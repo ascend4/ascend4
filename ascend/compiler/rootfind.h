@@ -49,7 +49,7 @@
 # include "codegen_support.h"
 #endif
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_rel Compiler Relations
 	@{
 */
 

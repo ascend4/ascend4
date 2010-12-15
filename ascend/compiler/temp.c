@@ -42,10 +42,6 @@
 #include "value_type.h"
 #include "temp.h"
 
-#ifndef lint
-static CONST char TemporaryRCSid[] = "$Id: temp.c,v 1.8 1998/04/19 18:45:34 ballan Exp $";
-#endif
-
 struct gl_list_t *g_temporary_var_list = NULL;
 /* a list of active vars */
 #define GTVL g_temporary_var_list

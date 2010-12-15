@@ -28,29 +28,19 @@
 
 /** @file
  *  SELECT List Routines.
- *  <pre>
- *  When #including select.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "compiler.h"
- *         #include "sets.h"
- *         #include "exprs.h"
- *         #include "bit.h"
- *         #include "stattypes.h"
- *  </pre>
  */
 
 #ifndef ASC_SELECT_H
 #define ASC_SELECT_H
 
-/**	@addtogroup compiler Compiler
+#include "stattypes.h"
+
+/**	@addtogroup compiler_stmt Compiler Statements
 	@{
 */
 
 extern struct SelectList *CreateSelect(struct Set *set, struct StatementList *sl);
 /**< 
- *  <!--  struct SelectList *CreateSelect(set,sl)                      -->
- *  <!--  struct Set *set;                                             -->
- *  <!--  struct StatementList *sl;                                    -->
  *  Create a Select node.  This will examine the set data structure which
  *  must contain only constant expressions (TRUE or FALSE), symbol values or
  *  integer values.
@@ -59,16 +49,12 @@ extern struct SelectList *CreateSelect(struct Set *set, struct StatementList *sl
 
 extern struct SelectList *ReverseSelectCases(struct SelectList *sel);
 /**< 
- *  <!--  struct SelectList *ReverseSelectCases(sel)                   -->
- *  <!--  struct SelectList *sel;                                      -->
  *  Reverse this list.
  */
 
 extern struct SelectList
 *LinkSelectCases(struct SelectList *sel1, struct SelectList *sel2);
 /**< 
- *  <!--  struct SelectList *LinkSelectCases(sel1,sel2)                -->
- *  <!--  struct SelectList *sel1,*sel2;                               -->
  *  Link two case lists and return the joined list.  This works best when
  *  sel1 is a one element list.
  */
@@ -87,10 +73,6 @@ extern struct SelectList
  */
 extern struct SelectList *NextSelectCaseF(struct SelectList *cs);
 /**<
- *  <!--  macro NextSelectCase(cs)                                     -->
- *  <!--  struct SelectList *NextSelectCaseF(cs)                       -->
- *  <!--  struct SelectList *cs;                                       -->
- *  <!--  Return the next case.                                        -->
  *  Implementation function for NextSelectCase().  Do not call this
  *  function directly - use NextSelectCase() instead.
  */
@@ -109,11 +91,6 @@ extern struct SelectList *NextSelectCaseF(struct SelectList *cs);
  */
 extern struct Set *SelectSetListF(struct SelectList *sel);
 /**<
- *  <!--  macro SelectSetList(sel)                                     -->
- *  <!--  struct Set *SelectSetListF(sel)                              -->
- *  <!--  const struct SelectList *sel;                                -->
- *  <!--  This will return the set list part of a SelectList structure.--> 
- *  <!--  When the set is NULL, this indicates an OTHERWISE case.      -->
  *  Implementation function for SelectSetList().  Do not call this
  *  function directly - use SelectSetList() instead.
  */
@@ -131,39 +108,27 @@ extern struct Set *SelectSetListF(struct SelectList *sel);
  */
 extern struct StatementList *SelectStatementListF(struct SelectList *sel);
 /**<
- *  <!--  macro SelectStatementList(sel)                               -->
- *  <!--  const struct StatementList *SelectStatementListF(sel)        -->
- *  <!--  const struct SelectList *sel;                                -->
- *  <!--  Return the statement list.                                   -->
  *  Implementation function for SelectStatementList().  Do not call this
  *  function directly - use SelectStatementList() instead.
  */
 
 extern void DestroySelectList(struct SelectList *sel);
 /**< 
- *  <!--  void DestroySelectList(sel)                                  -->
- *  <!--  struct SelectList *sel;                                      -->
  *  Destroy a whole list.
  */
 
 extern void DestroySelectNode(struct SelectList *sel);
 /**< 
- *  <!--  void DestroySelectNode(sel)                                  -->
- *  <!--  struct SelectList *sel;                                      -->
  *  Destroy just this node.
  */
 
 extern struct SelectList *CopySelectNode(struct SelectList *sel);
 /**< 
- *  <!--  struct SelectList *CopySelectNode(sel)                       -->
- *  <!--  struct SelectList *sel;                                      -->
  *  Copy a case.  The next attribute is initialized to NULL.
  */
 
 extern struct SelectList *CopySelectList(struct SelectList *sel);
 /**< 
- *  <!--  struct SelectList *CopySelectList(sel)                       -->
- *  <!--  struct SelectList *sel;                                      -->
  *  Copy the whole list content. not a reference count change.
  */
 

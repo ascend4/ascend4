@@ -36,11 +36,11 @@
 #ifndef ASC_ASCCOMPILER_H
 #define ASC_ASCCOMPILER_H
 
-/**	@addtogroup compiler Compiler
+#include <ascend/utilities/ascConfig.h>
+
+/**	@addtogroup compiler_common Compiler Common
 	@{
 */
-
-#include <ascend/utilities/ascConfig.h>
 
 ASC_DLLSPEC int Asc_CompilerInit(int simplify_relations);
 /**<
@@ -55,6 +55,9 @@ ASC_DLLSPEC int Asc_CompilerInit(int simplify_relations);
  *
  *  @BUG At present it needs to more aggressively check the return codes
  *       from the functions this calls. Currently returns 0 regardless.
+ *
+ *  @TODO this function might provide for a means to store so-called Global
+ *  variables, if we can at least nest them into a global 'Compiler' object...
  */
 
 ASC_DLLSPEC void Asc_CompilerDestroy(void);

@@ -18,16 +18,6 @@
 	Boston, MA 02111-1307, USA.
 *//** @file
  *  Ascend Instance Tree Name Search Routines.
- *  <pre>
- *  When #including find.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "fractions.h"
- *         #include "compiler.h"
- *         #include "instance_enum.h"
- *         #include "dimen.h"
- *         #include "expr_types.h"
- *         #include "find.h"
- *  </pre>
 *//*
 	by Ben Allan
 	Created: 10/3/2006
@@ -36,7 +26,11 @@
 #ifndef ASC_FINDPATH_H
 #define ASC_FINDPATH_H
 
-/**	@addtogroup compiler Compiler
+#include <ascend/general/list.h>
+#include "instance_enum.h"
+#include "find.h"
+
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 

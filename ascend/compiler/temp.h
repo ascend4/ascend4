@@ -42,50 +42,38 @@
 #ifndef ASC_TEMP_H
 #define ASC_TEMP_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_rel Compiler Relations
 	@{
 */
 
 extern void AddTemp(symchar *name);
 /**<
- *  <!--  void AddTemp(name)                                           -->
- *  <!--  const char *name;                                            -->
  *  Make a temporary variable called name.  Assume that one doesn't
  *  already exist.
  */
 
 extern void SetTemp(symchar *name, struct value_t value);
 /**< 
- *  <!--  void SetTemp(name,value)                                     -->
- *  <!--  const char *name;                                            -->
- *  <!--  struct value_t value;                                        -->
  *  Set the value of a temporary variable.
  */
 
 extern void RemoveTemp(symchar *name);
 /**< 
- *  <!--  void RemoveTemp(name)                                        -->
- *  <!--  const char *name;                                            -->
  *  Remove a temporary variable called name.
  */
 
 extern int TempExists(symchar *name);
 /**< 
- *  <!--  int TempExists(name)                                         -->
- *  <!--  const char *name;                                            -->
  *  Return true is a temporary variable of the given name exists.
  */
 
 extern struct value_t TempValue(symchar *name);
 /**< 
- *  <!--  struct value_t TempValue(name)                               -->
- *  <!--  const char *name;                                            -->
  *  Return the value of a temporary variable.
  */
 
 extern void DestroyTemporaryList(void);
 /**< 
- *  <!--  void DestroyTemporaryList()                                  -->
  *  Free the memory for the temporary variable list.
  */
 

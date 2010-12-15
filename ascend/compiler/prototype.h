@@ -38,10 +38,9 @@
 #include "compiler.h"
 #include "instance_enum.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
-
 
 extern void InitializePrototype(void);
 /**<  Must be called before any other prototype procedure. */

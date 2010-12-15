@@ -44,7 +44,7 @@
 #include <ascend/general/dstring.h>
 #include <stdio.h>
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_expr Compiler Expressions
 	@{
 */
 

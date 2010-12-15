@@ -34,7 +34,7 @@
 #include <ascend/compiler/expr_types.h>
 #include <ascend/compiler/symtab.h>
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_stmt Compiler Statements
 	@{
 */
 

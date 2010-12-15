@@ -29,17 +29,14 @@
 
 /** @file
  *  FOR Loop Index Variable Table.
- *  <pre>
- *  When #including forvars.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "compiler.h"
- *  </pre>
  */
 
 #ifndef ASC_FORVARS_H
 #define ASC_FORVARS_H
 
-/**	@addtogroup compiler Compiler
+#include "compiler.h"
+
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 

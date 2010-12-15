@@ -46,7 +46,7 @@
 #include "instance_enum.h"
 #include <ascend/general/list.h>
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_simlist Compiler Simulation List
 	@{
 */
 

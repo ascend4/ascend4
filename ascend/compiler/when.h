@@ -28,44 +28,30 @@
 
 /** @file
  *  WHEN List Routines.
- *  <pre>
- *  When #including when.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "compiler.h"
- *         #include "sets.h"
- *         #include "exprs.h"
- *         #include "bit.h"
- *         #include "stattypes.h"
- *  </pre>
  */
 
 #ifndef ASC_WHEN_H
 #define ASC_WHEN_H
 
-/**	@addtogroup compiler Compiler
+#include "stattypes.h"
+
+/**	@addtogroup compiler_stmt Compiler Statements
 	@{
 */
 
 extern struct WhenList *CreateWhen(struct Set *set, struct StatementList *sl);
 /**< 
- *  <!--  struct WhenList *CreateWhen(set,sl)                          -->
- *  <!--  struct Set *set;                                             -->
- *  <!--  struct StatementList *sl;                                    -->
  *  Create a when node.
  *  If set = NULL, this indicates an OTHERWISE case.
  */
 
 extern struct WhenList *ReverseWhenCases(struct WhenList *w);
 /**< 
- *  <!--  struct WhenList *ReverseWhenCases(w)                         -->
- *  <!--  struct WhenList *w;                                          -->
  *  Reverse this list.
  */
 
 extern struct WhenList *LinkWhenCases(struct WhenList *w1, struct WhenList *w2);
 /**< 
- *  <!--  struct WhenList *LinkWhenCases(w1,w2)                        -->
- *  <!--  struct WhenList *w1,*w2;                                     -->
  *  Link two case lists and return the joined list.  This works best when
  *  w1 is a one element list.
  */
@@ -84,10 +70,6 @@ extern struct WhenList *LinkWhenCases(struct WhenList *w1, struct WhenList *w2);
  */
 extern struct WhenList *NextWhenCaseF(struct WhenList *w);
 /**<
- *  <!--  macro NextWhenCase(w)                                        -->
- *  <!--  struct WhenList *NextWhenCaseF(w)                            -->
- *  <!--  struct WhenList *w;                                          -->
- *  <!--  Return the next case in the list.                            -->
  *  Implementation function for NextWhenCase() (debug mode).
  *  Do not call this function directly - use NextWhenCase() instead.
  */
@@ -106,11 +88,6 @@ extern struct WhenList *NextWhenCaseF(struct WhenList *w);
  */
 extern struct Set *WhenSetListF(struct WhenList *w);
 /**<
- *  <!--  macro WhenSetList(w)                                         -->
- *  <!--  struct Set *WhenSetListF(w)                                  -->
- *  <!--  const struct WhenList *w;                                    -->
- *  <!--  This will return the set list part of a WhenList structure. When  -->
- *  <!--  the set is NULL, this indicates an OTHERWISE case.           -->
  *  Implementation function for WhenSetList() (debug mode).
  *  Do not call this function directly - use WhenSetList() instead.
  */
@@ -128,39 +105,27 @@ extern struct Set *WhenSetListF(struct WhenList *w);
  */
 extern struct StatementList *WhenStatementListF(struct WhenList *w);
 /**<
- *  <!--  macro WhenStatementList(w)                                   -->
- *  <!--  const struct StatementList *WhenStatementListF(w)            -->
- *  <!--  const struct WhenList *w;                                    -->
- *  <!--  Return the statement list.                                   -->
  *  Implementation function for WhenStatementList() (debug mode).
  *  Do not call this function directly - use WhenStatementList() instead.
  */
 
 extern void DestroyWhenList(struct WhenList *w);
 /**< 
- *  void DestroyWhenList(w)
- *  <!--  struct WhenList *w;                                          -->
- *  <!--  Destroy a whole list.                                        -->
+ *  Destroy a whole list.
  */
 
 extern void DestroyWhenNode(struct WhenList *w);
 /**< 
- *  <!--  void DestroyWhenNode(w)                                      -->
- *  <!--  struct WhenList *w;                                          -->
  *  Destroy just this node.
  */
 
 extern struct WhenList *CopyWhenNode(struct WhenList *w);
 /**< 
- *  <!--  struct WhenList *CopyWhenNode(w)                             -->
- *  <!--  struct WhenList *w;                                          -->
  *  Copy a case.  The next attribute is initialized to NULL.
  */
 
 extern struct WhenList *CopyWhenList(struct WhenList *w);
 /**< 
- *  <!--  struct WhenList *CopyWhenList(w)                             -->
- *  <!--  struct WhenList *w;                                          -->
  *  Copy the whole list contents. not a reference count change.
  */
 

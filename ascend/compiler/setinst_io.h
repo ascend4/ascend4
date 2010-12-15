@@ -40,15 +40,12 @@
 #ifndef ASC_SETINST_IO_H
 #define ASC_SETINST_IO_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 
 extern void WriteInstSet(FILE *f, CONST struct set_t *s);
 /**<
- *  <!--  void WriteInstSet(f,s)                                       -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  const struct set_t *s;                                       -->
  *  Write set instance s to file f.
  */
 

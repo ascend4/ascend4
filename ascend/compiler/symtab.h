@@ -34,7 +34,7 @@
 #include <ascend/utilities/ascConfig.h>
 #include "compiler.h"
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_common Compiler Common
 	@{
 */
 

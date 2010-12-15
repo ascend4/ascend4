@@ -46,7 +46,7 @@
 #ifndef ASC_STATTYPES_H
 #define ASC_STATTYPES_H
 
-#include "compiler.h"
+#include "expr_types.h"
 
 /**	@addtogroup compiler_stmt Compiler Statements
 	@{

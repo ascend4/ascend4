@@ -45,12 +45,12 @@
 	@{
 */
 
-#include <ascend/utilities/ascConfig.h>
 #include "compiler.h"
 #include "dimen.h"
 #include "expr_types.h"
-#include <ascend/general/list.h>
 #include "func.h"
+
+#include <ascend/general/list.h>
 
 /** If TOKENDOMINANT is 1, then we assume union RelationUnion fields
  * other than relop and ref_count are all going to be initialized

@@ -42,7 +42,7 @@
 #ifndef ASC_REFINEINST_H
 #define ASC_REFINEINST_H
 
-/**	@addtogroup compiler Compiler
+/**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */
 
@@ -50,9 +50,6 @@ extern struct Instance *RefineInstance(struct Instance *i,
                                        struct TypeDescription *type,
                                        struct Instance *arginst);
 /**<
- *  <!--  struct Instance *RefineInstance(i,type,arginst)              -->
- *  <!--  struct Instance *, *arginsti;                                -->
- *  <!--  struct TypeDescription *type;                                -->
  *  This returns the refined instance.  In most cases, the return value equals
  *  i, but sometimes it doesn't.  In general the interface should not
  *  call this routine.  Check RefineClique below.  This may change
@@ -68,9 +65,6 @@ ASC_DLLSPEC struct Instance *RefineClique(struct Instance *i,
                                      struct TypeDescription *type,
                                      struct Instance *arginst);
 /**<
- *  <!--  void RefineClique(i,type,arginst)                            -->
- *  <!--  struct Instance *i, *arginst;                                -->
- *  <!--  struct TypeDescription *type;                                -->
  *  This returns the refined instance.  In most cases, the return value equals
  *  i, but sometimes it doesn't.
  *  Proper arginst must be supplied if the type is in any way parameterized.
