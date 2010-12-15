@@ -54,7 +54,7 @@
 */
 
 #ifdef ASC_BINTOKEN_H
-# include <ascend/utilities/ascConfig.h>
+# include <ascend/general/platform.h>
 # include <ascend/compiler/instance_enum.h>
 #else
 # define IS_BINTOKEN_COMPILE

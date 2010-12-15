@@ -23,7 +23,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #ifdef __WIN32__
 #include <io.h>
 #endif

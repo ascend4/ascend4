@@ -25,9 +25,9 @@
  *  the program; if not, write to the Free Software Foundation, Inc., 675
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
 
 

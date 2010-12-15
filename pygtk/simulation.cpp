@@ -28,7 +28,7 @@ extern "C"{
 #include <ascend/utilities/error.h>
 #include <ascend/utilities/ascSignal.h>
 #include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 
 #include <ascend/general/tm_time.h>
 

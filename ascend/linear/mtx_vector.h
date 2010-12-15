@@ -45,7 +45,7 @@
 #ifndef ASC_MTX_VECTOR_H
 #define ASC_MTX_VECTOR_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "mtx.h"
 
 /**	@addtogroup linear Linear

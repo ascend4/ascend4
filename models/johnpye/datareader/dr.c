@@ -29,7 +29,7 @@
 #include <ascend/general/ospath.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/error.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/utilities/ascEnvVar.h>
 
 #define DR_DEBUG 0

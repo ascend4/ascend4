@@ -27,7 +27,7 @@
  *  COPYING.  COPYING is in ../compiler.
  */
 
-#include "ascConfig.h"
+#include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include "readln.h"
 

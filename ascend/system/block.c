@@ -27,7 +27,7 @@
 #include "block.h"
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPrint.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/mathmacros.h>
 #include "slv_client.h"
 #include "slv_stdcalls.h"

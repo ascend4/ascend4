@@ -1,6 +1,6 @@
 extern "C"{
 #include <ascend/utilities/config.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 }
 
 #include <stdexcept>

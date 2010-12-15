@@ -29,7 +29,7 @@
 #include <ascend/utilities/config.h>
 #include <ascend/utilities/error.h>
 #include <ascend/utilities/ascDynaLoad.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/utilities/ascEnvVar.h>
 #include <ascend/general/table.h>
 

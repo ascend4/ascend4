@@ -28,7 +28,7 @@
  *
  */
 
-#include <ascend/utilities/ascConfig.h>
+#include "platform.h"
 
 #ifndef ASC_POOL_H
 #define ASC_POOL_H

@@ -10,7 +10,7 @@
 #include "instanceinterfacedata.h"
 
 extern "C"{
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/compiler/instance_types.h>
 #include <ascend/utilities/ascSignal.h>
 #include <ascend/general/ascMalloc.h>

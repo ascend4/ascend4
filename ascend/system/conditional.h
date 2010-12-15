@@ -30,7 +30,7 @@
 #ifndef ASC_CONDITIONAL_H
 #define ASC_CONDITIONAL_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/list.h>
 
 #include "slv_types.h"

@@ -43,7 +43,7 @@
 #ifndef ASC_REDIRECTFILE_H
 #define ASC_REDIRECTFILE_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /**	@addtogroup compiler_common Compiler Common
 	@{

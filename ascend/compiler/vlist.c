@@ -28,7 +28,7 @@
 
 #include<stdio.h>
 #include<assert.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 #include <ascend/general/ascMalloc.h>
 

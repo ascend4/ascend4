@@ -1,4 +1,4 @@
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 #include <ascend/compiler/packages.h>
 #include <ascend/compiler/instance_enum.h>

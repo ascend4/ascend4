@@ -32,10 +32,10 @@
 #include <string.h>
 #include <limits.h>
 #include <ctype.h>  /* was compiler/actype.h */
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascEnvVar.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/list.h>
 #include <ascend/general/pool.h>
 #include "compiler.h"

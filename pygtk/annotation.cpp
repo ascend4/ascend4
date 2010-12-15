@@ -4,7 +4,7 @@ extern "C"{
 #include <ascend/compiler/notate.h>
 #include <ascend/compiler/notequery.h>
 #include <ascend/utilities/error.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 }
 
 #include <stdexcept>

@@ -30,9 +30,9 @@
 
 #include "dimen.h"
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/error.h>
 #include <ascend/general/list.h>

@@ -29,9 +29,9 @@
  *  Implementation of instance garbage dump using hash tables.
  */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 #include "instance_enum.h"

@@ -52,7 +52,7 @@
 #include <stdio.h>
 
 #include <ascend/utilities/config.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /**	@addtogroup linear Linear
 	@{

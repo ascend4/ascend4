@@ -27,7 +27,7 @@
  *  COPYING.
  */
 
-#include <ascend/utilities/ascConfig.h>
+#include "platform.h"
 #include "ascMalloc.h"
 #include "mem.h"
 #include "mathmacros.h"

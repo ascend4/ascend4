@@ -39,7 +39,7 @@
 	@{
 */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /* some influential defines and where to set them:
 	ATDEBUG anontype.c -- controls anon type/relation sharing spew

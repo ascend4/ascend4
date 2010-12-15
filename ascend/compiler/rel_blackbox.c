@@ -24,7 +24,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 
 #include <ascend/general/pairlist.h>
 #include <ascend/general/dstring.h>

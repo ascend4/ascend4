@@ -27,7 +27,7 @@
  *  COPYING.
  */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 
 #include <ascend/general/list.h>

@@ -29,7 +29,7 @@ class Plot;
 
 #include "config.h"
 extern "C"{
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/error.h>
 #include <ascend/compiler/expr_types.h>
 #include <ascend/compiler/instance_enum.h>

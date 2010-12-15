@@ -42,7 +42,7 @@
 #ifndef ASC_BIT_H
 #define ASC_BIT_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /**	@addtogroup utilities_bit Utilities Bit-list
 	@{

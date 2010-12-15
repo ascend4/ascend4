@@ -22,8 +22,8 @@
 	by John Pye, Mar 2007
 */
 
-#include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/platform.h>
+#include <ascend/general/panic.h>
 #include <ascend/utilities/error.h>
 #include <ascend/general/ospath.h>
 #include <ascend/compiler/extfunc.h>

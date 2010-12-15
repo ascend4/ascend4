@@ -1,6 +1,6 @@
 #include "idaanalyse.h"
 
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/utilities/error.h>
 
 #include <ascend/linear/linsolqr.h>

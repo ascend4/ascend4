@@ -67,7 +67,7 @@
 #ifndef ASC_LIST_H
 #define ASC_LIST_H
 
-#include <ascend/utilities/ascConfig.h>
+#include "platform.h"
 
 #ifndef TRUE
 #define TRUE 1

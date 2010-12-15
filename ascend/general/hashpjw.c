@@ -11,8 +11,8 @@
  */
 
 #include <stdio.h>
-#include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascPanic.h>
+#include "platform.h"
+#include "panic.h"
 #include "hashpjw.h"
 
 unsigned long hashpjw(register CONST char *str,

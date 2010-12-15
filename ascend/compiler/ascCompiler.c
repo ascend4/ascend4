@@ -29,13 +29,13 @@
  *  This module initializes the fundamental data structures used by the rest of
  *  Ascend and pulls in system headers. Largely this means memory management.
  */
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascEnvVar.h>
 
 #include "ascCompiler.h"
 #include <ascend/utilities/ascSignal.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/list.h>
 
 

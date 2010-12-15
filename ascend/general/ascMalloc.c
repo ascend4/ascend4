@@ -35,7 +35,7 @@
 #else
 #  include <io.h>     /* _open() declared here in MSVC */
 #endif
-#include <ascend/utilities/ascPanic.h>
+#include "panic.h"
 #include "ascMalloc.h"
 
 /*

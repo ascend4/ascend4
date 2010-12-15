@@ -7,7 +7,7 @@
 #include "config.h"
 
 extern "C"{
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/compiler/dimen.h>
 }
 

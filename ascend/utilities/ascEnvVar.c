@@ -34,8 +34,8 @@
  */
 
 #include <ctype.h>
-#include "ascConfig.h"
-#include "ascPanic.h"
+#include <ascend/general/platform.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
 #include "ascEnvVar.h"
 #include <ascend/general/list.h>

@@ -39,7 +39,7 @@
 #ifndef ASC_NAME_H
 #define ASC_NAME_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "compiler.h"
 #include "expr_types.h"
 
@@ -47,7 +47,7 @@
 	@{
 */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 #define CreateIdName(s) CreateIdNameF((s),NAMEBIT_IDTY)
 /**<

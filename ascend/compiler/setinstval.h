@@ -45,7 +45,7 @@
 	@{
 */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 enum set_kind {
   integer_set,  /**< set of integer values */

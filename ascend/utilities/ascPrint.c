@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include "ascConfig.h"
+#include <ascend/general/platform.h>
 #include "ascPrint.h"
 
 /* <..> path is required here for the autotools build to be happy */

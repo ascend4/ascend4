@@ -44,7 +44,7 @@
 	Have included the follow here to simplify instructions for people
 	writing their own external packages:
 */
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "instance_enum.h"
 #include <ascend/general/list.h>
 #include "extfunc.h"

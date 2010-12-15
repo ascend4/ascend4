@@ -4,7 +4,7 @@ Import('libascend_env')
 csrcs = Split("""
 	ascMalloc.c dstring.c except.c
 	hashpjw.c list.c listio.c mem.c
-	pool.c pretty.c
+	panic.c pool.c pretty.c
 	stack.c table.c tm_time.c
 	ospath.c env.c pairlist.c ltmatrix.c
 """)

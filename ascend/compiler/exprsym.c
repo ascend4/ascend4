@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>		/* !!! dont ever forget this and -lm */
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>

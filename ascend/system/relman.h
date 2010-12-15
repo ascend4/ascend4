@@ -37,7 +37,7 @@
 #ifndef ASC_RELMAN_H
 #define ASC_RELMAN_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 #include <ascend/linear/mtx.h>
 #include <ascend/general/ltmatrix.h>

@@ -36,7 +36,7 @@
 #ifndef ASC_ASCCOMPILER_H
 #define ASC_ASCCOMPILER_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /**	@addtogroup compiler_common Compiler Common
 	@{

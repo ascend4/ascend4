@@ -26,7 +26,7 @@
 #include "ranki_impl.h"
 
 #include <ascend/general/mathmacros.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/error.h>
 
 #include <math.h>

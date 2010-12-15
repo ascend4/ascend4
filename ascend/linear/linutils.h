@@ -36,7 +36,7 @@
 #ifndef ASC_LINUTILS_H
 #define ASC_LINUTILS_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "mtx.h"
 #include "linsolqr.h"
 

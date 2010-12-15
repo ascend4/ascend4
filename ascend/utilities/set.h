@@ -42,7 +42,7 @@
 #ifndef	ASC_SET_H
 #define ASC_SET_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 
 /**	@addtogroup utilities_set Utilities Set

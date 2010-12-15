@@ -25,7 +25,7 @@
 #ifndef ASC_SENSITIVITY_H
 #define ASC_SENSITIVITY_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/list.h>
 #include <ascend/compiler/extfunc.h>
 

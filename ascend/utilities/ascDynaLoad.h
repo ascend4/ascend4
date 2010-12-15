@@ -36,7 +36,7 @@
 #ifndef ASC_ASCDYNALOAD_H
 #define ASC_ASCDYNALOAD_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /**	@addtogroup utilities_dl Utilities Dynamic Library Loading
 	@{

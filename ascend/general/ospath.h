@@ -47,8 +47,8 @@
 # include "env.h"
 #else
 # include <ascend/utilities/config.h>
-# include <ascend/utilities/ascConfig.h>
-# include <ascend/general/ascMalloc.h>
+# include "platform.h"
+# include "ascMalloc.h"
 # include "env.h"
 #endif
 

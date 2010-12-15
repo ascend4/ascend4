@@ -34,7 +34,7 @@
 #define GAUSSALONE 0
 #if GAUSSALONE
 #include <math.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/compiler/compiler.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/mem.h>

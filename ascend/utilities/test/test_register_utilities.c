@@ -23,7 +23,7 @@
 
 #include "CUnit/CUnit.h"
 #include <ascend/utilities/config.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "test_register_utilities.h"
 
 #include "test_ascDynaLoad.h"

@@ -28,9 +28,9 @@
  *
  */
 #include <stdarg.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/stack.h>
 

@@ -30,7 +30,7 @@
 #ifndef ASC_SLIST_H
 #define ASC_SLIST_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/list.h>
 #include "compiler.h"
 #include "stattypes.h"
@@ -39,7 +39,7 @@
 	@{
 */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 extern struct StatementList *CreateStatementList(struct gl_list_t *l);
 /**<

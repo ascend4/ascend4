@@ -38,7 +38,7 @@
 	@{
 */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/dstring.h>
 #include <ascend/compiler/compiler.h>
 #include <ascend/compiler/symtab.h>

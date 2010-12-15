@@ -17,7 +17,7 @@
 	Boston, MA 02111-1307, USA.
 */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "test_register_packages.h"
 
 #define SUITE packages

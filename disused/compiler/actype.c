@@ -25,7 +25,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 #include<limits.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "compiler.h"
 #include "actype.h"
 

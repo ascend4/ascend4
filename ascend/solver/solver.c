@@ -33,7 +33,7 @@
 #include <ascend/system/system_impl.h>
 #include <ascend/general/list.h>
 #include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/compiler/packages.h>
 
 #define SOLVER_DEBUG 0

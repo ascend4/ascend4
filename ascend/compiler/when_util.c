@@ -28,9 +28,9 @@
  *
  */
 #include <stdarg.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/list.h>
 #include "functype.h"
 #include "expr_types.h"

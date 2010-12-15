@@ -23,7 +23,7 @@
 #include <CUnit/CUnit.h>
 
 #include <ascend/general/env.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/ascEnvVar.h>
 #include <ascend/utilities/error.h>
 

@@ -45,7 +45,7 @@
 	@{
 */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /*
 	The following functions are for use in running DOF analysis and dialog

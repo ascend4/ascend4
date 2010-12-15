@@ -281,7 +281,7 @@
 */
 
 #include <ascend/utilities/config.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 #include <ascend/linear/mtx.h>
 #include <ascend/linear/linsolqr.h>

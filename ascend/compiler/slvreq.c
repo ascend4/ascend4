@@ -2,7 +2,7 @@
 #include "slvreq.h"
 
 #include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include "instance_types.h"
 #include "instquery.h"
 

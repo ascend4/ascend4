@@ -41,8 +41,8 @@
 #include <ascend/system/slv_stdcalls.h>
 #include <ascend/system/block.h>
 
-#include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/platform.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascDynaLoad.h>
 #include <ascend/general/mem.h>

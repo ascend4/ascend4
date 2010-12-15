@@ -38,7 +38,7 @@
 #define ASC_PROCFRAME_H
 
 #include <stdio.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /**	@addtogroup compiler_proc Compiler Methods
 	@{
