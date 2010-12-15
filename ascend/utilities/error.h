@@ -55,7 +55,7 @@
 	default 'real' printf behaviour on this platform. (As
 	opposed to the sneaky stuff that FPRINTF does in this header)
 */
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/ascPrint.h>
 
 /**	@addtogroup utilities_error Utilities Error Message Handling

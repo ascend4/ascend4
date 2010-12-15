@@ -2,7 +2,7 @@
 Import('libascend_env')
 
 csrcs = Split("""
-	ascDynaLoad.c ascEnvVar.c ascPanic.c
+	ascDynaLoad.c ascEnvVar.c
 	ascPrint.c 
 	bit.c 
 	error.c readln.c set.c

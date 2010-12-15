@@ -34,7 +34,7 @@
 #ifndef ASC_WATCHPT_H
 #define ASC_WATCHPT_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/list.h>
 #include <ascend/compiler/instance_enum.h>
 

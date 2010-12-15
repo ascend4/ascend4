@@ -113,7 +113,7 @@
 #define ASC_MEM_H
 
 #include <stdio.h>
-#include <ascend/utilities/ascConfig.h>
+#include "platform.h"
 
 /**	@addtogroup general_mem General Memory Management
 	@{

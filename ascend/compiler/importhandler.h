@@ -27,7 +27,7 @@
 #ifndef IMPORTHANDLER_H
 #define IMPORTHANDLER_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/ospath.h>
 
 /**	@addtogroup compiler_file Compiler File Handling

@@ -28,7 +28,7 @@
 #ifndef ASC_TM_TIME_H
 #define ASC_TM_TIME_H
 
-#include <ascend/utilities/ascConfig.h>
+#include "platform.h"
 
 /**	@addtogroup general_time General Time
 	@{

@@ -30,8 +30,8 @@
  */
 
 #include <stdio.h>
-#include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascPanic.h>
+#include "platform.h"
+#include "panic.h"
 #include "list.h"
 #include "listio.h"
 

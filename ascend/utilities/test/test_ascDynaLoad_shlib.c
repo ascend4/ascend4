@@ -1,4 +1,4 @@
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "test_ascDynaLoad_shlib.h"
 
 int value = FALSE;

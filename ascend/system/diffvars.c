@@ -23,7 +23,7 @@
 #include "diffvars.h"
 
 #include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/utilities/error.h>
 
 #include <ascend/compiler/instance_io.h>

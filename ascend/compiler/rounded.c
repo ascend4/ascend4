@@ -29,9 +29,9 @@
  */
 
 #include <stdarg.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include "rounded.h"
 #define IsOdd(i) ((i & 1)!=0)
 

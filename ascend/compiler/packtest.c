@@ -26,7 +26,7 @@
 #include <math.h>
 #include <ctype.h>  /* was compiler/actype.h */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/config.h>
 
 #ifndef ASC_DEFAULT_ASCENDLIBRARY

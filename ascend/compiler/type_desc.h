@@ -31,7 +31,7 @@
 	@{
 */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "fractions.h"
 #include "compiler.h"
 #include "dimen.h"

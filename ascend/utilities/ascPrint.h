@@ -42,7 +42,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /**	@addtogroup utilities_print Utilities Output Stream Handling
 	@{

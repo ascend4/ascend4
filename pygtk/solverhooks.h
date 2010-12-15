@@ -34,7 +34,7 @@ class SolverReporter;
 class Simulation;
 
 extern "C"{
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/compiler/slvreq.h>
 };
 

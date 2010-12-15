@@ -32,11 +32,11 @@
 
 #include <math.h>
 #include <stdarg.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/mem.h>
 
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/compiler/functype.h>
 
 #include <ascend/compiler/func.h>

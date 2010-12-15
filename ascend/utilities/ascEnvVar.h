@@ -28,7 +28,7 @@
 #ifndef ASC_ENVVAR_H
 #define ASC_ENVVAR_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /**	@addtogroup utilities_env Utilities Environment Variable Imitation
 	@{

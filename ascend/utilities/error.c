@@ -6,7 +6,7 @@
 
 #ifdef ERROR_REPORTER_TREE_ACTIVE
 # include <ascend/general/ascMalloc.h>
-# include "ascPanic.h"
+# include <ascend/general/panic.h>
 #endif
 
 /**

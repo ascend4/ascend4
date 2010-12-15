@@ -41,8 +41,8 @@
 #include <ascend/general/mathmacros.h>
 #include <ascend/general/ltmatrix.h>
 #include <ascend/general/dstring.h>
-#include <ascend/utilities/ascPanic.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/panic.h>
+#include <ascend/general/platform.h>
 #include "reverse_ad.h"
 #include "fractions.h"
 #include "compiler.h"

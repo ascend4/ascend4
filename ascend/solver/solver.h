@@ -26,7 +26,7 @@
 #ifndef ASC_SOLVER_H
 #define ASC_SOLVER_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/system/slv_client.h>
 
 /*-----------------------------------------------------------------------

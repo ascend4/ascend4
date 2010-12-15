@@ -22,7 +22,7 @@
  */
 
 #include "CUnit/CUnit.h"
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "test_register_solver.h"
 
 /* #include "test_bnd.h" */

@@ -30,7 +30,7 @@
 #include <stdio.h>
 
 /* The includes required just for this *header* to load */
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/system/slv_types.h>
 #include <ascend/system/var.h>
 #include <ascend/system/rel.h>

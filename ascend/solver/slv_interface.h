@@ -40,7 +40,7 @@
 #ifndef ASC_SLV_INTERFACE_H
 #define ASC_SLV_INTERFACE_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 /* #include <compiler/instance_enum.h> */
 
 /**	@addtogroup solver Solver

@@ -28,7 +28,7 @@
 
 #include "fractions.h"
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 static
 short GCD(register int s1, register int s2)

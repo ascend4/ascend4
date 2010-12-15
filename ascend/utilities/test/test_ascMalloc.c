@@ -22,12 +22,12 @@
  */
 
 #include <stdio.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/error.h>
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
 #include <CUnit/CUnit.h>
 #include "test_ascMalloc.h"

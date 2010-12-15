@@ -94,7 +94,7 @@
 #include <errno.h>
 
 #include <ascend/utilities/config.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 #ifdef ASC_SIGNAL_TRAPS
 # include <ascend/utilities/ascSignal.h>
@@ -102,7 +102,7 @@
 
 /*#include <stdlib.h>*/
 #include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/utilities/error.h>
 #include <ascend/general/pool.h>
 #include <ascend/general/list.h>

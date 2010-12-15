@@ -10,7 +10,7 @@ using namespace std;
 #include "config.h"
 
 extern "C"{
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 #include <ascend/general/list.h>
 #include <ascend/compiler/ascCompiler.h>

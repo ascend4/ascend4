@@ -27,7 +27,7 @@
 	Last in CVS: $Revision: 1.3 $ $Date: 1997/07/18 12:34:53 $ $Author: mthomas $
 */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 #include "instance_enum.h"
 #include "destroyinst.h"

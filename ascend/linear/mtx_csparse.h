@@ -32,7 +32,7 @@
 #include "mtx.h"
 
 #include <ascend/utilities/config.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /**
 	This file will be effectively empty unless ASC_WITH_UFSPARSE is defined.

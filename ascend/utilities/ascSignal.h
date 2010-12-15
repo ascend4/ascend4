@@ -128,7 +128,7 @@
 #else
 /*-------------- rest of file is conditional on ASC_SIGNAL_TRAPS--------------*/
 
-#include "ascConfig.h"
+#include <ascend/general/platform.h>
 
 #include <ascend/general/except.h>
 

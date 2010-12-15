@@ -29,7 +29,7 @@
 #ifndef ASC_ASCPANIC_H
 #define ASC_ASCPANIC_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 #ifndef __GNUC__
 # ifndef __FUNCTION__
@@ -37,7 +37,7 @@
 # endif
 #endif
 
-/**	@addtogroup utilities_panic Utilities Fatal Error Handling
+/**	@addtogroup general_panic General Fatal Error Handling
 	@{
 */
 

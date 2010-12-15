@@ -24,10 +24,10 @@
 */
 
 #include <stdarg.h>
-#include <ascend/utilities/ascConfig.h>
+#include "platform.h"
 #include <ascend/utilities/error.h>
-#include <ascend/utilities/ascPanic.h>
-#include <ascend/general/ascMalloc.h>
+#include "panic.h"
+#include "ascMalloc.h"
 #include "list.h"
 #if LISTUSESPOOL
 #include "pool.h"

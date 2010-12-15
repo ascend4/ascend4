@@ -31,9 +31,9 @@
  *
  */
 
-#include <ascend/utilities/ascConfig.h>
-#include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include "platform.h"
+#include "ascMalloc.h"
+#include "panic.h"
 #include "dstring.h"
 #include "mathmacros.h"
 

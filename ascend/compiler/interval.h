@@ -33,7 +33,7 @@
 #ifndef ASC_INTERVAL_H
 #define ASC_INTERVAL_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /**	@addtogroup compiler_interval Compiler Interval Arithmetic
 	@{

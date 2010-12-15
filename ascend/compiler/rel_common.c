@@ -27,7 +27,7 @@
  */
 
 #include<math.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 
 

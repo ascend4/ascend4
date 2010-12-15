@@ -43,7 +43,7 @@
 */
 
 #include <ascend/general/dstring.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "expr_types.h"
 #include "relation_type.h"
 

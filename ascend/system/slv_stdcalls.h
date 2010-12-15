@@ -29,7 +29,7 @@
 #ifndef ASC_SLV_STDCLIENTS_H
 #define ASC_SLV_STDCLIENTS_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/linear/mtx.h>
 
 #include "slv_client.h"

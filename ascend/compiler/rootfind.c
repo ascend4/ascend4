@@ -40,7 +40,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 #include "instance_enum.h"
 #include <ascend/general/list.h>

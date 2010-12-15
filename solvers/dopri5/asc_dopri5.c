@@ -24,8 +24,8 @@
 	by John Pye, May 2007.
 */
 
-#include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/platform.h>
+#include <ascend/general/panic.h>
 #include <ascend/utilities/ascSignal.h>
 #include <ascend/utilities/error.h>
 #include <ascend/general/ospath.h>

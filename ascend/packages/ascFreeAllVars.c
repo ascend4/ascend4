@@ -24,7 +24,7 @@
 	Last in CVS: $Revision: 1.4 $ $Date: 1998/06/16 16:42:09 $ $Author: mthomas $
 */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/ascPrint.h>
 
 #include <ascend/compiler/child.h>

@@ -46,7 +46,7 @@
 #ifndef ASC_TMPNUM_H
 #define ASC_TMPNUM_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "instance_enum.h"
 
 /**	@addtogroup compiler_inst Compiler Instance Hierarchy

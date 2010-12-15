@@ -20,8 +20,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/platform.h>
+#include <ascend/general/panic.h>
 #include <ascend/utilities/error.h>
 
 

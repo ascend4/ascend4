@@ -43,7 +43,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/error.h>
 #include "stattypes.h"
 

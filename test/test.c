@@ -24,7 +24,7 @@
 #include <getopt.h>
 
 #include <ascend/utilities/config.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/error.h>
 #include <ascend/compiler/redirectFile.h>
 #include <ascend/general/ascMalloc.h>

@@ -31,7 +31,7 @@
 #define ASC_DISCRETE_H
 
 #include <stdio.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/list.h>
 
 #include "slv_types.h"

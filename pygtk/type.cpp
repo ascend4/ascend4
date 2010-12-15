@@ -25,7 +25,7 @@
 using namespace std;
 
 extern "C"{
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/ascSignal.h>
 #include <ascend/general/dstring.h>
 #include <ascend/compiler/instance_enum.h>

@@ -34,7 +34,7 @@
 #ifndef ASC_MERGEINST_H
 #define ASC_MERGEINST_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "instance_enum.h"
 
 /**	@addtogroup compiler_inst Compiler Instance Hierarchy

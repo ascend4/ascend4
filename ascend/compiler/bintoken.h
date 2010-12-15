@@ -34,7 +34,7 @@
 #ifndef ASC_BINTOKEN_H
 #define ASC_BINTOKEN_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "instance_enum.h"
 #include "compiler.h"
 

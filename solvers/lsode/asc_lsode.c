@@ -57,12 +57,12 @@
 #endif
 
 #include <ascend/utilities/config.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/error.h>
 #include <ascend/compiler/instance_enum.h>
 #include <ascend/utilities/ascSignal.h>
 #include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/solver/solver.h>
 
 #include <ascend/packages/sensitivity.h>

@@ -26,8 +26,8 @@
 
 #include "ltmatrix.h"
 
-#include <ascend/utilities/ascPanic.h>
-#include <ascend/general/ascMalloc.h>
+#include "panic.h"
+#include "ascMalloc.h"
 
 #include <stdio.h>
 

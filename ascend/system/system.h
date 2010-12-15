@@ -43,7 +43,7 @@
 #ifndef ASC_SYSTEM_H
 #define ASC_SYSTEM_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "slv_types.h"
 
 /**	@addtogroup system System

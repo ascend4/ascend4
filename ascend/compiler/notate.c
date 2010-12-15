@@ -27,7 +27,7 @@
 	Last in CVS: $Revision: 1.9 $ $Date: 1998/06/18 18:44:58 $ $Author: ballan $
 */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 #include <ascend/general/pool.h>

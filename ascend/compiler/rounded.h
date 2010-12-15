@@ -33,7 +33,7 @@
 #ifndef ASC_ROUNDED_H
 #define ASC_ROUNDED_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /**	@addtogroup compiler_rounded Compiler Rounded Arithmetic
 	@{

@@ -27,8 +27,8 @@
  *  COPYING.  COPYING is in ../compiler.
  */
 
-#include "ascConfig.h"
-#include "ascPanic.h"
+#include <ascend/general/platform.h>
+#include <ascend/general/panic.h>
 #include "set.h"
 
 

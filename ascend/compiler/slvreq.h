@@ -29,7 +29,7 @@
 #ifndef ASC_SLVREQ_H
 #define ASC_SLVREQ_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/compiler/instance_enum.h>
 #include <ascend/compiler/value_type.h>
 

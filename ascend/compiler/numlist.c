@@ -29,9 +29,9 @@
  *  the file named COPYING.
  */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/utilities/ascPrint.h>
 #include <ascend/general/list.h>
 #include "numlist.h" /* should be in general/ */

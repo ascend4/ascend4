@@ -22,11 +22,11 @@
  */
 
 #include <stdio.h>
-#include <ascend/utilities/ascConfig.h>
+#include "platform.h"
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include <ascend/general/ascMalloc.h>
+#include "ascMalloc.h"
 #include <ascend/general/list.h>
 #include <ascend/general/listio.h>
 #include "CUnit/CUnit.h"

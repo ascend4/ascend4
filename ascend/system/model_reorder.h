@@ -36,7 +36,7 @@
 #ifndef ASC_MODEL_REORDER_H
 #define ASC_MODEL_REORDER_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/linear/mtx.h>
 
 #include <ascend/system/slv_types.h>

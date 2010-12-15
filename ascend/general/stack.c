@@ -28,10 +28,10 @@
 
 #include<stdio.h>
 #include<stdlib.h>
-#include <ascend/utilities/ascConfig.h>
+#include "platform.h"
 
-#include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include "ascMalloc.h"
+#include "panic.h"
 #include "stack.h"
 #include "mathmacros.h"
 

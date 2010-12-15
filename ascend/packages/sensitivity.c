@@ -31,7 +31,7 @@
 #include <ascend/utilities/error.h>
 #include <ascend/general/mathmacros.h>
 #include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 
 #include <ascend/compiler/packages.h>
 

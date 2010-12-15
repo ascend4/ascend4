@@ -27,7 +27,7 @@
 #define ASC_VLISTIO_H
 
 #include <stdio.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/compiler/vlist.h>
 
 /**	@addtogroup compiler_type Compiler Type Description

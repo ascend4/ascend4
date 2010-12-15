@@ -20,7 +20,7 @@
 #ifndef ASC_PARSER_H
 #define ASC_PARSER_H
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 /**	@addtogroup compiler_parse Compiler Scanner/Parser
 	@{

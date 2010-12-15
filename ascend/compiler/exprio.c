@@ -23,8 +23,8 @@
 	Last in CVS: $Revision: 1.14 $ $Date: 1998/04/10 23:25:42 $ $Author: ballan $
 */
 
-#include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/platform.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/dstring.h>
 

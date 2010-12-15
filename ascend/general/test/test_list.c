@@ -24,8 +24,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <ascend/utilities/ascConfig.h>
-#include <ascend/general/ascMalloc.h>
+#include "platform.h"
+#include "ascMalloc.h"
 #include <ascend/utilities/ascPrint.h>
 #include <ascend/general/list.h>
 #include "CUnit/CUnit.h"

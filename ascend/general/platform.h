@@ -18,20 +18,26 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	@file
-	Global configuration parameters.
+	Platform-specific configuration parameters.
 
 	This module defines the fundamental constants used by the rest of
-	Ascend and pulls in system headers.
-	There is not corresponding compiler.c. The variables
-	declared in this header are defined in ascParse.y.
+	ASCEND and pulls in some platform-specific system headers where needed.
+	There is no corresponding platform.c.
 
+	NOT SURE IF FOLLOWING STILL APPLIES:
 	If including the file, you should also include utilities/error.h
+
+	@TODO refactor this file to remove global variables and typedefs.
 *//*
 	by Mark Thomas
 	Version: $Revision: 1.12 $
 	Version control file: $RCSfile: ascConfig.h,v $
 	Date last modified: $Date: 2003/08/23 18:43:13 $
 	Last modified by: $Author: ballan $
+*/
+
+/**	@addtogroup general_platform General Platform-specific Definitions
+	@{
 */
 
 #ifndef ASC_ASCCONFIG_H

@@ -28,9 +28,9 @@
 #include <ascend/compiler/proc.h>
 #include <ascend/compiler/name.h>
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/ascPrint.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/child.h>

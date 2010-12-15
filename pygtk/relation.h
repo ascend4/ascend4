@@ -10,7 +10,7 @@ struct Variable;
 
 #include "config.h"
 extern "C"{
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/system/slv_types.h>
 #include <ascend/system/rel.h>
 }

@@ -28,10 +28,10 @@
  *  the file named COPYING.
  */
 
-#include <ascend/utilities/ascConfig.h>
+#include "platform.h"
 
-#include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include "ascMalloc.h"
+#include "panic.h"
 #include "hashpjw.h"
 #include "table.h"
 

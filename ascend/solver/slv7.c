@@ -42,7 +42,7 @@
 #include <ascend/utilities/set.h>
 #include <ascend/general/tm_time.h>
 #include <ascend/general/mem.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/list.h>
 
 #include <ascend/system/calc.h>

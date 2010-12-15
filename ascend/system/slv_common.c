@@ -38,7 +38,7 @@
 
 #include <ascend/general/mathmacros.h>
 #include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/mem.h>
 
 #ifdef SLV_STANDALONE

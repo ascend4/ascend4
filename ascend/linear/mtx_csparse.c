@@ -1,5 +1,5 @@
 #include <math.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/mem.h>
 #include "mtx.h"
@@ -15,7 +15,7 @@
 #include "mtx_csparse.h"
 
 #include <ascend/utilities/error.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 
 #ifdef ASC_WITH_UFSPARSE
 

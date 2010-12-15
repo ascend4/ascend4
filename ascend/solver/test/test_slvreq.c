@@ -11,7 +11,7 @@
 #include <ascend/general/list.h>
 #include <ascend/general/ltmatrix.h>
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/ascEnvVar.h>
 #include <ascend/utilities/error.h>
 

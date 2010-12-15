@@ -7,7 +7,7 @@ using namespace std;
 
 extern "C"{
 #include <ascend/general/dstring.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 #include <ascend/compiler/expr_types.h>
 #include <ascend/compiler/symtab.h>

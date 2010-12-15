@@ -22,7 +22,7 @@
 #include <string.h>
 #include <CUnit/CUnit.h>
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/linear/mtx_csparse.h>
 
 #include <test/assertimpl.h>

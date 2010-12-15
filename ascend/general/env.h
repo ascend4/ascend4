@@ -29,8 +29,8 @@
 # define ASC_DLLSPEC T T
 #else
 # include <ascend/utilities/config.h>
-# include <ascend/utilities/ascConfig.h>
-# include <ascend/general/ascMalloc.h>
+# include "platform.h"
+# include "ascMalloc.h"
 # define FREE ascfree
 # define MALLOC ascmalloc
 #endif

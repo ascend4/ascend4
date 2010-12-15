@@ -64,7 +64,7 @@
 
 #include <ascend/general/ascMalloc.h>
 #include "ascSignal.h"
-#include "ascPanic.h"
+#include <ascend/general/panic.h>
 
 /* #define SIGNAL_DEBUG */
 

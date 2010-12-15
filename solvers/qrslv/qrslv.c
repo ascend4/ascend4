@@ -33,7 +33,7 @@
 #define ASC_BUILDING_INTERFACE
 
 #include <ascend/utilities/config.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #ifdef ASC_SIGNAL_TRAPS
 # include <ascend/utilities/ascSignal.h>
 #endif
@@ -43,7 +43,7 @@
 #include <ascend/general/mathmacros.h>
 #include <ascend/general/tm_time.h>
 #include <ascend/general/mem.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/general/list.h>
 
 #include <ascend/linear/mtx_vector.h>

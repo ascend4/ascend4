@@ -37,9 +37,9 @@
 #if (defined(__alpha) || defined(sun))
 #include <malloc.h>
 #endif
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/panic.h>
 #include <ascend/utilities/ascSignal.h>
 #include <ascend/general/pool.h>
 #include <ascend/general/list.h>

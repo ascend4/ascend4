@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include <ascend/utilities/error.h>
 #include <ascend/general/ospath.h>
 

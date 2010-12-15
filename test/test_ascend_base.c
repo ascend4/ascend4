@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 #include <ascend/utilities/config.h>
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 #include <ascend/general/test/test_register_general.h>
 #include <ascend/utilities/test/test_register_utilities.h>

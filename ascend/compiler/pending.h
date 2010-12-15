@@ -48,7 +48,7 @@
 	@{
 */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 
 struct pending_t {
   struct pending_t *next, *prev;

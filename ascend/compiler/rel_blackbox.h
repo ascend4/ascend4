@@ -33,7 +33,7 @@
 	@{
 */
 
-#include <ascend/utilities/ascConfig.h>
+#include <ascend/general/platform.h>
 #include "instance_enum.h"
 #include "relation_type.h"
 #include <ascend/general/list.h>
