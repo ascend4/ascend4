@@ -50,7 +50,7 @@
 #include <ascend/general/ospath.h>
 
 
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascEnvVar.h>
 #include <ascend/compiler/importhandler.h>
 #include <ascend/utilities/ascPanic.h>

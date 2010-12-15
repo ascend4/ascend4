@@ -44,7 +44,7 @@
 # include <ascend/utilities/ascSignal.h>
 #endif
 
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/readln.h> /* you wot? */
 
 /* DISABLED -- JP 

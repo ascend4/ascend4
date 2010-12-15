@@ -1,7 +1,7 @@
 #include "idalinear.h"
 #include <ida/ida_impl.h>
 #include <ascend/utilities/error.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 
 #include <sundials/sundials_math.h>
 #define ZERO RCONST(0.0)

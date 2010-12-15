@@ -30,7 +30,7 @@
 #include <math.h>
 #include <tcl.h>
 
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/compiler/instance_enum.h>
 
 #include <ascend/linear/mtx.h>

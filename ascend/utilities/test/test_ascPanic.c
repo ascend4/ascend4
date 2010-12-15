@@ -26,7 +26,7 @@
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPanic.h>
 /* #include <compiler/redirectFile.h> */
 #include "CUnit/CUnit.h"

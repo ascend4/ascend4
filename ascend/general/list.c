@@ -27,7 +27,7 @@
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/error.h>
 #include <ascend/utilities/ascPanic.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include "list.h"
 #if LISTUSESPOOL
 #include "pool.h"

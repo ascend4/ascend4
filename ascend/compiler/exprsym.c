@@ -33,7 +33,7 @@
 #include <math.h>		/* !!! dont ever forget this and -lm */
 #include <ascend/utilities/ascConfig.h>
 
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 
 #include "expr_types.h"

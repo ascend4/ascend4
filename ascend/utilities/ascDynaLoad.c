@@ -32,7 +32,7 @@
 #include "error.h"
 #include "ascPrint.h"
 #include "ascPanic.h"
-#include "ascMalloc.h"
+#include <ascend/general/ascMalloc.h>
 #include "ascDynaLoad.h"
 #include "ascEnvVar.h"
 

@@ -39,7 +39,7 @@
 
 extern "C"{
 #include <ascend/compiler/importhandler.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 }
 
 #ifdef ASC_WITH_DMALLOC

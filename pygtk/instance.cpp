@@ -13,7 +13,7 @@ extern "C"{
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/compiler/instance_types.h>
 #include <ascend/utilities/ascSignal.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/dstring.h>
 
 #include <ascend/compiler/symtab.h>

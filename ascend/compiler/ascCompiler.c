@@ -30,7 +30,7 @@
  *  Ascend and pulls in system headers. Largely this means memory management.
  */
 #include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascEnvVar.h>
 
 #include "ascCompiler.h"

@@ -43,7 +43,7 @@
 #define ASC_SET_H
 
 #include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 
 /**	@addtogroup utilities_set Utilities Set
 	@{

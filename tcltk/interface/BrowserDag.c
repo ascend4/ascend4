@@ -31,7 +31,7 @@
 #include <tcl.h>
 #include <tk.h>
 #include "config.h"
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 #include <ascend/compiler/instance_enum.h>
 #include <ascend/system/slv_client.h>

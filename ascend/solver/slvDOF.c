@@ -31,11 +31,11 @@
 #include <stdarg.h>
 
 #include <ascend/utilities/ascSignal.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPanic.h>
 #include <ascend/general/list.h>
 #include <ascend/general/mathmacros.h>
-#include <ascend/utilities/mem.h>
+#include <ascend/general/mem.h>
 
 #include <ascend/system/relman.h>
 #include <ascend/system/slv_stdcalls.h>

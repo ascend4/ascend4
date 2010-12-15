@@ -47,7 +47,7 @@
 #include <ascend/compiler/statement.h>
 #include <ascend/compiler/bintoken.h>
 
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/tm_time.h>
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>

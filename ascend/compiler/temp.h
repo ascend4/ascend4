@@ -42,6 +42,9 @@
 #ifndef ASC_TEMP_H
 #define ASC_TEMP_H
 
+#include <ascend/utilities/config.h>
+#include <ascend/utilities/ascConfig.h>
+
 /**	@addtogroup compiler_rel Compiler Relations
 	@{
 */

@@ -25,7 +25,7 @@
 
 #include "extfunc.h"
 
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPanic.h>
 #include <ascend/general/hashpjw.h>
 #include <ascend/general/list.h>

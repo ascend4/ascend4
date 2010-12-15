@@ -23,7 +23,7 @@
 #include <math.h>
 #include <errno.h>
 #include <stdarg.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPanic.h>
 
 #include <ascend/general/pairlist.h>

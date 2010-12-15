@@ -28,7 +28,7 @@
  */
 
 #include "ascConfig.h"
-#include "ascMalloc.h"
+#include <ascend/general/ascMalloc.h>
 #include "readln.h"
 
 #define	BUFLEN	1000

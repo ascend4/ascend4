@@ -27,7 +27,7 @@
 #include <ascend/utilities/ascConfig.h>
 #include <ascend/utilities/error.h>
 #include <ascend/compiler/redirectFile.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 
 #include "printutil.h"
 #include "test_globals.h"

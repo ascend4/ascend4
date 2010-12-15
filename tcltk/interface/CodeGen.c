@@ -39,7 +39,7 @@
 #include <tcl.h>
 #include <tk.h>
 #include "config.h"
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/dstring.h>
 #include <ascend/compiler/instance_io.h>
 #include <ascend/compiler/instance_enum.h>

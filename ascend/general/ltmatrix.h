@@ -28,7 +28,7 @@
 #define LT_MATRIX_H
 
 #include <ascend/utilities/ascPanic.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/mathmacros.h>
 
 /**	@addtogroup general_ltmatrix General Lightweight Matrix

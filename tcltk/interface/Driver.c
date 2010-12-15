@@ -54,7 +54,7 @@
 #endif /* __WIN32__ */
 
 #include <ascend/utilities/config.h>
-#include <ascend/utilities/ascMalloc.h>    /* for ascshutdown */
+#include <ascend/general/ascMalloc.h>    /* for ascshutdown */
 #include <ascend/utilities/ascPanic.h>     /* for Asc_Panic */
 #include <ascend/utilities/ascEnvVar.h>
 #include <ascend/utilities/ascPrint.h>

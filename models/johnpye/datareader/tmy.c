@@ -30,7 +30,7 @@
 /* #include <libradtran/sun.h> */
 #include "sun.h"
 
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/error.h>
 
 #include "tmy.h"

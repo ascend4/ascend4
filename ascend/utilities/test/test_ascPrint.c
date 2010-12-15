@@ -27,7 +27,7 @@
 #include <io.h>
 #endif
 #include <stdarg.h>
-#include <ascend/utilities/ascMalloc.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPrint.h>
 #include "CUnit/CUnit.h"
 #include "test_ascPrint.h"
