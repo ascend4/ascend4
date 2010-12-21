@@ -22,8 +22,8 @@
  */
 
 #include <stdio.h>
-#include "platform.h"
-#include "ascMalloc.h"
+#include <ascend/general/platform.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/pool.h>
 #include <ascend/general/list.h>
 #include "CUnit/CUnit.h"

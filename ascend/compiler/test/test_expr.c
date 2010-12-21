@@ -52,35 +52,13 @@ static void test_create(void){
 }
 
 
-static void test_create(void){
-
-	CU_ASSERT(0 == Asc_CompilerInit(0));
-
-#define DECLVAR(NAME) struct Expr *NAME = CreateVarExpr(CreateIdName(AddSymbol(#NAME)));
-	DECLVAR(A);
-	DECLVAR(B);
-	DECLVAR(C);
-
-	struct Expr *AandB = JoinExprLists(B,JoinExprLists(A,CreateOpExpr(e_and)));
-	struct Expr *C_or_AandB = JoinExprLists(AandB,JoinExprLists(C,CreateOpExpr(e_or)));
-
-	CONSOLE_DEBUG("write expr, in postfix form: ");
-	WriteExpr(ASCERR,C_or_AandB);
-	FPRINTF(ASCERR,"\n\n");
-
-	Asc_CompilerDestroy();
-}
-
-
-
 /*===========================================================================*/
 /* Registration information */
 
 /* the list of tests */
 
 #define TESTS(T,X) \
-	T(create) \
-	T(manip)
+	T(create)
 
 /* you shouldn't need to change the following */
 

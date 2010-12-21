@@ -21,8 +21,8 @@
  *  COPYING.
  */
 
-#include "platform.h"
-#include "ascMalloc.h"
+#include <ascend/general/platform.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 #include <ascend/general/tm_time.h>
 #include "CUnit/CUnit.h"

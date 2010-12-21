@@ -21,7 +21,7 @@
  *  COPYING.
  */
 
-#include "platform.h"
+#include <ascend/general/platform.h>
 #include "test_register_general.h"
 
 #define TESTS(T) \

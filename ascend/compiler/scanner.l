@@ -1,7 +1,7 @@
 %{
 /*	ASCEND modelling environment
 	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006, 2010 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -30,8 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "ascend/utilities/ascConfig.h"
-#include "ascend/utilities/ascMalloc.h"
+#include "ascend/general/platform.h"
+#include "ascend/general/ascMalloc.h"
 #include "ascend/compiler/compiler.h"
 /* everything between here and the next comment is only here */
 #include "ascend/compiler/fractions.h"
