@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006, 2010 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -391,6 +391,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 	ospath_stat_t buf;
 	FILE *f;
 	const char *epath;
+	char *epathmem = NULL;
 
 	fp1 = ospath_new_noclean(partialname); /* eg 'path/to/myext' */
 	if(fp1==NULL){
@@ -489,14 +490,14 @@ struct FilePath *importhandler_findinpath(const char *partialname
 	CONSOLE_DEBUG("SEARCHING ACCORDING TO ENV VAR $%s",envv);
 #endif
 
-	int free_epath = 1;
-	epath=Asc_GetEnv(envv);
-	if(epath==NULL){
+	epath = defaultpath;
+	epathmem=Asc_GetEnv(envv);
+	if(epathmem){
+		epath = epathmem;
 #ifdef FIND_DEBUG
+	}else{
 		CONSOLE_DEBUG("ENV VAR '%s' NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",envv,defaultpath);
 #endif
-		epath=defaultpath;
-		free_epath = 0;
 	}
 
 #ifdef FIND_DEBUG
@@ -511,7 +512,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 		ospath_free(searchdata.relativedir);
 		ASC_FREE(searchdata.partialname);
 		ospath_searchpath_free(sp);
-		if(free_epath)ASC_FREE(epath);
+		if(epathmem)ASC_FREE(epathmem);
 		return NULL;
 	}
 
@@ -521,7 +522,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 
 	ospath_searchpath_free(sp);
 	ASC_FREE(searchdata.partialname);
-	if(free_epath)ASC_FREE(epath);
+	if(epathmem)ASC_FREE(epathmem);
 	ospath_free(searchdata.relativedir);
 	*handler = searchdata.handler;
 	return searchdata.foundpath;
