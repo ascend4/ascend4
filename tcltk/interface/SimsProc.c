@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 1997, 2009 Carnegie Mellon University
+	Copyright (C) 1997, 2009, 2010 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 #include <tcl.h>
 #include "config.h"
 
-#include <ascend/compiler/bit.h>
+#include <ascend/utilities/bit.h>
 #include <ascend/compiler/pending.h>
 #include <ascend/compiler/simlist.h>
 #include <ascend/compiler/library.h>
