@@ -23,9 +23,9 @@
 #include <string.h>
 #include <CUnit/CUnit.h>
 
-#include "platform.h"
-#include "dstring.h"
-#include "ascMalloc.h"
+#include <ascend/general/platform.h>
+#include <ascend/general/dstring.h>
+#include <ascend/general/ascMalloc.h>
 
 #include <test/assertimpl.h>
 

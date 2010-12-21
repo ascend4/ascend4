@@ -21,8 +21,8 @@
  *  COPYING.
  */
 
-#include "platform.h"
-#include "ascMalloc.h"
+#include <ascend/general/platform.h>
+#include <ascend/general/ascMalloc.h>
 #include <ascend/general/hashpjw.h>
 #include "CUnit/CUnit.h"
 #include "test/assertimpl.h"

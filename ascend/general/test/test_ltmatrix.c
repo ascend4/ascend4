@@ -18,7 +18,7 @@
 */
 
 #include <CUnit/CUnit.h>
-#include "platform.h"
+#include <ascend/general/platform.h>
 #include <ascend/general/ltmatrix.h>
 
 static void Hessian_Mtx_fill_pattern(hessian_mtx* matrix, int pattern);
