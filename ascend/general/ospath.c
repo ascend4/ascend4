@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006-2010 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -842,7 +842,7 @@ int ospath_isroot(struct FilePath *fp)
 		return 0;
 	}
 
-	return fp->path == PATH_SEPARATOR_STR ? 1 : 0;
+	return strcmp(fp->path, PATH_SEPARATOR_STR) ? 1 : 0;
 }
 
 unsigned ospath_depth(struct FilePath *fp){

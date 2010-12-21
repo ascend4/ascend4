@@ -49,6 +49,7 @@ else:
 
 if scanparse_env.has_key('HAVE_LEX'):
 	scannersource = libascend_env.CFile('scanner.l',LEXFLAGS=['-l','-Pzz_'])
+	libascend_env.Depends(scannersource,parsersource)
 	# backup the lex output for use by people without lex:
 	if libascend_env.get('UPDATE_NO_YACC_LEX'):
 		libascend_env.Command('scanner_no_lex.c',scannersource,Copy('$TARGET','$SOURCE'))

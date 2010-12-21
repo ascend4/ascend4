@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006, 2010 Carnegie Mellon University
 	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
 	Copyright (C) 1993, 1994, 1995  Kirk Andre' Abbott
 	Copyright (C) 1996 Benjamin Andrew Allan
@@ -3608,6 +3608,7 @@ union RelationUnion *CopyRelationShare(union RelationUnion *ru,
   }
 }
 
+#ifdef INCLUDE_UNUSED_FUNCTIONS
 /*
 * @param relinst the relation instance.
 * @param rel the relation structure, which may include glass, black, token, etc.* @param old the variable instance being replaced.
@@ -3632,7 +3633,7 @@ void RecomputeVarListPointers(struct Instance *relinst,
 /* FIXME this gets used in interactive merge/refinement. RecomputeVarListPointers
 */
 }
-
+#endif
 
 /*
 * @param relinst the relation instance.

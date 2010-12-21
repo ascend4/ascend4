@@ -18,14 +18,21 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	@file
-	Platform-specific configuration parameters.
+	Platform-specific configuration parameters. This file has been renamed
+	from 'ascConfig.h', and moved from the 'utilities' folder to this one.
+	The main reason was because there is another file called 'config.h' which
+	performs closer to the classical Autotools 'config.h' function in ASCEND.
+	This file is more involved with platform-specific #includes and setting
+	various preprocessor constants, hence the name. However, the name is not
+	ideal, maybe we can call it something better eventually.
 
 	This module defines the fundamental constants used by the rest of
 	ASCEND and pulls in some platform-specific system headers where needed.
 	There is no corresponding platform.c.
 
-	NOT SURE IF FOLLOWING STILL APPLIES:
-	If including the file, you should also include utilities/error.h
+	The file also defines some global variables. Naughty, naughty.
+
+	This file also includes utilities/error.h, which we would like to avoid.
 
 	@TODO refactor this file to remove global variables and typedefs.
 *//*
