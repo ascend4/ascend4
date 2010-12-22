@@ -1,0 +1,146 @@
+#!/usr/bin/env python
+Import('env')
+
+import platform
+
+srcs = Split("""
+	library.cpp compiler.cpp type.cpp module.cpp symchar.cpp
+	instance.cpp instanceinterfacedata.cpp
+	matrix.cpp method.cpp name.cpp
+	reporter.cpp simulation.cpp set.cpp units.cpp dimensions.cpp extmethod.cpp
+	variable.cpp registry.cpp relation.cpp 
+	solver.cpp curve.cpp plot.cpp
+	solverhooks.cpp
+	solverparameters.cpp solverparameter.cpp solverparameteriterator.cpp
+	solverstatus.cpp solverreporter.cpp
+	value.cpp
+	incidencematrix.cpp
+	integrator.cpp
+	integratorreporter.cpp
+	annotation.cpp
+""")
+
+# Build a static library with all the sources
+
+python_env = env.Clone()
+
+if platform.system()=='Windows' and env.get('MSVS'):
+	python_env.Append(CCFLAGS=['/EHsc']) # for exceptions (as suggested by a MSVC error msg, dunno if it's right or not -- JP)
+
+swig_has_gccvisibility = False
+min,maj,pat = env['SWIGVERSION']
+if min==1 and maj==3 and pat>=29:
+	swig_has_gccvisibility = True
+
+if env.get('HAVE_GCC'):
+	#python_env.Append(CPPFLAGS=['-O3'])
+	if swig_has_gccvisibility and env.has_key('HAVE_GCCVISIBILITY'):
+		python_env.Append(CCFLAGS=['-fvisibility=hidden']);
+
+objs = []
+
+python_env.AppendUnique(
+	CPPPATH=env['PYTHON_CPPPATH']
+)
+
+print "PYTHON_CPPPATH = %s" % env['PYTHON_CPPPATH']
+
+for s in srcs:
+	objs += python_env.SharedObject(s)
+
+#----------------------------------------------
+# SWIG wrapper
+
+def get_new_swig_flags(env):
+	min,maj,pat = env['SWIGVERSION']
+	flags = []
+	if min==1 and maj==3 and pat>=28:
+		flags += ['-O']
+	sep = ":"
+	if platform.system=="Windows": sep=";"
+
+	#print "FLAGS=%s" % env.get('GRAPHVIZ_CPPPATH')
+	if env.get('WITH_GRAPHVIZ') and env.get('GRAPHVIZ_CPPPATH'):
+		flags += ['-I%s' % i for i in env.get('GRAPHVIZ_CPPPATH')]
+		
+	if 'msvcr71' in env['LIBS']:
+		flags += ['-DHAVE_MSVCR71']
+		
+	return flags
+
+swig_env = python_env.Clone()
+if '-Wall' in swig_env.get('CCFLAGS'):
+	swig_env['CCFLAGS'] = swig_env['CCFLAGS'].remove('-Wall')
+
+if platform.system()=="Windows":
+	swig_env['SHLIBSUFFIX']='.pyd'
+	if 'msvcr71' in env.get('LIBS'):
+		swig_env.Append(CPPDEFINES=['HAVE_MSVCR71'])
+elif platform.system()=="Darwin":
+    swig_env['SHLIBSUFFIX']='.so'
+
+swigobjs = []
+
+for swigf in Split("""
+	ascpy.i
+"""):
+	swigobj = swig_env.SharedObject(swigf
+		, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
+	)
+	#swig_env.SideEffect(['ascpy.py','ascpy_wrap.h'],'ascpy$SWIGCXXFILESUFFIX')
+	swig_env.Depends('ascpy$SWIGCXXFILESUFFIX',['ascpy.i','solver.i','plot.i'])
+	swig_env.Clean('ascpy_wrap$SWIGCXXFILESUFFIX',swigobj)
+	swig_env.Clean('ascpy.py','ascpy$SWIGCXXFILESUFFIX')
+	swig_env.Clean('ascpy_wrap.h','ascpy$SWIGCXXFILESUFFIX')
+
+	swigobjs.append(swigobj)
+
+swig_env.Append(LIBS = ['ascend']+env['PYTHON_LIB'])
+swig_env.Append(LIBPATH = ['#'] + env['PYTHON_LIBPATH'])
+swig_env.Append(LINKFLAGS=env['PYTHON_LINKFLAGS'])
+
+if not env.get('MSVS'):
+	swig_env.Append(LIBS = ['stdc++'])
+
+if env.get('WITH_DMALLOC'):
+	swig_env.Append(LIBS = ['dmalloc'])
+	swig_env.AppendUnique(LIBPATH = [env.get('DMALLOC_LIBPATH')])
+
+if env.get('WITH_GRAPHVIZ'):
+	swig_env.Append(LIBS = env['GRAPHVIZ_LIBS'])
+	swig_env.AppendUnique(LIBPATH = [env.get('GRAPHVIZ_LIBPATH')])
+
+swiglib = swig_env.SharedLibrary("ascpy",objs + swigobjs
+	, SHLIBPREFIX = '_'
+)
+
+#---------------------------------------------
+# CONFIG & runtime shell script for posix
+
+configh = env.SubstInFile(source='config.h.in')
+
+#---------------------------------------------
+# LITTLE WEE TEST PROGRAM for debuggin the c++ wrapper
+# currently out of order because of need for a separate builddir due to ASCXX_WITH_PYTHON flag taking different value
+#
+#libascxx = env.SharedLibrary('ascxx',objs
+#	, LIBS = ['ascend'] + env['PYTHON_LIB']
+#	, LIBPATH = ['.'] + ['#'] + env['PYTHON_LIBPATH']
+#)
+
+ipopttest = swig_env.Program('testipopt',['testipopt.cpp'] + objs)
+conopttest = swig_env.Program('testconopt',['testconopt.cpp'] + objs)
+slvreqtest = swig_env.Program('testslvreq',['testslvreq.cpp'] + objs)
+
+#env.Alias('ascxx',ascxxtest)
+
+#---------------------------------------------
+# INSTALLATION
+
+# python compile bytecode
+
+if env.get('CAN_INSTALL'):
+	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_PYTHON_ASCEND")),swiglib)
+
+# vim: set syntax=python:
+

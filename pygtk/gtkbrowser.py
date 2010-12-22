@@ -683,16 +683,25 @@ class Browser:
 			self.modelview.refreshtree()
 
 		self.sync_observers()
-		
-	def do_solve(self):
+
+
+	def no_built_system(self):
+		""" check that the system is 'built', ready for use by the solver. """
+
 		if not self.sim:
 			self.reporter.reportError("No model selected yet")
-			return
+			return 1
 
 		try:
 			self.sim.build()
 		except RuntimeError,e:
 			self.reporter.reportError("Couldn't build system: %s" % str(e));
+			return 1
+		
+		return 0;
+	
+	def do_solve(self):
+		if self.no_built_system():
 			return
 
 		if not hasattr(self,'solver'):
@@ -716,8 +725,7 @@ class Browser:
 		self.modelview.refreshtree()
 
 	def do_integrate(self):
-		if not self.sim:
-			self.reporter.reportError("No model selected yet")
+		if self.no_built_system():
 			return
 
 		try:
@@ -735,14 +743,7 @@ class Browser:
 		
 
 	def do_check(self):
-		if not self.sim:
-			self.reporter.reportError("No model selected yet")
-			return	
-
-		try:
-			self.sim.build()
-		except RuntimeError,e:
-			self.reporter.reportError("Couldn't build system: %s",str(e));
+		if self.no_built_system():
 			return
 
 		self.start_waiting("Checking system...")
@@ -791,14 +792,6 @@ class Browser:
 		self.modelview.refreshtree()
 
 	def do_method(self,method):
-		if not self.sim:
-			self.reporter.reportError("No model selected yet")
-
-		try:
-			self.sim.build()
-		except RuntimeError,e:
-			self.reporter.reportError("Couldn't build system: %s" % str(e));
-			return
 
 		try:
 			self.sim.run(method)

@@ -1263,7 +1263,7 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 	AddIpoptNumOption(sys->nlp, "constr_viol_tol", SLV_PARAM_REAL(&(sys->p),IPOPT_PARAM_CONSTR_VIOL_TOL));
 	AddIpoptNumOption(sys->nlp, "acceptable_tol", SLV_PARAM_REAL(&(sys->p),IPOPT_PARAM_ACCEPTABLE_TOL));
 	AddIpoptIntOption(sys->nlp, "acceptable_iter", SLV_PARAM_INT(&(sys->p),IPOPT_PARAM_ACCEPTABLE_ITER));
-	/** BARRIER PARAMETER OTPIONS*/
+	/** BARRIER PARAMETER OPTIONS */
 	AddIpoptStrOption(sys->nlp, "mu_strategy", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_MU_STRATEGY));
 	/** DERIVATIVE TEST OPTIONS */
 	AddIpoptStrOption(sys->nlp, "derivative_test", SLV_PARAM_CHAR(&(sys->p),IPOPT_PARAM_DERIVATIVE_TEST));
