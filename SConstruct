@@ -2938,14 +2938,15 @@ env.Append(
 		'.toc','.lof','.lot','.mm','.warnings','.tm2','.swp',',tmp','.gz',
 		'.bz2','.7z','.deb','.dsc','.changes','.bak','.tex','.tmp']
 	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist','debian']
-	, DISTTAR_EXCLUDERES=[r"_wrap\.cc?$", r"~$", r"pygtk/ascpy\.py","pygtk/testipopt$"
+	, DISTTAR_EXCLUDERES=[r"_wrap\.cc?$", r"~$", r"ascxx/ascpy\.py","ascxx/testipopt$"
 		,r"/lib.*\.so\.[.0-9]+$", r"tcltk/asc4dev$", r"tcltk/interface/typelex\.c$"
 		,r"ascend/compiler/ascParse\.[ch]$", r"ascend/solver/conoptconfig\.h$"
 		,r"ascend/utilities/config\.h$", r"pygtk/config\.h$", r"pygtk/config\.py$"
-		,r"pygtk/ascdev$", r"pygtk/testconopt$", r"ascend/compiler/scanner\.c$"
-		,r"tcltk/interface/ascend4$",r"pygtk/testslvreq$",r"test/test$"
+		,r"pygtk/ascdev$", r"ascxx/testconopt$", r"ascend/compiler/scanner\.c$"
+		,r"tcltk/interface/ascend4$",r"ascxx/testslvreq$",r"test/test$"
 		,r"models/johnpye/datareader/.*\.tm2\.Z$"
 		,r"models/johnpye/fprops/[a-z][a-z0-9]+(.*\.exe)?$" # FPROPS test executables
+		,r"models/johnpye/fprops/fluids/fluids_list\.h$" # FPROPS fluids list
 	]
 )
 
