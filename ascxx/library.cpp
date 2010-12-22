@@ -126,9 +126,9 @@ Library::load(const char *filename){
 	status = error_reporter_tree_has_error();
 	error_reporter_tree_end();
 	if(!status){
-		CONSOLE_DEBUG("CLEARING TREE...");
+		//CONSOLE_DEBUG("CLEARING TREE...");
 		error_reporter_tree_clear();
-		CONSOLE_DEBUG("DONE CLEARING TREE...");
+		//CONSOLE_DEBUG("DONE CLEARING TREE...");
 	}else{
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Error(s) when loading '%s'",filename);
 		stringstream ss;

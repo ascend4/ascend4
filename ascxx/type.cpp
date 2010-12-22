@@ -174,7 +174,7 @@ Type::getSimulation(const SymChar &sym
 	}
 
 	if(rundefaultmethod){
-		CONSOLE_DEBUG("RUNNING DEFAULT METHOD");
+		//CONSOLE_DEBUG("RUNNING DEFAULT METHOD");
 		sim.runDefaultMethod();
 	}
 

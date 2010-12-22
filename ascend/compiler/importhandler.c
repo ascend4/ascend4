@@ -77,7 +77,9 @@ ASC_DLLSPEC int importhandler_add(struct ImportHandler *handler){
 		return 1;
 	}
 	importhandler_library[i] = handler;
+#ifdef IMPORTHANDLER_VERBOSE
 	ERROR_REPORTER_HERE(ASC_USER_NOTE,"New import hander '%s' added",handler->name);
+#endif
 	return 0;
 }
 

@@ -1477,6 +1477,8 @@ class TestIPOPT(Ascend):
 	def test14_exact(self):
 		self.ipopt_tester('test14',hessian_approx='exact')
 
+	def testformula(self):
+		self.ipopt_tester('formula')
 
 class TestCSV(Ascend):
 	def test1(self):

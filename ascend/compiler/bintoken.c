@@ -61,6 +61,8 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 
 #include <ascend/bintokens/btprolog.h>
 
+/* #define BINTOKEN_VERBOSE */
+
 #define CLINE(a) FPRINTF(fp,"%s\n",(a))
 
 enum bintoken_error {
@@ -776,7 +778,9 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
   /*CONSOLE_DEBUG("...");*/
 
   if (g_bt_data.maxrels == 0) {
+#ifdef BINTOKEN_VERBOSE
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"BinTokensCreate disabled (maxrels=0)\n");
+#endif
     return;
   }
   if (srcname == NULL || buildcommand == NULL || unlinkcommand == NULL) {

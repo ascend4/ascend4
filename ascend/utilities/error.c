@@ -117,10 +117,10 @@ int error_reporter_tree_start(){
 	error_reporter_tree_t *tnew;
 	tnew = error_reporter_tree_new();
 
+#if 0
 	fprintf(stderr,"TREE = %p",TREE);
 	fprintf(stderr,"TREECURRENT = %p",TREECURRENT);
 
-#if 0
 	if(TREE != NULL && TREECURRENT == NULL){
 		CONSOLE_DEBUG("CALLED WITH NULL TREECURRENT BUT NON-NULL TREE");
 		error_reporter_tree_write(TREE);
@@ -158,7 +158,7 @@ int error_reporter_tree_start(){
 }
 
 int error_reporter_tree_end(){
-	CONSOLE_DEBUG("TREE END");
+	//CONSOLE_DEBUG("TREE END");
 	if(!TREECURRENT){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"'end' without TREECURRENT set");
 		return 1;
@@ -305,7 +305,7 @@ va_error_reporter(
 			t = TREE;
 			TREE = NULL;
 			error_reporter_tree_write(t);
-			CONSOLE_DEBUG("DONE WRITING TREE");
+			//CONSOLE_DEBUG("DONE WRITING TREE");
 			TREECURRENT = t;
 			error_reporter_tree_clear();
 			/* CONSOLE_DEBUG("DONE FREEING TREE");
