@@ -48,6 +48,8 @@ def usage():
                 Do not overwrite package files in current directory at
                 the end of the build.
 
+    -jN
+                Parallel build using N processors.
     -k
     --keep
                 Keep temporary files at end of build, for checking/debugging
@@ -56,12 +58,13 @@ def usage():
                 all the files are deleted if the build completes successfully.
 """
 
-opts,args = getopt.getopt(sys.argv[1:],"nhsk",["help","source","nooverwrite","keep"])
+opts,args = getopt.getopt(sys.argv[1:],"nhskj:",["help","source","nooverwrite","keep","parallel="])
 
 # do we just want a source package?
 buildsource = False
 overwrite = True
 clean = True
+parallel = ""
 
 for _o,_a in opts:
 	if _o in ['-h','--help']:
@@ -73,6 +76,9 @@ for _o,_a in opts:
 		overwrite = False
 	elif _o in ['-k','--keep']:
 		clean = False
+	elif _o in ['-j','--parallel']:
+		if int(_a) > 1:
+			parallel = "-j%s" % _a
 	else:
 		assert False,"unhandled option"
 
@@ -80,6 +86,8 @@ if len(args)<1 or len(args)>2:
 	raise RuntimeError("One or two tarballs must be supplied to dtar! (see dtar --help)")
 
 # the tarball is the argument to this script
+
+print "Parallel build with",parallel
 
 startingcwd = os.getcwd()
 
@@ -335,7 +343,10 @@ try:
 		res = subprocess.call(["debuild","-rfakeroot","-S","-sa"])
 	else:
 		print "Building binary package..."
-		res = subprocess.call(["dpkg-buildpackage","-rfakeroot","-sa"])
+		_cmd = ["dpkg-buildpackage","-rfakeroot","-sa"]
+		if parallel:
+			_cmd += [parallel]
+		res = subprocess.call(_cmd)
 
 	if res:
 		raise RuntimeError("dpkg-buildpackage returned error code %s" % res)

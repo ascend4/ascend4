@@ -452,38 +452,37 @@ vars.Add(
 
 #------- IPOPT -------
 
-vars.Add(PackageVariable(
-	"IPOPT_PREFIX"
-	,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
-	,default_conopt_prefix
-))
+if platform.system()=="Windows":
+	vars.Add(PackageVariable(
+		"IPOPT_PREFIX"
+		,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
+		,default_conopt_prefix
+	))
 
-vars.Add(
-	"IPOPT_LIBS"
-	,"Library linked to for IPOPT"
-	,default_ipopt_libs
-)
-
-
-vars.Add(
-	"IPOPT_LIBPATH"
-	,"Where is your IPOPT library installed"
-	,default_ipopt_libpath
-)
-
-vars.Add(
-	'IPOPT_CPPPATH'
-	,"Where is your IPOPT coin/IpStdCInterface.h (do not include the 'coin' in the path)"
-	,"$IPOPT_PREFIX/include"
-)
-
-vars.Add(
-	'IPOPT_DLL'
-	,"Exact path of IPOPT DLL to be included in the installer (Windows only)"
-	,default_ipopt_dll
-)
+	vars.Add(
+		"IPOPT_LIBS"
+		,"Library linked to for IPOPT"
+		,default_ipopt_libs
+	)
 
 
+	vars.Add(
+		"IPOPT_LIBPATH"
+		,"Where is your IPOPT library installed"
+		,default_ipopt_libpath
+	)
+
+	vars.Add(
+		'IPOPT_CPPPATH'
+		,"Where is your IPOPT coin/IpStdCInterface.h (do not include the 'coin' in the path)"
+		,"$IPOPT_PREFIX/include"
+	)
+
+	vars.Add(
+		'IPOPT_DLL'
+		,"Exact path of IPOPT DLL to be included in the installer (Windows only)"
+		,default_ipopt_dll
+	)
 
 #------- TRON -------
 
@@ -932,7 +931,7 @@ else:
 		envadditional['LIBS']=['gcc']
 	else:
 		envenv = os.environ
-		tools += ['default','doxygen']
+		tools += ['default','doxygen','ipopt']
 
 env = Environment(
 	ENV=envenv
@@ -1791,9 +1790,9 @@ def CheckIPOPT(context):
 	keep = KeepContext(context,"IPOPT")
 	is_ok = context.TryLink(ipopt_test_text,".c")
 	context.Result(is_ok)
-	
+
 	keep.restore(context)
-		
+	
 	return is_ok
 
 #----------------
@@ -2689,6 +2688,7 @@ else:
 # PYTHON INTERFACE
 
 if with_python:
+	env.SConscript(['ascxx/SConscript'],'env')
 	env.SConscript(['pygtk/SConscript'],'env')
 else:
 	print "Skipping... Python bindings aren't being built:",without_python_reason
@@ -2999,6 +2999,7 @@ default_targets =['libascend','solvers']
 if with_tcltk:
 	default_targets.append('tcltk')
 if with_python:
+	default_targets.append('ascxx')
 	default_targets.append('pygtk')
 	default_targets.append('pyfprops')
 #if with_installer:

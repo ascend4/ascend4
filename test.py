@@ -1634,7 +1634,7 @@ if __name__=='__main__':
 		if patchpath('ASCENDLIBRARY',SEP,modeldirs):
 			restart = 1
 
-	libdirs = ["pygtk","."]
+	libdirs = ["ascxx","."]
 	libdirs = [os.path.normpath(os.path.join(sys.path[0],l)) for l in libdirs]
 	if not os.environ.get(LD_LIBRARY_PATH):
 		os.environ[LD_LIBRARY_PATH]=SEP.join(libdirs)
@@ -1651,15 +1651,16 @@ if __name__=='__main__':
 				restart = 1		
 		os.environ[LD_LIBRARY_PATH] = SEP.join(envlibdirs)
 
-	pypath = os.path.normpath(os.path.join(sys.path[0],"pygtk"))
+	pypath = [os.path.normpath(os.path.join(sys.path[0],i)) for i in ['ascxx','pygtk']]
 	if not os.environ.get('PYTHONPATH'):
-		os.environ['PYTHONPATH']=pypath
+		os.environ['PYTHONPATH']= SEP.join(pypath)
 	else:
 		envpypath = os.environ['PYTHONPATH'].split(SEP)
-		if pypath not in envpypath:
-			envpypath.insert(0,pypath)
-			os.environ['PYTHONPATH']=SEP.join(envpypath)
-			restart = 1
+		for pypath1 in pypath:
+			if pypath1 not in envpypath:
+				envpypath.insert(0,pypath1)
+				os.environ['PYTHONPATH']=SEP.join(envpypath)
+				restart = 1
 
 	if restart and platform.system()!="Windows":
 		script = os.path.join(sys.path[0],"test.py")					

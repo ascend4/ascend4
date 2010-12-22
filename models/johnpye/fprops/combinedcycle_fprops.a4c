@@ -259,6 +259,16 @@ END set_x_limit;
 
 END combinedcycle_water;
 
+MODEL combinedcycle_water_opt REFINES combinedcycle_water;
+	MAXIMIZE eta;
+METHODS
+METHOD on_load;
+	RUN combinedcycle_water::on_load;
+	braytonpressureratio.lower_bound := 8;
+	braytonpressureratio.upper_bound := 20;
+END on_load;
+END combinedcycle_water_opt;
+
 
 
 MODEL combinedcycle_ammonia REFINES combinedcycle_fprops_common;
@@ -297,130 +307,8 @@ METHOD on_load;
 END on_load;
 END combinedcycle_ammonia;
 
-
-
-
-
-
-
-MODEL combinedcycle_co2 REFINES combinedcycle_fprops_common;
-	TU.inlet.cd.component :== 'carbondioxide';
-METHODS
-METHOD default_self;
-	RUN combinedcycle_fprops_common::default_self;
-	(* starting guess, for easy solving *)
-	HE.outlet_cold.h := 200 {kJ/kg};
-	CO.outlet.h := 200 {kJ/kg};
-END default_self;
-METHOD on_load;
-	RUN ClearAll;
-	RUN default_self;
-	RUN combinedcycle_fprops_common::specify;
-	FIX Wdot; Wdot := 100 {MW};
-	FIX GC.inlet.T, GC.inlet.p;
-	GC.inlet.T := 300 {K};
-	GC.inlet.p := 1 {bar};
-	FIX CO.outlet.p; CO.outlet.p := 5.2 {bar};
-
-	(* optimisable *)
-	FIX braytonpressureratio; braytonpressureratio := 8;
-
-	FIX HE.outlet.T; HE.outlet.T := 400 {K};
-	FIX BU.outlet.T; BU.outlet.T := 1300 {K};
-	FIX TU.inlet.T; TU.inlet.T := 600 {K};
-	FIX TU.inlet.p; TU.inlet.p := 50 {bar};
-
-	SOLVER QRSlv;
-	OPTION convopt 'RELNOM_SCALE';
-END on_load;
-END combinedcycle_co2;
-
-
-
-
-
-
-MODEL combinedcycle_fprops REFINES combinedcycle_water;
-METHODS
-METHOD on_load;
-	RUN default_self;
-	RUN cengel_ex_10_9;
-	SOLVER QRSlv;
-	OPTION convopt 'RELNOM_SCALE';
-END on_load;
-
-METHOD moran_ex_9_13;
-	RUN ClearAll;
-	FIX Wdot; Wdot := 45 {MW};
-
-	FIX GC.inlet.T, GC.inlet.p;
-	GC.inlet.T := 300 {K};
-	GC.inlet.p := 100 {kPa};
-
-	FIX GC.outlet.p;
-	GC.outlet.p := 1200 {kPa};
-
-	FIX GC.eta; GC.eta := 0.84;
-
-	FIX BU.outlet.T; BU.outlet.T := 1400 {K};
-
-	FIX GT.eta; GT.eta := 0.88;
-
-	(* GT.outlet.p := 100 {kPa};*)
-	FIX HE.outlet.T; HE.outlet.T := 400 {K};
-	
-	FIX TU.inlet.T, TU.inlet.p;
-	TU.inlet.T := 400 {K} +  273.15 {K};
-	TU.inlet.p := 8 {MPa};
-	FIX TU.outlet.p; TU.outlet.p := 8 {kPa};
-
-	FIX PU.inlet.x;
-	PU.inlet.x := 0.0001;
-
-	FIX TU.eta; TU.eta := 0.90;
-	FIX PU.eta; PU.eta := 0.8;
-
-	(* assumed *)
-	FIX BU.eta;
-	BU.eta := 1;
-END moran_ex_9_13;
-
-METHOD cengel_ex_10_9;
-	RUN ClearAll;
-	FIX Wdot; Wdot := 100 {MW};
-
-	FIX GC.inlet.p; GC.inlet.p := 1 {atm}; (* assumed *)
-
-	FIX braytonpressureratio; braytonpressureratio := 8;
-
-	FIX GC.inlet.T; GC.inlet.T := 300 {K};
-	FIX GT.inlet.T; GT.inlet.T := 1300 {K};
-
-	FIX GC.eta; GC.eta := 0.8;
-	FIX GT.eta; GT.eta := 0.85;
-
-	FIX TU.inlet.p; TU.inlet.p := 7 {MPa};
-	FIX CO.outlet.p; CO.outlet.p := 5 {kPa};
-
-	FIX TU.inlet.T; TU.inlet.T := 500 {K} +  273.15 {K};
-	FIX DI.inlet.T; DI.inlet.T := 450 {K};
-
-	(* 'complete' condensation... bit of a hack *)
-	FIX CO.outlet.x; CO.outlet.x := 0.0001;
-
-	(* 'simple ideal Rankine cycle *)
-	FIX TU.eta; TU.eta := 1;
-	FIX BU.eta; BU.eta := 1;
-	FIX PU.eta; PU.eta := 1;
-
-	(* first guess, for easy solving *)
-	HE.outlet_cold.h := 3000 {kJ/kg};
-END cengel_ex_10_9;
-
-END combinedcycle_fprops;
-
-
-
-
-
+(*
+the combinedcycle_co2 model is removed, because it wasn't viable due to the
+location of the CO2 critical point.
+*)
 

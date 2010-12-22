@@ -2533,8 +2533,8 @@ upper and lower bounds displayed.</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <signal name="clicked" handler="on_varinfobutton_clicked"/>
-                                    <accelerator key="v" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                                     <accelerator key="v" signal="clicked" modifiers="GDK_MOD1_MASK"/>
+                                    <accelerator key="v" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                                     <child>
                                       <widget class="GtkImage" id="varinfoimg">
                                         <property name="visible">True</property>
@@ -2555,8 +2555,8 @@ upper and lower bounds displayed.</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <signal name="clicked" handler="on_relinfobutton_clicked"/>
-                                    <accelerator key="r" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                                     <accelerator key="r" signal="clicked" modifiers="GDK_MOD1_MASK"/>
+                                    <accelerator key="r" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                                     <child>
                                       <widget class="GtkImage" id="relinfoimg">
                                         <property name="visible">True</property>

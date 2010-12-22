@@ -62,7 +62,7 @@ if __name__=='__main__':
 		restart.append(LD_LIBRARY_PATH)
 
 	# ensure our pygtk dir is in the PYTHONPATH
-	pypath = [os.path.join(sourceroot,"pygtk")]
+	pypath = [os.path.join(sourceroot,"ascxx")]
 	if add_at_start('PYTHONPATH',pypath):
 		restart.append('PYTHONPATH')
 
@@ -86,7 +86,7 @@ if __name__=='__main__':
 	
 	import ascpy
 	from gtkbrowser import *
-	assetspath =os.path.join(sourceroot,"pygtk","glade")
+	assetspath = os.path.join(os.path.join(sourceroot,"pygtk"),"glade")
 	print "ASSETS PATH = %s" % assetspath
 	B = Browser(assetspath=assetspath)
 	B.run()	
