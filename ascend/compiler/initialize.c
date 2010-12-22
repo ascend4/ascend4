@@ -73,7 +73,7 @@
 /* set to 1 for tracing execution the hard way. */
 #define IDB 0
 
-#define INIT_DEBUG
+//#define INIT_DEBUG
 
 /*********************************************************************\
   There is a stack of procedure calls kept for tracing and breaking
@@ -871,7 +871,9 @@ ExecuteInitAssert(struct procFrame *fm, struct Statement *stat){
 	switch(ValueKind(value)){
 		case boolean_value:
 			testerr = 0;
+#ifdef INIT_DEBUG
 			CONSOLE_DEBUG("Assertion %s.",BooleanValue(value)?"OK":"failed");
+#endif
 			if(BooleanValue(value)){
 				WriteStatementError(ASC_USER_SUCCESS,stat,0,"Assertion OK");
 			}else{

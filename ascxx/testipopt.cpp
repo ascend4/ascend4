@@ -20,4 +20,6 @@ int main(void){
 		exit(1);
 	}
 	S.run(t.getMethod("self_test"));
+
+	L.clear();
 }

@@ -5,7 +5,7 @@ using namespace std;
 #include "method.h"
 
 Method::Method() : initproc(NULL){
-	cerr << "EMPTY METHOD CREATED" << endl;
+	// cerr << "EMPTY METHOD CREATED" << endl;
 }
 
 Method::Method(const Method &old) : initproc(old.initproc){

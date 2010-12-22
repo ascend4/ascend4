@@ -198,7 +198,9 @@ SolverHooksManager::setHooks(SolverHooks *H){
 SolverHooks *
 SolverHooksManager::getHooks(){
 	if(this->hooks == NULL){
+#if SOLVERHOOKS_DEBUG
 		CONSOLE_DEBUG("Creating new default SolverHooks...");
+#endif
 		this->hooks = new SolverHooks();
 		this->own_hooks = 1;
 	}

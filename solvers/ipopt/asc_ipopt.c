@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2007-2008 Carnegie Mellon University
+	Copyright (C) 2007-2010 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -23,7 +23,8 @@
 
 	The IPOPT solver is documented at http://projects.coin-or.org/Ipopt/
 *//*
-	ASCEND wrapper for IPOPT originally by John Pye, Jun 2007 onwards.
+	ASCEND wrapper for IPOPT originally by John Pye, Jun 2007 onwards. Further
+	contributions from Mahesh Narayanamurthi 2009.
 */
 
 #include <ascend/utilities/config.h>
@@ -1241,13 +1242,10 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
   
 	/* We can free the memory now - the values for the bounds have been
 	copied internally in CreateIpoptProblem */
-#if 0
-	/* freeing this stuff seems to cause a crash...?!?!? */
 	ASC_FREE(x_L);
 	ASC_FREE(x_U);
 	ASC_FREE(g_L);
 	ASC_FREE(g_U);
-#endif
 
 	//CONSOLE_DEBUG("SETTING OPTIONS...");
 	/* set some options */
@@ -1302,9 +1300,11 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 
 	/** @todo update the sys->s.xxxxx flags based on value of 'status' */
 
-	if (status == Solve_Succeeded) {
+	ret = 1; /* default case is failure */
+	switch(status){
+	case Solve_Succeeded:
 		sys->s.converged = TRUE;
-		
+	
 		sys->s.block.current_block = -1; //is this 1??
 		sys->s.cost = ASC_NEW_ARRAY(struct slv_block_cost,1);
 		sys->s.cost->size=sys->s.block.current_size=sys->n;
@@ -1314,7 +1314,7 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 		sys->s.cost->time=sys->s.block.cpu_elapsed;
 		sys->s.cost->functime=sys->s.block.functime;
 		sys->s.cost->jactime=sys->s.block.jactime;
-		
+	
 
 		//CONSOLE_DEBUG("Solution of the primal variables, x");
 		for (i=0; i<sys->n; i++) {
@@ -1331,64 +1331,69 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 
 		//CONSOLE_DEBUG("Objective value");
 		//CONSOLE_DEBUG("    f(x*) = %e", sys->obj_val); 
-		
-		
-		
+			
 		ret = 0; /* success */
 		ipopt_iteration_ends(sys);
 		update_status(sys);
-	}else{
-		//Treat all other cases here
-		switch(status){
-		case Solved_To_Acceptable_Level:
-			/** @todo What should be done here? */
-			ERROR_REPORTER_HERE(ASC_USER_NOTE,"Solved to acceptable level");	
-			break;
-		case Infeasible_Problem_Detected:
-			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Infeasible Problem Detected");
-			break;
-		case Diverging_Iterates:
-			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Diverging iterations found.");
-			break;
-		case User_Requested_Stop:
-			ERROR_REPORTER_HERE(ASC_USER_WARNING,"User Requested Stop.");
-			break;
-		case Maximum_Iterations_Exceeded:
-			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Maximum Iterations Exceeded.");
-			break;
-		case Restoration_Failed:
-			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Restoration Failed.");
-			break;
-		case Error_In_Step_Computation:
-			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Error in Step Computation.");
-			break;
-		case Maximum_CpuTime_Exceeded:
-			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Maximum CPU Time exceeded.");
-			break;
-		case Not_Enough_Degrees_Of_Freedom:
-			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Not enough degrees of freedom.");
-			break;
-		case Invalid_Problem_Definition:
-			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Invalid problem definition.");
-			break;
-		case Invalid_Option:
-			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Invalid Option.");
-			break;
-		case Invalid_Number_Detected:
-			ERROR_REPORTER_HERE(ASC_USER_WARNING,"Invalid Number Detected.");
-			break;
-		case Unrecoverable_Exception:
-			ERROR_REPORTER_HERE(ASC_PROG_FATAL,"Unrecoverable_Exception.");
-			break;
-		case Insufficient_Memory:
-			ERROR_REPORTER_HERE(ASC_PROG_FATAL,"Insufficient Memory.");
-			break;
-		case Internal_Error:
-			ERROR_REPORTER_HERE(ASC_PROG_FATAL,"Internal Error.");
-			break;
-		}
-		ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Failed solve, unknown status");
-		ret = 1; /* failure */
+
+		break;
+	case Search_Direction_Becomes_Too_Small:
+		ERROR_REPORTER_HERE(ASC_USER_NOTE,"Solve direction becomes too small");	
+		break;
+	case Feasible_Point_Found:
+		ERROR_REPORTER_HERE(ASC_USER_NOTE,"Feasible point not found");
+		break;
+	case NonIpopt_Exception_Thrown:
+		ERROR_REPORTER_HERE(ASC_USER_NOTE,"Non-IPOPT exception thrown");
+		break;
+	case Solved_To_Acceptable_Level:
+		/** @todo What should be done here? */
+		ERROR_REPORTER_HERE(ASC_USER_NOTE,"Solved to acceptable level");	
+		break;
+	case Infeasible_Problem_Detected:
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"Infeasible Problem Detected");
+		break;
+	case Diverging_Iterates:
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"Diverging iterations found.");
+		break;
+	case User_Requested_Stop:
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"User Requested Stop.");
+		break;
+	case Maximum_Iterations_Exceeded:
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"Maximum Iterations Exceeded.");
+		break;
+	case Restoration_Failed:
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"Restoration Failed.");
+		break;
+	case Error_In_Step_Computation:
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"Error in Step Computation.");
+		break;
+	case Maximum_CpuTime_Exceeded:
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"Maximum CPU Time exceeded.");
+		break;
+	case Not_Enough_Degrees_Of_Freedom:
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"Not enough degrees of freedom.");
+		break;
+	case Invalid_Problem_Definition:
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"Invalid problem definition.");
+		break;
+	case Invalid_Option:
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"Invalid Option.");
+		break;
+	case Invalid_Number_Detected:
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"Invalid Number Detected.");
+		break;
+	case Unrecoverable_Exception:
+		ERROR_REPORTER_HERE(ASC_PROG_FATAL,"Unrecoverable_Exception.");
+		break;
+	case Insufficient_Memory:
+		ERROR_REPORTER_HERE(ASC_PROG_FATAL,"Insufficient Memory.");
+		break;
+	case Internal_Error:
+		ERROR_REPORTER_HERE(ASC_PROG_FATAL,"Internal Error.");
+		break;
+	default:
+		ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unhanded return state %d from IPOPT",status);
 	}
  
 	/* free allocated memory */
