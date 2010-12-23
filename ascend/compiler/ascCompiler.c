@@ -266,5 +266,4 @@ void Asc_CompilerDestroy(void)
   gl_destroy_pool();                   /* empty the reused list head pool */
   ClearRecycleStack();                 /* empty the reused stack list  */
   Asc_DestroyScannerInputBuffer();	/* empty lexer */
-
 }

@@ -148,11 +148,13 @@ int main(int argc, char* argv[]){
 			case '?':
 			case 'h':
 				fprintf(stderr,usage,argv[0]);
-				exit(1);
+				result = 1;
+				goto cleanup;
 			default:
 				fprintf(stderr,"Unknown option -- '%c'", c);
 				fprintf(stderr,usage,argv[0]);
-				exit(2);
+				result = 2;
+				goto cleanup;
 		}
 	}
 
@@ -167,10 +169,12 @@ int main(int argc, char* argv[]){
 			result = run_suite_or_test(argv[optind]);
 			if(result==CUE_NO_SUITENAME){
 				fprintf(stderr,"Invalid suite name '%s'\n", argv[optind]);
-				exit(1);
+				result = 1;
+				goto cleanup;
 			}else if(result==CUE_NO_TESTNAME){
 				fprintf(stderr,"Invalid test name '%s'\n", argv[optind]);
-				exit(1);
+				result = 1;
+				goto cleanup;
 			}
 			optind++;
 		}
@@ -178,10 +182,10 @@ int main(int argc, char* argv[]){
 		result = CU_basic_run_tests();
 	}
 
-	CU_cleanup_registry();
-
 	if(mode == CU_BRM_VERBOSE)ascshutdown("Testing completed.");/* shut down memory manager */
 
+cleanup:
+	CU_cleanup_registry();
 	ospath_free(test_executable);
 	ospath_free(ASC_TEST_DIR);
 
