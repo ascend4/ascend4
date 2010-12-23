@@ -340,7 +340,8 @@ try:
 	os.chdir(debianname)
 	if buildsource:
 		print "Building source package..."
-		res = subprocess.call(["debuild","-rfakeroot","-S","-sa"])
+		_cmd = ["dpkg-buildpackage","-S","-rfakeroot","-sa"]
+		res = subprocess.call(_cmd)
 	else:
 		print "Building binary package..."
 		_cmd = ["dpkg-buildpackage","-rfakeroot","-sa"]
