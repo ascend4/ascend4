@@ -82,15 +82,18 @@ int BaseType(symchar *name)
 {
   static int init = 0;
   int c;
-  if (!name) return -1;         /* missing OF in set declaration */
-  if (!init) {
+
+  if (!init || !name) {
     init = 1;
+
     FundamentalTypeList[0] = GetBaseTypeName(boolean_type);
     FundamentalTypeList[1] = GetBaseTypeName(integer_type);
     FundamentalTypeList[2] = GetBaseTypeName(real_type);
     FundamentalTypeList[3] = GetBaseTypeName(set_type);
     FundamentalTypeList[4] = GetBaseTypeName(symbol_type);
   }
+  if (!name) return -1;         /* missing OF in set declaration */
+
   for(c=0;c<NUM_FUNDTYPES;c++){
     if (name == FundamentalTypeList[c]) return c;
   }

@@ -46,6 +46,8 @@
 #ifndef ASC_CHILDDEF_H
 #define ASC_CHILDDEF_H
 
+#include "type_desc.h"
+
 /**	@addtogroup compiler_inst Compiler Instance Hierarchy
 	@{
 */

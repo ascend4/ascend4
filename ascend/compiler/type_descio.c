@@ -40,6 +40,7 @@
 #include "proc.h"
 #include "dimen_io.h"
 #include "child.h"
+#include "childdef.h"
 #include "childinfo.h"
 #include "instance_enum.h"
 #include "watchptio.h"
@@ -520,5 +521,7 @@ void InitBaseTypeNames(void)
   G_BASE_MODEL_NAME	= AddSymbol("MODEL");
   G_BASE_ARRAY_NAME	= AddSymbol("ARRAY");
   G_BASE_PATCH_NAME	= AddSymbol("PATCH");
+
+  BaseType(NULL);
   /* FPRINTF(ASCERR,"...INIT BASE TYPE NAMES\n"); */
 }
