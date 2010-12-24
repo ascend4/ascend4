@@ -76,6 +76,7 @@ static void test_parse_string_module(void){
 		END test1;";
 
 	Asc_CompilerInit(1);
+	CU_ASSERT(FindType(AddSymbol("boolean"))!=NULL);
 
 	struct module_t *m;
 	int status;
@@ -120,6 +121,8 @@ static void test_instantiate_string(void){
 		END test1;\n";
 
 	Asc_CompilerInit(1);
+	CU_ASSERT(FindType(AddSymbol("boolean"))!=NULL);
+	CONSOLE_DEBUG("Boolean type found OK");
 
 	/* CONSOLE_DEBUG("MODEL TEXT:\n%s",model); */
 

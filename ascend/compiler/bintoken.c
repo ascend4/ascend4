@@ -784,7 +784,9 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
     return;
   }
   if (srcname == NULL || buildcommand == NULL || unlinkcommand == NULL) {
+#ifdef BINTOKEN_VERBOSE
     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"BinaryTokensCreate called with no options set: ignoring");
+#endif
     return;
   }
 

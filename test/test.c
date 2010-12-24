@@ -182,12 +182,10 @@ int main(int argc, char* argv[]){
 		result = CU_basic_run_tests();
 	}
 
-	if(mode == CU_BRM_VERBOSE)ascshutdown("Testing completed.");/* shut down memory manager */
-
 cleanup:
+	if(mode == CU_BRM_VERBOSE)ascshutdown("Testing completed.");/* shut down memory manager */
 	CU_cleanup_registry();
 	ospath_free(test_executable);
 	ospath_free(ASC_TEST_DIR);
-
 	return result;
 }
