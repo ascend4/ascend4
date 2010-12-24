@@ -41,9 +41,6 @@
 #include "type_desc.h"
 #include "universal.h"
 
-#ifndef lint
-static CONST char UniversalModuleRCSid[] = "$Id: universal.c,v 1.7 1997/07/18 12:36:19 mthomas Exp $";
-#endif
 
 struct universal_rec {
   struct TypeDescription *desc;

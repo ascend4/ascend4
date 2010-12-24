@@ -31,8 +31,6 @@
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
 
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "symtab.h"
@@ -51,9 +49,6 @@
 #include "module.h"
 #include "type_descio.h"
 
-#ifndef lint
-static CONST char TypeDescIORCSid[] = "$Id: type_descio.c,v 1.24 1998/04/10 23:25:52 ballan Exp $";
-#endif
 
 static
 void WriteProcedureList(FILE *f, struct gl_list_t *pl)
