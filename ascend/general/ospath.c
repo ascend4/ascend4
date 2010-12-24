@@ -99,6 +99,15 @@
 # define STRTOKVAR(VAR) char *VAR
 # define GETCWD _getcwd
 # define GETENV(VAR) getenv(VAR)
+#elif defined(linux)
+# define STRCPY strcpy
+# define STRNCPY(dest,src,n) strncpy(dest,src,n)
+# define STRCAT strcat
+# define STRNCAT strncat
+# define STRTOK(STR,PAT,VAR) strtok_r(STR,PAT,&VAR)
+# define STRTOKVAR(VAR) char *VAR
+# define GETCWD getcwd
+# define GETENV(VAR) getenv(VAR)
 #else
 # define STRCPY strcpy
 # define STRNCPY(dest,src,n) strncpy(dest,src,n)
@@ -344,6 +353,7 @@ struct FilePath *ospath_getcwd(void){
 	/* create new path with resolved working directory */
 	fp = ospath_new_noclean(cwd != NULL ? cwd : ".");
 
+	ASC_FREE(cwd);
 	D(fp);
 
 	return fp;

@@ -38,6 +38,8 @@
   DATA STRUCTURES AND TYPES
 */
 
+struct ImportHandler;
+
 /**
 	This is the 'create filename' function that is use to take a generic
 	'partial filename' such as 'mystuff' and convert it into a correct
@@ -63,10 +65,20 @@ typedef char *ImportHandlerCreateFilenameFn(const char *partialname);
 */
 typedef int ImportHandlerImportFn(const struct FilePath *fp,const char *initfunc, const char *partialpath);
 
+/**
+	This function can be used to unload an import handler, and should
+	deallocate any memory that was used or unload any shared libraries that
+	were loaded in order to provide this import handler's functionality.
+	@param handler pointer to the un-destroyed handler. Pointer will be invalid on return.
+	@return 0 on success.
+*/
+typedef int ImportHandlerDestroyFn(struct ImportHandler *handler);
+
 struct ImportHandler{
 	const char *name; /**< name of this import handler, eg 'extpy' */
 	ImportHandlerCreateFilenameFn *filenamefn; /**< function which converts a partial filename into a correct filename, eg by adding a suffix */
 	ImportHandlerImportFn *importfn; /**< function which loads an external script module once it has been located */
+	ImportHandlerDestroyFn *destroyfn; /**< function that can unload and destroy this import handler */
 };
 
 /**
@@ -75,11 +87,9 @@ struct ImportHandler{
 */
 extern struct ImportHandler **ImportHandlerLibrary;
 
-/** Function to add a new import handler to the list that will be tried during an IMPORT 
-	@param handler Handler struct to be added to the list 
-	@return 0 on success
+/*------------------------------------------------------------------------------
+  FUNCTION TO PERFORM AN IMPORT
 */
-ASC_DLLSPEC int importhandler_add(struct ImportHandler *handler);
 
 /** Function to attempt import of an external script
 	@param partialname Name of the external script (without extension), relative to PATH.
@@ -90,16 +100,27 @@ ASC_DLLSPEC int importhandler_add(struct ImportHandler *handler);
 int importhandler_attemptimport(const char *partialname,const char *defaultpath, const char *pathenvvar);
 
 /*------------------------------------------------------------------------------
-  FUNCTIONS FOR IMPORT OF DLL/SO external libraries
+  FUNCTIONS TO AND AND REMOVE import handlers
 */
-ImportHandlerCreateFilenameFn importhandler_extlib_filename;
-ImportHandlerImportFn importhandler_extlib_import;
+
+/** Function to add a new import handler to the list that will be tried during an IMPORT 
+	@param handler Handler struct to be added to the list 
+	@return 0 on success
+*/
+ASC_DLLSPEC int importhandler_add(struct ImportHandler *handler);
+
+/**
+	Destroy/unload an import handler, and deallocate the memory pointed to
+	by handler.
+	@param handler the handler to be destroyed.
+	@return 0 on success. Otherwise, the handler will not have been freed.
+*/
+int importhandler_destroy(struct ImportHandler *handler);
 
 /*------------------------------------------------------------------------------
   LIST-BASED FUNCTIONS related to IMPORT handler 'library'
 */
 
-int importhandler_remove(const char *name);
 struct ImportHandler *importhandler_lookup(const char *name);
 ASC_DLLSPEC int importhandler_destroylibrary();
 int importhandler_createlibrary();
@@ -126,6 +147,13 @@ int importhandler_printhandler(FILE *fp, struct ImportHandler *);
 struct FilePath *importhandler_findinpath(const char *partialname
 		, const char *defaultpath, char *envv, struct ImportHandler **handler
 );
+
+/*------------------------------------------------------------------------------
+  BUILT-IN IMPORT HANDLER FOR DEALING WITH DLL/SO external libraries
+*/
+
+ImportHandlerCreateFilenameFn importhandler_extlib_filename;
+ImportHandlerImportFn importhandler_extlib_import;
 
 /*------------------------------------------------------------------------------
   SHARED POINTER TABLE

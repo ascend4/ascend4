@@ -43,6 +43,7 @@
 
 ImportHandlerCreateFilenameFn extpy_filename;
 ImportHandlerImportFn extpy_import;
+ImportHandlerDestroyFn extpy_handler_destroy;
 
 ExtMethodDestroyFn extpy_destroy;
 
@@ -70,6 +71,7 @@ extern ASC_EXPORT int extpy_register(){
 	handler->name = "extpy";
 	handler->filenamefn = &extpy_filename;
 	handler->importfn =   &extpy_import;
+	handler->destroyfn = &extpy_handler_destroy;
 
 	result = importhandler_add(handler);
 
@@ -80,6 +82,11 @@ extern ASC_EXPORT int extpy_register(){
 	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Loaded EXPERIMENTAL 'extpy' import handler.");
 	
 	return result;
+}
+
+int extpy_handler_destroy(struct ImportHandler *handler){
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Not implemented");
+	return 0;
 }
 
 /*------------------------------------------------------------------------------
