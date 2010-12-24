@@ -219,6 +219,7 @@ int importhandler_createlibrary(){
 	extlib_handler->name ="extlib";
 	extlib_handler->filenamefn = &importhandler_extlib_filename;
 	extlib_handler->importfn = &importhandler_extlib_import;
+	extlib_handler->destroyfn = NULL;
 	if(importhandler_add(extlib_handler)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to create 'extlib' import handler");
 		return 1;
@@ -227,28 +228,42 @@ int importhandler_createlibrary(){
 	return 0;
 }
 
-int importhandler_remove(const char *name){
-	if(importhandler_library==NULL)return 2;
-	/* CONSOLE_DEBUG("Removing importhandler '%s'", name); */
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s not implemented",__FUNCTION__);
-	return 1;
+int importhandler_destroy(struct ImportHandler *handler){
+	int res = 0;
+	if(handler->destroyfn){
+		res = (*(handler->destroyfn))(handler);
+	}/* else: nothing inside needs destroying */
+	if(!res)ASC_FREE(handler);
+	return res;
 }
 
 struct ImportHandler *importhandler_lookup(const char *name){
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s not implemented",__FUNCTION__);
+	int i;
+	for(i=0; i < IMPORTHANDLER_MAX && importhandler_library[i] != NULL; ++i){
+		if(importhandler_library[i]->name
+			&& 0==strcmp(name,importhandler_library[i]->name)
+		){
+			return importhandler_library[i];
+		}
+	}
 	return NULL;
 }
 
 /** @return 0 on success */
 int importhandler_destroylibrary(){
 	int i;
-	int err = 0;
+	int err = 0, thiserr;
 	CONSOLE_DEBUG("Destroying importhandler library...");
-	importhandler_printlibrary(stderr);
+	///importhandler_printlibrary(stderr);
 	if(importhandler_library!=NULL){
 		for(i=IMPORTHANDLER_MAX - 1; i >= 0; --i){
 			if(importhandler_library[i]==NULL)continue;
-			err = err | importhandler_remove(importhandler_library[i]->name);
+			thiserr = importhandler_destroy(importhandler_library[i]);
+			if(!thiserr){
+				importhandler_library[i] = NULL;
+				CONSOLE_DEBUG("Destroyed import handler");
+			}
+			err = err | thiserr;
 		}
 	}
 	if(err)ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Failed to destroy importhandler library");

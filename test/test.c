@@ -142,7 +142,8 @@ int main(int argc, char* argv[]){
 				}
 				else{
 					fprintf(stderr,"Invalid argument for --on-error option!\n");
-					exit(1);
+					result = 1;
+					goto cleanup;	
 				}
 				break;
 			case '?':

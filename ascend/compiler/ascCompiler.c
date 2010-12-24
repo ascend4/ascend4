@@ -84,12 +84,9 @@
 #include "numlist.h"
 #include "bintoken.h"
 #include "childio.h"
+#include "importhandler.h"
 /* #include "redirectFile.h" */
 #include "ascCompiler.h"
-
-#ifndef lint
-static CONST char ascCompilerID[] = "$Id: ascCompiler.c,v 1.20 2000/01/25 02:25:57 ballan Exp $";
-#endif
 
 
 /*
@@ -237,6 +234,9 @@ void Asc_CompilerDestroy(void)
   DestroySymbolTable();
   DestroyStringSpace();
   Asc_DestroyScannerWorkBuffer();
+
+  importhandler_destroylibrary();
+
   DestroyExtFuncLibrary();      /* deallocate external function nodes */
 
   /* some of the following calls are order dependent. see the headers.
@@ -266,4 +266,5 @@ void Asc_CompilerDestroy(void)
   gl_destroy_pool();                   /* empty the reused list head pool */
   ClearRecycleStack();                 /* empty the reused stack list  */
   Asc_DestroyScannerInputBuffer();	/* empty lexer */
+  tmpalloc(0); /* free temporary scratch memory allocated by relation_util.c */
 }
