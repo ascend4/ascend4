@@ -25,6 +25,8 @@
 #include <ascend/general/mem.h>
 #include <math.h>
 
+#define MTXVECTOR_DEBUG
+
 struct vec_vector *vec_create(int32 low, int32 high)
 {                                                                
   struct vec_vector *result;
@@ -35,6 +37,11 @@ struct vec_vector *vec_create(int32 low, int32 high)
 
   result->rng = NULL;
   result->vec = NULL;
+#ifdef MTXVECTOR_DEBUG
+  /* set these elements to zero only if we're debugging (eg valgrinding) */
+  result->accurate = 0;
+  result->norm2 = 0;
+#endif
   if (0 != vec_init(result, low, high)) {
     ASC_FREE(result);
     result = NULL;
@@ -61,7 +68,12 @@ int vec_init(struct vec_vector *vec, int32 low, int32 high)
 
   new_size = high + 1;
   if (NULL == vec->vec) {
+#ifdef MTXVECTOR_DEBUG
+    /* set these elements to zero only if we're debugging (eg valgrinding) */
+    vec->vec = ASC_NEW_ARRAY_CLEAR(real64,new_size);
+#else
     vec->vec = ASC_NEW_ARRAY(real64,new_size);
+#endif
     if (NULL == vec->vec) {
       ASC_FREE(vec->rng);
       vec->rng = NULL;
