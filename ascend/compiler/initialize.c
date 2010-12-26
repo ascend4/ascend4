@@ -73,7 +73,7 @@
 /* set to 1 for tracing execution the hard way. */
 #define IDB 0
 
-//#define INIT_DEBUG
+#define INIT_DEBUG
 
 /*********************************************************************\
   There is a stack of procedure calls kept for tracing and breaking
@@ -1814,13 +1814,24 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
   morename = WriteNameString(name);
 #ifdef INIT_DEBUG
   char *name1 = WriteInstanceNameString(fm->i,NULL);
-  CONSOLE_DEBUG("Running METHOD %s on '%s'",SCP(fm->cname),name1);
+  if(fm->proc && fm->proc->name){
+    CONSOLE_DEBUG("Running METHOD %s on '%s' (from scope %s)",SCP(fm->proc->name),name1,SCP(fm->cname));
+  }else{
+    CONSOLE_DEBUG("Running METHOD '%s' (from scope %s)",name1,SCP(fm->cname));
+  }
+
   ASC_FREE(name1);
 #endif
   ASC_FREE(morename);
 
   SetDeclarativeContext(1); /* set up for procedural processing */
   InstanceNamePart(name,&instname,&procname);
+
+#ifdef INIT_DEBUG
+  if(procname){
+    CONSOLE_DEBUG("Procname = %s",SCP(procname));
+  }
+#endif
 
   if (procname != NULL) {
     instances = FindInstances(fm->i, instname, &err);
@@ -1874,6 +1885,7 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
             } /* else was a c-like RETURN;. don't pass upward */
             break;
           }
+          CONSOLE_DEBUG("Destroying frame...");
           DestroyProcFrame(newfm);
         } else {
           fm->flow = FrameError;
