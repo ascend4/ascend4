@@ -205,14 +205,12 @@ ASC_DLLSPEC void Asc_SetMethodUserInterrupt(int value);
 
 
 /** 
- * <!--  wl = Asc_CreateWatchList(size);                               -->
- * Return a watchlist *wl of size n.
+ * @return a watchlist *wl of size n.
  * Adding more entries to the list than anticipated at creation is ok.
  */
 #define Asc_CreateWatchList(n) (gl_create(n))
 
 /** 
- * <!--  Asc_WatchLeafName(wl,leafname,output);                        -->
  * Add a local name of var to watch for assignments to wl.
  * E.g. to watch all things named T being assigned via
  * that name, Asc_WatchLeafName(wl,"T",wp_log);
@@ -222,7 +220,6 @@ extern int Asc_WatchLeafName(watchlist *wl,
                              enum wpdest output);
 
 /** 
- * <!--  Asc_WatchProc(wl,typename,procname,output);                   -->
  * Add a method named in type named to watch for execution to wl.
  * E.g. to watch all things named T being assigned via
  * that name, Asc_WatchProc(wl,"column","scale",wp_log);
@@ -231,7 +228,6 @@ extern int Asc_WatchProc(watchlist *wl, char *type_name,
                          char *procname, enum wpdest output);
 
 /** 
- * <!--  Asc_WatchInstance(wl,i,dest);                                 -->
  * Add a variable instance to watch for assignments to the watchlist.
  */
 extern int Asc_WatchInstance(watchlist *wl,
@@ -239,20 +235,17 @@ extern int Asc_WatchInstance(watchlist *wl,
                              enum wpdest dest);
 
 /** 
- * <!--  Asc_WatchStat(wl,modulename,linenum,dest);                    -->
  * Add a statement to watch for execution to the watchlist.
  */
 extern int Asc_WatchStat(watchlist *wl, char *modulename,
                          int linenum, enum wpdest dest);
 
 /** 
- * <!--  Asc_WatchType(wl,typename);                                   -->
  * Add a type of var to watch for assignments to the watchlist.
  */
 extern int Asc_WatchType(watchlist *wl, char *type_name, enum wpdest dest);
 
 /** 
- * <!--  Asc_WatchRefinements(wl,typename);                            -->
  * Add a type of var to watch for assignments of to the watchlist.
  * type and all its refinements are watched.
  */

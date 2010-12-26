@@ -37,6 +37,8 @@
 #include <ascend/compiler/parentchild.h>
 #include <ascend/compiler/atomvalue.h>
 
+#include <ascend/compiler/initialize.h>
+
 #include <test/assertimpl.h>
 
 static void test_init(void){
@@ -300,6 +302,50 @@ static void test_instantiate_file(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_initialize(void){
+	struct module_t *m;
+	int status;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	
+	/* load the file */
+#define TESTFILE "testinit"
+	m = Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
+	CU_ASSERT(status == 0);
+
+	/* parse it */
+	CU_ASSERT(0 == zz_parse());
+
+	/* find the model */	
+	CU_ASSERT(FindType(AddSymbol(TESTFILE))!=NULL);
+
+	/* instantiate it */
+	struct Instance *sim = SimsCreateInstance(AddSymbol(TESTFILE), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+
+	/* check for vars and rels */
+	struct Instance *root = GetSimulationRoot(sim);
+	struct Instance *inst;
+
+	CU_ASSERT(NumberChildren(root)==3);
+	CU_ASSERT((inst = ChildByChar(root,AddSymbol("x"))) && InstanceKind(inst)==REAL_ATOM_INST); 
+	CU_ASSERT((inst = ChildByChar(root,AddSymbol("y"))) && InstanceKind(inst)==REAL_ATOM_INST); 
+
+	CU_ASSERT((inst = ChildByChar(root,AddSymbol("expr1"))) && InstanceKind(inst)==REL_INST);
+
+
+	/** Call on_load */
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+    CONSOLE_DEBUG("RUNNING ON_LOAD");
+	enum Proc_enum pe = Initialize(GetSimulationRoot(sim),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe==Proc_all_ok);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -312,7 +358,8 @@ static void test_instantiate_file(void){
 	X T(instantiate_string) \
 	X T(parse_basemodel) \
 	X T(parse_file) \
-	X T(instantiate_file)
+	X T(instantiate_file) \
+	X T(initialize)
 
 /* you shouldn't need to change the following */
 

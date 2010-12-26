@@ -213,6 +213,8 @@ static void test_slvreq_c(void){
 	S.sys = NULL;
 	slvreq_assign_hooks(S.siminst, &slvreq_c_set_solver, &slvreq_c_set_option, &slvreq_c_do_solve, &S);
 
+    CONSOLE_DEBUG("RUNNING ON_LOAD");
+
 	/** Call on_load */
 	struct Name *name = CreateIdName(AddSymbol("on_load"));
 	enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
@@ -220,9 +222,11 @@ static void test_slvreq_c(void){
 
 	/* maybe if the model is really clever, it will have solved itself now! */
 
-	CONSOLE_DEBUG("DESTROYING NOW...");
 	/* all sorts of destruction */
-	system_destroy(S.sys);
+	CONSOLE_DEBUG("DESTROYING NOW...");
+	CU_ASSERT(S.siminst)
+	if(S.sys)system_destroy(S.sys);
+
 	sim_destroy(S.siminst);
 	solver_destroy_engines();
 	Asc_CompilerDestroy();

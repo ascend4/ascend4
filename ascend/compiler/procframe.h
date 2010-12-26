@@ -25,13 +25,8 @@
  *  interpreter io routines. watchpt.h is the header for
  *  client consumption.
  *//*
- *  by Benjamin Allan
- *  March 17, 1998
- *  Part of ASCEND
- *  Version: $Revision: 1.2 $
- *  Version control file: $RCSfile: procframe.h,v $
- *  Date last modified: $Date: 1998/06/16 16:38:49 $
- *  Last modified by: $Author: mthomas $
+ *  by Benjamin Allan, March 17, 1998
+ *  Last in CVS: $Revision: 1.2 $ $Date: 1998/06/16 16:38:49 $ $Author: mthomas $
 */
 
 #ifndef ASC_PROCFRAME_H
