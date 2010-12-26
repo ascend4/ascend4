@@ -337,7 +337,7 @@ static void test_initialize(void){
 
 	/** Call on_load */
 	struct Name *name = CreateIdName(AddSymbol("on_load"));
-    CONSOLE_DEBUG("RUNNING ON_LOAD");
+    //CONSOLE_DEBUG("RUNNING ON_LOAD");
 	enum Proc_enum pe = Initialize(GetSimulationRoot(sim),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
 	CU_ASSERT(pe==Proc_all_ok);
 
