@@ -1987,6 +1987,7 @@ enum Proc_enum Initialize(struct Instance *context,
   if (watchpoints == NULL) {
     InitNormalTopProcFrame(&fm,context,cname,err,options);
     rval = NormalInitialize(&fm,name);
+	if(fm.cname)ASC_FREE(fm.cname);
   } else {
     CONSOLE_DEBUG("Running method with debug...");
     rval = DebugInitialize(context,name,cname,err,options,watchpoints,log,&fm);
