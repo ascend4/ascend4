@@ -751,11 +751,6 @@ Bool ipopt_eval_jac_g(Index n, Number* x, Bool new_x, Index m
 	//CONSOLE_DEBUG("ipopt_eval_jac_g... n = %d",sys->n);
 	//CONSOLE_DEBUG("ipopt_eval_jac_g... m = %d",sys->m);
 	
-	/*if(!values){
-		//CONSOLE_DEBUG("sparsity structure requested, but not implemented");
-		return 0; // failure 
-	}*/
-
 	asc_assert(sys!=NULL);
 	asc_assert(n==sys->n);
 	asc_assert(nele_jac==sys->nnzJ);
@@ -767,15 +762,18 @@ Bool ipopt_eval_jac_g(Index n, Number* x, Bool new_x, Index m
 	}
 
 	if(values == NULL){
+		CONSOLE_DEBUG("sparsity structure requested");
 		k=0;
 		for(i=0; i<m;++i){
 			incidence_list = (struct var_variable**) rel_incidence_list(sys->rlist[i]); 
 			if(incidence_list!=NULL){
 				len=rel_n_incidences(sys->rlist[i]);
 				for(j=0;j<len;j++){
+						CONSOLE_DEBUG("Location of Non Zero: {%d,%d}; k = %d",i,incidence_list[j]->sindex,k);
+						/* valgrind says invalid write of size 4 here... */
 						iRow[k]=i; // should i use sindex of row here or is this ok?
+
 						jCol[k++]=incidence_list[j]->sindex;
-						//CONSOLE_DEBUG("Location of Non Zero: {%d,%d}; k = %d",i,incidence_list[j]->sindex,k);
 				}		
 			}
 			else{
@@ -783,9 +781,8 @@ Bool ipopt_eval_jac_g(Index n, Number* x, Bool new_x, Index m
 				return FALSE; //I'm not sure about the action to take.
 			}
 		}
-		//CONSOLE_DEBUG("Finished Locating Non-Zero elements in Sparse Matrix");
-	}	
-	else{
+		CONSOLE_DEBUG("Finished Locating Non-Zero elements in Sparse Matrix");
+	}else{
 		/** @todo Allocating and Deallocating memory for each row??? you must be out of your mind :O */
 		k=0;
 		variables = ASC_NEW_ARRAY(int,n);
@@ -1039,13 +1036,15 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 	/* calculate number of non-zeros in the Jacobian matrix for the constraint equations */
 
 	/* @todo make sure objective rel moved to end */
+
+	CONSOLE_DEBUG("About to call relman_jacobian_count");
 	sys->nnzJ = relman_jacobian_count(sys->rlist, sys->m, &(sys->vfilt), &(sys->rfilt), &max);
 	/*sys->nnzJ=0;
 	for(i=0;i<sys->m;++i){
 		sys->nnzJ += rel_n_incidences(sys->rlist[i]);
 	}*/
 
-	//CONSOLE_DEBUG("got %d non-zeros in constraint Jacobian", sys->nnzJ);
+	CONSOLE_DEBUG("got %d non-zeros in constraint Jacobian", sys->nnzJ);
 	
 	/* need to provide sparsity structure for jacobian? */
 
@@ -1172,7 +1171,7 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 
 	double *x, *x_L, *x_U, *g_L, *g_U, *mult_x_L, *mult_x_U;
 
-	//CONSOLE_DEBUG("SOLVING: sys->n = %d, sys->m = %d...",sys->n,sys->m);
+	CONSOLE_DEBUG("SOLVING: sys->n = %d, sys->m = %d...",sys->n,sys->m);
 	asc_assert(sys->n!=-1);
 
 	/* set the number of variables and allocate space for the bounds */

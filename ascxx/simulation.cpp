@@ -225,7 +225,7 @@ Simulation::run(const Method &method, Instanc &model){
 		CONSOLE_DEBUG("WARNING, SIMULATION NOT YET BUILT");
 	}*/
 
-	CONSOLE_DEBUG("Running method '%s' on simulation '%s'...", method.getName(),getName().getInternalType());
+	CONSOLE_DEBUG("Running method '%s' on simulation '%s'...", method.getName(), (const char *)(getName().getInternalType()));
 
 	Nam name = Nam(method.getSym());
 	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
