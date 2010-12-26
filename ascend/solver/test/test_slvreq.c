@@ -227,6 +227,7 @@ static void test_slvreq_c(void){
 	CU_ASSERT(S.siminst)
 	if(S.sys)system_destroy(S.sys);
 
+	system_free_reused_mem();
 	sim_destroy(S.siminst);
 	solver_destroy_engines();
 	Asc_CompilerDestroy();

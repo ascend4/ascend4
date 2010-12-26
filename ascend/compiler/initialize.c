@@ -73,7 +73,7 @@
 /* set to 1 for tracing execution the hard way. */
 #define IDB 0
 
-#define INIT_DEBUG
+//#define INIT_DEBUG
 
 /*********************************************************************\
   There is a stack of procedure calls kept for tracing and breaking
@@ -1885,7 +1885,9 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
             } /* else was a c-like RETURN;. don't pass upward */
             break;
           }
+#ifdef INIT_DEBUG
           CONSOLE_DEBUG("Destroying frame...");
+#endif
           DestroyProcFrame(newfm);
         } else {
           fm->flow = FrameError;
