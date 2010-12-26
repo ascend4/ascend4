@@ -46,7 +46,9 @@ struct gl_list_t *g_simulation_list = NULL;
 
 void sim_destroy(struct Instance *sim){
   if (sim) {
+#ifdef SIMLIST_DEBUG
 	CONSOLE_DEBUG("Destroying instance %s", SCP(GetSimulationName(sim)) );
+#endif
     DestroyInstance(sim,NULL);
   }
 }

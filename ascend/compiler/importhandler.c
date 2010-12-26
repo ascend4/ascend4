@@ -183,6 +183,7 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 		result = Asc_DynamicLoad(path,initfunc);
 	}
 
+#ifdef IMPORT_DEBUG
 	if(result){
 		CONSOLE_DEBUG("FAILED TO IMPORT '%s' (error %d)",partialpath,result);
 	}else{
@@ -192,6 +193,7 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 			CONSOLE_DEBUG("'%s' OK (explicitly named, got file '%s')",initfunc,path);
 		}
 	}
+#endif
 
 	ASC_FREE(path);
 	return result;
@@ -253,7 +255,9 @@ struct ImportHandler *importhandler_lookup(const char *name){
 int importhandler_destroylibrary(){
 	int i;
 	int err = 0, thiserr;
+#ifdef IMPORT_DEBUG
 	CONSOLE_DEBUG("Destroying importhandler library...");
+#endif
 	///importhandler_printlibrary(stderr);
 	if(importhandler_library!=NULL){
 		for(i=IMPORTHANDLER_MAX - 1; i >= 0; --i){
@@ -261,7 +265,9 @@ int importhandler_destroylibrary(){
 			thiserr = importhandler_destroy(importhandler_library[i]);
 			if(!thiserr){
 				importhandler_library[i] = NULL;
+#ifdef IMPORT_DEBUG
 				CONSOLE_DEBUG("Destroyed import handler");
+#endif
 			}
 			err = err | thiserr;
 		}
@@ -347,7 +353,9 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 
 		filename = (*(importhandler_library[i]->filenamefn))(searchdata->partialname); /* eg 'myext' -> 'libmyext.so' */
 		if(filename==NULL){
+#ifdef SEARCH_DEBUG
 			CONSOLE_DEBUG("Unable to create filename from partialname '%s'",searchdata->partialname);
+#endif
 			continue;
 		}
 		/* CONSOLE_DEBUG("Filename '%s'",filename); */
@@ -418,7 +426,9 @@ struct FilePath *importhandler_findinpath(const char *partialname
 
 	searchdata.partialname = ospath_getbasefilename(fp1);
 	if(searchdata.partialname==NULL){
+#ifdef FIND_DEBUG
 		CONSOLE_DEBUG("Not a filename");
+#endif
 		ospath_free(fp1);
 		return NULL;
 	}
@@ -445,7 +455,9 @@ struct FilePath *importhandler_findinpath(const char *partialname
 
 		filename = (*(importhandler_library[i]->filenamefn))(searchdata.partialname); /* eg 'myext' -> 'libmyext.so' */
 		if(filename==NULL){
+#ifdef FIND_DEBUG
 			CONSOLE_DEBUG("Unable to create filename from partialname '%s'",searchdata.partialname);
+#endif
 			continue;
 		}
 
@@ -485,7 +497,9 @@ struct FilePath *importhandler_findinpath(const char *partialname
 #endif
 
 		if(0==ospath_stat(fp1,&buf) && NULL!=(f = ospath_fopen(fp1,"r"))){
+#ifdef FIND_DEBUG
 			CONSOLE_DEBUG("Found in current directory!");
+#endif
 			fclose(f);
 			ASC_FREE(searchdata.partialname);
 			ospath_free(searchdata.relativedir);

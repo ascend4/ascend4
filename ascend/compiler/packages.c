@@ -79,7 +79,7 @@
 #include "packages.h"
 #include "defaultpaths.h"
 
-/* #define PACKAGE_DEBUG */
+/* #define PACKAGES_DEBUG */
 
 /*
 	Initialise the slv data structures used when calling external fns
@@ -115,7 +115,9 @@ int Builtins_Init(void){
 		,NULL /* destroy fn */
   );
 
+#ifdef PACKAGES_DEBUG
   CONSOLE_DEBUG("Registering EXTERNAL defaultself_visit_childatoms");
+#endif
   result = CreateUserFunctionMethod("defaultself_visit_childatoms"
 		,defaultself_visit_childatoms
 		,1 /* num of args */
@@ -124,7 +126,9 @@ int Builtins_Init(void){
 		,NULL /* destroy fn */
   );
 
+#ifdef PACKAGES_DEBUG
   CONSOLE_DEBUG("Registering EXTERNAL defaultself_visit_submodels");
+#endif
   result = CreateUserFunctionMethod("defaultself_visit_submodels"
 		,defaultself_visit_submodels
 		,1 /* num of args */
@@ -153,7 +157,7 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 		/*CONSOLE_DEBUG("Default ASCENDLIBRARY set to '%s'", default_library_path);*/
 	}
 
-#ifdef PACKAGE_DEBUG
+#ifdef PACKAGES_DEBUG
 	CONSOLE_DEBUG("Searching for external library '%s'",partialpath);
 #endif
 
@@ -170,11 +174,13 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 			partialpath, default_library_path, ASC_ENV_LIBRARY,&handler
 		);
 		if(fp1==NULL){
+#ifdef PACKAGES_DEBUG
 			CONSOLE_DEBUG("External library '%s' not found",partialpath);
+#endif
 			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External library '%s' not found.",partialpath);
 			return 1; /* failure */
 		}
-#ifdef PACKAGE_DEBUG
+#ifdef PACKAGES_DEBUG
 		else{
 			CONSOLE_DEBUG("FOUND in $ASCENDLIBRARY");
 		}
@@ -185,14 +191,14 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 
 	asc_assert(handler!=NULL);
 
-#ifdef PACKAGE_DEBUG
+#ifdef PACKAGES_DEBUG
 	CONSOLE_DEBUG("About to import external library...");
 #endif
 
 	/* run the import handlers' importfn to do the actual loading, registration etc. */
 	result = (*(handler->importfn))(fp1,initfunc,partialpath);
 	if(result){
-#ifdef PACKAGE_DEBUG
+#ifdef PACKAGES_DEBUG
 		CONSOLE_DEBUG("Error %d when importing external library of type '%s'",result,handler->name);
 #endif
 		ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Error importing external library '%s'",partialpath);

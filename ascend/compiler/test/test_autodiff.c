@@ -328,7 +328,9 @@ static void test_autodiff(void){
 		fprintf(data.outfile,"<b>No. of Total Errors</b> =<b> %d</b></br></br>\n",data.d0errors+data.d1errors);
 		fprintf(data.outfile,"<b>No. of First YACAS Mismatches</b> =<b> %d</b></br>\n",data.d1errors_yacas);
 		fprintf(data.outfile,"<b>No. of Second YACAS Mismatches</b> =<b> %d</b></br>\n",data.d2errors_yacas);
-		fprintf(data.outfile,"<b>No. of Total Mismatches</b> =<b> %d</b></center></br>\n</body>\n</html>",data.d1errors_yacas + data.d2errors_yacas);
+		fprintf(data.outfile,"<b>No. of Total Mismatches</b> =<b> %d</b></center></br>\n</body>\n</html>"
+			,data.d1errors_yacas + data.d2errors_yacas
+		);
 	}
 	
 
