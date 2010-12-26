@@ -39,7 +39,7 @@
 
 #include "ospath.h"
 
-/* to test this code, 'gcc -DTEST ospath.c && ./a' */
+//#define OSPATH_DEBUG
 
 #ifndef __GNUC__
 # ifndef __FUNCTION__
@@ -50,7 +50,7 @@
 
 /* #define VERBOSE */
 
-#if !defined(TEST) && !defined(VERBOSE)
+#if !defined(VERBOSE)
 #ifndef NDEBUG
 # define NDEBUG
 #endif
@@ -610,6 +610,9 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 	char sub[PATH_MAX];
 	struct FilePath *fp1, *fp2;
 
+#ifdef OSPATH_DEBUG
+	fprintf(stderr,"finding parent of %s\n",fp->path);
+#endif
 	D(fp);
 
 	if(strlen(fp->path) == 0){
@@ -618,6 +621,9 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 		ospath_free(fp1);
 		return fp2;
 	}else if(ospath_isroot(fp)){
+#ifdef OSPATH_DEBUG
+		fprintf(stderr,"path is root\n");
+#endif
 		/* stay at root */
 		return ospath_new("/");
 	}
@@ -631,8 +637,8 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 		) ? length - 1 : length; /* then remove last char */
 
 	for(pos = fp->path + offset - 1; *pos!=PATH_SEPARATOR_CHAR && pos>=fp->path; --pos){
-#if 0
-		fprintf(stderr,"CURRENT CHAR: %c\n",*pos);
+#ifdef OSPATH_DEBUG
+		CONSOLE_DEBUG("CURRENT CHAR: %c\n",*pos);
 #endif
 	}
 
@@ -847,12 +853,14 @@ char *ospath_getfileext(struct FilePath *fp){
 
 int ospath_isroot(struct FilePath *fp)
 {
-	if(!ospath_isvalid(fp))
-	{
+	if(!ospath_isvalid(fp)){
+#ifdef OSPATH_DEBUG
+		fprintf(stderr,"path is invalid\n");
+#endif
 		return 0;
 	}
 
-	return strcmp(fp->path, PATH_SEPARATOR_STR) ? 1 : 0;
+	return strcmp(fp->path, PATH_SEPARATOR_STR) ? 0 : 1;
 }
 
 unsigned ospath_depth(struct FilePath *fp){

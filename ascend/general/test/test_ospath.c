@@ -18,6 +18,7 @@
 *//**
 	@file
 	CUnit tests for the ospath.c module.
+	by John Pye.
 */
 
 #include <ascend/general/ospath.h>
@@ -112,7 +113,7 @@ static void test_ospath_getparent(void){
 	D(fp2);
 	D(fp3);
 	CU_TEST(ospath_cmp(fp2,fp3)==0);
-	M("Passed 'getparent' test\n");
+	if(ospath_cmp(fp2,fp3)==0)M("Passed 'getparent' test\n");
 
 	ospath_free(fp1); ospath_free(fp2); ospath_free(fp3);
 
