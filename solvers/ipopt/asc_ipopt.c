@@ -676,7 +676,7 @@ Bool ipopt_eval_grad_f(Index n, Number* x, Bool new_x, Number* grad_f, void *use
 	);*/
 
 	relman_diff2_rev(
-				 sys->obj,&vfilter,derivatives,variables
+				 sys->obj,&(sys->vfilt),derivatives,variables
 			, &count,SLV_PARAM_BOOL(&(sys->p),ASCEND_PARAM_SAFEEVAL)
 	);
 	
@@ -744,7 +744,7 @@ Bool ipopt_eval_jac_g(Index n, Number* x, Bool new_x, Index m
 	static var_filter_t vfilter = {
 		VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED,
 		VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR
-	};	
+	};
 
 
 	//CONSOLE_DEBUG("ipopt_eval_jac_g... nnzJ = %d",sys->nnzJ);
@@ -765,20 +765,20 @@ Bool ipopt_eval_jac_g(Index n, Number* x, Bool new_x, Index m
 		CONSOLE_DEBUG("sparsity structure requested");
 		k=0;
 		for(i=0; i<m;++i){
-			incidence_list = (struct var_variable**) rel_incidence_list(sys->rlist[i]); 
-			if(incidence_list!=NULL){
+			/* looping through rows, one per relation */
+			if(rel_apply_filter(sys->rlist[i], &(sys->rfilt))){
+				incidence_list = (struct var_variable**) rel_incidence_list(sys->rlist[i]); 
 				len=rel_n_incidences(sys->rlist[i]);
 				for(j=0;j<len;j++){
+					/* looping through incident variables in current relation */
+					if(var_apply_filter(incidence_list[j], &(sys->vfilt))){
 						CONSOLE_DEBUG("Location of Non Zero: {%d,%d}; k = %d",i,incidence_list[j]->sindex,k);
+
 						/* valgrind says invalid write of size 4 here... */
 						iRow[k]=i; // should i use sindex of row here or is this ok?
-
 						jCol[k++]=incidence_list[j]->sindex;
+					}
 				}		
-			}
-			else{
-				ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Unused Relation???");
-				return FALSE; //I'm not sure about the action to take.
 			}
 		}
 		CONSOLE_DEBUG("Finished Locating Non-Zero elements in Sparse Matrix");
@@ -788,23 +788,21 @@ Bool ipopt_eval_jac_g(Index n, Number* x, Bool new_x, Index m
 		variables = ASC_NEW_ARRAY(int,n);
 		derivatives = ASC_NEW_ARRAY(double,n);
 		for(i=0; i<m;++i){
-			incidence_list = (struct var_variable**) rel_incidence_list(sys->rlist[i]);
-			if(incidence_list!=NULL){
-			      len = rel_n_incidences(sys->rlist[i]);
+			if(rel_apply_filter(sys->rlist[i], &(sys->rfilt))){				
+				incidence_list = (struct var_variable**) rel_incidence_list(sys->rlist[i]);
+				len = rel_n_incidences(sys->rlist[i]);
+				
 			      /*relman_diff2(sys->rlist[i],&vfilter,derivatives,variables
 			      ,&count,SLV_PARAM_BOOL(&(sys->p),ASCEND_PARAM_SAFEEVAL)
 			      );*/
-				  relman_diff2_rev(sys->rlist[i],&vfilter,derivatives,variables
-						  ,&count,SLV_PARAM_BOOL(&(sys->p),ASCEND_PARAM_SAFEEVAL)
-						);
-			      for(j=0;j<len;j++){
+
+				relman_diff2_rev(sys->rlist[i], &(sys->vfilt), derivatives 
+					,variables, &count, SLV_PARAM_BOOL(&(sys->p),ASCEND_PARAM_SAFEEVAL)
+				);
+				for(j=0;j<len;j++){
 					asc_assert(!isnan(derivatives[j]));
-				    values[k++] = derivatives[j];
-			      }
-			}
-			else{
-				ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Unused Relation???");
-				return FALSE; //I'm not sure about the action to take.
+					values[k++] = derivatives[j];
+				}
 			}
 		}
 		if(variables)ASC_FREE(variables);
@@ -858,6 +856,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 	if(values == NULL){
 		asc_assert(iRow !=NULL && jCol != NULL);
 		
+		CONSOLE_DEBUG("Determining sparsity structure of the hessian of the lagrangian");
 
 		/* identify the sparsity structure of the Hessian (note: only the lower-
 		left part is required by IPOPT , because the Hessian is symmetric) */
@@ -875,6 +874,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 		}
 		asc_assert(idx == nele_hess);
 
+		CONSOLE_DEBUG("Done with sparsity calc, there are %d elements",idx);
 	}
 	else{
 		asc_assert(jCol==NULL && iRow==NULL);
