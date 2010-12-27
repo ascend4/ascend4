@@ -15,6 +15,7 @@
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
 *)
+IMPORT "ipopt";
 REQUIRE "atoms.a4l";
 (*
 This model is from W A Dollase & W I Newman (1984) 'Statistically most probable

@@ -140,6 +140,7 @@ static void test_ipopt(const char *filenamestem){
 	X T(test13) \
 	X T(test14) \
 	X T(test15) \
+	X T(formula)
 
 /* define the tests: each test loads the model, solves with IPOPT, then runs the
 self_test method. */
