@@ -43,7 +43,7 @@ TESTS(PROTO_GENERAL)
 #undef PROTO_GENERAL
 
 #define REGISTER_TEST(NAME) \
-	result = test_register_general_##NAME(); \
+	result = TESTREGISTER(general,NAME); \
 	if(CUE_SUCCESS!=result){ \
 		return result; \
 	}

@@ -5,6 +5,8 @@
 
 #define PROTO(SUITE,NAME) CU_ErrorCode test_register_##SUITE##_##NAME(void);
 
+#define TESTREGISTER(SUITE,NAME) test_register_##SUITE##_##NAME()
+
 #define PROTO_SUITE(SUITE) CU_ErrorCode test_register_##SUITE(void);
 
 #define REGISTER_SUITE(SUITENAME,TESTS) \

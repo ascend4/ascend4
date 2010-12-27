@@ -1,63 +1,41 @@
-/*
- *  Registration function for the ASCEND solver component.
- *
- *  Copyright (C) 2005 Jerry St.Clair
- *
- *  This file is part of the Ascend Environment.
- *
- *  The Ascend Environment is free software; you can redistribute it
- *  and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Environment is distributed in hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2010 Carnegie Mellon University
 
-#include "CUnit/CUnit.h"
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*/
+
 #include <ascend/general/platform.h>
 #include "test_register_solver.h"
 
-/* #include "test_bnd.h" */
-#include "test_slv_common.h"
-/* #include "test_slv.h" */
+#define SUITE solver
 
-CU_ErrorCode test_register_solver(void)
-{
-  CU_ErrorCode result = CUE_SUCCESS;
+#define TESTS(T) \
+	T(slv_common) \
+	T(slvreq) \
+	T(ipopt)
 
-  /* for new tests, add the test registration call to the following sequence: */
+#define PROTO_SOLVER(NAME) PROTO(solver,NAME)
+TESTS(PROTO_SOLVER)
+#undef PROTO_SOLVER
 
-  /* solver/bnd.c */
-  /* result = test_register_solver_bnd();
-  if (CUE_SUCCESS != result)
-    return result;
-  */
+#define REGISTER_TEST(NAME) \
+	result = TESTREGISTER(solver,NAME); \
+	if(CUE_SUCCESS!=result){ \
+		return result; \
+	}
 
-  /* solver/slv_common.c */
-  result = test_register_solver_slv_common();
-  if(CUE_SUCCESS != result)
-    return result;
-
-  /* compiler/slvreq.c */
-  result = test_register_solver_slvreq();
-  if(CUE_SUCCESS != result)
-    return result;
-
-  /* solver/slv.c */
-/*
-  result = test_register_solver_slv();
-  if (CUE_SUCCESS != result)
-    return result;
-*/
-
-  return result;
-}
+REGISTER_SUITE(solver,TESTS)
 

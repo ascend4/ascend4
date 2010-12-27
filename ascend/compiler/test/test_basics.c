@@ -343,7 +343,47 @@ static void test_initialize(void){
 
 	sim_destroy(sim);
 	Asc_CompilerDestroy();
+#undef TESTFILE
 }
+
+
+
+
+static void test_stoponerror(void){
+	struct module_t *m;
+	int status;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	
+	/* load the file */
+#define TESTFILE "stoponerror"
+	m = Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
+	CU_ASSERT(status == 0);
+
+	/* parse it */
+	CU_ASSERT(0 == zz_parse());
+
+	/* find the model */	
+	CU_ASSERT(FindType(AddSymbol(TESTFILE))!=NULL);
+
+	/* instantiate it */
+	struct Instance *sim = SimsCreateInstance(AddSymbol(TESTFILE), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+
+	/** Call on_load */
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+
+	enum Proc_enum pe = Initialize(GetSimulationRoot(sim),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe!=Proc_all_ok);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+#undef TESTFILE
+}
+
+
+
 
 
 /*===========================================================================*/
@@ -359,7 +399,8 @@ static void test_initialize(void){
 	X T(parse_basemodel) \
 	X T(parse_file) \
 	X T(instantiate_file) \
-	X T(initialize)
+	X T(initialize) \
+	X T(stoponerror)
 
 /* you shouldn't need to change the following */
 

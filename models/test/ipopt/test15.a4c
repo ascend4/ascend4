@@ -1,3 +1,4 @@
+IMPORT "ipopt";
 REQUIRE "atoms.a4l";
 (*
 This is the sample problem given in the IPOPT documentation:
@@ -20,6 +21,12 @@ METHOD on_load;
 	x[1..4].upper_bound := 5;
 
 END on_load;
+METHOD self_test;
+	ASSERT abs(x[1] - 1.) < 1e-8;
+	ASSERT abs(x[2] - 4.743) < 1e-3;
+	ASSERT abs(x[3] - 3.82114998) < 1e-4;
+	ASSERT abs(x[4] - 1.37940829) < 1e-4;
+END self_test;
 END test15;
 
 

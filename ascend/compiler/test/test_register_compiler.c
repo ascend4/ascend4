@@ -33,7 +33,7 @@ TESTS(PROTO_TEST)
 #undef PROTO_TEST
 
 #define REGISTER_TEST(NAME) \
-	result = test_register_compiler_##NAME(); \
+	result = TESTREGISTER(compiler,NAME); \
 	if(CUE_SUCCESS!=result){ \
 		return result; \
 	}
