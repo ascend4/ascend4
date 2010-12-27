@@ -1,96 +1,53 @@
-/*
- *  Registration function for the ASCEND utilities component.
- *
- *  Copyright (C) 2005 Jerry St.Clair
- *
- *  This file is part of the Ascend Environment.
- *
- *  The Ascend Environment is free software; you can redistribute it
- *  and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Environment is distributed in hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2005 Jerry St.Clair
 
-#include "CUnit/CUnit.h"
-#include <ascend/utilities/config.h>
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*/
+
 #include <ascend/general/platform.h>
 #include "test_register_utilities.h"
 
-#include "test_ascDynaLoad.h"
-#include "test_ascEnvVar.h"
-#include "test_ascMalloc.h"
-#include "test_ascPanic.h"
-#include "test_ascPrint.h"
-#include "test_ascSignal.h"
-#include "test_mem.h"
-#include "test_readln.h"
-#include "test_set.h"
-
-CU_ErrorCode test_register_utilities(void)
-{
-  CU_ErrorCode result = CUE_SUCCESS;
-
-  /* for new tests, add the test registration call to the following sequence: */
-
-  /* utilites/ascDynaLoad.c */
-  result = test_register_utilities_ascDynaLoad();
-  if (CUE_SUCCESS != result)
-    return result;
-
-  /* utilites/ascEnvVar.c */
-  result = test_register_utilities_ascEnvVar();
-  if (CUE_SUCCESS != result)
-    return result;
-
-#ifndef ASC_WITH_DMALLOC
-  /* utilites/ascMalloc.c */
-  result = test_register_utilities_ascMalloc();
-  if (CUE_SUCCESS != result)
-    return result;
+#ifdef ASC_WITH_DMALLOC
+# error "Need to disable the ascMalloc test in this case"
 #endif
 
-  /* utilites/ascPanic.c */
 #ifdef TEST_ASCPANIC
-  result = test_register_utilities_ascPanic();
-  if (CUE_SUCCESS != result)
-    return result;
+# error "Need to reenable the ascPanic test"
 #endif
 
-  /* utilites/ascPrint.c */
-  result = test_register_utilities_ascPrint();
-  if (CUE_SUCCESS != result)
-    return result;
+#define TESTS(T) \
+	T(ascDynaLoad) \
+	T(ascEnvVar) \
+	T(ascMalloc) \
+	/*T(ascPanic)*/ \
+	T(ascPrint) \
+	T(ascSignal) \
+	T(mem) \
+	T(readln) \
+	T(set)
 
-  /* utilites/ascSignal.c */
-  result = test_register_utilities_ascSignal();
-  if (CUE_SUCCESS != result)
-    return result;
+#define PROTO_UTILS(NAME) PROTO(utilities,NAME)
+TESTS(PROTO_UTILS)
+#undef PROTO_UTILS
 
-  /* utilites/mem.c */
-  result = test_register_utilities_mem();
-  if (CUE_SUCCESS != result)
-    return result;
+#define REGISTER_TEST(NAME) \
+	result = TESTREGISTER(utilities,NAME); \
+	if(CUE_SUCCESS!=result){ \
+		return result; \
+	}
 
-  /* utilites/readln.c */
-  result = test_register_utilities_readln();
-  if (CUE_SUCCESS != result)
-    return result;
-
-  /* utilites/set.c */
-  result = test_register_utilities_set();
-  if (CUE_SUCCESS != result)
-    return result;
-
-  return result;
-}
+REGISTER_SUITE(utilities,TESTS)
 

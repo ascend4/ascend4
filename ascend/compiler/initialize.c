@@ -932,7 +932,7 @@ ExecuteInitAssert(struct procFrame *fm, struct Statement *stat){
 			break;
 	}
 	if (fm->flow == FrameError && testerr) {
-		ProcWriteIfError(fm,"TEST");
+		ProcWriteIfError(fm,"ASSERT");
 	}
 	DestroyValue(&value);
 	return;
