@@ -9,8 +9,10 @@ using namespace std;
 int main(void){
 
 	Library L;
-	L.load("test/ipopt/formula.a4c");
-	Type t = L.findType("formula");
+#define TESTNAME "formula"
+	L.load("test/ipopt/" TESTNAME ".a4c");
+	Type t = L.findType(TESTNAME);
+#undef TESTNAME
 	Simulation S = t.getSimulation("S");
 	SolverReporter R;
 	try{
