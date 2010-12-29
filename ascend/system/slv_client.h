@@ -1064,7 +1064,7 @@ ASC_DLLSPEC void slv_set_obj_relation(slv_system_t sys, struct rel_relation *obj
 ASC_DLLSPEC struct rel_relation *slv_get_obj_relation(slv_system_t sys);
 /**<
 	@return the internal copy of the objective function, or
-	NULL if none was specified.<br><br>
+	NULL if none was specified.
 
 	Client solvers should minimize the residual of this equation.
 */
