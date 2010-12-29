@@ -878,6 +878,8 @@ ExecuteInitAssert(struct procFrame *fm, struct Statement *stat){
 				WriteStatementError(ASC_USER_SUCCESS,stat,0,"Assertion OK");
 			}else{
 				WriteStatementError(ASC_USER_ERROR,stat,1,"Assertion failed");
+				fm->flow = FrameError;
+				fm->ErrNo = Proc_if_real_expr;
 			}
 			break;
 		case real_value:
