@@ -879,7 +879,8 @@ ExecuteInitAssert(struct procFrame *fm, struct Statement *stat){
 			}else{
 				WriteStatementError(ASC_USER_ERROR,stat,1,"Assertion failed");
 				fm->flow = FrameError;
-				fm->ErrNo = Proc_if_real_expr;
+				/** FIXME need to add a special proc_enum for this */
+				fm->ErrNo = Proc_stop;
 			}
 			break;
 		case real_value:
