@@ -26,9 +26,9 @@
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/set.h>
-#include "CUnit/CUnit.h"
+
+#include <test/common.h>
 #include "test/assertimpl.h"
-#include "test_set.h"
 
 static void test_set(void)
 {
@@ -226,18 +226,8 @@ static void test_set(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo set_test_list[] = {
-  {"set", test_set},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(set)
 
-static CU_SuiteInfo suites[] = {
-  {"utilities_set", NULL, NULL, set_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(utilities_set, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_utilities_set(void)
-{
-  return CU_register_suites(suites);
-}

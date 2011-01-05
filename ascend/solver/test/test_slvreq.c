@@ -1,7 +1,3 @@
-#include <CUnit/CUnit.h>
-
-#include "test_slvreq.h"
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,6 +39,8 @@
 #include <ascend/system/slv_client.h>
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_server.h>
+
+#include <test/common.h>
 
 typedef struct SlvReqC_struct{
 	struct Instance *siminst;
@@ -224,7 +222,7 @@ static void test_slvreq_c(void){
 
 	/* all sorts of destruction */
 	CONSOLE_DEBUG("DESTROYING NOW...");
-	CU_ASSERT(S.siminst)
+	CU_ASSERT(NULL != S.siminst)
 	if(S.sys)system_destroy(S.sys);
 
 	system_free_reused_mem();
@@ -238,18 +236,8 @@ static void test_slvreq_c(void){
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo slvreq_test_list[] = {
-  {"slvreq_c", test_slvreq_c},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(slvreq_c)
 
-static CU_SuiteInfo suites[] = {
-  {"solver_slvreq", NULL, NULL, slvreq_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(solver_slvreq, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_solver_slvreq(void)
-{
-  return CU_register_suites(suites);
-}

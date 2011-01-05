@@ -28,7 +28,7 @@
  *  </pre>
  */
 
-#include "test/common.h"
+#include <test/common.h>
 
 #ifdef __cplusplus
 extern "C" {

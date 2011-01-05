@@ -28,8 +28,8 @@
 #endif
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascSignal.h>
-#include "CUnit/CUnit.h"
-#include "test_ascSignal.h"
+
+#include <test/common.h>
 
 static jmp_buf my_jmp_buf1;
 
@@ -519,18 +519,8 @@ Asc_SignalRecover(TRUE);
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo ascSignal_test_list[] = {
-  {"ascSignal", test_ascSignal},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(ascSignal)
 
-static CU_SuiteInfo suites[] = {
-  {"utilities_ascSignal", NULL, NULL, ascSignal_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(utilities_ascSignal, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_utilities_ascSignal(void)
-{
-  return CU_register_suites(suites);
-}

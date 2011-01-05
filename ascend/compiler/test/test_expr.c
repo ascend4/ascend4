@@ -20,7 +20,6 @@
 	Unit test functions for compiler. Nothing here yet.
 */
 #include <string.h>
-#include <CUnit/CUnit.h>
 
 #include <ascend/general/env.h>
 #include <ascend/general/platform.h>
@@ -31,6 +30,8 @@
 #include <ascend/compiler/exprio.h>
 #include <ascend/compiler/exprs.h>
 #include <ascend/compiler/symtab.h>
+
+#include <test/common.h>
 
 static void test_create(void){
 
@@ -57,26 +58,8 @@ static void test_create(void){
 
 /* the list of tests */
 
-#define TESTS(T,X) \
+#define TESTS(T) \
 	T(create)
 
-/* you shouldn't need to change the following */
+REGISTER_TESTS_SIMPLE(compiler_expr, TESTS)
 
-#define TESTDECL(TESTFN) {#TESTFN,test_##TESTFN}
-
-#define X ,
-
-static CU_TestInfo expr_test_list[] = {
-	TESTS(TESTDECL,X)
-	X CU_TEST_INFO_NULL
-};
-
-static CU_SuiteInfo suites[] = {
-	{"compiler_expr", NULL, NULL, expr_test_list},
-	CU_SUITE_INFO_NULL
-};
-
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_compiler_expr(void){
-	return CU_register_suites(suites);
-}

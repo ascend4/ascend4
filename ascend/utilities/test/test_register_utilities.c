@@ -31,7 +31,6 @@
 #define TESTS(T) \
 	T(ascDynaLoad) \
 	T(ascEnvVar) \
-	T(ascMalloc) \
 	/*T(ascPanic)*/ \
 	T(ascPrint) \
 	T(ascSignal) \

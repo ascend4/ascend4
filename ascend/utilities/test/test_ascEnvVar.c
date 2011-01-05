@@ -29,8 +29,8 @@
 #include <ascend/utilities/ascEnvVar.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
-#include "CUnit/CUnit.h"
-#include "test_ascEnvVar.h"
+
+#include <test/common.h>
 
 #ifdef __WIN32__
 #define SLASH '\\'
@@ -756,18 +756,8 @@ static void test_ascEnvVar(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo ascEnvVar_test_list[] = {
-  {"ascEnvVar", test_ascEnvVar},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(ascEnvVar)
 
-static CU_SuiteInfo suites[] = {
-  {"utilities_ascEnvVar", NULL, NULL, ascEnvVar_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(utilities_ascEnvVar, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_utilities_ascEnvVar(void)
-{
-  return CU_register_suites(suites);
-}

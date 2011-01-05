@@ -28,8 +28,9 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPrint.h>
 #include <ascend/general/table.h>
-#include "CUnit/CUnit.h"
-#include "test/assertimpl.h"
+
+#include <test/common.h>
+#include <test/assertimpl.h>
 
 /* transform function used in test_list(). */
 static
@@ -452,18 +453,8 @@ static void test_table(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo table_test_list[] = {
-  {"table", test_table},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(table)
 
-static CU_SuiteInfo suites[] = {
-  {"general_table", NULL, NULL, table_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(general_table, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_general_table(void)
-{
-  return CU_register_suites(suites);
-}

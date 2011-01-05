@@ -20,11 +20,11 @@
 	Unit test functions for linear/linsolqr.c
 */
 #include <string.h>
-#include <CUnit/CUnit.h>
 
 #include <ascend/general/platform.h>
 #include <ascend/linear/linsolqr.h>
 
+#include <test/common.h>
 #include <test/assertimpl.h>
 
 /*
@@ -152,19 +152,10 @@ static void test_qr3x3(void){
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo qr_test_list[] = {
-	{"qr1x1", test_qr1x1},
-	{"qr2x2", test_qr2x2},
-	{"qr3x3", test_qr3x3},
-	CU_TEST_INFO_NULL
-};
+#define TESTS(T)\
+	T(qr1x1) \
+	T(qr2x2) \
+	T(qr3x3)
 
-static CU_SuiteInfo suites[] = {
-	{"linear_qr", NULL, NULL, qr_test_list},
-	CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(linear_qrrank, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_linear_qr2x2(void){
-	return CU_register_suites(suites);
-}

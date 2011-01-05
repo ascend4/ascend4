@@ -27,8 +27,6 @@
 #include <io.h>
 #endif
 
-#include "CUnit/CUnit.h"
-
 #include <ascend/general/ascMalloc.h>
 
 #include <ascend/general/list.h>
@@ -41,7 +39,7 @@
 #include <ascend/system/logrel.h>
 #include <ascend/system/slv_common.h>
 
-#include "test_slv_common.h"
+#include <test/common.h>
 #include "test/assertimpl.h"
 #include "test/printutil.h"
 
@@ -1737,18 +1735,8 @@ extern int slv_direct_log_solve(slv_system_t sys,
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo slv_common_test_list[] = {
-  {"slv_common", test_slv_common},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(slv_common)
 
-static CU_SuiteInfo suites[] = {
-  {"solver_slv_common", NULL, NULL, slv_common_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(solver_slv_common, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_solver_slv_common(void)
-{
-  return CU_register_suites(suites);
-}

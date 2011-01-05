@@ -20,7 +20,6 @@
 	Unit test functions for compiler. Nothing here yet.
 */
 #include <string.h>
-#include <CUnit/CUnit.h>
 
 #include <ascend/general/env.h>
 #include <ascend/general/platform.h>
@@ -39,6 +38,7 @@
 
 #include <ascend/compiler/initialize.h>
 
+#include <test/common.h>
 #include <test/assertimpl.h>
 
 static void test_init(void){
@@ -391,34 +391,16 @@ static void test_stoponerror(void){
 
 /* the list of tests */
 
-#define TESTS(T,X) \
+#define TESTS(T) \
 	T(init) \
-	X T(fund_types) \
-	X T(parse_string_module) \
-	X T(instantiate_string) \
-	X T(parse_basemodel) \
-	X T(parse_file) \
-	X T(instantiate_file) \
-	X T(initialize) \
-	X T(stoponerror)
+	T(fund_types) \
+	T(parse_string_module) \
+	T(instantiate_string) \
+	T(parse_basemodel) \
+	T(parse_file) \
+	T(instantiate_file) \
+	T(initialize) \
+	T(stoponerror)
 
-/* you shouldn't need to change the following */
+REGISTER_TESTS_SIMPLE(compiler_basics, TESTS)
 
-#define TESTDECL(TESTFN) {#TESTFN,test_##TESTFN}
-
-#define X ,
-
-static CU_TestInfo basics_test_list[] = {
-	TESTS(TESTDECL,X)
-	X CU_TEST_INFO_NULL
-};
-
-static CU_SuiteInfo suites[] = {
-	{"compiler_basics", NULL, NULL, basics_test_list},
-	CU_SUITE_INFO_NULL
-};
-
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_compiler_basics(void){
-	return CU_register_suites(suites);
-}

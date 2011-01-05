@@ -29,8 +29,8 @@
 #endif
 #include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
-#include <CUnit/CUnit.h>
-#include "test_ascMalloc.h"
+
+#include <test/common.h>
 #include "test/assertimpl.h"
 
 #undef STR_LEN
@@ -1193,18 +1193,8 @@ static void test_ascMalloc(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo ascMalloc_test_list[] = {
-  {"ascMalloc", test_ascMalloc},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(ascMalloc)
 
-static CU_SuiteInfo suites[] = {
-  {"utilities_ascMalloc", NULL, NULL, ascMalloc_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(general_ascMalloc, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_utilities_ascMalloc(void)
-{
-  return CU_register_suites(suites);
-}

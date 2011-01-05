@@ -29,8 +29,9 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 #include <ascend/general/listio.h>
-#include "CUnit/CUnit.h"
-#include "test/assertimpl.h"
+
+#include <test/common.h>
+#include <test/assertimpl.h>
 #include "test/redirectStdStreams.h"
 
 #define USE_REDIRECT 0
@@ -148,18 +149,9 @@ static void test_listio(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo list_test_listio[] = {
-  {"listio", test_listio},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(listio)
 
-static CU_SuiteInfo suites[] = {
-  {"general_listio", NULL, NULL, list_test_listio},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(general_listio, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_general_listio(void)
-{
-  return CU_register_suites(suites);
-}
+

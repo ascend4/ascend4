@@ -29,8 +29,8 @@
 #endif
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/readln.h>
-#include "CUnit/CUnit.h"
-#include "test_readln.h"
+
+#include <test/common.h>
 #include "test/printutil.h"
 #include "test/redirectStdStreams.h"
 
@@ -375,18 +375,8 @@ static void test_readln(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo readln_test_list[] = {
-  {"readln", test_readln},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(readln)
 
-static CU_SuiteInfo suites[] = {
-  {"utilities_readln", NULL, NULL, readln_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(utilities_readln, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_utilities_readln(void)
-{
-  return CU_register_suites(suites);
-}

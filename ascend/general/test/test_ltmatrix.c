@@ -21,6 +21,8 @@
 #include <ascend/general/platform.h>
 #include <ascend/general/ltmatrix.h>
 
+#include "test/common.h"
+
 static void Hessian_Mtx_fill_pattern(hessian_mtx* matrix, int pattern);
 static int Hessian_Mtx_check_pattern(hessian_mtx* matrix, int pattern);
 
@@ -150,28 +152,8 @@ int Hessian_Mtx_check_pattern(hessian_mtx* matrix, int pattern){
 /*===========================================================================*/
 /* Registration information */
 
-/* the list of tests */
-
-#define TESTS(T,X) \
+#define TESTS(T) \
   T(ltmatrix)
 
-/* you shouldn't need to change the following */
+REGISTER_TESTS_SIMPLE(general_ltmatrix, TESTS);
 
-#define TESTDECL(TESTFN) {#TESTFN,test_##TESTFN}
-
-#define X ,
-
-static CU_TestInfo ltmatrix_test_list[] = {
-	TESTS(TESTDECL,X)
-	X CU_TEST_INFO_NULL
-};
-
-static CU_SuiteInfo suites[] = {
-	{"general_ltmatrix", NULL, NULL, ltmatrix_test_list},
-	CU_SUITE_INFO_NULL
-};
-
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_general_ltmatrix(void){
-	return CU_register_suites(suites);
-}

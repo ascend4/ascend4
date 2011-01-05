@@ -24,7 +24,7 @@
 #define SUITE general
 
 #define TESTS(T) \
-	T(qr2x2) \
+	T(qrrank) \
 	T(mtx)
 
 #define PROTO_TEST(NAME) PROTO(linear,NAME)

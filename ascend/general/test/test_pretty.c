@@ -25,8 +25,9 @@
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/pretty.h>
-#include "CUnit/CUnit.h"
-#include "test/printutil.h"
+
+#include <test/common.h>
+#include <test/printutil.h>
 
 #define MAX_STRING_LEN 100
 
@@ -263,18 +264,8 @@ static void test_pretty(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo list_test_pretty[] = {
-  {"pretty", test_pretty},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(pretty)
 
-static CU_SuiteInfo suites[] = {
-  {"general_pretty", NULL, NULL, list_test_pretty},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(general_pretty, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_general_pretty(void)
-{
-  return CU_register_suites(suites);
-}

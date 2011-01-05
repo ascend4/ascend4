@@ -26,8 +26,8 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/mem.h>
 #include <ascend/general/list.h>
-#include "CUnit/CUnit.h"
-#include "test_mem.h"
+
+#include <test/common.h>
 
 #define STR_LEN 100
 
@@ -829,18 +829,8 @@ static void test_mem(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo mem_test_list[] = {
-  {"mem", test_mem},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(mem)
 
-static CU_SuiteInfo suites[] = {
-  {"utilities_mem", NULL, NULL, mem_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(utilities_mem, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_utilities_mem(void)
-{
-  return CU_register_suites(suites);
-}

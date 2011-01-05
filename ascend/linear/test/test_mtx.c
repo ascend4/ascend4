@@ -20,11 +20,11 @@
 	Unit test functions for linear/linsolqr.c
 */
 #include <string.h>
-#include <CUnit/CUnit.h>
 
 #include <ascend/general/platform.h>
 #include <ascend/linear/mtx_csparse.h>
 
+#include <test/common.h>
 #include <test/assertimpl.h>
 
 
@@ -82,18 +82,8 @@ static void test_csparse(void){
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo mtx_test_list[] = {
-	{"csparse", test_csparse},
-	CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(csparse)
 
-static CU_SuiteInfo suites[] = {
-	{"linear_mtx", NULL, NULL, mtx_test_list},
-	CU_SUITE_INFO_NULL
-};
-
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_linear_mtx(void){
-	return CU_register_suites(suites);
-}
+REGISTER_TESTS_SIMPLE(linear_mtx, TESTS)
 

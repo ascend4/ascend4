@@ -1,18 +1,7 @@
 Import('test_env')
 
 import glob
+test_env['TESTSRCS_UTILITIES'] = [test_env.File(i) for i in glob.glob("test_*.c")]
 
-test_env['TESTSRCS_UTILITIES'] = [test_env.File(i) for i in Split("""
-	test_ascMalloc.c 
-	test_ascPanic.c
-	test_ascSignal.c
-	test_ascPrint.c
-	test_set.c
-	test_mem.c
-	test_readln.c
-	test_register_utilities.c
-	test_ascDynaLoad.c
-	test_ascEnvVar.c
-""")]
+test_env.SharedLibrary("testdynaload",["shlib_test.c"])
 
-test_env.SharedLibrary("testdynaload",["test_ascDynaLoad_shlib.c"])

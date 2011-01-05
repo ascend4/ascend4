@@ -22,7 +22,8 @@
 */
 
 #include <ascend/general/ospath.h>
-#include <CUnit/CUnit.h>
+
+#include <test/common.h>
 
 FilePathTestFn ospath_searchpath_testexists;
 
@@ -100,7 +101,7 @@ int ospath_searchpath_testexists(struct FilePath *path,void *file){
 #undef M
 #define M MM
 
-static void test_ospath_getparent(void){
+static void test_getparent(void){
 	struct FilePath *fp1, *fp2, *fp3;
 
 	//------------------------
@@ -121,7 +122,7 @@ static void test_ospath_getparent(void){
 }
 	//------------------------
 
-static void test_ospath_cleanup(void){
+static void test_cleanup(void){
 	struct FilePath *fp1, *fp2;
 
 	fp1 = ospath_new_from_posix("/usr/include/../local");
@@ -137,7 +138,7 @@ static void test_ospath_cleanup(void){
 }
 	//------------------------
 
-static void test_ospath_newfromposix(void){
+static void test_newfromposix(void){
 
 	struct FilePath *fp1, *fp2;
 
@@ -155,7 +156,7 @@ static void test_ospath_newfromposix(void){
 }
 	//------------------------
 
-static void test_ospath_secondcleanup(void){
+static void test_secondcleanup(void){
 	struct FilePath *fp1, *fp2, *fp3;
 	fp1 = ospath_new(".\\src/.\\images\\..\\\\movies\\");
 	fp2 = ospath_new(".\\src\\movies");
@@ -184,7 +185,7 @@ static void test_ospath_secondcleanup(void){
 }
 	//------------------------
 
-static void test_ospath_append(void){
+static void test_append(void){
 
 	struct FilePath *fp2, *fp3, *fp4;
 
@@ -211,7 +212,7 @@ static void test_ospath_append(void){
 }
 	//---------------------------
 
-static void test_ospath_appendupup(void){
+static void test_appendupup(void){
 
 	struct FilePath *fp2, *fp3, *fp4;
 
@@ -241,7 +242,7 @@ static void test_ospath_appendupup(void){
 }
 	//-------------------------
 
-static void test_ospath_up(void){
+static void test_up(void){
 
 	struct FilePath *fp1, *fp2;
 
@@ -270,7 +271,7 @@ static void test_ospath_up(void){
 }
 	//---------------------------
 
-static void test_ospath_concat(void){
+static void test_concat(void){
 
 	struct FilePath *fp1, *fp2, *fp3, *fp4;
 
@@ -299,7 +300,7 @@ static void test_ospath_concat(void){
 }
 	//---------------------------
 
-static void test_ospath_concatmixedslash(void){
+static void test_concatmixedslash(void){
 
 	struct FilePath *fp1, *fp2, *fp3, *fp4;
 
@@ -317,7 +318,7 @@ static void test_ospath_concatmixedslash(void){
 }
 	//---------------------------
 
-static void test_ospath_trailingslash(void){
+static void test_trailingslash(void){
 
 	struct FilePath *fp1, *fp2, *fp3, *fp4;
 
@@ -335,7 +336,7 @@ static void test_ospath_trailingslash(void){
 }
 	//---------------------------
 
-static void test_ospath_searchpath(void){
+static void test_searchpath(void){
 
 	struct FilePath *fp1, *fp2, *fp3;
 	struct FilePath **pp, **p1;// will be returned null-terminated
@@ -387,7 +388,7 @@ static void test_ospath_searchpath(void){
 }
 	//-------------------------------
 
-static void test_ospath_searchpath2(void){
+static void test_searchpath2(void){
 
 	struct FilePath *fp2, *fp3;
 	struct FilePath **pp, **p1;// will be returned null-terminated
@@ -422,7 +423,7 @@ static void test_ospath_searchpath2(void){
 }
 	//-------------------------------
 
-static void test_ospath_basefilename(void){
+static void test_basefilename(void){
 
 	struct FilePath *fp1;
 	char *s1;
@@ -472,7 +473,7 @@ static void test_ospath_basefilename(void){
 }
 	//-------------------------------
 
-static void test_ospath_getfilestem(void){
+static void test_getfilestem(void){
 
 	struct FilePath *fp1;
 	char *s1;
@@ -540,7 +541,7 @@ static void test_ospath_getfilestem(void){
 }
 	//-------------------------------
 
-static void test_ospath_getbasefileext(void){
+static void test_getbasefileext(void){
 
 	struct FilePath *fp1;
 	char *s1;
@@ -578,7 +579,7 @@ static void test_ospath_getbasefileext(void){
 }
 	//-------------------------------
 
-static void test_ospath_getdir(void){
+static void test_getdir(void){
 
 	struct FilePath *fp1, *fp2, *fp3;
 
@@ -617,35 +618,23 @@ static void test_ospath_getdir(void){
 /*===========================================================================*/
 /* Registration information */
 
-#define T(N) {#N, test_ospath_##N }
-static CU_TestInfo ospath_test_list[] = {
-	T(getparent)
-	,T(cleanup)
-	,T(newfromposix)
-	,T(secondcleanup)
-	,T(append)
-	,T(appendupup)
-	,T(up)
-	,T(concat)
-	,T(concatmixedslash)
-	,T(trailingslash)
-	,T(searchpath)
-	,T(searchpath2)
-	,T(basefilename)
-	,T(getfilestem)
-	,T(getbasefileext)
-	,T(getdir)
-	,CU_TEST_INFO_NULL
-};
-#undef T
+#define TESTS(T) \
+	T(getparent) \
+	T(cleanup) \
+	T(newfromposix) \
+	T(secondcleanup) \
+	T(append) \
+	T(appendupup) \
+	T(up) \
+	T(concat) \
+	T(concatmixedslash) \
+	T(trailingslash) \
+	T(searchpath) \
+	T(searchpath2) \
+	T(basefilename) \
+	T(getfilestem) \
+	T(getbasefileext) \
+	T(getdir)
 
-static CU_SuiteInfo suites[] = {
-  {"general_ospath", NULL, NULL, ospath_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(general_ospath, TESTS);
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_general_ospath(void)
-{
-  return CU_register_suites(suites);
-}

@@ -28,9 +28,10 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPrint.h>
 #include <ascend/general/list.h>
-#include "CUnit/CUnit.h"
-#include "test/assertimpl.h"
 #include <ascend/general/mathmacros.h>
+
+#include "test/common.h"
+#include "test/assertimpl.h"
 
 /* comparison function used in test_list(). */
 static
@@ -1703,18 +1704,9 @@ static void test_list(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo list_test_list[] = {
-  {"list", test_list},
-  CU_TEST_INFO_NULL
-};
 
-static CU_SuiteInfo suites[] = {
-  {"general_list", NULL, NULL, list_test_list},
-  CU_SUITE_INFO_NULL
-};
+#define TESTS(T) \
+	T(list)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_general_list(void)
-{
-  return CU_register_suites(suites);
-}
+REGISTER_TESTS_SIMPLE(general_list, TESTS);
+
