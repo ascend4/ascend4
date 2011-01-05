@@ -1,5 +1,5 @@
 #include <ascend/general/platform.h>
-#include "test_ascDynaLoad_shlib.h"
+#include "shlib_test.h"
 
 int value = FALSE;
                           

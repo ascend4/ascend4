@@ -21,5 +21,6 @@ if test_env.has_key('CUNIT_CPPPATH'):
 if test_env.has_key('CUNIT_LIBPATH'):
 	test_env.Append(LIBPATH=test_env['CUNIT_LIBPATH'])
 
-test_env.Program('test',srcs)
+testprog = test_env.Program('test',srcs)
 
+test_env.Depends(testprog,"#/ascend/utilities/test")
