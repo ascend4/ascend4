@@ -101,7 +101,7 @@
 #define __LINUX__
 #endif /* linux */
 
-/* FIXME: need to slip osx in here now. */
+/* NOTE: Mac OSX can be detected via __APPLE__ */
 
 /*
 	ASCEND code in base/generic only EXPORTS symbols, no imports.
