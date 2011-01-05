@@ -28,9 +28,10 @@
 #endif
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
+
 /* #include <compiler/redirectFile.h> */
-#include "CUnit/CUnit.h"
-#include "test_ascPanic.h"
+
+#include  <test/common.h>
 #include "test/assertimpl.h"
 #include "test/printutil.h"
 
@@ -191,18 +192,8 @@ static void test_ascPanic(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo ascPanic_test_list[] = {
-  {"ascPanic", test_ascPanic},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(ascPanic)
 
-static CU_SuiteInfo suites[] = {
-  {"utilities_ascPanic", NULL, NULL, ascPanic_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(general_ascPanic, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_utilities_ascPanic(void)
-{
-  return CU_register_suites(suites);
-}

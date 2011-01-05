@@ -29,8 +29,8 @@
 #include <stdarg.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPrint.h>
-#include "CUnit/CUnit.h"
-#include "test_ascPrint.h"
+
+#include <test/common.h>
 #include "test/printutil.h"
 
 #undef STR_LEN
@@ -534,18 +534,8 @@ static void test_ascPrint(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo ascPrint_test_list[] = {
-  {"ascPrint", test_ascPrint},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(ascPrint)
 
-static CU_SuiteInfo suites[] = {
-  {"utilities_ascPrint", NULL, NULL, ascPrint_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(utilities_ascPrint, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_utilities_ascPrint(void)
-{
-  return CU_register_suites(suites);
-}

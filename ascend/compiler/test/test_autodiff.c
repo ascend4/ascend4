@@ -23,8 +23,6 @@
 	Revised by: Ben Allan - Rev.1
 				Mahesh Narayanamurthi - Rev. 2
 */
-#include <CUnit/CUnit.h>
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -61,6 +59,7 @@
 #include <ascend/compiler/instance_io.h>
 // FIXME include anything else?
 
+#include <test/common.h>
 #include <test/assertimpl.h>
 #include <test/test_globals.h>
 
@@ -807,26 +806,8 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 
 /* the list of tests */
 
-#define TESTS(T,X) \
+#define TESTS(T) \
   T(autodiff)
 
-/* you shouldn't need to change the following */
+REGISTER_TESTS_SIMPLE(compiler_autodiff, TESTS)
 
-#define TESTDECL(TESTFN) {#TESTFN,test_##TESTFN}
-
-#define X ,
-
-static CU_TestInfo autodiff_test_list[] = {
-	TESTS(TESTDECL,X)
-	X CU_TEST_INFO_NULL
-};
-
-static CU_SuiteInfo suites[] = {
-	{"compiler_autodiff", NULL, NULL, autodiff_test_list},
-	CU_SUITE_INFO_NULL
-};
-
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_compiler_autodiff(void){
-	return CU_register_suites(suites);
-}

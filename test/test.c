@@ -47,6 +47,7 @@ extern struct FilePath* ASC_TEST_DIR;
 int run_suite_or_test(char *name){
 	char suitename[1000];
 	char *s,*n;
+	/* locate the '.' separator and copy bits before that into suitename. */
 	for(s=suitename,n=name; *n!='.' && *n!='\0' && s < suitename+999; *s++=*n++);
 	*s='\0';
 	struct CU_TestRegistry *reg = CU_get_registry();
@@ -59,18 +60,15 @@ int run_suite_or_test(char *name){
 
 	CU_ErrorCode result;
 	while(suite!=NULL){
-		fprintf(stderr,"Looking at suite %s\n", suite->pName);
 		if(0==strcmp(suite->pName,suitename)){
-			fprintf(stderr,"Found suite %s\n", suitename);
 			if(*n=='.'){
 				++n;
-				fprintf(stderr,"Looking for test %s\n", n);
 				test = suite->pTest;
 				while(test!=NULL){
-					fprintf(stderr,"Found test %s\n", test->pName);
 					if(0==strcmp(test->pName,n)){
 						fprintf(stderr,"Running test %s (%p, %p)\n", n,suite,test);
 						result = CU_basic_run_test(suite,test);
+						fprintf(stderr,"Result code: %d\n",result);
 						fprintf(stderr,"Result: %s\n",CU_get_error_msg());
 						return result;
 					}
@@ -89,6 +87,44 @@ int run_suite_or_test(char *name){
 	return CUE_NO_SUITENAME;
 };
 
+int list_suites(){
+	struct CU_TestRegistry *reg = CU_get_registry();
+	struct CU_Suite *suite = reg->pSuite;
+	fprintf(stderr,"Test suites found in registry:\n");	
+	while(suite!=NULL){
+		fprintf(stderr,"\t%s\n", suite->pName);
+		suite = suite->pNext;
+	}
+	return CUE_NO_SUITENAME;
+}
+
+int list_tests(const char *suitename0){
+	char suitename[1000];
+	char *s;
+	const char *n;
+	/* locate the '.' separator and copy bits before that into suitename. */
+	for(s=suitename,n=suitename0; *n!='.' && *n!='\0' && s < suitename+999; *s++=*n++);
+	*s='\0';
+
+	struct CU_TestRegistry *reg = CU_get_registry();
+	struct CU_Suite *suite = reg->pSuite;
+	struct CU_Test *test;
+	while(suite!=NULL){
+		if(0==strcmp(suite->pName,suitename)){
+			fprintf(stderr,"Tests found in suite '%s':\n",suitename);
+			test = suite->pTest;
+			while(test!=NULL){
+				fprintf(stderr,"\t%s\n", test->pName);
+				test = test->pNext;
+			}
+			return CUE_NO_TESTNAME;
+		}
+		suite = suite->pNext;
+	}
+	fprintf(stderr,"Test suite '%s' not found in registry.\n",suitename);
+	return CUE_NO_SUITENAME;
+}
+
 /**
 	Main routine, handles command line options
 */
@@ -96,17 +132,21 @@ int main(int argc, char* argv[]){
 	CU_BasicRunMode mode = CU_BRM_VERBOSE;
 	CU_ErrorAction error_action = CUEA_IGNORE;
 	CU_ErrorCode result;
+	char suitename[1000];
+	char list = 0;
 
 	struct FilePath* test_executable = ospath_new(argv[0]);
 	ASC_TEST_DIR = ospath_getdir(test_executable); /** Global Variable containing Path information about the test directory */
 
 	static struct option long_options[] = {
-		{"on-error", required_argument, 0, 'e'},
-		{"verbose",  no_argument,       0, 'v'},
-		{"silent",   no_argument,       0, 's'},
-		{"normal",   no_argument,       0, 'n'},
-		{"help",     no_argument,       0, '?'},
-		{"usage",    no_argument,       0, '?'},
+		{"on-error",   required_argument, 0, 'e'},
+		{"verbose",    no_argument,       0, 'v'},
+		{"silent",     no_argument,       0, 's'},
+		{"normal",     no_argument,       0, 'n'},
+		{"help",       no_argument,       0, '?'},
+		{"usage",      no_argument,       0, '?'},
+		{"list-suites",no_argument,       0, 'l'},
+		{"list-tests", required_argument, 0, 't'},
 		{0, 0, 0, 0}
 	};
 
@@ -121,10 +161,13 @@ int main(int argc, char* argv[]){
 		"    --silent, -s\n"
 		"    --normal, -n\n"
 		"    --on-error=[fail|abort|ignore], -e\n"
-		"    --help\n";
+		"    --help\n"
+		"    --list-suites, -l\n"
+		"    --list-tests=SUITENAME, -tSUITENAME\n"
+	;
 
 	char c;
-	while(-1 != (c = getopt_long (argc, argv, "vsne:", long_options, &option_index))){
+	while(-1 != (c = getopt_long (argc, argv, "vsne:t:l", long_options, &option_index))){
 		switch(c){
 			case 'v': mode = CU_BRM_VERBOSE; break;
 			case 's': mode = CU_BRM_SILENT; break;
@@ -146,6 +189,14 @@ int main(int argc, char* argv[]){
 					goto cleanup;	
 				}
 				break;
+			case 'l':
+				list = 1;
+				suitename[0] = '\0';
+				break;
+			case 't':
+				list = 1;
+				strncpy(suitename, optarg, 999);
+				break;
 			case '?':
 			case 'h':
 				fprintf(stderr,usage,argv[0]);
@@ -164,16 +215,27 @@ int main(int argc, char* argv[]){
 	CU_basic_set_mode(mode);
 	CU_set_error_action(error_action);
 
+	if(list){
+		if(strlen(suitename)){
+			list_tests(suitename);
+		}else{
+			list_suites();
+		}
+		goto cleanup;
+	}
+
 	/* any remaining command-line arguments will be specific test suites and/or tests to run */
 	if(optind < argc){
 		while(optind < argc){
 			result = run_suite_or_test(argv[optind]);
 			if(result==CUE_NO_SUITENAME){
 				fprintf(stderr,"Invalid suite name '%s'\n", argv[optind]);
+				list_suites();
 				result = 1;
 				goto cleanup;
 			}else if(result==CUE_NO_TESTNAME){
 				fprintf(stderr,"Invalid test name '%s'\n", argv[optind]);
+				list_tests(argv[optind]);
 				result = 1;
 				goto cleanup;
 			}

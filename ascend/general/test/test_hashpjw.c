@@ -24,7 +24,8 @@
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/hashpjw.h>
-#include "CUnit/CUnit.h"
+
+#include "test/common.h"
 #include "test/assertimpl.h"
 
 static void test_hashpjw(void)
@@ -127,18 +128,8 @@ static void test_hashpjw(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo hashpjw_test_list[] = {
-  {"hashpjw", test_hashpjw},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(hashpjw)
 
-static CU_SuiteInfo suites[] = {
-  {"general_hashpjw", NULL, NULL, hashpjw_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(general_hashpjw, TESTS);
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_general_hashpjw(void)
-{
-  return CU_register_suites(suites);
-}

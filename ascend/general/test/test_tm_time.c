@@ -25,8 +25,9 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 #include <ascend/general/tm_time.h>
-#include "CUnit/CUnit.h"
-#include "test/assertimpl.h"
+
+#include <test/common.h>
+#include <test/assertimpl.h>
 
 /* 
  *  This is pretty simplistic, but so is tm_time.[ch].
@@ -110,18 +111,8 @@ static void test_tm_time(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo tm_time_test_list[] = {
-  {"tm_time", test_tm_time},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(tm_time)
 
-static CU_SuiteInfo suites[] = {
-  {"general_tm_time", NULL, NULL, tm_time_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(general_tm_time, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_general_tm_time(void)
-{
-  return CU_register_suites(suites);
-}

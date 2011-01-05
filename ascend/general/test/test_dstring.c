@@ -21,12 +21,12 @@
 	Unit test functions for ASCEND: general/dstring.c
 */
 #include <string.h>
-#include <CUnit/CUnit.h>
 
 #include <ascend/general/platform.h>
 #include <ascend/general/dstring.h>
 #include <ascend/general/ascMalloc.h>
 
+#include <test/common.h>
 #include <test/assertimpl.h>
 
 static void test_dstring(void)
@@ -390,18 +390,8 @@ static void test_dstring(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo dstring_test_list[] = {
-  {"dstring", test_dstring},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(dstring)
 
-static CU_SuiteInfo suites[] = {
-  {"general_dstring", NULL, NULL, dstring_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(general_dstring, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_general_dstring(void)
-{
-  return CU_register_suites(suites);
-}

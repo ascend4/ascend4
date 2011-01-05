@@ -49,11 +49,11 @@
 #include "initialize.h"
 #include "procio.h"
 
-void WriteInitWarn(struct procFrame *fm, char *str){
+void WriteInitWarn(struct procFrame *fm, const char *str){
   WriteStatementErrorMessage(fm->err, fm->stat, str, 0,2);
 }
 
-void WriteInitErr(struct procFrame *fm, char *str){
+void WriteInitErr(struct procFrame *fm, const char *str){
   WSEM(fm->err,fm->stat,str);
   FFLUSH(fm->err);
 }

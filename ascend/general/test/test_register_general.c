@@ -35,7 +35,8 @@
 	T(table) \
 	T(tm_time) \
 	T(ospath) \
-	T(ltmatrix)
+	T(ltmatrix) \
+	T(ascMalloc)
 /* 	T(qsort1) */
 
 #define PROTO_GENERAL(NAME) PROTO(general,NAME)

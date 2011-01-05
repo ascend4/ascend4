@@ -54,9 +54,9 @@ enum ProcExtError {
 };
 
 /** METHODs equivalent of WSEM. Should go away soon. */
-extern void WriteInitWarn(struct procFrame *fm, char *str);
+extern void WriteInitWarn(struct procFrame *fm, const char *str);
 /** METHODs equivalent of WSEM. Should go away soon. */
-extern void WriteInitErr(struct procFrame *fm, char *str);
+extern void WriteInitErr(struct procFrame *fm, const char *str);
 
 /* error message services */
 

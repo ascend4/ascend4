@@ -28,9 +28,9 @@
 #endif
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascDynaLoad.h>
-#include "CUnit/CUnit.h"
-#include "test_ascDynaLoad.h"
-#include "test_ascDynaLoad_shlib.h"
+
+#include <test/common.h>
+#include "shlib_test.h"
 
 /*
  *  ascDynaLoad.[ch] has several different platform-dependent
@@ -162,18 +162,8 @@ static void test_ascDynaLoad(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo ascDynaLoad_test_list[] = {
-  {"dyna;oad", test_ascDynaLoad},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(ascDynaLoad)
 
-static CU_SuiteInfo suites[] = {
-  {"utilities_ascDynaLoad", NULL, NULL, ascDynaLoad_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(utilities_ascDynaLoad, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_utilities_ascDynaLoad(void)
-{
-  return CU_register_suites(suites);
-}

@@ -28,8 +28,9 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPrint.h>
 #include <ascend/general/stack.h>
-#include "CUnit/CUnit.h"
-#include "test/assertimpl.h"
+
+#include <test/common.h>
+#include <test/assertimpl.h>
 
 /* transform function used in test_stack(). */
 static
@@ -317,18 +318,8 @@ static void test_stack(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo stack_test_list[] = {
-  {"stack", test_stack},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(stack)
 
-static CU_SuiteInfo suites[] = {
-  {"general_stack", NULL, NULL, stack_test_list},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(general_stack, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_general_stack(void)
-{
-  return CU_register_suites(suites);
-}

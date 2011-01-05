@@ -1,7 +1,3 @@
-#include <CUnit/CUnit.h>
-
-#include "test_slvreq.h"
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,6 +39,8 @@
 #include <ascend/system/slv_client.h>
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_server.h>
+
+#include <test/common.h>
 
 /*
 	Test solving a simple IPOPT model
@@ -127,7 +125,7 @@ static void test_ipopt(const char *filenamestem){
 /*===========================================================================*/
 /* Registration information */
 
-#define TESTS(T,X) \
+#define TESTS1(T,X) \
 	T(test2) \
 	X T(test5) \
 	X T(test6) \
@@ -144,32 +142,18 @@ static void test_ipopt(const char *filenamestem){
 
 /* define the tests: each test loads the model, solves with IPOPT, then runs the
 self_test method. */
-#define T(N) static void test_ipopt_##N(void){\
+#define T(N) static void test_##N(void){\
 		test_ipopt(#N);\
 	}
 #define X
-TESTS(T,X)
+TESTS1(T,X)
 #undef T
 #undef X
 
-/* register the tests to CUnit */
-#define T(N) {#N, test_ipopt_##N }
-#define X ,
-static CU_TestInfo ipopt_test_list[] = {
-	TESTS(T,X)
-	, CU_TEST_INFO_NULL
-};
-#undef T
+#define X
+#define TESTS(T) \
+	TESTS1(T,X)
+
+REGISTER_TESTS_SIMPLE(solver_ipopt, TESTS)
 #undef X
-
-static CU_SuiteInfo suites[] = {
-  {"solver_ipopt", NULL, NULL, ipopt_test_list},
-  CU_SUITE_INFO_NULL
-};
-
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_solver_ipopt(void)
-{
-  return CU_register_suites(suites);
-}
 

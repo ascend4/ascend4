@@ -20,7 +20,6 @@
 	Unit test functions for default_all automatic recursive methods.
 */
 #include <string.h>
-#include <CUnit/CUnit.h>
 
 #include <ascend/general/env.h>
 #include <ascend/general/platform.h>
@@ -40,6 +39,7 @@
 #include <ascend/compiler/initialize.h>
 #include <ascend/compiler/watchpt.h>
 
+#include <test/common.h>
 #include <test/assertimpl.h>
 
 static enum Proc_enum run_method(struct Instance *sim, const char *methodname){
@@ -209,30 +209,11 @@ static void test_default3b(void){
 
 /* the list of tests */
 
-#define TESTS(T,X) \
+#define TESTS(T) \
 	T(default1) \
-	X T(default2) \
-	X T(default3) \
-	X T(default3b)
+	T(default2) \
+	T(default3) \
+	T(default3b)
 
-/* you shouldn't need to change the following */
-
-#define TESTDECL(TESTFN) {#TESTFN,test_##TESTFN}
-
-#define X ,
-
-static CU_TestInfo defaultall_test_list[] = {
-	TESTS(TESTDECL,X)
-	X CU_TEST_INFO_NULL
-};
-
-static CU_SuiteInfo suites[] = {
-	{"packages_defaultall", NULL, NULL, defaultall_test_list},
-	CU_SUITE_INFO_NULL
-};
-
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_packages_defaultall(void){
-	return CU_register_suites(suites);
-}
+REGISTER_TESTS_SIMPLE(packages_defaultall, TESTS)
 

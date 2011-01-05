@@ -26,7 +26,8 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/pool.h>
 #include <ascend/general/list.h>
-#include "CUnit/CUnit.h"
+
+#include <test/common.h>
 
 static void test_pool(void)
 {
@@ -406,18 +407,8 @@ static void test_pool(void)
 /*===========================================================================*/
 /* Registration information */
 
-static CU_TestInfo list_test_pool[] = {
-  {"pool", test_pool},
-  CU_TEST_INFO_NULL
-};
+#define TESTS(T) \
+	T(pool)
 
-static CU_SuiteInfo suites[] = {
-  {"general_pool", NULL, NULL, list_test_pool},
-  CU_SUITE_INFO_NULL
-};
+REGISTER_TESTS_SIMPLE(general_pool, TESTS)
 
-/*-------------------------------------------------------------------*/
-CU_ErrorCode test_register_general_pool(void)
-{
-  return CU_register_suites(suites);
-}
