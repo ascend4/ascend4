@@ -118,8 +118,7 @@ void system_destroy(slv_system_t sys){
 	slv_destroy(sys); /* frees buf data */
 }
 
-void system_free_reused_mem()
-{
+void system_free_reused_mem(){
   mtx_free_reused_mem();
   linsolqr_free_reused_mem();
   analyze_free_reused_mem();

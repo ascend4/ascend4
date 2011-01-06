@@ -117,7 +117,6 @@ static void test_ipopt(const char *filenamestem){
 	CU_ASSERT(siminst != NULL);
 
 	solver_destroy_engines();
-
 	sim_destroy(siminst);
 	Asc_CompilerDestroy();
 }

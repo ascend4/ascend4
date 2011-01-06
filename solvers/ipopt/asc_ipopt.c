@@ -127,7 +127,9 @@ struct IpoptSystemStruct{
 	int32 calc_ok;
 	double obj_val;
 
+#if 0
 	void *parm_array[IPOPT_PARAMS];
+#endif
 	struct slv_parameter pa[IPOPT_PARAMS];
 
 	/*
@@ -139,17 +141,21 @@ struct IpoptSystemStruct{
 	Index nnzJ; /* number of non zeros in the jacobian of the constraints */
 	Index nnzH; /* number of non-zeros in the hessian of the objective */
 
+#if 0
 	Number* x_L;                  /* lower bounds on x */
 	Number* x_U;                  /* upper bounds on x */
 	Number* g_L;                  /* lower bounds on g */
 	Number* g_U;                  /* upper bounds on g */
+#endif
 
 	IpoptProblem nlp;             /* IpoptProblem */
 
 	enum ApplicationReturnStatus status; /* Solve return code */
+#if 0
 	Number* x;                    /* starting point and solution vector */
 	Number* mult_x_L;             /* lower bound multipliers at the solution */
 	Number* mult_x_U;             /* upper bound multipliers at the solution */
+#endif
 	Index i;                      /* generic counter */
 };
 
@@ -245,9 +251,14 @@ static SlvClientToken ipopt_create(slv_system_t server, int32 *statusindex){
 }
 
 static int32 ipopt_destroy(slv_system_t server, SlvClientToken asys){
+	IpoptSystem *sys;
 	UNUSED_PARAMETER(server);
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"ipopt_destroy not implemented");
-	return 1;
+	sys = SYS(asys);
+	slv_destroy_parms(&(sys->p));
+	if(sys->s.cost) ascfree(sys->s.cost);
+	ASC_FREE(sys);
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"ipopt_destroy still needs debugging");
+	return 0;
 }	
 
 

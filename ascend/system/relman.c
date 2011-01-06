@@ -71,26 +71,30 @@
 	Calling with nbytes==0 will free any memory allocated.
 */
 static
-void *rel_tmpalloc( int nbytes){
-  static char *ptr = NULL;
-  static int cap = 0;
+void *rel_tmpalloc(int nbytes){
+	static char *ptr = NULL;
+	static int cap = 0;
 
-  if (nbytes) {
-    if( nbytes > cap ) {
-      if( ptr != NULL ) ascfree(ptr);
-      ptr = ASC_NEW_ARRAY(char,nbytes);
-      cap = nbytes;
-    }
-  }else{
-    if (ptr) ascfree(ptr);
-    ptr=NULL;
-    cap=0;
-  }
-  if ( cap >0) {
-    return(ptr);
-  } else  {
-    return NULL;
-  }
+	if(nbytes){
+		if(nbytes > cap){
+			if(ptr != NULL){
+				ASC_FREE(ptr);
+			}
+			ptr = ASC_NEW_ARRAY(char,nbytes);
+			cap = nbytes;
+		}
+	}else{
+		if(ptr){
+			ASC_FREE(ptr);
+		}
+		ptr=NULL;
+		cap=0;
+	}
+	if(cap > 0){
+		return(ptr);
+	} else  {
+		return NULL;
+	}
 }
 
 
@@ -102,7 +106,7 @@ void *rel_tmpalloc( int nbytes){
 
 
 void relman_free_reused_mem(void){
-  /* rel_tmpalloc(0); */
+  rel_tmpalloc(0); /* restoring this call, to avoid minor memory leaks; not sure why it was commented out ages ago -- JP*/
   RelationFindRoots(NULL,0,0,0,0,NULL,NULL,NULL);
 }
 
@@ -523,7 +527,6 @@ int relman_diff2_rev(struct rel_relation *rel, const var_filter_t *filter
 	real64 *gradient;
 	int32 len,c;
 	int status;
-	//CONSOLE_DEBUG("In Function: relman_diff2");
 	assert(rel!=NULL && filter!=NULL);
 	len = rel_n_incidences(rel);
 //	CONSOLE_DEBUG("In Function relman_diff2_rev");
@@ -551,8 +554,10 @@ int relman_diff2_rev(struct rel_relation *rel, const var_filter_t *filter
 		return status;
 	}else{
 		//CONSOLE_DEBUG("Derivative Type: Not SAFE");
-		if((status =(int32)RelationCalcGradientRev(rel_instance(rel),gradient))
-== 0) {
+		if(
+			(status = (int32)RelationCalcGradientRev(rel_instance(rel),gradient))
+			== 0
+		){
 			/* successful */
 			for (c=0; c < len; c++) {
 				if (var_apply_filter(vlist[c],filter)) {
@@ -562,11 +567,10 @@ int relman_diff2_rev(struct rel_relation *rel, const var_filter_t *filter
 				}
 			}
 		}
-		/* SOLE_DEBUG("RETURNING (NON-SAFE) calc_ok=%d",status); */
+		/* CONSOLE_DEBUG("RETURNING (NON-SAFE) calc_ok=%d",status); */
 		return status;
 	}
 }
-
 
 
 /** ---------------------Hessian Calculations------------------------------ */

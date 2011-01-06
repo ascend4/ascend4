@@ -30,7 +30,13 @@
 #include <ascend/utilities/ascDynaLoad.h>
 
 #include <test/common.h>
+#include <test/printutil.h>
+
 #include "shlib_test.h"
+
+int error_reporter_callback_null(ERROR_REPORTER_CALLBACK_ARGS){
+	return 0;
+}
 
 /*
  *  ascDynaLoad.[ch] has several different platform-dependent
@@ -59,6 +65,8 @@ static void test_ascDynaLoad(void)
   cleanupFunc       cleanup_func;
   valuetype        *value1, *value2;
   unsigned long prior_meminuse;
+
+	error_reporter_set_callback(&error_reporter_callback_null);
 
 #ifdef __WIN32__
   const char *shlib_name = "ascend\\utilities\\test\\testdynaload.dll";
@@ -159,6 +167,8 @@ static void test_ascDynaLoad(void)
   CU_TEST(NULL == Asc_DynamicFunction(shlib_name, "init")); /* library not open */
 
   CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
+
+	error_reporter_set_callback(NULL);
 }
 
 /*===========================================================================*/
