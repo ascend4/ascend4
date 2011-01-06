@@ -151,6 +151,7 @@ ASC_DLLSPEC real64 relman_scale(struct rel_relation *rel);
 	@TODO relman_diff() needs to be reimplemented - needs compiler-side work.
 */
 
+
 ASC_DLLSPEC int relman_diff2(struct rel_relation *rel,
                         const var_filter_t *filter,
                         real64 *derivatives,
@@ -159,7 +160,7 @@ ASC_DLLSPEC int relman_diff2(struct rel_relation *rel,
                         int32 safe);
 /**<
 	Calculates the row of the jacobian matrix (the transpose gradient of
-	the relation residual, $ \grad^{T}(f) $) corresponding to the relation
+	the relation residual, \f$ \grad^{T}(f) \f$) corresponding to the relation
 	rel. The filter determines which variables actually contribute to the
 	jacobian.
 

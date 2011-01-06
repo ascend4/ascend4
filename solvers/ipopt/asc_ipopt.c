@@ -257,7 +257,7 @@ static int32 ipopt_destroy(slv_system_t server, SlvClientToken asys){
 	slv_destroy_parms(&(sys->p));
 	if(sys->s.cost) ascfree(sys->s.cost);
 	ASC_FREE(sys);
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"ipopt_destroy still needs debugging");
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"ipopt_destroy still needs debugging");
 	return 0;
 }	
 
@@ -596,7 +596,7 @@ int ipopt_update_model(IpoptSystem *sys, const double *x){
 	/* FIXME do we need to update any other stuff? */
 	for(j = 0; j < sys->n; ++j){
 		//CONSOLE_DEBUG("value of var[%d] = %g", j, x[j]);
-	    	asc_assert(!isnan(x[j]));
+		asc_assert(!isnan(x[j]));
 		var_set_value(sys->vlist[j], x[j]);
 	}
 
@@ -651,11 +651,6 @@ Bool ipopt_eval_grad_f(Index n, Number* x, Bool new_x, Number* grad_f, void *use
 	int *variables;
 
 	sys = SYS(user_data);
-
-	static var_filter_t vfilter = {
-		VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED
-		,VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR
-	};
 
 	//CONSOLE_DEBUG("ipopt_eval_grad_f");
 
@@ -752,12 +747,6 @@ Bool ipopt_eval_jac_g(Index n, Number* x, Bool new_x, Index m
 	int *variables;
 	double *derivatives; 
 
-	static var_filter_t vfilter = {
-		VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED,
-		VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR
-	};
-
-
 	//CONSOLE_DEBUG("ipopt_eval_jac_g... nnzJ = %d",sys->nnzJ);
 	//CONSOLE_DEBUG("ipopt_eval_jac_g... n = %d",sys->n);
 	//CONSOLE_DEBUG("ipopt_eval_jac_g... m = %d",sys->m);
@@ -783,34 +772,42 @@ Bool ipopt_eval_jac_g(Index n, Number* x, Bool new_x, Index m
 				for(j=0;j<len;j++){
 					/* looping through incident variables in current relation */
 					if(var_apply_filter(incidence_list[j], &(sys->vfilt))){
-						CONSOLE_DEBUG("Location of Non Zero: {%d,%d}; k = %d",i,incidence_list[j]->sindex,k);
+						CONSOLE_DEBUG("Non-zero #%d at [%d,%d]",k, i,incidence_list[j]->sindex);
 
 						/* valgrind says invalid write of size 4 here... */
 						iRow[k]=i; // should i use sindex of row here or is this ok?
 						jCol[k++]=incidence_list[j]->sindex;
 					}
-				}		
+				}
+			}else{
+				CONSOLE_DEBUG("Filter removes relation %d",i);
 			}
 		}
-		CONSOLE_DEBUG("Finished Locating Non-Zero elements in Sparse Matrix");
+		CONSOLE_DEBUG("Found %d non-zero elements in jacobian", k);
 	}else{
-		/** @todo Allocating and Deallocating memory for each row??? you must be out of your mind :O */
+		//CONSOLE_DEBUG("Calculating jacobian...");
 		k=0;
+		/** @TODO make use of some temporary allocated memory for these arrays... */
 		variables = ASC_NEW_ARRAY(int,n);
-		derivatives = ASC_NEW_ARRAY(double,n);
+		derivatives = ASC_NEW_ARRAY_CLEAR(double,n);
 		for(i=0; i<m;++i){
-			if(rel_apply_filter(sys->rlist[i], &(sys->rfilt))){				
+			if(rel_apply_filter(sys->rlist[i], &(sys->rfilt))){
 				incidence_list = (struct var_variable**) rel_incidence_list(sys->rlist[i]);
 				len = rel_n_incidences(sys->rlist[i]);
-				
-			      /*relman_diff2(sys->rlist[i],&vfilter,derivatives,variables
-			      ,&count,SLV_PARAM_BOOL(&(sys->p),ASCEND_PARAM_SAFEEVAL)
-			      );*/
 
+#if 0
+				relman_diff2(sys->rlist[i],&(sys->vfilt),derivatives,variables
+					,&count,SLV_PARAM_BOOL(&(sys->p),ASCEND_PARAM_SAFEEVAL)
+				);
+#else
 				relman_diff2_rev(sys->rlist[i], &(sys->vfilt), derivatives 
 					,variables, &count, SLV_PARAM_BOOL(&(sys->p),ASCEND_PARAM_SAFEEVAL)
 				);
-				for(j=0;j<len;j++){
+#endif
+
+				for(j=0;j<count;j++){ /* loop through only the returned (filtered) incidences, not all of them */
+					asc_assert(k < sys->nnzJ);
+					//CONSOLE_DEBUG("Recording values[%d] = derivatives[%d]",k,j);
 					asc_assert(!isnan(derivatives[j]));
 					values[k++] = derivatives[j];
 				}
@@ -845,15 +842,9 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 	Index col;
 	Index idx;
 
-
-	static var_filter_t vfilter = {
-		VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED,
- 		VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR
-	};	
-
 	//CONSOLE_DEBUG("IN FUNCTION ipopt_eval_h");
-	//CONSOLE_DEBUG("ipopt_eval_h... nnzH = %d",sys->nnzH);
-	//CONSOLE_DEBUG("ipopt_eval_h... n = %d",sys->n);
+	//CONSOLE_DEBUG("nnzH = %d",sys->nnzH);
+	//CONSOLE_DEBUG("n = %d, m = %d",sys->n, sys->m);
 
 	asc_assert(sys!=NULL);
 	asc_assert(n==sys->n);
@@ -861,7 +852,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 	
 	if(new_x){
 		res = ipopt_update_model(sys,x);
-		if(res)return 0; /* fail model update */
+		if(res)return FALSE; /* fail model update */
 	}
 
 	if(values == NULL){
@@ -898,7 +889,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 		
 		/** Correction for objective function **/
 		//CONSOLE_DEBUG("Correction for Objective Relation underway");
-		relman_hess(sys->obj,&vfilter,hess_matrix,&count,n,SLV_PARAM_BOOL(&(sys->p),ASCEND_PARAM_SAFEEVAL));
+		relman_hess(sys->obj,&(sys->vfilt),hess_matrix,&count,n,SLV_PARAM_BOOL(&(sys->p),ASCEND_PARAM_SAFEEVAL));
 		
 		idx = 0;
 
@@ -921,7 +912,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 			incidence_list = (struct var_variable**) rel_incidence_list(sys->rlist[i]);
 			if(incidence_list!=NULL){
 				//CONSOLE_DEBUG("Correction for Constraint Relation [%lu] underway",i);
-				relman_hess(sys->rlist[i],&vfilter,hess_matrix,&count,n,SLV_PARAM_BOOL(&(sys->p),ASCEND_PARAM_SAFEEVAL));
+				relman_hess(sys->rlist[i],&(sys->vfilt),hess_matrix,&count,n,SLV_PARAM_BOOL(&(sys->p),ASCEND_PARAM_SAFEEVAL));
 			
 				idx=0;
 
@@ -971,9 +962,23 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 
 	/** @todo work out if matrix creation is not again needed */
 
-	/** @todo slv_sort_rels_and_vars(server,&(sys->m),&(sys->n)); */
+	slv_sort_rels_and_vars(server,&(sys->m),&(sys->n));
+#if 0
+	/* ignore any errors here; if it fails, we may just have a single objective function and no constraining relations */
+	if(-1 == sys->n){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to find any optimisable vars");
+		return -4;
+	}
+	if(-1 == sys->m){
+		sys->m = 0; /* no relations found, but that's OK if there's an objective? */
+	}
+	if(-1 == sys->m)sys->m = 0;
+	if(-1 == sys->n)sys->n = 0;
+#endif
 
+	CONSOLE_DEBUG("Got %d rels and %d vars",sys->m, sys->n);
 
+#if 1
 	/* count the number of optimisation variables */
 	sys->n = 0;
 	for(i = 0; i < sys->vtot; i++){
@@ -982,6 +987,7 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 			sys->n++;
 		}
 	}
+#endif
 
 	/* set all relations as being 'unsatisfied' to start with... */
 	for(i=0; i < sys->rtot; ++i){
@@ -998,8 +1004,11 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 	//CONSOLE_DEBUG("got objective rel %p",sys->obj);
 	/* @todo check if old_obj == obj ? */
 
+#if 1
 	/* TODO are there cases where these should be different: answer: NO. they are always the same -- JP */
 	sys->m = sys->rtot;
+#endif
+
 	//CONSOLE_DEBUG("Numbers of constraints = %d",sys->m);
 
 	/** @todo we need to move the objective relation to the end of the list */
