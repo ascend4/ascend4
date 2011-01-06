@@ -586,9 +586,12 @@ int relman_hess(struct rel_relation *rel, const var_filter_t *filter
 	assert(rel!=NULL && filter!=NULL);
 	
 	len = rel_n_incidences(rel);
-
+#if 0
+	/* we can't apply this assertion because there may be unfiltered incidences making len
+	greater than max_dimension! */
 	asc_assert(len<=max_dimension); //Checking if Index is out of bounds
-	
+#endif
+
 	vlist = rel_incidence_list(rel);
 	
 //	CONSOLE_DEBUG("IN FUNCTION relman_hess");
