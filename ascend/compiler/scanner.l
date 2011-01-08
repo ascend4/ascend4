@@ -957,7 +957,9 @@ void Asc_DestroyScannerInputBuffer(void)
   if (YY_CURRENT_BUFFER != NULL) {
     yy_delete_buffer(YY_CURRENT_BUFFER);
   }
+#ifdef ASC_HAVE_LEXDESTROY
   zz_lex_destroy();
+#endif
 }
 
 /*

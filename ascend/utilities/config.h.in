@@ -328,5 +328,12 @@ typedef unsigned int UGLint;
 #define ASC_DEFAULT_ASCENDLIBRARY "@DEFAULT_ASCENDLIBRARY@"
 #define ASC_DEFAULT_ASCENDSOLVERS "@DEFAULT_ASCENDSOLVERS@"
 
+/*------------------------------------------------------------------------------
+  LEX
+*/
+
+#ifndef ASC_HAVE_LEXDESTROY
+/* #define ASC_HAVE_LEXDESTROY @ASC_HAVE_LEXDESTROY@ */
+#endif
 
 #endif
