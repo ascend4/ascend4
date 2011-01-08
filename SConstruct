@@ -2579,6 +2579,7 @@ for k,v in {
 		,'HAVE_IEEE':env.get('HAVE_IEEE')
 		,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
+		,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY')
 		}.iteritems():
 		
 	if v: subst_dict["/\\* #define %s @%s@ \\*/" % (k,k)]='# define %s 1 ' % k
