@@ -583,8 +583,7 @@ int test_librarysearch(struct FilePath *path, void *userdata){
 }
 
 /**
-	@DEPRECATED this function needs to be rewritten to use 'ImportHandler'
-	functionality.
+	@NOTE this function makes use of ospath search functionality.
 */
 char *SearchArchiveLibraryPath(CONST char *name, char *dpath, const char *envv){
 	struct FilePath *fp1, *fp2, *fp3; /* relative path */

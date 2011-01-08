@@ -167,6 +167,9 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 	fp1 = importhandler_findinpath(
 		partialpath, default_solvers_path, ASC_ENV_SOLVERS,&handler
 	);
+#ifdef PACKAGES_DEBUG
+	CONSOLE_DEBUG("Not found in %s",ASC_ENV_SOLVERS);
+#endif
 
 	/* next, search in the ASCENDLIBRARY */
 	if(fp1==NULL){
@@ -177,7 +180,7 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 #ifdef PACKAGES_DEBUG
 			CONSOLE_DEBUG("External library '%s' not found",partialpath);
 #endif
-			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External library '%s' not found.",partialpath);
+			//ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External library '%s' not found.",partialpath);
 			return 1; /* failure */
 		}
 #ifdef PACKAGES_DEBUG

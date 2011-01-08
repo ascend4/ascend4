@@ -38,6 +38,7 @@
 /* #define SEARCH_DEBUG */
 /* #define FIND_DEBUG */
 /* #define IMPORTHANDLER_VERBOSE */
+/* #define IMPORT_DEBUG */
 
 /*
 	Maximum number of importhandlers possible in one session. Hard to imagine
@@ -165,7 +166,7 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"File path is NULL");
 		return 1;
 	}
-#ifdef SEARCH_DEBUG
+#ifdef IMPORT_DEBUG
 	CONSOLE_DEBUG("Importing extlib with path '%s'",path);
 #endif
 
@@ -271,6 +272,10 @@ int importhandler_destroylibrary(){
 			}
 			err = err | thiserr;
 		}
+		if(!err){
+			ASC_FREE(importhandler_library);
+			importhandler_library = NULL;
+		}
 	}
 	if(err)ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Failed to destroy importhandler library");
 	return err;
@@ -358,7 +363,9 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 #endif
 			continue;
 		}
-		/* CONSOLE_DEBUG("Filename '%s'",filename); */
+#ifdef SEARCH_DEBUG
+		CONSOLE_DEBUG("Filename '%s'",filename);
+#endif
 		fp = ospath_new_noclean(filename); /* eg 'libmyext.so' */
 		ASC_FREE(filename);
 		asc_assert(fp!=NULL);
