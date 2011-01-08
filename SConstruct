@@ -1371,6 +1371,35 @@ def CheckLex(context):
 	context.Result(is_ok)
 	return is_ok
 
+lexdestroy_test_text = """
+%{
+#include <stdio.h>
+%}
+DIGIT	[0-9]
+ID		[a-z][a-z0-9]*
+%%
+{DIGIT}+	{
+		printf("A digit: %s\\n",yytext);
+	}
+
+[ \\t\\n]+    /* ignore */
+
+.			{
+		printf("Unrecognized guff");
+	}
+%%
+main(){
+	yylex();
+	yylex_destroy();
+}
+"""
+
+def CheckLexDestroy(context):
+	context.Message("Checking for yylex_destroy... ")
+	is_ok, outstring = context.TryRun(lexdestroy_test_text,".l")
+	context.Result(is_ok)
+	return is_ok
+
 #----------------
 # CUnit test
 
@@ -2129,6 +2158,7 @@ conf = Configure(env
 		, 'CheckGccVisibility' : CheckGccVisibility
 		, 'CheckYacc' : CheckYacc
 		, 'CheckLex' : CheckLex
+		, 'CheckLexDestroy' : CheckLexDestroy
 		, 'CheckTkTable' : CheckTkTable
 		, 'CheckX11' : CheckX11
 		, 'CheckIDA' : CheckIDA
@@ -2292,6 +2322,9 @@ if conf.CheckYacc():
 
 if conf.CheckLex():
 	conf.env['HAVE_LEX']=True
+
+if conf.CheckLexDestroy():
+	conf.env['HAVE_LEXDESTROY']=True
 
 # Tcl/Tk
 
