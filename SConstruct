@@ -1374,24 +1374,22 @@ def CheckLex(context):
 lexdestroy_test_text = """
 %{
 #include <stdio.h>
+#include <unistd.h>
 %}
-DIGIT	[0-9]
-ID		[a-z][a-z0-9]*
-%%
-{DIGIT}+	{
-		printf("A digit: %s\\n",yytext);
-	}
 
-[ \\t\\n]+    /* ignore */
-
-.			{
-		printf("Unrecognized guff");
-	}
 %%
-main(){
-	yylex();
-	yylex_destroy();
+username	printf("%s", getlogin());
+%%
+
+int yywrap(void){
+  return 1;
 }
+
+main(){
+  //yylex();
+  yylex_destroy();
+}
+
 """
 
 def CheckLexDestroy(context):
