@@ -62,7 +62,7 @@ public:
 	virtual int setSolver(const char *solvername, Simulation *S);
 
 	/// C++ function that will be called as a result of a 'OPTION' command
-	virtual int setOption(const char *optionname, Value val, Simulation *S);
+	virtual int setOption(const char *optionname, Value val1, Simulation *S);
 
 	/// C++ function that will be called as a result of a 'SOLVE' command
 	virtual int doSolve(Instance *i, Simulation *S);
