@@ -120,7 +120,7 @@ int asc_conopt_load(){
 		CONSOLE_DEBUG("Default conopt search path: %s", ASC_CONOPT_DLPATH);
 	}*/
 
-	/** @TODO replace with a call to ospath and/or importhandler. */
+	/** @TODO replace with a direct call to ospath and/or importhandler? */
 	libpath = SearchArchiveLibraryPath(libname, ASC_CONOPT_DLPATH, envvar);
 
 	if(libpath==NULL){

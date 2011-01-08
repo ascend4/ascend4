@@ -530,13 +530,19 @@ import:
     IMPORT_TOK IDENTIFIER_TOK FROM_TOK DQUOTE_TOK ';'
 	{
 	  if(package_load($4,SCP($2))){
-		ErrMsg_Generic("IMPORT failed");
+	    error_reporter_current_line(ASC_USER_ERROR
+	      ,"IMPORT of '%s' from '%s'."
+	      ,SCP($4), SCP($2)
+	    );
       }
 	}
 	| IMPORT_TOK DQUOTE_TOK ';'
 	{
 	  if(package_load(SCP($2),NULL)){
-	    ErrMsg_Generic("IMPORT failed");
+	    error_reporter_current_line(ASC_USER_ERROR
+	      ,"IMPORT of '%s' failed."
+	      ,SCP($2)
+	    );
 	  }
 	}
     ;
