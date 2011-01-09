@@ -375,7 +375,6 @@ static void test_stop(void){
 	CU_ASSERT(pe!=Proc_all_ok);
 
 	struct Instance *inst;
-
 	CU_ASSERT((inst = ChildByChar(GetSimulationRoot(sim),AddSymbol("x"))) && InstanceKind(inst)==REAL_ATOM_INST); 
 	CU_ASSERT(RealAtomValue(inst)==2.0);
 
@@ -418,6 +417,46 @@ static void test_stoponfailedassert(void){
 #undef TESTFILE
 }
 
+/*
+	This is a test to check ascend bug #87.
+*/
+static void test_badassign(void){
+	struct module_t *m;
+	int status;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	
+	/* load the file */
+#define TESTFILE "badassign"
+	m = Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
+	CU_ASSERT(status == 0);
+
+	/* parse it */
+	CU_ASSERT(0 == zz_parse());
+
+	/* find the model */	
+	CU_ASSERT(FindType(AddSymbol(TESTFILE))!=NULL);
+
+	/* instantiate it */
+	struct Instance *sim = SimsCreateInstance(AddSymbol(TESTFILE), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+
+	/* Call on_load */
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(sim),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe!=Proc_all_ok); /* on_load should have returned error */
+
+	/* Check that x := 2 was NOT executed (after error statement) */
+	struct Instance *inst;
+	CU_ASSERT((inst = ChildByChar(GetSimulationRoot(sim),AddSymbol("x"))) && InstanceKind(inst)==REAL_ATOM_INST); 
+	CU_ASSERT(RealAtomValue(inst)==1.0);	
+
+	/* clean up */
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+#undef TESTFILE
+}
 
 
 
@@ -437,7 +476,8 @@ static void test_stoponfailedassert(void){
 	T(instantiate_file) \
 	T(initialize) \
 	T(stop) \
-	T(stoponfailedassert)
+	T(stoponfailedassert) \
+	T(badassign)
 
 REGISTER_TESTS_SIMPLE(compiler_basics, TESTS)
 

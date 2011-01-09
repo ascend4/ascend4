@@ -214,7 +214,7 @@ void ProcWriteAssignmentError(struct procFrame *fm){
     WriteInitErr(fm,"Error evaluating assignment right hand side");
     break;
   case Proc_lhs_error:
-    WriteInitErr(fm,"Undefined or NULL instance in left hand side of :=.");
+    WriteInitErr(fm,"Unrecognized variable name on left-hand side of ':='.");
     break;
   default:
     WriteInitErr(fm,"Assignment (:=) unexpected error message"); 
