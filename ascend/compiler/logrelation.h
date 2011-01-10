@@ -44,6 +44,9 @@
 #ifndef ASC_LOGRELATION_H
 #define ASC_LOGRELATION_H
 
+#include "logical_relation.h"
+#include "find.h"
+
 /**	@addtogroup compiler_logrel Compiler Logical Relations
 	@{
 */

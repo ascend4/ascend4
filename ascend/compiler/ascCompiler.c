@@ -266,5 +266,8 @@ void Asc_CompilerDestroy(void)
   gl_destroy_pool();                   /* empty the reused list head pool */
   ClearRecycleStack();                 /* empty the reused stack list  */
   Asc_DestroyScannerInputBuffer();	/* empty lexer */
+  error_reporter_tree_clear();
+  error_reporter_end_flush();
+
   tmpalloc(0); /* free temporary scratch memory allocated by relation_util.c */
 }
