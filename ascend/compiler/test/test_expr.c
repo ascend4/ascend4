@@ -95,7 +95,7 @@ static void test_boolrel(void){
 	struct Instance *inst;
 	struct Instance *root = GetSimulationRoot(sim);
 	CU_ASSERT(NULL != root);
-	CU_ASSERT((inst = ChildByChar(root,AddSymbol("rel1"))));
+	CU_ASSERT(NULL != (inst = ChildByChar(root,AddSymbol("rel1"))));
 	CONSOLE_DEBUG("Instance kind = %d",InstanceKind(inst));
 	CU_ASSERT(InstanceKind(inst)==LREL_INST); 
 
