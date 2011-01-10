@@ -41,6 +41,8 @@
 #ifndef ASC_LOGRELATION_IO_H
 #define ASC_LOGRELATION_IO_H
 
+#include "logrelation.h"
+
 /**	@addtogroup compiler_logrel Compiler Logical Relations
 	@{
 */
