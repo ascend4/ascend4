@@ -92,6 +92,11 @@ symchar *g_statio_stattypenames[WILLBE+1];
 static
 symchar *g_statio_flowtypenames[fc_stop+1];
 
+void statio_clear_stattypenames(void){
+	g_statio_stattypenames[0]=NULL;
+}
+
+
 static
 void Indent(FILE *f, register int i)
 {
@@ -673,7 +678,6 @@ void WriteStatementError(const error_severity_t sev
 		, ...
 ){
 	va_list args;
-
 	error_reporter_start(sev,Asc_ModuleFileName(stat->mod),stat->linenum,SCP(StatementTypeString(stat)));
 	va_start(args,fmt);
 	vfprintf_error_reporter(ASCERR,fmt,args);
@@ -780,7 +784,7 @@ symchar *StatementTypeString(CONST struct Statement *s)
 {
   static symchar *error_statement_sym;
   assert(s!=NULL);
-  if (g_statio_stattypenames[0]==NULL) {
+  if(g_statio_stattypenames[0]==NULL) {
     error_statement_sym = AddSymbol("Unknown-statement-type");
     g_statio_stattypenames[ALIASES] = AddSymbol("ALIASES");
     g_statio_stattypenames[ISA] = AddSymbol("IS_A");
