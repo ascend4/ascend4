@@ -47,6 +47,12 @@
 #include <ascend/utilities/error.h>
 #include "stattypes.h"
 
+ASC_DLLSPEC void statio_clear_stattypenames(void);
+/**<
+	Clear global array of pointers to statement type names, needed after
+	destruction of the symbol table.
+*/
+
 ASC_DLLSPEC struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList*sl);
 /**<
  *  Return a gl_list of types referenced by the statement list

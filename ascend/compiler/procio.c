@@ -321,7 +321,9 @@ void ProcWriteStackCheck(struct procFrame *fm,
       FPRINTF(fm->err,"  In call to"); 
     }
   } 
-  if (!unwind) {
+  if(!unwind){
+	/* FIXME use _end_clean instead, if available. */
+    error_reporter_end_flush();
     return;
   }
   FPRINTF(fm->err," METHOD ");
