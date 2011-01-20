@@ -716,7 +716,7 @@ void WriteLogSideInfix(FILE *f,
 		        LogRelTermType(LogTermBinRight(term)),1);
     if (parens) PUTC('(',f);
     WriteLogSideInfix(f,lr,LogTermBinRight(term),ref);
-    if (parens) PUTC('(',f);
+    if (parens) PUTC(')',f);
     break;
   default:
     FPRINTF(f,"***");
