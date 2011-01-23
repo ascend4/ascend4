@@ -44,6 +44,31 @@
 
 #include <test/common.h>
 
+/* a simple integrator reporter for testing */
+int test_ida_reporter_init(struct IntegratorSystemStruct *integ){
+	return 0;
+}
+
+int test_ida_reporter_write(struct IntegratorSystemStruct *integ){
+	return 0; /* no interrupt */
+}
+
+int test_ida_reporter_writeobs(struct IntegratorSystemStruct *integ){
+	CONSOLE_DEBUG("x = %f", var_value(integ->x));
+	return 0;
+}
+
+int test_ida_reporter_close(struct IntegratorSystemStruct *integ){
+	return 0;
+}
+
+IntegratorReporter test_ida_reporter = {
+	test_ida_reporter_init
+	,test_ida_reporter_write
+	,test_ida_reporter_writeobs
+	,test_ida_reporter_close
+};
+
 /*
 	Test solving a simple IPOPT model
 */
@@ -101,6 +126,7 @@ static void test_boundary(){
 	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
 
 	/* TODO assign an integrator reporter */
+	integrator_set_reporter(integ, &test_ida_reporter);
 
 	integrator_set_minstep(integ,0);
 	integrator_set_maxstep(integ,0);

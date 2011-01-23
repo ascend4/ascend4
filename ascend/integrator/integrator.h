@@ -366,6 +366,8 @@ ASC_DLLSPEC int integrator_set_reporter(IntegratorSystem *blsys
 	to make its output. You need to pass in a struct containing the required
 	function pointers. (We will wrap IntegratorReporter and access it from
 	Python, eventually)
+
+	@returns 1, but doesn't test anything for correctness.
 */
 
 ASC_DLLSPEC int integrator_find_indep_var(IntegratorSystem *blsys);
