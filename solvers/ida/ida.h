@@ -24,26 +24,9 @@
 #ifndef ASC_IDA_H
 #define ASC_IDA_H
 
-/**	@addtogroup integrator Integrator
-	@{
-*/
-
 #include <ascend/utilities/config.h>
 #include "integrator.h"
 
-#ifdef ASC_WITH_IDA
-
-IntegratorCreateFn integrator_ida_create;
-IntegratorParamsDefaultFn integrator_ida_params_default;
-IntegratorSolveFn integrator_ida_solve;
-IntegratorFreeFn integrator_ida_free;
-IntegratorDebugFn integrator_ida_debug;
-IntegratorWriteMatrixFn integrator_ida_write_matrix;
-
 const IntegratorInternals integrator_ida_internals;
-
-#endif
-
-/* @} */
 
 #endif  /* ASC_IDA_H */

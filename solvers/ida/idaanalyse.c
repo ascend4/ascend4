@@ -25,13 +25,13 @@
 #define DERIV_WITHOUT_DIFF
 
 #define VARMSG(MSG) \
-	varname = var_make_name(sys->system,v); \
+	varname = var_make_name(integ->system,v); \
 	CONSOLE_DEBUG(MSG,varname); \
 	ASC_FREE(varname)
 
-static int integrator_ida_check_partitioning(IntegratorSystem *sys);
-static int integrator_ida_check_diffindex(IntegratorSystem *sys);
-/* static int integrator_ida_rebuild_diffindex(IntegratorSystem *sys); */
+static int integrator_ida_check_partitioning(IntegratorSystem *integ);
+static int integrator_ida_check_diffindex(IntegratorSystem *integ);
+/* static int integrator_ida_rebuild_diffindex(IntegratorSystem *integ); */
 
 const var_filter_t integrator_ida_nonderiv = {
 	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV,
@@ -54,7 +54,7 @@ const rel_filter_t integrator_ida_rel = {
 	Check derivative chains: if a var or derivative is inelligible,
 	follow down the chain fixing & setting zero any derivatives.
 */
-static int integrator_ida_check_vars(IntegratorSystem *sys){
+static int integrator_ida_check_vars(IntegratorSystem *integ){
 	const SolverDiffVarCollection *diffvars;
 	char *varname;
 	int n_y = 0;
@@ -65,23 +65,23 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("BEFORE CHECKING VARS");
-	integrator_ida_analyse_debug(sys,stderr);
+	integrator_ida_analyse_debug(integ,stderr);
 #endif
 
 	/* we shouldn't have allocated these yet: just be sure */
-	asc_assert(sys->y==NULL);
-	asc_assert(sys->ydot==NULL);
-	asc_assert(sys->n_y==0);
+	asc_assert(integ->y==NULL);
+	asc_assert(integ->ydot==NULL);
+	asc_assert(integ->n_y==0);
 
 	/* get the the dervative chains from the system */
-	diffvars = system_get_diffvars(sys->system);
+	diffvars = system_get_diffvars(integ->system);
 	if(diffvars==NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Derivative structure is empty");
 		return 1;
 	}
 
 #ifdef ANALYSE_DEBUG
-	system_var_list_debug(sys->system);
+	system_var_list_debug(integ->system);
 #endif
 	
 	/* add the variables from the derivative chains */
@@ -134,7 +134,7 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 
 		/* VARMSG("We will use var '%s'"); */
 		if(seq.n > 2){
-			varname = var_make_name(sys->system,v);				
+			varname = var_make_name(integ->system,v);				
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Too-long derivative chain with var '%s'",varname);
 			ASC_FREE(varname);
 			return 2;
@@ -157,7 +157,7 @@ static int integrator_ida_check_vars(IntegratorSystem *sys){
 	}
 
 #ifdef ANALYSE_DEBUG
-	system_var_list_debug(sys->system);
+	system_var_list_debug(integ->system);
 #endif
 
 	/* we assert that all vars in y meet the integrator_ida_nonde6: v_wind
@@ -167,7 +167,7 @@ riv filter */
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Found %d good non-derivative vars", n_y);
 #endif
-	sys->n_y = n_y;
+	integ->n_y = n_y;
 
 	return 0;
 }
@@ -177,11 +177,11 @@ riv filter */
 
 	@TODO what to do about relations that make reference to 't'?
 */
-static int integrator_ida_flag_rels(IntegratorSystem *sys){
+static int integrator_ida_flag_rels(IntegratorSystem *integ){
 	int i, n, c, nd=0;
 	struct rel_relation **rels;
-	n = slv_get_num_solvers_rels(sys->system);
-	rels = slv_get_solvers_rel_list(sys->system);
+	n = slv_get_num_solvers_rels(integ->system);
+	rels = slv_get_solvers_rel_list(integ->system);
 	for(i=0;i<n;++i){
 		c = rel_classify_differential(rels[i]);
 		if(c){
@@ -190,46 +190,48 @@ static int integrator_ida_flag_rels(IntegratorSystem *sys){
 		}
 	}
 	CONSOLE_DEBUG("Found %d differential equations (so %d algebraic)",nd, n - nd);
-	sys->n_diffeqs = nd;
+	integ->n_diffeqs = nd;
 	return 0;
 }
 
 /**
 	Sort the lists. First we will put the non-derivative vars, then we will
 	put the derivative vars. Then we will put all the others.
+
+	See http://ascendwiki.cheme.cmu.edu/File:Diffvars.png
 */
-static int integrator_ida_sort_rels_and_vars(IntegratorSystem *sys){
+static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 	int ny1, nydot, nr;
 
 
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("BEFORE SORTING RELS AND VARS");
-	integrator_ida_analyse_debug(sys,stderr);
+	integrator_ida_analyse_debug(integ,stderr);
 #endif
 
 	/* we should not have allocated y or ydot yet */
-	asc_assert(sys->y==NULL && sys->ydot==NULL);
+	asc_assert(integ->y==NULL && integ->ydot==NULL);
 
 	/* but we should have found some variables (and know how many) */
-	asc_assert(sys->n_y);
+	asc_assert(integ->n_y);
 
-	if(system_cut_vars(sys->system, 0, &integrator_ida_nonderiv, &ny1)){
+	if(system_cut_vars(integ->system, 0, &integrator_ida_nonderiv, &ny1)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem cutting non-derivs");
 		return 1;
 	}
 
 #ifdef ANALYSE_DEBUG
-	CONSOLE_DEBUG("Cut %d non-derivative vars to start of list. cf sys->n_y = %d",ny1,sys->n_y);
+	CONSOLE_DEBUG("Cut %d non-derivative vars to start of list. cf integ->n_y = %d",ny1,integ->n_y);
 #endif
-	asc_assert(ny1 == sys->n_y);
+	asc_assert(ny1 == integ->n_y);
 
 	ERROR_REPORTER_HERE(ASC_USER_NOTE,"moving derivs to start of remainder\n");
-	if(system_cut_vars(sys->system, ny1, &integrator_ida_deriv, &nydot)){
+	if(system_cut_vars(integ->system, ny1, &integrator_ida_deriv, &nydot)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem cutting derivs");
 		return 1;
 	}
 
-	if(system_cut_rels(sys->system, 0, &integrator_ida_rel, &nr)){
+	if(system_cut_rels(integ->system, 0, &integrator_ida_rel, &nr)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem cutting derivs");
 		return 1;
 	}
@@ -248,7 +250,7 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *sys){
 	'y_id' allows us to locate the variable of a derivative given its sindex.
 
 	Hence
-	y_id[var_sindex(derivvar)-sys->n_y] = var_sindex(diffvar)
+	y_id[var_sindex(derivvar)-integ->n_y] = var_sindex(diffvar)
 	ydot[var_sindex(diffvar)] = derivvar (or NULL if diffvar is algebraic)
 
 	Note that there is 'shifting' required when looking up y_id.
@@ -257,30 +259,30 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *sys){
 	that. We want to be rid of it because if the vars are ordered correctly
 	it shouldn't be needed.
 */
-static int integrator_ida_create_lists(IntegratorSystem *sys){
+static int integrator_ida_create_lists(IntegratorSystem *integ){
 	const SolverDiffVarCollection *diffvars;
 	int i, j;
 	struct var_variable *v;
 
 	SolverDiffVarSequence seq;
 
-	asc_assert(sys->y==NULL);
-	asc_assert(sys->ydot==NULL);
-	asc_assert(sys->y_id== NULL);
+	asc_assert(integ->y==NULL);
+	asc_assert(integ->ydot==NULL);
+	asc_assert(integ->y_id== NULL);
 
 	/* get the the dervative chains from the system */
-	diffvars = system_get_diffvars(sys->system);
+	diffvars = system_get_diffvars(integ->system);
 	if(diffvars==NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Derivative structure is empty");
 		return 1;
 	}
 	
 	/* allocate space (more than enough) */
-	sys->y = ASC_NEW_ARRAY(struct var_variable *,sys->n_y);
-	sys->ydot = ASC_NEW_ARRAY_CLEAR(struct var_variable *,sys->n_y);
-	sys->n_ydot = 0;
-	for(i=0;i<sys->n_y;++i){
-		asc_assert(sys->ydot[i] == 0);
+	integ->y = ASC_NEW_ARRAY(struct var_variable *,integ->n_y);
+	integ->ydot = ASC_NEW_ARRAY_CLEAR(struct var_variable *,integ->n_y);
+	integ->n_ydot = 0;
+	for(i=0;i<integ->n_y;++i){
+		asc_assert(integ->ydot[i] == 0);
 	}
 
 #ifdef ANALYSE_DEBUG
@@ -299,19 +301,19 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 			continue;
 		}
 
-		sys->y[j] = v;
+		integ->y[j] = v;
 		/* VARMSG("'%s' is good non-deriv"); */
 
 		if(seq.n > 1 && var_apply_filter(seq.vars[1],&integrator_ida_deriv)){
 			v = seq.vars[1];
-			asc_assert(var_sindex(v) >= sys->n_y);
-			asc_assert(var_sindex(v)-sys->n_y < sys->n_y);
+			asc_assert(var_sindex(v) >= integ->n_y);
+			asc_assert(var_sindex(v)-integ->n_y < integ->n_y);
 
-			sys->ydot[j] = v;
-			sys->n_ydot++;
+			integ->ydot[j] = v;
+			integ->n_ydot++;
 			/* VARMSG("'%s' is good deriv"); */
 		}else{
-			asc_assert(sys->ydot[j]==NULL);
+			asc_assert(integ->ydot[j]==NULL);
 		}
 	}
 
@@ -319,16 +321,16 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 	CONSOLE_DEBUG("Found %d good non-derivs",j);
 #endif
 	/* create the list y_id by looking at non-NULLs from ydot */
-	sys->y_id = ASC_NEW_ARRAY(int,sys->n_ydot);
-	for(i=0,j=0; i <  sys->n_y; ++i){
-		if(sys->ydot[i]==NULL)continue;
-		/* v = sys->ydot[i]; VARMSG("deriv '%s'..."); */
-		/* v = sys->y[i]; VARMSG("diff '%s'..."); */
-		sys->y_id[var_sindex(sys->ydot[i]) - sys->n_y] = i;
+	integ->y_id = ASC_NEW_ARRAY(int,integ->n_ydot);
+	for(i=0,j=0; i <  integ->n_y; ++i){
+		if(integ->ydot[i]==NULL)continue;
+		/* v = integ->ydot[i]; VARMSG("deriv '%s'..."); */
+		/* v = integ->y[i]; VARMSG("diff '%s'..."); */
+		integ->y_id[var_sindex(integ->ydot[i]) - integ->n_y] = i;
 		j++;
 	}
 	
-	asc_assert(j==sys->n_ydot);
+	asc_assert(j==integ->n_ydot);
 
 	return 0;
 }
@@ -339,7 +341,7 @@ static int integrator_ida_create_lists(IntegratorSystem *sys){
 	can (we think?) be written that don't meet these requirements but they
 	will have index problems and may not solve with IDA.
 */
-int integrator_ida_check_index(IntegratorSystem *sys){
+int integrator_ida_check_index(IntegratorSystem *integ){
 #if 1
 	linsolqr_system_t L;
 	mtx_range_t range;
@@ -348,8 +350,8 @@ int integrator_ida_check_index(IntegratorSystem *sys){
 	struct SystemJacobianStruct df_dydp, dg_dya;
 
 	CONSOLE_DEBUG("system has total of %d rels and %d vars"
-		,slv_get_num_solvers_rels(sys->system)
-		,slv_get_num_solvers_vars(sys->system)
+		,slv_get_num_solvers_rels(integ->system)
+		,slv_get_num_solvers_vars(integ->system)
 	);
 
 	CONSOLE_DEBUG("VAR_DERIV = 0x%x = %d",VAR_DERIV, VAR_DERIV);
@@ -359,9 +361,9 @@ int integrator_ida_check_index(IntegratorSystem *sys){
 	asc_assert(system_vfilter_deriv.matchbits & VAR_DERIV);
 	asc_assert(system_vfilter_deriv.matchvalue & VAR_DERIV);
 
-	CONSOLE_DEBUG("system has %d vars matching deriv filter",slv_count_solvers_vars(sys->system, &system_vfilter_deriv));
+	CONSOLE_DEBUG("system has %d vars matching deriv filter",slv_count_solvers_vars(integ->system, &system_vfilter_deriv));
 
-	res = system_jacobian(sys->system
+	res = system_jacobian(integ->system
 		, &system_rfilter_diff
 		, &system_vfilter_deriv
 		, 1 /* safe evaluation */
@@ -373,7 +375,7 @@ int integrator_ida_check_index(IntegratorSystem *sys){
 	}
 	CONSOLE_DEBUG("df/dyd': nr = %d, nv = %d",df_dydp.n_rels,df_dydp.n_vars);
 
-	res = system_jacobian(sys->system
+	res = system_jacobian(integ->system
 		, &system_rfilter_algeb
 		, &system_vfilter_algeb
 		, 1 /* safe evaluation */
@@ -481,7 +483,7 @@ int integrator_ida_check_index(IntegratorSystem *sys){
 	@return 0 on success 
 	@see integrator_analyse
 */
-int integrator_ida_analyse(IntegratorSystem *sys){
+int integrator_ida_analyse(IntegratorSystem *integ){
 	int res;
 	const SolverDiffVarCollection *diffvars;
 	int i;
@@ -489,20 +491,20 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	char *varname;
 #endif
 
-	asc_assert(sys->engine==INTEG_IDA);
+	asc_assert(integ->engine==INTEG_IDA);
 
 	CONSOLE_DEBUG("System contains a total of %d bnds and %d rels"
-		,slv_get_num_solvers_bnds(sys->system)
-		,slv_get_num_solvers_rels(sys->system)
+		,slv_get_num_solvers_bnds(integ->system)
+		,slv_get_num_solvers_rels(integ->system)
 	);
 
 	/* set the active flags on  variables depending on the state of WHENs */
-	CONSOLE_DEBUG("Currently %d rels active",slv_count_solvers_rels(sys->system, &integrator_ida_rel));
+	CONSOLE_DEBUG("Currently %d rels active",slv_count_solvers_rels(integ->system, &integrator_ida_rel));
 
-	reanalyze_solver_lists(sys->system);
+	reanalyze_solver_lists(integ->system);
 
 	CONSOLE_DEBUG("After analysing WHENs, there are %d rels active"
-		,slv_count_solvers_rels(sys->system, &integrator_ida_rel)
+		,slv_count_solvers_rels(integ->system, &integrator_ida_rel)
 	);
 
 
@@ -511,13 +513,13 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 #endif
 
 	/* set the flags on differential and derivative and algebraic vars */
-	res = integrator_ida_check_vars(sys);
+	res = integrator_ida_check_vars(integ);
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem with vars");
 		return 1;
 	}
 
-	res = integrator_ida_flag_rels(sys);
+	res = integrator_ida_flag_rels(integ);
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem classifying differential equations");
 		return 1;
@@ -527,7 +529,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	CONSOLE_DEBUG("Sorting rels and vars");
 #endif
 
-	res = integrator_ida_sort_rels_and_vars(sys);
+	res = integrator_ida_sort_rels_and_vars(integ);
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem sorting rels and vars");
 		return 1;
@@ -537,41 +539,41 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	CONSOLE_DEBUG("Creating lists");
 
 	CONSOLE_DEBUG("BEFORE MAKING LISTS");
-	integrator_ida_debug(sys,stderr);
+	integrator_ida_debug(integ,stderr);
 #endif
 
-	res = integrator_ida_create_lists(sys);
+	res = integrator_ida_create_lists(integ);
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem creating lists");
 		return 1;
 	}
 
 	CONSOLE_DEBUG("After ida_create_lists, there are %d rels active"
-		,slv_count_solvers_rels(sys->system, &integrator_ida_rel)
+		,slv_count_solvers_rels(integ->system, &integrator_ida_rel)
 	);
 
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Checking lists");
 
-	asc_assert(sys->y);
-	asc_assert(sys->ydot);
-	asc_assert(sys->y_id);
+	asc_assert(integ->y);
+	asc_assert(integ->ydot);
+	asc_assert(integ->y_id);
 
-	integrator_ida_debug(sys,stderr);
+	integrator_ida_debug(integ,stderr);
 #endif
 
-	if(integrator_ida_check_diffindex(sys)){
+	if(integrator_ida_check_diffindex(integ)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error with diffindex");
 		return 360;
 	}
 
 
 	CONSOLE_DEBUG("After ida_check_diffindex, there are %d rels active"
-		,slv_count_solvers_rels(sys->system, &integrator_ida_rel)
+		,slv_count_solvers_rels(integ->system, &integrator_ida_rel)
 	);
 
 	/* the following causes TestIDA.testincidence3 to fail:
-	if(sys->n_y != slv_get_num_solvers_rels(sys->system)){
+	if(integ->n_y != slv_get_num_solvers_rels(integ->system)){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem is not square");
 		return 2;
 	}*/
@@ -581,47 +583,47 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 
 	/* ...(1) FIX the derivatives */
 	CONSOLE_DEBUG("Checking system with derivatives fixed...");
-	for(i=0;i<sys->n_y;++i){
-		if(sys->ydot[i])var_set_fixed(sys->ydot[i],1);
+	for(i=0;i<integ->n_y;++i){
+		if(integ->ydot[i])var_set_fixed(integ->ydot[i],1);
 	}
 
-	slv_block_partition(sys->system);
-	res = integrator_ida_block_check(sys);
+	slv_block_partition(integ->system);
+	res = integrator_ida_block_check(integ);
 	if(res)return 100 + res;
 
 	/* ...(2) FREE the derivatives, FIX the diffvars */
 	CONSOLE_DEBUG("Checking system with differential variables fixed...");
-	for(i=0;i<sys->n_y;++i){
-		if(sys->ydot[i]){
-			var_set_fixed(sys->ydot[i],0);
-			var_set_fixed(sys->y[i],1);
+	for(i=0;i<integ->n_y;++i){
+		if(integ->ydot[i]){
+			var_set_fixed(integ->ydot[i],0);
+			var_set_fixed(integ->y[i],1);
 		}
 	}
-	slv_block_partition(sys->system);
-	res = integrator_ida_block_check(sys);
+	slv_block_partition(integ->system);
+	res = integrator_ida_block_check(integ);
 	if(res)return 200 + res;
 	
 	/* ...(3) restore as it was, FREE the diffvars */
-	for(i=0;i<sys->n_y;++i){
-		if(sys->ydot[i]){
-			var_set_fixed(sys->y[i],0);
+	for(i=0;i<integ->n_y;++i){
+		if(integ->ydot[i]){
+			var_set_fixed(integ->y[i],0);
 		}
 	}	
 #endif
 
-	res = integrator_ida_check_index(sys);
+	res = integrator_ida_check_index(integ);
 	if(res){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Your DAE system has an index problem");
 		return 100 + res;
 	}
 
 	CONSOLE_DEBUG("After ida_check_index, there are %d rels active"
-		,slv_count_solvers_rels(sys->system, &integrator_ida_rel)
+		,slv_count_solvers_rels(integ->system, &integrator_ida_rel)
 	);
 
 
 	/* get the the dervative chains from the system */
-	diffvars = system_get_diffvars(sys->system);
+	diffvars = system_get_diffvars(integ->system);
 
 	/* check the indep var is same as was located earlier */
 	if(diffvars->nindep>1){
@@ -630,7 +632,7 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	}else if(diffvars->nindep<1){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Independent var not set (ode_type=-1)");
 		return 4;
-	}else if(diffvars->indep[0]!=sys->x){
+	}else if(diffvars->indep[0]!=integ->x){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Indep var doesn't match");
 		return 5;
 	}
@@ -642,13 +644,13 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	/* get the observations */
 	/** @TODO this should use a 'problem provider' API instead of static data
 	from the system object */
-	sys->n_obs = diffvars->nobs;
-	sys->obs = ASC_NEW_ARRAY(struct var_variable *,sys->n_obs);
-	for(i=0;i<sys->n_obs;++i){
+	integ->n_obs = diffvars->nobs;
+	integ->obs = ASC_NEW_ARRAY(struct var_variable *,integ->n_obs);
+	for(i=0;i<integ->n_obs;++i){
 		/* we get them all, regardless of flags etc */
-		sys->obs[i] = diffvars->obs[i];
+		integ->obs[i] = diffvars->obs[i];
 #ifdef ANALYSE_DEBUG
-		varname = var_make_name(sys->system,sys->obs[i]);
+		varname = var_make_name(integ->system,integ->obs[i]);
 		CONSOLE_DEBUG("'%s' is observation",varname);
 		ASC_FREE(varname);
 #endif
@@ -658,31 +660,31 @@ int integrator_ida_analyse(IntegratorSystem *sys){
 	CONSOLE_DEBUG("rels matchvalue: 0x%x",integrator_ida_rel.matchvalue);
 
 	CONSOLE_DEBUG("At the end of ida_analyse, there are %d rels active"
-		,slv_count_solvers_rels(sys->system, &integrator_ida_rel)
+		,slv_count_solvers_rels(integ->system, &integrator_ida_rel)
 	);
 
 	return 0;
 }
 
 
-static int integrator_ida_check_partitioning(IntegratorSystem *sys){
+static int integrator_ida_check_partitioning(IntegratorSystem *integ){
 	long i, nv;
 	int err=0;
 	char *varname;
 	struct var_variable **vlist, *v;
-	nv = slv_get_num_solvers_vars(sys->system);
-	vlist = slv_get_solvers_var_list(sys->system);
+	nv = slv_get_num_solvers_vars(integ->system);
+	vlist = slv_get_solvers_var_list(integ->system);
 	var_filter_t vf = {VAR_SVAR|VAR_ACTIVE|VAR_INCIDENT|VAR_FIXED
 					  ,VAR_SVAR|VAR_ACTIVE|VAR_INCIDENT|0 };
 	for(i=0;i<nv;++i){
 		v=vlist[i];
 		if(!var_apply_filter(v,&vf))continue;
-		varname = var_make_name(sys->system,v);
+		varname = var_make_name(integ->system,v);
 		if(!var_deriv(v)){
 #ifdef ANALYSE_DEBUG
 			fprintf(stderr,"vlist[%ld] = '%s' (nonderiv)\n",i,varname);
 #endif
-			if(i>=sys->n_y){
+			if(i>=integ->n_y){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"non-deriv var '%s' is not at the start",varname);
 				err++;
 			}
@@ -690,9 +692,9 @@ static int integrator_ida_check_partitioning(IntegratorSystem *sys){
 #ifdef ANALYSE_DEBUG
 			fprintf(stderr,"vlist[%ld] = '%s' (derivative)\n",i,varname);
 #endif
-			if(i<sys->n_y){
+			if(i<integ->n_y){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"deriv var '%s' is not at the end (n_y = %d, i = %d)"
-					,varname, sys->n_y, i
+					,varname, integ->n_y, i
 				);
 				err++;
 			}
@@ -706,7 +708,7 @@ static int integrator_ida_check_partitioning(IntegratorSystem *sys){
 	return 0;
 }
 
-int integrator_ida_block_check(IntegratorSystem *sys){
+int integrator_ida_block_check(IntegratorSystem *integ){
 	int res;
  	int dof;
 #ifdef ANALYSE_DEBUG
@@ -719,12 +721,12 @@ int integrator_ida_block_check(IntegratorSystem *sys){
 		VAR_ACTIVE | VAR_INCIDENT | 0
 	};
 			
-	nv = slv_get_num_solvers_vars(sys->system);
-	solversvars = slv_get_solvers_var_list(sys->system);
+	nv = slv_get_num_solvers_vars(integ->system);
+	solversvars = slv_get_solvers_var_list(integ->system);
 	CONSOLE_DEBUG("-------------- nv = %d -------------",nv);
 	for(nv_ok=0, i=0; i < nv; ++i){
 		if(var_apply_filter(solversvars[i],&vfilt)){
-			varname = var_make_name(sys->system,solversvars[i]);
+			varname = var_make_name(integ->system,solversvars[i]);
 			fprintf(stderr,"%s\n",varname);
 			ASC_FREE(varname);
 			nv_ok++;
@@ -733,7 +735,7 @@ int integrator_ida_block_check(IntegratorSystem *sys){
 	CONSOLE_DEBUG("----------- got %d ok -------------",nv_ok);
 #endif
 
-	if(!slvDOF_status(sys->system, &res, &dof)){
+	if(!slvDOF_status(integ->system, &res, &dof)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to determine DOF status");
 		return -1;
 	}
@@ -751,13 +753,13 @@ int integrator_ida_block_check(IntegratorSystem *sys){
 	/* if it was underspecified, what vars could be fixed? */
 	if(res==1){
 		CONSOLE_DEBUG("Need to FIX %d of the following vars:",dof);
-		solversvars = slv_get_solvers_var_list(sys->system);
-		if(!slvDOF_eligible(sys->system, &vlist)){
+		solversvars = slv_get_solvers_var_list(integ->system);
+		if(!slvDOF_eligible(integ->system, &vlist)){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to det slvDOF_eligble list");
 			return -3;
 		}
 		for(vp=vlist;*vp!=-1;++vp){
-			varname = var_make_name(sys->system, solversvars[*vp]);
+			varname = var_make_name(integ->system, solversvars[*vp]);
 			CONSOLE_DEBUG("Fixable var: %s",varname);
 			ASC_FREE(varname);
 		}
@@ -770,7 +772,7 @@ int integrator_ida_block_check(IntegratorSystem *sys){
 }
 
 /* return 0 on succes */
-static int check_dups(IntegratorSystem *sys, struct var_variable **list,int n,int allownull){
+static int check_dups(IntegratorSystem *integ, struct var_variable **list,int n,int allownull){
 	int i,j;
 	struct var_variable *v;
 #ifdef ANALYSE_DEBUG
@@ -787,7 +789,7 @@ static int check_dups(IntegratorSystem *sys, struct var_variable **list,int n,in
 			if(list[j]==NULL)continue;
 			if(v==list[j]){
 #ifdef ANALYSE_DEBUG
-				varname = var_make_name(sys->system,v);
+				varname = var_make_name(integ->system,v);
 				if(varname){
 					CONSOLE_DEBUG("Duplicate of '%s' found",varname);
 					ASC_FREE(varname);
@@ -821,7 +823,7 @@ static int check_dups(IntegratorSystem *sys, struct var_variable **list,int n,in
 
 	  - all the vars [n_y+n_ydot,n_vars) fail the non-deriv filter and fail the deriv filter.
 */
-static int integrator_ida_check_diffindex(IntegratorSystem *sys){
+static int integrator_ida_check_diffindex(IntegratorSystem *integ){
 	int i, n_vars, n_ydot=0;
 	struct var_variable **list, *v;
 	char *varname;
@@ -831,48 +833,48 @@ static int integrator_ida_check_diffindex(IntegratorSystem *sys){
 	CONSOLE_DEBUG("Checking diffindex vector");
 #endif
 
-	if(sys->y_id == NULL || sys->y == NULL || sys->ydot == NULL){
+	if(integ->y_id == NULL || integ->y == NULL || integ->ydot == NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"list(s) NULL");
 		return 1;
 	}
 	
-	list = slv_get_solvers_var_list(sys->system);
-	n_vars = slv_get_num_solvers_vars(sys->system);
+	list = slv_get_solvers_var_list(integ->system);
+	n_vars = slv_get_num_solvers_vars(integ->system);
 	
-	if(check_dups(sys, list, n_vars,FALSE)){
+	if(check_dups(integ, list, n_vars,FALSE)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"duplicates or NULLs in solver's var list");
 		return 1;
 	}
 
-	if(check_dups(sys, sys->ydot, sys->n_y,TRUE)){
+	if(check_dups(integ, integ->ydot, integ->n_y,TRUE)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"duplicates in ydot vector");
 		return 1;
 	}
 
 	/* check n_y in range */
-	if(sys->n_y <= 0 || sys->n_y >= n_vars){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"n_y = %d invalid (n_vars = %d)",sys->n_y, n_vars);
+	if(integ->n_y <= 0 || integ->n_y >= n_vars){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"n_y = %d invalid (n_vars = %d)",integ->n_y, n_vars);
 		return 1;
 	}
 
 	/* check first n_y vars */
-	for(i=0; i < sys->n_y; ++i){
+	for(i=0; i < integ->n_y; ++i){
 		v = list[i];
 		if(!var_apply_filter(v, &integrator_ida_nonderiv)){
 			msg = "'%s' (in first n_y vars) fails non-deriv filter"; goto finish;
 		}else if(var_sindex(v) != i){
 			msg = "'%s' has wrong var_sindex"; goto finish;
-		}else if(v != sys->y[i]){
+		}else if(v != integ->y[i]){
 			msg = "'%s' not matched in y vector"; goto finish;
 		}
 		/* meets filter, matches in y vector, has correct var_sindex. */
 	}
 
 	/* count non-NULLs in ydot */
-	for(i=0; i < sys->n_y; ++i){
-		v = sys->ydot[i];
+	for(i=0; i < integ->n_y; ++i){
+		v = integ->ydot[i];
 		if(v!=NULL){
-			if(var_sindex(v) < sys->n_y){
+			if(var_sindex(v) < integ->n_y){
 				msg = "'%s' has var_sindex < n_y"; goto finish;
 			}else if(!var_apply_filter(v,&integrator_ida_deriv)){
 				msg = "'%s' (in next n_ydot vars) fails deriv filter"; goto finish;
@@ -883,7 +885,7 @@ static int integrator_ida_check_diffindex(IntegratorSystem *sys){
 	}
 
 	/* check that vars [n_y, n_y+n_ydot) in solver's var list match the deriv filter */
-	for(i=sys->n_y; i< sys->n_y + n_ydot; ++i){
+	for(i=integ->n_y; i< integ->n_y + n_ydot; ++i){
 		v = list[i];
 		if(!var_apply_filter(v,&integrator_ida_deriv)){
 			msg = "'%s', in range [n_y,n_y+n_ydot), fails deriv filter"; goto finish;
@@ -892,18 +894,18 @@ static int integrator_ida_check_diffindex(IntegratorSystem *sys){
 
 	/* check values in y_id are ints int range [0,n_y), and that they point to correct vars */
 	for(i=0; i<n_ydot; ++i){
-		if(sys->y_id[i] < 0 || sys->y_id[i] >= sys->n_y){
+		if(integ->y_id[i] < 0 || integ->y_id[i] >= integ->n_y){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"value of y_id[%d] is out of range",i);
 			return 1;
 		}
-		v = sys->ydot[sys->y_id[i]];
-		if(var_sindex(v) - sys->n_y != i){
+		v = integ->ydot[integ->y_id[i]];
+		if(var_sindex(v) - integ->n_y != i){
 			msg = "'%s' not index correctly from y_id"; goto finish;
 		}
 	}
 
 	/* check remaining vars fail both filters */
-	for(i=sys->n_y + n_ydot; i<n_vars; ++i){
+	for(i=integ->n_y + n_ydot; i<n_vars; ++i){
 		v = list[i];
 		if(var_apply_filter(v,&integrator_ida_nonderiv)){
 			msg = "Var '%s' at end meets non-deriv filter, but shouldn't"; goto finish;
@@ -916,7 +918,7 @@ static int integrator_ida_check_diffindex(IntegratorSystem *sys){
 
 	return 0;		
 finish:
-	varname = var_make_name(sys->system,v);
+	varname = var_make_name(integ->system,v);
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,msg,varname);
 	ASC_FREE(varname);
 	return 1;			
@@ -926,26 +928,26 @@ finish:
 	Given a derivative variable, return the index of its corresponding differential
 	variable in the y vector (and equivalently the var_sindex of the diff var)
 */
-int integrator_ida_diffindex(const IntegratorSystem *sys, const struct var_variable *deriv){
-	asc_assert(var_sindex(deriv) >= sys->n_y);
-	asc_assert(var_sindex(deriv) < sys->n_y + sys->n_ydot);
-	return sys->y_id[var_sindex(deriv) - sys->n_y];
+int integrator_ida_diffindex(const IntegratorSystem *integ, const struct var_variable *deriv){
+	asc_assert(var_sindex(deriv) >= integ->n_y);
+	asc_assert(var_sindex(deriv) < integ->n_y + integ->n_ydot);
+	return integ->y_id[var_sindex(deriv) - integ->n_y];
 }
 
 /**
 	A less assertive version of diffindex...
 */
-int integrator_ida_diffindex1(const IntegratorSystem *sys, const struct var_variable *deriv){
-	if(var_sindex(deriv) >= sys->n_y)return -1;
-	if(var_sindex(deriv) < sys->n_y + sys->n_ydot)return -2;
-	return sys->y_id[var_sindex(deriv) - sys->n_y];
+int integrator_ida_diffindex1(const IntegratorSystem *integ, const struct var_variable *deriv){
+	if(var_sindex(deriv) >= integ->n_y)return -1;
+	if(var_sindex(deriv) < integ->n_y + integ->n_ydot)return -2;
+	return integ->y_id[var_sindex(deriv) - integ->n_y];
 }
 
 /**
 	This function will output the data structures provided to use BY THE
 	SYSTEM -- not the ones we're working with here IN THE SOLVER.
 */
-int integrator_ida_analyse_debug(const IntegratorSystem *sys,FILE *fp){
-	return system_diffvars_debug(sys->system,fp);
+int integrator_ida_analyse_debug(const IntegratorSystem *integ,FILE *fp){
+	return system_diffvars_debug(integ->system,fp);
 }
 
