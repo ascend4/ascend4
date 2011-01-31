@@ -32,7 +32,6 @@ typedef struct IntegratorIdaDataStruct{
 
 } IntegratorIdaData;
 
-
 mtx_matrix_t integrator_ida_dgdya(const IntegratorSystem *sys);
 
 int integrator_ida_debug(const IntegratorSystem *sys, FILE *fp);
