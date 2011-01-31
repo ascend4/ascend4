@@ -1026,7 +1026,12 @@ static int integrator_ida_solve(
 		Asc_SignalHandlerPopDefault(SIGINT);
 #endif
 
-		/* check for roots found */
+		/* this seems to work, so we can use it to avoid needing 'havecrossed'? */
+		if(flag == IDA_ROOT_RETURN){
+			CONSOLE_DEBUG("IDA reports root found!");
+		}
+
+		/* so we will check for roots found explicitly */
 		if(enginedata->nbnds){
 			rootsfound = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
 			havecrossed = 0;
@@ -1036,10 +1041,10 @@ static int integrator_ida_solve(
 						havecrossed = 1;
 #ifdef SOLVE_DEBUG
 						relname = bnd_make_name(integ->system,enginedata->bndlist[i]);
-						ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Boundary '%s' crossed",relname);
+						ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Boundary '%s' crossed%s",relname,rootsfound[i]>0?" (increasing)":" (decreasing)");
 						ASC_FREE(relname);
 #else
-						ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Boundary %d crossed!", i);
+						ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Boundary %d crossed!%s", i, ,rootsfound[i]>0?" (increasing)":" (decreasing)");
 #endif
 					}
 				}
