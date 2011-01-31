@@ -74,13 +74,10 @@
 
 #include "analyze.h"
 
-#include <stdarg.h>
-
 #include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/error.h>
 #include <ascend/general/list.h>
-#include <ascend/general/dstring.h>
 #include <ascend/general/mathmacros.h>
 
 #include <ascend/compiler/atomvalue.h>
@@ -88,12 +85,10 @@
 #include <ascend/compiler/visitinst.h>
 #include <ascend/compiler/expr_types.h>
 #include <ascend/compiler/exprs.h>
-#include <ascend/compiler/sets.h>
 #include <ascend/compiler/mathinst.h>
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/instance_io.h>
 #include <ascend/compiler/find.h>
-#include <ascend/compiler/extfunc.h>
 #include <ascend/compiler/extcall.h>
 #include <ascend/compiler/rel_blackbox.h>
 #include <ascend/compiler/vlist.h>
@@ -102,12 +97,9 @@
 #include <ascend/compiler/safe.h>
 #include <ascend/compiler/relation_util.h>
 #include <ascend/compiler/logical_relation.h>
-#include <ascend/compiler/logrelation.h>
 #include <ascend/compiler/logrel_util.h>
 #include <ascend/compiler/case.h>
 #include <ascend/compiler/when_util.h>
-
-#include <ascend/linear/mtx.h>
 
 #include "slv_server.h"
 #include "cond_config.h"
