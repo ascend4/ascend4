@@ -270,6 +270,27 @@ try:
 	
 	assert(os.path.exists(os.path.join(head,"debian/control")))
 
+	# apply patches so that dpkg-buildpackage can come and detect them
+
+	print "LOOKING FOR PATCHES"
+	os.chdir(os.path.join(maindir,head))
+	if os.path.exists("debian/patches"):
+		print "PATCH DIR FOUND"
+		patches = glob.glob("debian/patches/*.patch")
+		for p in patches:
+			print "PATCH %s" % p
+			pf = open(p,"r")
+			po = subprocess.Popen(["patch","-p1"],stdin = pf,executable="/usr/bin/patch")
+			po.communicate()
+			pf.close()
+			if 0==po.returncode:
+				print "PATCH %s APPLIED OK" % p
+				os.unlink(p)
+			else:
+				raise RuntimeError("Error applying patch '%s': is it in 'patch -p1' format?" % p)
+		os.rmdir("debian/patches")
+	os.chdir(maindir)
+
 	# copy original tarball (recompressing to .gz/reheading if required?)
 
 	unzip = None
@@ -305,7 +326,7 @@ try:
 		tar.close()
 		assert(os.path.exists(temptz))
 
-	elif ext != "gz":
+	elif ext != "gz" and ext != "bz2":
 		print "Source tarball needs to be re-zipped to gzip format."
 		temptar = "%s_%s.orig.tar" % (control['Source'],changes.upstream_version)
 		temptz = "%s.%s"%(temptar,ext)
@@ -318,12 +339,12 @@ try:
 		subprocess.call(['gzip',temptar])
 		
 	else:
-		origname = "%s_%s.orig.tar.gz" % (control['Source'],changes.upstream_version)
-		print "Original tarball is in gzip format"
+		origname = "%s_%s.orig.tar.%s" % (control['Source'],changes.upstream_version,ext)
+		print "Original tarball is in %s format" % unzip[0]
 		shutil.copyfile(ffull, origname)
 
 	print "Checking for correct original tarball name..."
-	origname = "%s_%s.orig.tar.gz" % (control['Source'],changes.upstream_version)
+	origname = "%s_%s.orig.tar.%s" % (control['Source'],changes.upstream_version,ext)
 	assert(os.path.exists(origname))
 
 	t1 = t
@@ -340,11 +361,11 @@ try:
 	os.chdir(debianname)
 	if buildsource:
 		print "Building source package..."
-		_cmd = ["dpkg-buildpackage","-S","-rfakeroot","-sa"]
+		_cmd = ["dpkg-buildpackage","-i","-S","-rfakeroot","-sa"]
 		res = subprocess.call(_cmd)
 	else:
 		print "Building binary package..."
-		_cmd = ["dpkg-buildpackage","-rfakeroot","-sa"]
+		_cmd = ["dpkg-buildpackage","-i","-rfakeroot","-sa"]
 		if parallel:
 			_cmd += [parallel]
 		res = subprocess.call(_cmd)
@@ -353,7 +374,7 @@ try:
 		raise RuntimeError("dpkg-buildpackage returned error code %s" % res)
 
 except Exception, e:
-	print "ERROR DURING DPKG-BUILDPACKAGE: %s"% str(e)
+	print "ERROR IN DTAR: %s"% str(e)
 	print "Temporary files can be inspected in %s" % maindir
 	sys.exit(1)
 
