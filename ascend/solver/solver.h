@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2007 Carnegie Mellon University
+	Copyright (C) 2007-2011 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -28,6 +28,10 @@
 
 #include <ascend/general/platform.h>
 #include <ascend/system/slv_client.h>
+
+/**	@addtogroup solver Solver
+	@{
+*/
 
 /*-----------------------------------------------------------------------
 	SOLVER HOOKS AND REGISTRATION DATA STRUCTURE
@@ -365,7 +369,8 @@ ASC_DLLSPEC const char*slv_solver_name(int sindex);
 	of name-number pair.
 */
 
-#endif
+/* @} */
 
+#endif
 
 
