@@ -1,40 +1,38 @@
-/*
+/*	ASCEND modelling environment
+	Copyright (c) 1990 Thomas Guthrie Epperly
+	Copyright (c) 1994 Joseph Zaher, Benjamin Andrew Allan
+	Copyright (c) 2011 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Interface to Karl Westerberg's Solver.
+
+	@DEPRECATED This header file relates to a disused command-line based interface
+	for the ASCEND system. It might still be possible to do something useful
+	with this though, so it has been kept for now -- JP, Feb 2011.
+
+	@todo Clean junk out of solver/slv_interface.h.
+*//*
  *  Interface to Karl Westerberg's Solver
  *  Tom Epperly
  *  Created: June, 1990
  *  Copyright (C) 1990 Thomas Guthrie Epperly
  *  Patched 1/94 for ASCEND3C -baa
  *  Only Solve is implemented in slv_interface.c
- *                            
- *  Version: $Revision: 1.4 $
- *  Version control file: $RCSfile: slv_interface.h,v $
- *  Date last modified: $Date: 1997/07/18 12:17:10 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
-
-/** @file
- *  Interface to the Westerberg SLV Solver.
-
- *  @todo Clean junk out of solver/slv_interface.h.
+ *  Last in CVS: $Revision: 1.4 $ $Date: 1997/07/18 12:17:10 $ $Author: mthomas $
  */
 
 #ifndef ASC_SLV_INTERFACE_H
@@ -77,6 +75,8 @@
  *
  *  @todo If still needed, should it be a typedef?
  */
+
+/* @} */
 
 #endif  /* ASC_SLV_INTERFACE_H */
 
