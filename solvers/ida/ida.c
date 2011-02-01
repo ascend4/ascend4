@@ -127,6 +127,11 @@ static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
 /*-------------------------------------------------------------
   SETUP/TEARDOWN ROUTINES
 */
+
+/**
+	Allocate memory inside the IntegratorIdaData structure at
+	the time when IDA is assigned to a particular system as its integrator.
+*/
 static void integrator_ida_create(IntegratorSystem *integ){
 	CONSOLE_DEBUG("ALLOCATING IDA ENGINE DATA");
 	IntegratorIdaData *enginedata;
@@ -146,6 +151,11 @@ static void integrator_ida_create(IntegratorSystem *integ){
 	integrator_ida_params_default(integ);
 }
 
+/**
+	Free any memory specifically allocated for use by our ASCEND wrapper for
+	the IDA integrator, other than that which the IDA code itself may be
+	managing.
+*/
 static void integrator_ida_free(void *enginedata){
 #ifdef DESTROY_DEBUG
 	CONSOLE_DEBUG("DESTROYING IDA engine data at %p",enginedata);
@@ -348,7 +358,14 @@ static int integrator_ida_params_default(IntegratorSystem *integ){
 typedef int IdaFlagFn(void *,int *);
 typedef char *IdaFlagNameFn(int);
 
-/* return 0 on success */
+/**
+	Main IDA solver routine. We can assume that the integrator_ida_analyse
+	function will already have been run.
+
+	The presence of 'start_index' and 'finish_index' is a hangover from the
+	Tcl/Tk GUI. We would like to get rid of them eventually.
+
+	@return 0 on success */
 static int integrator_ida_solve(
 		IntegratorSystem *integ
 		, unsigned long start_index
