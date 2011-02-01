@@ -1472,7 +1472,7 @@ DOT_GRAPH_MAX_NODES    = 50
 # and MAX_DOT_GRAPH_HEIGHT). If 0 is used for the depth value (the default), 
 # the graph is not depth-constrained.
 
-MAX_DOT_GRAPH_DEPTH    = 2
+MAX_DOT_GRAPH_DEPTH    = 3
 
 # Set the DOT_TRANSPARENT tag to YES to generate images with a transparent 
 # background. This is disabled by default, which results in a white background. 
