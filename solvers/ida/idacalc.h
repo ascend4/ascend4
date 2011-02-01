@@ -1,27 +1,28 @@
-/*
-	for cases where we don't have SUNDIALS_VERSION_MINOR defined, guess version 2.2
+/*	ASCEND modelling environment
+	Copyright (C) 2006-2011 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Evaluation functions of the ASCEND wrapping of IDA. These functions provide
+	residual and jacobian evaluation functions in various forms back to IDA
+	so that the integrator can do its work.
 */
-#ifndef SUNDIALS_VERSION_MINOR
-# ifdef __GNUC__
-#  warning "GUESSING SUNDIALS VERSION 2.2"
-# endif
-# define SUNDIALS_VERSION_MINOR 2
-#endif
-#ifndef SUNDIALS_VERSION_MAJOR
-# define SUNDIALS_VERSION_MAJOR 2
-#endif
 
-/* SUNDIALS 2.4.0 introduces new DlsMat in place of DenseMat */
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==4
-# define IDA_MTX_T DlsMat
-# define IDADENSE_SUCCESS IDADLS_SUCCESS
-# define IDADENSE_MEM_NULL IDADLS_MEM_NULL
-# define IDADENSE_ILL_INPUT IDADLS_ILL_INPUT
-# define IDADENSE_MEM_FAIL IDADLS_MEM_FAIL
-#else
-# define IDA_MTX_T DenseMat
-#endif
-
+#include "ida.h"
+#include "idalinear.h"
 
 /* residual function forward declaration */
 int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data);

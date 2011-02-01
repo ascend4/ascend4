@@ -1,8 +1,9 @@
 #include "idalinear.h"
-#include <ida/ida_impl.h>
+
 #include <ascend/utilities/error.h>
 #include <ascend/general/ascMalloc.h>
 
+/** FIXME should the following be moved to ida.h? */
 #include <sundials/sundials_math.h>
 #define ZERO RCONST(0.0)
 #define ONE  RCONST(1.0)

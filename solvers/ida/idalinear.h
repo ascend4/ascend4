@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006-2011 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -32,20 +32,7 @@
 #ifndef ASC_IDALINEAR_H
 #define ASC_IDALINEAR_H
 
-/**	@addtogroup integrator Integrator
-	@{
-*/
-
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
-# include <sundials/sundials_config.h>
-# include <sundials/sundials_nvector.h>
-# include <ida.h>
-# include <ida/ida_spgmr.h>
-#else
-# include <sundials/sundials_config.h>
-# include <nvector/nvector_serial.h>
-# include <ida/ida.h>
-#endif
+#include "ida.h"
 
 #include <ascend/linear/mtx.h>
 
@@ -94,7 +81,5 @@ int IDAASCENDGetLastFlag(void *ida_mem, int *flag);
 	You need to free the returned string here.
 */
 char *IDAASCENDGetReturnFlagName(int flag);
-
-/* @} */
 
 #endif

@@ -1,4 +1,28 @@
+/*	ASCEND modelling environment
+	Copyright (C) 2006-2011 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Analysis routines for the ASCEND wrapper of the IDA integrator.
+	These functions perform sorting of variables and relations and create
+	additional lists of variables as required for use by our ida.c code.
+*/
 #include "idaanalyse.h"
+#include "idatypes.h"
+#include "idaio.h"
 
 #include <ascend/general/panic.h>
 #include <ascend/utilities/error.h>
@@ -13,8 +37,6 @@
 #include <ascend/system/jacobian.h>
 #include <ascend/system/cond_config.h>
 #include <ascend/solver/slvDOF.h>
-
-#include "ida_impl.h"
 
 #define ANALYSE_DEBUG
 
@@ -65,7 +87,7 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("BEFORE CHECKING VARS");
-	integrator_ida_analyse_debug(integ,stderr);
+	system_diffvars_debug(integ->system,stderr);
 #endif
 
 	/* we shouldn't have allocated these yet: just be sure */
@@ -206,7 +228,7 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("BEFORE SORTING RELS AND VARS");
-	integrator_ida_analyse_debug(integ,stderr);
+	system_diffvars_debug(integ->system,stderr);
 #endif
 
 	/* we should not have allocated y or ydot yet */
@@ -941,13 +963,5 @@ int integrator_ida_diffindex1(const IntegratorSystem *integ, const struct var_va
 	if(var_sindex(deriv) >= integ->n_y)return -1;
 	if(var_sindex(deriv) < integ->n_y + integ->n_ydot)return -2;
 	return integ->y_id[var_sindex(deriv) - integ->n_y];
-}
-
-/**
-	This function will output the data structures provided to use BY THE
-	SYSTEM -- not the ones we're working with here IN THE SOLVER.
-*/
-int integrator_ida_analyse_debug(const IntegratorSystem *integ,FILE *fp){
-	return system_diffvars_debug(integ->system,fp);
 }
 
