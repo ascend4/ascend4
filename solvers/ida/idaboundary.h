@@ -24,8 +24,7 @@
 #ifndef ASC_IDA_H
 #define ASC_IDA_H
 
-#include <ascend/utilities/config.h>
-#include "integrator.h"
+#include <ascend/integrator/integrator.h>
 
 /**
 	Reconfigure the IDA system after a boundary-crossing event. This will

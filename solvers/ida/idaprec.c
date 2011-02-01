@@ -17,14 +17,7 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	@file
-	Access to the IDA integrator for ASCEND. IDA is a DAE solver that comes
-	as part of the GPL-licensed SUNDIALS solver package from LLNL.
-
-	IDA provides the non-linear parts, as well as a number of pluggable linear
-	solvers: dense, banded and krylov types.
-
-	We also implement here an EXPERIMENTAL direct sparse linear solver for IDA
-	using the ASCEND linsolqr routines.
+	Preconditioner routines for IDA with ASCEND.
 
 	@see http://www.llnl.gov/casc/sundials/
 *//*
@@ -33,100 +26,13 @@
 
 #define _GNU_SOURCE
 
-#include <signal.h>
-#include <setjmp.h>
-#include <fenv.h>
-#include <math.h>
-
-/* SUNDIALS includes */
-#ifdef ASC_WITH_IDA
-
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
-# include <sundials/sundials_config.h>
-# include <sundials/sundials_nvector.h>
-# include <ida/ida_spgmr.h>
-# include <ida.h>
-# include <nvector_serial.h>
-#else
-# include <sundials/sundials_config.h>
-# include <nvector/nvector_serial.h>
-# include <ida/ida.h>
-#endif
-
-# include <sundials/sundials_dense.h>
-# include <ida/ida_spgmr.h>
-# include <ida/ida_spbcgs.h>
-# include <ida/ida_sptfqmr.h>
-# include <ida/ida_dense.h>
-
-# ifndef IDA_SUCCESS
-#  error "Failed to include SUNDIALS IDA header file"
-# endif
-#else
-# error "If you're building this file, you should have ASC_WITH_IDA"
-#endif
-
-#ifdef ASC_WITH_MMIO
-# include <mmio.h>
-#endif
+#include "idaprec.h"
+#include "idaio.h"
 
 #include <ascend/general/platform.h>
-#include <ascend/utilities/error.h>
-#include <ascend/utilities/ascSignal.h>
-#include <ascend/general/panic.h>
-#include <ascend/compiler/instance_enum.h>
-
-#include <ascend/system/slv_client.h>
 #include <ascend/system/relman.h>
-#include <ascend/system/block.h>
-#include <ascend/system/slv_stdcalls.h>
-#include <ascend/system/jacobian.h>
-#include <ascend/system/bndman.h>
 
-#include <ascend/utilities/config.h>
-#include <ascend/integrator/integrator.h>
-
-#include "idalinear.h"
-#include "idaanalyse.h"
-#include "ida_impl.h"
-#include "idaprec.h"
-/*
-	for cases where we don't have SUNDIALS_VERSION_MINOR defined, guess version 2.2
-*/
-#ifndef SUNDIALS_VERSION_MINOR
-# ifdef __GNUC__
-#  warning "GUESSING SUNDIALS VERSION 2.2"
-# endif
-# define SUNDIALS_VERSION_MINOR 2
-#endif
-#ifndef SUNDIALS_VERSION_MAJOR
-# define SUNDIALS_VERSION_MAJOR 2
-#endif
-
-/* SUNDIALS 2.4.0 introduces new DlsMat in place of DenseMat */
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==4
-# define IDA_MTX_T DlsMat
-# define IDADENSE_SUCCESS IDADLS_SUCCESS
-# define IDADENSE_MEM_NULL IDADLS_MEM_NULL
-# define IDADENSE_ILL_INPUT IDADLS_ILL_INPUT
-# define IDADENSE_MEM_FAIL IDADLS_MEM_FAIL
-#else
-# define IDA_MTX_T DenseMat
-#endif
-
-/* #define FEX_DEBUG */
-#define JEX_DEBUG
-/* #define DJEX_DEBUG */
-#define SOLVE_DEBUG
-#define STATS_DEBUG
 #define PREC_DEBUG
-/* #define ROOT_DEBUG */
-
-/* #define DIFFINDEX_DEBUG */
-/* #define ANALYSE_DEBUG */
-/* #define DESTROY_DEBUG */
-/* #define MATRIX_DEBUG */
-
 
 /*------
   Full jacobian preconditioner -- experimental
