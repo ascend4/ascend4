@@ -29,7 +29,7 @@
 #include <ascend/general/platform.h>
 #include <ascend/system/slv_client.h>
 
-/**	@addtogroup solver Solver
+/**	@addtogroup solver_api Solver API
 	@{
 */
 

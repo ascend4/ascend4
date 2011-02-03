@@ -56,7 +56,7 @@
 
 #include <ascend/general/platform.h>
 
-/**	@addtogroup solver Solver
+/**	@addtogroup solver_server Solver Server
 	@{
 */
 
