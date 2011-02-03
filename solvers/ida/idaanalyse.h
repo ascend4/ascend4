@@ -28,7 +28,10 @@
 #include <ascend/system/var.h>
 #include <ascend/system/rel.h>
 
-IntegratorAnalyseFn integrator_ida_analyse; /* for new approach -- JP Jan 2007 */
+/**
+	The top-level analysis function, called by the Integrator API.
+*/
+IntegratorAnalyseFn integrator_ida_analyse;
 
 /**
 	Given a derivative variable, return the index of its corresponding differential

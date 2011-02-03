@@ -49,7 +49,7 @@
 
 	ASCEND is licensed under the GNU General Public License. See the the file
 	'LICENSE.txt' for more information, which is available at:
-	http://ascendcode.cheme.cmu.edu/viewvc.cgi/code/branches/extfn/LICENSE.txt?view=markup
+	http://ascendcode.cheme.cmu.edu/viewvc.cgi/code/trunk/LICENSE.txt?view=markup
 */
 
 #ifndef ASC_INSTANTIATE_H
