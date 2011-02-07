@@ -902,7 +902,7 @@ struct var_variable **slv6_get_var_list(slv6_system_t sys){
 }
 
 void slv6_set_bnd_list(slv6_system_t sys, struct bnd_boundary *blist){
-   static bnd_boundary_t empty_list[] = {NULL};
+   static struct bnd_boundary empty_list[] = {};
    check_system(sys);
    sys->blist_user = blist;
    sys->blist = (blist==NULL ? empty_list : blist);
@@ -965,7 +965,7 @@ var_filter_t *vfilter;
 }
 
 int slv6_count_bnds(slv6_system_t sys,bnd_filter_t *bfilter){
-	struct bnd_boundary_t *bp;
+	struct bnd_boundary *bp;
 	int32 count = 0;
 	check_system(sys);
 	for( bp=sys->blist; *bp != NULL; bp++ ){
@@ -1231,7 +1231,7 @@ boolean slv6_eligible_solver(slv6_system_t sys){
 #else
      FPRINTF(stderr,"  function slv6_elegible_solver is slv6 is broken.\n");
      FPRINTF(stderr," It calls exprman_is_linear with wrong number of args.\n");
-     exit;
+     exit(1);
 #endif
    }
 
@@ -1284,7 +1284,7 @@ void slv6_presolve(slv6_system_t sys){
 #else
    if( sys->vlist_user == NULL ){
      FPRINTF(stderr,"  function determine_vlist is slv6 is broken.\n");
-     exit;
+     exit(1);
    }
 #endif
    sys->mps.cap = 0;
@@ -1572,7 +1572,7 @@ int slv6_register(SlvFunctionsT *sft){
   sft->iterate = slv6_iterate;
   sft->resolve = slv6_resolve;
   sft->getlinsys = NULL;
-  sft->get_sys_mtx = slv6_get_jacobian;
+  sft->get_sys_mtx = NULL /*slv6_get_jacobian*/;
   sft->dumpinternals = slv6_dump_internals;
   return 0;
 }
