@@ -37,11 +37,16 @@
 #include <ascend/general/platform.h>
 #include <ascend/system/var.h>
 
-/**	@addtogroup solver Solver
-	@{
-*/
+#define MPS_FIXED 1
+#define MPS_BINARY 2
+#define MPS_INT 3
+#define MPS_SEMI 4
+#define MPS_VAR 5
 
-#ifdef STATIC_MPS
+#define MPS_BINARY_STR "boolean_var"
+#define MPS_INT_STR "solver_int"
+#define MPS_SEMI_STR "solver_semi"
+#define MPS_VAR_STR "solver_var"
 
 /** 
  *  Writes out a map file.
@@ -67,9 +72,6 @@ extern boolean write_MPS(const char *name,
                          mps_data_t mps,
                          int iarray[],
                          double rarray[]);   
-
-#endif  /* STATIC_MPS */
-/* @} */
 
 #endif  /* ASC_MPS_H */
 

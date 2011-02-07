@@ -496,12 +496,12 @@ static char *calc_svtlist( struct var_variable **vlist,    /* input, not modifie
           {
               if (var_relaxed(*vlist))
               {
-                   *tmp = SOLVER_RELAXED;
+                   *tmp = MPS_RELAXED;
                    *solver_relaxed_used++;
               }
               else
               {
-                   *tmp = SOLVER_BINARY;
+                   *tmp = MPS_BINARY;
                    *solver_binary_used++;
               }
           }
@@ -511,12 +511,12 @@ static char *calc_svtlist( struct var_variable **vlist,    /* input, not modifie
               {
                    if (var_relaxed(*vlist))
                    {
-                         *tmp = SOLVER_RELAXED;
+                         *tmp = MPS_RELAXED;
                          *solver_relaxed_used++;
                    }
                    else
                    {
-                         *tmp = SOLVER_INT;
+                         *tmp = MPS_INT;
                          *solver_int_used++;
                    }
               }
@@ -526,12 +526,12 @@ static char *calc_svtlist( struct var_variable **vlist,    /* input, not modifie
                    {
                          if (var_relaxed(*vlist))
                          {
-                              *tmp = SOLVER_RELAXED;
+                              *tmp = MPS_RELAXED;
                               *solver_relaxed_used++;
                          }
                          else
                          {
-                              *tmp = SOLVER_SEMI;
+                              *tmp = MPS_SEMI;
                               *solver_semi_used++;
                          }
                    }
@@ -539,7 +539,7 @@ static char *calc_svtlist( struct var_variable **vlist,    /* input, not modifie
                    {
                          if (type == MoreRefined(type,solver_var_type) )
                          {  /* either solver var or some refinement */
-                              *tmp = SOLVER_VAR;
+                              *tmp = MPS_VAR;
                               *solver_var_used++;
                          }
                          else
@@ -554,7 +554,7 @@ static char *calc_svtlist( struct var_variable **vlist,    /* input, not modifie
       }        /* if free inc var */
       else
       {
-         *tmp = SOLVER_FIXED;
+         *tmp = MPS_FIXED;
          *solver_fixed++;
       }
 
