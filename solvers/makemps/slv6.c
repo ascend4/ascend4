@@ -62,6 +62,8 @@
 #endif
 #define DEBUG FALSE
 
+#define SYS(s) ((slv6_system_t)(s))
+
 struct slv6_system_structure {
 
    /**
@@ -82,12 +84,12 @@ struct slv6_system_structure {
     ***  Solver information
     **/
    int                    integrity;    /* ? Has the system been created */
+
    slv_parameters_t       p;            /* Parameters */
+   struct slv_parameter pa[SP6_PARAMS];
+
    slv_status_t           s;            /* Status flags */
    double                 clock;        /* CPU time */
-   int iarray[slv6_IA_SIZE];            /* Integer subparameters */
-   double rarray[slv6_RA_SIZE];         /* Real subparameters */
-   char *carray[slv6_CA_SIZE];          /* Charptr subparameter */
 
    /**
     ***  Calculated Data
@@ -96,6 +98,171 @@ struct slv6_system_structure {
    mps_data_t  mps;          /* the main chunk of data for the problem */
 
 };
+
+
+static int slv6_get_default_parameters(slv_system_t server, SlvClientToken asys
+		,slv_parameters_t *parameters
+){
+	slv6_system_t sys = NULL;
+	struct slv_parameter *new_parms = NULL;
+
+	if(server != NULL && asys != NULL) {
+		sys = SYS(asys);
+	}
+
+	if(parameters->parms == NULL) {
+		new_parms = ASC_NEW_ARRAY_OR_NULL(struct slv_parameter,SP6_PARAMS);
+		if(new_parms == NULL) {
+		    return -1;
+		}
+		parameters->parms = new_parms;
+		parameters->dynamic_parms = 1;
+	}
+
+	parameters->num_parms = 0;
+
+	/** ASCEND Options */
+
+	slv_param_bool(parameters,ASCEND_PARAM_SAFEEVAL
+		,(SlvParameterInitBool){{"safeeval"
+			,"Use safe evaluation?",1
+			,"Use 'safe' function evaluation routines (TRUE) or allow ASCEND to "
+			"throw SIGFPE errors which will then halt integration (FALSE)."
+		}, FALSE}
+	);
+		
+	/** Integer and Bool Options */
+
+	slv_param_bool(parameters,SP6_NONLIN
+		,(SlvParameterInitBool){{"nonlin"
+			,"Linearise non-linear equations?",1
+			,"Perform linearisation of non-linear models at the current point (TRUE)"
+			" or else require a linear model (FALSE)."
+		}, FALSE}
+	);
+
+
+	slv_param_bool(parameters,SP6_RELAXED
+		,(SlvParameterInitBool){{"relaxed"
+			,"Solve LP relaxation?",1
+			,"Solve regular problem (FALSE) or LP relaxation of problem (TRUE)."
+		}, FALSE}
+	);
+
+	slv_param_bool(parameters,SP6_NONNEG
+		,(SlvParameterInitBool){{"nonneg"
+			,"Require non-negative?",1
+			,"Solver handles free vars (FALSE) or solver requires that all vars have LB=0, UB=infinity, no FR or MI"
+		}, FALSE}
+	);
+
+	slv_param_int(parameters,SP6_OBJ
+		,(SlvParameterInitInt){{"obj"
+			,"Objective function type",2
+			,"0->solver assumes minimization, do nothing special; 1->solver assumes maximization, swap obj coeff for min problems; 2->solver support SCICONIC style MINIMIZE; 3->solver supports QOMILP style MAX/MIN in names section"
+		}, 0, 0, 3}
+	);
+
+	slv_param_int(parameters,SP6_BINARY
+		,(SlvParameterInitInt){{"binary"
+			,"Binary variable support",2
+			,"0->solver supports binary variables using INTORG; 1->solver supports binary variables with BV option in BOUNDS; 2->no support"
+		}, 2, 0, 2}
+	);
+
+	slv_param_int(parameters,SP6_INTEGER
+		,(SlvParameterInitInt){{"integer"
+			,"Integer variable method",2
+			,"0->solver defines integer vars using INTORG; 1->solver defines integer vars using UI in BOUNDS; 2->no support for integer vars"
+		}, 2, 0, 2}
+	);
+	
+
+	slv_param_bool(parameters,SP6_SEMI
+		,(SlvParameterInitBool){{"semi"
+			,"Semi-continuous support?",2
+			,"0->no support; 1->solver supports SCICONIC style semi-continuous vars"
+		}, FALSE}
+	);
+
+	slv_param_bool(parameters,SP6_SOS1
+		,(SlvParameterInitBool){{"sos1"
+			,"SOS1 support?",2
+			,"0->no support; 1->solver supports SOS1, i.e. sum(Xi) = 1"
+		}, FALSE}
+	);
+
+	slv_param_bool(parameters,SP6_SOS2
+		,(SlvParameterInitBool){{"sos2"
+			,"SOS2 support? (ignored)",2
+			,"This parameter currently ignored; no support for type 2 yet. 0->no support; 1->solver supports SOS2, i.e. sum(xi) <=2, with 2 nonzeros being adjacent"
+		}, FALSE}
+	);
+
+	slv_param_bool(parameters,SP6_SOS3
+		,(SlvParameterInitBool){{"sos3"
+			,"SOS3 support?",2
+			,"0->no support; 1->solver supports SOS3, i.e. sum(xi) <= 1"
+		}, FALSE}
+	);
+
+	slv_param_bool(parameters,SP6_BO
+		,(SlvParameterInitBool){{"bo"
+			,"BO current bound support?",3
+			,"0->no support; 1->solver supports QOMILP-style BO cutoff bound in names section. Note: value of bound is set in 'bndval'."
+		}, FALSE}
+	);
+
+	slv_param_bool(parameters,SP6_BO
+		,(SlvParameterInitBool){{"eps"
+			,"EPS termination criterion support?",4
+			,"0->no support; 1->solver supports QOMILP-style EPS termination criterion. Note: value of bound is set in 'epsval'."
+		}, FALSE}
+	);
+
+
+	slv_param_real(parameters,SP6_BOVAL
+		,(SlvParameterInitReal){{"boval"
+			,"BO cutoff bound value",3  
+			,"Value of QOMILP style BO cutoff bound in names section. Ignored if 'bo' is FALSE."
+		}, 0, -1e99, 1.e99}
+	);
+
+	slv_param_real(parameters,SP6_EPSVAL
+		,(SlvParameterInitReal){{"epsval"
+			,"EPS termination criterion value",4  
+			,"Value of QOMILP-style EPS termination criterion. Note: Ignored if 'eps' is FALSE."
+		}, 0, -1e99, 1.e99}
+	);
+
+	slv_param_real(parameters,SP6_PINF
+		,(SlvParameterInitReal){{"pinf"
+			,"Positive 'infinity' value",5
+			,"Any upper bound greater than 'pinf' will be set to +infinity"
+		}, 1e30, 0, 1.e99}
+	);
+
+	slv_param_real(parameters,SP6_MINF
+		,(SlvParameterInitReal){{"minf"
+			,"Minus 'infinity' value",5
+			,"Any lower bound greater than 'minf' will be set to -infinity"
+		}, -1e30, -1e99, 0}
+	);
+
+	slv_param_char(parameters,SP6_FILENAME
+		,(SlvParameterInitChar){{"filename"
+			,"Output filename",1
+			,"Name of the output file to be created."
+		}, "outfile.txt"}, (char *[]){
+			"outfile.txt","outfile1.txt","outfile2.txt","outfile3.txt",NULL
+		} /* FIXME how to specify that the user can type this in as free text? */
+	); 
+
+	asc_assert(parameters->num_parms==SP6_PARAMS);
+
+	return 1;	
+}
+
 
 /* _________________________________________________________________________ */
 
@@ -885,6 +1052,7 @@ static void determine_vlist(slv6_system_t sys){
  **/
 
 
+#if 0
 void slv6_set_var_list(slv6_system_t sys, struct var_variable **vlist){
    static struct var_variable *empty_list[] = {NULL};
    check_system(sys);
@@ -994,22 +1162,6 @@ struct rel_relation *slv6_get_obj_relation(slv6_system_t sys){
    return(sys->obj);
 }
 
-void slv6_get_parameters(slv6_system_t sys,slv_parameters_t *parameters){
-   check_system(sys);
-   mem_copy_cast(&(sys->p),parameters,sizeof(slv_parameters_t));
-}
-
-void slv6_set_parameters(slv6_system_t sys, slv_parameters_t *parameters){
-   check_system(sys);
-   if (parameters->whose==slv6_solver_number)
-   mem_copy_cast(parameters,&(sys->p),sizeof(slv_parameters_t));
-}
-
-void slv6_get_status(slv6_system_t sys, slv_status_t *status){
-   check_system(sys);
-   mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
-}
-
 void slv6_dump_internals(slv6_system_t sys, int level){
    check_system(sys);
    if (level > 0) {
@@ -1017,7 +1169,29 @@ void slv6_dump_internals(slv6_system_t sys, int level){
       FPRINTF(stderr,"        slv6 does not dump its internals.\n");
    }
 }
+#endif
 
+void slv6_get_parameters(slv_system_t server,slv_parameters_t *parameters){
+	slv6_system_t sys;
+	sys = SYS(server);
+	check_system(sys);
+	mem_copy_cast(&(sys->p),parameters,sizeof(slv_parameters_t));
+}
+
+void slv6_set_parameters(slv_system_t server, slv_parameters_t *parameters){
+	slv6_system_t sys;
+	sys = SYS(server);
+	check_system(sys);
+	if (parameters->whose==slv6_solver_number)
+	mem_copy_cast(parameters,&(sys->p),sizeof(slv_parameters_t));
+}
+
+void slv6_get_status(slv_system_t server, slv_status_t *status){
+	slv6_system_t sys;
+	sys = SYS(server);
+	check_system(sys);
+	mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
+}
 
 /* _________________________________________________________________________ */
 
@@ -1059,19 +1233,25 @@ boolean slv6_change_basis(slv6_system_t sys,int32 var, mtx_range_t *rng){
 	It should be a good source of comments on the system parameters and
 	status flags used in slv6
 */
-slv6_system_t slv6_create(){   /* added mps initialization */
-
+static SlvClientToken slv6_create(slv_system_t server, int32 *statusindex){   /* added mps initialization */
 	slv6_system_t sys;
 
-	/***  Allocate main system memory ***/
-
-	sys = (slv6_system_t)ascmalloc( sizeof(struct slv6_system_structure) );
-	mem_zero_byte_cast(sys,0,sizeof(struct slv6_system_structure));
-	sys->integrity = OK;
-
+	sys = ASC_NEW_CLEAR(struct slv6_system_structure);
+	if(sys==NULL){
+		*statusindex = 1;
+		return sys;
+	}
 
 	/***  Initialize system parameters ***/
 
+	sys->p.parms = sys->pa;
+	sys->p.dynamic_parms = 0;
+	slv6_get_default_parameters(server,(SlvClientToken)sys,&(sys->p));
+	sys->p.whose = (*statusindex);
+
+	sys->integrity = OK;
+
+#if 0
 	sys->p.output.more_important = stdout;  /* used in MIF macro */
 	sys->p.output.less_important = NULL;    /*   used in LIF macro (which is not used) */
 
@@ -1090,7 +1270,7 @@ slv6_system_t slv6_create(){   /* added mps initialization */
 	sys->p.sp.rap=&(sys->rarray[0]);        /* all defaults in rarray are 0 */
 	sys->p.sp.cap=&(sys->carray[0]);        /* all defaults in carray are NULL */
 	sys->p.sp.vap=NULL;                     /* not currently used */
-
+#endif
 
 	/***  Initialize mps data structure ***/
 
@@ -1157,29 +1337,30 @@ slv6_system_t slv6_create(){   /* added mps initialization */
 	return(sys);
 }
 
+static int slv6_destroy(slv_system_t server, SlvClientToken asys){
+	slv6_system_t sys;
+	sys = SYS(server);
+	//int i;
+	if(server == NULL || sys==NULL)return 1;
 
-int slv6_destroy(slv6_system_t sys){
-   int i;
+	if(check_system(sys))return 1;
+#if 0
+	slv6_set_var_list(sys,(struct var_variable **)NULL);
+	//slv6_set_obj_function(sys,NULL);
+	slv6_set_bnd_list(sys,NULL);
+	slv6_set_rel_list(sys,NULL);
+	slv6_set_extrel_list(sys,NULL);
+#endif
+	sys->integrity = DESTROYED;
+	if (sys->s.cost) ascfree(sys->s.cost);  /* deallocate cost array */
 
-   if (check_system(sys)) return 1;
-   slv6_set_var_list(sys,(struct var_variable **)NULL);
-   slv6_set_obj_function(sys,NULL);
-   slv6_set_bnd_list(sys,NULL);
-   slv6_set_rel_list(sys,NULL);
-   slv6_set_extrel_list(sys,NULL);
-   sys->integrity = DESTROYED;
-   if (sys->s.cost) ascfree(sys->s.cost);  /* deallocate cost array */
+	slv_destroy_parms(&(sys->p));
 
-   /* deallocate strings here */
-   for (i=0; i< slv6_CA_SIZE; i++) {
-       if (sys->p.sp.cap[i] != NULL) ascfree(sys->p.sp.cap[i]);  /* deallocate old, if any */
-   }
-
-   nuke_pointers(sys->mps);   /* free memory, and set all pointers to NULL */
-   ascfree( (POINTER)sys );
+	nuke_pointers(sys->mps);   /* free memory, and set all pointers to NULL */
+	ascfree( (POINTER)sys );
 
 
-   return 0;
+	return 0;
 }
 
 
@@ -1187,7 +1368,10 @@ int slv6_destroy(slv6_system_t sys){
 	The system must have a relation list and objective before
 	slv6_eligible_solver will return true
  */
-boolean slv6_eligible_solver(slv6_system_t sys){
+boolean slv6_eligible_solver(slv6_system_t server){
+	slv6_system_t sys;
+	sys = SYS(server);
+
    struct rel_relation **rp;
    var_filter_t vfilter;
 
@@ -1214,7 +1398,7 @@ boolean slv6_eligible_solver(slv6_system_t sys){
    vfilter.in_block = var_ignore;   */
 
    /*  Check that the system is linear if iarray[SP6_NONLIN] == 0 */
-   if (sys->iarray[SP6_NONLIN] == 0){
+   if (SLV_PARAM_BOOL(&(sys->p),SP6_NONLIN) == 0){
       for( rp=sys->rlist ; *rp != NULL ; ++rp )   /* check relations */
           if(!relman_is_linear(*rp,&vfilter)) {
             FPRINTF(MIF(sys), "ERROR:  With the current settings, the MPS generator can only\n");
@@ -1247,7 +1431,10 @@ boolean slv6_eligible_solver(slv6_system_t sys){
    return TRUE;
 }
 
-void slv6_presolve(slv6_system_t sys){
+void slv6_presolve(slv_system_t server){
+	slv6_system_t sys;
+	sys = SYS(server);
+
    struct var_variable **vp;
    struct rel_relation **rp;
    struct bnd_boundary *bp;
@@ -1276,6 +1463,7 @@ void slv6_presolve(slv6_system_t sys){
    /* time presolve */
    sys->clock = tm_cpu_time();  /* record start time */
 
+#if 0
 /*  set up vlist, if necessary, and set all vars, rels, and boundary's
     to being nonincident, set up index scheme */
 
@@ -1336,6 +1524,7 @@ void slv6_presolve(slv6_system_t sys){
       sys->mps.rused++;
    }
 
+#endif
       /* compute info for variables */
    sys->mps.vused = 0;     /* number starting at 0 */
    sys->mps.vinc = 0;
@@ -1463,7 +1652,9 @@ void slv6_presolve(slv6_system_t sys){
 
 }
 
-void slv6_solve(slv6_system_t sys){
+void slv6_solve(slv_system_t server){
+	slv6_system_t sys;
+	sys = SYS(server);
 
    /* make sure none of the mps pointers are NULL */
    if ((sys->mps.Ac_mtx == NULL) ||
@@ -1493,19 +1684,21 @@ void slv6_solve(slv6_system_t sys){
    FPRINTF(MIF(sys),"_________________________________________\n");
  */
 
+#define FN SLV_PARAM_CHAR(&(sys->p),SP6_FILENAME)
+
    /* Call write_mps to create the mps file */
-   write_MPS(sys->carray[SP6_FILENAME],     /* filename for output */
+   write_MPS(FN,     /* filename for output */
              sys->mps,                      /* main chunk of data */
-             sys->iarray,                   /* Integer subparameters */
-             sys->rarray);                  /* Real subparameters */
+             sys->pa);
 
    /* replace .mps with .map at end of filename */
-   *(sys->carray[SP6_FILENAME]+strlen(sys->carray[SP6_FILENAME])-2) = 'a';
-   *(sys->carray[SP6_FILENAME]+strlen(sys->carray[SP6_FILENAME])-1) = 'p';
+   *(FN+strlen(FN)-2) = 'a';
+   *(FN+strlen(FN)-1) = 'p';
 
    /* writes out a file mapping the CXXXXXXX variable names with the actual ASCEND names */
-   write_name_map(sys->carray[SP6_FILENAME],   /* user-specified filename */
+   write_name_map(FN,   /* user-specified filename */
                   sys->vlist);
+#undef FN
 
 
 
@@ -1526,17 +1719,21 @@ void slv6_solve(slv6_system_t sys){
 }
 
 
-void slv6_iterate(slv6_system_t sys){
+void slv6_iterate(slv_system_t server){
+	slv6_system_t sys;
+	sys = SYS(server);
   /*  Writing an MPS file is a one shot deal.  Thus, an interation
       is equivalent to solving the problem.  So we just call
       slv6_solve   */
 
    check_system(sys);
-   slv6_solve(sys);
+   slv6_solve(server);
 }
 
 
-void slv6_resolve(slv6_system_t sys){
+void slv6_resolve(slv_system_t server){
+	slv6_system_t sys;
+	sys = SYS(server);
 
   /* This routine is meant to be called when the following parts of
      the system change:
@@ -1550,30 +1747,31 @@ void slv6_resolve(slv6_system_t sys){
   */
 
    check_system(sys);
-   slv6_solve(sys);
+   slv6_solve(server);
 }
 
 
-int slv6_register(SlvFunctionsT *sft){
-  if (sft==NULL)  {
-    FPRINTF(stderr,"slv6_register called with NULL pointer\n");
-    return 1;
-  }
+static const SlvFunctionsT makemps_internals = {
+	6
+	,"MakeMPS"
+	,slv6_create
+  	,slv6_destroy
+	,slv6_eligible_solver
+	,slv6_get_default_parameters
+	,slv6_get_parameters
+	,slv6_set_parameters
+	,slv6_get_status
+	,slv6_solve
+	,slv6_presolve
+	,slv6_iterate
+	,slv6_resolve
+	,NULL
+	,NULL
+	,NULL
+};
 
-  sft->name = "makeMPS";
-  sft->ccreate = slv6_create;
-  sft->cdestroy = slv6_destroy;
-  sft->celigible = slv6_eligible_solver;
-  sft->get_parameters = slv6_get_parameters;
-  sft->setparam = slv6_set_parameters;
-  sft->getstatus = slv6_get_status;
-  sft->solve = slv6_solve;
-  sft->presolve = slv6_presolve;
-  sft->iterate = slv6_iterate;
-  sft->resolve = slv6_resolve;
-  sft->getlinsys = NULL;
-  sft->get_sys_mtx = NULL /*slv6_get_jacobian*/;
-  sft->dumpinternals = slv6_dump_internals;
-  return 0;
+
+int makemps_register(void){
+	return solver_register(&makemps_internals);
 }
 

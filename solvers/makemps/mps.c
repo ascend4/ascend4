@@ -804,8 +804,7 @@ void do_bounds(FILE *out,              /* file */
 
   extern boolean write_MPS(const char *name,                /* filename for output */
                            mps_data_t mps,                  /* the main chunk of data for the problem */
-                           int iarray[slv6_IA_SIZE],        /* Integer subparameters */
-                           double rarray[slv6_RA_SIZE])     /* Real subparameters */
+                           struct slv_parameter *parms
 {
   FILE *out;
   int32 sosvar;   /* number of variables used in SOS's */

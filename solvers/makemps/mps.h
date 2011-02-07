@@ -35,6 +35,7 @@
 #define ASC_MPS_H
 
 #include <ascend/system/var.h>
+#include <ascend/system/slv_param.h>
 #include "mps_types.h"
 
 /** 
@@ -59,8 +60,7 @@ extern boolean write_name_map(const char *name,
  */
 extern boolean write_MPS(const char *name,
                          mps_data_t mps,
-                         int iarray[],
-                         double rarray[]);   
+                         struct slv_parameter *parms);   
 
 #endif  /* ASC_MPS_H */
 
