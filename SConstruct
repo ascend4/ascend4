@@ -293,7 +293,7 @@ vars.Add(ListVariable(
 	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","TRON","IPOPT","DOPRI5"]
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5"
+		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS"
 	 ]
 ))
 
@@ -1020,6 +1020,9 @@ without_conopt_reason = "Not selected (see config option WITH_SOLVERS)"
 
 with_ipopt = 'IPOPT' in env['WITH_SOLVERS']
 without_ipopt_reason = "Not selected (see config option WITH_SOLVERS)"
+
+with_makemps = 'MAKEMPS' in env['WITH_SOLVERS']
+without_makemps_reason = "Not selected (see config option WITH_SOLVERS)"
 
 
 #print "SOLVERS:",env['WITH_SOLVERS']
@@ -2704,6 +2707,9 @@ if with_ipopt:
 
 if with_dopri5:
 	env.Append(WITH_DOPRI5=1)
+
+if with_makemps:
+	env.Append(WITH_MAKEMPS=1)
 
 if with_graphviz and env.get('GRAPHVIZ_RPATH'):
 	env.Append(RPATH=env['GRAPHVIZ_RPATH'])

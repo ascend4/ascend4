@@ -1,7 +1,7 @@
 Import('env')
 
 subdirs = [
-	'qrslv','conopt','cmslv','lrslv','lsode','ida','ipopt','dopri5'
+	'qrslv','conopt','cmslv','lrslv','lsode','ida','ipopt','dopri5','makemps'
 ]
 #'tron',
 

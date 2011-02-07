@@ -3,8 +3,6 @@ Import('libascend_env')
 
 csrcs = Split("""
 	slv_interface.c
-	mps.c
-	slv2.c slv6.c slv7.c
 	slvDOF.c 
 	logblock.c
 	solver.c

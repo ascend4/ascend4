@@ -65,7 +65,8 @@
 #ifndef ASC_SLV6_H
 #define ASC_SLV6_H
 
-#include "solver.h"
+#include <ascend/solver/solver.h>
+#include <ascend/system/slv_client.h>
 
 /**	@addtogroup solver Solver
 	@{

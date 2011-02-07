@@ -58,6 +58,7 @@
 */
 
 #include "mps.h"
+#include "slv6.h"
 
 #include <time.h>
 #include <errno.h>
@@ -67,11 +68,6 @@
 #include <ascend/utilities/set.h>
 #include <ascend/general/tm_time.h>
 #include <ascend/general/mem.h>
-
-#include <ascend/system/slv_client.h>
-#include "slv6.h"
-
-#ifdef STATIC_MPS
 
 /* _________________________________________________________________________ */
 
@@ -236,11 +232,11 @@ void print_col(FILE *out,               /* file */
    else
       nexttype = 0;
 
-   if (coltype != SOLVER_FIXED) {  /* only bother with incident, nonfixed variables */
+   if (coltype != MPS_FIXED) {  /* only bother with incident, nonfixed variables */
 
        /* do an INTORG marker if start of binary/integer var */
-       if ((! inBinInt) && (((coltype == SOLVER_BINARY) && (dobinary == 0)) ||
-	  ((coltype == SOLVER_INT) && (dointeger == 0))))  {
+       if ((! inBinInt) && (((coltype == MPS_BINARY) && (dobinary == 0)) ||
+	  ((coltype == MPS_INT) && (dointeger == 0))))  {
 	     inBinInt = TRUE;  /* turn on flag */
 
 	     /*                   1       2         3         4        *
@@ -262,7 +258,7 @@ void print_col(FILE *out,               /* file */
 
        /* close marker if in last column or next type is not an int or bin */
        if (((inBinInt) && (curcol == (vused-1))) ||
-	    (inBinInt && ((nexttype != SOLVER_BINARY) && (nexttype != SOLVER_INT )))) {
+	    (inBinInt && ((nexttype != MPS_BINARY) && (nexttype != MPS_INT )))) {
 
              inBinInt = FALSE;  /* turn on flag */
              /*                   1       2         3         4        *
@@ -453,41 +449,41 @@ static void upgrade_vars(FILE *out,             /* file */
    int          orgcol;                        /* original column number */
 
    for(orgcol = 0; orgcol < vused; orgcol++)   /* loop over all columns, is _original_ column number */
-       if (typerow[orgcol] != SOLVER_FIXED) {  /* only bother with incident variables */
+       if (typerow[orgcol] != MPS_FIXED) {  /* only bother with incident variables */
 
-          if ((relaxed == 1) && ((typerow[orgcol] == SOLVER_BINARY) ||   /* if relaxed convert it to solver_var */
-               (typerow[orgcol] == SOLVER_INT) ||
-               (typerow[orgcol] == SOLVER_SEMI)))
-                typerow[orgcol] = SOLVER_VAR;
+          if ((relaxed == 1) && ((typerow[orgcol] == MPS_BINARY) ||   /* if relaxed convert it to solver_var */
+               (typerow[orgcol] == MPS_INT) ||
+               (typerow[orgcol] == MPS_SEMI)))
+                typerow[orgcol] = MPS_VAR;
           else
 
           /* upgrade types as appropriate here */
  	  /* if defined a binary var, and solver only supports integer vars, "upgrade" to an int var, etc. */
-	  if ((typerow[orgcol] == SOLVER_BINARY) && (dointeger != 2) && (dobinary == 2))  {
-               typerow[orgcol] = SOLVER_INT;
+	  if ((typerow[orgcol] == MPS_BINARY) && (dointeger != 2) && (dobinary == 2))  {
+               typerow[orgcol] = MPS_INT;
           }
-	  else if ((typerow[orgcol] == SOLVER_INT) && (dointeger == 2) && (dobinary != 2))  {
-	       FPRINTF(stderr,"WARNING: Variable C%07d was treated as a %s instead of a %s.\n", orgcol, SOLVER_BINARY_STR, SOLVER_INT_STR);
-	       FPRINTF(stderr,"         The selected MILP solver does not support %s.\n", SOLVER_INT_STR);
+	  else if ((typerow[orgcol] == MPS_INT) && (dointeger == 2) && (dobinary != 2))  {
+	       FPRINTF(stderr,"WARNING: Variable C%07d was treated as a %s instead of a %s.\n", orgcol, MPS_BINARY_STR, MPS_INT_STR);
+	       FPRINTF(stderr,"         The selected MILP solver does not support %s.\n", MPS_INT_STR);
 	       FPRINTF(stderr,"         Upper bound was set to 1.0.\n");
-               typerow[orgcol] = SOLVER_BINARY;
+               typerow[orgcol] = MPS_BINARY;
                ubrow[orgcol] = 1.0;   /* note: changed bound */
           }
-	  else if ((typerow[orgcol] == SOLVER_SEMI) && (dosemi == 0))  {   /* semi not supported */
-	       FPRINTF(stderr,"WARNING: Variable C%07d was converted from a %s to a %s.\n", orgcol, SOLVER_SEMI_STR, SOLVER_VAR_STR);
-	       FPRINTF(stderr,"         The selected MILP solver does not support %s.\n", orgcol, SOLVER_SEMI_STR);
+	  else if ((typerow[orgcol] == MPS_SEMI) && (dosemi == 0))  {   /* semi not supported */
+	       FPRINTF(stderr,"WARNING: Variable C%07d was converted from a %s to a %s.\n", orgcol, MPS_SEMI_STR, MPS_VAR_STR);
+	       FPRINTF(stderr,"         The selected MILP solver does not support %s.\n", orgcol, MPS_SEMI_STR);
 	       FPRINTF(stderr,"         The solution found may not be correct for your model.\n");
-               typerow[orgcol] = SOLVER_VAR;
+               typerow[orgcol] = MPS_VAR;
           }
-	  else if ((typerow[orgcol] == SOLVER_BINARY) && (dointeger == 2) && (dobinary ==2))  {  /* neither is supported */
-	       FPRINTF(stderr,"WARNING: Variable C%07d was treated as a %s instead of a %s.\n", orgcol, SOLVER_VAR_STR, SOLVER_BINARY_STR);
-	       FPRINTF(stderr,"         The selected MILP solver only supports %s.\n", SOLVER_VAR_STR);
-               typerow[orgcol] = SOLVER_VAR;
+	  else if ((typerow[orgcol] == MPS_BINARY) && (dointeger == 2) && (dobinary ==2))  {  /* neither is supported */
+	       FPRINTF(stderr,"WARNING: Variable C%07d was treated as a %s instead of a %s.\n", orgcol, MPS_VAR_STR, MPS_BINARY_STR);
+	       FPRINTF(stderr,"         The selected MILP solver only supports %s.\n", MPS_VAR_STR);
+               typerow[orgcol] = MPS_VAR;
           }
-	  else if ((typerow[orgcol] == SOLVER_INT) && (dointeger == 2) && (dobinary == 2))  {  /* neither is supported */
-	       FPRINTF(stderr,"WARNING: Variable C%07d was treated as a %s instead of a %s.\n", orgcol, SOLVER_VAR_STR, SOLVER_INT_STR);
-	       FPRINTF(stderr,"         The selected MILP solver only supports %s.\n", SOLVER_VAR_STR);
-               typerow[orgcol] = SOLVER_VAR;
+	  else if ((typerow[orgcol] == MPS_INT) && (dointeger == 2) && (dobinary == 2))  {  /* neither is supported */
+	       FPRINTF(stderr,"WARNING: Variable C%07d was treated as a %s instead of a %s.\n", orgcol, MPS_VAR_STR, MPS_INT_STR);
+	       FPRINTF(stderr,"         The selected MILP solver only supports %s.\n", MPS_VAR_STR);
+               typerow[orgcol] = MPS_VAR;
           }
        }
 }
@@ -581,8 +577,8 @@ void scan_SOS(mtx_matrix_t Ac_mtx,     /* Matrix representation of problem */
                         	   isSOS = FALSE;  /* overlaps prev SOS */
                         	   FPRINTF(stderr, "nz.col, current_col, mtx_FIRST: %d  %d  %d\n", nz.col, current_col, mtx_FIRST);
                          }
-                	 if ((typerow[mtx_col_to_org(Ac_mtx, nz.col)] != SOLVER_BINARY) &&
-                	     ( typerow[mtx_col_to_org(Ac_mtx, nz.col)] != SOLVER_INT)) {
+                	 if ((typerow[mtx_col_to_org(Ac_mtx, nz.col)] != MPS_BINARY) &&
+                	     ( typerow[mtx_col_to_org(Ac_mtx, nz.col)] != MPS_INT)) {
                                isSOS = FALSE;  /* var is wrong type */
                                FPRINTF(stderr, "typerow: %d\n", typerow[mtx_col_to_org(Ac_mtx, nz.col)]);
                 	 }
@@ -757,15 +753,15 @@ void do_bounds(FILE *out,              /* file */
 
    for(i = 0; i < rused; i++)                          /* loop over all rows */
    {
-     if ((typerow[i] == SOLVER_BINARY) && (binary_flag == 1))   /* do BV */
+     if ((typerow[i] == MPS_BINARY) && (binary_flag == 1))   /* do BV */
               FPRINTF(out," BV B%07d  C%07d\n",i,i);
-     else if ((typerow[i] == SOLVER_INT) && (integer_flag == 1))  /* do UI */
+     else if ((typerow[i] == MPS_INT) && (integer_flag == 1))  /* do UI */
               {
                  FPRINTF(out," UI B%07d  C%07d  %12.6G\n",i,i,ubrow[i]);
                  if (lbrow[i] != 0.0)   /* LB of 0 is assumed, so don't need to add it */
                     FPRINTF(out," LO B%07d  C%07d  %12.6G\n",i,i,lbrow[i]);
               }
-     else if ((typerow[i] == SOLVER_SEMI) && (semi_flag == 1))      /* do SC, upper bound is value */
+     else if ((typerow[i] == MPS_SEMI) && (semi_flag == 1))      /* do SC, upper bound is value */
 
               FPRINTF(out," SC B%07d  C%07d  %12.6G\n",i,i,ubrow[i]);
 
@@ -896,7 +892,5 @@ void do_bounds(FILE *out,              /* file */
 
   return close_file(out);
 }
-
-#endif
 
 
