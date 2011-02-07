@@ -98,8 +98,7 @@ extern boolean free_inc_var_filter(struct var_variable *var);
  ***  var is not fixed and incident in something.
  **/ 
 
-extern slv6_system_t slv6_create();
-extern int slv6_destroy();
+#if 0
 extern void slv6_set_var_list();
 extern struct var_variable **slv6_get_var_list();
 extern void slv6_set_bnd_list();
@@ -123,7 +122,7 @@ extern boolean slv6_change_basis();
 extern void slv6_resolve();
 extern void slv6_iterate();
 extern void slv6_solve();
-
+#endif
 
 /*********************************************************************
     Craig Schmidt 2/15/95
@@ -182,7 +181,7 @@ extern void slv6_solve();
     carray[SP6_FILENAME] pointer to filename to create
    
 *********************************************************************/
-     
+#if 0     
 #define slv6_IA_SIZE 12
 #define slv6_RA_SIZE 4
 #define slv6_CA_SIZE 1
@@ -210,7 +209,34 @@ extern void slv6_solve();
 
 /**< subscripts for ca */
 #define SP6_FILENAME 0
+#endif
 
+
+enum{
+	/** ASCEND OPTIONS */
+	ASCEND_PARAM_SAFEEVAL = 0
+	/**< integer-valued */
+	, SP6_NONLIN
+	, SP6_RELAXED
+	, SP6_NONNEG
+	, SP6_OBJ
+	, SP6_BINARY
+	, SP6_INTEGER
+	, SP6_SEMI
+	, SP6_SOS1
+	, SP6_SOS2
+	, SP6_SOS3
+	, SP6_BO
+	, SP6_EPS
+	/* real-valued */
+	, SP6_BOVAL
+	, SP6_EPSVAL
+	, SP6_PINF
+	, SP6_MINF
+	/* string-valued */
+	, SP6_FILENAME
+	, SP6_PARAMS
+};
 
 /**< define another token to go with
    rel_TOK_less, rel_TOK_equal, and rel_TOK_greater,
