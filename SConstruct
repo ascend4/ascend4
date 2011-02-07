@@ -1006,23 +1006,25 @@ else:
 	with_installer=0
 	without_installer_reason = "only possible under Windows"
 
+notselected = "Not selected (see config option WITH_SOLVERS)"
+
 with_lsode = 'LSODE' in env['WITH_SOLVERS']
-without_lsode_reason = "Not selected (see config option WITH_SOLVERS)"
+without_lsode_reason = notselected
 
 with_ida = 'IDA' in env['WITH_SOLVERS']
-without_ida_reason = "Not selected (see config option WITH_SOLVERS)"
+without_ida_reason = notselected
 
 with_dopri5 = 'DOPRI5' in env['WITH_SOLVERS']
-without_dopri5_reason = "Not selected (see config option WITH_SOLVERS)"
+without_dopri5_reason = notselected
 
 with_conopt = 'CONOPT' in env['WITH_SOLVERS']
-without_conopt_reason = "Not selected (see config option WITH_SOLVERS)"
+without_conopt_reason = notselected
 
 with_ipopt = 'IPOPT' in env['WITH_SOLVERS']
-without_ipopt_reason = "Not selected (see config option WITH_SOLVERS)"
+without_ipopt_reason = notselected
 
 with_makemps = 'MAKEMPS' in env['WITH_SOLVERS']
-without_makemps_reason = "Not selected (see config option WITH_SOLVERS)"
+without_makemps_reason = notselected
 
 
 #print "SOLVERS:",env['WITH_SOLVERS']

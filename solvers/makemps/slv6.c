@@ -35,6 +35,7 @@
  */
 
 #include "slv6.h"
+#include "mps.h"
 
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/set.h>
@@ -45,26 +46,16 @@
 #include <ascend/compiler/module.h>
 #include <ascend/compiler/library.h>
 #include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/instquery.h>
 
 #include <ascend/linear/mtx.h>
 
 #include <ascend/system/calc.h>
 #include <ascend/system/relman.h>
 #include <ascend/system/slv_common.h>
-#include "mps.h"
-
-#if !defined(STATIC_MPS) && !defined(DYNAMIC_MPS)
-int slv6_register(SlvFunctionsT *f)
-{
-  (void)f;  /* stop gcc whine about unused parameter */
-
-  FPRINTF(stderr,"makeMPS not compiled in this ASCEND IV.\n");
-  return 1;
-}
-#else /* either STATIC_MPS or DYNAMIC_MPS is defined */
-#ifdef DYNAMIC_MPS
-/* do dynamic loading stuff.   yeah, right */
-#else /* following is used if STATIC_MPS is defined */
+#include <ascend/system/bnd.h>
+#include <ascend/system/var.h>
+#include <ascend/system/rel.h>
 
 #ifndef KILL
 #define KILL TRUE
@@ -80,8 +71,8 @@ struct slv6_system_structure {
    struct rel_relation    *obj;          /* Objective function: NULL = none */
    struct var_variable    **vlist;       /* Variable list (NULL terminated) */
    struct var_variable    **vlist_user;  /* User vlist (NULL = determine) */
-   bnd_boundary_t         *blist;       /* Boundary list (NULL terminated) */
-   bnd_boundary_t         *blist_user;  /* User blist (NULL = none) */
+   struct bnd_boundary    *blist;       /* Boundary list (NULL terminated) */
+   struct bnd_boundary    *blist_user;  /* User blist (NULL = none) */
    struct rel_relation    **rlist;       /* Relation list (NULL terminated) */
    struct rel_relation    **rlist_user;  /* User rlist (NULL = none) */
    struct ExtRelCache     **erlist;     /* External relations cache list */
@@ -108,7 +99,7 @@ struct slv6_system_structure {
 
 /* _________________________________________________________________________ */
 
-/**
+/*
  ***  Integrity checks
  ***  ----------------
  ***     check_system(sys)
@@ -143,7 +134,7 @@ static int check_system(slv6_system_t sys)
 
 /* _________________________________________________________________________ */
 
-/**
+/*
  ***  Array/vector operations
  ***  ----------------------------
  ***     destroy_array(p)
@@ -198,19 +189,18 @@ static void nuke_pointers(mps_data_t mps) { /* free all allocated memory in mps 
 
 /* _________________________________________________________________________ */
 
-/**
+/*
  ***  General input/output routines
  ***  -----------------------------
  ***     fp = MIF(sys)
  ***     fp = LIF(sys)
  **/
 
-static FILE *get_output_file(FILE *fp)
 /**
- ***  Returns fp if fp!=NULL, or a file pointer
- ***  open to nul device if fp == NULL.
- **/
-{
+	Returns fp if fp!=NULL, or a file pointer
+	open to nul device if fp == NULL.
+*/
+static FILE *get_output_file(FILE *fp){
    static FILE *nuldev = NULL;
    static char fname[] = "/dev/null";
 
@@ -231,20 +221,19 @@ static FILE *get_output_file(FILE *fp)
 
 /* _________________________________________________________________________ */
 
-/**
+/*
  ***  Routines for common filters
  ***  -----------------
  ***  free_inc_var_filter -  true for non-fixed incident variables
  ***  inc_rel_filter      -  true for incident relations
  **/
 
-extern boolean free_inc_var_filter(struct var_variable *var)
 /**
- ***  I've been calling this particular var filter a lot ,
- ***  so I decided to make it a subroutine.  Returns true if
- ***  var is not fixed and incident in something.
- **/
-{
+	I've been calling this particular var filter a lot ,
+	so I decided to make it a subroutine.  Returns true if
+	var is not fixed and incident in something.
+*/
+extern boolean free_inc_var_filter(struct var_variable *var){
       var_filter_t vfilter;
       vfilter.matchbits = (VAR_FIXED | VAR_INCIDENT | VAR_ACTIVE);
       vfilter.matchvalue = (VAR_INCIDENT | VAR_ACTIVE);
@@ -275,7 +264,7 @@ static boolean inc_rel_filter(struct rel_relation *rel)
 
 /* _________________________________________________________________________ */
 
-/**
+/*
  ***  Routines to calculate the mps problem representation
  ***  --------------------
  ***  var_relaxed - is the variable relaxed or not?
@@ -287,15 +276,16 @@ static boolean inc_rel_filter(struct rel_relation *rel)
  ***  calc_matrix - compute entire matrix representaion of problem
  **/
 
-static boolean calc_c(mtx_matrix_t mtx,     /* matrix to store derivs */
-                      int32 org_row,  /* original number of row to store them */
-                      struct rel_relation  *obj)           /* expression to diffs */
+
 /**
  ***  Calculate gradient of the objective function. (or any expression, for that matter)
  ***  On the linear system we should have, this is the c vector of
  ***  our problem max/min {cx: Ax<=b}.
  ***  On nonlinear problems is the linearization of problem at current point
  **/
+static boolean calc_c(mtx_matrix_t mtx,     /* matrix to store derivs */
+                      int32 org_row,  /* original number of row to store them */
+                      struct rel_relation  *obj)           /* expression to diffs */
 {
       var_filter_t vfilter;
 	  int32 row;
@@ -319,20 +309,20 @@ static boolean calc_c(mtx_matrix_t mtx,     /* matrix to store derivs */
 #else
      FPRINTF(stderr,"  function calc_c is slv6 is broken.\n");
      FPRINTF(stderr," It calls exprman_diffs with wrong number of args.\n");
-     exit;
+     exit(1);
 #endif
       return calc_ok;                          /* did things work out ?, calc_ok in calc.h */
 }
 
 
-static real64 *calc_bounds(struct var_variable **vlist, /* variable list to get bounds */
-                                 int32 vinc,      /* number of incident variables */
-                                 boolean upper)         /* do upper, else lower */
-
 /**
  **  Stores the upper or lower bounds of all non-fixed, incident vars
  **  in a new array, which is returned by the routine
  **/
+static real64 *calc_bounds(struct var_variable **vlist, /* variable list to get bounds */
+                                 int32 vinc,      /* number of incident variables */
+                                 boolean upper)         /* do upper, else lower */
+
 {
       real64 *tmp,*tmp_array_origin;  /* temporary storage for our bounds data */
 
@@ -350,17 +340,16 @@ static real64 *calc_bounds(struct var_variable **vlist, /* variable list to get 
       }
 
       tmp = tmp_array_origin;
-      for( ; *vlist != NULL ; ++vlist )
-        if( free_inc_var_filter(*vlist) )
+      for( ; *vlist != NULL ; ++vlist ){
+        if( free_inc_var_filter(*vlist) ){
            if (upper) { *tmp=var_upper_bound(*vlist); tmp++; }
            else   { *tmp=var_lower_bound(*vlist); tmp++; }
-
+        }
+      }
       return tmp_array_origin;
 }
 
 
-static char *calc_reloplist(struct rel_relation **rlist,
-                            int32    rused)   /* entry for each relation */
 /**
  ***  This function constructs the a list of relational operators: <=, >=, =
  ***  from the relations list.  The values for each relational operator
@@ -371,6 +360,8 @@ static char *calc_reloplist(struct rel_relation **rlist,
  ***  Note: the rel_less, rel_equal, and rel_greater routines in rel.h don't
  ***  behave as you'd expect, and should _not_ be used.  Use rel_type instead.
  **/
+static char *calc_reloplist(struct rel_relation **rlist,
+                            int32    rused)   /* entry for each relation */
 {
    char *reloplist;
    char *tmp;                  /* pointer for storage */
@@ -386,17 +377,17 @@ static char *calc_reloplist(struct rel_relation **rlist,
    for ( ;*rlist != NULL; rlist++)
    {
        if (inc_rel_filter(*rlist))   /* is an incident var */
-           switch (rel_type(*rlist)) {
-               case e_less:
-               case e_lesseq:
+           switch(rel_relop(*rlist)) {
+               case e_rel_less:
+               case e_rel_lesseq:
                               *tmp = rel_TOK_less;
                               break;
 
-               case e_equal:
+               case e_rel_equal:
                               *tmp = rel_TOK_equal;
                               break;
-               case e_greater:
-               case e_greatereq:
+               case e_rel_greater:
+               case e_rel_greatereq:
                               *tmp = rel_TOK_greater;
                               break;
                default:
@@ -414,7 +405,14 @@ static char *calc_reloplist(struct rel_relation **rlist,
    return reloplist;
 }
 
+/**
+	This function constructs the solver var list from the variable list.
 
+	WARNING:  This routine assumes that a struct var_variable *is an Instance.
+	In the future this is going to change, and this routine will break.
+
+	UPDATE: have made some steps to fixing above wrong assumption -- Feb 2011 JP.
+ **/
 static char *calc_svtlist( struct var_variable **vlist,    /* input, not modified */
                            int32 vused,        /* number of vars (incident or nonincident, free or fixed) */
                            int *solver_var_used,     /* number of each type of var are cached  */
@@ -423,147 +421,113 @@ static char *calc_svtlist( struct var_variable **vlist,    /* input, not modifie
                            int *solver_binary_used,
                            int *solver_semi_used,
                            int *solver_other_used,
-                           int *solver_fixed)
-/**
- ***  This function constructs the solver var list from the variable list.
- ***
- ***  WARNING:  This routine assumes that a struct var_variable *is an Instance.
- ***  In the future this is going to change, and this routine will break.
- ***
- **/
-{
-   struct TypeDescription *type;              /* type of the current var */
-   struct TypeDescription *solver_var_type;   /* type of the standard types */
-   struct TypeDescription *solver_int_type;
-   struct TypeDescription *solver_binary_type;
-   struct TypeDescription *solver_semi_type;
+                           int *solver_fixed){
+	struct TypeDescription *type;              /* type of the current var */
+	struct TypeDescription *solver_var_type;   /* type of the standard types */
+	struct TypeDescription *solver_int_type;
+	struct TypeDescription *solver_binary_type;
+	struct TypeDescription *solver_semi_type;
 
-   char *svtlist;  /* pointer for storage */
-   char *tmp;      /* temp pointer to set values */
+	char *svtlist;  /* pointer for storage */
+	char *tmp;      /* temp pointer to set values */
 
-   /* get the types for variable definitions */
+	/* get the types for variable definitions */
 
-   if( (solver_var_type = FindType(SOLVER_VAR_STR)) == NULL ) {
-       FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
-       FPRINTF(stderr,"        Type solver_var not defined.\n");
-       FPRINTF(stderr,"        MPS will not work.\n");
-       return NULL;
-   }
-   if( (solver_int_type = FindType(SOLVER_INT_STR)) == NULL ) {
-       FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
-       FPRINTF(stderr,"        Type solver_int not defined.\n");
-       FPRINTF(stderr,"        MPS will not work.\n");
-       return NULL;
-   }
-   if( (solver_binary_type = FindType(SOLVER_BINARY_STR)) == NULL ) {
-       FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
-       FPRINTF(stderr,"        Type solver_binary not defined.\n");
-       FPRINTF(stderr,"        MPS will not work.\n");
-       return NULL;
-   }
-   if( (solver_semi_type = FindType(SOLVER_SEMI_STR)) == NULL ) {
-       FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
-       FPRINTF(stderr,"        Type solver_semi not defined.\n");
-       FPRINTF(stderr,"        MPS will not work.\n");
-       return NULL;
-   }
+	if( (solver_var_type = FindType(AddSymbol(MPS_VAR_STR))) == NULL ) {
+		FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
+		FPRINTF(stderr,"        Type solver_var not defined.\n");
+		FPRINTF(stderr,"        MPS will not work.\n");
+		return NULL;
+	}
+	if( (solver_int_type = FindType(AddSymbol(MPS_INT_STR))) == NULL ) {
+		FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
+		FPRINTF(stderr,"        Type solver_int not defined.\n");
+		FPRINTF(stderr,"        MPS will not work.\n");
+		return NULL;
+	}
+	if( (solver_binary_type = FindType(AddSymbol(MPS_BINARY_STR))) == NULL ) {
+		FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
+		FPRINTF(stderr,"        Type solver_binary not defined.\n");
+		FPRINTF(stderr,"        MPS will not work.\n");
+		return NULL;
+	}
+	if( (solver_semi_type = FindType(AddSymbol(MPS_SEMI_STR))) == NULL ) {
+		FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
+		FPRINTF(stderr,"        Type solver_semi not defined.\n");
+		FPRINTF(stderr,"        MPS will not work.\n");
+		return NULL;
+	}
 
-   /* allocate memory and initialize stuff */
-   svtlist = create_array(vused,char);  /* see macro */
-   if (svtlist == NULL) {         /* memory allocation failed */
-          FPRINTF(stderr,"ERROR:  (slv6) calc_svtlist\n");
-          FPRINTF(stderr,"        Memory allocation failed for solver var type list!\n");
-          return NULL;
-   }
+	/* allocate memory and initialize stuff */
 
-   *solver_var_used = 0;
-   *solver_relaxed_used = 0;
-   *solver_int_used = 0;
-   *solver_binary_used = 0;
-   *solver_semi_used = 0;
-   *solver_other_used = 0;
-   *solver_fixed = 0;
-   tmp = svtlist;
+	svtlist = create_array(vused,char);  /* see macro */
+	if (svtlist == NULL) {         /* memory allocation failed */
+		  FPRINTF(stderr,"ERROR:  (slv6) calc_svtlist\n");
+		  FPRINTF(stderr,"        Memory allocation failed for solver var type list!\n");
+		  return NULL;
+	}
 
-   /* loop over all vars */
+	*solver_var_used = 0;
+	*solver_relaxed_used = 0;
+	*solver_int_used = 0;
+	*solver_binary_used = 0;
+	*solver_semi_used = 0;
+	*solver_other_used = 0;
+	*solver_fixed = 0;
+	tmp = svtlist;
 
-   for( ; *vlist != NULL ; ++vlist )  {
-      if( free_inc_var_filter(*vlist) )
-      {
-          type = InstanceTypeDesc( (struct Instance *) *vlist);
+	/* loop over all vars */
 
-          if (type == MoreRefined(type,solver_binary_type) )
-          {
-              if (var_relaxed(*vlist))
-              {
-                   *tmp = MPS_RELAXED;
-                   *solver_relaxed_used++;
-              }
-              else
-              {
-                   *tmp = MPS_BINARY;
-                   *solver_binary_used++;
-              }
-          }
-          else
-          {
-              if (type == MoreRefined(type,solver_int_type) )
-              {
-                   if (var_relaxed(*vlist))
-                   {
-                         *tmp = MPS_RELAXED;
-                         *solver_relaxed_used++;
-                   }
-                   else
-                   {
-                         *tmp = MPS_INT;
-                         *solver_int_used++;
-                   }
-              }
-              else
-              {
-                   if (type == MoreRefined(type,solver_semi_type) )
-                   {
-                         if (var_relaxed(*vlist))
-                         {
-                              *tmp = MPS_RELAXED;
-                              *solver_relaxed_used++;
-                         }
-                         else
-                         {
-                              *tmp = MPS_SEMI;
-                              *solver_semi_used++;
-                         }
-                   }
-                   else
-                   {
-                         if (type == MoreRefined(type,solver_var_type) )
-                         {  /* either solver var or some refinement */
-                              *tmp = MPS_VAR;
-                              *solver_var_used++;
-                         }
-                         else
-                         {
-                             FPRINTF(stderr,"ERROR:  (slv6) determine_svtlist\n");
-                             FPRINTF(stderr,"        Unknown solver_var type encountered.\n");
-                              /* should never get to here */
-                         }
-                   }          /* if semi */
-              }          /* if int */
-          }         /* if binary */
-      }        /* if free inc var */
-      else
-      {
-         *tmp = MPS_FIXED;
-         *solver_fixed++;
-      }
+	for(; *vlist != NULL ; ++vlist )  {
+		if(free_inc_var_filter(*vlist) ){
+			type = InstanceTypeDesc(var_instance(*vlist));
 
-      tmp++;
-
-    }  /* for */
-
-    return svtlist;
-
+			if(type == MoreRefined(type,solver_binary_type) ){
+				if (var_relaxed(*vlist)){
+				   *tmp = MPS_RELAXED;
+				   (*solver_relaxed_used)++;
+				}else{
+				   *tmp = MPS_BINARY;
+				   (*solver_binary_used)++;
+				}
+			}else{
+				if (type == MoreRefined(type,solver_int_type) ){
+					if(var_relaxed(*vlist)){
+						*tmp = MPS_RELAXED;
+						(*solver_relaxed_used)++;
+					}else{
+						*tmp = MPS_INT;
+						(*solver_int_used)++;
+					}
+				}else{
+					if (type == MoreRefined(type,solver_semi_type) ){
+						if (var_relaxed(*vlist)){
+							*tmp = MPS_RELAXED;
+							(*solver_relaxed_used)++;
+						}else{
+							*tmp = MPS_SEMI;
+							(*solver_semi_used)++;
+						}
+					}else{
+						if (type == MoreRefined(type,solver_var_type) ){
+							/* either solver var or some refinement */
+							*tmp = MPS_VAR;
+							(*solver_var_used)++;
+						}else{
+							FPRINTF(stderr,"ERROR:  (slv6) determine_svtlist\n");
+							FPRINTF(stderr,"        Unknown solver_var type encountered.\n");
+							/* should never get to here */
+						}
+					}          /* if semi */
+				}          /* if int */
+			}         /* if binary */
+		}else{
+			*tmp = MPS_FIXED;
+			(*solver_fixed)++;
+		}
+		tmp++;
+	}
+	return svtlist;
 }
 
 static mtx_matrix_t calc_matrix(int32     cap,
@@ -576,17 +540,16 @@ static mtx_matrix_t calc_matrix(int32     cap,
                                 int32     *rank,
                                 real64    **rhs_orig)
 /**
-int32     cap,          in: capacity of matrix
-int32     rused,        in: total number of relations used
-int32     vused,        in: total number of variables used
-struct rel_relation  **rlist,       in: Relation list (NULL terminated)
-struct rel_relation  *obj,          in: objective function
-int32     crow,         in: row to store objective row
-slv_status_t    *s,          out: s.block.jactime, and s.calc_ok
-int32     *rank,       out
-real64    **rhs_orig   out: rhs array origin
-**/
-/**
+	@param     cap,          in: capacity of matrix
+	@param    rused,        in: total number of relations used
+	@param    vused,        in: total number of variables used
+	@param rlist,       in: Relation list (NULL terminated)
+	@param obj,          in: objective function
+	@param crow,         in: row to store objective row
+	@param s,          out: s.block.jactime, and s.calc_ok
+	@param rank,       out
+	@oaram rhs_orig   out: rhs array origin
+
  ***  Creates and calculates a matrix representation of the A matrix, c row,
  ***  and the RHS or b column (which is stored in rhs_orig).
  ***  On nonlinear problems is the linearization of problem at current point.
@@ -607,7 +570,7 @@ real64    **rhs_orig   out: rhs array origin
  ***  current point.  If you are adding an MINLP feature,
  ***  you'll need to come up with a better way.
  ***
- ***
+<pre>
  ***       MPS matrix strucutre
  ***                                    v
  ***       min/max cx:                  u
@@ -636,8 +599,8 @@ real64    **rhs_orig   out: rhs array origin
  ***
  ***       cap = max(vused+1,rused), size of sparse square matrix
  ***       cap = N ---> row/column 0 to N-1 exist
- ***
- **/
+</pre>
+*/
 {
    mtx_matrix_t mtx;      /* main data structure */
    var_filter_t vfilter;  /* checks for free incident vars in relman_diffs */
@@ -679,10 +642,12 @@ real64    **rhs_orig   out: rhs array origin
   /* note: the rhs array is the residual at the current point, not what we want!
      see further comments at the start of this routine */
 
+	int safe = 0;
+
    for( rp = rlist ; *rp != NULL ; ++rp ) {
       /* fill out A matrix only for used elements */
       if( inc_rel_filter(*rp) ) {
-         *rhs = relman_diffs(*rp,&vfilter,mtx);
+         *rhs = relman_diffs(*rp,&vfilter,mtx,rhs,safe);
          /*calculate each row of A matrix here! */
          rhs++;
          if( ! calc_ok ) {   /* error check each call, calc_ok is in calc.h */
@@ -864,12 +829,14 @@ static struct var_variable **update_vlist(struct var_variable * *vlist, expr_t e
 
 #ifndef KILL
 
-static void determine_vlist(slv6_system_t sys)
 /**
- ***  This function constructs the variable list from the relation list.  It
- ***  is assumed that sys->vlist_user == NULL so that this is necessary.
- **/
-{
+	This function constructs the variable list from the relation list.  It
+	is assumed that sys->vlist_user == NULL so that this is necessary.
+
+	@todo FIXME this function seems to be building its own vlist, which we
+	shouldn't have to do using the 'new' Solver API.
+*/
+static void determine_vlist(slv6_system_t sys){
    bnd_boundary_t *bp;
    struct rel_relation **rp;
 
@@ -918,10 +885,7 @@ static void determine_vlist(slv6_system_t sys)
  **/
 
 
-void slv6_set_var_list(sys,vlist)
-slv6_system_t sys;
-struct var_variable **vlist;
-{
+void slv6_set_var_list(slv6_system_t sys, struct var_variable **vlist){
    static struct var_variable *empty_list[] = {NULL};
    check_system(sys);
    if( sys->vlist_user == NULL )
@@ -932,17 +896,12 @@ struct var_variable **vlist;
    sys->s.ready_to_solve = FALSE;
 }
 
-struct var_variable **slv6_get_var_list(sys)
-slv6_system_t sys;
-{
+struct var_variable **slv6_get_var_list(slv6_system_t sys){
    check_system(sys);
    return( sys->vlist_user );
 }
 
-void slv6_set_bnd_list(sys,blist)
-slv6_system_t sys;
-bnd_boundary_t *blist;
-{
+void slv6_set_bnd_list(slv6_system_t sys, struct bnd_boundary *blist){
    static bnd_boundary_t empty_list[] = {NULL};
    check_system(sys);
    sys->blist_user = blist;
@@ -950,7 +909,7 @@ bnd_boundary_t *blist;
    sys->s.ready_to_solve = FALSE;
 }
 
-bnd_boundary_t *slv6_get_bnd_list(sys)
+struct bnd_boundary *slv6_get_bnd_list(sys)
 slv6_system_t sys;
 {
    check_system(sys);
@@ -1005,22 +964,17 @@ var_filter_t *vfilter;
    return( count );
 }
 
-int slv6_count_bnds(sys,bfilter)
-slv6_system_t sys;
-bnd_filter_t *bfilter;
-{
-   bnd_boundary_t *bp;
-   int32 count = 0;
-   check_system(sys);
-   for( bp=sys->blist; *bp != NULL; bp++ )
-      if( bnd_apply_filter(*bp,bfilter) ) ++count;
-   return( count );
+int slv6_count_bnds(slv6_system_t sys,bnd_filter_t *bfilter){
+	struct bnd_boundary_t *bp;
+	int32 count = 0;
+	check_system(sys);
+	for( bp=sys->blist; *bp != NULL; bp++ ){
+		if( bnd_apply_filter(*bp,bfilter) ) ++count;
+	}
+	return( count );
 }
 
-int slv6_count_rels(sys,rfilter)
-slv6_system_t sys;
-rel_filter_t *rfilter;
-{
+int slv6_count_rels(slv6_system_t sys,rel_filter_t *rfilter){
    struct rel_relation **rp;
    int32 count = 0;
    check_system(sys);
@@ -1029,48 +983,34 @@ rel_filter_t *rfilter;
    return( count );
 }
 
-void slv6_set_obj_relation(slv6_system_t sys,struct rel_relation *obj)
-{
+void slv6_set_obj_relation(slv6_system_t sys,struct rel_relation *obj){
    check_system(sys);
    sys->obj = obj;
    sys->s.ready_to_solve = FALSE;
 }
 
-struct rel_relation *slv6_get_obj_relation(slv6_system_t sys)
-{
+struct rel_relation *slv6_get_obj_relation(slv6_system_t sys){
    check_system(sys);
    return(sys->obj);
 }
 
-void slv6_get_parameters(sys,parameters)
-slv6_system_t sys;
-slv_parameters_t *parameters;
-{
+void slv6_get_parameters(slv6_system_t sys,slv_parameters_t *parameters){
    check_system(sys);
    mem_copy_cast(&(sys->p),parameters,sizeof(slv_parameters_t));
 }
 
-void slv6_set_parameters(sys,parameters)
-slv6_system_t sys;
-slv_parameters_t *parameters;
-{
+void slv6_set_parameters(slv6_system_t sys, slv_parameters_t *parameters){
    check_system(sys);
    if (parameters->whose==slv6_solver_number)
    mem_copy_cast(parameters,&(sys->p),sizeof(slv_parameters_t));
 }
 
-void slv6_get_status(sys,status)
-slv6_system_t sys;
-slv_status_t *status;
-{
+void slv6_get_status(slv6_system_t sys, slv_status_t *status){
    check_system(sys);
    mem_copy_cast(&(sys->s),status,sizeof(slv_status_t));
 }
 
-void slv6_dump_internals(sys,level)
-slv6_system_t sys;
-int level;
-{
+void slv6_dump_internals(slv6_system_t sys, int level){
    check_system(sys);
    if (level > 0) {
       FPRINTF(stderr,"ERROR:  (slv6) slv6_dump_internals\n");
@@ -1087,9 +1027,7 @@ int level;
  ***  slv6_change_basis           just return FALSE & error msg
  **/
 
-
 boolean slv6_change_basis(slv6_system_t sys,int32 var, mtx_range_t *rng){
-
 /* In the MPS file maker, changing the basis doesn't make any sense.
    Nor, for that matter, is there a basis in the first place.
    So I just write out an error message, and return FALSE  */
@@ -1103,7 +1041,7 @@ boolean slv6_change_basis(slv6_system_t sys,int32 var, mtx_range_t *rng){
 
 /* _________________________________________________________________________ */
 
-/**
+/*
  ***  External routines unique to slv6 (Based on routines from slv0)
  ***  -----------------
  ***  slv6_create()               added solver specific initialization
@@ -1116,113 +1054,111 @@ boolean slv6_change_basis(slv6_system_t sys,int32 var, mtx_range_t *rng){
  **/
 
 
-slv6_system_t slv6_create()   /* added mps initialization */
-{
-  slv6_system_t sys;
-
-/***  This routine allocates memory and initializes all data structures
- ***  It should be a good source of comments on the system parameters and
- ***  status flags used in slv6
- **/
-
-/***  Allocate main system memory ***/
-
-  sys = (slv6_system_t)ascmalloc( sizeof(struct slv6_system_structure) );
-  mem_zero_byte_cast(sys,0,sizeof(struct slv6_system_structure));
-  sys->integrity = OK;
-
-
-/***  Initialize system parameters ***/
-
-  sys->p.output.more_important = stdout;  /* used in MIF macro */
-  sys->p.output.less_important = NULL;    /*   used in LIF macro (which is not used) */
-
-  sys->p.tolerance.pivot = 0.1;           /* these tolerances are never used */
-  sys->p.tolerance.singular = 1e-12;
-  sys->p.tolerance.feasible = 1e-8;
-  sys->p.tolerance.stationary = 1e-8;
-  sys->p.tolerance.termination = 1e-12;
-  sys->p.time_limit = 1500.0;             /* never used */
-  sys->p.iteration_limit = 100;           /* never used */
-  sys->p.partition = FALSE;               /* never used, but don't want partitioning */
-  sys->p.ignore_bounds = FALSE;           /* never used, but must satisfy bounds */
-  sys->p.whose = slv6_solver_number;      /* read in slv6_set_parameters */
-  sys->p.rho = 1.0;
-  sys->p.sp.iap=&(sys->iarray[0]);        /* all defaults in iarray are 0 */
-  sys->p.sp.rap=&(sys->rarray[0]);        /* all defaults in rarray are 0 */
-  sys->p.sp.cap=&(sys->carray[0]);        /* all defaults in carray are NULL */
-  sys->p.sp.vap=NULL;                     /* not currently used */
-
-
-/***  Initialize mps data structure ***/
-
-  sys->mps.Ac_mtx = NULL;    /* set all pointers to NULL - will all be set in presolve */
-  sys->mps.lbrow = NULL;     /* all other data in mps structure is 0 */
-  sys->mps.ubrow = NULL;
-  sys->mps.bcol = NULL;
-  sys->mps.typerow = NULL;
-  sys->mps.relopcol = NULL;
-
-
-/***  Initialize status flags ***/
-
-  sys->s.over_defined               = FALSE;  /* set to (sys->mps.rinc > sys->mps.vinc) in slv6_presolve */
-  sys->s.under_defined              = FALSE;  /* set to (sys->mps.rinc < sys->mps.vinc) in slv6_presolve */
-  sys->s.struct_singular            = FALSE;  /* set to (sys->mps.rank < sys->mps.rinc) in slv6_presolve */
-  sys->s.calc_ok                    = TRUE;   /* set in calc_matrix (FALSE if error occurs with diffs calc) */
-  sys->s.ok                         = TRUE;   /* set to (sys->s.calc_ok && !sys->s.struct_singular) in slv6_presolve */
-  sys->s.ready_to_solve             = FALSE;  /* set to (sys->.ok) after slv6_presolve,
-                                               set FALSE after:  slv6_set_var_list, slv6_set_bnd_list,
-                                                   slv6_set_rel_list, slv6_set_extrel_list, slv6_set_obj_function
-                                               tested in slv6_solve */
-  sys->s.converged                  = FALSE;  /* set FALSE after slv6_presolve; set TRUE after slv6_solve */
-  sys->s.diverged                   = FALSE;  /* always FALSE, never used */
-  sys->s.inconsistent               = FALSE;  /* always FALSE, never used */
-  sys->s.iteration_limit_exceeded   = FALSE;  /* always FALSE, never used */
-  sys->s.time_limit_exceeded        = FALSE;  /* always FALSE, never used */
-
-  sys->s.block.number_of            = 1;      /* always 1, just have 1 block */
-  sys->s.block.current_block        = 0;      /* always 1, start in first and only block */
-  sys->s.block.current_size         = 0;      /* set to sys->mps.vused in slv6_presolve */
-  sys->s.block.previous_total_size  = 0;      /* always 0, never used */
-
-/* same : */
-  sys->s.block.iteration            = 0;      /* set to 0 after slv6_presolve; set to 1 after slv6_solve */
-  sys->s.iteration                  = 0;      /* set to 0 after slv6_presolve; set to 1 after slv6_solve */
-
-/* same : */
-  sys->s.block.cpu_elapsed          = 0.0;    /* set to time taken by slv6_presolve and slv6_solve */
-  sys->s.cpu_elapsed                = 0.0;    /* set to time taken by slv6_presolve and slv6_solve */
-
-  sys->s.block.functime             = 0.0;    /* always 0.0 since no function evaluation, never used */
-  sys->s.block.residual             = 0.0;    /* always 0.0 since not iterating, never used */
-  sys->s.block.jactime              = 0.0;    /* calculated in slv6_presolve, time for jacobian eval */
-
-  sys->s.costsize                   = sys->s.block.number_of;  /* just one cost block, which will be set in  */
-
-  sys->s.cost=create_zero_array(sys->s.costsize,struct slv_block_cost);  /* allocate memory */
-
-
-/* Note: the cost vars are equivalent to other sys->s.* vars
-
-  sys->s.cost->size        = sys->s.block.current_size
-  sys->s.cost->iterations  = sys->s.block.iteration
-  sys->s.cost->jacs        = sys->s.block.iteration
-  sys->s.cost->funcs       = always 0 since no function evals needed
-  sys->s.cost->time        = sys->s.block.cpu_elapsed
-  sys->s.cost->resid       = 0.0  whatever this is ?
-  sys->s.cost->functime    = 0.0  since no function evals needed
-  sys->s.cost->jactime     = sys->s.block.jactime
-
+/**
+	This routine allocates memory and initializes all data structures
+	It should be a good source of comments on the system parameters and
+	status flags used in slv6
 */
+slv6_system_t slv6_create(){   /* added mps initialization */
 
-   return(sys);
+	slv6_system_t sys;
+
+	/***  Allocate main system memory ***/
+
+	sys = (slv6_system_t)ascmalloc( sizeof(struct slv6_system_structure) );
+	mem_zero_byte_cast(sys,0,sizeof(struct slv6_system_structure));
+	sys->integrity = OK;
+
+
+	/***  Initialize system parameters ***/
+
+	sys->p.output.more_important = stdout;  /* used in MIF macro */
+	sys->p.output.less_important = NULL;    /*   used in LIF macro (which is not used) */
+
+	sys->p.tolerance.pivot = 0.1;           /* these tolerances are never used */
+	sys->p.tolerance.singular = 1e-12;
+	sys->p.tolerance.feasible = 1e-8;
+	sys->p.tolerance.stationary = 1e-8;
+	sys->p.tolerance.termination = 1e-12;
+	sys->p.time_limit = 1500.0;             /* never used */
+	sys->p.iteration_limit = 100;           /* never used */
+	sys->p.partition = FALSE;               /* never used, but don't want partitioning */
+	sys->p.ignore_bounds = FALSE;           /* never used, but must satisfy bounds */
+	sys->p.whose = slv6_solver_number;      /* read in slv6_set_parameters */
+	sys->p.rho = 1.0;
+	sys->p.sp.iap=&(sys->iarray[0]);        /* all defaults in iarray are 0 */
+	sys->p.sp.rap=&(sys->rarray[0]);        /* all defaults in rarray are 0 */
+	sys->p.sp.cap=&(sys->carray[0]);        /* all defaults in carray are NULL */
+	sys->p.sp.vap=NULL;                     /* not currently used */
+
+
+	/***  Initialize mps data structure ***/
+
+	sys->mps.Ac_mtx = NULL;    /* set all pointers to NULL - will all be set in presolve */
+	sys->mps.lbrow = NULL;     /* all other data in mps structure is 0 */
+	sys->mps.ubrow = NULL;
+	sys->mps.bcol = NULL;
+	sys->mps.typerow = NULL;
+	sys->mps.relopcol = NULL;
+
+
+	/***  Initialize status flags ***/
+
+	sys->s.over_defined               = FALSE;  /* set to (sys->mps.rinc > sys->mps.vinc) in slv6_presolve */
+	sys->s.under_defined              = FALSE;  /* set to (sys->mps.rinc < sys->mps.vinc) in slv6_presolve */
+	sys->s.struct_singular            = FALSE;  /* set to (sys->mps.rank < sys->mps.rinc) in slv6_presolve */
+	sys->s.calc_ok                    = TRUE;   /* set in calc_matrix (FALSE if error occurs with diffs calc) */
+	sys->s.ok                         = TRUE;   /* set to (sys->s.calc_ok && !sys->s.struct_singular) in slv6_presolve */
+	sys->s.ready_to_solve             = FALSE;  /* set to (sys->.ok) after slv6_presolve,
+		                                       set FALSE after:  slv6_set_var_list, slv6_set_bnd_list,
+		                                           slv6_set_rel_list, slv6_set_extrel_list, slv6_set_obj_function
+		                                       tested in slv6_solve */
+	sys->s.converged                  = FALSE;  /* set FALSE after slv6_presolve; set TRUE after slv6_solve */
+	sys->s.diverged                   = FALSE;  /* always FALSE, never used */
+	sys->s.inconsistent               = FALSE;  /* always FALSE, never used */
+	sys->s.iteration_limit_exceeded   = FALSE;  /* always FALSE, never used */
+	sys->s.time_limit_exceeded        = FALSE;  /* always FALSE, never used */
+
+	sys->s.block.number_of            = 1;      /* always 1, just have 1 block */
+	sys->s.block.current_block        = 0;      /* always 1, start in first and only block */
+	sys->s.block.current_size         = 0;      /* set to sys->mps.vused in slv6_presolve */
+	sys->s.block.previous_total_size  = 0;      /* always 0, never used */
+
+	/* same : */
+	sys->s.block.iteration            = 0;      /* set to 0 after slv6_presolve; set to 1 after slv6_solve */
+	sys->s.iteration                  = 0;      /* set to 0 after slv6_presolve; set to 1 after slv6_solve */
+
+	/* same : */
+	sys->s.block.cpu_elapsed          = 0.0;    /* set to time taken by slv6_presolve and slv6_solve */
+	sys->s.cpu_elapsed                = 0.0;    /* set to time taken by slv6_presolve and slv6_solve */
+
+	sys->s.block.functime             = 0.0;    /* always 0.0 since no function evaluation, never used */
+	sys->s.block.residual             = 0.0;    /* always 0.0 since not iterating, never used */
+	sys->s.block.jactime              = 0.0;    /* calculated in slv6_presolve, time for jacobian eval */
+
+	sys->s.costsize                   = sys->s.block.number_of;  /* just one cost block, which will be set in  */
+
+	sys->s.cost=create_zero_array(sys->s.costsize,struct slv_block_cost);  /* allocate memory */
+
+
+	/* Note: the cost vars are equivalent to other sys->s.* vars
+
+	sys->s.cost->size        = sys->s.block.current_size
+	sys->s.cost->iterations  = sys->s.block.iteration
+	sys->s.cost->jacs        = sys->s.block.iteration
+	sys->s.cost->funcs       = always 0 since no function evals needed
+	sys->s.cost->time        = sys->s.block.cpu_elapsed
+	sys->s.cost->resid       = 0.0  whatever this is ?
+	sys->s.cost->functime    = 0.0  since no function evals needed
+	sys->s.cost->jactime     = sys->s.block.jactime
+
+	*/
+
+	return(sys);
 }
 
 
-int slv6_destroy(sys)
-slv6_system_t sys;
-{
+int slv6_destroy(slv6_system_t sys){
    int i;
 
    if (check_system(sys)) return 1;
@@ -1247,14 +1183,11 @@ slv6_system_t sys;
 }
 
 
-boolean slv6_eligible_solver(sys)
-
-/***  The system must have a relation list and objective before
- ***  slv6_eligible_solver will return true
- **/
-
-slv6_system_t sys;
-{
+/**
+	The system must have a relation list and objective before
+	slv6_eligible_solver will return true
+ */
+boolean slv6_eligible_solver(slv6_system_t sys){
    struct rel_relation **rp;
    var_filter_t vfilter;
 
@@ -1314,12 +1247,10 @@ slv6_system_t sys;
    return TRUE;
 }
 
-void slv6_presolve(sys)
-slv6_system_t sys;
-{
+void slv6_presolve(slv6_system_t sys){
    struct var_variable **vp;
    struct rel_relation **rp;
-   bnd_boundary_t *bp;
+   struct bnd_boundary *bp;
    int32 cap;
 
    bnd_filter_t bfilter;
@@ -1363,7 +1294,7 @@ slv6_system_t sys;
    }
    sys->mps.cap = cap;
    for( rp=sys->rlist,cap=0 ; *rp != NULL ; ++rp ) {
-      rel_set_index(*rp,cap++);
+      rel_set_sindex(*rp,cap++);
       rel_set_in_block(*rp,FALSE);
       rel_set_satisfied(*rp,FALSE);
    }
@@ -1532,9 +1463,7 @@ slv6_system_t sys;
 
 }
 
-void slv6_solve(sys)
-slv6_system_t sys;
-{
+void slv6_solve(slv6_system_t sys){
 
    /* make sure none of the mps pointers are NULL */
    if ((sys->mps.Ac_mtx == NULL) ||
@@ -1597,22 +1526,17 @@ slv6_system_t sys;
 }
 
 
-void slv6_iterate(sys)
-slv6_system_t sys;
-{
+void slv6_iterate(slv6_system_t sys){
   /*  Writing an MPS file is a one shot deal.  Thus, an interation
       is equivalent to solving the problem.  So we just call
       slv6_solve   */
 
    check_system(sys);
    slv6_solve(sys);
-
 }
 
 
-void slv6_resolve(sys)
-slv6_system_t sys;
-{
+void slv6_resolve(slv6_system_t sys){
 
   /* This routine is meant to be called when the following parts of
      the system change:
@@ -1630,8 +1554,7 @@ slv6_system_t sys;
 }
 
 
-int slv6_register(SlvFunctionsT *sft)
-{
+int slv6_register(SlvFunctionsT *sft){
   if (sft==NULL)  {
     FPRINTF(stderr,"slv6_register called with NULL pointer\n");
     return 1;
@@ -1653,5 +1576,4 @@ int slv6_register(SlvFunctionsT *sft)
   sft->dumpinternals = slv6_dump_internals;
   return 0;
 }
-#endif /* #else clause of DYNAMIC_MPS */
-#endif /* #else clause of !STATIC_MPS && !DYNAMIC_MPS */
+
