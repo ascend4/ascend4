@@ -617,7 +617,9 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		tkfp = ospath_new_expand_env(ASCENDTK_DEFAULT, &GETENV);
 #else
 		fp = ospath_new(ASC_TK_REL_DIST);
-		tkfp = ospath_concat(distdir,fp);
+		distfp = ospath_new(distdir);
+		tkfp = ospath_concat(distfp,fp);
+		ospath_free(distfp);
 		ospath_free(fp);
 		ospath_cleanup(tkfp);
 #endif

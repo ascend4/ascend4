@@ -44,6 +44,7 @@
 #include "exprs.h"
 #include "sets.h"
 #include "stattypes.h"
+#include "statio.h"
 #include "slist.h"
 #include "evaluate.h"
 #include "units.h"
