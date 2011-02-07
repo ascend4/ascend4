@@ -68,9 +68,7 @@
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_client.h>
 
-/**	@addtogroup solver Solver
-	@{
-*/
+#include "mps_types.h"
 
 typedef struct slv6_system_structure *slv6_system_t;
 
@@ -90,7 +88,6 @@ int slv6_register(SlvFunctionsT *sft);
 /*
 # if 0
 */
-#ifdef STATIC_MPS
 #define slv6_solver_name "makeMPS" /**< Solver's name. don't mess with the caps!*/
 #define slv6_solver_number 6   /**< Solver's number */
 
@@ -119,7 +116,7 @@ extern boolean slv6_eligible_solver();
 extern void slv6_get_parameters();
 extern void slv6_set_parameters();
 extern void slv6_get_status();
-extern linsol_system_t slv6_get_linsol_sys();
+//extern linsol_system_t slv6_get_linsol_sys();
 extern void slv6_dump_internals();
 extern void slv6_presolve();
 extern boolean slv6_change_basis();
@@ -214,89 +211,11 @@ extern void slv6_solve();
 /**< subscripts for ca */
 #define SP6_FILENAME 0
 
-/***
- ***       MPS matrix strucutre
- ***                                    v
- ***       min/max cx:  Ax<=b           u
- ***                                    s
- ***                                    e
- ***                       1            d
- ***
- ***                       |            |  
- ***                       |            |  
- ***                      \ /          \ /
- ***
- ***                      +-            -+ 
- ***       1          ->  |              |
- ***                      |              | 
- ***                      |      A       | 
- ***                      |              |
- ***       rused      ->  |              | 
- ***                      +-            -+
- ***
- ***       crow       ->  [      c       ]
- **/
-
-typedef struct mps_data {   /**< see more detailed comments in calc_matrix */
-
-   int32   rused;           /**< row of last relation (incident or not) */
-   int32   rinc;            /**< number of incident relations */
-   int32   crow;            /**< row of cost vector (rused+1)*/
-   int32   vused;           /**< column of last variable (incident or not) */
-   int32   vinc;            /**< number of incident variables */
-   int32   cap;             /**< size of sparse square matrix=max(vused+2+1,rused+4+1) */
-   int32   rank;            /**< Symbolic rank of problem */
-   int32   bused;           /**< Included boundaries */
-
-   int solver_var_used;     /**< values are calculated in calc_svtlist  */
-   int solver_relaxed_used; /**< is cache of how many of each vars used */
-   int solver_int_used;                    
-   int solver_binary_used;   
-   int solver_semi_used;     
-   int solver_other_used; 
-   int solver_fixed;        /**< number of fixed or non-incident vars */
-
-   mtx_matrix_t  Ac_mtx;    /**< Matrix representation of the A matrix and c vector */
-
-   real64  *lbrow;          /**< pointer to array of lower bounds */
-   real64  *ubrow;          /**< pointer to array of upper bounds */
-   real64  *bcol;           /**< pointer to array of RHS b vector */
-   char    *typerow;        /**< pointer to array of variable types */
-   char    *relopcol;       /**< pointer to array of relational operators i.e. <=, >=, =  */
-
-} mps_data_t;
-
-
-
-/**< _____________________________________________________________________ */
-
-/**< define solver variable types */
-/**< note: 0 not defined since default value for sparse matrix, and so a value of 
-         0 will imply an invalid row/col is being accessed */
-#define SOLVER_VAR     1          /**< original solver_var, or some other refinement */
-#define SOLVER_RELAXED 2          /**< something else, but are working on a relaxed  */
-                                  /**< problem, so treat it as a regular solver_var  */
-#define SOLVER_INT     3          /**< integer var, refines solver_var */
-#define SOLVER_BINARY  4          /**< binary var, refines solver_int */
-#define SOLVER_SEMI    5          /**< semicontinuos solver_var, refines solver_var */
-#define SOLVER_FIXED   6          /**< a fixed or nonincident var */
-
 
 /**< define another token to go with
    rel_TOK_less, rel_TOK_equal, and rel_TOK_greater,
    defined in rel.h */
 #define rel_TOK_nonincident 00
-
-#else
-#define slv6_solver_name "no_makeMPS"   /**< Solver's name */
-#define slv6_solver_number 6        /**< Solver's number */
-#endif
-
-/*
-#endif
-*/
-
-/* @} */
 
 #endif  /* ASC_SLV6_H */
 

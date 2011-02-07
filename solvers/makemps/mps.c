@@ -68,6 +68,7 @@
 #include <ascend/utilities/set.h>
 #include <ascend/general/tm_time.h>
 #include <ascend/general/mem.h>
+#include <ascend/compiler/instance_io.h>
 
 /* _________________________________________________________________________ */
 
@@ -282,7 +283,7 @@ extern boolean write_name_map(const char *name,        /* filename for output */
                               struct var_variable  **vlist)  /* Variable list (NULL terminated) */
 {
   FILE *out;
-  int i;
+  //int i;
 
   if ((vlist == NULL) || (name == NULL)) {  /* got a bad pointer */
           FPRINTF(stderr,"ERROR:  (MPS) write_name_map\n");
@@ -809,7 +810,7 @@ void do_bounds(FILE *out,              /* file */
   FILE *out;
   int32 sosvar;   /* number of variables used in SOS's */
   int32 sosrel;   /* number of relations defining SOS's */
-  int i;                /* temporary counter */
+ // int i;                /* temporary counter */
 
   if (name == NULL) {  /* got a bad pointer */
           FPRINTF(stderr,"ERROR:  (MPS) write_MPS\n");

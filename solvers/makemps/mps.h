@@ -34,19 +34,8 @@
 #ifndef ASC_MPS_H
 #define ASC_MPS_H
 
-#include <ascend/general/platform.h>
 #include <ascend/system/var.h>
-
-#define MPS_FIXED 1
-#define MPS_BINARY 2
-#define MPS_INT 3
-#define MPS_SEMI 4
-#define MPS_VAR 5
-
-#define MPS_BINARY_STR "boolean_var"
-#define MPS_INT_STR "solver_int"
-#define MPS_SEMI_STR "solver_semi"
-#define MPS_VAR_STR "solver_var"
+#include "mps_types.h"
 
 /** 
  *  Writes out a map file.
