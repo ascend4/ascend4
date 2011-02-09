@@ -15,7 +15,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//** @file
+*//** @defgroup solver_api Solver API
 	Encapsulation of the NLA solver interface, separate from the
 	system definition and access routines.
 *//*
@@ -29,7 +29,7 @@
 #include <ascend/general/platform.h>
 #include <ascend/system/slv_client.h>
 
-/**	@addtogroup solver_api Solver API
+/**	@addtogroup solver_api
 	@{
 */
 

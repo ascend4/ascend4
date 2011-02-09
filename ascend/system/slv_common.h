@@ -20,7 +20,7 @@
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
 *//**
-	@file
+	@defgroup solver_common Solver Common
 	SLV common utilities & structures for ASCEND solvers.
 
 	Routines in this header are applicable to both the system API (as accessed
@@ -77,7 +77,7 @@
 #include "rel.h"
 #include "logrel.h"
 
-/**	@addtogroup solver Solver
+/**	@addtogroup solver_common
 	@{
 */
 

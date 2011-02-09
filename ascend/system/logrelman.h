@@ -14,9 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*//** @file
-	Logical Relation Manipulator Module.
-
+*//** @addtogroup system_logrelman System Logical relation manipulation
 	This module will provide supplemental operations for
 	logical relations such as evaluation.
 *//*
@@ -33,7 +31,7 @@
 #include "discrete.h"
 #include "logrel.h"
 
-/**	@addtogroup solver Solver
+/**	@addtogroup system_logrelman
 	@{
 */
 

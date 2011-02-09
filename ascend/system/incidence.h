@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*//** @file
+*//** @defgroup system_incidence System Incidence matrix
 	This file wraps up the routines for making a data structure
 	containing system incidence matrix information, which can then be
 	plotted or interactively queried using the GUI
@@ -23,10 +23,6 @@
 #ifndef ASC_INCIDENCE_H
 #define ASC_INCIDENCE_H
 
-/**	@addtogroup system System
-	@{
-*/
-
 #include <stdio.h>
 
 /* The includes required just for this *header* to load */
@@ -34,6 +30,10 @@
 #include <ascend/system/slv_types.h>
 #include <ascend/system/var.h>
 #include <ascend/system/rel.h>
+
+/**	@addtogroup system_incidence
+	@{
+*/
 
 /* Note, removed 'own' attribute from mplotvars struct since it was unused */
 

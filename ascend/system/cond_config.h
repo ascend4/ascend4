@@ -15,7 +15,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//* @file
+*//* @defgroup system_condconfig System Conditional configuration
 	Conditional Modeling Configuration
 *//*
 	by Vicente Rico-Ramirez, 04/97
@@ -34,7 +34,7 @@
 #include "logrel.h"
 
 
-/**	@addtogroup analyse Analyse
+/**	@addtogroup system_condconfig
 	@{
 */
 

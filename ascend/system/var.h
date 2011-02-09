@@ -18,9 +18,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//** @file
-	Variable module of the SLV solver.
-
+*//** @defgroup system_var System Variable
 	This module provides a SLV solver (the "client") with access to
 	variables present in the ASCEND compiler (the "server").
 
@@ -32,6 +30,11 @@
 	a slv_system_t, so some of the functions here may require
 	the passing of a slv_system_t with the var.
 
+	@TODO
+	At present there is some insanity about asking the instance tree
+	vs asking our data structure about the flag values - This needs to
+	be fixed (see longer BAA comment in var.h).
+*//*
 	06/90 - original version
 	01/94 - added var_make_name() to create a copy of the
 			instance name
@@ -41,11 +44,6 @@
 			filter module)
 	08/94 - added var_BackendTokens_to_vars. BAA.
 
-	@TODO
-	At present there is some insanity about asking the instance tree
-	vs asking our data structure about the flag values - This needs to
-	be fixed (see longer BAA comment in var.h).
-*//*
 	Authors: Karl Westerberg and Joseph Zaher
 	Version: $Revision: 1.26 $
 	Date last modified: $Date: 1998/03/30 22:07:10 $
@@ -55,13 +53,13 @@
 #ifndef ASC_VAR_H
 #define ASC_VAR_H
 
-/**	@addtogroup system System
-	@{
-*/
-
 #include <stdio.h>
 #include <ascend/general/platform.h>
 #include "slv_types.h"
+
+/**	@addtogroup system_var
+	@{
+*/
 
 /*
 	The first section of flagbit definitions are those flags to be

@@ -15,7 +15,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//** @file
+*//** @defgroup system_diffvars System Differential variables
 	Derivative chains for ASCEND solver systems. This structure holds a
 	reorganised form of the solver lists as for example as follows:
 
@@ -52,7 +52,7 @@
 #include "slv_client.h"
 #include "system.h"
 
-/**	@addtogroup analyse Analyse
+/**	@addtogroup system_diffvars
 	@{
 */
 

@@ -16,7 +16,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//** @file
+*//** @defgroup system_modelreorder Solver Model reordering
 	Model-based Reordering Routines
 
 	These functions are part of a new design for feeding
@@ -41,8 +41,7 @@
 
 #include <ascend/system/slv_types.h>
 
-
-/**	@addtogroup solver Solver
+/**	@addtogroup system_modelreorder
 	@{
 */
 

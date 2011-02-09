@@ -15,9 +15,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//* @file
-	Boundary Module
-
+*//* @defgroup  system_bnd System Boundaries
 	This is the ascend version of the boundary module.
 	This version should be used by any user who receives
 	his/her formulation directly from an instance tree
@@ -36,7 +34,7 @@
 #include "rel.h"
 #include "logrel.h"
 
-/**	@addtogroup system System
+/**	@addtogroup system_bnd
 	@{
 */
 

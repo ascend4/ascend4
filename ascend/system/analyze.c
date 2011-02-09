@@ -16,18 +16,17 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//**
-	@file
-	Problem Analysis Routines
+*//** @addtogroup system_analysis 
+	<b>Problem Analysis Routines</b>
 
-	@NOTE 'ip' signifies 'interface pointer' @ENDNOTE
+	@note 'ip' signifies 'interface pointer' @endnote
 
 	The intent here is to do away with the old persistent interface pointer
-	scheme by making the struct rel_relation* individually keep track of the
+	scheme by making the struct rel_relation * individually keep track of the
 	map between the ascend RelationVariable list position and the
 	solver's var list index (and hence the column in jacobian for jacobian
 	involved clients).
-	In this mapping each struct relation* has its var list and this list
+	In this mapping each struct relation * has its var list and this list
 	may contain RealAtomInstances that we don't consider variables.
 	In the rel_relation we will have the variable index list
 	which is an array of int32 the same length as the RelationVariable list.
@@ -66,10 +65,6 @@
 *//*
 	by Benjamin Andrew Allan 5/19/96
 	Last in CVS: $Revision: 1.56 $ $Date: 2003/08/23 18:43:12 $ $Author: ballan $
-*/
-
-/**	@addtogroup analyse Analyse
-	@{
 */
 
 #include "analyze.h"
@@ -2744,5 +2739,4 @@ extern void analyze_free_reused_mem(void){
   resize_ipbuf((size_t)0,0);
 }
 
-/* @} */
 /* :ex: set ts=4 : */

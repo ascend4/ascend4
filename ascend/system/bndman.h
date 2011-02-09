@@ -15,8 +15,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//* @file
-	Boundary Manipulator Module.
+*//* @defgroup system_bndman System Boundary Manipulation
 
 	This module will provide supplemental operations for
 	boundaries such as evaluation.
@@ -31,7 +30,7 @@
 #include <ascend/general/platform.h>
 #include "bnd.h"
 
-/**	@addtogroup solver Solver
+/**	@addtogroup system_bndman
 	@{
 */
 
