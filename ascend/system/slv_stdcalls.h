@@ -16,7 +16,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//* @defgroup system_stdcalls System Standard calls
+*//** @defgroup system_stdcalls System Standard calls
 	'Standard calls' module. This appears to include stuff relating
 	matrix generation, bounds checking, registration of solver engines.
 *//*
