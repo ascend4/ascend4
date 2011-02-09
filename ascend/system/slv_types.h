@@ -16,7 +16,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//** @file
+*//** @defgroup system_types System Token Types
 	Type definitions as they should be seen by solver engines.
 
 	We're trying to hide the implementation detail from the solver engines,
@@ -30,7 +30,7 @@
 #ifndef ASC_SLV_TYPES_H
 #define ASC_SLV_TYPES_H
 
-/**	@addtogroup system System
+/**	@addtogroup system_types
 	@{
 */
 

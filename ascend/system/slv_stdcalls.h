@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 1998, 2006 Carnegie Mellon University
+	Copyright (C) 1998, 2006-2011 Carnegie Mellon University
 	Copyright (C) 1996 Benjamin Andrew Allan
 
 	This program is free software; you can redistribute it and/or modify
@@ -16,9 +16,8 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//*
-	@file
-	'Standard clients' module. This appears to include stuff relating
+*//* @defgroup system_stdcalls System Standard calls
+	'Standard calls' module. This appears to include stuff relating
 	matrix generation, bounds checking, registration of solver engines.
 *//*
 	by Benjamin Andrew Allan
@@ -34,7 +33,7 @@
 
 #include "slv_client.h"
 
-/**	@addtogroup system System
+/**	@addtogroup system_stdcalls
 	@{
 */
 

@@ -16,8 +16,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//** @file
-	Ascend pointer pair manager.
+*//** @defgroup general_pairlist General Pointer-pair manager
 
 	This module uses (internally) a pair of gl_list_t
 	to manage pointer pairs.

@@ -15,7 +15,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//** @file
+*//** @defgropu system_analyseimplem System Analysis Internal implementation
 	Data structures used by the 'analyze.c' implementation. DO NOT include
 	this file unless you are inside the implementation of problem analysis.
 	(so, only analyse.c and diffvars.c, at this stage).
@@ -28,7 +28,8 @@
 #define ASC_ANALYSE_IMPL_H
 
 #include "slv_server.h"
-/**	@addtogroup system System
+
+/**	@addtogroup system_analyseimplem
 	@{
 */
 

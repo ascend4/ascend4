@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*//**
+*//** @defgroup system_diffvarsimpl System Differential Variables Internal Implementation
 	Implementation of the derivative chains data structures.
 
 	This is a private header file to be used only by problem analysis modules.
@@ -26,36 +26,41 @@
 
 #include "system.h"
 
+/** @addtogroup system_diffvarsimpl
+	@{
+*/
 
 /**
-	Structure that holds a differential variable and the sequence of
-	its derivatives as found explicity in the model.
+    Structure that holds a differential variable and the sequence of
+    its derivatives as found explicity in the model.
 
-	For example,
-	  - x, dx/dt
+    For example,
+      - x, dx/dt
 */
 typedef struct SolverDiffVarSequenceStruct{
-	long ode_id;
-	short n;
-	struct var_variable **vars; /* will be in order of ascending ode_type, starting from 1 */
+    long ode_id; /**< as assigned by user to this set of variables */
+    short n; /**< length of this variable sequence */
+    struct var_variable **vars; /**< variables in the sequence; will be in order of ascending ode_type, starting from 1 */
 } SolverDiffVarSequence;
 
 /**
-	Array of diff var sequences. Once generated, this will hold all of the 
-	This would hold all of the differential and derivative variables found
-	in the system. For example, with each row being a SolverDiffVarSequence:
-	  - y, dy/dt, d2y/dt2
-	  - x, dx/dt
+    Array of diff var sequences. Once generated, this will hold all of the 
+    This would hold all of the differential and derivative variables found
+    in the system. For example, with each row being a SolverDiffVarSequence:
+      - y, dy/dt, d2y/dt2
+      - x, dx/dt
       - z, dz/dt
 */
 struct SolverDiffVarCollectionStruct{
-	SolverDiffVarSequence *seqs;
-	long nseqs;
-	long nalg;
-	long ndiff;
-	struct var_variable **indep;
-	long nindep;
-	struct var_variable **obs;
-	long nobs;
-	long maxorder;
+    SolverDiffVarSequence *seqs;
+    long nseqs; /**< number of differential variable sequences */
+    long nalg; /**< number of algebraic variables */
+    long ndiff; /**< number of differential variables */
+    struct var_variable **indep; /** independent variable(s), in case user mistakenly flags more than one. Normally this would be 'time' or similar. */
+    long nindep; /**< number of independent variables */
+    struct var_variable **obs; /**< observed variables. These will have been flags somehow so that the Integrator will record their value as solution proceeds. */
+    long nobs; /**< number of observed variables */
+    long maxorder; /**< Maximum length of derivative chains found. We can only usefully deal with maxorder==2 at this stage. */
 };
+
+

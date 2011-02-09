@@ -14,9 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*//**
-	@file
-	Logical Relation Module.
+*//** @defgroup system_logrel System Logical Relations module
 
 	This is the ASCEND version of the logrel module.  This
 	version should be used by any user who receives his/her
@@ -35,7 +33,7 @@
 #include "discrete.h"
 #include "slv_types.h"
 
-/**	@addtogroup system System
+/**	@addtogroup system_logrel
 	@{
 */
 

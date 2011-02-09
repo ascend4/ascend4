@@ -15,7 +15,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//** @file
+*//** @defgroup system_jacobian System Jacobian
 	General-purpose jacobian routines that should hopefully be shareable
 	but at this stage are only going to be used by IDA.
 */
@@ -27,6 +27,10 @@
 
 #include <ascend/linear/mtx.h>
 
+/**	@addtogroup system_jacobian
+	@{
+*/
+
 ASC_DLLSPEC const rel_filter_t system_rfilter_algeb;
 ASC_DLLSPEC const rel_filter_t system_rfilter_diff;
 ASC_DLLSPEC const rel_filter_t system_rfilter_all;
@@ -35,6 +39,7 @@ ASC_DLLSPEC const var_filter_t system_vfilter_algeb;
 ASC_DLLSPEC const var_filter_t system_vfilter_diff;
 ASC_DLLSPEC const var_filter_t system_vfilter_deriv;
 ASC_DLLSPEC const var_filter_t system_vfilter_nonderiv;
+
 
 /**
 	This mischevious data structure is a quick dodge to avoid having to

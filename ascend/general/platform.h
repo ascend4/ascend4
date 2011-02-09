@@ -17,7 +17,7 @@
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
 *//**
-	@file
+	@defgroup general_platform General Platform-specific definitions
 	Platform-specific configuration parameters. This file has been renamed
 	from 'ascConfig.h', and moved from the 'utilities' folder to this one.
 	The main reason was because there is another file called 'config.h' which
@@ -43,7 +43,7 @@
 	Last modified by: $Author: ballan $
 */
 
-/**	@addtogroup general_platform General Platform-specific Definitions
+/**	@addtogroup general_platform
 	@{
 */
 

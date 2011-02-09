@@ -16,22 +16,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//*
-	by Kirk A. Abbott
-	Created December 29, 1994.
-	Last in CVS $Revision: 1.3 $ $Date: 1998/06/16 15:47:47 $ $Author: mthomas $
-*/
-
-#ifndef ASC_TABLE_H
-#define ASC_TABLE_H
-
-/**	@addtogroup general_table General Table
-	@{
-*/
-
-/** @file
-	Hash Table Module.
-	
+*//** @defgroup general_table General Hash Table
 	Many hash tables are used throughout the implementation of a compiler
 	and/or interpreter. This module (in the spirit of the list module)
 	attempts to provide a generic table implementation, based on the classic
@@ -42,9 +27,20 @@
 	
 	This module is appropriate for hash tables keyed with arbitrary strings.
 	It is not appropriate for use with symbol table entry keys.
+*/
+/*
+	by Kirk A. Abbott
+	Created December 29, 1994.
+	Last in CVS $Revision: 1.3 $ $Date: 1998/06/16 15:47:47 $ $Author: mthomas $
+*/
 
-	Requires:
-	#include "utilities/ascConfig.h"
+#ifndef ASC_TABLE_H
+#define ASC_TABLE_H
+
+#include <ascend/general/platform.h>
+
+/**	@addtogroup general_table General Table
+	@{
 */
 
 typedef  void (*TableIteratorOne)(void *);

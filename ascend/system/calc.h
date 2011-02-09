@@ -18,8 +18,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//** @file
-	Calculation module
+*//** @defgroup system_calc System Calculation
 
 	Operations are provided for computing unary and binary
 	functions.  First, second, and nth derivatives may
@@ -50,7 +49,7 @@
 #include <ascend/general/platform.h>
 #include <ascend/compiler/func.h>
 
-/**	@addtogroup solver Solver
+/**	@addtogroup system_calc
 	@{
 */
 

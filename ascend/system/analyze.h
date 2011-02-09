@@ -16,7 +16,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//** @file
+*//** @defgroup system_analysis System Analysis
 	Problem Analysis Routines.
 	
 	These functions are the start of a new design for feeding
@@ -56,7 +56,7 @@
 #include "slv_types.h"
 #include "conditional.h"
 
-/**	@addtogroup analyse Analyse
+/**	@addtogroup system_analysis
 	@{
 */
 

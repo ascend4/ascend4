@@ -21,7 +21,7 @@
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
 *//**
-	@file
+	@defgroup solver_client Solver Client
 	Routines to allow the ASCEND GUI/CLI to solve models, using an abstracted
 	'SLV' solver interface.
 
@@ -276,10 +276,6 @@
 #ifndef ASC_SLV_CLIENT_H
 #define ASC_SLV_CLIENT_H
 
-/**	@addtogroup slvclient Solver Client
-	@{
-*/
-
 #include <ascend/utilities/config.h>
 #include <ascend/general/platform.h>
 
@@ -295,6 +291,10 @@
 #include "slv_common.h"
 #include "slv_types.h"
 #include "slv_param.h"
+
+/**	@addtogroup solver_client
+	@{
+*/
 
 typedef void *SlvClientToken;
 /**<
