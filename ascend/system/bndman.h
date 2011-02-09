@@ -15,7 +15,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//* @defgroup system_bndman System Boundary Manipulation
+*//** @defgroup system_bndman System Boundary Manipulation
 
 	This module will provide supplemental operations for
 	boundaries such as evaluation.

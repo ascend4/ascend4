@@ -16,7 +16,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//*@defgroup System Block Partitioning
+*//** @defgroup System Block Partitioning
 	Block partitioning gets done by a selected solver engine, at its
 	discretion. See functions 'structural_analysis' in slv3 and others.
 
