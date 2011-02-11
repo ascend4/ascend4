@@ -21,6 +21,7 @@
 	By John Pye, Jan 2007
 */
 #include "diffvars.h"
+#include "diffvars_impl.h"
 
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
