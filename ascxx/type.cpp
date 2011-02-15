@@ -146,20 +146,22 @@ Type::getSimulation(const SymChar &sym
 	Compiler::instance()->sendBinaryCompilationOptions();
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Starting tree...\n");
+#if 1
 	error_reporter_tree_start();
+#endif
 	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Started tree\n"); */
 
 	Instance *i = SimsCreateInstance(getInternalType()->name, sym.getInternalType(), e_normal, NULL);
 	Simulation sim(i,sym);
 
-	bool has_error;
+	bool has_error = FALSE;
+#if 1
 	if(error_reporter_tree_has_error()){
 		has_error = TRUE;
-	}else{
-		has_error = FALSE;
 	}
 
 	error_reporter_tree_end();
+#endif
 
 	if(has_error){
 		stringstream ss;

@@ -23,9 +23,7 @@ Compiler::Compiler(){
 	bt_srcname = bt_targetstem + ".c";
 	bt_objname = bt_targetstem + ".o";
 	bt_libname = bt_targetstem + ".so";
-	bt_cmd = "cd ~/ascend/ascend/bintokens && "
-		"make -f ~/ascend/ascend/bintokens/Makefile" 
-		" ASCBT_TARGET=" + bt_libname;
+	bt_cmd = "make -f ascend/bintokens/Makefile ASCBT_TARGET=" + bt_libname + " ASCBT_SRC=" + bt_srcname;
 	bt_rm = "/bin/rm";
 }
 
@@ -54,10 +52,10 @@ Compiler::getUseRelationSharing() const{
 
 void
 Compiler::setUseRelationSharing(const bool &use_relation_sharing){
+	g_use_copyanon = 0;
 	if(use_relation_sharing){
 		g_use_copyanon = 1;
 	}
-	g_use_copyanon = 0;
 }
 
 void
@@ -79,7 +77,7 @@ Compiler::sendBinaryCompilationOptions(){
 		);
 
 #ifdef BINTOKEN_DEBUG
-		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"srcname = %s, objname = %s, libname = %s, cmd = %s, rm = %s",
+		CONSOLE_DEBUG("srcname = %s, objname = %s, libname = %s, cmd = %s, rm = %s",
 			bt_srcname.c_str(), bt_objname.c_str(), bt_libname.c_str(), bt_cmd.c_str(), bt_rm.c_str()
 		);
 #endif
