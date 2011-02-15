@@ -158,6 +158,9 @@ int BinTokenSetOptions(CONST char *srcname,
   g_bt_data.maxrels = maxrels;
   g_bt_data.verbose = verbose;
   g_bt_data.housekeep = housekeep;
+#ifdef BINTOKEN_VERBOSE
+  CONSOLE_DEBUG("make command = %s",buildcommand);
+#endif
   return err;
 }
 
@@ -783,7 +786,9 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
   char *unlinkcommand = g_bt_data.unlinkcommand;
   int verbose = g_bt_data.verbose;
 
-  /*CONSOLE_DEBUG("...");*/
+#ifdef BINTOKEN_VERBOSE
+  CONSOLE_DEBUG("...");
+#endif
 
   if (g_bt_data.maxrels == 0) {
 #ifdef BINTOKEN_VERBOSE
@@ -792,7 +797,7 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
     return;
   }
   if (srcname == NULL || buildcommand == NULL || unlinkcommand == NULL) {
-#if 0
+#ifdef BINTOKEN_VERBOSE
     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"BinaryTokensCreate called with no options set: ignoring");
 #endif
     return;

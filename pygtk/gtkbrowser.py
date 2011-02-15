@@ -633,9 +633,11 @@ class Browser:
 		try:
 			_v = self.prefs.getBoolPref("Compiler","use_relation_sharing",True)
 			ascpy.getCompiler().setUseRelationSharing(_v)
+			print "Relation sharing set to",_v
 
 			_v = self.prefs.getBoolPref("Compiler","use_binary_compilation",True)
-			ascpy.getCompiler().setBinaryCompilation(True)
+			ascpy.getCompiler().setBinaryCompilation(_v)
+			print "Binary compilation set to",_v
 
 			self.sim = type_object.getSimulation(str(type_object.getName())+"_sim",False)
 
