@@ -25,7 +25,8 @@
 #define TESTS(T) \
 	T(basics) \
 	T(autodiff) \
-	T(expr)
+	T(expr) \
+	T(bintok)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)

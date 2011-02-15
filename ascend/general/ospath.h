@@ -64,7 +64,7 @@
 #  ifndef stat
 #   include <sys/stat.h>
 #  else
-#   error "STAT alreay defined..."
+#   error "STAT already defined..."
 #  endif
 # endif
 #endif
@@ -148,7 +148,7 @@ int ospath_isvalid(struct FilePath *fp);
 
 /**
 	Return the FilePath in the form of a string.
-	You must FREE the allocated string when you don't need it any more.
+	You must ASC_FREE the allocated string when you don't need it any more.
 */
 ASC_DLLSPEC char *ospath_str(const struct FilePath *fp);
 

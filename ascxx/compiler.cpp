@@ -1,7 +1,7 @@
 #include "compiler.h"
 
 /* #define COMPILER_DEBUG */
-/* #define BINTOKEN_DEBUG */
+#define BINTOKEN_DEBUG
 
 extern "C"{
 #include <ascend/compiler/compiler.h>
@@ -75,7 +75,7 @@ Compiler::sendBinaryCompilationOptions(){
 		CONSOLE_DEBUG("SETUP BINTOKENS...");
 #endif
 		BinTokenSetOptions(bt_srcname.c_str(), bt_objname.c_str(), bt_libname.c_str()
-			, bt_cmd.c_str(), bt_rm.c_str(), 1000, 1, 0
+			, bt_cmd.c_str(), bt_rm.c_str(), 1000/*maxrels*/, 1/*verbose*/, 0/*housekeep*/
 		);
 
 #ifdef BINTOKEN_DEBUG

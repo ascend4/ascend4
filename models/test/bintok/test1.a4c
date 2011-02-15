@@ -1,0 +1,30 @@
+IMPORT "qrslv";
+REQUIRE "system.a4l";
+
+MODEL test1;
+	x,y,z,a,b,c,d,e,f IS_A solver_var;
+	y = log10(x);
+	z = sin(x);
+	a = abs(x);
+	b = arccos(x);
+	c = x^2;
+	d = x^0.5;
+	e = exp(x);
+	f = 2^x;
+METHODS
+METHOD on_load;
+	FIX x;
+	x := 0.8;
+END on_load;
+METHOD self_test;
+	ASSERT abs(y - log10(x)) < 1e-8;
+	ASSERT abs(a - abs(x)) < 1e-8;
+	ASSERT abs(cos(b) - x) < 1e-8;
+	ASSERT abs(c - x^2) < 1e-8;
+	ASSERT abs(d - x^0.5) < 1e-8;
+	ASSERT abs(e - exp(x)) < 1e-8;
+	ASSERT abs(f - 2^x) < 1e-8;
+	(* ASSERT abs(z - sin(x)) < 1e-8; *) (* "real dimensionality conflict"?? *)
+END self_test;
+END test1;
+
