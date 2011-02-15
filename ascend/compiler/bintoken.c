@@ -1,5 +1,5 @@
 /*  ASCEND modelling environment
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006-2011 Carnegie Mellon University
 	Copyright (C) 1998 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
@@ -30,11 +30,11 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
  * much of this goes in bintoken.h.
  */
 
+#include <ascend/utilities/config.h>
 #include "bintoken.h"
 
 #include <unistd.h> /* for getpid() */
 
-#include <ascend/utilities/config.h>
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/ascPrint.h>
@@ -61,7 +61,7 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 
 #include <ascend/bintokens/btprolog.h>
 
-/* #define BINTOKEN_VERBOSE */
+#define BINTOKEN_VERBOSE
 
 #define CLINE(a) FPRINTF(fp,"%s\n",(a))
 
@@ -389,7 +389,7 @@ void WritePrologue(FILE *fp, struct Instance *root,
                    unsigned long len, int verbose)
 {
   if (verbose) {
-    CLINE("/*\n\tBinTokenSharesToC $Revision: 1.12 $");
+    CLINE("/*\n\tAuto-generated code from" __FILE__);
     FPRINTF(fp,"\t%lu relations in instance '",len);
     WriteInstanceName(fp,root,NULL);
     CLINE("'\n\t(possibly fewer C functions required)\n*/");
@@ -468,6 +468,11 @@ enum bintoken_error WriteResidualCode(FILE *fp, struct Instance *i,
   } else {
     CLINE("  ;");
   }
+#ifdef BINTOKEN_VERBOSE
+  FPRINTF(fp,"  fprintf(stderr,\"%%s:%%d: residual for '%%s' is %%f.\\n\", __FILE__, __LINE__, \"");
+  WriteAnyInstanceName(fp,i);
+  FPRINTF(fp,"\", *residual);\n");
+#endif
   CLINE("}");
   return BTE_ok;
 }
@@ -627,7 +632,7 @@ enum bintoken_error BinTokenSharesToC(struct Instance *root,
   /** @TODO FIXME win32 has getpid but it is bogus as uniquifier. */
   /* so long as makefile deletes previous dll, windows is ok though */
   sprintf(g_bt_data.regname,"BinTokenArch_%d_%d",++(g_bt_data.nextid),(int)pid);
-  FPRINTF(fp,"int ASC_EXPORT %s(){\n",g_bt_data.regname);
+  FPRINTF(fp,"\n\nint ASC_EXPORT %s(){\n",g_bt_data.regname);
   CLINE("\tint status;");
   FPRINTF(fp,"\tstatic struct TableC g_ctable[%lu] =\n",len+1);
   CLINE("\t\t{ {NULL, NULL},");
@@ -667,9 +672,12 @@ enum bintoken_error BinTokenCompileC(char *buildcommand)
   ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Starting build, command:\n%s\n",buildcommand);
   status = system(buildcommand);
   if (status) {
-    FPRINTF(ASCERR,"\nBUILD returned %d\n",status);
+    CONSOLE_DEBUG("BUILD returned %d",status);
     return BTE_build;
   }
+#ifdef BINTOKEN_VERBOSE
+  CONSOLE_DEBUG("Build command returned OK, status=%d",status);
+#endif
   return BTE_ok;
 }
 
@@ -784,7 +792,7 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
     return;
   }
   if (srcname == NULL || buildcommand == NULL || unlinkcommand == NULL) {
-#ifdef BINTOKEN_VERBOSE
+#if 0
     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"BinaryTokensCreate called with no options set: ignoring");
 #endif
     return;

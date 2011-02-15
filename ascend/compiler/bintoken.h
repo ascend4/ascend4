@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2006-2011 Carnegie Mellon University
 	Copyright (C) 1998 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
@@ -17,14 +17,14 @@
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
 *//** @file
- *  Binary tokens implementation for real relation instances.
- *
- *  Note that this header and btprolog.h are a pair.
- *  btprolog exists to make the C compiler job simpler -
- *  we don't want it to know about struct Instance when
- *  building code because we may not have the compiler
- *  directory available. btprolog.h is installed with
- *  the ascend binaries or scripts.
+	Binary tokens implementation for real relation instances.
+	
+	Note that this header and btprolog.h are a pair.
+	btprolog exists to make the C compiler job simpler -
+	we don't want it to know about struct Instance when
+	building code because we may not have the compiler
+	directory available. btprolog.h is installed with
+	the ascend binaries or scripts.
 *//*
 	By Benjamin A. Allan
 	Jan 7, 1998.
@@ -73,7 +73,7 @@ ASC_DLLSPEC int BinTokenSetOptions(
  * Do not call any previously loaded functions after this is
  * executed. Generally, this should only be called at shutdown.
  */
-extern void BinTokenClearTables(void);
+ASC_DLLSPEC void BinTokenClearTables(void);
 
 /**
  * When all the references expire, we might unload the library.
@@ -90,7 +90,7 @@ extern void BinTokenDeleteReference(int btable);
  * library. Then associates the compiled code to the equations.
  * The language and compiler tools are determined from method.
  */
-extern void BinTokensCreate(struct Instance *root, enum bintoken_kind method);
+ASC_DLLSPEC void BinTokensCreate(struct Instance *root, enum bintoken_kind method);
 
 /**
  * Calculates residual of relation indicated by btable and bindex
@@ -100,7 +100,7 @@ extern void BinTokensCreate(struct Instance *root, enum bintoken_kind method);
  * Returns an error code (0 if ok, 1 if couldn't evaluate function).
  * May be safely called on token relation instances only.
  */
-extern int BinTokenCalcResidual(int btable, int bindex, double *vars, double *residual);
+ASC_DLLSPEC int BinTokenCalcResidual(int btable, int bindex, double *vars, double *residual);
 
 /**
  * Calculates gradient of relation indicated by btable and bindex
