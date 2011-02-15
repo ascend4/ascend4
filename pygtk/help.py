@@ -34,11 +34,7 @@ class Help:
 
 	def run(self,topic=None):
 
-		if platform.system()=="Windows":
-			_b = webbrowser.get()
-		else:
-			# tested on Fedora 7:
-			_b = webbrowser.get('firefox')
+		_b = webbrowser.get()
 
 		if self.goonline:
 			_u = self.webhelproot
