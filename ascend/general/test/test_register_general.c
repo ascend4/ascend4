@@ -35,6 +35,7 @@
 	T(table) \
 	T(tm_time) \
 	T(ospath) \
+	T(env) \
 	T(ltmatrix) \
 	T(ascMalloc)
 /* 	T(qsort1) */
