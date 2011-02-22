@@ -234,29 +234,5 @@ char * env_subst_level(const char *path,GetEnvFn *getenvptr, int level){
 	return dest;
 }
 
-/*--------------------------------
-	some simple test routines...
-*/
-#ifdef TEST
+/* test code has been moved to test/test_env.c */
 
-#include <assert.h>
-
-/* switch to boldface for messages in 'main' */
-#undef D
-#define D DD
-#undef M
-#define M MM
-
-int main(void){
-	char s1[]="$ASCENDTK/bitmaps";
-	char *r;
-
-	M(s1);
-
-	r = env_subst(s1,getenv);
-	M(r);
-
-	/*assert(strcmp(r,"C:/msys/1.0/share/ascend/share")==0);*/
-}
-
-#endif
