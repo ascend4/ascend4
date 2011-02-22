@@ -141,6 +141,7 @@ slvreqtest = swig_env.Program('testslvreq',['testslvreq.cpp'] + objs)
 
 if env.get('CAN_INSTALL'):
 	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_PYTHON_ASCEND")),swiglib)
+	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_PYTHON_ASCEND")),'ascpy.py')
 
 # vim: set syntax=python:
 
