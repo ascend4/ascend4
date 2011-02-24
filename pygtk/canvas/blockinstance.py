@@ -22,47 +22,27 @@ class BlockInstance:
 		if not blocknameindex.has_key(n):
 			blocknameindex[n] = 0
 		blocknameindex[n] += 1
-		print "Block index for %s is %d" % (n, blocknameindex[n])
 		if name is None:
 			name = self.get_default_name()
 		self.name = name
-		#blockproperties tab
 		self.tab = 0
-		# ASCEND reference:
 		self.color_r = 1
 		self.color_g = 1
 		self.color_b = 1
 		self.instance = 0
 		self.ports = {}
 		for n in self.blocktype.inputs:
-			t = n.getId()
-			# TODO record that it's an input port
-			self.ports[t] = PortInstance(self,t, PORT_IN)
+			self.ports[n[0]] = PortInstance(self,n[0], n[1], PORT_IN)
 		for n in self.blocktype.outputs:
-			t = n.getId()
-			# TODO record that it's an output port
-			self.ports[t] = PortInstance(self,t, PORT_OUT)
-		#for n in self.blocktype.duals:
-		#	t = n.getId()
-		#	# TODO record that it's a bidirectional  port
-		#	self.ports[t] = PortInstance(self,t, PORT_INOUT)
-
-		print "CREATING PARAMETERS"
+			self.ports[n[0]] = PortInstance(self,n[0], n[1], PORT_OUT)
 		self.params = {}
-		#self.pfix = {}
 		for n in self.blocktype.params:
-			print n
-			t = n.getId()
-			self.params[t] = ParamInstance(self,t)
-			#self.pfix[t] = 0
-		print self.params	
+			self.params[n[0]] = (ParamInstance(self,n[0],n[1]))
 			
 		self.usercode = ""
 			
 	def get_default_name(self):
 		n = str(self.blocktype.type.getName())
-		print blocknameindex
-		print "the name is:",n
 		if not blocknameindex.has_key(n):
 			print "the key '%s' is not in blocknameindex" % n
 
@@ -70,7 +50,17 @@ class BlockInstance:
 
 	def __str__(self):
 		return "\t%s IS_A %s;\n" % (self.name, self.blocktype.type.getName())
-	
+
+	def reattach_ascend(self,ascwrap,notesdb):
+		if self.blocktype.type is None:
+			self.blocktype.reattach_ascend(ascwrap, notesdb)
+		
+		for port in self.ports:
+			self.ports[port].type = ascwrap.findType(self.ports[port].type)
+			
+		for param in self.params:
+			self.params[param].type = ascwrap.findType(self.params[param].type)
+		
 	def __getstate__(self):
 		#Return state values to pickle without  blockinstance.instance
 		return (self.blocktype, self.name, self.tab, self.ports, self.params, self.usercode)
@@ -88,10 +78,19 @@ class PortInstance:
 	the variable represented by the Port, but no type information, as that is
 	currently difficult to extract from the ASCEND API.
 	"""
-	def __init__(self,blockinstance,name, type):
+	def __init__(self,blockinstance,name, type, io):
 		self.blockinstance = blockinstance
 		self.name = name
 		self.type = type
+		self.io = io
+		
+	def __getstate__(self):
+		state = self.__dict__.copy()
+		state['type'] = str(self.type)
+		return(state)
+	
+	def __setstate__(self, state):
+		self.__dict__ = state
 
 class ParamInstance:
 	"""
@@ -100,11 +99,18 @@ class ParamInstance:
 	we have no information about the type of the parameter (its units etc)
 	because that data is still difficult to extract from the ASCEND API.
 	"""
-	def __init__(self,blockinstance,name):
+	def __init__(self,blockinstance,name,type):
 		self.blockinstance = blockinstance
 		self.name = name
-		self.value = 0
-		self.fix = 0
+		self.type = type
+		self.value = None
+		self.fix = False
+		if self.type.getPreferredUnits():
+			self.units=str(self.type.getPreferredUnits().getName())
+		else:
+			self.units=str(self.type.getDimensions().getDefaultUnits().getName())
+		if self.units == '1':
+			self.units = ''
 
 	def get_description(self):
 		"""
@@ -118,6 +124,29 @@ class ParamInstance:
 			if p.getId() == self.name:
 				desc = p.getText()
 		return desc.split(":",2)[1].strip()
+	
+	def getValue(self):
+		if self.value:
+			return(str(self.value)+' '+str(self.units))		
+		else:
+			return(' '+str(self.units))
+		
+	def setValue(self,conv,units):
+		if self.value:
+			self.value=self.value*conv
+			self.units=units
+			return(str(self.value)+' '+str(self.units))
+		else:
+			self.units=units
+			return(' '+str(self.units))
+	
+	def __getstate__(self):
+		state = self.__dict__.copy()
+		state['type'] = str(self.type)
+		return(state)
+	
+	def __setstate__(self, state):
+		self.__dict__ = state
 		
 class LineInstance:
 	def __init__(self,fromport=None,toport=None):
@@ -135,6 +164,3 @@ class LineInstance:
 		return ""
 
 # TODO set up reversible properties...?
-
-
-

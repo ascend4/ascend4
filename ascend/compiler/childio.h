@@ -41,7 +41,7 @@
  *  given.  What is known may be surprising. It may be only mildly
  *  accurate.
  */
-extern void WriteChildList(FILE *fp, ChildListPtr cl);
+ASC_DLLSPEC void WriteChildList(FILE *fp, ChildListPtr cl);
 
 /**
  * Return a string containing buckets o'stuff about the nth child in list.

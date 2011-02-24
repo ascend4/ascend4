@@ -14,3 +14,5 @@ class BlockPort(PointPort):
 		super(BlockPort,self).__init__(Position((0,0)))
 		self.portinstance = blockinstance.ports[portname]
 
+	def get_portinstance(self):
+		return self.portinstance

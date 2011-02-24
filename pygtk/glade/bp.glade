@@ -1,0 +1,269 @@
+<?xml version="1.0"?>
+<glade-interface>
+  <!-- interface-requires gtk+ 2.16 -->
+  <!-- interface-naming-policy toplevel-contextual -->
+  <widget class="GtkDialog" id="dialog">
+    <property name="border_width">5</property>
+    <property name="title" translatable="yes">Block Description</property>
+    <property name="modal">True</property>
+    <property name="window_position">center</property>
+    <property name="default_width">500</property>
+    <property name="default_height">500</property>
+    <property name="destroy_with_parent">True</property>
+    <property name="type_hint">utility</property>
+    <child internal-child="vbox">
+      <widget class="GtkVBox" id="dialog-vbox2">
+        <property name="visible">True</property>
+        <property name="spacing">2</property>
+        <child>
+          <widget class="GtkVBox" id="vbox1">
+            <property name="visible">True</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <widget class="GtkNotebook" id="notebook1">
+                <property name="visible">True</property>
+                <property name="app_paintable">True</property>
+                <property name="can_focus">True</property>
+                <property name="scrollable">True</property>
+                <child>
+                  <widget class="GtkLayout" id="general_tab">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkEntry" id="block_name">
+                        <property name="visible">True</property>
+                        <property name="app_paintable">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="invisible_char">&#x25CF;</property>
+                      </widget>
+                      <packing>
+                        <property name="x">100</property>
+                        <property name="y">10</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="type">
+                        <property name="visible">True</property>
+                        <property name="app_paintable">True</property>
+                        <property name="label" translatable="yes">Type:</property>
+                      </widget>
+                      <packing>
+                        <property name="x">10</property>
+                        <property name="y">65</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkEntry" id="type_name">
+                        <property name="visible">True</property>
+                        <property name="app_paintable">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="invisible_char">&#x25CF;</property>
+                      </widget>
+                      <packing>
+                        <property name="x">100</property>
+                        <property name="y">60</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="ports">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Ports:</property>
+                      </widget>
+                      <packing>
+                        <property name="x">10</property>
+                        <property name="y">115</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="label1">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Name:</property>
+                      </widget>
+                      <packing>
+                        <property name="x">10</property>
+                        <property name="y">15</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkEntry" id="port_name_input">
+                        <property name="visible">True</property>
+                      </widget>
+                      <packing>
+                        <property name="x">170</property>
+                        <property name="y">110</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="ports_in">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Input:</property>
+                      </widget>
+                      <packing>
+                        <property name="x">60</property>
+                        <property name="y">115</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="ports_out">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Output:</property>
+                      </widget>
+                      <packing>
+                        <property name="x">60</property>
+                        <property name="y">145</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkEntry" id="port_name_output">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="invisible_char">&#x25CF;</property>
+                      </widget>
+                      <packing>
+                        <property name="x">170</property>
+                        <property name="y">140</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="ports_inout">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Inpput/Output:</property>
+                      </widget>
+                      <packing>
+                        <property name="x">60</property>
+                        <property name="y">175</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkEntry" id="port_name_inputoutput">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="invisible_char">&#x25CF;</property>
+                      </widget>
+                      <packing>
+                        <property name="x">170</property>
+                        <property name="y">170</property>
+                      </packing>
+                    </child>
+                  </widget>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="general_label">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">General</property>
+                  </widget>
+                  <packing>
+                    <property name="tab_fill">False</property>
+                    <property name="type">tab</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkTreeView" id="param_tree">
+                    <property name="visible">True</property>
+                    <property name="app_paintable">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="is_focus">True</property>
+                    <property name="reorderable">True</property>
+                  </widget>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="param_label">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Parameters</property>
+                  </widget>
+                  <packing>
+                    <property name="position">1</property>
+                    <property name="tab_fill">False</property>
+                    <property name="type">tab</property>
+                  </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                  <packing>
+                    <property name="type">tab</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkVBox" id="instance">
+                    <property name="visible">True</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="position">3</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="instance_label">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Instance</property>
+                  </widget>
+                  <packing>
+                    <property name="position">3</property>
+                    <property name="tab_fill">False</property>
+                    <property name="type">tab</property>
+                  </packing>
+                </child>
+              </widget>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <widget class="GtkHButtonBox" id="dialog-action_area2">
+            <property name="visible">True</property>
+            <property name="layout_style">end</property>
+            <child>
+              <widget class="GtkButton" id="ok">
+                <property name="label">gtk-ok</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+                <signal name="clicked" handler="save_changes" after="yes"/>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkButton" id="discard">
+                <property name="label">gtk-cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </widget>
+    </child>
+  </widget>
+</glade-interface>

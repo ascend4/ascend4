@@ -7,7 +7,7 @@ from gaphas.state import observed, reversible_method, reversible_pair, reversibl
 from gaphas.geometry import distance_rectangle_point
 
 from blockport import BlockPort
-from blockinstance import PORT_IN, PORT_OUT
+from blockinstance import PORT_IN, PORT_OUT, PORT_INOUT
 
 class ElementNoPorts(Item):
     """
@@ -37,8 +37,11 @@ class ElementNoPorts(Item):
         self.constraint(vertical=(h_se.pos, h_ne.pos))
 
         # create minimal size constraints
-        self._c_min_w = self.constraint(left_of=(h_nw.pos, h_se.pos), delta=10)
-        self._c_min_h = self.constraint(above=(h_nw.pos, h_se.pos), delta=10)
+	factor = 7
+	delta_w = len(self.blockinstance.name)*factor
+	delta_h = 10
+        self._c_min_w = self.constraint(left_of=(h_nw.pos, h_se.pos), delta=delta_w)
+        self._c_min_h = self.constraint(above=(h_nw.pos, h_se.pos), delta=delta_h)
 
         # set width/height when minimal size constraints exist
         self.width = width
@@ -51,7 +54,8 @@ class ElementNoPorts(Item):
         # Set width/height explicitly, so the element will maintain it
         self.width = self.width
         self.height = self.height
-
+	self._set_height(50)
+	
     def _set_width(self, width):
         """
         >>> b=ElementNoPorts()
@@ -167,21 +171,34 @@ class BlockItem(ElementNoPorts):
 
 		Connected ports will be coloured red, other ports will be pale blue.
 		"""
-		c = context.cairo	
+		from blockconnecttool import SET_CONNECTION_FLAG
+		c = context.cairo
 		phalfsize = 3
-		for p in self._ports:
+		if SET_CONNECTION_FLAG[0]:
+		    for p in self._ports:
+			if hasattr(p,"point") and checkportscanconnect(p.portinstance, SET_CONNECTION_FLAG[1]):
+			    c.rectangle(p.point.x - phalfsize, p.point.y - phalfsize, 2*phalfsize, 2*phalfsize)
+			    c.set_source_rgba(0.8,0.8,1, 0.8)
+			    c.fill_preserve()
+			    c.set_source_rgb(0.8,0.8,1)
+			    c.stroke()
+			    
+			elif hasattr(p,"point") and not checkportscanconnect(p.portinstance, SET_CONNECTION_FLAG[1]):
+			    c.rectangle(p.point.x - phalfsize, p.point.y - phalfsize, 2*phalfsize, 2*phalfsize)
+			    c.set_source_rgba(0.8,0.8,1, 0.8)
+			    c.fill_preserve()
+			    c.set_source_rgb(0.8,0.8,0)
+			    c.stroke()
+		else:
+		    for p in self._ports:
 			if hasattr(p,"point"):
-				c.rectangle(p.point.x - phalfsize, p.point.y - phalfsize, 2*phalfsize, 2*phalfsize)
-				#if p.connected_to is None:
-				c.set_source_rgba(0.8,0.8,1, 0.8)
-				#else:
-				#	c.set_source_rgba(1,0,0,1)
-				c.fill_preserve()
-				c.set_source_rgb(0.8,0.8,0)
-				c.stroke()
-
-	# removing the 'glue' method now, as ports are now built in to gaphas.
-
+			    c.rectangle(p.point.x - phalfsize, p.point.y - phalfsize, 2*phalfsize, 2*phalfsize)
+			    c.set_source_rgba(0.8,0.8,1, 0.8)
+			    c.fill_preserve()
+			    c.set_source_rgb(0.8,0.8,0)
+			    c.stroke()
+		    
+			
     def pre_update(self,context):
         #print "PRE-UPDATE BLOCK"
 		pass
@@ -215,11 +232,11 @@ class DefaultBlockItem(BlockItem):
 		_ports = []
 		for i in self.blockinstance.ports:
 			p = BlockPort(blockinstance, i)
-			if self.blockinstance.ports[i].type is PORT_IN:
+			if self.blockinstance.ports[i].io is PORT_IN:
 				self._constraints.append(eq(p.point.x, h_nw.x))
 				self._constraints.append(bal(band=(h_nw.y, h_sw.y),v=p.point.y, balance=(0.5 + ii)/ninputs))
 				ii += 1
-			elif self.blockinstance.ports[i].type is PORT_OUT:
+			elif self.blockinstance.ports[i].io is PORT_OUT:
 				self._constraints.append(eq(p.point.x, h_ne.x))
 				self._constraints.append(bal(band=(h_ne.y,h_se.y),v=p.point.y, balance=(0.5 + oi)/noutputs))
 				oi += 1
@@ -230,7 +247,7 @@ class DefaultBlockItem(BlockItem):
 		self._ports = _ports
 
 	def draw(self, context):
-		# draw the box itself
+	    # draw the box itself
 		c = context.cairo
 		nw = self._handles[NW]
 		c.rectangle(nw.x, nw.y, self.width, self.height)
@@ -256,4 +273,22 @@ class DefaultBlockItem(BlockItem):
 
 		# now the draw the ports using the base class
 		super(DefaultBlockItem, self).draw(context)
+
+def checkportscanconnect(port1,port2):
+	'''Checks if the two portinstances can connect
+	Returns: True, if Connectable
+	         False, if not Connectable
+	'''
+	#TODO: Right now port Type checking is a simple str(Type) checking, have a complex procedure to check for
+	#connectable ports!!
+	if str(port1.type) == str(port2.type):
+		if port1.io == PORT_IN or port1.io == PORT_INOUT:
+			if port2.io == PORT_OUT or port2.io == PORT_INOUT:
+				return True
+		elif port2.io == PORT_IN or port2.io == PORT_INOUT:
+			if port1.io == PORT_OUT or port1.io == PORT_INOUT:
+				return True
+	return False 
+
+
 

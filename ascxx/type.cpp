@@ -43,6 +43,7 @@ extern "C"{
 #include <ascend/system/slv_client.h>
 #include <ascend/system/system.h>
 #include <ascend/compiler/simlist.h>
+#include <ascend/compiler/child.h>
 }
 
 #include "type.h"
@@ -258,4 +259,22 @@ Type::getModule() const{
 	return GetModule(getInternalType());
 }
 
+const Type &
+Type::findMember(const SymChar &name){
+	
+	unsigned long pos;
+	ChildListPtr CL;
 
+	CL = GetChildList(t);
+	pos = ChildPos(CL,name.getInternalType());
+	
+	const TypeDescription *t = ChildBaseTypePtr(CL,pos);
+
+	if(t==NULL){
+		stringstream ss;
+		ss << "Library::findType: type '" << name << "' not found in library";
+		throw runtime_error(ss.str());
+	}
+	Type *t2=new Type(t);
+	return *t2;
+}

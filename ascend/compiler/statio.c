@@ -689,9 +689,10 @@ void WriteStatementError(const error_severity_t sev
 	error_reporter_end_flush();
 }
 
-void WriteStatementErrorMessage(FILE *f, CONST struct Statement *stat,
-                                CONST char *message, int noisy,int level)
-{
+void WriteStatementErrorMessage(
+	FILE *f, CONST struct Statement *stat
+	,CONST char *message, int noisy,int level
+){
   /* old behavior */
   const char *filename=NULL;
   int line=0;
@@ -732,6 +733,23 @@ void WriteStatementErrorMessage(FILE *f, CONST struct Statement *stat,
 
   error_reporter_end_flush();
 }
+
+void WriteStatementLocation(FILE *f, CONST struct Statement *stat){
+	const char *filename=NULL;
+	int line=0;
+
+	if(stat==NULL){
+		FPRINTF(f,"NULL STATEMENT!");
+		return;
+	}
+
+	filename=Asc_ModuleBestName(StatementModule(stat));
+	line=StatementLineNum(stat);
+
+	/* write some more detail */
+	FPRINTF(f,"%s:%d",filename,line);
+}
+
 
 CONST char *StatioLabel(int level)
 {

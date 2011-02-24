@@ -160,7 +160,10 @@ void WriteChildList(FILE *fp,ChildListPtr cl)
           ((cle->typeptr==NULL)?"UNKNOWN":SCP(GetName(cle->typeptr))),
           cle->isarray,
           (int)cle->origin,cle->bflags);
-        WSEM(fp,cle->statement,"  Declared at ");
+		FPRINTF(fp,"    ");
+        WriteStatementLocation(fp,cle->statement);
+		FPRINTF(fp,"\n");
+        WriteStatement(fp,cle->statement,8);
       } else {
         FPRINTF(fp,"Child list item %lu is empty!\n",c);
       }
@@ -414,3 +417,4 @@ void WriteChildMissing(FILE *fp, char *fcn, symchar *childname)
     CONSOLE_DEBUG("Child '%s' not found (requested by %s).",SCP(childname),fcn);
   }
 }
+

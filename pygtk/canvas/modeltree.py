@@ -103,7 +103,7 @@ class TreeView:
 				except Exception,e:
 					pass
 				
-	def make(self, name=None, value=None, path=None, depth=1):
+	def make(self, name=None, value=None, path=None, depth=2):
 		if path is None:
 		# make root node
 			piter = self.make_row( None, name, value )
@@ -124,39 +124,23 @@ class TreeView:
 		else:
 			self.treeview.expand_row("0",False)			
 	
-	def make_from_presaved(self, name=None, value=None, path=None, depth=1):
-		if path is None:
-		# make root node
-			piter = self.make_row_from_presaved( None, name, value )
-			path = self.treestore.get_path( piter )
-			self.otank[ path ] = (name, value)
-		else:
-			name, value = self.otank[ path ]
+	#def make_from_presaved(self, name=None, value=None, path=None, depth=1):
+		#if path is None:
+		## make root node
+			#piter = self.make_row_from_presaved( None, name, value )
+			#path = self.treestore.get_path( piter )
+			#self.otank[ path ] = (name, value)
+		#else:
+			#name, value = self.otank[ path ]
 		
-		assert(value)
+		#assert(value)
 		
-		piter = self.treestore.get_iter( path )
-		if not self.treestore.iter_has_child( piter ):
-			self.make_children_from_presaved(value,piter)
+		#piter = self.treestore.get_iter( path )
+		#if not self.treestore.iter_has_child( piter ):
+			#self.make_children_from_presaved(value,piter)
 		
-		if depth:
-			for i in range( self.treestore.iter_n_children( piter ) ):
-				self.make_from_presaved( path = path+(i,), depth = depth - 1 )
-		else:
-			self.treeview.expand_row("0",False)	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+		#if depth:
+			#for i in range( self.treestore.iter_n_children( piter ) ):
+				#self.make_from_presaved( path = path+(i,), depth = depth - 1 )
+		#else:
+			#self.treeview.expand_row("0",False)	
