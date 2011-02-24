@@ -14,6 +14,7 @@ else:
 	os.environ['LD_LIBRARY_PATH'] = "../.."
 	
 sys.path.append("..")
+sys.path.append("../../ascxx")
 
 #import gtkexcepthook
 
