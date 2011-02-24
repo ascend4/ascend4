@@ -139,6 +139,11 @@ extern void WriteStatementErrorMessage(FILE *f,
 	@see WriteStatementError
  */
 
+ASC_DLLSPEC void WriteStatementLocation(FILE *f, CONST struct Statement *stat);
+/**<
+	Write out a statement, together with its location information
+*/
+
 extern CONST char *StatioLabel(int level);
 /**<
  *  Returns an Asc-#######: label padded to a uniform length.

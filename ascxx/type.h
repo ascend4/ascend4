@@ -43,6 +43,7 @@ public:
 	const bool isFundamental() const;
 	const bool isModel() const;
 	const bool hasParameters() const;
+	const Type &findMember(const SymChar &name);
 
 	Module getModule() const;
 

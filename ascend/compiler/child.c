@@ -491,34 +491,3 @@ extern int CompareChildLists(ChildListPtr cl1,
   }
 }
 
-#if 0 /* to childio.c */
-void WriteChildList(FILE *fp,ChildListPtr cl)
-{
-  unsigned long c,len;
-  struct ChildListEntry *cle;
-  CONST struct gl_list_t *l;
-  if (cl!=NULL) {
-    l = GL(cl);
-    len = gl_length(l);
-    if (!len) {
-      FPRINTF(fp,"Child list is empty\n");
-      return;
-    }
-    FPRINTF(fp,"Child list is %lu long.\n",len);
-    for (c=1;c<=len;c++) {
-      cle = GGET(l,c);
-      if (cle!=NULL) {
-        FPRINTF(fp,"%lu name=\"%s\" type=\"%s\" ARRAY=%d origin=%d bits=%u\n",
-          c,
-          SCP(cle->strptr),
-          ((cle->typeptr==NULL)?"UNKNOWN":SCP(GetName(cle->typeptr))),
-          cle->isarray,
-          (int)cle->origin,cle->bflags);
-        WSEM(fp,cle->statement,"  Declared at ");
-      } else {
-        FPRINTF(fp,"Child list item %lu is empty!\n",c);
-      }
-    }
-  }
-}
-#endif /* migrated */

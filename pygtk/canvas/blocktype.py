@@ -4,7 +4,7 @@ import gtk
 import ascpy
 import os.path
 
-class BlockType:
+class BlockType():
 	"""
 	All data associated with the MODEL type that is represented by a block.
 	This includes the actual ASCEND TypeDescription as well as the NOTES that
@@ -26,7 +26,7 @@ class BlockType:
 		self.sourcefile = None
 
 		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("inline"))
-
+		
 		self.inputs = []
 		self.outputs = []
 		self.params = []
@@ -34,14 +34,14 @@ class BlockType:
 		for n in nn:
 			t = n.getText()
 			if t[0:min(len(t),3)]=="in:":
-				self.inputs += [n]
+				self.inputs += [[n.getId(),self.type.findMember(n.getId())]]
 			elif t[0:min(len(t),4)]=="out:":
-				self.outputs += [n]
+				self.outputs += [[n.getId(),self.type.findMember(n.getId())]]
 			#elif t[0:min(len(t),5)]=="dual:":
 			#	self.duals += [n]
 			elif t[0:min(len(t),6)]=="param:":
-				self.params += [n]
-				
+				self.params += [[n.getId(),self.type.findMember(n.getId())]]
+			
 		self.iconfile = None
 		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("icon"))
 		if nn:
@@ -61,7 +61,10 @@ class BlockType:
 
 	def __getstate__(self):
 		print "GET STATE ON BLOCKTYPE %s" % self.type.getName()
-		return (str(self.type.getName()),len(self.inputs), len(self.outputs))
+		ninput= len(self.inputs)
+		noutput=len(self.outputs)
+		name=str(self.type.getName())
+		return (name,ninput,noutput)
 
 	def __setstate__(self, state):
 		print "SET STATE ON BLOCKTYPE"
@@ -76,7 +79,7 @@ class BlockType:
 		#self.duals = range(nduals)
 		print "outputs =", self.outputs
 
-	def reattach_ascend(self,library,  notesdb):
+	def reattach_ascend(self,library, notesdb):
 		self.type = library.findType(self._typename)
 
 		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("inline"))
@@ -84,17 +87,14 @@ class BlockType:
 		self.inputs = []
 		self.outputs = []
 		self.params = []
-		#self.duals = []
 		for n in nn:
 			t = n.getText()
 			if t[0:min(len(t),3)]=="in:":
-				self.inputs += [n]
+				self.inputs += [[n.getId(),self.type.findMember(n.getId())]]
 			elif t[0:min(len(t),4)]=="out:":
-				self.outputs += [n]
-		#	elif t[0:min(len(t),4)]=="dual:":
-		#		self.duals += [n]
+				self.outputs += [[n.getId(),self.type.findMember(n.getId())]]
 			elif t[0:min(len(t),6)]=="param:":
-				self.params += [n]
+				self.params += [[n.getId(),self.type.findMember(n.getId())]]
 	
 		print "Reattached type '%s', with %d inputs, %d outputs" % (self.type.getName(), len(self.inputs), len(self.outputs))		
 
@@ -103,8 +103,3 @@ class BlockType:
 
 	def get_output_name(self, index):
 		return self.outputs[index].getText()
-
-	#def get_dual_name(self, index):
-	#	return self.duals[index].get_text()
-	
-	

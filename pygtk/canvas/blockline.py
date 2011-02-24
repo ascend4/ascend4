@@ -14,5 +14,7 @@ class BlockLine(Line):
 	def __init__(self):
 		super(BlockLine, self).__init__()
 		self.lineinstance = LineInstance()
-
-
+	
+	def get_connected_ports(self):
+		ports = [self.lineinstance.fromport,self.lineinstance.toport]
+		return ports

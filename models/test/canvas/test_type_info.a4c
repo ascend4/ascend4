@@ -1,0 +1,80 @@
+(*These test are meant for testing type_desc.h functions GetChildList etc*)
+
+(* CASE 1: Test for ALIASES for multiple REFINES*)
+REQUIRE "atoms.a4l";
+
+MODEL mymodel;
+	myvar IS_A fraction;
+END mymodel;
+
+MODEL mymodel1 REFINES mymodel;
+	myvar1 ALIASES myvar;
+END mymodel1;
+
+MODEL mymodel2 REFINES mymodel1;
+	myvar2 ALIASES myvar1;
+END mymodel2;
+
+MODEL mymodel3 REFINES mymodel2;
+	myvar3 ALIASES myvar2;
+END mymodel3;
+
+MODEL mymodel4 REFINES mymodel3;
+	myvar4 ALIASES myvar3;
+END mymodel4;
+
+MODEL mymodel5 REFINES mymodel4;
+	myvar5 ALIASES myvar4;
+END mymodel5;
+
+MODEL mymodel6 REFINES mymodel5;
+	myvar6 ALIASES myvar5;
+END mymodel6;
+
+(*CASE 2: Test for Prammetric Models*)
+
+(*CASE 2A: Test for Type determination of parametrised Sub Model*)
+MODEL myparametricmodel(
+	firstparameter WILL_BE 	integer_constant;
+	secondparameter WILL_BE symbol;
+	thirdparameter WILL_BE energy_rate;
+);
+	(*other vars*)
+	myvar1 ALIASES firstparameter;
+	myvar2 IS_A monetary_unit;
+END myparametricmodel;
+
+MODEL myparametrictestmodel;
+	var1 IS_A integer_constant;
+	var2 IS_A symbol;
+	var3 IS_A energy_rate;
+	mymodeltest IS_A myparametricmodel(var1,var2,var3);
+	testvar1 ALIASES mymodeltest.myvar2;
+	testvar2 ALIASES mymodeltest.firstparameter;
+END myparametrictestmodel;
+
+(*CASE 2B: Test for Type determination of arrays/unspecified declarations inside parametrised Model*)
+MODEL myotherparametricmodel(
+	firstparameter WILL_BE set OF integer_constant;
+	var1[firstparmeter] WILL_BE fraction;
+);
+
+METHODS
+
+END myotherparametricmodel;
+	
+MODEL myotherparametrictestmodel;
+	flow_set1 IS_A set OF integer_constant;
+	flow_set2 IS_A set OF integer_constant;
+	
+	flow_set1 :== [1,2,3,4,5];
+	flow_set2 :== [5,4,3,2,1];
+
+	
+	flow1 IS_A myotherparametricmodel(flow_set1);
+	flow2 IS_A myotherparametricmodel(flow_set2);
+		
+METHODS
+END myotherparametrictestmodel;
+ 
+	

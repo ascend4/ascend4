@@ -261,7 +261,7 @@ ASC_DLLSPEC void ChildSetBoolean(ChildListPtr cl, unsigned long n,
  *  @param n  unsigned long
  */
 
-extern CONST struct TypeDescription *ChildBaseTypePtr(ChildListPtr cl,
+ASC_DLLSPEC const struct TypeDescription *ChildBaseTypePtr(ChildListPtr cl,
                                                       unsigned long n);
 /**<
  *  Return child number n type determinable at parse time.
@@ -300,13 +300,6 @@ extern int CompareChildLists(ChildListPtr cl, ChildListPtr c2, unsigned long *di
  * Returns -1/0/1 as d1 <,==,> d2 (0). If cmp != 0, diff = position
  * in child list d2 of first difference, i.e. if the lists are m and n
  * long (m > n) and OTHERWISE equivalent, diff = n + 1.
- */
-
-extern void WriteChildList(FILE *fp, ChildListPtr cl);
-/**<
- *  Write what is known at parse time about the children in the child list
- *  given.  What is known may be surprising. It may be only mildly
- *  accurate.
  */
 
 /* @} */
