@@ -1,7 +1,7 @@
 #include "compiler.h"
 
 /* #define COMPILER_DEBUG */
-#define BINTOKEN_DEBUG
+//#define BINTOKEN_DEBUG
 
 extern "C"{
 #include <ascend/compiler/compiler.h>
