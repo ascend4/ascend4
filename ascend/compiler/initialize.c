@@ -74,6 +74,7 @@
 #define IDB 0
 
 //#define INIT_DEBUG
+#define FIXFREE_DEBUG
 
 /*********************************************************************\
   There is a stack of procedure calls kept for tracing and breaking
@@ -248,7 +249,9 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 	struct gl_list_t *temp;
 	unsigned i, len;
 	struct Instance *i1, *i2;
-	//char *instname;
+#ifdef FIXFREE_DEBUG
+	char *instname;
+#endif
 	struct TypeDescription *t, *st;
 	CONST struct Name *name;
 	symchar *fixed;
@@ -276,6 +279,9 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 			return;
 		}
 		len = gl_length(temp);
+#ifdef FIXFREE_DEBUG
+		CONSOLE_DEBUG("There are %d items in the %s list", len, val?"FIX":"FREE");
+#endif
 		for(i=1; i<=len; i++){
 			i1 = (struct Instance *)gl_fetch(temp,i);
 #ifdef FIXFREE_DEBUG
@@ -288,6 +294,7 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 			ascfree(instname);
 #endif
 			if(InstanceKind(i1)!=REAL_ATOM_INST){
+				CONSOLE_DEBUG("Attempted to FIX or FREE variable that is not a real atom type.");
 				fm->ErrNo = Proc_illegal_type_use;
 				ProcWriteFixError(fm,name);
 				return;

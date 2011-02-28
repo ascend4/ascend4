@@ -296,9 +296,10 @@ struct Statement *CreateATS(struct VariableList *vl)
 
 struct Statement *CreateFIX(struct VariableList *vars){
 	register struct Statement *result;
-	/* CONSOLE_DEBUG("CREATING FIX STMT"); */
+	/*CONSOLE_DEBUG("CREATING FIX STMT");*/
 	result=create_statement_here(FIX);
 	result->v.fx.vars = vars;
+	/*WriteVariableList(ASCERR,result->v.fx.vars);*/
 	return result;
 }
 

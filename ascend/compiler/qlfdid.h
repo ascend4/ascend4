@@ -125,19 +125,19 @@ ASC_DLLSPEC int Asc_QlfdidSearch2(char *str);
 
 ASC_DLLSPEC int Asc_QlfdidSearch3(CONST char *str, int relative);
 /**<
- *  This function is still yet another entry point to the search routines.
- *  It uses the function BrowQlfdidSearch3, and will leave the g_search_inst
- *  looking at the found instance, or NULL. It attempts to avoid the
- *  overhead of creating search entries, for cases where the user only
- *  wants to find the instance associated with the given qualfied id.
- *  Returns 0 if found, 1 otherwise. This is perhaps the fastest
- *  version of the search codes.
- *
- *  If relative = 1 will start search at g_relative_inst whose value
- *  should be set by a call to qlfdid (tcl) or Asc_BrowQlfdidSearchCmd (c).
- *  Note that if the relative option is used str should be relative to
- *  g_relative_inst NOT to the simulation root.
- */
+	This function is still yet another entry point to the search routines.
+	It uses the function BrowQlfdidSearch3, and will leave the g_search_inst
+	looking at the found instance, or NULL. It attempts to avoid the
+	overhead of creating search entries, for cases where the user only
+	wants to find the instance associated with the given qualfied id.
+	@return 0 if found, 1 otherwise. This is perhaps the fastest
+	version of the search codes.
+	
+	@param relative If relative = 1 will start search at g_relative_inst whose value
+	should be set by a call to qlfdid (tcl) or Asc_BrowQlfdidSearchCmd (c).
+	Note that if the relative option is used str should be relative to
+	g_relative_inst NOT to the simulation root.
+*/
 
 /* @} */
 

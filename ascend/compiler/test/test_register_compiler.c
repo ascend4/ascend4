@@ -26,7 +26,8 @@
 	T(basics) \
 	T(autodiff) \
 	T(expr) \
-	T(bintok)
+	T(bintok) \
+	T(fixfree)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)
