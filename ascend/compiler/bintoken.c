@@ -61,7 +61,7 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 
 #include <ascend/bintokens/btprolog.h>
 
-#define BINTOKEN_VERBOSE
+//#define BINTOKEN_VERBOSE
 
 #define CLINE(a) FPRINTF(fp,"%s\n",(a))
 

@@ -33,6 +33,8 @@ class DiagnoseWindow:
 		except:
 			pass
 		
+		self.blockstatus = _xml.get_widget("blockstatustext")
+
 		self.imagescroll = _xml.get_widget("imagescroll")
 		self.image = _xml.get_widget("image")
 		self.blockentry = _xml.get_widget("blockentry")
@@ -189,6 +191,7 @@ class DiagnoseWindow:
 
 		self.fill_var_names()
 		self.fill_rel_names()
+		self.fill_block_status()
 	
 		self.fill_selection_info()
 
@@ -245,6 +248,21 @@ class DiagnoseWindow:
 			pb1 = self.pixbuf.scale_simple(w,h,gtk.gdk.INTERP_NEAREST)
 		
 		self.image.set_from_pixbuf(pb1)
+
+	def fill_block_status(self):
+		print "FILL BLOCK STATUS"
+		s = self.im.getBlockStatus(self.block)
+		ss = "Failed"
+		if s == ascpy.IM_CONVERGED:
+			ss = "Converged"
+		elif s == ascpy.IM_NOT_YET_ATTEMPTED:
+			ss = "Not attempted yet"
+		elif s == ascpy.IM_OVER_TIME:
+			ss += " (time limit)"
+		elif s == ascpy.IM_OVER_ITER:
+			ss += " (iter limit)"
+		self.blockstatus.set_text(ss);
+		
 
 	def fill_var_names(self):
 		print "FILL VAR NAMES"
