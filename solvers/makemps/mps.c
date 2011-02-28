@@ -802,10 +802,11 @@ void do_bounds(FILE *out,              /* file */
 
 /* writes out an MPS file */
 
-  extern boolean write_MPS(const char *name,                /* filename for output */
-                           mps_data_t mps,                  /* the main chunk of data for the problem */
-                           struct slv_parameter *parms
-{
+extern boolean write_MPS(const char *name,                /* filename for output */
+	mps_data_t mps,                  /* the main chunk of data for the problem */
+	struct slv_parameter *parms
+){
+#if 0
   FILE *out;
   int32 sosvar;   /* number of variables used in SOS's */
   int32 sosrel;   /* number of relations defining SOS's */
@@ -891,6 +892,9 @@ void do_bounds(FILE *out,              /* file */
   FPRINTF(out, "ENDATA\n");  /* finish up the file */
 
   return close_file(out);
+#else
+  return 0;
+#endif
 }
 
 
