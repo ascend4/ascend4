@@ -159,7 +159,26 @@ IncidenceMatrix::getBlockLocation(const int &block) const{
 	v.push_back(bb->block[block].col.high);
 	return v;
 }
-		
+
+const BlockStatusType
+IncidenceMatrix::getBlockStatus(const int &block) const{
+	if(!is_built)throw runtime_error("Not build");
+	SolverStatus st;
+	st.getSimulationStatus(sim);
+	
+	if(st.isConverged() || st.getCurrentBlockNum() > block){
+		return IM_CONVERGED;
+	}
+
+	if(st.getCurrentBlockNum() < block){
+		return IM_NOT_YET_ATTEMPTED;
+	}
+
+	if(st.hasExceededIterationLimit())return IM_OVER_ITER;
+	if(st.hasExceededTimeLimit())return IM_OVER_TIME;
+	return IM_DIVERGED;
+}
+
 const vector<Variable>
 IncidenceMatrix::getBlockVars(const int &block){
 	if(!is_built){

@@ -6,6 +6,7 @@
 #include "variable.h"
 #include "relation.h"
 #include "simulation.h"
+#include "solverstatus.h"
 
 #include "config.h"
 
@@ -16,6 +17,10 @@ extern "C"{
 typedef enum{
 	IM_NULL=0, IM_ACTIVE_FIXED, IM_ACTIVE_FREE, IM_DORMANT_FIXED, IM_DORMANT_FREE
 } IncidencePointType;
+
+typedef enum{
+	IM_CONVERGED=0, IM_OVER_ITER, IM_OVER_TIME, IM_DIVERGED, IM_NOT_YET_ATTEMPTED
+} BlockStatusType;
 
 class IncidencePoint{
 public:
@@ -61,6 +66,7 @@ public:
 	const std::vector<Variable> getBlockVars(const int &block);
 	const std::vector<Relation> getBlockRels(const int &block);
 	const std::vector<int> getBlockLocation(const int &block) const;
+	const BlockStatusType getBlockStatus(const int &block) const;
 	const int getNumBlocks();
 };
 
