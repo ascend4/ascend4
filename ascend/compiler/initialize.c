@@ -249,6 +249,7 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 	struct gl_list_t *temp;
 	unsigned i, len;
 	struct Instance *i1, *i2;
+	const char *err = NULL;
 #ifdef FIXFREE_DEBUG
 	char *instname;
 #endif
@@ -274,11 +275,45 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 	while(vars!=NULL){
 		name = NamePointer(vars);
 		temp = FindInstances(fm->i, name, &e);
+#if 0
+		switch (e) {
+		case unmade_instance:
+			fm->ErrNo = Proc_instance_not_found;
+			break;
+		case undefined_instance:
+			fm->ErrNo = Proc_name_not_found;
+			break;
+		case impossible_instance:
+			fm->ErrNo = Proc_illegal_name_use;
+			break;
+		case correct_instance:
+			fm->ErrNo = Proc_CallError; /* move write to procio */
+			break;
+		}
 		if(temp==NULL){
 			fm->ErrNo = Proc_bad_name;
 			return;
 		}
+#else
+		if(temp==NULL){
+			err = "Unknown error";
+			fm->ErrNo = Proc_bad_name;
+		}
+		switch(e){
+			case unmade_instance: err = "unmade instance"; fm->ErrNo = Proc_instance_not_found; break;
+			case undefined_instance: err = "undefined instance"; fm->ErrNo = Proc_name_not_found; break;
+			case impossible_instance: err = "impossible instance"; fm->ErrNo = Proc_illegal_name_use; break;
+			case correct_instance: break;
+		}
+		if(err){
+			WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid name(s) in variable list (%s)",err);
+			//ERROR_REPORTER_HERE(ASC_USER_ERROR,"%s in %s variable list",err,val?"FIX":"FREE");
+			return;
+		}
+#endif
+		
 		len = gl_length(temp);
+		
 #ifdef FIXFREE_DEBUG
 		CONSOLE_DEBUG("There are %d items in the %s list", len, val?"FIX":"FREE");
 #endif
