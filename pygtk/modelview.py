@@ -484,13 +484,13 @@ class ModelView:
 			_dia = VarPropsWin(self.browser,_instance);
 			_dia.run();
 		else:
-			self.browser.reporter.reportWarning("Select a variable or relation first...")			
+			self.browser.reporter.reportWarning("Select a variable or relation first...")
 
 	def observe_activate(self,widget,*args):
 		_path,_col = self.modelview.get_cursor()
 		_instance = self.otank[_path][1]
 		if _instance.getType().isRefinedSolverVar():
-			print "OBSERVING",_instance.getName().toString()		
+			print "OBSERVING",_instance.getName().toString()
 			self.browser.observe(_instance)
 
 	def on_fix_variable_activate(self,*args):
@@ -512,6 +512,9 @@ class ModelView:
 
 	def units_activate(self,*args):
 		T = self.get_selected_type()
-		_un = UnitsDialog(self.browser,T)
-		_un.run()
+		try:
+			_un = UnitsDialog(self.browser,T)
+			_un.run()
+		except:
+			self.browser.reporter.reportError("Unable to display units dialog.")
 
