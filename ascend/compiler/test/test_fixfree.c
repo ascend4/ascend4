@@ -93,8 +93,8 @@ static void test_test1(void){
 	enum Proc_enum pe = Initialize(GetSimulationRoot(sim),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
 	CU_ASSERT(pe==Proc_all_ok);
 
-	CHECK_FIXED("x");
-	CHECK_FREE("y");
+	CHECK_FREE("x");
+	CHECK_FIXED("y");
 	CHECK_FREE("z");
 	
 	sim_destroy(sim);
@@ -119,11 +119,34 @@ static void test_test2(void){
 
 	CHECK_FREE("y");
 	CHECK_FIXED("x");
-	CHECK_FIXED("z");
+	CHECK_FREE("z"); /* we expect names after the wrong ones not to have been changed */
 	
 	sim_destroy(sim);
 	Asc_CompilerDestroy();
 }
+
+static void test_test3(void){
+	struct Instance *sim = load_model("test3");
+
+	/* check for vars and rels */
+	struct Instance *root = GetSimulationRoot(sim);
+	struct Instance *inst;
+
+	CHECK_FREE("x");
+	CHECK_FREE("z");
+
+	/** Call on_load */
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(sim),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe!=Proc_all_ok);
+
+	CHECK_FIXED("x");
+	CHECK_FREE("z");
+	
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -132,7 +155,8 @@ static void test_test2(void){
 
 #define TESTS(T) \
 	T(test1) \
-	T(test2)
+	T(test2) \
+	T(test3)
 	
 REGISTER_TESTS_SIMPLE(compiler_fixfree, TESTS)
 
