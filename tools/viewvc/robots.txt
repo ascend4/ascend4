@@ -1,0 +1,18 @@
+User-agent: *
+Disallow: /
+
+User-agent: Googlebot-Image
+Disallow: /
+
+User-agent: Googlebot
+Disallow: /viewvc/code/branches/
+Disallow: /viewvc/code/tags/
+Disallow: *?view=annotate*
+Disallow: *?annotate=*
+Disallow: *?view=diff*
+Disallow: *?view=rev*
+Disallow: *?r1=*
+Disallow: *?revision=*
+Disallow: *&pathrev=*
+Disallow: *?content-type=*
+Disallow: *&content-type=*
