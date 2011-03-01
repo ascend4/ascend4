@@ -44,8 +44,10 @@ MODEL valve REFINES stream_equipment;
 			y = x^2 / sqrt(2. - x^4);
 		CASE 'quick':
 			y = 10.*x / sqrt(1 + 99.* x^2);
+			(* regularised? see http://is.gd/deKZ5j *)
 		CASE 'hyperbolic':
 			y = 0.1*x/sqrt(1 - 0.99*x^2);
+			(* regularised? http://is.gd/deKZ5j *)
 		OTHERWISE:
 			(* assume linear if we are given nonsense *)
 			y = x;
