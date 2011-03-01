@@ -9,6 +9,8 @@ from the EMSO EML/ALSOC project. http://www.enq.ufrgs.br/alsoc.
 Apparent limitations with dimensions in ASCEND mean I have added 
 'valve_coefficient_sq' (the square of a valve coefficient) to 
 models/johnpye/thermo_types.a4c, for use in this model.
+
+Update: to solve the units-of-measurement problem, see http://is.gd/C73iky
 *)
 
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
