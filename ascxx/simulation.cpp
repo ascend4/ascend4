@@ -913,7 +913,7 @@ Simulation::processVarStatus(){
 	int low;
 	int high;
 
-	if(!sys)throw runtime_error("No system built");
+	if(!sys)return;
 
 	//CONSOLE_DEBUG("Getting var status");
 
