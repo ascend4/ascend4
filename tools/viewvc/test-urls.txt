@@ -19,3 +19,5 @@ http://ascendcode.cheme.cmu.edu/viewvc/code/trunk/pygtk/canvas/blockproperties.p
 http://ascendcode.cheme.cmu.edu/viewvc/code/trunk/pygtk/canvas/blockproperties.py?revision=2819
 http://ascendcode.cheme.cmu.edu/viewvc?view=rev&revision=2813
 http://ascendcode.cheme.cmu.edu/viewvc/code/tags/ascend-0.9.7/INSTALL.txt?view=log
+http://ascendcode.cheme.cmu.edu/viewvc/code/trunk/?diff_format=c&sortdir=down&pathrev=1231&logsort=rev&sortby=file&view=log
+

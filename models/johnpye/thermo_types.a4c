@@ -207,3 +207,13 @@ MODEL thermo_state;
 	cv IS_A specific_heat_capacity;
 	(* w IS_A speed; *)
 END thermo_state;
+
+(* square of valve coefficient *)
+ATOM valve_coefficient_sq REFINES solver_var
+	DIMENSION L^7/M
+	DEFAULT 0.0625 {gal^2/min^2/psi};
+	lower_bound := 0 {gal^2/min^2/psi};
+	upper_bound := 1e12 {gal^2/min^2/psi};
+END valve_coefficient_sq;
+
+
