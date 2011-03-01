@@ -308,6 +308,7 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 		if(err){
 			WriteStatementError(ASC_USER_ERROR,stat,1,"Invalid name(s) in variable list (%s)",err);
 			//ERROR_REPORTER_HERE(ASC_USER_ERROR,"%s in %s variable list",err,val?"FIX":"FREE");
+			fm->flow = FrameError;
 			return;
 		}
 #endif
@@ -1705,14 +1706,12 @@ void ExecuteInitStatement(struct procFrame *fm, struct Statement *stat)
   case CASGN:
     fm->flow = FrameError;
     fm->ErrNo = Proc_declarative_constant_assignment;
-    WriteInitErr(fm,
-                 "Incorrect statement type (constant assigned)"
-                 " in initialization section");
+    WriteInitErr(fm, "Assignment of constants is not permitted inside METHODs.");
     break;
   default:
     fm->flow = FrameError;
     fm->ErrNo = Proc_bad_statement;
-    WriteInitErr(fm,"Unexpected statement type in initialization section");
+    WriteInitErr(fm,"Unexpected statement type in initialization section.");
     break;
   }
 #if IDB
