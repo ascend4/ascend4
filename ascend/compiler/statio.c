@@ -811,6 +811,8 @@ symchar *StatementTypeString(CONST struct Statement *s)
     g_statio_stattypenames[ATS] = AddSymbol("ARE_THE_SAME");
     g_statio_stattypenames[AA] = AddSymbol("ARE_ALIKE");
     g_statio_stattypenames[FOR] = AddSymbol("FOR");
+	g_statio_stattypenames[FIX] = AddSymbol("FIX");
+	g_statio_stattypenames[FREE] = AddSymbol("FREE");
     g_statio_stattypenames[REL] = GetBaseTypeName(relation_type);
     g_statio_stattypenames[LOGREL] = GetBaseTypeName(logrel_type);
     g_statio_stattypenames[ASGN] = AddSymbol("Assignment");
@@ -845,6 +847,8 @@ symchar *StatementTypeString(CONST struct Statement *s)
   case ATS:
   case AA:
   case FOR:
+  case FIX:
+  case FREE:
   case REL:
   case LOGREL:
   case ASGN:
