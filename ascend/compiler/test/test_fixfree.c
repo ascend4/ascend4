@@ -17,7 +17,8 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	@file
-	Unit test functions for compiler. Nothing here yet.
+	Unit test functions for FIX and FREE argument lists, especially where
+	there are invalid things in the list.
 */
 #include <string.h>
 
