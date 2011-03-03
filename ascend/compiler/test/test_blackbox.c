@@ -76,6 +76,7 @@ static void test_parsefail1(void){
 	struct Instance *sim = load_model("parsefail1", FALSE, &parsestatus);
 	CU_ASSERT(parsestatus!=0);
 	CU_ASSERT(sim==NULL);
+	if(sim)sim_destroy(sim);
 	Asc_CompilerDestroy();
 }
 
