@@ -478,6 +478,11 @@ lux= {lx};
 
 gpm = {gallon/min};
 
+(* conversion factor to US (Fisher-Rosemount) valve constants to SI unit
+equivalent. see Appendix 3 of P Thomas 'Simulation of Industrial Processes for
+Control Engineers, 1999, ISBN 0750641614 *)
+VALVE_COEFF_US = {2.3837e-5*m*m};
+
 (* time variant conversions *)
 
 MINIMUMWAGE = {5.15*USD/h}; (* Dec 2005, see http://www.dol.gov/ *)
