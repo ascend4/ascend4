@@ -5331,7 +5331,9 @@ static int ExecuteBlackBoxEXT(struct Instance *inst
     SetEvaluationForTable(SavedForTable);
   }
   if ( executeStatus ) {
-	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Failed to execute blackbox statement");
+	/* don't report an error here, because return 1 is possible even with 
+	eventual success at later compiler passes. */
+	//ERROR_REPORTER_HERE(ASC_USER_ERROR,"Failed to execute blackbox statement");
     return 1;
   }else{
     return 0;

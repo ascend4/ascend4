@@ -11,6 +11,10 @@ Apparent limitations with dimensions in ASCEND mean I have added
 models/johnpye/thermo_types.a4c, for use in this model.
 
 Update: to solve the units-of-measurement problem, see http://is.gd/C73iky
+
+See also Appendix 3 "Equations for control valve flow in SI units" from
+P Thomas, 1999, Simulation of Industrial Processes for Control Engineers",
+Butterworth-Heinemann, ISBN 0750641614.
 *)
 
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
@@ -18,7 +22,11 @@ REQUIRE "johnpye/thermo_types.a4c";
 
 MODEL valve REFINES stream_equipment;
 	NOTES 'description' SELF 
-	{Assumed: steady state, liquid phase, isenthalpic}
+	{Assumed: steady state, liquid phase, isenthalpic.
+
+	Note that when setting the valve constant, use values like 
+	C_v := 0.25 {VALVE_CONST_US} to specify the value and the required unit and
+	dimension convesion will be correctly made.}
 	END NOTES;
 
 	types IS_A set OF symbol_constant;
@@ -27,9 +35,8 @@ MODEL valve REFINES stream_equipment;
 	type IS_A symbol_constant;
 
 	Vdot "volumetric flow rate" IS_A volume_rate;
-	C_v2 "valve coefficient" IS_A valve_coefficient_sq;
+	C_v "valve coefficient" IS_A valve_coefficient;
 	x "opening fraction" IS_A fraction;
-	SG "specific gravity" IS_A factor;
 
 	pr "pressure ratio" IS_A factor;
 	dp IS_A delta_pressure;
@@ -59,13 +66,8 @@ MODEL valve REFINES stream_equipment;
 	(* pressure ratio *)
 	outlet.p = inlet.p * pr;
 
-	(* specific gravity *)
-	v_ref IS_A specific_volume;
-	v_ref * 999.02 {kg/m^3} = 1; (* 999.02 is water at NTP...? *)
-	SG * inlet.v = v_ref;
-
 	(* FIXME what if dp <= 0, in other words reversed- or no-flow? *)
-	Vdot = y * sqrt(C_v2) * sqrt(-dp/SG);
+	Vdot = y * C_v * sqrt(-dp/inlet.v);
 
 	(* volumetric flow rate (should we be using the liquid density instead? *)
 	(* FIXME should we take an average density across the valve? *)
@@ -74,7 +76,7 @@ END valve;
 
 MODEL valve_test REFINES valve;
 	cd.component :== 'water';
-	type :== 'equal';
+	type :== 'linear';
 METHODS
 METHOD on_load;
 	FIX inlet.p, inlet.T;
@@ -87,8 +89,8 @@ METHOD on_load;
 	FIX x;
 	x := 0.5;
 
-	FIX C_v2;
-	C_v2 := 0.25 * 0.25 {gal^2/min^2/psi};
+	FIX C_v;
+	C_v := 0.25{VALVE_COEFF_US};
 
 	(* first guesses *)
 	inlet.h := 4000 {kJ/kg};
