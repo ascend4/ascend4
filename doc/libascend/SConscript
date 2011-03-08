@@ -1,6 +1,6 @@
 Import('env')
 
-doxyfile = env.SubstInFile('Doxyfile','Doxyfile.base')
-
-doxyout = env.Doxygen(doxyfile)
+if env.get("DOXYGEN"):
+	doxyfile = env.SubstInFile('Doxyfile','Doxyfile.base')
+	doxyout = env.Doxygen(doxyfile)
 
