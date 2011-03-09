@@ -22,7 +22,8 @@ REQUIRE "johnpye/thermo_types.a4c";
 
 MODEL valve REFINES stream_equipment;
 	NOTES 'description' SELF 
-	{Assumed: steady state, liquid phase, isenthalpic.
+	{Assumed: steady state, isenthalpic, single-phase (liquid or gas)
+	Assume that we are not in danger of choked flow or cavitation.
 
 	Note that when setting the valve constant, use values like 
 	C_v := 0.25 {VALVE_CONST_US} to specify the value and the required unit and
@@ -67,11 +68,14 @@ MODEL valve REFINES stream_equipment;
 	outlet.p = inlet.p * pr;
 
 	(* FIXME what if dp <= 0, in other words reversed- or no-flow? *)
-	Vdot = y * C_v * sqrt(-dp/inlet.v);
+	mdot = y * C_v * sqrt(-dp/inlet.v);
 
 	(* volumetric flow rate (should we be using the liquid density instead? *)
 	(* FIXME should we take an average density across the valve? *)
-	Vdot = inlet.mdot * inlet.v;
+	Vdot = mdot * inlet.v;
+
+	(* need to add consideration of cavitation and choking... details in 
+	Thomas, sec. 7.4, p. 62. *)
 END valve;
 
 MODEL valve_test REFINES valve;
