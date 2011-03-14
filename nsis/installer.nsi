@@ -556,8 +556,6 @@ Section "Uninstall"
 	${If} $0 <> 0
 		DetailPrint "--- REMOVING HEADER FILES ---"
 		RMDir /r $INSTDIR\include
-		Delete $INSTDIR\ascend-config
-		Delete $INSTDIR\ascend-config.bat	
 	${EndIf}
 	
 ;--- start menu ---
@@ -579,6 +577,8 @@ Section "Uninstall"
 
 	; Remove files and uninstaller
 
+	Delete $INSTDIR\ascend-config
+	Delete $INSTDIR\ascend-config.bat	
 	Delete $INSTDIR\ascend.dll
 	Delete $INSTDIR\LICENSE.txt
 	Delete $INSTDIR\README-windows.txt
@@ -586,7 +586,7 @@ Section "Uninstall"
 	Delete $INSTDIR\ascend.ico
 	Delete $INSTDIR\Makefile.bt
 	Delete $INSTDIR\ascend.syn
-	Delete $INSTDIR\ipopt38.dll
+	Delete $INSTDIR\ipopt39.dll
 	RMDir /r $INSTDIR\models
 	Delete $INSTDIR\solvers\qrslv_ascend.dll
 	Delete $INSTDIR\solvers\conopt_ascend.dll
