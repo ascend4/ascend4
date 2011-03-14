@@ -41,7 +41,7 @@ def generate(env):
 			except WindowsError:
 				# if someone has installed sundials with ./configure --prefix=/MinGW using MSYS, then
 				# this should work, but we would like to make this a lot more robust!
-				cmd = ['c:\\MSYS\\1.0\\bin\\sh.exe','/MinGW/bin/sundials-config','-mida','-ts','-lc']
+				cmd = ['sh.exe','/mingw/bin/sundials-config','-mida','-ts','-lc']
 				env1 = env.Clone()
 				env1['CPPPATH'] = None
 				env1['LIBPATH'] = None
@@ -71,7 +71,7 @@ def generate(env):
 		print "SUNDIALS_CPPPATH =",env.get('SUNDIALS_CPPPATH')
 
 	except Exception, e:
-		print "FAILED SUNDIALS DETECTION:",e.__class__,str(e)
+		print "FAILED SUNDIALS DETECTION (%s):" % platform.system(),e.__class__,str(e)
 		env['HAVE_SUNDIALS'] = False
 
 def exists(env):
