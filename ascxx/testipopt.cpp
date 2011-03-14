@@ -9,7 +9,7 @@ using namespace std;
 int main(void){
 
 	Library L;
-#define TESTNAME "formula"
+#define TESTNAME "test6"
 	L.load("test/ipopt/" TESTNAME ".a4c");
 	Type t = L.findType(TESTNAME);
 #undef TESTNAME

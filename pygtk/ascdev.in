@@ -52,7 +52,7 @@ if __name__=='__main__':
 		restart.append('ASCENDLIBRARY')
 
 	solverdir = os.path.join(sourceroot,"solvers")
-	solverdirs = [os.path.join(solverdir,d.lower()) for d in "@WITH_SOLVERS@".split(",")]
+	solverdirs = [os.path.join(solverdir,d.lower()) for d in sorted("@WITH_SOLVERS@".split(","),reverse=True)]
 	if add_at_start('ASCENDSOLVERS',solverdirs):
 		restart.append('ASCENDSOLVERS')
 
