@@ -36,8 +36,6 @@ if env.get('HAVE_GCC'):
 	#python_env.Append(CPPFLAGS=['-O3'])
 	if swig_has_gccvisibility and env.has_key('HAVE_GCCVISIBILITY'):
 		python_env.Append(CCFLAGS=['-fvisibility=hidden']);
-	# use static linking to libstdc++ on Windows
-	python_env.Append(LINKFLAGS=['-static-libstdc++'])
 
 objs = []
 

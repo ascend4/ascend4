@@ -635,7 +635,7 @@ class Browser:
 			ascpy.getCompiler().setUseRelationSharing(_v)
 			print "Relation sharing set to",_v
 
-			_v = self.prefs.getBoolPref("Compiler","use_binary_compilation",True)
+			_v = self.prefs.getBoolPref("Compiler","use_binary_compilation",False)
 			ascpy.getCompiler().setBinaryCompilation(_v)
 			print "Binary compilation set to",_v
 

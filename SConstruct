@@ -2983,6 +2983,7 @@ env.Append(
 		,r"ascend/compiler/ascParse\.[ch]$", r"ascend/solver/conoptconfig\.h$"
 		,r"ascend/utilities/config\.h$", r"pygtk/config\.h$", r"pygtk/config\.py$"
 		,r"pygtk/ascdev$", r"ascxx/testconopt$", r"ascend/compiler/scanner\.c$"
+		,r"pygtk/ascpy.py$"
 		,r"tcltk/interface/ascend4$",r"ascxx/testslvreq$",r"test/test$"
 		,r"models/johnpye/datareader/.*\.tm2\.Z$"
 		,r"models/johnpye/fprops/[a-z][a-z0-9]+(.*\.exe)?$" # FPROPS test executables
