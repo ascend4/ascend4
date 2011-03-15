@@ -58,10 +58,11 @@ if platform.system()=="Windows":
 			try:
 				# we can only munge the path if it actually exists
 				s1 = win32api.GetShortPathName(s)
-				s1 = s1.replace("\\","\\\\")
 			except:
 				# if it doesn't exist, we just return the un-munged path
 				pass
+			# follow the pkg-config approach and use forward slashes instead of backslashes
+			s1 = s1.replace("\\","/")
 			return s1
 		munge = munge1 
 	except:
@@ -104,23 +105,18 @@ if options.cppflags:
 	include = ""
 	if INCLUDE!="/usr/include":
 		include=INCLUDE
-	if -1!=include.find(" "):
+	if len(include):
 		print "-I"+munge(include)+""
-	elif len(include):
-		print "-I"+include
 	ok = True
 
 if options.libs:
 	libs = ""
 	if LIB!="/usr/lib":
 		libs = LIB
-	if -1!=libs.find(" "):
-		print "-L"+munge(libs)+" -lascend"
-	else:
-		Lflag  = ""
-		if len(libs):
-			Lflag = "-L"+libs+" "
-		print Lflag + "-lascend"
+	Lflag  = ""
+	if len(libs):
+		Lflag = "-L"+munge(libs)+" "
+	print Lflag + "-lascend"
 	ok = True
 
 if options.data:
