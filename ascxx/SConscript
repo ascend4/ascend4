@@ -36,6 +36,8 @@ if env.get('HAVE_GCC'):
 	#python_env.Append(CPPFLAGS=['-O3'])
 	if swig_has_gccvisibility and env.has_key('HAVE_GCCVISIBILITY'):
 		python_env.Append(CCFLAGS=['-fvisibility=hidden']);
+	# use static linking to libstdc++ on Windows
+	python_env.Append(LINKFLAGS=['-static-libstdc++'])
 
 objs = []
 
@@ -99,9 +101,17 @@ swig_env.Append(LIBS = ['ascend']+env['PYTHON_LIB'])
 swig_env.Append(LIBPATH = ['#'] + env['PYTHON_LIBPATH'])
 swig_env.Append(LINKFLAGS=env['PYTHON_LINKFLAGS'])
 
-if not env.get('MSVS'):
-	swig_env.Append(LIBS = ['stdc++'])
+libcxx = 'link'
+if env.get('MSVS'): 
+	libcxx = None
+if platform.system()=="Windows" and env.get('HAVE_GCC'):
+	libcxx = 'static'
 
+if libcxx == 'link':	
+	swig_env.Append(LIBS = ['stdc++'])
+elif libcxx == 'static':
+	swig_env.Append(LINKFLAGS = ['-static-libstdc++'])
+	
 if env.get('WITH_DMALLOC'):
 	swig_env.Append(LIBS = ['dmalloc'])
 	swig_env.AppendUnique(LIBPATH = [env.get('DMALLOC_LIBPATH')])

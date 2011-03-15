@@ -28,18 +28,16 @@ FunctionEnd
 ; Prefer the current user's installation of GTK, fall back to the local machine
 
 Function DetectGTK
-	ReadRegStr $R6 HKLM "SOFTWARE\Gtk+" "Path"
-	${If} $R6 == ''
-		Push "No GTK registry key found"
-		Push "NOK"
-		Return
-	${EndIf}
-	
-	${If} ${FileExists} "$R6\bin\libgtk-win32-2.0-0.dll"
-		Push "$R6\bin"
-		Push "OK"
+	${If} $PYOK == "OK"
+		${If} ${FileExists} "$PYPATH\Lib\site-packages\gtk-2.0\runtime\bin\libgtk-win32-2.0-0.dll"
+			Push "$PYPATH\Lib\site\packages\gtk-2.0\runtime\bin"
+			Push "OK"
+		${Else}
+			Push "libgtk-win32-2.0-0.dll not found in $PYPATH\Lib\site\packages\gtk-2.0\runtime\bin"
+			Push "NOK"
+		${EndIf}
 	${Else}
-		Push "No libgtk-win32-2.0-0.dll found in'$R6\bin'"
+		Push "Python not detected (we are looking for PyGTK All-in-one package)"
 		Push "NOK"
 	${EndIf}
 FunctionEnd
@@ -75,18 +73,16 @@ FunctionEnd
 ; Prefer the current user's installation of GTK, fall back to the local machine
 
 Function DetectGlade
-	ReadRegStr $R6 HKLM "SOFTWARE\Gtk+" "Path"
-	${If} $R6 == ''
-		Push "No GTK registry key found"
-		Push "NOK"
-		Return
-	${EndIf}
-
-	${If} ${FileExists} "$R6\bin\libglade-2.0-0.dll"
-		Push "$R6\bin"
-		Push "OK"
+	${If} $PYOK == "OK"
+		${If} ${FileExists} "$PYPATH\Lib\site-packages\gtk-2.0\runtime\bin\libglade-2.0-0.dll"
+			Push "$PYPATH\Lib\site\packages\gtk-2.0\runtime\bin"
+			Push "OK"
+		${Else}
+			Push "libglade-2.0-0.dll not found in $PYPATH\Lib\site\packages\gtk-2.0\runtime\bin"
+			Push "NOK"
+		${EndIf}
 	${Else}
-		Push "No libglade-2.0-0.dll found in'$R6\bin'"
+		Push "Python not detected (we are looking for PyGTK All-in-one package)"
 		Push "NOK"
 	${EndIf}
 FunctionEnd
