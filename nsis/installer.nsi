@@ -97,7 +97,8 @@ Var /GLOBAL ASCENDINIFOUND
 !define GTK_PATCH ".6"
 !define GTK_FN "pygtk-all-in-one-${GTK_VER}${GTK_PATCH}.win32-py${PYVERSION}.msi"
 !define GTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.22/${GTK_FN}"
-!define GTK_CMD "msiexec /i $DAI_TMPFILE /passive"
+!define GTK_CMD "msiexec /i $DAI_TMPFILE"
+; passive install of pygtk 2.22.6 doesn't seem to work.
 
 !define TCL_VERSION "8.5.9.2"
 !define TCL_PATCH ".294317"
