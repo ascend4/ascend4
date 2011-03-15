@@ -40,6 +40,8 @@ InstallDir $PROGRAMFILES\ASCEND
 ; overwrite the old one automatically)
 InstallDirRegKey HKLM "Software\ASCEND" "Install_Dir"
 
+RequestExecutionLevel admin
+
 ;--------------------------------
 
 ; Pages
@@ -52,6 +54,7 @@ Page directory
 Page custom dependenciesCreate dependenciesLeave
 Page instfiles
 Page custom ascendIniCreate ascendIniLeave
+Page custom ascendEnvVarCreate ascendEnvVarLeave
 
 UninstPage uninstConfirm
 UninstPage instfiles
@@ -82,6 +85,8 @@ Var /GLOBAL GTKDOWNLOAD
 Var /GLOBAL TCLDOWNLOAD
 
 Var /GLOBAL ASCENDINIFOUND
+Var /GLOBAL ASCENDENVVARFOUND
+Var /GLOBAL ASCENDLIBRARY
 
 ; .onInit has been moved to after section decls so that they can be references
 
@@ -181,11 +186,18 @@ Section "ASCEND (required)"
 	;File "Makefile.bt"
 	File "..\tools\textpad\ascend.syn"
 
+	; Check for pre-existing .ascend.ini for current user (warn after installation, if so)
 	${If} ${FileExists} "$APPDATA\.ascend.ini"
 		StrCpy $ASCENDINIFOUND "1"
 	${Else}
 		; Set 'librarypath' in .ascend.ini
 		WriteINIstr $APPDATA\.ascend.ini Directories librarypath "$DOCUMENTS\ascdata;$INSTDIR\models"
+	${EndIf}
+	
+	; Check for ASCENDLIBRARY environment variable for current user
+	ExpandEnvStrings $ASCENDLIBRARY "%ASCENDLIBRARY%"
+	${IfNot} $ASCENDLIBRARY == "%ASCENDLIBRARY%"
+		StrCpy $ASCENDENVVARFOUND "1"
 	${EndIf}
 
 	; Write the installation path into the registry
@@ -568,11 +580,14 @@ SectionEnd
 
 !include "ascendini.nsi"
 
+!include "envvarwarning.nsi"
+
 Function .onInit
 	StrCpy $PYINSTALLED ""
 	StrCpy $TCLINSTALLED ""
 	StrCpy $ASCENDINIFOUND ""
 	StrCpy $PDFINSTALLED ""
+	StrCpy $ASCENDENVVARFOUND ""
 	
 	ExpandEnvStrings $DEFAULTPATH "%WINDIR%;%WINDIR%\system32"
 
