@@ -47,22 +47,9 @@ def load_matplotlib(throw=False,alert=False):
 		try:
 			print_status("Trying python numpy")
 			import numpy
-			matplotlib.rcParams['numerix'] = 'numpy'  
 			print_status("","Using python module numpy")
 		except ImportError:
-			try:
-				print_status("Trying python numarray")
-				import numarray
-				matplotlib.rcParams['numerix'] = 'numarray'  
-				print_status("","Using python module numarray")
-			except ImportError:
-				try:
-					print_status("Trying python Numeric")
-					import Numeric
-					matplotlib.rcParams['numerix'] = 'Numeric'  
-					print_status("","Using python module Numeric")
-				except ImportError:
-					print_status("","FAILED TO LOAD A NUMERIC MODULE FOR PYTHON")
+			print_status("","FAILED to load Python module 'numpy'")
 		import pylab
 
 

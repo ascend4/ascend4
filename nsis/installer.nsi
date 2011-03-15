@@ -78,9 +78,6 @@ Var /GLOBAL PDFINSTALLED
 Var /GLOBAL PATH
 
 Var /GLOBAL PYDOWNLOAD
-Var /GLOBAL PYGTKDOWNLOAD
-Var /GLOBAL PYGOBJECTDOWNLOAD
-Var /GLOBAL PYCAIRODOWNLOAD
 Var /GLOBAL GTKDOWNLOAD
 Var /GLOBAL TCLDOWNLOAD
 
@@ -96,27 +93,14 @@ Var /GLOBAL ASCENDINIFOUND
 !define PYTHON_URL "http://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FN}"
 !define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive"
 
-!define GTK_FN "glade3-3.6.7-with-GTK+.exe"
-!define GTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/glade3/3.6/${GTK_FN}"
-!define GTK_CMD "$DAI_TMPFILE"
-
-!define PYGOBJECT_VER "2.14"
-!define PYGOBJECT_FN "pygobject-${PYGOBJECT_VER}.2-2.win32-py${PYVERSION}.exe"
-!define PYGOBJECT_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygobject/${PYGOBJECT_VER}/${PYGOBJECT_FN}"
-!define PYGOBJECT_CMD "$DAI_TMPFILE"
-
-!define PYCAIRO_VER "1.4"
-!define PYCAIRO_FN "pycairo-${PYCAIRO_VER}.12-2.win32-py${PYVERSION}.exe"
-!define PYCAIRO_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pycairo/${PYCAIRO_VER}/${PYCAIRO_FN}"
-!define PYCAIRO_CMD "$DAI_TMPFILE"
-
-!define PYGTK_VER "2.12"
-!define PYGTK_FN "pygtk-${PYGTK_VER}.1-3.win32-py${PYVERSION}.exe"
-!define PYGTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/${PYGTK_VER}/${PYGTK_FN}"
-!define PYGTK_CMD "$DAI_TMPFILE"
+!define GTK_VER "2.22"
+!define GTK_PATCH ".6"
+!define GTK_FN "pygtk-all-in-one-${GTK_VER}${GTK_PATCH}.win32-py${PYVERSION}.msi"
+!define GTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.22/${GTK_FN}"
+!define GTK_CMD "msiexec /i $DAI_TMPFILE /passive"
 
 !define TCL_VERSION "8.5.9.2"
-!define TCL_PATCH ".292682"
+!define TCL_PATCH ".294317"
 !define TCL_FN "ActiveTcl${TCL_VERSION}${TCL_PATCH}-win32-ix86-threaded.exe"
 !define TCL_URL "http://downloads.activestate.com/ActiveTcl/releases/${TCL_VERSION}/${TCL_FN}"
 !define TCL_CMD "$DAI_TMPFILE"
@@ -135,9 +119,9 @@ Section "-python"
         ${EndIf}
 SectionEnd
 Section "-gtk"
-	DetailPrint "--- DOWNLOAD GTK+ ---"
+	DetailPrint "--- DOWNLOAD PYGTK ---"
 	${If} $GTKDOWNLOAD == '1'
-		!insertmacro downloadAndInstall "GTK+" ${GTK_URL} ${GTK_FN} ${GTK_CMD}
+		!insertmacro downloadAndInstall "PyGTK All-in-one" "${GTK_URL}" "${GTK_FN}" "${GTK_CMD}"
 		Call DetectGTK
 		Pop $GTKOK
 		Pop $GTKPATH
@@ -146,38 +130,10 @@ Section "-gtk"
 		Pop $GLADEPATH
         ${EndIf}
 SectionEnd
-Section "-pygobject"
-	DetailPrint "--- DOWNLOAD PYGOBJECT ---"
-        ${If} $PYGOBJECTDOWNLOAD == '1'
-        ${AndIf} $PYOK == 'OK'
-		!insertmacro downloadAndInstall "PyGObject" ${PYGOBJECT_URL} ${PYGOBJECT_FN} ${PYGOBJECT_CMD}
-		Call DetectPyGObject
-		Pop $PYGOBJECTOK
-        ${EndIf}
-SectionEnd
-Section "-pycairo"
-	DetailPrint "--- DOWNLOAD PYCAIRO ---"
-        ${If} $PYCAIRODOWNLOAD == '1'
-        ${AndIf} $PYOK == 'OK'
-		!insertmacro downloadAndInstall "PyCairo" ${PYCAIRO_URL} ${PYCAIRO_FN} ${PYCAIRO_CMD}
-		Call DetectPyCairo
-		Pop $PYCAIROOK
-        ${EndIf}
-SectionEnd
-Section "-pygtk"
-	DetailPrint "--- DOWNLOAD PYGTK ---"
-        ${If} $PYGTKDOWNLOAD == '1'
-        ${AndIf} $PYOK == 'OK'
-		!insertmacro downloadAndInstall "PyGTK" ${PYGTK_URL} ${PYGTK_FN} ${PYGTK_CMD}
-		Call DetectPyGTK
-		Pop $PYGTKOK
-
-        ${EndIf}
-SectionEnd
 Section "-tcl"
 	DetailPrint "--- DOWNLOAD TCL/TK ---"
 	${If} $TCLDOWNLOAD == '1'
-		!insertmacro downloadAndInstall "Tcl/Tk" ${TCL_URL} ${TCL_FN} ${TCL_CMD}
+		!insertmacro downloadAndInstall "Tcl/Tk" "${TCL_URL}" "${TCL_FN}" "${TCL_CMD}"
 		Call DetectTcl
 		Pop $TCLOK
 		Pop $TCLPATH

@@ -3,9 +3,6 @@
 
 Var CHECKPY
 Var CHECKGTK
-Var CHECKPYGTK
-Var CHECKPYGOBJECT
-Var CHECKPYCAIRO
 Var CHECKTCL
 
 !macro setCheckboxChecked CB
@@ -30,37 +27,19 @@ Function dependenciesCreate
 		Pop $0
 
 		${If} $PYOK == 'NOK'
-			${NSD_CreateCheckbox} 10% 50% 100% 8u Python
+			${NSD_CreateCheckbox} 10% 50% 100% 8u "Python"
 			Pop $CHECKPY
 			!insertmacro setCheckboxChecked $CHECKPY
 		${EndIf}
 
 		${If} $GTKOK == 'NOK'
-			${NSD_CreateCheckbox} 10% 58% 100% 8u GTK+
+			${NSD_CreateCheckbox} 10% 58% 100% 8u "PyGTK All-in-one"
 			Pop $CHECKGTK
 			!insertmacro setCheckboxChecked $CHECKGTK
 		${EndIf}
-
-		${If} $PYGOBJECTOK == 'NOK'
-			${NSD_CreateCheckbox} 10% 66% 100% 8u PyGObject
-			Pop $CHECKPYGOBJECT
-			!insertmacro setCheckboxChecked $CHECKPYGOBJECT
-		${EndIf}
-
-		${If} $PYCAIROOK == 'NOK'
-			${NSD_CreateCheckbox} 10% 74% 100% 8u PyCairo
-			Pop $CHECKPYCAIRO
-			!insertmacro setCheckboxChecked $CHECKPYCAIRO
-		${EndIf}
-
-		${If} $PYGTKOK == 'NOK'
-			${NSD_CreateCheckbox} 10% 82% 100% 8u PyGTK
-			Pop $CHECKPYGTK
-			!insertmacro setCheckboxChecked $CHECKPYGTK			
-		${EndIf}
 		
 		${If} $TCLOK == 'NOK'
-			${NSD_CreateCheckbox} 10% 90% 100% 8u Tcl/Tk
+			${NSD_CreateCheckbox} 10% 90% 100% 8u "Tcl/Tk"
 			Pop $CHECKTCL
 			!insertmacro setCheckboxChecked $CHECKTCL
 		${EndIf}
@@ -73,9 +52,6 @@ FunctionEnd
 Function DependenciesLeave
 	SendMessage $CHECKPY ${BM_GETCHECK} 0 0 $PYDOWNLOAD
 	SendMessage $CHECKGTK ${BM_GETCHECK} 0 0 $GTKDOWNLOAD
-	SendMessage $CHECKPYGTK ${BM_GETCHECK} 0 0 $PYGTKDOWNLOAD
-	SendMessage $CHECKPYGOBJECT ${BM_GETCHECK} 0 0 $PYGOBJECTDOWNLOAD
-	SendMessage $CHECKPYCAIRO ${BM_GETCHECK} 0 0 $PYCAIRODOWNLOAD
 	SendMessage $CHECKTCL ${BM_GETCHECK} 0 0 $TCLDOWNLOAD
 FunctionEnd
 	
