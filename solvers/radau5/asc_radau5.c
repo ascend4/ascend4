@@ -3,8 +3,8 @@ AUTHOR : Shrikanth Ranganadham
 Based on asc_lsode and asc_dopri5
 */
 
-#include <ascend/utilities/ascConfig.h>
-#include <ascend/utilities/ascPanic.h>
+#include <ascend/general/platform.h>
+#include <ascend/general/panic.h>
 #include <ascend/utilities/ascSignal.h>
 #include <ascend/utilities/error.h>
 #include <ascend/general/ospath.h>
@@ -89,7 +89,7 @@ IntegratorRadau5Data;
 	asc_assert(N!=NULL)
 
 /** Macro to set the global l_radau5_blsys to the currently blsys ptr. */
-#define RADUA5DATA_SET(N) \
+#define RADAU5DATA_SET(N) \
 	asc_assert(l_radau5_blsys==NULL); \
 	asc_assert(N!=NULL); \
 	l_radau5_blsys = N
@@ -202,8 +202,10 @@ enum radau5_parameters{
 	,RADAU5_PARAM_ATOL
 	,RADAU5_PARAM_ITOL
 	,RADAU5_PARAM_IJAC
-	,RADAU5_PARAMS_IMAS
-	,RADAU5_PARAMS_SIZE // DONT KNOW USE OF THIS 
+	,RADAU5_PARAM_IMAS
+	/* FIXME add NSTIFF here... */
+	,RADAU5_PARAMS_SIZE // DONT KNOW USE OF THIS
+		/*^^^  (this automatically takes on the next number in the sequence, hence, by declaring it, we automatically calculates the required size of the parameters array) -- JP */
 };
 
 
@@ -223,11 +225,11 @@ static int integrator_radau5_params_default(IntegratorSystem *blsys){
 	slv_destroy_parms(p);
 
 	if(p->parms==NULL){
-		p->parms = ASC_NEW_ARRAY(struct slv_parameter, RADUA5_PARAMS_SIZE);
+		p->parms = ASC_NEW_ARRAY(struct slv_parameter, RADAU5_PARAMS_SIZE);
 		if(p->parms==NULL)return -1;
 		p->dynamic_parms = 1;
 	}else{
-		asc_assert(p->num_parms == RADUA5_PARAMS_SIZE);
+		asc_assert(p->num_parms == RADAU5_PARAMS_SIZE);
 	}
 
 	/* reset the number of parameters to zero so that we can check it at the end */
@@ -254,7 +256,7 @@ static int integrator_radau5_params_default(IntegratorSystem *blsys){
 
 
 	slv_param_real(p,RADAU5_PARAM_ITOL
-			,(SlvParameterInitChar){{"itol"
+			,(SlvParameterInitReal){{"itol"
 			,"Switch for rtol and atol",1
 			,"ITOL=0: BOTH RTOL AND ATOL ARE SCALARS."
                      	"THE CODE KEEPS, ROUGHLY, THE LOCAL ERROR OF "
@@ -336,7 +338,7 @@ static void integrator_radau5_fex(
 #if 1
 		ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
 		FPRINTF(ASCERR,"Unable to compute the vector of derivatives with the following values for the state variables:\n");
-		for (i = 0; i< n_eq; i++) {
+		for (i = 0; i< *n_eq; i++) {
 			FPRINTF(ASCERR,"y[%4d] = %g\n",i, y[i]);
 		}
 		error_reporter_end_flush();
@@ -362,14 +364,21 @@ Dummy Jacobian ... more work needs to be done here
 compatible with default settings
 */
 static void integrator_radau5_jex(int *n, double *x, double *y, double *dfy,
-		   int *ldfy, double *rpar, double *ipar)
+		   int *ldfy, double *rpar, double *ipar){
+	/* TODO implement this */
+	abort();
+}
+
 // MASS FUNCTION
 /**
 Dummy Mass function ... more work needs to be done
 compatible with default settings
 */
-static void mass_dummy(int *n,double *am, int *lmas,int *rpar, int *ipar)
-{
+static void mass_dummy(int *n,double *am, int *lmas,int *rpar, int *ipar){
+
+	/* TODO implement this */
+	abort();
+
 }
 /** END DEFINING*/
 
@@ -494,13 +503,13 @@ int integrator_radau5_solve(IntegratorSystem *blsys
 	double h;
 	double rpar=0.0;
 	int mujac = my_neq;
-	int mujac=0;
+	//int mujac=0;
 	int mlmas=0;
 	int mumas;
 	int ipar=0;
 	int iout=1;
-	double *y, *atol, *rtol, *obs;
-	int my_neq;
+	double *y, atol, rtol, *obs;
+	//int my_neq;
 	enum radau5_status res;
 
 	atol = SLV_PARAM_REAL(&(blsys->params),RADAU5_PARAM_ATOL);
@@ -590,7 +599,7 @@ void radau5_(int *N,
 # ifdef ASC_SIGNAL_TRAPS
 		}else{
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in RADAU5 call.");
-			DOPRI5_FREE;
+			//DOPRI5_FREE; /* FIXME what's this for? */
 			return 6;
 		}
 		Asc_SignalHandlerPopDefault(SIGFPE);
