@@ -290,10 +290,10 @@ vars.Add(ListVariable(
 	,"List of the solvers you want to build. The default is the minimum that"	
 		+" works. The option 'LSOD' is provided for backwards compatibility"
 		+"; the value 'LSODE' is preferred."
-	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","TRON","IPOPT","DOPRI5"]
+	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","TRON","IPOPT","DOPRI5","RADAU5"]
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS"
+		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","RADAU5"
 	 ]
 ))
 
@@ -1016,6 +1016,9 @@ without_ida_reason = notselected
 
 with_dopri5 = 'DOPRI5' in env['WITH_SOLVERS']
 without_dopri5_reason = notselected
+
+with_radau5 = 'RADAU5' in env['WITH_SOLVERS']
+without_radau5_reason = notselected
 
 with_conopt = 'CONOPT' in env['WITH_SOLVERS']
 without_conopt_reason = notselected
@@ -2698,6 +2701,8 @@ if env['GCOV']:
 		, LINKFLAGS=['-fprofile-arcs','-ftest-coverage']
 	)
 
+#FIXME there must be a better way of doing this...
+
 if with_ida:
 	env.Append(WITH_IDA=1)
 
@@ -2709,6 +2714,9 @@ if with_ipopt:
 
 if with_dopri5:
 	env.Append(WITH_DOPRI5=1)
+
+if with_radau5:
+	env.Append(WITH_RADAU5=1)
 
 if with_makemps:
 	env.Append(WITH_MAKEMPS=1)

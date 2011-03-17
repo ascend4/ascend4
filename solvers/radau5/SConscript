@@ -3,7 +3,9 @@ Import('env')
 
 if env.get('WITH_RADAU5'):
 
-	radau5obj = env.SharedObject("radau5.f decsol.f dc_decsol.f")
+	srcs = Split("radau5 decsol.f dc_decsol.f")
+
+	radau5obj = env.SharedObject(srcs)
 
 	lib = env.SharedLibrary("radau5",["asc_radau5.c",radau5obj]
 		,LIBS = ['ascend']
