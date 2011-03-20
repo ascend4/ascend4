@@ -290,7 +290,7 @@ vars.Add(ListVariable(
 	,"List of the solvers you want to build. The default is the minimum that"	
 		+" works. The option 'LSOD' is provided for backwards compatibility"
 		+"; the value 'LSODE' is preferred."
-	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","TRON","IPOPT","DOPRI5","RADAU5"]
+	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5"]
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
 		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","RADAU5"
