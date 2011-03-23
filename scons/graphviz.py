@@ -39,23 +39,20 @@ def generate(env):
 			env['HAVE_GRAPHVIZ'] = True
 									
 		else:
+			env1 = env.Clone()
+			env1['CPPPATH'] = None
+			env1['LIBPATH'] = None
+			env1['LIBS'] = None
 			try:
-				cmd = ['pkg-config','libgvc','libagraph','--cflags','--libs']
-				env1 = env.Clone()
-				env1['CPPPATH'] = None
-				env1['LIBPATH'] = None
-				env1['LIBS'] = None
+				cmd = ['pkg-config','libgvc','libcgraph','--cflags','--libs']
 				env1.ParseConfig(cmd)
+				# we might get an error from this with older versions of GraphViz, so failover to below...
 				env['GRAPHVIZ_CPPPATH'] = env1.get('CPPPATH')
 				env['GRAPHVIZ_LIBPATH'] = env1.get('LIBPATH')
 				env['GRAPHVIZ_LIBS'] = env1.get('LIBS')
 				env['HAVE_GRAPHVIZ'] = True
 			except:
-				cmd = ['pkg-config','libgvc','libcgraph','--cflags','--libs']
-				env1 = env.Clone()
-				env1['CPPPATH'] = None
-				env1['LIBPATH'] = None
-				env1['LIBS'] = None
+				cmd = ['pkg-config','libgvc','libagraph','--cflags','--libs']
 				env1.ParseConfig(cmd)
 				env['GRAPHVIZ_CPPPATH'] = env1.get('CPPPATH')
 				env['GRAPHVIZ_LIBPATH'] = env1.get('LIBPATH')
