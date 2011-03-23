@@ -30,14 +30,14 @@
 #endif
 #include <ascend/general/platform.h>
 
-#ifdef WITH_GRAPHVIZ
+/*#ifdef WITH_GRAPHVIZ
 # ifdef __WIN32__
 #  include <gvc.h>
 # else
 #  include <graphviz/gvc.h>
 # endif
 # define HAVE_BOOLEAN
-#endif
+#endif*/
 
 boolean X;
 
@@ -46,6 +46,8 @@ boolean X;
 #include "incidence.h"
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
+#include <dlfcn.h>
+#include <graphviz/gvc.h>
 
 int system_write_graph(slv_system_t sys
 	, FILE *fp
@@ -54,7 +56,141 @@ int system_write_graph(slv_system_t sys
 	incidence_vars_t id;
 	build_incidence_data(sys, &id);
 
-#ifdef WITH_GRAPHVIZ
+	void * handle;
+	handle = dlopen("libgvc.so",RTLD_NOW);
+	if(handle==NULL) 
+	{
+		printf("Graphviz was not found on your system");
+		return 1;
+	}
+		
+	Agraph_t *g;
+	Agraph_t *(*agop)(char* , int);
+	
+	GVC_t *gvc;
+	GVC_t *(*gvConte)();
+
+	void (*agnodeat) (Agraph_t* , char* , char*);
+	
+	*(void **) (&gvConte) = dlsym(handle,"gvContext");
+	*(void **) (&agop) = dlsym(handle,"agopen");
+	*(void **) (&agnodeat) = dlsym(handle,"agnodeattr");
+
+
+	unsigned edgecount = 0;
+	unsigned nodecount = 0;
+
+	gvc = (*gvConte)();
+	g = (*agop)("g",AGDIGRAPH);
+	(*agnodeat)(g,"shape","ellipse");
+	(*agnodeat)(g,"label","");
+	(*agnodeat)(g,"color","");
+	(*agnodeat)(g,"style","");
+	
+	char temp[200];
+
+	/* first create nodes for the relations */
+	unsigned i;
+	Agnode_t *n, *m;
+	Agnode_t *(*agno)(Agraph_t* , char*);
+	void (*ags) (Agnode_t* , char* , char*);
+
+	*(void **) (&agno) = dlsym(handle,"agnode");
+	*(void **) (&ags) = dlsym(handle,"agset");
+	
+
+	for(i=0; i < id.neqn; ++i){
+		char *relname;
+		relname = rel_make_name(sys,id.rlist[i]);
+		sprintf(temp,"r%d",rel_sindex(id.rlist[i]));
+		n = (*agno)(g,temp);
+		(*ags)(n,"label",relname);
+		if(rel_satisfied(id.rlist[i])){
+			(*ags)(n,"style","filled");
+			(*ags)(n,"color","blue");
+		}
+		ASC_FREE(relname);
+		nodecount++;
+	}
+
+	/* now create nodes for the variables */
+	unsigned j;
+	for(j=0; j < id.nvar; ++j){
+		char *varname;
+		varname = var_make_name(sys,id.vlist[j]);
+		sprintf(temp,"v%d",var_sindex(id.vlist[j]));
+		n = (*agno)(g,temp);
+		(*ags)(n,"label",varname);
+		(*ags)(n, "shape", "box");
+		if(var_fixed(id.vlist[j])){
+			CONSOLE_DEBUG("VAR '%s' IS FIXED",varname);
+			(*ags)(n,"style","filled");
+			(*ags)(n,"color","green");
+		}
+		if(!var_active(id.vlist[j])){
+			CONSOLE_DEBUG("VAR '%s' IS FIXED",varname);
+			(*ags)(n,"style","filled");
+			(*ags)(n,"color","gray");
+		}
+		ASC_FREE(varname);
+		nodecount++;
+	}
+
+	/* now create edges */
+	const struct var_variable **ivars;
+	unsigned niv;
+	char reltemp[200];
+	Agedge_t *e;
+	Agedge_t *(*aged)(Agraph_t* , Agnode_t*, Agnode_t*);
+
+	*(void **) (&aged) = dlsym(handle,"agedge");
+
+	for(i=0; i < id.nprow; ++i){
+		ivars = rel_incidence_list(id.rlist[i]);
+		niv = rel_n_incidences(id.rlist[i]);
+		sprintf(reltemp,"r%d",rel_sindex(id.rlist[i]));
+		char *relname;
+		relname = rel_make_name(sys,id.rlist[i]);
+		CONSOLE_DEBUG("rel = '%s'",relname);
+		ASC_FREE(relname);
+		for(j=0; j < niv; ++j){
+			const struct var_variable *v;
+			v = ivars[j];
+			sprintf(temp,"v%d",var_sindex(v));
+			n = (*agno)(g, reltemp);
+			m = (*agno)(g, temp);
+
+			if(id.v2pc[var_sindex(v)]==id.e2pr[rel_sindex(id.rlist[i])]){
+				e = (*aged)(g,n,m); /* from rel to var */
+			}else{
+				e = (*aged)(g,m,n); /* from var to rel */
+			}
+			edgecount++;
+		}
+	}
+
+	if(nodecount > 300 || edgecount > 300){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Graph is too complex, will not launch GraphViz (%d nodes, %d edges)", nodecount, edgecount);
+		return 1;
+	}
+
+
+	void (*gvLayo)(GVC_t* , Agraph_t*, char*);
+	void (*gvRend)(GVC_t* , Agraph_t*, char*, FILE*);
+
+	*(void **) (&gvLayo) = dlsym(handle,"gvLayout");
+	*(void **) (&gvRend) = dlsym(handle,"gvRender");
+
+
+	(*gvLayo)(gvc, g, "dot");
+	(*gvRend)(gvc, g, (char*)format, fp);
+
+	printf("\nErrors encountered %s\n",(*dlerror)());
+	dlclose(handle);
+
+#if 0//def WITH_GRAPHVIZ
+
+
 	Agraph_t *g;
 	GVC_t *gvc;
 
@@ -145,11 +281,11 @@ int system_write_graph(slv_system_t sys
 	}
 
 	gvLayout(gvc, g, "dot");
-	gvRender(gvc, g, (char*)format, fp);
+	gvRender(gvc, g, (char*)format, fp); */
 
 #else
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Function system_write_graph not available (GraphViz not present at build-time)");
-	return 1; /* error */
+//	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Function system_write_graph not available (GraphViz not present at build-time)");
+//	return 1; /* error */
 #endif
 
 #if 0
