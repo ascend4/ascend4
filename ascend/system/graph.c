@@ -106,6 +106,8 @@ int system_write_graph(slv_system_t sys
 		return 1;
 	}
 
+	CONSOLE_DEBUG("Dynamically loaded '" ASC_GV_LIBNAME "' OK");
+
 	/* create the graph and its style details */
 	gvc = (*gvConte)();
 	g = (*agop)("g",AGDIGRAPH);
