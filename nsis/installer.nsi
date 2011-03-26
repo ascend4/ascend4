@@ -96,13 +96,15 @@ Var /GLOBAL ASCENDLIBRARY
 !define PYTHON_VERSION "${PYVERSION}${PYPATCH}"
 !define PYTHON_FN "python-${PYTHON_VERSION}.msi"
 !define PYTHON_URL "http://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FN}"
-!define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive"
+!define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive ALLUSERS=1 TARGETDIR=c:\Python${PYVERSION}"
 
 !define GTK_VER "2.22"
 !define GTK_PATCH ".6"
 !define GTK_FN "pygtk-all-in-one-${GTK_VER}${GTK_PATCH}.win32-py${PYVERSION}.msi"
 !define GTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.22/${GTK_FN}"
-!define GTK_CMD "msiexec /i $DAI_TMPFILE"
+!define GTK_CMD "msiexec /i $DAI_TMPFILE ALLUSERS=1 TARGETDIR=c:\Python${PYVERSION}"
+; FIXME shouldn't need to specify TARGETDIR here...
+
 ; passive install of pygtk 2.22.6 doesn't seem to work.
 
 !define TCL_VERSION "8.5.9.2"

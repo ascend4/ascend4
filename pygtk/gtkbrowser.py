@@ -865,7 +865,7 @@ class Browser:
 			self.sim.write(f,'dot') # create a PNG file in f
 		except Exception,e:
 			self.stop_waiting()
-			self.reporter.reportError("Faile-d to create incidence graph: %s" % str(e))
+			self.reporter.reportError("Failed to create incidence graph: %s" % str(e))
 			return
 		f.close()
 		self.stop_waiting()

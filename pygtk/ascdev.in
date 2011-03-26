@@ -5,7 +5,7 @@ import os.path, sys, platform;
 
 def add_at_start(envvar,pathcomponents):
 	"""
-	Add path components at start of envvar
+	Add path components at start of envvar, but only if they're not already in the path somewhere.
 	@return 1 if changes made, 0 otherwise
 	@TODO what about Windows path munging?
 	"""
@@ -25,27 +25,14 @@ def add_at_start(envvar,pathcomponents):
 	envvals = [os.path.abspath(i) for i in os.environ[envvar].split(SEP)]
 	oldenv = os.environ[envvar]
 	found = []
-	for k in range(0,len(pathcomponents)):
-		# for each of the desired path components...
-		p = pathcomponents[k]
-		for i in range(len(envvals))[::-1]: # backwards, to avoid list index out-of-range after removal
-			if envvals[i] == p:
-				if i == k:
-					# found, in the correct spot. don't remove it
-					print "NOT REMOVED from %s: %s"%(envvar,p)
-					pass
-				else:	
-					# found, in the wrong spot
-				 	envvals.remove(p)
-				 	print "REMOVED from %s: %s"%(envvar,p)
-				 	changed = 1
-
-	# then add them in order, at the start
 	for p in reversed(pathcomponents):
 		if p not in envvals:
 			envvals.insert(0,p)
 			print "INSERTED into %s: %s"%(envvar,p)
 			changed = 1
+
+	# TODO if changes made, let's check for repeated path components and remove them (PyGTK All-in-one does this)	
+			
 	os.environ[envvar]=SEP.join(envvals)
 	if not changed:
 		print "VAR %s UNCHANGED" % envvar
@@ -82,7 +69,7 @@ if __name__=='__main__':
 		restart.append('ASCENDLIBRARY')
 
 	solverdir = os.path.join(sourceroot,"solvers")
-	solverdirs = [os.path.join(solverdir,d.lower()) for d in sorted("@WITH_SOLVERS@".split(","),reverse=True)]
+	solverdirs = [os.path.join(solverdir,d.lower()) for d in "@WITH_SOLVERS@".split(",")]
 	if add_at_start('ASCENDSOLVERS',solverdirs):
 		restart.append('ASCENDSOLVERS')
 
