@@ -36,7 +36,7 @@
 
 #include <CUnit/Basic.h>
 
-ASC_IMPORT int register_cunit_tests();
+extern int register_cunit_tests();
 
 extern struct FilePath* ASC_TEST_DIR;
 
@@ -90,7 +90,7 @@ int run_suite_or_test(char *name){
 int list_suites(){
 	struct CU_TestRegistry *reg = CU_get_registry();
 	struct CU_Suite *suite = reg->pSuite;
-	fprintf(stderr,"Test suites found in registry:\n");	
+	fprintf(stderr,"Test suites found in registry:\n");
 	while(suite!=NULL){
 		fprintf(stderr,"\t%s\n", suite->pName);
 		suite = suite->pNext;
@@ -186,7 +186,7 @@ int main(int argc, char* argv[]){
 				else{
 					fprintf(stderr,"Invalid argument for --on-error option!\n");
 					result = 1;
-					goto cleanup;	
+					goto cleanup;
 				}
 				break;
 			case 'l':
