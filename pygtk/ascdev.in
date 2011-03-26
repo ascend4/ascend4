@@ -4,27 +4,57 @@
 import os.path, sys, platform;
 
 def add_at_start(envvar,pathcomponents):
-	""" add path components at start of envvar, return 1 if changes made """
+	"""
+	Add path components at start of envvar
+	@return 1 if changes made, 0 otherwise
+	@TODO what about Windows path munging?
+	"""
+
+	# convert pathcomponents to absolute paths
+	pathcomponents = [os.path.abspath(i) for i in pathcomponents]
 
 	if not os.environ.get(envvar):
+		# env var is not yet set; simply set it to requested value
 		v = SEP.join(pathcomponents)
+		print "CREATED %s=%s" % (envvar,v)
 		os.environ[envvar]=v
 		return 1
 
-	restart = 0
-	pathcomponents = [os.path.abspath(i) for i in pathcomponents]
+	changed = 0
+	# convert what's in there to absolute paths for comparison
 	envvals = [os.path.abspath(i) for i in os.environ[envvar].split(SEP)]
+	oldenv = os.environ[envvar]
+	found = []
 	for k in range(0,len(pathcomponents)):
+		# for each of the desired path components...
 		p = pathcomponents[k]
-		if p in envvals[k+1:]:
-			envvals.remove(p)
-			restart = 1
-	for p in [pathcomponents[i] for i in range(len(pathcomponents))[::-1]]:
+		for i in range(len(envvals))[::-1]: # backwards, to avoid list index out-of-range after removal
+			if envvals[i] == p:
+				if i == k:
+					# found, in the correct spot. don't remove it
+					print "NOT REMOVED from %s: %s"%(envvar,p)
+					pass
+				else:	
+					# found, in the wrong spot
+				 	envvals.remove(p)
+				 	print "REMOVED from %s: %s"%(envvar,p)
+				 	changed = 1
+
+	# then add them in order, at the start
+	for p in reversed(pathcomponents):
 		if p not in envvals:
 			envvals.insert(0,p)
-			restart = 1
+			print "INSERTED into %s: %s"%(envvar,p)
+			changed = 1
 	os.environ[envvar]=SEP.join(envvals)
-	return restart
+	if not changed:
+		print "VAR %s UNCHANGED" % envvar
+	else:
+		print "VAR %s CHANGED" % envvar
+		print "OLD %s = %s" % (envvar,oldenv)
+		print "NEW %s = %s" % (envvar,os.environ[envvar])
+		
+	return changed
 		
 if __name__=='__main__':
 	sourceroot="@SOURCE_ROOT@"
