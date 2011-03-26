@@ -1,8 +1,9 @@
 import os, os.path, platform, subprocess
 from SCons.Script import *
 
-munge = lambda s: s
+HKLM_GRAPHVIZ = r"SOFTWARE\AT&T Research Labs\Graphviz"
 
+munge = lambda s: s
 try:
 	# if we have access to GetShortPathName, we'll use it...
 	import win32api
@@ -27,11 +28,11 @@ def generate(env):
 		if platform.system()=="Windows":
 			import _winreg
 			x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
-			y= _winreg.OpenKey(x,r"SOFTWARE\ATT\GraphViz")
+			y= _winreg.OpenKey(x,HKLM_GRAPHVIZ)
 			PATH,t = _winreg.QueryValueEx(y,"InstallPath")
 			LIB = os.path.join(PATH,"lib")
 			BIN = os.path.join(PATH,"bin")
-			INCLUDE = os.path.join(PATH,"include")
+			INCLUDE = os.path.join(PATH,"include","graphviz")
 
 			env['GRAPHVIZ_CPPPATH'] = [munge(INCLUDE)]
 			env['GRAPHVIZ_LIBPATH'] = [munge(BIN)]
@@ -63,23 +64,28 @@ def generate(env):
 		print "GRAPHVIZ_LIBPATH =",env.get('GRAPHVIZ_LIBPATH')
 		print "GRAPHVIZ_CPPPATH =",env.get('GRAPHVIZ_CPPPATH')
 
-	except:
+	except Exception,e:
+		print "NO GRAPHVIZ (%s)" % str(e)
 		env['HAVE_GRAPHVIZ'] = False
 
 def exists(env):
 	"""
 	Make sure this tool exists.
 	"""
+	print "CHECKING FOR GRAPHVIZ"
 	if platform.system()=="Windows":
 		try:
 			import _winreg
 			x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
-			y= _winreg.OpenKey(x,r"SOFTWARE\graphviz")
-			INCLUDE,t = _winreg.QueryValueEx(y,'INSTALL_INCLUDE')
+			y= _winreg.OpenKey(x,HKLM_GRAPHVIZ)
+			INCLUDE,t = _winreg.QueryValueEx(y,'InstallPath')
+			print "GRAPHVIZ EXISTS"
 			return True
 		except:
+			print "GRAPHVIZ DOESN'T EXIST"
 			return False
 	else:
+		print "NOT WINDOWS"
 		if not subprocess.call('pkg-config libgvc libagraph --exists'):
 			return True
 		return False

@@ -30,7 +30,7 @@ FunctionEnd
 Function DetectGTK
 	${If} $PYOK == "OK"
 		${If} ${FileExists} "$PYPATH\Lib\site-packages\gtk-2.0\runtime\bin\libgtk-win32-2.0-0.dll"
-			Push "$PYPATH\Lib\site\packages\gtk-2.0\runtime\bin"
+			Push "$PYPATH\Lib\site-packages\gtk-2.0\runtime\bin"
 			Push "OK"
 		${Else}
 			Push "libgtk-win32-2.0-0.dll not found in $PYPATH\Lib\site\packages\gtk-2.0\runtime\bin"
