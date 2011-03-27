@@ -1,0 +1,81 @@
+IMPORT "dopri5";
+IMPORT "radau5";
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL VDP;
+
+	NOTES
+		'author' SELF {Shrikanth Ranganadham}
+		'description' SELF {Van der Pol problem}
+
+	END NOTES;
+
+
+	(*variables*)
+		miu
+		IS_A real_constant;
+
+		dy1_dt,
+		dy2_dt
+		IS_A  frequency;
+
+		y1,
+		y2
+		IS_A factor;
+	
+		t IS_A time;
+	(*equations*)
+		eq1:	dy1_dt=y2;
+		eq2:	dy2_dt=((1-y1*y1)*y2-y1)/miu;
+	(*constants*)
+		miu :== 1e-6;
+
+METHODS
+
+	METHOD default_self;
+		t:=0 {s} ;
+		dy1_dt:=0 {1/s};
+		dy2_dt:=0 {1/s};
+		dy1_dt.lower_bound:=-1e50{1/s};
+		dy2_dt.lower_bound:=-1e50{1/s};
+	END default_self;
+
+	METHOD specify;
+		FIX y1,y2;
+		FREE dy1_dt,dy2_dt;
+	END specify;
+
+	METHOD values;
+		y1:=2.0;
+		y2:=-0.66;
+	END values;
+
+	METHOD set_ode;
+		t.ode_type:=-1;
+		dy1_dt.ode_type:=2;dy1_dt.ode_id:=1;
+		dy2_dt.ode_type:=2;dy2_dt.ode_id:=2;
+		y1.ode_type:=1;y1.ode_id:=1;
+		y2.ode_type:=1;y2.ode_id:=2;
+	END set_ode;
+
+	METHOD set_obs;
+		y1.obs_id:=1;
+		y2.obs_id:=2;
+	END set_obs;
+
+	METHOD on_load;
+		RUN default_self;
+		RUN specify;
+		RUN values;
+		RUN set_ode;
+		RUN set_obs;
+	END on_load;
+
+END VDP;
+
+
+
+
+
+
