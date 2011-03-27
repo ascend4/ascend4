@@ -2,7 +2,7 @@
 AUTHOR : Shrikanth Ranganadham
 Based on asc_lsode and asc_dopri5
 */
-
+#include <malloc.h>
 #include <ascend/general/platform.h>
 #include <ascend/general/panic.h>
 #include <ascend/utilities/ascSignal.h>
@@ -12,19 +12,27 @@ Based on asc_lsode and asc_dopri5
 #include <ascend/system/slv_stdcalls.h>
 #include <ascend/solver/solver.h>
 #include "radau.h"
-
 #define INTEG_RADAU5 6 	// Guess this is solver id for ascend purpose 
 			// Since dopri5 had 5 i used 6 here
 
+/**
+//DEBUGGING STATEMENTS
+
+#define memory_debug
+
+*/
+/**
+END DEBUGGING
+*/
 /* REGISTERING THE SOLVER */
 
-static IntegratorCreateFn integrator_radau5_create;
-static IntegratorParamsDefaultFn integrator_radau5_params_default;
-static IntegratorSolveFn integrator_radau5_solve;
-static IntegratorFreeFn integrator_radau5_free;
-static IntegratorWriteMatrixFn integrator_radau5_write_matrix;
+IntegratorCreateFn integrator_radau5_create;
+IntegratorParamsDefaultFn integrator_radau5_params_default;
+IntegratorSolveFn integrator_radau5_solve;
+IntegratorFreeFn integrator_radau5_free;
+IntegratorWriteMatrixFn integrator_radau5_write_matrix;
 
-static const IntegratorInternals integrator_radau5_internals = {
+const IntegratorInternals integrator_radau5_internals = {
 	integrator_radau5_create
 	,integrator_radau5_params_default
 	,integrator_analyse_ode /* note, this routine is back in integrator.c */
@@ -32,7 +40,7 @@ static const IntegratorInternals integrator_radau5_internals = {
 	,NULL /*integrator_radau5_write_matrix not implemented */
 	,NULL /* debugfn */
 	,integrator_radau5_free
-	,INTEG_LSODE
+	,INTEG_RADAU5
 	,"RADAU5"
 };
 
@@ -81,25 +89,25 @@ typedef struct IntegratorRadau5DataStruct
 IntegratorRadau5Data;
 
 /** DONT KNOW IF THIS STUFF IS NEEDED*/
+static IntegratorSystem *l_blsys = 0;
 /** Macro to declare a local var and fetch the 'enginedata' stuff into it from l_radau5_blsys. */
 #define RADAU5DATA_GET(N) \
 	IntegratorRadau5Data *N; \
-	asc_assert(l_radau5_blsys!=NULL); \
-	N = (IntegratorRadau5Data *)l_radau5_blsys->enginedata; \
+	asc_assert(l_blsys!=NULL); \
+	N = (IntegratorRadau5Data *)l_blsys->enginedata; \
 	asc_assert(N!=NULL)
 
 /** Macro to set the global l_radau5_blsys to the currently blsys ptr. */
 #define RADAU5DATA_SET(N) \
-	asc_assert(l_radau5_blsys==NULL); \
+	asc_assert(l_blsys==NULL); \
 	asc_assert(N!=NULL); \
-	l_radau5_blsys = N
+	l_blsys = N
 
 #define RADAU5DATA_RELEASE() \
-	asc_assert(l_radau5_blsys!=NULL); \
-	l_radau5_blsys = NULL;
+	asc_assert(l_blsys!=NULL); \
+	l_blsys = NULL;
 
-/** END DONT KNOW STUFF :p */
-
+/** END DONT KNOW STUFF */
 /**
 ALLOCATE AND FREE MEMORY 
 */
@@ -124,7 +132,7 @@ END MEMORY ALLOCATION
 /**
 Cleanup the data struct that belongs to RADAU5
 */
-static void integrator_radau5_free(void *enginedata){
+void integrator_radau5_free(void *enginedata){
 	IntegratorRadau5Data d;
 	d = *((IntegratorRadau5Data *)enginedata);
 
@@ -203,7 +211,6 @@ enum radau5_parameters{
 	,RADAU5_PARAM_ITOL
 	,RADAU5_PARAM_IJAC
 	,RADAU5_PARAM_IMAS
-	/* FIXME add NSTIFF here... */
 	,RADAU5_PARAMS_SIZE // DONT KNOW USE OF THIS
 		/*^^^  (this automatically takes on the next number in the sequence, hence, by declaring it, we automatically calculates the required size of the parameters array) -- JP */
 };
@@ -215,7 +222,7 @@ enum radau5_parameters{
 
 	@return 0 on success
 */
-static int integrator_radau5_params_default(IntegratorSystem *blsys){
+int integrator_radau5_params_default(IntegratorSystem *blsys){
 
 	asc_assert(blsys!=NULL);
 	asc_assert(blsys->engine==INTEG_RADAU5);
@@ -255,8 +262,8 @@ static int integrator_radau5_params_default(IntegratorSystem *blsys){
 	);
 
 
-	slv_param_real(p,RADAU5_PARAM_ITOL
-			,(SlvParameterInitReal){{"itol"
+	slv_param_int(p,RADAU5_PARAM_ITOL
+			,(SlvParameterInitInt){{"itol"
 			,"Switch for rtol and atol",1
 			,"ITOL=0: BOTH RTOL AND ATOL ARE SCALARS."
                      	"THE CODE KEEPS, ROUGHLY, THE LOCAL ERROR OF "
@@ -265,8 +272,8 @@ static int integrator_radau5_params_default(IntegratorSystem *blsys){
 	);
 
 
-	slv_param_real(p,RADAU5_PARAM_IJAC
-			,(SlvParameterInitReal){{"ijac"
+	slv_param_int(p,RADAU5_PARAM_IJAC
+			,(SlvParameterInitInt){{"ijac"
 			,"GIVES INFORMATION ON THE MASS-MATRIX",1
 			,"IJAC=0: JACOBIAN IS NOT SUPPLIED"
 			"MATRIX, JACOBIAN IS COMPUTED INTERNALLY"
@@ -275,8 +282,8 @@ static int integrator_radau5_params_default(IntegratorSystem *blsys){
 		},0,1,0}
 	);
 
-	slv_param_real(p,RADAU5_PARAM_IMAS
-			,(SlvParameterInitReal){{"imas"
+	slv_param_int(p,RADAU5_PARAM_IMAS
+			,(SlvParameterInitInt){{"imas"
 			,"GIVES INFORMATION ON THE MASS-MATRIX",1
 			,"IMAS=0: M IS SUPPOSED TO BE THE IDENTITY"
 			"MATRIX, MAS IS NEVER CALLED"
@@ -293,37 +300,44 @@ static int integrator_radau5_params_default(IntegratorSystem *blsys){
 
 
 /** DEFINING FUNCTIONS FOR SOLVER USAGE */
+//prototypes
+static void integrator_radau5_fex(int*,double*,double*,double*,double*,int*);
+static void integrator_radau5_jex(int*,double*,double*,double*,int*,double*,double*);
+static void integrator_radau5_mex(int*,double*,int*,int*,int*);
+static void integrator_radau5_solout(int*,double*,double*,double*,double*,int*,int*,double*,int*,int*);
 // FUNCTION
 //FCN(int*,double*,double*,double*,double*,int*)
 static void integrator_radau5_fex(
-		unsigned* n_eq, double* t, double *y, double *ydot,
+		int *n_eq, double *t, double *y, double *ydot,
 		double *rpar, int* ipar)
 {
 	slv_status_t status;
-	IntegratorSystem *blsys;
-
+	RADAU5DATA_GET(radau5data);
 	int i;
 	unsigned long res;
 
 	//CONSOLE_DEBUG("Calling for a function evaluation");
-
+	//CONSOLE_DEBUG("t = %e",*t);
+	//CONSOLE_DEBUG("t = %p",blsys);
 	/* pass the time and the unknowns back to the System */
-	integrator_set_t(blsys, t);
-	integrator_set_y(blsys, y);
-	//CONSOLE_DEBUG("t = %f: y[0] = %f",t,y[0]);
+	integrator_set_t (l_blsys, *t);
+	//CONSOLE_DEBUG("%e",*t);
+	integrator_set_y (l_blsys, y);
 
-	asc_assert(blsys->system);
+	//CONSOLE_DEBUG("t = %p",t);
 
-	slv_resolve(blsys->system);
+	asc_assert(l_blsys->system);
 
-	if((res = slv_solve(blsys->system))){
+	slv_resolve(l_blsys->system);
+
+	if((res = slv_solve(l_blsys->system))){
 		CONSOLE_DEBUG("solver returns error %ld",res);
 	}
 
-	slv_get_status(blsys->system, &status);
+	slv_get_status(l_blsys->system, &status);
 
 
-	if(slv_check_bounds(blsys->system,0,-1,"")){
+	if(slv_check_bounds(l_blsys->system,0,-1,"")){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variables went outside boundaries...");
 		// TODO relay that system has gone out of bounds
 	}
@@ -331,7 +345,7 @@ static void integrator_radau5_fex(
 	/* pass the NLA solver status to the integrator */
 	res = integrator_checkstatus(status);
 
-	integrator_output_write(blsys);
+	integrator_output_write(l_blsys);
 
   	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for derivatives (%d)",res);
@@ -350,13 +364,14 @@ static void integrator_radau5_fex(
 		/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",lsodedata->status); */
 	}
 
-	integrator_get_ydot(blsys, ydot);
+	integrator_get_ydot(l_blsys, ydot);
+	//CONSOLE_DEBUG("Check");
 
-#ifdef DOPRI5_DEBUG
+#ifdef RADAU5_DEBUG
 	CONSOLE_DEBUG("y[0]=%e,y[1]=%e --> ydot[0]=%e,ydot[1]=%e",y[0],y[1],ydot[0],ydot[1]);
 #endif
 	//CONSOLE_DEBUG("ydot[0] = %f",ydot[0]);
-	// DONE, OK
+	//CONSOLE_DEBUG("DONE, OK");
 }
 // JACOBIAN .... 
 /**
@@ -366,7 +381,8 @@ compatible with default settings
 static void integrator_radau5_jex(int *n, double *x, double *y, double *dfy,
 		   int *ldfy, double *rpar, double *ipar){
 	/* TODO implement this */
-	abort();
+	/*abort();*/
+	CONSOLE_DEBUG("Dummy Jacobian");
 }
 
 // MASS FUNCTION
@@ -374,10 +390,38 @@ static void integrator_radau5_jex(int *n, double *x, double *y, double *dfy,
 Dummy Mass function ... more work needs to be done
 compatible with default settings
 */
-static void mass_dummy(int *n,double *am, int *lmas,int *rpar, int *ipar){
-
+static void integrator_radau5_mex(int *n,double *am, int *lmas,int *rpar, int *ipar){
+	//CONSOLE_DEBUG("Dummy mass function");
 	/* TODO implement this */
-	abort();
+	/*abort();*/
+
+}
+static void integrator_radau5_solout(int *nr,double *xold,double *x,
+			double *y,
+			double *cont,int *lrc,
+			int *n,
+			double *rpar,int *ipar,
+			int *irtrn)
+{	//CONSOLE_DEBUG("solout initiated");
+	
+	double t = *x;
+	double ts;
+	RADAU5DATA_GET(d);
+
+	ts = integrator_getsample(l_blsys,d->currentsample);
+
+	if(t>ts){
+		//CONSOLE_DEBUG("t=%f > ts=%f (currentsample = %ld",t,ts,d->currentsample);
+		integrator_output_write_obs(l_blsys);
+		while(t>ts){
+			d->currentsample++;
+			l_blsys->currentstep++;
+			ts = integrator_getsample(l_blsys,d->currentsample);
+		}
+	}
+
+	//CONSOLE_DEBUG("t = %f, y[0] = %f",t,y[0]);
+	integrator_output_write(l_blsys);
 
 }
 /** END DEFINING*/
@@ -412,9 +456,10 @@ typedef struct IntegratorRadau5StatsStruct{
 
 #define RADAU5_FREE CONSOLE_DEBUG("FREE RADAU5")
 
-int integrator_radau5_solve(IntegratorSystem *blsys
-,unsigned long start_index, unsigned long finish_index
-){
+int integrator_radau5_solve(IntegratorSystem *blsys,
+unsigned long start_index, unsigned long finish_index
+)
+{
 	IntegratorRadau5Data *d;
 	slv_status_t status;
 	
@@ -440,7 +485,8 @@ int integrator_radau5_solve(IntegratorSystem *blsys
 	set up the NLA solver here
 	 */
 	// THIS STUFF IS NOT CLEAR
-	if(strcmp(slv_solver_name(slv_get_selected_solver(blsys->system)),"QRSlv") != 0) {
+	if(strcmp(slv_solver_name(slv_get_selected_solver(blsys->system)),"QRSlv") != 0)
+	{
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"QRSlv must be selected before integration.");
 		return 1;
 	}
@@ -449,7 +495,8 @@ int integrator_radau5_solve(IntegratorSystem *blsys
 
 	slv_get_status(blsys->system, &status);
 
-	if(status.struct_singular){
+	if(status.struct_singular)
+	{
 		ERROR_REPORTER_HERE(ASC_USER_WARNING
 			,"The system (according to QRSlv) is structurally singular."
 			" The ODE system may also be singular, but not necessarily."
@@ -461,63 +508,63 @@ int integrator_radau5_solve(IntegratorSystem *blsys
 	/* set up parameters for sending to RADAU5 */
 
 	nsamples = integrator_getnsamples(blsys);
-	if (nsamples <2) {
+	if (nsamples <2)
+	{
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Integration will not be performed. The system has no end sample time defined.");
-		//d->status = dopri5_nok;
+		//d->status = Radau5_nok;
 		return 3;
 	}
 	neq = blsys->n_y;
 	nobs = blsys->n_obs;
 	my_neq = (int)neq;
-/**
-	#define ND     2 //no. equations
-	#define NS     7 //
-	#define LWORK  (NS+1)*ND*ND+(3*NS+3)*ND+20
-	#define LIWORK (2+(NS-1)/2)*ND+20
-	double y[ND],work[LWORK];
-	int iwork[LIWORK];
-	double x,xend;
-	int i,idid;
-	double   rpar=1e-6;
-	int  n=2;
-	int ijac=1;
-	int mljac=n;
-	int mujac=0;
-	int imas=0;
-	int mlmas=0;
-	int mumas;
-	int ipar=0;
-	int iout=1;
-*/
+
 /**
 	SOME PARAMETERS
 */
+	int ns = 3 ;
 	int lwork;
-	lwork = 4*my_neq*my_neq + 8*my_neq + 20; //full jacobian setting 
+	//lwork = (ns+1)*my_neq*my_neq + (1*ns+3)*my_neq + 20; //full jacobian setting 
 	int liwork;
-	liwork = 3*my_neq + 7; // full jacobian setting
-	double work[lwork];
-	int iwork[liwork];
+	liwork = (2+(ns-1)/2)*my_neq + 20; // full jacobian setting
+	double *work;
+	int *iwork;
+	lwork = my_neq*(4*my_neq+12)+ 20;
+	work= malloc(lwork * sizeof(double) );
+	iwork= malloc(liwork * sizeof(int) );
+	//double work[lwork];
+	//int iwork[liwork];
 	int i,idid;
 	double x,xend;
-	double h;
+	double h,hmax;
 	double rpar=0.0;
-	int mujac = my_neq;
-	//int mujac=0;
+	int mljac = my_neq;
+	int mujac=0;
 	int mlmas=0;
 	int mumas;
 	int ipar=0;
 	int iout=1;
 	double *y, atol, rtol, *obs;
-	//int my_neq;
+
+# ifdef memory_debug
+	CONSOLE_DEBUG("lwork = %d,liwork= %d,equations = %d",lwork,liwork,my_neq);
+# endif
+
+	for(i=0; i<20; ++i)
+	{
+		work[i]=0.0;
+	}
+	for(i=0; i<20; ++i)
+	{
+		iwork[i]=0;
+	}
 	enum radau5_status res;
 
 	atol = SLV_PARAM_REAL(&(blsys->params),RADAU5_PARAM_ATOL);
 	rtol = SLV_PARAM_REAL(&(blsys->params),RADAU5_PARAM_RTOL);	
-	int ijac = SLV_PARAM_REAL(&(blsys->params),RADAU5_PARAM_IJAC);
-	int imas = SLV_PARAM_REAL(&(blsys->params),RADAU5_PARAM_IMAS);
-	int itol = SLV_PARAM_REAL(&(blsys->params),RADAU5_PARAM_ITOL);	
-
+	int ijac = SLV_PARAM_INT(&(blsys->params),RADAU5_PARAM_IJAC);
+	int imas = SLV_PARAM_INT(&(blsys->params),RADAU5_PARAM_IMAS);
+	int itol = SLV_PARAM_INT(&(blsys->params),RADAU5_PARAM_ITOL);	
+	//CONSOLE_DEBUG("atol=%e,rtol=%e,ijac=%d,imas=%d,itol=%d",atol,rtol,ijac,imas,itol);
 	/* samplelist_debug(blsys->samples); */
 
 	x = integrator_getsample(blsys, 0);
@@ -530,76 +577,63 @@ int integrator_radau5_solve(IntegratorSystem *blsys
 
 	h = integrator_get_stepzero(blsys);
 	hmax = integrator_get_maxstep(blsys);
-	CONSOLE_DEBUG("init step = %f, max step = %f", h, hmax);
+	work[6]=hmax;
+	//CONSOLE_DEBUG("init step = %f, max step = %f", h, hmax);
 
 	/* rwork[6] = integrator_get_minstep(blsys); */ /* ignored */
-	nmax = integrator_get_maxsubsteps(blsys);
+	iwork[1] = integrator_get_maxsubsteps(blsys); // NMAX PARAMETER 
 
-	nstiff = SLV_PARAM_INT(&(blsys->params),DOPRI5_PARAM_NSTIFF);
-
-	if(x > integrator_getsample(blsys, 2)) {
+	if(x > integrator_getsample(blsys, 2))
+	{
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid initialisation time: exceeds second timestep value");
 		return 5;
 	}
 
 	/* put the values from derivative system into the record */
-	integrator_setsample(blsys, start_index, x);
+	//integrator_setsample(blsys, start_index, x);
 
-	integrator_output_init(blsys);
+	///integrator_output_init(blsys);
 
 	/* -- store the initial values of all the stuff */
-	integrator_output_write(blsys);
+	//integrator_output_write(blsys);
+
 	integrator_output_write_obs(blsys);
-
-
 
 	blsys->currentstep = 0;
 
 	xend = integrator_getsample(blsys, finish_index);
 
-# ifdef ASC_SIGNAL_TRAPS
+	# ifdef ASC_SIGNAL_TRAPS
 
-		Asc_SignalHandlerPushDefault(SIGFPE);
-		Asc_SignalHandlerPushDefault(SIGINT);
+	Asc_SignalHandlerPushDefault(SIGFPE);
+	Asc_SignalHandlerPushDefault(SIGINT);
 
-		if(SETJMP(g_fpe_env)==0) {
-# endif /* ASC_SIGNAL_TRAPS */
-
-			d->lastwrite = clock();
-/**
-HERE IS INTEGRATOR CALL 
-REF CODE : 
-void radau5_(int *N,
-   void FCN(int*,double*,double*,double*,double*,int*),
-   double *X, double *Y, double *XEND, double *H,
-           double *RTOL, double *ATOL, int *ITOL,
-   void JAC(int*, double*, double*, double*, int*, double*, double*),
-    int *IJAC, int *MLJAC, int *MUJAC,
-   void MAS(int *n,double *am, int *lmas,int *rpar, int *ipar),
-    int *IMAS, int *MLMAS, int *MUMAS,
-   void SOLOUT(int*,double*,double*,double*,double*,int*,int*,double*,int*,int*),
-    int *IOUT,
-   double *WORK, int *LWORK,int *IWORK, int *LIWORK,
-   double *RPAR, int *IPAR, int *IDID);
-*/
-		    radau5(&my_neq,
-				integrator_radau5_fex,	// Function
-				&x, &y, &xend,&h,	
-				&rtol,&atol,&itol,
-				integrator_radau5_jex,	// jacobian
-				&ijac, &mljac, &mujac,	
-				integrator_radau5_mex,	// mass matrix
-				&imas,&mlmas,&mumas,
-				integrator_radau5_solout,
-				&iout,
-				&work,&lwork,&iwork,&liwork,
-				&rpar,&ipar,&idid
-			);
-		res = idid // res takes idid value 
+	if(SETJMP(g_fpe_env)==0)
+	{
+	# endif /* ASC_SIGNAL_TRAPS */
+	d->lastwrite = clock();
+#ifdef PARAMETER_DEBUG
+	CONSOLE_DEBUG("printing everythin %d %e %e %e %d %d %d %d %d %e %d %d",my_neq,x,xend,h,mljac,mujac,mlmas,mumas,iout,rpar,ipar,idid);
+#endif
+	CONSOLE_DEBUG("solving started");
+	RADAU5DATA_SET(blsys);
+	radau5_( &my_neq, &integrator_radau5_fex,	// Function
+		&x, y, &xend, &h, &rtol, &atol, &itol,
+		&integrator_radau5_jex,	// jacobian
+		 &ijac, &mljac, &mujac,	
+		&integrator_radau5_mex,	// mass matrix
+		 &imas, &mlmas, &mumas,
+		&integrator_radau5_solout,// sol_out 
+		 &iout, work, &lwork, iwork, &liwork, &rpar, &ipar, &idid);
+	RADAU5DATA_RELEASE();
+	res = idid; // res takes idid value
+	free(work);
+	free(iwork); 
+	CONSOLE_DEBUG("solving ended");
 # ifdef ASC_SIGNAL_TRAPS
 		}else{
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in RADAU5 call.");
-			//DOPRI5_FREE; /* FIXME what's this for? */
+			RADAU5_FREE;//DOPRI5_FREE; /* FIXME what's this for? */
 			return 6;
 		}
 		Asc_SignalHandlerPopDefault(SIGFPE);
@@ -607,7 +641,8 @@ void radau5_(int *N,
 
 # endif
 
-	switch(res){
+	switch(res)
+	{
 		case RADAU5_SUCCESS:
 			break;
 		case RADAU5_INRPT:
@@ -627,13 +662,15 @@ void radau5_(int *N,
 			break;
 	}
 
-	if(res<0){
+	if(res<0)
+	{
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Furthest point reached was t = %g.\n",x);
 		RADAU5_FREE;
 		return 7;
 	}
 
 	/* write final step output */
+	CONSOLE_DEBUG("solving has reached this level \n blsys = %p",blsys);
 	integrator_output_write_obs(blsys);
 	integrator_output_close(blsys);
 
