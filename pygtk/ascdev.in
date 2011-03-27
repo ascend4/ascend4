@@ -98,7 +98,7 @@ if __name__=='__main__':
 
 
 	print "\nRunning with..."
-	for v in [LD_LIBRARY_PATH,'ASCENDLIBRARY','PYTHONPATH','PATH']:
+	for v in [LD_LIBRARY_PATH,'ASCENDLIBRARY','ASCENDSOLVERS','PYTHONPATH','PATH']:
 		print "   %s = %s" % (v,os.environ[v])
 	
 	import ascpy
