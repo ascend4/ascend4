@@ -25,10 +25,11 @@ if sys.platform.startswith("win"):
 
 if tclconfigfile is None:
 	# use a 'tclsh' script to find location of tclConfig.sh
+	# location of tclConfig.sh is canonical tcl_pkgPath
 	tclscript = """
+         #puts stderr "searching for tclConfig.sh ..."
 	 foreach d [concat \
-		  [list $tcl_library \
-		        [lindex $tcl_pkgPath 0]] \
+		  [concat $tcl_library $tcl_pkgPath ] \
 		  $auto_path \
 		  [list [file dirname $tcl_library] \
 		        [file dirname [lindex $tcl_pkgPath 0]] \
@@ -39,19 +40,31 @@ if tclconfigfile is None:
 	 ] {
 		 if {[file exists [file join $d tclConfig.sh]]} {
 		     puts "[file join $d tclConfig.sh]"
-		     exit
+		     #puts stderr "found $d : [file join $d tclConfig.sh]"
+		     exit 1
+		 } else {
+		     #puts stderr "not in $d"
 		 }
 	 }
 	"""
 
 	import subprocess
 	output = subprocess.Popen(["tclsh"], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate(input=tclscript)[0]
+	# print output
+	# print output.strip()
+        # tcl will not return it if not there; already checked
 	if os.path.exists(output.strip()):
+		# print "path exists"
 		# only report the file if it actually exists...
 		tclconfigfile = output.strip()
+		# print tclconfigfile
 
+# print tclconfigfile
 if tclconfigfile is None:
-	print "Unable to locate tclConfig.sh"
+	print >> sys.stderr, "Unable to locate tclConfig.sh."
+	print >> sys.stderr, "If on Linux/Unix and you have tcl & tk installed, check that tclsh is in your path."
+	print >> sys.stderr, "If tclsh is in your path and this still fails, check that tcl-devel or equivalent package is installed."
+	print >> sys.stderr, "If your vendor doesn't provide tcl-devel and tk-devel equivalents, get free ActiveTcl from activestate.com."
 	sys.exit(1)
 
 # parse the file to determine the names of the variables it contains
@@ -80,9 +93,9 @@ r = re.compile(r'\$\{([A-Z_0-9]+)\}')
 # variable substitution/expansion function
 def expand(s,d):
 	m = r.search(s)
-	#print "MATCHING",s
+	# print "MATCHING",s
 	if m:
-		#print "MATCH!"
+		# print "MATCH!"
 		if d.has_key(m.group(1)):
 			return expand(s[:m.start()] + d[m.group(1)] + s[m.end():],d)
 		else:
@@ -97,7 +110,11 @@ for l in f:
 	if len(v) >= 2 and v[0] == "'" and v[len(v)-1] == "'":
 		v = v[1:len(v)-1]
 
-	d[k] = expand(v,d)
+	try:
+		d[k] = expand(v,d)
+	except RuntimeError, err:
+		# print str(err),"probably unneeded"
+		pass
 
 # output the variable that the user requests
 
@@ -115,7 +132,7 @@ def usage(progname):
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], "h",
-		["help", "cflags", "libs","var=","vars"]
+		["help", "cflags", "libs", "var=","vars"]
 	)
 except getopt.GetoptError, err:
     print str(err)
