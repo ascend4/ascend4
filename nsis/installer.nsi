@@ -97,12 +97,14 @@ Var /GLOBAL ASCENDLIBRARY
 !define PYTHON_FN "python-${PYTHON_VERSION}.msi"
 !define PYTHON_URL "http://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FN}"
 !define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive ALLUSERS=1 TARGETDIR=c:\Python${PYVERSION}"
+!define PYTHON_MD5 "a69ce1b2d870be29befd1cefb4615d82"
 
 !define GTK_VER "2.22"
 !define GTK_PATCH ".6"
 !define GTK_FN "pygtk-all-in-one-${GTK_VER}${GTK_PATCH}.win32-py${PYVERSION}.msi"
 !define GTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.22/${GTK_FN}"
 !define GTK_CMD "msiexec /i $DAI_TMPFILE ALLUSERS=1 TARGETDIR=c:\Python${PYVERSION}"
+!define GTK_MD5 "75cfe879a13ae99d5b19fee4f1597bb5"
 ; FIXME shouldn't need to specify TARGETDIR here...
 
 ; passive install of pygtk 2.22.6 doesn't seem to work.
@@ -112,12 +114,14 @@ Var /GLOBAL ASCENDLIBRARY
 !define TCL_FN "ActiveTcl${TCL_VERSION}${TCL_PATCH}-win32-ix86-threaded.exe"
 !define TCL_URL "http://downloads.activestate.com/ActiveTcl/releases/${TCL_VERSION}/${TCL_FN}"
 !define TCL_CMD "$DAI_TMPFILE"
+!define TCL_MD5 "15d6b17d38e66a83956dc16b7d80fc59"
+
 !include "download.nsi"
 
 Section "-python"
 	DetailPrint "--- DOWNLOAD PYTHON ---"
         ${If} $PYDOWNLOAD == '1'
-		!insertmacro downloadAndInstall "Python" "${PYTHON_URL}" "${PYTHON_FN}" "${PYTHON_CMD}"
+		!insertmacro downloadAndInstall "Python" "${PYTHON_URL}" "${PYTHON_FN}" "${PYTHON_CMD}" "${PYTHON_MD5}"
 		Call DetectPython
 		Pop $PYOK
 		Pop $PYPATH
@@ -129,7 +133,7 @@ SectionEnd
 Section "-gtk"
 	DetailPrint "--- DOWNLOAD PYGTK ---"
 	${If} $GTKDOWNLOAD == '1'
-		!insertmacro downloadAndInstall "PyGTK All-in-one" "${GTK_URL}" "${GTK_FN}" "${GTK_CMD}"
+		!insertmacro downloadAndInstall "PyGTK All-in-one" "${GTK_URL}" "${GTK_FN}" "${GTK_CMD}" "${GTK_MD5}"
 		Call DetectGTK
 		Pop $GTKOK
 		Pop $GTKPATH
@@ -141,7 +145,7 @@ SectionEnd
 Section "-tcl"
 	DetailPrint "--- DOWNLOAD TCL/TK ---"
 	${If} $TCLDOWNLOAD == '1'
-		!insertmacro downloadAndInstall "Tcl/Tk" "${TCL_URL}" "${TCL_FN}" "${TCL_CMD}"
+		!insertmacro downloadAndInstall "Tcl/Tk" "${TCL_URL}" "${TCL_FN}" "${TCL_CMD}" "${TCL_MD5}"
 		Call DetectTcl
 		Pop $TCLOK
 		Pop $TCLPATH
