@@ -162,10 +162,24 @@ elif platform.system()=="Darwin":
 	if not os.path.exists(default_conopt_prefix):
 		default_conopt_prefix = None
 	
-else: # LINUX
+else: # LINUX, unix we hope
 
+	# the scons 'philosophy' if there is one is that the scons input arguments
+	# completely determine what external tools get picked any time there might
+	# be choices.
+	# We don't follow that philosophy with regard to tcl/tk.
+	# tcl/tk are often in multiple versions and locations on any given system.
+	# This leaves us trying to guess whether we should take:
+	# - only explicit arguments, otherwise disable tcl, tk
+	# - the first tcl/tk in the users path
+	# - the tcl/tk under a given user-specified prefix
+	# - the folklore-based canonical location of distributor's tcl/tk on a given linux dist
+	# We know one thing for sure. Any tcl installation includes tclsh, and thus
+	# it's the canonical way to find anything about tcl once tclsh is picked.
+	# So all the above reduces to 'how do we find tclsh?'
 	icon_extension = '.svg'
 
+	# here's the folklore we know.
 	if os.path.exists("/etc/debian_version"):
 		default_tcl_cpppath = "/usr/include/tcl8.4"
 		default_tcl_lib = "tcl8.4"
@@ -192,6 +206,16 @@ else: # LINUX
 				default_tk_lib = "tk8.5"
 				default_tktable_lib = "Tktable2.9"
 				default_tcl_cpppath = "/usr/include/tcl8.5"
+	# centos 5
+	if os.path.exists("/etc/redhat-release"):
+		default_tcl_cpppath = "/usr/include"
+		default_tcl_lib = "tcl"
+		if sys.maxint > 2**32:
+			default_tcl_libpath = "/usr/lib64"
+		else:
+			default_tcl_libpath = "/usr/lib"
+		default_tk_lib = "tk"
+		default_tktable_lib = "Tktable2.9"
 			
 
 	default_absolute_paths = True
