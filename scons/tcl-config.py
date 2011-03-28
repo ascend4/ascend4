@@ -2,7 +2,8 @@
 
 tclconfigfile = None
 
-import sys, os.path
+import sys, os.path, platform
+
 if sys.platform.startswith("win"):
 	# check for ActiveState Tcl in Windows registry
 	try:
@@ -23,12 +24,26 @@ if sys.platform.startswith("win"):
 	except:
 		pass
 
+
 if tclconfigfile is None:
+	import subprocess
+	# first check that tclsh can be run
+	tclshcheck = """exit 0"""
+	res = 1
+	try:
+		p = subprocess.Popen(['tclsh'],stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+		p.communicate(input=tclshcheck)
+		res = p.returncode
+		assert res == 0
+	except Exception,e:
+		print >> sys.stderr,"Unable to locate 'tclsh' in PATH. Suspect tcl/tk not installed, or PATH not correctly set."
+		sys.exit(1)
+
 	# use a 'tclsh' script to find location of tclConfig.sh
 	# location of tclConfig.sh is canonical tcl_pkgPath
 	tclscript = """
-         #puts stderr "searching for tclConfig.sh ..."
-	 foreach d [concat \
+		#puts stderr "searching for tclConfig.sh ..."
+		foreach d [concat \
 		  [concat $tcl_library $tcl_pkgPath ] \
 		  $auto_path \
 		  [list [file dirname $tcl_library] \
@@ -36,19 +51,19 @@ if tclconfigfile is None:
 		        [file dirname [file dirname $tcl_library]] \
 		        [file dirname [file dirname [lindex $tcl_pkgPath 0]]] \
 		        [file dirname [file dirname [file dirname $tcl_library]]] \
-		        [file dirname [file dirname [file dirname [lindex $tcl_pkgPath 0]]]]] \
-	 ] {
-		 if {[file exists [file join $d tclConfig.sh]]} {
-		     puts "[file join $d tclConfig.sh]"
-		     #puts stderr "found $d : [file join $d tclConfig.sh]"
-		     exit 1
-		 } else {
-		     #puts stderr "not in $d"
-		 }
-	 }
+		        [file dirname [file dirname [file dirname [lindex $tcl_pkgPath 0]]]]\
+		   ] \
+		] {
+		  if {[file exists [file join $d tclConfig.sh]]} {
+		    puts "[file join $d tclConfig.sh]"
+		    #puts stderr "found $d : [file join $d tclConfig.sh]"
+		    exit 1
+		  } else {
+		    #puts stderr "not in $d"
+		  }
+		}
 	"""
 
-	import subprocess
 	output = subprocess.Popen(["tclsh"], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate(input=tclscript)[0]
 	# print output
 	# print output.strip()
@@ -62,9 +77,10 @@ if tclconfigfile is None:
 # print tclconfigfile
 if tclconfigfile is None:
 	print >> sys.stderr, "Unable to locate tclConfig.sh."
-	print >> sys.stderr, "If on Linux/Unix and you have tcl & tk installed, check that tclsh is in your path."
-	print >> sys.stderr, "If tclsh is in your path and this still fails, check that tcl-devel or equivalent package is installed."
-	print >> sys.stderr, "If your vendor doesn't provide tcl-devel and tk-devel equivalents, get free ActiveTcl from activestate.com."
+	if platform.system()=="Linux":
+		print >> sys.stderr, "It is likely that you do not have tcl-devel or equivalent package installed on your system."
+	else:
+		print >> sys.stderr, "On non-Linux platforms, the free ActiveTcl distribution for activestate.com is recommended (but we haven't tested this with Mac)."
 	sys.exit(1)
 
 # parse the file to determine the names of the variables it contains
