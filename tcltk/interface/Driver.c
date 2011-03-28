@@ -465,28 +465,32 @@ int AscDriver(int argc, CONST char **argv)
 	PUTENV(tmp)
 
 /**
-	This is a quick macro to send data to Tcl using Tcl_SetVar.
-	It uses an intermediate buffer which is assumed to be
-	empty already.
-
-	usage: ASC_SEND_TO_TCL(tclvarname,"some string value");
+	This is a function to send data to Tcl using Tcl_SetVar.
+	usage: ASC_SEND_TO_TCL(tclstrvarname,"some string value");
 */
-#define ASC_SEND_TO_TCL(VAR,VAL) \
-	Tcl_DStringAppend(&buffer,VAL,-1); \
-	Tcl_SetVar(interp,#VAR,Tcl_DStringValue(&buffer),TCL_GLOBAL_ONLY); \
+static void AscSendToTcl(Tcl_Interp *interp, const char * var, const char *value)
+{
+	Tcl_DString buffer;
+	Tcl_DStringInit(&buffer);
+	Tcl_DStringAppend(&buffer,var,-1);
+	Tcl_SetVar(interp,var,Tcl_DStringValue(&buffer),TCL_GLOBAL_ONLY);
 	Tcl_DStringFree(&buffer);
+}
+#define ASC_SEND_TO_TCL(VAR,VAL) AscSendToTcl(interp,VAR,VAL)
 
 /**
-	This is a quick macro to send data to Tcl using Tcl_SetVar2.
-	It uses an intermediate buffer which is assumed to be
-	empty already.
-
+	This is a wrapper functionto send data to Tcl using Tcl_SetVar2.
 	usage: ASC_SEND_TO_TCL2(arrayname,"keyname","some string value");
 */
-#define ASC_SEND_TO_TCL2(ARR,KEY,VAL) \
-	Tcl_DStringAppend(&buffer,VAL,-1); \
-	Tcl_SetVar2(interp,#ARR,KEY,Tcl_DStringValue(&buffer),TCL_GLOBAL_ONLY); \
+static void AscSendToTcl2(Tcl_Interp *interp, const char *tclName, const char * key, const char *value)
+{
+	Tcl_DString buffer;
+	Tcl_DStringInit(&buffer);
+	Tcl_DStringAppend(&buffer,value,-1);
+	Tcl_SetVar2(interp,tclName,key,Tcl_DStringValue(&buffer),TCL_GLOBAL_ONLY);
 	Tcl_DStringFree(&buffer);
+}
+#define ASC_SEND_TO_TCL2(ARRSTRNAME,KEY,VAL) AscSendToTcl2(interp,ARRSTRNAME,KEY,VAL)
 
 static void printenv(){
 	int n;
@@ -706,14 +710,14 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 
 	/* put AscendRC location in string and export to Tcl */
 	ospath_strncpy(fp,tmp,MAX_ENV_VAR_LENGTH);
-    ASC_SEND_TO_TCL(tcl_rcFileName, tmp);
+	ASC_SEND_TO_TCL("tcl_rcFileName", tmp);
 	ospath_free(fp);
 
     /* send all the environment variables to Tcl/Tk as well */
-    ASC_SEND_TO_TCL2(env,ASC_ENV_DIST,distdir);
-    ASC_SEND_TO_TCL2(env,ASC_ENV_LIBRARY,librarydir);
-    ASC_SEND_TO_TCL2(env,ASC_ENV_BITMAPS,bitmapsdir);
-    ASC_SEND_TO_TCL2(env,ASC_ENV_TK,tkdir);
+    ASC_SEND_TO_TCL2("env",ASC_ENV_DIST,distdir);
+    ASC_SEND_TO_TCL2("env",ASC_ENV_LIBRARY,librarydir);
+    ASC_SEND_TO_TCL2("env",ASC_ENV_BITMAPS,bitmapsdir);
+    ASC_SEND_TO_TCL2("env",ASC_ENV_TK,tkdir);
 }
 
 
@@ -1101,14 +1105,28 @@ defaultPrompt:
 }
 
 /* include here to avoid contaminating everything above it. */
-//#include <tclInt.h>
+/* NOTE: this is NOT optional; if tclInt.h is not available,
+the interface cannot be correctly built. Because of C standards
+it will compile *incorrectly* if tclInt.h is not seen:
+TclGetEnv will default to returning an int rather than the char*
+(which is bigger in x64.
+*/
+#if 0
+/* the proper way is this. but we need to fix the scons tcl includes flags and there
+is no 'canonical' location for tclInt.h.  
+*/
+#include <tclInt.h>
+#else
+/* this in the mean time is what we must have. it's valid for at least tcl 8.[3-6] */
+EXTERN CONST84_RETURN char * TclGetEnv _ANSI_ARGS_((CONST char * name, Tcl_DString * valuePtr));
+#endif
 /**
 preserve key stuff in the launching environment where we can check it later.
 */
 static void AscSaveOrgEnv(Tcl_Interp *interp,const char *progname) {
 #define ENVCOUNT 8
-#define ORGVAR ascOrgEnv
   int i;
+  int envcount = ENVCOUNT;
   CONST char *value;
   const char *vars[ENVCOUNT] = {
     ASC_ENV_DIST, ASC_ENV_TK, ASC_ENV_BITMAPS, ASC_ENV_LIBRARY, ASC_ENV_SOLVERS, 
@@ -1120,11 +1138,12 @@ static void AscSaveOrgEnv(Tcl_Interp *interp,const char *progname) {
 
   Tcl_DStringInit(&buffer);
   Tcl_DStringInit(&search);
-  ASC_SEND_TO_TCL2(ascOrgEnv, "dummy", "0");
-  for (i = 0; i < ENVCOUNT; i++) {
+  ASC_SEND_TO_TCL2("ascOrgEnv", "dummy", "0");
+  for (i = 0; i < envcount; i++) {
+	/* next statement bombs on 64 bit if no tclint.h seen */
     value = TclGetEnv(vars[i], &search);
     if (value != NULL) {
-      ASC_SEND_TO_TCL2(ascOrgEnv, vars[i], value);
+      ASC_SEND_TO_TCL2("ascOrgEnv", vars[i], value);
       ASC_FPRINTF(stderr,"\nCACHING %s.\n",vars[i]);
     }
     Tcl_DStringFree(&search);
