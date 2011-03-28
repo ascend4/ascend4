@@ -79,7 +79,7 @@
 #include "packages.h"
 #include "defaultpaths.h"
 
-/* #define PACKAGES_DEBUG */
+//#define PACKAGES_DEBUG
 
 /*
 	Initialise the slv data structures used when calling external fns
@@ -168,7 +168,9 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 		partialpath, default_solvers_path, ASC_ENV_SOLVERS,&handler
 	);
 #ifdef PACKAGES_DEBUG
-	CONSOLE_DEBUG("Not found in %s",ASC_ENV_SOLVERS);
+	char *solversstr = Asc_GetEnv(ASC_ENV_SOLVERS);
+	CONSOLE_DEBUG("Not found in %s = \"%s\"",ASC_ENV_SOLVERS,solversstr);
+	ASC_FREE(solversstr);
 #endif
 
 	/* next, search in the ASCENDLIBRARY */

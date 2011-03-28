@@ -16,7 +16,12 @@ if 'LSODE' in env.get('WITH_SOLVERS'):
 
 	if solver_env.get('F2C_LIB'):
 		solver_env.AppendUnique(LIBS=[env.get('F2C_LIB')])
-
+	
+	import platform
+	if platform.system()=="Windows":
+		# needed for latest gfortran with Mingw GCC 4.x
+		solver_env.AppendUnique(LINKFLAGS = ['-static-libgfortran','-static-libgcc'])
+		
 	solver_env.AppendUnique(
 		LIBS=['ascend']
 		,LIBPATH=['#']

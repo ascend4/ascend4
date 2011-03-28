@@ -103,7 +103,7 @@ Var /GLOBAL ASCENDLIBRARY
 !define GTK_PATCH ".6"
 !define GTK_FN "pygtk-all-in-one-${GTK_VER}${GTK_PATCH}.win32-py${PYVERSION}.msi"
 !define GTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.22/${GTK_FN}"
-!define GTK_CMD "msiexec /i $DAI_TMPFILE ALLUSERS=1 TARGETDIR=c:\Python${PYVERSION}"
+!define GTK_CMD "msiexec /i $DAI_TMPFILE TARGETDIR=c:\Python${PYVERSION} INSTALLLEVEL=1 ALLUSERS=1 /passive"
 !define GTK_MD5 "75cfe879a13ae99d5b19fee4f1597bb5"
 ; FIXME shouldn't need to specify TARGETDIR here...
 
@@ -137,9 +137,23 @@ Section "-gtk"
 		Call DetectGTK
 		Pop $GTKOK
 		Pop $GTKPATH
+
 		Call DetectGlade
 		Pop $GLADEOK
-		Pop $GLADEPATH
+		Pop $GLADEPATH	
+
+		Call DetectTcl
+		Pop $TCLOK
+		Pop $TCLPATH
+
+		Call DetectPyGTK
+		Pop $PYGTKOK
+
+		Call DetectPyGObject
+		Pop $PYGOBJECTOK
+
+		Call DetectPyCairo
+		Pop $PYCAIROOK
         ${EndIf}
 SectionEnd
 Section "-tcl"
