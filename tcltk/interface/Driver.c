@@ -675,13 +675,14 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		ospath_free(solversfp);
 	}
 
+#ifdef ASCTK_DEBUG
 	CONSOLE_DEBUG("ASCENDDIST = %s",GETENV(ASC_ENV_DIST));
 	CONSOLE_DEBUG("ASCENDTK = %s",GETENV(ASC_ENV_TK));
 	CONSOLE_DEBUG("ASCENDLIBRARY = %s",GETENV(ASC_ENV_LIBRARY));
 	CONSOLE_DEBUG("ASCENDSOLVERS = %s",GETENV(ASC_ENV_SOLVERS));
 
-
     CONSOLE_DEBUG("CHECKING FOR AscendRC FILE");
+#endif
 
 	fp1 = ospath_new("AscendRC");
 	fp = ospath_concat(tkfp,fp1);
@@ -1105,49 +1106,53 @@ defaultPrompt:
 }
 
 /* include here to avoid contaminating everything above it. */
-/* NOTE: this is NOT optional; if tclInt.h is not available,
-the interface cannot be correctly built. Because of C standards
-it will compile *incorrectly* if tclInt.h is not seen:
-TclGetEnv will default to returning an int rather than the char*
-(which is bigger in x64.
-*/
-#if 0
-/* the proper way is this. but we need to fix the scons tcl includes flags and there
-is no 'canonical' location for tclInt.h.  
-*/
-#include <tclInt.h>
-#else
-/* this in the mean time is what we must have. it's valid for at least tcl 8.[3-6] */
-EXTERN CONST84_RETURN char * TclGetEnv _ANSI_ARGS_((CONST char * name, Tcl_DString * valuePtr));
+
+/* If we want to use the function 'TclGetEnv' then we need to include
+tclInt.h. On non-Windows systems, however, we can make do with the getenv
+function. */
+#ifdef __WIN32__
+# include <tclInt.h>
+/* this is what it gives us, hopefully... */
+/* EXTERN CONST84_RETURN char * TclGetEnv _ANSI_ARGS_((CONST char * name, Tcl_DString * valuePtr)); */
 #endif
+
 /**
-preserve key stuff in the launching environment where we can check it later.
+	Preserve key stuff in the launching environment where we can check it later.
 */
 static void AscSaveOrgEnv(Tcl_Interp *interp,const char *progname) {
 #define ENVCOUNT 8
-  int i;
-  int envcount = ENVCOUNT;
-  CONST char *value;
-  const char *vars[ENVCOUNT] = {
-    ASC_ENV_DIST, ASC_ENV_TK, ASC_ENV_BITMAPS, ASC_ENV_LIBRARY, ASC_ENV_SOLVERS, 
-    "TK_LIBRARY", "TCL_LIBRARY", "PRINTER"
-  };
-  Tcl_DString buffer;
-  Tcl_DString search;
-  ASC_FPRINTF(stderr,"\nCACHING ENV Vars.\n");
-
-  Tcl_DStringInit(&buffer);
-  Tcl_DStringInit(&search);
-  ASC_SEND_TO_TCL2("ascOrgEnv", "dummy", "0");
-  for (i = 0; i < envcount; i++) {
-	/* next statement bombs on 64 bit if no tclint.h seen */
-    value = TclGetEnv(vars[i], &search);
-    if (value != NULL) {
-      ASC_SEND_TO_TCL2("ascOrgEnv", vars[i], value);
-      ASC_FPRINTF(stderr,"\nCACHING %s.\n",vars[i]);
-    }
-    Tcl_DStringFree(&search);
-  }
+	int i;
+	int envcount = ENVCOUNT;
+	CONST char *value;
+	const char *vars[ENVCOUNT] = {
+		ASC_ENV_DIST, ASC_ENV_TK, ASC_ENV_BITMAPS, ASC_ENV_LIBRARY, ASC_ENV_SOLVERS, 
+		"TK_LIBRARY", "TCL_LIBRARY", "PRINTER"
+	};
+	Tcl_DString buffer;
+	Tcl_DString search;
+#ifdef ASCTK_DEBUG
+	CONSOLE_DEBUG("CACHING env vars...");
+#endif
+	Tcl_DStringInit(&buffer);
+	Tcl_DStringInit(&search);
+	ASC_SEND_TO_TCL2("ascOrgEnv", "dummy", "0");
+	for (i = 0; i < envcount; i++) {
+#ifdef __WIN32__
+		/* next statement bombs on 64 bit if no tclint.h seen */
+		value = TclGetEnv(vars[i], &search);
+#else
+		value = getenv(vars[i]);
+#endif
+		if (value != NULL) {
+			ASC_SEND_TO_TCL2("ascOrgEnv", vars[i], value);
+#ifdef ASCTK_DEBUG
+			CONSOLE_DEBUG("CACHING %s.",vars[i]);
+#endif
+		}
+#ifdef __WIN32__
+		Tcl_DStringFree(&search);
+#endif
+	}
 }
 
 #ifdef DEBUG_MALLOC
