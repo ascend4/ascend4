@@ -58,7 +58,7 @@ elif platform.system()=="Darwin":
 
 	LDPATHVAR = 'DYLD_LIBRARY_PATH'
 
-	GTKLIBPATH=[path_absolute("PyGTK.bundle/lib")]
+	GTKLIBPATH=path_absolute("PyGTK.bundle/lib")
 
 	INSTALL_LIB = path_absolute(".")
 	INSTALL_ASCDATA = path_absolute("Resources")
@@ -101,11 +101,17 @@ if not os.environ.get('ASC_GDB'):
 			restart = 1
 		if GTKLIBPATH in LDPATH:
 			LDPATH.remove(GTKLIBPATH)
-		LDPATH=[INSTALL_LIB,GTKLIBPATH]+LDPATH
+		if GTKLIBPATH:
+			LDPATH = [INSTALL_LIB,GTKLIBPATH] + LDPATH
+		else:
+			LDPATH = [INSTALL_LIB] + LDPATH
 		os.environ[LDPATHVAR] = SEP.join(LDPATH)
 	elif INSTALL_LIB != "/usr/lib" and not INSTALL_LIB in LDPATH:
 		# don't worry about GTK location; just ensure that LDPATH includes INSTALL_LIB
-		LDPATH = [INSTALL_LIB] + GTKLIBPATH + LDPATH
+		if GTKLIBPATH:
+			LDPATH = [INSTALL_LIB,GTKLIBPATH] + LDPATH
+		else:
+			LDPATH = [INSTALL_LIB] + LDPATH
 		os.environ[LDPATHVAR] = SEP.join(LDPATH)
 		restart = 1
 
