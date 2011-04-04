@@ -362,7 +362,7 @@ SectionEnd
 
 ;---------------------------------
 
-Section "Tcl/Tk GUI" sect_tcltk
+Section /o "Tcl/Tk GUI" sect_tcltk
 
 	${If} $TCLOK != 'OK'
 		MessageBox MB_OK "Tck/Tk GUI can not be installed, because ActiveTcl was not found on this system. If do you want to use the Tcl/Tk GUI, please check the installation instructions ($TCLPATH)"
