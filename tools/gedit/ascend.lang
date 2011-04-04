@@ -354,6 +354,7 @@ John Pye (C) 2005
 		<keyword>solid_angle</keyword>
 		<keyword>time</keyword>
 		<keyword>speed</keyword>
+		<keyword>angular_speed</keyword>
 		<keyword>acceleration</keyword>
 		<keyword>stiffness</keyword>
 		<keyword>viscosity</keyword>
