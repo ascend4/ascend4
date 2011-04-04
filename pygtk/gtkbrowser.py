@@ -540,6 +540,15 @@ class Browser:
 		import console
 		console.create_widget(self)
 
+		import locale
+		if locale.localeconv()['decimal_point'] != '.':
+			self.reporter.reportError(
+"""Incompatible locale settings detected. Please set your system local to one which
+uses '.' as the decimal point separator, such as en_US or en_AU. Note that failing
+to make this change will cause input and output values to be truncated.
+For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
+			)
+
 	def run(self):
 		self.window.show()
 		loading.print_status("ASCEND is now running")
