@@ -79,6 +79,8 @@
 #include "SolverProc.h"
 #include "UnitsProc.h"
 
+#define ASCTK_DEBUG
+
 /*
  *  EXPORTED VARIABLES
  */
@@ -465,32 +467,28 @@ int AscDriver(int argc, CONST char **argv)
 	PUTENV(tmp)
 
 /**
-	This is a function to send data to Tcl using Tcl_SetVar.
-	usage: ASC_SEND_TO_TCL(tclstrvarname,"some string value");
+	This is a quick macro to send data to Tcl using Tcl_SetVar.
+	It uses an intermediate buffer which is assumed to be
+	empty already.
+
+	usage: ASC_SEND_TO_TCL(tclvarname,"some string value");
 */
-static void AscSendToTcl(Tcl_Interp *interp, const char * var, const char *value)
-{
-	Tcl_DString buffer;
-	Tcl_DStringInit(&buffer);
-	Tcl_DStringAppend(&buffer,var,-1);
-	Tcl_SetVar(interp,var,Tcl_DStringValue(&buffer),TCL_GLOBAL_ONLY);
+#define ASC_SEND_TO_TCL(VAR,VAL) \
+	Tcl_DStringAppend(&buffer,VAL,-1); \
+	Tcl_SetVar(interp,#VAR,Tcl_DStringValue(&buffer),TCL_GLOBAL_ONLY); \
 	Tcl_DStringFree(&buffer);
-}
-#define ASC_SEND_TO_TCL(VAR,VAL) AscSendToTcl(interp,VAR,VAL)
 
 /**
-	This is a wrapper functionto send data to Tcl using Tcl_SetVar2.
+	This is a quick macro to send data to Tcl using Tcl_SetVar2.
+	It uses an intermediate buffer which is assumed to be
+	empty already.
+
 	usage: ASC_SEND_TO_TCL2(arrayname,"keyname","some string value");
 */
-static void AscSendToTcl2(Tcl_Interp *interp, const char *tclName, const char * key, const char *value)
-{
-	Tcl_DString buffer;
-	Tcl_DStringInit(&buffer);
-	Tcl_DStringAppend(&buffer,value,-1);
-	Tcl_SetVar2(interp,tclName,key,Tcl_DStringValue(&buffer),TCL_GLOBAL_ONLY);
+#define ASC_SEND_TO_TCL2(ARR,KEY,VAL) \
+	Tcl_DStringAppend(&buffer,VAL,-1); \
+	Tcl_SetVar2(interp,#ARR,KEY,Tcl_DStringValue(&buffer),TCL_GLOBAL_ONLY); \
 	Tcl_DStringFree(&buffer);
-}
-#define ASC_SEND_TO_TCL2(ARRSTRNAME,KEY,VAL) AscSendToTcl2(interp,ARRSTRNAME,KEY,VAL)
 
 static void printenv(){
 	int n;
@@ -563,7 +561,9 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	/* used for colour console output */
 	env_import("TERM",getenv,PUTENV);
 
-	/* CONSOLE_DEBUG("IMPORTING VARS"); */
+#ifdef ASCTK_DEBUG
+	CONSOLE_DEBUG("IMPORTING VARS");
+#endif
 
 	distdir = GETENV(ASC_ENV_DIST);
 	tkdir = GETENV(ASC_ENV_TK);
@@ -577,7 +577,9 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		CONSOLE_DEBUG("Note: No '" ASC_ENV_DIST "' var defined");
 
 #if ASC_ABSOLUTE_PATHS
+#ifdef ASCTK_DEBUG
 		CONSOLE_DEBUG("ASC_ABSOLUTE_PATHS=%d",ASC_ABSOLUTE_PATHS);
+#endif
 		distfp = ospath_new(ASCENDDIST_DEFAULT);
 		(void)progname;
 #else
@@ -606,7 +608,10 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 
 		distdir = ospath_str(distfp);
 		
+#ifdef ASCTK_DEBUG
 		CONSOLE_DEBUG("Setting distdir %s = %s",ASC_ENV_DIST,distdir);
+#endif
+
 		OSPATH_PUTENV(ASC_ENV_DIST,distfp);
 		distdir = GETENV(ASC_ENV_DIST);
 		/* CONSOLE_DEBUG("RETRIEVED %s = %s",ASC_ENV_DIST,distdir); */
@@ -711,14 +716,14 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 
 	/* put AscendRC location in string and export to Tcl */
 	ospath_strncpy(fp,tmp,MAX_ENV_VAR_LENGTH);
-	ASC_SEND_TO_TCL("tcl_rcFileName", tmp);
+    ASC_SEND_TO_TCL(tcl_rcFileName, tmp);
 	ospath_free(fp);
 
     /* send all the environment variables to Tcl/Tk as well */
-    ASC_SEND_TO_TCL2("env",ASC_ENV_DIST,distdir);
-    ASC_SEND_TO_TCL2("env",ASC_ENV_LIBRARY,librarydir);
-    ASC_SEND_TO_TCL2("env",ASC_ENV_BITMAPS,bitmapsdir);
-    ASC_SEND_TO_TCL2("env",ASC_ENV_TK,tkdir);
+    ASC_SEND_TO_TCL2(env,ASC_ENV_DIST,distdir);
+    ASC_SEND_TO_TCL2(env,ASC_ENV_LIBRARY,librarydir);
+    ASC_SEND_TO_TCL2(env,ASC_ENV_BITMAPS,bitmapsdir);
+    ASC_SEND_TO_TCL2(env,ASC_ENV_TK,tkdir);
 }
 
 
@@ -1105,54 +1110,55 @@ defaultPrompt:
   color_off(stdout);
 }
 
-/* include here to avoid contaminating everything above it. */
-
-/* If we want to use the function 'TclGetEnv' then we need to include
-tclInt.h. On non-Windows systems, however, we can make do with the getenv
-function. */
 #ifdef __WIN32__
+# define HAVE_TCLINT_H
+#endif
+
+/* include here to avoid contaminating everything above it. */
+#ifdef HAVE_TCLINT_H
 # include <tclInt.h>
-/* this is what it gives us, hopefully... */
-/* EXTERN CONST84_RETURN char * TclGetEnv _ANSI_ARGS_((CONST char * name, Tcl_DString * valuePtr)); */
+# define HAVE_TCLGETENV
 #endif
 
 /**
-	Preserve key stuff in the launching environment where we can check it later.
+preserve key stuff in the launching environment where we can check it later.
 */
 static void AscSaveOrgEnv(Tcl_Interp *interp,const char *progname) {
 #define ENVCOUNT 8
-	int i;
-	int envcount = ENVCOUNT;
-	CONST char *value;
-	const char *vars[ENVCOUNT] = {
-		ASC_ENV_DIST, ASC_ENV_TK, ASC_ENV_BITMAPS, ASC_ENV_LIBRARY, ASC_ENV_SOLVERS, 
-		"TK_LIBRARY", "TCL_LIBRARY", "PRINTER"
-	};
-	Tcl_DString buffer;
-	Tcl_DString search;
+#define ORGVAR ascOrgEnv
+  int i;
+  CONST char *value;
+  const char *vars[ENVCOUNT] = {
+    ASC_ENV_DIST, ASC_ENV_TK, ASC_ENV_BITMAPS, ASC_ENV_LIBRARY, ASC_ENV_SOLVERS, 
+    "TK_LIBRARY", "TCL_LIBRARY", "PRINTER"
+  };
+  Tcl_DString buffer;
+  Tcl_DString search;
 #ifdef ASCTK_DEBUG
-	CONSOLE_DEBUG("CACHING env vars...");
+  CONSOLE_DEBUG("CACHING ENV Vars.");
 #endif
-	Tcl_DStringInit(&buffer);
-	Tcl_DStringInit(&search);
-	ASC_SEND_TO_TCL2("ascOrgEnv", "dummy", "0");
-	for (i = 0; i < envcount; i++) {
-#ifdef __WIN32__
-		/* next statement bombs on 64 bit if no tclint.h seen */
-		value = TclGetEnv(vars[i], &search);
+
+  Tcl_DStringInit(&buffer);
+  Tcl_DStringInit(&search);
+  ASC_SEND_TO_TCL2(ascOrgEnv, "dummy", "0");
+  for (i = 0; i < ENVCOUNT; i++) {
+#ifdef HAVE_TCLGETENV
+    value = TclGetEnv(vars[i], &search);
 #else
-		value = getenv(vars[i]);
+	value = getenv(vars[i]);
 #endif
-		if (value != NULL) {
-			ASC_SEND_TO_TCL2("ascOrgEnv", vars[i], value);
+
+    if (value != NULL) {
+      ASC_SEND_TO_TCL2(ascOrgEnv, vars[i], value);
 #ifdef ASCTK_DEBUG
-			CONSOLE_DEBUG("CACHING %s.",vars[i]);
+      CONSOLE_DEBUG("CACHING %s.",vars[i]);
 #endif
-		}
-#ifdef __WIN32__
-		Tcl_DStringFree(&search);
+    }
+
+#ifdef HAVE_TCLGETENV
+    Tcl_DStringFree(&search);
 #endif
-	}
+  }
 }
 
 #ifdef DEBUG_MALLOC
