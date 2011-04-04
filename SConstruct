@@ -206,6 +206,12 @@ else: # LINUX, unix we hope
 				default_tk_lib = "tk8.5"
 				default_tktable_lib = "Tktable2.9"
 				default_tcl_cpppath = "/usr/include/tcl8.5"
+			if not os.path.exists(default_tcl_cpppath):
+				default_tcl_lib = "tcl8.4"
+				default_tk_lib = "tk8.4"
+				default_tktable_lib = "Tktable2.9"
+				default_tcl_cpppath = "/usr/include/tcl8.4"
+				
 	# centos 5
 	if os.path.exists("/etc/redhat-release"):
 		default_tcl_cpppath = "/usr/include"
