@@ -41,6 +41,7 @@
         <style id="decimal"           _name="Decimal number"      map-to="def:decimal"/>
         <style id="boolean"           _name="Boolean value"       map-to="def:boolean"/>
         <style id="units"             _name="Units of measurement" map-to="def:comment"/>
+        <style id="note" _name="Note (FIXME, TODO, XXX, etc.)" map-to="def:note"/>
     </styles>
 
     <definitions>
@@ -54,9 +55,12 @@
                     <start>\(\*</start>
                     <end>\*\)</end>
                     <include>
+                        <context id="comment-note" extend-parent="false" style-ref="note">
+                            <match>\b(FIXME|TODO|XXX)\b</match>
+                        </context>
                         <context ref="comment-multiline"/>
                     </include>
-                </context>
+               </context>
 
                <context id="close-comment-outside-comment" style-ref="error">
                     <match>\*\)</match>
