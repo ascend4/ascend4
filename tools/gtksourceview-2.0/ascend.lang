@@ -39,6 +39,7 @@
         <style id="common-methods"    _name="Common Methods"       map-to="def:type"/>
         <style id="floating-point"    _name="Floating point number" map-to="def:floating-point"/>
         <style id="decimal"           _name="Decimal number"      map-to="def:decimal"/>
+        <style id="function"          _name="Function identifier" map-to="def:identifier"/>
         <style id="boolean"           _name="Boolean value"       map-to="def:boolean"/>
         <style id="units"             _name="Units of measurement" map-to="def:comment"/>
         <style id="note" _name="Note (FIXME, TODO, XXX, etc.)" map-to="def:note"/>
@@ -436,6 +437,30 @@
                     <keyword>FALSE</keyword>
                 </context>
 
+               <context id="functions" style-ref="function">
+					<keyword>exp</keyword>
+					<keyword>ln</keyword>
+					<keyword>log10</keyword>
+					<keyword>sin</keyword>
+					<keyword>cos</keyword>
+					<keyword>tan</keyword>
+					<keyword>sqr</keyword>
+					<keyword>sqrt</keyword>
+					<keyword>arcsin</keyword>
+					<keyword>arccos</keyword>
+					<keyword>arctan</keyword>
+					<keyword>erf</keyword>
+					<keyword>lnm</keyword>
+					<keyword>sinh</keyword>
+					<keyword>cosh</keyword>
+					<keyword>tanh</keyword>
+					<keyword>arcsinh</keyword>
+					<keyword>arccosh</keyword>
+					<keyword>arctanh</keyword>
+					<keyword>cube</keyword>
+					<keyword>cbrt</keyword>
+					<keyword>abs</keyword>
+				</context>
             </include>
         </context>
     </definitions>
