@@ -465,6 +465,8 @@ degrees = {deg};
 grad = {0.9*deg};
 arcmin = {deg/60.0};
 arcsec = {arcmin/60.0};
+rot = {2 * PI * rad};
+RPM = {rot/minute};
 
 (* light quantities *)
 
