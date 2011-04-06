@@ -66,6 +66,8 @@ ExtBBoxFunc helmholtz_s_calc;
 ExtBBoxFunc helmholtz_h_calc;
 ExtBBoxFunc helmholtz_a_calc;
 ExtBBoxFunc helmholtz_g_calc;
+ExtBBoxFunc helmholtz_cp_calc;
+ExtBBoxFunc helmholtz_cv_calc;
 ExtBBoxFunc helmholtz_phsx_vT_calc;
 ExtBBoxFunc helmholtz_Tvsx_ph_calc;
 
@@ -83,11 +85,12 @@ static const char *helmholtz_s_help = "Calculate specific entropy from temperatu
 static const char *helmholtz_h_help = "Calculate specific enthalpy from temperature and density, using Helmholtz fundamental correlation";
 static const char *helmholtz_a_help = "Calculate specific Helmholtz energy from temperature and density, using Helmholtz fundamental correlation";
 static const char *helmholtz_g_help = "Calculate specific Gibbs energy from temperature and density, using Helmholtz fundamental correlation";
+static const char *helmholtz_cp_help = "Calculate isobaric specific heat from temperature and density, using Helmholtz fundamental correlation";
+static const char *helmholtz_cv_help = "Calculate isochoric specific heat from temperature and density, using Helmholtz fundamental correlation";
 
 static const char *helmholtz_phsx_vT_help = "Calculate p, h, s, x from temperature and density, using FPROPS/Helmholtz eqn";
 
 static const char *helmholtz_Tvsx_ph_help = "Calculate T, v, s, x from pressure and enthalpy, using FPROPS/Helmholtz eqn";
-
 
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION
@@ -134,6 +137,8 @@ ASC_EXPORT int helmholtz_register(){
 	CALCFN(helmholtz_h,2,1);
 	CALCFN(helmholtz_a,2,1);
 	CALCFN(helmholtz_g,2,1);
+	CALCFN(helmholtz_cp,2,1);
+	CALCFN(helmholtz_cv,2,1);
 	CALCFN(helmholtz_phsx_vT,2,4);
 	CALCFN(helmholtz_Tvsx_ph,2,4);
 
@@ -339,6 +344,46 @@ int helmholtz_g_calc(struct BBoxInterp *bbox,
 
 	/* first input is temperature, second is density */
 	outputs[0] = helmholtz_g(inputs[0], inputs[1], helmholtz_data);
+
+	/* no need to worry about error states etc. */
+	return 0;
+}
+
+
+/**
+	Evaluation function for 'helmholtz_cp'
+	@param jacobian ignored
+	@return 0 on success
+*/
+int helmholtz_cp_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE(2,1);
+
+	/* first input is temperature, second is density */
+	outputs[0] = helmholtz_cp(inputs[0], inputs[1], helmholtz_data);
+
+	/* no need to worry about error states etc. */
+	return 0;
+}
+
+
+/**
+	Evaluation function for 'helmholtz_cv'
+	@param jacobian ignored
+	@return 0 on success
+*/
+int helmholtz_cv_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE(2,1);
+
+	/* first input is temperature, second is density */
+	outputs[0] = helmholtz_cv(inputs[0], inputs[1], helmholtz_data);
 
 	/* no need to worry about error states etc. */
 	return 0;

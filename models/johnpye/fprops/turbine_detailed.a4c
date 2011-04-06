@@ -1,0 +1,294 @@
+(*	ASCEND modelling environment
+	Copyright (C) 2011 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)(*
+	Detailed model of a turbine stage. Based on the method of Prof Philip Thomas
+	'Simulation of Industrial Processes for Control Engineers', Butterworth-
+	Heinemann, 1999.
+
+	Author: John Pye
+
+	XXX not yet finished! EXPERIMENTAL! DO NOT USE (yet).
+*)
+
+REQUIRE "johnpye/fprops/rankine_fprops.a4c";
+
+(*
+	This is the common stuff in a turbine stage. We hope to be able to put
+	more stuff into such as all the common variables. Not supposed to be
+	solvable on its own.
+*)
+MODEL turbine_stage REFINES stream_equipment;
+
+	Vel_in(*, Vel_out*) IS_A speed;
+	w,w_max IS_A specific_energy;
+
+	(* for first stage, need to consider KE  *)
+	(* inlet.h + 0.5*Vel_in^2 = outlet.h + 0.5*Vel_out^2 + w;  *)
+
+	(* for other stages, changes in KE negl. *)
+	w = (inlet.h - outlet.h);
+
+	Wdot IS_A energy_rate;
+	Wdot = mdot * w;
+
+	(* turbine instantaneous speed equation not added here yet *)
+
+	outlet_is IS_A stream_state;
+	outlet_is.cd, outlet.cd ARE_THE_SAME;
+	outlet_is.p, outlet.p ARE_THE_SAME;
+	outlet_is.s, inlet.s ARE_THE_SAME;
+
+	eta "stage efficiency" IS_A fraction;
+	w_max = inlet.h - outlet_is.h;
+	eta_eq:eta * w_max = w;
+
+	cp, cv IS_A specific_heat_capacity;
+	rho_in IS_A mass_density;
+	rho_in = 1 / inlet.v;
+	calc_cp: helmholtz_cp(
+		inlet.T, rho_in : INPUT;
+		cp : OUTPUT;
+		cd : DATA
+	);
+	calc_cv: helmholtz_cv(
+		inlet.T, rho_in : INPUT;
+		cv : OUTPUT;
+		cd : DATA
+	);
+	gamma IS_A factor;
+	gamma * cv = cp;
+
+	m_s IS_A factor;
+	m_s * (gamma - eta * (gamma - 1)) = gamma;
+
+END turbine_stage;
+
+(*
+	Model of an impulse stage. Design case only, at this stage, not off-design.
+
+	Seems to solve for the simple test case given in on_load, and reproduces
+	at least the example numbers given by Thomas.
+*)
+MODEL turbine_stage_impulse REFINES turbine_stage;
+	inlet.cd.component :== 'water';
+
+	eta_B "impulse blade efficiency" IS_A fraction;
+	w_max_B "available kinetic energy" IS_A specific_energy;
+	Vel_mid "inter-blade velocity" IS_A speed;
+	Vel_B "average blade velocity" IS_A speed;
+	DVel_w "change in gas velocity, in tangential direction" IS_A speed;
+	alpha_mid(*, alpha_out*) IS_A angle;
+	R_B "ratio of blade linear speed to mid-stage gas speed" IS_A speed;
+
+	N "turbine speed" IS_A angular_speed;
+	r_B "average blade radius (for calculation of blade speed)" IS_A distance;
+	r_B * N = Vel_B;
+
+	R_B * Vel_mid = Vel_B;
+	eta_B = 4*(R_B * cos(alpha_mid) - R_B^2);
+	w_max_B = 0.5 * Vel_in^2;
+	w = Vel_B * DVel_w;
+	eta_B * w_max = w;
+
+	(* for maximum efficiency... FIXME remove this for off-design calc *)
+	R_B = 0.5 * cos(alpha_mid);
+
+	(* other blade angles *)
+	beta_in "blade approach angle, relative to direction of movement" IS_A angle;
+	tan(beta_in) * (cos(alpha_mid) - R_B) = sin(alpha_mid);
+	beta_out "blade exit angle, relative to direction of movement" IS_A angle;
+	beta_out = beta_in;
+
+	(* fluid exit direction *)
+
+	(*Vel_rel_i, Vel_rel_o IS_A speed;
+	Vel_rel_i = Vel_rel_o; (* no slow-down on blade *)
+	(*DVel_w = Vel_rel_i * cos(beta_in) + Vel_rel_o * cos(beta_out);*)
+	Vel_rel_i * cos(beta_in) = Vel_in * cos(alpha_mid) - Vel_B;
+	Vel_rel_o * cos(beta_out) = Vel_out * cos(alpha_out) - Vel_B;
+	(* beta_out = arctan(2 * tan(alpha_mid)); *)*)
+
+METHODS
+METHOD on_load;
+	FIX inlet.p, inlet.T, mdot;
+	inlet.p := 50 {bar};
+	inlet.T := 400 {K} + 273.15 {K};
+	mdot := 0.5 {kg/s};
+	inlet.h := 4000 {kJ/kg}; (* init guess for solving *)
+
+	FIX outlet.p;
+	outlet.p := 45 {bar};
+
+	FIX alpha_mid;
+	alpha_mid := 20 {deg};
+
+	FIX r_B, N;
+	r_B := 30 {cm};
+	N := 3000 {RPM};
+
+	(* an imaginary, small inlet velocity *)
+	FIX Vel_in;
+	Vel_in := inlet.mdot * inlet.v / (1{PI} * r_B^2);
+END on_load;
+END turbine_stage_impulse;
+
+
+(*
+	Model of a reaction stage. Equations from Thomas are given for 50% reaction
+	stage, but we attempt to generalise to any reaction percentage. 
+
+	This model is still not working; it partly solves, only.
+*)
+MODEL turbine_stage_reaction REFINES turbine_stage;
+	cd.component :== 'water';
+
+	Vel_0 ALIASES Vel_in;
+	Vel_1, Vel_2 IS_A speed;
+
+	Vel_a "axial velocity, at both 1 and 2" IS_A speed;
+	Vel_B "average blade velocity" IS_A speed;
+
+	DVel_w IS_A speed;
+	DVel_w = Vel_a * (1/tan(beta_in) + 1/tan(beta_2));
+
+	DVel_w = Vel_rel_i * cos(beta_in) + Vel_rel_o * cos(beta_2);
+
+	w = Vel_B * DVel_w; (* eq 15.72 *)
+
+	rho "degree of reaction" IS_A fraction;
+	mid IS_A stream_state;
+	mid.cd, inlet.cd ARE_THE_SAME;
+	rho * (inlet.h - outlet.h) = mid.h - outlet.h; (* eq 15.19 *)
+	pr IS_A factor;
+	pr * inlet.p = outlet.p;
+
+(*	rho = (mid.p - outlet.p) / (inlet.p - outlet.p); (* eq 15.19 *) *)
+
+	Vel_rel_i, Vel_rel_o IS_A speed;
+
+	mid.h - outlet.h = 0.5*Vel_rel_o^2 - 0.5*Vel_rel_i^2;
+
+	alpha_0, alpha_1, alpha_2 IS_A angle;
+	beta_in "blade approach angle, relative to direction of movement" IS_A angle;
+	beta_2 "fluid exit angle from blade, relative to direction of movement" IS_A angle;
+	Vel_rel_i * sin(beta_in) = Vel_a;
+	Vel_rel_o * sin(beta_2) = Vel_a;
+
+	Vel_B = Vel_a * (1/tan(alpha_1) - 1/tan(beta_in));
+	Vel_B = Vel_a * (1/tan(beta_2) - 1/tan(alpha_2));
+
+	(* shockless entry *)
+	beta_1 ALIASES beta_in;
+
+	Vel_0  = Vel_2;
+	alpha_0  = alpha_2;
+
+	N "turbine speed" IS_A angular_speed;
+	r_B "average blade radius (for calculation of blade speed)" IS_A distance;
+	r_B * N = Vel_B;
+
+	(* BLADE EFFICIENCY *)
+
+	mid_is IS_A stream_state; (* p1, s0 *)
+	mid_is.cd, mid.cd ARE_THE_SAME;
+	mid_is.p, mid.p ARE_THE_SAME;
+	mid_is.s, inlet.s ARE_THE_SAME;
+
+	outlet_is_a IS_A stream_state; (* p2, s1 *)
+	outlet_is_a.cd, outlet.cd ARE_THE_SAME;
+	outlet_is_a.p, outlet.p ARE_THE_SAME;
+	outlet_is_a.s, mid.s ARE_THE_SAME;
+
+	eta_N IS_A fraction;
+	eta_N = (inlet.h - mid.h) / (inlet.h - mid_is.h); (* eq 15.84 *)
+
+	eta_NB IS_A fraction;
+	eta_NB = (mid.h - outlet.h) / (mid.h - outlet_is_a.h); (* eq 15.85 *)
+
+	w_max_B "maximum extractable work" IS_A specific_energy;
+	w_max_B = 0.5 * Vel_1^2 + mid.h - outlet_is_a.h; (* eq 15.88 *)
+
+	Vel_rel_i^2 = Vel_1^2 - 2*Vel_1*Vel_B*cos(alpha_1) + Vel_B^2; (* eq 15.47 *)
+
+	R_B "ratio of blade linear speed to mid-stage gas speed" IS_A speed;
+	R_B * Vel_1 = Vel_B;
+
+METHODS
+METHOD on_load;
+	FIX inlet.p, inlet.T, mdot;
+	inlet.p := 50 {bar};
+	inlet.T := 400 {K} + 273.15 {K};
+	mdot := 0.5 {kg/s};
+	inlet.h := 4000 {kJ/kg}; (* init guess for solving *)
+
+	FIX outlet.p;
+	outlet.p := 45 {bar};
+
+	FIX r_B, N;
+	r_B := 30 {cm};
+	N := 3000 {RPM};
+
+	FIX rho;
+	rho := 0.5;
+
+	(* an imaginary, small inlet velocity *)
+	FIX Vel_in;
+	Vel_in := inlet.mdot * inlet.v / (1{PI} * r_B^2);
+
+	FIX alpha_0;
+	alpha_0 := 20 {deg};
+
+	beta_2.upper_bound := 0.5{rot};
+	beta_2.lower_bound := 0{rot};
+	beta_in.upper_bound := 0.5{rot};
+	beta_in.lower_bound := 0{rot};
+	Vel_rel_i.lower_bound := 0 {m/s};
+	Vel_rel_o.lower_bound := 0 {m/s};
+
+	(* initial guess *)
+	mid.p := rho * (inlet.p - outlet.p) + outlet.p;
+END on_load;
+END turbine_stage_reaction;
+
+(*
+MODEL turbine_stage_reaction REFINES turbine_stage;
+	rho "degree of reaction" IS_A fraction;
+	mid IS_A stream_state;
+	mid.cd, inlet.cd ARE_THE_SAME;
+	rho * (inlet.h - outlet.h) = mid.h - outlet.h;
+	pr IS_A factor;
+	pr * inlet.p = outlet.p;
+	
+	m "nozzle polytropic index" IS_A factor;
+	m_s "stage polytropic index" IS_A factor;
+
+	m = gamma / (gamma - eta_N * (gamma - 1));
+
+	mid.p = inlet.p  * (rho + (1 - rho) * pr^((m_s - 1) / m_s))^(m / (m-1));
+
+END turbine_stage;
+*)
+
+
+
+
+
+
+
+
+
