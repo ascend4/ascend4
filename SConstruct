@@ -3015,7 +3015,7 @@ env.Append(
 		'.pyc','.cvsignore','.dblite','.log','.pl','.out','.exe','.aux','.idx',
 		'.toc','.lof','.lot','.mm','.warnings','.tm2','.swp',',tmp','.gz',
 		'.bz2','.7z','.deb','.dsc','.changes','.bak','.tex','.tmp']
-	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist','debian']
+	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist','debian','doxy']
 	, DISTTAR_EXCLUDERES=[r"_wrap\.cc?$", r"~$", r"ascxx/ascpy\.py","ascxx/testipopt$"
 		,r"/lib.*\.so\.[.0-9]+$", r"tcltk/asc4dev$", r"tcltk/interface/typelex\.c$"
 		,r"ascend/compiler/ascParse\.[ch]$", r"ascend/solver/conoptconfig\.h$"
