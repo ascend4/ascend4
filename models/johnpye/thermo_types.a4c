@@ -36,6 +36,16 @@ ATOM specific_entropy REFINES solver_var
 
 END specific_entropy;
 
+ATOM delta_specific_entropy REFINES solver_var
+		DIMENSION L^2/T^2/TMP
+		DEFAULT 6{kJ/kg/K};
+	
+	lower_bound := -1e50{kJ/kg/K};
+	upper_bound := 1e50{kJ/kg/K};
+	nominal := 6{kJ/kg/K};
+
+END delta_specific_entropy;
+
 ATOM specific_heat_capacity REFINES solver_var
 		DIMENSION L^2/T^2/TMP
 		DEFAULT 4.0{kJ/kg/K};

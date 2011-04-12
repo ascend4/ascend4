@@ -1,0 +1,115 @@
+(*	ASCEND modelling environment
+	Copyright (C) 2011 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)(*
+	Calculations of isentropic shocks in air flow, following approach given
+	in Potter & Wiggert, 3rd SI edition.
+
+	Intention is to be able to generalise these models for arbitrary fluids as
+	supported by FPROPS. But the present models include ideal gas and constant
+	specific heat assumptions.
+
+	Author: John Pye
+*)
+
+REQUIRE "johnpye/thermo_types.a4c";
+
+MODEL ideal_gas_node;
+	M "Mach number" IS_A positive_factor;
+	p IS_A pressure;
+	T IS_A temperature;
+	v IS_A specific_volume;
+	rho IS_A mass_density;
+	Vel IS_A speed;
+
+	MM IS_A molar_weight_constant;
+	R IS_A specific_gas_constant;
+	R :== 1{GAS_C}/MM;
+
+	rho*v = 1;
+	p*v = R * T;
+
+	k "adiabatic index" IS_A real_constant;
+
+	c IS_A speed;
+	c = sqrt(k*R*T);
+
+	M = Vel / c;
+END ideal_gas_node;
+
+MODEL air_node REFINES ideal_gas_node;
+	MM :== 28.97 {kg/kmol};
+	k :== 1.4;
+END air_node;
+
+(*
+	Model of a stationary normal shock in air. Using a moving frame of
+	reference, it can be used to model a moving shock wave as well.
+
+	Equations from Potter & Wiggert, 3rd SI edition, sects 9.1, 9.2 and 9.4.
+*)
+MODEL air_normal_shock;
+	S1, S2 IS_A air_node;
+	k ALIASES S1.k;
+	
+	S2.M^2 = ( S1.M^2 + 2/(k-1) ) / (2*k/(k-1)*S1.M^2 - 1);
+
+	S2.p / S1.p = 2*k/(k+1)*S1.M^2 - (k-1)/(k+1);
+
+	S2.T / S1.T = ( 1 + (k-1)/2*S1.M^2) * (2*k/(k-1)*S1.M^2 - 1)/ ((k+1)^2/2/(k-1)*S1.M^2);
+END air_normal_shock;
+
+
+(*
+	This model reproduces the results of Example 9.5 from Potter & Wiggert, 
+	3rd SI edition. The question asks to determine the pressure and temperature 
+	conditions downstream of a shock wave passing through ambient air of given
+	state.
+*)
+MODEL example_potter_wiggert_ex_9_5 REFINES air_normal_shock;
+METHODS
+METHOD on_load;
+	FIX S1.Vel, S1.p, S1.T;
+	S1.Vel := 450 {m/s};
+	S1.p := 80 {kPa};
+	S1.T := 15 {K} + 273.15 {K};
+END on_load;
+END example_potter_wiggert_ex_9_5;
+
+(*
+	This model reproduces the results of Example 9.5 from Potter & Wiggert, 
+	3rd SI edition. This problem shows the wind speeds implicit behind a strong
+	shock wave such as that arising from a high-powered bomb explosions.
+
+	Although the problem as given in P&W can be solved even without doing so,
+	we have added an assumption that the ambient air pressure is 101.3 kPa. This
+	allows the model to be 'square' and the pressure and temperature behind the
+	shock wave (4.83 bar, 500 K) to also be calculated.
+*)
+MODEL example_potter_wiggert_ex_9_6 REFINES air_normal_shock;
+	Vel_induced IS_A speed;
+	Vel_induced = S2.Vel - S1.Vel;
+METHODS
+METHOD on_load;
+	FIX S1.Vel, S1.T, S1.p;
+	S1.Vel := 700 {m/s};
+	S1.T := 15 {K} + 273.15 {K};
+	S1.p := 101.3 {kPa};
+END on_load;
+END example_potter_wiggert_ex_9_6;
+
+
