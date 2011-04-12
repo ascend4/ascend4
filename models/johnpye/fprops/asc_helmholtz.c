@@ -68,6 +68,7 @@ ExtBBoxFunc helmholtz_a_calc;
 ExtBBoxFunc helmholtz_g_calc;
 ExtBBoxFunc helmholtz_cp_calc;
 ExtBBoxFunc helmholtz_cv_calc;
+ExtBBoxFunc helmholtz_w_calc;
 ExtBBoxFunc helmholtz_phsx_vT_calc;
 ExtBBoxFunc helmholtz_Tvsx_ph_calc;
 
@@ -87,6 +88,7 @@ static const char *helmholtz_a_help = "Calculate specific Helmholtz energy from 
 static const char *helmholtz_g_help = "Calculate specific Gibbs energy from temperature and density, using Helmholtz fundamental correlation";
 static const char *helmholtz_cp_help = "Calculate isobaric specific heat from temperature and density, using Helmholtz fundamental correlation";
 static const char *helmholtz_cv_help = "Calculate isochoric specific heat from temperature and density, using Helmholtz fundamental correlation";
+static const char *helmholtz_w_help = "Calculate speed of sound from temperature and density, using Helmholtz fundamental correlation";
 
 static const char *helmholtz_phsx_vT_help = "Calculate p, h, s, x from temperature and density, using FPROPS/Helmholtz eqn";
 
@@ -139,6 +141,7 @@ ASC_EXPORT int helmholtz_register(){
 	CALCFN(helmholtz_g,2,1);
 	CALCFN(helmholtz_cp,2,1);
 	CALCFN(helmholtz_cv,2,1);
+	CALCFN(helmholtz_w,2,1);
 	CALCFN(helmholtz_phsx_vT,2,4);
 	CALCFN(helmholtz_Tvsx_ph,2,4);
 
@@ -389,6 +392,25 @@ int helmholtz_cv_calc(struct BBoxInterp *bbox,
 	return 0;
 }
 
+
+/**
+	Evaluation function for 'helmholtz_w'
+	@param jacobian ignored
+	@return 0 on success
+*/
+int helmholtz_w_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE(2,1);
+
+	/* first input is temperature, second is density */
+	outputs[0] = helmholtz_w(inputs[0], inputs[1], helmholtz_data);
+
+	/* no need to worry about error states etc. */
+	return 0;
+}
 
 
 /**

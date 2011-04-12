@@ -28,17 +28,368 @@
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 
 (*
+	Model of a nozzle, just implements definition of nozzle efficiency
+	but does not include sonic flow effects.
+*)
+MODEL nozzle REFINES stream_equipment;
+	Vel_0, Vel_1 IS_A speed;
+	0.5*Vel_1^2 - 0.5*Vel_0^2 = inlet.h - outlet.h;
+
+	(* flow rate from cross-sectional area and velocity *)
+	A_1 IS_A area;
+	mdot * outlet.v = A_1 * Vel_1;
+
+	(* isentropic outlet state *)
+	outlet_is IS_A stream_state;
+	outlet_is.cd, outlet.cd ARE_THE_SAME;
+	outlet_is.p, outlet.p ARE_THE_SAME;
+	outlet_is.s, inlet.s ARE_THE_SAME;
+
+	eta_N IS_A fraction;
+	eta_N = (inlet.h - outlet.h) / (inlet.h - outlet_is.h);
+
+	(* adiabatic index *)
+	cp, cv IS_A specific_heat_capacity;
+	rho_in IS_A mass_density;
+	rho_in = 1 / inlet.v;
+	calc_cp: helmholtz_cp(
+		inlet.T, rho_in : INPUT;
+		cp : OUTPUT;
+		cd : DATA
+	);
+	calc_cv: helmholtz_cv(
+		inlet.T, rho_in : INPUT;
+		cv : OUTPUT;
+		cd : DATA
+	);
+	gamma "adiabatic index" IS_A factor;
+	gamma * cv = cp;
+
+	(* polytropic process predicts outlet speed *)
+	m IS_A factor;
+	m * (gamma - eta_N * (gamma - 1)) = gamma;
+
+	Dp IS_A delta_pressure;
+	Dp = outlet.p - inlet.p;
+END nozzle;
+
+(*
+	Test of nozzle model, using superheated steam.
+*)
+MODEL nozzle_test REFINES nozzle;
+	cd.component :== 'water';
+METHODS
+METHOD on_load;
+	FIX inlet.p, inlet.T, mdot;
+	inlet.h := 4000 {kJ/kg};
+	inlet.p := 50 {bar};
+	inlet.T := 400 {K} + 273.15 {K};
+	mdot := 0.1 {kg/s};
+
+	FIX Vel_0;
+	Vel_0 := 0 {m/s};
+
+	FIX outlet.p;
+	outlet.p := 40 {bar};
+
+	FIX eta_N;
+	eta_N := 0.95;
+
+	Dp.upper_bound := 0 {Pa};
+	Dp := -1 {bar};
+
+	Vel_0.lower_bound := 0 {m/s};
+	Vel_1.lower_bound := 0 {m/s};
+END on_load;
+END nozzle_test;
+
+
+
+
+
+MODEL nozzle_sonic1;
+
+	throat IS_A stream_node;
+	throat.cd.component :== 'water';
+
+	A_1 IS_A area;
+	Vel_1 IS_A speed;
+	inlet.mdot * inlet.v = Vel_1 * A_1;
+
+	(* sonic throat conditions *)
+	Vel_t IS_A speed;
+	rho_t IS_A mass_density;
+	rho_t = 1 / throat.v;
+	calc_w: helmholtz_w(
+		throat.T, rho_t : INPUT;
+		Vel_t : OUTPUT;
+		throat.cd : DATA
+	);
+	A_t IS_A area;
+	throat.mdot * throat.v = Vel_t * A_t;
+
+	(* flow from inlet to throat is isentropic *)
+	inlet IS_A stream_node;
+	inlet.cd, throat.cd ARE_THE_SAME;
+	inlet.mdot, throat.mdot ARE_THE_SAME;
+	mdot ALIASES inlet.mdot;
+	inlet.s, throat.s ARE_THE_SAME;
+
+	p_star_0 IS_A factor;
+	p_star_0 = throat.p / inlet.p;
+
+METHODS
+METHOD on_load;
+	FIX A_1;
+	A_1 := 10 {cm^2};
+
+	FIX inlet.p, inlet.T;
+	inlet.p := 40 {bar};
+	inlet.T := 400 {K} + 273.15 {K};
+	throat.h := 4000 {kJ/kg};
+	inlet.h := 4000 {kJ/kg};
+
+	FIX A_t;
+	A_t := 0.001 {cm^2};
+
+	(*FIX Vel_1;
+	Vel_1 := 1 {m/s};*)
+	FIX throat.p;
+	throat.p := 30 {bar};
+
+	p_star_0.upper_bound := 1;
+	p_star_0.lower_bound := 0;
+
+END on_load;
+METHOD solve_area;
+	FREE throat.p;
+	FIX Vel_1;
+END solve_area;
+END nozzle_sonic1;
+
+
+
+MODEL normal_shock REFINES stream_equipment;
+	cd.component :== 'nitrogen';
+
+	A IS_A area;
+	Vel_1, Vel_2 IS_A speed;
+	mdot * inlet.v = Vel_1 * A;
+
+	(* relate velocities by continuity *)
+	outlet.v * Vel_1 = inlet.v * Vel_2;
+
+	(* energy equation *)
+	0.5*(Vel_2^2 - Vel_1^2) + outlet.h - inlet.h = 0;
+
+	(* momentum equation *)
+	inlet.p - outlet.p = mdot * (Vel_2 - Vel_1);
+
+	(* upstream mach number *)
+	c_1 IS_A speed;
+	rho_1 IS_A mass_density;
+	rho_1 = 1 / inlet.v;
+	calc_w1: helmholtz_w(
+		inlet.T, rho_1 : INPUT;
+		c_1 : OUTPUT;
+		inlet.cd : DATA
+	);
+	M_1 IS_A positive_factor;
+	M_1 = Vel_1 / c_1;
+
+	(* downstream mach number *)
+	c_2 IS_A speed;
+	rho_2 IS_A mass_density;
+	rho_2 = 1 / outlet.v;
+	calc_w2: helmholtz_w(
+		outlet.T, rho_2 : INPUT;
+		c_2 : OUTPUT;
+		outlet.cd : DATA
+	);
+	M_2 IS_A positive_factor;
+	M_2 = Vel_2 / c_2;
+
+	(* second law: entropy must increase *)
+	ds IS_A delta_specific_entropy;
+	ds = outlet.s - inlet.s;
+
+METHODS
+METHOD on_load;
+	FIX A;
+	A := 10 {cm^2};
+
+	FIX inlet.p, inlet.T, mdot;
+	inlet.p := 40 {bar};
+	inlet.T := 400 {K} + 273.15 {K};
+	inlet.h := 4000 {kJ/kg};
+	mdot := 5 {kg/s};
+
+	ds.lower_bound := 0 {kJ/kg/K};
+END on_load;
+END normal_shock;
+
+
+MODEL nozzle_sonic REFINES stream_equipment;
+	cd.component :== 'water';
+
+	Vel_0, Vel_1 IS_A speed;
+	0.5*Vel_1^2 - 0.5*Vel_0^2 = inlet.h - outlet.h;
+
+	(* flow rate from cross-sectional area and velocity *)
+	A_1 IS_A area;
+	mdot * outlet.v = A_1 * Vel_1;
+
+	throat ALIASES outlet;
+
+	(* isentropic throat state, for calculation of eta_N0, the convergent efficiency *)
+	throat_is IS_A stream_state;
+	throat_is.cd, throat.cd ARE_THE_SAME;
+	throat_is.p, throat.p ARE_THE_SAME;
+	throat_is.s, inlet.s ARE_THE_SAME;
+	
+	eta_N0 IS_A fraction;
+	eta_N0 = (inlet.h - throat.h) / (inlet.h - throat_is.h);
+
+	(* adiabatic index *)
+	cp, cv IS_A specific_heat_capacity;
+	rho_in IS_A mass_density;
+	rho_in = 1 / inlet.v;
+	calc_cp: helmholtz_cp(
+		inlet.T, rho_in : INPUT;
+		cp : OUTPUT;
+		cd : DATA
+	);
+	calc_cv: helmholtz_cv(
+		inlet.T, rho_in : INPUT;
+		cv : OUTPUT;
+		cd : DATA
+	);
+	gamma "adiabatic index" IS_A factor;
+	gamma * cv = cp;
+
+	(* polytropic index for convergent part *)
+	m0 IS_A factor;
+	m0 * (gamma - eta_N0 * (gamma - 1)) = gamma;
+
+	(* sonic conditions at the throat *)
+	(*throat IS_A stream_state;*)
+	throat.cd, inlet.cd ARE_THE_SAME;
+	inlet.p * inlet.v^m0 = throat.p * throat.v^m0;
+
+	(* sonic throat conditions *)
+	Vel_t IS_A speed;
+	rho_t IS_A mass_density;
+	rho_t = 1 / throat.v;
+	calc_w: helmholtz_w(
+		throat.T, rho_t : INPUT;
+		Vel_t : OUTPUT;
+		cd : DATA
+	);
+	A_t IS_A area;
+	mdot * throat.v = Vel_t * A_t;
+METHODS
+METHOD on_load;
+	FIX inlet.p, inlet.T(*, mdot*);
+	inlet.h := 4000 {kJ/kg};
+	inlet.p := 50 {bar};
+	inlet.T := 400 {K} + 273.15 {K};
+	mdot := 0.1 {kg/s};
+
+	throat.T := inlet.T;
+	throat.p := outlet.p;
+	throat.h := 4000 {kJ/kg};
+
+	FIX eta_N0;
+	eta_N0 := 1;
+
+	FIX Vel_0;
+	Vel_0 := 0 {m/s};
+
+	FIX A_t;
+	A_t := 1e-5 {m^2};
+END on_load;
+END nozzle_sonic;
+
+(* 
+	Model of nozzle with choked flow.
+*)
+
+MODEL nozzle_choked REFINES nozzle;
+	cd.component :== 'water';
+
+	(* isentropic throat state, for calculation of eta_N0, the convergent efficiency *)
+	throat_is IS_A stream_state;
+	throat_is.cd, throat.cd ARE_THE_SAME;
+	throat_is.p, throat.p ARE_THE_SAME;
+	throat_is.s, inlet.s ARE_THE_SAME;
+	
+	eta_N0 IS_A fraction;
+	eta_N0 = (inlet.h - throat.h) / (inlet.h - throat_is.h);
+
+	(* we already calculated gamma in parent model *)
+
+	(* polytropic index for convergent part *)
+	m0 IS_A factor;
+	m0 * (gamma - eta_N0 * (gamma - 1)) = gamma;
+
+	(* sonic conditions at the throat *)
+	throat IS_A stream_state;
+	throat.cd, inlet.cd ARE_THE_SAME;
+	inlet.p * inlet.v^m0 = throat.p * throat.v^m0;
+
+	(* sonic throat conditions *)
+	Vel_t IS_A speed;
+	rho_t IS_A mass_density;
+	rho_t = 1 / throat.v;
+	calc_w: helmholtz_w(
+		throat.T, rho_t : INPUT;
+		Vel_t : OUTPUT;
+		cd : DATA
+	);
+	A_t IS_A area;
+	mdot * throat.v = Vel_t * A_t;
+
+	(* wild assumption... *)
+	throat.T, outlet.T ARE_THE_SAME;
+
+METHODS
+METHOD on_load;
+	FIX inlet.p, inlet.T;
+	inlet.h := 4000 {kJ/kg};
+	inlet.p := 50 {bar};
+	inlet.T := 400 {K} + 273.15 {K};
+	mdot := 0.1 {kg/s};
+
+	FIX outlet.p;
+	outlet.p := 40 {bar};
+
+	throat.T := inlet.T;
+	throat.p := outlet.p;
+	throat.h := 4000 {kJ/kg};
+
+	FIX Vel_0;
+	Vel_0 := 0 {m/s};
+
+	FIX eta_N0;
+	eta_N0 := 0.95;
+
+	FIX A_t;
+	A_t := 1e-5 {m^2};
+END on_load;
+END nozzle_choked;
+
+(*
 	This is the common stuff in a turbine stage. We hope to be able to put
 	more stuff into such as all the common variables. Not supposed to be
 	solvable on its own.
 *)
 MODEL turbine_stage REFINES stream_equipment;
+	Vel_0, Vel_1, Vel_2 IS_A speed;
 
-	Vel_in(*, Vel_out*) IS_A speed;
 	w,w_max IS_A specific_energy;
 
 	(* for first stage, need to consider KE  *)
-	(* inlet.h + 0.5*Vel_in^2 = outlet.h + 0.5*Vel_out^2 + w;  *)
+	(* inlet.h + 0.5*Vel_0^2 = outlet.h + 0.5*Vel_out^2 + w;  *)
 
 	(* for other stages, changes in KE negl. *)
 	w = (inlet.h - outlet.h);
@@ -76,6 +427,14 @@ MODEL turbine_stage REFINES stream_equipment;
 	m_s IS_A factor;
 	m_s * (gamma - eta * (gamma - 1)) = gamma;
 
+	Vel_B "average blade velocity" IS_A speed;
+	N "turbine speed" IS_A angular_speed;
+	r_B "average blade radius (for calculation of blade speed)" IS_A distance;
+	r_B * N = Vel_B;
+
+	R_B "ratio of blade linear speed to mid-stage gas speed" IS_A speed;
+	R_B * Vel_1 = Vel_B;
+
 END turbine_stage;
 
 (*
@@ -90,18 +449,11 @@ MODEL turbine_stage_impulse REFINES turbine_stage;
 	eta_B "impulse blade efficiency" IS_A fraction;
 	w_max_B "available kinetic energy" IS_A specific_energy;
 	Vel_mid "inter-blade velocity" IS_A speed;
-	Vel_B "average blade velocity" IS_A speed;
 	DVel_w "change in gas velocity, in tangential direction" IS_A speed;
 	alpha_mid(*, alpha_out*) IS_A angle;
-	R_B "ratio of blade linear speed to mid-stage gas speed" IS_A speed;
 
-	N "turbine speed" IS_A angular_speed;
-	r_B "average blade radius (for calculation of blade speed)" IS_A distance;
-	r_B * N = Vel_B;
-
-	R_B * Vel_mid = Vel_B;
 	eta_B = 4*(R_B * cos(alpha_mid) - R_B^2);
-	w_max_B = 0.5 * Vel_in^2;
+	w_max_B = 0.5 * Vel_0^2;
 	w = Vel_B * DVel_w;
 	eta_B * w_max = w;
 
@@ -119,7 +471,7 @@ MODEL turbine_stage_impulse REFINES turbine_stage;
 	(*Vel_rel_i, Vel_rel_o IS_A speed;
 	Vel_rel_i = Vel_rel_o; (* no slow-down on blade *)
 	(*DVel_w = Vel_rel_i * cos(beta_in) + Vel_rel_o * cos(beta_out);*)
-	Vel_rel_i * cos(beta_in) = Vel_in * cos(alpha_mid) - Vel_B;
+	Vel_rel_i * cos(beta_in) = Vel_0 * cos(alpha_mid) - Vel_B;
 	Vel_rel_o * cos(beta_out) = Vel_out * cos(alpha_out) - Vel_B;
 	(* beta_out = arctan(2 * tan(alpha_mid)); *)*)
 
@@ -142,26 +494,22 @@ METHOD on_load;
 	N := 3000 {RPM};
 
 	(* an imaginary, small inlet velocity *)
-	FIX Vel_in;
-	Vel_in := inlet.mdot * inlet.v / (1{PI} * r_B^2);
+	FIX Vel_0;
+	Vel_0 := inlet.mdot * inlet.v / (1{PI} * r_B^2);
 END on_load;
 END turbine_stage_impulse;
 
 
 (*
 	Model of a reaction stage. Equations from Thomas are given for 50% reaction
-	stage, but we attempt to generalise to any reaction percentage. 
+	stage, and to start with, we assume the same %reaction in the equations.
 
 	This model is still not working; it partly solves, only.
 *)
-MODEL turbine_stage_reaction REFINES turbine_stage;
+MODEL turbine_stage_reaction_50 REFINES turbine_stage;
 	cd.component :== 'water';
 
-	Vel_0 ALIASES Vel_in;
-	Vel_1, Vel_2 IS_A speed;
-
 	Vel_a "axial velocity, at both 1 and 2" IS_A speed;
-	Vel_B "average blade velocity" IS_A speed;
 
 	DVel_w IS_A speed;
 	DVel_w = Vel_a * (1/tan(beta_in) + 1/tan(beta_2));
@@ -195,12 +543,9 @@ MODEL turbine_stage_reaction REFINES turbine_stage;
 	(* shockless entry *)
 	beta_1 ALIASES beta_in;
 
-	Vel_0  = Vel_2;
-	alpha_0  = alpha_2;
-
-	N "turbine speed" IS_A angular_speed;
-	r_B "average blade radius (for calculation of blade speed)" IS_A distance;
-	r_B * N = Vel_B;
+	(* equal absolute velocities at stage inlet and outlet... *)
+	Vel_0  = Vel_2; (* p 182 *)
+	alpha_0  = alpha_2; (* eq 15.83 *)
 
 	(* BLADE EFFICIENCY *)
 
@@ -223,10 +568,8 @@ MODEL turbine_stage_reaction REFINES turbine_stage;
 	w_max_B "maximum extractable work" IS_A specific_energy;
 	w_max_B = 0.5 * Vel_1^2 + mid.h - outlet_is_a.h; (* eq 15.88 *)
 
-	Vel_rel_i^2 = Vel_1^2 - 2*Vel_1*Vel_B*cos(alpha_1) + Vel_B^2; (* eq 15.47 *)
-
-	R_B "ratio of blade linear speed to mid-stage gas speed" IS_A speed;
-	R_B * Vel_1 = Vel_B;
+	Vel_rel_i^2 = Vel_1^2 + Vel_B^2 - 2*Vel_1*Vel_B*cos(alpha_1); (* eq 15.47 *)
+	(*Vel_2^2 = Vel_rel_o^2 + Vel_B^2 - 2*Vel_rel_o*Vel_B*cos(beta_2);*) (* cosine rule applied to other triangle, no assumption of %reaction *)
 
 METHODS
 METHOD on_load;
@@ -263,7 +606,7 @@ METHOD on_load;
 	(* initial guess *)
 	mid.p := rho * (inlet.p - outlet.p) + outlet.p;
 END on_load;
-END turbine_stage_reaction;
+END turbine_stage_reaction_50;
 
 (*
 MODEL turbine_stage_reaction REFINES turbine_stage;
@@ -283,12 +626,4 @@ MODEL turbine_stage_reaction REFINES turbine_stage;
 
 END turbine_stage;
 *)
-
-
-
-
-
-
-
-
 
