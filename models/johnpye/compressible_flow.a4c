@@ -28,6 +28,11 @@
 
 REQUIRE "johnpye/thermo_types.a4c";
 
+
+(*
+	Ideal gas flow node, with ideal gas law, Mach number and speed of sound
+	included. No allowance for enthalpy, entropy at this stage.
+*)
 MODEL ideal_gas_node;
 	M "Mach number" IS_A positive_factor;
 	p IS_A pressure;
@@ -51,10 +56,30 @@ MODEL ideal_gas_node;
 	M = Vel / c;
 END ideal_gas_node;
 
+
+(*
+	Add cross-sectional area to the above model; not needed for normal shock
+	calculations, but useful in nozzle calcs.
+*)
+MODEL ideal_gas_duct_node REFINES ideal_gas_node;
+	A IS_A area;
+	mdot IS_A mass_rate;
+	mdot = rho * A * Vel;
+END ideal_gas_duct_node;
+
+
+(* Specific cases for air...*)
+
 MODEL air_node REFINES ideal_gas_node;
 	MM :== 28.97 {kg/kmol};
 	k :== 1.4;
 END air_node;
+
+MODEL air_duct_node REFINES ideal_gas_duct_node;
+	MM :== 28.97 {kg/kmol};
+	k :== 1.4;
+END air_duct_node;
+
 
 (*
 	Model of a stationary normal shock in air. Using a moving frame of
@@ -73,12 +98,69 @@ MODEL air_normal_shock;
 	S2.T / S1.T = ( 1 + (k-1)/2*S1.M^2) * (2*k/(k-1)*S1.M^2 - 1)/ ((k+1)^2/2/(k-1)*S1.M^2);
 END air_normal_shock;
 
+(*
+	Model of isentropic flow in a converging or diverging nozzle over an
+	interval in which no shock is present.
+*)
+MODEL isentropic_flow_segment;
+	inlet, outlet IS_A air_duct_node;
+	k ALIASES inlet.k;
+	(* isentropic <=> adiabatic <=> no heat transfer *)
+	outlet.T / inlet.T = (outlet.p / inlet.p)^((k-1)/k);
+	(* conservation of mass *)
+	inlet.mdot, outlet.mdot ARE_THE_SAME;
+END isentropic_flow_segment;
+
+
+MODEL isentropic_stagnation;
+	flow IS_A air_duct_node;
+	stag IS_A air_node;
+
+	stag.Vel = 0;
+	stag.p * stag.v^stag.k = flow.p * flow.v^k;
+	k ALIASES flow.k;
+	flow.Vel^2 / 2 + (k / (k-1)) * flow.p * flow.v = stag.k/(stag.k-1) * stag.p * stag.v;
+END isentropic_stagnation;
+
+(* TODO write a test model for isentropic_stagnation *)
+
+(*------------------------------EXAMPLE MODELS -------------------------------*)
+
+(*
+	Flow from reservoir at 20°C, 500 kPa to receiver at 300 kPa.
+	Potter & Wiggert 3rd SI Edition, Example 9.2.
+
+	FIXME this model isn't working yet.
+*)
+MODEL example_potter_wiggert_ex_9_2;
+	(* wire up a reservoir, through a flowing node, to a receiver *)
+	res, rec IS_A isentropic_stagnation;
+	inlet ALIASES res.stag;
+	outlet ALIASES rec.stag;
+	res.flow, rec.flow ARE_THE_SAME;
+	exit ALIASES res.flow;
+METHODS
+METHOD on_load;
+
+	FIX inlet.p, inlet.T;
+	inlet.p := 500 {kPa};
+	inlet.T := 20 {K} + 273.15 {K};
+
+	FIX exit.A;
+	exit.A := 10 {cm^2};
+
+	FIX outlet.p;
+	outlet.p := 300 {kPa};
+END on_load;
+END example_potter_wigger_ex_9_2;
 
 (*
 	This model reproduces the results of Example 9.5 from Potter & Wiggert, 
 	3rd SI edition. The question asks to determine the pressure and temperature 
 	conditions downstream of a shock wave passing through ambient air of given
 	state.
+
+	Tested, works OK -- JP
 *)
 MODEL example_potter_wiggert_ex_9_5 REFINES air_normal_shock;
 METHODS
@@ -99,6 +181,8 @@ END example_potter_wiggert_ex_9_5;
 	we have added an assumption that the ambient air pressure is 101.3 kPa. This
 	allows the model to be 'square' and the pressure and temperature behind the
 	shock wave (4.83 bar, 500 K) to also be calculated.
+
+	Tested, works OK -- JP
 *)
 MODEL example_potter_wiggert_ex_9_6 REFINES air_normal_shock;
 	Vel_induced IS_A speed;
@@ -112,4 +196,13 @@ METHOD on_load;
 END on_load;
 END example_potter_wiggert_ex_9_6;
 
+
+(*
+	Example 9.5 from Potter & Wiggert, 3rd SI edition. A converging-diverging
+	nozzle with normal shock at the exit plane, exiting to ambient conditions.
+	Exit diameter and throat diameter given. We calculate supply pressure and
+	flow rate.
+*)(*
+MODEL example_potter_wiggert_ex_9_7 REFINES air_normal_shock;
+	*)
 
