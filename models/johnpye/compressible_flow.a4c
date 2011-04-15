@@ -105,10 +105,17 @@ END air_normal_shock;
 MODEL isentropic_flow_segment;
 	inlet, outlet IS_A air_duct_node;
 	k ALIASES inlet.k;
+	inlet.mdot, outlet.mdot ARE_THE_SAME;
+
+	(* conservation of energy *)
+	0 = (outlet.Vel^2 - inlet.Vel^2) / 2 + k/(k-1)*(outlet.p * outlet.v - inlet.p * inlet.rho);
+
 	(* isentropic <=> adiabatic <=> no heat transfer *)
 	outlet.T / inlet.T = (outlet.p / inlet.p)^((k-1)/k);
+
 	(* conservation of mass *)
-	inlet.mdot, outlet.mdot ARE_THE_SAME;
+	inlet.rho * inlet.A * inlet.Vel = outlet.rho * outlet.A * outlet.Vel;
+
 END isentropic_flow_segment;
 
 
@@ -116,13 +123,76 @@ MODEL isentropic_stagnation;
 	flow IS_A air_duct_node;
 	stag IS_A air_node;
 
+	(* conservation of mass *)
 	stag.Vel = 0;
-	stag.p * stag.v^stag.k = flow.p * flow.v^k;
+	mdot ALIASES flow.mdot;
 	k ALIASES flow.k;
-	flow.Vel^2 / 2 + (k / (k-1)) * flow.p * flow.v = stag.k/(stag.k-1) * stag.p * stag.v;
+
+	(* conservation of energy *)
+	stag.T = flow.T * (1 + (k-1)/2 * flow.M^2);
+
+	(* isentropic *)
+	(*(1 + (k-1)/2 * flow.M^2 ) * flow.p^((k-1)/k) = stag.p^((k-1)/k);*)
+	(stag.rho / flow.rho)^(k-1) = 1 + (k-1)/2*flow.M^2;
+
 END isentropic_stagnation;
 
-(* TODO write a test model for isentropic_stagnation *)
+(*
+	This model calculates the pressure at the throat (critical area) for an
+	assumed upstream reservoir pressure, and isentropic flow inbetween.
+
+	Reproduces a part of Potter & Wiggert Example 9.2.
+*)
+MODEL isentropic_critical_area;
+	stag IS_A air_node;
+	crit IS_A air_duct_node;
+	k ALIASES crit.k;
+
+	crit.T / stag.T = 2 / (k+1);
+	(*crit.p / stag.p = (2/(k+1))^(k/(k-1));*)
+	crit.rho / stag.rho = (2/(k+1))^(1/(k-1));
+
+	(* stagnation: no velocity *)
+	stag.Vel = 0;
+
+	(* supersonic at the critical area *)
+	crit.M = 1;
+METHODS
+METHOD on_load;
+	FIX stag.p, stag.T;
+	stag.p := 500 {kPa};
+	stag.T := 20 {K} + 273.15 {K};
+
+	FIX crit.A;
+	crit.A := 10 {cm^2};
+END on_load;
+END isentropic_critical_area;
+
+MODEL isentropic_stagnation_test_1 REFINES isentropic_stagnation;
+METHODS
+METHOD on_load;
+	FIX stag.p, stag.T, flow.A;
+	stag.p := 500 {kPa};
+	stag.T := 20 {K} + 273.15 {K};
+	flow.A := 10 {cm^2};
+
+	FIX mdot;
+	mdot := 1.167 {kg/s};
+END on_load;
+END isentropic_stagnation_test_1;
+
+MODEL isentropic_stagnation_test_2 REFINES isentropic_stagnation;
+METHODS
+METHOD on_load;
+	FIX stag.p, flow.A;
+	stag.p := 500 {kPa};
+	stag.T := 20 {K} + 273.15 {K};
+	flow.A := 10 {cm^2};
+
+	FIX flow.M;
+	flow.M := 1;
+END on_load;
+END isentropic_stagnation_test_2;
 
 (*------------------------------EXAMPLE MODELS -------------------------------*)
 
@@ -152,7 +222,7 @@ METHOD on_load;
 	FIX outlet.p;
 	outlet.p := 300 {kPa};
 END on_load;
-END example_potter_wigger_ex_9_2;
+END example_potter_wiggert_ex_9_2;
 
 (*
 	This model reproduces the results of Example 9.5 from Potter & Wiggert, 
