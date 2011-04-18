@@ -80,6 +80,7 @@ MODEL air_duct_node REFINES ideal_gas_duct_node;
 	k :== 1.4;
 END air_duct_node;
 
+(*-----------------------NORMAL SHOCK IN ISENTROPIC FLOW----------------------*)
 
 (*
 	Model of a stationary normal shock in air. Using a moving frame of
@@ -97,6 +98,53 @@ MODEL air_normal_shock;
 
 	S2.T / S1.T = ( 1 + (k-1)/2*S1.M^2) * (2*k/(k-1)*S1.M^2 - 1)/ ((k+1)^2/2/(k-1)*S1.M^2);
 END air_normal_shock;
+
+(*------------------------------EXAMPLE MODELS -------------------------------*)
+
+(*
+	This model reproduces the results of Example 9.5 from Potter & Wiggert, 
+	3rd SI edition. The question asks to determine the pressure and temperature 
+	conditions downstream of a shock wave passing through ambient air of given
+	state.
+
+	Tested, works OK -- JP
+*)
+MODEL example_potter_wiggert_ex_9_5 REFINES air_normal_shock;
+METHODS
+METHOD on_load;
+	FIX S1.Vel, S1.p, S1.T;
+	S1.Vel := 450 {m/s};
+	S1.p := 80 {kPa};
+	S1.T := 15 {K} + 273.15 {K};
+END on_load;
+END example_potter_wiggert_ex_9_5;
+
+(*
+	This model reproduces the results of Example 9.5 from Potter & Wiggert, 
+	3rd SI edition. This problem shows the wind speeds implicit behind a strong
+	shock wave such as that arising from a high-powered bomb explosions.
+
+	Although the problem as given in P&W can be solved even without doing so,
+	we have added an assumption that the ambient air pressure is 101.3 kPa. This
+	allows the model to be 'square' and the pressure and temperature behind the
+	shock wave (4.83 bar, 500 K) to also be calculated.
+
+	Tested, works OK -- JP
+*)
+MODEL example_potter_wiggert_ex_9_6 REFINES air_normal_shock;
+	Vel_induced IS_A speed;
+	Vel_induced = S2.Vel - S1.Vel;
+METHODS
+METHOD on_load;
+	FIX S1.Vel, S1.T, S1.p;
+	S1.Vel := 700 {m/s};
+	S1.T := 15 {K} + 273.15 {K};
+	S1.p := 101.3 {kPa};
+END on_load;
+END example_potter_wiggert_ex_9_6;
+
+
+(*----------------------------STAGNATION CONDITIONS---------------------------*)
 
 (*
 	Model of isentropic flow in a converging or diverging nozzle over an
@@ -194,7 +242,24 @@ METHOD on_load;
 END on_load;
 END isentropic_stagnation_test_2;
 
-(*------------------------------EXAMPLE MODELS -------------------------------*)
+
+
+
+(*
+	Example 9.7 from Potter & Wiggert, 3rd SI edition. A converging-diverging
+	nozzle with normal shock at the exit plane, exiting to ambient conditions.
+	Exit diameter and throat diameter given. We calculate receiver pressure and
+	flow rate.
+
+	Note:
+	* throat must be at M = 1
+	* isentropic flow from throat to exit occurs with area ratio given
+	* upstream (reservoir) conditions are 90 kPa, 20 °C - ambient.
+*)
+MODEL example_potter_wiggert_ex_9_7 REFINES air_normal_shock;
+
+	
+
 
 (*
 	Flow from reservoir at 20°C, 500 kPa to receiver at 300 kPa.
@@ -224,55 +289,5 @@ METHOD on_load;
 END on_load;
 END example_potter_wiggert_ex_9_2;
 
-(*
-	This model reproduces the results of Example 9.5 from Potter & Wiggert, 
-	3rd SI edition. The question asks to determine the pressure and temperature 
-	conditions downstream of a shock wave passing through ambient air of given
-	state.
 
-	Tested, works OK -- JP
-*)
-MODEL example_potter_wiggert_ex_9_5 REFINES air_normal_shock;
-METHODS
-METHOD on_load;
-	FIX S1.Vel, S1.p, S1.T;
-	S1.Vel := 450 {m/s};
-	S1.p := 80 {kPa};
-	S1.T := 15 {K} + 273.15 {K};
-END on_load;
-END example_potter_wiggert_ex_9_5;
-
-(*
-	This model reproduces the results of Example 9.5 from Potter & Wiggert, 
-	3rd SI edition. This problem shows the wind speeds implicit behind a strong
-	shock wave such as that arising from a high-powered bomb explosions.
-
-	Although the problem as given in P&W can be solved even without doing so,
-	we have added an assumption that the ambient air pressure is 101.3 kPa. This
-	allows the model to be 'square' and the pressure and temperature behind the
-	shock wave (4.83 bar, 500 K) to also be calculated.
-
-	Tested, works OK -- JP
-*)
-MODEL example_potter_wiggert_ex_9_6 REFINES air_normal_shock;
-	Vel_induced IS_A speed;
-	Vel_induced = S2.Vel - S1.Vel;
-METHODS
-METHOD on_load;
-	FIX S1.Vel, S1.T, S1.p;
-	S1.Vel := 700 {m/s};
-	S1.T := 15 {K} + 273.15 {K};
-	S1.p := 101.3 {kPa};
-END on_load;
-END example_potter_wiggert_ex_9_6;
-
-
-(*
-	Example 9.5 from Potter & Wiggert, 3rd SI edition. A converging-diverging
-	nozzle with normal shock at the exit plane, exiting to ambient conditions.
-	Exit diameter and throat diameter given. We calculate supply pressure and
-	flow rate.
-*)(*
-MODEL example_potter_wiggert_ex_9_7 REFINES air_normal_shock;
-	*)
 
