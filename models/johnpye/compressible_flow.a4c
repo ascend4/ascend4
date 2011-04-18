@@ -237,4 +237,44 @@ METHOD on_load;
 END on_load;
 END example_potter_wiggert_ex_9_2;
 
+(*
+	Converging-diverging nozzle with exit 40 cm² and throat 10 cm², with flow
+	coming from reservoir at 20 °C, 500 kPa. Two different exit pressures can
+	result in M = 1 at the throat -- we calculate what those pressure are.
+	Potter & Wiggert 3rd SI ed, Example 9.3.
+
+	For this problem, saturation states are the upstream reservoir, and we
+	assert that A_star is the throat area and A is the exit area. These areas
+	then yield the Mach number from eq 9.3.19 (iteratively). We find the two
+	solutions by having two instances of the 'isentropic_saturation' model, and
+	impose upper and lower bounds on M in each of the two models.
+
+	Tested, works OK -- JP
+*)
+MODEL example_potter_wiggert_ex_9_3;
+	sub, sup IS_A isentropic_stagnation;
+	sub.A_star, sup.A_star ARE_THE_SAME;
+	A_star ALIASES sub.A_star;
+	sub.A, sup.A ARE_THE_SAME;
+	A ALIASES sub.A;
+	sub.p_0, sup.p_0 ARE_THE_SAME;
+	p_0 ALIASES sub.p_0;
+	sub.T_0, sup.T_0 ARE_THE_SAME;
+	T_0 ALIASES sub.T_0;
+METHODS
+METHOD on_load;
+	FIX A, A_star;
+	A_star := 10 {cm^2};
+	A := 40 {cm^2};
+
+	(* ensure two different solution regions *)
+	sub.M.upper_bound := 1;
+	sup.M.lower_bound := 1;
+
+	FIX T_0, p_0;
+	T_0 := 20 {K} +  273.15 {K};
+	p_0 := 500 {kPa};
+END on_load;
+END example_potter_wiggert_ex_9_3;
+
 
