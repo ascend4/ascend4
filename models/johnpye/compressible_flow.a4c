@@ -146,26 +146,6 @@ END example_potter_wiggert_ex_9_6;
 
 (*----------------------------STAGNATION CONDITIONS---------------------------*)
 
-(*
-	Model of isentropic flow in a converging or diverging nozzle over an
-	interval in which no shock is present.
-*)
-MODEL isentropic_flow_segment;
-	inlet, outlet IS_A air_duct_node;
-	k ALIASES inlet.k;
-	inlet.mdot, outlet.mdot ARE_THE_SAME;
-
-	(* conservation of energy *)
-	0 = (outlet.Vel^2 - inlet.Vel^2) / 2 + k/(k-1)*(outlet.p * outlet.v - inlet.p * inlet.rho);
-
-	(* isentropic <=> adiabatic <=> no heat transfer *)
-	outlet.T / inlet.T = (outlet.p / inlet.p)^((k-1)/k);
-
-	(* conservation of mass *)
-	inlet.rho * inlet.A * inlet.Vel = outlet.rho * outlet.A * outlet.Vel;
-
-END isentropic_flow_segment;
-
 
 MODEL isentropic_stagnation;
 	flow IS_A air_duct_node;
@@ -177,46 +157,33 @@ MODEL isentropic_stagnation;
 	k ALIASES flow.k;
 
 	(* conservation of energy *)
-	stag.T = flow.T * (1 + (k-1)/2 * flow.M^2);
+	1 = T_rel_0 * (1 + (k-1)/2 * flow.M^2);
 
 	(* isentropic *)
+	(1 + (k-1)/2*flow.M^2)^(k/(k-1)) * p_rel_0 = 1;
 	(*(1 + (k-1)/2 * flow.M^2 ) * flow.p^((k-1)/k) = stag.p^((k-1)/k);*)
-	(stag.rho / flow.rho)^(k-1) = 1 + (k-1)/2*flow.M^2;
+	(*(stag.rho / flow.rho)^(k-1) = 1 + (k-1)/2*flow.M^2;*)
+
+	p_rel_0 IS_A positive_factor;
+	T_rel_0 IS_A positive_factor;
+	A_rel_star IS_A positive_factor;
+	A_star IS_A area;
+	p_0 ALIASES stag.p;
+	p ALIASES flow.p;
+	T ALIASES flow.T;
+	T_0 ALIASES stag.T;
+	A ALIASES flow.A;
+	M ALIASES flow.M;
+
+	p_rel_0 * stag.p = flow.p;
+	T_rel_0 * stag.T = flow.T;
+	A_rel_star * A_star = flow.A;
+
+	A_rel_star = 1 / flow.M * ((2 + (k-1)*M^2)/(k+1))^((k+1)/(2*(k-1)));
 
 END isentropic_stagnation;
 
-(*
-	This model calculates the pressure at the throat (critical area) for an
-	assumed upstream reservoir pressure, and isentropic flow inbetween.
-
-	Reproduces a part of Potter & Wiggert Example 9.2.
-*)
-MODEL isentropic_critical_area;
-	stag IS_A air_node;
-	crit IS_A air_duct_node;
-	k ALIASES crit.k;
-
-	crit.T / stag.T = 2 / (k+1);
-	(*crit.p / stag.p = (2/(k+1))^(k/(k-1));*)
-	crit.rho / stag.rho = (2/(k+1))^(1/(k-1));
-
-	(* stagnation: no velocity *)
-	stag.Vel = 0;
-
-	(* supersonic at the critical area *)
-	crit.M = 1;
-METHODS
-METHOD on_load;
-	FIX stag.p, stag.T;
-	stag.p := 500 {kPa};
-	stag.T := 20 {K} + 273.15 {K};
-
-	FIX crit.A;
-	crit.A := 10 {cm^2};
-END on_load;
-END isentropic_critical_area;
-
-MODEL isentropic_stagnation_test_1 REFINES isentropic_stagnation;
+MODEL isentropic_stagnation_test REFINES isentropic_stagnation;
 METHODS
 METHOD on_load;
 	FIX stag.p, stag.T, flow.A;
@@ -224,70 +191,50 @@ METHOD on_load;
 	stag.T := 20 {K} + 273.15 {K};
 	flow.A := 10 {cm^2};
 
-	FIX mdot;
-	mdot := 1.167 {kg/s};
+	FIX M;
+	M := 0.80;
 END on_load;
-END isentropic_stagnation_test_1;
+END isentropic_stagnation_test;
 
-MODEL isentropic_stagnation_test_2 REFINES isentropic_stagnation;
-METHODS
-METHOD on_load;
-	FIX stag.p, flow.A;
-	stag.p := 500 {kPa};
-	stag.T := 20 {K} + 273.15 {K};
-	flow.A := 10 {cm^2};
-
-	FIX flow.M;
-	flow.M := 1;
-END on_load;
-END isentropic_stagnation_test_2;
-
-
-
+(*------------------------------EXAMPLE MODELS -------------------------------*)
 
 (*
-	Example 9.7 from Potter & Wiggert, 3rd SI edition. A converging-diverging
-	nozzle with normal shock at the exit plane, exiting to ambient conditions.
-	Exit diameter and throat diameter given. We calculate receiver pressure and
-	flow rate.
-
-	Note:
-	* throat must be at M = 1
-	* isentropic flow from throat to exit occurs with area ratio given
-	* upstream (reservoir) conditions are 90 kPa, 20 °C - ambient.
-*)
-MODEL example_potter_wiggert_ex_9_7 REFINES air_normal_shock;
-
-	
-
-
-(*
-	Flow from reservoir at 20°C, 500 kPa to receiver at 300 kPa.
+	Flow from reservoir at 20°C, 500 kPa to receiver at 200 and 300 kPa.
 	Potter & Wiggert 3rd SI Edition, Example 9.2.
 
-	FIXME this model isn't working yet.
+	We assume the flow is through a converging-only nozzle from the reservoir 
+	into the receiver. As such, either the entire flow is subsonic, or else
+	there will be choked flow with M = 1 in the exit of the nozzle.
+
+	'crit' uses upstream conditions to determine the reservoir pressure that
+	will give M = 1 at the exit. Then, in part (a), the receiver pressure is
+	higher than that critical pressure, so subsonic flow occurs. For (b), the
+	pressure is lower, so choked flow occurs, with flow rate limited by the
+	M_exit = 1 choked-flow limit.
+
+	Tested, works OK -- JP
 *)
 MODEL example_potter_wiggert_ex_9_2;
-	(* wire up a reservoir, through a flowing node, to a receiver *)
-	res, rec IS_A isentropic_stagnation;
-	inlet ALIASES res.stag;
-	outlet ALIASES rec.stag;
-	res.flow, rec.flow ARE_THE_SAME;
-	exit ALIASES res.flow;
+	crit, part_a, part_b IS_A isentropic_stagnation;
+	crit.A, part_a.A, part_b.A ARE_THE_SAME;
+	crit.T_0, part_a.T_0, part_b.T_0 ARE_THE_SAME;
+	A ALIASES crit.A;
+	T_0 ALIASES crit.T_0;
 METHODS
 METHOD on_load;
+	FIX A; A := 10 {cm^2};
+	FIX T_0; T_0 := 20 {K} + 273.15 {K};
 
-	FIX inlet.p, inlet.T;
-	inlet.p := 500 {kPa};
-	inlet.T := 20 {K} + 273.15 {K};
+	FIX crit.M; crit.M := 1;
+	FIX crit.p_0; crit.p_0 := 500 {kPa};
 
-	FIX exit.A;
-	exit.A := 10 {cm^2};
+	FIX part_a.p_0; part_a.p_0 := 500 {kPa};
+	FIX part_a.p; part_a.p := 300 {kPa};
 
-	FIX outlet.p;
-	outlet.p := 300 {kPa};
+	(* actually, part (b) ends up being identical to 'crit'! *)
+	FIX part_b.p_0; part_b.p_0 := 500 {kPa};
+	FIX part_b.M; part_b.M := 1;
 END on_load;
 END example_potter_wiggert_ex_9_2;
-
 
 
