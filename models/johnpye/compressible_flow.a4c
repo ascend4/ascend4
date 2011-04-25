@@ -109,7 +109,7 @@ MODEL isentropic_stagnation;
 	1 = T_rel_0 * (1 + (k-1)/2 * flow.M^2);
 
 	(* isentropic *)
-	(1 + (k-1)/2*flow.M^2)^(k/(k-1)) * p_rel_0 = 1;
+	isen:  (1 + (k-1)/2*flow.M^2)^(k/(k-1)) * p_rel_0 = 1;
 	(*(1 + (k-1)/2 * flow.M^2 ) * flow.p^((k-1)/k) = stag.p^((k-1)/k);*)
 	(*(stag.rho / flow.rho)^(k-1) = 1 + (k-1)/2*flow.M^2;*)
 
@@ -128,7 +128,7 @@ MODEL isentropic_stagnation;
 	T_rel_0 * stag.T = flow.T;
 	A_rel_star * A_star = flow.A;
 
-	A_rel_star = 1 / flow.M * ((2 + (k-1)*M^2)/(k+1))^((k+1)/(2*(k-1)));
+	arat:  A_rel_star * flow.M = ((2 + (k-1)*M^2)/(k+1))^((k+1)/(2*(k-1)));
 
 END isentropic_stagnation;
 
@@ -275,7 +275,7 @@ END on_load;
 END example_potter_wiggert_ex_9_5;
 
 (*
-	This model reproduces the results of Example 9.5 from Potter & Wiggert, 
+	This model reproduces the results of Example 9.6 from Potter & Wiggert, 
 	3rd SI edition. This problem shows the wind speeds implicit behind a strong
 	shock wave such as that arising from a high-powered bomb explosions.
 
@@ -298,6 +298,7 @@ METHOD on_load;
 END on_load;
 END example_potter_wiggert_ex_9_6;
 
+
 (*
 	This model reproduces the results of Example 9.7 from Potter & Wiggert,
 	3rd SI edition. The problem relates to the calculation of outlet conditions 
@@ -307,31 +308,55 @@ END example_potter_wiggert_ex_9_6;
 
 	For a shock to exist at the exit, we know that we must have M = 1 at the
 	throat, so A* = A_t.
+
+	Tested, works OK -- JP
 *)
 MODEL example_potter_wiggert_ex_9_7; 
 	noz IS_A isentropic_stagnation;
 	A_star ALIASES noz.A_star;
 	A ALIASES noz.A;
+
+	D_star, D IS_A distance;
+	0.25{PI}*D_star^2 = A_star;
+	0.25{PI}*D^2 = A;
+
 	p_0 ALIASES noz.p_0;
 	T_0 ALIASES noz.T_0;
 
 	shock IS_A air_duct_normal_shock;
 	shock.S1, noz.flow ARE_THE_SAME;
-	
+
 	rec IS_A isentropic_stagnation;
 	rec.flow, shock.S2 ARE_THE_SAME;
 
 	p_2 ALIASES rec.p;
 	mdot ALIASES noz.mdot;
+
 METHODS
 METHOD on_load;
-	FIX A_star, A;
-	A_star := 5 {cm^2};
-	A := 10 {cm^2};
+	(* nozzle geometry *)
+	FIX D_star, D;
+	D_star := 5 {cm};
+	D := 10 {cm};
+
+	(* note that isentropic flow equations have to be bounded over a reasonable
+	range for the Brent	algorithm to converge in this case. Note that P&W Table
+	D.1 gives M up to 10 only, so limiting to 100 is still more generous.
+	FIXME Perhaps we can make these models more user-friendly by having a
+	supersonic and subsonic model that sets these bounds automatically...? *)
+	noz.flow.M.lower_bound := 1;
+	noz.flow.M.upper_bound := 100;
+
+	(* reservoir conditions *)
 	FIX p_0, T_0;
 	p_0 := 90 {kPa};
 	T_0 := 20 {K} + 273.15 {K};
 END on_load;
+METHOD self_test;
+	(* values from P&W *)
+	ASSERT abs(p_2 - 26.6 {kPa}) < 0.05 {kPa};
+	ASSERT abs(mdot - 0.417 {kg/s}) < 0.0005 {kg/s};
+END self_test;
 END example_potter_wiggert_ex_9_7;
 
 
