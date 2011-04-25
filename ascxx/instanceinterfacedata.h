@@ -20,6 +20,8 @@
 	will then be able to show an icon accordingly.
 
 	@NOTE LEAKY!
+	FIXME detail why this is leaky? perhaps failing to provide a mechanism for
+	deletion of these objects?
 */
 class InstanceInterfaceData{
 private:
