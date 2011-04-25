@@ -61,7 +61,20 @@ END ideal_gas_node;
 	Add cross-sectional area to the above model; not needed for normal shock
 	calculations, but useful in nozzle calcs.
 *)
-MODEL ideal_gas_duct_node REFINES ideal_gas_node;
+MODEL ideal_gas_duct_node;
+	(* we incorporate state as submodel so we can ARE_THE_SAME non-duct nodes *)
+	state IS_A ideal_gas_node;
+	M ALIASES state.M;
+	p ALIASES state.p;
+	T ALIASES state.T;
+	v ALIASES state.v;
+	rho ALIASES state.rho;
+	Vel ALIASES state.Vel;
+	MM ALIASES state.MM;
+	R ALIASES state.R;
+	k ALIASES state.k;
+	c ALIASES state.c;
+
 	A IS_A area;
 	mdot IS_A mass_rate;
 	mdot = rho * A * Vel;
@@ -79,70 +92,6 @@ MODEL air_duct_node REFINES ideal_gas_duct_node;
 	MM :== 28.97 {kg/kmol};
 	k :== 1.4;
 END air_duct_node;
-
-(*-----------------------NORMAL SHOCK IN ISENTROPIC FLOW----------------------*)
-
-(*
-	Model of a stationary normal shock in air. Using a moving frame of
-	reference, it can be used to model a moving shock wave as well.
-
-	Equations from Potter & Wiggert, 3rd SI edition, sects 9.1, 9.2 and 9.4.
-*)
-MODEL air_normal_shock;
-	S1, S2 IS_A air_node;
-	k ALIASES S1.k;
-	
-	S2.M^2 = ( S1.M^2 + 2/(k-1) ) / (2*k/(k-1)*S1.M^2 - 1);
-
-	S2.p / S1.p = 2*k/(k+1)*S1.M^2 - (k-1)/(k+1);
-
-	S2.T / S1.T = ( 1 + (k-1)/2*S1.M^2) * (2*k/(k-1)*S1.M^2 - 1)/ ((k+1)^2/2/(k-1)*S1.M^2);
-END air_normal_shock;
-
-(*------------------------------EXAMPLE MODELS -------------------------------*)
-
-(*
-	This model reproduces the results of Example 9.5 from Potter & Wiggert, 
-	3rd SI edition. The question asks to determine the pressure and temperature 
-	conditions downstream of a shock wave passing through ambient air of given
-	state.
-
-	Tested, works OK -- JP
-*)
-MODEL example_potter_wiggert_ex_9_5 REFINES air_normal_shock;
-METHODS
-METHOD on_load;
-	FIX S1.Vel, S1.p, S1.T;
-	S1.Vel := 450 {m/s};
-	S1.p := 80 {kPa};
-	S1.T := 15 {K} + 273.15 {K};
-END on_load;
-END example_potter_wiggert_ex_9_5;
-
-(*
-	This model reproduces the results of Example 9.5 from Potter & Wiggert, 
-	3rd SI edition. This problem shows the wind speeds implicit behind a strong
-	shock wave such as that arising from a high-powered bomb explosions.
-
-	Although the problem as given in P&W can be solved even without doing so,
-	we have added an assumption that the ambient air pressure is 101.3 kPa. This
-	allows the model to be 'square' and the pressure and temperature behind the
-	shock wave (4.83 bar, 500 K) to also be calculated.
-
-	Tested, works OK -- JP
-*)
-MODEL example_potter_wiggert_ex_9_6 REFINES air_normal_shock;
-	Vel_induced IS_A speed;
-	Vel_induced = S2.Vel - S1.Vel;
-METHODS
-METHOD on_load;
-	FIX S1.Vel, S1.T, S1.p;
-	S1.Vel := 700 {m/s};
-	S1.T := 15 {K} + 273.15 {K};
-	S1.p := 101.3 {kPa};
-END on_load;
-END example_potter_wiggert_ex_9_6;
-
 
 (*----------------------------STAGNATION CONDITIONS---------------------------*)
 
@@ -237,11 +186,12 @@ METHOD on_load;
 END on_load;
 END example_potter_wiggert_ex_9_2;
 
+
 (*
+	Potter & Wiggert 3rd SI ed, Example 9.3.
 	Converging-diverging nozzle with exit 40 cm² and throat 10 cm², with flow
 	coming from reservoir at 20 °C, 500 kPa. Two different exit pressures can
 	result in M = 1 at the throat -- we calculate what those pressure are.
-	Potter & Wiggert 3rd SI ed, Example 9.3.
 
 	For this problem, saturation states are the upstream reservoir, and we
 	assert that A_star is the throat area and A is the exit area. These areas
@@ -276,5 +226,112 @@ METHOD on_load;
 	p_0 := 500 {kPa};
 END on_load;
 END example_potter_wiggert_ex_9_3;
+
+(*-----------------------NORMAL SHOCK IN ISENTROPIC FLOW----------------------*)
+
+(*
+	Model of a stationary normal shock in air. Using a moving frame of
+	reference, it can be used to model a moving shock wave as well.
+
+	Equations from Potter & Wiggert, 3rd SI edition, sects 9.1, 9.2 and 9.4.
+*)
+MODEL air_normal_shock;
+	S1, S2 IS_A air_node;
+	k ALIASES S1.k;
+	
+	S2.M^2 = ( S1.M^2 + 2/(k-1) ) / (2*k/(k-1)*S1.M^2 - 1);
+
+	S2.p / S1.p = 2*k/(k+1)*S1.M^2 - (k-1)/(k+1);
+
+	S2.T / S1.T = ( 1 + (k-1)/2*S1.M^2) * (2*k/(k-1)*S1.M^2 - 1)/ ((k+1)^2/2/(k-1)*S1.M^2);
+END air_normal_shock;
+
+MODEL air_duct_normal_shock;
+	S1, S2 IS_A air_duct_node;
+	shock IS_A air_normal_shock;
+	S1.state, shock.S1 ARE_THE_SAME;
+	S2.state, shock.S2 ARE_THE_SAME;
+	S1.A, S2.A ARE_THE_SAME;
+END air_duct_normal_shock;
+
+(*------------------------------EXAMPLE MODELS -------------------------------*)
+
+(*
+	This model reproduces the results of Example 9.5 from Potter & Wiggert, 
+	3rd SI edition. The question asks to determine the pressure and temperature 
+	conditions downstream of a shock wave passing through ambient air of given
+	state.
+
+	Tested, works OK -- JP
+*)
+MODEL example_potter_wiggert_ex_9_5 REFINES air_normal_shock;
+METHODS
+METHOD on_load;
+	FIX S1.Vel, S1.p, S1.T;
+	S1.Vel := 450 {m/s};
+	S1.p := 80 {kPa};
+	S1.T := 15 {K} + 273.15 {K};
+END on_load;
+END example_potter_wiggert_ex_9_5;
+
+(*
+	This model reproduces the results of Example 9.5 from Potter & Wiggert, 
+	3rd SI edition. This problem shows the wind speeds implicit behind a strong
+	shock wave such as that arising from a high-powered bomb explosions.
+
+	Although the problem as given in P&W can be solved even without doing so,
+	we have added an assumption that the ambient air pressure is 101.3 kPa. This
+	allows the model to be 'square' and the pressure and temperature behind the
+	shock wave (4.83 bar, 500 K) to also be calculated.
+
+	Tested, works OK -- JP
+*)
+MODEL example_potter_wiggert_ex_9_6 REFINES air_normal_shock;
+	Vel_induced IS_A speed;
+	Vel_induced = S2.Vel - S1.Vel;
+METHODS
+METHOD on_load;
+	FIX S1.Vel, S1.T, S1.p;
+	S1.Vel := 700 {m/s};
+	S1.T := 15 {K} + 273.15 {K};
+	S1.p := 101.3 {kPa};
+END on_load;
+END example_potter_wiggert_ex_9_6;
+
+(*
+	This model reproduces the results of Example 9.7 from Potter & Wiggert,
+	3rd SI edition. The problem relates to the calculation of outlet conditions 
+	and flow rate for a converging-diverging nozzle, given specified upstream
+	reservoir pressure and temperature, given the throat and exit areas, and
+	subject to the fact that there is a normal shock at the nozzle's exit plane.
+
+	For a shock to exist at the exit, we know that we must have M = 1 at the
+	throat, so A* = A_t.
+*)
+MODEL example_potter_wiggert_ex_9_7; 
+	noz IS_A isentropic_stagnation;
+	A_star ALIASES noz.A_star;
+	A ALIASES noz.A;
+	p_0 ALIASES noz.p_0;
+	T_0 ALIASES noz.T_0;
+
+	shock IS_A air_duct_normal_shock;
+	shock.S1, noz.flow ARE_THE_SAME;
+	
+	rec IS_A isentropic_stagnation;
+	rec.flow, shock.S2 ARE_THE_SAME;
+
+	p_2 ALIASES rec.p;
+	mdot ALIASES noz.mdot;
+METHODS
+METHOD on_load;
+	FIX A_star, A;
+	A_star := 5 {cm^2};
+	A := 10 {cm^2};
+	FIX p_0, T_0;
+	p_0 := 90 {kPa};
+	T_0 := 20 {K} + 273.15 {K};
+END on_load;
+END example_potter_wiggert_ex_9_7;
 
 
