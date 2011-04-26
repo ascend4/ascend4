@@ -101,12 +101,12 @@ MODEL isentropic_stagnation;
 	stag IS_A air_node;
 
 	(* conservation of mass *)
-	stag.Vel = 0;
+	novel: stag.Vel = 0;
 	mdot ALIASES flow.mdot;
 	k ALIASES flow.k;
 
 	(* conservation of energy *)
-	1 = T_rel_0 * (1 + (k-1)/2 * flow.M^2);
+	conen: 1 = T_rel_0 * (1 + (k-1)/2 * flow.M^2);
 
 	(* isentropic *)
 	isen:  (1 + (k-1)/2*flow.M^2)^(k/(k-1)) * p_rel_0 = 1;
@@ -359,13 +359,38 @@ METHOD self_test;
 END self_test;
 END example_potter_wiggert_ex_9_7;
 
+(*
+	Example 9.8 from Potter & Wiggert 3rd SI ed.
+	We have a converging-diverging nozzle with throat 5 cm dia and outlet 10 cm
+	dia. A normal shock is established where the nozzle is 7.5 cm dia. The
+	reservoir is at 200 kPa and 20 °C. We have to calculate the pressure of
+	the receiver that will cause this shock location, and also the pressure at
+	the nozzle exit plane.
 
+	Tested, works OK -- JP
+
+	FIXME this model shows a limitation with repeated use of the 	
+	isentropic_stagnation model. That model contains a stag.Vel = 0 equation
+	which causes structural singularity if multiple stagnation models are
+	coupled to the same stagnation state.
+
+	FIXME another interesting issue with this model was that the isentropic
+	flow equations between the normal shock and the receiver were difficult
+	to calculate using the isentropic_stagnation model in current form. While we
+	would naturally have written
+		exit.mdot, rec.mdot ARE_THE_SAME;
+	we found that that did not solve well, and instead the following worked much
+	better:
+		exit.A_star, rec.A_star ARE_THE_SAME;
+	Maybe we need a simpler model for an isentropic flow segment that does not
+	incorporate the stagnation state...?
+*)
 MODEL example_potter_wiggert_ex_9_8;
 	noz IS_A isentropic_stagnation;
 	A_star ALIASES noz.A_star;
 	A ALIASES noz.A;
 
-	D_star, D IS_A distance;
+	D_star, D, D_exit IS_A distance;
 	0.25{PI}*D_star^2 = A_star;
 	0.25{PI}*D^2 = A;
 
@@ -377,11 +402,21 @@ MODEL example_potter_wiggert_ex_9_8;
 
 	rec IS_A isentropic_stagnation;
 	rec.flow, shock.S2 ARE_THE_SAME;
+
+	exit IS_A isentropic_stagnation;
+	exit.stag, rec.stag ARE_THE_SAME;
+	A_exit ALIASES exit.A;
+	0.25{PI}*D_exit^2 = A_exit;
+	exit.A_star, rec.A_star ARE_THE_SAME;
+
+	p_exit ALIASES exit.flow.p;
+	p_rec ALIASES rec.stag.p;
 METHODS
 METHOD on_load;
-	FIX D_star, D;
+	FIX D_star, D, D_exit;
 	D_star := 5 {cm};
 	D := 7.5 {cm};
+	D_exit := 10 {cm};
 
 	(* reservoir conditions *)
 	FIX p_0, T_0;
@@ -390,5 +425,19 @@ METHOD on_load;
 
 	noz.flow.M.lower_bound := 1;
 	noz.flow.M.upper_bound := 100;
+
+	exit.novel.included := FALSE;
+
+	exit.flow.M.lower_bound := 0;
+	exit.flow.M.upper_bound := 1;
 END on_load;
+METHOD self_test;
+	ASSERT abs(p_exit - 109 {kPa}) < 0.5 {kPa};
+	ASSERT abs(p_rec - 114 {kPa}) < 0.5 {kPa};
+	ASSERT abs(exit.M - 0.265) < 0.001;
+	ASSERT abs(exit.A_rel_star - 2.284) < 0.0005;
+	ASSERT abs(shock.S2.M - 0.531) < 0.0005;
+END self_test;
 END example_potter_wiggert_ex_9_8;
+
+
