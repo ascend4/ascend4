@@ -360,3 +360,35 @@ END self_test;
 END example_potter_wiggert_ex_9_7;
 
 
+MODEL example_potter_wiggert_ex_9_8;
+	noz IS_A isentropic_stagnation;
+	A_star ALIASES noz.A_star;
+	A ALIASES noz.A;
+
+	D_star, D IS_A distance;
+	0.25{PI}*D_star^2 = A_star;
+	0.25{PI}*D^2 = A;
+
+	p_0 ALIASES noz.p_0;
+	T_0 ALIASES noz.T_0;
+
+	shock IS_A air_duct_normal_shock;
+	shock.S1, noz.flow ARE_THE_SAME;
+
+	rec IS_A isentropic_stagnation;
+	rec.flow, shock.S2 ARE_THE_SAME;
+METHODS
+METHOD on_load;
+	FIX D_star, D;
+	D_star := 5 {cm};
+	D := 7.5 {cm};
+
+	(* reservoir conditions *)
+	FIX p_0, T_0;
+	p_0 := 200 {kPa};
+	T_0 := 20 {K} + 273.15 {K};
+
+	noz.flow.M.lower_bound := 1;
+	noz.flow.M.upper_bound := 100;
+END on_load;
+END example_potter_wiggert_ex_9_8;
