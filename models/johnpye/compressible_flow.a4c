@@ -77,7 +77,7 @@ MODEL ideal_gas_duct_node;
 
 	A IS_A area;
 	mdot IS_A mass_rate;
-	mdot = rho * A * Vel;
+	mdoteq: mdot = rho * A * Vel;
 END ideal_gas_duct_node;
 
 
@@ -124,9 +124,9 @@ MODEL isentropic_stagnation;
 	A ALIASES flow.A;
 	M ALIASES flow.M;
 
-	p_rel_0 * stag.p = flow.p;
-	T_rel_0 * stag.T = flow.T;
-	A_rel_star * A_star = flow.A;
+	preleq:  p_rel_0 * stag.p = flow.p;
+	Treleq:  T_rel_0 * stag.T = flow.T;
+	Areleq:  A_rel_star * A_star = flow.A;
 
 	arat:  A_rel_star * flow.M = ((2 + (k-1)*M^2)/(k+1))^((k+1)/(2*(k-1)));
 
@@ -196,7 +196,7 @@ END example_potter_wiggert_ex_9_2;
 	For this problem, saturation states are the upstream reservoir, and we
 	assert that A_star is the throat area and A is the exit area. These areas
 	then yield the Mach number from eq 9.3.19 (iteratively). We find the two
-	solutions by having two instances of the 'isentropic_saturation' model, and
+	solutions by having two instances of the 'isentropic_stagnation' model, and
 	impose upper and lower bounds on M in each of the two models.
 
 	Tested, works OK -- JP
@@ -440,4 +440,42 @@ METHOD self_test;
 END self_test;
 END example_potter_wiggert_ex_9_8;
 
+
+(*
+	This model is solves Example 9.9 from Potter & Wiggert 3rd SI ed. The
+	problem relates to the performance of a Pitot tube placed in a 
+	supersonic flow stream. Given the flow pressure as well as the pitot-tube
+	stagnation pressure, we must determine the free-stream flow velocity. We
+	are also given the temperature at the stagnation point.
+
+	Tested, works OK -- JP
+*)
+MODEL example_potter_wiggert_ex_9_9;
+	free ALIASES shock.S1;
+	shock IS_A air_normal_shock;
+	pitot IS_A isentropic_stagnation;
+	shock.S2, pitot.flow.state ARE_THE_SAME;
+	stag ALIASES pitot.stag;
+	Vel ALIASES free.Vel;
+	p ALIASES free.p;
+	p_0 ALIASES stag.p;
+	T_0 ALIASES stag.T;
+	T ALIASES free.T;
+METHODS
+METHOD on_load;
+	FIX free.p, stag.p, stag.T;
+	free.p := 75 {kPa};
+	stag.p := 300 {kPa};
+	stag.T := 150 {K} + 273.15 {K};
+
+	(* arbitrarily fix the pitot area to make problem square *)
+	FIX pitot.A;
+	pitot.A := 1 {m^2};
+END on_load;
+METHOD self_test;
+	ASSERT abs(free.M - 1.65) < 0.005;
+	ASSERT abs(free.T - 274 {K}) < 0.5 {K};
+	ASSERT abs(free.Vel - 547 {m/s}) < 0.5 {m/s};
+END self_test;
+END example_potter_wiggert_ex_9_9;
 
