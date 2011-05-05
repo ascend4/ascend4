@@ -28,12 +28,19 @@
 
 REQUIRE "johnpye/thermo_types.a4c";
 
+MODEL fluid;
+	component IS_A symbol_constant;
+	(* TODO, generalise for different fluid property correlations, selectable *)
+END fluid;
+
+(* XXX how to get hold of the fluid property constants... do we need them?? *)
 
 (*
 	Ideal gas flow node, with ideal gas law, Mach number and speed of sound
 	included. No allowance for enthalpy, entropy at this stage.
 *)
 MODEL ideal_gas_node;
+	cd IS_A fluid;
 	M "Mach number" IS_A positive_factor;
 	p IS_A pressure;
 	T IS_A temperature;
