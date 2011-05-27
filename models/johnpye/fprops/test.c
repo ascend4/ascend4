@@ -57,7 +57,7 @@ int helm_run_test_cases(const HelmholtzData *d, unsigned ntd, const TestData *td
 		T = td[i].T+T_adj;
 		rho = td[i].rho;
 		u = td[i].u*1e3;
-		ASSERT_TOL(helmholtz_u, T, rho, d, u, 1e3*u);
+		ASSERT_TOL(helmholtz_u_raw, T, rho, d, u, 1e3*u);
 	}
 
 	/* Checking entropy values */

@@ -82,6 +82,22 @@ double helmholtz_p(double T, double rho, const HelmholtzData *d){
 	return helmholtz_p_raw(T,rho,d);
 }
 
+double helmholtz_u(double T, double rho, const HelmholtzData *d){
+	double p, rho_f, rho_g;
+	if(T < d->T_c){
+		int res = fprops_sat_T(T, &p, &rho_f, &rho_g, d);
+		if(res){
+			//fprintf(stderr,"ERROR: got error % from saturation calc in %s",res,__func__);
+			return d->rho_c;
+		}
+		if(rho < rho_f && rho > rho_g){
+			double x = rho_g*(rho_f/rho - 1)/(rho_f - rho_g);
+			return x*helmholtz_u_raw(T,rho_g,d) + (1.-x)*helmholtz_u_raw(T,rho_f,d);
+		}
+	}
+	return helmholtz_u_raw(T,rho,d);
+}
+
 double helmholtz_h(double T, double rho, const HelmholtzData *d){
 	double p, rho_f, rho_g;
 	if(T < d->T_c){
@@ -156,7 +172,7 @@ double helmholtz_p_raw(double T, double rho, const HelmholtzData *data){
 	@param rho mass density in kg/m³
 	@return internal energy in ???
 */
-double helmholtz_u(double T, double rho, const HelmholtzData *data){
+double helmholtz_u_raw(double T, double rho, const HelmholtzData *data){
 	DEFINE_TD;
 
 #ifdef TEST

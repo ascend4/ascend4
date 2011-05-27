@@ -6,10 +6,20 @@
 #include "../helmholtz.h"
 #include "../sat.h"
 #include "../solve_ph.h"
+#include "../solve_Tx.h"
 #include "../fluids.h"
 %}
 
 %include exception.i
+
+// strip 'fprops' prefix from function names, since module name is already 'fprops'.
+//%rename(solve_Tx) fprops_solve_Tx;
+//%rename(solve_ph) fprops_solve_ph;
+//%rename(sat_T) fprops_sat_T;
+//%rename(sat_p) fprops_sat_p;
+//%rename(fluid) fprops_fluid;
+//%rename(num_fluids) fprops_num_fluids;
+//%rename(get_fluid) fprops_get_fluid;
 
 %include "../helmholtz.h"
 
@@ -27,6 +37,10 @@
 %apply double *OUTPUT {double *rho};
 int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, const HelmholtzData *D);
 %clear double *T;
+%clear double *rho;
+
+%apply double *OUTPUT {double *rho};
+int fprops_solve_Tx(double T, double x, double *rho, const HelmholtzData *D);
 %clear double *rho;
 
 %exception;

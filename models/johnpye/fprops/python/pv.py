@@ -1,7 +1,7 @@
 from fprops import *
 from pylab import *
 
-C = helmholtz_data_carbondioxide;
+C = fprops_fluid('carbondioxide');
 
 TT = linspace(C.T_t + 0.0001, 1073)
 

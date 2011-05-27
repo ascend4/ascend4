@@ -113,6 +113,7 @@ typedef struct HelmholtzData_struct{
 } HelmholtzData;
 
 double helmholtz_p_raw(double T, double rho, const HelmholtzData *data);
+double helmholtz_u_raw(double T, double rho, const HelmholtzData *data);
 double helmholtz_h_raw(double T, double rho, const HelmholtzData *data);
 double helmholtz_s_raw(double T, double rho, const HelmholtzData *data);
 
@@ -140,5 +141,11 @@ double helmholtz_dhdrho_T(double T, double rho, const HelmholtzData *data);
 
 double helmholtz_dudT_rho(double T, double rho, const HelmholtzData *data);
 double helmholtz_dudrho_T(double T, double rho, const HelmholtzData *data);
-#endif
+
+/* return codes for some FPROPS functions, eg see solve_ph.c */
+#define FPROPS_NON 0
+#define FPROPS_SAT 1
+#define FPROPS_ERR -1
+
+#endif /* FPROPS_HELMHOLTZ_H */
 
