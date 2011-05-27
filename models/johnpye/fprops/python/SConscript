@@ -14,6 +14,23 @@ if platform.system()=="Windows":
 else:
 	python_lib='python%d.%d'
 
+if not fprops_env.get('PYTHON_LIBPATH'):
+	cfig = distutils.sysconfig.get_config_vars()
+	python_libpath = []
+	python_linkflags = []
+	if platform.system()=="Windows":
+		python_libpath += [os.path.join(sys.prefix,"libs")]
+	elif platform.system()=="Darwin":
+		python_libpath += [cfig['LIBPL']]
+		python_linkflags += cfig['LIBS'].split(' ')
+	else:
+		# checked on Linux and SunOS
+		if cfig['LDLIBRARY']==cfig['LIBRARY']:
+			sys.stdout.write("(static)")
+			python_libpath += [cfig['LIBPL']]
+			python_linkflags += cfig['LIBS'].split(' ')
+	fprops_env['PYTHON_LIBPATH'] = python_libpath
+
 lib = pyenv.SharedLibrary('fprops',['fprops.i'] + pyenv['shobjs']
 	,LIBPATH=['#'] + fprops_env['PYTHON_LIBPATH']
 	,CPPPATH=['#',distutils.sysconfig.get_python_inc()]
