@@ -53,9 +53,7 @@
 #ifndef SUNPOS_GRENA_H
 #define SUNPOS_GRENA_H
 
-#include <iostream>
-#include <cmath>
-
+#include <math.h>
 #ifndef PI
 # define PI 3.14159265358979
 #endif
@@ -68,7 +66,8 @@
 */
 typedef struct SunPos_struct{
 	// input data
-	double t; ///< Ephemeris Julian Day, offset such that 0 = noon 1 Jan 2003.
+	double t_G; ///< Julian Day, offset such that 0 = noon 1 Jan 2003.
+	double Delta_t; ///< Difference between UT and Terrestrial Time, in seconds. Zero is probably OK here.
 	double latitude; ///< Latitude (N = positive??), in RADIANS.
 	double longitude; ///< Longitude (E = positive??), in RADIANS.
 	double p; ///< Pressure, in ATM (used for refraction calculation)
@@ -86,8 +85,11 @@ typedef struct SunPos_struct{
 */
 void SunPos_calc_time(SunPos *S, double UT, int Day, int Month, int Year, double Delta_t);
 
-/**	Set time directly in days since noon 1 Jan 2003 UTC. */
-void SunPos_set_time(SunPos *S, double t);
+/**	Set Julian Day time directly in days since noon 1 Jan 2003 UTC. 
+	@param t_G Julian Day (offset such that 0 = noon 1 Jan 2003 UTC)
+	@param Delta_t @see SunPos_struct.
+*/
+void SunPos_set_time(SunPos *S, double t_G, double Delta_t);
 
 /** Set location of observer on Earth
 	@param latitude latitude in RADIANS!
@@ -99,7 +101,7 @@ void SunPos_set_lat_long(SunPos *S, double latitude, double longitude);
 	@param p Pressure in ATM
 	@param T Temperature in °C
 */
-void SunPos_set_pressure_temp(SunPos *S, double p, double T)
+void SunPos_set_pressure_temp(SunPos *S, double p, double T);
 
 /**
 	Calculate the sun position in local spherical coordinates.
@@ -108,4 +110,6 @@ void SunPos_set_pressure_temp(SunPos *S, double p, double T)
 	@param azimuth azimuth angle in radians (output)
 */
 void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth);
+
+#endif /* SUNPOS_GRENA_H */
 
