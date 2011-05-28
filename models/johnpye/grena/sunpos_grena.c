@@ -62,7 +62,7 @@ void SunPos_set_lat_long(SunPos *S, double latitude, double longitude){
 }
 
 
-void SunPos_set_pressure_temp(SunPos *S, double p, double T){
+void SunPos_set_press_temp(SunPos *S, double p, double T){
 	S->p = p;
 	S->T = T;
 }
@@ -135,7 +135,7 @@ void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth){
 		+ S->longitude - RightAscension;
 
 	// to obtain the local hour angle in the range [0,2pi] uncomment:
-	// HourAngle = fmod(HourAngle,2*PI);
+	//HourAngle = fmod(HourAngle,2*PI);
 
 	double c_lat = cos(S->latitude);
 	double s_lat = sin(S->latitude);

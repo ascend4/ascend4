@@ -101,7 +101,7 @@ void SunPos_set_lat_long(SunPos *S, double latitude, double longitude);
 	@param p Pressure in ATM
 	@param T Temperature in °C
 */
-void SunPos_set_pressure_temp(SunPos *S, double p, double T);
+void SunPos_set_press_temp(SunPos *S, double p, double T);
 
 /**
 	Calculate the sun position in local spherical coordinates.

@@ -5,23 +5,27 @@ REQUIRE "atoms.a4l";
 MODEL location;
 	latitude IS_A angle_constant;
 	longitude IS_A angle_constant;
+	timezone IS_A time_constant;
 END location;
 
 MODEL sunpos_test;
 	loc IS_A location;
 	loc.latitude :== -35 {deg};
 	loc.longitude :== 135 {deg};
+	loc.timezone :== 10 {h};
 
 	p IS_A pressure;
 	T IS_A temperature;
 	zenith, azimuth IS_A angle;
+	t_UTC IS_A time;
 	t IS_A time;
+	t = t_UTC + loc.timezone;
 
 	solar: sunpos(
-		t, p, T : INPUT;
+		t_UTC, p, T : INPUT;
 		zenith, azimuth : OUTPUT;
 		loc : DATA
-	);		
+	);
 
 METHODS
 METHOD on_load;

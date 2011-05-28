@@ -50,7 +50,7 @@ static symchar *sunpos_symbols[2];
 #define LATITUDE_SYM sunpos_symbols[0]
 #define LONGITUDE_SYM sunpos_symbols[1]
 
-static const char *sunpos_help = "Calculate sun position (local zenith, azimuth angles) given time, pressure and temperature, using Grena algorithm. DATA member for this external relation is required to provide constants for latitude and longitude of the selected location.";
+static const char *sunpos_help = "Calculate sun position (local zenith, azimuth angles) given time, pressure and temperature, using Grena algorithm. DATA member for this external relation is required to provide constants for latitude and longitude of the selected location. FIXME: more information about time units required here.";
 
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION
@@ -152,4 +152,54 @@ int sunpos_prepare(struct BBoxInterp *bbox,
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Prepared position for sun position.\n");
 	return 0;
 }
+
+#define CALCPREPARE(NIN,NOUT) \
+	/* a few checks about the input requirements */ \
+	if(ninputs != NIN)return -1; \
+	if(noutputs != NOUT)return -2; \
+	if(inputs==NULL)return -3; \
+	if(outputs==NULL)return -4; \
+	if(bbox==NULL)return -5; \
+	\
+	/* the 'user_data' in the black box object will contain the */\
+	/* coefficients required for this fluid; cast it to the required form: */\
+	const SunPos *sunpos1 = (const SunPos *)bbox->user_data
+
+
+/**
+	Evaluation function for 'sunpos'
+	@return 0 on success
+*/
+int sunpos_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE(3,2);
+
+	double t, p, T;
+
+	t = inputs[0];
+	p = inputs[1];
+	T = inputs[2];
+
+	SunPos S = *sunpos1;
+
+	SunPos_set_press_temp(&S, p, T);
+	/* we ignore differences between universal time and terrestrial time.
+	it seems that these differences are < 1 sec in general 
+	http://en.wikipedia.org/wiki/DUT1 */
+	SunPos_set_time(&S, t, 0);
+	
+	double zenith, azimuth;
+
+	SunPos_calc_zen_azi(&S, &zenith, &azimuth);
+
+	outputs[0] = zenith;
+	outputs[1] = azimuth;
+
+	return 0;
+}
+
+
 
