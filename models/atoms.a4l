@@ -64,6 +64,10 @@ PROVIDE "atoms.a4l";
     CONSTANT solid_angle_constant
     REFINES real_constant DIMENSION S;
 
+	(* time *)
+	CONSTANT time_constant
+	REFINES real_constant DIMENSION T;
+
     (* molecular weight *)
     CONSTANT molar_weight_constant
     REFINES real_constant DIMENSION M/Q;
