@@ -59,8 +59,7 @@
 #endif
 
 /**
-	Structure to hold sun position data, both input data as well as calculated
-	output data.
+	Structure to hold location data as well as desird time point.
 
 	FIXME convert fields p, T to base SI units Pa and K.
 */

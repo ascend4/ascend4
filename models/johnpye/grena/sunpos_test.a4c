@@ -27,6 +27,9 @@ MODEL sunpos_test;
 		loc : DATA
 	);
 
+	altitude IS_A angle;
+	altitude = 0.5{PI} - zenith;
+
 METHODS
 METHOD on_load;
 	FIX p, T, t;

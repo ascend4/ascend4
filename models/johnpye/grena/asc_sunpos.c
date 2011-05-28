@@ -179,9 +179,9 @@ int sunpos_calc(struct BBoxInterp *bbox,
 
 	double t, p, T;
 
-	t = inputs[0];
-	p = inputs[1];
-	T = inputs[2];
+	t = inputs[0]/ 86400. - 0.5 /* convert seconds to days, offset such that 0:00 1 Jan 2003 --> -0.5 */;
+	p = inputs[1] / 101325. /* convert Pa to atm */;
+	T = inputs[2] - 273.15 /* convert °C to K */;
 
 	SunPos S = *sunpos1;
 
@@ -195,6 +195,7 @@ int sunpos_calc(struct BBoxInterp *bbox,
 
 	SunPos_calc_zen_azi(&S, &zenith, &azimuth);
 
+	/* returned values are in Radians, no offsets required */
 	outputs[0] = zenith;
 	outputs[1] = azimuth;
 
