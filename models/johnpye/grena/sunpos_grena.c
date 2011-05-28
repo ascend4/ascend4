@@ -26,30 +26,33 @@
 */
 
 #include "sunpos_grena.h"
-#include <math.h>
 
 /* we have converted this file from C++ to C. not so classy any more ;-) */
 
-
-double SunPos_calc_time(SunPos *S, double UT, int Day, int Month, int Year, double Delta_t){
+void SunPos_calc_time(SunPos *S, double UT, int Day, int Month, int Year, double Delta_t){
 
 	// calculation of JD and JDE
 	double dYear, dMonth;
-	if(sunpos->Month <= 2){
-		dYear = (double)S->Year - 1.;
-		dMonth = (double)S->Month + 12.;
+	if(Month <= 2){
+		dYear = (double)Year - 1.;
+		dMonth = (double)Month + 12.;
 	}else{
-		dYear = (double)S->Year;
-		dMonth = (double)S->Month;
+		dYear = (double)Year;
+		dMonth = (double)Month;
 	}
 
-	double JD_t = (double)trunc(365.25 * (dYear - 2000))
+	// universal time
+	S->t_G = (double)trunc(365.25 * (dYear - 2000))
 		+ (double)trunc(30.6001 * (dMonth + 1))
-		+ (double)S->Day + S->UT/24. - 1158.5;
+		+ (double)Day + UT/24. - 1158.5;
 
-	double t = JD_t + sunpos->Delta_t/86400;
+	S->Delta_t = Delta_t;
+}
 
-	S->t = t;
+
+void SunPos_set_time(SunPos *S, double t_G, double Delta_t){
+	S->t_G = t_G;
+	S->Delta_t = Delta_t;
 }
 
 
@@ -64,13 +67,12 @@ void SunPos_set_pressure_temp(SunPos *S, double p, double T){
 	S->T = T;
 }
 
-void SunPos_set_time(SunPos *S, double t){
-	S->t = t;
-}
-
-
+/*
+	Note: there is some confusion in nomenclature in the paper regarding
+	'JD_t' and 't_G' which are assumed to be the same time. This seems to John
+	to be correct.
+*/
 void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth){
-	double t = S->t;
 	double HourAngle;
 	double TopocRightAscension;
 	double TopocDeclination;
@@ -80,10 +82,12 @@ void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth){
 
 	// HELIOCENTRIC LONGITUDE
 
+	double t = S->t_G + S->Delta_t / 86400;
+
 	// linear increase + annual harmonic
 
 	double ang = 1.72019e-2 * t - 0.0563;
-	HeliocLongitude = 1.740940 + 1.7202768683e-2 * t + 3.34118e-2 * sin(ang) + 3.488e-4 * sin(2*ang);
+	double HeliocLongitude = 1.740940 + 1.7202768683e-2 * t + 3.34118e-2 * sin(ang) + 3.488e-4 * sin(2*ang);
 
 	// moon perturbation
 
@@ -117,15 +121,17 @@ void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth){
 
 	// Geocentric global solar coordinates:
 
-	GeocSolarLongitude = HeliocLongitude + PI + delta_psi - 9.932e-5;
+	double GeocSolarLongitude = HeliocLongitude + PI + delta_psi - 9.932e-5;
 
 	double s_lambda = sin(GeocSolarLongitude);
 
-	RightAscension = atan2(s_lambda * cos(epsilon), cos(GeocSolarLongitude));
+	double RightAscension = atan2(s_lambda * cos(epsilon), cos(GeocSolarLongitude));
+
+	double Declination = asin(sin(epsilon) * s_lambda);
 
 	// local hour angle of the sun
 
-	HourAngle = 6.30038809903 * JD_t + 4.8824623 + delta_psi * 0.9174 
+	HourAngle = 6.30038809903 * S->t_G + 4.8824623 + delta_psi * 0.9174 
 		+ S->longitude - RightAscension;
 
 	// to obtain the local hour angle in the range [0,2pi] uncomment:
@@ -159,10 +165,11 @@ void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth){
 	const double elev_min = -0.01;
 	
 	if(Elevation_no_refrac > elev_min){
-		RefractionCorrection = 0.084217 * Pressure / (273 + Temperature) 
+		RefractionCorrection = 0.084217 * S->p / (273 + S->T) 
 			/ tan(Elevation_no_refrac + 0.0031376 / (Elevation_no_refrac + 0.089186));
 	}else{
 		RefractionCorrection = 0;
+	}
 
 	// local coordinates of the sun
 
