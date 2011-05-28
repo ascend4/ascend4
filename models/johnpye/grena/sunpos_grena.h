@@ -1,3 +1,21 @@
+/*	ASCEND modelling environment
+	Copyright (C) 2011 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*/
 
 /* WARNING: this is a FIRST DRAFT of the code and HAS NOT BEEN CHECKED yet. */
 
@@ -42,42 +60,52 @@
 # define PI 3.14159265358979
 #endif
 
+/**
+	Structure to hold sun position data, both input data as well as calculated
+	output data.
 
-class SunCoord{
-public:
+	FIXME convert fields p, T to base SI units Pa and K.
+*/
+typedef struct SunPos_struct{
 	// input data
-	double UT; 
-	int Day, Month, Year;
-	double Delta_t;
-	double ObserverLatitude;
-	double ObserverLongitude;
-	double Pressure;
-	double Temperature;
+	double t; ///< Ephemeris Julian Day, offset such that 0 = noon 1 Jan 2003.
+	double latitude; ///< Latitude (N = positive??), in RADIANS.
+	double longitude; ///< Longitude (E = positive??), in RADIANS.
+	double p; ///< Pressure, in ATM (used for refraction calculation)
+	double T; ///< Temperature, in °C (used for refraction calculation)
+} SunPos;
 
-	// output data
-	double HourAngle;
-	double TopocRightAscension;
-	double TopocDeclination;
-	double TopocHourAngle;
-	double Elevation_no_refrac;
-	double RefractionCorrection;
-	double Zenith;
-	double Azimuth;
+// functions
 
-	// functions
-	/** set the input data quickly */
-	void SetCoord(double UT, int Day, int Month, int Year, double Delta_t
-		, double ObserverLatitude, double ObserverLongitude, double Pressure
-		, double Temperature
-	) : UT(UT), Day(Day), Month(Month), Year(Year), Delta_t(Delta_t)
-		, ObserverLatitude(ObserverLatitude)
-		, ObserverLongitude(ObserverLongitude), Pressure(Pressure)
-		, Temperature(Temperature){}
+/** Calculate time given the input date fields and store it in the SunPos object.
+	@param UT fractional universal time (GMT) in hours from midnight (or fractional hours as required)
+	@param Day Day of the month, starting at 1??
+	@param Month Month of the year, starting at 1??
+	@param Year Year, eg 2011.
+	@param Delta_t Difference between UT and Terrestrial Time, in seconds.
+*/
+void SunPos_calc_time(SunPos *S, double UT, int Day, int Month, int Year, double Delta_t);
 
-	void Calculate();
-}
+/**	Set time directly in days since noon 1 Jan 2003 UTC. */
+void SunPos_set_time(SunPos *S, double t);
 
+/** Set location of observer on Earth
+	@param latitude latitude in RADIANS!
+	@param longitude longitude in RADIANS!
+*/
+void SunPos_set_lat_long(SunPos *S, double latitude, double longitude);
 
+/** Set local atmospheric conditions 
+	@param p Pressure in ATM
+	@param T Temperature in °C
+*/
+void SunPos_set_pressure_temp(SunPos *S, double p, double T)
 
-
+/**
+	Calculate the sun position in local spherical coordinates.
+	@param S sun position input data object (set using above functions)
+	@param zenith zenith angle in radians (output)
+	@param azimuth azimuth angle in radians (output)
+*/
+void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth);
 

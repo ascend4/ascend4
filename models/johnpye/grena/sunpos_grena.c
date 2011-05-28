@@ -1,32 +1,82 @@
+/*	ASCEND modelling environment
+	Copyright (C) 2011 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @FILE
+	This file's code is based on the source code given in the publication
+	R Grena (2008), An algorithm for the computation of the solar position, 
+	Solar Energy (82), pp 462-470.
+
+	The original code was in C++ and returned several intermediate results.
+	This modified version returns only the zenith and azimuth angles for 
+	given date/time.
+*/
+
 #include "sunpos_grena.h"
+#include <math.h>
 
-/* WARNING: this is a FIRST DRAFT of the code and HAS NOT BEEN CHECKED yet. */
+/* we have converted this file from C++ to C. not so classy any more ;-) */
 
-void
-SunCoord::Calculate(){
+
+double SunPos_calc_time(SunPos *S, double UT, int Day, int Month, int Year, double Delta_t){
 
 	// calculation of JD and JDE
 	double dYear, dMonth;
-	if(Month <= 2){
-		dYear = (double)Year - 1.;
-		dMonth = (double)Month + 12.;
+	if(sunpos->Month <= 2){
+		dYear = (double)S->Year - 1.;
+		dMonth = (double)S->Month + 12.;
 	}else{
-		dYear = (double)Year;
-		dMonth = (double)Month;
+		dYear = (double)S->Year;
+		dMonth = (double)S->Month;
 	}
 
 	double JD_t = (double)trunc(365.25 * (dYear - 2000))
 		+ (double)trunc(30.6001 * (dMonth + 1))
-		+ (double)Day + UT/24. - 1158.5;
+		+ (double)S->Day + S->UT/24. - 1158.5;
 
-	double t = JD_t + Delta_t/86400;
+	double t = JD_t + sunpos->Delta_t/86400;
 
-#if 0
-	// standard JD and JDE (useless for the computation, they are computed for
-	// completeness:
+	S->t = t;
+}
 
-	// (omitted)
-#endif
+
+void SunPos_set_lat_long(SunPos *S, double latitude, double longitude){
+	S->latitude = latitude;
+	S->longitude = longitude;
+}
+
+
+void SunPos_set_pressure_temp(SunPos *S, double p, double T){
+	S->p = p;
+	S->T = T;
+}
+
+void SunPos_set_time(SunPos *S, double t){
+	S->t = t;
+}
+
+
+void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth){
+	double t = S->t;
+	double HourAngle;
+	double TopocRightAscension;
+	double TopocDeclination;
+	double TopocHourAngle;
+	double Elevation_no_refrac;
+	double RefractionCorrection;
 
 	// HELIOCENTRIC LONGITUDE
 
@@ -76,10 +126,15 @@ SunCoord::Calculate(){
 	// local hour angle of the sun
 
 	HourAngle = 6.30038809903 * JD_t + 4.8824623 + delta_psi * 0.9174 
-		+ ObserverLongitude - RightAscension;
+		+ S->longitude - RightAscension;
 
 	// to obtain the local hour angle in the range [0,2pi] uncomment:
 	// HourAngle = fmod(HourAngle,2*PI);
+
+	double c_lat = cos(S->latitude);
+	double s_lat = sin(S->latitude);
+	double c_H = cos(HourAngle);
+	double s_H = sin(HourAngle);
 
 	// parallax correction to right ascension
 
@@ -111,8 +166,8 @@ SunCoord::Calculate(){
 
 	// local coordinates of the sun
 
-	Zenith = PI/2 - Elevation_no_refrac - RefractionCorrection;
+	*zenith = PI/2 - Elevation_no_refrac - RefractionCorrection;
 
-	Azimuth = atan2(s_H_corr, c_H_corr*s_lat - s_delta_corr/c_delta_corr*c_lat);
+	*azimuth = atan2(s_H_corr, c_H_corr*s_lat - s_delta_corr/c_delta_corr*c_lat);
 }
 
