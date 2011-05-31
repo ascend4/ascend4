@@ -41,6 +41,10 @@ void SunPos_calc_time(SunPos *S, double UT, int Day, int Month, int Year, double
 		dMonth = (double)Month;
 	}
 
+	// WARNING: my testing shows that following equation gives correct values 
+	// only in the range 2001 to 2099. By not correcting for leap years on 100
+	// and 1000 year multiples, it gradually gets out of accord. -- J Pye. 
+
 	// universal time
 	S->t_G = (double)trunc(365.25 * (dYear - 2000))
 		+ (double)trunc(30.6001 * (dMonth + 1))
@@ -104,7 +108,8 @@ void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth){
 	// polynomial correction
 
 	double t2 = t/1000;
-	HeliocLongitude += ((( -2.30796e-7 * t2 + 3.7976e-6) * t2 - 2.0458e-5) * t + 3.976e-5) * t2*t2;
+	HeliocLongitude += ((( -2.30796e-7 * t2 + 3.7976e-6) * t2 - 2.0458e-5) * t
+		+ 3.976e-5) * t2*t2;
 
 	// to obtain obtain Heliocentric longitude in the range [0,2pi] uncomment:
 	// HeliocLongitude = fmod(HeliocLongitude, 2*PI);
