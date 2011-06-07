@@ -1,0 +1,23 @@
+--- lib/viewvc.py.orig  2007-05-10 10:39:10.000000000 +0800
++++ lib/viewvc.py       2007-05-10 11:17:00.000000000 +0800
+@@ -973,10 +973,12 @@
+ # addresses.  Note that the regexps assume the text is already HTML-encoded.
+ _re_rewrite_url = re.compile('((http|https|ftp|file|svn|svn\+ssh)(://[-a-zA-Z0-9%.~:_/]+)((\?|\&amp;)([-a-zA-Z0-9%.~:_]+)=([-a-zA-Z0-9%.~:_])+)*(#([-a-zA-Z0-9%.~:_]+)?)?)')
+ _re_rewrite_email = re.compile('([-a-zA-Z0-9_.\+]+)@(([-a-zA-Z0-9]+\.)+[A-Za-z]{2,4})')
++_re_rewrite_mantis = re.compile('(bug|issue)(\ *\#?)(\d{1,7})')
+ def htmlify(html):
+   html = cgi.escape(html)
+   html = re.sub(_re_rewrite_url, r'<a href="\1">\1</a>', html)
+   html = re.sub(_re_rewrite_email, r'<a href="mailto:\1&#64;\2">\1&#64;\2</a>', html)
++  html = re.sub(_re_rewrite_mantis, r'<a href="http://bugs.ascend4.org/view.php?id=\3">\1\2\3</a>', html)
+   return html
+
+ def format_log(log, cfg):
+@@ -1310,6 +1312,7 @@
+   html = pp.fontify(html)
+   html = re.sub(_re_rewrite_url, r'<a href="\1">\1</a>', html)
+   html = re.sub(_re_rewrite_email, r'<a href="mailto:\1">\1</a>', html)
++  html = re.sub(_re_rewrite_mantis, r'<a href="/mantis/view.php?id=\3">\1\2\3</a>', html)
+   return html
+
+ def markup_stream_php(fp, cfg):
