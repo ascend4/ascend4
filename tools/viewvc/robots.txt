@@ -8,6 +8,7 @@ User-agent: Googlebot
 Disallow: /viewvc/code/branches/
 Disallow: /viewvc/code/tags/
 Disallow: /viewvc/web/wikiscrape/
+Disallow: /viewvc/web
 Disallow: *?view=annotate*
 Disallow: *?annotate=*
 Disallow: *?view=diff*
@@ -15,5 +16,7 @@ Disallow: *?view=rev*
 Disallow: *?r1=*
 Disallow: *?revision=*
 Disallow: *&pathrev=*
+Disallow: *?pathrev=*
 Disallow: *?content-type=*
 Disallow: *&content-type=*
+
