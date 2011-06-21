@@ -1,0 +1,61 @@
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "sensitivity/solve";
+
+(*
+	Model of 60% NaNO3 + 40% KNO3 as specified in Sandia National
+	Laboratories document SAND2001-2100 rev 0.
+*)
+MODEL moltensalt_state;
+	T IS_A temperature;
+	h IS_A specific_enthalpy;
+	p IS_A pressure;
+
+	cp IS_A specific_heat_capacity;		
+	cp_eq: cp = 1396.0182 {J/kg/K} + 0.172 {J/kg/K^2} * T;
+
+	rho IS_A mass_density;
+	rho_eq: rho = 2263.7234 {kg/m^3} - 0.636 {kg/m^3/K} * T;
+
+	(* constant set to give h = 0 at 0 °C *)
+	h_eq: h = (1396.0182 {J/kg/K}) * T + 0.5 * (0.172 {J/kg/K^2}) * T^2 - 387.738910665 {kJ/kg};
+
+	v IS_A specific_volume;
+	v_eq: v = 1. / rho;
+
+	u IS_A specific_energy;
+	u_eq: u = h - p*v;
+METHODS
+	METHOD solve;
+		EXTERNAL do_solve(SELF);
+	END solve;
+	METHOD bound_self;
+		T.upper_bound := 621 {K} + 273.15 {K};
+		T.lower_bound := 221 {K} + 273.15 {K};
+	END bound_self;
+	METHOD on_load;
+		RUN ClearAll;
+		RUN bound_self;
+		FIX T; T := 371.111 {K} + 273.15 {K}; (* 700 °F *)
+		FIX p; p := 1 {bar};
+	END on_load;
+	METHOD self_test;
+		ASSERT abs(rho - 115.65 {lbm/ft^3}) < 0.1 {lbm/ft^3};
+	END self_test;
+END moltensalt_state;
+
+MODEL moltensalt_node;
+	state IS_A moltensalt_state;
+	T ALIASES state.T;
+	h ALIASES state.h;
+	p ALIASES state.p;
+	v ALIASES state.v;
+	cp ALIASES state.cp;
+	mdot IS_A mass_rate;
+METHODS
+	METHOD solve;
+		EXTERNAL do_solve(SELF);
+	END solve;
+END moltensalt_node;
+
+
+
