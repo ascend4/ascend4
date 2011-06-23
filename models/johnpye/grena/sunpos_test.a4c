@@ -11,7 +11,7 @@ END location;
 MODEL sunpos_test;
 	loc IS_A location;
 	loc.latitude :== -35 {deg};
-	loc.longitude :== 135 {deg};
+	loc.longitude :== 149 {deg};
 	loc.timezone :== 10 {h};
 
 	p IS_A pressure;

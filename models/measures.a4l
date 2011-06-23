@@ -450,16 +450,13 @@ TeV = {1e12*eV};
 PeV = {1e15*eV};
 EeV = {1e18*eV};
 
-lyr = {LIGHT_C * yr};               (*      Light-year *)
+lyr = {LIGHT_C * yr}; (* Light-year *)
 
 oersted = {gauss/MU0};
 
-(* subtly dimensionless measures *)
+(* plane angle measures *)
 
 radian = {rad};
-
-steradian = {sr};
-srad = {sr};
 deg = {rad*1.74532925199433e-2};
 degrees = {deg};
 grad = {0.9*deg};
@@ -467,6 +464,11 @@ arcmin = {deg/60.0};
 arcsec = {arcmin/60.0};
 rot = {2 * PI * rad};
 RPM = {rot/minute};
+
+(* solid angle measures *)
+
+steradian = {sr};
+srad = {sr};
 
 (* light quantities *)
 
