@@ -1,6 +1,6 @@
 /*
 ASCEND modelling environment
-Copyright (C) 2004-2010 John Pye
+Copyright (C) 2004-2011 John Pye
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
