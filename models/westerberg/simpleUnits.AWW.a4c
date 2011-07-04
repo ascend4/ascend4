@@ -1,5 +1,5 @@
 REQUIRE "stream_holdup.a4l";
-REQUIRE "atoms.AWW.a4c";
+REQUIRE "westerberg/atoms.AWW.a4c";
 
 (*
   
@@ -126,8 +126,8 @@ MODEL unitOneInOneOut
     
     stoichCoef[compsAll] IS_A factor;
     turnover, error_LostFlowOut IS_A molar_rate;
-    delP IS_A pressure_difference;
-    delT IS_A temperature_difference;
+    delP IS_A delta_pressure;
+    delT IS_A delta_temperature;
     
     (* material balance *)
     
@@ -216,8 +216,8 @@ MODEL unitOneInTwoOut
 	
     error_LostFlowOut IS_A molar_rate;
     split[compsInAll] IS_A fraction;
-    delP1, delP12 IS_A pressure_difference;
-    delT1, delT12 IS_A temperature_difference;    
+    delP1, delP12 IS_A delta_pressure;
+    delT1, delT12 IS_A delta_temperature;    
 
     (* material balances *)
     
@@ -320,8 +320,8 @@ MODEL unitTwoInOneOut
     compsInAll :== compsFeed1*compsFeed2*compsProduct;
 	
     error_LostFlowOut IS_A molar_rate;
-    delP1 IS_A pressure_difference;
-    delT1 IS_A temperature_difference;    
+    delP1 IS_A delta_pressure;
+    delT1 IS_A delta_temperature;    
 
     (* material balance *)
     (* in Feeds only - flows lost *)
@@ -470,14 +470,20 @@ MODEL testUnitOneInOneOut;
 
     unitMissing IS_A unitOneInOneOut(Missing_Qin, feedMissing, prodMissing);
     
-    METHODS
-    
-    METHOD default_self;
+METHODS
+
+METHOD on_load;
+	RUN default_self;
+	RUN values;
+	RUN specify;
+END on_load;
+
+METHOD default_self;
 	RUN unitNormal.default_self;
 	RUN unitMissing.default_self;
-    END default_self;
-    
-    METHOD values;
+END default_self;
+
+METHOD values;
 	feedNormal.T := 600 {K};
 	feedNormal.P := 1 {atm};
 	feedNormal.f[compsAll] := 10.0 {mol/s};
@@ -498,14 +504,14 @@ MODEL testUnitOneInOneOut;
 	unitMissing.stoichCoef[O2] := -1.0;
 	unitMissing.stoichCoef[H2O] := 2.0;
 	unitMissing.turnover := 1.0 {mol/s};
-    END values;
-    
-    METHOD specify;
+END values;
+
+METHOD specify;
 	RUN unitNormal.specify;
 	FREE prodNormal.f[compsAll];
 	RUN unitMissing.specify;
 	FREE prodMissing.f[allButN2];	
-    END specify;
+END specify;
 
 END testUnitOneInOneOut;
 
@@ -551,14 +557,20 @@ MODEL testUnitOneInTwoOut;
 
     unitMissing IS_A unitOneInTwoOut(Missing_Qin, feedMissing, prod1Missing, prod2Missing);
     
-    METHODS
-    
-    METHOD default_self;
+METHODS
+
+METHOD on_load;
+	RUN default_self;
+	RUN values;
+	RUN specify;
+END on_load;
+
+METHOD default_self;
 	RUN unitNormal.default_self;
 	RUN unitMissing.default_self;
-    END default_self;
-    
-    METHOD values;
+END default_self;
+
+METHOD values;
 	feedNormal.T := 600 {K};
 	feedNormal.P := 1 {atm};
 	feedNormal.f[compsF] := 10.0 {mol/s};
@@ -570,16 +582,16 @@ MODEL testUnitOneInTwoOut;
 	feedMissing.f[compsF] := 10.0 {mol/s};
 	unitMissing.product1.T := 550.0 {K};
 	equilibrated := TRUE;
-    END values;
+END values;
 
-    METHOD specify;
+METHOD specify;
 	RUN unitNormal.specify;
 	RUN feedNormal.specify;
 	RUN unitMissing.specify;
 	RUN feedMissing.specify;
 	FREE unitMissing.Qin;
 	FIX unitMissing.product1.T;
-    END specify;
+END specify;
 
 END testUnitOneInTwoOut;
 
@@ -624,14 +636,20 @@ MODEL testUnitTwoInOneOut;
 
     unitMissing IS_A unitTwoInOneOut(Missing_Qin, feed1Missing, feed2Missing, prodMissing);
     
-    METHODS
-    
-    METHOD default_self;
+METHODS
+
+METHOD on_load;
+	RUN default_self;
+	RUN values;
+	RUN specify;
+END on_load;
+
+METHOD default_self;
 	RUN unitNormal.default_self;
 	RUN unitMissing.default_self;
-    END default_self;
-    
-    METHOD values;
+END default_self;
+
+METHOD values;
 	feed1Normal.T := 600 {K};
 	feed1Normal.P := 1 {atm};
 	feed1Normal.f[compsF1] := 10.0 {mol/s};
@@ -646,9 +664,9 @@ MODEL testUnitTwoInOneOut;
 	feed2Missing.f[compsF2] := 6 {mol/s};
 	unitMissing.product.T := 550 {K};
 	equilibrated := TRUE;
-    END values;
+END values;
 
-    METHOD specify;
+METHOD specify;
 	RUN unitNormal.specify;
 	RUN feed1Normal.specify;
 	RUN feed2Normal.specify;
@@ -657,9 +675,9 @@ MODEL testUnitTwoInOneOut;
 	RUN feed2Missing.specify;
 	FREE unitMissing.Qin;
 	FIX unitMissing.product.T;
-    END specify;
-
+END specify;
 END testUnitTwoInOneOut;
+
 
 MODEL testSimpleCompressor;
     H2, O2, N2, H2O IS_A symbol_constant;
@@ -687,23 +705,29 @@ MODEL testSimpleCompressor;
     
     sC IS_A simpleCompressor(Qin, compressionRatio, eff, feed, product);
     
-    METHODS
-    
-    METHOD default_self;
-	RUN sC.default_self;
-    END default_self;
+METHODS
 
-    METHOD values;
+METHOD on_load;
+	RUN default_self;
+	RUN values;
+	RUN specify;
+END on_load;
+
+METHOD default_self;
+	RUN sC.default_self;
+END default_self;
+
+METHOD values;
 	equil := FALSE;
 	compressionRatio := 2.5;
 	eff := 0.95;
 	feed.T := 350 {K};
 	feed.P := 2 {atm};
 	feed.f[comps] := 1 {mol/s};
-    END values;
+END values;
 
-    METHOD specify;
+METHOD specify;
 	RUN sC.specify;
-    END specify;
+END specify;
 
 END testSimpleCompressor;
