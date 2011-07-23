@@ -255,7 +255,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
    *	If the named library does not exist, if it's not loadable or if
    *	it does not define the named install proc, report an error
    */
-  xlib = dlopen(path, 1);
+  xlib = dlopen(path, RTLD_NOW|RTLD_LOCAL);
   if (xlib == NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s",(char *)dlerror());
 
