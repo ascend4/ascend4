@@ -54,3 +54,23 @@ Description:Solver for systems of equations and ODEs/DAEs
 
 
 
+Package: ascend-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends:
+    ascend (= ${binary:Version}),
+    ${misc:Depends}
+Description: Debugging symbols for ASCEND.
+ ASCEND is a modelling and simulation environment for
+ solving systems of nonlinear equations. It includes
+ a modelling language, in which you write the equations
+ that represent your system-to-be-modelled, as well as
+ a user interface that lets to interact with your model,
+ solve it, adjust values, and report results. There is also
+ a model library with many example problems, and a database of
+ thermodynamic properties for various materials.
+ .
+ This package contains the debugging symbols for Ipopt.
+
+
