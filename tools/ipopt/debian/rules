@@ -1,0 +1,86 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+else
+	CFLAGS += -O2
+endif
+
+ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
+	INSTALL_PROGRAM += -s
+endif
+
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+	NUMJOBS = 2
+	MAKEFLAGS += -j$(NUMJOBS)
+endif
+
+INSTALLROOT=$(CURDIR)/debian/tmp
+
+# shared library versions, option 1
+major=0
+
+build: build-stamp
+build-stamp:
+	dh_testdir
+	cd ThirdParty/Mumps && ./get.Mumps
+
+	CC="ccache gcc" CXX="ccache g++" F77=gfortran ./configure --prefix=/usr --enable-static --enable-shared --with-blas-lib=/usr/lib/libblas.so --with-lapack-lib=/usr/lib/liblapack.so --enable-pkg-config=no
+
+	echo
+	echo "BUILD OPTIONS: $(DEB_BUILD_OPTIONS)"
+	echo
+
+	+make $(MAKEFLAGS)
+	touch build-stamp
+
+clean:
+	dh_testdir
+	rm -f build-stamp
+	dh_clean 
+
+install: build
+	dh_testdir
+#	dh_testroot
+	dh_clean -k 
+	dh_installdirs
+	mkdir -p $(INSTALLROOT)/usr
+	cd $(CURDIR) && make DESTDIR=$(INSTALLROOT) install
+#
+	dh_install --fail-missing --sourcedir=$(INSTALLROOT)
+#
+	dh_desktop
+	dh_installman
+
+# Build architecture-independent files here.
+binary-indep:
+	dh_testdir
+	dh_testroot
+
+.PHONY: override_dh_strip
+override_dh_strip:
+        dh_strip --dbg-package=libipopt-dbg
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs ChangeLog
+	dh_installdocs
+	dh_installexamples
+	dh_installman
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_makeshlibs
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure
+

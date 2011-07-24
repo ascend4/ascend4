@@ -1,0 +1,18 @@
+This package was debianized by John Pye <john@curioussymbols.com>
+Wed Dec 02 22:55:00 AEDT 2009
+
+It was downloaded from the COIN-OR website
+https://projects.coin-or.org/Ipopt
+
+Upstream Authors: see the AUTHORS file in the source distribution.
+
+Copyright (C) 2002-2009 the AUTHORS (Andreas Wächter, and many others)
+
+Details: 'On the Implementation of a Primal-Dual Interior Point Filter Line
+ Search Algorithm for Large-Scale Nonlinear Programming, Mathematical
+ Programming 106(1), pp. 25-57, 2006'
+
+License: Common Public License Version 1.0
+
+See LICENSE from the source code distribution for details.
+

@@ -1,0 +1,64 @@
+Source: ipopt
+Section: contrib/math
+Priority: extra
+Maintainer: John Pye <john@curioussymbols.com>
+Build-Depends: gfortran, wget, liblapack-dev, libblas-dev, ccache, debhelper (>= 7.0.50)
+Standards-Version: 3.7.2
+
+Package: libipopt0
+Architecture: any
+Section: contrib/libs
+Depends: ${shlibs:Depends}
+Recommends: libipopt-dev, ascend
+Conflicts: coinor-libipopt0
+Description:Optimisation solver for non-linear problems 
+ Ipopt (Interior Point OPTimizer, pronounced I-P-Opt) is a software
+ package for large-scale nonlinear optimization.  IPOPT implements
+ a primal-dual interior point method, and uses line searches based on
+ Filter methods (Fletcher and Leyffer).
+ .
+ IPOPT is designed to exploit 1st and 2nd derivative (Hessians)
+ information if provided (usually via automatic differentiation routines
+ in modeling environments such as AMPL). If no Hessians are provided,
+ IPOPT will approximate them using a quasi-Newton methods, specifically a
+ BFGS update.
+ .
+ Part of the COIN-OR project.
+ http://www.coin-or.org/Ipopt/
+
+Package: libipopt-dev
+Architecture: any
+Section: contrib/libdevel
+Depends: libipopt0
+Conflicts: coinor-libipopt-dev
+Description: Optimisation solver for non-linear problems 
+ Ipopt (Interior Point OPTimizer, pronounced I-P-Opt) is a software
+ package for large-scale nonlinear optimization.  IPOPT implements
+ a primal-dual interior point method, and uses line searches based on
+ Filter methods (Fletcher and Leyffer).
+ .
+ IPOPT is designed to exploit 1st and 2nd derivative (Hessians)
+ information if provided (usually via automatic differentiation routines
+ in modeling environments such as AMPL). If no Hessians are provided,
+ IPOPT will approximate them using a quasi-Newton methods, specifically a
+ BFGS update.
+ .
+ This package contains header files and shared libraries to allow developers to
+ compile against Ipopt.
+ .
+ Part of the COIN-OR project.
+ http://www.coin-or.org/Ipopt/
+
+Package: libipopt-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends:
+    libipopt0 (= ${binary:Version}),
+    ${misc:Depends}
+Description: Debugging symbols for libipopt.
+ Ipopt (Interior Point OPTimizer, pronounced I-P-Opt) is a software
+ package for large-scale nonlinear optimization.
+ .
+ This package contains the debugging symbols for Ipopt.
+
