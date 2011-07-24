@@ -1,0 +1,23 @@
+ipopt (3.10.0) natty; urgency=low
+
+  * Updated to version 3.10.0
+  * Migrated build files to ~/ascend/tools/ipopt/debian
+  * Updating for Natty
+
+ -- John Pye (Aug 2010) <john@curioussymbols.com>  Sun, 24 Jul 2011 20:19:00 +1000
+
+ipopt (3.9.1) lucid; urgency=low
+
+  * Updated to version 3.9.1
+  * Using a local (static-linked) MUMPS.
+  * Updating for Lucid.
+
+ -- John Pye (Aug 2010) <john@curioussymbols.com>  Thu, 03 Dec 2009 12:25:00 +1000
+
+ipopt (3.8.1) karmic; urgency=low
+
+  * First debian package, version 3.8.1.
+  * Using MUMPS package currently available in Karmic repositories.
+
+ -- John Pye (Aug 08) <john@curioussymbols.com>  Thu, 03 Dec 2009 12:25:00 +1000
+
