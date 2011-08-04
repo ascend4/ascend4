@@ -1183,7 +1183,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_plat = str(platform.system())
 		_version = config.VERSION
 		_help = Help(
-			url="http://ascendbugs.cheme.cmu.edu/report/?project_id=ascend&platform=%s&build=%s"
+			url="http://bugs.ascend4.org/bug_report_page.php?project_id=ascend&platform=%s&product_version=%s"
 				% (_plat,_version)
 		)
 		_help.run()
