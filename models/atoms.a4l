@@ -982,6 +982,14 @@ END length_parameter;
         nominal := 10.0{ohm};
     END resistance;
 
+    ATOM conductance REFINES solver_var
+        DIMENSION (E^2*T^3)/(M*L^2)
+        DEFAULT 0.01{siemens};
+        lower_bound := -1e50{siemens};
+        upper_bound := 1e50{siemens};
+        nominal := 0.01{siemens};
+    END conductance;
+
     ATOM current REFINES solver_var
         DIMENSION E
         DEFAULT 1.0{amp};
@@ -1021,6 +1029,31 @@ END length_parameter;
         upper_bound := 1e50{volt/m};
         nominal := 1.0{volt/m};
     END electric_field;
+
+	ATOM electrical_conductivity REFINES solver_var
+		DIMENSION E^2*T^3/M/L^3
+		DEFAULT 1000 {S/m};
+		lower_bound := 1e-50 {S/m};
+		upper_bound := 1e50 {S/m};
+		nominal := 1000 {S/m};
+	END electrical_conductivity;
+
+	ATOM thermoelectric_power_factor REFINES solver_var
+		DIMENSION M*L/T^3/TMP^2
+		DEFAULT 10e-5 {W/m/K^2};
+		lower_bound := 1e-50 {W/m/K^2};
+		upper_bound := 1e50 {W/m/K^2};
+		nominal := 10e-5 {W/m/K^2};
+	END thermoelectric_power_factor;
+
+	ATOM seebeck_coefficient REFINES solver_var
+		DIMENSION M*L^2/T^3/E/TMP
+		DEFAULT 200 {micro*V/K};
+		lower_bound := 1e-50 {micro*V/K};
+		upper_bound := 1e50 {micro*V/K};
+		nominal := 200 {micro*V/K};
+	END seebeck_coefficient;
+
 
 (*  D I F F E R E N T I A L  Q U A N T I T I E S
     -------------------------------------------  *)
