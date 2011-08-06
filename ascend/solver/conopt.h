@@ -1,19 +1,11 @@
-/*
-	Permission has been obtained from Arne Drud, Fri Jul 6, 2007, to include
-	this file in the ASCEND distribution. He is aware that ASCEND is an
-	open source project license under the GNU General Public License.
-
-	Note that this version of the file comes from CONOPT version 3.14.
-*/
-
-#ifndef CONOPT_H
-#define CONOPT_H
+#ifndef ARKI_CONOPT_H
+#define ARKI_CONOPT_H
 
 /*****************************************************************************/
 /*  File: conopt.h                                                           */
-/*  Version 3.13d                                                            */
+/*  Version 3.13Y                                                            */
 /*                                                                           */
-/*  Copyright (C) 1995-2003 by ARKI Consulting & Development A/S             */
+/*  Copyright (C) 1995-2011 by ARKI Consulting & Development A/S             */
 /*  All Rights Reserved.                                                     */
 /*                                                                           */
 /*  THIS MATERIAL IS CONSIDERED A TRADE SECRET.                              */
@@ -21,11 +13,25 @@
 /*                                                                           */
 /*  Last Modified December 16, 2003                                          */
 /*****************************************************************************/
+
+/** @FILE
+CONOPT optimisation solver API definition.
+
+NOTE: Arne Drud has given the ASCEND project permission to include this header file
+in our source-code distribution, as it allows us to build code that links
+against a dlopened version of CONOPT, even if CONOPT is not present at the
+time that ASCEND is built.
+*/
+
 #if defined(_WIN32)
-#define COI_CALL __stdcall
-#define FNAME_UCASE_PREDECOR 1
+# define COI_CALL __stdcall
+# ifdef __gcc__
+#  define FNAME_LCASE_DECOR 1
+# else
+#  define FNAME_UCASE_NODECOR 1
+# endif
 #else
-#define COI_CALL
+# define COI_CALL
 #endif
 
 typedef int (COI_CALL *COI_READMATRIX) ( double* LOWER, double* CURR, double* UPPER, int* VSTA, int* TYPE, double* RHS,
@@ -380,86 +386,6 @@ typedef int (COI_CALL *COI_DUALBND   ) ( double* LBND, double* UBND, int* COLS, 
 # define COEAII            COEAII
 # define COEAI             COEAI
 
-#elif defined(FNAME_UCASE_PREDECOR) /* fortran names: upper case, no _ */
-# define COIDEF_Size       _COIDEF_SIZE
-# define COIDEF_Ini        _COIDEF_INI
-# define COIDEF_NumVar     _COIDEF_NUMVAR
-# define COIDEF_NumCon     _COIDEF_NUMCON
-# define COIDEF_NumNZ      _COIDEF_NUMNZ
-# define COIDEF_NumNlNz    _COIDEF_NUMNLNZ
-# define COIDEF_Base       _COIDEF_BASE
-# define COIDEF_OptDir     _COIDEF_OPTDIR
-# define COIDEF_ObjCon     _COIDEF_OBJCON
-# define COIDEF_ObjVar     _COIDEF_OBJVAR
-# define COIDEF_ItLim      _COIDEF_ITLIM
-# define COIDEF_ErrLim     _COIDEF_ERRLIM
-# define COIDEF_IniStat    _COIDEF_INISTAT
-# define COIDEF_FVincLin   _COIDEF_FVINCLIN
-# define COIDEF_FVforAll   _COIDEF_FVFORALL
-# define COIDEF_DebugFV    _COIDEF_DEBUGFV
-# define COIDEF_MaxSup     _COIDEF_MAXSUP
-# define COIDEF_Square     _COIDEF_SQUARE
-# define COIDEF_EmptyRow   _COIDEF_EMPTYROW
-# define COIDEF_EmptyCol   _COIDEF_EMPTYCOL
-# define COIDEF_Num2D      _COIDEF_NUM2D
-# define COIDEF_Debug2D    _COIDEF_DEBUG2D
-# define COIDEF_DisCont    _COIDEF_DISCONT
-# define COIDEF_StdOut     _COIDEF_STDOUT
-# define COIDEF_ClearM     _COIDEF_CLEARM
-# define COIDEF_2DPerturb  _COIDEF_2DPERTURB
-# define COIDEF_NDual      _COIDEF_NDUAL
-
-# define COIDEF_ResLim     _COIDEF_RESLIM
-# define COIDEF_WorkSpace  _COIDEF_WORKSPACE
-# define COIDEF_WorkFactor _COIDEF_WORKFACTOR
-
-# define COIDEF_ReadMatrix _COIDEF_READMATRIX
-# define COIDEF_FDEval     _COIDEF_FDEVAL
-# define COIDEF_Status     _COIDEF_STATUS
-# define COIDEF_Solution   _COIDEF_SOLUTION
-# define COIDEF_Message    _COIDEF_MESSAGE
-# define COIDEF_ErrMsg     _COIDEF_ERRMSG
-# define COIDEF_Progress   _COIDEF_PROGRESS
-# define COIDEF_Optfile    _COIDEF_OPTFILE
-# define COIDEF_Option     _COIDEF_OPTION
-# define COIDEF_TriOrd     _COIDEF_TRIORD
-# define COIDEF_FDInterval _COIDEF_FDINTERVAL
-# define COIDEF_2DDir      _COIDEF_2DDIR
-# define COIDEF_2DDirLag   _COIDEF_2DDIRLAG
-# define COIDEF_2DLagr     _COIDEF_2DLAGR
-# define COIDEF_SRFile     _COIDEF_SRFILE
-# define COIDEF_DualBnd    _COIDEF_DUALBND
-
-# define COIDEF_UsrMem     _COIDEF_USRMEM
-# define COIDEF_WorkMem    _COIDEF_WORKMEM
-
-# define COIGET_MaxUsed    _COIGET_MAXUSED
-# define COIGET_CurUsed    _COIGET_CURUSED
-
-# define COI_Solve         _COI_SOLVE
-# define COI_MemEst        _COI_MEMEST
-# define COI_Version       _COI_VERSION
-
-# define COI_ADDRESSOF     _COI_ADDRESSOF
-# define CALL_READMATRIX   _CALL_READMATRIX
-# define CALL_FDEVAL       _CALL_FDEVAL
-# define CALL_STATUS       _CALL_STATUS
-# define CALL_SOLUTION     _CALL_SOLUTION
-# define CALL_MESSAGE      _CALL_MESSAGE
-# define CALL_PROGRESS     _CALL_PROGRESS
-# define CALL_OPTFILE      _CALL_OPTFILE
-# define CALL_OPTION       _CALL_OPTION
-# define CALL_ERRMSG       _CALL_ERRMSG
-# define CALL_TRIORD       _CALL_TRIORD
-# define CALL_FDINTERVAL   _CALL_FDINTERVAL
-# define CALL_2DDIR        _CALL_2DDIR
-# define CALL_2DDIRLAG     _CALL_2DDIRLAG
-# define CALL_2DLAGR       _CALL_2DLAGR
-# define CALL_SRFILE       _CALL_SRFILE
-# define CALL_DUALBND      _CALL_DUALBND
-# define COEAII            _COEAII
-# define COEAI             _COEAI
-
 #else
 #error "No compile define for fortran naming convention"
 No_compile_define_for_fortran_naming_convention;
@@ -526,4 +452,4 @@ extern int COI_CALL COI_Solve        ( int* );
 extern int COI_CALL COI_MemEst       ( int*, double*, double* );
 extern int COI_CALL COI_Version      ( float*, char*, int );
 
-#endif
+#endif /* ARKI_CONOPT_H */
