@@ -248,7 +248,7 @@ METHOD self_test;
 	ASSERT abs(omega_s - 98.9{deg}) < 0.05 {deg};
 	ASSERT abs(Ho - 33.4{MJ/m^2}) < 0.4{MJ/m^2};
 END self_test;
-END dailyextraterrestrial;
+END example_1_8_1;
 
 (* 
 	NOTE
