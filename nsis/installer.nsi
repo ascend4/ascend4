@@ -72,9 +72,9 @@ Var /GLOBAL PYGOBJECTOK
 Var /GLOBAL PYCAIROOK
 Var /GLOBAL GLADEPATH
 Var /GLOBAL PYINSTALLED
-Var /GLOBAL TCLOK
-Var /GLOBAL TCLPATH
-Var /GLOBAL TCLINSTALLED
+;Var /GLOBAL TCLOK
+;Var /GLOBAL TCLPATH
+;Var /GLOBAL TCLINSTALLED
 
 Var /GLOBAL PDFINSTALLED
 
@@ -82,7 +82,7 @@ Var /GLOBAL PATH
 
 Var /GLOBAL PYDOWNLOAD
 Var /GLOBAL GTKDOWNLOAD
-Var /GLOBAL TCLDOWNLOAD
+;Var /GLOBAL TCLDOWNLOAD
 
 Var /GLOBAL ASCENDINIFOUND
 Var /GLOBAL ASCENDENVVARFOUND
@@ -109,12 +109,12 @@ Var /GLOBAL ASCENDLIBRARY
 
 ; passive install of pygtk 2.22.6 doesn't seem to work.
 
-!define TCL_VERSION "8.5.9.2"
-!define TCL_PATCH ".294317"
-!define TCL_FN "ActiveTcl${TCL_VERSION}${TCL_PATCH}-win32-ix86-threaded.exe"
-!define TCL_URL "http://downloads.activestate.com/ActiveTcl/releases/${TCL_VERSION}/${TCL_FN}"
-!define TCL_CMD "$DAI_TMPFILE"
-!define TCL_MD5 "15d6b17d38e66a83956dc16b7d80fc59"
+;!define TCL_VERSION "8.5.9.2"
+;!define TCL_PATCH ".294317"
+;!define TCL_FN "ActiveTcl${TCL_VERSION}${TCL_PATCH}-win32-ix86-threaded.exe"
+;!define TCL_URL "http://downloads.activestate.com/ActiveTcl/releases/${TCL_VERSION}/${TCL_FN}"
+;!define TCL_CMD "$DAI_TMPFILE"
+;!define TCL_MD5 "15d6b17d38e66a83956dc16b7d80fc59"
 
 !include "download.nsi"
 
@@ -142,9 +142,9 @@ Section "-gtk"
 		Pop $GLADEOK
 		Pop $GLADEPATH	
 
-		Call DetectTcl
-		Pop $TCLOK
-		Pop $TCLPATH
+;		Call DetectTcl
+;		Pop $TCLOK
+;		Pop $TCLPATH
 
 		Call DetectPyGTK
 		Pop $PYGTKOK
@@ -156,15 +156,15 @@ Section "-gtk"
 		Pop $PYCAIROOK
         ${EndIf}
 SectionEnd
-Section "-tcl"
-	DetailPrint "--- DOWNLOAD TCL/TK ---"
-	${If} $TCLDOWNLOAD == '1'
-		!insertmacro downloadAndInstall "Tcl/Tk" "${TCL_URL}" "${TCL_FN}" "${TCL_CMD}" "${TCL_MD5}"
-		Call DetectTcl
-		Pop $TCLOK
-		Pop $TCLPATH
-        ${EndIf}
-SectionEnd
+;Section "-tcl"
+;	DetailPrint "--- DOWNLOAD TCL/TK ---"
+;	${If} $TCLDOWNLOAD == '1'
+;		!insertmacro downloadAndInstall "Tcl/Tk" "${TCL_URL}" "${TCL_FN}" "${TCL_CMD}" "${TCL_MD5}"
+;		Call DetectTcl
+;		Pop $TCLOK
+;		Pop $TCLPATH
+;        ${EndIf}
+;SectionEnd
 
 ;------------------------------------------------------------------------
 ; INSTALL CORE STUFF including model library
@@ -362,25 +362,24 @@ SectionEnd
 
 ;---------------------------------
 
-Section /o "Tcl/Tk GUI" sect_tcltk
-
-	${If} $TCLOK != 'OK'
-		MessageBox MB_OK "Tck/Tk GUI can not be installed, because ActiveTcl was not found on this system. If do you want to use the Tcl/Tk GUI, please check the installation instructions ($TCLPATH)"
-	${Else}
-		DetailPrint "--- TCL/TK INTERFACE ---"
-		SetOutPath $INSTDIR\tcltk
-		; FIXME we should be a bit more selective here?
-		File /r /x .svn "..\tcltk\tk\*"
-		SetOutPath $INSTDIR
-		File "..\tcltk\interface\ascendtcl.dll"
-		File "..\tcltk\interface\ascend4.exe"
-
-		StrCpy $TCLINSTALLED "1"
-		WriteRegDWORD HKLM "SOFTWARE\ASCEND" "TclTk" 1
-
-	${EndIf}
-
-SectionEnd
+;Section /o "Tcl/Tk GUI" sect_tcltk
+;
+;	${If} $TCLOK != 'OK'
+;		MessageBox MB_OK "Tck/Tk GUI can not be installed, because ActiveTcl was not found on this system. If do you want to use the Tcl/Tk GUI, please check the installation instructions ($TCLPATH)"
+;	${Else}
+;		DetailPrint "--- TCL/TK INTERFACE ---"
+;		SetOutPath $INSTDIR\tcltk
+;		; FIXME we should be a bit more selective here?
+;		File /r /x .svn "..\tcltk\tk\*"
+;		SetOutPath $INSTDIR
+;		File "..\tcltk\interface\ascendtcl.dll"
+;		File "..\tcltk\interface\ascend4.exe"
+;
+;		StrCpy $TCLINSTALLED "1"
+;		WriteRegDWORD HKLM "SOFTWARE\ASCEND" "TclTk" 1
+;
+;	${EndIf}
+;SectionEnd
 
 ;---------------------------------
 
@@ -406,10 +405,10 @@ Section "Start Menu Shortcuts" sect_menu
 	; Model library shortcut
 	CreateShortCut "$SMPROGRAMS\ASCEND\Model Library.lnk" "$INSTDIR\models" "" "$INSTDIR\models" 0
 
-	; Link to Tcl/Tk GUI  
-	${If} $TCLINSTALLED == "1"
-		CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND Tcl/Tk.lnk" "$INSTDIR\ascend4.exe" "" "$INSTDIR\ascend4.exe" 0
-	${EndIf}
+;	; Link to Tcl/Tk GUI  
+;	${If} $TCLINSTALLED == "1"
+;		CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND Tcl/Tk.lnk" "$INSTDIR\ascend4.exe" "" "$INSTDIR\ascend4.exe" 0
+;	${EndIf}
 	
 	; Documentation
 	${If} $PDFINSTALLED == "1"
@@ -523,13 +522,13 @@ Section "Uninstall"
 
 ;--- tcl/tk components ---
 
-	ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "TclTk"
-	${If} $0 <> 0
-		DetailPrint "--- REMOVING TCL/TK COMPONENTS ---"
-		Delete $INSTDIR\ascendtcl.dll
-		Delete $INSTDIR\ascend4.exe
-		RMDir /r $INSTDIR\tcltk
-	${EndIf}
+;	ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "TclTk"
+;	${If} $0 <> 0
+;		DetailPrint "--- REMOVING TCL/TK COMPONENTS ---"
+;		Delete $INSTDIR\ascendtcl.dll
+;		Delete $INSTDIR\ascend4.exe
+;		RMDir /r $INSTDIR\tcltk
+;	${EndIf}
 
 ;--- documentation ---
 
@@ -604,7 +603,7 @@ SectionEnd
 
 Function .onInit
 	StrCpy $PYINSTALLED ""
-	StrCpy $TCLINSTALLED ""
+;	StrCpy $TCLINSTALLED ""
 	StrCpy $ASCENDINIFOUND ""
 	StrCpy $PDFINSTALLED ""
 	StrCpy $ASCENDENVVARFOUND ""
@@ -623,9 +622,9 @@ Function .onInit
 	Pop $GLADEOK
 	Pop $GLADEPATH	
 	
-	Call DetectTcl
-	Pop $TCLOK
-	Pop $TCLPATH
+;	Call DetectTcl
+;	Pop $TCLOK
+;	Pop $TCLPATH
 	
 	Call DetectPyGTK
 	Pop $PYGTKOK
@@ -643,20 +642,20 @@ Function .onInit
 		;MessageBox MB_OK "Previous installation detected..."
 		; If user previous deselected Tcl/Tk, then deselect it by
 		; default now, i.e don't force the user to install it.
-		ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "TclTk"
-		${If} $0 = 0
-			;MessageBox MB_OK "Tcl/Tk was previously deselected"
-			SectionGetFlags "${sect_tcltk}" $1
-			IntOp $1 $1 ^ ${SF_SELECTED}
-			SectionSetFlags "${sect_tcltk}" $1
-		${Else}
-			; If previously installed, force it to stay installed;
-			; the only way to uninstall a component is via complete
-			; uninstall.
-			SectionGetFlags "${sect_tcltk}" $1
-			IntOp $1 $1 ^ ${SF_RO}
-			SectionSetFlags "${sect_tcltk}" $1
-		${EndIf}
+;		ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "TclTk"
+;		${If} $0 = 0
+;			;MessageBox MB_OK "Tcl/Tk was previously deselected"
+;			SectionGetFlags "${sect_tcltk}" $1
+;			IntOp $1 $1 ^ ${SF_SELECTED}
+;			SectionSetFlags "${sect_tcltk}" $1
+;		${Else}
+;			; If previously installed, force it to stay installed;
+;			; the only way to uninstall a component is via complete
+;			; uninstall.
+;			SectionGetFlags "${sect_tcltk}" $1
+;			IntOp $1 $1 ^ ${SF_RO}
+;			SectionSetFlags "${sect_tcltk}" $1
+;		${EndIf}
 
 		ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "Python"
 		${If} $0 = 0

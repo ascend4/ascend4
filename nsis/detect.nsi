@@ -89,28 +89,28 @@ FunctionEnd
 
 ;--------------------------------------------------------------------
 
-Function DetectTcl
-	ReadRegStr $R6 HKCU "SOFTWARE\ActiveState\ActiveTcl" "CurrentVersion"
-	${If} $R6 == ''
-		ReadRegStr $R6 HKLM "SOFTWARE\ActiveState\ActiveTcl" "CurrentVersion"
-		${If} $R6 == ''
-			Push "No 'CurrentVersion' registry key"
-			Push "NOK"
-			Return
-		${Else}
-			StrCpy $R7 "SOFTWARE\ActiveState\ActiveTcl\$R6"
-			ReadRegStr $R8 HKLM $R7 ""		
-		${EndIf}
-	${Else}
-		StrCpy $R7 "SOFTWARE\ActiveState\ActiveTcl\$R6"
-		ReadRegStr $R8 HKCU $R7 ""		
-	${EndIf}
-	
-	${If} $R8 == ''
-		Push "No value for $R7"
-		Push "NOK"
-	${Else}
-		Push "$R8\bin"
-		Push "OK"
-	${EndIf}
-FunctionEnd
+;Function DetectTcl
+;	ReadRegStr $R6 HKCU "SOFTWARE\ActiveState\ActiveTcl" "CurrentVersion"
+;	${If} $R6 == ''
+;		ReadRegStr $R6 HKLM "SOFTWARE\ActiveState\ActiveTcl" "CurrentVersion"
+;		${If} $R6 == ''
+;			Push "No 'CurrentVersion' registry key"
+;			Push "NOK"
+;			Return
+;		${Else}
+;			StrCpy $R7 "SOFTWARE\ActiveState\ActiveTcl\$R6"
+;			ReadRegStr $R8 HKLM $R7 ""		
+;		${EndIf}
+;	${Else}
+;		StrCpy $R7 "SOFTWARE\ActiveState\ActiveTcl\$R6"
+;		ReadRegStr $R8 HKCU $R7 ""		
+;	${EndIf}
+;	
+;	${If} $R8 == ''
+;		Push "No value for $R7"
+;		Push "NOK"
+;	${Else}
+;		Push "$R8\bin"
+;		Push "OK"
+;	${EndIf}
+;FunctionEnd

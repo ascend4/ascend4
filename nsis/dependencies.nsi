@@ -3,7 +3,7 @@
 
 Var CHECKPY
 Var CHECKGTK
-Var CHECKTCL
+;Var CHECKTCL
 
 !macro setCheckboxChecked CB
 	SendMessage ${CB} ${BM_SETCHECK} 0x0001 0
@@ -17,7 +17,7 @@ Function dependenciesCreate
 	${AndIf} $PYGTKOK == 'OK'
 	${AndIf} $PYGOBJECTOK == 'OK'
 	${AndIf} $PYCAIROOK == 'OK'
-	${AndIf} $TCLOK == 'OK'
+	;${AndIf} $TCLOK == 'OK'
 		; do nothing in this page
 	${Else}
 		nsDialogs::Create /NOUNLOAD 1018
@@ -38,11 +38,11 @@ Function dependenciesCreate
 			!insertmacro setCheckboxChecked $CHECKGTK
 		${EndIf}
 		
-		${If} $TCLOK == 'NOK'
-			${NSD_CreateCheckbox} 10% 90% 100% 8u "Tcl/Tk"
-			Pop $CHECKTCL
-			!insertmacro setCheckboxChecked $CHECKTCL
-		${EndIf}
+;		${If} $TCLOK == 'NOK'
+;			${NSD_CreateCheckbox} 10% 90% 100% 8u "Tcl/Tk"
+;			Pop $CHECKTCL
+;			!insertmacro setCheckboxChecked $CHECKTCL
+;		${EndIf}
 
 		nsDialogs::Show
 	${EndIf}
@@ -52,6 +52,6 @@ FunctionEnd
 Function DependenciesLeave
 	SendMessage $CHECKPY ${BM_GETCHECK} 0 0 $PYDOWNLOAD
 	SendMessage $CHECKGTK ${BM_GETCHECK} 0 0 $GTKDOWNLOAD
-	SendMessage $CHECKTCL ${BM_GETCHECK} 0 0 $TCLDOWNLOAD
+;	SendMessage $CHECKTCL ${BM_GETCHECK} 0 0 $TCLDOWNLOAD
 FunctionEnd
 	
