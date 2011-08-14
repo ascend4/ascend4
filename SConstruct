@@ -970,6 +970,10 @@ env = Environment(
 	, **envadditional
 )
 
+# Create .def files by default on Windows (or else SCons 2.0.1 never seems to be happy)
+if platform.system()=="Windows":
+	env.Append(WINDOWS_INSERT_DEF=1)
+
 #print "PATH =",os.environ['PATH']
 #print "PROGSUFFIX =",env['PROGSUFFIX']
 #print "CPPPATH =",env['CPPPATH']
@@ -2987,7 +2991,7 @@ if with_installer:
 		,'IPOPTDLL':os.path.normpath(env['IPOPT_DLL'])
 	})
 	installer = env.Installer('nsis/installer.nsi')
-	env.Depends(installer,["pygtk","tcltk","ascend.dll","models","solvers","ascend-config",'pygtk/ascend'])
+	env.Depends(installer,["pygtk","ascxx","tcltk","ascend.dll","models","solvers","ascend-config",'pygtk/ascend'])
 	env.Depends(installer,[os.path.normpath(env['IPOPT_DLL'])])
 	env.Alias('installer',installer)
 else:

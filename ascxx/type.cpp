@@ -146,6 +146,7 @@ Type::getSimulation(const SymChar &sym
 	/* notify the compiler of our bintoken options, if nec */
 	Compiler::instance()->sendBinaryCompilationOptions();
 
+	/* removing the following line causes a crash on Windows 7 */
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Starting tree...\n");
 #if 1
 	error_reporter_tree_start();

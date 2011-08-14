@@ -574,7 +574,7 @@ Section "Uninstall"
 	Delete $INSTDIR\ascend.ico
 	Delete $INSTDIR\Makefile.bt
 	Delete $INSTDIR\ascend.syn
-	Delete $INSTDIR\ipopt39.dll
+	Delete $INSTDIR\ipopt38.dll
 	RMDir /r $INSTDIR\models
 	Delete $INSTDIR\solvers\qrslv_ascend.dll
 	Delete $INSTDIR\solvers\conopt_ascend.dll
