@@ -672,7 +672,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		# run the 'on_load' method
 		self.start_waiting("Running default method...")
 		try:
-			self.reporter.reportNote("SIMULATION CREATED, RUNNING DEFAULT METHOD NOW...")
+			#self.reporter.reportNote("SIMULATION CREATED, RUNNING DEFAULT METHOD NOW...")
 			self.sim.runDefaultMethod()
 		except RuntimeError, e:
 			self.stop_waiting()
