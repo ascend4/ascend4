@@ -1,5 +1,4 @@
 import gtk
-import gtk.glade
 import ascpy
 from itertools import groupby
 from operator import itemgetter
@@ -17,10 +16,9 @@ AT_BOUND_TOL = 0.0001;
 class DiagnoseWindow:
 	def __init__(self,browser,block=0):
 		self.browser=browser
-		_xml = gtk.glade.XML(browser.glade_file,"diagnosewin")
-		_xml.signal_autoconnect(self)	
-
-		self.window = _xml.get_widget("diagnosewin")
+		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["diagnosewin"])
+		self.browser.builder.connect_signals(self)
+		self.window = self.browser.builder.get_object("diagnosewin")
 		self.window.set_transient_for(self.browser.window)
 
 		try:
@@ -33,31 +31,31 @@ class DiagnoseWindow:
 		except:
 			pass
 		
-		self.blockstatus = _xml.get_widget("blockstatustext")
+		self.blockstatus = self.browser.builder.get_object("blockstatustext")
 
-		self.imagescroll = _xml.get_widget("imagescroll")
-		self.image = _xml.get_widget("image")
-		self.blockentry = _xml.get_widget("blockentry")
-		self.zoomentry = _xml.get_widget("zoomentry")
+		self.imagescroll = self.browser.builder.get_object("imagescroll")
+		self.image = self.browser.builder.get_object("image")
+		self.blockentry = self.browser.builder.get_object("blockentry")
+		self.zoomentry = self.browser.builder.get_object("zoomentry")
 
 		self.var = None; self.rel = None
-		self.varname = _xml.get_widget("varname1")
-		self.varval = _xml.get_widget("varval")
-		self.varinfobutton = _xml.get_widget("varinfobutton")
-		self.relname = _xml.get_widget("relname1")
-		self.relresid = _xml.get_widget("relresid")
-		self.relinfobutton = _xml.get_widget("relinfobutton")
+		self.varname = self.browser.builder.get_object("varname1")
+		self.varval = self.browser.builder.get_object("varval")
+		self.varinfobutton = self.browser.builder.get_object("varinfobutton")
+		self.relname = self.browser.builder.get_object("relname1")
+		self.relresid = self.browser.builder.get_object("relresid")
+		self.relinfobutton = self.browser.builder.get_object("relinfobutton")
 
-		self.varview = _xml.get_widget("varview")
+		self.varview = self.browser.builder.get_object("varview")
 		self.varbuf = gtk.TextBuffer()
 		self.varview.set_buffer(self.varbuf)
-		self.varcollapsed = _xml.get_widget("varcollapsed")
-		self.relview = _xml.get_widget("relview")	
-		self.relcollapsed = _xml.get_widget("relcollapsed")
-		self.relvalues = _xml.get_widget("relvalues")
-		self.rellabels = _xml.get_widget("rellabels")
-		self.relrels = _xml.get_widget("relrels")
-		self.relresids = _xml.get_widget("relresids")
+		self.varcollapsed = self.browser.builder.get_object("varcollapsed")
+		self.relview = self.browser.builder.get_object("relview")	
+		self.relcollapsed = self.browser.builder.get_object("relcollapsed")
+		self.relvalues = self.browser.builder.get_object("relvalues")
+		self.rellabels = self.browser.builder.get_object("rellabels")
+		self.relrels = self.browser.builder.get_object("relrels")
+		self.relresids = self.browser.builder.get_object("relresids")
 		self.relbuf = gtk.TextBuffer()
 		self.relview.set_buffer(self.relbuf)
 

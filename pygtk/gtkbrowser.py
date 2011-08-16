@@ -42,9 +42,8 @@ try:
 	import ascpy
 	import os.path
 
-	loading.print_status("Loading PyGTK, glade, pango")
+	loading.print_status("Loading PyGTK, pango")
 
-	import gtk.glade
 	import pango
 
 	loading.load_matplotlib()
@@ -171,6 +170,7 @@ class Browser:
 		#loading.create_window(self.assets_dir)
 		
 		self.observers = []
+		self.currentobservertab = None
 		self.clip = None
 
 		#--------
@@ -240,11 +240,14 @@ class Browser:
 
 		loading.print_status("Setting up windows") #,"GLADE_FILE = %s" % self.glade_file)
 
-		glade = gtk.glade.XML(self.glade_file,"browserwin")
+		builder = gtk.Builder()
+		#builder.add_from_file(self.glade_file)
+		builder.add_objects_from_file(self.glade_file,["integ_icon","browserwin","list_of_td"])
+		self.builder=builder
+		self.window=self.builder.get_object ("browserwin")
 
-		self.window = glade.get_widget("browserwin")
-
-
+		self.disable_menu()
+		self.disable_on_first_run()
 		if not self.window:
 			raise RuntimeError("Couldn't load window from glade file")
 
@@ -256,7 +259,7 @@ class Browser:
 		
 		self.window.connect("delete_event", self.delete_event)
 
-		self.browserpaned=glade.get_widget("browserpaned")
+		self.browserpaned=self.builder.get_object ("browserpaned")
 		_geom2=self.prefs.getGeometryValue(_display,"browserpaned")
 		if _geom2:
 			self.browserpaned.set_position(_geom2)
@@ -264,31 +267,34 @@ class Browser:
 		buttons = ["open","reload","solve","integrate","check","methodrun"]
 		for n in buttons:
 			name = "%sbutton"%n
-			setattr(self,name,glade.get_widget(name))
+			setattr(self,name,self.builder.get_object(name))
 			getattr(self,name).connect("clicked",getattr(self,"%s_click"%n))
 
-		widgets = ["autotoggle","automenu","methodsel","maintabs","lowertabs","consolescroll","statusbar","browsermenu"]
+		widgets = ["autotoggle","automenu","methodsel","maintabs","lowertabs","consolescroll","statusbar","browsermenu","reloadwarn"]
 		for n in widgets:
-			setattr(self,n,glade.get_widget(n))
+			setattr(self,n,self.builder.get_object(n))
 
 		self.autotoggle.connect("toggled",self.auto_toggle)
 
-		self.show_solving_popup=glade.get_widget("show_solving_popup")
+		self.show_solving_popup=self.builder.get_object("show_solving_popup")
 		self.show_solving_popup.set_active(self.prefs.getBoolPref("SolverReporter","show_popup",True))
-		self.close_on_converged=glade.get_widget("close_on_converged")
+		self.close_on_converged=self.builder.get_object("close_on_converged")
 		self.close_on_converged.set_active(self.prefs.getBoolPref("SolverReporter","close_on_converged",True))
-		self.close_on_nonconverged=glade.get_widget("close_on_nonconverged")
+		self.close_on_nonconverged=self.builder.get_object("close_on_nonconverged")
 		self.close_on_nonconverged.set_active(self.prefs.getBoolPref("SolverReporter","close_on_nonconverged",True))
-		self.solver_engine=glade.get_widget("solver_engine")
+		self.solver_engine=self.builder.get_object("solver_engine")
 
-		self.use_relation_sharing=glade.get_widget("use_relation_sharing")
+		self.use_relation_sharing=self.builder.get_object("use_relation_sharing")
 		self.use_relation_sharing.set_active(self.prefs.getBoolPref("Compiler","use_relation_sharing",True))
 
-		self.use_binary_compilation=glade.get_widget("use_binary_compilation")
+		self.use_binary_compilation=self.builder.get_object("use_binary_compilation")
 		self.use_binary_compilation.set_active(self.prefs.getBoolPref("Compiler","use_binary_compilation",False))
 		self.use_binary_compilation.set_sensitive(self.use_relation_sharing.get_active())
+		
+		self.check_weekly=self.builder.get_object("check_weekly")
+		self.check_weekly.set_active(not(self.prefs.getBoolPref("Browser","disable_auto_check_for_updates",False)))
 
-		glade.signal_autoconnect(self)
+		self.builder.connect_signals(self)
 
 		#-------
 		# Status icons
@@ -361,7 +367,7 @@ class Browser:
 		#--------------------
 		# set up the error view
 
-		self.errorview = glade.get_widget("errorview")	
+		self.errorview = self.builder.get_object("errorview")
 		errstorecolstypes = [gtk.gdk.Pixbuf,str,str,str,int]
 		self.errorstore = gtk.TreeStore(*errstorecolstypes)
 		errtitles = ["","Location","Message"];
@@ -440,7 +446,7 @@ class Browser:
 		# set up the module view
 
 		self.modtank = {}
-		self.moduleview = ModuleView(self,glade, self.library)
+		self.moduleview = ModuleView(self, self.builder, self.library)
 	
 		#--------------------
 		# set up the methods combobox
@@ -454,7 +460,7 @@ class Browser:
 		#--------
 		# set up the instance browser view
 
-		self.modelview = ModelView(self, glade)
+		self.modelview = ModelView(self, self.builder)
 
 		#--------
 		# set up the tabs
@@ -467,7 +473,13 @@ class Browser:
 		self.is_auto = self.prefs.getBoolPref("Browser","auto_solve",True)
 		self.autotoggle.set_active(self.is_auto)
 		self.automenu.set_active(self.is_auto)
+		
+		#--------
+		# set the state of the 'warn on reload' toggle
 
+		self.reload_warn = self.prefs.getBoolPref("Browser","warn_on_reload",True)
+		self.reloadwarn.set_active(self.reload_warn)
+		
 		#--------
 		# tell libascend about this 'browser' object
 
@@ -550,9 +562,10 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			)
 
 	def run(self):
-		self.window.show()
+		#self.window.show()
 		loading.print_status("ASCEND is now running")
 		loading.complete()
+		self.auto_update_check()
 		gtk.main()
 
 #   ------------------
@@ -591,7 +604,9 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		self.errorstore.clear()
 		self.modelview.clear()
-	
+		self.currentobservertab = None
+		for _obs in self.observers:
+			_obs.set_dead()
 		# self.library.clear()
 
 		#print "Filename =",filename
@@ -600,6 +615,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.filename = filename
 			# call the low-level 'load' command...
 			self.library.load(filename)
+			self.disable_menu()
+			self.enable_on_file_open()
 		except RuntimeError,e:
 			self.statusbar.pop(_context)
 			raise
@@ -705,6 +722,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		try:
 			self.sim.build()
+			self.enable_on_sim_build()
 		except RuntimeError,e:
 			self.reporter.reportError("Couldn't build system: %s" % str(e));
 			return 1
@@ -899,8 +917,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def on_keep_observed_click(self,*args):
 		print "KEEPING..."
-		if len(self.observers) <= 0:
-			self.reporter.reportError("No observer defined!")
+		if self.currentobservertab is None:
+			self.reporter.reportError("No observers defined for this model!")
 			return
 		self.tabs[self.currentobservertab].do_add_row()
 
@@ -911,7 +929,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		if len(self.observers) <= 0:
 			self.reporter.reportError("No observer defined!")
 			return
-		self.tabs[self.currentobservertab].copy_to_clipboard(self.clip)
+		self.tabs[self.currentpage].copy_to_clipboard(self.clip)
 
 	def on_use_relation_sharing_toggle(self,checkmenuitem,*args):
 		_v = checkmenuitem.get_active()
@@ -1073,6 +1091,9 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				self.do_open( _filename)
 			except RuntimeError,e:
 				self.reporter.reportError(str(e))
+	
+	def on_reloadwarn_toggled(self,*args):
+		self.prefs.setBoolPref("Browser","warn_on_reload",self.reloadwarn.get_active())
 
 	def reload_click(self,*args):
 		_type = None
@@ -1083,7 +1104,12 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		if self.sim:
 			_type = self.sim.getType().getName().toString();
-
+		
+		if self.reloadwarn.get_active() and self.currentobservertab is not None:
+			_alertwin = ReloadDialog(self)
+			_reload = _alertwin.run()
+			if _reload is False:
+				return
 		self.library.clear()
 
 		try:
@@ -1166,8 +1192,9 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.autotoggle.set_active(self.is_auto)
 
 	def on_help_about_click(self,*args):
-		_xml = gtk.glade.XML(self.glade_file,"aboutdialog")
-		_about = _xml.get_widget("aboutdialog")
+
+		self.builder.add_objects_from_file(self.glade_file,["aboutdialog"])
+		_about = self.builder.get_object("aboutdialog")
 		_about.set_transient_for(self.window);
 		_about.set_version(config.VERSION)
 		_about.run()
@@ -1192,6 +1219,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		v = VersionCheck()
 		title = "Check for updates"
 		text = "Your version is %s\n" % config.VERSION
+		self.prefs.setStringPref("Browser","last_update_check","%s" %time.time())
+			
 		try:
 			v.check()
 			if config.VERSION==v.latest:
@@ -1307,18 +1336,35 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def on_maintabs_switch_page(self,notebook,page,pagenum):
 		#print("Page switched to %d" % pagenum)
-		if pagenum in self.tabs.keys():
+		if (pagenum in self.tabs.keys()) and self.tabs[pagenum].alive:
 			self.currentobservertab = pagenum
+			self.currentpage = pagenum
+		else:
+			self.currentpage = pagenum
+		if pagenum == 1:
+			self.enable_on_enter_sim_tab()
+			self.modelview.modelview.grab_focus()
+		else:
+			self.disable_on_leave_sim_tab()
 
 	def create_observer(self,name=None):
-		_xml = gtk.glade.XML(self.glade_file,"observervbox");
+		_imagelist = []
+		for i in range(5):
+			_imagelist.append("image%s" % (i+7))
+		self.builder.add_objects_from_file(self.glade_file, _imagelist)
+		
+		self.builder.add_objects_from_file(self.glade_file,["observervbox","observercontext"])
+		
 		_label = gtk.Label();
-		_tab = self.maintabs.append_page(_xml.get_widget("observervbox"),_label);
-		_obs = ObserverTab(xml=_xml, name=name, browser=self, tab=_tab)
+		_tab = self.maintabs.append_page(self.builder.get_object("observervbox"),_label);
+		_obs = ObserverTab(name=name, browser=self, tab=_tab)
 		_label.set_text(_obs.name)
 		self.observers.append(_obs)
 		self.tabs[_tab] = _obs
 		self.currentobservertab = _tab
+
+		self.builder.get_object("copy_observer_matrix").set_sensitive(True)
+		self.builder.get_object("keep_observed").set_sensitive(True)
 		return _obs
 	
 	def sync_observers(self):
@@ -1330,11 +1376,144 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		return False
 
 	def observe(self,instance):
-			if len(self.observers) ==0:
+			if self.currentobservertab is None:
 				self.create_observer()
 			_observer = self.tabs[self.currentobservertab]
 			_observer.add_instance(instance)
-
+			
+	def auto_update_check(self):
+		_p = self.prefs
+		_no_auto_check = _p.getBoolPref("Browser", "disable_auto_check_for_updates", False)
+		
+		if _no_auto_check is True:
+			return
+		
+		_time_now = time.time()
+		_last_update = float(self.prefs.getStringPref("Browser","last_update_check","0"))
+		print "Time since last update check : %f days" %((_time_now-_last_update)/(3600*24))
+		
+		if ((_time_now-_last_update)/(3600*24)) < 7:
+			return
+		
+		_win = AutoUpdateDialog(self)
+		_check_now = _win.run()
+		
+		if _check_now is False:
+			return
+		
+		self.on_help_check_for_updates_click()
+	
+	def on_check_weekly_toggled(self, widget):
+		_p = self.prefs
+		_p.setBoolPref("Browser", "disable_auto_check_for_updates", not(widget.get_active()))
+		
+	def disable_menu(self):
+		list=["free_variable","fix_variable","sparsity","propsmenuitem","copy_observer_matrix",
+                      "incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
+                      "show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1",
+                      "repaint_tree","checkbutton","solvebutton","integratebutton","methodrunbutton",
+                      "check1","solve1","integrate1","units","add_observer","keep_observed","preferences"]
+		for button in list:
+			self.builder.get_object(button).set_sensitive(False)
+			
+	def disable_on_leave_sim_tab(self):
+		list =["free_variable","fix_variable","propsmenuitem","units"]
+		for button in list:
+			self.builder.get_object(button).set_sensitive(False)
+			
+	def enable_on_enter_sim_tab(self):
+		list =["free_variable","fix_variable","propsmenuitem","units"]
+		for button in list:
+			self.builder.get_object(button).set_sensitive(False)
+		if hasattr(self.modelview,'sim'):
+			_path, _col = self.modelview.modelview.get_cursor()
+			_instance = None
+			if _path:
+				_name,_instance = self.modelview.otank[_path]
+			if _instance is None:
+				return
+			if _instance.isReal():
+				self.builder.get_object("units").set_sensitive(True)
+			if _instance.getType().isRefinedSolverVar():
+				self.builder.get_object("propsmenuitem").set_sensitive(True)
+				if _instance.isFixed():
+					self.builder.get_object("free_variable").set_sensitive(True)
+				else:
+					self.builder.get_object("fix_variable").set_sensitive(True)	
+	def enable_on_sim_build(self):
+		list=["sparsity","incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
+                      "show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1"]
+		for button in list:
+			self.builder.get_object(button).set_sensitive(True)
+	def disable_on_first_run(self):
+		list=["reloadbutton","reload","show_external_functions","notes_view"]
+		for button in list:
+			self.builder.get_object(button).set_sensitive(False)
+	def enable_on_file_open(self):
+		list=["reloadbutton","reload","show_external_functions","notes_view"]
+		for button in list:
+			self.builder.get_object(button).set_sensitive(True)
+	def enable_on_model_tree_build(self):
+		list=["repaint_tree","checkbutton","solvebutton","integratebutton","methodrunbutton",
+                      "check1","solve1","integrate1","units","add_observer","preferences"]
+		for button in list:
+			self.builder.get_object(button).set_sensitive(True)
 if __name__ == "__main__":
 	b = Browser();
 	b.run()
+	
+class ReloadDialog:
+		
+	# Just a dialog to confirm that the user REALLY
+	# wants to reload the model
+	
+	def __init__(self, browser):
+		browser.builder.add_objects_from_file(browser.glade_file, ["reloaddialog"])
+		self.alertwin = browser.builder.get_object("reloaddialog")
+		browser.builder.connect_signals(self)
+	
+	def on_reloaddialog_close(self,*args):
+		self.alertwin.response(gtk.RESPONSE_CLOSE)
+		
+	def run(self):
+		_continue = True
+		while _continue:
+			_res = self.alertwin.run()
+			if _res == gtk.RESPONSE_YES:
+				self.alertwin.destroy()
+				return True
+			else:
+				self.alertwin.destroy()
+				return False
+				
+class AutoUpdateDialog:
+	
+	# A dialog to automatically check for updates
+	
+	def __init__(self, browser):
+		self.browser = browser
+		browser.builder.add_objects_from_file(browser.glade_file, ["autoupdatedialog"])
+		self.win = browser.builder.get_object("autoupdatedialog")
+		self.checkbutton = browser.builder.get_object("autoupdate")
+		
+		_p = self.browser.prefs
+		self.checkbutton.set_active(_p.getBoolPref("Browser", "disable_auto_check_for_updates", False))
+		
+		browser.builder.connect_signals(self)
+		
+	def on_autoupdate_toggled(self, widget):
+		_p = self.browser.prefs
+		_p.setBoolPref("Browser", "disable_auto_check_for_updates", widget.get_active())
+		self.browser.check_weekly.set_active(not(widget.get_active))
+		
+	def run(self):
+		_continue = True
+		while _continue:
+			_res = self.win.run()
+			if _res == gtk.RESPONSE_YES:
+				self.win.destroy()
+				return True
+			elif _res == gtk.RESPONSE_NO or _res == gtk.RESPONSE_DELETE_EVENT or _res == gtk.RESPONSE_CLOSE:
+				self.win.destroy()
+				return False
+	

@@ -1,7 +1,6 @@
 import ascpy
 import time
 import gtk
-import gtk.glade
 import time
 from varentry import *
 from preferences import *
@@ -26,18 +25,17 @@ class IntegratorWindow:
 		self.prefs = Preferences()
 
 		# locate all the widgets
-		_xml = gtk.glade.XML(browser.glade_file,"integratorwin")
-		_xml.signal_autoconnect(self)
+		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["integratorwin","list_of_td"])
+		self.browser.builder.connect_signals(self)
 
-		self.window = _xml.get_widget("integratorwin")
+		self.window = self.browser.builder.get_object("integratorwin")
 		self.window.set_transient_for(self.browser.window)
 
-		self.engineselect = _xml.get_widget("engineselect")
-		self.beginentry = _xml.get_widget("beginentry")
-		self.durationentry = _xml.get_widget("durationentry")
-		self.nstepsentry = _xml.get_widget("nstepsentry")
-		self.timedistributionselect = _xml.get_widget("timedistributionselect")
-
+		self.engineselect = self.browser.builder.get_object("engineselect")
+		self.beginentry = self.browser.builder.get_object("beginentry")
+		self.durationentry = self.browser.builder.get_object("durationentry")
+		self.nstepsentry = self.browser.builder.get_object("nstepsentry")
+		self.timedistributionselect = self.browser.builder.get_object("timedistributionselect")
 		self.settings = {
 			# input field: [pref name, default value, export-to-integrator function]
 			"initialstep": [1,lambda x:self.integrator.setInitialSubStep(float(x))]
@@ -48,7 +46,7 @@ class IntegratorWindow:
 
 		self.integratorentries={}
 		for _k in self.settings.keys():
-			_w = _xml.get_widget(_k+"entry")
+			_w = self.browser.builder.get_object(_k+"entry")
 			if not _w:
 				raise RuntimeError("Couldn't find entry for"+_k)
 			self.integratorentries[_k]=_w
@@ -68,7 +66,7 @@ class IntegratorWindow:
 		self.engineselect.set_model(_enginestore)
 		_cell = gtk.CellRendererText()
 		self.engineselect.pack_start(_cell, True)
-		self.engineselect.add_attribute(_cell, 'text', 1)
+		self.engineselect.add_attribute(_cell, 'text', 0)
 		
 		_engpref = self.prefs.getStringPref("Integrator","engine","LSODE")
 		_engindex = 0
@@ -110,7 +108,6 @@ class IntegratorWindow:
 		_dur = self.prefs.getStringPref("Integrator","duration","100")
 		self.durationentry.set_text(_dur)
 		self.nstepsentry.set_text("100")
-		self.timedistributionselect.set_active(0)
 
 	def on_integratorcancel_clicked(self,*args):
 		self.browser.reporter.reportNote("CANCELLING");

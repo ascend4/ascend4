@@ -1,6 +1,6 @@
 # General-purpose popup window for reporting graphical stuff
 
-import gtk, gtk.glade, pango
+import gtk, pango
 import ascpy
 from varentry import *
 import os,shutil
@@ -12,10 +12,10 @@ class ImageWindow:
 		self.delete = delete
 
 		# GUI config
-		_xml = gtk.glade.XML(browser.glade_file,"imagewindow")
-		self.window = _xml.get_widget("imagewindow")
-		self.vbox = _xml.get_widget("vbox1")
-		self.closebutton = _xml.get_widget("closebutton")
+		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["imagewindow"])
+		self.window = self.browser.builder.get_object("imagewindow")
+		self.vbox = self.browser.builder.get_object("vbox1")
+		self.closebutton = self.browser.builder.get_object("closebutton")
 		self.window.set_title(title)
 
 		if self.browser.icon:
@@ -39,7 +39,7 @@ class ImageWindow:
 		self.scrollwin.show()
 		self.vbox.add(self.scrollwin)
 
-		_xml.signal_autoconnect(self)
+		self.browser.builder.connect_signals(self)
 
 		# more than 100% is pointless
 		self.zoom_max = 1

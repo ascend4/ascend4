@@ -1,7 +1,6 @@
 import ascpy
 import time
 import gtk
-import gtk.glade
 
 class PythonSolverReporter(ascpy.SolverReporter):
 	def __init__(self,browser,message=None):
@@ -47,26 +46,26 @@ class PopupSolverReporter(PythonSolverReporter):
 	def __init__(self,browser,numvars):
 		PythonSolverReporter.__init__(self,browser)
 
-		_xml = gtk.glade.XML(browser.glade_file,"solverstatusdialog")
-		_xml.signal_autoconnect(self)
 
-		self.window = _xml.get_widget("solverstatusdialog")
+		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["solverstatusdialog"])
+		self.window = self.browser.builder.get_object("solverstatusdialog")
+		self.browser.builder.connect_signals(self)
 		if self.browser.icon:
 			self.window.set_icon(self.browser.icon)
 		self.window.set_transient_for(self.browser.window)
 		
-		self.numvars = _xml.get_widget("numvarsentry")
-		self.numblocks = _xml.get_widget("numblocksentry")
-		self.elapsedtime = _xml.get_widget("elapsedtimeentry")
-		self.numiterations = _xml.get_widget("numiterationsentry")
-		self.blockvars = _xml.get_widget("blockvarsentry")
-		self.blockiterations = _xml.get_widget("blockiterationsentry")
-		self.blockresidual = _xml.get_widget("blockresidualentry")
-		self.blockelapsedtime = _xml.get_widget("blockelapsedtimeentry")
+		self.numvars = self.browser.builder.get_object("numvarsentry")
+		self.numblocks = self.browser.builder.get_object("numblocksentry")
+		self.elapsedtime = self.browser.builder.get_object("elapsedtimeentry")
+		self.numiterations = self.browser.builder.get_object("numiterationsentry")
+		self.blockvars = self.browser.builder.get_object("blockvarsentry")
+		self.blockiterations = self.browser.builder.get_object("blockiterationsentry")
+		self.blockresidual = self.browser.builder.get_object("blockresidualentry")
+		self.blockelapsedtime = self.browser.builder.get_object("blockelapsedtimeentry")
 	
-		self.progressbar = _xml.get_widget("progressbar")
-		self.closebutton = _xml.get_widget("closebutton1")
-		self.stopbutton = _xml.get_widget("stopbutton")
+		self.progressbar = self.browser.builder.get_object("progressbar")
+		self.closebutton = self.browser.builder.get_object("closebutton1")
+		self.stopbutton = self.browser.builder.get_object("stopbutton")
 			
 		#print "SOLVER REPORTER ---- PYTHON"
 

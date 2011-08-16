@@ -1,11 +1,11 @@
 import gtk
-import gtk.glade
 import pango
 import ascpy
 
 from varentry import *
 from properties import *
 from unitsdialog import *
+from study import *
 
 BROWSER_FIXED_COLOR = "#008800"
 BROWSER_FREE_COLOR = "#000088"
@@ -15,12 +15,13 @@ BROWSER_INCLUDED_COLOR = "black"
 BROWSER_UNINCLUDED_COLOR = "#888888"
 
 class ModelView:
-	def __init__(self,browser,glade):
+	def __init__(self,browser,builder):
 		self.browser = browser # the parent object: the entire ASCEND browser
 
+		self.builder = builder
 		self.notes = browser.library.getAnnotationDatabase()	
 
-		self.modelview = glade.get_widget("browserview")
+		self.modelview = builder.get_object("browserview")
 		
 		# name, type, value, foreground, weight, editable, status-icon
 		columns = [str,str,str,str,int,bool,gtk.gdk.Pixbuf]
@@ -36,7 +37,7 @@ class ModelView:
 		
 		self.modelview.connect("row-expanded", self.row_expanded )
 		self.modelview.connect("button-press-event", self.on_treeview_event )
-		self.modelview.connect("key-press-event",self.on_treeview_event )
+		self.modelview.connect("key-release-event",self.on_treeview_event )
 
 		# data columns are: name type value colour weight editable
 		
@@ -62,53 +63,26 @@ class ModelView:
 			i = i + 1
 
 		#--------------------
-		# set up the context menu for fixing/freeing vars
-
-		# TODO import this menu from Glade (this code is a PITA)
-
-		self.treecontext = gtk.Menu();
-		self.fixmenuitem = gtk.ImageMenuItem("_Fix",True);
-		self.fixmenuitem.set_image(self.browser.fixedimg)
-
-		self.freemenuitem = gtk.ImageMenuItem("F_ree",True);
-		_img = gtk.Image()
-		_img.set_from_file(self.browser.options.assets_dir+'/unlocked.png')
-		self.freemenuitem.set_image(_img)
-
-		self.propsmenuitem = gtk.ImageMenuItem("_Properties",True);
-		_img = gtk.Image()
-		_img.set_from_file(self.browser.options.assets_dir+'/properties.png')
-		self.propsmenuitem.set_image(_img)
-
-		self.observemenuitem = gtk.ImageMenuItem("_Observe",True);
-		_img = gtk.Image()
-		_img.set_from_file(self.browser.options.assets_dir+'/observe.png')
-		self.observemenuitem.set_image(_img)
-
-		self.unitsmenuitem = gtk.ImageMenuItem("Select _Units",True);
-		_img = gtk.Image()
-		_img.set_from_file(self.browser.options.assets_dir+'/ruler.png')
-		self.unitsmenuitem.set_image(_img)
-
-		self.fixmenuitem.show(); self.fixmenuitem.set_sensitive(False)
-		self.freemenuitem.show(); self.freemenuitem.set_sensitive(False)
-		self.observemenuitem.show(); self.observemenuitem.set_sensitive(False)
-		self.unitsmenuitem.show(); self.unitsmenuitem.set_sensitive(False)
-
-		self.propsmenuitem.show()
-		self.treecontext.append(self.fixmenuitem)
-		self.treecontext.append(self.freemenuitem)
-		_sep = gtk.SeparatorMenuItem(); _sep.show()
-		self.treecontext.append(_sep);
-		self.treecontext.append(self.observemenuitem)
-		_sep = gtk.SeparatorMenuItem(); _sep.show()
-		self.treecontext.append(_sep)
-		self.treecontext.append(self.propsmenuitem)
-		self.treecontext.append(self.unitsmenuitem)
+		# get all menu icons and set up the context menu for fixing/freeing vars
+		_imagelist = []
+		for i in range(6):
+			_imagelist.append("image%s" % (i+1))
+		self.browser.builder.add_objects_from_file(self.browser.glade_file, _imagelist)
+		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["treecontext"])
+		
+		self.treecontext = self.browser.builder.get_object("treecontext")
+		self.fixmenuitem = self.browser.builder.get_object("fix1")
+		self.freemenuitem = self.browser.builder.get_object("free1")
+		self.propsmenuitem = self.browser.builder.get_object("properties1")
+		self.observemenuitem = self.browser.builder.get_object("observe1")
+		self.studymenuitem = self.browser.builder.get_object("study1")
+		self.unitsmenuitem = self.browser.builder.get_object("units1")
+		
 		self.fixmenuitem.connect("activate",self.fix_activate)
 		self.freemenuitem.connect("activate",self.free_activate)
 		self.propsmenuitem.connect("activate",self.props_activate)
 		self.observemenuitem.connect("activate",self.observe_activate)
+		self.studymenuitem.connect("activate", self.study_activate)
 		self.unitsmenuitem.connect("activate",self.units_activate)
 
 		if not self.treecontext:
@@ -119,8 +93,10 @@ class ModelView:
 		self.sim = sim
 		self.modelstore.clear()
 		self.otank = {} # map path -> (name,value)
+		self.browser.disable_menu()
 		try:
 			self.make( self.sim.getName(),self.sim.getModel() )
+			self.browser.enable_on_model_tree_build()
 		except Exception,e:
 			self.browser.reporter.reportError("Error building tree: %s" % e);
 		self.browser.maintabs.set_current_page(1);
@@ -216,6 +192,8 @@ class ModelView:
 		_name, _instance = self.otank[path]
 
 		if _instance.isReal():
+			if _instance.getValue() == newtext:
+				return
 			# only real-valued things can have units
 			
 			_e = RealAtomEntry(_instance,newtext);
@@ -317,7 +295,7 @@ class ModelView:
 	
 		_path = None
 		_contextmenu = False
-		if event.type==gtk.gdk.KEY_PRESS:
+		if event.type==gtk.gdk.KEY_RELEASE:
 			_keyval = gtk.gdk.keyval_name(event.keyval)
 			_path, _col = self.modelview.get_cursor()
 			if _keyval=='Menu':
@@ -344,6 +322,18 @@ class ModelView:
 			nn = self.notes.getNotes(self.sim.getModel().getType(),ascpy.SymChar("inline"),_name)
 			for n in nn:
 				print "%s: (%s) %s" % (n.getId(),str(n.getLanguage()),n.getText())
+		
+			self.builder.get_object("free_variable").set_sensitive(False)
+			self.builder.get_object("fix_variable").set_sensitive(False)
+			self.builder.get_object("propsmenuitem").set_sensitive(False)
+			if _instance.isReal():
+				self.builder.get_object("units").set_sensitive(True)
+			if _instance.getType().isRefinedSolverVar():
+				self.builder.get_object("propsmenuitem").set_sensitive(True)
+				if _instance.isFixed():
+					self.builder.get_object("free_variable").set_sensitive(True)
+				else:
+					self.builder.get_object("fix_variable").set_sensitive(True)
 
 		if not _contextmenu:
 			#print "NOT DOING ANYTHING ABOUT %s" % gtk.gdk.keyval_name(event.keyval)
@@ -356,6 +346,7 @@ class ModelView:
 		self.fixmenuitem.set_sensitive(False)
 		self.freemenuitem.set_sensitive(False)
 		self.observemenuitem.set_sensitive(False)
+		self.studymenuitem.set_sensitive(False)
 		self.propsmenuitem.set_sensitive(False)					
 
 		if _instance.isReal():
@@ -369,6 +360,8 @@ class ModelView:
 			self.observemenuitem.set_sensitive(True)
 			if _instance.isFixed():
 				self.freemenuitem.set_sensitive(True)
+				if len(self.browser.observers) > 0:
+					self.studymenuitem.set_sensitive(True)
 			else:
 				self.fixmenuitem.set_sensitive(True)
 		elif _instance.isRelation():
@@ -509,6 +502,14 @@ class ModelView:
 			if (f and not val) or (not f and val):
 				instance.setFixed(val)
 				self.browser.do_solve_if_auto()
+
+
+	def study_activate(self, *args):
+		_path,_col = self.modelview.get_cursor()
+		_instance = self.otank[_path][1]
+		self.browser.observe(_instance)
+		_dia = StudyWin(self.browser,_instance);
+		_dia.run()
 
 	def units_activate(self,*args):
 		T = self.get_selected_type()

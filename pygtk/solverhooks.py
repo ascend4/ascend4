@@ -1,7 +1,6 @@
 import ascpy
 import time
 import gtk
-import gtk.glade
 from solverreporter import *
 
 class SolverHooksPython(ascpy.SolverHooks):

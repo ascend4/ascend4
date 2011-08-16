@@ -1,6 +1,6 @@
 # General-purpose popup window for reporting texty stuff
 
-import gtk, gtk.glade, pango
+import gtk, pango
 import ascpy
 from varentry import *
 
@@ -9,8 +9,9 @@ class InfoDialog:
 		self.browser = browser;
 
 		# GUI config
-		_xml = gtk.glade.XML(browser.glade_file,"infodialog")
-		self.window = _xml.get_widget("infodialog")
+		self.browser.builder.add_objects_from_file(self.browser.glade_file,["infodialog"])
+		self.window = self.browser.builder.get_object("infodialog")
+		#self.window.set_visible(True)
 		self.window.set_title(title)
 
 		if self.browser.icon:
@@ -21,8 +22,8 @@ class InfoDialog:
 			self.parent = parent
 			self.window.set_transient_for(self.parent)
 
-		self.textview = _xml.get_widget("textview")
-		self.closebutton = _xml.get_widget("closebutton")
+		self.textview = self.browser.builder.get_object("textview")
+		self.closebutton = self.browser.builder.get_object("closebutton")
 
 		if tabs:
 			self.setTabs(*tabs)
@@ -31,7 +32,7 @@ class InfoDialog:
 		self.textview.set_buffer(self.textbuff)
 
 		self.fill_values(text)
-		_xml.signal_autoconnect(self)
+		self.browser.builder.connect_signals(self)
 
 	def setTabs(self,*args):
 		n = len(args)
