@@ -400,6 +400,7 @@ class DiagnoseWindow:
 			rl,cl,rh,ch = self.im.getBlockLocation(b)
 			if rh-rl > 0 or ch-cl>0:
 				self.set_block(b)
+				return
 			b = b - 1
 		print "NO PRECEDING 'BIG' BLOCKS"
 		
@@ -410,6 +411,7 @@ class DiagnoseWindow:
 			rl,cl,rh,ch = self.im.getBlockLocation(b)
 			if rh-rl > 0 or ch-cl>0:
 				self.set_block(b)
+				return
 			b = b + 1
 		print "NO FOLLOWING 'BIG' BLOCKS"
 	

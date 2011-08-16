@@ -120,6 +120,7 @@ class VarPropsWin:
 		for _k,_v in _arr.iteritems():	
 			_t = str(_v / _conversion)+" "+_u
 			_k.set_text(_t)
+			self.parse_entry(_k)
 
 		self.varname.set_text(self.browser.sim.getInstanceName(self.instance));
 
@@ -148,11 +149,11 @@ class VarPropsWin:
 			i = RealAtomEntry(self.instance, _k.get_text())
 			try:
 				i.checkEntry()
-				self.color_entry(_k,"white");
+				self.taint_entry(_k,"white");
 				_v(i.getValue())
 			except InputError, e:
 				print "INPUT ERROR: ",str(e)
-				self.color_entry(_k,"#FFBBBB");
+				self.taint_entry(_k,"#FFBBBB");
 				failed = True;
 		
 		self.instance.setFixed(self.fixed.get_active())
@@ -162,12 +163,35 @@ class VarPropsWin:
 
 		self.browser.do_solve_if_auto()
 
-	def color_entry(self,entry,color):
+	def taint_entry(self, entry, color):
 		entry.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
 		entry.modify_bg(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
 		entry.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
 		entry.modify_base(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
+		if color == "#FFBBBB":
+			entry.set_property("secondary-icon-stock", 'gtk-dialog-error')
+		elif color == "white":
+			entry.set_property("secondary-icon-stock", 'gtk-yes')
+			entry.set_property("secondary-icon-tooltip-text", "")
 
+	def parse_entry(self, entry):
+		# A simple function to get the real value from the entered text
+		# and taint the entry box accordingly
+		i = RealAtomEntry(self.instance, entry.get_text())
+		try:
+			i.checkEntry()
+			_value = i.getValue()
+		except InputError, e:
+			_value = None
+			_error = re.split('Input Error: ', str(e), 1)
+			entry.set_property("secondary-icon-tooltip-text", _error[1])
+		
+		if _value is not None:
+			self.taint_entry(entry, "white")
+		else:
+			self.taint_entry(entry, "#FFBBBB")
+		return _value
+		
 	def on_varpropswin_close(self,*args):
 		self.window.response(gtk.RESPONSE_CANCEL)
 
