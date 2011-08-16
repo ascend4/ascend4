@@ -416,6 +416,7 @@ about this again</property>
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
+            <property name="pack_type">end</property>
             <property name="position">2</property>
           </packing>
         </child>
@@ -2076,8 +2077,8 @@ upper and lower bounds displayed.</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <property name="use_action_appearance">False</property>
-                                    <accelerator key="v" signal="clicked" modifiers="GDK_MOD1_MASK"/>
                                     <accelerator key="v" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
+                                    <accelerator key="v" signal="clicked" modifiers="GDK_MOD1_MASK"/>
                                     <signal name="clicked" handler="on_varinfobutton_clicked" swapped="no"/>
                                     <child>
                                       <object class="GtkImage" id="varinfoimg">
@@ -2100,8 +2101,8 @@ upper and lower bounds displayed.</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <property name="use_action_appearance">False</property>
-                                    <accelerator key="r" signal="clicked" modifiers="GDK_MOD1_MASK"/>
                                     <accelerator key="r" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
+                                    <accelerator key="r" signal="clicked" modifiers="GDK_MOD1_MASK"/>
                                     <signal name="clicked" handler="on_relinfobutton_clicked" swapped="no"/>
                                     <child>
                                       <object class="GtkImage" id="relinfoimg">
@@ -6203,9 +6204,10 @@ upper and lower bounds displayed.</property>
           <object class="GtkTable" id="table1">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="border_width">5</property>
             <property name="n_rows">10</property>
             <property name="n_columns">2</property>
-            <property name="column_spacing">5</property>
+            <property name="column_spacing">7</property>
             <property name="row_spacing">5</property>
             <child>
               <object class="GtkLabel" id="label22">
@@ -6278,7 +6280,7 @@ upper and lower bounds displayed.</property>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
-                    <property name="padding">6</property>
+                    <property name="padding">3</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
@@ -6371,7 +6373,7 @@ upper and lower bounds displayed.</property>
                 <property name="right_attach">2</property>
                 <property name="top_attach">8</property>
                 <property name="bottom_attach">9</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
               </packing>
             </child>
             <child>
@@ -6380,9 +6382,9 @@ upper and lower bounds displayed.</property>
                 <property name="can_focus">False</property>
               </object>
               <packing>
+                <property name="right_attach">2</property>
                 <property name="top_attach">8</property>
                 <property name="bottom_attach">9</property>
-                <property name="x_options"></property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -6392,9 +6394,10 @@ upper and lower bounds displayed.</property>
                 <property name="can_focus">False</property>
               </object>
               <packing>
+                <property name="right_attach">2</property>
                 <property name="top_attach">3</property>
                 <property name="bottom_attach">4</property>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
               </packing>
             </child>
             <child>
@@ -6407,7 +6410,6 @@ upper and lower bounds displayed.</property>
                 <property name="right_attach">2</property>
                 <property name="top_attach">3</property>
                 <property name="bottom_attach">4</property>
-                <property name="x_options"></property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -6456,8 +6458,8 @@ upper and lower bounds displayed.</property>
                 <property name="right_attach">2</property>
                 <property name="top_attach">9</property>
                 <property name="bottom_attach">10</property>
-                <property name="x_options"></property>
-                <property name="y_options"></property>
+                <property name="x_options">GTK_EXPAND | GTK_SHRINK | GTK_FILL</property>
+                <property name="y_options">GTK_EXPAND | GTK_SHRINK | GTK_FILL</property>
               </packing>
             </child>
             <child>
@@ -6482,6 +6484,7 @@ upper and lower bounds displayed.</property>
                 <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
                 <property name="secondary_icon_sensitive">True</property>
+                <signal name="changed" handler="parse_entry" swapped="no"/>
                 <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
               </object>
               <packing>
@@ -6500,6 +6503,7 @@ upper and lower bounds displayed.</property>
                 <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
                 <property name="secondary_icon_sensitive">True</property>
+                <signal name="changed" handler="parse_entry" swapped="no"/>
                 <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
               </object>
               <packing>
@@ -6518,6 +6522,7 @@ upper and lower bounds displayed.</property>
                 <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
                 <property name="secondary_icon_sensitive">True</property>
+                <signal name="changed" handler="parse_entry" swapped="no"/>
                 <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
               </object>
               <packing>
@@ -6549,6 +6554,7 @@ upper and lower bounds displayed.</property>
                 <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
                 <property name="secondary_icon_sensitive">True</property>
+                <signal name="changed" handler="parse_entry" swapped="no"/>
                 <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
               </object>
               <packing>

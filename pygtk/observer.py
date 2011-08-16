@@ -256,7 +256,7 @@ class ObserverTab:
 		if y.__class__ is int and y>=0 and y<len(self.cols):
 			y=self.cols[y]
 		if y2.__class__ is int and y2>=0 and y2<len(self.cols):
-			y2=self.cols[y2]			
+			y2=self.cols[y2]
 
 		ncols = 2
 		start = None
@@ -306,10 +306,11 @@ class ObserverTab:
 						 continue
 			if start == None:
 				self.browser.reporter.reportError("Can't plot, could not get enough points.")
-				return			
+				return
 			A = pylab.zeros((j,ncols),'f')
 			while start<len(self.rows)-1:
 				if self.rows[start].tainted is True:
+					start+=1
 					continue
 				r = self.rows[start].get_values(self)
 				A[k,0]=r[x.index]
