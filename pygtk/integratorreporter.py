@@ -2,7 +2,6 @@ import ascpy
 import time
 import sys
 import gtk
-import gtk.glade
 import time
 from varentry import *
 from preferences import *
@@ -29,13 +28,13 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 	 	ascpy.IntegratorReporterCxx.__init__(self,integrator)
 		
 		# GUI elements
-		_xml = gtk.glade.XML(browser.glade_file,"integratorstatusdialog")
-		_xml.signal_autoconnect(self)
-		self.window=_xml.get_widget("integratorstatusdialog")
+		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["integratorstatusdialog"])
+		self.browser.builder.connect_signals(self)
+		self.window=self.browser.builder.get_object("integratorstatusdialog")
 		self.window.set_transient_for(self.browser.window)
-		self.label=_xml.get_widget("integratorlabel")
+		self.label=self.browser.builder.get_object("integratorlabel")
 		self.label.set_text("Solving with "+self.getIntegrator().getName())
-		self.progress=_xml.get_widget("integratorprogress")
+		self.progress=self.browser.builder.get_object("integratorprogress")
 		self.data = None
 
 		self.cancelrequested=False
@@ -86,12 +85,11 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		integrator = self.getIntegrator()
 		# create an empty observer
 		try:
-			_xml = gtk.glade.XML(self.browser.glade_file,"observervbox")
 			_label = gtk.Label();
 			INTEGRATOR_NUM = INTEGRATOR_NUM + 1
 			_name = "Integrator %d" % INTEGRATOR_NUM
-			_tab = self.browser.maintabs.append_page(_xml.get_widget("observervbox"),_label)
-			_obs = ObserverTab(xml=_xml, name=_name, browser=self.browser, tab=_tab, alive=False)
+			_tab = self.browser.maintabs.append_page(self.browser.builder.get_object("observervbox"),_label)
+			_obs = ObserverTab(name=_name, browser=self.browser, tab=_tab, alive=False)
 			_label.set_text(_obs.name)
 			self.browser.observers.append(_obs)
 			self.browser.tabs[_tab]=_obs

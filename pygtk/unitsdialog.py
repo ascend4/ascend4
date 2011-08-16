@@ -1,4 +1,4 @@
-import gtk, gtk.glade, pango, gobject, re
+import gtk, pango, gobject, re
 
 class UnitsDialog:
 
@@ -7,18 +7,18 @@ class UnitsDialog:
 		self.browser = browser;
 
 		# GUI config
-		_xml = gtk.glade.XML(browser.glade_file,"unitsdialog")
-		self.window = _xml.get_widget("unitsdialog")
-		self.typecombo = _xml.get_widget("typecombo")
-		self.dimensionlabel = _xml.get_widget("dimensionlabel")
-		self.unitsview = _xml.get_widget("unitsview")
-		self.applybutton = _xml.get_widget("units_applybutton")
+		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["unitsdialog"])
+		self.window = self.browser.builder.get_object("unitsdialog")
+		self.typecombo = self.browser.builder.get_object("typecombo")
+		self.dimensionlabel = self.browser.builder.get_object("dimensionlabel")
+		self.unitsview = self.browser.builder.get_object("unitsview")
+		self.applybutton = self.browser.builder.get_object("units_applybutton")
 
 		self.applybutton.set_sensitive(False)
 
 		self.window.set_transient_for(self.browser.window)
 
-		_xml.signal_autoconnect(self)
+		self.browser.builder.connect_signals(self)
 
 		self.units = self.browser.library.getUnits()
 		self.realtypes = self.browser.library.getRealAtomTypes()
@@ -44,6 +44,7 @@ class UnitsDialog:
 		self.unitsview.append_column(_col2)
 
 		self.changed = {}
+		self.T = T
 		if T is not None:
 			if T.isRefinedReal():
 				self.typecombo.child.set_text(str(T.getName()))
@@ -138,5 +139,8 @@ class UnitsDialog:
 				else:
 					self.update_unitsview(None)
 				self.browser.modelview.refreshtree()
+				for _obs in self.browser.observers:
+					if _obs.alive:
+						_obs.units_refresh(self.T)
 		self.window.hide()
 

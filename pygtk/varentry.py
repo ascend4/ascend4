@@ -69,9 +69,11 @@ class RealAtomEntry:
 				_my_dims = _instdim.getDefaultUnits()
 				if _instdim.isDimensionless():
 					_my_dims = "[dimensionless]"
-
-				raise InputError("Incompatible units '%s' (must fit with '%s')" 
-						% (self.units, _my_dims.getName().toString()) )
+					raise InputError("Incompatible units '%s' (must be dimensionless)" 
+							% (self.units) )
+				else:
+					raise InputError("Incompatible units '%s' (must fit with '%s')" 
+							% (self.units, _my_dims.getName().toString()) )
 	
 		_conv = float(_u.getConversion())
 		# self.reporter.reportNote("Converting: multiplying '%s %s' by factor %s to get SI units" % (_val, _units, _conv) )

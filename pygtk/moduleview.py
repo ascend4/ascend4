@@ -1,15 +1,14 @@
 import gtk
-import gtk.glade
 import pango
 import ascpy
 
 class ModuleView:
-	def __init__(self,browser,glade, library):
+	def __init__(self,browser,builder, library):
 		"""Set up the 'modules' tab, set up column types."""
 
 		self.browser = browser
 		self.library = library
-		self.moduleview = glade.get_widget('moduleview')
+		self.moduleview = builder.get_object('moduleview')
 
 		modulestorecoltypes = [str, str, int] # bool=can-be-instantiated
 		self.modulestore = gtk.TreeStore(*modulestorecoltypes)

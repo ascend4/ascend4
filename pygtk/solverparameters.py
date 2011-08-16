@@ -1,7 +1,6 @@
 import pygtk
 pygtk.require('2.0')
 import gtk
-import gtk.glade
 import pango
 import os.path
 
@@ -19,20 +18,20 @@ class SolverParametersWindow:
 		self.reporter = browser.reporter
 		self.params = params
 		self.assets_dir = browser.options.assets_dir
-
-		_xml = gtk.glade.XML(browser.glade_file,"paramswin")
-		self.window = _xml.get_widget("paramswin")
+		self.browser=browser
+		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["paramswin"])
+		self.window = self.browser.builder.get_object("paramswin")
 		self.window.set_transient_for(self.parent.window)
+		self.window.set_visible(True)
+		self.paramdescription = self.browser.builder.get_object("paramdescription1")
+		self.paramname = self.browser.builder.get_object("paramname")
+		self.solvername = self.browser.builder.get_object("solvername1")
 
-		self.paramdescription = _xml.get_widget("paramdescription1")
-		self.paramname = _xml.get_widget("paramname")
-		self.solvername = _xml.get_widget("solvername1")
-
-		_xml.signal_autoconnect(self)
+		self.browser.builder.connect_signals(self)
 
 		self.solvername.set_text(name)
 		
-		self.paramsview = _xml.get_widget("paramsview1")	
+		self.paramsview = self.browser.builder.get_object("paramsview1")	
 		self.otank = {}
 		self.paramstore = gtk.TreeStore(str,str,str,bool,str,int)
 		self.paramsview.set_model(self.paramstore)

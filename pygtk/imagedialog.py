@@ -1,6 +1,6 @@
 # General-purpose popup window for reporting texty stuff
 
-import gtk, gtk.glade, pango
+import gtk, pango
 import ascpy
 from varentry import *
 
@@ -10,10 +10,10 @@ class ImageDialog:
 		self.imagefilename = imagefilename
 
 		# GUI config
-		_xml = gtk.glade.XML(browser.glade_file,"imagedialog")
-		self.window = _xml.get_widget("imagedialog")
-		self.vbox = _xml.get_widget("vbox")
-		self.closebutton = _xml.get_widget("closebutton")
+		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["imagedialog"])
+		self.window = self.browser.builder.get_object("imagedialog")
+		self.vbox = self.browser.builder.get_object("vbox")
+		self.closebutton = self.browser.builder.get_object("closebutton")
 		self.window.set_title(title)
 
 		if self.browser.icon:
@@ -32,7 +32,9 @@ class ImageDialog:
 		s.show()
 		self.vbox.add(s)
 
-		_xml.signal_autoconnect(self)
+		self.browser.builder.connect_signals(self)
+		#self.browser.builder.connect_signals("vbox")
+		#self.browser.builder.connect_signals("closebutton")
 
 	def on_savebutton_clicked(self,*args):
 		self.browser.reporter.reportNote("SAVE %s" % self.imagefilename)

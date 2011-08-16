@@ -1,6 +1,6 @@
 # GUI for ASCEND solver_var properties
 
-import gtk, gtk.glade
+import gtk
 import ascpy
 from varentry import *
 from infodialog import *
@@ -11,24 +11,24 @@ class RelPropsWin:
 		self.browser = browser;
 
 		# GUI config
-		_xml = gtk.glade.XML(browser.glade_file,"relpropswin")
-		self.window = _xml.get_widget("relpropswin")
+		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["relpropswin"])
+		self.window = self.browser.builder.get_object("relpropswin")
 		self.window.set_transient_for(self.browser.window)
 
-		self.relname = _xml.get_widget("relname")
-		self.residual = _xml.get_widget("residual")
-		self.expr = _xml.get_widget("expr")
-		self.included = _xml.get_widget("included")
-		self.active = _xml.get_widget("active")
+		self.relname = self.browser.builder.get_object("relname")
+		self.residual = self.browser.builder.get_object("residual")
+		self.expr = self.browser.builder.get_object("expr")
+		self.included = self.browser.builder.get_object("included")
+		self.active = self.browser.builder.get_object("active")
 		self.exprbuff = gtk.TextBuffer();
 		self.expr.set_buffer(self.exprbuff)
-		self.morepropsbutton = _xml.get_widget("morepropsbutton");
+		self.morepropsbutton = self.browser.builder.get_object("morepropsbutton");
 
-		self.statusimg = _xml.get_widget("rel_statusimg");
-		self.statusmessage = _xml.get_widget("rel_statusmessage");
+		self.statusimg = self.browser.builder.get_object("rel_statusimg");
+		self.statusmessage = self.browser.builder.get_object("rel_statusmessage");
 
 		self.fill_values()
-		_xml.signal_autoconnect(self)
+		self.browser.builder.connect_signals(self)
 
 	def fill_values(self):
 		self.relname.set_text( self.browser.sim.getInstanceName(self.instance) )
@@ -77,28 +77,28 @@ class VarPropsWin:
 		self.browser = browser;
 
 		# GUI config
-		_xml = gtk.glade.XML(browser.glade_file,"varpropswin")
-		self.window = _xml.get_widget("varpropswin")
+		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["varpropswin"])
+		self.window = self.browser.builder.get_object("varpropswin")
 		self.window.set_transient_for(self.browser.window)
 
-		self.varname = _xml.get_widget("varname")
-		self.valueentry= _xml.get_widget("valueentry");
-		self.lowerentry = _xml.get_widget("lowerentry");
-		self.upperentry = _xml.get_widget("upperentry");
-		self.nominalentry = _xml.get_widget("nominalentry");
-		self.fixed = _xml.get_widget("fixed");
-		self.free = _xml.get_widget("free");
+		self.varname = self.browser.builder.get_object("varname")
+		self.valueentry= self.browser.builder.get_object("valueentry");
+		self.lowerentry = self.browser.builder.get_object("lowerentry");
+		self.upperentry = self.browser.builder.get_object("upperentry");
+		self.nominalentry = self.browser.builder.get_object("nominalentry");
+		self.fixed = self.browser.builder.get_object("fixed");
+		self.free = self.browser.builder.get_object("free");
 
-		self.statusimg = _xml.get_widget("var_statusimg");
+		self.statusimg = self.browser.builder.get_object("var_statusimg");
 		assert self.statusimg
-		self.statusmessage = _xml.get_widget("var_statusmessage");
+		self.statusmessage = self.browser.builder.get_object("var_statusmessage");
 
-		self.cliquebutton = _xml.get_widget("cliquebutton"); 
-		self.morepropsbutton = _xml.get_widget("morepropsbutton");
+		self.cliquebutton = self.browser.builder.get_object("cliquebutton"); 
+		self.morepropsbutton = self.browser.builder.get_object("morepropsbutton");
 
 		self.fill_values()
 
-		_xml.signal_autoconnect(self)
+		self.browser.builder.connect_signals(self)
 
 	def fill_values(self):
 		# all the values here use the same preferred units for this instance type
