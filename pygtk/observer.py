@@ -269,7 +269,7 @@ class ObserverTab:
 			for i in range(len(self.rows)-1):
 				try:
 					r = self.rows[i].get_values(self)
-					if r[x.index] and r[y.index]:
+					if r[x.index]!="" and r[y.index]!="":
 						if start == None:
 							start = i
 							break
@@ -297,7 +297,7 @@ class ObserverTab:
 				if self.rows[i].tainted is False:
 					try:
 						r = self.rows[i].get_values(self)
-						if r[x.index] and r[y.index]:
+						if r[x.index]!="" and r[y.index]!="":
 							if start == None:
 								start = i
 								j=0
