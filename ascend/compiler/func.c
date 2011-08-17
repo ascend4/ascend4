@@ -288,7 +288,7 @@ double datan(register double d)
 
 double datan2(register double d)
 {
-  return -ldexp(d/(1.0+d*d),1);
+  return -2*d/sqr(1+d*d); 
 }
 
 #ifdef HAVE_ERF
