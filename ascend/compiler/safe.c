@@ -510,7 +510,7 @@ double safe_sqrt_D0(double x,enum safe_err *safe)
 double safe_cube_D0(double x,enum safe_err *safe)
 {
   (void)safe;
-   return( cbrt(x) );
+   return( cube(x) );
 }
 
 double safe_cbrt_D0(double x,enum safe_err *safe)
