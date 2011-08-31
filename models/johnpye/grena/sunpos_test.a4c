@@ -8,11 +8,8 @@ MODEL location;
 	timezone IS_A time_constant;
 END location;
 
-MODEL sunpos_test;
+MODEL sunpos_grena;
 	loc IS_A location;
-	loc.latitude :== -35 {deg};
-	loc.longitude :== 149 {deg};
-	loc.timezone :== 10 {h};
 
 	p IS_A pressure;
 	T IS_A temperature;
@@ -30,6 +27,13 @@ MODEL sunpos_test;
 	altitude IS_A angle;
 	altitude = 0.5{PI} - zenith;
 
+END sunpos_grena;
+
+
+MODEL sunpos_test REFINES sunpos_grena;
+	loc.latitude :== -35 {deg};
+	loc.longitude :== 149 {deg};
+	loc.timezone :== 10 {h};
 METHODS
 METHOD on_load;
 	FIX p, T, t;
