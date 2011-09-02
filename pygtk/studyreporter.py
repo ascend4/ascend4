@@ -147,7 +147,7 @@ class PopupSolverReporter(PythonSolverReporter):
 			self.blocknum = status.getCurrentBlockNum()
 			self.blockstart = _time
 
-		if self.lasttime==0 or _sincelast > self.updateinterval or status.isConverged():
+		if self.lasttime==0 or _sincelast > self.updateinterval:
 			self.lasttime = _time;
 			self.elapsed = _time - self.starttime
 			self.totalelapsed = _time - self.studybegintime
@@ -169,8 +169,10 @@ class PopupSolverReporter(PythonSolverReporter):
 	def finalise(self,status):
 		try:
 			_time = time.clock()
+			_sincelast = _time - self.lasttime
+			if _sincelast > self.updateinterval:
+				self.fill_values(status)
 			
-			self.fill_values(status)
 			if status.isConverged():
 				self.report_to_browser(status)
 				print "Converged for %s = %s" % (self.browser.sim.getInstanceName(self.instance), self.instance.getRealValue())
