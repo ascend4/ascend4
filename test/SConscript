@@ -24,3 +24,5 @@ if test_env.has_key('CUNIT_LIBPATH'):
 testprog = test_env.Program('test',srcs)
 
 test_env.Depends(testprog,"#/ascend/utilities/test")
+test_env.Depends(testprog,"#/libascend.so.1")
+
