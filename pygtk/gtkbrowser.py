@@ -1439,7 +1439,10 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				if _instance.isFixed():
 					self.builder.get_object("free_variable").set_sensitive(True)
 				else:
-					self.builder.get_object("fix_variable").set_sensitive(True)	
+					self.builder.get_object("fix_variable").set_sensitive(True)
+			elif _instance.isRelation():
+				self.builder.get_object("propsmenuitem").set_sensitive(True)
+		
 	def enable_on_sim_build(self):
 		list=["sparsity","incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
                       "show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1"]
