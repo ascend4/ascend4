@@ -334,6 +334,8 @@ class ModelView:
 					self.builder.get_object("free_variable").set_sensitive(True)
 				else:
 					self.builder.get_object("fix_variable").set_sensitive(True)
+			elif _instance.isRelation():
+				self.builder.get_object("propsmenuitem").set_sensitive(True)
 
 		if not _contextmenu:
 			#print "NOT DOING ANYTHING ABOUT %s" % gtk.gdk.keyval_name(event.keyval)
