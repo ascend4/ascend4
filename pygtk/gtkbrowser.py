@@ -613,10 +613,10 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.statusbar.push(_context,"Loading '"+filename+"'")
 		try:
 			self.filename = filename
-			# call the low-level 'load' command...
-			self.library.load(filename)
 			self.disable_menu()
 			self.enable_on_file_open()
+			# call the low-level 'load' command...
+			self.library.load(filename)
 		except RuntimeError,e:
 			self.statusbar.pop(_context)
 			raise
@@ -1412,7 +1412,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
                       "incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
                       "show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1",
                       "repaint_tree","checkbutton","solvebutton","integratebutton","methodrunbutton",
-                      "check1","solve1","integrate1","units","add_observer","keep_observed","preferences"]
+                      "check1","solve1","integrate1","units","add_observer","keep_observed","preferences","notes_view"]
 		for button in list:
 			self.builder.get_object(button).set_sensitive(False)
 			
@@ -1445,7 +1445,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		
 	def enable_on_sim_build(self):
 		list=["sparsity","incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
-                      "show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1"]
+                      "show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1","notes_view"]
 		for button in list:
 			self.builder.get_object(button).set_sensitive(True)
 	def disable_on_first_run(self):
@@ -1453,12 +1453,12 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		for button in list:
 			self.builder.get_object(button).set_sensitive(False)
 	def enable_on_file_open(self):
-		list=["reloadbutton","reload","show_external_functions","notes_view"]
+		list=["reloadbutton","reload","show_external_functions"]
 		for button in list:
 			self.builder.get_object(button).set_sensitive(True)
 	def enable_on_model_tree_build(self):
 		list=["repaint_tree","checkbutton","solvebutton","integratebutton","methodrunbutton",
-                      "check1","solve1","integrate1","units","add_observer","preferences"]
+                      "check1","solve1","integrate1","units","add_observer","preferences","notes_view"]
 		for button in list:
 			self.builder.get_object(button).set_sensitive(True)
 if __name__ == "__main__":
