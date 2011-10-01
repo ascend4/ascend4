@@ -9,6 +9,8 @@ srcs = Split("""
 	acdb.c
 	texttable.c
 	sun.c
+	parse/parse.c parse/new.c parse/error.c parse/print.c parse/CharactersInDouble.c
+	ee.c
 """)
 
 dr_env.Append(LIBPATH=['#'])

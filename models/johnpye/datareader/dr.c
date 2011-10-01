@@ -24,6 +24,7 @@
 #include "tmy.h"
 #include "acdb.h"
 #include "csv.h"
+#include "ee.h"
 
 #include <ascend/utilities/config.h>
 #include <ascend/general/ospath.h>
@@ -43,7 +44,7 @@
 	DATA instance of the external relation
 */
 
-#define FMTS(D,X) D(TMY2) X D(ACDB) X D(CSV) X D(TDV)
+#define FMTS(D,X) D(TMY2) X D(ACDB) X D(CSV) X D(EE) X D(TDV)
 
 #define ENUM(F_) DATAREADER_FORMAT_##F_
 #define COMMA ,
@@ -98,41 +99,33 @@ DataReader *datareader_new(const char *fn, int noutputs) {
 **/
 
 interp_t datareader_int_type(const char *interpToken) {
-    interp_t type = default_interp; //set default interpolation, fallback case
     if (strcmp(interpToken,"default")==0) {
-        return type; //user has declared default interpolation
+        return default_interp; //user has declared default interpolation
     }
     if (strcmp(interpToken,"linear")==0) {
-        type = linear;
-        return type; //user has declared linear interpolation
+        return linear; //user has declared linear interpolation
     }
     if (strcmp(interpToken,"cubic")==0) {
-        type = cubic;
-        return type; //usen has declared cubic interpolation
+        return cubic; //usen has declared cubic interpolation
     }
     if (strcmp(interpToken,"sun")==0) {
-        type = sun;
-        return type; //user has declared sun interpolation
+        return sun; //user has declared sun interpolation
     }
-    //if we got here, used did not declare a valid interpolation type
-    //return fallback case.
-
-    //CONSOLE_DEBUG("token %s, type %d ", interpToken, type);
-    return type;
-
+    /* if we got here, used did not declare a valid interpolation type */
+    return default_interp;
 }
 
 /** Set datareader parameters.
-This function reads the parameters as declared in the model file and
-fills out the cols and interp_t fields in the datareader structure.
+	This function reads the parameters as declared in the model file and
+	fills out the cols and interp_t fields in the datareader structure.
 
-This process happens after datareader creation so that the right amount
-of memory is allocated for cols and interp_t. The other reason to create
-a separate function is that an integer with the result of this operation
-can be returned
-@param d the datareader object
-@param par the parameter string passed from the drconfig model
-@return 0 on sucess
+	This process happens after datareader creation so that the right amount
+	of memory is allocated for cols and interp_t. The other reason to create
+	a separate function is that an integer with the result of this operation
+	can be returned
+	@param d the datareader object
+	@param par the parameter string passed from the drconfig model
+	@return 0 on sucess
 **/
 int datareader_set_parameters(DataReader *d, const char *parameters) {
     char *partok = NULL;
@@ -158,7 +151,7 @@ int datareader_set_parameters(DataReader *d, const char *parameters) {
         }
         partok = strtok(NULL,",:"); //reread parameter string for next token
     }
-CONSOLE_DEBUG("parcount: %d,noutoputs: %d",parcount,d->noutputs); 
+	CONSOLE_DEBUG("parcount: %d,noutoputs: %d",parcount,d->noutputs); 
     if (parcount+1 != d->noutputs) {
     	ERROR_REPORTER_HERE(ASC_USER_ERROR,
     	"Number of Columns in parameters and Model dont match, check model declaration");
@@ -229,6 +222,13 @@ int datareader_set_format(DataReader *d, const char *format) {
         d->eoffn = &datareader_csv_eof;
         d->indepfn = &datareader_csv_time;
         d->valfn = &datareader_csv_vals;
+        break;
+    case DATAREADER_FORMAT_EE:
+        d->headerfn = &datareader_ee_header;
+        d->datafn = &datareader_ee_data;
+        d->eoffn = &datareader_ee_eof;
+        d->indepfn = &datareader_ee_time;
+        d->valfn = &datareader_ee_vals;
         break;
     case DATAREADER_FORMAT_TDV:
         ERROR_REPORTER_HERE(ASC_USER_ERROR, "Tab delimited values (TDV) format not yet implemenented.");
