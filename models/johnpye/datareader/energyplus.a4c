@@ -1,0 +1,68 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+IMPORT "johnpye/datareader/datareader";
+
+MODEL drconf;
+	filename IS_A symbol_constant;
+	format IS_A symbol_constant;
+	parameters IS_A symbol_constant;
+END drconf;
+
+MODEL energyplus;
+	col1,col2,col3,col4,col5 IS_A solver_var;
+	total, average IS_A solver_var;
+
+	eedata IS_A drconf;
+	eedata.format :== 'EE';
+	eedata.filename :== 'johnpye/datareader/AUS_NSW.Moree.Aero.955270_RMY.epw';
+	eedata.parameters :== '1,2,3,4';
+
+	filereader:datareader(
+		col1 : INPUT;
+		col2,col3,col4,col5 :OUTPUT;
+		eedata : DATA
+	);
+	
+	t IS_A time;
+	t = col1 * 1{h};
+	Gh IS_A power_per_area;
+	Gh = col2 * 1{kJ/m^2} / 1{h};
+	Ghb IS_A power_per_area;
+	Ghb = col3 * 1{kJ/m^2} / 1{h};
+	T IS_A temperature;
+	T = col4 * 1{K} + 237.15 {K};
+	v_wind IS_A speed;
+	v_wind = col5 * 1{m/s};
+	
+METHODS
+(*
+METHOD default_self;
+END default_self;
+*)
+METHOD on_load;
+	RUN default_self; RUN specify; RUN values; 
+	(*RUN ode_init;*)
+END on_load;
+(*
+METHOD ode_init;
+	E.ode_id := 1; E.ode_type := 1;
+	G.ode_id := 1; G.ode_type := 2;
+
+	Gbnl.obs_id := 1;
+	Gbnc.obs_id := 2;
+	Gbns.obs_id := 3;
+
+	t.ode_type :=-1;	
+END ode_init;
+*)
+METHOD specify;
+	FIX t;
+END specify;
+
+METHOD values;
+	t := 1 {s};
+END values;
+
+END energyplus;
+
