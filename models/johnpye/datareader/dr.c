@@ -139,7 +139,7 @@ int datareader_set_parameters(DataReader *d, const char *parameters) {
             if (d->cols[parcount] > d->nmaxoutputs) {
                 CONSOLE_DEBUG("col %d, max %d",d->cols[parcount],d->nmaxoutputs);
                 ERROR_REPORTER_HERE(ASC_USER_ERROR,
-                "Requested Column out of range!,check your data file and model declaration");
+                "Requested column %d out of range (limit %d). Check your data file and model declaration",d->cols[parcount],d->nmaxoutputs);
                 return 1; //failed due to column out of range
             }
             LastTokWasNumeric =TRUE; //keep track of numeric tokens

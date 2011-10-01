@@ -158,7 +158,7 @@ N34; \field Liquid Precipitation Quantity
 
 #include "parse/parse.h"
 
-#define EE_DEBUG 0
+#define EE_DEBUG 1
 
 /**
 	Data extracted from the E/E data file, doesn't have to included everything,
@@ -256,13 +256,13 @@ int datareader_ee_header(DataReader *d){
     d->i = 0;
     d->ninputs = 1;
     d->ndata = 8760; // FIXME
-    d->nmaxoutputs = 5; // FIXME
+    d->nmaxoutputs = 7; // FIXME
 
     DATA(d)->rows = ASC_NEW_ARRAY(EePoint,d->ndata);
 
 	/* set the number of inputs and outputs */
 	d->ninputs = 1;
-	d->noutputs = 6;
+	d->noutputs = 7;
 
 	return 0;
 }
@@ -276,7 +276,13 @@ int datareader_ee_eof(DataReader *d){
 			ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Incomplete data set found (%d rows < %d expected",d->i, d->ndata);
 		}
 		d->ndata=d->i;
-		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Read %d rows",d->ndata);
+		int i;double tmin = +0.5*DBL_MAX,tmax = -0.5*DBL_MAX;
+		for(i=0; i<d->ndata; ++i){
+			double t = DATA(d)->rows[i].t;
+			if(t < tmin)tmin = t;
+			if(t > tmax)tmax = t;
+		}
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Read %d rows, t in range [%f,%f] d",d->ndata,tmin/3600./24.,tmax/3600./24.);		
 		return 1;
 	}
 
@@ -288,10 +294,10 @@ int datareader_ee_eof(DataReader *d){
 	@return 0 on success
 */
 int datareader_ee_data(DataReader *d){
-	//CONSOLE_DEBUG("Reading data, i = %d");
+	CONSOLE_DEBUG("Reading data, i = %d",d->i);
 	unsigned year,month,day,hour,minute;
 	char uncerts[101];
-	EePoint *row = &(DATA(d)->rows[d->i]);
+	EePoint row;
 
 #define NUMFIELDS(D,X) D(T) X D(Tdew) X D(rh) X D(pres) X D(EHI) X D(EDNI) X D(HII) X D(GHI) X D(DNI) X D(DiffHI) X D(GHIll) X D(DNIll) X D(DiffHIll) X D(ZL) X D(winddir) X D(windspeed) X D(skycover) X D(opaqueskycover) X D(visibility) X D(ceilingheight) X D(weatherobs) X D(weathercodes) X D(precip) X D(aerosol) X D(snowdepth) X D(dayssincesnow) X D(albedo) X D(liquidprecipdepth) X D(liquidprecipqty)
 
@@ -332,21 +338,25 @@ int datareader_ee_data(DataReader *d){
 #undef ANDTHEN
 #undef PARSENUM
 
-	row->t = ((day_of_year_specific(day,month,year) - 1)*24.0 + hour)*3600.0 + minute*60.;
-	row->T = T + 273.15;
-	row->p = pres;
-	row->rh = rh / 100.;
-	row->DNI = DNI; // FIXME need to allow for difference in dt, which might be other than 1h.
-	row->Gd = DiffHI; // FIXME need to allow for difference in dt, which might be other than 1h.
-	row->d_wind = winddir * 2*3.141592653589 / 360; // perhaps for variable continuity we should return sin and cos of this?
-	row->v_wind = windspeed;
+	row.t = ((day_of_year_specific(day,month,year) - 1)*24.0 + (hour - 1))*3600.0 + minute*60.;
+	row.T = T + 273.15;
+	row.p = pres;
+	row.rh = rh / 100.;
+	row.DNI = DNI; // FIXME need to allow for difference in dt, which might be other than 1h.
+	row.Gd = DiffHI; // FIXME need to allow for difference in dt, which might be other than 1h.
+	row.d_wind = winddir * 2*3.141592653589 / 360; // perhaps for variable continuity we should return sin and cos of this?
+	row.v_wind = windspeed;
 
+	DATA(d)->rows[d->i] = row;
+
+	CONSOLE_DEBUG("Read i = %d, t = %f d, T = %.1f°C, rh = %.1f %",d->i,row.t / 3600. / 24., T, row.rh*100);
+	
 	d->i++;
 	return 0;
 }
 
 int datareader_ee_time(DataReader *d, double *t){
-	//*t = DATA(d).t;
+	*t = DATA(d)->rows[d->i].t;
 	return 0;
 }
 
@@ -354,8 +364,8 @@ int datareader_ee_time(DataReader *d, double *t){
 
 int datareader_ee_vals(DataReader *d, double *v){
 #if EE_DEBUG
-	CONSOLE_DEBUG("At t=%f h, T = %lf, DNI = %f Wh/m2"
-		,(ROW.t / 3600.),ROW.T, ROW.DNI
+	CONSOLE_DEBUG("At t=%f d, T = %lf, DNI = %f Wh/m2"
+		,(ROW.t / 3600. / 24.),ROW.T, ROW.DNI
 	);
 #endif
 
