@@ -10,36 +10,30 @@ MODEL drconf;
 END drconf;
 
 MODEL energyplus;
-	col1,col2,col3,col4,col5 IS_A solver_var;
-	total, average IS_A solver_var;
-
 	eedata IS_A drconf;
 	eedata.format :== 'EE';
 	eedata.filename :== 'johnpye/datareader/AUS_NSW.Moree.Aero.955270_RMY.epw';
-	eedata.parameters :== '1,2,3,4';
+	eedata.parameters :== '1,2,3,4,5,6,7';
+
+	t IS_A time;
+	T IS_A temperature;
+	p IS_A pressure;
+	rh "relative humidity" IS_A fraction;
+	Gn IS_A power_per_area;
+	Gd IS_A power_per_area;
+	d_wind IS_A angle;
+	v_wind IS_A speed;	
 
 	filereader:datareader(
-		col1 : INPUT;
-		col2,col3,col4,col5 :OUTPUT;
+		t : INPUT;
+		T,p,rh,Gn,Gd,d_wind,v_wind :OUTPUT;
 		eedata : DATA
 	);
 	
-	t IS_A time;
-	t = col1 * 1{h};
-	Gh IS_A power_per_area;
-	Gh = col2 * 1{kJ/m^2} / 1{h};
-	Ghb IS_A power_per_area;
-	Ghb = col3 * 1{kJ/m^2} / 1{h};
-	T IS_A temperature;
-	T = col4 * 1{K} + 237.15 {K};
-	v_wind IS_A speed;
-	v_wind = col5 * 1{m/s};
-	
 METHODS
-(*
 METHOD default_self;
+	(* nothing here *)
 END default_self;
-*)
 METHOD on_load;
 	RUN default_self; RUN specify; RUN values; 
 	(*RUN ode_init;*)
@@ -61,7 +55,7 @@ METHOD specify;
 END specify;
 
 METHOD values;
-	t := 1 {s};
+	t := 0 {s};
 END values;
 
 END energyplus;
