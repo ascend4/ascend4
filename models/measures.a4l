@@ -107,6 +107,8 @@ yard = {yd};
 feet = {ft};
 foot = {ft};
 in = {inch};
+rod = {5.5*yard};
+chain = {4*rod};
 
 (* mass *)
 

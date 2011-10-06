@@ -1,0 +1,8 @@
+REQUIRE "atoms.a4l";
+(* solution to question Arithmetic 6 of the 1869 Harvard entrance exam *)
+(* http://spectrum.columbiaspectator.com/wp-content/uploads/2011/04/harvardexam.pdf *)
+MODEL harvard;
+	x IS_A area;
+	x = (1 {rod^2} + 5 {ft^2}) - (7 {yd^2} + 139 {in^2});
+END hardvard;
+
