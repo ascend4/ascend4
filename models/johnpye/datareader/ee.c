@@ -175,8 +175,20 @@ typedef struct EePoint_struct{
 	float v_wind; ///< wind speed, m/s.
 } EePoint;
 
+static const EePoint ee_missing = {
+	0
+	, 99.9
+	, 999999.
+	, 999.
+	, 9999.	
+	, 9999.
+	, 999.
+	, 999.
+};
+
 typedef struct EeData_struct{
 	EePoint *rows;
+	EePoint foundmissing;
 	parse *p; /* parse object, non-null during file read */
 } EeData;
 
@@ -235,6 +247,7 @@ int parseIgnoreLineWith(parse *p, const char *label){
 int datareader_ee_header(DataReader *d){
 	struct EeLocation loc;
 	d->data = ASC_NEW(EeData);
+	DATA(d)->foundmissing = (EePoint){0,0,0,0 ,0,0,0,0};
 	DATA(d)->p = parseCreateFile(d->f);
 	parse *p = DATA(d)->p;
 
@@ -282,7 +295,14 @@ int datareader_ee_eof(DataReader *d){
 			if(t < tmin)tmin = t;
 			if(t > tmax)tmax = t;
 		}
-		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Read %d rows, t in range [%f,%f] d",d->ndata,tmin/3600./24.,tmax/3600./24.);		
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Read %d rows, t in range [%f,%f] d",d->ndata,tmin/3600./24.,tmax/3600./24.);
+
+		if(DATA(d)->foundmissing.T || DATA(d)->foundmissing.DNI){
+			ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Missing data in weather file: missing %d temperature readings and %d DNI readings."
+				, (int)DATA(d)->foundmissing.T, (int)DATA(d)->foundmissing.DNI
+			);
+		}
+		
 		return 1;
 	}
 
@@ -339,17 +359,60 @@ int datareader_ee_data(DataReader *d){
 #undef PARSENUM
 
 	row.t = ((day_of_year_specific(day,month,year) - 1)*24.0 + (hour - 1))*3600.0 + minute*60.;
-	row.T = T + 273.15;
-	row.p = pres;
-	row.rh = rh / 100.;
-	row.DNI = DNI; // FIXME need to allow for difference in dt, which might be other than 1h.
-	row.Gd = DiffHI; // FIXME need to allow for difference in dt, which might be other than 1h.
-	row.d_wind = winddir * 2*3.141592653589 / 360; // perhaps for variable continuity we should return sin and cos of this?
-	row.v_wind = windspeed;
+
+	if(T != ee_missing.T){
+		row.T = T + 273.15;
+	}else{
+		// missing temperature
+		row.T = 20 + 273.15;
+		DATA(d)->foundmissing.T++;
+	}
+	
+	if(pres !=ee_missing.p){
+		row.p = pres;
+	}else{
+		row.p = 1e5;
+		DATA(d)->foundmissing.p++;
+	}
+
+	if(rh !=ee_missing.rh){
+		row.rh = rh / 100.;
+	}else{
+		row.rh = 0.2;
+		DATA(d)->foundmissing.rh++;
+	}
+
+	if(DNI != ee_missing.DNI){
+		row.DNI = DNI; // FIXME need to allow for difference in dt, which might be other than 1h.
+	}else{
+		row.DNI = 600;
+		DATA(d)->foundmissing.DNI++;
+	}
+
+	if(DiffHI != ee_missing.Gd){
+		row.Gd = DiffHI; // FIXME need to allow for difference in dt, which might be other than 1h.
+	}else{
+		row.Gd = 0;
+		DATA(d)->foundmissing.Gd++;
+	}
+
+	if(winddir != ee_missing.d_wind){
+		row.d_wind = winddir * 2*3.141592653589 / 360; // perhaps for variable continuity we should return sin and cos of this?
+	}else{
+		row.d_wind = 0;
+		DATA(d)->foundmissing.d_wind++;
+	}
+
+	if(windspeed != ee_missing.v_wind){
+		row.v_wind = windspeed;
+	}else{
+		row.v_wind = 0;
+		DATA(d)->foundmissing.d_wind++;
+	}
 
 	DATA(d)->rows[d->i] = row;
 
-	CONSOLE_DEBUG("Read i = %d, t = %f d, T = %.1f°C, rh = %.1f %",d->i,row.t / 3600. / 24., T, row.rh*100);
+	//CONSOLE_DEBUG("Read i = %d, t = %f d, T = %.1f°C, rh = %.1f %",d->i,row.t / 3600. / 24., T, row.rh*100);
 	
 	d->i++;
 	return 0;
