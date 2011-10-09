@@ -31,6 +31,8 @@
 
 #include <test/common.h>
 
+// #define ASCSIGNAL_DEBUG
+
 static jmp_buf my_jmp_buf1;
 
 static int f_handler1_called;
@@ -118,7 +120,7 @@ static void test_ascSignal(void)
   CU_FAIL("Signal handler manager not enabled.");
 #else
 
-  CONSOLE_DEBUG("Assigning signals");
+  //CONSOLE_DEBUG("Assigning signals");
   
   old_fpe_handler = signal(SIGFPE, my_handler1);        /* save any pre-existing handlers */
   old_int_handler = signal(SIGINT, my_handler1);
@@ -130,7 +132,7 @@ static void test_ascSignal(void)
 
   /* Asc_SignalInit(), Asc_SignalDestroy() - not much to test */
 
-  CONSOLE_DEBUG("Start signal manager");
+  //CONSOLE_DEBUG("Start signal manager");
 
   CU_TEST(0 == Asc_SignalInit());                       /* initialize the signal manager */
 
@@ -141,7 +143,7 @@ static void test_ascSignal(void)
   old_handler = signal(SIGSEGV, SIG_DFL);
   CU_TEST(my_handler2 == old_handler);
 
-  CONSOLE_DEBUG("Recover installed signals");
+  //CONSOLE_DEBUG("Recover installed signals");
   Asc_SignalRecover(TRUE);
 
   old_handler = signal(SIGFPE, SIG_DFL);                /* handlers should have been reinstalled */
@@ -151,10 +153,10 @@ static void test_ascSignal(void)
   old_handler = signal(SIGSEGV, SIG_DFL);
   CU_TEST(my_handler2 == old_handler);
 
-  CONSOLE_DEBUG("Recover installed signals again");
+  //CONSOLE_DEBUG("Recover installed signals again");
   Asc_SignalRecover(TRUE);
 
-  CONSOLE_DEBUG("Test push/pop of handlers");
+  //CONSOLE_DEBUG("Test push/pop of handlers");
 
   /* test Asc_SignalPush(), Asc_SignalPop() */
 
@@ -200,7 +202,7 @@ static void test_ascSignal(void)
   old_handler = signal(SIGSEGV, SIG_DFL);
   CU_TEST(my_handler2 == old_handler);
 
-  CONSOLE_DEBUG("Recover installed signals after a f");
+  //CONSOLE_DEBUG("Recover installed signals after a f");
   Asc_SignalRecover(TRUE);
   old_handler = signal(SIGFPE, SIG_DFL);                /* but Asc_SignalRecover should reset it */
   CU_TEST(my_handler1 == old_handler);
@@ -223,7 +225,7 @@ static void test_ascSignal(void)
 
   /* test Asc_SignalTrap() */
 
-  CONSOLE_DEBUG("Testing trapping of signals");
+  //CONSOLE_DEBUG("Testing trapping of signals");
 
   CU_TEST(0 == Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap));
   CU_TEST(0 == Asc_SignalHandlerPush(SIGINT, Asc_SignalTrap));
@@ -265,7 +267,7 @@ Asc_SignalRecover(TRUE);
   CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, Asc_SignalTrap));
   CU_TEST(0 == Asc_SignalHandlerPop(SIGSEGV, Asc_SignalTrap));
 
-  CONSOLE_DEBUG("Check handler settings after pop");
+  //CONSOLE_DEBUG("Check handler settings after pop");
 
   old_handler = signal(SIGFPE, SIG_DFL);                /* handlers should be restored at this point */
   CU_TEST(my_handler1 == old_handler);
@@ -276,7 +278,7 @@ Asc_SignalRecover(TRUE);
   Asc_SignalRecover(TRUE);
 
   /* test typical use with nesting of handlers */
-  CONSOLE_DEBUG("Testing typical use of nested handlers");
+  //CONSOLE_DEBUG("Testing typical use of nested handlers");
 
   f_handler1_called = FALSE;                              /* initialize flags for detecting flow */
   f_handler1_sigval = 0;
@@ -482,7 +484,7 @@ Asc_SignalRecover(TRUE);
   CU_TEST(FALSE == signal3_caught);
   CU_TEST(0 == Asc_SignalHandlerPop(SIGSEGV, Asc_SignalTrap));
 
-  CONSOLE_DEBUG("Check recovered signals");
+  //CONSOLE_DEBUG("Check recovered signals");
 
   old_handler = signal(SIGFPE, SIG_DFL);                /* handlers should be restored at this point */
   CU_TEST(my_handler1 == old_handler);
@@ -513,7 +515,7 @@ Asc_SignalRecover(TRUE);
 
   CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
 
-  CONSOLE_DEBUG("Finished");
+  //CONSOLE_DEBUG("Finished");
 }
 
 /*===========================================================================*/
