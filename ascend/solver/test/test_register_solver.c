@@ -26,7 +26,8 @@
 	T(slv_common) \
 	T(slvreq) \
 	T(ipopt) \
-	T(ida)
+	T(ida) \
+	T(qrslv)
 
 #define PROTO_SOLVER(NAME) PROTO(solver,NAME)
 TESTS(PROTO_SOLVER)
