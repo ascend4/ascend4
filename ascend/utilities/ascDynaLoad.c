@@ -40,6 +40,8 @@
 #include <ascend/general/ospath.h>
 #include <ascend/general/list.h>
 
+// #define DL_DEBUG
+
 typedef int (*ExternalLibraryRegister_fptr_t)(void);
 
 /*--------------------------------------
@@ -381,7 +383,9 @@ int Asc_DynamicUnLoad(CONST char *path)
     ERROR_REPORTER_HERE(ASC_PROG_ERR, "Unable to remember or unload %s", path);
     return -3;
   }
+#ifdef DL_DEBUG
   CONSOLE_DEBUG("Asc_DynamicUnLoad: forgetting & unloading %s", path);
+#endif
   /*
    *  dlclose() returns 0 on success, FreeLibrary() returns TRUE.
    *  A uniform convention is preferable, so trap and return 0 on success.
