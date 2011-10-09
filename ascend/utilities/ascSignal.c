@@ -478,7 +478,9 @@ static void reset_trap(int signum, SigHandlerFn **tlist, int tos){
     if (tp != SIG_ERR) {
 #ifndef ASC_RESETNEEDED
 	  if(tp!=oldfn){
+#ifdef SIGNAL_DEBUG
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Resetting signal %d (was=%p, new=%p",signum,oldfn,tp);
+#endif
 	  }
 #endif
       (void)signal(signum,tp);
