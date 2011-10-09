@@ -45,11 +45,11 @@
 /*
 	Test solving a simple IPOPT model
 */
-static void test_qrslv(const char *filenamestem){
+static void test_qrslv(const char *filenamestem, int simplify){
 
 	struct module_t *m;
 
-	Asc_CompilerInit(1);
+	Asc_CompilerInit(simplify);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models:solvers/qrslv:solvers/lrslv:solvers/cmslv:solvers/conopt:solvers/ipopt");
 
 	SlvRegisterStandardClients();
@@ -126,22 +126,20 @@ static void test_qrslv(const char *filenamestem){
 /*===========================================================================*/
 /* Registration information */
 
+static void test_bug513_simplify(void){
+	test_qrslv("bug513",1);
+}
+
+static void test_bug513_no_simplify(void){
+	test_qrslv("bug513",0);
+}
+
 #define TESTS1(T,X) \
-	T(bug513)
-
-/* define the tests: each test loads the model, solves with IPOPT, then runs the
-self_test method. */
-#define T(N) static void test_##N(void){\
-		test_qrslv(#N);\
-	}
-#define X
-TESTS1(T,X)
-#undef T
-#undef X
+	T(bug513_no_simplify) \
+	X T(bug513_simplify)
 
 #define X
-#define TESTS(T) \
-	TESTS1(T,X)
+#define TESTS(T) TESTS1(T,X)
 
 REGISTER_TESTS_SIMPLE(solver_qrslv, TESTS)
 #undef X

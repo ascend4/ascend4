@@ -154,6 +154,8 @@ int Asc_CompilerInit(int simp)
 
  if (simp !=0){
    g_simplify_relations = 1;
+ }else{
+   g_simplify_relations = 0;
  }
 
 #ifdef REIMPLEMENT_STREAMS
