@@ -776,7 +776,7 @@ void gl_insert_sorted(struct gl_list_t *list,
     list->flags |= gsf_SORTED;
   }
   else {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"gl_insert_sorted called on unsorted list -- sorting list now.");
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"gl_insert_sorted called on unsorted list -- sorting list now.");
     gl_append_ptr(list,ptr);
     gl_sort(list,func);
   }
