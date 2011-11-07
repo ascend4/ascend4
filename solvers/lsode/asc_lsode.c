@@ -802,7 +802,7 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
 #endif
 
   if(res){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for derivatives (%d)",res);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for derivatives (%d)",res);
 #if 0
   	ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
     FPRINTF(ASCERR,"Unable to compute the vector of derivatives with the following values for the state variables:\n");
@@ -811,14 +811,14 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
     }
     error_reporter_end_flush();
 #endif
-		lsodedata->stop = 1;
+    lsodedata->stop = 1;
     lsodedata->status = lsode_nok;
 #ifdef ASC_SIGNAL_TRAPS
-		raise(SIGINT);
+    raise(SIGINT);
 #endif
   }else{
     lsodedata->status = lsode_ok;
-		/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",lsodedata->status); */
+    /* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"lsodedata->status = %d",lsodedata->status); */
   }
   integrator_get_ydot(l_lsode_blsys, ydot);
 
@@ -863,10 +863,10 @@ static void LSODE_JEX(int *neq ,double *t, double *y
   );
 
   if(nok){
-  	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in computing the derivatives for the system. Failing...");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in computing the derivatives for the system. Failing...");
     lsodedata->status = lsode_nok;
     lsodedata->lastcall = lsode_derivative;
-		lsodedata->stop = 1;
+    lsodedata->stop = 1;
     return;
   }else{
     lsodedata->status = lsode_ok;
@@ -995,7 +995,7 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
 			CONSOLE_DEBUG("MAXORD reduced to 12 for AM");
 		}
 		mf = 10 + miter;
-  }else{
+        }else{
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unacceptable value '%d' of parameter 'meth'",method);
 		return 5;
 	}
@@ -1089,15 +1089,18 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
   for(index = start_index; index < finish_index; index++, 	blsys->currentstep++) {
     xend = integrator_getsample(blsys, index+1);
     xprev = x[0];
-		asc_assert(xend > xprev);
+    asc_assert(xend > xprev);
     /* CONSOLE_DEBUG("LSODE call #%lu: x = [%f,%f]", index,xprev,xend); */
 
 # ifdef ASC_SIGNAL_TRAPS
 
-		Asc_SignalHandlerPushDefault(SIGFPE);
-		Asc_SignalHandlerPushDefault(SIGINT);
+    Asc_SignalHandlerPushDefault(SIGFPE);
+    Asc_SignalHandlerPushDefault(SIGINT);
 
-    if(SETJMP(g_fpe_env)==0) {
+    int s_fpe = SETJMP(g_fpe_env);
+    int s_int = SETJMP(g_int_env);
+
+    if(s_fpe == 0 && s_int == 0) {
 # endif /* ASC_SIGNAL_TRAPS */
 
 	  /* CONSOLE_DEBUG("Calling LSODE with end-time = %f",xend); */
@@ -1133,15 +1136,23 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
 
 # ifdef ASC_SIGNAL_TRAPS
     }else{
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in LSODE call.");
-      lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
-      d->status = lsode_ok;		/* clean up before we go */
-      d->lastcall = lsode_none;
-      return 6;
+      if(s_fpe){
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration terminated due to float error in LSODE call.");
+        lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
+        d->status = lsode_ok;		/* clean up before we go */
+        d->lastcall = lsode_none;
+        return 6;
+	}
+      if(s_int){
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration aborted or interrupted.");
+        lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
+        d->status = lsode_ok;		/* clean up before we go */
+        d->lastcall = lsode_none;
+        return 6;
+      }
     }
-		Asc_SignalHandlerPopDefault(SIGFPE);
-		Asc_SignalHandlerPopDefault(SIGINT);
-
+    Asc_SignalHandlerPopDefault(SIGFPE);
+    Asc_SignalHandlerPopDefault(SIGINT);
 # endif
 
     /* CONSOLE_DEBUG("AFTER %lu LSODE CALL\n", index); */
