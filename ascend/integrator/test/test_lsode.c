@@ -72,7 +72,7 @@ static IntegratorReporter test_lsode_reporter = {
 /*
 	Test solving a simple IPOPT model
 */
-static void test_boundary(){
+static void test_bounds(){
 
 	struct module_t *m;
 
@@ -135,15 +135,15 @@ static void test_boundary(){
 	/* perform problem analysis */
 	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
 
-	/* TODO assign an integrator reporter */
+	CONSOLE_DEBUG("Assigning reporter and step sizes...");
 	integrator_set_reporter(integ, &test_lsode_reporter);
-
 	integrator_set_minstep(integ,0);
 	integrator_set_maxstep(integ,0);
 	integrator_set_stepzero(integ,0);
 	integrator_set_maxsubsteps(integ,0);
 
 	/* set a linearly-distributed samplelist */
+	CONSOLE_DEBUG("Preparing samplelist...");
 	double start = 0, end = 10;
 	int num = 20;
 	dim_type d;
@@ -158,6 +158,7 @@ static void test_boundary(){
 	}
 	integrator_set_samples(integ,samplelist);
 
+	CONSOLE_DEBUG("Commencing solve...");
 	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
 
 	integrator_free(integ);
@@ -180,7 +181,7 @@ static void test_boundary(){
 /* Registration information */
 
 #define TESTS(T) \
-	T(boundary)
+	T(bounds)
 
 REGISTER_TESTS_SIMPLE(integrator_lsode, TESTS)
 

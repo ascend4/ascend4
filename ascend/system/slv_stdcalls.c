@@ -278,10 +278,13 @@ int slv_check_bounds(const slv_system_t sys
 	, int32 lo,int32 hi
 	, const char *label
 ){
+
   real64 val,low,high;
   int32 c,len;
   struct var_variable *var, **vp;
   int err = 0;
+
+  CONSOLE_DEBUG("Got lo = %d, hi =%d",lo,hi);
 
   if(label==NULL) label = "";
   if(sys==NULL) return -1;
@@ -291,7 +294,7 @@ int slv_check_bounds(const slv_system_t sys
   if(hi < 0)hi+= len; /* so you can use -1 to mean 'the last' */
   if(lo < 0)lo+= len;
   if(lo > len || hi > len || lo < 0 || hi < 0 || lo > hi){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv_check_bounds miscalled");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid arguments (lo = %d, hi = %d, len = %d)",lo, hi, len);
     return -1;
   }
 

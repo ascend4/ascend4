@@ -777,11 +777,12 @@ static void LSODE_FEX( int *n_eq ,double *t ,double *y ,double *ydot){
     break;
   }
 
-  if((res =slv_solve(l_lsode_blsys->system))){
+  if((res = slv_solve(l_lsode_blsys->system))){
 		CONSOLE_DEBUG("solver returns error %ld",res);
 	}
 
   slv_get_status(l_lsode_blsys->system, &status);
+  CONSOLE_DEBUG("Calling slv_check_bounds with lo = 0, hi = -1");
   if(slv_check_bounds(l_lsode_blsys->system,0,-1,"")){
     lsodedata->status = lsode_nok;
   }
