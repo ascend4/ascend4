@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2007 Carnegie Mellon University
+	Copyright (C) 2010 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -18,27 +18,22 @@
 */
 
 #include <ascend/general/platform.h>
-#include "test_register_compiler.h"
+#include "test_register_integrator.h"
 
-#define SUITE compiler
+#define SUITE integrator
 
 #define TESTS(T) \
-	T(basics) \
-	T(autodiff) \
-	T(expr) \
-	T(bintok) \
-	T(fixfree) \
-	T(blackbox)
+	T(ida)
 
-
-#define PROTO_TEST(NAME) PROTO(compiler,NAME)
-TESTS(PROTO_TEST)
-#undef PROTO_TEST
+#define PROTO_INTEG(NAME) PROTO(integrator,NAME)
+TESTS(PROTO_INTEG)
+#undef PROTO_INTEG
 
 #define REGISTER_TEST(NAME) \
-	result = TESTREGISTER(compiler,NAME); \
+	result = TESTREGISTER(integrator,NAME); \
 	if(CUE_SUCCESS!=result){ \
 		return result; \
 	}
 
-REGISTER_SUITE(compiler,TESTS)
+REGISTER_SUITE(integrator,TESTS)
+

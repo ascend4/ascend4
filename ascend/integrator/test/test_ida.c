@@ -172,5 +172,5 @@ static void test_boundary(){
 #define TESTS(T) \
 	T(boundary)
 
-REGISTER_TESTS_SIMPLE(solver_ida, TESTS)
+REGISTER_TESTS_SIMPLE(integrator_ida, TESTS)
 
