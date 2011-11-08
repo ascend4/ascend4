@@ -1,0 +1,70 @@
+REQUIRE "ivpsystem.a4l";
+
+(* model file from Ksenija Bestuzheva to test patch applied at http://ascend4.org/r3842 *)
+
+MODEL bounds;
+
+	x IS_A solver_var;
+	dx_dt IS_A solver_var;
+	t IS_A solver_var;
+
+	dx_dt = t;
+
+METHODS
+	METHOD on_load;
+		x.ode_id := 1; x.ode_type := 1;
+		dx_dt.ode_id := 1; dx_dt.ode_type := 2;
+		t.ode_type := -1;
+		RUN specify;
+		RUN values;	
+	END on_load;
+
+	METHOD specify;
+		FIX x;
+		FREE dx_dt;
+		FREE t;
+	END specify;
+
+	METHOD values;
+		x := 0;
+		dx_dt := 0;
+		t := 0;
+	END values;
+
+END bounds;
+	
+MODEL boundsfail;
+
+	x IS_A solver_var;
+	dx_dt IS_A solver_var;
+	t IS_A solver_var;
+
+	dx_dt = t;
+
+METHODS
+	METHOD on_load;
+		x.ode_id := 1; x.ode_type := 1;
+		dx_dt.ode_id := 1; dx_dt.ode_type := 2;
+		t.ode_type := -1;
+		RUN specify;
+		RUN values;
+		RUN bound_self;	
+	END on_load;
+
+	METHOD bound_self;
+		dx_dt.upper_bound := 10;
+	END bound_self;
+
+	METHOD specify;
+		FIX x;
+		FREE dx_dt;
+		FREE t;
+	END specify;
+
+	METHOD values;
+		x := 0;
+		dx_dt := 0;
+		t := 0;
+	END values;
+
+END boundsfail;
