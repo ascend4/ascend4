@@ -89,8 +89,8 @@ ASC_DLLSPEC int slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
 );
 /**<
 	Takes a system and a range of vars (lo,hi) from the solver's var list
-	and makes sure all the variables are within bounds and bounds are
-	make sense (lower < upper). Reports errors in all cases where they are not.
+	and makes sure all the variables are within bounds, and that bounds are
+	making sense (lower < upper). Reports errors in all cases where they are not.
 	Does not change anything.
 
 	You can express lo,hi as negative numbers, which means you count back from
