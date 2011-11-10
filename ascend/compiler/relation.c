@@ -1776,7 +1776,7 @@ static unsigned long SimplifyTermBuf(int level,
             }
             if (abs(ival) < INT_MAX) { /* this could be a little better */
               rval = asc_ipow((double)I_TERM(b[TS_LEFT])->ivalue,
-                              (int)I_TERM(b[TS_LEFT])->ivalue);
+                              (int)I_TERM(b[TS_TOP])->ivalue);
               if (fabs(rval) > MAXINTREAL || floor(rval)!=ceil(rval) ) {
                 b[top]->t = e_real;
                 R_TERM(b[top])->dimensions = Dimensionless();
