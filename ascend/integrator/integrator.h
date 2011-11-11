@@ -173,6 +173,8 @@ typedef int IntegratorSolveFn(struct IntegratorSystemStruct *blsys
 /**<
 	Integrators must provide a function like this that actually runs the
 	integration.
+
+	@return 0 on success.
 */
 
 typedef int IntegratorWriteMatrixFn(const struct IntegratorSystemStruct *blsys, FILE *fp, const char *type);
