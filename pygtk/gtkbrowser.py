@@ -1507,7 +1507,7 @@ class AutoUpdateDialog:
 	def on_autoupdate_toggled(self, widget):
 		_p = self.browser.prefs
 		_p.setBoolPref("Browser", "disable_auto_check_for_updates", widget.get_active())
-		self.browser.check_weekly.set_active(not(widget.get_active))
+		self.browser.check_weekly.set_active(not(widget.get_active()))
 		
 	def run(self):
 		_continue = True
