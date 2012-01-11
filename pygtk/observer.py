@@ -333,10 +333,7 @@ class ObserverTab:
 			pylab.legend([y.name,y2.name])
 
 		pylab.ion()
-		if platform.system()=="Windows":
-			pylab.show()
-		else:
-			pylab.show(False)				
+		pylab.show()
 		
 	def on_plot_clicked(self,*args):
 		try:
