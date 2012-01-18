@@ -43,7 +43,7 @@ void enable_assert_longjmp(int TRUE_or_FALSE)
 /* Override implementation of assert using the signature of the relevant compiler */
 #ifdef __WIN32__
 #  if defined(__GNUC__) || defined(__MINGW32_VERSION)
-_CRTIMP void __cdecl _assert(const char *cond, const char *file, int line)
+_CRTIMP void __cdecl my_assert(const char *cond, const char *file, int line)
 {
 
 #  elif defined(_MSC_VER)

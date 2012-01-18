@@ -34,7 +34,6 @@ default_install_python_ascend = "$INSTALL_PYTHON/ascend"
 default_tcl = '/usr'
 default_tcl_libpath = "$TCL/lib"
 default_tcl_cpppath = "$TCL/include"
-default_tron_envvar="TRON_PATH"
 default_conopt_envvar="CONOPT_PATH"
 default_with_graphviz = True
 default_tcl_lib = "tcl8.5"
@@ -48,20 +47,20 @@ default_conopt_prefix="$DEFAULT_PREFIX"
 default_conopt_libpath="$CONOPT_PREFIX"
 default_conopt_cpppath="$CONOPT_PREFIX"
 default_conopt_dlpath="$CONOPT_PREFIX"
-default_tron_prefix="$DEFAULT_PREFIX"
-default_tron_dlpath="$TRON_PREFIX/lib"
-default_tron_lib="tron1"
 default_prefix="/usr"
 default_libpath="$DEFAULT_PREFIX/lib"
 default_cpppath="$DEFAULT_PREFIX/include"
-default_fortran="gfortran"
 default_f2c_lib="gfortran"
 default_swig="swig"
 
 icon_extension = '.png'
 
 if platform.system()=="Windows":
-	default_prefix="c:\\MinGW"
+	if os.path.exists("c:\\MinGW"):
+		default_prefix="c:\\MinGW"
+	elif os.path.exists("c:\MinGW64"):
+		default_prefix="c:\\MinGW64"
+	
 	default_libpath="$DEFAULT_PREFIX\\lib"
 	default_cpppath="$DEFAULT_PREFIX\\include"	
 
@@ -86,7 +85,7 @@ if platform.system()=="Windows":
 	default_solvers_rel_dist = 'solvers'
 	
 	# where to look for IDA solver libraries, headers, etc.
-	default_ida_prefix = "c:\\MinGW"
+	default_ida_prefix = "$DEFAULT_PREFIX"
 	
 	# IPOPT
 	default_ipopt_libpath = "$IPOPT_PREFIX/lib/win32/release"
@@ -98,17 +97,12 @@ if platform.system()=="Windows":
 	default_conopt_cpppath="$CONOPT_PREFIX"
 	default_conopt_dlpath="$CONOPT_PREFIX"
 	default_conopt_lib="conopt3"
-
-	# FIXME remove this
-	default_tron_prefix="c:\\Program Files\\TRON"
-	default_tron_dlpath="$TRON_PREFIX"
 		
 	need_libm = False
 	python_exe = sys.executable
 	default_with_scrollkeeper=False
 	pathsep = ";"
 	
-	default_fortran="gfortran"
 	default_f2c_lib="gfortran"
 	
 	default_swig=WhereIs("swig.exe")
@@ -149,10 +143,6 @@ elif platform.system()=="Darwin":
 	default_conopt_prefix = "/Library/CONOPT"
 
 	default_conopt_lib="conopt3"
-
-	# FIXME remove this
-	default_tron_dlpath="$TRON_PREFIX"
-	default_tron_lib="tron1"
 		
 	need_libm = False
 	python_exe = sys.executable
@@ -250,9 +240,6 @@ else: # LINUX, unix we hope
 	#	default_graphviz_libpath="/usr/lib/graphviz"
 	#	default_graphviz_rpath="$GRAPHVIZ_LIBPATH"
 
-if not os.path.exists(default_tron_prefix):
-	default_tron_prefix = None
-
 if not os.path.exists(default_ida_prefix):
 	default_ida_prefix = None
 
@@ -270,15 +257,21 @@ soname_full = "%s%s" % (soname_clean,soname_major)
 vars = Variables(['options.cache', 'config.py'])
 	
 vars.Add(
+	'HOST_PREFIX'
+	,"Host architecture prefix"
+	,""
+)
+
+vars.Add(
 	'CC'
 	,'C Compiler command'
-	,None
+	,"${HOST_PREFIX}gcc"
 )
 
 vars.Add(
 	'CXX'
 	,'C++ Compiler command'
-	,None
+	,"${HOST_PREFIX}g++"
 )
 
 vars.Add(BoolVariable(
@@ -514,32 +507,6 @@ if platform.system()=="Windows":
 		,default_ipopt_dll
 	)
 
-#------- TRON -------
-
-vars.Add(
-	'TRON_ENVVAR'
-	,"What environment variable should be used at runtime to override the default search location for TRON DLL/SO?"
-	,default_tron_envvar
-)
-
-vars.Add(
-	"TRON_LIB"
-	,"Library linked to for TRON"
-	,"tron"
-)
-
-vars.Add(
-	"TRON_PREFIX"
-	,"Prefix for your TRON install"
-	,default_tron_prefix
-)
-
-vars.Add(
-	'TRON_DLPATH'
-	,"What is the default search path that ASCEND should use when dlopening the TRON library at runtime?"
-	,default_tron_dlpath
-)
-
 #-------- f2c ------
 
 vars.Add(
@@ -557,7 +524,7 @@ vars.Add(PackageVariable(
 vars.Add(
 	"FORTRAN"
 	,"Fortran compiler (eg g77, gfortran)"
-	,default_fortran
+	,"${HOST_PREFIX}gfortran"
 )
 
 #------- tcl/tk --------
@@ -1152,8 +1119,8 @@ C     Hello World in Fortran 77
       END	
 """;
 
-def CheckF77(context):
-	context.Message("Checking Fortran 77 compiler ('%s')..." % context.env.get('FORTRAN'))
+def CheckFortran(context):
+	context.Message("Checking Fortran compiler ('%s')..." % context.env.get('FORTRAN'))
 	if not context.env.get('FORTRAN'):
 		context.Result('not found')
 		return False
@@ -1643,9 +1610,11 @@ def CheckDLOpen(context):
 
 libpython_test_text = """
 #include <Python.h>
+PyObject *get10(void){
+	PyObject *p = Py_BuildValue("i", 10);
+	return p;
+}
 int main(void){
-	PyObject *p;
-	p = Py_None;
 	return 0;
 }
 """
@@ -2176,7 +2145,7 @@ conf = Configure(env
 	, custom_tests = { 
 		'CheckCC' : CheckCC
 		, 'CheckCXX' : CheckCXX
-		, 'CheckF77' : CheckF77
+		, 'CheckFortran' : CheckFortran
 		, 'CheckMath' : CheckMath
 		, 'CheckMalloc' : CheckMalloc
 		, 'CheckDLOpen' : CheckDLOpen
@@ -2284,12 +2253,17 @@ for _var,_type in _sizes.iteritems():
 
 # check for some string functions
 
-if conf.CheckFunc('snprintf') is False:
-	print "Didn't find snprintf";
+if conf.CheckFunc('sprintf') is False:
+	print "Didn't find sprintf";
 	Exit(1)
 
 if conf.CheckFunc('strdup'):
 	conf.env['HAVE_STRDUP'] = True
+
+if conf.CheckFunc('snprintf'):
+	conf.env['HAVE_SNPRINTF'] = True
+elif conf.CheckFunc('_snprintf'):
+	conf.env['HAVE__SNPRINTF'] = True
 
 # attempt to support MSVCRT 7.1 on Windows
 
@@ -2516,7 +2490,7 @@ if need_fortran:
 else:
 	print "FORTRAN WAS NOT FOUND TO BE REQUIRED"
 
-if need_fortran and conf.CheckF77() is False:
+if need_fortran and conf.CheckFortran() is False:
 	print "Failed to build simple test file with your Fortran compiler."
 	print "Check your compiler is installed and running correctly."
 	print "You can set your Fortran compiler using the FORTRAN scons option."
@@ -2899,7 +2873,7 @@ env.Alias('extfns',env['extfns'])
 #-------------
 # FPROPS python bindings
 
-env.Alias('pyfprops',env['pyfprops'])
+env.Alias('pyfprops',env.get('pyfprops'))
 
 #------------------------------------------------------
 # CREATE ASCEND-CONFIG scriptlet

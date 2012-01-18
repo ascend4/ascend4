@@ -49,7 +49,7 @@ typedef enum
   catOper       = 4,
   catBracket    = 8,
   catQuote      = 16,
-  
+
   catMinus      = 32,
   catUnderscore = 64
 } category;
@@ -89,7 +89,7 @@ typedef struct _parse{
   /* for string implementations */
   char      *contents;
   int       ptr;
-  
+
   parseGetCharFunction   *getChar;
   parseUnGetCharFunction *unGetChar;
   parseDisposeFunction   *dispose;
@@ -97,7 +97,7 @@ typedef struct _parse{
 
 /* functions */
 
-MSTRANP_API parse *parseCreateFile( FILE *file );
+extern parse *parseCreateFile( FILE *file );
 MSTRANP_API parse *parseCreateFileName( const char *name );
 parse *parseCreateString( char *s );
 MSTRANP_API void parseDispose( parse *p );

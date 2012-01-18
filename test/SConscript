@@ -1,5 +1,6 @@
 #!/usr/bin/python invoke_using_scons
 Import('test_env')
+import platform
 
 # local sources
 srcs = ['test.c','test_ascend_base.c','redirectStdStreams.c','printutil.c','assertimpl.c']
@@ -24,5 +25,10 @@ if test_env.has_key('CUNIT_LIBPATH'):
 testprog = test_env.Program('test',srcs)
 
 test_env.Depends(testprog,"#/ascend/utilities/test")
-test_env.Depends(testprog,"#/libascend.so.1")
+
+if platform.system()=="Windows":
+	test_env.Depends(testprog,test_env['libascend'])
+else:
+	test_env.Depends(testprog,"#/libascend.so.1")
+	
 
