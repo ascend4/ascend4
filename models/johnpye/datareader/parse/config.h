@@ -2,8 +2,8 @@
 #define MICROSTRAN_CONFIG_H
 
 #ifdef __WIN32__
-# define MSTRANP_EXPORT __declspec(dllexport)
-# define MSTRANP_IMPORT __declspec(dllimport)
+# define MSTRANP_EXPORT
+# define MSTRANP_IMPORT
 #else
 # ifdef HAVE_GCCVISIBILITY
 #  define MSTRANP_EXPORT __attribute__ ((visibility("default")))

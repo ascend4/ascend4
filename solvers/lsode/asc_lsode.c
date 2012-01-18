@@ -145,6 +145,14 @@ extern ASC_EXPORT int lsode_register(void){
 #define GETCOMMON GET_LSODE_COMMON
 #endif
 
+#ifdef __WIN32__ && defined(__MINGW32_VERSION))
+#undef LSODE
+#undef XASCWV
+#define XASCWV xascwv_
+#define LSODE lsode_
+#endif
+
+
 #define ASC_CLOCK_CHECK_PERIOD 1 /* number of FEX or JEX cycled between GUI updates */
 #define ASC_CLOCK_MAX_GUI_WAIT (0.5*CLOCKS_PER_SEC) /* max number of clock ticks between GUI updates */
 /* definitions of lsode supported children of atoms, etc */

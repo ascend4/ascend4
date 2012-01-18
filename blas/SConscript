@@ -7,6 +7,6 @@ srcs = Split("""
 
 blas = []
 for src in srcs:
-	blas.append( env.SharedObject(src) )
+	blas.append( env.SharedObject(src,SHFORTRAN=env['FORTRAN']) )
 
 Return('blas')
