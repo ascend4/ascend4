@@ -34,7 +34,7 @@ static error_reporter_meta_t *error_reporter_meta_new(){
 	return e;
 }
 #endif /* ERROR_REPORTER_TREE_ACTIVE */
-	
+
 /**
 	XTERM colour codes used to distinguish between errors of different types.
 */
@@ -166,7 +166,7 @@ int error_reporter_tree_end(){
 	TREECURRENT = TREECURRENT->parent;
 	/* CONSOLE_DEBUG("SET TREECURRENT TO %p",TREECURRENT); */
 	return 0;
-}	
+}
 
 static void error_reporter_tree_free(error_reporter_tree_t *t){
 	if(t->head){
@@ -340,7 +340,7 @@ int vfprintf_error_reporter(FILE *file, const char *fmt, va_list args){
 			len = strlen(msg);
 			res = vsnprintf(msg+len,ERROR_REPORTER_MAX_MSG-len,fmt,args);
 			if(len+res+1>=ERROR_REPORTER_MAX_MSG){
-				snprintf(msg+ERROR_REPORTER_MAX_MSG-16,15,"... (truncated)");
+				SNPRINTF(msg+ERROR_REPORTER_MAX_MSG-16,15,"... (truncated)");
 				ASC_FPRINTF(stderr,"TRUNCATED MESSAGE, FULL MESSAGE FOLLOWS:\n----------START----------\n");
 				ASC_VFPRINTF(stderr,fmt,args);
 				ASC_FPRINTF(stderr,"\n-----------END----------\n");
@@ -354,7 +354,7 @@ int vfprintf_error_reporter(FILE *file, const char *fmt, va_list args){
 	}
 	return res;
 }
-	
+
 /**
 	This function performs caching of the error text if the flag is set
 */

@@ -93,9 +93,6 @@ if platform.system()=="Windows":
 
 	# where to look for CONOPT when compiling
 	default_conopt_prefix = "c:\\Program Files\\CONOPT"
-	default_conopt_libpath="$CONOPT_PREFIX"
-	default_conopt_cpppath="$CONOPT_PREFIX"
-	default_conopt_dlpath="$CONOPT_PREFIX"
 	default_conopt_lib="conopt3"
 		
 	need_libm = False
@@ -119,9 +116,7 @@ elif platform.system()=="Darwin":
 	default_install_prefix = ''
 	default_install_bin = "$INSTALL_PREFIX/ASCEND.app/Contents"
 	default_install_lib = "$INSTALL_BIN"
-	#default_install_models = "$INSTALL_PREFIX/Library/Application Support/ASCEND/Models"
 	default_install_models = "$INSTALL_BIN/Models"
-	#default_install_solvers = "$INSTALL_PREFIX/Library/Application Support/ASCEND/Solvers"
 	default_install_solvers = "$INSTALL_BIN/Solvers"
 	default_install_ascdata = "$INSTALL_BIN/Resources"
 	default_install_include = "$INSTALL_BIN/Headers"
@@ -135,7 +130,7 @@ elif platform.system()=="Darwin":
 	default_dist_rel_bin = '.'
 	default_tk_rel_dist = 'tcltk'
 
-	# we want these to be in /Library/ASCEND/Models and /Library/ASCEND/Solvers
+	# we should move these to /Library/ASCEND/Models and /Library/ASCEND/Solvers, for visibility
 	default_library_rel_dist = 'Models'
 	default_solvers_rel_dist = 'Solvers'
 
@@ -220,7 +215,6 @@ else: # LINUX, unix we hope
 	default_library_rel_dist = 'lib/ascend/models'
 	default_solvers_rel_dist = 'lib/ascend/solvers'
 
-	default_conopt_prefix = "$DEFAULT_PREFIX"
 	default_conopt_libpath="$CONOPT_PREFIX/lib"
 	default_conopt_cpppath="$CONOPT_PREFIX/include"
 	default_conopt_dlpath= default_conopt_libpath + ":/usr/local/lib"
@@ -232,13 +226,6 @@ else: # LINUX, unix we hope
 	python_exe = distutils.sysconfig.EXEC_PREFIX+"/bin/python"
 	default_with_scrollkeeper=False
 	pathsep = ":"
-		
-	#default_graphviz_libs=["graph","cdt","gvc"]
-	#default_graphviz_libpath = default_libpath
-	#if os.path.exists("/usr/lib/graphviz/libgraph.so"):
-	#	# for Ubuntu 7.04
-	#	default_graphviz_libpath="/usr/lib/graphviz"
-	#	default_graphviz_rpath="$GRAPHVIZ_LIBPATH"
 
 if not os.path.exists(default_ida_prefix):
 	default_ida_prefix = None
@@ -256,60 +243,51 @@ soname_full = "%s%s" % (soname_clean,soname_major)
 
 vars = Variables(['options.cache', 'config.py'])
 	
-vars.Add(
-	'HOST_PREFIX'
+vars.Add('HOST_PREFIX'
 	,"Host architecture prefix"
 	,""
 )
 
-vars.Add(
-	'CC'
+vars.Add('CC'
 	,'C Compiler command'
 	,"${HOST_PREFIX}gcc"
 )
 
-vars.Add(
-	'CXX'
+vars.Add('CXX'
 	,'C++ Compiler command'
 	,"${HOST_PREFIX}g++"
 )
 
-vars.Add(BoolVariable(
-	'GCOV'
+vars.Add(BoolVariable('GCOV'
 	, 'Whether to enable coverage testing in object code'
 	, False
 ))
 
 if platform.system()!="Windows":
-	vars.Add(BoolVariable(
-		'WITH_GCCVISIBILITY'
+	vars.Add(BoolVariable('WITH_GCCVISIBILITY'
 		,"Whether to use GCC Visibility features (only applicable if available)"
 		,True
 	))
 
-vars.Add(BoolVariable(
-	'WITH_SIGNALS'
+vars.Add(BoolVariable('WITH_SIGNALS'
 	,"Whether to permit use of signals for flow control in the C-level code"
 	,True
 ))
 
 # You can turn off building of Tcl/Tk interface
-vars.Add(BoolVariable(
-	'WITH_TCLTK'
+vars.Add(BoolVariable('WITH_TCLTK'
 	,"Set to False if you don't want to build the original Tcl/Tk GUI."
 	, True
 ))
 
 # You can turn off the building of the Python interface
-vars.Add(BoolVariable(
-	'WITH_PYTHON'
+vars.Add(BoolVariable('WITH_PYTHON'
 	,"Set to False if you don't want to build Python wrappers."
 	, True
 ))
 
 # Which solvers will we allow?
-vars.Add(ListVariable(
-	'WITH_SOLVERS'
+vars.Add(ListVariable('WITH_SOLVERS'
 	,"List of the solvers you want to build. The default is the minimum that"	
 		+" works. The option 'LSOD' is provided for backwards compatibility"
 		+"; the value 'LSODE' is preferred."
@@ -321,33 +299,28 @@ vars.Add(ListVariable(
 ))
 
 # Where will the local copy of the help files be kept?
-vars.Add(BoolVariable(
-	'WITH_DOC'
+vars.Add(BoolVariable('WITH_DOC'
 	, "Should we try to build and install help files? If not, ASCEND will access online help files"
 	, True
 ))
 
-vars.Add(BoolVariable(
-	'WITH_DOC_BUILD'
+vars.Add(BoolVariable('WITH_DOC_BUILD'
 	, "If true, we'll attempt to build docs. Set false, we'll assume we already have then (eg from the tarball)"
 	, "$WITH_DOC"
 ))
 
-vars.Add(BoolVariable(
-	'WITH_DOC_INSTALL'
+vars.Add(BoolVariable('WITH_DOC_INSTALL'
 	, "If true, SCons will install the documentation file(s). If false, assume rpm or dpkg is going to do it."
 	, "$WITH_DOC"
 ))
 
-vars.Add(
-	'HELP_ROOT'
+vars.Add('HELP_ROOT'
 	, "Location of the main help file"
 	, "$INSTALL_DOC/book.pdf"
 )
 
 # Will bintoken support be enabled?
-vars.Add(BoolVariable(
-	'WITH_BINTOKEN'
+vars.Add(BoolVariable('WITH_BINTOKEN'
 	,"Enable bintoken support? This means compiling models as C-code before"
 		+" running them, to increase solving speed for large models."
 	,False
@@ -355,8 +328,7 @@ vars.Add(BoolVariable(
 
 # What should the default ASCENDLIBRARY path be?
 # Note: users can change it by editing their ~/.ascend.ini
-vars.Add(
-	'DEFAULT_ASCENDLIBRARY'
+vars.Add('DEFAULT_ASCENDLIBRARY'
 	,"Set the default value of the ASCENDLIBRARY -- the location where"
 		+" ASCEND will look for models when running ASCEND"
 	,"$INSTALL_MODELS"
@@ -364,16 +336,14 @@ vars.Add(
 
 # What should the default ASCENDLIBRARY path be?
 # Note: users can change it by editing their ~/.ascend.ini
-vars.Add(
-	'DEFAULT_ASCENDSOLVERS'
+vars.Add('DEFAULT_ASCENDSOLVERS'
 	,"Set the default value of ASCENDSOLVERS -- the location where"
 		+" ASCEND will look for solver shared-library files"
 	,"$INSTALL_SOLVERS"
 )
 
 # Where is SWIG?
-vars.Add(
-	'SWIG'
+vars.Add('SWIG'
 	,"SWIG location, probably only required for MinGW and MSVC users."
 		+" Enter the location as a Windows-style path, for example"
 		+" 'c:\\msys\\1.0\\home\\john\\swigwin-1.3.29\\swig.exe'."
@@ -381,8 +351,7 @@ vars.Add(
 )
 
 # Build the test suite?
-vars.Add(BoolVariable(
-	'WITH_CUNIT'
+vars.Add(BoolVariable('WITH_CUNIT'
 	,"You can disable CUnit tests with this option. This will basically stop"
 		+" SCons from parsing the SConscript files relating to the 'test'"
         +" target, which just might make things marginally faster. Probably"
@@ -392,15 +361,13 @@ vars.Add(BoolVariable(
 ))
 
 # Build with MMIO matrix export support?
-vars.Add(BoolVariable(
-	'WITH_MMIO'
+vars.Add(BoolVariable('WITH_MMIO'
 	,"Include support for exporting matrices in Matrix Market format"
 	,True
 ))
 
 #----- default paths -----
-vars.Add(PackageVariable(
-	'DEFAULT_PREFIX'
+vars.Add(PackageVariable('DEFAULT_PREFIX'
 	,"Where are most of the shared libraries located on your system?"
 	,default_prefix
 ))
@@ -409,66 +376,56 @@ vars.Add(PackageVariable(
 # CUnit is a unit testing library that we use to test libascend.
 
 # Where was CUNIT installed?
-vars.Add(PackageVariable(
-	'CUNIT_PREFIX'
+vars.Add(PackageVariable('CUNIT_PREFIX'
 	,"Where are your CUnit files?"
 	,"$DEFAULT_PREFIX"
 ))
 
 # Where are the CUnit includes?
-vars.Add(PackageVariable(
-	'CUNIT_CPPPATH'
+vars.Add(PackageVariable('CUNIT_CPPPATH'
 	,"Where are your CUnit include files?"
 	,"$CUNIT_PREFIX/include"
 ))
 
 # Where are the CUnit libraries?
-vars.Add(PackageVariable(
-	'CUNIT_LIBPATH'
+vars.Add(PackageVariable('CUNIT_LIBPATH'
 	,"Where are your CUnit libraries?"
 	,"$CUNIT_PREFIX/lib"
 ))
 
 # ----- conopt-----
 
-vars.Add(PackageVariable(
-	"CONOPT_PREFIX"
+vars.Add(PackageVariable("CONOPT_PREFIX"
 	,"Prefix for your CONOPT install (CONOPT ./configure --prefix)"
 	,default_conopt_prefix
 ))
 
-vars.Add(
-	"CONOPT_LIB"
+vars.Add("CONOPT_LIB"
 	,"Library linked to for CONOPT. This is the name of the CONOPT .so or DLL. On Windows it seems to be called 'copopt3' but on linux it seems to be called 'consub3'."
 	,default_conopt_lib
 )
 
-vars.Add(BoolVariable(
-	"CONOPT_LINKED"
+vars.Add(BoolVariable("CONOPT_LINKED"
 	,"Do you want to dynamically link to CONOPT (only possible if CONOPT is available at buildtime)"
 	,False
 ))
 
-vars.Add(
-	'CONOPT_CPPPATH'
+vars.Add('CONOPT_CPPPATH'
 	,"Where is your conopt.h?"
 	,default_conopt_cpppath
 )
 
-vars.Add(
-	'CONOPT_LIBPATH'
+vars.Add('CONOPT_LIBPATH'
 	,"Where is your CONOPT library installed?"
 	,default_conopt_libpath
 )
 
-vars.Add(
-	'CONOPT_DLPATH'
+vars.Add('CONOPT_DLPATH'
 	,"Default (fallback) search path that ASCEND should use when dlopening the CONOPT library at runtime? This is only used if the conopt environment variable doesn't exist and doesn't point to a location where the DLL/SO is found.  This is in platform-specific form (paths with ';' separator in Windows, ':' separator on Linux)."
 	,default_conopt_dlpath
 )
 
-vars.Add(
-	'CONOPT_ENVVAR'
+vars.Add('CONOPT_ENVVAR'
 	,"Name of the optional environment variable which will be used for the value of the searchpath for the CONOPT DLL/SO."
 	,default_conopt_envvar
 )
@@ -476,410 +433,323 @@ vars.Add(
 #------- IPOPT -------
 
 if platform.system()=="Windows":
-	vars.Add(PackageVariable(
-		"IPOPT_PREFIX"
+	vars.Add(PackageVariable("IPOPT_PREFIX"
 		,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
 		,default_conopt_prefix
 	))
 
-	vars.Add(
-		"IPOPT_LIBS"
+	vars.Add("IPOPT_LIBS"
 		,"Library linked to for IPOPT"
 		,default_ipopt_libs
 	)
 
-
-	vars.Add(
-		"IPOPT_LIBPATH"
+	vars.Add("IPOPT_LIBPATH"
 		,"Where is your IPOPT library installed"
 		,default_ipopt_libpath
 	)
 
-	vars.Add(
-		'IPOPT_CPPPATH'
+	vars.Add('IPOPT_CPPPATH'
 		,"Where is your IPOPT coin/IpStdCInterface.h (do not include the 'coin' in the path)"
 		,"$IPOPT_PREFIX/include"
 	)
 
-	vars.Add(
-		'IPOPT_DLL'
+	vars.Add('IPOPT_DLL'
 		,"Exact path of IPOPT DLL to be included in the installer (Windows only)"
 		,default_ipopt_dll
 	)
 
 #-------- f2c ------
 
-vars.Add(
-	"F2C_LIB"
+vars.Add("F2C_LIB"
 	,"F2C library (eg. g2c, gfortran, f2c)"
 	,default_f2c_lib # the default is gfortran now
 )
 
-vars.Add(PackageVariable(
-	"F2C_LIBPATH"
+vars.Add(PackageVariable("F2C_LIBPATH"
 	,"Directory containing F2C library (i.e. g2c, gfortran, f2c, etc.), if not already accessible"
 	,"off"
 ))
 
-vars.Add(
-	"FORTRAN"
+vars.Add("FORTRAN"
 	,"Fortran compiler (eg g77, gfortran)"
 	,"${HOST_PREFIX}gfortran"
 )
 
+vars.Add("SHFORTRAN"
+	,"Fortran compiler for shared library object (should normally be same as FORTRAN)"
+	,"$FORTRAN"
+)
+
 #------- tcl/tk --------
 
-vars.Add(
-	'TCL'
+vars.Add('TCL'
 	,'Base of Tcl distribution'
 	,default_tcl
 )
 
 # Where are the Tcl includes?
-vars.Add(
-	'TCL_CPPPATH'
+vars.Add('TCL_CPPPATH'
 	,"Where are your Tcl include files?"
 	,default_tcl_cpppath
 )
 
 # Where are the Tcl libs?
-vars.Add(
-	'TCL_LIBPATH'
+vars.Add('TCL_LIBPATH'
 	,"Where are your Tcl libraries?"
 	,default_tcl_libpath
 )
 
 # What is the name of the Tcl lib?
-vars.Add(
-	'TCL_LIB'
+vars.Add('TCL_LIB'
 	,"Name of Tcl lib (eg 'tcl' or 'tcl83'), for full path to static library (if STATIC_TCLTK is set)"
 	,default_tcl_lib
 )
 
 # Where are the Tk includes?
-vars.Add(
-	'TK_CPPPATH'
+vars.Add('TK_CPPPATH'
 	,"Where are your Tk include files?"
 	,'$TCL_CPPPATH'
 )
 
 # Where are the Tk libs?
-vars.Add(
-	'TK_LIBPATH'
+vars.Add('TK_LIBPATH'
 	,"Where are your Tk libraries?"
 	,'$TCL_LIBPATH'
 )
 
 # What is the name of the Tk lib?
-vars.Add(
-	'TK_LIB'
+vars.Add('TK_LIB'
 	,"Name of Tk lib (eg 'tk' or 'tk83'), or full path to static library"
 	,default_tk_lib
 )	
 
 # Static linking to TkTable
 
-vars.Add(BoolVariable(
-	'STATIC_TCLTK'
+vars.Add(BoolVariable('STATIC_TCLTK'
 	,'Set true for static linking for Tcl/Tk and TkTable. EXPERIMENTAL'
 	,False
 ))
 
-vars.Add(
-	'TKTABLE_LIBPATH'
+vars.Add('TKTABLE_LIBPATH'
 	,'Location of TkTable static library'
 	,'$TCL_LIBPATH/Tktable2.8'
 )
 
-vars.Add(
-	'TKTABLE_LIB'
+vars.Add('TKTABLE_LIB'
 	,'Stem name of TkTable (eg tktable2.8, no ".so" or "lib") shared library, or full path of static tktable (/usr/lib/...)'
 	,default_tktable_lib
 )
 
-vars.Add(
-	'TKTABLE_CPPPATH'
+vars.Add('TKTABLE_CPPPATH'
 	,'Location of TkTable header file'
 	,'$TCL_CPPPATH'
 )
 
-vars.Add(
-	'X11'
+vars.Add('X11'
 	,'Base X11 directory. Only used when STATIC_TCLTK is turned on. EXPERIMENTAL'
 	,'/usr/X11R6'
 )
 
-vars.Add(
-	'X11_LIBPATH'
+vars.Add('X11_LIBPATH'
 	,'Location of X11 lib. EXPERIMENTAL'
 	,'$X11/lib'
 )
 
-vars.Add(
-	'X11_CPPPATH'
+vars.Add('X11_CPPPATH'
 	,'Location of X11 includes. EXPERIMENTAL'
 	,'$X11/include'
 )
 
-vars.Add(
-	'X11_LIB'
+vars.Add('X11_LIB'
 	,'Name of X11 lib. EXPERIMENTAL'
 	,'X11'
 )
 
 #----- installed file locations (for 'scons install') -----
 
-vars.Add(
-	'INSTALL_PREFIX'
+vars.Add('INSTALL_PREFIX'
 	,'Root location for installed files'
 	,default_install_prefix
 )
 
-vars.Add(
-	'INSTALL_BIN'
+vars.Add('INSTALL_BIN'
 	,'Location to put binaries during installation'
 	,default_install_bin
 )
 
-vars.Add(
-	'INSTALL_LIB'
+vars.Add('INSTALL_LIB'
 	,'Location to put libraries during installation'
 	,default_install_lib
 )
 
-vars.Add(
-	'INSTALL_SHARE'
+vars.Add('INSTALL_SHARE'
 	,'Common shared-file location on this system'
 	,"$INSTALL_PREFIX/share"
 )
 
-vars.Add(
-	'INSTALL_ASCDATA'
+vars.Add('INSTALL_ASCDATA'
 	,"Location of ASCEND shared data (TK, python, models etc)"
 	,default_install_ascdata
 )
 
-vars.Add(
-	'INSTALL_PYTHON'
+vars.Add('INSTALL_PYTHON'
 	,'General location for Python extensions on this system'
 	,default_install_python
 )
 
-vars.Add(
-	'INSTALL_PYTHON_ASCEND'
+vars.Add('INSTALL_PYTHON_ASCEND'
 	,'Location for installation of Python modules specific to ASCEND'
 	,default_install_python_ascend
 )
 
-vars.Add(
-	'INSTALL_TK'
+vars.Add('INSTALL_TK'
 	,'Location for Tcl/Tk files used by ASCEND Tk GUI'
 	,"$INSTALL_ASCDATA/tcltk"
 )
 
-vars.Add(
-	'INSTALL_MODELS'
+vars.Add('INSTALL_MODELS'
 	,"Location of ASCEND model files (.a4c,.a4l,.a4s)"
 	,default_install_models
 )
 
-vars.Add(
-	'INSTALL_SOLVERS'
+vars.Add('INSTALL_SOLVERS'
 	,"Location of ASCEND solvers"
 	,default_install_solvers
 )
 
-vars.Add(
-	'INSTALL_DOC'
+vars.Add('INSTALL_DOC'
 	,"Location of ASCEND documentation files"
 	,"$INSTALL_SHARE/doc/ascend-"+version
 )
 
-vars.Add(
-	'INSTALL_INCLUDE'
+vars.Add('INSTALL_INCLUDE'
 	,'Location to put header files during installation'
 	,default_install_include
 )
 
-
-vars.Add(
-	'INSTALL_ROOT'
+vars.Add('INSTALL_ROOT'
 	,'For use by RPM only: location of %{buildroot} during rpmbuild'
 	,""
 )
 
-vars.Add(
-	'EXTLIB_SUFFIX'
+vars.Add('EXTLIB_SUFFIX'
 	,"Filename suffix for ASCEND 'external libraries' (for use with IMPORT"
 	,"_ascend$SHLIBSUFFIX"
 )
 
-vars.Add(
-	'EXTLIB_PREFIX'
+vars.Add('EXTLIB_PREFIX'
 	,"Filename suffix for ASCEND 'external libraries' (for use with IMPORT"
 	,"$SHLIBPREFIX"
 )
 
 #----------------------
 
-vars.Add(
-	'PYGTK_ASSETS'
+vars.Add('PYGTK_ASSETS'
 	,'Default location for Glade assets (will be recorded in pygtk/config.py)'
 	,default_install_assets
 )
 
-vars.Add(BoolVariable(
-	'DEBUG'
+vars.Add(BoolVariable('DEBUG'
 	,"Compile source with debugger symbols, eg for use with 'gdb'"
 	,False
 ))
 
-vars.Add(BoolVariable(
-	'MALLOC_DEBUG'
+vars.Add(BoolVariable('MALLOC_DEBUG'
 	,"Compile with debugging version of MALLOC. Required for full CUnit testing"
 	,False
 ))
 
 #------ dmalloc --------
-vars.Add(PackageVariable(
-	'DMALLOC_PREFIX'
+vars.Add(PackageVariable('DMALLOC_PREFIX'
 	,"Where are your dmalloc files?"
 	,default_prefix
 ))
 
-vars.Add(PackageVariable(
-	'DMALLOC_CPPPATH'
+vars.Add(PackageVariable('DMALLOC_CPPPATH'
 	,"Where are your dmalloc include files?"
 	,default_cpppath
 ))
 
-vars.Add(PackageVariable(
-	'DMALLOC_LIBPATH'
+vars.Add(PackageVariable('DMALLOC_LIBPATH'
 	,"Where are your dmalloc libraries?"
 	,default_libpath
 ))
 
-vars.Add(BoolVariable(
-	'WITH_DMALLOC'
+vars.Add(BoolVariable('WITH_DMALLOC'
 	,"Link to the DMALLOC library (if available) for debugging of memory usage."
 	,False
 ))
 
-#------ Graphviz --------
-#	vars.Add(PackageVariable(
-#		'GRAPHVIZ_PREFIX'
-#		,"Where are your GRAPHVIZ files?"
-#		,default_prefix
-#	))
-#
-#	vars.Add(PackageVariable(
-#		'GRAPHVIZ_CPPPATH'
-#		,"Where are your GRAPHVIZ include files? (don't need the final '/graphviz')"
-#		,default_cpppath
-#	))
-#
-#	vars.Add(PackageVariable(
-#		'GRAPHVIZ_LIBPATH'
-#		,"Where are your GRAPHVIZ libraries?"
-#		,default_graphviz_libpath
-#	))
-#
-#	vars.Add(
-#		'GRAPHVIZ_LIBS'
-#		,"What are your GRAPHVIZ libraries named?"
-#		,default_graphviz_libs
-#	)
-#
-#	vars.Add(PackageVariable(
-#		'GRAPHVIZ_RPATH'
-#		,"What is your GRAPHVIZ rpath for locating libraries at runtime? (only required for old Ubuntu)"
-#		,default_graphviz_rpath
-#	))
-
-vars.Add(BoolVariable(
-	'WITH_GRAPHVIZ'
+vars.Add(BoolVariable('WITH_GRAPHVIZ'
 	,"Link to the GRAPHVIZ library (if available, for generating incidence graphs)"
 	,default_with_graphviz
 ))
 
 
 #------ ufsparse --------
-vars.Add(PackageVariable(
-	'UFSPARSE_PREFIX'
+vars.Add(PackageVariable('UFSPARSE_PREFIX'
 	,"Where are your UFSPARSE files?"
 	,default_prefix
 ))
 
-vars.Add(PackageVariable(
-	'UFSPARSE_CPPPATH'
+vars.Add(PackageVariable('UFSPARSE_CPPPATH'
 	,"Where are your UFSPARSE include files?"
 	,default_cpppath
 ))
 
-vars.Add(PackageVariable(
-	'UFSPARSE_LIBPATH'
+vars.Add(PackageVariable('UFSPARSE_LIBPATH'
 	,"Where are your UFSPARSE libraries?"
 	,default_libpath
 ))
 
-vars.Add(BoolVariable(
-	'WITH_UFSPARSE'
+vars.Add(BoolVariable('WITH_UFSPARSE'
 	,"Link to the UFSPARSE library (if available, for additional sparse matrix routines)"
 	,True
 ))
 
 #-----------------------
 
-vars.Add(BoolVariable(
-	'UPDATE_NO_YACC_LEX'
+vars.Add(BoolVariable('UPDATE_NO_YACC_LEX'
 	,"Update the *_no_yacc* and *_no_lex* files in the source tree? (these files are created so that ASCEND can be compiled in the absence of those tools)"
 	,False
 ))
 
-vars.Add(
-	'DISTTAR_NAME'
+vars.Add('DISTTAR_NAME'
 	,"Stem name of the tarball created by 'scons dist'. So for 'ascend-aaa.tar.bz2', set this to 'ascend-aaa'."
 	,"ascend-"+version
 )
 
-vars.Add(
-	'RELEASE'
+vars.Add('RELEASE'
 	,"Release number for use in RPM spec file. This should always start with a zero for releases made by the ASCEND group, in order that third parties can make 'patch' releases of higher version numbers."
 	,"0"
 )
 
-vars.Add(BoolVariable(
-	'ABSOLUTE_PATHS'
+vars.Add(BoolVariable('ABSOLUTE_PATHS'
 	,"Whether to use absolute or relative paths in the installed Tcl/Tk interface. If you want to build an RPM, set this to false."
 	,default_absolute_paths
 ))
 
-vars.Add(
-	'WIN_INSTALLER_NAME'
+vars.Add('WIN_INSTALLER_NAME'
 	,"Name of the installer .exe to create under Windows (minus the '.exe')"
 	,"ascend-"+version+"-py"+pyversion+".exe"
 )
 
-vars.Add(BoolVariable(
-	'WITH_XTERM_COLORS'
+vars.Add(BoolVariable('WITH_XTERM_COLORS'
 	,"Set to 0 if you don't want xterm colour codes in the console output"
 	,True
 ))
 
-vars.Add(BoolVariable(
-	'WITH_EXTFNS'
+vars.Add(BoolVariable('WITH_EXTFNS'
 	,"Set to 0 if you don't want to attempt to build the external modules bundled with ASCEND"
 	,True
 ))
 
-vars.Add(BoolVariable(
-	'WITH_SCROLLKEEPER'
+vars.Add(BoolVariable('WITH_SCROLLKEEPER'
 	,"Set to to 1 if you want to install an OMF file that can be read by scrollkeeper (eg Yelp on GNOME)"
 	,default_with_scrollkeeper
 ))
 
-vars.Add(BoolVariable(
-	'WITH_MSVCR71'
+vars.Add(BoolVariable('WITH_MSVCR71'
 	,"Attempt to link against MSVCR71.DLL, to enable passing of FILE* objects to/from python"
 	,False
 ))
@@ -907,7 +777,6 @@ if platform.system()=="Windows":
 	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
 		envenv = os.environ;
 		tools += ['mingw']
-		#TODO removed 'doxygen' for SCons 0.96.93
 		envadditional['IS_MINGW']=True
 	else:
 		print "Assuming VC++ build environment (Note: MinGW is preferred)"
@@ -918,17 +787,10 @@ if platform.system()=="Windows":
 			,'MSVS_IGNORE_IDE_PATHS':1
 		}
 		tools += ['default']
-		#TODO removed 'doxygen' for SCons 0.96.93
 		envadditional['CPPDEFINES']=['_CRT_SECURE_NO_DEPRECATE']
 else:
-	if os.environ.get('TARGET')=='mingw':
-		envenv = os.environ
-		tools += ['crossmingw']
-		envadditional['CPPPATH']=['/usr/lib/gcc/i586-mingw32msvc/3.4.5/include','/usr/include']
-		envadditional['LIBS']=['gcc']
-	else:
-		envenv = os.environ
-		tools += ['default','doxygen','ipopt']
+	envenv = os.environ
+	tools += ['default','doxygen','ipopt']
 
 env = Environment(
 	ENV=envenv
@@ -1045,9 +907,6 @@ print "TCL=",env['TCL']
 print "TCL_CPPPATH =",env['TCL_CPPPATH']
 print "TCL_LIBPATH =",env['TCL_LIBPATH']
 print "TCL_LIB =",env['TCL_LIB']
-print "CC =",env['CC']
-print "CXX =",env['CXX']
-print "FORTRAN=",env.get('FORTRAN')
 
 print "ABSOLUTE PATHS =",env['ABSOLUTE_PATHS']
 print "INSTALL_ASCDATA =",env['INSTALL_ASCDATA']
@@ -1077,7 +936,7 @@ int main(void){
 """;
 
 def CheckCC(context):
-	context.Message("Checking C compiler ('%s')... " % context.env.get('CC'))
+	context.Message("Checking C compiler ('%s')... " % context.env.subst('$CC'))
 	is_ok = context.TryCompile(cc_test_text,".c")
 	context.Result(is_ok)
 	return is_ok
@@ -1101,7 +960,7 @@ int main(void){
 """;
 
 def CheckCXX(context):
-	context.Message("Checking C++ compiler ('%s')... " % context.env.get('CXX'))
+	context.Message("Checking C++ compiler ('%s')... " % context.env.subst('$CXX'))
 	if not context.env.get('CXX'):
 		context.Result("not found")
 		return False
@@ -1120,7 +979,7 @@ C     Hello World in Fortran 77
 """;
 
 def CheckFortran(context):
-	context.Message("Checking Fortran compiler ('%s')..." % context.env.get('FORTRAN'))
+	context.Message("Checking Fortran compiler ('%s')..." % context.env.subst('$FORTRAN'))
 	if not context.env.get('FORTRAN'):
 		context.Result('not found')
 		return False
@@ -1134,6 +993,8 @@ def CheckFortran(context):
 import os,re
 
 def get_swig_version(env):
+	if not WhereIs(env['SWIG']):
+		raise RuntimeError("'%s' not found in PATH"%env.subst("$SWIG"))
 	cmd = [env['SWIG'],'-version']
 	p = subprocess.Popen(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	output, err = p.communicate()
@@ -1156,7 +1017,7 @@ def CheckSwigVersion(context):
 		context.Message("Checking version of SWIG... ")
 		maj,min,pat = get_swig_version(context.env)
 	except Exception,e:
-		context.Result("Failed to detect version, or failed to run SWIG (%s)" % str(e))
+		context.Result("Failed (%s)" % str(e))
 		return False;
 	
 	context.env['SWIGVERSION']=tuple([maj,min,pat])
@@ -2472,23 +2333,7 @@ else:
 
 # FORTRAN
 
-if need_fortran:
-	print "NEED FORTRAN"
-	# Removed stuff for SCons 0.97 (Ubuntu 8.04) from here -- JP
-	detect_fortran = conf.env.Detect(['gfortran','g77'])
-	if detect_fortran:
-		conf.env.Tool(detect_fortran)
-		if detect_fortran == 'g77':
-			print "Setting F2C_LIB to 'g2c' because G77 compiler in use"
-			conf.env['F2C_LIB'] = 'g2c'
-		#print "DETECT_FORTRAN =",detect_fortran
-		#print "NOW, FORTAN =",env['FORTRAN']
-	else:
-		print "FAILED G77/FORTRAN DETECTION"
-		with_lsode=False;
-		without_lsode_reason="FORTRAN required but not detected"
-else:
-	print "FORTRAN WAS NOT FOUND TO BE REQUIRED"
+# we'll assume now (2012) that we always have gfortran available on our system.
 
 if need_fortran and conf.CheckFortran() is False:
 	print "Failed to build simple test file with your Fortran compiler."
@@ -2522,11 +2367,12 @@ if with_doc_build:
 		with_doc_build = False
 		without_doc_build_reason="unable to locate LyX"
 
-	with_latex2html = conf.CheckLatex2HTML()
+	if with_doc_build:
+		with_latex2html = conf.CheckLatex2HTML()
 
-	if conf.CheckLModern() is False:
-		with_doc_build = False
-		without_doc_build_reason="'lmodern' is not available"
+		if conf.CheckLModern() is False:
+			with_doc_build = False
+			without_doc_build_reason="'lmodern' is not available"
 
 # TODO: -D_HPUX_SOURCE is needed
 
@@ -2612,7 +2458,7 @@ subst_dict = {
 }
 
 if env.get('WITH_DOC'):
-	print "WITH_DOC:",env['WITH_DOC']
+	#print "WITH_DOC:",env['WITH_DOC']
 	subst_dict['@HELP_ROOT@']=env['HELP_ROOT']
 
 # bool options...
@@ -2627,9 +2473,11 @@ for k,v in {
 		,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
 		,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY')
+		,'HAVE_SNPRINTF':env.get('HAVE_SNPRINTF')
+		,'HAVE__SNPRINTF':env.get('HAVE__SNPRINTF')
 		}.iteritems():
 		
-	if v: subst_dict["/\\* #define %s @%s@ \\*/" % (k,k)]='# define %s 1 ' % k
+	if v: subst_dict["/\\* #\\s*define %s @%s@ \\*/" % (k,k)]='# define %s 1 ' % k
 
 if with_python:
 	subst_dict['@ASCXX_USE_PYTHON@']="1"
@@ -2763,12 +2611,6 @@ for d in dirs:
 
 #-------------
 # IMPORTED CODE: LSODE, BLAS, etc
-
-#if with_lsode:
-#	srcs += env.SConscript(['lsod/SConscript'],'env')
-#	srcs += env.SConscript(['linpack/SConscript'],'env')
-#else:
-#	print "Skipping... LSODE won't be built:", without_lsode_reason
 
 if with_local_blas:
 	env['blasobjs'] = env.SConscript(['blas/SConscript'],'env')

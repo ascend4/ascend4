@@ -15,6 +15,8 @@
 #include "panic.h"
 #include "hashpjw.h"
 
+#include "config.h"
+
 unsigned long hashpjw(register CONST char *str,
                       register unsigned long int size)
 {
@@ -44,7 +46,7 @@ unsigned long hashpjw_int(int id,
 {
   char tmp[64];
 
-  (void)snprintf(tmp, 64, "%d", id);
+  (void)SNPRINTF(tmp, 64, "%d", id);
   return hashpjw(tmp, size);
 }
 

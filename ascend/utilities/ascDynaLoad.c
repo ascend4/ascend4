@@ -529,7 +529,7 @@ char *dynaload_lib_filename(const char *partialname){
 #if !defined(ASC_SHLIBSUFFIX) || !defined(ASC_SHLIBPREFIX)
 # error "ASC_SHLIBSUFFIX and ASC_SHLIBPREFIX are not defined"
 #endif
-	snprintf(buffer,PATH_MAX,"%s%s%s",ASC_SHLIBPREFIX,partialname,ASC_SHLIBSUFFIX);
+	SNPRINTF(buffer,PATH_MAX,"%s%s%s",ASC_SHLIBPREFIX,partialname,ASC_SHLIBSUFFIX);
 	return buffer;
 }
 

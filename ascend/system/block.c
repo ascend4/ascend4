@@ -977,9 +977,9 @@ extern int system_block_debug(slv_system_t sys, FILE *fp){
 	dof = slv_get_dofdata(sys);
 	char s[80];
 	char color;
-	
+
 	fprintf(fp,"\n\nSLV_SYSTEM BLOCK INFO\n\n");
-	
+
 	fprintf(fp,"Structural rank: %d\n",dof->structural_rank);
 	fprintf(fp,"Included rels: %d\n",dof->n_rows);
 	fprintf(fp,"Incident, free vars: %d\n",dof->n_cols);
@@ -998,9 +998,9 @@ extern int system_block_debug(slv_system_t sys, FILE *fp){
 		b = dof->blocks.block[i];
 		nr = b.row.high - b.row.low + 1;
 		nc = b.col.high - b.col.low + 1;
-		snprintf(s,80,"BLOCK %d (%d x %d)",i,nr,nc);
+		SNPRINTF(s,80,"BLOCK %d (%d x %d)",i,nr,nc);
 		fprintf(fp,"%-18s",s);
-		snprintf(s,80,"%-18s","");
+		SNPRINTF(s,80,"%-18s","");
 		for(j=0;j<MAX(nr,nc); ++j){
 			fprintf(fp,"%s%d",(j?s:""),j);
 			if(j<nr){
@@ -1019,9 +1019,9 @@ extern int system_block_debug(slv_system_t sys, FILE *fp){
 		}
 	}
 	if(color)color_off(fp);
-	return 0;				
+	return 0;
 }
-	
+
 /*------------------------------------------------------------------------------
   PARTITIONING for DIFFERENTIAL/ALGEBRAIC SYSTEMS
 */
@@ -1065,7 +1065,7 @@ LIST_DEBUG(rel,rel_relation)
 	of the list from that point to the end. Any 'good' items matching the filter
 	are	moved to the start of the range traversed. And 'bad' ones that dont
 	get moved to the end. At the end, the number of items found matching the
-	filter is returned in 'numgood'. There will be that many 'good' items 
+	filter is returned in 'numgood'. There will be that many 'good' items
 	in place from position 'begin' onwards.
 */
 #define SYSTEM_CUT_LIST(TYPE,FULLTYPE) \
@@ -1122,7 +1122,7 @@ LIST_DEBUG(rel,rel_relation)
 		MAYBE_CONSOLE_DEBUG("numgood = %d",*numgood); \
 		 \
 		return 0; \
-	} 
+	}
 
 SYSTEM_CUT_LIST(var,var_variable);
 SYSTEM_CUT_LIST(rel,rel_relation);

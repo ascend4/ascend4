@@ -46,6 +46,7 @@ def generate(env):
 				env1['CPPPATH'] = None
 				env1['LIBPATH'] = None
 				env1['LIBS'] = None
+				print "RUNNING sundials-config"
 				env1.ParseConfig(cmd)
 				env['SUNDIALS_CPPPATH'] = env1.get('CPPPATH')
 				env['SUNDIALS_LIBPATH'] = env1.get('LIBPATH')

@@ -68,12 +68,12 @@ static void test_mem(void)
   str2_bad = FALSE;
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str1_bad && (str1[i] != '\0')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
     if (!str2_bad && (str2[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
       CU_FAIL(str3);
       str2_bad = TRUE;
     }
@@ -86,21 +86,21 @@ static void test_mem(void)
   str2_bad = FALSE;
   for (i=0 ; i<STR_LEN/2 ; ++i) {
     if (!str1_bad && (str1[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '*' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '*' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=STR_LEN/2 ; i<STR_LEN-1 ; ++i) {
     if (!str1_bad && (str1[i] != '\0')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str2_bad && (str2[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
       CU_FAIL(str3);
       str2_bad = TRUE;
     }
@@ -116,12 +116,12 @@ static void test_mem(void)
   str2_bad = FALSE;
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str1_bad && (str1[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '*' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '*' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
     if (!str2_bad && (str2[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
       CU_FAIL(str3);
       str2_bad = TRUE;
     }
@@ -137,14 +137,14 @@ static void test_mem(void)
   str1_bad = FALSE;
   for (i=0 ; i<20 ; ++i) {
     if (!str1_bad && (str1[i] != '~')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '~' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '~' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=20 ; i<30 ; ++i) {
     if (!str1_bad && (str1[i] != '=')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
@@ -160,21 +160,21 @@ static void test_mem(void)
   str1_bad = FALSE;
   for (i=0 ; i<10 ; ++i) {
     if (!str1_bad && (str1[i] != '=')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '~' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '~' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=10 ; i<30 ; ++i) {
     if (!str1_bad && (str1[i] != '|')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   if (!str1_bad) CU_PASS("str1 and str2 check out.");
 
-  snprintf(str1, STR_LEN-1, "This is yet another dumb string");
+  SNPRINTF(str1, STR_LEN-1, "This is yet another dumb string");
   mem_move_cast(str1, str1, strlen(str1));            /* to == from */
   CU_TEST(0 == strcmp(str1, "This is yet another dumb string"));
 
@@ -190,12 +190,12 @@ static void test_mem(void)
   str2_bad = FALSE;
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str1_bad && (str1[i] != '\0')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
     if (!str2_bad && (str2[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
       CU_FAIL(str3);
       str2_bad = TRUE;
     }
@@ -208,21 +208,21 @@ static void test_mem(void)
   str2_bad = FALSE;
   for (i=0 ; i<STR_LEN/2 ; ++i) {
     if (!str1_bad && (str1[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '*' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '*' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=STR_LEN/2 ; i<STR_LEN-1 ; ++i) {
     if (!str1_bad && (str1[i] != '\0')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str2_bad && (str2[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
       CU_FAIL(str3);
       str2_bad = TRUE;
     }
@@ -238,12 +238,12 @@ static void test_mem(void)
   str2_bad = FALSE;
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str1_bad && (str1[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '*' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '*' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
     if (!str2_bad && (str2[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
       CU_FAIL(str3);
       str2_bad = TRUE;
     }
@@ -254,7 +254,7 @@ static void test_mem(void)
   memset(str1+10, '=', 10);
   memset(str1+20, '|', 10);
 
-  snprintf(str1, STR_LEN-1, "This is yet another dumb string");
+  SNPRINTF(str1, STR_LEN-1, "This is yet another dumb string");
   mem_copy_cast(str1, str1, strlen(str1));            /* to == from */
   CU_TEST(0 == strcmp(str1, "This is yet another dumb string"));
 
@@ -270,14 +270,14 @@ static void test_mem(void)
   str1_bad = FALSE;
   for (i=0 ; i<STR_LEN/2 ; ++i) {
     if (!str1_bad && (str1[i] != '#')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=STR_LEN/2 ; i<STR_LEN-1 ; ++i) {
     if (!str1_bad && (str1[i] != '=')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
@@ -291,7 +291,7 @@ static void test_mem(void)
   str1_bad = FALSE;
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str1_bad && (str1[i] != '+')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '+' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '+' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
@@ -307,14 +307,14 @@ static void test_mem(void)
   str1_bad = FALSE;
   for (i=0 ; i<STR_LEN/2 ; ++i) {
     if (!str1_bad && (str1[i] != '\0')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=STR_LEN/2 ; i<STR_LEN-1 ; ++i) {
     if (!str1_bad && (str1[i] != '=')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
@@ -328,7 +328,7 @@ static void test_mem(void)
   str1_bad = FALSE;
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str1_bad && (str1[i] != '+')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '+' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '+' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
@@ -348,7 +348,7 @@ static void test_mem(void)
   str1_bad = FALSE;
   for (i=sizeof(unsigned) ; i<STR_LEN-1 ; ++i) {
     if (!str1_bad && (str1[i] != '=')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
@@ -366,7 +366,7 @@ static void test_mem(void)
   str1_bad = FALSE;
   for (i=10*sizeof(unsigned) ; i<STR_LEN-1 ; ++i) {
     if (!str1_bad && (str1[i] != '~')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '~' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '~' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
@@ -380,7 +380,7 @@ static void test_mem(void)
   str1_bad = FALSE;
   for (i=0 ; i<STR_LEN-1 ; ++i) {
     if (!str1_bad && (str1[i] != '?')) {
-      snprintf(str3, STR_LEN-1, "str1[%d] != '?' in test_mem().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '?' in test_mem().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
@@ -758,7 +758,7 @@ static void test_mem(void)
 #ifdef MALLOC_DEBUG
   for (i=0 ; i<100 ; ++i) {                           /* confirm destruction of the elements */
     if (0 != AllocatedMemory((VOIDPTR)pstr_array[i], sizeof(VOIDPTR))) {
-      snprintf(str_error_msg, 100, "%s%d%s", "pstr_array[", i, "] not deallocated.");
+      SNPRINTF(str_error_msg, 100, "%s%d%s", "pstr_array[", i, "] not deallocated.");
       CU_FAIL(str_error_msg);
     }
   }
