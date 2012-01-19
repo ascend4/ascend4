@@ -317,6 +317,8 @@ static void test_ascEnvVar(void)
   CU_TEST(1 == Asc_PutEnv("=my_path_is_silly"));        /* empty var name */
   CU_TEST(1 == Asc_PutEnv("envar 1=my_path_is_silly")); /* embedded space in var */
   CU_TEST(1 == Asc_PutEnv("my_path_is_silly"));         /* no '=' */
+  CU_TEST(1 == Asc_PutEnv(" = my_path_is_silly"));      /* empty var name, leading spaces */
+  CU_TEST(1 == Asc_PutEnv("   =my_path_is_silly"));      /* empty var name, leading spaces */
 
   memset(str_pathbig, '.', MAX_ENV_VAR_LENGTH-1);
   str_pathbig[MAX_ENV_VAR_LENGTH-1] = '=';
