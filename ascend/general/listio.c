@@ -49,7 +49,8 @@ void gl_write_list(FILE *fp, struct gl_list_t *l)
   }
   len = gl_length(l);
   for (c= 1; c <= len ; c++) {
+	/* FIXME the point to integer thing here is not working */
     fprintf(myfp,"%lu: 0x%p (%lu)\n",c,gl_fetch(l,c),
-             (unsigned long)gl_fetch(l,c));
+             (asc_intptr_t)gl_fetch(l,c));
   }
 }

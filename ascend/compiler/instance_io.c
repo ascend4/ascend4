@@ -88,7 +88,7 @@ static const struct InstanceEnumLookup g_instancetypenames[] = {
 	LIST_X {DUMMY_INST,NULL}
 #undef LIST_D
 #undef LIST_X
-	
+
 };
 
 /*------------------------------------------------------------------------------
@@ -301,7 +301,7 @@ char *WriteInstanceNameString(CONST struct Instance *i,
   writing of data.
   KAA
 
-  Ref is completely irrelevant. If it is not, one should use a 
+  Ref is completely irrelevant. If it is not, one should use a
   indexed visit tree so that the paths can be computed properly.
   Prototype code never dies. As expected, this is a production
   function now.
@@ -325,7 +325,7 @@ void InstanceAnyPath(struct Instance *i, struct gl_list_t *path)
 }
 
 int WriteAnyInstanceName(FILE *f, struct Instance *i)
-		       
+
 {
   struct gl_list_t *path_list;
   int count;
@@ -334,7 +334,7 @@ int WriteAnyInstanceName(FILE *f, struct Instance *i)
   count = WritePath(f,path_list);
   gl_destroy(path_list);
   /* costs nothing. lists are recycled */
-  return count; 
+  return count;
 }
 
 
@@ -1193,6 +1193,7 @@ int ProcessArrayDesc(struct gl_list_t *arraytypelist,
 {
   struct TypeDescription *tmp;
 
+  /* FIXME how can you cast an array index to a pointer??? */
   tmp = (struct TypeDescription *)gl_search(arraytypelist,(VOIDPTR)desc,
                                             (CmpFunc)CmpDescPtrs);
   if (tmp==NULL) {
@@ -1208,13 +1209,13 @@ int ProcessArrayDesc(struct gl_list_t *arraytypelist,
 	typedescriptions, with NULL names; This can happen in the case
 	of array types. We could probably filter here for all fundamental
 	types in fact.
-	
+
 	At this time we are doing a hack in type_desc.c to *ensure*
 	that the arrays have names. This means that name should not
 	come up NULL *ever* in the type table. If it does, its an
 	error. We now instead scan for base_types, so that we can
 	write out some index stuff for arrays.
-	
+
 	(BAA: the hack has been institutionalized as MAKEARRAYNAMES
 	in type_desc.h)
 */
@@ -1341,8 +1342,8 @@ void SaveIndexList(FILE *fp, struct IndexType *itype)
 </pre>
 	This code appropriately deals with these odd cases.
 	@ENDNOTE
-	
-	@NOTE (is that you, Ben?) 
+
+	@NOTE (is that you, Ben?)
 	You would not believe the stuff that is returned as a
 	result of this code. Yep the above note about evaluation
 	is rubbish. What is saved is the index set as found verbatim.

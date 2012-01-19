@@ -102,64 +102,64 @@ int	mem_get_byte(long from)
    return( ((int)c) & mask_I_L(BYTESIZE) );
 }
 #endif /*  0  */
-unsigned char mem_get_byte(long from)
+unsigned char mem_get_byte(asc_intptr_t from)
 {
    unsigned char c;
    mv_get(&c, from, 1);
    return(c);
 }
 
-int	mem_get_int(long from)
+int	mem_get_int(asc_intptr_t from)
 {
    int	i;
    mv_get(&i,from,sizeof(int));
    return(i);
 }
 
-long	mem_get_long(long from)
+long	mem_get_long(asc_intptr_t from)
 {
    long	l;
    mv_get(&l,from,sizeof(long));
    return(l);
 }
 
-double	mem_get_float(long from)
+double	mem_get_float(asc_intptr_t from)
 {
    float	f;
    mv_get(&f,from,sizeof(float));
    return((double)f);
 }
 
-double	mem_get_double(long from)
+double	mem_get_double(asc_intptr_t from)
 {
    double	d;
    mv_get(&d,from,sizeof(double));
    return(d);
 }
 
-void mem_set_byte(long from, int b)
+void mem_set_byte(asc_intptr_t from, int b)
 {
    char	c = (char)b;
    mv_set(&c,from,1);
 }
 
-void mem_set_int(long from, int i)
+void mem_set_int(asc_intptr_t from, int i)
 {
    mv_set(&i,from,sizeof(int));
 }
 
-void mem_set_long(long from, long l)
+void mem_set_long(asc_intptr_t from, long l)
 {
    mv_set(&l,from,sizeof(long));
 }
 
-void mem_set_float(long from, double f)
+void mem_set_float(asc_intptr_t from, double f)
 {
    float	ff = (float)f;
    mv_set(&ff,from,sizeof(float));
 }
 
-void mem_set_double(long from, double d)
+void mem_set_double(asc_intptr_t from, double d)
 {
    mv_set(&d,from,sizeof(double));
 }
@@ -479,7 +479,7 @@ mem_store_t mem_create_store(int length, int width,
 
 
   newms = (mem_store_t)AMEM_calloc(1,sizeof(struct mem_store_header));
-  if (ISNULL(newms)) {                                                       
+  if (ISNULL(newms)) {
     FPRINTF(stderr,"ERROR: (mem_create_store) : Insufficient memory.\n");
     return NULL;
   }

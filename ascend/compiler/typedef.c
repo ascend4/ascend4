@@ -1749,7 +1749,7 @@ void MarkIfPassedArgs(CONST struct Name *nptr, CONST struct gl_list_t *clist)
   CONST struct Name *pnptr;
   struct ChildListEntry *found;
   struct ChildListEntry test;
-  int rlen;
+  //int rlen;
   unsigned long pos;
 
   /* digest the first part of the name in the local scope */
@@ -1765,7 +1765,7 @@ void MarkIfPassedArgs(CONST struct Name *nptr, CONST struct gl_list_t *clist)
   }
   /* name found. */
   found = (struct ChildListEntry *) gl_fetch(clist,pos);
-  rlen = found->isarray;
+  //rlen = found->isarray;
   if (NameLength(nptr) == 1) {
     /* local scalar name */
     found->bflags |= CBF_PASSED;
@@ -3099,7 +3099,7 @@ enum typelinterr VerifyTypeArgs(CONST struct Set *alist,
          * the type might be <= and refined elsewhere to the correct sort.
          */
         if (ptype!=atype && MoreRefined(ptype,atype)==NULL) {
-          ERROR_REPORTER_START_HERE(ASC_USER_ERROR);		  
+          ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
           FPRINTF(ASCERR,"Instance '");
           WriteSetNode(ASCERR,sn);
 		  FPRINTF(ASCERR,"' is of incompatible type '%s' (expected '%s') at argument %d."
@@ -3704,7 +3704,7 @@ enum typelinterr AddRLE(struct gl_list_t *nspace, struct Statement *s)
 {
   struct RedListEntry *rle;
   CONST struct VariableList *vl;
-  CONST struct Expr *checkval;
+  //CONST struct Expr *checkval;
   enum typelinterr rval = DEF_OKAY;
 
   /* remember to append pointer before leaving function, but after
@@ -3729,7 +3729,7 @@ enum typelinterr AddRLE(struct gl_list_t *nspace, struct Statement *s)
   } else {
     assert(StatementType(s)==WILLBE);
     vl = GetStatVarList(s);
-    checkval = GetStatCheckValue(s);
+    GetStatCheckValue(s);
     /* WILL_BE creates as many rle as there are lhs names. */
     while (vl != NULL) {
       rle = CREATERLE;

@@ -60,7 +60,7 @@ struct ChildHash {
  * May need to revisit on high address architectures with
  * 64 bit pointers. Creates a number 0 - 255.
  */
-#define CHILDHASHINDEX(p) (((((long) (p))*1103515245) >> 22) & 255)
+#define CHILDHASHINDEX(p) (((((asc_intptr_t) (p))*1103515245) >> 22) & 255)
 
 /**
  * Must be 2^N with N even and must match CHILDHASHINDEX.

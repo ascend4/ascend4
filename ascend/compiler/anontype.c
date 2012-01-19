@@ -75,7 +75,7 @@ static CONST char AnonTypeModuleID[] = "$Id: anontype.c,v 1.9 2000/01/25 02:25:5
 /* hash function for type name pointers.
  * assumes 1024 table size.
  */
-#define TYPEHASHINDEX(p) (((((long) (p))*1103515245) >> 20) & 1023)
+#define TYPEHASHINDEX(p) (((((asc_intptr_t) (p))*1103515245) >> 20) & 1023)
 
 /*
  * write merge list before returning.

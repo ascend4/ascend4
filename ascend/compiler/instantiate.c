@@ -867,7 +867,6 @@ struct IndexType *MakeIndex(struct Instance *inst,
     default:
       STATEMENT_ERROR(stat, "Unknown result value type in MakeIndex.\n");
       ASC_PANIC("Unknown result value type in MakeIndex.\n");
-
     }
   }else{ /* checking subscripts on dense ALIASES/param'd IS_A statement */
     if (sptr==NULL) {
@@ -895,9 +894,9 @@ struct IndexType *MakeIndex(struct Instance *inst,
       DestroyValue(&value);
       STATEMENT_ERROR(stat, "Bad index to dense alias array");
       ASC_PANIC("Bad index to dense alias array");
-
     }
     /* return NULL; */  /* unreachable */
+    /* FIXME add GCC flags to tell compiler that we never get here? */
   }
 }
 
@@ -3558,38 +3557,38 @@ int DigestArguments(
   pp = pphead;
   while (pp!=NULL) {
     char *msg;
-    CONST struct Statement *stat;
+    //CONST struct Statement *stat;
     switch (pp->status) {
     case pp_ISA:
       msg = "Oddly unable to construct parameter scalar";
-      stat = pp->s;
+      //stat = pp->s;
       break;
     case pp_ISAARR:
       msg = "Unable to construct array parameter. Probably missing subscripts";
-      stat = pp->s;
+      //stat = pp->s;
       break;
     case pp_ARR:
       msg = "Unable to check parameter array subscripts.";
-      stat = pp->s;
+      //stat = pp->s;
       break;
     case pp_ASGN:
       msg = "Unable to execute assigment: LHS unmade or RHS not evaluatable";
-      stat = pp->s;
+      //stat = pp->s;
       break;
     case pp_ASSC:
       msg ="Unable to set scalar param: RHS not evaluatable or incorrect type";
-      stat = pp->s;
+      //stat = pp->s;
       break;
     case pp_ASAR:
       msg = "Parameters: Not all array elements assigned during refinement";
-      stat = pp->s;
+      //stat = pp->s;
       break;
     case pp_WV:
       msg = "Unable to verify parameter value: probably bad WITH_VALUE RHS";
-      stat = pp->s;
+      //stat = pp->s;
       break;
     case pp_ERR:
-      stat = statement;
+      //stat = statement;
       msg = "Unexpected pp_ERR pending in parameters";
       break;
     case pp_DONE:
@@ -5331,7 +5330,7 @@ static int ExecuteBlackBoxEXT(struct Instance *inst
     SetEvaluationForTable(SavedForTable);
   }
   if ( executeStatus ) {
-	/* don't report an error here, because return 1 is possible even with 
+	/* don't report an error here, because return 1 is possible even with
 	eventual success at later compiler passes. */
 	//ERROR_REPORTER_HERE(ASC_USER_ERROR,"Failed to execute blackbox statement");
     return 1;
@@ -5430,8 +5429,8 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
  */
   //so lets see if getting i and o works better than commented code above
   n_input_args = statement->v.ext.u.black.n_inputs;
-  n_output_args = statement->v.ext.u.black.n_outputs; 
- 
+  n_output_args = statement->v.ext.u.black.n_outputs;
+
   if ((len =gl_length(arglist)) != (n_input_args + n_output_args)) {
     instantiation_error(ASC_PROG_ERR,statement
 		,"Unable to create external expression structure."
@@ -5482,7 +5481,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   ex = CreateSetExpr(extrange);
   value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
   SetEvaluationContext(NULL);
-  
+
   ASC_ASSERT_EQ(ValueKind(value),set_value);
   sptr = SetValue(value);
   ASC_ASSERT_EQ(SetKind(sptr),integer_set);
@@ -8165,7 +8164,7 @@ int Pass3ExecuteCondStatements(struct Instance *inst,
     case LOGREL:
       return ExecuteLOGREL(inst,statement);
     case FOR:
-      if ( ForContainsLogRelations(statement) ) { 
+      if ( ForContainsLogRelations(statement) ) {
         return Pass3ExecuteFOR(inst,statement);
       }else{
         return 1;
@@ -9513,9 +9512,9 @@ void ReEvaluateSELECT(struct Instance *inst, unsigned long *c,
                       struct Statement *statement, int pass, int *changed)
 {
   unsigned long tmp;
-  struct BitList *blist;
+  //struct BitList *blist;
 
-  blist = InstanceBitList(inst);
+  //blist = InstanceBitList(inst);
   if (CheckSELECT(inst,statement)){
     SetBitOfSELECTStat(inst,c,statement,pass,changed);
   }else{
@@ -10046,6 +10045,7 @@ int ExecuteUnSelectedForStatements(struct Instance *inst,
                   " declarative section unSEL FOR");
     }
   }
+  /* FIXME this should be 'return_value', shouldn't it??? */
   return 1;
 }
 
@@ -12574,12 +12574,11 @@ struct Instance *NewRealInstantiate(struct TypeDescription *def,
 static
 void ExecDefMethod(struct Instance *root,symchar *simname, symchar *defmethod)
 {
-  enum Proc_enum runstat;
+  //enum Proc_enum runstat;
   struct Name *name;
   if (InstanceKind(root) == MODEL_INST && defmethod != NULL) {
     name = CreateIdName(defmethod);
-    runstat = Initialize(root,name,(char *)SCP(simname),ASCERR,
-                         (WP_BTUIFSTOP|WP_STOPONERR),NULL,NULL);
+    Initialize(root,name,(char *)SCP(simname),ASCERR,(WP_BTUIFSTOP|WP_STOPONERR),NULL,NULL);
     DestroyName(name);
   }
 }

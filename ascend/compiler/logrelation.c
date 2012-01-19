@@ -388,7 +388,7 @@ static struct logrel_term *CreateSatisfiedTerm(CONST struct Name *n,
 
 /*
 	This function creates (and *must* create) the memory for the structure
-	and for the union that the stucuture points to. Too much code depends on 
+	and for the union that the stucuture points to. Too much code depends on
 	the pre-existence of a properly initialized union.
 */
 struct logrelation *CreateLogRelStructure(enum Expr_enum t)
@@ -611,7 +611,7 @@ static int ConvertLogExpr(CONST struct Expr *start,
 static
 CONST struct Expr *FindLogRHS(CONST struct Expr *ex)
 {
-  CONST struct Expr *rhs = NULL,*previous=NULL;
+  CONST struct Expr *rhs = NULL;//,*previous=NULL;
   unsigned depth=0;
   while(ex!=NULL){
     switch(ExprType(ex)){
@@ -675,7 +675,7 @@ CONST struct Expr *FindLogRHS(CONST struct Expr *ex)
       ASC_PANIC("Unknown expression node type.\n");
       break;
     }
-    previous = ex;
+    //previous = ex;
     ex = NextExpr(ex);
   }
   return NULL;
@@ -1558,13 +1558,13 @@ struct logrelation *CopyLogRelByReference(CONST struct Instance *src_inst,
 {
   struct logrelation *src;
   struct logrelation *result;
-  unsigned size;
+  //unsigned size;
 
   src = (struct logrelation *)GetInstanceLogRel(src_inst);
   if (!src) return NULL;
 
   result = CreateLogRelStructure(e_bol_token);
-  size = sizeof(struct logrelation);
+  //size = sizeof(struct logrelation);
   ascbcopy(src,result,sizeof(struct logrelation));
     /* copy everything.  */
   /*

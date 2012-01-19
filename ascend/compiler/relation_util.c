@@ -2409,7 +2409,7 @@ enum safe_err RelationCalcResidGradSafe(struct Instance *i
   struct relation *r;
   enum Expr_enum reltype;
   enum safe_err not_safe = safe_ok;
-  int dummy_int;
+  //int dummy_int;
 
 #ifndef NDEBUG
   if( i == NULL ) {
@@ -2437,8 +2437,7 @@ enum safe_err RelationCalcResidGradSafe(struct Instance *i
 
 
   if( reltype == e_token ) {
-    dummy_int =
-      RelationEvaluateResidualGradientSafe(r, residual, gradient, &not_safe);
+    RelationEvaluateResidualGradientSafe(r, residual, gradient, &not_safe);
     //CONSOLE_DEBUG("Relation Type: e_token");
     return not_safe;
   }
@@ -2525,7 +2524,7 @@ enum safe_err RelationCalcResidGradRevSafe(struct Instance *i
 	struct relation *r;
 	enum Expr_enum reltype;
 	enum safe_err not_safe = safe_ok;
-	
+
 
 	#ifndef NDEBUG
 	if( i == NULL ) {
@@ -2616,7 +2615,7 @@ enum safe_err RelationCalcSecondDerivSafe(struct Instance *i, double *deriv2nd,u
 	struct relation *r;
 	enum Expr_enum reltype;
 	enum safe_err not_safe = safe_ok;
-	
+
 
 #ifndef NDEBUG
 	if( i == NULL ) {
@@ -2649,7 +2648,7 @@ enum safe_err RelationCalcSecondDerivSafe(struct Instance *i, double *deriv2nd,u
 		  								var_index,
 										0,
  										NULL,
- 										&not_safe);		
+ 										&not_safe);
 		return not_safe;
 	}
 	if (reltype == e_blackbox){
@@ -2713,7 +2712,7 @@ enum safe_err RelationCalcHessianMtxSafe(struct Instance *i, hessian_mtx *hess_m
 	struct relation *r;
 	enum Expr_enum reltype;
 	enum safe_err not_safe = safe_ok;
-	
+
 //	CONSOLE_DEBUG("IN FUNCTION RelationCalcHessianMtxSafe");
 
 #ifndef NDEBUG
@@ -2935,7 +2934,7 @@ void PrintGradients(struct Instance *i){
 	else {
 		PRINTF("**** RelationCalcResidGradRevSafe returned nonzero: %d\n", safe);
 	}
-	
+
 	if( ! RelationCalcResidGradRev(i,&res,grads) ) {
 		for (v = 0; v < vars; v++) {
 			PRINTF("reverse non-safe gradient in %6ld =\t%g\n", v+1, grads[v]);

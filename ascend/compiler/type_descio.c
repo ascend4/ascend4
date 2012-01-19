@@ -40,6 +40,7 @@
 #include "proc.h"
 #include "dimen_io.h"
 #include "child.h"
+#include "childio.h"
 #include "childdef.h"
 #include "childinfo.h"
 #include "instance_enum.h"

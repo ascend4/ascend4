@@ -1058,6 +1058,7 @@ void RelDestroySloppy(RelationINF *rel)
   if (rel->vars) gl_destroy(rel->vars);
   side = A_TERM(FreeStoreCheckMem(UNION_TERM(Infix_LhsSide(rel))));
   side = A_TERM(FreeStoreCheckMem(UNION_TERM(Infix_RhsSide(rel))));
+  (void)side;
 }
 
 void PrepareDerivatives(int setup,int n_buffers,int buffer_length)

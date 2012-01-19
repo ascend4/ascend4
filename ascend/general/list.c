@@ -190,7 +190,7 @@ void gl_init_pool(void) {
     GLP_MORE_ELTS, GLP_MORE_BARS);
   if (g_list_head_pool == NULL) {
     ASC_PANIC("ERROR: gl_init_pool unable to allocate pool.\n");
-  }                     
+  }
 #else
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"list.[ch] built without pooling of overheads\n");
 #endif
@@ -206,7 +206,7 @@ void gl_destroy_pool(void) {
 #else
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"list.[ch] built without pooling of overheads\n");
 #endif
-}                                                              
+}
 
 
 int gl_pool_initialized(void)
@@ -732,7 +732,7 @@ void gl_insert_sorted(struct gl_list_t *list,
 {
   int comparison;
   register unsigned long lower,upper,search=0L;
-  
+
   asc_assert((NULL != list) &&
              (0 != gl_expandable(list)) &&
              (NULL != func));
@@ -854,10 +854,10 @@ unsigned long gl_ptr_search(CONST struct gl_list_t *list,
         }
         else if (comparison < 0) {
           lower = search + 1;
-        } 
+        }
         else if (search > 0) {
           upper = search - 1;
-        } 
+        }
         else {
           return 0;
         }
@@ -970,7 +970,7 @@ void gl_delete(struct gl_list_t *list, unsigned long int pos, int dispose)
   VOIDPTR ptr;
 
   asc_assert(NULL != list);
-  /* should be ASSERTRANGE(list,pos,"gl_delete");  
+  /* should be ASSERTRANGE(list,pos,"gl_delete");
      The check for (pos > 0) below is suspicious, though.
      It suggests this function may be called with pos == 0. */
   asc_assert(pos <= gl_length(list));
@@ -1034,7 +1034,7 @@ struct gl_list_t *gl_copy(CONST struct gl_list_t *list)
   unsigned long counter,length;
 
   asc_assert(NULL != list);
-  
+
   length = GL_LENGTH(list);
   new = gl_create(length);
   for (counter = 1;counter <= length;counter++)
@@ -1048,7 +1048,7 @@ struct gl_list_t *gl_concat(CONST struct gl_list_t *list1,
 {
   struct gl_list_t *new;
   unsigned long counter,length1,length2;
-  
+
   asc_assert ((NULL != list1) && (NULL != list2));
 
   length1 = GL_LENGTH(list1);
@@ -1072,8 +1072,8 @@ int gl_compare_ptrs(CONST struct gl_list_t *l1, CONST struct gl_list_t *l2)
   }
   len = MIN(GL_LENGTH(l1),GL_LENGTH(l2));
   for (c=0;c < len; c++) {
-    i1 = (unsigned long)(l1->data[c]);
-    i2 = (unsigned long)(l2->data[c]);
+    i1 = (asc_intptr_t)(l1->data[c]);
+    i2 = (asc_intptr_t)(l2->data[c]);
     if (i1<i2) {
       return -1;
     }
@@ -1081,8 +1081,8 @@ int gl_compare_ptrs(CONST struct gl_list_t *l1, CONST struct gl_list_t *l2)
       return 1;
     }
   }
-  return (GL_LENGTH(l1) == GL_LENGTH(l2)) ? 
-          0 : 
+  return (GL_LENGTH(l1) == GL_LENGTH(l2)) ?
+          0 :
           (( GL_LENGTH(l2) > len) ? -1 : 1);
 }
 
@@ -1128,7 +1128,7 @@ void gl_emptyrecycler()
 #endif
   struct gl_list_t *list;
 
-#if LISTRECYCLERDEBUG                                         
+#if LISTRECYCLERDEBUG
   PRINTF("LIST RECYCLER SUMMARY\n");
   PRINTF("=====================\n");
   PRINTF("New lists created  : %d\n", NewListsUsed);

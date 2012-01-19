@@ -2103,6 +2103,9 @@ _sizes = {
 	,"INT" : "int"
 	,"LONG" : "long"
 	,"LONG_LONG" : "long long"
+	,"ULONG" : "unsigned long"
+	,"UINT" : "unsigned int"
+	,"ULONGLONG" : "unsigned long long"
 }
 
 for _var,_type in _sizes.iteritems():
@@ -2455,6 +2458,9 @@ subst_dict = {
 	, '@SIZEOF_INT@' : env['SIZEOF_INT']
 	, '@SIZEOF_LONG@' : env['SIZEOF_LONG']
 	, '@SIZEOF_LONG_LONG@' : env['SIZEOF_LONG_LONG']
+	, '@SIZEOF_UINT@' : env['SIZEOF_UINT']
+	, '@SIZEOF_ULONG@' : env['SIZEOF_ULONG']
+	, '@SIZEOF_ULONGLONG@' : env['SIZEOF_ULONGLONG']
 }
 
 if env.get('WITH_DOC'):

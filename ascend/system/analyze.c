@@ -16,7 +16,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*//** @addtogroup system_analysis 
+*//** @addtogroup system_analysis
 	<b>Problem Analysis Routines</b>
 
 	@note 'ip' signifies 'interface pointer' @endnote
@@ -330,7 +330,7 @@ int IntegerChildValue(struct Instance *i,symchar *sc){
 }
 
 
-static 
+static
 void CollectArrayRelsAndWhens(struct Instance *i, long modindex
 		,struct problem_t *p_data
 ){
@@ -1464,9 +1464,9 @@ void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels
 
 /**
 	Fill in the list of cases and variables of a w_when structure with
-	the appropriate data. 
+	the appropriate data.
 
-	The information required is provided by the corresponding when Instance 
+	The information required is provided by the corresponding when Instance
 	generated in the compilation time. So, what we do is:
 	1) Obtain the list of variables and the list of cases from each
 	   WHEN intance.
@@ -1578,8 +1578,8 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
 /**
 	Is this (discrete) variable inside a WHEN?
 
-	@return 
-		1 if discrete var is a member of the when var list, 
+	@return
+		1 if discrete var is a member of the when var list,
 		else 0
 
 	@DEPRECATED we want to get rid of this in order to clean up the
@@ -1679,7 +1679,7 @@ void GetTolerance(struct bnd_boundary *bnd){
 	logrelation/conditional/when etc. lists for the consumer.
 	Includes fixing up rel caches and initing flagbits as best we can.
 	includes setting master indices on rel/var/logrel/when etc.
-	
+
 	@returns 0 on success, 1 on out-of-memory, or 2 if the problem does not
 	contain at least one variable in one equation
 */
@@ -1700,12 +1700,12 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   struct logrel_relation *lrel;
   struct bnd_boundary *bnd;
   struct w_when *when;
-  int order,nnzold;
-  int logorder,lognnzold;
+  int nnzold;
+  int lognnzold;
   int c,len,v,vlen,r,found;
   uint32 flags;
 
-  order = MAX(gl_length(p_data->vars),gl_length(p_data->rels));
+  //order = MAX(gl_length(p_data->vars),gl_length(p_data->rels));
   nnzold = p_data->nnz = p_data->nnztot
          = p_data->nnzobj = p_data->nnzcond = 0;
   p_data->nrow = 0; /* number of included relations */
@@ -1776,7 +1776,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   */
 
   /* count the incidences of bool vars and logrels */
-  logorder = MAX((unsigned long)p_data->lrelinc,gl_length(p_data->logrels));
+  //logorder = MAX((asc_intptr_t)p_data->lrelinc,gl_length(p_data->logrels));
   lognnzold = p_data->lognnz = p_data->lrelincsize = 0;
   p_data->lognrow = 0; /* number of included logrelations */
   for (c=1,len = gl_length(p_data->logrels); c <= len; c++) {
@@ -1844,7 +1844,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
 #define ALLOC_OR_NULL(T,N) ((N) > 0 ? ASC_NEW_ARRAY(T,N) : (T*)NULL)
 
 #define AL(P,N,T) p_data->P##data = ALLOC_OR_NULL(struct T,p_data->N)
-  AL(var,nv,var_variable);  AL(par,np,var_variable);  AL(un,nu,var_variable);  
+  AL(var,nv,var_variable);  AL(par,np,var_variable);  AL(un,nu,var_variable);
   AL(dis,ndv,dis_discrete);  AL(undis,nud,dis_discrete);
   AL(rel,nr,rel_relation);  AL(obj,no,rel_relation);  AL(con,nc,rel_relation);
   AL(lr,nl,logrel_relation);  AL(logcon,ncl,logrel_relation);
@@ -1853,7 +1853,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
 #undef AL
 
 #define AL(P,N,T) p_data->master##P=ALLOC_OR_NULL(struct T*,p_data->N + 1)
-  AL(vl,nv,var_variable);  AL(pl,np,var_variable);  AL(ul,nu,var_variable);  
+  AL(vl,nv,var_variable);  AL(pl,np,var_variable);  AL(ul,nu,var_variable);
   AL(dl,ndv,dis_discrete);  AL(dul,nud,dis_discrete);
   AL(rl,nr,rel_relation);  AL(ol,no,rel_relation);  AL(cl,nc,rel_relation);
   AL(ll,nl,logrel_relation);  AL(cll,ncl,logrel_relation);
@@ -1862,7 +1862,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
 #undef AL
 
 #define AL(P,N,T) p_data->solver##P=ALLOC_OR_NULL(struct T*,p_data->N + 1)
-  AL(vl,nv,var_variable);  AL(pl,np,var_variable);  AL(ul,nu,var_variable);  
+  AL(vl,nv,var_variable);  AL(pl,np,var_variable);  AL(ul,nu,var_variable);
   AL(dl,ndv,dis_discrete);  AL(dul,nud,dis_discrete);
   AL(rl,nr,rel_relation);  AL(ol,no,rel_relation);  AL(cl,nc,rel_relation);
   AL(ll,nl,logrel_relation);  AL(cll,ncl,logrel_relation);
@@ -1871,7 +1871,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
 #undef AL
 
 #ifdef ANALYSE_DEBUG
-  CONSOLE_DEBUG("For relincidence, size will be %d",p_data->nnztot + p_data->nnzobj + p_data->nnzcond); 
+  CONSOLE_DEBUG("For relincidence, size will be %d",p_data->nnztot + p_data->nnzobj + p_data->nnzcond);
 #endif
 
   p_data->relincidence = ALLOC_OR_NULL(struct var_variable*
@@ -2574,7 +2574,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
 	@TODO this code is really repetitive, can't we clean it up with some
 	nice macros? The whole problem is that the naming isn't quite consistent
 	enough. eg.
-		slv_set_solvers_condlogrel_list(sys,p_data->solvercll,gl_length(p_data->logcnds));	
+		slv_set_solvers_condlogrel_list(sys,p_data->solvercll,gl_length(p_data->logcnds));
 	could be better written
 		slv_set_solvers_condlogrel_list(sys,p_data->solver_condlogrel,gl_length(p_data->condlogrel_list));
 
