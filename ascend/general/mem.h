@@ -213,23 +213,23 @@ ASC_DLLSPEC void mem_zero_byte(POINTER too, unsigned byte, size_t nbytes);
 ASC_DLLSPEC void mem_repl_word(POINTER too, unsigned word, size_t nwords);
 /**<
 	Implementation function for mem_repl_word_cast().  Do not call this
-	function directly - use mem_repl_word_cast() instead.                    
+	function directly - use mem_repl_word_cast() instead.
 */
 
 /* the following are pretty much a monument to Karl. */
 #if 0
-extern int mem_get_byte(long from);               /**< Returns the byte located at from. */
+extern int mem_get_byte(asc_intptr_t from);               /**< Returns the byte located at from. */
 #endif
-ASC_DLLSPEC unsigned char mem_get_byte(long from);     /**< Returns the byte located at from. */
-ASC_DLLSPEC int mem_get_int(long from);                /**< Returns the int located at from. */
-ASC_DLLSPEC long mem_get_long(long from);              /**< Returns the long located at from. */
-ASC_DLLSPEC double mem_get_float(long from);           /**< Returns the float located at from. */
-ASC_DLLSPEC double mem_get_double(long from);          /**< Returns the double located at from. */
-ASC_DLLSPEC void mem_set_byte(long from, int b);       /**< Sets the byte located at from. */
-ASC_DLLSPEC void mem_set_int(long from, int i);        /**< Sets the int located at from. */
-ASC_DLLSPEC void mem_set_long(long from, long l);      /**< Sets the long located at from. */
-ASC_DLLSPEC void mem_set_float(long from, double f);   /**< Sets the float located at from. */
-ASC_DLLSPEC void mem_set_double(long from, double d);  /**< Sets the double located at from. */
+ASC_DLLSPEC unsigned char mem_get_byte(asc_intptr_t from);     /**< Returns the byte located at from. */
+ASC_DLLSPEC int mem_get_int(asc_intptr_t from);                /**< Returns the int located at from. */
+ASC_DLLSPEC long mem_get_long(asc_intptr_t from);              /**< Returns the long located at from. */
+ASC_DLLSPEC double mem_get_float(asc_intptr_t from);           /**< Returns the float located at from. */
+ASC_DLLSPEC double mem_get_double(asc_intptr_t from);          /**< Returns the double located at from. */
+ASC_DLLSPEC void mem_set_byte(asc_intptr_t from, int b);       /**< Sets the byte located at from. */
+ASC_DLLSPEC void mem_set_int(asc_intptr_t from, int i);        /**< Sets the int located at from. */
+ASC_DLLSPEC void mem_set_long(asc_intptr_t from, long l);      /**< Sets the long located at from. */
+ASC_DLLSPEC void mem_set_float(asc_intptr_t from, double f);   /**< Sets the float located at from. */
+ASC_DLLSPEC void mem_set_double(asc_intptr_t from, double d);  /**< Sets the double located at from. */
 
 #define	mem_get_unsigned(from)	((unsigned)mem_get_int(from))
 /**< Returns the unsigned located at from. */
@@ -276,7 +276,7 @@ ASC_DLLSPEC void mem_set_double(long from, double d);  /**< Sets the double loca
 typedef struct mem_store_header *mem_store_t;
 /**<
 	The token for this memory system.  Internal details of the
-	implementation are private.  Do not dereference or free this 
+	implementation are private.  Do not dereference or free this
 	pointer.
 */
 
@@ -333,8 +333,8 @@ ASC_DLLSPEC mem_store_t mem_create_store(int length, int width, size_t eltsize,
 	@param width     Number of elements in each block.
 	                 Width should (for some architectures) be such that
 	                 width*eltsize = 2^n - 32 for some n fairly large
-	                 (heuristic: n= 9..13).  Widths that are too large may 
-	                 be prone to causing excess page faults, though the 
+	                 (heuristic: n= 9..13).  Widths that are too large may
+	                 be prone to causing excess page faults, though the
 	                 process cpu time reported by the clock() can be much
 	                 better for extremely large sizes.  If width < 1, an
 	                 error message is printed and NULL is returned.<br><br>
@@ -343,7 +343,7 @@ ASC_DLLSPEC mem_store_t mem_create_store(int length, int width, size_t eltsize,
 	                 performance on some VM systems.  See deltapool below
 	                 about pool expansions.<br><br>
 	                 If you know something about the page size of your
-	                 architecture, fiddling with width may help you reduce 
+	                 architecture, fiddling with width may help you reduce
 	                 your page fault or cache miss count in some uses.
 
 	@param eltsize   Element size maintained by the pool.
@@ -360,12 +360,12 @@ ASC_DLLSPEC mem_store_t mem_create_store(int length, int width, size_t eltsize,
 	                 creation of the new pool will fail.
 
 	@param deltapool Size change of the pool array when expanded.  It should
-	                 be as large as you are willing to tolerate.  The pool 
-	                 array starts out completely filled (all pointers allocated). 
-	                 When the pool needs more pointers it gets them in chunks of 
-	                 at least deltapool.  These additional pointers will not 
+	                 be as large as you are willing to tolerate.  The pool
+	                 array starts out completely filled (all pointers allocated).
+	                 When the pool needs more pointers it gets them in chunks of
+	                 at least deltapool.  These additional pointers will not
 	                 automatically have elements allocated to them; rather,
-	                 they will be initialized to NULL and filled in only as the 
+	                 they will be initialized to NULL and filled in only as the
 	                 chunks of deltalen*width elements are required.
 
 	@return A pointer to the newly created pool store, NULL if an error occurred.
@@ -382,7 +382,7 @@ ASC_DLLSPEC void *mem_get_element(mem_store_t ms);
 	          If ms is NULL, then an error message is printed
 	          and NULL is returned.
 	@return A pointer to the usable element, or NULL iff ms is NULL or
-	        store growth is required and the operating system is unable 
+	        store growth is required and the operating system is unable
 	        to allocate the required memory.
 */
 

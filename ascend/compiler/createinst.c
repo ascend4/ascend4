@@ -165,16 +165,15 @@ struct Instance *CreateSimulationInstance(struct TypeDescription *type,
 					  symchar *name)
 {
   register struct SimulationInstance *result;
-  int num_children;
-  unsigned int size;
+  unsigned num_children;
+  /* unsigned int size; */
 
   num_children = 1;
   CopyTypeDesc(type);
-  size = (unsigned)sizeof(struct SimulationInstance) +
-    (unsigned)num_children*sizeof(struct Instance *);
+  /* size = (unsigned)sizeof(struct SimulationInstance) +
+    (unsigned)num_children*sizeof(struct Instance *); */
   result = SIM_INST(ascmalloc((unsigned)sizeof(struct SimulationInstance) +
-			      (unsigned)num_children*
-			      sizeof(struct Instance *)));
+			      num_children* sizeof(struct Instance *)));
   result->t = SIM_INST;
   result->interface_ptr = NULL;
   result->desc = type;
@@ -191,7 +190,7 @@ struct Instance *CreateSimulationInstance(struct TypeDescription *type,
 static void CreateReal(struct RealInstance *i, struct Instance *parent)
 {
   i->t = REAL_INST;
-  i->parent_offset = INST((unsigned long)i-(unsigned long)parent);
+  i->parent_offset = INST((asc_intptr_t)i-(asc_intptr_t)parent);
   i->value = UNDEFAULTEDREAL;
   i->dimen = WildDimension();
   i->assigned = 0;
@@ -203,7 +202,7 @@ static void CreateReal(struct RealInstance *i, struct Instance *parent)
 static void CreateInteger(struct IntegerInstance *i, struct Instance *parent)
 {
   i->t = INTEGER_INST;
-  i->parent_offset = INST((unsigned long)i-(unsigned long)parent);
+  i->parent_offset = INST((asc_intptr_t)i-(asc_intptr_t)parent);
   i->value = 0;
   i->assigned = 0;
   i->depth = 0;
@@ -214,7 +213,7 @@ static void CreateInteger(struct IntegerInstance *i, struct Instance *parent)
 static void CreateBoolean(struct BooleanInstance *i, struct Instance *parent)
 {
   i->t = BOOLEAN_INST;
-  i->parent_offset = INST((unsigned long)i-(unsigned long)parent);
+  i->parent_offset = INST((asc_intptr_t)i-(asc_intptr_t)parent);
   i->value = 0;
   i->assigned = 0;
   i->depth = UINT_MAX;
@@ -229,7 +228,7 @@ static void CreateSet(struct SetInstance *i,
 			struct Instance *parent, int intset)
 {
   i->t = SET_INST;
-  i->parent_offset = INST((unsigned long)i-(unsigned long)parent);
+  i->parent_offset = INST((asc_intptr_t)i-(asc_intptr_t)parent);
   i->int_set = intset ? 1 : 0;
   i->list = NULL;
   AssertContainedMemory(i,sizeof(struct SetInstance));
@@ -238,7 +237,7 @@ static void CreateSet(struct SetInstance *i,
 static void CreateSymbol(struct SymbolInstance *i, struct Instance *parent)
 {
   i->t = SYMBOL_INST;
-  i->parent_offset = INST((unsigned long)i-(unsigned long)parent);
+  i->parent_offset = INST((asc_intptr_t)i-(asc_intptr_t)parent);
   i->value = NULL;
   AssertContainedMemory(i,sizeof(struct SymbolInstance));
 }
@@ -266,35 +265,35 @@ static void MakeAtomChildren(unsigned long int nc, /* number of children */
 	SetRealAtomDims(base,RealDimensions(cd));
       }
       /* prepare for next child */
-      base = INST((unsigned long)base+sizeof(struct RealInstance));
+      base = INST((asc_intptr_t)base+sizeof(struct RealInstance));
       break;
     case integer_child:
       CreateInteger(I_INST(base),parent);
       if (ValueAssigned(cd))
 	SetIntegerAtomValue(base,IntegerDefault(cd),UINT_MAX);
       /* prepare for next child */
-      base = INST((unsigned long)base+sizeof(struct IntegerInstance));
+      base = INST((asc_intptr_t)base+sizeof(struct IntegerInstance));
       break;
     case boolean_child:
       CreateBoolean(B_INST(base),parent);
       if (ValueAssigned(cd))
 	SetBooleanAtomValue(base,BooleanDefault(cd),UINT_MAX);
       /* prepare for next child */
-      base = INST((unsigned long)base+sizeof(struct BooleanInstance));
+      base = INST((asc_intptr_t)base+sizeof(struct BooleanInstance));
       break;
     case set_child:
       CreateSet(S_INST(base),parent,(int)SetIsIntegerSet(cd));
       if (ValueAssigned(cd))
 	AssignSetAtomList(base,CopySet(SetDefault(cd)));
       /* prepare for next child */
-      base = INST((unsigned long)base+sizeof(struct SetInstance));
+      base = INST((asc_intptr_t)base+sizeof(struct SetInstance));
       break;
     case symbol_child:
       CreateSymbol(SYM_INST(base),parent);
       if (ValueAssigned(cd))
 	SetSymbolAtomValue(base,SymbolDefault(cd));
       /* prepare for next child */
-      base = INST((unsigned long)base+sizeof(struct SymbolInstance));
+      base = INST((asc_intptr_t)base+sizeof(struct SymbolInstance));
       break;
     case bad_child:
       ASC_PANIC("MakeAtomChildren called with bad_child\n");

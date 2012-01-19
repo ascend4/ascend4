@@ -137,14 +137,14 @@ char *g_unit_base_name[NUM_DIMENS];
 void InitUnitsTable(void)
 {
   register unsigned long c;
-  register CONST struct Units *result;
+  //register CONST struct Units *result;
 
   for(c=0;c<UNITS_HASH_SIZE;g_units_hash_table[c++]=NULL);
     /* no body */
   g_units_size = 0;
   g_units_collisions = 0;
-  result = DefineUnits(AddSymbol("?"),1.0,WildDimension());
-  result = DefineUnits(AddSymbol(""),1.0,Dimensionless());
+  DefineUnits(AddSymbol("?"),1.0,WildDimension());
+  DefineUnits(AddSymbol(""),1.0,Dimensionless());
   DefineFundamentalUnits();
   g_unit_base_name[D_MASS] = UNIT_BASE_MASS;
   g_unit_base_name[D_QUANTITY] = UNIT_BASE_QUANTITY;
@@ -547,7 +547,7 @@ struct ParseReturn ParseTerm(CONST char *c,
 {
   register CONST struct Units *lookup;
   struct fraction frac;
-  enum units_scanner_tokens tok;
+  //enum units_scanner_tokens tok;
   struct ParseReturn result;
   unsigned long oldpos;
   result.conv = 1.0;
@@ -609,7 +609,7 @@ struct ParseReturn ParseTerm(CONST char *c,
   }
   SkipStrBlanks(c,pos);
   if (c[*pos]=='^') {
-    tok = GetUnitsToken(c,pos);
+    GetUnitsToken(c,pos);
     SkipStrBlanks(c,pos);
     oldpos = *pos;
     frac = ParseFraction(c,pos,error_code);

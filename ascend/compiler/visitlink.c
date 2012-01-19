@@ -56,11 +56,11 @@ static CONST char NameVisitModuleID[] = "$Id: visitlink.c,v 1.3 1997/12/20 17:51
 static
 void SlowVisitTreeTwo(struct Instance *inst,
                       VisitNameTwoProc proc,
-                      int depth, int leaf, int anon_flags, 
+                      int depth, int leaf, int anon_flags,
                       struct gl_list_t *path,
                       VOIDPTR userdata)
 {
-  unsigned long nc,c;
+  asc_intptr_t nc,c;
   unsigned nullchildren=0;
   struct Instance *child;
   AssertMemory(inst);
@@ -97,11 +97,11 @@ void SlowVisitTreeTwo(struct Instance *inst,
 static
 void SilentVisitTreeTwo(struct Instance *inst,
                         VisitNameTwoProc proc,
-                        int depth, int leaf, int anon_flags, 
+                        int depth, int leaf, int anon_flags,
                         struct gl_list_t *path,
-                        VOIDPTR userdata)
-{
-  unsigned long nc,c;
+                        VOIDPTR userdata
+){
+  asc_intptr_t nc,c;
   struct Instance *child;
   AssertMemory(inst);
   if (!depth) {

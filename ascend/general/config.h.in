@@ -16,6 +16,9 @@
 #define SIZEOF_INT @SIZEOF_INT@
 #define SIZEOF_LONG @SIZEOF_LONG@
 #define SIZEOF_LONG_LONG @SIZEOF_LONG_LONG@
+#define SIZEOF_UINT @SIZEOF_UINT@
+#define SIZEOF_ULONG @SIZEOF_ULONG@
+#define SIZEOF_ULONGLONG @SIZEOF_ULONGLONG@
 
 /* now typedef some stuff based on these... */
 
@@ -35,6 +38,17 @@ typedef unsigned long long UGLint; /**< int fits in gl_lists exactly */
 typedef int GLint; /**< warnings may result, but should all be safe if void* is bigger than int. */
 typedef unsigned int UGLint;
 #endif
+
+#if (SIZEOF_VOID_P == SIZEOF_UINT)
+typedef unsigned int asc_intptr_t;
+#elif (SIZEOF_VOID_P == SIZEOF_ULONG)
+typedef unsigned long asc_intptr_t;
+#elif (SIZEOF_VOID_P == SIZEOF_ULONGLONG)
+typedef unsigned long long asc_intptr_t;
+#else
+# error "Invalid SIZEOF_VOID_P ???"
+#endif
+
 
 /**
 	If we have C99 FPE (floating point error) routines available on this
@@ -73,6 +87,28 @@ typedef unsigned int UGLint;
 #  else
 #   error "Need snprintf or _snprintf!"
 #  endif
+#endif
+
+/*
+	Whether to do use testing malloc. Required for some of the CUnit
+	tests to work fully.
+
+	SCons will uncomment the #define line if required.
+	Doing it this (hacky) way so as not to mess up autoconf.
+*/
+#ifndef MALLOC_DEBUG
+/* #define MALLOC_DEBUG @MALLOC_DEBUG@ */
+#endif
+
+/*
+	Whether the dmalloc library was detected. Should permit much reduced
+	complexity in ascMalloc.c, hopefully.
+
+	SCons will uncomment the #define line if required.
+	Doing it this (hacky) way so as not to mess up autoconf.
+*/
+#ifndef ASC_WITH_DMALLOC
+/* #define ASC_WITH_DMALLOC @ASC_WITH_DMALLOC@ */
 #endif
 
 #endif

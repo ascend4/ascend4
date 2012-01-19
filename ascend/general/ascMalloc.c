@@ -60,7 +60,7 @@ char *ascstrdupf(CONST char *s){
 /*------------------------------------------------------------------------------
   ASCEND 'MALLOC' IMPLEMENTATION
 
-	if 'dmalloc' is being used, we don't need *any* of this stuff 
+	if 'dmalloc' is being used, we don't need *any* of this stuff
 */
 #ifndef ASC_WITH_DMALLOC
 
@@ -140,7 +140,7 @@ char *ascreallocPUREF(char *ptr, size_t oldbytes, size_t newbytes)
     char *ret;
     ret = malloc(newbytes);
     if (ret==NULL) return NULL;
-    if (oldbytes%sizeof(long) == 0 && ((unsigned long)ptr)%sizeof(long) == 0) {
+    if (oldbytes%sizeof(long) == 0 && ((asc_intptr_t)ptr)%sizeof(long) == 0) {
       register unsigned long c,len, *src, *trg;
       src = (unsigned long *)ptr;
       trg = (unsigned long *)ret;
@@ -176,7 +176,7 @@ char *ascreallocPUREF_dbg(char *ptr, size_t oldbytes, size_t newbytes)
     char *ret;
     ret = ascmallocf(newbytes, __FILE__, __LINE__);
     if (ret==NULL) return NULL;
-    if (oldbytes%sizeof(long) == 0 && ((unsigned long)ptr)%sizeof(long) == 0) {
+    if (oldbytes%sizeof(long) == 0 && ((asc_intptr_t)ptr)%sizeof(long) == 0) {
       register unsigned long c,len, *src, *trg;
       src = (unsigned long *)ptr;
       trg = (unsigned long *)ret;
@@ -241,10 +241,10 @@ static CONST VOIDPTR MemoryMean(void)
     if (0 != size){
       bytes += (double)size;
       sum += (double)((size * (size-1))/2)
-          + ((double)size) * ((double)(unsigned long)f_mem_rec[c].ptr);
+          + ((double)size) * ((double)(asc_intptr_t)f_mem_rec[c].ptr);
     }
   }
-  return (VOIDPTR)(unsigned long)(sum/NONZERO(bytes));
+  return (VOIDPTR)(asc_intptr_t)(sum/NONZERO(bytes));
 }
 
 /*
@@ -317,11 +317,11 @@ static void WriteMemoryStatus(FILE *f, CONST char *msg)
             f_memory_allocated,
             f_memory_length,
             f_peak_memory_usage,
-            (unsigned long)minm,
-            (unsigned long)maxm,
+            (asc_intptr_t)minm,
+            (asc_intptr_t)maxm,
             ((double)f_memory_allocated/(double)
             NONZERO((CONST char *)maxm - (CONST char *)minm)),
-            (unsigned long)MemoryMean());
+            (asc_intptr_t)MemoryMean());
 }
 
 static void WriteMemoryRecords(FILE *f, CONST char *msg)
@@ -395,8 +395,8 @@ static void WriteAllocation(CONST VOIDPTR adr, size_t size,
 {
   if (NULL != f_memory_log_file) {
     FPRINTF(f_memory_log_file,"%9lx->%9x %9u %31s%6d %s\n",
-                              (unsigned long)adr,
-                              (unsigned long)adr + size - 1,
+                              (asc_intptr_t)adr,
+                              (asc_intptr_t)adr + size - 1,
                               size,
                               "",
                               line,
@@ -406,8 +406,8 @@ static void WriteAllocation(CONST VOIDPTR adr, size_t size,
   else{
     FPRINTF(ASCERR,"Unable to append to memory log file.\n");
     FPRINTF(ASCERR,"%9lx->%9x %9u %31s%6d %s\n",
-                   (unsigned long)adr,
-                   (unsigned long)adr + size - 1,
+                   (asc_intptr_t)adr,
+                   (asc_intptr_t)adr + size - 1,
                    size,
                    "",
                    line,
@@ -421,22 +421,22 @@ static void WriteReAllocation(CONST VOIDPTR adr1, size_t size1,
 {
   if (NULL != f_memory_log_file) {
     FPRINTF(f_memory_log_file,"%9lx->%9x %9u %9lx->%9x %9u %6d %s\n",
-                              (unsigned long)adr2,
-                              (unsigned long)adr2 + size2 - 1,
+                              (asc_intptr_t)adr2,
+                              (asc_intptr_t)adr2 + size2 - 1,
                               size2,
-                              (unsigned long)adr1,
-                              (unsigned long)adr1 + size1 - 1,
+                              (asc_intptr_t)adr1,
+                              (asc_intptr_t)adr1 + size1 - 1,
                               size1, line, file);
     fflush(f_memory_log_file);
   }
   else{
     FPRINTF(ASCERR,"Unable to append to memory log file.\n");
     FPRINTF(ASCERR,"%9lx->%9x %9u %9lx->%9x %9u %6d %s\n",
-                   (unsigned long)adr2,
-                   (unsigned long)adr2 + size2 - 1,
+                   (asc_intptr_t)adr2,
+                   (asc_intptr_t)adr2 + size2 - 1,
                    size2,
-                   (unsigned long)adr1,
-                   (unsigned long)adr1 + size1 - 1,
+                   (asc_intptr_t)adr1,
+                   (asc_intptr_t)adr1 + size1 - 1,
                    size1, line, file);
   }
 }
@@ -446,16 +446,16 @@ static void WriteDeallocation(CONST VOIDPTR adr, size_t size,
 {
   if (NULL != f_memory_log_file) {
     FPRINTF(f_memory_log_file,"%31s%9x->%9x %9u %6d %s\n","",
-                              (unsigned long)adr,
-                              (unsigned long)adr + size - 1,
+                              (asc_intptr_t)adr,
+                              (asc_intptr_t)adr + size - 1,
                               size, line, file);
     fflush(f_memory_log_file);
   }
   else{
     FPRINTF(ASCERR,"Unable to append to memory log file.\n");
     FPRINTF(ASCERR,"%31s%9x->%9x %9u %6d %s\n","",
-                   (unsigned long)adr,
-                   (unsigned long)adr + size - 1,
+                   (asc_intptr_t)adr,
+                   (asc_intptr_t)adr + size - 1,
                    size, line, file);
   }
 }
@@ -580,7 +580,7 @@ static void DeallocateMemory(CONST VOIDPTR ptr, size_t size,
 {
   int pos,c;
   pos = SearchForMemory(ptr);
-  if (( pos >= 0 ) && 
+  if (( pos >= 0 ) &&
       ( pos < f_memory_length ) &&
       ( f_mem_rec[pos].ptr == ptr )) {
     /* a matching pointer was found */

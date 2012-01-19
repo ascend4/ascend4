@@ -114,7 +114,7 @@ struct relation *GetInstanceRelToModify(struct Instance *i,
     return RELN_INST(i)->ptr;
   }else{
     PANIC_INCORRECT_TYPE;
-    
+
   }
 }
 
@@ -126,7 +126,7 @@ CONST struct logrelation *GetInstanceLogRel(CONST struct Instance *i)
     return LRELN_INST(i)->ptr;
   }else{
     PANIC_INCORRECT_TYPE;
-    
+
   }
 }
 
@@ -137,7 +137,7 @@ struct logrelation *GetInstanceLogRelToModify(struct Instance *i)
     return LRELN_INST(i)->ptr;
   }else{
     PANIC_INCORRECT_TYPE;
-    
+
   }
 }
 
@@ -148,7 +148,7 @@ CONST struct logrelation *GetInstanceLogRelOnly(CONST struct Instance *i)
     return LRELN_INST(i)->ptr;
   }else{
     PANIC_INCORRECT_TYPE;
-    
+
   }
 }
 
@@ -175,17 +175,17 @@ struct gl_list_t *GetInstanceOperands(CONST struct Instance *i)
     if (rel != NULL) {
       list = RelationVarList(rel);
     }
-    break; 
+    break;
   case LREL_INST:
     lrel = GetInstanceLogRel(i);
     if (lrel != NULL) {
       list = LogRelBoolVarList(lrel);
       list2 = LogRelSatRelList(lrel);
     }
-    break; 
+    break;
   case WHEN_INST:
     list = GetInstanceWhenVars(i);
-    break; 
+    break;
   default:
     return NULL;
   }
@@ -219,7 +219,7 @@ struct gl_list_t *GetInstanceWhenVars(CONST struct Instance *i)
     return W_INST(i)->bvar;
   }else{
     PANIC_INCORRECT_TYPE;
-    
+
   }
 }
 
@@ -230,7 +230,7 @@ struct gl_list_t *GetInstanceWhenCases(CONST struct Instance *i)
     return W_INST(i)->cases;
   }else{
     PANIC_INCORRECT_TYPE;
-    
+
   }
 }
 
@@ -338,7 +338,7 @@ unsigned long RelationsCount(CONST struct Instance *i)
     }
   default:
     ASC_PANIC("RelationsCount called with inappropriate argument.");
-    
+
   }
 }
 
@@ -364,7 +364,7 @@ struct Instance *RelationsForAtom(CONST struct Instance *i,
 }
 
 void AddRelation(struct Instance *i, struct Instance *reln){
-  unsigned long len;
+  //unsigned long len;
   assert(i);
   assert(reln);
   assert(reln->t==REL_INST);
@@ -375,7 +375,7 @@ void AddRelation(struct Instance *i, struct Instance *reln){
     if (RA_INST(i)->relations==NULL) {
       RA_INST(i)->relations = gl_create(AVG_RELATIONS);
     }
-    len = gl_length(RA_INST(i)->relations);
+    //len = gl_length(RA_INST(i)->relations);
     if (gl_search(RA_INST(i)->relations,(char*)reln,(CmpFunc)CmpRelations)==0){
       gl_append_ptr(RA_INST(i)->relations,(VOIDPTR)reln);
     }
@@ -469,7 +469,7 @@ struct Instance *LogRelationsForInstance(CONST struct Instance *i,
 
 void AddLogRel(struct Instance *i, struct Instance *lreln)
 {
-  unsigned long len;
+  //unsigned long len;
   assert(i&&lreln&&(lreln->t==LREL_INST));
   AssertMemory(i);
   switch(i->t){
@@ -477,7 +477,7 @@ void AddLogRel(struct Instance *i, struct Instance *lreln)
     if (BA_INST(i)->logrelations==NULL) {
       BA_INST(i)->logrelations = gl_create(AVG_LOGRELS);
     }
-    len = gl_length(BA_INST(i)->logrelations);
+    //len = gl_length(BA_INST(i)->logrelations);
     if (gl_search(BA_INST(i)->logrelations,
                   (char *)lreln,(CmpFunc)CmpLogRelations)==0) {
       gl_append_ptr(BA_INST(i)->logrelations,(VOIDPTR)lreln);
@@ -487,7 +487,7 @@ void AddLogRel(struct Instance *i, struct Instance *lreln)
     if (RELN_INST(i)->logrels==NULL) {
       RELN_INST(i)->logrels = gl_create(AVG_LOGRELS);
     }
-    len = gl_length(RELN_INST(i)->logrels);
+    //len = gl_length(RELN_INST(i)->logrels);
     if (gl_search(RELN_INST(i)->logrels,
                   (char *)lreln,(CmpFunc)CmpLogRelations)==0) {
       gl_append_ptr(RELN_INST(i)->logrels,(VOIDPTR)lreln);
@@ -497,7 +497,7 @@ void AddLogRel(struct Instance *i, struct Instance *lreln)
     if (LRELN_INST(i)->logrels==NULL) {
       LRELN_INST(i)->logrels = gl_create(AVG_LOGRELS);
     }
-    len = gl_length(LRELN_INST(i)->logrels);
+    //len = gl_length(LRELN_INST(i)->logrels);
     if (gl_search(LRELN_INST(i)->logrels,
                   (char *)lreln,(CmpFunc)CmpLogRelations)==0) {
       gl_append_ptr(LRELN_INST(i)->logrels,(VOIDPTR)lreln);
@@ -699,14 +699,14 @@ struct Instance *WhensForInstance(struct Instance *i,
 
 void AddWhen(struct Instance *i, struct Instance *when)
 {
-  unsigned long len;
+  //unsigned long len;
   assert(i&&when&&(when->t==WHEN_INST));
   AssertMemory(i);
   switch(i->t){
   case BOOLEAN_ATOM_INST:
     if (BA_INST(i)->whens==NULL)
       BA_INST(i)->whens = gl_create(AVG_WHEN);
-    len = gl_length(BA_INST(i)->whens);
+    //len = gl_length(BA_INST(i)->whens);
     if (gl_search(BA_INST(i)->whens,
                  (char *)when,(CmpFunc)CmpWhens)==0)
       gl_append_ptr(BA_INST(i)->whens,(VOIDPTR)when);
@@ -714,7 +714,7 @@ void AddWhen(struct Instance *i, struct Instance *when)
   case INTEGER_ATOM_INST:
     if (IA_INST(i)->whens==NULL)
       IA_INST(i)->whens = gl_create(AVG_WHEN);
-    len = gl_length(IA_INST(i)->whens);
+    //len = gl_length(IA_INST(i)->whens);
     if (gl_search(IA_INST(i)->whens,
                  (char *)when,(CmpFunc)CmpWhens)==0)
       gl_append_ptr(IA_INST(i)->whens,(VOIDPTR)when);
@@ -722,7 +722,7 @@ void AddWhen(struct Instance *i, struct Instance *when)
   case SYMBOL_ATOM_INST:
     if (SYMA_INST(i)->whens==NULL)
       SYMA_INST(i)->whens = gl_create(AVG_WHEN);
-    len = gl_length(SYMA_INST(i)->whens);
+    //len = gl_length(SYMA_INST(i)->whens);
     if (gl_search(SYMA_INST(i)->whens,
                  (char *)when,(CmpFunc)CmpWhens)==0)
       gl_append_ptr(SYMA_INST(i)->whens,(VOIDPTR)when);
@@ -730,7 +730,7 @@ void AddWhen(struct Instance *i, struct Instance *when)
   case BOOLEAN_CONSTANT_INST:
     if (BC_INST(i)->whens==NULL)
       BC_INST(i)->whens = gl_create(AVG_WHEN);
-    len = gl_length(BC_INST(i)->whens);
+    //len = gl_length(BC_INST(i)->whens);
     if (gl_search(BC_INST(i)->whens,
                  (char *)when,(CmpFunc)CmpWhens)==0)
       gl_append_ptr(BC_INST(i)->whens,(VOIDPTR)when);
@@ -738,7 +738,7 @@ void AddWhen(struct Instance *i, struct Instance *when)
   case INTEGER_CONSTANT_INST:
     if (IC_INST(i)->whens==NULL)
       IC_INST(i)->whens = gl_create(AVG_WHEN);
-    len = gl_length(IC_INST(i)->whens);
+    //len = gl_length(IC_INST(i)->whens);
     if (gl_search(IC_INST(i)->whens,
                  (char *)when,(CmpFunc)CmpWhens)==0)
       gl_append_ptr(IC_INST(i)->whens,(VOIDPTR)when);
@@ -746,7 +746,7 @@ void AddWhen(struct Instance *i, struct Instance *when)
   case SYMBOL_CONSTANT_INST:
     if (SYMC_INST(i)->whens==NULL)
       SYMC_INST(i)->whens = gl_create(AVG_WHEN);
-    len = gl_length(SYMC_INST(i)->whens);
+    //len = gl_length(SYMC_INST(i)->whens);
     if (gl_search(SYMC_INST(i)->whens,
                  (char *)when,(CmpFunc)CmpWhens)==0)
       gl_append_ptr(SYMC_INST(i)->whens,(VOIDPTR)when);
@@ -754,7 +754,7 @@ void AddWhen(struct Instance *i, struct Instance *when)
   case MODEL_INST:
     if (MOD_INST(i)->whens==NULL)
       MOD_INST(i)->whens = gl_create(AVG_WHEN);
-    len = gl_length(MOD_INST(i)->whens);
+    //len = gl_length(MOD_INST(i)->whens);
     if (gl_search(MOD_INST(i)->whens,
                  (char *)when,(CmpFunc)CmpWhens)==0)
       gl_append_ptr(MOD_INST(i)->whens,(VOIDPTR)when);
@@ -762,7 +762,7 @@ void AddWhen(struct Instance *i, struct Instance *when)
   case REL_INST:
     if (RELN_INST(i)->whens==NULL)
       RELN_INST(i)->whens = gl_create(AVG_WHEN);
-    len = gl_length(RELN_INST(i)->whens);
+    //len = gl_length(RELN_INST(i)->whens);
     if (gl_search(RELN_INST(i)->whens,
                  (char *)when,(CmpFunc)CmpWhens)==0)
       gl_append_ptr(RELN_INST(i)->whens,(VOIDPTR)when);
@@ -770,7 +770,7 @@ void AddWhen(struct Instance *i, struct Instance *when)
   case LREL_INST:
     if (LRELN_INST(i)->whens==NULL)
       LRELN_INST(i)->whens = gl_create(AVG_WHEN);
-    len = gl_length(LRELN_INST(i)->whens);
+    //len = gl_length(LRELN_INST(i)->whens);
     if (gl_search(LRELN_INST(i)->whens,
                  (char *)when,(CmpFunc)CmpWhens)==0)
       gl_append_ptr(LRELN_INST(i)->whens,(VOIDPTR)when);
@@ -778,7 +778,7 @@ void AddWhen(struct Instance *i, struct Instance *when)
   case WHEN_INST:
     if (W_INST(i)->whens==NULL)
       W_INST(i)->whens = gl_create(AVG_WHEN);
-    len = gl_length(W_INST(i)->whens);
+    //len = gl_length(W_INST(i)->whens);
     if (gl_search(W_INST(i)->whens,
                  (char *)when,(CmpFunc)CmpWhens)==0)
       gl_append_ptr(W_INST(i)->whens,(VOIDPTR)when);

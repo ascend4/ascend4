@@ -63,7 +63,7 @@ static struct gl_list_t *g_names_needed = NULL;
 struct stack_t {
   struct value_t *ptr; 	/* data pointer */
   unsigned capacity;	/* length of data */
-  unsigned long size;	/* pointer while recycled and data while in use */
+  asc_intptr_t size;	/* pointer while recycled and data while in use */
 };
 
 #define SMALLOC(x) x=ASC_NEW(struct stack_t);
@@ -117,7 +117,7 @@ static void DestroyStack(struct stack_t *stack)
   if (stack==NULL) return;
   if (stack->capacity < RECYCLESTACKSIZE) {
     /* the recycle list NEXT pointer has to be cast into the size slot */
-    stack->size =(unsigned long)(g_recycle_expreval_stacks[stack->capacity]);
+    stack->size =(asc_intptr_t)(g_recycle_expreval_stacks[stack->capacity]);
     /* push stack on LIFO recycle list */
     g_recycle_expreval_stacks[stack->capacity] = stack;
     return;

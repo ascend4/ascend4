@@ -49,7 +49,7 @@ struct BitList *CreateBList(unsigned long int len)
     (struct BitList *)ascmalloc((unsigned)(sizeof(struct BitList)+num_bytes));
   result->length = len;
   /* clear the memory */
-  ptr = (char *)((unsigned long)result+(unsigned long)sizeof(struct BitList));
+  ptr = (char *)((asc_intptr_t)result+(asc_intptr_t)sizeof(struct BitList));
   ascbzero(ptr,(int)num_bytes);
   AssertAllocatedMemory((char *)result,sizeof(struct BitList)+num_bytes);
   return result;
@@ -81,8 +81,8 @@ struct BitList *ExpandBList(struct BitList *bl, unsigned long int len)
     result =
       (struct BitList *)
 	ascrealloc((char *)bl,(unsigned)(new_bytes+sizeof(struct BitList)));
-    ascbzero((char *)((unsigned long)result+sizeof(struct BitList)+
-		      (unsigned long)old_bytes),(int)(new_bytes-old_bytes));
+    ascbzero((char *)((asc_intptr_t)result+sizeof(struct BitList)+
+		      (asc_intptr_t)old_bytes),(int)(new_bytes-old_bytes));
   }
   else result = bl;
   AssertAllocatedMemory(result,sizeof(struct BitList)+new_bytes);
@@ -156,7 +156,7 @@ void SetBit(struct BitList *bl, unsigned long int pos)
   register byte *ptr;
   register unsigned bit;
   AssertContainedMemory(bl,sizeof(struct BitList));
-  ptr = (byte *)((unsigned long)bl+sizeof(struct BitList)+(pos >> 3));
+  ptr = (byte *)((asc_intptr_t)bl+sizeof(struct BitList)+(pos >> 3));
   AssertContainedIn(bl,ptr);
   bit = pos & 0x07;
   *ptr = *ptr | (byte)(1 << bit);
@@ -167,7 +167,7 @@ void ClearBit(struct BitList *bl, unsigned long int pos)
   register byte *ptr;
   register unsigned bit;
   AssertContainedMemory(bl,sizeof(struct BitList));
-  ptr = (byte *)((unsigned long)bl+sizeof(struct BitList)+(pos >> 3));
+  ptr = (byte *)((asc_intptr_t)bl+sizeof(struct BitList)+(pos >> 3));
   AssertContainedIn(bl,ptr);
   bit = pos & 0x07;
   *ptr = *ptr & (byte)(~(1 << bit));
@@ -178,7 +178,7 @@ void CondSetBit(struct BitList *bl, unsigned long int pos, int cond)
   register byte *ptr;
   register unsigned bit;
   AssertContainedMemory(bl,sizeof(struct BitList));
-  ptr = (byte *)((unsigned long)bl+sizeof(struct BitList)+(pos >> 3));
+  ptr = (byte *)((asc_intptr_t)bl+sizeof(struct BitList)+(pos >> 3));
   AssertContainedIn(bl,ptr);
   bit = pos & 0x07;
   if (cond)
@@ -192,7 +192,7 @@ int ReadBit(CONST struct BitList *bl, unsigned long int pos)
   register byte *ptr;
   register unsigned bit;
   AssertContainedMemory(bl,sizeof(struct BitList));
-  ptr = (byte *)((unsigned long)bl+sizeof(struct BitList)+(pos >> 3));
+  ptr = (byte *)((asc_intptr_t)bl+sizeof(struct BitList)+(pos >> 3));
   AssertContainedIn(bl,ptr);
   bit = pos & 0x07;
   return (*ptr & (1 << bit));
@@ -209,8 +209,8 @@ void IntersectBLists(struct BitList *bl1, CONST struct BitList *bl2)
     FPRINTF(ASCERR,"Bad bit list intersection\n");
     return;
   }
-  ptr1 = (byte *)((unsigned long)bl1+sizeof(struct BitList));
-  ptr2 = (byte *)((unsigned long)bl2+sizeof(struct BitList));
+  ptr1 = (byte *)((asc_intptr_t)bl1+sizeof(struct BitList));
+  ptr2 = (byte *)((asc_intptr_t)bl2+sizeof(struct BitList));
   num_bytes = BLENGTH(bl1) >> 3; /* divided by 8 */
   if (BLENGTH(bl1) & 0x07) num_bytes++;
   while(num_bytes-->0) {
@@ -233,8 +233,8 @@ void UnionBLists(struct BitList *bl1, CONST struct BitList *bl2)
     FPRINTF(ASCERR,"Bad bit list union\n");
     return;
   }
-  ptr1 = (byte *)((unsigned long)bl1+sizeof(struct BitList));
-  ptr2 = (byte *)((unsigned long)bl2+sizeof(struct BitList));
+  ptr1 = (byte *)((asc_intptr_t)bl1+sizeof(struct BitList));
+  ptr2 = (byte *)((asc_intptr_t)bl2+sizeof(struct BitList));
   num_bytes = BLENGTH(bl1) >> 3; /* divided by 8 */
   if (BLENGTH(bl1) & 0x07) num_bytes++;
   while(num_bytes-->0) {
@@ -259,7 +259,7 @@ int BitListEmpty(CONST struct BitList *bl)
   AssertContainedMemory(bl,sizeof(struct BitList));
   num_bytes = bl->length >> 3;
   if (bl->length & 0x07) num_bytes++;
-  ptr = (unsigned char *)((unsigned long)bl+
+  ptr = (unsigned char *)((asc_intptr_t)bl+
 			  (unsigned long)sizeof(struct BitList));
   while(num_bytes--){
     AssertContainedIn(bl,ptr);
@@ -288,7 +288,7 @@ unsigned long FirstNonZeroBit(CONST struct BitList *bl)
   num_bytes = bl->length >> 3;
   if (bl->length & 0x07) num_bytes++;
   AssertAllocatedMemory(bl,sizeof(struct BitList)+num_bytes);
-  ptr = (unsigned char *)((unsigned long)bl+
+  ptr = (unsigned char *)((asc_intptr_t)bl+
 			  (unsigned long)sizeof(struct BitList));
   c = num_bytes;
   while ((!(*ptr))&&(num_bytes)) {

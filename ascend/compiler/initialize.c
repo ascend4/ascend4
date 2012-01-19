@@ -290,9 +290,9 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 			fm->flow = FrameError;
 			return;
 		}
-		
+
 		len = gl_length(temp);
-		
+
 #ifdef FIXFREE_DEBUG
 		CONSOLE_DEBUG("There are %d items in the %s list", len, val?"FIX":"FREE");
 #endif
@@ -531,7 +531,7 @@ struct gl_list_t *ProcessExtMethodArgs(struct Instance *inst,
   struct gl_list_t *branch;
   CONST struct Name *n;
   enum find_errors ferr;
-  unsigned long pos;
+  asc_intptr_t pos;
 
   ListMode=1;
   arglist = gl_create(10L);
@@ -646,7 +646,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
     assert((len & 0x1) == 0); /* must be even */
     while (c < len) {
       /* works because error position/code pairs */
-      pos = (unsigned long)gl_fetch(errlist,c);
+      pos = (asc_intptr_t)gl_fetch(errlist,c);
       c++;	/* Wait, who let that dirty word in here!? */
       ferr = (enum find_errors)gl_fetch(errlist,c);
       c++;
@@ -1391,7 +1391,7 @@ void ExecuteInitSwitch(struct procFrame *fm, struct Statement *stat)
   struct StatementList *sl;
   int arm;
   int case_match;
-  int fallthru;
+  //int fallthru;
   enum FrameControl oldflow;
 
   vlist = SwitchStatVL(stat);
@@ -1417,12 +1417,12 @@ void ExecuteInitSwitch(struct procFrame *fm, struct Statement *stat)
         case FrameLoop:
         case FrameOK:
           fm->flow = oldflow;
-          fallthru = 0;
+          //fallthru = 0;
           break;
         case FrameReturn:
           return;
         case FrameBreak: /* not properly implemented. fixme */
-          fallthru = 0;
+          //fallthru = 0;
           break;
         case FrameContinue:
           if (oldflow == FrameLoop) {
@@ -1430,7 +1430,7 @@ void ExecuteInitSwitch(struct procFrame *fm, struct Statement *stat)
           }
           break;
         case FrameFallthru: /* not implemented */
-          fallthru = 1;
+          //fallthru = 1;
         case FrameError: /* EISS not supposed to return this */
         default:
           break;
@@ -1994,10 +1994,10 @@ enum Proc_enum Initialize(struct Instance *context,
 {
   enum Proc_enum rval;
   struct procFrame fm;
-  
+
 #ifdef INIT_DEBUG
   char *instname = WriteInstanceNameString(context,NULL);
-  const char *insttype = 
+  const char *insttype =
 		InstanceKind(context)==SIM_INST ? "SIM_INST" :(
 		InstanceKind(context)==MODEL_INST ? "MODEL_INST" : (
 		"UNRECOGNIZED-TYPE"));

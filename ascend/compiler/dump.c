@@ -53,7 +53,7 @@ static CONST char GarbageDumpID[] = "$Id: dump.c,v 1.10 1998/02/05 22:23:24 ball
 /*
  * macro for hashing pointers. shift, mask must match dump SIZE.
  */
-#define DUMPHASHINDEX(p) (((((long) (p))*1103515245) >> 20) & 1023) 
+#define DUMPHASHINDEX(p) (((((asc_intptr_t) (p))*1103515245) >> 20) & 1023)
 
 
 #define DUMPLISTSIZE 10L

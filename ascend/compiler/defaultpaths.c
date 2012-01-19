@@ -12,7 +12,7 @@ const char *get_default_solvers_path(){
 	HKEY key;
 	DWORD datatype, len = MAXLEN;
 	long res;
-	static char value[MAXLEN];
+	static unsigned char value[MAXLEN];
 	res = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\ASCEND", 0L, KEY_QUERY_VALUE, &key);
 	if(res==ERROR_SUCCESS){
 		res = RegQueryValueEx(key, ASC_ENV_SOLVERS, NULL, &datatype, value, &len);
@@ -31,7 +31,7 @@ const char *get_default_library_path(){
 	HKEY key;
 	DWORD datatype, len = MAXLEN;
 	long res;
-	static char value[MAXLEN];
+	static unsigned char value[MAXLEN];
 	res = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\ASCEND", 0L, KEY_QUERY_VALUE, &key);
 	if(res==ERROR_SUCCESS){
 		res = RegQueryValueEx(key, ASC_ENV_LIBRARY, NULL, &datatype, value, &len);

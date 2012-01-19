@@ -82,7 +82,7 @@
 */
 
 /* MALLOC_DEBUG and ASC_WITH_DMALLOC will be defined in config.h... */
-#include <ascend/utilities/config.h>
+#include "config.h"
 #include "platform.h"
 
 /*------------------------------------------------------------------------------

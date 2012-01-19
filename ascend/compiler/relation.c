@@ -2998,7 +2998,7 @@ static int ConvertExpr(CONST struct Expr *start,
 static
 CONST struct Expr *FindRHS(CONST struct Expr *ex)
 {
-  CONST struct Expr *rhs = NULL, *previous = NULL;
+  CONST struct Expr *rhs = NULL;//, *previous = NULL;
   unsigned depth=0;
   while(ex!=NULL){
     switch(ExprType(ex)){
@@ -3061,7 +3061,7 @@ CONST struct Expr *FindRHS(CONST struct Expr *ex)
 		,(int)ExprType(ex));
       break;
     }
-    previous = ex;
+    //previous = ex;
     ex = NextExpr(ex);
   }
   return NULL;
@@ -4268,7 +4268,7 @@ int CheckExternal(CONST struct Instance *reference, CONST struct VariableList *v
 {
   enum find_errors ferr;
   struct gl_list_t *args;
-  struct Instance *data;
+  //struct Instance *data;
 
   args = ProcessExtRelArgs(reference, vl, &ferr);
   if (args == NULL) {
@@ -4276,7 +4276,7 @@ int CheckExternal(CONST struct Instance *reference, CONST struct VariableList *v
   }
   DestroySpecialList(args);
   /* args ok. */
-  data = ProcessExtRelData(reference, n, &ferr);
+  ProcessExtRelData(reference, n, &ferr);
   if (ferr == correct_instance) {
     return 1;
   }
@@ -4526,7 +4526,7 @@ struct relation *CopyAnonRelationByReference(CONST struct Instance *src_inst,
   struct relation *src;
   struct relation *result;
   enum Expr_enum type;
-  unsigned size;
+  //unsigned size;
   /*struct pairlist_t *bboxtable = (struct pairlist_t *)bboxtable_p;*/
 
   src = (struct relation *)GetInstanceRelation(src_inst,&type);
@@ -4535,7 +4535,7 @@ struct relation *CopyAnonRelationByReference(CONST struct Instance *src_inst,
   }
 
   result = CreateRelationStructure(RelRelop(src),crs_NOUNION);
-  size = sizeof(struct relation);
+  //size = sizeof(struct relation);
   CopyRelationHead(src,result);
   /*
    * We now have a verbatim copy. We now need to patch the public
@@ -4567,13 +4567,13 @@ struct relation *CopyRelationByReference(CONST struct Instance *src_inst,
   struct relation *src;
   struct relation *result;
   enum Expr_enum type;
-  unsigned size;
+  //unsigned size;
 
   src = (struct relation *)GetInstanceRelation(src_inst,&type);
   if (!src) return NULL;
 
   result = CreateRelationStructure(RelRelop(src),crs_NOUNION);
-  size = sizeof(struct relation);
+  //size = sizeof(struct relation);
   ascbcopy(src,result,sizeof(struct relation));
     /* copy everything. Everything includes the pointer to the rel union. */
   /*

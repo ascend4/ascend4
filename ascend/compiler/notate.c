@@ -88,7 +88,7 @@ struct note_bucket {
 #define GNT db->note_tokens
 
 #define NTAB 1024
-#define PTRHASH(p) (((((long) (p))*1103515245) >> 20) & 1023)
+#define PTRHASH(p) (((((asc_intptr_t) (p))*1103515245) >> 20) & 1023)
 
 /**
 	This module manages possibly several databases of this sort.
@@ -500,7 +500,7 @@ struct gl_list_t *GetNotes(symchar *dbid,
         (id == NOTESWILD || id == n->id) &&
         (method == NOTESWILD || method == n->method) &&
         (lang == NOTESWILD || lang == n->lang) &&
-        (nd == nd_wild || nd == n->kind)) 
+        (nd == nd_wild || nd == n->kind))
 	if(n->id!=NULL) gl_append_ptr(result,n);
     n = n->next;
   }
@@ -895,7 +895,7 @@ struct Note *CreateNote(symchar *type, symchar *lang,
   return n;
 }
 
-/** 
+/**
 	does not copy vlist data and nd, if found.
 	OTHERWISE copies everything about the note.
 	The text t is copied by reference.

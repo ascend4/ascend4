@@ -139,9 +139,9 @@ void RedoChildPointers(unsigned long int num,
 		       struct Instance * CONST *oldchildptrs)
 {
   while (num > 0) {
-    *newchildptrs = INST((unsigned long)newparent+
-			 (unsigned long)(*oldchildptrs)-
-			 (unsigned long)oldparent);
+    *newchildptrs = INST((asc_intptr_t)newparent+
+			 (asc_intptr_t)(*oldchildptrs)-
+			 (asc_intptr_t)oldparent);
     newchildptrs++;
     oldchildptrs++;
     num--;
@@ -826,7 +826,7 @@ static struct Instance *CopyNode(CONST struct Instance *i)
     return NULL;
   default:
     ASC_PANIC("Incorrect instance type passed to CopyNode.\n");
-    
+
   }
 }
 
@@ -1208,10 +1208,10 @@ struct Instance *CopyInstance(CONST struct Instance *i)
     Asc_Panic(2, NULL,
               "CopyInstance may not be called on"
               " fundamental atomic instances.\n");
-    
+
   default:
     ASC_PANIC("Unknown instance type passed to CopyInstance.\n");
-    
+
   }
 }
 /************ end of copy stuff ****************/

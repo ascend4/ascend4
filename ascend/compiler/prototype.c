@@ -41,7 +41,7 @@
 #include "destroyinst.h"
 
 #define PROTOTYPEHASHSIZE 1024
-#define PROTOHASH(p) (((((long) (p))*1103515245) >> 20) & 1023)
+#define PROTOHASH(p) (((((asc_intptr_t) (p))*1103515245) >> 20) & 1023)
 
 struct ProtoRec {
   struct ProtoRec *next;
@@ -78,7 +78,7 @@ void AddPrototype(struct Instance *i)
 {
   register unsigned long bucket;
   register struct ProtoRec *p;
-  register struct ProtoRec *prev;
+  //register struct ProtoRec *prev;
   register symchar *t;
 
   t = InstanceType(i);
@@ -94,12 +94,12 @@ void AddPrototype(struct Instance *i)
   }
 
   /* search down the list */
-  prev = p;
+  //prev = p;
   p = p->next;
   while (p!=NULL) {
     if (t == p->t) /* found a match */
       break;
-    prev = p;
+    //prev = p;
     p = p->next;
   }
   if (!p) { /* reached the end of the chain */

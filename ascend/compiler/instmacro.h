@@ -77,21 +77,21 @@ extern struct WhenInstance *g_when_inst;
 #endif
 
 /* init parent list size */
-#define AVG_CONSTANT_PARENTS 2L	   
+#define AVG_CONSTANT_PARENTS 2L
 /**< size to which all parent lists are initialized for real constants */
-#define AVG_ICONSTANT_PARENTS 20L  
+#define AVG_ICONSTANT_PARENTS 20L
 /**< size to which all parent lists are initialized for int constants */
-#define AVG_PARENTS 2L		         
+#define AVG_PARENTS 2L
 /**< size to which all parent lists are initialized */
-#define AVG_CASES 2L	             
+#define AVG_CASES 2L
 /**< size to which all cases lists are initialized (WHEN instance) */
-#define AVG_WHEN 2L	               
+#define AVG_WHEN 2L
 /**< size to which all when lists are initialized (models, relations) */
-#define AVG_RELATIONS 7L           
+#define AVG_RELATIONS 7L
 /**< size to which all relation lists are initialized */
-#define AVG_LOGRELS 7L           	 
+#define AVG_LOGRELS 7L
 /**< size to which all logical relation lists are initialized */
-#define AVG_ARY_CHILDREN 7L        
+#define AVG_ARY_CHILDREN 7L
 /**< size to which all array children lists are initialized */
 #define UNDEFAULTEDREAL 0.0
 
@@ -137,15 +137,15 @@ extern struct WhenInstance *g_when_inst;
 
 /* parent macros for fundamental atoms real, integer, boolean, and set */
 #define R_PARENT(i) \
-  INST((unsigned long)i-(unsigned long)R_INST(i)->parent_offset)
+  INST((asc_intptr_t)i-(asc_intptr_t)R_INST(i)->parent_offset)
 #define I_PARENT(i) \
-  INST((unsigned long)i-(unsigned long)I_INST(i)->parent_offset)
+  INST((asc_intptr_t)i-(asc_intptr_t)I_INST(i)->parent_offset)
 #define B_PARENT(i) \
-  INST((unsigned long)i-(unsigned long)B_INST(i)->parent_offset)
+  INST((asc_intptr_t)i-(asc_intptr_t)B_INST(i)->parent_offset)
 #define S_PARENT(i) \
-  INST((unsigned long)i-(unsigned long)S_INST(i)->parent_offset)
+  INST((asc_intptr_t)i-(asc_intptr_t)S_INST(i)->parent_offset)
 #define SYM_PARENT(i) \
-  INST((unsigned long)i-(unsigned long)SYM_INST(i)->parent_offset)
+  INST((asc_intptr_t)i-(asc_intptr_t)SYM_INST(i)->parent_offset)
 
 /** this should probably be conditionally defined by LONGCHILDREN
  * so that if LONGCHILDREN, just returns ivalue.
@@ -154,7 +154,7 @@ extern struct WhenInstance *g_when_inst;
 
 /* child array macros */
 #define CHILD_ADR(iptr,type,c)\
-  ((struct Instance **)((unsigned long)iptr+(unsigned long)sizeof(type))+c)
+  ((struct Instance **)((asc_intptr_t)iptr+(asc_intptr_t)sizeof(type))+c)
 #define SIM_CHILD(i,c) CHILD_ADR(i,struct SimulationInstance,c)
 #define MOD_CHILD(i,c) CHILD_ADR(i,struct ModelInstance,c)
 #define RA_CHILD(i,c) CHILD_ADR(i,struct RealAtomInstance,c)
@@ -165,7 +165,7 @@ extern struct WhenInstance *g_when_inst;
 #define REL_CHILD(i,c) CHILD_ADR(i,struct RelationInstance,c)
 #define LREL_CHILD(i,c) CHILD_ADR(i,struct LogRelInstance,c)
 
-#define CLIST(in,type) (struct Instance **)((unsigned long)(in)+sizeof(type))
+#define CLIST(in,type) (struct Instance **)((asc_intptr_t)(in)+sizeof(type))
 #define BASE_ADDR(in,num,type) INST((CLIST(in,type)) + NextHighestEven(num))
 
 /**<
@@ -180,7 +180,7 @@ extern struct WhenInstance *g_when_inst;
 #define NotAtom(i) NotAtomF(i)
 #endif
 extern int NotAtomF(struct Instance *);
-/**< 
+/**<
  *  <!--  macro NotAtom(i)                                             -->
  *  <!--  NotAtomF(i)                                                  -->
  *  Returns 1 if instance is compound (i.e. not relation, ATOM, constant,

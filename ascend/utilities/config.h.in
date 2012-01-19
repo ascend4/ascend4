@@ -141,28 +141,6 @@
 /* #define ASC_XTERM_COLORS @ASC_XTERM_COLORS@ */
 #endif
 
-/*
-	Whether to do use testing malloc. Required for some of the CUnit
-	tests to work fully.
-
-	SCons will uncomment the #define line if required.
-	Doing it this (hacky) way so as not to mess up autoconf.
-*/
-#ifndef MALLOC_DEBUG
-/* #define MALLOC_DEBUG @MALLOC_DEBUG@ */
-#endif
-
-/*
-	Whether the dmalloc library was detected. Should permit much reduced
-	complexity in ascMalloc.c, hopefully.
-
-	SCons will uncomment the #define line if required.
-	Doing it this (hacky) way so as not to mess up autoconf.
-*/
-#ifndef ASC_WITH_DMALLOC
-/* #define ASC_WITH_DMALLOC @ASC_WITH_DMALLOC@ */
-#endif
-
 /*-----------------------------------------------------------------------
   IDA
 */
