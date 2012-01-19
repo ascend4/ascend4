@@ -1,43 +1,35 @@
 #ifndef ASC_ASCPRINT_H
 #define ASC_ASCPRINT_H
-/*
- *  ASCEND Printf stdout/stderr Substitutes Dispatcher
- *  by Benjamin Allan
- *  Created: 4.March.2005
- *  Version: $Revision: 1.6 $
- *  Version control file: $RCSfile: ascPrint.h,v $
- *  Date last modified: $Date: 1997/10/29 13:08:50 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the ASCEND utilities.
- *
- *  Copyright 2005, Benjamin Andrew Allan
- *
- *  The ASCEND utilities is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The ASCEND utilities is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+ 	Copyright 2005, Benjamin Andrew Allan
 
-/** @file
- *  ASCEND Printf stdout/stderr substitutes dispatcher.
- *  These routines redirect output to stdout and stdin to other
- *  functions defined by the user.  This is not required when you
- *  desire to send output to an available console, which is normally
- *  the case on Linux/unix.  However, in cases where a console is
- *  not available (e.g. Win32 gui) or you prefer to redirect output
- *  for other reasons, these routines make it possible.<br><br>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file Printf stdout/stderr Substitutes Dispatcher
+ 	ASCEND Printf stdout/stderr substitutes dispatcher.
+ 	These routines redirect output to stdout and stdin to other
+ 	functions defined by the user.  This is not required when you
+ 	desire to send output to an available console, which is normally
+ 	the case on Linux/unix.  However, in cases where a console is
+ 	not available (e.g. Win32 gui) or you prefer to redirect output
+ 	for other reasons, these routines make it possible.
+*//*
+ 	by Benjamin Allan
+ 	Created: 4.March.2005
+	Last in CVS: $Revision: 1.6 $ $Date: 1997/10/29 13:08:50 $ $Author: mthomas $
+*/
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -54,7 +46,7 @@
  * pushed on the stack of output tables.
  *
  * This should be constructed and the functions fully operational
- * before it is pushed on the stack of output tables.<br><br>
+ * before it is pushed on the stack of output tables.
  */
 struct Asc_PrintVTable {
   CONST char *name;                                         /**< Vtable name. */
@@ -71,14 +63,14 @@ ASC_DLLSPEC int Asc_PrintPushVTable(struct Asc_PrintVTable *vtable);
  *  called by the internal ASCEND print functions to do the actual output.
  *  This function should be called after the user interface io channels
  *  have been initialized.  Any calls to Asc_Printf() made prior to calling
- *  Asc_PrintAddVTable() will use ordinary printf().<br><br>
+ *  Asc_PrintAddVTable() will use ordinary printf().
  *
  *  More than one vtable can be pushed, in which case output will go to all
  *  the outputs setup in the reverse order in which tables were pushed.
  *  The vtable will be rejected if it or any field in it is null,
  *  other than next which must be null.  It is advisable to use distinct
  *  names for all registered vtables so they may be uniquely identified in
- *  calls to Asc_PrintRemoveVTable().  This in not, however, enforced.<br><br>
+ *  calls to Asc_PrintRemoveVTable().  This in not, however, enforced.
  *
  *  He who pushes a vtable should eventually remove it and destroy it.
  *

@@ -1,0 +1,78 @@
+#ifndef ASC_GEN_CONFIG_H
+#define ASC_GEN_CONFIG_H
+
+/*
+	Size of some data types on the present platform, determined by SCons at
+	compile time...
+
+	Ben: The following bits of stuff could be rationalized when we are ready
+	to require a conformant c99 compiler with intptr_t support. unfortunately,
+	it is for some reason optional in 7.18.1.4 of iso C TC2 2005 draft to have
+	intptr_t.
+*/
+#ifndef SIZEOF_VOID_P
+# define SIZEOF_VOID_P @SIZEOF_VOID_P@
+#endif
+#define SIZEOF_INT @SIZEOF_INT@
+#define SIZEOF_LONG @SIZEOF_LONG@
+#define SIZEOF_LONG_LONG @SIZEOF_LONG_LONG@
+
+/* now typedef some stuff based on these... */
+
+#if ( SIZEOF_VOID_P == SIZEOF_INT )
+typedef int GLint; /**< int fits in gl_lists exactly */
+typedef unsigned int UGLint; /**< uint fits in gl_lists exactly */
+#define GL_INT_MAX INT_MAX
+#elif (SIZEOF_VOID_P == SIZEOF_LONG )
+typedef long GLint; /**< int fits in gl_lists exactly */
+typedef unsigned long UGLint; /**< int fits in gl_lists exactly */
+#define GL_INT_MAX LONG_MAX
+#elif ( SIZEOF_VOID_P == SIZEOF_LONG_LONG )
+typedef long long GLint; /**< int fits in gl_lists exactly */
+typedef unsigned long long UGLint; /**< int fits in gl_lists exactly */
+#define GL_INT_MAX LLONG_MAX
+#else
+typedef int GLint; /**< warnings may result, but should all be safe if void* is bigger than int. */
+typedef unsigned int UGLint;
+#endif
+
+/**
+	If we have C99 FPE (floating point error) routines available on this
+	platform/compiler.
+*/
+#ifndef HAVE_C99FPE
+/* #define HAVE_C99FPE @HAVE_C99FPE@ */
+#endif
+
+/**
+	If we have IEEE math library include 'isnan' etc.
+*/
+#ifndef HAVE_IEEE
+/* #define HAVE_IEEE @HAVE_IEEE@ */
+#endif
+
+/**
+	If we have snprintf function
+*/
+#ifndef HAVE_SNPRINTF
+/* #define HAVE_SNPRINTF @HAVE_SNPRINTF@ */
+#endif
+
+/**
+	If we have _snprintf function
+*/
+#ifndef HAVE__SNPRINTF
+/* #define HAVE__SNPRINTF @HAVE__SNPRINTF@ */
+#endif
+
+#ifdef HAVE_SNPRINTF
+# define SNPRINTF snprintf
+#else
+#  ifdef HAVE__SNPRINTF
+#   define SNPRINTF _snprintf
+#  else
+#   error "Need snprintf or _snprintf!"
+#  endif
+#endif
+
+#endif

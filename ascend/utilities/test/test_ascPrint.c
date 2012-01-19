@@ -320,7 +320,7 @@ static void test_ascPrint(void)
   test_print2_str[0] = '\0';
   test_print2_fp = NULL;
 
-  nchars = snprintf(str, STR_LEN, "%s%d%c%s%f", "my_float[", 7, ']', " = ", 8.12);
+  nchars = SNPRINTF(str, STR_LEN, "%s%d%c%s%f", "my_float[", 7, ']', " = ", 8.12);
   CU_TEST(0 == Asc_Printf("%s%d%c%s%f", "my_float[", 7, ']', " = ", 8.12)); /* no vtables registered */
   CU_TEST(FALSE == test_print1_called);
   CU_TEST('\0' == test_print1_str[0]);
@@ -339,7 +339,7 @@ static void test_ascPrint(void)
   test_print2_str[0] = '\0';
   test_print2_fp = NULL;
 
-  nchars = snprintf(str, STR_LEN, "%s%d%c%s%f", "my_float[", 7, ']', " = ", 8.12);
+  nchars = SNPRINTF(str, STR_LEN, "%s%d%c%s%f", "my_float[", 7, ']', " = ", 8.12);
   CU_TEST(nchars == Asc_Printf("%s%d%c%s%f", "my_float[", 7, ']', " = ", 8.12)); /* print something */
   CU_TEST(TRUE == test_print1_called);
   CU_TEST(0 == strcmp(test_print1_str, str));
@@ -362,7 +362,7 @@ static void test_ascPrint(void)
   test_print2_str[0] = '\0';
   test_print2_fp = NULL;
 
-  nchars = snprintf(str, STR_LEN, "%s%d%c%s%f", "my_float[", 7, ']', " = ", 8.12);
+  nchars = SNPRINTF(str, STR_LEN, "%s%d%c%s%f", "my_float[", 7, ']', " = ", 8.12);
   CU_TEST(0 == Asc_FPrintf((FILE *)10, "%s%d%c%s%f", "my_float[", 7, ']', " = ", 8.12)); /* no vtables registered */
   CU_TEST(FALSE == test_print1_called);
   CU_TEST('\0' == test_print1_str[0]);
@@ -398,7 +398,7 @@ static void test_ascPrint(void)
   test_print2_str[0] = '\0';
   test_print2_fp = NULL;
 
-  nchars = snprintf(str, STR_LEN, "%s%d%c%s%f", "my_float[", 7, ']', " = ", 8.12);
+  nchars = SNPRINTF(str, STR_LEN, "%s%d%c%s%f", "my_float[", 7, ']', " = ", 8.12);
   CU_TEST(nchars == Asc_FPrintf((FILE *)10, "%s%d%c%s%f", "my_float[", 7, ']', " = ", 8.12)); /* print something */
   CU_TEST(TRUE == test_print1_called);
   CU_TEST(0 == strcmp(test_print1_str, str));

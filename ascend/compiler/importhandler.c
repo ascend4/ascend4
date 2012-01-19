@@ -115,7 +115,7 @@ char *importhandler_extlib_filename(const char *partialname){
 		this is the preferred operation: SCons reports what the local system
 		uses as its shared library file extension.
 	*/
-	snprintf(buffer,PATH_MAX,"%s%s%s",ASC_EXTLIBPREFIX,partialname,ASC_EXTLIBSUFFIX);
+	SNPRINTF(buffer,PATH_MAX,"%s%s%s",ASC_EXTLIBPREFIX,partialname,ASC_EXTLIBSUFFIX);
 #else
 #ifdef __GNUC__
 # warning "You should be using Use ASC_EXTLIBPREFIX and ASC_EXTLIBSUFFIX!"
@@ -127,15 +127,15 @@ char *importhandler_extlib_filename(const char *partialname){
 		system-specific stuff here, but it's not as general.
 	*/
 # ifdef __WIN32__
-	snprintf(buffer,PATH_MAX,"%s.dll",partialname);
+	SNPRINTF(buffer,PATH_MAX,"%s.dll",partialname);
 # elif defined(linux)
-	snprintf(buffer,PATH_MAX,"lib%s.so",partialname); /* changed from .o to .so -- JP */
+	SNPRINTF(buffer,PATH_MAX,"lib%s.so",partialname); /* changed from .o to .so -- JP */
 # elif defined(sun) || defined(solaris)
-	snprintf(buffer,PATH_MAX,"%s.so.1.0",partialname);
+	SNPRINTF(buffer,PATH_MAX,"%s.so.1.0",partialname);
 # elif defined(__hpux)
-	snprintf(buffer,PATH_MAX,"%s.sl",partialname);
+	SNPRINTF(buffer,PATH_MAX,"%s.sl",partialname);
 # elif defined(_SGI_SOURCE)
-	snprintf(buffer,PATH_MAX,"%s.so",partialname);
+	SNPRINTF(buffer,PATH_MAX,"%s.so",partialname);
 # else
 #  error "Unknown system type (please define ASC_EXTLIBSUFFIX and ASC_EXTLIBPREFIX)"
 # endif

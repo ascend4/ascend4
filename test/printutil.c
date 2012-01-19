@@ -37,7 +37,7 @@ when USE_ASC_PRINTF is defined in ascend/general/platform.h, which currently
 only occurs on Windows. An alternative way to suppress debug output is via
 error_reporter_set_callback, but this doesn't prevent ALL output, eg via
 Asc_FPrintF or CONSOLE_DEBUG. There is also some code possibility of using the
-test/redirectStdStreams.h code but not attempting that at this stage 
+test/redirectStdStreams.h code but not attempting that at this stage
 -- JP, Jan 2010
 */
 
@@ -45,12 +45,9 @@ static struct Asc_PrintVTable f_vtable = {f_vtable_name, vfprintf, fflush, NULL}
 static int f_vtable_registered = FALSE;
 
 int test_enable_printing(void){
-	if (TRUE == f_vtable_registered) {
-		fprintf(stderr,"PRINTING *ALREADY* ENABLED\n");
+	if(TRUE == f_vtable_registered){
 		return TRUE;
-	}
-	else {
-		fprintf(stderr,"PRINTING ENABLED\n");
+	}else{
 		f_vtable_registered = TRUE;
 		return (0 == Asc_PrintPushVTable(&f_vtable)) ? TRUE : FALSE ;
 	}

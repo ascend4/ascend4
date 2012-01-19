@@ -73,7 +73,7 @@ static void asc_va_panic(const int status, const char *filename, const int line
 	/* Fail loudly if ASCERR isn't set to a file pointer -- can't use asc_assert here! */
 	assert(NULL != ASCERR);
 
-	p = snprintf(msg,PANIC_MSG_MAXLEN-2,"%s:%d (%s): ",filename,line,function);
+	p = SNPRINTF(msg,PANIC_MSG_MAXLEN-2,"%s:%d (%s): ",filename,line,function);
 
 	/* Add the variable args to the panic message using the format "format" */
 	vsnprintf(msg+p, PANIC_MSG_MAXLEN-p-2, fmt, args );
@@ -152,7 +152,7 @@ void asc_panic_line(const int status, const char *filename, const int line
 
 #if !defined(__GNUC__) || defined(__STRICT_ANSI__)
 /**
-	we only need this function if our platform doesn't support var-arg macros 
+	we only need this function if our platform doesn't support var-arg macros
 */
 void asc_panic(CONST int status, CONST char *function
 		,CONST char *fmt, ...

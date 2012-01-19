@@ -107,7 +107,7 @@ void DestroyEnvVar(struct asc_env_t *ev)
 
 CmpFunc CmpEv;
 
-static 
+static
 int CmpEV(struct asc_env_t *ev1, struct asc_env_t *ev2)
 {
   if (ev1==ev2) {
@@ -217,7 +217,7 @@ int Asc_SetPathList(CONST char *envvar, CONST char *pathstring)
    * transform envvar into a string w/out lead/trail blanks and copy.
    */
   putenvstring = g_path_var;
-  snprintf(putenvstring, MAX_ENV_VAR_LENGTH, "%s", envvar);
+  SNPRINTF(putenvstring, MAX_ENV_VAR_LENGTH, "%s", envvar);
   /* trim leading whitespace */
   while (isspace(putenvstring[0])) {
     putenvstring++;
@@ -312,7 +312,7 @@ int Asc_PutEnv(CONST char *envstring)
   }
 
   putenvstring = g_path_var;
-  snprintf(putenvstring, MAX_ENV_VAR_LENGTH, "%s", envstring);
+  SNPRINTF(putenvstring, MAX_ENV_VAR_LENGTH, "%s", envstring);
   /* trim leading whitespace */
   while (isspace(putenvstring[0])) {
     putenvstring++;
@@ -328,6 +328,12 @@ int Asc_PutEnv(CONST char *envstring)
     return 1;
   }
   rhs = c;
+
+  if(c == 0){
+    /* '=' is at start of strong */
+    return 1;
+  }
+
   /* backup space before = */
   while (isspace(putenvstring[c-1])) {
     c--;
@@ -443,7 +449,7 @@ const char **Asc_GetPathList(const char *envvar, int *argc){
   }
   if (( g_env_list == NULL ) ||
       ( envvar == NULL )) {
-  	FPRINTF(ASCERR,"G_ENV_LIST IS NULL LOOKING FOR %s\n",envvar);
+  	//FPRINTF(ASCERR,"G_ENV_LIST IS NULL LOOKING FOR %s\n",envvar);
     *argc = -1;
     return NULL;
   }
@@ -453,7 +459,7 @@ const char **Asc_GetPathList(const char *envvar, int *argc){
   }
   ev = FindEnvVar(envvar);
   if (ev==NULL ) {
-  	FPRINTF(ASCERR,"UNABLE TO FINDENVVAR %s\n",envvar);
+  	//FPRINTF(ASCERR,"UNABLE TO FINDENVVAR %s\n",envvar);
 
     *argc = 0;
     return NULL;

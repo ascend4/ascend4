@@ -35,7 +35,7 @@
 #include <ascend/general/panic.h>
 #include <ascend/general/list.h>
 #include <ascend/general/pool.h>
-#ifndef FIRSTCHOICE 
+#ifndef FIRSTCHOICE
 #include <ascend/general/hashpjw.h>
 #endif
 
@@ -51,10 +51,6 @@
 #include "expr_types.h"
 #include "find.h"
 #include "value_type.h"
-
-#ifndef lint
-static CONST char ValueTypeRCSid[] = "$Id: value_type.c,v 1.20 1998/02/05 22:23:36 ballan Exp $";
-#endif
 
 static pool_store_t g_value_pool = NULL;
 /* A pool_store for value_t elements.
@@ -819,7 +815,7 @@ struct value_t CardValues(struct value_t value)
   else return TypeConflict();
 }
 
-#ifndef FIRSTCHOICE 
+#ifndef FIRSTCHOICE
 /*
  * next two functions used only if firstchoice not defined
  */

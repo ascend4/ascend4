@@ -29,7 +29,8 @@
 #ifndef ASC_ASCPANIC_H
 #define ASC_ASCPANIC_H
 
-#include <ascend/general/platform.h>
+#include "config.h"
+#include "platform.h"
 
 #ifndef __GNUC__
 # ifndef __FUNCTION__

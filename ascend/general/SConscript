@@ -9,6 +9,8 @@ csrcs = Split("""
 	ospath.c env.c pairlist.c ltmatrix.c
 """)
 
+configh = libascend_env.SubstInFile(source='config.h.in')
+
 objs =[]
 for c in csrcs:
 	objs += libascend_env.SharedObject(c)

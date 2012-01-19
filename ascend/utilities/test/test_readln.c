@@ -80,7 +80,7 @@ static void test_readln(void)
 
 #if USE_REDIRECT /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
-    snprintf(str2, STR_LEN, "This is the string we expect back from readln()?\n");
+    SNPRINTF(str2, STR_LEN, "This is the string we expect back from readln()?\n");
     fputs(str2, infile);
     fclose(infile);
     infile = redirect_stdin(infilename);
@@ -99,7 +99,7 @@ static void test_readln(void)
 
 #if USE_REDIRECT /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
-    snprintf(str2, STR_LEN, "\nThis is the string we expect back from readln()?\n");
+    SNPRINTF(str2, STR_LEN, "\nThis is the string we expect back from readln()?\n");
     fputs(str2, infile);
     fclose(infile);
     infile = redirect_stdin(infilename);
@@ -131,7 +131,7 @@ static void test_readln(void)
   }
 
   if (NULL != (infile = fopen(infilename, "w+"))) {
-    snprintf(str2, STR_LEN, "This is the string we expect back from readln()?\n");
+    SNPRINTF(str2, STR_LEN, "This is the string we expect back from readln()?\n");
     fputs(str2, infile);
     rewind(infile);
     CU_TEST(-1 == freadln(NULL, STR_LEN, infile));    /* NULL str */
@@ -147,7 +147,7 @@ static void test_readln(void)
   }
 
   if (NULL != (infile = fopen(infilename, "w+"))) {
-    snprintf(str2, STR_LEN, "\nThis is the string we expect back from readln()?\n");
+    SNPRINTF(str2, STR_LEN, "\nThis is the string we expect back from readln()?\n");
     fputs(str2, infile);
     rewind(infile);
     CU_TEST(0 == freadln(str1, 0, infile));           /* max = 0 */
@@ -181,7 +181,7 @@ static void test_readln(void)
 
 #if USE_REDIRECT /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
-    snprintf(str2, STR_LEN, "This is the string we expect back from areadln()?\n");
+    SNPRINTF(str2, STR_LEN, "This is the string we expect back from areadln()?\n");
     fputs(str2, infile);
     fclose(infile);
     infile = redirect_stdin(infilename);
@@ -200,7 +200,7 @@ static void test_readln(void)
 
 #if USE_REDIRECT /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
-    snprintf(str2, STR_LEN, "\nThis is the string we expect back from areadln()?\n");
+    SNPRINTF(str2, STR_LEN, "\nThis is the string we expect back from areadln()?\n");
     fputs(str2, infile);
     fclose(infile);
     infile = redirect_stdin(infilename);
@@ -235,7 +235,7 @@ static void test_readln(void)
   }
 
   if (NULL != (infile = fopen(infilename, "w+"))) {
-    snprintf(str2, STR_LEN, "This is the string we expect back from readln()?\n");
+    SNPRINTF(str2, STR_LEN, "This is the string we expect back from readln()?\n");
     fputs(str2, infile);
     rewind(infile);
     pstr = afreadln(infile);                          /* read from typical stream */
@@ -251,7 +251,7 @@ static void test_readln(void)
   }
 
   if (NULL != (infile = fopen(infilename, "w+"))) {
-    snprintf(str2, STR_LEN, "\nThis is the string we expect back from readln()?\n");
+    SNPRINTF(str2, STR_LEN, "\nThis is the string we expect back from readln()?\n");
     fputs(str2, infile);
     rewind(infile);
     pstr = afreadln(infile);                          /* read from stream with '\n' at start */
@@ -288,7 +288,7 @@ static void test_readln(void)
 
 #if USE_REDIRECT /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
-    snprintf(str2, STR_LEN, "98765This is the string we expect back from areadln()?\n");
+    SNPRINTF(str2, STR_LEN, "98765This is the string we expect back from areadln()?\n");
     fputs(str2, infile);
     fclose(infile);
     infile = redirect_stdin(infilename);
@@ -303,7 +303,7 @@ static void test_readln(void)
 
 #if USE_REDIRECT /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
-    snprintf(str2, STR_LEN, "\n-837\n");
+    SNPRINTF(str2, STR_LEN, "\n-837\n");
     fputs(str2, infile);
     fclose(infile);
     infile = redirect_stdin(infilename);
@@ -335,7 +335,7 @@ static void test_readln(void)
 
 #if USE_REDIRECT /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
-    snprintf(str2, STR_LEN, "-3.5670384e199This is the string we expect back from areadln()?\n");
+    SNPRINTF(str2, STR_LEN, "-3.5670384e199This is the string we expect back from areadln()?\n");
     fputs(str2, infile);
     fclose(infile);
     infile = redirect_stdin(infilename);
@@ -350,7 +350,7 @@ static void test_readln(void)
 
 #if USE_REDIRECT /* removing support for stream redirection (too confusing) */
   if (NULL != (infile = fopen(infilename, "w"))) {
-    snprintf(str2, STR_LEN, "\n-642542146Good bye!\n");
+    SNPRINTF(str2, STR_LEN, "\n-642542146Good bye!\n");
     fputs(str2, infile);
     fclose(infile);
     infile = redirect_stdin(infilename);

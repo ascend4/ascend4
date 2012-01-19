@@ -37,8 +37,8 @@
 #define STR_LEN 100
 
 /*
- *  ascMalloc.c is a challenging module to test.  There are 
- *  numerous different definitions for the function macros 
+ *  ascMalloc.c is a challenging module to test.  There are
+ *  numerous different definitions for the function macros
  *  depending on the definitions of MOD_ASCMALLOC, MOD_REALLOC,
  *  MALLOC_DEBUG, and ALLOCATED_TESTS.
  *
@@ -84,7 +84,7 @@ static void test_ascMalloc(void)
   ascfree(p_str1);
   CU_ASSERT(0 == ascmeminuse());
 
-  snprintf(str1, STR_LEN-1, "I'm a simple string.");
+  SNPRINTF(str1, STR_LEN-1, "I'm a simple string.");
   p_str1 = ASC_STRDUP(str1);                            /* normal operation with literal*/
   CU_ASSERT(NULL != p_str1);
   CU_ASSERT(0 == strcmp(p_str1, str1));
@@ -117,12 +117,12 @@ static void test_ascMalloc(void)
   str2_bad = FALSE;
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str1_bad && (str1[i] != '\0')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '\\0' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '\\0' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
     if (!str2_bad && (str2[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str2[%lu] != '*' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str2[%lu] != '*' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str2_bad = TRUE;
     }
@@ -135,21 +135,21 @@ static void test_ascMalloc(void)
   str2_bad = FALSE;
   for (i=0 ; i<STR_LEN/2 ; ++i) {
     if (!str1_bad && (str1[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '*' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '*' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=STR_LEN/2 ; i<STR_LEN-1 ; ++i) {
     if (!str1_bad && (str1[i] != '\0')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '\\0' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '\\0' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str2_bad && (str2[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str2[%lu] != '*' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str2[%lu] != '*' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str2_bad = TRUE;
     }
@@ -165,12 +165,12 @@ static void test_ascMalloc(void)
   str2_bad = FALSE;
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str1_bad && (str1[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '*' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '*' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
     if (!str2_bad && (str2[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str2[%lu] != '*' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str2[%lu] != '*' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str2_bad = TRUE;
     }
@@ -186,17 +186,17 @@ static void test_ascMalloc(void)
   str1_bad = FALSE;
   for (i=0 ; i<20 ; ++i) {
     if (!str1_bad && (str1[i] != '~')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '~' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '~' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=20 ; i<30 ; ++i) {
     if (!str1_bad && (str1[i] != '=')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '=' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '=' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
-    }                                                                       
+    }
   }
   if (!str1_bad) CU_PASS("str1 and str2 check out.");
 
@@ -209,21 +209,21 @@ static void test_ascMalloc(void)
   str1_bad = FALSE;
   for (i=0 ; i<10 ; ++i) {
     if (!str1_bad && (str1[i] != '=')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '~' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '~' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=10 ; i<30 ; ++i) {
     if (!str1_bad && (str1[i] != '|')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '=' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '=' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   if (!str1_bad) CU_PASS("str1 and str2 check out.");
 
-  snprintf(str1, STR_LEN-1, "This is yet another dumb string");
+  SNPRINTF(str1, STR_LEN-1, "This is yet another dumb string");
   CU_ASSERT(str1 == asc_memcpy(str1, str1, strlen(str1))); /* to == from */
   CU_ASSERT(0 == strcmp(str1, "This is yet another dumb string"));
 
@@ -242,7 +242,7 @@ static void test_ascMalloc(void)
   CU_ASSERT(1 == AllocatedMemory(p_str1, 50));
 #endif
 
-  snprintf(p_str1, 49, "I should survive a reallocation!");
+  SNPRINTF(p_str1, 49, "I should survive a reallocation!");
   p_str1 = ascreallocPURE(p_str1, 50, 100);
   CU_TEST_FATAL(NULL != p_str1);
 #ifdef MALLOC_DEBUG
@@ -482,9 +482,9 @@ static void test_ascMalloc(void)
   CU_ASSERT(1 == AllocatedMemory(p_str3, 25));
 #endif
 
-  snprintf(p_str1, 49, "I should survive a reallocation!");
-  snprintf(p_str2, 19, "Me too?");
-  snprintf(p_str3, 24, "Realloc me away.");
+  SNPRINTF(p_str1, 49, "I should survive a reallocation!");
+  SNPRINTF(p_str2, 19, "Me too?");
+  SNPRINTF(p_str3, 24, "Realloc me away.");
 
   p_str1 = ascrealloc(p_str1, 100);                     /* realloc to larger size */
   CU_TEST_FATAL(NULL != p_str1);
@@ -588,21 +588,21 @@ static void test_ascMalloc(void)
   str2_bad = FALSE;
   for (i=0 ; i<STR_LEN/2 ; ++i) {
     if (!str2_bad && (str2[i] != '\0')) {
-      snprintf(str3, STR_LEN-1, "str2[%lu] != '\\0' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str2[%lu] != '\\0' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str2_bad = TRUE;
     }
   }
   for (i=STR_LEN/2 ; i<STR_LEN-1 ; ++i) {
     if (!str2_bad && (str2[i] != '*')) {
-      snprintf(str3, STR_LEN-1, "str2[%lu] != '*' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str2[%lu] != '*' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str2_bad = TRUE;
     }
   }
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str1_bad && (str1[i] != '\0')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '\\0' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '\\0' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
@@ -618,12 +618,12 @@ static void test_ascMalloc(void)
   str2_bad = FALSE;
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str1_bad && (str1[i] != '+')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '+' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '+' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
     if (!str2_bad && (str2[i] != '-')) {
-      snprintf(str3, STR_LEN-1, "str2[%lu] != '-' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str2[%lu] != '-' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str2_bad = TRUE;
     }
@@ -639,14 +639,14 @@ static void test_ascMalloc(void)
   str1_bad = FALSE;
   for (i=0 ; i<STR_LEN/2 ; ++i) {
     if (!str1_bad && (str1[i] != '\0')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '\\0' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '\\0' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=STR_LEN/2 ; i<STR_LEN-1 ; ++i) {
     if (!str1_bad && (str1[i] != '=')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '=' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '=' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
@@ -660,7 +660,7 @@ static void test_ascMalloc(void)
   str1_bad = FALSE;
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str1_bad && (str1[i] != '+')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '+' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '+' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
@@ -676,14 +676,14 @@ static void test_ascMalloc(void)
   str1_bad = FALSE;
   for (i=0 ; i<STR_LEN/2 ; ++i) {
     if (!str1_bad && (str1[i] != '\xff')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != 255 in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != 255 in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
   }
   for (i=STR_LEN/2 ; i<STR_LEN-1 ; ++i) {
     if (!str1_bad && (str1[i] != '@')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '@' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '@' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }
@@ -697,7 +697,7 @@ static void test_ascMalloc(void)
   str1_bad = FALSE;
   for (i=0 ; i<STR_LEN ; ++i) {
     if (!str1_bad && (str1[i] != '#')) {
-      snprintf(str3, STR_LEN-1, "str1[%lu] != '#' in test_ascMalloc().", i);
+      SNPRINTF(str3, STR_LEN-1, "str1[%lu] != '#' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
     }

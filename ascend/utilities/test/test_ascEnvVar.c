@@ -107,7 +107,7 @@ static void test_ascEnvVar(void)
   Asc_DestroyEnvironment();                             /* start clean in case failure cases left vars */
   CU_TEST(0 == Asc_InitEnvironment(10));                /* init with typical number */
 
-  snprintf(str_path, STR_LEN-1, "%s", "ThisStringHasNoSpaces!");
+  SNPRINTF(str_path, STR_LEN-1, "%s", "ThisStringHasNoSpaces!");
 
   CU_TEST(0 == Asc_SetPathList("envar1", str_path));    /* single path element */
   paths = Asc_GetPathList("envar1", &elem_count);
@@ -116,11 +116,11 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[0], str_path));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "%s%c%s", "ThisStringHasNoSpaces+",
+  SNPRINTF(str_path, STR_LEN-1, "%s%c%s", "ThisStringHasNoSpaces+",
                                            PATHDIV,
                                            "this one does, huh?");
-  snprintf(str_path_ss1, STR_LEN-1, "%s", "ThisStringHasNoSpaces+");
-  snprintf(str_path_ss2, STR_LEN-1, "%s", "this one does, huh?");
+  SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "ThisStringHasNoSpaces+");
+  SNPRINTF(str_path_ss2, STR_LEN-1, "%s", "this one does, huh?");
 
   CU_TEST(0 == Asc_SetPathList("envar2", str_path));    /* 2 path elements */
   paths = Asc_GetPathList("envar2", &elem_count);
@@ -130,8 +130,8 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[1], str_path_ss2));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "%c%s", PATHDIV, "   ThisStringHasNoSpaces!   ");
-  snprintf(str_path_ss1, STR_LEN-1, "%s", "ThisStringHasNoSpaces!");
+  SNPRINTF(str_path, STR_LEN-1, "%c%s", PATHDIV, "   ThisStringHasNoSpaces!   ");
+  SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "ThisStringHasNoSpaces!");
 
   CU_TEST(0 == Asc_SetPathList("envar2e1", str_path));  /* 2 elements, 1 empty */
   paths = Asc_GetPathList("envar2e1", &elem_count);
@@ -140,8 +140,8 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[0], str_path_ss1));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "%s%c", "< I DO have spaces >      ", PATHDIV);
-  snprintf(str_path_ss1, STR_LEN-1, "%s", "< I DO have spaces >");
+  SNPRINTF(str_path, STR_LEN-1, "%s%c", "< I DO have spaces >      ", PATHDIV);
+  SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "< I DO have spaces >");
 
   CU_TEST(0 == Asc_SetPathList("envar2e2", str_path));  /* 2 elements, other empty */
   paths = Asc_GetPathList("envar2e2", &elem_count);
@@ -150,7 +150,7 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[0], str_path_ss1));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "%c", PATHDIV);
+  SNPRINTF(str_path, STR_LEN-1, "%c", PATHDIV);
 
   CU_TEST(0 == Asc_SetPathList("envar2e3", str_path));  /* 2 elements, both empty */
   paths = Asc_GetPathList("envar2e3", &elem_count);
@@ -159,7 +159,7 @@ static void test_ascEnvVar(void)
   CU_TEST(0 == elem_count);
   if (NULL != paths) ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "  %c  ", PATHDIV);
+  SNPRINTF(str_path, STR_LEN-1, "  %c  ", PATHDIV);
 
   CU_TEST(0 == Asc_SetPathList("envar2e4", str_path));  /* 2 elements, both empty with ws */
   paths = Asc_GetPathList("envar2e4", &elem_count);
@@ -168,14 +168,14 @@ static void test_ascEnvVar(void)
   CU_TEST(0 == elem_count);
   if (NULL != paths) ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "%s%c%s%c%s", "< spaces >",
+  SNPRINTF(str_path, STR_LEN-1, "%s%c%s%c%s", "< spaces >",
                                               PATHDIV,
                                               "~NoSpaces~  ",
                                               PATHDIV,
                                               "  another one . ~ $   ");
-  snprintf(str_path_ss1, STR_LEN-1, "%s", "< spaces >");
-  snprintf(str_path_ss2, STR_LEN-1, "%s", "~NoSpaces~");
-  snprintf(str_path_ss3, STR_LEN-1, "%s", "another one . ~ $");
+  SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "< spaces >");
+  SNPRINTF(str_path_ss2, STR_LEN-1, "%s", "~NoSpaces~");
+  SNPRINTF(str_path_ss3, STR_LEN-1, "%s", "another one . ~ $");
 
   CU_TEST(0 == Asc_SetPathList("envar3", str_path));    /* 3 path elements */
   paths = Asc_GetPathList("envar3", &elem_count);
@@ -186,12 +186,12 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[2], str_path_ss3));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "%s%c%c%s", "  < spaces >  ",
+  SNPRINTF(str_path, STR_LEN-1, "%s%c%c%s", "  < spaces >  ",
                                             PATHDIV,
                                             PATHDIV,
                                             "  another one . ~ $   ");
-  snprintf(str_path_ss1, STR_LEN-1, "%s", "< spaces >");
-  snprintf(str_path_ss2, STR_LEN-1, "%s", "another one . ~ $");
+  SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "< spaces >");
+  SNPRINTF(str_path_ss2, STR_LEN-1, "%s", "another one . ~ $");
 
   CU_TEST(0 == Asc_SetPathList("envar3e1", str_path));  /* 3 elements - middle empty */
   paths = Asc_GetPathList("envar3e1", &elem_count);
@@ -201,10 +201,10 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[1], str_path_ss2));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "%c%s%c", PATHDIV,
+  SNPRINTF(str_path, STR_LEN-1, "%c%s%c", PATHDIV,
                                           " \t - =ASCEND rocks || \t",
                                           PATHDIV);
-  snprintf(str_path_ss1, STR_LEN-1, "%s", "- =ASCEND rocks ||");
+  SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "- =ASCEND rocks ||");
 
   CU_TEST(0 == Asc_SetPathList("envar3e2", str_path));  /* 3 elements - 1st & 3rd empty */
   paths = Asc_GetPathList("envar3e2", &elem_count);
@@ -213,7 +213,7 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[0], str_path_ss1));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "%c   %c  ", PATHDIV, PATHDIV);
+  SNPRINTF(str_path, STR_LEN-1, "%c   %c  ", PATHDIV, PATHDIV);
 
   CU_TEST(0 == Asc_SetPathList("envar3e3", str_path));  /* 3 elements - all empty */
   paths = Asc_GetPathList("envar3e3", &elem_count);
@@ -237,7 +237,7 @@ static void test_ascEnvVar(void)
   memset(str_pathbig_ss2, '@', MAX_ENV_VAR_LENGTH-1);
   str_pathbig_ss2[MAX_ENV_VAR_LENGTH-1] = '\0';
 
-  snprintf(str_pathbig, MAX_ENV_VAR_LENGTH*3, "%s%c%s",
+  SNPRINTF(str_pathbig, MAX_ENV_VAR_LENGTH*3, "%s%c%s",
                                               str_pathbig_ss1,
                                               PATHDIV,
                                               str_pathbig_ss2);
@@ -294,7 +294,7 @@ static void test_ascEnvVar(void)
   CU_TEST(14 == elem_count);
   for (i=0 ; i<elem_count ; ++i) {
     if (0 == gl_search(name_list, paths[i], compare_strings)) {
-      snprintf(str_pathbig, MAX_ENV_VAR_LENGTH*3, "Environment variable name not registered: %s",
+      SNPRINTF(str_pathbig, MAX_ENV_VAR_LENGTH*3, "Environment variable name not registered: %s",
                                                    paths[i]);
       CU_FAIL(str_pathbig);
     }
@@ -306,7 +306,7 @@ static void test_ascEnvVar(void)
 
   /* test Asc_PutEnv() */
 
-  snprintf(str_path, STR_LEN-1, "envar1=This is my string");
+  SNPRINTF(str_path, STR_LEN-1, "envar1=This is my string");
 
   CU_TEST(1 == Asc_PutEnv(str_path));                   /* not initialized */
 
@@ -328,8 +328,8 @@ static void test_ascEnvVar(void)
 
   CU_TEST(0 == Asc_InitEnvironment(10));                /* init with typical number */
 
-  snprintf(str_path, STR_LEN-1, "%s", "envar1=ThisStringHasNoSpaces!");
-  snprintf(str_path_ss1, STR_LEN-1, "%s", "ThisStringHasNoSpaces!");
+  SNPRINTF(str_path, STR_LEN-1, "%s", "envar1=ThisStringHasNoSpaces!");
+  SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "ThisStringHasNoSpaces!");
 
   CU_TEST(0 == Asc_PutEnv(str_path));                   /* single path element */
   paths = Asc_GetPathList("envar1", &elem_count);
@@ -338,11 +338,11 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[0], str_path_ss1));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "envar2  =\t %s%c%s", "ThisStringHasNoSpaces+",
+  SNPRINTF(str_path, STR_LEN-1, "envar2  =\t %s%c%s", "ThisStringHasNoSpaces+",
                                                       PATHDIV,
                                                       "this one does, huh?");
-  snprintf(str_path_ss1, STR_LEN-1, "%s", "ThisStringHasNoSpaces+");
-  snprintf(str_path_ss2, STR_LEN-1, "%s", "this one does, huh?");
+  SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "ThisStringHasNoSpaces+");
+  SNPRINTF(str_path_ss2, STR_LEN-1, "%s", "this one does, huh?");
 
   CU_TEST(0 == Asc_PutEnv(str_path));                   /* 2 path elements */
   paths = Asc_GetPathList("envar2", &elem_count);
@@ -352,8 +352,8 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[1], str_path_ss2));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "  envar2e1  = %c%s", PATHDIV, "   ThisStringHasNoSpaces!   ");
-  snprintf(str_path_ss1, STR_LEN-1, "%s", "ThisStringHasNoSpaces!");
+  SNPRINTF(str_path, STR_LEN-1, "  envar2e1  = %c%s", PATHDIV, "   ThisStringHasNoSpaces!   ");
+  SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "ThisStringHasNoSpaces!");
 
   CU_TEST(0 == Asc_PutEnv(str_path));                   /* 2 elements, 1 empty */
   paths = Asc_GetPathList("envar2e1", &elem_count);
@@ -362,8 +362,8 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[0], str_path_ss1));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "envar2e2= %s%c ", "< I DO have spaces >      ", PATHDIV);
-  snprintf(str_path_ss1, STR_LEN-1, "%s", "< I DO have spaces >");
+  SNPRINTF(str_path, STR_LEN-1, "envar2e2= %s%c ", "< I DO have spaces >      ", PATHDIV);
+  SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "< I DO have spaces >");
 
   CU_TEST(0 == Asc_PutEnv(str_path));                   /* 2 elements, other empty */
   paths = Asc_GetPathList("envar2e2", &elem_count);
@@ -372,7 +372,7 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[0], str_path_ss1));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "envar2e3=%c", PATHDIV);
+  SNPRINTF(str_path, STR_LEN-1, "envar2e3=%c", PATHDIV);
 
   CU_TEST(0 == Asc_PutEnv(str_path));                   /* 2 elements, both empty */
   paths = Asc_GetPathList("envar2e3", &elem_count);
@@ -381,7 +381,7 @@ static void test_ascEnvVar(void)
   CU_TEST(0 == elem_count);
   if (NULL != paths) ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "\t envar2e4 =   %c  ", PATHDIV);
+  SNPRINTF(str_path, STR_LEN-1, "\t envar2e4 =   %c  ", PATHDIV);
 
   CU_TEST(0 == Asc_PutEnv(str_path));                   /* 2 elements, both empty with ws */
   paths = Asc_GetPathList("envar2e4", &elem_count);
@@ -390,14 +390,14 @@ static void test_ascEnvVar(void)
   CU_TEST(0 == elem_count);
   if (NULL != paths) ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "envar3=%s%c%s%c%s", "< spaces >",
+  SNPRINTF(str_path, STR_LEN-1, "envar3=%s%c%s%c%s", "< spaces >",
                                                      PATHDIV,
                                                      "~NoSpaces~  ",
                                                      PATHDIV,
                                                      "  another one . ~ $   ");
-  snprintf(str_path_ss1, STR_LEN-1, "%s", "< spaces >");
-  snprintf(str_path_ss2, STR_LEN-1, "%s", "~NoSpaces~");
-  snprintf(str_path_ss3, STR_LEN-1, "%s", "another one . ~ $");
+  SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "< spaces >");
+  SNPRINTF(str_path_ss2, STR_LEN-1, "%s", "~NoSpaces~");
+  SNPRINTF(str_path_ss3, STR_LEN-1, "%s", "another one . ~ $");
 
   CU_TEST(0 == Asc_PutEnv(str_path));                   /* 3 path elements */
   paths = Asc_GetPathList("envar3", &elem_count);
@@ -408,12 +408,12 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[2], str_path_ss3));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "envar3e1\t=%s%c%c%s", "  < spaces >  ",
+  SNPRINTF(str_path, STR_LEN-1, "envar3e1\t=%s%c%c%s", "  < spaces >  ",
                                                        PATHDIV,
                                                        PATHDIV,
                                                        "  another one . ~ $   ");
-  snprintf(str_path_ss1, STR_LEN-1, "%s", "< spaces >");
-  snprintf(str_path_ss2, STR_LEN-1, "%s", "another one . ~ $");
+  SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "< spaces >");
+  SNPRINTF(str_path_ss2, STR_LEN-1, "%s", "another one . ~ $");
 
   CU_TEST(0 == Asc_PutEnv(str_path));                   /* 3 elements - middle empty */
   paths = Asc_GetPathList("envar3e1", &elem_count);
@@ -423,10 +423,10 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[1], str_path_ss2));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "envar3e2=%c%s%c", PATHDIV,
+  SNPRINTF(str_path, STR_LEN-1, "envar3e2=%c%s%c", PATHDIV,
                                                    " \t - =ASCEND rocks || \t",
                                                    PATHDIV);
-  snprintf(str_path_ss1, STR_LEN-1, "%s", "- =ASCEND rocks ||");
+  SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "- =ASCEND rocks ||");
 
   CU_TEST(0 == Asc_PutEnv(str_path));                   /* 3 elements - 1st & 3rd empty */
   paths = Asc_GetPathList("envar3e2", &elem_count);
@@ -435,7 +435,7 @@ static void test_ascEnvVar(void)
   CU_TEST(!strcmp(paths[0], str_path_ss1));
   ascfree(paths);
 
-  snprintf(str_path, STR_LEN-1, "envar3e3=%c   %c  ", PATHDIV, PATHDIV);
+  SNPRINTF(str_path, STR_LEN-1, "envar3e3=%c   %c  ", PATHDIV, PATHDIV);
 
   CU_TEST(0 == Asc_PutEnv(str_path));                   /* 3 elements - all empty */
   paths = Asc_GetPathList("envar3e3", &elem_count);
@@ -446,7 +446,7 @@ static void test_ascEnvVar(void)
 
   memset(str_pathbig_ss1, '.', MAX_ENV_VAR_LENGTH-9);
   str_pathbig_ss1[MAX_ENV_VAR_LENGTH-9] = '\0';
-  snprintf(str_pathbig, MAX_ENV_VAR_LENGTH-1, "envar4=%s", str_pathbig_ss1);
+  SNPRINTF(str_pathbig, MAX_ENV_VAR_LENGTH-1, "envar4=%s", str_pathbig_ss1);
 
   CU_TEST(0 == Asc_PutEnv(str_pathbig));                /* large string at max length */
   paths = Asc_GetPathList("envar4", &elem_count);
@@ -457,7 +457,7 @@ static void test_ascEnvVar(void)
 
   memset(str_pathbig_ss1, 'a', MAX_ENV_VAR_LENGTH-3);
   str_pathbig_ss1[MAX_ENV_VAR_LENGTH-3] = '\0';
-  snprintf(str_pathbig, MAX_ENV_VAR_LENGTH, "%s=1", str_pathbig_ss1);
+  SNPRINTF(str_pathbig, MAX_ENV_VAR_LENGTH, "%s=1", str_pathbig_ss1);
 
   CU_TEST(0 == Asc_PutEnv(str_pathbig));                /* large string at max length */
   paths = Asc_GetPathList(str_pathbig_ss1, &elem_count);
@@ -486,7 +486,7 @@ static void test_ascEnvVar(void)
   CU_TEST(12 == elem_count);
   for (i=0 ; i<elem_count ; ++i) {
     if (0 == gl_search(name_list, paths[i], compare_strings)) {
-      snprintf(str_pathbig, MAX_ENV_VAR_LENGTH*3, "Environment variable name not registered: %s",
+      SNPRINTF(str_pathbig, MAX_ENV_VAR_LENGTH*3, "Environment variable name not registered: %s",
                                                    paths[i]);
       CU_FAIL(str_pathbig);
     }
@@ -509,7 +509,7 @@ static void test_ascEnvVar(void)
   CU_TEST(0 == Asc_InitEnvironment(10));                /* init with typical number */
 
   if (NULL != getenv(test_ext_varname)) {               /* make sure our external env var doesn't exist */
-    snprintf(str_path, STR_LEN-1,
+    SNPRINTF(str_path, STR_LEN-1,
              "External environment variable '%s' already exists.  Aborting test of Asc_ImportPathList().",
              test_ext_varname);
     str_path[STR_LEN-1] = '\0';
@@ -519,8 +519,8 @@ static void test_ascEnvVar(void)
 
     CU_TEST(1 == Asc_ImportPathList(test_ext_varname)); /* non-existent external env var */
 
-    snprintf(str_path_ss1, STR_LEN-1, "%s", "iHaveNoSpaces");
-    snprintf(str_path, STR_LEN-1, "%s=%s", test_ext_varname, str_path_ss1);
+    SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "iHaveNoSpaces");
+    SNPRINTF(str_path, STR_LEN-1, "%s=%s", test_ext_varname, str_path_ss1);
     CU_TEST_FATAL(0 == putenv(str_path));
 
     CU_TEST(0 == Asc_ImportPathList(test_ext_varname)); /* import single path env var */
@@ -530,9 +530,9 @@ static void test_ascEnvVar(void)
     CU_TEST(!strcmp(paths[0], str_path_ss1));
     if (NULL != paths) ascfree(paths);
 
-    snprintf(str_path_ss1, STR_LEN-1, "%s", "~This one has spaces~");
-    snprintf(str_path_ss2, STR_LEN-1, "%s", "<>NotMe<>");
-    snprintf(str_path, STR_LEN-1, "%s=%s%c%s",
+    SNPRINTF(str_path_ss1, STR_LEN-1, "%s", "~This one has spaces~");
+    SNPRINTF(str_path_ss2, STR_LEN-1, "%s", "<>NotMe<>");
+    SNPRINTF(str_path, STR_LEN-1, "%s=%s%c%s",
                                   test_ext_varname,
                                   str_path_ss1,
                                   PATHDIV,
@@ -547,10 +547,10 @@ static void test_ascEnvVar(void)
     CU_TEST(!strcmp(paths[1], str_path_ss2));
     if (NULL != paths) ascfree(paths);
 
-    snprintf(str_path_ss1, STR_LEN-1, "%cusr%clocal%clib", SLASH, SLASH, SLASH);
-    snprintf(str_path_ss2, STR_LEN-1, "%cc%cWindows%cTemp", SLASH, SLASH, SLASH);
-    snprintf(str_path_ss3, STR_LEN-1, "server%c%caccount%csubfolder", SLASH, SLASH, SLASH);
-    snprintf(str_path, STR_LEN-1, "%s=%s%c%s%c%s",
+    SNPRINTF(str_path_ss1, STR_LEN-1, "%cusr%clocal%clib", SLASH, SLASH, SLASH);
+    SNPRINTF(str_path_ss2, STR_LEN-1, "%cc%cWindows%cTemp", SLASH, SLASH, SLASH);
+    SNPRINTF(str_path_ss3, STR_LEN-1, "server%c%caccount%csubfolder", SLASH, SLASH, SLASH);
+    SNPRINTF(str_path, STR_LEN-1, "%s=%s%c%s%c%s",
                                   test_ext_varname,
                                   str_path_ss1,
                                   PATHDIV,
@@ -569,7 +569,7 @@ static void test_ascEnvVar(void)
     if (NULL != paths) ascfree(paths);
   }
 
-  snprintf(str_path, STR_LEN-1, "%s=", test_ext_varname); /* clear the temporary external env var */
+  SNPRINTF(str_path, STR_LEN-1, "%s=", test_ext_varname); /* clear the temporary external env var */
   CU_TEST(0 == putenv(str_path));
   Asc_DestroyEnvironment();                             /* clean up */
 
@@ -587,9 +587,9 @@ static void test_ascEnvVar(void)
   Asc_DestroyEnvironment();                             /* start clean in case failure cases left vars */
   CU_TEST(0 == Asc_InitEnvironment(10));                /* init with typical number */
 
-  snprintf(str_path_ss1, STR_LEN-1, "path/with\\many;unusual:chars");
-  snprintf(str_path_ss2, STR_LEN-1, "  What should I test next?   ");
-  snprintf(str_path_ss3, STR_LEN-1, "T");
+  SNPRINTF(str_path_ss1, STR_LEN-1, "path/with\\many;unusual:chars");
+  SNPRINTF(str_path_ss2, STR_LEN-1, "  What should I test next?   ");
+  SNPRINTF(str_path_ss3, STR_LEN-1, "T");
 
   CU_TEST(0 == Asc_AppendPath("envar1", str_path_ss1)); /* append a path to a new variable */
   paths = Asc_GetPathList("envar1", &elem_count);
@@ -680,10 +680,10 @@ static void test_ascEnvVar(void)
   str_env = Asc_GetEnv("envar1");                       /* non-existent var */
   CU_TEST(NULL == str_env);
 
-  snprintf(str_path_ss1, STR_LEN-1, "path/with\\many;unusual:chars");
-  snprintf(str_path_ss2, STR_LEN-1, "  What should I test next?   ");
-  snprintf(str_path_ss3, STR_LEN-1, "T");
-  snprintf(str_path, STR_LEN-1, "%s%c%s%c%s", str_path_ss1, PATHDIV, str_path_ss2, PATHDIV, str_path_ss3);
+  SNPRINTF(str_path_ss1, STR_LEN-1, "path/with\\many;unusual:chars");
+  SNPRINTF(str_path_ss2, STR_LEN-1, "  What should I test next?   ");
+  SNPRINTF(str_path_ss3, STR_LEN-1, "T");
+  SNPRINTF(str_path, STR_LEN-1, "%s%c%s%c%s", str_path_ss1, PATHDIV, str_path_ss2, PATHDIV, str_path_ss3);
 
   CU_TEST(0 == Asc_SetPathList("envar1", str_path_ss1));
   str_env = Asc_GetEnv("envar1");
@@ -733,7 +733,7 @@ static void test_ascEnvVar(void)
   CU_TEST_FATAL(2 == elem_count);
   CU_TEST(!strcmp(paths[0], "envar1"));
   CU_TEST(!strcmp(paths[1], "envar2"));
-  ascfree(paths);                                                                   
+  ascfree(paths);
 
   Asc_SetPathList("envar3", "my val 3");
   paths = Asc_EnvNames(&elem_count);                    /* 2 environment var */
