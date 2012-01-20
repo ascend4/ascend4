@@ -53,6 +53,7 @@ void test_subst(void){
 	M(r);
 
 	CU_TEST(strcmp(r,"/home/john/bitmaps")==0);
+	ASC_FREE(r);
 
 	/* TODO add lots more tests in here... */
 
