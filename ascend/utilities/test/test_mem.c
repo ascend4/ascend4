@@ -21,6 +21,8 @@
  *  COPYING.
  */
 
+/* FIXME this test needs to move to 'general'. */
+
 #include <stdio.h>
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
@@ -390,98 +392,96 @@ static void test_mem(void)
   /* test mem_set_byte(), mem_get_byte() */
 
   memset(str1, '\0', STR_LEN);
-  CU_TEST('\0' == mem_get_byte((long)str1));
+  CU_TEST('\0' == mem_get_byte((asc_intptr_t)str1));
 
-  mem_set_byte((long)str1, 0xff);
-  CU_TEST(0xff == mem_get_byte((long)str1));
+  mem_set_byte((asc_intptr_t)str1, 0xff);
+  CU_TEST(0xff == mem_get_byte((POINTER)str1));
 
-  mem_set_byte((long)str1, '\t');
-  CU_TEST('\t' == mem_get_byte((long)str1));
+  mem_set_byte((POINTER)str1, '\t');
+  CU_TEST('\t' == mem_get_byte((POINTER)str1));
 
-  mem_set_byte((long)str1, '\0');
-  CU_TEST('\0' == mem_get_byte((long)str1));
+  mem_set_byte((POINTER)str1, '\0');
+  CU_TEST('\0' == mem_get_byte((POINTER)str1));
 
   /* test mem_set_int(), mem_get_int() */
 
   memset(str1, '\0', STR_LEN);
-  CU_TEST(0 == mem_get_int((long)str1));
+  CU_TEST(0 == mem_get_int((POINTER)str1));
 
-  mem_set_int((long)str1, 0xff72);
-  CU_TEST(0xff72 == mem_get_int((long)str1));
+  mem_set_int((POINTER)str1, 0xff72);
+  CU_TEST(0xff72 == mem_get_int((POINTER)str1));
 
-  mem_set_int((long)str1, '\t');
-  CU_TEST('\t' == mem_get_int((long)str1));
+  mem_set_int((POINTER)str1, '\t');
+  CU_TEST('\t' == mem_get_int((POINTER)str1));
 
-  mem_set_int((long)str1, 0);
-  CU_TEST(0 == mem_get_int((long)str1));
+  mem_set_int((POINTER)str1, 0);
+  CU_TEST(0 == mem_get_int((POINTER)str1));
 
   /* test mem_set_long(), mem_get_long() */
 
   memset(str1, '\0', STR_LEN);
-  CU_TEST(0 == mem_get_long((long)str1));
+  CU_TEST(0 == mem_get_long((POINTER)str1));
 
-  mem_set_long((long)str1, 0xff72);
-  CU_TEST(0xff72 == mem_get_long((long)str1));
+  mem_set_long((POINTER)str1, 0xff72);
+  CU_TEST(0xff72 == mem_get_long((POINTER)str1));
 
-  mem_set_long((long)str1, '\t');
-  CU_TEST('\t' == mem_get_long((long)str1));
+  mem_set_long((POINTER)str1, '\t');
+  CU_TEST('\t' == mem_get_long((POINTER)str1));
 
-  mem_set_long((long)str1, 0);
-  CU_TEST(0 == mem_get_long((long)str1));
+  mem_set_long((POINTER)str1, 0);
+  CU_TEST(0 == mem_get_long((POINTER)str1));
 
   /* test mem_set_float(), mem_get_float() */
 
   memset(str1, '\0', STR_LEN);
-  CU_ASSERT_DOUBLE_EQUAL(0.0, mem_get_float((long)str1), 0.001);
+  CU_ASSERT_DOUBLE_EQUAL(0.0, mem_get_float((POINTER)str1), 0.001);
 
-  mem_set_float((long)str1, 1.501436);
-  CU_ASSERT_DOUBLE_EQUAL(1.501436, mem_get_float((long)str1), 0.00001);
+  mem_set_float((POINTER)str1, 1.501436);
+  CU_ASSERT_DOUBLE_EQUAL(1.501436, mem_get_float((POINTER)str1), 0.00001);
 
-  mem_set_float((long)str1, 9.3e-10);
-  CU_ASSERT_DOUBLE_EQUAL(9.3e-10, mem_get_float((long)str1), 0.001);
+  mem_set_float((POINTER)str1, 9.3e-10);
+  CU_ASSERT_DOUBLE_EQUAL(9.3e-10, mem_get_float((POINTER)str1), 0.001);
 
-  mem_set_float((long)str1, 0.0);
-  CU_ASSERT_DOUBLE_EQUAL(0.0, mem_get_float((long)str1), 0.001);
+  mem_set_float((POINTER)str1, 0.0);
+  CU_ASSERT_DOUBLE_EQUAL(0.0, mem_get_float((POINTER)str1), 0.001);
 
   /* test mem_set_double(), mem_get_double() */
 
   memset(str1, '\0', STR_LEN);
-  CU_ASSERT_DOUBLE_EQUAL(0.0, mem_get_double((long)str1), 0.001);
+  CU_ASSERT_DOUBLE_EQUAL(0.0, mem_get_double((POINTER)str1), 0.001);
 
-  mem_set_double((long)str1, 1.501436872625);
-  CU_ASSERT_DOUBLE_EQUAL(1.501436872625, mem_get_double((long)str1), 0.000000000001);
+  mem_set_double((POINTER)str1, 1.501436872625);
+  CU_ASSERT_DOUBLE_EQUAL(1.501436872625, mem_get_double((POINTER)str1), 0.000000000001);
 
-  mem_set_double((long)str1, 9.32626e-154);
-  CU_ASSERT_DOUBLE_EQUAL(9.32626e-154, mem_get_double((long)str1), 0.00001);
+  mem_set_double((POINTER)str1, 9.32626e-154);
+  CU_ASSERT_DOUBLE_EQUAL(9.32626e-154, mem_get_double((POINTER)str1), 0.00001);
 
-  mem_set_double((long)str1, 0.0);
-  CU_ASSERT_DOUBLE_EQUAL(0.0, mem_get_double((long)str1), 0.001);
+  mem_set_double((POINTER)str1, 0.0);
+  CU_ASSERT_DOUBLE_EQUAL(0.0, mem_get_double((POINTER)str1), 0.001);
 
   /* test mem_set_unsigned(), mem_get_unsigned() */
 
   memset(str1, '\0', STR_LEN);
-  CU_TEST(0 == mem_get_unsigned((long)str1));
+  CU_TEST(0 == mem_get_unsigned((POINTER)str1));
 
-  mem_set_unsigned((long)str1, 0xff72);
-  CU_TEST(0xff72 == mem_get_unsigned((long)str1));
+  mem_set_unsigned((POINTER)str1, 0xff72);
+  CU_TEST(0xff72 == mem_get_unsigned((POINTER)str1));
 
-  mem_set_unsigned((long)str1, '\t');
-  CU_TEST('\t' == mem_get_unsigned((long)str1));
+  mem_set_unsigned((POINTER)str1, '\t');
+  CU_TEST('\t' == mem_get_unsigned((POINTER)str1));
 
-  mem_set_unsigned((long)str1, 0);
-  CU_TEST(0 == mem_get_unsigned((long)str1));
+  mem_set_unsigned((POINTER)str1, 0);
+  CU_TEST(0 == mem_get_unsigned((POINTER)str1));
 
   /* test mem_create_store(), mem_destroy_store() */
 
   ms = mem_create_store(0, 10, sizeof(int), 10, 10); /* create a store - length < 1 (error) */
   CU_TEST(NULL == ms);
-  if (NULL != ms)
-    mem_destroy_store(ms);
+  if(NULL != ms)mem_destroy_store(ms);
 
   ms = mem_create_store(10, 0, sizeof(int), 10, 10); /* create a store - width < 1 (error) */
   CU_TEST(NULL == ms);
-  if (NULL != ms)
-    mem_destroy_store(ms);
+  if(NULL != ms)mem_destroy_store(ms);
 
   ms = mem_create_store(10, 10, 0, 10, 10);          /* create a store - eltsze < 1 (ok) */
   CU_TEST(NULL != ms);
@@ -494,8 +494,7 @@ static void test_mem(void)
   CU_TEST(10 == stats.str_len);
   CU_TEST(10 == stats.str_wid);
 
-  if (NULL != ms)
-    mem_destroy_store(ms);
+  if(NULL != ms)mem_destroy_store(ms);
 
   ms = mem_create_store(10, 10, sizeof(int), 10, 10);/* create a store for ints */
   CU_TEST(NULL != ms);

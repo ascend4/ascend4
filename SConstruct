@@ -2103,8 +2103,8 @@ _sizes = {
 	,"INT" : "int"
 	,"LONG" : "long"
 	,"LONG_LONG" : "long long"
-	,"ULONG" : "unsigned long"
 	,"UINT" : "unsigned int"
+	,"ULONG" : "unsigned long"
 	,"ULONGLONG" : "unsigned long long"
 }
 
