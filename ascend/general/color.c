@@ -68,9 +68,13 @@ int color_on(FILE *f, int colorcode){
 	int use_color = color_test();
 
 	if(use_color){
-		int fg = colorcode & (ASC_FG_WHITE);
-		int bg = colorcode & (ASC_BG_WHITE) >> 4;
-		fprintf(f, "\033[3%d;4%dm",fg,bg);
+		int fg = colorcode & (ASC_FG_GREY);
+		int bg = (colorcode & (ASC_BG_GREY)) >> 4;
+		int bold = colorcode & ASC_FG_BRIGHT;
+		fprintf(f, "\033[3%d%sm",fg,(bold?";1":""));
+		if(bg){
+			fprintf(f, "\0334%dm",bg);
+		}
 	}
 	return 0;
 }
