@@ -60,9 +60,9 @@ on the compile line. renamed to NOISY.*/
 
 #define ENV_MAX_VAR_NAME 64 /* arbitrarily*/
 
-char * env_subst_level(const char *path,GetEnvFn *getenvptr, int level);
+char *env_subst_level(const char *path,GetEnvFn *getenvptr, int level);
 
-char * env_subst(const char *path,GetEnvFn *getenvptr){
+char *env_subst(const char *path,GetEnvFn *getenvptr){
 	char *dest;
 
 	X(path);
@@ -89,7 +89,7 @@ int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr){
 	return -1;
 }
 
-char * env_subst_level(const char *path,GetEnvFn *getenvptr, int level){
+char *env_subst_level(const char *path,GetEnvFn *getenvptr, int level){
 	char *dest, *dest1;
 	char *msg;
 	char *p, *q, *i, *j, *val;
