@@ -38,7 +38,7 @@
 
 extern int register_cunit_tests();
 
-extern struct FilePath* ASC_TEST_DIR;
+extern char ASC_TEST_PATH[PATH_MAX];
 
 /*
 	The following allows the CUnit tests to be run using a standalone executable
@@ -135,8 +135,11 @@ int main(int argc, char* argv[]){
 	char suitename[1000];
 	char list = 0;
 
-	struct FilePath* test_executable = ospath_new(argv[0]);
-	ASC_TEST_DIR = ospath_getdir(test_executable); /** Global Variable containing Path information about the test directory */
+	struct FilePath *test_executable = ospath_new(argv[0]);
+	struct FilePath *test_dir = ospath_getdir(test_executable); /** Global Variable containing Path information about the test directory */
+	ospath_strncpy(test_dir,ASC_TEST_PATH,PATH_MAX);
+	ospath_free(test_dir);
+	ospath_free(test_executable);
 
 	static struct option long_options[] = {
 		{"on-error",   required_argument, 0, 'e'},
@@ -248,7 +251,5 @@ int main(int argc, char* argv[]){
 cleanup:
 	if(mode == CU_BRM_VERBOSE)ascshutdown("Testing completed.");/* shut down memory manager */
 	CU_cleanup_registry();
-	ospath_free(test_executable);
-	ospath_free(ASC_TEST_DIR);
 	return result;
 }

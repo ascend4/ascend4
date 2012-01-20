@@ -65,7 +65,7 @@
 
 #define RAD_TOL 1e-05
 
-extern struct FilePath* ASC_TEST_DIR;
+extern char ASC_TEST_PATH[PATH_MAX];
 
 struct FileList
 {
@@ -148,7 +148,7 @@ static void test_autodiff(void){
 	int status;
 	int use_yacas = 0;
 
-	struct module_t *m;
+	//struct module_t *m;
 
 	struct Name *name;
 	enum Proc_enum pe;
@@ -191,8 +191,7 @@ static void test_autodiff(void){
 
 	// FIXME Use the environment variables here
 
-	
-	ospath_strncpy(ASC_TEST_DIR,FILE_PATH,PATH_MAX);
+	strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
 	strncat(FILE_PATH,OUTENV,PATH_MAX-strlen(FILE_PATH));
 	out_osp = ospath_new(FILE_PATH);
 	out = ospath_fopen(out_osp,"w");
@@ -200,45 +199,45 @@ static void test_autodiff(void){
 
 	/** @TODO Open the following streams only if Environment Variable is set */
 	if(getenv(USE_YACAS_ENV) != NULL ){
-			ospath_strncpy(ASC_TEST_DIR,FILE_PATH,PATH_MAX);
+			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
 			strncat(FILE_PATH,VARFILE,PATH_MAX-strlen(FILE_PATH));
 			varfile_osp = ospath_new(FILE_PATH);
 			varfile = ospath_fopen(varfile_osp,"w");
 			CU_ASSERT_PTR_NOT_NULL_FATAL(varfile);
 
-			ospath_strncpy(ASC_TEST_DIR,FILE_PATH,PATH_MAX);
+			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
 			strncat(FILE_PATH,YACAS_2ND,PATH_MAX-strlen(FILE_PATH));
 			yacas_osp_2nd = ospath_new(FILE_PATH);
 			SecondDer.yacas = ospath_fopen(yacas_osp_2nd,"w");
 			CU_ASSERT_PTR_NOT_NULL_FATAL(SecondDer.yacas);
 		
-			ospath_strncpy(ASC_TEST_DIR,FILE_PATH,PATH_MAX);
+			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
 			strncat(FILE_PATH,SAFEDER_2ND,PATH_MAX-strlen(FILE_PATH));
 			safe_osp_2nd = ospath_new(FILE_PATH);
 			SecondDer.safeder = ospath_fopen(safe_osp_2nd,"w");
 			CU_ASSERT_PTR_NOT_NULL_FATAL(SecondDer.safeder);
 			
 		
-			ospath_strncpy(ASC_TEST_DIR,FILE_PATH,PATH_MAX);
+			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
 			strncat(FILE_PATH,NONSAFEDER_2ND,PATH_MAX-strlen(FILE_PATH));
 			nonsafe_osp_2nd = ospath_new(FILE_PATH);
 			SecondDer.nonsafeder = ospath_fopen(nonsafe_osp_2nd,"w");
 			CU_ASSERT_PTR_NOT_NULL_FATAL(SecondDer.nonsafeder);
 			
-			ospath_strncpy(ASC_TEST_DIR,FILE_PATH,PATH_MAX);
+			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
 			strncat(FILE_PATH,YACAS_1ST,PATH_MAX-strlen(FILE_PATH));
 			yacas_osp_1st = ospath_new(FILE_PATH);
 			FirstDer.yacas = ospath_fopen(yacas_osp_1st,"w");
 			CU_ASSERT_PTR_NOT_NULL_FATAL(FirstDer.yacas);
 		
-			ospath_strncpy(ASC_TEST_DIR,FILE_PATH,PATH_MAX);
+			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
 			strncat(FILE_PATH,SAFEDER_1ST,PATH_MAX-strlen(FILE_PATH));
 			safe_osp_1st = ospath_new(FILE_PATH);
 			FirstDer.safeder = ospath_fopen(safe_osp_1st,"w");
 			CU_ASSERT_PTR_NOT_NULL_FATAL(FirstDer.safeder);
 			
 		
-			ospath_strncpy(ASC_TEST_DIR,FILE_PATH,PATH_MAX);
+			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
 			strncat(FILE_PATH,NONSAFEDER_1ST,PATH_MAX-strlen(FILE_PATH));
 			nonsafe_osp_1st = ospath_new(FILE_PATH);
 			FirstDer.nonsafeder = ospath_fopen(nonsafe_osp_1st,"w");
@@ -247,13 +246,13 @@ static void test_autodiff(void){
 			use_yacas=1;
 	}
 	else{
-			ospath_strncpy(ASC_TEST_DIR,FILE_PATH,PATH_MAX);
+			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
 			strncat(FILE_PATH,YACAS_IN_1ST,PATH_MAX-strlen(FILE_PATH));
 			first_yacas_osp = ospath_new(FILE_PATH);
 			first_yacas = ospath_fopen(first_yacas_osp,"r");
 			CU_ASSERT_PTR_NOT_NULL_FATAL(first_yacas);
 			
-			ospath_strncpy(ASC_TEST_DIR,FILE_PATH,PATH_MAX);
+			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
 			strncat(FILE_PATH,YACAS_IN_2ND,PATH_MAX-strlen(FILE_PATH));
 			second_yacas_osp = ospath_new(FILE_PATH);
 			second_yacas = ospath_fopen(second_yacas_osp,"r");
@@ -261,7 +260,7 @@ static void test_autodiff(void){
 	}
 
 	/* load the file */
-	m = Asc_OpenModule(CASEFILE,&status);
+	Asc_OpenModule(CASEFILE,&status);
 	CU_ASSERT(status == 0);
 
 	/* parse it */
