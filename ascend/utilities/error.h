@@ -108,11 +108,11 @@ typedef enum error_severity_enum{
 # define ERROR_REPORTER_DEBUG(args...) error_reporter(ASC_PROG_NOTE, __FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_HERE(SEV,args...) error_reporter(SEV,__FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_NOLINE(SEV,args...) error_reporter(SEV, NULL, 0, NULL, ##args)
-# define CONSOLE_DEBUG(args...) ((void)(color_on(stderr,"0;34") + \
+# define CONSOLE_DEBUG(args...) ((void)(color_on(stderr,ASC_FG_BRIGHTBLUE) + \
 		fprintf(stderr, "%s:%d ",__FILE__,__LINE__) + \
-		color_on(stderr,"0;31") + \
+		color_on(stderr,ASC_FG_BRIGHTRED) + \
 		fprintf(stderr, "(%s)", __func__) + \
-		color_on(stderr,"0;34") + \
+		color_on(stderr,ASC_FG_BRIGHTBLUE) + \
 		fprintf(stderr, ": ") + \
 		fprintf(stderr, ##args) + \
         fprintf(stderr, "\n") + color_off(stderr)))
@@ -188,9 +188,9 @@ typedef struct{
 			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"failed");
 		}else{
 			ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"success");
-		}	
+		}
 
-	The next 'error_reporter' call after an outermost 'error_reporter_tree_end' 
+	The next 'error_reporter' call after an outermost 'error_reporter_tree_end'
 	will cause the error tree to be output to the error reporting channel.
 
 	If an 'error_reporter' is found *inside* an an 'error_reporter_tree_start'

@@ -32,13 +32,9 @@
  *  10/13/2005  Added Asc_PrintHasVTable() so user can tell if a vtable
  *              has already been registered.  (J.D. St.Clair)
  */
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <ascend/general/platform.h>
 #include "ascPrint.h"
 
-/* <..> path is required here for the autotools build to be happy */
+#include <stdlib.h>
 #include <ascend/utilities/config.h>
 
 static struct Asc_PrintVTable *g_Asc_printVtables = NULL;
@@ -239,77 +235,4 @@ int Asc_FPutc( int c, FILE *fileptr )
 int Asc_Putchar( int c )
 {
   return Asc_Printf( "%c", c );
-}
-
-#ifdef ASC_XTERM_COLORS
-static int color_test(){
-	static int use_xterm_color = 0;
-	char *term;
-	if(!use_xterm_color){
-		term = getenv("TERM");
-		if(term!=NULL){
-			if(strcmp(term,"msys")==0 || strcmp(term,"xterm")==0){
-				/* fprintf(stderr,"\n\n\nCOLOR CODES \033[1mWILL\033[0m BE USED\n\n\n"); */
-				use_xterm_color=1;
-			}else{
-				use_xterm_color=-1;
-				Asc_FPrintf(stderr,"\n\n\n----------------------------------\nCOLOR CODES WILL NOT BE USED\n\n\n");
-			}
-		}else{
-			/*fprintf(stderr,"\n\n\n----------------------------------\nCOLOR CODES WILL NOT BE USED (NO ENV VAR 'TERM')\n\n\n");*/
-			use_xterm_color=-1;
-		}
-
-# ifdef WIN32
-	/** @TODO see http://msdn2.microsoft.com/en-us/library/ms682088.aspx */
-#  if 0
-		term = getenv("CLIENTNAME");
-		if(term!=NULL){
-			if(strcmp(term,"Console")==0){
-				use_xterm_color=1;
-				/* windows command prompt is OK as well */
-			}
-		}
-#  endif
-# endif
-
-	}/*else{
-		Asc_FPrintf(stderr,"color=%d",use_xterm_color);
-	}*/
-	return use_xterm_color;
-}
-#endif /*ASC_XTERM_COLORS*/
-
-/**
-	Little routine to aid output of XTERM colour codes where supported.
-	Not very efficient, so use sparingly.
-*/
-int color_on(FILE *f, const char *colorcode){
-#ifdef ASC_XTERM_COLORS
-	int use_color = color_test();
-
-	if(colorcode!=NULL && use_color==1){
-		return fprintf(f,"\033[%sm",colorcode);
-	}
-#else
-	(void)f; (void)colorcode;
-#endif
-	return 0;
-}
-
-/**
-	Little routine to aid output of XTERM colour codes where supported.
-	Not very efficient, so use sparingly.
-*/
-int color_off(FILE *f){
-#ifdef ASC_XTERM_COLORS
-	int use_color = color_test();
-	if(use_color==1){
-		return fprintf(f,"\033[0m");
-	}
-
-#else
-	(void)f;
-#endif
-	return 0;
 }

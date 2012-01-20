@@ -111,4 +111,19 @@ typedef unsigned long long asc_intptr_t;
 /* #define ASC_WITH_DMALLOC @ASC_WITH_DMALLOC@ */
 #endif
 
+
+/*
+	Whether to generate color console output when requested eg
+	'ERROR' in red, etc.
+
+	On Windows, we can handle TERM=cygwin (the msys/cygwin prompt).
+	On non-Windows, we can handle 'xterm'.
+
+	SCons will uncomment the #define line if required.
+	Doing it this (hacky) way so as not to mess up autoconf.
+*/
+#ifndef ASC_XTERM_COLORS
+/* #define ASC_XTERM_COLORS @ASC_XTERM_COLORS@ */
+#endif
+
 #endif

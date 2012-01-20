@@ -25,6 +25,7 @@
 #include "test_register_general.h"
 
 #define TESTS(T) \
+	T(color) \
 	T(dstring) \
 	T(hashpjw) \
 	T(list) \

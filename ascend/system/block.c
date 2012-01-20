@@ -992,8 +992,8 @@ extern int system_block_debug(slv_system_t sys, FILE *fp){
 	color = (fp == stderr || fp==stdout);
 	for(i=0;i<dof->blocks.nblocks;++i){
 		if(color){
-			if(i%2)color_on(fp,"0;33");
-			else color_on(fp,"0;30");
+			if(i%2)color_on(fp,ASC_FG_BROWN);
+			else color_on(fp,ASC_FG_BLACK);
 		}
 		b = dof->blocks.block[i];
 		nr = b.row.high - b.row.low + 1;
