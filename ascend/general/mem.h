@@ -216,20 +216,22 @@ ASC_DLLSPEC void mem_repl_word(POINTER too, unsigned word, size_t nwords);
 	function directly - use mem_repl_word_cast() instead.
 */
 
+
 /* the following are pretty much a monument to Karl. */
+/* XXX note that they are also referenced in the test suite... */
 #if 0
-extern int mem_get_byte(asc_intptr_t from);               /**< Returns the byte located at from. */
+extern int mem_get_byte(POINTER from);               /**< Returns the byte located at from. */
 #endif
-ASC_DLLSPEC unsigned char mem_get_byte(asc_intptr_t from);     /**< Returns the byte located at from. */
-ASC_DLLSPEC int mem_get_int(asc_intptr_t from);                /**< Returns the int located at from. */
-ASC_DLLSPEC long mem_get_long(asc_intptr_t from);              /**< Returns the long located at from. */
-ASC_DLLSPEC double mem_get_float(asc_intptr_t from);           /**< Returns the float located at from. */
-ASC_DLLSPEC double mem_get_double(asc_intptr_t from);          /**< Returns the double located at from. */
-ASC_DLLSPEC void mem_set_byte(asc_intptr_t from, int b);       /**< Sets the byte located at from. */
-ASC_DLLSPEC void mem_set_int(asc_intptr_t from, int i);        /**< Sets the int located at from. */
-ASC_DLLSPEC void mem_set_long(asc_intptr_t from, long l);      /**< Sets the long located at from. */
-ASC_DLLSPEC void mem_set_float(asc_intptr_t from, double f);   /**< Sets the float located at from. */
-ASC_DLLSPEC void mem_set_double(asc_intptr_t from, double d);  /**< Sets the double located at from. */
+ASC_DLLSPEC unsigned char mem_get_byte(POINTER from);     /**< Returns the byte located at from. */
+ASC_DLLSPEC int mem_get_int(POINTER from);                /**< Returns the int located at from. */
+ASC_DLLSPEC long mem_get_long(POINTER from);              /**< Returns the long located at from. */
+ASC_DLLSPEC double mem_get_float(POINTER from);           /**< Returns the float located at from. */
+ASC_DLLSPEC double mem_get_double(POINTER from);          /**< Returns the double located at from. */
+ASC_DLLSPEC void mem_set_byte(POINTER from, int b);       /**< Sets the byte located at from. */
+ASC_DLLSPEC void mem_set_int(POINTER from, int i);        /**< Sets the int located at from. */
+ASC_DLLSPEC void mem_set_long(POINTER from, long l);      /**< Sets the long located at from. */
+ASC_DLLSPEC void mem_set_float(POINTER from, double f);   /**< Sets the float located at from. */
+ASC_DLLSPEC void mem_set_double(POINTER from, double d);  /**< Sets the double located at from. */
 
 #define	mem_get_unsigned(from)	((unsigned)mem_get_int(from))
 /**< Returns the unsigned located at from. */
@@ -405,12 +407,13 @@ extern void mem_get_element_list(mem_store_t ms, int len, void **ellist);
 	it from pool.h.
 */
 
-#define mem_DEBUG FALSE
+#define MEM_DEBUG 1
 /**<
 	Flag controlling extra checking of the pool management routines.
 	Setting mem_DEBUG to TRUE causes the mem_store routines to do
 	some RATHER expensive checking. It should be set to FALSE.
 */
+
 #define mem_LIGHTENING FALSE
 /**<
 	Flag controlling extent of internal sanity checking.

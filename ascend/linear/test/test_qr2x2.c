@@ -28,7 +28,7 @@
 #include <test/assertimpl.h>
 
 /*
-	Test the rank of matrix 
+	Test the rank of matrix
 
 	[ 1 ]
 */
@@ -51,7 +51,9 @@ static void test_qr1x1(void){
 	G.row = R;
 	G.col = R;
 
+#ifdef ASC_WITH_MMIO
 	mtx_write_region_mmio(stderr,M,&G);
+#endif
 
 	L = linsolqr_create_default();
 	linsolqr_set_matrix(L,M);
@@ -65,7 +67,7 @@ static void test_qr1x1(void){
 }
 
 /*
-	Test the rank of matrix 
+	Test the rank of matrix
 
 	[ 1 0
 	  1 1 ]
@@ -91,7 +93,9 @@ static void test_qr2x2(void){
 	G.row = R;
 	G.col = R;
 
+#ifdef ASC_WITH_MMIO
 	mtx_write_region_mmio(stderr,M,&G);
+#endif
 
 	L = linsolqr_create_default();
 	linsolqr_set_matrix(L,M);
@@ -105,10 +109,10 @@ static void test_qr2x2(void){
 }
 
 /*
-	Test the rank of matrix 
+	Test the rank of matrix
 
 	[ 2 0 1
-	  1 1 1 
+	  1 1 1
 	  0 1 1 ]
 */
 static void test_qr3x3(void){
@@ -136,7 +140,9 @@ static void test_qr3x3(void){
 	G.row = R;
 	G.col = R;
 
+#ifdef ASC_WITH_MMIO
 	mtx_write_region_mmio(stderr,M,&G);
+#endif
 
 	L = linsolqr_create_default();
 	linsolqr_set_matrix(L,M);

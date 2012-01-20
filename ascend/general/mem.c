@@ -102,74 +102,68 @@ int	mem_get_byte(long from)
    return( ((int)c) & mask_I_L(BYTESIZE) );
 }
 #endif /*  0  */
-unsigned char mem_get_byte(asc_intptr_t from)
+unsigned char mem_get_byte(POINTER from)
 {
    unsigned char c;
    mv_get(&c, from, 1);
    return(c);
 }
 
-int	mem_get_int(asc_intptr_t from)
-{
+int	mem_get_int(POINTER from){
    int	i;
    mv_get(&i,from,sizeof(int));
    return(i);
 }
 
-long	mem_get_long(asc_intptr_t from)
-{
+long mem_get_long(POINTER from){
    long	l;
    mv_get(&l,from,sizeof(long));
    return(l);
 }
 
-double	mem_get_float(asc_intptr_t from)
-{
+double	mem_get_float(POINTER from){
    float	f;
    mv_get(&f,from,sizeof(float));
    return((double)f);
 }
 
-double	mem_get_double(asc_intptr_t from)
-{
+double	mem_get_double(POINTER from){
    double	d;
    mv_get(&d,from,sizeof(double));
    return(d);
 }
 
-void mem_set_byte(asc_intptr_t from, int b)
-{
+void mem_set_byte(POINTER from, int b){
    char	c = (char)b;
    mv_set(&c,from,1);
 }
 
-void mem_set_int(asc_intptr_t from, int i)
-{
+void mem_set_int(POINTER from, int i){
    mv_set(&i,from,sizeof(int));
 }
 
-void mem_set_long(asc_intptr_t from, long l)
-{
+void mem_set_long(POINTER from, long l){
    mv_set(&l,from,sizeof(long));
 }
 
-void mem_set_float(asc_intptr_t from, double f)
-{
+void mem_set_float(POINTER from, double f){
    float	ff = (float)f;
    mv_set(&ff,from,sizeof(float));
 }
 
-void mem_set_double(asc_intptr_t from, double d)
-{
+void mem_set_double(POINTER from, double d){
    mv_set(&d,from,sizeof(double));
 }
-
+
+
 /*********************** mem_store code. BAA 5/16/95 ***********************/
+
 /* according to K&R2 char <--> byte and size_t is a byte count.
    We are coding with those assumptions. (sizeof(char)==1) */
+
 #define OK 345676543
 #define DESTROYED 765434567
-#if mem_DEBUG
+#if MEM_DEBUG
 /* ground LIGHTENING */
 #undef mem_LIGHTENING
 #define mem_LIGHTENING FALSE
@@ -343,7 +337,7 @@ static int expand_store(mem_store_t ms, int incr)
   ms->len = newsize; /* set expanded number of bars filled */
   punt = -1;
   for (i = oldsize; i < newsize; i++) {
-#if mem_DEBUG
+#if MEM_DEBUG
     ms->pool[i] = (char *)AMEM_calloc(ms->barsize,1);
 #else
     ms->pool[i] = (char *)AMEM_malloc(ms->barsize);
@@ -358,13 +352,12 @@ static int expand_store(mem_store_t ms, int incr)
     /* incomplete expansion */
     if (punt == oldsize) {
       /* unable to add elements at all. fail */
-      FPRINTF(stderr,"ERROR: (mem) expand_store:  Insufficient memory.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
       ms->len = oldsize;
       return 1;
     } else {
       /* contract pool to the actual expansion size */
-      FPRINTF(stderr,"WARNING: (mem) expand_store: Insufficient memory.\n");
-      FPRINTF(stderr,"                             Doing partial expansion.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory. Doing partial expansion.");
       ms->len = punt;
     }
   }
@@ -374,14 +367,14 @@ static int expand_store(mem_store_t ms, int incr)
   return 0;
 }
 
+
 #if !mem_LIGHTENING
-#if mem_DEBUG
+#if MEM_DEBUG
 /*
 Returns 1 if pointer is to an elt of the store, 0 otherwise.
 The case of pointer into store reserved space, but not an elt is checked.
 */
-static int from_store( mem_store_t ms, void *elt)
-{
+static int from_store( mem_store_t ms, void *elt){
   char *data;
   char **pool;
   int i;
@@ -398,8 +391,7 @@ static int from_store( mem_store_t ms, void *elt)
       if ( !((data - (*pool)) % ms->eltsize) ) {
         return 1;
       } else {
-        FPRINTF(stderr,"ERROR: (mem.c) from_store:  Misaligned element\n");
-        FPRINTF(stderr,"                            pointer detected.\n");
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Misaligned element pointer detected.");
         return 0;
       }
     }
@@ -410,17 +402,15 @@ static int from_store( mem_store_t ms, void *elt)
 #endif
 #endif
 
-void mem_get_stats(struct mem_statistics *mss,  mem_store_t m)
-{
+
+void mem_get_stats(struct mem_statistics *mss,  mem_store_t m){
   if (ISNULL(mss)) {
-    FPRINTF(stderr,"ERROR: (mem_get_stats)   Called with NULL struct\n");
-    FPRINTF(stderr,"                         mem_statistics.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL struct mem_statistics pointer.");
     return;
   }
   if (check_mem_store(m)>1 ) {
     ascbzero((void *)mss,(size_t)sizeof(struct mem_statistics));
-    FPRINTF(stderr,"ERROR: (mem_get_stats)   Bad mem_store_t given.\n");
-    FPRINTF(stderr,"                         Returning 0s.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad mem_store_t given. Returning 0s.");
     return;
   }
 #if !mem_LIGHTENING
@@ -443,15 +433,16 @@ void mem_get_stats(struct mem_statistics *mss,  mem_store_t m)
   mss->str_wid = m->wid;
 }
 
+
 mem_store_t mem_create_store(int length, int width,
-                             size_t eltsize, int deltalen, int deltapool)
-{
+		size_t eltsize, int deltalen, int deltapool
+){
   int i, punt;
   mem_store_t newms=NULL;
   size_t uelt;
 
   if (length < 1 || width < 1 || deltalen < 1 ) {
-    FPRINTF(stderr,"ERROR: (mem_create_store) : Bad input detected.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad input detected.");
     return NULL;
   }
 
@@ -463,12 +454,11 @@ mem_store_t mem_create_store(int length, int width,
 
   uelt = eltsize;
   /* check for elt padding needed */
-  if (eltsize % sizeof(void *)) {
+  if(eltsize % sizeof(void *)) {
     size_t ptrperelt;
     ptrperelt = eltsize/sizeof(void *) + 1;
-#if mem_DEBUG
-    FPRINTF(stderr,"(mem_create_store) Elts of size %d padded to %d\n",
-      eltsize,(eltsize=ptrperelt*sizeof(void *)));
+#if MEM_DEBUG
+	CONSOLE_DEBUG("Elts of size %d padded to %d\n",(unsigned)eltsize,(unsigned)(eltsize = (unsigned)ptrperelt*sizeof(void *)));
 #else
     eltsize = ptrperelt*sizeof(void *);
 #endif
@@ -477,10 +467,9 @@ mem_store_t mem_create_store(int length, int width,
   /* it could still be user data misalignable, of course, if pointer
      is not the most restrictive data type for the machine */
 
-
   newms = (mem_store_t)AMEM_calloc(1,sizeof(struct mem_store_header));
   if (ISNULL(newms)) {
-    FPRINTF(stderr,"ERROR: (mem_create_store) : Insufficient memory.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return NULL;
   }
   /* the following are all initially 0/NULL by calloc, and should be:
@@ -510,7 +499,7 @@ mem_store_t mem_create_store(int length, int width,
   /* get pool */
   newms->pool = (char **)AMEM_calloc((size_t)length,sizeof(char *));
   if (ISNULL(newms->pool)) {
-    FPRINTF(stderr,"ERROR: (mem_create_store) : Insufficient memory.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     newms->integrity = DESTROYED;
     AMEM_free(newms);
     return NULL;
@@ -528,7 +517,7 @@ mem_store_t mem_create_store(int length, int width,
 
   /* drain it if can't fill it */
  if (punt != -1) {
-    FPRINTF(stderr,"ERROR: (mem_create_store) : Insufficient memory.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     for (i = 0; i < punt; i++) {
       AMEM_free(newms->pool[i]);
     }
@@ -540,14 +529,14 @@ mem_store_t mem_create_store(int length, int width,
   return newms;
 }
 
-void *mem_get_element(mem_store_t ms)
-{
+
+void *mem_get_element(mem_store_t ms){
   /* no automatic variables please */
   register struct mem_element *elt;
   /* in a test on the alpha, though, making elt static global slowed it */
 
   if (ISNULL(ms)) {
-    FPRINTF(stderr,"ERROR: (mem_get_element)  Called with NULL store.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL store.");
     return NULL;
   }
   /* recycling */
@@ -572,7 +561,7 @@ void *mem_get_element(mem_store_t ms)
   if (ms->curbar == ms->len) {
     /* attempt to expand pool if all allocated */
     if ( expand_store(ms,1) ) {
-      FPRINTF(stderr,"ERROR: (mem_get_element)  Insufficient memory.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
       return NULL;
     }
   }
@@ -590,41 +579,37 @@ void *mem_get_element(mem_store_t ms)
   return (void *)elt;
 }
 
-void mem_get_element_list(mem_store_t ms, int nelts, void **ary)
-{
-  FPRINTF(stderr,"ERROR: mem_get_element_list NOT implemented\n");
+
+void mem_get_element_list(mem_store_t ms, int nelts, void **ary){
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"mem_get_element_list NOT implemented");
   if (ISNULL(ms) || ISNULL(ary)) {
-    FPRINTF(stderr,"ERROR:   mem_get_element_list   Called with NULL\n");
-    FPRINTF(stderr,"                                array or mem_store_t");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL array or mem_store_t");
     return;
   }
   if (nelts <1) {
-    FPRINTF(stderr,"WARNING:  mem_get_element_list   Called with request\n");
-    FPRINTF(stderr,"                                 for 0 elements.");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with request for 0 elements.");
     return;
   }
   ary[0]=NULL;
 }
 
-void mem_free_element(mem_store_t ms, void *ptr)
-{
+
+void mem_free_element(mem_store_t ms, void *ptr){
   register struct mem_element *elt;
 
   if (ISNULL(ptr)) return;
   elt = (struct mem_element *)ptr;
 
 #if !mem_LIGHTENING
-#if mem_DEBUG
+#if MEM_DEBUG
   if (check_mem_store(ms)) {
-    FPRINTF(stderr,"ERROR: (mem_free_element)  Fishy mem_store_t.\n");
-    FPRINTF(stderr,"                           Element not recycled.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Fishy mem_store_t. Element not recycled.");
     return;
     /* at this point we have no way to get back at the abandoned element */
   }
   /* check for belongs to this mem_store_t */
   if (!from_store(ms,ptr)) {
-    FPRINTF(stderr,"ERROR: (mem_free_element)  Spurious element detected.\n");
-    FPRINTF(stderr,"                           Element ignored.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Spurious element detected. Element ignored.");
     return;
   }
 #endif
@@ -641,32 +626,28 @@ void mem_free_element(mem_store_t ms, void *ptr)
   ms->retned++;
   ms->inuse--;
   if (ms->inuse < 0) {
-    FPRINTF(stderr,"ERROR: (mem_free_element) More elements freed than\n");
-    FPRINTF(stderr,"                          have been handed out. (%d)\n",
-      abs(ms->inuse));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"More elements freed than have been handed out. (%d)",abs(ms->inuse));
   }
 #endif
   return;
 }
 
-void mem_clear_store(mem_store_t ms) {
+
+void mem_clear_store(mem_store_t ms){
   if ( check_mem_store(ms) > 1 ) {
-    FPRINTF(stderr,"ERROR: (mem_clear_store)  Bad mem_store_t given.\n");
-    FPRINTF(stderr,"                          Not cleared.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad mem_store_t given. Not cleared.");
     return;
   }
-#if mem_DEBUG
+#if MEM_DEBUG
   if (ms->inuse || ms->highwater - ms->onlist ) {
-    FPRINTF(stderr,"WARNING: (mem_clear_store)  In use elements in given\n");
-    FPRINTF(stderr,"                            mem_store_t are cleared.\n");
-    FPRINTF(stderr,"                            Don't refer to them again.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"In use elements in given mem_store_t are cleared. Don't refer to them again.");
   }
 #endif
   ms->retned += ms->inuse;
   if (ms->active - ms->retned ||
       ms->onlist + ms->inuse - ms->highwater ||
       ms->curelt + ms->curbar*ms->wid - ms->highwater) {
-    FPRINTF(stderr,"Warning: mem_clear_store: Element imbalance detected.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Element imbalance detected.");
   }
   ms->inuse = 0;
   ms->curbar = 0;
@@ -676,30 +657,24 @@ void mem_clear_store(mem_store_t ms) {
   ms->list = NULL;
 }
 
-void mem_destroy_store(mem_store_t ms)
-{
+
+void mem_destroy_store(mem_store_t ms){
   int i;
-#if mem_DEBUG
+#if MEM_DEBUG
   if ( (i=check_mem_store(ms))==2 ) {
-    FPRINTF(stderr,"ERROR: (mem_destroy_store)  Bad mem_store_t given.\n");
-    FPRINTF(stderr,"                            Not destroyed.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad mem_store_t given. Not destroyed.");
     return;
   }
   if ( i ) {
-    FPRINTF(stderr,
-      "WARNING: (mem_destroy_store)  Suspicious mem_store_t given.\n");
-    FPRINTF(stderr,"                            Destroyed anyway.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Suspicious mem_store_t given. Destroyed anyway.");
     return;
   }
   if (ms->inuse || ms->highwater - ms->onlist ) {
-    FPRINTF(stderr,"WARNING: (mem_destroy_store) In use elements in given\n");
-    FPRINTF(stderr,"                             mem_store_t are cleared.\n");
-    FPRINTF(stderr,"                             Don't refer to them again.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"In use elements in given mem_store_t are cleared. Don't refer to them again.");
   }
 #else
   if (ISNULL(ms)  || ms->integrity != OK) {
-    FPRINTF(stderr,"ERROR: (mem_destroy_store)  Bad mem_store_t given.\n");
-    FPRINTF(stderr,"                            Not destroyed.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad mem_store_t given. Not destroyed.");
     return;
   }
 #endif
@@ -712,15 +687,14 @@ void mem_destroy_store(mem_store_t ms)
   return;
 }
 
-void mem_print_store(FILE *fp, mem_store_t ms, unsigned detail)
-{
+
+void mem_print_store(FILE *fp, mem_store_t ms, unsigned detail){
   if (ISNULL(fp) || ISNULL(ms)) {
-    FPRINTF(stderr,"ERROR: (mem_print_store) Called with NULL\n");
-    FPRINTF(stderr,"                         FILE or mem_store_t\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL FILE or mem_store_t");
     return;
   }
   if (check_mem_store(ms)>1) {
-    FPRINTF(stderr,"ERROR: (mem_print_store) Called with bad mem_store_t\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with bad mem_store_t");
     return;
   }
   FPRINTF(fp,"mem_store_t statistics:\n");
@@ -780,8 +754,8 @@ void mem_print_store(FILE *fp, mem_store_t ms, unsigned detail)
   return;
 }
 
-size_t mem_sizeof_store(mem_store_t ms)
-{
+
+size_t mem_sizeof_store(mem_store_t ms){
   register size_t siz;
   if (check_mem_store(ms)>1) return (size_t)0;
   siz = sizeof(struct mem_store_header);    /* header */
