@@ -127,20 +127,6 @@
 # define ASC_SOLVERS_REL_DIST "@ASC_SOLVERS_REL_DIST@"
 #endif
 
-/*
-	Whether to use xterm colours when writing 'error.h' output, eg
-	'ERROR' in red, etc. If not defined, colour will never be used.
-	If defined, colour will be used any time the the TERM environment
-	variable is set to 'xterm' or 'msys'. MSYS uses the 'rxvt' console,
-	which knows about xterm colour codes.
-
-	SCons will uncomment the #define line if required.
-	Doing it this (hacky) way so as not to mess up autoconf.
-*/
-#ifndef ASC_XTERM_COLORS
-/* #define ASC_XTERM_COLORS @ASC_XTERM_COLORS@ */
-#endif
-
 /*-----------------------------------------------------------------------
   IDA
 */

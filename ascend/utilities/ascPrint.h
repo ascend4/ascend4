@@ -35,6 +35,7 @@
 #include <stdarg.h>
 
 #include <ascend/general/platform.h>
+#include <ascend/general/color.h>
 
 /**	@addtogroup utilities_print Utilities Output Stream Handling
 	@{
@@ -183,9 +184,6 @@ ASC_DLLSPEC int Asc_Putchar(int c);
  *  @param c       The character to print.
  *  @return Returns 1 for success, EOF otherwise.
  */
-
-ASC_DLLSPEC int color_on(FILE *f, const char *colorcode);
-ASC_DLLSPEC int color_off(FILE *f);
 
 /* @} */
 
