@@ -123,10 +123,6 @@
 #define DRIVEMAX 3
 #define LISTMAX 256
 
-#ifdef __WIN32__ /* && !defined(__MINGW32__) */
-# define WINPATHS
-#endif
-
 struct FilePath{
     char path[PATH_MAX]; /** the string version of the represented POSIX path */
 
@@ -346,14 +342,14 @@ void ospath_fixslash(char *path){
 struct FilePath *ospath_getcwd(void){
 	struct FilePath *fp;
 	char *cwd;
+	char temp[PATH_MAX];
 
 	/* get current working directory */
-	cwd = (char *)GETCWD(NULL, 0);
+	cwd = (char *)GETCWD(temp, PATH_MAX);
 
 	/* create new path with resolved working directory */
 	fp = ospath_new_noclean(cwd != NULL ? cwd : ".");
 
-	ASC_FREE(cwd);
 	D(fp);
 
 	return fp;
@@ -543,7 +539,7 @@ void ospath_cleanup(struct FilePath *fp){
 
 
 int ospath_isvalid(struct FilePath *fp){
-	/*if(fp==NULL) return 0; */
+	if(fp==NULL) return 0;
 	return strlen(fp->path) > 0 ? 1 : 0;
 }
 

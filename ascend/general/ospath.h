@@ -28,7 +28,7 @@
 	Heavily modified version of C++ code from codeproject.com
 	originally written by Simon Parkinson-Bates.
 
-	Includes (fairly basic) support for environment variable expansion here for 
+	Includes (fairly basic) support for environment variable expansion here for
 	use in cases like "$ASCENDTK/bitmaps" or "ascend-$VERSION$EXESUFFIX".
 
 	@NOTE this library makes no allowance for fancy escape characters.
@@ -75,6 +75,10 @@
 
 #ifndef PATH_MAX
 # define PATH_MAX 1023
+#endif
+
+#ifdef __WIN32__ /* && !defined(__MINGW32__) */
+# define WINPATHS
 #endif
 
 #ifdef _MSC_VER

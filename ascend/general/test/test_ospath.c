@@ -32,13 +32,13 @@ FilePathTestFn ospath_searchpath_testexists;
 #ifndef NDEBUG
 # include <assert.h>
 # define M(MSG) fprintf(stderr,"%s:%d: (%s) %s\n",__FILE__,__LINE__,__FUNCTION__,MSG);fflush(stderr);fflush(stderr)
-# define MC(CLR,MSG) fprintf(stderr,"%c[%sm%s:%d: (%s) %s%c[0m\n",27,CLR,__FILE__,__LINE__,__FUNCTION__,MSG,27);fflush(stderr)
-# define MM(MSG) MC("34",MSG)
+# define MC(CLR,MSG) color_on(stderr,CLR);fprintf(stderr,"%s:%d: (%s) %s\n",__FILE__,__LINE__,__FUNCTION__,MSG);color_off(stderr);fflush(stderr)
+# define MM(MSG) MC(ASC_FG_MAGENTA,MSG)
 # define X(VAR) fprintf(stderr,"%s:%d: (%s) %s=%s\n",__FILE__,__LINE__,__FUNCTION__,#VAR,VAR);fflush(stderr)
 # define C(VAR) fprintf(stderr,"%s:%d: (%s) %s=%c\n",__FILE__,__LINE__,__FUNCTION__,#VAR,VAR);fflush(stderr)
 # define V(VAR) fprintf(stderr,"%s:%d: (%s) %s=%d\n",__FILE__,__LINE__,__FUNCTION__,#VAR,(VAR));fflush(stderr)
 # define D(VAR) fprintf(stderr,"%s:%d: (%s) %s=",__FILE__,__LINE__,__FUNCTION__,#VAR);ospath_debug(VAR);fflush(stderr)
-# define DD(VAR) fprintf(stderr,"\033[34;1m%s:%d: (%s)\033[0m %s=",__FILE__, __LINE__,__FUNCTION__, #VAR);ospath_debug(VAR);fflush(stderr)
+# define DD(VAR) color_on(stderr,ASC_FG_BRIGHTBLUE);fprintf(stderr,"%s:%d: (%s)",__FILE__, __LINE__,__FUNCTION__);color_off(stderr);fprintf(stderr,"%s=",#VAR);ospath_debug(VAR);fflush(stderr)
 #else
 # include <assert.h>
 # define M(MSG) ((void)0)
@@ -75,20 +75,20 @@ int ospath_searchpath_testexists(struct FilePath *path,void *file){
 #endif
 
 	char *t=ospath_str(fp1);
-	MC("1",t);
+	MC(ASC_FG_BRIGHT,t);
 	FREE(t);
 
 	t=ospath_str(fp2);
-	MC("31;1",t);
+	MC(ASC_FG_BRIGHTRED,t);
 	FREE(t);
 
 	if(ospath_cmp(fp1,fp2)==0){
-		MC("32","MATCH");
+		MC(ASC_FG_GREEN,"MATCH");
 		ospath_free(fp1);
 		ospath_free(fp2);
 		return 1;
 	}
-	MC("31","NO MATCH");
+	MC(ASC_FG_RED,"NO MATCH");
 	ospath_free(fp1);
 	ospath_free(fp2);
 	return 0;
