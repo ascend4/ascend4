@@ -40,53 +40,6 @@ extern int register_cunit_tests();
 
 extern char ASC_TEST_PATH[PATH_MAX];
 
-/*
-	The following allows the CUnit tests to be run using a standalone executable
-	using the CUnit 'basic' interface.
-*/
-int run_suite_or_test(char *name){
-	char suitename[1000];
-	char *s,*n;
-	/* locate the '.' separator and copy bits before that into suitename. */
-	for(s=suitename,n=name; *n!='.' && *n!='\0' && s < suitename+999; *s++=*n++);
-	*s='\0';
-	struct CU_TestRegistry *reg = CU_get_registry();
-	struct CU_Suite *suite = reg->pSuite;
-	struct CU_Test *test;
-	if(suite==NULL){
-		fprintf(stderr,"No suites present in registry!\n");
-		return CUE_NO_SUITENAME;
-	}
-
-	CU_ErrorCode result;
-	while(suite!=NULL){
-		if(0==strcmp(suite->pName,suitename)){
-			if(*n=='.'){
-				++n;
-				test = suite->pTest;
-				while(test!=NULL){
-					if(0==strcmp(test->pName,n)){
-						fprintf(stderr,"Running test %s (%p, %p)\n", n,suite,test);
-						result = CU_basic_run_test(suite,test);
-						fprintf(stderr,"Result code: %d\n",result);
-						fprintf(stderr,"Result: %s\n",CU_get_error_msg());
-						return result;
-					}
-					test = test->pNext;
-				}
-				return CUE_NO_TESTNAME;
-			}else{
-				fprintf(stderr,"Running suite %s (%p)\n",suitename,suite);
-				result = CU_basic_run_suite(suite);
-				fprintf(stderr,"Result: %s\n",CU_get_error_msg());
-				return result;
-			}
-		}
-		suite = suite->pNext;
-	}
-	return CUE_NO_SUITENAME;
-};
-
 int list_suites(){
 	struct CU_TestRegistry *reg = CU_get_registry();
 	struct CU_Suite *suite = reg->pSuite;
@@ -227,23 +180,8 @@ int main(int argc, char* argv[]){
 		goto cleanup;
 	}
 
-	/* any remaining command-line arguments will be specific test suites and/or tests to run */
 	if(optind < argc){
-		while(optind < argc){
-			result = run_suite_or_test(argv[optind]);
-			if(result==CUE_NO_SUITENAME){
-				fprintf(stderr,"Invalid suite name '%s'\n", argv[optind]);
-				list_suites();
-				result = 1;
-				goto cleanup;
-			}else if(result==CUE_NO_TESTNAME){
-				fprintf(stderr,"Invalid test name '%s'\n", argv[optind]);
-				list_tests(argv[optind]);
-				result = 1;
-				goto cleanup;
-			}
-			optind++;
-		}
+		result = CU_basic_run_selected_tests(argc - optind, &argv[optind]);
 	}else{
 		result = CU_basic_run_tests();
 	}

@@ -94,68 +94,6 @@ void mem_repl_word(POINTER too,unsigned word, size_t nwords)
 #define mv_get(too,from,nbytes) move_fwd((POINTER)(from),(POINTER)(too),nbytes)
 #define mv_set(from,too,nbytes) move_fwd((POINTER)(from),(POINTER)(too),nbytes)
 
-#if 0
-int	mem_get_byte(long from)
-{
-   char	c;
-   mv_get(&c,from,1);
-   return( ((int)c) & mask_I_L(BYTESIZE) );
-}
-#endif /*  0  */
-unsigned char mem_get_byte(POINTER from)
-{
-   unsigned char c;
-   mv_get(&c, from, 1);
-   return(c);
-}
-
-int	mem_get_int(POINTER from){
-   int	i;
-   mv_get(&i,from,sizeof(int));
-   return(i);
-}
-
-long mem_get_long(POINTER from){
-   long	l;
-   mv_get(&l,from,sizeof(long));
-   return(l);
-}
-
-double	mem_get_float(POINTER from){
-   float	f;
-   mv_get(&f,from,sizeof(float));
-   return((double)f);
-}
-
-double	mem_get_double(POINTER from){
-   double	d;
-   mv_get(&d,from,sizeof(double));
-   return(d);
-}
-
-void mem_set_byte(POINTER from, int b){
-   char	c = (char)b;
-   mv_set(&c,from,1);
-}
-
-void mem_set_int(POINTER from, int i){
-   mv_set(&i,from,sizeof(int));
-}
-
-void mem_set_long(POINTER from, long l){
-   mv_set(&l,from,sizeof(long));
-}
-
-void mem_set_float(POINTER from, double f){
-   float	ff = (float)f;
-   mv_set(&ff,from,sizeof(float));
-}
-
-void mem_set_double(POINTER from, double d){
-   mv_set(&d,from,sizeof(double));
-}
-
-
 /*********************** mem_store code. BAA 5/16/95 ***********************/
 
 /* according to K&R2 char <--> byte and size_t is a byte count.
