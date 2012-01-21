@@ -141,36 +141,32 @@ static int check_pool_store(const pool_store_t ps)
   int i;
 
   if (ISNULL(ps)) {
-    FPRINTF(ASCERR,"check_pool_store (pool.c): NULL pool_store_t!\n");
+    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"check_pool_store (pool.c): NULL pool_store_t!");
     return 2;
   }
   if (ps->integrity != OK) {
     (ps->integrity == DESTROYED) ?
-      FPRINTF(ASCERR,
-        "check_pool_store (pool.c): pool_store_t recently destroyed!\n")
-    : FPRINTF(ASCERR,
-        "check_pool_store (pool.c): pool_store_t corrupted!\n");
+      (ERROR_REPORTER_HERE(ASC_PROG_NOTE,"check_pool_store (pool.c): pool_store_t recently destroyed!"))
+    : (ERROR_REPORTER_HERE(ASC_PROG_NOTE,"check_pool_store (pool.c): pool_store_t corrupted!"));
     return 2;
   }
   if (ps->onlist && ISNULL(ps->list)) {
-    FPRINTF(ASCERR, "ERROR: check_pool_store (pool.c): NULL recycle list!\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL recycle list!");
     return 1;
   }
   /* more in than out? */
   if (ps->retned > ps->active) {
-    FPRINTF(ASCERR, "ERROR: check_pool_store (pool.c): Imbalanced memory.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Imbalanced memory.");
     return 1;
   }
   if (ps->onlist + ps->inuse != ps->highwater) {
-    FPRINTF(ASCERR,"ERROR: check_pool_store (pool.c): Imbalanced elements.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Imbalanced elements.");
     return 1;
   }
   /* is pool allocated to ps->len? */
   for (i=0; i < ps->len; i++) {
     if (ISNULL(ps->pool[i])) {
-      FPRINTF(ASCERR,
-	 "ERROR: check_pool_store (pool.c): Hole found in pool!\n");
-      FPRINTF(ASCERR, "                                Bar %d is NULL.\n",i);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Hole found in pool! Bar %d is NULL.",i);
       return 2;
     }
   }
@@ -195,16 +191,14 @@ static int expand_store(pool_store_t ps, int incr)
   static int oldsize, newsize,punt,i;
   char **newpool = NULL;
   if (check_pool_store(ps) >1) {
-    FPRINTF(ASCERR,"ERROR: (pool.c) expand_store received bad\n");
-    FPRINTF(ASCERR,"               pool_store_t. Expansion failed.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"expand_store received bad pool_store_t. Expansion failed.");
     return 1;
   }
 
 #if !pool_LIGHTENING
   /* do not expand elements or pool if all is not in use */
   if (ps->inuse < ps->total) {
-    FPRINTF(ASCERR,"ERROR: (pool.c) expand_store called prematurely.\n");
-    FPRINTF(ASCERR,"               Expansion will be reported as failed.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"expand_store called prematurely. Expansion will be reported as failed.");
     return 1;
   }
 #endif
@@ -219,7 +213,7 @@ static int expand_store(pool_store_t ps, int incr)
     i = ps->maxlen + PMX(ps->growpool,incr);
     newpool = (char **)PMEM_realloc(ps->pool, i*sizeof(char *));
     if (ISNULL(newpool)) {
-      FPRINTF(ASCERR,"ERROR: (pool.c) expand_store can't realloc pool.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"expand_store can't realloc pool.");
       return 1;
     }
     /* NULL the new pool */
@@ -250,13 +244,12 @@ static int expand_store(pool_store_t ps, int incr)
     /* incomplete expansion */
     if (punt == oldsize) {
       /* unable to add elements at all. fail */
-      FPRINTF(ASCERR,"ERROR: (pool) expand_store:  Insufficient memory.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
       ps->len = oldsize;
       return 1;
     } else {
       /* contract pool to the actual expansion size */
-      FPRINTF(ASCERR,"WARNING: (pool) expand_store: Insufficient memory.\n");
-      FPRINTF(ASCERR,"                            Doing partial expansion.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"expand_store: Insufficient memory. Doing partial expansion.");
       ps->len = punt;
     }
   }
@@ -288,8 +281,7 @@ static int from_store( pool_store_t ps, void *elt)
       if ( !((data - (*pool)) % ps->eltsize) ) {
         return 1;
       } else {
-        FPRINTF(ASCERR,"ERROR: (pool.c) from_store:  Misaligned element\n");
-        FPRINTF(ASCERR,"                             pointer detected.\n");
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Misaligned element pointer detected.");
         return 0;
       }
     }
@@ -303,14 +295,12 @@ static int from_store( pool_store_t ps, void *elt)
 void pool_get_stats(struct pool_statistics *pss,  pool_store_t m)
 {
   if (ISNULL(pss)) {
-    FPRINTF(ASCERR,"ERROR: (pool_get_stats)   Called with NULL struct\n");
-    FPRINTF(ASCERR,"                          pool_statistics.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL struct pool_statistics.");
     return;
   }
   if (check_pool_store(m)>1 ) {
     ascbzero((void *)pss,(int)sizeof(struct pool_statistics));
-    FPRINTF(ASCERR,"ERROR: (pool_get_stats)   Bad pool_store_t given.\n");
-    FPRINTF(ASCERR,"                          Returning 0s.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad pool_store_t given. Returning 0s.");
     return;
   }
 #if !pool_LIGHTENING
@@ -341,7 +331,7 @@ pool_store_t pool_create_store(int length, int width,
   size_t uelt;
 
   if (length < 1 || width < 1 || deltalen < 1 ) {
-    FPRINTF(ASCERR,"ERROR: (pool_create_store) : Bad input detected.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad input detected.");
     return NULL;
   }
 
@@ -357,8 +347,9 @@ pool_store_t pool_create_store(int length, int width,
     int ptrperelt;
     ptrperelt = eltsize/sizeof(void *) + 1;
 #if pool_DEBUG
-    FPRINTF(ASCERR,"(pool_create_store) Elts of size %d padded to %d\n",
-      (int)eltsize,(int)(eltsize=ptrperelt*sizeof(void *)));
+	int oldsize = eltsize;
+	eltsize = ptrperelt*sizeof(void *);
+    CONSOLE_DEBUG("Elements were size %d; now padded to %d",oldsize,eltsize);
 #else
     eltsize = ptrperelt*sizeof(void *);
 #endif
@@ -370,7 +361,7 @@ pool_store_t pool_create_store(int length, int width,
 
   newps = (pool_store_t)PMEM_calloc(1,sizeof(struct pool_store_header));
   if (ISNULL(newps)) {
-    FPRINTF(ASCERR,"ERROR: (pool_create_store) : Insufficient memory.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return NULL;
   }
   /* the following are all initially 0/NULL by calloc, and should be:
@@ -400,7 +391,7 @@ pool_store_t pool_create_store(int length, int width,
   /* get pool */
   newps->pool = (char **)PMEM_calloc(length,sizeof(char *));
   if (ISNULL(newps->pool)) {
-    FPRINTF(ASCERR,"ERROR: (pool_create_store) : Insufficient memory.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     newps->integrity = DESTROYED;
     PMEM_free(newps);
     return NULL;
@@ -418,7 +409,7 @@ pool_store_t pool_create_store(int length, int width,
 
   /* drain it if can't fill it */
  if (punt != -1) {
-    FPRINTF(ASCERR,"ERROR: (pool_create_store) : Insufficient memory.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     for (i = 0; i < punt; i++) {
       PMEM_free(newps->pool[i]);
     }
@@ -437,7 +428,7 @@ void *pool_get_element(pool_store_t ps)
   /* in a test on the alpha, though, making elt static global slowed it */
 
   if (ISNULL(ps)) {
-    FPRINTF(ASCERR,"ERROR: (pool_get_element)  Called with NULL store.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL store.");
     return NULL;
   }
   /* recycling */
@@ -462,7 +453,7 @@ void *pool_get_element(pool_store_t ps)
   if (ps->curbar == ps->len) {
     /* attempt to expand pool if all allocated */
     if ( expand_store(ps,1) ) {
-      FPRINTF(ASCERR,"ERROR: (pool_get_element)  Insufficient memory.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
       return NULL;
     }
   }
@@ -482,15 +473,13 @@ void *pool_get_element(pool_store_t ps)
 
 void pool_get_element_list(pool_store_t ps, int nelts, void **ary)
 {
-  FPRINTF(ASCERR,"ERROR: pool_get_element_list NOT implemented\n");
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"NOT implemented");
   if (ISNULL(ps) || ISNULL(ary)) {
-    FPRINTF(ASCERR,"ERROR:   pool_get_element_list   Called with NULL\n");
-    FPRINTF(ASCERR,"                                 array or pool_store_t");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL array or pool_store_t");
     return;
   }
   if (nelts <1) {
-    FPRINTF(ASCERR,"WARNING:  pool_get_element_list   Called with request\n");
-    FPRINTF(ASCERR,"                                  for 0 elements.");
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Called with request for 0 elements.");
     return;
   }
   ary[0]=NULL;
@@ -510,17 +499,13 @@ void pool_free_elementF(pool_store_t ps, void *ptr
 #if !pool_LIGHTENING
 #if pool_DEBUG
   if (check_pool_store(ps)) {
-    FPRINTF(ASCERR,"ERROR: (pool_free_element)  Fishy pool_store_t.\n");
-    FPRINTF(ASCERR,"                            Element not recycled.\n");
-    FPRINTF(ASCERR,"%s\n",fn);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Fishy pool_store_t. Element not recycled. Filename='%s'",fn);
     return;
     /* at this point we have no way to get back at the abandoned element */
   }
   /* check for belongs to this pool_store_t */
   if (!from_store(ps,ptr)) {
-    FPRINTF(ASCERR,"ERROR: (pool_free_element)  Spurious element detected.\n");
-    FPRINTF(ASCERR,"                            Element ignored.\n");
-    FPRINTF(ASCERR,"%s\n",fn);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Spurious element detected. Element ignored. Filename='%s'",fn);
     return;
   }
 #endif
@@ -537,11 +522,9 @@ void pool_free_elementF(pool_store_t ps, void *ptr
   ps->retned++;
   ps->inuse--;
   if (ps->inuse < 0) {
-    FPRINTF(ASCERR,"ERROR: (pool_free_element) More elements freed than\n");
-    FPRINTF(ASCERR,"                           have been handed out. (%d)\n",
-      abs(ps->inuse));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"More elements freed than have been handed out. (%d)",abs(ps->inuse));
 #if pool_DEBUG
-    FPRINTF(ASCERR,"%s\n",fn);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Filename='%s'",fn);
 #endif
   }
 #endif
@@ -554,19 +537,15 @@ void pool_clear_storeF(pool_store_t ps
 #endif
 ) {
   if ( check_pool_store(ps) > 1 ) {
-    FPRINTF(ASCERR,"ERROR: (pool_clear_store)  Bad pool_store_t given.\n");
-    FPRINTF(ASCERR,"                           Not cleared.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad pool_store_t given. Not cleared.");
 #if pool_DEBUG
-    FPRINTF(ASCERR,"%s\n",fn);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Filename='%s'",fn);
 #endif
     return;
   }
 #if pool_DEBUG
   if (ps->inuse || ps->highwater - ps->onlist ) {
-    FPRINTF(ASCERR,"WARNING: (pool_clear_store)  In use elements in given\n");
-    FPRINTF(ASCERR,"                            pool_store_t are cleared.\n");
-    FPRINTF(ASCERR,"                            Don't refer to them again.\n");
-    FPRINTF(ASCERR,"%s\n",fn);
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"In use elements in given pool_store_t are cleared. Don't refer to them again. Filename='%s'",fn);
   }
 #endif
 #if !pool_LIGHTENING
@@ -574,9 +553,9 @@ void pool_clear_storeF(pool_store_t ps
   if (ps->active - ps->retned ||
       ps->onlist + ps->inuse - ps->highwater ||
       ps->curelt + ps->curbar*ps->wid - ps->highwater) {
-    FPRINTF(ASCERR,"Warning: pool_clear_store: Element imbalance detected.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Element imbalance detected.");
 #if pool_DEBUG
-    FPRINTF(ASCERR,"%s\n",fn);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Filename='%s'",fn);
 #endif
   }
 #endif
@@ -595,26 +574,19 @@ void pool_destroy_store(pool_store_t ps)
   int i;
 #if pool_DEBUG
   if ( (i=check_pool_store(ps))==2 ) {
-    FPRINTF(ASCERR,"ERROR: (pool_destroy_store)  Bad pool_store_t given.\n");
-    FPRINTF(ASCERR,"                             Not destroyed.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad pool_store_t given. Not destroyed.");
     return;
   }
   if ( i ) {
-    FPRINTF(ASCERR,
-      "WARNING: (pool_destroy_store)  Suspicious pool_store_t given.\n");
-    FPRINTF(ASCERR,"                             Destroyed anyway.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Suspicious pool_store_t given. Destroyed anyway.");
     return;
   }
   if (ps->inuse || ps->highwater - ps->onlist ) {
-    FPRINTF(ASCERR,"WARNING: (pool_destroy_store) In use elements in given\n");
-    FPRINTF(ASCERR,"                             pool_store_t are cleared.\n");
-    FPRINTF(ASCERR,
-       "                             Don't refer to them again.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"In use elements in given pool_store_t are cleared. Don't refer to them again.");
   }
 #else
   if (ISNULL(ps)  || ps->integrity != OK) {
-    FPRINTF(ASCERR,"ERROR: (pool_destroy_store)  Bad pool_store_t given.\n");
-    FPRINTF(ASCERR,"                             Not destroyed.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad pool_store_t given. Not destroyed.");
     return;
   }
 #endif
@@ -630,12 +602,11 @@ void pool_destroy_store(pool_store_t ps)
 void pool_print_store(FILE *fp, pool_store_t ps, unsigned detail)
 {
   if (ISNULL(fp) || ISNULL(ps)) {
-    FPRINTF(ASCERR,"ERROR: (pool_print_store) Called with NULL\n");
-    FPRINTF(ASCERR,"                          FILE or pool_store_t\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL FILE or pool_store_t.");
     return;
   }
   if (check_pool_store(ps)>1) {
-    FPRINTF(ASCERR,"ERROR: (pool_print_store) Called with bad pool_store_t\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with bad pool_store_t");
     return;
   }
   FPRINTF(fp,"pool_store_t statistics:\n");

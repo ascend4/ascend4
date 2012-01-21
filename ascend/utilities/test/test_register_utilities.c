@@ -34,7 +34,6 @@
 	/*T(ascPanic)*/ \
 	T(ascPrint) \
 	T(ascSignal) \
-	T(mem) \
 	T(readln) \
 	T(set)
 

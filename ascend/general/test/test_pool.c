@@ -12,7 +12,7 @@
  *
  *  The Ascend Environment is distributed in hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU        
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -83,7 +83,7 @@ static void test_pool(void)
   CU_TEST(0 == stats.elt_taken);
   CU_TEST(0 == stats.elt_inuse);
   CU_TEST(0 == stats.elt_onlist);
-  CU_TEST(sizeof(int) == stats.elt_size);
+  CU_TEST(sizeof(asc_intptr_t) == stats.elt_size);
   CU_TEST(10 == stats.str_len);
   CU_TEST(10 == stats.str_wid);
 
@@ -113,7 +113,7 @@ static void test_pool(void)
   CU_TEST(0 == stats.elt_taken);
   CU_TEST(0 == stats.elt_inuse);
   CU_TEST(0 == stats.elt_onlist);
-  CU_TEST(sizeof(int) == stats.elt_size);
+  CU_TEST(sizeof(asc_intptr_t) == stats.elt_size);
   CU_TEST(10 == stats.str_len);
   CU_TEST(10 == stats.str_wid);
 
@@ -126,7 +126,7 @@ static void test_pool(void)
   CU_TEST(50 == stats.elt_taken);
   CU_TEST(50 == stats.elt_inuse);
   CU_TEST(0 == stats.elt_onlist);
-  CU_TEST(sizeof(int) == stats.elt_size);
+  CU_TEST(sizeof(asc_intptr_t) == stats.elt_size);
   CU_TEST(10 == stats.str_len);
   CU_TEST(10 == stats.str_wid);
 
@@ -139,7 +139,7 @@ static void test_pool(void)
   CU_TEST(100 == stats.elt_taken);
   CU_TEST(100 == stats.elt_inuse);
   CU_TEST(0 == stats.elt_onlist);
-  CU_TEST(sizeof(int) == stats.elt_size);
+  CU_TEST(sizeof(asc_intptr_t) == stats.elt_size);
   CU_TEST(10 == stats.str_len);
   CU_TEST(10 == stats.str_wid);
 
@@ -153,7 +153,7 @@ static void test_pool(void)
   CU_TEST(100 == stats.elt_taken);
   CU_TEST(100 == stats.elt_inuse);
   CU_TEST(0 == stats.elt_onlist);
-  CU_TEST(sizeof(int) == stats.elt_size);
+  CU_TEST(sizeof(asc_intptr_t) == stats.elt_size);
   CU_TEST(10 == stats.str_len);
   CU_TEST(10 == stats.str_wid);
 
@@ -165,7 +165,7 @@ static void test_pool(void)
   CU_TEST(100 == stats.elt_taken);
   CU_TEST(50 == stats.elt_inuse);
   CU_TEST(50 == stats.elt_onlist);
-  CU_TEST(sizeof(int) == stats.elt_size);
+  CU_TEST(sizeof(asc_intptr_t) == stats.elt_size);
   CU_TEST(10 == stats.str_len);
   CU_TEST(10 == stats.str_wid);
 #ifdef MALLOC_DEBUG
@@ -183,7 +183,7 @@ static void test_pool(void)
   CU_TEST(100 == stats.elt_taken);
   CU_TEST(100 == stats.elt_inuse);
   CU_TEST(0 == stats.elt_onlist);
-  CU_TEST(sizeof(int) == stats.elt_size);
+  CU_TEST(sizeof(asc_intptr_t) == stats.elt_size);
   CU_TEST(10 == stats.str_len);
   CU_TEST(10 == stats.str_wid);
 
@@ -364,7 +364,7 @@ static void test_pool(void)
   CU_TEST(100 == stats.elt_taken);
   CU_TEST(100 == stats.elt_inuse);
   CU_TEST(0 == stats.elt_onlist);
-  CU_TEST(sizeof(int) == stats.elt_size);
+  CU_TEST(sizeof(asc_intptr_t) == stats.elt_size);
   CU_TEST(10 == stats.str_len);
   CU_TEST(10 == stats.str_wid);
 
@@ -374,7 +374,7 @@ static void test_pool(void)
   CU_TEST(0 == stats.elt_taken);
   CU_TEST(0 == stats.elt_inuse);
   CU_TEST(0 == stats.elt_onlist);
-  CU_TEST(sizeof(int) == stats.elt_size);
+  CU_TEST(sizeof(asc_intptr_t) == stats.elt_size);
   CU_TEST(10 == stats.str_len);
   CU_TEST(10 == stats.str_wid);
 

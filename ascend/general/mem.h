@@ -216,28 +216,6 @@ ASC_DLLSPEC void mem_repl_word(POINTER too, unsigned word, size_t nwords);
 	function directly - use mem_repl_word_cast() instead.
 */
 
-
-/* the following are pretty much a monument to Karl. */
-/* XXX note that they are also referenced in the test suite... */
-#if 0
-extern int mem_get_byte(POINTER from);               /**< Returns the byte located at from. */
-#endif
-ASC_DLLSPEC unsigned char mem_get_byte(POINTER from);     /**< Returns the byte located at from. */
-ASC_DLLSPEC int mem_get_int(POINTER from);                /**< Returns the int located at from. */
-ASC_DLLSPEC long mem_get_long(POINTER from);              /**< Returns the long located at from. */
-ASC_DLLSPEC double mem_get_float(POINTER from);           /**< Returns the float located at from. */
-ASC_DLLSPEC double mem_get_double(POINTER from);          /**< Returns the double located at from. */
-ASC_DLLSPEC void mem_set_byte(POINTER from, int b);       /**< Sets the byte located at from. */
-ASC_DLLSPEC void mem_set_int(POINTER from, int i);        /**< Sets the int located at from. */
-ASC_DLLSPEC void mem_set_long(POINTER from, long l);      /**< Sets the long located at from. */
-ASC_DLLSPEC void mem_set_float(POINTER from, double f);   /**< Sets the float located at from. */
-ASC_DLLSPEC void mem_set_double(POINTER from, double d);  /**< Sets the double located at from. */
-
-#define	mem_get_unsigned(from)	((unsigned)mem_get_int(from))
-/**< Returns the unsigned located at from. */
-#define	mem_set_unsigned(from,u) mem_set_int(from,(int)u)
-/**< Sets the unsigned located at from. */
-
 /*---------------------------------------------------------------------------
  The following definitions provide a generic and reasonably efficient memory
  allocation system for situations where many many objects of the same size

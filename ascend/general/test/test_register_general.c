@@ -30,6 +30,7 @@
 	T(hashpjw) \
 	T(list) \
 	T(listio) \
+	T(mem) \
 	T(pool) \
 	T(pretty) \
 	T(stack) \
