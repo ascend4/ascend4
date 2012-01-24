@@ -775,7 +775,7 @@ if platform.system()=="Windows":
 	tools += ['nsis']
 	
 	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
-		envenv = os.environ;
+		envenv = os.environ
 		tools += ['mingw']
 		envadditional['IS_MINGW']=True
 	else:
@@ -822,6 +822,14 @@ if 'LSOD' in env['WITH_SOLVERS']:
 vars.Save('options.cache',env)
 
 Help(vars.GenerateHelpText(env))
+
+if env['ENV'].get('HOST_PREFIX'):
+	triplet = re.compile("^[a-z0-9_]+-[a-z0-9_]+-[a-z0-9]+$")
+	if not triplet.match(env['ENV']['HOST_PREFIX']):
+		print "NOTE: invalid host triplet from environment variable HOST_PREFIX has been ignored"
+	else:
+		print "NOTE: using HOST_PREFIX=%s from environment to override HOST_PREFIX SCons variable" % env['ENV']['HOST_PREFIX']
+		env['HOST_PREFIX'] = env['ENV']['HOST_PREFIX']+"-"
 
 with_tcltk = env.get('WITH_TCLTK')
 without_tcltk_reason = "disabled by options/config.py"
