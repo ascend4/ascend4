@@ -256,8 +256,10 @@ ASC_DLLSPEC void Asc_SignalRecover(int force);
  *               compiler/platform.
  */
 
-ASC_DLLSPEC int Asc_SignalHandlerPushDefault(int signum);
-ASC_DLLSPEC int Asc_SignalHandlerPush(int signum, SigHandlerFn *func);
+/* add source line/file and signal handler name to call */
+#define Asc_SignalHandlerPushDefault(SIG) Asc_SignalHandlerPush_impl((SIG),Asc_SignalTrap,"Asc_SignalTrap",__FILE__,__LINE__)
+
+#define Asc_SignalHandlerPush(SIG,FUNC) Asc_SignalHandlerPush_impl((SIG),(FUNC),#FUNC,__FILE__,__LINE__)
 /**<
  * Adds a handler to the stack of signal handlers for the given signal.
  * There is a maximum stack limit, so returns 1 if limit exceeded.
@@ -279,8 +281,11 @@ ASC_DLLSPEC int Asc_SignalHandlerPush(int signum, SigHandlerFn *func);
  *        popping an unintended handler.
  */
 
-ASC_DLLSPEC int Asc_SignalHandlerPopDefault(int signum);
-ASC_DLLSPEC int Asc_SignalHandlerPop(int signum, SigHandlerFn *func);
+ASC_DLLSPEC int Asc_SignalHandlerPush_impl(int signum, SigHandlerFn *func, char *name, char *file, int line);
+
+#define Asc_SignalHandlerPopDefault(SIG) Asc_SignalHandlerPop_impl((SIG),Asc_SignalTrap,"Asc_SignalTrap",__FILE__,__LINE__)
+
+#define Asc_SignalHandlerPop(SIG,FUNC) Asc_SignalHandlerPop_impl((SIG),(FUNC),#FUNC,__FILE__,__LINE__)
 /**<
  *  Removes the last-pushed handler from the stack for signum signal types.
  *  If the removed handler is the same as func, it is uninstalled and
@@ -301,6 +306,8 @@ ASC_DLLSPEC int Asc_SignalHandlerPop(int signum, SigHandlerFn *func);
  *        clear why the function should pop the top handler no matter what, but
  *        only call Asc_SignalRecover() if it matches func.
  */
+
+ASC_DLLSPEC int Asc_SignalHandlerPop_impl(int signum, SigHandlerFn *func, char *name, char *file, int line);
 
 /** Output the contents of the specified stack. For debugging. */
 ASC_DLLSPEC void Asc_SignalPrintStack(int signum);
