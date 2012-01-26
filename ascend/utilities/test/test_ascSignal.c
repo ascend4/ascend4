@@ -98,16 +98,8 @@ void my_handler3(int sigval){
 
 /*----------------------------------------------------------------------------*/
 
-static void test_ascSignal(void){
-  SigHandlerFn* old_fpe_handler = NULL;
-  SigHandlerFn* old_int_handler = NULL;
-  SigHandlerFn* old_seg_handler = NULL;
-  SigHandlerFn* old_handler;
-  volatile int signal1_caught;
-  volatile int signal2_caught;
-  volatile int signal3_caught;
+static void test_pushpop(void){
   unsigned long prior_meminuse;
-
   prior_meminuse = ascmeminuse();             /* save meminuse() at start of test function */
 
 #ifdef NO_SIGNAL_TRAPS
@@ -115,9 +107,9 @@ static void test_ascSignal(void){
   CU_FAIL("Signal handler manager not enabled.");
 #else
 
-  old_fpe_handler = signal(SIGFPE, my_handler1);        /* save any pre-existing handlers */
-  old_int_handler = signal(SIGINT, my_handler1);
-  old_seg_handler = signal(SIGSEGV, my_handler1);
+  SigHandlerFn* old_SIGFPE_handler = signal(SIGFPE, my_handler1);
+  SigHandlerFn* old_SIGINT_handler = signal(SIGINT, my_handler1);
+  SigHandlerFn* old_SIGSEGV_handler = signal(SIGSEGV, my_handler1);
 
   signal(SIGFPE, my_handler1);                          /* install some pre-existing handlers */
   signal(SIGINT, SIG_DFL);
@@ -220,6 +212,37 @@ static void test_ascSignal(void){
   CU_TEST(signal(SIGSEGV, SIG_DFL) == my_handler2);
   Asc_SignalRecover(TRUE);
 
+  Asc_SignalDestroy();
+
+#define RESTORE(SIG) \
+   if(NULL!=old_##SIG##_handler)signal(SIG,old_##SIG##_handler);\
+   else signal(SIG,SIG_DFL);
+
+  RESTORE(SIGFPE);
+  RESTORE(SIGINT);
+  RESTORE(SIGSEGV);
+
+  CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
+
+}
+
+
+void test_raise(){
+  SigHandlerFn* old_handler;
+  volatile int signal1_caught;
+  volatile int signal2_caught;
+  volatile int signal3_caught;
+
+  unsigned long prior_meminuse;
+  prior_meminuse = ascmeminuse();             /* save meminuse() at start of test function */
+
+  /* save pre-existing handlers */
+  SigHandlerFn* old_SIGFPE_handler = signal(SIGFPE, my_handler3);
+  SigHandlerFn* old_SIGINT_handler = signal(SIGINT, my_handler2);
+  SigHandlerFn* old_SIGSEGV_handler = signal(SIGSEGV, my_handler1);
+
+  Asc_SignalInit();
+
   /* test Asc_SignalTrap() */
 
   //CONSOLE_DEBUG("Testing trapping of signals");
@@ -266,9 +289,9 @@ static void test_ascSignal(void){
   //CONSOLE_DEBUG("Check handler settings after pop");
 
   /* handlers should be restored at this point */
-  CU_TEST(signal(SIGFPE, SIG_DFL) == my_handler1);
-  CU_TEST(signal(SIGINT, SIG_DFL) == NULL);
-  CU_TEST(signal(SIGSEGV, SIG_DFL) == my_handler2);
+  CU_TEST(signal(SIGFPE, SIG_DFL) == my_handler3);
+  CU_TEST(signal(SIGINT, SIG_DFL) == my_handler2);
+  CU_TEST(signal(SIGSEGV, SIG_DFL) == my_handler1);
   Asc_SignalRecover(TRUE);
 
   CONSOLE_DEBUG("CURRENT STACKS...");
@@ -329,7 +352,7 @@ static void test_ascSignal(void){
       CU_TEST(FALSE == signal2_caught);
       CU_TEST(TRUE == signal3_caught);
 
-      CU_TEST(0 == Asc_SignalHandlerPop(SIGFPE, Asc_SignalTrap));
+      CU_TEST(0 == Asc_SignalHandlerPop(SIGFPE, my_handler3));
 
       f_handler1_called = FALSE;
       f_handler1_sigval = 0;
@@ -507,34 +530,27 @@ static void test_ascSignal(void){
 
   //CONSOLE_DEBUG("Check recovered signals");
 
-  old_handler = signal(SIGFPE, SIG_DFL);                /* handlers should be restored at this point */
-  CU_TEST(my_handler1 == old_handler);
-  old_handler = signal(SIGINT, SIG_DFL);
-  CU_TEST(NULL == old_handler);
-  old_handler = signal(SIGSEGV, SIG_DFL);
-  CU_TEST(my_handler2 == old_handler);
+  CU_TEST(signal(SIGFPE, SIG_DFL) == my_handler3);
+  CU_TEST(signal(SIGINT, SIG_DFL) == my_handler2);
+  CU_TEST(signal(SIGSEGV, SIG_DFL) == my_handler1);
+
   Asc_SignalRecover(TRUE);
 
   Asc_SignalDestroy();
 
-  old_handler = signal(SIGFPE, SIG_DFL);                /* original handlers should still be in place */
-  CU_TEST(my_handler1 == old_handler);
-  old_handler = signal(SIGINT, SIG_DFL);
-  CU_TEST(NULL == old_handler);
-  old_handler = signal(SIGSEGV, SIG_DFL);
-  CU_TEST(my_handler2 == old_handler);
+  /* after destruction, handlers should not have been touched */
+  CU_TEST(signal(SIGFPE, SIG_DFL) == my_handler3);
+  CU_TEST(signal(SIGINT, SIG_DFL) == my_handler2);
+  CU_TEST(signal(SIGSEGV, SIG_DFL) == my_handler1);
+
+  /* what does this do, now?? return an error? */
   Asc_SignalRecover(TRUE);
 
 #endif  /* NO_SIGNAL_TRAPS */
 
-  if (NULL != old_fpe_handler)                /* restore any pre-existing handlers */
-    signal(SIGFPE, old_fpe_handler);
-  if (NULL != old_int_handler)
-    signal(SIGINT, old_int_handler);
-  if (NULL != old_seg_handler)
-    signal(SIGSEGV, old_seg_handler);
-
-  /* TODO what if they WERE null... has something changed now in that case?? */
+  RESTORE(SIGFPE);
+  RESTORE(SIGINT);
+  RESTORE(SIGSEGV);
 
   CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
 }
@@ -543,7 +559,8 @@ static void test_ascSignal(void){
 /* Registration information */
 
 #define TESTS(T) \
-	T(ascSignal)
+	T(pushpop) \
+	T(raise)
 
 REGISTER_TESTS_SIMPLE(utilities_ascSignal, TESTS)
 
