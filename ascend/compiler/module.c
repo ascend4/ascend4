@@ -1017,7 +1017,9 @@ int ModuleSearchPath(CONST char *name,
 			return 1;
 		}
 
-		/*  CONSOLE_DEBUG("ENV var value is '%s'",tmp); */
+#ifdef SEARCH_DEBUG
+		CONSOLE_DEBUG("ENV var value is '%s'",tmp);
+#endif
 
 		sp1 = ospath_searchpath_new(tmp);
 		if(sp1==NULL){
@@ -1029,7 +1031,9 @@ int ModuleSearchPath(CONST char *name,
 		}
 		ascfree(tmp);
 
-		/* CONSOLE_DEBUG("Created SP with %d elements",ospath_searchpath_length(sp1)); */
+#ifdef SEARCH_DEBUG
+		CONSOLE_DEBUG("Created SP with %d elements",ospath_searchpath_length(sp1));
+#endif
 
 		sd.fp = fp1;
 

@@ -330,7 +330,7 @@ extern int CallExternalProcs(struct Instance *i);
 */
 #endif
 
-extern int package_load(CONST char *partialpath, CONST char *initfunc);
+ASC_DLLSPEC int package_load(CONST char *partialpath, CONST char *initfunc);
 /**<
 	Generalised loading of external libraries. This allows for the possibility of
 	libraries being either external shared libraries (DLL or SO files) or external scripts

@@ -385,7 +385,7 @@ extern void mem_get_element_list(mem_store_t ms, int len, void **ellist);
 	it from pool.h.
 */
 
-#define MEM_DEBUG 1
+#define MEM_DEBUG 0
 /**<
 	Flag controlling extra checking of the pool management routines.
 	Setting mem_DEBUG to TRUE causes the mem_store routines to do

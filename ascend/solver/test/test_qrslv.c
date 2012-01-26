@@ -32,6 +32,7 @@
 #include <ascend/compiler/safe.h>
 #include <ascend/compiler/qlfdid.h>
 #include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/packages.h>
 
 #include <ascend/compiler/slvreq.h>
 
@@ -47,13 +48,15 @@
 */
 static void test_qrslv(const char *filenamestem, int simplify){
 
-	struct module_t *m;
-
 	Asc_CompilerInit(simplify);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models:solvers/qrslv:solvers/lrslv:solvers/cmslv:solvers/conopt:solvers/ipopt");
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv"));
+	char *lib = Asc_GetEnv(ASC_ENV_LIBRARY);
+	CONSOLE_DEBUG("%s = %s\n",ASC_ENV_LIBRARY,lib);
+	ASC_FREE(lib);
 
-	SlvRegisterStandardClients();
-	
+	package_load("qrslv",NULL);
+
 	/* load the file */
 	char path[PATH_MAX];
 	strcpy((char *)path,"test/qrslv/");
@@ -61,8 +64,12 @@ static void test_qrslv(const char *filenamestem, int simplify){
 	strncat(path, ".a4c", PATH_MAX - strlen(path));
 	{
 		int status;
-		m = Asc_OpenModule(path,&status);
+		Asc_OpenModule(path,&status);
 		CU_ASSERT(status == 0);
+		if(status){
+			Asc_CompilerDestroy();
+			CU_FAIL_FATAL(failed to load module);
+		}
 	}
 
 	/* parse it */
@@ -89,7 +96,7 @@ static void test_qrslv(const char *filenamestem, int simplify){
 
 	slv_system_t sys = system_build(GetSimulationRoot(siminst));
 	CU_ASSERT_FATAL(sys != NULL);
-	
+
 	CU_ASSERT_FATAL(slv_select_solver(sys,index));
 	CONSOLE_DEBUG("Assigned solver '%s'...",solvername);
 
@@ -103,7 +110,7 @@ static void test_qrslv(const char *filenamestem, int simplify){
 
 	slv_get_status(sys, &status);
 	CU_ASSERT(status.ok);
-	
+
 	CONSOLE_DEBUG("Destroying system...");
 	if(sys)system_destroy(sys);
 	system_free_reused_mem();

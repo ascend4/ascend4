@@ -39,7 +39,7 @@
 
 #include "ospath.h"
 
-//#define OSPATH_DEBUG
+/* #define OSPATH_DEBUG */
 
 #ifndef __GNUC__
 # ifndef __FUNCTION__
