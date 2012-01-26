@@ -36,6 +36,10 @@
 
 #include <CUnit/Basic.h>
 
+#ifdef __WIN32__
+# include <windows.h>
+#endif
+
 extern int register_cunit_tests();
 
 extern char ASC_TEST_PATH[PATH_MAX];
@@ -87,6 +91,10 @@ int main(int argc, char* argv[]){
 	CU_ErrorCode result;
 	char suitename[1000];
 	char list = 0;
+
+#ifdef __WIN32__
+	SetErrorMode(SEM_NOGPFAULTERRORBOX);
+#endif
 
 	struct FilePath *test_executable = ospath_new(argv[0]);
 	struct FilePath *test_dir = ospath_getdir(test_executable); /** Global Variable containing Path information about the test directory */
