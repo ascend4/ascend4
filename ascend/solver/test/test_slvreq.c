@@ -109,7 +109,7 @@ int slvreq_c_set_option(const char *optionname, struct value_t *val, void *user_
 		CONSOLE_DEBUG("Setting %s = %ld...",optionname, IntegerValue(*val));
 		SLV_PARAM_INT(&pp,index) = IntegerValue(*val);
 		break;
-	case bool_parm: 
+	case bool_parm:
 		if(ValueKind(*val)!=boolean_value){
 			CONSOLE_DEBUG("Wrong parameter type: expecting boolean type");
 			return SLVREQ_WRONG_OPTION_VALUE_TYPE;
@@ -148,7 +148,7 @@ int slvreq_c_do_solve(struct Instance *instance, void *user_data){
 	SlvReqC *S = (SlvReqC *)user_data;
 	int res;
 	if(S->sys==NULL)return SLVREQ_NO_SOLVER_SELECTED;
-	
+
 	res = slv_presolve(S->sys);
 	if(res)return SLVREQ_PRESOLVE_FAIL;
 
@@ -167,7 +167,7 @@ int slvreq_c_do_solve(struct Instance *instance, void *user_data){
 		CONSOLE_DEBUG("Solver completed OK");
 		return 0;
 	}
-	
+
 	if(status.diverged)CONSOLE_DEBUG("Solver diverged");
 	if(status.inconsistent)CONSOLE_DEBUG("System is inconsistent");
 	if(status.iteration_limit_exceeded)CONSOLE_DEBUG("Solver exceeded iteration limit");
@@ -188,8 +188,9 @@ static void test_slvreq_c(void){
 	int status;
 
 	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models:solvers/conopt:solvers/qrslv:solvers/cmslv:solvers/ida:solvers/lsode:solvers/ipopt");
-	
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
+
 	/* load the file */
 #define TESTFILE "test2"
 	m = Asc_OpenModule("test/slvreq/" TESTFILE ".a4c",&status);
@@ -198,7 +199,7 @@ static void test_slvreq_c(void){
 	/* parse it */
 	CU_ASSERT(0 == zz_parse());
 
-	/* find the model */	
+	/* find the model */
 	CU_ASSERT(FindType(AddSymbol(TESTFILE))!=NULL);
 
 	/* instantiate it */
