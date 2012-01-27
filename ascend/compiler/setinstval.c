@@ -131,7 +131,7 @@ int SetStrCmp(CONST char *s1, CONST char *s2)
 struct set_t *CreateEmptySet(void)
 {
   register struct set_t *result;
-  assert(sizeof(long)==sizeof(char *));
+  assert(sizeof(asc_intptr_t)==sizeof(char *));
   MALLOCSET(result);
   result->kind = empty_set;
   result->list = NULL;
