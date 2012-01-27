@@ -50,8 +50,9 @@ static void test_ipopt(const char *filenamestem){
 	struct module_t *m;
 
 	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models:solvers/conopt:solvers/qrslv:solvers/cmslv:solvers/ida:solvers/lsode:solvers/ipopt");
-	
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ipopt");
+
 	/* load the file */
 	char path[PATH_MAX];
 	strcpy((char *)path,"test/ipopt/");
@@ -87,7 +88,7 @@ static void test_ipopt(const char *filenamestem){
 
 	slv_system_t sys = system_build(GetSimulationRoot(siminst));
 	CU_ASSERT_FATAL(sys != NULL);
-	
+
 	CU_ASSERT_FATAL(slv_select_solver(sys,index));
 	CONSOLE_DEBUG("Assigned solver '%s'...",solvername);
 
@@ -101,7 +102,7 @@ static void test_ipopt(const char *filenamestem){
 
 	slv_get_status(sys, &status);
 	CU_ASSERT(status.ok);
-	
+
 	CONSOLE_DEBUG("Destroying system...");
 	if(sys)system_destroy(sys);
 	system_free_reused_mem();
