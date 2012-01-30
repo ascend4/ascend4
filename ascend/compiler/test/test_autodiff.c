@@ -317,6 +317,7 @@ static void test_autodiff(void){
 		OSPCLEAN(nonsafe_osp_2nd,SecondDer.nonsafeder);
 		OSPCLEAN(yacas_osp_1st,FirstDer.yacas);
 		OSPCLEAN(safe_osp_1st,FirstDer.safeder);
+		OSPCLEAN(nonsafe_osp_1st,FirstDer.nonsafeder);
 	}else{
 		OSPCLEAN(first_yacas_osp,first_yacas);
 		OSPCLEAN(second_yacas_osp,second_yacas);
@@ -459,6 +460,8 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 		}
 	}
 	/** Testing non-safe routines */
+
+	ASC_FREE(infix_rel);
 
 	/* we need to sigfpe trap this code or use the safe versions. */
 	RelationCalcResidGradRev(inst,&residual_rev,gradients_rev);
