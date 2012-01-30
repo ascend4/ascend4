@@ -50,8 +50,9 @@ static void test_test1(){
 	struct module_t *m;
 
 	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models:solvers/qrslv");
-	
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
+
 	/* load the file */
 	char path[PATH_MAX];
 #define filenamestem "test1"
@@ -82,7 +83,7 @@ static void test_test1(){
 	strcpy(makecmd, "make -f ");
 	strncat(makecmd, fp2str, PATH_MAX - strlen(makecmd));
 	strncat(makecmd, " ASCBT_SRC=" T_BTSRC " ASCBT_TARGET=" T_BTLIB, PATH_MAX - strlen(makecmd));
-	
+
 	BinTokenSetOptions(
 		T_BTSRC, T_BTOBJ, T_BTLIB
 		,makecmd
@@ -107,7 +108,7 @@ static void test_test1(){
 
 	slv_system_t sys = system_build(GetSimulationRoot(siminst));
 	CU_ASSERT_FATAL(sys != NULL);
-	
+
 	/* assign solver */
 	const char *solvername = "QRSlv";
 	int index = slv_lookup_client(solvername);
@@ -126,7 +127,7 @@ static void test_test1(){
 
 	slv_get_status(sys, &status);
 	CU_ASSERT(status.ok);
-	
+
 	CONSOLE_DEBUG("Destroying system...");
 	if(sys)system_destroy(sys);
 	system_free_reused_mem();
