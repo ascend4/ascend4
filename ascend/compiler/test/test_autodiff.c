@@ -232,6 +232,8 @@ static void test_autodiff(void){
 		OPENTESTFILE(YACAS_IN_2ND,second_yacas_osp,second_yacas,"r");
 	}
 
+	ospath_free(rootfp);
+
 	/* load the file */
 	Asc_OpenModule(CASEFILE,&status);
 	CU_ASSERT(status == 0);
