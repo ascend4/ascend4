@@ -67,7 +67,7 @@
 #include "ascSignal.h"
 #include <ascend/general/panic.h>
 
-//#define SIGNAL_DEBUG
+/* #define SIGNAL_DEBUG */
 
 /*------------------------------------------------------------------------------
   GLOBALS AND FOWARD DECS
@@ -272,7 +272,33 @@ int Asc_SignalHandlerPush_impl(int signum, SigHandlerFn *func, char *name
     );
     return err;
   }
+
+#if 0
+/* TODO we can try introducing this code to solve the issues of the test_ascSignal
+test cases, but really it's possible that our approach isn't really the right
+one (and still not sure this fixes things on Windows, anyway). More work required. */
+#ifdef __linux__
+  struct sigaction new_action, old_action;
+  new_action.sa_handler = func;
+  sigemptyset(&new_action.sa_mask);
+  new_action.sa_flags = 0;
+  sigaction(signum, NULL, &old_action);
+  /* FIXME we should have provision for dealing with signals currently set to SIG_IGN */
+  int err1 = sigaction(signum, &new_action, NULL);
+  sigset_t sigset;
+  sigprocmask(0, NULL, &sigset);
+  if(sigismember(&sigset, signum)){
+    sigemptyset(&sigset);
+    sigaddset(&sigset, signum);
+    sigprocmask(SIG_UNBLOCK, &sigset, NULL);
+  }
+  return err1;
+#else
   return SIG_ERR==SIGNAL(signum, func); /* install */
+#endif
+#else
+  return SIG_ERR==SIGNAL(signum, func); /* install */
+#endif
 }
 
 
@@ -293,8 +319,33 @@ int Asc_SignalHandlerPop_impl(int signum, SigHandlerFn *tp, char *name
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Asc_Signal (%d) stack pop mismatch.",signum);
     return err;
   }
+
+#if 0
+/* see comments above */
+#ifdef __linux__
+  struct sigaction new_action, old_action;
+  new_action.sa_handler = Asc_SignalStackTop(signum);
+  sigemptyset(&new_action.sa_mask);
+  new_action.sa_flags = 0;
+  sigaction(signum, NULL, &old_action);
+  /* FIXME we should have provision for dealing with signals currently set to SIG_IGN */
+  sigaction(signum, &new_action, NULL);
+  sigset_t sigset;
+  sigprocmask(0, NULL, &sigset);
+  if(sigismember(&sigset, signum)){
+    sigemptyset(&sigset);
+    sigaddset(&sigset, signum);
+    sigprocmask(SIG_UNBLOCK, &sigset, NULL);
+  }
+  return err;
+#else
   SIGNAL(signum,Asc_SignalStackTop(signum));
   return err;
+#endif
+#else
+  SIGNAL(signum,Asc_SignalStackTop(signum));
+  return err;
+#endif
 }
 
 void Asc_SignalTrap(int sigval){
