@@ -29,6 +29,7 @@
 */
 
 #include <math.h>
+#include <ascend/utilities/config.h>
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/mem.h>
