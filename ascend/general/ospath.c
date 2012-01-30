@@ -602,7 +602,9 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 	int offset;
 	char *pos;
 	ptrdiff_t len1;
+#ifdef OSPATH_DEBUG
 	int len2;
+#endif
 	char sub[PATH_MAX];
 	struct FilePath *fp1, *fp2;
 
@@ -638,8 +640,11 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 #endif
 	}
 
-	len1 = pos - (fp->path); len2 = (int)len1;
+	len1 = pos - (fp->path);
+#ifdef OSPATH_DEBUG
+	len2 = (int)len1;
 	V(len2);
+#endif
 	/*fprintf(stderr,"POS = %d\n",len2);*/
 
 	if(*pos==PATH_SEPARATOR_CHAR){
