@@ -424,11 +424,13 @@ struct module_t *FindModuleFile(CONST char *name,
    */
   dup = SearchForModule(new_module);
 
+#if SEARCH_DEBUG
   if(dup){
     CONSOLE_DEBUG("Duplicate module named '%s' was found"
       ,SCP(new_module->base_name)
     );
   }
+#endif
 
   /*
 	If we were called from RequireModule, return if a module

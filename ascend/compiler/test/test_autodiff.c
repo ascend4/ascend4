@@ -127,19 +127,19 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr);
 
 
 static void test_autodiff(void){
-#define OUTENV "/../ascend/compiler/test/LOG.html"
-#define VARFILE "/../ascend/compiler/test/Vars.txt"
+#define OUTENV "../ascend/compiler/test/LOG.html"
+#define VARFILE "../ascend/compiler/test/Vars.txt"
 
-#define SAFEDER_2ND "/../ascend/compiler/test/Safes2nd.txt"
-#define NONSAFEDER_2ND "/../ascend/compiler/test/Nonsafes2nd.txt"
-#define YACAS_2ND "/../ascend/compiler/test/Yacas2nd.txt"
+#define SAFEDER_2ND "../ascend/compiler/test/Safes2nd.txt"
+#define NONSAFEDER_2ND "../ascend/compiler/test/Nonsafes2nd.txt"
+#define YACAS_2ND "../ascend/compiler/test/Yacas2nd.txt"
 
-#define SAFEDER_1ST "/../ascend/compiler/test/Safes1st.txt"
-#define NONSAFEDER_1ST "/../ascend/compiler/test/Nonsafes1st.txt"
-#define YACAS_1ST "/../ascend/compiler/test/Yacas1st.txt"
+#define SAFEDER_1ST "../ascend/compiler/test/Safes1st.txt"
+#define NONSAFEDER_1ST "../ascend/compiler/test/Nonsafes1st.txt"
+#define YACAS_1ST "../ascend/compiler/test/Yacas1st.txt"
 
-#define YACAS_IN_1ST "/../ascend/compiler/test/FirstDeriv.txt"
-#define YACAS_IN_2ND "/../ascend/compiler/test/SecondDeriv.txt"
+#define YACAS_IN_1ST "../ascend/compiler/test/FirstDeriv.txt"
+#define YACAS_IN_2ND "../ascend/compiler/test/SecondDeriv.txt"
 
 #define CASEFILE "test/reverse_ad/allmodels.a4c"
 
@@ -155,8 +155,6 @@ static void test_autodiff(void){
 	struct Instance *root;
 
 	struct DiffTestData data;
-
-	char FILE_PATH[PATH_MAX];
 
 	struct FilePath* out_osp;
 	struct FilePath* varfile_osp;
@@ -190,73 +188,48 @@ static void test_autodiff(void){
 
 
 	// FIXME Use the environment variables here
+	CONSOLE_DEBUG("ASC_TEST_PATH = '%s'",ASC_TEST_PATH);
 
-	strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
-	strncat(FILE_PATH,OUTENV,PATH_MAX-strlen(FILE_PATH));
-	out_osp = ospath_new(FILE_PATH);
-	outfile = ospath_fopen(out_osp,"w");
-	CU_ASSERT_PTR_NOT_NULL_FATAL(outfile);
+	struct FilePath *rootfp;
+	{
+		CONSOLE_DEBUG("setting root path");
+		struct FilePath *tmp = ospath_new(ASC_TEST_PATH);
+		rootfp = ospath_getabs(tmp);
+		ospath_free(tmp);
+		char *str = ospath_str(rootfp);
+		CONSOLE_DEBUG("ROOTFP = %s",str);
+		ASC_FREE(str);
+	}
+
+#define OPENTESTFILE(FNAME,OSP,VAR,MODE) {\
+		struct FilePath *tmp = ospath_new_noclean(FNAME);\
+		CONSOLE_DEBUG("file = %s",FNAME);ospath_debug(tmp);\
+		CONSOLE_DEBUG("concat with root...");\
+		ospath_debug(rootfp);\
+		CONSOLE_DEBUG("results...");\
+		OSP = ospath_concat(rootfp,tmp);\
+		ospath_cleanup(OSP);\
+		ospath_debug(OSP);\
+		VAR = ospath_fopen(OSP,"w");\
+		CU_ASSERT_PTR_NOT_NULL_FATAL(VAR);\
+		ospath_free(tmp);\
+	}
+
+	OPENTESTFILE(OUTENV,out_osp,outfile,"w");
 
 	/** @TODO Open the following streams only if Environment Variable is set */
 	if(getenv(USE_YACAS_ENV) != NULL ){
-			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
-			strncat(FILE_PATH,VARFILE,PATH_MAX-strlen(FILE_PATH));
-			varfile_osp = ospath_new(FILE_PATH);
-			varfile = ospath_fopen(varfile_osp,"w");
-			CU_ASSERT_PTR_NOT_NULL_FATAL(varfile);
-
-			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
-			strncat(FILE_PATH,YACAS_2ND,PATH_MAX-strlen(FILE_PATH));
-			yacas_osp_2nd = ospath_new(FILE_PATH);
-			SecondDer.yacas = ospath_fopen(yacas_osp_2nd,"w");
-			CU_ASSERT_PTR_NOT_NULL_FATAL(SecondDer.yacas);
-
-			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
-			strncat(FILE_PATH,SAFEDER_2ND,PATH_MAX-strlen(FILE_PATH));
-			safe_osp_2nd = ospath_new(FILE_PATH);
-			SecondDer.safeder = ospath_fopen(safe_osp_2nd,"w");
-			CU_ASSERT_PTR_NOT_NULL_FATAL(SecondDer.safeder);
-
-
-			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
-			strncat(FILE_PATH,NONSAFEDER_2ND,PATH_MAX-strlen(FILE_PATH));
-			nonsafe_osp_2nd = ospath_new(FILE_PATH);
-			SecondDer.nonsafeder = ospath_fopen(nonsafe_osp_2nd,"w");
-			CU_ASSERT_PTR_NOT_NULL_FATAL(SecondDer.nonsafeder);
-
-			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
-			strncat(FILE_PATH,YACAS_1ST,PATH_MAX-strlen(FILE_PATH));
-			yacas_osp_1st = ospath_new(FILE_PATH);
-			FirstDer.yacas = ospath_fopen(yacas_osp_1st,"w");
-			CU_ASSERT_PTR_NOT_NULL_FATAL(FirstDer.yacas);
-
-			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
-			strncat(FILE_PATH,SAFEDER_1ST,PATH_MAX-strlen(FILE_PATH));
-			safe_osp_1st = ospath_new(FILE_PATH);
-			FirstDer.safeder = ospath_fopen(safe_osp_1st,"w");
-			CU_ASSERT_PTR_NOT_NULL_FATAL(FirstDer.safeder);
-
-
-			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
-			strncat(FILE_PATH,NONSAFEDER_1ST,PATH_MAX-strlen(FILE_PATH));
-			nonsafe_osp_1st = ospath_new(FILE_PATH);
-			FirstDer.nonsafeder = ospath_fopen(nonsafe_osp_1st,"w");
-			CU_ASSERT_PTR_NOT_NULL_FATAL(FirstDer.nonsafeder);
-
-			use_yacas=1;
-	}
-	else{
-			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
-			strncat(FILE_PATH,YACAS_IN_1ST,PATH_MAX-strlen(FILE_PATH));
-			first_yacas_osp = ospath_new(FILE_PATH);
-			first_yacas = ospath_fopen(first_yacas_osp,"r");
-			CU_ASSERT_PTR_NOT_NULL_FATAL(first_yacas);
-
-			strncpy(ASC_TEST_PATH,FILE_PATH,PATH_MAX);
-			strncat(FILE_PATH,YACAS_IN_2ND,PATH_MAX-strlen(FILE_PATH));
-			second_yacas_osp = ospath_new(FILE_PATH);
-			second_yacas = ospath_fopen(second_yacas_osp,"r");
-			CU_ASSERT_PTR_NOT_NULL_FATAL(second_yacas);
+		OPENTESTFILE(VARFILE,varfile_osp,varfile,"w");
+		OPENTESTFILE(YACAS_2ND,yacas_osp_2nd,SecondDer.yacas,"w");
+		OPENTESTFILE(SAFEDER_2ND,safe_osp_2nd,SecondDer.safeder,"w");
+		OPENTESTFILE(NONSAFEDER_2ND,nonsafe_osp_2nd,SecondDer.nonsafeder,"w");
+		OPENTESTFILE(YACAS_1ST,yacas_osp_1st,FirstDer.yacas,"w");
+		OPENTESTFILE(SAFEDER_1ST,safe_osp_1st,FirstDer.safeder,"w");
+		OPENTESTFILE(NONSAFEDER_1ST,nonsafe_osp_1st,FirstDer.nonsafeder,"w");
+		use_yacas=1;
+	}else{
+		OPENTESTFILE(YACAS_IN_1ST,first_yacas_osp,first_yacas,"r");
+		OPENTESTFILE(YACAS_IN_2ND,second_yacas_osp,second_yacas,"r");
 	}
 
 	/* load the file */
@@ -333,17 +306,18 @@ static void test_autodiff(void){
 
 #define OSPCLEAN(OSPNAME,FNAME) if(OSPNAME!=NULL){ospath_free(OSPNAME);if(FNAME!=NULL){fclose(FNAME);data.FNAME = NULL;}}
 
-    OSPCLEAN(out_osp,outfile);
+	OSPCLEAN(out_osp,outfile);
 
 	if (use_yacas){
-	  OSPCLEAN(varfile_osp,varfile);
-	  OSPCLEAN(yacas_osp_2nd,SecondDer.yacas);
-	  OSPCLEAN(safe_osp_2nd,SecondDer.safeder);
-	  OSPCLEAN(nonsafe_osp_2nd,SecondDer.nonsafeder);
-	  OSPCLEAN(yacas_osp_1st,FirstDer.yacas);
-	  OSPCLEAN(safe_osp_1st,FirstDer.safeder);
-	  OSPCLEAN(first_yacas_osp,first_yacas);
-	  OSPCLEAN(second_yacas_osp,second_yacas);
+		OSPCLEAN(varfile_osp,varfile);
+		OSPCLEAN(yacas_osp_2nd,SecondDer.yacas);
+		OSPCLEAN(safe_osp_2nd,SecondDer.safeder);
+		OSPCLEAN(nonsafe_osp_2nd,SecondDer.nonsafeder);
+		OSPCLEAN(yacas_osp_1st,FirstDer.yacas);
+		OSPCLEAN(safe_osp_1st,FirstDer.safeder);
+	}else{
+		OSPCLEAN(first_yacas_osp,first_yacas);
+		OSPCLEAN(second_yacas_osp,second_yacas);
 	}
 
 	CU_ASSERT( 0 == (data.d0errors + data.d1errors) );
