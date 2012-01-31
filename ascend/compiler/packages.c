@@ -72,7 +72,6 @@
 #include "safe.h"
 #include "relation_util.h"
 #include "extfunc.h"
-#include <ascend/packages/sensitivity.h>
 #include <ascend/packages/ascFreeAllVars.h>
 #include <ascend/packages/defaultall.h>
 #include "module.h"
