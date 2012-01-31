@@ -35,15 +35,14 @@
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/parentchild.h>
 #include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/pending.h>
 
 #include <ascend/compiler/initialize.h>
 
 #include <test/common.h>
 #include <test/assertimpl.h>
 
-static struct Instance *load_model(const char *name, int assert_parse_ok, int *parsestatus){
-	struct module_t *m;
-
+static struct Instance *load_model(const char *name){
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 
@@ -53,53 +52,43 @@ static struct Instance *load_model(const char *name, int assert_parse_ok, int *p
 	strncat(path, name, PATH_MAX - strlen(path));
 	strncat(path, ".a4c", PATH_MAX - strlen(path));
 	int openmodulestatus;
-	m = Asc_OpenModule(path,&openmodulestatus);
+	Asc_OpenModule(path,&openmodulestatus);
 	CU_ASSERT(openmodulestatus == 0);
 
 	/* parse it */
-	if(assert_parse_ok){
-		CU_ASSERT((*parsestatus = zz_parse()) == 0);
-	}else{
-		*parsestatus = zz_parse();
-		if(*parsestatus)return NULL;
-	}
+	CU_ASSERT(zz_parse() == 0);
+
+	CONSOLE_DEBUG("Parse completed");
 
 	/* instantiate it */
 	struct Instance *sim = SimsCreateInstance(AddSymbol(name), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(sim!=NULL);
+	CU_ASSERT(sim!=NULL);
+	CU_ASSERT(NumberPendingInstances(sim)==0);
 
 	return sim;
 }
 
 static void test_parsefail1(void){
-	int parsestatus;
-	struct Instance *sim = load_model("parsefail1", FALSE, &parsestatus);
-	CU_ASSERT(parsestatus!=0);
+	struct Instance *sim = load_model("parsefail1");
 	CU_ASSERT(sim==NULL);
 	if(sim)sim_destroy(sim);
 	Asc_CompilerDestroy();
 }
 
 static void test_parsefail2(void){
-	int parsestatus;
-	struct Instance *sim = load_model("parsefail2", FALSE, &parsestatus);
-	CU_ASSERT(parsestatus!=0);
+	struct Instance *sim = load_model("parsefail2");
 	CU_ASSERT(sim==NULL);
 	Asc_CompilerDestroy();
 }
 
 static void test_parsefail3(void){
-	int parsestatus;
-	struct Instance *sim = load_model("parsefail3", FALSE, &parsestatus);
-	CU_ASSERT(parsestatus!=0);
+	struct Instance *sim = load_model("parsefail3");
 	CU_ASSERT(sim==NULL);
 	Asc_CompilerDestroy();
 }
 
 static void test_parsefail4(void){
-	int parsestatus;
-	struct Instance *sim = load_model("parsefail4", FALSE, &parsestatus);
-	CU_ASSERT(parsestatus!=0);
+	struct Instance *sim = load_model("parsefail4");
 	CU_ASSERT(sim==NULL);
 	Asc_CompilerDestroy();
 }
@@ -114,6 +103,6 @@ static void test_parsefail4(void){
 	T(parsefail2) \
 	T(parsefail3) \
 	T(parsefail4)
-	
+
 REGISTER_TESTS_SIMPLE(compiler_blackbox, TESTS)
 

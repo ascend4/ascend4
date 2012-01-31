@@ -192,24 +192,15 @@ static void test_autodiff(void){
 
 	struct FilePath *rootfp;
 	{
-		CONSOLE_DEBUG("setting root path");
 		struct FilePath *tmp = ospath_new(ASC_TEST_PATH);
 		rootfp = ospath_getabs(tmp);
 		ospath_free(tmp);
-		char *str = ospath_str(rootfp);
-		CONSOLE_DEBUG("ROOTFP = %s",str);
-		ASC_FREE(str);
 	}
 
 #define OPENTESTFILE(FNAME,OSP,VAR,MODE) {\
 		struct FilePath *tmp = ospath_new_noclean(FNAME);\
-		CONSOLE_DEBUG("file = %s",FNAME);ospath_debug(tmp);\
-		CONSOLE_DEBUG("concat with root...");\
-		ospath_debug(rootfp);\
-		CONSOLE_DEBUG("results...");\
 		OSP = ospath_concat(rootfp,tmp);\
 		ospath_cleanup(OSP);\
-		ospath_debug(OSP);\
 		VAR = ospath_fopen(OSP,"w");\
 		CU_ASSERT_PTR_NOT_NULL_FATAL(VAR);\
 		ospath_free(tmp);\
@@ -228,6 +219,7 @@ static void test_autodiff(void){
 		OPENTESTFILE(NONSAFEDER_1ST,nonsafe_osp_1st,FirstDer.nonsafeder,"w");
 		use_yacas=1;
 	}else{
+		CONSOLE_DEBUG("Using precalculated derviatvies from YACAS.");
 		OPENTESTFILE(YACAS_IN_1ST,first_yacas_osp,first_yacas,"r");
 		OPENTESTFILE(YACAS_IN_2ND,second_yacas_osp,second_yacas,"r");
 	}
@@ -502,9 +494,9 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 				}
 				err = fabs(err);
 				LOG(data,"<tr><td>Column</td><td>ASCEND(NONSAFE,REV)</td><td>YACAS</td><td>Percentage Mismatch</td></tr>\n");
-				//CU_ASSERT(err <= RAD_TOL);
+				CU_ASSERT(err <= RAD_TOL);
 				if (err > RAD_TOL) {
-					CU_FAIL("error exceeded tolerance");
+					CONSOLE_DEBUG("error = %e, tolerance = %e",err,RAD_TOL);
 					data->d1errors_yacas ++;
 					LOG(data,"<tr bgcolor='yellow'><td><font color='red'>%lu</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%.4g</font></td></tr>\n", i,gradients_rev[i],yacas_first_der, err*100);
 				}
@@ -523,7 +515,7 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 		LOG(data,"<tr><td>Column</td><td>ASCEND(NONSAFE,REV)</td><td>ASCEND(NONSAFE,FWD)</td><td>Percentage Mismatch</td></tr>\n");
 		//CU_ASSERT(err <= RAD_TOL);
 		if (err > RAD_TOL) {
-			CONSOLE_DEBUG("Failed tolerance in first deriv #%d",i);
+			CONSOLE_DEBUG("Failed tolerance in first deriv #%lu",i);
 			CU_FAIL("Error exceeded tolerance");
 			data->d1errors ++;
 			LOG(data,"<tr bgcolor='yellow'><td><font color='red'>%lu</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%.4g</font></td></tr>\n", i,gradients_rev[i],gradients_fwd[i], err*100);
@@ -564,9 +556,8 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 						err = deriv_2nd[j];
 					}
 					err = fabs(err);
-					//CU_ASSERT(err <= RAD_TOL);
+					CU_ASSERT(err <= RAD_TOL);
 					if(err > RAD_TOL) {
-						CU_FAIL("error exceeded tolerance");
 						data->d2errors_yacas ++;
 						LOG(data,"<tr bgcolor='yellow'><td><font color='red'>%lu</font></td><td><font color='red'>%lu</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%.4g</font></td></tr>\n", i,j,deriv_2nd[j],yacas_second_der,err*100);
 					}

@@ -11343,6 +11343,7 @@ void Pass2ExecuteRelationStatements(struct BitList *blist,
     if (ReadBit(blist,c)){
       if ( Pass2ExecuteStatement(work,
            (struct Statement *)gl_fetch(statements,c+1)) ) {
+        CONSOLE_DEBUG("Got error code here, clearing bit in blist, setting '*changed' to 1");
         ClearBit(blist,c);
         *changed = 1;
       }
@@ -12180,7 +12181,7 @@ void Pass3SetLogRelBits(struct Instance *inst)
 static struct Instance *Pass2InstantiateModel(struct Instance *result,
 		unsigned long *pcount
 ){
-  /*CONSOLE_DEBUG("starting...");*/
+  CONSOLE_DEBUG("starting...");
   /* do we need a ForTable on the stack here? don't think so. np2ppi does it */
   if (result!=NULL) {
     /* CONSOLE_DEBUG("result!=NULL..."); */
@@ -12207,7 +12208,7 @@ static struct Instance *Pass2InstantiateModel(struct Instance *result,
     }
     ClearList();
   }
-  /* CONSOLE_DEBUG("...done"); */
+  CONSOLE_DEBUG("...done");
   return result;
 }
 
@@ -12367,7 +12368,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   clock_t start, phase1t,phase2t,phase3t,phase4t,phase5t;
 #endif
 
-  /*CONSOLE_DEBUG("starting...");*/
+  CONSOLE_DEBUG("starting...");
 
   pass1pendings = 0L;
   pass2pendings = 0L;
@@ -12377,10 +12378,12 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   start = clock();
 #endif
   result = Pass1InstantiateModel(def,&pass1pendings,NULL);
+
 #if TIMECOMPILER
   phase1t = clock();
   CONSOLE_DEBUG("Phase 1 models = %lu",(unsigned long)phase1t-start);
 #endif
+
   /* At this point, there may be unexecuted non-relation
    * statements, but they can never be executed. The
    * pending list is therefore empty. We know how many.
@@ -12405,10 +12408,12 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   }else{
     return result;
   }
+
 #if TIMECOMPILER
   phase2t = clock();
   CONSOLE_DEBUG("Phase 2 relations = %lu",(unsigned long)(phase2t-phase1t));
 #endif
+
   /* CONSOLE_DEBUG("Starting phase 3..."); */
   /* at this point, there may be unexecuted non-logical relation
    * statements, but they can never be executed. The
@@ -12426,10 +12431,12 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   }else{
     return result;
   }
+
 #if TIMECOMPILER
   phase3t = clock();
   CONSOLE_DEBUG("Phase 3 logicals = %lu",(unsigned long)(phase3t-phase2t));
 #endif
+
   if (result!=NULL) {
     /* now set the bits for when statements and add pending models */
     SilentVisitInstanceTree(result,Pass4SetWhenBits,0,0);
@@ -12440,10 +12447,12 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   }else{
     return result;
   }
+
 #if TIMECOMPILER
   phase4t = clock();
   CONSOLE_DEBUG("Phase 4 when-case = %lu",(unsigned long)(phase4t-phase3t));
 #endif
+
   if (result!=NULL) {
     if (!pass1pendings && !pass2pendings && !pass3pendings && !pass4pendings){
       DefaultInstanceTree(result);
@@ -12452,15 +12461,16 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
 		"in the instance.\nDefault assignments not executed.");
     }
   }
+
 #if TIMECOMPILER
   phase5t = clock();
   CONSOLE_DEBUG("Phase 5 defaults = %lu",(unsigned long)(phase5t-phase4t));
   if (pass1pendings || pass2pendings || pass3pendings || pass4pendings) {
-#ifdef __WIN32__
+# ifdef __WIN32__
     char *timeunit = "milliseconds";
-#else
+# else
     char *timeunit = "microseconds";
-#endif
+# endif
     CONSOLE_DEBUG("Compilation times (%s):\n",timeunit);
     CONSOLE_DEBUG("Phase 1 models \t\t%lu\n",
             (unsigned long)(phase1t-start));
@@ -12474,10 +12484,11 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
             (unsigned long)(phase5t-phase4t));
   }
   CONSOLE_DEBUG("Total = %lu",(unsigned long)(phase5t-start));
-#if 0 /* deep performance tuning */
+# if 0 /* deep performance tuning */
   gl_reportrecycler(ASCERR);
+# endif
 #endif
-#endif
+
   return result;
 }
 
