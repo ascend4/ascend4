@@ -146,7 +146,7 @@ void ospath_fixslash(char *path);
 
 struct FilePath *ospath_getcwd();
 
-void ospath_copy(struct FilePath *dest, struct FilePath *src);
+void ospath_copy(struct FilePath *dest, const struct FilePath *src);
 
 
 #ifdef WINPATHS
@@ -222,7 +222,7 @@ struct FilePath *ospath_new_expand_env(const char *path, GetEnvFn *getenvptr){
 	return fp;
 }
 
-struct FilePath *ospath_new_copy(struct FilePath *fp){
+struct FilePath *ospath_new_copy(const struct FilePath *fp){
 	struct FilePath *fp1 = (struct FilePath *)MALLOC(sizeof(struct FilePath));
 	ospath_copy(fp1,fp);
 	return fp1;
@@ -942,7 +942,7 @@ struct FilePath *ospath_getdir(struct FilePath *fp){
 	return ospath_new(s);
 }
 
-ASC_DLLSPEC struct FilePath *ospath_getabs(struct FilePath *fp){
+ASC_DLLSPEC struct FilePath *ospath_getabs(const struct FilePath *fp){
 	struct FilePath *fp1, *fp2;
 	if(fp->path[0]==PATH_SEPARATOR_CHAR){
 		fp1 = ospath_new_copy(fp);
@@ -1196,7 +1196,7 @@ void ospath_append(struct FilePath *fp, struct FilePath *fp1){
 	ospath_cleanup(fp);
 }
 
-void ospath_copy(struct FilePath *dest, struct FilePath *src){
+void ospath_copy(struct FilePath *dest, const struct FilePath *src){
 	STRCPY(dest->path,src->path);
 #ifdef WINPATHS
 	STRCPY(dest->drive,src->drive);

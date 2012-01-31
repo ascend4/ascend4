@@ -144,6 +144,12 @@ ASC_DLLSPEC struct FilePath *ospath_new_expand_env(const char *path, GetEnvFn *g
 ASC_DLLSPEC void ospath_cleanup(struct FilePath *);
 
 /**
+	Create a copy of a FilePath. This allocated new memory, so you must
+	separately free both the original fp as well as the new copy, when the time comes.
+*/
+ASC_DLLSPEC struct FilePath *ospath_new_copy(const struct FilePath *);
+
+/**
 	Check that the created FilePath was valid (i.e. able
 	to be parsed. Doesn't check that the directory/file
 	actually exists.)
@@ -238,7 +244,7 @@ ASC_DLLSPEC struct FilePath *ospath_getdir(struct FilePath *fp);
 	the current path. This just means that if the path isn't already starting
 	with a slash, it will be concatenated with the current working directory.
 */
-ASC_DLLSPEC struct FilePath *ospath_getabs(struct FilePath *fp);
+ASC_DLLSPEC struct FilePath *ospath_getabs(const struct FilePath *fp);
 
 /**
 	Function returns true if the current path is the root directory, otherwise it returns false.

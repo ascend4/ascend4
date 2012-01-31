@@ -161,7 +161,11 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 	char auto_initfunc[PATH_MAX];
 	int result;
 
-	path = ospath_str(fp);
+	fp1 = ospath_getabs(fp);
+	ospath_cleanup(fp1);
+	path = ospath_str(fp1);
+	ospath_free(fp1);
+
 	if(path==NULL){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"File path is NULL");
 		return 1;
