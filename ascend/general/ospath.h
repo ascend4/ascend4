@@ -133,7 +133,7 @@ ASC_DLLSPEC struct FilePath *ospath_new_expand_env(const char *path, GetEnvFn *g
 
 	3. Remove redundant /./ in middle of path
 
-	4. Remove reduncant dir/.. in path
+	4. Remove redundant dir/.. in path
 
 	5. Environment substitution??
 
@@ -154,7 +154,7 @@ ASC_DLLSPEC struct FilePath *ospath_new_copy(const struct FilePath *);
 	to be parsed. Doesn't check that the directory/file
 	actually exists.)
 */
-int ospath_isvalid(struct FilePath *fp);
+int ospath_isvalid(const struct FilePath *fp);
 
 /**
 	Return the FilePath in the form of a string.
@@ -265,7 +265,7 @@ ASC_DLLSPEC struct FilePath *ospath_root(struct FilePath *fp);
 
 ASC_DLLSPEC int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2);
 
-ASC_DLLSPEC struct FilePath *ospath_concat(struct FilePath *fp1, struct FilePath *fp2);
+ASC_DLLSPEC struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath *fp2);
 
 ASC_DLLSPEC void ospath_append(struct FilePath *fp, struct FilePath *fp1);
 
@@ -284,6 +284,20 @@ ASC_DLLSPEC FILE *ospath_fopen(struct FilePath *fp, const char *mode);
 	@return 0 on success
 */
 ASC_DLLSPEC int ospath_stat(struct FilePath *fp,ospath_stat_t *buf);
+
+/*
+	Get the current working directory from the operating system, and return
+	it in the form of a FilePath. You must free the FilePath object when you're
+	finished with it.
+*/
+ASC_DLLSPEC struct FilePath *ospath_getcwd(void);
+
+/*
+	Change the current working directory to that specified in fp. No checks
+	are made that the directory actually exists. The return status from the
+	system 'chdir' function is returned (should be 0 for no error)
+*/
+ASC_DLLSPEC int ospath_chdir(struct FilePath *fp);
 
 /*------------------------*/
 /* SEARCH PATH FUNCTIONS*/

@@ -99,6 +99,7 @@
 # define STRTOKVAR(VAR) char *VAR
 # define GETCWD _getcwd
 # define GETENV(VAR) getenv(VAR)
+# define CHDIR chdir
 #elif defined(linux)
 # define STRCPY strcpy
 # define STRNCPY(dest,src,n) strncpy(dest,src,n)
@@ -108,6 +109,7 @@
 # define STRTOKVAR(VAR) char *VAR
 # define GETCWD getcwd
 # define GETENV(VAR) getenv(VAR)
+# define CHDIR chdir
 #else
 # define STRCPY strcpy
 # define STRNCPY(dest,src,n) strncpy(dest,src,n)
@@ -117,6 +119,7 @@
 # define STRTOKVAR(VAR) ((void)0)
 # define GETCWD getcwd
 # define GETENV(VAR) getenv(VAR)
+# define CHDIR chdir
 #endif
 
 /* PATH_MAX is in ospath.h */
@@ -355,6 +358,14 @@ struct FilePath *ospath_getcwd(void){
 	return fp;
 }
 
+int ospath_chdir(struct FilePath *fp){
+	char *s = ospath_str(fp);
+	X(s);
+	int res = CHDIR(s);
+	FREE(s);
+	return res;
+}
+	
 /**
 	Use getenv() function to retrieve HOME path, or if not set, use
 	the password database and try to retrieve it that way (???)
@@ -538,7 +549,7 @@ void ospath_cleanup(struct FilePath *fp){
 }
 
 
-int ospath_isvalid(struct FilePath *fp){
+int ospath_isvalid(const struct FilePath *fp){
 	if(fp==NULL) return 0;
 	return strlen(fp->path) > 0 ? 1 : 0;
 }
@@ -1046,7 +1057,7 @@ int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2){
 	return strcmp(temp[0],temp[1]);
 }
 
-struct FilePath *ospath_concat(struct FilePath *fp1, struct FilePath *fp2){
+struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath *fp2){
 
 	struct FilePath *fp;
 	char temp[2][PATH_MAX];

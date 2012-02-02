@@ -2,6 +2,7 @@
 #define TEST_CONFIG_H
 
 #include "CUnit/CUnit.h"
+#include "test_globals.h"
 
 #define DEFINE_SUITE_SIMPLE(NAME) \
 	int res = 0; \

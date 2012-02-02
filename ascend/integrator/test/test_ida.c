@@ -73,12 +73,18 @@ IntegratorReporter test_ida_reporter = {
 	Test solving a simple IPOPT model
 */
 static void test_boundary(){
-
-	struct module_t *m;
-
 	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models:solvers/conopt:solvers/qrslv:solvers/cmslv:solvers/ida:solvers/lsode:solvers/ipopt");
-	
+	/* set current directory to same dir as test executable */
+	struct FilePath *testfp, *oldwd = ospath_getcwd();
+	CU_ASSERT_FATAL(NULL != oldwd);
+	testfp = ospath_new(ASC_TEST_PATH);
+	ospath_chdir(testfp);
+	ospath_free(testfp);
+
+	/* set paths relative to test executable */
+	Asc_PutEnv(ASC_ENV_LIBRARY "=../models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=../solvers/ida");
+
 	/* load the file */
 	char path[PATH_MAX];
 	strcpy((char *)path,"test/ida/");
@@ -87,7 +93,7 @@ static void test_boundary(){
 	strncat(path, ".a4c", PATH_MAX - strlen(path));
 	{
 		int status;
-		m = Asc_OpenModule(path,&status);
+		Asc_OpenModule(path, &status);
 		CU_ASSERT_FATAL(status == 0);
 	}
 
@@ -101,7 +107,7 @@ static void test_boundary(){
 	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(siminst!=NULL);
 
-    CONSOLE_DEBUG("RUNNING ON_LOAD");
+	CONSOLE_DEBUG("RUNNING ON_LOAD");
 
 	/** Call on_load */
 	struct Name *name = CreateIdName(AddSymbol("on_load"));

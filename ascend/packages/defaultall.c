@@ -42,7 +42,7 @@
 #include <ascend/compiler/library.h>
 #include <ascend/compiler/initialize.h>
 
-#define DEFAULT_DEBUG
+// #define DEFAULT_DEBUG
 
 #ifdef DEFAULT_DEBUG
 # include <ascend/compiler/instance_io.h>
