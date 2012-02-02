@@ -76,8 +76,8 @@
 */
 
 /*
-	The following functions are declared static because we don't want them 
-	ever to be called directly from outside code. Instead, they are call via 
+	The following functions are declared static because we don't want them
+	ever to be called directly from outside code. Instead, they are call via
 	function pointers passed through the ida_register function.
 */
 
@@ -962,7 +962,7 @@ static int integrator_ida_solve(
 	N_VDestroy_Serial(ypret);
 
 	/* free solver memory */
-	IDAFree(ida_mem);
+	IDAFree(&ida_mem);
 
 	if(flag < -500){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Interrupted while attempting t = %f", t);
