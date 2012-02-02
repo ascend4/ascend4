@@ -77,8 +77,11 @@
 # define PATH_MAX 1023
 #endif
 
-#ifdef __WIN32__ /* && !defined(__MINGW32__) */
+#ifdef __WIN32__
 # define WINPATHS
+# define OSPATH_DIV ";"
+#else
+# define OSPATH_DIV ":"
 #endif
 
 #ifdef _MSC_VER

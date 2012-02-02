@@ -32,6 +32,7 @@
 #include <ascend/compiler/safe.h>
 #include <ascend/compiler/qlfdid.h>
 #include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/packages.h>
 
 #include <ascend/compiler/slvreq.h>
 
@@ -73,12 +74,14 @@ static IntegratorReporter test_lsode_reporter = {
 	Test solving a simple IPOPT model
 */
 static void test_bounds(){
-
-	struct module_t *m;
-
 	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models:solvers/qrslv:solvers/lsode");
-	SlvRegisterStandardClients();
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
+	char *lib = Asc_GetEnv(ASC_ENV_SOLVERS);
+	CONSOLE_DEBUG("%s = %s\n",ASC_ENV_SOLVERS,lib);
+	ASC_FREE(lib);
+
+	CU_TEST_FATAL(0 == package_load("qrslv",NULL));
 
 	/* load the file */
 	char path[PATH_MAX];
@@ -88,7 +91,7 @@ static void test_bounds(){
 	strncat(path, ".a4c", PATH_MAX - strlen(path));
 	{
 		int status;
-		m = Asc_OpenModule(path,&status);
+		Asc_OpenModule(path,&status);
 		CU_ASSERT_FATAL(status == 0);
 	}
 
@@ -117,14 +120,14 @@ static void test_bounds(){
 
 	slv_system_t sys = system_build(GetSimulationRoot(siminst));
 	CU_ASSERT_FATAL(sys != NULL);
-	
+
 	CU_ASSERT_FATAL(slv_select_solver(sys,index));
 	CONSOLE_DEBUG("Assigned solver '%s'...",solvername);
 
 	/* create the integrator */
 
 	IntegratorSystem *integ = integrator_new(sys,siminst);
-	
+
 	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"LSODE"));
 	CONSOLE_DEBUG("Assigned integrator '%s'...",integ->internals->name);
 
@@ -163,7 +166,7 @@ static void test_bounds(){
 
 	integrator_free(integ);
 	samplelist_free(samplelist);
-	
+
 	CU_ASSERT_FATAL(NULL != sys);
 	system_destroy(sys);
 	system_free_reused_mem();

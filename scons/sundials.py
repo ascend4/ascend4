@@ -19,6 +19,32 @@ try:
 except:
 	pass
 
+def winpath(path):
+	"""
+	Convert a MSYS path to a native Windows path, so that we can pass values correctly to GCC
+	"""
+	import subprocess
+	import os
+	#print "path = %s"%path
+	fn = "scons%d" % os.getpid()
+	while os.path.exists(fn):
+		fn = fn + "0"
+	try:
+		f = file(fn,"w")
+		f.write("#!python\nimport sys\nprint sys.argv[1]")
+		f.close()
+		#print "FILE %s FOUND? %d"%(fn,os.path.exists(fn))
+		p1 = subprocess.Popen(["sh.exe","-c","%s %s"%(fn,path)], stdout=subprocess.PIPE)
+		#p1 = subprocess.Popen(["sh.exe","-c","echo hello"], stdout=subprocess.PIPE)
+		out = p1.communicate()[0].strip()
+		#print "NEW PATH IS '%s'" % out
+	except Exception,e:
+		print "FAILED: %s"%str(e)
+	finally:
+		#print "Deleting %s" % fn
+		os.unlink(fn)
+	return out
+
 def generate(env):
 	"""
 	Detect SUNDIALS (IDA) settings and add them to the environment.
@@ -48,8 +74,8 @@ def generate(env):
 				env1['LIBS'] = None
 				print "RUNNING sundials-config"
 				env1.ParseConfig(cmd)
-				env['SUNDIALS_CPPPATH'] = env1.get('CPPPATH')
-				env['SUNDIALS_LIBPATH'] = env1.get('LIBPATH')
+				env['SUNDIALS_CPPPATH'] = [munge(winpath(p)) for p in env1.get('CPPPATH')]
+				env['SUNDIALS_LIBPATH'] = [munge(winpath(p)) for p in env1.get('LIBPATH')]
 				env['SUNDIALS_LIBS'] = env1.get('LIBS')
 				env['HAVE_SUNDIALS'] = True		
 
