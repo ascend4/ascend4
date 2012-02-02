@@ -74,16 +74,11 @@ IntegratorReporter test_ida_reporter = {
 */
 static void test_boundary(){
 	Asc_CompilerInit(1);
-	/* set current directory to same dir as test executable */
-	struct FilePath *testfp, *oldwd = ospath_getcwd();
-	CU_ASSERT_FATAL(NULL != oldwd);
-	testfp = ospath_new(ASC_TEST_PATH);
-	ospath_chdir(testfp);
-	ospath_free(testfp);
 
 	/* set paths relative to test executable */
-	Asc_PutEnv(ASC_ENV_LIBRARY "=../models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=../solvers/ida");
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida");
+	package_load("ida",NULL);
 
 	/* load the file */
 	char path[PATH_MAX];
@@ -120,7 +115,7 @@ static void test_boundary(){
 	CU_ASSERT_FATAL(sys != NULL);
 
 	IntegratorSystem *integ = integrator_new(sys,siminst);
-	
+
 	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"IDA"));
 	CONSOLE_DEBUG("Assigned integrator '%s'...",integ->internals->name);
 
@@ -158,7 +153,7 @@ static void test_boundary(){
 
 	integrator_free(integ);
 	samplelist_free(samplelist);
-	
+
 	CU_ASSERT_FATAL(NULL != sys);
 	system_destroy(sys);
 	system_free_reused_mem();
