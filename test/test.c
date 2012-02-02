@@ -42,8 +42,6 @@
 
 extern int register_cunit_tests();
 
-extern char ASC_TEST_PATH[PATH_MAX];
-
 int list_suites(){
 	struct CU_TestRegistry *reg = CU_get_registry();
 	struct CU_Suite *suite = reg->pSuite;

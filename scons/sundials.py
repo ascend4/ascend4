@@ -62,6 +62,24 @@ def generate(env):
 			env1['LIBPATH'] = None
 			env1['LIBS'] = None
 			env1.ParseConfig(cmd)
+
+			# tricky stuff to detect the necessary extra 'lapack' linkage if required
+			if os.path.exists("/etc/lsb-release"):
+				print "CHECKING SUNDIALS"
+				s = env.WhereIs('sundials-config')
+				if s == "/usr/bin/sundials-config":
+					print "STANDARD CONFIG"
+					# With Ubuntu 11.10 onwards, we need to explicitly add lapack (and blas?)
+					f = file("/etc/lsb-release")
+					v = {}
+					for l in f:
+						x = l.strip().split("=")
+						v[x[0]] = x[1]
+					print v
+					if v['DISTRIB_ID']=="Ubuntu" and float(v['DISTRIB_RELEASE'])>=11.10:
+						print "ADDING LAPACK"
+						env1['LIBS'].append("lapack")
+
 			env['SUNDIALS_CPPPATH'] = env1.get('CPPPATH')
 			env['SUNDIALS_LIBPATH'] = env1.get('LIBPATH')
 			env['SUNDIALS_LIBS'] = env1.get('LIBS')

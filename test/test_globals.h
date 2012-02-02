@@ -28,8 +28,6 @@
 #ifndef ASC_TEST_GLOBALS
 #define ASC_TEST_GLOBALS
 
-#include <ascend/general/ospath.h>
-
 /* GLOBAL Variable to the Test Directory maintained by test/test.c */
 char ASC_TEST_PATH[PATH_MAX];
 
