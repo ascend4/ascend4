@@ -80,10 +80,6 @@ static void test_bounds(){
 	Asc_CompilerInit(1);
 	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
 	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv" OSPATH_DIV "solvers/lsode"));
-	char *lib = Asc_GetEnv(ASC_ENV_SOLVERS);
-	CONSOLE_DEBUG("%s = %s\n",ASC_ENV_SOLVERS,lib);
-	ASC_FREE(lib);
-
 	CU_TEST_FATAL(0 == package_load("qrslv",NULL));
 
 	/* load the file */

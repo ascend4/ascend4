@@ -48,6 +48,7 @@ int some_dis_vars_changed(slv_system_t sys) {
 		dis_name = dis_make_name(sys, cur_dis);
 		CONSOLE_DEBUG("Boundary %s index, current, prev = %d, %d, %d ", dis_name,
 				i, dis_value(cur_dis), dis_previous_value(cur_dis));
+		ASC_FREE(dis_name);
 #endif
 
 		if ((dis_kind(cur_dis) == e_dis_boolean_t) && dis_inwhen(cur_dis)) {
