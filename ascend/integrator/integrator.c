@@ -221,7 +221,10 @@ static struct gl_list_t *integrator_get_list(int free_space){
 	};
 
 	if(free_space){
-		if(init && L)ASC_FREE(L);
+		if(init && L){
+			gl_destroy(L);
+			L = NULL;
+		}
 		init = 0;
 		return NULL;
 	}
@@ -256,6 +259,10 @@ const struct gl_list_t *integrator_get_engines(){
 
 struct gl_list_t *integrator_get_engines_growable(){
 	return integrator_get_list(0);
+}
+
+void integrator_free_engines(){
+	integrator_get_list(1);
 }
 
 /* return 0 on success */
@@ -314,7 +321,7 @@ const IntegratorInternals *integrator_get_engine(const IntegratorSystem *sys){
 	Free any engine-specific  data that was required for the solution of
 	this system. Note that this data is pointed to by sys->enginedata.
 
-	@TODO rename this
+	@TODO rename this, bad choice/confusing name.
 */
 void integrator_free_engine(IntegratorSystem *sys){
 	if(sys->engine==INTEG_UNKNOWN)return;
@@ -997,8 +1004,8 @@ static long DynamicVarInfo(struct var_variable *v,long *index, IntegratorSystem 
   c = ChildByChar(i,STATEFLAG);
   d = ChildByChar(i,STATEINDEX);
 
-	
-		
+
+
   /* lazy evaluation is important in the following if */
   if(c == NULL
       || d == NULL

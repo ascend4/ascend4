@@ -179,6 +179,7 @@ static void test_bounds(){
 	CU_ASSERT(siminst != NULL);
 
 	solver_destroy_engines();
+	integrator_free_engines();
 	sim_destroy(siminst);
 	Asc_CompilerDestroy();
 }
