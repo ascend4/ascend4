@@ -440,15 +440,15 @@ int ida_retrieve_IVs(IntegratorSystem *integ, realtype t0, N_Vector y0,
 		fprintf(stderr, "%d\t%15s=%10f\t", i, varname, NV_Ith_S(y0,i));
 
 		if (integ->ydot[i]) {
+			ASC_FREE(varname);
 			varname = var_make_name(integ->system, integ->ydot[i]);
 			fprintf(stderr, "%15s=%10f\t\n", varname, NV_Ith_S(yp0,i));
 		} else {
 			snprintf(diffname,99,"diff(%s)",varname);
 			fprintf(stderr,"%15s=%10f\t\n",diffname,NV_Ith_S(yp0,i));
 		}
+		ASC_FREE(varname);
 	}
-
-	ASC_FREE(varname);
 #endif
 
 	return 0;
