@@ -108,15 +108,16 @@ struct Instance *CreateModelInstance(struct TypeDescription *type)
     CopyTypeDesc(type);
     num_children = ChildListLen(GetChildList(type));
     stats = GetStatementList(type);
-    result = MOD_INST(ascmalloc((unsigned)sizeof(struct ModelInstance)+
-				(unsigned)num_children*
-				(unsigned)sizeof(struct Instance *)));
+    result = MOD_INST(ascmalloc(
+                (unsigned)sizeof(struct ModelInstance)
+                + (unsigned)num_children * (unsigned)sizeof(struct Instance *)
+    ));
     result->t = MODEL_INST;
     result->pending_entry = NULL;
     result->interface_ptr = NULL;
     result->parents = gl_create(AVG_PARENTS);
     result->whens = NULL;
-		result->link_table = gl_create(AVG_LINKS); /**< DS: initially the link_table for a model is empty */
+    result->link_table = gl_create(AVG_LINKS); /**< DS: initially the link_table for a model is empty */
     result->desc = type;
     result->alike_ptr = INST(result);
     result->visited = 0;

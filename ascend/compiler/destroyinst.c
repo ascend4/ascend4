@@ -75,14 +75,8 @@
 #include "cmpfunc.h"
 #include "slvreq.h"
 
-#ifndef lint
-static CONST char DestroyInstModuleID[] = "$Id: destroyinst.c,v 1.12 1997/07/18 12:28:50 mthomas Exp $";
-#endif
 
-
-static
-void DeleteIPtr(struct Instance *i)
-{
+static void DeleteIPtr(struct Instance *i){
   assert(i&&InterfacePtrDelete);
   AssertMemory(i);
   switch(i->t) {
@@ -160,15 +154,13 @@ void DeleteIPtr(struct Instance *i)
   }
 }
 
-/*********************************************************************\
-int RemoveParentReference(inst,parent)
-
-Return a true value if inst should be deleted; otherwise, return 0.
-This never returns anything but 1 for DUMMY_INSTs.
-\*********************************************************************/
-static int RemoveParentReferences(struct Instance *inst,
-                                  struct Instance *parent)
-{
+/**
+	This never returns anything but 1 for DUMMY_INSTs.
+	@return true value if inst should be deleted; otherwise, return 0.
+*/
+static int RemoveParentReferences(
+	struct Instance *inst, struct Instance *parent
+){
   register unsigned long c,pos,length;
   AssertMemory(inst);
   if (parent!=NULL) {
@@ -206,9 +198,7 @@ static int RemoveParentReferences(struct Instance *inst,
   }
 }
 
-static
-void RemoveFromClique(struct Instance *inst)
-{
+static void RemoveFromClique(struct Instance *inst){
   register struct Instance *i,*hold;
   AssertMemory(inst);
   if ((hold=i=NextCliqueMember(inst))==inst)
@@ -252,24 +242,20 @@ void RemoveFromClique(struct Instance *inst)
   }
 }
 
-static
-void DeleteArrayChild(struct ArrayChild *acp, struct Instance *parent)
-{
+static void DeleteArrayChild(struct ArrayChild *acp, struct Instance *parent){
   if ((acp!=NULL)&&(acp->inst!=NULL)) {
     AssertContainedMemory(acp,sizeof(struct ArrayChild));
     DestroyInstance(acp->inst,parent);
   }
 }
 
-static
-void RemoveRelationLinks(struct Instance *i, struct gl_list_t *list)
-/*********************************************************************\
-Take an ATOM and tell all the relations that know about it to
-forget it, then destroy the list that identifies those relations.
-After this, a real ATOM can be safely deleted if there are no models
-refering to it.
-\*********************************************************************/
-{
+/**
+	Take an ATOM and tell all the relations that know about it to
+	forget it, then destroy the list that identifies those relations.
+	After this, a real ATOM can be safely deleted if there are no models
+	refering to it.
+*/
+static void RemoveRelationLinks(struct Instance *i, struct gl_list_t *list){
   register unsigned long c,length;
   assert(list!=NULL);
   length = gl_length(list);
@@ -280,13 +266,13 @@ refering to it.
 }
 
 
-/*********************************************************************\
-Take an BOOLEAN ATOM, REL or LOGREL and tell all the logrelations that
-know about them to forget them, then destroy the list that identifies
-those logrelations.
-After this, the ATOM, REL or LOGREL  can be deleted if there are no
-models or whens refering to it.
-\*********************************************************************/
+/**
+	Take a BOOLEAN ATOM, REL or LOGREL and tell all the logrelations that
+	know about them to forget them, then destroy the list that identifies
+	those logrelations.
+	After this, the ATOM, REL or LOGREL  can be deleted if there are no
+	models or whens refering to it.
+*/
 static
 void RemoveLogRelLinks(struct Instance *i, struct gl_list_t *list)
 {
@@ -312,10 +298,9 @@ void RemoveWhenLinks(struct Instance *i, struct gl_list_t *list)
   gl_destroy(list);
 }
 
-static
-void DestroyAtomChildren(register struct Instance **i,
-			 register unsigned long int nc)
-{
+static void DestroyAtomChildren(
+	register struct Instance **i, register unsigned long int nc
+){
   while(nc-- > 0){
     AssertMemory(i);
     AssertMemory(*i);
@@ -329,11 +314,10 @@ void DestroyAtomChildren(register struct Instance **i,
 }
 
 /*
- * should only be called when there areno more references
- * to the object.
- */
-static void DestroyInstanceParts(struct Instance *i)
-{
+	should only be called when there areno more references
+	to the object.
+*/
+static void DestroyInstanceParts(struct Instance *i){
   register unsigned long c,length;
   register struct gl_list_t *l;
   struct Instance *child;
@@ -368,6 +352,7 @@ static void DestroyInstanceParts(struct Instance *i)
     i->t = ERROR_INST;
     DeleteTypeDesc(MOD_INST(i)->desc);
     MOD_INST(i)->desc = NULL;
+	gl_destroy(MOD_INST(i)->link_table);
     ascfree((char *)i);
     return;
   case REAL_CONSTANT_INST:
