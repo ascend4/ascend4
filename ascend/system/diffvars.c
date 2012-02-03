@@ -85,9 +85,6 @@ int CmpDiffVars(const struct solver_ipdata *a, const struct solver_ipdata *b){
 */
 int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 
-	
-	
-
 	SolverDiffVarCollection *diffvars = NULL;
 	struct solver_ipdata *vip, *vipnext;
 	SolverDiffVarSequence *seq;
@@ -101,10 +98,12 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 	
 
 	if(gl_length(prob->diffvars)==0){
-		CONSOLE_DEBUG("No differential variables were seen. Skipping generation of diffvars struct.");
+		sys->diffvars = NULL;
 		return 0;
 	}
 
+	CONSOLE_DEBUG("Differential variables were seen. Generating diffvars data.");
+		
 	seqs = gl_create(prob->nr);
 	
 	/* add the list of algebraic variables to the structure too */
@@ -218,8 +217,6 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 		}
 		continue;
 	}
-	
-	
 
 
 #ifdef DIFFVARS_DEBUG
@@ -233,7 +230,7 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 	for(i=0;i<diffvars->nseqs;++i){
 		diffvars->seqs[i] = *(SolverDiffVarSequence *)gl_fetch(seqs,i+1);
 	}
-	gl_destroy(seqs);
+	gl_free_and_destroy(seqs);
 	diffvars->nalg = nalg;
 	diffvars->ndiff = ndiff;
 
@@ -291,4 +288,19 @@ int system_diffvars_debug(slv_system_t sys,FILE *fp){
 	}
 	return 0;
 }
+
+void system_diffvars_destroy(slv_system_t sys){
+	SolverDiffVarCollection *diffvars = sys->diffvars;
+	if(diffvars == NULL)return;
+	ASC_FREE(diffvars->indep);
+	ASC_FREE(diffvars->obs);
+	int i;
+	for(i=0; i<diffvars->nseqs; ++i){
+		ASC_FREE(diffvars->seqs[i].vars);
+	}
+	ASC_FREE(diffvars->seqs);
+	ASC_FREE(diffvars);
+	sys->diffvars = NULL;
+}
+
 

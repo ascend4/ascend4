@@ -317,6 +317,7 @@ static void integrator_lsode_free(void *enginedata){
 	densematrix_destroy(d.dydot_dy);
 
 	d.n_eqns = 0L;
+	ASC_FREE(enginedata);
 }
 
 /*------------------------------------------------------------------------------

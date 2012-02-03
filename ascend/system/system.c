@@ -115,6 +115,8 @@ void system_destroy(slv_system_t sys){
 #undef F
 #undef FN
 
+	system_diffvars_destroy(sys);
+
 	symbollist=slv_get_symbol_list(sys);
 	if(symbollist != NULL)DestroySymbolValuesList(symbollist);
 
