@@ -180,7 +180,7 @@ typedef int IntegratorSolveFn(struct IntegratorSystemStruct *blsys
 typedef int IntegratorWriteMatrixFn(const struct IntegratorSystemStruct *blsys, FILE *fp, const char *type);
 /**<
 	Write Matrix. This method allows the user to request output of 'a matrix'
-	from the integrator to a file. The type of output can be requested using 
+	from the integrator to a file. The type of output can be requested using
 	the type parameter. Check the implementation details of the specific
 	integrator.
 
@@ -262,7 +262,7 @@ struct IntegratorSystemStruct{
   int n_obs;
   int n_diffeqs;              /**< number of differential equations (used by idaanalyse) */
   int currentstep;            /**< current step number (also @see integrator_getnsamples) */
- 
+
   /** @TODO move the following to the 'params' structure? Or maybe better not to? */
   int maxsubsteps;            /**< most steps between mesh poins */
   double stepzero;            /**< initial step length, SI units. */
@@ -324,6 +324,13 @@ ASC_DLLSPEC const struct gl_list_t *integrator_get_engines();
 	Return a {INTEG_UNKNOWN,NULL} terminated list of integrator currently
 	available. At present this is determined at compile time but will be
 	changed to being determined at load time if necessary.
+*/
+
+ASC_DLLSPEC void integrator_free_engines();
+/**<
+	Destroy integrator engines, hopefully unloading any shared libraries
+	that aren't needed. FIXME probably needs to be reimplemented to
+	store pointers in a shared context object somewhere.
 */
 
 ASC_DLLSPEC int integrator_set_engine(IntegratorSystem *blsys, const char *name);
