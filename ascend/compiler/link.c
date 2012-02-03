@@ -701,7 +701,11 @@ extern int getOdeType(struct Instance *model ,struct Instance *inst){
 		maxorder = link_entry->length;
 		k = 0;
 		while(var!=NULL){
-			if(strcmp(SCP(SimpleNameIdPtr(NamePointer(var))),WriteInstanceNameString(inst,model)) == 0 ) {
+			char *s = WriteInstanceNameString(inst,model);
+			int c = strcmp(SCP(SimpleNameIdPtr(NamePointer(var))),s);
+			ASC_FREE(s);
+			if(c == 0 ) {
+				gl_destroy(der_links);
 				return maxorder - k;
 			}
 			k++;
@@ -709,6 +713,7 @@ extern int getOdeType(struct Instance *model ,struct Instance *inst){
 		}
 	}
 
+	gl_destroy(der_links);
 	independent_key = AddSymbol("independent");
 	independent_links = getLinks(model,independent_key,0);
 
@@ -718,7 +723,11 @@ extern int getOdeType(struct Instance *model ,struct Instance *inst){
 
 		k = 0;
 		while(var!=NULL){
-			if(strcmp(SCP(SimpleNameIdPtr(NamePointer(var))),WriteInstanceNameString(inst,model)) == 0 ) {
+			char *s = WriteInstanceNameString(inst,model);
+			int c = strcmp(SCP(SimpleNameIdPtr(NamePointer(var))),s);
+			ASC_FREE(s);
+			if(c == 0 ) {
+				gl_destroy(independent_links);
 				return -1;
 			}
 			k++;
@@ -726,12 +735,11 @@ extern int getOdeType(struct Instance *model ,struct Instance *inst){
 		}
 	}
 
+	gl_destroy(independent_links);
 	return 0;
 }
 
 extern int getOdeId(struct Instance *model,struct Instance *inst){
-	
-
 	struct link_entry_t *link_entry;
 	struct gl_list_t *der_links;
 	symchar *der_key;
@@ -747,12 +755,17 @@ extern int getOdeId(struct Instance *model,struct Instance *inst){
 		var = link_entry->u.vl;
 
 		while(var!=NULL){
-			if(strcmp(SCP(SimpleNameIdPtr(NamePointer(var))),WriteInstanceNameString(inst,model)) == 0 ) {
+			char *s = WriteInstanceNameString(inst,model);
+			int c = strcmp(SCP(SimpleNameIdPtr(NamePointer(var))),s);
+			ASC_FREE(s);
+			if(c == 0){
+				gl_destroy(der_links);
 				return i;
 			}
 			var = NextVariableNode(var);
 		}
 	}
+	gl_destroy(der_links);
 	return 0;
 }
 
