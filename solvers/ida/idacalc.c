@@ -426,6 +426,9 @@ int integrator_ida_djex(long int Neq, realtype tt
 		is_error = 1;
 	}*/
 
+	ASC_FREE(variables);
+	ASC_FREE(derivatives);
+
 	if(is_error){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"There were derivative evaluation errors in the dense jacobian");
 		return 1;

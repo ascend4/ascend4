@@ -365,7 +365,7 @@ int ospath_chdir(struct FilePath *fp){
 	FREE(s);
 	return res;
 }
-	
+
 /**
 	Use getenv() function to retrieve HOME path, or if not set, use
 	the password database and try to retrieve it that way (???)
@@ -1257,11 +1257,23 @@ struct FilePath **ospath_searchpath_new(const char *path){
 	char *c;
 	unsigned i;
 	struct FilePath **pp;
-	char path1[PATH_MAX];
+
+#if PATH_MAX < 4096
+# define SEARCHPATH_MAX 4096
+#else
+# define SEARCHPATH_MAX PATH_MAX
+#endif
+
+	if(strlen(path) > SEARCHPATH_MAX){
+		E("Search path is too long, increase SEARCHPATH_MAX in ospath code");
+		return NULL;
+	}
+
+	char path1[SEARCHPATH_MAX+1];
 
 	STRTOKVAR(nexttok);
 
-	strncpy(path1,path,PATH_MAX);
+	strncpy(path1,path,SEARCHPATH_MAX);
 
 	X(path1);
 	X(PATH_LISTSEP_STR);
@@ -1280,6 +1292,7 @@ struct FilePath **ospath_searchpath_new(const char *path){
 	X(p);
 	for(; p!= NULL; p=STRTOK(NULL,PATH_LISTSEP_STR,nexttok)){
 		c = (char *)MALLOC(sizeof(char)*(strlen(p)+1));
+		/* XXX FIXME what if one path component is longer than PATH_MAX?*/
 		X(p);
 		STRCPY(c,p);
 		if(n>=LISTMAX){
