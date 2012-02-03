@@ -29,6 +29,7 @@
 
 #ifdef ASC_XTERM_COLORS
 static int color_test(){
+	/* 1: use xterm; 2: use windows; -1: no color */
 	static int use_xterm_color = 0;
 	char *term;
 	if(!use_xterm_color){
@@ -38,12 +39,15 @@ static int color_test(){
 		if(term!=NULL){
 			if(strcmp(term,"cygwin")==0){
 				Asc_FPrintf(stderr,"\n\n\nUsing Windows color codes\n\n\n");
+				use_xterm_color=2;
+			}else if(strcmp(term,"xterm")==0){
+				Asc_FPrintf(stderr,"\n\n\nUsing xterm color codes\n\n\n");
 				use_xterm_color=1;
 			}
 		}
 # else
 		if(term!=NULL){
-			if(strcmp(term,"msys")==0 || strcmp(term,"xterm")==0){
+			if(strcmp(term,"xterm")==0){
 				/* MSYS (rxvt), putty, xterm. */
 				use_xterm_color=1;
 			}else{
@@ -60,54 +64,61 @@ static int color_test(){
 }
 
 
-# ifndef __WIN32__
-
 /* ANSI color codes from integer bitfield input... */
 
 int color_on(FILE *f, int colorcode){
 	int use_color = color_test();
+	int fg, bg, bold;
+# ifdef __WIN32__
+	HANDLE Hnd;
+# endif
 
-	if(use_color){
-		int fg = colorcode & (ASC_FG_GREY);
-		int bg = (colorcode & (ASC_BG_GREY)) >> 4;
-		int bold = colorcode & ASC_FG_BRIGHT;
+	switch(use_color){
+	case 1:
+		fg = colorcode & (ASC_FG_GREY);
+		bg = (colorcode & (ASC_BG_GREY)) >> 4;
+		bold = colorcode & ASC_FG_BRIGHT;
+# ifdef __WIN32__
+		/* on this platform, we have to switch red and blue bits for both fg and bg */
+		fg = fg - (fg & 5) + ((1 & fg)<<2) + ((fg & 4)>>2);
+		bg = bg - (bg & 5) + ((1 & bg)<<2) + ((bg & 4)>>2);
+# endif
 		fprintf(f, "\033[3%d%sm",fg,(bold?";1":""));
 		if(bg){
 			fprintf(f, "\0334%dm",bg);
 		}
-	}
-	return 0;
-}
-
-int color_off(FILE *f){
-	int use_color = color_test();
-
-	if(use_color){
-		fprintf(f, "\033[0m");
-	}
-	return 0;
-}
-
-# else
-
-/* Windows color codes... */
-
-int color_on(FILE *f, int colorcode){
-	int use_color = color_test();
-	HANDLE Hnd;
-	if(use_color==1){
+		break;
+# ifdef __WIN32__
+	case 2:
 	   Hnd = GetStdHandle(STD_OUTPUT_HANDLE);
 	   if(Hnd == INVALID_HANDLE_VALUE)return 0;
 	   SetConsoleTextAttribute(Hnd, (WORD)colorcode);
+	   break;
+#endif
 	}
 	return 0;
 }
 
 int color_off(FILE *f){
-	return color_on(f,ASC_FG_GREY);
-}
-
+	int use_color = color_test();
+# ifdef __WIN32__
+	HANDLE Hnd;
 # endif
+
+	switch(use_color){
+	case 1:
+		fprintf(f, "\033[0m");
+		break;
+# ifdef __WIN32__
+	case 2:
+		Hnd = GetStdHandle(STD_OUTPUT_HANDLE);
+		if(Hnd == INVALID_HANDLE_VALUE)return 0;
+		SetConsoleTextAttribute(Hnd, (WORD)ASC_FG_GREY);
+		break;
+# endif
+	}
+	return 0;
+}
 
 #else
 /* if ASC_XTERM_COLORS is turned off, we're not using any colors ever */
