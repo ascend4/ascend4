@@ -67,3 +67,29 @@
    fun:_ZN5Ipopt16TSymLinearSolver10MultiSolveERKNS_9SymMatrixERSt6vectorINS_8SmartPtrIKNS_6VectorEEESaIS8_EERS4_INS5_IS6_EESaISC_EEbi
 }
 
+{
+   DLOPEN-1
+   Memcheck:Leak
+   fun:malloc
+   fun:_dl_lookup_symbol_x
+   fun:_dl_relocate_object
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   obj:*
+}
+
+{
+   DLOPEN-2
+   Memcheck:Leak
+   fun:malloc
+   fun:local_strdup
+   fun:_dl_map_object
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   obj:*
+}
+

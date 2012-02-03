@@ -117,6 +117,7 @@ int system_jacobian(slv_system_t sys
 
 	ASC_FREE(derivvals);
 	ASC_FREE(derivvars);
+	ASC_FREE(vartocol);
 
 	return err;
 }

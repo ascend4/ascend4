@@ -58,8 +58,8 @@ int test_ida_reporter_init(struct IntegratorSystemStruct *integ) {
 
 int test_ida_reporter_write(struct IntegratorSystemStruct *integ) {
 	double val;
-	val = var_value(integ->y[4]);
-	CONSOLE_DEBUG("y = %g", val);
+	val = var_value(integ->y[0]);
+	CONSOLE_DEBUG("y[0] = %g", val);
 	return 0; /* no interrupt */
 }
 
