@@ -163,14 +163,25 @@ static void test_shm(){
 	system_destroy(sys);
 	system_free_reused_mem();
 
+	struct Instance *simroot = GetSimulationRoot(siminst);
+	CU_TEST(simroot != NULL);
+	struct Instance *ix = ChildByChar(simroot,AddSymbol("x"));
+	struct Instance *iv = ChildByChar(simroot,AddSymbol("v"));
+	CU_TEST(ix != NULL);
+	CU_TEST(iv != NULL);
+
+	CONSOLE_DEBUG("Final x = %e",RealAtomValue(ix));
+	CONSOLE_DEBUG("Final v = %e",RealAtomValue(iv));
+
+	CU_TEST(fabs(RealAtomValue(ix) - 10 < 2e-3));
+	CU_TEST(fabs(RealAtomValue(iv) - 0 < 4e-4));
+
 	/* destroy all that stuff */
-	CONSOLE_DEBUG("Destroying instance tree");
 	CU_ASSERT(siminst != NULL);
 
 	solver_destroy_engines();
 	sim_destroy(siminst);
 	Asc_CompilerDestroy();
-
 }
 
 /*
