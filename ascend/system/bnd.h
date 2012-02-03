@@ -142,7 +142,7 @@ extern void bnd_set_tolerance(struct bnd_boundary *bnd, real64 tolerance);
  *  bnd may not be NULL (checked by asc_assertion).
  */
 
-extern real64 bnd_tolerance(struct bnd_boundary *bnd);
+ASC_DLLSPEC real64 bnd_tolerance(struct bnd_boundary *bnd);
 /**<
  *  Retrieves the tolerance used to determine the truth value
  *  of the condition. The current implimentation allows a single 
@@ -284,6 +284,9 @@ ASC_DLLSPEC void bnd_set_flagbit(struct bnd_boundary *bnd,
 #define BND_CROSSED     0x40    /**< Was the boundary crossed ? */
 #define BND_PERTURB     0x80    /**< Should I perturb this boundary in the calculation
                                      of logical variables ? */
+#define BND_IDA_CROSSED 0x100	/**< Has IDA tagged this boundary as crossed? */
+#define BND_IDA_VALUE	0x200	/**< If IDA crossed what should the condition
+									 evaluate to? */
 /*
  * the bit flag lookups
  */
@@ -305,6 +308,8 @@ ASC_DLLSPEC void bnd_set_flagbit(struct bnd_boundary *bnd,
 #define bnd_pre_status(b)  bnd_flagbit((b),BND_PRE_STATUS)
 #define bnd_crossed(b)     bnd_flagbit((b),BND_CROSSED)
 #define bnd_perturb(b)     bnd_flagbit((b),BND_PERTURB)
+#define bnd_ida_crossed(b) bnd_flagbit((b),BND_IDA_CROSSED)
+#define bnd_ida_value(b)   bnd_flagbit((b),BND_IDA_VALUE)
 #endif /* NDEBUG */
 
 /*
@@ -319,6 +324,8 @@ ASC_DLLSPEC void bnd_set_flagbit(struct bnd_boundary *bnd,
 #define bnd_set_pre_status(b,bv)     bnd_set_flagbit((b),BND_PRE_STATUS,(bv))
 #define bnd_set_crossed(b,bv)        bnd_set_flagbit((b),BND_CROSSED,(bv))
 #define bnd_set_perturb(b,bv)        bnd_set_flagbit((b),BND_PERTURB,(bv))
+#define bnd_set_ida_crossed(b,bv)	 bnd_set_flagbit((b),BND_IDA_CROSSED,(bv))
+#define bnd_set_ida_value(b,bv)		 bnd_set_flagbit((b),BND_IDA_VALUE,(bv))
 
 ASC_DLLSPEC int32 bnd_status_cur(struct bnd_boundary *bnd);  /**< See bnd_status_pre(). */
 ASC_DLLSPEC int32 bnd_status_pre(struct bnd_boundary *bnd);

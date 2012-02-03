@@ -1,0 +1,13 @@
+REQUIRE "system.a4l";
+
+(* this model should show successful operation of the 'fix and assign' statement. *)
+
+MODEL fix_and_assign1;
+	x,y IS_A solver_var;
+	x = y + 1;
+METHODS
+METHOD on_load;
+	FIX y:=1;
+	FIX x:=2;
+END on_load;
+END fix_and_assign1;

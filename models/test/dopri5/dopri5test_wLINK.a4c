@@ -1,0 +1,21 @@
+IMPORT "dopri5";
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL dopri5test;
+	x,y IS_A delta_distance;
+	t IS_A time;
+	dy_dt IS_A speed;
+	INDEPENDENT t;
+	DER(dy_dt,y);
+	dy_dt = -x;
+	x = y;
+METHODS
+	METHOD on_load;
+		y.obs_id := 1;
+		dy_dt.obs_id := 2;
+		x.obs_id := 3;
+		y := 1.0 {m};
+		t := 0.0 {s};
+	END on_load;
+END dopri5test;

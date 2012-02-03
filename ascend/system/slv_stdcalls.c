@@ -284,7 +284,7 @@ int slv_check_bounds(const slv_system_t sys
   struct var_variable *var, **vp;
   int err = 0;
 
-  CONSOLE_DEBUG("Got lo = %d, hi =%d",lo,hi);
+  //CONSOLE_DEBUG("Got lo = %d, hi =%d",lo,hi);
 
   if(label==NULL) label = "";
   if(sys==NULL) return -1;

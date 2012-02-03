@@ -12,7 +12,7 @@ csrcs = Split("""
 	freestore.c func.c findpath.c
 	importhandler.c initialize.c instance_io.c
 	instantiate.c instmacro.c instquery.c
-	library.c linkinst.c logrel_io.c logrel_util.c
+	library.c link.c linkinst.c logrel_io.c logrel_util.c
 	logrelation.c mathinst.c mergeinst.c module.c name.c
 	nameio.c notate.c notequery.c numlist.c parentchild.c
 	parpend.c pending.c plot.c proc.c procframe.c

@@ -1,0 +1,9 @@
+REQUIRE "system.a4l";
+
+(* this model file should fail to load *)
+
+MODEL fix_and_assign2;
+	x,y IS_A solver_var;
+	x = y + 1;
+	FIX x := 1;
+END fix_and_assign2;

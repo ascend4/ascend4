@@ -32,10 +32,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <ctype.h>
-
-#ifndef __WIN32__
-# include <unistd.h>
-#endif
+#include <unistd.h>
 
 #include "ospath.h"
 

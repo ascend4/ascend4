@@ -95,6 +95,7 @@
 #include <ascend/compiler/logrel_util.h>
 #include <ascend/compiler/case.h>
 #include <ascend/compiler/when_util.h>
+#include <ascend/compiler/link.h>
 
 #include "slv_server.h"
 #include "cond_config.h"
@@ -544,21 +545,22 @@ int GetIntFromSymbol(CONST char *symval
   return value;
 }
 
-void DestroySymbolValuesList(struct gl_list_t *symbol_list)
-{
+
+void DestroySymbolValuesList(struct gl_list_t *symbol_list){
   struct SymbolValues *entry;
   int len,c;
-    if(symbol_list != NULL) {
-      len = gl_length(symbol_list);
-      for (c=1; c<= len; c++) {
-        entry = (struct SymbolValues *)(gl_fetch(symbol_list,c));
-        ascfree((char *)entry->name); /* Do I need this ? */
-        ascfree((char *)entry);
-      }
-      gl_destroy(symbol_list);
-      symbol_list = NULL;
+  if(symbol_list != NULL) {
+    len = gl_length(symbol_list);
+    for (c=1; c<= len; c++) {
+      entry = (struct SymbolValues *)(gl_fetch(symbol_list,c));
+      ascfree((char *)entry->name); /* Do I need this ? */
+      ascfree((char *)entry);
     }
+    gl_destroy(symbol_list);
+    symbol_list = NULL;
+  }
 }
+
 
 /*------------------------------------------------------------------------------
   CLASSIFICATION OF INSTANCES, CREATING INTERFACE POINTERS
@@ -592,13 +594,20 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     ip->u.v.index = 0;
     ip->u.v.active = 0;
     if(solver_var(inst)){
+	  //printf("\n Variable name:%s \n",WriteInstanceNameString(inst,p_data->root));
       ip->u.v.solvervar = 1; /* must set this regardless of what list */
       ip->u.v.fixed = BooleanChildValue(inst,FIXED_A);
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
       ip->u.v.deriv = IntegerChildValue(inst,DERIV_A);
       ip->u.v.odeid = IntegerChildValue(inst,ODEID_A);
-	  ip->u.v.obsid = IntegerChildValue(inst,OBSID_A);
+      ip->u.v.obsid = IntegerChildValue(inst,OBSID_A);
 	  /* CONSOLE_DEBUG("FOUND A VAR: deriv = %d, %s = %d",ip->u.v.deriv,SCP(ODEID_A),ip->u.v.odeid); */
+
+	  if(ip->u.v.deriv == 0){
+		ip->u.v.deriv = getOdeType(p_data->root,inst);
+		ip->u.v.odeid = getOdeId(p_data->root,inst);
+	  }
+	  //printf("\n ode_type: %d, ode_id: %d \n",ip->u.v.deriv,ip->u.v.odeid);
 
       if(RelationsCount(inst)) {
         asc_assert(ip!=(void *)0x1);
@@ -607,18 +616,32 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
         gl_append_ptr(p_data->unas,(POINTER)ip);
       }
 
-	  if(ip->u.v.obsid){
-		gl_append_ptr(p_data->obsvars,(POINTER)ip);
-		/* CONSOLE_DEBUG("Added to obsvars"); */
-      }
-	  /* make the algebraic/differential/derivative cut */
-	  if(ip->u.v.odeid){
-        gl_append_ptr(p_data->diffvars,(POINTER)ip);
-		/* CONSOLE_DEBUG("Added var to diffvars"); */
-      }else{
-		if(ip->u.v.deriv==-1){
-		  gl_append_ptr(p_data->indepvars,(POINTER)ip);
-		  /* CONSOLE_DEBUG("Added to indep vars"); */
+	if(ip->u.v.obsid){
+	gl_append_ptr(p_data->obsvars,(POINTER)ip);
+	/* CONSOLE_DEBUG("Added to obsvars"); */
+      	  }
+	/* make the algebraic/differential/derivative cut */
+	if(ip->u.v.odeid){
+            gl_append_ptr(p_data->diffvars,(POINTER)ip);
+	/* CONSOLE_DEBUG("Added var to diffvars"); */
+          }else{
+	if(ip->u.v.deriv==-1){
+		//printf("\n smth smth \n");
+		struct solver_ipdata *original_indep_var;
+		if(gl_length(p_data->indepvars) != 0) {
+			original_indep_var = (struct solver_ipdata *)gl_fetch(p_data->indepvars,1);
+			//printf("\n asadada %d \n",original_indep_var->i == inst);
+		  }
+		  /*>>DS: Checking that the independent variable is the same one in each derivative chains */
+		  if(gl_length(p_data->indepvars) == 0 || strcmp(WriteInstanceNameString(original_indep_var->i,p_data->root),WriteInstanceNameString(inst,p_data->root))== 0 ) {
+			//printf("\n ttttttt %ld %s \n",gl_length(p_data->indepvars),WriteInstanceNameString(inst,p_data->root));
+		        gl_append_ptr(p_data->indepvars,(POINTER)ip);
+			/* CONSOLE_DEBUG("Added to indep vars"); */
+		  }else{
+		    ERROR_REPORTER_HERE(ASC_USER_ERROR,"Set the same independent variable for all derivative chains!" );
+			FPRINTF(ASCERR,"All derivative chains must contain one and the same independent variable \n");
+			/* ASC_PANIC("Set the same independent variable for all derivative chains!.\n"); */
+		  }
 		}else{
 		  gl_append_ptr(p_data->algebvars,(POINTER)ip);
 		  /* CONSOLE_DEBUG("Added var to algebvars"); */
@@ -642,7 +665,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     ip->u.dv.incident = 0;
     ip->u.dv.index = 0;
     ip->u.dv.active = 0;
-      ip->u.dv.value = GetBooleanAtomValue(inst);
+    ip->u.dv.value = GetBooleanAtomValue(inst);
     if(boolean_var(inst) ) {
       ip->u.dv.booleanvar = 1;
       ip->u.dv.fixed = BooleanChildValue(inst,FIXED_A);

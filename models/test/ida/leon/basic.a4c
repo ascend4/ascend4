@@ -1,0 +1,74 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL airlock;
+
+(*
+	m_air 	IS_A mass;
+	v_air 	IS_A volume;
+	rho_a 	IS_A mass_density;
+	E		IS_A energy;
+	work	IS_A energy;
+	mdot_a	IS_A mass_rate;
+	mdot_e	IS_A mass_rate;
+	h_a		IS_A specific_enthalpy;
+	h_e		IS_A specific_enthalpy;
+
+	vol_flow IS_A volume_rate;
+	
+	dE_dt	IS_A energy_rate;
+	dW_dt	IS_A energy_rate;
+*)
+
+	t		IS_A time;
+
+	m	 	IS_A solver_var;
+	v_air 	IS_A solver_var;
+	rho_a 	IS_A solver_var;
+	E		IS_A solver_var;
+	W		IS_A solver_var;
+	h_a		IS_A solver_var;
+	h_e		IS_A solver_var;
+
+	vol_flow IS_A solver_var;
+	
+	dE_dt	IS_A solver_var;
+	dW_dt	IS_A solver_var;
+	dm_dt	IS_A solver_var;
+
+	(* Equations *)
+	rho_a = m / v_air;
+	dm_dt = m * vol_flow;
+	dE_dt = -1*dW_dt  + dm_dt*(h_a - h_e);
+
+
+
+METHODS
+	METHOD on_load;
+		RUN ode_init;
+		FIX v_air;
+		FIX vol_flow;
+		FIX h_a;
+		FIX h_e;
+
+		v_air := 3.0;
+		vol_flow := 0.1;
+		h_a := 290;
+		h_e := 450;
+		t := 0.0{s};
+	END on_load;
+	
+	METHOD ode_init;
+		E.ode_type := 1; dE_dt.ode_type := 2;
+		E.ode_id := 1; dE_dt.ode_id := 1;
+
+		W.ode_type :=1; dW_dt.ode_type := 2;
+		W.ode_id :=2;	dW_dt.ode_id := 2;
+
+		m.ode_type :=1; dm_dt.ode_type := 2;
+		m.ode_id := 3; dm_dt.ode_id :=3;
+
+		t.ode_type := -1;
+	END ode_init;
+
+END airlock;

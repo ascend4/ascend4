@@ -28,8 +28,12 @@
 #include <ascend/utilities/error.h>
 
 #include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/link.h>
+#include <ascend/compiler/vlist.h>
+#include <ascend/compiler/name.h>
 
 #include "analyse_impl.h"
+#include "analyze.h"
 #include "system_impl.h"
 
 /* #define DIFFVARS_DEBUG */
@@ -40,6 +44,21 @@
 
 SolverDiffVarCollection *system_get_diffvars(slv_system_t sys){
 	return sys->diffvars;
+}
+
+/**<DS: compare the names of the instances from the problem_t that will be sent to the solver and a symchar, on success return the pointer to the respective solver_ipdata */
+static
+struct solver_ipdata *FindVarIPdata(struct problem_t *prob,symchar *varName){
+	int i,len;
+	struct solver_ipdata *ip;
+	len = gl_length(prob->algebvars);
+	for(i=1;i<=len;i++){
+		ip = (struct solver_ipdata *) gl_fetch(prob->algebvars,i);
+		if(strcmp(SCP(varName),WriteInstanceNameString(ip->i,prob->root)) == 0){
+			return ip;
+		}
+	}
+	return NULL;
 }
 
 static 
@@ -65,6 +84,10 @@ int CmpDiffVars(const struct solver_ipdata *a, const struct solver_ipdata *b){
 	@return 0 on success
 */
 int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
+
+	
+	
+
 	SolverDiffVarCollection *diffvars = NULL;
 	struct solver_ipdata *vip, *vipnext;
 	SolverDiffVarSequence *seq;
@@ -76,6 +99,7 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 
 	asc_assert(prob);
 	
+
 	if(gl_length(prob->diffvars)==0){
 		CONSOLE_DEBUG("No differential variables were seen. Skipping generation of diffvars struct.");
 		return 0;
@@ -195,6 +219,9 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 		continue;
 	}
 	
+	
+
+
 #ifdef DIFFVARS_DEBUG
 	CONSOLE_DEBUG("Identified %ld derivative chains, maximum length %d...",gl_length(seqs),maxorder);
 #endif
@@ -211,6 +238,7 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 	diffvars->ndiff = ndiff;
 
 	diffvars->nindep = gl_length(prob->indepvars);
+
 	diffvars->indep = ASC_NEW_ARRAY(struct var_variable *,diffvars->nindep);
 	for(i=0;i<diffvars->nindep;++i){
 		vip = (struct solver_ipdata *)gl_fetch(prob->indepvars,i+1);

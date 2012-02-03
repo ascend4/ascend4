@@ -167,6 +167,41 @@ extern struct Statement *CreateAA(struct VariableList *vl);
  *  @param vl variable list
  */
 
+extern struct Statement *IgnoreLNK(symchar *key, struct Name *n_key, struct VariableList *vl);
+/**<
+ *  Create an 'ignore' LINK statement node. (for the declarative part)
+ *  The statement's module is set to the current open module.
+ *  The statement's line number is set to the current line number.
+ *
+ *  @param key tag of the LINK-ed variables
+ *  @param used in case the key is a symbol constant ( in this case the key parameter is NULL)
+ *  @param vl variable list
+ */
+
+
+extern struct Statement *CreateLNK(symchar *key, struct Name *n_key, struct VariableList *vl);
+/**<
+ *  Create an LINK statement node.
+ *  The statement's module is set to the current open module.
+ *  The statement's line number is set to the current line number.
+ *
+ *  @param key tag of the LINK-ed variables
+ *  @param used in case the key is a symbol constant ( in this case the key parameter is NULL)
+ *  @param vl variable list
+ */
+
+extern struct Statement *CreateUNLNK(symchar *key, struct Name *n_key, struct VariableList *vl);
+/**<
+ *  Create an UNLINK statement node (ONLY availabale in the Methods section).
+ *  The statement's module is set to the current open module.
+ *  The statement's line number is set to the current line number.
+ *
+ *  @param key tag of the LINK-ed variables
+ *  @param used in case the key is a symbol constant ( in this case the key parameter is NULL)
+ *  @param vl variable list
+ */
+
+
 extern struct Statement *CreateATS(struct VariableList *vl);
 /**<
  *  Create an ARE_THE_SAME statement node.
@@ -623,7 +658,7 @@ extern void MarkStatContext(struct Statement *s, unsigned int bits);
 extern struct VariableList *GetStatVarList(CONST struct Statement *s);
 /**< 
  *  Returns the variable list of a
- *  IS_A, IS_REFINED_TO, WILL_BE, WILL_BE_THE_SAME,
+ *  IS_A, LINK, IS_REFINED_TO, WILL_BE, WILL_BE_THE_SAME,
  *  ARE_ALIKE, ARE_THE_SAME, ALIASES or ALIASES-ISA(ARR) statement.
  *  It must be passed one of these types of statement.
  *  Other statements will return NULL or crash.
@@ -715,6 +750,45 @@ extern CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s);
  *  Implementation function for GetStatCheckValue().  Do not call this
  *  function directly - use GetStatCheckValue() instead.
  */
+
+/* * * StateLink functions * * */
+
+#ifdef NDEBUG
+#define LINKStatKey(s) ((s)->v.lnk.key)
+#else
+#define LINKStatKey(s) LINKStatKeyF(s)
+#endif
+/**<
+ *  Return the name of the key used to link the instances. This variable
+ *  is used as a key in the LINK table to identify the instances that are
+ *  linked together 
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @return The name as a symchar*.
+ *  @see LINKStatKeyF()
+ */
+extern symchar *LINKStatKeyF(CONST struct Statement *s);
+/**<
+ *  Implementation function for LINKStatVlist().  Do not call this
+ *  function directly - use LINKStatVlist() instead.
+ */
+
+#ifdef NDEBUG
+#define LINKStatVlist(s) ((s)->v.lnk.vl)
+#else
+#define LINKStatVlist(s) LINKStatVlistF(s)
+#endif
+/**<
+ *  Return the list of variables/models that refer to the given LINK.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @return The list as a struct VariableList*.
+ *  @see LINKStatVlistF()
+ */
+extern struct VariableList *LINKStatVlistF(CONST struct Statement *s);
+/**<
+ *  Implementation function for LINKStatVlist().  Do not call this
+ *  function directly - use LINKStatVlist() instead.
+ */
+
 
 /* * * StateAlias functions * * */
 
@@ -916,6 +990,7 @@ extern enum ForOrder ForLoopOrderF(CONST struct Statement *s);
 #define ForContainsCAssigns(s)     ((s)->v.f.contains & contains_CAS)
 #define ForContainsWhen(s)         ((s)->v.f.contains & contains_WHEN)
 #define ForContainsAlike(s)        ((s)->v.f.contains & contains_AA)
+#define ForContainsLink(s)         ((s)->v.f.contains & contains_LNK)
 #define ForContainsAlias(s)        ((s)->v.f.contains & contains_ALI)
 #define ForContainsArray(s)        ((s)->v.f.contains & contains_ARR)
 #define ForContainsIsa(s)          ((s)->v.f.contains & contains_ISA)
@@ -936,6 +1011,7 @@ extern enum ForOrder ForLoopOrderF(CONST struct Statement *s);
 #define ForContainsCAssigns(s)     ForContainsCAssignsF(s)
 #define ForContainsWhen(s)         ForContainsWhenF(s)
 #define ForContainsAlike(s)        ForContainsAlikeF(s)
+#define ForContainsLink(s)	   		 ForContainsLinkF(s)
 #define ForContainsAlias(s)        ForContainsAliasF(s)
 #define ForContainsArray(s)        ForContainsArrayF(s)
 #define ForContainsIsa(s)          ForContainsIsaF(s)
@@ -956,6 +1032,7 @@ extern unsigned ForContainsDefaultsF(CONST struct Statement *s);
 extern unsigned ForContainsCAssignsF(CONST struct Statement *s);
 extern unsigned ForContainsWhenF(CONST struct Statement *s);
 extern unsigned ForContainsAlikeF(CONST struct Statement *s);
+extern unsigned ForContainsLinkF(CONST struct Statement *s);
 extern unsigned ForContainsAliasF(CONST struct Statement *s);
 extern unsigned ForContainsArrayF(CONST struct Statement *s);
 extern unsigned ForContainsIsaF(CONST struct Statement *s);
@@ -1000,6 +1077,7 @@ extern unsigned ForContainsIllegalF(CONST struct Statement *s);
  *  its nested statements a WHEN statement.
  *  Likewise for:
  *  ARE_ALIKE
+ *  LINK
  *  ALIASES
  *  CREATE ARRAY
  *  IS_A
@@ -1809,6 +1887,7 @@ extern int CompareSelectStatements(CONST struct Statement *s1,
 #define SelectContainsCAssigns(s) ((s)->v.se.contains & contains_CAS)
 #define SelectContainsWhen(s) ((s)->v.se.contains & contains_WHEN)
 #define SelectContainsAlike(s) ((s)->v.se.contains & contains_AA)
+#define SelectContainsLink(s) ((s)->v.se.contains & contains_LNK)
 #define SelectContainsAlias(s) ((s)->v.se.contains & contains_ALI)
 #define SelectContainsArray(s) ((s)->v.se.contains & contains_ARR)
 #define SelectContainsIsa(s) ((s)->v.se.contains & contains_ISA)
@@ -1829,6 +1908,7 @@ extern int CompareSelectStatements(CONST struct Statement *s1,
 #define SelectContainsCAssigns(s) SelectContainsCAssignsF(s)
 #define SelectContainsWhen(s) SelectContainsWhenF(s)
 #define SelectContainsAlike(s) SelectContainsAlikeF(s)
+#define SelectContainsLink(s) SelectContainsLinkF(s)
 #define SelectContainsAlias(s) SelectContainsAliasF(s)
 #define SelectContainsArray(s) SelectContainsArrayF(s)
 #define SelectContainsIsa(s) SelectContainsIsaF(s)
@@ -1849,6 +1929,7 @@ extern unsigned SelectContainsDefaultsF(CONST struct Statement *s);
 extern unsigned SelectContainsCAssignsF(CONST struct Statement *s);
 extern unsigned SelectContainsWhenF(CONST struct Statement *s);
 extern unsigned SelectContainsAlikeF(CONST struct Statement *s);
+extern unsigned SelectContainsLinkF(CONST struct Statement *s);
 extern unsigned SelectContainsAliasF(CONST struct Statement *s);
 extern unsigned SelectContainsArrayF(CONST struct Statement *s);
 extern unsigned SelectContainsIsaF(CONST struct Statement *s);

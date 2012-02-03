@@ -67,6 +67,14 @@ enum ForKind {
   fk_expect   /**< for expect */
 };
 
+/** LINK statement kinds. */
+enum LinkKind {
+  link_symchar = 0,  /**< LINK with a symchar as a key */
+  link_name = 1,      /**< LINK with a Name as a key */
+  link_ignore = 2   /**<  LINK with ignore key*/
+};
+
+
 /** Codes for the varieties of flow control statement. */
 enum FlowControl {
   fc_break,
@@ -90,6 +98,8 @@ enum stat_t {
   IRT,          /**< IS_REFINED_TO */
   ATS,          /**< ARE_THE_SAME */
   AA,           /**< ARE_ALIKE */
+  LNK,          /**< LINK */ 
+  UNLNK,        /**< UNLINK */
   FLOW,         /**< BREAK, CONTINUE, FALL_THROUGH, RETURN, STOP */
   FOR,          /**< FOR CREATE LOOP */
   REL,          /**< RELATION */
@@ -377,12 +387,19 @@ struct StateWhile {
 /** used for SOLVER statement */
 struct StateSOLVER{
   CONST char *name; /**< name of the solver being requested */
-};
-
+ };
+ 
 /** used for OPTION statement */
 struct StateOPTION{
   CONST char *name; /**< name of the option being set FIXME can we deal with hierarchical options, eg 'linlsv.convopt'? */
   struct Expr *rhs;
+ };
+
+/**<DS: used for LINK statements */
+struct StateLINK {
+  symchar *key;			/**< key under which the linked instances are stored in the link table, which can be a symbol, a name, loop index stored as symchars*/
+  enum LinkKind key_type;     /**< for now 0 means symbol, 1 means symbol constant, DS TODO: define constants for this*/
+  struct VariableList *vl; /**<< variables that are linked (FIXED)*/
 };
 
 /**
@@ -411,6 +428,8 @@ struct StateOPTION{
                                      MODEL, and any loop should be inside the
                                      CONDITIONAL statement. VRR */
 #define contains_EXT 0x10000	/*< contains a External statement. */
+#define contains_LNK 0x20000	/**< true if LINK in stmts list */
+#define contains_UNLNK 0x40000 /**< true if UNLINK in statements list */
 #define contains_ILL 0x80000    /**< true if illegal statement in loop */
 /* unsupported values, meaning we should be using them but don't yet */
 
@@ -423,7 +442,7 @@ union StateUnion {
   struct StateLogicalRel lrel;
   struct StateFOR        f;
   struct StateRUN        r;
-  struct StateFIX		 fx;
+  struct StateFIX	       fx;
   struct StateCall       call;
   struct StateIF         ifs;
   struct StateASSERT     asserts;
@@ -438,6 +457,7 @@ union StateUnion {
   struct StateFlow       flow;
   struct StateSOLVER     solver;
   struct StateOPTION     option;
+  struct StateLINK	     lnk;
 };
 
 struct Statement {

@@ -244,6 +244,7 @@ struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl)
     case REL:
     case LOGREL:
     case AA:
+    case LNK:
     case FOR: 	/* that this isn't handled further may be a bug */
     case ASGN:
     case CASGN:
@@ -375,6 +376,11 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
     WriteVariableList(f,GetStatVarList(s));
     FPRINTF(f," ARE_ALIKE;\n");
     break;
+  case LNK:
+  	FPRINTF(f,"key: %s\n;",SCP(LINKStatKey(s)));
+    WriteVariableList(f,LINKStatVlist(s));
+    FPRINTF(f," LINK;\n");
+    break;	
   case FOR:
   {
     FPRINTF(f,"FOR %s IN ",SCP(ForStatIndex(s)));
@@ -394,6 +400,7 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
 		(ForContainsConditional(s)) ? " conditional" : "",
 		(ForContainsWillbe(s)) ? " wb" : "",
 		(ForContainsAlike(s)) ? " aa" : "",
+		(ForContainsLink(s)) ? " lnk" : "",
 		(ForContainsAlias(s)) ? " ali" : "",
 		(ForContainsArray(s)) ? " arr" : "",
 		(ForContainsWbts(s)) ? " wbts" : "",
@@ -732,6 +739,7 @@ void WriteStatementErrorMessage(
   }
 
   error_reporter_end_flush();
+  CONSOLE_DEBUG(message);
 }
 
 void WriteStatementLocation(FILE *f, CONST struct Statement *stat){
@@ -810,6 +818,7 @@ symchar *StatementTypeString(CONST struct Statement *s)
     g_statio_stattypenames[IRT] = AddSymbol("IS_REFINED_TO");
     g_statio_stattypenames[ATS] = AddSymbol("ARE_THE_SAME");
     g_statio_stattypenames[AA] = AddSymbol("ARE_ALIKE");
+    g_statio_stattypenames[LNK] = AddSymbol("LINK");
     g_statio_stattypenames[FOR] = AddSymbol("FOR");
 	g_statio_stattypenames[FIX] = AddSymbol("FIX");
 	g_statio_stattypenames[FREE] = AddSymbol("FREE");
@@ -846,6 +855,7 @@ symchar *StatementTypeString(CONST struct Statement *s)
   case IRT:
   case ATS:
   case AA:
+  case LNK:
   case FOR:
   case FIX:
   case FREE:

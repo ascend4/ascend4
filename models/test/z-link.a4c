@@ -1,0 +1,145 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+(* => system.a4l, basemodel.a4l *)
+PROVIDE "z-link.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *
+ * Use of this module is in an empty ascend system.
+ *)
+
+(*********************************************************************\
+\*********************************************************************)
+
+
+MODEL test_link_base;
+	a IS_A solver_var;
+	LINK('key1',a);
+END test_link_base;
+
+MODEL model_pass_1 REFINES test_link_base;
+  b,c,d,e IS_A solver_var;
+  LINK('key2',b,c,d);
+	
+METHODS
+	METHOD method_pass_1;
+	  LINK('key3',d,e);
+	END method_pass_1;
+
+	METHOD method_pass_2;
+	  LINK('key3',d,e);
+	  UNLINK('key3',d,e);
+	END method_pass_2;
+
+	METHOD method_fail_1;
+	  UNLINK('key4',d,e);
+		(* if a given key is not present in the link table then the user is prompted by a warning and the statement is not executed *)
+	END method_fail_1;
+
+	METHOD method_fail_2;
+	  UNLINK('key3',e,f);
+		(* if the exact link entry is not found in the non-declarative link-table then the statement is not executed and the user is prompted with a warning *)
+	END method_fail_2;
+
+	METHOD method_fail_3;
+		UNLINK('key2',b,c,d);
+		(* UNLINK can only be used to remove non-declarative links *)
+	END method_fail_3;
+END model_pass_1;
+
+MODEL model_fail_1 REFINES test_link_base;
+	UNLINK('key1',a);
+	(* UNLINK statement can not be part of the declarative part of a model *)
+END model_fail_1;
+
+MODEL model_pass_2 REFINES test_link_base;
+	set1 IS_A set OF integer_constant; 	
+	set2 IS_A set OF symbol_constant; 
+	v[set1][set2] IS_A generic_real;
+	set1 :== [1..10];
+	set2 :==['x','y','z'];	
+
+METHODS	
+	METHOD method_pass_3;
+		LINK('keyXYZ',v[set1][set2]);
+		LINK('keyX',v[set1]['x']);
+	END method_pass_3;
+END model_pass_2;
+
+
+MODEL model_pass_3 REFINES test_link_base;
+	m,n,p IS_A solver_var;
+
+	FOR i IN [1,2,3,4] CREATE
+			LINK(i,m,n,p);
+	END FOR;
+	
+
+METHODS
+	
+	METHOD method_pass_4;
+		FOR i IN [5,6,7,8] DO
+			LINK(i,m,n,p);
+		END FOR;
+	END method_pass_4;
+	METHOD method_pass_5;
+		FOR i IN [9,10,11,12] DO
+			LINK(i,m,n,p);
+			UNLINK(i,m,n,p);
+		END FOR;
+	END method_pass_5;
+
+END model_pass_3;
+
+MODEL model_pass_4;
+	x,y,z IS_A solver_var;
+	LINK('key5',x,y,z);
+	LINK('ignore','key5',x,y,z);
+	LINK('ignore','key1',a);
+END model_pass_4;
+
+MODEL ftest_pass REFINES test_link_base;
+	b,c,d,e,f IS_A solver_var;
+  LINK('k1',b,c,d);
+METHODS
+	METHOD test_functions_pass;
+
+		LINK('k2',e);
+		LINK('k3',d,c);
+		LINK('k1',a,b,d);
+		LINK('k3',a,b,f);
+		LINK('k1',a,b,f);
+		LINK('k3',d,e,c);
+		LINK('TestingRoutine',a); (* This links only calls the TestingRoutine function inside "link.h" - provisory *)
+		(* Note: test results are printed to the console...also for previous models and methods *)
+	END test_functions_pass;
+END ftest_pass;
+(*
+ *  z-link.a4c
+ *  by  Dante Stroe
+ *  Part of the ASCEND Library
+ *  $Date: 2009/07/07 19:39:31 $
+ *  $Revision: 1.3 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/z-alike.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1997 Benjamin Allan
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

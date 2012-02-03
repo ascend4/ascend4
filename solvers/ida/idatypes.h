@@ -36,6 +36,12 @@ struct IntegratorIdaDataStruct;
 typedef void IntegratorIdaPrecFreeFn(struct IntegratorIdaDataStruct *enginedata);
 
 /**
+ * Function type for error flag description look-up
+ */
+typedef int IdaFlagFn(void *, int *);
+typedef char *IdaFlagNameFn(int);
+
+/**
 	Struct containing any stuff that IDA needs that doesn't fit into the
 	common IntegratorSystem struct.
 */
@@ -52,6 +58,11 @@ typedef struct IntegratorIdaDataStruct{
 	rel_filter_t rfilter;            /**< Used to filter relations from solver's rellist (@TODO needs work) */
 	void *precdata;                  /**< For use by the preconditioner */
 	IntegratorIdaPrecFreeFn *pfree;	 /**< Store instructions here on how to free precdata */
+
+	/* Error flag look-up data */
+	IdaFlagFn *flagfn;
+	IdaFlagNameFn *flagnamefn;
+	const char *flagfntype;
 
 } IntegratorIdaData;
 

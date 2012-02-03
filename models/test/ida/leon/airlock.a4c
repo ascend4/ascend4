@@ -1,0 +1,34 @@
+REQUIRE "test/ida/leon/mars.a4c";
+
+(*
+Depressurisation model for the airlock
+*)
+
+MODEL boring_volume;
+
+	valve IS_A air_node;
+
+	(* Variables *)
+	vol 	IS_A volume;
+	m 		IS_A mass;
+	rho 	IS_A mass_density;
+	p		IS_A pressure;
+
+	
+	(* Equations *)
+	rho = m/vol;
+	vol / m = valve.v;
+
+METHODS
+	METHOD on_load;
+	FIX vol;
+	vol := 3{m^3};
+	rho := 1.2041{kg/m^3};
+	m := rho * vol;
+
+	FIX valve.T;
+	valve.T := 293{K};
+
+	END on_load;
+
+END boring_volume;

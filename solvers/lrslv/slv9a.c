@@ -47,9 +47,13 @@ typedef struct slv9a_system_structure *slv9a_system_t;
 
 ASC_DLLSPEC SolverRegisterFn lrslv_register;
 
+/* Some constants for use with IDA */
+#define IDA_TRUE = 2
+#define IDA_FALSE = 3
+
 #define SLV9A(s) ((slv9a_system_t)(s))
 #define SERVER (sys->slv)
-#define slv9a_PA_SIZE 6 /* MUST INCREMENT WHEN ADDING PARAMETERS */
+#define slv9a_PA_SIZE 7 /* MUST INCREMENT WHEN ADDING PARAMETERS */
 #define SHOW_MORE_IMPT_PTR (sys->parm_array[0])
 #define SHOW_MORE_IMPT     ((*(int32 *)SHOW_MORE_IMPT_PTR))
 #define SHOW_LESS_IMPT_PTR (sys->parm_array[1])
@@ -62,6 +66,8 @@ ASC_DLLSPEC SolverRegisterFn lrslv_register;
 #define ITER_LIMIT     ((*(int32 *)ITER_LIMIT_PTR))
 #define PERTURB_BOUNDARY_PTR (sys->parm_array[5])
 #define PERTURB_BOUNDARY     ((*(int32 *)PERTURB_BOUNDARY_PTR))
+#define WITH_IDA_PTR		(sys->parm_array[6])
+#define WITH_IDA			((*(int32 *)WITH_IDA_PTR))
 
 /*
  * auxiliar structures
@@ -534,6 +540,11 @@ static int32 slv9a_get_default_parameters(slv_system_t server,
 	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), -1);
   SLV_BPARM_MACRO(PERTURB_BOUNDARY_PTR,parameters);
 
+  slv_define_parm(parameters, bool_parm,
+	       "withida", "LRSlv called by IDA",
+               "LRSlv called by IDA",
+	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), -1);
+  SLV_BPARM_MACRO(WITH_IDA_PTR,parameters);
   return 1;
 }
 
@@ -901,6 +912,7 @@ static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
   FILE              *mif;
   FILE              *lif;
   int               ds_status=0;
+  int				per_value;
   double            time0;
 
   sys = SLV9A(asys);
@@ -926,6 +938,14 @@ static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
     return 4;
   }
 
+  if(blist == NULL && WITH_IDA) {
+	  ERROR_REPORTER_HERE(ASC_USER_ERROR, "No boundaries found when"
+				"LRSlving with IDA");
+		sys->s.ready_to_solve = FALSE;
+		iteration_ends(sys);
+		return 4;
+  }
+
   /*
     Solution process begins
   */
@@ -939,6 +959,7 @@ static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
     finding the list of boundaries to be perturbed
   */
   per_insts = NULL;
+  per_value = 0;
   if(PERTURB_BOUNDARY) {
     numbnds = slv_get_num_solvers_bnds(server);
     bfilter.matchbits = (BND_PERTURB);
@@ -946,6 +967,7 @@ static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
     numper = slv_count_solvers_bnds(server,&bfilter);
     if(numper != 0) {
       per_insts = gl_create(numper);
+      per_value = 1;
       for (nb=0; nb <numbnds; nb++){
         cur_bnd = blist[nb];
         if(bnd_perturb(cur_bnd)) {
@@ -963,6 +985,36 @@ static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
 	}
       }
     }
+  }
+
+  /* stick the boundary to be toggled onto per_insts. Should only be 1 instance
+   * in the list, i.e only single boundary crossings (for the moment....) */
+  if (WITH_IDA) {
+		numbnds = slv_get_num_solvers_bnds(server);
+		for (nb = 0; nb < numbnds; nb++) {
+			cur_bnd = blist[nb];
+			if (bnd_ida_crossed(cur_bnd)) {
+				per_insts = gl_create(1);
+				if(bnd_ida_value(cur_bnd)) {
+					per_value = 2;
+				} else {
+					per_value = 3;
+				}
+
+				if (bnd_kind(cur_bnd) == e_bnd_rel) {
+					rel = bnd_rel(bnd_real_cond(cur_bnd));
+					i = (struct Instance *) rel_instance(rel);
+					gl_append_ptr(per_insts, i);
+				} else {
+					if (bnd_kind(cur_bnd) == e_bnd_logrel) {
+						logrel = bnd_logrel(bnd_log_cond(cur_bnd));
+						i = (struct Instance *) logrel_instance(logrel);
+						gl_append_ptr(per_insts, i);
+					}
+				}
+			}
+
+		}
   }
 
   iteration_begins(sys);
@@ -990,7 +1042,12 @@ static int slv9a_iterate(slv_system_t server, SlvClientToken asys){
       ds_status=slv_direct_log_solve(SERVER,lrel,dvar,mif,1,per_insts);
       gl_destroy(per_insts);
       per_insts = NULL;
-    } else {
+    } else if (WITH_IDA && per_insts != NULL) {
+				ds_status = slv_direct_log_solve(SERVER,lrel,dvar,mif,per_value,per_insts);
+				gl_destroy(per_insts);
+				per_insts = NULL;
+			} else {
+
       ds_status=slv_direct_log_solve(SERVER,lrel,dvar,mif,0,NULL);
     }
     sys->s.block.functime += (tm_cpu_time()-time0);

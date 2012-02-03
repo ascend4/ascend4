@@ -741,7 +741,7 @@ enum typelinterr VerifyALIASES(CONST struct StatementList *stats,
     case REF:
     case ISA:
     case WHEN:
-    default: /* IRT, ATS, AA, REL, ASGN, RUN, IF, EXT, CASGN, too. */
+    default: /* IRT, ATS, AA, LNK, REL, ASGN, RUN, IF, EXT, CASGN, too. */
       break;
     }
   }
@@ -835,7 +835,7 @@ enum typelinterr DoIS_A(CONST struct StatementList *stats)
         return error_code;
       }
       break;
-    default: /* IRT, ATS, AA, REL, ASGN, RUN, WHEN, IF, EXT, CASGN  */
+    default: /* IRT, ATS, AA, LNK, REL, ASGN, RUN, WHEN, IF, EXT, CASGN  */
       break;
     }
   }
@@ -1218,7 +1218,7 @@ enum typelinterr DoRelations(symchar *type,
         return error_code;
       }
       break;
-    default: /* ISA, IRT, ATS, AA, ASGN, WHEN, RUN, IF, REF, CASGN, CALL*/
+    default: /* ISA, IRT, ATS, AA, LNK, ASGN, WHEN, RUN, IF, REF, CASGN, CALL*/
       break;
     }
   }
@@ -1274,7 +1274,7 @@ enum typelinterr DoWhens(symchar *type,
   return DEF_OKAY;
 }
 
-
+
 /*****************************************************************\
   Functions to help determine the types of children.
 \*****************************************************************/
@@ -2054,7 +2054,7 @@ int DeriveChildTypes(struct StatementList *stats, struct gl_list_t *clist)
   End of functions to help determine the types of children
   necessitated by aliases.
 \*****************************************************************/
-
+
 /*****************************************************************\
  begin stuff to help refine the types of children
  using ARE_ALIKE ARE_THE_SAME IS_REFINED_TO info.
@@ -2930,7 +2930,8 @@ enum typelinterr VerifyRefinementLegal(CONST struct StatementList *stats,
     case FOR:
       if (ForContainsAlike(stat) ||
           ForContainsAts(stat) ||
-          ForContainsIrt(stat) ) {
+          ForContainsIrt(stat) ||
+	  ForContainsLink(stat) ) {
         error_code = VerifyRefinementLegal(ForStatStmts(stat),lclgl);
         if (error_code != DEF_OKAY){
           return error_code;
@@ -2945,7 +2946,7 @@ enum typelinterr VerifyRefinementLegal(CONST struct StatementList *stats,
       break;
     case COND:
       break;
-    default: /* LREL REL, ASGN, RUN, IF, EXT, REF ISA WHEN too. */
+    default: /* LREL REL, ASGN, RUN, IF, LNK, EXT, REF ISA WHEN too. */
       break;
     }
   }
@@ -3579,7 +3580,7 @@ enum typelinterr VerifyRelationNames(symchar * name,
         return error_code;
       }
       break;
-    default: /* ISA, IRT, ATS, AA, ASGN, WHEN, RUN, IF, REF, CASGN*/
+    default: /* ISA, IRT, ATS, AA, LNK, ASGN, WHEN, RUN, IF, REF, CASGN*/
       break;
     }
   }

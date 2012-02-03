@@ -103,7 +103,6 @@ struct Instance *CreateModelInstance(struct TypeDescription *type)
   register struct ModelInstance *result, *proto;
   register unsigned long num_children;
   register CONST struct StatementList *stats;
-
   proto = MOD_INST(LookupPrototype(GetName(type)));
   if (proto==NULL) {
     CopyTypeDesc(type);
@@ -117,6 +116,7 @@ struct Instance *CreateModelInstance(struct TypeDescription *type)
     result->interface_ptr = NULL;
     result->parents = gl_create(AVG_PARENTS);
     result->whens = NULL;
+		result->link_table = gl_create(AVG_LINKS); /**< DS: initially the link_table for a model is empty */
     result->desc = type;
     result->alike_ptr = INST(result);
     result->visited = 0;

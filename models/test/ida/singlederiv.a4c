@@ -5,11 +5,23 @@ MODEL singlederiv;
 	dy_dt IS_A solver_var;
 	t IS_A solver_var;
 	dy_dt = -4 * y;
+
 METHODS
 	METHOD on_load;
 		y.ode_id := 1; y.ode_type := 1;
 		dy_dt.ode_id := 1; dy_dt.ode_type := 2;
 		t.ode_type:= -1;
+	END on_load;
+END singlederiv;
+
+MODEL singlederiv_LINK;
+	y IS_A solver_var;
+	dy_dt IS_A solver_var;
+	t IS_A solver_var;
+	dy_dt = -4 * y;
+METHODS
+	METHOD on_load;
+		LINK('ode_type',dy_dt,y,t);
 	END on_load;
 END singlederiv;
 

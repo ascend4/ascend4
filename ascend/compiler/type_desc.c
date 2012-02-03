@@ -47,6 +47,12 @@
 #include "library.h"
 #include "watchpt.h"
 #include "initialize.h"
+#include "instmacro.h" /**< DS: added in order to defer ModelInstance pointer, should be removed if the LINK functions are defined in a differnet file*/
+#include "find.h"
+#include <ascend/general/list.h>
+#include "instance_types.h"
+#include "instquery.h"
+
 
 #define TYPELINKDEBUG 0
 /*
@@ -385,6 +391,7 @@ int ClaimNewMethodsTypeDesc(long parseid, struct gl_list_t *pl)
   return old;
 }
 
+
 struct TypeDescription
 *CreateModelTypeDesc(symchar *name, /* name of the type*/
 		struct TypeDescription *rdesc,/* type that it refines or NULL */
@@ -422,6 +429,7 @@ struct TypeDescription
   result->u.modarg.absorbed = tsl;
   result->u.modarg.reductions = rsl;
   result->u.modarg.wheres = wsl;
+  result->u.modarg.link_table = gl_create(100); /**>>DS : for testing purposes */
 /*
   result->u.modarg.argdata = NULL;
 */
@@ -992,7 +1000,7 @@ struct gl_list_t *GetInitializationListF(CONST struct TypeDescription *d){
  * part of anything. if it is kept, it is by copying.
  *
  * Due to the implementation of the base MODEL methods in
- * a global list, this function will allow you to Add 
+ * a global list, this function will allow you to Add
  * a method with the same name as a global one. This is
  * inconsistent but desirable. If you wish to disallow that,
  * then the filter should be in AddMethods, not in this function.
@@ -1006,7 +1014,7 @@ void RealAddMethod(struct TypeDescription *d, struct InitProcedure *new){
 
   assert(d != NULL);
   assert(new != NULL);
-  
+
   opl = GetInitializationList(d);
   old = SearchProcList(opl,ProcName(new));
   if (old != NULL) {
@@ -1032,7 +1040,7 @@ void RealReplaceMethod(struct TypeDescription *d, struct InitProcedure *new){
 
   assert(d != NULL);
   assert(new != NULL);
-  
+
   opl = GetInitializationList(d);
   pos = gl_search(opl,new,(CmpFunc)CmpProcs);
 
@@ -1042,14 +1050,14 @@ void RealReplaceMethod(struct TypeDescription *d, struct InitProcedure *new){
     return; /* type never had it or type redefined it */
   }
 #endif
-      
-  if (pos == 0) { 
+
+  if (pos == 0) {
     return;
     /* type did not have it; can't replace it. */
-  } 
+  }
   old = (struct InitProcedure *)gl_fetch(opl,pos);
   assert(old != NULL);
-  if (GetProcParseId(old) > GetProcParseId(new)) { 
+  if (GetProcParseId(old) > GetProcParseId(new)) {
     return;
     /* 'old' is more recent; keep it. */
   }
@@ -1127,7 +1135,7 @@ int AddMethods(struct TypeDescription *d, struct gl_list_t *pl, int err){
           "%s: ADD METHODS cannot replace METHOD %s in type %s.\n",
           StatioLabel(3),SCP(ProcName(newproc)),SCP(GetName(d)));
       } else {
-        RealAddMethod(d,newproc); 
+        RealAddMethod(d,newproc);
         /* find and copy to destinations recursively */
       }
     }
@@ -1149,7 +1157,7 @@ int ReplaceMethods(struct TypeDescription *d,struct gl_list_t *pl, int err){
     return 1;
   }
   if (err!= 0) {
-    FPRINTF(ASCERR, 
+    FPRINTF(ASCERR,
       "%sREPLACE METHODS abandoned due to previous syntax errors.\n",
       StatioLabel(3));
     return 1;
@@ -1199,7 +1207,7 @@ int ReplaceMethods(struct TypeDescription *d,struct gl_list_t *pl, int err){
           "%s: REPLACE METHODS cannot add METHOD %s in type %s.\n",
           StatioLabel(3),SCP(ProcName(newproc)),SCP(GetName(d)));
       } else {
-        RealReplaceMethod(d,newproc); 
+        RealReplaceMethod(d,newproc);
         /* find and copy to destinations (existing) recursively */
       }
     }
@@ -1279,6 +1287,7 @@ void DeleteTypeDesc(struct TypeDescription *d){
       DestroyStatementList(d->u.modarg.absorbed);
       DestroyStatementList(d->u.modarg.reductions);
       DestroyStatementList(d->u.modarg.wheres);
+			gl_free_and_destroy(d->u.modarg.link_table);
 /* not in use. probably needs to be smarter if it was.
       if (d->u.modarg.argdata!=NULL) {
         gl_destroy(d->u.modarg.argdata);
@@ -1427,7 +1436,7 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
                        CONST struct TypeDescription *d2
 ){
   unsigned long n;
-  
+
   if (d1 == d2) {
     return 1;
   }
@@ -1437,13 +1446,13 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
       d1->refines != d2->refines) {
     return 0; /* basetype, univ, symtab name, ancestor must be == */
   }
-  /* 
+  /*
    * check special things, then for all types, check stats, init.
    */
   switch (d1->t) {
   case real_type:
     if (d1->u.atom.defaulted != d2->u.atom.defaulted ||
-        (d1->u.atom.defaulted  && 
+        (d1->u.atom.defaulted  &&
            d1->u.atom.u.defval != d2->u.atom.u.defval) ||
         d1->u.atom.dimp != d2->u.atom.dimp
        ) {
@@ -1452,7 +1461,7 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
     break;
   case boolean_type:
     if (d1->u.atom.defaulted != d2->u.atom.defaulted ||
-        (d1->u.atom.defaulted  && 
+        (d1->u.atom.defaulted  &&
             d1->u.atom.u.defbool != d2->u.atom.u.defbool)
        ) {
       return 0;
@@ -1460,7 +1469,7 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
     break;
   case integer_type:
     if (d1->u.atom.defaulted != d2->u.atom.defaulted ||
-        (d1->u.atom.defaulted  && 
+        (d1->u.atom.defaulted  &&
             d1->u.atom.u.defint != d2->u.atom.u.defint)
        ) {
       return 0;
@@ -1468,7 +1477,7 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
     break;
   case symbol_type:
     if (d1->u.atom.defaulted != d2->u.atom.defaulted ||
-        (d1->u.atom.defaulted  && 
+        (d1->u.atom.defaulted  &&
             d1->u.atom.u.defsym != d2->u.atom.u.defsym)
        ) {
       return 0;
@@ -1476,7 +1485,7 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
     break;
   case real_constant_type:
     if (d1->u.constant.defaulted != d2->u.constant.defaulted ||
-        (d1->u.constant.defaulted  && 
+        (d1->u.constant.defaulted  &&
            d1->u.constant.u.defreal != d2->u.constant.u.defreal) ||
         d1->u.constant.dimp != d2->u.constant.dimp
        ) {
@@ -1485,7 +1494,7 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
     break;
   case boolean_constant_type:
     if (d1->u.constant.defaulted != d2->u.constant.defaulted ||
-        (d1->u.constant.defaulted  && 
+        (d1->u.constant.defaulted  &&
             d1->u.constant.u.defboolean != d2->u.constant.u.defboolean)
        ) {
       return 0;
@@ -1493,7 +1502,7 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
     break;
   case integer_constant_type:
     if (d1->u.constant.defaulted != d2->u.constant.defaulted ||
-        (d1->u.constant.defaulted  && 
+        (d1->u.constant.defaulted  &&
             d1->u.constant.u.definteger != d2->u.constant.u.definteger)
        ) {
       return 0;
@@ -1501,7 +1510,7 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
     break;
   case symbol_constant_type:
     if (d1->u.constant.defaulted != d2->u.constant.defaulted ||
-        (d1->u.constant.defaulted  && 
+        (d1->u.constant.defaulted  &&
             d1->u.constant.u.defsymbol != d2->u.constant.u.defsymbol)
        ) {
       return 0;
@@ -1513,7 +1522,7 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
   case logrel_type:
     break;
   case array_type:
-    return 0; /* array types are weird */ 
+    return 0; /* array types are weird */
   case model_type:
   if (
       CompareStatementLists(
@@ -1525,10 +1534,10 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
       CompareStatementLists(
           d1->u.modarg.reductions,
           d2->u.modarg.reductions,&n) != 0 ||
-      CompareStatementLists( 
-          d1->u.modarg.wheres, 
+      CompareStatementLists(
+          d1->u.modarg.wheres,
           d2->u.modarg.wheres,&n) != 0  ||
-      CompareChildLists( d1->children, d2->children,&n) != 0 
+      CompareChildLists( d1->children, d2->children,&n) != 0
      ) {
     return 0;
   }
@@ -1615,6 +1624,8 @@ struct TypeDescription *GetStatTypeDesc(CONST struct Statement *s){
   case WBTS:
   case WNBTS:
   case AA:
+  case LNK:
+	case UNLNK:
   case FOR:
   case REL:
   case LOGREL:

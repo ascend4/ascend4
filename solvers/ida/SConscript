@@ -28,7 +28,7 @@ if env.get('WITH_IDA'):
 		,LIBS=[env.get('SUNDIALS_LIBS'),"ascend"]
 	)
 
-	srcs = ['ida.c', 'idacalc.c', 'idalinear.c', 'idaio.c', 'idaprec.c', 'idaanalyse.c']
+	srcs = ['ida.c', 'idacalc.c', 'idalinear.c', 'idaio.c', 'idaprec.c', 'idaanalyse.c', 'idaboundary.c']
 	lib = solver_env.SharedLibrary("ida",srcs
 		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']

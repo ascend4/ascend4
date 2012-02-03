@@ -1112,9 +1112,8 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
     if(s_fpe == 0 && s_int == 0) {
 # endif /* ASC_SIGNAL_TRAPS */
 
-	  /* CONSOLE_DEBUG("Calling LSODE with end-time = %f",xend); */
-      /*
-	  switch(mf){
+      CONSOLE_DEBUG("Calling LSODE with end-time = %f",xend);
+      switch(mf){
 		case 10:
 			CONSOLE_DEBUG("Non-stiff (Adams) method; no Jacobian will be used"); break;
 		case 21:
@@ -1127,11 +1126,10 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
 			CONSOLE_DEBUG("Stiff (BDF) method, internally generated banded jacobian"); break;
 		default:
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid method id %d for LSODE",mf);
-			return 0; * failure *
+			return 0;
       }
-	  */
 
-			d->lastwrite = clock();
+      d->lastwrite = clock();
 
       /* provides some rudimentary locking to prevent reentrance*/
       LSODEDATA_SET(blsys);
@@ -1143,6 +1141,8 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
       /* clear the global var */
       LSODEDATA_RELEASE();
 
+      CONSOLE_DEBUG("...");
+
 # ifdef ASC_SIGNAL_TRAPS
     }else{
       if(s_fpe){
@@ -1151,7 +1151,7 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
         d->status = lsode_ok;		/* clean up before we go */
         d->lastcall = lsode_none;
         return 6;
-	}
+      }
       if(s_int){
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integration aborted or interrupted.");
         lsode_free_mem(y,reltol,abtol,rwork,iwork,obs,dydx);
@@ -1164,7 +1164,7 @@ static int integrator_lsode_solve(IntegratorSystem *blsys
     Asc_SignalHandlerPopDefault(SIGINT);
 # endif
 
-    /* CONSOLE_DEBUG("AFTER %lu LSODE CALL\n", index); */
+    /*CONSOLE_DEBUG("AFTER %lu LSODE CALL\n", index); */
     /* this check is better done in fex,jex, but lsode takes no status */
 /*    if (Solv_C_CheckHalt()) {
       if (istate >= 0) {

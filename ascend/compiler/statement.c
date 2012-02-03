@@ -123,6 +123,8 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case WILLBE:
     case IRT:
     case AA:
+    case LNK:
+		case UNLNK:
     case ATS:
     case WBTS:
     case WNBTS:
@@ -286,6 +288,60 @@ struct Statement *CreateAA(struct VariableList *vl)
   return result;
 }
 
+
+struct Statement *IgnoreLNK(symchar *key, struct Name *n_key, struct VariableList *vl)
+{
+  register struct Statement *result;
+  result=create_statement_here(LNK);
+
+  if(key != NULL){
+    result->v.lnk.key = key;
+    result->v.lnk.key_type = link_ignore; /**>> DS: this flag tells the compiler that it is a ignore LINK */
+    result->v.lnk.vl = vl;
+  }else if(n_key != NULL){
+    result->v.lnk.key = n_key->val.id;	
+    result->v.lnk.key_type = link_ignore;	
+    result->v.lnk.vl = vl;
+  }
+  return result;
+}
+
+struct Statement *CreateLNK(symchar *key, struct Name *n_key, struct VariableList *vl)
+{	
+  register struct Statement *result;
+  result=create_statement_here(LNK);
+
+  if(key != NULL){
+    result->v.lnk.key = key;
+    result->v.lnk.key_type = link_symchar;
+    result->v.lnk.vl = vl;
+  }else if(n_key != NULL){
+    result->v.lnk.key = n_key->val.id;	/**>>DS TODO: Not sure if this is fine, I however need a single datatype to store the keys in the appropriate datastructures */
+    result->v.lnk.key_type = link_name;	
+    result->v.lnk.vl = vl;
+  }
+  return result;
+}
+
+
+struct Statement *CreateUNLNK(symchar *key, struct Name *n_key, struct VariableList *vl)
+{
+  register struct Statement *result;
+  result=create_statement_here(UNLNK);
+
+  if(key != NULL){
+    result->v.lnk.key = key;
+    result->v.lnk.key_type = 0;
+    result->v.lnk.vl = vl;
+  }else if(n_key != NULL){
+    result->v.lnk.key = n_key->val.id;	/**>>DS: Not sure if this is fine, I however need a single datatype to store the keys in the appropriate datastructures */
+    result->v.lnk.key_type = 1;	
+    result->v.lnk.vl = vl;
+  }
+return result;
+}
+
+
 struct Statement *CreateATS(struct VariableList *vl)
 {
   register struct Statement *result;
@@ -394,6 +450,12 @@ unsigned int SlistHasWhat(struct StatementList *slist)
       break;
     case AA:
       what |= contains_AA;
+      break;
+    case LNK:
+      what |= contains_LNK;
+      break;
+		case UNLNK:
+      what |= contains_UNLNK;
       break;
     case CASGN:
       what |= contains_CAS;
@@ -548,7 +610,7 @@ struct Statement *CreateEXTERNBlackBox(
 	internal compiler usage pops up (likely) we like the informative name.
    */
   /* name of the bbox implicit int set */
-  bsuf = AddSymbol(BBOX_RESERVED_INDEX); 
+  bsuf = AddSymbol(BBOX_RESERVED_INDEX);
   bbsuffix = CreateReservedIndexName(bsuf); /* add a [?BBOX_OUTPUT] index */
   n = JoinNames(n, bbsuffix);
   result->v.ext.u.black.nptr = n;
@@ -841,6 +903,14 @@ void DestroyStatement(struct Statement *s)
         break;
       case ATS:
       case AA:
+      case LNK:
+				DestroyVariableList(s->v.lnk.vl); 
+        s->v.lnk.vl = NULL;
+        break;
+			case UNLNK: 
+				DestroyVariableList(s->v.lnk.vl);
+        s->v.lnk.vl = NULL;
+        break;
       case WBTS:
       case WNBTS:
         DestroyVariableList(s->v.a.vl);
@@ -1041,6 +1111,11 @@ struct Statement *CopyToModify(struct Statement *s)
     /* is this complete for IS_A with args to type? */
     break;
   case AA:
+  case LNK:
+    result->v.lnk.key = s->v.lnk.key;
+    result->v.lnk.vl = CopyVariableList(s->v.lnk.vl);
+    break;
+	case UNLNK:
   case ATS:
   case WBTS:
   case WNBTS:
@@ -1176,6 +1251,8 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case WILLBE:
   case IRT:
   case AA:
+  case LNK:
+	case UNLNK:
   case ATS:
   case WBTS:
   case WNBTS:
@@ -1219,6 +1296,8 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case WILLBE:
   case IRT:
   case AA:
+  case LNK:
+	case UNLNK:
   case ATS:
   case WBTS:
   case WNBTS:
@@ -1264,6 +1343,8 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case WILLBE:
   case IRT:
   case AA:
+  case LNK:
+	case UNLNK:
   case ATS:
   case WBTS:
   case WNBTS:
@@ -1307,7 +1388,9 @@ struct VariableList *GetStatVarList(CONST struct Statement *s)
 		(s->t==WILLBE) ||
 		(s->t==IRT) ||
 		(s->t==AA)  ||
-		(s->t==ATS) ||
+		(s->t==LNK)  || 
+		(s->t==UNLNK) ||
+		(s->t==ATS)  ||
 		(s->t==WBTS) ||
 		(s->t==WNBTS) ||
 		(s->t==ARR) ||
@@ -1319,6 +1402,10 @@ struct VariableList *GetStatVarList(CONST struct Statement *s)
   case IRT:
     return (s)->v.i.vl;
   case AA:
+  case LNK:
+    return (s)->v.lnk.vl;
+	case UNLNK:
+		return (s)->v.lnk.vl;
   case ATS:
   case WBTS:
   case WNBTS:
@@ -1374,6 +1461,21 @@ CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s)
   assert(s->ref_count);
   assert(s->t==WILLBE);
   return s->v.i.checkvalue;
+}
+
+symchar *LINKStatKeyF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==LNK || s->t==UNLNK);
+	return s->v.lnk.key;
+	
+}
+
+struct VariableList *LINKStatVlistF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==LNK || s->t==UNLNK);
+  return s->v.lnk.vl;
 }
 
 CONST struct Name *AliasStatNameF(CONST struct Statement *s)
@@ -1525,6 +1627,20 @@ unsigned ForContainsAlikeF(CONST struct Statement *s)
   assert(s!=NULL);
   assert(s->t==FOR);
   return (s->v.f.contains & contains_AA);
+}
+
+unsigned ForContainsLinkF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==FOR);
+  return (s->v.f.contains & contains_LNK);
+}
+
+unsigned ForContainsUnlinkF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==FOR);
+  return (s->v.f.contains & contains_UNLNK);
 }
 
 unsigned ForContainsAliasF(CONST struct Statement *s)
@@ -2077,6 +2193,20 @@ unsigned SelectContainsAlikeF(CONST struct Statement *s)
   return (s->v.se.contains & contains_AA);
 }
 
+unsigned SelectContainsLinkF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==SELECT);
+  return (s->v.se.contains & contains_LNK);
+}
+
+unsigned SelectContainsUnlinkF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==SELECT);
+  return (s->v.se.contains & contains_UNLNK);
+}
+
 unsigned SelectContainsAliasF(CONST struct Statement *s)
 {
   assert(s!=NULL);
@@ -2304,6 +2434,8 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
   case WNBTS: /* fallthru */
   case AA:
     return CompareVariableLists(GetStatVarList(s1),GetStatVarList(s2));
+  case LNK: /* fallthru */
+	case UNLNK: /* fallthru */
   case FOR:
     if (ForStatIndex(s1)!=ForStatIndex(s2)) {
       return CmpSymchar(ForStatIndex(s1),ForStatIndex(s2));
@@ -2454,7 +2586,7 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
      * will not be fixed until the definitions are really known.
      */
     ASC_PANIC("Don't know how to compare REF statements\n");
-    
+
   case COND:
     return CompareStatementLists(CondStatList(s1),CondStatList(s2),&ltmp);
   case FLOW:
@@ -2580,6 +2712,8 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
   case ARR:
   case ATS: /* fallthru */
   case AA:
+  case LNK:
+	case UNLNK:
   case ASGN:
   case CASGN:
   case RUN:
@@ -2602,4 +2736,6 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     return 1;
   }
 }
+
+/* vim: set ts=8: */
 

@@ -57,7 +57,7 @@
 #include <ascend/integrator/integrator.h>
 
 
-/* #define FEX_DEBUG */
+/* #define FEX_DEBUG  */
 #define JEX_DEBUG
 /* #define DJEX_DEBUG */
 /* #define ROOT_DEBUG */
@@ -133,6 +133,12 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 #endif
 
 	if(NV_LENGTH_S(rr)!=enginedata->nrels){
+		CONSOLE_DEBUG("y");
+		N_VPrint_Serial(yy);
+		CONSOLE_DEBUG("yp");
+		N_VPrint_Serial(yp);
+		CONSOLE_DEBUG("r");
+		N_VPrint_Serial(rr);
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid residuals nrels!=length(rr)");
 		return -1; /* unrecoverable */
 	}

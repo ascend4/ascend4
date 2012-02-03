@@ -115,7 +115,7 @@ extern enum logrel_enum logrel_relop(struct logrel_relation *logrel);
  * Returns the type of the operator of a given logrelation.
  */
 
-extern char *logrel_make_name(slv_system_t sys,
+ASC_DLLSPEC char *logrel_make_name(slv_system_t sys,
                               struct logrel_relation *logrel);
 /**<
  *  Copies of the logrelation instance name can be made and returned.
