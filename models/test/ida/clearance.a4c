@@ -1,0 +1,75 @@
+(*	The simplest model of a hysteron, which can be solved without any modifications in ASCEND.
+	A piston is moving inside a cilinder, the position of the piston is the input u, the position
+	of the cilinder's right end is the output x.
+	Planning to generalize it in order to make more inputs possible.
+*)
+
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL clearance;
+	x, x0, u, du_dt IS_A solver_var;
+	t IS_A time;
+	left_end, right_end, uincreases IS_A boolean_var;
+
+	A, h IS_A integer_constant;
+	A :== 5;
+	h :== 2;
+
+	(*du_dt = -A*sin(t);
+	u = A*cos(t);*)
+
+	equation: u*sin(t) = -du_dt*cos(t);
+	inside: x = x0;
+	push: x = u;
+	pull: x = u + h;
+	increase: x0 = -A;
+	decrease: x0 = A;
+
+	CONDITIONAL
+		left_end_cond: u < x0 - h;
+		right_end_cond: u > x0;
+	END CONDITIONAL;
+
+	left_end_pos: left_end == SATISFIED(left_end_cond);
+	right_end_pos: right_end == SATISFIED(right_end_cond);
+
+
+	position: WHEN (left_end, right_end)
+				CASE FALSE,FALSE: USE inside;
+				CASE FALSE,TRUE: USE push;
+				CASE TRUE,FALSE: USE pull;
+	END WHEN;
+
+	CONDITIONAL
+		increasing_cond: du_dt > 0;
+	END CONDITIONAL;
+	increasing: uincreases == SATISFIED(increasing_cond);
+	initial_condition: WHEN (uincreases)
+						CASE TRUE: USE increase;
+						CASE FALSE: USE decrease;
+	END WHEN;
+
+METHODS
+	METHOD ode_init;
+		x.ode_type := 0; x0.ode_type := 0;
+		u.ode_type := 1;  du_dt.ode_type := 2;
+		u.ode_id := 1; du_dt.ode_id := 1; 
+		t.ode_type := -1;
+	END ode_init;
+	METHOD specify;
+		FIX t;
+	END specify;
+	METHOD values;
+		u := 5;
+		uincreases := FALSE;
+		left_end := FALSE;
+		right_end := FALSE;
+		t := 0 {s};
+	END values;
+	METHOD on_load;
+		RUN specify;
+		RUN values;
+		RUN ode_init;
+	END on_load;
+END clearance;

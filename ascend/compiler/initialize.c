@@ -68,6 +68,7 @@
 #include "sets.h"
 #include "parentchild.h"
 #include "slvreq.h"
+#include "link.h"
 
 /* set to 1 for tracing execution the hard way. */
 #define IDB 0
@@ -1626,6 +1627,96 @@ void ExecuteInitAsgn(struct procFrame *fm, struct Statement *stat)
   return /* Proc_all_ok */;
 }
 
+/**
+	
+	DS: Find instances: Make sure at least one thing is found for each name item
+	on list (else returned list will be NULL) and return the collected instances.
+*/
+static
+struct gl_list_t *FindInsts(struct Instance *inst,
+                            CONST struct VariableList *list,
+                            enum find_errors *err)
+{
+  struct gl_list_t *result,*temp;
+  unsigned c,len;
+  result = gl_create(7L);
+  while(list!=NULL){
+    temp = FindInstances(inst,NamePointer(list),err);
+    if (temp==NULL){
+      gl_destroy(result);
+      return NULL;
+    }
+    len = gl_length(temp);
+    for(c=1;c<=len;c++) {
+      gl_append_ptr(result,gl_fetch(temp,c));
+    }
+    gl_destroy(temp);
+    list = NextVariableNode(list);
+  }
+  return result;
+}
+
+
+/*DS : Implement Non-declarative LINK statement here*/
+static
+void ExecuteInitLnk(struct procFrame *fm, struct Statement *stat)
+{
+  printf("\nDS: ExecuteInitLnk called\n");
+  enum find_errors err;
+  struct gl_list_t *instances;
+  symchar *key;
+
+  instances = FindInsts(fm->i,LINKStatVlist(stat),&err);
+  key = LINKStatKey(stat);
+
+  printf("\n number %lu \n",VariableListLength(LINKStatVlist(stat)));
+  if((instances != NULL) && (key != NULL)){
+	switch(InstanceKind(fm->i)) {
+		case MODEL_INST:
+  			printf("DS: Execute non-declarative LINK here \n");      
+			addLinkEntry(fm->i,key,instances,stat,0);
+			break;
+		default:
+        	STATEMENT_ERROR(stat, "LINK is not called by a model");
+			break;
+	}
+  }
+  else if(key == NULL){
+      STATEMENT_ERROR(stat, "non-declarative LINK contains impossible key");
+  }
+}
+
+
+/*DS : Implement UNLINK statement here (Non-declarative only) */
+static
+void ExecuteInitUnlnk(struct procFrame *fm, struct Statement *stat)
+{
+  printf("\nDS: ExecuteInitUnlnk called\n");
+  enum find_errors err;
+  struct gl_list_t *instances;
+  symchar *key;
+
+  instances = FindInstances(fm->i,stat->v.lnk.vl->nptr,&err);
+  key = LINKStatKey(stat);
+
+  if((instances != NULL) && (key != NULL)){
+	switch(InstanceKind(fm->i)) {
+		case MODEL_INST:
+  			printf("DS: Execute UNLINK here \n");      
+			removeLinkEntry(fm->i,key,LINKStatVlist(stat));
+			break;
+		default:
+        	STATEMENT_ERROR(stat, "UNLINK is not called by a model");
+			break;
+	}
+  }
+  else if(key == NULL){
+      STATEMENT_ERROR(stat, "UNLINK contains impossible key");
+  }
+}
+
+
+
 static
 void ExecuteInitStatement(struct procFrame *fm, struct Statement *stat)
 {
@@ -1641,10 +1732,16 @@ void ExecuteInitStatement(struct procFrame *fm, struct Statement *stat)
   case ASGN:
     ExecuteInitAsgn(fm,stat);
     break;
+  case LNK:
+	ExecuteInitLnk(fm,stat);
+	break;
+  case UNLNK:
+	ExecuteInitUnlnk(fm,stat);
+	break;
   case RUN:
     ExecuteInitRun(fm,stat);
     break;
-  case FIX:
+  case FIX:/* this function always returns ok. 5/96 */
     ExecuteInitFix(fm,stat);
     break;
   case FREE:

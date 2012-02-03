@@ -195,7 +195,8 @@ LogTermSatisfied(CONST struct logrelation *lrel,
   satisfied = 1;
   not_satisfied = 0;
 
-  if (perturb && (instances!=NULL)) {
+  /* perturb == 1 is the trigger for CMSlv perturbations */
+  if ( (perturb == 1) && (instances!=NULL)) {
     len = gl_length(instances);
     for (n=1;n<=len;n++) {
       relname = (struct Instance *)(gl_fetch(instances,n));
@@ -206,6 +207,19 @@ LogTermSatisfied(CONST struct logrelation *lrel,
       }
     }
   }
+
+  /* perturb == 2 or 3 implies IDA wants true or false */
+  if( ( (perturb == 2) || (perturb == 3) ) && (instances!=NULL) ) {
+	  relname = (struct Instance *)(gl_fetch(instances,1));
+	  if (inst == relname) {
+		  if(perturb == 2) {
+			  return satisfied;
+		  } else {
+			  return not_satisfied;
+		  }
+	  }
+  }
+
   switch (InstanceKind(inst)) {
   case REL_INST:
     status = RelationCalcResidualPostfixSafe(inst,&res);

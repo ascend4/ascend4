@@ -15,16 +15,17 @@ MODEL boundaries;
 
 	t IS_A time;
 	x[nodes], dx_dt[nodes] IS_A solver_var; (* system states *)
-	u[1] IS_A solver_var; (* input signals *)
+	u[1,2] IS_A solver_var; (* input signals *)
 
 	(* second-order transfer function G(s) = 1 / (1 + s + 0.5 s^2) *)
-(*
-	diffeq1: 0.5 * dx_dt[1] = u[1] -x[1] - x[2];
+
+	diffeq1: (1/2) * dx_dt[1] = u[1] -x[1] - x[2];
 	diffeq2: dx_dt[2] = x[1];
-*)
+
+(*
 	dx_dt[1] = -x[1];
 	dx_dt[2] = -x[2];
-
+*)
 	(* ramp input 
 		u = u1     t < t1
         u = u2     t > t2
@@ -33,17 +34,17 @@ MODEL boundaries;
 	t1 IS_A solver_var;
 	t2 IS_A solver_var;
 	uisbefore, uisafter IS_A boolean_var;
-	u1,u2 IS_A solver_var;
+	u1,u2,u3 IS_A solver_var;
 	CONDITIONAL
-		ubeforecond: t <= t1; (* mysteriously, I can't make t1 and t2 constants! *)
-		uaftercond: t >= t2; (* and these conditions really don't behave themselves... *)
+		ubeforecond: t < t1; (* mysteriously, I can't make t1 and t2 constants! *)
+		uaftercond: t > t2; (* and these conditions really don't behave themselves... *)
 	END CONDITIONAL;
 	satbefore: uisbefore == SATISFIED(ubeforecond,1e-8{s});
 	satend: uisafter == SATISFIED(uaftercond,1e-8{s});
 	(* variant equations *)
-	ubefore: u[1] = u1;
-	uduring: (u[1] - u1)*(t2 - t1) = (t - t1)*(u2 - u1);
-	uafter:  u[1] = u2;
+	ubefore: u[1] = 5;
+	uduring: u[1] = 10; (*(u[1] - u1)*(t2 - t1) = (t - t1)*(u2 - u1);*)
+	uafter:  u[1] = 12;
 	(* disjunctive statements *)
 	ramppos: WHEN (uisbefore,uisafter)
 		CASE TRUE,FALSE:
@@ -54,25 +55,35 @@ MODEL boundaries;
 			USE uduring;
 	END WHEN;
 
+
+	robot:	 u[2] = u2;
+	WHEN(uisafter, uisbefore)
+		CASE FALSE, FALSE:
+			USE robot;
+	END WHEN;
+
+
 METHODS
 	METHOD ode_init;
 		FOR i IN nodes DO
 			x[i].ode_type := 1; dx_dt[i].ode_type := 2;
 			x[i].ode_id := i; dx_dt[i].ode_id := i;
+			x[i].obs_id := i;
 		END FOR;
+		u[1].obs_id := 3;
 		t.ode_type := -1;
-		u[1].obs_id := 2;
 	END ode_init;
 	METHOD specify;
 		FIX t1,t2;
-		FIX u1,u2;
+		FIX u1,u2,u3;
 		FIX t;
 	END specify;
 	METHOD values;
-		x[1] := 0;
-		x[2] := 0;
+		x[1] := 1;
+		x[2] := 1;
 		t1 := 4 {s}; u1 := 5;
 		t2 := 6 {s}; u2 := 10;
+		u3 := 20;
 		t := 0 {s};
 		uisbefore := TRUE;
 		uisafter := FALSE;
@@ -83,4 +94,19 @@ METHODS
 		RUN values;
 		RUN ode_init;
 	END on_load;
+	METHOD check_satbefore;
+		ASSERT uisbefore == TRUE;
+		ASSERT uisafter == FALSE;
+	END check_satbefore;
+	METHOD check_satduring;
+		ASSERT uisbefore == FALSE;
+		ASSERT uisafter == FALSE;
+	END check_satduring;
+	METHOD check_satend;
+		ASSERT uisbefore == FALSE;
+		ASSERT uisafter == TRUE;
+	END check_satend;
 END boundaries;
+
+
+

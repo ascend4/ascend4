@@ -51,7 +51,7 @@ static int test_lsode_reporter_init(struct IntegratorSystemStruct *integ){
 }
 
 static int test_lsode_reporter_write(struct IntegratorSystemStruct *integ){
-	return 0; /* no interrupt */
+	return 1; /* no interrupt */
 }
 
 static int test_lsode_reporter_writeobs(struct IntegratorSystemStruct *integ){
@@ -71,7 +71,10 @@ static IntegratorReporter test_lsode_reporter = {
 };
 
 /*
-	Test solving a simple IPOPT model
+	Test solving a simple LSODE model. This test integrates a model that deliberately
+	goes out of bounds, and checks that LSODE catches and aborts.
+
+	TODO we need to add a test for normal completion of LSODE!
 */
 static void test_bounds(){
 	Asc_CompilerInit(1);
@@ -162,7 +165,7 @@ static void test_bounds(){
 	integrator_set_samples(integ,samplelist);
 
 	CONSOLE_DEBUG("Commencing solve...");
-	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
+	CU_ASSERT_FATAL(integrator_solve(integ, 0, samplelist_length(samplelist)-1));
 
 	integrator_free(integ);
 	samplelist_free(samplelist);

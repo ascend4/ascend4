@@ -93,6 +93,10 @@ extern struct WhenInstance *g_when_inst;
 /**< size to which all logical relation lists are initialized */
 #define AVG_ARY_CHILDREN 7L
 /**< size to which all array children lists are initialized */
+#define AVG_LINKS 4  
+/**< size to which all link_tables are initialized for link entries */
+#define AVG_LINKS_INST 4  
+/**< size to which all link_entries are initialized for number of instances linked */
 #define UNDEFAULTEDREAL 0.0
 
 #define MAX_EXTRELATIONS 50

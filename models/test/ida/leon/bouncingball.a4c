@@ -1,0 +1,93 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL bouncingball;
+
+	(* Variables *)
+	y       IS_A solver_var;	(* position of ball centre *)
+	v, ydot IS_A solver_var;	(* velocity *)
+	a       IS_A solver_var;	(* accleration *)	
+
+	F_net 		IS_A solver_var;	(* total force *)
+	F_g		IS_A solver_var;	(* gravitational *)
+	F_d		IS_A solver_var;	(* damping *)
+	F_s		IS_A solver_var;	(* spring model of bounce *)
+
+	(* Constants *)	
+	m 	IS_A solver_var;		(* ball mass *)
+	g 	IS_A solver_var;		(* gravitational constant *)
+	r 	IS_A solver_var;		(* ball radius *)
+	k1	IS_A solver_var;		(* sping constant *)
+	k2	IS_A solver_var;		(* damping constant *)
+	
+	(*Independant*)
+	t IS_A time;
+
+	(* Booleans *)
+	switch IS_A boolean_var;	
+
+	(* Equations *)
+	motion:		m*a	= F_net;
+
+	gravity:	F_g 	= -1*m*g;
+	damping:	F_d	= -1*k2*v;
+	spring:		F_s	= k1*(r - y);	
+
+	vdum:		v	= ydot;	
+
+	airborn: 	F_net = F_g;
+	bouncing: 	F_net = F_g + F_d + F_s;
+
+CONDITIONAL
+	boundary: y <= r;
+END CONDITIONAL;
+
+	switch == SATISFIED(boundary, 1e-8{m});
+
+WHEN(switch)
+	CASE TRUE:
+		USE bouncing;
+	CASE FALSE:
+		USE airborn;
+END WHEN;
+
+
+METHODS
+	METHOD on_load;
+		RUN ode_init;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+
+	METHOD ode_init;
+		y.ode_type 	:= 1; ydot.ode_type	:= 2; 	
+		y.ode_id 	:= 1; ydot.ode_id	:= 1;
+
+		v.ode_type 	:= 1; a.ode_type 	:= 2;	
+		v.ode_id 	:= 2; a.ode_id 		:= 2; 
+
+		t.ode_type	:= -1;
+	END ode_init;
+
+	METHOD values;
+		y 		:= 40;
+		v		:= 0;
+		a		:= 0;		
+		m 		:= 4;
+		g	 	:= 9.8;
+		r 		:= 10;
+		k1 		:= 400;
+		k2 		:= 4;
+
+		t 		:= 0{s};
+		switch		:= FALSE;
+		FIX 	m, k1, k2, r, g;
+
+	END values;
+
+	METHOD obs_init;
+		y.obs_id	:= 1;
+	END obs_init;
+
+END bouncingball;
+

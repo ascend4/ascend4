@@ -186,6 +186,14 @@ extern struct Instance *NewInstantiate(symchar *type, symchar *name,
  *      referenced by the whens  must be findable or
  *      they can't be
  *  ...return all the way up eventually.
+ *
+ *  DS: Added new Phase for LINK statements that need the final instances in order to be consistent
+ * 		Phase 6
+ *		1 call real_instantiate_5
+ * 	  2 call instantiate_model_5
+ *    3 process pending instances of model
+ * 	  4 recursive instantiate, doing LINKs only	
+ *
  *  Phase 5
  *      Execution of default statements. (we would like to delete phase 5).
  *  Phase 6

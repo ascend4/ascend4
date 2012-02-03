@@ -125,7 +125,7 @@ extern void dis_set_instanceF(struct dis_discrete *dis, SlvBackendToken i);
  * Do not call this function directly - use dis_set_instance() instead.
  */
 
-extern char *dis_make_name(const slv_system_t sys,
+ASC_DLLSPEC char *dis_make_name(const slv_system_t sys,
                            const struct dis_discrete *dis);
 /**<
  *  Creates and returns a sufficiently large string storing the

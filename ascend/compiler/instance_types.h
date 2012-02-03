@@ -542,6 +542,7 @@ struct ModelInstance {
   VOIDPTR interface_ptr;
   struct gl_list_t *parents;  /**< link to parent instances */
   struct gl_list_t *whens;    /**< link to whens on which the model appears */
+	struct gl_list_t *link_table; /**< link_table for non-declarative LINKs */
   struct TypeDescription *desc;
   struct Instance *alike_ptr;
   struct BitList *executed;   /**< bit list to keep track of which
@@ -587,7 +588,7 @@ struct AutomaticInstance {
  * Would be nice to have a commoneqninstance type (CE_INST)
  * for rel,log,when.
  *
- * doesn't align as never has children. 
+ * doesn't align as never has children.
  */
 struct WhenInstance {
   enum inst_t t;
@@ -631,7 +632,7 @@ struct ArrayInstance {
 /** CONTAINER INSTANCE for interfaces. never pending.
  * no packed children, so never need align
  */
-struct SimulationInstance { 	  
+struct SimulationInstance {
   /* these have *no* parents, yet */
   enum inst_t t;
   VOIDPTR interface_ptr;

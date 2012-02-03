@@ -1,0 +1,132 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL electron;
+	x IS_A solver_var;
+	y IS_A solver_var;
+
+	xDummy IS_A solver_var;
+	yDummy IS_A solver_var;
+
+	dx_dt IS_A solver_var;
+	dy_dt IS_A solver_var;
+
+	dx_dt1 IS_A solver_var;
+	dy_dt1 IS_A solver_var;
+
+	d2y_dt2 IS_A solver_var;
+	d2x_dt2 IS_A solver_var;
+
+	t IS_A time;
+
+	B IS_A solver_var;
+	E IS_A solver_var;
+	m IS_A solver_var;
+	q IS_A solver_var;
+
+	
+
+
+	inElectricX		IS_A boolean_var;
+	inElectricY		IS_A boolean_var;
+
+	bSwitch			IS_A boolean_var;
+
+
+	(* Equations *)
+
+
+	xdum:x = xDummy;
+	ydum:y = yDummy;
+
+	dxdum:dx_dt1 = dx_dt;
+	dydum:dy_dt1 = dy_dt;
+
+
+	CONDITIONAL
+		bound1: x < -10010;
+		bound2: y < -1;
+		switchCond: t < 36;
+	END CONDITIONAL;	
+
+	elec1: m*d2x_dt2 = q*E;
+	elec2: m*d2y_dt2 = 0.0;
+
+	mag1:m*d2x_dt2 = dy_dt*B*q;
+	mag2:m*d2y_dt2 = -1*dx_dt*B*q;
+
+	bOn: B = 1;
+	bOff: B = 0;
+
+	inElectricX == SATISFIED(bound1, 1e-8{s});
+	inElectricY == SATISFIED(bound2, 1e-8{s});
+	bSwitch		== SATISFIED(switchCond, 1e-8{s});
+
+	WHEN(inElectricX, inElectricY)
+		CASE TRUE, TRUE:
+			USE elec1;
+			USE elec2;
+		OTHERWISE :
+			USE mag1;
+			USE mag2;
+	END WHEN;
+
+	WHEN(bSwitch)
+		CASE TRUE:
+			USE bOn;
+		CASE FALSE:
+			USE bOff;
+	END WHEN;
+
+METHODS
+	METHOD on_load;
+		RUN ode_init;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+
+	METHOD ode_init;
+		x.ode_type := 1; dx_dt.ode_type := 2;
+		x.ode_id := 1;	dx_dt.ode_id := 1;
+
+		dx_dt1.ode_type := 1; d2x_dt2.ode_type := 2;
+		dx_dt1.ode_id	:= 2; d2x_dt2.ode_id := 2;
+		
+		y.ode_type := 1; dy_dt.ode_type := 2;
+		y.ode_id := 3;	dy_dt.ode_id := 3;
+
+		dy_dt1.ode_type := 1; d2y_dt2.ode_type := 2;
+		dy_dt1.ode_id	:= 4; d2y_dt2.ode_id := 4;
+
+		t.ode_type := -1;
+	END ode_init;
+	
+	METHOD obs_init;
+		x.obs_id := 1;
+		y.obs_id := 2;
+	END obs_init;
+
+	METHOD values;
+		FIX m;
+		FIX q;
+		FIX E;
+
+		E := 1;
+		B := 1;
+		m := 1;
+		q := 1;
+
+		x := 0;
+		y := 0;
+		xDummy := 0;
+		yDummy := 0;
+
+		dx_dt := 3;
+		dy_dt := 0;
+		dx_dt1 := 3;
+		dy_dt1 := 0;
+
+		
+		t := 0{s};
+	END values;
+END electron;

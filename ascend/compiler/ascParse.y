@@ -337,13 +337,14 @@ static void CollectNote(struct Note *);
 %token BEQ_TOK BNE_TOK BREAK_TOK
 %token CALL_TOK CARD_TOK CASE_TOK CHOICE_TOK CHECK_TOK CONDITIONAL_TOK CONSTANT_TOK
 %token CONTINUE_TOK CREATE_TOK
-%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DIMENSION_TOK
+%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DER_TOK DIMENSION_TOK
 %token DIMENSIONLESS_TOK DO_TOK
 %token ELSE_TOK END_TOK EXPECT_TOK EXTERNAL_TOK
 %token FALSE_TOK FALLTHRU_TOK FIX_TOK FOR_TOK FREE_TOK FROM_TOK
 %token GLOBAL_TOK
-%token IF_TOK IMPORT_TOK IN_TOK INPUT_TOK INCREASING_TOK INTERACTIVE_TOK
+%token IF_TOK  IGNORE_TOK IMPORT_TOK IN_TOK INPUT_TOK INCREASING_TOK INTERACTIVE_TOK INDEPENDENT_TOK
 %token INTERSECTION_TOK ISA_TOK _IS_T ISREFINEDTO_TOK
+%token LINK_TOK
 %token MAXIMIZE_TOK MAXINTEGER_TOK MAXREAL_TOK METHODS_TOK METHOD_TOK MINIMIZE_TOK MODEL_TOK
 %token NOT_TOK NOTES_TOK
 %token OF_TOK OPTION_TOK OR_TOK OTHERWISE_TOK OUTPUT_TOK
@@ -351,7 +352,7 @@ static void CollectNote(struct Note *);
 %token REFINES_TOK REPLACE_TOK REQUIRE_TOK RETURN_TOK RUN_TOK
 %token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK
 %token THEN_TOK TRUE_TOK
-%token UNION_TOK UNITS_TOK UNIVERSAL_TOK
+%token UNION_TOK UNITS_TOK UNIVERSAL_TOK UNLINK_TOK
 %token WHEN_TOK WHERE_TOK WHILE_TOK WILLBE_TOK WILLBETHESAME_TOK WILLNOTBETHESAME_TOK
 %token ASSIGN_TOK CASSIGN_TOK DBLCOLON_TOK USE_TOK LEQ_TOK GEQ_TOK NEQ_TOK
 %token DOTDOT_TOK WITH_TOK VALUE_TOK WITH_VALUE_T
@@ -387,7 +388,7 @@ static void CollectNote(struct Note *);
 %type <lptr> fvarlist input_args output_args varlist
 
 %type <statptr> statement isa_statement willbe_statement aliases_statement
-%type <statptr> is_statement isrefinedto_statement arealike_statement
+%type <statptr> is_statement isrefinedto_statement arealike_statement link_statement unlink_statement der_statement independent_statement
 %type <statptr> arethesame_statement willbethesame_statement
 %type <statptr> willnotbethesame_statement assignment_statement
 %type <statptr> relation_statement glassbox_statement blackbox_statement
@@ -405,7 +406,7 @@ static void CollectNote(struct Note *);
 %type <swptr> switchlist switchlistf
 %type <wptr> whenlist whenlistf
 %type <notesptr> notes_body noteslist
-%type <listp> methods proclist proclistf statements unitdeflist
+%type <listp> methods proclist proclistf statements unitdeflist complex_statement fix_and_assign_statement
 %type <procptr> procedure
 %type <dimp> dims dimensions
 %type <dimen> dimexpr
@@ -1226,6 +1227,13 @@ statements:
 	  }
 	  $$ = $1;
 	}
+    | statements complex_statement ';'
+	{
+	  if ($2 != NULL) {
+	    gl_append_list($1,$2);
+	  }
+	  $$ = $1;
+	}
     | statements error ';'
 	{
 	  ErrMsg_Generic("Error in statement input.");
@@ -1234,40 +1242,49 @@ statements:
     ;
 
 statement:
-	isa_statement
-	| willbe_statement
-	| aliases_statement
-	| is_statement
-	| isrefinedto_statement
-	| arealike_statement
-	| arethesame_statement
-	| willbethesame_statement
-	| willnotbethesame_statement
-	| assignment_statement
-	| relation_statement
-	| glassbox_statement
-	| blackbox_statement
-	| call_statement
-	| external_statement
-	| for_statement
-	| run_statement
-	| fix_statement
-	| free_statement
-	| solver_statement
-	| solve_statement
-	| option_statement
-	| assert_statement
-	| if_statement
-	| while_statement
-	| when_statement
-	| use_statement
-	| flow_statement
-	| select_statement
-	| switch_statement
-	| conditional_statement
-	| notes_statement
-	| units_statement
+    isa_statement
+    | willbe_statement
+    | aliases_statement
+    | is_statement
+    | isrefinedto_statement
+    | arealike_statement
+    | link_statement
+    | unlink_statement
+    | der_statement
+    | independent_statement
+    | arethesame_statement
+    | willbethesame_statement
+    | willnotbethesame_statement
+    | assignment_statement
+    | relation_statement
+    | glassbox_statement
+    | blackbox_statement
+    | call_statement
+    | external_statement
+    | for_statement
+    | run_statement
+    | fix_statement
+    | free_statement
+    | solver_statement
+    | solve_statement
+    | option_statement
+    | assert_statement
+    | if_statement
+    | while_statement
+    | when_statement
+    | use_statement
+    | flow_statement
+    | select_statement
+    | switch_statement
+    | conditional_statement
+    | notes_statement
+    | units_statement
+    ;
+
+complex_statement:
+	fix_and_assign_statement
 	;
+
 
 isa_statement:
     fvarlist ISA_TOK type_identifier optional_of optional_with_value
@@ -1506,6 +1523,50 @@ arealike_statement:
     fvarlist AREALIKE_TOK
 	{
 	  $$ = CreateAA($1);
+	}
+    ;
+
+link_statement:
+    LINK_TOK '(' IGNORE_TOK ',' SYMBOL_TOK ',' fvarlist ')'
+	{
+	    $$ = IgnoreLNK($5,NULL,$7);
+	}
+    | LINK_TOK '(' SYMBOL_TOK ',' fvarlist ')'
+	{
+	    $$ = CreateLNK($3,NULL,$5);
+	}
+    | LINK_TOK '(' fname ',' fvarlist ')'
+	{
+	    $$ = CreateLNK(NULL,$3,$5);
+	}
+    ;
+
+unlink_statement:
+    UNLINK_TOK '(' SYMBOL_TOK ',' fvarlist ')'
+	{
+	    $$ = CreateUNLNK($3,NULL,$5);
+	}
+    | UNLINK_TOK '(' fname ',' fvarlist ')'
+	{
+	    $$ = CreateUNLNK(NULL,$3,$5);
+	}
+    ;
+
+der_statement:
+    DER_TOK '(' fvarlist ')'
+	{
+	    symchar *str;
+	    str = AddSymbol("ode");
+	    $$ = CreateLNK(str,NULL,$3);
+	}
+    ;
+
+independent_statement:
+    INDEPENDENT_TOK  fvarlist
+	{
+	    symchar *str;
+	    str = AddSymbol("independent");
+	    $$ = CreateLNK(str,NULL,$2);
 	}
     ;
 
@@ -1750,6 +1811,20 @@ fix_statement:
 		$$ = CreateFIX($2);
 	}
 	;
+
+fix_and_assign_statement:
+	FIX_TOK assignment_statement
+	{
+		struct Statement *assign = $2;
+		struct Name *n = CopyName($2 -> v.asgn.nptr);
+		struct VariableList *vars = CreateVariableNode(n);
+		struct Statement *fix = CreateFIX(ReverseVariableList(vars));
+		struct gl_list_t *fix_and_assign = gl_create(7L);
+		gl_append_ptr(fix_and_assign,(char*)fix);
+		gl_append_ptr(fix_and_assign,(char*)assign);
+		$$ = fix_and_assign;
+	}
+     ;
 
 free_statement:
 	FREE_TOK fvarlist
@@ -2948,3 +3023,6 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
 	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),NULL,fmt,args);
 	va_end(args);
 }
+
+/* vim: set ts=8: */
+

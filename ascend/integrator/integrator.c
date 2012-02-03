@@ -30,6 +30,8 @@
 #include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/compiler/packages.h>
+#include <ascend/compiler/link.h>
+
 
 #include <ascend/system/slv_common.h>
 #include <ascend/system/slv_stdcalls.h>
@@ -111,7 +113,7 @@ static int Integ_CmpDynVars(struct Integ_var_t *v1, struct Integ_var_t *v2);
 static int Integ_CmpObs(struct Integ_var_t *v1, struct Integ_var_t *v2);
 static void Integ_SetObsId(struct var_variable *v, long oindex);
 
-static long DynamicVarInfo(struct var_variable *v,long *vindex);
+static long DynamicVarInfo(struct var_variable *v,long *vindex, IntegratorSystem *sys);
 static struct var_variable *ObservationVar(struct var_variable *v, long *oindex);
 static void IntegInitSymbols(void);
 
@@ -851,7 +853,7 @@ void integrator_dae_classify_var(IntegratorSystem *sys
 		/* only non-fixed variables are accepted */
 		if(!var_fixed(var)){
 			/* get the ode_type and ode_id of this solver_var */
-			type = DynamicVarInfo(var,&index);
+			type = DynamicVarInfo(var,&index,sys);
 
 			if(type==INTEG_OTHER_VAR){
 				/* if the var's type is -1, it's independent */
@@ -865,7 +867,7 @@ void integrator_dae_classify_var(IntegratorSystem *sys
 #if 1
 		else{
 			/* fixed variable, only include it if ode_type == 1 */
-			type = DynamicVarInfo(var,&index);
+			type = DynamicVarInfo(var,&index,sys);
 			if(type==INTEG_STATE_VAR){
 				INTEG_ADD_TO_LIST(info,type,index,var,varindx,sys->dynvars);
 			}
@@ -900,7 +902,7 @@ void integrator_ode_classify_var(IntegratorSystem *sys, struct var_variable *var
 
   if( var_apply_filter(var,&vfilt) ) {
 	/* it's a solver var: what type of variable? */
-    type = DynamicVarInfo(var,&index);
+    type = DynamicVarInfo(var,&index,sys);
 
     if(type==INTEG_ALGEBRAIC_VAR){
 		/* no action required */
@@ -947,7 +949,7 @@ void integrator_classify_indep_var(IntegratorSystem *sys
 #endif
 
 	if( var_apply_filter(var,&vfilt) ) {
-		type = DynamicVarInfo(var,&index);
+		type = DynamicVarInfo(var,&index,sys);
 
 		if(type==INTEG_OTHER_VAR){
 			/* i.e. independent var */
@@ -971,6 +973,7 @@ void integrator_classify_indep_var(IntegratorSystem *sys
 #endif
 }
 
+
 /**
 	Look at a variable, and if it is an 'ODE variable' (it has a child instance
 	named 'ode_type') return its type, which will be either:
@@ -982,14 +985,20 @@ void integrator_classify_indep_var(IntegratorSystem *sys
 	If the parameter 'index' is not null, the value of 'ode_id' will be stuffed
 	there.
 */
-static long DynamicVarInfo(struct var_variable *v,long *index){
+static long DynamicVarInfo(struct var_variable *v,long *index, IntegratorSystem *sys){
   struct Instance *c, *d, *i;
+	int type;
+
   i = var_instance(v);
+
   asc_assert(i!=NULL);
   asc_assert(STATEFLAG!=NULL);
   asc_assert(STATEINDEX!=NULL);
   c = ChildByChar(i,STATEFLAG);
   d = ChildByChar(i,STATEINDEX);
+
+	
+		
   /* lazy evaluation is important in the following if */
   if(c == NULL
       || d == NULL
@@ -998,6 +1007,14 @@ static long DynamicVarInfo(struct var_variable *v,long *index){
       || !AtomAssigned(c)
       || (!AtomAssigned(d) && GetIntegerAtomValue(c) != INTEG_OTHER_VAR)
   ){
+		type = getOdeType(sys->instance,i);
+		if(type != 0) {
+			if(index !=NULL){
+				*index = getOdeId(sys->instance,i);
+			}
+ 			return type;
+		}
+
     return INTEG_ALGEBRAIC_VAR;
   }
   if (index != NULL) {

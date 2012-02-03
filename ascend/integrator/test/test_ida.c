@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include <ascend/general/env.h>
 #include <ascend/general/ospath.h>
@@ -44,35 +45,36 @@
 #include <ascend/integrator/integrator.h>
 
 #include <test/common.h>
+#include <test/test_globals.h>
 
 #ifndef PI
 # define PI 3.14159265358979
 #endif
 
 /* a simple integrator reporter for testing */
-int test_ida_reporter_init(struct IntegratorSystemStruct *integ){
+int test_ida_reporter_init(struct IntegratorSystemStruct *integ) {
 	return 0;
 }
 
-int test_ida_reporter_write(struct IntegratorSystemStruct *integ){
+int test_ida_reporter_write(struct IntegratorSystemStruct *integ) {
+	double val;
+	val = var_value(integ->y[4]);
+	CONSOLE_DEBUG("y = %g", val);
 	return 0; /* no interrupt */
 }
 
-int test_ida_reporter_writeobs(struct IntegratorSystemStruct *integ){
+int test_ida_reporter_writeobs(struct IntegratorSystemStruct *integ) {
 	CONSOLE_DEBUG("x = %f", var_value(integ->x));
 	return 0;
 }
 
-int test_ida_reporter_close(struct IntegratorSystemStruct *integ){
+int test_ida_reporter_close(struct IntegratorSystemStruct *integ) {
 	return 0;
 }
 
-IntegratorReporter test_ida_reporter = {
-	test_ida_reporter_init
-	,test_ida_reporter_write
-	,test_ida_reporter_writeobs
-	,test_ida_reporter_close
-};
+IntegratorReporter test_ida_reporter = { test_ida_reporter_init,
+		test_ida_reporter_write, test_ida_reporter_writeobs,
+		test_ida_reporter_close };
 
 
 /*
@@ -192,13 +194,13 @@ static void test_boundary(){
 
 	/* set paths relative to test executable */
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida");
-	CU_TEST_FATAL(0 == package_load("ida",NULL));
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv");
+	CU_TEST_FATAL(0 == package_load("lrslv",NULL));
 
 	/* load the file */
 	char path[PATH_MAX];
-	strcpy((char *)path,"test/ida/");
-#define FILESTEM "boundaries"
+	strcpy((char *) path, "test/ida/leon/");
+#define FILESTEM "bouncingball"
 	strncat(path, FILESTEM, PATH_MAX - strlen(path));
 	strncat(path, ".a4c", PATH_MAX - strlen(path));
 	{
@@ -211,17 +213,19 @@ static void test_boundary(){
 	CU_ASSERT(0 == zz_parse());
 
 	/* find the model */
-	CU_ASSERT(FindType(AddSymbol(FILESTEM))!=NULL);
+	// CU_ASSERT(FindType(AddSymbol(FILESTEM))!=NULL);
 
 	/* instantiate it */
-	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM), AddSymbol("sim1"), e_normal, NULL);
+	struct Instance *siminst = SimsCreateInstance(AddSymbol("bouncingball"),
+			AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(siminst!=NULL);
 
 	CONSOLE_DEBUG("RUNNING ON_LOAD");
 
 	/** Call on_load */
 	struct Name *name = CreateIdName(AddSymbol("on_load"));
-	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst), name, "sim1",
+			ASCERR, WP_STOPONERR, NULL, NULL);
 	CU_ASSERT(pe==Proc_all_ok);
 
 	/* create the integrator */
@@ -229,7 +233,7 @@ static void test_boundary(){
 	slv_system_t sys = system_build(GetSimulationRoot(siminst));
 	CU_ASSERT_FATAL(sys != NULL);
 
-	IntegratorSystem *integ = integrator_new(sys,siminst);
+	IntegratorSystem *integ = integrator_new(sys,GetSimulationRoot(siminst));
 
 	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"IDA"));
 	CONSOLE_DEBUG("Assigned integrator '%s'...",integ->internals->name);
@@ -244,25 +248,25 @@ static void test_boundary(){
 	/* TODO assign an integrator reporter */
 	integrator_set_reporter(integ, &test_ida_reporter);
 
-	integrator_set_minstep(integ,0);
-	integrator_set_maxstep(integ,0);
-	integrator_set_stepzero(integ,0);
-	integrator_set_maxsubsteps(integ,0);
+	integrator_set_minstep(integ, .01);
+	integrator_set_maxstep(integ, 1);
+	integrator_set_stepzero(integ, .001);
+	integrator_set_maxsubsteps(integ, 200);
 
 	/* set a linearly-distributed samplelist */
-	double start = 0, end = 10;
-	int num = 20;
+	double start = 0, end = 30;
+	int num = 63;
 	dim_type d;
 	SetDimFraction(d,D_TIME,CreateFraction(1,1));
-	SampleList *samplelist = samplelist_new(num+1, &d);
+	SampleList *samplelist = samplelist_new(num + 1, &d);
 	double val = start;
-	double inc = (end-start)/(num);
+	double inc = (end - start) / (num);
 	unsigned long i;
-	for(i=0; i<=num; ++i){
-		samplelist_set(samplelist,i,val);
+	for (i = 0; i <= num; ++i) {
+		samplelist_set(samplelist, i, val);
 		val += inc;
 	}
-	integrator_set_samples(integ,samplelist);
+	integrator_set_samples(integ, samplelist);
 
 	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
 

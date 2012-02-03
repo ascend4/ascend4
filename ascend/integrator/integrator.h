@@ -229,7 +229,7 @@ typedef struct IntegratorInternalsStruct{
 	that we're solving it with, and a struct containing the output function ptrs
 */
 struct IntegratorSystemStruct{
-  struct Instance *instance;  /**< not sure if this one is really necessary... -- JP */
+  struct Instance *instance;  /**< not sure if this one is really necessary... -- JP */ /*DS: it is necessary to know the model where the integration takes place in case the LINK syntax is used because we need to access the model LINK tables */
   slv_system_t system;        /**< the system that we're integrating in ASCEND */
   IntegratorEngine engine;    /**< enum containing the ID of the integrator engine we're using. Should go away -- fully replaced by 'internals' */
   const IntegratorInternals *internals;/**< pointers to the various functions belonging to this integrator */

@@ -1,0 +1,44 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+
+MODEL spring;
+(*
+1d Harmonic oscillator, since I can't get anything else to work
+*)
+
+(*Variables*)
+x IS_A solver_var;
+k IS_A solver_var;
+m IS_A solver_var;
+
+xdot IS_A solver_var;
+xdd IS_A solver_var;
+
+t IS_A time;
+
+(*Equations*)
+m*xdd = -1*k*x;
+
+METHODS
+	METHOD on_load;
+		RUN ode_init;
+		FIX k;
+		FIX m;
+		
+		k := 1;
+		m := 1;
+
+		x := 3;
+		t := 0.0{s};
+	END on_load;
+
+	METHOD ode_init;
+		x.ode_type := 1; xdot.ode_type := 2; xdd.ode_type := 3;
+		x.ode_id := 1;	xdot.ode_id := 1; xdd.ode_id := 1;
+
+		t.ode_type := -1;
+	END ode_init;
+
+
+END spring;

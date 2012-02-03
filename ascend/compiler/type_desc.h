@@ -40,6 +40,7 @@
 #include "module.h"
 #include "childinfo.h"
 #include "slist.h"
+#include "instance_enum.h" 
 #include <stdio.h>
 
 /*------------------------------------------------------------------------------
@@ -141,9 +142,9 @@ struct AtomTypeDesc {
 	1,2,3,4. -- which is useful
 	Likewise "foo[fooset - [thingset]] IS_A thing;" we would have
 	"fooset thingset -"  -- which is not very useful.
-	
+
 	So we now save a string representation of the set.
-	
+
 	Apparently, the above statement about sets could only have been made
 	by someone "with no real clue about the instantiate process", and
 	"Both representations are critical to have, and since they
@@ -159,7 +160,7 @@ struct IndexType {
 struct ArrayDesc {
   struct gl_list_t *indices;    /**< a list of IndexType objects */
   struct TypeDescription *desc; /**< the type of the array/common superclass*/
-  /* 
+  /*
 	the following 4 need to be made bit flags.
 	At present, this overuse of ints does not dominate the
 	union cost at the end of the typedescription struct, so
@@ -171,10 +172,12 @@ struct ArrayDesc {
   int iswhen;         /**< TRUE in case of array of WHEN */
 };
 
-/** 
-	ModelArgs is a structure in preparation for parameterized types 
+
+/**
+	ModelArgs is a structure in preparation for parameterized types
 */
 struct ModelArgs {
+  struct gl_list_t *link_table; /**< pointer to the table of "LINK" relationships of the model (moved from ModelInstance)*/
   struct StatementList *declarations; /**< list of the statements in the parameter list */
   struct StatementList *absorbed;
   /**<
@@ -231,6 +234,7 @@ struct TypeDescription {
 	Note that virtually NOTHING works anymore if MAKEARRAYNAMES
 	is 0.
 */
+
 
 /*------------------------------------------------------------------------------
   GETTER / QUERY FUNCTIONS
@@ -367,11 +371,11 @@ extern int AddMethods(struct TypeDescription *d,
 	pl should contain (struct InitProcedure *) to the methods to
 	add to d.  The methods named in pl must not conflict with any
 	method in d or its refinements.  If err != 0, rejects pl.<br><br>
-	
+
 	If return is 1, caller is responsible for pl, OTHERWISE we manage it
 	from here on.  If caller supplied d == ILLEGAL_DEFINITION, the caller
 	can unconditionally forget pl.
-	
+
 	@param d   The type to which the methods in pl should be added.
 	@param pl  A gl_list_t of (struct InitProcedure *) to add to d.
 	@param err If non-zero, pl is rejected and no methods are added.
@@ -386,10 +390,10 @@ extern int ReplaceMethods(struct TypeDescription *d,
 	themselves redefine the methods.  The methods in pl must exist in d or
 	else an error condition is returned.  Methods not named in pl but found
 	in d or its refinements are left undisturbed. If err != 0, rejects pl.<br><br>
-	
+
 	If return is 1, caller is responsible for pl, OTHERWISE we manage it
 	from here on.
-	
+
 	@param d   The type to which the methods in pl should be replaced.
 	@param pl  A gl_list_t of (struct InitProcedure *) to replace in.
 	@param err If non-zero, pl is rejected and no methods are replaced.
@@ -434,7 +438,7 @@ extern void CopyTypeDescF(struct TypeDescription *d);
 extern void DeleteTypeDesc(struct TypeDescription *d);
 /**<
 	Decrement the reference count.  Eventually, this should delete it
-	when ref_count == 0.  
+	when ref_count == 0.
 
 	@NOTE ('to myself')  Remember that array type
 	descriptions need to be removed from a list too.
@@ -708,7 +712,7 @@ ASC_DLLSPEC symchar*GetNameF(CONST struct TypeDescription *d);
 #define GetParseId(d) ((d)->parseid)
 /**<
 	Returns the parseid of type d.
-	
+
 	@param d The type to query (TypeDescription *).
 	@return The parseid of d as a long int.
 */
@@ -716,7 +720,7 @@ ASC_DLLSPEC symchar*GetNameF(CONST struct TypeDescription *d);
 #define GetRefinement(d) ((d)->refines)
 /**<
 	Returns the refinement of type d, or NULL if none.
-	
+
 	@param d The type to query (TypeDescription *).
 	@return The refinement of d as a TypeDescription *.
 */
@@ -724,7 +728,7 @@ ASC_DLLSPEC symchar*GetNameF(CONST struct TypeDescription *d);
 #define GetRefiners(d) ((d)->refiners)
 /**<
 	Returns a list of refiners of type d, or NULL if none.
-	
+
 	@param d The type to query (TypeDescription *).
 	@return The refiners of d as a gl_list of TypeDescription *.
 */
@@ -932,6 +936,7 @@ extern void DestroyIndexType(struct IndexType *ind);
  *  @return The set string associated with p as a symchar *.
  */
 
+
 /*------------------------------------------------------------------------------
   CONSTRUCTORS
 */
@@ -963,7 +968,6 @@ extern struct TypeDescription
  *  @param psl    List of parameter statements.
  *  @param rsl    List of parameter reducing statements.
  *  @param tsl    List of reduced statements.
- *  @param vsl    List of parameter constraint statements.
  *  @return A pointer to the new TypeDescription structure.
  */
 
