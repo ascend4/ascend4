@@ -5,6 +5,9 @@
 ; Look for Python in HKLM. No attempt to detect it in HKCU at this stage.
 
 Function DetectPython
+!if INST64
+	SetRegView 64
+!endif
 	ReadRegStr $R6 HKCU "SOFTWARE\Python\PythonCore\${PYVERSION}\InstallPath" ""
 	${If} $R6 == ''
 		ReadRegStr $R6 HKLM "SOFTWARE\Python\PythonCore\${PYVERSION}\InstallPath" ""
@@ -90,6 +93,9 @@ FunctionEnd
 ;--------------------------------------------------------------------
 
 ;Function DetectTcl
+;!if INST64
+;	SetRegView 64
+;!endif
 ;	ReadRegStr $R6 HKCU "SOFTWARE\ActiveState\ActiveTcl" "CurrentVersion"
 ;	${If} $R6 == ''
 ;		ReadRegStr $R6 HKLM "SOFTWARE\ActiveState\ActiveTcl" "CurrentVersion"
