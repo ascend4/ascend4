@@ -1,5 +1,5 @@
 ; NSIS script to create an ASCEND binary installer for Windows
-; by John Pye, 2006-2007.
+; by John Pye, 2006-2012.
 ;
 ;--------------------------------
 
@@ -11,8 +11,9 @@
 
 Name "ASCEND ${VERSION}"
 
+SetCompressor /SOLID zlib
 ;SetCompressor /FINAL zlib
-SetCompressor /SOLID lzma
+;SetCompressor /SOLID lzma
 
 !include LogicLib.nsh
 !include nsDialogs.nsh
@@ -26,6 +27,10 @@ SetCompressor /SOLID lzma
 !define PYPATCH ".1"
 !endif
 
+!ifndef INST64
+!define INST64 1
+!endif
+
 ; The file to write
 !ifdef OUTFILE
 OutFile ${OUTFILE}
@@ -33,12 +38,8 @@ OutFile ${OUTFILE}
 OutFile "ascend-${VERSION}-py${PYVERSION}.exe"
 !endif
 
-!ifndef INST64
-!define INST64 0
-!endif
-
 ; The default installation directory
-!if INST64
+!if ${INST64}
 InstallDir $PROGRAMFILES64\ASCEND
 !else
 InstallDir $PROGRAMFILES32\ASCEND
@@ -69,16 +70,16 @@ UninstPage instfiles
 
 ;--------------------------------
 
+!define GTKSEARCHPATH "c:\GTK"
+
 Var /GLOBAL DEFAULTPATH
 Var /GLOBAL PYOK
 Var /GLOBAL PYPATH
 Var /GLOBAL GTKOK
 Var /GLOBAL GTKPATH
-Var /GLOBAL GLADEOK
 Var /GLOBAL PYGTKOK
 Var /GLOBAL PYGOBJECTOK
 Var /GLOBAL PYCAIROOK
-Var /GLOBAL GLADEPATH
 Var /GLOBAL PYINSTALLED
 ;Var /GLOBAL TCLOK
 ;Var /GLOBAL TCLPATH
@@ -138,6 +139,7 @@ Section "-python"
 		${EndIf}
         ${EndIf}
 SectionEnd
+; FIXME need to go back to using separate GTK, PyGTK, PyGObject, PyCairo installers :-(
 Section "-gtk"
 	DetailPrint "--- DOWNLOAD PYGTK ---"
 	${If} $GTKDOWNLOAD == '1'
@@ -145,10 +147,6 @@ Section "-gtk"
 		Call DetectGTK
 		Pop $GTKOK
 		Pop $GTKPATH
-
-		Call DetectGlade
-		Pop $GLADEOK
-		Pop $GLADEPATH	
 
 ;		Call DetectTcl
 ;		Pop $TCLOK
@@ -257,7 +255,7 @@ SectionEnd
 ;--------------------------------
 
 Section "PyGTK GUI" sect_pygtk
-!if INST64
+!if ${INST64}
 	SetRegView 64
 !endif
 	; Check the dependencies of the PyGTK GUI before proceding...
@@ -265,8 +263,6 @@ Section "PyGTK GUI" sect_pygtk
 		MessageBox MB_OK "PyGTK GUI can not be installed, because Python was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(PYPATH=$PYPATH)"
 	${ElseIf} $GTKOK == 'NOK'
 		MessageBox MB_OK "PyGTK GUI cannot be installed, because GTK+ 2.x was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(GTKPATH=$GTKPATH)"
-	${ElseIf} $GLADEOK == 'NOK'
-		MessageBox MB_OK "PyGTK GUI cannot be installed, because Glade 2.x was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(GTKPATH=$GTKPATH).\n\nIf you do have GTK+ runtime installed, make sure\nyou have a version that includes support for Glade."
 	${ElseIf} $PYGTKOK == "NOK"
 		MessageBox MB_OK "PyGTK GUI cannot be installed, because PyGTK was not found on this system.$\nPlease check the installation instructions.$\n$\n(PYPATH=$PYPATH)"
 	${ElseIf} $PYCAIROOK == "NOK"
@@ -476,7 +472,7 @@ SectionEnd
 ; UNINSTALLER
 
 Section "Uninstall"
-!if INST64
+!if ${INST64}
 	SetRegView 64
 !endif
 
@@ -616,16 +612,14 @@ SectionEnd
 !include "envvarwarning.nsi"
 
 Function .onInit
-!if INST64
+!if ${INST64}
 	${If} ${RunningX64}
 	${Else}
-		Abort "This ASCEND installer is for 64-bit Windows versions only"
+		MessageBox MB_OK "This ASCEND installer is for 64-bit Windows versions only.\n\nVisit http://ascend4.org for 32-bit versions."
 	${EndIf}
-!endif
-
-!if INST64
 	SetRegView 64
 !endif
+
 	StrCpy $PYINSTALLED ""
 ;	StrCpy $TCLINSTALLED ""
 	StrCpy $ASCENDINIFOUND ""
@@ -641,10 +635,6 @@ Function .onInit
 	Call DetectGTK
 	Pop $GTKOK
 	Pop $GTKPATH
-
-	Call DetectGlade
-	Pop $GLADEOK
-	Pop $GLADEPATH	
 	
 ;	Call DetectTcl
 ;	Pop $TCLOK
@@ -659,13 +649,15 @@ Function .onInit
 	Call DetectPyCairo
 	Pop $PYCAIROOK
 	
-	StrCpy $PATH "$DEFAULTPATH;$PYPATH;$GTKPATH"
+	MessageBox MB_OK "GTK path is $GTKPATH"
+	StrCpy $PATH "$GTKPATH;$DEFAULTPATH;$PYPATH"
 
 	ReadRegStr $0 HKLM "SOFTWARE\ASCEND" "Install_Dir"
 	${If} $0 != ""	
 		;MessageBox MB_OK "Previous installation detected..."
 		; If user previous deselected Tcl/Tk, then deselect it by
 		; default now, i.e don't force the user to install it.
+
 ;		ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "TclTk"
 ;		${If} $0 = 0
 ;			;MessageBox MB_OK "Tcl/Tk was previously deselected"

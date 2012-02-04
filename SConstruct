@@ -16,6 +16,11 @@ import subprocess
 # version number for python, useful on Windows
 pyversion = "%d.%d" % (sys.version_info[0],sys.version_info[1])
 
+# architecture label
+winarchtag = "-win32"
+if platform.architecture()[0] == "64bit":
+	winarchtag="-amd64"
+
 #------------------------------------------------------
 # PLATFORM DEFAULTS
 
@@ -41,7 +46,7 @@ default_tk_lib = "tk8.5"
 default_tktable_lib = "Tktable2.9"
 default_ida_prefix="$DEFAULT_PREFIX"
 default_ipopt_libpath = "$IPOPT_PREFIX/lib"
-default_ipopt_dll = "$IPOPT_LIBPATH/Ipopt38.dll"
+default_ipopt_dll = "$IPOPT_LIBPATH/Ipopt39.dll"
 default_ipopt_libs = ["$F2C_LIB","blas","lapack","pthread","ipopt"]
 default_conopt_prefix="$DEFAULT_PREFIX"
 default_conopt_libpath="$CONOPT_PREFIX"
@@ -88,7 +93,10 @@ if platform.system()=="Windows":
 	default_ida_prefix = "$DEFAULT_PREFIX"
 	
 	# IPOPT
-	default_ipopt_libpath = "$IPOPT_PREFIX/lib/win32/release"
+	if platform.architecture()[0] == "64bit":
+		default_ipopt_libpath = "$IPOPT_PREFIX/lib/x64/release"
+	else:
+		default_ipopt_libpath = "$IPOPT_PREFIX/lib/win32/release"
 	default_ipopt_libs = ["Ipopt"]
 
 	# where to look for CONOPT when compiling
@@ -731,7 +739,7 @@ vars.Add(BoolVariable('ABSOLUTE_PATHS'
 
 vars.Add('WIN_INSTALLER_NAME'
 	,"Name of the installer .exe to create under Windows (minus the '.exe')"
-	,"ascend-"+version+"-py"+pyversion+".exe"
+	,"ascend-"+version+winarchtag+"-py"+pyversion+".exe"
 )
 
 vars.Add(BoolVariable('WITH_XTERM_COLORS'
@@ -2821,7 +2829,8 @@ if with_installer:
 		pyarch = ".amd64"
 		inst64 = 1
 	if env['IPOPT_DLL']:
-		ipoptdllline = "File: %s"%os.path.normpath(env['IPOPT_DLL'])
+		#print "IPOPT_DLL =", os.path.normcase(env.subst('$IPOPT_DLL'))
+		ipoptdllline = "File %s"%os.path.normcase(os.path.normpath(env.subst('$IPOPT_DLL')))
 	env.Append(NSISDEFINES={
 		'OUTFILE':"#dist/$WIN_INSTALLER_NAME"
 		,"VERSION":version
@@ -2834,6 +2843,8 @@ if with_installer:
 	env.Depends(installer,["pygtk","ascxx","tcltk","ascend.dll","models","solvers","ascend-config",'pygtk/ascend'])
 	if env['IPOPT_DLL']:
 		env.Depends(installer,[os.path.normpath(env['IPOPT_DLL'])])
+		env.Depends(installer,"doc/book.pdf")
+		env.Depends(installer,["nsis/detect.nsi","nsis/dependencies.nsi","nsis/download.nsi"])
 	env.Alias('installer',installer)
 else:
 	print "Skipping... Windows installer isn't being built:",without_installer_reason
@@ -2905,11 +2916,11 @@ Alias('dist',[tar,deb_tar])
 
 #print "WITH_DOC_BUILD = ",with_doc_build
 
-if not with_doc_build:
+if with_doc_build:
+	#user's manual
+	env.SConscript('doc/SConscript',['env'])
+else:
 	print "Skipping... Documentation isn't being built:",without_doc_build_reason
-
-#user's manual
-env.SConscript('doc/SConscript',['env'])
 
 #------------------------------------------------------
 # RPM BUILD
