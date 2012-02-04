@@ -2814,15 +2814,26 @@ if not env.get('NSIS'):
 	without_installer_reason = "NSIS not found"
 
 if with_installer:
+	pyarch = ""
+	ipoptdllline = ""
+	inst64 = 0
+	if platform.architecture()[0] == "64bit":
+		pyarch = ".amd64"
+		inst64 = 1
+	if env['IPOPT_DLL']:
+		ipoptdllline = "File: %s"%os.path.normpath(env['IPOPT_DLL'])
 	env.Append(NSISDEFINES={
-		'OUTFILE':"#dist/"+env['WIN_INSTALLER_NAME']
+		'OUTFILE':"#dist/$WIN_INSTALLER_NAME"
 		,"VERSION":version
 		,'PYVERSION':pyversion
-		,'IPOPTDLL':os.path.normpath(env['IPOPT_DLL'])
+		,'IPOPTDLL_LINE':ipoptdllline
+		,'PYARCH':pyarch
+		,'INST64':inst64
 	})
 	installer = env.Installer('nsis/installer.nsi')
 	env.Depends(installer,["pygtk","ascxx","tcltk","ascend.dll","models","solvers","ascend-config",'pygtk/ascend'])
-	env.Depends(installer,[os.path.normpath(env['IPOPT_DLL'])])
+	if env['IPOPT_DLL']:
+		env.Depends(installer,[os.path.normpath(env['IPOPT_DLL'])])
 	env.Alias('installer',installer)
 else:
 	print "Skipping... Windows installer isn't being built:",without_installer_reason
@@ -2848,7 +2859,7 @@ env.Append(
 	DISTTAR_EXCLUDEEXTS=['.o','.os','.so','.a','.dll','.lib','.cc','.cache',
 		'.pyc','.cvsignore','.dblite','.log','.pl','.out','.exe','.aux','.idx',
 		'.toc','.lof','.lot','.mm','.warnings','.tm2','.swp',',tmp','.gz',
-		'.bz2','.7z','.deb','.dsc','.changes','.bak','.tex','.tmp']
+		'.bz2','.7z','.deb','.dsc','.changes','.bak','.tex','.tmp','.def']
 	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist','debian','doxy']
 	, DISTTAR_EXCLUDERES=[r"_wrap\.cc?$", r"~$", r"ascxx/ascpy\.py","ascxx/testipopt$"
 		,r"/lib.*\.so\.[.0-9]+$", r"tcltk/asc4dev$", r"tcltk/interface/typelex\.c$"
@@ -2916,8 +2927,6 @@ if with_python:
 	default_targets.append('ascxx')
 	default_targets.append('pygtk')
 	default_targets.append('pyfprops')
-#if with_installer:
-#	default_targets.append('installer')
 if with_extfns:
 	default_targets.append('extfns')
 if with_doc_build:

@@ -16,9 +16,10 @@ SetCompressor /SOLID lzma
 
 !include LogicLib.nsh
 !include nsDialogs.nsh
+!include x64.nsh
 
 !ifndef PYVERSION
-!define PYVERSION "2.6"
+!define PYVERSION "2.7"
 !endif
 
 !ifndef PYPATCH
@@ -32,9 +33,16 @@ OutFile ${OUTFILE}
 OutFile "ascend-${VERSION}-py${PYVERSION}.exe"
 !endif
 
+!ifndef INST64
+!define INST64 0
+!endif
 
 ; The default installation directory
-InstallDir $PROGRAMFILES\ASCEND
+!if INST64
+InstallDir $PROGRAMFILES64\ASCEND
+!else
+InstallDir $PROGRAMFILES32\ASCEND
+!endif
 
 ; Registry key to check for directory (so if you install again, it will 
 ; overwrite the old one automatically)
@@ -93,9 +101,9 @@ Var /GLOBAL ASCENDLIBRARY
 ;------------------------------------------------------------
 ; DOWNLOAD AND INSTALL DEPENDENCIES FIRST
 
-!define PYTHON_VERSION "${PYVERSION}${PYPATCH}"
+!define PYTHON_VERSION "${PYVERSION}${PYPATCH}${PYARCH}"
 !define PYTHON_FN "python-${PYTHON_VERSION}.msi"
-!define PYTHON_URL "http://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FN}"
+!define PYTHON_URL "http://python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FN}"
 !define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive ALLUSERS=1 TARGETDIR=c:\Python${PYVERSION}"
 !define PYTHON_MD5 "a69ce1b2d870be29befd1cefb4615d82"
 
@@ -183,7 +191,7 @@ Section "ASCEND (required)"
 	File "..\LICENSE.txt"
 	File "..\CHANGELOG.txt"
 	File "..\README-windows.txt"
-	File "${IPOPTDLL}"
+	${IPOPTDLL_LINE}
 	
 	; Model Library
 	SetOutPath $INSTDIR\models
@@ -249,6 +257,9 @@ SectionEnd
 ;--------------------------------
 
 Section "PyGTK GUI" sect_pygtk
+!if INST64
+	SetRegView 64
+!endif
 	; Check the dependencies of the PyGTK GUI before proceding...
 	${If} $PYOK == 'NOK'
 		MessageBox MB_OK "PyGTK GUI can not be installed, because Python was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(PYPATH=$PYPATH)"
@@ -465,6 +476,9 @@ SectionEnd
 ; UNINSTALLER
 
 Section "Uninstall"
+!if INST64
+	SetRegView 64
+!endif
 
 ;--- python components ---
 
@@ -602,6 +616,16 @@ SectionEnd
 !include "envvarwarning.nsi"
 
 Function .onInit
+!if INST64
+	${If} ${RunningX64}
+	${Else}
+		Abort "This ASCEND installer is for 64-bit Windows versions only"
+	${EndIf}
+!endif
+
+!if INST64
+	SetRegView 64
+!endif
 	StrCpy $PYINSTALLED ""
 ;	StrCpy $TCLINSTALLED ""
 	StrCpy $ASCENDINIFOUND ""
