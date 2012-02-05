@@ -11,9 +11,9 @@
 
 Name "ASCEND ${VERSION}"
 
-SetCompressor /SOLID zlib
+;SetCompressor /SOLID zlib
 ;SetCompressor /FINAL zlib
-;SetCompressor /SOLID lzma
+SetCompressor /SOLID lzma
 
 !include LogicLib.nsh
 !include nsDialogs.nsh
@@ -190,6 +190,7 @@ Section "ASCEND (required)"
 	File "..\CHANGELOG.txt"
 	File "..\README-windows.txt"
 	${IPOPTDLL_LINE}
+	${IPOPTDLL_LINE2}
 	
 	; Model Library
 	SetOutPath $INSTDIR\models

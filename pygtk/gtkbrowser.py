@@ -994,6 +994,20 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_dialog = InfoDialog(self,self.window,text,title)
 		_dialog.run()
 
+	def on_show_config_activate(self,*args):
+		text = "Configuration"
+		title=text;
+		text += "\n\nEnvironment variables:\n"
+		if len(os.environ):
+			for _k,_v in sorted(os.environ.items()):
+				text += "  %s=%s\n" % (_k,_v)
+		else:
+			text +="\nempty"
+
+		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog.run()
+
+
 #   ----------------------------------
 #   ERROR PANEL
 

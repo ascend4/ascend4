@@ -47,6 +47,7 @@ default_tktable_lib = "Tktable2.9"
 default_ida_prefix="$DEFAULT_PREFIX"
 default_ipopt_libpath = "$IPOPT_PREFIX/lib"
 default_ipopt_dll = "$IPOPT_LIBPATH/Ipopt39.dll"
+default_ipopt_dll2 = "$IPOPT_LIBPATH/IpOptFSS39.dll"
 default_ipopt_libs = ["$F2C_LIB","blas","lapack","pthread","ipopt"]
 default_conopt_prefix="$DEFAULT_PREFIX"
 default_conopt_libpath="$CONOPT_PREFIX"
@@ -464,6 +465,10 @@ if platform.system()=="Windows":
 	vars.Add('IPOPT_DLL'
 		,"Exact path of IPOPT DLL to be included in the installer (Windows only)"
 		,default_ipopt_dll
+	)
+	vars.Add('IPOPT_DLL2'
+		,"Exact path of IPOPT DLL to be included in the installer (Windows only)"
+		,default_ipopt_dll2
 	)
 
 #-------- f2c ------
@@ -2825,24 +2830,28 @@ if with_installer:
 	pyarch = ""
 	ipoptdllline = ""
 	inst64 = 0
+	ipoptf1 = ""
+	ipoptf2 = ""
 	if platform.architecture()[0] == "64bit":
 		pyarch = ".amd64"
 		inst64 = 1
 	if env['IPOPT_DLL']:
-		#print "IPOPT_DLL =", os.path.normcase(env.subst('$IPOPT_DLL'))
-		ipoptdllline = "File %s"%os.path.normcase(os.path.normpath(env.subst('$IPOPT_DLL')))
+		ipoptf1 = "File %s"%os.path.normcase(os.path.normpath(env.subst("$IPOPT_DLL")))
+	if env['IPOPT_DLL2']:
+		ipoptf2 = "File %s"%os.path.normcase(os.path.normpath(env.subst("$IPOPT_DLL2")))
 	env.Append(NSISDEFINES={
 		'OUTFILE':"#dist/$WIN_INSTALLER_NAME"
 		,"VERSION":version
 		,'PYVERSION':pyversion
-		,'IPOPTDLL_LINE':ipoptdllline
+		,'IPOPTDLL_LINE':ipoptf1
+		,'IPOPTDLL_LINE2':ipoptf2
 		,'PYARCH':pyarch
 		,'INST64':inst64
 	})
 	installer = env.Installer('nsis/installer.nsi')
 	env.Depends(installer,["pygtk","ascxx","tcltk","ascend.dll","models","solvers","ascend-config",'pygtk/ascend'])
 	if env['IPOPT_DLL']:
-		env.Depends(installer,[os.path.normpath(env['IPOPT_DLL'])])
+		env.Depends(installer,env['IPOPT_DLL'])
 		env.Depends(installer,"doc/book.pdf")
 		env.Depends(installer,["nsis/detect.nsi","nsis/dependencies.nsi","nsis/download.nsi"])
 	env.Alias('installer',installer)
