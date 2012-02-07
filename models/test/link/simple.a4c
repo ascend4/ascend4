@@ -12,6 +12,20 @@ METHOD on_load;
 END on_load;
 END simple_ok1;
 
+MODEL simple_ok2;
+	y IS_A solver_var;
+	dy_dt IS_A solver_var;
+	t IS_A solver_var;
+	dy_dt = -4 * y;
+	INDEPENDENT t;
+	DER(dy_dt,y);
+METHODS
+METHOD on_load;
+	(* nothing *)
+END on_load;
+END simple_ok2;
+
+
 (* missing INDEPENDENT *)
 MODEL simple_fail1;
 	y IS_A solver_var;

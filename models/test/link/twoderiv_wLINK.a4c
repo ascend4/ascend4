@@ -1,0 +1,67 @@
+REQUIRE "ivpsystem.a4l";
+
+
+MODEL twoderiv_wLINK;
+	y IS_A solver_var;	dy_dt IS_A solver_var;
+	x IS_A solver_var;	dx_dt IS_A solver_var;
+	t IS_A solver_var;  
+
+	dy_dt = -x;
+	dx_dt = -y;
+METHODS
+	METHOD specify;
+		(* nothing yet *)
+	END specify;
+	METHOD on_load;
+		RUN specify;
+		DER(dy_dt,y);
+		DER(dx_dt,x);
+		INDEPENDENT t;
+	END on_load;
+END twoderiv_wLINK;
+
+
+(* different independent variables for derivative chains *)
+MODEL twoderiv_wLINK_fail1;
+	y IS_A solver_var;	dy_dt IS_A solver_var;
+	x IS_A solver_var;	dx_dt IS_A solver_var;
+	t IS_A solver_var;
+	t2 IS_A  solver_var;
+
+	dy_dt = -x;
+	dx_dt = -y;
+METHODS
+	METHOD specify;
+		(* nothing yet *)
+	END specify;
+	METHOD on_load;
+		RUN specify;
+		DER(dy_dt,y);
+		DER(dx_dt,x);
+		INDEPENDENT t;
+		INDEPENDENT t2;
+	END on_load;
+END twoderiv_wLINK;
+
+(* no independent variable declared *)
+MODEL twoderiv_wLINK_fail2;
+	y IS_A solver_var;	dy_dt IS_A solver_var;
+	x IS_A solver_var;	dx_dt IS_A solver_var;
+	t IS_A solver_var;
+	t2 IS_A  solver_var;
+
+	dy_dt = -x;
+	dx_dt = -y;
+METHODS
+	METHOD specify;
+		(* nothing yet *)
+	END specify;
+	METHOD on_load;
+		RUN specify;
+		DER(dy_dt,y);
+		DER(dx_dt,x);
+	END on_load;
+END twoderiv_wLINK;
+
+
+

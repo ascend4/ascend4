@@ -2705,7 +2705,7 @@ test_env.Append(
 )
 
 if with_cunit:
-	testdirs = ['general','solver','utilities','linear','compiler','packages','integrator']
+	testdirs = ['general','solver','utilities','linear','compiler','system','packages','integrator']
 	testsrcs = []
 	for testdir in testdirs:
 		path = 'ascend/'+testdir+'/test/'

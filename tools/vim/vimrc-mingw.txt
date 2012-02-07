@@ -1,0 +1,8 @@
+au BufRead,BufNewFile *.a4c set syntax=ascend
+au BufRead,BufNewFile *.a4l set syntax=ascend
+let &t_Co=8
+let &t_AF="\e[3%dm"
+let &t_AB="\e[4%dm"
+set bg=dark
+syntax on
+

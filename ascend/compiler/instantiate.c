@@ -4711,54 +4711,48 @@ int ExecuteAA(struct Instance *inst, struct Statement *statement)
 
 
 static
-int ExecuteLNK(struct Instance *inst, struct Statement *statement)
-{
-
-  struct TypeDescription *def_inst;
-  enum find_errors err;
-  struct gl_list_t *instances;
-  symchar *key;
+int ExecuteLNK(struct Instance *inst, struct Statement *statement){
+	struct TypeDescription *def_inst;
+	enum find_errors err;
+	struct gl_list_t *instances;
+	symchar *key;
 
 	asc_assert(StatementType(statement)==LNK);
 
-  def_inst = InstanceTypeDesc(inst);
-  instances = FindInsts(inst,LINKStatVlist(statement),&err);
-  key = LINKStatKey(statement);
+	def_inst = InstanceTypeDesc(inst);
+	instances = FindInsts(inst,LINKStatVlist(statement),&err);
+	key = LINKStatKey(statement);
 
-  if((instances != NULL) && (key != NULL)){
-
+	if((instances != NULL) && (key != NULL)){
 		switch (def_inst->t) {
-			case model_type:
-				printf("DS: Execute declarative LINK here \n");
-				if(statement->v.lnk.key_type == 2) {/* in case the LINK entry has the 'ignore' key */
-					printf("DS: Execute declarative LINK herea asd \n");
-					ignoreDeclLinkEntry(inst,key,LINKStatVlist(statement));
-				}
-				else {
-					addLinkEntry(inst,key,instances,statement,1);
-				}
-			  return 1;
-		  default:
-        STATEMENT_ERROR(statement, "LINK is not called by a model");
-			  return 1;
+		case model_type:
+			if(statement->v.lnk.key_type == 2) {/* in case the LINK entry has the 'ignore' key */
+				CONSOLE_DEBUG("Ignore declarative link");
+				ignoreDeclLinkEntry(inst,key,LINKStatVlist(statement));
+			}else{
+				CONSOLE_DEBUG("Adding declarative link");
+				addLinkEntry(inst,key,instances,statement,1);
+			}
+			return 1;
+		default:
+			STATEMENT_ERROR(statement, "LINK is not called by a model");
+			return 1;
 		}
-  }
-  else if(key == NULL){
-      STATEMENT_ERROR(statement, "declarative LINK contains impossible key");
-      return 1;
-  }
-  else{
+	}else if(key == NULL){
+		STATEMENT_ERROR(statement, "declarative LINK contains impossible key");
+		return 1;
+	}else{
 		switch(err){
-	    case impossible_instance:
-	      MissingInsts(inst,LINKStatVlist(statement),1);
-	      STATEMENT_ERROR(statement, "LINK contains impossible instance");
-	      return 1;
-	    default:
-	      MissingInsts(inst,LINKStatVlist(statement),0);
-	      WriteUnexecutedMessage(ASCERR,statement, "Could not execute LINK");
-	      return 0;
-    }
-  }
+		case impossible_instance:
+			MissingInsts(inst,LINKStatVlist(statement),1);
+			STATEMENT_ERROR(statement, "LINK contains impossible instance");
+			return 1;
+		default:
+			MissingInsts(inst,LINKStatVlist(statement),0);
+			WriteUnexecutedMessage(ASCERR,statement, "Could not execute LINK");
+			return 0;
+		}
+	}
 }
 /*------------------------------------------------------------------------------
 	RELATION PROCESSING

@@ -1,6 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2005 Jerry St.Clair
-	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 2012 John Pye
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -18,20 +17,22 @@
 	Boston, MA 02111-1307, USA.
 */
 
-/**
-	Contains the FilePath to Test directory which can later be used to locate files in the
-	ASCEND Directory in test-suites
-	FIXME Any other better means than a global variable?
-*/
+#include <test/common.h>
+#include <ascend/general/platform.h>
 
+#define SUITE system
 
-#ifndef ASC_TEST_GLOBALS
-#define ASC_TEST_GLOBALS
+#define TESTS(T) \
+	T(link)
 
-/* for PATH_MAX defn */
-#include <ascend/general/ospath.h>
+#define PROTO_TEST(NAME) PROTO(SUITE,NAME)
+TESTS(PROTO_TEST)
+#undef PROTO_TEST
 
-/* GLOBAL Variable to the Test Directory maintained by test/test.c */
-char ASC_TEST_PATH[PATH_MAX];
+#define REGISTER_TEST(NAME) \
+	result = TESTREGISTER(system,NAME); \
+	if(CUE_SUCCESS!=result){ \
+		return result; \
+	}
 
-#endif
+REGISTER_SUITE(system,TESTS)
