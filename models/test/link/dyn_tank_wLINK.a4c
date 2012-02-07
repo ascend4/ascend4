@@ -1,0 +1,133 @@
+REQUIRE "ivpsystem.a4l"; (* provides a modified version of system.a4l for IVP problems *)
+REQUIRE "atoms.a4l";
+
+(*  ASCEND modelling environment
+	Copyright (C) 1998, 2006  Carnegie Mellon University
+
+	The ASCEND Modeling Library is free software; you can redistribute
+	it and/or modify it under the terms of the GNU General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later version.
+
+	The ASCEND Modeling Library is distributed in hope that it will
+	be useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+	See the GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with the program; if not, write to the Free Software
+	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the
+	file named COPYING.
+*)(*
+	by Duncan Coffey
+	This model gives a pretty trivial example of integration using LSODE.
+*)
+
+MODEL dyn_tank;
+    (* List of Variables *)
+    dM_dt IS_A molar_rate;
+    M IS_A mole;
+    input IS_A molar_rate;
+    output IS_A molar_rate;
+    Volume IS_A volume;
+    density IS_A real_constant;
+    dynamic IS_A boolean;
+    t IS_A time;
+
+    (* Equations *)
+    dM_dt = input - output;
+    M = Volume * density;
+
+    (* Assignment of values to Constants *)
+    density :==10 {mol/m^3};
+
+		(* Creating an ode sequence in the declarative part using the DER syntax *)		
+		(*LINK('ode',dM_dt,M); (*this syntax is also possible*) *)
+		INDEPENDENT t;
+		DER(dM_dt,M);
+
+METHODS
+METHOD check_self;
+	IF (input < 1e-4 {mole/s}) THEN
+	    STOP {Input dried up in tank};
+	END IF;
+	IF (output < 1e-4 {mole/s}) THEN
+	    STOP {Output dried up in tank};
+	END IF;
+END check_self;
+
+METHOD check_all;
+	RUN check_self;
+    END check_all;
+
+    METHOD default_self;
+	dynamic := FALSE;
+	t :=0 {sec};
+	dM_dt :=0 {mol/sec};
+	dM_dt.lower_bound := -1e49 {mol/sec};
+	input := 1 {mol/sec};
+	output := 1 {mol/sec};
+END default_self;
+
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+METHOD bound_self;
+END bound_self;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD scale_self;
+END scale_self;
+
+METHOD scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD seqmod;
+	FIX dM_dt;
+	FREE M;
+	FIX Volume;
+	FIX input;
+	FREE output;
+	IF dynamic THEN
+	    FREE dM_dt;
+	    FIX M;
+	    FREE Volume;
+	    FIX output;
+	END IF;
+END seqmod;
+
+METHOD specify;
+	FIX input;
+	RUN seqmod;
+END specify;
+
+
+METHOD set_obs;
+	(* Set OBS_ID to any integer value greater
+	   than 0, the variable will be recorded
+	   (i.e., observed) *)
+	M.obs_id :=1;
+	Volume.obs_id :=2;
+	input.obs_id :=3;
+	output.obs_id :=4;
+END set_obs;
+
+METHOD values;
+	Volume :=5 {m^3};
+	input :=100 {mole/s};
+END values;
+
+METHOD on_load;
+	RUN default_self;
+	dynamic := TRUE;
+	RUN reset;
+	RUN specify;
+	RUN set_obs;
+END on_load;
+
+END dyn_tank;

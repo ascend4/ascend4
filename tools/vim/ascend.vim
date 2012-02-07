@@ -10,7 +10,7 @@
 " * In your .vimrc, add these lines:
 "     au BufRead,BufNewFile *.a4c set syntax=ascend
 "     au BufRead,BufNewFile *.a4l set syntax=ascend
-" Thereafter, any .des files you edit in (g)vim will use syntax highlighting.
+" Thereafter, any .a4c or a4l you edit in (g)vim will use syntax highlighting.
 
 " Quit when syntax hilighting already loaded
 if exists("b:current_syntax")

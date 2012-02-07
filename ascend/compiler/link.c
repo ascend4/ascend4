@@ -53,7 +53,7 @@
 
 
 /**< DS: beginning of LINK functions *******/
-/* implemented functions related to the LINK statements, probably they shouldn't be here*/ 
+/* implemented functions related to the LINK statements, probably they shouldn't be here*/
 
 /**
 	Find instances: Make sure at least one thing is found for each name item
@@ -111,9 +111,9 @@ static struct gl_list_t *FindInsts(
 	@return 0 if the tuple (key, instances) is the same as the link entry,
 	otherwise return 1.
  */
-static int CmpLinkEntry(symchar *key, struct VariableList *vlist,struct link_entry_t *linkEntry){	
+static int CmpLinkEntry(symchar *key, struct VariableList *vlist,struct link_entry_t *linkEntry){
 	/* DS: Note: the key_cache and the u.vl were used instead of
-	LINKStatKey(linkEntry->u.statptr) and LINKStatVlist(linkEntry->u.statptr), 
+	LINKStatKey(linkEntry->u.statptr) and LINKStatVlist(linkEntry->u.statptr),
 	because for some reason the pointer to the statement becomes NULL after the
 	statement is executed */
 
@@ -123,7 +123,7 @@ static int CmpLinkEntry(symchar *key, struct VariableList *vlist,struct link_ent
 		/* if the keys are different, the LINKs are different */
 		return 1;
 	}
-	
+
 	linkEntry_vlist = linkEntry->u.vl;
 	if(VariableListLength(vlist) != VariableListLength(linkEntry_vlist)) {
 		/* if the number of variables linked are different, the LINKs are different */
@@ -144,7 +144,7 @@ void CollectLinkTypes(struct Instance *model, struct gl_list_t *result)
 	struct link_entry_t *link_entry;
 	symchar *key, *key_result;
 	int c1, c2, len_table, len_result, existent;
-		
+
 	modelType = InstanceTypeDesc(model);
 	if(modelType->t == model_type) {
 
@@ -165,7 +165,7 @@ void CollectLinkTypes(struct Instance *model, struct gl_list_t *result)
 			for(c2=1;c2<=len_result;c2++){
 				key_result = (symchar *)gl_fetch(result,c2);
 				if(CmpSymchar(key,key_result) == 0){
-					existent = 1;	
+					existent = 1;
 				}
 			}
 			if(!existent){
@@ -190,23 +190,23 @@ void CollectLinkTypes(struct Instance *model, struct gl_list_t *result)
 			for(c2=1;c2<=len_result;c2++){
 				key_result = (symchar *)gl_fetch(result,c2);
 				if(CmpSymchar(key,key_result) == 0){
-					existent = 1;	
+					existent = 1;
 				}
 			}
 			if(!existent){
 					gl_append_ptr(result,(VOIDPTR)key);
 			}
 		}
-	}	
-	/*DS:If the instance or the child instance is not a model we do nothing 
+	}
+	/*DS:If the instance or the child instance is not a model we do nothing
 	since a "link_table" is only present in the typedescription of a model (modarg) */
 }
 
 
 /** find all the keys in link table(s), optionally recursive. */
-extern struct gl_list_t *getLinkTypes (struct Instance *model, int recursive){	
-	struct gl_list_t *result = gl_create(AVG_LINKS); 
-	
+extern struct gl_list_t *getLinkTypes (struct Instance *model, int recursive){
+	struct gl_list_t *result = gl_create(AVG_LINKS);
+
 	if (recursive) {
 		VisitInstanceTreeTwo(model, (VisitTwoProc)CollectLinkTypes, 0,0, result);
 	}else{
@@ -236,14 +236,14 @@ void CollectLinks(struct Instance *model, struct gl_list_t *result){
 			for(c2=1;c2<=len_result;c2++){
 				link_entry_result = (struct link_entry_t *)gl_fetch(result,c2);
 				if(CmpLinkEntry(link_entry->key_cache,link_entry->u.vl,link_entry_result) == 0){
-					existent = 1;	
+					existent = 1;
 				}
 			}
 			if(!existent){
 				gl_append_ptr(result,(VOIDPTR)link_entry);
 			}
 		}
-		
+
 		/* probe instance given (if appropriate kind) to get link info needed
 		from the ModelInstance link_table */
 		len_table = gl_length(MOD_INST(model)->link_table);
@@ -252,19 +252,19 @@ void CollectLinks(struct Instance *model, struct gl_list_t *result){
 			existent = 0;
 			// verify if the LINK is unique in the result list
 			len_result = gl_length(result);
-			
+
 			for(c2=1;c2<=len_result;c2++){
 				link_entry_result = (struct link_entry_t *)gl_fetch(result,c2);
 				if(CmpLinkEntry(link_entry->key_cache,link_entry->u.vl,link_entry_result) == 0){
-					existent = 1;	
+					existent = 1;
 				}
 			}
-			if(!existent){ 
+			if(!existent){
 				gl_append_ptr(result,(VOIDPTR)link_entry);
 			}
 		}
-	}	
-	/*DS:If the instance or the child instance is not a model we do nothing since 
+	}
+	/*DS:If the instance or the child instance is not a model we do nothing since
 	a "link_table" is only present in the typedescription of a model (modarg) */
 }
 
@@ -272,7 +272,7 @@ void CollectLinks(struct Instance *model, struct gl_list_t *result){
 extern struct gl_list_t *getLinks(struct Instance *model
 	, symchar *target_key, int recursive
 ){
-	struct gl_list_t *result = gl_create(AVG_LINKS); /**< DS: hardcoded for now but will eventually be a constant */ 
+	struct gl_list_t *result = gl_create(AVG_LINKS); /**< DS: hardcoded for now but will eventually be a constant */
 	int c1, len_result;
 	struct link_entry_t *link_entry;
 
@@ -281,9 +281,9 @@ extern struct gl_list_t *getLinks(struct Instance *model
 	}else{
 		CollectLinks(model, result);
 	}
-	
+
 	len_result = gl_length(result);
-	
+
 	for(c1=1;c1<=len_result;c1++) {
 		link_entry = (struct link_entry_t *)gl_fetch(result,c1);
 		if(CmpSymchar(link_entry->key_cache,target_key) !=0 ){
@@ -320,7 +320,7 @@ extern struct gl_list_t *getLinksReferencing (struct Instance *model
 		}else{
 			link_instances = link_entry->instances_cache;
 		}
-		
+
 		len_inst = gl_length(link_instances);
 		containsInst = 0;
 		if(CmpSymchar(link_entry->key_cache,key) == 0){
@@ -355,12 +355,12 @@ extern void addLinkEntry(struct Instance *model, symchar *key
 
 	/* in case the LINK key is in fact the index of a for loop, the value of the
 	index at the current iteration is turned into a symchar and stored as a key*/
-	if(GetEvaluationForTable() && (ptr = FindForVar((struct gl_list_t *)GetEvaluationForTable(),key)) != NULL) { 
+	if(GetEvaluationForTable() && (ptr = FindForVar((struct gl_list_t *)GetEvaluationForTable(),key)) != NULL) {
 		char index_key[10];
 		sprintf(index_key,"%ld",GetForInteger(ptr));
 		key = AddSymbol(index_key);
 	}
-	
+
 	if(declarative == 0) {
 		/* we first check if the LINK we are about to add isn't already present in the declartive LINK table */
 		len = gl_length(MOD_INST(model)->link_table);
@@ -370,22 +370,22 @@ extern void addLinkEntry(struct Instance *model, symchar *key
 				exist = 1;
 			}
 		}
-		
+
 		if(!exist){
 
 			link_entry = (struct link_entry_t *)ascmalloc(sizeof(struct link_entry_t));
 			link_entry->key_cache = key;
-		  link_entry->u.statptr = stat; 	
+		  link_entry->u.statptr = stat;
 			link_entry->link_type = stat->v.lnk.key_type;
-			link_entry->u.vl = LINKStatVlist(stat);	
+			link_entry->u.vl = LINKStatVlist(stat);
 			link_entry->instances_cache = instances;
 			link_entry->flags = 1;
-		  link_entry->length = gl_length(instances); 
+		  link_entry->length = gl_length(instances);
 
 			/**< DS: in case the link entry is non-declartive, it is appended to the linktable in the model instance */
-			gl_append_ptr(MOD_INST(model)->link_table,(VOIDPTR)link_entry);	
-			printf("\n non-declarative LINK no of instances in cache: %ld \n", gl_length(link_entry->instances_cache));
-			printf("\n non-declarative LINK key %s \n", SCP(key));
+			gl_append_ptr(MOD_INST(model)->link_table,(VOIDPTR)link_entry);
+			CONSOLE_DEBUG("procedural LINK no of instances in cache: %ld", gl_length(link_entry->instances_cache));
+			CONSOLE_DEBUG("procedural LINK key '%s'", SCP(key));
 		}else{
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"The LINK entry to-be added is already present in the non-declarative LINK table.");
 		}
@@ -406,19 +406,19 @@ extern void addLinkEntry(struct Instance *model, symchar *key
 			if(!exist){
 				link_entry = (struct link_entry_t *)ascmalloc(sizeof(struct link_entry_t));
 				link_entry->key_cache = key;
-			  link_entry->u.statptr = stat; 	
+			  link_entry->u.statptr = stat;
 				link_entry->link_type = stat->v.lnk.key_type;
-				link_entry->u.vl = LINKStatVlist(stat);	
+				link_entry->u.vl = LINKStatVlist(stat);
 				link_entry->instances_cache = instances;
 				link_entry->flags = 1;
-			  link_entry->length = gl_length(instances); 
-	
+			  link_entry->length = gl_length(instances);
+
 				/**< DS: in case the link entry is declarative, it is appeneded to the linktable in the model type description */
-				gl_append_ptr(modelType->u.modarg.link_table,(VOIDPTR)link_entry); 
-			
+				gl_append_ptr(modelType->u.modarg.link_table,(VOIDPTR)link_entry);
+
 				/* DS: testing purposes: */
-				printf("\n declarative LINK no of instances in cache: %ld \n", gl_length(link_entry->instances_cache));
-				printf("\n declarative LINK key %s \n", SCP(key));		
+				CONSOLE_DEBUG("declarative LINK no of instances in cache: %ld", gl_length(link_entry->instances_cache));
+				CONSOLE_DEBUG("declarative LINK key %s", SCP(key));
 			}else{
 			 	ERROR_REPORTER_HERE(ASC_USER_WARNING,"The LINK entry to-be added is already present in the declarative LINK table.");
 			}
@@ -447,7 +447,7 @@ extern void ignoreDeclLinkEntry(struct Instance *model
 		}
 	}
 	len = gl_length(modelType->u.modarg.link_table);
-	printf("\n new declarative link_table size %d\n",len); 
+	printf("\n new declarative link_table size %d\n",len);
 
 	if(!exist){
 	   ERROR_REPORTER_HERE(ASC_USER_ERROR,"The LINK entry to-be ignored does not exist.");
@@ -472,7 +472,7 @@ extern void removeLinkEntry(struct Instance *model
 
 	/* in case the LINK key is in fact the index of a for loop, the value of
 	the index at the current iteration is turned into a symchar and stored as a key*/
-	if(GetEvaluationForTable() && (ptr = FindForVar((struct gl_list_t *)GetEvaluationForTable(),key)) != NULL) { 
+	if(GetEvaluationForTable() && (ptr = FindForVar((struct gl_list_t *)GetEvaluationForTable(),key)) != NULL) {
 		char index_key[10];
 		sprintf(index_key,"%ld",GetForInteger(ptr));
 		key = AddSymbol(index_key);
@@ -497,7 +497,7 @@ extern void removeLinkEntry(struct Instance *model
 	if(!exist){
 	   ERROR_REPORTER_HERE(ASC_USER_ERROR,"The LINK entry to-be removed does not exist.");
 	}
-} 
+}
 
 
 /** DS: (current Implementation) check if the the non-declarative link table contains any of the instances in the list under the given key, if so remove them from the entries */
@@ -514,7 +514,7 @@ extern void removeNonDeclarativeLinkEntry(struct Instance *model
 	}else{
 		CollectLinks(model, result);
 	}
-	
+
 	printf("\n execute removeNonDeclarativeLinkEntry \n");
 	len =  gl_length(MOD_INST(model)->link_table);
 	printf("\n non-declarative link_table size: %d\n",len);
@@ -529,18 +529,18 @@ extern void removeNonDeclarativeLinkEntry(struct Instance *model
 			c++;
 		}
 	}
-	
+
 	len = gl_length(MOD_INST(model)->link_table);
 	printf("\n non-declarative link_table size: %d\n",len);
-} 
+}
 
 
 const struct gl_list_t *getLinkInstances(struct Instance *inst
 	, struct link_entry_t *link_entry,int status
 ){
-	struct gl_list_t *result = gl_create(AVG_LINKS_INST); 
+	struct gl_list_t *result = gl_create(AVG_LINKS_INST);
 	enum find_errors err;
-	
+
 	result = FindInstsNonFlat(inst,link_entry->u.vl,&err);
 
 	if (result==NULL) {
@@ -558,7 +558,7 @@ const struct gl_list_t *getLinkInstances(struct Instance *inst
 const struct gl_list_t *getLinkInstancesFlat(struct Instance *inst
 	, struct link_entry_t *link_entry,int status
 ){
-	struct gl_list_t *result = gl_create(AVG_LINKS_INST); 
+	struct gl_list_t *result = gl_create(AVG_LINKS_INST);
 	enum find_errors err;
 	if(link_entry->instances_cache == NULL) {
 		result = FindInsts(inst,link_entry->u.vl,&err);
@@ -614,7 +614,7 @@ extern int isDeclarative(struct Instance* model, struct link_entry_t *target_lin
 	/* DS: get all the links that contain the target instance from the declarative part (i.e. stored in the model TypeDescription) */
 	modelType = InstanceTypeDesc(model);
 	len = gl_length(modelType->u.modarg.link_table);
-	
+
 	for(c=1;c<=len;c++){
 		link_entry = (struct link_entry_t *)gl_fetch(modelType->u.modarg.link_table,c);
 		if(CmpLinkEntry(target_link_entry->key_cache,target_link_entry->u.vl,link_entry) == 0) {
@@ -778,7 +778,7 @@ void TestingRoutine(struct Instance *model)
 	struct TypeDescription *modelType;
 	modelType = InstanceTypeDesc(model);
 	int c1, len1, len2;
-	
+
 	/* test getLinkTypes */
 	struct gl_list_t *linkTypes;
 	symchar *keyc1;
@@ -799,12 +799,12 @@ void TestingRoutine(struct Instance *model)
 	links = getLinks(model,keyc1,0);
 	len2 = gl_length(links);
 	CONSOLE_DEBUG("\n number of links with key %s is: %d \n",SCP(keyc1),len2);
-	
+
 	/* just a test for comparing two instances pointer-wise */
-	/*	
+	/*
 	struct Instance *i11,*i22;
 	struct link_entry_t *lnk1,lnk2;
-	
+
 	lnk1 = (struct link_entry_t *)gl_fetch(modelType->u.modarg.link_table,1);
 	lnk2 = (struct link_entry_t *)gl_fetch(MOD_INST(model)->link_table,1);
 	i11 = (struct Instance *)gl_fetch(lnk1->instances_cache,2);
@@ -813,8 +813,8 @@ void TestingRoutine(struct Instance *model)
 		printf("\n are equal \n");
 	} */
 
-	/* test getLinksReferencing */	
-	lnk	= (struct link_entry_t *)gl_fetch(MOD_INST(model)->link_table,1); 
+	/* test getLinksReferencing */
+	lnk	= (struct link_entry_t *)gl_fetch(MOD_INST(model)->link_table,1);
 		/* take the first link from all the non-declarative and declarative LINK Tables, just for testing */
 	populateLinkCache(model);
 	i1= (struct Instance *)gl_fetch(lnk->instances_cache,1);
@@ -827,7 +827,7 @@ void TestingRoutine(struct Instance *model)
 	/* test getLinkInstancesFlat */
 
 	/* test isDeclarative */
-	modelType = InstanceTypeDesc(model);	
+	modelType = InstanceTypeDesc(model);
 	CONSOLE_DEBUG("\n the link should be declarative %d\n"
 		,isDeclarative(model,(struct link_entry_t *)gl_fetch(modelType->u.modarg.link_table,1))
 	);

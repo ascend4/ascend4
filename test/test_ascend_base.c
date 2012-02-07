@@ -30,6 +30,7 @@
 #include <ascend/solver/test/test_register_solver.h>
 #include <ascend/compiler/test/test_register_compiler.h>
 #include <ascend/linear/test/test_register_linear.h>
+#include <ascend/system/test/test_register_system.h>
 #include <ascend/packages/test/test_register_packages.h>
 #include <ascend/integrator/test/test_register_integrator.h>
 
@@ -39,6 +40,7 @@ int register_cunit_tests(){
 	test_register_solver();
  	test_register_linear();
 	test_register_compiler();
+	test_register_system();
 	test_register_packages();
 	test_register_integrator();
 	fprintf(stderr,"Registered ASCEND test suites\n");

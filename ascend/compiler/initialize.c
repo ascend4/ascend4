@@ -1628,7 +1628,7 @@ void ExecuteInitAsgn(struct procFrame *fm, struct Statement *stat)
 }
 
 /**
-	
+
 	DS: Find instances: Make sure at least one thing is found for each name item
 	on list (else returned list will be NULL) and return the collected instances.
 */
@@ -1658,63 +1658,55 @@ struct gl_list_t *FindInsts(struct Instance *inst,
 
 
 /*DS : Implement Non-declarative LINK statement here*/
-static
-void ExecuteInitLnk(struct procFrame *fm, struct Statement *stat)
-{
-  printf("\nDS: ExecuteInitLnk called\n");
-  enum find_errors err;
-  struct gl_list_t *instances;
-  symchar *key;
+static void ExecuteInitLnk(struct procFrame *fm, struct Statement *stat){
+	//printf("\nDS: ExecuteInitLnk called\n");
+	enum find_errors err;
+	struct gl_list_t *instances;
+	symchar *key;
 
-  instances = FindInsts(fm->i,LINKStatVlist(stat),&err);
-  key = LINKStatKey(stat);
+	instances = FindInsts(fm->i,LINKStatVlist(stat),&err);
+	key = LINKStatKey(stat);
 
-  printf("\n number %lu \n",VariableListLength(LINKStatVlist(stat)));
-  if((instances != NULL) && (key != NULL)){
-	switch(InstanceKind(fm->i)) {
+	CONSOLE_DEBUG("LINKStatVlist(stat) contains %lu",VariableListLength(LINKStatVlist(stat)));
+	if((instances != NULL) && (key != NULL)){
+		switch(InstanceKind(fm->i)) {
 		case MODEL_INST:
-  			printf("DS: Execute non-declarative LINK here \n");      
+			CONSOLE_DEBUG("Adding procedural link");
 			addLinkEntry(fm->i,key,instances,stat,0);
 			break;
 		default:
-        	STATEMENT_ERROR(stat, "LINK is not called by a model");
+			STATEMENT_ERROR(stat, "LINK is not called by a model");
 			break;
+		}
+	}else if(key == NULL){
+		STATEMENT_ERROR(stat, "Procedural LINK contains impossible key");
 	}
-  }
-  else if(key == NULL){
-      STATEMENT_ERROR(stat, "non-declarative LINK contains impossible key");
-  }
 }
 
 
 /*DS : Implement UNLINK statement here (Non-declarative only) */
-static
-void ExecuteInitUnlnk(struct procFrame *fm, struct Statement *stat)
-{
-  printf("\nDS: ExecuteInitUnlnk called\n");
-  enum find_errors err;
-  struct gl_list_t *instances;
-  symchar *key;
+static void ExecuteInitUnlnk(struct procFrame *fm, struct Statement *stat){
+	enum find_errors err;
+	struct gl_list_t *instances;
+	symchar *key;
 
-  instances = FindInstances(fm->i,stat->v.lnk.vl->nptr,&err);
-  key = LINKStatKey(stat);
+	instances = FindInstances(fm->i,stat->v.lnk.vl->nptr,&err);
+	key = LINKStatKey(stat);
 
-  if((instances != NULL) && (key != NULL)){
-	switch(InstanceKind(fm->i)) {
+	if((instances != NULL) && (key != NULL)){
+		switch(InstanceKind(fm->i)) {
 		case MODEL_INST:
-  			printf("DS: Execute UNLINK here \n");      
+			printf("Procedural UNLINK...");
 			removeLinkEntry(fm->i,key,LINKStatVlist(stat));
 			break;
 		default:
-        	STATEMENT_ERROR(stat, "UNLINK is not called by a model");
+			STATEMENT_ERROR(stat, "UNLINK is not called by a model");
 			break;
+		}
+	}else if(key == NULL){
+		STATEMENT_ERROR(stat, "UNLINK contains impossible key");
 	}
-  }
-  else if(key == NULL){
-      STATEMENT_ERROR(stat, "UNLINK contains impossible key");
-  }
 }
-
 
 
 static

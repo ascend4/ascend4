@@ -422,21 +422,21 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
     case ATS:
       break;
     case AA:
-      if (TLINT_STYLE) {
+      if(TLINT_STYLE){
         FPRINTF(fp,"%sType \"%s\" contains AA:\n",
                 StatioLabel(1),SCP(name));
         WriteStatement(fp,s,2);
       }
       break;
-    case LNK: 
-      if (TLINT_STYLE) {
+    case LNK:
+      if(TLINT_STYLE){
         FPRINTF(fp,"%sType \"%s\" contains LNK:\n",
                 StatioLabel(1),SCP(name));
         WriteStatement(fp,s,2);
       }
       break;
-		 case UNLNK: 
-      if (TLINT_STYLE) {
+		 case UNLNK:
+      if(TLINT_STYLE){
         FPRINTF(fp,"%sType \"%s\" contains UNLNK:\n",
                 StatioLabel(1),SCP(name));
         WriteStatement(fp,s,2);
