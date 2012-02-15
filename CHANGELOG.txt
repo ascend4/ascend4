@@ -2,6 +2,7 @@
 -----------
 
 Version 0.9.8
+ - Require SUNDIALS 2.4.0, no support for older versions now.
  - Added new SOLVER, OPTION and SOLVE commands for use in METHODS, see
    http://tinyurl.com/slvreq for full details (john)
  - Added support for viewing ALIASES lists in the PyGTK GUI (john)
