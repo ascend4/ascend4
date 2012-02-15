@@ -32,11 +32,7 @@ SetCompressor /SOLID lzma
 !endif
 
 ; The file to write
-!ifdef OUTFILE
 OutFile ${OUTFILE}
-!else
-OutFile "ascend-${VERSION}-py${PYVERSION}.exe"
-!endif
 
 ; The default installation directory
 !if ${INST64}
