@@ -1,0 +1,272 @@
+REQUIRE "atoms.a4l";
+REQUIRE "solar/solar_types.a4l";
+
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/fprops/helmholtz";
+
+MODEL Qabsorbed;
+
+	Qabs 			IS_A intensity;
+	DNI 			IS_A intensity;
+	THETA 			IS_A angle;
+	THETAz	 		IS_A angle;
+	DEL 			IS_A angle;
+	OMEGA			IS_A angle;
+	n 				IS_A time;
+	Solar_Time		IS_A time;
+	Standard_Time	IS_A time;
+	DST				IS_A time;
+	Lst				IS_A angle;
+	Lloc			IS_A angle;
+	E				IS_A time;
+	B				IS_A angle;
+	PHI				IS_A angle;
+	Iam				IS_A factor;
+	Rs				IS_A factor;
+	Weff			IS_A distance;
+	W				IS_A distance;
+	Lspacing		IS_A distance;
+	ENDLOSS			IS_A factor;
+	F				IS_A distance;
+
+	Lsca			IS_A distance;
+	Nfield			IS_A fraction;
+	Nhce			IS_A fraction;
+	SFAavail		IS_A fraction;
+
+
+	Qabs = DNI * cos(THETA) * Iam * Rs * ENDLOSS * Nfield * Nhce * SFAavail;
+
+	THETA = arccos( (cos(THETAz)^2 + (cos(DEL)^2)*(sin(OMEGA)^2))^0.5);
+	
+	DEL = 23.45 * sin(360*( 284+n )/365);
+	OMEGA = (Solar_Time - 12) * 15 *(3.14/180);
+	Solar_Time = Standard_Time - DST + (Lst - Lloc)/15{deg/hour} + E*(1{hour})/(60{min});
+	E = 229.18{min} * (0.000075 + 0.001868*cos(B) - 0.032077*sin(B) - 0.014615*cos(2*B) - 0.04089*sin(2*B));
+	B = (360/365) * (n-1) * (3.14/180);
+	THETAz = cos(DEL)*cos(PHI)*cos(OMEGA) + sin(DEL)*sin(PHI);
+	
+	Iam = 1 + 8.84e-4 * (THETA/cos(THETA)) - 5.369e-5 * (THETA^2)/cos(THETA);
+	
+	Rs = Weff / W;
+	Rs = (Lspacing/W) * (cos(THETAz)/cos(THETA));
+	
+	ENDLOSS = 1 - F * tan(THETA) / Lsca;
+	
+	
+	UNITS
+	heat_intensity = {watt/m^2};
+	END UNITS;
+	
+
+	METHODS
+		METHOD specify;
+			FIX DNI;
+			FIX n;
+			FIX Lst;
+			FIX Lloc;
+			FIX DST;
+			FIX Standard_Time;
+			FIX Lspacing;
+			FIX W;
+			FIX F;
+
+			FIX Lsca;
+			FIX Nfield;
+			FIX Nhce;
+			FIX SFAavail;
+			FIX PHI;
+		END specify;
+
+
+		METHOD values;
+			DNI := 60 {watt/m^2};
+			n := 31 {day}; (* 31st January *)
+			Lst := -105 {deg};
+			Lloc := -110 {deg};
+			DST := 0 {hour};
+			PHI := 37.21 {deg};
+			Standard_Time := 12 {hour};
+			Lspacing := 15 {m};
+			W := 5 {m};
+			F := 5 {m};
+
+			Lsca := 50 {m};
+			Nfield := 0.857;
+			Nhce := 0.832;
+			SFAavail := 1;
+			
+			(* guesses *)
+			Qabs := 100 {watt/m^2};
+		END values;
+
+
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+		END on_load;
+
+END Qabsorbed;
+
+
+MODEL HeatLossFiels_air(
+	DNI WILL_BE intensity;
+	Ti WILL_BE temperature;
+	To WILL_BE temperature;
+	);
+
+	a0 IS_A solver_var;
+	a1 IS_A solver_var;
+	a2 IS_A solver_var;
+	a3 IS_A solver_var;
+	b0 IS_A solver_var;
+	b1 IS_A solver_var;
+	
+	HLfield IS_A solver_var;
+
+	HLfield * (To-Ti) = (a0*(To-Ti) + (a1/2)*(To^2 - Ti^2) + (a2/3)*(To^3 - Ti^3) + (a3/4)*(To^4 - Ti^4) * DNI*(b0*(To-Ti) + (b1/3)*(To^3 - Ti^3)));
+
+	METHODS	
+		METHOD specify;		
+			FIX a0;
+			FIX a1;
+			FIX a2;
+			FIX a3;
+			FIX b0;
+			FIX b1;
+		END specify;
+	
+		METHOD values;			
+			a0 := -2.247372E+01 {watt/m^2};
+			a1 :=  8.374490E-01 {watt/m^2/K};
+			a2 :=  0.00         {watt/m^2/K^2};
+			a3 :=  4.620143E-06 {watt/m^2/K^3};
+			b0 :=  6.983190E-02	{1};
+			b1 :=  9.312703E-08 {1/K^2};
+		END values;
+END HeatLossFiels_air;
+
+
+
+
+MODEL helmholtz_conf;
+	component IS_A symbol_constant;
+	component :== 'methane';
+END helmholtz_conf;
+
+
+MODEL Qcollected;	
+	DNI IS_A intensity;
+	
+	Ti IS_A temperature;
+	To IS_A temperature;
+	Tambient IS_A temperature;
+	
+	width IS_A distance;	
+	hl IS_A HeatLossFiels_air(DNI, Ti, To);
+	
+	RecHL IS_A intensity;
+	SfHL IS_A intensity;
+	
+	Qcoll IS_A intensity;
+	Qabs IS_A intensity;
+	delT IS_A delta_temperature;
+
+	rho_i IS_A mass_density;
+	hi IS_A specific_enthalpy;
+	ui IS_A specific_energy;
+	pi IS_A pressure;
+	
+	rho_o IS_A mass_density;
+	ho IS_A specific_enthalpy;
+	uo IS_A specific_energy;
+	po IS_A pressure;
+	
+	delHfield IS_A specific_enthalpy;
+	
+	Lsca IS_A distance;
+	Nsca IS_A factor;
+	Vhtf IS_A volume_rate;
+	
+	RecHL * width = 1.0 * hl.HLfield;
+
+	delT * 2 = (To + Ti) - Tambient * 2;
+	SfHL = 0.01693*delT - 0.0001683*(delT^2) + 0.78e-7*(delT^3);
+	
+	Qcoll = Qabs - (RecHL + SfHL);
+
+	delHfield * (Vhtf * rho_i) = Qcoll * width * Lsca * Nsca;
+	delHfield = abs(hi - ho);
+
+	conf IS_A helmholtz_conf;
+
+	rho_i = 1074.0 - 0.6367*(Ti-273.15) - 0.0007762*((Ti-273.15)^2);
+	rho_o = 1074.0 - 0.6367*(To-273.15) - 0.0007762*((To-273.15)^2);
+
+	props1: helmholtz_p(
+		Ti, rho_i : INPUT;
+		pi : OUTPUT;
+		conf : DATA
+	);
+
+	props2: helmholtz_p(
+		To, rho_o : INPUT;
+		po : OUTPUT;
+		conf : DATA
+	);
+
+	props3: helmholtz_u(
+		Ti, rho_i : INPUT;
+		ui : OUTPUT;
+		conf : DATA
+	);
+
+	props4: helmholtz_u(
+		To, rho_o : INPUT;
+		uo : OUTPUT;
+		conf : DATA
+	);
+
+	rho_i*(hi - ui) = pi;
+	rho_o*(ho - uo) = po;
+
+
+	METHODS	
+		METHOD specify;		
+			FIX DNI;
+			FIX Ti;
+			FIX Tambient;
+			FIX Qabs;
+			
+			FIX width;
+			FIX Lsca;
+			FIX Nsca;
+			FIX Vhtf;
+			
+			RUN hl.specify;
+		END specify;
+	
+		METHOD values;
+			DNI := 60 {watt/m^2};
+			Ti := 60{K} + 273.15{K};
+			Tambient := 30{K} + 273.15{K};
+			Qabs := 1000 {watt/m^2};
+
+			width := 5{m};
+			Lsca := 50 {m};
+			Nsca := 256;
+			Vhtf := 400{m^3/hour};
+			
+			RUN hl.values;
+		END values;
+
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+		END on_load;
+
+END Qcollected;
+
+
+
+

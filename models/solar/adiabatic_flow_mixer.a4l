@@ -1,0 +1,209 @@
+REQUIRE "atoms.a4l";
+REQUIRE "solar/solar_types.a4l";
+
+MODEL pipe;
+	(* Variables *)
+	rho IS_A mass_density;
+
+	Ar IS_A area; 					(* Cross-sectional area of pipe *)
+	velocity_in IS_A speed;			(* Inlet velocity *)
+	T_input IS_A temperature; 		(* Temperature of inlet fluid *)
+	mdot_supply IS_A mass_rate;		(* flow rate of supply fluid *) 
+
+	mdot_in IS_A mass_rate;			(* flow rate of inlet fluid *)
+	mdot_out IS_A mass_rate;		(* flow rate of outlet fluid *)
+	velocity_out IS_A speed;		(* outlet velocity *)
+	T_supply IS_A temperature;		(* Temperature of supply fluid *)
+	T_output IS_A temperature;		(* Temperature of outlet fluid *)
+
+
+	(* Equations *)
+	mdot_out = mdot_supply + mdot_in;
+	Ar * velocity_in = mdot_in / rho;
+	Ar * velocity_out = mdot_out / rho;
+	mdot_in * T_input  +  mdot_supply  * T_supply =  mdot_out * T_output;
+
+	METHODS
+		METHOD default_self;
+			rho := 1000 {kg/m^3};	(* For water rho = 1000 kg/m3 .. This is density of water at 4 deg *)
+
+			Ar := 5 {cm^2};
+			velocity_in := 1 {m/s};
+			T_input := 20 {K} + 273.15 {K};
+			mdot_supply := 0.5 {kg/s}; 
+			T_supply := 30 {K} + 273.15 {K};
+
+			IF mdot_supply < 0{kg/s} THEN
+				T_supply := T_input;
+			END IF;
+		END default_self;
+
+		METHOD specify;
+			FIX Ar;
+			FIX mdot_supply;
+			FIX T_supply;
+		END specify;
+
+		METHOD self_test;
+		END self_test;
+
+		METHOD on_load;
+			FIX rho;
+			RUN specify;
+			RUN default_self;
+		END on_load;
+END pipe;
+
+
+MODEL PipeSet;
+	N_PIPES IS_A integer_constant; 	(* Number of pipes in a set *)
+	pipes[1..N_PIPES] IS_A pipe;	(* Array of pipes *)
+
+	METHODS
+		METHOD specify;
+			FOR i IN [1..N_PIPES] DO
+				RUN pipes[i].specify;
+			END FOR;
+		END specify;
+		
+		METHOD default_self;
+			FOR i IN [1..N_PIPES] DO
+				RUN pipes[i].default_self;
+			END FOR;
+		END default_self;
+END PipeSet;
+
+
+(* A Node is Junction between two rows, one row is connected with the next one by a node *)
+MODEL Node;
+	input_pipeset IS_A PipeSet;
+	output_pipeset IS_A PipeSet;
+
+	mdot_total IS_A mass_rate;		(* Total flowrate of pipes from input_pipeset *)
+	total_A IS_A area;				(* Total cross-sectional area of pipes from output_pipeset *)
+
+	T_in_nextrow IS_A temperature;	(* T_input for pipes from input_pipeset *)
+
+	mdot_total = SUM[ input_pipeset.pipes[i].mdot_out | i IN [1..input_pipeset.N_PIPES] ];
+	total_A = SUM[ output_pipeset.pipes[i].Ar | i IN [1..output_pipeset.N_PIPES] ];
+
+	T_in_nextrow * mdot_total = SUM[ input_pipeset.pipes[i].T_output * input_pipeset.pipes[i].mdot_out | i IN [1..input_pipeset.N_PIPES] ];
+
+	FOR i IN [1..output_pipeset.N_PIPES] CREATE
+		output_pipeset.pipes[i].mdot_in * total_A = mdot_total * output_pipeset.pipes[i].Ar;
+		output_pipeset.pipes[i].T_input = T_in_nextrow;
+	END FOR;
+	
+END Node; 
+
+
+MODEL AdiabaticFlowMixer;
+
+	rho IS_A mass_density;				(* Mass demsity of fluid *)
+
+	N_PIPESETS IS_A integer_constant;	(* Number of pipesets in the mixer, also equals (number of nides - 1) *)
+	
+	list_nodes [1..N_PIPESETS-1] IS_A Node;
+	pipesets [1..N_PIPESETS] IS_A PipeSet;
+
+
+	FOR i IN [1..N_PIPESETS] CREATE
+		rho, pipesets[i].pipes[1..pipesets[i].N_PIPES].rho ARE_THE_SAME;
+	END FOR;
+
+	pipesets[1], list_nodes[1].input_pipeset ARE_THE_SAME;
+	FOR i IN [1..N_PIPESETS-2] CREATE
+		pipesets[i+1], list_nodes[i].output_pipeset, list_nodes[i+1].input_pipeset ARE_THE_SAME;
+	END FOR;
+	pipesets[N_PIPESETS], list_nodes[N_PIPESETS-1].output_pipeset ARE_THE_SAME;
+
+	METHODS
+		METHOD specify;	
+			FIX rho;
+			FOR i IN [1..N_PIPESETS] DO
+				RUN pipesets[i].specify;
+			END FOR;
+
+			FIX pipesets[1].pipes[1..pipesets[1].N_PIPES].velocity_in;
+			FIX pipesets[1].pipes[1..pipesets[1].N_PIPES].T_input;
+		END specify;
+
+		METHOD default_self;
+			rho := 1000 {kg/m^3};
+			FOR i IN [1..N_PIPESETS] DO
+				RUN pipesets[i].default_self;
+			END FOR;
+		END default_self;
+END AdiabaticFlowMixer;
+
+
+MODEL example_AdiabaticFlowMixer REFINES AdiabaticFlowMixer;
+
+	N_PIPESETS :== 3;
+
+	pipesets[1].N_PIPES :== 2;
+	pipesets[2].N_PIPES :== 4;
+	pipesets[3].N_PIPES :== 3;
+
+	METHODS
+		METHOD specify;
+			RUN AdiabaticFlowMixer::specify;
+		END specify;
+
+		METHOD default_self;			
+			RUN AdiabaticFlowMixer::default_self;			
+		END default_self;
+
+		METHOD values;
+			pipesets[1].pipes[1].velocity_in := 2 {m/s};
+			pipesets[1].pipes[1].T_input := 20 {K} + 273.15 {K};
+			pipesets[1].pipes[2].velocity_in := 2 {m/s};
+			pipesets[1].pipes[2].T_input := 20 {K} + 273.15 {K};
+
+
+			pipesets[1].pipes[1].Ar := 5 {cm^2};
+			pipesets[1].pipes[1].mdot_supply := 0.5 {kg/s}; 
+			pipesets[1].pipes[1].T_supply := 30 {K} + 273.15 {K};
+
+			pipesets[1].pipes[2].Ar := 5 {cm^2};
+			pipesets[1].pipes[2].mdot_supply := 0.5 {kg/s}; 
+			pipesets[1].pipes[2].T_supply := 30 {K} + 273.15 {K};
+
+
+			pipesets[2].pipes[1].Ar := 5 {cm^2};
+			pipesets[2].pipes[1].mdot_supply := 0.5 {kg/s}; 
+			pipesets[2].pipes[1].T_supply := 30 {K} + 273.15 {K};
+
+			pipesets[2].pipes[2].Ar := 5 {cm^2};
+			pipesets[2].pipes[2].mdot_supply := 0.5 {kg/s}; 
+			pipesets[2].pipes[2].T_supply := 30 {K} + 273.15 {K};
+
+			pipesets[2].pipes[3].Ar := 5 {cm^2};
+			pipesets[2].pipes[3].mdot_supply := 0.5 {kg/s}; 
+			pipesets[2].pipes[3].T_supply := 30 {K} + 273.15 {K};
+
+			pipesets[2].pipes[4].Ar := 5 {cm^2};
+			pipesets[2].pipes[4].mdot_supply := 0.5 {kg/s}; 
+			pipesets[2].pipes[4].T_supply := 30 {K} + 273.15 {K};
+
+
+			pipesets[3].pipes[1].Ar := 5 {cm^2};
+			pipesets[3].pipes[1].mdot_supply := 0.5 {kg/s}; 
+			pipesets[3].pipes[1].T_supply := 30 {K} + 273.15 {K};
+
+			pipesets[3].pipes[2].Ar := 5 {cm^2};
+			pipesets[3].pipes[2].mdot_supply := 0.5 {kg/s}; 
+			pipesets[3].pipes[2].T_supply := 30 {K} + 273.15 {K};
+
+			pipesets[3].pipes[3].Ar := 5 {cm^2};
+			pipesets[3].pipes[3].mdot_supply := 0.5 {kg/s}; 
+			pipesets[3].pipes[3].T_supply := 30 {K} + 273.15 {K};
+		END values;
+
+		METHOD on_load;
+			RUN specify;			
+			RUN default_self;
+			RUN values;
+		END on_load;
+END example_AdiabaticFlowMixer;
+

@@ -1,0 +1,161 @@
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+IMPORT "johnpye/fprops/helmholtz";
+
+
+MODEL fluid;
+	component IS_A symbol_constant;
+END fluid;
+
+
+MODEL stream_state;
+	cd IS_A fluid;
+	p IS_A pressure;
+	h IS_A specific_enthalpy;
+
+	T IS_A temperature;
+	v IS_A specific_volume;
+	s IS_A specific_entropy;
+	x IS_A fraction;
+
+	calc_ph: helmholtz_Tvsx_ph(
+		p, h : INPUT;
+		T, v, s, x : OUTPUT;
+		cd : DATA
+	);
+METHODS
+METHOD default;
+	p := 10{bar};
+	p.nominal := 42 {bar};
+	IF cd.component == 'water' THEN
+		h := 2000 {kJ/kg};
+	ELSE 
+		IF cd.component == 'carbondioxide' THEN
+			h := 350 {kJ/kg};
+		ELSE
+			h := 350 {kJ/kg};
+		END IF;
+	END IF;
+
+	T := 400 {K};
+	v.nominal := 10 {L/kg};
+	s := 4 {kJ/kg/K};
+	x := 0.8;
+
+	RUN enable_ph;
+END default;
+METHOD default_self;
+	RUN default;
+END default_self;
+METHOD enable_vT;
+	FOR i IN [1..4] DO
+		(*calc_ph[i].included := FALSE;
+		calc_vT[i].included := TRUE;*)
+		calc_ph[i].included := TRUE;
+	END FOR;
+END enable_vT;
+METHOD enable_ph;
+	FOR i IN [1..4] DO
+		calc_ph[i].included := TRUE;
+		(*calc_vT[i].included := FALSE;*)
+	END FOR;
+END enable_ph;
+METHOD solve;
+	EXTERNAL do_solve(SELF);
+END solve;
+END stream_state;
+
+
+(* a simple connector that includes calculation of steam properties *)
+MODEL stream_node;
+	state IS_A stream_state;
+	cd ALIASES state.cd;
+	p ALIASES state.p;
+	h ALIASES state.h;
+	v ALIASES state.v;
+	T ALIASES state.T;
+	s ALIASES state.s;
+	x ALIASES state.x;
+	mdot IS_A mass_rate;
+METHODS
+
+METHOD default_self;
+	RUN state.default_self;
+	RUN default;
+END default_self;
+
+METHOD default;
+	mdot.nominal := 2 {kg/s};
+END default;
+METHOD solve;
+	EXTERNAL do_solve(SELF);
+END solve;
+METHOD on_load;
+	RUN default_all; RUN reset; RUN values;
+	FIX p,h;
+END on_load;
+END stream_node;
+
+
+MODEL stream_equipment;
+	inlet "in: inlet steam stream" IS_A stream_node;
+	outlet "out: outlet steam stream" IS_A stream_node;
+	inlet.cd, outlet.cd ARE_THE_SAME;
+	inlet.mdot, outlet.mdot ARE_THE_SAME;
+	cd ALIASES inlet.cd;
+	mdot ALIASES inlet.mdot;
+END stream_equipment;
+
+
+MODEL pump_simple REFINES stream_equipment;
+	NOTES
+		'block' SELF {Simple model of a pump using isentropic efficiency}
+	END NOTES;
+
+	dp IS_A delta_pressure;
+	inlet.p + dp = outlet.p;
+
+	outlet_is IS_A stream_state;
+	outlet_is.p, outlet.p ARE_THE_SAME;
+	outlet_is.cd, outlet.cd ARE_THE_SAME;
+	outlet_is.s, inlet.s ARE_THE_SAME;
+	eta IS_A fraction;
+	
+	eta_eq:eta * (inlet.h - outlet.h) = (inlet.h - outlet_is.h);
+
+	(* work done on the environment, will be negative *)
+	Wdot IS_A energy_rate;
+	Wdot_eq:Wdot = mdot * w;
+
+	w IS_A negative_specific_work;
+	w_eq:w = inlet.h - outlet.h;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+	RUN outlet_is.default_self;
+END default_self;
+END pump_simple;
+
+
+MODEL pump_simple_test REFINES pump_simple;
+	cd.component :== 'water';
+METHODS
+METHOD on_load;
+	RUN default_self;
+	FIX inlet.p; inlet.p := 5 {bar};
+	FIX inlet.h; inlet.h := 400 {kJ/kg};
+	FIX outlet.p; outlet.p := 100 {bar};
+	FIX eta; eta := 0.65;
+	FIX mdot; mdot := 900 {t/d};
+
+	inlet.v := 0.97 {L/kg};	
+	inlet.T := 300 {K};
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 200;
+END on_load;
+END pump_simple_test;
+

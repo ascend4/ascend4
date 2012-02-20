@@ -1,0 +1,110 @@
+REQUIRE "atoms.a4l";
+REQUIRE "solar/solar_types.a4l";
+
+
+MODEL Electric_Heater;
+
+	Heater_state IS_A integer_constant; (* 1 when heater on and 0 when heater off *)
+
+	Q_out IS_A power; 					(* equal to 0 when in off state *)
+	Eta_conversion IS_A fraction;
+	Eta_transfer IS_A fraction;
+
+	Electricity_Consumption IS_A power;
+
+	Electricity_Consumption = Q_out / (Eta_conversion * Eta_transfer);
+
+	METHODS
+		METHOD specify;
+			FIX Q_out;
+			FIX Eta_conversion;
+			FIX Eta_transfer;
+		END specify;
+
+		METHOD values;
+			IF Heater_state < 1 THEN
+				Q_out := 0 {watt};
+			END IF;
+		END values;
+END Electric_Heater;
+
+
+MODEL example_Electric_Heater REFINES Electric_Heater;
+
+	Heater_state :== 1;
+
+	METHODS
+		METHOD specify;
+			RUN Electric_Heater::specify;
+		END specify;
+
+		METHOD values;
+			Q_out := 100 {watt};
+			Eta_conversion := 0.99;
+			Eta_transfer := 0.8;
+			RUN Electric_Heater::values;
+		END values;
+
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+		END on_load;
+END example_Electric_Heater;
+
+
+
+MODEL Fuel_Based_Heater;
+
+	Heater_state IS_A integer_constant; (* 1 when heater on and 0 when heater off *)
+
+	Fuel_calval IS_A calorific_value; 	(* calorific value of fuel *)
+
+	Q_out IS_A power; 					(* is equal to 0 when in off state *)
+	Eta_conversion IS_A fraction;
+	Eta_transfer IS_A fraction;
+
+	Fuel_Consumption_rate IS_A mass_rate;
+
+	Fuel_Consumption_rate = Q_out / (Eta_conversion * Eta_transfer* Fuel_calval);
+
+	METHODS
+		METHOD specify;
+			FIX Fuel_calval;
+			FIX Q_out;
+			FIX Eta_conversion;
+			FIX Eta_transfer;
+		END specify;
+
+		METHOD values;
+			IF Heater_state < 1 THEN
+				Q_out := 0 {watt};
+			END IF;
+		END values;
+END Fuel_Based_Heater;
+
+
+MODEL example_Coal_Heater REFINES Fuel_Based_Heater;
+
+	Heater_state :== 1;
+
+	METHODS
+		METHOD specify;
+			RUN Fuel_Based_Heater::specify;
+		END specify;
+
+		METHOD values;			
+			Q_out := 1000 {watt};
+			Eta_conversion := 0.40;
+			Eta_transfer := 0.8;
+			Fuel_calval := 200 {kJ/kg};
+			RUN Fuel_Based_Heater::values;
+		END values;
+
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+		END on_load;
+END example_Coal_Electric_Heater;
+
+
+
