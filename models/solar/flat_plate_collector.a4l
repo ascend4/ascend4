@@ -1,0 +1,455 @@
+REQUIRE "atoms.a4l";
+REQUIRE "solar/solar_types.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+
+
+MODEL heat_transfer_coefficient_radiation(
+	T1 WILL_BE temperature;
+	T2 WILL_BE temperature;
+	E1 WILL_BE fraction;
+	E2 WILL_BE fraction;
+	);
+
+	value IS_A heat_transfer_coefficient;
+	
+	(* equations *)
+	value * (1/E1 + 1/E2 - 1) = 5.67e-8{W/m^2/K^4} * (T1 + T2) * (T1^2 + T2^2);
+
+	METHODS
+		METHOD specify;
+		END specify;
+
+		METHOD values;
+		END values;		
+END heat_transfer_coefficient_radiation;
+
+
+MODEL test_radiation;
+	T1 IS_A temperature;
+	T2 IS_A temperature;
+	E1 IS_A fraction;
+	E2 IS_A fraction;
+	
+	h_r IS_A heat_transfer_coefficient_radiation(T1, T2, E1, E2);
+	
+	METHODS
+		METHOD specify;
+			FIX T1;
+			FIX T2;
+			FIX E1;
+			FIX E2;
+		END specify;
+		METHOD values;
+			T1 := 60 {K} + 273.15 {K};
+			T2 := 30 {K} + 273.15 {K};
+			E1 := 0.6;
+			E2 := 0.7;
+		END values;
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+		END on_load;	
+
+END test_radiation;
+
+
+MODEL Nusselt_number(
+	T1 WILL_BE temperature;
+	T2 WILL_BE temperature;
+	B WILL_BE angle;
+	L WILL_BE distance;
+	);
+
+	(* variables *)	
+	value IS_A factor;	
+	g IS_A acceleration;	
+	dT IS_A delta_temperature;
+	Ra IS_A factor; (* Rayleigh_number *)
+	
+	t1 IS_A factor;
+	t2 IS_A factor;
+	tt1 IS_A factor;
+	tt2 IS_A factor;
+	
+	g = 9.8 {m/s^2};
+	dT = abs(T1-T2);
+	
+	(* equations *)
+	Ra = (g/1{m/s^2}) * (B/1{rad}) * (dT/1{K}) * (L/1{m})^3;
+	
+	tt1 = (1 - 1708/(Ra*cos(B)));
+	t1 = (abs(tt1) + tt1 )/ 2;
+	tt2 = (abs(Ra * cos(B)/5830))^(0.3) - 1;
+	t2 = (abs(tt2) + tt2 )/ 2;
+	
+	value = 1 + 1.44*(1- 1708*((sin(1.8 * B)) ^ 1.6) / (Ra * cos(B)))*t1 + t2;
+	
+	METHODS
+		METHOD specify;
+		END specify;
+
+		METHOD values;
+		END values;	
+END Nusselt_number;
+
+
+MODEL test_Nusselt_number;
+
+	(* variables *)
+	T1 IS_A temperature;
+	T2 IS_A temperature;
+	B IS_A angle;
+	L IS_A distance;
+
+	(* equations *)
+	Nu IS_A Nusselt_number(T1, T2, B, L);
+
+	METHODS
+		METHOD specify;
+			FIX T1;
+			FIX T2;
+			FIX B;
+			FIX L;
+		END specify;
+		METHOD values;
+			T1 := 60 {K} + 273.15 {K};
+			T2 := 30 {K} + 273.15 {K};
+			B := 0.85 {rad};
+			L := 1.8 {cm};
+		END values;
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+		END on_load;	
+END test_Nusselt_number;
+
+
+MODEL heat_transfer_coefficient_convection(
+	T1 WILL_BE temperature;
+	T2 WILL_BE temperature;
+	spacing  WILL_BE distance;
+	B WILL_BE angle;
+	);
+
+	(* variables *)	
+	value IS_A heat_transfer_coefficient;	
+	K IS_A thermal_conductivity; 
+		(* thermal_conductivity of air *)
+	
+	(* parts *)	
+	Nu IS_A Nusselt_number(T1, T2, B, spacing);	
+
+	(* equations *)
+	value = Nu.value * K / spacing;	
+	
+	METHODS
+		METHOD specify;
+			FIX K;
+			RUN Nu.specify;		
+		END specify;
+
+		METHOD values;
+			K := 0.0253 {W/m/K};
+			RUN Nu.values;
+		END values;	
+END heat_transfer_coefficient_convection;
+
+MODEL test_heat_transfer_coefficient_convection;
+	T1 		IS_A temperature;
+	T2 		IS_A temperature;
+	spacing IS_A distance;
+	B 		IS_A angle;
+	
+	h_c 	IS_A heat_transfer_coefficient_convection(T1, T2, spacing, B);
+	
+	METHODS
+		METHOD specify;
+			FIX T1;
+			FIX T2;
+			FIX spacing;
+			FIX B;
+
+			RUN h_c.specify;
+		END specify;
+
+		METHOD values;
+			T1 := 55 {K} + 273.15 {K};
+			T2 := 100 {K} + 273.15 {K};
+			spacing := 2.5 {cm};
+			B := 45 {deg};
+
+			RUN h_c.values;
+		END values;
+
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+		END on_load;	
+
+END test_heat_transfer_coefficient_convection;
+
+
+MODEL cover(
+	T WILL_BE temperature;
+	T_ WILL_BE temperature;
+	E WILL_BE fraction;
+	E_ WILL_BE fraction;
+	spacing WILL_BE distance;
+	tilt WILL_BE angle;
+);
+
+	(* variables *)
+	Thermal_resistance IS_A inv_heat_transfer_coefficient;
+	
+	(* parts *)
+	h_r IS_A heat_transfer_coefficient_radiation(T, T_, E, E_ );
+    h_c IS_A heat_transfer_coefficient_convection(T, T_, spacing, tilt );
+    
+    (* equations *)
+	Thermal_resistance = 1/(h_c.value + h_r.value );
+
+	METHODS
+		METHOD specify;
+			FIX E;
+			FIX spacing;
+			FIX tilt;			
+			RUN h_r.specify;
+			RUN h_c.specify;
+		END specify;
+		
+		METHOD values;
+			RUN h_r.values;
+			RUN h_c.values;
+		END values;
+END cover;
+
+MODEL test_cover;
+	T IS_A temperature;
+	T_ IS_A temperature;
+	E IS_A fraction;
+	E_ IS_A fraction;
+	spacing IS_A distance;
+	tilt IS_A angle;
+
+    Cover IS_A cover(T, T_, E, E_, spacing,	tilt);
+
+	METHODS
+		METHOD values;		
+		    T := 55 {K} + 273.15 {K};
+		    T_ := 100 {K} + 273.15 {K};
+   		    E := 0.88;
+   		    E_ := 0.95;
+		    spacing := 2.5 {cm};		    
+			tilt := 45 {deg};
+			
+			RUN Cover.values;
+		END values;
+		
+		METHOD specify;			
+		    FIX T;
+		    FIX T_;
+		    FIX E;
+		    FIX E_;
+		    FIX spacing;
+		    FIX tilt;
+
+			RUN Cover.specify;
+		END specify;
+	
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+		END on_load;
+END test_cover;
+
+
+MODEL topcover_to_atmosphere(
+	Ta WILL_BE temperature;
+	Ttop WILL_BE temperature;
+	Etop WILL_BE fraction;
+);
+	(* variables *)
+	Ts IS_A temperature;
+	Thermal_resistance IS_A inv_heat_transfer_coefficient;
+	h_r IS_A heat_transfer_coefficient;
+	h_c IS_A heat_transfer_coefficient;
+
+	(* equations *)
+	Ts = 0.0552*(Ta^1.5);
+	h_r * (Ttop - Ta) = Etop * 5.67e-8{W/m^2/K^4} * (Ttop^4 - Ts^4);
+	Thermal_resistance = 1/(h_r + h_c);
+	
+	METHODS
+		METHOD specify;
+			FIX h_c;
+			FIX Ta;
+			FIX Etop;
+		END specify;
+
+		METHOD values;
+			h_c := 10{W/m^2/K};
+		END values;
+END topcover_to_atmosphere;
+
+MODEL test_topcover_to_atmosphere;
+	Ta IS_A temperature;
+	Ttop IS_A temperature;
+	Etop IS_A fraction;
+
+    Rtop IS_A topcover_to_atmosphere (Ta, Ttop, Etop);
+
+	METHODS
+		METHOD values;
+		    Ta := 10 {K} + 273.15 {K};
+		    Ttop := 55 {K} + 273.15 {K};
+   		    Etop := 0.88;
+
+			RUN Rtop.values;
+		END values;
+		
+		METHOD specify;
+		    FIX Ta;
+		    FIX Ttop;
+		    FIX Etop;
+
+			RUN Rtop.specify;
+		END specify;
+	
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+		END on_load;
+END test_topcover_to_atmosphere;
+
+
+MODEL absorbed_radiations;
+	value IS_A intensity;
+	METHODS
+		METHOD specify;
+		FIX value;
+		END specify;
+		
+		METHOD values;
+		value := 1000 {W/m^2};
+		END values;
+END absorbed_radiations;
+
+
+MODEL heat_loss();
+	(* variables *)
+	Tp IS_A temperature;
+	Ta IS_A temperature;
+	Tc IS_A temperature;	
+	Ec IS_A fraction;
+	Ep IS_A fraction;
+	cover_spacing IS_A distance;
+	tilt IS_A angle;
+	Cover IS_A cover (Tc, Tp, Ec, Ep, cover_spacing, tilt);
+	Rtop IS_A topcover_to_atmosphere (Ta, Tc, Ec);
+	value IS_A intensity;
+	Ut IS_A heat_transfer_coefficient;
+	
+	(* equations *)
+	Tc = Tp - Cover.Thermal_resistance * Ut * (Tp-Ta);
+	Ut * ( Cover.Thermal_resistance + Rtop.Thermal_resistance ) = 1;
+	value = Ut*(Tp-Ta);
+	
+	METHODS
+		METHOD specify;
+			FIX Ta;
+			FIX Tp;
+			FIX Ep;
+			FIX tilt;
+			FIX Ec;
+			FIX cover_spacing;
+
+			RUN Cover.specify;
+			RUN Rtop.specify;
+		END specify;
+		
+		METHOD values;
+			Ta 		:= 10 {K} + 273.15 {K};
+			Tp 		:= 100 {K} + 273.15 {K};		    
+			Tc 		:= 55 {K} + 273.15 {K};		    
+			Ep 		:= 0.95;		    
+			tilt 		:= 45 {deg};
+			Ec 		:= 0.88;
+			cover_spacing 	:= 2.5 {cm};
+
+			RUN Cover.values;
+			RUN Rtop.values;
+		END values;
+END heat_loss;
+
+
+MODEL test_heat_loss;
+
+	Heat_Loss IS_A heat_loss ();
+
+	METHODS
+		METHOD values;		
+			RUN Heat_Loss.values;
+		END values;
+	
+		METHOD specify;	
+			RUN Heat_Loss.specify;
+		END specify;
+	
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+		END on_load;
+END test_heat_loss;
+
+
+MODEL flat_plate_collector;
+	(* variables *)
+	A IS_A area;
+	Qu IS_A energy_rate;
+
+	(* parts *)
+	Heat_Absorbed IS_A absorbed_radiations;	
+	Heat_Loss IS_A heat_loss;
+
+	(* equations *)
+
+	Qu = A * (Heat_Absorbed.value - Heat_Loss.value);
+	
+	METHODS
+		METHOD specify;
+			FIX A;
+			RUN Heat_Absorbed.specify;
+			RUN Heat_Loss.specify;
+		END specify;
+		
+		METHOD values;
+			RUN Heat_Absorbed.values;
+			RUN Heat_Loss.values;
+		END values;		
+END flat_plate_collector;
+
+
+MODEL test_flat_plate_collector;
+
+	fpcollector IS_A flat_plate_collector;
+
+	METHODS
+		METHOD specify;
+		    RUN fpcollector.specify;
+		END specify;
+	
+		METHOD values;		
+			fpcollector.A := 1 {m^2};		
+			RUN fpcollector.values;
+		END values;
+	
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+
+			SOLVER QRSlv;
+			OPTION convopt 'RELNOM_SCALE';
+		END on_load;		
+END test_flat_plate_collector;
+

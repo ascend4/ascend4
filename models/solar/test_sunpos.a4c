@@ -1,0 +1,41 @@
+REQUIRE "atoms.a4l";
+
+REQUIRE "johnpye/sunpos.a4c";
+
+
+MODEL example REFINES sunpos;
+	
+	beta = 1.0* theta_z;
+	
+	METHODS
+
+		METHOD specify;		
+			FIX L_st, L_loc, phi; (* time and location *)
+			FIX gamma; (* surface orientation *)
+			FIX t_solar;
+		END specify;
+		
+		METHOD values;
+			(*RUN sunpos::values;*)
+
+			t_solar := 43{d} + 15{h} + 30{min};
+
+			gamma := 90 {deg};
+
+
+			L_st := -90{deg}; (* USA Central time*)
+			L_loc := -89.4{deg};
+			phi := +43{deg};
+		END values;
+		
+		METHOD self_test;
+			ASSERT abs(theta-35.0{deg}) < 0.15{deg};
+			ASSERT abs(delta-(-13.80{deg})) < 0.02{deg};
+		END self_test;
+
+		METHOD onload;
+			RUN specify;
+			RUN values;
+		END onload;
+		
+END example;

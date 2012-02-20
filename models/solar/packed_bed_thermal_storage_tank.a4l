@@ -1,0 +1,216 @@
+REQUIRE "solar/solar_types.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+
+MODEL Air_Properties(
+	T WILL_BE temperature;
+);
+	(* Variables *)
+	rho IS_A mass_density;			(* Air density *)
+	Cp IS_A specific_heat_capacity; (* Constant pressure heat capacity *)
+
+	T_dimless IS_A factor;
+	rho_dimless IS_A factor;
+	Cp_dimless IS_A factor;
+
+
+	(* Equations *)
+	T_dimless * 1{K} = T;
+	rho = rho_dimless * 1{kg/m^3};
+	Cp = Cp_dimless * 1{J/kg/K};
+
+	rho_dimless * (8314.32 * T_dimless) = 1000 * 101.325 * 28.9645;
+(*	rho = 1.2466 {kg/m^3}; *)
+
+	Cp_dimless = (1 + ( 2.5e-10 * T_dimless^3 )) * 1000 ; 
+(*	Cp = 1.012 {kJ/kg/K}; 	*)
+
+METHODS
+	METHOD bound_self;
+		rho.lower_bound := 0 {kg/m^3};
+		rho_dimless.lower_bound := 0;
+		Cp.lower_bound := 0 {J/kg/K};
+		Cp_dimless.lower_bound := 0;
+	END bound_self;
+END Air_Properties;
+
+
+MODEL test_Air_Properties;
+	T IS_A temperature;
+	instance IS_A Air_Properties (T);
+
+METHODS
+	METHOD specify;
+		FIX T;
+	END specify;
+
+	METHOD values;
+		T := 25{K} + 273.15{K};
+	END values;
+
+	METHOD on_load;
+		RUN specify;
+		RUN values;
+	
+		RUN instance.bound_self;
+	END on_load;
+END test_Air_Properties;
+
+
+MODEL layer;
+	e IS_A real_constant;
+	e :== 2.718;
+
+	(* Variables *)
+	T_f_after IS_A temperature;
+	T_f_before IS_A temperature;
+
+	T_b IS_A temperature;	
+	NTU_by_N IS_A factor;
+
+	(* Equations *)
+	(T_f_after - T_b) * e^NTU_by_N = T_f_before - T_b;
+END layer;
+
+
+MODEL packed_bed_tank;	
+	(* Constants *)	
+	NL IS_A integer_constant;
+	NL :== 3;
+	e IS_A real_constant;
+	e :== 2.718;
+
+	(* Variables *)
+	T_amb IS_A temperature;
+	T_in IS_A temperature;	
+	V IS_A speed; 				(* Fluid velocity *)
+	D IS_A distance;			(* diameter of pebbles *)
+	A IS_A area; 				(* Cross sectional area of bed [input] *)
+	L IS_A distance; 			(* length of bed [input] *)
+	delta_t IS_A time; 				(* process starts from zero (Input: 0 to 5hrs) *)
+	epsilon IS_A fraction; 		(* bed void fraction (input) *)
+
+	Tavg IS_A temperature;	
+	T_out IS_A temperature;	
+	NTU IS_A factor;
+	hv IS_A volumetric_heat_transfer_coefficient; 			(* volumetric heat transfer coefficient *)
+	G_dimless IS_A factor;
+	D_dimless IS_A factor;
+	mdot IS_A mass_rate;
+	NTU_by_N IS_A factor;
+	delta_x IS_A distance;
+	delta_theta IS_A time;
+
+
+	(* parts *)
+	air_props IS_A Air_Properties (Tavg);	
+	bed[1..NL] IS_A layer;
+
+	(* Interconnections *)
+	bed[1].T_f_before, T_in ARE_THE_SAME;
+	bed[NL].T_f_after, T_out ARE_THE_SAME;
+	NTU_by_N, bed[1..NL].NTU_by_N ARE_THE_SAME;
+	FOR i IN [2..NL] CREATE
+		bed[i-1].T_f_after, bed[i].T_f_before ARE_THE_SAME;
+	END FOR;
+
+
+	(* Equations *)
+	Tavg = (T_in + T_out)/2;
+	NTU * (mdot * air_props.Cp) = hv * A * L;
+
+	hv * (D_dimless^0.7) = 650 * (G_dimless^0.7);	
+
+	D_dimless = D / 1{m};
+	G_dimless = V * air_props.rho / 1{kg/m^2/s};
+	mdot = air_props.rho * V * A;
+	
+	delta_x = L / NL;
+	NTU_by_N = NTU / NL;
+
+	delta_theta * (air_props.rho * air_props.Cp) *  (1-epsilon) * A * L = delta_t * mdot * air_props.Cp;
+
+	(bed[1].T_b - T_amb) * e^NTU_by_N = delta_theta * NL * (T_in - (T_amb + bed[1].T_b)/2);
+	FOR i IN [2..NL] CREATE		
+		(bed[i].T_b - bed[i-1].T_b) * e^NTU_by_N = delta_theta * NL * (bed[i-1].T_f_after - (bed[i-1].T_b + bed[i].T_b)/2);
+    END FOR;
+
+    
+METHODS
+	METHOD specify;
+		FIX	T_amb, T_in, V, D, A, L, delta_t, epsilon;
+	END specify;
+
+	METHOD bound_self;
+		RUN air_props.bound_self;
+		G_dimless.lower_bound := 0;
+		mdot.lower_bound := 0{kg/s};
+		NTU.lower_bound := 0;
+		NTU_by_N.lower_bound := 0;
+		hv.lower_bound := 0{watt/m^3/K};
+		delta_theta.lower_bound := 0 {s};
+		NTU_by_N.upper_bound := 100;
+	END bound_self;
+
+	METHOD values;
+		T_amb := 10 {K} + 273.15 {K};
+		T_in := 40 {K} + 273.15 {K};
+		V := 0.053 {m/s};
+		D := 0.0125 {m};
+		A := 14.8 {m^2};
+		L := 1.8 {m};
+		delta_t := 1 {hr};
+		epsilon := 0.47;
+	END values;
+
+	METHOD default_self;
+		G_dimless := 0.0638;
+		NTU := 57;
+		hv := 2030{watt/m^3/K};
+		T_out := 20 {K} + 273.15 {K};
+	END default_self;
+
+	METHOD on_load;
+		RUN specify;
+		RUN bound_self;
+		RUN default_self;
+		RUN values;
+
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+		OPTION iterationlimit 100;
+	END on_load;
+END packed_bed_tank;
+
+
+MODEL example_packed_bed_tank REFINES packed_bed_tank;
+
+	METHODS
+		METHOD specify;
+			RUN packed_bed_tank::specify;
+		END specify;
+
+		METHOD values;
+			T_amb := 10 {K} + 273.15 {K};
+			T_in := 40 {K} + 273.15 {K};
+			V := 0.053 {m/s};
+			D := 0.0125 {m};
+			A := 14.8 {m^2};
+			L := 1.8 {m};
+			delta_t := 1 {hr};
+			epsilon := 0.47;
+		END values;
+
+		METHOD on_load;
+			RUN packed_bed_tank::specify;
+			RUN packed_bed_tank::bound_self;
+			RUN packed_bed_tank::default_self;
+			RUN values;
+
+			SOLVER QRSlv;
+			OPTION convopt 'RELNOM_SCALE';
+			OPTION iterationlimit 100;
+		END on_load;
+	
+END example_packed_bed_tank;
+

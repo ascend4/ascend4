@@ -1,0 +1,265 @@
+(*
+The sky temperature depression thus calculated is convenient to use in radiative heat transfer
+calculations, especially when the total sky emissivity remains within a narrow range. The sky
+emissivity is a sensitive function only of the atmospheric water vapor content and the amount,
+type, and distribution of cloud cover.
+
+Assumption: Sky Emmissivity is linear Function of cloud fraction
+*)
+
+REQUIRE "atoms.a4l";
+REQUIRE "solar/solar_types.a4l";
+
+MODEL dew_point;
+
+	(* Variables *)
+	exp IS_A real_constant;
+	exp :== 2.718;
+
+	T_air IS_A temperature;			(* Dry-bulb Temperature *)
+	T_w IS_A temperature;			(* Wet-bulb Temperature *)
+	rho_sta IS_A pressure;			(* Station Pressure *)
+	T_dew_point IS_A temperature;	(* Dew Point Temperature *)
+
+	pow_s IS_A factor; 
+	e_s IS_A factor;				(* saturated water vapor pressure, at the dry-bulb temperature *)
+	pow_w IS_A factor;
+	e_w IS_A factor;				(* saturated water vapor pressure, at the wet-bulb temperature *)
+	e IS_A factor;					(* actual water vapor pressure *)
+	RH IS_A factor; 				(* Relative Humidity *)
+
+	(* Equations *)
+	pow_s * (257.14{K} + T_air) = (18.678 - T_air / 234.5{K}) * T_air;
+	e_s = 6.1121 * exp^pow_s;
+	pow_w * (257.14{K} + T_w) = (18.678 - T_w / 234.5{K}) * T_w;
+	e_w = 6.1121 * exp^pow_w;
+	e = e_w - (rho_sta / 100) * 1{1/bar} * (T_air - T_w) * 1{1/K} * 0.00066 * (1 + 0.00115{1/K} * T_w);
+	RH = 100 * e / e_s;
+	T_dew_point * (17.67 - ln(e/6.112)) = 243.5 * ln(e/6.112);
+
+	METHODS
+		METHOD values; 
+			(* T_air := 16.82 {K}; *)
+			rho_sta := 900 {mbar};
+			T_w := 10 {K};
+		END values;
+
+		METHOD specify;
+			(* FIX T_air; *)
+			FIX rho_sta;
+			FIX T_w;
+		END specify;
+
+		METHOD self_test;
+			ASSERT T_w < T_air;
+		END self_test;
+
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+			RUN self_test;
+		END on_load;
+
+END dew_point;
+
+
+MODEL clear_sky;
+	(* Variables *)
+	pi IS_A real_constant;
+	pi :== 3.1416;
+
+	Epsilon_0 IS_A factor;			(* Clear Sky Emmisivity *)
+	delta_Epsilon_e IS_A factor;	(* Correction for elevation of observing station *)
+	delta_Epsilon_h IS_A factor;	(* diurnal correction for predicting hourly emmissivities *)
+	
+	t IS_A factor; 					(* Hour of day *)
+	T_dp IS_A temperature;			(* Dew point temperature *)
+	rho_sta IS_A pressure;			(* Station pressure *)
+
+	(* Components *)
+	dew_point_instance IS_A dew_point;
+
+	(* Interconnections *)
+	T_dp, dew_point_instance.T_dew_point ARE_THE_SAME; 
+
+	Epsilon_0 = 0.711 + 0.56*(T_dp/100) + 0.73*(T_dp/100)^2 + delta_Epsilon_h + delta_Epsilon_e;
+	delta_Epsilon_h = 0.013 * cos(2*pi*t/24);
+	delta_Epsilon_e = 0.00012 * (rho_sta/100 - 1000);
+
+	METHODS
+		METHOD values;
+			t := 12;
+			rho_sta := 0.900 {bar};
+		END values;
+		
+		METHOD specify;
+			FIX t;
+			FIX rho_sta;
+		END specify;
+
+		METHOD other;
+			RUN dew_point_instance.on_load;
+		END other;
+
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+			RUN other;
+		END on_load;
+
+END clear_sky;
+
+
+MODEL cloud_layer;
+
+	exp IS_A real_constant;
+	exp :== 2.718;
+
+	(* Variables *)
+	n IS_A fraction;			(* fractional area of sky covered by clouds *)
+	epsilon_c IS_A fraction;	(* Hemispherical cloud emmisivity *)
+	tau IS_A factor;			(* Factor depending on the cloud base temperature called Cloud factor - Small for high clouds and approach unity for low clouds *)
+	h IS_A distance; 			(* Cloud base height *)
+	h0 IS_A distance;			
+	
+	C IS_A factor; 				(* Infrared cloud amount *)
+
+	(* Equations *)
+	C = n * epsilon_c * tau;
+	tau = exp^(-h/h0);
+
+	METHODS
+		METHOD specify;
+			FIX h0;
+			FIX h;
+			FIX n;
+		END specify;
+
+		METHOD values;
+			h0 := 8.2 {km};
+		END values;
+
+		METHOD other;
+			RUN values;
+		END other;
+END cloud_layer;
+
+
+MODEL cloudy_sky;
+	(* Constants *)	
+	NL IS_A integer_constant;				(* Number of cloud layers *)
+
+	Epsilon IS_A fraction;					(* Sky emmisivity in the presence of clouds *)
+	cloud_sum IS_A factor;					(* Total infrared cloud amount *)
+	n_total IS_A fraction;					
+	n_opaque IS_A fraction;
+
+	(* Components *)
+	clear IS_A clear_sky;
+	cloud_layers[1..NL] IS_A cloud_layer;
+
+	(* Equations *)
+	cloud_sum = cloud_layers[1].C + SUM[cloud_layers[i].C | i IN [2..NL]];
+	
+	cloud_layers[1].epsilon_c = 0.4; 		(* Last layer is thin *)
+	FOR i IN [2..NL] CREATE
+		cloud_layers[i].epsilon_c = 1;
+	END FOR;
+
+	Epsilon = clear.Epsilon_0 + (1- clear.Epsilon_0) * cloud_sum;
+
+	METHODS
+		METHOD specify;
+			FIX n_total;
+			FIX n_opaque;
+
+			RUN clear.specify;
+			RUN cloud_layers[1..NL].specify;
+		END specify;
+		
+		METHOD default_self;
+			n_total := 0.9;
+			n_opaque := 0.7;
+			
+			cloud_layers[1].n := n_total - n_opaque;
+			cloud_layers[1].h := 8 {km};
+
+			cloud_layers[2..NL].n := (1-cloud_layers[1].n)/(NL-1);
+			cloud_layers[2..NL].h := 2 {km};
+		END default_self;
+		
+		METHOD self_test;
+			ASSERT cloud_layers[1].n == n_total - n_opaque;
+			ASSERT SUM[cloud_layers[i].n | i IN [1..NL]] == 1;
+		END self_test;
+
+		METHOD other;
+			RUN default_self;
+			RUN self_test;
+			RUN clear.other;
+			RUN cloud_layers[1..NL].other;
+		END other;
+END cloudy_sky;
+
+
+MODEL sky;
+	(* Variables *)
+	T_air IS_A temperature;	(* Dry-bulb Temperature *)
+	T_sky IS_A temperature;	(* Sky Temperature *)
+
+	(* Components *)
+	cloudy IS_A cloudy_sky;
+
+	(* Equations *)
+	cloudy.clear.dew_point_instance.T_air = T_air - 273.15 {K}; (* Conversion from Kelvin to Degree Celsius *)
+	T_air - T_sky = (1- cloudy.Epsilon ^ 0.25) * T_air;
+
+	METHODS
+		METHOD specify;
+			FIX T_air;
+			RUN cloudy.specify;	
+		END specify;
+		
+		METHOD default_self;
+			T_air := 16 {K} + 273.15 {K};
+		END default_self;
+		
+		METHOD other;
+			RUN default_self;
+			RUN cloudy.other;	
+		END other;
+END sky;
+
+
+MODEL example_sky REFINES sky;
+
+	cloudy.NL :== 3;
+
+	METHODS
+		METHOD specify;
+			RUN sky::specify;
+		END specify;
+
+		METHOD values;
+			T_air := 16 {K} + 273.15 {K};
+
+			cloudy.n_total := 0.9;
+			cloudy.n_opaque := 0.7;
+			
+			cloudy.cloud_layers[1].n := cloudy.n_total - cloudy.n_opaque;
+			cloudy.cloud_layers[1].h := 8 {km};
+
+			cloudy.cloud_layers[2..cloudy.NL].n := (1-cloudy.cloud_layers[1].n)/(cloudy.NL-1);
+			cloudy.cloud_layers[2..cloudy.NL].h := 2 {km};
+		END values;
+
+		METHOD other;
+			RUN sky::other;
+		END other;
+
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+			RUN other;
+		END on_load;
+END example_sky;

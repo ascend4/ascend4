@@ -1,0 +1,96 @@
+REQUIRE "atoms.a4l";
+REQUIRE "solar/solar_types.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/sunpos.a4c";
+
+
+MODEL sunpos_wrapper REFINES sunpos;
+
+	METHODS
+		METHOD specify;
+			FIX t, L_st, L_loc, phi; (* time and location *)
+		    FIX beta, gamma; (* surface orientation *)
+		END specify;
+
+END sunpos_wrapper;
+
+MODEL sunpos_tracker_type1; 
+	(* The collector is rotated about a horizontal east-west axis with single daily adjustment such that the solar beam is normal to the collector aperture plane at solar noon *)
+
+	sp IS_A sunpos_wrapper;
+
+	cos(sp.beta) * cos(sp.phi - sp.delta) + cos(sp.gamma) * sin(sp.beta) * sin(sp.phi - sp.delta) = 1;
+
+	METHODS
+		METHOD specify;
+			RUN sp.specify;
+		    FREE sp.beta;
+		END specify;
+
+        METHOD bound_self;
+            sp.beta.lower_bound := -90 {deg};
+            sp.beta.upper_bound := 90 {deg};
+        END bound_self;
+
+
+		METHOD values;		
+			sp.L_st := -90{deg}; 	(* USA Central time*)
+			sp.L_loc := -89.4{deg};
+			sp.phi := +43{deg}; 	(* t := 32.4375 {d}; *)
+			sp.t := 32{d} + 10{h}+30{min};
+
+    		(* surface orientation *)
+			sp.gamma := 15{deg};
+			
+			(* Assumption *)
+			sp.beta := 45{deg};
+		END values;
+
+		METHOD on_load;
+            RUN specify;
+			RUN bound_self;
+            RUN values;
+        END on_load;
+
+END sunpos_tracker_type1;
+
+
+
+
+MODEL sunpos_tracker_type2 REFINES sunpos;
+    (* The collector is rotated about a horizontal east-west axis with single daily adjustment such that the solar beam is normal to the collector aperture plane at solar noon *)
+
+    cos(beta) * cos(phi - delta) + cos(gamma) * sin(beta) * sin(phi - delta) = 1;
+
+    METHODS
+        METHOD specify;
+            FIX t, L_st, L_loc, phi; (* time and location *)
+            FIX beta, gamma; (* surface orientation *)
+
+            FREE beta;
+        END specify;
+
+        METHOD bound_self;
+            beta.lower_bound := 0 {deg};
+            beta.upper_bound := 90 {deg};
+        END bound_self;
+
+        METHOD values;
+            L_st := -90{deg};    (* USA Central time*)
+            L_loc := -89.4{deg};
+            phi := +43{deg};     (* t := 32.4375 {d}; *)
+            t := 32{d} + 10{h}+30{min};
+
+            (* surface orientation *)
+            gamma := 15{deg};
+
+            (* Assumption *)
+            beta := 45{deg};
+        END values;
+
+        METHOD on_load;
+            RUN specify;
+            RUN bound_self;
+            RUN values;
+        END on_load;
+END sunpos_tracker_type2;

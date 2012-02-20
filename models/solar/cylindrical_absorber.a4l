@@ -1,0 +1,608 @@
+REQUIRE "atoms.a4l";
+REQUIRE "solar/solar_types.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+REQUIRE "johnpye/sunpos.a4c";
+
+IMPORT "johnpye/fprops/helmholtz";
+
+MODEL helmholtz_conf;
+	component IS_A symbol_constant;
+	component :== 'water';
+END helmholtz_conf;
+
+MODEL sunpos_tracker2 REFINES sunpos;
+	(* The collector is rotated about a horizontal east-west axis with continuous adjustment to minimize the angle of incidence *)
+	
+	sin(delta) * ( sin(phi)*sin(beta) + cos(phi)*cos(beta)*cos(gamma) ) = cos(delta) * cos(omega) * ( sin(phi) * cos(beta) * cos(gamma) - cos(phi) * sin(beta) ) + cos(delta) * cos(beta) * sin(gamma) * sin(omega);
+
+	METHODS
+		METHOD specify;
+			FIX t, L_st, L_loc, phi; (* time and location *)
+		    FIX gamma; (* surface orientation *)
+		END specify;
+
+		METHOD bound_self;
+			beta.lower_bound := 0 {deg};
+			beta.upper_bound := 90 {deg};
+		END bound_self;
+
+		METHOD values;		
+			L_st := -90{deg};
+			L_loc := -89.4{deg};
+			phi := +43{deg};		
+				(* t := 32.4375 {d}; *)
+			t := 32{d} + 10{h}+30{min};
+			gamma := 15{deg};  		(* surface orientation *)
+		END values;
+
+		METHOD default_self;
+			beta := 45{deg};
+		END default_self;
+
+		METHOD on_load;
+            RUN specify;
+            RUN values;
+			RUN bound_self;
+			RUN default_self;
+        END on_load;
+END sunpos_tracker2;
+
+
+MODEL hconv_c_a(
+    D WILL_BE distance;
+    V WILL_BE speed;
+    T_amb WILL_BE temperature;
+	);
+
+    r IS_A mass_density;
+    u IS_A viscosity;
+    Re IS_A factor;
+		(* Reynolds Number *)
+    Nu IS_A factor;
+	k IS_A thermal_conductivity;
+    value IS_A heat_transfer_coefficient;
+
+    Re*u = r*V*D;
+    Nu = 0.40 + 0.54 * Re^0.52;
+    value*D = Nu*k;
+
+    METHODS
+        METHOD specify;
+            FIX r;
+            FIX u;
+            FIX k;
+        END specify;
+
+        METHOD values;
+            r := 1.2466 {kg/m^3};
+			u := 1.78e-5 {kg/m/s};
+            k := 0.0253 {W/m/K};
+        END values;
+END hconv_c_a;
+
+MODEL test_hconv_c_a();
+	D IS_A distance;
+    V IS_A speed;
+    T_amb IS_A temperature;
+
+	instance IS_A hconv_c_a(D,V,T_amb);
+
+	METHODS
+		METHOD specify;
+            FIX D;
+            FIX V;
+            FIX T_amb;
+			RUN instance.specify;
+        END specify;
+
+        METHOD values;
+            D := 1 {cm};
+            V := 10 {m/s};
+            T_amb := 10 {K} + 273.15 {K};
+			RUN instance.values;	
+        END values;
+
+        METHOD on_load;
+            RUN specify;
+            RUN values;
+        END on_load;
+
+END test_hconv_c_a;
+
+
+
+MODEL hr_c_a(
+	Tc WILL_BE temperature;
+	T_amb WILL_BE temperature;
+	e WILL_BE fraction;
+	);
+
+	S IS_A stefan_boltzman_constant;
+	S :== 5.670e-8 {watt/m^2/K^4};
+	
+	value IS_A heat_transfer_coefficient;
+	
+	value = 4*S*e*(Tc+T_amb)^3;
+
+    METHODS
+        METHOD specify;
+		END specify;
+
+        METHOD values;
+        END values;
+END hr_c_a;
+
+
+MODEL test_hr_c_a();
+    Tc IS_A temperature;
+    T_amb IS_A temperature;
+	e IS_A fraction;
+
+    instance IS_A hr_c_a(Tc,T_amb,e);
+
+    METHODS
+        METHOD specify;
+            FIX Tc;
+            FIX T_amb;
+            FIX e;
+            RUN instance.specify;
+        END specify;
+
+        METHOD values;
+            Tc := 40 {K} + 273.15 {K};
+            T_amb := 10 {K} + 273.15 {K};
+            e := 0.9;
+			RUN instance.values;
+        END values;
+
+        METHOD on_load;
+            RUN specify;
+            RUN values;
+        END on_load;
+
+END test_hr_c_a;
+
+
+MODEL hr_r_c(
+	Tc WILL_BE temperature;
+	Tr WILL_BE temperature;
+	e1 WILL_BE fraction;
+	e2 WILL_BE fraction;
+	Ar WILL_BE area; 
+	Aa WILL_BE area;
+	);
+
+	S IS_A stefan_boltzman_constant;
+	S :== 5.670e-8 {watt/m^2/K^4};
+	
+	value IS_A heat_transfer_coefficient;
+
+	value = S*(Tc^2+Tr^2)*(Tc+Tr) / (((1-e1)/e1)+1+((1-e2)/e2)*(Ar/Aa));
+
+
+    METHODS
+        METHOD specify;
+		END specify;
+
+        METHOD values;
+        END values;
+END hr_r_c;
+
+
+MODEL test_hr_r_c();
+
+    Tc IS_A temperature;
+    Tr IS_A temperature;
+    e1 IS_A fraction;
+    e2 IS_A fraction;
+    Ar IS_A area;
+    Aa IS_A area;
+
+    instance IS_A hr_r_c (Tc,Tr,e1,e2,Ar,Aa);
+
+    METHODS
+        METHOD specify;
+            FIX Tc;
+            FIX Tr;
+            FIX e1;
+			FIX e2;
+			FIX Ar;
+			FIX Aa;
+            RUN instance.specify;
+        END specify;
+
+        METHOD values;
+            Tc := 40 {K} + 273.15 {K};
+            Tr := 100 {K} + 273.15 {K};
+            e1 := 0.9;
+			e2 := 0.88;
+			Ar := 16 {cm^2};
+			Aa := 4 {cm^2};
+			RUN instance.values;
+        END values;
+
+        METHOD on_load;
+            RUN specify;
+            RUN values;
+        END on_load;
+END test_hr_r_c;
+
+
+
+MODEL Ul;
+	Tc IS_A temperature;
+	Tr IS_A temperature;
+    T_amb IS_A temperature;
+    e IS_A fraction;
+    e1 IS_A fraction;
+    e2 IS_A fraction;
+    Ar IS_A area;
+    Aa IS_A area;
+    D IS_A distance;
+    V IS_A speed;	
+
+
+	hconv_c_a_instance IS_A hconv_c_a(D,V,T_amb); 
+
+	hr_c_a_instance IS_A hr_c_a(Tc,T_amb,e);
+
+    hr_r_c_instance IS_A hr_r_c (Tc,Tr,e1,e2,Ar,Aa);
+
+	C IS_A factor;
+
+	value IS_A heat_transfer_coefficient;
+
+	
+
+	Tc = (Ar*hr_r_c_instance.value*Tr + Aa*(hr_c_a_instance.value + hconv_c_a_instance.value)*T_amb) / (Ar*hr_r_c_instance.value + Aa*(hr_c_a_instance.value + hconv_c_a_instance.value));
+
+	C * Ar = Aa;
+	
+	value * C * hr_r_c_instance.value = (hconv_c_a_instance.value + hr_c_a_instance.value) * (hr_r_c_instance.value - value);
+
+
+	METHODS
+		METHOD specify;
+            FIX Tr;
+            FIX T_amb;
+			FIX e;
+            FIX e1;
+			FIX e2;
+			FIX Ar;
+			FIX Aa;
+			FIX D;
+			FIX V;
+
+			RUN hconv_c_a_instance.specify;
+			RUN hr_c_a_instance.specify;
+			RUN hr_r_c_instance.specify;
+		END specify;
+
+		METHOD values;
+            Tr := 100 {K} + 273.15 {K};
+            T_amb := 10 {K} + 273.15 {K};
+			e  := 0.9;
+            e1 := 0.9;
+			e2 := 0.88;
+			Ar := 16 {cm^2};
+			Aa := 4 {cm^2};
+			D := 1 {cm};
+			V := 10 {m/s};
+
+			RUN hconv_c_a_instance.values;
+			RUN hr_c_a_instance.values;
+			RUN hr_r_c_instance.values;
+        END values;
+
+        METHOD on_load;
+            RUN specify;
+            RUN values;
+        END on_load;
+END Ul;
+
+
+MODEL S1;
+
+	(* Variables *)
+
+	sp IS_A sunpos_tracker2;
+
+	value IS_A factor;
+
+	DNI IS_A factor;
+	kT IS_A factor;
+
+	IAM IS_A factor;
+
+	f IS_A distance; 		(* focal length of the concentrator (distance from vertex to the focus) *)
+	L IS_A distance; 		(* length of collector assembly (same as earlier L, length of receiver tube) *)
+	EndLoss IS_A factor;
+	
+	Eta_field IS_A factor; 	(* field efficiency *)
+	TrkTwstErr IS_A factor; (* twisting and tracking error associated with the collector type *)
+	GeoAcc IS_A factor; 	(* geometric accuracy of the collector mirrors *)
+	MirRef IS_A fraction; 	(* mirror reflectivity *)
+	MirCln IS_A fraction; 	(* mirror cleanliness *)
+
+	Eta_HCE IS_A fraction; 	(* Heat Collection Element Efficiency *)
+	HCEdust IS_A factor; 	(* losses due to shading of HCE by dust on the envelope *)
+	BelShad IS_A factor; 	(* losses from shading of ends of HCEs due to bellows (WHAT is this *)
+	EnvTrans IS_A fraction; (* transmissivity of the glass envelope *)
+	HCEabs IS_A fraction; 	(* absorbtivity of the HCE selective coating *)
+	HCEmisc IS_A factor; 	(* miscellaneous factor to adjust for other HCE losses *)
+
+	SFAvail IS_A fraction; 	(* fraction of the solar field that is operable and tracking the sun *)
+
+
+
+	(* Equations *)
+
+	DNI = 1;
+
+	value = DNI * cos(sp.theta) * IAM * EndLoss * Eta_field * Eta_HCE * SFAvail;
+
+	IAM = 1 + 0.000884 {1/rad} * (sp.theta / cos(sp.theta)) - 0.00005369 {1/rad^2} * (sp.theta / cos(sp.theta))^2;
+
+	EndLoss * L = L - f*tan(sp.theta);
+	
+	Eta_field = TrkTwstErr * GeoAcc * MirRef * MirCln; 	(* Assuming all the collectors (in cases there are more than one) are identical. *)
+
+	Eta_HCE  = HCEdust * BelShad * EnvTrans * HCEabs * HCEmisc;
+
+
+	METHODS
+        METHOD specify;
+			FIX kT;
+			FIX f;
+			FIX L;
+
+			FIX TrkTwstErr;
+			FIX GeoAcc;
+			FIX MirRef;
+			FIX MirCln;
+
+			FIX HCEdust;
+			FIX BelShad;
+			FIX EnvTrans;
+			FIX HCEabs;
+			FIX HCEmisc;
+
+			FIX SFAvail;
+
+			RUN sp.specify;
+        END specify;
+		
+        METHOD values;
+			kT := 0.75;
+			f 	:= 1{cm};
+			L 	:= 2{cm};
+			RUN sp.values;
+		END values;
+
+		METHOD on_load;
+            RUN specify;
+            RUN values;
+
+			RUN sp.bound_self;
+			RUN sp.default_self;
+        END on_load;
+END S1;
+
+
+MODEL water_props(
+	T WILL_BE temperature;
+);
+	Cp IS_A specific_heat_capacity;
+	Cp_dimless IS_A factor;
+
+	rho IS_A mass_density;
+	mu IS_A viscosity;
+	k IS_A thermal_conductivity;
+	
+	T_dimless IS_A factor;
+
+	
+	T_dimless * 1{K} = T;
+	Cp_dimless = 4.2204 - 4.2587e-3 + 1.3575e-4*T_dimless^2 - 1.8660e-6*T_dimless^3 + 1.3008e-8*T_dimless^4 - 4.2341e-11*T_dimless^5 + 5.2769e-14*T_dimless^6;
+	
+    Cp = Cp_dimless * 1{kJ/kg/K}; 
+
+	(* Cp = 7.573 {kJ/kg/K};  Cp is assumed constant temporarily *)
+	(*h = 21 {kJ};*)
+
+	rho = 1000 {kg/m^3};
+	mu = 0.152 {N*s/m^2};
+	k = 0.58 {watt/m/K};
+
+	p IS_A pressure;
+	h IS_A specific_enthalpy;
+	u IS_A specific_energy;
+
+
+	conf IS_A helmholtz_conf;
+
+	props1: helmholtz_p(
+		T, rho : INPUT;
+		p : OUTPUT;
+		conf : DATA
+	);
+
+	props2: helmholtz_u(
+		T, rho : INPUT;
+		u : OUTPUT;
+		conf : DATA
+	);
+
+	rho*(h - u) = p;
+
+	METHODS
+		METHOD bound_self;
+			T_dimless.lower_bound := 0;
+			T_dimless.upper_bound := 5000;
+		END bound_self;
+END water_props;
+
+
+MODEL test_water_props;
+	T IS_A temperature;
+	wp IS_A water_props(T);
+
+	METHODS
+		METHOD on_load;
+			FIX T;
+			T := 40 {K} + 273.15 {K};
+			RUN wp.bound_self;
+		END on_load;
+END test_water_props;
+
+
+MODEL h_fi(
+	Di WILL_BE distance;
+	V_f WILL_BE speed; 				(* Velocity of fluid in the tube *)
+	wp_f WILL_BE water_props;		 	(* Density of the fluid at T_f *)
+	L WILL_BE distance; 			(* length of receiver tube (Input) *)
+	Tc WILL_BE temperature;
+);
+	(* Variables *)
+	value IS_A heat_transfer_coefficient;
+	Nu1 IS_A factor;
+	Re1 IS_A factor;
+	Pr IS_A factor;
+	wp_Tc IS_A water_props(Tc);
+
+
+	(* Equations *)
+	
+	value = Nu1 * wp_f.k / Di;
+
+	(* For Re1 less than 10000 *)
+	Nu1 = 1.86/((Re1*Pr)^(2/3)) * ((Di/L)^(1/3)) * ((wp_f.mu/wp_Tc.mu)^0.14);
+	(* For Re more than 10000, Nu1 = 0.023*Re^0.8*Pr^0.4 *)
+
+	Re1 = wp_f.rho * V_f * Di / wp_f.mu; (* Reynolds Number inside the tube *)
+	Pr = wp_f.Cp * wp_f.mu / wp_f.k; (* Prandtl Number *)
+
+END h_fi;
+
+
+MODEL Cylindrical_Absorber;
+	(* constants *)
+	e IS_A real_constant;
+	e :== 2.718;
+
+
+	(* Variables *)
+	T_in IS_A temperature;	
+	V_f IS_A speed; 		(* Velocity of fluid in the tube *)
+	L IS_A distance; 		(* length of receiver tube (Input) *)
+	W IS_A distance; 		(* Width of aparture *)
+	N IS_A factor; 			(* Number of solar collector assemblies *)
+	Do IS_A distance; 		(* Outer diameter of the receiver tube (Input) *)	
+	Di IS_A distance;		(* Inner diameter of the receiver tube (Input) *)
+	k_tube IS_A thermal_conductivity; 	(* thermal conductivity of the tube material *)
+
+	Ul_instance IS_A Ul;
+	S1_instance IS_A S1;
+	wp_in IS_A water_props(T_in);
+	wp_f IS_A water_props(T_f);
+	h_fi_instance IS_A h_fi (Di, V_f, wp_f, L, Ul_instance.Tc); 	(* Heat transfer coefficient inside the tube *)
+	
+	Qu IS_A intensity;
+	T_out IS_A temperature;	
+	T_f IS_A temperature;
+	FR IS_A factor;
+	F_dash IS_A factor;		
+	m_dot IS_A mass_rate;
+	delta_h IS_A specific_enthalpy; (* delta_enthalpy;		 Change in enthalpy *)
+	Vdot_f IS_A volume_rate;
+	power IS_A factor;
+
+	(* Equations *)
+	Qu * Ul_instance.Aa + FR * Ul_instance.Aa * Ul_instance.Ar * Ul_instance.value * (T_in - Ul_instance.T_amb) =  Ul_instance.Aa * S1_instance.value * Ul_instance.Aa;
+	T_f * 2 = (T_in + T_out);
+	FR * (Ul_instance.Ar * Ul_instance.value) = (m_dot * wp_f.Cp) * (1 - e^power);
+	power = -1 * Ul_instance.Ar * Ul_instance.value * F_dash / m_dot * wp_f.Cp;
+	F_dash * ( (h_fi_instance.value*Di) + (Do*Ul_instance.value) +  (h_fi_instance.value*Di)*Ul_instance.value*(Do/2*k_tube)*ln(Do/Di)) = (h_fi_instance.value*Di);
+	m_dot * 4 = wp_f.rho * (3.14 * Di^2) * V_f;
+	delta_h = wp_f.h - wp_in.h;
+	delta_h * (Vdot_f * wp_in.rho) = Qu * W * L * N;
+	Vdot_f = 3.14 * Di^2 / 4;
+
+
+	METHODS
+		METHOD specify;
+			FIX T_in;
+			FIX V_f;
+			FIX L;
+			FIX W;
+			FIX N;
+			FIX Do;
+			FIX Di;
+			FIX k_tube;
+
+			RUN Ul_instance.specify;
+			RUN S1_instance.specify;
+			RUN wp_in.specify;
+			RUN wp_f.specify;
+			RUN h_fi_instance.specify;
+		END specify;
+
+		METHOD bound_self;
+			power.lower_bound := -100;
+			power.upper_bound := 100;
+
+			FR.upper_bound := 10000;
+
+			RUN wp_in.bound_self;		
+			RUN wp_f.bound_self;
+		END bound_self;
+		
+		METHOD other;
+			RUN bound_self;
+			RUN S1_instance.sp.bound_self;
+			RUN S1_instance.sp.default_self;
+
+			RUN Ul_instance.values;
+			RUN S1_instance.values;
+			RUN wp_in.values;
+			RUN wp_f.values;
+			RUN h_fi_instance.values;
+		END other;
+
+		(*
+		METHOD on_load;
+			RUN specify;
+			RUN other;
+
+			SOLVER QRSlv;
+			OPTION convopt 'RELNOM_SCALE';
+		END on_load;
+		*)
+END Cylindrical_Absorber;
+
+
+MODEL example_Cylindrical_Absorber REFINES Cylindrical_Absorber;
+
+	METHODS
+		METHOD values;
+			T_in := 10 {K} + 273.15 {K};(* Inlet temperature of water *)
+			V_f := 0.5 {m/s}; 			(* Velocity of fluid in the tube *)
+			L := 10 {m}; 				(* length of receiver tube (Input) *)
+			W := 2.5 {m}; 				(* Width of aparture *)
+			N := 1; 					(* Number of solar collector assemblies *)
+			Do := 0.06 {m}; 			(* Outer diameter of the receiver tube (Input) *)	
+			Di := 0.055 {m};			(* Inner diameter of the receiver tube (Input) *)
+			k_tube	 := 16 {watt/m/K};	(* thermal conductivity of the tube material *)
+		END values;
+
+		METHOD on_load;
+			RUN Cylindrical_Absorber::specify;
+			RUN Cylindrical_Absorber::other;
+			RUN values;
+
+			SOLVER QRSlv;
+			OPTION convopt 'RELNOM_SCALE';
+		END on_load;
+END example_Cylindrical_Absorber;
+

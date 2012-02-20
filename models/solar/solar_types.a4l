@@ -1,0 +1,70 @@
+REQUIRE "system.a4l";   (* => system.a4l, basemodel.a4l *)
+REQUIRE "measures.a4l"; (* => measures.a4l *)
+PROVIDE "solar_types.a4l";
+
+
+ATOM calorific_value REFINES solver_var
+    DIMENSION L^2/T^2
+    DEFAULT 100 {kJ/kg};
+    lower_bound := -1e50 {kJ/kg};
+    upper_bound := 1e50 {kJ/kg}; 
+END calorific_value;
+
+
+ATOM power REFINES solver_var
+	DIMENSION M*L^2/T^3
+	DEFAULT 100{W};
+
+	lower_bound := 0{W};
+	upper_bound := 1e50{W};
+	nominal := 100{W};
+END power;
+
+
+ATOM enthalpy REFINES solver_var
+	DIMENSION M*L^2/T^2
+	DEFAULT 1{kJ};
+
+	lower_bound := 0{kJ};
+END enthalpy;
+
+
+ATOM delta_enthalpy REFINES solver_var
+	DIMENSION M*L^2/T^2
+	DEFAULT 1{kJ};
+END delta_enthalpy;
+
+
+ATOM volumetric_heat_transfer_coefficient REFINES solver_var
+    DIMENSION M/T^3/L/TMP
+    DEFAULT 1{watt/m^3/K};
+END volumetric_heat_transfer_coefficient;
+
+
+ATOM intensity REFINES solver_var
+    DIMENSION M/T^3
+    DEFAULT 1{watt/m^2};
+END intensity;
+
+
+ATOM heatloss_per_unit_lenght REFINES solver_var
+    DIMENSION M*L^2/T^3/L
+    DEFAULT 1{watt/m};
+END heatloss_per_unit_lenght;
+
+
+ATOM inv_heat_transfer_coefficient REFINES solver_var
+	DIMENSION T^3*TMP/M
+	DEFAULT 0.2{m^2*K/W};
+END inv_heat_transfer_coefficient;
+
+
+ATOM energy_per_unit_area REFINES solver_var
+    DIMENSION M/T^2
+    DEFAULT 1.0{J/m^2};
+END energy_per_unit_area;
+
+
+CONSTANT stefan_boltzman_constant
+REFINES real_constant DIMENSION M/T^3/TMP^4;
+

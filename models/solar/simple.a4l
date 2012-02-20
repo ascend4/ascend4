@@ -1,0 +1,94 @@
+REQUIRE "atoms.a4l";
+
+MODEL simple;
+
+	Ta IS_A variable;
+	Tp IS_A variable;
+	Ec IS_A variable;
+	Ep IS_A variable;
+	K IS_A variable;
+	B IS_A angle;
+	L IS_A variable;
+		
+		
+	Tc IS_A variable;
+	h_r_c IS_A variable;
+	Ra IS_A variable;
+	tt1 IS_A variable;
+	tt2 IS_A variable;
+	t1 IS_A variable;
+	t2 IS_A variable;
+	Nu IS_A variable;
+	h_c_c IS_A variable;
+	Cres IS_A variable;
+	
+	Ts IS_A variable;
+	h_r_t IS_A variable;
+	h_c_t IS_A variable;
+	Rres IS_A variable;
+	
+	Ut IS_A variable;
+		
+	
+	h_r_c * (1/Ec + 1/Ep - 1) = 5.67e-8 * (Tc + Tp) * (Tc^2 + Tp^2) ;
+	Ra = 9.8 * B * abs(Tc - Tp) * L^3;
+	tt1 * (Ra*cos(B))  = (1 * (Ra*cos(B))  - 1708 );
+	t1 * 2 = (abs(tt1) + tt1 );
+	tt2 = (abs(Ra * cos(B)/5830))^(0.3) - 1;
+	t2 = (abs(tt2) + tt2 )/ 2;	
+	(Nu - t2 -1 -1.44) * (Ra * cos(B)) = (1*(Ra * cos(B))- 1708*((sin(1.8 * B)) ^ 1.6) ) * t1;	
+    h_c_c*L = Nu * K;    
+	Cres * (h_c_c + h_r_c) = 1;
+
+	Ts = 0.0552 * (Ta ^ 1.5);
+	h_r_t * (Tc - Ta) = Ec * 5.67e-8 * (Tc^4 - Ts^4);	
+(*	h_c_t = 10;	*)
+	Rres * (h_r_t + h_c_t ) = 1;
+
+	Ut * ( Cres + Rres ) = 1;
+
+	Tc = Tp - Cres * Ut * (Tp-Ta);
+
+
+	METHODS
+		METHOD specify;
+			FIX Ta;
+			FIX Tp;
+			FIX Ec;
+			FIX Ep;
+			FIX K;
+			FIX B;
+			FIX L;
+			FIX h_c_t;
+			
+		END specify;
+
+
+		METHOD values;
+			
+			Ta := 10 + 273.15;
+			Tp := 100 + 273.15;
+			Ec := 0.88;
+			Ep := 0.95; 
+			K  := 0.0253;
+			B  := 0.785 {rad};
+			L  := 0.02;
+
+			Cres := 10.0;
+			Tc := 300.0;
+
+			h_c_t := 10;
+
+		END values;
+
+
+		METHOD on_load;
+			RUN specify;
+			RUN values;
+			
+			(*SOLVER QRSlv;
+		    OPTION convopt 'RELNOM_SCALE';
+    		SOLVE;*)
+		END on_load;
+	
+END simple;
