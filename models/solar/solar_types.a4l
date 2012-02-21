@@ -47,7 +47,7 @@ ATOM intensity REFINES solver_var
 END intensity;
 
 
-ATOM energy_per_length REFINES solver_var
+ATOM power_per_length REFINES solver_var
     DIMENSION M*L^2/T^3/L
     DEFAULT 1{watt/m};
 END energy_per_length;
