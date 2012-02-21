@@ -1,0 +1,305 @@
+(*
+Model of a parabolic trough solar thermal collector field, of the type
+of SEGS VI plant, closely following the approach of Patnode (2006).
+https://www.nrel.gov/analysis/sam/pdfs/thesis_patnode06.pdf
+
+First ASCEND version by Vikram Kaadam (2011), with revisions by 
+John Pye (2012).
+*)
+REQUIRE "atoms.a4l";
+REQUIRE "solar/solar_types.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/sunpos.a4c";
+
+(*
+	Sun position calculator, using Duffie & Beckman equations.
+	
+	TODO change to use grena/PSA/NREL algorithm instead of D&B
+*)
+MODEL sunpos_wrapper REFINES sunpos;
+		
+	beta = 1.0 * theta_z;
+
+METHODS
+	METHOD specify;
+		FIX L_st, L_loc, phi; (* time and location *)
+		FIX gamma; (* surface orientation *)
+		FIX t;			
+	END specify;
+
+	METHOD values;
+		(* there should be something here?? *)
+	END values;
+
+	METHOD self_test;
+		ASSERT abs(theta-35.0{deg}) < 0.15{deg};
+		ASSERT abs(delta-(-13.80{deg})) < 0.02{deg};
+	END self_test;		
+END sunpos_wrapper;
+
+
+(*
+	Heat absorbed by the solar receiver of cylindrical shape
+	
+	TODO implement option to set field orientation EW/NS.
+*) 
+MODEL parabolic_trough;
+
+	(* sun position *)
+	sun        IS_A sunpos_wrapper; (* Sun position calculation *)
+	(* TODO what do we do with this? *)
+	DST        IS_A time;      (* Daylight savings time adjustment (1 hr during daylight savings time, else 0)  *) 
+	t_std ALIASES sun.t;
+
+	Q_abs      "solar radiation absorbed by receiver tubes" IS_A intensity;
+	DNI        "direct normal irradiance" IS_A intensity;
+	IAM        "incidence angle modifier" IS_A factor;
+	row_shadow IS_A factor;
+	end_loss   IS_A factor;
+	eta_field  "averaged field efficiency" IS_A fraction;
+	eta_HCE    "averaged heat collection element efficiency" IS_A fraction;
+	avail_SF   "solar field availability - on-sun portion" IS_A fraction;
+
+	(* absorbed solar radiation, Patnode eq 2.1. factored the cos(theta) into IAM. *)	
+	Q_abs = DNI * IAM * row_shadow * end_loss * eta_field * eta_HCE * avail_SF;
+
+	(* TODO where is Patnode eq 2.8 ? looks like an error? *)
+	
+	(* incidence angle modifier, Patnode eq 2.9 *)
+	IAM * cos(sun.theta) = cos(sun.theta) + 8.84e-4 * sun.theta - 5.369e-5 * sun.theta^2;
+	
+	W          IS_A distance;  (* Collector aperture width *)
+	L_spacing  IS_A distance;  (* Length of spacing between troughs *)
+
+	(* row shading (Stuetzle), Patnode eq 2.12 *)
+	(* TODO is this the right theta_z and theta? *)
+	row_shadow = (L_spacing/W) * (cos(sun.theta_z)/cos(sun.theta));	
+	
+	L_SCA      IS_A distance;  (* Length of single solar collector assembly *) 
+	f          IS_A distance;  (* Focal length of the collectors *) 
+
+	(* end loss (Lippke), Patnode eq 2.13 *)
+	end_loss = 1 - f * tan(sun.theta) / L_SCA;
+		
+METHODS
+	METHOD specify;
+		FIX DNI, sun.L_st, sun.L_loc, DST, t_std, L_spacing;
+		FIX W, f, L_SCA, eta_field, eta_HCE, avail_SF;
+		RUN sun.specify;
+	END specify;	
+
+	METHOD values;		
+		IF (t_std > 12{hour}) THEN
+			sun.gamma := 90{deg};
+		END IF;
+		IF (t_std <= 12{hour}) THEN
+			sun.gamma := -90{deg};
+		END IF;
+
+		DNI := 60 {W/m^2};
+		sun.L_st := -105 {deg};
+		sun.L_loc := -110 {deg};
+		DST := 0 {hour};
+		t_std := 15 {hour};
+		L_spacing := 15 {m};
+		W := 5 {m};
+		f := 5 {m};
+		L_SCA := 50 {m};
+		
+		(* fixed field efficiency based on values in Patnode Table 2.1 *)
+		eta_field := 0.857;
+		
+		T_i,T_o IS_A 
+		abs[1] IS_A absorber_loss(
+		
+		
+		eta_HCE := 0.832;
+		avail_SF := 1;
+		sun.phi := 37.21 {deg};
+
+		(* initial guesses  *) 
+		Q_abs := 100 {W/m^2};
+	END values;
+
+	METHOD on_load;
+		RUN specify;
+		RUN values;
+	END on_load;	
+END parabolic_trough;
+
+(*
+	Heat loss per metre length of absorber tube, including convective, conductive 
+	and radiative losses.	
+*) 
+MODEL absorber_loss(type IS_A symbol_constant
+	, T_i WILL_BE temperature;
+	, T_o WILL_BE temperature;
+	, DNI WILL_BE intensity;
+);
+
+	a[0..3] IS_A real_constant;
+	b[0,1] IS_A real_constant;
+	
+	SELECT(type)
+	CASE 'air':
+		(* a broken glass envelope; contents will be air at ambient pressure *)
+		a[0] :== -2.247372E+01 {W/m^2};
+		a[1] :==  8.374490E-01 {W/m^2/K};
+		a[2] :==  0.00         {W/m^2/K^2};
+		a[3] :==  4.620143E-06 {W/m^2/K^3};
+		b[0] :==  6.983190E-02	{m};
+		b[1] :==  9.312703E-08 {m/K^2};		
+	CASE 'vacuum':
+		(* an intact HCE, evacuated air at 0.0001 Torr *)
+		a[0] := -2.247372E+01 {W/m^2};
+		a[1] :=  8.374490E-01 {W/m^2/K};
+		a[2] :=  0.00         {W/m^2/K^2};
+		a[3] :=  4.620143E-06 {W/m^2/K^3};
+		b[0] :=  6.983190E-02	{m};
+		b[1] :=  9.312703E-08 {m/K^2};
+	CASE 'hydrogen':
+		(* intact HCE into which hydrogen has diffused to a pressure off 1 Torr *)
+		a[0] := -2.247372E+01 {W/m^2};
+		a[1] :=  8.374490E-01 {W/m^2/K};
+		a[2] :=  0.00         {W/m^2/K^2};
+		a[3] :=  4.620143E-06 {W/m^2/K^3};
+		b[0] :=  6.983190E-02	{m};
+		b[1] :=  9.312703E-08 {m/K^2};
+	END SELECT;
+	
+	Qdash_loss IS_A power_per_length;  
+
+	(* heat loss calculated locally *)
+	(* 
+	T "local HTF temperature" IS_A temperature;
+	Q_loss_field = SUM[(a[i]*T^i | i IN [0..3]] + DNI * (b[0] + b[1]*T^2);
+	*)
+	
+	(* heat loss calculated as integral wrt temperature, assumes linear temperature rise with position? *)
+	Q_loss_field * (T_o - T_i) = SUM[(a[i]*(T_o^(i+1) - T_i^(i+1))/(i+1) | i IN [0..3]] + DNI * (b[0] + b[1]/3*(T_o^3 - T_i^3));
+
+METHODS	
+	METHOD specify;		
+		FIX DNI;
+		FIX Ti;			
+	END specify;
+
+	METHOD values;		
+		DNI := 60 {W/m^2};
+		Ti := 30 {K};
+	END values;		
+END HeatLossField;
+
+(*
+	T_o calculate Q collected by the solar field in W/m2
+*) 
+MODEL Qcollected;
+	
+	(*  variables  *) 
+    field_types IS_A set OF symbol_constant;
+    field_types :== ['air','vacuum','hydrogen'];
+
+	DNI IS_A intensity;
+	
+	Ti IS_A temperature;        (* Input temperature to the field, degC *) 
+	T_o IS_A temperature;       (* Output temperature from the field, degC *) 
+	T_amb IS_A temperature;     (* Ambient temperature, degC *) 
+	
+	width IS_A distance;	    (* Width of mirror aperure, m *) 
+	
+	Q_loss_recv IS_A intensity; (* Receiver heat loss, W/m2 *) 
+	Q_loss_pipe IS_A intensity; (* Solar field piping heat loss, W/m2 *) 
+	
+	value IS_A intensity;
+	DT IS_A delta_temperature;
+
+	rho_i IS_A mass_density;
+	h_i IS_A specific_enthalpy;
+	h_o IS_A specific_enthalpy;
+		
+	dh_field IS_A specific_enthalpy;
+	
+	L_SCA IS_A distance;      (* Length of single solar collector assembly, m *) 
+	eta_SCA IS_A factor;      (* Number of solar collector assemblies in the field *) 
+	Vdot_HTF IS_A volume_rate;
+	
+	(*  parts  *)
+	trough IS_A parabolic_trough;
+	hlfield[field_types] IS_A HeatLossField;
+		
+	(*  interconnecting  *)  (* Annulus types- air, vacuum, hydrogen *) 
+    T_o, hlfield[field_types].T_o ARE_THE_SAME;
+    DNI, trough.DNI ARE_THE_SAME;
+    L_SCA, trough.L_SCA ARE_THE_SAME;
+
+	(*  equations  *)
+	Q_loss_recv * width = SUM[hlfield[field_types].Q_loss_field];
+	T_amb + DT = 0.5 * (T_o + Ti);
+	Q_loss_pipe = 0.01693{W/m^2/K}*DT - 0.0001683{W/m^2/K^2}*(DT^2) + 0.78e-7{W/m^2/K^3}*(DT^3);	
+	value = trough.Q_abs - (Q_loss_recv + Q_loss_pipe);
+	rho_i = 1074.0{kg/m^3} - 0.6367{kg/m^3/K}*Ti - 0.0007762{kg/m^3/K^2}*Ti^2;
+	dh_field * (Vdot_HTF * rho_i) = value * width * L_SCA * eta_SCA;
+	h_i = 1000{m^2/s^2} * (-18.34 + 1.498{1/K}*Ti + 0.001377{1/K^2}*Ti^2);
+	h_o = 1000{m^2/s^2} * (-18.34 + 1.498{1/K}*T_o + 0.001377{1/K^2}*T_o^2);
+	dh_field = abs(h_i - h_o);
+	
+	
+METHODS
+	METHOD specify;
+		FIX DNI;
+		FIX Ti;
+		FIX T_amb;			
+		FIX width;
+		FIX L_SCA;
+		FIX eta_SCA;
+		FIX Vdot_HTF;
+		FIX hlfield[field_types].HCEfra;
+		FIX hlfield[field_types].type;
+
+		RUN hlfield[field_types].specify;			
+		RUN trough.specify;
+	END specify;
+
+	METHOD values;
+		DNI := 60 {W/m^2};
+		Ti := 60{K};
+		T_amb := 30{K};
+
+		width := 5{m};
+		L_SCA := 50 {m};
+		eta_SCA := 256;
+		Vdot_HTF := 400{m^3/hour};
+
+		hlfield['air'].type := 1;
+		hlfield['vacuum'].type := 2;
+		hlfield['hydrogen'].type := 3;
+
+		hlfield['air'].HCEfra := 1.0;
+		hlfield['vacuum'].HCEfra := 0.0;
+		hlfield['hydrogen'].HCEfra := 0.0;
+
+		trough.sun.L_st := -105 {deg};
+		trough.sun.L_loc := -110 {deg};
+		trough.DST := 0 {hour};
+		trough.sun.phi := 37.21 {deg};
+		trough.t_std := 15 {hour};
+		trough.L_spacing := 15 {m};
+		trough.W := 5 {m};
+		trough.f := 5 {m};
+		trough.eta_field := 0.857;
+		trough.eta_HCE := 0.832;
+		trough.avail_SF := 1;
+
+		RUN hlfield[field_types].values;
+		RUN trough.values;
+
+		(*  guesses  *) 
+		T_o := 100{K};
+	END values;
+
+	METHOD on_load;
+		RUN specify;
+		RUN values;
+	END on_load;
+END Qcollected;
+
