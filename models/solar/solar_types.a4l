@@ -47,10 +47,10 @@ ATOM intensity REFINES solver_var
 END intensity;
 
 
-ATOM heatloss_per_unit_lenght REFINES solver_var
+ATOM energy_per_length REFINES solver_var
     DIMENSION M*L^2/T^3/L
     DEFAULT 1{watt/m};
-END heatloss_per_unit_lenght;
+END energy_per_length;
 
 
 ATOM inv_heat_transfer_coefficient REFINES solver_var
