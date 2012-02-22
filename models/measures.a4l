@@ -279,8 +279,8 @@ MPa = {1e6*Pa};
 GPa = {1e9*Pa};
 
 atm = {Pa*101325.0};
-mmHg = {133.322*Pa};
-torr = {133.322*Pa};
+mmHg = {13.5951*g/cm^3*9.80665*m/s^2*1*mm};
+Torr = {atm/760.};
 psia = {6894.733*Pa};
 psi = {psia};
 ftH2O = {2989*Pa};
