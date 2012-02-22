@@ -3079,11 +3079,13 @@ enum typelinterr VerifyTypeArgs(CONST struct Set *alist,
         }
         n = ExprName(ex);
         if (NameInForTable(ft,n)) {
-          FPRINTF(ASCERR,
-            "%s Loop index used where instance expected\n  Argument %d: ",
-            StatioLabel(3),argc);
+          const char *filename=Asc_ModuleBestName(StatementModule(stat));
+          int line=StatementLineNum(stat);
+          error_reporter_start(ASC_USER_ERROR,filename,line,"");
+          FPRINTF(ASCERR,"Loop index used in argument list where instance expected (arg #%d '",argc);
           WriteSetNode(ASCERR,sn);
-          FPRINTF(ASCERR,"\n");
+          FPRINTF(ASCERR,"')");
+          error_reporter_end_flush();
           return DEF_ARGS_INCORRECT;
         }
         ptype = FindRHSType(n,lclgl,&rval,&subsopen,&origin);

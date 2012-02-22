@@ -1,0 +1,20 @@
+REQUIRE "atoms.a4l";
+
+(*
+	Therminol VP1 heat transfer oil, as used in the SEGS VI
+	system. Equations by Price (2005) as cited in Patnode thesis.
+*)
+MODEL therminol;
+	T IS_A temperature;
+	rho IS_A mass_density;
+	h IS_A specific_enthalpy;
+
+	rho = 1 {m^3/kg} * (1074. - 0.6367 * ((T-273.15{K})/1{K}) - 0.0007762 * ((T-273.15{K})/1{K})^2);
+	
+	h = 1 {kJ/kg} * (-18.34 + 1.498 * ((T-273.15{K})/1{K}) + 0.001377 * ((T-273.15{K})/1{K})^2);
+	
+(*
+	NOTE Patnode provides a reverse equation T(h) but we'll try not using 
+	that, and just let ASCEND handle the inversion.
+*)	
+END therminol;
