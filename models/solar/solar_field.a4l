@@ -88,13 +88,14 @@ MODEL absorber_loss(
 	Qd_loss * (T_o - T_i) = SUM[a[i]*(T_o^(i+1) - T_i^(i+1))/(i+1) | i IN [0..3]] + DNI * (b[0] + b[1]/3*(T_o^3 - T_i^3));
 	(* NOTE above eq assumes linear temperature rise with position? is that suff valid? *)
 	(* NOTE above eq assumes ambient temperature of 25 C (Patnode sect 2.3.2) -- should adjust for changes in T_amb?? *)
+	(* NOTE also the equation in Lippke 1995 for bare tubes, which has a different form and requires wind speed *)
 END absorber_loss;
 
 MODEL absorber_loss_test;
 	type IS_A symbol_constant;
+	type :== 'vacuum';
 	T_i, T_o IS_A temperature;
 	DNI IS_A intensity;
-	type :== 'vacuum';
 	abso IS_A absorber_loss(type,T_i,T_o,DNI);
 	Qd_loss ALIASES abso.Qd_loss;
 METHODS 
@@ -142,10 +143,13 @@ MODEL parabolic_trough;
 	
 	(* absorbed solar radiation, Patnode eq 2.1. factored the cos(theta) into IAM. *)	
 	Qdd_abs = DNI * IAM * row_shadow * end_loss * eta_field * eta_HCE * avail_SF;
+	(* NOTE that eta_field and eta_HCE are given fixed values here, though their 
+	components factors are shown in Patnode sect 2.2.5 *)
 
 	(* TODO where is Patnode eq 2.8 ? looks like an error? *)
 	
 	(* incidence angle modifier, Patnode eq 2.9 *)
+	(* TODO check... do these values assume angles in degrees? *)
 	IAM * cos(sun.theta) = cos(sun.theta) + 8.84e-4 * sun.theta - 5.369e-5 * sun.theta^2;
 	
 	(* row shading (Stuetzle), Patnode eq 2.12 *)
@@ -168,16 +172,19 @@ MODEL parabolic_trough;
 	END FOR;
 	
 	Qdd_loss_recv "HCE losses per aperture area" IS_A power_per_area;
+	(* receiver heat loss, Patnode eq 2.19 *)
 	Qdd_loss_recv * W_apert = SUM[abso[i].Qd_loss * hce_frac[i] | i IN hce_types];
 	
 	(* LOSSES FROM FIELD PIPING *)
 	
 	T_amb "ambient temperature" IS_A temperature;
 	DT "temperature difference ambient to field piping" IS_A delta_temperature;
+	(* average external temp difference, Patnode eq 2.21 *)
 	T_amb + DT = 0.5 * (T_i + T_o);
 
 	Qdd_loss_pipe "losses from pipework, per solar field aperture area" IS_A power_per_area;
 	
+	(* solar field piping loses, Patnode eq 2.20 *)
 	Qdd_loss_pipe = 0.01693{W/m^2/K}*DT - 0.0001683{W/m^2/K^2}*(DT^2) + 0.78e-7{W/m^2/K^3}*(DT^3);	
 	(* typically 10 W/m2 or less, apparently *)
 	
@@ -185,13 +192,18 @@ MODEL parabolic_trough;
 	
 	Vdot_i IS_A volume_rate;
 	Qdd_fluid IS_A power_per_area;
+	(* net absorbed energy, Patnode eq 2.22 *)
 	Qdd_fluid = Qdd_abs - Qdd_loss_pipe - Qdd_loss_recv;
 	
 	inlet, outlet IS_A therminol;
 	inlet.T, T_i ARE_THE_SAME;
 	outlet.T, T_o ARE_THE_SAME;
 	
-	(outlet.h - inlet.h) * inlet.rho * Vdot_i = Qdd_fluid * A_field;
+	Q_net IS_A energy_rate;
+	Q_net = Qdd_fluid * A_field;
+	
+	(* first-law energy balance, Patnode eq 2.23 *)
+	(outlet.h - inlet.h) * inlet.rho * Vdot_i = Q_net;
 
 METHODS
 	METHOD specify;
@@ -242,7 +254,7 @@ METHODS
 		hce_frac['vacuum'] := 0.0;
 		hce_frac['hydrogen'] := 0.0;
 
-		(*  guesses  *) 
+		(* initial guess, needed for solving OK  *) 
 		T_o := 200 {K} + 273.15{K};
 	END values;
 
