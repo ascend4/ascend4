@@ -89,6 +89,7 @@ MODEL absorber_loss(
 	(* NOTE above eq assumes linear temperature rise with position? is that suff valid? *)
 	(* NOTE above eq assumes ambient temperature of 25 C (Patnode sect 2.3.2) -- should adjust for changes in T_amb?? *)
 	(* NOTE also the equation in Lippke 1995 for bare tubes, which has a different form and requires wind speed *)
+	(* NOTE that Lippke says that end loss must be included in the above equation (eq 7, p. 11) *)
 END absorber_loss;
 
 MODEL absorber_loss_test;
