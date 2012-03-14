@@ -141,7 +141,7 @@ Type::isRefinedConstant() const{
 */
 Simulation
 Type::getSimulation(const SymChar &sym
-		, const bool &rundefaultmethod
+		, const bool rundefaultmethod
 ){
 	/* notify the compiler of our bintoken options, if nec */
 	Compiler::instance()->sendBinaryCompilationOptions();

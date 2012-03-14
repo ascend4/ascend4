@@ -153,6 +153,7 @@ void
 Simulation::write(FILE *fp, const char *type) const{
 	int res;
 
+#if 0
 	const var_filter_t vfilter = {
 		  VAR_SVAR | VAR_ACTIVE | VAR_INCIDENT | VAR_FIXED
 		, VAR_SVAR | VAR_ACTIVE | VAR_INCIDENT | 0
@@ -162,6 +163,7 @@ Simulation::write(FILE *fp, const char *type) const{
 		  REL_INCLUDED | REL_EQUALITY | REL_ACTIVE
 		, REL_INCLUDED | REL_EQUALITY | REL_ACTIVE
 	};
+#endif
 
 	if(type==NULL){
 		CONSOLE_DEBUG("Writing simroot...");

@@ -13,7 +13,7 @@ int main(void){
 	L.load("test/ipopt/" TESTNAME ".a4c");
 	Type t = L.findType(TESTNAME);
 #undef TESTNAME
-	Simulation S = t.getSimulation("S");
+	Simulation S = t.getSimulation("S",1);
 	SolverReporter R;
 	try{
 		S.solve(Solver("IPOPT"),R);
