@@ -540,7 +540,7 @@ class mainWindow(gtk.Window):
 			self.ascwrap.library.loadString(model,"canvasmodel")
 			
 			T = self.ascwrap.library.findType("canvasmodel")
-			M = T.getSimulation('canvassim')
+			M = T.getSimulation('canvassim',True)
 			M.setSolver(ascpy.Solver("QRSlv"))
 			M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
 

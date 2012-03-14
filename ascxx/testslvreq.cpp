@@ -17,7 +17,7 @@ int main(void){
 	Type t = L.findType("test2");
 
 	// in here, there is a call to slvreq_assign_hooks.
-	Simulation S = t.getSimulation("S");
+	Simulation S = t.getSimulation("S",1);
 
 	Method M = t.getMethod("on_load");
 	S.run(M);

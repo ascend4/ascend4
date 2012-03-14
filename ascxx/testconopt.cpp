@@ -12,7 +12,7 @@ int main(void){
 	L.load("conopttest.a4c");
 	Type t = L.findType("conopttest");
 	cerr << "Type = " << t.getName() << endl;
-	Simulation S = t.getSimulation("S");
+	Simulation S = t.getSimulation("S",1);
 	
 	S.build();
 	

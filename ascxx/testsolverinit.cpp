@@ -11,7 +11,7 @@ int main(void){
 	L.load("johnpye/testlog10.a4c");
 	Type t = L.findType("testlog10");
 	cerr << "Type = " << t.getName() << endl;
-	Simulation S = t.getSimulation("S");
+	Simulation S = t.getSimulation("S",1);
 	
 	S.build();
 	
