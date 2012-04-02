@@ -675,7 +675,7 @@ vars.Add(BoolVariable('MALLOC_DEBUG'
 #------ dmalloc --------
 vars.Add(PackageVariable('DMALLOC_PREFIX'
 	,"Where are your dmalloc files?"
-	,default_prefix
+	,"$DEFAULT_PREFIX"
 ))
 
 vars.Add(PackageVariable('DMALLOC_CPPPATH'
@@ -702,7 +702,7 @@ vars.Add(BoolVariable('WITH_GRAPHVIZ'
 #------ ufsparse --------
 vars.Add(PackageVariable('UFSPARSE_PREFIX'
 	,"Where are your UFSPARSE files?"
-	,default_prefix
+	,"$DEFAULT_PREFIX"
 ))
 
 vars.Add(PackageVariable('UFSPARSE_CPPPATH'
@@ -2845,8 +2845,8 @@ if with_installer:
 		,'PYVERSION':pyversion
 		,'IPOPTDLL_LINE':ipoptf1
 		,'IPOPTDLL_LINE2':ipoptf2
-		,'PYARCH':pyarch
-		,'INST64':inst64
+		,'PYARCH':str(pyarch)
+		,'INST64':str(inst64)
 	})
 	installer = env.Installer('nsis/installer.nsi')
 	env.Depends(installer,["pygtk","ascxx","tcltk","ascend.dll","models","solvers","ascend-config",'pygtk/ascend'])

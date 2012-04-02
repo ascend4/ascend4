@@ -35,7 +35,7 @@ SetCompressor /SOLID lzma
 OutFile ${OUTFILE}
 
 ; The default installation directory
-!if ${INST64}
+!if "${INST64}" != "0"
 InstallDir $PROGRAMFILES64\ASCEND
 !else
 InstallDir $PROGRAMFILES32\ASCEND
@@ -252,7 +252,7 @@ SectionEnd
 ;--------------------------------
 
 Section "PyGTK GUI" sect_pygtk
-!if ${INST64}
+!if "${INST64}" != "0"
 	SetRegView 64
 !endif
 	; Check the dependencies of the PyGTK GUI before proceding...
@@ -469,7 +469,7 @@ SectionEnd
 ; UNINSTALLER
 
 Section "Uninstall"
-!if ${INST64}
+!if "${INST64}" != "0"
 	SetRegView 64
 !endif
 
@@ -609,12 +609,19 @@ SectionEnd
 !include "envvarwarning.nsi"
 
 Function .onInit
-!if ${INST64}
+!if "${INST64}" != "0"
 	${If} ${RunningX64}
+		MessageBox MB_OK "64-bit installer on 64-bit Windows (inst64= ${INST64})"
 	${Else}
 		MessageBox MB_OK "This ASCEND installer is for 64-bit Windows versions only.\n\nVisit http://ascend4.org for 32-bit versions."
 	${EndIf}
 	SetRegView 64
+!else
+	${If} ${RunningX64}
+		MessageBox MB_OK "32-bit installer on 64-bit Windows"
+	${Else}
+		MessageBox MB_OK "32-bit installer on 32-bit Windows"
+	${EndIf}
 !endif
 
 	StrCpy $PYINSTALLED ""

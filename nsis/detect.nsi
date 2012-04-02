@@ -2,18 +2,18 @@
 ; ROUTINES TO DETECT PYTHON, PYGTK, PYGOBJECT, PYCAIRO and TCL/TK.
 
 ;---------------------------------------------------------------------
-; Look for Python in HKLM. No attempt to detect it in HKCU at this stage.
+; Look for Python in HKLM and HKCU
 
 Function DetectPython
-!if ${INST64}
+!if "${INST64}" != "0"
 	SetRegView 64
 !endif
-	ReadRegStr $R6 HKCU "SOFTWARE\Python\PythonCore\${PYVERSION}\InstallPath" ""
+	ReadRegStr $R6 HKLM "SOFTWARE\Python\PythonCore\${PYVERSION}\InstallPath" ""
 	${If} $R6 == ''
-		;MessageBox MB_OK "No Python in HKCU"
-		ReadRegStr $R6 HKLM "SOFTWARE\Python\PythonCore\${PYVERSION}\InstallPath" ""
+		;MessageBox MB_OK "No Python in HKLM"
+		ReadRegStr $R6 HKCU "SOFTWARE\Python\PythonCore\${PYVERSION}\InstallPath" ""
 		${If} $R6 == ''
-			;MessageBox MB_OK "No Python in HKLM"
+			;MessageBox MB_OK "No Python in HKCU"
 			Push "No registry key found"
 			Push "NOK"
 			Return
@@ -34,15 +34,27 @@ FunctionEnd
 ; Prefer the current user's installation of GTK, fall back to the local machine
 
 Function DetectGTK
-	${If} ${FileExists} "${GTKSEARCHPATH}\manifest\gtk+-bundle_2.22.1-20101229_win64.mft"
+!if "${INST64}" != "0"
+	${If} ${RunningX64}
+		${If} ${FileExists} "${GTKSEARCHPATH}\manifest\gtk+-bundle_2.22.1-20101229_win64.mft"
+				MessageBox MB_OK "GTK OK in ${GTKSEARCHPATH}\manifest"
+				Push "${GTKSEARCHPATH}\bin"
+				Push "OK"
+				Return
+		${EndIf}
+	${EndIf}
+	MessageBox MB_OK "Expected to gtk+-bundle_2.22.1-20101229_win64.mft in ${GTKSEARCHPATH}\manifest"
+!else
+	${If} ${FileExists} "${GTKSEARCHPATH}\manifest\gtk+-bundle_2.24.10-20120208_win32.mft"
 		MessageBox MB_OK "GTK OK in ${GTKSEARCHPATH}\manifest"
 		Push "${GTKSEARCHPATH}\bin"
 		Push "OK"
-	${Else}
- 		MessageBox MB_OK "gtk+-bundle_2.22.1-20101229_win64.mft not found in ${GTKSEARCHPATH}\manifest"
-		Push "gtk+-bundle_2.22.1-20101229_win64.mft not found in ${GTKSEARCHPATH}\manifest"
-		Push "NOK"
+		Return
 	${EndIf}
+	MessageBox MB_OK "Expected to find gtk+-bundle_2.24.10-20120208_win32.mft in ${GTKSEARCHPATH}\manifest"
+!endif
+	Push "gtk+-bundle manifest not found in ${GTKSEARCHPATH}\manifest"
+	Push "NOK"
 FunctionEnd
 
 ;--------------------------------------------------------------------
