@@ -283,6 +283,7 @@ class Browser:
 		self.close_on_nonconverged=self.builder.get_object("close_on_nonconverged")
 		self.close_on_nonconverged.set_active(self.prefs.getBoolPref("SolverReporter","close_on_nonconverged",True))
 		self.solver_engine=self.builder.get_object("solver_engine")
+		self.recent_files=self.builder.get_object("recentfiles")
 
 		self.use_relation_sharing=self.builder.get_object("use_relation_sharing")
 		self.use_relation_sharing.set_active(self.prefs.getBoolPref("Compiler","use_relation_sharing",True))
@@ -418,6 +419,28 @@ class Browser:
 			self.solver_engine_menu.append(_mi)
 			self.solver_engine_menu_dict[_s.getName()]=_mi	
 		
+		#-------
+		# Recent file list
+
+		self.recent_file_list = gtk.Menu()
+		self.recent_file_list.show()
+		self.recent_files.set_submenu(self.recent_file_list)
+		
+		_max_num = int(self.prefs.getStringPref("recentfiles","max","-1"))
+		if _max_num == -1:
+			self.prefs.setStringPref("recentfiles","max","10")
+
+		_cur_num = int(self.prefs.getStringPref("recentfiles","cur","-1"))
+		if _cur_num >= 0:
+			for _i in range(_cur_num):
+				_fname = self.prefs.getStringPref("recentfiles","file%s"%(_cur_num -_i - 1),"no recent files")
+				_mi = gtk.MenuItem(_fname,False)
+				_mi.show()
+				_mi.connect("activate",self.on_recent_file_select)
+				self.recent_file_list.append(_mi)
+		else:
+			self.recent_file_list.set_state(gtk.STATE_INSENSITIVE)
+
 		_pref_solver = self.prefs.getStringPref("Solver","engine","QRSlv")
 		_mi = self.solver_engine_menu_dict.get(_pref_solver)
 		if _mi:
@@ -596,6 +619,52 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		if widget.get_active():
 			self.set_solver(solvername)
 
+	def on_recent_file_select(self,widget):
+		if widget:
+			#	_msg = gtk.MessageDialog(buttons=gtk.BUTTONS_OK,message_format=filename,flags=gtk.DIALOG_MODAL)
+			#	_msg.run()
+			self.do_open(widget.get_label())
+
+	def update_recent_files(self,filename):
+		if filename:
+			_max_num = int(self.prefs.getStringPref("recentfiles","max","10"))
+			_cur_num = int(self.prefs.getStringPref("recentfiles","cur","0"))
+			_should_change = False
+			_temp = None
+			if _cur_num < _max_num:
+				for _i in range(_cur_num):
+					_temp = self.prefs.getStringPref("recentfiles","file%s"%(_i),None)
+					if _temp == filename: #already in the list before
+						_should_change = True
+					if _should_change and _i+1 < _cur_num:
+						_temp = self.prefs.getStringPref("recentfiles","file%s"%(_i+1),None)
+						self.prefs.setStringPref("recentfiles","file%s"%(_i),_temp)
+					if _should_change and _i == _cur_num - 1:
+						self.prefs.setStringPref("recentfiles","file%s"%(_i),filename)
+
+				if _should_change == False:
+					self.prefs.setStringPref("recentfiles","file%s"%(_cur_num),filename)
+					self.prefs.setStringPref("recentfiles","cur",_cur_num+1)
+			else:
+				for _i in range(_max_num):
+					_temp = self.prefs.getStringPref("recentfiles","file%s"%(_i),None)
+					if _temp == filename: #already in the list before
+						_should_change = True
+					if _should_change and _i+1 < _max_num:
+						_temp = self.prefs.getStringPref("recentfiles","file%s"%(_i+1),None)
+						self.prefs.setStringPref("recentfiles","file%s"%(_i),_temp)
+					if _should_change and _i == _max_num - 1:
+						self.prefs.setStringPref("recentfiles","file%s"%(_i),filename)
+
+				if _should_change == False: #this is a new file, then remove the oldest one 
+					for _i in range(_max_num):
+						if _i+1 < _max_num:
+							_temp = self.prefs.getStringPref("recentfiles","file%s"%(_i+1),None)
+							self.prefs.setStringPref("recentfiles","file%s"%(_i),_temp)
+						else:
+							self.prefs.setStringPref("recentfiles","file%s"%(_i),filename)
+
+	
 	def do_open(self,filename):
 		# TODO does the user want to lose their work?
 		# TODO do we need to chdir?
@@ -608,7 +677,6 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		for _obs in self.observers:
 			_obs.set_dead()
 		# self.library.clear()
-
 		#print "Filename =",filename
 		self.statusbar.push(_context,"Loading '"+filename+"'")
 		try:
@@ -617,6 +685,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.enable_on_file_open()
 			# call the low-level 'load' command...
 			self.library.load(filename)
+			self.update_recent_files(filename)
 		except RuntimeError,e:
 			self.statusbar.pop(_context)
 			raise
