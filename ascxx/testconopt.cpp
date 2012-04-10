@@ -9,7 +9,7 @@ using namespace std;
 int main(void){
 
 	Library L;
-	L.load("conopttest.a4c");
+	L.load("test/conopt/conopttest.a4c");
 	Type t = L.findType("conopttest");
 	cerr << "Type = " << t.getName() << endl;
 	Simulation S = t.getSimulation("S",1);
