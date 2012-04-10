@@ -1,4 +1,8 @@
-
+/*
+THIS CODE COMES FROM APPENDIX A.6 OF REPORT NREL/TP-560-34302 
+WHICH WAS OBTAINED FROM
+http://www.osti.gov/bridge/servlets/purl/15003974-iP3z6k/native/15003974.PDF
+*/
 
 /////////////////////////////////////////////
 //          HEADER FILE for SPA.C          //
