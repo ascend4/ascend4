@@ -435,7 +435,7 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
         WriteStatement(fp,s,2);
       }
       break;
-		 case UNLNK:
+    case UNLNK:
       if(TLINT_STYLE){
         FPRINTF(fp,"%sType \"%s\" contains UNLNK:\n",
                 StatioLabel(1),SCP(name));
@@ -657,7 +657,7 @@ enum typelinterr TypeLintIllegalParamStats(FILE * fp,
     case WNBTS:
     case AA:
     case LNK:
-		case UNLNK:
+    case UNLNK:
     case FOR: /* eventually for legal and fk_expect required */
     case REL:
     case LOGREL:
@@ -730,7 +730,7 @@ TypeLintIllegalWhereStats(FILE * fp,
     case ATS:
     case AA:
     case LNK:
-		case UNLNK:
+    case UNLNK:
     case ASGN:
     case WHEN:
     case FNAME:
@@ -794,7 +794,7 @@ TypeLintIllegalReductionStats(FILE * fp,
     case WNBTS:
     case AA:
     case LNK:
-		case UNLNK:
+    case UNLNK:
     case FOR: /* probably should be legal now and require fk_create */
     case REL:
     case LOGREL:
@@ -892,20 +892,19 @@ TypeLintIllegalMethodStatList(FILE *fp,
         rval = DEF_STAT_MISLOCATED;
       }
       break;
+    case LNK:
+    case UNLNK:
+      /* DS: in case we provide functionality for other statements inside LINK, check their legal status */
+      /* DS: in case we provide functionality for other statements inside UNLINK, check their legal status */
+      break;
     case ASGN:
     case RUN:
-		case FIX:
-    case LNK:
-		/* DS: in case we provide functionality for other statements inside LINK, check their legal status */
-			break;
-		case UNLNK:
-		/* DS: in case we provide functionality for other statements inside UNLINK, check their legal status */
-			break;
-		case FREE:
-	case CALL:
-	case SOLVER:
-	case OPTION:
-	case SOLVE:
+    case FIX:
+    case FREE:
+    case CALL:
+    case SOLVER:
+    case OPTION:
+    case SOLVE:
       break;
     case WHILE:
       if (WhileStatBlock(s) != NULL) {
