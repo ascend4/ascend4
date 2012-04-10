@@ -82,7 +82,7 @@ struct Statement *stmallocF()
 }
 
 /**
-	Create a statement of the specified type and assign the local context to it
+  Create a statement of the specified type and assign the local context to it
 */
 static struct Statement *
 create_statement_here(enum stat_t t){
@@ -124,7 +124,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case IRT:
     case AA:
     case LNK:
-		case UNLNK:
+    case UNLNK:
     case ATS:
     case WBTS:
     case WNBTS:
@@ -156,9 +156,9 @@ void AddContext(struct StatementList *slist, unsigned int con)
         AddContext(sublist,con);
       }
       break;
-	case ASSERT:
+    case ASSERT:
       /* no sublists under a TEST statement */
-	  break;
+      break;
     case IF:
       sublist = IfStatThen(s);
       AddContext(sublist,con);
@@ -299,15 +299,15 @@ struct Statement *IgnoreLNK(symchar *key, struct Name *n_key, struct VariableLis
     result->v.lnk.key_type = link_ignore; /**>> DS: this flag tells the compiler that it is a ignore LINK */
     result->v.lnk.vl = vl;
   }else if(n_key != NULL){
-    result->v.lnk.key = n_key->val.id;	
-    result->v.lnk.key_type = link_ignore;	
+    result->v.lnk.key = n_key->val.id;
+    result->v.lnk.key_type = link_ignore;
     result->v.lnk.vl = vl;
   }
   return result;
 }
 
 struct Statement *CreateLNK(symchar *key, struct Name *n_key, struct VariableList *vl)
-{	
+{
   register struct Statement *result;
   result=create_statement_here(LNK);
 
@@ -316,8 +316,8 @@ struct Statement *CreateLNK(symchar *key, struct Name *n_key, struct VariableLis
     result->v.lnk.key_type = link_symchar;
     result->v.lnk.vl = vl;
   }else if(n_key != NULL){
-    result->v.lnk.key = n_key->val.id;	/**>>DS TODO: Not sure if this is fine, I however need a single datatype to store the keys in the appropriate datastructures */
-    result->v.lnk.key_type = link_name;	
+    result->v.lnk.key = n_key->val.id; /**>>DS TODO: Not sure if this is fine, I however need a single datatype to store the keys in the appropriate datastructures */
+    result->v.lnk.key_type = link_name;
     result->v.lnk.vl = vl;
   }
   return result;
@@ -334,8 +334,8 @@ struct Statement *CreateUNLNK(symchar *key, struct Name *n_key, struct VariableL
     result->v.lnk.key_type = 0;
     result->v.lnk.vl = vl;
   }else if(n_key != NULL){
-    result->v.lnk.key = n_key->val.id;	/**>>DS: Not sure if this is fine, I however need a single datatype to store the keys in the appropriate datastructures */
-    result->v.lnk.key_type = 1;	
+    result->v.lnk.key = n_key->val.id; /**>>DS: Not sure if this is fine, I however need a single datatype to store the keys in the appropriate datastructures */
+    result->v.lnk.key_type = 1;
     result->v.lnk.vl = vl;
   }
 return result;
@@ -454,7 +454,7 @@ unsigned int SlistHasWhat(struct StatementList *slist)
     case LNK:
       what |= contains_LNK;
       break;
-		case UNLNK:
+    case UNLNK:
       what |= contains_UNLNK;
       break;
     case CASGN:
@@ -583,8 +583,8 @@ struct Statement *CreateEXTERNGlassBox(
   result->v.ext.extcall = funcname;
   result->v.ext.u.glass.nptr = n;
   result->v.ext.u.glass.vl = vl;
-  result->v.ext.u.glass.data = data; 	/* NULL is valid */
-  result->v.ext.u.glass.scope = scope;	/* NULL is valid */
+  result->v.ext.u.glass.data = data;   /* NULL is valid */
+  result->v.ext.u.glass.scope = scope; /* NULL is valid */
   return result;
 }
 
@@ -615,9 +615,9 @@ struct Statement *CreateEXTERNBlackBox(
   n = JoinNames(n, bbsuffix);
   result->v.ext.u.black.nptr = n;
   result->v.ext.u.black.vl = vl;
-  result->v.ext.u.black.data = data; 	/* NULL is valid */
-  result->v.ext.u.black.n_inputs = n_inputs; //number of inputs from parsed statement
-  result->v.ext.u.black.n_outputs = n_outputs; //number of outputs from parsed statement
+  result->v.ext.u.black.data = data;          /* NULL is valid */
+  result->v.ext.u.black.n_inputs = n_inputs;  //number of inputs from parsed statement
+  result->v.ext.u.black.n_outputs = n_outputs;//number of outputs from parsed statement
   return result;
 }
 
@@ -653,7 +653,7 @@ struct Statement *CreateRUN(struct Name *n,struct Name *type_access)
   register struct Statement *result;
   result=create_statement_here(RUN);
   result->v.r.proc_name = n;
-  result->v.r.type_name = type_access;	/* NULL is valid */
+  result->v.r.type_name = type_access; /* NULL is valid */
   return result;
 }
 
@@ -662,7 +662,7 @@ struct Statement *CreateCALL(symchar *sym,struct Set *args)
   register struct Statement *result;
   result=create_statement_here(CALL);
   result->v.call.id = sym;
-  result->v.call.args = args;	/* NULL is valid */
+  result->v.call.args = args; /* NULL is valid */
   return result;
 }
 
@@ -770,10 +770,10 @@ int CountStatementsInSelect(struct SelectList *sel)
       assert(s!=NULL);
       switch(StatementType(s)) {
         case SELECT:
-	  tmp = CountStatementsInSelect(SelectStatCases(s));
-	  break;
+          tmp = CountStatementsInSelect(SelectStatCases(s));
+          break;
         default:
-	  break;
+          break;
       }
       count = count + tmp;
     }
@@ -901,16 +901,13 @@ void DestroyStatement(struct Statement *s)
           s->v.i.typeargs = NULL;
         }
         break;
+      case LNK:
+      case UNLNK: 
+        DestroyVariableList(s->v.lnk.vl); 
+        s->v.lnk.vl = NULL;
+        break;
       case ATS:
       case AA:
-      case LNK:
-				DestroyVariableList(s->v.lnk.vl); 
-        s->v.lnk.vl = NULL;
-        break;
-			case UNLNK: 
-				DestroyVariableList(s->v.lnk.vl);
-        s->v.lnk.vl = NULL;
-        break;
       case WBTS:
       case WNBTS:
         DestroyVariableList(s->v.a.vl);
@@ -1110,12 +1107,12 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.i.checkvalue =  CopyExprList(s->v.i.checkvalue);
     /* is this complete for IS_A with args to type? */
     break;
-  case AA:
+  case UNLNK:
   case LNK:
     result->v.lnk.key = s->v.lnk.key;
     result->v.lnk.vl = CopyVariableList(s->v.lnk.vl);
     break;
-	case UNLNK:
+  case AA:
   case ATS:
   case WBTS:
   case WNBTS:
@@ -1252,7 +1249,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case IRT:
   case AA:
   case LNK:
-	case UNLNK:
+  case UNLNK:
   case ATS:
   case WBTS:
   case WNBTS:
@@ -1281,7 +1278,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case FLOW:
     return s->context;
   default:
-	ERROR_REPORTER_STAT(ASC_PROG_ERR,s,"GetStatContext called on incorrect statement type.");
+    ERROR_REPORTER_STAT(ASC_PROG_ERR,s,"GetStatContext called on incorrect statement type.");
     return context_MODEL;
   }
 }
@@ -1297,7 +1294,7 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case IRT:
   case AA:
   case LNK:
-	case UNLNK:
+  case UNLNK:
   case ATS:
   case WBTS:
   case WNBTS:
@@ -1344,7 +1341,7 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case IRT:
   case AA:
   case LNK:
-	case UNLNK:
+  case UNLNK:
   case ATS:
   case WBTS:
   case WNBTS:
@@ -1401,11 +1398,10 @@ struct VariableList *GetStatVarList(CONST struct Statement *s)
   case WILLBE:
   case IRT:
     return (s)->v.i.vl;
-  case AA:
   case LNK:
+  case UNLNK:
     return (s)->v.lnk.vl;
-	case UNLNK:
-		return (s)->v.lnk.vl;
+  case AA:
   case ATS:
   case WBTS:
   case WNBTS:
@@ -1467,8 +1463,7 @@ symchar *LINKStatKeyF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->t==LNK || s->t==UNLNK);
-	return s->v.lnk.key;
-	
+  return s->v.lnk.key;
 }
 
 struct VariableList *LINKStatVlistF(CONST struct Statement *s)
@@ -2381,7 +2376,7 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
         return CmpSymchar(GetBaseTypeName(integer_constant_type),
                           GetBaseTypeName(symbol_constant_type));
       } else {
-	/* ctmp == -1 */
+        /* ctmp == -1 */
         return CmpSymchar(GetBaseTypeName(symbol_constant_type) ,
                           GetBaseTypeName(integer_constant_type));
       }
@@ -2429,13 +2424,14 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     return CompareExprs(GetStatCheckValue(s1),GetStatCheckValue(s2));
+  case LNK: /* fallthru */ /* FIXME check this? */
+  case UNLNK: /* fallthru */
+    CONSOLE_DEBUG("CHECK HERE! don't we also need to check the TYPE of link?");
   case ATS: /* fallthru */
   case WBTS: /* fallthru */
   case WNBTS: /* fallthru */
   case AA:
     return CompareVariableLists(GetStatVarList(s1),GetStatVarList(s2));
-  case LNK: /* fallthru */
-	case UNLNK: /* fallthru */
   case FOR:
     if (ForStatIndex(s1)!=ForStatIndex(s2)) {
       return CmpSymchar(ForStatIndex(s1),ForStatIndex(s2));
@@ -2499,8 +2495,8 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     return CompareStatementLists(WhileStatBlock(s1), WhileStatBlock(s2),&ltmp);
 
   case ASSERT:
-	ctmp = CompareExprs(AssertStatExpr(s1), AssertStatExpr(s2));
-	return ctmp;
+    ctmp = CompareExprs(AssertStatExpr(s1), AssertStatExpr(s2));
+    return ctmp;
 
   case IF:
     ctmp = CompareExprs(IfStatExpr(s1), IfStatExpr(s2));
@@ -2596,13 +2592,13 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     /* FlowStatMessage is considered comment info and so not compared */
     return 0;
   default:
-	ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"CompareStatements called with unknown statement");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"CompareStatements called with unknown statement");
     return 0;
   }
 }
 
 /* could we merge some of this with plain compare statements via some
- *static functions? baa. fix me.
+ *static functions? baa. FIXME.
  */
 int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
 {
@@ -2713,7 +2709,7 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
   case ATS: /* fallthru */
   case AA:
   case LNK:
-	case UNLNK:
+  case UNLNK:
   case ASGN:
   case CASGN:
   case RUN:
@@ -2729,10 +2725,10 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
   case COND:
   case FLOW:
   case WHILE:
-	ERROR_REPORTER_STAT(ASC_PROG_ERR,s1,"CompareISStatements called with incorrect statement");
+    ERROR_REPORTER_STAT(ASC_PROG_ERR,s1,"CompareISStatements called with incorrect statement");
     return -1;
   default:
-	ERROR_REPORTER_STAT(ASC_PROG_ERR,s1,"CompareISStatements called with unknown statement");
+    ERROR_REPORTER_STAT(ASC_PROG_ERR,s1,"CompareISStatements called with unknown statement");
     return 1;
   }
 }
