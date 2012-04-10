@@ -7033,7 +7033,7 @@ int Pass3CheckCondStatements(struct Instance *inst,
     case ATS:
     case AA:
     case LNK:
-		case UNLNK:
+    case UNLNK:
     case CALL:
     case EXT:
     case ASGN:
@@ -7042,9 +7042,9 @@ int Pass3CheckCondStatements(struct Instance *inst,
     case WHEN:
     case FNAME:
     case SELECT:
-         STATEMENT_ERROR(statement,
-               "Statement not allowed inside a CONDITIONAL statement\n");
-         return 0;
+      STATEMENT_ERROR(statement,
+        "Statement not allowed inside a CONDITIONAL statement\n");
+      return 0;
     default:
       STATEMENT_ERROR(statement,"Inappropriate statement type");
 	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
@@ -7099,7 +7099,7 @@ int Pass2CheckCondStatements(struct Instance *inst,
     case ATS:
     case AA:
     case LNK:
-		case UNLNK:
+    case UNLNK:
     case CALL:
     case ASGN:
     case CASGN:
@@ -7403,7 +7403,7 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
     case ATS:
     case AA:
     case LNK:
-		case UNLNK:
+    case UNLNK:
     case REL:
     case LOGREL:
     case EXT:
@@ -7610,7 +7610,7 @@ int CheckSelectStatements(struct Instance *inst, struct Statement *statement)
   case ATS:
   case AA:
   case LNK:
-	case UNLNK:
+  case UNLNK:
   case ARR:
     return 1;
   case FOR:
@@ -7912,6 +7912,10 @@ int Pass4CheckStatement(struct Instance *inst, struct Statement *stat)
     return CheckFNAME(inst,stat);
   case FOR:
     return Pass4CheckFOR(inst,stat);
+  case UNLNK:
+    STATEMENT_ERROR(stat,"Inappropriate UNLINK statement in the declarative part");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
+    return 0;
   case COND:
   case SELECT:
   case REL:
@@ -7924,10 +7928,6 @@ int Pass4CheckStatement(struct Instance *inst, struct Statement *stat)
   case ATS:
   case AA:
   case LNK:
-	case UNLNK:
-		STATEMENT_ERROR(stat,"Inappropriate UNLINK statement in the declarative part");
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
-		return 0;
   case CASGN:
   case ASGN:
   default:
@@ -7956,7 +7956,7 @@ int Pass3CheckStatement(struct Instance *inst, struct Statement *stat)
   case ATS:
   case AA:
   case LNK:
-	case UNLNK:
+  case UNLNK:
   case CASGN:
   case ASGN:
   case WHEN:
@@ -7989,7 +7989,7 @@ int Pass2CheckStatement(struct Instance *inst, struct Statement *stat)
   case ATS:
   case AA:
   case LNK:
-	case UNLNK:
+  case UNLNK:
   case CASGN:
   case ASGN:
   case WHEN:
@@ -8030,7 +8030,7 @@ int Pass1CheckStatement(struct Instance *inst, struct Statement *stat)
   case LNK:
     return CheckLNK(inst,stat);
   case UNLNK:
-   	FPRINTF(ASCERR,"UNLINK are only allowed inside a non-declarative part of the \n");
+   	FPRINTF(ASCERR,"UNLINK are only allowed inside a non-declarative part.\n");
    	return 0;
   case FOR:
     return Pass1CheckFOR(inst,stat);
@@ -9100,8 +9100,8 @@ void ExecuteSelectStatements(struct Instance *inst, unsigned long *count,
         if (return_value) ClearBit(blist,*count);
         break;
       case UNLNK:
-		   	FPRINTF(ASCERR,"UNLINK are only allowed inside a non-declarative part of the \n");
-				break;
+        FPRINTF(ASCERR,"UNLINK are only allowed inside a non-declarative part of the \n");
+        break;
       case FOR:
         return_value = Pass1ExecuteFOR(inst,statement);
         if (return_value) ClearBit(blist,*count);
@@ -9164,7 +9164,7 @@ void ExecuteUnSelectedStatements(struct Instance *inst,unsigned long *count,
       case ATS:
       case AA:
       case LNK:
-			case UNLNK:
+      case UNLNK:
       case CALL:
       case CASGN:
       case ASGN:
@@ -9803,14 +9803,16 @@ int Pass5ExecuteForStatements(struct Instance *inst,
     statement = (struct Statement *)gl_fetch(list,c);
     switch(StatementType(statement)){
     case LNK:
-      if (!ExecuteLNK(inst,statement)) return 0;
+      if (!ExecuteLNK(inst,statement))return 0;
       break;
-		case UNLNK:
-      STATEMENT_ERROR(statement,
-           "Inappropriate statement type in declarative section (UNLINK only possible in the METHODS section)");
-      Asc_Panic(2, NULL,
-                "Inappropriate statement type in declarative section (UNLINK only possible in the METHODS section)");
-			break;
+    case UNLNK:
+      STATEMENT_ERROR(statement,"Inappropriate statement type in declarative "
+        "section (UNLINK only possible in the METHODS section)"
+      );
+      Asc_Panic(2, NULL,"Inappropriate statement type in declarative section "
+      	"(UNLINK only possible in the METHODS section)"
+      );
+      break;
     case FNAME:
       if (!ExecuteFNAME(inst,statement)) return 0;
       break;
@@ -9859,12 +9861,12 @@ int Pass4ExecuteForStatements(struct Instance *inst,
   for(c=1;c<=len;c++){
     statement = (struct Statement *)gl_fetch(list,c);
     switch(StatementType(statement)){
-		case LNK:
-			return 1; /* ignore'm until pass 5 */
+    case LNK:
+      return 1; /* ignore'm until pass 5 */
       break;
-		case UNLNK:
-			return 0;
-			break;
+    case UNLNK:
+      return 0;
+      break;
     case WHEN:
       if (!ExecuteWHEN(inst,statement)) return 0;
       break;
@@ -9931,7 +9933,7 @@ int Pass3ExecuteForStatements(struct Instance *inst,
     case ATS:
     case AA:
     case LNK:
-		case UNLNK:
+    case UNLNK:
     case REF:
     case ASGN:
     case REL:
@@ -10007,7 +10009,7 @@ void Pass2ExecuteForStatements(struct Instance *inst,
     case ATS:
     case AA:
     case LNK:
-		case UNLNK:
+    case UNLNK:
     case CALL:
     case REF:
     case ASGN: /* ignore'm */
@@ -10118,11 +10120,11 @@ void Pass1ExecuteForStatements(struct Instance *inst,
     case LNK:
       return_value = 1; /*DS: ignore'm until pass 5*/
       break;
-		case UNLNK:
-			STATEMENT_ERROR(statement,
-                "UNLINK statements are not allowed in the declarative section");
-			return_value = 0;
-			break;
+    case UNLNK:
+      STATEMENT_ERROR(statement,
+        "UNLINK statements are not allowed in the declarative section");
+      return_value = 0;
+      break;
     case FOR:
       return_value = 1;
       Pass1RealExecuteFOR(inst,statement);
@@ -10186,7 +10188,7 @@ int ExecuteUnSelectedForStatements(struct Instance *inst,
       case ATS:
       case AA:
       case LNK:
-			case UNLNK:
+      case UNLNK:
       case CALL:
       case CASGN:
       case ASGN:
@@ -11419,9 +11421,9 @@ int Pass5ExecuteStatement(struct Instance *inst,struct Statement *statement)
   switch(StatementType(statement)){ /* should be a LNK statement */
   case LNK:
     return ExecuteLNK(inst,statement);
-	case UNLNK:
-		STATEMENT_ERROR(statement," UNLINK statement not allowed in the declarative section");
-		return 0;
+  case UNLNK:
+    STATEMENT_ERROR(statement," UNLINK statement not allowed in the declarative section");
+    return 0;
   case FOR:
     return Pass5ExecuteFOR(inst,statement);
   default:
@@ -11438,10 +11440,10 @@ int Pass4ExecuteStatement(struct Instance *inst,struct Statement *statement)
     return ExecuteWHEN(inst,statement);
   case FOR:
     return Pass4ExecuteFOR(inst,statement);
-	case LNK:
-		return 1; /* automatically assume done */
-	case UNLNK:
-		return 1;
+  case LNK:
+    return 1; /* automatically assume done */
+  case UNLNK:
+    return 1;
   default:
     return 1;
     /* For anything else but a WHEN and FOR statement */
@@ -11460,10 +11462,10 @@ int Pass3ExecuteStatement(struct Instance *inst,struct Statement *statement)
     return Pass3ExecuteCOND(inst,statement);
   case WHEN:
     return 1; /* assumed done  */
-	case LNK:
-		return 1; /* assumed done */
-	case UNLNK:
-		return 1;
+  case LNK:
+    return 1; /* assumed done */
+  case UNLNK:
+    return 1;
   case FNAME:
     STATEMENT_ERROR(statement,"FNAME are allowed only inside a WHEN statement");
     return 0;
@@ -11501,10 +11503,10 @@ int Pass2ExecuteStatement(struct Instance *inst,struct Statement *statement)
 		return 1; /* assumed done */
   case WHEN:
     return 1; /* assumed done  */
-	case LNK:
-		return 1; /* assumed done */
-	case UNLNK:
-		return 0;
+  case LNK:
+    return 1; /* assumed done */
+  case UNLNK:
+    return 0; /* meaning what??? FIXME */
   case FNAME:
     STATEMENT_ERROR(statement,"FNAME are allowed only inside a WHEN statement");
     return 0;
@@ -11550,11 +11552,11 @@ int Pass1ExecuteStatement(struct Instance *inst, unsigned long *c,
     return 1; /* automatically assume done */
   case WHEN:
     return 1; /* automatically assume done */
-	case LNK:
-		return 1; /* automatically assume done */
-	case UNLNK:
-		STATEMENT_ERROR(statement,"UNLINK is allowed only inside the declarative part of the model; statement not executed");
-		return 0;
+  case LNK:
+    return 1; /* automatically assume done */
+  case UNLNK:
+    STATEMENT_ERROR(statement,"UNLINK is allowed only inside the declarative part of the model; statement not executed");
+    return 0;
   case FNAME:
     STATEMENT_ERROR(statement,"FNAME are allowed only inside a WHEN statement");
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);

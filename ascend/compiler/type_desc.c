@@ -1625,7 +1625,7 @@ struct TypeDescription *GetStatTypeDesc(CONST struct Statement *s){
   case WNBTS:
   case AA:
   case LNK:
-	case UNLNK:
+  case UNLNK:
   case FOR:
   case REL:
   case LOGREL:
