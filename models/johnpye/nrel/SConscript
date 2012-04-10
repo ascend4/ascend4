@@ -1,0 +1,19 @@
+Import('env')
+nrel_env = env.Clone()
+
+srcs = Split("""
+	spa.c
+	asc_sunpos.c
+""")
+
+nrel_env.Append(LIBPATH=['#'])
+nrel_env.Append(LIBS=['ascend'])
+
+lib = nrel_env.SharedLibrary("sunpos_nrel",srcs
+	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+	,SHLIBPREFIX = env['EXTLIB_PREFIX']
+)
+
+env['extfns'] += [lib]
+
+# vim: set syntax=python:

@@ -485,7 +485,7 @@ class ObserverTab:
 			self.deletecolumnmenuitem.set_sensitive(False)
 			if _delete_row:
 				self.on_delete_row()
-				return
+				return True
 			self.treecontext.popup( None, None, None, _button, event.time)
 			return
 		
