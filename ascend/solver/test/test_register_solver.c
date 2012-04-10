@@ -26,6 +26,7 @@
 	T(slv_common) \
 	T(slvreq) \
 	T(ipopt) \
+	T(conopt) \
 	T(qrslv) \
 	T(lrslv)
 
