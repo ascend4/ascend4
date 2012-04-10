@@ -1,3 +1,12 @@
+/*
+THIS CODE COMES FROM APPENDIX A.6 OF REPORT NREL/TP-560-34302 
+WHICH WAS OBTAINED FROM
+http://www.osti.gov/bridge/servlets/purl/15003974-iP3z6k/native/15003974.PDF
+
+THE CODE HAS BEEN MODIFIED TO
+(1) convert local functions to 'static' to reduce symbol exports in object code
+(2) add functionality to allow Julian Day as input, instead of datatime fields.
+*/
 
 /////////////////////////////////////////////
 //      Solar Position Algorithm (SPA)     //
@@ -28,40 +37,26 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //
-//   NOTICE
-//   Copyright (C) 2008-2011 Alliance for Sustainable Energy, LLC, All Rights Reserved
+// NOTICE
 //
-//The Solar Position Algorithm ("Software") is code in development prepared by employees of the
-//Alliance for Sustainable Energy, LLC, (hereinafter the "Contractor"), under Contract No.
-//DE-AC36-08GO28308 ("Contract") with the U.S. Department of Energy (the "DOE"). The United
-//States Government has been granted for itself and others acting on its behalf a paid-up, non-
-//exclusive, irrevocable, worldwide license in the Software to reproduce, prepare derivative
-//works, and perform publicly and display publicly. Beginning five (5) years after the date
-//permission to assert copyright is obtained from the DOE, and subject to any subsequent five
-//(5) year renewals, the United States Government is granted for itself and others acting on
-//its behalf a paid-up, non-exclusive, irrevocable, worldwide license in the Software to
-//reproduce, prepare derivative works, distribute copies to the public, perform publicly and
-//display publicly, and to permit others to do so. If the Contractor ceases to make this
-//computer software available, it may be obtained from DOE's Office of Scientific and Technical
-//Information's Energy Science and Technology Software Center (ESTSC) at P.O. Box 1020, Oak
-//Ridge, TN 37831-1020. THIS SOFTWARE IS PROVIDED BY THE CONTRACTOR "AS IS" AND ANY EXPRESS OR
-//IMPLIED WARRANTIES, INCLUDING BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
-//AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE CONTRACTOR OR THE
-//U.S. GOVERNMENT BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-//WHATSOEVER, INCLUDING BUT NOT LIMITED TO CLAIMS ASSOCIATED WITH THE LOSS OF DATA OR PROFITS,
-//WHICH MAY RESULT FROM AN ACTION IN CONTRACT, NEGLIGENCE OR OTHER TORTIOUS CLAIM THAT ARISES
-//OUT OF OR IN CONNECTION WITH THE ACCESS, USE OR PERFORMANCE OF THIS SOFTWARE.
+//This solar position algorithm for solar radiation applications (the "data") was produced by
+//the National Renewable Energy Laboratory ("NREL"), which is operated by the Midwest Research
+//Institute ("MRI") under Contract No. DE-AC36-99-GO10337 with the U.S. Department of Energy
+//(the "Government").
 //
-//The Software is being provided for internal, noncommercial purposes only and shall not be
-//re-distributed. Please contact Anne Miller (Anne.Miller@nrel.gov) in the NREL
-//Commercialization and Technology Transfer Office for information concerning a commercial
-//license to use the Software.
+//Reference herein, directly or indirectly to any specific commercial product, process, or
+//service by trade name, trademark, manufacturer, or otherwise, does not constitute or imply
+//its endorsement, recommendation, or favoring by the Government, MRI or NREL.
 //
-//As a condition of using the Software in an application, the developer of the application
-//agrees to reference the use of the Software and make this Notice readily accessible to any
-//end-user in a Help|About screen or equivalent manner.
+//THESE DATA ARE PROVIDED "AS IS" AND NEITHER THE GOVERNMENT, MRI, NREL NOR ANY OF THEIR
+//EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, INCLUDING THE WARRANTIES OF MERCHANTABILITY
+//AND FITNESS FOR A PARTICULAR PURPOSE, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE
+//ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY SUCH INFORMATION DISCLOSED IN THE ALGORITHM, OR
+//OF ANY APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE
+//PRIVATELY OWNED RIGHTS.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Revised 27-FEB-2004 Andreas
