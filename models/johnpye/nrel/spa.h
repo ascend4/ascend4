@@ -62,7 +62,13 @@ enum {
     SPA_ZA,           //calculate zenith and azimuth
     SPA_ZA_INC,       //calculate zenith, azimuth, and incidence
     SPA_ZA_RTS,       //calculate zenith, azimuth, and sun rise/transit/set values
-    SPA_ALL,          //calculate all SPA output values
+
+    SPA_JD,           // just calculate the julian day and return
+    SPA_ZA_JD,		  // as SPA_ZA but don't calculate julian day afresh
+    SPA_ZA_INC_JD,    // as SPA_ZA_INC but don't calculate julian day afresh
+    SPA_ZA_RTS_JD,    // as SPA_ZA_RTS but don't calculate julian day afresh
+
+    SPA_ALL,          // calculate all SPA output values from datetime inputs
 };
 
 typedef struct

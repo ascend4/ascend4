@@ -1,0 +1,49 @@
+IMPORT "johnpye/nrel/sunpos_nrel";
+
+REQUIRE "atoms.a4l";
+
+MODEL location;
+	latitude IS_A angle_constant;
+	longitude IS_A angle_constant;
+	elevation IS_A real_constant;
+	t_offset "Actual JD value referred to by t = 0" IS_A time_constant;
+END location;
+
+MODEL sunpos_nrel;
+	loc IS_A location;
+
+	t_JD IS_A time;
+	p IS_A pressure;
+	T IS_A temperature;
+
+	zenith, azimuth IS_A angle;
+
+	t IS_A time;
+	t_JD - t = loc.t_offset;
+
+	solar: sunpos_nrel(
+		t_JD, p, T : INPUT;
+		zenith, azimuth : OUTPUT;
+		loc : DATA
+	);
+
+	altitude IS_A angle;
+	altitude = 0.5{PI} - zenith;
+
+END sunpos_nrel;
+
+
+MODEL sunpos_test REFINES sunpos_nrel;
+	loc.latitude :== +35 {deg} + 6.{deg}/60 + 39.{deg}/3600;
+	loc.longitude :== -106{deg} + 36.{deg}/60 + 36.{deg}/3600;
+	loc.elevation :== 1619 {m};
+	loc.t_offset :== 2451545. {d} - 12 {h};
+METHODS
+METHOD on_load;
+	FIX p, T, t;
+	p := 1 {atm};
+	T := 20 {K} + 273.15 {K};
+	t := 0.5 {d};
+END on_load;
+END sunpos_test;
+
