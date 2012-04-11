@@ -614,7 +614,7 @@ static int validate_inputs(spa_data *spa)
     return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////
-static double julian_day (int year, int month, int day, int hour, int minute, int second, double tz)
+double julian_day (int year, int month, int day, int hour, int minute, int second, double tz)
 {
     double day_decimal, julian_day, a;
 
