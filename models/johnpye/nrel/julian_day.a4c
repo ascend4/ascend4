@@ -2,7 +2,7 @@ IMPORT "johnpye/nrel/sunpos_nrel";
 
 REQUIRE "atoms.a4l";
 
-MODEL jd_test;
+MODEL julian_day;
 	y,mon,d,h,min,s IS_A factor;
 	tz IS_A time;
 	t_JD IS_A time;
@@ -12,8 +12,11 @@ MODEL jd_test;
 		t_JD : OUTPUT
 	);
 METHODS
-METHOD on_load;
+METHOD specify;
+	RUN ClearAll;
 	FIX y,mon,d,h,min,s,tz;
+END specify;
+METHOD values;
 	y := 2000;
 	mon := 1;
 	d := 1;
@@ -21,6 +24,10 @@ METHOD on_load;
 	min := 0;
 	s := 0;
 	tz := 0 {h};
+END values;
+METHOD on_load;
+	RUN specify;
+	RUN values;
 END on_load;
-END jd_test;
+END julian_day;
 
