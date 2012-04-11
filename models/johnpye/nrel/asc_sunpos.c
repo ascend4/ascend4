@@ -51,13 +51,15 @@ static ExtBBoxFunc sunpos_nrel_calc;
 static ExtBBoxInitFunc julian_day_nrel_prepare;
 static ExtBBoxFunc julian_day_nrel_calc;
 
-static const char *sunpos_nrel_help = "Calculate sun position (local zenith, azimuth "
-	"angles) given time, pressure and temperature, using NREL algorithm. DATA "
-	"member for this external relation is required to provide constants for "
-	"latitude and longitude of the selected location.\n\n"
-	"Time is required to be in the form of Julian Date. ASCEND will convert the "
-	"Julian Date into seconds automatically. The JD should be in the range"
-	"-2000 BC to 6000 AD (12:00pm 1 Jan 2000 GMT is 2451545.0 JD)";
+static const char *sunpos_nrel_help = "\
+Calculate sun position using NREL SPA code. Inputs are:\n\
+  * time (relative to reference time)\n\
+  * pressure (instantaneous atmospheric pressure)\n\
+  * temperature (instantaneous absolute atmospheric temperature)\n\
+  * reference time (Julian Day value expressed as seconds)\n\
+The reference time allows this function to use the same time variable as the\
+rest of your simulation; the reference time is expected to be pre-calculated\
+from a year-month-day calculation (see 'julian_day_nrel' external relation).";
 
 static const char *julian_day_nrel_help = "Calculate the Julian Day from "
 	"year, month, day, hour, minute, second and timezone inputs. "
@@ -94,7 +96,7 @@ ASC_EXPORT int sunpos_nrel_register(){
 		, 0.0 \
 	) /* returns 0 on success */
 
-	CALCFN(sunpos_nrel,3,2);
+	CALCFN(sunpos_nrel,4,2);
 	CALCFN(julian_day_nrel,7,1);
 
 #undef CALCFN
@@ -189,18 +191,19 @@ static int sunpos_nrel_calc(struct BBoxInterp *bbox,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
-	CALCPREPARE(3,2);
+	CALCPREPARE(4,2);
 
-	double t, p, T;
+	double t, p, T, t_offset;
 
-	t = inputs[0]/ 86400.; /* convert from JD seconds to JD days */
+	t = inputs[0]; /* convert from JD seconds to JD days */
 	p = inputs[1] / 100. /* convert Pa to mbar */;
 	T = inputs[2] - 273.15 /* convert °C to K */;
+	t_offset = inputs[3];
 
 	spa_data S = *sunpos1;
 	S.pressure = p;
 	S.temperature = T;
-	S.jd = t;
+	S.jd = (t + t_offset) / 3600 / 24; /* convert to days */
 
 	int res = spa_calculate(&S);
 	CONSOLE_DEBUG("Sun position: t = %f JD, p  %f mbar, T = %f C: res = %d, az = %f, zen = %f",t, p, T, res, S.azimuth, S.zenith);
