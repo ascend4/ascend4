@@ -124,8 +124,7 @@ static void test_conopt(const char *filenamestem){
 /* Registration information */
 
 #define TESTS1(T,X) \
-	T(test10) \
-	X T(test11) \
+	T(test11) \
 	X T(test12) \
 	X T(test13) \
 	X T(test14)
