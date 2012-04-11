@@ -1,3 +1,4 @@
+# NREL sun position calculation, as external relation for ASCEND.
 Import('env')
 nrel_env = env.Clone()
 
@@ -17,3 +18,4 @@ lib = nrel_env.SharedLibrary("sunpos_nrel",srcs
 env['extfns'] += [lib]
 
 # vim: set syntax=python:
+
