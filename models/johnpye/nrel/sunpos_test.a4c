@@ -6,7 +6,10 @@ MODEL location;
 	latitude IS_A angle_constant;
 	longitude IS_A angle_constant;
 	elevation IS_A real_constant;
-	t_offset "Actual JD value referred to by t = 0" IS_A time_constant;
+
+	(* can include both timezone as well as date offsets here. Note 
+	1 Jan 2000, 12pm GMT corresponds to 2451545.0. *)	
+	t_offset "Actual JD value referred to by t = 0." IS_A time_constant;
 END location;
 
 MODEL sunpos_nrel;

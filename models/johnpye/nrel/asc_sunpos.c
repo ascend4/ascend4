@@ -46,8 +46,10 @@
 # define PI 3.14159265358979
 #endif
 
-ExtBBoxInitFunc sunpos_nrel_prepare;
-ExtBBoxFunc sunpos_nrel_calc;
+static ExtBBoxInitFunc sunpos_nrel_prepare;
+static ExtBBoxFunc sunpos_nrel_calc;
+static ExtBBoxInitFunc julian_day_nrel_prepare;
+static ExtBBoxFunc julian_day_nrel_calc;
 
 static const char *sunpos_nrel_help = "Calculate sun position (local zenith, azimuth "
 	"angles) given time, pressure and temperature, using NREL algorithm. DATA "
@@ -57,12 +59,20 @@ static const char *sunpos_nrel_help = "Calculate sun position (local zenith, azi
 	"Julian Date into seconds automatically. The JD should be in the range"
 	"-2000 BC to 6000 AD (12:00pm 1 Jan 2000 GMT is 2451545.0 JD)";
 
+static const char *julian_day_nrel_help = "Calculate the Julian Day from "
+	"year, month, day, hour, minute, second and timezone inputs. "
+	"Intended for once-off use in ASCEND models to calculate the time offset "
+	"eg for the start of a weather file. Acceptable dates are in the range "
+	"of -2000 BC to AD 6000. All of the inputs should be as 'factor' type "
+	"variables (to avoid needless time unit conversions), except for the "
+	"timezone, which should be in time units eg '8{h}'.";
+
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION
 */
 
 /**
-	This is the function called from 'IMPORT "johnpye/grena/sunpos";'
+	This is the function called from 'IMPORT "johnpye/nrel/sunpos_nrels";'
 
 	It sets up the functions contained in this external library
 */
@@ -70,11 +80,11 @@ extern
 ASC_EXPORT int sunpos_nrel_register(){
 	int result = 0;
 
-	ERROR_REPORTER_HERE(ASC_USER_WARNING,"SUNPOS is still EXPERIMENTAL. Use with caution.\n");
+	ERROR_REPORTER_HERE(ASC_USER_WARNING,"SUNPOS_NREL is still EXPERIMENTAL. Use with caution.\n");
 
 #define CALCFN(NAME,INPUTS,OUTPUTS) \
 	result += CreateUserFunctionBlackBox(#NAME \
-		, sunpos_nrel_prepare \
+		, NAME##_prepare \
 		, NAME##_calc /* value */ \
 		, (ExtBBoxFunc*)NULL /* derivatives not provided yet*/ \
 		, (ExtBBoxFunc*)NULL /* hessian not provided yet */ \
@@ -85,6 +95,7 @@ ASC_EXPORT int sunpos_nrel_register(){
 	) /* returns 0 on success */
 
 	CALCFN(sunpos_nrel,3,2);
+	CALCFN(julian_day_nrel,7,1);
 
 #undef CALCFN
 
@@ -94,21 +105,6 @@ ASC_EXPORT int sunpos_nrel_register(){
 	return result;
 }
 
-
-/**
-	This function is called when the black-box relation is being instantiated.
-
-   'sunpos_prepare' just gets the data member and checks that it's
-	valid, and stores it in the blackbox data field.
-*/
-int sunpos_nrel_prepare(struct BBoxInterp *bbox,
-	   struct Instance *data,
-	   struct gl_list_t *arglist
-){
-	struct Instance *inst;
-	double latitude, longitude, elevation;
-
-	/* fetch DATA items for geographical location, timezone etc */
 #define GET_CHILD_VAL(NAME) \
 	inst = ChildByChar(data,AddSymbol(#NAME)); \
 	if(!inst){ \
@@ -122,6 +118,19 @@ int sunpos_nrel_prepare(struct BBoxInterp *bbox,
 		return 1;\
 	}\
 	NAME = RC_INST(inst)->value;
+
+/**
+	This function is called when the black-box relation is being instantiated.
+
+	This just gets the data member and checks that it's valid, and stores
+	it in the blackbox data field.
+*/
+static int sunpos_nrel_prepare(struct BBoxInterp *bbox,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	struct Instance *inst;
+	double latitude, longitude, elevation;
 
 	/* get the latitude */
 	GET_CHILD_VAL(latitude);
@@ -146,8 +155,6 @@ int sunpos_nrel_prepare(struct BBoxInterp *bbox,
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'elevation' is out of allowable range (must be > -6,500 km)");
 		return 1;
 	}
-
-#undef GET_CHILD_VAL
 
 	spa_data *S = ASC_NEW(spa_data);
 	S->latitude = latitude * 180/PI;
@@ -177,7 +184,7 @@ int sunpos_nrel_prepare(struct BBoxInterp *bbox,
 	Evaluation function for 'sunpos'
 	@return 0 on success
 */
-int sunpos_nrel_calc(struct BBoxInterp *bbox,
+static int sunpos_nrel_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
@@ -206,5 +213,39 @@ int sunpos_nrel_calc(struct BBoxInterp *bbox,
 	return res;
 }
 
+/*---------- SUNPOS_JULIAN_DAY ------------*/
+
+static int julian_day_nrel_prepare(struct BBoxInterp *bbox,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	bbox->user_data = NULL;
+	return 0;
+}
+
+static int julian_day_nrel_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE(7,1);
+	(void)sunpos1;
+
+	int y,mon,d,h,m,s;
+	double tz;
+
+	y = inputs[0]; /* convert from seconds to years */
+	mon = inputs[1]; /* convert from seconds to months */ 
+	d = inputs[2]; /* convert from seconds to days */
+	h = inputs[3]; /* seconds to hours */
+	m = inputs[4]; /* seconds to minutes */
+	s = inputs[5];
+	tz = inputs[6] / 3600.; /* seconds to hours */
+
+	double t = julian_day(y,mon,d, h,m,s, tz) * 3600 * 24;
+	
+	outputs[0] = t;
+	return 0;
+}
 
 

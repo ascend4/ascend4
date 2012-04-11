@@ -185,4 +185,7 @@ typedef struct
 //Calculate SPA output values (in structure) based on input values passed in structure
 int spa_calculate(spa_data *spa);
 
+//Calculate Julian Day, return #days.
+double julian_day (int year, int month, int day, int hour, int minute, int second, double tz);
+
 #endif
