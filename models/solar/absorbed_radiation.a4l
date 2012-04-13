@@ -1,9 +1,9 @@
 REQUIRE "atoms.a4l";
 REQUIRE "solar/solar_types.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
-REQUIRE "johnpye/sunpos.a4c";
+REQUIRE "johnpye/sunpos_db.a4c";
 
-MODEL sunpos_wrapper REFINES sunpos;
+MODEL sunpos_wrapper REFINES sunpos_db;
 	METHODS
 		METHOD specify;
 			FIX t, L_st, L_loc, phi; (* time and location *)

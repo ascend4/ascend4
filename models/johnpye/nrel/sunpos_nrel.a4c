@@ -46,7 +46,7 @@ METHOD on_load;
 	FIX p, T, t;
 	p := 1 {atm};
 	T := 20 {K} + 273.15 {K};
-	t := 0.5 {d};
+	t := 0. {d};
 
 	(* to plot the analemma with this model, use the 'Observer' to observe
 	t, altitude and azimuth. Run a 'study' with t from 0 to 365 in steps of 1

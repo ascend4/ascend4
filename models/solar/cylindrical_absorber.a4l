@@ -2,7 +2,7 @@ REQUIRE "atoms.a4l";
 REQUIRE "solar/solar_types.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 
-REQUIRE "johnpye/sunpos.a4c";
+REQUIRE "johnpye/sunpos_db.a4c";
 
 IMPORT "johnpye/fprops/helmholtz";
 
@@ -11,7 +11,7 @@ MODEL helmholtz_conf;
 	component :== 'water';
 END helmholtz_conf;
 
-MODEL sunpos_tracker2 REFINES sunpos;
+MODEL sunpos_tracker2 REFINES sunpos_db;
 	(* The collector is rotated about a horizontal east-west axis with continuous adjustment to minimize the angle of incidence *)
 	
 	sin(delta) * ( sin(phi)*sin(beta) + cos(phi)*cos(beta)*cos(gamma) ) = cos(delta) * cos(omega) * ( sin(phi) * cos(beta) * cos(gamma) - cos(phi) * sin(beta) ) + cos(delta) * cos(beta) * sin(gamma) * sin(omega);

@@ -2,14 +2,14 @@ IMPORT "johnpye/grena/sunpos";
 
 REQUIRE "atoms.a4l";
 
-MODEL location;
+MODEL location_grena;
 	latitude IS_A angle_constant;
 	longitude IS_A angle_constant;
 	timezone IS_A time_constant;
-END location;
+END location_grena;
 
 MODEL sunpos_grena;
-	loc IS_A location;
+	loc IS_A location_grena;
 
 	p IS_A pressure;
 	T IS_A temperature;
@@ -30,7 +30,7 @@ MODEL sunpos_grena;
 END sunpos_grena;
 
 
-MODEL sunpos_test REFINES sunpos_grena;
+MODEL sunpos_grena_test REFINES sunpos_grena;
 	loc.latitude :== -35 {deg};
 	loc.longitude :== 149 {deg};
 	loc.timezone :== 10 {h};
@@ -41,5 +41,5 @@ METHOD on_load;
 	T := 20 {K} + 273.15 {K};
 	t := 5 {d};
 END on_load;
-END sunpos_test;
+END sunpos_grena_test;
 

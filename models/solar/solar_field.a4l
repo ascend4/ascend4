@@ -9,15 +9,13 @@ John Pye (2012).
 REQUIRE "atoms.a4l";
 REQUIRE "solar/solar_types.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
-REQUIRE "johnpye/sunpos.a4c";
+REQUIRE "johnpye/nrel/sunpos_nrel.a4c";
 REQUIRE "solar/therminol.a4c";
 
 (*
-	Sun position calculator, using Duffie & Beckman equations.
-	
-	TODO change to use grena/PSA/NREL algorithm instead of D&B
+	Sun position calculator, using NREL SPA.
 *)
-MODEL sunpos_wrapper REFINES sunpos;
+MODEL sunpos_wrapper REFINES sunpos_nrel;
 		
 	beta = 1.0 * theta_z;
 
@@ -234,7 +232,7 @@ METHODS
 		t_std := 15 {hour};
 		sun.phi := 37.21 {deg};
 
-		(* TODO what's this? *)
+		(* TODO what's this? *) (* JP: is it trying to stop the sun from being below the horizon? *)
 		IF (t_std > 12{hour}) THEN
 			sun.gamma := 90{deg};
 		END IF;
