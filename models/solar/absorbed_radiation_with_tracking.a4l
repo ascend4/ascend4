@@ -1,10 +1,10 @@
 REQUIRE "atoms.a4l";
 REQUIRE "solar/solar_types.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
-REQUIRE "johnpye/sunpos.a4c";
+REQUIRE "johnpye/sunpos_db.a4c";
 
 
-MODEL sunpos_tracker1 REFINES sunpos; 
+MODEL sunpos_tracker1 REFINES sunpos_db; 
 	(* The collector is rotated about a horizontal east-west axis with single daily adjustment such that the solar beam is normal to the collector aperture plane at solar noon *)
 
 	cos(beta) * cos(phi - delta) + cos(gamma) * sin(beta) * sin(phi - delta) = 1;
@@ -45,7 +45,7 @@ MODEL sunpos_tracker1 REFINES sunpos;
 END sunpos_tracker1;
 
 
-MODEL sunpos_tracker2 REFINES sunpos;
+MODEL sunpos_tracker2 REFINES sunpos_db;
 	(* The collector is rotated about a horizontal east-west axis with continuous adjustment to minimize the angle of incidence *)
 	
 	sin(delta) * ( sin(phi)*sin(beta) + cos(phi)*cos(beta)*cos(gamma) ) = cos(delta) * cos(omega) * ( sin(phi) * cos(beta) * cos(gamma) - cos(phi) * sin(beta) ) + cos(delta) * cos(beta) * sin(gamma) * sin(omega);

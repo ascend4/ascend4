@@ -50,7 +50,15 @@ static symchar *sunpos_symbols[2];
 #define LATITUDE_SYM sunpos_symbols[0]
 #define LONGITUDE_SYM sunpos_symbols[1]
 
-static const char *sunpos_help = "Calculate sun position (local zenith, azimuth angles) given time, pressure and temperature, using Grena algorithm. DATA member for this external relation is required to provide constants for latitude and longitude of the selected location. FIXME: more information about time units required here.";
+static const char *sunpos_help = "\
+Calculate sun position (local zenith, azimuth angles) given time, pressure \n\
+and temperature, using Grena algorithm. DATA member for this external relation \n\
+is required to provide constants for latitude and longitude of the selected \n\
+location.\n\
+\n\
+Time input to this calculation is an offset from 0h00 on 1 Jan 2003, which \n\
+ASCEND will automatically convert to seconds if you use a variable of type \n\
+'time'.";
 
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION

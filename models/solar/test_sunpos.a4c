@@ -1,9 +1,9 @@
 REQUIRE "atoms.a4l";
 
-REQUIRE "johnpye/sunpos.a4c";
+REQUIRE "johnpye/sunpos_db.a4c";
 
 
-MODEL example REFINES sunpos;
+MODEL example REFINES sunpos_db;
 	
 	beta = 1.0* theta_z;
 	

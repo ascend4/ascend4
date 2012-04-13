@@ -210,7 +210,7 @@ static int sunpos_nrel_calc(struct BBoxInterp *bbox,
 
 	/* returned values are in degrees, need to convert back to base SI: radians */
 	outputs[0] = S.zenith * PI/180.;
-	outputs[1] = S.azimuth * PI/180.;
+	outputs[1] = S.azimuth180 * PI/180.;
 
 	/* 0 on success, non-zero is error code from spa_calculate (would prob be input parameters out-of-range) */
 	return res;

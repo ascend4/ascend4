@@ -1,0 +1,89 @@
+REQUIRE "johnpye/nrel/sunpos_nrel.a4c";
+REQUIRE "johnpye/grena/sunpos_test.a4c";
+REQUIRE "johnpye/sunpos_db.a4c";
+
+(* FIXME this model demonstrates the inconsistent approaches used for time
+offsets and timezone specification between the different models. TODO change
+the different models to adopt a common approach. But first establish that they
+are all consistent... *)
+
+MODEL sunpos_compare;
+	G IS_A sunpos_grena;
+	N IS_A sunpos_nrel;
+	D IS_A sunpos_db;
+
+	(* greenwich *)
+	N.loc.latitude :== 51.4778 {deg};
+	N.loc.longitude :== 0 {deg};
+	N.loc.elevation :== 215.9 {ft};
+	G.loc.timezone :== 0 {h};
+
+	D.phi = G.loc.latitude;
+	D.L_loc = G.loc.longitude;
+	G.loc.latitude, N.loc.latitude ARE_THE_SAME;
+	G.loc.longitude, N.loc.longitude ARE_THE_SAME;	
+
+	p IS_A pressure;
+	T IS_A temperature;
+	T, G.T, N.T ARE_THE_SAME;
+	p, G.p, N.p ARE_THE_SAME;
+
+	t_start IS_A julian_day;
+
+	ref_G IS_A julian_day;
+	ref_D IS_A julian_day;
+	ref_N ALIASES N.offset;
+
+	t, t_JD IS_A time;
+	t_G ALIASES G.t;
+	t_N ALIASES N.t;
+	t_D ALIASES D.t;
+	t_JD = t_start.t_JD + t;
+	t_N, t ARE_THE_SAME;
+	t_G = t_JD - ref_G.t_JD;
+	t_D = t_JD - ref_D.t_JD;
+
+	azimuth['G','N','D'] IS_A angle;
+	altitude['G','N','D'] IS_A angle;
+	azimuth['G'], G.azimuth ARE_THE_SAME;
+	altitude['G'], G.altitude ARE_THE_SAME;
+	azimuth['N'], N.azimuth ARE_THE_SAME;
+	altitude['N'], N.altitude ARE_THE_SAME;
+	azimuth['D'], D.gamma_s ARE_THE_SAME;
+	altitude['D'] = 90{deg} - D.theta_z;
+	
+
+	(* offset for NREL SPA is done inside the extrel *)
+METHODS
+METHOD on_load;
+	(* starting time for our year of simulated time *)
+	RUN t_start.on_load;
+	t_start.y := 2003;
+	t_start.h := 0;
+
+	FIX D.L_st := 0 {deg};
+	FIX T := 293.15 {K};
+	FIX p := 1 {bar};
+
+	(* reference time for Grena algorithm is Jan 1 2003, note the 1/2day offset *)
+	RUN ref_G.on_load;
+	ref_G.y := 2003;
+	ref_G.h := 0;
+
+	(* for DB, the year is not part of the calculation *)
+	RUN ref_D.on_load;
+	ref_D.y := t_start.y;
+	ref_D.h := 0;
+	FIX D.gamma := 0 {deg};
+	FIX D.beta := 0 {deg};
+
+	(* for NREL, true JD offset is what is needed *)
+	RUN ref_N.on_load;
+	ref_N.y := 2012;
+	ref_N.h := 0;
+
+	FIX t;
+	t := 12 {h} + 0 {d};
+END on_load;
+END sunpos_compare;
+

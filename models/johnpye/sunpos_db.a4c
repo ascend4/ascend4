@@ -16,7 +16,7 @@ REQUIRE "atoms.a4l";
 
 	by John Pye, 2006
 *)
-MODEL sunpos;
+MODEL sunpos_db;
 	t IS_A time; (* starting at zero at midnight on 1 Jan *)
 		
 	L_st IS_A angle; (* standard meridian for the current time zone *)
@@ -80,6 +80,21 @@ MODEL sunpos;
 	R_b IS_A factor; (* ratio of beam radiation, inclined : horizontal *)
 	R_b = cos(theta) / cos(theta_z);
 
+	(* solar azimuth angle *)
+	gamma_s "solar azimuth angle (sign conv?)" IS_A angle;
+	omega_ew "see eq 1.6.6g from D&B" IS_A angle;
+	omega_ew = arccos(tan(delta)/tan(phi));
+	C1, C2, C3 IS_A factor;
+	C1 = (omega^2 - omega_ew^2) / abs(omega^2 - omega_ew^2);
+	C2 = (phi - delta) / abs(phi - delta);
+	C3 = omega / abs(omega);
+	gamma_sd "pseudo surface azimuth angle" IS_A angle;
+	gamma_sd = arcsin(sin(omega) * cos(delta) / sin(theta_z));
+	gamma_s = C1 * C2 * gamma_sd + C3*(1 - C1*C2)*0.5{PI};
+
+	alpha_s "solar altitude angle" IS_A angle;
+	alpha_s = 0.5{PI} - theta_z;
+
 METHODS
 METHOD default_self;
 	t := 0{day};
@@ -108,14 +123,14 @@ METHOD values;
 	gamma := 15{deg};
 
 END values;
-END sunpos;
+END sunpos_db;
 
 (*
 	Total daily extraterrestrial radiation, from sunrise to sunset.
 	
 	Set 't' to the start of the day in question.
 *)
-MODEL dailyextraterrestrial REFINES sunpos;
+MODEL dailyextraterrestrial REFINES sunpos_db;
 	(* extraterrestrial irradiance on a horizontal surface -- problems coz it goes negative! *)
 	(* Go IS_A irradiance;
 	Go = Gsc*(1 + 0.033*cos( 300{deg}/365{day}*(1{day}+t)) )*cos(theta_z); *)
@@ -140,15 +155,15 @@ END dailyextraterrestrial;
 
 	checked, this looks OK -- JP 
 *)
-MODEL example_1_6_1 REFINES sunpos;
+MODEL example_1_6_1 REFINES sunpos_db;
 METHODS
 METHOD specify;
-	RUN sunpos::specify;
+	RUN sunpos_db::specify;
 	FREE t;
 	FIX t_solar;
 END specify;
 METHOD values;
-	RUN sunpos::values;
+	RUN sunpos_db::values;
 	t_solar := 43{d} + 10{h} + 30{min};
 	beta := 45 {deg};
 	gamma := 15 {deg};
@@ -168,15 +183,15 @@ END example_1_6_1;
 
 	checked, this looks OK -- JP
 *)
-MODEL example_1_6_2 REFINES sunpos;
+MODEL example_1_6_2 REFINES sunpos_db;
 METHODS
 METHOD specify;
-	RUN sunpos::specify;
+	RUN sunpos_db::specify;
 	FREE t;
 	FIX t_solar;
 END specify;
 METHOD values;
-	RUN sunpos::values;
+	RUN sunpos_db::values;
 	t_solar := 43{d} + 9{h} + 30{min};
 	L_st := -90{deg}; (* USA Central time*)
 	L_loc := -89.4{deg};
@@ -187,8 +202,34 @@ METHOD self_test;
 END self_test;
 END example_1_6_2;
 
+(* 
+	Solar zenith and azimuth, plus profile angle for a sfc facing 25° west
+	of south, 4pm solar time 16 March, latitude 43°.
+*)
+MODEL example_1_6_3 REFINES sunpos_db;
+METHODS
+METHOD specify;
+	RUN sunpos_db::specify;
+	FREE t;
+	FIX t_solar;
+END specify;
+METHOD values;
+	RUN sunpos_db::values;
+	t_solar := 59{d} + 16 {d} + 16{h} - 1 {d};
+	(* latitude is not important for this calculation: solar time *)
+	L_st := 0{deg};
+	L_loc := 0{deg};
+	phi := 43{deg};
+END values;
+METHOD self_test;
+	ASSERT abs(gamma_s - 66.8{deg}) < 0.2{deg};
+	ASSERT abs(alpha_s - 19.7{deg}) < 0.2{deg};
+	(* we don't get calculate the 'profile angle'... *)
+END self_test;
+END example_1_6_3;
+
 (*
-	What is the ratio of beam radiiation for the surface and time specified in
+	What is the ratio of beam radiation for the surface and time specified in
 	Example 1.6.1 to that on a horizontal surface?
 
 	checked, this looks OK -- JP
