@@ -21,7 +21,7 @@
 #include <math.h>
 
 #include "dr.h"
-#include "tmy.h"
+#include "tmy2.h"
 #include "acdb.h"
 #include "csv.h"
 #include "ee.h"

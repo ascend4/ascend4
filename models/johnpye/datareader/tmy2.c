@@ -33,7 +33,7 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/error.h>
 
-#include "tmy.h"
+#include "tmy2.h"
 
 
 typedef struct Tmy2Point_struct{
