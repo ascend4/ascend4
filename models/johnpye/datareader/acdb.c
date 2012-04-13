@@ -87,7 +87,7 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/error.h>
 
-#include "tmy.h"
+#include "acdb.h"
 
 #define ACDB_DEBUG 0
 
