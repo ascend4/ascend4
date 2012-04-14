@@ -5,6 +5,7 @@ srcs = Split("""
 	datareader.c
 	dr.c
 	tmy2.c
+	tmy3.c
 	csv.c
 	acdb.c
 	ee.c

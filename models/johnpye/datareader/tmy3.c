@@ -90,7 +90,7 @@ typedef struct Tmy3Data_struct{
 
 #define DATA(D) ((Tmy3Data *)(D->data))
 
-struct Tmy3Location_struct{
+typedef struct Tmy3Location_struct{
 	char stationcode[101];
 	char stationname[101];
 	char state[20];
@@ -102,12 +102,12 @@ struct Tmy3Location_struct{
 
 //example header line:
 //723815,"DAGGETT BARSTOW-DAGGETT AP",CA,-8.0,34.850,-116.800,586
-int parseLocation(parse *p, struct Tmy3Location *loc){
+int parseLocation(parse *p, Tmy3Location *loc){
 	return
 		(parseStrExcept(p,",",loc->stationcode,100)
 		&& parseThisString(p,",\"")
 		&& parseStrExcept(p,"\"",loc->stationname,100)
-		&& parseThisString(p,",")
+		&& parseThisString(p,"\",")
 		&& parseStrExcept(p,",",loc->state,100)
 		&& parseThisString(p,",")
 		&& parseDouble(p,&(loc->timezone))
@@ -126,14 +126,16 @@ int parseLocation(parse *p, struct Tmy3Location *loc){
 	@return 0 on success
 */
 int datareader_tmy3_header(DataReader *d){
-	struct EeLocation loc;
-	d->data = ASC_NEW(EeData);
+	Tmy3Location loc;
+	d->data = ASC_NEW(Tmy3Data);
 	DATA(d)->p = parseCreateFile(d->f);
 	parse *p = DATA(d)->p;
+	char rubbish[2049];
 
 	if(!(
 		parseLocation(p,&loc) 
-		// FIXME add ignore whole next line
+		&& parseStrExcept(p,"\r\n",rubbish,2048)
+		&& parseEOL(p)
 	)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Parser error in header part of file");
 	}
@@ -151,7 +153,6 @@ int datareader_tmy3_header(DataReader *d){
 	/* set the number of inputs and outputs */
 	d->ninputs = 1;
 	d->noutputs = 7;
-
 	return 0;
 }
 
@@ -180,9 +181,8 @@ int datareader_tmy3_eof(DataReader *d){
 	@return 0 on success
 */
 int datareader_tmy3_data(DataReader *d){
-	CONSOLE_DEBUG("Reading data, i = %d",d->i);
+	//CONSOLE_DEBUG("Reading data, i = %d",d->i);
 	unsigned year,month,day,hour,minute;
-	char uncerts[101];
 	Tmy3Point row;
 
 	// in the following 'C' are char fiels, 'I' are integer fields;
@@ -211,17 +211,17 @@ int datareader_tmy3_data(DataReader *d){
 	X I(65_RainDepth) X I(66_RainDuration) X C(67_Rains) X C(68_Raine)
 
 #define CHARDECL(NAME) char tmy3_field_##NAME;
-#define INTDECL(NAME) unsigned int tmy3_field_##NAME;
+#define NUMDECL(NAME) double tmy3_field_##NAME;
 #define NUTHIN_HERE
-	NUMFIELDS(CHARDECL,INTDECL,NUTHIN_HERE);
+	NUMFIELDS(CHARDECL,NUMDECL,NUTHIN_HERE);
 #undef CHARDECL
-#undef INTDECL
+#undef NUMDECL
 #undef NUTHIN_HERE
 
 	// TODO what to do with 'missing' values??
 	parse *p = DATA(d)->p;
 
-#define PARSEINT(NAME) parseSignedNumber(p,&tmy3_field_##NAME)
+#define PARSEINT(NAME) parseDouble(p,&tmy3_field_##NAME)
 #define PARSECHAR(NAME) parseAChar(p,&tmy3_field_##NAME)
 #define ANDTHEN && parseThisString(p,",") &&
 
@@ -255,8 +255,14 @@ int datareader_tmy3_data(DataReader *d){
 #undef PARSECHAR
 
 	// TODO add check for data for Feb 29... just in case?
-
 	row.t = ((day_of_year_specific(day,month,year) - 1)*24.0 + (hour - 1))*3600.0 + minute*60.;
+	row.T = tmy3_field_32_T * 0.1;
+	row.p = tmy3_field_41_P * 100.;
+	row.rh = tmy3_field_38_RH * 0.01;
+	row.DNI = tmy3_field_8_DNI * 1.;
+	row.GHI = tmy3_field_5_GHI * 1.;
+	row.v_wind = tmy3_field_47_WS * 0.1;
+	row.d_wind = tmy3_field_44_WD * 3.14159265358 / 180. ;
 
 	DATA(d)->rows[d->i] = row;
 
@@ -266,26 +272,27 @@ int datareader_tmy3_data(DataReader *d){
 	return 0;
 }
 
-int datareader_ee_time(DataReader *d, double *t){
+int datareader_tmy3_time(DataReader *d, double *t){
 	*t = DATA(d)->rows[d->i].t;
 	return 0;
 }
 
 #define ROW DATA(d)->rows[d->i]
 
-int datareader_ee_vals(DataReader *d, double *v){
-#if EE_DEBUG
+int datareader_tmy3_vals(DataReader *d, double *v){
+#if TMY3_DEBUG
 	CONSOLE_DEBUG("At t=%f d, T = %lf, DNI = %f Wh/m2"
 		,(ROW.t / 3600. / 24.),ROW.T, ROW.DNI
 	);
 #endif
-
 	v[0]=ROW.T;
 	v[1]=ROW.p;
 	v[2]=ROW.rh;
 	v[3]=ROW.DNI;
-	v[4]=ROW.Gd;
+	v[4]=ROW.GHI;
 	v[5]=ROW.d_wind;
 	v[6]=ROW.v_wind;
 	return 0;
 }
+
+
