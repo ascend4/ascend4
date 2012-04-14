@@ -22,6 +22,7 @@
 
 #include "dr.h"
 #include "tmy2.h"
+#include "tmy3.h"
 #include "acdb.h"
 #include "csv.h"
 #include "ee.h"
@@ -44,7 +45,7 @@
 	DATA instance of the external relation
 */
 
-#define FMTS(D,X) D(TMY2) X D(ACDB) X D(CSV) X D(EE) X D(TDV)
+#define FMTS(D,X) D(TMY2) X D(TMY3) X D(ACDB) X D(CSV) X D(EE) X D(TDV)
 
 #define ENUM(F_) DATAREADER_FORMAT_##F_
 #define COMMA ,
@@ -208,6 +209,13 @@ int datareader_set_format(DataReader *d, const char *format) {
         d->eoffn = &datareader_tmy2_eof;
         d->indepfn = &datareader_tmy2_time;
         d->valfn = &datareader_tmy2_vals;
+        break;
+    case DATAREADER_FORMAT_TMY3:
+        d->headerfn = &datareader_tmy3_header;
+        d->datafn = &datareader_tmy3_data;
+        d->eoffn = &datareader_tmy3_eof;
+        d->indepfn = &datareader_tmy3_time;
+        d->valfn = &datareader_tmy3_vals;
         break;
     case DATAREADER_FORMAT_ACDB:
         d->headerfn = &datareader_acdb_header;

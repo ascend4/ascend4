@@ -1,0 +1,43 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+IMPORT "johnpye/datareader/datareader";
+
+MODEL drconf;
+	filename IS_A symbol_constant;
+	format IS_A symbol_constant;
+	format :== 'TMY3';
+	parameters IS_A symbol_constant;
+	parameters :== '1,2,3,4,5,6,7';
+END drconf;
+
+MODEL testtmy3;
+	t IS_A time;
+	T IS_A temperature;
+	p IS_A pressure;
+	rh IS_A fraction;
+	DNI IS_A power_per_area;
+	GHI IS_A power_per_area;
+	v_wind IS_A solver_var;
+	d_wind IS_A angle;
+
+	tmydata IS_A drconf;
+	tmydata.filename :== 'johnpye/datareader/723815TY.csv';
+
+	filereader:datareader(
+		t : INPUT;
+		T,p,rh,DNI,GHI,v_wind,d_wind :OUTPUT;
+		tmydata : DATA
+	);
+
+METHODS
+METHOD on_load;
+	RUN default_self; RUN specify; RUN values; 
+END on_load;
+METHOD specify;
+	FIX t;
+END specify;
+METHOD values;
+	t := 8 {h};
+END values;
+END testtmy3;
