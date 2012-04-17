@@ -1,5 +1,6 @@
 REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
+REQUIRE "johnpye/nrel/julian_day.a4c";
 
 IMPORT "johnpye/datareader/datareader";
 
@@ -18,7 +19,7 @@ MODEL testtmy3;
 	rh IS_A fraction;
 	DNI IS_A power_per_area;
 	GHI IS_A power_per_area;
-	v_wind IS_A solver_var;
+	v_wind IS_A speed;
 	d_wind IS_A angle;
 
 	tmydata IS_A drconf;
