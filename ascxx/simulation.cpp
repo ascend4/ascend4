@@ -841,7 +841,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		status.getSimulationStatus(*this);
 
 		if(res || reporter.report(&status)){
-			CONSOLE_DEBUG("STOPPING!");
+			//CONSOLE_DEBUG("STOPPING!");
 			stop = true;
 		}
 	}

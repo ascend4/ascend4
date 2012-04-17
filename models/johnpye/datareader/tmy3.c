@@ -66,7 +66,7 @@
 
 #include "parse/parse.h"
 
-#define TMY3_DEBUG 1
+//#define TMY3_DEBUG 1
 
 /**
 	Data extracted from the E/E data file, doesn't have to included everything,
@@ -74,13 +74,13 @@
 */
 typedef struct Tmy3Point_struct{
 	double t;
-	float T; ///< dry bulb temperature, K.
-	float p; ///< atmospheric pressure, Pa.
-	float rh; /// relative humidity, fraction 0<rh<1.
-	float DNI; ///< direct normal irradiance Wh/m²
-	float GHI; ///< diffuse horizontal irradiance Wh/m²
-	float d_wind; ///< wind direction, rad, N = 0, E = pi/2, W = 3pi/2, S = pi. Range 0<=d<2pi
-	float v_wind; ///< wind speed, m/s.
+	double T; ///< dry bulb temperature, K.
+	double p; ///< atmospheric pressure, Pa.
+	double rh; /// relative humidity, fraction 0<rh<1.
+	double DNI; ///< direct normal irradiance Wh/m²
+	double GHI; ///< diffuse horizontal irradiance Wh/m²
+	double d_wind; ///< wind direction, rad, N = 0, E = pi/2, W = 3pi/2, S = pi. Range 0<=d<2pi
+	double v_wind; ///< wind speed, m/s.
 } Tmy3Point;
 
 typedef struct Tmy3Data_struct{
@@ -145,7 +145,7 @@ int datareader_tmy3_header(DataReader *d){
     // set the value of some of the Data Reader parameters
     d->i = 0;
     d->ninputs = 1;
-    d->ndata = 8760; // FIXME
+    d->ndata = 8760; // FIXME -- is a variable length file possible?
     d->nmaxoutputs = 7; // FIXME
 
     DATA(d)->rows = ASC_NEW_ARRAY(Tmy3Point,d->ndata);
@@ -254,15 +254,17 @@ int datareader_tmy3_data(DataReader *d){
 #undef PARSEINT
 #undef PARSECHAR
 
-	// TODO add check for data for Feb 29... just in case?
-	row.t = ((day_of_year_specific(day,month,year) - 1)*24.0 + (hour - 1))*3600.0 + minute*60.;
-	row.T = tmy3_field_32_T * 0.1;
+	/* TODO add check for data for Feb 29... just in case */
+
+	// ignore year, so that data sampled from a leap year isn't somehow offset.
+	row.t = ((day_of_year(day,month) - 1)*24.0 + hour)*3600.0 + minute*60.;
+	row.T = tmy3_field_32_T + 273.15 /* convert to K */;
 	row.p = tmy3_field_41_P * 100.;
 	row.rh = tmy3_field_38_RH * 0.01;
 	row.DNI = tmy3_field_8_DNI * 1.;
 	row.GHI = tmy3_field_5_GHI * 1.;
-	row.v_wind = tmy3_field_47_WS * 0.1;
-	row.d_wind = tmy3_field_44_WD * 3.14159265358 / 180. ;
+	row.v_wind = tmy3_field_47_WS * 1.;
+	row.d_wind = tmy3_field_44_WD * 3.14159265358 / 180.;
 
 	DATA(d)->rows[d->i] = row;
 
@@ -290,8 +292,8 @@ int datareader_tmy3_vals(DataReader *d, double *v){
 	v[2]=ROW.rh;
 	v[3]=ROW.DNI;
 	v[4]=ROW.GHI;
-	v[5]=ROW.d_wind;
-	v[6]=ROW.v_wind;
+	v[5]=ROW.v_wind;
+	v[6]=ROW.d_wind;
 	return 0;
 }
 

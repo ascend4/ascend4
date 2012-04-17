@@ -21,8 +21,8 @@ class PythonSolverReporter(ascpy.SolverReporter):
 		self.browser.statusbar.pop(self.statusbarcontext)
 
 		if status.isConverged():
-			self.reporter.reportSuccess("Converged for %s = %0.2f" % (self.browser.sim.getInstanceName(self.instance), 
-						    self.instance.getRealValue()))
+			#self.reporter.reportSuccess("Converged for %s = %0.2f" % (self.browser.sim.getInstanceName(self.instance), 
+			#			    self.instance.getRealValue()))
 			return
 		elif status.hasExceededTimeLimit():
 			_msg = "Solver exceeded time limit"
@@ -45,7 +45,7 @@ class PythonSolverReporter(ascpy.SolverReporter):
 		_msg = _msg + " for %s = %0.2f" % (self.browser.sim.getInstanceName(self.instance), self.instance.getRealValue())
 		self.reporter.reportError(_msg)
 
-class PopupSolverReporter(PythonSolverReporter):
+class StudyReporter(PythonSolverReporter):
 	def __init__(self, browser, numvars, instance, nsteps, study):
 		PythonSolverReporter.__init__(self,browser)
 
@@ -175,7 +175,7 @@ class PopupSolverReporter(PythonSolverReporter):
 			
 			if status.isConverged():
 				self.report_to_browser(status)
-				print "Converged for %s = %s" % (self.browser.sim.getInstanceName(self.instance), self.instance.getRealValue())
+				# print "Converged for %s = %s" % (self.browser.sim.getInstanceName(self.instance), self.instance.getRealValue())
 				#add row in the observer tabs
 				for tabs in self.browser.observers:
 					if tabs.alive:

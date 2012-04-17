@@ -248,19 +248,26 @@ class StudyWin:
 		_browser.start_waiting("Solving with %s..." % _browser.solver.getName())
 		_browser.prefs.setStringPref("Study","nsteps",str(_nsteps))
 		self.studywin.destroy()
-		reporter = PopupSolverReporter(_browser, _browser.sim.getNumVars(), self.instance, _nsteps, self)
+		reporter = StudyReporter(_browser, _browser.sim.getNumVars(), self.instance, _nsteps, self)
 		i = 0
 		while i<=_nsteps and reporter.guiinterrupt == False:
 			
 			#run method
-			if self.method != None:
-				_browser.do_method(self.method)
+			if self.method:
+				try:
+					_browser.sim.run(method)
+				except RuntimeError,e:
+					_browser.reporter.reportError(str(e))
 				
 			#set the value
+			## FIXME do this test outside the loop...
 			if self.instance.getType().isRefinedSolverVar():
 				# for solver vars, set the 'fixed' flag as well
+				## FIXME shouldn't be necessary to set the 'fixed' flag each time.
+				## FIXME this function seems to somehow be repeatedly parsing units: avoid doing that every step.
 				self.instance.setFixedValue(parameters[0])
 			else:
+				## why would we NOT want to fix this variable??
 				self.instance.setRealValue(parameters[0])
 			
 			#solve
@@ -271,6 +278,7 @@ class StudyWin:
 				_browser.reporter.reportError(str(e))
 
 			i = i+1
+			# any issue with accumulation of rounding errors here?
 			if _log == True:
 				parameters[0] = parameters[0]*exp(_diff)
 			else:

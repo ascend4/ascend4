@@ -130,13 +130,13 @@ class ObserverRow:
 
 	def make_static(self,table):
 		self.active = False
-		print "TABLE COLS:",table.cols
-		print "ROW VALUES:",self.values
+		#print "TABLE COLS:",table.cols
+		#print "ROW VALUES:",self.values
 		_v = {}
 		for col in table.cols.values():
 			_v[col.index] = col.instance.getRealValue()
 		self.values = _v
-		print "Made static, values:",self.values
+		#print "Made static, values:",self.values
 
 	def get_values(self,table):
 		vv = {}
