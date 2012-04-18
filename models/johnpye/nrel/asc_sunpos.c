@@ -43,7 +43,7 @@
 #include "spa.h"
 
 #ifndef PI
-# define PI 3.14159265358979
+# define PI 3.141592653589793238462
 #endif
 
 static ExtBBoxInitFunc sunpos_nrel_prepare;
@@ -206,11 +206,17 @@ static int sunpos_nrel_calc(struct BBoxInterp *bbox,
 	S.jd = (t + t_offset) / 3600 / 24; /* convert to days */
 
 	int res = spa_calculate(&S);
-	CONSOLE_DEBUG("Sun position: t = %f JD, p  %f mbar, T = %f C: res = %d, az = %f, zen = %f",t, p, T, res, S.azimuth, S.zenith);
+	//CONSOLE_DEBUG("Sun position: t = %f JD, p  %f mbar, T = %f C: res = %d, az = %f, zen = %f",S.jd, p, T, res, S.azimuth, S.zenith);
 
 	/* returned values are in degrees, need to convert back to base SI: radians */
 	outputs[0] = S.zenith * PI/180.;
 	outputs[1] = S.azimuth180 * PI/180.;
+
+	switch(res){
+	case 0: break;
+	case 16: CONSOLE_DEBUG("Calculated julian day (t + offset) = %f is out of permitted range",S.jd); break;
+	default: CONSOLE_DEBUG("Error code %d returned from spa_calculate",res);
+	}
 
 	/* 0 on success, non-zero is error code from spa_calculate (would prob be input parameters out-of-range) */
 	return res;
@@ -237,13 +243,13 @@ static int julian_day_nrel_calc(struct BBoxInterp *bbox,
 	int y,mon,d,h,m,s;
 	double tz;
 
-	y = inputs[0]; /* convert from seconds to years */
-	mon = inputs[1]; /* convert from seconds to months */ 
-	d = inputs[2]; /* convert from seconds to days */
-	h = inputs[3]; /* seconds to hours */
-	m = inputs[4]; /* seconds to minutes */
-	s = inputs[5];
-	tz = inputs[6] / 3600.; /* seconds to hours */
+	y = inputs[0]; /* year */
+	mon = inputs[1]; /* month */ 
+	d = inputs[2]; /* day */
+	h = inputs[3]; /* hour */
+	m = inputs[4]; /* minute */
+	s = inputs[5]; /* second */
+	tz = inputs[6] / 3600.; /* timezone (in seconds, converted here to hours) */
 
 	double t = julian_day(y,mon,d, h,m,s, tz) * 3600 * 24;
 	

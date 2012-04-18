@@ -582,7 +582,7 @@ static int validate_inputs(spa_data *spa)
     case SPA_ZA_JD:
     case SPA_ZA_INC_JD:
     case SPA_ZA_RTS_JD:
-		if ((spa->jd < 2451544.5) || (spa->jd > 3912879.500000)) return 16;
+		if ((spa->jd < 990557.5) || (spa->jd > 3912879.500000)) return 16;
     	break;
     default:
 		if ((spa->year        < -2000) || (spa->year        > 6000)) return 1;
@@ -618,6 +618,8 @@ double julian_day (int year, int month, int day, int hour, int minute, int secon
 {
     double day_decimal, julian_day, a;
 
+	//fprintf(stderr,"Julian day for %d/%d/%d %d:%d:%d (%+0.2f) is ",day,month,year,hour,minute,second,tz);
+
     day_decimal = day + (hour - tz + (minute + second/60.0)/60.0)/24.0;
 
     if (month < 3) {
@@ -632,6 +634,7 @@ double julian_day (int year, int month, int day, int hour, int minute, int secon
         julian_day += (2 - a + floor(a/4));
     }
 
+	//fprintf(stderr,"%f\n",julian_day);
     return julian_day;
 }
 

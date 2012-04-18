@@ -1,0 +1,60 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/nrel/sunpos_nrel.a4c";
+REQUIRE "johnpye/datareader/testtmy3.a4c";
+
+(*
+	Calculate the radiation incident on a sloped surface at a particular
+	location over the course of a year.
+
+	EXPERIMENTAL.
+
+	John Pye, Apr 2012.
+*)
+MODEL incident;
+	sun IS_A sunpos_nrel;
+	sun.loc.latitude :== 34.850 {deg};
+	sun.loc.longitude :== -116.800 {deg};
+	sun.loc.elevation :== 586 {m};
+
+	dr IS_A tmy3;
+	dr.tmydata.filename :== 'johnpye/datareader/723815TY.csv';
+	
+	t IS_A time;
+	t, dr.t, sun.t ARE_THE_SAME;
+	dr.T, sun.T ARE_THE_SAME;
+	dr.p, sun.p ARE_THE_SAME;
+
+	CONDITIONAL
+		sunup: sun.zenith < 90 {deg};
+	END CONDITIONAL;
+	is_sunup IS_A boolean_var;
+	is_sunup == SATISFIED(sunup);
+
+	E_tot IS_A energy_per_area;
+	E_tot_der IS_A power_per_area;
+
+	sun_added: E_tot_der = dr.GHI;
+	sun_ignor: E_tot_der = 0;
+	WHEN(is_sunup)
+	CASE TRUE:
+		USE sun_added;
+	CASE FALSE:
+		USE sun_ignor;
+	END WHEN;
+METHODS
+METHOD on_load;
+	FIX t := 297.5 {d};
+	RUN sun.offset.on_load;
+	FIX sun.offset.y := 1999;
+	FIX sun.offset.tz := -8 {h};
+	FIX sun.offset.h := 0;
+	E_tot := 0 {kJ/m^2};
+	E_tot_der.ode_id := 1;
+	E_tot.ode_id := 1;
+	E_tot_der.ode_type := 2;
+	E_tot.ode_type := 1;
+	t.ode_type := -1;
+END on_load;	
+END incident;
+

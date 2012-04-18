@@ -643,6 +643,14 @@ END length_parameter;
         nominal := 100000.0{BTU};
     END energy;
 
+    ATOM energy_per_area REFINES solver_var
+        DIMENSION M/T^2
+        DEFAULT 1000{kJ/m^2};
+        lower_bound := -1e50{kJ/m^2};
+        upper_bound := 1e50{kJ/m^2};
+        nominal := 1000{kJ/m^2};
+    END energy_per_area;
+
     ATOM energy_per_volume REFINES solver_var
         DIMENSION M/L/T^2
         DEFAULT 1000{kJ/L};
