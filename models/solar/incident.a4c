@@ -25,15 +25,17 @@ MODEL incident;
 	dr.T, sun.T ARE_THE_SAME;
 	dr.p, sun.p ARE_THE_SAME;
 
+	E_tot IS_A energy_per_area;
+	E_tot_der IS_A power_per_area;
+
+	integ: E_tot_der = dr.GHI * (1./(1.+exp(-2*100{1/rad}*(sun.altitude))));
+(*
+	(* Conditional modelling approach: can use this with IDA perhaps *)
 	CONDITIONAL
 		sunup: sun.zenith < 90 {deg};
 	END CONDITIONAL;
 	is_sunup IS_A boolean_var;
 	is_sunup == SATISFIED(sunup);
-
-	E_tot IS_A energy_per_area;
-	E_tot_der IS_A power_per_area;
-
 	sun_added: E_tot_der = dr.GHI;
 	sun_ignor: E_tot_der = 0;
 	WHEN(is_sunup)
@@ -42,6 +44,7 @@ MODEL incident;
 	CASE FALSE:
 		USE sun_ignor;
 	END WHEN;
+*)
 METHODS
 METHOD on_load;
 	FIX t := 297.5 {d};
