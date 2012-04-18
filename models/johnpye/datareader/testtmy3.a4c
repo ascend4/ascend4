@@ -12,7 +12,7 @@ MODEL drconf;
 	parameters :== '1,2,3,4,5,6,7';
 END drconf;
 
-MODEL testtmy3;
+MODEL tmy3;
 	t IS_A time;
 	T IS_A temperature;
 	p IS_A pressure;
@@ -23,22 +23,25 @@ MODEL testtmy3;
 	d_wind IS_A angle;
 
 	tmydata IS_A drconf;
-	tmydata.filename :== 'johnpye/datareader/723815TY.csv';
 
 	filereader:datareader(
 		t : INPUT;
 		T,p,rh,DNI,GHI,v_wind,d_wind :OUTPUT;
 		tmydata : DATA
 	);
-
 METHODS
 METHOD on_load;
 	RUN default_self; RUN specify; RUN values; 
 END on_load;
+END tmy3;
+
+MODEL testtmy3 REFINES tmy3;
+	tmydata.filename :== 'johnpye/datareader/723815TY.csv';
+METHODS
 METHOD specify;
 	FIX t;
 END specify;
 METHOD values;
-	t := 8 {h};
+	t := 297.5 {d};
 END values;
 END testtmy3;

@@ -2156,7 +2156,7 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
       break;
     case e_blackbox:
       if ( RelationCalcResidualPostfix(i,res) != 0) {
-        CONSOLE_DEBUG("Problem evalutating Blackbox residual");
+        CONSOLE_DEBUG("Problem evaluating Blackbox residual");
         status = safe_problem;
         safe_error_to_stderr(&status);
       }
