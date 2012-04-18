@@ -878,9 +878,12 @@ int ida_prepare_integrator(IntegratorSystem *integ, void *ida_mem,
 
 	int i;
 	double val;
+	CONSOLE_DEBUG("Values of the derivatives present in the model");
 	for(i=0; i < integ->n_y; i++) {
-		val = var_value(integ->ydot[i]);
-		CONSOLE_DEBUG("ydot[%d]= %g", i, val);
+		if(integ->ydot[i]){
+			val = var_value(integ->ydot[i]);
+			CONSOLE_DEBUG("ydot[%d]= %g", i, val);
+		}
 	}
 
 	t0 = integrator_get_t(integ);

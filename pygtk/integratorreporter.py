@@ -57,7 +57,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 				_fp = file(_fn,"w")
 				try:
 					try: 
-						self.getIntegrator().writeMatrix(_fp)
+						self.getIntegrator().writeMatrix(_fp,None)
 					except RuntimeError,e:
 						self.browser.reporter.reportError(str(e))
 				finally:
@@ -88,6 +88,8 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			_label = gtk.Label();
 			INTEGRATOR_NUM = INTEGRATOR_NUM + 1
 			_name = "Integrator %d" % INTEGRATOR_NUM
+			print "maintabs =",self.browser.maintabs
+			print "observervbox =",self.browser.builder.get_object("observervbox")
 			_tab = self.browser.maintabs.append_page(self.browser.builder.get_object("observervbox"),_label)
 			_obs = ObserverTab(name=_name, browser=self.browser, tab=_tab, alive=False)
 			_label.set_text(_obs.name)

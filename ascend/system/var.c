@@ -168,7 +168,7 @@ void var_set_sindexF(struct var_variable *var, int32 sindex)
 real64 var_value(const struct var_variable *var)
 {
   if (var==NULL || var->ratom==NULL) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad var (%s)",(var==NULL?"null":"null ratom"));
     return 0.0;
   }
   return( RealAtomValue(var->ratom) );

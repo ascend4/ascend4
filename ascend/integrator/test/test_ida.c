@@ -256,7 +256,7 @@ static void test_boundary(){
 
 	/* set a linearly-distributed samplelist */
 	double start = 0, end = 30;
-	int num = 63;
+	int num = 100;
 	dim_type d;
 	SetDimFraction(d,D_TIME,CreateFraction(1,1));
 	SampleList *samplelist = samplelist_new(num + 1, &d);
@@ -286,6 +286,9 @@ static void test_boundary(){
 	integrator_free_engines();
 	sim_destroy(siminst);
 	Asc_CompilerDestroy();
+
+	/* FIXME this test only checks that nothing catastrophic happens... it's not
+	actually testing the answer. */
 }
 
 /*===========================================================================*/

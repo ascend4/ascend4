@@ -1342,6 +1342,7 @@ int integrator_write_matrix(const IntegratorSystem *sys, FILE *fp,const char *ty
 	asc_assert(sys->internals);
 	asc_assert(sys->internals->name);
 	if(sys->internals->writematrixfn){
+		if(type!=NULL && strcmp(type,"")==0)type = NULL;
 		return (sys->internals->writematrixfn)(sys,fp,type);
 	}else{
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Integrator '%s' defines no write_matrix function.",sys->internals->name);
