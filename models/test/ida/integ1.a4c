@@ -1,0 +1,30 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(*
+	Can we integrate a constant value?
+*)
+MODEL integ1;
+	y,x,der_y IS_A solver_var;
+	t IS_A solver_var;
+
+	x = 1; (* this will fail *)
+	(* x = y * 0. + 1; *)(* this will work *)
+
+	der_y = x;
+METHODS
+METHOD on_load;
+	INDEPENDENT t;
+	DER(der_y,y);
+	t := 0;
+	y := 0;
+	y.obs_id := 2;
+END on_load;
+METHOD self_test;
+	(* assuming integration from t = 0 to 10 *)
+	ASSERT abs(t - 10) < 1e-5;
+	ASSERT x == 1;
+	ASSERT abs(y - 10) < 1e-5;
+END self_test;
+END integ1;
+

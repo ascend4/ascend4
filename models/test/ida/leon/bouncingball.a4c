@@ -4,23 +4,23 @@ REQUIRE "atoms.a4l";
 MODEL bouncingball;
 
 	(* Variables *)
-	y       IS_A solver_var;	(* position of ball centre *)
-	v, ydot IS_A solver_var;	(* velocity *)
-	a       IS_A solver_var;	(* accleration *)	
+	y       IS_A distance;       (* position of ball centre *)
+	v, ydot IS_A speed;          (* velocity *)
+	a       IS_A acceleration;   (* accleration *)	
 
-	F_net 		IS_A solver_var;	(* total force *)
-	F_g		IS_A solver_var;	(* gravitational *)
-	F_d		IS_A solver_var;	(* damping *)
-	F_s		IS_A solver_var;	(* spring model of bounce *)
+	F_net   IS_A force;          (* total force *)
+	F_g     IS_A force;          (* gravitational *)
+	F_d     IS_A force;          (* damping *)
+	F_s     IS_A force;          (* spring model of bounce *)
 
 	(* Constants *)	
-	m 	IS_A solver_var;		(* ball mass *)
-	g 	IS_A solver_var;		(* gravitational constant *)
-	r 	IS_A solver_var;		(* ball radius *)
-	k1	IS_A solver_var;		(* sping constant *)
-	k2	IS_A solver_var;		(* damping constant *)
+	m 	IS_A mass;               (* ball mass *)
+	g 	IS_A acceleration;       (* gravitational constant *)
+	r 	IS_A distance;           (* ball radius *)
+	k1	IS_A stiffness;          (* spring constant *)
+	k2	IS_A damping_coefficient;(* damping constant *)
 	
-	(*Independant*)
+	(*Independent *)
 	t IS_A time;
 
 	(* Booleans *)
@@ -62,27 +62,25 @@ METHODS
 	METHOD ode_init;
 		y.ode_type 	:= 1; ydot.ode_type	:= 2; 	
 		y.ode_id 	:= 1; ydot.ode_id	:= 1;
-
 		v.ode_type 	:= 1; a.ode_type 	:= 2;	
 		v.ode_id 	:= 2; a.ode_id 		:= 2; 
-
 		t.ode_type	:= -1;
 	END ode_init;
 
 	METHOD values;
-		y 		:= 40;
-		v		:= 0;
-		a		:= 0;		
-		m 		:= 4;
-		g	 	:= 9.8;
-		r 		:= 10;
-		k1 		:= 400;
-		k2 		:= 4;
+		FIX m, k1, k2, r, g;
+		m  := 4 {kg};
+		g  := 9.8 {m/s^2};
+		r  := 10 {m};
+		k1 := 400 {N/m};
+		k2 := 4 {N*s/m};
 
-		t 		:= 0{s};
-		switch		:= FALSE;
-		FIX 	m, k1, k2, r, g;
-
+		(* Initial values *)
+		y  := 40 {m};
+		v  := 0 {m/s};
+		a  := 0 {m/s^2};
+		t  := 0{s};
+		switch := FALSE;
 	END values;
 
 	METHOD obs_init;

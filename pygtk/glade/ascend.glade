@@ -2096,8 +2096,8 @@ upper and lower bounds displayed.</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <property name="use_action_appearance">False</property>
-                                    <accelerator key="v" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                                     <accelerator key="v" signal="clicked" modifiers="GDK_MOD1_MASK"/>
+                                    <accelerator key="v" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                                     <signal name="clicked" handler="on_varinfobutton_clicked" swapped="no"/>
                                     <child>
                                       <object class="GtkImage" id="varinfoimg">
@@ -2120,8 +2120,8 @@ upper and lower bounds displayed.</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <property name="use_action_appearance">False</property>
-                                    <accelerator key="r" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                                     <accelerator key="r" signal="clicked" modifiers="GDK_MOD1_MASK"/>
+                                    <accelerator key="r" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                                     <signal name="clicked" handler="on_relinfobutton_clicked" swapped="no"/>
                                     <child>
                                       <object class="GtkImage" id="relinfoimg">
@@ -4377,7 +4377,7 @@ upper and lower bounds displayed.</property>
                 <property name="label" translatable="yes">Name	</property>
               </object>
               <packing>
-                <property name="x_options"></property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -4426,6 +4426,7 @@ upper and lower bounds displayed.</property>
                 <property name="right_attach">2</property>
                 <property name="top_attach">2</property>
                 <property name="bottom_attach">3</property>
+                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -4434,18 +4435,20 @@ upper and lower bounds displayed.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
-                <property name="yalign">1</property>
+                <property name="yalign">0</property>
                 <property name="label" translatable="yes">Relation	</property>
               </object>
               <packing>
                 <property name="top_attach">3</property>
                 <property name="bottom_attach">4</property>
                 <property name="x_options"></property>
-                <property name="y_options"></property>
+                <property name="y_options">GTK_FILL</property>
+                <property name="y_padding">6</property>
               </packing>
             </child>
             <child>
               <object class="GtkScrolledWindow" id="scrolledwindow16">
+                <property name="height_request">30</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="hscrollbar_policy">automatic</property>
@@ -4469,7 +4472,6 @@ upper and lower bounds displayed.</property>
                 <property name="right_attach">2</property>
                 <property name="top_attach">3</property>
                 <property name="bottom_attach">4</property>
-                <property name="x_options"></property>
               </packing>
             </child>
             <child>
@@ -4488,7 +4490,6 @@ upper and lower bounds displayed.</property>
                 <property name="right_attach">2</property>
                 <property name="top_attach">4</property>
                 <property name="bottom_attach">5</property>
-                <property name="x_options">GTK_FILL</property>
                 <property name="y_options"></property>
               </packing>
             </child>
@@ -4573,6 +4574,7 @@ upper and lower bounds displayed.</property>
                 <property name="top_attach">1</property>
                 <property name="bottom_attach">2</property>
                 <property name="x_options">GTK_FILL</property>
+                <property name="y_options">GTK_FILL</property>
               </packing>
             </child>
             <child>
