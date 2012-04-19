@@ -359,7 +359,7 @@ class ObserverTab:
 			_oldpath,_oldcol = self.view.get_cursor()
 			self.view.set_cursor(_path, _oldcol)
 		else:
-			_row = ObserverRow(values=values,active=False,tainted=taint)
+			_row = ObserverRow(values=values,active=False,tainted=False)
 			self.rows.append(_row)
 			_store.append(None,[_row])			
 			#self.browser.reporter.reportNote("Added data row")

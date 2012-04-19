@@ -88,9 +88,11 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			_label = gtk.Label();
 			INTEGRATOR_NUM = INTEGRATOR_NUM + 1
 			_name = "Integrator %d" % INTEGRATOR_NUM
-			print "maintabs =",self.browser.maintabs
-			print "observervbox =",self.browser.builder.get_object("observervbox")
-			_tab = self.browser.maintabs.append_page(self.browser.builder.get_object("observervbox"),_label)
+			self.browser.builder.add_objects_from_file(self.browser.glade_file,
+				["observervbox","observercontext"] + ["image%d"%n for n in range(7,12)]
+			)
+			_vbox = self.browser.builder.get_object("observervbox")
+			_tab = self.browser.maintabs.append_page(_vbox,_label)
 			_obs = ObserverTab(name=_name, browser=self.browser, tab=_tab, alive=False)
 			_label.set_text(_obs.name)
 			self.browser.observers.append(_obs)
@@ -104,7 +106,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			for _time,_vals in self.data:
 				_obs.do_add_row([_time]+[_v for _v in _vals])
 		except Exception,e:
-			sys.stderr.write("\n\n\nIntegratorReporter::closeOutput: error: %s\n\n\n" % str(e))
+			sys.stderr.write("\n\n\nIntegratorReporter::closeOutput: error: %s: %s\n\n\n" % (e.__class__,str(e)))
 			return 1
 		return 0
 
