@@ -933,6 +933,13 @@ END length_parameter;
 		nominal := 1 {N/m};
 	END stiffness;
 
+    ATOM damping_coefficient REFINES solver_var
+		DIMENSION M/T
+		DEFAULT 1 {N*s/m};
+		lower_bound := 0 {N*s/m};
+		upper_bound := 1e12 {N*s/m};
+		nominal := 1 {N*s/m};
+	END damping_coefficient;
 		
 
 (*  T R A N S P O R T   Q U A N T I T I E S

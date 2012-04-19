@@ -9,6 +9,7 @@ METHODS
 METHOD on_load;
 	INDEPENDENT t;
 	DER(dy_dt,y);
+	y.obs_id := 2;
 END on_load;
 END simple_ok1;
 
