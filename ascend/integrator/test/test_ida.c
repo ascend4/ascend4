@@ -76,7 +76,6 @@ IntegratorReporter test_ida_reporter = { test_ida_reporter_init,
 		test_ida_reporter_write, test_ida_reporter_writeobs,
 		test_ida_reporter_close };
 
-
 /*
 	Test using simple harmonic motion model.
 */
@@ -217,9 +216,10 @@ static void test_boundary(){
 	// CU_ASSERT(FindType(AddSymbol(FILESTEM))!=NULL);
 
 	/* instantiate it */
-	struct Instance *siminst = SimsCreateInstance(AddSymbol("bouncingball"),
+	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM),
 			AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(siminst!=NULL);
+#undef FILESTEM
 
 	CONSOLE_DEBUG("RUNNING ON_LOAD");
 
@@ -246,7 +246,6 @@ static void test_boundary(){
 	/* perform problem analysis */
 	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
 
-	/* TODO assign an integrator reporter */
 	integrator_set_reporter(integ, &test_ida_reporter);
 
 	integrator_set_minstep(integ, .01);
@@ -291,12 +290,117 @@ static void test_boundary(){
 	actually testing the answer. */
 }
 
+/*
+	Check that we can integrate a constant!
+*/
+static void test_integ1(){
+	Asc_CompilerInit(1);
+
+	/* set paths relative to test executable */
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv");
+
+	/* FIXME shouldn't be necessary to load this explicitly, surely?? */
+	CU_TEST_FATAL(0 == package_load("lrslv",NULL));
+
+	/* load the file */
+	char path[PATH_MAX];
+	strcpy((char *) path, "test/ida/");
+#define FILESTEM "integ1"
+	strncat(path, FILESTEM, PATH_MAX - strlen(path));
+	strncat(path, ".a4c", PATH_MAX - strlen(path));
+	{
+		int status;
+		Asc_OpenModule(path, &status);
+		CU_ASSERT_FATAL(status == 0);
+	}
+
+	/* parse it */
+	CU_ASSERT(0 == zz_parse());
+
+	/* instantiate it */
+	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM),
+		AddSymbol("sim1"), e_normal, NULL
+	);
+	CU_ASSERT_FATAL(siminst!=NULL);
+#undef FILESTEM
+
+	/** Call on_load */
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst), name, "sim1",
+		ASCERR, WP_STOPONERR, NULL, NULL
+	);
+	CU_ASSERT(pe==Proc_all_ok);
+
+	/* create the integrator */
+	slv_system_t sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+
+	IntegratorSystem *integ = integrator_new(sys,GetSimulationRoot(siminst));
+
+	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"IDA"));
+
+	slv_parameters_t p;
+	CU_ASSERT(0 == integrator_params_get(integ,&p));
+	/* TODO set some parameters? */
+
+	/* perform problem analysis */
+	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
+
+	integrator_set_reporter(integ, &test_ida_reporter);
+
+	integrator_set_minstep(integ, .01);
+	integrator_set_maxstep(integ, 1);
+	integrator_set_stepzero(integ, .001);
+	integrator_set_maxsubsteps(integ, 200);
+
+	/* set a linearly-distributed samplelist */
+	double start = 0, end = 30;
+	int num = 100;
+	dim_type d;
+	SetDimFraction(d,D_TIME,CreateFraction(1,1));
+	SampleList *samplelist = samplelist_new(num + 1, &d);
+	double val = start;
+	double inc = (end - start) / (num);
+	unsigned long i;
+	for (i = 0; i <= num; ++i) {
+		samplelist_set(samplelist, i, val);
+		val += inc;
+	}
+	integrator_set_samples(integ, samplelist);
+
+	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
+
+	/* run the self-test */
+	CreateIdName(AddSymbol("self_test"));
+	pe = Initialize(GetSimulationRoot(siminst), name, "sim1",
+		ASCERR, WP_STOPONERR, NULL, NULL
+	);
+	CU_ASSERT(pe==Proc_all_ok);
+
+	/* clean up */
+	integrator_free(integ);
+	samplelist_free(samplelist);
+
+	CU_ASSERT_FATAL(NULL != sys);
+	system_destroy(sys);
+	system_free_reused_mem();
+
+	CU_ASSERT(siminst != NULL);
+	solver_destroy_engines();
+	integrator_free_engines();
+	sim_destroy(siminst);
+	Asc_CompilerDestroy();
+}
+
+
 /*===========================================================================*/
 /* Registration information */
 
 #define TESTS(T) \
 	T(shm) \
-	T(boundary)
+	T(boundary) \
+	T(integ1)
 
 REGISTER_TESTS_SIMPLE(integrator_ida, TESTS)
 
