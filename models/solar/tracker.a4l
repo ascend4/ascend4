@@ -1,19 +1,41 @@
 REQUIRE "atoms.a4l";
 REQUIRE "solar/solar_types.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
-REQUIRE "johnpye/sunpos_db.a4c";
+REQUIRE "johnpye/nrel/sunpos_nrel.a4c";
 
+MODEL sunpos_tilted_surface REFINES sunpos_nrel;
+	beta "inclination angle of tilted surface"
+	, gamma "azimuth angle of tilted surface"
+	, theta "angle between solar rays and normal to tilted surface"
+	IS_A angle;
 
-MODEL sunpos_wrapper REFINES sunpos_db;
+	theta = arccos(cos(zenith)*cos(beta) + sin(zenith)*sin(beta) * cos(azimuth - gamma));
+	(* if theta > 90{deg} then sun is behind the surface *)	
+END sunpos_tilted_surface;
 
-	METHODS
-		METHOD specify;
-			FIX t, L_st, L_loc, phi; (* time and location *)
-		    FIX beta, gamma; (* surface orientation *)
-		END specify;
+MODEL sunpos_tilted_surface_test REFINES sunpos_tilted_surface;
+	loc.latitude :== 43{deg};
+	loc.longitude :== 0{deg};
+	loc.elevation :== 0{m};
+METHODS
+METHOD on_load;
+	RUN offset.on_load;
+	FIX offset.h := 0;
+	FIX offset.tz := 0 {h}; (* timezone matches latitude, so solar time = clock time *)
+	FIX t := 31 {d} + 13 {d} - 1 {d} + 10 {h} + 30 {min};
 
-END sunpos_wrapper;
+	FIX T := 293 {K};
+	FIX p := 1 {atm};
 
+	FIX beta := 45 {deg};
+	FIX gamma := 15 {deg};
+END on_load;
+METHOD self_test;
+	ASSERT abs(theta - 35 {deg}) < 0.5 {deg};
+END self_test;
+END sunpos_tilted_surface_test;
+
+(*
 MODEL sunpos_tracker_type1; 
 	(* The collector is rotated about a horizontal east-west axis with single daily adjustment such that the solar beam is normal to the collector aperture plane at solar noon *)
 
@@ -55,9 +77,7 @@ MODEL sunpos_tracker_type1;
 END sunpos_tracker_type1;
 
 
-
-
-MODEL sunpos_tracker_type2 REFINES sunpos_db;
+MODEL tracker_axis_type2 REFINES sunpos_db;
     (* The collector is rotated about a horizontal east-west axis with single daily adjustment such that the solar beam is normal to the collector aperture plane at solar noon *)
 
     cos(beta) * cos(phi - delta) + cos(gamma) * sin(beta) * sin(phi - delta) = 1;
@@ -94,3 +114,5 @@ MODEL sunpos_tracker_type2 REFINES sunpos_db;
             RUN values;
         END on_load;
 END sunpos_tracker_type2;
+
+*)

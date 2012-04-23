@@ -1059,6 +1059,7 @@ LIST_DEBUG(rel,rel_relation)
 # define MAYBE_CONSOLE_DEBUG(MSG,...)
 #endif
 
+/* we define system_cut_vars and system_cut_rels with this macro... */
 /**
 	This is a big durtie macro to perform cuts on our solvers_*_lists.
 	The function will start at position 'begin' and move through all elements
