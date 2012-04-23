@@ -14,7 +14,7 @@ REQUIRE "atoms.a4l";
 
 	See further notes and references at the end of the file.
 
-	by John Pye, 2006
+	by John Pye, 2006-2012.
 *)
 MODEL sunpos_db;
 	t IS_A time; (* starting at zero at midnight on 1 Jan *)
@@ -37,64 +37,41 @@ MODEL sunpos_db;
 	t_corr = E - t_long;
 
 	delta IS_A angle; (* solar declination *)
-	delta = 23.45{deg}*sin(360{deg}*(285{day}+t)/(365{day}));
+	(* we adjust the D&B equation so that it holds true at noon (t=0.5d) but 
+	is continuous on time, instead of based on discrete day-of-the-year *)
+	delta = 23.45{deg}*sin(360{deg}*(284.5{day}+t)/(365{day}));
 
-	theta IS_A angle; (* angle of incidence of sun onto inclined surface *)
 	omega IS_A angle; (* hour angle, noon=0, afternoon positive *)
-	gamma IS_A angle; (* surface azimuth angle, south=0, west positive *)
-	beta IS_A angle; (* surface inclination, horiz=0, +90deg=vertical *)	
 
 	omega = (t_solar - 12{h})*(360{deg}/1{d});
-	omega_RHP IS_A angle;
-	omega_RHP = arccos(cos(omega));
+	omega_RHP "omega converted to right half-plane" IS_A angle;
+	omega_RHP = arcsin(sin(omega));
 
 	omega_s IS_A angle;
 	omega_s = arccos( - tan(phi)*tan(delta) );
-
-	theta = arccos( 
-		sin(delta)*sin(phi)*cos(beta) - sin(delta)*cos(phi)*sin(beta)*cos(gamma)
-		+ cos(delta)*cos(phi)*cos(beta)*cos(omega)
-		+ cos(delta)*sin(phi)*sin(beta)*cos(gamma)*cos(omega)
-		+ cos(delta)*sin(beta)*sin(gamma)*sin(omega)
-	);
 
 	theta_z IS_A angle; (* zenith angle of the sun *)
 	theta_z = arccos(
 		cos(delta)*cos(phi)*cos(omega) + sin(delta)*sin(phi)
 	);
 
-	costheta IS_A factor;
-	costheta = cos(theta);
-	costhetaz IS_A factor;
-	costhetaz = cos(theta_z);
-
-	Gsc IS_A real_constant; (* solar constant *)
-	Gsc :== 1353 {W/m^2};
-
-	(* extraterrestrial irradiance on a normal surface*)
-	Gon IS_A irradiance;
-	Gon = Gsc*(1 + 0.033*cos(
-		300{deg}/365{day}*(1{day}+t))
-	);
-
-	R_b IS_A factor; (* ratio of beam radiation, inclined : horizontal *)
-	R_b = cos(theta) / cos(theta_z);
-
 	(* solar azimuth angle *)
 	gamma_s "solar azimuth angle (sign conv?)" IS_A angle;
 	omega_ew "see eq 1.6.6g from D&B" IS_A angle;
 	omega_ew = arccos(tan(delta)/tan(phi));
 	C1, C2, C3 IS_A factor;
-	C1 = (omega^2 - omega_ew^2) / abs(omega^2 - omega_ew^2);
+	C1 = (omega_ew^2 - omega_RHP^2) / abs(omega_RHP^2 - omega_ew^2);
 	C2 = (phi - delta) / abs(phi - delta);
-	C3 = omega / abs(omega);
+	C3 = omega_RHP / abs(omega_RHP);
 	gamma_sd "pseudo surface azimuth angle" IS_A angle;
-	gamma_sd = arcsin(sin(omega) * cos(delta) / sin(theta_z));
+	gamma_sd = arcsin(sin(omega_RHP) * cos(delta) / sin(theta_z));
 	gamma_s = C1 * C2 * gamma_sd + C3*(1 - C1*C2)*0.5{PI};
 
 	alpha_s "solar altitude angle" IS_A angle;
 	alpha_s = 0.5{PI} - theta_z;
 
+	Gsc IS_A real_constant; (* solar constant *)
+	Gsc :== 1353 {W/m^2};
 METHODS
 METHOD default_self;
 	t := 0{day};
@@ -108,7 +85,6 @@ METHOD on_load;
 END on_load;
 METHOD specify;
 	FIX t, L_st, L_loc, phi; (* time and location *)
-	FIX beta, gamma; (* surface orientation *)
 END specify;
 METHOD values;
 	(* values for Duffie & Beckman examples 1.5.1 ff *)
@@ -117,13 +93,54 @@ METHOD values;
 	phi := +43{deg};
 	(* t := 32.4375 {d}; *)
 	t := 32{d} + 10{h}+30{min};
+END values;
+END sunpos_db;
 
+
+(*
+	Model of the solar angles on a tilted surface, calculated using the D&B
+	sun position model.
+*)
+MODEL sunpos_tilted_surface_db REFINES sunpos_db;
+	theta IS_A angle; (* angle of incidence of sun onto inclined surface *)
+	gamma IS_A angle; (* surface azimuth angle, south=0, west positive *)
+	beta IS_A angle; (* surface inclination, horiz=0, +90deg=vertical *)	
+
+	theta = arccos(cos(theta_z)*cos(beta) + sin(theta_z)*sin(beta)*cos(gamma_s - gamma));
+	(*
+	theta = arccos( 
+		sin(delta)*sin(phi)*cos(beta) - sin(delta)*cos(phi)*sin(beta)*cos(gamma)
+		+ cos(delta)*cos(phi)*cos(beta)*cos(omega)
+		+ cos(delta)*sin(phi)*sin(beta)*cos(gamma)*cos(omega)
+		+ cos(delta)*sin(beta)*sin(gamma)*sin(omega)
+	);
+	*)
+
+	(* extraterrestrial irradiance on a normal surface*)
+	Gon IS_A irradiance;
+	Gon = Gsc*(1 + 0.033*cos(
+		300{deg}/365{day}*(1{day}+t))
+	);
+
+	R_b IS_A factor; (* ratio of beam radiation, inclined : horizontal *)
+	R_b = cos(theta) / cos(theta_z);
+
+	(* profile angle, as defined in D&B *)
+	alpha_p "profile angle" IS_A angle;
+	tan(alpha_p) = tan(alpha_s) / cos(gamma_s - gamma);
+
+METHODS
+METHOD specify;
+	RUN sunpos_db::default_self;
+	FIX beta, gamma; (* surface orientation *)
+END specify;
+METHOD values;
+	RUN sunpos_db::values;
 	(* surface orientation *)
 	beta := 45{deg};
 	gamma := 15{deg};
-
 END values;
-END sunpos_db;
+END sunpos_tilted_surface_db;
 
 (*
 	Total daily extraterrestrial radiation, from sunrise to sunset.
@@ -155,10 +172,11 @@ END dailyextraterrestrial;
 
 	checked, this looks OK -- JP 
 *)
-MODEL example_1_6_1 REFINES sunpos_db;
+MODEL example_1_6_1 REFINES sunpos_tilted_surface_db;
 METHODS
 METHOD specify;
 	RUN sunpos_db::specify;
+	FIX beta, gamma;
 	FREE t;
 	FIX t_solar;
 END specify;
@@ -172,8 +190,8 @@ METHOD values;
 	phi := +43{deg};
 END values;
 METHOD self_test;
-	ASSERT abs(theta-35.0{deg}) < 0.15{deg};
-	ASSERT abs(delta-(-13.80{deg})) < 0.02{deg};
+	ASSERT abs(theta-35.0{deg}) < 0.17{deg};
+	ASSERT abs(delta-(-14{deg})) < 0.1{deg};
 END self_test;
 END example_1_6_1;
 
@@ -183,7 +201,7 @@ END example_1_6_1;
 
 	checked, this looks OK -- JP
 *)
-MODEL example_1_6_2 REFINES sunpos_db;
+MODEL example_1_6_2a REFINES sunpos_db;
 METHODS
 METHOD specify;
 	RUN sunpos_db::specify;
@@ -192,24 +210,53 @@ METHOD specify;
 END specify;
 METHOD values;
 	RUN sunpos_db::values;
-	t_solar := 43{d} + 9{h} + 30{min};
+	t_solar := (31 {d} + 13{d} -1 {d}) + 9{h} + 30{min};
 	L_st := -90{deg}; (* USA Central time*)
 	L_loc := -89.4{deg};
 	phi := +43{deg};
 END values;
 METHOD self_test;
-	ASSERT abs(theta_z-66.0{deg}) < 0.4{deg};
+	ASSERT abs(theta_z-66.0{deg}) < 0.6{deg};
+	ASSERT abs(gamma_s--40.3{deg}) < 0.25{deg};
 END self_test;
-END example_1_6_2;
+END example_1_6_2a;
+
+(*
+	Calculate the zenith angle of the sun at 5:30 AM solar time in Madison on
+	1 Jul.
+
+	checked, this looks OK -- JP
+*)
+MODEL example_1_6_2b REFINES sunpos_db;
+METHODS
+METHOD specify;
+	RUN sunpos_db::specify;
+	FREE t;
+	FIX t_solar;
+END specify;
+METHOD values;
+	RUN sunpos_db::values;
+	t_solar := (181 {d} + 1{d} -1 {d}) + 5{h} + 30{min};
+	L_st := -90{deg}; (* USA Central time*)
+	L_loc := -89.4{deg};
+	phi := +43{deg};
+END values;
+METHOD self_test;
+	ASSERT abs(theta_z-79.6{deg}) < 0.1{deg};
+	ASSERT abs(gamma_s--112{deg}) < 0.1{deg};
+END self_test;
+END example_1_6_2b;
+
 
 (* 
 	Solar zenith and azimuth, plus profile angle for a sfc facing 25° west
 	of south, 4pm solar time 16 March, latitude 43°.
 *)
-MODEL example_1_6_3 REFINES sunpos_db;
+MODEL example_1_6_3 REFINES sunpos_tilted_surface_db;
 METHODS
 METHOD specify;
 	RUN sunpos_db::specify;
+	FIX gamma, beta;
 	FREE t;
 	FIX t_solar;
 END specify;
@@ -220,13 +267,20 @@ METHOD values;
 	L_st := 0{deg};
 	L_loc := 0{deg};
 	phi := 43{deg};
+	gamma := 25{deg};
+	beta := 0{deg};
 END values;
 METHOD self_test;
-	ASSERT abs(gamma_s - 66.8{deg}) < 0.2{deg};
-	ASSERT abs(alpha_s - 19.7{deg}) < 0.2{deg};
+	(* discrepancies here arise from difference in calculated value of delta *)
+	ASSERT abs(alpha_s - 19.7{deg}) < 0.05{deg};
+	ASSERT abs(omega_ew - 92.6{deg}) < 0.1{deg};
+	ASSERT abs(gamma_s - 66.8{deg}) < 0.05{deg};
+	ASSERT abs(alpha_p - 25.7{deg}) < 0.05{deg};
 	(* we don't get calculate the 'profile angle'... *)
 END self_test;
 END example_1_6_3;
+
+(* for tracking surfaces, see models/solar/tracker.a4c *)
 
 (*
 	What is the ratio of beam radiation for the surface and time specified in
@@ -234,12 +288,12 @@ END example_1_6_3;
 
 	checked, this looks OK -- JP
 *)
-MODEL example_1_7_1 REFINES example_1_6_1;
+MODEL example_1_8_1 REFINES example_1_6_1;
 METHODS
 METHOD self_test;
 	ASSERT abs(R_b-1.6577) < 0.013;
 END self_test;
-END example_1_7_1;
+END example_1_8_1;
 
 (* 
 	Calculate Rb for a surface at latitude 40 N, at a tilt 30 degrees toward 
@@ -247,7 +301,7 @@ END example_1_7_1;
 
 	checked, this looks OK -- JP
 *)
-MODEL example_1_7_2 REFINES example_1_6_1;
+MODEL example_1_8_2 REFINES example_1_6_1;
 METHODS
 METHOD values;
 	phi := 40{deg};
@@ -259,25 +313,26 @@ METHOD self_test;
 	ASSERT abs(delta - (-13{deg})) < 0.5{deg};
 	ASSERT abs(R_b-1.61) < 0.005;
 END self_test;
-END example_1_7_2;
+END example_1_8_2;
 
 (*
-	As for Example 1.7.2, but with a surface inclined at 50 degrees
+	As for Example 1.8.2, but with a surface inclined at 50 degrees
 
 	checked, this looks OK
 *)
-MODEL example_1_7_3 REFINES example_1_7_2;
+MODEL example_1_8_3 REFINES example_1_8_2;
 METHODS
 METHOD values;
-	RUN example_1_7_2::values;
+	RUN example_1_8_2::values;
 	beta := 50{deg};
 END values;
 METHOD self_test;
 	ASSERT abs(delta - (-13{deg})) < 0.5{deg};
 	ASSERT abs(R_b-1.80) < 0.05;
 END self_test;
-END example_1_7_3;
+END example_1_8_3;
 
+(*
 (* checked, looks OK (although the error in Ho is a little high) *)
 MODEL example_1_8_1 REFINES dailyextraterrestrial;
 METHODS
@@ -290,6 +345,7 @@ METHOD self_test;
 	ASSERT abs(Ho - 33.4{MJ/m^2}) < 0.4{MJ/m^2};
 END self_test;
 END example_1_8_1;
+*)
 
 (* 
 	NOTE

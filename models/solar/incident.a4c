@@ -9,6 +9,10 @@ REQUIRE "johnpye/datareader/testtmy3.a4c";
 
 	EXPERIMENTAL.
 
+	This model is blocked by bug #549. Until we resolve that, we have to add the
+	hacky 'trick' (E_tot * 0) in eq. 'integ'. And it's still not working,
+	currently (Apr 2012).
+
 	John Pye, Apr 2012.
 *)
 MODEL incident;
@@ -28,7 +32,8 @@ MODEL incident;
 	E_tot IS_A energy_per_area;
 	E_tot_der IS_A power_per_area;
 
-	integ: E_tot_der = dr.GHI * (1./(1.+exp(-2*100{1/rad}*(sun.altitude))));
+	(* non-conditional approach: an approximate heaviside function for sunset *)
+	integ: E_tot_der = (E_tot * 0) + dr.GHI * (1./(1.+exp(-2*100{1/rad}*(sun.altitude))));
 (*
 	(* Conditional modelling approach: can use this with IDA perhaps *)
 	CONDITIONAL

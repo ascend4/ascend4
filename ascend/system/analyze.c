@@ -2678,7 +2678,7 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
 	This is the entry point for problem analysis. It takes the compiler
 	Instance, visits it with the 'CountStuffInTree' method, then constructs
 	lists of all the different types of variables and relations etc, then
-	convey them to the solver using the slv_ interface (i.e. methods that act
+	conveys them to the solver using the slv_ interface (i.e. methods that act
 	on the slv_system_t we've been given).
 
 	We're also establishing any any protocols needed to communicate with the

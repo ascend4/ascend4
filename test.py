@@ -56,7 +56,7 @@ class AscendSelfTester(Ascend):
 			filename = 'johnpye/%s.a4c' % modelname
 		self.L.load(filename)
 		T = self.L.findType(modelname)
-		M = T.getSimulation('sim')
+		M = T.getSimulation('sim',1)
 		M.setSolver(ascpy.Solver(solvername))
 		for k,v in parameters.iteritems():
 			M.setParameter(k,v)
@@ -69,7 +69,7 @@ class TestCompiler(Ascend):
 	def _run(self,filen,modeln=""):
 		self.L.load('test/compiler/%s.a4c' % filen)
 		T = self.L.findType('%s%s' % (filen,modeln))
-		M = T.getSimulation('sim')
+		M = T.getSimulation('sim',1)
 		M.build()
 
 	def _runfail(self,filen,n,msg="failed"):
@@ -104,7 +104,7 @@ class TestCompiler(Ascend):
 	def defaultmethodstest(self,modelname):
 		self.L.load("test/defaultmethods.a4c")
 		T = self.L.findType(modelname)
-		M = T.getSimulation('sim')
+		M = T.getSimulation('sim',1)
 		M.run(T.getMethod('on_load'))
 		M.run(T.getMethod('self_test'))
 		return M
@@ -201,38 +201,40 @@ class TestSolver(AscendSelfTester):
 		self._run('distance_calc',filename="distance_calc.a4c")
 
 	def testconopt(self):
-		self._run('conopttest',"CONOPT",filename="conopttest.a4c")				
+		self._run('conopttest',"CONOPT",filename="test/conopt/conopttest.a4c")				
 
 	def testcmslv2(self):
 		self._run('testcmslv2',"CMSlv")	
 
 	def testsunpos1(self):
-		self._run('example_1_6_1',"QRSlv","johnpye/sunpos.a4c")
+		self._run('example_1_6_1',"QRSlv","johnpye/sunpos_db.a4c")
 
 	def testsunpos2(self):
-		self._run('example_1_6_2',"QRSlv","johnpye/sunpos.a4c")
+		self._run('example_1_6_2a',"QRSlv","johnpye/sunpos_db.a4c")
+	def testsunpos2(self):
+		self._run('example_1_6_2b',"QRSlv","johnpye/sunpos_db.a4c")
+
+	def testsunpos2(self):
+		self._run('example_1_6_3',"QRSlv","johnpye/sunpos_db.a4c")
 
 	def testsunpos3(self):
-		self._run('example_1_7_1',"QRSlv","johnpye/sunpos.a4c")
+		self._run('example_1_8_1',"QRSlv","johnpye/sunpos_db.a4c")
 
 	def testsunpos4(self):
-		self._run('example_1_7_2',"QRSlv","johnpye/sunpos.a4c")
+		self._run('example_1_8_2',"QRSlv","johnpye/sunpos_db.a4c")
 
 	def testsunpos5(self):
-		self._run('example_1_7_3',"QRSlv","johnpye/sunpos.a4c")
-
-	def testsunpos6(self):
-		self._run('example_1_8_1',"QRSlv","johnpye/sunpos.a4c")
+		self._run('example_1_8_3',"QRSlv","johnpye/sunpos_db.a4c")
 
 	def testinstanceas(self):
-		M = self._run('example_1_6_1',"QRSlv","johnpye/sunpos.a4c")
+		M = self._run('example_1_6_1',"QRSlv","johnpye/sunpos_db.a4c")
 		self.assertAlmostEqual( float(M.t_solar), M.t_solar.to("s"))
 		self.assertAlmostEqual( float(M.t_solar)/3600, M.t_solar.to("h"))
 
 	def testrelinclude(self):
 		self.L.load('test/relinclude.a4c')
 		T = self.L.findType('relinclude')
-		M = T.getSimulation('sim')
+		M = T.getSimulation('sim',1)
 		M.eq1.setIncluded(True)
 		M.eq2.setIncluded(False)
 		M.eq3.setIncluded(False)
@@ -256,7 +258,7 @@ class TestBinTokens(AscendSelfTester):
 		ascpy.getCompiler().setBinaryCompilation(True)
 		self.L.load('johnpye/testlog10.a4c')
 		T = self.L.findType('testlog10')
-		M = T.getSimulation('sim')
+		M = T.getSimulation('sim',1)
 		M.build()
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 
@@ -331,7 +333,7 @@ class TestIntegrator(Ascend):
 	# this routine is reused by both testIDA and testLSODE
 	def _testIntegrator(self,integratorname):
 		self.L.load('johnpye/shm.a4c')
-		M = self.L.findType('shm').getSimulation('sim')
+		M = self.L.findType('shm').getSimulation('sim',1)
 		M.setSolver(ascpy.Solver('QRSlv'))
 		P = M.getParameters()
 		M.setParameter('feastol',1e-12)
@@ -363,7 +365,7 @@ class TestIntegrator(Ascend):
 
 	def testInvalidIntegrator(self):
 		self.L.load('johnpye/shm.a4c') 
-		M = self.L.findType('shm').getSimulation('sim')
+		M = self.L.findType('shm').getSimulation('sim',1)
 		M.setSolver(ascpy.Solver('QRSlv'))
 		I = ascpy.Integrator(M)
 		try:
@@ -380,7 +382,7 @@ class TestIntegrator(Ascend):
 
 	def testparameters(self):
 		self.L.load('johnpye/shm.a4c')
-		M = self.L.findType('shm').getSimulation('sim')
+		M = self.L.findType('shm').getSimulation('sim',1)
 		M.build()
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
@@ -413,7 +415,7 @@ class TestLSODE(Ascend):
 	def testzill(self):
 		self.L.load('johnpye/zill.a4c')
 		T = self.L.findType('zill')
-		M = T.getSimulation('sim')
+		M = T.getSimulation('sim',1)
 		M.setSolver(ascpy.Solver('QRSlv'))
 		I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
@@ -430,7 +432,7 @@ class TestLSODE(Ascend):
 		sys.stderr.write("STARTING TESTNEWTON\n")
 		self.L.load('johnpye/newton.a4c')
 		T = self.L.findType('newton')
-		M = T.getSimulation('sim')
+		M = T.getSimulation('sim',1)
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())	
 		I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
@@ -453,7 +455,7 @@ class TestLSODE(Ascend):
 
 	def testlotka(self):
 		self.L.load('johnpye/lotka.a4c')
-		M = self.L.findType('lotka').getSimulation('sim')
+		M = self.L.findType('lotka').getSimulation('sim',1)
 		M.setSolver(ascpy.Solver("QRSlv"))
 		I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
@@ -469,7 +471,7 @@ class TestLSODE(Ascend):
 
 	def testwritegraph(self):
 		self.L.load('johnpye/lotka.a4c')
-		M = self.L.findType('lotka').getSimulation('sim')
+		M = self.L.findType('lotka').getSimulation('sim',1)
 		F = file('lotka.png','w')
 		M.build()
 		M.write(F,"dot")
@@ -518,7 +520,7 @@ class TestBlackBox(AscendSelfTester):
 		"""Mismatched arg counts check-- tests bbox, not ascend."""
 		self.L.load('test/blackbox/fail1.a4c')
 		try:
-			M = self.L.findType('fail1').getSimulation('sim')
+			M = self.L.findType('fail1').getSimulation('sim',1)
 			self.fail("expected exception was not raised")
 		except RuntimeError,e:
 			print "Caught exception '%s', assumed ok" % e
@@ -527,7 +529,7 @@ class TestBlackBox(AscendSelfTester):
 		"""Incorrect data arg check -- tests bbox, not ascend"""
 		self.L.load('test/blackbox/fail2.a4c')
 		try:
-			M = self.L.findType('fail2').getSimulation('sim')
+			M = self.L.findType('fail2').getSimulation('sim',1)
 			self.fail("expected exception was not raised")
 		except RuntimeError,e:
 			print "Caught exception '%s', assumed ok (should mention errors during instantiation)" % e
@@ -649,7 +651,7 @@ class TestSensitivity(AscendSelfTester):
 	def test1(self):
 		self.L.load('sensitivity_test.a4c')
 		T = self.L.findType('sensitivity_test')
-		M = T.getSimulation('sim',False)
+		M = T.getSimulation('sim',0)
 		M.run(T.getMethod('on_load'))
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		M.run(T.getMethod('analyse'))
@@ -672,7 +674,7 @@ class TestExtPy(AscendSelfTester):
 	def test1(self):
 		self.L.load('johnpye/extpy/extpytest.a4c')
 		T = self.L.findType('extpytest')
-		M = T.getSimulation('sim')
+		M = T.getSimulation('sim',1)
 		M.run(T.getMethod('self_test'))
 		
 	def test2(self):

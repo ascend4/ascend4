@@ -136,15 +136,14 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 		}		
 
 		if(!vok){
-			/* VARMSG("'%s' fails non-deriv filter");
+			/*VARMSG("'%s' fails non-deriv filter");
 			if(var_fixed(v)){
 				CONSOLE_DEBUG("(var is fixed");
 			}
 			CONSOLE_DEBUG("passes nonderiv? %s (flags = 0x%x)"
 				, (var_apply_filter(v,&integrator_ida_nonderiv) ? "TRUE" : "false")
 				, var_flags(v)
-			);
-			*/
+			);*/
 			for(j=1;j<seq.n;++j){
 				v = seq.vars[j];
 				var_set_active(v,FALSE);
