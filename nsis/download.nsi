@@ -20,11 +20,15 @@ Var DAI_REMOVE
 	
 	${If} $DAI_RET != "success"
 		DetailPrint "Downloading file ${DAI_FN}..."
+		DetailPrint "URL: ${DAI_URL}"
 		StrCpy $DAI_TMPFILE "$TEMP\${DAI_FN}"
-		nsisdl::download /TIMEOUT=30000 "${DAI_URL}" "$DAI_TMPFILE"
-		Pop $DAI_RET ;Get the return value		
+
+		; Download files using the INETC plugin for NSIS, available from
+		; http://nsis.sourceforge.net/Inetc_plug-in
+		inetc::get /CAPTION "${DAI_FN}""${DAI_URL}" "$DAI_TMPFILE" /END
+		Pop $DAI_RET ; return value = exit code, "OK" means OK
 			
-		${DoWhile} $DAI_RET != "success"
+		${DoWhile} $DAI_RET != "OK"
 			${If} $DAI_RET == "cancel"
 				StrCpy $DAI_MSG "cancelled"
 			${Else}
@@ -32,7 +36,7 @@ Var DAI_REMOVE
 			${EndIf}
 			
 			DetailPrint "Download of ${DAI_FN} $DAI_MSG."
-			${IfNot} ${Cmd} `MessageBox MB_ICONEXCLAMATION|MB_YESNO "${DAI_NAME} download $DAI_MSG.$\n$\nDo you wish to re-attempt the download?" IDYES `
+			${IfNot} ${Cmd} `MessageBox MB_ICONEXCLAMATION|MB_YESNO "${DAI_NAME} download $DAI_MSG. URL was:$\n$\n${DAI_URL}$\n$\nDo you wish to re-attempt the download?" IDYES `
 				; response was no
 				;MessageBox MB_OK "File ${DAI_NAME} will not be installed..."
 				Pop $1

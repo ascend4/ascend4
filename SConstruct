@@ -2829,10 +2829,11 @@ if not env.get('NSIS'):
 if with_installer:
 	pyarch = ""
 	ipoptdllline = ""
-	inst64 = 0
+	instarch = "win32"
 	ipoptf1 = ""
 	ipoptf2 = ""
 	if platform.architecture()[0] == "64bit":
+		instarch = "x64"
 		pyarch = ".amd64"
 		inst64 = 1
 	if env['IPOPT_DLL']:
@@ -2846,7 +2847,7 @@ if with_installer:
 		,'IPOPTDLL_LINE':ipoptf1
 		,'IPOPTDLL_LINE2':ipoptf2
 		,'PYARCH':str(pyarch)
-		,'INST64':str(inst64)
+		,'INSTARCH':str(instarch)
 	})
 	installer = env.Installer('nsis/installer.nsi')
 	env.Depends(installer,["pygtk","ascxx","tcltk","ascend.dll","models","solvers","ascend-config",'pygtk/ascend'])

@@ -29,6 +29,10 @@ SetCompressor /SOLID lzma
 ; The file to write
 OutFile ${OUTFILE}
 
+!if "${INSTARCH}" == "x64"
+!define INST64
+!endif
+
 ; The default installation directory
 !ifdef INST64
 InstallDir $PROGRAMFILES64\ASCEND
@@ -87,6 +91,8 @@ Var ASCENDINIFOUND
 Var ASCENDENVVARFOUND
 Var ASCENDLIBRARY
 
+Var PYTHONTARGETDIR
+
 ; .onInit has been moved to after section decls so that they can be references
 
 ;------------------------------------------------------------
@@ -96,29 +102,35 @@ Var ASCENDLIBRARY
 !define PYTHON_VERSION "${PYVERSION}${PYPATCH}${PYARCH}"
 !define PYTHON_FN "python-${PYTHON_VERSION}.msi"
 !define PYTHON_URL "http://python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FN}"
-!define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive ALLUSERS=1 TARGETDIR=c:\Python${PYVERSION}"
+!define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive ALLUSERS=1 TARGETDIR=$PYTHONTARGETDIR"
 
-!define THIRDPARTY_DIR "http://sourceforge.net/projects/ascend-sim/files/thirdparty/"
+!define THIRDPARTY_DIR "http://downloads.sourceforge.net/project/ascend-sim/thirdparty/"
 !define GTK_VER "2.22"
 
 !ifdef INST64
 !define WINXX "win64"
 !define AMDXX ".win-amd64"
-!define GTK_PATCH ".1-20101227"
+!define NNBIT "64-bit"
+!define X64I386 "x64"
+!define GTK_PATCH ".1-20101229"
 !else
 !define WINXX "win32"
 !define AMDXX ".win32"
-!define GTK_PATCH ".0-20101016"
+!define X64I386 "i386"
+!define NNBIT "32-bit"
+!define GTK_PATCH ".1-20101227"
 !endif
 
 ; Host our own GTK bundles, repackaged as installers.
 ; User should still be able to use the ftp.gnome.org zip files, we just can't easily install them from here.
 ; Also, but having GTK installer, we can store the installation location in the registry (and have both 64 and 32 bit versions)
-!define GTK_FN "gtk+_bundle_${GTK_VER}${GTK_PATCH}.win64-py${PYVERSION}.msi"
-!define GTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.22/${GTK_FN}"
+!define GTK_FN "gtk+-${GTK_VER}${GTK_PATCH}-${X64I386}-a4.exe"
+!define GTK_URL "${THIRDPARTY_DIR}${GTK_FN}"
 !define GTK_MFT "gtk+-bundle_${GTK_VER}${GTK_PATCH}_${WINXX}.mft"
+!define GTK_CMD "$DAI_TMPFILE /S"
 
 ; We will host the PyGTK, PyGObject and PyCairo dependencies on SF.net ourselves... for the moment.
+; Note that PyGTK version should match GTK+ version.
 !define PYGTK_PATCH ".0"
 !define PYCAIRO_VER "1.10.0"
 !define PYGOBJECT_VER "2.28.6"
@@ -127,7 +139,10 @@ Var ASCENDLIBRARY
 !define PYGOBJECT_FN "pygobject-${PYGOBJECT_VER}${AMDXX}-py${PYVERSION}.exe"
 !define PYGTK_URL "${THIRDPARTY_DIR}${PYGTK_FN}"
 !define PYCAIRO_URL "${THIRDPARTY_DIR}${PYCAIRO_FN}"
-!define PYGOBJECT_URL "${THIRDPARTY_DIR}${PYGTK_FN}"
+!define PYGOBJECT_URL "${THIRDPARTY_DIR}${PYGOBJECT_FN}"
+!define PYGTK_CMD "$DAI_TMPFILE"
+!define PYCAIRO_CMD "$DAI_TMPFILE"
+!define PYGOBJECT_CMD "$DAI_TMPFILE"
 
 !include "download.nsi"
 
@@ -137,7 +152,7 @@ Section "-python"
 		!insertmacro downloadAndInstall "Python" "${PYTHON_URL}" "${PYTHON_FN}" "${PYTHON_CMD}"
 		Call DetectPython
 		${If} $HAVE_PYTHON == 'NOK'
-			MessageBox MB_OK "Python installation appears to have failed"
+			MessageBox MB_OK "Python installation appears to have failed. You may need to retry manually."
 		${EndIf}
         ${EndIf}
 SectionEnd
@@ -148,8 +163,9 @@ Section "-gtk"
 		!insertmacro downloadAndInstall "GTK" "${GTK_URL}" "${GTK_FN}" "${GTK_CMD}"
 		Call DetectGTK
 		${If} $HAVE_GTK == 'NOK'
-			MessageBox MB_OK "GTK installation appears to have failed"
+			MessageBox MB_OK "GTK installation appears to have failed. You may need to retry manually."
 		${EndIf}
+		; TODO need to update $PATH !!
         ${EndIf}
 SectionEnd
 
@@ -159,7 +175,7 @@ Section "-pygtk"
 		!insertmacro downloadAndInstall "PyGTK" "${PYGTK_URL}" "${PYGTK_FN}" "${PYGTK_CMD}"
 		Call DetectPyGTK
 		${If} $HAVE_PYGTK == 'NOK'
-			MessageBox MB_OK "PyGTK installation appears to have failed"
+			MessageBox MB_OK "PyGTK installation appears to have failed. You may need to retry manually"
 		${EndIf}
         ${EndIf}
 SectionEnd
@@ -170,7 +186,7 @@ Section "-pycairo"
 		!insertmacro downloadAndInstall "PyCAIRO" "${PYCAIRO_URL}" "${PYCAIRO_FN}" "${PYCAIRO_CMD}"
 		Call DetectPyCairo
 		${If} $HAVE_PYCAIRO == 'NOK'
-			MessageBox MB_OK "PyCairo installation appears to have failed"
+			MessageBox MB_OK "PyCairo installation appears to have failed. You may need to retry manually."
 		${EndIf}
         ${EndIf}
 SectionEnd
@@ -181,7 +197,7 @@ Section "-pygobject"
 		!insertmacro downloadAndInstall "PyGObject" "${PYGOBJECT_URL}" "${PYGOBJECT_FN}" "${PYGOBJECT_CMD}"
 		Call DetectPyGObject
 		${If} $HAVE_PYGOBJECT == 'NOK'
-			MessageBox MB_OK "PyGObject installation appears to have failed"
+			MessageBox MB_OK "PyGObject installation appears to have failed. You may need to retry manually."
 		${EndIf}
         ${EndIf}
 SectionEnd
@@ -628,18 +644,21 @@ SectionEnd
 
 Function .onInit
 !ifdef INST64
-	${If} ${RunningX64}
-		MessageBox MB_OK "64-bit installer on 64-bit Windows."
-	${Else}
-		MessageBox MB_OK "This ASCEND installer is for 64-bit Windows versions only.\n\nVisit http://ascend4.org for 32-bit versions."
+	${IfNot} ${RunningX64}
+		MessageBox MB_OK "This ASCEND installer is for 64-bit Windows versions only.$\n$\nVisit http://ascend4.org for 32-bit versions."
+		Abort
 	${EndIf}
 	SetRegView 64
-!else
+!endif
+
+	;set the default python target dir
+	StrCpy $PYTHONTARGETDIR "c:\Python${PYVERSION}"
+!ifndef INST64
 	${If} ${RunningX64}
-		MessageBox MB_OK "32-bit installer on 64-bit Windows."
-	${Else}
-		MessageBox MB_OK "32-bit installer on 32-bit Windows."
+		; this is a 32-bit installer on 64-bit Windows: install Python to a special location
+		StrCpy $PYTHONTARGETDIR "c:\Python${PYVERSION}_32"
 	${EndIf}
+	; FIXME we should check whether that directory already exists before going ahead...
 !endif
 
 	StrCpy $PYINSTALLED ""
