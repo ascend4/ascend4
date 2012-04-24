@@ -74,8 +74,6 @@ METHOD on_load;
 	RUN ref_D.on_load;
 	ref_D.y := t_start.y;
 	ref_D.h := 0;
-	FIX D.gamma := 0 {deg};
-	FIX D.beta := 0 {deg};
 
 	(* for NREL, true JD offset is what is needed *)
 	RUN ref_N.on_load;
