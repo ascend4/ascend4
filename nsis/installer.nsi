@@ -40,9 +40,8 @@ InstallDir $PROGRAMFILES64\ASCEND
 InstallDir $PROGRAMFILES32\ASCEND
 !endif
 
-; Registry key to check for directory (so if you install again, it will 
-; overwrite the old one automatically)
-InstallDirRegKey HKLM "Software\ASCEND" "Install_Dir"
+; NOTE we *don't* user InstallDirRegKey because it doesn't work correctly on Win64.
+;InstallDirRegKey HKLM "Software\ASCEND" "Install_Dir"
 
 RequestExecutionLevel admin
 
@@ -165,7 +164,6 @@ Section "-gtk"
 		${If} $HAVE_GTK == 'NOK'
 			MessageBox MB_OK "GTK installation appears to have failed. You may need to retry manually."
 		${EndIf}
-		; TODO need to update $PATH !!
         ${EndIf}
 SectionEnd
 
@@ -400,27 +398,6 @@ SectionEnd
 
 ;---------------------------------
 
-;Section /o "Tcl/Tk GUI" sect_tcltk
-;
-;	${If} $TCLOK != 'OK'
-;		MessageBox MB_OK "Tck/Tk GUI can not be installed, because ActiveTcl was not found on this system. If do you want to use the Tcl/Tk GUI, please check the installation instructions ($TCLPATH)"
-;	${Else}
-;		DetailPrint "--- TCL/TK INTERFACE ---"
-;		SetOutPath $INSTDIR\tcltk
-;		; FIXME we should be a bit more selective here?
-;		File /r /x .svn "..\tcltk\tk\*"
-;		SetOutPath $INSTDIR
-;		File "..\tcltk\interface\ascendtcl.dll"
-;		File "..\tcltk\interface\ascend4.exe"
-;
-;		StrCpy $TCLINSTALLED "1"
-;		WriteRegDWORD HKLM "SOFTWARE\ASCEND" "TclTk" 1
-;
-;	${EndIf}
-;SectionEnd
-
-;---------------------------------
-
 Section "Documentation" sect_doc
 	SetOutPath $INSTDIR
 	File "..\doc\book.pdf"
@@ -627,6 +604,9 @@ Section "Uninstall"
 	Delete $INSTDIR\solvers\ipopt_ascend.dll
 	RMDir $INSTDIR\solvers
 
+	${DEL_IPOPTDLL_LINE}
+	${DEL_IPOPTDLL_LINE2}
+
 	; Remove directories used
 
 	Delete $INSTDIR\uninstall.exe
@@ -651,6 +631,12 @@ Function .onInit
 	SetRegView 64
 !endif
 
+	;Get the previously-chosen $INSTDIR
+	ReadRegStr $0 HKLM "SOFTWARE\ASCEND" "Install_Dir"
+	${If} $0 != ""
+		StrCpy $INSTDIR $0
+	${EndIf}
+
 	;set the default python target dir
 	StrCpy $PYTHONTARGETDIR "c:\Python${PYVERSION}"
 !ifndef INST64
@@ -674,7 +660,7 @@ Function .onInit
 	Call DetectPyGObject
 	Call DetectPyCairo
 	
-	MessageBox MB_OK "GTK path is $GTKPATH"
+	;MessageBox MB_OK "GTK path is $GTKPATH"
 	StrCpy $PATH "$GTKPATH;$DEFAULTPATH;$PYPATH"
 
 	ReadRegStr $0 HKLM "SOFTWARE\ASCEND" "Install_Dir"
@@ -727,4 +713,17 @@ Function .onInit
 		${EndIf}
 	${EndIf}	
 
+FunctionEnd
+
+
+Function un.onInit
+!ifdef INST64
+	SetRegView 64
+!endif
+
+	;Get the previously-chosen $INSTDIR
+	ReadRegStr $0 HKLM "SOFTWARE\ASCEND" "Install_Dir"
+	${If} $0 != ""
+		StrCpy $INSTDIR $0
+	${EndIf}
 FunctionEnd

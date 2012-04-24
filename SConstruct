@@ -2831,21 +2831,27 @@ if with_installer:
 	ipoptdllline = ""
 	instarch = "win32"
 	ipoptf1 = ""
+	dipoptf1 = ""
 	ipoptf2 = ""
+	dipoptf2 = ""
 	if platform.architecture()[0] == "64bit":
 		instarch = "x64"
 		pyarch = ".amd64"
 		inst64 = 1
 	if env['IPOPT_DLL']:
 		ipoptf1 = "File %s"%os.path.normcase(os.path.normpath(env.subst("$IPOPT_DLL")))
+		dipoptf1 = "Delete %s"%os.path.split(env.subst("$IPOPT_DLL"))[1]
 	if env['IPOPT_DLL2']:
 		ipoptf2 = "File %s"%os.path.normcase(os.path.normpath(env.subst("$IPOPT_DLL2")))
+		dipoptf1 = "Delete %s"%os.path.split(env.subst("$IPOPT_DLL2"))[1]
 	env.Append(NSISDEFINES={
 		'OUTFILE':"#dist/$WIN_INSTALLER_NAME"
 		,"VERSION":version
 		,'PYVERSION':pyversion
 		,'IPOPTDLL_LINE':ipoptf1
 		,'IPOPTDLL_LINE2':ipoptf2
+		,'DEL_IPOPTDLL_LINE':dipoptf1
+		,'DEL_IPOPTDLL_LINE2':dipoptf2
 		,'PYARCH':str(pyarch)
 		,'INSTARCH':str(instarch)
 	})
