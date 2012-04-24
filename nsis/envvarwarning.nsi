@@ -4,7 +4,7 @@
 Function ascendEnvVarCreate
 	
 	${If} $ASCENDENVVARFOUND == '1'
-	${AndIf} $PYOK == "OK"
+	${AndIf} $HAVE_PYTHON == "OK"
 
 		nsDialogs::Create /NOUNLOAD 1018
 		Pop $0

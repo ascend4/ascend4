@@ -11,7 +11,6 @@
 
 Name "ASCEND ${VERSION}"
 
-;SetCompressor /SOLID zlib
 ;SetCompressor /FINAL zlib
 SetCompressor /SOLID lzma
 
@@ -27,15 +26,11 @@ SetCompressor /SOLID lzma
 !define PYPATCH ".1"
 !endif
 
-!ifndef INST64
-!define INST64 1
-!endif
-
 ; The file to write
 OutFile ${OUTFILE}
 
 ; The default installation directory
-!if "${INST64}" != "0"
+!ifdef INST64
 InstallDir $PROGRAMFILES64\ASCEND
 !else
 InstallDir $PROGRAMFILES32\ASCEND
@@ -68,105 +63,128 @@ UninstPage instfiles
 
 !define GTKSEARCHPATH "c:\GTK"
 
-Var /GLOBAL DEFAULTPATH
-Var /GLOBAL PYOK
-Var /GLOBAL PYPATH
-Var /GLOBAL GTKOK
-Var /GLOBAL GTKPATH
-Var /GLOBAL PYGTKOK
-Var /GLOBAL PYGOBJECTOK
-Var /GLOBAL PYCAIROOK
-Var /GLOBAL PYINSTALLED
-;Var /GLOBAL TCLOK
-;Var /GLOBAL TCLPATH
-;Var /GLOBAL TCLINSTALLED
+Var DEFAULTPATH
+Var HAVE_PYTHON
+Var PYPATH
+Var HAVE_GTK
+Var GTKPATH
+Var HAVE_PYGTK
+Var HAVE_PYGOBJECT
+Var HAVE_PYCAIRO
+Var PYINSTALLED
 
-Var /GLOBAL PDFINSTALLED
+Var PDFINSTALLED
 
-Var /GLOBAL PATH
+Var PATH
 
-Var /GLOBAL PYDOWNLOAD
-Var /GLOBAL GTKDOWNLOAD
-;Var /GLOBAL TCLDOWNLOAD
+Var NEED_PYTHON
+Var NEED_GTK
+Var NEED_PYGTK
+Var NEED_PYCAIRO
+Var NEED_PYGOBJECT
 
-Var /GLOBAL ASCENDINIFOUND
-Var /GLOBAL ASCENDENVVARFOUND
-Var /GLOBAL ASCENDLIBRARY
+Var ASCENDINIFOUND
+Var ASCENDENVVARFOUND
+Var ASCENDLIBRARY
 
 ; .onInit has been moved to after section decls so that they can be references
 
 ;------------------------------------------------------------
 ; DOWNLOAD AND INSTALL DEPENDENCIES FIRST
 
+; Use the official python.org Python packages
 !define PYTHON_VERSION "${PYVERSION}${PYPATCH}${PYARCH}"
 !define PYTHON_FN "python-${PYTHON_VERSION}.msi"
 !define PYTHON_URL "http://python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FN}"
 !define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive ALLUSERS=1 TARGETDIR=c:\Python${PYVERSION}"
-!define PYTHON_MD5 "a69ce1b2d870be29befd1cefb4615d82"
 
+!define THIRDPARTY_DIR "http://sourceforge.net/projects/ascend-sim/files/thirdparty/"
 !define GTK_VER "2.22"
-!define GTK_PATCH ".6"
-!define GTK_FN "pygtk-all-in-one-${GTK_VER}${GTK_PATCH}.win32-py${PYVERSION}.msi"
+
+!ifdef INST64
+!define WINXX "win64"
+!define AMDXX ".win-amd64"
+!define GTK_PATCH ".1-20101227"
+!else
+!define WINXX "win32"
+!define AMDXX ".win32"
+!define GTK_PATCH ".0-20101016"
+!endif
+
+; Host our own GTK bundles, repackaged as installers.
+; User should still be able to use the ftp.gnome.org zip files, we just can't easily install them from here.
+; Also, but having GTK installer, we can store the installation location in the registry (and have both 64 and 32 bit versions)
+!define GTK_FN "gtk+_bundle_${GTK_VER}${GTK_PATCH}.win64-py${PYVERSION}.msi"
 !define GTK_URL "http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.22/${GTK_FN}"
-!define GTK_CMD "msiexec /i $DAI_TMPFILE TARGETDIR=c:\Python${PYVERSION} INSTALLLEVEL=1 ALLUSERS=1 /passive"
-!define GTK_MD5 "75cfe879a13ae99d5b19fee4f1597bb5"
-; FIXME shouldn't need to specify TARGETDIR here...
+!define GTK_MFT "gtk+-bundle_${GTK_VER}${GTK_PATCH}_${WINXX}.mft"
 
-; passive install of pygtk 2.22.6 doesn't seem to work.
-
-;!define TCL_VERSION "8.5.9.2"
-;!define TCL_PATCH ".294317"
-;!define TCL_FN "ActiveTcl${TCL_VERSION}${TCL_PATCH}-win32-ix86-threaded.exe"
-;!define TCL_URL "http://downloads.activestate.com/ActiveTcl/releases/${TCL_VERSION}/${TCL_FN}"
-;!define TCL_CMD "$DAI_TMPFILE"
-;!define TCL_MD5 "15d6b17d38e66a83956dc16b7d80fc59"
+; We will host the PyGTK, PyGObject and PyCairo dependencies on SF.net ourselves... for the moment.
+!define PYGTK_PATCH ".0"
+!define PYCAIRO_VER "1.10.0"
+!define PYGOBJECT_VER "2.28.6"
+!define PYGTK_FN "pygtk-${GTK_VER}${PYGTK_PATCH}${AMDXX}-py${PYVERSION}.exe"
+!define PYCAIRO_FN "py2cairo-${PYCAIRO_VER}${AMDXX}-py${PYVERSION}.exe"
+!define PYGOBJECT_FN "pygobject-${PYGOBJECT_VER}${AMDXX}-py${PYVERSION}.exe"
+!define PYGTK_URL "${THIRDPARTY_DIR}${PYGTK_FN}"
+!define PYCAIRO_URL "${THIRDPARTY_DIR}${PYCAIRO_FN}"
+!define PYGOBJECT_URL "${THIRDPARTY_DIR}${PYGTK_FN}"
 
 !include "download.nsi"
 
 Section "-python"
 	DetailPrint "--- DOWNLOAD PYTHON ---"
-        ${If} $PYDOWNLOAD == '1'
-		!insertmacro downloadAndInstall "Python" "${PYTHON_URL}" "${PYTHON_FN}" "${PYTHON_CMD}" "${PYTHON_MD5}"
+        ${If} $NEED_PYTHON == '1'
+		!insertmacro downloadAndInstall "Python" "${PYTHON_URL}" "${PYTHON_FN}" "${PYTHON_CMD}"
 		Call DetectPython
-		Pop $PYOK
-		Pop $PYPATH
-		${If} $PYOK == 'NOK'
+		${If} $HAVE_PYTHON == 'NOK'
 			MessageBox MB_OK "Python installation appears to have failed"
 		${EndIf}
         ${EndIf}
 SectionEnd
-; FIXME need to go back to using separate GTK, PyGTK, PyGObject, PyCairo installers :-(
+
 Section "-gtk"
-	DetailPrint "--- DOWNLOAD PYGTK ---"
-	${If} $GTKDOWNLOAD == '1'
-		!insertmacro downloadAndInstall "PyGTK All-in-one" "${GTK_URL}" "${GTK_FN}" "${GTK_CMD}" "${GTK_MD5}"
+	DetailPrint "--- DOWNLOAD GTK ---"
+	${If} $NEED_GTK == '1'
+		!insertmacro downloadAndInstall "GTK" "${GTK_URL}" "${GTK_FN}" "${GTK_CMD}"
 		Call DetectGTK
-		Pop $GTKOK
-		Pop $GTKPATH
-
-;		Call DetectTcl
-;		Pop $TCLOK
-;		Pop $TCLPATH
-
-		Call DetectPyGTK
-		Pop $PYGTKOK
-
-		Call DetectPyGObject
-		Pop $PYGOBJECTOK
-
-		Call DetectPyCairo
-		Pop $PYCAIROOK
+		${If} $HAVE_GTK == 'NOK'
+			MessageBox MB_OK "GTK installation appears to have failed"
+		${EndIf}
         ${EndIf}
 SectionEnd
-;Section "-tcl"
-;	DetailPrint "--- DOWNLOAD TCL/TK ---"
-;	${If} $TCLDOWNLOAD == '1'
-;		!insertmacro downloadAndInstall "Tcl/Tk" "${TCL_URL}" "${TCL_FN}" "${TCL_CMD}" "${TCL_MD5}"
-;		Call DetectTcl
-;		Pop $TCLOK
-;		Pop $TCLPATH
-;        ${EndIf}
-;SectionEnd
+
+Section "-pygtk"
+	DetailPrint "--- DOWNLOAD PYGTK ---"
+	${If} $NEED_PYGTK == '1'
+		!insertmacro downloadAndInstall "PyGTK" "${PYGTK_URL}" "${PYGTK_FN}" "${PYGTK_CMD}"
+		Call DetectPyGTK
+		${If} $HAVE_PYGTK == 'NOK'
+			MessageBox MB_OK "PyGTK installation appears to have failed"
+		${EndIf}
+        ${EndIf}
+SectionEnd
+
+Section "-pycairo"
+	DetailPrint "--- DOWNLOAD PYCAIRO ---"
+	${If} $NEED_PYCAIRO == '1'
+		!insertmacro downloadAndInstall "PyCAIRO" "${PYCAIRO_URL}" "${PYCAIRO_FN}" "${PYCAIRO_CMD}"
+		Call DetectPyCairo
+		${If} $HAVE_PYCAIRO == 'NOK'
+			MessageBox MB_OK "PyCairo installation appears to have failed"
+		${EndIf}
+        ${EndIf}
+SectionEnd
+
+Section "-pygobject"
+	DetailPrint "--- DOWNLOAD PYGOBJECT ---"
+	${If} $NEED_PYGOBJECT == '1'
+		!insertmacro downloadAndInstall "PyGObject" "${PYGOBJECT_URL}" "${PYGOBJECT_FN}" "${PYGOBJECT_CMD}"
+		Call DetectPyGObject
+		${If} $HAVE_PYGOBJECT == 'NOK'
+			MessageBox MB_OK "PyGObject installation appears to have failed"
+		${EndIf}
+        ${EndIf}
+SectionEnd
 
 ;------------------------------------------------------------------------
 ; INSTALL CORE STUFF including model library
@@ -252,19 +270,19 @@ SectionEnd
 ;--------------------------------
 
 Section "PyGTK GUI" sect_pygtk
-!if "${INST64}" != "0"
+!ifdef INST64
 	SetRegView 64
 !endif
 	; Check the dependencies of the PyGTK GUI before proceding...
-	${If} $PYOK == 'NOK'
+	${If} $HAVE_PYTHON == 'NOK'
 		MessageBox MB_OK "PyGTK GUI can not be installed, because Python was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(PYPATH=$PYPATH)"
-	${ElseIf} $GTKOK == 'NOK'
+	${ElseIf} $HAVE_GTK == 'NOK'
 		MessageBox MB_OK "PyGTK GUI cannot be installed, because GTK+ 2.x was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(GTKPATH=$GTKPATH)"
-	${ElseIf} $PYGTKOK == "NOK"
+	${ElseIf} $HAVE_PYGTK == "NOK"
 		MessageBox MB_OK "PyGTK GUI cannot be installed, because PyGTK was not found on this system.$\nPlease check the installation instructions.$\n$\n(PYPATH=$PYPATH)"
-	${ElseIf} $PYCAIROOK == "NOK"
+	${ElseIf} $HAVE_PYCAIRO == "NOK"
 		MessageBox MB_OK "PyGTK GUI cannot be installed, because PyCairo was not found on this system.$\nPlease check the installation instructions.$\n$\n(PYPATH=$PYPATH)"
-	${ElseIf} $PYGOBJECTOK == "NOK"
+	${ElseIf} $HAVE_PYGOBJECT == "NOK"
 		MessageBox MB_OK "PyGTK GUI cannot be installed, because PyGObject was not found on this system.$\nPlease check the installation instructions.$\n$\n(PYPATH=$PYPATH)"
 	${Else}
 		;MessageBox MB_OK "Python: $PYPATH, GTK: $GTKPATH"
@@ -469,7 +487,7 @@ SectionEnd
 ; UNINSTALLER
 
 Section "Uninstall"
-!if "${INST64}" != "0"
+!ifdef INST64
 	SetRegView 64
 !endif
 
@@ -609,23 +627,22 @@ SectionEnd
 !include "envvarwarning.nsi"
 
 Function .onInit
-!if "${INST64}" != "0"
+!ifdef INST64
 	${If} ${RunningX64}
-		MessageBox MB_OK "64-bit installer on 64-bit Windows (inst64= ${INST64})"
+		MessageBox MB_OK "64-bit installer on 64-bit Windows."
 	${Else}
 		MessageBox MB_OK "This ASCEND installer is for 64-bit Windows versions only.\n\nVisit http://ascend4.org for 32-bit versions."
 	${EndIf}
 	SetRegView 64
 !else
 	${If} ${RunningX64}
-		MessageBox MB_OK "32-bit installer on 64-bit Windows"
+		MessageBox MB_OK "32-bit installer on 64-bit Windows."
 	${Else}
-		MessageBox MB_OK "32-bit installer on 32-bit Windows"
+		MessageBox MB_OK "32-bit installer on 32-bit Windows."
 	${EndIf}
 !endif
 
 	StrCpy $PYINSTALLED ""
-;	StrCpy $TCLINSTALLED ""
 	StrCpy $ASCENDINIFOUND ""
 	StrCpy $PDFINSTALLED ""
 	StrCpy $ASCENDENVVARFOUND ""
@@ -633,25 +650,10 @@ Function .onInit
 	ExpandEnvStrings $DEFAULTPATH "%WINDIR%;%WINDIR%\system32"
 
 	Call DetectPython
-	Pop $PYOK
-	Pop $PYPATH
-	
 	Call DetectGTK
-	Pop $GTKOK
-	Pop $GTKPATH
-	
-;	Call DetectTcl
-;	Pop $TCLOK
-;	Pop $TCLPATH
-	
 	Call DetectPyGTK
-	Pop $PYGTKOK
-
 	Call DetectPyGObject
-	Pop $PYGOBJECTOK
-
 	Call DetectPyCairo
-	Pop $PYCAIROOK
 	
 	MessageBox MB_OK "GTK path is $GTKPATH"
 	StrCpy $PATH "$GTKPATH;$DEFAULTPATH;$PYPATH"
@@ -659,23 +661,6 @@ Function .onInit
 	ReadRegStr $0 HKLM "SOFTWARE\ASCEND" "Install_Dir"
 	${If} $0 != ""	
 		;MessageBox MB_OK "Previous installation detected..."
-		; If user previous deselected Tcl/Tk, then deselect it by
-		; default now, i.e don't force the user to install it.
-
-;		ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "TclTk"
-;		${If} $0 = 0
-;			;MessageBox MB_OK "Tcl/Tk was previously deselected"
-;			SectionGetFlags "${sect_tcltk}" $1
-;			IntOp $1 $1 ^ ${SF_SELECTED}
-;			SectionSetFlags "${sect_tcltk}" $1
-;		${Else}
-;			; If previously installed, force it to stay installed;
-;			; the only way to uninstall a component is via complete
-;			; uninstall.
-;			SectionGetFlags "${sect_tcltk}" $1
-;			IntOp $1 $1 ^ ${SF_RO}
-;			SectionSetFlags "${sect_tcltk}" $1
-;		${EndIf}
 
 		ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "Python"
 		${If} $0 = 0

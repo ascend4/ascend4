@@ -3,7 +3,7 @@ Var DAI_MSG
 Var DAI_TMPFILE
 Var DAI_REMOVE
 
-!macro downloadAndInstall DAI_NAME DAI_URL DAI_FN DAI_CMD DAI_MD5
+!macro downloadAndInstall DAI_NAME DAI_URL DAI_FN DAI_CMD
 	Push $0
 	Push $1
 
@@ -16,22 +16,6 @@ Var DAI_REMOVE
 			StrCpy $DAI_RET "success"
 			StrCpy $DAI_TMPFILE "${DAI_FN}"
 		${EndIf}
-
-; Unable to get reliable behaviour with md5dll or Crypto plugins for NSIS...	
-;		md5dll::GetMD5File "${DAI_FN}"
-;		;Crypto::HashFile "MD5" "${DAI_FN}"
-;		;Pop $0
-;		${If} $0 == "${DAI_MD5}"
-;			StrCpy $DAI_RET "success"
-;			StrCpy $DAI_TMPFILE "${DAI_FN}"
-;		${Else}
-;			${If} ${Cmd} `MessageBox MB_ICONQUESTION|MB_YESNO "File ${DAI_FN} was found (with MD5 sum '$0')$\n but did not have expected MD5 '${DAI_MD5}'.$\n$\nWould you like this file to be used?" IDYES `
-				StrCpy $DAI_RET "success"
-				StrCpy $DAI_TMPFILE "${DAI_FN}"
-;			${EndIf}
-;		${EndIf}
-;	${Else}
-;		MessageBox MB_OK "File ${DAI_FN} not found. Will be downloaded."
 	${EndIf}
 	
 	${If} $DAI_RET != "success"

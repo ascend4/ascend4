@@ -5,7 +5,7 @@
 ; Look for Python in HKLM and HKCU
 
 Function DetectPython
-!if "${INST64}" != "0"
+!ifdef INST64
 	SetRegView 64
 !endif
 	ReadRegStr $R6 HKLM "SOFTWARE\Python\PythonCore\${PYVERSION}\InstallPath" ""
@@ -14,19 +14,19 @@ Function DetectPython
 		ReadRegStr $R6 HKCU "SOFTWARE\Python\PythonCore\${PYVERSION}\InstallPath" ""
 		${If} $R6 == ''
 			;MessageBox MB_OK "No Python in HKCU"
-			Push "No registry key found"
-			Push "NOK"
+			StrCpy $HAVE_PYTHON "NOK"
+			StrCpy $PYPATH "No registry key found"
 			Return
 		${EndIf}
 	${EndIf}
 	
 	${If} ${FileExists} "$R6\python.exe"
-		Push "$R6"
-		Push "OK"
+		StrCpy $PYPATH "$R6"
+		StrCpy $HAVE_PYTHON "OK"
 	${Else}
 		;MessageBox MB_OK "No python.exe in $R6"	
-		Push "No python.exe found"
-		Push "NOK"
+		StrCpy $PYPATH "No python.exe found"
+		StrCpy $HAVE_PYTHON "NOK"
 	${EndIf}
 FunctionEnd
 
@@ -34,27 +34,21 @@ FunctionEnd
 ; Prefer the current user's installation of GTK, fall back to the local machine
 
 Function DetectGTK
-!if "${INST64}" != "0"
+!ifdef INST64
 	${If} ${RunningX64}
-		${If} ${FileExists} "${GTKSEARCHPATH}\manifest\gtk+-bundle_2.22.1-20101229_win64.mft"
+!endif
+		${If} ${FileExists} "${GTKSEARCHPATH}\manifest\${GTK_MFT}"
 				MessageBox MB_OK "GTK OK in ${GTKSEARCHPATH}\manifest"
-				Push "${GTKSEARCHPATH}\bin"
-				Push "OK"
+				StrCpy $GTKPATH "${GTKSEARCHPATH}\bin"
+				StrCpy $HAVE_GTK "OK"
 				Return
 		${EndIf}
+!ifdef INST64
 	${EndIf}
-	MessageBox MB_OK "Expected to gtk+-bundle_2.22.1-20101229_win64.mft in ${GTKSEARCHPATH}\manifest"
-!else
-	${If} ${FileExists} "${GTKSEARCHPATH}\manifest\gtk+-bundle_2.24.10-20120208_win32.mft"
-		MessageBox MB_OK "GTK OK in ${GTKSEARCHPATH}\manifest"
-		Push "${GTKSEARCHPATH}\bin"
-		Push "OK"
-		Return
-	${EndIf}
-	MessageBox MB_OK "Expected to find gtk+-bundle_2.24.10-20120208_win32.mft in ${GTKSEARCHPATH}\manifest"
 !endif
-	Push "gtk+-bundle manifest not found in ${GTKSEARCHPATH}\manifest"
-	Push "NOK"
+	MessageBox MB_OK "Expected to find ${GTK_MFT} in ${GTKSEARCHPATH}\manifest"
+	StrCpy $GTKPATH "gtk+-bundle manifest not found in ${GTKSEARCHPATH}\manifest"
+	StrCpy $HAVE_GTK "NOK"
 FunctionEnd
 
 ;--------------------------------------------------------------------
@@ -62,77 +56,27 @@ FunctionEnd
 
 Function DetectPyGTK
 	${If} ${FileExists} "$PYPATH\Lib\site-packages\gtk-2.0\gtk\__init__.py"
-		Push "OK"
+		StrCpy $HAVE_PYGTK "OK"
 	${Else}
 		MessageBox MB_OK "No PyGTK in $PYPATH"		
-		Push "NOK"
+		StrCpy $HAVE_PYGTK "NOK"
 	${EndIf}
 FunctionEnd
 
 Function DetectPyCairo
 	${If} ${FileExists} "$PYPATH\Lib\site-packages\cairo\__init__.py"
-		Push "OK"
+		StrCpy $HAVE_PYCAIRO "OK"
 	${Else}
 		MessageBox MB_OK "No PyCairo in $PYPATH"		
-		Push "NOK"
+		StrCpy $HAVE_PYCAIRO "NOK"
 	${EndIf}
 FunctionEnd
 
 Function DetectPyGObject
 	${If} ${FileExists} "$PYPATH\Lib\site-packages\gtk-2.0\gobject\__init__.py"
-		Push "OK"
+		StrCpy $HAVE_PYGOBJECT "OK"
 	${Else}
 		MessageBox MB_OK "No PyGObject in $PYPATH"		
-		Push "NOK"
+		StrCpy $HAVE_PYGOBJECT "NOK"
 	${EndIf}
 FunctionEnd
-
-;--------------------------------------------------------------------
-; Prefer the current user's installation of GTK, fall back to the local machine
-
-; don't need glade any more, we converted to gtkbuilder.
-;Function DetectGlade
-;	${If} $PYOK == "OK"
-;		${If} ${FileExists} "$PYPATH\Lib\site-packages\gtk-2.0\runtime\bin\libglade-2.0-0.dll"
-;			Push "$PYPATH\Lib\site\packages\gtk-2.0\runtime\bin"
-;			Push "OK"
-;		${Else}
-;			Push "libglade-2.0-0.dll not found in $PYPATH\Lib\site\packages\gtk-2.0\runtime\bin"
-;			Push "NOK"
-;		${EndIf}
-;	${Else}
-;		Push "Python not detected (we are looking for PyGTK All-in-one package)"
-;		Push "NOK"
-;	${EndIf}
-;FunctionEnd
-
-;--------------------------------------------------------------------
-
-;Function DetectTcl
-;!if ${INST64}
-;	SetRegView 64
-;!endif
-;	ReadRegStr $R6 HKCU "SOFTWARE\ActiveState\ActiveTcl" "CurrentVersion"
-;	${If} $R6 == ''
-;		ReadRegStr $R6 HKLM "SOFTWARE\ActiveState\ActiveTcl" "CurrentVersion"
-;		${If} $R6 == ''
-;			Push "No 'CurrentVersion' registry key"
-;			Push "NOK"
-;			Return
-;		${Else}
-;			StrCpy $R7 "SOFTWARE\ActiveState\ActiveTcl\$R6"
-;			ReadRegStr $R8 HKLM $R7 ""		
-;		${EndIf}
-;	${Else}
-;		StrCpy $R7 "SOFTWARE\ActiveState\ActiveTcl\$R6"
-;		ReadRegStr $R8 HKCU $R7 ""		
-;	${EndIf}
-;	
-;	${If} $R8 == ''
-;		Push "No value for $R7"
-;		Push "NOK"
-;	${Else}
-;		Push "$R8\bin"
-;		Push "OK"
-;	${EndIf}
-;FunctionEnd
