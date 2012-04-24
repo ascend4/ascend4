@@ -3,7 +3,9 @@
 
 Var CHECKPY
 Var CHECKGTK
-;Var CHECKTCL
+Var CHECKPYGTK
+Var CHECKPYCAIRO
+Var CHECKPYGOBJECT
 
 !macro setCheckboxChecked CB
 	SendMessage ${CB} ${BM_SETCHECK} 0x0001 0
@@ -27,17 +29,36 @@ Function dependenciesCreate
 		Pop $0
 
 		${If} $HAVE_PYTHON == 'NOK'
-			${NSD_CreateCheckbox} 10% 50% 100% 8u "Python"
+			${NSD_CreateCheckbox} 10% 50% 100% 8u "Python ${PYVERSION} (${NNBIT})"
 			Pop $CHECKPY
 			!insertmacro setCheckboxChecked $CHECKPY
 		${EndIf}
 
 		${If} $HAVE_GTK == 'NOK'
-			${NSD_CreateCheckbox} 10% 58% 100% 8u "PyGTK All-in-one"
+			${NSD_CreateCheckbox} 10% 58% 100% 8u "GTK+ bundle ${GTK_VER} (${NNBIT})"
 			Pop $CHECKGTK
 			!insertmacro setCheckboxChecked $CHECKGTK
 		${EndIf}
+
+
+		${If} $HAVE_PYGTK == 'NOK'
+			${NSD_CreateCheckbox} 10% 64% 100% 8u "PyGTK"
+			Pop $CHECKPYGTK
+			!insertmacro setCheckboxChecked $CHECKPYGTK
+		${EndIf}
 		
+		${If} $HAVE_PYCAIRO == 'NOK'
+			${NSD_CreateCheckbox} 10% 72% 100% 8u "PyCairo"
+			Pop $CHECKPYCAIRO
+			!insertmacro setCheckboxChecked $CHECKPYCAIRO
+		${EndIf}
+
+		${If} $HAVE_PYGOBJECT == 'NOK'
+			${NSD_CreateCheckbox} 10% 80% 100% 8u "PyGObject"
+			Pop $CHECKPYGOBJECT
+			!insertmacro setCheckboxChecked $CHECKPYGOBJECT
+		${EndIf}
+
 		nsDialogs::Show
 	${EndIf}
 	
