@@ -12,11 +12,11 @@ Var CHECKGTK
 
 Function dependenciesCreate
 	
-	${If} $PYOK == 'OK'
-	${AndIf} $GTKOK == 'OK'
-	${AndIf} $PYGTKOK == 'OK'
-	${AndIf} $PYGOBJECTOK == 'OK'
-	${AndIf} $PYCAIROOK == 'OK'
+	${If} $HAVE_PYTHON == 'OK'
+	${AndIf} $HAVE_GTK == 'OK'
+	${AndIf} $HAVE_PYGTK == 'OK'
+	${AndIf} $HAVE_PYGOBJECT == 'OK'
+	${AndIf} $HAVE_PYCAIRO == 'OK'
 	;${AndIf} $TCLOK == 'OK'
 		; do nothing in this page
 	${Else}
@@ -26,32 +26,28 @@ Function dependenciesCreate
 		${NSD_CreateLabel} 0% 0 100% 48% "The following additional packages are required for ASCEND to function correctly. Checked items will be downloaded and installed (some of the installers may require you to click 'next' a few times). If you don't want additional components to be downloaded you can unckeck them. This installer will then install only the parts for which the prerequisites are already satisfied."
 		Pop $0
 
-		${If} $PYOK == 'NOK'
+		${If} $HAVE_PYTHON == 'NOK'
 			${NSD_CreateCheckbox} 10% 50% 100% 8u "Python"
 			Pop $CHECKPY
 			!insertmacro setCheckboxChecked $CHECKPY
 		${EndIf}
 
-		${If} $GTKOK == 'NOK'
+		${If} $HAVE_GTK == 'NOK'
 			${NSD_CreateCheckbox} 10% 58% 100% 8u "PyGTK All-in-one"
 			Pop $CHECKGTK
 			!insertmacro setCheckboxChecked $CHECKGTK
 		${EndIf}
 		
-;		${If} $TCLOK == 'NOK'
-;			${NSD_CreateCheckbox} 10% 90% 100% 8u "Tcl/Tk"
-;			Pop $CHECKTCL
-;			!insertmacro setCheckboxChecked $CHECKTCL
-;		${EndIf}
-
 		nsDialogs::Show
 	${EndIf}
 	
 FunctionEnd
 
 Function DependenciesLeave
-	SendMessage $CHECKPY ${BM_GETCHECK} 0 0 $PYDOWNLOAD
-	SendMessage $CHECKGTK ${BM_GETCHECK} 0 0 $GTKDOWNLOAD
-;	SendMessage $CHECKTCL ${BM_GETCHECK} 0 0 $TCLDOWNLOAD
+	SendMessage $CHECKPY        ${BM_GETCHECK} 0 0 $NEED_PYTHON
+	SendMessage $CHECKGTK       ${BM_GETCHECK} 0 0 $NEED_GTK
+	SendMessage $CHECKPYGTK     ${BM_GETCHECK} 0 0 $NEED_PYGTK
+	SendMessage $CHECKPYCAIRO   ${BM_GETCHECK} 0 0 $NEED_PYCAIRO
+	SendMessage $CHECKPYGOBJECT ${BM_GETCHECK} 0 0 $NEED_PYGOBJECT
 FunctionEnd
 	
