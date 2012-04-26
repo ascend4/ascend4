@@ -5,10 +5,6 @@
 
 ; The name of the installer
 
-!ifndef VERSION
-!define VERSION 0.svn
-!endif
-
 Name "ASCEND ${VERSION}"
 
 ;SetCompressor /FINAL zlib
@@ -17,14 +13,6 @@ SetCompressor /SOLID lzma
 !include LogicLib.nsh
 !include nsDialogs.nsh
 !include x64.nsh
-
-!ifndef PYVERSION
-!define PYVERSION "2.7"
-!endif
-
-!ifndef PYPATCH
-!define PYPATCH ".1"
-!endif
 
 ; The file to write
 OutFile ${OUTFILE}
@@ -98,8 +86,8 @@ Var PYTHONTARGETDIR
 ; DOWNLOAD AND INSTALL DEPENDENCIES FIRST
 
 ; Use the official python.org Python packages
-!define PYTHON_VERSION "${PYVERSION}${PYPATCH}${PYARCH}"
-!define PYTHON_FN "python-${PYTHON_VERSION}.msi"
+!define PYTHON_VERSION "${PYVERSION}${PYPATCH}"
+!define PYTHON_FN "python-${PYTHON_VERSION}${PYARCH}.msi"
 !define PYTHON_URL "http://python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_FN}"
 !define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive ALLUSERS=1 TARGETDIR=$PYTHONTARGETDIR"
 
@@ -217,8 +205,11 @@ Section "ASCEND (required)"
 	File "..\LICENSE.txt"
 	File "..\CHANGELOG.txt"
 	File "..\README-windows.txt"
-	${IPOPTDLL_LINE}
-	${IPOPTDLL_LINE2}
+	${FILE_IPOPT_1}
+	${FILE_IPOPT_2}
+	${FILE_IPOPT_3}
+	${FILE_IPOPT_4}
+	${FILE_IPOPT_5}
 	
 	; Model Library
 	SetOutPath $INSTDIR\models
@@ -604,9 +595,12 @@ Section "Uninstall"
 	Delete $INSTDIR\solvers\ipopt_ascend.dll
 	RMDir $INSTDIR\solvers
 
-	${DEL_IPOPTDLL_LINE}
-	${DEL_IPOPTDLL_LINE2}
-
+	${DEL_IPOPT_1}
+	${DEL_IPOPT_2}
+	${DEL_IPOPT_3}
+	${DEL_IPOPT_4}
+	${DEL_IPOPT_5}
+	
 	; Remove directories used
 
 	Delete $INSTDIR\uninstall.exe
