@@ -46,7 +46,7 @@ default_tk_lib = "tk8.5"
 default_tktable_lib = "Tktable2.9"
 default_ida_prefix="$DEFAULT_PREFIX"
 default_ipopt_libpath = "$IPOPT_PREFIX/lib"
-default_ipopt_dll = ["$IPOPT_LIBPATH/Ipopt-vs8.dll","$IPOPT_LIBPATH/IpOptFSS.dll", None, None, None] # should be five here
+default_ipopt_dll = [None,None,None, None, None] # should be five here
 default_ipopt_libs = ["$F2C_LIB","blas","lapack","pthread","ipopt"]
 default_conopt_prefix="$DEFAULT_PREFIX"
 default_conopt_libpath="$CONOPT_PREFIX"
@@ -92,12 +92,8 @@ if platform.system()=="Windows":
 	# where to look for IDA solver libraries, headers, etc.
 	default_ida_prefix = "$DEFAULT_PREFIX"
 	
-	# IPOPT
-	if platform.architecture()[0] == "64bit":
-		default_ipopt_libpath = "$IPOPT_PREFIX/lib/x64/release"
-	else:
-		default_ipopt_libpath = "$IPOPT_PREFIX/lib/win32/release"
-	default_ipopt_libs = ["Ipopt"]
+	# IPOPT. we now prefer to build our own version.
+	default_ipopt_libs = ["ipopt",'stdc++','coinmumps','coinmetis','coinlapack','coinblas','gfortran']
 
 	# where to look for CONOPT when compiling
 	default_conopt_prefix = "c:\\Program Files\\CONOPT"
@@ -2842,7 +2838,7 @@ if with_installer:
 		_fl = ''; _dl = ''
 		if env.get('IPOPT_DLL%d'%(i+1)):
 			_fl = "File %s"%os.path.normcase(os.path.normpath(env.subst("$IPOPT_DLL%d"%(i+1))))
-			_dl = "Delete %s"%os.path.split(env.subst("$IPOPT_DLL%d"%(i+1)))[1]
+			_dl = "Delete \"$$INSTDIR\\%s\""%os.path.split(env.subst("$IPOPT_DLL%d"%(i+1)))[1]
 		nsisdefs['FILE_IPOPT_%d'%(i+1)] = _fl
 		nsisdefs['DEL_IPOPT_%d'%(i+1)] = _dl	
 	env.Append(NSISDEFINES=nsisdefs)
