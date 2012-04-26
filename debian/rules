@@ -39,13 +39,13 @@ major=0
 INSTALLROOT=$(CURDIR)/debian/tmp
 DATADIR=$(INSTALLROOT)/usr/share
 
-GTKSOURCEVIEW=gtksourceview-2.0
+GTKSOURCEVIEW=gtksourceview-3.0
 GTKSOURCEVIEWLANGS=$(DATADIR)/$(GTKSOURCEVIEW)/language-specs
 
 build: build-stamp
 build-stamp:
 	dh_testdir
-	cd $(CURDIR) && $(SCONS) libascend tcltk pygtk models
+	cd $(CURDIR) && $(SCONS)
 	touch build-stamp
 
 clean:
@@ -80,23 +80,9 @@ install: build
 	install -m 644 -D ascend-doc-48x48.png $(DATADIR)/icons/hicolor/48x48/mimetypes/text-x-ascend-model.png && \
 	install -m 644 -D ascend-doc-64x64.png $(DATADIR)/icons/hicolor/64x64/mimetypes/text-x-ascend-model.png
 #
-# workaround for bug in Ubuntu Hardy -- to prevent generic icons from overriding ASCEND icon.
-	cd $(CURDIR)/pygtk/glade && \
-	install -m 644 -D ascend-doc-48x48.svg $(DATADIR)/icons/Human/scalable/mimetypes/text-x-ascend-model.svg && \
-	install -m 644 -D ascend-doc-16x16.png $(DATADIR)/icons/Human/16x16/mimetypes/text-x-ascend-model.png && \
-	install -m 644 -D ascend-doc-22x22.png $(DATADIR)/icons/Human/22x22/mimetypes/text-x-ascend-model.png && \
-	install -m 644 -D ascend-doc-24x24.png $(DATADIR)/icons/Human/24x24/mimetypes/text-x-ascend-model.png && \
-	install -m 644 -D ascend-doc-32x32.png $(DATADIR)/icons/Human/32x32/mimetypes/text-x-ascend-model.png && \
-	install -m 644 -D ascend-doc-48x48.png $(DATADIR)/icons/Human/48x48/mimetypes/text-x-ascend-model.png && \
-	install -m 644 -D ascend-doc-64x64.png $(DATADIR)/icons/Human/64x64/mimetypes/text-x-ascend-model.png
-#
 # syntax highlighting for gedit
 	cd $(CURDIR)/tools/$(GTKSOURCEVIEW) && \
 	install -m 644 -D ascend.lang $(GTKSOURCEVIEWLANGS)/ascend.lang
-#
-# DESKTOP file for ASCEND Tcl/Tk
-	cd $(CURDIR)/tcltk/gnome && \
-	install -m 644 -D ascend4.desktop $(DATADIR)/applications/ascend4.desktop
 #
 	dh_install --fail-missing --sourcedir=$(INSTALLROOT)
 
