@@ -46,8 +46,7 @@ default_tk_lib = "tk8.5"
 default_tktable_lib = "Tktable2.9"
 default_ida_prefix="$DEFAULT_PREFIX"
 default_ipopt_libpath = "$IPOPT_PREFIX/lib"
-default_ipopt_dll = "$IPOPT_LIBPATH/Ipopt39.dll"
-default_ipopt_dll2 = "$IPOPT_LIBPATH/IpOptFSS39.dll"
+default_ipopt_dll = ["$IPOPT_LIBPATH/Ipopt-vs8.dll","$IPOPT_LIBPATH/IpOptFSS.dll", None, None, None] # should be five here
 default_ipopt_libs = ["$F2C_LIB","blas","lapack","pthread","ipopt"]
 default_conopt_prefix="$DEFAULT_PREFIX"
 default_conopt_libpath="$CONOPT_PREFIX"
@@ -462,14 +461,11 @@ if platform.system()=="Windows":
 		,"$IPOPT_PREFIX/include"
 	)
 
-	vars.Add('IPOPT_DLL'
-		,"Exact path of IPOPT DLL to be included in the installer (Windows only)"
-		,default_ipopt_dll
-	)
-	vars.Add('IPOPT_DLL2'
-		,"Exact path of IPOPT DLL to be included in the installer (Windows only)"
-		,default_ipopt_dll2
-	)
+	for i in range(5):
+		vars.Add('IPOPT_DLL%d'%(i+1)
+			,"Exact path of IPOPT DLL (%d) to be included in the installer (Windows only)"%(i+1)
+			,default_ipopt_dll[i]
+		)
 
 #-------- f2c ------
 
@@ -2828,39 +2824,37 @@ if not env.get('NSIS'):
 
 if with_installer:
 	pyarch = ""
-	ipoptdllline = ""
 	instarch = "win32"
-	ipoptf1 = ""
-	dipoptf1 = ""
-	ipoptf2 = ""
-	dipoptf2 = ""
 	if platform.architecture()[0] == "64bit":
 		instarch = "x64"
 		pyarch = ".amd64"
 		inst64 = 1
-	if env['IPOPT_DLL']:
-		ipoptf1 = "File %s"%os.path.normcase(os.path.normpath(env.subst("$IPOPT_DLL")))
-		dipoptf1 = "Delete %s"%os.path.split(env.subst("$IPOPT_DLL"))[1]
-	if env['IPOPT_DLL2']:
-		ipoptf2 = "File %s"%os.path.normcase(os.path.normpath(env.subst("$IPOPT_DLL2")))
-		dipoptf1 = "Delete %s"%os.path.split(env.subst("$IPOPT_DLL2"))[1]
-	env.Append(NSISDEFINES={
+	nsisdefs = {
 		'OUTFILE':"#dist/$WIN_INSTALLER_NAME"
 		,"VERSION":version
 		,'PYVERSION':pyversion
-		,'IPOPTDLL_LINE':ipoptf1
-		,'IPOPTDLL_LINE2':ipoptf2
-		,'DEL_IPOPTDLL_LINE':dipoptf1
-		,'DEL_IPOPTDLL_LINE2':dipoptf2
+		,'PYPATCH':".%d"%sys.version_info[2]
 		,'PYARCH':str(pyarch)
 		,'INSTARCH':str(instarch)
-	})
+	}
+	# support up to 5 extra dependency DLLs to accompany IPOPT
+	for i in range(5):
+		_fl = ''; _dl = ''
+		if env.get('IPOPT_DLL%d'%(i+1)):
+			_fl = "File %s"%os.path.normcase(os.path.normpath(env.subst("$IPOPT_DLL%d"%(i+1))))
+			_dl = "Delete %s"%os.path.split(env.subst("$IPOPT_DLL%d"%(i+1)))[1]
+		nsisdefs['FILE_IPOPT_%d'%(i+1)] = _fl
+		nsisdefs['DEL_IPOPT_%d'%(i+1)] = _dl	
+	env.Append(NSISDEFINES=nsisdefs)
 	installer = env.Installer('nsis/installer.nsi')
+
+	for i in range(5):
+		if env.get('IPOPT_DLL%d'%(i+1)):
+			env.Depends(installer,env['IPOPT_DLL%d'%(i+1)])
+	
 	env.Depends(installer,["pygtk","ascxx","tcltk","ascend.dll","models","solvers","ascend-config",'pygtk/ascend'])
-	if env['IPOPT_DLL']:
-		env.Depends(installer,env['IPOPT_DLL'])
-		env.Depends(installer,"doc/book.pdf")
-		env.Depends(installer,["nsis/detect.nsi","nsis/dependencies.nsi","nsis/download.nsi"])
+	env.Depends(installer,"doc/book.pdf")
+	env.Depends(installer,["nsis/detect.nsi","nsis/dependencies.nsi","nsis/download.nsi"])
 	env.Alias('installer',installer)
 else:
 	print "Skipping... Windows installer isn't being built:",without_installer_reason
