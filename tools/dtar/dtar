@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #	dtar - Tool to produce .deb package from source tarball
-#	Copyright (C) 2008 John Pye <john@curioussymbols.com>
+#	Copyright (C) 2008-2012 John Pye <john@curioussymbols.com>
 #
 #	This program is free software; you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -87,7 +87,8 @@ if len(args)<1 or len(args)>2:
 
 # the tarball is the argument to this script
 
-print "Parallel build with",parallel
+if parallel:
+	print "Parallel build with",parallel
 
 startingcwd = os.getcwd()
 
@@ -180,9 +181,16 @@ for _c in controlmandatory:
 
 fchange = getdebfile('changelog')
 
-changes = changelog.Changelog(file=fchange.read())
+changes = changelog.Changelog()
+changes.parse_changelog(file=fchange.read(),strict=1)
+
+if not changes:
+	s = "Failed to parse Debian changelog file."
+	raise RuntimeError(s)
 
 debianname = "%s-%s" % (control['Source'],changes.upstream_version)
+
+print "DEBIAN NAME =",debianname
 
 need_tarball_reheaded = False
 if debianname != head:

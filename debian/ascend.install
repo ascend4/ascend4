@@ -1,8 +1,6 @@
 usr/bin/ascend
-usr/bin/ascend4
 usr/lib/ascend/models
 usr/lib/ascend/solvers
 usr/lib/*.so.*
-usr/lib/libascendtcl.so
 usr/lib/python2.*/*
 usr/share

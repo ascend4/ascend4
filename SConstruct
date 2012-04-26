@@ -774,7 +774,7 @@ envadditional={}
 
 tools = [
 	'lex', 'yacc', 'fortran', 'swig', 'substinfile'
-	,'disttar', 'tar', 'graphviz','sundials'
+	,'disttar', 'tar', 'graphviz','sundials', 'dvi', 'pdflatex'
 ]
 if platform.system()=="Windows":
 	tools += ['nsis']
@@ -1981,7 +1981,7 @@ lmodern_test_text = r"""
 \usepackage{lmodern}
 \title{Cartesian closed categories and the price of eggs}
 \author{Jane Doe}
-\date{September 1994}
+\date{September 2012}
 \begin{document}
    \maketitle
    Hello world!
@@ -2729,6 +2729,8 @@ modeldirs = env.SConscript(['models/SConscript'],'env')
 if not with_extfns:
 	print "Skipping... External modules aren't being built:",without_extfns_reason
 
+for _f in env['extfns']:
+	env.Depends(_f,'libascend')
 env.Alias('extfns',env['extfns'])
 
 #-------------
@@ -2883,6 +2885,7 @@ env.Append(
 		,r"ascend/compiler/ascParse\.[ch]$", r"ascend/solver/conoptconfig\.h$"
 		,r"ascend/utilities/config\.h$", r"pygtk/config\.h$", r"pygtk/config\.py$"
 		,r"pygtk/ascdev$", r"ascxx/testconopt$", r"ascend/compiler/scanner\.c$"
+		,r"datareader/.*TY\.csv$"
 		,r"ascxx/ascpy_wrap\.h",r"ascxx/config\.h$"
 		,r"tcltk/interface/ascend4$",r"ascxx/testslvreq$",r"test/test$"
 		,r"models/johnpye/datareader/.*\.tm2\.Z$"

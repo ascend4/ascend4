@@ -2,17 +2,12 @@ Source: ascend
 Section: contrib/science
 Priority: extra
 Maintainer: John Pye <john@curioussymbols.com>
-Build-Depends: scons, gcc, flex, bison, swig, python-dev, gfortran, libblas-dev, tcl8.5-dev, tk8.5-dev, debhelper, graphviz-dev, libtktable2.9, libsundials-serial-dev, libipopt-dev, debhelper (>= 5)
-#                                    (!)^^^^^^^^^^^
-# NOTE: coinor-libipopt-dev does NOT work in Ubuntu 9.x and 10.x, see instead
-# information at http://ascendwiki.cheme.cmu.edu/IPOPT#Installing_IPOPT for
-# details on how to obtain the above package.
-#
+Build-Depends: scons, gcc, flex, bison, swig, python-dev, gfortran, libblas-dev, debhelper, graphviz-dev, libsundials-serial-dev, coinor-libipopt-dev, debhelper (>= 5)
 Standards-Version: 3.7.2
 
 Package: ascend
 Architecture: any
-Depends: python, libtktable2.9, libgtksourceview2.0-common, ${shlibs:Depends}, python-glade2, python-numpy, python-matplotlib
+Depends: python, libgtksourceview-3.0-common, ${shlibs:Depends}, python-glade2, python-numpy, python-matplotlib
 Recommends: ipython, xgraph
 Description:Solver for systems of equations and ODEs/DAEs
  ASCEND is a modelling and simulation environment for

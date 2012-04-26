@@ -2,16 +2,17 @@ This package was debianized by John Pye <john@curioussymbols.com>
 Sat Apr 21 16:24:33 EST 2007
 
 It was downloaded from the ASCEND subversion repository
-http://ascendwiki.cheme.cmu.edu/VersionManagement
+http://ascend4.org/VersionManagement
 
 Upstream Authors: Art Westerberg, Tom Epperly, Ben Allan, Kirk Abbott, 
-Jerry StClair, John Pye, and others.
+Jerry StClair, John Pye, and others including those listed at
+http://ascend4.org/Category:ASCEND_Contributors.
 
 License: /usr/share/common-licenses/GPL-2
 
 --------------------------------------------------------------------------------
 
-This software is Copyright (c) 2007 Carnegie Mellon University
+This software is Copyright (c) 2012 Carnegie Mellon University
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
