@@ -2,10 +2,10 @@ REQUIRE "thermodynamics.a4l";
 
 ATOM vdwa REFINES solver_var
 	DIMENSION M*L^5/Q^2/T^2
-	DEFAULT 0.1 {kg*m^5/mole^2/sec^2};
-	lower_bound := 0.0 {kg*m^5/mole^2/sec^2};
-	upper_bound := 10.0 {kg*m^5/mole^2/sec^2};
-	nominal := 0.1 {kg*m^5/mole^5/sec^2};
+	DEFAULT 0.1 {kg*m^5/mole^2/s^2};
+	lower_bound := 0.0 {kg*m^5/mole^2/s^2};
+	upper_bound := 10.0 {kg*m^5/mole^2/s^2};
+	nominal := 0.1 {kg*m^5/mole^5/s^2};
 END vdwa;
 
 ATOM virialC REFINES solver_var
