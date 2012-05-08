@@ -142,6 +142,7 @@ slug = {14.5939*kilogram};
 (*  time *)
 
 second = {s};
+sec = {s};
 min = {60*s};
 h = {3600*s};
 d = {86400*s};
