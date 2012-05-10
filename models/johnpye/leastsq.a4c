@@ -1,0 +1,52 @@
+IMPORT "ipopt";
+REQUIRE "atoms.a4l";
+
+(*
+	Testing implementation of a least-squares curve fit using IPOPT as the
+	solver...
+
+	Solution should be close to a = 1, b = -12, c = 37
+*)
+MODEL params;
+	a,b,c IS_A solver_var;
+END params;
+
+MODEL fn(
+	p WILL_BE params;
+	x WILL_BE solver_var;
+);
+	y IS_A solver_var;
+	y = (p.a * x + p.b)*x + p.c;
+END fn;
+
+MODEL leastsq;
+	p IS_A params;
+	n IS_A integer_constant;
+	n :== 10;
+	x[1..n], y[1..n] IS_A solver_var;
+	FOR i IN [1..n] CREATE
+		f[i] IS_A fn(p, x[i]);
+	END FOR;
+	sse IS_A solver_var;
+	sse = SUM[(y[i] - f[i].y)^2 | i IN [1..n]];
+	MINIMIZE sse;
+METHODS
+METHOD on_load;
+	(*SOLVER ipopt;*)
+	FIX x[1..n], y[1..n];
+	FOR i IN [1..n] DO
+		x[i] := i;
+	END FOR;
+	y[1] := 27.5638512764;
+	y[2] := 17.0591647169;
+	y[3] := 10.2458879212;
+	y[4] := 5.5211061304;
+	y[5] := 3.8450975241;
+	y[6] := 2.7473614207;
+	y[7] := 4.279372646;
+	y[8] := 6.2993978336;
+	y[9] := 11.9244818208;
+	y[10] := 19.6601520996;
+END on_load;
+END leastsq;
+
