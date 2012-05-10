@@ -166,6 +166,8 @@ struct problem_t {
   struct gl_list_t *unas;	/* real ATOM instance of no 'apparent' use */
   struct gl_list_t *models;	/* models in tree. modips */
 
+  int bad_rel_in_list;
+
   /*
   	The following gllists contain pointers to interface ptrs as
   	locally defined.

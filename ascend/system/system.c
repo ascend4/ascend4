@@ -72,7 +72,7 @@ slv_system_t system_build(SlvBackendToken inst){
     system_destroy(sys);
     sys = NULL;
     if(stat==2) {
-	  ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
       FPRINTF(ASCERR,"Models sent to solver: \n");
       FPRINTF(ASCERR,"1 cannot have any pending parts\n");
       FPRINTF(ASCERR,"2 cannot have NULL or unfinished relations.\n");
@@ -80,7 +80,7 @@ slv_system_t system_build(SlvBackendToken inst){
       FPRINTF(ASCERR,"4 must have at least one objective or relation.\n");
       FPRINTF(ASCERR,"5 must have at all WHEN-controlling values initialized.\n");
       FPRINTF(ASCERR,"Check pendings and problem structure.\n");
-	  error_reporter_end_flush();
+      error_reporter_end_flush();
     }
     return sys;
   }

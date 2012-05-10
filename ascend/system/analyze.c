@@ -124,11 +124,6 @@ static symchar *g_strings[6];
 #define OBSID_A g_strings[5]
 
 /*
-	Global variable. Set to true by classify if need be
-*/
-static int g_bad_rel_in_list;
-
-/*
 	a bridge buffer used so much we aren't going to free it, just reuse it
 */
 static struct reuse_t {
@@ -502,7 +497,7 @@ static void analyze_CountRelation(struct Instance *inst
 
 /**
 	Obtain an integer value from a symbol value
-	Used for a WHEN statement. Each symbol value is storaged in a symbol list.
+	Used for a WHEN statement. Each symbol value is stored in a symbol list.
 	It checks if the symval is already in the solver symbol list,
 	if it is, returns the integer corresponding to the position of symval
 	if it is not, appends the symval to the list and then returns the int
@@ -850,9 +845,9 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
 */
 
 /*
-	This function sets g_bad_rel_in_list TRUE if it finds any unhappy
+	This function sets p_data->bad_rel_in_list TRUE if it finds any unhappy
 	relations. All the rest of the code depends on ALL relations being
-	good, so don't disable the g_bad_rel_in_list feature.
+	good, so don't disable the p_data->bad_rel_in_list feature.
 */
 static
 void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
@@ -862,13 +857,13 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
     case REL_INST:
       if( GetInstanceRelationOnly(inst) == NULL ||
           GetInstanceRelationType(inst) == e_undefined) {
-	/* guard against null relations, unfinished ones */
+        /* guard against null relations, unfinished ones */
         ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-		FPRINTF(ASCERR,"Found bad (unfinished?) relation '");
+        FPRINTF(ASCERR,"Found bad (unfinished?) relation '");
         WriteInstanceName(ASCERR,inst,p_data->root);
         FPRINTF(ASCERR,"' (in CountStuffInTree)");
-		error_reporter_end_flush();
-        g_bad_rel_in_list = TRUE;
+        error_reporter_end_flush();
+        p_data->bad_rel_in_list = TRUE;
         return;
       }
       /* increment according to classification */
@@ -914,7 +909,7 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
           FPRINTF(ASCERR,"CountStuffInTree found undefined symbol or symbol_constant in WHEN.\n");
           WriteInstanceName(ASCERR,inst,p_data->root);
           error_reporter_end_flush();
-          g_bad_rel_in_list = TRUE;
+          p_data->bad_rel_in_list = TRUE;
           return;
         }
         p_data->ndv++;
@@ -926,7 +921,7 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
         FPRINTF(ASCERR,"CountStuffInTree found bad logrel.\n");
         WriteInstanceName(ASCERR,inst,p_data->root);
         error_reporter_end_flush();
-        g_bad_rel_in_list = TRUE;
+        p_data->bad_rel_in_list = TRUE;
         return;
       }
       if( LogRelIsCond(GetInstanceLogRel(inst)) ) {
@@ -1081,7 +1076,7 @@ int analyze_make_master_lists(struct problem_t *p_data){
       (long)gl_length(p_data->whens) != p_data->nw
   ){
     ERROR_REPORTER_START_HERE(ASC_PROG_WARNING);
-	FPRINTF(ASCERR,"Warning: Mismatch in problem census and problem found\n");
+    FPRINTF(ASCERR,"Warning: Mismatch in problem census and problem found\n");
     FPRINTF(ASCERR,"Rels: Counted %lu\t Found %ld\n",gl_length(p_data->rels), p_data->nr);
     FPRINTF(ASCERR,"Objs: Counted %lu\t Found %ld\n",gl_length(p_data->objrels), p_data->no);
     FPRINTF(ASCERR,"LogRels: Counted %lu\t Found %ld\n",gl_length(p_data->logrels),p_data->nl);
@@ -2710,12 +2705,12 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   OBSID_A = AddSymbol("obs_id");
 
   p_data = &thisproblem;
-  g_bad_rel_in_list = FALSE;
+  p_data->bad_rel_in_list = FALSE;
   InitTreeCounts(inst,p_data);
   /* take the census */
   VisitInstanceTreeTwo(inst,(VisitTwoProc)CountStuffInTree,TRUE,FALSE,
                        (VOIDPTR)p_data);
-  if(g_bad_rel_in_list) {
+  if(p_data->bad_rel_in_list) {
     p_data->root = NULL;
     return 2;
   }
