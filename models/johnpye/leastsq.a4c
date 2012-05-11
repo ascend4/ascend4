@@ -1,16 +1,26 @@
-IMPORT "ipopt";
-REQUIRE "atoms.a4l";
-
 (*
 	Testing implementation of a least-squares curve fit using IPOPT as the
 	solver...
 
 	Solution should be close to a = 1, b = -12, c = 37
 *)
+IMPORT "ipopt";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/leastsq_fit";
+REQUIRE "atoms.a4l";
+
+(*
+	Model containing just the parameters we wish to identify.
+*)
 MODEL params;
 	a,b,c IS_A solver_var;
 END params;
 
+(*
+	Parametric model containing the fitting curve. The parameters are passed
+	in along with a single 'x' value; the 'y' value is calculated and stored
+	as part of this sub-model.
+*)
 MODEL fn(
 	p WILL_BE params;
 	x WILL_BE solver_var;
@@ -19,6 +29,10 @@ MODEL fn(
 	y = (p.a * x + p.b)*x + p.c;
 END fn;
 
+(*
+	Least-squares curve fit model (fitting simple x-y data). No provision yet
+	for reading x-y data from an external file.
+*)
 MODEL leastsq;
 	p IS_A params;
 	n IS_A integer_constant;
@@ -32,7 +46,6 @@ MODEL leastsq;
 	MINIMIZE sse;
 METHODS
 METHOD on_load;
-	(*SOLVER ipopt;*)
 	FIX x[1..n], y[1..n];
 	FOR i IN [1..n] DO
 		x[i] := i;
@@ -47,6 +60,14 @@ METHOD on_load;
 	y[8] := 6.2993978336;
 	y[9] := 11.9244818208;
 	y[10] := 19.6601520996;
+
+	SOLVER IPOPT;
+	OPTION hessian_approximation 'limited-memory';
+	SOLVE;
+	RUN plot_fit;
 END on_load;
+METHOD plot_fit;
+	EXTERNAL leastsq_plot(SELF);
+END plot_fit;
 END leastsq;
 
