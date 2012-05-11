@@ -7,6 +7,7 @@
 IMPORT "ipopt";
 IMPORT "johnpye/extpy/extpy";
 IMPORT "johnpye/leastsq_fit";
+
 REQUIRE "atoms.a4l";
 
 (*
@@ -41,9 +42,7 @@ MODEL leastsq;
 	FOR i IN [1..n] CREATE
 		f[i] IS_A fn(p, x[i]);
 	END FOR;
-	sse IS_A solver_var;
-	sse = SUM[(y[i] - f[i].y)^2 | i IN [1..n]];
-	MINIMIZE sse;
+	obj: MINIMIZE SUM[(y[i] - f[i].y)^2 | i IN [1..n]];
 METHODS
 METHOD on_load;
 	FIX x[1..n], y[1..n];
