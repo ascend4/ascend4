@@ -3,39 +3,16 @@ Model of a parabolic trough solar thermal collector field, of the type
 of SEGS VI plant, closely following the approach of Patnode (2006).
 https://www.nrel.gov/analysis/sam/pdfs/thesis_patnode06.pdf
 
-First ASCEND version by Vikram Kaadam (2011), re-written by 
-John Pye (2012).
+First version by Vikram Kaadam (2011) as part of GSOC2011.
+Second version by John Pye (2012).
 *)
 REQUIRE "atoms.a4l";
 REQUIRE "solar/solar_types.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
-REQUIRE "johnpye/nrel/sunpos_nrel.a4c";
+REQUIRE "solar/tracker.a4l";
 REQUIRE "solar/therminol.a4c";
 
-(*
-	Sun position calculator, using NREL SPA.
-*)
-MODEL sunpos_wrapper REFINES sunpos_nrel;
-		
-	beta = 1.0 * theta_z;
-
-METHODS
-	METHOD specify;
-		FIX L_st, L_loc, phi; (* time and location *)
-		FIX gamma; (* surface orientation *)
-		FIX t;			
-	END specify;
-
-	METHOD values;
-		(* FIXME there should be something here?? *)
-	END values;
-
-	METHOD self_test;
-		ASSERT abs(theta-35.0{deg}) < 0.15{deg};
-		ASSERT abs(delta-(-13.80{deg})) < 0.02{deg};
-	END self_test;		
-END sunpos_wrapper;
-
+(* refinement base, used in the parabolic_trough model... *)
 MODEL absorber_loss_base;
 END absorber_loss_base;
 
@@ -114,34 +91,38 @@ END absorber_loss_test;
 *) 
 MODEL parabolic_trough;
 	(* field geometry *)
-	W_apert "collector aperture width" IS_A distance;
-	L_spacing "'length of spacing' between troughs" IS_A distance; (* clarification required, assume centre-to-centre? *)
+	W_apert    "collector aperture width" IS_A distance;
+	L_spacing  "'length of spacing' between troughs" IS_A distance; (* clarification required, assume centre-to-centre? *)
 	L_SCA      "length of a single solar collector assembly (SCA)" IS_A distance;
 	N_SCA      "total number of solar collector assemblies" IS_A factor;
 	f          "focal length of collector" IS_A distance;
 	
-	A_field IS_A area;
+	A_field    IS_A area;
 	A_field = N_SCA * L_SCA * W_apert;
 	
-	(* sun position *)
-	sun        IS_A sunpos_wrapper;
-	(* TODO what do we do with this? *)
-	DST        "daylight savings adjust (=1h during DST, else 0)" IS_A time;
-	t_std ALIASES sun.t;
+	(* tracker and sun position *)
+	sun    IS_A solar_tracker_single_horiz;
+	t          "local time (standard, not DST correction)" ALIASES sun.t;
 
 	Qdd_abs    "solar radiation absorbed by receiver tubes per aperture area" IS_A power_per_area;
 	DNI        "direct normal irradiance" IS_A intensity;
 	IAM        "incidence angle modifier" IS_A factor;
-	row_shadow IS_A factor;
-	end_loss   IS_A factor;
+	eta_shading IS_A fraction;
+	end_loss   IS_A fraction;
 	eta_field  "averaged field efficiency" IS_A fraction;
 	eta_HCE    "averaged heat collection element efficiency" IS_A fraction;
 	avail_SF   "solar field availability - on-sun portion" IS_A fraction;
 
+	(* constants that define the location -- can we do this better?? *)
+	(* Kramer Junction *)
+	sun.loc.latitude :== 37.21 {deg};
+	sun.loc.longitude :== -117.022 {deg};
+	sun.loc.elevation :== 755 {ft};
+
 	(* OPTICAL PERFORMANCE *)
 	
 	(* absorbed solar radiation, Patnode eq 2.1. factored the cos(theta) into IAM. *)	
-	Qdd_abs = DNI * IAM * row_shadow * end_loss * eta_field * eta_HCE * avail_SF;
+	absheat_eq: Qdd_abs = DNI * IAM * eta_shading * end_loss * eta_field * eta_HCE * avail_SF;
 	(* NOTE that eta_field and eta_HCE are given fixed values here, though their 
 	components factors are shown in Patnode sect 2.2.5 *)
 
@@ -152,11 +133,15 @@ MODEL parabolic_trough;
 	IAM * cos(sun.theta) = cos(sun.theta) + 8.84e-4 * sun.theta - 5.369e-5 * sun.theta^2;
 	
 	(* row shading (Stuetzle), Patnode eq 2.12 *)
-	(* TODO is this the right theta_z and theta? *)
-	row_shadow = (L_spacing/W_apert) * (cos(sun.theta_z)/cos(sun.theta));	
-	
+	eta_shading_1, eta_shading_2 IS_A factor; (* before being normalised to [0,1] *)
+	eta_shading_1 = (L_spacing/W_apert) * (cos(sun.zenith)/cos(sun.theta));
+	(* limit to max of 1 *)
+	eta_shading_2 = eta_shading_1 + ((1 - eta_shading_1) + abs(1 - eta_shading_1))/2;
+	(* limit to min of 0 *)
+	eta_shading = (-eta_shading_1 + abs(-eta_shading_1))/2;
+
 	(* end loss (Lippke), Patnode eq 2.13 *)
-	end_loss = 1 - f * tan(sun.theta) / L_SCA;
+	endloss_eq: end_loss = 1 - f * tan(sun.theta) / L_SCA;
 	
 	(* LOSSES FROM HCE *)
 	
@@ -207,7 +192,6 @@ MODEL parabolic_trough;
 METHODS
 	METHOD specify;
 		RUN sun.specify;
-
 		FIX DNI, L_spacing;
 		FIX W_apert, f, L_SCA, eta_field, eta_HCE, avail_SF;
 		
@@ -219,26 +203,19 @@ METHODS
 	END specify;
 
 	METHOD values;		
-		L_spacing := 15 {m};
-		W_apert := 5 {m};
+		L_spacing := 13 {m};
+		W_apert := 4.83 {m};
 		f := 5 {m};
 		L_SCA := 50 {m};
 		N_SCA := 256;
 
 		DNI := 1000 {W/m^2};
-		sun.L_st := -105 {deg};
-		sun.L_loc := -110 {deg};
-		DST := 0 {hour};
-		t_std := 15 {hour};
-		sun.phi := 37.21 {deg};
 
-		(* TODO what's this? *) (* JP: is it trying to stop the sun from being below the horizon? *)
-		IF (t_std > 12{hour}) THEN
-			sun.gamma := 90{deg};
-		END IF;
-		IF (t_std <= 12{hour}) THEN
-			sun.gamma := -90{deg};
-		END IF;
+		(* tracker, including sun position and geographical location *)
+		RUN sun.values;
+		sun.offset.tz := -8{h};
+		sun.offset.h := 0;
+		t := 43.5 {d};
 
 		(* fixed field efficiency based on values in Patnode Table 2.1 *)
 		eta_field := 0.857;		

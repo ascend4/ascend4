@@ -1,8 +1,20 @@
+(*
+Models of fixed surfaces and solar trackers.
+
+First version by Vikram Kaadam (2011) as part of GSOC2011.
+Second version by John Pye (2012).
+*)
 REQUIRE "atoms.a4l";
 REQUIRE "solar/solar_types.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 REQUIRE "johnpye/nrel/sunpos_nrel.a4c";
 
+(*
+	Fixed surface with specified tilt and orientation. Calculate the
+	angle between the solar rays and the surface normal.
+
+	Equation from Duffie and Beckman.
+*)
 MODEL sunpos_tilted_surface REFINES sunpos_nrel;
 	beta "inclination angle of tilted surface"
 	, gamma "azimuth angle of tilted surface"
@@ -35,84 +47,64 @@ METHOD self_test;
 END self_test;
 END sunpos_tilted_surface_test;
 
+
 (*
-MODEL sunpos_tracker_type1; 
-	(* The collector is rotated about a horizontal east-west axis with single daily adjustment such that the solar beam is normal to the collector aperture plane at solar noon *)
+	A single-axis solar tracker with horizontal axis. Calculate the 
+	angle between the solar rays and the normal to the tracker. Also
+	calculate the tracker orientation angle.
 
-	sp IS_A sunpos_wrapper;
+	Equation adapted from http://www.powerfromthesun.net.
 
-	cos(sp.beta) * cos(sp.phi - sp.delta) + cos(sp.gamma) * sin(sp.beta) * sin(sp.phi - sp.delta) = 1;
-
-	METHODS
-		METHOD specify;
-			RUN sp.specify;
-		    FREE sp.beta;
-		END specify;
-
-        METHOD bound_self;
-            sp.beta.lower_bound := -90 {deg};
-            sp.beta.upper_bound := 90 {deg};
-        END bound_self;
-
-
-		METHOD values;		
-			sp.L_st := -90{deg}; 	(* USA Central time*)
-			sp.L_loc := -89.4{deg};
-			sp.phi := +43{deg}; 	(* t := 32.4375 {d}; *)
-			sp.t := 32{d} + 10{h}+30{min};
-
-    		(* surface orientation *)
-			sp.gamma := 15{deg};
-			
-			(* Assumption *)
-			sp.beta := 45{deg};
-		END values;
-
-		METHOD on_load;
-            RUN specify;
-			RUN bound_self;
-            RUN values;
-        END on_load;
-
-END sunpos_tracker_type1;
-
-
-MODEL tracker_axis_type2 REFINES sunpos_db;
-    (* The collector is rotated about a horizontal east-west axis with single daily adjustment such that the solar beam is normal to the collector aperture plane at solar noon *)
-
-    cos(beta) * cos(phi - delta) + cos(gamma) * sin(beta) * sin(phi - delta) = 1;
-
-    METHODS
-        METHOD specify;
-            FIX t, L_st, L_loc, phi; (* time and location *)
-            FIX beta, gamma; (* surface orientation *)
-
-            FREE beta;
-        END specify;
-
-        METHOD bound_self;
-            beta.lower_bound := 0 {deg};
-            beta.upper_bound := 90 {deg};
-        END bound_self;
-
-        METHOD values;
-            L_st := -90{deg};    (* USA Central time*)
-            L_loc := -89.4{deg};
-            phi := +43{deg};     (* t := 32.4375 {d}; *)
-            t := 32{d} + 10{h}+30{min};
-
-            (* surface orientation *)
-            gamma := 15{deg};
-
-            (* Assumption *)
-            beta := 45{deg};
-        END values;
-
-        METHOD on_load;
-            RUN specify;
-            RUN bound_self;
-            RUN values;
-        END on_load;
-END sunpos_tracker_type2;
-
+	TODO need to be check carefully, because Powewr From The Sun uses the
+	azimuth as east of north angle convention, and we are using west of south.
 *)
+MODEL solar_tracker_single_horiz REFINES sunpos_nrel;
+	gamma "azimuth angle of the tracker axis"
+	, theta "angle between solar rays and the collector normal"
+	, rho "rotation angle of the tracker, with upwards = 0"
+	IS_A angle;
+
+	theta = arcsin(cos(altitude)*cos(azimuth - gamma));
+	rho = arctan(sin(azimuth - gamma)/tan(altitude));
+METHODS
+METHOD specify;
+	RUN offset.specify;
+	FIX p, T, t;
+	FIX gamma;
+END specify;
+METHOD values;
+	RUN offset.values;
+	gamma := 0 {deg}; (* axis aligned north-south *)
+	p := 1 {bar};
+	T := 298 {K};
+	t :=  43.5 {d};
+END values;
+END solar_tracker_single_horiz;
+
+
+(*
+	Test of the single-axis tracker model. Plot the values of rho and theta
+	for t = 43 to t = 44 d, for gamma = 0 and gamma = 90.
+*)
+MODEL solar_tracker_single_horiz_test REFINES solar_tracker_single_horiz;
+	loc.latitude :== 43{deg};
+	loc.longitude :== 0{deg};
+	loc.elevation :== 0{m};
+METHODS
+METHOD on_load;
+	RUN specify;
+	zenith := 0;
+	RUN offset.on_load;
+	(* Greenwich at 10:30 am GMT on 13 Feb *)
+	FIX offset.h := 0;
+	FIX offset.tz := 0 {h};
+	FIX t := 31 {d} + 13 {d} - 1 {d} + 10 {h} + 30 {min};
+	(* wot a luvly day: *)
+	FIX T := 298 {K};
+	FIX p := 1 {atm};
+	FIX gamma := 0 {deg};
+	SOLVER QRSlv;
+END on_load;
+END solar_tracker_single_horiz_test;
+
+
