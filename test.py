@@ -181,6 +181,7 @@ class TestSystem(AscendSelfTester):
 		M.run(self.L.findType('testlog10').getMethod('on_load'))
 		if platform.system!="Windows":
 			f = file('temp.png','wb')
+			# currently M.write is failing...JP 20120511.
 			M.write(f,"dot")
 			f.close()
 		else:
@@ -1495,7 +1496,7 @@ class TestSlvReq(Ascend):
 		H = ascpy.SolverHooks(ascpy.SolverReporter())
 		ascpy.SolverHooksManager_Instance().setHooks(H)
 		T = self.L.findType('test1')
-		M = T.getSimulation('sim')
+		M = T.getSimulation('sim',0)
 		print "\n\n\nRUNNING ON_LOAD EXPLICITLY NOW..."
 		M.run(T.getMethod('on_load'))
 
@@ -1542,7 +1543,7 @@ class TestSlvReq(Ascend):
 		H = SolverHooksPython()
 		ascpy.SolverHooksManager_Instance().setHooks(H)
 		T = self.L.findType('test1')
-		M = T.getSimulation('sim')
+		M = T.getSimulation('sim',1)
 
 # test some stuff for beam calculations
 class TestSection(Ascend):
