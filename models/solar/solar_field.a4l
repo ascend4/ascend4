@@ -108,7 +108,7 @@ MODEL parabolic_trough;
 	DNI        "direct normal irradiance" IS_A intensity;
 	IAM        "incidence angle modifier" IS_A factor;
 	eta_shading IS_A fraction;
-	end_loss   IS_A fraction;
+	eta_endloss IS_A fraction;
 	eta_field  "averaged field efficiency" IS_A fraction;
 	eta_HCE    "averaged heat collection element efficiency" IS_A fraction;
 	avail_SF   "solar field availability - on-sun portion" IS_A fraction;
@@ -122,7 +122,7 @@ MODEL parabolic_trough;
 	(* OPTICAL PERFORMANCE *)
 	
 	(* absorbed solar radiation, Patnode eq 2.1. factored the cos(theta) into IAM. *)	
-	absheat_eq: Qdd_abs = DNI * IAM * eta_shading * end_loss * eta_field * eta_HCE * avail_SF;
+	absheat_eq: Qdd_abs = DNI * IAM * eta_shading * eta_endloss * eta_field * eta_HCE * avail_SF;
 	(* NOTE that eta_field and eta_HCE are given fixed values here, though their 
 	components factors are shown in Patnode sect 2.2.5 *)
 
@@ -134,15 +134,18 @@ MODEL parabolic_trough;
 	
 	(* row shading (Stuetzle), Patnode eq 2.12 *)
 	eta_shading_1, eta_shading_2 IS_A factor; (* before being normalised to [0,1] *)
-	eta_shading_1 = (L_spacing/W_apert) * (cos(sun.zenith)/cos(sun.theta));
-	(* limit to max of 1 *)
-	eta_shading_2 = eta_shading_1 + ((1 - eta_shading_1) + abs(1 - eta_shading_1))/2;
-	(* limit to min of 0 *)
-	eta_shading = (-eta_shading_1 + abs(-eta_shading_1))/2;
+	shading_1: eta_shading_1 = (L_spacing/W_apert) * (cos(sun.zenith)/cos(sun.theta));
+	(* limit first to max of 1, then min of 0 *)
+	shading_2: eta_shading_2 = 1. + 0.5*((eta_shading_1 - 1) - abs(eta_shading_1 - 1));
+	shading_3: eta_shading = (eta_shading_2 + abs(eta_shading_2))/2;
 
 	(* end loss (Lippke), Patnode eq 2.13 *)
-	endloss_eq: end_loss = 1 - f * tan(sun.theta) / L_SCA;
-	
+	eta_endloss_1, eta_endloss_2 IS_A factor;
+	endloss_1: eta_endloss_1 = 1 - f * tan(sun.theta) / L_SCA;
+	(* limit first to max of 1, then min of 0 *)
+	endloss_2: eta_endloss_2 = 1. + 0.5*((eta_endloss_1 - 1) - abs(eta_endloss_1 - 1));
+	endloss_3: eta_endloss = (eta_endloss_2 + abs(eta_endloss_2))/2;
+
 	(* LOSSES FROM HCE *)
 	
 	T_i, T_o IS_A temperature;
