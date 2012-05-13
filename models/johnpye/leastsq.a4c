@@ -3,6 +3,9 @@
 	solver...
 
 	Solution should be close to a = 1, b = -12, c = 37
+
+	Tested and works with IPOPT and CONOPT, but some glitches still found
+	as reported in the bug tracker, bug 555 and bug 556 and bug 554.
 *)
 IMPORT "ipopt";
 IMPORT "johnpye/extpy/extpy";

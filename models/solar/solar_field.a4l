@@ -6,11 +6,12 @@ https://www.nrel.gov/analysis/sam/pdfs/thesis_patnode06.pdf
 First version by Vikram Kaadam (2011) as part of GSOC2011.
 Second version by John Pye (2012).
 *)
+REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
-REQUIRE "solar/solar_types.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
-REQUIRE "solar/tracker.a4l";
-REQUIRE "solar/therminol.a4c";
+REQUIRE "solar/tracker.a4l"; (* sun position *)
+REQUIRE "solar/therminol.a4c"; (* oil properties *)
+REQUIRE "johnpye/datareader/testtmy3.a4c"; (* weather data reader *)
 
 (* refinement base, used in the parabolic_trough model... *)
 MODEL absorber_loss_base;
@@ -24,7 +25,7 @@ MODEL absorber_loss(
 	type IS_A symbol_constant;
 	T_i WILL_BE temperature;
 	T_o WILL_BE temperature;
-	DNI WILL_BE intensity;
+	DNI WILL_BE power_per_area;
 ) REFINES absorber_loss_base;
 
 	a[0..3] IS_A real_constant;
@@ -59,6 +60,8 @@ MODEL absorber_loss(
 	
 	Qd_loss IS_A power_per_length;  
 
+	(* FIXME this equation assumes temperatures in degC. T^3 in degC? Bah! *)
+
 	(* heat loss calculated as integral wrt temperature, Patnode eq 2.18. *)
 	Qd_loss * (T_o - T_i) = SUM[a[i]*(T_o^(i+1) - T_i^(i+1))/(i+1) | i IN [0..3]] + DNI * (b[0] + b[1]/3*(T_o^3 - T_i^3));
 	(* NOTE above eq assumes linear temperature rise with position? is that suff valid? *)
@@ -71,7 +74,7 @@ MODEL absorber_loss_test;
 	type IS_A symbol_constant;
 	type :== 'vacuum';
 	T_i, T_o IS_A temperature;
-	DNI IS_A intensity;
+	DNI IS_A power_per_area;
 	abso IS_A absorber_loss(type,T_i,T_o,DNI);
 	Qd_loss ALIASES abso.Qd_loss;
 METHODS 
@@ -85,9 +88,9 @@ END absorber_loss_test;
 
 
 (*
-	Heat absorbed by the solar receiver of cylindrical shape
-	
-	TODO implement option to set field orientation EW/NS.
+	Model of a parabolic trough field, based on the approach of Patnode, but
+	modified to allow for arbitrary (horizontal) orientation of the collector
+	axis.
 *) 
 MODEL parabolic_trough;
 	(* field geometry *)
@@ -96,28 +99,40 @@ MODEL parabolic_trough;
 	L_SCA      "length of a single solar collector assembly (SCA)" IS_A distance;
 	N_SCA      "total number of solar collector assemblies" IS_A factor;
 	f          "focal length of collector" IS_A distance;
-	
+
 	A_field    IS_A area;
 	A_field = N_SCA * L_SCA * W_apert;
-	
-	(* tracker and sun position *)
-	sun    IS_A solar_tracker_single_horiz;
-	t          "local time (standard, not DST correction)" ALIASES sun.t;
 
+	(* field performance *)
 	Qdd_abs    "solar radiation absorbed by receiver tubes per aperture area" IS_A power_per_area;
-	DNI        "direct normal irradiance" IS_A intensity;
+	DNI        "direct normal irradiance" IS_A power_per_area;
 	IAM        "incidence angle modifier" IS_A factor;
 	eta_shading IS_A fraction;
 	eta_endloss IS_A fraction;
 	eta_field  "averaged field efficiency" IS_A fraction;
 	eta_HCE    "averaged heat collection element efficiency" IS_A fraction;
 	avail_SF   "solar field availability - on-sun portion" IS_A fraction;
+	
+	(* tracker and sun position *)
+	sun    IS_A solar_tracker_single_horiz;
+	t          "local time (standard, not DST correction)" ALIASES sun.t;
 
 	(* constants that define the location -- can we do this better?? *)
 	(* Kramer Junction *)
 	sun.loc.latitude :== 37.21 {deg};
 	sun.loc.longitude :== -117.022 {deg};
 	sun.loc.elevation :== 755 {ft};
+	(* TODO the location should be extracted from the weather data *)
+
+	(* weather data (download your TMY3, see http://ascend4.org/Data_reader) *)
+	dr IS_A tmy3;
+	dr.tmydata.filename :== 'johnpye/datareader/723815TY.csv';
+	t, dr.t ARE_THE_SAME;
+	T_amb ALIASES dr.T;
+	T_amb, sun.T ARE_THE_SAME;
+	p_amb ALIASES dr.p;
+	p_amb, sun.p ARE_THE_SAME;
+	DNI, dr.DNI ARE_THE_SAME;
 
 	(* OPTICAL PERFORMANCE *)
 	
@@ -132,17 +147,15 @@ MODEL parabolic_trough;
 	(* TODO check... do these values assume angles in degrees? *)
 	IAM * cos(sun.theta) = cos(sun.theta) + 8.84e-4 * sun.theta - 5.369e-5 * sun.theta^2;
 	
-	(* row shading (Stuetzle), Patnode eq 2.12 *)
+	(* row shading (Stuetzle), Patnode eq 2.12, limited to range [0,1] *)
 	eta_shading_1, eta_shading_2 IS_A factor; (* before being normalised to [0,1] *)
 	shading_1: eta_shading_1 = (L_spacing/W_apert) * (cos(sun.zenith)/cos(sun.theta));
-	(* limit first to max of 1, then min of 0 *)
 	shading_2: eta_shading_2 = 1. + 0.5*((eta_shading_1 - 1) - abs(eta_shading_1 - 1));
 	shading_3: eta_shading = (eta_shading_2 + abs(eta_shading_2))/2;
 
-	(* end loss (Lippke), Patnode eq 2.13 *)
+	(* end loss (Lippke), Patnode eq 2.13, limited to range [0,1] *)
 	eta_endloss_1, eta_endloss_2 IS_A factor;
 	endloss_1: eta_endloss_1 = 1 - f * tan(sun.theta) / L_SCA;
-	(* limit first to max of 1, then min of 0 *)
 	endloss_2: eta_endloss_2 = 1. + 0.5*((eta_endloss_1 - 1) - abs(eta_endloss_1 - 1));
 	endloss_3: eta_endloss = (eta_endloss_2 + abs(eta_endloss_2))/2;
 
@@ -163,8 +176,6 @@ MODEL parabolic_trough;
 	Qdd_loss_recv * W_apert = SUM[abso[i].Qd_loss * hce_frac[i] | i IN hce_types];
 	
 	(* LOSSES FROM FIELD PIPING *)
-	
-	T_amb "ambient temperature" IS_A temperature;
 	DT "temperature difference ambient to field piping" IS_A delta_temperature;
 	(* average external temp difference, Patnode eq 2.21 *)
 	T_amb + DT = 0.5 * (T_i + T_o);
@@ -195,14 +206,15 @@ MODEL parabolic_trough;
 METHODS
 	METHOD specify;
 		RUN sun.specify;
-		FIX DNI, L_spacing;
+		FIX L_spacing;
 		FIX W_apert, f, L_SCA, eta_field, eta_HCE, avail_SF;
 		
 		FIX inlet.T;
-		FIX T_amb;			
 		FIX N_SCA;
 		FIX Vdot_i;
-		FIX hce_frac[hce_types];		
+		FIX hce_frac[hce_types];
+		FIX t;
+		FREE sun.p, sun.T;
 	END specify;
 
 	METHOD values;		
@@ -212,8 +224,6 @@ METHODS
 		L_SCA := 50 {m};
 		N_SCA := 256;
 
-		DNI := 1000 {W/m^2};
-
 		(* tracker, including sun position and geographical location *)
 		RUN sun.values;
 		sun.offset.tz := -8{h};
@@ -221,7 +231,7 @@ METHODS
 		t := 43.5 {d};
 
 		(* fixed field efficiency based on values in Patnode Table 2.1 *)
-		eta_field := 0.857;		
+		eta_field := 0.857;
 		eta_HCE := 0.832;
 		avail_SF := 1;
 
