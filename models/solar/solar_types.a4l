@@ -2,6 +2,7 @@ REQUIRE "system.a4l";   (* => system.a4l, basemodel.a4l *)
 REQUIRE "measures.a4l"; (* => measures.a4l *)
 PROVIDE "solar_types.a4l";
 
+(* DEPRECATED. We should incorporate these into atoms.a4l if needed *)
 
 ATOM calorific_value REFINES solver_var
     DIMENSION L^2/T^2
