@@ -1,6 +1,6 @@
 (*
 Model of a parabolic trough solar thermal collector field, of the type
-of SEGS VI plant, closely following the approach of Patnode (2006).
+of SEGS VI plant, closely following the approach of Angela Patnode (2006).
 https://www.nrel.gov/analysis/sam/pdfs/thesis_patnode06.pdf
 
 First version by Vikram Kaadam (2011) as part of GSOC2011.
@@ -23,10 +23,14 @@ END absorber_loss_base;
 *) 
 MODEL absorber_loss(
 	type IS_A symbol_constant;
-	T_i WILL_BE temperature;
-	T_o WILL_BE temperature;
+	T_i_K WILL_BE temperature;
+	T_o_K WILL_BE temperature;
 	DNI WILL_BE power_per_area;
 ) REFINES absorber_loss_base;
+
+	T_i, T_o IS_A delta_temperature;
+	T_i = T_i_K - 273.15 {K};
+	T_o = T_o_K - 273.15 {K};
 
 	a[0..3] IS_A real_constant;
 	b[0,1] IS_A real_constant;
@@ -252,3 +256,4 @@ METHODS
 		RUN values;
 	END on_load;	
 END parabolic_trough;
+
