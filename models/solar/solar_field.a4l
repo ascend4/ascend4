@@ -38,7 +38,7 @@ MODEL absorber_loss(
 		a[1] :==  8.374490E-01 {W/m^2/K};
 		a[2] :==  0.00         {W/m^2/K^2};
 		a[3] :==  4.620143E-06 {W/m^2/K^3};
-		b[0] :==  6.983190E-02	{m};
+		b[0] :==  6.983190E-02 {m};
 		b[1] :==  9.312703E-08 {m/K^2};
 	CASE 'hydrogen':
 		(* intact HCE into which hydrogen has diffused to a pressure off 1 Torr *)
@@ -46,7 +46,7 @@ MODEL absorber_loss(
 		a[1] :==  8.374490E-01 {W/m^2/K};
 		a[2] :==  0.00         {W/m^2/K^2};
 		a[3] :==  4.620143E-06 {W/m^2/K^3};
-		b[0] :==  6.983190E-02	{m};
+		b[0] :==  6.983190E-02 {m};
 		b[1] :==  9.312703E-08 {m/K^2};
 	CASE 'air':
 		(* a broken glass envelope; contents will be air at ambient pressure *)
@@ -54,7 +54,7 @@ MODEL absorber_loss(
 		a[1] :==  8.374490E-01 {W/m^2/K};
 		a[2] :==  0.00         {W/m^2/K^2};
 		a[3] :==  4.620143E-06 {W/m^2/K^3};
-		b[0] :==  6.983190E-02	{m};
+		b[0] :==  6.983190E-02 {m};
 		b[1] :==  9.312703E-08 {m/K^2};		
 	END SELECT;
 	
@@ -114,7 +114,7 @@ MODEL parabolic_trough;
 	avail_SF   "solar field availability - on-sun portion" IS_A fraction;
 	
 	(* tracker and sun position *)
-	sun    IS_A solar_tracker_single_horiz;
+	sun        IS_A solar_tracker_single_horiz;
 	t          "local time (standard, not DST correction)" ALIASES sun.t;
 
 	(* constants that define the location -- can we do this better?? *)
