@@ -1,0 +1,136 @@
+REQUIRE "atoms.a4l";
+
+(* refinement base, used in the parabolic_trough model... *)
+MODEL receiver_loss_base;
+END receiver_loss_base;
+
+(*
+	Loss parameters for the Luz evacuated tube receiver as provided in 
+	Patnode thesis.
+*)
+MODEL luz_loss_parameters(
+	type IS_A symbol_constant;
+);
+	a[0..3] IS_A real_constant;
+	b[0,1] IS_A real_constant;
+	
+	SELECT(type)
+	CASE 'vacuum':
+		(* an intact HCE, evacuated air at 0.0001 Torr *)
+		a[0] :== -9.463033e+00 {W/m^2};
+		a[1] :==  3.029616e-01 {W/m^2/K};
+		a[2] :==  -1.38633e-03 {W/m^2/K^2};
+		a[3] :==  6.929243e-06 {W/m^2/K^3};
+		b[0] :==  7.649610e-02 {m};
+		b[1] :==  1.128818e-07 {m/K^2};
+	CASE 'hydrogen':
+		(* intact HCE into which hydrogen has diffused to a pressure of 1 Torr *)
+		a[0] :== -3.583342e+01 {W/m^2};
+		a[1] :==  1.461366e+00 {W/m^2/K};
+		a[2] :==  1.569955e-03 {W/m^2/K^2};
+		a[3] :==  4.013432e-06 {W/m^2/K^3};
+		b[0] :==  6.926351e-02 {m};
+		b[1] :==  1.382089e-07 {m/K^2};
+	CASE 'air':
+		(* a broken glass envelope; contents will be air at ambient pressure *)
+		a[0] :== -2.247372E+01 {W/m^2};
+		a[1] :==  8.374490E-01 {W/m^2/K};
+		a[2] :==  0.00         {W/m^2/K^2};
+		a[3] :==  4.620143E-06 {W/m^2/K^3};
+		b[0] :==  6.983190E-02 {m};
+		b[1] :==  9.312703E-08 {m/K^2};		
+	END SELECT;
+END luz_loss_parameters;
+
+
+(*
+	Receiver (HCE) heat loss calculated for a local position along the receiver,
+	as a function of fluid temperature and DNI.
+*)
+MODEL receiver_loss_local(
+	type IS_A symbol_constant;
+	T_K WILL_BE temperature;
+	DNI WILL_BE power_per_area;
+) REFINES receiver_loss_base;
+	lp IS_A luz_loss_parameters(type);
+	a ALIASES lp.a;
+	b ALIASES lp.b;
+
+	(* calculate temperature in celsius *)
+	T IS_A delta_temperature;
+	T = T_K - 273.15 {K};
+
+	(* receiver heat loss, Patnode eq 2.16 *)
+	Qd_loss IS_A power_per_length;
+	Qd_loss = a[0] + a[1]*T + a[2]*T^2 + a[3]*T^3+ DNI*(b[0] + b[1]*T^2);
+END receiver_loss_local;
+
+	
+(*
+	Receiver (HCE) heat loss calculated by integration along a length of tube,
+	as function of inlet and outlet temperature, plus DNI.
+*)
+MODEL receiver_loss_integ(
+	type IS_A symbol_constant;
+	T_i_K WILL_BE temperature;
+	T_o_K WILL_BE temperature;
+	DNI WILL_BE power_per_area;
+) REFINES receiver_loss_base;
+	lp IS_A luz_loss_parameters(type);
+	a ALIASES lp.a;
+	b ALIASES lp.b;
+
+	(* calculate temperatures in celsius *)
+	T_i, T_o IS_A delta_temperature;
+	T_i = T_i_K - 273.15 {K};
+	T_o = T_o_K - 273.15 {K};
+
+	(* heat loss calculated as integral wrt temperature, Patnode eq 2.18. *)
+	Qd_loss IS_A power_per_length;  
+	Qd_loss * (T_o - T_i) = SUM[a[i]/(i+1)*(T_o^(i+1) - T_i^(i+1)) | i IN [0..3]] + DNI * (b[0]*(T_o - T_i) + b[1]/3.*(T_o^3 - T_i^3));
+
+	(* NOTE above eq assumes linear temperature rise with position? is that suff valid? *)
+	(* NOTE above eq assumes ambient temperature of 25 C (Patnode sect 2.3.2) -- should adjust for changes in T_amb?? *)
+	(* NOTE also the equation in Lippke 1995 for bare tubes, which has a different form and requires wind speed *)
+	(* NOTE that Lippke says that end loss must be included in the above equation (eq 7, p. 11) *)
+END receiver_loss_integ;
+
+
+(*
+	Test of local model. Gives results consistent with Figs 2.19-2.21 from
+	Patnode thesis.
+*)
+MODEL receiver_loss_local_test;
+	T IS_A temperature;
+	DNI IS_A power_per_area;
+	recv IS_A receiver_loss_local('hydrogen',T,DNI);
+
+	Qd_loss ALIASES recv.Qd_loss;
+	T_C ALIASES recv.T;
+METHODS 
+METHOD on_load;
+	FIX DNI, T_C;
+	DNI := 1000 {W/m^2};
+	T_C := 300 {K};
+END on_load;
+END receiver_loss_local_test;
+
+
+
+MODEL receiver_loss_integ_test;
+	T_i, T_o IS_A temperature;
+	DNI IS_A power_per_area;
+	recv IS_A receiver_loss_integ('vacuum',T_i,T_o,DNI);
+	Qd_loss ALIASES recv.Qd_loss;
+	T_i_C ALIASES recv.T_i;
+	T_o_C ALIASES recv.T_o;
+METHODS 
+METHOD on_load;
+	FIX DNI, T_i_C, T_o_C;
+	DNI := 1000 {W/m^2};
+	T_i_C := 200 {K};
+	T_o_C := 400 {K};
+END on_load;
+END receiver_loss_integ_test;
+
+
