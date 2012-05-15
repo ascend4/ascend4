@@ -4,6 +4,7 @@ REQUIRE "atoms.a4l";
 MODEL receiver_loss_base;
 END receiver_loss_base;
 
+
 (*
 	Loss parameters for the Luz evacuated tube receiver as provided in 
 	Patnode thesis.
@@ -19,7 +20,7 @@ MODEL luz_loss_parameters(
 		(* an intact HCE, evacuated air at 0.0001 Torr *)
 		a[0] :== -9.463033e+00 {W/m^2};
 		a[1] :==  3.029616e-01 {W/m^2/K};
-		a[2] :==  -1.38633e-03 {W/m^2/K^2};
+		a[2] :== -1.386833e-03 {W/m^2/K^2};
 		a[3] :==  6.929243e-06 {W/m^2/K^3};
 		b[0] :==  7.649610e-02 {m};
 		b[1] :==  1.128818e-07 {m/K^2};
@@ -65,7 +66,7 @@ MODEL receiver_loss_local(
 	Qd_loss = a[0] + a[1]*T + a[2]*T^2 + a[3]*T^3+ DNI*(b[0] + b[1]*T^2);
 END receiver_loss_local;
 
-	
+
 (*
 	Receiver (HCE) heat loss calculated by integration along a length of tube,
 	as function of inlet and outlet temperature, plus DNI.
@@ -86,9 +87,10 @@ MODEL receiver_loss_integ(
 	T_o = T_o_K - 273.15 {K};
 
 	(* heat loss calculated as integral wrt temperature, Patnode eq 2.18. *)
-	Qd_loss IS_A power_per_length;  
-	Qd_loss * (T_o - T_i) = SUM[a[i]/(i+1)*(T_o^(i+1) - T_i^(i+1)) | i IN [0..3]] + DNI * (b[0]*(T_o - T_i) + b[1]/3.*(T_o^3 - T_i^3));
+	Qd_loss IS_A power_per_length;
+	Qd_loss = SUM[a[i]/(i+1)*(T_o^(i+1) - T_i^(i+1))/(T_o - T_i) | i IN [0..3]] + DNI * (b[0]) + b[1]/3.*(T_o^3 - T_i^3)/(T_o - T_i);
 
+	(* NOTE the above form seems to avoid Qd_loss converging to zero and T_o --> T_i *)
 	(* NOTE above eq assumes linear temperature rise with position? is that suff valid? *)
 	(* NOTE above eq assumes ambient temperature of 25 C (Patnode sect 2.3.2) -- should adjust for changes in T_amb?? *)
 	(* NOTE also the equation in Lippke 1995 for bare tubes, which has a different form and requires wind speed *)
