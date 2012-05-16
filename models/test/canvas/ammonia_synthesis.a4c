@@ -1,0 +1,281 @@
+REQUIRE "simpleunits.a4c";
+REQUIRE "flash.a4l";
+
+(* => simpleunits.a4c, stream_holdup.a4l, thermodynamics.a4l,
+ *    components.a4l, phases.a4l, atoms.a4l, measures.a4l,
+ *    system.a4l, basemodel.a4l *)
+
+MODEL VaporStream;
+    cd IS_A components_data([
+    'nitrogen'
+    ,'hydrogen'
+    ,'ammonia'],'ammonia');
+    pd IS_A phases_data('V', 'ideal_vapor_mixture', 'none', 'none');
+    equil IS_A start_true;
+    str IS_A stream(cd,pd,equil);
+  
+    comp ALIASES str.components;
+    P ALIASES str.P;
+    T ALIASES str.T;
+    f ALIASES str.f; (*Molar Rates*)
+    y ALIASES str.y; (*Mole Fractions*)
+    flow ALIASES str.flow; (*Total Stream Molar Rate*)
+    H_flow ALIASES str.H_flow;
+    
+    METHODS
+    METHOD specify;
+        FIX T;
+        FIX P;
+        FIX f[comp];
+        END specify;
+    METHOD values;
+        T := 800 {K};
+        P := 1 {atm};
+        f[comp] := 1 {mole/min};
+        str.state.slack_PhaseDisappearance['vapor'] := 0;
+    END values;
+    METHOD seqmod;
+        FIX str.state.slack_PhaseDisappearance['vapor'];
+    END seqmod;
+END VaporStream;
+
+MODEL LiquidStream;
+    cd IS_A components_data([
+    'nitrogen'
+    ,'hydrogen'
+    ,'ammonia'],'ammonia');
+    pd IS_A phases_data('L','none','none','none');
+    equil IS_A start_true;
+    str IS_A stream(cd,pd,equil);
+    
+    comp ALIASES str.components;
+    P ALIASES str.P;
+    T ALIASES str.T;
+    f ALIASES str.f; (*Molar Rates*)
+    y ALIASES str.y; (*Mole Fractions*)
+    flow ALIASES str.flow; (*Total Stream Molar Rate*)
+    H_flow ALIASES str.H_flow;
+    
+     METHODS
+    METHOD specify;
+        FIX T;
+        FIX P;
+        FIX f[comp];
+        END specify;
+    METHOD values;
+        T := 800 {K};
+        P := 1 {atm};
+        f[comp] := 1 {mole/min};
+    END values;
+    METHOD seqmod;
+   FIX str.state.slack_PhaseDisappearance['liquid']; (*not sure why we do this, but documentation suggests to force a phase to exist*)
+    END seqmod;
+END LiquidStream;
+
+MODEL HydrogenStream REFINES VaporStream;
+    METHODS
+    METHOD seqmod;
+        RUN VaporStream::seqmod;
+        FREE f[comp];
+        FIX y[comp];
+        FREE y['hydrogen']; (*not sure why we do this..*)
+    END seqmod;
+    METHOD specify;
+	    RUN VaporStream::specify;
+	    RUN seqmod;
+	    FIX flow;
+    END specify;
+    METHOD values;
+	    RUN VaporStream::values;
+	    y[comp] := 0;
+	    y['hydrogen'] := 1;
+	    flow := 1 {mole/min};
+	    T := 800 {K};
+    END values;
+END HydrogenStream;
+
+MODEL NitrogenStream REFINES VaporStream;
+    METHODS
+    METHOD seqmod;
+        RUN VaporStream::seqmod;
+        FREE f[comp];
+        FIX y[comp];
+        FREE y['hydrogen'];
+    END seqmod;
+    METHOD specify;
+	    RUN VaporStream::specify;
+	    RUN seqmod;
+	    FIX flow;
+    END specify;
+    METHOD values;
+	    RUN VaporStream::values;
+	    y[comp] := 0;
+	    y['nitrogen'] := 1;
+	    flow := 1 {mole/min};
+	    T := 800 {K};
+    END values;
+END NitrogenStream;
+
+MODEL Mixer;
+    NOTES
+		'block' SELF {Mixer Unit}
+  	END NOTES;
+	  input1 IS_A NitrogenStream;
+    input2 IS_A HydrogenStream;
+    output IS_A VaporStream;
+    
+    FOR i IN input1.comp CREATE 
+        output.f[i] = input1.f[i] + input2.f[i];
+    END FOR;
+    output.H_flow = input1.H_flow + input2.H_flow;
+    output.P = input1.P - (input1.P-input2.P)*(0.5 + arctan(input1.P-input2.P));
+    
+    METHODS
+    METHOD seqmod;
+        RUN input1.seqmod;
+        RUN input2.seqmod;
+        RUN output.seqmod;
+    END seqmod;
+    METHOD specify;
+        RUN seqmod;	
+        RUN input1.specify;
+        RUN input2.specify;
+    END specify;
+    METHOD values;
+        RUN input1.values;
+        RUN input2.values;
+        RUN output.values;
+    END values;
+END Mixer;
+
+MODEL Reactor;
+    NOTES
+		'block' SELF {NH3 Reactor Unit}
+	END NOTES;
+	  input1 IS_A VaporStream;
+    input2 IS_A VaporStream;
+    output IS_A VaporStream;
+	(*TODO*)
+    (*equations*)
+    (*mass balance*)
+    METHODS
+    METHOD seqmod;
+        RUN input1.seqmod;
+        RUN input2.seqmod;
+        RUN output.seqmod;
+    END seqmod;
+    METHOD specify;
+        RUN seqmod;	
+        RUN input1.specify;
+        RUN input2.specify;
+        RUN output.specify;
+    END specify;
+    METHOD values;
+        RUN input1.values;
+        RUN input2.values;
+        RUN output.values;
+    END values;
+END Reactor;
+
+(*Copied and modified from simpleunits.a4c*)
+MODEL Compressor;
+    NOTES
+		'block' SELF {Compressor Unit}
+	  END NOTES;
+	  
+	  input IS_A VaporStream;
+    output IS_A VaporStream;
+    
+	  Qin IS_A energy_rate;
+    compressionRatio IS_A factor;
+    efficiency IS_A fraction;
+    
+    idealOut IS_A stream(input.str.cd,input.str.pd,input.str.equilibrated);
+    Qideal IS_A energy_rate;
+    idealCompressor IS_A unitOneInOneOut(Qideal, input.str, idealOut);
+    realCompressor IS_A unitOneInOneOut(Qin, input.str, output.str);
+    idealOut.P = compressionRatio*input.str.P;
+    output.str.P = idealOut.P;
+    idealCompressor.productMolarEntropy = idealCompressor.feedMolarEntropy;
+    Qin*efficiency = Qideal;
+
+    METHODS
+    METHOD default_self;
+	    RUN idealCompressor.default_self;
+    	RUN realCompressor.default_self;	
+    END default_self;
+    METHOD specify;
+	    RUN idealCompressor.specify;
+	    RUN realCompressor.specify;
+	    FREE idealCompressor.delP;
+	    FREE realCompressor.delP;
+	    FREE idealCompressor.Qin;
+	    FREE Qin;
+	    FIX compressionRatio;
+	    FIX efficiency;
+    END specify;
+    METHOD values;
+	    compressionRatio := 2.5;
+	    efficiency := 0.95;
+      input.str.equilibrated := FALSE;
+      output.str.equilibrated := FALSE;
+    END values;
+END Compressor;
+
+MODEL Flash;
+  input IS_A VaporStream;
+	output1 IS_A LiquidStream;
+	output2 IS_A VaporStream;
+	Qin IS_A energy_rate;
+  equilibrated IS_A boolean;
+  
+  
+  NOTES
+		'block' SELF {Flash Unit}
+	END NOTES;
+	
+	METHODS
+	METHOD default_self;
+	END default_self;
+	
+	METHOD specify;
+	  RUN input.specify;
+	  RUN output1.specify;
+	  RUN output2.specify;
+	END specify;
+	METHOD values;
+	  RUN input.values;
+	  RUN output1.values;
+	  RUN output2.values;
+	END values;
+	METHOD seqmod;
+	  RUN input.seqmod;
+	  RUN output1.seqmod;
+	  RUN output2.seqmod;
+	END seqmod;
+END Flash;
+  
+MODEL main;
+  S1 IS_A NitrogenStream;
+  S2 IS_A HydrogenStream;
+  S3,S4,S5,S6,S7,S9,S10 IS_A VaporStream;
+  S8 IS_A LiquidStream;
+  
+  mixer1 IS_A Mixer;
+  compressor1 IS_A Compressor;
+  compressor2 IS_A Compressor;
+  reactor1 IS_A Reactor;
+  flash1 IS_A Flash;
+  
+  S1,mixer1.input1 ARE_THE_SAME;
+  S2,mixer1.input2 ARE_THE_SAME;
+  S3,mixer1.output ARE_THE_SAME;
+  S3,S4 ARE_THE_SAME; (*Ignoring heater component for now*)
+  S4,compressor1.input ARE_THE_SAME;
+  S5,compressor1.output,reactor1.input1 ARE_THE_SAME;
+  S6,reactor1.output,S7,flash1.input ARE_THE_SAME; (*Ignoring the refrigeration component for now*)
+  S8,flash1.output1 ARE_THE_SAME;
+  S9,flash1.output2,compressor2.input ARE_THE_SAME;
+  S10,compressor2.input,reactor1.input2 ARE_THE_SAME;
+  
+END main;

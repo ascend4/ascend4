@@ -220,8 +220,8 @@ class mainWindow(gtk.Window):
 		vbox.pack_start(menubar,False,False)
 		
 		#Creating Tool Bar
-		#toolbar = ui_manager.get_widget('/ToolBar')
-		#vbox.pack_start(toolbar,False)
+		toolbar = ui_manager.get_widget('/ToolBar')
+		vbox.pack_start(toolbar,False,False)
 		
 		'''The Toolbar Definations start here'''
 		
@@ -387,7 +387,7 @@ class mainWindow(gtk.Window):
 		"""
 		Save the canvas in 'pickle' format. Currently saving is jointly handled by both self.save_canvas and self.filesave methods
 		"""
-		if self.view.canvas.filestate == 0:
+		if not self.view.canvas.filestate:
 			self.filesave(widget)
 			return
 		else:	
@@ -438,7 +438,7 @@ class mainWindow(gtk.Window):
 	
 	def undo_canvas(self,widget):
 		"""
-		NOTE: 	re-implementation needed	
+		Undo
 
 		"""
 		self.undo_manager.undo()
@@ -533,23 +533,23 @@ class mainWindow(gtk.Window):
 
 		self.status.push(0,"Wrote SVG file '%s'." % fn)
 		
-	def run_presaved_canvas(self,widget):
-		#TODO: Separate
-		if self.view.canvas.saved_model is not None:
-			model = self.view.canvas.saved_model 
-			self.ascwrap.library.loadString(model,"canvasmodel")
+	#def run_presaved_canvas(self,widget):
+		##TODO: Separate
+		#if self.view.canvas.saved_model is not None:
+			#model = self.view.canvas.saved_model 
+			#self.ascwrap.library.loadString(model,"canvasmodel")
 			
-			T = self.ascwrap.library.findType("canvasmodel")
-			M = T.getSimulation('canvassim',True)
-			M.setSolver(ascpy.Solver("QRSlv"))
-			M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
+		T = self.ascwrap.library.findType("canvasmodel")
+		M = T.getSimulation('canvassim',True)
+		M.setSolver(ascpy.Solver("QRSlv"))
+		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
 
-			for item in self.view.canvas.get_all_items():
-				if hasattr(item, 'blockinstance'):
-					bi = item.blockinstance
-					for i in self.ascwrap.library.modules.getChildren()[0].getChildren():
-						if str(bi.name) == str(i.getName()):
-							bi.instance = i
+			#for item in self.view.canvas.get_all_items():
+				#if hasattr(item, 'blockinstance'):
+					#bi = item.blockinstance
+					#for i in self.ascwrap.library.modules.getChildren()[0].getChildren():
+						#if str(bi.name) == str(i.getName()):
+							#bi.instance = i
 							
 	def load_presaved_canvas(self,widget):
 		#TODO: Separate
@@ -559,7 +559,7 @@ class mainWindow(gtk.Window):
 				model = str(self.view.canvas)
 				self.ascwrap.library.loadString(model,"canvasmodel")
 				T = self.ascwrap.library.findType("canvasmodel")
-				M = T.getSimulation('canvassim')
+				M = T.getSimulation("canvassim",True)
 				
 				def assignval(sim_inst, name):	
 					if sim_inst.isAtom():
@@ -602,7 +602,7 @@ class mainWindow(gtk.Window):
 		T = self.ascwrap.library.findType("canvasmodel")
 		
 		
-		self.M = T.getSimulation('canvassim')
+		self.M = T.getSimulation("canvassim",True)
 		self.M.setSolver(ascpy.Solver("QRSlv"))
 		self.reporter = ascpy.getReporter()
 		reporter = PopupSolverReporter(self,self.M.getNumVars())
@@ -613,6 +613,12 @@ class mainWindow(gtk.Window):
 			print "Couldn't build system: %s" % str(e)
 			self.status.push(0,"Couldn't build system: %s" % str(e));
 			return
+		#try:
+			#met=T.getMethod('on_load')
+			#self.M.run(met)
+		#except Exception,e:
+			#print "Couldn't run on_load method: %s"% str(e)
+			#return
 		
 		self.status.push(0,"Solving with 'QRSlv'. Please Wait...")
 		
@@ -703,7 +709,7 @@ class mainWindow(gtk.Window):
 		dialog.add_filter(filter)
 		dialog.show()
 		dialog.set_do_overwrite_confirmation(True)
-		dialog.connect("confirm-overwrite", self.confirm_overwrite_callback)
+		#dialog.connect("confirm-overwrite", self.confirm_overwrite_callback)
 		response = dialog.run()
 		if response == gtk.RESPONSE_OK:
 			name = dialog.get_filename()
@@ -711,7 +717,6 @@ class mainWindow(gtk.Window):
 				name += '.a4b'
 			if f == None and f != name:
 				f = open(name, 'w')
-				
 			try:
 				pickle.dump(self.view.canvas,f)
 				self.reporter.reportNote(" File ' %s ' saved successfully." % name )
@@ -731,7 +736,8 @@ class mainWindow(gtk.Window):
 		dialog.destroy()
 
 	def confirm_overwrite_callback(self, widget):
-		uri = gtk.FileChooserDialog.get_filename()
+
+		uri = widget.get_filename()
 		if is_uri_read_only(uri):
 			if user_wants_to_replace_read_only_file (uri):
 				return gtk.FILE_CHOOSER_CONFIRMATION_ACCEPT_FILENAME

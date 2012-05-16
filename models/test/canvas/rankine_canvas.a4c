@@ -163,7 +163,7 @@ MODEL boiler_simple REFINES steam_equipment;
 	outlet_pressure "param: Outlet Steam Node Pressure" ALIASES outlet.p;
 	outlet_specific_enthalpy "param: Outlet Steam Node Specific Enthalpy" ALIASES outlet.h;
 	inlet_temperature "param: Inlet Steam Node temperature" ALIASES inlet.T;
-	outlet_temperature "param: Outlet Steam Node temperature" ALIASES inlet.T;
+	outlet_temperature "param: Outlet Steam Node temperature" ALIASES outlet.T;
 	eta "param: Efficiency" IS_A fraction;
 	mass_rate "param: Mass Rate" ALIASES mdot;
 	(*End of Parameter Definitions*)

@@ -1,0 +1,453 @@
+(*	ASCEND modelling environment
+	Copyright (C) 2007, 2008, 2009, 2010 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)(*
+	A number of Rankine-cycle (steam turbine power cycle) models of increasing
+	complexity, following the general development of Moran & Shapiro, Çengel,
+	and others.
+
+	Author: John Pye
+*)
+
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+IMPORT "johnpye/fprops/helmholtz";
+IMPORT "sensitivity/solve";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/fprops/cycle_plot";
+
+(*------------------------------------------------------------------------------
+  BACKGROUND STUFF
+*)
+
+MODEL fluid;
+  NOTES
+		'stream' SELF {Basic Fluid Stream}
+	END NOTES;
+  component "water,carbondioxide,toluene,ammonia" IS_A symbol_constant;
+END fluid;
+
+(*
+	Thermo properties -- IAPWS-IF97
+*)
+MODEL stream_state;
+	cd IS_A fluid;
+	component ALIASES cd.component;
+	
+	p IS_A pressure;
+	h IS_A specific_enthalpy;
+
+	T IS_A temperature;
+	v IS_A specific_volume;
+	s IS_A specific_entropy;
+	x IS_A fraction;
+
+	(*calc_vT: helmholtz_phsx_vT(
+		v, T : INPUT;
+		p, h, s, x : OUTPUT;
+		cd : DATA
+	);*)
+	calc_ph: helmholtz_Tvsx_ph(
+		p, h : INPUT;
+		T, v, s, x : OUTPUT;
+		cd : DATA
+	);
+METHODS
+METHOD default;
+	p := 10{bar};
+	p.nominal := 42 {bar};
+	IF cd.component == 'water' THEN
+		h := 2000 {kJ/kg};
+	ELSE 
+		IF cd.component == 'carbondioxide' THEN
+			h := 350 {kJ/kg};
+		ELSE
+			h := 350 {kJ/kg};
+		END IF;
+	END IF;
+
+	T := 400 {K};
+	v.nominal := 10 {L/kg};
+	s := 4 {kJ/kg/K};
+	x := 0.8;
+
+	RUN enable_ph;
+END default;
+METHOD default_self;
+	RUN default;
+END default_self;
+METHOD enable_vT;
+	FOR i IN [1..4] DO
+		(*calc_ph[i].included := FALSE;
+		calc_vT[i].included := TRUE;*)
+		calc_ph[i].included := TRUE;
+	END FOR;
+END enable_vT;
+METHOD enable_ph;
+	FOR i IN [1..4] DO
+		calc_ph[i].included := TRUE;
+		(*calc_vT[i].included := FALSE;*)
+	END FOR;
+END enable_ph;
+METHOD solve;
+	EXTERNAL do_solve(SELF);
+END solve;
+END stream_state;
+
+(* a simple connector that includes calculation of steam properties *)
+MODEL stream_node;
+	state IS_A stream_state;
+	cd ALIASES state.cd;
+	component ALIASES state.component;
+	p ALIASES state.p;
+	h ALIASES state.h;
+	v ALIASES state.v;
+	T ALIASES state.T;
+	s ALIASES state.s;
+	x ALIASES state.x;
+	mdot IS_A mass_rate;
+METHODS
+
+METHOD default_self;
+	RUN state.default_self;
+	RUN default;
+END default_self;
+
+METHOD default;
+	mdot.nominal := 2 {kg/s};
+END default;
+METHOD solve;
+	EXTERNAL do_solve(SELF);
+END solve;
+METHOD on_load;
+	RUN default_all; RUN reset; RUN values;
+	FIX p,h;
+END on_load;
+END stream_node;
+
+MODEL stream_equipment;
+	inlet "in: inlet steam stream" IS_A stream_node;
+	outlet "out: outlet steam stream" IS_A stream_node;
+	inlet.cd, outlet.cd ARE_THE_SAME;
+	inlet.mdot, outlet.mdot ARE_THE_SAME;
+	cd ALIASES inlet.cd;
+	component ALIASES inlet.component;
+	mdot ALIASES inlet.mdot;
+END stream_equipment;
+
+(*------------------------------------------------------------------------------
+  PUMP COMPONENT
+*)
+
+MODEL pump_simple REFINES stream_equipment;
+	NOTES
+		'block' SELF {Simple model of a pump using isentropic efficiency}
+	END NOTES;
+
+  (*Parameter Definitions*)
+	inlet_pressure "param: Inlet Steam Node Pressure" ALIASES inlet.p;	
+	inlet_specific_enthalpy "param: Inlet Steam Node Specific Enthalpy" ALIASES inlet.h;
+	outlet_pressure "param: Outlet Steam Node Pressure" ALIASES outlet.p;
+	outlet_specific_enthalpy "param: Outlet Steam Node Specific Enthalpy" ALIASES outlet.h;
+	inlet_temperature "param: Inlet Steam Node temperature" ALIASES inlet.T;
+	outlet_temperature "param: Outlet Steam Node temperature" ALIASES inlet.T;	
+	eta "param: Efficiency" IS_A fraction;
+	mass_rate "param: Mass Rate" ALIASES mdot;
+	(*End of Parameter Definitions*)
+	
+	dp IS_A delta_pressure;
+	inlet.p + dp = outlet.p;
+
+	outlet_is IS_A stream_state;
+	outlet_is.p, outlet.p ARE_THE_SAME;
+	outlet_is.cd, outlet.cd ARE_THE_SAME;
+	outlet_is.s, inlet.s ARE_THE_SAME;
+	
+	eta_eq:eta * (inlet.h - outlet.h) = (inlet.h - outlet_is.h);
+
+	(* work done on the environment, will be negative *)
+	Wdot IS_A energy_rate;
+	Wdot_eq:Wdot = mdot * w;
+
+	w IS_A negative_specific_work;
+	w_eq:w = inlet.h - outlet.h;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+	RUN outlet_is.default_self;
+END default_self;
+END pump_simple;
+
+(*------------------------------------------------------------------------------
+  TURBINE COMPONENT
+*)
+
+MODEL turbine_simple REFINES stream_equipment;
+	NOTES
+		'block' SELF {Simple turbine model}
+	END NOTES;
+
+  (*Parameter Definitions*)
+	inlet_pressure "param: Inlet Steam Node Pressure" ALIASES inlet.p;	
+	inlet_specific_enthalpy "param: Inlet Steam Node Specific Enthalpy" ALIASES inlet.h;
+	outlet_pressure "param: Outlet Steam Node Pressure" ALIASES outlet.p;
+	outlet_specific_enthalpy "param: Outlet Steam Node Specific Enthalpy" ALIASES outlet.h;
+	inlet_temperature "param: Inlet Steam Node temperature" ALIASES inlet.T;
+	outlet_temperature "param: Outlet Steam Node Temperature" ALIASES inlet.T;
+	eta "param: Efficiency" IS_A fraction;
+	mass_rate "param: Mass Rate" ALIASES mdot;
+	(*End of Parameter Definitions*)
+	
+	dp IS_A delta_pressure;
+	inlet.p + dp = outlet.p;
+	
+	outlet_is IS_A stream_state;
+	outlet_is.cd, outlet.cd ARE_THE_SAME;
+	outlet_is.p, outlet.p ARE_THE_SAME;
+	outlet_is.s, inlet.s ARE_THE_SAME;
+
+	eta_eq:eta * (inlet.h - outlet_is.h) = (inlet.h - outlet.h);
+	
+	(* work done on the environment, will be positive *)
+	Wdot IS_A energy_rate;
+	Wedot_eq:Wdot = mdot * w;
+
+	w IS_A positive_specific_work;
+	w_eq:w = inlet.h - outlet.h;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+	RUN outlet_is.default_self;
+END default_self;
+END turbine_simple;
+
+(*------------------------------------------------------------------------------
+  BOILER COMPONENT
+*)
+
+(*
+	simple model assumes no pressure drop, but heating losses due to
+	flue gas temperature
+*)
+MODEL boiler_simple REFINES stream_equipment;
+	NOTES
+		'block' SELF {Simple boiler model}
+	END NOTES;
+
+	(*Parameter Definitions*)
+	inlet_pressure "param: Inlet Steam Node Pressure" ALIASES inlet.p;	
+	inlet_specific_enthalpy "param: Inlet Steam Node Specific Enthalpy" ALIASES inlet.h;
+	outlet_pressure "param: Outlet Steam Node Pressure" ALIASES outlet.p;
+	outlet_specific_enthalpy "param: Outlet Steam Node Specific Enthalpy" ALIASES outlet.h;
+	inlet_temperature "param: Inlet Steam Node temperature" ALIASES inlet.T;
+	outlet_temperature "param: Outlet Steam Node temperature" ALIASES outlet.T;
+	eta "param: Efficiency" IS_A fraction;
+	mass_rate "param: Mass Rate" ALIASES mdot;
+	(*End of Parameter Definitions*)
+	
+	inlet.p, outlet.p ARE_THE_SAME;
+	Qdot_fuel IS_A energy_rate;
+
+	q IS_A specific_energy;
+	q = (outlet.h - inlet.h);
+
+	Qdot IS_A energy_rate;
+	Qdot = mdot * q;
+	Qdot = eta * Qdot_fuel;
+	
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+END default_self;
+END boiler_simple;
+
+(*------------------------------------------------------------------------------
+  CONDENSER COMPONENT
+*)
+
+(*
+	this is really simple (fluid props permitting): just work out the heat
+	that must be expelled to get the water down to a certain state
+*)
+MODEL condenser_simple REFINES stream_equipment;
+	NOTES
+		'block' SELF {Simple condenser model}
+		'inline' inlet {in: yahoooo}
+	END NOTES;
+	
+	(*Parameter Definitions*)
+	inlet_pressure "param: Inlet Steam Node Pressure" ALIASES inlet.p;	
+	inlet_specific_enthalpy "param: Inlet Steam Node Specific Enthalpy" ALIASES inlet.h;
+	outlet_pressure "param: Outlet Steam Node Pressure" ALIASES outlet.p;
+	outlet_specific_enthalpy "param: Outlet Steam Node Specific Enthalpy" ALIASES outlet.h;
+	inlet_temperature "param: Inlet Steam Node temperature" ALIASES inlet.T;
+	outlet_temperature "param: Outlet Steam Node temperature" ALIASES inlet.T;
+	inlet_quality "param: Inlet Steam Node Quality" ALIASES inlet.x;
+	outlet_quality "param: Outlet Steam Node Quality" ALIASES outlet.x;
+	mass_rate "param: Mass Rate" ALIASES mdot;
+	(*End of Parameter Definitions*)
+
+
+	inlet.p, outlet.p ARE_THE_SAME;
+	Qdot IS_A energy_rate;
+
+	cons_en: Qdot = mdot * (outlet.h - inlet.h);
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+END default_self;
+END condenser_simple;
+
+(*
+(*------------------------------------------------------------------------------
+  FEEDWATER HEATER
+*)
+
+(*
+	open heater does not have inlet.mdot==outlet.mdot, so not a refinement
+	of 'stream_equipment'.
+*)
+MODEL heater_open;
+	NOTES
+		'block' SELF {Simple open feedwater heater model}
+	END NOTES;
+
+	inlet "in:" IS_A stream_node;
+	inlet_heat "in:" IS_A stream_node;
+	outlet "out:" IS_A stream_node;
+	inlet_heat.p, inlet.p, outlet.p ARE_THE_SAME;
+	inlet.cd, outlet.cd, inlet_heat.cd ARE_THE_SAME;
+	cd ALIASES inlet.cd;
+
+	(* cons. mass *)
+	cons_mass: inlet.mdot + inlet_heat.mdot = outlet.mdot;
+
+	m_ratio IS_A factor;
+	inlet_heat.mdot = m_ratio * inlet.mdot;
+	(* cons. energy *)
+	cons_en: inlet.h + m_ratio * inlet_heat.h = outlet.h;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN inlet_heat.default_self;
+	RUN outlet.default_self;
+END default_self;
+END heater_open;
+
+MODEL heater_open2;
+	NOTES
+		'block' SELF {Simple open feedwater heater model}
+	END NOTES;
+
+	inlet "in:" IS_A stream_node;
+	inlet_heat1 "in:" IS_A stream_node;
+	inlet_heat2 "in:" IS_A stream_node;
+	outlet "out:" IS_A stream_node;
+	inlet.cd, inlet_heat1.cd, inlet_heat2.cd, outlet.cd ARE_THE_SAME;
+	inlet_heat1.p, inlet_heat2.p, inlet.p, outlet.p ARE_THE_SAME;
+	cd ALIASES inlet.cd;
+
+	(* cons. mass *)
+	cons_mass: inlet.mdot + inlet_heat1.mdot + inlet_heat2.mdot = outlet.mdot;
+
+	(* cons. energy *)
+	cons_en: inlet.mdot * inlet.h + inlet_heat1.mdot * inlet_heat1.h 
+		+ inlet_heat2.mdot * inlet_heat2.h = outlet.mdot * outlet.h;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN inlet_heat.default_self;
+	RUN inlet_heat2.default_self;
+	RUN outlet.default_self;
+END default_self;
+END heater_open2;
+
+MODEL heater_closed;
+	NOTES
+		'block' SELF {Simple open feedwater heater model}
+	END NOTES;
+
+	inlet "in:" IS_A stream_node;
+	inlet_heat "in:" IS_A stream_node;
+	outlet "out:" IS_A stream_node;
+	outlet_heat "out:" IS_A stream_node;
+	
+	inlet.cd, outlet.cd ARE_THE_SAME;
+	inlet_heat.cd, outlet_heat.cd ARE_THE_SAME;
+	cd ALIASES inlet.cd;
+	cd_heat ALIASES inlet_heat.cd;
+
+	inlet_heat.p, outlet_heat.p ARE_THE_SAME;
+	inlet.p, outlet.p ARE_THE_SAME;
+
+	Qdot "heat transferred to main flow stream" IS_A energy_rate;
+	
+	q IS_A specific_energy;
+	Qdot = q * inlet.mdot;
+
+	(* cons. mass *)
+	cons_mass: inlet.mdot = outlet.mdot;
+	cons_mass_heat: inlet_heat.mdot = outlet_heat.mdot;
+
+	m_ratio IS_A factor;
+	inlet_heat.mdot = inlet.mdot * m_ratio;
+
+	(* cons. energy *)
+	cons_en: q + inlet.h = outlet.h;
+	cons_en_heat: m_ratio * inlet_heat.h = m_ratio * outlet_heat.h + q;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN inlet_heat.default_self;
+	RUN outlet.default_self;
+	RUN outlet_heat.default_self;
+END default_self;
+END heater_closed;
+(*------------------------------------------------------------------------------
+  TEE PIECE
+*)
+*)
+(*
+	it's not a car :-)
+*)
+MODEL tee;
+	NOTES
+		'block' SELF {Model of a branching of two flow streams}
+	END NOTES;
+
+	inlet "in:" IS_A stream_node;
+	outlet "out:" IS_A stream_node;
+	outlet_branch "out:" IS_A stream_node;
+
+	inlet.cd, outlet.cd, outlet_branch.cd ARE_THE_SAME;
+	cd ALIASES inlet.cd;
+
+	inlet.p, outlet.p, outlet_branch.p ARE_THE_SAME;
+	inlet.h, outlet.h, outlet_branch.h ARE_THE_SAME;
+
+	(* cons. mass *)
+	cons_mass: inlet.mdot = outlet.mdot + outlet_branch.mdot;
+
+	phi IS_A fraction;
+	phi_eq: phi * inlet.mdot = outlet_branch.mdot;
+
+END tee;

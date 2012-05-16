@@ -3,6 +3,7 @@ from gaphas.item import Line
 import re
 from blockitem import DefaultBlockItem
 from blockline import BlockLine
+from blockstream import BlockStream
 
 UNITS_RE = re.compile("([-+]?(\d+(\.\d*)?|\d*\.d+)([eE][-+]?\d+)?)\s*(.*)");
 
@@ -52,7 +53,15 @@ class BlockCanvas(Canvas):
 			
 			#if bi.blocktype.type is None:
 			#	bi.blocktype.reattach_ascend(ascwrap, notesdb)
-
+	'''		
+	def set_stream(self,stream):
+		items = self.get_all_items()
+		for item in items:
+			if type(item)==DefaultBlockItem:
+				bi = item.blockinstance
+				bi.stream=stream
+	'''
+	
 	def __str__(self):
 		"""
 		Create ASCEND code corresponding to canvas model, return the
@@ -64,15 +73,16 @@ class BlockCanvas(Canvas):
 		# application layer, without using routines from Gaphas...
 			
 		string = '''
-(* automatically generated model from blocklist.py *)
+(* automatically generated model*)
 REQUIRE "{lib_name}";
 
 MODEL canvasmodel;
     {is_a}
+    {streams}
     {are_the_same}
+    {canvas_user_code} 
 METHODS
 METHOD canvas_user_code;
-    {canvas_user_code} 
 END canvas_user_code;
 METHOD parameter_code;
     {parameter_code} 
@@ -83,7 +93,9 @@ METHOD on_load;
 END on_load;
 END canvasmodel;
 '''
-		replacement_fields = {'lib_name':str(self.model_library),'is_a':'','are_the_same':'','canvas_user_code':'','parameter_code':'','block_user_code':''}
+		replacement_fields = {'lib_name':str(self.model_library),'is_a':'','are_the_same':'',
+		                      'canvas_user_code':'','parameter_code':'','block_user_code':''
+		                      ,'streams':''}
 	
 		items = self.get_all_items()
 	
@@ -94,21 +106,22 @@ END canvasmodel;
 				specify = filter(lambda param:bi.params[param].value != None,bi.params)
 				fix = filter(lambda param:bi.params[param].fix == True,bi.params)
 				specify = filter(lambda x:not (x in fix),specify)
-				specify = map(lambda param:'\t{0}.{1}:={2};\n'.format(bi.name,param,bi.params[param].value),specify)
-				fix = map(lambda param:'\tFIX {0}.{1};\n\t{0}.{1}:={2}{4}{3}{5};\n'.format(bi.name,param,bi.params[param].value,bi.params[param].units,'{','}'),fix)
+				specify = map(lambda param:'\t{0}.{1}:={2};\n'.
+				              format(bi.name,param,bi.params[param].value),specify)
+				fix = map(lambda param:'\tFIX {0}.{1};\n\t{0}.{1}:={2}{4}{3}{5};\n'.
+				          format(bi.name,param,bi.params[param].value,
+				                 bi.params[param].units,'{','}'),fix)
 				try:
-					replacement_fields['parameter_code']+=reduce(lambda x,y:x+y,specify)
-				except Exception as e:
+					replacement_fields['parameter_code']+=\
+					                  reduce(lambda x,y:x+y,specify)
+				except TypeError:
 					pass
-					##print 'No values to specify: ',e
-					##print 'Continuing...'
 				try:
-					replacement_fields['parameter_code']+=reduce(lambda x,y:x+y,fix)
-				except Exception as e:
+					replacement_fields['parameter_code']+=\
+					                  reduce(lambda x,y:x+y,fix)
+				except TypeError:
 					pass
-					##print 'No values to fix: ',e
-					##print 'Continuing...'
-			
+							
 			if type(item)==BlockLine:
 				replacement_fields['are_the_same']+=str(item.lineinstance)
 		
@@ -116,9 +129,6 @@ END canvasmodel;
 		map(parse,items)
 		
 		replacement_fields['canvas_user_code'] = self.user_code
-		
-		##s +="\nQdot_loss ALIASES condenser_simple1.Qdot;\n T_H ALIASES boiler_simple1.outlet.T;\n T_C ALIASES condenser_simple1.outlet.T; \neta IS_A fraction; \neta * (boiler_simple1.Qdot_fuel - pump_simple1.Wdot) = turbine_simple1.Wdot;\neta_carnot IS_A fraction;\neta_carnot = 1 - T_C / T_H;\nx_turb_out ALIASES turbine_simple1.outlet.x;\n\n"
-		
 		return string.format(**replacement_fields)
 
 	def __getstate__(self):
@@ -126,7 +136,6 @@ END canvasmodel;
 		Placeholder for any special pickling stuff that we want to do with
 		our canvas.
 		"""
-		
 		return super(BlockCanvas,self).__getstate__()
 	
 	def __setstate__(self, state):

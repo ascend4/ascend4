@@ -269,6 +269,15 @@ Type::findMember(const SymChar &name){
 	CL = GetChildList(t);
 	pos = ChildPos(CL,name.getInternalType());
 	
+  unsigned long clsize = ChildListLen(CL);
+  
+  if((pos<1) || (pos>clsize))
+  {
+    stringstream ss;
+		ss << "Library::findType: type '" << name << "' not found in library";
+		throw runtime_error(ss.str());
+  }
+	
 	const TypeDescription *t = ChildBaseTypePtr(CL,pos);
 
 	if(t==NULL){
