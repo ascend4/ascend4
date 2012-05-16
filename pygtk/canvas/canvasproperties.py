@@ -54,21 +54,62 @@ class CanvasProperties(object):
 	
 		##Instance Tab##
 		try:
-			self.instance_box = xml.get_widget('instance')
+			self.instance_box = xml.get_widget('instancescrolledwin')
 			self.instance_model = modeltree.TreeView(parent.M)
 			self.instance_box.add(self.instance_model.treeview)
 			self.instance_model.treeview.show()
 		except Exception as e:
-			self.instance_box = xml.get_widget('instance')
+			self.instance_box = xml.get_widget('instancescrolledwin')
 			self.instance_label = gtk.Label()
-			self.instance_box.add(self.instance_label)
+			self.instance_box.add_with_viewport(self.instance_label)
 			self.instance_label.set_text('Instance not Built, Solve the Canvas Model first!')
 			self.instance_label.show()
+		
+		##Stream(s) tab##
+		self.treeview = xml.get_widget('treeview1')
+		self.stream_store = gtk.TreeStore(gobject.TYPE_PYOBJECT,gobject.TYPE_STRING,
+		                                  gobject.TYPE_STRING)
+		for stream in self.parent.ascwrap.streams:
+			row = self.stream_store.append(None,[stream,str(stream),''])
+			for prop in stream.stream_properties:
+				self.stream_store.append(row,
+				                         [stream,
+				                          prop,
+				                          stream.stream_properties[prop]])
+		self.treeview.set_model(self.stream_store)
+		self.draw_stream_view()
 		
 		OK_button = xml.get_widget('ok')
 		OK_button.connect('clicked',self.save_changes)
 		OK_button.grab_default()
 	
+	def draw_stream_view(self):
+		self.name_render = gtk.CellRendererText()
+		self.name_render.set_property('foreground-set',True)
+		self.name_render.set_property('weight-set',True)
+		
+		self.prop_render = gtk.CellRendererText()
+		self.prop_render.set_property('foreground-set',True)
+		self.prop_render.set_property('weight-set',True)
+		self.prop_render.set_property('editable',True)
+		self.prop_render.connect('edited',self.set_stream_prop_callback)
+		
+		self.name_column = gtk.TreeViewColumn('Name',self.name_render,text=1,
+		                                      foreground =4, weight=5)
+		self.prop_column = gtk.TreeViewColumn('Value',self.prop_render,text=2,
+		                                      foreground =4, weight=5)
+		self.treeview.append_column(self.name_column)
+		self.treeview.append_column(self.prop_column)
+		
+	def set_stream_prop_callback(self,combo,path,new_text):
+		iter = self.stream_store.get_iter(path)
+		stream = self.stream_store.get_value(iter,0)
+		prop = self.stream_store.get_value(iter,1)
+		if new_text == str(stream.stream_properties[prop]):
+			return
+		stream.stream_properties[prop]=new_text.split(',')
+		self.stream_store.set_value(iter,2,new_text.split(','))
+			
 	def save_method_buffer(self,textbuffer):
 		print textbuffer.get_modified()
 	

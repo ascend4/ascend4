@@ -71,6 +71,38 @@ class BlockProperties(object):
 			self.general_entry[i].set_editable(False)
 			for port in sorted_ports[i]:
 				self.general_entry[i].set_text(str(sorted_ports[i]))
+
+		#Stream
+		#self.stream = xml.get_widget('comboboxentry1')
+		#self.stream_store = gtk.ListStore(gobject.TYPE_STRING)
+		
+		'''
+		for stream in self.parent.ascwrap.streams:
+			try:
+				self.block.blocktype.type.findMember(stream[0])
+				for sm_type in stream[1]:
+					self.stream_store.append([str(sm_type)])
+			except RuntimeError:
+				print "DEBUG: Stream not found"
+	
+		self.stream.set_model(self.stream_store)
+		self.stream.set_entry_text_column(0)
+		iter = self.stream_store.get_iter_first()
+		
+		
+		#FIXME Does not properly handle all cases, i.e. if there are multiple
+		#stream in one block
+		for stream in self.parent.ascwrap.streams:
+			if self.block.stream in stream[1]: 
+				while True:
+					if self.block.stream == self.stream_store.get_value(iter,0): 
+						break;
+					else:
+						iter = self.stream_store.iter_next(iter)
+						self.stream.set_active_iter(iter)
+						
+		self.stream.connect('changed',self.stream_changed)
+		'''
 		##End of General Tab##
 		
 		##Parameters Tab##
@@ -115,7 +147,7 @@ class BlockProperties(object):
 		except Exception as e:
 			self.instance_box = xml.get_widget('instance')
 			self.instance_label = gtk.Label()
-			self.instance_box.add(self.instance_label)
+			self.instance_box.add_with_viewport(self.instance_label)
 			self.instance_label.set_text('Instance not Built, Solve the Canvas Model first!')
 			self.instance_label.show()
 		##End of Instance Tab##
@@ -190,7 +222,11 @@ class BlockProperties(object):
 		model,iter = self.param_tree_view.view.get_selection().get_selected()
 		path = self.param_tree_view.model.get_path(iter)
 		self.param_tree_view.toggle_callback(path=path,model=model)
-	
+	'''
+	def stream_changed(self,widget):
+		stream = widget.get_active_text()
+		self.parent.view.canvas.set_stream(stream)
+	'''	
 	def run(self):
 		global SAVED_TAB
 		self.dialog.run()
@@ -207,7 +243,7 @@ class displayModel(object):
 	def draw_view(self,model,xml,units):
 		self.view = xml.get_widget('param_tree')
 		self.view.set_model(model)
-		
+		self.view.set_tooltip_column(6)
 		self.model = model
 		#Set the row renderers
 		self.name_render = gtk.CellRendererText()
@@ -305,8 +341,9 @@ class displayModel(object):
 		iter = model.get_iter(path)
 		param = model.get_value(iter,3)
 		valid = False
+		
 		if new_text == '':
-			param.units = param.type.getDimensions().getDefaultUnits().getName()
+			param.units = str(param.type.getDimensions().getDefaultUnits().getName())
 			param.value = None
 			model.set_value(iter,1,new_text)
 			self.toggle_callback(path=path,model=model,fix=False)
@@ -323,7 +360,7 @@ class displayModel(object):
 				param.units = str(_entry.getUnits())
 			else:
 				new_text = str(_entry.getValue()) +' ' + str(param.type.getDimensions().getDefaultUnits().getName())
-				param.units = param.type.getDimensions().getDefaultUnits().getName()
+				param.units = str(param.type.getDimensions().getDefaultUnits().getName())
 				
 			self.toggle_callback(path=path,model=model,fix=True)
 			combo.set_property('text',new_text)
@@ -360,16 +397,17 @@ class paramListStore(object):
 	Fourth Column:   Lock/Unlock Icon Status
 	Fifth Column:    Text Foreground
 	Sixth Column:    Text Weight
+	Seventh Column:  Tootip Description
 	'''
 	def __init__(self,params):
-		self.list_store = gtk.ListStore(gobject.TYPE_STRING,gobject.TYPE_STRING,gtk.gdk.Pixbuf,gobject.TYPE_PYOBJECT,gobject.TYPE_STRING, gobject.TYPE_INT)
+		self.list_store = gtk.ListStore(gobject.TYPE_STRING,gobject.TYPE_STRING,gtk.gdk.Pixbuf,gobject.TYPE_PYOBJECT,gobject.TYPE_STRING, gobject.TYPE_INT,gobject.TYPE_STRING)
 		self.params = params
 		for name in self.params.keys():
 			pi=self.params[name]
 			if self.params[name].fix == True:
-				self.list_store.append([pi.name,pi.getValue(), _iconfixed, pi, _colorfixed, _weightfixed])
+				self.list_store.append([pi.name,pi.getValue(), _iconfixed, pi, _colorfixed, _weightfixed,pi.get_description()])
 			else:
-				self.list_store.append([pi.name,pi.getValue(), _iconfree, pi, _colorfree, _weightfree])
+				self.list_store.append([pi.name,pi.getValue(), _iconfree, pi, _colorfree, _weightfree,pi.get_description()])
 	def get_model(self):
 		if self.list_store:
 			return self.list_store

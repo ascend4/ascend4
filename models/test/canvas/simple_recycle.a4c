@@ -1,0 +1,203 @@
+REQUIRE "atoms.a4l";
+
+MODEL mixture;
+  components IS_A set OF symbol_constant;
+  y[components] IS_A fraction;
+  SUM[y[i] | i IN components] = 1.0;
+
+METHODS
+METHOD default_self;
+END default_self;
+
+METHOD specify;
+  FIX y[components];
+  FREE y[CHOICE[components]];
+END specify;
+END mixture;
+
+MODEL stream;
+  NOTES
+		'stream' SELF {Basic Fluid Stream}
+	END NOTES;
+	
+  components "param: set of stream components" IS_A set OF symbol_constant;
+  (*components :== ['NH3','N2','H2'];*)
+	state IS_A mixture;
+  Ftot,f[components]  IS_A molar_rate;
+	components, state.components ARE_THE_SAME;
+	FOR i IN components CREATE
+	  f_def[i]: f[i] = Ftot*state.y[i];
+	END FOR;
+
+METHODS
+METHOD default_self;
+END default_self;
+
+METHOD seqmod;
+RUN state.specify;
+FREE state.y[components];
+END seqmod;
+
+METHOD specify;
+  RUN seqmod;
+  FIX f[components];
+END specify;
+
+METHOD scale;
+  FOR i IN components DO
+ 	  f[i].nominal := f[i] + 0.1{mol/s};
+	END FOR;
+	Ftot.nominal := Ftot + 0.1{mol/s};
+END scale;
+END stream;
+
+MODEL mixer;
+  NOTES
+		'block' SELF {Mixer Unit}
+  END NOTES;
+  
+	feed1 "in: feed1",feed2 "in: feed2", out "out: outlet" IS_A stream;
+
+	feed1.components,feed2.components,out.components ARE_THE_SAME;
+
+	FOR i IN out.components CREATE
+	  cmb[i]: out.f[i] = feed1.f[i]+feed2.f[i];
+	END FOR;
+	
+METHODS
+METHOD default_self;
+END default_self;
+
+METHOD seqmod;
+END seqmod;
+
+METHOD specify;
+  RUN seqmod;
+	RUN feed1.specify;
+	RUN feed2.specify;
+END specify;
+
+METHOD scale;
+  RUN feed[1..n_inputs].scale;
+	RUN out.scale;
+END scale;
+END mixer;
+
+MODEL ammonia_reactor;
+  NOTES
+		'block' SELF {Ammonia reactor unit, requires the stream to have NH3,N2,H2 as components}
+  END NOTES;
+
+	feed "in: feed", out "out: outlet" IS_A stream;
+	feed.components, out.components ARE_THE_SAME;
+
+	turnover "param: Turnover rate" IS_A molar_rate;
+	(*stoich_coef[feed.components] IS_A factor;*)
+	stoich_coef_N2 "param: N2 Stioch Coef",stoich_coef_H2 "param: H2 Stioch Coef",stoich_coef_NH3 "param: NH3 Stioch Coef" IS_A factor;
+	
+	out.f['N2'] = feed.f['N2'] + stoich_coef_N2*turnover;
+	out.f['H2'] = feed.f['H2'] + stoich_coef_H2*turnover;
+	out.f['NH3'] = feed.f['NH3'] + stoich_coef_NH3*turnover;
+	
+METHODS
+METHOD default_self;
+	stoich_coef_NH3:=2;
+	stoich_coef_N2:=-1;
+	stoich_coef_H2:=-3;
+	RUN seqmod;
+END default_self;
+
+METHOD seqmod;
+	FIX turnover;
+	FIX stoich_coef_NH3;
+	FIX stoich_coef_N2;
+	FIX stoich_coef_H2;
+END seqmod;
+
+METHOD specify;
+  RUN seqmod;
+	RUN feed.specify;
+END specify;
+
+METHOD scale;
+	RUN feed.scale;
+	RUN out.scale;
+	turnover.nominal := turnover.nominal+0.0001 {kg_mole/s};
+END scale;
+END ammonia_reactor;
+
+MODEL ammonia_flash;
+  NOTES
+		'block' SELF {Flash unit, seperates NH3 as liquid from stream, requires stream to have NH3,N2,H2 as components}
+  END NOTES;
+
+  feed "in: feed",vap "out: vapor out",liq "out: liquid out" IS_A stream;
+
+	feed.components,vap.components,liq.components ARE_THE_SAME;
+
+	alpha_N2"param: N2 relative volatility",alpha_H2"param: H2 relative volatility",alpha_NH3"param: NH3 relative volatility" IS_A factor;
+	ave_alpha "param: " IS_A factor;
+	
+	vap_to_feed_ratio	"param: Vapor to Feed ratio" IS_A fraction;
+
+	vap_to_feed_ratio*feed.Ftot = vap.Ftot;
+
+  vap.state.y['N2']*ave_alpha = alpha_N2*liq.state.y['N2'];
+  vap.state.y['H2']*ave_alpha = alpha_H2*liq.state.y['H2'];
+  vap.state.y['NH3']*ave_alpha = alpha_NH3*liq.state.y['NH3'];
+  
+	FOR i IN feed.components CREATE
+		cmb[i]: feed.f[i] = vap.f[i] + liq.f[i];
+	END FOR;
+
+METHODS
+METHOD default_self;
+  alpha_NH3:=1;
+	alpha_N2:=10;
+	alpha_H2:=12;
+	vap_to_feed_ratio := 0.9;
+	RUN seqmod;
+END default_self;
+
+METHOD seqmod;
+	FIX alpha_NH3;
+	FIX alpha_H2;
+  FIX alpha_N2;
+	FIX vap_to_feed_ratio;
+END seqmod;
+
+METHOD specify;
+	RUN seqmod;
+	RUN feed.specify;
+END specify;
+END ammonia_flash;
+
+MODEL splitter;
+  NOTES
+		'block' SELF {Splitter, splits feed into two stream according to split fraction}
+  END NOTES;
+
+	feed "in: ", out1 "out: ", out2 "out: " IS_A stream;
+	split "param: split fraction" IS_A fraction;
+
+	feed.components, out1.components, out2.components ARE_THE_SAME;
+
+	feed.state,	out1.state, out2.state ARE_THE_SAME;
+
+  out1.Ftot = split*feed.Ftot;
+  out2.Ftot = (1-split)*feed.Ftot;
+  
+METHODS
+METHOD default_self;
+  RUN seqmod;
+END default_self;
+
+METHOD seqmod;
+	FIX split[1..2];
+END seqmod;
+
+METHOD specify;
+	RUN seqmod;
+  RUN feed.specify;
+END specify;
+END splitter;

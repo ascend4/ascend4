@@ -29,6 +29,7 @@ END mymodel5;
 
 MODEL mymodel6 REFINES mymodel5;
 	myvar6 ALIASES myvar5;
+	myvar7 IS_A mymodel1;
 END mymodel6;
 
 (*CASE 2: Test for Prammetric Models*)

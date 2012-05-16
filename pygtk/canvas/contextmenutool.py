@@ -8,6 +8,8 @@ import blockproperties
 import canvasproperties
 import undo
 
+import ascpy
+
 class ContextMenuTool(Tool):
 	"""
 	Context menu for blocks and connectors on the canvas, intended to be
@@ -47,6 +49,10 @@ class ContextMenuTool(Tool):
 		menublockparams.connect("activate",self.blockproperties, window, context, context.view.hovered_item, 1)
 		menu.add(menublockparams)
 		
+		menudefault = gtk.MenuItem("_Set Default Values")
+		menudefault.connect("activate",self.defaultvalues,window ,context,context.view.hovered_item)
+		menu.add(menudefault)
+		
 		#menublockmethod = gtk.MenuItem("_Custom Method(s)")
 		#menublockmethod.connect("activate",self.blockproperties, window, context, context.view.hovered_item, 2)
 		#menu.add(menublockmethod)
@@ -54,7 +60,11 @@ class ContextMenuTool(Tool):
 		menublockinstance = gtk.MenuItem("_Instance")
 		menublockinstance.connect("activate",self.blockproperties, window, context, context.view.hovered_item, 3)
 		menu.add(menublockinstance)
-
+		'''
+		menublockstreams = gtk.MenuItem("_Streams")
+		menublockstreams.connect("activate",self.setstream, window, context, context.view.hovered_item)
+		menu.add(menublockstreams)
+	        '''
 		#menuinfo = gtk.MenuItem("_Info",True)
 		#menuinfo.connect("activate",self.info,window,context,context.view.hovered_item)	
 		#menu.add(menuinfo)
@@ -73,6 +83,8 @@ class ContextMenuTool(Tool):
 			menublockinstance.set_sensitive(False)
 			#menublockmethod.set_sensitive(False)
 			menublockparams.set_sensitive(False)
+			menudefault.set_sensitive(False)
+			'''menublockstreams.set_sensitive(False)'''
 
 			
 		if not hasattr(context.view.hovered_item,'blockinstance'):
@@ -136,3 +148,30 @@ class ContextMenuTool(Tool):
 		
 	def canvasproperties(self, widget, window, context):
 		canvasproperties.CanvasProperties(window).run()
+	'''
+	def setstream(self, widget, window, context, item):
+		print window.ascwrap.streams
+	'''
+	def defaultvalues(self,widget,window,context,item):
+		print widget,window,context,item.blockinstance
+		
+		model = str(self.view.canvas)
+		#print model
+		self.view.canvas.saved_model = model
+		self.view.canvas.saved_data = {}
+	
+		window.ascwrap.library.loadString(model,"canvasmodel")
+		t = window.ascwrap.library.findType(str(item.blockinstance.blocktype.type.getName()));
+		try:
+			m =t.getMethod('default_self');
+		except:
+			return
+		i = t.getSimulation('sim',False);
+		i.build()
+		i.run(m);
+		fv = i.getFixedVariables();
+		for i in fv:
+			for param in item.blockinstance.params:
+				if param == i.getName():
+					item.blockinstance.params[param].value = i.getValue();
+					item.blockinstance.params[param].fix = True

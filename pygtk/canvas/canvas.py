@@ -7,7 +7,7 @@ import gtk
 
 os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))
 
-DEFAULT_LIBRARY = 'rankine_canvas.a4c'
+DEFAULT_LIBRARY = 'rankine_streams.a4c'
 
 #Remove this sometime
 DEFAULT_CANVAS_MODEL_LIBRARY = os.path.join('..','..','models','test','canvas')

@@ -459,6 +459,31 @@ static void test_badassign(void){
 }
 
 
+static void test_type_info(void){
+	struct module_t *m;
+	int status;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	
+	/* load the file */
+	m = Asc_OpenModule("test/canvas/simple_recycle.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	/* parse it */
+	CU_ASSERT(0 == zz_parse());
+
+	/* find the model */	
+	struct TypeDescription *T;
+	T = FindType(AddSymbol("ammonia_flash"));
+	
+	CU_ASSERT(T != NULL);
+
+	ChildListPtr CL;
+	CL = GetChildList(T);
+
+	WriteChildList(ASCERR,CL);
+}
 
 
 /*===========================================================================*/
@@ -477,7 +502,8 @@ static void test_badassign(void){
 	T(initialize) \
 	T(stop) \
 	T(stoponfailedassert) \
-	T(badassign)
+	T(badassign) \
+	T(type_info)
 
 REGISTER_TESTS_SIMPLE(compiler_basics, TESTS)
 

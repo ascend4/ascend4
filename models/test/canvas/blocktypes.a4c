@@ -105,6 +105,14 @@ MODEL lots_of_params REFINES equipment;
 		aaabbbbccccceeeeffff "param: Some parameter with a silly long name that I can never remember and quite a long description too" IS_A energy_rate;
 		cp "param: heat cap" IS_A specific_heat_capacity;
 		cp2 "param: another heat capacity" IS_A specific_heat_capacity;
+		V=V1+V2;
+METHODS
+METHOD default_self;
+FIX V1;
+V1 := 128{m^3};
+FIX V2;
+V2 := 256{m^3};
+END default_self;
 END lots_of_params;
 
 (*
