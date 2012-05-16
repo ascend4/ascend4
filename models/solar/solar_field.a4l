@@ -177,6 +177,8 @@ METHODS
 	METHOD on_load;
 		RUN specify;
 		RUN values;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
 	END on_load;	
 END parabolic_trough;
 
