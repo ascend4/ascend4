@@ -483,6 +483,8 @@ static void test_type_info(void){
 	CL = GetChildList(T);
 
 	WriteChildList(ASCERR,CL);
+
+	Asc_CompilerDestroy();
 }
 
 
