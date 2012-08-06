@@ -28,13 +28,19 @@ srcs = coresrcs + fprops_env['fluids']
 fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
 
 
-lib = fprops_env.SharedLibrary("helmholtz"
+lib1 = fprops_env.SharedLibrary("helmholtz"
 	,['asc_helmholtz.c'] + fprops_env['shobjs']
 	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 	,SHLIBPREFIX = env['EXTLIB_PREFIX']
 )
 
-env['extfns'] += [lib]
+lib2 = fprops_env.SharedLibrary("heatex_pinch"
+	,['asc_heatex_pinch.c'] + fprops_env['shobjs']
+	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+	,SHLIBPREFIX = env['EXTLIB_PREFIX']
+)
+
+env['extfns'] += [lib1,lib2]
 
 if env['WITH_PYTHON']:
 	fprops_env.SConscript('python/SConscript',['fprops_env'])

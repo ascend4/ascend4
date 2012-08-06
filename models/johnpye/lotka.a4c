@@ -8,22 +8,20 @@ REQUIRE "atoms.a4l";
 	http://www.ento.vt.edu/~sharov/PopEcol/lec10/lotka.html
 *)
 MODEL lotka;
-
-	R IS_A factor; (* rabbits *)
-	F IS_A factor; (* foxes *)
+	t IS_A time;
+	R "rabbit population" IS_A factor;
+	F "fox population" IS_A factor;
 	
 	dR_dt IS_A rate;
 	dF_dt IS_A rate;
 
-	r IS_A rate; (* growth rate of rabbits in absence of foxes *) 
-	a IS_A rate; (* efficiency of turning hunted rabbits into new foxes*)
-	b IS_A rate; (* production rate of predators per prey eaten *)
-	m IS_A rate; (* natural fox mortality rate *)
+	r "growth rate of rabbits in absence of foxes" IS_A rate;
+	a "fraction of rabbits killed per fox per time" IS_A rate;
+	b "production rate of predators per prey eaten" IS_A rate;
+	m "natural fox mortality rate" IS_A rate; 
 	
-	dR_dt = r*R - a*R*F;
-	dF_dt = b*R*F - m*F;
-	
-	t IS_A time;	
+	dR_dt =  r*R - a*R*F;
+	dF_dt = -m*F + b*R*F ;
 METHODS
 
 METHOD on_load;
@@ -46,17 +44,17 @@ METHOD specify;
 END specify;
 
 METHOD values;
-	r	:= 0.04 {1/s};
-	a	:= 0.0005 {1/s};
-	b	:= 0.1*0.0005 {1/s};
-	m	:= 0.2 {1/s};
+	r	:= 0.1 {1/s};
+	a	:= 0.01 {1/s};
+	b	:= 0.1 * a;
+	m	:= 0.05 {1/s};
 	t   := 0{s};
 END values;
 
 METHOD set_obs;
 	t.obs_id :=1;
-	R.obs_id :=2;
-	F.obs_id :=3;
+	R.obs_id :=3;
+	F.obs_id :=4;
 END set_obs;
 
 METHOD set_ode; (* this is where the current implementation sux *)
