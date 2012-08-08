@@ -95,7 +95,7 @@ extern
 ASC_EXPORT int heatex_pinch_register(){
 	int result = 0;
 
-	ERROR_REPORTER_HERE(ASC_USER_WARNING,"FPROPS is still EXPERIMENTAL. Use with caution.\n");
+	ERROR_REPORTER_HERE(ASC_USER_WARNING,"HEATEX is still EXPERIMENTAL.\n");
 
 	result += CreateUserFunctionBlackBox("heatex_DT_phmphmQ"
 		,heatex_prepare
@@ -213,13 +213,16 @@ int heatex_calc(struct BBoxInterp *bbox,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
-	CALCPREPARE(7,5);
+	CALCPREPARE(7,1);
 
 	StreamData cold = {inputs[0],inputs[1],inputs[2]};
 	StreamData hot = {inputs[3],inputs[4],inputs[5]};
 	double Q = inputs[6];
 	double DT_min = DBL_MAX;
 	int i, n = heatex_data->n;
+
+	CONSOLE_DEBUG("hot: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",hot.p/1e5, hot.h/1e3, hot.mdot);
+	CONSOLE_DEBUG("cold: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",cold.p/1e5, cold.h/1e3, cold.mdot);
 	
 	double Th,Tc,rhoh,rhoc;
 	/* loop from i=0 (cold inlet) to i=n (cold outlet) */
@@ -236,6 +239,8 @@ int heatex_calc(struct BBoxInterp *bbox,
 		double DT = Th - Tc;
 		if(DT<DT_min)DT_min = DT;
 	}
+
+	CONSOLE_DEBUG("DT = %f K",DT_min);
 
 	/* non-saturated */
 	outputs[0] = DT_min;
