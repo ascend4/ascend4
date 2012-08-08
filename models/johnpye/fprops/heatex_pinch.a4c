@@ -1,5 +1,7 @@
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 IMPORT "johnpye/fprops/heatex_pinch";
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/fprops/regenerator_plot";
 
 MODEL heatex_pinch_data;
 	component IS_A symbol_constant;
@@ -29,7 +31,7 @@ MODEL heatex_pinch REFINES stream_equipment;
 	outlet_hot.h = inlet_hot.h - Qdot/inlet_hot.mdot;
 
 	pinch_ext: heatex_DT_phmphmQ(
-		inlet_hot.p, inlet_hot.h, inlet_hot.mdot, inlet.p, inlet.h, inlet.mdot,Qdot  : INPUT;
+		inlet.p, inlet.h, inlet.mdot, inlet_hot.p, inlet_hot.h, inlet_hot.mdot, Qdot  : INPUT;
 		DT_pinch : OUTPUT;
 		hxd : DATA
 	);
@@ -43,14 +45,14 @@ END heatex_pinch;
 MODEL heatex_pinch_test REFINES heatex_pinch;
 	inlet.cd.component :== 'carbondioxide';
 	inlet_hot.cd.component :== 'carbondioxide';
-	n :== 20;
+	n :== 8;
 METHODS
 METHOD on_load;
 	RUN heatex_pinch::default_self;
 	FIX inlet.p := 200 {bar};
 	FIX inlet_hot.p := 74 {bar};
-	FIX inlet_hot.T := 100 {K} + 273.15{K};
-	FIX inlet.T := 31 {K};
+	FIX inlet_hot.T := 100 {K} + 273.15 {K};
+	FIX inlet.T := 31 {K} + 273.15 {K};
 	FIX mdot_hot := 1.1 {kg/s};
 	FIX mdot := 0.81 {kg/s};
 	FIX DT_pinch := 10 {K};
