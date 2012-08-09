@@ -392,13 +392,16 @@ MODEL steam_state;
 
 	phirdeltadelta_r3[range_r3] IS_A factor;
 	FOR i IN range_r3 CREATE
-		phirdeltadelta_r3[i] = 
+	bugrel[i]:	phirdeltadelta_r3[i] = 
 			n[i]* tau^t[i] * exp( r3_b1[i] ) * (
                     - 2 * alpha[i] * delta^d[i]
     (* >>>>>>>>> *) + 4 * alpha[i]^2 * delta^d[i] * d1^2 (* <<<<<<<<<<<<<<< BUG IS HERE! *)
                     - 4 * d[i] * alpha[i] * delta^(d[i]-1) * d1
                     + d[i] * (d[i]-1) * delta^(d[i]-2) 
                 );
+	bugout2[i], bugout3[i] IS_A solver_var;
+	bugrel2[i]: bugout2[i] = 4 * alpha[i]^2 * delta^d[i] * d1^2;
+	bugrel3[i]: bugout3[i] = 4 * alpha[i]*alpha[i] * delta^d[i] * d1^2;
 	END FOR;
 
 	phirdeltadelta_r4[range_r4] IS_A factor;
