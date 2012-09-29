@@ -4,6 +4,12 @@ IMPORT "sensitivity/solve";
 (*
 	Model of 60% NaNO3 + 40% KNO3 as specified in Sandia National
 	Laboratories document SAND2001-2100 rev 0.
+
+	http://prod.sandia.gov/techlib/access-control.cgi/2001/012100.pdf
+
+	The source data is density and specific heat capacity as functions of
+	temperature, with no pressure dependence specified. Enthalpy is calculated
+	by simple integration integ(cp dT) as a secondary expression.
 *)
 MODEL moltensalt_state;
 	T IS_A temperature;
