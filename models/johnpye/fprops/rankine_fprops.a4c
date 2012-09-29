@@ -318,7 +318,7 @@ MODEL boiler_simple REFINES stream_equipment;
 	q = (outlet.h - inlet.h);
 
 	Qdot IS_A energy_rate;
-	Qdot = mdot * q;
+	heateqn: Qdot = mdot * q;
 
 	eta IS_A fraction;
 	Qdot = eta * Qdot_fuel;
