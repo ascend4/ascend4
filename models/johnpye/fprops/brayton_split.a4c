@@ -1,0 +1,241 @@
+(*	ASCEND modelling environment
+	Copyright (C) 2007, 2008, 2009, 2010 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)(*
+	Split CO2 Brayton cycle models
+
+	Author: Rachel Hogan, John Pye
+*)
+
+(* re-use the existing Rankine cycle models as basis for new stuff *)
+REQUIRE "johnpye/fprops/brayton_fprops.a4c";
+
+(*------------------------------------------------------------------------------
+  SPLIT CYCLE
+*)
+
+(*
+	Joiner model, to allow easy flowsheet tearing from methods.
+*)
+MODEL joiner (* does NOT REFINE stream_equiment, since that merges mdots *);
+	inlet "in: inlet steam stream" IS_A stream_node;
+	outlet "out: outlet steam stream" IS_A stream_node;
+	inlet.cd, outlet.cd ARE_THE_SAME;
+	eq1: inlet.mdot = outlet.mdot;
+	eq2: inlet.p = outlet.p;
+	eq3: inlet.h = outlet.h;
+METHODS
+METHOD tear;
+	eq1.included := FALSE;
+	eq2.included := FALSE;
+	eq3.included := FALSE;
+END tear;
+METHOD join;
+	eq1.included := TRUE;
+	eq2.included := TRUE;
+	eq3.included := TRUE;
+END join;
+END joiner;	
+
+(*
+	simple split brayton cycle
+*)
+MODEL brayton_split_common;
+	BO IS_A boiler_simple;
+	TU IS_A turbine_simple;
+	DI IS_A condenser_simple;
+	HEH IS_A regenerator;
+	HEL IS_A regenerator;
+	SP IS_A tee;
+	ME IS_A merge;
+	CO1 IS_A pump_simple;
+	CO2 IS_A pump_simple;
+	cd ALIASES BO.cd;
+	
+	JO[1..3] IS_A joiner; (* replace with [1..3] *)
+
+	BO.outlet, TU.inlet ARE_THE_SAME;
+	TU.outlet, HEH.inlet_hot ARE_THE_SAME;
+	(* first tear *)
+	HEH.outlet_hot, JO[1].inlet ARE_THE_SAME;
+	JO[1].outlet, HEL.inlet_hot ARE_THE_SAME;
+	(*second tear*)
+	HEL.outlet_hot, JO[2].inlet ARE_THE_SAME;
+	JO[2].outlet, SP.inlet ARE_THE_SAME;
+	SP.outlet, CO1.inlet ARE_THE_SAME;
+	CO1.outlet, ME.inlet ARE_THE_SAME;
+	SP.outlet_branch, DI.inlet ARE_THE_SAME;
+	DI.outlet, CO2.inlet ARE_THE_SAME;
+	CO2.outlet, HEL.inlet ARE_THE_SAME;
+	HEL.outlet, ME.inlet_branch ARE_THE_SAME;
+	ME.outlet, HEH.inlet ARE_THE_SAME;
+	(*third tear*)
+	HEH.outlet, JO[3].inlet ARE_THE_SAME;
+	JO[3].outlet, BO.inlet ARE_THE_SAME;
+	
+	Wdot IS_A energy_rate;
+	Wdot = CO1.Wdot + CO2.Wdot + TU.Wdot;
+	
+	Qdot_loss ALIASES DI.Qdot;
+	T_H ALIASES BO.outlet.T;
+	T_C ALIASES DI.outlet.T;
+	
+	eta IS_A fraction;
+	eta * (BO.Qdot) = Wdot;
+	
+	eta_carnot IS_A fraction;
+	eta_carnot = 1 - T_C / T_H;
+
+	Qdot_H IS_A energy_rate;
+	Qdot_H = BO.Qdot;
+	
+	Qdot IS_A energy_rate;
+	Qdot = BO.Qdot + DI.Qdot;
+	
+	DE_cycle IS_A energy_rate;
+	DE_cycle = Qdot-Wdot;
+
+	r_bw IS_A factor;
+	r_bw = -(CO1.Wdot + CO2.Wdot) / TU.Wdot;
+
+	mdot ALIASES TU.mdot;
+	x_turb_out ALIASES TU.outlet.x;
+	
+	exergy_in_HEH IS_A energy_rate;
+	exergy_in_HEH = HEH.mdot * ((HEH.outlet.h - HEH.inlet.h)-295.*(HEH.outlet.s - HEH.inlet.s));
+	
+	exergy_out_HEH IS_A energy_rate;
+	exergy_out_HEH = HEH.mdot * ((HEH.outlet_hot.h - HEH.inlet_hot.h)-295.*(HEH.outlet_hot.s - HEH.inlet_hot.s));
+		
+	exergy_in_HEL IS_A energy_rate;
+	exergy_in_HEL = HEL.mdot * ((HEL.outlet.h - HEL.inlet.h)-295.*(HEL.outlet.s - HEL.inlet.s));
+	
+	exergy_out_HEL IS_A energy_rate;
+	exergy_out_HEL = HEL.mdot * ((HEL.outlet_hot.h - HEL.inlet_hot.h)-295.*(HEL.outlet_hot.s - HEL.inlet_hot.s));
+
+	exergy_HEH IS_A energy_rate;
+	problem1: exergy_HEH = - exergy_in_HEH - exergy_out_HEH;
+	
+	exergy_TU IS_A energy_rate;
+	exergy_TU = TU.mdot * 295 * (TU.outlet.s - TU.inlet.s);
+	
+	exergy_CO1 IS_A energy_rate;
+	exergy_CO1 = CO1.mdot * 295 * ( CO1.outlet.s - CO2.inlet.s);
+	
+	exergy_CO2 IS_A energy_rate;
+	exergy_CO2 = CO2.mdot * 295 * ( CO2.outlet.s - CO2.inlet.s);
+	
+	exergy_DI IS_A energy_rate;
+	exergy_DI = DI.mdot * 295 * (DI.outlet.s - DI.inlet.s);
+	
+	exergy_BO IS_A energy_rate;
+	exergy_BO = BO.mdot * 295 * (BO.outlet.s - BO.inlet.s);
+
+(*	ME.inlet.T, ME.inlet_branch.T ARE_THE_SAME;*)
+
+METHODS
+METHOD on_load;
+	FIX CO1.eta, CO2.eta, TU.eta;
+	CO1.eta := 0.8;
+	CO2.eta := 0.8;
+	TU.eta := 0.85;
+	FIX DI.inlet.T, TU.inlet.T;
+	DI.inlet.T := 300 {K};
+	TU.inlet.T := 1300 {K};
+	FIX CO1.r, CO2.r;
+	CO1.r := 8;
+	CO2.r := 8;
+	FIX CO1.inlet.p;
+	CO1.inlet.p := 1 {bar};
+	FIX CO1.inlet.mdot;
+	CO1.inlet.mdot := 1 {kg/s};
+	FIX BO.eta;
+	BO.eta := 1;
+END on_load;
+METHOD default_self;
+	RUN BO.default_self;
+	RUN TU.default_self;
+	RUN HEH.default_self;
+	RUN HEL.default_self;
+	RUN DI.default_self;
+	RUN CO1.default_self;
+	RUN CO2.default_self;
+END default_self;
+METHOD cycle_plot;
+	EXTERNAL cycle_plot_brayton_split(SELF);
+END cycle_plot;
+END brayton_split_common;
+	
+
+MODEL brayton_split_co2 REFINES brayton_split_common;
+	cd.component :== 'carbondioxide';
+	HEL.n :== 8;
+	HEH.n :== 8;
+	heatex_temp_eq: CO1.outlet.T = HEH.inlet.T;
+METHODS
+METHOD on_load;
+	ME.cons_mass.included := FALSE;
+	RUN ClearAll;
+	(*FIX TU.mdot := 1.8 {kg/s};*)
+	FIX TU.inlet.p := 20. {MPa};
+	FIX TU.inlet.T := 600 {K} + 273.15 {K};
+	FIX TU.outlet.p := 7.38 {MPa};
+	FIX TU.eta := 0.85;
+	(*FIX HEH.epsilon := 0.8;	
+	FIX HEL.epsilon := 0.6;	*)
+	FIX HEH.DT_pinch := 12 {K};	
+	FIX HEL.DT_pinch := 12 {K};
+	FIX DI.outlet.T := 295. {K};
+	FIX CO2.eta := 0.8;
+	FIX CO1.eta := 0.8;
+	FIX BO.eta; BO.eta := 1.0;
+
+	(* with HEL.outlet_hot.T specified, we get a nice solution, but we find
+	that we can FREE that temperature after solution has completed, and then re-
+	included heatex_temp_eq and the system still solves and is square... is
+	is there a missing equation to allow this temperature to be uniquely
+	defined?? *)
+	FIX mdot := 1.0 {kg/s};
+	FIX HEL.outlet_hot.T := 350 {K};
+	heatex_temp_eq.included := FALSE;
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 400;
+END on_load;
+METHOD tear;
+	RUN JO[1].tear;
+	RUN JO[2].tear;
+	RUN JO[3].tear;
+	RUN on_load;
+END tear;
+METHOD join;
+	RUN JO[1].join;
+	RUN JO[2].join;
+	RUN JO[3].join;
+	RUN on_load;
+END join;
+METHOD default_self;
+	RUN brayton_split::default_self;
+	(*BO.outlet.h := 350 {kJ/kg}; (* guess *)
+	TU.outlet.h := 1000 {kJ/kg}; (* guess *)
+	DI.outlet.h := 350 {kJ/kg};
+	DI.outlet.p := 60 {bar};
+	DI.outlet.p.lower_bound := 5.2 {bar};*)
+END default_self;
+END brayton_split_co2;
+
