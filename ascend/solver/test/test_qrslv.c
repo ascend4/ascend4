@@ -44,7 +44,7 @@
 #include <test/common.h>
 
 /*
-	Test solving a simple IPOPT model
+	Test solving a simple QRSlv model
 */
 static void test_qrslv(const char *filenamestem, int simplify){
 
@@ -130,9 +130,6 @@ static void test_qrslv(const char *filenamestem, int simplify){
 	Asc_CompilerDestroy();
 }
 
-/*===========================================================================*/
-/* Registration information */
-
 static void test_bug513_simplify(void){
 	test_qrslv("bug513",1);
 }
@@ -141,9 +138,100 @@ static void test_bug513_no_simplify(void){
 	test_qrslv("bug513",0);
 }
 
+
+/* test for mysterious crash during solution (64-bit) which also results in 
+side-effect of FIXed values being changed by the solver (32-bit)! */
+
+static void test_bug564(void){
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv"));
+	char *lib = Asc_GetEnv(ASC_ENV_LIBRARY);
+	CONSOLE_DEBUG("%s = %s\n",ASC_ENV_LIBRARY,lib);
+	ASC_FREE(lib);
+
+	package_load("qrslv",NULL);
+
+	/* load the file */
+	const char *path = "models/johnpye/fprops/brayton_split.a4c";
+	{
+		int status;
+		Asc_OpenModule(path,&status);
+		CU_ASSERT(status == 0);
+		if(status){
+			Asc_CompilerDestroy();
+			CU_FAIL_FATAL(failed to load module);
+		}
+	}
+
+	/* parse it */
+	CU_ASSERT(0 == zz_parse());
+
+	/* find the model */
+	const char *simtype = "brayton_split_co2";
+	CU_ASSERT(FindType(AddSymbol(simtype))!=NULL);
+
+	/* instantiate it */
+	struct Instance *siminst = SimsCreateInstance(AddSymbol(simtype), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst!=NULL);
+
+    CONSOLE_DEBUG("RUNNING ON_LOAD");
+
+	/** Call on_load */
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe==Proc_all_ok);
+
+	/* assign solver */
+	const char *solvername = "QRSlv";
+	int index = slv_lookup_client(solvername);
+	CU_ASSERT_FATAL(index != -1);
+
+	slv_system_t sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+
+	CU_ASSERT_FATAL(slv_select_solver(sys,index));
+	CONSOLE_DEBUG("Assigned solver '%s'...",solvername);
+
+	CU_ASSERT_FATAL(0 == slv_presolve(sys));
+
+	slv_status_t status;
+	slv_get_status(sys, &status);
+	CU_ASSERT_FATAL(status.ready_to_solve);
+
+	slv_solve(sys);
+
+	slv_get_status(sys, &status);
+	CU_ASSERT(status.ok);
+
+	CONSOLE_DEBUG("Destroying system...");
+	if(sys)system_destroy(sys);
+	system_free_reused_mem();
+
+	/* run 'self_test' method */
+	CONSOLE_DEBUG("Running self-tests");
+	name = CreateIdName(AddSymbol("self_test"));
+	pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe==Proc_all_ok);
+
+	/* destroy all that stuff */
+	CONSOLE_DEBUG("Destroying instance tree");
+	CU_ASSERT(siminst != NULL);
+
+	solver_destroy_engines();
+	sim_destroy(siminst);
+	Asc_CompilerDestroy();
+
+}
+
+/*===========================================================================*/
+/* Registration information */
+
 #define TESTS1(T,X) \
 	T(bug513_no_simplify) \
-	X T(bug513_simplify)
+	X T(bug513_simplify) \
+	X T(bug564)
 
 #define X
 #define TESTS(T) TESTS1(T,X)
