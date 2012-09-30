@@ -27,5 +27,10 @@ METHOD on_load;
 	FIX BO.inlet_salt.p := 1 {bar};
 	FIX BO.mdot_salt := 1 {kg/s};
 END on_load;
+METHOD self_test;
+	ASSERT BO.inlet_salt.T == 565 {K} + 263.15 {K};
+	ASSERT BO.mdot_salt == 1 {kg/s};
+	ASSERT BO.inlet_salt.p == 1 {bar};
+END self_test;
 END brayton_split_salt;
 

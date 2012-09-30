@@ -1,7 +1,7 @@
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 IMPORT "johnpye/fprops/heatex_pinch";
-IMPORT "johnpye/extpy/extpy";
-IMPORT "johnpye/fprops/regenerator_plot";
+(*IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/fprops/regenerator_plot";*)
 
 MODEL heatex_pinch_data;
 	component IS_A symbol_constant;

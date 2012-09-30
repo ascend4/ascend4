@@ -35,6 +35,7 @@
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/parentchild.h>
 #include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/childio.h>
 
 #include <ascend/compiler/initialize.h>
 
@@ -136,10 +137,10 @@ static void test_instantiate_string(void){
 #endif
 	/* CONSOLE_DEBUG("MODEL TEXT:\n%s",model); */
 
-	struct module_t *m;
+	//struct module_t *m;
 	int status;
 	
-	m = Asc_OpenStringModule(model, &status, ""/* name prefix*/);
+	/*m =*/ Asc_OpenStringModule(model, &status, ""/* name prefix*/);
 	CU_ASSERT_FATAL(status==0); /* if successfully created */
 
 	status = zz_parse();
@@ -266,14 +267,14 @@ static void test_parse_file(void){
 
 static void test_instantiate_file(void){
 
-	struct module_t *m;
+	/*struct module_t *m;*/
 	int status;
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 	
 	/* load the file */
-	m = Asc_OpenModule("johnpye/testlog10.a4c",&status);
+	/*m = */Asc_OpenModule("johnpye/testlog10.a4c",&status);
 	CU_ASSERT(status == 0);
 
 	/* parse it */
@@ -303,7 +304,7 @@ static void test_instantiate_file(void){
 }
 
 static void test_initialize(void){
-	struct module_t *m;
+	/*struct module_t *m;*/
 	int status;
 
 	Asc_CompilerInit(1);
@@ -311,7 +312,7 @@ static void test_initialize(void){
 	
 	/* load the file */
 #define TESTFILE "testinit"
-	m = Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
+	/*m =*/ Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
 	CU_ASSERT(status == 0);
 
 	/* parse it */
@@ -347,7 +348,7 @@ static void test_initialize(void){
 }
 
 static void test_stop(void){
-	struct module_t *m;
+	/*struct module_t *m;*/
 	int status;
 
 	Asc_CompilerInit(1);
@@ -355,7 +356,7 @@ static void test_stop(void){
 	
 	/* load the file */
 #define TESTFILE "stop"
-	m = Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
+	/*m =*/ Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
 	CU_ASSERT(status == 0);
 
 	/* parse it */
@@ -385,7 +386,7 @@ static void test_stop(void){
 
 
 static void test_stoponfailedassert(void){
-	struct module_t *m;
+	/*struct module_t *m;*/
 	int status;
 
 	Asc_CompilerInit(1);
@@ -393,7 +394,7 @@ static void test_stoponfailedassert(void){
 	
 	/* load the file */
 #define TESTFILE "stoponerror"
-	m = Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
+	/*m =*/ Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
 	CU_ASSERT(status == 0);
 
 	/* parse it */
@@ -421,7 +422,7 @@ static void test_stoponfailedassert(void){
 	This is a test to check ascend bug #87.
 */
 static void test_badassign(void){
-	struct module_t *m;
+	/*struct module_t *m;*/
 	int status;
 
 	Asc_CompilerInit(1);
@@ -429,7 +430,7 @@ static void test_badassign(void){
 	
 	/* load the file */
 #define TESTFILE "badassign"
-	m = Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
+	/*m =*/ Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
 	CU_ASSERT(status == 0);
 
 	/* parse it */
@@ -460,14 +461,14 @@ static void test_badassign(void){
 
 
 static void test_type_info(void){
-	struct module_t *m;
+	/*struct module_t *m;*/
 	int status;
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 	
 	/* load the file */
-	m = Asc_OpenModule("test/canvas/simple_recycle.a4c",&status);
+	/*m =*/ Asc_OpenModule("test/canvas/simple_recycle.a4c",&status);
 	CU_ASSERT(status == 0);
 
 	/* parse it */

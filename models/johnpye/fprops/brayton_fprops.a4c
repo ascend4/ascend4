@@ -28,8 +28,8 @@ REQUIRE "johnpye/airprops.a4c";
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 REQUIRE "johnpye/fprops/heatex_pinch.a4c";
 
-IMPORT "johnpye/extpy/extpy";
-IMPORT "johnpye/fprops/cycle_plot_rachel";
+(*IMPORT "johnpye/extpy/extpy";*)
+(*IMPORT "johnpye/fprops/cycle_plot_rachel";*)
 
 (*------------------------------------------------------------------------------
   MERGE PIECE
