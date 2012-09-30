@@ -128,9 +128,10 @@ int heatex_prepare(struct BBoxInterp *bbox,
 	struct Instance *compinst[2], *ninst;
 	const char *comp[2];
 
+	N_SYM = AddSymbol("n");
+	/* we look through these 0,1 below */
 	heatex_symbols[0] = AddSymbol("component");
 	heatex_symbols[1] = AddSymbol("component_hot");
-	N_SYM = AddSymbol("n");
 
 	ninst = ChildByChar(data,N_SYM);
 	if(!ninst){
