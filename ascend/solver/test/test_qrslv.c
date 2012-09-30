@@ -176,9 +176,9 @@ static void test_bug564(void){
 	struct Instance *siminst = SimsCreateInstance(AddSymbol(simtype), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(siminst!=NULL);
 
-
 #if 0
     CONSOLE_DEBUG("RUNNING ON_LOAD");
+
 	/** Call on_load */
 	struct Name *name = CreateIdName(AddSymbol("on_load"));
 	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
