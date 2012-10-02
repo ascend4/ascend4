@@ -35,14 +35,10 @@
 #include <ascend/utilities/error.h>
 
 #include "cmpfunc.h"
-#include "find.h"
 #include "forvars.h"
 #include "instance_types.h"
-#include "instance_enum.h"
 #include "instmacro.h"
 #include "instquery.h"
-#include "statement.h"
-#include "stattypes.h"
 #include "stdio.h"
 #include "symtab.h"
 #include "visitinst.h"
@@ -83,8 +79,8 @@ static struct gl_list_t *FindInstsNonFlat(
 	on list (else returned list will be NULL) and return the collected instances.
 	DS: it returns a flattened list of the instances
 */
-static struct gl_list_t *FindInsts(
-	struct Instance *inst, CONST struct VariableList *list, enum find_errors *err
+struct gl_list_t *FindInsts(
+	struct Instance *inst, const struct VariableList *list, enum find_errors *err
 ){
   struct gl_list_t *result,*temp;
   unsigned c,len;

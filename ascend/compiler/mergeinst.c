@@ -543,7 +543,7 @@ void MergeParents(struct Instance *i1, struct Instance *i2)
 }
 
 static
-int InClique(struct Instance *i1, struct Instance *i2)
+int mergeinst_InClique(struct Instance *i1, struct Instance *i2)
 {
   register struct Instance *ptr;
   ptr = i1;
@@ -558,7 +558,7 @@ int InClique(struct Instance *i1, struct Instance *i2)
 void MergeCliques(struct Instance *i1, struct Instance *i2)
 {
   register struct Instance *tmp;
-  if (!InClique(i1,i2)){
+  if (!mergeinst_InClique(i1,i2)){
     tmp = NextCliqueMember(i1);
     SetNextCliqueMember(i1,NextCliqueMember(i2));
     SetNextCliqueMember(i2,tmp);

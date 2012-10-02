@@ -30,6 +30,7 @@
 #include "statement.h"
 #include "stattypes.h"
 #include "instance_enum.h" 
+#include "find.h"
 #include <stdio.h>
 
 /**
@@ -224,4 +225,9 @@ extern int getOdeType(struct Instance *model,struct Instance *inst);
 	FIXME It will be removed eventually
 */
 void TestingRoutine(struct Instance* model);
+
+/* NOT EXTERN: internal use only in libascend */
+struct gl_list_t *FindInsts(
+	struct Instance *inst, const struct VariableList *list, enum find_errors *err
+);
 
