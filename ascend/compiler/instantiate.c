@@ -233,9 +233,6 @@ static int DigestArguments(struct Instance *,
                     struct StatementList *, struct Statement *);
 static int DeriveSetType(CONST struct Set *, struct Instance *,CONST unsigned int);
 
-static struct gl_list_t *FindInsts(struct Instance *, CONST struct VariableList *,
-                            enum find_errors *);
-
 static void MissingInsts(struct Instance *, CONST struct VariableList *,int);
 static struct gl_list_t *FindArgInsts(struct Instance *, struct Set *,
                                enum find_errors *);
@@ -4260,33 +4257,6 @@ struct gl_list_t *FindArgInsts(struct Instance *parent,
   return result;
 }
 
-/**
-	Find instances: Make sure at least one thing is found for each name item
-	on list (else returned list will be NULL) and return the collected instances.
-*/
-static
-struct gl_list_t *FindInsts(struct Instance *inst,
-                            CONST struct VariableList *list,
-                            enum find_errors *err)
-{
-  struct gl_list_t *result,*temp;
-  unsigned c,len;
-  result = gl_create(7L);
-  while(list!=NULL){
-    temp = FindInstances(inst,NamePointer(list),err);
-    if (temp==NULL){
-      gl_destroy(result);
-      return NULL;
-    }
-    len = gl_length(temp);
-    for(c=1;c<=len;c++) {
-      gl_append_ptr(result,gl_fetch(temp,c));
-    }
-    gl_destroy(temp);
-    list = NextVariableNode(list);
-  }
-  return result;
-}
 
 /**
    Missing instances: makes sure at least one thing is found for
