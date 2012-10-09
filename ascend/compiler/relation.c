@@ -3729,9 +3729,9 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
 /* After the instance list has been updated, we must recollect
    the input argument indices into the relation varlist.
 */
-static
-void UpdateInputArgsList(struct Instance *relinst, struct relation *rel)
-{
+static void UpdateInputArgsList(struct Instance *relinst
+	, struct relation *rel, char destroy
+){
   struct ExternalFunc *efunc;
   unsigned long n_input_args,c,pos,len;
   unsigned long *inputArgs;
@@ -3765,7 +3765,7 @@ void UpdateInputArgsList(struct Instance *relinst, struct relation *rel)
     pos = gl_search(varlist,var,(CmpFunc)CmpP);
     if(pos){
       inputArgs[argloc] = pos;
-    }else{
+    }else if(!destroy){
 	  char *context = WriteInstanceNameString(relinst,NULL);
       FPRINTF(ASCERR,"Screwed up merge of input variable %d in %s\n", argloc, context);
 	  ascfree(context);
@@ -3812,8 +3812,6 @@ void ModifyBlackBoxRelPointers(struct Instance *relinst,
 	struct gl_list_t *branch, *extvars;
 	struct Instance *arg;
 
-	UNUSED_PARAMETER(relinst);
-
   /* FIXME: kirk never dealt with varlist rel->properly under merge. ModifyBlackBoxRelPointers
 this gets used in interactive merge/refinement.
 This should have just gone away perhaps now that we don't store
@@ -3840,7 +3838,7 @@ instance pointers anywhere except the varlist. maybe we must reindex,though.
     }
   }
   /* fix up inputs lookup table. */
-  UpdateInputArgsList(relinst,rel);
+  UpdateInputArgsList(relinst,rel,(new==NULL));
   /* still need to fix up lhsvar index. */
 }
 
