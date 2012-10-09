@@ -70,8 +70,8 @@
 #include "tmpnum.h"
 #include "mathinst.h"
 
-static const char panic_msg[]="Incorrect type passed";
-#define PANIC_INCORRECT_TYPE Asc_Panic(2,__FUNCTION__,panic_msg);
+static const char panic_msg[]="Incorrect type '%s' passed";
+#define PANIC_INCORRECT_TYPE(i) ASC_PANIC(panic_msg,instance_typename(i))
 
 enum Expr_enum GetInstanceRelationType(CONST struct Instance *i)
 {
@@ -79,7 +79,7 @@ enum Expr_enum GetInstanceRelationType(CONST struct Instance *i)
   if (i->t == REL_INST) {
     return RELN_INST(i)->type; /* the implementation kind */
   }else{
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -89,7 +89,7 @@ CONST struct relation *GetInstanceRelationOnly(CONST struct Instance *i)
   if (i->t == REL_INST) {
     return RELN_INST(i)->ptr;
   }else{
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -101,7 +101,7 @@ CONST struct relation *GetInstanceRelation(CONST struct Instance *i,
     *type = RELN_INST(i)->type;
     return RELN_INST(i)->ptr;
   }else{
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -113,7 +113,7 @@ struct relation *GetInstanceRelToModify(struct Instance *i,
     *type = RELN_INST(i)->type;
     return RELN_INST(i)->ptr;
   }else{
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
 
   }
 }
@@ -125,7 +125,7 @@ CONST struct logrelation *GetInstanceLogRel(CONST struct Instance *i)
   if (i->t == LREL_INST) {
     return LRELN_INST(i)->ptr;
   }else{
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
 
   }
 }
@@ -136,7 +136,7 @@ struct logrelation *GetInstanceLogRelToModify(struct Instance *i)
   if (i->t == LREL_INST) {
     return LRELN_INST(i)->ptr;
   }else{
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
 
   }
 }
@@ -147,7 +147,7 @@ CONST struct logrelation *GetInstanceLogRelOnly(CONST struct Instance *i)
   if (InstanceKind(i) == LREL_INST) {
     return LRELN_INST(i)->ptr;
   }else{
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
 
   }
 }
@@ -218,7 +218,7 @@ struct gl_list_t *GetInstanceWhenVars(CONST struct Instance *i)
   if (i->t == WHEN_INST) {
     return W_INST(i)->bvar;
   }else{
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
 
   }
 }
@@ -229,8 +229,7 @@ struct gl_list_t *GetInstanceWhenCases(CONST struct Instance *i)
   if (i->t == WHEN_INST) {
     return W_INST(i)->cases;
   }else{
-    PANIC_INCORRECT_TYPE;
-
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -259,7 +258,7 @@ struct gl_list_t *GetInstanceWhens(CONST struct Instance *i)
     case WHEN_INST:
       return W_INST(i)->whens;
     default:
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -269,7 +268,7 @@ void SetWhenVarList(struct Instance *i,struct gl_list_t *whenvars)
   if (i->t == WHEN_INST) {
     W_INST(i)->bvar = whenvars;
   }else{
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -279,7 +278,7 @@ void SetWhenCases(struct Instance *i,struct gl_list_t *whencases)
   if (i->t == WHEN_INST) {
     W_INST(i)->cases = whencases;
   }else{
-     PANIC_INCORRECT_TYPE;
+     PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -304,7 +303,7 @@ void SetInstanceRelation(struct Instance *i, struct relation *rel,
       Asc_Panic(2, __FUNCTION__, "Attempt to reassign RelationPointer.");
     }
   }else{
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -317,7 +316,7 @@ void SetInstanceLogRel(struct Instance *i, struct logrelation *lrel){
       Asc_Panic(2, __FUNCTION__, "Attempted reassignment to logrel ptr");
     }
   }else{
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -381,7 +380,7 @@ void AddRelation(struct Instance *i, struct Instance *reln){
     }
     break;
   default:
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -401,7 +400,7 @@ void RemoveRelation(struct Instance *i, struct Instance *reln)
     }
     break;
   default:
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -433,7 +432,7 @@ unsigned long LogRelationsCount(CONST struct Instance *i)
       return 0;
     }
   default:
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -462,7 +461,7 @@ struct Instance *LogRelationsForInstance(CONST struct Instance *i,
       ASC_PANIC("c out of bounds in LogRelationsForInstance.\n");
     }
   default:
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
   exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
 }
@@ -504,7 +503,7 @@ void AddLogRel(struct Instance *i, struct Instance *lreln)
     }
     break;
   default:
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -545,7 +544,7 @@ void RemoveLogRel(struct Instance *i, struct Instance *lreln)
     }
     break;
   default:
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -619,7 +618,7 @@ unsigned long WhensCount(struct Instance *i)
       return 0;
     }
   default:
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -691,7 +690,7 @@ struct Instance *WhensForInstance(struct Instance *i,
       ASC_PANIC("c out of bounds in WhensForInstance.\n");
     }
   default:
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
   exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
 }
@@ -784,7 +783,7 @@ void AddWhen(struct Instance *i, struct Instance *when)
       gl_append_ptr(W_INST(i)->whens,(VOIDPTR)when);
     break;
   default:
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 
@@ -855,7 +854,7 @@ void RemoveWhen(struct Instance *i, struct Instance *when)
     if (c>0) gl_delete(W_INST(i)->whens,c,0);
     break;
   default:
-    PANIC_INCORRECT_TYPE;
+    PANIC_INCORRECT_TYPE(i);
   }
 }
 

@@ -106,7 +106,7 @@ CONST char *instance_typename(CONST struct Instance *inst){
 		}
 	}
 	CONSOLE_DEBUG("No match");
-	Asc_Panic(2,__FUNCTION__,"Invalid instance type (inst_t '%d' not found in list)",(int)inst->t);
+	ASC_PANIC("Invalid instance type (inst_t '%d' not found in list)",(int)inst->t);
 }
 
 /*------------------------------------------------------------------------------
@@ -847,7 +847,7 @@ void WriteTypeOrValue(FILE *f, CONST struct Instance *i)
 		SCP(GetName(GetArrayBaseType(InstanceTypeDesc(i)))));
     break;
   default:
-    ASC_PANIC("Unknown instance type in WriteTypeOrValue.\n");
+    ASC_PANIC("Unknown instance type in WriteTypeOrValue.");
     break;
   }
 }
@@ -1085,7 +1085,7 @@ void WriteInstance(FILE *f, CONST struct Instance *i)
     FPRINTF(f,"GlobalDummyInstance\n");
     break;
   default:
-    ASC_PANIC("Unknown instance type in WriteInstance.\n");
+    ASC_PANIC("Unknown instance type in WriteInstance.");
   }
 }
 
@@ -1515,7 +1515,7 @@ void Save__ComplexInsts(FILE *fp, struct Instance *inst)
     FPRINTF(fp,"UNSELECTED;\n");
     break;
   default:
-    ASC_PANIC("Unknown instance kind in Save__ComplexInsts.\n");
+    ASC_PANIC("Unknown instance kind in Save__ComplexInsts.");
     break;
   }
 }
