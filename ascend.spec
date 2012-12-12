@@ -31,14 +31,14 @@ BuildRequires: swig >= 1.3.24
 %if 0%{?fedora_version}
 BuildRequires: gcc-gfortran gcc-c++ >= 4
 BuildRequires: blas-devel
-BuildRequires: sundials-devel >= 2.2.0
+BuildRequires: sundials-devel >= 2.4.0
 BuildRequires: python-devel >= 2.4
 BuildRequires: tk-devel, tk, tcl-devel, tcl, tktable
 BuildRequires: graphviz-devel
 %else
 %if 0%{?suse_version}
 BuildRequires: gcc-fortran gcc-c++
-BuildRequires: sundials-devel >= 2.2.0
+BuildRequires: sundials-devel >= 2.4.0
 BuildRequires: blas
 BuildRequires: python-devel >= 2.4
 BuildRequires: tk, tk-devel, tcl, tcl-devel, tktable
@@ -51,7 +51,7 @@ BuildRequires: xorg-x11-libX11-devel
 %else
 %if 0%{?mandriva_version}
 BuildRequires: gcc-gfortran gcc-c++
-BuildRequires: sundials-devel >= 2.2.0
+BuildRequires: sundials-devel >= 2.4.0
 BuildRequires: blas-devel python-devel tk tcl
 %else
 # xubuntu version is the fallback...

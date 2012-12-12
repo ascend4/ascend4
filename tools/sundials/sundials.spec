@@ -5,7 +5,7 @@
 
 Summary:	Suite of nonlinear solvers
 Name:		sundials
-Version:	2.5.0
+Version:	2.4.0
 Release:	0%{?dist}
 License:	BSD-style
 Group:		System/Libraries
