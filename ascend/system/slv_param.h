@@ -16,9 +16,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @defgroup system_slvparam System Solver Parameters
 	Solver parameters interface
 	@seepage solver-parameters
@@ -222,7 +220,7 @@ typedef struct{
 	const int guipagenum;
 	const char *description;
 } SlvParameterInitMeta;
-	
+
 typedef struct{
 	const SlvParameterInitMeta meta;
 	const int val;
@@ -255,7 +253,7 @@ ASC_DLLSPEC int slv_param_bool(struct slv_parameters_structure *p, const int ind
 ASC_DLLSPEC int slv_param_real(struct slv_parameters_structure *p, const int index, const SlvParameterInitReal);
 ASC_DLLSPEC int slv_param_char(struct slv_parameters_structure *p, const int index, const SlvParameterInitChar, char *options[]);
 
-/* macros to access values from your solver code 
+/* macros to access values from your solver code
 
 	Usage example:
 		if(SLV_PARAM_BOOL(p,IDA_PARAM_AUTODIFF)){

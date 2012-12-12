@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//**
 	@file
 	Data Reader implementation for the ESP-r/EnergyPlus weather data format.
@@ -125,7 +123,7 @@ N25, \field Ceiling Height
 N26, \field Present Weather Observation
 N27, \field Present Weather Codes
 N28, \field Precipitable Water
-\units mm 
+\units mm
 \missing 999
 N29, \field Aerosol Optical Depth
 \units thousandths
@@ -180,7 +178,7 @@ static const EePoint ee_missing = {
 	, 99.9
 	, 999999.
 	, 999.
-	, 9999.	
+	, 9999.
 	, 9999.
 	, 999.
 	, 999.
@@ -203,7 +201,7 @@ struct EeLocation{
 	double latitude; // in degrees, + is north
 	double longitude; // in degrees, + is east
 	double timezone; // in hours, rel to GMT
-	double elevation; // in metres, -1000.0 to 9999.9 m.	
+	double elevation; // in metres, -1000.0 to 9999.9 m.
 };
 
 int parseLOCATION(parse *p, struct EeLocation *loc){
@@ -252,7 +250,7 @@ int datareader_ee_header(DataReader *d){
 	parse *p = DATA(d)->p;
 
 	if(!(
-		parseLOCATION(p,&loc) 
+		parseLOCATION(p,&loc)
 		&& parseIgnoreLineWith(p,"DESIGN CONDITIONS")
 		&& parseIgnoreLineWith(p,"TYPICAL/EXTREME PERIODS")
 		&& parseIgnoreLineWith(p,"GROUND TEMPERATURES")
@@ -302,13 +300,13 @@ int datareader_ee_eof(DataReader *d){
 				, (int)DATA(d)->foundmissing.T, (int)DATA(d)->foundmissing.DNI
 			);
 		}
-		
+
 		return 1;
 	}
 
 	return 0;
 }
-	
+
 /**
 	Read a line of data and store in d.
 	@return 0 on success
@@ -367,7 +365,7 @@ int datareader_ee_data(DataReader *d){
 		row.T = 20 + 273.15;
 		DATA(d)->foundmissing.T++;
 	}
-	
+
 	if(pres !=ee_missing.p){
 		row.p = pres;
 	}else{
@@ -413,7 +411,7 @@ int datareader_ee_data(DataReader *d){
 	DATA(d)->rows[d->i] = row;
 
 	//CONSOLE_DEBUG("Read i = %d, t = %f d, T = %.1f°C, rh = %.1f %",d->i,row.t / 3600. / 24., T, row.rh*100);
-	
+
 	d->i++;
 	return 0;
 }

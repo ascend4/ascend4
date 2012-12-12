@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	This file presents a linear solver interface that can be utilised by the
 	IDA integrator from the SUNDIALS suite by LLNL. The linear solver uses the
@@ -23,7 +21,7 @@
 
 	EXPERIMENTAL -- INCOMPLETE -- UNDER DEVELOPMENT
 
-	This file and idalinear.c are modelled fairly closely on ida_dense.c from 
+	This file and idalinear.c are modelled fairly closely on ida_dense.c from
 	the SUNDIALS distribution, which maps out the expected use of ida_lmem
 	data structure, etc.
 
@@ -66,7 +64,7 @@ typedef int IntegratorSparseJacFn(long int Neq, realtype tt
 */
 int IDAASCEND(void *ida_mem, long size);
 
-/**	
+/**
 	Register a (sparse mtx) Jacobian evaluation function with the linear solver (required)
 */
 int IDAASCENDSetJacFn(void *ida_mem, IntegratorSparseJacFn *jacfn, void *jac_data);

@@ -1,4 +1,4 @@
-/* 
+/*
  *  Ascend Instance Tree TmpNum functions.
  *  by Tom Epperly & Kirk Abbott
  *  8/16/89
@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -54,7 +52,7 @@
 */
 
 extern unsigned long GetTmpNum(CONST struct Instance *i);
-/**< 
+/**<
  *  Return the tmp number, or LONG_MAX if i is NULL,
  *  or 0 if i is subatomic, or exits if i enum is wierd.
  */
@@ -65,7 +63,7 @@ extern void SetTmpNum(struct Instance *i, unsigned long int n);
  */
 
 extern unsigned long IncrementTmpNum(struct Instance *i);
-/**< 
+/**<
  *  Add 1 to and return the tmp number.
  *  Returns LONG_MAX if i is NULL.
  *  or 0 if i is subatomic, or exits if i enum is wierd.
@@ -73,7 +71,7 @@ extern unsigned long IncrementTmpNum(struct Instance *i);
  */
 
 extern unsigned long DecrementTmpNum(struct Instance *i);
-/**< 
+/**<
  *  Subtract 1 from and return the tmp number.
  *  Returns LONG_MAX if i is NULL
  *  or 0 if i is subatomic, or exits if i enum is wierd.
@@ -81,7 +79,7 @@ extern unsigned long DecrementTmpNum(struct Instance *i);
  */
 
 extern void ZeroTmpNums(struct Instance *i, int order);
-/**< 
+/**<
  *  Does a VisitInstanceTree to set all i->tmp_num = 0;
  *  The visit order really is irrelevant though.
  */

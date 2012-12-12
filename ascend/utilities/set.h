@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	<pre>
 	This module is responsible for primitive manipulation
@@ -149,7 +147,7 @@ ASC_DLLSPEC unsigned int *set_null(unsigned int *set, int n);
 ASC_DLLSPEC void set_change_member(unsigned int *set, int k, boolean value);
 /**<
 	Adds or removes an element from a set.
-	If value==TRUE, then k is added to the set.  Otherwise k 
+	If value==TRUE, then k is added to the set.  Otherwise k
 	is taken out of the set.  It is assumed that 0 <= k < n.
 	set may not be NULL (checked by assertion).
 

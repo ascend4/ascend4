@@ -19,15 +19,13 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
  *  Dynamic String Utilities.
- *  These routines are modifications of TCL code by John Osterhout at 
- *  Berkeley, as allowed by the TCL distribution license.  See dstring.c 
+ *  These routines are modifications of TCL code by John Osterhout at
+ *  Berkeley, as allowed by the TCL distribution license.  See dstring.c
  *  for the details. There are minor differences internally.
  *  <pre>
  *  Requires:
@@ -86,7 +84,7 @@ typedef struct Asc_DString {
  *	Appends more characters to the specified dynamic string.
  *	Length bytes from string (or all of string if length is less
  *	than zero) are added to the current value of the string.  If
- *  string is shorter than length, only the length of string 
+ *  string is shorter than length, only the length of string
  *  characters are appended.  The resulting value of the
  *  dynamic string is always null-terminated.
  *  <p />

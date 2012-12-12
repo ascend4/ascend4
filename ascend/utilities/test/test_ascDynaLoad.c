@@ -16,9 +16,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdio.h>
@@ -89,9 +87,9 @@ static void test_ascDynaLoad(void)
   if (NULL == (file = fopen(shlib_name, "r"))) {  /* make sure we can open the test shared library */
     CU_FAIL("Could not find test shared library.  Aborting test.");
   } else {
-  
+
     fclose(file);
-    
+
     if (0 == Asc_DynamicLoad(shlib_name, NULL)) {  /* shared lib with no init func */
       CU_PASS("Opening of shared library succeeded.");
 
@@ -122,10 +120,10 @@ static void test_ascDynaLoad(void)
     else {
       CU_FAIL("Opening of shared library failed.");
     }
-  
+
     if (-5 == Asc_DynamicLoad(shlib_name, "init")) {  /* shared lib with init func */
       CU_PASS("Opening of shared library succeeded.");
-  
+
       CU_TEST(NULL != (init_func =          (initFunc)Asc_DynamicFunction(shlib_name, "init")));
       CU_TEST(NULL != (isInitialized_func = (isInitializedFunc)Asc_DynamicFunction(shlib_name, "isInitialized")));
       CU_TEST(NULL != (cleanup_func =       (cleanupFunc)Asc_DynamicFunction(shlib_name, "cleanup")));
@@ -150,7 +148,7 @@ static void test_ascDynaLoad(void)
       CU_FAIL("Opening of shared library failed.");
     }
   }
-  
+
   /* test Asc_DynamicVariable(), test Asc_DynamicFunction(), test Asc_DynamicSymbol()
           - normal operation tested in previous tests */
 

@@ -13,9 +13,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//**
 	@file
 	Signal handling protocol definitions for ASCEND.
@@ -30,12 +28,12 @@
 	  - a standard signal handler - Asc_SignalTrap()
 	  - global jmp_buf's for use with Asc_SignalTrap()
 	  - functions for managing nested signal handlers
-	
+
 	The following signal types are currently supported:
 	  - SIGFPE  - floating point exception
 	  - SIGINT  - CTRL-C interactive attention request
 	  - SIGSEGV - segmentation fault
-	
+
 	A simple use of these facilities to trap floating point exceptions
 	might be as follows:
 	<pre>
@@ -59,7 +57,7 @@
 	uses <code>lngjmp</code> and returns to the if statement, and now
 	'setjmp' returns non-zero and the <code>else</code> clause is executed.
 	Finally, the handler is removed and the signal manager cleaned up.<br><br>
-	
+
 	The stack mechanism also allows nested handlers to be registered.  It is
 	important to note that nested handlers for the same signal type cannot
 	both use Asc_SignalTrap() as the handler.  This is because different
@@ -85,14 +83,14 @@
 	   Asc_SignHandlerPop(SIGFPE,Asc_SignalTrap);
 	   Asc_SignalDestroy();
 	</pre>
-	
+
 	Here, exceptions in the sqrt(x) calculation are handled by the standard
 	Asc_SignalTrap(), while the division is handled by my_handler.<br><br>
-	
+
 	Avoid mixing use of the signal manager with direct calls to signal().
 	Once Asc_SignalInit() has been called, use of signal() directly is likely
 	to be lost or to corrupt the managed handlers.<br><br>
-	
+
 	Another warning: setjmp is expensive if called inside a fast loop.
 
 	Requires:
@@ -151,7 +149,7 @@ typedef void SigHandlerFn(int);
 
 #define MAX_TRAP_DEPTH 40L
 /**< The maximum number of traps that can be nested. */
-	
+
 ASC_DLLSPEC JMP_BUF g_fpe_env;   /**< Standard signal jmp_buf - floating point error. */
 ASC_DLLSPEC JMP_BUF g_seg_env;   /**< Standard signal jmp_buf - segmentation fault. */
 ASC_DLLSPEC JMP_BUF g_int_env;   /**< Standard signal jmp_buf - interactive attention (<CTRL>C). */

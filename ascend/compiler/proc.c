@@ -23,10 +23,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "proc.h"
@@ -223,10 +220,10 @@ int CmpProcs(CONST struct InitProcedure *p1, CONST struct InitProcedure *p2)
 
 
 int CompareProcedureLists(struct gl_list_t *pl1, struct gl_list_t *pl2,
-                          unsigned long *n) 
+                          unsigned long *n)
 {
   CONST struct InitProcedure *proc1, *proc2;
-  CONST struct StatementList *sl1, *sl2;  
+  CONST struct StatementList *sl1, *sl2;
   unsigned long c,len, len1, len2, diff;
 
   assert (n != NULL);
@@ -246,10 +243,10 @@ int CompareProcedureLists(struct gl_list_t *pl1, struct gl_list_t *pl2,
   len1 = gl_length(pl1);
   len2 = gl_length(pl2);
 
-  /* 
-   * if len1 and len2 are different from each other , we will return 1, 
-   * but we still need to find the index of the first different procedure. 
-   * So, get the number of elements of the shorthest list and compare 
+  /*
+   * if len1 and len2 are different from each other , we will return 1,
+   * but we still need to find the index of the first different procedure.
+   * So, get the number of elements of the shorthest list and compare
    * that number of procedures in the lists
    */
   if (len1 == len2) {
@@ -265,22 +262,22 @@ int CompareProcedureLists(struct gl_list_t *pl1, struct gl_list_t *pl2,
   /* analyze the list of procedures */
   for(c=1;c<=len;c++){
     proc1 = (struct InitProcedure *)gl_fetch(pl1,c);
-    proc2 = (struct InitProcedure *)gl_fetch(pl2,c);  
+    proc2 = (struct InitProcedure *)gl_fetch(pl2,c);
 
-    /* 
-     * compare names 
-     */ 
+    /*
+     * compare names
+     */
     if (CmpProcs(proc1,proc2)) {
       *n = c;
       return 1;
     }
-    /* 
+    /*
      * compare statement lists
      * if lists are different, diff will contain the index of the first
      * different statement. Use it if necessary
      */
     sl1 = ProcStatementList(proc1);
-    sl2 = ProcStatementList(proc2); 
+    sl2 = ProcStatementList(proc2);
     if (CompareStatementLists(sl1,sl2,&diff)) {
       *n = c;
       return 1;

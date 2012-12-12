@@ -24,10 +24,8 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
@@ -753,7 +751,7 @@ int32 mtx_symbolic_rank( mtx_matrix_t mtx)
 
   if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
 #if MTX_DEBUG
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
 #endif
   }
@@ -779,7 +777,7 @@ boolean mtx_make_col_independent( mtx_matrix_t mtx, int32 col, mtx_range_t *rng)
   }
   if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
 #if MTX_DEBUG
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
 #endif
     if(!mtx_check_matrix(mtx)) return -2;
@@ -1090,7 +1088,7 @@ int32 mtx_transpose(mtx_matrix_t mtx)
 
 #if MTX_DEBUG
   if( !mtx_check_matrix(mtx) ) {
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix given is in error.\n");
     return mtx_NONE; /*ben*/
   }
@@ -1099,7 +1097,7 @@ int32 mtx_transpose(mtx_matrix_t mtx)
     mtx = mtx->master;
 #if MTX_DEBUG
     if( !mtx_check_matrix(mtx) ) {
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix given is in error.\n");
       return mtx_NONE;
     }
@@ -1107,7 +1105,7 @@ int32 mtx_transpose(mtx_matrix_t mtx)
   }
   master = mtx;
   if (master->perm.transpose == mtx_NONE) {
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix given is 0 order.\n");
     return mtx_NONE;
   }
@@ -1162,7 +1160,7 @@ int32 mtx_isa_transpose(mtx_matrix_t mtx)
 {
 #if MTX_DEBUG
   if( !mtx_check_matrix(mtx) ) {
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix given is in error.\n");
     return mtx_NONE; /*ben*/
   }
@@ -1171,7 +1169,7 @@ int32 mtx_isa_transpose(mtx_matrix_t mtx)
     mtx = mtx->master;
 #if MTX_DEBUG
     if( !mtx_check_matrix(mtx) ) {
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix given's master is in error.\n");
       return mtx_NONE;
     }
@@ -1284,7 +1282,7 @@ void mtx_partition( mtx_matrix_t mtx)
   }
   if( !mtx_output_assigned(mtx) ) {
     int mc=mtx_check_matrix(mtx);
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
     if(!mc) return;
   }
@@ -1351,7 +1349,7 @@ void mtx_ut_partition( mtx_matrix_t mtx)
   }
   if( !mtx_output_assigned(mtx) ) {
     int mc=mtx_check_matrix(mtx);
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
     if(!mc) return;
   }
@@ -1362,7 +1360,7 @@ void mtx_ut_partition( mtx_matrix_t mtx)
   vars.done = 0;
   vars.nblocks = 0;
 
-  rng.low = 0;				
+  rng.low = 0;
   rng.high = mtx->data->symbolic_rank-1;
   while( vars.done < vars.vstack ) {
     analyze_col(mtx,vars.done,&vars,&rng);
@@ -1410,7 +1408,7 @@ function matters... */
 void mtx_org_permute(mtx_matrix_t mtx, mtx_region_t *reg)
 {
   if (ISNULL(mtx)) {
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL matrix given.\n");
     return;
   }
@@ -1427,7 +1425,7 @@ void mtx_org_permute(mtx_matrix_t mtx, mtx_region_t *reg)
       /* create sort space */
       top=sort=ASC_NEW_ARRAY(int,len);
       if (ISNULL(sort)) {
-        
+
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory. Not permuted.\n");
         return;
       }
@@ -1455,7 +1453,7 @@ void mtx_org_permute(mtx_matrix_t mtx, mtx_region_t *reg)
     if (len>1) {
       top=sort=ASC_NEW_ARRAY(int,len);
       if (ISNULL(sort)) {
-        
+
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory. Not permuted.\n");
         return;
       }
@@ -1490,7 +1488,7 @@ boolean mtx_check_blocks( mtx_matrix_t mtx)
     mtx = mtx->master;
   }
   if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
     return( FALSE );
   }
@@ -1519,13 +1517,13 @@ boolean mtx_check_blocks( mtx_matrix_t mtx)
 int32 mtx_number_of_blocks( mtx_matrix_t mtx)
 {
    if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
    }
 
 #if MTX_DEBUG
    if( !mtx_check_blocks(mtx) ) {
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid partition.\n");
       return mtx_NONE;
    }
@@ -1541,7 +1539,7 @@ int32 mtx_block( mtx_matrix_t mtx, int32 block_number, mtx_region_t *block)
 
    if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
 #if MTX_DEBUG
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
 #endif
       error=1;
@@ -1549,14 +1547,14 @@ int32 mtx_block( mtx_matrix_t mtx, int32 block_number, mtx_region_t *block)
 
 #if MTX_DEBUG
    if( !mtx_check_blocks(mtx) ) {
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid partition.\n");
    }
 #endif
 
    if( (block_number > mtx->data->nblocks-1) || (block_number<0) ) {
 #if MTX_DEBUG
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Block number doesn't exist.\n");
 #endif
       error=1;
@@ -1581,7 +1579,7 @@ int32 mtx_block_containing_row(mtx_matrix_t mtx, int32 row, mtx_region_t *block)
 
    if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
 #if MTX_DEBUG
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
 #endif
       return 0;
@@ -1589,7 +1587,7 @@ int32 mtx_block_containing_row(mtx_matrix_t mtx, int32 row, mtx_region_t *block)
 
 #if MTX_DEBUG
    if( !mtx_check_blocks(mtx) ) {
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid partition.\n");
    }
 #endif
@@ -1618,7 +1616,7 @@ int32 mtx_block_containing_col(mtx_matrix_t mtx, int32 col, mtx_region_t *block)
 
    if( !mtx_output_assigned(mtx) ) {   /* matrix will be checked */
 #if MTX_DEBUG
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Matrix not output assigned.\n");
 #endif
       return 0;
@@ -1626,7 +1624,7 @@ int32 mtx_block_containing_col(mtx_matrix_t mtx, int32 col, mtx_region_t *block)
 
 #if MTX_DEBUG
    if( !mtx_check_blocks(mtx) ) {
-      
+
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid partition.\n");
    }
 #endif

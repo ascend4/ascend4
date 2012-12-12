@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -193,7 +191,7 @@ extern int CmpWhensF(CONST struct Instance *i1, CONST struct Instance *i2);
 extern int CmpIntIndex(CONST struct ArrayChild *a, CONST struct ArrayChild *b);
 /**<
  *  Compare integer indexes of ArrayChildren a and b.
- *  Both a and b must be non-NULL and are then ASSUMED to be 
+ *  Both a and b must be non-NULL and are then ASSUMED to be
  *  indexed by integer.
  *
  *  This function requires instance_types.h be seen first or it is

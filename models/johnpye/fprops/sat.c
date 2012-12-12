@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	Routines to calculate saturation properties using Helmholtz correlation
 	data. We first include some 'generic' saturation equations that make use
@@ -30,7 +28,7 @@
 
 //#define SAT_DEBUG
 
-#ifdef SAT_DEBUG 
+#ifdef SAT_DEBUG
 # include <assert.h>
 #else
 # define assert(ARGS...)
@@ -154,7 +152,7 @@ double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D){
 	double p_c = fprops_pc(D);
 	double Zc = D->rho_c * D->R * D->T_c / p_c;
 # define N1 -0.1497547
-# define N2 0.6006565 
+# define N2 0.6006565
 # define P1 -19.348354
 # define P2 -41.060325
 # define P3 1.1878726
@@ -163,7 +161,7 @@ double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D){
 	double PPP = Zc / (P1 + P2*Zc*log(Zc) + P3/Zc);
 	fprintf(stderr,"PPP = %f\n",PPP);
 	//PPP = -0.6240188;
-	double NNN = PPP + 1./(N1*D->omega + N2);	
+	double NNN = PPP + 1./(N1*D->omega + N2);
 #else
 /* exact values from Chouaieb for CO2 */
 # define MMM 2.4686277
@@ -307,7 +305,7 @@ int fprops_triple_point(double *p_t_out, double *rhof_t_out, double *rhog_t_out,
 		return 0;
 	}
 }
-	
+
 
 /**
 	Solve saturation properties in terms of pressure.
@@ -334,7 +332,7 @@ int fprops_sat_p(double p, double *Tsat_out, double *rhof_out, double * rhog_out
 		Estimate of saturation temperature using definition	of acentric factor and
 		the assumed p(T) relationship:
 			log10(p)=A + B/T
-		See Reid, Prausnitz and Poling, 4th Ed., section 2.3. 
+		See Reid, Prausnitz and Poling, 4th Ed., section 2.3.
 		*/
 		T1 = d->T_c / (1. - 3./7. / (1.+d->omega) * log10(p / p_c));
 		MSG("Estimated using acentric factor: T = %f",T1);

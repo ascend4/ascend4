@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	Analysis routines for the ASCEND wrapper of the IDA integrator.
 	These functions perform sorting of variables and relations and create
@@ -67,7 +65,7 @@ const var_filter_t integrator_ida_deriv = {
 
 const rel_filter_t integrator_ida_rel = {
 	REL_INCLUDED | REL_EQUALITY | REL_ACTIVE,
-	REL_INCLUDED | REL_EQUALITY | REL_ACTIVE 
+	REL_INCLUDED | REL_EQUALITY | REL_ACTIVE
 };
 
 /**
@@ -105,7 +103,7 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 #ifdef ANALYSE_DEBUG
 	system_var_list_debug(integ->system);
 #endif
-	
+
 	/* add the variables from the derivative chains */
 	for(i=0; i<diffvars->nseqs; ++i){
 		seq = diffvars->seqs[i];
@@ -115,7 +113,7 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 		/* update the var_fixed flag */
 		(void)var_fixed(v);
 		vok = var_apply_filter(v,&integrator_ida_nonderiv);
-		
+
 		if(vok && !var_incident(v)){
 			/* VARMSG("good var '%s' is not incident"); */
 			/* var meets our filter, but perhaps it's not incident? */
@@ -129,11 +127,11 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 				VARMSG("'%s' has a derivative present, so needs to be included in the system");
 				CONSOLE_DEBUG("That var %s active",(var_active(v) ? "is" : "is NOT"));
 				var_set_incident(v,1);
-#else				
+#else
 				return 1;
 #endif
 			}
-		}		
+		}
 
 		if(!vok){
 			/*VARMSG("'%s' fails non-deriv filter");
@@ -151,11 +149,11 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 				/* VARMSG("Derivative '%s' SET ZERO AND INACTIVE"); */
 			}
 			continue;
-		}		
+		}
 
 		/* VARMSG("We will use var '%s'"); */
 		if(seq.n > 2){
-			varname = var_make_name(integ->system,v);				
+			varname = var_make_name(integ->system,v);
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Too-long derivative chain with var '%s'",varname);
 			ASC_FREE(varname);
 			return 2;
@@ -297,7 +295,7 @@ static int integrator_ida_create_lists(IntegratorSystem *integ){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Derivative structure is empty");
 		return 1;
 	}
-	
+
 	/* allocate space (more than enough) */
 	integ->y = ASC_NEW_ARRAY(struct var_variable *,integ->n_y);
 	integ->ydot = ASC_NEW_ARRAY_CLEAR(struct var_variable *,integ->n_y);
@@ -312,7 +310,7 @@ static int integrator_ida_create_lists(IntegratorSystem *integ){
 	/* create the lists y and ydot, ignoring 'bad' vars */
 	for(i=0; i<diffvars->nseqs; ++i){
 		/* CONSOLE_DEBUG("i = %d",i); */
-			
+
 		seq = diffvars->seqs[i];
 		asc_assert(seq.n >= 1);
 		v = seq.vars[0];
@@ -350,7 +348,7 @@ static int integrator_ida_create_lists(IntegratorSystem *integ){
 		integ->y_id[var_sindex(integ->ydot[i]) - integ->n_y] = i;
 		j++;
 	}
-	
+
 	asc_assert(j==integ->n_ydot);
 
 	return 0;
@@ -411,7 +409,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 	if((df_dydp.n_rels == 0) ^ (df_dydp.n_vars == 0)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"df/dyd' is a bit ambiguous");
 	}
-		
+
 	if(dg_dya.n_rels <= 0){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No algebraic equations were found in the DAE system!");
 	}else if(dg_dya.n_rels != dg_dya.n_vars){
@@ -430,7 +428,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 		r = linsolqr_rank(L);
 
 		linsolqr_destroy(L);
-		
+
 		if(r != dg_dya.n_rels){
 			ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Your DAE system has an index problem: the matrix dg/dya is not full rank");
 		}
@@ -480,17 +478,17 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"check_index disabled");
 	return 0;
 #endif
-}	
+}
 
 /*------------------------------------------------------------------------------
   ANALYSIS ROUTINE (new implementation)
 */
 
-/** 
-	Perform additional problem analysis to prepare problem for integration with 
+/**
+	Perform additional problem analysis to prepare problem for integration with
 	IDA.
 
-	We assume that the analyse_generate_diffvars routine has been called, so 
+	We assume that the analyse_generate_diffvars routine has been called, so
 	that we just need to call slv_get_diffvars to access the derivative
 	chains.
 
@@ -499,9 +497,9 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 	See mailing list, ~Jan 2007.
 
 	Note, the stuff for identifying the static and output sub-problems should
-	be part of integrator.c, not this file. We will assume this is handled 
+	be part of integrator.c, not this file. We will assume this is handled
 
-	@return 0 on success 
+	@return 0 on success
 	@see integrator_analyse
 */
 int integrator_ida_analyse(IntegratorSystem *integ){
@@ -623,13 +621,13 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 	slv_block_partition(integ->system);
 	res = integrator_ida_block_check(integ);
 	if(res)return 200 + res;
-	
+
 	/* ...(3) restore as it was, FREE the diffvars */
 	for(i=0;i<integ->n_y;++i){
 		if(integ->ydot[i]){
 			var_set_fixed(integ->y[i],0);
 		}
-	}	
+	}
 #endif
 
 	res = integrator_ida_check_index(integ);
@@ -741,7 +739,7 @@ int integrator_ida_block_check(IntegratorSystem *integ){
 		VAR_ACTIVE | VAR_INCIDENT | VAR_FIXED,
 		VAR_ACTIVE | VAR_INCIDENT | 0
 	};
-			
+
 	nv = slv_get_num_solvers_vars(integ->system);
 	solversvars = slv_get_solvers_var_list(integ->system);
 	CONSOLE_DEBUG("-------------- nv = %d -------------",nv);
@@ -765,7 +763,7 @@ int integrator_ida_block_check(IntegratorSystem *integ){
 		case 2: CONSOLE_DEBUG("System is square"); return 0; /* all OK */
 		case 3: CONSOLE_DEBUG("System is structurally singular"); break;
 		case 4: CONSOLE_DEBUG("System is overspecified"); break;
-		default: 
+		default:
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unrecognised slfDOF_status");
 			return -2;
 	}
@@ -858,10 +856,10 @@ static int integrator_ida_check_diffindex(IntegratorSystem *integ){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"list(s) NULL");
 		return 1;
 	}
-	
+
 	list = slv_get_solvers_var_list(integ->system);
 	n_vars = slv_get_num_solvers_vars(integ->system);
-	
+
 	if(check_dups(integ, list, n_vars,FALSE)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"duplicates or NULLs in solver's var list");
 		return 1;
@@ -937,12 +935,12 @@ static int integrator_ida_check_diffindex(IntegratorSystem *integ){
 		}
 	}
 
-	return 0;		
+	return 0;
 finish:
 	varname = var_make_name(integ->system,v);
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,msg,varname);
 	ASC_FREE(varname);
-	return 1;			
+	return 1;
 }
 
 /**

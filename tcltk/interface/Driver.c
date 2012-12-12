@@ -13,9 +13,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//*
 	by Kirk Abbott and Ben Allan
 	Created: 1/94
@@ -607,7 +605,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 #endif
 
 		distdir = ospath_str(distfp);
-		
+
 #ifdef ASCTK_DEBUG
 		CONSOLE_DEBUG("Setting distdir %s = %s",ASC_ENV_DIST,distdir);
 #endif
@@ -1129,7 +1127,7 @@ static void AscSaveOrgEnv(Tcl_Interp *interp,const char *progname) {
   int i;
   CONST char *value;
   const char *vars[ENVCOUNT] = {
-    ASC_ENV_DIST, ASC_ENV_TK, ASC_ENV_BITMAPS, ASC_ENV_LIBRARY, ASC_ENV_SOLVERS, 
+    ASC_ENV_DIST, ASC_ENV_TK, ASC_ENV_BITMAPS, ASC_ENV_LIBRARY, ASC_ENV_SOLVERS,
     "TK_LIBRARY", "TCL_LIBRARY", "PRINTER"
   };
   Tcl_DString buffer;

@@ -1,7 +1,7 @@
 /*
  *  IPSlv ASCEND Interior Point Method Solver
  *  by Vicente Rico-Ramirez based on QRSlv
- *  Created: 
+ *  Created:
  *  Version: $ $
  *  Version control file: $ $
  *  Date last modified: $ $
@@ -20,10 +20,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <math.h>
@@ -604,14 +601,14 @@ static void calc_comp( slv5_system_t sys )
       FFLUSH(ASCERR);
     }
 #endif
-    if (rel_active(rel) && rel_included (rel) && rel_complementary(rel)) {  
+    if (rel_active(rel) && rel_included (rel) && rel_complementary(rel)) {
 #if DEBUG
       FPRINTF(ASCERR,"Complementary equation in slv5 \n");
 #endif /* DEBUG */
-      comp = comp + 1.0; 
+      comp = comp + 1.0;
     }
   }
- 
+
 #if DEBUG_ITERATION
   FPRINTF(ASCERR," No. of complementary eqns = %g \n",comp);
 #endif /*  DEBUG_ITERATION  */
@@ -694,7 +691,7 @@ static boolean calc_mu( slv5_system_t sys)
       FFLUSH(ASCERR);
     }
 #endif
-    if (rel_complementary(rel) && rel_active(rel)  && rel_included(rel)) { 
+    if (rel_complementary(rel) && rel_active(rel)  && rel_included(rel)) {
       muk = muk + rel_residual(rel);
 #if DEBUG
       FPRINTF(ASCERR,"Complementary equation in calc_mu \n");
@@ -702,7 +699,7 @@ static boolean calc_mu( slv5_system_t sys)
       FPRINTF(ASCERR,"residual vector = %g\n",sys->residuals.vec[row]);
       FPRINTF(ASCERR,"rel_residual = %g \n",rel_residual(rel));
       FPRINTF(ASCERR,"Partial muk is = %g \n",muk);
-#endif /* DEBUG */ 
+#endif /* DEBUG */
     }
   }
 
@@ -778,7 +775,7 @@ static boolean calc_muaff( slv5_system_t sys)
       FFLUSH(ASCERR);
     }
 #endif
-    if (rel_complementary(rel) && rel_active(rel)  && rel_included(rel)) { 
+    if (rel_complementary(rel) && rel_active(rel)  && rel_included(rel)) {
       muaff = muaff + sys->newton_residuals.vec[row];
  #if DEBUG
       FPRINTF(ASCERR,"Complementary equation in calc_muaff \n");
@@ -786,7 +783,7 @@ static boolean calc_muaff( slv5_system_t sys)
       FPRINTF(ASCERR,"residual vector = %g\n",sys->newton_residuals.vec[row]);
       FPRINTF(ASCERR,"rel_residual = %g \n",rel_residual(rel));
       FPRINTF(ASCERR,"Partial muaff is = %g \n",muaff);
-#endif /* DEBUG */ 
+#endif /* DEBUG */
     }
   }
 
@@ -825,7 +822,7 @@ static boolean calc_sigma( slv5_system_t sys)
 #if DEBUG_CENTERING
   FPRINTF(ASCERR,"sigma is = %g \n",sys->sigma);
 #endif /* DEBUG_CENTERING */
-  return(calc_ok); 
+  return(calc_ok);
 }
 
 /*
@@ -877,7 +874,7 @@ static boolean calc_perturbed_residuals( slv5_system_t sys)
     }
 #endif
     sys->perturbed_residuals.vec[row] = relman_eval(rel,&calc_ok,SAFE_CALC);
-    if (rel_complementary(rel) && rel_active(rel)) {  
+    if (rel_complementary(rel) && rel_active(rel)) {
       sys->perturbed_residuals.vec[row] = sys->perturbed_residuals.vec[row] -
 	                                  sys->sigmamu ;
     }
@@ -1891,7 +1888,7 @@ static void calc_step( slv5_system_t sys, int minor)
       vars.alpha2 = 0.0;
       sys->maxstep = 0.0;
       sys->varstep.norm2 = 0.0;
- 
+
 
    } else if( (tot2_norm2>0.0)&&(calc_sqrt_D0(tot2_norm2)<=sys->maxstep) ) {
       /* Attempt step in varstep2 direction */
@@ -1900,7 +1897,7 @@ static void calc_step( slv5_system_t sys, int minor)
       sys->maxstep = calc_sqrt_D0(tot2_norm2);
       sys->varstep.norm2 = calc_sqr_D0(sys->maxstep)*
          sys->varstep2.norm2/tot2_norm2;
- 
+
 
    } else if( (tot2_norm2==0.0 || sys->s.block.current_size==1) &&
              (tot1_norm2 > 0.0) ) {
@@ -1979,11 +1976,11 @@ static void restore_variables( slv5_system_t sys)
 
 /*
  *  Calculates the maximum fraction of the step which can be
- *  taken without making negative the complementary vars.  
+ *  taken without making negative the complementary vars.
  *  It is assumed that the current complementary variable
  *  is positive.  The step must be calculated.
  */
-static real64 factor_for_complementary_vars( slv5_system_t sys, int32 v) 
+static real64 factor_for_complementary_vars( slv5_system_t sys, int32 v)
 {
    real64 factor, minfactor;
    struct var_variable *var;
@@ -1997,7 +1994,7 @@ static real64 factor_for_complementary_vars( slv5_system_t sys, int32 v)
    if (v == 1) {
      step = sys->varstep;
    } else {
-     step = sys->varnewstep;    
+     step = sys->varnewstep;
    }
 
    minfactor = 1.0;
@@ -2013,7 +2010,7 @@ static real64 factor_for_complementary_vars( slv5_system_t sys, int32 v)
          if (factor < 1.0) {
 #if DEBUG_COMPLEMENTARY_VAR
            FPRINTF(ASCERR,"Negative Complementary Variable : \n");
-           print_var_name(ASCERR,sys,var); 
+           print_var_name(ASCERR,sys,var);
            FPRINTF(ASCERR,"\n");
            FPRINTF(ASCERR,"factor = %f \n",factor);
 #endif /* DEBUG_COMPLEMENTARY_VAR */
@@ -2025,7 +2022,7 @@ static real64 factor_for_complementary_vars( slv5_system_t sys, int32 v)
      }
    }
 #if DEBUG_COMPLEMENTARY_VAR
-  FPRINTF(ASCERR,"Minimum factor = %f \n",minfactor); 
+  FPRINTF(ASCERR,"Minimum factor = %f \n",minfactor);
 #endif /* DEBUG_COMPLEMENTARY_VAR */
   return minfactor;
 }
@@ -2051,7 +2048,7 @@ static real64 required_coef_to_stay_inbounds( slv5_system_t sys, int32 v)
    if (v == 1) {
      step = sys->varstep;
    } else {
-     step = sys->varnewstep;    
+     step = sys->varnewstep;
    }
 
    mincoef = 1.0;
@@ -2071,7 +2068,7 @@ static real64 required_coef_to_stay_inbounds( slv5_system_t sys, int32 v)
          mincoef = coef;
    }
 #if DEBUG_COMPLEMENTARY_VAR
-   FPRINTF(ASCERR,"Minimum coefficient to stay in bounds = %f \n",mincoef); 
+   FPRINTF(ASCERR,"Minimum coefficient to stay in bounds = %f \n",mincoef);
 #endif /* DEBUG_COMPLEMENTARY_VAR */
    return(mincoef);
 }
@@ -2102,7 +2099,7 @@ static void apply_newton_step( slv5_system_t sys)
 
    if ((bounds_coef < 1.0) && (factor < bounds_coef)) {
       bounds_coef = factor;
-   } 
+   }
 
    for(col=sys->varnewstep.rng->low; col<=sys->varnewstep.rng->high;col++) {
       struct var_variable *var;
@@ -2139,7 +2136,7 @@ static void apply_newton_step( slv5_system_t sys)
                ++nproj;
             }
           }
-	}  
+	}
       }
       var_set_value(var,val+dx);
    }
@@ -2176,7 +2173,7 @@ static void apply_step( slv5_system_t sys)
    if ((bounds_coef < 1.0) && (factor < bounds_coef)) {
       bounds_coef = factor;
    }
-  
+
    for( col=sys->varstep.rng->low; col <= sys->varstep.rng->high; col++ ) {
       struct var_variable *var;
       real64 dx,val,bnd;
@@ -2766,13 +2763,13 @@ int32 slv5_get_default_parameters(slv_system_t server, SlvClientToken asys,
   SLV_RPARM_MACRO(SING_TOL_PTR,parameters);
 
   slv_define_parm(parameters, real_parm,
-	       "sigmaconst", "sigma (centering parameter)", 
+	       "sigmaconst", "sigma (centering parameter)",
                "sigma (centering parameter)",
 	       U_p_real(val, 0.5),U_p_real(lo, 0.0),U_p_real(hi,1.0),1);
   SLV_RPARM_MACRO(SIGMA_PTR,parameters);
 
  slv_define_parm(parameters, real_parm,
-	       "mumax", "mu maximum (centering parameter)", 
+	       "mumax", "mu maximum (centering parameter)",
                "mu maximum (centering parameter)",
 	       U_p_real(val, 0.9),U_p_real(lo, 0.0),U_p_real(hi,1.0),1);
   SLV_RPARM_MACRO(MUK_PTR,parameters);
@@ -2835,7 +2832,7 @@ int32 slv5_get_default_parameters(slv_system_t server, SlvClientToken asys,
   SLV_IPARM_MACRO(UPDATE_RELNOMS_PTR,parameters);
 
   slv_define_parm(parameters, int_parm,
-	       "itscalelim", "Iteration lim for iterative scale", IEX(14), 
+	       "itscalelim", "Iteration lim for iterative scale", IEX(14),
 	       U_p_int(val, 10),U_p_int(lo,0),U_p_int(hi,20000), 3);
   SLV_IPARM_MACRO(ITSCALELIM_PTR,parameters);
 
@@ -3140,7 +3137,7 @@ static void structural_analysis(slv_system_t server, slv5_system_t sys)
   }
   sys->J.dofdata = slv_get_dofdata(server);
   sys->rank = sys->J.dofdata->structural_rank;
- 
+
   if( !(PARTITION) ) {
     /* maybe we should reorder blocks here? maybe not */
     slv_block_unify(server);
@@ -3595,7 +3592,7 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
     mtx_write_region(ldat,sys->J.mtx,&(sys->J.reg));
     fclose(ldat);
   }
- 
+
   calc_phi(sys);
 
   if (SHOW_LESS_IMPT) {
@@ -3689,13 +3686,13 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
             real64 maxstep_coef;
             real64 denom;
             previous = MIN(sys->phi, oldphi);
-    
- 
+
+
 	      denom = sys->phi - oldphi +
 		sys->maxstep*calc_sqrt_D0(sys->gamma.norm2);
               maxstep_coef = denom > 0.0 ? 0.5*
               sys->maxstep*calc_sqrt_D0(sys->gamma.norm2)/denom : MAX_COEF;
- 
+
             if (maxstep_coef < MIN_COEF) maxstep_coef = MIN_COEF;
             if (maxstep_coef > MAX_COEF) maxstep_coef = MAX_COEF;
             if (SHOW_LESS_IMPT) {
@@ -3788,7 +3785,7 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
       scale_perturbed_system(sys);
     }
     calc_phi(sys);
- 
+
     if (SHOW_LESS_IMPT) {
       FPRINTF(lif,"%-40s ---> %g\n", "    Anticipated phi",sys->phi);
     }
@@ -3955,7 +3952,7 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
     mtx_write_region(ldat,sys->J.mtx,&(sys->J.reg));
     fclose(ldat);
   }
- 
+
   calc_phi(sys);
 
   if (SHOW_LESS_IMPT) {
@@ -4011,13 +4008,13 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
             real64 maxstep_coef;
             real64 denom;
             previous = MIN(sys->phi, oldphi);
-    
- 
+
+
 	      denom = sys->phi - oldphi +
 		sys->maxstep*calc_sqrt_D0(sys->gamma.norm2);
               maxstep_coef = denom > 0.0 ? 0.5*
               sys->maxstep*calc_sqrt_D0(sys->gamma.norm2)/denom : MAX_COEF;
- 
+
             if (maxstep_coef < MIN_COEF) maxstep_coef = MIN_COEF;
             if (maxstep_coef > MAX_COEF) maxstep_coef = MAX_COEF;
             if (SHOW_LESS_IMPT) {
@@ -4106,7 +4103,7 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
      */
     scale_residuals(sys);
     calc_phi(sys);
- 
+
     if (SHOW_LESS_IMPT) {
       FPRINTF(lif,"%-40s ---> %g\n", "    Anticipated phi",sys->phi);
     }

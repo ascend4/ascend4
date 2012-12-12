@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /* Property data for Nitrogen
@@ -117,7 +115,7 @@ const HelmholtzData helmholtz_data_nitrogen = {
 
 
 /*
-	Test suite. These tests attempt to validate the current code using 
+	Test suite. These tests attempt to validate the current code using
 	a few sample figures output by REFPROP 7.0.
 
 	To run the test, compile and run as follows:
@@ -162,7 +160,7 @@ double phi0tau(double tau, double del){
 	term = (27.00285962508*exp(-26.65788*tau))/(1-exp(-26.65788*tau));
 	//fprintf(stderr,"\t\t(27.00285962508*exp(-26.65788*tau))/(1-exp(-26.65788*tau)) = %f\n",term);
 	res += term;
-	
+
 	return res;
 }
 

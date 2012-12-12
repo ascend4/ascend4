@@ -21,9 +21,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -50,10 +48,10 @@ enum arg_type {
 
 extern void InitializeCommands(void);
 /**<
- *  Initializes the command list.  
+ *  Initializes the command list.
  *  This function must be called before anything else in this module.
  *  It is a logical error to call this function more than once, but
- *  will be tolerated.  Call DestroyCommands() when finished using 
+ *  will be tolerated.  Call DestroyCommands() when finished using
  *  the command facilities.
  */
 
@@ -97,7 +95,7 @@ extern void CommandFunc(unsigned long int cmd_number, InterfaceCommandF *func);
 /**<
  *  Returns the function of a command.
  *  The cmd_number must be in the range (1 .. NumberCommands()), and may be
- *  looked up using FindCommand().  func is the address where the pointer to 
+ *  looked up using FindCommand().  func is the address where the pointer to
  *  the command's function will be stored.
  */
 
@@ -117,7 +115,7 @@ extern int CommandNumArgs(unsigned long cmd_number);
 
 extern enum arg_type CommandArgument(unsigned long cmd_number, int n);
 /**<
- *  Returns the type of the n'th argument for a command.  
+ *  Returns the type of the n'th argument for a command.
  *  The cmd_number must be in the range (1 .. NumberCommands()), and may be
  *  looked up using FindCommand().  n ranges from 0 to CommandNumArgs(pos)-1.
  */

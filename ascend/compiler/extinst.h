@@ -62,7 +62,7 @@ extern void FixExternalVars(struct Instance *old, struct Instance *new);
 	Replaces old with new in the table.
 	This will be called only for MODEL_INSTS.
 
-	Used by MergeModels, RefineModels, apparently -- JP.
+	Just used in MergeModels and RefineModel -- JP.
 */
 
 extern void SetSimulationExtVars(struct Instance *i, struct Instance **extvars);

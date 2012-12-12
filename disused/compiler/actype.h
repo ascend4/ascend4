@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -42,8 +40,8 @@
 extern CONST unsigned char ascend_char_t[];
 /**<
  *  Array of type codes for ASCII characters.
- *  Valid array indices are 0-255, corresponding to the valid ASCII values.  
- *  The type of a given character can be tested using the bit masks UNIT_CHAR, 
+ *  Valid array indices are 0-255, corresponding to the valid ASCII values.
+ *  The type of a given character can be tested using the bit masks UNIT_CHAR,
  *  ID_CHAR, DIGIT_CHAR, SPACE_CHAR, and ALPHA_CHAR.
  */
 
@@ -59,7 +57,7 @@ extern CONST unsigned char ascend_char_t[];
 /**< Bit mask for an alpha character. */
 
 #define isunit(c) ((ascend_char_t[(unsigned char)c])&UNIT_CHAR)
-/**< 
+/**<
  *  Test whether c is a character than can appear inside unit delimeters.
  *  @param c char to test
  *  @return Evaluates to TRUE if c is a valid unit character

@@ -13,7 +13,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//*
 	By Benjamin Allan, March 20, 1998.
 	Last in CVS: $Revision: 1.4 $ $Date: 1998/06/16 16:38:38 $ $Author: mthomas $

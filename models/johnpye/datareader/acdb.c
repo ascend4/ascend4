@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//**
 	@file
 	Data Reader implementation for the Australian Climate Data Bank .DAT format.
@@ -98,7 +96,7 @@ typedef struct AcdbPoint_struct{
 	float Id;
 	float T;
 	float v_wind;
-	
+
 } AcdbPoint;
 
 #define DATA(D) ((AcdbPoint *)(D->data))[D->i]
@@ -262,7 +260,7 @@ int datareader_acdb_eof(DataReader *d){
 
 #define MEAS(N) int N; char N##_source; int N##_uncert
 #define READ(N) &N, &N##_source, &N##_uncert
-	
+
 /**
 	Read a line of data and store in d.
 	@return 0 on success
@@ -317,7 +315,7 @@ int datareader_acdb_data(DataReader *d){
 	const unsigned fieldsize[N_FIELDS] = {
 		2,2,2,2, 4,3,4,3,2,1, 1,1,1,1,1, 1, 4,3,4,3,3,1
 	};
-	
+
 	int data[N_FIELDS];
 
 	enum {
@@ -347,7 +345,7 @@ int datareader_acdb_data(DataReader *d){
 
 	char field[10];
 	char code[3];
-	
+
 	unsigned i;
 	assert(N_FIELDS == sizeof(fieldsize) / sizeof(unsigned));
 
@@ -392,7 +390,7 @@ int datareader_acdb_data(DataReader *d){
 	}
 	*/
 
-	/* 
+	/*
 		for the moment, we only record global horizontal, direct normal,
 		ambient temperature, wind speed.
 	*/

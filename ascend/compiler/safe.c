@@ -25,10 +25,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "safe.h"
@@ -985,7 +982,7 @@ double safe_div_D1(double x,double y,int wrt,enum safe_err *safe)
     return( -safe_mul_D0(safe_sqr_D0(y,safe),x,safe) );
   default:
     ASC_PANIC("'wrt' out of range!");
-    
+
   }
 }
 
@@ -1001,7 +998,7 @@ double safe_ipow_D1( double x,double y, int wrt,enum safe_err *safe)
                   * assume integers are constant */
   default:
     ASC_PANIC("'wrt' out of range!");
-    
+
   }
 }
 
@@ -1014,7 +1011,7 @@ double safe_pow_D1(double x,double y,int wrt,enum safe_err *safe)
     return( safe_mul_D0( safe_ln_D0(x,safe) , safe_pow_D0(x,y,safe) ,safe) );
   default:
     ASC_PANIC("'wrt' out of range!");
-    
+
   }
 }
 
@@ -1030,7 +1027,7 @@ double safe_div_D2(double x,double y,int wrt1,int wrt2,enum safe_err *safe)
     return( safe_rec(0.5*safe_mul_D0(y,safe_sqr_D0(y,safe),safe),safe) );
   default:
     ASC_PANIC("'wrt' out of range!");
-    
+
   }
 }
 
@@ -1053,7 +1050,7 @@ double safe_ipow_D2( double x,double y, int wrt1,int wrt2,enum safe_err *safe)
                         safe_ipow_D0(x,y,safe),safe) );
   default:
     ASC_PANIC("'wrt' out of range!");
-    
+
   }
 }
 
@@ -1074,7 +1071,7 @@ double safe_pow_D2(double x,double y,int wrt1,int wrt2,enum safe_err *safe)
                         safe_pow_D0(x,y,safe),safe) );
   default:
     ASC_PANIC("'wrt' out of range!");
-    
+
   }
 }
 

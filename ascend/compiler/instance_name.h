@@ -1,4 +1,4 @@
-/* 
+/*
  *  Instance name routines
  *  by Tom Epperly
  *  Part Of Ascend
@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -62,33 +60,33 @@ struct InstanceName {
 };
 
 #define InstanceNameType(in) ((in).t)
-/**< 
+/**<
  *  Return the type of InstanceName structure in.
  */
 
 #define InstanceNameStr(in) ((in).u.name)
-/**< 
+/**<
  *  Return the name of InstanceName structure in.
  *  in must be of type StrName.
  */
 
 #define InstanceIntIndex(in) ((in).u.index)
-/**< 
+/**<
  *  Return the integer index value of InstanceName structure in.
  */
 
 #define InstanceStrIndex(in) ((in).u.name)
-/**< 
+/**<
  *  Return the string index value of InstanceName structure in.
  */
 
 #define SetInstanceNameType(in,type) ((in).t) = (type)
-/**< 
+/**<
  *  Set the type of InstanceName structure in to type (a NameTypes).
  */
 
 #define SetInstanceNameStrPtr(in,str) ((in).u.name) = (str)
-/**< 
+/**<
  *  Set the string pointer of InstanceName structure in to str (a symchar*).
  */
 
@@ -98,7 +96,7 @@ struct InstanceName {
  */
 
 #define SetInstanceNameIntIndex(in,int_index) ((in).u.index) = (int_index)
-/**< 
+/**<
  *  Set the integer index of InstanceName structure in to int_index (a long).
  */
 

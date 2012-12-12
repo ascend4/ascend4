@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../helmholtz.h"
@@ -60,7 +58,7 @@ const IdealData ideal_data_ammonia = {
 };
 
 /**
-Residual (non-ideal) property data for Ammonia, from Tillner-Roth, 
+Residual (non-ideal) property data for Ammonia, from Tillner-Roth,
 Harms-Watzenberg and Baehr, 'Eine neue Fundamentalgleichung für Ammoniak',
 DKV-Tagungsbericht, 20:167-181, 1993. This is the ammmonia property correlation
 recommended by NIST in its program REFPROP 7.0.
@@ -89,7 +87,7 @@ const HelmholtzData helmholtz_data_ammonia = {
 		,{-0.1858814E+1,  1.5 ,   1, 0 }
 		,{0.2141882E-10,    3 ,  15, 0 }/* 5 */
 		,{-0.1430020E-1,    0 ,   3, 1 }
-		,{0.3441324E+0,     3 ,   3, 1 } 
+		,{0.3441324E+0,     3 ,   3, 1 }
 		,{-0.2873571E+0,    4 ,   1, 1 }
 		,{0.2352589E-4,     4 ,   8, 1 }
 		,{-0.3497111E-1,   5  ,  2,  1}/* 10 */
@@ -111,12 +109,12 @@ const HelmholtzData helmholtz_data_ammonia = {
 #endif
 
 /*
-	Test suite. These tests attempt to validate the current code using 
+	Test suite. These tests attempt to validate the current code using
 	a few sample figures output by REFPROP 7.0.
 
 	To run the test, compile and run as follows:
 
-	gcc ideal.c helmholtz.c ammonia.c -DTEST -o ammonia -lm && ./ammonia 
+	gcc ideal.c helmholtz.c ammonia.c -DTEST -o ammonia -lm && ./ammonia
 
 	These tests all currently pass with a maximum error of 0.09%.
 */

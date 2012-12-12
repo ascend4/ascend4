@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -111,7 +109,7 @@ extern int Asc_SolvSimInst(ClientData cdata, Tcl_Interp *interp,
  */
 #endif /* DELETEME */
 
-#if 0 
+#if 0
 extern int Asc_SolvCurInst(ClientData cdata, Tcl_Interp *interp,
                            int argc, CONST84 char *argv[]);
 /**<
@@ -188,7 +186,7 @@ extern int Asc_SolvGetSlvParms(ClientData cdata, Tcl_Interp *interp,
  *  If a specified solver is not linked, then slv0 parameters will be
  *  returned instead.<br><br>
  *
- *  Returns: 
+ *  Returns:
  *    - number of solver parameters were retrieved from.
  *    - time_limit
  *    - iteration_limit
@@ -224,7 +222,7 @@ extern int Asc_SolvSetSlvParms(ClientData cdata, Tcl_Interp *interp,
  *  slv_tolerance_data, or slv_output_data in slv.h are changed.
  *  If a specified solver is not linked, parameters will not be set.<br><br>
  *
- *  Input: 
+ *  Input:
  *    - solver number
  *    - time_limit (seconds)
  *    - iteration_limit (integer)
@@ -456,7 +454,7 @@ extern int Asc_SolvEligSolver(ClientData cdata, Tcl_Interp *interp,
 
 extern int Asc_SolvSelectSolver(ClientData cdata, Tcl_Interp *interp,
                                 int argc, CONST84 char *argv[]);
-/**< 
+/**<
  *  Sets solver to N, if N available.
  *  On return the Tcl interpreter result is set to the selected solver number.
  *
@@ -486,7 +484,7 @@ extern int Asc_SolvImportQlfdid(ClientData cdata, Tcl_Interp *interp,
 /**<
  *  Import qlfdid to solver context.
  *  Will take a fully qualified ascend name and will search for the
- *  instance with that name. Will leave g_solvsys_cur looking at the            
+ *  instance with that name. Will leave g_solvsys_cur looking at the
  *  named instance if successful.
  *  Uses Asc_BrowQlfdidSearchCmd().
  *  If a called with an id and a third argument, will return 0 if an

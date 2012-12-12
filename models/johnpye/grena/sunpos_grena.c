@@ -12,16 +12,14 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @FILE
 	This file's code is based on the source code given in the publication
-	R Grena (2008), An algorithm for the computation of the solar position, 
+	R Grena (2008), An algorithm for the computation of the solar position,
 	Solar Energy (82), pp 462-470.
 
 	The original code was in C++ and returned several intermediate results.
-	This modified version returns only the zenith and azimuth angles for 
+	This modified version returns only the zenith and azimuth angles for
 	given date/time.
 */
 
@@ -41,9 +39,9 @@ void SunPos_calc_time(SunPos *S, double UT, int Day, int Month, int Year, double
 		dMonth = (double)Month;
 	}
 
-	// WARNING: my testing shows that following equation gives correct values 
+	// WARNING: my testing shows that following equation gives correct values
 	// only in the range 2001 to 2099. By not correcting for leap years on 100
-	// and 1000 year multiples, it gradually gets out of accord. -- J Pye. 
+	// and 1000 year multiples, it gradually gets out of accord. -- J Pye.
 
 	// universal time
 	S->t_G = (double)trunc(365.25 * (dYear - 2000))
@@ -99,7 +97,7 @@ void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth){
 
 	// harmonic correction
 
-	HeliocLongitude += 1.26e-5 * sin(4.243e-3 * t + 1.46)	
+	HeliocLongitude += 1.26e-5 * sin(4.243e-3 * t + 1.46)
 		+ 2.35e-5 * sin(1.0727e-2 * t + 0.72)
 		+ 2.76e-5 * sin(1.5799e-2 * t + 2.35)
 		+ 2.75e-5 * sin(2.1551e-2 * t - 1.98)
@@ -136,7 +134,7 @@ void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth){
 
 	// local hour angle of the sun
 
-	HourAngle = 6.30038809903 * S->t_G + 4.8824623 + delta_psi * 0.9174 
+	HourAngle = 6.30038809903 * S->t_G + 4.8824623 + delta_psi * 0.9174
 		+ S->longitude - RightAscension;
 
 	// to obtain the local hour angle in the range [0,2pi] uncomment:
@@ -168,9 +166,9 @@ void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth){
 	// if Elevation_no_refract > elev_min
 
 	const double elev_min = -0.01;
-	
+
 	if(Elevation_no_refrac > elev_min){
-		RefractionCorrection = 0.084217 * S->p / (273 + S->T) 
+		RefractionCorrection = 0.084217 * S->p / (273 + S->T)
 			/ tan(Elevation_no_refrac + 0.0031376 / (Elevation_no_refrac + 0.089186));
 	}else{
 		RefractionCorrection = 0;

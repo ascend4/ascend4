@@ -22,10 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "dimen.h"
@@ -440,7 +437,7 @@ ASC_DLLSPEC void PrintDimenMessage(CONST char *message
 		error_reporter_end_flush();
 #else
 	(void)message; (void)label1; (void)d1; (void)d2; (void)label2;
-#endif	
+#endif
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid dimensions");
 }
 

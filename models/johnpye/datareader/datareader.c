@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <stdio.h>
@@ -116,7 +114,7 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 	dr_symbols[0] = AddSymbol("filename");
 	dr_symbols[1] = AddSymbol("format");
 	dr_symbols[2] = AddSymbol("parameters");
-	
+
 		/* get the data file name (we will look for this file in the ASCENDLIBRARY path) */
 	fninst = ChildByChar(data,FILENAME_SYM);
 	if(!fninst){
@@ -180,7 +178,7 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'parameters' is NULL or empty");
 		return 1;
 	}
-	
+
 	/* obtain number of outputs from the paramater statement */
 	/* this enables to create a datareader object with the right size parameter tokens */
     /*
@@ -190,15 +188,15 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
     	instance, or the datareader structure. even if passed down it wont be passed
     	by value, but by pointer, so other functions (such as datareader_set_parameters)
     	might affect this address, potentially causing a seg fault.
-    
+
     */
 	const char *par2[strlen(par)]; //allocate enough space for a copy of par
 	strcpy(par2,par); //take a copy of par an
-	
-	/*datareader only! in rigour nouputs has to be derived by more 
+
+	/*datareader only! in rigour nouputs has to be derived by more
 	  explicit methods, such as parsing or argument passing*/
-	noutputs = gl_length(arglist)-1; 
-	
+	noutputs = gl_length(arglist)-1;
+
 	/* create the data reader: tell it the filename and nouputs */
 	d = datareader_new(fn,noutputs);
 	//set datareader file format
@@ -220,9 +218,9 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 		return 1;
 		}
 	}
-   
+
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Created data reader at %p...",d);
-	/*assign the succesfully created datareader object to the 
+	/*assign the succesfully created datareader object to the
 	BlackBox Cache of the relation */
 	slv_interp->user_data = (void *)d; //BROKEN AT THE MOMENT
 	return 0;

@@ -22,10 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdarg.h>
 #include <ascend/general/platform.h>
@@ -84,7 +81,7 @@ struct Instance *RecursiveMergeInstance(struct Instance *, struct Instance *);
 /*
  * Issue merge illegal message.
  */
-void BadMerge(FILE *fp, char *m1, 
+void BadMerge(FILE *fp, char *m1,
               CONST struct Instance *i1, CONST struct Instance *i2, char *m2)
 {
   FPRINTF(fp,"%sInstance 1 IS_A %s (ptr=%p)\nInstance 2 IS_A %s (ptr=%p)\n%s",
@@ -95,7 +92,7 @@ void BadMerge(FILE *fp, char *m1,
 /*
  * Issue merge really illegal message.
  */
-void ReallyBadMerge(FILE *fp, char *m1, 
+void ReallyBadMerge(FILE *fp, char *m1,
                     CONST struct Instance *i1, CONST struct Instance *i2,
                     char *m2)
 {
@@ -362,7 +359,7 @@ Returns 0 if happy, 1 or other if not.
     return 0;
   default:
     ASC_PANIC("Error in MergeValues in instance.c. Unknown type.\n");
-    
+
   }
 }
 
@@ -768,6 +765,13 @@ static
 struct Instance *MergeModels(struct ModelInstance *i1,
 			     struct ModelInstance *i2)
 {
+  char *n1 = WriteInstanceNameString(i1,NULL);
+  char *n2 = WriteInstanceNameString(i2,NULL);
+  CONSOLE_DEBUG("Merging models '%s' and '%s'",n2,n2);
+  ASC_FREE(n1);
+  ASC_FREE(n2);
+
+
   switch(KeepWhichInstance(i1->desc,i2->desc,INST(i1),INST(i2))){
   case 1:
     if (InterfacePtrATS!=NULL) {
@@ -809,11 +813,17 @@ static
 struct Instance *MergeRelations(struct RelationInstance *i1,
 				struct RelationInstance *i2)
 {
-  if (i1->desc==i2->desc){
+  char *n1 = WriteInstanceNameString(i1,NULL);
+  char *n2 = WriteInstanceNameString(i2,NULL);
+  CONSOLE_DEBUG("Merging relations '%s' and '%s'",n2,n2);
+  ASC_FREE(n1);
+  ASC_FREE(n2);
+
+  if(i1->desc==i2->desc){
     switch(KeepWhichInstance(i1->desc,i2->desc,INST(i1),INST(i2))){
     case 1:
       if (InterfacePtrATS!=NULL) {
-	(*InterfacePtrATS)(INST(i1),INST(i2));
+        (*InterfacePtrATS)(INST(i1),INST(i2));
       }
       /* add check to make sure equations are equal.
        * A sufficient check is that they have the same
@@ -822,7 +832,7 @@ struct Instance *MergeRelations(struct RelationInstance *i1,
        * token arrays be the same size and varlists
        * be the same size. This is uncheckable at
        * present because the merge of relations and
-       * whens possibly occurs before the merge of 
+       * whens possibly occurs before the merge of
        * locally defined variables and sets.
        * To ensure correctness, we must merge all the
        * local variables and sets successfully, then
@@ -837,8 +847,8 @@ struct Instance *MergeRelations(struct RelationInstance *i1,
       DestroyInstance(INST(i2),NULL);
       return INST(i1);
     case 2:
-      if (InterfacePtrATS!=NULL) {
-	(*InterfacePtrATS)(INST(i2),INST(i1));
+      if(InterfacePtrATS!=NULL) {
+        (*InterfacePtrATS)(INST(i2),INST(i1));
       }
       /* add check to make sure equations are equal */
       MergeChildrenValues(INST(i2),INST(i1));
@@ -1076,6 +1086,15 @@ struct Instance *RecursiveMergeInstance(struct Instance *i1,
   if (i1==i2) {
     return i1;
   }
+
+#if 0
+  char *n1 = WriteInstanceNameString(i1,NULL);
+  char *n2 = WriteInstanceNameString(i2,NULL);
+  CONSOLE_DEBUG("Merging '%s' and '%s'",n2,n2);
+  ASC_FREE(n1);
+  ASC_FREE(n2);
+#endif
+
   if ( i1->t == i2->t ) {
     switch( i1->t ) {
     case MODEL_INST:
@@ -1126,19 +1145,18 @@ struct Instance *RecursiveMergeInstance(struct Instance *i1,
     return result;
   } else {
     ASC_PANIC("Attempt to merge unconformable types in children.\n");
-    
+
   }
 }
 
-struct Instance *MergeInstances(struct Instance *i1, struct Instance *i2)
-{
+struct Instance *MergeInstances(struct Instance *i1, struct Instance *i2){
   assert(i1&&i2);
-  if (i1==i2) return i1;
+  if(i1==i2) return i1;
   AssertMemory(i1);
   AssertMemory(i2);
-  if (InstanceKind(i1)==InstanceKind(i2)){
-    if (InstanceKind(i1)==MODEL_INST) {
-      if (GetModelParameterCount(InstanceTypeDesc(i1)) != 0 ||
+  if(InstanceKind(i1)==InstanceKind(i2)){
+    if(InstanceKind(i1)==MODEL_INST) {
+      if(GetModelParameterCount(InstanceTypeDesc(i1)) != 0 ||
           GetModelParameterCount(InstanceTypeDesc(i2)) != 0 ) {
         /* We need to relax this for == types where i1,i2 have
          * exactly equal arguments, typewise.
@@ -1148,16 +1166,16 @@ struct Instance *MergeInstances(struct Instance *i1, struct Instance *i2)
         return NULL;
       }
     }
-    if (MoreRefined(InstanceTypeDesc(i1),InstanceTypeDesc(i2))!=NULL) {
+    if(MoreRefined(InstanceTypeDesc(i1),InstanceTypeDesc(i2))!=NULL) {
       return RecursiveMergeInstance(i1,i2);
-    } else {
+    }else{
       BadMerge(ASCERR,"Attempt to merge unconformable types.\n",
                INST(i1),INST(i2), "Both instances remain unchanged.\n");
       DifferentVersionCheck(InstanceTypeDesc(i1),
 			    InstanceTypeDesc(i2));
       return NULL;
     }
-  } else{
+  }else{
     ReallyBadMerge(ASCERR,"Attempt to merge very unconformable types.\n",
              INST(i1),INST(i2), "Both instances remain unchanged.\n");
     return NULL;

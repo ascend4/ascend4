@@ -21,11 +21,8 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *//* @file
  *  These functions are the start of a new design for feeding
  *  solvers from the ASCEND compiler or any arbitrary backend.
  *
@@ -116,13 +113,13 @@ static symchar *g_strings[4];
 
 
 
-/* 
- * Forward declaration 
+/*
+ * Forward declaration
  */
 static void ProcessModelsInWhens(struct Instance *, struct gl_list_t *,
                                  struct gl_list_t *, struct gl_list_t *);
 
-/* 
+/*
  * Global variable. Set to true by classify if need be
  */
 static int g_bad_rel_in_list;
@@ -215,8 +212,8 @@ struct solver_ipdata {
 /* a handy cast for fetching things off gllists */
 #define SIP(x) ((struct solver_ipdata *)(x))
 
-/* 
- * a bridge buffer used so much we aren't going to free it, just reuse it 
+/*
+ * a bridge buffer used so much we aren't going to free it, just reuse it
  */
 static struct reuse_t {
   size_t ipcap;			/* number of ips allocated in ipbuf */
@@ -224,9 +221,9 @@ static struct reuse_t {
   struct solver_ipdata *ipbuf;
 } g_reuse = {0,0,NULL};
 
-/* 
+/*
  *  a data structure for bridge building only. hell of a scaffolding.
- *  all fields should be empty if construction is not in progress. 
+ *  all fields should be empty if construction is not in progress.
  *  In particular, do no operations that can throw an exception
  *  while manipulating a problem_t, as it is way too big to let leak.
  */
@@ -245,7 +242,7 @@ static struct problem_t {
   long nw;              /* number of whens */
   long ne;		/* number of external rels subset overestimate*/
   long nm;		/* number of models */
-/* 
+/*
  * The following gllists contain pointers to interface ptrs as
  * locally defined.
  * The lists will be in order found by a visit instance tree.
@@ -254,7 +251,7 @@ static struct problem_t {
   struct gl_list_t *pars;	/* real ATOM instance parameters */
   struct gl_list_t *unas;	/* real ATOM instance of no 'apparent' use */
   struct gl_list_t *models;	/* models in tree. modips */
-/* 
+/*
  * The following gllists contain pointers to interface ptrs as
  * locally defined.
  * The lists will be in order found by running over the models list.
@@ -406,7 +403,7 @@ static struct solver_ipdata *analyze_getip(void)
   }
 }
 
-/* 
+/*
  * reallocates to the requested size (newcap) the ipbuf.
  * if newcap = 0, frees ipbuf.
  * if insufficient memory returns 1.
@@ -456,7 +453,7 @@ int resize_ipbuf(size_t newcap, int resetmem)
 }
 
 
-/* 
+/*
  * checks size of request and returns a pointer to the next available
  * chunk of incidence space. if too much requested or 0 requested returns
  * NULL. p_data->relincidence must have been allocated for this to work.
@@ -478,7 +475,7 @@ struct var_variable **get_incidence_space(int len, struct problem_t *p_data)
   return tmp;
 }
 
-/* 
+/*
  * checks size of request and returns a pointer to the next available
  * chunk of incidence space. if too much requested or 0 requested returns
  * NULL. p_data->varincidence must have been allocated for this to work.
@@ -615,7 +612,7 @@ static void CollectArrayRelsAndWhens(struct Instance *i, long modindex,
       break;
     case ARRAY_ENUM_INST:
     case ARRAY_INT_INST:
-      if (ArrayIsRelation(child) || 
+      if (ArrayIsRelation(child) ||
           ArrayIsLogRel(child) ||
           ArrayIsWhen(child)) {
 	CollectArrayRelsAndWhens(child,modindex,p_data);
@@ -679,8 +676,8 @@ static void CollectRelsAndWhens(struct solver_ipdata *ip,
       break;
     case ARRAY_ENUM_INST:
     case ARRAY_INT_INST:
-      if (ArrayIsRelation(child) || 
-          ArrayIsLogRel(child)|| 
+      if (ArrayIsRelation(child) ||
+          ArrayIsLogRel(child)||
           ArrayIsWhen(child)) {
 	CollectArrayRelsAndWhens(child,modindex,p_data);
       }
@@ -1094,7 +1091,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp)
  * relations. All the rest of the code depends on ALL relations being
  * good, so don't disable the g_bad_rel_in_list feature.
  */
-static 
+static
 void CountStuffInTree(struct Instance *inst, struct problem_t *p_data)
 {
   if (inst!=NULL) {
@@ -1233,7 +1230,7 @@ static int analyze_make_master_lists(struct problem_t *p_data)
   struct gl_list_t *scratch;
   size_t reqlen;
   int stat;
-  reqlen = 
+  reqlen =
     p_data->nr + p_data->no + p_data->nc + p_data->nl+ p_data->ncl+  /*rels*/
        p_data->nv + p_data->ndv +
        p_data->np + p_data->nu +  p_data->nud +  /* atoms */
@@ -1301,7 +1298,7 @@ static int analyze_make_master_lists(struct problem_t *p_data)
     return 1;
   }
 
-  /* 
+  /*
    * collect relations, objectives, logrels and whens recording the
    * MODEL number in each rel's ip and setting incidence.
    */
@@ -1325,7 +1322,7 @@ static int analyze_make_master_lists(struct problem_t *p_data)
     FPRINTF(ASCERR,"Whens: Counted %lu\t Found %ld\n",
       gl_length(p_data->whens), p_data->nw);
   }
-  /* 
+  /*
    * relation list is now grouped by model, and the order will be
    * invariant with hardware and ascend invocation so long as
    * set FIRSTCHOICE holds in compilation.
@@ -1394,7 +1391,7 @@ static int analyze_make_master_lists(struct problem_t *p_data)
   for (c=1; c <= len; c++) {
     SIP(gl_fetch(p_data->whens,c))->u.w.index = c;
   }
-  /* 
+  /*
    * now we need to move all the nonincident vars off the var list
    * onto the unas list. It is easiest to make a new list and copy
    * the existing var list to either it if keep or unas if punt.
@@ -1439,8 +1436,8 @@ static int analyze_make_master_lists(struct problem_t *p_data)
   p_data->tmplist = NULL;
 
   p_data->np = gl_length(p_data->pars);
-  p_data->nu = gl_length(p_data->unas); 
-  
+  p_data->nu = gl_length(p_data->unas);
+
   /*
    * discrete variables: take the incident dis vars in logrels first,
    * then append the dis vars which are used only in whens
@@ -1492,14 +1489,14 @@ static int analyze_make_master_lists(struct problem_t *p_data)
    * SolverAtomInstance, which still needs parser and interpreter support
    *
    */
-  
+
   if (p_data->nr != 0 &&  p_data->nv==0) {
     FPRINTF(ASCERR, "\n");
     FPRINTF(ASCERR, "A L E R T\n");
-    FPRINTF(ASCERR, "\n");    
+    FPRINTF(ASCERR, "\n");
     FPRINTF(ASCERR, "Problem should contain at least one variable %s",
             "and one relation\n");
-    FPRINTF(ASCERR, "\n");    
+    FPRINTF(ASCERR, "\n");
     FPRINTF(ASCERR, "There are relations into the system, but the number \n");
     FPRINTF(ASCERR, "of variables is zero. That means that the existent \n");
     FPRINTF(ASCERR, "vars were not recognized as solver_vars. A possible \n");
@@ -1512,12 +1509,12 @@ static int analyze_make_master_lists(struct problem_t *p_data)
     FPRINTF(ASCERR, "\n");
     return 2;
   }
-  
+
   return 0;
 }
 
 
-/*  
+/*
  *  This function cleans up an errant problem_t or a good one that we're
  *  done with. We should have set to null any pointers to memory we are
  *  keeping elsewhere before calling this.
@@ -1991,7 +1988,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   uint32 flags;
 
   order = MAX(gl_length(p_data->vars),gl_length(p_data->rels));
-  nnzold = p_data->nnz = p_data->nnztot 
+  nnzold = p_data->nnz = p_data->nnztot
          = p_data->nnzobj = p_data->nnzcond = 0;
   p_data->nrow = 0; /* number of included relations */
   for (c=1,len = gl_length(p_data->rels); c <= len; c++) {
@@ -2031,15 +2028,15 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   }
 
 
-  /* 
-   * calculate the number of free and incident variables, ncol 
-   * we put all the nonincident on the unas list, so just check fixed. 
+  /*
+   * calculate the number of free and incident variables, ncol
+   * we put all the nonincident on the unas list, so just check fixed.
    */
   for (c=1,len = gl_length(p_data->vars); c <= len; c++) {
     vip = SIP(gl_fetch(p_data->vars,c));
     if (!(vip->u.v.fixed)) p_data->ncol++;
   }
-  /* 
+  /*
    * now, at last we have cols jacobian in the order we want the lists to
    * be handed to the solvers.
    */
@@ -2210,11 +2207,11 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   p_data->relincinuse = 0;
   p_data->lrelincinuse = 0;
 
-  /* 
-   * for c in varlist copy vardata. remember gllist # from 1 and data from 0 
+  /*
+   * for c in varlist copy vardata. remember gllist # from 1 and data from 0
    */
-  /* 
-   * for c in varlist set mastervl, solvervl pointer to point to data 
+  /*
+   * for c in varlist set mastervl, solvervl pointer to point to data
    */
   vlen = gl_length(p_data->vars);
   for (v = 0; v < vlen; v++) {
@@ -2238,9 +2235,9 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   }
   p_data->mastervl[vlen] = NULL; /* terminator */
   p_data->solvervl[vlen] = NULL; /* terminator */
-  /* 
+  /*
    * for c in parlist copy pardata. remember gllist # from 1 and data from 0
-   * for c in parlist set masterpl, solverpl pointer to point to data 
+   * for c in parlist set masterpl, solverpl pointer to point to data
    */
   vlen = gl_length(p_data->pars);
   for (v = 0; v < vlen; v++) {
@@ -2263,9 +2260,9 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   }
   p_data->masterpl[vlen] = NULL; /* terminator */
   p_data->solverpl[vlen] = NULL; /* terminator */
-  /* 
-   * for c in unalist copy undata. remember gllist # from 1 and data from 0 
-   * for c in unalist set masterul, solverul pointer to point to data 
+  /*
+   * for c in unalist copy undata. remember gllist # from 1 and data from 0
+   * for c in unalist set masterul, solverul pointer to point to data
    */
   vlen = gl_length(p_data->unas);
   for (v = 0; v < vlen; v++) {
@@ -2289,9 +2286,9 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   p_data->masterul[vlen] = NULL; /* terminator */
   p_data->solverul[vlen] = NULL; /* terminator */
 
-  /* 
+  /*
    * process the constraining relations
-   * for v in rellist copy reldata and fix extrels. 
+   * for v in rellist copy reldata and fix extrels.
    */
   vlen = gl_length(p_data->rels);
   for (v = 0; v < vlen; v++) {
@@ -2358,9 +2355,9 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
  * for c in objlist copy objdata.
  * for c in objlist set masterrl, solverrl pointer to point to data.
  */
-  /* 
+  /*
    * process the objective relations
-   * for v in objlist copy objdata 
+   * for v in objlist copy objdata
    */
   vlen = gl_length(p_data->objrels);
   found = 0;
@@ -2407,9 +2404,9 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   p_data->masterol[vlen] = NULL; /* terminator */
   p_data->solverol[vlen] = NULL; /* terminator */
 
-  /* 
+  /*
    * process the conditional relations
-   * for v in cndlist copy conddata . 
+   * for v in cndlist copy conddata .
    */
   vlen = gl_length(p_data->cnds);
   for (v = 0; v < vlen; v++) {
@@ -2453,10 +2450,10 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   p_data->solvercl[vlen] = NULL; /* terminator */
 
 
-  /* 
-   * process discrete variables 
+  /*
+   * process discrete variables
    * for c in dvarlist copy disdata. gllist # from 1 and data from 0
-   * for c in dvarlist set masterdl, solverdl pointer to point to data 
+   * for c in dvarlist set masterdl, solverdl pointer to point to data
    */
   vlen = gl_length(p_data->dvars);
   for (v = 0; v < vlen; v++) {
@@ -2502,9 +2499,9 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   p_data->masterdl[vlen] = NULL; /* terminator */
   p_data->solverdl[vlen] = NULL; /* terminator */
 
-  /* 
+  /*
    * for c in dunalist copy undisdata. gllist # from 1 and data from 0
-   * for c in dunalist set masterdul, solverdul pointer to point to data 
+   * for c in dunalist set masterdul, solverdul pointer to point to data
    */
   vlen = gl_length(p_data->dunas);
   for (v = 0; v < vlen; v++) {
@@ -2530,9 +2527,9 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
  * for c in logrellist copy lrdata.
  * for c in logrellist set masterll, solverll pointer to point to data.
  */
-  /* 
-   * process the logical relations 
-   * for v in logrellist copy lrdata 
+  /*
+   * process the logical relations
+   * for v in logrellist copy lrdata
    */
   vlen = gl_length(p_data->logrels);
   for (v = 0; v < vlen; v++) {
@@ -2574,9 +2571,9 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   p_data->solverll[vlen] = NULL; /* terminator */
 
 
-  /* 
-   * process the conditional logrelations 
-   * for v in logcndlist copy logconddata 
+  /*
+   * process the conditional logrelations
+   * for v in logcndlist copy logconddata
    */
   vlen = gl_length(p_data->logcnds);
   for (v = 0; v < vlen; v++) {
@@ -2617,9 +2614,9 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   p_data->solvercll[vlen] = NULL; /* terminator */
 
 
-  /* 
+  /*
    * process the boundaries
-   * for v in cndlist and logcndlist, copy bnddata. 
+   * for v in cndlist and logcndlist, copy bnddata.
    */
   vlen = gl_length(p_data->cnds);
   len = gl_length(p_data->logcnds);
@@ -2719,9 +2716,9 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   p_data->masterwl[vlen] = NULL; /* terminator */
   p_data->solverwl[vlen] = NULL; /* terminator */
 
-  /* 
+  /*
    * Get data from the when instance to fill the
-   * list in the w_when instance 
+   * list in the w_when instance
    */
 
   for (v = 0; v < vlen; v++) {
@@ -2755,7 +2752,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
     }
     FPRINTF(ASCERR,"\n");
 #endif /* DEBUG_ANALYSIS  */
-    
+
   } else {
 
     /*
@@ -2933,7 +2930,7 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data)
   slv_set_solvers_bnd_list(sys,p_data->solverbl,
                         gl_length(p_data->cnds)+gl_length(p_data->logcnds));
   p_data->solverbl = NULL;
-  slv_set_solvers_unattached_list(sys,p_data->solverul, 
+  slv_set_solvers_unattached_list(sys,p_data->solverul,
                                   gl_length(p_data->unas));
   p_data->solverul = NULL;
   slv_set_solvers_disunatt_list(sys,p_data->solverdul,

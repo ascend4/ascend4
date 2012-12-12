@@ -28,10 +28,8 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -95,14 +93,14 @@
 #define EVEN FALSE
 #define ODD TRUE
 #define SWAPS_PRESERVE_ORDER TRUE
-/**< 
+/**<
  ***  Do row and column swaps preserve the ordering of non-zeros in rows
  ***  and columns?  Setting this to TRUE means swapping only entails the
  ***  movement of integer row or column numbers and NOT the exchange of
  ***  entire row or columns.
  **/
 #define WIDTHMAGIC 2048
-/**< 
+/**<
  *** WIDTHMAGIC is the byte size to aim for in allocating groups of elements.
  **/
 #define LENMAGIC 10
@@ -132,7 +130,7 @@ struct next_element_t {
  ***  The row and col indices in an element refer back to
  ***  the header positions of the two lists that element is in.
  ***  That is, each element knows its orgrow and orgcol.
- **/  
+ **/
 struct element_t {
   real64 value;
   int32 row;
@@ -173,7 +171,7 @@ struct nz_headers_t {
  ***
  ***  Special note: The -1th element of nz_header arrays is NOT allocated.<br><br>
  ***
- ***  Do not access the parity field of a slave matrix, refer to its master. 
+ ***  Do not access the parity field of a slave matrix, refer to its master.
  ***  Conduct all permuting operations on the master.
  **/
 struct permutation_t {
@@ -253,15 +251,15 @@ struct mtx_block_perm_structure {
 #define ordered3(a,b,c) ((a) <= (b) && (b) <= (c))
 #define in_range(rng,ndx) ordered3((rng)->low,ndx,(rng)->high)
 #define legal(mtx,ndx) ordered3(ZERO,ndx,(mtx)->order-1)
-/**< 
+/**<
  ***  Boolean operators to compare a row or column
  ***  index with some specified range or the maximum
  ***  range of the matrix in which it is used.
  **/
 
 #define fast_in_range(l,h,i) ( ordered3(l,i,h) )
-#define not_in_range(l,h,i) ( (i)<(l) || (i)>(h) ) 
-/**< 
+#define not_in_range(l,h,i) ( (i)<(l) || (i)>(h) )
+/**<
  ***  Boolean operators to compare 3 integers.
  ***  l <= h must be TRUE or these will lie. In many cases,
  ***  this condition can (or should) be met before in_range
@@ -278,7 +276,7 @@ struct mtx_block_perm_structure {
 
 #define zero(ptr,nelts,type)  \
    mem_zero_byte_cast((ptr),0,(nelts)*sizeof(type))
-/**< 
+/**<
  ***  Zeros a vector of specified length and type.
  ***  It is inefficient to use, however, if you know the type
  ***  is one of the basic types (int,double,ptr,char)
@@ -289,7 +287,7 @@ struct mtx_block_perm_structure {
   Private check routines
 \* ************************************************************************ */
 extern int super_check_matrix(mtx_matrix_t mtx);
-/**< 
+/**<
  *** After somevery extensive checking, returns an error count.
  *** More or less assume MTX_DEBUG is TRUE, and that is the only
  *** condition under which this should be called.
@@ -307,18 +305,18 @@ extern int super_check_matrix(mtx_matrix_t mtx);
   guaranteed valid.
 \* ************************************************************************ */
 
-struct element_t *mtx_find_element(mtx_matrix_t mtx, 
-                                   int32 org_row, 
+struct element_t *mtx_find_element(mtx_matrix_t mtx,
+                                   int32 org_row,
                                    int32 org_col);
-/**< 
+/**<
  ***  Searches for a given element of the matrix and returns a pointer to it
- ***  if it exists, or NULL if it doesn't exist. 
+ ***  if it exists, or NULL if it doesn't exist.
  ***  It is *ASSUMED* that org_row
  ***  and org_col are legal indices. May crash if they are not.
  **/
 
-struct element_t *mtx_create_element(mtx_matrix_t mtx, 
-                                     int32 org_row, 
+struct element_t *mtx_create_element(mtx_matrix_t mtx,
+                                     int32 org_row,
                                      int32 org_col);
 /**<
  ***  Creates the given element and returns a pointer to it.  The value is
@@ -329,7 +327,7 @@ struct element_t *mtx_create_element(mtx_matrix_t mtx,
  ***  exists, but go ahead and create it anyway.
  **/
 
-struct element_t *mtx_create_element_value(mtx_matrix_t mtx, 
+struct element_t *mtx_create_element_value(mtx_matrix_t mtx,
                                            int32 org_row,
                                            int32 org_col,
                                            real64 val);
@@ -347,17 +345,17 @@ struct element_t *mtx_create_element_value(mtx_matrix_t mtx,
   intelligence would ever need to use these in critical path functions.
 \* ************************************************************************ */
 extern struct element_t *mtx_next_col(register struct element_t *elt,
-                                      mtx_range_t *rng, 
+                                      mtx_range_t *rng,
                                       int32 *tocur);
-/**< 
+/**<
  ***  Returns the next element after elt that is in the range
  ***  rng according to the permutation vector tocur given. May return NULL.
  **/
 
 extern struct element_t *mtx_next_row(register struct element_t *elt,
-                                      mtx_range_t *rng, 
+                                      mtx_range_t *rng,
                                       int32 *tocur);
-/**< 
+/**<
  ***  Returns the next element after elt that is in the range
  ***  rng according to the permutation vector tocur given. May return NULL.
  **/
@@ -383,7 +381,7 @@ extern void mtx_free_perm(int32 *perm);
  **/
 
 /* ************************************************************************ *\
-  It is advantageous in an interactive system to introduce reusable 
+  It is advantageous in an interactive system to introduce reusable
   memory and monitor its integrity rather than to repeatedly allocate
   and zero it. The following code accomplishes this for mtx.
   A null_vector is an array of objects (size s, length n) with value 0.
@@ -443,7 +441,7 @@ extern struct reusable_data_vector
  ***  mtx_null_mark_release();
  ***  mtx_null_sum_release();
  ***  mtx_null_index_release();
- *** 
+ ***
  ***  These are a memory reuse promoter.
  ***  Calling with cap==0 frees any memory in use.
  ***  Clientlists -- PLEASE KEEP THIS UP TO DATE --
@@ -466,7 +464,7 @@ extern struct reusable_data_vector
                                          &g_mtx_null_vector_data,"null_vector"))
 /**<
  *  Returns an array of elt pointers all NULL/0.
- *  This function should not be called again until the vector is 
+ *  This function should not be called again until the vector is
  *  re-NULLED and out of use.  If we detect a double call, we will
  *  whine loudly, renull the array ourselves, and give it to you again.
  *  To avoid whining, call mtx_null_vector_release()
@@ -629,9 +627,9 @@ extern void *mtx_null_vector_f(int32 cap, int line, CONST char *file,
  ***  returns NULL.
  **/
 
-extern void mtx_null_vector_release_f(int line, 
+extern void mtx_null_vector_release_f(int line,
                                       CONST char *file,
-                                      struct reusable_data_vector *ptr, 
+                                      struct reusable_data_vector *ptr,
                                       char *fn);
 /**<
  ***  Implementation function for macros releasing reusable vectors.
@@ -665,7 +663,7 @@ extern struct element_t **mtx_expand_row(mtx_matrix_t mtx, int32 orgrow);
  ***  col number.  The array is obtained from mtx_null_vector().
  ***  Be sure to call mtx_null_vector_release() when done with the vector and
  ***  you have rezeroed it.
- ***  You cannot call this twice without releasing first or call 
+ ***  You cannot call this twice without releasing first or call
  ***  mtx_expand_col().
  **/
 
@@ -675,11 +673,11 @@ extern struct element_t **mtx_expand_col(mtx_matrix_t mtx, int32 orgcol);
  ***  row number.  The array is obtained from mtx_null_vector().
  ***  Be sure to call mtx_null_vector_release() when done with the vector and
  ***  you have rezeroed it.
- ***  You cannot call this twice without releasing first or call 
+ ***  You cannot call this twice without releasing first or call
  ***  mtx_expand_row().
  **/
 
-extern void mtx_renull_using_row(mtx_matrix_t mtx, 
+extern void mtx_renull_using_row(mtx_matrix_t mtx,
                                  int32 orgrow,
                                  struct element_t **arr);
 /**<
@@ -688,7 +686,7 @@ extern void mtx_renull_using_row(mtx_matrix_t mtx,
  ***  orgrow.
  **/
 
-extern void mtx_renull_using_col(mtx_matrix_t mtx, 
+extern void mtx_renull_using_col(mtx_matrix_t mtx,
                                  int32 orgcol,
                                  struct element_t **arr);
 /**<

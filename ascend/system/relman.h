@@ -15,9 +15,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @defgroup system_relman System Relation Manipulation
 	This module will provide supplemental operations for
 	relations such as simplification, evaluation, and
@@ -177,7 +175,7 @@ ASC_DLLSPEC int relman_diff2(struct rel_relation *rel,
 
 
 /* return 0 on success (derivatives, variables and count are output vars too) */
-ASC_DLLSPEC int relman_diff2_rev(struct rel_relation *rel, 
+ASC_DLLSPEC int relman_diff2_rev(struct rel_relation *rel,
 								 const var_filter_t *filter,
 		 						 real64 *derivatives,
 		   						 int32 *variables,
@@ -186,13 +184,13 @@ ASC_DLLSPEC int relman_diff2_rev(struct rel_relation *rel,
 /**<
   similar to relman_diff2, but uses revers Automatic differentiation to obtain derivatives
  */
-		
+
 ASC_DLLSPEC int relman_hess(struct rel_relation *rel,
 							const var_filter_t *filter,
 							hessian_mtx *hess_matrix,
 							int32 *count,
 							unsigned long max_dimension,
-							int32 safe);	
+							int32 safe);
 /**<
 	Hessian Matrix Evaluation,
 	@param rel is the relation whose Hessian Matrix is desired

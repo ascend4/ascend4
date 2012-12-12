@@ -25,6 +25,12 @@ MODEL moltensalt_state;
 	(* constant set to give h = 0 at 0 °C *)
 	h_eq: h = (1396.0182 {J/kg/K}) * T + 0.5 * (0.172 {J/kg/K^2}) * T^2 - 387.738910665 {kJ/kg};
 
+	s IS_A specific_entropy;
+	s_eq: s = 1396.0182 {J/kg/K} * ln(T) + 0.172 {J/kg/K^2} * T 
+		- p*(((- 0.636 {kg/m^3/K})/(2263.7234 {kg/m^3})^2) *ln(T/rho)
+			+ (- 0.636 {kg/m^3/K})/(2263.7234 {kg/m^3} * rho)
+		);
+
 	v IS_A specific_volume;
 	v_eq: v = 1. / rho;
 

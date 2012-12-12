@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//**
 	@file
 	Import handler to provide external python script functionality for ASCEND.
@@ -80,7 +78,7 @@ extern ASC_EXPORT int extpy_register(){
 	}
 
 	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Loaded EXPERIMENTAL 'extpy' import handler.");
-	
+
 	return result;
 }
 
@@ -154,7 +152,7 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 	}
 
 	arglist = Py_BuildValue("(O)", pyinstance);
-	
+
 
 	PyErr_Clear();
 	result = PyEval_CallObject(extpydata->fn, arglist);
@@ -163,7 +161,7 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 		CONSOLE_DEBUG("Error occured in PyEval_CallObject");
 
 		/* get the content of the error message */
-		PyErr_Fetch(&perrtype, &perrvalue, &perrtrace);		
+		PyErr_Fetch(&perrtype, &perrvalue, &perrtrace);
 
 		errtypestring = NULL;
 		if(perrtype != NULL
@@ -174,7 +172,7 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 		}else{
 			errtypestring = Py_BuildValue("");
 		}
-	
+
 		errstring = NULL;
 		if(perrvalue != NULL
 			&& (errstring = PyObject_Str(perrvalue)) != NULL
@@ -387,7 +385,7 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	PyErr_Clear();
 
 	iserr = PyRun_AnyFileEx(f,name,1);
-	
+
 	if(iserr){
 		/* according to the manual, there is no way of determining anything more about the error. */
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"An error occurring in importing the script '%s'",name);

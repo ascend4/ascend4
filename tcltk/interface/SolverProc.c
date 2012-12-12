@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #define ASC_BUILDING_INTERFACE
@@ -1315,7 +1313,7 @@ int Asc_SolvGetPathName(ClientData cdata, Tcl_Interp *interp,
 }
 
 
-#if 0 
+#if 0
 /*
  *  Solves g_curinst with solver specified.
  *  This is for commandline use only.
@@ -1829,7 +1827,7 @@ int Asc_SolvSolverName(ClientData cdata, Tcl_Interp *interp
 		Tcl_AppendElement(interp,solver->name);
 		return TCL_OK;
 	}
-}	
+}
 
 int Asc_SolvLinsolNames(ClientData cdata, Tcl_Interp *interp,
                       int argc, CONST84 char *argv[])

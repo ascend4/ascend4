@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -75,7 +73,7 @@ extern void DestroyForTable(struct for_table_t *ft);
  */
 
 extern void WriteForTable(FILE *out, struct for_table_t *ft);
-/**< 
+/**<
  *  <!--  void WriteForTable(out,ft)                                   -->
  *  <!--  FILE *out;                                                   -->
  *  <!--  struct for_table_t *ft;                                      -->
@@ -83,14 +81,14 @@ extern void WriteForTable(FILE *out, struct for_table_t *ft);
  */
 
 extern unsigned long ActiveForLoops(CONST struct for_table_t *ft);
-/**< 
+/**<
  *  <!--  unsigned long ActiveForLoops(ft)                             -->
  *  <!--  struct for_table_t *ft;                                      -->
  *  Returns the number of active FOR loops.
  */
 
 extern void AddLoopVariable(struct for_table_t *ft,struct for_var_t *var);
-/**< 
+/**<
  *  <!--  void AddLoopVariable(ft,var)                                 -->
  *  <!--  struct for_table_t *ft;                                      -->
  *  <!--  struct for_var_t *var;                                       -->
@@ -109,9 +107,9 @@ extern struct for_var_t *LoopIndex(CONST struct for_table_t *ft,
  *  being the number given by ActiveForLoops(ft).
  */
 
-extern struct for_var_t *FindForVar(CONST struct for_table_t *ft, 
+extern struct for_var_t *FindForVar(CONST struct for_table_t *ft,
                                     symchar *name);
-/**< 
+/**<
  *  <!--  struct for_var_t *FindForVar(ft,name)                        -->
  *  <!--  CONST struct for_table_t *ft;                                -->
  *  <!--  symchar *name;                                               -->
@@ -120,7 +118,7 @@ extern struct for_var_t *FindForVar(CONST struct for_table_t *ft,
  */
 
 extern void RemoveForVariable(struct for_table_t *ft);
-/**< 
+/**<
  *  <!--  void RemoveForVariable(ft)                                   -->
  *  <!--  struct for_table_t *ft;                                      -->
  *  This removes the most recently added FOR index variable.  The
@@ -132,7 +130,7 @@ extern void RemoveForVariable(struct for_table_t *ft);
  */
 
 extern struct for_var_t *CreateForVar(symchar *name);
-/**< 
+/**<
  *  <!--  struct for_var_t *CreateForVar(name)                         -->
  *  <!--  const char *name;                                            -->
  *  Create a for_var_t with the name given.  This for_var_t starts out being
@@ -141,7 +139,7 @@ extern struct for_var_t *CreateForVar(symchar *name);
  */
 
 extern void SetForVarType(struct for_var_t *ft, enum for_kind t);
-/**< 
+/**<
  *  <!--  void SetForVarType(fv,t)                                     -->
  *  <!--  struct for_var_t *fv;                                        -->
  *  <!--  enum for_kind t;                                             -->
@@ -149,7 +147,7 @@ extern void SetForVarType(struct for_var_t *ft, enum for_kind t);
  */
 
 extern void SetForInteger(struct for_var_t *fv, long ivalue);
-/**< 
+/**<
  *  <!--  void SetForInteger(fv,ivalue)                                -->
  *  <!--  struct for_var_t *fv;                                        -->
  *  <!--  long ivalue;                                                 -->
@@ -157,7 +155,7 @@ extern void SetForInteger(struct for_var_t *fv, long ivalue);
  */
 
 extern void SetForSymbol(struct for_var_t *fv, symchar *sym_ptr);
-/**< 
+/**<
  *  <!--  void SetForSymbol(fv,sym_ptr)                                -->
  *  <!--  struct for_var_t *fv;                                        -->
  *  <!--  const char *sym_ptr;                                         -->
@@ -173,21 +171,21 @@ extern void SetForSet(struct for_var_t *fv, struct set_t *sptr);
  */
 
 extern enum for_kind GetForKind(CONST struct for_var_t *fv);
-/**< 
+/**<
  *  <!--  for_kind GetForKind(fv)                                      -->
  *  <!--  const struct for_var_t *fv;                                  -->
  *  Return the type of the for variable.
  */
 
 extern symchar *GetForName(CONST struct for_var_t *fv);
-/**< 
+/**<
  *  <!--  symchar *GetForName(fv)                                      -->
  *  <!--  const struct for_var_t *fv;                                  -->
  *  Return the name of the for variable
  */
 
 extern long GetForInteger(CONST struct for_var_t *fv);
-/**< 
+/**<
  *  <!--  long GetForInteger(fv)                                       -->
  *  <!--  const struct for_var_t *fv;                                  -->
  *  Return the value of an integer for variable.
@@ -201,14 +199,14 @@ extern symchar *GetForSymbol(CONST struct for_var_t *fv);
  */
 
 extern CONST struct set_t *GetForSet(CONST struct for_var_t *fv);
-/**< 
+/**<
  *  <!--  const struct set_t *GetForSet(fv)                            -->
  *  <!--  const struct for_var_t *fv;                                  -->
  *  Return the value of a set for variable.
  */
 
 extern void DestroyForVar(struct for_var_t *fv);
-/**< 
+/**<
  *  <!--  void DestroyForVar(fv)                                       -->
  *  <!--  struct for_var_t *fv;                                        -->
  *  Deallocate the memory of this for variable.  In the case of a set
@@ -216,7 +214,7 @@ extern void DestroyForVar(struct for_var_t *fv);
  */
 
 extern int ClearForVarRecycle(void);
-/**< 
+/**<
  *  <!--  int ClearForVarRecycle();                                    -->
  *  Deallocates the recycle list of forvar_t. returns the list length,
  *  if anyone cares.

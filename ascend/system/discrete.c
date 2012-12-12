@@ -20,10 +20,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "discrete.h"
@@ -514,7 +511,7 @@ static void *g_dis_tag = NULL;
 /*
  * should be using vp instead of a global counter.
  */
-static 
+static
 void *SetDisTags(struct Instance *i,VOIDPTR vp)
 {
   (void)vp;
@@ -554,10 +551,10 @@ struct dis_discrete **dis_BackendTokens_to_dis(slv_system_t sys,
 	/* guard a little */
       SetInterfacePtr((struct Instance *)atoms[i],(void *)i);
     } else {
-      /* 
+      /*
        * the odds of g_dis_tag being a legal pointer are vanishingly
        * small, so if we find an ATOM without g_dis_tag we assume it
-       * is outside the tree and shouldn't have been in the list. 
+       * is outside the tree and shouldn't have been in the list.
        */
       FPRINTF(stderr,"dis_BackendTokens_to_dis called with bad token.\n");
     }

@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <stdlib.h>
 #include <errno.h>
@@ -152,7 +150,7 @@ int datareader_set_parameters(DataReader *d, const char *parameters) {
         }
         partok = strtok(NULL,",:"); //reread parameter string for next token
     }
-	CONSOLE_DEBUG("parcount: %d,noutoputs: %d",parcount,d->noutputs); 
+	CONSOLE_DEBUG("parcount: %d,noutoputs: %d",parcount,d->noutputs);
     if (parcount+1 != d->noutputs) {
     	ERROR_REPORTER_HERE(ASC_USER_ERROR,
     	"Number of Columns in parameters and Model dont match, check model declaration");
@@ -163,11 +161,11 @@ int datareader_set_parameters(DataReader *d, const char *parameters) {
     variables less or equal to the variables allowed by the data file. This is
     different from the parameter check where the user is requesting a column out
     of range.
-    
+
     One could argue that the user might like to declare several model variables
     linked to the same data column, but a decision has been made by the developer
     to restrict this, as it is thought as superfluous for most modelling scenarios.
-    
+
     */
     if (d->noutputs > d->nmaxoutputs) {
     	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Numbef of model variables exceeds number of data colums, check your model");

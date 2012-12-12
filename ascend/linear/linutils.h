@@ -21,10 +21,8 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -54,7 +52,7 @@
 	do:
 
 		||A||\1 = max (i<=j<=n) SUM\1..m (Aij)^2.0
-	
+
 */
 ASC_DLLSPEC double linutils_A_1_norm(mtx_matrix_t mtx,
                                 mtx_region_t *reg);
@@ -62,7 +60,7 @@ ASC_DLLSPEC double linutils_A_1_norm(mtx_matrix_t mtx,
 
 /**
 	The A_infinity norm is:
-		
+
 		||A||    = max (i<=i<=m) SUM\1..n |Aij|
 	         inf
 

@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//**
 	@file
 	Data Reader implementation for the TMY2 format.
@@ -43,7 +41,7 @@ typedef struct Tmy2Point_struct{
 	float Id;
 	float T;
 	float v_wind;
-	
+
 } Tmy2Point;
 
 #define DATA(D) ((Tmy2Point *)(D->data))[D->i]
@@ -62,7 +60,7 @@ int datareader_tmy2_header(DataReader *d){
 	int longdeg, longmin;
 	int elev;
 
-	fscanf(d->f,"%s %s %s %d" 
+	fscanf(d->f,"%s %s %s %d"
 		" %c %d %d"
 		" %c %d %d"
 		" %d"
@@ -94,20 +92,20 @@ int datareader_tmy2_eof(DataReader *d){
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Read %d rows",d->ndata);
 		return 1;
 	}
-	
+
 	/* set the number of inputs and max outputs */
 	d->ninputs = 1;
 	/*
-	@TODO change the amount of data retrieved from a TMY2 file	
+	@TODO change the amount of data retrieved from a TMY2 file
 	*/
-	d->nmaxoutputs = 5; 
-		
+	d->nmaxoutputs = 5;
+
 	return 0;
 }
 
 #define MEAS(N) int N; char N##_source; int N##_uncert
 #define READ(N) &N, &N##_source, &N##_uncert
-	
+
 /**
 	Read a line of data and store in d.
 	@return 0 on success
@@ -139,7 +137,7 @@ int datareader_tmy2_data(DataReader *d){
 	MEAS(wvel); /* wind speed / (m/s) */
 	MEAS(vis); /* visibility / (100m) */
 	MEAS(ch); /* ceiling height / m (or special value) */
-	
+
 	MEAS(rain); /* preciptable water / mm */
 	MEAS(aer); /* aerosol optical depth in thousandths (???) */
 	MEAS(snow); /* snow depth on the specified day / cm (999=missing data) */
@@ -150,7 +148,7 @@ int datareader_tmy2_data(DataReader *d){
 
 	/* brace yourself for this one... */
 
-	res = fscanf(d->f, 
+	res = fscanf(d->f,
 		/* 1 */ "%2d%2d%2d%2d" "%4d%4d" "%4d%1c%1d" "%4d%1c%1d" "%4d%1c%1d" /* =15 */
 		/* 2 */ "%4d%1c%1d" "%4d%1c%1d" "%4d%1c%1d" "%4d%1c%1d" /* +12=27 */
 		/* 3 */ "%2d%1c%1d" "%2d%1c%1d" "%4d%1c%1d" "%4d%1c%1d" "%3d%1c%1d" "%4d%1c%1d" /* +18=45 */
@@ -180,7 +178,7 @@ int datareader_tmy2_data(DataReader *d){
 	}
 	*/
 
-	/* 
+	/*
 		for the moment, we only record global horizontal, direct normal,
 		ambient temperature, wind speed.
 	*/
@@ -206,7 +204,7 @@ int datareader_tmy2_data(DataReader *d){
 }
 
 
-	
+
 
 int datareader_tmy2_time(DataReader *d, double *t){
 	*t = DATA(d).t;
@@ -214,15 +212,15 @@ int datareader_tmy2_time(DataReader *d, double *t){
 }
 
 int datareader_tmy2_vals(DataReader *d, double *v){
-	
+
 	v[0]=DATA(d).I;
 	v[1]=DATA(d).Ibn;
 	v[2]=DATA(d).Id;
 	v[3]=DATA(d).T;
 	v[4]=DATA(d).v_wind;
-		
+
 	/*CONSOLE_DEBUG("At t=%f h, T = %lf, I = %f J/m2"
 		,(DATA(d).t/3600.0),DATA(d).T, DATA(d).I);*/
-		
+
 	return 0;
 }

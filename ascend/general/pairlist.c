@@ -18,10 +18,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdarg.h>
@@ -37,7 +34,7 @@ struct pairlist_t {
 };
 
 
-struct pairlist_t * 
+struct pairlist_t *
 pairlist_create(unsigned long capacity)
 {
 	struct pairlist_t * pl = (struct pairlist_t *)ascmalloc(sizeof(struct pairlist_t));
@@ -46,21 +43,21 @@ pairlist_create(unsigned long capacity)
 	return pl;
 }
 
-void * 
+void *
 pairlist_keyAt(struct pairlist_t * pl, unsigned long eindex)
 {
 	assert(pl != NULL);
 	return gl_fetch(pl->keys, eindex);
 }
 
-void * 
+void *
 pairlist_valueAt(struct pairlist_t * pl, unsigned long eindex)
 {
 	assert(pl != NULL);
 	return gl_fetch(pl->vals, eindex);
 }
 
-unsigned long 
+unsigned long
 pairlist_contains(struct pairlist_t * pl, void *key)
 {
 	unsigned long eindex;
@@ -69,7 +66,7 @@ pairlist_contains(struct pairlist_t * pl, void *key)
 	return eindex;
 }
 
-unsigned long 
+unsigned long
 pairlist_append(struct pairlist_t * pl, void *key, void * value)
 {
 	assert(pl != NULL);
@@ -124,7 +121,7 @@ struct gl_list_t *pairlist_values_and_destroy(struct pairlist_t *pl){
 	ascfree(pl);
 	return vals;
 }
-	
+
 
 long pairlist_length(struct pairlist_t * pl)
 {

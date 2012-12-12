@@ -21,14 +21,12 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
- *  The module is used for keeping bit lists (lists of 0/1 values).  
- *  Routines are provided for creating lists, set list elements, 
+ *  The module is used for keeping bit lists (lists of 0/1 values).
+ *  Routines are provided for creating lists, set list elements,
  *  changing list elements, and other set-like operations.<br><br>
  *
  *  Bits are numbered 0 .. (BLength(list)-1)
@@ -144,7 +142,7 @@ extern void UnionBLists(struct BitList *bl1, CONST struct BitList *bl2);
 #define BLength(bl) BLengthF(bl)
 #endif
 extern unsigned long BLengthF(CONST struct BitList *bl);
-/**< 
+/**<
  *  Return the length of bl.
  */
 

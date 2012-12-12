@@ -23,10 +23,8 @@ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with
-the program; if not, write to the Free Software Foundation, Inc., 675
-Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
-COPYING is found in ../compiler.
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 \*********************************************************************/
 
 /* d1mach.c. Ben Allan
@@ -59,7 +57,7 @@ C  NONE
 #include <stdio.h>
 #include <float.h>
 #include <math.h>
- 
+
 
 /* Commentary and Apology:
  * We used to have a bunch of #ifdef's here trying to figure out which

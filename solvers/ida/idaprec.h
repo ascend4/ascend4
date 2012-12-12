@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//**
 	@file
 	Preconditioner routines for the ASCEND wrapping of the IDA integrator.
@@ -34,7 +32,7 @@ typedef void IntegratorIdaPrecCreateFn(IntegratorSystem *integ);
 	by the pcreate function (ensures that corresponding 'free' and 'create' are always used)
 
 	@TODO is there any way we can also store the FREE function in this struct?
-	
+
 	@note IDA uses a different convention for function pointer types, so no '*'.
 */
 typedef struct IntegratorIdaPrecStruct{

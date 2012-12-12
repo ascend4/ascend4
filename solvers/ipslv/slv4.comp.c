@@ -24,10 +24,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <math.h>
@@ -1497,7 +1494,7 @@ static void calc_step( slv4_system_t sys, int minor)
       vars.alpha2 = 0.0;
       sys->maxstep = 0.0;
       sys->varstep.norm2 = 0.0;
- 
+
 
    } else if( (tot2_norm2>0.0)&&(calc_sqrt_D0(tot2_norm2)<=sys->maxstep) ) {
       /* Attempt step in varstep2 direction */
@@ -1506,7 +1503,7 @@ static void calc_step( slv4_system_t sys, int minor)
       sys->maxstep = calc_sqrt_D0(tot2_norm2);
       sys->varstep.norm2 = calc_sqr_D0(sys->maxstep)*
          sys->varstep2.norm2/tot2_norm2;
- 
+
 
    } else if( (tot2_norm2==0.0 || sys->s.block.current_size==1) &&
              (tot1_norm2 > 0.0) ) {
@@ -1585,11 +1582,11 @@ static void restore_variables( slv4_system_t sys)
 
 /*
  *  Calculates the maximum fraction of the step which can be
- *  taken without making negative the complementary vars.  
+ *  taken without making negative the complementary vars.
  *  It is assumed that the current complementary variable
  *  is positive.  The step must be calculated.
  */
-static real64 factor_for_complementary_vars( slv4_system_t sys) 
+static real64 factor_for_complementary_vars( slv4_system_t sys)
 {
    real64 factor, minfactor;
    struct var_variable *var;
@@ -1612,7 +1609,7 @@ static real64 factor_for_complementary_vars( slv4_system_t sys)
          if (factor < 1.0) {
 #if DEBUG_COMPLEMENTARY_VAR
            FPRINTF(ASCERR,"Negative Complementary Variable : \n");
-           print_var_name(ASCERR,sys,var); 
+           print_var_name(ASCERR,sys,var);
            FPRINTF(ASCERR,"\n");
            FPRINTF(ASCERR,"factor = %f \n",factor);
 #endif /* DEBUG_COMPLEMENTARY_VAR */
@@ -1624,7 +1621,7 @@ static real64 factor_for_complementary_vars( slv4_system_t sys)
      }
    }
 #if DEBUG_COMPLEMENTARY_VAR
-  FPRINTF(ASCERR,"Minimum factor for complementary vars = %f \n",minfactor); 
+  FPRINTF(ASCERR,"Minimum factor for complementary vars = %f \n",minfactor);
 #endif /* DEBUG_COMPLEMENTARY_VAR */
   return minfactor;
 }
@@ -1665,8 +1662,8 @@ static real64 required_coef_to_stay_inbounds( slv4_system_t sys)
    }
    if (mincoef < 1.0) {
 #if DEBUG_COMPLEMENTARY_VAR
-     FPRINTF(ASCERR,"Coefficient to stay in bounds = %f \n",mincoef); 
-#endif /* DEBUG_COMPLEMENTARY_VAR */   
+     FPRINTF(ASCERR,"Coefficient to stay in bounds = %f \n",mincoef);
+#endif /* DEBUG_COMPLEMENTARY_VAR */
    }
    return(mincoef);
 }
@@ -1697,7 +1694,7 @@ static void apply_step( slv4_system_t sys)
        bounds_coef = factor;
      }
    }
- 
+
    for( col=sys->varstep.rng->low; col <= sys->varstep.rng->high; col++ ) {
       struct var_variable *var;
       real64 dx,val,bnd;
@@ -1720,7 +1717,7 @@ static void apply_step( slv4_system_t sys)
       if (bounds_coef < 1.0 && TRUNCATE) {
          dx = dx*TOWARD_BOUNDS*bounds_coef;
          sys->varstep.vec[col] = dx/vec[col];
-	} else {  
+	} else {
           if( !sys->p.ignore_bounds ) {
             if( val + dx > (bnd=var_upper_bound(var)) ) {
                dx = TOWARD_BOUNDS*(bnd-val);
@@ -2326,7 +2323,7 @@ int32 slv4_get_default_parameters(slv_system_t server, SlvClientToken asys,
   SLV_IPARM_MACRO(UPDATE_RELNOMS_PTR,parameters);
 
   slv_define_parm(parameters, int_parm,
-	       "itscalelim", "Iteration lim for iterative scale", IEX(14), 
+	       "itscalelim", "Iteration lim for iterative scale", IEX(14),
 	       U_p_int(val, 10),U_p_int(lo,0),U_p_int(hi,20000), 3);
   SLV_IPARM_MACRO(ITSCALELIM_PTR,parameters);
 
@@ -2399,7 +2396,7 @@ int32 slv4_get_default_parameters(slv_system_t server, SlvClientToken asys,
   SLV_RPARM_MACRO(TOWARD_BOUNDS_PTR,parameters);
 
   slv_define_parm(parameters, real_parm,
-	       "tocompbnds", "fraction move to complementary bounds", 
+	       "tocompbnds", "fraction move to complementary bounds",
                "fraction move to complementary bounds",
 	       U_p_real(val, 0.95),U_p_real(lo, 0),U_p_real(hi,1.0), 3);
   SLV_RPARM_MACRO(TOWARD_COMP_BOUNDS_PTR,parameters);
@@ -2453,7 +2450,7 @@ int32 slv4_get_default_parameters(slv_system_t server, SlvClientToken asys,
   SLV_BPARM_MACRO(TRUNCATE_COMP_PTR,parameters);
 
   slv_define_parm(parameters, bool_parm,
-	       "truncall", "truncate all variables", 
+	       "truncall", "truncate all variables",
                "truncate all variables",
 	       U_p_bool(val, 0),U_p_bool(lo,0),U_p_bool(hi,1), 2);
   SLV_BPARM_MACRO(TRUNCATE_ALL_PTR,parameters);
@@ -2646,7 +2643,7 @@ static void structural_analysis(slv_system_t server, slv4_system_t sys)
   }
   sys->J.dofdata = slv_get_dofdata(server);
   sys->rank = sys->J.dofdata->structural_rank;
- 
+
   if( !(PARTITION) ) {
     /* maybe we should reorder blocks here? maybe not */
     slv_block_unify(server);
@@ -3091,7 +3088,7 @@ static void slv4_iterate(slv_system_t server, SlvClientToken asys)
     mtx_write_region(ldat,sys->J.mtx,&(sys->J.reg));
     fclose(ldat);
   }
- 
+
   calc_phi(sys);
 
   if (SHOW_LESS_IMPT) {
@@ -3147,13 +3144,13 @@ static void slv4_iterate(slv_system_t server, SlvClientToken asys)
             real64 maxstep_coef;
             real64 denom;
             previous = MIN(sys->phi, oldphi);
-    
- 
+
+
 	      denom = sys->phi - oldphi +
 		sys->maxstep*calc_sqrt_D0(sys->gamma.norm2);
               maxstep_coef = denom > 0.0 ? 0.5*
               sys->maxstep*calc_sqrt_D0(sys->gamma.norm2)/denom : MAX_COEF;
- 
+
             if (maxstep_coef < MIN_COEF) maxstep_coef = MIN_COEF;
             if (maxstep_coef > MAX_COEF) maxstep_coef = MAX_COEF;
             if (SHOW_LESS_IMPT) {
@@ -3242,7 +3239,7 @@ static void slv4_iterate(slv_system_t server, SlvClientToken asys)
      */
     scale_residuals(sys);
     calc_phi(sys);
- 
+
     if (SHOW_LESS_IMPT) {
       FPRINTF(lif,"%-40s ---> %g\n", "    Anticipated phi",sys->phi);
     }

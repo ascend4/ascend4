@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -49,12 +47,12 @@ extern void Asc_CreateCommands(Tcl_Interp *interp);
  *  here.
  */
 
-extern void Asc_AddCommand(Tcl_Interp *interp, 
-                           char *cmdName, 
+extern void Asc_AddCommand(Tcl_Interp *interp,
+                           char *cmdName,
                            Tcl_CmdProc *proc,
-                           ClientData cdata, 
+                           ClientData cdata,
                            Tcl_CmdDeleteProc *deleteProc,
-                           CONST char *group, 
+                           CONST char *group,
                            CONST char *usage,
                            CONST char *shorth,
                            HLFunc longh);

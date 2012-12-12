@@ -16,9 +16,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	write_MPS: create the actual MPS file
 
@@ -38,7 +36,7 @@
 #include <ascend/system/slv_param.h>
 #include "mps_types.h"
 
-/** 
+/**
  *  Writes out a map file.
  *  The VXXXXXXX variable names are mapped to the actual ASCEND names.
  *
@@ -60,7 +58,7 @@ extern boolean write_name_map(const char *name,
  */
 extern boolean write_MPS(const char *name,
                          mps_data_t mps,
-                         struct slv_parameter *parms);   
+                         struct slv_parameter *parms);
 
 #endif  /* ASC_MPS_H */
 

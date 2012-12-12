@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../helmholtz.h"
@@ -24,9 +22,9 @@
 #define HYDROGEN_TSTAR 33.145
 
 /*
-	Ideal gas specific heat for 'normal hydrogen' from the masters thesis of 
-	Jacob Leachman, currently awaiting delivery to U of Idaho library. Values 
-	here come from a proof copy received from Steve Penoncello by email 20 Sep 
+	Ideal gas specific heat for 'normal hydrogen' from the masters thesis of
+	Jacob Leachman, currently awaiting delivery to U of Idaho library. Values
+	here come from a proof copy received from Steve Penoncello by email 20 Sep
 	2008.
 
 	It is understood that this is the same correlation as implemented by REFPROP
@@ -98,7 +96,7 @@ const HelmholtzData helmholtz_data_hydrogen = {
 };
 
 /*
-	Test suite. These tests attempt to validate the current code using 
+	Test suite. These tests attempt to validate the current code using
 	a few sample figures output by REFPROP 8.0. To compile and run the test:
 
 	./test.py hydrogen

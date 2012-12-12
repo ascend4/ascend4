@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -48,8 +46,8 @@
 */
 
 enum Copy_enum {
-  c_none, 
-  c_reference, 
+  c_none,
+  c_reference,
   c_tomodify
 };
 
@@ -59,7 +57,7 @@ extern void CheckChildCopies(unsigned long int num, struct Instance **clist);
  * Fixes up the num subatomic children sets copied into clist.
  */
 
-extern void RedoChildPointers(unsigned long int num, 
+extern void RedoChildPointers(unsigned long int num,
                               struct Instance *newparent,
                               struct Instance **newchildptrs,
                               CONST struct Instance *oldparent,
@@ -113,13 +111,13 @@ ASC_DLLSPEC struct Instance *CopyInstance(CONST struct Instance *i);
  *  <!--  const struct Instance *i;                                    -->
  *  This will make a copy of instance i.
  *
- *  This routine is especially good for copying atomic instances, 
- *  since it is faster to copy an atomic instance rather than 
+ *  This routine is especially good for copying atomic instances,
+ *  since it is faster to copy an atomic instance rather than
  *  instantiating it.
  *  <pre>
  *  1995
  *  This will make a copy of instance i.  i may not be a fundamental
- *  atomic instance.  At the current time, there are the following 
+ *  atomic instance.  At the current time, there are the following
  *  additional restrictions on instance i.
  *
  *    1) "i" may not contain instances of universal types

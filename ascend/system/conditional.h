@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @defgroup system_cond System Conditional
 	This is the ascend version of the conditional module
 	This version should be used by any user who receives
@@ -221,7 +219,7 @@ extern void when_set_flagbit(struct w_when *when,
 /**<  Is this when nested in another when? */
 #define WHEN_INCLUDED           0x2
 /**<
- *  Wser wants when in problem.  Bit should be treated as 
+ *  Wser wants when in problem.  Bit should be treated as
  *  readonly. use when_set_* to change.   solvers, ui clients.
  */
 #define WHEN_VISITED            0x4

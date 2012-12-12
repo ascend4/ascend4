@@ -13,10 +13,10 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	Binary tokens implementation for real relation instances.
-	
+
 	Note that this header and btprolog.h are a pair.
 	btprolog exists to make the C compiler job simpler -
 	we don't want it to know about struct Instance when

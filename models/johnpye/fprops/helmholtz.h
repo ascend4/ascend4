@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef FPROPS_HELMHOLTZ_H
@@ -66,7 +64,7 @@ typedef struct HelmholtzGausTerm_struct{
 
 /*
 	Data structure for 'critical terms' in the residual expression. These
-	terms are of the form described in the IAPWS-95 document, as cited in 
+	terms are of the form described in the IAPWS-95 document, as cited in
 	the file 'water.c'.
 
 	This structure is for terms are of the form:
@@ -99,9 +97,9 @@ typedef struct HelmholtzData_struct{
 	double rho_c; /**< critical density */
 	double T_t; /**< triple-point temperature */
 	//REMOVED: double p_t; /**< triple-point pressure */
-	
+
 	double omega; /**< Pitzer acentric factor */
-	
+
 	const IdealData *ideal; /* data for ideal component of Helmholtz energy */
 
 	unsigned np; /* number of power terms in residual equation */

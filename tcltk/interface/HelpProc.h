@@ -1,6 +1,6 @@
 /*
  *  HelpProc.h
- *  by Ben Allan          
+ *  by Ben Allan
  *  Created: 4/97
  *  Version: $Revision: 1.9 $
  *  Version control file: $RCSfile: HelpProc.h,v $
@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -113,7 +111,7 @@ extern char *HelpBuildString(char *first, ...);
  * Up to the first MAXHELPARGS are used in the returned string.
  */
 
-extern int Asc_HelpCheck(ClientData cdata, Tcl_Interp *interp, 
+extern int Asc_HelpCheck(ClientData cdata, Tcl_Interp *interp,
                          int argc, CONST84 char **argv);
 /**<
  * <!--  Asc_HelpCheck(cdata,interp,argc,argv);                        -->
@@ -144,10 +142,10 @@ extern int Asc_HelpDefineGroup(CONST char *froup, CONST char *explanation);
  *  Follows tcl return conventions.
  */
 
-extern int Asc_HelpDefine(CONST char *name, 
-                          CONST char *group, 
+extern int Asc_HelpDefine(CONST char *name,
+                          CONST char *group,
                           CONST char *usage,
-                          CONST char *desc, 
+                          CONST char *desc,
                           HLFunc longfunc);
 /**<
  *  <!--  Asc_HelpDefine(name,group,usage,desc,longfunc)               -->
@@ -236,7 +234,7 @@ extern int Asc_HelpCommandsByGroups(Tcl_Interp *interp);
 STDHLF_H(Asc_HelpCmd);
 /**<  Function returning our long help string. */
 
-extern int Asc_HelpCmd(ClientData cdata, Tcl_Interp *interp, 
+extern int Asc_HelpCmd(ClientData cdata, Tcl_Interp *interp,
                        int arcg, CONST84 char **argv);
 /**<
  * <!--  Asc_HelpCmd(cdata,interp,argc,argv);                          -->

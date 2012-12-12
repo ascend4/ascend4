@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -42,7 +40,7 @@
 */
 
 ASC_DLLSPEC struct Instance *MergeInstances(struct Instance *i1, struct Instance *i2);
-/**< 
+/**<
  *  This is the ARE_THE_SAME operator.
  *  The return value is the merged instance or NULL if can't be done.
  *  Instances are merged from the bottom up, checking one step ahead
@@ -61,7 +59,7 @@ ASC_DLLSPEC struct Instance *MergeInstances(struct Instance *i1, struct Instance
  */
 
 ASC_DLLSPEC void PostMergeCheck(struct Instance *i);
-/**< 
+/**<
  *  Sanity check after a MergeInstances() call.
  *  This should be performed after a MergeInstances call or a sequence of
  *  MergeInstances calls.  This goes through the merged instance tree and
@@ -70,7 +68,7 @@ ASC_DLLSPEC void PostMergeCheck(struct Instance *i);
 
 
 ASC_DLLSPEC void MergeCliques(struct Instance *i1, struct Instance *i2);
-/**< 
+/**<
  *  Merge the cliques represented by i1 and i2.  This does not enforce
  *  any type consistency between the clicks; it just links them together.
  *  It doesn't matter if i1 and i2 are already in the same clique.

@@ -23,10 +23,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdarg.h>
@@ -78,7 +75,7 @@ struct rel_stack {
 /* default for other tokens. this will cause an array bounds read
  * error if misused, which is nice if you assume purify.
  */
-/* 
+/*
  *  THIS LOOKS LIKE A BUG.
  *  rel_stack.lhs is unsigned long, so assigning -1 appears wrong
  *  If the intent is to use the result of (unsigned long)-1, then
@@ -235,7 +232,7 @@ static void WriteOpDS(Asc_DString *dsPtr, enum Expr_enum t,
 }
 
 char *RelationVarXName(CONST struct relation *r,
-                       unsigned long varnum, 
+                       unsigned long varnum,
                        struct RXNameData *rd)
 {
   unsigned long i;
@@ -480,7 +477,7 @@ void PushRelation(unsigned long int pos, int first, unsigned long int lhs)
 {
   struct rel_stack *next;
   next = g_rel_stack;
-  g_rel_stack = RSPMALLOC; 
+  g_rel_stack = RSPMALLOC;
   g_rel_stack->next = next;
   g_rel_stack->pos = pos;
   g_rel_stack->first = first;
@@ -765,7 +762,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
   CONST struct relation_term *term;
   struct Instance *cur_var;
   char *username;
-  
+
 
   ClearRelationStack();
   rlen = RelationLength(r,side);
@@ -789,7 +786,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
     case e_int:
       if (lang == relio_C) {
         if (pos == rlen /* don't check next term if at END */ ||
-            RelationTermType(RelationTerm(r,pos+1,side)) != e_ipower) { 
+            RelationTermType(RelationTerm(r,pos+1,side)) != e_ipower) {
           /* don't want to provoke integer division, normally */
           sprintf(SB255,"%ld.0",TermInteger(term));
         } else {
@@ -865,7 +862,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
           PushRelation(pos,0,NOLHS);
           PushRelation(pos-1,1,NOLHS);
           break;
-        case 0: 
+        case 0:
           /* seeing binary token the third (last) time */
           if (t==e_power) {
             Asc_DStringAppend(dsPtr," ))",3);
@@ -911,7 +908,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
         }
         PushRelation(pos-1,1,NOLHS);
         break;
-      case 0: 
+      case 0:
         /* seeing binary token the third (last) time */
         term = RelationTerm(r,pos-1,side);
         if (NeedParen(t,RelationTermType(term),1))

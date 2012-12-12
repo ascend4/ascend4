@@ -1,4 +1,4 @@
-/* 
+/*
  *  SLV: Ascend Nonlinear Solver
  *  by Kirk Andre' Abbott
  *  Created: 10/06/95
@@ -24,9 +24,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file

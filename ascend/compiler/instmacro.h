@@ -24,9 +24,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef ASC_INSTMACRO_H
@@ -93,9 +91,9 @@ extern struct WhenInstance *g_when_inst;
 /**< size to which all logical relation lists are initialized */
 #define AVG_ARY_CHILDREN 7L
 /**< size to which all array children lists are initialized */
-#define AVG_LINKS 4  
+#define AVG_LINKS 4
 /**< size to which all link_tables are initialized for link entries */
-#define AVG_LINKS_INST 4  
+#define AVG_LINKS_INST 4
 /**< size to which all link_entries are initialized for number of instances linked */
 #define UNDEFAULTEDREAL 0.0
 

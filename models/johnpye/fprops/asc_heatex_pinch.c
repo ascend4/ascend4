@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	Pinch model of heat exchanger calculated with FPROPS.
 */
@@ -87,9 +85,10 @@ static const char *heatex_help = "Calculate heat exchanger pinch temperature (de
 */
 
 /**
-	This is the function called from "IMPORT heatex"
+	This is the function called from "IMPORT heatex_pinch"
 
-	It sets up the functions contained in this external library
+	It sets up the functions contained in this external library, but doesn't
+	actually create any specific external-relation instances.
 */
 extern
 ASC_EXPORT int heatex_pinch_register(){
@@ -107,7 +106,7 @@ ASC_EXPORT int heatex_pinch_register(){
 		,heatex_help
 		,0.0
 	);
-		
+
 	if(result){
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"result = %d\n",result);
 	}
@@ -181,12 +180,12 @@ int heatex_prepare(struct BBoxInterp *bbox,
 
 fail:
 	if(hxd){
-		/* TODO FIXME implement FPROPS freeing */
+		/* TODO FIXME implement FPROPS freeing, will be important with fprops2 */
 		//if(hxd->comp[0])ASC_FREE(hxd->comp[0]);
 		//if(hxd->comp[1])ASC_FREE(hxd->comp[1]);
 		ASC_FREE(hxd);
 	}
-	return 1;	
+	return 1;
 }
 
 /*------------------------------------------------------------------------------
@@ -224,7 +223,7 @@ int heatex_calc(struct BBoxInterp *bbox,
 
 	CONSOLE_DEBUG("hot: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",hot.p/1e5, hot.h/1e3, hot.mdot);
 	CONSOLE_DEBUG("cold: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",cold.p/1e5, cold.h/1e3, cold.mdot);
-	
+
 	double Th,Tc,rhoh,rhoc;
 	/* loop from i=0 (cold inlet) to i=n (cold outlet) */
 	for(i=0;i<=n;++i){
