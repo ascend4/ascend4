@@ -1,16 +1,19 @@
+# This is a SPEC file to build SUNDIALS RPM for Fedora 17 and thereabouts.
+# 
+#
 %define libname sundials
 
 Summary:	Suite of nonlinear solvers
 Name:		sundials
-Version:	2.3.0
+Version:	2.5.0
 Release:	0%{?dist}
 License:	BSD-style
 Group:		System/Libraries
 URL:		http://www.llnl.gov/casc/sundials/
-Source0:	http://ascend.cheme.cmu.edu/ftp/%{name}-%{version}.tar.gz
+Source0:	https://computation.llnl.gov/casc/sundials/download/code/%{name}-%{version}.tar.gz
 
 # patch replaces config/ltmain.sh with a newer one.
-Patch0:         sundials-ltmain.patch
+#Patch0:         sundials-ltmain.patch
 
 BuildRoot:	/var/tmp/%{name}-%{version}
 
@@ -66,12 +69,9 @@ This package contains the documentation files
 
 %prep
 %setup -q 
-%patch -p1
+#%patch -p1
 
 %build
-aclocal
-autoconf
-autoheader
 ./configure \
   CXX=g++ \
   CC=gcc \
@@ -115,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %_bindir/sundials-config
 
 %changelog
+* Wed Dec 12 2012 John Pye <john@curioussymbols.com> 2.5.0
+- Updating for Fedora 17 (time passes...)
+
 * Wed Jun 27 2007 John Pye <john@curioussymbols.com> 2.3.0
 - Creating separate devel, doc and library packages.
 
