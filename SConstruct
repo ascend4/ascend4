@@ -1553,7 +1553,7 @@ def CheckPythonLib(context):
 # IDA test
 
 sundials_version_major_required = 2
-sundials_version_minor_min = 2
+sundials_version_minor_min = 4
 sundials_version_minor_max = 4
 
 sundials_version_text = """
