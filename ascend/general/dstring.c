@@ -25,10 +25,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "platform.h"
@@ -136,7 +133,7 @@ char *Asc_DStringAppend(register Asc_DString *dsPtr,
 void Asc_DStringTrunc(register Asc_DString *dsPtr, int length)
 {
   asc_assert(NULL != dsPtr);
-  
+
   if (length < 0) {
     length = 0;
   }

@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//**
 	@file
 	Dynamic library routines.
@@ -60,7 +58,7 @@ ASC_DLLSPEC char *SearchArchiveLibraryPath(const char *name, char *dpath, const 
 	FREEd when no longer needed.
 
 	@NOTE
-	This function has been moved out of compiler/packages.c into 
+	This function has been moved out of compiler/packages.c into
 	utilities/ascDynaLoad.c so that it can be shared with the solver for use
 	in dynamic loading of external solver DLLs.
 */

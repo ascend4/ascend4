@@ -120,13 +120,13 @@ struct gl_list_t *ShortestPath(CONST struct Instance *i,
   struct gl_list_t *path,*shortest=NULL;
   unsigned long c,len;
   unsigned mybest= UINT_MAX;
-  if (height>=best) return NULL;
-  if (i==ref) {
+  if(height>=best) return NULL;
+  if(i==ref) {
     shortest = gl_create(1L);
     gl_append_ptr(shortest,(VOIDPTR)ref);
     return shortest;
   }
-  if (0 != (len=NumberParents(i))){
+  if(0 != (len=NumberParents(i))){
     for(c=len;c>=1;c--){
       path = ShortestPath(InstanceParent(i,c),ref,height+1,mybest);
       if (path!=NULL){
@@ -152,12 +152,12 @@ struct gl_list_t *ShortestPath(CONST struct Instance *i,
       gl_store(shortest,1,(char *)i);
       assert((ref!=NULL)||(gl_length(shortest)==InstanceShortDepth(i)));
     }
-  } else {
-    if (ref==NULL) {
+  }else{
+    if(ref==NULL) {
       shortest = gl_create(1L);
       gl_append_ptr(shortest,(VOIDPTR)i);
       assert(gl_length(shortest)==InstanceShortDepth(i));
-    } else {
+    }else{
       return NULL;
     }
   }

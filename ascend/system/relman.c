@@ -15,9 +15,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	Relation manipulator module for the SLV solver.
 *//*
@@ -487,7 +485,7 @@ int relman_diff2(struct rel_relation *rel, const var_filter_t *filter
   *count = 0;
   if(safe){
     //CONSOLE_DEBUG("Derivative Type: Safe");
-    status =(int32)RelationCalcGradientSafe(rel_instance(rel),gradient); 
+    status =(int32)RelationCalcGradientSafe(rel_instance(rel),gradient);
     safe_error_to_stderr( (enum safe_err *)&status );
     /* always map when using safe functions */
     for (c=0; c < len; c++) {
@@ -533,14 +531,14 @@ int relman_diff2_rev(struct rel_relation *rel, const var_filter_t *filter
 	len = rel_n_incidences(rel);
 //	CONSOLE_DEBUG("In Function relman_diff2_rev");
 	vlist = rel_incidence_list(rel);
-	
+
 	gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
 	assert(gradient !=NULL);
 	*count = 0;
 	if(safe){
 		//CONSOLE_DEBUG("Derivative Type: Safe");
 		//PrintGradients(rel_instance(rel));
-		status =(int32)RelationCalcGradientRevSafe(rel_instance(rel),gradient); 
+		status =(int32)RelationCalcGradientRevSafe(rel_instance(rel),gradient);
 		safe_error_to_stderr( (enum safe_err *)&status );
 		/* always map when using safe functions */
 		for (c=0; c < len; c++) {
@@ -552,7 +550,7 @@ int relman_diff2_rev(struct rel_relation *rel, const var_filter_t *filter
 				(*count)++;
 			}
 		}
-//		CONSOLE_DEBUG("RETURNING (SAFE) calc_ok=%d",status); 
+//		CONSOLE_DEBUG("RETURNING (SAFE) calc_ok=%d",status);
 		return status;
 	}else{
 		//CONSOLE_DEBUG("Derivative Type: Not SAFE");
@@ -584,9 +582,9 @@ int relman_hess(struct rel_relation *rel, const var_filter_t *filter
 	hessian_mtx *matrix;
 	int32 len,i,j;
 	int status;
-	
+
 	assert(rel!=NULL && filter!=NULL);
-	
+
 	len = rel_n_incidences(rel);
 #if 0
 	/* we can't apply this assertion because there may be unfiltered incidences making len
@@ -595,23 +593,23 @@ int relman_hess(struct rel_relation *rel, const var_filter_t *filter
 #endif
 
 	vlist = rel_incidence_list(rel);
-	
+
 //	CONSOLE_DEBUG("IN FUNCTION relman_hess");
-	
+
 	matrix = Hessian_Mtx_create(hess_matrix->access_type,len);	// As Hessians may be (rarely) unsymmetrical
-																	// type of Hessian matrix should be decided from 
+																	// type of Hessian matrix should be decided from
 																	// type of relation
 	asc_assert(matrix !=NULL);
 	*count = 0;
-	
+
 
 
 	if(safe){
-		status =(int32)RelationCalcHessianMtxSafe(rel_instance(rel),matrix,len); 
+		status =(int32)RelationCalcHessianMtxSafe(rel_instance(rel),matrix,len);
 		safe_error_to_stderr( (enum safe_err *)&status );
 		/* always map when using safe functions */
 		for(i=0;i<len;i++){
-			if(var_apply_filter(vlist[i],filter)){	
+			if(var_apply_filter(vlist[i],filter)){
 				for(j=0;j<=i;j++){
 					if (var_apply_filter(vlist[j],filter)) {
 						Hessian_Mtx_set_element(hess_matrix,i,j,Hessian_Mtx_get_element(matrix,i,j));
@@ -620,13 +618,13 @@ int relman_hess(struct rel_relation *rel, const var_filter_t *filter
 				}
 			}
 		}
-//		CONSOLE_DEBUG("RETURNING (SAFE) calc_ok=%d",status); 
+//		CONSOLE_DEBUG("RETURNING (SAFE) calc_ok=%d",status);
 	}else{
 		if((status =(int32)RelationCalcHessianMtx(rel_instance(rel),matrix,len)) == 0) {
 
 			/* successful */
 			for(i=0;i<len;i++){
-				if(var_apply_filter(vlist[i],filter)){	
+				if(var_apply_filter(vlist[i],filter)){
 					for(j=0;j<=i;j++){
 						if (var_apply_filter(vlist[j],filter)) {
 							Hessian_Mtx_set_element(hess_matrix,i,j,Hessian_Mtx_get_element(matrix,i,j));
@@ -634,12 +632,12 @@ int relman_hess(struct rel_relation *rel, const var_filter_t *filter
 						}
 					}
 				}
-			}	
+			}
 		}
 	}
-	
+
 	Hessian_Mtx_destroy(matrix);
-	
+
 	return status;
 }
 
@@ -878,7 +876,7 @@ int32 relman_hessian_count(struct rel_relation **rlist, int32 rlen
 
 	CONSOLE_DEBUG("r1 = %p",r1);
 	r2 = RelDerivative(r1,0,&AllVariables);
-		
+
 	return 0;
 }
 
@@ -1064,7 +1062,7 @@ real64 *relman_directly_solve_new( struct rel_relation *rel,
 			case e_rel_glassbox:
 				/* I think glassbox functionality might be dead at the moment? */
 				break;
-#endif 
+#endif
 			default:
 				/* anything else? */
 				break;
@@ -1072,7 +1070,7 @@ real64 *relman_directly_solve_new( struct rel_relation *rel,
 	}
 	*able = FALSE;
 	*nsolns = 0;
-	return(NULL);	
+	return(NULL);
 }
 
 

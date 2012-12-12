@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	Implementation of the Modified Benedict-Webb-Rubin (MBWR) equation of state.
 
@@ -67,7 +65,7 @@ double mbwr_p(double T, double rhob, MbwrData *data){
 #undef R
 
 	/* add up the first sum in the MBWR correlation */
-	rhobpow = 1;	
+	rhobpow = 1;
 	for(i=0;i<9;++i){
 		rhobpow *= rhob;
 		p += alpha[i]* rhobpow;

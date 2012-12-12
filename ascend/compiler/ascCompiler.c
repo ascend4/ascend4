@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  This module initializes the fundamental data structures used by the rest of
  *  Ascend and pulls in system headers. Largely this means memory management.

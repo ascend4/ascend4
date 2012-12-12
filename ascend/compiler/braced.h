@@ -13,18 +13,18 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
-	Module for storing braced text of notes and some other 
+	Module for storing braced text of notes and some other
 	BRACEDTEXT_T applications.
 
-	What we're calling "braced text" is just a regular C char* augmented with a 
+	What we're calling "braced text" is just a regular C char* augmented with a
 	language attribute and string length, and with reference counting.
-	
+
 	Not everything that is defined as BRACEDTEXT_T in the grammar is necessarily
-	kept by using this module. For example, some units END up in the symbol 
+	kept by using this module. For example, some units END up in the symbol
 	table.
-	
+
 	'struct bracechar' is defined first in compiler.h, to hide the details of
 	whatever it is we do with braced text in composing NOTES and other
 	persistent forms.

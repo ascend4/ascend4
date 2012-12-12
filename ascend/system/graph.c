@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	System graph output
 
@@ -67,7 +65,7 @@ int system_write_graph(slv_system_t sys
 
 	unsigned edgecount = 0;
 	unsigned nodecount = 0;
-	
+
 	GVC_t *gvc;
 
 	const struct var_variable **ivars;
@@ -91,7 +89,7 @@ int system_write_graph(slv_system_t sys
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Unable to access GraphViz on your system. Is it installed?");
 		return 1;
 	}
-	
+
 	*(void **) (&gvConte) = Asc_DynamicFunction(ASC_GV_LIBNAME,"gvContext");
 	*(void **) (&agop) = Asc_DynamicFunction(ASC_GV_LIBNAME,"agopen");
 	*(void **) (&agnodeat) = Asc_DynamicFunction(ASC_GV_LIBNAME,"agnodeattr");
@@ -115,7 +113,7 @@ int system_write_graph(slv_system_t sys
 	(*agnodeat)(g,"label","");
 	(*agnodeat)(g,"color","");
 	(*agnodeat)(g,"style","");
-	
+
 	/* create notes for the relations */
 	for(i=0; i < id.neqn; ++i){
 		char *relname;

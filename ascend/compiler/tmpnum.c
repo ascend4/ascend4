@@ -22,10 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdarg.h>
 #include <ascend/general/platform.h>
@@ -207,7 +204,7 @@ unsigned long DecrementTmpNum(struct Instance *i)
   }
   switch(i->t) {
   case SIM_INST:
-    if (SIM_INST(i)->tmp_num > 0) { 
+    if (SIM_INST(i)->tmp_num > 0) {
       SIM_INST(i)->tmp_num -= 1;
     }
     return SIM_INST(i)->tmp_num;

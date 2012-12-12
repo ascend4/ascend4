@@ -16,9 +16,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "slv_param.h"
@@ -74,7 +72,7 @@ void slv_destroy_parms(slv_parameters_t *p) {
 */
 /** @page solver-parameters
 
-	Additional info on new solver parameter routines. This routine attempts 
+	Additional info on new solver parameter routines. This routine attempts
 	to make declaration of new parameters possible with simple syntax, without
 	requiring changes to the underlying data structure. Also aim to eliminate
 	the extensive #defines used in the old approach, and eliminate the risk of
@@ -106,7 +104,7 @@ static void slv_define_param_meta(struct slv_parameter *p1, const SlvParameterIn
 	p1->description = ASC_STRDUP(meta->description);
 	p1->display = meta->guipagenum;
 
-	/* record the index of this parameter */		
+	/* record the index of this parameter */
 	p1->number = index;
 }
 

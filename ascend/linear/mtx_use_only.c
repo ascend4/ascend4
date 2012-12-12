@@ -25,10 +25,8 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
@@ -69,7 +67,7 @@ struct element_t *mtx_create_element(mtx_matrix_t mtx,
 
 #if MTX_DEBUG
   if( NOTNULL(mtx_find_element(mtx,org_row,org_col)) ) {
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Element (%d,%d) already exists.\n",
             org_row,org_col);
   }
@@ -94,7 +92,7 @@ struct element_t *mtx_create_element_value(mtx_matrix_t mtx,
 
 #if MTX_DEBUG
   if( NOTNULL(mtx_find_element(mtx,org_row,org_col)) ) {
-    
+
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Element (%d,%d) already exists.\n",
             org_row,org_col);
   }

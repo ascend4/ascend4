@@ -52,7 +52,7 @@
 #if __STDC_VERSION__ >= 199901L
 
 /* C99 says to define __STDC_LIMIT_MACROS before including stdint.h,
- * if you want the limit (max/min) macros for int types. 
+ * if you want the limit (max/min) macros for int types.
  */
 #ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS 1
@@ -69,7 +69,7 @@ typedef uint32_t flex_uint32_t;
 typedef signed char flex_int8_t;
 typedef short int flex_int16_t;
 typedef int flex_int32_t;
-typedef unsigned char flex_uint8_t; 
+typedef unsigned char flex_uint8_t;
 typedef unsigned short int flex_uint16_t;
 typedef unsigned int flex_uint32_t;
 #endif /* ! C99 */
@@ -180,7 +180,7 @@ extern FILE *typ_in, *typ_out;
 
     /* Note: We specifically omit the test for yy_rule_can_match_eol because it requires
      *       access to the local variable yy_act. Since yyless() is a macro, it would break
-     *       existing scanners that call yyless() from OUTSIDE typ_lex. 
+     *       existing scanners that call yyless() from OUTSIDE typ_lex.
      *       One obvious solution it to make yy_act a global. I tried that, and saw
      *       a 5% performance hit in a non-typ_lineno scanner, because yy_act is
      *       normally declared as a register variable-- so it is not worth it.
@@ -192,7 +192,7 @@ extern FILE *typ_in, *typ_out;
                     if ( typ_text[yyl] == '\n' )\
                         --typ_lineno;\
             }while(0)
-    
+
 /* Return all but the first "n" matched characters back to the input stream. */
 #define yyless(n) \
 	do \
@@ -259,7 +259,7 @@ struct yy_buffer_state
 
     int yy_bs_lineno; /**< The line count. */
     int yy_bs_column; /**< The column count. */
-    
+
 	/* Whether to try to fill the input buffer when we reach the
 	 * end of it.
 	 */
@@ -649,7 +649,7 @@ static yyconst flex_int16_t yy_chk[497] =
 /* Table of booleans, true if rule could match eol. */
 static yyconst flex_int32_t yy_rule_can_match_eol[35] =
     {   0,
-0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 
+0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
     1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0,     };
 
 extern int typ__flex_debug;
@@ -708,9 +708,7 @@ char *yytext_ptr;
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /*
@@ -863,7 +861,7 @@ extern int typ_wrap (void );
 #endif
 
     static void yyunput (int c,char *buf_ptr  );
-    
+
 #ifndef yytext_ptr
 static void yy_flex_strncpy (char *,yyconst char *,int );
 #endif
@@ -984,7 +982,7 @@ YY_DECL
 	register yy_state_type yy_current_state;
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
-    
+
 #line 167 "tcltk/generic/interface/typelex.l"
 
 
@@ -1089,7 +1087,7 @@ find_rule: /* we branch to this label when backing up */
 			int yyl;
 			for ( yyl = (yy_prev_more_offset); yyl < typ_leng; ++yyl )
 				if ( typ_text[yyl] == '\n' )
-					   
+
     typ_lineno++;
 ;
 			}
@@ -1884,7 +1882,7 @@ static int yy_get_next_buffer (void)
 {
 	register yy_state_type yy_current_state;
 	register char *yy_cp;
-    
+
 	yy_current_state = (yy_start);
 
 	(yy_state_ptr) = (yy_state_buf);
@@ -1914,7 +1912,7 @@ static int yy_get_next_buffer (void)
     static yy_state_type yy_try_NUL_trans  (yy_state_type yy_current_state )
 {
 	register int yy_is_jam;
-    
+
 	register YY_CHAR yy_c = 1;
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
@@ -1933,7 +1931,7 @@ static int yy_get_next_buffer (void)
     static void yyunput (int c, register char * yy_bp )
 {
 	register char *yy_cp;
-    
+
     yy_cp = (yy_c_buf_p);
 
 	/* undo effects of setting up typ_text */
@@ -1980,7 +1978,7 @@ static int yy_get_next_buffer (void)
 
 {
 	int c;
-    
+
 	*(yy_c_buf_p) = (yy_hold_char);
 
 	if ( *(yy_c_buf_p) == YY_END_OF_BUFFER_CHAR )
@@ -2042,7 +2040,7 @@ static int yy_get_next_buffer (void)
 	(yy_hold_char) = *++(yy_c_buf_p);
 
 	if ( c == '\n' )
-		   
+
     typ_lineno++;
 ;
 
@@ -2052,12 +2050,12 @@ static int yy_get_next_buffer (void)
 
 /** Immediately switch to a different input stream.
  * @param input_file A readable stream.
- * 
+ *
  * @note This function does not reset the start condition to @c INITIAL .
  */
     void typ_restart  (FILE * input_file )
 {
-    
+
 	if ( ! YY_CURRENT_BUFFER ){
         typ_ensure_buffer_stack ();
 		YY_CURRENT_BUFFER_LVALUE =
@@ -2070,11 +2068,11 @@ static int yy_get_next_buffer (void)
 
 /** Switch to a different input buffer.
  * @param new_buffer The new input buffer.
- * 
+ *
  */
     void typ__switch_to_buffer  (YY_BUFFER_STATE  new_buffer )
 {
-    
+
 	/* TODO. We should be able to replace this entire function body
 	 * with
 	 *		typ_pop_buffer_state();
@@ -2114,13 +2112,13 @@ static void typ__load_buffer_state  (void)
 /** Allocate and initialize an input buffer state.
  * @param file A readable stream.
  * @param size The character buffer size in bytes. When in doubt, use @c YY_BUF_SIZE.
- * 
+ *
  * @return the allocated buffer state.
  */
     YY_BUFFER_STATE typ__create_buffer  (FILE * file, int  size )
 {
 	YY_BUFFER_STATE b;
-    
+
 	b = (YY_BUFFER_STATE) typ_alloc(sizeof( struct yy_buffer_state )  );
 	if ( ! b )
 		YY_FATAL_ERROR( "out of dynamic memory in typ__create_buffer()" );
@@ -2143,11 +2141,11 @@ static void typ__load_buffer_state  (void)
 
 /** Destroy the buffer.
  * @param b a buffer created with typ__create_buffer()
- * 
+ *
  */
     void typ__delete_buffer (YY_BUFFER_STATE  b )
 {
-    
+
 	if ( ! b )
 		return;
 
@@ -2163,7 +2161,7 @@ static void typ__load_buffer_state  (void)
 #ifndef __cplusplus
 extern int isatty (int );
 #endif /* __cplusplus */
-    
+
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
  * such as during a typ_restart() or at EOF.
@@ -2172,7 +2170,7 @@ extern int isatty (int );
 
 {
 	int oerrno = errno;
-    
+
 	typ__flush_buffer(b );
 
 	b->yy_input_file = file;
@@ -2188,13 +2186,13 @@ extern int isatty (int );
     }
 
         b->yy_is_interactive = file ? (isatty( fileno(file) ) > 0) : 0;
-    
+
 	errno = oerrno;
 }
 
 /** Discard all buffered characters. On the next scan, YY_INPUT will be called.
  * @param b the buffer state to be flushed, usually @c YY_CURRENT_BUFFER.
- * 
+ *
  */
     void typ__flush_buffer (YY_BUFFER_STATE  b )
 {
@@ -2223,7 +2221,7 @@ extern int isatty (int );
  *  the current state. This function will allocate the stack
  *  if necessary.
  *  @param new_buffer The new state.
- *  
+ *
  */
 void typ_push_buffer_state (YY_BUFFER_STATE new_buffer )
 {
@@ -2253,7 +2251,7 @@ void typ_push_buffer_state (YY_BUFFER_STATE new_buffer )
 
 /** Removes and deletes the top of the stack, if present.
  *  The next element becomes the new top.
- *  
+ *
  */
 void typ_pop_buffer_state (void)
 {
@@ -2277,7 +2275,7 @@ void typ_pop_buffer_state (void)
 static void typ_ensure_buffer_stack (void)
 {
 	int num_to_alloc;
-    
+
 	if (!(yy_buffer_stack)) {
 
 		/* First allocation is just for 2 elements, since we don't know if this
@@ -2288,9 +2286,9 @@ static void typ_ensure_buffer_stack (void)
 		(yy_buffer_stack) = (struct yy_buffer_state**)typ_alloc
 								(num_to_alloc * sizeof(struct yy_buffer_state*)
 								);
-		
+
 		memset((yy_buffer_stack), 0, num_to_alloc * sizeof(struct yy_buffer_state*));
-				
+
 		(yy_buffer_stack_max) = num_to_alloc;
 		(yy_buffer_stack_top) = 0;
 		return;
@@ -2316,13 +2314,13 @@ static void typ_ensure_buffer_stack (void)
 /** Setup the input buffer state to scan directly from a user-specified character buffer.
  * @param base the character buffer
  * @param size the size in bytes of the character buffer
- * 
- * @return the newly allocated buffer state object. 
+ *
+ * @return the newly allocated buffer state object.
  */
 YY_BUFFER_STATE typ__scan_buffer  (char * base, yy_size_t  size )
 {
 	YY_BUFFER_STATE b;
-    
+
 	if ( size < 2 ||
 	     base[size-2] != YY_END_OF_BUFFER_CHAR ||
 	     base[size-1] != YY_END_OF_BUFFER_CHAR )
@@ -2351,14 +2349,14 @@ YY_BUFFER_STATE typ__scan_buffer  (char * base, yy_size_t  size )
 /** Setup the input buffer state to scan a string. The next call to typ_lex() will
  * scan from a @e copy of @a str.
  * @param str a NUL-terminated string to scan
- * 
+ *
  * @return the newly allocated buffer state object.
  * @note If you want to scan bytes that may contain NUL values, then use
  *       typ__scan_bytes() instead.
  */
 YY_BUFFER_STATE typ__scan_string (yyconst char * yystr )
 {
-    
+
 	return typ__scan_bytes(yystr,strlen(yystr) );
 }
 
@@ -2366,7 +2364,7 @@ YY_BUFFER_STATE typ__scan_string (yyconst char * yystr )
  * scan from a @e copy of @a bytes.
  * @param bytes the byte buffer to scan
  * @param len the number of bytes in the buffer pointed to by @a bytes.
- * 
+ *
  * @return the newly allocated buffer state object.
  */
 YY_BUFFER_STATE typ__scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
@@ -2375,7 +2373,7 @@ YY_BUFFER_STATE typ__scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
 	char *buf;
 	yy_size_t n;
 	int i;
-    
+
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = _yybytes_len + 2;
 	buf = (char *) typ_alloc(n  );
@@ -2429,16 +2427,16 @@ static void yy_fatal_error (yyconst char* msg )
 /* Accessor  methods (get/set functions) to struct members. */
 
 /** Get the current line number.
- * 
+ *
  */
 int typ_get_lineno  (void)
 {
-        
+
     return typ_lineno;
 }
 
 /** Get the input stream.
- * 
+ *
  */
 FILE *typ_get_in  (void)
 {
@@ -2446,7 +2444,7 @@ FILE *typ_get_in  (void)
 }
 
 /** Get the output stream.
- * 
+ *
  */
 FILE *typ_get_out  (void)
 {
@@ -2454,7 +2452,7 @@ FILE *typ_get_out  (void)
 }
 
 /** Get the length of the current token.
- * 
+ *
  */
 int typ_get_leng  (void)
 {
@@ -2462,7 +2460,7 @@ int typ_get_leng  (void)
 }
 
 /** Get the current token.
- * 
+ *
  */
 
 char *typ_get_text  (void)
@@ -2472,18 +2470,18 @@ char *typ_get_text  (void)
 
 /** Set the current line number.
  * @param line_number
- * 
+ *
  */
 void typ_set_lineno (int  line_number )
 {
-    
+
     typ_lineno = line_number;
 }
 
 /** Set the input stream. This does not discard the current
  * input buffer.
  * @param in_str A readable stream.
- * 
+ *
  * @see typ__switch_to_buffer
  */
 void typ_set_in (FILE *  in_str )
@@ -2514,7 +2512,7 @@ static int yy_init_globals (void)
 
     /* We do not touch typ_lineno unless the option is enabled. */
     typ_lineno =  1;
-    
+
     (yy_buffer_stack) = 0;
     (yy_buffer_stack_top) = 0;
     (yy_buffer_stack_max) = 0;
@@ -2545,7 +2543,7 @@ static int yy_init_globals (void)
 /* typ_lex_destroy is for both reentrant and non-reentrant scanners. */
 int typ_lex_destroy  (void)
 {
-    
+
     /* Pop the buffer stack, destroying each element. */
 	while(YY_CURRENT_BUFFER){
 		typ__delete_buffer(YY_CURRENT_BUFFER  );

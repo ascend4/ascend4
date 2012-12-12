@@ -15,12 +15,10 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	ASCEND linear solver
-	
+
 	A linear system consists of a coefficient matrix (A)
     and possibly several right-hand-sides (rhs).  The
     solution vector x sought can be that of either
@@ -116,21 +114,21 @@ extern int linsol_number_of_rhs(linsol_system_t sys);
  */
 
 ASC_DLLSPEC real64 *linsol_get_rhs(linsol_system_t sys, int n);
-/**< 
+/**<
  *  Returns the n-th rhs, where rhs's are indexed in the order they were
  *  added using linsol_add_rhs() from 0 to (# rhs's)-1.  NULL is returned
  *  if the index is out of range.
  */
 
 ASC_DLLSPEC void linsol_matrix_was_changed(linsol_system_t sys);
-/**< 
+/**<
  *  Informs the solver that a numerical value of a non-zero was changed.
  *  This must be called whenever any numerical changes to the matrix are
  *  made.
  */
 
 ASC_DLLSPEC void linsol_rhs_was_changed(linsol_system_t sys, real64 *rhs);
-/**< 
+/**<
  *  Informs the solver that the given rhs has been modified.  This must be
  *  called whenever the rhs is modified.
  */
@@ -144,7 +142,7 @@ extern void linsol_set_pivot_zero(linsol_system_t sys, real64 pivot_zero);
 extern real64 linsol_pivot_zero(linsol_system_t sys);
 /**<
 	Gets the pivot zero for the system.  Pivots less than or equal to
-	this value are regarded as zero.  
+	this value are regarded as zero.
 
 	Calls linsol_matrix_was_changed().
 */
@@ -160,7 +158,7 @@ extern real64 linsol_pivot_tolerance(linsol_system_t sys);
 /**<
 	Gets the pivot tolerance for the system.  Pivots less than this
 	fraction of the maximum pivot value in the same row are disregarded.
-	
+
 	Calls linsol_matrix_was_changed().
 */
 
@@ -254,7 +252,7 @@ ASC_DLLSPEC void linsol_solve(linsol_system_t sys, real64 *rhs);
  *  or not.
  */
 
-extern real64 linsol_var_value(linsol_system_t sys, 
+extern real64 linsol_var_value(linsol_system_t sys,
                                real64 *rhs, int32 var);
 /**<
  *  Returns the value of the variable in the solution vector associated
@@ -292,6 +290,6 @@ extern real64 linsol_eqn_residual(linsol_system_t sys,
  */
 
 /** @} */
- 
+
 #endif  /* ASC_LINSOL_H */
 

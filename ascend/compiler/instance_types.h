@@ -80,7 +80,7 @@
 /* # define ALIGNSTUPID 1 */
 /* # endif */
 /* if ALIGNSTUPID, then 4 byte ptrs must fall on 8 byte boundaries */
-/* any architecture with such a restrict should be summarily torched */
+/* any architecture with such a restriction should be summarily torched */
 
 
 /* FUNDAMENTAL INSTANCES */
@@ -193,7 +193,7 @@ struct RealAtomInstance {
 
 #if 0
 /** future work.
- * needs parser and interpretter support. Not yet used.
+ * needs parser and interpreter support. Not yet used.
  * @todo Implement SolverAtomInstance.
  */
 struct SolverAtomInstance {

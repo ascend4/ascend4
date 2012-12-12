@@ -24,10 +24,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdarg.h>
 #include <ascend/general/platform.h>
@@ -620,6 +617,11 @@ void DestroyInstance(struct Instance *inst, struct Instance *parent)
   struct TypeDescription *desc;
   int delete;
   if (inst==NULL) return;
+
+  /*char *temp = WriteInstanceNameString(parent,NULL);
+  CONSOLE_DEBUG("parent name = %s",temp);
+  ASC_FREE(temp);*/
+
   if (InterfacePtrDelete!=NULL) {
     DeleteIPtr(inst);
   }

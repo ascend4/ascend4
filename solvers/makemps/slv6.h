@@ -24,10 +24,8 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -58,7 +56,7 @@
  *  </pre>
  *  @todo makeMPS (solver/slv6.c) is out-of-date and will not compile.
  *        Should be either fixed or archived.
- *  @todo Restructure solver/slv6 & mps so can remove declarations in 
+ *  @todo Restructure solver/slv6 & mps so can remove declarations in
  *        solver/slv6.h out of header.  Currently needed by mps.[ch].
  */
 
@@ -92,11 +90,11 @@ int slv6_register(SlvFunctionsT *sft);
 #define slv6_solver_number 6   /**< Solver's number */
 
 extern boolean free_inc_var_filter(struct var_variable *var);
-/**< 
+/**<
  ***  I've been calling this particular var filter a lot ,
  ***  so I decided to make it a subroutine.  Returns true if
  ***  var is not fixed and incident in something.
- **/ 
+ **/
 
 #if 0
 extern void slv6_set_var_list();
@@ -127,19 +125,19 @@ extern void slv6_solve();
 /*********************************************************************
     Craig Schmidt 2/15/95
 
-    This section describes the parameters, subparameters, 
-    and status flags as used by the solver.  
-    
+    This section describes the parameters, subparameters,
+    and status flags as used by the solver.
+
     *** See slv6_create() for more specific information   ***
     *** on parameters and status flags                  ***
-    
+
     *** Note: the parameters can be changed by the user ***
     ***       with the slv6_set_parameters routine      ***
 
 
     Use of subparameters in iarray and rarray:
-   
-    iarray[SP6_NONLIN]   0->require linear model, 
+
+    iarray[SP6_NONLIN]   0->require linear model,
                          1->solve linearization at current pt
     iarray[SP6_RELAXED]  0->solve regular problem
                          1->solve LP relaxation of problem
@@ -159,7 +157,7 @@ extern void slv6_solve();
                          1->solver supports SCICONIC style semi-continuous vars
     iarray[SP6_SOS1]     0->no support
                          1->solver supports SOS1, i.e. sum(Xi)  = 1
-    iarray[SP6_SOS2]     0->no support  
+    iarray[SP6_SOS2]     0->no support
                          1->solver supports SOS2, i.e. sum(xi) <=2, with 2 nonzeros being adjacent
                          Note: this parameter currently ignored, no support offered for type 2
     iarray[SP6_SOS3]     0->no support
@@ -170,18 +168,18 @@ extern void slv6_solve();
     iarray[SP6_EPS]      0->no support
                          1->solver supports QOMILP style EPS termination criterion
                          Note: value of bound is in rarray[SP6_EPSVAL]
-   
+
     rarray[SP6_BOVAL]    value of QOMILP style BO cutoff bound in names section
                          Note: Ignored if iarray[SP6_BO]=0
     rarray[SP6_EPSVAL]   value of QOMILP style EPS termination criterion
                          Note: Ignored if iarray[SP6_EPS]=0
     rarray[SP6_PINF]     any UB >= pinf is set to + infinity
     rarray[SP6_MINF]     any LB <= minf is set to - infinity
-                         
+
     carray[SP6_FILENAME] pointer to filename to create
-   
+
 *********************************************************************/
-#if 0     
+#if 0
 #define slv6_IA_SIZE 12
 #define slv6_RA_SIZE 4
 #define slv6_CA_SIZE 1

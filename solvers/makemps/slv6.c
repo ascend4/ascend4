@@ -25,10 +25,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*  known bugs
  *  still uses pl_ functions and assumes the old slv protocol.
@@ -130,7 +127,7 @@ static int slv6_get_default_parameters(slv_system_t server, SlvClientToken asys
 			"throw SIGFPE errors which will then halt integration (FALSE)."
 		}, FALSE}
 	);
-		
+
 	/** Integer and Bool Options */
 
 	slv_param_bool(parameters,SP6_NONLIN
@@ -176,7 +173,7 @@ static int slv6_get_default_parameters(slv_system_t server, SlvClientToken asys
 			,"0->solver defines integer vars using INTORG; 1->solver defines integer vars using UI in BOUNDS; 2->no support for integer vars"
 		}, 2, 0, 2}
 	);
-	
+
 
 	slv_param_bool(parameters,SP6_SEMI
 		,(SlvParameterInitBool){{"semi"
@@ -223,14 +220,14 @@ static int slv6_get_default_parameters(slv_system_t server, SlvClientToken asys
 
 	slv_param_real(parameters,SP6_BOVAL
 		,(SlvParameterInitReal){{"boval"
-			,"BO cutoff bound value",3  
+			,"BO cutoff bound value",3
 			,"Value of QOMILP style BO cutoff bound in names section. Ignored if 'bo' is FALSE."
 		}, 0, -1e99, 1.e99}
 	);
 
 	slv_param_real(parameters,SP6_EPSVAL
 		,(SlvParameterInitReal){{"epsval"
-			,"EPS termination criterion value",4  
+			,"EPS termination criterion value",4
 			,"Value of QOMILP-style EPS termination criterion. Note: Ignored if 'eps' is FALSE."
 		}, 0, -1e99, 1.e99}
 	);
@@ -256,11 +253,11 @@ static int slv6_get_default_parameters(slv_system_t server, SlvClientToken asys
 		}, "outfile.txt"}, (char *[]){
 			"outfile.txt","outfile1.txt","outfile2.txt","outfile3.txt",NULL
 		} /* FIXME how to specify that the user can type this in as free text? */
-	); 
+	);
 
 	asc_assert(parameters->num_parms==SP6_PARAMS);
 
-	return 1;	
+	return 1;
 }
 
 

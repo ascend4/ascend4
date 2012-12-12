@@ -1,7 +1,7 @@
 /*
  *  IPSlv ASCEND Interior Point Method Solver
  *  by Vicente Rico-Ramirez based on QRSlv
- *  Created: 
+ *  Created:
  *  Version: $ $
  *  Version control file: $ $
  *  Date last modified: $ $
@@ -20,10 +20,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <math.h>
@@ -472,14 +469,14 @@ static void calc_comp( slv5_system_t sys )
       FFLUSH(ASCERR);
     }
 #endif
-    if (rel_active(rel) && rel_included (rel) && rel_complementary(rel)) {  
+    if (rel_active(rel) && rel_included (rel) && rel_complementary(rel)) {
 #if DEBUG
       FPRINTF(ASCERR,"Complementary equation in slv5 \n");
 #endif /* DEBUG */
-      comp = comp + 1.0; 
+      comp = comp + 1.0;
     }
   }
- 
+
 #if DEBUG_ITERATION
   FPRINTF(ASCERR," No. of complementary eqns = %g \n",comp);
 #endif /*  DEBUG_ITERATION  */
@@ -579,7 +576,7 @@ static boolean calc_mu( slv5_system_t sys)
       FFLUSH(ASCERR);
     }
 #endif
-    if (rel_complementary(rel) && rel_active(rel)  && rel_included(rel)) { 
+    if (rel_complementary(rel) && rel_active(rel)  && rel_included(rel)) {
       muk = muk + rel_residual(rel);
 #if DEBUG
       FPRINTF(ASCERR,"Complementary equation in calc_mu \n");
@@ -587,7 +584,7 @@ static boolean calc_mu( slv5_system_t sys)
       FPRINTF(ASCERR,"residual vector = %g\n",sys->residuals.vec[row]);
       FPRINTF(ASCERR,"rel_residual = %g \n",rel_residual(rel));
       FPRINTF(ASCERR,"Partial muk is = %g \n",muk);
-#endif /* DEBUG */ 
+#endif /* DEBUG */
     }
   }
 
@@ -663,7 +660,7 @@ static boolean calc_muaff( slv5_system_t sys)
       FFLUSH(ASCERR);
     }
 #endif
-    if (rel_complementary(rel) && rel_active(rel)  && rel_included(rel)) { 
+    if (rel_complementary(rel) && rel_active(rel)  && rel_included(rel)) {
       muaff = muaff + sys->newton_residuals.vec[row];
  #if DEBUG
       FPRINTF(ASCERR,"Complementary equation in calc_muaff \n");
@@ -671,7 +668,7 @@ static boolean calc_muaff( slv5_system_t sys)
       FPRINTF(ASCERR,"residual vector = %g\n",sys->newton_residuals.vec[row]);
       FPRINTF(ASCERR,"rel_residual = %g \n",rel_residual(rel));
       FPRINTF(ASCERR,"Partial muaff is = %g \n",muaff);
-#endif /* DEBUG */ 
+#endif /* DEBUG */
     }
   }
 
@@ -712,7 +709,7 @@ static boolean calc_sigma( slv5_system_t sys)
   FPRINTF(ASCERR,"sigma is = %g \n",sys->sigma);
 #endif /* DEBUG_CENTERING */
 
-  return(calc_ok); 
+  return(calc_ok);
 }
 
 /*
@@ -764,13 +761,13 @@ static boolean calc_correction( slv5_system_t sys)
       FFLUSH(ASCERR);
     }
 #endif
-    if (rel_complementary(rel) && rel_active(rel)  && rel_included(rel)) {  
+    if (rel_complementary(rel) && rel_active(rel)  && rel_included(rel)) {
       sys->correction.vec[row] = relman_eval(rel,&calc_ok,SAFE_CALC);
 #if DEBUG
       FPRINTF(ASCERR,"calc_correction \n");
       FPRINTF(ASCERR,"row = %d\n",row);
       FPRINTF(ASCERR,"correction = %g\n",sys->correction.vec[row]);
-#endif /* DEBUG */ 
+#endif /* DEBUG */
     } else {
       sys->correction.vec[row] = 0.0;
     }
@@ -818,15 +815,15 @@ static boolean calc_perturbed_residuals( slv5_system_t sys)
     FPRINTF(ASCERR,"rel_residual = %g \n",rel_residual(rel));
     FPRINTF(ASCERR,"sigmamu = %g \n",sys->sigmamu);
     FPRINTF(ASCERR,"correction = %g \n",sys->correction.vec[row]);
-#endif /* DEBUG */ 
-    if (rel_complementary(rel) && rel_active(rel)  && rel_included(rel)) {  
+#endif /* DEBUG */
+    if (rel_complementary(rel) && rel_active(rel)  && rel_included(rel)) {
       sys->perturbed_residuals.vec[row] = sys->perturbed_residuals.vec[row] -
-	                                  sys->sigmamu 
+	                                  sys->sigmamu
 	                                  + sys->correction.vec[row];
 #if DEBUG
       FPRINTF(ASCERR,"residual vector - sigmamu + correction = %g\n",
 	      sys->perturbed_residuals.vec[row]);
-#endif /* DEBUG */ 
+#endif /* DEBUG */
     }
   }
   Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
@@ -1052,7 +1049,7 @@ static void scale_perturbed_residuals( slv5_system_t sys)
       FPRINTF(ASCERR,"residual vector = %g\n",
 	      sys->perturbed_residuals.vec[row]);
       FPRINTF(ASCERR,"rel_residual = %g \n",rel_residual(rel));
-#endif /* DEBUG */ 
+#endif /* DEBUG */
     sys->perturbed_residuals.vec[row] = sys->perturbed_residuals.vec[row]
                                         * sys->weights.vec[row];
   }
@@ -1372,7 +1369,7 @@ static void calc_nu( slv5_system_t sys)
       FPRINTF(ASCERR,"row = %d\n",row);
       FPRINTF(ASCERR,"residual vector = %g\n",sys->residuals.vec[row]);
       FPRINTF(ASCERR,"rel_residual = %g \n",rel_residual(rel));
-#endif /* DEBUG */ 
+#endif /* DEBUG */
         error = error + rel_residual(rel);
     } else {
       if (rel_active(rel) && rel_included(rel)) {
@@ -1382,7 +1379,7 @@ static void calc_nu( slv5_system_t sys)
       FPRINTF(ASCERR,"row = %d\n",row);
       FPRINTF(ASCERR,"residual vector = %g\n",sys->residuals.vec[row]);
       FPRINTF(ASCERR,"rel_residual = %g \n",rel_residual(rel));
-#endif /* DEBUG */ 
+#endif /* DEBUG */
       }
     }
   }
@@ -1422,7 +1419,7 @@ static void calc_psi( slv5_system_t sys)
       FPRINTF(ASCERR,"row = %d\n",row);
       FPRINTF(ASCERR,"residual vector = %g\n",sys->residuals.vec[row]);
       FPRINTF(ASCERR,"rel_residual = %g \n",rel_residual(rel));
-#endif /* DEBUG */ 
+#endif /* DEBUG */
       sumt = log10(rel_residual(rel));
       sum = sum + sumt;
     }
@@ -1468,11 +1465,11 @@ static void restore_variables( slv5_system_t sys)
 
 /*
  *  Calculates the maximum fraction of the step which can be
- *  taken without making negative the complementary vars.  
+ *  taken without making negative the complementary vars.
  *  It is assumed that the current complementary variable
  *  is positive.  The step must be calculated.
  */
-static real64 factor_for_complementary_vars( slv5_system_t sys, int32 v) 
+static real64 factor_for_complementary_vars( slv5_system_t sys, int32 v)
 {
    real64 factor, minfactor;
    struct var_variable *var;
@@ -1486,7 +1483,7 @@ static real64 factor_for_complementary_vars( slv5_system_t sys, int32 v)
    if (v == 1) {
      step = sys->varstep;
    } else {
-     step = sys->varnewstep;    
+     step = sys->varnewstep;
    }
 
    minfactor = 1.0;
@@ -1502,7 +1499,7 @@ static real64 factor_for_complementary_vars( slv5_system_t sys, int32 v)
          if (factor < 1.0) {
 #if DEBUG_COMPLEMENTARY_VAR
            FPRINTF(ASCERR,"Negative Complementary Variable : \n");
-           print_var_name(ASCERR,sys,var); 
+           print_var_name(ASCERR,sys,var);
            FPRINTF(ASCERR,"\n");
            FPRINTF(ASCERR,"factor = %g \n",factor);
 #endif /* DEBUG_COMPLEMENTARY_VAR */
@@ -1514,7 +1511,7 @@ static real64 factor_for_complementary_vars( slv5_system_t sys, int32 v)
      }
    }
 #if DEBUG_COMPLEMENTARY_VAR
-  FPRINTF(ASCERR,"Minimum complementary factor = %g \n",minfactor); 
+  FPRINTF(ASCERR,"Minimum complementary factor = %g \n",minfactor);
 #endif /* DEBUG_COMPLEMENTARY_VAR */
   return minfactor;
 }
@@ -1540,7 +1537,7 @@ static void apply_step( slv5_system_t sys, int32 v, real64 factor)
    if (v == 1) {
      step = sys->varstep;
    } else {
-     step = sys->varnewstep;    
+     step = sys->varnewstep;
    }
 
    for(col=step.rng->low; col<=step.rng->high;col++) {
@@ -1588,11 +1585,11 @@ static void apply_2nd_order_correction( slv5_system_t sys)
    real64 *vec;
 
    vec = (sys->nominals.vec);
-   step = sys->varnewstep;    
+   step = sys->varnewstep;
 
    for(col=step.rng->low; col<=step.rng->high;col++) {
      var = sys->vlist[mtx_col_to_org(sys->J.mtx,col)];
-     if (var_active(var) && var_incident(var) && var_complementary(var) 
+     if (var_active(var) && var_incident(var) && var_complementary(var)
          && (!var_fixed(var))) {
        dx = vec[col]*step.vec[col];
        val = dx;
@@ -2041,13 +2038,13 @@ int32 slv5_get_default_parameters(slv_system_t server, SlvClientToken asys,
   SLV_BPARM_MACRO(SHOW_LESS_IMPT_PTR,parameters);
 
   slv_define_parm(parameters, int_parm,
-	       "timelimit", "time limit (CPU sec/block)", 
+	       "timelimit", "time limit (CPU sec/block)",
 		"time limit (CPU sec/block)",
 	       U_p_int(val,1500),U_p_int(lo, 1),U_p_int(hi,20000),1);
   SLV_IPARM_MACRO(TIME_LIMIT_PTR,parameters);
 
   slv_define_parm(parameters, int_parm,
-	       "iterationlimit", "max iterations/block", 
+	       "iterationlimit", "max iterations/block",
 	       "max iterations/block",
 	       U_p_int(val, 30),U_p_int(lo, 1),U_p_int(hi,20000),1);
   SLV_IPARM_MACRO(ITER_LIMIT_PTR,parameters);
@@ -2068,7 +2065,7 @@ int32 slv5_get_default_parameters(slv_system_t server, SlvClientToken asys,
   SLV_RPARM_MACRO(PIVOT_TOL_PTR,parameters);
 
   slv_define_parm(parameters, real_parm,
-	       "feastol", "max residual (absolute)", 
+	       "feastol", "max residual (absolute)",
 	       "max residual (absolute)",
 	       U_p_real(val, 1e-8),U_p_real(lo, 1e-13),
 	       U_p_real(hi,100000.5),1);
@@ -2362,7 +2359,7 @@ static void structural_analysis(slv_system_t server, slv5_system_t sys)
   }
   sys->J.dofdata = slv_get_dofdata(server);
   sys->rank = sys->J.dofdata->structural_rank;
- 
+
   if( !(PARTITION) ) {
     /* maybe we should reorder blocks here? maybe not */
     slv_block_unify(server);
@@ -2695,7 +2692,7 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
   sys = SLV5(asys);
   mif = MIF(sys);
   lif = LIF(sys);
-  ds_status = 0; 
+  ds_status = 0;
   rank_defect = 0;
 
   if (server == NULL || sys==NULL) return;
@@ -2789,7 +2786,7 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
 
   scale_system(sys);
 
-  set_factor_options(sys); 
+  set_factor_options(sys);
   rank_defect = calc_pivots(sys);
 
   calc_newton(sys);
@@ -2845,7 +2842,7 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
           update_status(sys);
           return;
 	}
-      } 
+      }
     }
     if (sys->eta > 0.0) {
       sys->progress = -1.0 * ALPHA * factor * (1.0 - sys->sigma) *
@@ -2867,7 +2864,7 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
      *  Check calculations at new point.
      */
     new_ok = (calc_residuals(sys));
- 
+
     if( !new_ok ) {
       continue;
     }
@@ -2877,7 +2874,7 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
      */
     calc_psi(sys);
     scale_residuals(sys);
- 
+
     descent_ok = (sys->psi - oldpsi) < sys->progress;
     if (!descent_ok) {
 #if DEBUG_ITERATION

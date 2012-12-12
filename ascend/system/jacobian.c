@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "jacobian.h"
 #include "relman.h"
@@ -41,7 +39,7 @@ int system_jacobian(slv_system_t sys
 #ifdef JACOBIAN_DEBUG
 	char *varname;
 #endif
-	
+
 	/* first count the rels */
 	nsr = slv_get_num_solvers_rels(sys);
 	nr = slv_count_solvers_rels(sys,rfilter);
@@ -68,7 +66,7 @@ int system_jacobian(slv_system_t sys
 
 	n = 0;
 	for(i=0;i<nsv;++i){
-		if(var_apply_filter(svars[i],vfilter)){			
+		if(var_apply_filter(svars[i],vfilter)){
 			vartocol[i]=n;
 			sysjac->vars[n++] = svars[i];
 		}else{
@@ -86,14 +84,14 @@ int system_jacobian(slv_system_t sys
 	/* now create a matrix */
 	sysjac->M = mtx_create();
 	mtx_set_order(sysjac->M, MAX(nv,nr));
-	
+
 	for(i=0;i<nr;++i){
 #ifdef JACOBIAN_DEBUG
 		relname = rel_make_name(sys,sysjac->rels[i]);
 		CONSOLE_DEBUG("rel '%s'",relname);
 		ASC_FREE(relname);
 #endif
-	
+
 		res = relman_diff2(sysjac->rels[i], vfilter, derivvals, derivvars, &n, safe);
 		for(j=0;j<n;++j){
 #ifdef JACOBIAN_DEBUG
@@ -158,5 +156,5 @@ const var_filter_t system_vfilter_deriv = {
 
 const var_filter_t system_vfilter_nonderiv = {
 	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV ,
-	VAR_SVAR | VAR_ACTIVE | 0         | 0        
+	VAR_SVAR | VAR_ACTIVE | 0         | 0
 };

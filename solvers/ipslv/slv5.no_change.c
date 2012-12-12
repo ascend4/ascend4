@@ -1,7 +1,7 @@
 /*
  *  IPSlv ASCEND Interior Point Method Solver
  *  by Vicente Rico-Ramirez based on QRSlv
- *  Created: 
+ *  Created:
  *  Version: $ $
  *  Version control file: $ $
  *  Date last modified: $ $
@@ -20,10 +20,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <math.h>
@@ -1486,7 +1483,7 @@ static void calc_step( slv5_system_t sys, int minor)
       vars.alpha2 = 0.0;
       sys->maxstep = 0.0;
       sys->varstep.norm2 = 0.0;
- 
+
 
    } else if( (tot2_norm2>0.0)&&(calc_sqrt_D0(tot2_norm2)<=sys->maxstep) ) {
       /* Attempt step in varstep2 direction */
@@ -1495,7 +1492,7 @@ static void calc_step( slv5_system_t sys, int minor)
       sys->maxstep = calc_sqrt_D0(tot2_norm2);
       sys->varstep.norm2 = calc_sqr_D0(sys->maxstep)*
          sys->varstep2.norm2/tot2_norm2;
- 
+
 
    } else if( (tot2_norm2==0.0 || sys->s.block.current_size==1) &&
              (tot1_norm2 > 0.0) ) {
@@ -2238,7 +2235,7 @@ int32 slv5_get_default_parameters(slv_system_t server, SlvClientToken asys,
   SLV_IPARM_MACRO(UPDATE_RELNOMS_PTR,parameters);
 
   slv_define_parm(parameters, int_parm,
-	       "itscalelim", "Iteration lim for iterative scale", IEX(14), 
+	       "itscalelim", "Iteration lim for iterative scale", IEX(14),
 	       U_p_int(val, 10),U_p_int(lo,0),U_p_int(hi,20000), 3);
   SLV_IPARM_MACRO(ITSCALELIM_PTR,parameters);
 
@@ -2539,7 +2536,7 @@ static void structural_analysis(slv_system_t server, slv5_system_t sys)
   }
   sys->J.dofdata = slv_get_dofdata(server);
   sys->rank = sys->J.dofdata->structural_rank;
- 
+
   if( !(PARTITION) ) {
     /* maybe we should reorder blocks here? maybe not */
     slv_block_unify(server);
@@ -2984,7 +2981,7 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
     mtx_write_region(ldat,sys->J.mtx,&(sys->J.reg));
     fclose(ldat);
   }
- 
+
   calc_phi(sys);
 
   if (SHOW_LESS_IMPT) {
@@ -3040,13 +3037,13 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
             real64 maxstep_coef;
             real64 denom;
             previous = MIN(sys->phi, oldphi);
-    
- 
+
+
 	      denom = sys->phi - oldphi +
 		sys->maxstep*calc_sqrt_D0(sys->gamma.norm2);
               maxstep_coef = denom > 0.0 ? 0.5*
               sys->maxstep*calc_sqrt_D0(sys->gamma.norm2)/denom : MAX_COEF;
- 
+
             if (maxstep_coef < MIN_COEF) maxstep_coef = MIN_COEF;
             if (maxstep_coef > MAX_COEF) maxstep_coef = MAX_COEF;
             if (SHOW_LESS_IMPT) {
@@ -3135,7 +3132,7 @@ static void slv5_iterate(slv_system_t server, SlvClientToken asys)
      */
     scale_residuals(sys);
     calc_phi(sys);
- 
+
     if (SHOW_LESS_IMPT) {
       FPRINTF(lif,"%-40s ---> %g\n", "    Anticipated phi",sys->phi);
     }

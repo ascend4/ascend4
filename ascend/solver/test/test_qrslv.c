@@ -195,7 +195,7 @@ static void test_bug564(void){
 	package_load("qrslv",NULL);
 
 	/* load the file */
-	const char *path = "models/johnpye/fprops/brayton_split.a4c";
+	const char *path = "models/johnpye/fprops/brayton_split_salt.a4c";
 	{
 		int status;
 		Asc_OpenModule(path,&status);
@@ -210,7 +210,7 @@ static void test_bug564(void){
 	CU_ASSERT(0 == zz_parse());
 
 	/* find the model */
-	const char *simtype = "brayton_split_co2";
+	const char *simtype = "brayton_split_salt_co2";
 	CU_ASSERT(FindType(AddSymbol(simtype))!=NULL);
 
 	/* instantiate it */
@@ -255,11 +255,13 @@ static void test_bug564(void){
 	pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
 	CU_ASSERT(pe==Proc_all_ok);
 
+	CONSOLE_DEBUG("Destroy solver engines");
+	solver_destroy_engines();
+
 	/* destroy all that stuff */
 	CONSOLE_DEBUG("Destroying instance tree");
 	CU_ASSERT(siminst != NULL);
 
-	solver_destroy_engines();
 	Asc_CompilerDestroy();
 }
 

@@ -13,9 +13,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//**
 	@file
 	Tcl/Tk interface functions for the Integration feature
@@ -829,7 +827,7 @@ int Asc_IntegSetupCmd(ClientData cdata,Tcl_Interp *interp,
     Tcl_SetResult(interp, "Unsupported integrator", TCL_STATIC);
     Tcl_AppendResult(interp," ",engine,SNULL);
     return TCL_ERROR;
-  } 
+  }
 
   integrator_set_reporter(blsys, reporter);
   integrator_set_samples(blsys,&l_samplelist);

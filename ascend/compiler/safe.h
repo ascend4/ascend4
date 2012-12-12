@@ -24,10 +24,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -243,7 +240,7 @@ extern double safe_fabs_Dn(double x, int n, enum safe_err *safe);
 #define safe_div_D0(x,y,safe) safe_mul_D0((x),safe_rec(y,safe),(safe))
 #define safe_ipow_D0(x,y,safe) asc_ipow((x),ascnint(y))
 extern double safe_pow_D0(double x, double y, enum safe_err *safe);
-/**< 
+/**<
  *  <!--  value = safe_<binop>_D0(x,y,safe)                            -->
  *  <!--  double value,x,y;                                            -->
  *  <!--  enum safe_err *safe                                          -->
@@ -293,7 +290,7 @@ extern double safe_sub_Dn(double x, double y, int nwrt0, int nwrt1, enum safe_er
 extern double safe_mul_Dn(double x, double y, int nwrt0, int nwrt1, enum safe_err *safe);
 extern double safe_div_Dn(double x, double y, int nwrt0, int nwrt1, enum safe_err *safe);
 extern double
-safe_pow_Dn(double x, double y, int nwrt0, int nwrt1, enum safe_err *safe); 
+safe_pow_Dn(double x, double y, int nwrt0, int nwrt1, enum safe_err *safe);
 /**<  @todo this one not verified!*/
 /*
  *  diffn = safe_<binop>_Dn(x,y,nwrt0,nwrt1)

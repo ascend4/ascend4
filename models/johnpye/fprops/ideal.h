@@ -12,14 +12,12 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef FPROPS_IDEAL_H
 #define FPROPS_IDEAL_H
 
-/* 
+/*
 	Data types for declaration of ideal fluid components of property
 	correlations. Frequently property correlations for 'real' fluids are
 	given in terms of ideal gas components plus 'residual' or 'real'
@@ -29,7 +27,7 @@
 
 /*
 	Terms in the expression for cp0 that are power terms, of the form:
-	
+
 		c * T^t
 */
 typedef struct IdealPowTerm_struct{
@@ -53,7 +51,7 @@ typedef struct IdealPowTerm_struct{
 	however, we need terms of the form
 
 		c_i * T^P
-	
+
 	so we need to convert
 
 		c_i = C_i * Tstar^P
@@ -76,7 +74,7 @@ typedef struct IdealPowTerm_struct{
 
 	See J R Cooper 'Representation of the Ideal-Gas Thermaldynamic
 	Properties of Water', Int J Thermophys v 3 no 1, 1982 and also
-	Span, Lemmon, Jacobsen & Wagner 'A Reference Quality Equation of State 
+	Span, Lemmon, Jacobsen & Wagner 'A Reference Quality Equation of State
 	for Nitrogen' 1998.
 
 	From the above expression, the term appearing in the reduced

@@ -12,7 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//**
 	@file
 	Unit test functions for compiler. Nothing here yet.
@@ -63,7 +63,7 @@ static void test_fund_types(void){
 }
 
 static void test_parse_string_module(void){
-	
+
 	const char *model = "\n\
 		DEFINITION relation\
 		    included IS_A boolean;\
@@ -81,7 +81,7 @@ static void test_parse_string_module(void){
 
 	struct module_t *m;
 	int status;
-	
+
 	m = Asc_OpenStringModule(model, &status, ""/* name prefix*/);
 
 #ifdef BASICS_DEBUG
@@ -112,7 +112,7 @@ static void test_parse_string_module(void){
 }
 
 static void test_instantiate_string(void){
-	
+
 	const char *model = "(* silly little model *)\n\
 		DEFINITION relation\n\
 		    included IS_A boolean;\n\
@@ -137,7 +137,7 @@ static void test_instantiate_string(void){
 
 	//struct module_t *m;
 	int status;
-	
+
 	/*m =*/ Asc_OpenStringModule(model, &status, ""/* name prefix*/);
 	CU_ASSERT_FATAL(status==0); /* if successfully created */
 
@@ -165,8 +165,8 @@ static void test_instantiate_string(void){
 
 	/* check instances are of expected types */
 	CU_ASSERT(InstanceKind(ChildByChar(root,AddSymbol("x_rel")))==REL_INST);
-	CU_ASSERT(InstanceKind(ChildByChar(root,AddSymbol("x")))==REAL_ATOM_INST); 
-	CU_ASSERT(InstanceKind(ChildByChar(root,AddSymbol("x")))!=REAL_INST); 
+	CU_ASSERT(InstanceKind(ChildByChar(root,AddSymbol("x")))==REAL_ATOM_INST);
+	CU_ASSERT(InstanceKind(ChildByChar(root,AddSymbol("x")))!=REAL_INST);
 
 	/* check attributes on relation */
 	struct Instance *xrel;
@@ -188,7 +188,7 @@ static void test_parse_basemodel(void){
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	
+
 	m = Asc_OpenModule("basemodel.a4l",&status);
 	CU_ASSERT(status==0);
 
@@ -224,7 +224,7 @@ static void test_parse_file(void){
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	
+
 	m = Asc_OpenModule("system.a4l",&status);
 	CU_ASSERT(status==0);
 
@@ -270,7 +270,7 @@ static void test_instantiate_file(void){
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	
+
 	/* load the file */
 	/*m = */Asc_OpenModule("johnpye/testlog10.a4c",&status);
 	CU_ASSERT(status == 0);
@@ -278,7 +278,7 @@ static void test_instantiate_file(void){
 	/* parse it */
 	CU_ASSERT(0 == zz_parse());
 
-	/* find the model */	
+	/* find the model */
 	CU_ASSERT(FindType(AddSymbol("testlog10"))!=NULL);
 
 	/* instantiate it */
@@ -290,8 +290,8 @@ static void test_instantiate_file(void){
 	struct Instance *inst;
 
 	CU_ASSERT(NumberChildren(root)==5);
-	CU_ASSERT((inst = ChildByChar(root,AddSymbol("x"))) && InstanceKind(inst)==REAL_ATOM_INST); 
-	CU_ASSERT((inst = ChildByChar(root,AddSymbol("y"))) && InstanceKind(inst)==REAL_ATOM_INST); 
+	CU_ASSERT((inst = ChildByChar(root,AddSymbol("x"))) && InstanceKind(inst)==REAL_ATOM_INST);
+	CU_ASSERT((inst = ChildByChar(root,AddSymbol("y"))) && InstanceKind(inst)==REAL_ATOM_INST);
 	CU_ASSERT((inst = ChildByChar(root,AddSymbol("z"))) && InstanceKind(inst)==REAL_ATOM_INST);
 
 	CU_ASSERT((inst = ChildByChar(root,AddSymbol("log_10_expr"))) && InstanceKind(inst)==REL_INST);
@@ -307,7 +307,7 @@ static void test_initialize(void){
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	
+
 	/* load the file */
 #define TESTFILE "testinit"
 	/*m =*/ Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
@@ -316,7 +316,7 @@ static void test_initialize(void){
 	/* parse it */
 	CU_ASSERT(0 == zz_parse());
 
-	/* find the model */	
+	/* find the model */
 	CU_ASSERT(FindType(AddSymbol(TESTFILE))!=NULL);
 
 	/* instantiate it */
@@ -328,8 +328,8 @@ static void test_initialize(void){
 	struct Instance *inst;
 
 	CU_ASSERT(NumberChildren(root)==3);
-	CU_ASSERT((inst = ChildByChar(root,AddSymbol("x"))) && InstanceKind(inst)==REAL_ATOM_INST); 
-	CU_ASSERT((inst = ChildByChar(root,AddSymbol("y"))) && InstanceKind(inst)==REAL_ATOM_INST); 
+	CU_ASSERT((inst = ChildByChar(root,AddSymbol("x"))) && InstanceKind(inst)==REAL_ATOM_INST);
+	CU_ASSERT((inst = ChildByChar(root,AddSymbol("y"))) && InstanceKind(inst)==REAL_ATOM_INST);
 
 	CU_ASSERT((inst = ChildByChar(root,AddSymbol("expr1"))) && InstanceKind(inst)==REL_INST);
 
@@ -351,7 +351,7 @@ static void test_stop(void){
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	
+
 	/* load the file */
 #define TESTFILE "stop"
 	/*m =*/ Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
@@ -360,7 +360,7 @@ static void test_stop(void){
 	/* parse it */
 	CU_ASSERT(0 == zz_parse());
 
-	/* find the model */	
+	/* find the model */
 	CU_ASSERT(FindType(AddSymbol(TESTFILE))!=NULL);
 
 	/* instantiate it */
@@ -374,7 +374,7 @@ static void test_stop(void){
 	CU_ASSERT(pe!=Proc_all_ok);
 
 	struct Instance *inst;
-	CU_ASSERT((inst = ChildByChar(GetSimulationRoot(sim),AddSymbol("x"))) && InstanceKind(inst)==REAL_ATOM_INST); 
+	CU_ASSERT((inst = ChildByChar(GetSimulationRoot(sim),AddSymbol("x"))) && InstanceKind(inst)==REAL_ATOM_INST);
 	CU_ASSERT(RealAtomValue(inst)==2.0);
 
 	sim_destroy(sim);
@@ -389,7 +389,7 @@ static void test_stoponfailedassert(void){
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	
+
 	/* load the file */
 #define TESTFILE "stoponerror"
 	/*m =*/ Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
@@ -398,7 +398,7 @@ static void test_stoponfailedassert(void){
 	/* parse it */
 	CU_ASSERT(0 == zz_parse());
 
-	/* find the model */	
+	/* find the model */
 	CU_ASSERT(FindType(AddSymbol(TESTFILE))!=NULL);
 
 	/* instantiate it */
@@ -425,7 +425,7 @@ static void test_badassign(void){
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	
+
 	/* load the file */
 #define TESTFILE "badassign"
 	/*m =*/ Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
@@ -434,7 +434,7 @@ static void test_badassign(void){
 	/* parse it */
 	CU_ASSERT(0 == zz_parse());
 
-	/* find the model */	
+	/* find the model */
 	CU_ASSERT(FindType(AddSymbol(TESTFILE))!=NULL);
 
 	/* instantiate it */
@@ -448,8 +448,8 @@ static void test_badassign(void){
 
 	/* Check that x := 2 was NOT executed (after error statement) */
 	struct Instance *inst;
-	CU_ASSERT((inst = ChildByChar(GetSimulationRoot(sim),AddSymbol("x"))) && InstanceKind(inst)==REAL_ATOM_INST); 
-	CU_ASSERT(RealAtomValue(inst)==1.0);	
+	CU_ASSERT((inst = ChildByChar(GetSimulationRoot(sim),AddSymbol("x"))) && InstanceKind(inst)==REAL_ATOM_INST);
+	CU_ASSERT(RealAtomValue(inst)==1.0);
 
 	/* clean up */
 	sim_destroy(sim);
@@ -464,7 +464,7 @@ static void test_type_info(void){
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	
+
 	/* load the file */
 	/*m =*/ Asc_OpenModule("test/canvas/simple_recycle.a4c",&status);
 	CU_ASSERT(status == 0);
@@ -472,10 +472,10 @@ static void test_type_info(void){
 	/* parse it */
 	CU_ASSERT(0 == zz_parse());
 
-	/* find the model */	
+	/* find the model */
 	struct TypeDescription *T;
 	T = FindType(AddSymbol("ammonia_flash"));
-	
+
 	CU_ASSERT(T != NULL);
 
 	ChildListPtr CL;

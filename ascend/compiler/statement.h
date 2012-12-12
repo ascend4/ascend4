@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -106,7 +104,7 @@ extern struct Statement *CreateARR(struct VariableList *aname,
  *
  *  @param aname   avlname lhs name (in varlist form) of array being made.
  *  @param il      rhs varlist of things to alias.
- *  @param setname name (in varlist form) of set instance to create which 
+ *  @param setname name (in varlist form) of set instance to create which
  *                 indexes avlname.
  *  @param intset  symbol (0) or integer (1) set instance.
  *  @param setvals set expression for subscripts. Must evaluate to match
@@ -500,7 +498,7 @@ ASC_DLLSPEC enum stat_t StatementTypeF(CONST struct Statement *s);
  */
 extern struct module_t *StatementModuleF(CONST struct Statement *s);
 /**<
- *  Return the module that statement s was defined in. 
+ *  Return the module that statement s was defined in.
  *  Implementation function for StatementModule().  Do not call this
  *  function directly - use StatementModule() instead.
  */
@@ -518,7 +516,7 @@ extern struct module_t *StatementModuleF(CONST struct Statement *s);
  */
 extern unsigned long StatementLineNumF(CONST struct Statement *s);
 /**<
- *  Return the line number where statement s was defined. 
+ *  Return the line number where statement s was defined.
  *  Implementation function for StatementLineNum().  Do not call this
  *  function directly - use StatementLineNum() instead.
  */
@@ -546,7 +544,7 @@ extern struct Statement *CopyStatementF(struct Statement *s);
  */
 
 extern void DestroyStatement(struct Statement *s);
-/**< 
+/**<
  *  Delete a reference to statement s.  This make not actually deallocate
  *  the memory associated with s if there are still other references to
  *  the statement.  If there aren't any, remaining references it deallocates
@@ -554,7 +552,7 @@ extern void DestroyStatement(struct Statement *s);
  */
 
 extern struct Statement *CopyToModify(struct Statement *s);
-/**< 
+/**<
  *  This will always make a new separate copy of the statement, so that
  *  it can be modified.  The statement reference count is initialize to
  *  one.
@@ -580,61 +578,61 @@ extern unsigned int GetStatContextF(CONST struct Statement *s);
  */
 
 #define StatInFOR(stat) (GetStatContext(stat)&context_FOR)
-/**< 
+/**<
  *  Returns a nonzero value (context_FOR) if the statement is inside
  *  the statement list of a FOR statement.
  */
 
 #define StatInMETH(stat) (GetStatContext(stat)&context_METH)
-/**< 
+/**<
  *  Returns a nonzero value (context_METH) if the statement is inside
  *  the statement list of a method.
  */
 
 #define StatWrong(stat) (GetStatContext(stat)&context_WRONG)
-/**< 
+/**<
  *  Returns a nonzero value (context_WRONG) if the statement is probably
  *  incorrect in all situations.
  */
 
 #define StatInCOND(stat) (GetStatContext(stat)&context_COND)
-/**< 
+/**<
  *  Returns a nonzero value (context_COND) if the statement is inside
  *  the statement list of a CONDITIONAL statement.
  */
 
 #define StatInWHEN(stat) (GetStatContext(stat)&context_WHEN)
-/**< 
+/**<
  *  Returns a nonzero value (context_WHEN) if the statement is inside
  *  the statement list of a WHEN statement.
  */
 
 #define StatInSELECT(stat) (GetStatContext(stat)&context_SELECT)
-/**< 
+/**<
  *  Returns a nonzero value (context_SELECT) if the statement is inside
  *  the statement list of a SELECT statement.
  */
 
 #define StatInIF(stat) (GetStatContext(stat)&context_IF)
-/**< 
+/**<
  *  Returns a nonzero value (context_IF) if the statement is inside
  *  the thenblock or elseblock of an IF statement.
  */
 
 #define StatInSWITCH(stat) (GetStatContext(stat)&context_SWITCH)
-/**< 
+/**<
  *  Returns a nonzero value (context_SWITCH) if the statement is inside
  *  the statement list of a SWITCH statement.
  */
 
 #define StatModelParameter(stat) (GetStatContext(stat)&context_MODPARAM)
-/**< 
+/**<
  *  Returns a nonzero value (context_MODPARAM) if the statement is
  *  in a parameterized type list. (or at least came from there).
  */
 
 extern void SetStatContext(struct Statement *s, unsigned int bits);
-/**< 
+/**<
  *  Sets the context field of a statement to the value, bits, given.
  *  E.g. to turn on the FOR context bit,
  *  This function should only be used at parse time, and probably not
@@ -644,7 +642,7 @@ extern void SetStatContext(struct Statement *s, unsigned int bits);
  */
 
 extern void MarkStatContext(struct Statement *s, unsigned int bits);
-/**< 
+/**<
  *  Adds the context bits given in bits to the context field of the
  *  statement given.
  *  E.g. to turn on the FOR context bit,
@@ -656,7 +654,7 @@ extern void MarkStatContext(struct Statement *s, unsigned int bits);
  */
 
 extern struct VariableList *GetStatVarList(CONST struct Statement *s);
-/**< 
+/**<
  *  Returns the variable list of a
  *  IS_A, LINK, IS_REFINED_TO, WILL_BE, WILL_BE_THE_SAME,
  *  ARE_ALIKE, ARE_THE_SAME, ALIASES or ALIASES-ISA(ARR) statement.
@@ -707,7 +705,7 @@ extern CONST struct Set *GetStatTypeArgsF(CONST struct Statement *s);
  */
 
 extern unsigned int GetStatNeedsArgs(CONST struct Statement *s);
-/**< 
+/**<
  *  Returns the number of arguments required to satisfy the type of the
  *  ISA or IRT statement given. Note that this number is not necessarily
  *  the number of arguments actually in the statement as the user wrote it.
@@ -761,7 +759,7 @@ extern CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s);
 /**<
  *  Return the name of the key used to link the instances. This variable
  *  is used as a key in the LINK table to identify the instances that are
- *  linked together 
+ *  linked together
  *  @param s CONST struct Statement*, the statement to query.
  *  @return The name as a symchar*.
  *  @see LINKStatKeyF()
@@ -1044,7 +1042,7 @@ extern unsigned ForContainsWillbeF(CONST struct Statement *s);
 extern unsigned ForContainsSelectF(CONST struct Statement *s);
 extern unsigned ForContainsConditionalF(CONST struct Statement *s);
 extern unsigned ForContainsIllegalF(CONST struct Statement *s);
-/**< 
+/**<
  *  <pre>
  *  macro ForContains(s)
  *  unsigned ForContainsF(s)
@@ -1583,20 +1581,20 @@ extern struct StatementList *WhileStatBlockF(CONST struct Statement *s);
 /* * * stateflow * * */
 
 #define FlowStatControl(s) ((s)->v.flow.fc)
-/**< 
- * Return the type of flow control. 
- * @todo Needs a function wrapper. 
+/**<
+ * Return the type of flow control.
+ * @todo Needs a function wrapper.
  */
 
 #define FlowStatMessage(s) ((s)->v.flow.message)
-/**< 
+/**<
  * Return the message of the flow control.
  * @todo Needs a function wrapper.
  */
 
 /* * * StateASSERT functions * * */
 
-/** Return the ASSERT expression 
+/** Return the ASSERT expression
 	@param s the expression to test
 	@see AssertStatExprF()
 */
@@ -1941,7 +1939,7 @@ extern unsigned SelectContainsWillbeF(CONST struct Statement *s);
 extern unsigned SelectContainsSelectF(CONST struct Statement *s);
 extern unsigned SelectContainsConditionalF(CONST struct Statement *s);
 extern unsigned SelectContainsIllegalF(CONST struct Statement *s);
-/**< 
+/**<
  *  <pre>
  *  macro SelectContains(s)
  *  unsigned SelectContainsF(s)

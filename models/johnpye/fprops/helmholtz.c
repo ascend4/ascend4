@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	Implementation of the reduced molar Helmholtz free energy equation of state.
 
@@ -155,7 +153,7 @@ double helmholtz_p_raw(double T, double rho, const HelmholtzData *data){
 
 	//fprintf(stderr,"T = %f\n", T);
 	//fprintf(stderr,"rhob = %f, rhob* = %f, delta = %f\n", rho/data->M, data->rho_star/data->M, delta);
-	
+
 	double p = data->R * T * rho * (1 + delta * helm_resid_del(tau,delta,data));
 	if(isnan(p)){
 		fprintf(stderr,"T = %.12e, rho = %.12e\n",T,rho);
@@ -299,7 +297,7 @@ double helmholtz_cp(double T, double rho, const HelmholtzData *data){
 	double phir_d = helm_resid_del(tau,delta,data);
 	double phir_dd = helm_resid_deldel(tau,delta,data);
 	double phir_dt = helm_resid_deltau(tau,delta,data);
-	
+
 	/* note similarities with helmholtz_w */
 	double temp1 = 1 + 2*delta*phir_d + SQ(delta)*phir_dd;
 	double temp2 = 1 + delta*phir_d - delta*tau*phir_dt;
@@ -323,7 +321,7 @@ double helmholtz_w(double T, double rho, const HelmholtzData *data){
 	double phir_d = helm_resid_del(tau,delta,data);
 	double phir_dd = helm_resid_deldel(tau,delta,data);
 	double phir_dt = helm_resid_deltau(tau,delta,data);
-	
+
 	/* note similarities with helmholtz_cp */
 	double temp1 = 1. + 2.*delta*phir_d + SQ(delta)*phir_dd;
 	double temp2 = 1. + delta*phir_d - delta*tau*phir_dt;
@@ -347,7 +345,7 @@ double helmholtz_g(double T, double rho, const HelmholtzData *data){
 	double phir_d = helm_resid_del(tau,delta,data);
 	double phir = helm_resid(tau,delta,data);
 	double phi0 = helm_ideal(tau,delta,data->ideal);
-	
+
 	return data->R * T * (phi0 + phir + 1. + delta * phir_d);
 }
 
@@ -362,7 +360,7 @@ double helmholtz_cp0(double T, const HelmholtzData *data){
 	return val;
 }
 
-/** 
+/**
 	alpha_p function from IAPWS Advisory Note 3, used in calculation of
 	partial property derivatives.
 */
@@ -426,7 +424,7 @@ double helmholtz_dpdrho_T(double T, double rho, const HelmholtzData *data){
 #ifdef TEST
 	assert(!isinf(phir_del));
 	assert(!isinf(phir_deldel));
-#endif	
+#endif
 	return data->R * T * (1 + 2*delta*phir_del + SQ(delta)*phir_deldel);
 }
 
@@ -441,7 +439,7 @@ double helmholtz_d2pdrho2_T(double T, double rho, const HelmholtzData *data){
 	assert(!isinf(phir_del));
 	assert(!isinf(phir_deldel));
 	assert(!isinf(phir_deldeldel));
-#endif	
+#endif
 
 	return data->R * T / rho * delta * (2*phir_del + delta*(4*phir_deldel + delta*phir_deldeldel));
 }
@@ -472,7 +470,7 @@ double helmholtz_dhdrho_T(double T, double rho, const HelmholtzData *data){
 	double phir_del = helm_resid_del(tau,delta,data);
 	double phir_deltau = helm_resid_deltau(tau,delta,data);
 	double phir_deldel = helm_resid_deldel(tau,delta,data);
-	
+
 	return data->R * T / rho * (tau*delta*(0 + phir_deltau) + delta * phir_del + SQ(delta)*phir_deldel);
 }
 
@@ -496,7 +494,7 @@ double helmholtz_dudrho_T(double T, double rho, const HelmholtzData *data){
 	DEFINE_TD;
 
 	double phir_deltau = helm_resid_deltau(tau,delta,data);
-	
+
 	return data->R * T / rho * (tau * delta * phir_deltau);
 }
 
@@ -524,7 +522,7 @@ static double ipow(double x, int n){
 	}while(n);      /* the last pass, but the comparison is always
 					   true _except_ on the last pass. */
 
-	return t; 
+	return t;
 }
 
 /* maxima expressions:
@@ -703,7 +701,7 @@ double helm_resid(double tau, double delta, const HelmholtzData *data){
 /**
 	Derivative of the helmholtz residual function with respect to
 	delta.
-*/	
+*/
 double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 	double sum = 0, res = 0;
 	double dell, ldell;
@@ -798,9 +796,9 @@ double helm_resid_del(double tau,double delta, const HelmholtzData *data){
 /**
 	Derivative of the helmholtz residual function with respect to
 	tau.
-*/			
+*/
 double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
-	
+
 	double sum;
 	double res = 0;
 	double delX;
@@ -860,7 +858,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 #ifdef RESID_DEBUG
 		fprintf(stderr,"res = %f\n",res);
 #endif
-			
+
 		++gt;
 	}
 	assert(!__isnan(res));
@@ -884,7 +882,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzData *data){
 	assert(!__isnan(res));
 
 	return res;
-}	
+}
 
 
 /*=================== SECOND DERIVATIVES =======================*/
@@ -1003,7 +1001,7 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	const HelmholtzPowTerm *pt;
 	const HelmholtzGausTerm *gt;
 	const HelmholtzCritTerm *ct;
-	
+
 #ifdef RESID_DEBUG
 		fprintf(stderr,"tau=%f, del=%f\n",tau,delta);
 #endif
@@ -1043,9 +1041,9 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzData *data){
 	gt = &(data->gt[0]);
 	for(i=0; i<n; ++i){
 		double s1 = SQ(delta - gt->epsilon);
-		double f1 = gt->d*(gt->d - 1) 
+		double f1 = gt->d*(gt->d - 1)
 			+ 2.*gt->alpha*delta * (
-				delta * (2. * gt->alpha * s1 - 1) 
+				delta * (2. * gt->alpha * s1 - 1)
 				- 2. * gt->d * (delta - gt->epsilon)
 			);
 		res += gt->n * pow(tau,gt->t) * pow(delta, gt->d - 2.)
@@ -1174,7 +1172,7 @@ double helm_resid_tautau(double tau, double delta, const HelmholtzData *data){
 		DEFINE_DDELBDTAU;
 		DEFINE_DPSIDTAU;
 
-		double d2DELbdtau2 = 2. * ct->b * (DELB/DELTA) + 4. * SQ(theta) * ct->b * (ct->b - 1) * (DELB/SQ(DELTA));	
+		double d2DELbdtau2 = 2. * ct->b * (DELB/DELTA) + 4. * SQ(theta) * ct->b * (ct->b - 1) * (DELB/SQ(DELTA));
 
 		double d2PSIdtau2 = 2. * ct->D * PSI * (2. * ct->D * SQ(t1) -1.);
 
@@ -1267,8 +1265,8 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzData *data){
 
 		// this expression calculated from wxMaxima using subsitutions for
 		// D=delta-epsilon and A=alpha*delta.
-		double f1 = 
-			- (8*A*A2) * D*D2 
+		double f1 =
+			- (8*A*A2) * D*D2
 			+ (12*d * A2) * D2
 			+ (12 * delta * A2 + (6*d - 6*d2)*A) * D
 			- (6 * d * delta * A + d*d2 - 3*d2 + 2*d);

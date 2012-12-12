@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	Implementation of solver hooks on the C++ side, for accessing by the
 	'slvreq.h' language features (SOLVER, OPTION, SOLVE) in ASCEND METHODS.
@@ -23,7 +21,7 @@
 
 	See also SlvReqHooks in ascend/compiler/slvreq.h.
 */
- 
+
 #ifndef ASCXX_SOLVERHOOKS_H
 #define ASCXX_SOLVERHOOKS_H
 
@@ -80,7 +78,7 @@ public:
 	to reassign different solver hooks in the C++ layer, because the Python
 	GUI will use different hooks to the pure C++ API (see testslvreq.cpp).
 
-	Note that if no setHooks() call has been made before the first call to 
+	Note that if no setHooks() call has been made before the first call to
 	getHooks(), the SetHooksManager will assign a default C++ SolverHooks
 	object. Therefore, for users of Python or other possible interfaces based
 	on this code, you must make sure you first call

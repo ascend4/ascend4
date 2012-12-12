@@ -13,9 +13,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	Signal handling protocol definitions for ASCEND
 
@@ -30,7 +28,7 @@
 *//*
 	by Benjamin Andrew Allan, May 27, 1997
 	Last in CVS $Revision: 1.9 $ $Date: 1999/01/19 12:23:20 $ $Author: mthomas $
-	
+
 	10/15/2005  - Changed ascresetneeded() so that any previously
 	              registered handlers are reset before return.
 	            - Added Asc_SignalRecover() to standard handler
@@ -143,7 +141,7 @@ static int fenv_push(fenv_t *stack,int *top, int excepts);
 /**
 	Initialise ASCEND signal handling
 
-	Does not establish any traps, just the structures for maintaining them. 
+	Does not establish any traps, just the structures for maintaining them.
 	Pushes the existing traps, if any, on the bottom of the created stacks.
 
 	@NOTE Cannot be called twice successfully.
@@ -189,7 +187,7 @@ int Asc_SignalInit(void){
 #if defined(HAVE_C99FPE)
   CONSOLE_DEBUG("Initialise FPE state to stack (%d)",f_fenv_stack_top);
   fenv_push(f_fenv_stack,&f_fenv_stack_top,0);
-#endif 
+#endif
 
   return 0;
 }
@@ -394,7 +392,7 @@ void Asc_SignalPrintStack(int signum){
 	}
 	int i = 0;
 	const char *signame = (signum==SIGFPE?"SIGFPE":SIGNAME(signum));
-	
+
 #define LMAX 4096
 	char str[LMAX], *end = str;
 	int ch;
@@ -531,7 +529,7 @@ static void reset_trap(int signum){
 				/* reset the signal, if it's not already set to what we want */
 #ifdef SIGNAL_DEBUG
 				CONSOLE_DEBUG("Resetting signal %s from %p to %p (%s)"
-					,SIGNAME(signum) 
+					,SIGNAME(signum)
 					,oldfn,top.handler,top.name
 				);
 #endif
@@ -612,7 +610,7 @@ static int pop_trap(int signum, SigHandlerFn *func, char *name, char *file, int 
 	}
 
 	if(*index < 0)return 1;
-	
+
 	if(stack[*index].handler != func){
 #ifdef SIGNAL_DEBUG
 		error_reporter(ASC_PROG_ERR,file,line,name,"Request to pop '%s' (%p), but top of stack contains '%s' (%p)!"
@@ -641,11 +639,11 @@ static int pop_trap(int signum, SigHandlerFn *func, char *name, char *file, int 
 
 #ifdef HAVE_C99FPE
 
-/** 
+/**
 	Store current FPU state so that we can reset it later (after we've done
 	some stuff)
 
-	return 0 on success 
+	return 0 on success
 */
 static int fenv_push(fenv_t *stack, int *top, int excepts){
 #ifdef SIGNAL_DEBUG

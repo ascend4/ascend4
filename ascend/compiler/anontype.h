@@ -13,7 +13,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	'Anonymous type' classification functions.
 
@@ -86,7 +86,7 @@
 	       #include "utilities/ascConfig.h"
 	       #include "general/list.h"
 	       #include "compiler/instance_enum.h"
-	
+
 *//*
 	By Benjamin Andrew Allan
 	Created August 30, 1997.

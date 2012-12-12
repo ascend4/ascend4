@@ -3764,7 +3764,8 @@ static void UpdateInputArgsList(struct Instance *relinst
     if(pos){
       inputArgs[argloc] = pos;
     }else if(!destroy){
-	  char *context = WriteInstanceNameString(relinst,NULL);
+      /*char *context = WriteInstanceNameString(relinst,NULL);*/
+      char *context = "[unknown]";
       FPRINTF(ASCERR,"Screwed up merge of input variable %d in %s\n", argloc, context);
 	  ascfree(context);
       inputArgs[argloc] = 0;

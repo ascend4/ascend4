@@ -21,10 +21,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdarg.h>
 #include <ascend/general/platform.h>
@@ -130,36 +127,36 @@ static symchar *CopyString(CONST char *str,int userlen)
     }
     if (ptr != NULL){
       /* ptr must sit next symchar on a word boundary. */
-      assert((ptr->used & (sizeof(int)-1)) == 0); 
+      assert((ptr->used & (sizeof(int)-1)) == 0);
       lenptr = (int *)&(ptr->data[ptr->used]);
       lenptr[0] = userlen;
       result = (char *)(&lenptr[1]);
       strcpy(result,str);
       ptr->used += (length+sizeof(int));
-      while((ptr->used & (unsigned long)(sizeof(int)-1)) != 0 && 
+      while((ptr->used & (unsigned long)(sizeof(int)-1)) != 0 &&
             ptr->used < MAXIMUM_STRING_LENGTH) {
         /* pad string to next word boundary after nul with 0xFF */
         ptr->data[ptr->used] = (char)UCHAR_MAX;
         (ptr->used)++;
-      } 
+      }
       return (symchar *)result;
     }
     ptr = g_string_space;
   }
   if ((g_string_space = ASC_NEW(struct StringSpaceRec))==NULL){
     ASC_PANIC("Unable to allocate string space.\n");
-    
+
   }
   g_string_space->next = ptr;
   g_string_space->used = length + sizeof(int);
   strcpy((g_string_space->data + sizeof(int)),str);
   ((int *)g_string_space->data)[0] = userlen;
-  while(((g_string_space->used) & (sizeof(int)-1)) != 0 && 
+  while(((g_string_space->used) & (sizeof(int)-1)) != 0 &&
         g_string_space->used < MAXIMUM_STRING_LENGTH) {
     /* pad string to next word boundary after nul with 0xFF */
     g_string_space->data[g_string_space->used] = (char)UCHAR_MAX;
     (g_string_space->used)++;
-  } 
+  }
   return (symchar *)(g_string_space->data+sizeof(int));
 }
 
@@ -311,7 +308,7 @@ void PrintTabF(int noisy,FILE *fp)
 
 void PrintTab(int noisy)
 {
-  PrintTabF(noisy,stdout); 
+  PrintTabF(noisy,stdout);
 }
 
 #define STDUMP 0

@@ -12,15 +12,13 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	This file implements a Helmholtz fundamental equation correlation for
-	Carbon Dioxide using the results from 
+	Carbon Dioxide using the results from
 
 	R Span & W Wagner ''A new equation of state for carbon dioxide covering the
-	fluid region from the triple-point temperature to 1100 K at pressures up 
+	fluid region from the triple-point temperature to 1100 K at pressures up
 	to 800 MPa'', J Phys Chem Ref Data, Vol 25, No. 6, 1996.
 	http://link.aip.org/link/JPCRBU/v25/i6/p1509/s1
 */
@@ -41,7 +39,7 @@
 
 /**
 	Ideal gas data for CO2.
-	
+
 	The constant and linear factors for phi_0 have been offset to match the
 	reference state used by REFPROP, for the purpose of testing.
 */
@@ -51,7 +49,7 @@ const IdealData ideal_data_carbondioxide = {
 #if 0
 	/* The following values have been selected to give zero enthalpy and zero
 	entropy at the triple point for this fluid, see test.c 'helm_calc_offsets'.
-	However these changes are now disabled, because enthalpy never goes negative 
+	However these changes are now disabled, because enthalpy never goes negative
 	for	this species. */
 	-3.36545655935087095756
 	, 3.72263567031386832795
@@ -153,7 +151,7 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 
 	To run the test, compile and run as follows:
 
-	./test.py carbondioxide 
+	./test.py carbondioxide
 */
 
 #include <assert.h>

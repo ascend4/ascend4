@@ -16,9 +16,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <ascend/general/platform.h>
@@ -29,7 +27,7 @@
 #include <test/common.h>
 #include <test/assertimpl.h>
 
-/* 
+/*
  *  This is pretty simplistic, but so is tm_time.[ch].
  *  We just check for valid values, do a simple timing test, and stop.
  */

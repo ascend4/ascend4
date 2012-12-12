@@ -22,10 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdarg.h>
@@ -758,7 +755,7 @@ struct gl_list_t *FindNextNameElement(CONST struct Name *n,
       return NULL;
     default:
       ASC_PANIC("Need to add to FindNextNameElement.\n");
-      
+
     }
   }
 }
@@ -811,7 +808,7 @@ struct gl_list_t *FindInstancesFromNames(CONST struct Instance *i,
 
   *errpos = 0;
   len = gl_length(names);
-  if (len == 0) { 
+  if (len == 0) {
     *err = correct_instance;
     return NULL;
   }

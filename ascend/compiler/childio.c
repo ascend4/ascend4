@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  Implementation of Child list output
  */
@@ -193,7 +191,7 @@ CONST char *WriteChildMetaDetails(void)
   };
   static char result[(sizeof(metadata)+1)*80];
   static int done=0;
-  
+
   if (!done) {
     done = 1;
     sprintf(result,
@@ -340,19 +338,19 @@ char *WriteChildDetails(ChildListPtr cl,unsigned long n)
     } else {
       Asc_DStringAppend(dsPtr,"0} {",4);
     }
-    /* supported */ 
+    /* supported */
     if (ChildSupported(cl,n)) {
       Asc_DStringAppend(dsPtr,"1} {",4);
     } else {
       Asc_DStringAppend(dsPtr,"0} {",4);
     }
-    /* passed */ 
+    /* passed */
     if (ChildPassed(cl,n)) {
       Asc_DStringAppend(dsPtr,"1} {",4);
     } else {
       Asc_DStringAppend(dsPtr,"0} {",4);
     }
-    /* guesstype */ 
+    /* guesstype */
     desc = ChildBaseTypePtr(cl,n);
     if (desc == NULL) {
       Asc_DStringAppend(dsPtr,"UNKNOWN",7);
@@ -379,11 +377,11 @@ char *WriteChildDetails(ChildListPtr cl,unsigned long n)
     }
     WriteName2Str(dsPtr,name);
     Asc_DStringAppend(dsPtr,"} {",3);
-    /* module */ 
+    /* module */
     tmp = Asc_ModuleBestName(StatementModule(stat));
     Asc_DStringAppend(dsPtr,tmp,-1);
     Asc_DStringAppend(dsPtr,"} {",3);
-    /* line */ 
+    /* line */
     sprintf(longspace,"%lu",StatementLineNum(stat));
     Asc_DStringAppend(dsPtr,longspace,-1);
     /* statement */

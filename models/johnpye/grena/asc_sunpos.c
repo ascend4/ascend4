@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	Wrapper for sunpos_grena.c to allow access to the calculation from ASCEND.
 */
@@ -195,10 +193,10 @@ int sunpos_calc(struct BBoxInterp *bbox,
 
 	SunPos_set_press_temp(&S, p, T);
 	/* we ignore differences between universal time and terrestrial time.
-	it seems that these differences are < 1 sec in general 
+	it seems that these differences are < 1 sec in general
 	http://en.wikipedia.org/wiki/DUT1 */
 	SunPos_set_time(&S, t, 0);
-	
+
 	double zenith, azimuth;
 
 	SunPos_calc_zen_azi(&S, &zenith, &azimuth);

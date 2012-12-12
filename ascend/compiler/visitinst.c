@@ -24,10 +24,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdarg.h>
@@ -273,7 +270,7 @@ static int CheckVisitNumber(struct Instance *i)
     /* rogues */
     Asc_Panic(2, "VisitInstanceTree",
               "VisitInstanceTree: Instance tree contains illegal instance.");
-    
+
   }
 }
 #endif  /*  OLDCHECKVISIT  */
@@ -382,7 +379,7 @@ static int ZeroVisitNumber(struct Instance *i)
               "  Instance tree contains illegal instance.\n");
     /*NOTREACHED*/
   }
-  
+
 }
 
 #endif /* old unused code. might be handy for debugging someday */
@@ -396,7 +393,7 @@ void WriteWhereNull(FILE *f, struct Instance *i)
 }
 
 /* set global_visit_num = 0 after calling this for all instances
- * in simulation universe and prototype libraries. 
+ * in simulation universe and prototype libraries.
  */
 void ResetVisitCounts(struct Instance *inst)
 {
@@ -831,7 +828,7 @@ void MakeMap(struct Instance *inst,
   map[*lensofar].last = (int)GetTmpNum(inst);
   map[*lensofar].child = parents_child_num_of_i;
   SetTmpNum(inst,*lensofar);
-  (*lensofar)++; 
+  (*lensofar)++;
 }
 
 /*
@@ -857,7 +854,7 @@ void CalcMapSize(struct Instance *inst,unsigned long *lensofar)
   }
   /* if been here before or not, must record seeing here. */
   SetTmpNum(inst,INT_MAX);
-  (*lensofar)++; 
+  (*lensofar)++;
 }
 
 struct visitmapinfo *MakeVisitMap(struct Instance *root,unsigned long *len)
@@ -874,7 +871,7 @@ struct visitmapinfo *MakeVisitMap(struct Instance *root,unsigned long *len)
     return NULL;
   }
   /* put some crap at the END that should signal any reasonable program
-   * should also check this for being same before freeing. 
+   * should also check this for being same before freeing.
    */
   map[*len].parent = NULL;
   map[*len].context = NULL;

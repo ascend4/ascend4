@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//* @file
 	Conditional Modeling Configuration
 *//*
@@ -80,7 +78,7 @@ static void cases_matching_in_when_list(struct gl_list_t *,
 static int32 g_case_number = 0;
 
 /*----------------------------------------------------------------------------
-	
+
 */
 /**
 	Set the ACTIVE bit to value for all the relations
@@ -2069,7 +2067,7 @@ int32 build_disvar_solver_from_master(struct dis_discrete **masterdl,
 	Not currently in use, but maybe someday :) . It creates the solver
 	lists based in the master lists. The solver lists build based on
 	this function contains only ACTIVE vars, rels and logrels.
-	
+
 	We are using the function system_reanalyze instead
 */
 void rebuild_solvers_from_masters(slv_system_t sys)

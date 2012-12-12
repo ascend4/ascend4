@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  Implementation of Child list stuff.
  */
@@ -137,7 +135,7 @@ static void BuildChildHashTable(struct ChildListStructure *result)
     chp->sym = old->strptr;		/* hash key on pointer, not content. */
     htindex = CHILDHASHINDEX(chp->sym);	/* could save if symtab calc index */
     chp->next = result->table[htindex];	/* stick in bucket list. */
-    result->table[htindex] = chp;	
+    result->table[htindex] = chp;
   }
 }
 
@@ -352,7 +350,7 @@ unsigned int ChildAliasing(ChildListPtr cl, unsigned long int n)
 {
   unsigned result, origin;
   origin = CGET(cl,n)->origin;
-  result = AliasingOrigin(origin); 
+  result = AliasingOrigin(origin);
   return result;
 }
 

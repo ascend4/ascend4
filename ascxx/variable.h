@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef ASCXX_VARIABLE_H
 #define ASCXX_VARIABLE_H
@@ -56,7 +54,7 @@ public:
 	const double getLowerBound() const;
 	const std::vector<Relation> getIncidentRelations() const;
 	const int getNumIncidentRelations() const;
-	
+
 	Instanc getInstance();
 };
 

@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -156,7 +154,7 @@ extern void Asc_CodeGenShutDown(void);
 extern int Asc_CodeGenParseDataCmd(ClientData cdata, Tcl_Interp *interp,
                                    int argc, char *argv[]);
 /**<
- *  This function simply attempts to find all the instance 
+ *  This function simply attempts to find all the instance
  *  corresponding to the names in the list. This is mainly
  *  used for debugging.  Where list is a proper tcl list. <br><br>
  *
@@ -213,7 +211,7 @@ extern int Asc_CodeGenGeneralCmd(ClientData cdata, Tcl_Interp *interp,
  */
 
 extern void Asc_CodeGenWriteAscendFile(slv_system_t sys,
-                                       FILE *fp, 
+                                       FILE *fp,
                                        char *file_prefix,
                                        int gradients,
                                        char *typelist);

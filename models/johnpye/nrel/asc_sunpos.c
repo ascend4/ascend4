@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	Wrapper for sunpos_nrel.c to allow access to the calculation from ASCEND.
 */
@@ -244,7 +242,7 @@ static int julian_day_nrel_calc(struct BBoxInterp *bbox,
 	double tz;
 
 	y = inputs[0]; /* year */
-	mon = inputs[1]; /* month */ 
+	mon = inputs[1]; /* month */
 	d = inputs[2]; /* day */
 	h = inputs[3]; /* hour */
 	m = inputs[4]; /* minute */
@@ -252,7 +250,7 @@ static int julian_day_nrel_calc(struct BBoxInterp *bbox,
 	tz = inputs[6] / 3600.; /* timezone (in seconds, converted here to hours) */
 
 	double t = julian_day(y,mon,d, h,m,s, tz) * 3600 * 24;
-	
+
 	outputs[0] = t;
 	return 0;
 }

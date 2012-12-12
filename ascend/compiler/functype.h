@@ -21,9 +21,9 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  Revision notes:
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *  Revision notes:
  *
  *  If CHRIS_FUNC defined, auxillary quantities to func structure.
  *  2/96 baa Probably somebody should properly set these evaluation
@@ -46,9 +46,9 @@
 	@{
 */
 
-/** 
+/**
  *  Safe math error codes.
- *  If you add to this enum be sure to add to safe_error_to_stderr 
+ *  If you add to this enum be sure to add to safe_error_to_stderr
  */
 enum safe_err {
   safe_problem = -1,

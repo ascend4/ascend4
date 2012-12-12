@@ -12,7 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//**
 	@file
 	Unit test functions for compiler. Nothing here yet.
@@ -69,7 +69,7 @@ static void test_boolrel(void){
 
 	Asc_CompilerInit(0); /* no simplification of expressions for this test */
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	
+
 	/* load the file */
 #define TESTFILE "boolrel"
 	m = Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
@@ -78,7 +78,7 @@ static void test_boolrel(void){
 	/* parse it */
 	CU_ASSERT(0 == zz_parse());
 
-	/* find the model */	
+	/* find the model */
 	CU_ASSERT(FindType(AddSymbol(TESTFILE))!=NULL);
 
 	/* instantiate it */
@@ -95,19 +95,19 @@ static void test_boolrel(void){
 	CU_ASSERT(NULL != root);
 	CU_ASSERT(NULL != (inst = ChildByChar(root,AddSymbol("rel1"))));
 	CONSOLE_DEBUG("Instance kind = %d",InstanceKind(inst));
-	CU_ASSERT(InstanceKind(inst)==LREL_INST); 
+	CU_ASSERT(InstanceKind(inst)==LREL_INST);
 
 	char *out = WriteLogRelToString(inst,root);
 	CONSOLE_DEBUG("Relation: %s",out);
 
 
 	ASC_FREE(out);
-	
+
 	/* clean up */
 	sim_destroy(sim);
 	Asc_CompilerDestroy();
 #undef TESTFILE
-}	
+}
 
 
 /*===========================================================================*/

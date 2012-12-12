@@ -13,8 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file Small demonstration of the 'solve_ph' routines for FPROPS.
 
 To build this file, run
@@ -30,7 +29,7 @@ int main(void){
 	double p = 1e5;
 	double h = 3500e3;
 	const char *fluid = "water";
-	
+
 	const HelmholtzData *D = fprops_fluid(fluid);
 
 	printf("Solving for (p = %f bar, h = %f kJ/kg) for fluid '%s'\n",p/1e5,h/1e3,fluid);
@@ -38,13 +37,13 @@ int main(void){
 	int reg = fprops_region_ph(p,h, D);
 
 	printf("Region = %d\n",reg);
-	
+
 	double T = 0,rho = 0;
 	int res = fprops_solve_ph(p,h,&T, &rho, 0, D);
 
 	if(res)printf("ERROR %d! (check solve_ph.c for meaning)\n",res);
 	else printf("Success, solved state.\n");
-	
+
 	printf("Result: T = %f K, rho = %f kg/m3\n",T,rho);
 
 	double p1, h1;

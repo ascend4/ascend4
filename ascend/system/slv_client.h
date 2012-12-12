@@ -17,9 +17,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//**
 	@defgroup solver_client Solver Client
 	Routines to allow the ASCEND GUI/CLI to solve models, using an abstracted
@@ -162,7 +160,7 @@
 	'natural' order as discovered in the Instance hierarchy.
 
 	Then there are the 'solvers' (ie solver's) lists, which are reordered in
-	a formed defined by the solver. "the solvers var list is to be fetched by 
+	a formed defined by the solver. "the solvers var list is to be fetched by
 	the solvers".
 
 	Eventually the solvers_varlist will only include those vars the specific
@@ -662,32 +660,32 @@ extern struct dis_discrete **slv_get_master_disunatt_list(slv_system_t sys);
 */
 
 ASC_DLLSPEC struct rel_relation**slv_get_solvers_rel_list(slv_system_t sys);
-/**< 
-	Returns the (NULL-terminated) list of solver relations. 
+/**<
+	Returns the (NULL-terminated) list of solver relations.
 	@ref solverslists
 */
 
 extern struct rel_relation **slv_get_solvers_condrel_list(slv_system_t sys);
-/**< 
-	Returns the (NULL-terminated) list of solver conditional relations. 
+/**<
+	Returns the (NULL-terminated) list of solver conditional relations.
 	@ref solverslists
 */
 
 ASC_DLLSPEC struct rel_relation **slv_get_solvers_obj_list(slv_system_t sys);
-/**< 
-	Returns the (NULL-terminated) list of solver objective relations. 
+/**<
+	Returns the (NULL-terminated) list of solver objective relations.
 	@ref solverslists
 */
 
 ASC_DLLSPEC struct logrel_relation **slv_get_solvers_logrel_list(slv_system_t sys);
 /**<
-	Returns the (NULL-terminated) list of solver logical relations. 
+	Returns the (NULL-terminated) list of solver logical relations.
 	@ref solverslists
 */
 
 extern struct logrel_relation **slv_get_solvers_condlogrel_list(slv_system_t sys);
 /**<
-	Returns the (NULL-terminated) list of solver conditional relations. 
+	Returns the (NULL-terminated) list of solver conditional relations.
 	@ref solverslists
 */
 
@@ -698,7 +696,7 @@ extern struct w_when **slv_get_solvers_when_list(slv_system_t sys);
 */
 
 ASC_DLLSPEC struct bnd_boundary **slv_get_solvers_bnd_list(slv_system_t sys);
-/**< 
+/**<
 	Returns the (NULL-terminated) list of solver boundaries.
 	@ref solverslists
 */
@@ -906,7 +904,7 @@ extern int32 slv_get_num_models(slv_system_t sys);
 */
 
 ASC_DLLSPEC int32 slv_count_solvers_vars(slv_system_t sys, const var_filter_t *vfilter);
-/**< 
+/**<
 	Returns the number of solver variables matching the specified filter.
 	@ref solverslists
 */
@@ -918,26 +916,26 @@ extern int32 slv_count_solvers_pars(slv_system_t sys, const var_filter_t *vfilte
 */
 
 ASC_DLLSPEC int32 slv_count_solvers_unattached(slv_system_t sys, const var_filter_t *vfilter);
-/**< 
+/**<
 	Returns the number of solver unattached variables matching the specified filter.
 	@ref solverslists
 */
 
 ASC_DLLSPEC int32 slv_count_solvers_dvars(slv_system_t sys, const dis_filter_t *dfilter);
-/**< 
-	Returns the number of solver discrete variables matching the specified filter. 
+/**<
+	Returns the number of solver discrete variables matching the specified filter.
 	@ref solverslists
 */
 
 extern int32 slv_count_solvers_disunatt(slv_system_t sys, const dis_filter_t *dfilter);
-/**< 
-	Returns the number of solver unattached discrete variables matching the specified filter. 
+/**<
+	Returns the number of solver unattached discrete variables matching the specified filter.
 	@ref varlists
 */
 
 ASC_DLLSPEC int32 slv_count_solvers_rels(slv_system_t sys, const rel_filter_t *rfilter);
-/**< 
-	Returns the number of solver relations matching the specified filter. 
+/**<
+	Returns the number of solver relations matching the specified filter.
 	@ref solverslists
 */
 
@@ -948,7 +946,7 @@ extern int32 slv_count_solvers_condrels(slv_system_t sys, const rel_filter_t *rf
 */
 
 extern int32 slv_count_solvers_objs(slv_system_t sys, const rel_filter_t *rfilter);
-/**< 
+/**<
 	Returns the number of solver objective relations matching the specified filter.
 	@ref solverslists
 */
@@ -961,7 +959,7 @@ ASC_DLLSPEC int32 slv_count_solvers_logrels(slv_system_t sys, const logrel_filte
 
 extern int32 slv_count_solvers_condlogrels(slv_system_t sys, const logrel_filter_t *lrfilter);
 /**<
-	Returns the number of solver conditional logical relations matching the specified filter. 
+	Returns the number of solver conditional logical relations matching the specified filter.
 	@ref solverslists
 */
 
@@ -1021,7 +1019,7 @@ extern int32 slv_count_master_condrels(slv_system_t sys, const rel_filter_t *rfi
 
 extern int32 slv_count_master_objs(slv_system_t sys, const rel_filter_t *rfilter);
 /**<
-	Returns the number of master objective relations matching the specified filter. 
+	Returns the number of master objective relations matching the specified filter.
 	@ref masterlists
 */
 

@@ -22,9 +22,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /** @file
@@ -110,10 +108,10 @@ extern int Asc_BrowWriteProcedure(ClientData cdata, Tcl_Interp *interp,
  *  to a full file pathname given.
  */
 
-extern int Asc_BrowSetAtomAttribute(Tcl_Interp *interp, 
+extern int Asc_BrowSetAtomAttribute(Tcl_Interp *interp,
                                     struct Instance *atominstance,
-                                    symchar *childname, 
-                                    enum inst_t childtype, 
+                                    symchar *childname,
+                                    enum inst_t childtype,
                                     void *dataptr);
 /**<
  * <!--  status = Asc_BrowSetAtomAttribute(interp,atominstance,        -->

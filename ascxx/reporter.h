@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef ASCXX_REPORTER_H
 #define ASCXX_REPORTER_H
@@ -34,7 +32,7 @@ extern "C"{
 #ifdef ASCXX_USE_PYTHON
 extern "C"{
 /**
-	This function is a hook function that will convey errors 
+	This function is a hook function that will convey errors
 	back to Python via the C++ 'Reporter' class.
 */
 ASC_EXPORT int reporter_error_python(ERROR_REPORTER_CALLBACK_ARGS);

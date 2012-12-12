@@ -24,10 +24,7 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /*
@@ -51,8 +48,8 @@
 #ifndef rel__already_included
 #define rel__already_included
 
-/* 
- * requires #include "var.h" 
+/*
+ * requires #include "var.h"
  */
 
 /*
@@ -67,7 +64,7 @@ struct rel_extnode {
   int32 whichvar;
   struct ExtRelCache *cache; /* pointer to private structure */
 };
-  
+
 enum rel_enum {
   e_rel_minimize,
   e_rel_maximize,
@@ -87,19 +84,19 @@ enum backend_enum {
   e_rel_glassbox,
   e_rel_blackbox
 };
-  
+
 struct rel_relation {
    SlvBackendToken instance;
    struct rel_extnode *nodeinfo; /* Not NULL if blackbox relation */
    struct var_variable **incidence;
    /* array of atomic vars and nonvars in rel */
-/* 
+/*
  * For future use:
  *
- * struct var_variable **incidentals; array of nonvars, 
+ * struct var_variable **incidentals; array of nonvars,
  * once solveratoms arrive.
  *
- * int32 n_incidentals;	
+ * int32 n_incidentals;
  */
    enum backend_enum type;	/* tokens, glassbox or blackbox */
    int32 n_incidences;		/* length of incidence. */
@@ -108,8 +105,8 @@ struct rel_relation {
    int32 model;			/* index of a hypothetical MODEL rel is from */
    uint32 flags;		/* flags */
 };
-/* 
- * if you mess with the above struct, change the defaults for it in .c file 
+/*
+ * if you mess with the above struct, change the defaults for it in .c file
  */
 
 
@@ -230,7 +227,7 @@ extern char *rel_make_name(slv_system_t,struct rel_relation *);
  *  Copies of the relation instance name can be made and returned.
  *  The string returned should be freed when no longer in use.
  */
- 
+
 extern int32 rel_mindex(struct rel_relation *);
 extern void rel_set_mindex(struct rel_relation *,int32);
 /*
@@ -240,7 +237,7 @@ extern void rel_set_mindex(struct rel_relation *,int32);
  *  struct rel_relation *rel;
  *
  *  Sets or retrieves the index number of the given relation as it
- *  appears in a slv_system_t master relation list.  
+ *  appears in a slv_system_t master relation list.
  */
 
 extern int32 rel_sindex(const struct rel_relation *);
@@ -299,7 +296,7 @@ extern void rel_set_nominal(struct rel_relation *,real64);
 /*
  * Breaking above 'rule' for time being
  */
-     
+
 #ifdef NDEBUG
 #define rel_n_incidences(r) ((r)->n_incidences)
 #define rel_set_incidences(r,n,ilist) \
@@ -339,7 +336,7 @@ extern struct var_variable
  *  Each element of the array is a struct var_variable *.
  *  Check the var sindex to see where each might go in a jacobian.
  *  If there is no incidence, NULL is returned.
- *  Pointers in this array will be unique. 
+ *  Pointers in this array will be unique.
  *  The list belongs to the relation. Do not destroy it. Do not change it.
  *
  *  VA IS NOT a NULL-TERMINATED LIST.
@@ -376,7 +373,7 @@ extern int32 rel_apply_filter(const struct rel_relation *,rel_filter_t *);
  *  setting filt.matchbits = (| of all your interesting bits) and
  *  setting filt.matchvalue = (| of the bits you want to be TRUE).
  */
-  
+
 extern uint32 rel_flags(struct rel_relation *);
 extern void rel_set_flags(struct rel_relation *,uint32);
 /*
@@ -389,10 +386,10 @@ extern void rel_set_flags(struct rel_relation *,uint32);
  */
 
 extern uint32 rel_flagbit(struct rel_relation *,uint32);
-/* 
+/*
  *  rel_flagbit(rel,name);
  *  struct rel_relation *rel;
- *  uint32 name;		
+ *  uint32 name;
  *  name should be a REL_xx flag defined above)
  *  Returns the value of the bit specified from the relation flags.
  */
@@ -420,13 +417,13 @@ extern void rel_set_flagbit(struct rel_relation *,uint32, uint32);
 
 /*
  *  the bit flags. explained afterward. several are for use of
- *  transient clients and should be ignored by solver engines 
+ *  transient clients and should be ignored by solver engines
  */
 #define REL_PARTITION	0x1
 #define REL_TORN	0x2
 #define REL_INTERFACE	0x4
 #define REL_INCLUDED	0x8
-/* 
+/*
  * INCLUDED is as yet a funny one. treat it as readonly because
  * you can only change it using a real function and not the
  * bit manipulation functions. It is here in the bits because
@@ -444,14 +441,14 @@ extern void rel_set_flagbit(struct rel_relation *,uint32, uint32);
 /* Conditional Relations (Boundaries) */
 #define REL_CONDITIONAL 0x1000
 #define REL_IN_CUR_SUBREGION 0x2000
-/* 
+/*
  * temporary relation that doesn't exist independently in the backend,
  * but is made by some process of the backend or the solver client.
  */
 #define REL_COMPLEMENTARY 0x4000
 #define REL_COMP_TERM 0x8000
 #define REL_GENERATED 0x10000
-     
+
 /*
  * REL_PARTITION	reordering clients. is it in the interesting region
  * REL_TORN	        reordering clients output. is it a tear.
@@ -469,7 +466,7 @@ extern void rel_set_flagbit(struct rel_relation *,uint32, uint32);
  *	        	client? for clients.
  * REL_INWHEN   	is relation in a when? readonly for clients.
  * REL_ACTIVE           is this relation currently a part of my problem ?
- * REL_INVARIANT        is this relation an invariant in the conditional 
+ * REL_INVARIANT        is this relation an invariant in the conditional
  *                       modeling analysis
  * REL_CONDITIONAL	is relation conditional? readonly for clients
  * REL_IN_CUR_SUBREGION is the relation in the subregion currently
@@ -481,8 +478,8 @@ extern void rel_set_flagbit(struct rel_relation *,uint32, uint32);
  * REL_GENERATED	is rel fake and cooked up for this system only?
  */
 
-/* 
- * the bit flag lookups 
+/*
+ * the bit flag lookups
  */
 #ifdef NDEBUG
 #define rel_partition(r)	((r)->flags & REL_PARTITION)
@@ -520,7 +517,7 @@ extern void rel_set_flagbit(struct rel_relation *,uint32, uint32);
 #define rel_comp_term(r)	rel_flagbit((r),REL_COMP_TERM)
 #endif /* NDEBUG */
 
-/* 
+/*
  * bit flag assignments. any value other than 0 for bv turns the
  * named flag to 1. 0 sets it to 0.
  * Many of these bits have read-only semantics for clients.
@@ -569,14 +566,14 @@ extern void rel_set_included(struct rel_relation *,uint32);
  *  which determines if the relation is within the current block.
  */
 
-/* 
+/*
  *   rel_obj_negate(rel)
  *   struct rel_relation *rel;
  *
  *   Returns TRUE if relation is of type e_maximize.
  *   Returns FALSE if relation is of type e_minimize.
  *   Note: should only be used on objectives. other relations
- *   will give a meaningless result (probably FALSE). 
+ *   will give a meaningless result (probably FALSE).
  */
 
 /*
@@ -596,11 +593,11 @@ extern void rel_set_included(struct rel_relation *,uint32);
  *  struct rel_relation *rel;
  *
  *  TRUE if relation is of form lhs = rhs.
- */     
+ */
 
 extern real64 rel_multiplier(struct rel_relation *);
 extern void rel_set_multiplier(struct rel_relation *,real64);
-/* 
+/*
  *  (won a temporary reprieve. this should be a system property, not rel.)
  *  multiplier = rel_multiplier(rel)
  *  rel_set_multiplier(rel,multiplier)
@@ -617,21 +614,21 @@ extern void rel_set_multiplier(struct rel_relation *,real64);
  *  rel_relation utility functions.
  *
  *  Things for the server side only. Not visible to clients.
- * 
- *  Ok, really nosy clients courting death can cheat. Don't cry when 
+ *
+ *  Ok, really nosy clients courting death can cheat. Don't cry when
  *  they break.
  *  We make absolutely no commitment to being compatible with this portion
  *  of the header at any time in the future.
  */
 #ifdef _SLV_SERVER_C_SEEN_
-/* 
- *requires #include "expr.h" 
- * requires #include "types.h" 
- * requires #include "extfunc.h" 
- * requires #include "relation.h" 
- * requires #include "packages.h" 
- * requires #include "extcall.h" 
- * requires #include "mtx.h" 
+/*
+ *requires #include "expr.h"
+ * requires #include "types.h"
+ * requires #include "extfunc.h"
+ * requires #include "relation.h"
+ * requires #include "packages.h"
+ * requires #include "extcall.h"
+ * requires #include "mtx.h"
  */
 
 extern double g_external_tolerance; /* DEFAULT 1e-12 */
@@ -669,9 +666,9 @@ extern void rel_set_extcache(struct rel_relation *,struct ExtRelCache *);
  *  don't.
  */
 
-/* 
+/*
  * The following aren't commented because Kirk Abbott didn't comment them.
- * It's all server magic anyway? 
+ * It's all server magic anyway?
  */
 
 extern struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *);

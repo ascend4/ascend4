@@ -14,7 +14,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//*
 	by Tom Epperly 8/16/89, Ben Allan
 	Last in CVS $Revision: 1.15 $ $Date: 1998/04/07 19:52:46 $ $Author: ballan $
@@ -102,23 +102,23 @@
 #define CAC(acp) ((struct ArrayChild *)(acp))
 
 extern pool_store_t g_array_child_pool;
-/**< 
+/**<
  *  Pool of array children.
- *  Never ever dereference this except with MALLOCPOOLAC or FREEPOOLAC(). 
+ *  Never ever dereference this except with MALLOCPOOLAC or FREEPOOLAC().
  */
 
 #ifdef ASC_NO_POOL
 
 /* slow version for debugging */
 #define MALLOCPOOLAC CAC( ascmalloc(sizeof(struct ArrayChild)) )
-/**< 
+/**<
  *  Get an element from the pool (slow, unpooled version).
- *  Only call after InitInstanceNanny(). 
+ *  Only call after InitInstanceNanny().
  */
 #define FREEPOOLAC(ac) ascfree(ac);
-/**< 
- *  Return element ac to the pool (slow, unpooled version). 
- *  Only call after InitInstanceNanny(). 
+/**<
+ *  Return element ac to the pool (slow, unpooled version).
+ *  Only call after InitInstanceNanny().
  */
 
 #else

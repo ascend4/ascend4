@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	Ideal-gas components of helmholtz fundamental functions, calculated using
 	terms in cp0 in a standard power series form. For details see the
@@ -105,7 +103,7 @@ double helm_cp0(double T, const IdealData *data){
 //#define IDEAL_DEBUG
 /**
 	Ideal component of helmholtz function
-*/	
+*/
 double helm_ideal(double tau, double delta, const IdealData *data){
 
 	const IdealPowTerm *pt;
@@ -164,9 +162,9 @@ double helm_ideal(double tau, double delta, const IdealData *data){
 }
 
 /**
-	Partial dervivative of ideal component (phi0) of normalised helmholtz 
+	Partial dervivative of ideal component (phi0) of normalised helmholtz
 	residual function (phi), with respect to tau.
-*/	
+*/
 double helm_ideal_tau(double tau, double delta, const IdealData *data){
 	const IdealPowTerm *pt;
 	const IdealExpTerm *et;
@@ -222,13 +220,13 @@ double helm_ideal_tau(double tau, double delta, const IdealData *data){
 
 
 /**
-	Second partial dervivative of ideal component (phi0) of normalised helmholtz 
+	Second partial dervivative of ideal component (phi0) of normalised helmholtz
 	residual function (phi), with respect to tau. This one is easy! It's just
 	cp0 divided by tau^2, and it's not a function of delta.
 
 	FIXME although this one is easy, we want to pull Tstar out of the
 	ideal properties stuff, if that's possible.
-*/	
+*/
 double helm_ideal_tautau(double tau, const IdealData *data){
 	const IdealPowTerm *pt;
 	const IdealExpTerm *et;
