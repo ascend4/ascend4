@@ -27,9 +27,9 @@ REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 
 IMPORT "johnpye/fprops/helmholtz";
-(*IMPORT "sensitivity/solve";
+(*IMPORT "sensitivity/solve";*)
 IMPORT "johnpye/extpy/extpy";
-IMPORT "johnpye/fprops/cycle_plot";*)
+IMPORT "johnpye/fprops/cycle_plot";
 
 (*------------------------------------------------------------------------------
   BACKGROUND STUFF

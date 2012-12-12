@@ -267,8 +267,9 @@ def cycle_plot_brayton_split(self):
 	sat_curve(D)
 	
 	# add some dots for the points in the cycle
-	seq = "CO2.inlet HEL.inlet HEL.outlet HEH.inlet BO.inlet TU.inlet HEH.inlet_hot HEL.inlet_hot CO1.inlet CO1.outlet".split(" ")
-	lalign = "CO1.outlet".split(" ")
+#	seq = "CO2.inlet HEL.inlet HEL.outlet HEH.inlet BO.inlet TU.inlet HEH.inlet_hot HEL.inlet_hot CO1.inlet CO1.outlet".split(" ")
+	seq = "CO2.inlet HEL.inlet HEH.inlet BO.inlet TU.inlet HEH.inlet_hot HEH.outlet_hot CO1.inlet".split(" ")
+	lalign = "CO1.inlet HEH.outlet_hot ".split(" ")
 	SS1 = []; SS1a = []
 	for s in seq:
 		print "looking at '%s'"%s

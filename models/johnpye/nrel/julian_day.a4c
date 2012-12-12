@@ -20,7 +20,7 @@ METHOD values;
 	y := 2000;
 	mon := 1;
 	d := 1;
-	h := 12;
+	h := 17;
 	min := 0;
 	s := 0;
 	tz := 0 {h};
