@@ -23,7 +23,7 @@ BuildRequires: swig >= 1.3.24
 BuildRequires: gcc-gfortran gcc-c++ >= 4
 BuildRequires: blas-devel
 BuildRequires: sundials-devel >= 2.4.0
-BuildRequires: ipopt >= 3.10
+BuildRequires: ipopt-devel >= 3.10
 BuildRequires: python-devel >= 2.4
 BuildRequires: tk-devel, tk, tcl-devel, tcl, tktable
 BuildRequires: graphviz-devel
@@ -37,6 +37,7 @@ BuildRequires: graphviz-devel
 #------ runtime dependencies --------
 Requires: blas%{?_isa}
 Requires: sundials%{?_isa}
+Requires: ipopt%{?_isa}
 
 # ...pygtk
 Requires: python%{?_isa} >= 2.4
