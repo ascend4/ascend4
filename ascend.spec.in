@@ -37,6 +37,7 @@ BuildRequires: graphviz-devel
 #------ runtime dependencies --------
 Requires: blas%{?_isa}
 Requires: sundials%{?_isa}
+Requires: ipopt%{?_isa}
 
 # ...pygtk
 Requires: python%{?_isa} >= 2.4
