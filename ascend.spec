@@ -6,73 +6,66 @@ Version:	0.9.8
 # and still have the update occur automatically.
 Release:	0%{?dist}
 
-%define disttar_name ascend-0.9.8
-
-License:	GPLv2+
 Group:		Applications/Engineering
-Source:		%{disttar_name}.tar.bz2
+License:	GPLv2+
 URL:		http://ascend.cheme.cmu.edu/
+Source:		ascend-0.9.8.tar.bz2
 
 Prefix:		%{_prefix}
 Packager:	John Pye
 Vendor:		Carnegie Mellon University
 
-Buildroot: /var/tmp/%{name}-buildroot
-
-#----------build dependencies------------
-
-# ...general
+#------ build dependencies -------
 BuildRequires: scons >= 0.96.92
 BuildRequires: bison
 BuildRequires: flex >= 2.5.4
 BuildRequires: swig >= 1.3.24
-# removed version requirement for 2.0 on bison.
-
-%if 0%{?fedora_version}
 BuildRequires: gcc-gfortran gcc-c++ >= 4
 BuildRequires: blas-devel
 BuildRequires: sundials-devel >= 2.4.0
 BuildRequires: python-devel >= 2.4
 BuildRequires: tk-devel, tk, tcl-devel, tcl, tktable
 BuildRequires: graphviz-devel
-%else
-%if 0%{?suse_version}
-BuildRequires: gcc-fortran gcc-c++
-BuildRequires: sundials-devel >= 2.4.0
-BuildRequires: blas
-BuildRequires: python-devel >= 2.4
-BuildRequires: tk, tk-devel, tcl, tcl-devel, tktable
-BuildRequires: graphviz-devel
-%if 0%{suse_version} == 1000
-BuildRequires: xorg-x11-devel
-%else
-BuildRequires: xorg-x11-libX11-devel
-%endif
-%else
-%if 0%{?mandriva_version}
-BuildRequires: gcc-gfortran gcc-c++
-BuildRequires: sundials-devel >= 2.4.0
-BuildRequires: blas-devel python-devel tk tcl
-%else
-# xubuntu version is the fallback...
-BuildRequires: g++-4.1 gfortran-4.1 libsundials-serial-dev python-dev tk8.3-dev tcl8.3-dev tktable
-%endif
-%endif
-%endif
+
+# ... documentation
+# There are no dependencies for documentation as the tarball
+# will always contain documentation in compiled form. Only
+# when building from subversion are targets formats of the
+# documentation files not available.
+
+#------ runtime dependencies --------
+Requires: blas%{?_isa}
+Requires: sundials%{?_isa}
+
+# ...pygtk
+Requires: python%{?_isa} >= 2.4
+Requires: pygtk2 >= 2.6
+Requires: pygtk2-libglade
+# does this one get picked up automatically?
+Requires: python-matplotlib
+Requires: numpy
+Requires: ipython
+
+# ... file association
+Requires(post): desktop-file-utils shared-mime-info
+Requires(postun): desktop-file-utils shared-mime-info
+
+# syntax highlighting for gedit
+Requires: gtksourceview3
+
+#------------------------------------------
+
+Provides: ascend-gui
 
 %define pyver %(python -c 'import sys ; print sys.version[:3]')
-%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
+%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(plat_specific=0)")}
+%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(pat_specific=1)")}
+%define gtksourceview_lang_file %{_datadir}/gtksourceview-3.0/language-specs/ascend.lang
 
-%{!?gtksourceview2: %define gtksourceview2 %(%{__python} -c 'from glob import glob; print len(glob("/usr/lib/libgtksourceview-2.0*"))')}
-
-%if 0%{?gtksourceview2}
-%define gtksourceview_lang_file %{_datadir}/gtksourceview-2.0/language-specs/ascend.lang
-%else
-%define gtksourceview_lang_file %{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
-%endif
-
-Buildroot: /var/tmp/%{name}-buildroot
+%{?filter_setup:
+%filter_provides_in %{_libdir}/purple-2/.*\.so$
+%filter_setup
+}
 
 %description
 ASCEND IV is both a large-scale object-oriented mathematical
@@ -82,45 +75,29 @@ Engineers, great care has been exercised to assure that it is
 domain independent. ASCEND can support modeling activities in
 fields from Architecture to (computational) Zoology.
 
-# ... documentation
-# There are no dependencies for documentation as the tarball
-# will always contain documentation in compiled form. Only
-# when building from subversion are targets formats of the
-# documentation files not available.
-
-#-----------runtime dependencies-----------
-
-# ...general
-Requires: gtksourceview
-Requires: blas
-Requires: sundials
-# ... is now packaged as a shared library
-
-# ...pygtk
-Requires: python >= 2.4
-Requires: pygtk2 >= 2.6
-Requires: pygtk2-libglade
-Requires: python-matplotlib
-Requires: numpy
-Requires: ipython
-
-# ...tcl/tk
-Requires: xgraph >= 11
-Requires: tcl >= 8.3
-Requires: tk >= 8.3
-Requires: tktable < 2.10, tktable >= 2.8
-
-# ... file association
-Requires(post): desktop-file-utils shared-mime-info
-Requires(postun): desktop-file-utils shared-mime-info
-
-
-#------------------------------------------
-
-Provides: ascend-gui
-
 # for the moment we'll just make one big super-package, to keep things 
 # simple for end-users.
+
+%package devel
+Summary: Developer files ASCEND
+Group: Applications/Engineering
+Requires: %{name}
+%description devel
+Developer files for ASCEND, in the form for C header files for the core
+ASCEND library, 'libascend'.
+
+%package doc
+Summary: Documentation for ASCEND
+Group: Applications/Engineering
+%description doc
+Documentation for ASCEND, in the form of a PDF User's Manual.
+
+#%package -n libascend1
+#Summary: Shared library for core ASCEND functionality
+#Group: Applications/Engineering
+#%description -n libascend1
+#Shared library for ASCEND, providing core functionality including compiler 
+#and solver API.
 
 #%package -n ascend-python
 #Version:    %{version}
@@ -132,33 +109,23 @@ Provides: ascend-gui
 #human interface guidelines as closely as possible. It does not as yet provide
 #access to all of the ASCEND functionality provided by the Tcl/Tk interface.
 #
-#%package -n ascend-tcltk
-#Version:    %{version}
-#Summary:    Tcl/Tk user interface for ASCEND
-#Group:		Applications/Engineering
-#
-#%description -n ascend-tcltk
-#Tcl/Tk user interface for ASCEND. This is the original ASCEND IV interface
-#and is a more complete and mature interface than the alternative PyGTK
-#interface. Use this interface if you need to use ASCEND *.a4s files or other
-#functionality not provided by the PyGTK interface.
 
-%package doc
-Summary: Documentation for ASCEND
+%package tcltk
+Summary: Tcl/Tk user interface for ASCEND
 Group: Applications/Engineering
-%description doc
-Documentation for ASCEND, in the form of a PDF User's Manual.
+Requires: xgraph >= 11
+Requires: tcl%{?_isa} >= 8.3
+Requires: tk%{?_isa} >= 8.3
+Requires: tktable < 2.10, tktable >= 2.8
 
-%package devel
-Summary: Developer files ASCEND
-Group: Applications/Engineering
-Requires: %{name}
-%description devel
-Developer files for ASCEND, in the form for C header files for the core
-ASCEND library, 'libascend'.
+%description tcltk
+Tcl/Tk user interface for ASCEND. This is the original ASCEND IV interface
+and is a more complete and mature interface than the alternative PyGTK
+interface. Use this interface if you need to use ASCEND *.a4s files or other
+functionality not provided by the PyGTK interface.
 
 %prep
-%setup -q -n %{disttar_name}
+%setup -q -n ascend-0.9.8
 
 %build
 scons %{_smp_mflags} \
@@ -169,15 +136,15 @@ scons %{_smp_mflags} \
 	INSTALL_INCLUDE=%{_includedir} \
 	INSTALL_LIB=%{_libdir} \
 	INSTALL_DOC=%{_docdir}/%{name}-doc-%{version} \
+	DEBUG=1 \
 	WITH_DOC_BUILD=0 \
 	WITH_DOC_INSTALL=0 \
 	WITH_SOLVERS=QRSLV,LSODE,CMSLV,IDA,LRSLV,CONOPT \
 	ABSOLUTE_PATHS=1 \
 	%{?__cc:CC="%__cc"} %{?__cxx:CXX="%__cxx"} \
-	pygtk tcltk models solvers
+	ascend ascxx pygtk tcltk models solvers
 
 %install
-rm -rf %{buildroot}
 scons %{_smp_mflags} install
 
 # Install menu entry for PyGTK interface, gtksourceview syntax highlighting, and MIME definition
@@ -194,19 +161,10 @@ install -m 644 -D ascend-doc-48x48.svg %{buildroot}/%{_datadir}/icons/text-x-asc
 popd
 
 # language file for use with gedit
-%if 0%{?gtksourceview2}
+# FIXME gtksourceview-3.0?
 pushd tools/gtksourceview-2.0
 install -m 644 -D ascend.lang %{buildroot}/%{gtksourceview_lang_file}
 popd
-%else
-pushd tools/gedit
-install -m 644 -D ascend.lang %{buildroot}/%{gtksourceview_lang_file}
-popd
-%endif
-
-# TODO...
-#%__python -c 'from compileall import *; compile_dir("'$RPM_BUILD_ROOT'/%{python_sitelib}",10,"%{python_sitelib}")'
-#%__python -O -c 'from compileall import *; compile_dir("'$RPM_BUILD_ROOT'/%{python_sitelib}",10,"%{python_sitelib}")'
 
 # Install menu entry for Tcl/Tk interface
 pushd tcltk/gnome
@@ -215,55 +173,79 @@ install -m 644 -D ascend4.png %{buildroot}/%{_datadir}/icons/ascend4-app.png
 install -m 644 -D ascend4.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend4.png
 popd
 
+/usr/lib/rpm/redhat/brp-strip-shared /usr/bin/strip
+
 %clean
 rm -rf %{buildroot}
 
 %post
+/sbin/ldconfig
 update-desktop-database
 update-mime-database /usr/share/mime &> /dev/null || :
 
 %postun
+/sbin/ldconfig
 update-desktop-database
 update-mime-database /usr/share/mime &> /dev/null || :
 
 %files
-%defattr(-, root, root)
+%defattr(644,root,root)
 %doc INSTALL.txt LICENSE.txt
 
-%{_libdir}/libascend.so.*
+%defattr(644,root,root)
 %{_libdir}/ascend/models
 %{_libdir}/ascend/solvers
 %{_datadir}/mime/packages/ascend.xml
 %{gtksourceview_lang_file}
 %{_datadir}/icons/text-x-ascend-model.svg
 
-# %package -n ascend-python
+#%files -n libascend1
+%defattr(755,root,root)
+%{_libdir}/libascend.so.*
+
+# %package python
+%defattr(755,root,root)
 %{_bindir}/ascend
-%{python_sitelib}/ascend/_ascpy.so
-%{python_sitelib}/ascend/*.py
-%{python_sitelib}/ascend/*.py[oc]
+%{python_sitearch}/ascend/_ascpy.so
+%defattr(644,root,root)
+%{python_sitearch}/ascend/*.py
+%{python_sitearch}/ascend/*.py[oc]
 %{_datadir}/ascend/glade
 %{_datadir}/applications/ascend.desktop
 %{_datadir}/icons/ascend-app.png
 %{_datadir}/icons/hicolor/64x64/ascend.png
 
-# %package -n ascend-tcltk
+# %package -n python-fprops
+%defattr(755,root,root)
+%{python_sitearch}/_fprops.so
+%defattr(644,root,root)
+%{python_sitearch}/fprops.py
+%{python_sitearch}/fprops.py[oc]
+
+%files tcltk
+%defattr(755,root,root)
 %{_bindir}/ascend4
-%{_datadir}/ascend/tcltk
 %{_libdir}/libascendtcl.so
+%defattr(644,root,root)
+%{_datadir}/ascend/tcltk
 %{_datadir}/applications/ascend4.desktop
 %{_datadir}/icons/ascend4-app.png
 %{_datadir}/icons/hicolor/64x64/ascend4.png
 
 %files devel
+%defattr(755,root,root)
 %{_bindir}/ascend-config
 %{_includedir}/ascend
 %{_libdir}/lib*.so
 
 %files doc
+%defattr(644,root,root)
 %doc doc/book.pdf
 
 %changelog
+* Wed Dec 12 2012 John Pye <john.pye@anu.edu.au> 0.9.8
+- New version
+
 * Thu Apr 30 2009 John Pye <john.pye@anu.edu.au> 0.9.6
 - New version
 
