@@ -7,7 +7,7 @@
 version = "0.9.8"
 
 # shared library API numbering, for Linux (FIXME windows too?)
-soname_major = ".1"
+soname_major_int = "1"
 soname_minor = ".0"
 
 import sys, os, commands, platform, distutils.sysconfig, os.path, re, types
@@ -26,6 +26,7 @@ if platform.architecture()[0] == "64bit":
 
 #print "PLATFORM = ",platform.system()
 
+soname_major = "." + soname_major_int
 default_install_prefix = '/usr/local'
 default_install_bin = "$INSTALL_PREFIX/bin"
 default_install_lib = "$INSTALL_PREFIX/lib"
@@ -34,7 +35,7 @@ default_install_solvers = "$INSTALL_LIB/ascend/solvers"
 default_install_assets = "$INSTALL_ASCDATA/glade/"
 default_install_ascdata = "$INSTALL_SHARE/ascend"
 default_install_include = "$INSTALL_PREFIX/include"
-default_install_python = distutils.sysconfig.get_python_lib()
+default_install_python = distutils.sysconfig.get_python_lib(plat_specific=1)
 default_install_python_ascend = "$INSTALL_PYTHON/ascend"
 default_tcl = '/usr'
 default_tcl_libpath = "$TCL/lib"
@@ -2435,6 +2436,7 @@ subst_dict = {
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
 	, '@VERSION@':version
 	, '@RELEASE@':release
+	, '@SONAME_MAJOR_INT@':soname_major_int
 	, '@DISTTAR_NAME@':env['DISTTAR_NAME']
 	, '@WEBHELPROOT@':'http://ascendwiki.cheme.cmu.edu/Category:Documentation'
 	, '@SHLIBSUFFIX@':env['SHLIBSUFFIX']
