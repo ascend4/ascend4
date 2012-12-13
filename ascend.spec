@@ -23,6 +23,7 @@ BuildRequires: swig >= 1.3.24
 BuildRequires: gcc-gfortran gcc-c++ >= 4
 BuildRequires: blas-devel
 BuildRequires: sundials-devel >= 2.4.0
+BuildRequires: ipopt >= 3.10
 BuildRequires: python-devel >= 2.4
 BuildRequires: tk-devel, tk, tcl-devel, tcl, tktable
 BuildRequires: graphviz-devel
@@ -53,17 +54,14 @@ Requires(postun): desktop-file-utils shared-mime-info
 # syntax highlighting for gedit
 Requires: gtksourceview3
 
-#------------------------------------------
-
-Provides: ascend-gui
-
 %define pyver %(python -c 'import sys ; print sys.version[:3]')
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(plat_specific=0)")}
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(pat_specific=1)")}
 %define gtksourceview_lang_file %{_datadir}/gtksourceview-3.0/language-specs/ascend.lang
 
 %{?filter_setup:
-%filter_provides_in %{_libdir}/purple-2/.*\.so$
+%filter_provides_in %{_libdir}/ascend/models/.*\.so$
+%filter_provides_in %{_libdir}/ascend/solvers/.*\.so$
 %filter_setup
 }
 
@@ -139,7 +137,7 @@ scons %{_smp_mflags} \
 	DEBUG=1 \
 	WITH_DOC_BUILD=0 \
 	WITH_DOC_INSTALL=0 \
-	WITH_SOLVERS=QRSLV,LSODE,CMSLV,IDA,LRSLV,CONOPT \
+	WITH_SOLVERS=QRSLV,LSODE,CMSLV,IDA,LRSLV,CONOPT,DOPRI5,IPOPT \
 	ABSOLUTE_PATHS=1 \
 	%{?__cc:CC="%__cc"} %{?__cxx:CXX="%__cxx"} \
 	ascend ascxx pygtk tcltk models solvers
@@ -173,7 +171,7 @@ install -m 644 -D ascend4.png %{buildroot}/%{_datadir}/icons/ascend4-app.png
 install -m 644 -D ascend4.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend4.png
 popd
 
-/usr/lib/rpm/redhat/brp-strip-shared /usr/bin/strip
+#/usr/lib/rpm/redhat/brp-strip-shared /usr/bin/strip
 
 %clean
 rm -rf %{buildroot}
