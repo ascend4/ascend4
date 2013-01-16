@@ -81,13 +81,7 @@ static HelmholtzData helmholtz_data_carbondioxide = {
 	, /* rho_c */ CARBONDIOXIDE_RHOC
 	, /* T_t */ 216.592
 
-	, {
-		FPROPS_REF_PHI0
-		, .data = {.phi0 = {
-			.c = 8.37304456
-			, .m = -3.70454304
-		}}
-	}
+	, {FPROPS_REF_TPF}
 	,  0.2239 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_carbondioxide
 	, 34 /* power terms */
@@ -160,6 +154,7 @@ EosData eos_carbondioxide = {
 #ifdef TEST
 #include "../test.h"
 #include "../sat.h"
+#include "../refstate.h"
 /*
 	Test suite. These tests attempt to validate the current code using
 	a few sample figures output by REFPROP 7.0.
@@ -180,10 +175,9 @@ const TestDataSat tds[]; const unsigned nsd;
 int main(void){
 	test_init();
 	FpropsError err = FPROPS_NO_ERROR;
-	//unsigned n;
-	//double rho, T, cp0, p, u, h, s;
-
 	PureFluid *d = helmholtz_prepare(&eos_carbondioxide,NULL);
+	ReferenceState S = {FPROPS_REF_IIR};
+	fprops_set_reference_state(d,&S);
 	double maxerr = 0;
 
 #if 0

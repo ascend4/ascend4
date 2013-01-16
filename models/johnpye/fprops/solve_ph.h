@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "rundata.h"
 
 int fprops_region_ph(double p, double h, const PureFluid *fluid, FpropsError *err);
+
 void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 	, const PureFluid *fluid, FpropsError *err
 );

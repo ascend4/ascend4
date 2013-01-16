@@ -50,7 +50,7 @@ static const IdealData ideal_data_water = {
 
 /**
 Residual (non-ideal) property data for Water/Steam, from IAPWS-95.
-http://www.iapws.org/relguide/IAPWS95.pdf
+http://www.iapws.org/relguide/IAPWS95-Rev.pdf
 */
 static HelmholtzData helmholtz_data_water = {
 	/* R */ WATER_R /* J/kg/K */
@@ -62,13 +62,15 @@ static HelmholtzData helmholtz_data_water = {
 	, /* rho_c */ WATER_RHOC
 	, /* T_t */ 273.16
 
+#if 1
 	, .ref = {
 		FPROPS_REF_PHI0
 		, .data = {.phi0 = {
-			.m = /* n_2 = */ 6.6832105275932
-			, .c = /* n_1 = */ -8.3204464837497
+			.m = /* n_2 = */ 6.6832105275932 
+			, .c = /* n_1 = */ -8.3204464837497 
 		}}
 	}
+#endif
 
 	, 0.344 /* acentric factor, source: Reid, Prausnitz & Polling */
 	, &ideal_data_water
@@ -164,31 +166,6 @@ EosData eos_water = {
 
 	./test.py water
 */
-/*
-	some code from freesteam, http://freesteam.sf.net/ , which has been thoroughly
-	validated already.
-*/
-
-const double n0[] = {
-    0.0 /* placeholder */,
-    -8.32044648201, 6.6832105268, 3.00632 /* const, linear, ln(tau) coeffs */
-	, 0.012436, 0.97315, 1.27950, 0.96956, 0.24873 /* exponential coeffs */
-};
-
-const double gamma0[] = {
-    0.0, 0.0, 0.0, 0.0,
-    1.28728967,
-    3.53734222,
-    7.74073708,
-    9.24437796,
-    27.5075105
-};
-
-enum Limits{
-    eGamma1 = 4,
-    eGamma2 = 9,
-};
-
 # include <math.h>
 # include <stdlib.h>
 # include <stdio.h>
@@ -198,17 +175,6 @@ enum Limits{
 # include "../cp0.h"
 # include "../ideal.h"
 # include "../helmholtz_impl.h"
-
-double phi0(const double delta, const double tau){
-	int i;
-    double sum = 0;
-    for (i = eGamma1; i < eGamma2; i++)
-    {
-        sum += n0[i]*log(1-exp(-tau*gamma0[i]));
-    }
-    sum += log(delta) + n0[1] + n0[2]*tau + n0[3]*log(tau);
-    return sum;
-}
 
 typedef struct{double T, rho, p, cv, w, s;} TestDataIAPWS95;
 const TestDataIAPWS95 td[]; const unsigned ntd;
@@ -223,21 +189,6 @@ int main(void){
 
 	double maxerr = 0;
 	unsigned i;
-
-
-#if 0
-	/* these tests pass, but don't prove much */
-	fprintf(stderr,"COMPARISON OF phi0 VALUES WITH THOSE FROM FREESTEAM\n");
-	for(T = 300; T <= 900; T+= 100){
-		for(rho = 900; rho >= 0.9; rho*=0.5){
-			double delta = rho / P->data->rho_star;
-			double tau = P->data->T_star / T;
-			double p0 = phi0(delta,tau);
-
-		 	ASSERT_TOL(helm_ideal, tau, delta, P->data->ideal, p0, p0*1e-5);
-		}
-	}
-#endif
 
 	/* LOW-LEVEL TEST DATA PROVIDED IN IAPWS95 */
 

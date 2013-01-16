@@ -42,14 +42,16 @@
 
 #include <test/common.h>
 
+
+
 typedef struct SlvReqC_struct{
 	struct Instance *siminst;
 	slv_system_t sys;
 } SlvReqC;
 
-SlvReqSetSolverFn slvreq_c_set_solver;
-SlvReqSetOptionFn slvreq_c_set_option;
-SlvReqDoSolveFn slvreq_c_do_solve;
+static SlvReqSetSolverFn slvreq_c_set_solver;
+static SlvReqSetOptionFn slvreq_c_set_option;
+static SlvReqDoSolveFn slvreq_c_do_solve;
 
 /*
 	This function actually does the job of setting the solver in our little
@@ -179,32 +181,34 @@ int slvreq_c_do_solve(struct Instance *instance, void *user_data){
 	return SLVREQ_SOLVE_FAIL;
 }
 
+
+
 /*
 	Test that the slvreq mechanism works within the C layer
 */
-static void test_slvreq_c(void){
-
-	struct module_t *m;
+static void test_fprops_model(const char *modelname){
 	int status;
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
+	char *lib = Asc_GetEnv(ASC_ENV_SOLVERS);
+	CONSOLE_DEBUG("%s = %s\n",ASC_ENV_SOLVERS,lib);
+	ASC_FREE(lib);
 
 	/* load the file */
-#define TESTFILE "test2"
-	m = Asc_OpenModule("test/slvreq/" TESTFILE ".a4c",&status);
+	Asc_OpenModule("test/fprops/fprops_test_base.a4c",&status);
 	CU_ASSERT(status == 0);
 
 	/* parse it */
 	CU_ASSERT(0 == zz_parse());
 
 	/* find the model */
-	CU_ASSERT(FindType(AddSymbol(TESTFILE))!=NULL);
+	CU_ASSERT(FindType(AddSymbol(modelname))!=NULL);
 
 	/* instantiate it */
 	SlvReqC S;
-	S.siminst = SimsCreateInstance(AddSymbol(TESTFILE), AddSymbol("sim1"), e_normal, NULL);
+	S.siminst = SimsCreateInstance(AddSymbol(modelname), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(S.siminst!=NULL);
 #undef TESTFILE
 
@@ -219,26 +223,41 @@ static void test_slvreq_c(void){
 	enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
 	CU_ASSERT(pe==Proc_all_ok);
 
-	/* maybe if the model is really clever, it will have solved itself now! */
+	/* assume that this clever model will have already solved and self-tested itself */
 
-	/* all sorts of destruction */
-	CONSOLE_DEBUG("DESTROYING NOW...");
-	CU_ASSERT(NULL != S.siminst)
-	if(S.sys)system_destroy(S.sys);
-
-	system_free_reused_mem();
-	sim_destroy(S.siminst);
+	CONSOLE_DEBUG("Destroy solver engines");
 	solver_destroy_engines();
+
+	/* destroy all that stuff */
+	CONSOLE_DEBUG("Destroying instance tree");
+	CU_ASSERT(S.siminst != NULL);
+
 	Asc_CompilerDestroy();
 }
-
-
 
 /*===========================================================================*/
 /* Registration information */
 
-#define TESTS(T) \
-	T(slvreq_c)
 
-REGISTER_TESTS_SIMPLE(solver_slvreq, TESTS)
+#define TESTS1(T,X) \
+	T(stream_state_test) \
+	X T(stream_state_test_co2) \
+	X T(stream_state_test_toluene) \
+	X T(pump_simple_test)
+
+/* need a little function for each model we're testing... */
+#define T(N) static void test_##N(void){\
+		test_fprops_model(#N);\
+	}
+#define X
+TESTS1(T,X)
+#undef T
+#undef X
+
+#define X
+#define TESTS(T) \
+	TESTS1(T,X)
+
+REGISTER_TESTS_SIMPLE(solver_fprops, TESTS)
+#undef X
 

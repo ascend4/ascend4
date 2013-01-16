@@ -334,7 +334,6 @@ double pengrob_g(double T, double rho, const FluidData *data, FpropsError *err){
 	ratsimp(%);
 */
 double pengrob_cv(double T, double rho, const FluidData *data, FpropsError *err){
-    DEFINE_SQRTALPHA;
 	DEFINE_V;
 	DEFINE_D2ADT2;
 	double cv0 = ideal_cv(T, rho, data, err);

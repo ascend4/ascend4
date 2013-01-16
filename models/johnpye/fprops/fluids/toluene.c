@@ -54,14 +54,6 @@ static HelmholtzData helmholtz_data_toluene = {
     , /* T_t */ 178.15
 
 	,{FPROPS_REF_TPF}
-#if 0
-{FPROPS_REF_TRHS,{.trhs={
-		.T0 = 273.15
-		, .rho0 = 8.85419387005E+2
-		, .h0 = -1.99730529336E+5
-		, .s0 = -6.10308234395E+2
-	}}}
-#endif
 
     , 0.2657 /* acentric factor */
     , &ideal_data_toluene
@@ -115,12 +107,8 @@ const TestData td[]; const unsigned ntd;
 
 int main(void){
 	PureFluid *P = helmholtz_prepare(&eos_toluene, NULL);
-	ReferenceState R = {FPROPS_REF_TRHS,{.trhs={
-		.T0 = 273.15
-		, .rho0 = 8.85419387005E+2
-		, .h0 = -1.99730529336E+5
-		, .s0 = -6.10308234395E+2
-	}}};
+	// refprop test test is evaluated with NBP refstate.
+	ReferenceState R = {FPROPS_REF_NBP};
 	fprops_set_reference_state(P, &R);
     return helm_run_test_cases(P, ntd, td, 'C');
 }
