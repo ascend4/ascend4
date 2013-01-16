@@ -47,7 +47,7 @@ int fedisableexcept(int excepts);
 int fegetexcept(void);
 #endif
 
-#define SOLVE_PH_DEBUG
+//#define SOLVE_PH_DEBUG
 #ifdef SOLVE_PH_DEBUG
 # include "color.h"
 # define MSG(FMT, ...) \
