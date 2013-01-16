@@ -53,12 +53,15 @@ static HelmholtzData helmholtz_data_toluene = {
     , /* rho_c */ 3.169*TOLUENE_M /* kg/m3 */
     , /* T_t */ 178.15
 
-	,{FPROPS_REF_TRHS,{.trhs={
+	,{FPROPS_REF_TPF}
+#if 0
+{FPROPS_REF_TRHS,{.trhs={
 		.T0 = 273.15
 		, .rho0 = 8.85419387005E+2
 		, .h0 = -1.99730529336E+5
 		, .s0 = -6.10308234395E+2
 	}}}
+#endif
 
     , 0.2657 /* acentric factor */
     , &ideal_data_toluene
@@ -103,6 +106,7 @@ EosData eos_toluene = {
 #ifdef TEST
 
 #include "../test.h"
+#include "../refstate.h"
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
@@ -111,6 +115,13 @@ const TestData td[]; const unsigned ntd;
 
 int main(void){
 	PureFluid *P = helmholtz_prepare(&eos_toluene, NULL);
+	ReferenceState R = {FPROPS_REF_TRHS,{.trhs={
+		.T0 = 273.15
+		, .rho0 = 8.85419387005E+2
+		, .h0 = -1.99730529336E+5
+		, .s0 = -6.10308234395E+2
+	}}};
+	fprops_set_reference_state(P, &R);
     return helm_run_test_cases(P, ntd, td, 'C');
 }
 
