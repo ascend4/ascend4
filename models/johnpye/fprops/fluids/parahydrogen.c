@@ -1,5 +1,5 @@
-/* This file is created by Hongke Zhu, 7-20-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 7-20-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
 
 LITERATURE REFERENCE
@@ -12,40 +12,46 @@ International Journal of Thermophysics, 2007.
 
 #define PARAHYDROGEN_M 2.01594 /* kg/kmol */
 #define PARAHYDROGEN_R (8314.472/PARAHYDROGEN_M) /* J/kg/K */
-#define PARAHYDROGEN_TSTAR 32.938 /* K */
+#define PARAHYDROGEN_TC 32.938 /* K */
 
-const IdealData ideal_data_parahydrogen = {
-    -1.4485891134 /* constant */
-    , 1.884521239 /* linear */
-    , PARAHYDROGEN_TSTAR /* Tstar */
-    , PARAHYDROGEN_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {0.25E+01,	0.0}
-    }
-    , 7 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {0.430256E+01,      499.0}
-	, {0.130289E+02,    826.5}
-	, {-0.477365E+02,   970.8}
-	, {0.500013E+02,   1166.2}
-	, {-0.186261E+02,  1341.4}
-	, {0.993973E+00,   5395.0}
-	, {0.536078E+00,  10185.0}
-    } 
+static const IdealData ideal_data_parahydrogen = {
+	IDEAL_CP0,{.cp0={
+		PARAHYDROGEN_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{0.25E+01,	0.0}
+		}
+		, 7 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{0.430256E+01,      499.0}
+		, {0.130289E+02,    826.5}
+		, {-0.477365E+02,   970.8}
+		, {0.500013E+02,   1166.2}
+		, {-0.186261E+02,  1341.4}
+		, {0.993973E+00,   5395.0}
+		, {0.536078E+00,  10185.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_parahydrogen = {
-	"parahydrogen"
-    , /* R */ PARAHYDROGEN_R /* J/kg/K */
+static HelmholtzData helmholtz_data_parahydrogen = {
+	/* R */ PARAHYDROGEN_R /* J/kg/K */
     , /* M */ PARAHYDROGEN_M /* kg/kmol */
     , /* rho_star */ 15.538*PARAHYDROGEN_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ PARAHYDROGEN_TSTAR /* K (= T_c for this model) */
-
-    , /* T_c */ PARAHYDROGEN_TSTAR
+    , /* T_star */ PARAHYDROGEN_TC /* K (= T_c for this model) */
+    , /* T_c */ PARAHYDROGEN_TC
     , /* rho_c */ 15.538*PARAHYDROGEN_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 13.8033
 
+#if 0
+	,{FPROPS_REF_NBP}
+#else
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = -1.4485891134 /* constant */
+    	, .m = 1.884521239 /* linear */
+    }}}
+#endif
     , -0.219 /* acentric factor */
     , &ideal_data_parahydrogen
     , 9 /* power terms */
@@ -70,9 +76,19 @@ const HelmholtzData helmholtz_data_parahydrogen = {
 	, {-0.401766E-01,  6.791,   1.0,  2.1341,  0.2383,  0.6832,  0.6319}
 	, {0.119510E+00,  3.190,    1.0,  1.7770,  0.3253,  1.4930,  1.7104}
     }
-    , 0 /* critical terms */
-    , 0
 };
+
+EosData eos_parahydrogen = {
+	"parahydrogen"
+	,"J W Leachman, R T Jacobsen and E W Lemmon, 2007. 'Fundamental Equations "
+	"of State for Parahydrogen, Normal Hydrogen, and Orthohydrogen', "
+	"International Journal of Thermophysics."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_parahydrogen}
+};
+
 
 /*
     Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
@@ -90,18 +106,14 @@ const HelmholtzData helmholtz_data_parahydrogen = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_parahydrogen, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_parahydrogen, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_parahydrogen, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_parahydrogen, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_parahydrogen, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_parahydrogen, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_parahydrogen, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_parahydrogen, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_parahydrogen,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
+
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

@@ -12,58 +12,68 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define R245FA_M 134.04794 /* kg/kmol */
 #define R245FA_R (8314.472/R245FA_M) /* J/kg/K */
-#define R245FA_TSTAR 427.16 /* K */
+#define R245FA_TC 427.16 /* K */
 
-const IdealData ideal_data_r245fa = {
-    -13.4283638514 /* constant */
-    , 9.8723653800 /* linear */
-    , R245FA_TSTAR /* Tstar */
-    , R245FA_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.0,	0.0}
-    }
-    , 3 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {5.5728,    222.0}
-        ,{10.385,   1010.0}
-        ,{12.554,   2450.0}
-    } 
+static const IdealData ideal_data_r245fa = {
+	IDEAL_CP0,{.cp0={
+		R245FA_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+		    {4.0,	0.0}
+		}
+		, 3 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{5.5728,    222.0}
+			,{10.385,   1010.0}
+			,{12.554,   2450.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_r245fa = {
-	"r245a"
-    , /* R */ R245FA_R /* J/kg/K */
-    , /* M */ R245FA_M /* kg/kmol */
-    , /* rho_star */ 3.85*R245FA_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ R245FA_TSTAR /* K (= T_c for this model) */
+static const HelmholtzData helmholtz_data_r245fa = {
+	/* R */ R245FA_R /* J/kg/K */
+	, /* M */ R245FA_M /* kg/kmol */
+	, /* rho_star */ 3.85*R245FA_M /* kg/m3(= rho_c for this model) */
+	, /* T_star */ R245FA_TC /* K (= T_c for this model) */
 
-    , /* T_c */ R245FA_TSTAR
-    , /* rho_c */ 3.85*R245FA_M /* kg/m3 */
-    , /* T_t */ 171.05
+	, /* T_c */ R245FA_TC
+	, /* rho_c */ 3.85*R245FA_M /* kg/m3 */
+	, /* T_t */ 171.05
 
-    , 0.3776 /* acentric factor */
-    , &ideal_data_r245fa
-    , 12 /* power terms */
-    , (const HelmholtzPowTerm[]){
-        /* a_i, 	t_i, 	d_i, 	l_i */
-        {1.2904,          0.25,    1.0,   0}
-        , {-3.2154,         1.25,    1.0,   0}
-  	, {0.50693,         1.5,     1.0,   0}
-  	, {0.093148,        0.25,    3.0,   0}
-  	, {0.00027638,      0.875,   7.0,   0}
-  	, {0.71458,         2.375,   1.0,   1}
-  	, {0.87252,         2.0,     2.0,   1}
- 	, {-0.015077,       2.125,   5.0,   1}
- 	, {-0.40645,        3.5,     1.0,   2}
- 	, {-0.11701,        6.5,     1.0,   2}
- 	, {-0.13062,        4.75,    4.0,   2}
- 	, {-0.022952,       12.5,    2.0,   3}
-    }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = -13.4283638514 /* constant */
+		, .m = 9.8723653800 /* linear */
+	}}}
+
+	, 0.3776 /* acentric factor */
+	, &ideal_data_r245fa
+	, 12 /* power terms */
+	, (const HelmholtzPowTerm[]){
+		/* a_i, 	t_i, 	d_i, 	l_i */
+		{1.2904,          0.25,    1.0,   0}
+		, {-3.2154,         1.25,    1.0,   0}
+	  	, {0.50693,         1.5,     1.0,   0}
+	  	, {0.093148,        0.25,    3.0,   0}
+	  	, {0.00027638,      0.875,   7.0,   0}
+	  	, {0.71458,         2.375,   1.0,   1}
+	  	, {0.87252,         2.0,     2.0,   1}
+	 	, {-0.015077,       2.125,   5.0,   1}
+	 	, {-0.40645,        3.5,     1.0,   2}
+	 	, {-0.11701,        6.5,     1.0,   2}
+	 	, {-0.13062,        4.75,    4.0,   2}
+	 	, {-0.022952,       12.5,    2.0,   3}
+	}
+};
+
+EosData eos_r245fa = {
+	"r245fa"
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_r245fa}
 };
 
 /*
@@ -82,14 +92,9 @@ const HelmholtzData helmholtz_data_r245fa = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_r245fa, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_r245fa, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_r245fa, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_r245fa, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_r245fa, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_r245fa, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_r245fa, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_r245fa, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_r245fa,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="dataTransform.xsl"?>
+<fluid>
+    <name>water</name>
+    <core source="IAPWS95" rank="0">
+        <M>18.015242</M>
+        <T_c>647.096</T_c>
+        <p_c>22.064e6</p_c>
+        <rho_c>322</rho_c><!--Should be able to claculate the last one based on the first two-->
+        <omega>0.344</omega>
+        <T_t>647.096</T_t><!--Don't fully understand this yet...-->
+    </core>
+    <ideal source="IAPWS95" rank="0">
+        <const></const>
+        <lin></lin>
+        <Cp_star></Cp_star>
+        <powers>
+            <term><c></c> <t></t></term>
+            <term><c></c> <t></t></term>
+            <term><c></c> <t></t></term>
+            <term><c></c> <t></t></term>
+            <term><c></c> <t></t></term>
+		</powers>
+        <exponentials>
+            <term><b></b><beta></beta></term>
+        </exponentials>
+    </ideal>
+    <helmholtz source="Span and Wagner" rank="0">
+        <powerTerms>
+            <term><a></a> <t></t> <d></d> <l></l></term>
+            <term><a></a> <t></t> <d></d> <l></l></term>
+            <term><a></a> <t></t> <d></d> <l></l></term>
+            <term><a></a> <t></t> <d></d> <l></l></term>
+            <term><a></a> <t></t> <d></d> <l></l></term>
+            <term><a></a> <t></t> <d></d> <l></l></term>
+            <term><a></a> <t></t> <d></d> <l></l></term>
+            <term><a></a> <t></t> <d></d> <l></l></term>
+            <term><a></a> <t></t> <d></d> <l></l></term>
+            <term><a></a> <t></t> <d></d> <l></l></term>
+            <term><a></a> <t></t> <d></d> <l></l></term>
+            <term><a></a> <t></t> <d></d> <l></l></term>
+        </powerTerms>
+    </helmholtz>
+</fluid>

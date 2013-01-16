@@ -1,5 +1,5 @@
-/* This file is created by Hongke Zhu, 05-30-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 05-30-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
 
 LITERATURE REFERENCE
@@ -12,35 +12,36 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define SULFURDIOXIDE_M 64.0638 /* kg/kmol */
 #define SULFURDIOXIDE_R (8314.472/SULFURDIOXIDE_M) /* J/kg/K */
-#define SULFURDIOXIDE_TSTAR 430.64 /* K */
+#define SULFURDIOXIDE_TC 430.64 /* K */
 
-const IdealData ideal_data_sulfurdioxide = {
-    -4.5328346436 /* constant */
-    , 4.4777967379 /* linear */
-    , SULFURDIOXIDE_TSTAR /* Tstar */
-    , SULFURDIOXIDE_R /* cp0star */
-    , 2 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.0,	0.0}
-        ,{0.72453E-04,	1.0}
-    }
-    , 2 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {1.0620,	775.0}
-        ,{1.9401,	1851.0}
-    }
+static const IdealData ideal_data_sulfurdioxide = {
+	IDEAL_CP0,{.cp0={
+		.cp0star = SULFURDIOXIDE_R /* cp0star */
+		, .Tstar = 1. /* Tstar */
+		, .np = 2 /* power terms */
+		, .pt = (const Cp0PowTerm[]){
+			{4.0,	0.0}
+			,{0.72453E-04,	1.0}
+		}
+		, .ne = 2 /* exponential terms */
+		, .et = (const Cp0ExpTerm[]){
+			{1.0620,	775.0}
+			,{1.9401,	1851.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_sulfurdioxide = {
-	"sulfurdioxide"
-    , /* R */ SULFURDIOXIDE_R /* J/kg/K */
+static const HelmholtzData helmholtz_data_sulfurdioxide = {
+    /* R */ SULFURDIOXIDE_R /* J/kg/K */
     , /* M */ SULFURDIOXIDE_M /* kg/kmol */
     , /* rho_star */ 8.195*SULFURDIOXIDE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ SULFURDIOXIDE_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ SULFURDIOXIDE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ SULFURDIOXIDE_TSTAR
+    , /* T_c */ SULFURDIOXIDE_TC
     , /* rho_c */ 8.195*SULFURDIOXIDE_M /* kg/m3 */
     , /* T_t */ 197.7
+
+	,{FPROPS_REF_NBP}
 
     , 0.2557 /* acentric factor */
     , &ideal_data_sulfurdioxide
@@ -60,10 +61,16 @@ const HelmholtzData helmholtz_data_sulfurdioxide = {
         , {-0.059856,	4.75,	4.0,	2.0}
         , {-0.016523,	12.5,	2.0,	3.0}
     }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+};
+
+EosData eos_sulfurdioxide = {
+	"sulfurdioxide"
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_sulfurdioxide}
 };
 
 /*
@@ -82,18 +89,13 @@ const HelmholtzData helmholtz_data_sulfurdioxide = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_sulfurdioxide, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_sulfurdioxide, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_sulfurdioxide, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_sulfurdioxide, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_sulfurdioxide, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_sulfurdioxide, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_sulfurdioxide, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_sulfurdioxide, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_sulfurdioxide,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

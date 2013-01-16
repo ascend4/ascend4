@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fprops xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="\\office\dfs\Replicated\IndigoTeam\towersr\fprops.xsd">
+	<fluid>
+		<name>test</name>
+		<core>
+			<M units="J/(mol K)">114.231</M>
+			<Critical>
+				<T-P>
+					<T>569.32</T>
+					<P>2.497</P>
+				</T-P>
+			</Critical>
+			<omega>123</omega>
+			<T_t>123</T_t>
+		</core>
+		<ideal>
+			<const>12</const>
+			<lin>12</lin>
+			<Cp_star>12</Cp_star>
+			<powerTerms>
+				<term>
+					<c>12</c>
+					<t>12</t>
+				</term>
+				<term>
+					<c>1</c>
+					<t>2</t>
+				</term>
+			</powerTerms>
+		</ideal>
+	</fluid>
+</fprops>

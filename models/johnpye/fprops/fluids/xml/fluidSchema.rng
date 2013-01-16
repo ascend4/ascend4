@@ -1,0 +1,96 @@
+<element name="fluid" xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+<!--TODO: Put optional source attributes in every element that can have a source (i.e. down to TERMS level)-->
+<!--TODO: Add units attributes to every element that can take it, have to think about how best to do this-->
+	<element name="name" />
+	<oneOrMore>
+		<element name="core">
+			<optional>
+				<attribute name="source" />
+			</optional>
+			<attribute name="rank" />
+			<element name="M" />
+			<!--Any two of the following:-->
+				<element name="T_c" />
+				<element name="p_c" />
+				<element name="rho_c" />
+			<!---->
+			<element name="omega" />
+			<element name="T_t" />
+		</element>
+	</oneOrMore>
+	<oneOrMore>
+		<element name="ideal">
+			<optional>
+				<attribute name="source" />
+			</optional>
+			<attribute name="rank" />
+			<!--Things that are required in ideal data-->
+			<element name="const" />
+			<element name="lin" />
+			<element name="Cp_star" />
+			<element name="powers" />
+				<zeroOrMore>
+					<element name="term">
+						<element name="c" />
+						<element name="t" />
+					</element>
+				</zeroOrMore>
+			</element>
+			<element name="exponentials">
+				<zeroOrMore>
+					<element name="term">
+						<element name="b" />
+						<element name="beta" />
+					</element>
+				</zeroOrMore>
+			</element>
+		</element>
+	</oneOrMore>
+	<zeroOrMore>
+		<element name="helmholtz">
+			<optional>
+				<attribute name="source" />
+			</optional>
+			<attribute name="rank" />
+			<!--Things that are required in helmholtz data-->
+			<element name="powers">
+				<oneOrMore>
+					<element name="term">
+					
+					</element>
+				</oneOrMore>
+			</element>
+			<element name="criticalFirsts">
+				<zeroOrMore>
+					<element name="term">
+				
+					</element>
+				</zeroOrMore>
+			</element>
+			<element name="criticalSeconds">
+				<zeroOrMore>
+					<element name="term">
+					</element>
+				</zeroOrMore>
+			</element>
+		</element>
+	</zeroOrMore>
+	<zeroOrMore>
+		<element name="pengrobinson">
+			<optional>
+				<attribute name="source" />
+			</optional>
+			<attribute name="rank" />
+			<!--Things that are required in pengrobinson data-->
+		</element>
+	</zeroOrMore>
+	<zeroOrMore>
+		<element name="mbwr">
+			<optional>
+				<attribute name="source" />
+			</optional>
+			<attribute name="rank" />
+			<!--Things that are required in mbwr data-->
+		</element>
+	</zeroOrMore>
+</element>

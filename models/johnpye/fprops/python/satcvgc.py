@@ -12,15 +12,16 @@ print "\nfprops_sat_T test...\n"
 toterrors = 0
 totchecks = 0
 for f in testfluids:
-	D = fprops_fluid(f)
+	D = fluid(f)
 	print D.name, D.T_t, D.T_c
 	TT = linspace(D.T_t, D.T_c, 1000);
 	firsterror = True
 	errcount = 0
 	for T in TT:
 		sys.stderr.write("%s: %f\r" % (D.name,T))
-		res, p, rhof, rhog = fprops_sat_T(T,D)
-		if res:
+		try: 
+			p, rhof, rhog = D.sat_T(T)
+		except:
 			if firsterror:
 				print "%s: Error %d at T = %f" % (D.name,res,T)
 				firsterror = False
@@ -39,17 +40,18 @@ print "\nfprops_sat_p test...\n"
 toterrors = 0
 totchecks = 0
 for f in testfluids:
-	D = fprops_fluid(f)
-	res, pt, rhof, rhog = fprops_triple_point(D)
-	pc = helmholtz_p(D.T_c, D.rho_c, D)
+	D = fluid(f)
+	pt, rhof, rhog = D.triple_point()
+	pc = D.p(D.T_c, D.rho_c)
 	print D.name, pt, pc
 	pp = linspace(pt, pc, 1000);
 	firsterror = True
 	errcount = 0
 	for p in pp:
 		sys.stderr.write("%s: %f\r" % (D.name,p))
-		res, T, rhof, rhog = fprops_sat_p(p,D)
-		if res:
+		try:
+			T, rhof, rhog = D.sat_p(p)
+		except:
 			if firsterror:
 				print "%s: Error %d at p = %0.12e" % (D.name,res,p)
 				firsterror = False

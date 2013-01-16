@@ -13,12 +13,15 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "solve_ph.h"
+#include "fprops.h"
 #include "sat.h"
 #include "derivs.h"
+#include "rundata.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -39,36 +42,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef FPE_DEBUG
 #define _GNU_SOURCE
 #include <fenv.h>
-int feenableexcept (int excepts);
-int fedisableexcept (int excepts);
-int fegetexcept (void);
+int feenableexcept(int excepts);
+int fedisableexcept(int excepts);
+int fegetexcept(void);
 #endif
 
-#define SQ(X) ((X)*(X))
-
-//#define SOLVE_PH_DEBUG
+#define SOLVE_PH_DEBUG
 #ifdef SOLVE_PH_DEBUG
-# define MSG(STR,...) fprintf(stderr,"%s:%d: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
+# include "color.h"
+# define MSG(FMT, ...) \
+	color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
+	color_on(stderr,ASC_FG_BRIGHTBLUE);\
+	fprintf(stderr,"%s: ",__func__);\
+	color_off(stderr);\
+	fprintf(stderr,FMT "\n",##__VA_ARGS__)
 #else
-# define MSG(ARGS...)
+# define MSG(ARGS...) ((void)0)
 #endif
 
 #define ERRMSG(STR,...) fprintf(stderr,"%s:%d: ERROR: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
 
-int fprops_region_ph(double p, double h, const HelmholtzData *D){
-
-	double Tsat, rhof, rhog;
-	double p_c = fprops_pc(D);
+int fprops_region_ph(double p, double h, const PureFluid *fluid, FpropsError *err){
+    double Tsat, rhof, rhog;
+	double p_c = fluid->data->p_c;
 
 	if(p >= p_c)return FPROPS_NON;
 
-	int res = fprops_sat_p(p, &Tsat, &rhof, &rhog, D);
-	if(res)return FPROPS_ERR;
+	fprops_sat_p(p, &Tsat, &rhof, &rhog, fluid, err);
+	if(*err){
+		*err = FPROPS_SAT_CVGC_ERROR;
+		return FPROPS_ERROR;
+	}
 
-	double hf = helmholtz_h(Tsat, rhof, D);
+	double hf = fluid->h_fn(Tsat, rhof, fluid->data, err);
 	if(h <= hf)return FPROPS_NON;
 
-	double hg = helmholtz_h(Tsat, rhog, D);
+	double hg = fluid->h_fn(Tsat,rhog, fluid->data, err);
 	if(h >= hg)return FPROPS_NON;
 
 	return FPROPS_SAT;
@@ -85,13 +95,17 @@ void fprops_fpe(int sig){
 }
 #endif
 
-int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, const HelmholtzData *D){
+void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
+		, const PureFluid *fluid, FpropsError *err
+){
 	double Tsat, rhof, rhog, hf, hg;
 	double T1, rho1;
 	int subcrit_pressure = 0;
 	int liquid_iteration = 0;
 	double rhof_t;
-	double p_c = fprops_pc(D);
+	double p_c = fluid->data->p_c;
+
+	MSG("Solving for p=%f bar, h=%f kJ/kgK (EOS type %d)",p/1e5,h/1e3,fluid->type);
 
 #ifdef FPE_DEBUG
     feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
@@ -100,47 +114,34 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 	int jmpret = setjmp(mark);
 	if(jmpret==0){
 #endif
-		
+		MSG("p_c = %f bar",p_c/1e5);
 		if(p < p_c){
 			MSG("Calculate saturation Tsat(p < p_c)");
-			int res = fprops_sat_p(p, &Tsat, &rhof, &rhog, D);
-			if(res){
+			fprops_sat_p(p, &Tsat, &rhof, &rhog, fluid, err);
+			if(*err){
 				ERRMSG("Unable to solve saturation state");
-				return res;
+				*err = FPROPS_SAT_CVGC_ERROR;
+				return;
 			}
-			hf = helmholtz_h(Tsat, rhof, D);
-			hg = helmholtz_h(Tsat, rhog, D);
-			MSG("hf = %f kJ/kg, hg = %f",hf/1e3,hg/1e3);
+			hf = fluid->h_fn(Tsat, rhof, fluid->data, err);
+			hg = fluid->h_fn(Tsat, rhog, fluid->data, err);
+			MSG("at p = %f bar, T_sat = %f, hf = %f kJ/kg, hg = %f",p/1e5,Tsat,hf/1e3,hg/1e3);
 
-			if(h > hf && h < hg){
+			if(hf < h && h < hg){
 				MSG("SATURATION REGION");
 				/* saturation region... easy */
 				double x = (h - hf)/(hg - hf);
 				*rho = 1./(x/rhog + (1.-x)/rhof);
 				*T = Tsat;
-				return 0;
+				return;
 			}
 
 			subcrit_pressure = 1;
 			if(h < hf){
 				liquid_iteration = 1;
 				if(!use_guess){
-#if 1
-					double Tsat1, psat1, rhof1, rhog1;
-					MSG("SOLVING TSAT(HF)");
-					res = fprops_sat_hf(h, &Tsat1, &psat1, &rhof1, &rhog1, D);
-					if(res){
-						ERRMSG("Unable to solve Tsat(hf), returning T = %f, rho = %f.",Tsat,rhof);
-						*T = Tsat;
-						*rho = rhof;
-						return res;
-					}
-					*T = Tsat1;
-					*rho = rhof1;
-#else
 					*T = Tsat;
 					*rho = rhof;
-#endif
 					MSG("LIQUID GUESS: T = %f, rho = %f",*T, *rho);
 				}
 			}else if(!use_guess){
@@ -148,26 +149,41 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 				*rho = rhog * 0.5;
 				MSG("GAS GUESS: T = %f, rho = %f",*T, *rho);
 			}
-		}else{
-			/* FIXME still some problems here at very high pressures */
+		}else{ /* p >= p_c */
+			/* FIXME: still some problems here at very high pressures */
 			if(!use_guess){
-				double hc = helmholtz_h_raw(D->T_c, D->rho_c, D);
-				assert(!__isnan(hc));
-				MSG("hc = %f",hc);
-				if(h < 0.9 * hc){
-					MSG("h < hc... using saturation Tsat(hf) for starting guess");
+				/* FIXME we should cache/precalculate hc, store in rundata. */
+				double hc = fluid->h_fn(fluid->data->T_c, fluid->data->rho_c, fluid->data, err);
+				assert(!isnan(hc));
+				MSG("hc = %f kJ/kgK",hc/1e3);
+				if(h < 0.8*hc){ /* FIXME should make use of h_ref here in some way? Otherwise arbitrary... */
+#if 0
 					double Tsat1, psat1, rhof1, rhog1;
-					int res = fprops_sat_hf(h, &Tsat1, &psat1, &rhof1, &rhog1, D);
-					if(res){
+					int res = fprops_sat_p(p, &Tsat1, &rhof1, &rhog1, fluid);
+					MSG("Unable to solve saturation at p = %f",p);
+					*T = Tsat1;
+					*rho = rhof1;
+#else					
+					MSG("h < 0.9 hc... using saturation Tsat(hf) for starting guess");
+					double Tsat1, psat1, rhof1, rhog1;
+					fprops_sat_hf(h, &Tsat1, &psat1, &rhof1, &rhog1, fluid, err);
+					if(*err){
 						MSG("Unable to solve Tsat(hf)");
-						/* accuracy of the estimate of Tsat(hf) doesn't matter 
+						/* accuracy of the estimate of Tsat(hf) doesn't matter
 						very much so we can ignore this error. */
+
+						/* try initialising to T_t, rho_f(T_t) */
+						Tsat1 = fluid->data->T_t;
+						MSG("T_t = %f",Tsat1);
+						fprops_sat_T(Tsat1, &psat1, &rhof1, &rhog1, fluid, err);
+						if(*err)MSG("Unable to solve rhof(Tt)");
 					}
 					*T = Tsat1;
 					*rho = rhof1;
+#endif
 				}else{
-					*T = D->T_c * 1.01;
-					*rho = D->rho_c * 1.05;
+					*T = fluid->data->T_c * 1.01;
+					*rho = fluid->data->rho_c * 1.05;
 				}
 				MSG("SUPERCRITICAL GUESS: T = %f, rho = %f", *T, *rho);
 			}
@@ -179,36 +195,40 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 
 		T1 = *T;
 		rho1 = *rho;
-		assert(!__isnan(T1));
-		assert(!__isnan(rho1));
+		assert(!isnan(T1));
+		assert(!isnan(rho1));
 
 		if(liquid_iteration){
 			double pt,rhogt;
-			int res = fprops_sat_T(D->T_t,&pt,&rhof_t, &rhogt, D);
-			if(res){
+			fprops_sat_T(fluid->data->T_t,&pt,&rhof_t, &rhogt, fluid, err);
+			if(err){
 				ERRMSG("Unable to solve triple point liquid density.");
-				return 1;
+				*err = FPROPS_SAT_CVGC_ERROR;
+				return;
 			}
 		}
 
 		/* try our own home-baked newton iteration */
 		int i = 0;
+			err = FPROPS_NO_ERROR;
 		double delta_T = 0;
 		double delta_rho = 0;
 		MSG("STARTING ITERATION");
 		while(i++ < 200){
-			double p1 = helmholtz_p_raw(T1,rho1,D);
-			assert(!__isnan(p1));
-			double h1 = helmholtz_h_raw(T1,rho1,D);
-			assert(!__isnan(h1));
+			double p1 = fluid->p_fn(T1,rho1, fluid->data, err);
+			if(err){
+				MSG("Got an error ('%s') in p_fn calculation",fprops_error(*err));
+			} 
+			double h1 = fluid->h_fn(T1,rho1, fluid->data, err);
+			assert(!isnan(h1));
 
-			MSG("  T = %f, rho = %f\tp = %f bar, h = %f kJ/kg", T1, rho1, p1/1e5, h1/1e3);
+			MSG("  %d: T = %f, rho = %f\tp = %f bar, h = %f kJ/kg", i, T1, rho1, p1/1e5, h1/1e3);
 			MSG("      p error = %f bar",(p1 - p)/1e5);
 			MSG("      h error = %f kJ/kg",(h1 - h)/1e3);
 
 			if(p1 < 0){
-				T1 -= (delta_T *= 0.5); 
-				rho1 -= (delta_rho *= 0.5); 
+				T1 -= (delta_T *= 0.5);
+				rho1 -= (delta_rho *= 0.5);
 				continue;
 			}
 
@@ -216,42 +236,42 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 				MSG("Converged to T = %f, rho = %f, in homebaked Newton solver", T1, rho1);
 				*T = T1;
 				*rho = rho1;
-				return 0;
+				return;
 			}
 			/* calculate step, we're solving log(p1) in this code... */
 			double f = log(p1) - log(p);
 			double g = h1 - h;
-			assert(!__isnan(f));
-			assert(!__isnan(g));
+			assert(!isnan(f));
+			assert(!isnan(g));
 			assert(rho1 != 0);
 			assert(p1 != 0);
-			assert(!__isnan(fprops_non_dZdT_v('p', T1,rho1, D)));
-			double f_T = 1./p1 * fprops_non_dZdT_v('p', T1,rho1, D);
-			double f_rho = -1./p1/SQ(rho1) * fprops_non_dZdv_T('p', T1, rho1, D);
-			double g_T = fprops_non_dZdT_v('h', T1,rho1, D);
-			double g_rho = -1./SQ(rho1) * fprops_non_dZdv_T('h', T1, rho1, D);
-			assert(!__isnan(f_T));
+			assert(!isnan(fprops_non_dZdT_v('p', T1,rho1, fluid,err)));
+			double f_T = 1./p1 * fprops_non_dZdT_v('p', T1,rho1, fluid,err);
+			double f_rho = -1./p1/SQ(rho1) * fprops_non_dZdv_T('p', T1, rho1, fluid,err);
+			double g_T = fprops_non_dZdT_v('h', T1,rho1, fluid,err);
+			double g_rho = -1./SQ(rho1) * fprops_non_dZdv_T('h', T1, rho1, fluid,err);
+			assert(!isnan(f_T));
 
-			if(__isnan(f_rho)){
+			if(isnan(f_rho)){
 				ERRMSG("     rho1 = %f, T1 = %f",rho1, T1);
 			}
-			assert(!__isnan(f_rho));
+			assert(!isnan(f_rho));
 
-			assert(!__isnan(g_T));
-			assert(!__isnan(g_rho));
+			assert(!isnan(g_T));
+			assert(!isnan(g_rho));
 
 			double det = g_rho * f_T - f_rho * g_T;
 			assert(det!=0);
-			assert(!__isnan(det));
-			MSG("      ∂f/∂T = %e\t\t∂f/∂rho = %e",f_T, f_rho);
-			MSG("      ∂g/∂T = %e\t\t∂g/∂rho = %e",g_T, g_rho);
-	
+			assert(!isnan(det));
+			MSG("      df/dT = %e\t\tdf/drho = %e",f_T, f_rho);
+			MSG("      dg/dT = %e\t\tdg/drho = %e",g_T, g_rho);
+
 			delta_T = -1./det * (g_rho * f - f_rho * g);
 			delta_rho = -1./det * (f_T * g - g_T * f);
-			assert(!__isnan(delta_T));
-			assert(!__isnan(delta_rho));
-			MSG("          ΔT   = %f", delta_T);
-			MSG("          Δrho = %f", delta_rho);
+			assert(!isnan(delta_T));
+			assert(!isnan(delta_rho));
+			MSG("          dT   = %f", delta_T);
+			MSG("          drho = %f", delta_rho);
 
 			if(subcrit_pressure){
 				if(h > hg){
@@ -265,13 +285,13 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 					while(rho1 + delta_rho < rhof && i++ < 20){
 						delta_rho *= 0.5;
 					}
-					if(T1 + delta_T < D->T_t) delta_T = 0.5 * (T1 + D->T_t);
+					if(T1 + delta_T < fluid->data->T_t) delta_T = 0.5 * (T1 + fluid->data->T_t);
 				}
 			}else{
 #if 0
 				/* supercritical... stay above critical temperature of density > rho_crit */
-				if(rho1 + delta_rho > D->rho_c && T1 + delta_T < D->T_c){
-					delta_T = 0.5 *(T1 + D->T_c);
+				if(rho1 + delta_rho > fluid->data->rho_c && T1 + delta_T < fluid->data->T_c){
+					delta_T = 0.5 *(T1 + fluid->data->T_c);
 				}
 #endif
 			}
@@ -279,7 +299,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 			if(liquid_iteration){
 				if(rho1 + delta_rho > rhof_t) delta_rho = rhof_t;
 			}
-		
+
 			/* don't go too hot */
 			if(T1 + delta_T > 5000) delta_T = 5000 - T1;
 
@@ -292,7 +312,7 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 			}
 
 			T1 = T1 + delta_T;
-			if(T1 < D->T_t)T1 = D->T_t;
+			if(T1 < fluid->data->T_t)T1 = fluid->data->T_t;
 			rho1 = rho1 + delta_rho;
 		}
 #ifdef FPE_DEBUG
@@ -306,10 +326,11 @@ int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, c
 	*T = T1;
 	*rho = rho1;
 	ERRMSG("Iteration failed for p = %.12e, h = %.12e",p,h);
-	return 999;
+	*err = FPROPS_NUMERIC_ERROR;
+	return;
 
 #if 0
-	int res = fprops_nonsolver('p','h',p,h,T,rho,D);
+	int res = fprops_nonsolver('p','h',p,h,T,rho,fluid);
 	ERRMSG("Iteration failed in nonsolver");
 	return res;
 #endif

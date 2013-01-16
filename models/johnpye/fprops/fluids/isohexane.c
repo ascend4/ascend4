@@ -12,36 +12,42 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define ISOHEXANE_M 86.17536 /* kg/kmol */
 #define ISOHEXANE_R (8314.472/ISOHEXANE_M) /* J/kg/K */
-#define ISOHEXANE_TSTAR 497.7 /* K */
+#define ISOHEXANE_TC 497.7 /* K */
 
-const IdealData ideal_data_isohexane = {
-    6.9259123919 /* constant */
-    , -0.3128629679 /* linear */
-    , ISOHEXANE_TSTAR /* Tstar */
-    , ISOHEXANE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.0,	0.0}
-    }
-    , 4 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {7.9127,	325.0}
-        ,{16.871,	1150.0}
-        ,{19.257,	2397.0}
-        ,{14.075,	5893.0}
-    }
+
+
+static const IdealData ideal_data_isohexane = {
+	IDEAL_CP0,{.cp0={
+		ISOHEXANE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{4.0,	0.0}
+		}
+		, 4 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{7.9127,	325.0}
+			,{16.871,	1150.0}
+			,{19.257,	2397.0}
+			,{14.075,	5893.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_isohexane = {
-	"isohexane"
-    , /* R */ ISOHEXANE_R /* J/kg/K */
+static const HelmholtzData helmholtz_data_isohexane = {
+    /* R */ ISOHEXANE_R /* J/kg/K */
     , /* M */ ISOHEXANE_M /* kg/kmol */
     , /* rho_star */ 2.715*ISOHEXANE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ ISOHEXANE_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ ISOHEXANE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ ISOHEXANE_TSTAR
+    , /* T_c */ ISOHEXANE_TC
     , /* rho_c */ 2.715*ISOHEXANE_M /* kg/m3 */
     , /* p_t */ 119.6
+
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = 6.9259123919 /* constant */
+		, .m = -0.3128629679 /* linear */
+	}}}
 
     , 0.2797 /* acentric factor */
     , &ideal_data_isohexane
@@ -61,10 +67,17 @@ const HelmholtzData helmholtz_data_isohexane = {
         , {-0.019262,	14.5,	3.0,	3.0}
         , {0.0080783,	12.0,	4.0,	3.0}
     }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+	// no more terms
+};
+
+EosData eos_isohexane = {
+	"isohexane"
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_isohexane}
 };
 
 /*
@@ -83,14 +96,9 @@ const HelmholtzData helmholtz_data_isohexane = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_isohexane, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_isohexane, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_isohexane, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_isohexane, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_isohexane, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_isohexane, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_isohexane, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_isohexane, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_isohexane,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*

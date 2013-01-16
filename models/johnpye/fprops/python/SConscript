@@ -1,4 +1,5 @@
 Import('fprops_env')
+import os
 
 pyenv = fprops_env.Clone()
 
@@ -37,6 +38,8 @@ lib = pyenv.SharedLibrary('fprops',['fprops.i'] + pyenv['shobjs']
 	,LIBS=[python_lib % (sys.version_info[0],sys.version_info[1])]
 	,SWIGFLAGS=['-python']
 )
+
+pyenv.Depends(lib,"fprops_wrap.c")
 
 fprops_env['pyfprops'] = lib
 

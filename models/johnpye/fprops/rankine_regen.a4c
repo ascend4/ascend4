@@ -18,6 +18,7 @@ MODEL rankine_regen_water;
 	PU2 IS_A pump_simple;
 
 	BO.cd.component :== 'water';
+	BO.cd.type :== 'pengrob';
 
 	(* main loop *)
 	BO.outlet, TU1.inlet ARE_THE_SAME;

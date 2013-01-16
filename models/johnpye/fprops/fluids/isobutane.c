@@ -1,5 +1,5 @@
-/* This file is created by Hongke Zhu, 7-20-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 7-20-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
 
 LITERATURE REFERENCE
@@ -12,36 +12,40 @@ J. Phys. Chem. Ref. Data, 35(2):929-1019, 2006.
 
 #define ISOBUTANE_M 58.1222  /* kg/kmol */
 #define ISOBUTANE_R (8314.472/ISOBUTANE_M) /* J/kg/K */
-#define ISOBUTANE_TSTAR 407.81 /* K */
+#define ISOBUTANE_TC 407.81 /* K */
 
-const IdealData ideal_data_isobutane = {
-    11.60865546 /* constant */
-    , -5.29450411 /* linear */
-    , ISOBUTANE_TSTAR /* Tstar */
-    , ISOBUTANE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.05956619,	0.0}
-    }
-    , 4 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {4.94641014,    387.94064}
-        ,{4.09475197,   973.80782}
-        ,{15.6632824,   1772.71103}
-        ,{9.73918122,   4228.52424}
-    } 
+static const IdealData ideal_data_isobutane = {
+	IDEAL_CP0,{.cp0={
+		ISOBUTANE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{4.05956619,	0.0}
+		}
+		, 4 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{4.94641014,    387.94064}
+			,{4.09475197,   973.80782}
+			,{15.6632824,   1772.71103}
+			,{9.73918122,   4228.52424}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_isobutane = {
-	"isobutane"
-    , /* R */ ISOBUTANE_R /* J/kg/K */
+static const HelmholtzData helmholtz_data_isobutane = {
+	/* R */ ISOBUTANE_R /* J/kg/K */
     , /* M */ ISOBUTANE_M /* kg/kmol */
     , /* rho_star */ 3.879756788*ISOBUTANE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ ISOBUTANE_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ ISOBUTANE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ ISOBUTANE_TSTAR
+    , /* T_c */ ISOBUTANE_TC
     , /* rho_c */ 3.879756788*ISOBUTANE_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 113.73
+
+	,{FPROPS_REF_PHI0,{.phi0={
+    	.c = 11.60865546 /* constant */
+    	, .m = -5.29450411 /* linear */
+    }}}
 
     , 0.184 /* acentric factor */
     , &ideal_data_isobutane
@@ -78,9 +82,19 @@ const HelmholtzData helmholtz_data_isobutane = {
         {-0.42276036810382E-01,    2.0,   1.0,  10.0, 150.0, 1.16, 0.85}
         , {-0.53001044558079E-02,   0.0,   2.0,  10.0, 200.0, 1.13, 1.0}
     }
-    , 0 /* critical terms */
-    , 0
 };
+
+EosData eos_isobutane = {
+	"butane"
+	,"D Buecker and W Wagner, 2006. 'Reference Equations of State for the "
+	"Thermodynamic Properties of Fluid Phase n-Butane and Isobutane,' "
+	"J. Phys. Chem. Ref. Data, 35(2):929-1019."
+	,"http://dx.doi.org/10.1063/1.1901687"
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_isobutane}
+};
+
 
 /*
     Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
@@ -98,18 +112,12 @@ const HelmholtzData helmholtz_data_isobutane = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_isobutane, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_isobutane, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_isobutane, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_isobutane, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_isobutane, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_isobutane, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_isobutane, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_isobutane, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_isobutane,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
-
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

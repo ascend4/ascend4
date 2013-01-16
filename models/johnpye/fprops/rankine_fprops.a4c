@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 	
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *)(*
 	A number of Rankine-cycle (steam turbine power cycle) models of increasing
 	complexity, following the general development of Moran & Shapiro, Çengel,
@@ -24,8 +26,8 @@
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 
-IMPORT "johnpye/fprops/helmholtz";
-(*IMPORT "sensitivity/solve";*)
+IMPORT "johnpye/fprops/fprops";
+IMPORT "sensitivity/solve";
 IMPORT "johnpye/extpy/extpy";
 IMPORT "johnpye/fprops/cycle_plot";
 
@@ -35,6 +37,7 @@ IMPORT "johnpye/fprops/cycle_plot";
 
 MODEL fluid;
 	component IS_A symbol_constant;
+	type IS_A symbol_constant;
 END fluid;
 
 (*
@@ -50,12 +53,12 @@ MODEL stream_state;
 	s IS_A specific_entropy;
 	x IS_A fraction;
 
-	(*calc_vT: helmholtz_phsx_vT(
+	calc_vT: fprops_phsx_vT(
 		v, T : INPUT;
 		p, h, s, x : OUTPUT;
 		cd : DATA
-	);*)
-	calc_ph: helmholtz_Tvsx_ph(
+	);
+	calc_ph: fprops_Tvsx_ph(
 		p, h : INPUT;
 		T, v, s, x : OUTPUT;
 		cd : DATA
@@ -86,15 +89,14 @@ METHOD default_self;
 END default_self;
 METHOD enable_vT;
 	FOR i IN [1..4] DO
-		(*calc_ph[i].included := FALSE;
-		calc_vT[i].included := TRUE;*)
-		calc_ph[i].included := TRUE;
+		calc_ph[i].included := FALSE;
+		calc_vT[i].included := TRUE;
 	END FOR;
 END enable_vT;
 METHOD enable_ph;
 	FOR i IN [1..4] DO
 		calc_ph[i].included := TRUE;
-		(*calc_vT[i].included := FALSE;*)
+		calc_vT[i].included := FALSE;
 	END FOR;
 END enable_ph;
 METHOD solve;
@@ -123,12 +125,13 @@ END	stream_state_test;
 
 MODEL stream_state_test_co2 REFINES stream_state;
 	cd.component :== 'carbondioxide';
+	cd.type :== 'pengrob';
 METHODS
 METHOD on_load;
 	RUN default_all;
 	h := 350 {kJ/kg};
 	FIX p, x;
-	p := 9 {kPa};
+	p := 6 {bar};
 	x := 1e-6;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
@@ -138,6 +141,7 @@ END stream_state_test_co2;
 
 MODEL stream_state_test_toluene REFINES stream_state;
 	cd.component :== 'toluene';
+	cd.type :== 'pengrob';
 METHODS
 METHOD on_load;
 	RUN default_all;
@@ -618,6 +622,7 @@ END rankine_common;
 
 MODEL rankine_water REFINES rankine_common;
 	cd.component :== 'water';
+	cd.type :== 'pengrob';
 METHODS
 (* first test case: just some plausible values *)
 METHOD on_load;
@@ -698,6 +703,7 @@ END rankine_water;
 
 MODEL rankine_co2 REFINES rankine_common;
 	cd.component :== 'carbondioxide';
+	cd.type :== 'pengrob';
 METHODS
 METHOD on_load_1;
 	RUN ClearAll;

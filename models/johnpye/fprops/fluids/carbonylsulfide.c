@@ -1,5 +1,5 @@
-/* This file is created by Hongke Zhu, 02-03-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 02-03-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
 
 LITERATURE REFERENCE \
@@ -12,38 +12,41 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define CARBONYLSULFIDE_M 60.0751 /* kg/kmol */
 #define CARBONYLSULFIDE_R (8314.472/CARBONYLSULFIDE_M) /* J/kg/K */
-#define CARBONYLSULFIDE_TSTAR 378.77 /* K */
+#define CARBONYLSULFIDE_TC 378.77 /* K */
 
-const IdealData ideal_data_carbonylsulfide = {
-    -3.6587449805 /* constant, a_1, adjust to solver s */
-    , 3.7349245016 /* linear, a_2, adjust to solver h */
-    , CARBONYLSULFIDE_TSTAR /* Tstar */
-    , CARBONYLSULFIDE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {3.5,	0.0}
-    }
-    , 4 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {2.1651,	768.0}
-        ,{0.93456,	1363.0}
-        ,{1.0623,	3175.0}
-        ,{0.34269,	12829.0}
-    }
+static const IdealData ideal_data_carbonylsulfide = {
+	IDEAL_CP0,{.cp0={
+		CARBONYLSULFIDE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{3.5,	0.0}
+		}
+		, 4 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{2.1651,	768.0}
+			,{0.93456,	1363.0}
+			,{1.0623,	3175.0}
+			,{0.34269,	12829.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_carbonylsulfide = {
-    "carbonylsulfide"
-	, /* R */ CARBONYLSULFIDE_R /* J/kg/K */
+static const HelmholtzData helmholtz_data_carbonylsulfide = {
+	/* R */ CARBONYLSULFIDE_R /* J/kg/K */
     , /* M */ CARBONYLSULFIDE_M /* kg/kmol */
     , /* rho_star */ 7.41*CARBONYLSULFIDE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ CARBONYLSULFIDE_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ CARBONYLSULFIDE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ CARBONYLSULFIDE_TSTAR
+    , /* T_c */ CARBONYLSULFIDE_TC
     , /* rho_c */ 7.41*CARBONYLSULFIDE_M /* kg/m3 */
     , /* T_t */ 134.3
 
-    , 0.0978 /* acentric factor */
+    ,{FPROPS_REF_PHI0,{.phi0={
+		.c = -3.6587449805 /* constant, a_1, adjust to solver s */
+    	, .m = 3.7349245016 /* linear, a_2, adjust to solver h */
+    }}}
+	, 0.0978 /* acentric factor */
     , &ideal_data_carbonylsulfide
     , 12 /* power terms */
     , (const HelmholtzPowTerm[]){
@@ -61,11 +64,20 @@ const HelmholtzData helmholtz_data_carbonylsulfide = {
         , {-0.028333,	14.5,	3.0,	3.0}
         , {0.016983,	12.0,	4.0,	3.0}
     }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+    // no other terms
 };
+
+EosData eos_carbonylsulfide = {
+	"carbonylsulfide"
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_carbonylsulfide}
+};
+
+
 
 /*
     Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
@@ -83,18 +95,12 @@ const HelmholtzData helmholtz_data_carbonylsulfide = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_carbonylsulfide, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_carbonylsulfide, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_carbonylsulfide, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_carbonylsulfide, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_carbonylsulfide, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_carbonylsulfide, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_carbonylsulfide, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_carbonylsulfide, ntd, td, 'C');
+	PureFluid *P = helmholtz_prepare(&eos_carbonylsulfide, NULL);
+    return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

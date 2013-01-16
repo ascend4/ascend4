@@ -2,12 +2,13 @@ from fprops import *
 from pylab import *
 import sys
 
-D = fprops_fluid('carbondioxide');
+D = fluid('hydrogensulfide');
 
 print "SOLVING TRIPLE POINT..."
 
-res, p_t, rhof_t, rhog_t = fprops_triple_point(D)
-if res:
+try:
+	p_t, rhof_t, rhog_t = D.triple_point()
+except RuntimeError,e:
 	print "failed to solve triple point"
 	sys.exit(1)
 
@@ -29,16 +30,21 @@ for T in TT:
 	sys.stderr.write("+++ T = %f\r" % (T))
 	for v in vv:
 		rho = 1./v
-		p = helmholtz_p(T,rho,D)
+		p = D.p(T,rho)
 		if p > pmax:
 			continue
-		h = helmholtz_h(T,rho,D)
+		h = D.h(T,rho)
 		#print "    p = %f bar, h = %f kJ/kg" % (p/1e5,h/1e3)
 		if(h > 8000e3):
 			continue
 
-		res, T1, rho1 = fprops_solve_ph(p,h,0,D);
-		if res or isnan(T1) or isnan(rho1):
+		try:
+			T1, rho1 = D.solve_ph(p,h);
+		except RuntimeError,e:
+			print "Error %s at p = %f, rho = %f (T = %.12e, rho = %.12e)" % (str(e),p, h,T,rho)
+			badT.append(T); badv.append(v)
+			continue	
+		if isnan(T1) or isnan(rho1):
 			print "Error at T1 = %f, rho1 = %f (T = %.12e, rho = %.12e)" % (T1, rho1,T,rho)
 			badT.append(T); badv.append(v)
 		else:
@@ -66,11 +72,13 @@ TT1 = []
 vf1 = []
 vg1 = []
 for T in TTs:
-	res, p, rhof, rhog = fprops_sat_T(T,D)
-	if not res:
-		TT1.append(T)
-		vf1.append(1./rhof)
-		vg1.append(1./rhog)
+	try:
+		p, rhof, rhog = D.sat_T(T)
+	except:
+		continue;	
+	TT1.append(T)
+	vf1.append(1./rhof)
+	vg1.append(1./rhog)
 
 semilogx(vf1,TT1,"b-")
 semilogx(vg1,TT1,"b-")

@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 */
 
 #ifndef FPROPS_HELM_IMPL_H
@@ -28,22 +30,22 @@
 	We provide this header file just the purpose of diagnostic testing.
 */
 
-double helm_resid(double tau, double delta, const HelmholtzData *data);
-double helm_resid_del(double tau, double delta, const HelmholtzData *data);
-double helm_resid_tau(double tau, double delta, const HelmholtzData *data);
-double helm_resid_deltau(double tau, double delta, const HelmholtzData *data);
-double helm_resid_deldel(double tau, double delta, const HelmholtzData *data);
-double helm_resid_tautau(double tau, double delta, const HelmholtzData *data);
+double helm_resid(double tau, double delta, const HelmholtzRunData *data);
+double helm_resid_del(double tau, double delta, const HelmholtzRunData *data);
+double helm_resid_tau(double tau, double delta, const HelmholtzRunData *data);
+double helm_resid_deltau(double tau, double delta, const HelmholtzRunData *data);
+double helm_resid_deldel(double tau, double delta, const HelmholtzRunData *data);
+double helm_resid_tautau(double tau, double delta, const HelmholtzRunData *data);
 
 #ifdef INCLUDE_THIRD_DERIV_CODE
-double helm_resid_deldeldel(double tau, double delta, const HelmholtzData *data);
+double helm_resid_deldeldel(double tau, double delta, const HelmholtzRunData *data);
 #endif
 
 /*
 	Note: the cross partial derivative with respect to delta and tau is
 	identically zero
 */
-#define HELM_IDEAL_DELTAU(TAU, DELTA, DATA) (0)
+//#define HELM_IDEAL_DELTAU(TAU, DELTA, DATA, ERROR) (0)
 
 
 #endif

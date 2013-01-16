@@ -2,14 +2,14 @@ from fprops import *
 from pylab import *
 import sys
 
-D = fluid("toluene");
+D = fprops_fluid("toluene");
 if not D:
 	print "ERROR couldn't access fluid definition"
 	sys.exit(1)
 
 T = D.T_c - 1e-8
 
-res, p1, rf1, rg1 = sat_T(T,D)
+res, p1, rf1, rg1 = fprops_sat_T(T,D)
 
 if res:
 	print "ERROR in calculation of psat(T)"

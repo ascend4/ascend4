@@ -1,0 +1,73 @@
+digraph structs {
+node [shape=record];
+PureFluid [label="PureFluid\n(struct)|{\
+name|\
+<type> *type|\
+<data> *data|\
+*p_fn|\
+*u_fn|\
+*h_fn|\
+*s_fn|\
+*a_fn|\
+*cv_fn|\
+*cp_fn|\
+*w_fn|\
+*g_fn|\
+*dpdrho_T_fn}"];
+
+EosType [label="EosType\n(enum)|{\
+FPROPS_IDEAL|\
+FPROPS_CUBIC|\
+FPROPS_PENGROB|\
+FPROPS_REDKW|\
+FPROPS_SOAVE|\
+FPROPS_HELMHOLTZ|\
+FPROPS_MBWR}"];
+
+FluidData [label="FluidData\n(struct)|{\
+R|\
+M|\
+T_t|\
+T_c|\
+p_c|\
+rho_c|\
+omega|\
+<ideal>*ideal helmholtz energy|\
+<correlation>*correlation specifics}"];
+
+Cp0RunData [label="Cp0RunData\n(struct)|{\
+c|\
+m|\
+Tstar|\
+np|\
+*pt|\
+ne|\
+*et}"];
+	
+CorrelationUnion [label="CorrelationUnion\n(union)|{\
+<helm>Helmholtz|\
+<pengrob>Peng Robinson|\
+...}"];
+
+HelmholtzRunData [label="HelmholtzRunData\n(struct)|{\
+rho_star|\
+T_star|\
+np|\
+*pt|\
+ng|\
+*gt|\
+nc|\
+*ct}"];
+
+PengrobRunData [label="PengrobRunData\n(struct)|{\
+aTc|\
+b|\
+double kappa}"];
+
+PureFluid:type -> EosType;
+PureFluid:data -> FluidData;
+FluidData:ideal -> Cp0RunData;
+FluidData:correlation -> CorrelationUnion;
+CorrelationUnion:helm -> HelmholtzRunData;
+CorrelationUnion:pengrob -> PengrobRunData;
+}

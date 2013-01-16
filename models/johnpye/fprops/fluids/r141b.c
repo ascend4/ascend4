@@ -12,58 +12,68 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define R141B_M 116.94962 /* kg/kmol */
 #define R141B_R (8314.472/R141B_M) /* J/kg/K */
-#define R141B_TSTAR 477.5 /* K */
+#define R141B_TC 477.5 /* K */
 
-const IdealData ideal_data_r141b = {
-    -15.5074814985 /* constant */
-    , 9.1871858933 /* linear */
-    , R141B_TSTAR /* Tstar */
-    , R141B_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.0,	0.0}
-    }
-    , 3 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {6.8978,    502.0}
-        ,{7.8157,   1571.0}
-        ,{3.2039,   4603.0}
-    } 
+static const IdealData ideal_data_r141b = {
+	IDEAL_CP0,{.cp0={
+		R141B_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{4.0,	0.0}
+		}
+		, 3 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{6.8978,    502.0}
+			,{7.8157,   1571.0}
+			,{3.2039,   4603.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_r141b = {
+static const HelmholtzData helmholtz_data_r141b = {
+	/* R */ R141B_R /* J/kg/K */
+	, /* M */ R141B_M /* kg/kmol */
+	, /* rho_star */ 3.921*R141B_M /* kg/m3(= rho_c for this model) */
+	, /* T_star */ R141B_TC /* K (= T_c for this model) */
+
+	, /* T_c */ R141B_TC
+	, /* rho_c */ 3.921*R141B_M /* kg/m3 */
+	, /* T_t */ 169.68
+
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = -15.5074814985 /* constant */
+		, .m = 9.1871858933 /* linear */
+	}}}
+
+	, 0.2195 /* acentric factor */
+	, &ideal_data_r141b
+	, 12 /* power terms */
+	, (const HelmholtzPowTerm[]){
+		/* a_i, 	t_i, 	d_i, 	l_i */
+		{1.1469,          0.25,    1.0,   0}
+		, {-3.6799,         1.25,    1.0,   0}
+		, {1.3469,          1.5,     1.0,   0}
+		, {0.083329,        0.25,    3.0,   0}
+		, {0.00025137,      0.875,   7.0,   0}
+		, {0.32720,         2.375,   1.0,   1}
+		, {0.46946,         2.0,     2.0,   1}
+		, {-0.029829,       2.125,   5.0,   1}
+		, {-0.31621,        3.5,     1.0,   2}
+		, {-0.026219,       6.5,     1.0,   2}
+		, {-0.078043,       4.75,    4.0,   2}
+		, {-0.020498,       12.5,    2.0,   3}
+	}
+};
+
+EosData eos_r141b = {
 	"r141b"
-    , /* R */ R141B_R /* J/kg/K */
-    , /* M */ R141B_M /* kg/kmol */
-    , /* rho_star */ 3.921*R141B_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ R141B_TSTAR /* K (= T_c for this model) */
-
-    , /* T_c */ R141B_TSTAR
-    , /* rho_c */ 3.921*R141B_M /* kg/m3 */
-    , /* T_t */ 169.68
-
-    , 0.2195 /* acentric factor */
-    , &ideal_data_r141b
-    , 12 /* power terms */
-    , (const HelmholtzPowTerm[]){
-        /* a_i, 	t_i, 	d_i, 	l_i */
-        {1.1469,          0.25,    1.0,   0}
-        , {-3.6799,         1.25,    1.0,   0}
-  	, {1.3469,          1.5,     1.0,   0}
-  	, {0.083329,        0.25,    3.0,   0}
-  	, {0.00025137,      0.875,   7.0,   0}
-  	, {0.32720,         2.375,   1.0,   1}
-  	, {0.46946,         2.0,     2.0,   1}
- 	, {-0.029829,       2.125,   5.0,   1}
- 	, {-0.31621,        3.5,     1.0,   2}
- 	, {-0.026219,       6.5,     1.0,   2}
- 	, {-0.078043,       4.75,    4.0,   2}
- 	, {-0.020498,       12.5,    2.0,   3}
-    }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_r141b}
 };
 
 /*
@@ -82,14 +92,9 @@ const HelmholtzData helmholtz_data_r141b = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_r141b, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_r141b, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_r141b, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_r141b, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_r141b, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_r141b, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_r141b, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_r141b, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_r141b,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*

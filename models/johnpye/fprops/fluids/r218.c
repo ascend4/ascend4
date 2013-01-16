@@ -12,58 +12,68 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define R218_M 188.01933 /* kg/kmol */
 #define R218_R (8314.472/R218_M) /* J/kg/K */
-#define R218_TSTAR 345.02 /* K */
+#define R218_TC 345.02 /* K */
 
-const IdealData ideal_data_r218 = {
-    -15.6587335175 /* constant */
-    , 11.4531412796 /* linear */
-    , R218_TSTAR /* Tstar */
-    , R218_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.0,	0.0}
-    }
-    , 3 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {7.2198,    326.0}
-        ,{7.2692,    595.0}
-        ,{11.599,   1489.0}
-    } 
+static const IdealData ideal_data_r218 = {
+	IDEAL_CP0,{.cp0={
+		R218_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{4.0,	0.0}
+		}
+		, 3 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{7.2198,    326.0}
+			,{7.2692,    595.0}
+			,{11.599,   1489.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_r218 = {
-    "r218"
-	, /* R */ R218_R /* J/kg/K */
-    , /* M */ R218_M /* kg/kmol */
-    , /* rho_star */ 3.34*R218_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ R218_TSTAR /* K (= T_c for this model) */
+static const HelmholtzData helmholtz_data_r218 = {
+	 /* R */ R218_R /* J/kg/K */
+	, /* M */ R218_M /* kg/kmol */
+	, /* rho_star */ 3.34*R218_M /* kg/m3(= rho_c for this model) */
+	, /* T_star */ R218_TC /* K (= T_c for this model) */
 
-    , /* T_c */ R218_TSTAR
-    , /* rho_c */ 3.34*R218_M /* kg/m3 */
-    , /* T_t */ 125.45
+	, /* T_c */ R218_TC
+	, /* rho_c */ 3.34*R218_M /* kg/m3 */
+	, /* T_t */ 125.45
 
-    , 0.3172 /* acentric factor */
-    , &ideal_data_r218
-    , 12 /* power terms */
-    , (const HelmholtzPowTerm[]){
-        /* a_i, 	t_i, 	d_i, 	l_i */
-        {1.3270,          0.25,    1.0,   0}
-        , {-3.8433,         1.25,    1.0,   0}
- 	, {0.92200,         1.5,     1.0,   0}
-  	, {0.11360,         0.25,    3.0,   0}
-  	, {0.00036195,      0.875,   7.0,   0}
-  	, {1.1001,          2.375,   1.0,   1}
-  	, {1.1896,          2.0,     2.0,   1}
- 	, {-0.025147,       2.125,   5.0,   1}
- 	, {-0.65923,        3.5,     1.0,   2}
- 	, {-0.027969,       6.5,     1.0,   2}
- 	, {-0.18330,        4.75,    4.0,   2}
- 	, {-0.021630,       12.5,    2.0,   3}
-    }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = -15.6587335175 /* constant */
+		, .m = 11.4531412796 /* linear */
+	}}}
+
+	, 0.3172 /* acentric factor */
+	, &ideal_data_r218
+	, 12 /* power terms */
+	, (const HelmholtzPowTerm[]){
+		/* a_i, 	t_i, 	d_i, 	l_i */
+		{1.3270,          0.25,    1.0,   0}
+		, {-3.8433,         1.25,    1.0,   0}
+		, {0.92200,         1.5,     1.0,   0}
+		, {0.11360,         0.25,    3.0,   0}
+		, {0.00036195,      0.875,   7.0,   0}
+		, {1.1001,          2.375,   1.0,   1}
+		, {1.1896,          2.0,     2.0,   1}
+		, {-0.025147,       2.125,   5.0,   1}
+		, {-0.65923,        3.5,     1.0,   2}
+		, {-0.027969,       6.5,     1.0,   2}
+		, {-0.18330,        4.75,    4.0,   2}
+		, {-0.021630,       12.5,    2.0,   3}
+	}
+};
+
+EosData eos_r218 = {
+	"r218"
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_r218}
 };
 
 /*
@@ -82,14 +92,9 @@ const HelmholtzData helmholtz_data_r218 = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_r218, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_r218, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_r218, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_r218, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_r218, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_r218, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_r218, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_r218, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_r218,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*

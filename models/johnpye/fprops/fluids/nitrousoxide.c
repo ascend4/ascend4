@@ -12,58 +12,70 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define NITROUSOXIDE_M 44.0128 /* kg/kmol */
 #define NITROUSOXIDE_R (8314.472/NITROUSOXIDE_M) /* J/kg/K */
-#define NITROUSOXIDE_TSTAR 309.52 /* K */
+#define NITROUSOXIDE_TC 309.52 /* K */
 
-const IdealData ideal_data_nitrousoxide = {
-    -4.4262736272 /* constant */
-    , 4.3120475243 /* linear */
-    , NITROUSOXIDE_TSTAR /* Tstar */
-    , NITROUSOXIDE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {3.5,	0.0}
-    }
-    , 3 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {2.1769,	879.0}
-        ,{1.6145,	2372.0}
-        ,{0.48393,	5447.0}
-    }
+
+
+static const IdealData ideal_data_nitrousoxide = {
+	IDEAL_CP0,{.cp0={
+		NITROUSOXIDE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{3.5,	0.0}
+		}
+		, 3 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{2.1769,	879.0}
+			,{1.6145,	2372.0}
+			,{0.48393,	5447.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_nitrousoxide = {
+static const HelmholtzData helmholtz_data_nitrousoxide = {
+	/* R */ NITROUSOXIDE_R /* J/kg/K */
+	, /* M */ NITROUSOXIDE_M /* kg/kmol */
+	, /* rho_star */ 10.27*NITROUSOXIDE_M /* kg/m3(= rho_c for this model) */
+	, /* T_star */ NITROUSOXIDE_TC /* K (= T_c for this model) */
+
+	, /* T_c */ NITROUSOXIDE_TC
+	, /* rho_c */ 10.27*NITROUSOXIDE_M /* kg/m3 */
+	, /* T_t */ 182.33
+
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = -4.4262736272 /* constant */
+		, .m = 4.3120475243 /* linear */
+	}}}
+
+	, 0.1613 /* acentric factor */
+	, &ideal_data_nitrousoxide
+	, 12 /* power terms */
+	, (const HelmholtzPowTerm[]){
+		/* a_i, 	t_i, 	d_i, 	l_i */
+		{0.88045,	0.25,	1.0,	0.0}
+		, {-2.4235,	1.25,	1.0,	0.0}
+		, {0.38237,	1.5,	1.0,	0.0}
+		, {0.068917,	0.25,	3.0,	0.0}
+		, {0.00020367,	0.875,	7.0,	0.0}
+		, {0.13122,	2.375,	1.0,	1.0}
+		, {0.46032,	2.0,	2.0,	1.0}
+		, {-0.0036985,	2.125,	5.0,	1.0}
+		, {-0.23263,	3.5,	1.0,	2.0}
+		, {-0.00042859,	6.5,	1.0,	2.0}
+		, {-0.042810,	4.75,	4.0,	2.0}
+		, {-0.023038,	12.5,	2.0,	3.0}
+	}
+};
+
+EosData eos_nitrousoxide = {
 	"nitrousoxide"
-    , /* R */ NITROUSOXIDE_R /* J/kg/K */
-    , /* M */ NITROUSOXIDE_M /* kg/kmol */
-    , /* rho_star */ 10.27*NITROUSOXIDE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ NITROUSOXIDE_TSTAR /* K (= T_c for this model) */
-
-    , /* T_c */ NITROUSOXIDE_TSTAR
-    , /* rho_c */ 10.27*NITROUSOXIDE_M /* kg/m3 */
-    , /* T_t */ 182.33
-
-    , 0.1613 /* acentric factor */
-    , &ideal_data_nitrousoxide
-    , 12 /* power terms */
-    , (const HelmholtzPowTerm[]){
-        /* a_i, 	t_i, 	d_i, 	l_i */
-        {0.88045,	0.25,	1.0,	0.0}
-        , {-2.4235,	1.25,	1.0,	0.0}
-        , {0.38237,	1.5,	1.0,	0.0}
-        , {0.068917,	0.25,	3.0,	0.0}
-        , {0.00020367,	0.875,	7.0,	0.0}
-        , {0.13122,	2.375,	1.0,	1.0}
-        , {0.46032,	2.0,	2.0,	1.0}
-        , {-0.0036985,	2.125,	5.0,	1.0}
-        , {-0.23263,	3.5,	1.0,	2.0}
-        , {-0.00042859,	6.5,	1.0,	2.0}
-        , {-0.042810,	4.75,	4.0,	2.0}
-        , {-0.023038,	12.5,	2.0,	3.0}
-    }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_nitrousoxide}
 };
 
 /*
@@ -82,14 +94,9 @@ const HelmholtzData helmholtz_data_nitrousoxide = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_nitrousoxide, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_nitrousoxide, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_nitrousoxide, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_nitrousoxide, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_nitrousoxide, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_nitrousoxide, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_nitrousoxide, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_nitrousoxide, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_nitrousoxide,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*

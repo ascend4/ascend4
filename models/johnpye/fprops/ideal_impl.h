@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 */
 
 #ifndef FPROPS_IDEAL_IMPL_H
@@ -28,17 +30,11 @@
 	We provide this header file just the purpose of diagnostic testing.
 */
 
-double helm_ideal(double tau, double delta, const IdealData *data);
-double helm_ideal_tau(double tau, double delta, const IdealData *data);
-double helm_ideal_tautau(double tau, const IdealData *data);
-
-double helm_cp0(double T, const IdealData *data);
-
 /*
 	Note: the cross partial derivative with respect to delta and tau is
 	identically zero
 */
-#define HELM_IDEAL_DELTAU(TAU, DELTA, DATA) (0)
+
 
 
 #endif

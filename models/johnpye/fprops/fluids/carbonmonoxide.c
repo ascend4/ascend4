@@ -12,35 +12,40 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define CARBONMONOXIDE_M 28.0101 /* kg/kmol */
 #define CARBONMONOXIDE_R (8314.472/CARBONMONOXIDE_M) /* J/kg/K */
-#define CARBONMONOXIDE_TSTAR 132.86 /* K */
+#define CARBONMONOXIDE_TC 132.86 /* K */
 
-const IdealData ideal_data_carbonmonoxide = {
-    -3.3728318564 /* constant, a_1, adjust to solver s */
-    , 3.3683460039 /* linear, a_2, adjust to solver h */
-    , CARBONMONOXIDE_TSTAR /* Tstar */
-    , CARBONMONOXIDE_R /* cp0star */
-    , 2 /* power terms */
-    , (const IdealPowTerm[]){
-        {3.5,	0.0}
-        ,{0.22311e-6,	1.5}
-    }
-    , 1 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {1.0128,3089.0}
-    }
+static const IdealData ideal_data_carbonmonoxide = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		CARBONMONOXIDE_R /* cp0star */
+    	, 1. /* Tstar */
+		, 2 /* power terms */
+		, (const Cp0PowTerm[]){
+		    {3.5,	0.0}
+		    ,{0.22311e-6,	1.5}
+		}
+		, 1 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+		    {1.0128,3089.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_carbonmonoxide = {
-	"carbonmonoxide"
-    , /* R */ CARBONMONOXIDE_R /* J/kg/K */
-    , /* M */ CARBONMONOXIDE_M /* kg/kmol */
-    , /* rho_star */ 10.85*CARBONMONOXIDE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ CARBONMONOXIDE_TSTAR /* K (= T_c for this model) */
+static const HelmholtzData helmholtz_data_carbonmonoxide = {
+	/* R */ CARBONMONOXIDE_R /* J/kg/K */
+	, /* M */ CARBONMONOXIDE_M /* kg/kmol */
+	, /* rho_star */ 10.85*CARBONMONOXIDE_M /* kg/m3(= rho_c for this model) */
+	, /* T_star */ CARBONMONOXIDE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ CARBONMONOXIDE_TSTAR
-    , /* rho_c */ 10.85*CARBONMONOXIDE_M /* kg/m3 */
-    , /* T_t */ 68.16
-
+	, /* T_c */ CARBONMONOXIDE_TC
+	, /* rho_c */ 10.85*CARBONMONOXIDE_M /* kg/m3 */
+	, /* T_t */ 68.16
+	,{FPROPS_REF_PHI0,
+		.data={.phi0={
+			.c = -3.3728318564 /* constant, a_1, adjust to solver s */
+			,.m = 3.3683460039 /* linear, a_2, adjust to solver h */
+		}}
+	}
     , 0.0497 /* acentric factor */
     , &ideal_data_carbonmonoxide
     , 12 /* power terms */
@@ -65,6 +70,17 @@ const HelmholtzData helmholtz_data_carbonmonoxide = {
     , 0
 };
 
+EosData eos_carbonmonoxide = {
+	"carbondioxide"
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_carbonmonoxide}
+};
+
+
 /*
     Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
 
@@ -81,14 +97,8 @@ const HelmholtzData helmholtz_data_carbonmonoxide = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_carbonmonoxide, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_carbonmonoxide, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_carbonmonoxide, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_carbonmonoxide, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_carbonmonoxide, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_carbonmonoxide, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_carbonmonoxide, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_carbonmonoxide, ntd, td, 'C');
+	PureFluid *P = helmholtz_prepare(&eos_carbonmonoxide,NULL);
+    return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
