@@ -199,8 +199,8 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 			return 1;
 		}
 		type = SCP(SYMC_INST(typeinst)->value);
-		CONSOLE_DEBUG("TYPE: %s",type);
-		if(strlen(type)==0)type = NULL;
+		CONSOLE_DEBUG("TYPE: %s",type?type:"(null)");
+		if(type && strlen(type)==0)type = NULL;
 	}
 
 	bbox->user_data = (void *)fprops_fluid(comp,type);
