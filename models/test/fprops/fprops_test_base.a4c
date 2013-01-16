@@ -25,9 +25,7 @@ REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 
 IMPORT "johnpye/fprops/fprops";
-(*IMPORT "sensitivity/solve";*)
-IMPORT "johnpye/extpy/extpy";
-IMPORT "johnpye/fprops/cycle_plot";
+IMPORT "qrslv";
 
 (*------------------------------------------------------------------------------
   BACKGROUND STUFF
@@ -134,6 +132,9 @@ METHOD on_load;
 	x := 1e-6;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
+	SOLVE;
+	ASSERT abs(T - 220.03 {K}) < 0.005 {K};
+	ASSERT abs(v - 1/(1166 {kg/m^3})) < 1/(0.5 {kg/m^3});
 END on_load;
 END stream_state_test_co2;
 
@@ -149,6 +150,9 @@ METHOD on_load;
 	x := 1e-6;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
+	SOLVE;
+	ASSERT abs(T - 313.45 {K}) < 0.005 {K};
+	ASSERT abs(v - 1/(874.84 {kg/m^3})) < 1/(0.005 {kg/m^3});
 END on_load;
 END stream_state_test_toluene;
 
@@ -228,6 +232,7 @@ END pump_simple;
 
 MODEL pump_simple_test REFINES pump_simple;
 	cd.component :== 'water';
+	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -243,6 +248,7 @@ METHOD on_load;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 	OPTION iterationlimit 200;
+	SOLVE;
 END on_load;
 END pump_simple_test;
 
@@ -613,9 +619,6 @@ METHOD default_self;
 	RUN CO.default_self;
 	RUN PU.default_self;
 END default_self;
-METHOD cycle_plot;
-	EXTERNAL cycle_plot_rankine(SELF);
-END cycle_plot;
 END rankine_common;
 
 
@@ -672,17 +675,6 @@ METHOD values;
 	BO.eta := 1.0;
 	mdot := 900 {t/d};
 END values;
-(*
-METHOD on_load;
-	RUN default_self;
-	RUN specify;
-	RUN values;
-
-	SOLVER QRSlv;
-	OPTION convopt 'RELNOM_SCALE';
-	OPTION iterationlimit 200;
-END on_load;
-*)
 METHOD self_test;
 	(* check the results against those from K Weston's book *)
 	(* note that we have NOT neglected pump work in this case! *)

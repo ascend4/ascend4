@@ -544,11 +544,12 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 		outputs[1] = 1./ rhoft;
 		outputs[2] = FLUID->s_fn(TTRIP(FLUID), rhoft, FLUID->data, &err);
 		outputs[3] = 0;
-		return 6;
+		return 7;
 	}
 
 	if(p < PCRIT(FLUID)){
 		double T_sat, rho_f, rho_g;
+		
 		fprops_sat_p(p, &T_sat, &rho_f, &rho_g, FLUID, &err);
 		if(err){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR
@@ -559,7 +560,7 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 			outputs[1] = 1./rhoft;
 			outputs[2] = FLUID->s_fn(TTRIP(FLUID), rhoft, FLUID->data, &err);
 			outputs[3] = 0;
-			return 1;
+			return 8;
 		}
 		
 		FluidState Sf = fprops_set_Trho(T_sat,rho_f,FLUID,&err);
@@ -591,6 +592,10 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 
 	double rho;
 	fprops_solve_ph(p,h, &T, &rho, 0, FLUID, &err);
+	if(err){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for (p,h): %s",fprops_error(err));
+		return 9;
+	}
 	/* non-saturated */
 	v = 1./rho;
 	FluidState S = fprops_set_Trho(T,rho,FLUID,&err);
@@ -604,7 +609,7 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 #ifdef ASC_FPROPS_DEBUG
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Non-saturated state, p = %f bar, h = %f kJ/kg",p/1e5,h/1e3);
 #endif
-	return err;
+	return 0;
 }
 
 

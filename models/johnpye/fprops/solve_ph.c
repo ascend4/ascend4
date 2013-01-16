@@ -27,6 +27,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <math.h>
 #include <stdlib.h>
 
+//#define SOLVE_PH_DEBUG
+#define SOLVE_PH_ERRORS
+
 //#define FPE_DEBUG
 #define ASSERT_DEBUG
 
@@ -47,7 +50,6 @@ int fedisableexcept(int excepts);
 int fegetexcept(void);
 #endif
 
-//#define SOLVE_PH_DEBUG
 #ifdef SOLVE_PH_DEBUG
 # include "color.h"
 # define MSG(FMT, ...) \
@@ -61,7 +63,16 @@ int fegetexcept(void);
 # define MSG(ARGS...) ((void)0)
 #endif
 
-#define ERRMSG(STR,...) fprintf(stderr,"%s:%d: ERROR: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
+#ifdef SOLVE_PH_ERRORS
+# include "color.h"
+# define ERRMSG(STR,...) \
+	color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"ERROR:");\
+	color_off(stderr);\
+	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
+#else
+# define ERRMSG(ARGS...) ((void)0)
+#endif
 
 int fprops_region_ph(double p, double h, const PureFluid *fluid, FpropsError *err){
     double Tsat, rhof, rhog;
@@ -200,8 +211,8 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 
 		if(liquid_iteration){
 			double pt,rhogt;
-			fprops_sat_T(fluid->data->T_t,&pt,&rhof_t, &rhogt, fluid, err);
-			if(err){
+			fprops_triple_point(&pt, &rhof_t, &rhogt, fluid, err);
+			if(*err){
 				ERRMSG("Unable to solve triple point liquid density.");
 				*err = FPROPS_SAT_CVGC_ERROR;
 				return;
@@ -210,13 +221,13 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 
 		/* try our own home-baked newton iteration */
 		int i = 0;
-			err = FPROPS_NO_ERROR;
+		*err = FPROPS_NO_ERROR;
 		double delta_T = 0;
 		double delta_rho = 0;
 		MSG("STARTING ITERATION");
 		while(i++ < 200){
 			double p1 = fluid->p_fn(T1,rho1, fluid->data, err);
-			if(err){
+			if(*err){
 				MSG("Got an error ('%s') in p_fn calculation",fprops_error(*err));
 			} 
 			double h1 = fluid->h_fn(T1,rho1, fluid->data, err);
@@ -325,7 +336,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 
 	*T = T1;
 	*rho = rho1;
-	ERRMSG("Iteration failed for p = %.12e, h = %.12e",p,h);
+	ERRMSG("Iteration failed for '%s' with p = %.12e, h = %.12e",fluid->name, p,h);
 	*err = FPROPS_NUMERIC_ERROR;
 	return;
 

@@ -26,6 +26,7 @@
 	T(ipopt) \
 	T(conopt) \
 	T(qrslv) \
+	T(fprops) \
 	T(lrslv)
 
 #define PROTO_SOLVER(NAME) PROTO(solver,NAME)

@@ -13,20 +13,21 @@ except:
 
 #--- for (T,s) plots ---
 
-def sat_curve(d):
-	Tt = d.T_t
-	Tc = d.T_c
+def sat_curve(D):
+	Tt = D.T_t
+	Tc = D.T_c
 	TT = []
 	pp = []
 	ssf = []
 	ssg = []
 	for T in linspace(Tt,Tc,100):
-		res,p,rf,rg = fprops.fprops_sat_T(T,d)
-		if not res:
-			TT.append(T - 273.15)
-			pp.append(p)
-			ssf.append(fprops.helmholtz_s_raw(T,rf,d)/1.e3)
-			ssg.append(fprops.helmholtz_s_raw(T,rg,d)/1.e3)
+		# TODO this is inefficient because of repeated saturation solutions.
+		SF = D.set_Tx(T,0)
+		SG = D.set_Tx(T,1)
+		TT.append(SF.T - 273.15)
+		pp.append(SF.p)
+		ssf.append(SF.s/1.e3)
+		ssg.append(SG.s/1.e3)
 	plot(ssf,TT,"b--")
 	plot(ssg,TT,"r--")
 
@@ -40,13 +41,12 @@ def write(msg):
 
 def pconst(S1,S2,n):
 	"""Return a set of (T,s) points between two states, with pressure held constant."""
-	D = fprops.fprops_fluid(str(S1.cd.component.getSymbolValue()))	
+	D = fprops.fluid(str(S1.cd.component.getSymbolValue()))	
 	out = []
 	hh = linspace(float(S1.h), float(S2.h), n)
 	for h in hh:
-		res, T, rho = fprops.fprops_solve_ph(float(S1.p), h, 0, D)
-		if not res:
-			out += [TSPoint(T,fprops.helmholtz_s(T,rho,D))]
+		S = D.set_ph(float(S1.p), h)
+		out += [TSPoint(S.T,S.s)]
 	return out
 
 
@@ -68,14 +68,14 @@ class THPoint:
 
 def pconsth(S1,S2,n):
 	"""Return a set of (T,H) points between two states, with pressure constant"""
-	D = fprops.fprops_fluid(str(S1.cd.component.getSymbolValue()))	
+	D = fprops.fluid(str(S1.cd.component.getSymbolValue()))	
 	out = []
 	hh = linspace(float(S1.h), float(S2.h), n)
 	mdot = float(S1.mdot)
 	for h in hh:
-		res, T, rho = fprops.fprops_solve_ph(float(S1.p), h, 0, D)
-		if not res:
-			out += [THPoint(T,h * mdot)]
+		# TODO add try/except
+		S = D.set_ph(float(S1.p),h)
+		out += [THPoint(S.T,h * mdot)]
 	return out
 
 def plot_TH(SS,style='b-',Href = 0):
@@ -95,7 +95,7 @@ def cycle_plot_rankine(self):
 	ioff()
 	figure()
 	hold(1)
-	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	D = fprops.fluid(str(self.cd.component.getSymbolValue()))
 	sat_curve(D)
 
 	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
@@ -163,7 +163,7 @@ def cycle_plot_rankine_regen1(self):
 	ioff()
 	figure()
 	hold(1)
-	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	D = fprops.fluid(str(self.cd.component.getSymbolValue()))
 	sat_curve(D)
 
 	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
@@ -204,7 +204,7 @@ def heater_closed_plot(self):
 	ioff()
 	figure()
 	hold(1)
-	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	D = fprops.fluid(str(self.cd.component.getSymbolValue()))
 	HE = self.HE
 
 	extpy.getbrowser().reporter.reportNote("Fluid is %s" % D.name)	
@@ -235,7 +235,7 @@ def cycle_plot_ccgt(self):
 	ioff()
 	figure()
 
-	D = fprops.fprops_fluid(str(self.cd_rankine.component.getSymbolValue()))
+	D = fprops.fluid(str(self.cd_rankine.component.getSymbolValue()))
 
 	# plot gas turbine cycle
 	SS = [self.GC.inlet, self.GC.outlet, self.GT.inlet, self.GT.outlet, self.HE.inlet, self.HE.outlet, self.GC.inlet]
@@ -296,7 +296,7 @@ def air_stream_heat_exchanger_plot(self):
 	ioff()
 	figure()
 	hold(1)
-	D = fprops.fprops_fluid(str(self.cd_cold.component.getSymbolValue()))
+	D = fprops.fluid(str(self.cd_cold.component.getSymbolValue()))
 
 	n = self.n.getIntValue()
 	extpy.getbrowser().reporter.reportNote("Fluid is %s" % D.name)	
