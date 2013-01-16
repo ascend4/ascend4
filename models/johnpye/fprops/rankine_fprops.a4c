@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 	
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *)(*
 	A number of Rankine-cycle (steam turbine power cycle) models of increasing
 	complexity, following the general development of Moran & Shapiro, Çengel,
@@ -27,7 +25,7 @@ REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 
 IMPORT "johnpye/fprops/fprops";
-IMPORT "sensitivity/solve";
+(*IMPORT "sensitivity/solve";*)
 IMPORT "johnpye/extpy/extpy";
 IMPORT "johnpye/fprops/cycle_plot";
 
@@ -73,7 +71,7 @@ METHOD default;
 		IF cd.component == 'carbondioxide' THEN
 			h := 350 {kJ/kg};
 		ELSE
-			h := 350 {kJ/kg};
+			h := 351 {kJ/kg};
 		END IF;
 	END IF;
 
@@ -106,6 +104,7 @@ END stream_state;
 
 MODEL stream_state_test REFINES stream_state;
 	cd.component :== 'water';
+	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_all;
@@ -125,7 +124,7 @@ END	stream_state_test;
 
 MODEL stream_state_test_co2 REFINES stream_state;
 	cd.component :== 'carbondioxide';
-	cd.type :== 'pengrob';
+	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_all;
@@ -140,8 +139,8 @@ END stream_state_test_co2;
 
 
 MODEL stream_state_test_toluene REFINES stream_state;
-	cd.component :== 'toluene';
-	cd.type :== 'pengrob';
+	cd.component :== 'toluene';	
+	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_all;
@@ -622,7 +621,6 @@ END rankine_common;
 
 MODEL rankine_water REFINES rankine_common;
 	cd.component :== 'water';
-	cd.type :== 'pengrob';
 METHODS
 (* first test case: just some plausible values *)
 METHOD on_load;
@@ -703,7 +701,7 @@ END rankine_water;
 
 MODEL rankine_co2 REFINES rankine_common;
 	cd.component :== 'carbondioxide';
-	cd.type :== 'pengrob';
+	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load_1;
 	RUN ClearAll;
