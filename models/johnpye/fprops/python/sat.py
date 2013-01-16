@@ -1,6 +1,6 @@
 from fprops import *
 
-D = helmholtz_data_methane;
+D = fluid("methane")
 
 from pylab import *
 hold(1)
@@ -8,10 +8,10 @@ hold(1)
 T_min = D.T_t
 TT = linspace(T_min, D.T_c, 1000)
 
-rhog = array([fprops_rhog_T_chouaieb(T,D) for T in TT])
-rhof = array([fprops_rhof_T_rackett(T,D) for T in TT])
-psat = array([fprops_psat_T_xiang(T,D) for T in TT])
-psata = array([fprops_psat_T_acentric(T,D) for T in TT])
+rhog = array([D.rhog_T_chouaieb(T) for T in TT])
+rhof = array([D.rhof_T_rackett(T) for T in TT])
+psat = array([D.psat_T_xiang(T) for T in TT])
+psata = array([D.psat_T_acentric(T) for T in TT])
 
 rhof1 = []
 rhog1 = []
@@ -25,9 +25,9 @@ TT_src = linspace(T_min, D.T_c, 4000)
 TT1 = []
 failcount = 0
 for T in TT_src:
-	res, p1, rf1, rg1 = fprops_sat_T(T,D)
-	#print "T=%f, psat=%f bar, rhof=%f, rhog=%f" % (T,p1/1e5,rf1,rg1)
-	if res:
+	try:
+		p1, rf1, rg1 = D.sat_T(T)
+	except Exception,e:
 		print "error %d in %s saturation function T = %0.10e " % (res,D.name,T)
 		failcount += 1
 		rhof1.append(rf1)

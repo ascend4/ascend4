@@ -12,58 +12,67 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define R41_M 34.03292 /* kg/kmol */
 #define R41_R (8314.472/R41_M) /* J/kg/K */
-#define R41_TSTAR 317.28 /* K */
+#define R41_TC 317.28 /* K */
 
-const IdealData ideal_data_r41 = {
-    -4.8676441160 /* constant */
-    , 4.2527951258 /* linear */
-    , R41_TSTAR /* Tstar */
-    , R41_R /* cp0star */
-    , 2 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.0,	0.0}
-	, {0.00016937,	1.0}
-    }
-    , 2 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {5.6936,     1841.0}
-        , {2.9351,     4232.0}
-    } 
+static const IdealData ideal_data_r41 = {
+	IDEAL_CP0,{.cp0={
+		R41_R /* cp0star */
+		, 1. /* Tstar */
+		, 2 /* power terms */
+		, (const Cp0PowTerm[]){
+			{4.0,	0.0}
+		, {0.00016937,	1.0}
+		}
+		, 2 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{5.6936,     1841.0}
+			, {2.9351,     4232.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_r41 = {
+static const HelmholtzData helmholtz_data_r41 = {
+	/* R */ R41_R /* J/kg/K */
+	, /* M */ R41_M /* kg/kmol */
+	, /* rho_star */ 9.3*R41_M /* kg/m3(= rho_c for this model) */
+	, /* T_star */ R41_TC /* K (= T_c for this model) */
+
+	, /* T_c */ R41_TC
+	, /* rho_c */ 9.3*R41_M /* kg/m3 */
+	, /* T_t */ 129.82
+
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = -4.8676441160 /* constant */
+		, .m = 4.2527951258 /* linear */
+	}}}
+	, 0.2004 /* acentric factor */
+	, &ideal_data_r41
+	, 12 /* power terms */
+	, (const HelmholtzPowTerm[]){
+		/* a_i, 	t_i, 	d_i, 	l_i */
+		{1.6264,          0.52,    1.0,   0}
+		, {-2.8337,         1.12,    1.0,   0}
+		, {0.0010932,       4.0,     1.0,   0}
+		, {0.037136,        0.03,    3.0,   0}
+		, {0.00018724,      0.63,    7.0,   0}
+		, {-0.22189,        3.4,     1.0,   1}
+		, {0.55021,         2.2,     2.0,   1}
+		, {0.046100,        1.5,     5.0,   1}
+		, {-0.056405,       0.1,     1.0,   2}
+		, {-0.17005,        4.8,     1.0,   2}
+		, {-0.032409,       3.5,     4.0,   2}
+		, {-0.012276,       15.0,    2.0,   3}
+	}
+};
+
+EosData eos_r41 = {
 	"r41"
-    , /* R */ R41_R /* J/kg/K */
-    , /* M */ R41_M /* kg/kmol */
-    , /* rho_star */ 9.3*R41_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ R41_TSTAR /* K (= T_c for this model) */
-
-    , /* T_c */ R41_TSTAR
-    , /* rho_c */ 9.3*R41_M /* kg/m3 */
-    , /* T_t */ 129.82
-
-    , 0.2004 /* acentric factor */
-    , &ideal_data_r41
-    , 12 /* power terms */
-    , (const HelmholtzPowTerm[]){
-        /* a_i, 	t_i, 	d_i, 	l_i */
-        {1.6264,          0.52,    1.0,   0}
-        , {-2.8337,         1.12,    1.0,   0}
-  	, {0.0010932,       4.0,     1.0,   0}
- 	, {0.037136,        0.03,    3.0,   0}
-  	, {0.00018724,      0.63,    7.0,   0}
- 	, {-0.22189,        3.4,     1.0,   1}
-  	, {0.55021,         2.2,     2.0,   1}
-  	, {0.046100,        1.5,     5.0,   1}
- 	, {-0.056405,       0.1,     1.0,   2}
- 	, {-0.17005,        4.8,     1.0,   2}
- 	, {-0.032409,       3.5,     4.0,   2}
- 	, {-0.012276,       15.0,    2.0,   3}
-    }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_r41}
 };
 
 /*
@@ -82,14 +91,9 @@ const HelmholtzData helmholtz_data_r41 = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_r41, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_r41, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_r41, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_r41, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_r41, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_r41, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_r41, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_r41, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_r41,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*

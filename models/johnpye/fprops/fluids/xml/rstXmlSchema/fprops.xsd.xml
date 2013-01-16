@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="rstXmlSchema.xsl"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="fprops">
+		<xs:annotation>
+			<xs:documentation>A library of fluid properties</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="fluid" type="fluidDataType" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>A fluid</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="fluidDataType">
+		<xs:sequence>
+			<xs:element name="name">
+				<xs:annotation>
+					<xs:documentation>e.g. 'hydrogen'</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+						<xs:maxLength value="30"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="core" type="coreDataType">
+				<xs:annotation>
+					<xs:documentation>Data that is required for every type of correlation.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ideal" type="idealDataType"  minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Data to be used in calculating ideal properties</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="helmholtz" type="helmholtzDataType" minOccurs="0">
+			
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="coreDataType">
+		<xs:complexContent>
+			<xs:extension base="fpropsDataType">
+				<xs:all>
+					<xs:element name="M" type="fpropsGasConstantType">
+						<xs:annotation>
+							<xs:documentation>Molar gas constant</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Critical">
+						<xs:annotation>
+							<xs:documentation>Conditions at the critical point</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:choice>
+								<xs:annotation>
+									<xs:documentation>You must specify any two of temperature, pressure and density</xs:documentation>
+								</xs:annotation>
+								<xs:element name="T-P">
+									<xs:complexType>
+										<xs:all>
+											<xs:element name="T" type="fpropsTemperatureType">
+												<xs:annotation>
+													<xs:documentation>Temperature</xs:documentation>
+												</xs:annotation>
+											</xs:element>
+											<xs:element name="P" type="fpropsPressureType">
+												<xs:annotation>
+													<xs:documentation>Pressure</xs:documentation>
+												</xs:annotation>
+											</xs:element>
+										</xs:all>
+									</xs:complexType>
+								</xs:element>
+								<xs:element name="T-rho">
+									<xs:complexType>
+										<xs:all>
+											<xs:element name="T" type="fpropsTemperatureType">
+												<xs:annotation>
+													<xs:documentation>Temperature</xs:documentation>
+												</xs:annotation>
+											</xs:element>
+											<xs:element name="rho" type="fpropsDensityType">
+												<xs:annotation>
+													<xs:documentation>Density</xs:documentation>
+												</xs:annotation>
+											</xs:element>
+										</xs:all>
+									</xs:complexType>
+								</xs:element>
+								<xs:element name="P-rho">
+									<xs:complexType>
+										<xs:all>
+											<xs:element name="P" type="fpropsPressureType">
+												<xs:annotation>
+													<xs:documentation>Pressure</xs:documentation>
+												</xs:annotation>
+											</xs:element>
+											<xs:element name="rho" type="fpropsDensityType">
+												<xs:annotation>
+													<xs:documentation>Density</xs:documentation>
+												</xs:annotation>
+											</xs:element>
+										</xs:all>
+									</xs:complexType>
+								</xs:element>
+							</xs:choice>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="omega" type="fpropsDimensionlessType">
+						<xs:annotation>
+							<xs:documentation>Acentric factor</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="T_t" type="fpropsTemperatureType">
+						<xs:annotation>
+							<xs:documentation>Triple-point temperature</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:all>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="helmholtzDataType">
+		<xs:complexContent>
+			<xs:extension base="fpropsDataType">
+				<xs:all>
+					<xs:element name="powerTerms">
+						<xs:annotation>
+							<xs:documentation>A list of helmholtz power terms</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="term" maxOccurs="unbounded">
+									<xs:complexType>
+										<xs:all>
+											<xs:element name="a" type="fpropsDimensionlessType"/>
+											<xs:element name="t" type="fpropsDimensionlessType"/>
+											<xs:element name="d" type="fpropsDimensionlessType"/>
+											<xs:element name="l" type="fpropsDimensionlessType"/>
+										</xs:all>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+				</xs:all>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="idealDataType">
+		<xs:complexContent>
+			<xs:extension base="fpropsDataType">
+				<xs:all>
+					<xs:element name="const" type="fpropsDimensionlessType">
+						<xs:annotation>
+							<xs:documentation>Constant term</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="lin" type="fpropsDimensionlessType">
+						<xs:annotation>
+							<xs:documentation>Linear term</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="Cp_star" type="fpropsDimensionlessType">
+						<xs:annotation>
+							<xs:documentation>Coefficient of Pressure at the reference state</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="powerTerms">
+						<xs:annotation>
+							<xs:documentation>A list of power terms for the EOS</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="term" maxOccurs="unbounded">
+									<xs:complexType>
+										<xs:all>
+											<xs:element name="c" type="fpropsDimensionlessType"/>
+											<xs:element name="t" type="fpropsDimensionlessType"/>
+										</xs:all>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+				</xs:all>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="fpropsDataType">
+		<xs:attribute name="source" type="xs:string"/>
+	</xs:complexType>
+	<xs:complexType name="fpropsTemperatureType">
+		<xs:simpleContent>
+			<xs:extension base="xs:double">
+				<xs:attribute name="units" default="K">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:enumeration value="C"/>
+							<xs:enumeration value="K"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="fpropsPressureType">
+		<xs:simpleContent>
+			<xs:extension base="xs:double">
+				<xs:attribute name="units" default="kPa">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:enumeration value="Pa"/>
+							<xs:enumeration value="kPa"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="fpropsDensityType">
+		<xs:simpleContent>
+			<xs:extension base="xs:double">
+				<xs:attribute name="units" default="kg/m3">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:enumeration value="kg/m3"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="fpropsGasConstantType">
+		<xs:simpleContent>
+			<xs:extension base="xs:double">
+				<xs:attribute name="units" default="J/(mol K)">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:enumeration value="J/(mol K)"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="fpropsDimensionlessType">
+		<xs:simpleContent>
+			<xs:extension base="xs:double">
+				<xs:attribute name="units" default="dimensionless">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:enumeration value="dimensionless"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+</xs:schema>

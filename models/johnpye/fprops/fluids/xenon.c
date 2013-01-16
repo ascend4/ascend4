@@ -1,13 +1,15 @@
-/* This file is created by Hongke Zhu, 05-30-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 05-30-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
 
-LITERATURE REFERENCE
-Lemmon, E.W. and Span, R.,
-"Short Fundamental Equations of State for 20 Industrial Fluids,"
-J. Chem. Eng. Data, 51:785-850, 2006.
+Revised by John Pye 2012 for the new data structures.
 
-Triple point value below comes from 
+LITERATURE REFERENCE
+Lemmon, E.W. and Span, R., 2006.
+"Short Fundamental Equations of State for 20 Industrial Fluids,"
+J. Chem. Eng. Data, 51:785-850.
+
+Triple point value below comes from
 http://en.wikipedia.org/wiki/Xenon
 which in turn cites
 Lide, David R. (2004). "Section 4, Properties of the Elements and Inorganic Compounds; Melting, boiling, triple, and critical temperatures of the elements". CRC Handbook of Chemistry and Physics (85th edition ed.). Boca Raton, Florida: CRC Press. ISBN 0849304857.
@@ -20,31 +22,30 @@ Sifner & Klomfar, J. Phys. Chem. Ref. Data 23, 63 (1994); doi:10.1063/1.555956
 
 #define XENON_M 131.293 /* kg/kmol */
 #define XENON_R (8314.472/XENON_M) /* J/kg/K */
-#define XENON_TSTAR 289.733 /* K */
+#define XENON_TC 289.733 /* K */
 
-const IdealData ideal_data_xenon = {
-    -3.8227178129 /* constant */
-    , 3.8416395351 /* linear */
-    , XENON_TSTAR /* Tstar */
-    , XENON_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {2.5,	0.0}
-    }
-    , 0 /* exponential terms */
-    , 0
+static const IdealData ideal_data_xenon = {
+	IDEAL_CP0, {.cp0={
+		XENON_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{2.5,	0.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_xenon = {
-	"xenon"
-    , /* R */ XENON_R /* J/kg/K */
+static HelmholtzData helmholtz_data_xenon = {
+    /* R */ XENON_R /* J/kg/K */
     , /* M */ XENON_M /* kg/kmol */
     , /* rho_star */ 8.40*XENON_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ XENON_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ XENON_TC /* K (= T_c for this model) */
 
-    , /* T_c */ XENON_TSTAR
+    , /* T_c */ XENON_TC
     , /* rho_c */ 8.40*XENON_M /* kg/m3 */
     , /* T_t */ 161.405
+
+    , {FPROPS_REF_NBP}
 
     , 0.00363 /* acentric factor */
     , &ideal_data_xenon
@@ -64,10 +65,16 @@ const HelmholtzData helmholtz_data_xenon = {
         , {-0.023305,	14.5,	3.0,	3.0}
         , {0.0086941,	12.0,	4.0,	3.0}
     }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+};
+
+EosData eos_xenon = {
+	"xenon"
+	,"Lemmon, E.W. and Span, R., 2006. 'Short Fundamental Equations of "
+	"State for 20 Industrial Fluids', J. Chem. Eng. Data, 51:785-850."
+	, "http://dx.doi.org/10.1021/je050186n"
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_xenon}
 };
 
 /*
@@ -86,18 +93,13 @@ const HelmholtzData helmholtz_data_xenon = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_xenon, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_xenon, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_xenon, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_xenon, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_xenon, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_xenon, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_xenon, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_xenon, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_xenon, NULL);
+    return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

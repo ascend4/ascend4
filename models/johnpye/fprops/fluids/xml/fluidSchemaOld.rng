@@ -1,0 +1,100 @@
+﻿<element name="fluid" xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <attribute name="name"><text /></attribute>
+  <element name="idealData">
+    <element name="molarMass">
+      <attribute name="value"><data type="double" /></attribute>
+    </element>
+    <element name="specificGasConstant">
+      <attribute name="value"><data type="double" /></attribute>
+    </element>
+    <element name="normalizationTemperature">
+      <attribute name="value"><data type="double" /></attribute>
+    </element>
+    <element name="constantTerm">
+      <choice>
+      <attribute name="value"><data type="double" /></attribute>
+      <attribute name="multipleOfR"><data type="double" /></attribute>
+      </choice>
+    </element>
+    <element name="linearTerm">
+      <choice>
+      <attribute name="value"><data type="double" /></attribute>
+      <attribute name="multipleOfR"><data type="double" /></attribute>
+      <attribute name="multipleOfRAndTstar"><data type="double" /></attribute>
+      </choice>
+    </element>
+    <element name="idealPowerTerms">
+      <oneOrMore>
+        <element name="idealPowerTerm">
+            <attribute name="c"><data type="double" /></attribute>
+            <attribute name="t"><data type="double" /></attribute>
+        </element>
+      </oneOrMore>
+    </element>
+    <element name="exponentialTerms">
+      <oneOrMore>
+        <element name="exponentialTerm">
+          <attribute name="b"><data type="double" /></attribute>
+          <attribute name="beta"><data type="double" /></attribute>
+        </element>
+      </oneOrMore>
+    </element>
+  </element>
+  <element name="helmholtzData">
+    <element name="rhoStar">
+      <choice>
+        <attribute name="value"><data type="double" /></attribute>
+        <attribute name="valueOverM"><data type="double" /></attribute>
+      </choice>
+    </element>
+    <element name="rhoC">
+      <choice>
+        <attribute name="value"><data type="double" /></attribute>
+        <attribute name="valueOverM"><data type="double" /></attribute>
+      </choice>
+    </element>
+    <element name="triplePointTemp">
+      <attribute name="value"><data type="double" /></attribute>
+    </element>
+    <element name="acentricFactor">
+      <attribute name="value"><data type="double" /></attribute>
+    </element>
+    <element name="helmholtzPowerTerms">
+      <oneOrMore>
+        <element name="powerTerm">
+            <attribute name="a"><data type="double" /></attribute>
+            <attribute name="t"><data type="double" /></attribute>
+            <attribute name="d"><data type="double" /></attribute>
+            <attribute name="l"><data type="double" /></attribute>
+        </element>
+      </oneOrMore>
+    </element>
+    <element name="criticalTermsFirstKind">
+      <zeroOrMore>
+        <element name="criticalTerm">
+            <attribute name="n"><data type="double" /></attribute>
+            <attribute name="t"><data type="double" /></attribute>
+            <attribute name="d"><data type="double" /></attribute>
+            <attribute name="alpha"><data type="double" /></attribute>
+            <attribute name="beta"><data type="double" /></attribute>
+            <attribute name="gamma"><data type="double" /></attribute>
+            <attribute name="epsilon"><data type="double" /></attribute>
+        </element>
+      </zeroOrMore>
+    </element>
+    <element name="criticalTermsSecondKind">
+      <zeroOrMore>
+        <element name="criticalTerm">
+            <attribute name="n"><data type="double" /></attribute>
+            <attribute name="a"><data type="double" /></attribute>
+            <attribute name="b"><data type="double" /></attribute>
+            <attribute name="beta"><data type="double" /></attribute>
+            <attribute name="A"><data type="double" /></attribute>
+            <attribute name="B"><data type="double" /></attribute>
+            <attribute name="C"><data type="double" /></attribute>
+            <attribute name="D"><data type="double" /></attribute>
+        </element>
+      </zeroOrMore>
+    </element>
+  </element>
+</element>

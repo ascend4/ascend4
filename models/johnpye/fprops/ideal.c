@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2008-2009 Carnegie Mellon University
+	Copyright (C) 2008-2011 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	Ideal-gas components of helmholtz fundamental functions, calculated using
 	terms in cp0 in a standard power series form. For details see the
@@ -25,6 +27,7 @@
 #include <math.h>
 
 #include "ideal.h"
+#include "cp0.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -32,228 +35,166 @@
 
 #define SQ(X) ((X)*(X))
 
-/*---------------------------------------------
-  IDEAL COMPONENT RELATIONS
-*/
-
-//#define CP0_DEBUG
-
-/**
-	Zero-pressure specific heat function (ideal gas limit)
-
-	This is returned in the units of data->cp0star.
-*/
-double helm_cp0(double T, const IdealData *data){
-	const IdealPowTerm *pt;
-	const IdealExpTerm *et;
-
-	unsigned i;
-	double sum = 0;
-	double term;
-
-	/* power terms */
-	pt = &(data->pt[0]);
-#ifdef CP0_DEBUG
-	fprintf(stderr,"np = %d\n",data->np);
+#ifndef FPROPS_NEW
+# error "Where is FPROPS_NEW??"
 #endif
-	for(i = 0; i<data->np; ++i, ++pt){
-		term = pt->c * pow(T, pt->t);
-#ifdef CP0_DEBUG
-		fprintf(stderr,"i = %d: ",i);
-		fprintf(stderr,"power term, c = %f, t = %f, val = %f\n",pt->c, pt->t, term);
+
+#ifndef FPROPS_ARRAY_COPY
+# error "where is FPROPS_ARRAY_COPY??"
 #endif
-		sum += term;
-	}
 
-	/* 'exponential' terms */
-	et = &(data->et[0]);
-#ifdef CP0_DEBUG
-	fprintf(stderr,"ne = %d\n",data->ne);
-#endif
-	for(i=0; i<data->ne; ++i, ++et){
-#ifdef xCP0_DEBUG
-		fprintf(stderr,"exp term\n");
-#endif
-		double x = et->beta / T;
-		double e = exp(-x);
-		double d = (1-e)*(1-e);
-		term = et->b * x*x * e / d;
-#ifdef CP0_DEBUG
-		fprintf(stderr,"i = %d: ",i);
-		fprintf(stderr,"exp term, b = %f, beta = %f, val = %f\n",et->b, et->beta, term);
-#endif
-		sum += term;
-	}
+//static void ideal_set_reference_std(FluidData *D, const ReferenceStateStd *R);
 
-#ifdef CP0_DEBUG
-	fprintf(stderr,"Sum = %f. Mult by cp0* = %f => %f\n",sum,data->cp0star,sum*data->cp0star);
-#endif
-	return data->cp0star * sum;
-}
-
-/*
-	Hypothesis:
-	in calculating the ideal component relations, we have some integration
-	constants that ultimately allow the arbitrary scales of h and s to
-	be specified. Hence we can ignore components of helm_ideal that
-	are either constant or linear in tau, and work them out later when we
-	stick in the values of data->c and data->m.
-*/
-
-//#define IDEAL_DEBUG
-/**
-	Ideal component of helmholtz function
-*/
-double helm_ideal(double tau, double delta, const IdealData *data){
-
-	const IdealPowTerm *pt;
-	const IdealExpTerm *et;
-
-	unsigned i;
-	double sum = log(delta) - log(tau) + data->c + data->m * tau;
-	double term;
-	double Tstar_on_tau = data->Tstar / tau;
-
+#define IDEAL_DEBUG
 #ifdef IDEAL_DEBUG
-	fprintf(stderr,"\tlog(delta) - log(tau) + c + m tau = %f (c=%f,m=%f)\n",sum,data->c, data->m);
-	fprintf(stderr,"sum = %f\n",sum);
+# include "color.h"
+# define MSG(FMT, ...) \
+	color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
+	color_on(stderr,ASC_FG_BRIGHTBLUE);\
+	fprintf(stderr,"%s: ",__func__);\
+	color_off(stderr);\
+	fprintf(stderr,FMT "\n",##__VA_ARGS__)
+#else
+# define MSG(ARGS...) ((void)0)
 #endif
 
-	/* power terms */
-	pt = &(data->pt[0]);
-	for(i = 0; i<data->np; ++i, ++pt){
-		double c = pt->c;
-		double t = pt->t;
-		if(t == 0){
-			term = c*log(tau);
-#ifdef IDEAL_DEBUG
-			fprintf(stderr,"\tc log(tau) = %f (c=%f)\n",term,c);
-#endif
+/*--------------------------------------------
+  PREPARATION OF IDEAL RUNDATA from FILEDATA
+*/
+
+PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
+	PureFluid *P = FPROPS_NEW(PureFluid);
+	P->data = FPROPS_NEW(FluidData);
+#define D P->data
+
+	MSG("...");
+
+	/* metadata */
+	P->name = E->name;
+	P->type = FPROPS_IDEAL;
+
+	switch(E->type){
+	case FPROPS_CUBIC:
+		D->M = E->data.cubic->M;
+		D->R = R_UNIVERSAL / D->M;
+		D->T_t = 0; /* TODO how will we flag this object so that sat.c doesn't try to solve? */
+		D->T_c = 0;
+		D->p_c = 0;
+		D->rho_c = 0;
+		D->omega = 0;
+		D->cp0 = cp0_prepare(E->data.cubic->ideal, D->R, D->T_c);
+		D->corr.helm = NULL;
+		if(ref == NULL){
+			ref = &(E->data.cubic->ref);
+		}
+		break;
+	case FPROPS_HELMHOLTZ:
+		D->M = E->data.helm->M;
+		if(E->data.helm->R == 0){
+			P->data->R = R_UNIVERSAL / D->M;
 		}else{
-#ifdef IDEAL_DEBUG
-			assert(t!=-1);
-#endif
-			term = -c / (t*(t+1)) * pow(Tstar_on_tau,t);
-#ifdef IDEAL_DEBUG
-			fprintf(stderr,"\t-c/t/(t+1)*pow(T*/tau) = %f (c=%f, t=%f)\n",term,c,t);
-#endif
+			P->data->R = E->data.helm->R;
 		}
-		sum += term;
-#ifdef IDEAL_DEBUG
-		fprintf(stderr,"sum = %f\n",sum);
-#endif
+		D->T_t = 0;
+		D->T_c = E->data.helm->T_c;
+		D->p_c = 0;
+		D->rho_c = E->data.helm->rho_c;
+		D->omega = 0;
+		D->cp0 = cp0_prepare(E->data.helm->ideal, D->R, D->T_c);
+		D->corr.helm = NULL;
+
+		if(ref == NULL){
+			ref = &(E->data.helm->ref);
+		}
+		break;
+	default:
+		fprintf(stderr,"Unsupported type in ideal_prepare\n");
+		FPROPS_FREE(P->data);
+		FPROPS_FREE(P);
+		return NULL;
 	}
 
-	/* 'exponential' terms */
-	et = &(data->et[0]);
-	for(i=0; i<data->ne; ++i, ++et){
-		term = et->b * log(1 - exp(-et->beta / Tstar_on_tau));
-#ifdef IDEAL_DEBUG
-		fprintf(stderr,"\tb log(1-exp(-beta tau/Tstar)) = %f, (b=%f, beta=%f)\n",term,et->b,et->beta);
-#endif
-		sum += term;
+	// set the reference point
+	switch(ref->type){
+	case FPROPS_REF_PHI0:
+		MSG("Applying PHI0 reference data");
+		P->data->cp0->c = ref->data.phi0.c;
+		P->data->cp0->m = ref->data.phi0.m;
+		break;
+	default:
+		fprintf(stderr,"Unsupported reference point type in Helmholtz data with ideal_prepare.\n");
+		FPROPS_FREE(P->data);
+		FPROPS_FREE(P);
+		return NULL;
 	}
 
-#ifdef IDEAL_DEBUG
-	fprintf(stderr,"phi0 = %f\n",sum);
-#endif
-
-	return sum;
+	/* function pointers... more to come still? */
+#define FN(VAR) P->VAR##_fn = &ideal_##VAR
+	FN(p); FN(u); FN(h); FN(s); FN(a); FN(g); FN(cp); FN(cv); FN(w);
+	FN(dpdrho_T);
+#undef FN
+#undef D
+	return P;
 }
 
-/**
-	Partial dervivative of ideal component (phi0) of normalised helmholtz
-	residual function (phi), with respect to tau.
-*/
-double helm_ideal_tau(double tau, double delta, const IdealData *data){
-	const IdealPowTerm *pt;
-	const IdealExpTerm *et;
-
-	unsigned i;
-	double term;
-	double sum = -1./tau + data->m;
-	//fprintf(stderr,"\t-1./tau + data->m = %f\n",sum);
-	double Tstar_on_tau = data->Tstar / tau;
-
-	pt = &(data->pt[0]);
-	for(i = 0; i<data->np; ++i, ++pt){
-		double c = pt->c;
-		double t = pt->t;
-		if(t==0){
-			term = c / tau;
-			//fprintf(stderr,"\tc/tau = %f\n",term);
-		}else{
-			// term = -c / (t*(t+1)) * pow(Tstar_on_tau,t);
-			term = c/(t+1)*pow(Tstar_on_tau,t)/tau;
-			//double coeff = c/(t+1)*pow(data->Tstar,t);
-			//double powtau = pow(tau,-t-1.);
-			//fprintf(stderr,"\tc / tau^p = %f (t=%f, c=%.3e, p=%f)\n",term,t,coeff,-t-1.);
-		}
-#ifdef TEST
-		if(isinf(term)){
-			fprintf(stderr,"Error with infinite-valued term with i = %d, c = %f, t = %f\n", i,c ,t);
-			abort();
-		}
+#if 0
+void ideal_set_reference_std(FluidData *D, const ReferenceStateStd *R){
+	double tau0 = D->cp0->Tstar / R->T0;
+	double delta0 = R->rho0 / D->cp0->rhostar;
+	D->cp0->m = R->h0 / D->R / D->cp0->Tstar;
+	D->cp0->c = - R->s0 / D->R - 1 + log(tau0 / delta0);
+}
 #endif
-		assert(!__isnan(term));
-		sum += term;
-	}
 
-	/* 'exponential' terms */
-	et = &(data->et[0]);
-	for(i=0; i<data->ne; ++i, ++et){
-		double expo = exp(-et->beta/Tstar_on_tau);
-		term = et->b * et->beta / data->Tstar * expo / (1-expo);
-		//fprintf(stderr,"\tet->b * et->beta / data->Tstar / (1 - exp(-et->beta/Tstar_on_tau)) = %f\n",term);
-#ifdef TEST
-		assert(!isinf(term));
-#endif
-		sum += term;
-	}
-
-#ifdef TEST
-	assert(!isinf(sum));
-#endif
-	return sum;
+double ideal_p(double T, double rho, const FluidData *data, FpropsError *err){
+	return data->R * T * rho;
 }
 
+double ideal_h(double T, double rho, const FluidData *data, FpropsError *err){
+	double tau = data->T_c / T;
+	double delta = rho / data->rho_c;
+	return data->R * T * (1 + tau * ideal_phi_tau(tau,delta,data->cp0));
+}
 
+double ideal_s(double T, double rho, const FluidData *data, FpropsError *err){
+	double tau = data->T_c / T;
+	double delta = rho / data->rho_c;
+	return data->R * (tau * ideal_phi_tau(tau,delta,data->cp0) - ideal_phi(tau,delta,data->cp0));
+}
 
-/**
-	Second partial dervivative of ideal component (phi0) of normalised helmholtz
-	residual function (phi), with respect to tau. This one is easy! It's just
-	cp0 divided by tau^2, and it's not a function of delta.
+double ideal_u(double T, double rho, const FluidData *data, FpropsError *err){
+	return ideal_h(T,rho,data,err) - data->R * T;
+}
 
-	FIXME although this one is easy, we want to pull Tstar out of the
-	ideal properties stuff, if that's possible.
-*/
-double helm_ideal_tautau(double tau, const IdealData *data){
-	const IdealPowTerm *pt;
-	const IdealExpTerm *et;
+double ideal_a(double T, double rho, const FluidData *data, FpropsError *err){
+	return ideal_h(T,rho,data,err) - T * (data->R + ideal_s(T,rho,data,err));
+}
 
-	unsigned i;
-	double sum = 0;
-	double term;
+double ideal_g(double T, double rho, const FluidData *data, FpropsError *err){
+	return ideal_h(T,rho,data,err) - T * ideal_s(T,rho,data,err);
+}
 
-	double T = data->Tstar / tau;
+double ideal_cp(double T, double rho, const FluidData *data, FpropsError *err){
+	double tau = data->T_c / T;
+	//MSG("T = %f, T_c = %f, tau = %f",T,data->T_c,tau);
+	double res = data->R * (1. - SQ(tau) * ideal_phi_tautau(tau,data->cp0));
+	//MSG("R = %f, cp = %f",data->R, res);
+	return res;
+}
 
-	/* power terms */
-	pt = &(data->pt[0]);
-	for(i = 0; i<data->np; ++i, ++pt){
-		term = pt->c * pow(T, pt->t);
-		sum += term;
-	}
+double ideal_cv(double T, double rho, const FluidData *data, FpropsError *err){
+	double tau = data->T_c / T;
+	return - data->R * SQ(tau) * ideal_phi_tautau(tau,data->cp0);
+}
 
-	/* 'exponential' terms */
-	et = &(data->et[0]);
-	for(i=0; i<data->ne; ++i, ++et){
-		double x = et->beta / T;
-		double e = exp(-x);
-		double d = (1-e)*(1-e);
-		term = et->b * x*x * e / d;
-		sum += term;
-	}
+double ideal_w(double T, double rho, const FluidData *data, FpropsError *err){
+	double tau = data->T_c / T;
+	double w2onRT = 1. - 1. / (SQ(tau) * ideal_phi_tautau(tau,data->cp0));
+	return sqrt(data->R * T * w2onRT);
+}
 
-	return (1 - sum)/ SQ(tau);
+double ideal_dpdrho_T(double T, double rho, const FluidData *data, FpropsError *err){
+	return data->R * T;
 }
 

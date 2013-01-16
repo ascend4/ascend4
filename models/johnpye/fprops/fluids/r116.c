@@ -12,58 +12,68 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define R116_M 138.01182 /* kg/kmol */
 #define R116_R (8314.472/R116_M) /* J/kg/K */
-#define R116_TSTAR 293.03 /* K */
+#define R116_TC 293.03 /* K */
 
-const IdealData ideal_data_r116 = {
-    -10.7088650331 /* constant */
-    , 8.9148979056 /* linear */
-    , R116_TSTAR /* Tstar */
-    , R116_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.0,	0.0}
-    }
-    , 3 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {2.4818,    190.0}
- 	, {7.0622,    622.0}
- 	, {7.9951,   1470.0}
-    } 
+static const IdealData ideal_data_r116 = {
+	IDEAL_CP0,{.cp0={
+		R116_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{4.0,	0.0}
+		}
+		, 3 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{2.4818,    190.0}
+			, {7.0622,    622.0}
+			, {7.9951,   1470.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_r116 = {
+static const HelmholtzData helmholtz_data_r116 = {
+	/* R */ R116_R /* J/kg/K */
+	, /* M */ R116_M /* kg/kmol */
+	, /* rho_star */ 4.444*R116_M /* kg/m3(= rho_c for this model) */
+	, /* T_star */ R116_TC /* K (= T_c for this model) */
+
+	, /* T_c */ R116_TC
+	, /* rho_c */ 4.444*R116_M /* kg/m3 */
+	, /* T_t */ 173.1
+
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = -10.7088650331 /* constant */
+		, .m = 8.9148979056 /* linear */
+	}}}
+
+	, 0.2566 /* acentric factor */
+	, &ideal_data_r116
+	, 12 /* power terms */
+	, (const HelmholtzPowTerm[]){
+		/* a_i, 	t_i, 	d_i, 	l_i */
+		{1.1632,          0.25,    1.0,   0}
+		, {-2.8123,         1.125,   1.0,   0}
+		, {0.77202,         1.5,     1.0,   0}
+		, {-0.14331,        1.375,   2.0,   0}
+		, {0.10227,         0.25,    3.0,   0}
+		, {0.00024629,      0.875,   7.0,   0}
+		, {0.30893,         0.625,   2.0,   1}
+		, {-0.028499,       1.75,    5.0,   1}
+		, {-0.30343,        3.625,   1.0,   2}
+		, {-0.068793,       3.625,   4.0,   2}
+		, {-0.027218,      14.5,     3.0,   3}
+		, {0.010665,       12.0,     4.0,   3}
+	}
+};
+
+EosData eos_r116 = {
 	"r116"
-    , /* R */ R116_R /* J/kg/K */
-    , /* M */ R116_M /* kg/kmol */
-    , /* rho_star */ 4.444*R116_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ R116_TSTAR /* K (= T_c for this model) */
-
-    , /* T_c */ R116_TSTAR
-    , /* rho_c */ 4.444*R116_M /* kg/m3 */
-    , /* T_t */ 173.1
-
-    , 0.2566 /* acentric factor */
-    , &ideal_data_r116
-    , 12 /* power terms */
-    , (const HelmholtzPowTerm[]){
-        /* a_i, 	t_i, 	d_i, 	l_i */
-        {1.1632,          0.25,    1.0,   0}
-	, {-2.8123,         1.125,   1.0,   0}
-  	, {0.77202,         1.5,     1.0,   0}
- 	, {-0.14331,        1.375,   2.0,   0}
-  	, {0.10227,         0.25,    3.0,   0}
-  	, {0.00024629,      0.875,   7.0,   0}
-  	, {0.30893,         0.625,   2.0,   1}
- 	, {-0.028499,       1.75,    5.0,   1}
- 	, {-0.30343,        3.625,   1.0,   2}
- 	, {-0.068793,       3.625,   4.0,   2}
- 	, {-0.027218,      14.5,     3.0,   3}
-  	, {0.010665,       12.0,     4.0,   3}
-    }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_r116}
 };
 
 /*
@@ -82,14 +92,9 @@ const HelmholtzData helmholtz_data_r116 = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_r116, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_r116, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_r116, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_r116, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_r116, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_r116, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_r116, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_r116, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_r116,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*

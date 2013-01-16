@@ -1,5 +1,5 @@
-/* This file is created by Hongke Zhu, 06-17-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 06-17-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
 
 LITERATURE REFERENCE
@@ -12,36 +12,40 @@ in press, Fluid Phase Equilibria, 2007.
 
 #define DIMETHYLETHER_M 46.06844 /* kg/kmol */
 #define DIMETHYLETHER_R (8314.472/DIMETHYLETHER_M) /* J/kg/K */
-#define DIMETHYLETHER_TSTAR 400.3 /* K */
+#define DIMETHYLETHER_TC 400.3 /* K */
 
-const IdealData ideal_data_dimethylether = {
-    -1.928925 /* constant */
-    , 3.150284 /* linear */
-    , DIMETHYLETHER_TSTAR /* Tstar */
-    , DIMETHYLETHER_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.039,	0.0}
-    }
-    , 4 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {2.641,    361.0}
-        ,{2.123,   974.0}
-        ,{8.992,   1916.0}
-        ,{6.191,   4150.0}
-    }
+static const IdealData ideal_data_dimethylether = {
+	IDEAL_CP0,{.cp0={
+		DIMETHYLETHER_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{4.039,	0.0}
+		}
+		, 4 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{2.641,    361.0}
+			,{2.123,   974.0}
+			,{8.992,   1916.0}
+			,{6.191,   4150.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_dimethylether = {
-	"dimethylether"
-    , /* R */ DIMETHYLETHER_R /* J/kg/K */
+static const HelmholtzData helmholtz_data_dimethylether = {
+	/* R */ DIMETHYLETHER_R /* J/kg/K */
     , /* M */ DIMETHYLETHER_M /* kg/kmol */
     , /* rho_star */ 6.013*DIMETHYLETHER_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ DIMETHYLETHER_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ DIMETHYLETHER_TC /* K (= T_c for this model) */
 
-    , /* T_c */ DIMETHYLETHER_TSTAR
+    , /* T_c */ DIMETHYLETHER_TC
     , /* rho_c */ 6.013*DIMETHYLETHER_M /* kg/m3 */
-    , /* T_t */ 0
+    , /* T_t */ 156.92
+
+	,{FPROPS_REF_PHI0,{.phi0={/* as given in the original paper */
+    	.c = -1.928925 /* constant */
+    	, .m = 3.150284 /* linear */
+	}}}
 
     , 0.197 /* acentric factor */
     , &ideal_data_dimethylether
@@ -59,10 +63,17 @@ const HelmholtzData helmholtz_data_dimethylether = {
  	, {-0.031272,   5.9,    4.0,    2.0}
  	, {-0.065607,   3.7,    3.0,    2.0}
     }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+};
+
+EosData eos_dimethylether = {
+	"dimethylether"
+	,"E C Ihmels and E W Lemmon, 2007. 'Experimental Densities, "
+	"Vapor Pressures, and Critical Point, and a Fundamental Equation "
+	"of State for Dimethyl Ether', Fluid Phase Equilibria, 2007."
+	,"http://dx.doi.org/10.1016/j.fluid.2006.09.016"
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_dimethylether}
 };
 
 /*
@@ -81,18 +92,13 @@ const HelmholtzData helmholtz_data_dimethylether = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_dimethylether, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_dimethylether, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_dimethylether, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_dimethylether, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_dimethylether, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_dimethylether, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_dimethylether, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_dimethylether, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_dimethylether,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

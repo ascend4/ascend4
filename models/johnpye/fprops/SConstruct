@@ -1,46 +1,56 @@
+#!/usr/bin/env python
 # Standalone 'SConstruct' to demonstrate how you can build
 # this ASCEND external library against an existing copy of
 # ASCEND installed on your system.
 
-import os.path
+import os, platform, sys
+
+deft = "default"
+if platform.system()=="Windows":
+	deft = "mingw"
 
 fprops_env = Environment(
 	toolpath=['scons']
-	,tools = ['default','substinfile']
+	,tools = [deft ,'substinfile','swig']
+	,ENV={"PATH":os.environ.get('PATH')}
+	,HOST_PREFIX=os.environ.get('HOST_PREFIX')
 )
+
+if fprops_env['HOST_PREFIX']:
+	fprops_env['CC'] = "${HOST_PREFIX}-gcc"
+	print "CC =",fprops_env['CC']
 
 if WhereIs('ascend-config'):
 	fprops_env.ParseConfig(['ascend-config','--libs','--cppflags'])
+	fprops_env['WITH_ASCEND'] = 1
 else:
-	print "ERROR: no ascend-config in path"
-	fprops_env.Append(
-		LIBS=["ascend"]
-		,LIBPATH=["#/../../.."]
-		,CPPPATH=["#/../../.."]
-	)
+	print "WARNING: no ascend-config in path, won't build ASCEND wrapper"
+	fprops_env['WITH_ASCEND'] = 0
 
 fprops_env.Append(
-	CFLAGS=['-g','-Wall']
+	CFLAGS=['-g','-Wall','-O2']
 )
 
 #if WhereIs('gsl-config'):
 #	fprops_env.ParseConfig(['gsl-config','--libs','--cflags'])
 
-srcs = ['mbwr.c','asc_mbwr.c']
-
-fprops_env.SharedLibrary('mbwr_ascend',srcs)
+#srcs = ['mbwr.c','asc_mbwr.c']
+#fprops_env.SharedLibrary('mbwr_ascend',srcs)
 
 fprops_env.SConscript("fluids/SConscript",['fprops_env'])
 
 fprops_env.Depends('fluids.c','fluids/fluids_list.h')
 
-coresrcs = ['ideal.c', 'helmholtz.c', 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'fluids.c']
+coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'pengrob.c'
+	, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c', 'fluids.c','cp0.c', 'zeroin.c','cubicroots.c'
+]
 
-srcs = coresrcs + fprops_env['fluids']
+srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
 
 fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
 
-fprops_env.SharedLibrary('helmholtz_ascend',fprops_env['shobjs'] + ['asc_helmholtz.c'])
+if fprops_env['WITH_ASCEND']:
+	fprops_env.SharedLibrary('fprops_ascend',fprops_env['shobjs'] + ['asc_fprops.c'])
 
 fprops_env.SConscript('python/SConscript',['fprops_env'])
 

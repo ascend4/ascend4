@@ -1,5 +1,5 @@
-/* This file is created by Hongke Zhu, 06-10-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 06-10-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
 
 LITERATURE REFERENCE
@@ -12,38 +12,37 @@ Fluid Phase Equilibria, 228-229C:173-187, 2005.
 
 #define BUTENE_M 56.10632 /* kg/kmol */
 #define BUTENE_R (8314.472/BUTENE_M) /* J/kg/K */
-#define BUTENE_TSTAR 419.29 /* K */
+#define BUTENE_TC 419.29 /* K */
 
-
-const IdealData ideal_data_butene = {
-    -0.00101126 /* constant */
-    , 2.3869174 /* linear */
-    , BUTENE_TSTAR /* Tstar */
-    , BUTENE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {3.9197,	0.0}
-    }
-    , 4 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {2.9406,    274.0}
-        ,{6.5395,   951.0}
-        ,{14.535,   2127.0}
-        ,{5.8971,   5752.0}
-    } 
+static const IdealData ideal_data_butene = {
+	IDEAL_CP0, {.cp0={
+		BUTENE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{3.9197,	0.0}
+		}
+		, 4 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{2.9406,    274.0}
+			,{6.5395,   951.0}
+			,{14.535,   2127.0}
+			,{5.8971,   5752.0}
+		}
+    }}
 };
 
-const HelmholtzData helmholtz_data_butene = {
-	"butene"
-    , /* R */ BUTENE_R /* J/kg/K */
+static const HelmholtzData helmholtz_data_butene = {
+	/* R */ BUTENE_R /* J/kg/K */
     , /* M */ BUTENE_M /* kg/kmol */
     , /* rho_star */ 4.24*BUTENE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ BUTENE_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ BUTENE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ BUTENE_TSTAR
+    , /* T_c */ BUTENE_TC
     , /* rho_c */ 4.24*BUTENE_M /* kg/m3 */
     , /* T_t */ 87.8
 
+	,{FPROPS_REF_NBP}
     , 0.192 /* acentric factor */
     , &ideal_data_butene
     , 12 /* power terms */
@@ -62,10 +61,18 @@ const HelmholtzData helmholtz_data_butene = {
         , {-0.025385,       15.0,    3.0,   3}
         , {0.011040,       14.0,     4.0,   3}
     }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+    // no other terms
+};
+
+EosData eos_butene = {
+	"butene"
+	,"E W Lemmon and E C Ihmels, 2005. 'Thermodynamic Properties of "
+	"the Butenes.  Part II. Short Fundamental Equations of State', "
+	"Fluid Phase Equilibria, 228-229C:173-187."
+	,"http://dx.doi.org/10.1016/j.fluid.2004.09.004"
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_butene}
 };
 
 /*
@@ -84,18 +91,12 @@ const HelmholtzData helmholtz_data_butene = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_butene, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_butene, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_butene, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_butene, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_butene, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_butene, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_butene, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_butene, ntd, td, 'C');
+	PureFluid *P = helmholtz_prepare(&eos_butene, NULL);
+    return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

@@ -1,5 +1,6 @@
 /*	ASCEND modelling environment
 	Copyright (C) 2008-2009 Carnegie Mellon University
+	Copyright (C) 2012 John Pye
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -12,69 +13,47 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+Ideal gas data for Ammonia, from Tillner-Roth, Harms-Watzenberg and
+Baehr, 1993. 'Eine neue Fundamentalgleichung für Ammoniak', DKV-Tagungsbericht,
+20:167-181. This is the ammmonia property correlation recommended
+by NIST in its program REFPROP 7.0.
 */
 
 #include "../helmholtz.h"
 
-#define AMMONIA_OFFSET_H -1.4311891570e+05
-#define AMMONIA_R 488.189
-#define AMMONIA_TSTAR 405.40
-/**
-Ideal gas data for Ammonia, from Tillner-Roth, Harms-Watzenberg and
-Baehr, 'Eine neue Fundamentalgleichung für Ammoniak', DKV-Tagungsbericht,
-20:167-181, 1993. This is the ammmonia property correlation recommended
-by NIST in its program REFPROP 7.0.
-*/
+#define AMMONIA_M 17.03026
+#define AMMONIA_R (8314.472/AMMONIA_M) //488.189
+#define AMMONIA_TC 405.40
 
-#ifdef PRECALC
-const IdealPhi0Data precalc_data = {
-	AMMONIA_TSTAR
-	, 3 /* power terms */
-	, (const IdealPhi0PowTerm[]){
-		{11.47340, 1./3.}
-		,{-1.296211, -3./2}
-		,{0.5706757, -7./4}
-	}
-	, 0
-};
-#else
-const IdealData ideal_data_ammonia = {
-	-15.815020 - 4.715240698841839e+02/AMMONIA_R /* constant */
-	, 4.255726 + (1.432837032793666e+05)/AMMONIA_R/AMMONIA_TSTAR /* linear */
-	, AMMONIA_TSTAR /* Tstar */
-	, AMMONIA_R /* cpstar J/kgK */
-
-	/* cp0 POWER TERMS AUTOMATICALLY PRE-CALCULATED FROM phi0 */
-	, 3
-	, (const IdealPowTerm[]){
-		{1.887010003371195e+01, -3.333333333333333e-01}
-		, {5.954994351355028e-04, 1.500000000000000e+00}
-		, {-7.498313086309935e-05, 1.750000000000000e+00}
-	}
-	, 0, (const IdealExpTerm *)0 /* no exponential terms */
-	/* END OF PRE-CALCULATED VALUES */
-
+static const IdealData ideal_data_ammonia = {
+	IDEAL_CP0, {.cp0={
+		AMMONIA_R
+		, AMMONIA_TC
+		,.np = 3 /* power terms */
+		,.pt = (Cp0PowTerm[]){
+			{11.474340 * 2/9, -1./3}
+			,{1.296211 * 15/4, 3./2}
+			,{-0.5706757 * 77/16 , 7./4}
+		}
+	}}
 };
 
-/**
-Residual (non-ideal) property data for Ammonia, from Tillner-Roth,
-Harms-Watzenberg and Baehr, 'Eine neue Fundamentalgleichung für Ammoniak',
-DKV-Tagungsbericht, 20:167-181, 1993. This is the ammmonia property correlation
-recommended by NIST in its program REFPROP 7.0.
-*/
-const HelmholtzData helmholtz_data_ammonia = {
-	"ammonia"
-	, /* R */ AMMONIA_R /* J/kg/K */
+static const HelmholtzData helmholtz_data_ammonia = {
+	/* R */ AMMONIA_R /* J/kg/K */
 	, /* M */ 17.03026 /* kg/kmol */
 	, /* rho_star */225. /* kg/m³ */
-	, /* T_star */ AMMONIA_TSTAR /* K */
+	, /* T_star */ AMMONIA_TC /* K */
 
-	, /* T_c */ AMMONIA_TSTAR
-	//REMOVED /* p_c */ 1.133868565951e+07 /* note: value calculated from rho_c, T_c */
+	, /* T_c */ AMMONIA_TC
 	, /* rho_c */ 225.
-
 	, /* T_t */ 195.495
+
+
+	, {FPROPS_REF_TPFU}
 
 	, 0.250 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_ammonia
@@ -90,7 +69,7 @@ const HelmholtzData helmholtz_data_ammonia = {
 		,{0.3441324E+0,     3 ,   3, 1 }
 		,{-0.2873571E+0,    4 ,   1, 1 }
 		,{0.2352589E-4,     4 ,   8, 1 }
-		,{-0.3497111E-1,   5  ,  2,  1}/* 10 */
+		,{-0.3497111E-1,   5  ,  2,  1}/* 10 */ /* negative, as per REFPROP comment */
 		,{0.2397852E-1,    3  ,  1,  2}
 		,{0.1831117E-2,    5 ,   8,  2}
 		,{-0.4085375E-1,   6 ,   1,  2}
@@ -106,7 +85,16 @@ const HelmholtzData helmholtz_data_ammonia = {
 	, 0, 0 /* no gaussian terms */
 	, 0, 0 /* no critical terms */
 };
-#endif
+
+const EosData eos_ammonia = {
+	"ammonia"
+	,"Tillner-Roth, Harms-Watzenberg and Baehr, 1993. Eine neue "
+	"Fundamentalgleichung fur Ammoniak, DKV-Tagungsbericht, 20:167-181"
+	, NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_ammonia}
+};
 
 /*
 	Test suite. These tests attempt to validate the current code using
@@ -119,117 +107,14 @@ const HelmholtzData helmholtz_data_ammonia = {
 	These tests all currently pass with a maximum error of 0.09%.
 */
 #ifdef TEST
+#include "../test.h"
 
-#include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-
-typedef struct{double T,p,rho,u,h,s,cv,cp,cp0,a;} TestData;
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-	unsigned n, i;
-	double rho, T, cp0, p, u, h, a, s;
-	const HelmholtzData *d;
-
-	d = &helmholtz_data_ammonia;
-	double maxerr = 0;
-
-	n = ntd;
-	fprintf(stderr,"Running through %d test points...\n",n);
-
-/* a simple macro to actually do the testing */
-#define ASSERT_TOL(FN,PARAM1,PARAM2,PARAM3,VAL,TOL) {\
-		double cval; cval = FN(PARAM1,PARAM2,PARAM3);\
-		double err; err = cval - (double)(VAL);\
-		double relerrpc = (cval-(VAL))/(VAL)*100;\
-		if(fabs(relerrpc)>maxerr)maxerr=fabs(relerrpc);\
-		if(fabs(err)>fabs(TOL)){\
-			fprintf(stderr,"ERROR in line %d: value of '%s(%f,%f,%s)' = %0.8f,"\
-				" should be %f, error is %.10e (%.2f%%)!\n"\
-				, __LINE__, #FN,PARAM1,PARAM2,#PARAM3, cval, VAL,cval-(VAL)\
-				,relerrpc\
-			);\
-			exit(1);\
-		}else{\
-			fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.6f%% err.\n"\
-				,#FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc\
-			);\
-		}\
-	}
-
-#define CP0(T,RHO,DATA) helmholtz_cp0(T,DATA)
-
-	fprintf(stderr,"CP0 TESTS\n");
-	for(i=0; i<n;++i){
-		cp0 = td[i].cp0*1e3;
-	 	ASSERT_TOL(CP0, td[i].T+273.15, 0., d, cp0, cp0*1e-1);
-	}
-#undef CP0
-
-	fprintf(stderr,"PRESSURE TESTS\n");
-	for(i=0; i<n;++i){
-		p = td[i].p*1e6;
-	 	ASSERT_TOL(helmholtz_p, td[i].T+273.15, td[i].rho, d, p, p*1e-3);
-	}
-
-	double se=0, ss=0;
-	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
-	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
-		rho = td[i].rho;
-		u = td[i].u*1e3;
-		//double err = u - helmholtz_u(T,rho,d);
-		//se += err; ss += err*err;
-	 	ASSERT_TOL(helmholtz_u, T, rho, d, u, u*1e-2);
-		//fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,err);
-	}
-	//fprintf(stderr,"average u error = %.15e\n",se/n);
-	//fprintf(stderr,"sse = %.3e\n",ss - n*se*se);
-	//exit(1);
-
-	fprintf(stderr,"ENTHALPY TESTS\n");
-	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
-		rho = td[i].rho;
-		h = td[i].h*1e3;
-		//fprintf(stderr,"%.20e\n",(h - helmholtz_h(T,rho,d)) );
-	 	ASSERT_TOL(helmholtz_h, td[i].T+273.15, td[i].rho, d, h, 1E3);
-	}
-	//exit(1);
-
-	/* entropy offset required to attain agreement with REFPROP */
-	fprintf(stderr,"ENTROPY TESTS\n");
-	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
-		rho = td[i].rho;
-		s = td[i].s*1e3;
-		//double err = s - helmholtz_s(T,rho,d);
-		//se += err; ss += err*err;
-	 	ASSERT_TOL(helmholtz_s, td[i].T+273.15, td[i].rho, d, s, 1e-1*s);
-		//fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,err);
-	}
-	//fprintf(stderr,"average s error = %.15e\n",se/n);
-	//fprintf(stderr,"sse = %.3e\n",ss - n*se*se);
-	//exit(1);
-
-	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
-	for(i=0; i<n;++i){
-		T = td[i].T+273.15;
-		rho = td[i].rho;
-		a = td[i].a*1e3;
-		//fprintf(stderr,"%.10e\t%.10e\t%.20e\n",T,rho,(a - helmholtz_a(T,rho,d)) );
-	 	ASSERT_TOL(helmholtz_a, T, rho, d, a, a*1);
-	}
-
-	helm_check_dhdT_rho(d, ntd, td);
-	helm_check_dhdrho_T(d, ntd, td);
-	helm_check_dudT_rho(d, ntd, td);
-	helm_check_dudrho_T(d, ntd, td);
-
-	fprintf(stderr,"Tests completed OK (maximum error = %0.2f%%)\n",maxerr);
-	exit(0);
+	test_init();
+    PureFluid *P = helmholtz_prepare(&eos_ammonia, NULL);
+    return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*

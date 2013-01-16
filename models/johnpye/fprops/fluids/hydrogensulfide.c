@@ -1,5 +1,5 @@
-/* This file is created by Hongke Zhu, 02-03-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 02-03-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
 
 LITERATURE REFERENCE \
@@ -12,35 +12,39 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define HYDROGENSULFIDE_M 34.08088 /* kg/kmol */
 #define HYDROGENSULFIDE_R (8314.472/HYDROGENSULFIDE_M) /* J/kg/K */
-#define HYDROGENSULFIDE_TSTAR 373.1 /* K */
+#define HYDROGENSULFIDE_TC 373.1 /* K */
 
-const IdealData ideal_data_hydrogensulfide = {
-    -4.0740770957 /* constant, a_1, adjust to solver s */
-    , 3.7632137341 /* linear, a_2, adjust to solver h */
-    , HYDROGENSULFIDE_TSTAR /* Tstar */
-    , HYDROGENSULFIDE_R /* cp0star */
-    , 2 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.0,	0.0}
-        ,{0.14327E-5,	1.5}
-    }
-    , 2 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {1.1364,	1823.0}
-        ,{1.9721,	3965.0}
-    }
+static const IdealData ideal_data_hydrogensulfide = {
+	IDEAL_CP0,{.cp0={
+		HYDROGENSULFIDE_R /* cp0star */
+		, 1. /* Tstar */
+		, 2 /* power terms */
+		, (const Cp0PowTerm[]){
+			{4.0,	0.0}
+			,{0.14327E-5,	1.5}
+		}
+		, 2 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{1.1364,	1823.0}
+			,{1.9721,	3965.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_hydrogensulfide = {
-	"hydrogensulfide"
-    , /* R */ HYDROGENSULFIDE_R /* J/kg/K */
+static const HelmholtzData helmholtz_data_hydrogensulfide = {
+    /* R */ HYDROGENSULFIDE_R /* J/kg/K */
     , /* M */ HYDROGENSULFIDE_M /* kg/kmol */
     , /* rho_star */ 10.19*HYDROGENSULFIDE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ HYDROGENSULFIDE_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ HYDROGENSULFIDE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ HYDROGENSULFIDE_TSTAR
+    , /* T_c */ HYDROGENSULFIDE_TC
     , /* rho_c */ 10.19*HYDROGENSULFIDE_M /* kg/m3 */
     , /* T_t */ 187.7
+
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = -4.0740770957 /* constant, a_1, adjust to solver s */
+		, .m = 3.7632137341 /* linear, a_2, adjust to solver h */
+	}}}
 
     , 0.1005 /* acentric factor */
     , &ideal_data_hydrogensulfide
@@ -60,10 +64,17 @@ const HelmholtzData helmholtz_data_hydrogensulfide = {
         , {-0.014885,	14.5,	3.0,	3.0}
         , {0.0074154,	12.0,	4.0,	3.0}
     }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+    // no other terms
+};
+
+EosData eos_hydrogensulfide = {
+	"hydrogensulfide"
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_hydrogensulfide}
 };
 
 /*
@@ -82,18 +93,12 @@ const HelmholtzData helmholtz_data_hydrogensulfide = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_hydrogensulfide, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_hydrogensulfide, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_hydrogensulfide, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_hydrogensulfide, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_hydrogensulfide, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_hydrogensulfide, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_hydrogensulfide, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_hydrogensulfide, ntd, td, 'C');
+	PureFluid *P = helmholtz_prepare(&eos_hydrogensulfide, NULL);
+    return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

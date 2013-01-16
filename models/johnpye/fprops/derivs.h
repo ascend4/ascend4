@@ -12,38 +12,33 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 */
 #ifndef FPROPS_DERIV_H
 #define FPROPS_DERIV_H
 
-#include "helmholtz.h"
+#include "fprops.h"
 
 #define FPROPS_CHAR int
 
-typedef struct{
-	double T;
-	double rho;
-	double psat;
-	double rhof;
-	double rhog;
-	double dpdT_sat;
-	const HelmholtzData *D;
-} StateData;
+/* a locally-used struct for passing state together with some saturation properties */
+typedef struct SatStateData_struct SatStateData;
 
-double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, double rho, const HelmholtzData *D);
+double fprops_deriv(FluidState state, char *vars, FpropsError *err);
 
-double fprops_non_dZdv_T(FPROPS_CHAR x, double T, double rho, const HelmholtzData *D);
-double fprops_non_dZdT_v(FPROPS_CHAR x, double T, double rho, const HelmholtzData *D);
+double fprops_non_dZdv_T(FPROPS_CHAR z, double T, double rho, const PureFluid *fluid, FpropsError *err);
+double fprops_non_dZdT_v(FPROPS_CHAR z, double T, double rho, const PureFluid *fluid, FpropsError *err);
 
 /* the StateData object must be filled in/calculated external to the following
 functions */
 
-double fprops_sat_dZdT_v(FPROPS_CHAR z, const StateData *S);
-double fprops_sat_dZdv_T(FPROPS_CHAR z, const StateData *S);
+double fprops_sat_dZdT_v(FPROPS_CHAR z, const SatStateData *ssd, FpropsError *err);
+double fprops_sat_dZdv_T(FPROPS_CHAR z, const SatStateData *ssd, FpropsError *err);
 
-double fprops_drhofdT(const StateData *S);
-double fprops_drhogdT(const StateData *S);
+double fprops_drhofdT(const SatStateData *ssd, FpropsError *err);
+double fprops_drhogdT(const SatStateData *ssd, FpropsError *err);
 
 #endif
 

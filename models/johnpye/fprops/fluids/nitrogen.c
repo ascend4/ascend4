@@ -12,18 +12,21 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-/* Property data for Nitrogen
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//* @file
+Property data for Nitrogen
 
 From Span, Lemmon, Jacobsen & Wagner
 A Reference Quality Equation of State for Nitrogen
 Int J Thermophysics, Vol 18, No 4, 1998.
 
 This is the nitrogren property correlation recommended
-by NIST in its program REFPROP 7.0. */
+by NIST in its program REFPROP 7.0.
+*/
 
+#include "../fprops.h"
 #include "../helmholtz.h"
 
 #define NITROGEN_M 28.01348
@@ -31,43 +34,60 @@ by NIST in its program REFPROP 7.0. */
 #define NITROGEN_TC 126.192
 #define NITROGEN_RHOC (11.1839 * NITROGEN_M)
 
-const IdealData ideal_data_nitrogen = {
-	-12.76953 +(8.66460942220E-4)/NITROGEN_R
-	, -0.007841630
-	, NITROGEN_TC /* Tstar */
-	, NITROGEN_R /* cp0star */
-	, 4 /* power terms */
-	, (const IdealPowTerm[]){
-		{3.5,            0.}
-		,{3.066469e-6,   1.}
-		,{4.701240e-9,   2.}
-		,{-3.987984e-13, 3.}
-	}
-	, 1 /* exponential terms */
-	, (const IdealExpTerm[]){
-		{1.012941, 3364.011}
-	}
+
+
+static const IdealData ideal_data_nitrogen = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = NITROGEN_R
+		, .Tstar = 1.
+		, .np = 4 /* power terms */
+		, .pt = (const Cp0PowTerm[]){
+			{3.5,            0.}
+			,{3.066469e-6,   1.}
+			,{4.701240e-9,   2.}
+			,{-3.987984e-13, 3.}
+		}
+		, .ne = 1 /* exponential terms */
+		, .et = (const Cp0ExpTerm[]){
+			{1.012941, 3364.011}
+		}
+	}}
 };
 
 /*
 	this correlation is given in molar terms. we convert to mass
 	basis by changing the scaling density rho_star, and the ideal gas constant.
 */
-const HelmholtzData helmholtz_data_nitrogen = {
-	"nitrogen"
-	, /* R */ NITROGEN_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
-	, /* M */ NITROGEN_M /* kg/kmol */
-	, /* rho_star */ NITROGEN_RHOC /* kmol/m3 * kg/kmol = kg/m³ (= rho_c for this model) */
-	, /* T_star */ NITROGEN_TC /* K (= T_c for this model) */
+static const HelmholtzData helmholtz_data_nitrogen = {
+	.R = NITROGEN_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
+	, .M = NITROGEN_M /* kg/kmol */
+	, .rho_star = NITROGEN_RHOC /* kmol/m3 * kg/kmol = kg/m³ (= rho_c for this model) */
+	, .T_star = NITROGEN_TC /* K (= T_c for this model) */
 
-	, /* T_c */ NITROGEN_TC
-	, /* rho_c */ NITROGEN_RHOC
-	, /* T_t */ 63.151
+	, .T_c = NITROGEN_TC
+	, .rho_c = NITROGEN_RHOC
+	, .T_t = 63.151
 
-	, 0.039 /* acentric factor, from Reid, Prausnitz & Polling */
-	, &ideal_data_nitrogen
-	, 32 /* np */
-	, (const HelmholtzPowTerm[]){
+#if 0
+	// values from the Span paper, REFPROP agreement isn't perfect with this values
+	, .ref = {
+		FPROPS_REF_PHI0
+		, .data = {.phi0 = {
+			.c = -12.76953
+			, .m = -0.0007841630
+		}}
+	}
+#else
+	, .ref = {FPROPS_REF_TRHS, {.trhs={
+		323.15, 1.042637745E+0, 3.353055943E+5, 6.923064311E+3
+	}}}
+#endif
+
+	, .omega = 0.039 /* acentric factor, from Reid, Prausnitz & Polling */
+	, .ideal = &ideal_data_nitrogen
+	, .np = 32
+	, .pt = (const HelmholtzPowTerm[]){
 		/* a_i, t_i, d_i, l_i */
 		{ 0.924803575275,      0.25,    1,  0}/* 1 */
 		,{-0.492448489428,     0.875,   1,  0}
@@ -102,16 +122,26 @@ const HelmholtzData helmholtz_data_nitrogen = {
 		,{ 0.133722924858E-2,  4.,      6,  4}
 		,{ 0.264832491957E-3, 16.,      9,  4}
 	}
-	, 4 /* gaussian terms */
-	, (const HelmholtzGausTerm[]){
+	, .ng = 4 /* gaussian terms */
+	, .gt = (const HelmholtzGausTerm[]){
 		/* n, t, d, alpha, beta, gamma, epsilon */
-		{0.196688194015e2, 0., 1, 20, 325, 1.16, 1}
+		{0.196688194015e2,    0., 1, 20, 325, 1.16, 1}
 		, {-0.209115600730e2, 1., 1, 20, 325, 1.16, 1}
-		, {0.167788306989e-1, 2., 3, 15, 300, 1.13, 1 }
-		, {0.262767566274e4, 3., 2, 25, 275, 1.25, 1}
+		, {0.167788306989e-1, 2., 3, 15, 300, 1.13, 1}
+		, {0.262767566274e4,  3., 2, 25, 275, 1.25, 1}
 	}
-	, 0 /* critical terms */, 0
 };
+
+EosData eos_nitrogen = {
+	"nitrogen"
+	,"Span, Lemmon, Jacobsen & Wagner, A Reference Quality Equation of State "
+	"for Nitrogen, Int J Thermophysics, Vol 18, No 4, 1998."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_nitrogen}
+};
+
 
 
 /*
@@ -131,99 +161,67 @@ const HelmholtzData helmholtz_data_nitrogen = {
 #include <assert.h>
 #include <stdlib.h>
 
-double phi0(double tau, double del){
-	return log(del) - log(tau) - 12.76953 - 0.007841630*tau + 3.5*log(tau) - 1.934819e-4/tau - 1.247742e-5/(tau*tau) + 6.678326e-8/(tau*tau*tau) + 1.012941*log(1 - exp(-26.65788*tau));
-}
-
-double phi0tau(double tau, double del){
-
-	double term = -1/tau-0.00784163;
-	//fprintf(stderr,"\t\t-1/tau-0.00784163 = %f\n",term);
-	double res = term;
-
-	term = 3.5/tau;
-	//fprintf(stderr,"\t\t3.5/tau = %f\n",term);
-	res +=term;
-
-	term = +(1.9348189999999999e-4)/(tau*tau);
-	//fprintf(stderr,"\t\t+(1.9348189999999999e-4)/(tau*tau) = %f\n",term);
-	res +=term;
-
-	term = +(2.495484e-5)/(tau*tau*tau);
-	//fprintf(stderr,"\t\t+(2.495484*10^-5)/tau^3 = %f\n",term);
-	res+=term;
-
-	term = -(2.0034978000000001e-7)/(tau*tau*tau*tau);
-	//fprintf(stderr,"\t\t-(2.0034978000000001*10^-7)/tau^4 = %f\n",term);
-	res+=term;
-
-	term = (27.00285962508*exp(-26.65788*tau))/(1-exp(-26.65788*tau));
-	//fprintf(stderr,"\t\t(27.00285962508*exp(-26.65788*tau))/(1-exp(-26.65788*tau)) = %f\n",term);
-	res += term;
-
-	return res;
-}
-
 const TestData td[]; const unsigned ntd;
 
 int main(void){
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_nitrogen,NULL);
+	//PureFluid *PI = ideal_prepare(&eos_nitrogen,NULL);
+	ASSERT(P);
 
-	double rho, T, p, u, h, a, s, cp0;
-	const HelmholtzData *d;
+	FpropsError err=FPROPS_NO_ERROR;
+#define D P->data
+	double rho, T, p, u, h, a, s, cp0, w;
 
-	d = &helmholtz_data_nitrogen;
 	double maxerr = 0;
 
 	unsigned i;
 	const unsigned n = ntd;
 
-#if 0
-	fprintf(stderr,"Testing sample values from the Span paper...\n");
+	//cp0 = fprops_cp(273.15,0,PI,&err);
+	//fprintf(stderr,"cp0(2731.5) = %f\n",cp0);
 
-	rho = 10.993 * d->M; T = 270.;
-	p = helmholtz_p(T, rho, d);
-	fprintf(stderr,"p = %f\n", p);
-	assert(fabs(p - 27.0621e6) < 5e3);
-	fprintf(stderr,"OK 1\n");
-
-	rho = 11.2 * d->M; T = 126.2;
-	p = helmholtz_p(T, rho, d);
-	fprintf(stderr,"p = %f\n", p);
-	assert(fabs(p - 3.39712e6) < 50e3);
-	fprintf(stderr,"OK 2\n");
-#endif
-
-	fprintf(stderr,"Running through %d test points...\n",n);
-
-/* a simple macro to actually do the testing */
-#define ASSERT_TOL(FN,PARAM1,PARAM2,PARAM3,VAL,TOL) {\
-		double cval; cval = FN(PARAM1,PARAM2,PARAM3);\
-		double err; err = cval - (double)(VAL);\
-		double relerrpc = (cval-(VAL))/(VAL)*100;\
-		if(fabs(relerrpc)>maxerr)maxerr=fabs(relerrpc);\
-		if(fabs(err)>fabs(TOL)){\
-			fprintf(stderr,"ERROR in line %d: value of '%s(%f,%f,%s)' = %0.8f,"\
-				" should be %f, error is %.10e (%.2f%%)!\n"\
-				, __LINE__, #FN,PARAM1,PARAM2,#PARAM3, cval, VAL,cval-(VAL)\
-				,relerrpc\
-			);\
-			exit(1);\
-		}else{\
-			fprintf(stderr,"    OK, %s(%f,%f,%s) = %8.2e with %.6f%% err.\n"\
-				,#FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc\
-			);\
-		}\
-	}
-
-#define CP0(T,RHO,DATA) helmholtz_cp0(T,DATA)
 	fprintf(stderr,"CP0 TESTS\n");
 	for(i=0; i<n;++i){
 		cp0 = td[i].cp0*1e3;
-	 	ASSERT_TOL(CP0, td[i].T+273.15, 0., d, cp0, cp0*1e-1);
+#define CP0_TEMP(T,RHO,DATA, ERROR) ideal_cp(T,RHO,DATA, ERROR)
+	 	ASSERT_TOL(CP0_TEMP, td[i].T+273.15, 0., P->data, &err, cp0, cp0*1e-6);
+#undef CP0_TEMP
 	}
-#undef CP0
 
-	fprintf(stderr,"CONSISTENCY TESTS (of test data): u, T, s, a...");
+	fprintf(stderr,"Testing sample values from the Span paper...\n");
+
+	//ReferenceState ref = {FPROPS_REF_IIR};
+	//fprops_set_reference_state(P, &ref);
+
+	rho = 11 * D->M; T = 270.;
+	FluidState S = fprops_set_Trho(T,rho, P, &err);
+	ASSERT(!err);
+	p = fprops_p(S, &err);
+	fprintf(stderr,"p = %f\n", p);
+	ASSERT(fabs(p - 27.0621e6) < 0.00005e6);
+	h = fprops_h(S, &err);
+	fprintf(stderr,"h = %f (should = %f)\n", h, 6517.95*1e3/D->M);
+	//ASSERT(fabs(h - 6517.95 *1e3/ D->M) < 5e-3*1e3 / D->M);
+	w = fprops_w(S, &err);
+	fprintf(stderr,"w = %f\n", w);
+	ASSERT(fabs(w - 459.222) < 0.0005);
+	fprintf(stderr,"OK 1\n");
+
+	rho = 11.2 * D->M; T = 126.2;
+	S = fprops_set_Trho(T,rho, P, &err);
+	p = fprops_p(S, &err);
+	fprintf(stderr,"p = %f\n", p);
+	ASSERT(fabs(p - 3.39712e6) < 50e3);
+	h = fprops_h(S, &err);
+	fprintf(stderr,"h = %f (should be = %f)\n", h,816.780*1e3/D->M);
+	//ASSERT(fabs(h - 816.780*1e3/D->M) < 5e-4*1e3/D->M);
+	w = fprops_w(S, &err);
+	fprintf(stderr,"w = %f\n", w);
+	ASSERT(fabs(w - 135.571) < 0.0005);
+	fprintf(stderr,"OK 2\n");
+
+	fprintf(stderr,"CONSISTENCY TESTS (of test data): u, T, s, a... ");
 	for(i=0; i<n; ++i){
 		u = td[i].u*1e3;
 		T = td[i].T+273.15;
@@ -235,7 +233,7 @@ int main(void){
 	}
 	fprintf(stderr,"done\n");
 
-	fprintf(stderr,"CONSISTENCY TESTS (of test data): p, rho, h, u...");
+	fprintf(stderr,"CONSISTENCY TESTS (of test data): p, rho, h, u... ");
 	for(i=0; i<n; ++i){
 		h = td[i].h*1e3;
 		p = td[i].p*1e6;
@@ -248,36 +246,18 @@ int main(void){
 	fprintf(stderr,"done\n");
 
 #if 0
-	/* can only use this check if c,m haven't been offset from original */
-	fprintf(stderr,"CONSISTENCY TESTS (with handwritten phi0 expr)\n");
-	for(i=10;i<n;++i){
-		T = td[i].T+273.15;
-		rho = td[i].rho;
-
-		double tau = d->T_star / T;
-		double del = rho / d->rho_star;
-
-		double p0, p0t;
-		p0 = phi0(tau, del);
-
-		ASSERT_TOL(helm_ideal,tau,del, d->ideal, p0, p0*1e-3);
-
-		p0t = phi0tau(tau,del);
-		ASSERT_TOL(helm_ideal_tau,tau,del, d->ideal, p0t, p0t*1e-3);
-
-	}
-#endif
-
-	//return helm_check_dpdrho_T(d, ntd, td);
-	//return helm_check_dhdT_rho(d, ntd, td);
+	//return helm_check_dpdrho_T(D, ntd, td);
+	//return helm_check_dhdT_rho(D, ntd, td);
 	//return helm_check_dhdrho_T(d, ntd, td);
 
-	helm_check_dhdT_rho(d, ntd, td);
-	helm_check_dhdrho_T(d, ntd, td);
-	helm_check_dudT_rho(d, ntd, td);
-	helm_check_dudrho_T(d, ntd, td);
+	helm_check_dhdT_rho(D, ntd, td);
+	helm_check_dhdrho_T(D, ntd, td);
+	helm_check_dudT_rho(D, ntd, td);
+	helm_check_dudrho_T(D, ntd, td);
+#endif
 
-	return helm_run_test_cases(d, ntd, td, 'C');
+	fprintf(stderr,"Running through %d test points...\n",n);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 const TestData td[] = {

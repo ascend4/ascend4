@@ -22,14 +22,16 @@ fprops_env.SConscript("fluids/SConscript",['fprops_env'])
 
 fprops_env.Depends("fluids.c","fluids/fluids_list.h")
 
-coresrcs = ['ideal.c', 'helmholtz.c', 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'fluids.c']
-srcs = coresrcs + fprops_env['fluids']
+coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'pengrob.c'
+	, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c', 'fluids.c','cp0.c', 'zeroin.c','cubicroots.c'
+]
+srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
 
 fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
 
 
-lib1 = fprops_env.SharedLibrary("helmholtz"
-	,['asc_helmholtz.c'] + fprops_env['shobjs']
+lib = fprops_env.SharedLibrary("fprops"
+	,['asc_fprops.c'] + fprops_env['shobjs']
 	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 	,SHLIBPREFIX = env['EXTLIB_PREFIX']
 )
@@ -51,4 +53,4 @@ if env['WITH_PYTHON']:
 		env.InstallShared(dir,env['pyfprops'])
 		env.InstallShared(dir,"python/fprops.py")
 
-# vim: set syntax=python:
+ #vim: set syntax=python:

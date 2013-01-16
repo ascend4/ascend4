@@ -1,6 +1,6 @@
 /*
 ASCEND modelling environment
-Copyright (C) 2004-2010 John Pye
+Copyright (C) 2004-2012 John Pye
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -39,15 +39,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef FPE_DEBUG
 #define _GNU_SOURCE
 #include <fenv.h>
-int feenableexcept (int excepts);
-int fedisableexcept (int excepts);
-int fegetexcept (void);
+int feenableexcept(int excepts);
+int fedisableexcept(int excepts);
+int fegetexcept(void);
 #endif
 
 #define SQ(X) ((X)*(X))
 
-//#define SOLVE_PH_DEBUG
-#ifdef SOLVE_PH_DEBUG
+//#define SOLVE_TX_DEBUG
+#ifdef SOLVE_TX_DEBUG
 # define MSG(STR,...) fprintf(stderr,"%s:%d: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
 #else
 # define MSG(ARGS...)
@@ -62,11 +62,11 @@ int fegetexcept (void);
 	So this function just checks that the parameters are all within allowable
 	limits for the fluid in question.
 */
-int fprops_region_Tx(double T, double x, const HelmholtzData *D){
+int fprops_region_Tx(double T, double x, const PureFluid *fluid, FpropsError *err){
 
-	if(T > D->T_c)return FPROPS_ERR;
-	if(x < 0 || x > 1)return FPROPS_ERR;
-	if(T < D->T_t)return FPROPS_ERR;
+	if(x < 0 || x > 1)return FPROPS_ERROR;
+	if(T > fluid->data->T_c)return FPROPS_NON;
+	if(T < fluid->data->T_t)return FPROPS_ERROR;
 
 	return FPROPS_SAT;
 }
@@ -76,33 +76,37 @@ int fprops_region_Tx(double T, double x, const HelmholtzData *D){
 	because one of the inputs is already one of the outputs. But we write this
 	function to provide a uniform API for users.
 */
-int fprops_solve_Tx(double T, double x, double *rho, const HelmholtzData *D){
+void fprops_solve_Tx(double T, double x, double *rho, const PureFluid *fluid, FpropsError *err){
+	double p_sat, rho_f, rho_g;
 
-	if(T > D->T_c){
-		ERRMSG("Temperature exceeds critical temperature");
-		return FPROPS_ERR;
+	assert(rho != NULL);
+	assert(fluid != NULL);
+	assert(err != NULL);
+	
+	if(T > fluid->data->T_c){
+		ERRMSG("Temperature (%f) exceeds critical temperature (%f)",T, fluid->data->T_c);
+		*err = FPROPS_RANGE_ERROR;
+		return;
 	}
 	if(x < 0 || x > 1){
 		ERRMSG("Quality x should be in range [0,1]");
-		return FPROPS_ERR;
+		*err = FPROPS_RANGE_ERROR;
+		return;
 	}
-	if(T < D->T_t){
+	if(T < fluid->data->T_t){
 		ERRMSG("Temperature is below triple point");
-		return FPROPS_ERR;
+		*err = FPROPS_RANGE_ERROR;
+		return;
 	}
 
-	int res;
-	double p_sat, rho_f, rho_g;
-	res = fprops_sat_T(T, &p_sat, &rho_f, &rho_g, D);
-
-	if(res){
-		ERRMSG("Unable to solve saturation state at T = %f", T);
-		return res;
+	fprops_sat_T(T, &p_sat, &rho_f, &rho_g, fluid, err);
+	if(*err){
+		ERRMSG("Unable to solve saturation state at T = %f (T_c = %f)", T,fluid->data->T_c);
+		*err = FPROPS_SAT_CVGC_ERROR;
+		return;
 	}
 
 	double v = (1./rho_f) * (1 - x) + (1./rho_g) * x;
 	*rho = 1./ v;
-	return 0;
 }
-
 

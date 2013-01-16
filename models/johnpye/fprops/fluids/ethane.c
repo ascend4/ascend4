@@ -1,5 +1,5 @@
-/* This file is created by Hongke Zhu, 06-17-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 06-17-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
 
 LITERATURE REFERENCE
@@ -12,36 +12,40 @@ J. Phys. Chem. Ref. Data, 35(1):205-266, 2006.
 
 #define ETHANE_M 30.06904 /* kg/kmol */
 #define ETHANE_R (8314.472/ETHANE_M) /* J/kg/K */
-#define ETHANE_TSTAR 305.322 /* K */
+#define ETHANE_TC 305.322 /* K */
 
-const IdealData ideal_data_ethane = {
-    9.212802589 /* constant */
-    , -4.682248550 /* linear */
-    , ETHANE_TSTAR /* Tstar */
-    , ETHANE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.003039265,	0.0}
-    }
-    , 4 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {1.117433359,      430.23083}
-        ,{3.467773215,     1224.31590}
-        ,{6.941944640,     2014.12064}
-        ,{5.970850948,     4268.34363}
-    }
+static const IdealData ideal_data_ethane = {
+	IDEAL_CP0,{.cp0={
+		ETHANE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{4.003039265,	0.0}
+		}
+		, 4 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{1.117433359,      430.23083}
+			,{3.467773215,     1224.31590}
+			,{6.941944640,     2014.12064}
+			,{5.970850948,     4268.34363}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_ethane = {
-	"ethane"
-    , /* R */ ETHANE_R /* J/kg/K */
+static const HelmholtzData helmholtz_data_ethane = {
+	/* R */ ETHANE_R /* J/kg/K */
     , /* M */ ETHANE_M /* kg/kmol */
     , /* rho_star */ 6.856886685*ETHANE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ ETHANE_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ ETHANE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ ETHANE_TSTAR
+    , /* T_c */ ETHANE_TC
     , /* rho_c */ 6.856886685*ETHANE_M /* kg/m3 */
     , /* T_t */ 90.368
+
+    , {FPROPS_REF_PHI0,{.phi0={
+    	.c = 9.212802589 /* constant */
+    	, .m = -4.682248550 /* linear */
+    }}}
 
     , 0.0995 /* acentric factor */
     , &ideal_data_ethane
@@ -97,10 +101,21 @@ const HelmholtzData helmholtz_data_ethane = {
  	, {0.18413834111814e+3,    0.0,     3.0,     20.0,    275.0,   1.22,   1.0}
 	, {-0.10397127984854e+2,   3.0,     2.0,     20.0,    400.0,   1.16,   1.0}
 
-    }	
-    , 0 /* critical terms */
-    , 0
+    }
 };
+
+EosData eos_ethane = {
+	"ethane"
+	,"D Buecker and W Wagner, 2006. 'A Reference Equation of State for the "
+	"Thermodynamic Properties of Ethane for Temperatures from the Melting "
+	"Line to 675 K and Pressures up to 900 MPa', J. Phys. Chem. Ref. Data, "
+	"35(1):205-266."
+	,"http://dx.doi.org/10.1063/1.1859286"
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_ethane}
+};
+
 
 /*
     Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
@@ -117,19 +132,15 @@ const HelmholtzData helmholtz_data_ethane = {
 
 const TestData td[]; const unsigned ntd;
 
+
 int main(void){
-    //return helm_check_u(&helmholtz_data_ethane, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_ethane, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_ethane, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_ethane, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_ethane, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_ethane, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_ethane, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_ethane, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_ethane,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

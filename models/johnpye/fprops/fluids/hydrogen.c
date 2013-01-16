@@ -12,16 +12,10 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-#include "../helmholtz.h"
-
-#define HYDROGEN_M 2.01594
-#define HYDROGEN_R (8314.472/HYDROGEN_M)
-#define HYDROGEN_TSTAR 33.145
-
-/*
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//* @file
 	Ideal gas specific heat for 'normal hydrogen' from the masters thesis of
 	Jacob Leachman, currently awaiting delivery to U of Idaho library. Values
 	here come from a proof copy received from Steve Penoncello by email 20 Sep
@@ -30,23 +24,31 @@
 	It is understood that this is the same correlation as implemented by REFPROP
 	version 8.0.
 */
-const IdealData ideal_data_hydrogen = {
-	-6.0132647014e+03 / HYDROGEN_R /* const */
-	, 2.5810400764e+05/HYDROGEN_R/HYDROGEN_TSTAR /* linear */
-	, HYDROGEN_TSTAR /* Tstar */
-	, HYDROGEN_R /* cp0star */
-	, 1 /* power terms */
-	, (const IdealPowTerm[]){
-		{2.5,  0.}
-	}
-	, 5 /* exponential terms */
-	, (const IdealExpTerm[]){
-		{   1.616, 531.}
-		,{ -0.4117,751.}
-		,{ -0.792, 1989.}
-		,{  0.758, 2484.}
-		,{  1.217, 6859.}
-	}
+
+
+#include "../helmholtz.h"
+
+#define HYDROGEN_M 2.01594
+#define HYDROGEN_R (8314.472/HYDROGEN_M)
+#define HYDROGEN_TC 33.145
+
+static const IdealData ideal_data_hydrogen = {
+	IDEAL_CP0,{.cp0={
+		HYDROGEN_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{2.5,  0.}
+		}
+		, 5 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{   1.616, 531.}
+			,{ -0.4117,751.}
+			,{ -0.792, 1989.}
+			,{  0.758, 2484.}
+			,{  1.217, 6859.}
+		}
+	}}
 };
 
 /*
@@ -57,17 +59,16 @@ const IdealData ideal_data_hydrogen = {
 	It is understood that this is the same correlation as implemented by REFPROP
 	version 8.0.
 */
-const HelmholtzData helmholtz_data_hydrogen = {
-	"hydrogen"
-	, /* R */ HYDROGEN_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
+static HelmholtzData helmholtz_data_hydrogen = {
+	/* R */ HYDROGEN_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
 	, /* M */ HYDROGEN_M /* kg/kmol */
 	, /* rho_star */ 15.508 * HYDROGEN_M /* kmol/m3 * kg/kmol = kg/m³ (note, mol/L=kmol/m³) */
-	, /* T_star */ HYDROGEN_TSTAR /* K (= T_c for this model) */
+	, /* T_star */ HYDROGEN_TC /* K (= T_c for this model) */
 
-	, /* T_c */ HYDROGEN_TSTAR
+	, /* T_c */ HYDROGEN_TC
 	, /* rho_c */ 15.508 * HYDROGEN_M
 	, /* T_t */ 13.957
-
+	, {FPROPS_REF_NBP}
 	, 0.088 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_hydrogen
 	, 9 /* power terms */
@@ -92,8 +93,17 @@ const HelmholtzData helmholtz_data_hydrogen = {
 		, {-0.231752e-1,  7.249,1.0, 2.506, 0.2785, 0.7204, 0.670}
 		, {0.557346e-1,  2.986, 1.0, 1.607, 0.3967, 1.5445, 1.662}
 	}
-	, 0 /* nc2 */, 0
 };
+
+EosData eos_hydrogen = {
+	"hydrogen"
+	,"Jacob Leachman thesis, via email from Steve Penoncello, 2008"
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_hydrogen}
+};
+
 
 /*
 	Test suite. These tests attempt to validate the current code using
@@ -111,15 +121,9 @@ const HelmholtzData helmholtz_data_hydrogen = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-	//return helm_check_u(&helmholtz_data_hydrogen,ntd,td);
-	//return helm_check_dpdT_rho(&helmholtz_data_hydrogen, ntd, td);
-	//return helm_check_dpdrho_T(&helmholtz_data_hydrogen, ntd, td);
-	//return helm_check_dhdT_rho(&helmholtz_data_hydrogen, ntd, td);
-	//return helm_check_dhdrho_T(&helmholtz_data_hydrogen, ntd, td);
-	//return helm_check_dudT_rho(&helmholtz_data_hydrogen, ntd, td);
-	//return helm_check_dudrho_T(&helmholtz_data_hydrogen, ntd, td);
-
-	return helm_run_test_cases(&helmholtz_data_hydrogen, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_hydrogen,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*

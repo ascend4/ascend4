@@ -1,0 +1,128 @@
+.element {
+	height: 23px;
+	text-align: center;
+	margin-left: auto;
+	display: inline-block;
+	box-shadow: 1px 1px 2px #777;
+	background-color: #fbfbfb;
+	padding-right: 8px;
+	padding-left: 8px;
+	padding-bottom: 2px;
+	padding-top: 2px;
+	border-style: solid;
+	border-width: 1px;
+}
+
+.modifier {
+	background-color: #fffdf2;
+	font-weight: 100;
+	font-size: small;
+	text-align: center;
+	display: inline-block;
+	box-shadow: 1px 1px 2px #bbb;
+	padding-right: 2px;
+	padding-left: 4px;
+	padding-bottom: 4px;
+	padding-top: 1px;
+	border-style: solid;
+	border-width: 1px;
+}
+
+.annotation {
+	height: 1em;
+	text-align: center;
+	margin-top: 10px;
+	display: block;
+	font-size: 10px;
+	color: #989898;
+}
+
+.elementContainer {
+	font-family: Helvetica, Verdana, Arial, sans-serif;
+	margin-bottom: 20px;
+	text-align: center;
+	display: block;
+	padding-bottom: 5px;
+	padding-top: 5px;
+}
+
+.modifierContainer {
+	font-family: Helvetica, Verdana, Arial, sans-serif;
+	margin-bottom: 20px;
+	text-align: center;
+	display: block;
+	padding-bottom: 5px;
+	padding-top: 5px;
+}
+
+.element img {
+	right: -15px;
+	top: 3px;
+	position: relative;
+	cursor: pointer;
+}
+
+.modifier img {
+	right: -11px;
+	top: 2px;
+	position: relative;
+	cursor: pointer;
+}
+
+.branch {
+	margin-right: 1px;
+	margin-left: 1px;
+	margin-bottom: 1px;
+	margin-top: 20px;
+	display: inline-block;
+	vertical-align: top;
+}
+
+.branch .branch {
+	display: none;
+}
+
+_jsPlumb_endpoint  {
+   z-index: -1;
+ }
+ 
+ _jsPlumb_connector  {
+   z-index: -1;
+ }
+ 
+ _jsPlumb_overlay  {
+   z-index: -1;
+ }
+ 
+div {
+   position: relative;
+   z-index: 1;
+}
+.settings {
+	right: 10px;
+	z-index: 2;
+	top: 10px;
+	position: fixed;
+	font-family: Helvetica, Verdana, Arial, sans-serif;
+	background-color: #f4f4f4;
+	display: inline-block;
+	border-color: #cacaca;
+	border-width: 2px;
+	border-style: outset;
+}
+.settings input {
+	float: right;
+}
+body {
+	text-align: center;
+	padding: 20px;
+}
+.settings label {
+	float: left;
+}
+.settings div {
+	clear: both;
+}
+.element.optional {
+	border-style: dashed;
+}

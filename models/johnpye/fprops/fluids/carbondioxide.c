@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	This file implements a Helmholtz fundamental equation correlation for
 	Carbon Dioxide using the results from
@@ -23,7 +25,9 @@
 	http://link.aip.org/link/JPCRBU/v25/i6/p1509/s1
 */
 
+#include "../fprops.h"
 #include "../helmholtz.h"
+#include "../refstate.h"
 
 //#define CARBONDIOXIDE_R 188.9241
 #define GAS_C 8314.510
@@ -43,39 +47,32 @@
 	The constant and linear factors for phi_0 have been offset to match the
 	reference state used by REFPROP, for the purpose of testing.
 */
-const IdealData ideal_data_carbondioxide = {
-	-1.1571354956e+003/CARBONDIOXIDE_R /* constant, adjust to solve s */
-	, 2.9392750129e+005/CARBONDIOXIDE_TC/CARBONDIOXIDE_R /* linear, adjust to solver h */
-#if 0
-	/* The following values have been selected to give zero enthalpy and zero
-	entropy at the triple point for this fluid, see test.c 'helm_calc_offsets'.
-	However these changes are now disabled, because enthalpy never goes negative
-	for	this species. */
-	-3.36545655935087095756
-	, 3.72263567031386832795
-#endif
-	, CARBONDIOXIDE_TC /* Tstar / [K] */
-	, CARBONDIOXIDE_R /* cpstar / [J/kgK] */
-	, 1 /* power terms */
-	, (const IdealPowTerm[]){
-		{1. + 2.5,  0.}
-	}
-	, 5
-	, (const IdealExpTerm[]){
-		{1.99427042 , 3.15163 * CARBONDIOXIDE_TC}
-		,{0.62105248, 6.11190 * CARBONDIOXIDE_TC}
-		,{0.41195293, 6.77708 * CARBONDIOXIDE_TC}
-		,{1.04028922, 11.32384 * CARBONDIOXIDE_TC}
-		,{0.08327678, 27.08792 * CARBONDIOXIDE_TC}
-	}
+
+
+static const IdealData ideal_data_carbondioxide = {
+	IDEAL_PHI0
+	, {.phi0 = {
+		CARBONDIOXIDE_TC /* Tstar / [K] */
+		, 1 /* power terms */
+		, (const Phi0PowTerm[]){
+			{2.5,  0.}
+		}
+		, 5
+		, (const Phi0ExpTerm[]){
+			{1.99427042 , 3.15163}
+			,{0.62105248, 6.11190}
+			,{0.41195293, 6.77708}
+			,{1.04028922, 11.32384}
+			,{0.08327678, 27.08792}
+		}
+	}}
 };
 
 /**
 	Residual (non-ideal) property data.
 */
-const HelmholtzData helmholtz_data_carbondioxide = {
-	"carbondioxide"
-	, /* R */ CARBONDIOXIDE_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
+static HelmholtzData helmholtz_data_carbondioxide = {
+	/* R */ CARBONDIOXIDE_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
 	, /* M */ CARBONDIOXIDE_M /* kg/kmol */
 	, /* rho_star */ CARBONDIOXIDE_RHOC /* kg/mÂ³ (= rho_c for this model) */
 	, /* T_star */ CARBONDIOXIDE_TC /* K (= T_c for this model) */
@@ -84,6 +81,13 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 	, /* rho_c */ CARBONDIOXIDE_RHOC
 	, /* T_t */ 216.592
 
+	, {
+		FPROPS_REF_PHI0
+		, .data = {.phi0 = {
+			.c = 8.37304456
+			, .m = -3.70454304
+		}}
+	}
 	,  0.2239 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_carbondioxide
 	, 34 /* power terms */
@@ -142,6 +146,17 @@ const HelmholtzData helmholtz_data_carbondioxide = {
 	}
 };
 
+EosData eos_carbondioxide = {
+	"carbondioxide"
+	,"R Span & W Wagner ''A new equation of state for carbon dioxide covering the "
+	"fluid region from the triple-point temperature to 1100 K at pressures up "
+	"to 800 MPa'', J Phys Chem Ref Data, Vol 25, No. 6, 1996."
+	, "http://link.aip.org/link/JPCRBU/v25/i6/p1509/s1"
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_carbondioxide}
+};
+
 #ifdef TEST
 #include "../test.h"
 #include "../sat.h"
@@ -163,27 +178,31 @@ const TestData td[]; const unsigned ntd;
 const TestDataSat tds[]; const unsigned nsd;
 
 int main(void){
-	int err = 0;
-	unsigned n, i;
-	double rho, T, cp0, p, u, h, s;
-	const HelmholtzData *d;
+	test_init();
+	FpropsError err = FPROPS_NO_ERROR;
+	//unsigned n;
+	//double rho, T, cp0, p, u, h, s;
 
-	d = &helmholtz_data_carbondioxide;
+	PureFluid *d = helmholtz_prepare(&eos_carbondioxide,NULL);
 	double maxerr = 0;
 
+#if 0
 	double rhof,rhog;
 	int res = fprops_triple_point(&p,&rhof,&rhog,d);
 	helm_calc_offsets(d->T_t, rhof, 0, 0, d);
+#endif
 
-	n = ntd;
+	//n = ntd;
 
-#if 0
 	/* couple of data from the publication itself */
 	fprintf(stderr,"\nTEST DATA FROM THE ORIGINAL PUBLICATION\n");
-	ASSERT_TOL(helmholtz_p, 300.000, 679.24, d, 6.7131e6, 0.0001e6);
-	ASSERT_TOL(helmholtz_p, 300.000, 268.58, d, 6.7131e6, 0.0001e6);
-	ASSERT_TOL(helmholtz_p, 304.1282, 467.60, d, 7.3773e6, 0.0001e6);
-#endif
+	ASSERT_PROP(p, fprops_set_Trho(300.000, 679.24, d, &err), &err, 6.7131e6, 0.0001e6);
+	ASSERT_PROP(p, fprops_set_Trho(300.000, 268.58, d, &err), &err, 6.7131e6, 0.0001e6);
+	ASSERT_PROP(p, fprops_set_Trho(304.1282, 467.60, d, &err), &err, 7.3773e6, 0.0001e6);
+
+	/* need a new reference point for the REFPROP data... */
+	ReferenceState ref = {FPROPS_REF_IIR};
+	fprops_set_reference_state(d,&ref);
 
 	err += helm_run_test_cases(d, ntd, td, 'K');
 
@@ -191,6 +210,8 @@ int main(void){
 
 	//fprintf(stderr,"Tests completed OK (maximum error = %0.2f%% (%5.2e))\n",maxerr,maxerr);
 	//exit(0);
+	//fprintf(stderr,"err=%d\n",err);
+	return err;
 }
 
 /*
@@ -199,8 +220,7 @@ int main(void){
 const TestData td[] = {
 /*, {Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz}
 , {(K), (MPa), (kg/m³), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg)}*/
- {2.16E+2, 1.E-2, 2.454062144E-1, 4.0018002E+2, 4.409287843E+2, 2.91905617E+0, 5.653701779E-1, 7.555917727E-1, 7.53186339E-1, -2.303361127E+2}
-, {2.66E+2, 1.E-2, 1.991337854E-1, 4.298608404E+2, 4.80078336E+2, 3.081890365E+0, 6.208933259E-1, 8.104414236E-1, 8.094088439E-1, -3.899219966E+2}
+{2.66E+2, 1.E-2, 1.991337854E-1, 4.298608404E+2, 4.80078336E+2, 3.081890365E+0, 6.208933259E-1, 8.104414236E-1, 8.094088439E-1, -3.899219966E+2}
 , {3.16E+2, 1.E-2, 1.675727826E-1, 4.622510848E+2, 5.219266469E+2, 3.225924974E+0, 6.734607926E-1, 8.62745442E-1, 8.621948769E-1, -5.571412072E+2}
 , {3.66E+2, 1.E-2, 1.446570587E-1, 4.971403497E+2, 5.662693649E+2, 3.356110837E+0, 7.209482393E-1, 9.10105514E-1, 9.097699996E-1, -7.311962166E+2}
 , {4.16E+2, 1.E-2, 1.272587039E-1, 5.342743398E+2, 6.128544267E+2, 3.475359028E+0, 7.634284574E-1, 9.525151636E-1, 9.522915251E-1, -9.114750158E+2}
@@ -217,7 +237,6 @@ const TestData td[] = {
 , {9.66E+2, 1.E-2, 5.479330284E-2, 1.041502834E+3, 1.22400689E+3, 4.395472433E+0, 1.035648963E+0, 1.22459275E+0, 1.224569332E+0, -3.204523536E+3}
 , {1.016E+3, 1.E-2, 5.209670393E-2, 1.093636473E+3, 1.285587197E+3, 4.457622249E+0, 1.049476742E+0, 1.238418302E+0, 1.238397548E+0, -3.435307731E+3}
 , {1.066E+3, 1.E-2, 4.965308888E-2, 1.146432218E+3, 1.347829557E+3, 4.517422242E+0, 1.062154072E+0, 1.251093748E+0, 1.251075233E+0, -3.669139892E+3}
-, {2.16E+2, 1.E-1, 2.486826186E+0, 3.989032282E+2, 4.391151258E+2, 2.478112397E+0, 5.755764177E-1, 7.781063746E-1, 7.53186339E-1, -1.363690496E+2}
 , {2.66E+2, 1.E-1, 2.004455136E+0, 4.291098246E+2, 4.789986937E+2, 2.644049351E+0, 6.246026263E-1, 8.199018006E-1, 8.094088439E-1, -2.742073029E+2}
 , {3.16E+2, 1.E-1, 1.68194314E+0, 4.61736887E+2, 5.211919289E+2, 2.789283073E+0, 6.751779588E-1, 8.677495114E-1, 8.621948769E-1, -4.196765641E+2}
 , {3.66E+2, 1.E-1, 1.449818149E+0, 4.967556457E+2, 5.657298133E+2, 2.920045807E+0, 7.218710051E-1, 9.131429027E-1, 9.097699996E-1, -5.719811197E+2}

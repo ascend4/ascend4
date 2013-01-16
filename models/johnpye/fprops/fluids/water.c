@@ -12,10 +12,12 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 */
 
-#include "../helmholtz.h"
+#include "../filedata.h"
 
 #define WATER_R 461.51805 /* J/kg·K */
 #define WATER_TC 647.096 /* K */
@@ -24,26 +26,25 @@
 
 /**
 Ideal gas data for Water/Steam, from IAPWS-95.
-http://www.iapws.org/relguide/IAPWS95.pdf
+http://www.iapws.org/relguide/IAPWS95-Rev.pdf
 */
-const IdealData ideal_data_water = {
-	-8.32044648201 /* constant */
-	, 6.6832105268 /* linear */
-	, WATER_TC /* Tstar */
-	, WATER_R /* cpstar J/kgK */
-	, 1 /* power terms */
-	, (const IdealPowTerm[]){
-		{1. + 3.00632,  0}
-	}
-	, 5 /* exponential terms */
-	, (const IdealExpTerm []){
-		/* b, beta */
-		{0.012436, 1.28728967*WATER_TC}
-		,{0.97315,  3.53734222*WATER_TC}
-		,{1.27950, 7.74073708*WATER_TC}
-		,{0.96956, 9.24437796*WATER_TC}
-		,{0.24873, 27.5075105*WATER_TC}
-	}
+static const IdealData ideal_data_water = {
+	IDEAL_PHI0
+	,.data = {.phi0 = {WATER_TC
+		, .np = 1 /* power terms */
+		, .pt = (Phi0PowTerm[]){
+		    {/*1 +*/ 3.00632,  0}
+		}
+		, .ne = 5 /* exponential terms */
+		, .et = (Phi0ExpTerm []){
+			/* b, beta */
+			{0.012436, 1.28728967}
+			,{0.97315, 3.53734222}
+			,{1.27950, 7.74073708}
+			,{0.96956, 9.24437796}
+			,{0.24873, 27.5075105}
+		}
+	}}
 };
 
 
@@ -51,9 +52,8 @@ const IdealData ideal_data_water = {
 Residual (non-ideal) property data for Water/Steam, from IAPWS-95.
 http://www.iapws.org/relguide/IAPWS95.pdf
 */
-const HelmholtzData helmholtz_data_water = {
-	"water"
-	, /* R */ WATER_R /* J/kg/K */
+static HelmholtzData helmholtz_data_water = {
+	/* R */ WATER_R /* J/kg/K */
 	, /* M */ 18.015242 /* kg/kmol -- G S Kell, J Phys Chem Ref Data (6) 1109 (1977) */
 	, /* rho_star */ WATER_RHOC /* kg/m³ */
 	, /* T_star */ WATER_TC /* K */
@@ -62,10 +62,18 @@ const HelmholtzData helmholtz_data_water = {
 	, /* rho_c */ WATER_RHOC
 	, /* T_t */ 273.16
 
+	, .ref = {
+		FPROPS_REF_PHI0
+		, .data = {.phi0 = {
+			.m = /* n_2 = */ 6.6832105275932
+			, .c = /* n_1 = */ -8.3204464837497
+		}}
+	}
+
 	, 0.344 /* acentric factor, source: Reid, Prausnitz & Polling */
 	, &ideal_data_water
-	, 51 /* np */
-	, (const HelmholtzPowTerm[]){
+	, .np = (int)51 /* np */
+	, .pt = (HelmholtzPowTerm[]){
 		/* a_i, t_i, d_i, l_i */
 		{0.12533547935523E-1, -0.5, 1, 0}
 		,{0.78957634722828E1, 0.875, 1, 0}
@@ -119,24 +127,34 @@ const HelmholtzData helmholtz_data_water = {
 		,{0.31777497330738, 46, 6, 6}
 		,{-0.11841182425981, 50, 6, 6}
 	}
-	, 3 /* gaussian terms */
-	, (const HelmholtzGausTerm[]){
+	, .ng = 3 /* gaussian terms */
+	, .gt = (HelmholtzGausTerm[]){
 		/* n, t, d, alpha, beta, gamma, epsilon */
 		{-0.31306260323435e2, 0, 3, 20, 150, 1.21, 1}
 		,{0.31546140237781e2, 1, 3, 20, 150, 1.21, 1}
 		,{-0.25213154341695e4,4, 3, 20, 250, 1.25, 1}
 	}
-	, 2 /* critical terms */
-	, (const HelmholtzCritTerm[]){
+	, .nc = 2 /* critical terms */
+	, .ct = (HelmholtzCritTerm[]){
 		/* n, a, b, beta, A, B, C, D */
 		{-0.14874640856724, 3.5, 0.85, 0.3, 0.32, 0.2, 28, 700}
 		,{0.31806110878444, 3.5, 0.95, 0.3, 0.32, 0.2, 32, 800}
 	}
 };
 
+EosData eos_water = {
+	"water"
+	,"IAPWS-95"
+	,"http://www.iapws.org"
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_water}
+};
+
 #ifdef TEST
 # include "../test.h"
 # include "../sat.h"
+# include "../helmholtz.h"
 
 /*
 	Test suite. These tests attempt to validate the current code using
@@ -147,7 +165,7 @@ const HelmholtzData helmholtz_data_water = {
 	./test.py water
 */
 /*
-	some code from freesteam, http://freesteam.sf.net/, which has been thoroughly
+	some code from freesteam, http://freesteam.sf.net/ , which has been thoroughly
 	validated already.
 */
 
@@ -174,7 +192,11 @@ enum Limits{
 # include <math.h>
 # include <stdlib.h>
 # include <stdio.h>
-# include "../ideal_impl.h"
+
+# include "../fprops.h"
+# include "../rundata.h"
+# include "../cp0.h"
+# include "../ideal.h"
 # include "../helmholtz_impl.h"
 
 double phi0(const double delta, const double tau){
@@ -197,9 +219,8 @@ const TestData td1[]; const unsigned ntd1;
 
 int main(void){
 	double rho, T;
-	const HelmholtzData *d;
+	test_init();
 
-	d = &helmholtz_data_water;
 	double maxerr = 0;
 	unsigned i;
 
@@ -209,11 +230,11 @@ int main(void){
 	fprintf(stderr,"COMPARISON OF phi0 VALUES WITH THOSE FROM FREESTEAM\n");
 	for(T = 300; T <= 900; T+= 100){
 		for(rho = 900; rho >= 0.9; rho*=0.5){
-			double delta = rho / d->rho_star;
-			double tau = d->T_star / T;
+			double delta = rho / P->data->rho_star;
+			double tau = P->data->T_star / T;
 			double p0 = phi0(delta,tau);
 
-		 	ASSERT_TOL(helm_ideal, tau, delta, d->ideal, p0, p0*1e-5);
+		 	ASSERT_TOL(helm_ideal, tau, delta, P->data->ideal, p0, p0*1e-5);
 		}
 	}
 #endif
@@ -223,50 +244,50 @@ int main(void){
 	fprintf(stderr,"\nIAPWS95 TABLE 6 TESTS\n");
 	T = 500.; /* K */
 	rho = 838.025; /* kg/m³ */
-	double tau = d->T_star / T;
-	double delta = rho / d->rho_star;
+	PureFluid *PI = ideal_prepare(&eos_water,NULL);
+	double tau = PI->data->T_c / T;
+	double delta = rho / PI->data->rho_c;
+	//fprintf(stderr,"tau = %f, delta = %f\n",tau,delta);
 
-	ASSERT_TOL(helm_ideal, tau, delta, d->ideal, 0.204797733E1, 1e-8);
-	ASSERT_TOL(helm_ideal_tau, tau, delta, d->ideal, 0.904611106E1, 1e-8);
-	ASSERT_TOL(HELM_IDEAL_DELTAU, tau, delta, d->ideal, 0., 1e-8);
+	ASSERT_TOL_3(ideal_phi, tau, delta, PI->data->cp0, 0.204797733E1, 1e-8);
+	ASSERT_TOL_3(ideal_phi_tau, tau, delta, PI->data->cp0, 0.904611106E1, 1e-8);
+#define IDEAL_PHI_TAUTAU_2(A,B,C) ideal_phi_tautau(A,C)
+	ASSERT_TOL_3(IDEAL_PHI_TAUTAU_2, tau, delta, PI->data->cp0, -0.193249185E1, 1e-8);
+	/* FIXME: still need to implement helm_ideal_del, helm_ideal_deldel, helm_ideal_deltau */
 
-	double phitt = helm_ideal_tautau(tau, d->ideal);
-	double val = (-0.193249185E1);
-	double err = phitt - val;
-	if(fabs(err) > 1e-8){
-		fprintf(stderr,"ERROR in helm_ideal_tautau near line %d\n",__LINE__);
-		exit(1);
-	}else{
-		fprintf(stderr,"    OK, helm_ideal_tautau(%f) = %8.2e with %.6f%% err.\n"
-			,tau,val,err/val*100.
-		);
-	}
 
-	/* FIXME still need to implement helm_ideal_del, helm_ideal_deldel, helm_ideal_deltau */
+	PureFluid *P = helmholtz_prepare(&eos_water,NULL);
+	FpropsError error=FPROPS_NO_ERROR;
 
-	ASSERT_TOL(helm_resid, tau, delta, d, -0.342693206E1, 1e-8);
-	ASSERT_TOL(helm_resid_del, tau, delta, d, -0.364366650, 1e-8);
-	ASSERT_TOL(helm_resid_deldel, tau, delta, d, 0.856063701, 1e-8);
-	ASSERT_TOL(helm_resid_tau, tau, delta, d, -0.581403435E1, 1e-8);
-	ASSERT_TOL(helm_resid_tautau, tau, delta, d, -0.223440737E1, 1e-8);
-	ASSERT_TOL(helm_resid_deltau, tau, delta, d, -0.112176915e1, 1e-8);
+	ASSERT(NULL != P->data);
+	ASSERT(NULL != P->data->cp0);
+	ASSERT(NULL != P->data->corr.helm);
+
+#define D (P->data->corr.helm)
+	ASSERT_TOL_3(helm_resid, tau, delta, D, -0.342693206E1, 1e-8);
+	ASSERT_TOL_3(helm_resid_del, tau, delta, D, -0.364366650, 1e-8);
+	ASSERT_TOL_3(helm_resid_deldel, tau, delta, D, 0.856063701, 1e-8);
+	ASSERT_TOL_3(helm_resid_tau, tau, delta, D, -0.581403435E1, 1e-8);
+	ASSERT_TOL_3(helm_resid_tautau, tau, delta, D, -0.223440737E1, 1e-8);
+	ASSERT_TOL_3(helm_resid_deltau, tau, delta, D, -0.112176915e1, 1e-8);
+#undef D
 
 #if 0
 	fprintf(stderr,"\nADDITIONAL LOW-LEVEL TESTS NEAR CRITICAL POINT\n");
 
 	T = 647.; /* K */
 	rho = 358.; /* kg/m³ */
-	tau = d->T_star / T;
-	delta = rho / d->rho_star;
+	tau = P->data->T_star / T;
+	delta = rho / P->data->rho_star;
 
 	/* this test value calculated from pressure using REFPROP 8 */
-	ASSERT_TOL(helmholtz_a, T, rho, d, -8.286875181e5, 1e-4);
-	ASSERT_TOL(helm_resid_del, tau, delta, d, -7.14012024e-1, 1e-8);
-	ASSERT_TOL(helmholtz_s, T, rho, d, 4.320923066e3, 5e-8);
-	ASSERT_TOL(helmholtz_cv, T, rho, d, 6.183157277e3, 5e-7);
-	ASSERT_TOL(helmholtz_p, T, rho, d, 2.203847557e7, 7e-4);
-	ASSERT_TOL(helmholtz_cp, T, rho, d, 3.531798573e6, 1e-8);
-	ASSERT_TOL(helmholtz_w, T, rho, d, 2.52140783e2, 1e-8);
+	ASSERT_TOL(helmholtz_a, T, rho, P, -8.286875181e5, 1e-4);
+	ASSERT_TOL(helm_resid_del, tau, delta, P, -7.14012024e-1, 1e-8);
+	ASSERT_TOL(helmholtz_s, T, rho, P, 4.320923066e3, 5e-8);
+	ASSERT_TOL(helmholtz_cv, T, rho, P, 6.183157277e3, 5e-7);
+	ASSERT_TOL(helmholtz_p, T, rho, P, 2.203847557e7, 7e-4);
+	ASSERT_TOL(helmholtz_cp, T, rho, P, 3.531798573e6, 1e-8);
+	ASSERT_TOL(helmholtz_w, T, rho, P, 2.52140783e2, 1e-8);
 #endif
 
 	fprintf(stderr,"\nIAPWS95 TABLE 7 (SINGLE-PHASE) TESTS\n");
@@ -277,11 +298,12 @@ int main(void){
 		double cv = td[i].cv * 1e3; /* J/kgK */
 		double w = td[i].w; /* m/s */
 		double s = td[i].s * 1e3; /* J/kgK */
-		//fprintf(stderr,"T = %f, rho = %f, p = %f, w = %f, wcalc = %f\n",T,rho,p,w, helmholtz_w(T,rho,d));
-		ASSERT_TOL(helmholtz_s_raw, T, rho, d, s, s*1e-8);
-		ASSERT_TOL(helmholtz_p_raw, T, rho, d, p, p*1e-8);
-		ASSERT_TOL(helmholtz_cv, T, rho, d, cv, cv*1e-8);
-		ASSERT_TOL(helmholtz_w, T, rho, d, w, w*2e-5);
+		FluidState S = {T,rho,P};
+		//fprintf(stderr,"T = %f, rho = %f, p = %f, w = %f, wcalc = %f\n",T,rho,p,w, helmholtz_w(T,rho,P));
+		ASSERT_PROP(s, S , &error, s, s*1e-8);
+		ASSERT_PROP(p, S, &error, p, p*1e-8);
+		ASSERT_PROP(cv, S, &error, cv, cv*1e-8);
+		ASSERT_PROP(w, S, &error, w, w*2e-5);
 	}
 
 	fprintf(stderr,"\nIAPWS95 TABLE 8 (SATURATION) TESTS (%d items)\n",ntds);
@@ -296,19 +318,33 @@ int main(void){
 		double s_g = tds[i].sg * 1e3;
 		fprintf(stderr,"T = %f, p = %f bar, rho_f = %f, rho_g = %f\n",T,p/1e5,rho_f, rho_g);
 		double rho_f_eval, rho_g_eval, p_eval;
-		int res = fprops_sat_T(T, &p_eval, &rho_f_eval, &rho_g_eval, d);
-		ASSERT_TOL_VAL(p_eval, p, 1e-8);
-		ASSERT_TOL_VAL(rho_f_eval, rho_f, 1e-8);
-		ASSERT_TOL_VAL(rho_g_eval, rho_g, 1e-8);
+
+		fprops_sat_T(T, &p_eval, &rho_f_eval, &rho_g_eval, P, &error);
+		ASSERT(error == 0);
+
+		ASSERT_TOL_VAL(p_eval, p, 2e-2);
+		ASSERT_TOL_VAL(rho_f_eval, rho_f, 1e-6);
+		ASSERT_TOL_VAL(rho_g_eval, rho_g, 1e-6);
+
+		double s_f_eval = fprops_s((FluidState){T,rho_f,P},&error);
+		ASSERT_TOL_VAL(s_f_eval, s_f, 4e-6);
+		double s_g_eval = fprops_s((FluidState){T,rho_g,P},&error);
+		ASSERT_TOL_VAL(s_g_eval, s_g, 2e-5);
+
+		double h_f_eval = fprops_h((FluidState){T,rho_f,P},&error);
+		ASSERT_TOL_VAL(h_f_eval, h_f, 1e-3);
+		double h_g_eval = fprops_h((FluidState){T,rho_g,P},&error);
+		ASSERT_TOL_VAL(h_g_eval, h_g, 3e-3);
+#undef SATTOL
 	}
 
-#if 0
+#if 0   //TODO: This is commented out. Delete?
 	fprintf(stderr,"\nPROBLEMATIC SATURATION VALUES\n");
 	{
 		double T = 3.7631475862e+02;
 		T = 3.8920910345e+02;
 		double p, rho_f, rho_g;
-		int res = fprops_sat_T(T, &p, &rho_f, &rho_g, d);
+		int res = fprops_sat_T(T, &p, &rho_f, &rho_g, P);
 		if(res){
 			fprintf(stderr,"ERROR = %d\n",res);
 		}else{
@@ -319,13 +355,13 @@ int main(void){
 #endif
 
 # if 1
-	helm_run_test_cases(d, ntd1, td1, 'K');
+	helm_run_test_cases(P, ntd1, td1, 'K');
 # endif
 
-	//helm_check_dpdrho_T(d, ntd1, td1);
+	//helm_check_dpdrho_T(P, ntd1, td1);
 
 # if 1
-	//helm_check_d2pdrho2_T(d,ntd1, td1);
+	//helm_check_d2pdrho2_T(P,ntd1, td1);
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.8f%%)\n",maxerr);
 # endif

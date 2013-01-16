@@ -1,5 +1,5 @@
-/* This file is created by Hongke Zhu, 06-10-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 06-10-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
 
 LITERATURE REFERENCE
@@ -12,76 +12,89 @@ J. Phys. Chem. Ref. Data, 35(2):929-1019, 2006.
 
 #define BUTANE_M 58.12220 /* kg/kmol */
 #define BUTANE_R (8314.472/BUTANE_M) /* J/kg/K */
-#define BUTANE_TSTAR 425.125 /* K */
+#define BUTANE_TC 425.125 /* K */
 
-
-const IdealData ideal_data_butane = {
-    12.54882924 /* constant */
-    , -5.46976878 /* linear */
-    , BUTANE_TSTAR /* Tstar */
-    , BUTANE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.24680487,	0.0}
-    }
-    , 4 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {5.54913289,	329.40404}
-        ,{11.4648996,	1420.17366}
-        ,{7.59987584,	2113.08938}
-        ,{9.66033239,	4240.85730}
-    }
+static const IdealData ideal_data_butane = {
+	IDEAL_CP0,{.cp0={
+		BUTANE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{4.24680487,	0.0}
+		}
+		, 4 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{5.54913289,	329.40404}
+			,{11.4648996,	1420.17366}
+			,{7.59987584,	2113.08938}
+			,{9.66033239,	4240.85730}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_butane = {
+static const HelmholtzData helmholtz_data_butane = {
+	.R = BUTANE_R /* J/kg/K */
+	, .M = BUTANE_M /* kg/kmol */
+	, .rho_star = 3.922769613*BUTANE_M /* kg/m3(= rho_c for this model) */
+	, .T_star = BUTANE_TC /* K (= T_c for this model) */
+	, .T_c = BUTANE_TC
+	, .rho_c = 3.922769613*BUTANE_M /* kg/m3 */
+	, .T_t = 134.6
+
+	, .ref = {FPROPS_REF_PHI0,{.phi0={
+		.c = 12.54882924 /* constant */
+		,.m = -5.46976878 /* linear */
+	}}}
+
+	, .omega = 0.201 /* acentric factor */
+	, .ideal = &ideal_data_butane
+	, .np = 23 /* power terms */
+	, .pt = (const HelmholtzPowTerm[]){
+		/* a_i, 	t_i, 	d_i, 	l_i */
+		{0.25536998241635E+01,      0.5,    1.0,   0}
+		, {-0.44585951806696E+01,   1.0,    1.0,   0}
+		, {0.82425886369063E+00,    1.5,    1.0,   0}
+		, {0.11215007011442E+00,    0.0,    2.0,   0}
+		, {-0.35910933680333E-01,   0.5,    3.0,   0}
+		, {0.16790508518103E-01,    0.5,    4.0,   0}
+		, {0.32734072508724E-01,    0.75,   4.0,   0}
+		, {0.95571232982005E+00,    2.0,    1.0,   1}
+		, {-0.10003385753419E+01,   2.5,    1.0,   1}
+		, {0.85581548803855E-01,    2.5,    2.0,   1}
+		, {-0.25147918369616E-01,   1.5,    7.0,   1}
+		, {-0.15202958578918E-02,   1.0,    8.0,   1}
+		, {0.47060682326420E-02,    1.5,    8.0,   1}
+		, {-0.97845414174006E-01,   4.0,    1.0,   2}
+		, {-0.48317904158760E-01,   7.0,    2.0,   2}
+		, {0.17841271865468E+00,    3.0,    3.0,   2}
+		, {0.18173836739334E-01,    7.0,    3.0,   2}
+		, {-0.11399068074953E+00,   3.0,    4.0,   2}
+		, {0.19329896666669E-01,    1.0,    5.0,   2}
+		, {0.11575877401010E-02,    6.0,    5.0,   2}
+		, {0.15253808698116E-03,    0.0,   10.0,   2}
+		, {-0.43688558458471E-01,   6.0,    2.0,   3}
+		, {-0.82403190629989E-02,   13.0,   6.0,   3}
+	}
+	, .ng = 2 /* gaussian terms */
+	, .gt = (const HelmholtzGausTerm[]){
+		/* n, t, d, alpha, beta, gamma, epsilon */
+		{-0.28390056949441E-01,    2.0,   1.0,  10.0, 150.0, 1.16, 0.85}
+		, {0.14904666224681E-02,   0.0,   2.0,  10.0, 200.0, 1.13, 1.0}
+	}
+};
+
+
+const EosData eos_butane = {
 	"butane"
-    , /* R */ BUTANE_R /* J/kg/K */
-    , /* M */ BUTANE_M /* kg/kmol */
-    , /* rho_star */ 3.922769613*BUTANE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ BUTANE_TSTAR /* K (= T_c for this model) */
-
-    , /* T_c */ BUTANE_TSTAR
-    , /* rho_c */ 3.922769613*BUTANE_M /* kg/m3 */
-    , /* T_t */ 0
-
-    , 0.201 /* acentric factor */
-    , &ideal_data_butane
-    , 23 /* power terms */
-    , (const HelmholtzPowTerm[]){
-        /* a_i, 	t_i, 	d_i, 	l_i */
-        {0.25536998241635E+01,      0.5,    1.0,   0}
-        , {-0.44585951806696E+01,   1.0,    1.0,   0}
-        , {0.82425886369063E+00,    1.5,    1.0,   0}
-        , {0.11215007011442E+00,    0.0,    2.0,   0}
-        , {-0.35910933680333E-01,   0.5,    3.0,   0}
-        , {0.16790508518103E-01,    0.5,    4.0,   0}
-        , {0.32734072508724E-01,    0.75,   4.0,   0}
-        , {0.95571232982005E+00,    2.0,    1.0,   1}
-        , {-0.10003385753419E+01,   2.5,    1.0,   1}
-        , {0.85581548803855E-01,    2.5,    2.0,   1}
-        , {-0.25147918369616E-01,   1.5,    7.0,   1}
-        , {-0.15202958578918E-02,   1.0,    8.0,   1}
-        , {0.47060682326420E-02,    1.5,    8.0,   1}
-        , {-0.97845414174006E-01,   4.0,    1.0,   2}
-        , {-0.48317904158760E-01,   7.0,    2.0,   2}
-        , {0.17841271865468E+00,    3.0,    3.0,   2}
-        , {0.18173836739334E-01,    7.0,    3.0,   2}
-        , {-0.11399068074953E+00,   3.0,    4.0,   2}
-        , {0.19329896666669E-01,    1.0,    5.0,   2}
-        , {0.11575877401010E-02,    6.0,    5.0,   2}
-        , {0.15253808698116E-03,    0.0,   10.0,   2}
-        , {-0.43688558458471E-01,   6.0,    2.0,   3}
-        , {-0.82403190629989E-02,   13.0,   6.0,   3}
-    }
-    , 2 /* gaussian terms */
-    , (const HelmholtzGausTerm[]){
-        /* n, t, d, alpha, beta, gamma, epsilon */
-        {-0.28390056949441E-01,    2.0,   1.0,  10.0, 150.0, 1.16, 0.85}
-        , {0.14904666224681E-02,   0.0,   2.0,  10.0, 200.0, 1.13, 1.0}
-    }
-    , 0 /* critical terms */
-    , 0
+	,"D Buecker and W Wagner, 2006. 'Reference Equations of State for the "
+	"Thermodynamic Properties of Fluid Phase n-Butane and Isobutane,' "
+	"J. Phys. Chem. Ref. Data, 35(2):929-1019."
+	,"http://dx.doi.org/10.1063/1.1901687"
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_butane}
 };
+
 
 /*
     Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
@@ -99,18 +112,13 @@ const HelmholtzData helmholtz_data_butane = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_butane, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_butane, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_butane, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_butane, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_butane, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_butane, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_butane, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_butane, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_butane, NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {
