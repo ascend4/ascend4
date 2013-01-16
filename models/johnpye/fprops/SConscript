@@ -11,12 +11,6 @@ fprops_env = env.Clone()
 fprops_env.Append(LIBPATH=['#'])
 fprops_env.Append(LIBS=['ascend'])
 
-lib = fprops_env.SharedLibrary("mbwr"
-	,['mbwr.c','asc_mbwr.c']
-	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
-	,SHLIBPREFIX = env['EXTLIB_PREFIX']
-)
-
 # automatically create fluids/fluids_list.h...
 fprops_env.SConscript("fluids/SConscript",['fprops_env'])
 
