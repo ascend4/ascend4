@@ -53,7 +53,7 @@ better later on, hopefully. */
 #endif
 
 typedef struct{
-	const HelmholtzData *comp[2];/* 0 = cold, 1 = hot */
+	const PureFluid *comp[2];/* 0 = cold, 1 = hot */
 	int n;
 } HeatExData;
 
@@ -167,7 +167,7 @@ int heatex_prepare(struct BBoxInterp *bbox,
 			goto fail;
 		}
 
-		hxd->comp[i] = fprops_fluid(comp[i]);
+		hxd->comp[i] = fprops_fluid(comp[i], NULL);
 		if(hxd->comp[i] == NULL){
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Heat exchanger %s name '%s' not recognised. Check list of supported species.",SCP(heatex_symbols[i]),comp[i]);
 			goto fail;
@@ -229,11 +229,14 @@ int heatex_calc(struct BBoxInterp *bbox,
 	for(i=0;i<=n;++i){
 		double hh = hot.h - Q/hot.mdot*(n-i)/n;
 		double hc = cold.h + Q/cold.mdot*i/n;
+		FpropsError err = FPROPS_NO_ERROR;
 		/* FIXME make use of guess values? */
-		if(fprops_solve_ph(hot.p, hh, &Th, &rhoh, 0, heatex_data->comp[1])){
+		fprops_solve_ph(hot.p, hh, &Th, &rhoh, 0, heatex_data->comp[1], &err);
+		if(err){
 			/* error solving (p,h) hotside */
 		}
-		if(fprops_solve_ph(cold.p, hc, &Tc, &rhoc, 0, heatex_data->comp[0])){
+		fprops_solve_ph(cold.p, hc, &Tc, &rhoc, 0, heatex_data->comp[0], &err);
+		if(err){
 			/* error solving (p,h) coldside */
 		}
 		double DT = Th - Tc;

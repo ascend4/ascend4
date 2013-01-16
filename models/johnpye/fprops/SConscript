@@ -30,7 +30,7 @@ srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
 fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
 
 
-lib = fprops_env.SharedLibrary("fprops"
+lib1 = fprops_env.SharedLibrary("fprops"
 	,['asc_fprops.c'] + fprops_env['shobjs']
 	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 	,SHLIBPREFIX = env['EXTLIB_PREFIX']
