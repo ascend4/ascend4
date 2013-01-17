@@ -42,7 +42,8 @@ fprops_env.SConscript("fluids/SConscript",['fprops_env'])
 fprops_env.Depends('fluids.c','fluids/fluids_list.h')
 
 coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'pengrob.c'
-	, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c', 'fluids.c','cp0.c', 'zeroin.c','cubicroots.c'
+	, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c', 'fluids.c','cp0.c'
+	, 'zeroin.c','cubicroots.c'
 ]
 
 srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
