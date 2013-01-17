@@ -12,9 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 	Routines to calculate saturation properties using Helmholtz correlation
 	data. We first include some 'generic' saturation equations that make use
@@ -206,7 +204,7 @@ double fprops_rhog_T_chouaieb(double T, const FluidData *data){
 	double PPP = Zc / (P1 + P2*Zc*log(Zc) + P3/Zc);
 	fprintf(stderr,"PPP = %f\n",PPP);
 	//PPP = -0.6240188;
-	double NNN = PPP + 1./(N1*OMEGA(d) + N2);
+	double NNN = PPP + 1./(N1*D->omega + N2);
 #else
 /* exact values from Chouaieb for CO2 */
 # define MMM 2.4686277

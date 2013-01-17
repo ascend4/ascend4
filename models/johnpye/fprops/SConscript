@@ -2,8 +2,8 @@
 # run when 'scons' is launched from higher up the directory tree, eg from
 # ~/ascend. The 'SConstruct' file, on the other hand, is run when you launch 
 # 'scons' from this directory right here. The latter is here just to prove that
-# FPROPS can be built standalone; it doesn't need ASCEND to be present to
-# work.
+# FPROPS can be built standalone; FPROPS doesn't need ASCEND to be present to
+# compile and run.
 
 Import('env')
 fprops_env = env.Clone()
@@ -17,8 +17,10 @@ fprops_env.SConscript("fluids/SConscript",['fprops_env'])
 fprops_env.Depends("fluids.c","fluids/fluids_list.h")
 
 coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'pengrob.c'
-	, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c', 'fluids.c','cp0.c', 'zeroin.c','cubicroots.c'
+	, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c', 'fluids.c','cp0.c'
+	, 'zeroin.c','cubicroots.c'
 ]
+
 srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
 
 fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
