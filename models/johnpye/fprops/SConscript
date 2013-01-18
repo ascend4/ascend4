@@ -61,26 +61,3 @@ if env['WITH_PYTHON']:
 
 fprops_env.SConscript("test/SConscript",['fprops_env'])
 
-
-
-if 0:
-
-
-	fprops_env.SConscript("fluids/SConscript",['fprops_env'])
-
-	fprops_env.Depends('fluids.c','fluids/fluids_list.h')
-
-	coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'pengrob.c'
-		, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c', 'fluids.c','cp0.c'
-		, 'zeroin.c','cubicroots.c'
-	]
-
-	srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
-
-	fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
-
-	if fprops_env['WITH_ASCEND']:
-		fprops_env.SharedLibrary('fprops_ascend',fprops_env['shobjs'] + ['asc_fprops.c'])
-
-	fprops_env.SConscript('python/SConscript',['fprops_env'])
-

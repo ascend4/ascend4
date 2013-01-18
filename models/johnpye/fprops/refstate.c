@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 
-//#define REF_DEBUG
+#define REF_DEBUG
 #define REF_ERRORS
 
 #ifdef REF_DEBUG
@@ -141,6 +141,7 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
 		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+		MSG("Set TRHS reference state.");
 		return 0;
 
 	case FPROPS_REF_TPUS:
@@ -183,6 +184,7 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		MSG("...at T = %f K , rho = %f kg/m3",T, rho);
 #endif
 
+		MSG("Set TRUS reference state.");
 		return 0;
 
 
@@ -224,6 +226,7 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		MSG("Resulting reference values: h = %f, s = %f, p = %f kPa",h2,s2,p);
 		MSG("...at T = %f K , rho = %f kg/m3",T, rho);
 
+		MSG("Set TPHS reference state.");
 		return 0;
 
 
@@ -241,6 +244,7 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		s2 = 0;
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
 		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+		MSG("Set TPF reference state.");
 		return 0;
 
 	case FPROPS_REF_TPFU:
@@ -257,6 +261,7 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		s2 = 0;
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
 		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+		MSG("Set TPFU reference state.");
 		return 0;
 
 	default:

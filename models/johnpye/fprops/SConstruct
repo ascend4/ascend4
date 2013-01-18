@@ -28,7 +28,7 @@ else:
 	env['WITH_ASCEND'] = 0
 
 env.Append(
-	CFLAGS=['-g','-Wall','-O2']
+	CFLAGS=['-g','-Wall']
 )
 
 env['EXTLIB_SUFFIX'] = "_ascend" + env.subst("$SHLIBSUFFIX")

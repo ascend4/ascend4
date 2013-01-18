@@ -48,10 +48,11 @@ PropEvalFn pengrob_dpdrho_T;
 PropEvalFn pengrob_alphap;
 PropEvalFn pengrob_betap;
 SatEvalFn pengrob_sat;
+//SatEvalFn pengrob_sat_akasaka;
 
 static double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err);
 
-//#define PR_DEBUG
+#define PR_DEBUG
 #define PR_ERRORS
 
 #ifdef PR_DEBUG
@@ -185,6 +186,8 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 #undef I
 #undef D
 #undef C
+	//P->sat_fn = &pengrob_sat_akasaka;
+
 	return P;
 }
 
@@ -245,6 +248,11 @@ double pengrob_h(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_SQRTALPHA;
 	DEFINE_A;
 	DEFINE_V;
+	if(rho > 1./PD->b){
+		MSG("Density exceeds limit value 1/b = %f",1./PD->b);
+		*err = FPROPS_RANGE_ERROR;
+		return 0;
+	}
 	double h0 = ideal_h(T,rho,data,err);
 	double p = pengrob_p(T, rho, data, err);
 	double Z = p * v / (data->R * T);
@@ -278,11 +286,6 @@ double pengrob_s(double T, double rho, const FluidData *data, FpropsError *err){
 
 double pengrob_a(double T, double rho, const FluidData *data, FpropsError *err){
 	// FIXME maybe we can improve this with more direct maths
-	double b = PD->b;
-	if(rho > 1./b){
-		MSG("Density exceeds limit value 1/b = %f",1./b);
-		*err = FPROPS_RANGE_ERROR;
-	}
 	double h = pengrob_h(T,rho,data,err);
 	double s = pengrob_s(T,rho,data,err); // duplicated calculation of p!
 	double p = pengrob_p(T,rho,data,err); // duplicated calculation of p!
@@ -303,17 +306,27 @@ double pengrob_u(double T, double rho, const FluidData *data, FpropsError *err){
 }
 
 double pengrob_g(double T, double rho, const FluidData *data, FpropsError *err){
+	if(rho > 1./PD->b){
+		MSG("Density exceeds limit value 1/b = %f",1./PD->b);
+		*err = FPROPS_RANGE_ERROR;
+	}
+#if 0
 	double h = pengrob_h(T,rho,data,err);
 	double s = pengrob_s(T,rho,data,err); // duplicated calculation of p!
+	if(isnan(h))MSG("h is nan");
+	if(isnan(s))MSG("s is nan");
 	return h - T*s;
-//	previous code from Richard, probably fine but need to check
-//	DEFINE_A;
-//	DEFINE_V;
-//	double p = pengrob_p(T, rho, data, err);
-//	double Z = p*v/(data->R * T);
-//	double B = p*PD->b/(data->R * T);
-//	double A = p * a / SQ(data->R * T);
-//	return -log(fabs(Z-B))-(A/(sqrt(8)*B))*log(fabs((Z+(1+sqrt(2))*B)/(Z+(1-sqrt(2))*B)))+Z-1;
+#else
+	//	previous code from Richard, probably fine but need to check
+	DEFINE_SQRTALPHA;
+	DEFINE_A;
+	DEFINE_V;
+	double p = pengrob_p(T, rho, data, err);
+	double Z = p*v/(data->R * T);
+	double B = p*PD->b/(data->R * T);
+	double A = p * a / SQ(data->R * T);
+	return log(fabs(Z-B))-(A/(sqrt(8)*B))*log(fabs((Z+(1+sqrt(2))*B)/(Z+(1-sqrt(2))*B)))+Z-1;
+#endif
 }
 
 /**
@@ -492,11 +505,15 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 	double sqrt2 = sqrt(2);
 
 	double p = fprops_psat_T_acentric(T, data);
+	MSG("Initial guess: p = %f from acentric factor",p);
 
 	int i = 0;
 	double Zg, Z1, Zf, vg, vf;
+
+	FILE *F1 = fopen("pf.txt","w");
+
 	// FIXME test upper iteration limit required
-	while(++i < 100){
+	while(++i < 300){
 		MSG("iter %d: p = %f, rhof = %f, rhog = %f", i, p, 1/vf, 1/vg);
 		// Peng & Robinson eq 17
 		double sqrtalpha = 1 + PD->kappa * (1 - sqrt(T / PD_TCRIT));
@@ -529,7 +546,7 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 			double ff = FUG(Zf,A,B);
             double fg = FUG(Zg,A,B);
 			double fratio = ff/fg;
-			//MSG("    ff = %f, fg = %f, fratio = %f", ff, fg, fratio);
+			MSG("    ff = %f, fg = %f, fratio = %f", ff, fg, fratio);
 
 			//double hf = pengrob_h(T, 1/vf, data, err);
 			//double hg = pengrob_h(T, 1/vg, data, err);
@@ -540,8 +557,10 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 				*rhog_ret = 1 / vg;
 				p = pengrob_p(T, *rhog_ret, data, err);
 				MSG("Solved for T = %f: p = %f, rhof = %f, rhog = %f", T, p, *rhof_ret, *rhog_ret);
+				fclose(F1);
 				return p;
 			}
+			fprintf(F1,"%f\t%f\n",p,fratio);
 			p *= fratio;
 		}else{
 			/* In this case we need to adjust our guess p(T) such that we get 
@@ -549,6 +568,7 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 			p = MidpointPressureCubic(T, data, err);
 			if(*err){
 				ERRMSG("Failed to solve for a midpoint pressure");
+				fclose(F1);
 				return p;
 			}
 			MSG("    single root: Z = %f. new pressure guess: %f", Zf, p);
@@ -556,11 +576,12 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 	}
 	MSG("Did not converge");
 	*err = FPROPS_SAT_CVGC_ERROR;
+	fclose(F1);
 	return 0;
 }
 
 /*
-	FIXME can we generalise this to work with other cubic EOS as well?
+	FIXME can we generalise this to work with other *cubic* EOS as well?
 	Currently not easily done since pointers are kept at a higher level in our
 	data structures than FluidData.
 */
@@ -621,10 +642,123 @@ double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err){
 	return 0.5*(p1 + p2);
 }
 
-
 static double resid_dpdrho_T(double rho, void *user_data){
 #define D ((MidpointSolveData *)user_data)
     return pengrob_dpdrho_T(D->T,rho,D->data,D->err);
 #undef D
 }
+
+
+#if 0
+
+/* we would like to try the Akasaka approach and use it with cubic EOS.
+but at this stage it's not working correctly. Not sure why... */
+
+/**
+	Solve saturation condition for a specified temperature using approach of
+	Akasaka, but adapted for general use to non-helmholtz property correlations.
+	@param T temperature [K]
+	@param psat_out output, saturation pressure [Pa]
+	@param rhof_out output, saturated liquid density [kg/m^3]
+	@param rhog_out output, saturated vapour density [kg/m^3]
+	@param d helmholtz data object for the fluid in question.
+	@return 0 on success, non-zero on error (eg algorithm failed to converge, T out of range, etc.)
+*/
+double pengrob_sat_akasaka(double T, double *rhof_out, double * rhog_out, const FluidData *data, FpropsError *err){
+	if(T < data->T_t - 1e-8){
+		ERRMSG("Input temperature %f K is below triple-point temperature %f K",T,data->T_t);
+		return FPROPS_RANGE_ERROR;
+	}
+
+	if(T > data->T_c){
+		ERRMSG("Input temperature is above critical point temperature");
+		return FPROPS_RANGE_ERROR;
+	}
+
+	// we're at the critical point
+	if(fabs(T - data->T_c) < 1e-9){
+		*rhof_out = data->rho_c;
+		*rhog_out = data->rho_c;
+		return data->p_c;
+	}
+
+	// FIXME at present step-length multiplier is set to 0.4 just because of 
+	// ONE FLUID, ethanol. Probably our initial guess data isn't good enough,
+	// or maybe there's a problem with the acentric factor or something like
+	// that. This factor 0.4 will be slowing down the whole system, so it's not
+	// good. TODO XXX.
+
+	// initial guesses for liquid and vapour density
+	double rhof = fprops_rhof_T_rackett(T,data);
+	double rhog= fprops_rhog_T_chouaieb(T,data);
+	double R = data->R;
+	double pc = data->p_c;
+
+	MSG("initial guess rho_f = %f, rho_g = %f\n",rhof,rhog);
+	MSG("calculating for T = %.12e",T);
+
+	int i = 0;
+	while(i++ < 70){
+		if(rhof > 1/PD->b){
+			MSG("limit rhof to 1/b");
+			rhof = 1/PD->b;
+		}
+
+		MSG("iter %d: T = %f, rhof = %f, rhog = %f",i,T, rhof, rhog);
+
+		double pf = pengrob_p(T,rhof,data,err);
+		double pg = pengrob_p(T,rhog,data,err);
+		double gf = pengrob_g(T,rhof,data,err);
+		double gg = pengrob_g(T,rhog,data,err);
+		double dpdrf = pengrob_dpdrho_T(T,rhof,data,err);
+		double dpdrg = pengrob_dpdrho_T(T,rhog,data,err);
+		if(*err){
+			ERRMSG("error returned");
+		}
+
+		MSG("gf = %f, gg = %f", gf, gg);
+
+		// jacobian for [F;G](rhof, rhog) --- derivatives wrt rhof and rhog
+		double F = (pf - pg)/pc;
+		double G = (gf - gg)/R/T;
+
+		if(fabs(F) + fabs(G) < 1e-12){
+			//fprintf(stderr,"%s: CONVERGED\n",__func__);
+			*rhof_out = rhof;
+			*rhog_out = rhog;
+			return pengrob_p(T, *rhog_out, data, err);
+			/* SUCCESS */
+		}
+
+		double Ff = dpdrf/pc;
+		double Fg = -dpdrg/pc;
+		MSG("Ff = %e, Fg = %e",Ff,Fg);
+
+		double Gf = dpdrf/rhof/R/T;
+		double Gg = -dpdrg/rhog/R/T;
+		MSG("Gf = %e, Gg = %e",Gf,Gg);
+
+		double DET = Ff*Gg - Fg*Gf;
+		MSG("DET = %f",DET);
+
+		MSG("F = %f, G = %f", F, G);
+
+		// 'gamma' needs to be increased to 0.5 for water to solve correctly (see 'test/sat.c')
+#define gamma 1
+		rhof += gamma/DET * (Fg*G - Gg*F);
+		rhog += gamma/DET * ( Gf*F - Ff*G);
+#undef gamma
+
+		if(rhog < 0)rhog = -0.5*rhog;
+		if(rhof < 0)rhof = -0.5*rhof;
+	}
+	*rhof_out = rhof;
+	*rhog_out = rhog;
+	*err = FPROPS_SAT_CVGC_ERROR;
+	ERRMSG("Not converged: with T = %e (rhof=%f, rhog=%f).",T,*rhof_out,*rhog_out);
+	return pengrob_p(T, rhog, data, err);
+}
+
+#endif
+
 

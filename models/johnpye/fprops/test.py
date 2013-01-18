@@ -7,14 +7,11 @@ except:
 	print "Run './test.py speciesname' or ./test.py testname' to run test code."
 	exit(1)
 
-dirn = 'test'
-src = "%s/%s.c"%(dirn,name)
+dirn = 'fluids'
+src = "%s/%s.c" %(dirn,name)
 if not os.path.exists(src):
-	dirn = 'fluids'
-	src = "%s/%s.c" %(dirn,name)
-	if not os.path.exists(src):
-		print "No file named '%s.c' found in 'test' or 'fluids' directory" % name
-		exit(1)
+	print "No file named '%s.c' found in '%s' directory" % (name,dirn)
+	exit(1)
 
 CC = "gcc"
 if os.environ.get('HOST_PREFIX'):

@@ -29,7 +29,7 @@
 #include "zeroin.h"
 
 // report lots of stuff
-//#define SAT_DEBUG
+#define SAT_DEBUG
 #define SAT_ERRORS
 
 // assertions for NANs etc
@@ -143,7 +143,19 @@ double fprops_psat_T_xiang(double T, const FluidData *data){
 	Estimate saturation pressure using acentric factor. This algorithm
 	is used for first estimates for later refinement in the program REFPROP.
 
-	Is this Antoine equation or something? FIXME check this and correct.
+	This is derived from the definition of the acentric factor,
+	omega = -log10(psat(T1) - 1 where T1/Tc = Tr = 0.7
+	
+	together with the saturation curve obtained if h_fg(T) is assumed constant:
+	ln(psat(T)) = A - B/(T + C)
+
+	See Sandler 5e, p 320.	
+
+s	Such a curve will pass through (pc,Tc) and (psat(Tr),Tr) where Tr = 0.7,
+	but will probably be inaccurate at Tt. Given additional data, such as the
+	normal boiling point, a better equation like the Antoine equation can be
+	fitted. But we don't use that here.
+
 */
 double fprops_psat_T_acentric(double T, const FluidData *data){
 	/* first guess using acentric factor */
@@ -237,13 +249,14 @@ void fprops_triple_point(double *p_t_out, double *rhof_t_out, double *rhog_t_out
 		ERRMSG("Note: data for '%s' does not include a valid triple point temperature.",d->name);
 	}
 
-	MSG("Calculating saturation for '%s' (T_c = %f, p_c = %f) at T = %f",d->name, d->data->T_c, d->data->p_c, d->data->T_t);
+	MSG("Calculating for '%s' (type %d, T_t = %f, T_c = %f, p_c = %f)",d->name, d->type, d->data->T_t, d->data->T_c, d->data->p_c);
 	fprops_sat_T(d->data->T_t, &p_t, &rhof_t, &rhog_t,d,err);
 	if(*err)return;
 	d_last = d;
 	*p_t_out = p_t;
 	*rhof_t_out = rhof_t;
 	*rhog_t_out = rhog_t;
+	MSG("p_t = %f, rhof_t = %f, rhog_t = %f", p_t, rhof_t, rhog_t);
 }
 
 

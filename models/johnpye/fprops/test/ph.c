@@ -2,6 +2,8 @@
 #include "../fluids.h"
 #include "../fprops.h"
 #include "../solve_ph.h"
+#include "../refstate.h"
+
 #include <assert.h>
 #include <math.h>
 
@@ -21,47 +23,63 @@
 	color_off(stderr);\
 	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
 
-#define TOL_T 1e-3
+#define TOL_T 1e-8
 #define TOL_RHO 1e-3
 
 
 int main(void){
-	const PureFluid *P = fprops_fluid("water","helmholtz",NULL);
-	assert(P);
-	FpropsError err = FPROPS_NO_ERROR;
+	const PureFluid *P;
+	FpropsError err;
 	FluidState S;
-
 	double T0, rho0, p, h, T, rho;
 
 #define TEST_PH(T1,RHO1) \
-	MSG("TEST_PH(T1=%f, RHO1=%f)",T1,RHO1); \
+	err = FPROPS_NO_ERROR;\
+	/*MSG("TEST_PH(T1=%f, RHO1=%f)",T1,RHO1);*/ \
 	T0 = T1; \
 	rho0 = RHO1; \
+	/*MSG("setting T,rho");*/\
 	S = fprops_set_Trho(T0,rho0,P,&err); \
 	assert(!err); \
+	/*MSG("calc p");*/\
 	p = fprops_p(S,&err); \
 	assert(!err); \
+	/*MSG("calc h");*/\
 	h = fprops_h(S,&err); \
 	assert(!err); \
+	/*MSG("solving ph");*/\
 	fprops_solve_ph(p,h,&T,&rho,0,P,&err); \
 	assert(!err); \
+	MSG("T err: %f",(T-T0));\
+	MSG("rho err: %f",(rho-rho0));\
 	assert(fabs(T - T0) < TOL_T); \
 	assert(fabs(rho - rho0) < TOL_RHO);
 
-	// low-density saturation cases (I think)
+	P = fprops_fluid("water","helmholtz",NULL);
+	assert(P);
+	err = FPROPS_NO_ERROR;
+
+	TEST_PH(314.4054538268115, 999.7897902747587);
+
 	TEST_PH(4.278618181818e+02, 3.591421624513e-03);
 	TEST_PH(3.453541818182e+02, 6.899880592960e-03);
 	TEST_PH(7.166385454545e+02, 6.899880592960e-03);
 	TEST_PH(7.372654545455e+02, 4.092431601778e-03);
 
-	TEST_PH(314.4054538268115, 999.7897902747587);
-
 	TEST_PH(304.10372142680086, 999.7863801065582);
-
 	TEST_PH(283.4886584572104, 999.7900620473787);
-
 	TEST_PH(293.8028752316878, 999.7858245521049);
 
+	P = fprops_fluid("water","pengrob","IAPWS");
+	ReferenceState R = {FPROPS_REF_TPF};
+	fprops_set_reference_state(P,&R);
+	MSG("Testing '%s' (type '%d', source '%s')", P->name, P->type, P->source);
+	assert(P);
+	err = FPROPS_NO_ERROR;
+
+	TEST_PH(2.731600000000e+02, 8.618514819566e+02);
+	MSG("p = %f",p);
+	MSG("h = %f",h);
 
 	fprintf(stderr,"\n");
 	color_on(stderr,ASC_FG_BRIGHTGREEN);
