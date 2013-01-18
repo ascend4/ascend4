@@ -26,11 +26,9 @@
 
 
 int main(void){
-	const PureFluid *P = fprops_fluid("water","helmholtz",NULL);
-	assert(P);
-	FpropsError err = FPROPS_NO_ERROR;
+	const PureFluid *P;
+	FpropsError err;
 	FluidState S;
-
 	double T0, rho, rhof, rhog, psat1, psat2;
 
 #define TEST_SAT(T1) \
@@ -50,19 +48,42 @@ int main(void){
 	assert(!err); \
 	rhog = S.rho; \
 	assert(fabs(psat1 - psat2) < 1e-3); \
-	MSG("At T = %f K (%f C), psat = %f, rhof = %f, rhog = %f",T0,T0-273.15,psat1,rhof,rhog);
+	/*MSG("At T = %f K (%f C), psat = %f, rhof = %f, rhog = %f",T0,T0-273.15,psat1,rhof,rhog);*/
+
+//	const char *fluids[] = {"water","toluene","ethanol",NULL};
+	const char *fluids[] = {"water",NULL};
+	char **fi = fluids;
+	while(*fi){
+		MSG("TESTING %s",*fi);
+		P = fprops_fluid(*fi,"pengrob",NULL);
+		assert(P);
+		err = FPROPS_NO_ERROR;
+
+		double psat,rhof,rhog;
+		fprops_triple_point(&psat, &rhof, &rhog, P, &err);
+		assert(!err);
+		++fi;
+	}
+
+	P = fprops_fluid("water","helmholtz",NULL);
+	assert(P);
+	err = FPROPS_NO_ERROR;
 
 	// low-density saturation cases (I think)
-	TEST_SAT(275.212471); rho = 0;
-	TEST_SAT(2.732910e+02); rho = 0;
-	TEST_SAT(2.731868e+02); rho = 0;
-	TEST_SAT(2.844904e+02); rho = 0;
+	TEST_SAT(273.15+4.1);
+	TEST_SAT(273.15+3.9);
+	TEST_SAT(273.15+4);
+	TEST_SAT(275.212471); 
+	TEST_SAT(275.212471);
+	TEST_SAT(2.732910e+02);
+	TEST_SAT(2.731868e+02);
+	TEST_SAT(2.844904e+02);
 
 	psat1 = 709.144373;
 	fprops_sat_p(psat1,&T0,&rhof,&rhog,P,&err);
 	assert(!err);
 
-	MSG("At p = %f Pa, got T = %f K (%f C), rhof = %f, rhog = %f", psat1, T0, T0-273.15, rhof, rhog);
+	/*MSG("At p = %f Pa, got T = %f K (%f C), rhof = %f, rhog = %f", psat1, T0, T0-273.15, rhof, rhog)*/;
 
 	fprintf(stderr,"\n");
 	color_on(stderr,ASC_FG_BRIGHTGREEN);

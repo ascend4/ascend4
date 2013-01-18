@@ -6,8 +6,8 @@ srcs = fprops_env.Glob("[a-z]*.c")
 #print "srcs =",srcs
 
 for s in srcs:
-	fprops_env.Program(s
-		,LIBS = ["fprops","m"]
+	fprops_env.Program([s] + fprops_env['shobjs']
+		,LIBS = ["m"]
 		,LIBPATH = "#"
 	)
 

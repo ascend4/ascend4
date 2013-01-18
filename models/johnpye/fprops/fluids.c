@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define FLUIDS_DEBUG
+//#define FLUIDS_DEBUG
 #ifdef FLUIDS_DEBUG
 # include "color.h"
 # define MSG(FMT, ...) \
