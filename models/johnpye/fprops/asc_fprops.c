@@ -80,9 +80,10 @@ ExtBBoxFunc fprops_Tvsx_ph_calc;
 */
 
 /* place to store symbols needed for accessing ASCEND's instance tree */
-static symchar *fprops_symbols[2];
+static symchar *fprops_symbols[3];
 #define COMPONENT_SYM fprops_symbols[0]
 #define TYPE_SYM fprops_symbols[1]
+#define SOURCE_SYM fprops_symbols[2]
 
 static const char *fprops_p_help = "Calculate pressure from temperature and density, using FPROPS";
 static const char *fprops_u_help = "Calculate specific internal energy from temperature and density, using FPROPS";
@@ -165,11 +166,12 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 	   struct Instance *data,
 	   struct gl_list_t *arglist
 ){
-	struct Instance *compinst, *typeinst;
-	const char *comp, *type = NULL;
+	struct Instance *compinst, *typeinst, *srcinst;
+	const char *comp, *type = NULL, *src = NULL;
 
 	fprops_symbols[0] = AddSymbol("component");
 	fprops_symbols[1] = AddSymbol("type");
+	fprops_symbols[2] = AddSymbol("source");
 
 	/* get the component name */
 	compinst = ChildByChar(data,COMPONENT_SYM);
@@ -201,7 +203,19 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 		if(type && strlen(type)==0)type = NULL;
 	}
 
-	bbox->user_data = (void *)fprops_fluid(comp,type);
+	/* get the source data string (FPROPS doesn't mind if none given) */
+	srcinst = ChildByChar(data,SOURCE_SYM);
+	if(srcinst){
+		if(InstanceKind(srcinst)!=SYMBOL_CONSTANT_INST){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"DATA member 'source' must be a symbol_constant");
+			return 1;
+		}
+		src = SCP(SYMC_INST(srcinst)->value);
+		CONSOLE_DEBUG("SOURCE: %s",src?src:"(null)");
+		if(src && strlen(src)==0)src = NULL;
+	}
+
+	bbox->user_data = (void *)fprops_fluid(comp,type,src);
 	if(bbox->user_data == NULL){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Component name/type was not recognised. Check the source-code for for the supported species.");
 		return 1;

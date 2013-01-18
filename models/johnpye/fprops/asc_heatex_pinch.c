@@ -116,6 +116,8 @@ ASC_EXPORT int heatex_pinch_register(){
 /**
    'heatex_prepare' just gets the stream details and the number of slices for
 	internal calculation, and checks that the stream names are valid in FPROPS.
+
+	TODO FIXME allow general support for specification of components, incl type,source.
 */
 int heatex_prepare(struct BBoxInterp *bbox,
 	   struct Instance *data,
@@ -167,7 +169,7 @@ int heatex_prepare(struct BBoxInterp *bbox,
 			goto fail;
 		}
 
-		hxd->comp[i] = fprops_fluid(comp[i], NULL);
+		hxd->comp[i] = fprops_fluid(comp[i], NULL,NULL);
 		if(hxd->comp[i] == NULL){
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Heat exchanger %s name '%s' not recognised. Check list of supported species.",SCP(heatex_symbols[i]),comp[i]);
 			goto fail;
