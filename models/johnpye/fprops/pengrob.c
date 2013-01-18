@@ -87,6 +87,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 
 	/* metadata */
 	P->name = E->name;
+	P->source = E->source;
 	P->type = FPROPS_PENGROB;
 
 #define D P->data

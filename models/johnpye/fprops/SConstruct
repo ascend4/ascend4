@@ -9,49 +9,32 @@ deft = "default"
 if platform.system()=="Windows":
 	deft = "mingw"
 
-fprops_env = Environment(
+env = Environment(
 	toolpath=['scons']
 	,tools = [deft ,'substinfile','swig']
 	,ENV={"PATH":os.environ.get('PATH')}
 	,HOST_PREFIX=os.environ.get('HOST_PREFIX')
 )
 
-if fprops_env['HOST_PREFIX']:
-	fprops_env['CC'] = "${HOST_PREFIX}-gcc"
-	print "CC =",fprops_env['CC']
+if env['HOST_PREFIX']:
+	env['CC'] = "${HOST_PREFIX}-gcc"
+	print "CC =",env['CC']
 
 if WhereIs('ascend-config'):
-	fprops_env.ParseConfig(['ascend-config','--libs','--cppflags'])
-	fprops_env['WITH_ASCEND'] = 1
+	env.ParseConfig(['ascend-config','--libs','--cppflags'])
+	env['WITH_ASCEND'] = 1
 else:
 	print "WARNING: no ascend-config in path, won't build ASCEND wrapper"
-	fprops_env['WITH_ASCEND'] = 0
+	env['WITH_ASCEND'] = 0
 
-fprops_env.Append(
+env.Append(
 	CFLAGS=['-g','-Wall','-O2']
 )
 
-#if WhereIs('gsl-config'):
-#	fprops_env.ParseConfig(['gsl-config','--libs','--cflags'])
+env['EXTLIB_SUFFIX'] = "_ascend" + env.subst("$SHLIBSUFFIX")
+env['EXTLIB_PREFIX'] = env.subst("$SHLIBPREFIX")
+env['extfns'] = []
+env['WITH_PYTHON'] = 1
 
-#srcs = ['mbwr.c','asc_mbwr.c']
-#fprops_env.SharedLibrary('mbwr_ascend',srcs)
-
-fprops_env.SConscript("fluids/SConscript",['fprops_env'])
-
-fprops_env.Depends('fluids.c','fluids/fluids_list.h')
-
-coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'pengrob.c'
-	, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c', 'fluids.c','cp0.c'
-	, 'zeroin.c','cubicroots.c'
-]
-
-srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
-
-fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
-
-if fprops_env['WITH_ASCEND']:
-	fprops_env.SharedLibrary('fprops_ascend',fprops_env['shobjs'] + ['asc_fprops.c'])
-
-fprops_env.SConscript('python/SConscript',['fprops_env'])
+env.SConscript("SConscript",["env"])
 

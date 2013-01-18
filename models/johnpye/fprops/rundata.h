@@ -119,8 +119,9 @@ typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *d
 */
 typedef struct PureFluid_struct{
     const char *name;
+	const char *source;
 	EosType type;
-	FluidData *data; // everything we need at runtime in the following functions should be inside this
+	FluidData *data; // everything we need at runtime in the following functions should be in here
 	//Pointers to departure functions
 	PropEvalFn *p_fn;
 	PropEvalFn *u_fn;

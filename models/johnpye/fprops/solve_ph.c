@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <stdlib.h>
 
-#define SOLVE_PH_DEBUG
+//#define SOLVE_PH_DEBUG
 #define SOLVE_PH_ERRORS
 
 //#define FPE_DEBUG
@@ -126,7 +126,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 #endif
 		MSG("p_c = %f bar",p_c/1e5);
 		if(p < p_c){
-			MSG("Calculate saturation Tsat(p < p_c)");
+			MSG("Calculate saturation Tsat(p < p_c) with p = %f",p);
 			fprops_sat_p(p, &Tsat, &rhof, &rhog, fluid, err);
 			if(*err){
 				ERRMSG("Unable to solve saturation state");
@@ -135,7 +135,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 			}
 			hf = fluid->h_fn(Tsat, rhof, fluid->data, err);
 			hg = fluid->h_fn(Tsat, rhog, fluid->data, err);
-			MSG("at p = %f bar, T_sat = %f, hf = %f kJ/kg, hg = %f",p/1e5,Tsat,hf/1e3,hg/1e3);
+			MSG("at p = %f bar, T_sat = %f, rhof = %f, hf = %f kJ/kg, hg = %f",p/1e5,Tsat,rhof, hf/1e3,hg/1e3);
 
 			if(hf < h && h < hg){
 				MSG("SATURATION REGION");
@@ -224,6 +224,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 		double delta_T = 0;
 		double delta_rho = 0;
 		MSG("STARTING ITERATION");
+		MSG("rhof_t = %f",rhof_t);
 		while(i++ < 200){
 			double p1 = fluid->p_fn(T1,rho1, fluid->data, err);
 			if(*err){
@@ -233,10 +234,11 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 			assert(!isnan(h1));
 
 			MSG("  %d: T = %f, rho = %f\tp = %f bar, h = %f kJ/kg", i, T1, rho1, p1/1e5, h1/1e3);
-			MSG("      p error = %f bar",(p1 - p)/1e5);
-			MSG("      h error = %f kJ/kg",(h1 - h)/1e3);
+			//MSG("      p error = %f bar",(p1 - p)/1e5);
+			//MSG("      h error = %f kJ/kg",(h1 - h)/1e3);
 
 			if(p1 < 0){
+				MSG("p1 < 0, reducing dT, drho");
 				T1 -= (delta_T *= 0.5);
 				rho1 -= (delta_rho *= 0.5);
 				continue;
@@ -306,18 +308,28 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 #endif
 			}
 			/* don't go too dense */
+#if 1
 			if(liquid_iteration){
-				if(rho1 + delta_rho > rhof_t) delta_rho = rhof_t;
+				MSG("rho1 = %f, delta_rho = %f, rho1+delta_rho = %f", rho1, delta_rho, rho1+delta_rho);
+				if(rho1 + delta_rho > rhof_t){
+					MSG("Limit rho to be less than rhof_t");
+					delta_rho = rhof_t - rho1;
+				}
 			}
+#endif
 
 			/* don't go too hot */
 			if(T1 + delta_T > 5000) delta_T = 5000 - T1;
 
 			/* avoid huge step */
 			while(fabs(delta_T / T1) > 0.6){
+				MSG("Reduce delta_T");
 				delta_T *= 0.5;
 			}
-			while(fabs(delta_rho / rho1) > 0.2){
+
+			/* NOTE if step limit is less than 0.5, we're getting errors */
+			while(fabs(delta_rho / rho1) > 0.7){
+				MSG("Reduce delta_rho");
 				delta_rho *= 0.5;
 			}
 

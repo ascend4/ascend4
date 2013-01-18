@@ -56,7 +56,6 @@
 
 
 int fprops_corr_avail(const EosData *E, const char *corrtype){
-	// TODO feels like there shoud be a better way of doing this?
 	if(corrtype==NULL){
 		/* if none specify, return the 'best' we can manage (not yet very civilised) */
 		switch(E->type){

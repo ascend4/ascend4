@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 
-//#define FLUIDS_DEBUG
+#define FLUIDS_DEBUG
 #ifdef FLUIDS_DEBUG
 # include "color.h"
 # define MSG(FMT, ...) \
@@ -47,14 +47,22 @@ static int nfluids = 0 + FLUIDS(F,X) + RPPFLUIDS(F,X);
 #undef F
 #undef X
 
-const PureFluid *fprops_fluid(const char *name, const char *corrtype){
+const PureFluid *fprops_fluid(const char *name, const char *corrtype, const char *source){
 	int i;
-	MSG("Looking for fluid '%s' of type '%s'",name,corrtype);
+	MSG("Looking for fluid '%s' of type '%s', with source text '%s'",name,corrtype,source);
 	for(i = 0; i < nfluids; ++i){
 		if(0==strcmp(name, fluids[i]->name)){
-			MSG("Got '%s' (type %d)",name,fluids[i]->type);
+			MSG("Got '%s' (type %d, source '%s')",name,fluids[i]->type,fluids[i]->source);
+			if(source){
+				if(fluids[i]->source && NULL != strstr(fluids[i]->source, source)){
+					MSG("Source '%s' OK",source);
+				}else{
+					MSG("Source '%s' not matched",source);
+					continue;
+				}
+			}
 			if(fprops_corr_avail(fluids[i],corrtype)){
-				MSG("Match!");
+				MSG("Match! %d",i);
 				return fprops_prepare(fluids[i],corrtype);
 			}else{
 				MSG("No match");

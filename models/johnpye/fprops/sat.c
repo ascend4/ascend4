@@ -237,7 +237,6 @@ void fprops_triple_point(double *p_t_out, double *rhof_t_out, double *rhog_t_out
 		ERRMSG("Note: data for '%s' does not include a valid triple point temperature.",d->name);
 	}
 
-
 	MSG("Calculating saturation for '%s' (T_c = %f, p_c = %f) at T = %f",d->name, d->data->T_c, d->data->p_c, d->data->T_t);
 	fprops_sat_T(d->data->T_t, &p_t, &rhof_t, &rhog_t,d,err);
 	if(*err)return;
@@ -252,6 +251,7 @@ typedef struct{
 	const PureFluid *P;
 	double p;
 	FpropsError *err;
+	double Terr;
 } SatPResidData;
 
 static ZeroInSubjectFunction sat_p_resid;
@@ -259,6 +259,7 @@ static double sat_p_resid(double T, void *user_data){
 #define D ((SatPResidData *)user_data)
 	double p, rhof, rhog;
 	fprops_sat_T(T, &p, &rhof, &rhog, D->P, D->err);
+	if(*(D->err))D->Terr = T;
 	MSG("T = %f --> p = %f, rhof = %f, rhog = %f, RESID %f", T, p, rhof, rhog, (p - D->p));
 	//if(*(D->err))MSG("Error: %s",fprops_error(*(D->err)));
 	//if(*(D->err))return -1;
@@ -276,7 +277,6 @@ static double sat_p_resid(double T, void *user_data){
 	solver...
 */	
 void fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const PureFluid *P, FpropsError *err){
-	MSG("HELLO");
 	if(*err){
 		MSG("ERROR FLAG ALREADY SET");
 	}
@@ -287,7 +287,10 @@ void fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const P
 		*rho_g = P->data->rho_c;
 		return;
 	}
-	SatPResidData D = {P, p, err};
+	/* FIXME what about checking triple point pressure? */
+	
+
+	SatPResidData D = {P, p, err, 0};
 	MSG("Solving saturation conditions at p = %f", p);
 	double p1, T, resid;
 	int errn;
@@ -295,13 +298,19 @@ void fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const P
 	if(Tt == 0)Tt = 0.2* P->data->T_c;
 	errn = zeroin_solve(&sat_p_resid, &D, Tt, P->data->T_c, 1e-5, &T, &resid);
 	if(*err){
-		ERRMSG("Error during zeroin_solve: %s", fprops_error(*err));
-		return;
+		MSG("FPROPS error within zeroin_solve iteration ('%s', p = %f, p_c = %f): %s"
+			, P->name, p, P->data->p_c, fprops_error(*err)
+		);
 	}
 	if(errn){
 		ERRMSG("Failed to solve saturation at p = %f.",p);
 		*err = FPROPS_SAT_CVGC_ERROR;
 		return;
+	}else{
+		if(*err){
+			ERRMSG("Ignoring error inside zeroin_solve iteration at T = %f",D.Terr);
+		}
+		*err = FPROPS_NO_ERROR;
 	}
 	fprops_sat_T(T, &p1, rho_f, rho_g, P, err);
 	if(!*err)*T_sat = T;
