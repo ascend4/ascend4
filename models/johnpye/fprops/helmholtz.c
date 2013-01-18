@@ -130,7 +130,9 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	P->data->corr.helm = FPROPS_NEW(HelmholtzRunData);
 
 	/* metadata */
+	/* FIXME strings should be copied, not just referenced */
 	P->name = E->name;
+	P->source = E->source;
 	P->type = E->type;
 	MSG("name = %s",P->name);
 
@@ -648,7 +650,9 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 
 		double DET = Ff*Gg - Fg*Gf;
 		//MSG("DET = %f",DET);
-#define gamma 0.4
+
+		// 'gamma' needs to be increased to 0.5 for water to solve correctly (see 'test/sat.c')
+#define gamma 0.5
 		rhof += gamma/DET * (Fg*G - Gg*F);
 		rhog += gamma/DET * ( Gf*F - Ff*G);
 #undef gamma

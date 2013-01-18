@@ -70,6 +70,7 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 
 	/* metadata */
 	P->name = E->name;
+	P->source = E->source;
 	P->type = FPROPS_IDEAL;
 
 	switch(E->type){

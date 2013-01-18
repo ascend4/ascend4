@@ -76,7 +76,7 @@ const ReferenceState *REF_PHI0(double c, double m);
 		return NULL;
 	}
 }
-PureFluid *fprops_fluid(char *name, const char *corrtype = NULL);
+PureFluid *fprops_fluid(char *name, const char *corrtype = NULL, const char *source = NULL);
 
 // get a fluid by index position (don't assume that these numbers are constant!)
 %rename(get_fluid) fprops_get_fluid;
@@ -201,6 +201,7 @@ typedef struct{} PureFluid;
 	%immutable;
 	char *name;
 	int type;
+	char *source;
 }
 
 %{
@@ -229,6 +230,9 @@ double PureFluid_R_get(PureFluid *fluid){
 }
 const char *PureFluid_name_get(const PureFluid *fluid){
 	return fluid->name;
+}
+const char *PureFluid_source_get(const PureFluid *fluid){
+	return fluid->source;
 }
 int PureFluid_type_get(PureFluid *fluid){
 	return fluid->type;

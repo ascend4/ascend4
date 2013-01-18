@@ -10,8 +10,11 @@ double fprops_rhog_T_chouaieb(double T, const FluidData *D);
 double fprops_T_rhof_rackett(double rhof, const FluidData *D);
 
 void fprops_sat_T(double T, double *p_sat, double *rho_f, double *rho_g, const PureFluid *d, FpropsError *err);
+
 void fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const PureFluid *d, FpropsError *err);
+
 void fprops_sat_hf(double hf, double *T_sat, double *p_sat, double *rho_f, double *rho_g, const PureFluid *d, FpropsError *err);
+
 void fprops_triple_point(double *p_sat, double *rho_f, double *rho_g, const PureFluid *d, FpropsError *err);
 
 #endif
