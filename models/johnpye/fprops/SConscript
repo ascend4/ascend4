@@ -22,24 +22,29 @@ srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
 
 fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
 
-lib = fprops_env.SharedLibrary("fprops",fprops_env['shobjs'])
+fprops_env['libfprops'] = fprops_env.SharedLibrary("fprops",fprops_env['shobjs'])
 
-if fprops_env['WITH_ASCEND']:
-	lib1 = fprops_env.SharedLibrary("fprops"
-		,['asc_fprops.c']
-		,LIBS = ["fprops","ascend"]
-		,LIBPATH = "#"
+if fprops_env.get('BUILDING_ASCEND') or fprops_env.get('WITH_ASCEND'):
+	asc_env = fprops_env.Clone()
+	asc_env.AppendUnique(LIBPATH=["."])
+	asc_env.AppendUnique(LIBPATH=["#"])
+
+	lib1 = asc_env.SharedLibrary("fprops"
+		,['asc_fprops.c'] + fprops_env['shobjs']
+		,LIBS = ["ascend"]
 		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)
 
-	lib2 = fprops_env.SharedLibrary("heatex_pinch"
-		,['asc_heatex_pinch.c']
-		,LIBS = ["fprops","ascend"]
-		,LIBPATH = "#"
+	lib2 = asc_env.SharedLibrary("heatex_pinch"
+		,['asc_heatex_pinch.c'] + fprops_env['shobjs']
+		,LIBS = ["ascend"]
 		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)
+
+	asc_env.Depends(lib1,fprops_env['libfprops'])
+	asc_env.Depends(lib2,fprops_env['libfprops'])
 
 	env['extfns'] += [lib1,lib2]
 

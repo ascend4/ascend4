@@ -2720,6 +2720,7 @@ else:
 # EXTERNAL SOLVERS
 
 env['extfns']=[]
+env['BUILDING_ASCEND'] = 1
 
 env.SConscript(['solvers/SConscript'],'env')
 
