@@ -512,7 +512,9 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 	double Zg, Z1, Zf, vg, vf;
 	double oldfratio = 1e9;
 
+#ifdef PR_DEBUG
 	FILE *F1 = fopen("pf.txt","w");
+#endif
 
 	// FIXME test upper iteration limit required
 	while(++i < 200){
@@ -563,10 +565,14 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 				*rhog_ret = 1 / vg;
 				p = pengrob_p(T, *rhog_ret, data, err);
 				MSG("Solved for T = %f: p = %f, rhof = %f, rhog = %f", T, p, *rhof_ret, *rhog_ret);
+#ifdef PR_DEBUG
 				fclose(F1);
+#endif
 				return p;
 			}
+#ifdef PR_DEBUG
 			fprintf(F1,"%f\t%f\t%f\n",p,ff,fg);
+#endif
 			if(fratio > oldfratio){
 				MSG("fratio increased!");
 				//fratio = 0.5 + 0.5*fratio;
@@ -583,7 +589,9 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 			p = MidpointPressureCubic(T, data, err);
 			if(*err){
 				ERRMSG("Failed to solve for a midpoint pressure");
+#ifdef PR_DEBUG
 				fclose(F1);
+#endif
 				return p;
 			}
 			MSG("    single root: Z = %f. new pressure guess: %f", Zf, p);
@@ -591,7 +599,9 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 	}
 	MSG("Did not converge");
 	*err = FPROPS_SAT_CVGC_ERROR;
+#ifdef PR_DEBUG
 	fclose(F1);
+#endif
 	return 0;
 }
 

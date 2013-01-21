@@ -3,7 +3,7 @@ from pylab import *
 import sys
 
 #P = fluid('water','helmholtz');
-P = fluid('toluene','pengrob');
+P = fluid('ammonia','pengrob');
 
 print "SOLVING TRIPLE POINT..."
 
