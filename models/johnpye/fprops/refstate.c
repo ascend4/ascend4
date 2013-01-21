@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 
-#define REF_DEBUG
+//#define REF_DEBUG
 #define REF_ERRORS
 
 #ifdef REF_DEBUG

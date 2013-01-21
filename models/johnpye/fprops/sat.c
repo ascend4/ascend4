@@ -29,7 +29,7 @@
 #include "zeroin.h"
 
 // report lots of stuff
-#define SAT_DEBUG
+//#define SAT_DEBUG
 #define SAT_ERRORS
 
 // assertions for NANs etc

@@ -31,6 +31,7 @@
 #include "zeroin.h"
 #include <math.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include "helmholtz.h" // for helmholtz_prepare
 
@@ -52,7 +53,7 @@ SatEvalFn pengrob_sat;
 
 static double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err);
 
-#define PR_DEBUG
+//#define PR_DEBUG
 #define PR_ERRORS
 
 #ifdef PR_DEBUG
@@ -509,14 +510,15 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 
 	int i = 0;
 	double Zg, Z1, Zf, vg, vf;
+	double oldfratio = 1e9;
 
 	FILE *F1 = fopen("pf.txt","w");
 
 	// FIXME test upper iteration limit required
-	while(++i < 300){
+	while(++i < 200){
 		MSG("iter %d: p = %f, rhof = %f, rhog = %f", i, p, 1/vf, 1/vg);
 		// Peng & Robinson eq 17
-		double sqrtalpha = 1 + PD->kappa * (1 - sqrt(T / PD_TCRIT));
+		double sqrtalpha = 1. + PD->kappa * (1. - sqrt(T / PD_TCRIT));
 		// Peng & Robinson eq 12
 		double a = PD->aTc * SQ(sqrtalpha);
 		// Peng & Robinson eq 6
@@ -524,7 +526,11 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 		B = PD->b * p / (data->R*T);
 		
 		// use GSL function to return real roots of polynomial: Peng & Robinson eq 5
-		if(3 == cubicroots(-(1-B), A-3*SQ(B)-2*B, -(A*B-SQ(B)*(1+B)), &Zf,&Z1,&Zg)){
+		Zf = 0; Z1 = 0; Zg = 0;
+		if(3 == cubicroots(-(1.-B), A-3.*SQ(B)-2.*B, -(A*B-SQ(B)*(1.+B)), &Zf,&Z1,&Zg)){
+			assert(Zf < Z1);
+			assert(Z1 < Zg);
+				
 			//MSG("    roots: Z = %f, %f, %f", Zf, Z1, Zg);
 			//MSG("    Zf = %f, Zg = %f", Zf, Zg);
 			// three real roots in this case
@@ -560,9 +566,18 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 				fclose(F1);
 				return p;
 			}
-			fprintf(F1,"%f\t%f\n",p,fratio);
+			fprintf(F1,"%f\t%f\t%f\n",p,ff,fg);
+			if(fratio > oldfratio){
+				MSG("fratio increased!");
+				//fratio = 0.5 + 0.5*fratio;
+			}
 			p *= fratio;
+			if(p < 0){
+				p = 0.5 * p/fratio;
+			}
+			oldfratio = fratio;
 		}else{
+			MSG("Midpoint pressure calculation");
 			/* In this case we need to adjust our guess p(T) such that we get 
 			into the narrow range of values that gives multiple solutions. */
 			p = MidpointPressureCubic(T, data, err);

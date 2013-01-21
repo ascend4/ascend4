@@ -1,7 +1,43 @@
+#include <complex.h>
 #include <math.h>
 
 #define SWAP(a,b) do { double tmp = b ; b = a ; a = tmp ; } while(0)
 
+
+
+#if 1
+/*
+This function was originally taken from the Ankit branch.  I have modified it so that the equation is not "deflated" by dividing by the pressure.
+Because we are using specific volume, and in some cases large pressure, we may need a more numerically sound method that won't return nan's
+Should probably be put somewhere else if used.
+In this case, coefficients are AZ^3+BZ^2+CZ+D.  SPM
+
+John Pye has modifed further to assume A = 1
+*/
+int cubicroots(double B, double C, double D, double *Z0, double *Z1, double *Z2){ // This function will give value of liquid and vapour volumes at P using PR, and store it in reference variables
+    #define PI 3.14159265
+    double discriminant = 18*B*C*D - 4*B*B*B*D + C*C*B*B - 4*C*C*C - 27*D*D;
+	double term1 = (2*B*B*B)-(9*B*C)+(27*D);
+	double complex term2;
+	if(discriminant>0)term2 = _Complex_I * sqrt(27*discriminant);
+	else term2 = sqrt(-27*discriminant);
+
+	double complex cuberootpos = cpow(.5*(term1+term2),1./3);
+	double complex cuberootneg = cpow(.5*(term1-term2),1./3);
+	double complex complextermpos = (1 + _Complex_I*sqrt(3))/6;
+	double complex complextermneg = (1 - _Complex_I*sqrt(3))/6;
+    
+	*Z0 = -B/3 - 1./3 * cuberootpos - 1./3 * cuberootneg;
+	*Z1 = -B/3 + complextermpos * cuberootpos + complextermneg * cuberootneg;
+    *Z2 = -B/3 + complextermneg * cuberootpos + complextermpos * cuberootneg;
+    
+    if(discriminant>0) return 3;
+    else return 1;
+}
+
+#else
+// We are seeing weird numerical behaviour from the following function. We will
+// try a different approach instead (and instead adopt Ankit's GSOC code)
 /* 
  * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2007, 2009 Brian Gough
  * 
@@ -82,3 +118,5 @@ int  cubicroots(double a, double b, double c, double *x0, double *x1, double *x2
 	  return 1;
 	}
 }
+#endif
+
