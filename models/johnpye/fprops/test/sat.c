@@ -51,7 +51,7 @@ int main(void){
 	/*MSG("At T = %f K (%f C), psat = %f, rhof = %f, rhog = %f",T0,T0-273.15,psat1,rhof,rhog);*/
 
 //	const char *fluids[] = {"water","toluene","ethanol",NULL};
-	const char *fluids[] = {"water",NULL};
+	const char *fluids[] = {"toluene",NULL};
 	char **fi = fluids;
 	while(*fi){
 		MSG("TESTING %s",*fi);
