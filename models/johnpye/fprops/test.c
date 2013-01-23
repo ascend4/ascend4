@@ -101,16 +101,39 @@ int helm_run_test_cases(const PureFluid *P, unsigned ntd, const TestData *td, in
 	 	ASSERT_PROP(a, S1, &fprops_err, a, a*1e-3);
 	}
 
+	/* TRIPLE POINT PROPERTY CALCULATION */		
+	
 	fprintf(stderr,"\nTRIPLE POINT PROPERTIES\n\n");
 	assert(P->data->T_t != 0);
 	fprintf(stderr,"T_t = %f K\n", P->data->T_t);
 	double pt,rhoft,rhogt;
-	fprops_sat_T(P->data->T_t, &pt, &rhoft, &rhogt, P, &fprops_err);
+	fprops_triple_point(&pt, &rhoft, &rhogt, P, &fprops_err);
 	assert(fprops_err == FPROPS_NO_ERROR);
 	fprintf(stderr,"p_t = %.12e Pa\n", pt);
 	fprintf(stderr,"rhof_t = %.12e kg/m^3\n", rhoft);
 	fprintf(stderr,"rhog_t = %.12e kg/m^3\n\n", rhogt);
 
+	/* Check convergence along saturation curve */
+
+	fprintf(stderr,"SATURATION CURVE CONVERGENCE TEST\n");
+	if(P->data->T_t != 0){	
+		double n1 = 200;
+		/* space point linearly in 1/T, cf Sandler 5e fig 7.7-1. */
+		double rT = 1./P->data->T_t;
+		double drT = (1./P->data->T_c - 1./P->data->T_t) / (n1 - 1);
+		fprintf(stderr,"\t%10s\t%10s\t%10s\t%10s\n","T","psat", "rhof", "rhog");
+		for(i = 0; i < n1; i++){
+			T = 1/rT;
+			double psat1, rhof1, rhog1;
+			fprops_sat_T(T, &psat1, &rhof1, &rhog1, P, &fprops_err);
+			assert(fprops_err == FPROPS_NO_ERROR);
+			fprintf(stderr,"\t%10.3f\t%10.3f\t%10.5f\t%10.5f\n",T,psat1, rhof1, rhog1);
+			rT += drT;
+		}
+	}else{
+		fprintf(stderr,"NOT POSSIBLE due to missing T_t\n");
+	}
+	fprintf(stderr,"\n");
 
 	fprintf(stderr,"Tests completed OK (maximum error = %0.5f%%)\n",maxerr);
 	return 0;

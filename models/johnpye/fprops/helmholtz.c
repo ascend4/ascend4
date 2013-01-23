@@ -585,9 +585,9 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 		return FPROPS_RANGE_ERROR;
 	}
 
-	if(T > data->T_c){
+	if(T > data->T_c + 1e-8){
 		ERRMSG("Input temperature is above critical point temperature");
-		return FPROPS_RANGE_ERROR;
+		*err = FPROPS_RANGE_ERROR;
 	}
 
 	// we're at the critical point
