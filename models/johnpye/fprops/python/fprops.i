@@ -184,6 +184,11 @@ typedef struct{} PureFluid;
 		return p;
 	}
 
+	double sat_T(double T, double *rho_f, double *rho_g, FpropsError *err){
+		double p;
+		fprops_sat_T(T, &p, rho_f, rho_g, $self, err);
+		return p;
+	}
 
 	// raise exception if user attempts to write to these variables
 	//%typemap(in) double{

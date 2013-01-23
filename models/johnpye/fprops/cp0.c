@@ -107,7 +107,7 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 		}
 
 		if(cp0red != R){
-			fprintf(stderr,"WARNING: adjusting for R (=%f) != cp0red (=%f)...\n",R,cp0red);
+			MSG("WARNING: adjusting for R (=%f) != cp0red (=%f)...\n",R,cp0red);
 			double X = cp0red / R;
 			// scale for any differences in R and cpstar */
 			for(i=0; i < N->np; ++i)N->pt[i].a *= X;
