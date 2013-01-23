@@ -61,6 +61,7 @@ double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsErr
 
 //#define HELM_DEBUG
 #define HELM_ERRORS
+//#define SAT_DEBUG
 
 #ifdef HELM_DEBUG
 # include "color.h"
@@ -609,12 +610,12 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 	double pc = data->p_c;
 
 #ifdef SAT_DEBUG
-	MSG("initial guess rho_f = %f, rho_g = %f\n",rhof,rhog);
-	MSG("calculating for %s, T = %.12e",d->name,T);
+	MSG("initial guess rho_f = %f, rho_g = %f",rhof,rhog);
+	MSG("calculating at T = %.12e",T);
 #endif
 
 	int i = 0;
-	while(i++ < 70){
+	while(i++ < 200){
 		assert(!isnan(rhog));
 		assert(!isnan(rhof));
 #ifdef SAT_DEBUG
@@ -652,7 +653,7 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 		//MSG("DET = %f",DET);
 
 		// 'gamma' needs to be increased to 0.5 for water to solve correctly (see 'test/sat.c')
-#define gamma 0.45
+#define gamma 1
 		rhof += gamma/DET * (Fg*G - Gg*F);
 		rhog += gamma/DET * ( Gf*F - Ff*G);
 #undef gamma
@@ -785,7 +786,7 @@ double helm_resid(double tau, double delta, const HelmholtzRunData *HD){
 	n = HD->np;
 	pt = &(HD->pt[0]);
 
-	MSG("tau=%f, del=%f",tau,delta);
+	//MSG("tau=%f, del=%f",tau,delta);
 	//if(isinf(tau))abort();
 
 	/* power terms */
