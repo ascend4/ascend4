@@ -50,8 +50,8 @@ int main(void){
 	assert(fabs(psat1 - psat2) < 1e-3); \
 	/*MSG("At T = %f K (%f C), psat = %f, rhof = %f, rhog = %f",T0,T0-273.15,psat1,rhof,rhog);*/
 
-//	const char *fluids[] = {"water","toluene","ethanol",NULL};
-	const char *fluids[] = {"toluene",NULL};
+	const char *fluids[] = {"water","toluene","ethanol","isohexane", NULL};
+//	const char *fluids[] = {"toluene",NULL};
 	char **fi = fluids;
 	while(*fi){
 		MSG("TESTING %s",*fi);
@@ -82,6 +82,13 @@ int main(void){
 	psat1 = 709.144373;
 	fprops_sat_p(psat1,&T0,&rhof,&rhog,P,&err);
 	assert(!err);
+
+	P = fprops_fluid("isohexane","helmholtz",NULL);
+	assert(P);
+	err = FPROPS_NO_ERROR;
+
+	// low-density saturation cases (I think)
+	TEST_SAT(P->data->T_t);
 
 	/*MSG("At p = %f Pa, got T = %f K (%f C), rhof = %f, rhog = %f", psat1, T0, T0-273.15, rhof, rhog)*/;
 

@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SOLVE_PH_ERRORS
 
 //#define FPE_DEBUG
-#define ASSERT_DEBUG
+//#define ASSERT_DEBUG
 
 #ifdef ASSERT_DEBUG
 # include <assert.h>
@@ -233,6 +233,19 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 			double h1 = fluid->h_fn(T1,rho1, fluid->data, err);
 			assert(!isnan(h1));
 
+			if(i >= 2){
+				while(p1 <= 0){
+					rho1 = rho1 - delta_rho;
+					T1 = T1 - delta_T;
+					delta_rho *= 0.5;
+					delta_T *= 0.5;
+					rho1 = rho1 + delta_rho;
+					T1 = T1 + delta_T;
+					p1 = fluid->p_fn(T1,rho1,fluid->data, err);
+					MSG("Set smaller step as p < 0. T1 = %f, rho1 = %f --> p1 = %f",T1, rho1, p1);
+				}
+			}
+
 			MSG("  %d: T = %f, rho = %f\tp = %f bar, h = %f kJ/kg", i, T1, rho1, p1/1e5, h1/1e3);
 			//MSG("      p error = %f bar",(p1 - p)/1e5);
 			//MSG("      h error = %f kJ/kg",(h1 - h)/1e3);
@@ -322,7 +335,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 			if(T1 + delta_T > 5000) delta_T = 5000 - T1;
 
 			/* avoid huge step */
-			while(fabs(delta_T / T1) > 0.6){
+			while(fabs(delta_T / T1) > 0.7){
 				MSG("Reduce delta_T");
 				delta_T *= 0.5;
 			}
