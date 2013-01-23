@@ -55,6 +55,13 @@ int main(void){
 	assert(fabs(T - T0) < TOL_T); \
 	assert(fabs(rho - rho0) < TOL_RHO);
 
+
+	P = fprops_fluid("isohexane","helmholtz","J. Chem. Eng. Data, 51");
+	assert(P);
+	
+	TEST_PH(119.6, 807.5305511649);
+
+
 	P = fprops_fluid("water","helmholtz",NULL);
 	assert(P);
 	err = FPROPS_NO_ERROR;

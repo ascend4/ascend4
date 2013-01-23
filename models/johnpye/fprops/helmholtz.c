@@ -88,7 +88,7 @@ double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsErr
 #endif
 
 
-#define ASSERT_DEBUG
+//#define ASSERT_DEBUG
 #ifdef ASSERT_DEBUG
 # include <assert.h>
 #else
@@ -652,7 +652,7 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 		//MSG("DET = %f",DET);
 
 		// 'gamma' needs to be increased to 0.5 for water to solve correctly (see 'test/sat.c')
-#define gamma 0.5
+#define gamma 0.45
 		rhof += gamma/DET * (Fg*G - Gg*F);
 		rhog += gamma/DET * ( Gf*F - Ff*G);
 #undef gamma
