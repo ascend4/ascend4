@@ -121,7 +121,7 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	PureFluid *P = FPROPS_NEW(PureFluid);
 
 	if(E->type != FPROPS_HELMHOLTZ){
-		fprintf(stderr,"%s: Error: invalid EOS data, wrong type\n",__func__);
+		ERRMSG("invalid EOS data, wrong type");
 		return NULL;
 	}
 
@@ -179,13 +179,13 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	MSG("Calculating critical pressure at T_c = %f K, rho_c = %f kg/m3",P->data->T_c, P->data->rho_c);
 	P->data->p_c = helmholtz_p(P->data->T_c, P->data->rho_c, P->data, &err);
 	if(err){
-		fprintf(stderr,"Failed to calculate critical pressure\n");
+		ERRMSG("Failed to calculate critical pressure.");
 		FPROPS_FREE(P->data);
 		FPROPS_FREE(P->data->corr.helm);
 		return NULL;
 	}
 	if(P->data->p_c <= 0){
-		fprintf(stderr,"Calculated a critical pressure <= 0! (value = %f)\n",P->data->p_c);
+		ERRMSG("Calculated a critical pressure <= 0! (value = %f)",P->data->p_c);
 		//return NULL;
 	}
 
@@ -196,7 +196,7 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	}
 	int res = fprops_set_reference_state(P,ref);
 	if(res){
-		fprintf(stderr,"Unable to apply reference state (type %d, err %d)\n",ref->type,res);
+		ERRMSG("Unable to apply reference state (type %d, err %d)",ref->type,res);
 		return NULL;
 	}
 
@@ -653,7 +653,8 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 		//MSG("DET = %f",DET);
 
 		// 'gamma' needs to be increased to 0.5 for water to solve correctly (see 'test/sat.c')
-#define gamma 1
+		// 'gamma' needs to be not more than 0.4 for ethanol to solve correctly (see 'test/sat.c')
+#define gamma 0.40
 		rhof += gamma/DET * (Fg*G - Gg*F);
 		rhog += gamma/DET * ( Gf*F - Ff*G);
 #undef gamma
@@ -1209,10 +1210,12 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzRunData *HD){
 			}
 		}
 	}
+#if RESID_DEBUG
 	if(isnan(res)){
-		fprintf(stderr,"tau = %.12e, del = %.12e\n",tau,delta);
+		fprintf(stderr,"got NAN in %s: tau = %.12e, del = %.12e\n",__func__,tau,delta);
 	}
 	assert(!__isnan(res));
+#endif
 
 	/* gaussian terms */
 	n = HD->ng;

@@ -6,6 +6,8 @@
 #include <stdio.h>
 
 //#define FLUIDS_DEBUG
+#define FLUIDS_ERRORS
+
 #ifdef FLUIDS_DEBUG
 # include "color.h"
 # define MSG(FMT, ...) \
@@ -17,6 +19,18 @@
 	fprintf(stderr,FMT "\n",##__VA_ARGS__)
 #else
 # define MSG(ARGS...) ((void)0)
+#endif
+
+/* TODO centralise declaration of our error-reporting function somehow...? */
+#ifdef FLUIDS_ERRORS
+# include "color.h"
+# define ERRMSG(STR,...) \
+	color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"ERROR:");\
+	color_off(stderr);\
+	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
+#else
+# define ERRMSG(ARGS...) ((void)0)
 #endif
 
 /* declare the external EosData objects */
@@ -69,7 +83,7 @@ const PureFluid *fprops_fluid(const char *name, const char *corrtype, const char
 			}
 		}
 	}
-	MSG("Returning null");
+	ERRMSG("No fluid found matching name '%s', type '%s' and source '%s'",name,corrtype,source);
 	return NULL;
 }
 

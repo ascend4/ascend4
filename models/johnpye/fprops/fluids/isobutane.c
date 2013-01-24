@@ -85,7 +85,7 @@ static const HelmholtzData helmholtz_data_isobutane = {
 };
 
 EosData eos_isobutane = {
-	"butane"
+	"isobutane"
 	,"D Buecker and W Wagner, 2006. 'Reference Equations of State for the "
 	"Thermodynamic Properties of Fluid Phase n-Butane and Isobutane,' "
 	"J. Phys. Chem. Ref. Data, 35(2):929-1019."

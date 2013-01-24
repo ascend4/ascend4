@@ -95,7 +95,7 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 		}
 
 		if(add_const_term){
-			fprintf(stderr,"WARNING: adding constant term %d in cp0, is that what you really want?\n",i);
+			MSG("WARNING: adding constant term %d in cp0, is that what you really want?",i);
 			N->pt[i].a = -1;
 			N->pt[i].p = 0;
 			N->np++;
