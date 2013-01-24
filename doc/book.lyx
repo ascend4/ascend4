@@ -5,8 +5,8 @@
 \textclass book
 \begin_preamble
 \usepackage[bookmarks,bookmarksnumbered=true]{hyperref}
-\usepackage{lmodern}
 \usepackage{color}
+\usepackage{lmodern}
 \definecolor{darkred}{rgb}{0.55,0,0}
 \definecolor{darkgreen}{rgb}{0,0.55,0}
 
