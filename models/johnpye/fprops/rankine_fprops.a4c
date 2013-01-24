@@ -695,7 +695,7 @@ METHOD default_self;
 	RUN rankine_common::default_self;
 	BO.outlet.h := 3000 {kJ/kg}; (* guess *)
 	TU.outlet.h := 3000 {kJ/kg}; (* guess *)
-	CO.outlet.h := 200 {kJ/kg};
+	CO.outlet.h := 300 {kJ/kg};
 	CO.outlet.p := 10 {kPa};
 END default_self;
 END rankine_water;
@@ -783,6 +783,7 @@ END rankine_toluene;
 
 MODEL rankine_ammonia REFINES rankine_common;
 	cd.component :== 'ammonia';
+	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN ClearAll;

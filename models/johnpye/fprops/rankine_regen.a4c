@@ -18,7 +18,7 @@ MODEL rankine_regen_water;
 	PU2 IS_A pump_simple;
 
 	BO.cd.component :== 'water';
-	BO.cd.type :== 'pengrob';
+	BO.cd.type :== 'helmholtz';
 
 	(* main loop *)
 	BO.outlet, TU1.inlet ARE_THE_SAME;
@@ -332,6 +332,7 @@ END rankine_regen_common;
 
 MODEL rankine_regen_toluene REFINES rankine_regen_common;
 	BO.cd.component :== 'toluene';
+	BO.cd.type :== 'helmholtz';
 	HE.inlet_heat.T = HE.outlet.T + 33 {K};
 (*	HE.outlet_heat.T = HE.inlet.T + 12 {K};*)
 METHODS
@@ -363,6 +364,7 @@ END rankine_regen_toluene;
 
 MODEL rankine_regen_ammonia REFINES rankine_regen_common;
 	BO.cd.component :== 'ammonia';
+	BO.cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
