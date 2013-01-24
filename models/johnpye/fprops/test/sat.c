@@ -34,7 +34,21 @@ int main(void){
 #define COMMA ,
 	const char *helmfluids[] = { FLUIDS(FNAME,COMMA) COMMA RPPFLUIDS(FNAME,COMMA) };
 #undef FNAME
+	const char *corrtypes[] = {"pengrob","helmholtz"};
+	const char *corrinitial[] = {"P","H"};
+	enum corrtypes_enum {CORRTYPE_PENGROB,CORRTYPE_HELMHOLTZ,CORRTYPE_N};
+#define FHELM(F) CORRTYPE_HELMHOLTZ
+#define FPR(F) CORRTYPE_PENGROB
+	const enum corrtypes_enum corrfluids[] = {FLUIDS(FHELM,COMMA) COMMA RPPFLUIDS(FPR,COMMA) };
+#undef FHELM
+#undef FPR
+#define FRPP(F) "RPP"
+#define FUN(F) NULL
+	const char *srcfluids[] = {FLUIDS(FUN,COMMA) COMMA RPPFLUIDS(FRPP,COMMA) };
+#undef FUN
+#undef FRPP
 #undef COMMA
+
 	const int n = sizeof(helmfluids)/sizeof(char *);
 	int i,j;
 	int nerrfluids = 0;
@@ -42,19 +56,19 @@ int main(void){
 	MSG("Testing convergence of saturation curves for all helmholtz fluids...");
 	for(i=0; i<n; ++i){
 		int nerr = 0;
-		P = fprops_fluid(helmfluids[i],NULL,NULL);
+		P = fprops_fluid(helmfluids[i],corrtypes[corrfluids[i]],srcfluids[i]);
 		if(!P){
-			MSG("Error initialising fluid '%s'",helmfluids[i]);
+			MSG("Error initialising fluid '%s' type '%s'",helmfluids[i],corrtypes[corrfluids[i]]);
 			nerr = 1;
 			color_on(stdout,ASC_FG_BRIGHTRED);
-			fprintf(stdout,"I");
+			fprintf(stdout,"%s",corrinitial[corrfluids[i]]);
 			color_off(stdout);
 		}else{
 			double Tt = P->data->T_t;
 			double Tc = P->data->T_c;
 			if(Tt == 0){
 				color_on(stdout,ASC_FG_YELLOW);
-				fprintf(stdout,"T");
+				fprintf(stdout,"%s",corrinitial[corrfluids[i]]);
 				color_off(stdout);
 				Tt = 273.15 - 20;
 				if(Tt > Tc){
@@ -62,7 +76,7 @@ int main(void){
 				}
 			}else{
 				color_on(stdout,ASC_FG_BRIGHTGREEN);
-				fprintf(stdout,"I");
+				fprintf(stdout,"%s",corrinitial[corrfluids[i]]);
 				color_off(stdout);
 			}
 			double nT = 170;
