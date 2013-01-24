@@ -1975,38 +1975,6 @@ def CheckLatex2HTML(context):
 	return r
 
 #----------------
-# 'lmodern' package for LaTeX available?
-
-lmodern_test_text = r"""
-\documentclass{article}
-\usepackage{lmodern}
-\title{Cartesian closed categories and the price of eggs}
-\author{Jane Doe}
-\date{September 2012}
-\begin{document}
-   \maketitle
-   Hello world!
-\end{document}
-""";
-
-def CheckLModern(context):
-	context.Message("Checking for lmodern...")
-	b = context.env.get("DVI")
-	if not b:
-		context.Result(False)
-		return False
-	ff = context.env.get('LATEXFLAGS')
-	context.env.Append(LATEXFLAGS=['-interaction=nonstopmode','-halt-on-error'])
-	is_ok = context.TryBuild(builder=b,text=lmodern_test_text,extension=".latex")
-	print "is_ok=",is_ok
-	if ff is not None:
-		context.env['LATEXFLAGS'] = ff
-	else:
-		del context.env['LATEXFLAGS']
-	context.Result(is_ok)
-	return is_ok
-
-#----------------
 # GCC Version sniffing
 
 # TODO FIXME
@@ -2030,7 +1998,6 @@ conf = Configure(env
 		, 'CheckDMalloc' : CheckDMalloc
 		, 'CheckLyx' : CheckLyx
 		, 'CheckLatex2HTML' : CheckLatex2HTML
-		, 'CheckLModern' : CheckLModern
 		, 'CheckGraphViz' : CheckGraphViz
 		, 'CheckGraphVizBoolean' : CheckGraphVizBoolean
 		, 'CheckUFSparse' : CheckUFSparse
@@ -2383,13 +2350,6 @@ if with_doc_build:
 	if not conf.CheckLyx():
 		with_doc_build = False
 		without_doc_build_reason="unable to locate LyX"
-
-	if with_doc_build:
-		with_latex2html = conf.CheckLatex2HTML()
-
-		if conf.CheckLModern() is False:
-			with_doc_build = False
-			without_doc_build_reason="'lmodern' is not available"
 
 # TODO: -D_HPUX_SOURCE is needed
 
