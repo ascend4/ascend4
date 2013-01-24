@@ -26,6 +26,7 @@ REQUIRE "johnpye/airprops.a4c";
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 REQUIRE "johnpye/fprops/heatex_pinch.a4c";
 
+IMPORT "sensitivity/solve";
 IMPORT "johnpye/extpy/extpy";
 IMPORT "johnpye/fprops/cycle_plot_rachel";
 
@@ -146,6 +147,7 @@ END brayton_common;
 
 MODEL brayton_co2 REFINES brayton_common;
 	cd.component :== 'carbondioxide';
+	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN ClearAll;
@@ -209,21 +211,22 @@ END regenerator;
 
 MODEL regenerator_test REFINES regenerator;
 	inlet.cd.component :== 'carbondioxide';
-	n :== 8;
+	inlet.cd.type :== 'helmholtz';
 	inlet_hot.cd, inlet.cd ARE_THE_SAME;
+	n :== 8;
 METHODS
 METHOD on_load;
+	RUN heatex_pinch::default_self;
 	RUN bound_self;
-	FIX inlet.mdot, inlet.p, inlet.T;
-	FIX inlet_hot.mdot, inlet_hot.p, inlet_hot.T;
-	inlet.mdot := 1 {kg/s};
-	inlet.p := 10 {bar};
-	inlet.T := 300 {K};
-	inlet_hot.mdot := 1.05 {kg/s};
-	inlet_hot.p := 15 {bar};
-	inlet_hot.T := 500 {K};
-	FIX epsilon;
-	epsilon := 1;
+	RUN heatex_pinch::default_self;
+	(* heat transfer for a particular value of temperature drop at the pinch *)
+	FIX inlet.p := 200 {bar};
+	FIX inlet_hot.p := 70 {bar}; (* doesn't currently solve for CO2 if the pressure is too low... needed to figure out why *)
+	FIX inlet_hot.T := 100 {K} + 273.15 {K};
+	FIX inlet.T := 31 {K} + 273.15 {K};
+	FIX mdot_hot := 1.1 {kg/s};
+	FIX mdot := 0.81 {kg/s};
+	FIX DT_pinch := 10 {K};
 END on_load;
 END regenerator_test;
 
@@ -248,6 +251,7 @@ MODEL brayton_regen;
 	RE IS_A heatex_pinch;
 	cd ALIASES BO.cd;
 	cd.component :== 'carbondioxide';
+	cd.type :== 'helmholtz';
 	RE.n :== 8;
 	
 	PU.outlet, RE.inlet ARE_THE_SAME;
@@ -286,8 +290,15 @@ MODEL brayton_regen;
 	eta_PU ALIASES PU.eta;
 	DT_RE ALIASES RE.DT_pinch;
 METHODS
+METHOD default_self;
+	RUN BO.default_self;
+	RUN TU.default_self;
+	RUN CO.default_self;
+	RUN PU.default_self;
+	RUN RE.default_self;
+END default_self;
 METHOD on_load;
-	RUN RE.bound_self;
+	RUN default_self;
 	FIX PU.eta, TU.eta;
 	PU.eta := 0.8;
 	TU.eta := 0.85;
@@ -349,8 +360,20 @@ MODEL brayton_regen_reheat_intercool;
 	eta IS_A fraction;
 	eta = Wdot / Qdot_H;
 METHODS
+METHOD default_self;
+	RUN BU1.default_self;
+	RUN BU2.default_self;
+	RUN TU1.default_self;
+	RUN TU2.default_self;
+	RUN CO1.default_self;
+	RUN CO2.default_self;
+	RUN RE.default_self;
+	RUN DI1.default_self;
+	RUN DI2.default_self;
+END default_self;
 METHOD on_load;
 	RUN RE.bound_self;
+	RUN default_self;
 	FIX BU1.eta := 1;
 	FIX BU2.eta := 1;
 	FIX TU1.eta := 0.85;
@@ -368,6 +391,7 @@ END brayton_regen_reheat_intercool;
 
 MODEL brayton_regen_reheat_intercool_co2 REFINES brayton_regen_reheat_intercool;
 	cd.component :== 'carbondioxide';
+	cd.type :== 'helmholtz';
 	RE.n :== 8;
 METHODS
 METHOD on_load;
@@ -378,7 +402,8 @@ METHOD on_load;
 	FIX p_2a := 150 {bar};
 	FIX p_2b := p_2a;
 	FIX p_3 := 300 {bar};
-	FIX RE.epsilon := 0.77;
+	(* FIX RE.epsilon := 0.77; *)
+	FIX RE.DT_pinch := 15 {K};
 END on_load;
 END brayton_regen_reheat_intercool_co2;
 

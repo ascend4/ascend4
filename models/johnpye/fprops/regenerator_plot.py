@@ -24,8 +24,10 @@ def regenerator_plot_fprops(self):
 	"""Plot T-H diagram of regenerator"""
 	import loading; loading.load_matplotlib(throw=True)
 	ioff();	figure(); hold(1)
-	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
-	extpy.getbrowser().reporter.reportNote("Fluid is %s" % D.name)	
+	FH = fprops.fluid(str(self.hxd.component_hot.getSymbolValue()),str(self.hxd.type_hot.getSymbolValue()))
+	FC = fprops.fluid(str(self.hxd.component.getSymbolValue()),str(self.hxd.type.getSymbolValue()))
+
+	extpy.getbrowser().reporter.reportNote("Hot fluid is %s, cold fluid is %s" % (FH.name, FC.name))	
 
 	plot_TH(pconsth(self.inlet_hot, self.outlet_hot, 50),'r-',
 		Href = (float(self.outlet_hot.h)*float(self.outlet_hot.mdot))\
@@ -35,7 +37,7 @@ def regenerator_plot_fprops(self):
 		Href = (float(self.inlet.h)*float(self.inlet.mdot))\
 	)
 
-	title(unicode(r"%s heat exchanger" % D.name))
+	title(unicode(r"%s-%s heat exchanger" % (FH.name, FC.name)))
 	ylabel(unicode(r"T / [°C]"))
 	xlabel("H / [MW]")
 

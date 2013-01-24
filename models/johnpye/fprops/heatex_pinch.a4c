@@ -1,11 +1,17 @@
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 IMPORT "johnpye/fprops/heatex_pinch";
-(*IMPORT "johnpye/extpy/extpy";
-IMPORT "johnpye/fprops/regenerator_plot";*)
+IMPORT "johnpye/extpy/extpy";
+IMPORT "johnpye/fprops/regenerator_plot";
 
 MODEL heatex_pinch_data;
+	(* this model exists simply to convey the necessary component data to the
+	external relation that solves the heat exchanger behaviour. *)
 	component IS_A symbol_constant;
+	type IS_A symbol_constant;
+
 	component_hot IS_A symbol_constant;
+	type_hot IS_A symbol_constant;
+
 	n IS_A integer_constant;
 END heatex_pinch_data;
 
@@ -22,6 +28,8 @@ MODEL heatex_pinch REFINES stream_equipment;
 	hxd IS_A heatex_pinch_data;
 	hxd.component, inlet.cd.component ARE_THE_SAME;
 	hxd.component_hot, inlet_hot.cd.component ARE_THE_SAME;
+	hxd.type, inlet.cd.type ARE_THE_SAME;
+	hxd.type_hot, inlet_hot.cd.type ARE_THE_SAME;
 	n ALIASES hxd.n;
 
 	Qdot IS_A energy_rate;
@@ -44,11 +52,15 @@ END heatex_pinch;
 (* test case -- HEL from brayton_split model *)
 MODEL heatex_pinch_test REFINES heatex_pinch;
 	inlet.cd.component :== 'carbondioxide';
+	inlet.cd.type :== 'helmholtz';
 	inlet_hot.cd.component :== 'carbondioxide';
+	inlet_hot.cd.type :== 'helmholtz';
 	n :== 8;
 METHODS
 METHOD on_load;
 	RUN heatex_pinch::default_self;
+	(* in this configuration, we iterate to calculate the heat transfer 
+	occuring for a particular pinch temperature *)
 	FIX inlet.p := 200 {bar};
 	FIX inlet_hot.p := 74 {bar};
 	FIX inlet_hot.T := 100 {K} + 273.15 {K};
