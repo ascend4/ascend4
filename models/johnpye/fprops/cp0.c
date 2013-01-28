@@ -143,6 +143,12 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 	return N;
 }
 
+void cp0_destroy(Phi0RunData *N){
+	if(N->pt)FPROPS_FREE(N->pt);
+	if(N->et)FPROPS_FREE(N->et);
+	FPROPS_FREE(N);
+}
+
 /*---------------------------------------------
   IDEAL COMPONENT RELATIONS
 */

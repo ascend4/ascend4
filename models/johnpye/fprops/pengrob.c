@@ -88,6 +88,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 	P->data = FPROPS_NEW(FluidData);
 
 	/* metadata */
+	// TODO should we copy this so that we can uncouple the filedata? */
 	P->name = E->name;
 	P->source = E->source;
 	P->type = FPROPS_PENGROB;
@@ -137,8 +138,9 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 				return NULL;
 			}
 			double Zc = 0.307;
-			D->rho_c = D->p_c / (Zc * D->R * D->T_c); 
-		}			
+			D->rho_c = D->p_c / (Zc * D->R * D->T_c);
+			helmholtz_destroy(PH);
+		}
 #endif
 		break;
 #undef I
@@ -210,6 +212,14 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 	//P->sat_fn = &pengrob_sat_akasaka;
 
 	return P;
+}
+
+
+void pengrob_destroy(PureFluid *P){
+	cp0_destroy(P->data->cp0);
+	FPROPS_FREE(P->data->corr.pengrob);
+	FPROPS_FREE(P->data);
+	FPROPS_FREE(P);
 }
 
 

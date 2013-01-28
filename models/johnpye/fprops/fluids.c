@@ -4,8 +4,9 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 
-//#define FLUIDS_DEBUG
+#define FLUIDS_DEBUG
 #define FLUIDS_ERRORS
 
 #ifdef FLUIDS_DEBUG
@@ -101,5 +102,24 @@ const PureFluid *fprops_get_fluid(int i){
 	return NULL;
 }
 
-
+void fprops_fluid_destroy(const PureFluid *P){
+	MSG("Freeing data for lfuid '%s'",P->name);
+	switch(P->type){
+	case FPROPS_HELMHOLTZ:
+		helmholtz_destroy(P);
+		break;
+	case FPROPS_PENGROB:
+		pengrob_destroy(P);
+		break;
+	case FPROPS_CUBIC:
+		assert(FPROPS_CUBIC != P->type);
+		break;
+	case FPROPS_IDEAL:
+	case FPROPS_REDKW:
+	case FPROPS_SOAVE:
+	case FPROPS_MBWR:
+		ERRMSG("Not implemented: fluid '%s' of type %d to be destroyed",P->name,P->type);
+		break;
+	}
+}
 

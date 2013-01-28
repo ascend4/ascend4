@@ -96,12 +96,16 @@ typedef struct{} FluidState;
 typedef struct{} PureFluid;
 
 /* FIXME what should we do with ctors and dtors...? */
-//%nodefaultdtor;
+//%nodefaultdtor PureFluid;
+%nodefaultctor PureFluid;
 
 // use SWIG's generalised exceptions
 %include <exception.i>
 
 %extend PureFluid{
+	// destructor: doesn't see to work
+	~PureFluid();
+
 	// use a local _fprops___err variable to catch and raise errors from FPROPS
 	%typemap(in,numinputs=0) FpropsError *err (FpropsError _fprops___err = 0) {
 		$1 = &_fprops___err;
@@ -210,6 +214,11 @@ typedef struct{} PureFluid;
 }
 
 %{
+void delete_PureFluid(PureFluid *P){
+	fprintf(stderr,"DESTROY\n");
+	fprops_fluid_destroy(P);
+}
+
 // TODO trim this stuff down using some macro magic
 
 double PureFluid_T_t_get(const PureFluid *fluid){

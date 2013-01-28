@@ -157,7 +157,7 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	H->rho_star = I->rho_star;
 	H->T_star = I->T_star;
 	H->np = I->np;
-	// FIXME copy et, ct, pt to runtime struct?
+	// FIXME copy et, ct, pt to runtime struct?, FIXME see helmholtz_destroy below.
 	H->pt = I->pt;
 	H->ng = I->ng;
 	H->gt = I->gt;
@@ -202,6 +202,14 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 
 #undef I
 	return P;
+}
+
+void helmholtz_destroy(PureFluid *P){
+	assert(FPROPS_HELMHOLTZ == P->data);
+	cp0_destroy(P->data->cp0);
+	FPROPS_FREE(P->data->corr.helm);
+	FPROPS_FREE(P->data);
+	FPROPS_FREE(P);
 }
 
 /**

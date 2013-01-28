@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <stdlib.h>
 
-#define SOLVE_PH_DEBUG
+//#define SOLVE_PH_DEBUG
 #define SOLVE_PH_ERRORS
 
 //#define FPE_DEBUG

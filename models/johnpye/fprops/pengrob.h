@@ -21,4 +21,6 @@
 
 PureFluid *pengrob_prepare(const EosData *data, const ReferenceState *ref);
 
+void pengrob_destroy(PureFluid *data);
+
 #endif //PENGROB_H

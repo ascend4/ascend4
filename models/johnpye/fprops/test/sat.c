@@ -92,7 +92,7 @@ int main(void){
 				fprintf(stdout,"%s",corrinitial[corrfluids[i]]);
 				color_off(stdout);
 			}
-			double nT = 500;
+			double nT = 10;
 			double rT = 1/Tt;
 			double drT = (1/Tc - 1/Tt) / nT;
 			for(j=0; j<nT; ++j){
@@ -114,6 +114,7 @@ int main(void){
 		}
 		fprintf(stdout,":%s\n",helmfluids[i]);
 		if(nerr)errfluids[nerrfluids++] = helmfluids[i];
+		fprops_fluid_destroy(P); P = NULL;
 	}
 
 	if(nerrfluids){
