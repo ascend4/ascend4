@@ -29,7 +29,7 @@
 
 int main(void){
 	const PureFluid *P;
-	FpropsError err;
+	FpropsError err = FPROPS_NO_ERROR;
 	FluidState S;
 	double T0, rho0, p, h, T, rho;
 
@@ -55,16 +55,23 @@ int main(void){
 	assert(fabs(T - T0) < TOL_T); \
 	assert(fabs(rho - rho0) < TOL_RHO);
 
+	P = fprops_fluid("isohexane","pengrob","J. Chem. Eng. Data, 51");
+	assert(P);
+
+	TEST_PH(128.4465, 1.);
+	TEST_PH(1.284465e+02, 1/1.693087e-03);
+	TEST_PH(1.284465e+02, 1/2.232836e-03);
+	TEST_PH(1.284465e+02, 1/2.944654e-03);
+	TEST_PH(1.284465e+02, 1/3.883396e-03);
+	TEST_PH(1.284465e+02, 1/5.121405e-03);
 
 	P = fprops_fluid("isohexane","helmholtz","J. Chem. Eng. Data, 51");
 	assert(P);
+
+	TEST_PH(119.6, 807.530551164909);
 	
-	TEST_PH(119.6, 807.5305511649);
-
-
 	P = fprops_fluid("water","helmholtz",NULL);
 	assert(P);
-	err = FPROPS_NO_ERROR;
 
 	TEST_PH(314.4054538268115, 999.7897902747587);
 
@@ -88,6 +95,7 @@ int main(void){
 	MSG("p = %f",p);
 	MSG("h = %f",h);
 
+	/* all done? report success */
 	fprintf(stderr,"\n");
 	color_on(stderr,ASC_FG_BRIGHTGREEN);
 	fprintf(stderr,"SUCCESS (%s)",__FILE__);

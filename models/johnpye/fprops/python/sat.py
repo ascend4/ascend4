@@ -1,6 +1,6 @@
 from fprops import *
 
-D = fluid("n_eicosane")
+D = fluid("isohexane")
 
 from pylab import *
 hold(1)
@@ -57,8 +57,8 @@ plot(rhof2,TT2,'b.',label="liquid (OK, converged)")
 
 
 legend(loc=8)
-xlabel('Density')
-ylabel('Temperature')
+xlabel('Density / [kg/m3]')
+ylabel("Temperature / K");
 #legend(L)
 #axis([10,1200,1.,1e6 * D.p_c])
 #axis([0,1000,0,100e6])
@@ -71,6 +71,8 @@ plot(TT,psata/1e5,label="Acentric")
 #plot(TT1,psat1/1e5,'rx',label="Maxwell (error)")
 plot(TT2,psat2/1e5,'g.',label="FPROPS (OK)")
 legend(loc=2)
+xlabel("Temperature / K");
+ylabel(r"$p_\mathrm{sat}(T)$ / [bar]");
 axis([T_min, D.T_c, 0, D.p_c/1e5])
 show()
 

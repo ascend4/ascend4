@@ -49,7 +49,7 @@ int main(void){
 	assert(!err); \
 	rhog = S.rho; \
 	assert(fabs(psat1 - psat2) < 1e-3); \
-	MSG("At T = %f K (%f C), psat = %f, rhof = %f, rhog = %f ('%s')",T0,T0-273.15,psat1,rhof,rhog,P->name);
+	/*MSG("At T = %f K (%f C), psat = %f, rhof = %f, rhog = %f ('%s')",T0,T0-273.15,psat1,rhof,rhog,P->name);*/
 
 	// following tests came form sat.c failures, mostly at close to critical point temp?
 	P = fprops_fluid("trans_difluorodiazine","pengrob","RPP"); assert(P);
@@ -73,7 +73,7 @@ int main(void){
 //	const char *fluids[] = {"toluene",NULL};
 	const char **fi = fluids;
 	while(*fi){
-		MSG("TESTING %s",*fi);
+		//MSG("TESTING %s",*fi);
 		P = fprops_fluid(*fi,"pengrob",NULL);
 		assert(P);
 		err = FPROPS_NO_ERROR;

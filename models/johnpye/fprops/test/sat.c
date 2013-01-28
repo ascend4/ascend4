@@ -116,15 +116,25 @@ int main(void){
 		if(nerr)errfluids[nerrfluids++] = helmfluids[i];
 	}
 
-	MSG("There were %d fluids with saturation curve errors:",nerrfluids);
-	for(i=0; i<nerrfluids; ++i){
-		fprintf(stderr,"  %s",errfluids[i]);
+	if(nerrfluids){
+		MSG("There were %d fluids with saturation curve errors:",nerrfluids);
+		for(i=0; i<nerrfluids; ++i){
+			fprintf(stderr,"  %s",errfluids[i]);
+		}
 	}
-	fprintf(stderr,"\n");
-	MSG("First %d of the %d errors logged:",MAXNLOGGEDERRORS,nloggederrors);
-	fprintf(stderr,"%s",errorlog);
+	if(nloggederrors){
+		fprintf(stderr,"\n");
+		MSG("First %d of the %d errors logged:",MAXNLOGGEDERRORS,nloggederrors);
+		fprintf(stderr,"%s",errorlog);
+	}
 
 	if(nerrfluids)return nerrfluids;
+
+	fprintf(stderr,"\n");
+	color_on(stderr,ASC_FG_BRIGHTGREEN);
+	fprintf(stderr,"SUCCESS (%s)",__FILE__);
+	color_off(stderr);
+	fprintf(stderr,"\n");
 	return 0;
 }
 

@@ -262,21 +262,28 @@ void fprops_triple_point(double *p_t_out, double *rhof_t_out, double *rhog_t_out
 
 typedef struct{
 	const PureFluid *P;
-	double p;
+	double logp;
 	FpropsError *err;
 	double Terr;
+#ifdef SAT_DEBUG
+	int neval;
+#endif
 } SatPResidData;
 
 static ZeroInSubjectFunction sat_p_resid;
-static double sat_p_resid(double T, void *user_data){
+static double sat_p_resid(double rT, void *user_data){
 #define D ((SatPResidData *)user_data)
-	double p, rhof, rhog;
-	fprops_sat_T(T, &p, &rhof, &rhog, D->P, D->err);
-	if(*(D->err))D->Terr = T;
-	MSG("T = %f --> p = %f, rhof = %f, rhog = %f, RESID %f", T, p, rhof, rhog, (p - D->p));
+	double p, rhof, rhog, resid;
+	fprops_sat_T(1/rT, &p, &rhof, &rhog, D->P, D->err);
+	if(*(D->err))D->Terr = 1/rT;
+	resid = log(p) - D->logp;
+	MSG("T = %f --> p = %f, rhof = %f, rhog = %f, RESID %f", 1/rT, p, rhof, rhog, resid);
 	//if(*(D->err))MSG("Error: %s",fprops_error(*(D->err)));
 	//if(*(D->err))return -1;
-	return p - D->p;
+#ifdef SAT_DEBUG
+	D->neval++;
+#endif
+	return resid;
 #undef D
 }
 
@@ -284,11 +291,31 @@ static double sat_p_resid(double T, void *user_data){
 /**
 	Solve saturation conditions as a function of pressure. 
 
-	TODO Currently, we will just attempt a Brent solver (zeroin) but hopefully 
-	we can do better later. In particular with cubic EOS this approach seems
-	very inefficient. At the very least we should be able to manage a Newton
-	solver...
-*/	
+	Currently this is just a Brent solver. We've tried to improve it slightly
+	by solving for the residual of log(p)-log(p1) as a function of 1/T, which
+	should make the function a bit more linear.
+
+	TODO Shouldn't(?) be hard at all to improve this to use a Newton solver via
+	the Clapeyron equation?
+
+	dp/dT = h_fg/(T*v_fg)
+	
+	where
+
+	h_fg = h(T, rhog) - h(T, rhof)
+	v_fg = 1/rhog - 1/rhof
+	rhof, rhog are evaluated at T.
+
+	We guess T, calculate saturation conditions at T, then evaluate dp/dT,
+	use Newton solver to converge, while checking that we remain within 
+	Tt < T < Tc. It may be faster to iterate using 1/T as the free variable,
+	and log(p) as the residual variable.
+
+	TODO Better still would be to reexamine the EOS and find a strategy similar to
+	the Akasaka algorithm that works with with rhof, rhog as the free variables,
+	see helmholtz.c...? Method above uses nested iteration on T inside p, so is
+	going to be slooooooow, even if it's fairly reliable.
+*/
 void fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const PureFluid *P, FpropsError *err){
 	if(*err){
 		MSG("ERROR FLAG ALREADY SET");
@@ -303,13 +330,18 @@ void fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const P
 	/* FIXME what about checking triple point pressure? */
 	
 
-	SatPResidData D = {P, p, err, 0};
+	SatPResidData D = {
+		P, log(p), err, 0
+#ifdef SAT_DEBUG
+		,0
+#endif
+	};
 	MSG("Solving saturation conditions at p = %f", p);
-	double p1, T, resid;
+	double p1, rT, T, resid;
 	int errn;
 	double Tt = P->data->T_t;
 	if(Tt == 0)Tt = 0.2* P->data->T_c;
-	errn = zeroin_solve(&sat_p_resid, &D, Tt, P->data->T_c, 1e-5, &T, &resid);
+	errn = zeroin_solve(&sat_p_resid, &D, 1./P->data->T_c, 1./Tt, 1e-10, &rT, &resid);
 	if(*err){
 		MSG("FPROPS error within zeroin_solve iteration ('%s', p = %f, p_c = %f): %s"
 			, P->name, p, P->data->p_c, fprops_error(*err)
@@ -325,9 +357,10 @@ void fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const P
 		}
 		*err = FPROPS_NO_ERROR;
 	}
+	T = 1./rT;
 	fprops_sat_T(T, &p1, rho_f, rho_g, P, err);
 	if(!*err)*T_sat = T;
-	MSG("Got p1 = %f, p = %f", p1, p);
+	MSG("Got p1 = %f, p = %f in %d iterations", p1, p, D.neval);
 }
 
 
