@@ -101,7 +101,7 @@ void fprops_solve_Tx(double T, double x, double *rho, const PureFluid *fluid, Fp
 
 	fprops_sat_T(T, &p_sat, &rho_f, &rho_g, fluid, err);
 	if(*err){
-		ERRMSG("Unable to solve saturation state at T = %f (T_c = %f)", T,fluid->data->T_c);
+		ERRMSG("Unable to solve saturation state at T = %f (T_c = %f) for '%s'", T,fluid->data->T_c,fluid->name);
 		*err = FPROPS_SAT_CVGC_ERROR;
 		return;
 	}
