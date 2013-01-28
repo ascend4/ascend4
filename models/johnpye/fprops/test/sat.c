@@ -49,6 +49,19 @@ int main(void){
 #undef FRPP
 #undef COMMA
 
+	char nloggederrors = 0;
+#define MAXNLOGGEDERRORS 25
+#define MAXERRORLOG (MAXNLOGGEDERRORS*80)
+	char errorlog[MAXERRORLOG] = "";
+
+#define ERRLOG(FMT,...) \
+	if(nloggederrors < MAXNLOGGEDERRORS){\
+		int l = strlen(errorlog);\
+		char *s = errorlog + l;\
+		snprintf(s,MAXERRORLOG-l,FMT "\n",##__VA_ARGS__);\
+	}\
+	nloggederrors++;
+
 	const int n = sizeof(helmfluids)/sizeof(char *);
 	int i,j;
 	int nerrfluids = 0;
@@ -92,6 +105,7 @@ int main(void){
 					color_on(stdout,ASC_FG_BRIGHTRED);
 					fprintf(stdout,"C");
 					color_off(stdout);
+					ERRLOG("sat_T(%f) for '%s', omega=%f",T,P->name,P->data->omega);
 				}else{
 					fprintf(stdout,".");
 				}
@@ -107,76 +121,10 @@ int main(void){
 		fprintf(stderr,"  %s",errfluids[i]);
 	}
 	fprintf(stderr,"\n");
+	MSG("First %d of the %d errors logged:",MAXNLOGGEDERRORS,nloggederrors);
+	fprintf(stderr,"%s",errorlog);
+
 	if(nerrfluids)return nerrfluids;
-
-	double T0, rho, rhof, rhog, psat1, psat2;
-
-#define TEST_SAT(T1) \
-	T0 = T1; \
-	fprops_solve_Tx(T0,0,&rho,P,&err); \
-	assert(!err); \
-	S = fprops_set_Trho(T0,rho,P,&err); \
-	assert(!err); \
-	rhof = S.rho; \
-	psat1 = fprops_p(S,&err); \
-	assert(!err); \
-	fprops_solve_Tx(T0,1,&rho,P,&err); \
-	S = fprops_set_Trho(T0,rho,P,&err); \
-	assert(!err); \
-	assert(!err); \
-	psat2 = fprops_p(S,&err); \
-	assert(!err); \
-	rhog = S.rho; \
-	assert(fabs(psat1 - psat2) < 1e-3); \
-	/*MSG("At T = %f K (%f C), psat = %f, rhof = %f, rhog = %f",T0,T0-273.15,psat1,rhof,rhog);*/
-
-	const char *fluids[] = {"water","toluene","ethanol","isohexane", NULL};
-//	const char *fluids[] = {"toluene",NULL};
-	const char **fi = fluids;
-	while(*fi){
-		MSG("TESTING %s",*fi);
-		P = fprops_fluid(*fi,"pengrob",NULL);
-		assert(P);
-		err = FPROPS_NO_ERROR;
-
-		double psat,rhof,rhog;
-		fprops_triple_point(&psat, &rhof, &rhog, P, &err);
-		assert(!err);
-		++fi;
-	}
-
-	P = fprops_fluid("water","helmholtz",NULL);
-	assert(P);
-	err = FPROPS_NO_ERROR;
-
-	// low-density saturation cases (I think)
-	TEST_SAT(273.15+4.1);
-	TEST_SAT(273.15+3.9);
-	TEST_SAT(273.15+4);
-	TEST_SAT(275.212471); 
-	TEST_SAT(275.212471);
-	TEST_SAT(2.732910e+02);
-	TEST_SAT(2.731868e+02);
-	TEST_SAT(2.844904e+02);
-
-	psat1 = 709.144373;
-	fprops_sat_p(psat1,&T0,&rhof,&rhog,P,&err);
-	assert(!err);
-
-	P = fprops_fluid("isohexane","helmholtz",NULL);
-	assert(P);
-	err = FPROPS_NO_ERROR;
-
-	// low-density saturation cases (I think)
-	TEST_SAT(P->data->T_t);
-
-	/*MSG("At p = %f Pa, got T = %f K (%f C), rhof = %f, rhog = %f", psat1, T0, T0-273.15, rhof, rhog)*/;
-
-	fprintf(stderr,"\n");
-	color_on(stderr,ASC_FG_BRIGHTGREEN);
-	fprintf(stderr,"SUCCESS (%s)",__FILE__);
-	color_off(stderr);
-	fprintf(stderr,"\n");
 	return 0;
 }
 

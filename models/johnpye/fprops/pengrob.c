@@ -149,7 +149,27 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		D->T_t = I->T_t;
 		D->T_c = I->T_c;
 		D->p_c = I->p_c;
-		D->rho_c = I->rho_c;
+#if 1
+		double Zc = 0.307;
+		D->rho_c = D->p_c / (Zc * D->R * D->T_c); 
+		if(I->rho_c != -1){
+			/* missing rho_c data, calculate using EOS */
+#define RHOC_ERROR_ACCEPTABLE 5e-2
+			if(fabs(I->rho_c - D->rho_c)/I->rho_c > RHOC_ERROR_ACCEPTABLE){
+				MSG("Warning: rho_c data contradicts PR value by more than %0.3f%%",RHOC_ERROR_ACCEPTABLE*100.);
+			}
+		}
+#else
+		double Zc = 0.307;
+		/* use rho_c from FileData unless missing */
+		if(I->rho_c == -1){
+			D->rho_c = D->p_c / (Zc * D->R * D->T_c); 
+		}else{
+			D->rho_c = I->rho_c;
+			/* ensure p_c is consistent with value of rho_c */
+			D->p_c = D->rho_c * (Zc * D->R * D->T_c); 
+		}
+#endif
 		D->omega = I->omega;
 		D->cp0 = cp0_prepare(I->ideal, D->R, D->T_c);
 		break;
@@ -632,7 +652,7 @@ static ZeroInSubjectFunction resid_dpdrho_T;
 */
 double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err){
 	MidpointSolveData msd = {data, err, T};
-	double rhomin = 0.5 * data->rho_c;
+	double rhomin = 0.9 * data->rho_c;
 	double rhomax = data->rho_c;
 	double rho, resid;
 
@@ -653,7 +673,7 @@ double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err){
 
 	// look for the other stationary point in density range less than rho_c
 	rhomin = data->rho_c;
-	rhomax = 2 * data->rho_c;
+	rhomax = 1.1 * data->rho_c;
 	if(rhomax + 1e-2 > 1./(data->corr.pengrob->b)) rhomax = 1./(data->corr.pengrob->b) - 1e-3;
 
 	res = zeroin_solve(&resid_dpdrho_T, &msd, rhomin, rhomax, 1e-9, &rho, &resid);
