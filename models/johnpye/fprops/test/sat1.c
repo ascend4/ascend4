@@ -69,12 +69,7 @@ int main(void){
 	TEST_SAT(261.003569);
 	TEST_SAT(261.051776);
 
-	P = fprops_fluid("n_eicosane","pengrob","RPP"); assert(P);
-	TEST_SAT(258.238420);
-	TEST_SAT(254.514089);
-	TEST_SAT(257.637699);
-
-	const char *fluids[] = {"water","toluene","ethanol","isohexane", NULL};
+	const char *fluids[] = {"water","toluene","ethanol","isohexane","n_eicosane", NULL};
 //	const char *fluids[] = {"toluene",NULL};
 	const char **fi = fluids;
 	while(*fi){
