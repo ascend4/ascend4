@@ -1,11 +1,16 @@
 from fprops import *
 
-D = fluid("ethanol")
+D = fluid("n_eicosane")
 
 from pylab import *
 hold(1)
 
 T_min = D.T_t
+
+if T_min == 0:
+	print "WARNING: no triple point specified, using 0.4*T_c"
+	T_min = 0.4 * D.T_c
+
 TT = linspace(T_min, D.T_c, 1000)
 
 rhog = array([D.rhog_T_chouaieb(T) for T in TT])
@@ -66,6 +71,6 @@ plot(TT,psata/1e5,label="Acentric")
 #plot(TT1,psat1/1e5,'rx',label="Maxwell (error)")
 plot(TT2,psat2/1e5,'g.',label="FPROPS (OK)")
 legend(loc=2)
-
+axis([T_min, D.T_c, 0, D.p_c/1e5])
 show()
 

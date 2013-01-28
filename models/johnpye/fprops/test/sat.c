@@ -85,14 +85,14 @@ int main(void){
 				color_off(stdout);
 				Tt = 273.15 - 20;
 				if(Tt > Tc){
-					Tt = 0.5 * Tc;
+					Tt = 0.4 * Tc;
 				}
 			}else{
 				color_on(stdout,ASC_FG_BRIGHTGREEN);
 				fprintf(stdout,"%s",corrinitial[corrfluids[i]]);
 				color_off(stdout);
 			}
-			double nT = 170;
+			double nT = 500;
 			double rT = 1/Tt;
 			double drT = (1/Tc - 1/Tt) / nT;
 			for(j=0; j<nT; ++j){
