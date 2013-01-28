@@ -18,6 +18,7 @@ for i in range(num_fluids()):
 			pt, rhoft, rhogt = D.triple_point()
 		except Exception,e:
 			print "ERROR (%s, %d): %s" % (D.name, D.type, str(e))
-		print "%3d:%30s\t%10.2f %10.2f %10.2f %10.3f %10.2f %10.2f" % (i,D.name, Tc-273.15, pc/1e5, rhoc, omega, Tt-273.15, pt)
+		trt = D.T_t / D.T_c
+		print "%3d:%30s\t%10.2f %10.2f %10.2f %10.3f %10.2f %10.2f %10.4f" % (i,D.name, Tc-273.15, pc/1e5, rhoc, omega, Tt-273.15, pt, trt)
 	else:
 		print "%3d:%30s\t%10.2f %10.2f %10.2f %10.3f %10s %10s" % (i,D.name, Tc-273.15, pc/1e5, rhoc, omega, "--","--")

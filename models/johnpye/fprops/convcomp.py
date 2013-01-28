@@ -3,6 +3,10 @@
 Convert Reid, Prausnitz and Poling data from components.a4l into a form that
 FPROPS can swallow. We will assume cubic equation of state with quartic
 polynomial in cp0 to start with.
+
+NOTE NOTE NOTE 
+There may have been custom edits to _rpp.c, check for these before committing
+changes to _rpp.c!
 """
 
 import re, os
