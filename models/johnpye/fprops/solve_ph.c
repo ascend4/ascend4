@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <stdlib.h>
 
-//#define SOLVE_PH_DEBUG
+#define SOLVE_PH_DEBUG
 #define SOLVE_PH_ERRORS
 
 //#define FPE_DEBUG
@@ -115,7 +115,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 	double rhof_t;
 	double p_c = fluid->data->p_c;
 
-	MSG("Solving for p=%f bar, h=%f kJ/kgK (EOS type %d)",p/1e5,h/1e3,fluid->type);
+	MSG("Solving for p=%f bar, h=%f kJ/kgK (EOS type %d, '%s')",p/1e5,h/1e3,fluid->type,fluid->name);
 
 #ifdef FPE_DEBUG
     feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
@@ -126,6 +126,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 #endif
 		MSG("p_c = %f bar",p_c/1e5);
 		if(p < p_c){
+			/* TODO what about testing for p >= p_t? */
 			MSG("Calculate saturation Tsat(p < p_c) with p = %f",p);
 			fprops_sat_p(p, &Tsat, &rhof, &rhog, fluid, err);
 			if(*err){
@@ -137,7 +138,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 			hg = fluid->h_fn(Tsat, rhog, fluid->data, err);
 			MSG("at p = %f bar, T_sat = %f, rhof = %f, hf = %f kJ/kg, hg = %f",p/1e5,Tsat,rhof, hf/1e3,hg/1e3);
 
-			if(hf < h && h < hg){
+			if(hf <= h && h <= hg){
 				MSG("SATURATION REGION");
 				/* saturation region... easy */
 				double x = (h - hf)/(hg - hf);
@@ -152,7 +153,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 				if(!use_guess){
 					*T = Tsat;
 					*rho = rhof;
-					MSG("LIQUID GUESS: T = %f, rho = %f",*T, *rho);
+					MSG("h < hf; LIQUID GUESS: T = %f, rho = %f",*T, *rho);
 				}
 			}else if(!use_guess){
 				*T = 1.1 * Tsat;
@@ -234,7 +235,8 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 			assert(!isnan(h1));
 
 			if(i >= 2){
-				while(p1 <= 0){
+				int nred = 10;
+				while(p1 <= 0 && nred){
 					rho1 = rho1 - delta_rho;
 					T1 = T1 - delta_T;
 					delta_rho *= 0.5;
@@ -243,6 +245,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 					T1 = T1 + delta_T;
 					p1 = fluid->p_fn(T1,rho1,fluid->data, err);
 					MSG("Set smaller step as p < 0. T1 = %f, rho1 = %f --> p1 = %f",T1, rho1, p1);
+					nred--;
 				}
 			}
 

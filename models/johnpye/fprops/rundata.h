@@ -29,7 +29,6 @@ Data declarations as provided in input files are given in filedata.h
 /* TODO remove this dependency eventually (some helmholtz data objects are not yet being copied into new structures*/
 #include "filedata.h"
 
-
 /** Power terms for phi0 (including polynomial) */
 typedef struct Cp0RunPowTerm_struct{
 	double a;
@@ -84,13 +83,19 @@ typedef union CorrelationUnion_union{
 	/* maybe more later */
 } CorrelationUnion;
 
-/* TODO Regarding Cp0Data: some source publications present Cp0 data eg in the
-form of polynomials etc, and others present phi0 data (nondimensionalised ideal
-helmholtz energy). There is a straightforward conversion between the two, see
-precalc.c (although that is still incomplete). What is not clear is whether it
-is better to keep phi0 or cp0 values in the runtime data here. */
+/** All runtime 'core' data for all possible correlations, with exception of 
+correlation-type-ID, function pointers and metadata (URLs, publications etc)
 
-/** All runtime 'core' data for all possible correlations, with exception of correlation-type-ID, function pointers and metadata */
+TODO FluidData (or PureFluid?) could/should be extended to include the following
+frequently-calculated items:
+	- fluid properties at triple point (rhoft, rhogt, pt...)
+	- fluid properties at critical point (hc, ...)
+	- accurate saturation curve data (interpolation/spline/something like that)
+	- solutions of iterative solver results, eg (p,h) pairs.
+
+This data would be held at this level unless it is correlation-specific in 
+nature, in which case it would belong in lower-level rundata structures.
+*/
 typedef struct FluidData_struct{
 	/* common data across all correlations */
 	double R;     /**< specific gas constant */

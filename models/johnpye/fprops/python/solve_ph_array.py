@@ -4,7 +4,7 @@ import sys
 
 #P = fluid('water','helmholtz');
 #P = fluid('ammonia','pengrob');
-P = fluid('isohexane');
+P = fluid('isohexane','pengrob');
 
 print "SOLVING TRIPLE POINT..."
 
@@ -99,5 +99,6 @@ xlabel("specific volume")
 ylabel("temperature")
 
 show()
+ion()
 
 
