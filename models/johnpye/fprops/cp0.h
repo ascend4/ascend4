@@ -20,6 +20,7 @@
 #include "rundata.h"
 
 Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar);
+void cp0_destroy(Phi0RunData *cp0);
 
 double ideal_phi(double tau, double delta, const Phi0RunData *data);
 double ideal_phi_tau(double tau, double delta, const Phi0RunData *data);

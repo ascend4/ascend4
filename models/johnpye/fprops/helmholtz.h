@@ -25,5 +25,7 @@
 
 PureFluid *helmholtz_prepare(const EosData *data, const ReferenceState *ref);
 
+void helmholtz_destroy(PureFluid *data);
+
 #endif
 

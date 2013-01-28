@@ -4,7 +4,7 @@ import sys
 
 #P = fluid('water','helmholtz');
 #P = fluid('ammonia','pengrob');
-P = fluid('isohexane','pengrob');
+P = fluid('carbondioxide','pengrob');
 
 print "SOLVING TRIPLE POINT..."
 
@@ -19,6 +19,10 @@ except RuntimeError,e:
 pmax = 100e6
 
 Tmin = P.T_t
+
+if Tmin == 0:
+	Tmin = 0.4 * P.T_c
+
 Tmax = 2 * P.T_c
 vmin = 1./rhof_t
 vmax = 2./rhog_t
