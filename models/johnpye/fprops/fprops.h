@@ -96,6 +96,7 @@ PureFluid *fprops_prepare(const EosData *E, const char *corrtype);
 */
 int fprops_corr_avail(const EosData *E, const char *corrtype);
 
+char *fprops_corr_type(EosType type);
 
 char *fprops_error(FpropsError err);
 #endif

@@ -92,7 +92,7 @@ int main(void){
 				fprintf(stdout,"%s",corrinitial[corrfluids[i]]);
 				color_off(stdout);
 			}
-			double nT = 10;
+			double nT = 500;
 			double rT = 1/Tt;
 			double drT = (1/Tc - 1/Tt) / nT;
 			for(j=0; j<nT; ++j){
