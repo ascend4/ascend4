@@ -194,6 +194,12 @@ typedef struct{} PureFluid;
 		return p;
 	}
 
+	double sat_p(double p, double *rho_f, double *rho_g, FpropsError *err){
+		double T;
+		fprops_sat_p(p, &T, rho_f, rho_g, $self, err);
+		return T;
+	}
+
 	// raise exception if user attempts to write to these variables
 	//%typemap(in) double{
 	//	SWIG_exception(SWIG_ValueError,"Read-only attribute");

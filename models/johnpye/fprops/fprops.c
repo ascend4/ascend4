@@ -243,4 +243,23 @@ char *fprops_error(FpropsError err){
 	}
 }
 
+char *fprops_corr_type(EosType type){
+	switch(type){
+	case FPROPS_IDEAL:
+		return "ideal";
+	case FPROPS_CUBIC:
+		return "cubic";
+	case FPROPS_PENGROB:
+		return "pengrob";
+	case FPROPS_REDKW:
+		return "redkw";
+	case FPROPS_SOAVE:
+		return "soave";
+	case FPROPS_HELMHOLTZ:
+		return "helmholtz";
+	case FPROPS_MBWR:
+		return "mbwr";
+	}
+	return NULL;
+}
 
