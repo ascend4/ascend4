@@ -81,6 +81,11 @@ typedef struct ReferenceStateTPHS_struct{
 	double T0, p0, h0, s0;
 } ReferenceStateTPHS;
 
+/* TODO add a reference state as defined by coefficients A_6, A_7 of the 
+NASA SP-273 polynomials (the constant terms in the H0(T) and S0(T) polynomials),
+this would open the way to a fairly easy support for the NASA fluid database, 
+although note that it's only giving ideal gas EOS data */
+
 typedef struct ReferenceState_struct{
 	ReferenceStateType type;
 	union{
