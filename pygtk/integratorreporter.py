@@ -92,6 +92,11 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 				["observervbox","observercontext"] + ["image%d"%n for n in range(7,12)]
 			)
 			_vbox = self.browser.builder.get_object("observervbox")
+			toolbar_list = _vbox.get_children()
+			toolbar = toolbar_list.__getitem__(0)
+			toolitem6 = toolbar.get_nth_item(3)
+			toolitem6_label = toolitem6.get_child()
+			toolitem6_label.set_text('')
 			_tab = self.browser.maintabs.append_page(_vbox,_label)
 			_obs = ObserverTab(name=_name, browser=self.browser, tab=_tab, alive=False)
 			_label.set_text(_obs.name)

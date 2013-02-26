@@ -35,7 +35,6 @@
 #include "incidencematrix.h"
 #include "registry.h"
 #include "annotation.h"
-#include "simulation.h"
 
 extern "C"{
 #include <ascend/compiler/importhandler.h>

@@ -4,7 +4,7 @@
 #include "config.h"
 
 #ifdef ASCXX_USE_PYTHON
-# include <Python.h>
+#include <Python.h>
 #endif
 
 extern "C"{

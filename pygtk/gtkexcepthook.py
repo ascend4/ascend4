@@ -7,7 +7,7 @@
 # Message-ID: <1062087716.1196.5.camel@emperor.homelinux.net>
 # 	"The license is whatever you want."
 
-import inspect, linecache, pydoc, sys, traceback
+import inspect, linecache, pydoc, sys, traceback, webbrowser
 from cStringIO import StringIO
 from gettext import gettext as _
 from smtplib import SMTP
@@ -124,25 +124,34 @@ def _info (exctyp, value, tb):
 	dialog.add_button (_("Details..."), 2)
 	dialog.add_button (gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
 	dialog.add_button (gtk.STOCK_QUIT, 1)
+	dialog.add_button (_("Report Bug"),3)
 
 	while True:
 		resp = dialog.run()
 		if resp == 3:
-			if trace == None:
-				trace = analyse (exctyp, value, tb)
+#if trace == None:
+#				trace = analyse (exctyp, value, tb)
 
 			# TODO: prettyprint, deal with problems in sending feedback, &tc
-			try:
-				server = smtphost
-			except NameError:
-				server = 'localhost'
+			handle = webbrowser.get()
+			print dir(handle)
+			handle.open("http://bugs.ascend4.org/bug_report_page.php")
+			if trace == None:
+				trace = analyse (exctyp, value, tb)
+			print trace.getvalue()
+			
 
-			message = 'From: buggy_application"\nTo: bad_programmer\nSubject: Exception feedback\n\n%s' % trace.getvalue()
-
-			s = SMTP()
-			s.connect (server)
-			s.sendmail (email, (email,), message)
-			s.quit()
+#			try:
+#				server = smtphost
+#			except NameError:
+#				server = 'localhost'
+#
+#			message = 'From: buggy_application"\nTo: bad_programmer\nSubject: Exception feedback\n\n%s' % trace.getvalue()
+#
+#			s = SMTP()
+#			s.connect (server)
+#			s.sendmail (email, (email,), message)
+#			s.quit()
 			break
 
 		elif resp == 2:

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <requires lib="gtk+" version="2.16"/>
+  <requires lib="gtk+" version="2.20"/>
   <!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkAboutDialog" id="aboutdialog">
     <property name="visible">True</property>
@@ -522,6 +522,7 @@ upper and lower bounds displayed.</property>
                         <property name="label">gtk-open</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Click to load a module</property>
                         <property name="use_action_appearance">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
@@ -533,6 +534,7 @@ upper and lower bounds displayed.</property>
                         <property name="label">_Reload</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Click to reload the current model</property>
                         <property name="use_action_appearance">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">False</property>
@@ -683,15 +685,14 @@ upper and lower bounds displayed.</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="diagnose_blocks">
-                        <property name="label">_Diagnose blocks...</property>
+                      <object class="GtkMenuItem" id="diagnose_blocks">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_action_appearance">False</property>
+                        <property name="label" translatable="yes">_Diagnose Blocks</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">False</property>
-                        <accelerator key="D" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                        <signal name="activate" handler="on_diagnose_blocks_click" swapped="no"/>
+                        <accelerator key="d" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                        <signal name="activate" handler="on_diagnose_blocks_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
@@ -1936,7 +1937,7 @@ upper and lower bounds displayed.</property>
                               <object class="GtkTable" id="table3">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="n_rows">2</property>
+                                <property name="n_rows">3</property>
                                 <property name="n_columns">3</property>
                                 <property name="column_spacing">7</property>
                                 <property name="row_spacing">5</property>
@@ -2139,6 +2140,29 @@ upper and lower bounds displayed.</property>
                                     <property name="x_options"></property>
                                     <property name="y_options"></property>
                                   </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="preferred_units_check">
+                                    <property name="label" translatable="yes">Show Preferred Units</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
+                                    <property name="draw_indicator">True</property>
+                                    <signal name="toggled" handler="on_preferred_units_toggle" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">1</property>
+                                    <property name="right_attach">2</property>
+                                    <property name="top_attach">2</property>
+                                    <property name="bottom_attach">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                               </object>
                             </child>
@@ -3129,6 +3153,7 @@ upper and lower bounds displayed.</property>
                             <property name="secondary_icon_activatable">False</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
+                            <signal name="changed" handler="parse_entry" swapped="no"/>
                             <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
                           </object>
                           <packing>
@@ -3168,6 +3193,7 @@ upper and lower bounds displayed.</property>
                             <property name="secondary_icon_activatable">False</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
+                            <signal name="changed" handler="parse_entry" swapped="no"/>
                             <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
                           </object>
                           <packing>
@@ -3291,6 +3317,7 @@ upper and lower bounds displayed.</property>
                             <property name="secondary_icon_activatable">False</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
+                            <signal name="changed" handler="parse_entry" swapped="no"/>
                             <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
                           </object>
                           <packing>
@@ -3307,6 +3334,8 @@ upper and lower bounds displayed.</property>
                             <property name="secondary_icon_activatable">False</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
+                            <signal name="changed" handler="parse_entry" swapped="no"/>
+                            <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -3324,6 +3353,8 @@ upper and lower bounds displayed.</property>
                             <property name="secondary_icon_activatable">False</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
+                            <signal name="changed" handler="parse_entry" swapped="no"/>
+                            <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -3441,6 +3472,21 @@ upper and lower bounds displayed.</property>
         <col id="0" translatable="yes">Linear</col>
       </row>
     </data>
+  </object>
+  <object class="GtkMenu" id="modulemenu">
+    <property name="can_focus">False</property>
+    <property name="ubuntu_local">True</property>
+    <child>
+      <object class="GtkMenuItem" id="view">
+        <property name="visible">True</property>
+        <property name="sensitive">False</property>
+        <property name="can_focus">False</property>
+        <property name="tooltip_text" translatable="yes">View this model</property>
+        <property name="use_action_appearance">False</property>
+        <property name="label" translatable="yes">_View</property>
+        <property name="use_underline">True</property>
+      </object>
+    </child>
   </object>
   <object class="GtkMenu" id="observercontext">
     <property name="visible">True</property>
@@ -4982,6 +5028,27 @@ upper and lower bounds displayed.</property>
                 <property name="position">2</property>
               </packing>
             </child>
+            <child>
+              <object class="GtkButton" id="diagnose_button">
+                <property name="label" translatable="yes">Show Block Diagnosis</property>
+                <property name="height_request">35</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="has_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <property name="focus_on_click">False</property>
+                <accelerator key="F9" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
+                <signal name="clicked" handler="on_diagnose_button_click" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">4</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -5569,7 +5636,7 @@ upper and lower bounds displayed.</property>
             <property name="column_spacing">6</property>
             <property name="row_spacing">2</property>
             <child>
-              <object class="GtkLabel" id="label901">
+              <object class="GtkLabel" id="varnamelabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
@@ -5577,7 +5644,7 @@ upper and lower bounds displayed.</property>
               </object>
             </child>
             <child>
-              <object class="GtkLabel" id="label902">
+              <object class="GtkLabel" id="lboundlabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
@@ -5589,7 +5656,7 @@ upper and lower bounds displayed.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label903">
+              <object class="GtkLabel" id="uboundlabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
@@ -5601,19 +5668,7 @@ upper and lower bounds displayed.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label904">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="xalign">0</property>
-                <property name="label" translatable="yes">No. of steps</property>
-              </object>
-              <packing>
-                <property name="top_attach">3</property>
-                <property name="bottom_attach">4</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="label905">
+              <object class="GtkLabel" id="distlabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
@@ -5625,7 +5680,7 @@ upper and lower bounds displayed.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label906">
+              <object class="GtkLabel" id="methodnamelabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
@@ -5646,8 +5701,7 @@ upper and lower bounds displayed.</property>
                 <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
                 <property name="secondary_icon_sensitive">True</property>
-                <signal name="changed" handler="on_dist_edited" swapped="no"/>
-                <signal name="focus-out-event" handler="on_dist_edited" swapped="no"/>
+                <signal name="changed" handler="parse_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -5667,8 +5721,7 @@ upper and lower bounds displayed.</property>
                 <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
                 <property name="secondary_icon_sensitive">True</property>
-                <signal name="changed" handler="on_dist_edited" swapped="no"/>
-                <signal name="focus-out-event" handler="on_dist_edited" swapped="no"/>
+                <signal name="changed" handler="parse_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -5689,30 +5742,13 @@ upper and lower bounds displayed.</property>
                 <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
                 <property name="secondary_icon_sensitive">True</property>
-                <signal name="changed" handler="on_nsteps_edited" swapped="no"/>
-                <signal name="focus-out-event" handler="on_nsteps_edited" swapped="no"/>
+                <signal name="changed" handler="on_nsteps_changed" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">3</property>
                 <property name="top_attach">3</property>
                 <property name="bottom_attach">4</property>
-                <property name="x_padding">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkComboBox" id="dist">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="model">list_of_dist</property>
-                <property name="active">0</property>
-                <signal name="changed" handler="on_dist_edited" swapped="no"/>
-              </object>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="right_attach">2</property>
-                <property name="top_attach">4</property>
-                <property name="bottom_attach">5</property>
                 <property name="x_padding">1</property>
               </packing>
             </child>
@@ -5772,7 +5808,7 @@ upper and lower bounds displayed.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label907">
+              <object class="GtkLabel" id="contfaillabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
@@ -5797,6 +5833,32 @@ upper and lower bounds displayed.</property>
                 <property name="right_attach">3</property>
                 <property name="top_attach">6</property>
                 <property name="bottom_attach">7</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBox" id="step_menu">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <signal name="changed" handler="on_step_menu_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="top_attach">3</property>
+                <property name="bottom_attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBox" id="dist">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="model">list_of_dist</property>
+                <property name="active">0</property>
+                <signal name="changed" handler="on_dist_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">4</property>
+                <property name="bottom_attach">5</property>
               </packing>
             </child>
           </object>
