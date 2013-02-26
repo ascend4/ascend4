@@ -102,7 +102,6 @@ class VarPropsWin:
 
 	def fill_values(self):
 		# all the values here use the same preferred units for this instance type
-
 		_u = self.instance.getType().getPreferredUnits();
 		if _u is None:
 			_conversion = 1

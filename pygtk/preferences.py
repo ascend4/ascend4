@@ -20,7 +20,7 @@ class Preferences:
 			else:
 				self.fname = os.path.expanduser("~/.ascend.ini");
 
-			#print "PREFERENCES FILE =",self.fname
+			print "PREFERENCES FILE =",self.fname
 				
 		self.n = self.n + 1;
 
@@ -133,6 +133,7 @@ class Preferences:
 # Test script:
 def main():
 	x = Preferences();
+	print x.getStringPref('Browser','auto_solve')
 	y = Preferences();
 
 	print "Units for length: ",x.getPreferredUnits("length");

@@ -1,49 +1,7 @@
 import ascpy
 import time
 import gtk
-
-class PythonSolverReporter(ascpy.SolverReporter):
-	def __init__(self,browser,message=None):
-		self.browser=browser
-		self.updateinterval = self.browser.prefs.getBoolPref("SolverReporter","update_interval", 0.5)
-		self.reporter = self.browser.reporter
-		if self.reporter==None:
-			raise RuntimeError("Can't find reporter")
-		self.starttime = time.clock()
-		self.statusbarcontext = self.browser.statusbar.get_context_id("pythonstudyreporter")
-		if message:
-			self.browser.statusbar.push(self.statusbarcontext,"Solving (%s)..." % message)
-		else:
-			self.browser.statusbar.push(self.statusbarcontext,"Solving..." )
-		ascpy.SolverReporter.__init__(self)
-
-	def report_to_browser(self,status):
-		self.browser.statusbar.pop(self.statusbarcontext)
-
-		if status.isConverged():
-			#self.reporter.reportSuccess("Converged for %s = %0.2f" % (self.browser.sim.getInstanceName(self.instance), 
-			#			    self.instance.getRealValue()))
-			return
-		elif status.hasExceededTimeLimit():
-			_msg = "Solver exceeded time limit"
-		elif status.hasExceededIterationLimit():
-			_msg = "Solver exceeded iteration limit"
-		elif status.isDiverged():
-			_msg = "Solver diverged"
-		elif status.isInterrupted():
-			_msg = "Solver interrupted"
-		elif status.hasResidualCalculationErrors():
-			_msg = "Solve had residual calculation errors"
-		else:
-			_msg = "Solve failed"
-		
-		_msg = _msg + " while solving block %d/%d (%d vars in block)" % (status.getCurrentBlockNum(),
-				status.getNumBlocks(),status.getCurrentBlockSize())
-		for tabs in self.browser.observers:
-			if tabs.alive:
-				tabs.taint_row(_msg)
-		_msg = _msg + " for %s = %0.2f" % (self.browser.sim.getInstanceName(self.instance), self.instance.getRealValue())
-		self.reporter.reportError(_msg)
+from solverreporter import PythonSolverReporter
 
 class StudyReporter(PythonSolverReporter):
 	def __init__(self, browser, numvars, instance, nsteps, study):

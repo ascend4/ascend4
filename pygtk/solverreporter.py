@@ -1,6 +1,7 @@
 import ascpy
 import time
 import gtk
+from diagnose import *
 
 class PythonSolverReporter(ascpy.SolverReporter):
 	def __init__(self,browser,message=None):
@@ -43,7 +44,7 @@ class PythonSolverReporter(ascpy.SolverReporter):
 
 
 class PopupSolverReporter(PythonSolverReporter):
-	def __init__(self,browser,numvars):
+	def __init__(self,browser,sim):
 		PythonSolverReporter.__init__(self,browser)
 
 
@@ -64,6 +65,7 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.blockelapsedtime = self.browser.builder.get_object("blockelapsedtimeentry")
 	
 		self.progressbar = self.browser.builder.get_object("progressbar")
+		self.diagnose_button = self.browser.builder.get_object("diagnose_button")
 		self.closebutton = self.browser.builder.get_object("closebutton1")
 		self.stopbutton = self.browser.builder.get_object("stopbutton")
 			
@@ -79,10 +81,21 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.guiinterrupt = False;
 		self.guitime = 0;
 
-		self.nv = numvars
+		self.sim = sim
+
+		self.nv = self.sim.getNumVars()
 
 		while gtk.events_pending():
 			gtk.main_iteration()
+
+	def on_diagnose_button_click(self,*args):
+		try:
+			_bl = self.sim.getActiveBlock()
+			_db = DiagnoseWindow(self.browser,_bl)
+			_db.run();
+		except RuntimeError, e:
+			self.reporter.reportError(str(e))
+			return
 
 	def on_stopbutton_activate(self,*args):
 		self.guiinterrupt = True
@@ -137,8 +150,6 @@ class PopupSolverReporter(PythonSolverReporter):
 			_p = self.browser.prefs;
 			_close_on_converged = _p.getBoolPref("SolverReporter","close_on_converged",True);
 			_close_on_nonconverged = _p.getBoolPref("SolverReporter","close_on_nonconverged",False);
-
-
 			if status.isConverged() and _close_on_converged:
 				self.report_to_browser(status)
 				print "CLOSING ON CONVERGED"

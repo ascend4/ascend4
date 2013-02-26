@@ -1,0 +1,19 @@
+REQUIRE "system.a4l";
+MODEL my_model;
+
+  (* variables declaration *)
+  x,
+  y,
+  z,
+  d,
+  a IS_A solver_var;
+
+  (* specifications *)
+        d = 1;
+
+  (* equations *)
+        x+y+z = a*d;
+        x+y+2*z = 5;
+        5*x + 2*y - 3*z = 0;
+
+END my_model;

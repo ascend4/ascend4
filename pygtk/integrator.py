@@ -24,6 +24,14 @@ class IntegratorWindow:
 		self.browser=browser
 		self.prefs = Preferences()
 
+		try:	 
+			self.integrator.findIndependentVar()
+			self.indepvar = self.integrator.getIndependentVariable()
+		except RuntimeError,e:
+			self.browser.reporter.reportNote(str(e))
+			self.indepvar = None
+			return
+
 		# locate all the widgets
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["integratorwin","list_of_td"])
 		self.browser.builder.connect_signals(self)
@@ -88,26 +96,34 @@ class IntegratorWindow:
 			self.engineselect.set_active(0)			
 			self.engineselect.set_sensitive(False)
 
-
-		# set preferred timesteps etc
-		for _k,_v in self.settings.iteritems():
-			self.integratorentries[_k].set_text(self.prefs.getStringPref("Integrator",_k,str(_v[0])))
-
 		# get the current time value as the beginentry...
 		print "SEARCHING FOR TIME VAR..."
 		try:
-			self.integrator.findIndependentVar()
-			print "FOUND time var..."	
-			_t = self.integrator.getCurrentTime();
-			print "Found time = %f" % _t
-			self.beginentry.set_text(str(_t))
+			_u = self.indepvar.getInstance().getType().getPreferredUnits()
+			if _u is None:
+				_u = self.indepvar.getInstance().getType().getDimensions().getDefaultUnits()
+			#_t = self.integrator.getCurrentTime();
+			_t = str(self.indepvar.getInstance().getRealValue() / _u.getConversion())
+			self.beginentry.set_text(str(_t)+" "+_u.getName().toString())
+			self.parse_entry(self.beginentry)
+			_dur = self.prefs.getStringPref("Integrator","duration","100")
+			self.durationentry.set_text(_dur+" "+_u.getName().toString())
+			self.parse_entry(self.durationentry)
 		except RuntimeError,e:
-			self.browser.reporter.reportNote(str(e));
+			self.browser.reporter.reportNote(str(e))
 			self.beginentry.set_text("0")
 
-		_dur = self.prefs.getStringPref("Integrator","duration","100")
-		self.durationentry.set_text(_dur)
 		self.nstepsentry.set_text("100")
+		
+		# set preferred timesteps etc
+		for _k,_v in self.settings.iteritems():
+			if _k!="maxsteps":
+				_a = _u.getName().toString()
+				self.integratorentries[_k].set_text(self.prefs.getStringPref("Integrator",_k,str(_v[0]))+" "+_a)
+				self.parse_entry(self.integratorentries[_k])
+			else :
+				self.integratorentries[_k].set_text(self.prefs.getStringPref("Integrator",_k,str(_v[0])))
+
 
 	def on_integratorcancel_clicked(self,*args):
 		self.browser.reporter.reportNote("CANCELLING");
@@ -148,6 +164,8 @@ class IntegratorWindow:
 			print "PARAMETERS UPDATED"
 
 	def run(self):
+		if self.indepvar == None:
+			return
 		# focus the engine select box when we start...
 		self.engineselect.grab_focus()
 
@@ -193,25 +211,65 @@ class IntegratorWindow:
 		self.window.destroy()
 		return None # can't solve
 
-	def color_entry(self,entry,color):
+        def color_entry(self,entry,color):
+                # colour an input box if it doesn't have acceptable contents
+                # error messages would be reported by the 'errors panel' in the main win
+                entry.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
+                entry.modify_bg(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
+                entry.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
+                entry.modify_base(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
+
+	def taint_entry(self,entry,color):
 		# colour an input box if it doesn't have acceptable contents
 		# error messages would be reported by the 'errors panel' in the main win
 		entry.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
 		entry.modify_bg(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
 		entry.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
 		entry.modify_base(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
+		if color == "#FFBBBB":
+			entry.set_property("secondary-icon-stock", 'gtk-dialog-error')
+		elif color == "white":
+			entry.set_property("secondary-icon-stock", 'gtk-yes')
+			entry.set_property("secondary-icon-tooltip-text", "")
+
+	def parse_entry(self, entry):
+		# A simple function to get the real value from the entered text
+		# and taint the entry box accordingly
+		i = RealAtomEntry(self.indepvar.getInstance(), entry.get_text())
+		try:
+			i.checkEntry()
+			_value = i.getValue()
+		except InputError, e:
+			_value = None
+			_error = re.split('Input Error: ', str(e), 1)
+			entry.set_property("secondary-icon-tooltip-text", _error[1])
+		
+		if _value is not None:
+			self.taint_entry(entry, "white")
+		else:
+			self.taint_entry(entry, "#FFBBBB")
+		return _value
 
 	def check_inputs(self):
 		# set the timesteps (samples)
 		_val = {}
+		units = ''
 		for _k,_v in {
 			self.beginentry:[lambda x:float(x),"begin"]
 			, self.durationentry:[lambda x:float(x),"duration"]
 			, self.nstepsentry:[lambda x:int(x),"num"]
 		}.iteritems():
-			_val[_v[1]]=_v[0](_k.get_text())
+			x = RealAtomEntry(self.indepvar.getInstance(), _k.get_text())
+			x.checkEntry()
+			if _k == self.beginentry: 
+				units = x.units
+				#self.indepvar.getInstance().setRealValueWithUnits()
+			if _k == self.nstepsentry:
+				_val[_v[1]] = _v[0](_k.get_text())
+			else :
+				_val[_v[1]]=_v[0](x.getValue()/ascpy.Units(units).getConversion())
 		
-		self.integrator.setLinearTimesteps(ascpy.Units("s"), _val["begin"], (_val["begin"]+_val["duration"]), _val["num"]);
+		self.integrator.setLinearTimesteps(ascpy.Units(units), _val["begin"], (_val["begin"]+_val["duration"]), _val["num"]);
 		self.begin=_val["begin"]
 		self.duration=_val["duration"]
 
@@ -219,14 +277,24 @@ class IntegratorWindow:
 		
 		# set substep parameters (ie settings common to any integrator engine)
 		_failed=False
+		x={}
 		for _k,_v in self.settings.iteritems():
 			try:
 				_f = self.integratorentries[_k];
 				# pass the substep setting to the integrator
-				_v[1](_f.get_text())
-				self.color_entry(_f,"white")
+				x[_f] = RealAtomEntry(self.indepvar.getInstance(), _f.get_text())
+				x[_f].checkEntry()
+				if _k!="maxsteps":
+					self.taint_entry(_f,"white")
+					_v[1](x[_f].getValue()/ascpy.Units(units).getConversion())
+				else:	
+					_v[1](_f.get_text())
+					self.color_entry(_f,"white")
 			except ValueError,e:
-				self.color_entry(_f,"#FFBBBB")
+				if _k!="maxsteps":
+					self.taint_entry(_f,"#FFBBBB")
+				else:	
+					self.color_entry(_f,"#FFBBBB")
 				_failed=True
 		
 		if _failed:
@@ -234,8 +302,11 @@ class IntegratorWindow:
 
 		for _k,_v in self.settings.iteritems():
 			# store those inputs for next time
-			_f = self.integratorentries[_k];
-			self.prefs.setStringPref("Integrator",_k,str(_f.get_text()))
+			_f = self.integratorentries[_k]
+			if _k!="maxsteps":
+				self.prefs.setStringPref("Integrator",_k,str(x[_f].getValue()/ascpy.Units(units).getConversion()))
+			else:	
+				self.prefs.setStringPref("Integrator",_k,str(_f.get_text()))
 
 		# set engine (and check that it's OK with this system)
 		engine=self.engineselect.get_active()
