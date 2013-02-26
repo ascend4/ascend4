@@ -40,7 +40,7 @@ lib = pyenv.SharedLibrary('fprops',['fprops.i'] + fprops_env['shobjs']
 )
 
 pyenv.Depends(lib,"fprops_wrap.c")
-pyenv.Depends(lib,fprops_env['libfprops'])
+#pyenv.Depends(lib,fprops_env['libfprops'])
 
 fprops_env['pyfprops'] = lib
 

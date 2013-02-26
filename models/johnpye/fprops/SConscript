@@ -22,7 +22,7 @@ srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
 
 fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
 
-fprops_env['libfprops'] = fprops_env.SharedLibrary("fprops",fprops_env['shobjs'])
+#fprops_env['libfprops'] = fprops_env.SharedLibrary("fprops",fprops_env['shobjs'])
 
 if fprops_env.get('BUILDING_ASCEND') or fprops_env.get('WITH_ASCEND'):
 	asc_env = fprops_env.Clone()
@@ -43,8 +43,8 @@ if fprops_env.get('BUILDING_ASCEND') or fprops_env.get('WITH_ASCEND'):
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)
 
-	asc_env.Depends(lib1,fprops_env['libfprops'])
-	asc_env.Depends(lib2,fprops_env['libfprops'])
+	#asc_env.Depends(lib1,fprops_env['libfprops'])
+	#asc_env.Depends(lib2,fprops_env['libfprops'])
 
 	env['extfns'] += [lib1,lib2]
 
