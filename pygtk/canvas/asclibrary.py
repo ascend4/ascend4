@@ -93,3 +93,5 @@ class ascPy(object):
 		x = self.annodb.getNotes(t,ascpy.SymChar("stream"),ascpy.SymChar("SELF"))
 		if x:
 			self.streamtypes.add(t)
+
+# vim: set ts=4 noet:

@@ -39,9 +39,9 @@ class BlockInstance:
 		self.params = {}
 		for n in self.blocktype.params:
 			self.params[n[0]] = (ParamInstance(self,n[0],n[1]))
-			
+
 		self.usercode = ""
-			
+
 	def get_default_name(self):
 		n = str(self.blocktype.type.getName())
 		if not blocknameindex.has_key(n):
@@ -55,26 +55,26 @@ class BlockInstance:
 	def reattach_ascend(self,ascwrap,notesdb):
 		if type(self.blocktype.type) == str:
 			self.blocktype.reattach_ascend(ascwrap, notesdb)
-		
+
 		for port in self.ports:
 			self.ports[port].type = ascwrap.findType(self.ports[port].type)
-			
+
 		for param in self.params:
 			self.params[param].type = ascwrap.findType(self.params[param].type)
-		
+
 	def __getstate__(self):
 		#Return state values to pickle without  blockinstance.instance
 		state = self.__dict__.copy()
 		return(state)
-	
+
 	def __setstate__(self, state):
 		#Restore state values from pickle
 		self.__dict__ = state
-		
-				
+
+
 class PortInstance:
 	"""
-	Application-layer representation of a Port, which is a variable inside a 
+	Application-layer representation of a Port, which is a variable inside a
 	MODEL which is connectable using the Canvas GUI. Class includes the name of
 	the variable represented by the Port, but no type information, as that is
 	currently difficult to extract from the ASCEND API.
@@ -84,18 +84,18 @@ class PortInstance:
 		self.name = name
 		self.type = type
 		self.io = io
-		
+
 	def __getstate__(self):
 		state = self.__dict__.copy()
 		state['type'] = str(self.type)
 		return(state)
-	
+
 	def __setstate__(self, state):
 		self.__dict__ = state
 
 class ParamInstance:
 	"""
-	Application-layer representation of a Parameter, which is a variable inside a 
+	Application-layer representation of a Parameter, which is a variable inside a
 	MODEL the value for which should be settable using the Canvas GUI. Currently
 	we have no information about the type of the parameter (its units etc)
 	because that data is still difficult to extract from the ASCEND API.
@@ -104,8 +104,9 @@ class ParamInstance:
 		self.blockinstance = blockinstance
 		self.name = name
 		self.type = type
-		self.value = None
 		self.fix = False
+		self.value = self.get_initial_value()
+		self.fix = self.set_initial_state()
 		if self.type.getPreferredUnits():
 			self.units=str(self.type.getPreferredUnits().getName())
 		else:
@@ -124,14 +125,59 @@ class ParamInstance:
 		for p in self.blockinstance.blocktype.params:
 			if p[0] == self.name:
 				desc = p[2]
-		return desc.split(":",2)[1].strip()
-	
+		return desc.split(":",2)[1].strip().split("=")[0].strip()
+
+	def get_initial_value(self):
+		'''
+		This will get the initial parameter value
+		given in the NOTE
+		dp "param: pressure rise due to the pump = 10{atm}" IS_A delta_pressure;
+		this methos will return 10{atm}
+		'''
+
+		desc = ""
+		for p in self.blockinstance.blocktype.params:
+			if p[0] == self.name:
+				desc = p[2]
+
+		temp = desc.split(":",2)[1].strip().split("=")
+
+
+		if(len(temp)==1):
+			return None	 # for no value
+
+		temp2 = temp[1].split("[")
+
+		# for free state
+		# print len(temp2)
+		if(len(temp2)>1):
+			self.fix = False
+		else:
+			self.fix = True
+
+		#print self.fix
+		if(self.fix):
+			return temp[1].strip().split("{")[0].strip() + temp[1].strip().split("{")[1].strip().split("}")[0].strip()# for fixed state
+		else:
+			return temp2[1].split("]")[0].strip()   # for free state
+
+	def set_initial_state(self):
+		'''
+		This will return initial state of the parameter i.e. FIX or FREE
+		'''
+		self.get_initial_value()
+		if (self.fix):
+			return True  # for fix
+		else:
+			return False	# for free
+
+
 	def getValue(self):
 		if self.value:
-			return(str(self.value)+' '+str(self.units))		
+			return (str(self.value))
 		else:
 			return(' '+str(self.units))
-		
+
 	def setValue(self,conv,units):
 		if self.value:
 			self.value=self.value*conv
@@ -140,15 +186,15 @@ class ParamInstance:
 		else:
 			self.units=units
 			return(' '+str(self.units))
-	
+
 	def __getstate__(self):
 		state = self.__dict__.copy()
 		state['type'] = str(self.type)
 		return(state)
-	
+
 	def __setstate__(self, state):
 		self.__dict__ = state
-		
+
 class LineInstance:
 	def __init__(self,fromport=None,toport=None):
 		self.fromport = fromport
@@ -158,10 +204,12 @@ class LineInstance:
 		"""
 		Create a string for use in MODEL export.
 		"""
-		if self.fromport and self.toport:	
+		if self.fromport and self.toport:
 			fromname = "%s.%s" % (self.fromport.blockinstance.name, self.fromport.name)
 			toname = "%s.%s" % (self.toport.blockinstance.name, self.toport.name)
 			return "\t%s, %s ARE_THE_SAME;\n" % (fromname, toname)
 		return ""
 
 # TODO set up reversible properties...?
+
+# vim: set ts=4 noet:

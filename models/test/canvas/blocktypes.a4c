@@ -61,8 +61,12 @@ END equipment;
 
 MODEL pump REFINES equipment;
 	NOTES
-		'block' SELF {Tee piece}
+		'block' SELF {Pump}
 		'icon' SELF {pump.svg}
+		'graphic' SELF {5,5,5,2,0
+					2.5,9.325-0,10-10,10-7.5,9.325}
+		'port_in' SELF {inlet:0,5}
+		'port_out' SELF {outlet:10,5}
 	END NOTES;
 	inlet.p - 1 {bar} = outlet.p;
 END pump;
@@ -71,6 +75,11 @@ MODEL tee REFINES equipment;
 	NOTES
 		'block' SELF {Tee piece}
 		'icon' SELF {tee.svg}
+		'graphic' SELF {0,0-0,10
+				0,0-10,5
+				10,5-0,10}
+		'port_in' SELF {inlet:0,5}
+		'port_out' SELF {outlet:10,4-side:10,6}
 	END NOTES;
 	side "out:" IS_A stream;
 	inlet.mdot = outlet.mdot + side.mdot;
@@ -78,37 +87,77 @@ END tee;
 
 MODEL join REFINES equipment;
 	NOTES
-		'block' SELF {Joiner piece}
+		'block' SELF {Joiner}
 		'inline' inlet {in: AS NAMED IN 'join'}
 		'icon' SELF {join.svg}
+		'graphic' SELF {2,1-8,1
+			2,8-8,8
+			2,1-2,8
+			8,1-8,8
+			0,0-2,1
+			0,10-2,8
+			10,10-8,8
+			10,0-8,1}
 	END NOTES;
 	side "in:" IS_A stream;
 	inlet.mdot + side.mdot = outlet.mdot;
+
 END join;
 
 MODEL heater REFINES join;
 	NOTES
 		'block' SELF {Feedwater heater}
 		'icon' SELF {heater.svg}
+		'graphic' SELF {0,0-10,0
+			0,10-10,10
+			0,0-0,10
+			10,0-10,10
+			10,0-5,5
+			10,10-5,5}
 	END NOTES;
 	V "param:" IS_A volume;
 END heater;
 
+MODEL turbine;
+	NOTES
+		'block' SELF {Turbine}
+		'icon' SELF {turbine.svg}
+		'graphic' SELF {0,2-0,8-10,10-10,0-0,2}
+	END NOTES;
+	V "param: Volume of Turbine" IS_A volume;
+	eta "param: Efficiency of Turbine" IS_A factor;
+END turbine;
+
+MODEL Default REFINES equipment;
+	NOTES
+		'block' SELF {Default model}
+		'icon' SELF {}
+		'port_in' SELF {inlet:0,5}
+		'port_out' SELF {outlet:10,5}
+	END NOTES;
+	V "param:" IS_A volume;
+END Default;
+
 MODEL lots_of_params REFINES equipment;
 	NOTES
 		'block' SELF {Spurious model with lots of parameters}
+		'graphic' SELF {0,5-5,0
+			0,5-5,10
+			5,0-10,5
+			5,10-10,5
+			2.5,7.5-0,10
+			0,10-10,10
+			7.5,7.5-10,10}
 	END NOTES;
 		V "param: volume of heater" IS_A volume;
 		V1 "param: another heater" IS_A volume;
 		V2 "param: so many values" IS_A volume;
 		mdot5 "param: some flow rate" IS_A mass_rate;
-		aaabbbbccccceeeeffff "param: Some parameter with a silly long name that I can never remember and quite a long description too" IS_A energy_rate;
 		cp "param: heat cap" IS_A specific_heat_capacity;
 		cp2 "param: another heat capacity" IS_A specific_heat_capacity;
 		V=V1+V2;
 METHODS
 METHOD default_self;
-FIX V1;
 V1 := 128{m^3};
 FIX V2;
 V2 := 256{m^3};
@@ -140,6 +189,8 @@ MODEL reservoir_in_test;
 	NOTES
 		'block' SELF {Reservoir}
 		'icon' SELF {reservoir_in.png}
+		'graphic' SELF {0,0-0,10
+				0,0-3,0-3,3-10,3-10,6-3,6-3,10-0,10}
 	END NOTES;
 
 	inlet "in:" IS_A stream;	
@@ -156,6 +207,8 @@ MODEL reservoir_out_test;
 	NOTES
 		'block' SELF {Reservoir}
 		'icon' SELF {reservoir_out.png}
+		'graphic' SELF {0,0-0,10
+				0,0-3,0-3,3-10,3-10,6-3,6-3,10-0,10}
 	END NOTES;
 
 	outlet "out:" IS_A stream;
@@ -173,8 +226,9 @@ END reservoir_out_test;
 
 MODEL pipesegment REFINES equipment ;
 	NOTES
-		'block' SELF {Pipesegment}
+		'block' SELF {Pipe Segment}
 		'icon' SELF {pipesegment.png}
+		'graphic' SELF {0,0-3,0-3,3-10,3-10,6-3,6-3,10-0,10}
 	END NOTES;
 	
 	pipelength "param: Total Length of the pipesegment" IS_A distance;
@@ -244,9 +298,15 @@ MODEL pump_minimal_test REFINES equipment;
 	NOTES
 		'block' SELF {Pump}
 		'icon' SELF {pump.svg}
+		'graphic' SELF {0,5-5,0
+			0,5-5,10
+			5,0-10,5
+			5,10-10,5
+			2.5,7.5-7.5,7.5
+			2.5,2.5-7.5,2.5}
 	END NOTES;
 
-	dp "param: pressure rise due to the pump" IS_A delta_pressure;
+	dp "param: pressure rise due to the pump = [10{atm}]" IS_A delta_pressure;
 
 	inlet.p + dp = outlet.p;
 	outlet.mdot, inlet.mdot ARE_THE_SAME;
@@ -255,4 +315,5 @@ MODEL pump_minimal_test REFINES equipment;
 	inlet.cp, outlet.cp ARE_THE_SAME;
 
 END pump_minimal_test;
+
 
