@@ -1,7 +1,7 @@
 from gaphas import Canvas
 from gaphas.item import Line
 import re
-from blockitem import DefaultBlockItem
+from blockitem import DefaultBlockItem, GraphicalBlockItem
 from blockline import BlockLine
 from blockstream import BlockStream
 
@@ -100,7 +100,7 @@ END canvasmodel;
 		items = self.get_all_items()
 	
 		def parse(item):
-			if type(item)==DefaultBlockItem:
+			if type(item)==DefaultBlockItem or type(item)==GraphicalBlockItem:
 				bi = item.blockinstance
 				replacement_fields['is_a']+=str(bi)
 				specify = filter(lambda param:bi.params[param].value != None,bi.params)
@@ -121,11 +121,10 @@ END canvasmodel;
 					                  reduce(lambda x,y:x+y,fix)
 				except TypeError:
 					pass
-							
+
 			if type(item)==BlockLine:
 				replacement_fields['are_the_same']+=str(item.lineinstance)
-		
-			
+
 		map(parse,items)
 		
 		replacement_fields['canvas_user_code'] = self.user_code
@@ -144,3 +143,5 @@ END canvasmodel;
 		our canvas.
 		"""
 		super(BlockCanvas,self).__setstate__(state)
+
+# vim: set ts=4 noet:
