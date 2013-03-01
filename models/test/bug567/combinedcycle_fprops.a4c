@@ -1,0 +1,303 @@
+(*	ASCEND modelling environment
+	Copyright (C) 2010 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*)(*
+	This file contains a model of a combined-cycle power station, with
+	a gas turbine (Brayton) cycle running as the 'topping' cycle and a steam
+	turbine (Rankine) cycle running as the 'bottoming' cycle. Initially the 
+	model is being based on Example 9.13 from Moran & Shapiro, 'Fundamentals of
+	Engineering Thermodynamics', 4th Ed, Wiley, 2000.
+
+	See also Example 10-9 from the book Çengel & Boles 
+	'Thermodynamcs: An Engineering Approach, 6th Ed, McGraw-Hill, 2008.
+
+	This file was based on models/johnpye/combinedcycle.a4c which originally
+	made use of the external library 'freesteam' for calculation of steam
+	properties in the bottoming cycle. This version has been modified to make
+	use of FPROPS for the property calculations, allowing the model to be
+	adapted for use with various different fluids.
+
+	Author: John Pye
+*)
+REQUIRE "test/bug567/rankine_fprops.a4c";
+REQUIRE "test/bug567/brayton.a4c";
+
+MODEL air_stream_heat_exchanger REFINES air_equipment;
+	inlet_cold, outlet_cold IS_A stream_node;
+	inlet.p, outlet.p ARE_THE_SAME;
+	inlet_cold.p, outlet_cold.p ARE_THE_SAME;
+	inlet_cold.mdot, outlet_cold.mdot ARE_THE_SAME;
+	inlet_cold.cd, outlet_cold.cd ARE_THE_SAME;
+
+	mdot_cold ALIASES inlet_cold.mdot;
+	cd_cold ALIASES inlet_cold.cd;
+
+	(* some very simplistics checks that temperatures are feasible: not totally safe! *)
+	DT_1, DT_2 IS_A delta_temperature;
+	DT_1 = inlet.T - outlet_cold.T;
+	DT_2 = outlet.T - inlet_cold.T;	
+
+	(* some intermediate temperatures for plotting *)
+	n IS_A integer_constant;
+	n :== 20;
+	H[0..n] IS_A air_node;
+	H[0..n].p, inlet.p ARE_THE_SAME;
+	H[0..n].mdot, inlet.mdot ARE_THE_SAME;
+	H[0].h, inlet.h ARE_THE_SAME;
+	H[n].h, outlet.h ARE_THE_SAME;
+	FOR i IN [1..n-1] CREATE
+		H[i].h = H[0].h + (H[n].h - H[0].h)/n * i;
+	END FOR;
+
+	Qdot IS_A energy_rate;
+	(* Strange, but the following form solves better than the obvious form, 
+	Could maybe be something to do with scaling. *)
+	outlet.h - inlet.h = Qdot/inlet.mdot;
+	outlet_cold.h = inlet_cold.h - Qdot/inlet_cold.mdot;
+METHODS
+METHOD default_self;
+	RUN inlet_cold.default_self;
+	RUN outlet_cold.default_self;
+	DT_1.lower_bound := 0 {K};
+	DT_2.lower_bound := 0 {K};
+END default_self;
+END air_stream_heat_exchanger;
+
+
+MODEL air_stream_heat_exchanger_test REFINES air_stream_heat_exchanger;
+	cd_cold.component :== 'water';
+METHODS
+METHOD on_load;
+	RUN default_self;
+	FIX inlet_cold.p; inlet_cold.p := 50 {bar};
+	FIX inlet_cold.h; inlet_cold.h := 200 {kJ/kg};
+	FIX inlet.p; inlet.p := 1 {bar};
+	FIX inlet.T; inlet.T := 700 {K};
+	FIX mdot; mdot := 1 {kg/s};
+	FIX mdot_cold; mdot_cold := 0.1 {kg/s};
+	FIX Qdot; Qdot := 10 {kW};
+END on_load;
+END air_stream_heat_exchanger_test;
+
+(* --- whole cycle models --- *)
+
+MODEL combinedcycle_fprops_common;
+	(* define the blocks *)
+	GC IS_A compressor;
+	BU IS_A combustor;
+	GT IS_A gas_turbine;
+	HE IS_A air_stream_heat_exchanger;
+	DI IS_A dissipator;
+	TU IS_A turbine_simple;
+	CO IS_A condenser_simple;
+	PU IS_A pump_simple;
+
+	(* wire up the model *)
+	GC.outlet, BU.inlet ARE_THE_SAME;
+	BU.outlet, GT.inlet ARE_THE_SAME;
+	GT.outlet, HE.inlet ARE_THE_SAME;
+	HE.outlet, DI.inlet ARE_THE_SAME;
+	DI.outlet, GC.inlet ARE_THE_SAME;
+
+	HE.outlet_cold, TU.inlet ARE_THE_SAME;
+	TU.outlet, CO.inlet ARE_THE_SAME;
+	CO.outlet, PU.inlet ARE_THE_SAME;
+	PU.outlet, HE.inlet_cold ARE_THE_SAME;
+
+	cd_rankine ALIASES TU.inlet.cd;
+
+	Wdot, Wdot_gas, Wdot_vap IS_A energy_rate;
+	Wdot_gas = GC.Wdot + GT.Wdot;
+	Wdot_vap = TU.Wdot + PU.Wdot;
+	Wdot = Wdot_gas + Wdot_vap;
+	
+	braytonpowerfraction IS_A fraction;
+	braytonpowerfraction = Wdot_gas / Wdot;
+
+	Qdot_H ALIASES BU.Qdot;
+	Qdot_HE ALIASES HE.Qdot;
+	Qdot_DI ALIASES DI.Qdot;
+	
+	eta IS_A fraction;
+	eta = Wdot / Qdot_H;
+
+	massflowratio IS_A factor;
+	massflowratio = TU.mdot / GT.mdot;
+
+	braytonpressureratio IS_A positive_factor;
+	braytonpressureratio * GC.inlet.p = GC.outlet.p;
+
+METHODS
+METHOD default_self;
+	RUN TU.default_self;
+	RUN PU.default_self;
+	RUN CO.default_self;
+	RUN HE.default_self;
+END default_self;
+METHOD specify;
+	(* these values should be independent of the fluid we choose to use *)
+	FIX GC.eta; GC.eta := 0.84;
+	FIX GT.eta; GT.eta := 0.88;
+	FIX TU.eta; TU.eta := 0.85;
+	FIX PU.eta; PU.eta := 0.8;
+	FIX CO.outlet.x; CO.outlet.x := 1e-6;
+	FIX BU.eta; BU.eta := 1;
+END specify;
+END combinedcycle_fprops_common;
+
+
+MODEL combinedcycle_toluene REFINES combinedcycle_fprops_common;
+	TU.inlet.cd.component :== 'toluene';
+	HE.outlet.T = PU.outlet.T + 40 {K};
+	HE.outlet_cold.T = GT.outlet.T - 20 {K};
+	Tmax_rankine ALIASES HE.outlet_cold.T;
+METHODS
+METHOD default_self;
+	RUN combinedcycle_fprops_common::default_self;
+	(* starting guess, for easy solving *)
+	HE.outlet_cold.h := 400 {kJ/kg};
+	CO.outlet.h := 400 {kJ/kg};
+END default_self;
+METHOD on_load;
+	RUN ClearAll;
+	RUN default_self;
+	RUN combinedcycle_fprops_common::specify;
+	FIX Wdot; Wdot := 100 {MW};
+	
+	(* ambient conditions *)
+	FIX GC.inlet.T, GC.inlet.p;
+	GC.inlet.T := 30 {K} + 273.15 {K};
+	GC.inlet.p := 1 {bar};
+
+	(* Brayton parameters *)
+	FIX braytonpressureratio; braytonpressureratio := 10.9; (* optimise this *)
+	FIX BU.outlet.T; BU.outlet.T := 970 {K} + 273.15 {K};
+
+	(* Rankine cycle condenser *)
+	CO.outlet.p := 8 {kPa};
+	FIX CO.outlet.T; CO.outlet.T := 40 {K} + 273.15 {K};
+	FIX TU.inlet.p; TU.inlet.p := 150 {bar};
+
+	(* optimisable *)
+
+	(* heat exchange cycle *)
+(*	FIX HE.outlet.T; HE.outlet.T := 60 {K} + 273.15 {K};
+	FIX HE.outlet_cold.T; HE.outlet_cold.T := 470 {K} + 273.15 {K};
+*)
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END on_load;
+END combinedcycle_toluene;
+
+
+MODEL combinedcycle_water REFINES combinedcycle_fprops_common;
+	TU.inlet.cd.component :== 'water';
+	x_turb_out ALIASES TU.outlet.x;
+	(* the difference values in these formula have to be corrected by looking
+	at the heat exchanger temperature profiles; haven't thoroughly modelled
+	this bit yet! *)
+	HE.outlet.T = PU.outlet.T + 130 {K};
+	HE.outlet_cold.T = GT.outlet.T - 20 {K};
+METHODS
+METHOD default_self;
+	RUN combinedcycle_fprops_common::default_self;
+	(* starting guess, for easy solving *)
+	HE.outlet_cold.h := 3000 {kJ/kg};
+	TU.inlet.h := 4000 {kJ/kg};
+END default_self;
+METHOD on_load;
+	RUN ClearAll;
+	RUN default_self;
+	RUN combinedcycle_fprops_common::specify;
+	FIX Wdot; Wdot := 100 {MW};
+
+	(* ambient conditions *)
+	FIX GC.inlet.T, GC.inlet.p;
+	GC.inlet.T := 30 {K} + 273.15 {K};
+	GC.inlet.p := 1 {bar};
+
+	(* Brayton parameters *)
+	FIX braytonpressureratio; braytonpressureratio := 7.2; (* optimise this *)
+	FIX BU.outlet.T; BU.outlet.T := 970 {K} + 273.15 {K};
+
+	(* Rankine cycle condenser *)
+	CO.outlet.p := 8 {kPa};
+	FIX CO.outlet.T; CO.outlet.T := 40 {K} + 273.15 {K};
+	FIX TU.inlet.p; TU.inlet.p := 150 {bar};
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END on_load;
+METHOD set_x_limit;
+	FREE PU.outlet.p;
+	PU.outlet.p.upper_bound := 150 {bar};
+	FIX TU.outlet.x; TU.outlet.x := 0.9;
+END set_x_limit;
+
+END combinedcycle_water;
+
+MODEL combinedcycle_water_opt REFINES combinedcycle_water;
+	MAXIMIZE eta;
+METHODS
+METHOD on_load;
+	RUN combinedcycle_water::on_load;
+	braytonpressureratio.lower_bound := 8;
+	braytonpressureratio.upper_bound := 20;
+END on_load;
+END combinedcycle_water_opt;
+
+
+
+MODEL combinedcycle_ammonia REFINES combinedcycle_fprops_common;
+	TU.inlet.cd.component :== 'ammonia';
+	HE.outlet.T = PU.outlet.T + 15 {K};
+	HE.outlet_cold.T = GT.outlet.T - 12 {K};
+METHODS
+METHOD default_self;
+	RUN combinedcycle_fprops_common::default_self;
+	(* starting guess, for easy solving *)
+	HE.outlet_cold.h := 400 {kJ/kg};
+	CO.outlet.h := 400 {kJ/kg};
+END default_self;
+METHOD on_load;
+	RUN ClearAll;
+	RUN default_self;
+	RUN combinedcycle_fprops_common::specify;
+	FIX Wdot; Wdot := 100 {MW};
+	
+	(* ambient conditions *)
+	FIX GC.inlet.T, GC.inlet.p;
+	GC.inlet.T := 30 {K} + 273.15 {K};
+	GC.inlet.p := 1 {bar};
+
+	(* Brayton parameters *)
+	FIX braytonpressureratio; braytonpressureratio := 11.2; (* optimise this *)
+	FIX BU.outlet.T; BU.outlet.T := 970 {K} + 273.15 {K};
+
+	(* Rankine cycle condenser *)
+	CO.outlet.p := 8 {kPa};
+	FIX CO.outlet.T; CO.outlet.T := 40 {K} + 273.15 {K};
+	FIX TU.inlet.p; TU.inlet.p := 150 {bar};
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END on_load;
+END combinedcycle_ammonia;
+
+(*
+the combinedcycle_co2 model is removed, because it wasn't viable due to the
+location of the CO2 critical point.
+*)
+

@@ -612,39 +612,34 @@ static void DestroyInstanceParts(struct Instance *i){
   }
 }
 
-void DestroyInstance(struct Instance *inst, struct Instance *parent)
-{
+void DestroyInstance(struct Instance *inst, struct Instance *parent){
   struct TypeDescription *desc;
   int delete;
-  if (inst==NULL) return;
+  if(inst==NULL) return;
 
-  /*char *temp = WriteInstanceNameString(parent,NULL);
-  CONSOLE_DEBUG("parent name = %s",temp);
-  ASC_FREE(temp);*/
-
-  if (InterfacePtrDelete!=NULL) {
+  if(InterfacePtrDelete!=NULL){
     DeleteIPtr(inst);
   }
   delete = RemoveParentReferences(inst,parent);
-  if (delete) {
-    if (inst->t != DUMMY_INST) {
+  if(delete){
+    if (inst->t != DUMMY_INST){
       desc = InstanceTypeDesc(inst);
-      if (GetUniversalFlag(desc)){ /* universal is being deleted */
+      if(GetUniversalFlag(desc)){ /* universal is being deleted */
         RemoveUniversalInstance(GetUniversalTable(),inst);
       }
-      if (IsCompoundInstance(inst) &&
+      if(IsCompoundInstance(inst) &&
           InstanceKind(inst) != SIM_INST &&
           ((struct PendInstance *)(inst))->p != NULL
-         ) {
+      ){
         RemoveInstance(inst);
       }
       /* remove PENDING or maybe not pending instance in destroy process. */
       RemoveFromClique(inst);
       DestroyInstanceParts(inst);
-    } else {
-      if (D_INST(inst)->ref_count<2) {
+    }else{
+      if(D_INST(inst)->ref_count<2){
         desc = InstanceTypeDesc(inst);
-        if (GetUniversalFlag(desc)){ /* universal is being deleted */
+        if(GetUniversalFlag(desc)){ /* universal is being deleted */
           RemoveUniversalInstance(GetUniversalTable(),inst);
         }
         /* dummy is never in cliques or pending */
