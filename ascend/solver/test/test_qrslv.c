@@ -151,7 +151,7 @@ static void test_bug567(void){
 	package_load("qrslv",NULL);
 
 	/* load the file */
-	const char *path = "models/johnpye/fprops/brayton_split.a4c";
+	const char *path = "models/test/bug567/combinedcycle_fprops.a4c";
 	int status;
 	Asc_OpenModule(path,&status);
 	CU_ASSERT(status == 0);
@@ -164,7 +164,7 @@ static void test_bug567(void){
 	CU_ASSERT(0 == zz_parse());
 
 	/* find the model */
-	const char *simtype = "brayton_split_co2";
+	const char *simtype = "combinedcycle_toluene";
 	CU_ASSERT(FindType(AddSymbol(simtype))!=NULL);
 
 	/* instantiate it */
