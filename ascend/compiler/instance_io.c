@@ -121,7 +121,7 @@ struct gl_list_t *ShortestPath(CONST struct Instance *i,
   unsigned long c,len;
   unsigned mybest= UINT_MAX;
   if(height>=best) return NULL;
-  if(i==ref) {
+  if(i==ref){
     shortest = gl_create(1L);
     gl_append_ptr(shortest,(VOIDPTR)ref);
     return shortest;
@@ -133,23 +133,23 @@ struct gl_list_t *ShortestPath(CONST struct Instance *i,
 	if (shortest==NULL){
 	  shortest=path;
 	  mybest = height+gl_length(path);
-	} else{
-	  if (gl_length(path)<gl_length(shortest)){
+	}else{
+	  if(gl_length(path)<gl_length(shortest)){
 	    gl_destroy(shortest);
 	    shortest = path;
 	    mybest = height+gl_length(path);
-	  } else {
+	  }else{
             gl_destroy(path);
           }
 	}
       }
     }
-    if (shortest){
+    if(shortest){
       gl_append_ptr(shortest,NULL);
       for(c=gl_length(shortest);c>1;c--) {
 	gl_store(shortest,c,gl_fetch(shortest,c-1));
       }
-      gl_store(shortest,1,(char *)i);
+      gl_store(shortest,1,(VOIDPTR)i);
       assert((ref!=NULL)||(gl_length(shortest)==InstanceShortDepth(i)));
     }
   }else{
@@ -164,21 +164,21 @@ struct gl_list_t *ShortestPath(CONST struct Instance *i,
   return shortest;
 }
 
-int WritePath(FILE *f, CONST struct gl_list_t *path)
-{
+
+int WritePath(FILE *f, CONST struct gl_list_t *path){
   CONST struct Instance *parent,*child;
   struct InstanceName name;
   unsigned long c;
   int count = 0;
 
-  if (path!=NULL){
+  if(path!=NULL){
     parent = gl_fetch(path,gl_length(path));
     for(c=gl_length(path)-1;c>=1;c--){
       child = gl_fetch(path,c);
       name = ParentsName(parent,child);
       switch (InstanceNameType(name)){
       case StrName:
-	if (c<(gl_length(path)-1)) PUTC('.',f);
+	if(c<(gl_length(path)-1)) PUTC('.',f);
 	FPRINTF(f,SCP(InstanceNameStr(name)));
 	count += SCLEN(InstanceNameStr(name));
 	break;
@@ -191,8 +191,7 @@ int WritePath(FILE *f, CONST struct gl_list_t *path)
       }
       parent = child;
     }
-  }
-  else{
+  }else{
     FPRINTF(ASCERR,"Cannot print name.\n");
     FPRINTF(f,"?????");
   }
@@ -233,8 +232,8 @@ static void WritePathDS(Asc_DString *dsPtr,CONST struct gl_list_t *path){
   }
 }
 
-char *WritePathString(CONST struct gl_list_t *path)
-{
+
+char *WritePathString(CONST struct gl_list_t *path){
   char *result;
   Asc_DString ds, *dsPtr;
   dsPtr = &ds;

@@ -540,7 +540,7 @@ struct ModelInstance {
   VOIDPTR interface_ptr;
   struct gl_list_t *parents;  /**< link to parent instances */
   struct gl_list_t *whens;    /**< link to whens on which the model appears */
-	struct gl_list_t *link_table; /**< link_table for non-declarative LINKs */
+  struct gl_list_t *link_table; /**< link_table for non-declarative LINKs */
   struct TypeDescription *desc;
   struct Instance *alike_ptr;
   struct BitList *executed;   /**< bit list to keep track of which

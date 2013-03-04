@@ -160,35 +160,34 @@ static int RemoveParentReferences(
 ){
   register unsigned long c,pos,length;
   AssertMemory(inst);
-  if (parent!=NULL) {
+  if(parent!=NULL){
     AssertMemory(parent);
     /* destroy link from inst to parent */
     pos = SearchForParent(inst,parent);
-    if (pos != 0 || inst->t == DUMMY_INST) {
-      /* Because the dummy always 'adds' a parent,
-       * it must always delete it to keep the ref_count happy.
-       * Dummy knows of no parents, but knows
-       * exactly how many it doesn't have.
-       */
+    if(pos != 0 || inst->t == DUMMY_INST){
+      /* Because the dummy always 'adds' a parent, it must always delete it to 
+      keep the ref_count happy. Dummy knows of no parents, but knows exactly 
+      how many it doesn't have. */
       DeleteParent(inst,pos);
     }
     /* destroy link(s) from parent to inst */
-    while (0 != (pos = ChildIndex(parent,inst))) {
+    while(0 != (pos = ChildIndex(parent,inst))){
       StoreChildPtr(parent,pos,NULL);
     }
     return (NumberParents(inst) == 0);
-  } else {
+  }else{
     length = NumberParents(inst);
-    if (inst->t == DUMMY_INST) {
+    if(inst->t == DUMMY_INST){
       FPRINTF(ASCERR,
- "The global dummy instance cannot be destroyed w/out parental consent\n");
+        "The global dummy instance cannot be destroyed w/out parental consent\n"
+      );
       FPRINTF(ASCERR, "You should not be seeing this message.\n");
       return 0;
     }
     for(c=1;c<=length;c++) {
       parent = InstanceParent(inst,c);
-      while (0 != (pos = ChildIndex(parent,inst))) {
-	StoreChildPtr(parent,pos,NULL);
+      while(0 != (pos = ChildIndex(parent,inst))){
+        StoreChildPtr(parent,pos,NULL);
       }
     }
     return  1;
@@ -252,14 +251,18 @@ static void DeleteArrayChild(struct ArrayChild *acp, struct Instance *parent){
 	After this, a real ATOM can be safely deleted if there are no models
 	refering to it.
 */
-static void RemoveRelationLinks(struct Instance *i, struct gl_list_t *list){
+static void RemoveRelationLinks(struct Instance *i){
+  struct gl_list_t *list = RA_INST(i)->relations;
+  if(NULL==list)return;
   register unsigned long c,length;
   assert(list!=NULL);
   length = gl_length(list);
   for(c=1;c<=length;c++) {
+	CONSOLE_DEBUG("Var %p: remove links to this var in relation %p",i, INST(gl_fetch(list,c)));
     ChangeRelationPointers(INST(gl_fetch(list,c)),i,INST(NULL));
   }
   gl_destroy(list);
+  RA_INST(i)->relations = NULL;
 }
 
 
@@ -404,20 +407,17 @@ static void DestroyInstanceParts(struct Instance *i){
     ascfree((char *)i);
     return;
   case REAL_ATOM_INST:
+    CONSOLE_DEBUG("Removing parts of var %p",i);
     /* deallocate dynamic memory used by children */
-    DestroyAtomChildren(RA_CHILD(i,0),
-			ChildListLen(GetChildList(RA_INST(i)->desc)));
+    DestroyAtomChildren(RA_CHILD(i,0),ChildListLen(GetChildList(RA_INST(i)->desc)));
     /* continue delete the atom */
     gl_destroy(RA_INST(i)->parents);
     RA_INST(i)->parents = NULL;
     DeleteTypeDesc(RA_INST(i)->desc);
     RA_INST(i)->desc = NULL;
     RA_INST(i)->alike_ptr = NULL;
-    if (RA_INST(i)->relations!=NULL) {
-      RemoveRelationLinks(i,RA_INST(i)->relations);
-      RA_INST(i)->relations=NULL;
-    }
-    /* children are automatically deleted by the following */
+    RemoveRelationLinks(i);
+    /* children are automatically deleted by the following  ----  EH??? how does that work? -JP */
     i->t = ERROR_INST;
     ascfree((char *)i);
     return;
@@ -493,9 +493,10 @@ static void DestroyInstanceParts(struct Instance *i){
     ascfree((char *)i);
     return;
   case REL_INST:
+    CONSOLE_DEBUG("Removing parts of rel %p",i);
     /* deallocate dynamic memory used by children */
     DestroyAtomChildren(REL_CHILD(i,0),
-			ChildListLen(GetChildList(RELN_INST(i)->desc)));
+    ChildListLen(GetChildList(RELN_INST(i)->desc)));
     /* continue deleting the relation */
     DeleteTypeDesc(RELN_INST(i)->desc);
     RELN_INST(i)->desc = NULL;
@@ -510,8 +511,8 @@ static void DestroyInstanceParts(struct Instance *i){
       RELN_INST(i)->whens=NULL;
     }
     /* delete references of reals to this expression */
-    if (RELN_INST(i)->ptr != NULL){
-      /*CONSOLE_DEBUG("Destroying relation at %p",RELN_INST(i)->ptr);*/
+    if(RELN_INST(i)->ptr != NULL){
+      CONSOLE_DEBUG("Destroying links to relation %p",i);
       DestroyRelation(RELN_INST(i)->ptr,i);
       RELN_INST(i)->ptr = NULL;
     }
@@ -631,6 +632,7 @@ void DestroyInstance(struct Instance *inst, struct Instance *parent){
           InstanceKind(inst) != SIM_INST &&
           ((struct PendInstance *)(inst))->p != NULL
       ){
+		// remove instance from the pending list, if such exists
         RemoveInstance(inst);
       }
       /* remove PENDING or maybe not pending instance in destroy process. */

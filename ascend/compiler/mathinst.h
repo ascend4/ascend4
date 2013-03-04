@@ -179,8 +179,8 @@ extern void AddRelation(struct Instance *i, struct Instance *reln);
 
 extern void RemoveRelation(struct Instance *i, struct Instance *reln);
 /**< 
-	Remove reln from i's relation list.  If 'reln' isn't found in i's relation
-	list, execution continues with a warning message.
+	Remove reln from the relation list of variable instance 'i'. If reln isn't
+	found in i's relation list, execution continues with a warning message.
 */
 
 ASC_DLLSPEC unsigned long LogRelationsCount(CONST struct Instance *i);
