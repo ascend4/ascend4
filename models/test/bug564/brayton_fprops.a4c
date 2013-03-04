@@ -1,0 +1,401 @@
+(*	ASCEND modelling environment
+	Copyright (C) 2007-2012 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*)(*
+	The Rankine-cycle has been altered to become a Brayton cycle to analyse a
+	supercritical CO2 brayton cycle.
+	
+	Authors: Rachel Hogan, John Pye
+*)
+
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/airprops.a4c";
+REQUIRE "test/bug564/rankine_fprops.a4c";
+REQUIRE "test/bug564/heatex_pinch.a4c";
+
+IMPORT "sensitivity/solve";
+
+(*------------------------------------------------------------------------------
+  MERGE PIECE
+*)
+
+(*
+	Joining two streams
+*)
+MODEL merge;
+	NOTES
+		'block' SELF {Model of a joining of two flow streams}
+	END NOTES;
+
+	inlet "in:" IS_A stream_node;
+	inlet_branch "in:" IS_A stream_node;
+	outlet "out:" IS_A stream_node;
+
+	inlet.cd, inlet_branch.cd, outlet.cd ARE_THE_SAME;
+	cd ALIASES inlet.cd;
+
+	inlet.p, inlet_branch.p, outlet.p ARE_THE_SAME;
+	(*inlet.h, inlet_branch.h, outlet.h  ARE_THE_SAME;*)
+
+	(* cons. mass *)
+	cons_mass: inlet.mdot + inlet_branch.mdot= outlet.mdot;
+	
+	(* cons. energy*)
+	cons_energy: inlet.mdot*inlet.h+inlet_branch.mdot*inlet_branch.h= outlet.mdot*outlet.h;
+
+	phi IS_A fraction;
+	phi_eq: phi * outlet.mdot = inlet_branch.mdot;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+	RUN inlet_branch.default_self;
+END default_self;
+END merge;	
+
+
+(*------------------------------------------------------------------------------
+  OVERALL CYCLE
+*)
+
+(*
+	Simple Brayton cycle.
+
+	This is an improvement on the earlier models/johnpye/brayton.a4c since it
+	allows non-ideal fluids to be used, with evalation done by FPROPS. You won't
+	be able to load both at the same time currently, because the models have the
+	same name.
+*)
+MODEL brayton_common;
+
+	BO IS_A boiler_simple;
+	TU IS_A turbine_simple;
+	CO IS_A condenser_simple;
+	PU IS_A pump_simple;
+	cd ALIASES BO.cd;
+
+	BO.outlet, TU.inlet ARE_THE_SAME;
+	TU.outlet, CO.inlet ARE_THE_SAME;
+	CO.outlet, PU.inlet ARE_THE_SAME;
+	PU.outlet, BO.inlet ARE_THE_SAME;
+	braytonpressureratio IS_A positive_factor;
+	braytonpressureratio * PU.inlet.p = TU.outlet.p;
+	
+	Wdot IS_A energy_rate;
+	Wdot = PU.Wdot + TU.Wdot;
+	
+	Qdot_loss ALIASES CO.Qdot;
+	T_H ALIASES BO.outlet.T;
+	T_C ALIASES CO.outlet.T;
+	
+	eta IS_A fraction;
+	eta * (BO.Qdot) = Wdot;
+	
+	eta_carnot IS_A fraction;
+	eta_carnot = 1 - T_C / T_H;
+
+	Qdot IS_A energy_rate;
+	Qdot = BO.Qdot + CO.Qdot;
+	
+	DE_cycle IS_A energy_rate;
+	DE_cycle = Qdot-Wdot;
+
+	r_bw IS_A factor;
+	r_bw = -PU.Wdot / TU.Wdot;
+
+	mdot ALIASES TU.mdot;
+	x_turb_out ALIASES TU.outlet.x;
+
+METHODS
+METHOD on_load;
+	FIX PU.eta, TU.eta;
+	PU.eta := 0.8;
+	TU.eta := 0.85;
+	FIX PU.inlet.T, TU.inlet.T;
+	CO.inlet.T := 300 {K};
+	TU.inlet.T := 1300 {K};
+	FIX PU.r;
+	PU.r := 8;
+	FIX PU.inlet.p;
+	PU.inlet.p := 1 {bar};
+	FIX PU.inlet.mdot;
+	PU.inlet.mdot := 1 {kg/s};
+	FIX BO.eta;
+	BO.eta := 1;
+END on_load;
+METHOD default_self;
+	RUN BO.default_self;
+	RUN TU.default_self;
+	RUN CO.default_self;
+	RUN PU.default_self;
+END default_self;
+END brayton_common;
+
+
+MODEL brayton_co2 REFINES brayton_common;
+	cd.component :== 'carbondioxide';
+	cd.type :== 'helmholtz';
+METHODS
+METHOD on_load;
+	RUN ClearAll;
+	RUN default_self;
+	FIX BO.eta; BO.eta := 1.0;
+	FIX TU.eta; TU.eta := 0.85;
+	FIX PU.eta; PU.eta := 0.8;
+	FIX Wdot; Wdot := 100 {MW};
+	FIX CO.outlet.T; CO.outlet.T := 10 {K} + 273.15 {K};
+	FIX CO.outlet.x; CO.outlet.x := 1e-6;
+	FIX PU.outlet.p; PU.outlet.p := 150 {bar};
+	FIX BO.outlet.T; BO.outlet.T := 580 {K} + 273.15 {K};
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 200;
+END on_load;
+METHOD default_self;
+	RUN brayton_common::default_self;
+	BO.outlet.h := 350 {kJ/kg}; (* guess *)
+	TU.outlet.h := 1000 {kJ/kg}; (* guess *)
+	CO.outlet.h := 350 {kJ/kg};
+	CO.outlet.p := 60 {bar};
+	CO.outlet.p.lower_bound := 5.2 {bar};
+END default_self;
+END brayton_co2;
+
+
+(*------------------------------------------------------------------------------
+  REGENERATIVE BRAYTON CYCLE, again using FPROPS instead of ideal air
+*)
+
+(*
+	Regenerator: heat exchanger
+
+	Assumption: fluid on both sides have the same c_p.
+	*** FIXME is that still true now that we're calculating on enthalpy??
+*)
+MODEL regenerator REFINES heatex_pinch;
+	DT,DT1,DT2 IS_A delta_temperature;
+	DT = inlet_hot.T - inlet.T;
+	DT1 = outlet_hot.T - inlet.T;
+	DT2 = inlet_hot.T - outlet.T;
+
+	epsilon IS_A fraction;
+
+	mdot_min IS_A mass_rate;
+	mdot_min = inlet.mdot + 0.5*(inlet.mdot - inlet_hot.mdot + abs(inlet.mdot - inlet_hot.mdot));
+
+	eps_eq: Qdot = epsilon * mdot_min * (inlet_hot.h - inlet.h);
+METHODS
+METHOD bound_self;
+	DT1.lower_bound := 0 {K};
+	DT2.lower_bound := 0 {K};
+	DT.lower_bound := 0 {K};
+END bound_self;
+END regenerator;
+
+MODEL regenerator_test REFINES regenerator;
+	inlet.cd.component :== 'carbondioxide';
+	inlet.cd.type :== 'helmholtz';
+	inlet_hot.cd, inlet.cd ARE_THE_SAME;
+	n :== 8;
+METHODS
+METHOD on_load;
+	RUN heatex_pinch::default_self;
+	RUN bound_self;
+	RUN heatex_pinch::default_self;
+	(* heat transfer for a particular value of temperature drop at the pinch *)
+	FIX inlet.p := 200 {bar};
+	FIX inlet_hot.p := 70 {bar}; (* doesn't currently solve for CO2 if the pressure is too low... needed to figure out why *)
+	FIX inlet_hot.T := 100 {K} + 273.15 {K};
+	FIX inlet.T := 31 {K} + 273.15 {K};
+	FIX mdot_hot := 1.1 {kg/s};
+	FIX mdot := 0.81 {kg/s};
+	FIX DT_pinch := 10 {K};
+END on_load;
+END regenerator_test;
+
+MODEL brayton_regen;
+	NOTES
+		'description' SELF {
+			This is a model of a regenerative Brayton cycle with
+			irreversible compressor (eta=0.8) and turbine (eta=0.85) operating
+			between 300 K and 1300 K, with a compression ratio of 8 and an
+			assumed inlet pressure of 1 bar. The regenerator effectiveness is 
+			0.8.
+
+			Based on example 9-7 from Çengel & Boles, 'Thermodynamics: An 
+			Engineering Approach', 6th Ed, McGraw-Hill, 2008}
+	END NOTES;
+
+	
+	BO IS_A boiler_simple;
+	TU IS_A turbine_simple;
+	CO IS_A condenser_simple;
+	PU IS_A pump_simple;
+	RE IS_A heatex_pinch;
+	cd ALIASES BO.cd;
+	cd.component :== 'carbondioxide';
+	cd.type :== 'helmholtz';
+	RE.n :== 8;
+	
+	PU.outlet, RE.inlet ARE_THE_SAME;
+	RE.outlet, BO.inlet ARE_THE_SAME;
+	BO.outlet, TU.inlet ARE_THE_SAME;
+	TU.outlet, RE.inlet_hot ARE_THE_SAME;
+	RE.outlet_hot, CO.inlet ARE_THE_SAME;
+	CO.outlet, PU.inlet ARE_THE_SAME;
+
+	Wdot_PU ALIASES PU.Wdot;
+	Wdot_TU ALIASES TU.Wdot;
+	Wdot IS_A energy_rate;
+	Wdot = Wdot_PU + Wdot_TU;
+	
+	Qdot_BO ALIASES BO.Qdot;
+	Qdot_CO ALIASES CO.Qdot;
+
+	Qdot IS_A energy_rate;
+	Qdot = Qdot_BO + Qdot_CO;
+
+	Edot IS_A energy_rate;
+	Edot = Wdot - Qdot;
+
+	eta IS_A factor;
+	eta = Wdot / Qdot_BO;
+
+	therm_eff IS_A fraction;
+	therm_eff = ((TU.Wdot)/(TU.mdot)+(PU.Wdot)/(PU.mdot))/(BO.Qdot/BO.mdot);
+	
+	r_bw IS_A factor;
+	r_bw = -Wdot_PU / Wdot_TU;
+
+	Qdot_RE ALIASES RE.Qdot;
+
+	eta_TU ALIASES TU.eta;
+	eta_PU ALIASES PU.eta;
+	DT_RE ALIASES RE.DT_pinch;
+METHODS
+METHOD default_self;
+	RUN BO.default_self;
+	RUN TU.default_self;
+	RUN CO.default_self;
+	RUN PU.default_self;
+	RUN RE.default_self;
+END default_self;
+METHOD on_load;
+	RUN default_self;
+	FIX PU.eta, TU.eta;
+	PU.eta := 0.8;
+	TU.eta := 0.85;
+	FIX PU.inlet.T, TU.inlet.T;
+	PU.inlet.T := 310. {K};
+	TU.inlet.T := 1200. {K};
+	FIX BO.Qdot_fuel := 353 {kW};
+	FIX PU.outlet.p := 50 {MPa};
+	FIX PU.inlet.p;
+	PU.inlet.p := 7.4 {MPa};
+	(*FIX PU.inlet.mdot;
+	PU.inlet.mdot := 1 {kg/s};*)
+	FIX BO.eta;
+	BO.eta := 1;
+	FIX RE.DT_pinch;
+	RE.DT_pinch := 10 {K};
+END on_load;
+END brayton_regen;
+
+
+MODEL brayton_regen_reheat_intercool;
+	BU1, BU2 IS_A boiler_simple;
+	TU1, TU2 IS_A turbine_simple;
+	CO1, CO2 IS_A pump_simple;
+	RE IS_A heatex_pinch;
+	DI1 IS_A condenser_simple; (* let's call it a 'dissipator' in this case *)
+	DI2 IS_A condenser_simple;
+	cd ALIASES BU1.cd;
+
+	BU1.outlet, TU1.inlet ARE_THE_SAME;
+	TU1.outlet, BU2.inlet ARE_THE_SAME;
+	BU2.outlet, TU2.inlet ARE_THE_SAME;
+	TU2.outlet, RE.inlet_hot ARE_THE_SAME;
+	RE.outlet_hot, DI1.inlet ARE_THE_SAME;
+	DI1.outlet, CO1.inlet ARE_THE_SAME;
+	CO1.outlet, DI2.inlet ARE_THE_SAME;
+	DI2.outlet, CO2.inlet ARE_THE_SAME;
+	CO2.outlet, RE.inlet ARE_THE_SAME;
+	RE.outlet, BU1.inlet ARE_THE_SAME;
+
+	T_H, T_L IS_A temperature;
+	T_L, DI1.outlet.T, DI2.outlet.T ARE_THE_SAME;
+	T_H, BU1.outlet.T, BU2.outlet.T ARE_THE_SAME;
+	p_1 ALIASES CO1.inlet.p;
+	p_2a ALIASES CO1.outlet.p;
+	p_2b ALIASES TU1.outlet.p;
+	p_3 ALIASES CO2.outlet.p;
+	DT_RE ALIASES RE.DT_pinch;
+
+	Wdot, Qdot_H, Qdot_L IS_A energy_rate;
+	Wdot = TU1.Wdot + TU2.Wdot + CO1.Wdot + CO2.Wdot;
+	Qdot_H = BU1.Qdot + BU2.Qdot;
+	Qdot_L = DI1.Qdot + DI2.Qdot;
+	Qdot_RE ALIASES RE.Qdot;
+
+	eta IS_A fraction;
+	eta = Wdot / Qdot_H;
+METHODS
+METHOD default_self;
+	RUN BU1.default_self;
+	RUN BU2.default_self;
+	RUN TU1.default_self;
+	RUN TU2.default_self;
+	RUN CO1.default_self;
+	RUN CO2.default_self;
+	RUN RE.default_self;
+	RUN DI1.default_self;
+	RUN DI2.default_self;
+END default_self;
+METHOD on_load;
+	RUN RE.bound_self;
+	RUN default_self;
+	FIX BU1.eta := 1;
+	FIX BU2.eta := 1;
+	FIX TU1.eta := 0.85;
+	FIX TU2.eta := 0.85;
+	FIX CO1.eta := 0.8;
+	FIX CO2.eta := 0.8;
+	FIX RE.DT_pinch := 10 {K};
+	FIX BU1.mdot := 1{kg/s};
+END on_load;
+END brayton_regen_reheat_intercool;
+
+
+MODEL brayton_regen_reheat_intercool_co2 REFINES brayton_regen_reheat_intercool;
+	cd.component :== 'carbondioxide';
+	cd.type :== 'helmholtz';
+	RE.n :== 8;
+METHODS
+METHOD on_load;
+	RUN brayton_regen_reheat_intercool::on_load;
+	FIX T_L := 30 {K} + 273.15 {K}; (* a little on the low side? *)
+	FIX T_H := 650 {K} + 273.15 {K};
+	FIX p_1 := 74 {bar};
+	FIX p_2a := 150 {bar};
+	FIX p_2b := p_2a;
+	FIX p_3 := 300 {bar};
+	(* FIX RE.epsilon := 0.77; *)
+	FIX RE.DT_pinch := 15 {K};
+END on_load;
+END brayton_regen_reheat_intercool_co2;
+
+

@@ -195,7 +195,7 @@ static void test_bug564(void){
 	package_load("qrslv",NULL);
 
 	/* load the file */
-	const char *path = "models/johnpye/fprops/brayton_split_salt.a4c";
+	const char *path = "models/test/bug564/brayton_split_salt.a4c";
 	{
 		int status;
 		Asc_OpenModule(path,&status);
