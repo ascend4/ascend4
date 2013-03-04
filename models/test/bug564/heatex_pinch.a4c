@@ -1,0 +1,73 @@
+REQUIRE "test/bug564/rankine_fprops.a4c";
+IMPORT "johnpye/fprops/heatex_pinch";
+
+MODEL heatex_pinch_data;
+	(* this model exists simply to convey the necessary component data to the
+	external relation that solves the heat exchanger behaviour. *)
+	component IS_A symbol_constant;
+	type IS_A symbol_constant;
+
+	component_hot IS_A symbol_constant;
+	type_hot IS_A symbol_constant;
+
+	n IS_A integer_constant;
+END heatex_pinch_data;
+
+MODEL heatex_pinch REFINES stream_equipment;
+	inlet_hot, outlet_hot IS_A stream_node;
+	
+	inlet.p, outlet.p ARE_THE_SAME;
+	inlet_hot.p, outlet_hot.p ARE_THE_SAME;
+	inlet_hot.cd, outlet_hot.cd ARE_THE_SAME;
+
+	inlet_hot.mdot, outlet_hot.mdot ARE_THE_SAME;
+	mdot_hot ALIASES inlet_hot.mdot;
+
+	hxd IS_A heatex_pinch_data;
+	hxd.component, inlet.cd.component ARE_THE_SAME;
+	hxd.component_hot, inlet_hot.cd.component ARE_THE_SAME;
+	hxd.type, inlet.cd.type ARE_THE_SAME;
+	hxd.type_hot, inlet_hot.cd.type ARE_THE_SAME;
+	n ALIASES hxd.n;
+
+	Qdot IS_A energy_rate;
+	DT_pinch "pinch temperature is the most-negative temperature difference (T_H-T_C) anywhere across the heat exchanger" IS_A delta_temperature;
+
+	outlet.h = inlet.h + Qdot/inlet.mdot;
+	outlet_hot.h = inlet_hot.h - Qdot/inlet_hot.mdot;
+
+	pinch_ext: heatex_DT_phmphmQ(
+		inlet.p, inlet.h, inlet.mdot, inlet_hot.p, inlet_hot.h, inlet_hot.mdot, Qdot  : INPUT;
+		DT_pinch : OUTPUT;
+		hxd : DATA
+	);
+METHODS
+METHOD default_self;
+	RUN stream_equipment::default_self;
+	RUN inlet_hot.default_self;
+	RUN outlet_hot.default_self;
+END default_self;
+END heatex_pinch;
+
+(* test case -- HEL from brayton_split model *)
+MODEL heatex_pinch_test REFINES heatex_pinch;
+	inlet.cd.component :== 'carbondioxide';
+	inlet.cd.type :== 'helmholtz';
+	inlet_hot.cd.component :== 'carbondioxide';
+	inlet_hot.cd.type :== 'helmholtz';
+	n :== 8;
+METHODS
+METHOD on_load;
+	RUN heatex_pinch::default_self;
+	(* in this configuration, we iterate to calculate the heat transfer 
+	occuring for a particular pinch temperature *)
+	FIX inlet.p := 200 {bar};
+	FIX inlet_hot.p := 74 {bar};
+	FIX inlet_hot.T := 100 {K} + 273.15 {K};
+	FIX inlet.T := 31 {K} + 273.15 {K};
+	FIX mdot_hot := 1.1 {kg/s};
+	FIX mdot := 0.81 {kg/s};
+	FIX DT_pinch := 10 {K};
+END on_load;
+END heatex_pinch_test;
+

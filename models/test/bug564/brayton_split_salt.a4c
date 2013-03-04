@@ -1,0 +1,37 @@
+REQUIRE "test/bug564/brayton_split.a4c";
+REQUIRE "johnpye/moltensalt.a4c";
+
+MODEL boiler_heatex_salt REFINES boiler_simple;
+	inlet_salt, outlet_salt IS_A moltensalt_node;
+
+	inlet_salt.mdot, outlet_salt.mdot ARE_THE_SAME;
+	mdot_salt ALIASES inlet_salt.mdot;
+	inlet_salt.p, outlet_salt.p ARE_THE_SAME;
+
+	(* Qdot is positive if heat is added to the cold-side flow *)
+	Qdot = inlet_salt.mdot * (inlet_salt.h - outlet_salt.h);
+
+END boiler_heatex_salt;	
+
+MODEL brayton_split_salt_co2 REFINES brayton_split_co2;
+	BO IS_REFINED_TO boiler_heatex_salt;
+
+	cd.component :== 'carbondioxide';
+	cd.type :== 'helmholtz';	
+	HEL.n :== 8;
+	HEH.n :== 8;	
+METHODS
+METHOD on_load;
+	RUN BO.default_self;
+	RUN brayton_split_co2::on_load;
+	FIX BO.inlet_salt.T := 565 {K} + 263.15 {K};
+	FIX BO.inlet_salt.p := 1 {bar};
+	FIX BO.mdot_salt := 1 {kg/s};
+END on_load;
+METHOD self_test;
+	ASSERT BO.inlet_salt.T == 565 {K} + 263.15 {K};
+	ASSERT BO.mdot_salt == 1 {kg/s};
+	ASSERT BO.inlet_salt.p == 1 {bar};
+END self_test;
+END brayton_split_salt_co2;
+
