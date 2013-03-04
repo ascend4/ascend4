@@ -101,6 +101,7 @@ void DestroyExtCall(struct ExtCallNode *ext, struct Instance *relinst){
       len2 = gl_length(branch);
       for (c2=len2;c2>=1;c2--) {
 	if ( (ptr = (struct Instance *)gl_fetch(branch,c2)) !=NULL)
+      CONSOLE_DEBUG("Remove relation...");
 	  RemoveRelation(ptr,relinst);
       }
       gl_destroy(branch);

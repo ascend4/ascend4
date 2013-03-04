@@ -767,10 +767,9 @@ struct Instance *MergeModels(struct ModelInstance *i1,
 {
   char *n1 = WriteInstanceNameString(i1,NULL);
   char *n2 = WriteInstanceNameString(i2,NULL);
-  CONSOLE_DEBUG("Merging models '%s' and '%s'",n2,n2);
+  CONSOLE_DEBUG("Merging models '%s' and '%s'",n1,n2);
   ASC_FREE(n1);
   ASC_FREE(n2);
-
 
   switch(KeepWhichInstance(i1->desc,i2->desc,INST(i1),INST(i2))){
   case 1:
@@ -1090,7 +1089,7 @@ struct Instance *RecursiveMergeInstance(struct Instance *i1,
 #if 0
   char *n1 = WriteInstanceNameString(i1,NULL);
   char *n2 = WriteInstanceNameString(i2,NULL);
-  CONSOLE_DEBUG("Merging '%s' and '%s'",n2,n2);
+  CONSOLE_DEBUG("Merging '%s' and '%s'",n1,n2);
   ASC_FREE(n1);
   ASC_FREE(n2);
 #endif

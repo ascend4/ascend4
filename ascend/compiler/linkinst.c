@@ -76,9 +76,6 @@ void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
   assert(rel!=NULL);
   assert(rel->t==REL_INST);
   AssertMemory(rel);
-#if 0
-  char *temp;
-#endif
   if (RELN_INST(rel)->ptr!=NULL) {
     /* FIXME: ChangeRelationPointers needs verification. all rel types have the rel->varlist that needs repair, then each rel type has specifics to fix up. */
     switch (RELN_INST(rel)->type) {
@@ -89,10 +86,8 @@ void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
       ModifyGlassBoxRelPointers(rel,RELN_INST(rel)->ptr,old,new);
       return;
     case e_blackbox:
-#if 0
-      temp = WriteInstanceNameString(old,NULL);	
-      CONSOLE_DEBUG("MODIFY BLACK BOX POINTERS old = '%s'",temp);
-	  ASC_FREE(temp);
+#if 1
+      CONSOLE_DEBUG("MODIFY BLACK BOX POINTERS on rel = %p: old instance %p new %p",rel,old,new);
 #endif
       ModifyBlackBoxRelPointers(rel,RELN_INST(rel)->ptr,old,new);
       return;

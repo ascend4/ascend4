@@ -67,7 +67,7 @@ ASC_EXPORT int bboxtest_register(void){
 
 struct BBOXTEST_problem {
 	double coef; /* coef in y=coef*x*/
-	int n; /* number of equations. */
+	int n; /* number of inputs passed to this bbox? */
 };
 
 static int GetCoef( struct Instance *data, struct BBOXTEST_problem *problem);

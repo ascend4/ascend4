@@ -3388,13 +3388,19 @@ static void DestroyTermSide(struct relation_side_temp *temp)
   temp->length=0L;
 }
 
-void DestroyVarList(struct gl_list_t *l, struct Instance *inst)
+/**
+	From a list of variables, remove all references to relation 'inst'.
+	@param l 	list of variables (gl_list of struct Instance *)
+	@param inst	relation instance to be removed from the relations list belonging to each variable
+*/
+void DestroyVarList(struct gl_list_t *l, struct Instance *relinst)
 {
   register struct Instance *ptr;
   register unsigned long c;
   for(c=gl_length(l);c>=1;c--) {
     if (NULL != (ptr = (struct Instance *)gl_fetch(l,c))) {
-      RemoveRelation(ptr,inst);
+      CONSOLE_DEBUG("Destroy var list");
+      RemoveRelation(ptr,relinst);
     }
   }
   gl_destroy(l);
@@ -3408,6 +3414,7 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
   if (--(RelationRefCount(rel))==0) {
     switch (GetInstanceRelationType(relinst)) {
     case e_token:
+      CONSOLE_DEBUG("Destroy token rel");
       if (RTOKEN(rel).lhs!=NULL) {
         ascfree(RTOKEN(rel).lhs);
       }
@@ -3419,6 +3426,7 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
       }
       break;
     case e_opcode:
+      CONSOLE_DEBUG("Destroy opcode rel");
       if (ROPCODE(rel).lhs) {
         ascfree((char *)ROPCODE(rel).lhs);
       }
@@ -3430,11 +3438,13 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
       }
       break;
     case e_glassbox:
+      CONSOLE_DEBUG("Destroy glass rel");
       if (RGBOX(rel).args) {
         ascfree((char *)(RGBOX(rel).args));
       }
       break;
     case e_blackbox:
+      CONSOLE_DEBUG("Destroy black rel");
       if (RBBOX(rel).inputArgs) {
         ascfree((void *)(RBBOX(rel).inputArgs));
         RBBOX(rel).inputArgs = NULL;
@@ -3457,6 +3467,7 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
 
   if (rel->vars) DestroyVarList(rel->vars,relinst);
   ascfree((char *)rel);
+  CONSOLE_DEBUG("...");
 }
 
 /*------------------------------------------------------------------------------
@@ -3777,7 +3788,7 @@ static void UpdateInputArgsList(struct Instance *relinst
 }
 
 
-/*
+/**
 	This procedure should change all references of "old" in relation
 	instance rel to "new.
 	Remember:
@@ -3787,20 +3798,20 @@ static void UpdateInputArgsList(struct Instance *relinst
 
 	If the varlist length is changed, we must rebuild the
 	indexing array.
-* @param relinst the relation instance.
-* @param rel the relation structure, which must be from a blackbox relation.
-* @param new the variable instance being used to replace old.
-* 5 cases:
-* 0-	no-op; old and new are the same already; do nothing.
-* 1-	notfound; old is not in the varlist; do nothing.
-* 2-	replace; old is found and new is not in list. overwrite old. ref count?
-*       bbox arg indexing remains the same.
-* 3-	merge; old and new are both in varlist, which shrinks varlist. This
-*	will break the indexing, which is part of the shared RelationUnion,
-*	and we will need to copy.
-*
-* 4-	null; new is NULL, in which case we just overwrite first instance of
-*	old in the list with null. This is probably incorrect in refcount terms.
+	@param relinst the relation instance.
+	@param rel the relation structure, which must be from a blackbox relation.
+	@param new the variable instance being used to replace old.
+
+	Five cases that need to be dealt with here:
+	0-	no-op; old and new are the same already; do nothing.
+	1-	notfound; old is not in the varlist; do nothing.
+	2-	replace; old is found and new is not in list. overwrite old. ref count?
+		bbox arg indexing remains the same.
+	3-	merge; old and new are both in varlist, which shrinks varlist. This
+		will break the indexing, which is part of the shared RelationUnion,
+		and we will need to copy.
+	4-	null; new is NULL, in which case we just overwrite first instance of
+		old in the list with null. This is probably incorrect in refcount terms.
 */
 void ModifyBlackBoxRelPointers(struct Instance *relinst,
 			       struct relation *rel,
@@ -3811,34 +3822,37 @@ void ModifyBlackBoxRelPointers(struct Instance *relinst,
 	struct gl_list_t *branch, *extvars;
 	struct Instance *arg;
 
-  /* FIXME: kirk never dealt with varlist rel->properly under merge. ModifyBlackBoxRelPointers
-this gets used in interactive merge/refinement.
-This should have just gone away perhaps now that we don't store
-instance pointers anywhere except the varlist. maybe we must reindex,though.
- */
+	if(0==new)CONSOLE_DEBUG("Blackbox relation %p: clear reference to var 'old'=%p",relinst,old);
 
-  assert(rel!=NULL);
-  if (old==new) return;
-  extvars = RelationBlackBoxArgNames(rel);
-  if (extvars==NULL) return;
+	/* FIXME: kirk never dealt with varlist rel->properly under merge. ModifyBlackBoxRelPointers
+	this gets used in interactive merge/refinement.
+	This should have just gone away perhaps now that we don't store
+	instance pointers anywhere except the varlist. maybe we must reindex,though. */
 
-  len1 = gl_length(extvars);
-  if (!len1) return;
-  for (c1=1;c1<=len1;c1++){	/* find all occurrences and change them */
-    branch = (struct gl_list_t *)gl_fetch(extvars,c1);
-    if (branch){
-      len2 = gl_length(branch);
-      for (c2=1;c2<=len2;c2++){
-	arg = (struct Instance *)gl_fetch(branch,c2);
-	if (arg==old) {
-	  gl_store(branch,c2,(VOIDPTR)new);
-        }
-      }
-    }
-  }
-  /* fix up inputs lookup table. */
-  UpdateInputArgsList(relinst,rel,(new==NULL));
-  /* still need to fix up lhsvar index. */
+	assert(rel!=NULL);
+	if(old==new)return;/* case 1 */
+
+	extvars = RelationBlackBoxArgNames(rel);
+	if(extvars==NULL)return;
+
+	len1 = gl_length(extvars);
+	if(!len1)return;
+	for(c1=1;c1<=len1;c1++){ /* find all occurrences and change them */
+		branch = (struct gl_list_t *)gl_fetch(extvars,c1);
+		if(branch){
+			len2 = gl_length(branch);
+			for(c2=1;c2<=len2;c2++){
+				arg = (struct Instance *)gl_fetch(branch,c2);
+				if(arg==old) {
+					CONSOLE_DEBUG("Rewriting reference to %p to be %p",c2,new);
+					gl_store(branch,c2,(VOIDPTR)new);
+				}
+			}
+		}
+	}
+	/* fix up inputs lookup table. */
+	UpdateInputArgsList(relinst,rel,(new==NULL));
+	/* still need to fix up lhsvar index. */
 }
 
 /**
