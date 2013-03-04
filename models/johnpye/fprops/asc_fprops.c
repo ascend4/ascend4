@@ -199,7 +199,7 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 			return 1;
 		}
 		type = SCP(SYMC_INST(typeinst)->value);
-		CONSOLE_DEBUG("TYPE: %s",type?type:"(null)");
+		//CONSOLE_DEBUG("TYPE: %s",type?type:"(null)");
 		if(type && strlen(type)==0)type = NULL;
 	}
 
