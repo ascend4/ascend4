@@ -3393,13 +3393,12 @@ static void DestroyTermSide(struct relation_side_temp *temp)
 	@param l 	list of variables (gl_list of struct Instance *)
 	@param inst	relation instance to be removed from the relations list belonging to each variable
 */
-void DestroyVarList(struct gl_list_t *l, struct Instance *relinst)
-{
+void DestroyVarList(struct gl_list_t *l, struct Instance *relinst){
   register struct Instance *ptr;
   register unsigned long c;
-  for(c=gl_length(l);c>=1;c--) {
-    if (NULL != (ptr = (struct Instance *)gl_fetch(l,c))) {
-      CONSOLE_DEBUG("Destroy var list");
+  for(c=gl_length(l);c>=1;c--){
+    if(NULL != (ptr = (struct Instance *)gl_fetch(l,c))){
+      //CONSOLE_DEBUG("Destroy var list");
       RemoveRelation(ptr,relinst);
     }
   }
@@ -3414,7 +3413,7 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
   if (--(RelationRefCount(rel))==0) {
     switch (GetInstanceRelationType(relinst)) {
     case e_token:
-      CONSOLE_DEBUG("Destroy token rel");
+      //CONSOLE_DEBUG("Destroy token rel");
       if (RTOKEN(rel).lhs!=NULL) {
         ascfree(RTOKEN(rel).lhs);
       }
@@ -3426,7 +3425,7 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
       }
       break;
     case e_opcode:
-      CONSOLE_DEBUG("Destroy opcode rel");
+      //CONSOLE_DEBUG("Destroy opcode rel");
       if (ROPCODE(rel).lhs) {
         ascfree((char *)ROPCODE(rel).lhs);
       }
@@ -3438,13 +3437,13 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
       }
       break;
     case e_glassbox:
-      CONSOLE_DEBUG("Destroy glass rel");
+      //CONSOLE_DEBUG("Destroy glass rel");
       if (RGBOX(rel).args) {
         ascfree((char *)(RGBOX(rel).args));
       }
       break;
     case e_blackbox:
-      CONSOLE_DEBUG("Destroy black rel");
+      //CONSOLE_DEBUG("Destroy black rel");
       if (RBBOX(rel).inputArgs) {
         ascfree((void *)(RBBOX(rel).inputArgs));
         RBBOX(rel).inputArgs = NULL;
@@ -3465,9 +3464,10 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
     }
   }
 
+  //CONSOLE_DEBUG("Running DestroyVarList on rel->vars for rel %p",rel);
   if (rel->vars) DestroyVarList(rel->vars,relinst);
   ascfree((char *)rel);
-  CONSOLE_DEBUG("...");
+  //CONSOLE_DEBUG("...");
 }
 
 /*------------------------------------------------------------------------------
@@ -3658,48 +3658,45 @@ void RecomputeVarListPointers(struct Instance *relinst,
 * 4-	null; new is NULL, in which case we just overwrite first instance of
 *	old in the list with null. This is probably incorrect in refcount terms.
 */
-void ModifyTokenRelationPointers(struct Instance *relinst,
-			         struct relation *rel,
-			         CONST struct Instance *old,
-			         CONST struct Instance *new)
-{
+void ModifyTokenRelationPointers(struct Instance *relinst
+	, struct relation *rel, CONST struct Instance *old
+	, CONST struct Instance *new
+){
   unsigned long pos,other;
 
   (void)relinst;    /*  stop gcc whine about unused parameter  */
   /* FIXME: ModifyTokenRelationPointers. we may have a problem here handling relation shared
-	merge/split operations and the sorted/unsorted assumption.
-  */
+  merge/split operations and the sorted/unsorted assumption. */
 
   assert(rel!=NULL);
 
-  if (old==new) {
+  if(old==new){
     return;
   }
-  if (new!=NULL){
+  if(new!=NULL){
     pos = gl_search(rel->vars,old,(CmpFunc)CmpP);
-    if (pos != 0) {
+    if(pos != 0){
       other = gl_search(rel->vars,new,(CmpFunc)CmpP);
-      if (other != 0L) {
-        if (RelationRefCount(rel) > 1) {
-          /* must copy and split off a separate token string
-           * so as not to mess up sharer's varlists.
-           */
+      if(other != 0L){
+        if(RelationRefCount(rel) > 1){
+          /* must copy and split off a separate token string so as not to mess
+          up sharer's varlists. */
           RelationRefCount(rel)--; /* adjusts the shared data refcount */
           rel->share = CopyRelationShare(rel->share,e_token);
           RelationRefCount(rel) = 1; /* init the new copied data refcount */
         }
-	gl_store(rel->vars,pos,(VOIDPTR)new);
-	DeleteAndChange(rel,pos,other);		/* case 3 */
-      } else {
-	gl_store(rel->vars,pos,(char *)new);	/* case 2 */
+        gl_store(rel->vars,pos,(VOIDPTR)new);
+        DeleteAndChange(rel,pos,other);		/* case 3 */
+      }else{
+        gl_store(rel->vars,pos,(char *)new);	/* case 2 */
       }
-    } else{					/* case 1 */
+    }else{					/* case 1 */
       FPRINTF(ASCERR,"Warning ModifyTokenRelationPointers arg not found.\n");
       FPRINTF(ASCERR,"This shouldn't affect your usage at all.\n");
     }
-  } else {						/* case 4 */
+  }else{						/* case 4 */
     pos = gl_search(rel->vars,old,(CmpFunc)CmpP);
-    if (pos) {
+    if(pos){
       gl_store(rel->vars,pos,(VOIDPTR)new);
     }
   }
@@ -3818,12 +3815,25 @@ void ModifyBlackBoxRelPointers(struct Instance *relinst,
 			       CONST struct Instance *old,
 			       CONST struct Instance *new
 ){
-	unsigned long len1,c1,len2,c2;
+	unsigned long pos;
 	struct gl_list_t *branch, *extvars;
 	struct Instance *arg;
 
-	if(0==new)CONSOLE_DEBUG("Blackbox relation %p: clear reference to var 'old'=%p",relinst,old);
+	if(old==new)return;/* case 1 */
 
+	if(0==new){/* case 4 */
+		//CONSOLE_DEBUG("Blackbox relation %p: clear reference to var 'old'=%p",relinst,old);
+		struct gl_list_t *vars = rel->vars;
+		pos = gl_search(rel->vars, old, (CmpFunc)CmpP);
+		if(pos){
+			gl_store(rel->vars, pos, NULL);
+		}
+		return;
+	}
+	
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Unhandled case");
+
+#if 0
 	/* FIXME: kirk never dealt with varlist rel->properly under merge. ModifyBlackBoxRelPointers
 	this gets used in interactive merge/refinement.
 	This should have just gone away perhaps now that we don't store
@@ -3853,6 +3863,7 @@ void ModifyBlackBoxRelPointers(struct Instance *relinst,
 	/* fix up inputs lookup table. */
 	UpdateInputArgsList(relinst,rel,(new==NULL));
 	/* still need to fix up lhsvar index. */
+#endif
 }
 
 /**

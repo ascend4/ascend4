@@ -73,6 +73,7 @@
 void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
 			    struct Instance *new
 ){
+  //if(NULL==new)CONSOLE_DEBUG("Want to remove reference to var %p in relation %p",old,rel);
   assert(rel!=NULL);
   assert(rel->t==REL_INST);
   AssertMemory(rel);
@@ -86,9 +87,6 @@ void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
       ModifyGlassBoxRelPointers(rel,RELN_INST(rel)->ptr,old,new);
       return;
     case e_blackbox:
-#if 1
-      CONSOLE_DEBUG("MODIFY BLACK BOX POINTERS on rel = %p: old instance %p new %p",rel,old,new);
-#endif
       ModifyBlackBoxRelPointers(rel,RELN_INST(rel)->ptr,old,new);
       return;
     case e_undefined:

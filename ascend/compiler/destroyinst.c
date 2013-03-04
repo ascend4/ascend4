@@ -257,8 +257,8 @@ static void RemoveRelationLinks(struct Instance *i){
   register unsigned long c,length;
   assert(list!=NULL);
   length = gl_length(list);
-  for(c=1;c<=length;c++) {
-	CONSOLE_DEBUG("Var %p: remove links to this var in relation %p",i, INST(gl_fetch(list,c)));
+  for(c=1;c<=length;c++){
+	//CONSOLE_DEBUG("Var %p: referenced in relation %p",i, INST(gl_fetch(list,c)));
     ChangeRelationPointers(INST(gl_fetch(list,c)),i,INST(NULL));
   }
   gl_destroy(list);
@@ -306,7 +306,7 @@ static void DestroyAtomChildren(
     AssertMemory(*i);
     if ((*i)->t==SET_INST) {
       if (S_INST(*i)->list!=NULL) {
-	DestroySet(S_INST(*i)->list);
+        DestroySet(S_INST(*i)->list);
       }
     }
     i++;			/* position pointer for next child */
@@ -407,7 +407,7 @@ static void DestroyInstanceParts(struct Instance *i){
     ascfree((char *)i);
     return;
   case REAL_ATOM_INST:
-    CONSOLE_DEBUG("Removing parts of var %p",i);
+    //CONSOLE_DEBUG("REMOVE PARTS OF VAR %p =========",i);
     /* deallocate dynamic memory used by children */
     DestroyAtomChildren(RA_CHILD(i,0),ChildListLen(GetChildList(RA_INST(i)->desc)));
     /* continue delete the atom */
@@ -493,7 +493,7 @@ static void DestroyInstanceParts(struct Instance *i){
     ascfree((char *)i);
     return;
   case REL_INST:
-    CONSOLE_DEBUG("Removing parts of rel %p",i);
+    //CONSOLE_DEBUG("REMOVE PARTS OF REL %p ===================",i);
     /* deallocate dynamic memory used by children */
     DestroyAtomChildren(REL_CHILD(i,0),
     ChildListLen(GetChildList(RELN_INST(i)->desc)));
@@ -512,7 +512,7 @@ static void DestroyInstanceParts(struct Instance *i){
     }
     /* delete references of reals to this expression */
     if(RELN_INST(i)->ptr != NULL){
-      CONSOLE_DEBUG("Destroying links to relation %p",i);
+      //CONSOLE_DEBUG("Destroying links to relation %p",i);
       DestroyRelation(RELN_INST(i)->ptr,i);
       RELN_INST(i)->ptr = NULL;
     }

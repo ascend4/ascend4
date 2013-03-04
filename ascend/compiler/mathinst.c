@@ -386,12 +386,12 @@ void AddRelation(struct Instance *i, struct Instance *reln){
 
 void RemoveRelation(struct Instance *i, struct Instance *reln){
 	register unsigned long c;
-	CONSOLE_DEBUG("Var %p: remove reference to rel %p",i,reln);
+	//CONSOLE_DEBUG("Var %p: remove reference to rel %p",i,reln);
 	assert(i&&reln&&(reln->t==REL_INST));
 	AssertMemory(i);
 	switch(i->t){
 	case REAL_ATOM_INST:
-		CONSOLE_DEBUG("It is a real atom");
+		//CONSOLE_DEBUG("It is a real atom");
 	    if(RA_INST(i)->relations==NULL){
 			return;
 		}
