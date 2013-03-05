@@ -861,6 +861,7 @@ MODEL rankine_reheat_common;
 	TU2 IS_A turbine_simple;
 	CO IS_A condenser_simple;
 	PU IS_A pump_simple;
+	cd ALIASES BO1.cd;
 
 	BO1.outlet, TU1.inlet ARE_THE_SAME;
 	TU1.outlet, BO2.inlet ARE_THE_SAME;
@@ -896,35 +897,45 @@ METHOD default_self;
 	RUN CO.default_self;
 	RUN PU.default_self;
 END default_self;
+METHOD cycle_plot;
+	EXTERNAL cycle_plot_rankine_reheat(SELF);
+END cycle_plot;
 END rankine_reheat_common;
 
 (*
-	A model for Rankine cycle with water as the working fluid
+	A model for a reheat Rankine cycle with water as the working fluid.
 *)
 MODEL rankine_reheat_water REFINES rankine_reheat_common;
-	BO1.cd.component :== 'water';
+	cd.component :== 'water';
+	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
 	RUN cengel_ex_10_4;
+	(* make the default case slightly more realistic than the Cengel example *)
+	FIX TU1.eta := 0.9;
+	FIX TU2.eta := 0.9;
+	FIX PU.eta := 0.8;
+	FIX TU1.inlet.T := 500 {K} + 273.15 {K};
+	FIX BO2.outlet.T := TU1.inlet.T;
 END on_load;
 METHOD cengel_ex_10_4;
 	(* This example 10.4 from Cengel & Boles, 2011, 'Thermodynamics: An
 	Engineering Approach', 7th Ed., McGraw-Hill. *)
 	RUN ClearAll;
 	RUN default_self;
-	FIX BO1.eta; BO1.eta := 1.0;
-	FIX TU1.eta; TU1.eta := 1.0;
-	FIX TU2.eta; TU2.eta := 1.0;
-	FIX PU.eta; PU.eta := 1.0;
+	FIX BO1.eta := 1.0;
+	FIX TU1.eta := 1.0;
+	FIX TU2.eta := 1.0;
+	FIX PU.eta := 1.0;
 
-	FIX TU1.inlet.p; TU1.inlet.p := 15 {MPa};
-	FIX TU1.inlet.T; TU1.inlet.T := (600 {K} + 273.15 {K});
-	FIX BO2.outlet.T; BO2.outlet.T := TU1.inlet.T;
-	FIX TU2.outlet.x; TU2.outlet.x := 0.896;
-	FIX CO.inlet.p; CO.inlet.p := 10 {kPa};
-	FIX CO.outlet.x; CO.outlet.x := 1e-6;
-	FIX mdot; mdot := 1 {kg/s};
+	FIX TU1.inlet.p := 15 {MPa};
+	FIX TU1.inlet.T := (600 {K} + 273.15 {K});
+	FIX BO2.outlet.T := TU1.inlet.T;
+	FIX TU2.outlet.x := 0.896;
+	FIX CO.inlet.p := 10 {kPa};
+	FIX CO.outlet.x := 1e-6;
+	FIX mdot := 1 {kg/s};
 END cengel_ex_10_4;
 METHOD self_test_cengel;
 	ASSERT abs(TU2.outlet.s -7.3688 {kJ/kg/K}) < 0.0001 {kJ/kg/K};

@@ -111,7 +111,42 @@ def cycle_plot_rankine(self):
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
-	savefig(os.path.expanduser("~/Desktop/rankine.eps"))
+	#savefig(os.path.expanduser("~/Desktop/rankine.eps"))
+
+def cycle_plot_rankine_reheat(self):
+	"""Plot T-s diagram for a reheat Rankine cycle"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()
+	hold(1)
+	D = fprops.fluid(str(self.cd.component.getSymbolValue()))
+	sat_curve(D)
+
+	boiler1_curve = pconst(self.BO1.inlet, self.BO1.outlet,100)
+	boiler2_curve = pconst(self.BO2.inlet, self.BO2.outlet,50)
+	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
+	SS = [self.PU.outlet, self.BO1.inlet] + \
+		boiler1_curve + [self.TU1.inlet, self.TU1.outlet] + \
+		boiler2_curve + [self.TU2.inlet, self.TU2.outlet] + \
+		condenser_curve + [self.CO.outlet, self.PU.outlet]
+	plot_Ts(SS)
+
+	plot_Ts(
+		[self.PU.inlet, self.BO1.inlet, self.TU1.inlet, self.BO2.inlet
+			,self.TU2.inlet, self.CO.inlet]
+		,'bo'
+	)
+
+	title(unicode(r"Reheat Rankine cycle with %s" % D.name))
+	ylabel(unicode(r"T / [°C]"))
+	aa = axis(); axis([aa[0],aa[1],-100,600])
+	xlabel("s / [kJ/kg/K]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+	#savefig(os.path.expanduser("~/Desktop/rankine-reheat.eps"))
 
 def cycle_plot_rankine_regen2(self):
 	"""Plot T-s diagram for a regenerative Rankine cycle (bleed steam regen)"""
@@ -120,7 +155,7 @@ def cycle_plot_rankine_regen2(self):
 	ioff()
 	figure()
 	hold(1)
-	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	D = fprops.fluid(str(self.cd.component.getSymbolValue()))
 	sat_curve(D)
 
 	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
@@ -142,7 +177,7 @@ def cycle_plot_rankine_regen2(self):
 	)
 
 	# line for the heat exchanger
-	plot_Ts(pconst(self.HE.inlet_heat, self.HE.outlet,100),'b-')
+	plot_Ts(pconst(self.HE.inlet_heat, self.HE.outlet,100),'b:')
 
 	title(unicode(r"Regenerative Rankine cycle with %s" % D.name))
 	ylabel(unicode(r"T / [°C]"))
@@ -152,7 +187,7 @@ def cycle_plot_rankine_regen2(self):
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
-	savefig(os.path.expanduser("~/Desktop/regen2.eps"))
+	#savefig(os.path.expanduser("~/Desktop/regen2.eps"))
 
 
 
@@ -192,7 +227,7 @@ def cycle_plot_rankine_regen1(self):
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
-	savefig(os.path.expanduser("~/Desktop/regen1.eps"))
+	#savefig(os.path.expanduser("~/Desktop/regen1.eps"))
 
 
 #--- heat exchange (T,H) plot ---
@@ -224,7 +259,7 @@ def heater_closed_plot(self):
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
-	savefig(os.path.expanduser("~/Desktop/heater_closed.eps"))
+	#savefig(os.path.expanduser("~/Desktop/heater_closed.eps"))
 
 #--- the big one: a combined-cycle GT ---
 
@@ -258,8 +293,8 @@ def cycle_plot_ccgt(self):
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
-	savefig(os.path.expanduser("~/Desktop/ccgt.eps"))
-	savefig(os.path.expanduser("~/Desktop/ccgt.png"))
+	#savefig(os.path.expanduser("~/Desktop/ccgt.eps"))
+	#savefig(os.path.expanduser("~/Desktop/ccgt.png"))
 
 
 #--- simple gas turbine models ---
@@ -285,7 +320,7 @@ def cycle_plot_brayton_regen(self):
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
-	savefig(os.path.expanduser("~/Desktop/brayton_regen.eps"))
+	#savefig(os.path.expanduser("~/Desktop/brayton_regen.eps"))
 
 #--- air-to-stream heat exchanger plot ---
 
@@ -317,10 +352,11 @@ def air_stream_heat_exchanger_plot(self):
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
 	ion()
 	show()
-	savefig(os.path.expanduser("~/Desktop/air_stream_heatex.eps"))
+	#savefig(os.path.expanduser("~/Desktop/air_stream_heatex.eps"))
 
 
 extpy.registermethod(cycle_plot_rankine)
+extpy.registermethod(cycle_plot_rankine_reheat)
 extpy.registermethod(cycle_plot_rankine_regen1)
 extpy.registermethod(cycle_plot_rankine_regen2)
 extpy.registermethod(cycle_plot_brayton_regen)
