@@ -18,7 +18,7 @@ MODEL rankine_regen_water;
 	PU2 IS_A pump_simple;
 
 	BO.cd.component :== 'water';
-	BO.cd.type :== 'pengrob';
+	BO.cd.type :== 'helmholtz';
 
 	(* main loop *)
 	BO.outlet, TU1.inlet ARE_THE_SAME;
@@ -82,10 +82,13 @@ METHODS
 METHOD default_self;
 	RUN BO.default_self;
 	RUN TU1.default_self;
+	RUN BL.default_self;
 	RUN TU2.default_self;
 	RUN CO.default_self;
+	RUN HE.default_self;
 	RUN PU1.default_self;
 	RUN PU2.default_self;
+	RUN TU_out_is.default_self;
 	BO.outlet.h := 4000 {kJ/kg};
 	p_bleed := 37 {bar};
 	TU1.outlet.h := 2300 {kJ/kg};
