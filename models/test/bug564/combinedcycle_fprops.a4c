@@ -31,8 +31,8 @@
 
 	Author: John Pye
 *)
-REQUIRE "johnpye/fprops/rankine_fprops.a4c";
-REQUIRE "johnpye/brayton.a4c";
+REQUIRE "test/bug564/rankine_fprops.a4c";
+REQUIRE "test/bug564/brayton.a4c";
 
 MODEL air_stream_heat_exchanger REFINES air_equipment;
 	inlet_cold, outlet_cold IS_A stream_node;
@@ -73,9 +73,6 @@ METHOD default_self;
 	DT_1.lower_bound := 0 {K};
 	DT_2.lower_bound := 0 {K};
 END default_self;
-METHOD heat_exchanger_plot;
-	EXTERNAL air_stream_heat_exchanger_plot(SELF);
-END heat_exchanger_plot;
 END air_stream_heat_exchanger;
 
 
@@ -158,9 +155,6 @@ METHOD specify;
 	FIX CO.outlet.x; CO.outlet.x := 1e-6;
 	FIX BU.eta; BU.eta := 1;
 END specify;
-METHOD cycle_plot;
-	EXTERNAL cycle_plot_ccgt(SELF);
-END cycle_plot;
 END combinedcycle_fprops_common;
 
 
