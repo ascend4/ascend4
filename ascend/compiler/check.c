@@ -393,28 +393,34 @@ static void ClearConsLists(void)
 }
 
 static FILE *g_diagf;
-/*
- * global pointer so gliterate will have a file to print to in WriteConsLists
- */
+/**< global pointer so gliterate will have a file to print to in WriteConsLists */
 
-static
-void Diagnose(struct Instance *i) {
-  if (InstanceKind(i)== REAL_CONSTANT_INST) {
-    if (IsWild(RealAtomDims(i))) {
-      FPRINTF(g_diagf,"Undimensioned ");
-    }
-    if (!AtomAssigned(i)) {
-      FPRINTF(g_diagf,"Unassigned ");
-    }
-    FPRINTF(g_diagf,"real constant ");
-    WriteInstanceName(g_diagf,i,NULL);
-    FPRINTF(g_diagf,"\n");
-  } else {
-    FPRINTF(g_diagf,"Unassigned constant ");
-    WriteInstanceName(g_diagf,i,NULL);
-    FPRINTF(g_diagf,"\n");
-  }
+static void Diagnose(struct Instance *i){
+	if(InstanceKind(i)== REAL_CONSTANT_INST){
+		if(IsWild(RealAtomDims(i))) {
+		  FPRINTF(g_diagf,"Undimensioned ");
+		}
+		if(!AtomAssigned(i)){
+		  FPRINTF(g_diagf,"Unassigned ");
+		}
+		FPRINTF(g_diagf,"real constant ");
+		WriteInstanceName(g_diagf,i,NULL);
+		FPRINTF(g_diagf,"\n");
+	}else{
+		if(g_diagf == ASCERR){
+			ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
+		}
+		FPRINTF(g_diagf,"Unassigned constant \"");
+		WriteInstanceName(g_diagf,i,NULL);
+		FPRINTF(g_diagf,"\"");
+		if(g_diagf == ASCERR){
+			error_reporter_end_flush();
+		}else{
+			FPRINTF(g_diagf,"\n");
+		}
+	}
 }
+
 
 /* writes out the unassigned foo based on the flags given (pr,b,s,i) */
 static void WriteConsLists(FILE *f, int pr, int pb, int pi, int ps)

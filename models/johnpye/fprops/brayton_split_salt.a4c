@@ -17,6 +17,7 @@ MODEL brayton_split_salt_co2 REFINES brayton_split_co2;
 	BO IS_REFINED_TO boiler_heatex_salt;
 
 	cd.component :== 'carbondioxide';
+	cd.type :== 'helmholtz';
 	HEL.n :== 8;
 	HEH.n :== 8;	
 METHODS
