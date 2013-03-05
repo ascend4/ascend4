@@ -37,6 +37,10 @@ MODEL joiner (* does NOT REFINE stream_equiment, since that merges mdots *);
 	eq2: inlet.p = outlet.p;
 	eq3: inlet.h = outlet.h;
 METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+END default_self;
 METHOD tear;
 	eq1.included := FALSE;
 	eq2.included := FALSE;
@@ -167,9 +171,11 @@ END on_load;
 METHOD default_self;
 	RUN BO.default_self;
 	RUN TU.default_self;
+	RUN DI.default_self;
 	RUN HEH.default_self;
 	RUN HEL.default_self;
-	RUN DI.default_self;
+	RUN SP.default_self;
+	RUN ME.default_self;
 	RUN CO1.default_self;
 	RUN CO2.default_self;
 END default_self;
@@ -181,12 +187,14 @@ END brayton_split_common;
 
 MODEL brayton_split_co2 REFINES brayton_split_common;
 	cd.component :== 'carbondioxide';
+	cd.type :== 'helmholtz';
 	HEL.n :== 8;
 	HEH.n :== 8;
 	heatex_temp_eq: CO1.outlet.T = HEH.inlet.T;
 METHODS
 METHOD on_load;
 	ME.cons_mass.included := FALSE;
+	RUN default_self;
 	RUN ClearAll;
 	(*FIX TU.mdot := 1.8 {kg/s};*)
 	FIX TU.inlet.p := 20. {MPa};
@@ -228,7 +236,7 @@ METHOD join;
 	RUN on_load;
 END join;
 METHOD default_self;
-	RUN brayton_split::default_self;
+	RUN brayton_split_common::default_self;
 	(*BO.outlet.h := 350 {kJ/kg}; (* guess *)
 	TU.outlet.h := 1000 {kJ/kg}; (* guess *)
 	DI.outlet.h := 350 {kJ/kg};

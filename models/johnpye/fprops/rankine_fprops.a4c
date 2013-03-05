@@ -165,12 +165,10 @@ MODEL stream_node;
 	x ALIASES state.x;
 	mdot "param: mass flowrate" IS_A mass_rate;
 METHODS
-
 METHOD default_self;
 	RUN state.default_self;
 	RUN default;
 END default_self;
-
 METHOD default;
 	mdot.nominal := 2 {kg/s};
 END default;
@@ -183,14 +181,19 @@ METHOD on_load;
 END on_load;
 END stream_node;
 
+
 MODEL stream_equipment;
-	
 	outlet "out: outlet stream" IS_A stream_node;
 	inlet "in: inlet stream" IS_A stream_node;
 	inlet.cd, outlet.cd ARE_THE_SAME;
 	inlet.mdot, outlet.mdot ARE_THE_SAME;
 	cd ALIASES inlet.cd;
 	mdot ALIASES inlet.mdot;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+END default_self;
 END stream_equipment;
 
 (*------------------------------------------------------------------------------
@@ -592,7 +595,12 @@ MODEL tee;
 
 	phi IS_A fraction;
 	phi_eq: phi * inlet.mdot = outlet_branch.mdot;
-
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+	RUN outlet_branch.default_self;
+END default_self;	
 END tee;	
 
 (*------------------------------------------------------------------------------

@@ -223,8 +223,8 @@ int heatex_calc(struct BBoxInterp *bbox,
 	double DT_min = DBL_MAX;
 	int i, n = heatex_data->n;
 
-	CONSOLE_DEBUG("hot: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",hot.p/1e5, hot.h/1e3, hot.mdot);
-	CONSOLE_DEBUG("cold: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",cold.p/1e5, cold.h/1e3, cold.mdot);
+	//CONSOLE_DEBUG("hot: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",hot.p/1e5, hot.h/1e3, hot.mdot);
+	//CONSOLE_DEBUG("cold: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",cold.p/1e5, cold.h/1e3, cold.mdot);
 
 	double Th,Tc,rhoh,rhoc;
 	/* loop from i=0 (cold inlet) to i=n (cold outlet) */
@@ -245,7 +245,7 @@ int heatex_calc(struct BBoxInterp *bbox,
 		if(DT<DT_min)DT_min = DT;
 	}
 
-	CONSOLE_DEBUG("DT = %f K",DT_min);
+	//CONSOLE_DEBUG("DT = %f K",DT_min);
 
 	/* non-saturated */
 	outputs[0] = DT_min;

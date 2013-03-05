@@ -46,7 +46,12 @@ MODEL heatex_pinch REFINES stream_equipment;
 METHODS
 METHOD regenerator_plot;
 	EXTERNAL regenerator_plot_fprops(SELF);
-END regenerator_plot;	
+END regenerator_plot;
+METHOD default_self;
+	RUN stream_equipment::default_self;
+	RUN inlet_hot.default_self;
+	RUN outlet_hot.default_self;
+END default_self;
 END heatex_pinch;
 
 (* test case -- HEL from brayton_split model *)

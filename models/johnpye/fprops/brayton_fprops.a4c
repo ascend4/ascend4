@@ -60,7 +60,12 @@ MODEL merge;
 
 	phi IS_A fraction;
 	phi_eq: phi * outlet.mdot = inlet_branch.mdot;
-
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+	RUN inlet_branch.default_self;
+END default_self;
 END merge;	
 
 
