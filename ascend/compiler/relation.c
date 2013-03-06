@@ -3732,6 +3732,7 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
       gl_store(rel->vars,pos,(VOIDPTR)new);
 }
 
+#if 0 /* unused static function, was part of the blackbox stuff, but disused now, apparently -- JP */
 /* After the instance list has been updated, we must recollect
    the input argument indices into the relation varlist.
 */
@@ -3783,6 +3784,7 @@ static void UpdateInputArgsList(struct Instance *relinst
 
   gl_destroy(inputs);
 }
+#endif
 
 
 /**
@@ -3816,14 +3818,11 @@ void ModifyBlackBoxRelPointers(struct Instance *relinst,
 			       CONST struct Instance *new
 ){
 	unsigned long pos;
-	struct gl_list_t *branch, *extvars;
-	struct Instance *arg;
 
 	if(old==new)return;/* case 1 */
 
 	if(0==new){/* case 4 */
 		//CONSOLE_DEBUG("Blackbox relation %p: clear reference to var 'old'=%p",relinst,old);
-		struct gl_list_t *vars = rel->vars;
 		pos = gl_search(rel->vars, old, (CmpFunc)CmpP);
 		if(pos){
 			gl_store(rel->vars, pos, NULL);

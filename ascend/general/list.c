@@ -871,7 +871,8 @@ unsigned long gl_ptr_search(CONST struct gl_list_t *list,
     } else {
       /* the test could be written 'search < upper' with unsigned assumption,
 	but someday we may want to make list length signed and move on. */
-      for(search=upper-1; search >= 0 && search < upper; search--) {
+      /* I removed the 'search >= 0 &&' part of the test because indeed it's tautological with the current unsigned integers */
+      for(search=upper-1; /* search >= 0 && */ search < upper; search--) {
         if (list->data[search]==match) return search+1;
       }
     }

@@ -74,6 +74,8 @@
 #include "setinstval.h"
 #include "mergeinst.h"
 
+//#define MERGE_DEBUG
+
 /* forward declarations */
 static
 struct Instance *RecursiveMergeInstance(struct Instance *, struct Instance *);
@@ -814,11 +816,13 @@ static
 struct Instance *MergeRelations(struct RelationInstance *i1,
 				struct RelationInstance *i2)
 {
+#ifdef MERGE_DEBUG
   char *n1 = WriteInstanceNameString(i1,NULL);
   char *n2 = WriteInstanceNameString(i2,NULL);
   CONSOLE_DEBUG("Merging relations '%s' and '%s'",n2,n2);
   ASC_FREE(n1);
   ASC_FREE(n2);
+#endif
 
   if(i1->desc==i2->desc){
     switch(KeepWhichInstance(i1->desc,i2->desc,INST(i1),INST(i2))){

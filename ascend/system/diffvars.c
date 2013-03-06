@@ -44,9 +44,9 @@ SolverDiffVarCollection *system_get_diffvars(slv_system_t sys){
 	return sys->diffvars;
 }
 
+#if 0 /* unused function, currently */
 /**<DS: compare the names of the instances from the problem_t that will be sent to the solver and a symchar, on success return the pointer to the respective solver_ipdata */
-static
-struct solver_ipdata *FindVarIPdata(struct problem_t *prob,symchar *varName){
+static struct solver_ipdata *FindVarIPdata(struct problem_t *prob,symchar *varName){
 	int i,len;
 	struct solver_ipdata *ip;
 	len = gl_length(prob->algebvars);
@@ -58,6 +58,8 @@ struct solver_ipdata *FindVarIPdata(struct problem_t *prob,symchar *varName){
 	}
 	return NULL;
 }
+#endif
+
 
 static
 int CmpDiffVars(const struct solver_ipdata *a, const struct solver_ipdata *b){
