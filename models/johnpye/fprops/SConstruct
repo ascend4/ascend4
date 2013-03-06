@@ -9,16 +9,23 @@ deft = "default"
 if platform.system()=="Windows":
 	deft = "mingw"
 
+vars = Variables()
+
+vars.Add(
+	'CC'
+	,'C Compiler command'
+	,"${HOST_PREFIX}gcc"
+)
+
 env = Environment(
 	toolpath=['scons']
 	,tools = [deft ,'substinfile','swig']
-	,ENV={"PATH":os.environ.get('PATH')}
+	,ENV={"TERM":os.environ.get('TERM'), "PATH":os.environ.get('PATH')}
 	,HOST_PREFIX=os.environ.get('HOST_PREFIX')
 )
 
-if env['HOST_PREFIX']:
-	env['CC'] = "${HOST_PREFIX}-gcc"
-	print "CC =",env['CC']
+Help(vars.GenerateHelpText(env))
+vars.Update(env)
 
 if WhereIs('ascend-config'):
 	env.ParseConfig(['ascend-config','--libs','--cppflags'])

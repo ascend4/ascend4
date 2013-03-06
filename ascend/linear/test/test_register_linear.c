@@ -19,8 +19,6 @@
 #include <ascend/general/platform.h>
 #include "test_register_linear.h"
 
-#define SUITE general
-
 #define TESTS(T) \
 	T(qrrank) \
 	T(mtx)

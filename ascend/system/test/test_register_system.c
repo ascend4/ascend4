@@ -15,15 +15,13 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <test/common.h>
+#include "test_register_system.h"
 #include <ascend/general/platform.h>
-
-#define SUITE system
 
 #define TESTS(T) \
 	T(link)
 
-#define PROTO_TEST(NAME) PROTO(SUITE,NAME)
+#define PROTO_TEST(NAME) PROTO(system,NAME)
 TESTS(PROTO_TEST)
 #undef PROTO_TEST
 
