@@ -18,8 +18,6 @@
 #include <ascend/general/platform.h>
 #include "test_register_packages.h"
 
-#define SUITE packages
-
 #define TESTS(T) \
 	T(defaultall)
 
