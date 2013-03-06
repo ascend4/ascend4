@@ -34,6 +34,7 @@
 #include <ascend/linear/mtx.h>
 
 #include "slv_client.h"
+#include "diffvars.h"
 
 #include "relman.h"
 #include "slv_server.h"

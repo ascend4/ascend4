@@ -87,7 +87,7 @@ static const struct rel_relation g_rel_defaults = {
    NULL,		    /* instance */
    NULL,		    /* extnode */
    NULL,		    /* incidence */
-   e_undefined,	    /* e_token */
+   e_rel_token,	    /* e_token */
    0,			    /* n_incidences */
    -1,		    	/* mindex */
    -1,			    /* sindex */

@@ -737,7 +737,7 @@ void WriteStatementErrorMessage(
   }
 
   error_reporter_end_flush();
-  CONSOLE_DEBUG(message);
+  CONSOLE_DEBUG("%s",message);
 }
 
 void WriteStatementLocation(FILE *f, CONST struct Statement *stat){
