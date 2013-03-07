@@ -178,8 +178,9 @@ static pool_store_t g_list_head_pool = NULL;
 
 #endif
 
+
 /* This function is called at compiler startup time and destroy at shutdown. */
-void gl_init_pool(void) {
+void gl_init_pool(void){
 #if LISTUSESPOOL
   if (g_list_head_pool != NULL) {
     ASC_PANIC("ERROR: gl_init_pool called twice.\n");
@@ -194,7 +195,8 @@ void gl_init_pool(void) {
 #endif
 }
 
-void gl_destroy_pool(void) {
+
+void gl_destroy_pool(void){
 #if LISTUSESPOOL
   if (g_list_head_pool==NULL) return;
   gl_emptyrecycler();    /* deallocate data in recycled lists, zero RecycledContents[] */
@@ -207,8 +209,7 @@ void gl_destroy_pool(void) {
 }
 
 
-int gl_pool_initialized(void)
-{
+int gl_pool_initialized(void){
 #if LISTUSESPOOL
   return (g_list_head_pool == NULL) ? FALSE : TRUE;
 #else
@@ -218,8 +219,7 @@ int gl_pool_initialized(void)
 }
 
 
-void gl_report_pool(FILE *f)
-{
+void gl_report_pool(FILE *f){
 #if LISTUSESPOOL
   if (g_list_head_pool==NULL)
     FPRINTF(f,"ListHeadPool is empty\n");
@@ -230,13 +230,13 @@ void gl_report_pool(FILE *f)
 #endif
 }
 
+
 /*
  * Guess of the capacity of the list.  If the
  * list capacity needs to be expanded it will
  * be.  It is good to be close though
  */
-struct gl_list_t *gl_create(unsigned long int capacity)
-{
+struct gl_list_t *gl_create(unsigned long int capacity){
   struct gl_list_t *new;
   unsigned long i;
   i = capacity = MAX((unsigned long)LOWCAPACITY,capacity);
@@ -284,8 +284,8 @@ struct gl_list_t *gl_create(unsigned long int capacity)
   }
 }
 
-void gl_free_and_destroy(struct gl_list_t *list)
-{
+
+void gl_free_and_destroy(struct gl_list_t *list){
   unsigned long c;
   if (list == NULL) return;
 #if LISTUSESPOOL
@@ -312,7 +312,7 @@ void gl_free_and_destroy(struct gl_list_t *list)
       HighWaterMark[c] = RecycledContents[c];
     }
 #endif
-  } else{
+  }else{
 #if LISTRECYCLERDEBUG
     if (c<=MAXRECYCLESIZE) {
       ListsDestroyed[c]++;
@@ -325,8 +325,8 @@ void gl_free_and_destroy(struct gl_list_t *list)
   }
 }
 
-void gl_destroy(struct gl_list_t *list)
-{
+
+void gl_destroy(struct gl_list_t *list){
   unsigned long c;
   if (list == NULL) return;
 #if LISTUSESPOOL
@@ -362,14 +362,17 @@ void gl_destroy(struct gl_list_t *list)
   }
 }
 
+
 VOIDPTR gl_fetchF(CONST struct gl_list_t *list, unsigned long int pos){
   asc_assert(NULL != list);
   ASSERTRANGE(list,pos,"gl_fetchF");
   return list->data[pos-1];
 }
 
+
 #define SORTED_OFF(l) (l)->flags &= (~gsf_SORTED)
 #define EXPAND_OFF(l) (l)->flags &= (~gsf_EXPANDABLE)
+
 
 /* for internal use only, where we can verify that STUFF is correct
  * and it is SOMEONE else job to maintain the integrity of
@@ -380,13 +383,13 @@ VOIDPTR gl_fetchF(CONST struct gl_list_t *list, unsigned long int pos){
 #else
 #define GL_STORE(list,pos,ptr) gl_store((list),(pos),(ptr))
 #endif
-void gl_store(struct gl_list_t *list, unsigned long int pos, VOIDPTR ptr)
-{
+void gl_store(struct gl_list_t *list, unsigned long int pos, VOIDPTR ptr){
   asc_assert(NULL != list);
   if (GL_LENGTH(list)>1) SORTED_OFF(list);
   ASSERTRANGE(list,pos,"gl_store");
   list->data[pos-1] = ptr;
 }
+
 
 #if REALLOCDEBUG
 /* this we know to not leak if MOD_REALLOC is defined */
@@ -403,8 +406,8 @@ void gl_store(struct gl_list_t *list, unsigned long int pos, VOIDPTR ptr)
  * was being left out of the cleanup process at shutdown.
  */
 
-static void gl_expand_list(struct gl_list_t *list)
-{
+
+static void gl_expand_list(struct gl_list_t *list){
   VOIDPTR *tmp;
   unsigned long increment;
   increment = (list->capacity*50)/100; /* 10% is too small. try 50% baa */
@@ -420,6 +423,7 @@ static void gl_expand_list(struct gl_list_t *list)
   }
 }
 
+
 /* changes only the capacity of the list, and possibly data pointer */
 static void gl_expand_list_by(struct gl_list_t *list,unsigned long addlen)
 {
@@ -432,8 +436,8 @@ static void gl_expand_list_by(struct gl_list_t *list,unsigned long addlen)
   asc_assert(list->data!=NULL);
 }
 
-void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr)
-{
+
+void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
   asc_assert((NULL != list) && (0 != gl_expandable(list)));
   if (list->length > 0) SORTED_OFF(list);
   if (++(list->length) > list->capacity) /* expand list capacity*/
@@ -441,8 +445,8 @@ void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr)
   list->data[list->length-1] = ptr;
 }
 
-void gl_append_list(struct gl_list_t *extendlist, struct gl_list_t *list)
-{
+
+void gl_append_list(struct gl_list_t *extendlist, struct gl_list_t *list){
   register unsigned long c,len,oldlen,newlen;
 
   asc_assert((NULL != extendlist) &&
@@ -464,164 +468,154 @@ void gl_append_list(struct gl_list_t *extendlist, struct gl_list_t *list)
   }
 }
 
-void gl_fast_append_ptr(struct gl_list_t *list, VOIDPTR ptr)
-{
+
+void gl_fast_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
   asc_assert(NULL != list);
   SORTED_OFF(list);
   list->data[list->length] = ptr;
   ++(list->length);
 }
 
-unsigned long gl_safe_length(CONST struct gl_list_t *list)
-{
+
+unsigned long gl_safe_length(CONST struct gl_list_t *list){
   if (list !=NULL) {
     return list->length;
   } else {
     return 0L;
   }
 }
-unsigned long gl_lengthF(CONST struct gl_list_t *list)
-{
+
+
+unsigned long gl_lengthF(CONST struct gl_list_t *list){
   asc_assert(NULL != list);
   return list->length;
 }
 
-unsigned long gl_capacity(CONST struct gl_list_t *list)
-{
+
+unsigned long gl_capacity(CONST struct gl_list_t *list){
   if (list==NULL) return 0;
   return list->capacity;
 }
 
 
-int gl_sorted(CONST struct gl_list_t *list)
-{
+int gl_sorted(CONST struct gl_list_t *list){
   asc_assert(NULL != list);
   return (int)(list->flags & gsf_SORTED);
 }
 
+
 #if LISTIMPLEMENTED
 /* I believe this function is ok */
-static void *gl_choose_ptrpivot(struct gl_list_t *list,
-			      unsigned long int lower,
-			      unsigned long int upper)
-/*********************************************************************\
-* This function will choose a pivot.  It can actually return any
-* number between and including upper and lower.  However, the goal
-* is to return a pivot that will not cause Quick Sort to have
-* O(n^2) behavior. This returns the value rather than the address
-* of the pivot.
-*
-* The heuristic I am choosing is to pick the middle of three test
-* sites which are upper,lower, and (upper+lower)/2.
-\*********************************************************************/
+/**
+	This function will choose a pivot.  It can actually return any
+	number between and including upper and lower.  However, the goal
+	is to return a pivot that will not cause Quick Sort to have
+	O(n^2) behavior. This returns the value rather than the address
+	of the pivot.
+
+	The heuristic I am choosing is to pick the middle of three test
+	sites which are upper,lower, and (upper+lower)/2.
+*/
+static void *gl_choose_ptrpivot(struct gl_list_t *list
+	, unsigned long int lower, unsigned long int upper
+)
 {
   unsigned long middle;
   middle = (upper+lower)/2;
-  if  (gl_fetch(list,middle) > gl_fetch(list,lower)) {
+  if(gl_fetch(list,middle) > gl_fetch(list,lower)) {
     /* middle > lower */
-    if (gl_fetch(list,upper) > gl_fetch(list,middle)) {
+    if(gl_fetch(list,upper) > gl_fetch(list,middle)) {
       /* middle > lower && upper > middle */
       return gl_fetch(list,middle);
-    }
-    else {
+    }else{
       /* middle > lower && middle >= upper */
-      if (gl_fetch(list,upper) > gl_fetch(list,lower)) {
-	/* middle > lower && middle >= upper && upper > lower */
-	return gl_fetch(list,upper);
-      }
-      else {
-	/* middle > lower && middle >= upper && lower >= upper */
-	return gl_fetch(list,lower);
+      if(gl_fetch(list,upper) > gl_fetch(list,lower)) {
+        /* middle > lower && middle >= upper && upper > lower */
+        return gl_fetch(list,upper);
+      }else{
+        /* middle > lower && middle >= upper && lower >= upper */
+        return gl_fetch(list,lower);
       }
     }
-  }
-  else {
+  }else{
     /* lower >= middle */
-    if (gl_fetch(list,upper) > gl_fetch(list,lower)) {
+    if(gl_fetch(list,upper) > gl_fetch(list,lower)) {
       /* lower >= middle && upper > lower */
       return gl_fetch(list,lower);
-    }
-    else {
+    }else{
       /* lower >= middle && lower >= upper */
-      if (gl_fetch(list,middle) > gl_fetch(list,upper)) {
-	/* lower >= middle && lower >= upper && middle > upper */
-	return gl_fetch(list,middle);
-      }
-      else {
-	/* lower >= middle && lower >= upper && upper >= middle */
-	return gl_fetch(list,upper);
+      if(gl_fetch(list,middle) > gl_fetch(list,upper)) {
+        /* lower >= middle && lower >= upper && middle > upper */
+        return gl_fetch(list,middle);
+      }else{
+        /* lower >= middle && lower >= upper && upper >= middle */
+        return gl_fetch(list,upper);
       }
     }
   }
 }
 #endif
 
-static
-unsigned long gl_choose_pivot(struct gl_list_t *list,
-			      unsigned long int lower,
-			      unsigned long int upper,
-			      CmpFunc func)
-/*
- * This function will choose a pivot.  It can actually return any
- * number between and including upper and lower.  However, the goal
- * is to return a pivot that will not cause Quick Sort to have
- * O(n^2) behavior.
- *
- * The heuristic I am choosing is to pick the middle of three test
- * sites which are upper,lower, and (upper+lower)/2.
- */
-{
+/**
+	This function will choose a pivot.  It can actually return any
+	number between and including upper and lower.  However, the goal
+	is to return a pivot that will not cause Quick Sort to have
+	O(n^2) behavior.
+ 
+	The heuristic I am choosing is to pick the middle of three test
+	sites which are upper,lower, and (upper+lower)/2.
+*/
+static unsigned long gl_choose_pivot(struct gl_list_t *list
+	, unsigned long int lower, unsigned long int upper, CmpFunc func
+){
   unsigned long middle;
   middle = (upper+lower)/2;
-  if ((*func)(gl_fetch(list,middle),gl_fetch(list,lower)) > 0) {
+  if((*func)(gl_fetch(list,middle),gl_fetch(list,lower)) > 0) {
     /* middle > lower */
-    if ((*func)(gl_fetch(list,upper),gl_fetch(list,middle)) > 0) {
+    if((*func)(gl_fetch(list,upper),gl_fetch(list,middle)) > 0) {
       /* middle > lower && upper > middle */
       return middle;
-    }
-    else {
+    }else{
       /* middle > lower && middle >= upper */
       if ((*func)(gl_fetch(list,upper),gl_fetch(list,lower)) > 0) {
-	/* middle > lower && middle >= upper && upper > lower */
-	return upper;
-      }
-      else {
-	/* middle > lower && middle >= upper && lower >= upper */
-	return lower;
+        /* middle > lower && middle >= upper && upper > lower */
+        return upper;
+      }else{
+        /* middle > lower && middle >= upper && lower >= upper */
+        return lower;
       }
     }
-  }
-  else {
+  }else{
     /* lower >= middle */
     if ((*func)(gl_fetch(list,upper),gl_fetch(list,lower)) > 0) {
       /* lower >= middle && upper > lower */
       return lower;
-    }
-    else {
+    }else{
       /* lower >= middle && lower >= upper */
       if ((*func)(gl_fetch(list,middle),gl_fetch(list,upper)) > 0) {
-	/* lower >= middle && lower >= upper && middle > upper */
-	return middle;
-      }
-      else {
-	/* lower >= middle && lower >= upper && upper >= middle */
-	return upper;
+        /* lower >= middle && lower >= upper && middle > upper */
+        return middle;
+      }else{
+        /* lower >= middle && lower >= upper && upper >= middle */
+        return upper;
       }
     }
   }
 }
 
+
 /* do not export. makes rosy assumptions. callers of this function
  * are responsible for making sure list.sorted is set appropriately.
  */
-static void gl_swap(struct gl_list_t *list,
-                    unsigned long int i, unsigned long int j)
-{
+static void gl_swap(struct gl_list_t *list
+	, unsigned long int i, unsigned long int j
+){
   VOIDPTR temp;
   temp = gl_fetch(list,i);
   GL_STORE(list,i,gl_fetch(list,j));
   GL_STORE(list,j,temp);
 }
+
 
 #if LISTIMPLEMENTED
 /* this function is probably ok */
@@ -672,27 +666,26 @@ void gl_downsort(struct gl_list_t *list,
 #endif
 
 static
-void gl_qsort(struct gl_list_t *list,
-              unsigned long int lower,
-              unsigned long int upper,
-              CmpFunc func)
-{
+void gl_qsort(struct gl_list_t *list, unsigned long int lower
+	, unsigned long int upper, CmpFunc func
+){
   unsigned long pivot,i,j;
   VOIDPTR pivot_element;
   j = upper;
   i = lower;
   pivot = gl_choose_pivot(list,lower,upper,func);
   pivot_element = gl_fetch(list,pivot);
-  do {
-    while ((*func)(pivot_element,gl_fetch(list,i))>0) i += 1;
-    while ((*func)(gl_fetch(list,j),pivot_element)>0) j -= 1;
-    if (i <= j) {
+  do{
+    while((*func)(pivot_element,gl_fetch(list,i))>0) i += 1;
+    while((*func)(gl_fetch(list,j),pivot_element)>0) j -= 1;
+    if(i <= j){
       gl_swap(list,i++,j--);
     }
-  } while(i <= j);
-  if (lower < j) gl_qsort(list,lower,j,func);
-  if (i<upper)   gl_qsort(list,i,upper,func);
+  }while(i <= j);
+  if(lower < j) gl_qsort(list,lower,j,func);
+  if(i<upper)gl_qsort(list,i,upper,func);
 }
+
 
 #if LISTIMPLEMENTED
 /* ok once its children are ok */
@@ -709,15 +702,14 @@ void gl_ptr_sort(struct gl_list_t *list, int increasing)
 }
 #endif
 
+
 #if LISTIMPLEMENTED
 /* broken */
-void gl_insert_ptr_sorted(struct gl_list_t *,VOIDPTR,int)
-{
-}
+void gl_insert_ptr_sorted(struct gl_list_t *,VOIDPTR,int){}
 #endif
 
-void gl_sort(struct gl_list_t *list, CmpFunc func)
-{
+
+void gl_sort(struct gl_list_t *list, CmpFunc func){
   asc_assert((NULL != list) && (NULL != func));
   if (GL_LENGTH(list) > 1) {
     gl_qsort(list,1,GL_LENGTH(list),func);
@@ -725,22 +717,23 @@ void gl_sort(struct gl_list_t *list, CmpFunc func)
   list->flags |= gsf_SORTED;
 }
 
-void gl_insert_sorted(struct gl_list_t *list,
-		      VOIDPTR ptr, CmpFunc func)
-{
+
+void gl_insert_sorted(struct gl_list_t *list
+	, VOIDPTR ptr, CmpFunc func
+){
   int comparison;
   register unsigned long lower,upper,search=0L;
 
   asc_assert((NULL != list) &&
              (0 != gl_expandable(list)) &&
              (NULL != func));
-  if (list->flags & gsf_SORTED) {
-    if (GL_LENGTH(list)==0) {
+  if(list->flags & gsf_SORTED) {
+    if(GL_LENGTH(list)==0) {
       gl_append_ptr(list,ptr);
       list->flags |= gsf_SORTED;
       return;
     }
-    if (++list->length > list->capacity) /* expand list capacity */
+    if(++list->length > list->capacity) /* expand list capacity */
       gl_expand_list(list);
     lower = 1;
     upper = GL_LENGTH(list)-1;
@@ -748,40 +741,38 @@ void gl_insert_sorted(struct gl_list_t *list,
       search = ( lower + upper) >> 1; /* divide by two */
       comparison = (*func)(gl_fetch(list,search),ptr);
       if (comparison==0) {
-	/* make room */
-	for(lower=GL_LENGTH(list);lower>search;lower--)
-	  GL_STORE(list,lower,gl_fetch(list,lower-1));
-	/* store it */
-	GL_STORE(list,search+1,ptr);
+        /* make room */
+        for(lower=GL_LENGTH(list);lower>search;lower--)
+          GL_STORE(list,lower,gl_fetch(list,lower-1));
+        /* store it */
+        GL_STORE(list,search+1,ptr);
         list->flags |= gsf_SORTED;
-	return;
+        return;
       }
       if (comparison < 0) lower = search + 1;
       else upper = search - 1;
     }
     if ((*func)(gl_fetch(list,search),ptr) > 0) {
       for(lower=GL_LENGTH(list);lower>search;lower--) {
-	GL_STORE(list,lower,gl_fetch(list,lower-1));
+        GL_STORE(list,lower,gl_fetch(list,lower-1));
       }
       GL_STORE(list,search,ptr);
-    }
-    else {
+    }else{
       for(lower=GL_LENGTH(list);lower>(search+1);lower--) {
-	GL_STORE(list,lower,gl_fetch(list,lower-1));
+        GL_STORE(list,lower,gl_fetch(list,lower-1));
       }
       GL_STORE(list,search+1,ptr);
     }
     list->flags |= gsf_SORTED;
-  }
-  else {
+  }else{
     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"gl_insert_sorted called on unsorted list -- sorting list now.");
     gl_append_ptr(list,ptr);
     gl_sort(list,func);
   }
 }
 
-void gl_iterate(struct gl_list_t *list, void (*func) (VOIDPTR))
-{
+
+void gl_iterate(struct gl_list_t *list, void (*func) (VOIDPTR)){
 #ifdef NDEBUG
   register unsigned long length,counter;
   length = GL_LENGTH(list);
@@ -797,82 +788,77 @@ void gl_iterate(struct gl_list_t *list, void (*func) (VOIDPTR))
 #endif
 }
 
-/* this will probably need casts to compile or an intermediate
- * void *array variable
- * this function is on the critical path in the compiler, or
- * should be, so it is highly tweaked here.
- */
-unsigned long gl_ptr_search(CONST struct gl_list_t *list,
-			CONST VOIDPTR match, int increasing)
-{
+
+/* 
+	this will probably need casts to compile or an intermediate
+	void *array variable
+	this function is on the critical path in the compiler, or
+	should be, so it is highly tweaked here.
+*/
+unsigned long gl_ptr_search(CONST struct gl_list_t *list
+	, CONST VOIDPTR match, int increasing
+){
 #define SHORTSEARCH 5
-/* if list is short, use linear instead of binary search.
- * SHORTSEARCH is the minimum size for a binary search.
- * SHORTSEARCH must be >=0
- */
+  /* if list is short, use linear instead of binary search.
+  SHORTSEARCH is the minimum size for a binary search.
+  SHORTSEARCH must be >=0 */
   register unsigned long lower,upper,search;
 
   asc_assert(NULL != list);
-  if (!GL_LENGTH(list)) return 0;
-  if ( (list->flags & gsf_SORTED)
+  if(!GL_LENGTH(list))return 0;
+  if((list->flags & gsf_SORTED)
 #if (SHORTSEARCH > 0)
        && (upper = GL_LENGTH(list)-1) > SHORTSEARCH
 #endif
-     ) {		/* use binary search */
+  ){		/* use binary search */
     register long comparison;
     lower = 0;
 #if (SHORTSEARCH <= 0)
     upper = GL_LENGTH(list)-1;
 #endif
-    if (increasing) {
-      while (lower <= upper) {
+    if(increasing){
+      while(lower <= upper) {
         search = (lower+upper) / 2;
         comparison =
           ((char *)list->data[search]-(char *)match); /* pointer difference */
-        if (comparison==0) {
+        if(comparison==0){
           return (search + 1);
-        }
-        else if (comparison < 0) {
+        }else if(comparison < 0){
           lower = search + 1;
-        }
-        else if (search > 0) {
+        }else if(search > 0){
           upper = search - 1;
-        }
-        else {
+        }else{
           return 0;
         }
       }
-    } else {
-      while (lower <= upper) {
+    }else{
+      while(lower <= upper){
         search = (lower+upper) / 2;
         comparison =
           ((char *)match-(char *)list->data[search]); /* pointer difference */
-        if (comparison==0) {
+        if(comparison==0){
           return (search + 1);
-        }
-        else if (comparison < 0) {
+        }else if (comparison < 0){
           lower = search + 1;
-        }
-        else if (search > 0) {
+        }else if (search > 0){
           upper = search - 1;
-        }
-        else {
+        }else{
           return 0;
         }
       }
     }
-  }
-  else {				/* use linear search */
+  }else{				/* use linear search */
     upper = GL_LENGTH(list);
-    if (increasing) {
+    if(increasing){
       for(search=0; search < upper; search++) {
         if (list->data[search]==match) return search+1;
       }
-    } else {
+    }else{
       /* the test could be written 'search < upper' with unsigned assumption,
-	but someday we may want to make list length signed and move on. */
-      /* I removed the 'search >= 0 &&' part of the test because indeed it's tautological with the current unsigned integers */
-      for(search=upper-1; /* search >= 0 && */ search < upper; search--) {
+      but someday we may want to make list length signed and move on. */
+      /* I removed the 'search >= 0 &&' part of the test because indeed it's 
+      tautological with the current unsigned integers -- JP */
+      for(search=upper-1; /* search >= 0 && */ search < upper; search--){
         if (list->data[search]==match) return search+1;
       }
     }
@@ -880,9 +866,10 @@ unsigned long gl_ptr_search(CONST struct gl_list_t *list,
   return 0;				/* search failed */
 }
 
-unsigned long gl_search(CONST struct gl_list_t *list,
-			CONST VOIDPTR match, CmpFunc func)
-{
+
+unsigned long gl_search(CONST struct gl_list_t *list
+	,CONST VOIDPTR match, CmpFunc func
+){
   register unsigned long lower,upper,search;
 #ifdef __alpha
   long comparison;
@@ -900,8 +887,7 @@ unsigned long gl_search(CONST struct gl_list_t *list,
       if (comparison < 0) lower = search + 1;
       else upper = search -1;
     }
-  }
-  else {				/* use linear search */
+  }else{				/* use linear search */
     upper = GL_LENGTH(list);
     for(search=0; search < upper; search++) {
       if ((*func)(list->data[search],match)==0) return search+1;
@@ -911,30 +897,29 @@ unsigned long gl_search(CONST struct gl_list_t *list,
 }
 
 
-unsigned long gl_search_reverse(CONST struct gl_list_t *list,
-                                CONST VOIDPTR match, CmpFunc func)
-{
+unsigned long gl_search_reverse(CONST struct gl_list_t *list
+	,CONST VOIDPTR match, CmpFunc func
+){
   register unsigned long search;
 
   asc_assert((NULL != list) && (NULL != func));
-  if (list->flags & gsf_SORTED) {	/* use binary search */
+  if(list->flags & gsf_SORTED) {	/* use binary search */
     return gl_search(list, match, func);
-  } else {				/* use linear search */
+  }else{				/* use linear search */
     /* since search is unsigned, the FOR loop cannot go to
      * zero, since 0-- is ULONG_MAX.  Must do zero separately.
      */
-    for( search = (GL_LENGTH(list)-1); search > 0; search-- ) {
-      if ((*func)(list->data[search],match)==0) return search+1;
+    for(search = (GL_LENGTH(list)-1); search > 0; search-- ) {
+      if((*func)(list->data[search],match)==0) return search+1;
     }
     search = 0;
-    if ((*func)(list->data[search],match)==0) return search+1;
+    if((*func)(list->data[search],match)==0) return search+1;
   }
   return 0;				/* search failed */
 }
 
 
-int gl_unique_list(CONST struct gl_list_t *list)
-{
+int gl_unique_list(CONST struct gl_list_t *list){
   unsigned long i,j,len,lm1;
   VOIDPTR e;
   VOIDPTR *d;
@@ -956,14 +941,14 @@ int gl_unique_list(CONST struct gl_list_t *list)
   return 1;
 }
 
-int gl_empty(CONST struct gl_list_t *list)
-{
+
+int gl_empty(CONST struct gl_list_t *list){
   asc_assert(NULL != list);
   return(GL_LENGTH(list)==0);
 }
 
-void gl_delete(struct gl_list_t *list, unsigned long int pos, int dispose)
-{
+
+void gl_delete(struct gl_list_t *list, unsigned long int pos, int dispose){
   unsigned long c,length;
   int sorted;
   VOIDPTR ptr;
@@ -995,14 +980,14 @@ void gl_delete(struct gl_list_t *list, unsigned long int pos, int dispose)
     list->length--;
     if (sorted) {
       list->flags |= gsf_SORTED;
-    } else {
+    }else{
       SORTED_OFF(list);
     }
   }
 }
 
-void gl_reverse(struct gl_list_t *list)
-{
+
+void gl_reverse(struct gl_list_t *list){
   VOIDPTR *tmpdata;
   unsigned long c,len;
 
@@ -1019,16 +1004,15 @@ void gl_reverse(struct gl_list_t *list)
   list->data = tmpdata;
 }
 
-void gl_reset(struct gl_list_t *list)
-{
+
+void gl_reset(struct gl_list_t *list){
   asc_assert(NULL != list);
   list->flags = (unsigned int)(gsf_SORTED | gsf_EXPANDABLE);
   list->length = 0;
 }
 
 
-struct gl_list_t *gl_copy(CONST struct gl_list_t *list)
-{
+struct gl_list_t *gl_copy(CONST struct gl_list_t *list){
   struct gl_list_t *new;
   unsigned long counter,length;
 
@@ -1042,9 +1026,9 @@ struct gl_list_t *gl_copy(CONST struct gl_list_t *list)
   return new;
 }
 
-struct gl_list_t *gl_concat(CONST struct gl_list_t *list1,
-			    CONST struct gl_list_t *list2)
-{
+struct gl_list_t *gl_concat(CONST struct gl_list_t *list1
+	, CONST struct gl_list_t *list2
+){
   struct gl_list_t *new;
   unsigned long counter,length1,length2;
 
@@ -1053,30 +1037,29 @@ struct gl_list_t *gl_concat(CONST struct gl_list_t *list1,
   length1 = GL_LENGTH(list1);
   length2 = GL_LENGTH(list2);
   new = gl_create(length1+length2);
-  for (counter = 1;counter<= length1; counter++) {
+  for(counter = 1;counter<= length1; counter++) {
     gl_append_ptr(new,gl_fetch(list1,counter));
   }
-  for (counter = 1;counter<= length2; counter++) {
+  for(counter = 1;counter<= length2; counter++) {
     gl_append_ptr(new,gl_fetch(list2,counter));
   }
   return new;
 }
 
-int gl_compare_ptrs(CONST struct gl_list_t *l1, CONST struct gl_list_t *l2)
-{
+int gl_compare_ptrs(CONST struct gl_list_t *l1, CONST struct gl_list_t *l2){
   unsigned long len,c;
   register unsigned long i1,i2;
   if (l1==NULL || l2 == NULL) {
     ASC_PANIC("Called with NULL input");
   }
   len = MIN(GL_LENGTH(l1),GL_LENGTH(l2));
-  for (c=0;c < len; c++) {
+  for(c=0;c < len; c++) {
     i1 = (asc_intptr_t)(l1->data[c]);
     i2 = (asc_intptr_t)(l2->data[c]);
-    if (i1<i2) {
+    if(i1<i2) {
       return -1;
     }
-    if (i1>i2) {
+    if(i1>i2) {
       return 1;
     }
   }
@@ -1085,8 +1068,8 @@ int gl_compare_ptrs(CONST struct gl_list_t *l1, CONST struct gl_list_t *l2)
           (( GL_LENGTH(l2) > len) ? -1 : 1);
 }
 
-void gl_set_sorted(struct gl_list_t *list, int TRUE_or_FALSE)
-{
+
+void gl_set_sorted(struct gl_list_t *list, int TRUE_or_FALSE){
   asc_assert(NULL != list);
   if (FALSE == TRUE_or_FALSE)
     list->flags &= ~gsf_SORTED;
@@ -1094,14 +1077,14 @@ void gl_set_sorted(struct gl_list_t *list, int TRUE_or_FALSE)
     list->flags |= gsf_SORTED;
 }
 
-int gl_expandable(struct gl_list_t *list)
-{
+
+int gl_expandable(struct gl_list_t *list){
   asc_assert(NULL != list);
   return (int)(list->flags & gsf_EXPANDABLE);
 }
 
-void gl_set_expandable(struct gl_list_t *list, int TRUE_or_FALSE)
-{
+
+void gl_set_expandable(struct gl_list_t *list, int TRUE_or_FALSE){
   asc_assert(NULL != list);
   if (FALSE == TRUE_or_FALSE)
     list->flags &= ~gsf_EXPANDABLE;
@@ -1110,17 +1093,14 @@ void gl_set_expandable(struct gl_list_t *list, int TRUE_or_FALSE)
 }
 
 
-VOIDPTR *gl_fetchaddr(CONST struct gl_list_t *list,
-		     unsigned long int pos)
-{
+VOIDPTR *gl_fetchaddr(CONST struct gl_list_t *list, unsigned long int pos){
   asc_assert(NULL != list);
   ASSERTRANGE(list,pos,"gl_fetchaddr");
   return (VOIDPTR *)&(list->data[pos-1]);
 }
 
 
-void gl_emptyrecycler()
-{
+void gl_emptyrecycler(){
   int i;
 #if LISTRECYCLERDEBUG
   unsigned long bytecount = 0;
@@ -1171,8 +1151,8 @@ void gl_emptyrecycler()
 #endif
 }
 
-void gl_reportrecycler(FILE *fp)
-{
+
+void gl_reportrecycler(FILE *fp){
   int i;
   unsigned long bytecount = 0;
 #if !LISTRECYCLERDEBUG
@@ -1210,3 +1190,4 @@ void gl_reportrecycler(FILE *fp)
   FPRINTF(fp,"Total bytes:\t%lu\n",bytecount);
 #endif
 }
+
