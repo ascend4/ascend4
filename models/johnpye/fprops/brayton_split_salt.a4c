@@ -1,6 +1,11 @@
 REQUIRE "johnpye/fprops/brayton_split.a4c";
 REQUIRE "johnpye/moltensalt.a4c";
 
+(*
+	This is a very simplified salt heat exchanger model. It has to be done
+	differently from heatex_pinch because we don't yet have support for 
+	fluids of the type expressed in moltensalt.a4c under FPROPS.
+*)
 MODEL boiler_heatex_salt REFINES boiler_simple;
 	inlet_salt, outlet_salt IS_A moltensalt_node;
 
@@ -22,11 +27,10 @@ MODEL brayton_split_salt_co2 REFINES brayton_split_co2;
 	HEH.n :== 8;	
 METHODS
 METHOD on_load;
-	RUN brayton_split_co2::on_load;
-
 	FIX BO.inlet_salt.T := 565 {K} + 263.15 {K};
 	FIX BO.inlet_salt.p := 1 {bar};
 	FIX BO.mdot_salt := 1 {kg/s};
+	RUN brayton_split_co2::on_load;
 END on_load;
 METHOD self_test;
 	ASSERT BO.inlet_salt.T == 565 {K} + 263.15 {K};

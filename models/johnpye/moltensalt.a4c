@@ -37,6 +37,10 @@ MODEL moltensalt_state;
 	u IS_A specific_energy;
 	u_eq: u = h - p*v;
 METHODS
+	METHOD default_self;
+		T := 400 {K};
+		p := 1 {bar};
+	END default_self;
 	METHOD solve;
 		EXTERNAL do_solve(SELF);
 	END solve;
