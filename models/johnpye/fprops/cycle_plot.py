@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 import extpy, sys
 from solverreporter import *
+from __builtin__ import *
 
 import sys, os, os.path
 sys.path.append(os.path.expanduser("~/ascend/models/johnpye/fprops/python"))
@@ -307,10 +308,28 @@ def cycle_plot_brayton_regen(self):
 	ioff()
 	figure()		
 
+	D = fprops.fluid(str(self.cd.component.getSymbolValue()))
+	sat_curve(D)
+
 	# plot gas turbine cycle
-	SS = [self.CO.inlet, self.CO.outlet, self.RE.inlet, self.RE.outlet, self.BU.inlet,self.BU.outlet, self.TU.inlet, self.TU.outlet,self.RE.inlet_hot, self.RE.outlet_hot, self.DI.inlet, self.DI.outlet,self.CO.inlet]
+	regen_cold_curve = pconst(self.RE.inlet, self.RE.outlet, 50)
+	burner_curve = pconst(self.BO.inlet, self.BO.outlet,50)
+	regen_hot_curve = pconst(self.RE.inlet_hot, self.RE.outlet_hot, 50)
+	diss_curve = pconst(self.CO.inlet, self.CO.outlet,50)
+
+	SS = [self.PU.inlet, self.PU.outlet, self.RE.inlet] + regen_cold_curve + [self.RE.outlet, self.BO.inlet] + burner_curve + [self.BO.outlet, self.TU.inlet, self.TU.outlet,self.RE.inlet_hot] + regen_hot_curve + [self.RE.outlet_hot, self.CO.inlet] + diss_curve + [self.CO.outlet,self.PU.inlet]
+
 	plot_Ts(SS,'g-')
-	plot_Ts(SS,'go')
+
+	SS2 = [self.PU.inlet, self.PU.outlet, self.RE.inlet, self.RE.outlet, self.BO.inlet, self.BO.outlet, self.TU.inlet, self.TU.outlet,self.RE.inlet_hot, self.RE.outlet_hot, self.CO.inlet, self.CO.outlet,self.PU.inlet]
+	plot_Ts(SS2,'go')
+
+	SS3 = [self.RE.inlet, self.RE.outlet_hot]
+	plot_Ts(SS3,'g--')
+
+	SS4 = [self.RE.outlet, self.RE.inlet_hot]
+	plot_Ts(SS4,'g--')
+
 	hold(1)
 
 	title(unicode(r"Regenerative Brayton cycle"))
@@ -321,6 +340,120 @@ def cycle_plot_brayton_regen(self):
 	ion()
 	show()
 	#savefig(os.path.expanduser("~/Desktop/brayton_regen.eps"))
+
+
+def cycle_plot_brayton_reheat_regen_intercool(self):
+	"""Plot T-s diagram for reheat-regenerative gas turbine"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()		
+	hold(1)
+	D = fprops.fluid(str(self.cd.component.getSymbolValue()),str(self.cd.type.getSymbolValue()))
+	sat_curve(D)
+	
+	# add some dots for the points in the cycle
+	seq = "CO1.inlet DI2.inlet CO2.inlet RE.inlet BU1.inlet BU2.inlet TU1.inlet BU2.inlet TU2.inlet RE.inlet_hot DI1.inlet".split(" ")
+	lalign = "TU2.inlet RE.inlet_hot DI1.inlet DI2.inlet CO1.inlet".split(" ")
+	SS1 = []; SS1a = []
+	for s in seq:
+		print "looking at '%s'"%s
+		p = reduce(getattr,s.split("."),self)
+		SS1.append(p)
+		SS1a.append((p,s))
+	plot_Ts(SS1,'go')
+
+	print "ANNOTATIONS"
+	for s in SS1a:
+		align = "right"
+		if s[1] in lalign:
+			align = "left"
+		annotate(s[1]+"  ", xy =(float(s[0].s)/1.e3,float(s[0].T) - 273.15)
+			,horizontalalignment=align
+		)
+
+	# plot the cycle with smooth curves
+	BU1_curve = pconst(self.BU1.inlet, self.BU1.outlet,30)
+	BU2_curve = pconst(self.BU2.inlet, self.BU2.outlet,20)
+	DI1_curve = pconst(self.DI1.inlet,self.DI1.outlet,20)
+	DI2_curve = pconst(self.DI2.inlet,self.DI2.outlet,20)
+	REH_curve = pconst(self.RE.inlet_hot,self.RE.outlet_hot,50)
+	REL_curve = pconst(self.RE.inlet,self.RE.outlet,50)
+
+	SS2 = [self.CO1.inlet, self.CO1.outlet] + DI2_curve + [self.CO2.inlet, self.CO2.outlet] + REL_curve + BU1_curve + [self.TU1.inlet, self.TU1.outlet] + BU2_curve + [self.TU2.inlet, self.TU2.outlet] + REH_curve + DI1_curve + [self.CO1.inlet]
+	plot_Ts(SS2,'g-')
+
+	SS3 = [self.RE.inlet, self.RE.outlet_hot]
+	plot_Ts(SS3,'g--')
+
+	SS4 = [self.RE.outlet, self.RE.inlet_hot]
+	plot_Ts(SS4,'g--')
+
+	title(unicode(r"Reheat Regenerative Brayton cycle with Intercooling"))
+	ylabel(unicode(r"T / [°C]"))
+	xlabel("s / [kJ/kg/K]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+
+
+def cycle_plot_brayton_split(self):
+	"""Plot T-s diagran for split-regeneration gas turbine"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()		
+	hold(1)
+	D = fprops.fluid(str(self.cd.component.getSymbolValue()),str(self.cd.type.getSymbolValue()))
+	sat_curve(D)
+	
+	# add some dots for the points in the cycle
+#	seq = "CO2.inlet HEL.inlet HEL.outlet HEH.inlet BO.inlet TU.inlet HEH.inlet_hot HEL.inlet_hot CO1.inlet CO1.outlet".split(" ")
+	seq = "CO2.inlet HEL.inlet HEH.inlet BO.inlet TU.inlet HEH.inlet_hot HEH.outlet_hot CO1.inlet".split(" ")
+	lalign = "CO1.inlet HEH.outlet_hot ".split(" ")
+	SS1 = []; SS1a = []
+	for s in seq:
+		print "looking at '%s'"%s
+		p = reduce(getattr,s.split("."),self)
+		SS1.append(p)
+		SS1a.append((p,s))
+	plot_Ts(SS1,'go')
+
+	print "ANNOTATIONS"
+	for s in SS1a:
+		align = "right"
+		if s[1] in lalign:
+			align = "left"
+		annotate(s[1]+"  ", xy =(float(s[0].s)/1.e3,float(s[0].T) - 273.15)
+			,horizontalalignment=align
+		)
+
+	SS2 = pconst(self.DI.inlet, self.DI.outlet, 50) + [self.CO2.inlet,self.CO2.outlet] + pconst(self.HEL.inlet,self.HEH.outlet,50) + pconst(self.BO.inlet,self.BO.outlet,50) + [self.TU.inlet, self.TU.outlet] + pconst(self.HEH.inlet_hot,self.HEL.outlet_hot,50) + [self.CO1.inlet,self.CO1.outlet]
+	plot_Ts(SS2,'g-')
+
+	SS3 = [self.HEL.inlet, self.HEL.outlet_hot]
+	plot_Ts(SS3,'g--')
+	SS4 = [self.HEL.outlet, self.HEL.inlet_hot]
+	plot_Ts(SS4,'g--')
+
+	SS5 = [self.HEH.inlet, self.HEH.outlet_hot]
+	plot_Ts(SS5,'g--')
+	SS6 = [self.HEH.outlet, self.HEH.inlet_hot]
+	plot_Ts(SS6,'g--')
+
+
+	title(unicode(r"Split Regenerative Brayton cycle"))
+	ylabel(unicode(r"T / [°C]"))
+	xlabel("s / [kJ/kg/K]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+	savefig(os.path.expanduser("~/Desktop/brayton__split_regen.eps"))
+
+
+
 
 #--- air-to-stream heat exchanger plot ---
 
@@ -360,6 +493,8 @@ extpy.registermethod(cycle_plot_rankine_reheat)
 extpy.registermethod(cycle_plot_rankine_regen1)
 extpy.registermethod(cycle_plot_rankine_regen2)
 extpy.registermethod(cycle_plot_brayton_regen)
+extpy.registermethod(cycle_plot_brayton_reheat_regen_intercool)
+extpy.registermethod(cycle_plot_brayton_split)
 extpy.registermethod(cycle_plot_ccgt)
 
 extpy.registermethod(heater_closed_plot)
