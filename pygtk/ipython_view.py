@@ -62,34 +62,69 @@ class IterableIPShell:
     @param input_func: Replacement for builtin raw_input()
     @type input_func: function
     '''
+
+    # Handling the IOstream for newer versions of IPython
+    io = IPython.utils.io
+
     if input_func:
-      IPython.iplib.raw_input_original = input_func
+      IPython.frontend.terminal.interactiveshell.raw_input_original = input_func
     if cin:
-      IPython.Shell.Term.cin = cin
+      io.stdin = io.IOStream(cin)
     if cout:
-      IPython.Shell.Term.cout = cout
+      io.stdout = io.IOStream(cout)
     if cerr:
-      IPython.Shell.Term.cerr = cerr
+      io.stderr = io.IOStream(cerr)
 
     # This is to get rid of the blockage that accurs during 
     # IPython.Shell.InteractiveShell.user_setup()
-    IPython.iplib.raw_input = lambda x: None
 
-    self.term = IPython.genutils.IOTerm(cin=cin, cout=cout, cerr=cerr)
+    io.raw_input = lambda x: None
+
+
     os.environ['TERM'] = 'dumb'
     excepthook = sys.excepthook 
-    self.IP = IPython.Shell.make_IPython(
-      argv,user_ns=user_ns,
-      user_global_ns=user_global_ns,
-      embedded=True,
-      shell_class=IPython.Shell.InteractiveShell)
-    self.IP.system = lambda cmd: self.shell(self.IP.var_expand(cmd),
-                                            header='IPython system call: ',
-                                            verbose=self.IP.rc.system_verbose)
+
+    from IPython.config.loader import Config
+    configuring = Config()
+    configuring.InteractiveShell.colors = "Linux"
+    old_stdout, old_stderr = sys.stdout, sys.stderr
+    sys.stdout, sys.stderr = io.stdout.stream, io.stderr.stream
+    self.IP = IPython.frontend.terminal.embed.InteractiveShellEmbed.instance(\
+            config=configuring, user_ns=user_ns)
+    sys.stdout, sys.stderr = old_stdout, old_stderr
+
+
+    self.IP.system = lambda cmd: self.shell(self.IP.var_expand(cmd),header='IPython system call: ') 
+    self.IP.raw_input = input_func
+
     sys.excepthook = excepthook
     self.iter_more = 0
     self.history_level = 0
     self.complete_sep =  re.compile('[\s\{\}\[\]\(\)]')
+
+################################################################
+# Temporary fix for now
+
+# Mapping exit and quit calls to None
+    
+    self.updateNamespace({'exit':lambda:None})
+    self.updateNamespace({'quit':lambda:None})
+
+################################################################
+
+
+    self.IP.readline_startup_hook(self.IP.pre_readline)
+    self.__update_namespace()
+
+
+  def __update_namespace(self):
+    '''
+    This function updates namespace with sys.modules
+    '''
+    for k,v in sys.modules.items():
+      if not '.' in k:
+        self.IP.user_ns.update({k:v})
+
 
   def execute(self):
     '''
@@ -97,34 +132,46 @@ class IterableIPShell:
     '''
     self.history_level = 0
     orig_stdout = sys.stdout
-    sys.stdout = IPython.Shell.Term.cout
+    sys.stdout = IPython.utils.io.stdout
+
+    orig_stdin = sys.stdin
+    sys.stdin = IPython.utils.io.stdin;
+    self.prompt = self.generatePrompt(self.iter_more)
+    self.IP.hooks.pre_prompt_hook()
+
+    if self.iter_more:
+       try:
+          self.prompt = self.generatePrompt(self.iter_more)
+       except:
+          self.IP.showtraceback()
+       if self.IP.autoindent:
+          self.IP.rl_do_indent = True
+
+
     try:
-      line = self.IP.raw_input(None, self.iter_more)
-      if self.IP.autoindent:
-        self.IP.readline_startup_hook(None)
+      line = self.IP.raw_input(self.prompt)
     except KeyboardInterrupt:
       self.IP.write('\nKeyboardInterrupt\n')
-      self.IP.resetbuffer()
       # keep cache in sync with the prompt counter:
       self.IP.outputcache.prompt_count -= 1
-        
-      if self.IP.autoindent:
-        self.IP.indent_current_nsp = 0
-      self.iter_more = 0
+      self.IP.input_splitter.reset()
     except:
       self.IP.showtraceback()
     else:
-      self.iter_more = self.IP.push(line)
-      if (self.IP.SyntaxTB.last_syntax_error and
-          self.IP.rc.autoedit_syntax):
+       self.IP.input_splitter.push(line)
+       self.iter_more = self.IP.input_splitter.push_accepts_more()
+       self.prompt = self.generatePrompt(self.iter_more)
+
+    if (self.IP.SyntaxTB.last_syntax_error and self.IP.autoedit_syntax):
         self.IP.edit_syntax_error()
-    if self.iter_more:
-      self.prompt = str(self.IP.outputcache.prompt2).strip()
-      if self.IP.autoindent:
-        self.IP.readline_startup_hook(self.IP.pre_readline)
+    if not self.iter_more:
+        source_raw = self.IP.input_splitter.source_raw_reset()[1]
+        self.IP.run_cell(source_raw, store_history=True)
     else:
-      self.prompt = str(self.IP.outputcache.prompt1).strip()
+        pass
+
     sys.stdout = orig_stdout
+    sys.stdin = orig_stdin
 
   def historyBack(self):
     '''
@@ -181,7 +228,11 @@ class IterableIPShell:
     @rtype: tuple
     '''
     split_line = self.complete_sep.split(line)
-    possibilities = self.IP.complete(split_line[-1])
+    if split_line[-1]:
+      possibilities = self.IP.complete(split_line[-1])
+    else:
+      completed = line
+      possibilities = ['',[]]
     if possibilities:
       def _commonPrefix(str1, str2):
         '''
@@ -199,11 +250,14 @@ class IterableIPShell:
           if not str2.startswith(str1[:i+1]):
             return str1[:i]
         return str1
-      common_prefix = reduce(_commonPrefix, possibilities)
-      completed = line[:-len(split_line[-1])]+common_prefix
+      if possibilities[1]:
+        common_prefix = reduce(_commonPrefix, possibilities[1]) or line[-1]
+        completed = line[:-len(split_line[-1])]+common_prefix
+      else:
+        completed = line
     else:
       completed = line
-    return completed, possibilities
+    return completed, possibilities[1]
   
 
   def shell(self, cmd,verbose=0,debug=0,header=''):
@@ -227,6 +281,26 @@ class IterableIPShell:
       print output.read()
       output.close()
       input.close()
+
+
+  def generatePrompt(self, is_continuation):
+      '''
+      This function helps to provide backward compatibility for the previous versions
+      of IPython
+      '''
+
+      if '0.11' in IPython.__version__ or '0.10' in IPython.__version__:
+        prompt = self.IP.hooks.generate_prompt(is_continuation)
+      else:
+        if is_continuation:
+          prompt = self.IP.prompt_manager.render('in2')
+        else:
+          prompt = self.IP.prompt_manager.render('in')
+
+      return prompt
+
+
+
 
 class ConsoleView(gtk.TextView):
   '''
@@ -300,7 +374,7 @@ class ConsoleView(gtk.TextView):
       for tag in ansi_tags:
         i = segments.index(tag)
         self.text_buffer.insert_with_tags_by_name(self.text_buffer.get_end_iter(),
-                                             segments[i+1], tag)
+                segments[i+1], str(tag))
         segments.pop(i)
     if not editable:
       self.text_buffer.apply_tag_by_name('notouch',
@@ -441,7 +515,9 @@ class IPythonView(ConsoleView, IterableIPShell):
     IterableIPShell.__init__(self, cout=self.cout,cerr=self.cout, 
                              input_func=self.raw_input)
 #    self.connect('key_press_event', self.keyPress)
+    self.interrupt = False
     self.execute()
+    self.prompt = self.generatePrompt(False)
     self.cout.truncate(0)
     self.showPrompt(self.prompt)
     self.interrupt = False
