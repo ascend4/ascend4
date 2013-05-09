@@ -1,23 +1,19 @@
-%define pyver %(python -c 'import sys ; print sys.version[:3]')
-
-%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
-%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
-
-%define gtksourceview_lang_file %{_datadir}/gtksourceview-3.0/language-specs/ascend.lang
-
 Name:		ascend
 Summary:	ASCEND modelling environment
 Version:	0.9.8
-Release:	0.1.4424svn%{?dist}
+
+# Use release 0.* so that other users can do patch releases with a higher number
+# and still have the update occur automatically.
+Release:	0%{?dist}
+
 Group:		Applications/Engineering
 License:	GPLv2+
 URL:		http://ascend.cheme.cmu.edu/
-# This package has been obtained by executing:
-# svn co svn://ascend4.org/code/trunk ascend (changeset 4424)
-# tar -cvzf  ascend-0.9.8.tar.gz ascend
-Source0:	ascend-0.9.8.tar.gz
+Source:		ascend-0.9.8.tar.bz2
 
-Buildroot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Prefix:		%{_prefix}
+Packager:	John Pye
+Vendor:		Carnegie Mellon University
 
 #------ build dependencies -------
 BuildRequires: scons >= 0.96.92
@@ -31,18 +27,13 @@ BuildRequires: ipopt-devel >= 3.10
 BuildRequires: python-devel >= 2.4
 BuildRequires: tk-devel, tk, tcl-devel, tcl, tktable
 BuildRequires: graphviz-devel
+BuildRequires: desktop-file-utils
 
 # ... documentation
 # There are no dependencies for documentation as the tarball
 # will always contain documentation in compiled form. Only
 # when building from subversion are targets formats of the
 # documentation files not available.
-#BuildRequires: lyx 
-#BuildRequires: texlive-collection-fontsrecommended 
-#BuildRequires: texlive-epstopdf 
-#BuildRequires: texlive-ulem 
-#BuildRequires: texlive-lm-math
-BuildRequires: desktop-file-utils
 
 #------ runtime dependencies --------
 Requires: blas%{?_isa}
@@ -52,8 +43,7 @@ Requires: ipopt%{?_isa}
 # ...pygtk
 Requires: python%{?_isa} >= 2.4
 Requires: pygtk2 >= 2.6
-# fairly sure we don't need this any more? JP -- using GtkBuilder now, part of core PyGTK
-#Requires: pygtk2-libglade
+# does this one get picked up automatically?
 Requires: python-matplotlib
 Requires: numpy
 Requires: ipython
@@ -64,6 +54,11 @@ Requires(postun): desktop-file-utils shared-mime-info
 
 # syntax highlighting for gedit
 Requires: gtksourceview3
+
+%define pyver %(python -c 'import sys ; print sys.version[:3]')
+%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(plat_specific=0)")}
+%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(pat_specific=1)")}
+%define gtksourceview_lang_file %{_datadir}/gtksourceview-3.0/language-specs/ascend.lang
 
 %{?filter_setup:
 %filter_provides_in %{_libdir}/ascend/models/.*\.so$
@@ -96,6 +91,23 @@ Group: Applications/Engineering
 %description doc
 Documentation for ASCEND, in the form of a PDF User's Manual.
 
+#%package -n libascend1
+#Summary: Shared library for core ASCEND functionality
+#Group: Applications/Engineering
+#%description -n libascend1
+#Shared library for ASCEND, providing core functionality including compiler 
+#and solver API.
+
+#%package -n ascend-python
+#Version:    %{version}
+#Summary:    PyGTK user interface for ASCEND
+#Group:		Applications/Engineering
+#
+#%description -n ascend-python
+#PyGTK user interface for ASCEND. This is a new interface that follows GNOME
+#human interface guidelines as closely as possible. It does not as yet provide
+#access to all of the ASCEND functionality provided by the Tcl/Tk interface.
+#
 
 %package tcltk
 Summary: Tcl/Tk user interface for ASCEND
@@ -112,7 +124,7 @@ interface. Use this interface if you need to use ASCEND *.a4s files or other
 functionality not provided by the PyGTK interface.
 
 %prep
-%setup -q -n %{name}
+%setup -q -n ascend-0.9.8
 
 %build
 scons %{_smp_mflags} \
@@ -122,90 +134,45 @@ scons %{_smp_mflags} \
 	INSTALL_BIN=%{_bindir} \
 	INSTALL_INCLUDE=%{_includedir} \
 	INSTALL_LIB=%{_libdir} \
-	INSTALL_DOC=%{_docdir}/%{name}-%{version} \
+	INSTALL_DOC=%{_docdir}/%{name}-doc-%{version} \
 	DEBUG=1 \
-	WITH_DOC_BUILD=1 \
-	WITH_DOC_INSTALL=1 \
+	WITH_DOC_BUILD=0 \
+	WITH_DOC_INSTALL=0 \
 	WITH_SOLVERS=QRSLV,LSODE,CMSLV,IDA,LRSLV,CONOPT,DOPRI5,IPOPT \
-	ABSOLUTE_PATHS=0 \
+	ABSOLUTE_PATHS=1 \
 	%{?__cc:CC="%__cc"} %{?__cxx:CXX="%__cxx"} \
 	ascend ascxx pygtk tcltk models solvers
 
 %install
-rm -rf %{buildroot}
 scons %{_smp_mflags} install
 
 # Install menu entry for PyGTK interface, gtksourceview syntax highlighting, and MIME definition
 pushd pygtk/gnome
-install -m 644 -D %{name}.desktop %{buildroot}/%{_datadir}/applications/%{name}.desktop
-install -m 644 -D %{name}.png %{buildroot}/%{_datadir}/icons/%{name}-app.png
-install -m 644 -D %{name}.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/%{name}.png
-install -m 644 -D %{name}.xml %{buildroot}/%{_datadir}/mime/packages/%{name}.xml
+install -m 644 -D ascend.desktop %{buildroot}/%{_datadir}/applications/ascend.desktop
+install -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/ascend-app.png
+install -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend.png
+install -m 644 -D ascend.xml %{buildroot}/%{_datadir}/mime/packages/ascend.xml
 popd
 
 # file-type icon for ascend models (double click should open in ASCEND)
 pushd pygtk/glade
-install -m 644 -D %{name}-doc-48x48.svg %{buildroot}/%{_datadir}/icons/text-x-%{name}-model.svg
+install -m 644 -D ascend-doc-48x48.svg %{buildroot}/%{_datadir}/icons/text-x-ascend-model.svg
 popd
 
 # language file for use with gedit
-# gtksourceview-3.0?
+# FIXME gtksourceview-3.0?
 pushd tools/gtksourceview-2.0
-install -m 644 -D %{name}.lang %{buildroot}/%{gtksourceview_lang_file}
+install -m 644 -D ascend.lang %{buildroot}/%{gtksourceview_lang_file}
 popd
 
 # Install menu entry for Tcl/Tk interface
 pushd tcltk/gnome
-install -m 644 -D %{name}4.desktop %{buildroot}/%{_datadir}/applications/%{name}4.desktop
-install -m 644 -D %{name}4.png %{buildroot}/%{_datadir}/icons/%{name}4-app.png
-install -m 644 -D %{name}4.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/%{name}4.png
+install -m 644 -D ascend4.desktop %{buildroot}/%{_datadir}/applications/ascend4.desktop
+install -m 644 -D ascend4.png %{buildroot}/%{_datadir}/icons/ascend4-app.png
+install -m 644 -D ascend4.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend4.png
 popd
 
-# Fix .desktop files entries
-
-desktop-file-edit                                       \
---set-icon="ascend-app"                                 \
---add-category="Science"                                \
---remove-key="Encoding"                                 \
---remove-key="Categories"                               \
-%{buildroot}/%{_datadir}/applications/%{name}.desktop
-
-desktop-file-edit                                       \
---set-icon="ascend-app"                                 \
---add-category="Science"                                \
---remove-key="Encoding"                                 \
---remove-key="Categories"                               \
-%{buildroot}/%{_datadir}/applications/%{name}4.desktop
-
-desktop-file-validate %{buildroot}/%{_datadir}/applications/%{name}.desktop
-desktop-file-validate %{buildroot}/%{_datadir}/applications/%{name}4.desktop
-
-# Fixed execute permission
-chmod +x %{buildroot}/%{_libdir}/%{name}/solvers/*.so
-chmod +x %{buildroot}/%{_libdir}/%{name}/models/*/*.so
-chmod +x %{buildroot}/%{_libdir}/%{name}/models/*/*/*.so
-chmod +x %{buildroot}/%{_libdir}/libascend.so.1.0
-chmod +x %{buildroot}/%{_libdir}/libascendtcl.so
-chmod +x %{buildroot}/%{_libdir}/%{name}/models/johnpye/fprops/test/ph
-chmod +x %{buildroot}/%{_libdir}/%{name}/models/johnpye/fprops/test/sat
-chmod +x %{buildroot}/%{python_sitearch}/%{name}/_ascpy.so
-chmod +x %{buildroot}/%{python_sitearch}/_fprops.so
-
-
-# Fix non-executable-script warnings
-for lib in %{buildroot}/%{_libdir}/%{name}/models/test/reverse_ad/modelgen.py; do
- sed '1{\@^#!/usr/bin/env python@d}' $lib > $lib.new &&
- touch -r $lib $lib.new &&
- mv $lib.new $lib
-done
-
-# Fix non-executable-script warnings
-for lib in %{buildroot}/%{_libdir}/%{name}/models/johnpye/fprops/convcomp.py; do
- sed '1{\@^#!/usr/bin/env python@d}' $lib > $lib.new &&
- touch -r $lib $lib.new &&
- mv $lib.new $lib
-done
-
+#/usr/lib/rpm/redhat/brp-strip-shared /usr/bin/strip
 
 %clean
 rm -rf %{buildroot}
@@ -221,67 +188,60 @@ update-desktop-database
 update-mime-database /usr/share/mime &> /dev/null || :
 
 %files
-#%defattr(644,root,root)
+%defattr(644,root,root)
 %doc INSTALL.txt LICENSE.txt
-#%defattr(755,root,root)
-%{_libdir}/%{name}/models
-%{_libdir}/%{name}/solvers
-%{_datadir}/mime/packages/%{name}.xml
+
+%defattr(644,root,root)
+%{_libdir}/ascend/models
+%{_libdir}/ascend/solvers
+%{_datadir}/mime/packages/ascend.xml
 %{gtksourceview_lang_file}
-%{_datadir}/icons/text-x-%{name}-model.svg
-#%defattr(755,root,root)
+%{_datadir}/icons/text-x-ascend-model.svg
+
+#%files -n libascend1
+%defattr(755,root,root)
 %{_libdir}/libascend.so.*
-%dir %{python_sitearch}/%{name}
-#%defattr(755,root,root)
-%{_bindir}/%{name}
-%{python_sitearch}/%{name}/_ascpy.so
-#%defattr(644,root,root)
-%{python_sitearch}/%{name}/*.py
-%{python_sitearch}/%{name}/*.py[oc]
-%{_datadir}/%{name}/glade
-%{_datadir}/applications/%{name}.desktop
-%{_datadir}/icons/%{name}-app.png
-%{_datadir}/icons/hicolor/64x64/%{name}.png
-#%defattr(755,root,root)
+
+# %package python
+%defattr(755,root,root)
+%{_bindir}/ascend
+%{python_sitearch}/ascend/_ascpy.so
+%defattr(644,root,root)
+%{python_sitearch}/ascend/*.py
+%{python_sitearch}/ascend/*.py[oc]
+%{_datadir}/ascend/glade
+%{_datadir}/applications/ascend.desktop
+%{_datadir}/icons/ascend-app.png
+%{_datadir}/icons/hicolor/64x64/ascend.png
+
+# %package -n python-fprops
+%defattr(755,root,root)
 %{python_sitearch}/_fprops.so
-#%defattr(644,root,root)
+%defattr(644,root,root)
 %{python_sitearch}/fprops.py
 %{python_sitearch}/fprops.py[oc]
 
-
 %files tcltk
-#%defattr(755,root,root)
-%{_bindir}/%{name}4
+%defattr(755,root,root)
+%{_bindir}/ascend4
 %{_libdir}/libascendtcl.so
-#%defattr(644,root,root)
-%{_datadir}/%{name}/tcltk
-%{_datadir}/applications/%{name}4.desktop
-%{_datadir}/icons/%{name}4-app.png
-%{_datadir}/icons/hicolor/64x64/%{name}4.png
+%defattr(644,root,root)
+%{_datadir}/ascend/tcltk
+%{_datadir}/applications/ascend4.desktop
+%{_datadir}/icons/ascend4-app.png
+%{_datadir}/icons/hicolor/64x64/ascend4.png
 
 %files devel
-#%defattr(755,root,root)
-%{_bindir}/%{name}-config
-%{_includedir}/%{name}
+%defattr(755,root,root)
+%{_bindir}/ascend-config
+%{_includedir}/ascend
 %{_libdir}/lib*.so
 
 %files doc
-#%defattr(644,root,root)
+%defattr(644,root,root)
 %doc doc/book.pdf
 
 %changelog
-* Thu Jan 24 2013 Antonio Trande <sagitter@fedoraproject.org> 0.9.8-0.1.4424svn
-- Fixed .desktop files entries
-- Fixed source package origin
-- Added BR texlive-collection-fontsrecommended,texlive-epstopdf,texlive-ulem 
-  texlive-lm-math,desktop-file-utils  
-- Fixed execute permission to various file
-- Added Buildroot tag
-- Fixed non-executable-script warnings
-
-* Thu Jan 24 2013 Antonio Trande <sagitter@fedoraproject.org> 0.9.8-0.0.4424svn
-- Initial package
-
 * Wed Dec 12 2012 John Pye <john.pye@anu.edu.au> 0.9.8
 - New version
 

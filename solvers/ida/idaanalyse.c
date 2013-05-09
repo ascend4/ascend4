@@ -49,7 +49,7 @@
 	CONSOLE_DEBUG(MSG,varname); \
 	ASC_FREE(varname)
 
-static int integrator_ida_check_partitioning(IntegratorSystem *integ);
+//static int integrator_ida_check_partitioning(IntegratorSystem *integ);
 static int integrator_ida_check_diffindex(IntegratorSystem *integ);
 /* static int integrator_ida_rebuild_diffindex(IntegratorSystem *integ); */
 
@@ -685,7 +685,7 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 	return 0;
 }
 
-
+#if 0 /* disused function, apparently -- JP */
 static int integrator_ida_check_partitioning(IntegratorSystem *integ){
 	long i, nv;
 	int err=0;
@@ -726,6 +726,7 @@ static int integrator_ida_check_partitioning(IntegratorSystem *integ){
 	}
 	return 0;
 }
+#endif
 
 int integrator_ida_block_check(IntegratorSystem *integ){
 	int res;

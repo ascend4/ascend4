@@ -230,10 +230,10 @@ static void test_pushpop(void){
 
 
 void test_raise(){
-  SigHandlerFn* old_handler;
+  //SigHandlerFn* old_handler;
   volatile int signal1_caught;
-  volatile int signal2_caught;
-  volatile int signal3_caught;
+  //volatile int signal2_caught;
+  //volatile int signal3_caught;
 
   unsigned long prior_meminuse;
   prior_meminuse = ascmeminuse();             /* save meminuse() at start of test function */

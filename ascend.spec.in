@@ -27,6 +27,7 @@ BuildRequires: ipopt-devel >= 3.10
 BuildRequires: python-devel >= 2.4
 BuildRequires: tk-devel, tk, tcl-devel, tcl, tktable
 BuildRequires: graphviz-devel
+BuildRequires: desktop-file-utils
 
 # ... documentation
 # There are no dependencies for documentation as the tarball
@@ -42,7 +43,6 @@ Requires: ipopt%{?_isa}
 # ...pygtk
 Requires: python%{?_isa} >= 2.4
 Requires: pygtk2 >= 2.6
-Requires: pygtk2-libglade
 # does this one get picked up automatically?
 Requires: python-matplotlib
 Requires: numpy

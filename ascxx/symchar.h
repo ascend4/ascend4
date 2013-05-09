@@ -28,7 +28,7 @@ public:
 	//SymChar();
 	SymChar(const std::string &name);
 	SymChar(const char *name);
-	SymChar(const symchar *name); // never gets used
+	//SymChar(const symchar *name); // never gets used
 	SymChar(const SymChar &);
 	SymChar(const struct InstanceName &);
 	bool operator==(const SymChar &) const;
