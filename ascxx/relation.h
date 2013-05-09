@@ -6,7 +6,7 @@
 
 #include "simulation.h"
 
-struct Variable;
+class Variable;
 
 #include "config.h"
 extern "C"{

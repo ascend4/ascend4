@@ -338,7 +338,7 @@ extern void addLinkEntry(struct Instance *model, symchar *key
 	, struct gl_list_t *instances, struct Statement *stat, unsigned int declarative
 ){
 	struct TypeDescription *modelType;
-	struct link_entry_t *link_entry, *old_link_entry;
+	struct link_entry_t *link_entry = NULL, *old_link_entry;
 	struct for_var_t *ptr;
 	int c,len,exist = 0;
 
