@@ -1,0 +1,27 @@
+REQUIRE "johnpye/fprops/rankine_fprops.a4c";
+
+MODEL pipe_adiabatic REFINES stream_equipment;
+	A IS_A area;
+	Vel_in, Vel_out IS_A speed;
+	Vel_in * A = mdot * inlet.v;
+	Vel_out * A = mdot * outlet.v;
+	inlet.h + 0.5*Vel_in^2 = outlet.h + 0.5*Vel_out^2;
+END pipe_adiabatic;
+
+MODEL pipe_adiabatic_test REFINES pipe_adiabatic;
+	cd.component :== 'water';
+	cd.type :== 'helmholtz';
+METHODS
+METHOD on_load;
+	RUN stream_equipment::default_self;
+	FIX A := 1{PI}*0.08{m}^2;
+	FIX mdot := 0.1 {kg/s};
+	FIX inlet.p := 33 {bar};
+	FIX outlet.p := 5 {bar};
+	FIX inlet.T := 370 {K} + 372.15 {K};
+	(* initial guesses *)
+	inlet.h := 4000 {kJ/kg};
+	outlet.h := 4000 {kJ/kg};
+END on_load;
+END pipe_adiabatic_test;
+
