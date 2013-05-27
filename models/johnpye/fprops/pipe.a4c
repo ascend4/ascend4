@@ -1,10 +1,10 @@
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 
 MODEL pipe_adiabatic REFINES stream_equipment;
-	D IS_A distance;
-	A IS_A area;
-	L IS_A distance;
-	eps IS_A distance;
+	D "inside diameter" IS_A distance;
+	A "flow cross-sectional area" IS_A area;
+	L "pipe length" IS_A distance;
+	eps "pipe roughness" IS_A distance;
 
 	(* energy equation, ignoring potential energy *)
 	A = 0.25{PI}*D^2;
@@ -14,9 +14,9 @@ MODEL pipe_adiabatic REFINES stream_equipment;
 	en_eqn: inlet.h + 0.5*Vel_in^2 = outlet.h + 0.5*Vel_out^2;
 
 	(* pressure drops *)
-	Re IS_A positive_factor;
-	f_D IS_A positive_factor;
-	mu IS_A viscosity;
+	Re "Reynolds number" IS_A positive_factor;
+	f_D "Friction factor (Darcy)" IS_A positive_factor;
+	mu "dynamic viscosity" IS_A viscosity;
 	Re = Vel_in * D / inlet.v / mu;
 	(* Swamee-Jain eqn *)
 	f_D = 0.25 / (log10(eps/(D*3.7) +5.74/Re^0.9))^2; (* note: constant f assumed over length, calculated with inlet spec vol *)
@@ -27,7 +27,7 @@ MODEL pipe_adiabatic REFINES stream_equipment;
 	ke_in = 0.5 * Vel_in^2;
 	ke_out = 0.5 * Vel_out^2;
 
-	Vel_sonic_out IS_A speed;
+	Vel_sonic_out "speed of sound at fluid outlet" IS_A speed;
 	rho_out IS_A mass_density;
 	rho_out = 1 / outlet.v;
 	calc_w: fprops_w(
@@ -81,6 +81,7 @@ MODEL pipe_heat_loss REFINES pipe_adiabatic;
 	Q = - h * L*1{PI}*D_o * (inlet.T - T_amb) - 1{SIGMA_C}*emiss*(inlet.T^4 - T_amb^4);
 
 	(* energy equation, ignoring potential energy *)
+	(* note that the pipe_adiabatic::en_eqn must be de-included in METHODS *)
 	en_eqn_Q: Q/mdot + inlet.h + 0.5*Vel_in^2 = outlet.h + 0.5*Vel_out^2;
 METHODS
 METHOD default_self;
