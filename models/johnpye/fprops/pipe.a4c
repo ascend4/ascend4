@@ -11,7 +11,7 @@ MODEL pipe_adiabatic REFINES stream_equipment;
 	Vel_in, Vel_out IS_A speed;
 	Vel_in * A = mdot * inlet.v;
 	Vel_out * A = mdot * outlet.v;
-	inlet.h + 0.5*Vel_in^2 = outlet.h + 0.5*Vel_out^2;
+	en_eqn: inlet.h + 0.5*Vel_in^2 = outlet.h + 0.5*Vel_out^2;
 
 	(* pressure drops *)
 	Re IS_A positive_factor;
@@ -21,7 +21,7 @@ MODEL pipe_adiabatic REFINES stream_equipment;
 	(* Swamee-Jain eqn *)
 	f_D = 0.25 / (log10(eps/(D*3.7) +5.74/Re^0.9))^2; (* note: constant f assumed over length, calculated with inlet spec vol *)
 	(* momentum equation *)
-	(inlet.p - outlet.p) = (0.5 * Vel_in^2 / inlet.v) * f_D * (L/D);
+	mom_eqn: (inlet.p - outlet.p) = (0.5 * Vel_in^2 / inlet.v) * f_D * (L/D);
 
 	ke_in, ke_out IS_A specific_energy;
 	ke_in = 0.5 * Vel_in^2;
@@ -39,23 +39,27 @@ MODEL pipe_adiabatic REFINES stream_equipment;
 	T_in_C = inlet.T - 273.15 {K};
 	T_out_C IS_A delta_temperature;
 	T_out_C = outlet.T - 273.15 {K};
+METHODS
+METHOD default_self;
+	RUN stream_equipment::default_self;
+END default_self;	
 END pipe_adiabatic;
+
 
 MODEL pipe_adiabatic_test REFINES pipe_adiabatic;
 	cd.component :== 'water';
 	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
-	RUN stream_equipment::default_self;
-	FIX D := 0.5 {in} - 2 * 2.769 {mm};
-	(*FIX mdot := 0.1 {kg/s};*)
+	RUN pipe_adiabatic::default_self;
+	FIX D := 10 {mm};
+	FIX L := 5 {m};
+	FIX mdot := 0.1 {kg/s};
 	FIX inlet.p := 35 {bar};
-	FIX outlet.p := 20 {bar};
 	FIX inlet.T := 370 {K} + 273.15 {K};
 
 	FIX mu := 0.024 {cP};
 	FIX eps := 0.09 {mm};
-	FIX L := 5 {m};
 
 	(* initial guesses *)
 	f_D := 0.0001;
@@ -64,21 +68,83 @@ METHOD on_load;
 END on_load;
 END pipe_adiabatic_test;
 
+
+MODEL pipe_heat_loss REFINES pipe_adiabatic;
+	D_o IS_A distance;
+	t IS_A distance;
+	D_o = D + 2*t;
+	
+	T_amb IS_A temperature;
+	h "pipe external convection coeff" IS_A heat_transfer_coefficient;
+	emiss "pipe external emissivity" IS_A fraction;
+	Q IS_A energy_rate;
+	Q = - h * L*1{PI}*D_o * (inlet.T - T_amb) - 1{SIGMA_C}*emiss*(inlet.T^4 - T_amb^4);
+
+	(* energy equation, ignoring potential energy *)
+	en_eqn_Q: Q/mdot + inlet.h + 0.5*Vel_in^2 = outlet.h + 0.5*Vel_out^2;
+METHODS
+METHOD default_self;
+	RUN pipe_adiabatic::default_self;
+	en_eqn.included := FALSE;
+	en_eqn_Q.included := TRUE;
+END default_self;	
+END pipe_heat_loss;
+
+
+MODEL pipe_heat_loss_test REFINES pipe_heat_loss;
+	cd.component :== 'water';
+	cd.type :== 'helmholtz';
+METHODS
+METHOD on_load;
+	RUN pipe_heat_loss::default_self;
+	FIX D := 10 {mm};
+	FIX t := 1 {mm};
+	FIX L := 5 {m};
+	FIX mdot := 0.1 {kg/s};
+	FIX inlet.p := 35 {bar};
+	FIX inlet.T := 370 {K} + 273.15 {K};
+
+	FIX mu := 0.024 {cP};
+	FIX eps := 0.09 {mm};
+	FIX emiss := 0.8;
+
+	FIX h := 20 {W/m^2/K};
+	FIX T_amb := 20 {K} + 273.15{K};
+
+	(* initial guesses *)
+	f_D := 0.0001;
+	inlet.h := 4000 {kJ/kg};
+	outlet.h := 4000 {kJ/kg};
+END on_load;
+END pipe_heat_loss_test;
+
+
 MODEL pipe_sequence_test;
-	P1, P2 IS_A pipe_adiabatic;
+	P1, P2 IS_A pipe_heat_loss;
 	P1.outlet, P2.inlet ARE_THE_SAME;
 	cd ALIASES P1.cd;
 	cd.component :== 'water';	
 	cd.type :== 'helmholtz';
 
 	P1.eps, P2.eps ARE_THE_SAME;
+	P1.emiss, P2.emiss ARE_THE_SAME;
+	emiss ALIASES P1.emiss;
+	P1.h, P2.h ARE_THE_SAME;
+	P1.T_amb, P2.T_amb ARE_THE_SAME;
+	h ALIASES P1.h;
+	T_amb ALIASES P1.T_amb;
 METHODS
 METHOD on_load;
 	RUN P1.default_self;
 	RUN P2.default_self;
 	FIX P1.eps := 0.09 {mm};
 	FIX P1.D := 10 {mm};
-	FIX P2.D := 20 {mm};
+	FIX P2.D := 16 {mm};
+	FIX P1.t := 2 {mm};
+	FIX P2.t := 2 {mm};
+	FIX h := 20 {W/m^2/K};
+	FIX emiss := 0.8;
+	FIX T_amb := 20 {K} + 273.15 {K};
 	FIX P1.L := 5 {m};
 	FIX P2.L := 25 {m};
 	FIX P1.inlet.p := 35 {bar};
