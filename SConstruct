@@ -21,6 +21,9 @@ winarchtag = "-win32"
 if platform.architecture()[0] == "64bit":
 	winarchtag="-amd64"
 
+import SCons.Warnings
+SCons.Warnings.suppressWarningClass(SCons.Warnings.VisualCMissingWarning) 
+
 #------------------------------------------------------
 # PLATFORM DEFAULTS
 
@@ -62,11 +65,12 @@ default_swig="swig"
 icon_extension = '.png'
 
 if platform.system()=="Windows":
-	if os.path.exists("c:\\MinGW"):
-		default_prefix="c:\\MinGW"
-	elif os.path.exists("c:\MinGW64"):
-		default_prefix="c:\\MinGW64"
-	
+	try:
+		d = os.path.split(os.path.dirname(WhereIs("gcc.exe")))[0]
+		default_prefix=d
+	except:
+		default_prefix="c:\\mingw"
+
 	default_libpath="$DEFAULT_PREFIX\\lib"
 	default_cpppath="$DEFAULT_PREFIX\\include"	
 
@@ -917,21 +921,20 @@ if platform.system()=='Windows':
 
 env['CAN_INSTALL']=can_install
 
-print "TCL=",env['TCL']
-print "TCL_CPPPATH =",env['TCL_CPPPATH']
-print "TCL_LIBPATH =",env['TCL_LIBPATH']
-print "TCL_LIB =",env['TCL_LIB']
+#print "TCL=",env['TCL']
+#print "TCL_CPPPATH =",env['TCL_CPPPATH']
+#print "TCL_LIBPATH =",env['TCL_LIBPATH']
+#print "TCL_LIB =",env['TCL_LIB']
 
-print "ABSOLUTE PATHS =",env['ABSOLUTE_PATHS']
-print "INSTALL_ASCDATA =",env['INSTALL_ASCDATA']
-print "INSTALL_PREFIX =",env['INSTALL_PREFIX']
-print "INSTALL_MODELS =",env['INSTALL_MODELS']
-print "INSTALL_SOLVERS =",env['INSTALL_SOLVERS']
-print "INSTALL_PYTHON =",env['INSTALL_PYTHON']
-print "INSTALL_PYTHON_ASCEND =",env['INSTALL_PYTHON_ASCEND']
-
-print "DEFAULT_ASCENDLIBRARY =",env['DEFAULT_ASCENDLIBRARY']
-print "DEFAULT_ASCENDSOLVERS =",env['DEFAULT_ASCENDSOLVERS']
+#print "ABSOLUTE PATHS =",env['ABSOLUTE_PATHS']
+#print "INSTALL_ASCDATA =",env['INSTALL_ASCDATA']
+#print "INSTALL_PREFIX =",env['INSTALL_PREFIX']
+#print "INSTALL_MODELS =",env['INSTALL_MODELS']
+#print "INSTALL_SOLVERS =",env['INSTALL_SOLVERS']
+#print "INSTALL_PYTHON =",env['INSTALL_PYTHON']
+#print "INSTALL_PYTHON_ASCEND =",env['INSTALL_PYTHON_ASCEND']
+#print "DEFAULT_ASCENDLIBRARY =",env['DEFAULT_ASCENDLIBRARY']
+#print "DEFAULT_ASCENDSOLVERS =",env['DEFAULT_ASCENDSOLVERS']
 
 
 #------------------------------------------------------

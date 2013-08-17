@@ -1,6 +1,6 @@
 import os, os.path, platform, subprocess
 from SCons.Script import *
-
+from SCons.Util import WhereIs
 munge = lambda s: s
 
 try:
@@ -65,14 +65,17 @@ def generate(env):
 				env['SUNDIALS_LIBPATH'] = [munge(BIN)]
 				env['SUNDIALS_LIBS'] = ['sundials_ida','sundials_nvecserial','m']
 			except WindowsError:
-				# if someone has installed sundials with ./configure --prefix=/MinGW using MSYS, then
+				sundialsconfig = find_sundials_config(env)
+				if not sundialsconfig:
+					raise RuntimeError("Unable to locate sundials-config in Windows PATH")
+					# if someone has installed sundials with ./configure --prefix=/MinGW using MSYS, then
 				# this should work, but we would like to make this a lot more robust!
-				cmd = ['sh.exe','/mingw/bin/sundials-config','-mida','-ts','-lc']
+				cmd = ['sh.exe',sundialsconfig,'-mida','-ts','-lc']
 				env1 = env.Clone()
 				env1['CPPPATH'] = None
 				env1['LIBPATH'] = None
 				env1['LIBS'] = None
-				print "RUNNING sundials-config"
+				#print "RUNNING sundials-config"
 				env1.ParseConfig(cmd)
 				env['SUNDIALS_CPPPATH'] = [munge(winpath(p)) for p in env1.get('CPPPATH')]
 				env['SUNDIALS_LIBPATH'] = [munge(winpath(p)) for p in env1.get('LIBPATH')]
@@ -82,6 +85,9 @@ def generate(env):
 			env['HAVE_SUNDIALS'] = True
 									
 		else:
+			sundialsconfig = env.WhereIs("sundials-config")
+			if not sundialsconfig:
+				raise RuntimeError("Unable to locate 'sundials-config' in PATH")
 			cmd = ['sundials-config','-mida','-ts','-lc']
 			env1 = env.Clone()
 			env1['CPPPATH'] = None
@@ -119,21 +125,29 @@ def generate(env):
 		print "FAILED SUNDIALS DETECTION (%s):" % platform.system(),e.__class__,str(e)
 		env['HAVE_SUNDIALS'] = False
 
+def find_sundials_config(env):
+  """
+  Try and figure out if sundials-config is installed on this machine, and if so, where.
+  """
+  if SCons.Util.can_read_reg:
+    # If we can read the registry, get the NSIS command from it
+    try:
+		# 0x20019 is KEY_READ, 
+		k = SCons.Util.RegOpenKeyEx(SCons.Util.hkey_mod.HKEY_LOCAL_MACHINE,'SOFTWARE\\NSIS',0,0x20019)
+		val, tok = SCons.Util.RegQueryValueEx(k,None)
+		ret = val + os.path.sep + 'makensis.exe'
+		if os.path.exists(ret):
+			return '"' + ret + '"'
+		else:
+			return None
+    except:
+		pass # Couldn't find the key, just act like we can't read the registry
+  # Hope it's on the path, but note that we have to be careful with PATHEXT since sundials-config doesn't have an 
+  # an executable-signifying suffix (seems like a weakness with env.WhereIs in SCons??
+  return WhereIs('sundials-config',path=os.environ['PATH'],pathext="")	
+
 def exists(env):
-	"""
-	Make sure this tool exists.
-	"""
-	if platform.system()=="Windows":
-		try:
-			import _winreg
-			x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
-			y= _winreg.OpenKey(x,r"SOFTWARE\SUNDIALS")
-			INCLUDE,t = _winreg.QueryValueEx(y,'INSTALL_INCLUDE')
-			return True
-		except:
-			return False
-	else:
-		if not subprocess.call('sundials-config -h'):
-			return True
-		return False
+	if find_sundials_config(env) != None:
+		return 1
+	return 0
 
