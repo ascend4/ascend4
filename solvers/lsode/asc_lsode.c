@@ -1,3 +1,4 @@
+
 /* :ex: set ts=2 */
 /*	ASCEND modelling environment
 	Copyright 1997, Carnegie Mellon University
@@ -103,16 +104,16 @@ extern ASC_EXPORT int lsode_register(void){
  *  is wierd. WIN32/CRAY is treated as special case
  */
 #ifdef APOLLO
-#define NOUNDERBARS TRUE
+#define NOUNDERBARS
 #endif
 #ifdef _HPUX_SOURCE
-#define NOUNDERBARS TRUE
+#define NOUNDERBARS
 #endif
 /* AIX xlf will not suffix an underbar on a symbol
  * unless xlf is given the ``-qextname'' option
  */
 #ifdef _AIX
-#define NOUNDERBARS TRUE
+#define NOUNDERBARS
 #endif
 
 #ifdef NOUNDERBARS
@@ -143,7 +144,7 @@ extern ASC_EXPORT int lsode_register(void){
 #define GETCOMMON GET_LSODE_COMMON
 #endif
 
-#if defined(__WIN32__) && defined(__MINGW32_VERSION)
+#if defined(__MINGW32__) || defined(__MINGW64__)
 #undef LSODE
 #undef XASCWV
 #define XASCWV xascwv_
