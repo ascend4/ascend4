@@ -98,7 +98,7 @@ if platform.system()=="Windows":
 	default_ida_prefix = "$DEFAULT_PREFIX"
 	
 	# IPOPT. we now prefer to build our own version.
-	default_ipopt_libs = ["ipopt",'stdc++','coinmumps','coinmetis','coinlapack','coinblas','gfortran']
+	default_ipopt_libs = ["ipopt",'stdc++','coinmumps','coinmetis','coinlapack','coinblas','gfortran','pthread']
 
 	# where to look for CONOPT when compiling
 	default_conopt_prefix = "c:\\Program Files\\CONOPT"
