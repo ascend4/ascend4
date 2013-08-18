@@ -1,8 +1,26 @@
 import gtk
 import pango
 import ascpy
-import gtksourceview2 as gtksourceview
 import os
+
+HAVE_SOURCEVIEW=0
+try:
+	from gtksourceview2 import Buffer as MyBuffer, View as MyView, language_manager_get_default
+	# Ensure that the ascend.lang settings are accessible for gtksourceview
+
+	# TODO move this to ascdev / ascend scripts, it shouldn't be here as
+	# it contains assumptions about the filesystem layout.
+
+	mgr = language_manager_get_default()
+	_op = mgr.get_search_path()
+	if os.path.join('..','tools','gtksourceview-2.0') not in _op:
+		_op.append(os.path.join('..','tools','gtksourceview-2.0'))
+		mgr.set_search_path(_op)
+	lang = mgr.get_language('ascend')
+	HAVE_SOURCEVIEW=1
+except ImportError,e:
+	MyBuffer = gtk.TextBuffer
+	MyView = gtk.TextView
 
 class ModuleView:
 	def __init__(self,browser,builder, library):
@@ -204,26 +222,19 @@ class ViewModel:
 		window.add(box)
 		box.show()
 		
-		#Get the ASCEND language
-		mgr = gtksourceview.language_manager_get_default()
-		op = mgr.get_search_path()
-		if os.path.join('..','tools','gtksourceview-2.0') not in op:
-			op.append(os.path.join('..','tools','gtksourceview-2.0'))
-			mgr.set_search_path(op)
-		lang = mgr.get_language('ascend')
-
 		# TODO add status bar where this message can be reported?
-		if lang is None:
+		if not HAVE_SOURCEVIEW or lang is None:
 			print "UNABLE TO LOCATE ASCEND LANGUAGE DESCRIPTION for gtksourceview"
 
 		#Creating a ScrolledWindow for the textview widget
 		scroll = gtk.ScrolledWindow()
 		scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-		view = gtksourceview.View()
+		view = MyView()
 		view.set_editable(False)
-		buff = gtksourceview.Buffer()
-		buff.set_language(lang)
-		buff.set_highlight_syntax(True)
+		buff = MyBuffer()
+		if HAVE_SOURCEVIEW:
+			buff.set_language(lang)
+			buff.set_highlight_syntax(True)
 		view.set_buffer(buff)
 		scroll.add(view)
 
