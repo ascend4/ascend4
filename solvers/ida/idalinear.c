@@ -236,6 +236,7 @@ int integrator_ida_lsolve(IDAMem IDA_mem
 	, N_Vector b, N_Vector weight
 	, N_Vector ycur, N_Vector ypcur, N_Vector rrcur
 ){
+#ifdef STILL_NEED_TO_IMPLEMENT_THIS_STUFF
 	realtype *bd;
   
   	IntegratorIdaAscendMem *iamem;
@@ -253,6 +254,7 @@ int integrator_ida_lsolve(IDAMem IDA_mem
 	if(cjratio != ONE){
 		N_VScale(TWO/(ONE + cjratio), b, b);
 	}
+#endif
 
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
 	return -1;
