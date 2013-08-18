@@ -391,11 +391,13 @@ void integrator_ida_error(int error_code
 		, const char *module, const char *function
 		, char *msg, void *eh_data
 ){
-	IntegratorSystem *integ;
 	error_severity_t sev;
 
 	/* cast back the IntegratorSystem, just in case we need it */
+#ifdef WE_DONT_NEED_THIS_YET
+	IntegratorSystem *integ;
 	integ = (IntegratorSystem *)eh_data;
+#endif
 
 	/* severity depends on the sign of the error_code value */
 	if(error_code <= 0){
