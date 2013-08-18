@@ -41,14 +41,16 @@ typedef unsigned int UGLint;
 
 #if (SIZEOF_VOID_P == SIZEOF_UINT)
 typedef unsigned int asc_intptr_t;
+# define ASC_PTRFMT "%u"
 #elif (SIZEOF_VOID_P == SIZEOF_ULONG)
 typedef unsigned long asc_intptr_t;
+# define ASC_PTRFMT "%lu"
 #elif (SIZEOF_VOID_P == SIZEOF_ULONGLONG)
 typedef unsigned long long asc_intptr_t;
+# define ASC_PTRFMT "%llu"
 #else
 # error "Invalid SIZEOF_VOID_P ???"
 #endif
-
 
 /**
 	If we have C99 FPE (floating point error) routines available on this
