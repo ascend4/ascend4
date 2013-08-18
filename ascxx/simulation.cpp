@@ -811,13 +811,13 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 
 #if SIMULATION_DEBUG
 	cerr << "-----------------solve----------------" << endl;
+	double starttime = tm_cpu_time();
 #endif
 	//cerr << "DONE" << endl;
 
 	//cerr << "SOLVING SYSTEM..." << endl;
 	//double updateinterval = 0.02;
 
-	double starttime = tm_cpu_time();
 	//double lastupdate = starttime;
 	SolverStatus status;
 	//int solved_vars=0;
@@ -846,9 +846,8 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		}
 	}
 
-	double elapsed = tm_cpu_time() - starttime;
-
 #if SIMULATION_DEBUG
+	double elapsed = tm_cpu_time() - starttime;
 	CONSOLE_DEBUG("Elapsed time %0.3f for %d iterations (solver completed)", elapsed,iter);
 #endif
 
