@@ -1,6 +1,8 @@
 #include "fluids.h"
 #include "fluids/fluids_list.h"
 #include "fprops.h"
+#include "helmholtz.h"
+#include "pengrob.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -102,7 +104,7 @@ const PureFluid *fprops_get_fluid(int i){
 	return NULL;
 }
 
-void fprops_fluid_destroy(const PureFluid *P){
+void fprops_fluid_destroy(PureFluid *P){
 	MSG("Freeing data for lfuid '%s'",P->name);
 	switch(P->type){
 	case FPROPS_HELMHOLTZ:
