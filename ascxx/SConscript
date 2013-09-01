@@ -77,6 +77,8 @@ if platform.system()=="Windows":
 	if env.get('LIBS') and 'msvcr71' in env['LIBS']:
 		swig_env.Append(CPPDEFINES=['HAVE_MSVCR71'])
 	swig_env.Append(LINKFLAGS="-static-libgcc ")
+	#TDM-GCC not *not* require or support the following:
+	#swig_env.Append(LINKFLAGS="-static-libstdc++")
 
 elif platform.system()=="Darwin":
     swig_env['SHLIBSUFFIX']='.so'
@@ -100,17 +102,6 @@ for swigf in Split("""
 swig_env.Append(LIBS = ['ascend']+env['PYTHON_LIB'])
 swig_env.Append(LIBPATH = ['#'] + env['PYTHON_LIBPATH'])
 swig_env.Append(LINKFLAGS=env['PYTHON_LINKFLAGS'])
-
-libcxx = 'link'
-if env.get('MSVS'): 
-	libcxx = None
-if platform.system()=="Windows" and env.get('HAVE_GCC'):
-	libcxx = 'static'
-
-if libcxx == 'link':	
-	swig_env.Append(LIBS = ['stdc++'])
-elif libcxx == 'static':
-	pass #swig_env.Append(LINKFLAGS = ['-static-libstdc++'])
 	
 if env.get('WITH_DMALLOC'):
 	swig_env.Append(LIBS = ['dmalloc'])

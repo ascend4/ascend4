@@ -50,7 +50,7 @@ default_tk_lib = "tk8.5"
 default_tktable_lib = "Tktable2.9"
 default_ida_prefix="$DEFAULT_PREFIX"
 default_ipopt_libpath = "$IPOPT_PREFIX/lib"
-default_ipopt_dll = [None,None,None, None, None] # should be five here
+default_ipopt_dll = ["$DEFAULT_PREFIX/bin/libgfortran-3.dll","$DEFAULT_PREFIX/bin/libstdc++-6.dll","$DEFAULT_PREFIX/bin/libquadmath-0.dll", None, None] # should be five here
 default_ipopt_libs = ["$F2C_LIB","blas","lapack","pthread","ipopt"]
 default_conopt_prefix="$DEFAULT_PREFIX"
 default_conopt_libpath="$CONOPT_PREFIX"
@@ -79,7 +79,9 @@ if platform.system()=="Windows":
 	default_tk_lib = "tk85"
 	default_tktable_lib = "Tktable28"
 
-	default_install_assets = "glade/"
+	# on windows, we locate explicitly in gtkbrowser.py:
+	default_install_assets = ""
+
 	default_tcl = "c:\\Tcl"
 	if os.environ.get('MSYSTEM'):
 		default_tcl_libpath="$TCL\\bin"

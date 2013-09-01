@@ -1,4 +1,3 @@
-import sys
 try:
 	import loading
 	#loading.print_status("Loading PSYCO")
@@ -21,6 +20,7 @@ try:
 	import optparse
 	import platform
 	import sys
+	import os
 
 	if platform.system() != "Windows":
 		try:
@@ -35,11 +35,8 @@ try:
 		# ascend library are made available to libraries dlopened within ASCEND:
 		sys.setdlopenflags(_dlflags)
 
-
-
 	loading.print_status("Loading LIBASCEND/ascpy")
 	import ascpy
-	import os.path
 
 	loading.print_status("Loading PyGTK, pango")
 
@@ -119,8 +116,11 @@ class Browser:
 	def __init__(self,librarypath=None,assetspath=None):
 
 		if assetspath==None:
-			assetspath=config.PYGTK_ASSETS
-		
+			if platform.system()=="Windows":
+				assetspath=os.path.normpath(os.path.join(os.path.dirname(__file__),"..","glade")) 
+			else:
+				assetspath=config.PYGTK_ASSETS
+
 		#--------
 		# load the file referenced in the command line, if any
 

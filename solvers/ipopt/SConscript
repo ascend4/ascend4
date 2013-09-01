@@ -15,7 +15,7 @@ if env.get('WITH_IPOPT'):
 	
 	if platform.system()=="Windows":
 		solver_env.Append(
-			#CFLAGS="-static-libgfortran -static-libgcc -static-libstdc++"
+			CFLAGS=["-static"]
 		)
 
 	lib = solver_env.SharedLibrary("ipopt",["asc_ipopt.c"]
