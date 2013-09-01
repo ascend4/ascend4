@@ -133,7 +133,7 @@ def find_sundials_config(env):
     # If we can read the registry, get the NSIS command from it
     try:
 		# 0x20019 is KEY_READ, 
-		k = SCons.Util.RegOpenKeyEx(SCons.Util.hkey_mod.HKEY_LOCAL_MACHINE,'SOFTWARE\\NSIS',0,0x20019)
+		k = SCons.Util.RegOpenKeyEx(SCons.Util.hkey_mod.HKEY_LOCAL_MACHINE,'SOFTWARE\\SUNDIALS',0,0x20019)
 		val, tok = SCons.Util.RegQueryValueEx(k,None)
 		ret = val + os.path.sep + 'makensis.exe'
 		if os.path.exists(ret):
