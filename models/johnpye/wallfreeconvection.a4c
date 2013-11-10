@@ -1,0 +1,48 @@
+REQUIRE "johnpye/datareader/testairprops.a4c";
+
+(*
+	Model to calculation natural convection heat loss from a vertical wall.
+	The model makes use of interpolated air properties from Holman 10e table
+	A-5 for conductivity, viscosity, and specific heat capacity.
+*)
+MODEL wallfreeconvection;
+
+	T_w, T_amb, T_f IS_A temperature;
+
+	T_f = 0.5*(T_w + T_amb);
+
+	air IS_A airprops(T_f);
+
+	Gr, Pr, Ra, Nu IS_A factor;
+
+	L IS_A distance;
+
+	nu IS_A kinematic_viscosity;
+	nu = air.mu / air.rho;
+
+	Gr = 9.8{m/s^2} * (1./T_f) * (T_w - T_amb) * L^3 / nu^2;
+
+	Pr = air.cp * air.mu / air.k;
+
+	Ra = Gr * Pr;
+
+	(* Churchill & Chu correlation, as per Holman 10e, p 335, for Ra<1e9 *)
+	(*Nu = 0.68 + 0.670 * Ra^0.25 / (1 + (0.493/Pr)^(9./16))^(4./9);*)
+
+	(* Churchill & Chu correlation, as per Holman 10e, p 335, for 0.1<Ra<1e12 *)
+	sqrt(Nu) = 0.825 + (0.387*Ra^(1./6)) / (1 + (0.492/Pr)^(9./16))^(8./27);
+
+	h IS_A heat_transfer_coefficient;
+	Nu = h*L / air.k;
+
+	Qdd IS_A energy_flux;
+	Qdd = h * (T_w - T_amb);
+
+METHODS
+METHOD on_load;
+	FIX L := 2.4 {m};
+	FIX T_w := 96{K} + 273.15{K};
+	FIX T_amb := 35{K} + 273.15{K};
+END on_load;
+END wallfreeconvection;
+
