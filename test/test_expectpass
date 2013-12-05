@@ -1,3 +1,9 @@
 #!/bin/bash
+cd $(dirname "$0/..")
+export LD_LIBRARY_PATH=.
+export ASCENDLIBRARY=models
+export ASCENDSOLVERS=solvers/ipopt:solvers/qrslv:solvers/lrslv:solvers/dopri5:solvers/ida:solvers/radau5:solvers/ipslv:solvers/cmslv:solvers/conopt
 test/test general_color general_dstring genearl_hashpjw general_list general_listio general_mem general_pool general_pretty general_stack general_table general_tm_time general_ospath general_env general_ltmatrix general_ascMalloc utilities_ascDynaLoad utilities_ascEnvVar utilities_ascPrint utilities_ascSignal utilities_readln utilities_set solver_slv_common linear_mtx compiler_basics compiler_expr compiler_fixfree
+
+
 
