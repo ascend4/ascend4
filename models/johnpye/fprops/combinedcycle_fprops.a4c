@@ -81,6 +81,7 @@ END air_stream_heat_exchanger;
 
 MODEL air_stream_heat_exchanger_test REFINES air_stream_heat_exchanger;
 	cd_cold.component :== 'water';
+	cd_cold.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -166,6 +167,7 @@ END combinedcycle_fprops_common;
 
 MODEL combinedcycle_toluene REFINES combinedcycle_fprops_common;
 	TU.inlet.cd.component :== 'toluene';
+	TU.inlet.cd.type :== 'helmholtz';
 	HE.outlet.T = PU.outlet.T + 40 {K};
 	HE.outlet_cold.T = GT.outlet.T - 20 {K};
 	Tmax_rankine ALIASES HE.outlet_cold.T;
@@ -210,6 +212,7 @@ END combinedcycle_toluene;
 
 MODEL combinedcycle_water REFINES combinedcycle_fprops_common;
 	TU.inlet.cd.component :== 'water';
+	TU.inlet.cd.type :== 'helmholtz';
 	x_turb_out ALIASES TU.outlet.x;
 	(* the difference values in these formula have to be corrected by looking
 	at the heat exchanger temperature profiles; haven't thoroughly modelled
@@ -268,6 +271,7 @@ END combinedcycle_water_opt;
 
 MODEL combinedcycle_ammonia REFINES combinedcycle_fprops_common;
 	TU.inlet.cd.component :== 'ammonia';
+	TU.inlet.cd.type :== 'helmholtz';
 	HE.outlet.T = PU.outlet.T + 15 {K};
 	HE.outlet_cold.T = GT.outlet.T - 12 {K};
 METHODS
