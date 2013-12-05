@@ -20,7 +20,7 @@ MODEL wallfreeconvection;
 	nu IS_A kinematic_viscosity;
 	nu = air.mu / air.rho;
 
-	Gr = 9.8{m/s^2} * (1./T_f) * (T_w - T_amb) * L^3 / nu^2;
+	Gr = 9.81{m/s^2} * (1./T_f) * (T_w - T_amb) * L^3 / nu^2;
 
 	Pr = air.cp * air.mu / air.k;
 
