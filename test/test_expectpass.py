@@ -1,0 +1,3 @@
+#!/bin/bash
+test/test general_color general_dstring genearl_hashpjw general_list general_listio general_mem general_pool general_pretty general_stack general_table general_tm_time general_ospath general_env general_ltmatrix general_ascMalloc utilities_ascDynaLoad utilities_ascEnvVar utilities_ascPrint utilities_ascSignal utilities_readln utilities_set solver_slv_common linear_mtx compiler_basics compiler_expr compiler_fixfree
+

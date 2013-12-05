@@ -2115,6 +2115,9 @@ if conf.CheckFunc('snprintf'):
 elif conf.CheckFunc('_snprintf'):
 	conf.env['HAVE__SNPRINTF'] = True
 
+if conf.CheckFunc('cpow'):
+	conf.env['HAVE_CPOW'] = True
+
 # attempt to support MSVCRT 7.1 on Windows
 
 if platform.system()=="Windows" and env.get('WITH_MSVCR71'):
