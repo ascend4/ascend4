@@ -43,6 +43,7 @@ METHOD on_load;
 	FIX L := 2.4 {m};
 	FIX T_w := 96{K} + 273.15{K};
 	FIX T_amb := 35{K} + 273.15{K};
+	Ra.nominal := 1e9;	
 END on_load;
 END wallfreeconvection;
 

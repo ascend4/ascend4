@@ -42,6 +42,8 @@
 #ifndef ASC_FUNCTYPE_H
 #define ASC_FUNCTYPE_H
 
+#include <ascend/general/config.h>
+
 /**	@addtogroup compiler_rel Compiler Relations
 	@{
 */
@@ -66,9 +68,9 @@ enum Func_enum {
    F_SIN, F_COS, F_TAN,
    F_ARCSIN, F_ARCCOS, F_ARCTAN,
    F_SQR, F_SQRT,
- #ifdef HAVE_ERF
+#ifdef HAVE_ERF
    F_ERF,
- #endif
+#endif
    F_LNM, F_SINH, F_COSH, F_TANH,
    F_ARCSINH, F_ARCCOSH, F_ARCTANH,
    F_CUBE, F_CBRT, F_ABS, F_HOLD

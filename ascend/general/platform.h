@@ -45,8 +45,8 @@
 	@{
 */
 
-#ifndef ASC_ASCCONFIG_H
-#define ASC_ASCCONFIG_H
+#ifndef ASC_PLATFORM_H
+#define ASC_PLATFORM_H
 
 #ifndef ASC_BUILDING_INTERFACE
 # define ASC_BUILDING_LIBASCEND
@@ -536,5 +536,5 @@ This macro returns a nonzero value if X is finite: not plus or
 #endif
 
 
-#endif /* ASC_ASCCONFIG_H */
+#endif /* ASC_PLATFORM_H */
 

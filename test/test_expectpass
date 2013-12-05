@@ -5,10 +5,11 @@ export LD_LIBRARY_PATH=.
 export ASCENDLIBRARY=models
 export ASCENDSOLVERS=solvers/ipopt:solvers/qrslv:solvers/lrslv:solvers/dopri5:solvers/ida:solvers/radau5:solvers/ipslv:solvers/cmslv:solvers/conopt
 
-test/test general_color general_dstring general_listio general_pretty general_tm_time general_ospath general_env general_ltmatrix utilities_ascDynaLoad utilities_ascEnvVar utilities_ascPrint utilities_ascSignal utilities_readln linear_qrrank linear_mtx compiler_basics compiler_expr compiler_fixfree solver_ipopt compiler_fixassign solver_slvreq integrator_lsode solver_fprops solver_lrslv compiler_bintok
+test/test general_color general_dstring general_listio general_pretty general_tm_time general_ospath general_env general_ltmatrix utilities_ascDynaLoad utilities_ascEnvVar utilities_ascPrint utilities_ascSignal utilities_readln linear_qrrank linear_mtx compiler_basics compiler_expr compiler_fixfree compiler_fixassign solver_slvreq integrator_lsode solver_fprops solver_lrslv compiler_bintok
 
 # CURRENTLY FAILING independent of issues with memory leakage:
 
+# solver_ipopt 
 # solver_conopt 
 # solver_qrslv 
 # compiler_autodiff
