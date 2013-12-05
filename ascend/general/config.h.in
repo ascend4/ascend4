@@ -68,6 +68,13 @@ typedef unsigned long long asc_intptr_t;
 #endif
 
 /**
+	If we have IEEE math library include 'isnan' etc.
+*/
+#ifndef HAVE_ERF
+/* #define HAVE_ERF @HAVE_ERF@ */
+#endif
+
+/**
 	If we have snprintf function
 */
 #ifndef HAVE_SNPRINTF

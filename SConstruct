@@ -1021,6 +1021,34 @@ def CheckFortran(context):
 	return is_ok
 	
 #----------------
+# Address Sanitizer
+
+asan_test_text = """
+#if !defined(__has_feature)
+# error "__has_feature" not defined"
+#else
+# if !__has_feature(address_sanitizer)
+#  error "address_sanitizer is not available"
+# endif
+#endif
+int main(void){
+	return 0;
+}
+"""
+
+def CheckASan(context):
+	context.Message("Checking for AddressSanitizer... ")
+	ccf = context.env.get('CCFLAGS')
+	context.env.AppendUnique(CCFLAGS=['-O1','-g','-fsanitize=address','-fno-omit-frame-pointer'])
+	is_ok = context.TryCompile(asan_test_text,".c")
+	context.Result(is_ok)
+	if ccf is None:
+		del context.env['CCFLAGS']
+	else:
+		context.env['CCFLAGS'] = ccf	
+	return is_ok
+
+#----------------
 # SWIG
 
 import os,re
@@ -1994,6 +2022,23 @@ def CheckLatex2HTML(context):
 	return r
 
 #----------------
+# Check usable 'erf' function
+
+erf_test_text = r"""
+#include <math.h>
+int main(){
+	double x = erf(0.5);
+	return 0;
+}
+"""
+def CheckErf(context):
+	context.Message("Checking for erf... ")
+	libsave=context.env.get('LIBS')
+	context.env.AppendUnique(LIBS=['m'])
+	(is_ok,output) = context.TryRun(erf_test_text,'.c')
+	context.Result(is_ok)
+
+#----------------
 # GCC Version sniffing
 
 # TODO FIXME
@@ -2010,6 +2055,7 @@ conf = Configure(env
 		, 'CheckFortran' : CheckFortran
 		, 'CheckMath' : CheckMath
 		, 'CheckMalloc' : CheckMalloc
+		, 'CheckASan' : CheckASan
 		, 'CheckDLOpen' : CheckDLOpen
 		, 'CheckSwigVersion' : CheckSwigVersion
 		, 'CheckPythonLib' : CheckPythonLib
@@ -2039,6 +2085,7 @@ conf = Configure(env
 		, 'CheckFPE' : CheckFPE
 		, 'CheckSIGINT' : CheckSIGINT
 		, 'CheckSigReset' : CheckSigReset
+		, 'CheckErf' : CheckErf
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -2085,6 +2132,11 @@ if conf.CheckCXX() is False:
 	print "You can set your C++ compiler using the CXX scons option."
 	Exit(1)
 
+if conf.CheckASan() is False:
+	conf.env['HAVE_ASAN'] = True
+else:
+	conf.env['HAVE_ASAN'] = False
+
 # stdio -- just to check that compiler is behaving
 
 if conf.CheckHeader('stdio.h') is False:
@@ -2120,6 +2172,12 @@ for _var,_type in _sizes.iteritems():
 if conf.CheckFunc('sprintf') is False:
 	print "Didn't find sprintf";
 	Exit(1)
+
+if conf.CheckErf() is False:
+	print "Didn't find erf";
+	Exit(1)
+else:
+	conf.env['HAVE_ERF'] = True
 
 if conf.CheckFunc('strdup'):
 	conf.env['HAVE_STRDUP'] = True
@@ -2473,6 +2531,7 @@ for k,v in {
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
 		,'HAVE_C99FPE':env.get('HAVE_C99FPE')
 		,'HAVE_IEEE':env.get('HAVE_IEEE')
+		,'HAVE_ERF':env.get('HAVE_ERF')
 		,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
 		,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY')
@@ -2876,6 +2935,9 @@ env.Append(
 		,r"models/johnpye/datareader/.*\.tm2\.Z$"
 		,r"models/johnpye/fprops/[a-z][a-z0-9]+(.*\.exe)?$" # FPROPS test executables
 		,r"fprops/fluids/fluids_list\.h$" # FPROPS fluids list
+		,r"fprops/test/ph$"
+		,r"fprops/test/sat$"
+		,r"fprops/test/sat1$"
 	]
 )
 
