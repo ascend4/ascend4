@@ -1,0 +1,21 @@
+#!/bin/bash
+cd $(dirname "$0")
+cd ..
+export LD_LIBRARY_PATH=.
+export ASCENDLIBRARY=models
+export ASCENDSOLVERS=solvers/ipopt:solvers/qrslv:solvers/lrslv:solvers/dopri5:solvers/ida:solvers/radau5:solvers/ipslv:solvers/cmslv:solvers/conopt
+test/test general_color general_dstring general_hashpjw general_list general_listio general_mem general_pool general_pretty general_stack general_table general_tm_time general_ospath general_env general_ltmatrix general_ascMalloc utilities_ascDynaLoad utilities_ascEnvVar utilities_ascPrint utilities_ascSignal utilities_readln utilities_set solver_slv_common linear_qrrank linear_mtx compiler_basics compiler_expr compiler_fixfree
+
+# currently failing tests:
+# solver_conopt solver_qrslv 
+# compiler_autodiff compiler_blackbox system_link 
+
+# tests that pass but with memory leaks:
+# solver_ipopt 
+# compiler_fixassign
+# solver_slvreq
+# integrator_lsode
+# integrator_ida
+# solver_fprops
+# solver_lrslv 
+# compiler_bintok
