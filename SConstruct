@@ -4,7 +4,7 @@
 # much less tested.
 
 # version number for this ASCEND build:
-version = "0.9.8"
+version = "0.9.9"
 
 # shared library API numbering, for Linux (FIXME windows too?)
 soname_major_int = "1"
@@ -19,9 +19,11 @@ pyversion = "%d.%d" % (sys.version_info[0],sys.version_info[1])
 # architecture label
 winarchtag = "-win32"
 mingw64suff = ""
+mingw64excpt ="_dw2"
 if platform.architecture()[0] == "64bit":
 	winarchtag="-amd64"
 	mingw64suff = "_64"
+	mingw64excpt ="_seh"
 
 import SCons.Warnings
 SCons.Warnings.suppressWarningClass(SCons.Warnings.VisualCMissingWarning) 
@@ -52,7 +54,7 @@ default_tk_lib = "tk8.5"
 default_tktable_lib = "Tktable2.9"
 default_ida_prefix="$DEFAULT_PREFIX"
 default_ipopt_libpath = "$IPOPT_PREFIX/lib"
-default_ipopt_dll = ["$DEFAULT_PREFIX/bin/%s.dll"%i for i in ["libgfortran$MINGW64SUFF-3", "libstdc++$MINGW64SUFF-6","libquadmath$MINGW64SUFF-0","libgcc_s_seh$MINGW64SUFF-1"]]+[None] # should be five here
+default_ipopt_dll = ["$DEFAULT_PREFIX/bin/%s.dll"%i for i in ["libgfortran$MINGW64SUFF-3", "libstdc++$MINGW64SUFF-6","libquadmath$MINGW64SUFF-0","libgcc_s$MINGW64EXCPT$MINGW64SUFF-1"]]+[None] # should be five here
 default_ipopt_libs = ["$F2C_LIB","blas","lapack","pthread","ipopt"]
 default_conopt_prefix="$DEFAULT_PREFIX"
 default_conopt_libpath="$CONOPT_PREFIX"
@@ -466,16 +468,21 @@ if platform.system()=="Windows":
 		,"$IPOPT_PREFIX/include"
 	)
 
+	vars.Add('MINGW64SUFF'
+		,"Suffix for 64-bit GCC-related DLLs for bundling with the installer"
+		,mingw64suff
+	)
+
+	vars.Add('MINGW64EXCPT'
+		,"Suffix to specify exception style for GCC-related DLLs to be bundled with the installer"
+		,mingw64excpt
+	)
+
 	for i in range(5):
 		vars.Add('IPOPT_DLL%d'%(i+1)
 			,"Exact path of IPOPT DLL (%d) to be included in the installer (Windows only)"%(i+1)
 			,default_ipopt_dll[i]
 		)
-
-	vars.Add('MINGW64SUFF'
-		,"Suffix assumed in runtime IPOPT DLLs bundled with the installer"
-		,mingw64suff
-	)
 
 #-------- f2c ------
 
