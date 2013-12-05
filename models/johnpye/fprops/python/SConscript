@@ -35,7 +35,7 @@ if not fprops_env.get('PYTHON_LIBPATH'):
 lib = pyenv.SharedLibrary('fprops',['fprops.i'] + fprops_env['shobjs']
 	,LIBPATH=['..'] + fprops_env['PYTHON_LIBPATH']
 	,CPPPATH=['#',distutils.sysconfig.get_python_inc()]
-	,LIBS=[python_lib % (sys.version_info[0],sys.version_info[1])]
+	,LIBS=["m",python_lib % (sys.version_info[0],sys.version_info[1])]
 	,SWIGFLAGS=['-python']
 )
 
