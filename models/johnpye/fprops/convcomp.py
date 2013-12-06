@@ -100,6 +100,8 @@ static const CubicData cubic_data_%(name)s = {
 	,.rho_c = %(rhoc_kgm3)s
 	,.T_t = %(Tt_K)s
 	,.omega = %(omega)s
+	,.h_f0 = %(h_f0)s
+	,.g_f0 = %(g_f0)s
 	,.ref = {FPROPS_REF_IIR}
 	,.ideal = &ideal_data_%(name)s
 };
@@ -143,7 +145,11 @@ class CubicFluid:
 		if hasattr(self,'Pc'):pc = '(%s * 1e5)'%self.Pc
 		rhoc = '-1'
 		if hasattr(self,'Vc'):rhoc = '(1000 * %s / %s)'%(self.mw,self.Vc)
-
+		h_f0 = 'NAN'
+		if hasattr(self,'Hf'):h_f0 = '(%s / %s)'%(self.Hf,self.mw)
+		g_f0 = 'NAN'
+		if hasattr(self,'Gf'):g_f0 = '(%s / %s)'%(self.Gf,self.mw)
+		
 		return ctemplate % {
 			'name':self.name
 			,'source':'RPP'#'Reid, Prausnitz, and Poling, 1987, The Properties of '+
@@ -156,6 +162,8 @@ class CubicFluid:
 			,'rhoc_kgm3':rhoc
 			,'Tt_K' : 0
 			,'omega':self.omega
+			,'h_f0':h_f0
+			,'g_f0':g_f0
 			,'cpvapa':self.cpvapa
 			,'cpvapb':self.cpvapb
 			,'cpvapc':self.cpvapc
