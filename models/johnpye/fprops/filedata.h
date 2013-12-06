@@ -26,6 +26,7 @@ Runtime data is in rundata.h
 #define FPROPS_FILEDATA_H
 
 #include "common.h"
+#include <math.h> // needed for NAN
 
 /*---------------------------COMMON-------------------------------*/
 
@@ -56,6 +57,7 @@ typedef enum{
 	,FPROPS_REF_TPHS /**< Reference state specified by T0, p0, h0 and s0 */
 	,FPROPS_REF_TPF /**< Reference state of h=0 and s=0 for liquid at the triple point */
 	,FPROPS_REF_TPFU /**< Reference state of u=0 and s=0 for liquid at the triple point */
+	,FPROPS_REF_FORM /**< Reference state calculated from enthalpy and Gibbs energy of formation at standard temperature and pressure */
 } ReferenceStateType;
 
 /**
@@ -197,7 +199,7 @@ typedef struct IdealData_struct{
 
 typedef struct IdealFluid_struct{
 	double M;
-	double T0, p0, h0, s0;
+	//double T0, p0, h0, s0;
 	const IdealData data;
 	// reference state information
 } IdealFluid;
@@ -297,10 +299,12 @@ typedef struct HelmholtzData_struct{
 	PR, RK, etc EOSs. Hopefully.
 */
 typedef struct CubicData_struct{
-	double M;  //Molar Mass
-	double T_c, p_c, rho_c; ///< critical point properties
-	double T_t; ///< triple-point temperature?
-	double omega; //Acentric Factor
+	double M;                ///< molar mass (kg/kmol)
+	double T_c, p_c, rho_c;  // critical point properties
+	double T_t;              ///< triple-point temperature (K)
+	double omega;            ///< acentric Factor
+	double h_f0;             ///< enthalpy of formation (J/kg) at 298.2 K and zero pressure
+	double g_f0;             ///< Gibbs energy of formation (J/kg) at 298.2 K and zero pressure
 	const ReferenceState ref;
 	const IdealData *ideal;
 } CubicData;
