@@ -198,6 +198,8 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 	C = FPROPS_NEW(PengrobRunData);
 	C->aTc = 0.45724 * SQ(D->R * D->T_c) / D->p_c;
 	C->b = 0.07780 * D->R * D->T_c / D->p_c;
+
+	// note possible correction required? http://kshmakov.org/fluid/note/3/
 	C->kappa = 0.37464 + (1.54226 - 0.26992 * D->omega) * D->omega;
 
 	/* function pointers... more to come still? */

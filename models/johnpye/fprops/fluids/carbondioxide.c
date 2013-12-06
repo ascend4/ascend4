@@ -173,9 +173,8 @@ const TestDataSat tds[]; const unsigned nsd;
 int main(void){
 	test_init();
 	FpropsError err = FPROPS_NO_ERROR;
-	PureFluid *d = helmholtz_prepare(&eos_carbondioxide,NULL);
 	ReferenceState S = {FPROPS_REF_IIR};
-	fprops_set_reference_state(d,&S);
+	PureFluid *d = helmholtz_prepare(&eos_carbondioxide,&S);
 	double maxerr = 0;
 
 #if 0
@@ -191,10 +190,6 @@ int main(void){
 	ASSERT_PROP(p, fprops_set_Trho(300.000, 679.24, d, &err), &err, 6.7131e6, 0.0001e6);
 	ASSERT_PROP(p, fprops_set_Trho(300.000, 268.58, d, &err), &err, 6.7131e6, 0.0001e6);
 	ASSERT_PROP(p, fprops_set_Trho(304.1282, 467.60, d, &err), &err, 7.3773e6, 0.0001e6);
-
-	/* need a new reference point for the REFPROP data... */
-	ReferenceState ref = {FPROPS_REF_IIR};
-	fprops_set_reference_state(d,&ref);
 
 	err += helm_run_test_cases(d, ntd, td, 'K');
 
