@@ -264,6 +264,21 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		MSG("Set TPFU reference state.");
 		return 0;
 
+	case FPROPS_REF_FORM:
+		MSG("Setting formation enthalpy/entropy reference state");
+		ERRMSG("Not implemented");
+		/* this function needs h_f0 and s_f0 or g_f0 to be stored in the
+		PureFluid structure. if the data is missing, we can return an error
+		saying that this reference state can not be calculated. For RPP fluids,
+		the necessary data is available in the tables. For Helmholtz fluids,
+		this will be extra data that was not in the original publications...
+		this raises the question of whether this data should be stored in 
+		separate data structures, or in the fluids data along with everything
+		else... */
+		/* some sources seem to suggest that different formation conditions may
+		apply to certain substances; this needs to be checked. */
+		return -1;
+
 	default:
 		fprintf(stderr,"%s: Unhandled case (type %d)\n",__func__,ref->type);
 		return -1;
