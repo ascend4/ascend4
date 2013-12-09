@@ -104,7 +104,10 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		D->T_c = I->T_c;
 		D->rho_c = I->rho_c;
 		D->omega = I->omega;
-		D->cp0 = cp0_prepare(I->ideal, D->R, D->T_c);
+
+		D->Tstar = I->T_c;
+		D->rhostar = I->rho_c;
+		D->cp0 = cp0_prepare(I->ideal, D->R, D->Tstar);
 
 		// helmholtz data doesn't include p_c so we need to calculate it somehow...
 
@@ -173,7 +176,10 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		}
 #endif
 		D->omega = I->omega;
-		D->cp0 = cp0_prepare(I->ideal, D->R, D->T_c);
+
+		D->Tstar = I->T_c;
+		D->rhostar = I->rho_c;
+		D->cp0 = cp0_prepare(I->ideal, D->R, D->Tstar);
 		break;
 	default:
 		fprintf(stderr,"Invalid EOS data\n");
