@@ -57,7 +57,9 @@
 	but now we need to fix the re-derive the conversion from the cp0 to alpha0
 	expressions
 
-	currently there is an error!
+	currently there is an error! 
+
+	TODO check if ^^^ is still true
 */
 Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 	Phi0RunData *N = FPROPS_NEW(Phi0RunData);

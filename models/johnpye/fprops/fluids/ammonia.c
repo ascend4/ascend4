@@ -50,7 +50,6 @@ static const HelmholtzData helmholtz_data_ammonia = {
 	, /* rho_c */ 225.
 	, /* T_t */ 195.495
 
-
 	, {FPROPS_REF_TPFU}
 
 	, 0.250 /* acentric factor, from Reid, Prausnitz & Polling */

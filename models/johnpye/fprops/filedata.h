@@ -46,18 +46,27 @@ typedef struct CriticalData_struct{
 	give h=0, s=0 at certain conditions. It seems that we might need to
 	facilitate a few different ways of dealing with this stuff, so we'll
 	provide a data structure here that allows a few different options.
+
+	For chemical reactions, we need to use a reference state defined by the
+	enthalpy of formation and absolute entropy at defined conditions. Many 
+	sources seem to specify ~ambient pressure and ~25 degC, but RPP specifes
+	298.2 K and 'ideal gas', which I take to mean zero pressure. I am not sure
+	that case is correctly handled by FPROPS_REF_TPHG -- still working on that.
 */
 
 typedef enum{
-	FPROPS_REF_PHI0 /**< phi0 reference point means that 'c' and 'm' in the phi0 expression are provided */
-	,FPROPS_REF_IIR /**< International Institute of Refrigeration reference state: h=200 kJ/kg, s = 1 kJ/kg/K at saturated liquid, 0 deg C */
-	,FPROPS_REF_NBP /**< Set h and s to zero for the saturated liquid at normal atmospheric pressure (101.325 kPa) */
-	,FPROPS_REF_TRHS /**< Reference state specified by T0, p0, h0 and s0 */
-	,FPROPS_REF_TPUS /**< Reference state specified by T0, p0, h0 and s0 */
-	,FPROPS_REF_TPHS /**< Reference state specified by T0, p0, h0 and s0 */
-	,FPROPS_REF_TPF /**< Reference state of h=0 and s=0 for liquid at the triple point */
-	,FPROPS_REF_TPFU /**< Reference state of u=0 and s=0 for liquid at the triple point */
-	,FPROPS_REF_FORM /**< Reference state calculated from enthalpy and Gibbs energy of formation at standard temperature and pressure */
+	FPROPS_REF_UNDEFINED = 0 /**< undefined reference state, should be first to catch cases where ReferenceState is not initialised correctly */
+	,FPROPS_REF_PHI0 = 1 /**< phi0 reference point means that 'c' and 'm' in the phi0 expression are provided */
+	,FPROPS_REF_IIR = 2  /**< International Institute of Refrigeration reference state: h=200 kJ/kg, s = 1 kJ/kg/K at saturated liquid, 0 deg C */
+	,FPROPS_REF_NBP = 3  /**< Set h and s to zero for the saturated liquid at normal atmospheric pressure (101.325 kPa) */
+	,FPROPS_REF_TRHS = 4 /**< Reference state specified by T0, p0, h0 and s0 */
+	,FPROPS_REF_TPUS = 5 /**< Reference state specified by T0, p0, h0 and s0 */
+	,FPROPS_REF_TPHS = 6 /**< Reference state specified by T0, p0, h0 and s0 */
+	,FPROPS_REF_TPF = 7  /**< Reference state of h=0 and s=0 for liquid at the triple point */
+	,FPROPS_REF_TPFU = 8 /**< Reference state of u=0 and s=0 for liquid at the triple point */
+	,FPROPS_REF_TPHG = 9 /**< Reference state specified by T0, p0, h0 and g0 (Gibbs energy) */
+/* HACK?: */
+	,FPROPS_REF_REF0 /**< Special case: apply the 'ref0' reference state, which should allow calculuation of enthalpy of formation and absolute entropy */
 } ReferenceStateType;
 
 /**
@@ -83,6 +92,10 @@ typedef struct ReferenceStateTPHS_struct{
 	double T0, p0, h0, s0;
 } ReferenceStateTPHS;
 
+typedef struct ReferenceStateTPHG_struct{
+	double T0, p0, h0, g0;
+} ReferenceStateTPHG;
+
 /* TODO add a reference state as defined by coefficients A_6, A_7 of the 
 NASA SP-273 polynomials (the constant terms in the H0(T) and S0(T) polynomials),
 this would open the way to a fairly easy support for the NASA fluid database, 
@@ -95,6 +108,7 @@ typedef struct ReferenceState_struct{
 		ReferenceStateTRHS trhs;
 		ReferenceStateTPUS tpus;
 		ReferenceStateTPHS tphs;
+		ReferenceStateTPHG tphg;
 	} data;
 } ReferenceState;
 
@@ -303,9 +317,8 @@ typedef struct CubicData_struct{
 	double T_c, p_c, rho_c;  // critical point properties
 	double T_t;              ///< triple-point temperature (K)
 	double omega;            ///< acentric Factor
-	double h_f0;             ///< enthalpy of formation (J/kg) at 298.2 K and zero pressure
-	double g_f0;             ///< Gibbs energy of formation (J/kg) at 298.2 K and zero pressure
-	const ReferenceState ref;
+	const ReferenceState ref; ///< default reference state, e.g. to reproduce original published data
+	const ReferenceState ref0; ///< formation state, for calculation of enthalpy of formation and absolute entropy
 	const IdealData *ideal;
 } CubicData;
 
@@ -327,7 +340,8 @@ typedef struct MbwrData_struct{
 
 /** EOS correlation types */
 typedef enum EosType_enum{
-	FPROPS_IDEAL = 0 /**< we need to be able to flag IDEAL at runtime! */
+	/* note, enum should not allow value of zero, as that return value is needed for errors in fprops_corr_avail */
+	FPROPS_IDEAL = 7 /**< we need to be able to flag IDEAL at runtime! */
 	,FPROPS_CUBIC = 1 /**< should only exist in source data, not in PureFluid object */
 	,FPROPS_PENGROB = 2
 	,FPROPS_REDKW = 3

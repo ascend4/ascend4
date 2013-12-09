@@ -100,8 +100,7 @@ static const CubicData cubic_data_%(name)s = {
 	,.rho_c = %(rhoc_kgm3)s
 	,.T_t = %(Tt_K)s
 	,.omega = %(omega)s
-	,.h_f0 = %(h_f0)s
-	,.g_f0 = %(g_f0)s
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={%(T_ref)s, 101325, %(h_f0)s, %(g_f0)s}}}
 	,.ref = {FPROPS_REF_IIR}
 	,.ideal = &ideal_data_%(name)s
 };
@@ -161,6 +160,7 @@ class CubicFluid:
 			,'Pc_Pa':pc
 			,'rhoc_kgm3':rhoc
 			,'Tt_K' : 0
+			,'T_ref' : 298.2
 			,'omega':self.omega
 			,'h_f0':h_f0
 			,'g_f0':g_f0

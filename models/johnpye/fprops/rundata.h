@@ -95,6 +95,13 @@ frequently-calculated items:
 
 This data would be held at this level unless it is correlation-specific in 
 nature, in which case it would belong in lower-level rundata structures.
+
+For fluids without phase change (incompressible, ideal), we
+	- set T_c to zero,
+	- use a value of 1 K for Tstar
+	- provide a _sat SatEvalFn that always returns an error.
+...but maybe there's a better way. It's up to the particular PropEvalFn to 
+make use of Tstar or T_c as desired, but this data is stored here 
 */
 typedef struct FluidData_struct{
 	/* common data across all correlations */
@@ -105,8 +112,10 @@ typedef struct FluidData_struct{
 	double p_c;   /**< critical pressure */
 	double rho_c; /**< critical density */
 	double omega; /**< acentric factor (possibly calculated from correlation data)*/
+	double Tstar;   /**< reference for reduced temperature */
+	double rhostar; /**< reference for reduced density */
 	Phi0RunData *cp0; /* data for ideal component of Helmholtz energy */
-
+	ReferenceState ref0;
 	/* correlation-specific stuff here */
 	CorrelationUnion corr;
 } FluidData;
