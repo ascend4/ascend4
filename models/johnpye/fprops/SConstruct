@@ -20,7 +20,7 @@ vars.Add(
 vars.Add(
 	'CFLAGS'
 	,'C compiler flags'
-	,["-O2","-Wall"]
+	,["-Wall"]
 )
 
 env = Environment(

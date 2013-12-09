@@ -38,15 +38,11 @@
 #define FPR_DEBUG
 #ifdef FPR_DEBUG
 # include "color.h"
-# define MSG(FMT, ...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
-	color_on(stderr,ASC_FG_BRIGHTBLUE);\
-	fprintf(stderr,"%s: ",__func__);\
-	color_off(stderr);\
-	fprintf(stderr,FMT "\n",##__VA_ARGS__)
+# define MSG FPROPS_MSG
+# define ERRMSG FPROPS_ERRMSG
 #else
 # define MSG(ARGS...) ((void)0)
+# define ERRMSG(ARGS...) ((void)0)
 #endif
 
 #include <stdio.h>
@@ -105,7 +101,7 @@ PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 	case FPROPS_IDEAL:
 		return ideal_prepare(E,NULL);
 	default:
-		MSG("Invalid EOS data, unimplemented correlation type requested");
+		ERRMSG("Invalid EOS data, unimplemented correlation type requested");
 		return NULL;
 	}
 }
@@ -120,7 +116,7 @@ FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsE
 /*
 	TODO need some kind of support for freezing line, especially for water
 	since for temperatures 0.degC up to 0.01 degC liquid phase is possible
-	for for ambient pressure, but this is BELOW triple line. Hmmm.
+	for ambient pressure, but this is BELOW triple line. Hmmm.
 
 	Also sublimation curve needs to be added.
 */

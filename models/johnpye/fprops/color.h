@@ -69,4 +69,19 @@ int color_on(FILE *f, int colorcode);
 
 int color_off(FILE *f);
 
+#define FPROPS_MSG(FMT, ...) \
+	{color_on(stderr,ASC_FG_BRIGHTBLUE);\
+	fprintf(stderr,"%s:%d",__FILE__,__LINE__);\
+	fprintf(stderr,"(%s):",__func__);\
+	color_off(stderr);\
+	fprintf(stderr," " FMT "\n",##__VA_ARGS__);}
+
+#define FPROPS_ERRMSG(STR,...) \
+	{color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"ERROR:");\
+	color_on(stderr,ASC_FG_BRIGHTBLUE);\
+	fprintf(stderr,"%s:%d(%s):", __FILE__, __LINE__ ,__func__); \
+	color_off(stderr);\
+	fprintf(stderr," " STR "\n", ##__VA_ARGS__);}
+
 #endif /* ASC_COLOR_H */

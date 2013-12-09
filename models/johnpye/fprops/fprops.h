@@ -50,22 +50,26 @@ and also what reference state, as another option. */
 
 /*The following take the fluid data and use the function pointers
   to call the correct function (e.g. fprops_p -> helmholtz_p)*/
-double fprops_p(FluidState state, FpropsError *err);
-double fprops_u(FluidState state, FpropsError *err);
-double fprops_h(FluidState state, FpropsError *err);
-double fprops_s(FluidState state, FpropsError *err);
-double fprops_a(FluidState state, FpropsError *err);
-double fprops_cv(FluidState state, FpropsError *err);
-double fprops_cp(FluidState state, FpropsError *err);
-double fprops_w(FluidState state, FpropsError *err);
-double fprops_g(FluidState state, FpropsError *err);
+
+double fprops_p(FluidState state, FpropsError *err); ///< Pressure / [Pa]
+double fprops_u(FluidState state, FpropsError *err); ///< Specific internal energy / [J/kg]
+double fprops_h(FluidState state, FpropsError *err); ///< Specific enthalpy / [J/kg]
+double fprops_s(FluidState state, FpropsError *err); ///< Specific entropy / [J/kg/K]
+double fprops_a(FluidState state, FpropsError *err); ///< Specific helmholtz energy / [J/kg]
+double fprops_cv(FluidState state, FpropsError *err);///< Specific isochoric heat capacity / [J/kg/K]
+double fprops_cp(FluidState state, FpropsError *err);///< Specific isobaric heat capacity / [J/kg/K]
+double fprops_w(FluidState state, FpropsError *err); ///< Speed of sound / [m/s]
+double fprops_g(FluidState state, FpropsError *err); ///< Specific Gibbs energy / [J/kg]
 
 double fprops_alphap(FluidState state, FpropsError *err);
 double fprops_betap(FluidState state, FpropsError *err);
 
-double fprops_cp0(FluidState state, FpropsError *err);
+double fprops_cp0(FluidState state, FpropsError *err); ///< Specific isobaric heat capacity at zero pressure / [J/kg/K] (ideal gas limit)
 
-double fprops_dpdT_rho(FluidState state, FpropsError *err);
+/**	\brief Partial derivative of pressure wrt temperature at density constant.
+	\f$\left(\frac{\partial p}{\partial T}\right)_{\rho}\f$
+*/
+double fprops_dpdT_rho(FluidState state, FpropsError *err); 
 
 /// return the fluid quality; 0 if subcooled, 1 if superheated, error if both T>T_c and p>p_c
 double fprops_x(FluidState state, FpropsError *err);
