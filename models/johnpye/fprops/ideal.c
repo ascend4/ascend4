@@ -62,7 +62,7 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 	P->data = FPROPS_NEW(FluidData);
 #define D P->data
 
-	MSG("...");
+	//MSG("...");
 
 	/* metadata */
 	P->name = E->name;
@@ -71,7 +71,7 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 
 	switch(E->type){
 	case FPROPS_CUBIC:
-		MSG("Cubic");
+		//MSG("Cubic");
 		D->M = E->data.cubic->M;
 		D->R = R_UNIVERSAL / D->M;
 		D->T_t = 0; /* TODO how will we flag this object so that sat.c doesn't try to solve? */
@@ -84,7 +84,7 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 		D->cp0 = cp0_prepare(E->data.cubic->ideal, D->R, D->Tstar);
 		D->corr.helm = NULL;
 
-		MSG("ref0 type = %d", E->data.cubic->ref0.type);
+		//MSG("ref0 type = %d", E->data.cubic->ref0.type);
 		D->ref0 = E->data.cubic->ref0;
 		if(ref == NULL){
 			ref = &(E->data.cubic->ref);
@@ -127,7 +127,7 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 #undef FN
 #undef D
 
-	MSG("Setting reference state...");
+	//MSG("Setting reference state...");
 	// set the reference point
 	switch(ref->type){
 	case FPROPS_REF_PHI0:
@@ -136,13 +136,13 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 		P->data->cp0->m = ref->data.phi0.m;
 		break;
 	case FPROPS_REF_REF0:
-		MSG("Applying ref0 reference state");
+		//MSG("Applying ref0 reference state");
 		switch(P->data->ref0.type){
 		case FPROPS_REF_TPHG:
 			{
 				//MSG("TPHG");
 				ReferenceState *ref0 = &(P->data->ref0);
-				MSG("T0 = %f, p0 = %f, h0 = %f, g0 = %f",ref0->data.tphg.T0,ref0->data.tphg.p0,ref0->data.tphg.h0,ref0->data.tphg.g0);
+				//MSG("T0 = %f, p0 = %f, h0 = %f, g0 = %f",ref0->data.tphg.T0,ref0->data.tphg.p0,ref0->data.tphg.h0,ref0->data.tphg.g0);
 				FpropsError res = FPROPS_NO_ERROR;
 				double rho0 = ref0->data.tphg.p0 / P->data->R / ref0->data.tphg.T0;
 				double T0 = ref0->data.tphg.T0;
@@ -163,10 +163,10 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 
 				h0 = ideal_h(T0,rho0, P->data, &res);
 				if(res)ERRMSG("error %d",res);
-				MSG("new h0(T0,rho0) = %f", h0);
+				//MSG("new h0(T0,rho0) = %f", h0);
 				double g0 = ideal_g(T0,rho0, P->data, &res);
 				if(res)ERRMSG("error %d",res);
-				MSG("new g0(T0,rho0) = %f", g0);
+				//MSG("new g0(T0,rho0) = %f", g0);
 				//MSG("DONE");
 			}
 			break;
