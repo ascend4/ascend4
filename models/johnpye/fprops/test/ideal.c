@@ -34,10 +34,10 @@ int main(void){
 	P[CH4] = ideal_prepare(&eos_rpp_methane, &ref);
 
 	int i;
-	MSG("%-20s\t%s\t%s\t%s","comp","h(850 K)","h(1520 K)","Dh (kJ/kmol)");
 	for(i=0;i<NFLUIDS;++i){
+		double cp0 = ideal_cp(298.2, 0, P[i]->data, &err);
 		double h0 = ideal_h(298.2, 0, P[i]->data, &err);
-		MSG("%-20s: hbar(298.2) = %f J/kmol",P[i]->name,h0*P[CH4]->data->M);
+		MSG("%-20s: M = %f, R = %f, cp0(298.2) = %f, hbar(298.2) = %f J/kmol",P[i]->name,P[i]->data->M, P[i]->data->R, h0*P[CH4]->data->M);
 	}
 
 	MSG("%-20s\t%s\t%s\t%s","comp","h(850 K)","h(1520 K)","Dh (kJ/kmol)");
