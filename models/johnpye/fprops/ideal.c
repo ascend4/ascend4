@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2008-2011 Carnegie Mellon University
+	Copyright (C) 2008-2013 John Pye
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@
 
 	John Pye, Jul 2008.
 */
-
 
 #include <math.h>
 
@@ -141,33 +140,34 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 		switch(P->data->ref0.type){
 		case FPROPS_REF_TPHG:
 			{
-				MSG("TPHG");
+				//MSG("TPHG");
 				ReferenceState *ref0 = &(P->data->ref0);
 				MSG("T0 = %f, p0 = %f, h0 = %f, g0 = %f",ref0->data.tphg.T0,ref0->data.tphg.p0,ref0->data.tphg.h0,ref0->data.tphg.g0);
 				FpropsError res = FPROPS_NO_ERROR;
 				double rho0 = ref0->data.tphg.p0 / P->data->R / ref0->data.tphg.T0;
 				double T0 = ref0->data.tphg.T0;
+				double s0 = (ref0->data.tphg.h0 - ref0->data.tphg.g0) / T0;
+				double h0 = ref0->data.tphg.h0;
+
 				P->data->cp0->c = 0;
 				P->data->cp0->m = 0;
-				MSG("T0 = %f, rho0 = %f",T0,rho0);
+				//MSG("T0 = %f, rho0 = %f",T0,rho0);
 				//MSG("btw, p = %f", P->data->R * T0 *rho0); // is OK
 				res = FPROPS_NO_ERROR;
 				double h1 = ideal_h(T0, rho0, P->data, &res);
-				if(res)ERRMSG("error %d",res);
-				MSG("h1 = %f",h1);
 				double s1 = ideal_s(T0, rho0, P->data, &res);
-				double h2 = ref0->data.tphg.h0;
-				double s2 = (ref->data.tphg.h0 - ref->data.tphg.g0) / T0;
-				P->data->cp0->c = -(s2 - s1)/P->data->R;
-				P->data->cp0->m = (h2 - h1)/P->data->R/P->data->Tstar;
+				if(res)ERRMSG("error %d",res);
+				//MSG("h1 = %f",h1);
+				P->data->cp0->c = -(s0 - s1)/P->data->R;
+				P->data->cp0->m = (h0 - h1)/P->data->R/P->data->Tstar;
 
-				double h0 = ideal_h(T0,rho0, P->data, &res);
+				h0 = ideal_h(T0,rho0, P->data, &res);
 				if(res)ERRMSG("error %d",res);
 				MSG("new h0(T0,rho0) = %f", h0);
 				double g0 = ideal_g(T0,rho0, P->data, &res);
 				if(res)ERRMSG("error %d",res);
 				MSG("new g0(T0,rho0) = %f", g0);
-				MSG("DONE");
+				//MSG("DONE");
 			}
 			break;
 		default:
@@ -200,13 +200,8 @@ double ideal_h(double T, double rho, const FluidData *data, FpropsError *err){
 
 double ideal_s(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_TAUDELTA;
-	MSG("tau = %f",tau);
-	MSG("R = %f",data->R);
-	MSG("T = %f",T);
 	double pht = ideal_phi_tau(tau,delta,data->cp0);
 	double ph = ideal_phi(tau,delta,data->cp0);
-	MSG("pht = %f, ph = %f", pht, ph);
-	MSG("tau*pht - ph = %f", tau*pht - ph);
 	return data->R * (tau * ideal_phi_tau(tau,delta,data->cp0) - ideal_phi(tau,delta,data->cp0));
 }
 
@@ -219,17 +214,17 @@ double ideal_a(double T, double rho, const FluidData *data, FpropsError *err){
 }
 
 double ideal_g(double T, double rho, const FluidData *data, FpropsError *err){
-	MSG("g(T=%f,rho=%f)...",T,rho);
+	//MSG("g(T=%f,rho=%f)...",T,rho);
 	double h = ideal_h(T,rho,data,err);
 	double s = ideal_s(T,rho,data,err);
-	MSG("h = %f, T = %f, s = %f, h-T*s = %f",h,T,s,h-T*s);
+	//MSG("h = %f, T = %f, s = %f, h-T*s = %f",h,T,s,h-T*s);
 	return h - T * s;
 }
 
 /**
 	Note that this function is called by ALL fluid types via 'fprops_cp0' which
 	means that it needs to include the scaling temperature within the structure;
-	we can't just define it as a constant for ideal fluids.
+	we can't just define Tstar as a constant for ideal fluids.
 */
 double ideal_cp(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_TAU;
