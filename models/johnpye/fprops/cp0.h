@@ -22,8 +22,25 @@
 Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar);
 void cp0_destroy(Phi0RunData *cp0);
 
+/**
+	Ideal-gas component of the reduced Helmholtz function
+	\f$\phi = \frac{a}{R T}\f$
+*/
 double ideal_phi(double tau, double delta, const Phi0RunData *data);
+
+/**
+	Ideal-gas component of the reduced Helmholtz function: first partial derivative wrt reduced temperature 
+	\f$\phi_\tau = \left(\frac{\partial \phi}{\partial \tau}\right)_\delta = \frac{1}{R T} \frac{\partial T}{\partial \tau} \frac{\partial a}{\partial T} \f$
+*/
 double ideal_phi_tau(double tau, double delta, const Phi0RunData *data);
+
+/**
+	Ideal-gas component of the reduced Helmholtz function: second partial derivative wrt reduced temperature
+	\f$\phi_{\tau\tau}
+		 = \left(\frac{\partial^2 \phi}{\partial \tau^2}\right)_\delta
+		 = \frac{1}{R T} \left(\frac{d T}{d \tau}\right)^2 \frac{\partial^2 a}{\partial T^2} 
+	\f$
+*/
 double ideal_phi_tautau(double tau, const Phi0RunData *data);
 
 #endif

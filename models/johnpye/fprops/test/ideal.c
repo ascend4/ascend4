@@ -19,7 +19,22 @@ extern const EosData eos_rpp_water;
 #define TOL_T 1e-3
 #define TOL_RHO 1e-3
 
+typedef struct BejanIdealGasData_struct{
+	double Hplus;
+	double Splus;
+	double a,b,c,d;
+} BejanIdealGasData;
+
+/**
+	@return cp0 in kJ/kmolK
+*/
+double bejan_cp(double T, BejanIdealGasData D){
+	double y = 1e-3*T;
+	return 1000 * (D.a + y*(D.b + D.d*y) + D.c/(y*y));
+}
+
 int main(void){
+	int i;
 	FpropsError err = FPROPS_NO_ERROR;
 	
 	MSG("Testing ideal EOS	");
@@ -33,11 +48,33 @@ int main(void){
 	P[H2O] = ideal_prepare(&eos_rpp_water, &ref);
 	P[CH4] = ideal_prepare(&eos_rpp_methane, &ref);
 
-	int i;
+	BejanIdealGasData D[NFLUIDS];
+	D[N2] = (BejanIdealGasData){-7.069, 51.539, 24.229, 10.521, 0.180, -2.315};
+	D[O2] = (BejanIdealGasData){-9.589, 36.116, 29.154, 6.477, -0.184, -1.017};
+	D[CO2] = (BejanIdealGasData){-413.886, -87.078, 51.128, 4.368, -1.469, 0};
+	D[H2O] = (BejanIdealGasData){-253.871, -11.750, 34.376, 7.841, -0.423, 0};
+	D[CH4] = (BejanIdealGasData){-81.242, 96.731, 11.933, 77.647, 0.142, -18.414};
+
+	PureFluid *H_N2 = fprops_fluid("nitrogen","helmholtz",NULL);
+
+	fprintf(stderr,"temp / [K]\tcp_ideal\tcp_bejan\tcp_helmh\n");
+	for(i=0;i<20;++i){
+		double T = 273.15 + 10 * i;
+		double cpb = bejan_cp(T, D[N2]) / P[N2]->data->M;
+		double p = 1e5;
+		double rho = p / P[N2]->data->R / T;
+		double cp0 = ideal_cp(T, rho, P[N2]->data, &err);
+		double cph = fprops_cp((FluidState){T, rho, H_N2}, &err);
+		fprintf(stderr,"%f\t%f\t%f\t%f\n",T,cp0,cpb,cph);
+	}
+
 	for(i=0;i<NFLUIDS;++i){
-		double cp0 = ideal_cp(298.2, 0, P[i]->data, &err);
-		double h0 = ideal_h(298.2, 0, P[i]->data, &err);
-		MSG("%-20s: M = %f, R = %f, cp0(298.2) = %f, hbar(298.2) = %f J/kmol",P[i]->name,P[i]->data->M, P[i]->data->R, h0*P[CH4]->data->M);
+		double T = 298.2;
+		double cpb = bejan_cp(T, D[i]);
+		double cp0 = ideal_cp(T, 0, P[i]->data, &err);
+		MSG("cp(%s): bejan = %f, fprops = %f", P[i]->name, cpb, cp0);
+		//double h0 = ideal_h(298.2, 0, P[i]->data, &err);
+		//MSG("%-20s: M = %f, R = %f, cp0(298.2) = %f, hbar(298.2) = %f J/kmol",P[i]->name,P[i]->data->M, P[i]->data->R, cp0, h0*P[CH4]->data->M);
 	}
 
 	MSG("%-20s\t%s\t%s\t%s","comp","h(850 K)","h(1520 K)","Dh (kJ/kmol)");

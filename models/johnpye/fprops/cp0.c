@@ -156,12 +156,14 @@ void cp0_destroy(Phi0RunData *N){
 */
 
 /*
-	Hypothesis:
 	in calculating the ideal component relations, we have some integration
 	constants that ultimately allow the arbitrary scales of h and s to
 	be specified. Hence we can ignore components of helm_ideal that
 	are either constant or linear in tau, and work them out later when we
 	stick in the values of data->c and data->m.
+
+	See refstate.h, ReferenceState for the various ways we have for setting
+	c and m using reference state specifications.
 */
 
 //#define IDEAL_DEBUG
