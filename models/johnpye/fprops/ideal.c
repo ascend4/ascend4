@@ -71,16 +71,16 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 
 	switch(E->type){
 	case FPROPS_CUBIC:
-		//MSG("Cubic");
+		MSG("Cubic");
 		D->M = E->data.cubic->M;
 		D->R = R_UNIVERSAL / D->M;
 		D->T_t = 0; /* TODO how will we flag this object so that sat.c doesn't try to solve? */
-		D->T_c = 0; /* TODO we need a temperature for scaling against, what should it be if critical point is not specific, and how will it be provided? */
+		D->T_c = 0; /* TODO we need a temperature for scaling against, what should it be if critical point is not specified, and how will it be provided? */
 		D->p_c = 0;
 		D->rho_c = 0;
 		D->omega = 0;
 		D->Tstar = 1;
-		D->rhostar = 1;
+		D->rhostar = E->data.cubic->T_c;
 		D->cp0 = cp0_prepare(E->data.cubic->ideal, D->R, D->Tstar);
 		D->corr.helm = NULL;
 
@@ -164,8 +164,8 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 				h0 = ideal_h(T0,rho0, P->data, &res);
 				if(res)ERRMSG("error %d",res);
 				//MSG("new h0(T0,rho0) = %f", h0);
-				double g0 = ideal_g(T0,rho0, P->data, &res);
-				if(res)ERRMSG("error %d",res);
+				//double g0 = ideal_g(T0,rho0, P->data, &res);
+				//if(res)ERRMSG("error %d",res);
 				//MSG("new g0(T0,rho0) = %f", g0);
 				//MSG("DONE");
 			}
@@ -200,8 +200,8 @@ double ideal_h(double T, double rho, const FluidData *data, FpropsError *err){
 
 double ideal_s(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_TAUDELTA;
-	double pht = ideal_phi_tau(tau,delta,data->cp0);
-	double ph = ideal_phi(tau,delta,data->cp0);
+	//double pht = ideal_phi_tau(tau,delta,data->cp0);
+	//double ph = ideal_phi(tau,delta,data->cp0);
 	return data->R * (tau * ideal_phi_tau(tau,delta,data->cp0) - ideal_phi(tau,delta,data->cp0));
 }
 
