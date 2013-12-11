@@ -33,6 +33,12 @@ double bejan_cp(double T, BejanIdealGasData D){
 	return 1000 * (D.a + y*(D.b + D.d*y) + D.c/(y*y));
 }
 
+double rpp_cp_N2(double T){
+	double y = T / 1;
+	double cp0bar = 3.115e1 + y * (-1.357e-2 + y * (2.680e-5 + y * -1.168e-8));
+	return cp0bar / 28.013 * 1000;
+}
+
 int main(void){
 	int i;
 	FpropsError err = FPROPS_NO_ERROR;
@@ -57,7 +63,7 @@ int main(void){
 
 	PureFluid *H_N2 = fprops_fluid("nitrogen","helmholtz",NULL);
 
-	fprintf(stderr,"temp / [K]\tcp_ideal\tcp_bejan\tcp_helmh\n");
+	fprintf(stderr,"temp / [K]\tcp_ideal\tcp_bejan\tcp_helmh\tcp_rpp\n");
 	for(i=0;i<20;++i){
 		double T = 273.15 + 10 * i;
 		double cpb = bejan_cp(T, D[N2]) / P[N2]->data->M;
@@ -65,7 +71,8 @@ int main(void){
 		double rho = p / P[N2]->data->R / T;
 		double cp0 = ideal_cp(T, rho, P[N2]->data, &err);
 		double cph = fprops_cp((FluidState){T, rho, H_N2}, &err);
-		fprintf(stderr,"%f\t%f\t%f\t%f\n",T,cp0,cpb,cph);
+		double cpr = rpp_cp_N2(T);
+		fprintf(stderr,"%f\t%f\t%f\t%f\t%f\n",T,cp0,cpb,cph,cpr);
 	}
 
 	for(i=0;i<NFLUIDS;++i){
