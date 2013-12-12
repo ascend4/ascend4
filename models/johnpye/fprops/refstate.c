@@ -11,24 +11,14 @@
 
 #ifdef REF_DEBUG
 # include "color.h"
-# define MSG(FMT, ...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
-	color_on(stderr,ASC_FG_BRIGHTBLUE);\
-	fprintf(stderr,"%s: ",__func__);\
-	color_off(stderr);\
-	fprintf(stderr,FMT "\n",##__VA_ARGS__)
+# define MSG FPROPS_MSG
 #else
 # define MSG(ARGS...) ((void)0)
 #endif
 
 #ifdef REF_ERRORS
 # include "color.h"
-# define ERRMSG(STR,...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"ERROR:");\
-	color_off(stderr);\
-	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
+# define ERRMSG FPROPS_ERRMSG
 #else
 # define ERRMSG(ARGS...) ((void)0)
 #endif

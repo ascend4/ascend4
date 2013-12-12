@@ -34,13 +34,7 @@
 #define CP0_DEBUG
 #ifdef CP0_DEBUG
 # include "color.h"
-# define MSG(FMT, ...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
-	color_on(stderr,ASC_FG_BRIGHTBLUE);\
-	fprintf(stderr,"%s: ",__func__);\
-	color_off(stderr);\
-	fprintf(stderr,FMT "\n",##__VA_ARGS__)
+# define MSG FPROPS_MSG
 #else
 # define MSG(ARGS...) ((void)0)
 #endif
@@ -49,7 +43,20 @@
   PREPARATION OF IDEAL RUNDATA from FILEDATA
 */
 
-/*
+/**
+	This function prepares the ideal part of the helmholtz function, phi (\$f \phi = \frac{a}{R T}\f$).
+	If we have IdealData of type IDEAL_PHI0, then we just copy the data directly.
+	We assume that we don't need to normalise for Tstar or R in that case (it's
+	not even checked).
+
+	If we have IdealData of type IDEAL_CP0, then we have to do some conversions
+	in order to be able to obtain the required internal $\f\ \phi(\tau,\delta) \$f
+	function required here. The complication is that in general, cp0 can be
+	expressed with different normalising parameter cp0star and Tstar than those
+	used for the residual part function. So in that case, we normalise to R and
+	Tstar which are provided as parameters to this function. Except it doesn't \
+	work correctly for Peng-Robinson or Ideal EOS yet.
+
 	FIXME
 
 	we have changed the definition of the cp0 expression to cp/R = sum( c *T/T*)^t )
@@ -62,6 +69,7 @@
 	TODO check if ^^^ is still true
 */
 Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
+	MSG("Tstar = %f",Tstar);
 #ifdef CP0_DEBUG
 	if(I->type==IDEAL_CP0){
 		MSG("R=%f,Tstar=%f (cp0 data: cp0star=%f, Tstar=%f)",R,Tstar,I->data.cp0.cp0star, I->data.cp0.Tstar);
@@ -81,9 +89,9 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 		N->ne = I->data.cp0.ne;
 		Tred = I->data.cp0.Tstar;
 		cp0red = I->data.cp0.cp0star;
-		//MSG("Preparing PHI0 data for ideal fluid (np = %d, ne = %d)",N->np, N->ne);
-		//MSG("Tred = %f, Tstar = %f", Tred, Tstar);
-		//MSG("cp0red = %f, R = %f", cp0red, R);
+		MSG("Preparing PHI0 data for ideal fluid (np = %d, ne = %d)",N->np, N->ne);
+		MSG("Tred = %f, Tstar = %f", Tred, Tstar);
+		MSG("cp0red = %f, R = %f", cp0red, R);
 
 		for(i=0; i < N->np; ++i)if(I->data.cp0.pt[i].t == 0)add_const_term = 0;
 		//MSG("add_const_term = %d",add_const_term);
