@@ -19,7 +19,18 @@
 
 #include "rundata.h"
 
+/* FIXME rename this to phi0_prepare, along with the filename */
+/**
+	Prepare the runtime data required for calculation of the ideal component of 
+	the reduced Helmholtz function, \f$\phi = \frac{a}{R T}\f$ and its 
+	derivatives \f$\phi_\tau\f$ and \f$\phi_{\tau\tau}\f$. Note that even
+	though this is called 'cp0_prepare', it is unable on its own to calculate
+	\f$c_p^o\f$ because the values of Tstar (needed for \f$\tau = \frac{T^{*}}{T}\f$) and R are stored at higher-level in 
+	the FluidData object.
+*/
 Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar);
+
+
 void cp0_destroy(Phi0RunData *cp0);
 
 /**
