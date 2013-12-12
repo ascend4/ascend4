@@ -31,7 +31,7 @@
 
 #define SQ(X) ((X)*(X))
 
-//#define CP0_DEBUG
+#define CP0_DEBUG
 #ifdef CP0_DEBUG
 # include "color.h"
 # define MSG(FMT, ...) \
@@ -62,6 +62,14 @@
 	TODO check if ^^^ is still true
 */
 Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
+#ifdef CP0_DEBUG
+	if(I->type==IDEAL_CP0){
+		MSG("R=%f,Tstar=%f (cp0 data: cp0star=%f, Tstar=%f)",R,Tstar,I->data.cp0.cp0star, I->data.cp0.Tstar);
+	}else{
+		MSG("R=%f,Tstar=%f (cp0 data: Tstar=%f)",R,Tstar,I->data.phi0.Tstar);
+	}
+#endif
+
 	Phi0RunData *N = FPROPS_NEW(Phi0RunData);
 	int i, add_const_term=1;
 	double Tred, cp0red, p;
@@ -73,12 +81,12 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 		N->ne = I->data.cp0.ne;
 		Tred = I->data.cp0.Tstar;
 		cp0red = I->data.cp0.cp0star;
-		MSG("Preparing PHI0 data for ideal fluid (np = %d, ne = %d)",N->np, N->ne);
-		MSG("Tred = %f, Tstar = %f", Tred, Tstar);
-		MSG("cp0red = %f, R = %f", cp0red, R);
+		//MSG("Preparing PHI0 data for ideal fluid (np = %d, ne = %d)",N->np, N->ne);
+		//MSG("Tred = %f, Tstar = %f", Tred, Tstar);
+		//MSG("cp0red = %f, R = %f", cp0red, R);
 
 		for(i=0; i < N->np; ++i)if(I->data.cp0.pt[i].t == 0)add_const_term = 0;
-		MSG("add_const_term = %d",add_const_term);
+		//MSG("add_const_term = %d",add_const_term);
 
 		N->pt = FPROPS_NEW_ARRAY(Phi0RunPowTerm,N->np + add_const_term);
 		N->et = FPROPS_NEW_ARRAY(Phi0RunExpTerm, N->ne);
@@ -97,7 +105,7 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 		}
 
 		if(add_const_term){
-			MSG("WARNING: adding constant term %d in cp0, is that what you really want?",i);
+			//MSG("WARNING: adding constant term %d in cp0, is that what you really want?",i);
 			N->pt[i].a = -1;
 			N->pt[i].p = 0;
 			N->np++;
@@ -109,7 +117,7 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 		}
 
 		if(cp0red != R){
-			MSG("WARNING: adjusting for R (=%f) != cp0red (=%f)...\n",R,cp0red);
+			//MSG("WARNING: adjusting for R (=%f) != cp0red (=%f)...\n",R,cp0red);
 			double X = cp0red / R;
 			// scale for any differences in R and cpstar */
 			for(i=0; i < N->np; ++i)N->pt[i].a *= X;
@@ -121,7 +129,7 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 		// TODO add checks for disallowed terms, eg p = 0 or p = 1?
 		N->np = I->data.phi0.np;
 		N->ne = I->data.phi0.ne;
-		MSG("Preparing PHI0 data for ideal fluid (np = %d, ne = %d)",N->np, N->ne);
+		//MSG("Preparing PHI0 data for ideal fluid (np = %d, ne = %d)",N->np, N->ne);
 
 		// power terms
 		N->pt = FPROPS_NEW_ARRAY(Phi0RunPowTerm,N->np);
@@ -298,7 +306,7 @@ double ideal_phi_tautau(double tau, const Phi0RunData *data){
 	double sum = 0;
 	double term;
 
-#ifdef CP0_DEBUG
+#ifdef IDEAL_DEBUG
 	fprintf(stderr,"\ttau = %f\n",tau);
 #endif
 
@@ -310,7 +318,7 @@ double ideal_phi_tautau(double tau, const Phi0RunData *data){
 		}else{
 			term = -pt->a * pt->p * (pt->p - 1) * pow(tau, pt->p);
 		}
-#ifdef CP0_DEBUG
+#ifdef IDEAL_DEBUG
 		fprintf(stderr,"\tpt[%d] = ap(p-1)*tau^p (a = %e, p = %e) = %f\n",i,pt->a, pt->p, term);
 #endif
 		sum += term;
@@ -323,12 +331,14 @@ double ideal_phi_tautau(double tau, const Phi0RunData *data){
 		double e = exp(-x);
 		double d = (1-e)*(1-e);
 		term = et->n * x*x * e / d;
-#ifdef CP0_DEBUG
+#ifdef IDEAL_DEBUG
 		fprintf(stderr,"\tet[%d] = n x^2 exp(-x)/(1 - exp(-x))^2  (n = %e, x=gamma*tau, gamma = %e) = %f\n",i,et->n, et->gamma, term);
 #endif
 		sum += term;
 	}
 	/* note, at this point, sum == cp0/R - 1 */
+#ifdef IDEAL_DEBUG
 	MSG("sum = %f, phi_tautau = %f",sum, -sum/SQ(tau));
+#endif
 	return -sum/SQ(tau);
 }

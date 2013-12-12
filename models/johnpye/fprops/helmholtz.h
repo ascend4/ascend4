@@ -23,6 +23,11 @@
 #include "rundata.h"
 #include "ideal.h"
 
+/**
+	Use any elegible EoSData to prepare a PureFluid object that implements
+	Helmholtz fundamental equation of state. Currently, only EoSData containing
+	a HelmholtzData object would suffice for that.
+*/
 PureFluid *helmholtz_prepare(const EosData *data, const ReferenceState *ref);
 
 void helmholtz_destroy(PureFluid *data);

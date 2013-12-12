@@ -61,9 +61,12 @@ int main(void){
 	D[H2O] = (BejanIdealGasData){-253.871, -11.750, 34.376, 7.841, -0.423, 0};
 	D[CH4] = (BejanIdealGasData){-81.242, 96.731, 11.933, 77.647, 0.142, -18.414};
 
-	PureFluid *H_N2 = fprops_fluid("nitrogen","helmholtz",NULL);
+	MSG("preparing helmholtz");
+	const PureFluid *H_N2 = fprops_fluid("nitrogen","helmholtz",NULL);
+	MSG("preparing pengrob");
+	const PureFluid *PR_N2 = fprops_fluid("nitrogen","pengrob","RPP");
 
-	fprintf(stderr,"temp / [K]\tcp_ideal\tcp_bejan\tcp_helmh\tcp_rpp\n");
+	fprintf(stderr,"temp / [K]\tcp_ideal\tcp_bejan\tcp_helmh\tcp0_helm\tcp0_pengrob\tcp_rpp\n");
 	for(i=0;i<20;++i){
 		double T = 273.15 + 10 * i;
 		double cpb = bejan_cp(T, D[N2]) / P[N2]->data->M;
@@ -71,8 +74,10 @@ int main(void){
 		double rho = p / P[N2]->data->R / T;
 		double cp0 = ideal_cp(T, rho, P[N2]->data, &err);
 		double cph = fprops_cp((FluidState){T, rho, H_N2}, &err);
+		double cph0 = fprops_cp0((FluidState){T, rho, H_N2}, &err);
+		double cpp0 = fprops_cp((FluidState){T, rho, PR_N2}, &err);	
 		double cpr = rpp_cp_N2(T);
-		fprintf(stderr,"%f\t%f\t%f\t%f\t%f\n",T,cp0,cpb,cph,cpr);
+		fprintf(stderr,"%f\t%f\t%f\t%f\t%f\t%f\t%f\n",T,cp0,cpb,cph,cph0,cpp0,cpr);
 	}
 
 	for(i=0;i<NFLUIDS;++i){

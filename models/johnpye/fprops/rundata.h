@@ -42,7 +42,8 @@ typedef struct Cp0RunExpTerm_struct{
 } Phi0RunExpTerm;
 
 /**
-	Zero-pressure specific heat capacity data for a fluid
+	Runtime data for ideal gas properties, which are stored in the
+	form of reduced ideal-gas compnent of helmholtz energy (see http://fprops.org)
 
 	There is no 'R' or 'cp0star' in this structure. If cp0star != R in the filedata, that
 	difference will be corrected for when this structure is created.

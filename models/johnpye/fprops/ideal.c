@@ -125,7 +125,6 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 	FN(dpdrho_T);
 	FN(sat);
 #undef FN
-#undef D
 
 	//MSG("Setting reference state...");
 	// set the reference point
@@ -144,7 +143,7 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 				ReferenceState *ref0 = &(P->data->ref0);
 				//MSG("T0 = %f, p0 = %f, h0 = %f, g0 = %f",ref0->data.tphg.T0,ref0->data.tphg.p0,ref0->data.tphg.h0,ref0->data.tphg.g0);
 				FpropsError res = FPROPS_NO_ERROR;
-				double rho0 = ref0->data.tphg.p0 / P->data->R / ref0->data.tphg.T0;
+				double rho0 = ref0->data.tphg.p0 / D->R / ref0->data.tphg.T0;
 				double T0 = ref0->data.tphg.T0;
 				double s0 = (ref0->data.tphg.h0 - ref0->data.tphg.g0) / T0;
 				double h0 = ref0->data.tphg.h0;
@@ -152,14 +151,14 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 				P->data->cp0->c = 0;
 				P->data->cp0->m = 0;
 				//MSG("T0 = %f, rho0 = %f",T0,rho0);
-				//MSG("btw, p = %f", P->data->R * T0 *rho0); // is OK
+				//MSG("btw, p = %f", D->R * T0 *rho0); // is OK
 				res = FPROPS_NO_ERROR;
 				double h1 = ideal_h(T0, rho0, P->data, &res);
 				double s1 = ideal_s(T0, rho0, P->data, &res);
 				if(res)ERRMSG("error %d",res);
 				//MSG("h1 = %f",h1);
-				P->data->cp0->c = -(s0 - s1)/P->data->R;
-				P->data->cp0->m = (h0 - h1)/P->data->R/P->data->Tstar;
+				P->data->cp0->c = -(s0 - s1)/D->R;
+				P->data->cp0->m = (h0 - h1)/D->R/P->data->Tstar;
 
 				h0 = ideal_h(T0,rho0, P->data, &res);
 				if(res)ERRMSG("error %d",res);
@@ -182,6 +181,7 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 		FPROPS_FREE(P);
 		return NULL;
 	}
+#undef D
 
 	return P;
 }
@@ -252,7 +252,5 @@ double ideal_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData *d
 	*err = FPROPS_RANGE_ERROR;
 	return 0;
 }
-
-
 
 
