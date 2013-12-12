@@ -70,8 +70,9 @@ int color_on(FILE *f, int colorcode);
 int color_off(FILE *f);
 
 #define FPROPS_MSG(FMT, ...) \
-	{color_on(stderr,ASC_FG_BRIGHTBLUE);\
+	{color_on(stderr,ASC_FG_BROWN);\
 	fprintf(stderr,"%s:%d",__FILE__,__LINE__);\
+	color_on(stderr,ASC_FG_BRIGHTBLUE);\
 	fprintf(stderr,"(%s):",__func__);\
 	color_off(stderr);\
 	fprintf(stderr," " FMT "\n",##__VA_ARGS__);}

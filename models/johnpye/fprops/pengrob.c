@@ -53,7 +53,7 @@ SatEvalFn pengrob_sat;
 
 static double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err);
 
-//#define PR_DEBUG
+#define PR_DEBUG
 #define PR_ERRORS
 
 #ifdef PR_DEBUG
@@ -168,6 +168,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 
 		D->Tstar = I->T_c;
 		D->rhostar = I->rho_c;
+		MSG("R = %f, Tstar = %f",D->R, D->Tstar);
 		D->cp0 = cp0_prepare(I->ideal, D->R, D->Tstar);
 		break;
 	default:
