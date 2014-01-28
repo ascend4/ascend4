@@ -47,7 +47,21 @@ Description:Solver for systems of equations and ODEs/DAEs
  compile against libascend, for example when creating ASCEND 'external
  libraries' or programs that depend on ASCEND.
 
-
+Package: ascend-tcltk
+Architecture: any
+Depends: ascend, ${shlibs:Depends}
+Description:Solver for systems of equations and ODEs/DAEs
+ ASCEND is a modelling and simulation environment for
+ solving systems of nonlinear equations. It includes
+ a modelling language, in which you write the equations
+ that represent your system-to-be-modelled, as well as
+ a user interface that lets to interact with your model,
+ solve it, adjust values, and report results. There is also
+ a model library with many example problems, and a database of
+ thermodynamic properties for various materials.
+ .
+ This package contains the somewhat outdated Tcl/Tk GUI for ASCEND, which
+ although no longer maintained is still very useful in some cases.
 
 Package: ascend-dbg
 Architecture: any
