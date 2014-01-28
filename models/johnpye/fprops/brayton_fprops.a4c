@@ -31,45 +31,6 @@ IMPORT "johnpye/extpy/extpy";
 IMPORT "johnpye/fprops/cycle_plot";
 
 (*------------------------------------------------------------------------------
-  MERGE PIECE
-*)
-
-(*
-	Joining two streams
-*)
-MODEL merge;
-	NOTES
-		'block' SELF {Model of a joining of two flow streams}
-	END NOTES;
-
-	inlet "in:" IS_A stream_node;
-	inlet_branch "in:" IS_A stream_node;
-	outlet "out:" IS_A stream_node;
-
-	inlet.cd, inlet_branch.cd, outlet.cd ARE_THE_SAME;
-	cd ALIASES inlet.cd;
-
-	inlet.p, inlet_branch.p, outlet.p ARE_THE_SAME;
-	(*inlet.h, inlet_branch.h, outlet.h  ARE_THE_SAME;*)
-
-	(* cons. mass *)
-	cons_mass: inlet.mdot + inlet_branch.mdot= outlet.mdot;
-	
-	(* cons. energy*)
-	cons_energy: inlet.mdot*inlet.h+inlet_branch.mdot*inlet_branch.h= outlet.mdot*outlet.h;
-
-	phi IS_A fraction;
-	phi_eq: phi * outlet.mdot = inlet_branch.mdot;
-METHODS
-METHOD default_self;
-	RUN inlet.default_self;
-	RUN outlet.default_self;
-	RUN inlet_branch.default_self;
-END default_self;
-END merge;	
-
-
-(*------------------------------------------------------------------------------
   OVERALL CYCLE
 *)
 

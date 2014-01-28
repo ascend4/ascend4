@@ -1,0 +1,119 @@
+REQUIRE "johnpye/fprops/rankine_fprops.a4c";
+REQUIRE "johnpye/fprops/pipe.a4c";
+
+MODEL throttle REFINES stream_equipment;
+	inlet.h, outlet.h ARE_THE_SAME;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+END default_self;
+END throttle;
+
+(*
+	Model of a linear array of solar concentrators (dishes) with pressure drop
+	and heat loss in the connection lines, and fixed heat input in each dish,
+	but no assumed pressure drop (boiler_simple model).
+
+	PC1     PC2     ...    PCn
+	o------+-------+-------+-------\
+	       |       |       |       |
+	   DI1 |   DI2 |   ... |   DIn |
+	o------+-------+-------+-------/
+	  PH1     PH2     ...    PHn    
+
+	So far this model isn't solving... it might be because pressure drops
+	are overspecified / we aren't allowing for pressure drop through the dishes
+	such that at the joins, the pressures even out...?
+*)
+MODEL disharray;
+	n IS_A integer_constant;
+	n :== 4;
+
+	PC[1..n] IS_A pipe_heat_loss;
+	PH[1..n] IS_A pipe_heat_loss;
+	TE[1..n-1] IS_A tee;
+	JO[1..n-1] IS_A merge;
+	TH[1..n-1] IS_A throttle;
+	DI[1..n] IS_A boiler_simple;
+
+	FOR i IN [1..n-1] CREATE
+		PC[i].outlet, TE[i].inlet ARE_THE_SAME;
+		TE[i].outlet_branch, DI[i].inlet ARE_THE_SAME;
+		DI[i].outlet, TH[i].inlet ARE_THE_SAME;
+		TH[i].outlet, JO[i].inlet_branch ARE_THE_SAME;
+		JO[i].outlet, PH[i].inlet ARE_THE_SAME;
+		TE[i].outlet,PC[i+1].inlet ARE_THE_SAME;
+		JO[i].inlet,PH[i+1].inlet ARE_THE_SAME;
+	END FOR;
+	PC[n].outlet, DI[n].inlet ARE_THE_SAME;
+	DI[n].outlet, PH[n].inlet ARE_THE_SAME;
+
+	(* easy first try: all pipes same size, thickness, length, roughness *)
+	D, t, L, eps IS_A distance;
+	D, PC[1..n].D, PH[1..n].D ARE_THE_SAME;
+	t, PC[1..n].t, PH[1..n].t ARE_THE_SAME;
+	L, PC[1..n].L, PH[1..n].L ARE_THE_SAME;
+	eps, PC[1..n].eps, PH[1..n].eps ARE_THE_SAME;
+	emiss IS_A fraction;
+	emiss, PC[1..n].emiss, PH[1..n].emiss ARE_THE_SAME;
+	mu IS_A viscosity;
+	mu, PC[1..n].mu, PH[1..n].mu ARE_THE_SAME;
+	h IS_A heat_transfer_coefficient;
+	h, PC[1..n].h, PH[1..n].h ARE_THE_SAME;	
+	T_amb IS_A temperature;
+	T_amb, PC[1..n].T_amb, PH[1..n].T_amb ARE_THE_SAME;
+
+	Qdot_onedish IS_A energy_rate;
+	Qdot_onedish, DI[1..n].Qdot ARE_THE_SAME;
+	DI[1..n].eta ARE_THE_SAME; eta_DI ALIASES DI[1].eta;
+
+	Qdot_loss_tot IS_A energy_rate;
+	Qdot_loss_tot = SUM[PC[i].Q + PH[i].Q|i IN [1..n]];
+	
+	inlet ALIASES PC[1].inlet;
+	outlet ALIASES PH[1].outlet;
+
+	(* try: same mass flow for each dish *)
+	DI[1..n].mdot ARE_THE_SAME;
+
+	cd ALIASES inlet.cd;
+	cd.component :== 'water';
+	cd.type :== 'helmholtz';
+METHODS
+METHOD default_self;
+	FOR i IN [1..n-1] DO
+		RUN TE[i].default_self;
+		RUN JO[i].default_self;
+		RUN TH[i].default_self;
+	END FOR;
+	FOR i IN [1..n] DO
+		RUN PC[i].default_self;
+		RUN DI[i].default_self;
+		RUN PH[i].default_self;
+	END FOR;
+END default_self;
+METHOD on_load;
+	RUN default_self;
+	FOR i IN [1..n-1] DO
+		(*RUN TE[i].disable_cons_mass;*)
+		(*FIX TE[i].phi := 0.5;*)
+	END FOR;
+	FIX Qdot_onedish := 400 {kW};
+	FIX eta_DI := 1;
+	FIX D := 25 {mm};
+	FIX L := 40 {m};
+	FIX t := 4 {mm};
+	FIX eps := 0.015 {mm};
+	FIX emiss := 0.5;
+	FIX mu := 0.024 {cP};
+	FIX h := 10 {W/m^2/K};
+	FIX inlet.p := 50 {bar};
+	FIX inlet.T := 100 {K} +  273.15 {K};
+	FIX DI[1].mdot := 0.1 {kg/s}; (* same for all dishes *)
+	FIX T_amb := 300 {K};
+	(* initial guesses to help the solver *)
+	PC[1..n].inlet.h := 400 {kJ/kg};
+END on_load;
+END disharray;
+
