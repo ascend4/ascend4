@@ -15,16 +15,13 @@ END throttle;
 	and heat loss in the connection lines, and fixed heat input in each dish,
 	but no assumed pressure drop (boiler_simple model).
 
-	PC1     PC2     ...    PCn
-	o------+-------+-------+-------\
-	       |       |       |       |
-	   DI1 |   DI2 |   ... |   DIn |
-	o------+-------+-------+-------/
-	  PH1     PH2     ...    PHn    
+	     PC1     PC2     ...    PCn     (cold-side pipe connections)
+	>>-o------+-------+-------+-------\
+	          |       |       |       |
+	      DI1 |   DI2 |   ... |   DIn |   (dishes)
+	<<-o------+-------+-------+-------/
+	     PH1     PH2     ...    PHn     (hot-size pipe connections)
 
-	So far this model isn't solving... it might be because pressure drops
-	are overspecified / we aren't allowing for pressure drop through the dishes
-	such that at the joins, the pressures even out...?
 *)
 MODEL disharray;
 	n IS_A integer_constant;
