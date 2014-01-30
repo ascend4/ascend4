@@ -75,9 +75,9 @@ MODEL cavity REFINES cavity_base;
 	W,B,S,N,C,E,D IS_A distance;
 	theta, phi, psi IS_A angle;
 	
-	F_WN, F_WW, F_WB IS_A factor;
-	F_NB, F_NW, F_NN, F_BW, F_BN IS_A factor;
-	F_WS IS_A factor;
+	F_WN, F_WW, F_WB IS_A fraction;
+	F_NB, F_NW, F_NN, F_BW, F_BN IS_A fraction;
+	F_WS IS_A fraction;
 	
 	z_N: N * sin(theta) = D;
 	z_S: S * tan(theta) = D;
