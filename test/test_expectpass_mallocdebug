@@ -9,13 +9,13 @@ test/test general_color general_dstring general_hashpjw general_list general_lis
 # currently failing tests:
 # solver_conopt solver_qrslv 
 # compiler_autodiff compiler_blackbox system_link 
+# integrator_ida
 
 # tests that pass but with memory leaks:
 # solver_ipopt 
 # compiler_fixassign
 # solver_slvreq
 # integrator_lsode
-# integrator_ida
 # solver_fprops
 # solver_lrslv 
 # compiler_bintok
