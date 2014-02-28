@@ -1,5 +1,27 @@
 REQUIRE "johnpye/thermo_types.a4c";
-IMPORT "sensitivity/solve";
+
+(*
+	Base model for various fluids that will be used in solar-thermal receiver
+	modelling.
+*)
+MODEL thermophysical_fluid_base;
+	T IS_A temperature;
+	p IS_A pressure; (* not sure if we should have this here; makes it easier to switch from other fluid models *)
+	h IS_A specific_enthalpy;
+	p IS_A pressure;
+	cp IS_A specific_heat_capacity;
+	rho IS_A mass_density;
+	s IS_A specific_entropy;
+	v IS_A specific_volume;
+	v_eq: v = 1. / rho;
+
+	u IS_A specific_energy;
+	u_eq: u = T - p*v;
+
+	mu IS_A viscosity;
+	k IS_A thermal_conductivity;
+END thermophysical_fluid_base;
+
 
 (*
 	Model of 60% NaNO3 + 40% KNO3 as specified in Sandia National
@@ -10,32 +32,23 @@ IMPORT "sensitivity/solve";
 	The source data is density and specific heat capacity as functions of
 	temperature, with no pressure dependence specified. Enthalpy is calculated
 	by simple integration integ(cp dT) as a secondary expression.
+
+	What is the source of the entropy expression? -- TODO We need to check this!
 *)
-MODEL moltensalt_state;
-	T IS_A temperature;
-	h IS_A specific_enthalpy;
-	p IS_A pressure;
-
-	cp IS_A specific_heat_capacity;		
+MODEL moltensalt_state REFINES thermophysical_fluid_base;
 	cp_eq: cp = 1396.0182 {J/kg/K} + 0.172 {J/kg/K^2} * T;
-
-	rho IS_A mass_density;
 	rho_eq: rho = 2263.7234 {kg/m^3} - 0.636 {kg/m^3/K} * T;
 
 	(* constant set to give h = 0 at 0 °C *)
 	h_eq: h = (1396.0182 {J/kg/K}) * T + 0.5 * (0.172 {J/kg/K^2}) * T^2 - 387.738910665 {kJ/kg};
 
-	s IS_A specific_entropy;
 	s_eq: s = 1396.0182 {J/kg/K} * ln(T) + 0.172 {J/kg/K^2} * T 
 		- p*(((- 0.636 {kg/m^3/K})/(2263.7234 {kg/m^3})^2) *ln(T/rho)
 			+ (- 0.636 {kg/m^3/K})/(2263.7234 {kg/m^3} * rho)
 		);
-
-	v IS_A specific_volume;
-	v_eq: v = 1. / rho;
-
-	u IS_A specific_energy;
-	u_eq: u = h - p*v;
+	
+	mu_eq: mu = 22.714 {milli*Pa*s}- 0.12 {milli*Pa*s/K} * (T - 273.15)+ 2.281e-4 {milli*Pa*s/K^2} * ((T - 273.15)^2) - 1.474e-7 {milli*Pa*s/K^3} * ((T - 273.15)^3);
+	k_eq: k = 0.443 {W/m/K} + 6.26984e-5 * (T -273.15);
 METHODS
 	METHOD default_self;
 		T := 400 {K};
@@ -58,20 +71,3 @@ METHODS
 		ASSERT abs(rho - 115.65 {lbm/ft^3}) < 0.1 {lbm/ft^3};
 	END self_test;
 END moltensalt_state;
-
-MODEL moltensalt_node;
-	state IS_A moltensalt_state;
-	T ALIASES state.T;
-	h ALIASES state.h;
-	p ALIASES state.p;
-	v ALIASES state.v;
-	cp ALIASES state.cp;
-	mdot IS_A mass_rate;
-METHODS
-	METHOD solve;
-		EXTERNAL do_solve(SELF);
-	END solve;
-END moltensalt_node;
-
-
-

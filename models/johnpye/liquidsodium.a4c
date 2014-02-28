@@ -1,4 +1,4 @@
-REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/moltensalt.a4c";
 (*
 	Model of liquid sodium properties.
 
@@ -51,33 +51,22 @@ s = integrate(cp/T,T)
 T = symbols("T")
 mu = exp(-6.4406 - 0.3959*ln(T) + 556.835/T)
 
+(!) TODO this model still needs some thought in relation to the equation of
+	state and pressure variation should impact on the calculation of enthalpy
+	(perhaps) and entropy (certainly) in the case that pressure is actually
+	allowed to vary (it doesn't necessarily have to vary).
 *)
-MODEL liquidsodium_state;
-	T IS_A temperature;
-	h IS_A specific_enthalpy;
-	p IS_A pressure;
-
-	rho IS_A mass_density;
+MODEL liquidsodium_state REFINES imcompressible_fluid_base;
 	rho_eq: rho = 1{kg/m^3}*(5.6377e-9*(T/1{K})^3 - 1.92243137289697e-5*(T/1{K})^2 - 0.220459659656931*(T/1{K}) + 1011.57800360586);
 
-	cp, cp_o IS_A specific_heat_capacity;		
 	cp_eq: cp = 1{J/kg/K}*(0.000462719997001106*(T/1{K})^2 - 0.833283935981031*(T/1{K}) + 1629.7975410592);
 
 	h_eq: h = 1{J/kg}*(0.000154239999000369*(T/1{K})^3 - 0.416641967990516*(T/1{K})^2 + 1629.7975410592*(T/1{K}));
 
-	s IS_A specific_entropy;
 	s_eq: s = 1{J/kg/K}*(0.000231359998500553*(T/1{K})^2 - 0.833283935981031*(T/1{K}) + 1629.7975410592*ln(T/1{K}));
 
-	v IS_A specific_volume;
-	v_eq: v = 1. / rho;
-
-	u IS_A specific_energy;
-	u_eq: u = T - p*v;
-	
-	mu IS_A viscosity;
 	mu_eq: mu = 1{Pa*s}*exp(-6.4406 - 0.3959*ln(T/1{K}) + 556.835{K}/T);
 
-	k IS_A thermal_conductivity;
 	k_eq: k = 1{W/m/K}*(1.17273989567306e-5*(T/1{K})^2 - 0.0644936786213827*(T/1{K}) + 109.691456182527);
 METHODS
 METHOD on_load;
