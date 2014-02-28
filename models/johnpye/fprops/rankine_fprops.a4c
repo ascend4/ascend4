@@ -39,7 +39,7 @@ MODEL fluid;
 END fluid;
 
 (*
-	Thermo properties -- IAPWS-IF97
+	Thermo properties -- IAPWS-IF95
 *)
 MODEL stream_state;
 	cd IS_A fluid;
@@ -522,7 +522,7 @@ MODEL heater_closed;
 	
 	q IS_A specific_energy;
 	Qdot = q * inlet.mdot;
-
+REGION1_TMAX
 	(* cons. mass *)
 	cons_mass: inlet.mdot = outlet.mdot;
 	cons_mass_heat: inlet_heat.mdot = outlet_heat.mdot;
