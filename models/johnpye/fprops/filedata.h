@@ -346,30 +346,36 @@ typedef enum ViscCollisionIntegType_enum{
 	FPROPS_CI_1 = 1 /**< first collision integral type, as per Lemmon and Jacobsen 2004, "Viscosity and Thermal Conductivity Equations for Nitrogen, Oxygen, Argon, and Air" */
 } ViscCollisionIntegType;
 
+typedef struct ViscCI1Term_struct{
+	double a; /**< coefficient of ln(T/(e/k)) */
+	int i; /**< exponent of ln(T/(e/k))*/
+} ViscCI1Term;
+
 typedef struct ViscCI1Data_struct{
-	
+	unsigned nt;
+	ViscCI1Term *t;
+} ViscCI1Data;
 
 typedef struct ViscCollisionIntegData_struct{
 	ViscCollisionIntegType type;
 	union {
-		ViscCollisionInteg1Data ci1;
+		ViscCI1Data ci1;
 	} data;
+} ViscCollisionIntegData;
 
 typedef struct ViscosityData1_struct{
 	double sigma;
 	double M;
 	double eps_over_k;
-	ViscosityCollisionIntegral ci;
-	unsigned no; /**< number of terms in omega expression */
-	const Visc1Coll1Term *ot;	
+	ViscCollisionIntegData ci;
 } ViscosityData1;
 
 typedef struct ViscosityData_struct{
 	ViscosityType type;
 	union{
-		ViscosityType1 v1;
+		ViscosityData1 v1;
 	} data;
-}
+} ViscosityData;
 
 /*------------------------DATA WRAPPER-----------------------------*/
 
@@ -402,7 +408,7 @@ typedef struct EosData_struct{
 	const double quality; /**< data quality, higher means more accurate */
 	const EosType type;
 	const EosUnion data;
-	const ViscosityData visc;
+	const ViscosityData *visc;
 } EosData;
 
 #endif
