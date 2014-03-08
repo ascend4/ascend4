@@ -138,6 +138,11 @@ static HelmholtzData helmholtz_data_carbondioxide = {
 	}
 };
 
+ViscosityData1 visc1_carbondioxide = {
+	.sigma = sqrt(0.0266958*sqrt(CARBONDIOXIDE_M)/1.00697)
+	.M = CARBONDIOXIDE_M
+	
+
 EosData eos_carbondioxide = {
 	"carbondioxide"
 	,"R Span & W Wagner ''A new equation of state for carbon dioxide covering the "
