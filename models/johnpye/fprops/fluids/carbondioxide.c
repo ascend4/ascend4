@@ -138,10 +138,31 @@ static HelmholtzData helmholtz_data_carbondioxide = {
 	}
 };
 
-ViscosityData1 visc1_carbondioxide = {
-	.sigma = sqrt(0.0266958*sqrt(CARBONDIOXIDE_M)/1.00697)
-	.M = CARBONDIOXIDE_M
-	
+#define CARBONDIOXIDE_SIGMA 0.419373083367276
+// sqrt(0.0266958*sqrt(CARBONDIOXIDE_M)/1.00697)
+// = sqrt(0.0266958*sqrt(44.0098)/1.00697)
+
+ViscosityData visc_carbondioxide = {
+	FPROPS_VISC_1
+	,.data={.v1={
+		.sigma = CARBONDIOXIDE_SIGMA
+		,.M = CARBONDIOXIDE_M
+		,.eps_over_k = 251.196 /* K */
+		,.ci={
+			FPROPS_CI_1
+			,.data={.ci1={
+				.nt=5
+				,.t=(const ViscCI1Term[]){
+					{0, 0.235156}
+					,{1, -0.491266}
+					,{2, 5.211155e-2}
+					,{3, 5.247906e-2}
+					,{4, -1.537102e-2}
+				}
+			}}
+		}
+	}}
+};
 
 EosData eos_carbondioxide = {
 	"carbondioxide"
@@ -152,6 +173,7 @@ EosData eos_carbondioxide = {
 	,100
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_carbondioxide}
+	,.visc = &visc_carbondioxide
 };
 
 #ifdef TEST
