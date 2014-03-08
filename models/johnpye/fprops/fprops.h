@@ -33,7 +33,8 @@
 	struct, too, or else find some other way to cache them.
 
 	TODO perhaps eventually we can different different correlations using
-	different independent variables, in which case this state could be 
+	different independent variables, in which case this state could be modified/
+	expanded/improved.
 */
 typedef struct FluidState_struct{
 	double T; ///< temperature / K
@@ -84,6 +85,9 @@ double fprops_dhdrho_T(const FluidState state, FpropsError *err);
 double fprops_dudT_rho(const FluidState state, FpropsError *err);
 double fprops_dudrho_T(const FluidState state, FpropsError *err);
 #endif
+
+
+double fprops_mu(FluidState state, FpropsError *err); ///< Dynamic viscosity / [Pa*s]
 
 /**
 	Convert file data E into a PureFluid object, doing any necessary pre-calculation

@@ -104,6 +104,7 @@ PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 		ERRMSG("Invalid EOS data, unimplemented correlation type requested");
 		return NULL;
 	}
+	/* next: add preparation of viscosity, thermal conductivity, surface tension, ... */
 }
 
 FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsError *err){
@@ -177,6 +178,14 @@ double fprops_betap(FluidState state, FpropsError *err){
 	return 0;
 }
 #endif
+
+double fprops_mu(FluidState state, FpropsError *err){
+	/*if(NULL!=state.fluid->visc){
+		;;;;
+	}*/
+	*err = FPROPS_NOT_IMPLEMENTED;
+	return NAN;
+}
 
 double fprops_cp0(FluidState state, FpropsError *err){
 	return ideal_cp(state.T,0,state.fluid->data,err);
