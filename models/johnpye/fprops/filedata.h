@@ -335,6 +335,41 @@ typedef struct MbwrData_struct{
 	double beta[32]; /**< constants in MBWR for the fluid in question */
 } MbwrData;
 
+/*--------------------------VISCOSITY------------------------------*/
+
+typedef enum ViscosityType_enum{
+	FPROPS_VISC_NONE = 0
+	,FPROPS_VISC_1 = 1 /**< first viscosity model, as per Lemmon and Jacobsen 2004, "Viscosity and Thermal Conductivity Equations for Nitrogen, Oxygen, Argon, and Air" */
+} ViscosityType;
+
+typedef enum ViscCollisionIntegType_enum{
+	FPROPS_CI_1 = 1 /**< first collision integral type, as per Lemmon and Jacobsen 2004, "Viscosity and Thermal Conductivity Equations for Nitrogen, Oxygen, Argon, and Air" */
+} ViscCollisionIntegType;
+
+typedef struct ViscCI1Data_struct{
+	
+
+typedef struct ViscCollisionIntegData_struct{
+	ViscCollisionIntegType type;
+	union {
+		ViscCollisionInteg1Data ci1;
+	} data;
+
+typedef struct ViscosityData1_struct{
+	double sigma;
+	double M;
+	double eps_over_k;
+	ViscosityCollisionIntegral ci;
+	unsigned no; /**< number of terms in omega expression */
+	const Visc1Coll1Term *ot;	
+} ViscosityData1;
+
+typedef struct ViscosityData_struct{
+	ViscosityType type;
+	union{
+		ViscosityType1 v1;
+	} data;
+}
 
 /*------------------------DATA WRAPPER-----------------------------*/
 
@@ -367,6 +402,7 @@ typedef struct EosData_struct{
 	const double quality; /**< data quality, higher means more accurate */
 	const EosType type;
 	const EosUnion data;
+	const ViscosityData visc;
 } EosData;
 
 #endif
