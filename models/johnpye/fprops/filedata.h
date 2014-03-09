@@ -353,7 +353,7 @@ typedef struct ViscCI1Term_struct{
 
 typedef struct ViscCI1Data_struct{
 	unsigned nt;
-	ViscCI1Term *t;
+	const ViscCI1Term *t;
 } ViscCI1Data;
 
 typedef struct ViscCollisionIntegData_struct{
@@ -373,7 +373,7 @@ typedef struct ViscosityData1_struct{
 	double eps_over_k;
 	ViscCollisionIntegData ci;
 	unsigned nt;
-	ViscData1Term *t;
+	const ViscData1Term *t;
 } ViscosityData1;
 
 typedef struct ViscosityData_struct{

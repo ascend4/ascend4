@@ -33,6 +33,7 @@
 #include "sat.h"
 //#include "redkw.h"
 #include "pengrob.h"
+#include "visc.h"
 //#include "mbwr.h"
 
 #define FPR_DEBUG
@@ -93,18 +94,29 @@ int fprops_corr_avail(const EosData *E, const char *corrtype){
 
 
 PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
+	PureFluid *P = NULL;
 	switch(fprops_corr_avail(E,corrtype)){
 	case FPROPS_HELMHOLTZ:
-		return helmholtz_prepare(E,NULL);
+		P = helmholtz_prepare(E,NULL);
 	case FPROPS_PENGROB:
-		return pengrob_prepare(E,NULL);
+		P = pengrob_prepare(E,NULL);
 	case FPROPS_IDEAL:
-		return ideal_prepare(E,NULL);
+		P = ideal_prepare(E,NULL);
 	default:
 		ERRMSG("Invalid EOS data, unimplemented correlation type requested");
 		return NULL;
 	}
 	/* next: add preparation of viscosity, thermal conductivity, surface tension, ... */
+
+	MSG("Preparing viscosity data...");
+	FpropsError err = FPROPS_NO_ERROR;
+	P->visc = visc_prepare(E,P,&err);
+	if(err){
+		ERRMSG("Invalid viscosity data for '%s",P->name);
+		/* visc_prepare should return NULL if there was an error, so result is
+		same as when there is no viscosity data at all */
+	}
+	return P;
 }
 
 FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsError *err){

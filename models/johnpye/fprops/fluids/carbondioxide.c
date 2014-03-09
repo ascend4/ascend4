@@ -142,7 +142,7 @@ static HelmholtzData helmholtz_data_carbondioxide = {
 // sqrt(0.0266958*sqrt(CARBONDIOXIDE_M)/1.00697)
 // = sqrt(0.0266958*sqrt(44.0098)/1.00697)
 
-ViscosityData visc_carbondioxide = {
+const ViscosityData visc_carbondioxide = {
 	FPROPS_VISC_1
 	,.data={.v1={
 		.sigma = CARBONDIOXIDE_SIGMA
@@ -160,6 +160,14 @@ ViscosityData visc_carbondioxide = {
 					,{4, -1.537102e-2}
 				}
 			}}
+		}
+		,.nt=5
+		,.t=(const ViscData1Term[]){
+			{0.4071119e-2, 1, 1, 0}
+			,{0.7198037, 2, 1, 0}
+			,{0.2411697e-16, 6, 4, 0}
+			,{0.2971072e-22, 8, 1, 0}
+			,{-0.1627888e-22, 8, 2, 0}
 		}
 	}}
 };
