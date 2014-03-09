@@ -96,6 +96,8 @@ double fprops_mu(FluidState state, FpropsError *err); ///< Dynamic viscosity / [
 */
 PureFluid *fprops_prepare(const EosData *E, const char *corrtype);
 
+/* TODO what about a function to destroy the PureFluid structure? */
+
 /**
 	Check if the file data E is suitable for preparing a PureFluid
 	of the named correlation type.

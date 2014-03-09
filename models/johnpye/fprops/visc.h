@@ -17,5 +17,8 @@
 #include "rundata.h"
 #include "fprops.h"
 
+ViscosityData *visc_prepare(const EosData *E, const PureFluid *P, FpropsError *err);
+
 double visc1_mu(FluidState state, FpropsError *err);
+
 
