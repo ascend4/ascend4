@@ -8,7 +8,6 @@ MODEL thermophysical_fluid_base;
 	T IS_A temperature;
 	p IS_A pressure; (* not sure if we should have this here; makes it easier to switch from other fluid models *)
 	h IS_A specific_enthalpy;
-	p IS_A pressure;
 	cp IS_A specific_heat_capacity;
 	rho IS_A mass_density;
 	s IS_A specific_entropy;
@@ -35,7 +34,7 @@ END thermophysical_fluid_base;
 
 	What is the source of the entropy expression? -- TODO We need to check this!
 *)
-MODEL moltensalt_state REFINES thermophysical_fluid_base;
+MODEL moltensalt_fluid REFINES thermophysical_fluid_base;
 	cp_eq: cp = 1396.0182 {J/kg/K} + 0.172 {J/kg/K^2} * T;
 	rho_eq: rho = 2263.7234 {kg/m^3} - 0.636 {kg/m^3/K} * T;
 
@@ -70,4 +69,4 @@ METHODS
 	METHOD self_test;
 		ASSERT abs(rho - 115.65 {lbm/ft^3}) < 0.1 {lbm/ft^3};
 	END self_test;
-END moltensalt_state;
+END moltensalt_fluid;
