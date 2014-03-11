@@ -19,7 +19,7 @@
 #include "visc.h"
 #include <math.h>
 
-#define VISC_DEBUG
+//#define VISC_DEBUG
 #ifdef VISC_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
@@ -29,7 +29,7 @@
 # define ERRMSG(ARGS...) ((void)0)
 #endif
 
-ViscosityData *visc_prepare(const EosData *E, const PureFluid *P, FpropsError *err){
+const ViscosityData *visc_prepare(const EosData *E, const PureFluid *P, FpropsError *err){
 	MSG("Preparing viscosity");
 	return E->visc;
 }
@@ -39,11 +39,12 @@ ViscosityData *visc_prepare(const EosData *E, const PureFluid *P, FpropsError *e
 	perhaps v1 data should include 0.0266958/SQ(sigma)?
 */
 
-double visc1_ci1(ViscCI1Data *ci1, double Tstar){
+double visc1_ci1(const ViscCI1Data *ci1, double Tstar){
 	double res = 0;
 	double lnTstar = log(Tstar);
 	int i;
 	for(i=0; i<ci1->nt; ++i){
+		MSG("b[%d] = %e, i = %d",i,ci1->t[i].b, ci1->t[i].i);
 		res += ci1->t[i].b * pow(lnTstar, ci1->t[i].i);
 	}
 	return exp(res);
@@ -56,7 +57,7 @@ double visc1_mu(FluidState state, FpropsError *err){
 	}
 
 	double Omega;
-	ViscosityData1 *v1 = &(state.fluid->visc->data.v1);
+	const ViscosityData1 *v1 = &(state.fluid->visc->data.v1);
 	switch(v1->ci.type){
 		case FPROPS_CI_1:
 			Omega = visc1_ci1(&(v1->ci.data.ci1),state.T / v1->eps_over_k);
@@ -65,7 +66,9 @@ double visc1_mu(FluidState state, FpropsError *err){
 			*err = FPROPS_INVALID_REQUEST;
 			return NAN;
 	}
+	MSG("M = %f, sigma = %f, Omega = %f, eps/k = %f",v1->M, v1->sigma, Omega,v1->eps_over_k);
 	double mu0 = 0.0266958 * sqrt(v1->M * state.T) / SQ(v1->sigma) / Omega;
+	MSG("mu0 = %e",mu0);
 	double mur = 0;
 	double tau = state.fluid->data->T_c / state.T;
 	double del = state.rho / state.fluid->data->rho_c;
@@ -79,7 +82,9 @@ double visc1_mu(FluidState state, FpropsError *err){
 		}
 	}
 	/* TODO something about critical point terms? */
-	return mu0 + mur;	
+	MSG("mur = %e",mur);
+	MSG("mustar = %e",v1->mu_star);
+	return v1->mu_star * (mu0 + mur);
 }
 
 

@@ -347,8 +347,8 @@ typedef enum ViscCollisionIntegType_enum{
 } ViscCollisionIntegType;
 
 typedef struct ViscCI1Term_struct{
-	double b; /**< coefficient of ln(T/(e/k)) */
 	int i; /**< exponent of ln(T/(e/k))*/
+	double b; /**< coefficient of ln(T/(e/k)) */
 } ViscCI1Term;
 
 typedef struct ViscCI1Data_struct{
@@ -368,6 +368,7 @@ typedef struct ViscData1Term_struct{
 } ViscData1Term;
 
 typedef struct ViscosityData1_struct{
+	double mu_star; //< normalisation parameter for viscosity (eg use 1e-6 for correlations returning value in µPa·s)
 	double sigma;
 	double M;
 	double eps_over_k;
