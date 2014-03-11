@@ -201,6 +201,8 @@ double fprops_mu(FluidState state, FpropsError *err){
 		switch(state.fluid->visc->type){
 		case FPROPS_VISC_1:
 			return visc1_mu(state,err);
+		default:
+			break;
 		}	
 	}
 	*err = FPROPS_NOT_IMPLEMENTED;
