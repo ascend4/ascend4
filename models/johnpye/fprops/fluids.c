@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-//#define FLUIDS_DEBUG
+#define FLUIDS_DEBUG
 #define FLUIDS_ERRORS
 
 #ifdef FLUIDS_DEBUG
