@@ -95,13 +95,18 @@ int fprops_corr_avail(const EosData *E, const char *corrtype){
 
 PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 	PureFluid *P = NULL;
+	MSG("Working with EosData name '%s', source '%s", E->name, E->source);
+	MSG("Chosen correlation: %d (requested %s)", fprops_corr_avail(E,corrtype),corrtype);
 	switch(fprops_corr_avail(E,corrtype)){
 	case FPROPS_HELMHOLTZ:
 		P = helmholtz_prepare(E,NULL);
+		break;
 	case FPROPS_PENGROB:
 		P = pengrob_prepare(E,NULL);
+		break;
 	case FPROPS_IDEAL:
 		P = ideal_prepare(E,NULL);
+		break;
 	default:
 		ERRMSG("Invalid EOS data, unimplemented correlation type requested");
 		return NULL;
@@ -192,9 +197,12 @@ double fprops_betap(FluidState state, FpropsError *err){
 #endif
 
 double fprops_mu(FluidState state, FpropsError *err){
-	/*if(NULL!=state.fluid->visc){
-		;;;;
-	}*/
+	if(NULL!=state.fluid->visc){
+		switch(state.fluid->visc->type){
+		case FPROPS_VISC_1:
+			return visc1_mu(state,err);
+		}	
+	}
 	*err = FPROPS_NOT_IMPLEMENTED;
 	return NAN;
 }

@@ -15,12 +15,29 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
-	perhaps v1 data should include 0.0266958/SQ(sigma)?
-*/
 
 #include "visc.h"
 #include <math.h>
+
+#define VISC_DEBUG
+#ifdef VISC_DEBUG
+# include "color.h"
+# define MSG FPROPS_MSG
+# define ERRMSG FPROPS_ERRMSG
+#else
+# define MSG(ARGS...) ((void)0)
+# define ERRMSG(ARGS...) ((void)0)
+#endif
+
+ViscosityData *visc_prepare(const EosData *E, const PureFluid *P, FpropsError *err){
+	MSG("Preparing viscosity");
+	return E->visc;
+}
+
+/*----------------------FIRST CORRELATION---------------------------*/
+/*
+	perhaps v1 data should include 0.0266958/SQ(sigma)?
+*/
 
 double visc1_ci1(ViscCI1Data *ci1, double Tstar){
 	double res = 0;

@@ -151,7 +151,8 @@ typedef struct PureFluid_struct{
 	PropEvalFn *betap_fn;
 	PropEvalFn *dpdrho_T_fn; // this derivative is required for saturation properties by Akasaka method
 	SatEvalFn *sat_fn; // function to return {psat,rhof,rhog}(T) for this pure fluid
-	ViscosityData *visc;
+
+	const ViscosityData *visc;
 } PureFluid;
 
 #endif
