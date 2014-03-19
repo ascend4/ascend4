@@ -19,7 +19,7 @@
 #include "visc.h"
 #include <math.h>
 
-//#define VISC_DEBUG
+#define VISC_DEBUG
 #ifdef VISC_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
@@ -30,7 +30,7 @@
 #endif
 
 const ViscosityData *visc_prepare(const EosData *E, const PureFluid *P, FpropsError *err){
-	MSG("Preparing viscosity");
+	MSG("Preparing viscosity: currently we are just reusing the FileData pointer; no changes");
 	return E->visc;
 }
 
@@ -56,6 +56,8 @@ double visc1_mu(FluidState state, FpropsError *err){
 		return NAN;
 	}
 
+	MSG("T = %e, rho = %e", state.T, state.rho);
+	MSG("  (--> p = %e MPa)",fprops_p(state,err)/1e6);
 	double Omega;
 	const ViscosityData1 *v1 = &(state.fluid->visc->data.v1);
 	switch(v1->ci.type){
@@ -70,14 +72,19 @@ double visc1_mu(FluidState state, FpropsError *err){
 	double mu0 = 0.0266958 * sqrt(v1->M * state.T) / SQ(v1->sigma) / Omega;
 	MSG("mu0 = %e",mu0);
 	double mur = 0;
-	double tau = state.fluid->data->T_c / state.T;
-	double del = state.rho / state.fluid->data->rho_c;
+	MSG("T_star = %f",v1->T_star);
+	MSG("rho_star = %f",v1->rho_star);
+	double tau = v1->T_star / state.T;
+	double del = state.rho / v1->rho_star;
+	MSG("tau = %e, del = %e", tau, del);
 	int i;
 	for(i=0; i<v1->nt; ++i){
 		double mu1i = v1->t[i].N * pow(tau, v1->t[i].t) * pow(del, v1->t[i].d);
 		if(0 == v1->t[i].l){
+			MSG("%d: N = %e, t = %d, d = %d, l = %d --> %e", i, v1->t[i].N, v1->t[i].t, v1->t[i].d, v1->t[i].l, mu1i);
 			mur += mu1i;
 		}else{
+			MSG("%d: N = %e, t = %d, d = %d, l = %d ** --> %e", i, v1->t[i].N, v1->t[i].t, v1->t[i].d, v1->t[i].l, mu1i * exp(-pow(del, v1->t[i].l)));
 			mur += mu1i * exp(-pow(del, v1->t[i].l));
 		}
 	}

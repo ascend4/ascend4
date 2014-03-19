@@ -131,9 +131,12 @@ static const HelmholtzData helmholtz_data_nitrogen = {
 };
 
 const ViscosityData visc_nitrogen = {
-	FPROPS_VISC_1
+	.source="E W Lemmon and R T Jacobsen, 2004. 'Viscosity and Thermal Conductivity Equations for Nitrogen, Oxygen, Argon, and Air', Int J Thermophys 25(1), pp. 21-69."
+	,.type=FPROPS_VISC_1
 	,.data={.v1={
 		.mu_star = 1e-6
+		,.T_star = NITROGEN_TC
+		,.rho_star = NITROGEN_RHOC
 		,.sigma = 0.3656
 		,.M = 28.01348
 		,.eps_over_k = 98.94
@@ -261,7 +264,7 @@ int main(void){
 #define VISC_TEST(T__1,RHO__1,MU__1,TOL__1) \
 	S = fprops_set_Trho(T__1, RHO__1*P->visc->data.v1.M, P, &err); \
 	mu = fprops_mu(S,&err); \
-	/*fprintf(stderr,"mu(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,mu,MU__1);*/ \
+fprintf(stderr,"mu(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,mu,MU__1); \
 	ASSERT(FPROPS_NO_ERROR==err); \
 	ASSERT(fabs(mu - MU__1)<TOL__1);
 
