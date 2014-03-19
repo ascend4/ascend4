@@ -143,9 +143,13 @@ static HelmholtzData helmholtz_data_carbondioxide = {
 // = sqrt(0.0266958*sqrt(44.0098)/1.00697)
 
 const ViscosityData visc_carbondioxide = {
-	FPROPS_VISC_1
+	.source="A Fenghour and W A Wakeham, 1998. 'The Viscosity of Carbon Dioxide', J Phys Chem Ref Data 27(1)"
+	,.type=FPROPS_VISC_1
 	,.data={.v1={
-		.sigma = CARBONDIOXIDE_SIGMA
+		.mu_star = 1e-6
+		,.T_star = 251.196
+		,.rho_star = 1
+		,.sigma = CARBONDIOXIDE_SIGMA
 		,.M = CARBONDIOXIDE_M
 		,.eps_over_k = 251.196 /* K */
 		,.ci={
@@ -163,11 +167,12 @@ const ViscosityData visc_carbondioxide = {
 		}
 		,.nt=5
 		,.t=(const ViscData1Term[]){
-			{0.4071119e-2, 1, 1, 0}
-			,{0.7198037, 2, 1, 0}
-			,{0.2411697e-16, 6, 4, 0}
-			,{0.2971072e-22, 8, 1, 0}
-			,{-0.1627888e-22, 8, 2, 0}
+			// N             t    d  l
+			{0.4071119e-2,   1-1, 1, 0}
+			,{0.7198037e-4,  1-1, 2, 0}
+			,{0.2411697e-16, 4-1, 6, 0}
+			,{0.2971072e-22, 1-1, 8, 0}
+			,{-0.1627888e-22,2-1, 8, 0}
 		}
 	}}
 };
@@ -188,6 +193,8 @@ EosData eos_carbondioxide = {
 #include "../test.h"
 #include "../sat.h"
 #include "../refstate.h"
+#include "../visc.h"
+
 /*
 	Test suite. These tests attempt to validate the current code using
 	a few sample figures output by REFPROP 7.0.
@@ -208,8 +215,9 @@ const TestDataSat tds[]; const unsigned nsd;
 int main(void){
 	test_init();
 	FpropsError err = FPROPS_NO_ERROR;
-	ReferenceState S = {FPROPS_REF_IIR};
-	PureFluid *d = helmholtz_prepare(&eos_carbondioxide,&S);
+	ReferenceState R = {FPROPS_REF_IIR};
+	PureFluid *d = helmholtz_prepare(&eos_carbondioxide,&R);
+	FluidState S;
 	double maxerr = 0;
 
 #if 0
@@ -225,6 +233,29 @@ int main(void){
 	ASSERT_PROP(p, fprops_set_Trho(300.000, 679.24, d, &err), &err, 6.7131e6, 0.0001e6);
 	ASSERT_PROP(p, fprops_set_Trho(300.000, 268.58, d, &err), &err, 6.7131e6, 0.0001e6);
 	ASSERT_PROP(p, fprops_set_Trho(304.1282, 467.60, d, &err), &err, 7.3773e6, 0.0001e6);
+
+	fprintf(stderr,"Testing viscosity values from A Fenghour and W A Wakeham, 1998...\n");
+	const ViscosityData *V = visc_prepare(&eos_carbondioxide, d, &err);
+	double mu;
+	ASSERT(FPROPS_NO_ERROR==err);
+	ASSERT(V != NULL);
+	d->visc = V;
+
+	// test data gives densities in mol/dm³
+#define VISC_TEST(T__1,RHO__1,MU__1,TOL__1) \
+	S = fprops_set_Trho(T__1, RHO__1, d, &err); \
+	mu = fprops_mu(S,&err); \
+	fprintf(stderr,"mu(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,mu,MU__1); \
+	ASSERT(FPROPS_NO_ERROR==err); \
+	ASSERT(fabs(mu - MU__1)<TOL__1);
+
+	VISC_TEST(220, 2.43941203164E+0, 11.06e-6,  0.005e-6);
+	VISC_TEST(220, 1.19495544507E+3,  269.46e-6, 0.005e-6);
+	VISC_TEST(300, 7.33897247783E+2, 60.34e-6,  0.005e-6);
+	VISC_TEST(660, 9.57637753042E+2, 117.8e-6, 0.05e-6);
+	VISC_TEST(560, 9.4559470136E-1, 26.44e-6,  0.05e-6);
+
+	fprintf(stderr,"done\n");
 
 	err += helm_run_test_cases(d, ntd, td, 'K');
 

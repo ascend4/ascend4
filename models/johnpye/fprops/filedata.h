@@ -364,11 +364,14 @@ typedef struct ViscCollisionIntegData_struct{
 } ViscCollisionIntegData;
 
 typedef struct ViscData1Term_struct{
-	double N, t, d, l;
+	double N, t;
+	int d, l;
 } ViscData1Term;
 
 typedef struct ViscosityData1_struct{
 	double mu_star; //< normalisation parameter for viscosity (eg use 1e-6 for correlations returning value in µPa·s)
+	double T_star; //< normalisation temperature for inverse normalised temperature $\tau = \frac{T^{{}*{}}}{T}$
+	double rho_star; //< normalisation tempearture for normalised density $\delta = \frac{\rho}{\rho^{{}*{}}}$
 	double sigma;
 	double M;
 	double eps_over_k;
@@ -378,6 +381,7 @@ typedef struct ViscosityData1_struct{
 } ViscosityData1;
 
 typedef struct ViscosityData_struct{
+	const char *source;
 	ViscosityType type;
 	union{
 		ViscosityData1 v1;
