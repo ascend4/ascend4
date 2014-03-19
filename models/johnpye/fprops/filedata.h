@@ -388,6 +388,16 @@ typedef struct ViscosityData_struct{
 	} data;
 } ViscosityData;
 
+/*--------------------THERMAL CONDUCTIVITY-------------------------*/
+
+typedef struct ThermalConductivityData_struct{
+	const char *source;
+	ThermalConductivityType type;
+	union{
+		ThermalConductivityData1 v1;
+	} data;
+} ThermalConductivityData;
+
 /*------------------------DATA WRAPPER-----------------------------*/
 
 /** EOS correlation types */
