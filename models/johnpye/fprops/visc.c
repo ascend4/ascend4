@@ -50,6 +50,9 @@ double visc1_ci1(const ViscCI1Data *ci1, double Tstar){
 	return exp(res);
 }
 
+// TODO implement this for thcond calc...
+// double visc1_mu0(FluidState state, FpropsError *err){
+		
 double visc1_mu(FluidState state, FpropsError *err){
 	if(state.fluid->visc->type != FPROPS_VISC_1){
 		*err = FPROPS_INVALID_REQUEST;
