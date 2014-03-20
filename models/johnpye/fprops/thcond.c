@@ -29,7 +29,7 @@
 # define ERRMSG(ARGS...) ((void)0)
 #endif
 
-void thcond_prepare(PureFluid *P, ThermalConductivityData *K, FpropsError *err){
+void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError *err){
 	MSG("Preparing thermal conductivity: currently we are just reusing the FileData pointer; no changes");
 	P->thcond = K;
 	

@@ -17,7 +17,7 @@
 #include "rundata.h"
 #include "fprops.h"
 
-void thcond_prepare(PureFluid *P, ThermalConductivityData *K, FpropsError *err);
+void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError *err);
 
 double thcond1_k(FluidState state, FpropsError *err);
 
