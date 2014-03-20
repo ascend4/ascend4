@@ -177,6 +177,35 @@ const ViscosityData visc_carbondioxide = {
 	}}
 };
 
+const ThermalConductivityData thcond_carbondioxide = {
+	.source = "Vesovic et al, 1990"
+	,.type=FPROPS_THCOND_1
+	,.data={.k1={
+		.k_star = 1
+		,.T_star = 1
+		,.rho_star = 1
+		,.v1=&(visc_carbondioxide.data.v1)
+		,.eps_over_k = 251.196
+		,.nc = 6
+		,.ct=(const ThCondCSTerm[]){
+			{0, 0.4226159}
+			,{1, 0.6280115}
+			,{2, -0.5387661}
+			,{3, 0.6735941}
+			,{6, -0.4362677}
+			,{7, 0.2255388}
+		}
+		,.nr=4
+		,.rt=(const ThCondData1Term[]){
+			{2.447164e-2,  0, 1, 0}
+			,{8.705605e-5, 0, 2, 0}
+			,{-6.547950e-8,0, 3, 0}
+			,{6.594919e-11,0, 4, 0}
+		}
+		,.crit = NULL
+	}}
+};
+
 EosData eos_carbondioxide = {
 	"carbondioxide"
 	,"R Span & W Wagner ''A new equation of state for carbon dioxide covering the "

@@ -34,6 +34,7 @@
 //#include "redkw.h"
 #include "pengrob.h"
 #include "visc.h"
+#include "thcond.h"
 //#include "mbwr.h"
 
 #define FPR_DEBUG
@@ -196,6 +197,7 @@ double fprops_betap(FluidState state, FpropsError *err){
 }
 #endif
 
+/// TODO reimplement with function pointer?
 double fprops_mu(FluidState state, FpropsError *err){
 	if(NULL!=state.fluid->visc){
 		switch(state.fluid->visc->type){
@@ -208,6 +210,21 @@ double fprops_mu(FluidState state, FpropsError *err){
 	*err = FPROPS_NOT_IMPLEMENTED;
 	return NAN;
 }
+
+/// TODO reimplement with function pointer?
+double fprops_k(FluidState state, FpropsError *err){
+	if(NULL!=state.fluid->thcond){
+		switch(state.fluid->thcond->type){
+		case FPROPS_THCOND_1:
+			return thcond1_k(state,err);
+		default:
+			break;
+		}	
+	}
+	*err = FPROPS_NOT_IMPLEMENTED;
+	return NAN;
+}
+
 
 double fprops_cp0(FluidState state, FpropsError *err){
 	return ideal_cp(state.T,0,state.fluid->data,err);

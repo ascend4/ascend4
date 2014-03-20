@@ -84,10 +84,10 @@ double visc1_mu(FluidState state, FpropsError *err){
 	for(i=0; i<v1->nt; ++i){
 		double mu1i = v1->t[i].N * pow(tau, v1->t[i].t) * pow(del, v1->t[i].d);
 		if(0 == v1->t[i].l){
-			MSG("%d: N = %e, t = %d, d = %d, l = %d --> %e", i, v1->t[i].N, v1->t[i].t, v1->t[i].d, v1->t[i].l, mu1i);
+			MSG("%d: N = %e, t = %f, d = %d, l = %d --> %e", i, v1->t[i].N, v1->t[i].t, v1->t[i].d, v1->t[i].l, mu1i);
 			mur += mu1i;
 		}else{
-			MSG("%d: N = %e, t = %d, d = %d, l = %d ** --> %e", i, v1->t[i].N, v1->t[i].t, v1->t[i].d, v1->t[i].l, mu1i * exp(-pow(del, v1->t[i].l)));
+			MSG("%d: N = %e, t = %f, d = %d, l = %d ** --> %e", i, v1->t[i].N, v1->t[i].t, v1->t[i].d, v1->t[i].l, mu1i * exp(-pow(del, v1->t[i].l)));
 			mur += mu1i * exp(-pow(del, v1->t[i].l));
 		}
 	}
