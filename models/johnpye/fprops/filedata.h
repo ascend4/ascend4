@@ -368,6 +368,10 @@ typedef struct ViscData1Term_struct{
 	int d, l;
 } ViscData1Term;
 
+/**
+	This model doesn't yet include critical viscosity enhancement, which is
+	"often neglected in engineering applications" (Vesovic, 1990).
+*/
 typedef struct ViscosityData1_struct{
 	double mu_star; //< normalisation parameter for viscosity (eg use 1e-6 for correlations returning value in µPa·s)
 	double T_star; //< normalisation temperature for inverse normalised temperature $\tau = \frac{T^{{}*{}}}{T}$
@@ -390,13 +394,65 @@ typedef struct ViscosityData_struct{
 
 /*--------------------THERMAL CONDUCTIVITY-------------------------*/
 
+typedef enum ThCondType_enum{
+	FPROPS_THCOND_NONE = 0
+	,FPROPS_THCOND_1 = 1 /**< first thermal conductivity model, as per Vesovic et al 1990 (for CO2) and Lemmon and Jacobsen 2004 (for N2,O2,Ar,air). */
+} ThCondType;
+
+/**
+	Data to allow calculation of deviation of conductivity in the vicinity of
+	the critical point. Method suggested by Vesovic (1990) for CO2, citing publication
+	of Olchowy and Sengers. Wow, and this is the 'simplified' approach :-)
+*/
+typedef struct ThCondCritEnhOlchowyData_struct{
+	double qd_inv; //< $q_d^-1$ 'a modified effective cutoff parameter' [metres]
+	// data for calculating 'correlation length' (xi)
+	double xi0;
+	double Gamma;
+	double Tref; // reference temperature for $\Delta \chi$ expression.
+	double nu;
+	double gamma;
+} ThCondCritEnhOlchowyData;
+
+typedef struct ThCondData1Term_struct{
+	double N, t;
+	int d, l;
+} ThCondData1Term;
+
+typedef struct ThCondCSTerm_struct{
+	int i;
+	double b;
+} ThCondCSTerm;
+
+typedef struct ThermalConductivityData1_struct{
+	double k_star; //< normalisation parameter for viscosity (eg use 1e-6 for correlations returning value in µPa·s)
+	double T_star; //< normalisation temperature for inverse normalised temperature $\tau = \frac{T^{{}*{}}}{T}$
+	double rho_star; //< normalisation tempearture for normalised density $\delta = \frac{\rho}{\rho^{{}*{}}}$
+
+	// zero-density limit data
+	const ViscosityData1 *v1; //< we need an eta0 function to evaluate low-p gas conductivity!
+	double eps_over_k;
+	unsigned nc; // number of reduced collision cross-section terms
+	const ThCondCSTerm *ct; // collision cross-section terms
+
+	// residual conductivity data
+	unsigned nr;
+	const ThCondData1Term *rt;
+
+	// critical enhancement data (optional)
+	ThCondCritEnhOlchowyData *crit;
+} ThermalConductivityData1;
+
+
 typedef struct ThermalConductivityData_struct{
 	const char *source;
-	ThermalConductivityType type;
+	ThCondType type;
 	union{
-		ThermalConductivityData1 v1;
+		ThermalConductivityData1 k1;
 	} data;
 } ThermalConductivityData;
+
+
 
 /*------------------------DATA WRAPPER-----------------------------*/
 
