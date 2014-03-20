@@ -22,7 +22,7 @@ if os.environ.get('GCOV'):
 	CFLAGS += " -fprofile-arcs -ftest-coverage"
 
 
-srcs = "color.c refstate.c ideal.c cp0.c helmholtz.c pengrob.c sat.c fprops.c zeroin.c test.c cubicroots.c visc.c"
+srcs = "color.c refstate.c ideal.c cp0.c helmholtz.c pengrob.c sat.c fprops.c zeroin.c test.c cubicroots.c visc.c thcond.c"
 
 ldflags = '-lm'
 

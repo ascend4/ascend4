@@ -223,6 +223,7 @@ EosData eos_carbondioxide = {
 #include "../sat.h"
 #include "../refstate.h"
 #include "../visc.h"
+#include "../thcond.h"
 
 /*
 	Test suite. These tests attempt to validate the current code using
@@ -263,6 +264,7 @@ int main(void){
 	ASSERT_PROP(p, fprops_set_Trho(300.000, 268.58, d, &err), &err, 6.7131e6, 0.0001e6);
 	ASSERT_PROP(p, fprops_set_Trho(304.1282, 467.60, d, &err), &err, 7.3773e6, 0.0001e6);
 
+	//--------------------------------------------------------------------------
 	fprintf(stderr,"Testing viscosity values from A Fenghour and W A Wakeham, 1998...\n");
 	const ViscosityData *V = visc_prepare(&eos_carbondioxide, d, &err);
 	double mu;
@@ -285,6 +287,29 @@ int main(void){
 	VISC_TEST(560, 9.4559470136E-1, 26.44e-6,  0.05e-6);
 
 	fprintf(stderr,"done\n");
+
+	//--------------------------------------------------------------------------
+	fprintf(stderr,"Testing thermal conductivity values from Vesovic et al 1990...\n");
+	thcond_prepare(d, &thcond_carbondioxide, &err);
+	ASSERT(FPROPS_NO_ERROR==err);
+	ASSERT(V != NULL);
+
+	double k;
+#define THCOND_TEST(T__1,RHO__1,K__1,TOL__1) \
+	S = fprops_set_Trho(T__1, RHO__1, d, &err); \
+	k = fprops_k(S,&err); \
+	fprintf(stderr,"k(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,k,K__1); \
+	ASSERT(FPROPS_NO_ERROR==err); \
+	ASSERT(fabs(k - K__1)<TOL__1);
+
+	THCOND_TEST(220, 2.43941203164E+0, 10.902e-3, 0.0005e-3);
+	THCOND_TEST(220, 1.19495544507E+3, 187.32e-3, 0.005e-3);
+	THCOND_TEST(300, 7.33897247783E+2, 80.995e-3, 0.0005e-3);
+	THCOND_TEST(560, 9.4559470136E-1,  38.367e-3, 0.0005e-3);
+	THCOND_TEST(660, 9.57637753042E+2, 147.45e-3, 0.005e-3);
+
+
+	//--------------------------------------------------------------------------
 
 	err += helm_run_test_cases(d, ntd, td, 'K');
 

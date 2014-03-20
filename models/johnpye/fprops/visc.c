@@ -19,7 +19,7 @@
 #include "visc.h"
 #include <math.h>
 
-#define VISC_DEBUG
+//#define VISC_DEBUG
 #ifdef VISC_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
