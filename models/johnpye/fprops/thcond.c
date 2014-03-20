@@ -35,6 +35,17 @@ void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError 
 	
 }
 
+static double thcond1_cs(ThermalConductivityData1 *K, double Tstar){
+	double res = 0;
+	int i;
+	for(i=0; i < K->nc; ++i){
+		MSG("b[%d] = %e, i = %d",i,K->ct[i].b, K->ct[i].i);
+		res += K->ct[i].b * pow(Tstar, K->ct[i].i);
+	}
+	return exp(res);
+}
+
+
 double thcond1_k(FluidState state, FpropsError *err){
 	// if we are here, we should be able to assume that state, should be able to remove following test (convert to assert)
 	if(state.fluid->thcond->type != FPROPS_THCOND_1){
@@ -45,8 +56,8 @@ double thcond1_k(FluidState state, FpropsError *err){
 	const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
 
 	// value for the conductivity at the zero-density limit
-	double r;
-	double CS_star;
+	double r = 0;
+	double CS_star = thcond1_cs(k1, k1->T_star/state.T);
 	double lam0 = 0.475598 * sqrt(state.T) * (1 + SQ(r)) / CS_star;
 
 	// value for the residual thermal conductivity
@@ -72,8 +83,6 @@ double thcond1_k(FluidState state, FpropsError *err){
 
 	return k1->k_star * (lam0 + lamr + lamc);
 }
-
-
 
 
 
