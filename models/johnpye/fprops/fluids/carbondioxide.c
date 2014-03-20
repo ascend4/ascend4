@@ -289,7 +289,7 @@ int main(void){
 	fprintf(stderr,"done\n");
 
 	//--------------------------------------------------------------------------
-	fprintf(stderr,"Testing thermal conductivity values from Vesovic et al 1990...\n");
+	fprintf(stderr,"Testing thermal conductivity values from REFPROP 8.0\n");
 	thcond_prepare(d, &thcond_carbondioxide, &err);
 	ASSERT(FPROPS_NO_ERROR==err);
 	ASSERT(V != NULL);
@@ -307,7 +307,6 @@ int main(void){
 	THCOND_TEST(300, 7.33897247783E+2, 80.995e-3, 0.0005e-3);
 	THCOND_TEST(560, 9.4559470136E-1,  38.367e-3, 0.0005e-3);
 	THCOND_TEST(660, 9.57637753042E+2, 147.45e-3, 0.005e-3);
-
 
 	//--------------------------------------------------------------------------
 
