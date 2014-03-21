@@ -486,6 +486,7 @@ typedef struct EosData_struct{
 	const EosType type;
 	const EosUnion data;
 	const ViscosityData *visc;
+	const ThermalConductivityData *thcond;
 } EosData;
 
 #endif
