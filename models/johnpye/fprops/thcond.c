@@ -45,7 +45,6 @@ static double thcond1_cs(ThermalConductivityData1 *K, double Tstar){
 	return exp(res);
 }
 
-
 double thcond1_k(FluidState state, FpropsError *err){
 	// if we are here, we should be able to assume that state, should be able to remove following test (convert to assert)
 	if(state.fluid->thcond->type != FPROPS_THCOND_1){
@@ -83,8 +82,6 @@ double thcond1_k(FluidState state, FpropsError *err){
 
 	return k1->k_star * (lam0 + lamr + lamc);
 }
-
-
 
 
 
