@@ -72,7 +72,7 @@ static const IdealData ideal_data_carbondioxide = {
 static HelmholtzData helmholtz_data_carbondioxide = {
 	/* R */ CARBONDIOXIDE_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
 	, /* M */ CARBONDIOXIDE_M /* kg/kmol */
-	, /* rho_star */ CARBONDIOXIDE_RHOC /* kg/m³ (= rho_c for this model) */
+	, /* rho_star */ CARBONDIOXIDE_RHOC /* kg/m3 (= rho_c for this model) */
 	, /* T_star */ CARBONDIOXIDE_TC /* K (= T_c for this model) */
 
 	, /* T_c */ CARBONDIOXIDE_TC
@@ -216,6 +216,7 @@ EosData eos_carbondioxide = {
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_carbondioxide}
 	,.visc = &visc_carbondioxide
+	,.thcond = &visc_carbondioxide
 };
 
 #ifdef TEST
@@ -276,7 +277,7 @@ int main(void){
 #define VISC_TEST(T__1,RHO__1,MU__1,TOL__1) \
 	S = fprops_set_Trho(T__1, RHO__1, d, &err); \
 	mu = fprops_mu(S,&err); \
-	fprintf(stderr,"mu(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,mu,MU__1); \
+	/*fprintf(stderr,"mu(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,mu,MU__1);*/ \
 	ASSERT(FPROPS_NO_ERROR==err); \
 	ASSERT(fabs(mu - MU__1)<TOL__1);
 

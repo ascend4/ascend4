@@ -171,7 +171,7 @@ const ThermalConductivityData thcond_nitrogen = {
 		.k_star = 1e-3
 		,.T_star = 126.192
 		,.rho_star = 11.1839
-		,.v1=&(visc_carbondioxide.data.v1)
+		,.v1=&(visc_nitrogen.data.v1)
 		,.eps_over_k = 98.94
 		,.nc = 6
 		,.ct=(const ThCondCSTerm[]){
@@ -205,7 +205,7 @@ EosData eos_nitrogen = {
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_nitrogen}
 	,.visc = &visc_nitrogen
-	,.thcond = &thcond_nitrogen;
+	,.thcond = &thcond_nitrogen
 };
 
 
@@ -221,6 +221,7 @@ EosData eos_nitrogen = {
 
 #include "../ideal_impl.h"
 #include "../visc.h"
+#include "../thcond.h"
 #include "../test.h"
 #include <math.h>
 #include <stdio.h>
@@ -310,6 +311,28 @@ fprintf(stderr,"mu(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,mu,MU__1); \
 
 	fprintf(stderr,"done\n");
 
+	//--------------------------------------------------------------------------
+	fprintf(stderr,"Testing thermal conductivity values from REFPROP 8.0\n");
+	thcond_prepare(P, &thcond_nitrogen, &err);
+	ASSERT(FPROPS_NO_ERROR==err);
+	ASSERT(V != NULL);
+
+	double k;
+#define THCOND_TEST(T__1,RHO__1,K__1,TOL__1) \
+	S = fprops_set_Trho(T__1, RHO__1, P, &err); \
+	k = fprops_k(S,&err); \
+	fprintf(stderr,"k(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,k,K__1); \
+	ASSERT(FPROPS_NO_ERROR==err); \
+	ASSERT(fabs(k - K__1)<TOL__1);
+
+	THCOND_TEST(100,0,          9.2775e-3, 0.00005e-3);
+	THCOND_TEST(300,0,          25.936e-3, 0.0005e-3);
+	THCOND_TEST(100,25,         10.309e-3, 0.0005e-3);
+	THCOND_TEST(200,10,         18.545e-3, 0.0005e-3);
+	THCOND_TEST(300,5,          26.085e-3, 0.0005e-3);
+	THCOND_TEST(126.195,11.180, 12.132e-3, 0.0005e-3);
+
+	//--------------------------------------------------------------------------
 	fprintf(stderr,"CONSISTENCY TESTS (of test data): u, T, s, a... ");
 	for(i=0; i<n; ++i){
 		u = td[i].u*1e3;
