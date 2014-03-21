@@ -164,6 +164,38 @@ const ViscosityData visc_nitrogen = {
 	}}
 };
 
+const ThermalConductivityData thcond_nitrogen = {
+	.source = "Lemmon and Jacobsen, 2003. Int J Thermophys 25(1)."
+	,.type=FPROPS_THCOND_1
+	,.data={.k1={
+		.k_star = 1e-3
+		,.T_star = 126.192
+		,.rho_star = 11.1839
+		,.v1=&(visc_carbondioxide.data.v1)
+		,.eps_over_k = 98.94
+		,.nc = 6
+		,.ct=(const ThCondCSTerm[]){
+			{0, 0.4226159}
+			,{1, 0.6280115}
+			,{2, -0.5387661}
+			,{3, 0.6735941}
+			,{6, -0.4362677}
+			,{7, 0.2255388}
+		}
+		,.nr=6
+		,.rt=(const ThCondData1Term[]){
+			{8.862,        0.,   1, 0}
+			,{31.11,       0.03, 2, 0}
+			,{-73.13,      0.2,  3, 1}
+			,{20.03,       0.8,  4, 2}
+			,{-0.7096,     0.6,  8, 2}
+			,{0.2672,      1.9, 10, 2}
+		}
+		,.crit = NULL
+	}}
+};
+
+
 EosData eos_nitrogen = {
 	"nitrogen"
 	,"Span, Lemmon, Jacobsen & Wagner, A Reference Quality Equation of State "
@@ -173,6 +205,7 @@ EosData eos_nitrogen = {
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_nitrogen}
 	,.visc = &visc_nitrogen
+	,.thcond = &thcond_nitrogen;
 };
 
 
