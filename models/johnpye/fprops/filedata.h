@@ -376,7 +376,7 @@ typedef struct ViscosityData1_struct{
 	double mu_star; //< normalisation parameter for viscosity (eg use 1e-6 for correlations returning value in µPa·s)
 	double T_star; //< normalisation temperature for inverse normalised temperature $\tau = \frac{T^{{}*{}}}{T}$
 	double rho_star; //< normalisation tempearture for normalised density $\delta = \frac{\rho}{\rho^{{}*{}}}$
-	double sigma;
+	double sigma; //< length scaling parameter for zero-density viscosity [nm]. FIXME should convert to [m] for consistency.
 	double M;
 	double eps_over_k;
 	ViscCollisionIntegData ci;

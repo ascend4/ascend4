@@ -181,7 +181,7 @@ const ThermalConductivityData thcond_carbondioxide = {
 	.source = "Vesovic et al, 1990"
 	,.type=FPROPS_THCOND_1
 	,.data={.k1={
-		.k_star = 1
+		.k_star = 1e-3
 		,.T_star = 1
 		,.rho_star = 1
 		,.v1=&(visc_carbondioxide.data.v1)
@@ -243,6 +243,8 @@ EosData eos_carbondioxide = {
 const TestData td[]; const unsigned ntd;
 const TestDataSat tds[]; const unsigned nsd;
 
+typedef struct{double T, k;} TestThCondData;
+
 int main(void){
 	test_init();
 	FpropsError err = FPROPS_NO_ERROR;
@@ -250,6 +252,7 @@ int main(void){
 	PureFluid *d = helmholtz_prepare(&eos_carbondioxide,&R);
 	FluidState S;
 	double maxerr = 0;
+	int i;
 
 #if 0
 	double rhof,rhog;
@@ -290,10 +293,35 @@ int main(void){
 	fprintf(stderr,"done\n");
 
 	//--------------------------------------------------------------------------
-	fprintf(stderr,"Testing thermal conductivity values from REFPROP 8.0\n");
+
+	fprintf(stderr,"Preparing thermal conductivity data...\n");
+
 	thcond_prepare(d, &thcond_carbondioxide, &err);
 	ASSERT(FPROPS_NO_ERROR==err);
-	ASSERT(V != NULL);
+
+	fprintf(stderr,"Testing zero-density conductivity values from Vesovic paper...\n");
+
+	TestThCondData tdk[] = {
+		{191.7,   8.997e-3}
+		,{346.2,  20.422e-3}
+		,{621.4,  42.260e-3}
+		,{809.7,  55.809e-3}
+		,{1217.6, 79.778e-3}
+	};
+	const unsigned ntdk = sizeof(tdk)/sizeof(TestThCondData);
+	fprintf(stderr,"%d points...\n",ntdk);
+	for(i=0; i<ntdk; ++i){
+		//fprintf(stderr,"i=%d: T = %f, k = %f\n", i, tdk[i].T, tdk[i].k);
+		S = fprops_set_Trho(tdk[i].T, 1, d, &err);
+		ASSERT(err==FPROPS_NO_ERROR);
+		S.rho = 0;
+		double lam0 = thcond1_k0(S, &err);
+		ASSERT(err==FPROPS_NO_ERROR);
+		fprintf(stderr, "T = %f: k = %f (source data: %f)\n", tdk[i].T, lam0, tdk[i].k);
+	}
+	ASSERT(0==1);
+
+	fprintf(stderr,"Testing thermal conductivity values from REFPROP 8.0...\n");
 
 	double k;
 #define THCOND_TEST(T__1,RHO__1,K__1,TOL__1) \

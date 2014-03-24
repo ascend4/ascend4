@@ -46,34 +46,43 @@ static double thcond1_cs(const ThermalConductivityData1 *K, double Tstar){
 	return exp(res);
 }
 
-double thcond1_k(FluidState state, FpropsError *err){
-	// if we are here, we should be able to assume that state, should be able to remove following test (convert to assert)
-	if(state.fluid->thcond->type != FPROPS_THCOND_1){
-		*err = FPROPS_INVALID_REQUEST;
-		return NAN;
-	}
-
+double thcond1_k0(FluidState state, FpropsError *err){
+	if(state.fluid->thcond->type != FPROPS_THCOND_1){*err = FPROPS_INVALID_REQUEST; return NAN;}
 	const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
-
-	// value for the conductivity at the zero-density limit
 	double lam0 = 0;
+
+	// TODO FIXME need to re-factor this to be standardised and only use data from filedata.h structures.
 
 	if(0==strcmp(state.fluid->name,"carbondioxide")){
 		MSG("lam0 for carbondioxide");
-		/* TODO NAUGHTY! this is code specifically for CO2... */
 		int i;
 		double sum1 = 0;
 		double c[] = {2.387869e-2, 4.350794, -10.33404, 7.981590, -1.940558};
-		for(i=1; i<=5; ++i){
-			sum1 += c[i] * pow(state.T/100, 2-i);
+		for(i=0; i<5; ++i){
+			sum1 += c[i] * pow(state.T/100, 2-(i+1));
 		}
 		double cint_over_k = 1.0 + exp(-183.5/state.T)*sum1;
+
 		MSG("cint/k = %f",cint_over_k);
+		MSG("1 + r^2 = %f (by cint/k)",1+0.4*cint_over_k);
+
+		double cp0 = fprops_cp0(state,err);
+		double R = state.fluid->data->R;
+		MSG("cp0 = %f, R = %f", cp0, R);
+		double M = state.fluid->data->M;
+		double sigma = 0.3751; // nm!
+		double opr2_2 = 0.177568/0.475598 * cp0/R * 1 / SQ(sigma) / sqrt(M);
+		MSG("1 + r^2 = %f (by cp0)", opr2_2);
+		MSG("5/2 *(cp0(T)/R - 1) = %f\n", 5./2*(fprops_cp0(state,err)/state.fluid->data->R - 1));
+
 		double r = sqrt(0.4*cint_over_k);
 		MSG("r = %f",r);
 		double CS_star = thcond1_cs(k1, k1->T_star/state.T);
-		lam0 = 0.475598 * sqrt(state.T) * (1 + SQ(r)) / CS_star;
-		/* END of code specifically for CO2 */
+		//double sigma = 0.3751e-9;
+		lam0 = 0.475598 * sqrt(state.T) * (1 + 0.5*cint_over_k) / CS_star;
+
+		lam0 = 0.177568 * sqrt(state.T) / sqrt(state.fluid->data->M) / SQ(sigma) * cp0 / R;
+
 	}else if(0==strcmp(state.fluid->name,"nitrogen")){
 		MSG("lam0 for nitrogen");
 		double N1 = 1.511;
@@ -86,7 +95,22 @@ double thcond1_k(FluidState state, FpropsError *err){
 		*err = FPROPS_NOT_IMPLEMENTED;
 		return 0;
 	}
-	MSG("lam0 = %e",lam0);
+	return lam0 * k1->k_star;
+}
+
+
+double thcond1_k(FluidState state, FpropsError *err){
+	// if we are here, we should be able to assume that state, should be able to remove following test (convert to assert)
+	if(state.fluid->thcond->type != FPROPS_THCOND_1){
+		*err = FPROPS_INVALID_REQUEST;
+		return NAN;
+	}
+
+	const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
+
+	// value for the conductivity at the zero-density limit
+	double lam0 = thcond1_k0(state,err);
+	MSG("lam0(%f) = %e",state.T, lam0);
 
 	// value for the residual thermal conductivity
 	double lamr = 0;
@@ -111,7 +135,7 @@ double thcond1_k(FluidState state, FpropsError *err){
 	}
 	MSG("lamc = %e",lamc);
 
-	return k1->k_star * (lam0 + lamr + lamc);
+	return lam0 + k1->k_star * (lamr + lamc);
 }
 
 
