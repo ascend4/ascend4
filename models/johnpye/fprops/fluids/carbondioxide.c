@@ -184,10 +184,10 @@ const ThermalConductivityData thcond_carbondioxide = {
 		.k_star = 1e-3
 		,.T_star = 1
 		,.rho_star = 1
-		,.v1=&(visc_carbondioxide.data.v1)
+		//,.v1=&(visc_carbondioxide.data.v1)
 		,.eps_over_k = 251.196
 		,.nc = 6
-		,.ct=(const ThCondCSTerm[]){
+		,.ct=(const ThCondCSTerm[]){ // TERMS ARE.... constant / (T/(eps/k))^exponent == c tau^p WHERE tau = eps_on_k / T
 			{0, 0.4226159}
 			,{1, 0.6280115}
 			,{2, -0.5387661}
@@ -301,13 +301,19 @@ int main(void){
 
 	fprintf(stderr,"Testing zero-density conductivity values from Vesovic paper...\n");
 
-	TestThCondData tdk[] = {
+	/*TestThCondData tdk[] = {
 		{191.7,   8.997e-3}
 		,{346.2,  20.422e-3}
 		,{621.4,  42.260e-3}
 		,{809.7,  55.809e-3}
 		,{1217.6, 79.778e-3}
+	};*/
+	TestThCondData tdk[] = {
+		{450,  29.3489431694e-3}
+		,{800, 56.6311984024e-3}
+		,{1150,80.2145018812e-3}
 	};
+
 	const unsigned ntdk = sizeof(tdk)/sizeof(TestThCondData);
 	fprintf(stderr,"%d points...\n",ntdk);
 	for(i=0; i<ntdk; ++i){
@@ -317,9 +323,9 @@ int main(void){
 		S.rho = 0;
 		double lam0 = thcond1_k0(S, &err);
 		ASSERT(err==FPROPS_NO_ERROR);
-		fprintf(stderr, "T = %8.3f --> lam0 = %f (source data: %f, ratio calc/source = %f)\n", tdk[i].T, lam0, tdk[i].k, lam0/tdk[i].k);
+		//fprintf(stderr, "T = %8.3f --> lam0 = %f (source data: %f, ratio calc/source = %f)\n", tdk[i].T, lam0, tdk[i].k, lam0/tdk[i].k);
+		ASSERT_TOL_VAL(lam0,tdk[i].k,0.00001e-3);
 	}
-	ASSERT(0==1);
 
 	fprintf(stderr,"Testing thermal conductivity values from REFPROP 8.0...\n");
 

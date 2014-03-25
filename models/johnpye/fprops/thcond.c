@@ -39,11 +39,13 @@ void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError 
 static double thcond1_cs(const ThermalConductivityData1 *K, double Tstar){
 	double res = 0;
 	int i;
+	//MSG("Tstar = %f (1/Tstar = %f)",Tstar,1/Tstar);
 	for(i=0; i < K->nc; ++i){
-		//MSG("b[%d] = %e, i = %d",i,K->ct[i].b, K->ct[i].i);
+		//MSG("b[%d] = %e, i = %d, term = %f",i,K->ct[i].b, K->ct[i].i, K->ct[i].b * pow(Tstar, K->ct[i].i));
 		res += K->ct[i].b * pow(Tstar, K->ct[i].i);
 	}
-	return exp(res);
+	//MSG("res = %f",res);
+	return res;
 }
 
 double thcond1_k0(FluidState state, FpropsError *err){
@@ -64,21 +66,21 @@ double thcond1_k0(FluidState state, FpropsError *err){
 		double cint_over_k = 1.0 + exp(-183.5/state.T)*sum1;
 
 		//MSG("cint/k = %f",cint_over_k);
-		MSG("1 + r^2 = %f (by cint/k)",1+0.4*cint_over_k);
+		//MSG("1 + r^2 = %f (by cint/k)",1+0.4*cint_over_k);
 
-		double cp0 = fprops_cp0(state,err);
-		double R = state.fluid->data->R;
+		//double cp0 = fprops_cp0(state,err);
+		//double R = state.fluid->data->R;
 		//MSG("cp0 = %f, R = %f", cp0, R);
-		double M = state.fluid->data->M;
-		double sigma = 0.3751; // nm!
-		double opr2_2 = 0.177568/0.475598 * cp0/R * 1 / SQ(sigma) / sqrt(M);
-		MSG("1 + r^2 = %f (by cp0)", opr2_2);
+		//double M = state.fluid->data->M;
+		//double sigma = 0.3751; // nm!
+		//double opr2_2 = 0.177568/0.475598 * cp0/R * 1 / SQ(sigma) / sqrt(M);
+		//MSG("1 + r^2 = %f (by cp0)", opr2_2);
 		//MSG("5/2 *(cp0(T)/R - 1) = %f\n", 5./2*(fprops_cp0(state,err)/state.fluid->data->R - 1));
 
 		double r = sqrt(0.4*cint_over_k);
 		//MSG("r = %f",r);
-		double CS_star = thcond1_cs(k1, k1->T_star/state.T);
-		MSG("CS_star = %f", CS_star);
+		double CS_star = thcond1_cs(k1, k1->eps_over_k/state.T);
+		//MSG("CS_star = %f", CS_star);
 		//double sigma = 0.3751e-9;
 		lam0 = 0.475598 * sqrt(state.T) * (1 + 0.4*cint_over_k) / CS_star;
 
