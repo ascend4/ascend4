@@ -19,8 +19,11 @@
 
 void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError *err);
 
-double thcond1_k0(FluidState state, FpropsError *err);
+double thcond1_lam0(FluidState state, FpropsError *err);
 /**< zero-density component of thermal conductivity [W/m/K] */
+
+double thcond1_lamr(FluidState state, FpropsError *err);
+/**< residual component of thermal conductivity [W/m/K] */
 
 double thcond1_k(FluidState state, FpropsError *err);
 /**< thermal conductivity [W/m/K] */

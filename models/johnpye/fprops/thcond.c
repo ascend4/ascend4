@@ -48,7 +48,7 @@ static double thcond1_cs(const ThermalConductivityData1 *K, double Tstar){
 	return res;
 }
 
-double thcond1_k0(FluidState state, FpropsError *err){
+double thcond1_lam0(FluidState state, FpropsError *err){
 	if(state.fluid->thcond->type != FPROPS_THCOND_1){*err = FPROPS_INVALID_REQUEST; return NAN;}
 	const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
 	double lam0 = 0;
@@ -57,6 +57,17 @@ double thcond1_k0(FluidState state, FpropsError *err){
 
 	if(0==strcmp(state.fluid->name,"carbondioxide")){
 		//MSG("lam0 for carbondioxide");
+
+#ifdef USE_CP0_FOR_LAM0
+		double cp0 = fprops_cp0(state,err);
+		double R = state.fluid->data->R;
+		//MSG("cp0 = %f, R = %f", cp0, R);
+		double M = state.fluid->data->M;
+		double sigma = 0.3751; // nm!
+		double opr2 = 0.177568/0.475598 * cp0/R * 1 / SQ(sigma) / sqrt(M);
+		//MSG("1 + r^2 = %f (by cp0)", opr2_2);
+		//MSG("5/2 *(cp0(T)/R - 1) = %f\n", 5./2*(fprops_cp0(state,err)/state.fluid->data->R - 1));
+#else
 		int i;
 		double sum1 = 0;
 		double c[] = {2.387869e-2, 4.350794, -10.33404, 7.981590, -1.940558};
@@ -67,27 +78,22 @@ double thcond1_k0(FluidState state, FpropsError *err){
 
 		//MSG("cint/k = %f",cint_over_k);
 		//MSG("1 + r^2 = %f (by cint/k)",1+0.4*cint_over_k);
-
-		//double cp0 = fprops_cp0(state,err);
-		//double R = state.fluid->data->R;
-		//MSG("cp0 = %f, R = %f", cp0, R);
-		//double M = state.fluid->data->M;
-		//double sigma = 0.3751; // nm!
-		//double opr2_2 = 0.177568/0.475598 * cp0/R * 1 / SQ(sigma) / sqrt(M);
-		//MSG("1 + r^2 = %f (by cp0)", opr2_2);
-		//MSG("5/2 *(cp0(T)/R - 1) = %f\n", 5./2*(fprops_cp0(state,err)/state.fluid->data->R - 1));
-
-		double r = sqrt(0.4*cint_over_k);
+		double opr2 = 1+0.4*cint_over_k;
+		//double r = sqrt(0.4*cint_over_k);
 		//MSG("r = %f",r);
+#endif
+		// FIXME convert the other way, convert the cint/k stuff to simply cp0/R, should be more generalised that way.
+
 		double CS_star = thcond1_cs(k1, k1->eps_over_k/state.T);
 		//MSG("CS_star = %f", CS_star);
-		//double sigma = 0.3751e-9;
-		lam0 = 0.475598 * sqrt(state.T) * (1 + 0.4*cint_over_k) / CS_star;
+
+		lam0 = 0.475598 * sqrt(state.T) * opr2 / CS_star;
 
 		// 0.177568 (mW/m/K)*(nm^2)
 		//lam0 = 0.177568 * sqrt(state.T) / sqrt(state.fluid->data->M) / SQ(sigma) * cp0 / R / CS_star;
 
 	}else if(0==strcmp(state.fluid->name,"nitrogen")){
+		// this uses a rather different approach/formulation; see http://ascend4.org/FPROPS/Thermal_conductivity
 		MSG("lam0 for nitrogen");
 		double N1 = 1.511;
 		double N2 = 2.117, t2 = -1.;
@@ -102,19 +108,12 @@ double thcond1_k0(FluidState state, FpropsError *err){
 	return lam0 * k1->k_star;
 }
 
-
-double thcond1_k(FluidState state, FpropsError *err){
-	// if we are here, we should be able to assume that state, should be able to remove following test (convert to assert)
+double thcond1_lamr(FluidState state, FpropsError *err){
 	if(state.fluid->thcond->type != FPROPS_THCOND_1){
 		*err = FPROPS_INVALID_REQUEST;
 		return NAN;
 	}
-
 	const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
-
-	// value for the conductivity at the zero-density limit
-	double lam0 = thcond1_k0(state,err);
-	MSG("lam0(%f) = %e",state.T, lam0);
 
 	// value for the residual thermal conductivity
 	double lamr = 0;
@@ -129,7 +128,26 @@ double thcond1_k(FluidState state, FpropsError *err){
 			lamr += lamri * exp(-pow(del, k1->rt[i].l));
 		}
 	}
-	MSG("lamr = %e",lamr);
+	//MSG("lamr(rho=%f) = %e",state.rho, lamr);		
+	return lamr * k1->k_star;
+}
+
+
+double thcond1_k(FluidState state, FpropsError *err){
+	// if we are here, we should be able to assume that state, should be able to remove following test (convert to assert)
+	if(state.fluid->thcond->type != FPROPS_THCOND_1){
+		*err = FPROPS_INVALID_REQUEST;
+		return NAN;
+	}
+
+	const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
+
+	// value for the conductivity at the zero-density limit
+	double lam0 = thcond1_lam0(state,err);
+	MSG("lam0(T=%f) = %e",state.T, lam0);
+
+	double lamr = thcond1_lamr(state,err);
+	MSG("lamr(rho=%f) = %e",state.rho, lamr);
 
 	double lamc = 0;
 	if(!(k1->crit)){
@@ -139,7 +157,7 @@ double thcond1_k(FluidState state, FpropsError *err){
 	}
 	MSG("lamc = %e",lamc);
 
-	return lam0 + k1->k_star * (lamr + lamc);
+	return lam0 + lamr + k1->k_star * (lamc);
 }
 
 
