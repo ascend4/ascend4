@@ -317,7 +317,7 @@ int main(void){
 		S.rho = 0;
 		double lam0 = thcond1_k0(S, &err);
 		ASSERT(err==FPROPS_NO_ERROR);
-		fprintf(stderr, "T = %f: k = %f (source data: %f)\n", tdk[i].T, lam0, tdk[i].k);
+		fprintf(stderr, "T = %8.3f --> lam0 = %f (source data: %f, ratio calc/source = %f)\n", tdk[i].T, lam0, tdk[i].k, lam0/tdk[i].k);
 	}
 	ASSERT(0==1);
 

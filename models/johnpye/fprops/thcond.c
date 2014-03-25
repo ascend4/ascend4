@@ -40,7 +40,7 @@ static double thcond1_cs(const ThermalConductivityData1 *K, double Tstar){
 	double res = 0;
 	int i;
 	for(i=0; i < K->nc; ++i){
-		MSG("b[%d] = %e, i = %d",i,K->ct[i].b, K->ct[i].i);
+		//MSG("b[%d] = %e, i = %d",i,K->ct[i].b, K->ct[i].i);
 		res += K->ct[i].b * pow(Tstar, K->ct[i].i);
 	}
 	return exp(res);
@@ -54,7 +54,7 @@ double thcond1_k0(FluidState state, FpropsError *err){
 	// TODO FIXME need to re-factor this to be standardised and only use data from filedata.h structures.
 
 	if(0==strcmp(state.fluid->name,"carbondioxide")){
-		MSG("lam0 for carbondioxide");
+		//MSG("lam0 for carbondioxide");
 		int i;
 		double sum1 = 0;
 		double c[] = {2.387869e-2, 4.350794, -10.33404, 7.981590, -1.940558};
@@ -63,25 +63,27 @@ double thcond1_k0(FluidState state, FpropsError *err){
 		}
 		double cint_over_k = 1.0 + exp(-183.5/state.T)*sum1;
 
-		MSG("cint/k = %f",cint_over_k);
+		//MSG("cint/k = %f",cint_over_k);
 		MSG("1 + r^2 = %f (by cint/k)",1+0.4*cint_over_k);
 
 		double cp0 = fprops_cp0(state,err);
 		double R = state.fluid->data->R;
-		MSG("cp0 = %f, R = %f", cp0, R);
+		//MSG("cp0 = %f, R = %f", cp0, R);
 		double M = state.fluid->data->M;
 		double sigma = 0.3751; // nm!
 		double opr2_2 = 0.177568/0.475598 * cp0/R * 1 / SQ(sigma) / sqrt(M);
 		MSG("1 + r^2 = %f (by cp0)", opr2_2);
-		MSG("5/2 *(cp0(T)/R - 1) = %f\n", 5./2*(fprops_cp0(state,err)/state.fluid->data->R - 1));
+		//MSG("5/2 *(cp0(T)/R - 1) = %f\n", 5./2*(fprops_cp0(state,err)/state.fluid->data->R - 1));
 
 		double r = sqrt(0.4*cint_over_k);
-		MSG("r = %f",r);
+		//MSG("r = %f",r);
 		double CS_star = thcond1_cs(k1, k1->T_star/state.T);
+		MSG("CS_star = %f", CS_star);
 		//double sigma = 0.3751e-9;
-		lam0 = 0.475598 * sqrt(state.T) * (1 + 0.5*cint_over_k) / CS_star;
+		lam0 = 0.475598 * sqrt(state.T) * (1 + 0.4*cint_over_k) / CS_star;
 
-		lam0 = 0.177568 * sqrt(state.T) / sqrt(state.fluid->data->M) / SQ(sigma) * cp0 / R;
+		// 0.177568 (mW/m/K)*(nm^2)
+		//lam0 = 0.177568 * sqrt(state.T) / sqrt(state.fluid->data->M) / SQ(sigma) * cp0 / R / CS_star;
 
 	}else if(0==strcmp(state.fluid->name,"nitrogen")){
 		MSG("lam0 for nitrogen");
