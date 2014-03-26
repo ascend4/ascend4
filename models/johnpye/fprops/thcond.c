@@ -105,6 +105,7 @@ double thcond1_lam0(FluidState state, FpropsError *err){
 		*err = FPROPS_NOT_IMPLEMENTED;
 		return 0;
 	}
+	MSG("lam0(T=%f) = %e",state.T, lam0);
 	return lam0 * k1->k_star;
 }
 
@@ -128,7 +129,7 @@ double thcond1_lamr(FluidState state, FpropsError *err){
 			lamr += lamri * exp(-pow(del, k1->rt[i].l));
 		}
 	}
-	//MSG("lamr(rho=%f) = %e",state.rho, lamr);		
+	MSG("lamr(rho=%f) = %e",state.rho, lamr);		
 	return lamr * k1->k_star;
 }
 
@@ -144,10 +145,8 @@ double thcond1_k(FluidState state, FpropsError *err){
 
 	// value for the conductivity at the zero-density limit
 	double lam0 = thcond1_lam0(state,err);
-	MSG("lam0(T=%f) = %e",state.T, lam0);
 
 	double lamr = thcond1_lamr(state,err);
-	MSG("lamr(rho=%f) = %e",state.rho, lamr);
 
 	double lamc = 0;
 	if(!(k1->crit)){
