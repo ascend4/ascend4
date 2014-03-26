@@ -245,6 +245,7 @@ const TestDataSat tds[]; const unsigned nsd;
 
 typedef struct{double T, k;} TestThCond0Data;
 typedef struct{double rho, k;} TestThCondrData;
+typedef struct{double T, rho, k;} TestThCondData;
 
 int main(void){
 	test_init();
@@ -300,8 +301,8 @@ int main(void){
 	thcond_prepare(d, &thcond_carbondioxide, &err);
 	ASSERT(FPROPS_NO_ERROR==err);
 
-	fprintf(stderr,"Testing zero-density conductivity values from Vesovic paper...\n");
 
+	fprintf(stderr,"Testing zero-density conductivity values from Vesovic paper...\n");
 	/*TestThCondData tdk[] = {
 		{191.7,   8.997e-3}
 		,{346.2,  20.422e-3}
@@ -314,7 +315,6 @@ int main(void){
 		,{800, 56.6311984024e-3}
 		,{1150,80.2145018812e-3}
 	};
-
 	const unsigned ntdk0 = sizeof(tdk0)/sizeof(TestThCond0Data);
 	fprintf(stderr,"%d points...\n",ntdk0);
 	for(i=0; i<ntdk0; ++i){
@@ -328,8 +328,8 @@ int main(void){
 		ASSERT_TOL_VAL(lam0,tdk0[i].k,0.00001e-3);
 	}
 
-	fprintf(stderr,"Testing residual conductivity values from Vesovic paper...\n");
 
+	fprintf(stderr,"Testing residual conductivity values from Vesovic paper...\n");
 	TestThCondrData tdkr[] = {
 		/*{0, 0},*/
 		{200,  7.958252704e-3}
@@ -337,18 +337,41 @@ int main(void){
 		,{600, 40.426605024e-3}
 		,{800, 68.780468224e-3}
 	};
-
 	const unsigned ntdkr = sizeof(tdkr)/sizeof(TestThCond0Data);
 	fprintf(stderr,"%d points...\n",ntdkr);
 	for(i=0; i<ntdkr; ++i){
 		fprintf(stderr,"i=%d: rho = %f, k = %f\n", i, tdkr[i].rho, tdkr[i].k);
 		S = fprops_set_Trho(273.15, tdkr[i].rho, d, &err);
 		ASSERT(err==FPROPS_NO_ERROR);
-		double lamr = thcond1_lam0(S, &err);
+		double lamr = thcond1_lamr(S, &err);
 		ASSERT(err==FPROPS_NO_ERROR);
 		//fprintf(stderr, "T = %8.3f --> lam0 = %f (source data: %f, ratio calc/source = %f)\n", tdk0[i].T, lam0, tdk0[i].k, lam0/tdk0[i].k);
 		ASSERT_TOL_VAL(lamr,tdkr[i].k,0.00001e-3);
 	}
+
+
+	fprintf(stderr,"Testing lam0+lamr against conductivity values calculated using thcond.ods spreadsheet...\n");
+	TestThCondData tdk0r[] = {
+		{220, 2.4394120316, 10.8976062394e-3}
+		,{220, 1.19495544507E+3, 187.1284380256e-3}
+		,{300, 7.33897247783E+2, 74.8267322207e-3}
+		,{660, 9.57637753042E+2, 147.4645224115e-3}
+		,{560, 9.4559470136E-1, 38.4156295443e-3}
+	};
+	const unsigned ntdk0r = sizeof(tdk0r)/sizeof(TestThCondData);
+	fprintf(stderr,"%d points...\n",ntdk0r);
+	for(i=0; i<ntdk0r; ++i){
+		fprintf(stderr,"i=%d: T = %f, rho = %f, k = %f\n", i, tdk0r[i].T, tdk0r[i].rho, tdk0r[i].k);
+		S = fprops_set_Trho(tdk0r[i].T, tdk0r[i].rho, d, &err);
+		ASSERT(err==FPROPS_NO_ERROR);
+		double lam = thcond1_lam0(S, &err);
+		ASSERT(err==FPROPS_NO_ERROR);
+		lam += thcond1_lamr(S,&err);
+		ASSERT(err==FPROPS_NO_ERROR);
+		//fprintf(stderr, "T = %8.3f --> lam0 = %f (source data: %f, ratio calc/source = %f)\n", tdk0r[i].T, lam0, tdk0r[i].k, lam0/tdk0r[i].k);
+		ASSERT_TOL_VAL(lam,tdk0r[i].k,0.00001e-3);
+	}
+	
 
 	fprintf(stderr,"Testing thermal conductivity values from REFPROP 8.0...\n");
 
