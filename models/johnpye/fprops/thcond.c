@@ -20,7 +20,7 @@
 #include "visc.h"
 #include <math.h>
 
-#define THCOND_DEBUG
+//#define THCOND_DEBUG
 #ifdef THCOND_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
