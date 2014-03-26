@@ -317,13 +317,14 @@ fprintf(stderr,"mu(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,mu,MU__1); \
 	ASSERT(FPROPS_NO_ERROR==err);
 	ASSERT(V != NULL);
 
+	int kerr = 0;
 	double k;
 #define THCOND_TEST(T__1,RHO__1,K__1,TOL__1) \
 	S = fprops_set_Trho(T__1, RHO__1, P, &err); \
 	k = fprops_k(S,&err); \
 	fprintf(stderr,"k(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,k,K__1); \
 	ASSERT(FPROPS_NO_ERROR==err); \
-	ASSERT(fabs(k - K__1)<TOL__1);
+	if(fabs(k - K__1)<TOL__1)kerr++;
 
 	THCOND_TEST(100,0,          9.2775e-3, 0.00005e-3);
 	THCOND_TEST(300,0,          25.936e-3, 0.0005e-3);
@@ -331,6 +332,8 @@ fprintf(stderr,"mu(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,mu,MU__1); \
 	THCOND_TEST(200,10,         18.545e-3, 0.0005e-3);
 	THCOND_TEST(300,5,          26.085e-3, 0.0005e-3);
 	THCOND_TEST(126.195,11.180, 12.132e-3, 0.0005e-3);
+
+	ASSERT(kerr==0);
 
 	//--------------------------------------------------------------------------
 	fprintf(stderr,"CONSISTENCY TESTS (of test data): u, T, s, a... ");
