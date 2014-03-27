@@ -123,7 +123,7 @@ typedef struct FluidData_struct{
 
 
 /* Definition of a fluid property function pointer */
-typedef double PropEvalFn(double,double,const FluidData *data, FpropsError *err);
+typedef double PropEvalFn(double T,double rho,const FluidData *data, FpropsError *err);
 
 /** @return psat */
 typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *data, FpropsError *err);

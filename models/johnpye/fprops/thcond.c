@@ -162,12 +162,13 @@ double thcond1_chitilde(FluidState state, FpropsError *err){
 	double p_c = state.fluid->data->p_c;
 	double rho_c = state.fluid->data->rho_c;
 	double T_c = state.fluid->data->T_c;
+	MSG("p_c = %e, rho_c = %f",p_c, rho_c);
 	/* FIXME we use dpdrho_T directly; assume that we have checked if we're in two-phase region or not */
 	double dpdrho_T = (*(state.fluid->dpdrho_T_fn))(state.T, state.rho, state.fluid->data, err);
-	//MSG("drhodp_T = %e",1/dpdrho_T);
+	MSG("dpdrho_T = %f",dpdrho_T);
 
 	double chitilde = p_c * state.rho / SQ(rho_c) / dpdrho_T;
-	//MSG("chitilde = %f",chitilde);
+	MSG("chitilde(T=%f,rho=%f) = %f",state.T,state.rho,chitilde);
 	return chitilde;
 }
 
@@ -195,8 +196,11 @@ double thcond1_lamc(FluidState state, FpropsError *err){
 
 	/* use the cp/cv functions directly, to avoid bothering with saturation boundary checks (ie assume we're outside saturation region?) */
 	double cp = (*(state.fluid->cp_fn))(state.T, state.rho, state.fluid->data, err);
-	double cv = (*(state.fluid->cp_fn))(state.T, state.rho, state.fluid->data, err);
+	double cv = (*(state.fluid->cv_fn))(state.T, state.rho, state.fluid->data, err);
 	
+	MSG("cp = %f",cp);
+	MSG("cv = %f",cv);
+
 #if 0
 	double T_orig = state.T;
 	if(T_orig >= 445.){
@@ -204,10 +208,10 @@ double thcond1_lamc(FluidState state, FpropsError *err){
 	}
 #endif
 	FluidState state_r = state;
-	state_r.T = 445.;
+	state_r.T = T_ref;
 	MSG("state_r: T=%f, rho=%f",state_r.T, state_r.rho);
-	MSG("chitilde(state) = %e", thcond1_chitilde(state,err));
-	MSG("chitilde(state_r) = %e", thcond1_chitilde(state_r,err));
+	//MSG("chitilde(state) = %e", thcond1_chitilde(state,err));
+	//MSG("chitilde(state_r) = %e", thcond1_chitilde(state_r,err));
 	//MSG("chitilde(state_r)*T_ref/T = %e", thcond1_chitilde(state_r,err)*T_ref/state.T);
 	
 	double brackterm = (thcond1_chitilde(state,err) - thcond1_chitilde(state_r,err) * T_ref / state.T) / Gamma;
@@ -218,6 +222,7 @@ double thcond1_lamc(FluidState state, FpropsError *err){
 		MSG("brackterm<=0 -> lamc = 0");
 	}else{
 		double xi = xi0 * pow(brackterm, nu/gamma); /* m */
+		MSG("xi = %e",xi)
 		ASSERT(!isnan(xi));
 #if 0
 		if(T_orig >= 445.){
@@ -226,16 +231,19 @@ double thcond1_lamc(FluidState state, FpropsError *err){
 		MSG("xi = %f",xi);
 #endif
 
-		double xioq; /* = xi / qt_D */
+		double xioq = xi / qt_D;
+		MSG("xioq = %f",xioq);
 
 		//double xi = thcond1_xi(state, err);
 		double rho_c = state.fluid->data->rho_c;
-		double Omegatilde = 2/PI * ( (cp-cv)/cp * atan(xioq) + cv/cp*xioq);
+		double Omegatilde = 2/PI *( ((cp-cv)/cp) * atan(xioq) + (cv/cp)*xioq);
 		double Omegatilde_0 = 2/PI * (1 - exp(-1/(1./xioq + 1./3*SQ(xioq)*SQ(rho_c/state.rho))));
+		MSG("Omegatilde = %e",Omegatilde);
+		MSG("Omegatilde_0 = %e",Omegatilde_0);
 
 		double mu = visc1_mu(state, err); /* TODO ensure visc1_mu excludes crit enhancement! */
 
-		lamc = k1->k_star * state.rho * cp * R_0 * K_BOLTZMANN *state.T/(6.*PI*xi*mu)* (Omegatilde - Omegatilde_0);
+		lamc = state.rho * cp * R_0 * K_BOLTZMANN *state.T/(6.*PI*xi*mu)* (Omegatilde - Omegatilde_0);
 	}
 	return lamc;
 }
@@ -256,15 +264,11 @@ double thcond1_k(FluidState state, FpropsError *err){
 
 	double lamr = thcond1_lamr(state,err);
 
-	double lamc = 0;
-	if(!(k1->crit)){
-		MSG("No critical enhancement function provided");
-	}else{
-		MSG("Critical enhancement function not yet implemented");
-	}
+	// FIXME need to check if k1->crit is used, etc etc
+	double lamc = thcond1_lamc(state,err);
 	MSG("lamc = %e",lamc);
 
-	return lam0 + lamr + k1->k_star * (lamc);
+	return lam0 + lamr + lamc;
 }
 
 
