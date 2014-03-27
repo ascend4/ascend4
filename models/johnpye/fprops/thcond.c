@@ -20,6 +20,12 @@
 #include "visc.h"
 #include <math.h>
 
+#ifndef PI
+# define PI M_PI
+#endif
+
+#define K_BOLTZMANN 1.3806488e-23
+
 //#define THCOND_DEBUG
 #ifdef THCOND_DEBUG
 # include "color.h"
@@ -58,6 +64,7 @@ double thcond1_lam0(FluidState state, FpropsError *err){
 	if(0==strcmp(state.fluid->name,"carbondioxide")){
 		//MSG("lam0 for carbondioxide");
 
+//#define USE_CP0_FOR_LAM0
 #ifdef USE_CP0_FOR_LAM0
 		double cp0 = fprops_cp0(state,err);
 		double R = state.fluid->data->R;
@@ -109,6 +116,7 @@ double thcond1_lam0(FluidState state, FpropsError *err){
 	return lam0 * k1->k_star;
 }
 
+
 double thcond1_lamr(FluidState state, FpropsError *err){
 	if(state.fluid->thcond->type != FPROPS_THCOND_1){
 		*err = FPROPS_INVALID_REQUEST;
@@ -133,6 +141,78 @@ double thcond1_lamr(FluidState state, FpropsError *err){
 	return lamr * k1->k_star;
 }
 
+/**
+	Reduced symmetrised compressibility, as described/defined in Vesovic et al.,
+	1990, J Phys Chem Ref Data 19(3). This function is used in the calculation
+	of the critical enhancement of thermal conductivity, in particular for 
+	Carbon Dioxide.
+*/
+double thcond1_chitilde(FluidState state, FpropsError *err){
+	if(state.fluid->thcond->type != FPROPS_THCOND_1){
+		*err = FPROPS_INVALID_REQUEST;
+		return NAN;
+	}
+	double p_c = state.fluid->data->p_c;
+	double rho_c = state.fluid->data->rho_c;
+	double T_c = state.fluid->data->T_c;
+	/* FIXME we use dpdrho_T directly; assume that we have checked if we're in two-phase region or not */
+	double dpdrho_T = (*(state.fluid->dpdrho_T_fn))(state.T, state.rho, state.fluid->data, err);
+
+	double chitilde = p_c / SQ(rho_c) / T_c * state.rho * state.T * (1. / dpdrho_T);
+	return chitilde;
+}
+
+double thcond1_xi(FluidState state, FpropsError *err){
+	if(state.fluid->thcond->type != FPROPS_THCOND_1){
+		*err = FPROPS_INVALID_REQUEST;
+		return NAN;
+	}
+	double xi0 = 1.5e-10 /* m */;
+	double Gamma = 0.052;
+	double nu = 0.630;
+	double gamma = 1.2415;
+	double T_r = 450; /* K */
+
+	double T_orig = state.T;
+	
+	if(T_orig >= 445.){
+		state.T = 445.;
+	}
+	FluidState state_r = state;
+	state_r.T = 445.;
+	double Delta_chitilde = thcond1_chitilde(state,err) - thcond1_chitilde(state_r,err) * T_r / state.T;
+	double xi = xi0 * pow(Delta_chitilde / Gamma, nu/gamma); /* m */
+	if(T_orig >= 445.){
+		xi *= exp(-(T_orig - 445)/10.);
+	}
+	return xi;
+}
+
+double thcond1_lamc(FluidState state, FpropsError *err){
+	if(state.fluid->thcond->type != FPROPS_THCOND_1){
+		*err = FPROPS_INVALID_REQUEST;
+		return NAN;
+	}
+	const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
+
+	/* use the cp/cv functions directly, to avoid bothering with saturation boundary checks (ie assume we're outside saturation region?) */
+	double cp = (*(state.fluid->cp_fn))(state.T, state.rho, state.fluid->data, err);
+	double cv = (*(state.fluid->cp_fn))(state.T, state.rho, state.fluid->data, err);
+	double xi = thcond1_xi(state, err);
+	double rho_c = state.fluid->data->rho_c;
+
+	/* this value should be stored in k1 */
+	double qtilde_D = 1./(4.0e-10); // [m^-1]
+
+	double Omegatilde = 2/PI * ((cp-cv)/cp * atan(qtilde_D * xi) + cv/cp*qtilde_D*xi);
+	double Omegatilde_0 = 2/PI * (1 - exp(-1/(1./(qtilde_D*xi) + 1./3*SQ(qtilde_D*xi*rho_c/state.rho))));
+
+	double R = 1.01; /* 'universal' amplitude parameter, see eq 35 of Vesovic et al, 1990 */
+	double mubar = visc1_mu(state, err); /* TODO make sure visc1_mu excludes critical enhancement */
+
+	double lamc = state.rho * cp * R * K_BOLTZMANN *state.T/(6*PI*mubar*xi)* (Omegatilde - Omegatilde_0);
+	return lamc;
+}
 
 double thcond1_k(FluidState state, FpropsError *err){
 	// if we are here, we should be able to assume that state, should be able to remove following test (convert to assert)

@@ -100,6 +100,7 @@ double visc1_mu(FluidState state, FpropsError *err){
 		}
 	}
 	/* TODO something about critical point terms? */
+	/* FIXME if adding critical enhancement, note that the function thcond_lamc would need to be modified to allow the enhancement to be excluded from calculation */
 	MSG("mur/mu* = %e",mur);
 	MSG("mustar = %e",v1->mu_star);
 	return mu0 + (v1->mu_star * mur);
