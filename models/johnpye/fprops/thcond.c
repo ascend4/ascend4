@@ -26,12 +26,14 @@
 
 #define K_BOLTZMANN 1.3806488e-23
 
-//#define THCOND_DEBUG
+#define THCOND_DEBUG
 #ifdef THCOND_DEBUG
 # include "color.h"
+# include "test.h"
 # define MSG FPROPS_MSG
 # define ERRMSG FPROPS_ERRMSG
 #else
+# define ASSERT(ARGS...) (void)0)
 # define MSG(ARGS...) ((void)0)
 # define ERRMSG(ARGS...) ((void)0)
 #endif
@@ -41,6 +43,8 @@ void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError 
 	P->thcond = K;
 	
 }
+
+/*-----------------------------IDEAL PART ------------------------------------*/
 
 static double thcond1_cs(const ThermalConductivityData1 *K, double Tstar){
 	double res = 0;
@@ -117,6 +121,8 @@ double thcond1_lam0(FluidState state, FpropsError *err){
 }
 
 
+/*---------------------------RESIDUAL PART -----------------------------------*/
+
 double thcond1_lamr(FluidState state, FpropsError *err){
 	if(state.fluid->thcond->type != FPROPS_THCOND_1){
 		*err = FPROPS_INVALID_REQUEST;
@@ -141,6 +147,7 @@ double thcond1_lamr(FluidState state, FpropsError *err){
 	return lamr * k1->k_star;
 }
 
+/*---------------------------CRITICAL ENHANCEMENT-----------------------------*/
 /**
 	Reduced symmetrised compressibility, as described/defined in Vesovic et al.,
 	1990, J Phys Chem Ref Data 19(3). This function is used in the calculation
@@ -157,8 +164,10 @@ double thcond1_chitilde(FluidState state, FpropsError *err){
 	double T_c = state.fluid->data->T_c;
 	/* FIXME we use dpdrho_T directly; assume that we have checked if we're in two-phase region or not */
 	double dpdrho_T = (*(state.fluid->dpdrho_T_fn))(state.T, state.rho, state.fluid->data, err);
+	//MSG("drhodp_T = %e",1/dpdrho_T);
 
-	double chitilde = p_c / SQ(rho_c) / T_c * state.rho * state.T * (1. / dpdrho_T);
+	double chitilde = (p_c / SQ(rho_c) / T_c) * state.rho * state.T * (1. / dpdrho_T);
+	//MSG("chitilde = %f",chitilde);
 	return chitilde;
 }
 
@@ -167,25 +176,39 @@ double thcond1_xi(FluidState state, FpropsError *err){
 		*err = FPROPS_INVALID_REQUEST;
 		return NAN;
 	}
+	// parameters specific to CO2...
 	double xi0 = 1.5e-10 /* m */;
 	double Gamma = 0.052;
-	double nu = 0.630;
-	double gamma = 1.2415;
 	double T_r = 450; /* K */
 
-	double T_orig = state.T;
+	// 'universal' parameter'...
+	double nu = 0.630;
+	double gamma = 1.2415;
+
+	MSG("state: T=%f, rho=%f",state.T, state.rho);
 	
+	double T_orig = state.T;
 	if(T_orig >= 445.){
 		state.T = 445.;
 	}
 	FluidState state_r = state;
 	state_r.T = 445.;
+	MSG("state_r: T=%f, rho=%f",state_r.T, state_r.rho);
+	MSG("chitilde(state) = %e", thcond1_chitilde(state,err));
+	MSG("chitilde(state_r) = %e", thcond1_chitilde(state_r,err));
+	MSG("chitilde(state_r)*T_r/T = %e", thcond1_chitilde(state_r,err)*T_r/state.T);
+
 	double Delta_chitilde = thcond1_chitilde(state,err) - thcond1_chitilde(state_r,err) * T_r / state.T;
+	MSG("xi0 = %e, Delta_chitilde = %f", xi0, Delta_chitilde);
+	MSG("Delta_chitilde/Gamma = %e", Delta_chitilde / Gamma);
 	double xi = xi0 * pow(Delta_chitilde / Gamma, nu/gamma); /* m */
+	ASSERT(!isnan(xi));
 	if(T_orig >= 445.){
 		xi *= exp(-(T_orig - 445)/10.);
 	}
+	MSG("xi = %f",xi);
 	return xi;
+	
 }
 
 double thcond1_lamc(FluidState state, FpropsError *err){
@@ -193,7 +216,7 @@ double thcond1_lamc(FluidState state, FpropsError *err){
 		*err = FPROPS_INVALID_REQUEST;
 		return NAN;
 	}
-	const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
+	//const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
 
 	/* use the cp/cv functions directly, to avoid bothering with saturation boundary checks (ie assume we're outside saturation region?) */
 	double cp = (*(state.fluid->cp_fn))(state.T, state.rho, state.fluid->data, err);
@@ -213,6 +236,8 @@ double thcond1_lamc(FluidState state, FpropsError *err){
 	double lamc = state.rho * cp * R * K_BOLTZMANN *state.T/(6*PI*mubar*xi)* (Omegatilde - Omegatilde_0);
 	return lamc;
 }
+
+/*----------------------------------OVERALL RESULT----------------------------*/
 
 double thcond1_k(FluidState state, FpropsError *err){
 	// if we are here, we should be able to assume that state, should be able to remove following test (convert to assert)
