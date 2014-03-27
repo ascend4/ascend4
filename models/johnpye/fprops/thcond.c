@@ -166,74 +166,77 @@ double thcond1_chitilde(FluidState state, FpropsError *err){
 	double dpdrho_T = (*(state.fluid->dpdrho_T_fn))(state.T, state.rho, state.fluid->data, err);
 	//MSG("drhodp_T = %e",1/dpdrho_T);
 
-	double chitilde = (p_c / SQ(rho_c) / T_c) * state.rho * state.T * (1. / dpdrho_T);
+	double chitilde = p_c * state.rho / SQ(rho_c) / dpdrho_T;
 	//MSG("chitilde = %f",chitilde);
 	return chitilde;
 }
 
-double thcond1_xi(FluidState state, FpropsError *err){
-	if(state.fluid->thcond->type != FPROPS_THCOND_1){
-		*err = FPROPS_INVALID_REQUEST;
-		return NAN;
-	}
-	// parameters specific to CO2...
-	double xi0 = 1.5e-10 /* m */;
-	double Gamma = 0.052;
-	double T_r = 450; /* K */
-
-	// 'universal' parameter'...
-	double nu = 0.630;
-	double gamma = 1.2415;
-
-	MSG("state: T=%f, rho=%f",state.T, state.rho);
-	
-	double T_orig = state.T;
-	if(T_orig >= 445.){
-		state.T = 445.;
-	}
-	FluidState state_r = state;
-	state_r.T = 445.;
-	MSG("state_r: T=%f, rho=%f",state_r.T, state_r.rho);
-	MSG("chitilde(state) = %e", thcond1_chitilde(state,err));
-	MSG("chitilde(state_r) = %e", thcond1_chitilde(state_r,err));
-	MSG("chitilde(state_r)*T_r/T = %e", thcond1_chitilde(state_r,err)*T_r/state.T);
-
-	double Delta_chitilde = thcond1_chitilde(state,err) - thcond1_chitilde(state_r,err) * T_r / state.T;
-	MSG("xi0 = %e, Delta_chitilde = %f", xi0, Delta_chitilde);
-	MSG("Delta_chitilde/Gamma = %e", Delta_chitilde / Gamma);
-	double xi = xi0 * pow(Delta_chitilde / Gamma, nu/gamma); /* m */
-	ASSERT(!isnan(xi));
-	if(T_orig >= 445.){
-		xi *= exp(-(T_orig - 445)/10.);
-	}
-	MSG("xi = %f",xi);
-	return xi;
-	
-}
 
 double thcond1_lamc(FluidState state, FpropsError *err){
 	if(state.fluid->thcond->type != FPROPS_THCOND_1){
 		*err = FPROPS_INVALID_REQUEST;
 		return NAN;
 	}
+	const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
+
+	/* parameters specific to CO2 */
+	double qt_D = 4.0e-10; // [m]
+	double xi0 = 1.5e-10 /* m */;
+	double Gamma = 0.052;
+	double T_ref = 450; /* K */
+
+	// 'universal' parameters, 'theoretically based parameters'
+	double R_0 = 1.01; /* see eq 35 of Vesovic et al, 1990 or eq 7 of Lemmon & Jacobsen 2004. */
+	double nu = 0.630;
+	double gamma = 1.2415;
+
+	MSG("state: T=%f, rho=%f",state.T, state.rho);
 	//const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
 
 	/* use the cp/cv functions directly, to avoid bothering with saturation boundary checks (ie assume we're outside saturation region?) */
 	double cp = (*(state.fluid->cp_fn))(state.T, state.rho, state.fluid->data, err);
 	double cv = (*(state.fluid->cp_fn))(state.T, state.rho, state.fluid->data, err);
-	double xi = thcond1_xi(state, err);
-	double rho_c = state.fluid->data->rho_c;
+	
+#if 0
+	double T_orig = state.T;
+	if(T_orig >= 445.){
+		state.T = 445.;
+	}
+#endif
+	FluidState state_r = state;
+	state_r.T = 445.;
+	MSG("state_r: T=%f, rho=%f",state_r.T, state_r.rho);
+	MSG("chitilde(state) = %e", thcond1_chitilde(state,err));
+	MSG("chitilde(state_r) = %e", thcond1_chitilde(state_r,err));
+	//MSG("chitilde(state_r)*T_ref/T = %e", thcond1_chitilde(state_r,err)*T_ref/state.T);
+	
+	double brackterm = (thcond1_chitilde(state,err) - thcond1_chitilde(state_r,err) * T_ref / state.T) / Gamma;
 
-	/* this value should be stored in k1 */
-	double qtilde_D = 1./(4.0e-10); // [m^-1]
+	double lamc = 0;
+	if(brackterm<=0){
+		/* according to Lemmon & Jacobsen, we should use lamc=0 whenever brackterm <= 0 */
+		MSG("brackterm<=0 -> lamc = 0");
+	}else{
+		double xi = xi0 * pow(brackterm, nu/gamma); /* m */
+		ASSERT(!isnan(xi));
+#if 0
+		if(T_orig >= 445.){
+			xi *= exp(-(T_orig - 445)/10.);
+		}
+		MSG("xi = %f",xi);
+#endif
 
-	double Omegatilde = 2/PI * ((cp-cv)/cp * atan(qtilde_D * xi) + cv/cp*qtilde_D*xi);
-	double Omegatilde_0 = 2/PI * (1 - exp(-1/(1./(qtilde_D*xi) + 1./3*SQ(qtilde_D*xi*rho_c/state.rho))));
+		double xioq; /* = xi / qt_D */
 
-	double R = 1.01; /* 'universal' amplitude parameter, see eq 35 of Vesovic et al, 1990 */
-	double mubar = visc1_mu(state, err); /* TODO make sure visc1_mu excludes critical enhancement */
+		//double xi = thcond1_xi(state, err);
+		double rho_c = state.fluid->data->rho_c;
+		double Omegatilde = 2/PI * ( (cp-cv)/cp * atan(xioq) + cv/cp*xioq);
+		double Omegatilde_0 = 2/PI * (1 - exp(-1/(1./xioq + 1./3*SQ(xioq)*SQ(rho_c/state.rho))));
 
-	double lamc = state.rho * cp * R * K_BOLTZMANN *state.T/(6*PI*mubar*xi)* (Omegatilde - Omegatilde_0);
+		double mu = visc1_mu(state, err); /* TODO ensure visc1_mu excludes crit enhancement! */
+
+		lamc = k1->k_star * state.rho * cp * R_0 * K_BOLTZMANN *state.T/(6.*PI*xi*mu)* (Omegatilde - Omegatilde_0);
+	}
 	return lamc;
 }
 
