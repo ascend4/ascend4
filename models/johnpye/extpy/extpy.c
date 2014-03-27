@@ -264,7 +264,7 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 	cdocstring = "(no help)";
 	if(name!=NULL){
 		cdocstring = PyString_AsString(docstring);
-		CONSOLE_DEBUG("DOCSTRING: %s",cdocstring);
+		//CONSOLE_DEBUG("DOCSTRING: %s",cdocstring);
 	}
 
 	extpydata = ASC_NEW(struct ExtPyData);

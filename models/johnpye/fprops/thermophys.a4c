@@ -1,0 +1,58 @@
+IMPORT "johnpye/fprops/fprops";
+REQUIRE "johnpye/fprops/rankine_fprops.a4c";
+
+MODEL thcond1;
+	T IS_A temperature;
+	rho IS_A mass_density;
+	k IS_A thermal_conductivity;
+	cd IS_A fluid;
+	cd.component :== 'carbondioxide';
+	cd.type :== 'helmholtz';
+	calc_k: fprops_lam(
+		T, rho : INPUT;
+		k : OUTPUT;
+		cd : DATA
+	);
+METHODS
+METHOD on_load;
+	k := 1 {W/m/K};
+	FIX T := 323.15 {K};
+	FIX rho := 400 {kg/m^3};
+END on_load;
+END thcond1;
+
+(*
+	This model adds viscosity and thermal conductivity as additional
+	properties for the stream.
+	
+	TODO note that k,mu don't do anything clever yet inside the two-phase region.
+*)
+MODEL stream_state_thermophysical REFINES stream_state;
+	k IS_A thermal_conductivity;
+	mu IS_A viscosity;
+	rho IS_A mass_density;
+	rho = 1. / v;
+
+	calc_mu: fprops_mu(
+		T, rho : INPUT;
+		mu : OUTPUT;
+		cd : DATA
+	);
+
+	calc_lam: fprops_lam(
+		T, rho : INPUT;
+		k : OUTPUT;
+		cd : DATA
+	);
+END stream_state_thermophysical;
+
+MODEL stream_state_thermophysical_test_co2 REFINES stream_state_thermophysical;
+	cd.component :== 'carbondioxide';
+	cd.type :== 'helmholtz';
+METHODS
+METHOD on_load;
+	FIX T := 323.15 {K};
+	FIX rho := 400 {kg/m^3};
+END on_load;
+END stream_state_thermophysical_test_co2;
+
