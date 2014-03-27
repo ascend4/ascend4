@@ -372,7 +372,7 @@ int main(void){
 		ASSERT_TOL_VAL(lam,tdk0r[i].k,0.00001e-3);
 	}
 
-	fprintf(stderr,"Testing lamc against Vesovic et al, 1990, Fig. 8...\n");
+	fprintf(stderr,"\n\nTesting lamc against Vesovic et al, 1990, Fig. 8...\n");
 	TestThCondData tdkc[] = {
 		{323.15, 60.4316546763,  0.498557176358e-3}
 		,{323.15, 192.805755396, 4.6520370444e-3}
@@ -398,7 +398,9 @@ int main(void){
 		ASSERT(err==FPROPS_NO_ERROR);
 		double lamc = thcond1_lamc(S, &err);
 		ASSERT(err==FPROPS_NO_ERROR);
-		//fprintf(stderr, "T = %8.3f --> lam0 = %f (source data: %f, ratio calc/source = %f)\n", tdk0r[i].T, lam0, tdk0r[i].k, lam0/tdk0r[i].k);
+		fprintf(stderr, "T = %8.3f, rho = %f --> lam0 = %f (source data: %f, ratio calc/source = %f)\n", tdkc[i].T, tdkc[i].rho, lamc, tdkc[i].k, lamc/tdkc[i].k);
+		ASSERT(!isnan(lamc));
+		ASSERT(err==FPROPS_NO_ERROR);
 		ASSERT_TOL_VAL(lamc,tdkc[i].k,0.2e-3);
 	}
 
