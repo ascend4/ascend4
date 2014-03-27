@@ -371,7 +371,38 @@ int main(void){
 		//fprintf(stderr, "T = %8.3f --> lam0 = %f (source data: %f, ratio calc/source = %f)\n", tdk0r[i].T, lam0, tdk0r[i].k, lam0/tdk0r[i].k);
 		ASSERT_TOL_VAL(lam,tdk0r[i].k,0.00001e-3);
 	}
-	
+
+	fprintf(stderr,"Testing lamc against Vesovic et al, 1990, Fig. 8...\n");
+	TestThCondData tdkc[] = {
+		{323.15, 60.4316546763,  0.498557176358e-3}
+		,{323.15, 192.805755396, 4.6520370444e-3}
+		,{323.15, 313.669064748, 11.0086012958e-3}
+		,{323.15, 421.582733813, 15.1592432132e-3}
+		,{323.15, 480.575539568, 14.7793473508e-3}
+		,{323.15, 592.805755396, 9.95811439246e-3}
+		,{323.15, 722.302158273, 4.55877419611e-3}
+		,{323.15, 906.474820144, 1.56356770937e-3}
+		,{348.15, 90.6474820144, 0.61808497953e-3}
+		,{348.15, 187.050359712, 2.87236376645e-3}
+		,{348.15, 300.71942446,  6.13417067451e-3}
+		,{348.15, 435.971223022, 7.89019436385e-3}
+		,{348.15, 633.09352518,  4.50974999006e-3}
+		,{348.15, 785.611510791, 2.16832942486e-3}
+		,{348.15, 907.913669065, 1.2930164156e-3}
+	};
+	const unsigned ntdkc = sizeof(tdkc)/sizeof(TestThCondData);
+	fprintf(stderr,"%d points...\n",ntdkc);
+	for(i=0; i<ntdkc; ++i){
+		fprintf(stderr,"i=%d: T = %f, rho = %f, k = %f\n", i, tdkc[i].T, tdkc[i].rho, tdkc[i].k);
+		S = fprops_set_Trho(tdkc[i].T, tdkc[i].rho, d, &err);
+		ASSERT(err==FPROPS_NO_ERROR);
+		double lamc = thcond1_lamc(S, &err);
+		ASSERT(err==FPROPS_NO_ERROR);
+		//fprintf(stderr, "T = %8.3f --> lam0 = %f (source data: %f, ratio calc/source = %f)\n", tdk0r[i].T, lam0, tdk0r[i].k, lam0/tdk0r[i].k);
+		ASSERT_TOL_VAL(lamc,tdkc[i].k,0.2e-3);
+	}
+
+
 
 	fprintf(stderr,"Testing thermal conductivity values from REFPROP 8.0...\n");
 
