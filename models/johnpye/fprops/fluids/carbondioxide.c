@@ -216,7 +216,7 @@ EosData eos_carbondioxide = {
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_carbondioxide}
 	,.visc = &visc_carbondioxide
-	,.thcond = &visc_carbondioxide
+	,.thcond = &thcond_carbondioxide
 };
 
 #ifdef TEST
@@ -411,7 +411,7 @@ int main(void){
 	double lam;
 #define THCOND_TEST(T__1,RHO__1,K__1,TOL__1) \
 	S = fprops_set_Trho(T__1, RHO__1, d, &err); \
-	lam = fprops_k(S,&err); \
+	lam = fprops_lam(S,&err); \
 	/*fprintf(stderr,"k(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,k,K__1);*/ \
 	ASSERT(FPROPS_NO_ERROR==err); \
 	ASSERT_TOL_VAL(lam,K__1,TOL__1);

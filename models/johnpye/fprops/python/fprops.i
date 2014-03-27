@@ -295,6 +295,7 @@ exception types? */
 	%immutable;
 	double T, rho, v;
 	double x, p, u, h, s, a, cv, cp, w, g, alphap, betap, cp0, dpdT_rho;
+	double mu, lam;
 }
 
 %{
@@ -312,7 +313,8 @@ double FluidState_v_get(FluidState *state){
 }
 
 #define FNS(G,X) G(x) X G(p) X G(u) X G(h) X G(s) X G(a) X G(cv) \
-	X G(cp) X G(w) X G(g) X G(alphap) X G(betap) X G(cp0) X G(dpdT_rho)
+	X G(cp) X G(w) X G(g) X G(alphap) X G(betap) X G(cp0) X G(dpdT_rho) \
+	X G(mu) X G(lam)
 #define GETTER(N) \
 	double FluidState_##N##_get(FluidState *state){\
 		return fprops_##N(*state,&_fprops_fluidstate_err);\

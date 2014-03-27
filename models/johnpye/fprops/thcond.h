@@ -28,6 +28,6 @@ double thcond1_lamr(FluidState state, FpropsError *err);
 double thcond1_lamc(FluidState state, FpropsError *err);
 /**< critical enhancement component of thermal conductivity [W/m/K] */
 
-double thcond1_k(FluidState state, FpropsError *err);
+double thcond1_lam(FluidState state, FpropsError *err);
 /**< thermal conductivity [W/m/K] */
 

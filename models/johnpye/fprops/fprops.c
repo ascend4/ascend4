@@ -96,6 +96,7 @@ int fprops_corr_avail(const EosData *E, const char *corrtype){
 
 PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 	PureFluid *P = NULL;
+	FpropsError err = FPROPS_NO_ERROR;
 	MSG("Working with EosData name '%s', source '%s", E->name, E->source);
 	MSG("Chosen correlation: %d (requested %s)", fprops_corr_avail(E,corrtype),corrtype);
 	switch(fprops_corr_avail(E,corrtype)){
@@ -115,13 +116,24 @@ PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 	/* next: add preparation of viscosity, thermal conductivity, surface tension, ... */
 
 	MSG("Preparing viscosity data...");
-	FpropsError err = FPROPS_NO_ERROR;
 	P->visc = visc_prepare(E,P,&err);
 	if(err){
 		ERRMSG("Invalid viscosity data for '%s",P->name);
 		/* visc_prepare should return NULL if there was an error, so result is
 		same as when there is no viscosity data at all */
 	}
+
+	MSG("Preparing thermal conductivity data...");
+	err = FPROPS_NO_ERROR;
+	thcond_prepare(P,E->thcond,&err);
+	if(err){
+		ERRMSG("Invalid viscosity data for '%s",P->name);
+		/* visc_prepare should return NULL if there was an error, so result is
+		same as when there is no viscosity data at all */
+	}
+
+
+
 	return P;
 }
 
@@ -212,11 +224,11 @@ double fprops_mu(FluidState state, FpropsError *err){
 }
 
 /// TODO reimplement with function pointer?
-double fprops_k(FluidState state, FpropsError *err){
+double fprops_lam(FluidState state, FpropsError *err){
 	if(NULL!=state.fluid->thcond){
 		switch(state.fluid->thcond->type){
 		case FPROPS_THCOND_1:
-			return thcond1_k(state,err);
+			return thcond1_lam(state,err);
 		default:
 			break;
 		}	

@@ -88,7 +88,7 @@ double fprops_dudrho_T(const FluidState state, FpropsError *err);
 
 
 double fprops_mu(FluidState state, FpropsError *err); ///< Dynamic viscosity / [Pa*s]
-double fprops_k(FluidState state, FpropsError *err); ///< Thermal conductivity / [W/m/K]
+double fprops_lam(FluidState state, FpropsError *err); ///< Thermal conductivity / [W/m/K]
 
 /**
 	Convert file data E into a PureFluid object, doing any necessary pre-calculation
