@@ -372,7 +372,7 @@ int main(void){
 		ASSERT_TOL_VAL(lam,tdk0r[i].k,0.00001e-3);
 	}
 
-	fprintf(stderr,"\n\nTesting lamc against Vesovic et al, 1990, Fig. 8...\n");
+	fprintf(stderr,"Testing lamc against Vesovic et al, 1990, Fig. 8...\n");
 	TestThCondData tdkc[] = {
 		{323.15, 60.4316546763,  0.498557176358e-3}
 		,{323.15, 192.805755396, 4.6520370444e-3}
@@ -393,12 +393,12 @@ int main(void){
 	const unsigned ntdkc = sizeof(tdkc)/sizeof(TestThCondData);
 	fprintf(stderr,"%d points...\n",ntdkc);
 	for(i=0; i<ntdkc; ++i){
-		fprintf(stderr,"i=%d: T = %f, rho = %f, k = %f\n", i, tdkc[i].T, tdkc[i].rho, tdkc[i].k);
+		/*fprintf(stderr,"i=%d: T = %f, rho = %f, k = %f\n", i, tdkc[i].T, tdkc[i].rho, tdkc[i].k);*/
 		S = fprops_set_Trho(tdkc[i].T, tdkc[i].rho, d, &err);
 		ASSERT(err==FPROPS_NO_ERROR);
 		double lamc = thcond1_lamc(S, &err);
 		ASSERT(err==FPROPS_NO_ERROR);
-		fprintf(stderr, "T = %8.3f, rho = %f --> lamc = %f (source data: %f, ratio calc/source = %f)\n", tdkc[i].T, tdkc[i].rho, lamc, tdkc[i].k, lamc/tdkc[i].k);
+		/*fprintf(stderr, "T = %8.3f, rho = %f --> lamc = %f (source data: %f, ratio calc/source = %f)\n", tdkc[i].T, tdkc[i].rho, lamc, tdkc[i].k, lamc/tdkc[i].k);*/
 		ASSERT(!isnan(lamc));
 		ASSERT(err==FPROPS_NO_ERROR);
 		ASSERT_TOL_VAL(lamc,tdkc[i].k,5e-3);
@@ -408,13 +408,13 @@ int main(void){
 
 	fprintf(stderr,"Testing thermal conductivity values from REFPROP 8.0...\n");
 
-	double k;
+	double lam;
 #define THCOND_TEST(T__1,RHO__1,K__1,TOL__1) \
 	S = fprops_set_Trho(T__1, RHO__1, d, &err); \
-	k = fprops_k(S,&err); \
+	lam = fprops_k(S,&err); \
 	/*fprintf(stderr,"k(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,k,K__1);*/ \
 	ASSERT(FPROPS_NO_ERROR==err); \
-	ASSERT_TOL_VAL(k,K__1,TOL__1);
+	ASSERT_TOL_VAL(lam,K__1,TOL__1);
 
 	THCOND_TEST(220, 2.43941203164E+0, 10.902e-3, 0.05e-3);
 	THCOND_TEST(220, 1.19495544507E+3, 187.32e-3, 0.5e-3);

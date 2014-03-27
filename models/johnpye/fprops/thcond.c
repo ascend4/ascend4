@@ -26,14 +26,14 @@
 
 #define K_BOLTZMANN 1.3806488e-23
 
-#define THCOND_DEBUG
+//#define THCOND_DEBUG
 #ifdef THCOND_DEBUG
 # include "color.h"
 # include "test.h"
 # define MSG FPROPS_MSG
 # define ERRMSG FPROPS_ERRMSG
 #else
-# define ASSERT(ARGS...) (void)0)
+//# define ASSERT(ARGS...) (void)0)
 # define MSG(ARGS...) ((void)0)
 # define ERRMSG(ARGS...) ((void)0)
 #endif
@@ -161,7 +161,7 @@ double thcond1_chitilde(FluidState state, FpropsError *err){
 	}
 	double p_c = state.fluid->data->p_c;
 	double rho_c = state.fluid->data->rho_c;
-	double T_c = state.fluid->data->T_c;
+	//double T_c = state.fluid->data->T_c;
 	MSG("p_c = %e, rho_c = %f",p_c, rho_c);
 	/* FIXME we use dpdrho_T directly; assume that we have checked if we're in two-phase region or not */
 	double dpdrho_T = (*(state.fluid->dpdrho_T_fn))(state.T, state.rho, state.fluid->data, err);
@@ -222,8 +222,8 @@ double thcond1_lamc(FluidState state, FpropsError *err){
 		MSG("brackterm<=0 -> lamc = 0");
 	}else{
 		double xi = xi0 * pow(brackterm, nu/gamma); /* m */
-		MSG("xi = %e",xi)
-		ASSERT(!isnan(xi));
+		MSG("xi = %e",xi);
+		//ASSERT(!isnan(xi));
 #if 0
 		if(T_orig >= 445.){
 			xi *= exp(-(T_orig - 445)/10.);
@@ -257,7 +257,7 @@ double thcond1_k(FluidState state, FpropsError *err){
 		return NAN;
 	}
 
-	const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
+	//const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
 
 	// value for the conductivity at the zero-density limit
 	double lam0 = thcond1_lam0(state,err);
