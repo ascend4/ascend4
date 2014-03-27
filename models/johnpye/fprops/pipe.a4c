@@ -1,5 +1,10 @@
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 
+(*
+	TODO FIXME this model still doesn't include thermophysical property calculation
+	(ie, fprops_lam and fprops_mu)
+*)
+
 MODEL pipe_adiabatic REFINES stream_equipment;
 	D "inside diameter" IS_A distance;
 	A "flow cross-sectional area" IS_A area;
