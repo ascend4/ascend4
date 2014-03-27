@@ -43,6 +43,8 @@
 #include "fprops.h"
 #include "sat.h"
 #include "solve_ph.h"
+#include "thcond.h"
+#include "visc.h"
 
 /* for the moment, species data are defined in C code, we'll implement something
 better later on, hopefully. */
@@ -67,6 +69,8 @@ ExtBBoxFunc fprops_g_calc;
 ExtBBoxFunc fprops_cp_calc;
 ExtBBoxFunc fprops_cv_calc;
 ExtBBoxFunc fprops_w_calc;
+ExtBBoxFunc fprops_mu_calc;
+ExtBBoxFunc fprops_lam_calc;
 ExtBBoxFunc fprops_phsx_vT_calc;
 ExtBBoxFunc fprops_Tvsx_ph_calc;
 
@@ -94,6 +98,8 @@ static const char *fprops_g_help = "Calculate specific Gibbs energy from tempera
 static const char *fprops_cp_help = "Calculate isobaric specific heat from temperature and density, using FPROPS";
 static const char *fprops_cv_help = "Calculate isochoric specific heat from temperature and density, using FPROPS";
 static const char *fprops_w_help = "Calculate speed of sound from temperature and density, using FPROPS";
+static const char *fprops_mu_help = "Calculate viscosity from temperature and density, using FPROPS";
+static const char *fprops_lam_help = "Calculate thermal conductivity sound from temperature and density, using FPROPS";
 
 static const char *fprops_phsx_vT_help = "Calculate p, h, s, x from temperature and density, using FPROPS/Helmholtz eqn";
 
@@ -147,6 +153,8 @@ ASC_EXPORT int fprops_register(){
 	CALCFN(fprops_cp,2,1);
 	CALCFN(fprops_cv,2,1);
 	CALCFN(fprops_w,2,1);
+	CALCFN(fprops_mu,2,1);
+	CALCFN(fprops_lam,2,1);
 	CALCFN(fprops_phsx_vT,2,4);
 	CALCFN(fprops_Tvsx_ph,2,4);
 
@@ -453,6 +461,46 @@ int fprops_w_calc(struct BBoxInterp *bbox,
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_w(S, &err);
+
+	/* no need to worry about error states etc. */
+	return 0;
+}
+
+/**
+	Evaluation function for 'fprops_mu'
+	@param jacobian ignored
+	@return 0 on success
+*/
+int fprops_mu_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE(2,1);
+	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+
+	/* first input is temperature, second is density */
+	outputs[0] = fprops_mu(S, &err);
+
+	/* no need to worry about error states etc. */
+	return 0;
+}
+
+/**
+	Evaluation function for 'fprops_lam'
+	@param jacobian ignored
+	@return 0 on success
+*/
+int fprops_lam_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE(2,1);
+	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+
+	/* first input is temperature, second is density */
+	outputs[0] = fprops_lam(S, &err);
 
 	/* no need to worry about error states etc. */
 	return 0;
