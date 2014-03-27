@@ -40,8 +40,18 @@
 
 void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError *err){
 	MSG("Preparing thermal conductivity: currently we are just reusing the FileData pointer; no changes");
-	P->thcond = K;
-	
+	MSG("K.type: %d",K->type);
+	MSG("K.source: %s",K->source);
+	switch(K->type){
+	case FPROPS_THCOND_1:
+		MSG("K.data.k1.nc: %d",K->data.k1.nc);
+		P->thcond = K;
+		MSG("P.thcond.type = %d",P->thcond->type);
+		return;
+	case FPROPS_THCOND_NONE:
+		*err = FPROPS_NOT_IMPLEMENTED;
+		return;
+	}
 }
 
 /*-----------------------------IDEAL PART ------------------------------------*/
@@ -49,12 +59,14 @@ void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError 
 static double thcond1_cs(const ThermalConductivityData1 *K, double Tstar){
 	double res = 0;
 	int i;
-	//MSG("Tstar = %f (1/Tstar = %f)",Tstar,1/Tstar);
+	MSG("K: %p",K);
+	MSG("Tstar = %f (1/Tstar = %f)",Tstar,1/Tstar);
+	MSG("nc = %d",K->nc);
 	for(i=0; i < K->nc; ++i){
 		//MSG("b[%d] = %e, i = %d, term = %f",i,K->ct[i].b, K->ct[i].i, K->ct[i].b * pow(Tstar, K->ct[i].i));
 		res += K->ct[i].b * pow(Tstar, K->ct[i].i);
 	}
-	//MSG("res = %f",res);
+	MSG("res = %f",res);
 	return res;
 }
 
@@ -63,10 +75,12 @@ double thcond1_lam0(FluidState state, FpropsError *err){
 	const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
 	double lam0 = 0;
 
+	MSG("k1: %p",k1);
+
 	// TODO FIXME need to re-factor this to be standardised and only use data from filedata.h structures.
 
 	if(0==strcmp(state.fluid->name,"carbondioxide")){
-		//MSG("lam0 for carbondioxide");
+		MSG("lam0 for carbondioxide");
 
 //#define USE_CP0_FOR_LAM0
 #ifdef USE_CP0_FOR_LAM0
@@ -178,7 +192,7 @@ double thcond1_lamc(FluidState state, FpropsError *err){
 		*err = FPROPS_INVALID_REQUEST;
 		return NAN;
 	}
-	const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
+	//const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
 
 	/* parameters specific to CO2 */
 	double qt_D = 4.0e-10; // [m]
@@ -250,7 +264,7 @@ double thcond1_lamc(FluidState state, FpropsError *err){
 
 /*----------------------------------OVERALL RESULT----------------------------*/
 
-double thcond1_k(FluidState state, FpropsError *err){
+double thcond1_lam(FluidState state, FpropsError *err){
 	// if we are here, we should be able to assume that state, should be able to remove following test (convert to assert)
 	if(state.fluid->thcond->type != FPROPS_THCOND_1){
 		*err = FPROPS_INVALID_REQUEST;
