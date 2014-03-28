@@ -18,7 +18,7 @@ METHOD on_load;
 	k := 1 {W/m/K};
 	FIX T := 323.15 {K};
 	FIX rho := 400 {kg/m^3};
-END on_load;
+END on_load; 
 END thcond1;
 
 (*
@@ -51,6 +51,7 @@ MODEL stream_state_thermophysical_test_co2 REFINES stream_state_thermophysical;
 	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
+	RUN default_self;
 	FIX T := 323.15 {K};
 	FIX rho := 400 {kg/m^3};
 END on_load;
