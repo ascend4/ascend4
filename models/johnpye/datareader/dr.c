@@ -32,7 +32,12 @@
 #include <ascend/general/panic.h>
 #include <ascend/utilities/ascEnvVar.h>
 
-#define DR_DEBUG 0
+//#define DR_DEBUG
+#ifdef DATAREADER_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 /*------------------------------------------------------------------------------
   FORWARD DECLARATIONS
@@ -343,17 +348,13 @@ int datareader_init(DataReader *d) {
             return 1;
         }
     }
-#if DR_DEBUG
-    CONSOLE_DEBUG("About to open the data file");
-#endif
+    MSG("About to open the data file");
     d->f = ospath_fopen(d->fp, "r");
     if (d->f == NULL) {
         ERROR_REPORTER_HERE(ASC_USER_ERROR, "Unable to open file '%s' for reading.", d->fn);
         return 1;
     }
-#if DR_DEBUG
-    CONSOLE_DEBUG("Data file open ok");
-#endif
+    MSG("Data file open ok");
     asc_assert(d->headerfn);
     asc_assert(d->eoffn);
     asc_assert(d->datafn);
@@ -371,13 +372,9 @@ int datareader_init(DataReader *d) {
             return 1;
         }
     }
-#if DR_DEBUG
-    CONSOLE_DEBUG("Done retrieving data");
-#endif
+    MSG("Done retrieving data");
     fclose(d->f);
-#if DR_DEBUG
-    CONSOLE_DEBUG("Closed file");
-#endif
+    MSG("Closed file");
 
     d->i = 0; /* set current position to zero */
 
@@ -445,9 +442,7 @@ int datareader_locate(DataReader *d, double t, double *t1, double *t2) {
             (*d->indepfn)(d, t2);
         } while (*t2 < t && d->i < d->ndata);
     }
-#if DR_DEBUG
-    CONSOLE_DEBUG("d->i==%d, t1[0] = %lf, t2[0] = %lf", d->i, t1[0], t2[0]);
-#endif
+    MSG("d->i==%d, t1[0] = %lf, t2[0] = %lf", d->i, t1[0], t2[0]);
 
     if (d->i == d->ndata || d->i == 0) {
         return 1;
@@ -478,9 +473,7 @@ int datareader_func(DataReader *d, double *inputs, double *outputs) {
 
     double t = inputs[0];
 
-#if DR_DEBUG
-    CONSOLE_DEBUG("EVALUATING AT t = %lf", inputs[0]);
-#endif
+    MSG("EVALUATING AT t = %lf", inputs[0]);
 
     asc_assert(d->indepfn);
 
@@ -490,9 +483,7 @@ int datareader_func(DataReader *d, double *inputs, double *outputs) {
         return 1;
     }
 
-#if DR_DEBUG
-    CONSOLE_DEBUG("LOCATED AT t1 = %lf, t2 = %lf", t1[0], t2[0]);
-#endif
+    MSG("LOCATED AT t1 = %lf, t2 = %lf", t1[0], t2[0]);
     if (d->i < d->ndata-1) {
         ++d->i; //go one step forward
         (*d->valfn)(d, v3); //take a data sample at t1+2
@@ -513,9 +504,7 @@ int datareader_func(DataReader *d, double *inputs, double *outputs) {
     }
     else AtStart = TRUE;
 
-#if DR_DEBUG
-    CONSOLE_DEBUG("LOCATED OK, d->i = %d, t1 = %lf, t2 = %lf, v1=%lf, v2=%lf", d->i, t1[0], t2[0], v1[0], v2[0]);
-#endif
+    MSG("LOCATED OK, d->i = %d, t1 = %lf, t2 = %lf, v1=%lf, v2=%lf", d->i, t1[0], t2[0], v1[0], v2[0]);
 
     for (i = 0;i < d->noutputs;++i) {
         j = d->cols[i]-1;
@@ -530,9 +519,7 @@ int datareader_func(DataReader *d, double *inputs, double *outputs) {
 
             break;
         }
-#if DR_DEBUG
-        CONSOLE_DEBUG("[%d]: START = %lf, END = %lf, VALUE=%lf", i, v1[j],v2[j], outputs[i]);
-#endif
+        MSG("[%d]: START = %lf, END = %lf, VALUE=%lf", i, v1[j],v2[j], outputs[i]);
     }
 
     return 0;
@@ -553,9 +540,7 @@ int datareader_deriv(DataReader *d, double *inputs, double *jacobian) {
 
     double t = inputs[0];
 
-#if DR_DEBUG
-    CONSOLE_DEBUG("EVALUATING AT t = %lf", inputs[0]);
-#endif
+    MSG("EVALUATING AT t = %lf", inputs[0]);
 
     asc_assert(d->indepfn);
 
@@ -565,9 +550,7 @@ int datareader_deriv(DataReader *d, double *inputs, double *jacobian) {
         return 1;
     }
 
-#if DR_DEBUG
-    CONSOLE_DEBUG("LOCATED AT t1 = %lf, t2 = %lf", t1[0], t2[0]);
-#endif
+    MSG("LOCATED AT t1 = %lf, t2 = %lf", t1[0], t2[0]);
     if (d->i < d->ndata-1) {
         ++d->i; //go one step forward
         (*d->valfn)(d, v3); //take a data sample at t1+2
@@ -588,9 +571,7 @@ int datareader_deriv(DataReader *d, double *inputs, double *jacobian) {
     }
     else AtStart = TRUE;
 
-#if DR_DEBUG
-    CONSOLE_DEBUG("LOCATED OK, d->i = %d, t1 = %lf, t2 = %lf, v1=%lf, v2=%lf", d->i, t1[0], t2[0], v1[0], v2[0]);
-#endif
+    MSG("LOCATED OK, d->i = %d, t1 = %lf, t2 = %lf, v1=%lf, v2=%lf", d->i, t1[0], t2[0], v1[0], v2[0]);
 
     for (i = 0;i < d->noutputs;++i) {
         j = d->cols[i]-1;
@@ -605,9 +586,7 @@ int datareader_deriv(DataReader *d, double *inputs, double *jacobian) {
 
             break;
         }
-#if DR_DEBUG
-        CONSOLE_DEBUG("[%d]: START = %lf, VALUE=%lf", i, v1[j], jacobian[i]);
-#endif
+        MSG("[%d]: START = %lf, VALUE=%lf", i, v1[j], jacobian[i]);
     }
 
     return 0;
@@ -661,14 +640,12 @@ double dr_cubicinterp(DataReader *d, int j, double t, double *t1, double *t2, do
         d->a1[j] = a1;
         d->a2[j] = a2;
         d->a3[j] = a3;
-#if DR_DEBUG
+#ifdef DR_DEBUG
         if (j == 1 )CONSOLE_DEBUG("Cubic spline coefficients recalculated");
 #endif
     }
     //calculate output value
-#if DR_DEBUG
-    CONSOLE_DEBUG("v[%d]:%lf",j,d->a0[j] + d->a1[j]*t + d->a2[j]*pow(t,2) + d->a3[j]*pow(t,3));
-#endif
+    MSG("v[%d]:%lf",j,d->a0[j] + d->a1[j]*t + d->a2[j]*pow(t,2) + d->a3[j]*pow(t,3));
     return d->a0[j] + d->a1[j]*t + d->a2[j]*pow(t,2) + d->a3[j]*pow(t,3);
 
 }
@@ -718,9 +695,9 @@ double dr_cubicderiv(DataReader *d, int j, double t, double *t1, double *t2, dou
         d->a1[j] = a1;
         d->a2[j] = a2;
         d->a3[j] = a3;
-        #if DR_DEBUG
+#ifdef DR_DEBUG
         if (j == 1 )CONSOLE_DEBUG("Cubic spline derivatives recalculated");
-        #endif
+#endif
     }
     //calculate output value
     return d->a1[j] + 2*d->a2[j]*t + 3*d->a3[j]*pow(t,2);
