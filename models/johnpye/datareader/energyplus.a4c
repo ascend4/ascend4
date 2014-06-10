@@ -7,56 +7,34 @@ MODEL drconf;
 	filename IS_A symbol_constant;
 	format IS_A symbol_constant;
 	parameters IS_A symbol_constant;
+	format :== 'EE';
+	parameters :== '1,2,3,4,5,6,7';
 END drconf;
 
 MODEL energyplus;
 	eedata IS_A drconf;
-	eedata.format :== 'EE';
-	eedata.filename :== 'johnpye/datareader/AUS_NSW.Moree.Aero.955270_RMY.epw';
-	eedata.parameters :== '1,2,3,4,5,6,7';
-
 	t IS_A time;
 	T IS_A temperature;
 	p IS_A pressure;
-	rh "relative humidity" IS_A fraction;
-	Gn IS_A power_per_area;
+	rh "relative humidity" IS_A factor;
+	DNI IS_A power_per_area;
 	Gd IS_A power_per_area;
 	d_wind IS_A angle;
 	v_wind IS_A speed;	
 
 	filereader:datareader(
 		t : INPUT;
-		T,p,rh,Gn,Gd,d_wind,v_wind :OUTPUT;
+		T,p,rh,DNI,Gd,d_wind,v_wind :OUTPUT;
 		eedata : DATA
 	);
-	
-METHODS
-METHOD default_self;
-	(* nothing here *)
-END default_self;
-METHOD on_load;
-	RUN default_self; RUN specify; RUN values; 
-	(*RUN ode_init;*)
-END on_load;
-(*
-METHOD ode_init;
-	E.ode_id := 1; E.ode_type := 1;
-	G.ode_id := 1; G.ode_type := 2;
-
-	Gbnl.obs_id := 1;
-	Gbnc.obs_id := 2;
-	Gbns.obs_id := 3;
-
-	t.ode_type :=-1;	
-END ode_init;
-*)
-METHOD specify;
-	FIX t;
-END specify;
-
-METHOD values;
-	t := 0 {s};
-END values;
-
 END energyplus;
+
+MODEL testenergyplus REFINES energyplus;
+	eedata.filename :== 'johnpye/datareader/AUS_NSW.Moree.Aero.955270_RMY.epw';
+METHODS
+METHOD on_load;
+	FIX t;
+	t := 0 {s};
+END on_load;
+END testenergyplus;
 

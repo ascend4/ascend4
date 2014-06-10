@@ -1,0 +1,55 @@
+(*
+Model to extract DNI for a specific weather file, and also calculate sun
+position. Aim is to show a plot of DNI vs elevation for specified location.
+
+John Pye (2014).
+*)
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/datareader/energyplus.a4c"; (* weather data reader *)
+REQUIRE "johnpye/nrel/sunpos_nrel.a4c";
+
+(*
+	Model of a parabolic trough field, based on the approach of Patnode, but
+	modified to allow for arbitrary (horizontal) orientation of the collector
+	axis.
+*) 
+MODEL dni_elevation;
+	(* field performance *)
+	DNI        "direct normal irradiance" IS_A power_per_area;
+	
+	(* sun position *)
+	sun        IS_A sunpos_nrel;
+	t          "local time (standard, not DST correction)" ALIASES sun.t;
+
+	(* constants that define the location -- can we do this better?? *)
+	(* Canberra *)
+	(* need to set tz offset in method below *)
+	sun.loc.latitude :== -35.30 {deg};
+	sun.loc.longitude :== 149.20 {deg};
+	sun.loc.elevation :== 580 {m};
+	(* TODO the location should be extracted from the weather data *)
+
+	(* weather data reader, see http://ascend4.org/Data_reader *)
+	dr IS_A energyplus;
+	dr.eedata.filename :== 'johnpye/datareader/AUS_ACT.Canberra.Airport.949260_RMY.epw';
+	t, dr.t ARE_THE_SAME;
+	T_amb ALIASES dr.T;
+	T_amb, sun.T ARE_THE_SAME;
+	p_amb ALIASES dr.p;
+	p_amb, sun.p ARE_THE_SAME;
+	DNI, dr.DNI ARE_THE_SAME;
+
+	altitude ALIASES sun.altitude;
+METHODS
+	METHOD on_load;
+		FIX t := 0 {d};
+		RUN sun.offset.on_load;
+		FIX sun.offset.tz := +10{h};
+		FIX sun.offset.h := 0;
+		SOLVER QRSlv;
+		OPTION convopt 'RELNOM_SCALE';
+	END on_load;	
+END dni_elevation;
+
