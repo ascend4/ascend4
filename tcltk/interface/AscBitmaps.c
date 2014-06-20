@@ -31,12 +31,6 @@
 #include "config.h"
 #include "AscBitmaps.h"
 
-
-#ifndef lint
-static CONST char AscBitmapsID[] = "$Id: AscBitmaps.c,v 1.7 1998/04/25 18:14:13 ballan Exp $";
-#endif
-
-
 #define BITSTRING static unsigned char
 #define BITDATA(s) ((char *)&((s)[0]))
 int Asc_RegisterBitmaps(Tcl_Interp *interp)

@@ -47,11 +47,6 @@
 #include "UnitsProc.h"
 #include "BrowserProc.h"
 
-#ifndef lint
-static CONST char UserDataID[] = "$Id: UserData.c,v 1.19 2003/08/23 18:43:09 ballan Exp $";
-#endif
-
-
 #define USERDATA_HASHSIZE 31
 
 enum UserInfo_enum {
