@@ -23,8 +23,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-static char const rcsid[] =
-  "@(#) $Jeannot: texttable.c,v 1.15 2004/10/26 17:47:29 js Exp $";
+/*static char const rcsid[] =
+  "@(#) $Jeannot: texttable.c,v 1.15 2004/10/26 17:47:29 js Exp $"; */
 
 #include <stddef.h>
 #include <stdlib.h>

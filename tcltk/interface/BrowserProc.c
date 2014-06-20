@@ -81,11 +81,6 @@
 #include "Commands.h"
 #include "Driver.h"
 
-#ifndef lint
-static CONST char BrowserProcID[] = "$Id: BrowserProc.c,v 1.36 2003/08/23 18:43:04 ballan Exp $";
-#endif
-
-
 #ifndef MAXIMUM_STRING_LENGTH
 #define MAXIMUM_STRING_LENGTH 1024
 #endif

@@ -60,10 +60,6 @@
 #include "BrowserProc.h"
 #include "BrowserQuery.h"
 
-#ifndef lint
-static CONST char RelationOutputRoutinesRCS[]="$Id: BrowserRel_io.c,v 1.20 2003/08/23 18:43:05 ballan Exp $";
-#endif
-
 /* a horde of redundant code deleted. */
 /**************************************************************************/
 static struct gl_list_t *g_brow_rellist = NULL;

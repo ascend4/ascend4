@@ -49,11 +49,6 @@
 #include "UnitsProc.h"
 #include "ProbeProc.h"
 
-#ifndef lint
-static CONST char ProbeProcID[] = "$Id: ProbeProc.c,v 1.38 2003/08/23 18:43:07 ballan Exp $";
-#endif
-
-
 /*
  * the number of arguments required to specify a complete filter.
  */
