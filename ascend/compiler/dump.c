@@ -39,10 +39,6 @@
 #include "instquery.h"
 #include "dump.h"
 
-#ifndef lint
-static CONST char GarbageDumpID[] = "$Id: dump.c,v 1.10 1998/02/05 22:23:24 ballan Exp $";
-#endif
-
 /*
  * hash table keyed by type name pointer. chain is for some
  * bizarre reason alphabetized within each bucket.

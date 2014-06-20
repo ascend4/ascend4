@@ -30,10 +30,6 @@
 #include "setinstval.h"
 #include "setinst_io.h"
 
-#ifndef lint
-static CONST char SetInstIORCSid[]="$Id: setinst_io.c,v 1.7 1997/10/28 19:20:43 mthomas Exp $";
-#endif
-
 void WriteInstSet(FILE *f, CONST struct set_t *s)
 {
   unsigned long c,len;

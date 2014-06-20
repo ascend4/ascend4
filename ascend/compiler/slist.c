@@ -40,10 +40,6 @@
 
 #define SLMALLOC ASC_NEW(struct StatementList)
 
-#ifndef lint
-static CONST char StatementListID[] = "$Id: slist.c,v 1.10 1997/07/18 12:34:56 mthomas Exp $";
-#endif
-
 struct StatementList *CreateStatementList(struct gl_list_t *l)
 {
   struct StatementList *result;

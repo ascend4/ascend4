@@ -67,10 +67,6 @@
 #undef NUMLISTEXPORTIO
 #endif
 
-#ifndef lint
-static CONST char AnonMergeModuleID[] = "$Id: anonmerg.c,v 1.9 2000/01/25 02:25:52 ballan Exp $";
-#endif
-
 /* if want to compile unused functions, set to 1.
  */
 #define AMUNUSED 0

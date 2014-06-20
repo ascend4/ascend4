@@ -30,11 +30,6 @@
 #include <ascend/general/list.h>
 #include "commands.h"
 
-
-#ifndef lint
-static CONST char CommandRCSid[] = "$Id: commands.c,v 1.8 1997/07/29 18:29:26 mthomas Exp $";
-#endif /* lint */
-
 struct command_t {
   CONST char *str,*help;
   void (*func)(void);
