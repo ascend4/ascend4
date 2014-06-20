@@ -41,11 +41,6 @@
 
 #define WMALLOC(x) x = ASC_NEW(struct WhenList)
 
-#ifndef lint
-static CONST char WhenRCSid[] = "$Id: when.c,v 1.11 1997/07/29 15:52:56 rv2a Exp $";
-#endif
-
-
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
 static
 int SetNodeIsTrue(struct Set *s)

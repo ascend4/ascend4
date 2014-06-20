@@ -49,10 +49,6 @@
 #include "tmpnum.h"
 #include "visitinst.h"
 
-#ifndef lint
-static CONST char InstanceVisitModuleID[] = "$Id: visitinst.c,v 1.21 1998/02/26 15:59:37 mthomas Exp $";
-#endif
-
 unsigned long global_visit_num = 0;
 int g_iscomplete = 1;
 /************* VisitInstance stuff **************************************/

@@ -60,13 +60,8 @@
 #include "logrelation.h"
 #include "logrel_util.h"
 
-
 #define NAMELISTSIZE 20L
 #define DEFTOLERANCE 1e-08
-
-#ifndef lint
-static CONST char FindRCSid[]="$Id: find.c,v 1.24 1998/03/26 20:39:44 ballan Exp $";
-#endif /* lint */
 
 CONST struct Instance *g_EvaluationContext=NULL;
 struct for_table_t *g_EvaluationForTable=NULL;

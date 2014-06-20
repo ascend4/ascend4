@@ -36,10 +36,6 @@
 #include "cmpfunc.h"
 #include "setinstval.h"
 
-#ifndef lint
-static CONST char SetInstValID[] = "$Id: setinstval.c,v 1.9 1998/02/05 16:37:50 ballan Exp $";
-#endif
-
 #define MYMIN(x,y) (((x)<(y)) ? (x) : (y))
 
 #ifdef ASC_NO_POOL

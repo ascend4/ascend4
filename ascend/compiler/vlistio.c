@@ -27,18 +27,12 @@
 #include <ascend/general/platform.h>
 #include <ascend/general/dstring.h>
 
-
-
 #include "functype.h"
 #include "expr_types.h"
 #include "symtab.h"
 #include "vlist.h"
 #include "vlistio.h"
 #include "nameio.h"
-
-#ifndef lint
-static CONST char VariableListIOID[] = "$Id: vlistio.c,v 1.8 1997/12/02 12:00:21 ballan Exp $";
-#endif
 
 void WriteVariableList(FILE *f, CONST struct VariableList *n)
 {

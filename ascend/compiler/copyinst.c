@@ -75,11 +75,6 @@
 #include "setinstval.h"
 #include "copyinst.h"
 
-#ifndef lint
-static CONST char CopyInstModuleID[] = "$Id: copyinst.c,v 1.18 1998/03/17 22:08:28 ballan Exp $";
-#endif
-
-
 /*
  * This function simply makes a first pass at determining
  * whether the instance is a universal instance. It returns

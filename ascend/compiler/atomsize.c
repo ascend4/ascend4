@@ -45,10 +45,6 @@
 #include "instmacro.h"
 #include "atomsize.h"
 
-#ifndef lint
-static CONST char AtomSizeModuleID[] = "$Id: atomsize.c,v 1.6 1997/07/18 12:28:01 mthomas Exp $";
-#endif
-
 static unsigned long ChildMemory(unsigned long int count,
                                  CONST struct ChildDesc *cdesc)
 {

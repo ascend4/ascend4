@@ -55,10 +55,6 @@
 #include "anonmerg.h"
 #include "anontype.h"
 
-#ifndef lint
-static CONST char AnonTypeModuleID[] = "$Id: anontype.c,v 1.9 2000/01/25 02:25:55 ballan Exp $";
-#endif
-
 /*
  * Yo! Pinhead! Don't optimize anything until it has proved slow!
  */

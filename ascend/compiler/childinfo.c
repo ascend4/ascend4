@@ -34,11 +34,6 @@
 #include "childinfo.h"
 #include <ascend/general/mathmacros.h>
 
-#ifndef lint
-static CONST char ChildDescID[] = "$Id: childinfo.c,v 1.10 1998/02/05 16:35:39 ballan Exp $";
-#endif
-
-
 void CDescInit(struct ChildDesc *v)
 {
   memset((char *)v,0,sizeof(struct ChildDesc));

@@ -32,10 +32,6 @@
 #include "rounded.h"
 #define IsOdd(i) ((i & 1)!=0)
 
-#ifndef lint
-static CONST char RoundedRCSid[] = "$Id: rounded.c,v 1.6 1997/07/21 16:56:47 kt2g Exp $";
-#endif
-
 #ifndef SLOPPY
 
 #ifdef mips

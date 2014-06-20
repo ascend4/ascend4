@@ -38,9 +38,6 @@
 
 struct gl_list_t *g_dimen_list;
 dim_type *g_wild_dimen,*g_trig_dimen,*g_dimensionless;
-#ifndef lint
-static CONST char DimenID[] = "$Id: dimen.c,v 1.9 1997/10/28 19:20:32 mthomas Exp $";
-#endif
 
 #define WILD(d) ((d)->wild & DIM_WILD)
 /* test a DIMENSION pointer for being wild or not */

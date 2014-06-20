@@ -37,9 +37,6 @@
 #include "setinstval.h"
 #include "setinst_io.h"
 
-#ifndef lint
-static CONST char ForVarRCSid[] = "$Id: forvars.c,v 1.11 1998/02/05 16:36:06 ballan Exp $";
-#endif
 #define FVMALLOC ForVarMalloc()
 
 /* LIFO forvar list. contents of forvar recycle list are only the heads,
