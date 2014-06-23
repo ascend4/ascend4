@@ -45,7 +45,7 @@ static int color_test(){
 		}
 # else
 		if(term!=NULL){
-			if(strcmp(term,"xterm")==0){
+			if(strcmp(term,"xterm")==0 || strcmp(term,"xterm-256color")==0){
 				/* MSYS (rxvt), putty, xterm. */
 				use_xterm_color=1;
 			}else{
