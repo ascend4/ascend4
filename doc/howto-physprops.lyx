@@ -1,42 +1,89 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
-\lyxformat 245
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
 \begin_document
 \begin_header
 \textclass book
+\use_default_options false
+\maintain_unincluded_children false
 \language english
+\language_package default
 \inputencoding auto
-\fontscheme default
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
 \graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
 \paperfontsize default
 \spacing single
+\use_hyperref false
 \papersize a4paper
 \use_geometry false
-\use_amsmath 2
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 1
+\use_package esint 0
+\use_package mathdots 0
+\use_package mathtools 1
+\use_package mhchem 0
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
 \cite_engine basic
+\cite_engine_type default
+\biblio_style plain
 \use_bibtopic false
+\use_indices false
 \paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
-\defskip medskip
+\paragraph_indentation default
 \quotes_language english
 \papercolumns 1
 \papersides 2
 \paperpagestyle default
 \tracking_changes false
-\output_changes true
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 Multi-phase equilibrium
-\begin_inset LatexCommand \index{equilibrium}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+equilibrium
+\end_layout
 
 \end_inset
 
  libraries
-\begin_inset LatexCommand \label{cha:physprops}
+\begin_inset CommandInset label
+LatexCommand label
+name "cha:physprops"
 
 \end_inset
 
@@ -45,22 +92,42 @@ Multi-phase equilibrium
 
 \begin_layout Standard
 This chapter describes the models we provide to compute thermodynamic properties
-\begin_inset LatexCommand \index{thermodynamic properties}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+thermodynamic properties
+\end_layout
 
 \end_inset
 
  for multi-phase
-\begin_inset LatexCommand \index{multi-phase}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+multi-phase
+\end_layout
 
 \end_inset
 
 , multi-component
-\begin_inset LatexCommand \index{multi-component}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+multi-component
+\end_layout
 
 \end_inset
 
  vapor/liquid mixtures
-\begin_inset LatexCommand \index{vapor/liquid mixtures}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+vapor/liquid mixtures
+\end_layout
 
 \end_inset
 
@@ -81,9 +148,9 @@ phases.a4l
 \family typewriter
 components.a4l
 \family default
- and
+ and 
 \family typewriter
- thermodynamics.a4l
+thermodynamics.a4l
 \family default
 .
  These libraries contain many models, but the end user is only interested
@@ -96,7 +163,7 @@ components.a4l
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 first the phase definitions
 \end_layout
 
@@ -105,7 +172,9 @@ first the phase definitions
 The first contains the models we use to define the phases we allow for a
  mixture (i.e., vapor, liquid, vapor/liquid, liquid/liquid and vapor/liquid/liquid
 )
-\begin_inset LatexCommand \ref{id:#id(pgfId-1010487)}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "id:#id(pgfId-1010487)"
 
 \end_inset
 
@@ -113,7 +182,7 @@ The first contains the models we use to define the phases we allow for a
 \begin_inset Foot
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 It should be noted that, while the models will correctly set up the data
  structures for the liquid/liquid and vapor/liquid/liquid options, we do
  not really support these alternatives at this time.
@@ -130,7 +199,7 @@ It should be noted that, while the models will correctly set up the data
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 then the components and their data
 \end_layout
 
@@ -139,28 +208,53 @@ then the components and their data
 The second library contains the models having all the component physical
  properties for the components we include with ASCEND -- e.g., there are property
  values for heat capacity
-\begin_inset LatexCommand \index{heat capacity}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+heat capacity
+\end_layout
 
 \end_inset
 
 , heat of vaporization
-\begin_inset LatexCommand \index{heat of vaporization}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+heat of vaporization
+\end_layout
 
 \end_inset
 
 , accentric factor
-\begin_inset LatexCommand \index{accentric factor}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+accentric factor
+\end_layout
 
 \end_inset
 
  and so forth for water, methanol, carbon dioxide, etc.
  There is also the very extensive list of group contribution
-\begin_inset LatexCommand \index{group contribution}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+group contribution
+\end_layout
 
 \end_inset
 
  data we need to use the UNIFAC
-\begin_inset LatexCommand \index{UNIFAC}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+UNIFAC
+\end_layout
 
 \end_inset
 
@@ -171,7 +265,7 @@ The second library contains the models having all the component physical
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 and finally the mixture thermodynamic models
 \end_layout
 
@@ -179,17 +273,32 @@ and finally the mixture thermodynamic models
 
 The third provides the models we use to compute multi-component mixture
  thermodynamic properties for phases, such as ideal gas
-\begin_inset LatexCommand \index{ideal gas}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+ideal gas
+\end_layout
 
 \end_inset
 
 , Pitzer
-\begin_inset LatexCommand \index{Pitzer}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Pitzer
+\end_layout
 
 \end_inset
 
 , UNIFAC, and Wilson
-\begin_inset LatexCommand \index{Wilson}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Wilson
+\end_layout
 
 \end_inset
 
@@ -197,7 +306,12 @@ The third provides the models we use to compute multi-component mixture
  The final model in this library is the one to compute equilibrium conditions
  for multi-component, multi-phase systems.
  We provide both a constant relative volatility
-\begin_inset LatexCommand \index{relative volatility}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+relative volatility
+\end_layout
 
 \end_inset
 
@@ -206,7 +320,12 @@ y between which one to use.
  Thus one can first assume constant relative volatility to have a better
  chance to converge and then switch to the version that makes the chemical
  potential
-\begin_inset LatexCommand \index{chemical potential}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+chemical potential
+\end_layout
 
 \end_inset
 
@@ -219,7 +338,12 @@ The
 phases.a4l
 \family default
 
-\begin_inset LatexCommand \index{phases.a4l}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+phases.a4l
+\end_layout
 
 \end_inset
 
@@ -230,7 +354,7 @@ phases.a4l
 \begin_inset Marginal
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 need to create only instances of phases_data
 \end_layout
 
@@ -241,7 +365,9 @@ The
 Phases.a4l
 \family default
  library, see Figure 
-\begin_inset LatexCommand \ref{fig:physprops.phases.a4l}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:physprops.phases.a4l"
 
 \end_inset
 
@@ -250,7 +376,25 @@ Phases.a4l
 , has only one model in it, phases_data
 \noun default
 
-\begin_inset LatexCommand \index{phases\_data}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+phases
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+data
+\end_layout
 
 \end_inset
 
@@ -258,11 +402,13 @@ Phases.a4l
 \begin_inset Foot
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 In this and following figures, we represent each model as a rectangle.
  On the upper left is the name of the model.
  In 
-\begin_inset LatexCommand \ref{fig:physprops.phases.a4l}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:physprops.phases.a4l"
 
 \end_inset
 
@@ -273,7 +419,12 @@ Figure 1-1
 , the model is phases_data.
  On the left side we list in order the parameters for the model.
  These are shared objects
-\begin_inset LatexCommand \index{shared objects}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+shared objects
+\end_layout
 
 \end_inset
 
@@ -283,7 +434,9 @@ Figure 1-1
  of the rectangle, including instances of models, atoms and sets.
  The slanted double-headed arrow indicates a set; thus, phases and other_phases
  are sets in phases_data.In 
-\begin_inset LatexCommand \ref{fig:physprops.thermoLib}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:physprops.thermoLib"
 
 \end_inset
 
@@ -298,7 +451,12 @@ Figure 1-3
  We also show connections from the bottom of one model, call it C, to the
  top of another, call it D; with this connection we indicate that the lower
  model D is a refinement
-\begin_inset LatexCommand \index{refinement}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+refinement
+\end_layout
 
 \end_inset
 
@@ -331,7 +489,12 @@ For example, suppose we want to model a flowsheet consisting of a single
 testflashmodel
 \family default
 
-\begin_inset LatexCommand \index{testflashmodel}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+testflashmodel
+\end_layout
 
 \end_inset
 
@@ -340,7 +503,12 @@ testflashmodel
 flash.a4l
 \family default
 
-\begin_inset LatexCommand \index{flash.a4l}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+flash.a4l
+\end_layout
 
 \end_inset
 
@@ -386,12 +554,22 @@ pdVL
 \family default
  contain the data structures the thermodynamic models require to model a
  vapor, liquid and vapor/liquid stream
-\begin_inset LatexCommand \index{stream}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+stream
+\end_layout
 
 \end_inset
 
  (or holdup
-\begin_inset LatexCommand \index{holdup}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+holdup
+\end_layout
 
 \end_inset
 
@@ -402,7 +580,7 @@ pdVL
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 the phase indicators and types
 \end_layout
 
@@ -425,9 +603,9 @@ The first parameter is a character that indicates the phase option desired
 \family typewriter
 'VL'
 \family default
-,
+, 
 \family typewriter
- 'LL'
+'LL'
 \family default
  and 
 \family typewriter
@@ -452,7 +630,12 @@ The first parameter is a character that indicates the phase option desired
  an ordered list giving the three single phase mixture models to be used:
  vapor, liquid1, liquid2.
  For a non-existent phase
-\begin_inset LatexCommand \index{non-existent phase}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+non-existent phase
+\end_layout
 
 \end_inset
 
@@ -465,12 +648,19 @@ The first parameter is a character that indicates the phase option desired
 thermodynamics.a4l
 \family default
 
-\begin_inset LatexCommand \index{thermodynamics.a4l}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+thermodynamics.a4l
+\end_layout
 
 \end_inset
 
 , which we discuss shortly in Section 
-\begin_inset LatexCommand \ref{ssec:physprops.thermoLib}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "ssec:physprops.thermoLib"
 
 \end_inset
 
@@ -485,7 +675,7 @@ wide false
 sideways false
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \noun off
 \begin_inset Graphics
@@ -497,14 +687,29 @@ status open
 
 \end_layout
 
-\begin_layout Caption
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
 Phases.a4l
-\begin_inset LatexCommand \index{Phases.a4l}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Phases.a4l
+\end_layout
 
 \end_inset
 
  models
-\begin_inset LatexCommand \label{fig:physprops.phases.a4l}
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:physprops.phases.a4l"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -522,7 +727,12 @@ The
 components.a4l
 \family default
 
-\begin_inset LatexCommand \index{components.a4l}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+components.a4l
+\end_layout
 
 \end_inset
 
@@ -531,7 +741,9 @@ components.a4l
 
 \begin_layout Standard
 In this library (see Figure 
-\begin_inset LatexCommand \ref{fig:physprops.components.a4l}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:physprops.components.a4l"
 
 \end_inset
 
@@ -540,17 +752,32 @@ In this library (see Figure
 ) we provide the actual physical property data for the components supplied
  with ASCEND.
  The data we provide is that found in the tables at the back of Reid
-\begin_inset LatexCommand \index{Reid}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Reid
+\end_layout
 
 \end_inset
 
 , Prausnitz
-\begin_inset LatexCommand \index{Prausnitz}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Prausnitz
+\end_layout
 
 \end_inset
 
  and Poling
-\begin_inset LatexCommand \index{Poling}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Poling
+\end_layout
 
 \end_inset
 
@@ -559,19 +786,34 @@ In this library (see Figure
 &
 \noun off
  Liquids, 4th Ed, McGraw-Hill
-\begin_inset LatexCommand \index{McGraw-Hill}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+McGraw-Hill
+\end_layout
 
 \end_inset
 
 , New York (1986).
  For a few of the components, we have also identified their UNIFAC groups
-\begin_inset LatexCommand \index{UNIFAC groups}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+UNIFAC groups
+\end_layout
 
 \end_inset
 
 .
  We include a few Wilson binary mixture parameters
-\begin_inset LatexCommand \index{Wilson binary mixture parameters}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Wilson binary mixture parameters
+\end_layout
 
 \end_inset
 
@@ -582,7 +824,7 @@ In this library (see Figure
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 need to create only instances of components_data
 \end_layout
 
@@ -616,7 +858,12 @@ testflashmodel
 flash.a4l
 \family default
 
-\begin_inset LatexCommand \index{flash.a4l}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+flash.a4l
+\end_layout
 
 \end_inset
 
@@ -644,14 +891,19 @@ cd
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 reference component
 \end_layout
 
 \end_inset
 
 The choice of which species to use as the reference component
-\begin_inset LatexCommand \index{reference component}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+reference component
+\end_layout
 
 \end_inset
 
@@ -667,7 +919,7 @@ wide false
 sideways false
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename howto-physpropsFig2.eps
 	width 100col%
@@ -677,14 +929,29 @@ status open
 
 \end_layout
 
-\begin_layout Caption
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
 components.a4l
-\begin_inset LatexCommand \index{components.a4l}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+components.a4l
+\end_layout
 
 \end_inset
 
  models
-\begin_inset LatexCommand \label{fig:physprops.components.a4l}
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:physprops.components.a4l"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -700,7 +967,7 @@ components.a4l
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 adding a new component
 \end_layout
 
@@ -735,7 +1002,9 @@ SELECT
  statement in
 \family typewriter
 
-\newline
+\begin_inset Newline newline
+\end_inset
+
 td_thermodynamic_constants
 \family default
  (for an example, look at how it is done for 'methanol')
@@ -745,14 +1014,19 @@ td_thermodynamic_constants
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 adding UNIFAC group identifiers
 \end_layout
 
 \end_inset
 
 Put the UNIFAC group identifiers
-\begin_inset LatexCommand \index{UNIFAC group identifiers}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+UNIFAC group identifiers
+\end_layout
 
 \end_inset
 
@@ -770,7 +1044,25 @@ You can find all the UNIFAC group identifiers possible in the model
 UNIFAC_constants
 \family default
 
-\begin_inset LatexCommand \index{UNIFAC\_constants}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+UNIFAC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+constants
+\end_layout
 
 \end_inset
 
@@ -815,14 +1107,19 @@ CASE
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 adding Wilson parameters
 \end_layout
 
 \end_inset
 
 To add Wilson parameters
-\begin_inset LatexCommand \index{Wilson parameters}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Wilson parameters
+\end_layout
 
 \end_inset
 
@@ -897,12 +1194,19 @@ The
 thermodynamics.a4l
 \family default
 
-\begin_inset LatexCommand \index{thermodynamics.a4l}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+thermodynamics.a4l
+\end_layout
 
 \end_inset
 
  library
-\begin_inset LatexCommand \label{ssec:physprops.thermoLib}
+\begin_inset CommandInset label
+LatexCommand label
+name "ssec:physprops.thermoLib"
 
 \end_inset
 
@@ -913,14 +1217,16 @@ thermodynamics.a4l
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 create instances only of phase_partials and thermodynamics
 \end_layout
 
 \end_inset
 
 Figure 
-\begin_inset LatexCommand \ref{fig:physprops.thermoLib}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:physprops.thermoLib"
 
 \end_inset
 
@@ -935,7 +1241,25 @@ phase_partials
 \family default
 \noun off
 
-\begin_inset LatexCommand \index{phase\_partials}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+phase
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+partials
+\end_layout
 
 \end_inset
 
@@ -973,18 +1297,18 @@ phase_partials
 \begin_inset Note Note
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Need to explain UNIFAC, Pitzer etc, since these terms are not familiar to
  the Mechanical Engineer, and no details are provided as to which is appropriate
  for which types of problems.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Also, it would be useful to know how to model a homogenous two-phase stream
  of gas/liquid mixture of a single component.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Also, the documentation needs a 'hello world' example of how to use the
  properties correlation, eg how to compute the enthalpy of water at room
  temperature / atmospheric pressure.
@@ -1006,7 +1330,9 @@ phase_partials
 phase_paritals
 \family default
  model in Figure 
-\begin_inset LatexCommand \ref{fig:physprops.thermoLib}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:physprops.thermoLib"
 
 \end_inset
 
@@ -1019,7 +1345,38 @@ ideal_vapor_mixture
 \family default
 \noun off
 
-\begin_inset LatexCommand \index{ideal\_vapor\_mixture}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+ideal
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+vapor
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+mixture
+\end_layout
 
 \end_inset
 
@@ -1030,7 +1387,38 @@ Pitzer_vapor_mixture
 \family default
 \noun off
 
-\begin_inset LatexCommand \index{Pitzer\_vapor\_mixture}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Pitzer
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+vapor
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+mixture
+\end_layout
 
 \end_inset
 
@@ -1041,7 +1429,38 @@ UNIFAC_liquid_mixture
 \family default
 \noun off
 
-\begin_inset LatexCommand \index{UNIFAC\_liquid\_mixture}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+UNIFAC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+liquid
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+mixture
+\end_layout
 
 \end_inset
 
@@ -1052,7 +1471,38 @@ Wilson_liquid_mixture
 \family default
 \noun off
 
-\begin_inset LatexCommand \index{Wilson\_liquid\_mixture}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Wilson
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+liquid
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+mixture
+\end_layout
 
 \end_inset
 
@@ -1065,7 +1515,7 @@ wide false
 sideways false
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \noun off
 \begin_inset Graphics
@@ -1078,9 +1528,19 @@ status open
 
 \end_layout
 
-\begin_layout Caption
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
 Models in thermodynamic.a4l
-\begin_inset LatexCommand \label{fig:physprops.thermoLib}
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:physprops.thermoLib"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -1107,7 +1567,25 @@ phase_partials
 stream_holdup.a4l
 \family default
 
-\begin_inset LatexCommand \index{stream\_holdup.a4l}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+stream
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+holdup.a4l
+\end_layout
 
 \end_inset
 
@@ -1120,7 +1598,38 @@ phases_data
 
 \begin_layout LyX-Code
 MODEL select_mixture_type
-\begin_inset LatexCommand \index{select\_mixture\_type}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+select
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+mixture
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+type
+\end_layout
 
 \end_inset
 
@@ -1283,7 +1792,7 @@ state IS_A thermodynamics(cd, pd, phase, equilibrated);
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 cannot directly embed SELECT statements in FOR loops
 \end_layout
 
@@ -1324,7 +1833,13 @@ phase_type
 SELECT
 \family default
  statements
-\begin_inset LatexCommand \index{SELECT statements. embedded in FOR}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+SELECT statements.
+ embedded in FOR
+\end_layout
 
 \end_inset
 
@@ -1397,9 +1912,14 @@ smt
 \begin_inset Marginal
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 disappearing phases
-\begin_inset LatexCommand \index{disappearing phases}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+disappearing phases
+\end_layout
 
 \end_inset
 
@@ -1410,7 +1930,12 @@ disappearing phases
 
 The multi-phase model handles the case where a phase disappears by using
  a complementarity
-\begin_inset LatexCommand \index{complementarity}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+complementarity
+\end_layout
 
 \end_inset
 
@@ -1505,12 +2030,22 @@ stream_holdup.a4l
 
 \begin_layout Subsection
 Streams
-\begin_inset LatexCommand \index{streams}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+streams
+\end_layout
 
 \end_inset
 
  and holdups
-\begin_inset LatexCommand \index{holdups}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+holdups
+\end_layout
 
 \end_inset
 
@@ -1567,7 +2102,12 @@ equilibrated
 
 \begin_layout Subsection
 Flash units
-\begin_inset LatexCommand \index{flash units}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+flash units
+\end_layout
 
 \end_inset
 
@@ -1586,7 +2126,38 @@ flash.a4l
 
 \begin_layout LyX-Code
 MODEL vapor_liquid_flash
-\begin_inset LatexCommand \index{vapor\_liquid\_flash}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+vapor
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+liquid
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+flash
+\end_layout
 
 \end_inset
 
@@ -1714,7 +2285,12 @@ simple_reboiler
 
 \begin_layout Subsection
 Distillation columns
-\begin_inset LatexCommand \index{Distillation columns}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Distillation columns
+\end_layout
 
 \end_inset
 
@@ -1727,7 +2303,12 @@ We provide two libraries that allow you to model distillation columns:
 column.a4l
 \family default
 
-\begin_inset LatexCommand \index{column.a4l}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+column.a4l
+\end_layout
 
 \end_inset
 
@@ -1736,7 +2317,12 @@ column.a4l
 collocation.a4l
 \family default
 
-\begin_inset LatexCommand \index{collocation.a4l}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+collocation.a4l
+\end_layout
 
 \end_inset
 
@@ -1774,7 +2360,9 @@ Dynamic unit models
 \begin_layout Standard
 ASCEND contains models for simulating the dynamic behavior of units.
  Their use is described in Chapter 
-\begin_inset LatexCommand \vref{cha:ivp}
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "cha:ivp"
 
 \end_inset
 

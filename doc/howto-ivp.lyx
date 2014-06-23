@@ -1,42 +1,89 @@
-#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 245
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
 \begin_document
 \begin_header
 \textclass book
+\use_default_options false
+\maintain_unincluded_children false
 \language english
+\language_package default
 \inputencoding auto
-\fontscheme default
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
 \graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
 \paperfontsize default
 \spacing single
+\use_hyperref false
 \papersize default
 \use_geometry false
-\use_amsmath 2
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 1
+\use_package esint 0
+\use_package mathdots 0
+\use_package mathtools 1
+\use_package mhchem 0
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
 \cite_engine basic
+\cite_engine_type default
+\biblio_style plain
 \use_bibtopic false
+\use_indices false
 \paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
-\defskip medskip
+\paragraph_indentation default
 \quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
 \tracking_changes false
-\output_changes true
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 The modeling of a simple dynamic tank
-\begin_inset LatexCommand \index{dynamic tank}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+dynamic tank
+\end_layout
 
 \end_inset
 
 
-\begin_inset LatexCommand \label{cha:ivp}
+\begin_inset CommandInset label
+LatexCommand label
+name "cha:ivp"
 
 \end_inset
 
@@ -46,15 +93,25 @@ The modeling of a simple dynamic tank
 \begin_layout Standard
 This chapter assumes you have read Chapter
 \color black
-\InsetSpace ~
 
-\begin_inset LatexCommand \vref{cha:model1}
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "cha:model1"
 
 \end_inset
 
- and Chapter\InsetSpace ~
+ and Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand \vref{cha:model2}
+
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "cha:model2"
 
 \end_inset
 
@@ -64,7 +121,12 @@ This chapter assumes you have read Chapter
 \begin_layout Standard
 The purpose of this chapter is to be a good first step along the path to
  learning how to use ASCEND for dynamic simulations
-\begin_inset LatexCommand \index{dynamic simulation}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+dynamic simulation
+\end_layout
 
 \end_inset
 
@@ -72,10 +134,12 @@ The purpose of this chapter is to be a good first step along the path to
 \begin_inset Foot
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Some further information on this topic is available in the report by Perry
  and Allan 
-\begin_inset LatexCommand \cite{Perry1996}
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Perry1996"
 
 \end_inset
 
@@ -88,7 +152,12 @@ Some further information on this topic is available in the report by Perry
  We shall lead you through the steps for creating a simple model.
  You will also learn the standard methods that we employ for our dynamic
  libraries
-\begin_inset LatexCommand \index{dynamic libraries}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+dynamic libraries
+\end_layout
 
 \end_inset
 
@@ -101,9 +170,12 @@ Some further information on this topic is available in the report by Perry
 The problem
 \end_layout
 
-\begin_layout List
+\begin_layout Labeling
 \labelwidthstring 00.00.0000
-Step\InsetSpace ~
+Step
+\begin_inset space ~
+\end_inset
+
 1: We would like to create a dynamic model of a simple tank.
 \end_layout
 
@@ -125,7 +197,12 @@ Creating a script to load and execute an instance of the model.
 
 \begin_layout Itemize
 Integrating
-\begin_inset LatexCommand \index{integrating}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+integrating
+\end_layout
 
 \end_inset
 
@@ -138,14 +215,21 @@ View Integration Results.
 
 \begin_layout Section
 Converting the word description
-\newline
+\begin_inset Newline newline
+\end_inset
+
 into an ASCEND model
 \end_layout
 
 \begin_layout Standard
-As stated in Section\InsetSpace ~
+As stated in Section
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand \vref{sec:model1.converting-the-word}
+
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "sec:model1.converting-the-word"
 
 \end_inset
 
@@ -156,32 +240,62 @@ As stated in Section\InsetSpace ~
  We will have to create our type definition as a text file using a text
  editor.
  (Possible text editors
-\begin_inset LatexCommand \index{text editor}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+text editor
+\end_layout
 
 \end_inset
 
  are Word
-\begin_inset LatexCommand \index{Word}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Word
+\end_layout
 
 \end_inset
 
 , Emacs
-\begin_inset LatexCommand \index{Emacs}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Emacs
+\end_layout
 
 \end_inset
 
 , Notepad
-\begin_inset LatexCommand \index{Notepad}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Notepad
+\end_layout
 
 \end_inset
 
 , pico
-\begin_inset LatexCommand \index{pico}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+pico
+\end_layout
 
 \end_inset
 
 , vi
-\begin_inset LatexCommand \index{vi}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+vi
+\end_layout
 
 \end_inset
 
@@ -191,9 +305,14 @@ As stated in Section\InsetSpace ~
 
 \begin_layout Standard
 We need first to decide the parts to our model.
- In this case we know that we need the variables listed in Table\InsetSpace ~
+ In this case we know that we need the variables listed in Table
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand \eqref{cap:Variables-required-for}
+
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "cap:Variables-required-for"
 
 \end_inset
 
@@ -202,7 +321,12 @@ We readily fill in the first three columns in this table, and we can also
  each of the parts.
  To find the ASCEND variable type needed for the fourth column use the find
  menu on the library window and select ATOM by units
-\begin_inset LatexCommand \index{atom, select by units}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+atom, select by units
+\end_layout
 
 \end_inset
 
@@ -217,50 +341,60 @@ wide false
 sideways false
 status open
 
-\begin_layout Caption
-\begin_inset LatexCommand \label{cap:Variables-required-for}
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "cap:Variables-required-for"
 
 \end_inset
 
 Variables required for model
 \end_layout
 
-\begin_layout Standard
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="8" columns="4">
-<features>
-<column alignment="center" valignment="top" leftline="true" width="0">
-<column alignment="center" valignment="top" leftline="true" width="1.5in">
-<column alignment="center" valignment="top" leftline="true" width="1.5in">
-<column alignment="center" valignment="top" leftline="true" rightline="true" width="1in">
-<row topline="true" bottomline="true">
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top" width="1.5in">
+<column alignment="center" valignment="top" width="1.5in">
+<column alignment="center" valignment="top" width="1in">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Symbol
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Meaning
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Typical Units
 \begin_inset Foot
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 as entered into ASCEND
 \end_layout
 
@@ -271,21 +405,21 @@ as entered into ASCEND
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 ASCEND variable type
 \end_layout
 
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 M
@@ -296,7 +430,7 @@ M
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Moles in Tank
 \end_layout
 
@@ -305,7 +439,7 @@ Moles in Tank
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 mol, kmol
 \end_layout
 
@@ -314,18 +448,18 @@ mol, kmol
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 mole
 \end_layout
 
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 dM_dt
@@ -336,7 +470,7 @@ dM_dt
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Rate of change of Moles in tank (derivative)
 \end_layout
 
@@ -345,7 +479,7 @@ Rate of change of Moles in tank (derivative)
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 mol/sec, kmol/sec
 \end_layout
 
@@ -354,18 +488,18 @@ mol/sec, kmol/sec
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 molar_rate
 \end_layout
 
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 input
@@ -376,7 +510,7 @@ input
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Feed flow rate
 \end_layout
 
@@ -385,7 +519,7 @@ Feed flow rate
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 mol/sec, kmol/sec
 \end_layout
 
@@ -394,18 +528,18 @@ mol/sec, kmol/sec
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 molar_rate
 \end_layout
 
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 output
@@ -416,7 +550,7 @@ output
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Output flow rate
 \end_layout
 
@@ -425,7 +559,7 @@ Output flow rate
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 mol/sec, kmol/sec
 \end_layout
 
@@ -434,18 +568,18 @@ mol/sec, kmol/sec
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 molar_rate
 \end_layout
 
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 Volume
@@ -456,7 +590,7 @@ Volume
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Volume of liquid in the tank
 \end_layout
 
@@ -465,7 +599,7 @@ Volume of liquid in the tank
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 m^3,ft^3
 \end_layout
 
@@ -474,18 +608,18 @@ m^3,ft^3
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 volume
 \end_layout
 
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 density
@@ -496,7 +630,7 @@ density
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Molar density of tank fluid
 \end_layout
 
@@ -505,7 +639,7 @@ Molar density of tank fluid
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 mol/m^3,mol/ft^3
 \end_layout
 
@@ -514,18 +648,18 @@ mol/m^3,mol/ft^3
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 molar_density
 \end_layout
 
 \end_inset
 </cell>
 </row>
-<row topline="true" bottomline="true">
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 dynamic
@@ -533,28 +667,28 @@ dynamic
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Boolean for switching between dynamic and steady state simulations
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 N/A
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 boolean
 \end_layout
 
@@ -576,7 +710,12 @@ boolean
 \begin_layout Standard
 We would like to be able to compute the number of moles in the tank for
  a given volume assuming steady state
-\begin_inset LatexCommand \index{steady state}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+steady state
+\end_layout
 
 \end_inset
 
@@ -591,7 +730,12 @@ The first equation is the differential equation that relates the input and
  output flows to the accumulation in the tank.
  The second equation is the relation of the moles in the tank to the volume
  of liquid and should be rearranged to avoid division
-\begin_inset LatexCommand \index{division, avoid}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+division, avoid
+\end_layout
 
 \end_inset
 
@@ -600,8 +744,10 @@ The first equation is the differential equation that relates the input and
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula \begin{equation}
-dM\_dt=input-output\label{eq:ivp.dMdt}\end{equation}
+\begin_inset Formula 
+\begin{equation}
+dM\_dt=input-output\label{eq:ivp.dMdt}
+\end{equation}
 
 \end_inset
 
@@ -609,8 +755,10 @@ dM\_dt=input-output\label{eq:ivp.dMdt}\end{equation}
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula \begin{equation}
-Volume=\frac{M}{density}\label{eq:ivp.Volume}\end{equation}
+\begin_inset Formula 
+\begin{equation}
+Volume=\frac{M}{density}\label{eq:ivp.Volume}
+\end{equation}
 
 \end_inset
 
@@ -631,7 +779,12 @@ REQUIRE "atoms.a4l";
 
 \begin_layout LyX-Code
 MODEL tank
-\begin_inset LatexCommand \index{tank, dynamic MODEL}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+tank, dynamic MODEL
+\end_layout
 
 \end_inset
 
@@ -1114,7 +1267,12 @@ set_ode
 \family default
  method is used to set up the equations and variables described in the model
  for integration by LSODE
-\begin_inset LatexCommand \index{LSODE}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+LSODE
+\end_layout
 
 \end_inset
 
@@ -1126,9 +1284,14 @@ t
 \family default
  (time), which variables are the derivatives, and which are the states.
  The way we do this is we have to add a few extra attributes to each variable.
- In Section\InsetSpace ~
+ In Section
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand \ref{sec:model1.converting-the-word}
+
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:model1.converting-the-word"
 
 \end_inset
 
@@ -1138,7 +1301,12 @@ t
  etc.
  We need to add 5 more of this type of parameter.
  These attributes
-\begin_inset LatexCommand \index{attributes, ODE variables}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+attributes, ODE variables
+\end_layout
 
 \end_inset
 
@@ -1152,9 +1320,9 @@ ode_type
 \family typewriter
 ode_id
 \family default
-,
+, 
 \family typewriter
- obs_id
+obs_id
 \family default
 , 
 \family typewriter
@@ -1178,7 +1346,12 @@ system.a4l
 ivpsystem.a4l
 \family default
 
-\begin_inset LatexCommand \index{ivpsystem.a4l}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+ivpsystem.a4l
+\end_layout
 
 \end_inset
 
@@ -1263,7 +1436,12 @@ y.dat
 obs.dat
 \family default
  respectfully; however, they can be changed in the solver options
-\begin_inset LatexCommand \index{options, solver}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+options, solver
+\end_layout
 
 \end_inset
 
@@ -1303,7 +1481,12 @@ seqmod
 dynamic
 \family default
 
-\begin_inset LatexCommand \index{dynamic, boolean variable}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+dynamic, boolean variable
+\end_layout
 
 \end_inset
 
@@ -1376,7 +1559,12 @@ We are now ready to read in and compile an instance of our tank model.
 
 \begin_layout Subsubsection*
 Script code
-\begin_inset LatexCommand \index{script, solve dynamic model}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+script, solve dynamic model
+\end_layout
 
 \end_inset
 
@@ -1594,7 +1782,12 @@ values
 
 \begin_layout Standard
 After solving for the initial conditions
-\begin_inset LatexCommand \index{initial conditions}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+initial conditions
+\end_layout
 
 \end_inset
 
@@ -1708,7 +1901,12 @@ Viewing Simulation Results
 
 \begin_layout Standard
 To view the simulation results, open the ASCPLOT
-\begin_inset LatexCommand \index{ASCPLOT}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+ASCPLOT
+\end_layout
 
 \end_inset
 
@@ -1720,7 +1918,12 @@ To view the simulation results, open the ASCPLOT
  Once the data file is loaded, you can double click on the file name in
  the top window to get a list of the variables in the file.
  This list will appear in the left window named Unused variables
-\begin_inset LatexCommand \index{variables, unused}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+variables, unused
+\end_layout
 
 \end_inset
 
@@ -1782,19 +1985,34 @@ Graphing in Windows
 
 \begin_layout Standard
 Under MS Windows
-\begin_inset LatexCommand \index{MS Windows}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+MS Windows
+\end_layout
 
 \end_inset
 
  the default graph program Tkxgraph
-\begin_inset LatexCommand \index{Tkxgraph}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Tkxgraph
+\end_layout
 
 \end_inset
 
  gives you full control of the options without having to go through the
  ASCPLOT Options menu.
  Tkxgraph is also available for UNIX, but xgraph
-\begin_inset LatexCommand \index{xgraph}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+xgraph
+\end_layout
 
 \end_inset
 
@@ -1811,7 +2029,51 @@ If you decide you do not like the plotting tools described above, you have
 asc_merge_data_file
 \family default
 
-\begin_inset LatexCommand \index{asc\_merge\_data\_file}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+asc
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+merge
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+data
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+file
+\end_layout
 
 \end_inset
 
@@ -1866,7 +2128,12 @@ input_file_names
 
 \begin_layout Standard
 If the matlab
-\begin_inset LatexCommand \index{matlab}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+matlab
+\end_layout
 
 \end_inset
 
@@ -1918,7 +2185,12 @@ When the data is converted to be used in matlab the first thing that is
 
 \begin_layout Subsubsection*
 Excel
-\begin_inset LatexCommand \index{Excel}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Excel
+\end_layout
 
 \end_inset
 
@@ -1954,7 +2226,12 @@ This is not so much a conversion as a merge and is the origin of the command.
 
 \begin_layout Section
 Preparing a model for reuse
-\begin_inset LatexCommand \index{reuse, model}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+reuse, model
+\end_layout
 
 \end_inset
 
@@ -1962,9 +2239,14 @@ Preparing a model for reuse
 \end_layout
 
 \begin_layout Standard
-There are four major ways to prepare a model for reuse as described in Chapter\InsetSpace ~
+There are four major ways to prepare a model for reuse as described in Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand \ref{cha:model2}
+
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "cha:model2"
 
 \end_inset
 
@@ -1976,7 +2258,12 @@ There are four major ways to prepare a model for reuse as described in Chapter\I
 
 \begin_layout Subsection
 Parameterizing
-\begin_inset LatexCommand \index{parameterizing}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+parameterizing
+\end_layout
 
 \end_inset
 
@@ -1984,9 +2271,14 @@ Parameterizing
 \end_layout
 
 \begin_layout Standard
-As stated in Section\InsetSpace ~
+As stated in Section
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand \vref{sec:model2.parameterizingVessel}
+
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "sec:model2.parameterizingVessel"
 
 \end_inset
 
@@ -2013,7 +2305,25 @@ ode_id
 set_ode
 \family default
 
-\begin_inset LatexCommand \index{set\_ode}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+set
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+ode
+\end_layout
 
 \end_inset
 
@@ -2161,9 +2471,9 @@ set_ode
 \family typewriter
 tank_1
 \family default
- is run, the
+ is run, the 
 \family typewriter
- ode_id
+ode_id
 \family default
 s are set to the current value of 
 \family typewriter
