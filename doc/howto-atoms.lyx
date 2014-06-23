@@ -1,46 +1,78 @@
-#LyX 1.5.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 276
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
 \begin_document
 \begin_header
 \textclass book
+\use_default_options false
+\maintain_unincluded_children false
 \language english
+\language_package default
 \inputencoding auto
+\fontencoding global
 \font_roman default
 \font_sans default
 \font_typewriter default
+\font_math auto
 \font_default_family default
+\use_non_tex_fonts false
 \font_sc false
 \font_osf false
 \font_sf_scale 100
 \font_tt_scale 100
 \graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
 \paperfontsize default
 \spacing single
+\use_hyperref false
 \papersize a4paper
 \use_geometry false
-\use_amsmath 2
-\use_esint 0
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 1
+\use_package esint 0
+\use_package mathdots 0
+\use_package mathtools 1
+\use_package mhchem 0
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
 \cite_engine basic
+\cite_engine_type default
+\biblio_style plain
 \use_bibtopic false
+\use_indices false
 \paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
-\defskip medskip
+\paragraph_indentation default
 \quotes_language english
 \papercolumns 1
 \papersides 2
 \paperpagestyle default
 \tracking_changes false
 \output_changes false
-\author "" 
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 Defining Variables and Scaling Values
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "cha:atoms"
 
 \end_inset
@@ -52,15 +84,19 @@ name "cha:atoms"
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 the purpose of this chapter
 \end_layout
 
 \end_inset
 
-By now you have probably read Chapter\InsetSpace ~
+By now you have probably read Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand vref
+
+\begin_inset CommandInset ref
+LatexCommand vref
 reference "cha:model1"
 
 \end_inset
@@ -91,8 +127,12 @@ The "Big Picture" of how variables, constants, and scaling values relate
  You do not need to read about the "Big Picture" in order to read and use
  the other parts of this chapter, but you may find it helpful if you are
  having trouble writing an equation
-\begin_inset LatexCommand index
-name "equation, writing"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+equation, writing
+\end_layout
 
 \end_inset
 
@@ -142,8 +182,12 @@ How to define a scaling variable to make your equations much easier to solve.
 
 \begin_layout Section
 The Big Picture: a taxonomy
-\begin_inset LatexCommand index
-name "taxonomy"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+taxonomy
+\end_layout
 
 \end_inset
 
@@ -151,9 +195,13 @@ name "taxonomy"
 \end_layout
 
 \begin_layout Standard
-As you read in Chapter\InsetSpace ~
+As you read in Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cha:model1"
 
 \end_inset
@@ -162,7 +210,8 @@ reference "cha:model1"
  definitions are defined by creating types in an ASCEND language text file
  that you load into the ASCEND system.
  Figure 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "fig:atoms.taxonomy"
 
 \end_inset
@@ -188,7 +237,7 @@ wide false
 sideways false
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \align center
 
 \noun off
@@ -201,11 +250,12 @@ status open
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Caption
+\begin_layout Plain Layout
+\begin_inset Caption Standard
 
-\begin_layout Standard
-\begin_inset LatexCommand label
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
 name "fig:atoms.taxonomy"
 
 \end_inset
@@ -226,8 +276,12 @@ The big picture: how to think about variables
 \begin_layout Paragraph
 
 \noun off
-\begin_inset LatexCommand index
-name "atom"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+atom
+\end_layout
 
 \end_inset
 
@@ -265,8 +319,12 @@ Each subatomic particle instance belongs to exactly one atom instance (one
 \end_layout
 
 \begin_layout Paragraph
-\begin_inset LatexCommand index
-name "constant"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+constant
+\end_layout
 
 \end_inset
 
@@ -293,8 +351,12 @@ Integer and symbol constants can appear as members of sets or as subscripts
 \end_layout
 
 \begin_layout Paragraph
-\begin_inset LatexCommand index
-name "set"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+set
+\end_layout
 
 \end_inset
 
@@ -311,8 +373,12 @@ Sets are unordered lists of either integer or symbol constants.
 \end_layout
 
 \begin_layout Paragraph
-\begin_inset LatexCommand index
-name "relationship"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+relationship
+\end_layout
 
 \end_inset
 
@@ -321,14 +387,22 @@ relationships
 
 \begin_layout Itemize
 Relations and logical relations allow you to state 
-\begin_inset LatexCommand index
-name "equalities"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+equalities
+\end_layout
 
 \end_inset
 
 equalities and 
-\begin_inset LatexCommand index
-name "inequalitites"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+inequalitites
+\end_layout
 
 \end_inset
 
@@ -341,14 +415,22 @@ inequalities among the variables and constants in you models.
 
 \begin_layout Standard
 Real
-\begin_inset LatexCommand index
-name "real"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+real
+\end_layout
 
 \end_inset
 
  
-\begin_inset LatexCommand index
-name "relation, real"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+relation, real
+\end_layout
 
 \end_inset
 
@@ -360,14 +442,22 @@ relations relate the values of real atoms, real constants, and integer constants
 
 \begin_layout Standard
 Logical
-\begin_inset LatexCommand index
-name "logical"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+logical
+\end_layout
 
 \end_inset
 
  relations
-\begin_inset LatexCommand index
-name "logical relation"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+logical relation
+\end_layout
 
 \end_inset
 
@@ -377,8 +467,12 @@ name "logical relation"
 SATISFIED
 \family default
 
-\begin_inset LatexCommand index
-name "SATISFIED"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+SATISFIED
+\end_layout
 
 \end_inset
 
@@ -411,8 +505,12 @@ WHEN statements are outside the scope of this chapter; please see **conditional
 \end_layout
 
 \begin_layout Paragraph
-\begin_inset LatexCommand index
-name "model"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+model
+\end_layout
 
 \end_inset
 
@@ -427,8 +525,12 @@ A model is simply a container for a collection of atoms, constants, sets,
  The container also specifies some of the methods that can be used to manipulate
  its contents.
  Compiling a model creates an instance of it-- a simulation
-\begin_inset LatexCommand index
-name "simulation"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+simulation
+\end_layout
 
 \end_inset
 
@@ -476,8 +578,12 @@ lower_bound
 
 \begin_layout Paragraph
 Scaling
-\begin_inset LatexCommand index
-name "scaling"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+scaling
+\end_layout
 
 \end_inset
 
@@ -504,8 +610,12 @@ solver_var
 \begin_layout Standard
 This is one of the many reasons that scientists and engineers work with
  dimensionless models
-\begin_inset LatexCommand index
-name "dimensionless models"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+dimensionless models
+\end_layout
 
 \end_inset
 
@@ -521,8 +631,12 @@ name "dimensionless models"
 
 \begin_layout Section
 How to find the right variable type
-\begin_inset LatexCommand index
-name "type, variable"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+type, variable
+\end_layout
 
 \end_inset
 
@@ -544,7 +658,7 @@ The type of real atom you want to use depends first on the dimensionality
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Load atoms.a4l
 \end_layout
 
@@ -562,7 +676,7 @@ ascend4/models/atoms.a4l
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Find an ATOM or CONSTANT by units
 \end_layout
 
@@ -593,7 +707,7 @@ ding SI units.
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Selecting the right type
 \end_layout
 
@@ -624,13 +738,18 @@ You now know the name of the variable type you need, or you know that you
 
 \begin_layout Section
 How to define a new type of variable
-\begin_inset LatexCommand index
-name "type, variable"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+type, variable
+\end_layout
 
 \end_inset
 
 
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "ssec:atoms.newVarType"
 
 \end_inset
@@ -655,7 +774,7 @@ atoms.a4l
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Saving customized variable types
 \end_layout
 
@@ -670,8 +789,12 @@ ascdata
 myatoms.a4l
 \family default
  is  the normal location for a personal
-\begin_inset LatexCommand index
-name "library, personal"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+library, personal
+\end_layout
 
 \end_inset
 
@@ -710,8 +833,12 @@ If you develop an interesting set of atoms for some problem domain outside
 The user data directory 
 \family typewriter
 ~/
-\begin_inset LatexCommand index
-name "ascdata"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+ascdata
+\end_layout
 
 \end_inset
 
@@ -719,8 +846,12 @@ ascdata
 \family default
  may have a different name if you are running under Windows and do not have
  the environment variable HOME
-\begin_inset LatexCommand index
-name "HOME"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+HOME
+\end_layout
 
 \end_inset
 
@@ -824,8 +955,12 @@ In picking the name of your atom, remember that names should be as self-explanat
 ory as possible.
  Also avoid choosing a name that ends in _constant (as this is conventionally
  applied only to CONSTANT
-\begin_inset LatexCommand index
-name "CONSTANT"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+CONSTANT
+\end_layout
 
 \end_inset
 
@@ -840,7 +975,7 @@ name "CONSTANT"
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Exceptions 
 \end_layout
 
@@ -898,14 +1033,22 @@ For example, negative temperature just is not sensible for most physical
 
 \begin_layout Subsection
 A new real constant
-\begin_inset LatexCommand index
-name "real constant"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+real constant
+\end_layout
 
 \end_inset
 
  
-\begin_inset LatexCommand index
-name "constant, real"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+constant, real
+\end_layout
 
 \end_inset
 
@@ -946,7 +1089,7 @@ Here again, the italic parts of this incantation should be redefined for
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Universal exceptions and unit conversions
 \end_layout
 
@@ -957,14 +1100,22 @@ It is wasteful to define a
 CONSTANT
 \family default
  type and a compiled object to represent a universal
-\begin_inset LatexCommand index
-name "universal constant"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+universal constant
+\end_layout
 
 \end_inset
 
 
-\begin_inset LatexCommand index
-name "constant, universal"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+constant, universal
+\end_layout
 
 \end_inset
 
@@ -973,8 +1124,12 @@ name "constant, universal"
  {J/mole/K}, is frequently needed in modeling chemical systems.
  The SI value of R does not vary with its application.
  Neither does the value of 
-\begin_inset LatexCommand index
-name "pi"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+pi
+\end_layout
 
 \end_inset
 
@@ -986,8 +1141,12 @@ name "pi"
  Numeric constants of this sort are better represented as a numeric coefficient
  and an appropriately defined unit conversion.
  Consider the 
-\begin_inset LatexCommand index
-name "ideal gas law"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+ideal gas law
+\end_layout
 
 \end_inset
 
@@ -1064,8 +1223,12 @@ CONSTANT
 
 \begin_layout Section
 How to define a 
-\begin_inset LatexCommand index
-name "scaling"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+scaling
+\end_layout
 
 \end_inset
 
@@ -1102,7 +1265,7 @@ END distance_scale;
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 ASCEND cannot do it all for you
 \end_layout
 
@@ -1112,8 +1275,12 @@ ASCEND uses a combination of symbolic and numerical techniques to create
  and solve mathematical problems.
  Once you get the problem close to the solution, ASCEND can internally compute
  its own scaling values for relations, known elsewhere as "relation nominals
-\begin_inset LatexCommand index
-name "nominals"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+nominals
+\end_layout
 
 \end_inset
 
@@ -1136,23 +1303,48 @@ This internal scaling works quite well, but not when the problem is very
 scale_self
 \family default
 
-\begin_inset LatexCommand index
-name "scale\\_self"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+scale
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
 
 \end_inset
 
- method, which should be written for every model as described in Section\InsetSpace ~
+self
+\end_layout
 
-\begin_inset LatexCommand ref
+\end_inset
+
+ method, which should be written for every model as described in Section
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "sssec:methods.scaleself"
 
 \end_inset
 
  of Chapter
 \noun off
-\InsetSpace ~
 
-\begin_inset LatexCommand vref
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset ref
+LatexCommand vref
 reference "cha:methods"
 
 \end_inset
@@ -1174,15 +1366,19 @@ MODEL
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Scaling atom default value
 \end_layout
 
 \end_inset
 
 The 
-\begin_inset LatexCommand index
-name "default value"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+default value
+\end_layout
 
 \end_inset
 

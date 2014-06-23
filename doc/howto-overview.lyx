@@ -1,47 +1,78 @@
-#LyX 1.5.1 created this file. For more info see http://www.lyx.org/
-\lyxformat 276
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
 \begin_document
 \begin_header
 \textclass book
+\use_default_options false
+\maintain_unincluded_children false
 \language english
+\language_package default
 \inputencoding auto
+\fontencoding global
 \font_roman default
 \font_sans default
 \font_typewriter default
+\font_math auto
 \font_default_family default
+\use_non_tex_fonts false
 \font_sc false
 \font_osf false
 \font_sf_scale 100
 \font_tt_scale 100
 \graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
 \paperfontsize default
 \spacing single
+\use_hyperref false
 \papersize a4paper
 \use_geometry false
-\use_amsmath 2
-\use_esint 0
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 1
+\use_package esint 0
+\use_package mathdots 0
+\use_package mathtools 1
+\use_package mhchem 0
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
 \cite_engine basic
+\cite_engine_type default
+\biblio_style plain
 \use_bibtopic false
+\use_indices false
 \paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
-\defskip medskip
+\paragraph_indentation default
 \quotes_language english
 \papercolumns 1
 \papersides 2
 \paperpagestyle default
 \tracking_changes false
 \output_changes false
-\author "" 
-\author "" 
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 Starting Points
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "cha:Overview"
 
 \end_inset
@@ -70,9 +101,13 @@ Primal Subjects
 \end_layout
 
 \begin_layout Description
-Chapter\InsetSpace ~
+Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cha:model1"
 
 \end_inset
@@ -85,9 +120,13 @@ on of a water tank.
 \end_layout
 
 \begin_layout Description
-Chapter\InsetSpace ~
+Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cha:model2"
 
 \end_inset
@@ -98,9 +137,13 @@ reference "cha:model2"
 \end_layout
 
 \begin_layout Description
-Chapter\InsetSpace ~
+Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cha:model3"
 
 \end_inset
@@ -112,9 +155,13 @@ reference "cha:model3"
 \end_layout
 
 \begin_layout Description
-Chapter\InsetSpace ~
+Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cha:require"
 
 \end_inset
@@ -126,9 +173,13 @@ reference "cha:require"
 \end_layout
 
 \begin_layout Description
-Chapter\InsetSpace ~
+Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cha:plot"
 
 \end_inset
@@ -142,9 +193,12 @@ reference "cha:plot"
 status open
 
 \begin_layout Description
-*howto-specify*\InsetSpace ~
- (Art,Ben, in progress) Defining a square or well-posed problem
- when your model gets big.
+*howto-specify*
+\begin_inset space ~
+\end_inset
+
+ (Art,Ben, in progress) Defining a square or well-posed problem when your
+ model gets big.
  Writing a specify method is the only reliable way to go, and even this
  is not simple unless you plan ahead.
  Degrees of freedom can be tricky.
@@ -156,9 +210,13 @@ status open
 \end_layout
 
 \begin_layout Description
-Chapter\InsetSpace ~
+Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cha:atoms"
 
 \end_inset
@@ -169,9 +227,13 @@ reference "cha:atoms"
 \end_layout
 
 \begin_layout Description
-Chapter\InsetSpace ~
+Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cha:dimeqns"
 
 \end_inset
@@ -180,9 +242,13 @@ reference "cha:dimeqns"
 \end_layout
 
 \begin_layout Description
-Chapter\InsetSpace ~
+Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cha:units"
 
 \end_inset
@@ -209,9 +275,13 @@ status open
 \end_layout
 
 \begin_layout Description
-Chapter\InsetSpace ~
+Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cha:methods"
 
 \end_inset
@@ -229,9 +299,13 @@ Engineering Subjects
 \end_layout
 
 \begin_layout Description
-Chapter\InsetSpace ~
+Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cha:physprops"
 
 \end_inset
@@ -247,15 +321,20 @@ reference "cha:physprops"
 status open
 
 \begin_layout Description
-*howto-column1*\InsetSpace ~
- (Art, in progress) Defining a steady-state distillation
- column in a flowsheet using the column library that comes with ASCEND IV.
+*howto-column1*
+\begin_inset space ~
+\end_inset
+
+ (Art, in progress) Defining a steady-state distillation column in a flowsheet
+ using the column library that comes with ASCEND IV.
 \end_layout
 
 \begin_layout Description
-*howto-reactor*\InsetSpace ~
- (Duncan, in progress) Defining a chemical reactor model
- in a flowsheet.
+*howto-reactor*
+\begin_inset space ~
+\end_inset
+
+ (Duncan, in progress) Defining a chemical reactor model in a flowsheet.
  Not a task for the faint of heart, but probably far easier than defining
  a new reactor in almost any commercial simulator.
 \end_layout
@@ -266,9 +345,13 @@ status open
 \end_layout
 
 \begin_layout Description
-Chapter\InsetSpace ~
+Chapter
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cha:ivp"
 
 \end_inset
@@ -283,23 +366,31 @@ reference "cha:ivp"
 status open
 
 \begin_layout Description
-*howto-dynamic2*\InsetSpace ~
- (Duncan, in progress) Defining a complex dynamic model
- using dynamic libraries.
+*howto-dynamic2*
+\begin_inset space ~
+\end_inset
+
+ (Duncan, in progress) Defining a complex dynamic model using dynamic libraries.
  Dynamic vapor-liquid flash tank.
 \end_layout
 
 \begin_layout Description
-*howto-column2*\InsetSpace ~
- (Duncan, in progress) Simulating a dynamic distillation
- column in a flowsheet using ASCEND.
+*howto-column2*
+\begin_inset space ~
+\end_inset
+
+ (Duncan, in progress) Simulating a dynamic distillation column in a flowsheet
+ using ASCEND.
  
 \end_layout
 
 \begin_layout Description
-*howto-control*\InsetSpace ~
- (Duncan, in progress) Controlling dynamic systems, disturbances,
- and all those pesky graphing tools using the Script window and Tcl.
+*howto-control*
+\begin_inset space ~
+\end_inset
+
+ (Duncan, in progress) Controlling dynamic systems, disturbances, and all
+ those pesky graphing tools using the Script window and Tcl.
  
 \end_layout
 
@@ -309,15 +400,21 @@ status open
 \end_layout
 
 \begin_layout Description
-Chapter\InsetSpace ~
- Writing a conditional model where which equations apply is determined
- by variable values or boundary expressions.
+Chapter
+\begin_inset space ~
+\end_inset
+
+ Writing a conditional model where which equations apply is determined by
+ variable values or boundary expressions.
 \end_layout
 
 \begin_layout Description
-Chapter\InsetSpace ~
- (Ben, in progress) Defining a dynamic model with end-point conditions
- (boundary value problem) using our collocation (bvp) library.
+Chapter
+\begin_inset space ~
+\end_inset
+
+ (Ben, in progress) Defining a dynamic model with end-point conditions (boundary
+ value problem) using our collocation (bvp) library.
 \end_layout
 
 \begin_layout Standard
