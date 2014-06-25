@@ -30,9 +30,9 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 	P->data->cp0->m = 0;
 	int err;
 	FluidState S1, S2;
-	double T, p, rho, rho_f, rho_g, h1, h2, s1, s2, g2, resid;
+	double T, p, rho, rho_f, rho_g, h1, h2, s1, s2, resid;
 #ifdef REF_DEBUG
-	double u;
+	double u, g2;
 #endif
 
 	if(ref->type == FPROPS_REF_REF0){
@@ -299,7 +299,9 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 
 		S2 = fprops_set_Trho(T,rho,P,&res);
 		h2 = fprops_h(S2,&res);
+#ifdef REFSTATE_DEBUG
 		g2 = fprops_g(S2,&res);
+#endif
 		p = fprops_p(S2,&res);
 		if(res)return 4000+res;
 
