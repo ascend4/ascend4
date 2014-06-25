@@ -43,7 +43,7 @@ static HelmholtzData helmholtz_data_oxygen = {
     , .T_c = OXYGEN_TC
     , .rho_c = OXYGEN_RHOC
     , .T_t = 54.361
-    , {FPROPS_REF_TPHS,
+    , {FPROPS_REF_TPHS0,
 		.data={.tphs={
 			.T0 = 298.15
 			,.p0 = 1.01325e5
@@ -53,7 +53,7 @@ static HelmholtzData helmholtz_data_oxygen = {
 	}
     , 0.0222 /* acentric factor, according to REFPROP 8 */
     , &ideal_data_oxygen
-    , 12 /* power terms */
+    , 32 /* power terms */
     , (const HelmholtzPowTerm[]){
         /* a_i, 	t_i, 	d_i, 	l_i */
 		{0.39837687490,     	0,  	1,	0}
@@ -137,9 +137,6 @@ A small set of data points calculated using REFPROP 8.0, for validation.
 const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
-
-	/* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
-	/* (C), (MPa), (kg/m³), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
 	{-210, 0.02, 1.26802754557e3, -1.78916609977e2, -1.78900837449e2, 2.34276499745e0, 1.05931898199e0, 1.67618075825e0, 9.10091734584e-1, -3.26862219566e2}
 	,{-160, 0.02, 6.82492503289e-1, 7.30475393174e1, 1.02351890506e2, 5.94517498132e0, 6.50803410076e-1, 9.13747408186e-1, 9.09812873458e-1, -5.99649009818e2}
 	,{-110, 0.02, 4.72320799598e-1, 1.05625128973e2, 1.47969230729e2, 6.27908102651e0, 6.50345127400e-1, 9.11347209783e-1, 9.09823710085e-1, -9.18806940502e2}

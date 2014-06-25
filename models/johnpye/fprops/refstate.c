@@ -46,6 +46,17 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		MSG("Set PHI0 reference state.");
 		return 0;
 
+	case FPROPS_REF_TPHS0:
+		T = ref->data.tphs.T0;
+		p = ref->data.tphs.p0;
+		h1 = ref->data.tphs.h0;
+		s1 = ref->data.tphs.s0;
+		/* rho at this state = p/R*T by ideal gas equation */
+		P->data->cp0->m = h1/P->data->R/P->data->T_c;
+		P->data->cp0->c = -s1/P->data->R - 1. - log(p/(P->data->rhostar*P->data->R*T)) + log(P->data->Tstar/T);
+		MSG("Set TPHS0 reference state.");
+		return 0;
+
 	case FPROPS_REF_IIR:
 		MSG("Setting IIR reference state.");
 		/* need to calculate the saturated liquid state at 0 deg C */
