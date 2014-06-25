@@ -37,7 +37,7 @@
 #include "thcond.h"
 //#include "mbwr.h"
 
-#define FPR_DEBUG
+//#define FPR_DEBUG
 #ifdef FPR_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
@@ -125,15 +125,14 @@ PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 
 	MSG("Preparing thermal conductivity data...");
 	err = FPROPS_NO_ERROR;
-	thcond_prepare(P,E->thcond,&err);
-	if(err){
-		ERRMSG("Invalid viscosity data for '%s",P->name);
-		/* visc_prepare should return NULL if there was an error, so result is
-		same as when there is no viscosity data at all */
+	if(E->thcond){
+		thcond_prepare(P,E->thcond,&err);
+		if(err){
+			ERRMSG("Invalid viscosity data for '%s",P->name);
+			/* visc_prepare should return NULL if there was an error, so result is
+			same as when there is no viscosity data at all */
+		}
 	}
-
-
-
 	return P;
 }
 

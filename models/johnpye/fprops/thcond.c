@@ -26,7 +26,7 @@
 
 #define K_BOLTZMANN 1.3806488e-23
 
-//#define THCOND_DEBUG
+#define THCOND_DEBUG
 #ifdef THCOND_DEBUG
 # include "color.h"
 # include "test.h"
@@ -40,6 +40,7 @@
 
 void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError *err){
 	MSG("Preparing thermal conductivity: currently we are just reusing the FileData pointer; no changes");
+	ASSERT(K!=NULL);
 	MSG("K.type: %d",K->type);
 	MSG("K.source: %s",K->source);
 	switch(K->type){
