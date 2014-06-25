@@ -30,8 +30,13 @@
 #endif
 
 const ViscosityData *visc_prepare(const EosData *E, const PureFluid *P, FpropsError *err){
-	MSG("Preparing viscosity: currently we are just reusing the FileData pointer; no changes");
-	return E->visc;
+	if(E->visc){
+		MSG("Preparing viscosity: currently we are just reusing the FileData pointer; no changes");
+		return E->visc;
+	}else{
+		ERRMSG("Viscosity data is missing for fluid '%s'",P->name);
+		return NULL;
+	}
 }
 
 /*----------------------FIRST CORRELATION---------------------------*/
