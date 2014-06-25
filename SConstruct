@@ -2930,6 +2930,7 @@ env.Append(
 		,r"ascend/utilities/config\.h$", r"pygtk/config\.h$", r"pygtk/config\.py$"
 		,r"pygtk/ascdev$", r"ascxx/testconopt$", r"ascend/compiler/scanner\.c$"
 		,r"datareader/.*TY\.csv$"
+		,r"[a-z]+/.*/.*\.spec$"
 		,r"ascxx/ascpy_wrap\.h",r"ascxx/config\.h$"
 		,r"tcltk/interface/ascend4$",r"ascxx/testslvreq$",r"test/test$"
 		,r"models/johnpye/datareader/.*\.tm2\.Z$"

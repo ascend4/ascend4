@@ -1,17 +1,19 @@
-Name:		ascend
-Summary:	ASCEND modelling environment
-Version:	0.9.9
-Release:	0%{?dist}
-License:	GPLv2+
-URL:		http://ascend4.org/
-Source:		ascend-0.9.9.tar.bz2
-
 # prevent filtering for 'provides' tagging of ASCEND models/solvers
 %{?filter_setup:
 %filter_provides_in %{_libdir}/ascend/models/.*\.so$
 %filter_provides_in %{_libdir}/ascend/solvers/.*\.so$
 %filter_setup
 }
+%{!?python2_sitearch: %global python2_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(pat_specific=1)")}
+%global gtksourceview_lang_file %{_datadir}/gtksourceview-3.0/language-specs/ascend.lang
+
+Name:		ascend
+Summary:	ASCEND modelling environment
+Version:	0.9.9
+Release:	0%{?dist}
+License:	GPLv2+
+URL:		http://ascend4.org/
+Source:		http://ascend4.org/ascend-0.9.9.tar.bz2
 
 #------ build dependencies -------
 BuildRequires: scons >= 0.96.92
@@ -29,6 +31,7 @@ BuildRequires: python2-devel
 BuildRequires: coin-or-Ipopt-devel >= 3.10
 BuildRequires: MUMPS-devel
 BuildRequires: lapack-devel
+BuildRequires: CUnit-devel
 %else
 BuildRequires: python-devel >= 2.4
 BuildRequires: gcc-c++ >= 4
@@ -46,22 +49,20 @@ Requires: blas%{?_isa}
 Requires: sundials%{?_isa}
 Requires: coin-or-Ipopt%{?_isa}
 
-# ...pygtk
+# ... pygtk
 Requires: python%{?_isa} >= 2.4
 Requires: pygtk2 >= 2.6
-#         ^...libglade is no longer required; we use gtk.Builder
+#	^...libglade is no longer required; we use gtk.Builder
+
 Requires: python-matplotlib
 Requires: numpy
 Requires: ipython
-# syntax highlighting for gedit
+# ... syntax highlighting for gedit
 Requires: gtksourceview3
 
 # ... file association
 #Requires(post): desktop-file-utils shared-mime-info
 #Requires(postun): desktop-file-utils shared-mime-info
-
-%{!?python2_sitearch: %define python2_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(pat_specific=1)")}
-%define gtksourceview_lang_file %{_datadir}/gtksourceview-3.0/language-specs/ascend.lang
 
 %description
 ASCEND IV is both a large-scale object-oriented mathematical
@@ -71,52 +72,22 @@ Engineers, great care has been exercised to assure that it is
 domain independent. ASCEND can support modeling activities in
 fields from Architecture to (computational) Zoology.
 
-# for the moment we'll just make one big super-package, to keep things 
-# simple for end-users.
-
 %package devel
-Summary: Developer files ASCEND
-Requires: %{name}
+Summary: ASCEND developer files
+Requires: %{name} = %{version}-%{release}
 %description devel
 Developer files for ASCEND, in the form for C header files for the core
 ASCEND library, 'libascend'.
 
 %package doc
-Summary: Documentation for ASCEND
+Summary: ASCEND documentation
+Requires: %{name} = %{version}-%{release}
 %description doc
 Documentation for ASCEND, in the form of a PDF User's Manual.
 
-#%package -n libascend1
-#Summary: Shared library for core ASCEND functionality
-#%description -n libascend1
-#Shared library for ASCEND, providing core functionality including compiler 
-#and solver API.
-
-#%package -n ascend-python
-#Version:    %{version}
-#Summary:    PyGTK user interface for ASCEND
-#
-#%description -n ascend-python
-#PyGTK user interface for ASCEND. This is a new interface that follows GNOME
-#human interface guidelines as closely as possible. It does not as yet provide
-#access to all of the ASCEND functionality provided by the Tcl/Tk interface.
-#
-
-#%package tcltk
-#Summary: Tcl/Tk user interface for ASCEND
-#Requires: xgraph >= 11
-#Requires: tcl%{?_isa} >= 8.3
-#Requires: tk%{?_isa} >= 8.3
-#Requires: tktable < 2.10, tktable >= 2.8
-#
-#%description tcltk
-#Tcl/Tk user interface for ASCEND. This is the original ASCEND IV interface
-#and is a more complete and mature interface than the alternative PyGTK
-#interface. Use this interface if you need to use ASCEND *.a4s files or other
-#functionality not provided by the PyGTK interface.
-
 %prep
-%setup -q -n ascend-0.9.9
+%setup -q -n %{name}-%{version}
+# note Antonio Trande had some sed actions to insert directories into SConstruct, not sure that's needed actually.
 
 %build
 scons %{_smp_mflags} \
@@ -130,9 +101,10 @@ scons %{_smp_mflags} \
 	DEBUG=1 \
 	WITH_DOC_BUILD=0 \
 	WITH_DOC_INSTALL=0 \
+	WITH_TCLTK=0 \
 	WITH_SOLVERS=QRSLV,LSODE,CMSLV,IDA,LRSLV,CONOPT,DOPRI5,IPOPT \
 	ABSOLUTE_PATHS=1 \
-	%{?__cc:CC="%__cc"} %{?__cxx:CXX="%__cxx"} \
+	%{?__cc:CC="%{?ccache} %__cc"} %{?__cxx:CXX="%{?ccache} %__cxx"} \
 	ascend ascxx pygtk tcltk models solvers
 
 %install
@@ -156,27 +128,14 @@ pushd tools/gtksourceview-3.0
 install -m 644 -D ascend.lang %{buildroot}/%{gtksourceview_lang_file}
 popd
 
-# Install menu entry for Tcl/Tk interface
-#pushd tcltk/gnome
-#install -m 644 -D ascend4.desktop %{buildroot}/%{_datadir}/applications/ascend4.desktop
-#install -m 644 -D ascend4.png %{buildroot}/%{_datadir}/icons/ascend4-app.png
-#install -m 644 -D ascend4.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend4.png
-#popd
-
 #/usr/lib/rpm/redhat/brp-strip-shared /usr/bin/strip
 
 ##Tricks
 # Fix .desktop files entries
-desktop-file-install                                    \
- --set-icon=ascend-app                                  \
- --remove-key=Encoding                                  \
-%{buildroot}/%{_datadir}/applications/%{name}.desktop
-
-#desktop-file-install                                    \
-# --set-icon=ascend4-app                                  \
-# --remove-key=Encoding                                  \
-# --set-key=Exec --set-value="env ASCENDTK=%{_datadir}/%{name}/tcltk %{name}4" \
-#%{buildroot}/%{_datadir}/applications/%{name}4.desktop
+desktop-file-install \
+	--set-icon=ascend-app \
+	--remove-key=Encoding \
+	%{buildroot}/%{_datadir}/applications/%{name}.desktop
 
 # Fixed execute permission
 pushd %{buildroot}/%{_libdir}
@@ -193,9 +152,9 @@ popd
 
 chmod a+x %{buildroot}/%{_libdir}/libascend.so.1.0
 
-for file in %{buildroot}%{johnpye}/fprops/test/{ph,sat,sat1,ideal}; do
-   chmod a+x $file
-done
+#for file in %{buildroot}%{johnpye}/fprops/test/{ph,sat,sat1,ideal}; do
+#   chmod a+x $file
+#done
 
 %post
 /sbin/ldconfig
@@ -224,11 +183,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %{gtksourceview_lang_file}
 %{_datadir}/icons/text-x-ascend-model.svg
 
-#%files -n libascend1
 %defattr(755,root,root)
 %{_libdir}/libascend.so.*
 
-# %package python
 %defattr(755,root,root)
 %{_bindir}/ascend
 %{python_sitearch}/ascend/_ascpy.so
@@ -240,22 +197,12 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %{_datadir}/icons/ascend-app.png
 %{_datadir}/icons/hicolor/64x64/ascend.png
 
-# %package -n python-fprops
+# ...files python-fprops
 %defattr(755,root,root)
 %{python_sitearch}/_fprops.so
 %defattr(644,root,root)
 %{python_sitearch}/fprops.py
 %{python_sitearch}/fprops.py[oc]
-
-#%files tcltk
-#%defattr(755,root,root)
-#%{_bindir}/ascend4
-#%{_libdir}/libascendtcl.so
-#%defattr(644,root,root)
-#%{_datadir}/ascend/tcltk
-#%{_datadir}/applications/ascend4.desktop
-#%{_datadir}/icons/ascend4-app.png
-#%{_datadir}/icons/hicolor/64x64/ascend4.png
 
 %files devel
 %defattr(755,root,root)
@@ -324,6 +271,3 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 
 * Thu Apr 06 2006 John Pye <john.pye@student.unsw.edu.au>
 - First RPM package for new SCons build
-
-# vim: set syntax=spec:
-
