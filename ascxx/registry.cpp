@@ -6,10 +6,10 @@ extern "C"{
 
 #include <stdexcept>
 
-void
-Registry::setInteger(const char *key, int val){
+/*void
+Registry::setInteger(const char *key, intptr_t val){
 	importhandler_setsharedpointer(key,(void *)val);
-}
+}*/
 
 void
 Registry::setPointer(const char *key, void *val){

@@ -26,7 +26,7 @@ ASC_IMPORT void * importhandler_getsharedpointer(const char *);
 
 class Registry{
 public:
-	void setInteger(const char *key, int value);
+//	void setInteger(const char *key, int value);
 	void setPointer(const char *key, void *value);
 	Instanc *getInstance(const char *key);
 	Simulation &getSimulation(const char *key);
