@@ -65,6 +65,7 @@ typedef enum{
 	,FPROPS_REF_TPF = 7  /**< Reference state of h=0 and s=0 for liquid at the triple point */
 	,FPROPS_REF_TPFU = 8 /**< Reference state of u=0 and s=0 for liquid at the triple point */
 	,FPROPS_REF_TPHG = 9 /**< Reference state specified by T0, p0, h0 and g0 (Gibbs energy) */
+	,FPROPS_REF_TPHS0 = 10 /**< Reference state specified by T0, p0, h0 and s0 for ideal (zero-pressure) case */
 /* HACK?: */
 	,FPROPS_REF_REF0 /**< Special case: apply the 'ref0' reference state, which should allow calculuation of enthalpy of formation and absolute entropy */
 } ReferenceStateType;
