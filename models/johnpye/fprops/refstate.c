@@ -6,20 +6,13 @@
 #include <stdio.h>
 #include <math.h>
 
-#define REF_DEBUG
-#define REF_ERRORS
-
+//#define REF_DEBUG
 #ifdef REF_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
-#else
-# define MSG(ARGS...) ((void)0)
-#endif
-
-#ifdef REF_ERRORS
-# include "color.h"
 # define ERRMSG FPROPS_ERRMSG
 #else
+# define MSG(ARGS...) ((void)0)
 # define ERRMSG(ARGS...) ((void)0)
 #endif
 

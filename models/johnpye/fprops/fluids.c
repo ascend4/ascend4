@@ -8,31 +8,13 @@
 #include <stdio.h>
 #include <assert.h>
 
-#define FLUIDS_DEBUG
-#define FLUIDS_ERRORS
-
+//#define FLUIDS_DEBUG
 #ifdef FLUIDS_DEBUG
 # include "color.h"
-# define MSG(FMT, ...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
-	color_on(stderr,ASC_FG_BRIGHTBLUE);\
-	fprintf(stderr,"%s: ",__func__);\
-	color_off(stderr);\
-	fprintf(stderr,FMT "\n",##__VA_ARGS__)
+# define MSG FPROPS_MSG
+# define ERRMSG FPROPS_ERRMSG
 #else
 # define MSG(ARGS...) ((void)0)
-#endif
-
-/* TODO centralise declaration of our error-reporting function somehow...? */
-#ifdef FLUIDS_ERRORS
-# include "color.h"
-# define ERRMSG(STR,...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"ERROR:");\
-	color_off(stderr);\
-	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
-#else
 # define ERRMSG(ARGS...) ((void)0)
 #endif
 
