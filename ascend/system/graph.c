@@ -42,10 +42,6 @@
 # define ASC_CGRAPH_LIBNAME ASC_GV_LIBNAME
 #endif
 
-#ifdef WITH_CGRAPH
-# error "Not ready for this yet"
-#endif
-
 #include "./graph.h"
 #include "slv_client.h"
 #include "incidence.h"
