@@ -1375,6 +1375,7 @@ def CheckDMalloc(context):
 # graphviz test
 
 graphviz_test_text = """
+#define WITH_CGRAPH
 #ifdef __WIN32__
 # include <gvc.h>
 #else
@@ -1384,7 +1385,7 @@ int main(void){
 	Agraph_t *g;
 	GVC_t *gvc;
 	gvc = gvContext();
-	g = agopen("g", AGDIGRAPH);
+	g = agopen("g", Agdirected, 0);
 	return 0;
 }
 """

@@ -68,37 +68,37 @@ int system_write_graph(slv_system_t sys
 	const struct var_variable **ivars;
 	unsigned niv;
 	char reltemp[200];
-	Agedge_t *e;
+	//Agedge_t *e;
 
 	char temp[200];
 
 	/* function pointers */
 	GVC_t *(*gvConte)();
 	Agdesc_t Agdirected = { 1, 0, 0, 1};
-	Agnode_t *(*agno)(Agraph_t* , char*);
+	Agnode_t *(*agno)(Agraph_t* , char*, int);
 	Agraph_t *(*agop)(char* , Agdesc_t type, int);
-	void (*agnodeat) (Agraph_t* , char* , char*);
-	Agedge_t *(*aged)(Agraph_t* , Agnode_t*, Agnode_t*);
+	Agsym_t *(*agatt)(Agraph_t * g, int kind, char *name, char *value);
+	Agedge_t *(*aged)(Agraph_t* , Agnode_t*, Agnode_t*, void*,int);
 	void (*gvLayo)(GVC_t* , Agraph_t*, char*);
 	void (*gvRend)(GVC_t* , Agraph_t*, char*, FILE*);
 
 	res = Asc_DynamicLoad(ASC_GV_LIBNAME,NULL);
 	if(res){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Unable to access GraphViz on your system. Is it installed?");
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Unable to access GraphViz 'gvc' on your system. Is it installed?");
 		return 1;
 	}
 
 //	*(void **) (&Agdire) = Asc_DynamicFunction(ASC_GV_LIBNAME,"Agdirected");
 	*(void **) (&gvConte) = Asc_DynamicFunction(ASC_GV_LIBNAME,"gvContext");
 	*(void **) (&agop) = Asc_DynamicFunction(ASC_GV_LIBNAME,"agopen");
-	*(void **) (&agnodeat) = Asc_DynamicFunction(ASC_GV_LIBNAME,"agnodeattr");
+	*(void **) (&agatt) = Asc_DynamicFunction(ASC_GV_LIBNAME,"agattr");
 	*(void **) (&agno) = Asc_DynamicFunction(ASC_GV_LIBNAME,"agnode");
 	*(void **) (&ags) = Asc_DynamicFunction(ASC_GV_LIBNAME,"agset");
 	*(void **) (&aged) = Asc_DynamicFunction(ASC_GV_LIBNAME,"agedge");
 	*(void **) (&gvLayo) = Asc_DynamicFunction(ASC_GV_LIBNAME,"gvLayout");
 	*(void **) (&gvRend) = Asc_DynamicFunction(ASC_GV_LIBNAME,"gvRender");
 
-	if(!gvConte || !agop || !agnodeat | !agno | !ags || !aged || !gvLayo || !gvRend /*|| !Agdire */){
+	if(!gvConte || !agop || !agatt | !agno | !ags || !aged || !gvLayo || !gvRend /*|| !Agdire */){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Unable to access find required functions in dynamically-loaded library '%s'. Do you have the correct version installed?",ASC_GV_LIBNAME);
 		return 1;
 	}
@@ -108,17 +108,17 @@ int system_write_graph(slv_system_t sys
 	/* create the graph and its style details */
 	gvc = (*gvConte)();
 	g = (*agop)("g",Agdirected,0);
-	(*agnodeat)(g,"shape","ellipse");
-	(*agnodeat)(g,"label","");
-	(*agnodeat)(g,"color","");
-	(*agnodeat)(g,"style","");
+	(*agatt)(g,AGNODE,"shape","ellipse");
+	(*agatt)(g,AGNODE,"label","");
+	(*agatt)(g,AGNODE,"color","");
+	(*agatt)(g,AGNODE,"style","");
 
 	/* create notes for the relations */
 	for(i=0; i < id.neqn; ++i){
 		char *relname;
 		relname = rel_make_name(sys,id.rlist[i]);
 		sprintf(temp,"r%d",rel_sindex(id.rlist[i]));
-		n = (*agno)(g,temp);
+		n = (*agno)(g,temp,1);
 		(*ags)(n,"label",relname);
 		if(rel_satisfied(id.rlist[i])){
 			(*ags)(n,"style","filled");
@@ -134,7 +134,7 @@ int system_write_graph(slv_system_t sys
 		char *varname;
 		varname = var_make_name(sys,id.vlist[j]);
 		sprintf(temp,"v%d",var_sindex(id.vlist[j]));
-		n = (*agno)(g,temp);
+		n = (*agno)(g,temp,1);
 		(*ags)(n,"label",varname);
 		(*ags)(n, "shape", "box");
 		if(var_fixed(id.vlist[j])){
@@ -164,13 +164,13 @@ int system_write_graph(slv_system_t sys
 			const struct var_variable *v;
 			v = ivars[j];
 			sprintf(temp,"v%d",var_sindex(v));
-			n = (*agno)(g, reltemp);
-			m = (*agno)(g, temp);
+			n = (*agno)(g, reltemp,1);
+			m = (*agno)(g, temp,1);
 
 			if(id.v2pc[var_sindex(v)]==id.e2pr[rel_sindex(id.rlist[i])]){
-				e = (*aged)(g,n,m); /* from rel to var */
+				(*aged)(g,n,m,NULL,1); /* from rel to var */
 			}else{
-				e = (*aged)(g,m,n); /* from var to rel */
+				(*aged)(g,m,n,NULL,1); /* from var to rel */
 			}
 			edgecount++;
 		}
