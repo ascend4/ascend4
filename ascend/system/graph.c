@@ -29,17 +29,14 @@
 #include <ascend/general/platform.h>
 
 #ifdef WITH_GRAPHVIZ
-# ifdef __WIN32__
-#  include <gvc.h>
-# else
-#  include <graphviz/gvc.h>
-# endif
-# define HAVE_BOOLEAN
+#define WITH_CGRAPH
+# include <cgraph.h>
+# include <gvc.h>
 #endif
 
 #define ASC_GV_LIBNAME "libgvc.so"
 
-#include "graph.h"
+#include "./graph.h"
 #include "slv_client.h"
 #include "incidence.h"
 #include <ascend/general/ascMalloc.h>
@@ -77,8 +74,9 @@ int system_write_graph(slv_system_t sys
 
 	/* function pointers */
 	GVC_t *(*gvConte)();
+	Agdesc_t Agdirected = { 1, 0, 0, 1};
 	Agnode_t *(*agno)(Agraph_t* , char*);
-	Agraph_t *(*agop)(char* , int);
+	Agraph_t *(*agop)(char* , Agdesc_t type, int);
 	void (*agnodeat) (Agraph_t* , char* , char*);
 	Agedge_t *(*aged)(Agraph_t* , Agnode_t*, Agnode_t*);
 	void (*gvLayo)(GVC_t* , Agraph_t*, char*);
@@ -90,6 +88,7 @@ int system_write_graph(slv_system_t sys
 		return 1;
 	}
 
+//	*(void **) (&Agdire) = Asc_DynamicFunction(ASC_GV_LIBNAME,"Agdirected");
 	*(void **) (&gvConte) = Asc_DynamicFunction(ASC_GV_LIBNAME,"gvContext");
 	*(void **) (&agop) = Asc_DynamicFunction(ASC_GV_LIBNAME,"agopen");
 	*(void **) (&agnodeat) = Asc_DynamicFunction(ASC_GV_LIBNAME,"agnodeattr");
@@ -99,7 +98,7 @@ int system_write_graph(slv_system_t sys
 	*(void **) (&gvLayo) = Asc_DynamicFunction(ASC_GV_LIBNAME,"gvLayout");
 	*(void **) (&gvRend) = Asc_DynamicFunction(ASC_GV_LIBNAME,"gvRender");
 
-	if(!gvConte || !agop || !agnodeat | !agno | !ags || !aged || !gvLayo || !gvRend){
+	if(!gvConte || !agop || !agnodeat | !agno | !ags || !aged || !gvLayo || !gvRend /*|| !Agdire */){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Unable to access find required functions in dynamically-loaded library '%s'. Do you have the correct version installed?",ASC_GV_LIBNAME);
 		return 1;
 	}
@@ -108,7 +107,7 @@ int system_write_graph(slv_system_t sys
 
 	/* create the graph and its style details */
 	gvc = (*gvConte)();
-	g = (*agop)("g",AGDIGRAPH);
+	g = (*agop)("g",Agdirected,0);
 	(*agnodeat)(g,"shape","ellipse");
 	(*agnodeat)(g,"label","");
 	(*agnodeat)(g,"color","");
