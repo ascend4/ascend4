@@ -103,7 +103,7 @@ public:
 	std::vector<Variable> getallVariables();
 	Matrix getMatrix();
 
-	void write(FILE *fp,const char *type=NULL) const;
+	void write(const char *fname,const char *type=NULL) const;
 
 	void setSolver(Solver &s);
 	const Solver getSolver() const;

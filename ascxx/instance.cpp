@@ -629,9 +629,12 @@ Instanc::getPlot() const{
 }
 
 void
-Instanc::write(FILE *fp) const{
+Instanc::write(const char *fname) const{
+	FILE *fp;
+	fp = fopen(fname,"wb");
 	if(!fp)throw runtime_error("NULL file pointer");
 	WriteInstance(fp,i);
+	fclose(fp);
 }
 
 //----------------------------
