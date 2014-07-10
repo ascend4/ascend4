@@ -150,7 +150,7 @@ Simulation::getNumVars(){
 	A general purpose routine for reporting from simulations.
 */
 void
-Simulation::write(FILE *fp, const char *type) const{
+Simulation::write(const char *fname, const char *type) const{
 	int res;
 
 #if 0
@@ -167,15 +167,17 @@ Simulation::write(FILE *fp, const char *type) const{
 
 	if(type==NULL){
 		CONSOLE_DEBUG("Writing simroot...");
-		simroot.write(fp);
+		simroot.write(fname);
 		return;
 	}else if(string(type) == "dot"){
 		if(!sys)throw runtime_error("Can't write DOT file: simulation not built");
 		CONSOLE_DEBUG("Writing graph...");
+		FILE *fp = fopen(fname, "wb");
 		if(!fp){
-			throw runtime_error("Need a file to write to in Simulation::write");
+			throw runtime_error("Unable to open file for writing");
 		}
 		res = system_write_graph(sys, fp, "png");
+		fclose(fp);
 		if(res){
 			stringstream ss;
 			ss << "Error running system_write_graph (err " << res << ")";

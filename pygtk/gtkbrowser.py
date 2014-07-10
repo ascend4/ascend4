@@ -987,22 +987,18 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def on_tools_incidencegraph_click(self,*args):
 		self.reporter.reportNote("Preparing incidence graph...")
-		import tempfile
-		f,fname = tempfile.mkstemp(suffix=".png")
-		f = file(fname,'wb')
-		self.reporter.reportNote("temp file name = %s" % fname)
-		self.reporter.reportNote("file = %s" % f)
+		fname = os.tempnam()
 		self.start_waiting("Creating incidence graph...")
 		try:
-			self.sim.write(f,'dot') # create a PNG file in f
+			self.sim.write(fname,'dot') # create a PNG file in f
 		except Exception,e:
 			self.stop_waiting()
 			self.reporter.reportError("Failed to create incidence graph: %s" % str(e))
 			return
-		f.close()
 		self.stop_waiting()
 		_ig = ImageWindow(self, self.window, fname, title="Incidence Graph", delete=True)
 		_ig.run()
+		self.reporter.reportNote("Deleted temporary file")
 
 	def on_tools_repaint_tree_activate(self,*args):
 		self.reporter.reportNote("Repainting model view...")
