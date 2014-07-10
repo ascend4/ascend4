@@ -283,16 +283,17 @@ ASC_DLLSPEC FILE*g_ascend_information;    /**< File stream to receive general me
 #define	BYTESIZE   8
 #define	WORDSIZE   (sizeof(unsigned)*BYTESIZE)
 
-#ifndef HAVE_BOOLEAN
-/* don't need to define this stuff if using GraphViz types.h (it's already defined identically there) */
 #ifndef TRUE
 # define	TRUE       1
 #endif
 #ifndef FALSE
 # define	FALSE      0
 #endif
+
 typedef	char       *POINTER;       /**< Generic pointer. */
 
+/* graphviz 'types.h' redefines this. we carefully avoid defining it just in the case of system/graph.c */
+#ifndef HAVE_BOOLEAN
 typedef	unsigned char boolean;        /**< Boolean type. */
 /* changed from 'char' to 'unsigned char' for compatibility with standard headers with MinGW GCC 3.4.2 */
 #endif
