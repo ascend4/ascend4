@@ -1177,6 +1177,8 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False,testna
 		context.Message( 'Checking for '+testname+'... ' )
 		
 	if varprefix==None:
+		if not isinstance(libname,str):
+			raise RuntimeError("varprefix must be provided, as libname is not a string")
 		varprefix = libname.upper()
 	
 	#print "LIBS is currently:",context.env.get('LIBS')
@@ -1185,7 +1187,10 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False,testna
 	if not context.env.has_key(varprefix+'_LIB') and not context.env.has_key(varprefix+'_LIBS'):
 		# if varprefix_LIB were in env, KeepContext would 
 		# have appended it already
-		context.env.Append(LIBS=[libname])
+		if isinstance(libname,str):
+			context.env.Append(LIBS=[libname])
+		else:
+			context.env.Append(LIBS=libname)
 
 	is_ok = context.TryLink(text,ext)
 	
@@ -1374,11 +1379,31 @@ def CheckDMalloc(context):
 #----------------
 # graphviz test
 
-graphviz_test_text = """
-#define WITH_CGRAPH
+# test graphviz agraph...
+graphviz_agraph_test_text = """
 #ifdef __WIN32__
 # include <gvc.h>
 #else
+# include <graphviz/gvc.h>
+#endif
+#ifdef WITH_CGRAPH
+# error WITH_CGRAPH is defined!
+#endif
+int main(void){
+	Agraph_t *g;
+	g = agopen("g", AGDIGRAPH);
+	return 0;
+}
+"""
+def CheckGraphVizAgraph(context):
+	return CheckExtLib(context,'gvc',graphviz_agraph_test_text,ext=".c",varprefix="GRAPHVIZ",testname="graphviz agraph")
+
+# test graphviz cgraph
+graphviz_cgraph_test_text = """
+#ifdef __WIN32__
+# include <gvc.h>
+#else
+# include <graphviz/cgraph.h>
 # include <graphviz/gvc.h>
 #endif
 int main(void){
@@ -1389,10 +1414,13 @@ int main(void){
 	return 0;
 }
 """
+def CheckGraphVizCgraph(context):
+	return CheckExtLib(context,['gvc','cgraph'],graphviz_cgraph_test_text,ext=".c",varprefix="GRAPHVIZ",testname="graphviz cgraph")
 
-def CheckGraphViz(context):
-	return CheckExtLib(context,'graphviz',graphviz_test_text,ext=".c")
+#	GVC_t *gvc;
+#	gvc = gvContext();
 
+# test for definition of 'boolean' in graphviz/types.h
 graphviz_boolean_test = """
 #ifdef __WIN32__
 # include <types.h>
@@ -1408,7 +1436,6 @@ int main(void){
 	return 0;
 }
 """
-
 def CheckGraphVizBoolean(context):
 	return CheckExtLib(context,'graphviz',graphviz_boolean_test,ext=".c" \
 		,testname="graphviz 'boolean' definition"
@@ -2064,7 +2091,8 @@ conf = Configure(env
 		, 'CheckDMalloc' : CheckDMalloc
 		, 'CheckLyx' : CheckLyx
 		, 'CheckLatex2HTML' : CheckLatex2HTML
-		, 'CheckGraphViz' : CheckGraphViz
+		, 'CheckGraphVizAgraph' : CheckGraphVizAgraph
+		, 'CheckGraphVizCgraph' : CheckGraphVizCgraph
 		, 'CheckGraphVizBoolean' : CheckGraphVizBoolean
 		, 'CheckUFSparse' : CheckUFSparse
 		, 'CheckTcl' : CheckTcl
@@ -2329,10 +2357,11 @@ if with_dmalloc:
 # GRAPHVIZ
 
 if with_graphviz:
-	if not conf.CheckGraphViz():
-		without_graphviz_reason = 'graphviz not found'
-		with_graphviz = False
-		env['WITH_GRAPHVIZ'] = False
+	if not conf.CheckGraphVizCgraph():
+		if not conf.CheckGraphVizAgraph():
+			without_graphviz_reason = 'graphviz not found (cgraph nor agraph)'
+			with_graphviz = False
+			env['WITH_GRAPHVIZ'] = False
 	env['HAVE_GRAPHVIZ_BOOLEAN'] = conf.CheckGraphVizBoolean()		
 
 # UFSPARSE
