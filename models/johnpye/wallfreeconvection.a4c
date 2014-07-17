@@ -15,7 +15,8 @@ MODEL wallfreeconvection;
 
 	Gr, Pr, Ra, Nu IS_A factor;
 
-	L IS_A distance;
+	L "vertical height" IS_A distance;
+	W "width" IS_A distance;
 
 	nu IS_A kinematic_viscosity;
 	nu = air.mu / air.rho;
@@ -38,12 +39,18 @@ MODEL wallfreeconvection;
 	Qdd IS_A energy_flux;
 	Qdd = h * (T_w - T_amb);
 
+	Q IS_A energy_rate;
+	Q = Qdd * L * W;
+
 METHODS
 METHOD on_load;
-	FIX L := 2.4 {m};
+	FIX L := 1.0 {m};
+	FIX W := 1 {m};
 	FIX T_w := 96{K} + 273.15{K};
 	FIX T_amb := 35{K} + 273.15{K};
 	Ra.nominal := 1e9;	
+	Ra.lower_bound := 0.1;
+	Ra.upper_bound := 1e12;
 END on_load;
 END wallfreeconvection;
 
