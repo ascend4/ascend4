@@ -143,7 +143,7 @@ static HelmholtzData helmholtz_data_carbondioxide = {
 // = sqrt(0.0266958*sqrt(44.0098)/1.00697)
 
 const ViscosityData visc_carbondioxide = {
-	.source="A Fenghour and W A Wakeham, 1998. 'The Viscosity of Carbon Dioxide', J Phys Chem Ref Data 27(1)"
+	.source="A Fenghour, W A Wakeham and V Vesovic, 1998. 'The Viscosity of Carbon Dioxide', J Phys Chem Ref Data 27(1)"
 	,.type=FPROPS_VISC_1
 	,.data={.v1={
 		.mu_star = 1e-6
