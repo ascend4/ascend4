@@ -41,8 +41,15 @@
 
 #define BIGNUM 1.0e8
 
+//#define SAFE_DEBUG
+#ifdef SAFE_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 /*boolean safe_ok = TRUE;*/
-static int safe_print_errors = TRUE;
+static int safe_print_errors = FALSE;
 
 void safe_error_to_stderr(enum safe_err *not_safe){
   if (!safe_print_errors) {

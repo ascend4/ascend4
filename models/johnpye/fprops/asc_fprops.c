@@ -118,7 +118,7 @@ extern
 ASC_EXPORT int fprops_register(){
 	int result = 0;
 
-	ERROR_REPORTER_HERE(ASC_USER_WARNING,"FPROPS is still EXPERIMENTAL. Use with caution.\n");
+	ERROR_REPORTER_HERE(ASC_USER_WARNING,"FPROPS is still EXPERIMENTAL. Use with caution.");
 
 #define CALCFN(NAME,INPUTS,OUTPUTS) \
 	result += CreateUserFunctionBlackBox(#NAME \
