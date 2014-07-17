@@ -10806,7 +10806,7 @@ void Pass2FORMarkCond(struct Instance *inst, struct Statement *statement)
 static
 void Pass1RealExecuteFOR(struct Instance *inst, struct Statement *statement)
 {
-	printf("\n Pass1RealExecuteFOR called \n");
+	/*printf("\n Pass1RealExecuteFOR called \n");*/
   symchar *name;
   struct Expr *ex;
   struct StatementList *sl;

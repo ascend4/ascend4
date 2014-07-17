@@ -256,11 +256,10 @@ int slv_ensure_bounds(slv_system_t sys,int32 lo,int32 hi, FILE *mif)
     } else {
       if( val > high ) {
         if (mif!=NULL) {
-          ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
+          ERROR_REPORTER_START_NOLINE(ASC_USER_WARNING);
           FPRINTF(ASCERR,"Variable '");
           var_write_name(sys,var,ASCERR);
-          FPRINTF(ASCERR,"' was set above its upper bound.\n");
-          FPRINTF(ASCERR,"It will be moved to its upper bound.");
+          FPRINTF(ASCERR,"' was set above its upper bound. It will be moved to its upper bound.");
 		  error_reporter_end_flush();
         }
         var_set_value(var, high);

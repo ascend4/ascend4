@@ -33,7 +33,7 @@
 #include <ascend/utilities/ascEnvVar.h>
 
 //#define DR_DEBUG
-#ifdef DATAREADER_DEBUG
+#ifdef DR_DEBUG
 # define MSG CONSOLE_DEBUG
 #else
 # define MSG(ARGS...) ((void)0)
@@ -94,7 +94,7 @@ DataReader *datareader_new(const char *fn, int noutputs) {
     d->headerfn = NULL;
     d->eoffn = NULL;
 
-    CONSOLE_DEBUG("Datareader created...");
+    MSG("Datareader created...");
     return d;
 }
 /**read the parameter token and return an interpolation type.
@@ -141,7 +141,7 @@ int datareader_set_parameters(DataReader *d, const char *parameters) {
             if (LastTokWasNumeric) parcount++; //last was numeric, no interp_t declared
             d->cols[parcount] = atoi(partok);//assign to corresponding element array
             if (d->cols[parcount] > d->nmaxoutputs) {
-                CONSOLE_DEBUG("col %d, max %d",d->cols[parcount],d->nmaxoutputs);
+                MSG("col %d, max %d",d->cols[parcount],d->nmaxoutputs);
                 ERROR_REPORTER_HERE(ASC_USER_ERROR,
                 "Requested column %d out of range (limit %d). Check your data file and model declaration",d->cols[parcount],d->nmaxoutputs);
                 return 1; //failed due to column out of range
@@ -155,7 +155,7 @@ int datareader_set_parameters(DataReader *d, const char *parameters) {
         }
         partok = strtok(NULL,",:"); //reread parameter string for next token
     }
-	CONSOLE_DEBUG("parcount: %d,noutoputs: %d",parcount,d->noutputs);
+	MSG("parcount: %d,noutoputs: %d",parcount,d->noutputs);
     if (parcount+1 != d->noutputs) {
     	ERROR_REPORTER_HERE(ASC_USER_ERROR,
     	"Number of Columns in parameters and Model dont match, check model declaration");
@@ -193,7 +193,7 @@ int datareader_set_format(DataReader *d, const char *format) {
 
     int i;
 
-    CONSOLE_DEBUG("FORMAT '%s'", format);
+    MSG("FORMAT '%s'", format);
 
     DataReaderFormat found = DATAREADER_INVALID_FORMAT;
     for (i = 0; i < DATAREADER_INVALID_FORMAT; ++i) {
@@ -203,7 +203,7 @@ int datareader_set_format(DataReader *d, const char *format) {
         }
     }
 
-    CONSOLE_DEBUG("FOUND DATA FORMAT %d", found);
+    MSG("FOUND DATA FORMAT %d", found);
 
     switch (found) {
     case DATAREADER_FORMAT_TMY2:
@@ -478,7 +478,7 @@ int datareader_func(DataReader *d, double *inputs, double *outputs) {
     asc_assert(d->indepfn);
 
     if (datareader_locate(d, t, t1, t2)) {
-        CONSOLE_DEBUG("LOCATION ERROR");
+        MSG("LOCATION ERROR");
         ERROR_REPORTER_HERE(ASC_USER_ERROR, "Time value t=%f is out of range", t);
         return 1;
     }
@@ -545,7 +545,7 @@ int datareader_deriv(DataReader *d, double *inputs, double *jacobian) {
     asc_assert(d->indepfn);
 
     if (datareader_locate(d, t, t1, t2)) {
-        CONSOLE_DEBUG("LOCATION ERROR");
+        MSG("LOCATION ERROR");
         ERROR_REPORTER_HERE(ASC_USER_ERROR, "Time value t=%f is out of range", t);
         return 1;
     }
@@ -641,7 +641,7 @@ double dr_cubicinterp(DataReader *d, int j, double t, double *t1, double *t2, do
         d->a2[j] = a2;
         d->a3[j] = a3;
 #ifdef DR_DEBUG
-        if (j == 1 )CONSOLE_DEBUG("Cubic spline coefficients recalculated");
+        if (j == 1 )MSG("Cubic spline coefficients recalculated");
 #endif
     }
     //calculate output value
@@ -696,7 +696,7 @@ double dr_cubicderiv(DataReader *d, int j, double t, double *t1, double *t2, dou
         d->a2[j] = a2;
         d->a3[j] = a3;
 #ifdef DR_DEBUG
-        if (j == 1 )CONSOLE_DEBUG("Cubic spline derivatives recalculated");
+        if (j == 1 )MSG("Cubic spline derivatives recalculated");
 #endif
     }
     //calculate output value

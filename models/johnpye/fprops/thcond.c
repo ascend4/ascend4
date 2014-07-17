@@ -26,14 +26,14 @@
 
 #define K_BOLTZMANN 1.3806488e-23
 
-#define THCOND_DEBUG
+//#define THCOND_DEBUG
 #ifdef THCOND_DEBUG
 # include "color.h"
 # include "test.h"
 # define MSG FPROPS_MSG
 # define ERRMSG FPROPS_ERRMSG
 #else
-//# define ASSERT(ARGS...) (void)0)
+# define ASSERT(ARGS...) ((void)0)
 # define MSG(ARGS...) ((void)0)
 # define ERRMSG(ARGS...) ((void)0)
 #endif
