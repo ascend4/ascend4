@@ -3871,7 +3871,7 @@ static int qrslv_iterate(slv_system_t server, SlvClientToken asys){
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(ASCERR,"Direct solution of relation '");
       print_rel_name(ASCERR,sys,rel);
-      FPRINTF(ASCERR,"' gave a\nvalue of '");
+      FPRINTF(ASCERR,"' gave a value of '");
       print_var_name(ASCERR,sys,var);
       FPRINTF(ASCERR,"' outside its bounds.");
 	  error_reporter_end_flush();
