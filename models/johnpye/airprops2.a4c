@@ -20,13 +20,10 @@ REQUIRE "atoms.a4l";
 REQUIRE "johnpye/moltensalt.a4c";
 
 (*
-	Ideal-gas air, together with some power-law correlations for
-	viscosity and conductivity of uncertain accuracy, obtained from
-	http://dx.doi.org/10.1615/AtoZ.a.air_properties_of
-
-	THIS MODEL IS STILL IN DEVELOPMENT AND DOESN'T WORK YET!!!
+	Ideal-gas air, together with some simplified correlations for
+	viscosity and thermal conductivity.
 *)
-MODEL airprops2 REFINES thermophysical_fluid_base;
+MODEL air_fluid REFINES thermophysical_fluid_base;
 	M IS_A real_constant;
 	M :== 28.97{kg/kmol}; (* Cengel *)
 	R IS_A real_constant;
@@ -61,7 +58,7 @@ MODEL airprops2 REFINES thermophysical_fluid_base;
 	z2_eq: mu - mustar = 5.76e-3{cP} * (dpdT_v/1{atm})^1.126;
 	dpdT_v = rho * R;
 
-	(* conductivity *)
+	(* conductivity, from Kadoya et al, doi:10.1063/1.555744, using ideal EOS because of use of rho in calc *)
 	cc[-4..0,1,5] IS_A real_constant;
 	cc[1] :== 0.239503;
 	cc[5] :== 0.00649768;
@@ -95,15 +92,17 @@ METHODS
 		h.lower_bound := -1e5 {kJ/kg};
 		s.lower_bound := -1e5 {kJ/kg/K};
 		u.lower_bound := -1e5 {kJ/kg};
-	
 	END bound_self;
-	METHOD on_load;
-		RUN ClearAll;
-		RUN bound_self;
+	METHOD default;
 		FIX h_ref := -295.504033483 {kJ/kg};
 		FIX s_ref := 108.501816216 {kJ/kg/K};
+		h := 10 {kJ/kg};	
+	END default;
+	METHOD on_load;
+		RUN ClearAll;
+		RUN default;
 		FIX T := 650{K};
 		FIX p := 10 {MPa};
 	END on_load;
-END airprops2;
+END air_fluid;
  
