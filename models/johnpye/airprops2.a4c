@@ -28,23 +28,22 @@ REQUIRE "johnpye/moltensalt.a4c";
 *)
 MODEL airprops2 REFINES thermophysical_fluid_base;
 	M IS_A real_constant;
-	M :== 28.97{kg/kmol};
+	M :== 28.97{kg/kmol}; (* Cengel *)
 	R IS_A real_constant;
 	R :== 1{GAS_C} / M;
-	T_c IS_A temperature_constant;
-	T_c :== 132.5 {K};
-	p_c IS_A pressure_constant;
-	p_c :== 3.77 {MPa};
-
+	T_star IS_A temperature_constant;
+	T_star :== 132.5 {K}; (* Kadoya et al, 10.1063/1.555744 *)
+	rho_star IS_A mass_density_constant;
+	rho_star :== 314.3 {kg/m^3}; (* Kadoya et al, 10.1063/1.555744 *)
 	(* coefficients of zero-pressure ideal gas equation *)
 	n IS_A integer_constant;
 	n :== 4;
-	a[0..n-1] IS_A real_constant;
-	a[0] :== 28.11;
-	a[1] :== 0.1967e-2;
-	a[2] :== 0.4802e-5;
-	a[3] :== -1.966e-9;
-	cp_eq: cp * M = 1{kJ/kmol/K} * SUM[a[i] * (T/1{K})^i | i IN [0..n-1]];
+	c[0..n-1] IS_A real_constant;
+	c[0] :== 28.11;
+	c[1] :== 0.1967e-2;
+	c[2] :== 0.4802e-5;
+	c[3] :== -1.966e-9;
+	cp_eq: cp * M = 1{kJ/kmol/K} * SUM[c[i] * (T/1{K})^i | i IN [0..n-1]];
 
 	(* ideal gas equation *)
 	rho_eq: p = rho * R * T;
@@ -52,29 +51,59 @@ MODEL airprops2 REFINES thermophysical_fluid_base;
 	h_ref IS_A specific_enthalpy;
 	s_ref IS_A specific_entropy;
 
-	h_eq: (h - h_ref) * M = 1{kJ/kmol} * SUM[a[i]/(i+1) * (T/1{K})^(i+1) | i IN [0..n-1]];
-	s_eq: (s - s_ref) * M = 1{kJ/kmol/K} * a[0]*ln(T/1{K}) - R*ln(p/1{Pa}) + SUM[a[i]/i * (T/1{K})^i | i IN [2..n-1]];
+	h_eq: (h - h_ref) * M = 1{kJ/kmol} * SUM[c[i]/(i+1) * (T/1{K})^(i+1) | i IN [0..n-1]];
+	s_eq: (s - s_ref) * M = 1{kJ/kmol/K} * c[0]*ln(T/1{K}) - R*ln(p/1{Pa}) + SUM[c[i]/i * (T/1{K})^i | i IN [2..n-1]];
 
-	(* viscosity *)
+	(* viscosity from Lo et al, 1966, doi:10.1021/je60031a020, with ideal gas EOS for dpdT_v *)
 	mustar IS_A viscosity;
-	(* Lo et al, 1966, doi:10.1021/je60031a020 *)
-	z1_eq: mustar = 4.38e-3{cP} * (1.01e-3 * T - 0.093)^(5./9);
-	z2_eq: mu - mustar = 5.76e-3{cP} * (rho * R * T_c / p_c)^1.126;
+	z1_eq: mustar = 4.38e-2{cP} * (1.01e-3 * T - 0.093)^(5./9);
+	dpdT_v IS_A solver_var;
+	z2_eq: mu - mustar = 5.76e-3{cP} * (dpdT_v/1{atm})^1.126;
+	dpdT_v = rho * R;
+
+	(* conductivity *)
+	cc[-4..0,1,5] IS_A real_constant;
+	cc[1] :== 0.239503;
+	cc[5] :== 0.00649768;
+	cc[0] :== 1.;
+	cc[-1] :== -1.92615;
+	cc[-2] :== 2.00383;
+	cc[-3] :== -1.07553;
+	cc[-4] :== 0.229414;
+
+	D[1..5] IS_A real_constant;
+	D[1] :== 0.402287;
+	D[2] :==0.356603;
+	D[3] :== -0.163159;
+	D[4] :== 0.138059;
+	D[5] :== 0.0201725;
+
+	lam0, lamr IS_A factor;
+	T_r, rho_r IS_A factor;
+	T_r = T / T_star;
+	rho_r = rho / rho_star;
+	lam0 = cc[1]*T_r + cc[5]*sqrt(T_r) + SUM[cc[i]*T_r^i | i IN [-4..0]];
+	lamr = SUM[D[i]*rho_r^i | i IN [1..5]];
+	GAMMA IS_A real_constant;
+	GAMMA :== 25.9778e-3 {W/m/K};
+	k = GAMMA * (lam0 + lamr);
+
 METHODS
 	METHOD bound_self;
-		h_ref.lower_bound := -1e99 {kJ/kg};
-		s_ref.lower_bound := -1e99 {kJ/kg/K};
-		h.lower_bound := -1e99 {kJ/kg};
-		s.lower_bound := -1e99 {kJ/kg/K};
-		u.lower_bound := -1e99 {kJ/kg};
+		h_ref.lower_bound := -1e5 {kJ/kg};
+		s_ref.lower_bound := -1e5 {kJ/kg/K};
+		h.lower_bound := -1e5 {kJ/kg};
+		s.lower_bound := -1e5 {kJ/kg/K};
+		u.lower_bound := -1e5 {kJ/kg};
+	
 	END bound_self;
 	METHOD on_load;
 		RUN ClearAll;
 		RUN bound_self;
 		FIX h_ref := -295.504033483 {kJ/kg};
 		FIX s_ref := 108.501816216 {kJ/kg/K};
-		FIX T := 273{K};
-		FIX p := 100{atm};
+		FIX T := 650{K};
+		FIX p := 10 {MPa};
 	END on_load;
 END airprops2;
  
