@@ -20,8 +20,10 @@ REQUIRE "atoms.a4l";
 REQUIRE "johnpye/moltensalt.a4c";
 
 (*
-	Ideal-gas air, together with some simplified correlations for
-	viscosity and thermal conductivity.
+	Ideal-gas air with polynomial specific heat capacity,
+	together with some simplified correlations for viscosity and thermal 
+	conductivity. Should be good enough for high-temperature heat transfer
+	problems involving air (>300°C or so).
 *)
 MODEL air_fluid REFINES thermophysical_fluid_base;
 	M IS_A real_constant;
@@ -84,7 +86,6 @@ MODEL air_fluid REFINES thermophysical_fluid_base;
 	GAMMA IS_A real_constant;
 	GAMMA :== 25.9778e-3 {W/m/K};
 	k = GAMMA * (lam0 + lamr);
-
 METHODS
 	METHOD bound_self;
 		h_ref.lower_bound := -1e5 {kJ/kg};
@@ -94,9 +95,10 @@ METHODS
 		u.lower_bound := -1e5 {kJ/kg};
 	END bound_self;
 	METHOD default;
+		RUN bound_self;
 		FIX h_ref := -295.504033483 {kJ/kg};
 		FIX s_ref := 108.501816216 {kJ/kg/K};
-		h := 10 {kJ/kg};	
+		h := 10 {kJ/kg};
 	END default;
 	METHOD on_load;
 		RUN ClearAll;

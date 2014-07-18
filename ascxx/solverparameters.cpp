@@ -10,7 +10,7 @@ using namespace std;
 // SolverParameters
 
 SolverParameters::SolverParameters(const slv_parameters_t &p) : p(p){
-	cerr << "CREATED SOLVERPARAMETERS" << endl;
+	//cerr << "CREATED SOLVERPARAMETERS" << endl;
 }
 
 SolverParameters::SolverParameters(){

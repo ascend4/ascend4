@@ -834,7 +834,7 @@ Asc_ScannerPushBuffer(CONST char *filename)
   if( status == 5 ) {
     /* already required */
     RequireIndex--;
-    CONSOLE_DEBUG("REQUIREd module \"%s\" already PROVIDEd", filename);
+    /*CONSOLE_DEBUG("REQUIREd module \"%s\" already PROVIDEd", filename);*/
     return 1;
   }
   if( status == 4 ) {

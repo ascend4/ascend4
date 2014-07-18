@@ -248,8 +248,7 @@ int slv_ensure_bounds(slv_system_t sys,int32 lo,int32 hi, FILE *mif)
 		ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
         FPRINTF(ASCERR,"Variable '");
         var_write_name(sys,var,ASCERR);
-        FPRINTF(ASCERR,"' was set below its lower bound.\n");
-        FPRINTF(ASCERR,"It will be moved to its lower bound.");
+        FPRINTF(ASCERR,"' was set below its lower bound. It will be moved to its lower bound.");
 		error_reporter_end_flush();
       }
       var_set_value(var, low);
