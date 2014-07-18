@@ -70,3 +70,4 @@ METHODS
 		ASSERT abs(rho - 115.65 {lbm/ft^3}) < 0.1 {lbm/ft^3};
 	END self_test;
 END moltensalt_fluid;
+
