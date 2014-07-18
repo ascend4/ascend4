@@ -113,12 +113,13 @@ METHOD on_load;
 	h := 2000 {kJ/kg};
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
-	SOLVE;
+END on_load;
+METHOD self_test;
 	ASSERT abs(T - 453.03 {K}) < 0.01 {K};
 	ASSERT abs(v - 0.119808 {m^3/kg}) < 0.0001 {m^3/kg};
 	ASSERT abs(x - 0.6142) < 0.0001;
 	ASSERT abs(s - 4.8696 {kJ/kg/K}) < 0.0001 {kJ/kg/K};
-END on_load;
+END self_test;
 END	stream_state_test;
 
 

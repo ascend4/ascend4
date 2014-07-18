@@ -230,7 +230,7 @@ Simulation::run(const Method &method, Instanc &model){
 		CONSOLE_DEBUG("WARNING, SIMULATION NOT YET BUILT");
 	}*/
 
-	CONSOLE_DEBUG("Running method '%s' on simulation '%s'...", method.getName(), (const char *)(getName().getInternalType()));
+	MSG("Running method '%s' on simulation '%s'...", method.getName(), (const char *)(getName().getInternalType()));
 
 	Nam name = Nam(method.getSym());
 	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
@@ -373,7 +373,7 @@ Simulation::checkDoF() const{
     /*if(!is_built){
 		throw runtime_error("System not yet built");
     }*/
-	CONSOLE_DEBUG("Calling slvDOF_status...");
+	MSG("Calling slvDOF_status...");
     slvDOF_status(sys, &status, &dof);
     switch(status){
         case ASCXX_DOF_UNDERSPECIFIED:
@@ -451,7 +451,7 @@ Simulation::checkStructuralSingularity(){
 	}
 
 
-	CONSOLE_DEBUG("processing singularity data...");
+	MSG("processing singularity data...");
 	sing = new SingularityInfo();
 
 	struct var_variable **varlist = slv_get_solvers_var_list(sys);
@@ -478,11 +478,11 @@ Simulation::checkStructuralSingularity(){
 	ASC_FREE(fil);
 
 	if(sing->isSingular()){
-		CONSOLE_DEBUG("singularity found");
+		MSG("singularity found");
 		this->sing = sing;
 		return FALSE;
 	}
-	CONSOLE_DEBUG("no singularity");
+	MSG("no singularity");
 	delete sing;
 	return TRUE;
 }
@@ -561,7 +561,7 @@ Simulation::build(){
 		//CONSOLE_DEBUG("System is already built (%p)",sys);
 		return;
 	}else{
-		CONSOLE_DEBUG("Building system...");
+		MSG("Building system...");
 	}
 
 	if(simroot.getKind() != MODEL_INST){
@@ -579,7 +579,7 @@ Simulation::build(){
 		throw runtime_error("Unable to build system");
 	}
 
-	CONSOLE_DEBUG("System built OK");
+	MSG("System built OK");
 }
 
 
@@ -629,7 +629,7 @@ Simulation::getFixableVariables(){
 	int32 *vip; /** TODO ensure 32 bit integers are used */
 
 	// Get IDs of elegible variables in array at vip...
-	CONSOLE_DEBUG("Calling slvDOF_eligible");
+	MSG("Calling slvDOF_eligible");
 	if(!slvDOF_eligible(sys,&vip)){
 		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"No fixable variables found.");
 	}else{
@@ -711,7 +711,7 @@ Simulation::getVariablesNearBounds(const double &epsilon){
 	}
 
 	int *vip;
-	CONSOLE_DEBUG("Calling slv_near_bounds...");
+	MSG("Calling slv_near_bounds...");
 	if(slv_near_bounds(sys,epsilon,&vip)){
 		struct var_variable **vp = slv_get_solvers_var_list(sys);
 		struct var_variable *var;
@@ -749,7 +749,7 @@ Simulation::getVariablesFarFromNominals(const double &bignum){
 
 	int *vip;
 	int nv;
-	CONSOLE_DEBUG("Calling slv_far_from_nominals...");
+	MSG("Calling slv_far_from_nominals...");
 	if((nv=slv_far_from_nominals(sys, bignum, &vip))){
 		struct var_variable **vp = slv_get_solvers_var_list(sys);
 		struct var_variable *var;

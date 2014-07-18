@@ -37,6 +37,11 @@
 #include <ascend/compiler/extfunc.h>
 
 /* #define EXTPY_DEBUG */
+#ifdef EXTPY_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 
 ImportHandlerCreateFilenameFn extpy_filename;
@@ -114,19 +119,19 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 
 	mainmodule = PyImport_AddModule("__main__");
 	if(mainmodule==NULL){
-		CONSOLE_DEBUG("Unable to retrieve __main__ module");
+		MSG("Unable to retrieve __main__ module");
 		ret = 1;
 		goto cleanup_extpy_invokemethod;
 	}
 
 	dict = PyModule_GetDict(mainmodule);
 	if(dict==NULL){
-		CONSOLE_DEBUG("Unable to retrieve __main__ dict");
+		MSG("Unable to retrieve __main__ dict");
 		ret = 1;
 		goto cleanup_extpy_invokemethod;
 	}
 
-	CONSOLE_DEBUG("Running python method '%s'",extpydata->name);
+	MSG("Running python method '%s'",extpydata->name);
 
 	if(!PyCallable_Check(extpydata->fn)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"user_data is not a PyCallable");
@@ -146,7 +151,7 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 	PyErr_Clear();
 	pyinstance = PyRun_String("ascpy.Registry().getInstance('context')",Py_eval_input,dict,dict);
 	if(PyErr_Occurred()){
-		CONSOLE_DEBUG("Failed retrieving instance");
+		MSG("Failed retrieving instance");
 		ret = 1;
 		goto cleanup_extpy_invokemethod;
 	}
@@ -158,7 +163,7 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 	result = PyEval_CallObject(extpydata->fn, arglist);
 
 	if(PyErr_Occurred()){
-		CONSOLE_DEBUG("Error occured in PyEval_CallObject");
+		MSG("Error occured in PyEval_CallObject");
 
 		/* get the content of the error message */
 		PyErr_Fetch(&perrtype, &perrvalue, &perrtrace);
@@ -248,23 +253,23 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 		return NULL;
 	}
 
-	/* CONSOLE_DEBUG("FOUND FN=%p",fn); */
+	/* MSG("FOUND FN=%p",fn); */
 
 	name = PyObject_GetAttr(fn,PyString_FromString("__name__"));
 	if(name==NULL){
-		CONSOLE_DEBUG("No __name__ attribute");
+		MSG("No __name__ attribute");
 		PyErr_SetString(PyExc_TypeError,"No __name__ attribute");
 		return NULL;
 	}
 	cname = PyString_AsString(name);
 
-	/* CONSOLE_DEBUG("REGISTERED METHOD '%s' HAS %d ARGS",cname,nargs); */
+	/* MSG("REGISTERED METHOD '%s' HAS %d ARGS",cname,nargs); */
 
 	docstring = PyObject_GetAttr(fn,PyString_FromString("func_doc"));
 	cdocstring = "(no help)";
 	if(name!=NULL){
 		cdocstring = PyString_AsString(docstring);
-		//CONSOLE_DEBUG("DOCSTRING: %s",cdocstring);
+		//MSG("DOCSTRING: %s",cdocstring);
 	}
 
 	extpydata = ASC_NEW(struct ExtPyData);
@@ -275,9 +280,9 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 	res = CreateUserFunctionMethod(cname,&extpy_invokemethod,nargs,cdocstring,(void *)extpydata,&extpy_destroy);
 	Py_INCREF(fn);
 
-	/* CONSOLE_DEBUG("EXTPY 'fn' IS AT %p",fn); */
+	/* MSG("EXTPY 'fn' IS AT %p",fn); */
 
-	/* CONSOLE_DEBUG("EXTPY INVOKER IS AT %p",extpy_invokemethod); */
+	/* MSG("EXTPY INVOKER IS AT %p",extpy_invokemethod); */
 
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem registering external script method (%d)",res);
@@ -285,7 +290,7 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 		return NULL;
 	}
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Registered python method '%s'\n",cname);
+	MSG("Registered python method '%s'\n",cname);
 
 	/* nothing gets returned (but possibly an exception) */
 	return Py_BuildValue("");
@@ -325,9 +330,7 @@ char *extpy_filename(const char *partialname){
 	name = ASC_NEW_ARRAY_CLEAR(char,len+4);
 	strcpy(name,partialname);
 	strcat(name,".py");
-#ifdef EXTPY_DEBUG
-	CONSOLE_DEBUG("New filename is '%s'",name);
-#endif
+	MSG("New filename is '%s'",name);
 	return name;
 }
 
@@ -343,19 +346,19 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	PyObject *pyfile;
 	int iserr;
 
-	CONSOLE_DEBUG("Importing Python script %s",name);
+	MSG("Importing Python script %s",name);
 
 	if(Py_IsInitialized()){
-		CONSOLE_DEBUG("Python was already initialised");
+		MSG("Python was already initialised");
 	}else{
-		CONSOLE_DEBUG("INITIALISING PYTHON");
+		MSG("INITIALISING PYTHON");
 		Py_Initialize();
-		CONSOLE_DEBUG("COMPLETED ATTEMPT TO INITIALISE PYTHON");
+		MSG("COMPLETED ATTEMPT TO INITIALISE PYTHON");
 	}
 
 	if(!Py_IsInitialized()){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to initialise Python");
-		CONSOLE_DEBUG("UNABLE TO INITIALIZE PYTHON");
+		MSG("UNABLE TO INITIALIZE PYTHON");
 		ASC_FREE(name);
 		return 1;
 	}
@@ -363,13 +366,13 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	initextpy();
 
 	if(PyRun_SimpleString("import ascpy")){
-		CONSOLE_DEBUG("Failed importing 'ascpy'");
+		MSG("Failed importing 'ascpy'");
 		return 1;
 	}
 
 	pyfile = PyFile_FromString(name,"r");
 	if(pyfile==NULL){
-		CONSOLE_DEBUG("Failed opening script");
+		MSG("Failed opening script");
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to open '%s' (%s)",partialpath,name);
 		ASC_FREE(name);
 		return 1;
@@ -392,7 +395,7 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 		return 1;
 	}
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Imported python script '%s'\n",partialpath);
+	MSG("Imported python script '%s'\n",partialpath);
 
 	ASC_FREE(name);
 	return 0;
