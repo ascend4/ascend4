@@ -2,72 +2,51 @@ REQUIRE "johnpye/moltensalt.a4c";
 (*
 	Model of liquid sodium properties.
 
-	Source: 
-	R Carmona, F Rosa, H Jacobs and M Sanchez, 1989. "Evaluation of Advanced 
-	Sodium Receiver Losses During Operation of the IEA/SSPS Central Receiver
-	System", Journal of Solar Energy Engineering 111 pp.24-31.
-	doi:10.1115/1.3268282
-
-	The source data (p 28) is in the form of polynomials as a function of
-	temperature. Pressure effects are not provided. Polynomials are assumed to
-	be in terms of temperature values in Celsius. Since ASCEND uses absolute
-	temperatures, we must offset these correlations. Polynomials are given for
-	rho, cp, viscosity (eta aka mu) and thermal conductivity (lambda aka k).
+	Source data is J. Fink and L. Leibowitz (1995). "Thermodynamic and transport
+	properties of sodium liquid and vapor', technical report ANL/RE-95/2, 
+	Reactor Engineering Division, Argonne National Laboratories, 
+	http://www.ne.anl.gov/eda/ANL-RE-95-2.pdf
 
 	To use these correlations in our models, we integrate (cp dT) to obtain
-	enthalpa, and integrate (cp/T dT) to obtain entropy.
+	enthalpy, and integrate (cp/T dT) to obtain entropy. Integration constants
+	are added so that h and s evaluate to zero at T = 273.15 K.
 
-	Need to define reference states. Need to clarify assumptions on EoS (not
-	simply incompressible in this case, since there is a change in volume wrt
-	temperature, if not pressure)
-
-sympy input eg at http://live.sympy.org/
-
-T = symbols("T")
-rho0 = 5.6377e-9*T**3 - 14.6045e-6 * T**2 - 0.2297 * T + 950.04
-rho = simplify(rho0.subs(T, T-273.15))
-cp0 = 4.6272e-4 * T**2 - 0.5805 * T + 1436.71
-cp = simplify(cp0.subs(T, T-273.15))
-mu0  = 10*(-0.4925*log(T) + 220.65 / T - 2.4892)
-mu = simplify(mu0.subs(T, T-273.15))
-k0 = 11.7274e-6 * T**2 - 5.8087e-2 * T + 92.95
-k = simplify(k0.subs(T, T-273.15))
-h = integrate(cp,T)
+#sympy input eg at http://live.sympy.org/ 
+T = symbols("T") 
+cp = 1.6582 - 8.4790e-4 * T + 4.4541e-7 * T**2 - 2992.6 * T**-2;
+h = integrate(cp,T) 
 s = integrate(cp/T,T)
+h_ref = h.subs(T,273.15)
+s_ref = s.subs(T,273.15)
 
-	Values for rho, cp, k were checked against data in the book:
-	R N Lyon, Katz, Miller, Miller, Poppendiek, Jackson, Adams and Kramer,
-	1952. "Liquid Metals Handbook", 2nd Ed, Oak Ridge National Laboratory /
-	Atomic Energy Commission.
-
-	Values of mu did not agree. Instead we used the equation below, which uses
-	values in base SI.
-
-	More detail and more recent data are available from
-	Fink and Liebowitz, 1995. "Thermodynamic and transport properties of sodium
-	liquid and vapor", Argonne National Laboratory / US Department of Energy.
-	http://inis.iaea.org/search/search.aspx?orig_q=RN:27004412
-
-T = symbols("T")
-mu = exp(-6.4406 - 0.3959*ln(T) + 556.835/T)
-
-(!) TODO this model still needs some thought in relation to the equation of
-	state and pressure variation should impact on the calculation of enthalpy
-	(perhaps) and entropy (certainly) in the case that pressure is actually
-	allowed to vary (it doesn't necessarily have to vary).
 *)
 MODEL liquidsodium_fluid REFINES thermophysical_fluid_base;
-	rho_eq: rho = 1{kg/m^3}*(5.6377e-9*(T/1{K})^3 - 1.92243137289697e-5*(T/1{K})^2 - 0.220459659656931*(T/1{K}) + 1011.57800360586);
+	(* as given by Fink and Liebowitz *)
+	T_c IS_A temperature_constant;
+	T_c :== 2305.7{K};			
+	rho_c IS_A mass_density_constant;
 
-	cp_eq: cp = 1{J/kg/K}*(0.000462719997001106*(T/1{K})^2 - 0.833283935981031*(T/1{K}) + 1629.7975410592);
+	rho_c :== 219.{kg/m^3};
 
-	h_eq: h = 1{J/kg}*(0.000154239999000369*(T/1{K})^3 - 0.416641967990516*(T/1{K})^2 + 1629.7975410592*(T/1{K}));
+	rho_eq: rho = 1{kg/m^3}*(rho_c + 275.32*(1 - T/T_c) + 511.58*sqrt(1 - T/T_c));
 
-	s_eq: s = 1{J/kg/K}*(0.000231359998500553*(T/1{K})^2 - 0.833283935981031*(T/1{K}) + 1629.7975410592*ln(T/1{K}));
+	(* as given by Fink and Liebowitz *)
+	cp_eq: cp / 1{kJ/kg/K} = 1.6582 - 8.4790e-4 * (T/1{K}) + 4.4541e-7*(T/1{K})^2 - 2992.6*(T/1{K})^-2;
 
-	mu_eq: mu = 1{Pa*s}*exp(-6.4406 - 0.3959*ln(T/1{K}) + 556.835{K}/T);
+	(* as given by Fink and Liebowitz *)
+	mu_eq: mu = 1{Pa*s}*exp(-6.4406 - 0.3958*ln(T/1{K}) + 556.835{K}/T);
 
-	k_eq: k = 1{W/m/K}*(1.17273989567306e-5*(T/1{K})^2 - 0.0644936786213827*(T/1{K}) + 109.691456182527);
+	(* as given by Fink and Liebowitz *)
+	k_eq: k / 1{W/m/K} = 124.67 - 0.11381*(T/1{K}) + 5.5226e-5*(T/1{K})^2 - 1.1842e-8*(T/1{K})^3;
+
+	(* reference state is h=0, s=0 at 273.15 K *)
+
+	(* by integration of cp, see above *)
+	h_eq: h = 1{kJ/kg}*(1.4847e-7*(T/1{K})^3 - 0.000423950000705408*(T/1{K})^2 + 1.6582*(T/1{K}) + 2992.6/(T/1{K})) - 435.287729061046{kJ/kg};
+
+	(* by integration of cp, see above *)
+	s_eq: s = 1{kJ/kg/K}*(2.22705e-7*(T/1{K})^2 - 0.000847900001410815*(T/1{K}) + 1.6582*ln((T/1{K})) + 1496.3/(T/1{K})^2) - 9.10760402403353{kJ/kg/K};
+
 METHODS
 METHOD on_load;
 	FIX p := 1 {bar};

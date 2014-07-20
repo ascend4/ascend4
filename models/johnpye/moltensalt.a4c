@@ -45,10 +45,10 @@ h_ref = h.subs(T,273.15)
 s_ref = s.subs(T,273.15)
 *)
 MODEL moltensalt_fluid REFINES thermophysical_fluid_base;
-	T_C IS_A delta_temperature;
+(*	T_C IS_A delta_temperature;
 	T_C = T - 273.15;
 	T_F IS_A solver_var;
-	T_F = 9./5 * T_C/1{K} + 32;
+	T_F = 9./5 * T_C/1{K} + 32;*)
 
 	cp_eq: cp = 1396.0182 {J/kg/K} + 0.172 {J/kg/K^2} * T;
 	rho_eq: rho = 2263.7234 {kg/m^3} - 0.636 {kg/m^3/K} * T;
