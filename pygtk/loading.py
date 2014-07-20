@@ -5,8 +5,8 @@ import os.path
 global have_gtk
 have_gtk = False
 
-if not sys.executable.endswith("pythonw.exe"):
-	print "PYTHON PATH =",sys.path
+#if not sys.executable.endswith("pythonw.exe"):
+#	print "PYTHON PATH =",sys.path
 
 try:
 	import pygtk 
@@ -129,7 +129,7 @@ class LoadingWindow:
 			try:
 				sys.stderr.write("\r                                                 \r")
 				if msg!=None:
-					sys.stderr.write(msg+"\n")
+					sys.stderr.write(msg+"\r")
 					_messages.append(msg)
 				sys.stderr.write(status+"...\r")
 				sys.stderr.flush()
