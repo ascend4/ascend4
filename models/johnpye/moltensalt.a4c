@@ -28,26 +28,40 @@ END thermophysical_fluid_base;
 
 	http://prod.sandia.gov/techlib/access-control.cgi/2001/012100.pdf
 
-	The source data is density and specific heat capacity as functions of
-	temperature, with no pressure dependence specified. Enthalpy is calculated
-	by simple integration integ(cp dT) as a secondary expression.
-
-	What is the source of the entropy expression? -- TODO We need to check this!
+#sympy input eg at http://live.sympy.org/ 
+T,T_C = symbols("T T_C") 
+rho1 = 2090 - 0.636 * T_C # kg/m³
+rho = simplify(rho1.subs(T_C,T-273.15))
+cp1 = 1443 + 0.172*T_C # J/kg/K
+cp = simplify(cp1.subs(T_C,T-273.15)) 
+mu1= 22.714 - 0.120*T_C + 2.281e-4 * T_C**2 - 1.474e-7 * T_C**3 # mPa*s
+mu = simplify(mu1.subs(T_C, T-273.15)) / 1e-3 # now in Pa*s
+k1 = 0.443 + 1.9e-4 * T_C # W/m/K
+k = simplify(k1.subs(T_C, T-273.15)) 
+# we integrate cp to get h,s: incompressible fluid assumption.
+h = integrate(cp,T) 
+s = integrate(cp/T,T)
+h_ref = h.subs(T,273.15)
+s_ref = s.subs(T,273.15)
 *)
 MODEL moltensalt_fluid REFINES thermophysical_fluid_base;
+	T_C IS_A delta_temperature;
+	T_C = T - 273.15;
+	T_F IS_A solver_var;
+	T_F = 9./5 * T_C/1{K} + 32;
+
 	cp_eq: cp = 1396.0182 {J/kg/K} + 0.172 {J/kg/K^2} * T;
 	rho_eq: rho = 2263.7234 {kg/m^3} - 0.636 {kg/m^3/K} * T;
 
-	(* constant set to give h = 0 at 0 °C *)
-	h_eq: h = (1396.0182 {J/kg/K}) * T + 0.5 * (0.172 {J/kg/K^2}) * T^2 - 387.738910665 {kJ/kg};
+	(* constants of integration set to give h = 0, s = 0 at 0 °C *)
+	h_eq: h = 0.086{J/kg/K^2}*T^2 + 1396.0182{J/kg/K}*T - 387.738910665{kJ/kg};
 
-	s_eq: s = 1396.0182 {J/kg/K} * ln(T) + 0.172 {J/kg/K^2} * T 
-		- p*(((- 0.636 {kg/m^3/K})/(2263.7234 {kg/m^3})^2) *ln(T/rho)
-			+ (- 0.636 {kg/m^3/K})/(2263.7234 {kg/m^3} * rho)
-		);
-	
-	mu_eq: mu = 22.714 {milli*Pa*s}- 0.12 {milli*Pa*s/K} * (T - 273.15)+ 2.281e-4 {milli*Pa*s/K^2} * ((T - 273.15)^2) - 1.474e-7 {milli*Pa*s/K^3} * ((T - 273.15)^3);
-	k_eq: k = 0.443 {W/m/K} + 6.26984e-5 * (T -273.15);
+	s_eq: s = 0.172*T + 1396.0182*ln(T) - 7.87867335078{kJ/kg/K};
+
+	mu_eq: mu/1{uPa*s} = -0.0001474*(T/1{K})^3 + 0.348886926471821*(T/1{K})^2
+		- 277.603979928015*(T/1{K}) + 75514.7595133316;
+
+	k_eq: k/1{W/m/K} = 0.00019*(T/1{K}) + 0.3911015;
 METHODS
 	METHOD default_self;
 		T := 400 {K};
@@ -63,11 +77,15 @@ METHODS
 	METHOD on_load;
 		RUN ClearAll;
 		RUN bound_self;
-		FIX T; T := 371.111 {K} + 273.15 {K}; (* 700 °F *)
+		FIX T; T := 838.7055 {K}; (* 1050 °F *)
 		FIX p; p := 1 {bar};
 	END on_load;
 	METHOD self_test;
-		ASSERT abs(rho - 115.65 {lbm/ft^3}) < 0.1 {lbm/ft^3};
+		(* tabulated values from SAND report for T=1050 degF *)
+		ASSERT abs(rho - 107.88 {lbm/ft^3}) < 0.5 {lbm/ft^3};
+		ASSERT abs(cp - 0.369 {btu/lbm/R}) < 0.002 {btu/lbm/R};
+		ASSERT abs(mu - 2.7623 {lbm/ft/hr}) < 0.0005 {lbm/ft/hr};
+		ASSERT abs(k - 0.319041 {btu/hr/ft/R}) < 0.001 {btu/hr/ft/R};
 	END self_test;
 END moltensalt_fluid;
 
