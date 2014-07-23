@@ -229,12 +229,14 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 		return 1;
 	}
 
+#ifdef ASC_FPROPS_DEBUG
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Prepared component '%s'%s%s%s OK.\n"
 		,comp
 		,type?" type '":""
 		,type?type:""
 		,type?"'":""
 	);
+#endif
 	return 0;
 }
 
