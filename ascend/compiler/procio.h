@@ -60,7 +60,6 @@ extern void WriteInitErr(struct procFrame *fm, const char *str);
 /* error message services */
 
 /**
- * <!--  ProcWriteCaseError(fm,arm,pos);                               -->
  * Write error encountered while evaluating SWITCH.
  * arm gives the number of the case in question. pos
  * gives the position of the error in the var list.
@@ -68,43 +67,36 @@ extern void WriteInitErr(struct procFrame *fm, const char *str);
 extern void ProcWriteCaseError(struct procFrame *fm, int arm, int pos);
 
 /**
- * <!--  ProcWriteForError(fm);                                        -->
  * Write error encountered while evaluating FOR/DO.
  */
 extern void ProcWriteForError(struct procFrame *fm);
 
 /**
- * <!--  ProcWriteAssignmentError(fm);                                 -->
  * Write error encountered while evaluating := assignment.
  */
 extern void ProcWriteAssignmentError(struct procFrame *fm);
 
 /**
- * <!--  ProcWriteFixError(fm,var);                                 -->
  * Write error encountered while evaluating var.fixed assignment.
  */
 extern void ProcWriteFixError(struct procFrame *fm, CONST struct Name *var);
 
 /**
- * Write error encountered while performing a 'slvreq' request
  */
 extern void ProcWriteSlvReqError(struct procFrame *fm);
 
 /**
- * <!--  ProcWriteIfError(fm,cname);                                   -->
  * Write error encountered while evaluating boolean flow control.
  * cname is normally "IF" or "WHILE".
  */
 extern void ProcWriteIfError(struct procFrame *fm, CONST char *cname);
 
 /**
- * <!--  ProcWriteRunError(fm);                                        -->
  * Write error encountered while evaluating RUN arguments.
  */
 extern void ProcWriteRunError(struct procFrame *fm);
 
 /**
- * <!--  ProcWriteExtError(fm,funcname,err,pos);                       -->
  * Write error encountered while evaluating Ext arguments.
  */
 extern void ProcWriteExtError(struct procFrame *fm,
@@ -123,7 +115,6 @@ extern void ProcWriteStackCheck(struct procFrame *fm,
                                 struct Name *name);
 
 /**
- * <!--  WriteProcedureBlock(fp,initstack,str);                        -->
  * Writes a line to file fp.  Write format resembles:
  * ("%s %s in %s\n",str,stack->last->proc,stack->last->context)
  * For example: 
@@ -139,7 +130,6 @@ extern void WriteProcedureBlock(FILE *fp,
                                 CONST char *str);
 
 /**
- * <!--  WriteProcedureLine(fp,initstack,str);                         -->
  * Writes a line to file fp.  Write format resembles:
  * ("%s %d: %s in %s\n",str,line,proc,context)
  * For example:

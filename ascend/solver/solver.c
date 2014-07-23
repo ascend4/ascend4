@@ -247,8 +247,8 @@ int SlvRegisterStandardClients(void){
 	for(i=0; slv_reg[i].importname!=NULL;++i){
 		error = package_load(slv_reg[i].importname,NULL);
 		if(error){
-			ERROR_REPORTER_HERE(ASC_PROG_ERR
-				,"Unable to register solver '%s' (error %d)."
+			ERROR_REPORTER_HERE(ASC_PROG_NOTE
+				,"Unable to register solver '%s' (error %d).\n"
 				,slv_reg[i].importname,error
 			);
 		}else{
