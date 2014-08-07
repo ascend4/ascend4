@@ -4,7 +4,7 @@
 # much less tested.
 
 # version number for this ASCEND build:
-version = "0.9.9"
+version = "0.9.10"
 
 # shared library API numbering, for Linux (FIXME windows too?)
 soname_major_int = "1"
