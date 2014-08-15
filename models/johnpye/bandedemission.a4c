@@ -1,0 +1,57 @@
+
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/planck/planck";
+
+(* for this model to work nicely we need the blackbody function as an external
+piece of code. we'll try the following approach for that:
+
+http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19680008986.pdf
+*)
+MODEL bandedemission;
+	T IS_A temperature;
+
+	(* numbed of specified wavelengths; number of intervals will be n+1 *)
+	n IS_A integer_constant;
+	n :== 2;
+
+	(*   int0          int1             int n-1            int n   
+	   0..lam[1], lam[1]..lam[2],... lam[n-1]..lam[n], lam[n]..inf *)
+
+	lambda[1..n] "wavelength" IS_A distance;
+	I_lam[0..n+1] "normalised Planck integral" IS_A fraction;
+	I_lam[0] = 0;
+	I_lam[n+1] = 1;
+	FOR i IN [1..n] CREATE
+		I_eq[i]: planck(
+			lambda[i], T : INPUT;
+			I_lam[i] :  OUTPUT
+		);
+	END FOR;
+
+	eps[0..n] "band emissivity" IS_A fraction;
+	Qdd_emit_tot, Qdd_emit[0..n] "band emissive power" IS_A energy_flux;
+	FOR i IN [0..n] CREATE
+		Qdd_emit[i] = eps[i] * 1{SIGMA_C} * T^4 * (I_lam[i+1] - I_lam[i]);
+	END FOR;
+
+	Qdd_emit_tot = SUM[Qdd_emit[i] | i IN [0..n]];
+
+	Q_inc IS_A energy_flux;
+	
+	(* energy balance *)
+	Qdd_emit_tot = Q_inc;
+METHODS
+METHOD on_load;
+	T := 350 {K};
+	FIX lambda[1] := 700 {nm};
+	FIX lambda[2] := 5000 {nm};
+
+	FIX eps[0] := 0.95;
+	FIX eps[1] := 0.1;
+	FIX eps[2] := 0.7;
+
+	FIX Q_inc := 800 {W/m^2};
+END on_load;
+END bandedemission;
+
+
