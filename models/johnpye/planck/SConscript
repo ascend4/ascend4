@@ -1,0 +1,19 @@
+Import('env')
+grena_env = env.Clone()
+
+srcs = Split("""
+	plnkin.c
+	asc_planck.c
+""")
+
+grena_env.Append(LIBPATH=['#'])
+grena_env.Append(LIBS=['ascend'])
+
+lib = grena_env.SharedLibrary("planck",srcs
+	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+	,SHLIBPREFIX = env['EXTLIB_PREFIX']
+)
+
+env['extfns'] += [lib]
+
+# vim: set syntax=python:
