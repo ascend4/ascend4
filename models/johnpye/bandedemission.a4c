@@ -1,16 +1,30 @@
-
 REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "johnpye/planck/planck";
 
-(* for this model to work nicely we need the blackbody function as an external
-piece of code. we'll try the following approach for that:
+(* 
+This is a model of a surface that emits radiation with varying emissivity in 
+different user-defined wavelength bands. The bands are 
+	zero -- lam[1]
+	lam[1] -- lam[2]
+	...
+	lam[n] -- infinity
 
+The surface is assumed to have absorbed a certain amount of head Q_inc. At
+present we are not modelling the absorption process, nor any other loss 
+mechanisms (eg conduction, convection). 
+
+The Planck integral is evaluated according to the method of 
+Michels, T. E. Planck, 1968. "Functions and Integrals; Methods of Computation"
+Technical report NASA TN D-4446, NASA Goddard Space Flight Center.
 http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19680008986.pdf
+
+The function 'plnkin' from the above paper has been implemented as an 'external 
+relation' in ASCEND, and is loaded by the above IMPORT statement.
 *)
 MODEL bandedemission;
 	T IS_A temperature;
 
-	(* numbed of specified wavelengths; number of intervals will be n+1 *)
+	(* number of specified wavelengths; number of intervals will be n+1 *)
 	n IS_A integer_constant;
 	n :== 2;
 
