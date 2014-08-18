@@ -18,7 +18,7 @@ and the thermal emission flux is Qdd_emit_tot. The incident flux Qdd_sol is
 assumed to follow a black-body distribution at temperature T_sun.
 
 The Planck integral is evaluated according to the method of 
-Michels, T. E. Planck, 1968. "Functions and Integrals; Methods of Computation"
+T.E. Michels, 1968. "Planck Functions and Integrals; Methods of Computation"
 Technical report NASA TN D-4446, NASA Goddard Space Flight Center.
 http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19680008986.pdf
 
