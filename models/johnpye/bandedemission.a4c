@@ -2,16 +2,20 @@ REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "johnpye/planck/planck";
 
 (* 
-This is a model of a surface that emits radiation with varying emissivity in 
-different user-defined wavelength bands. The bands are 
-	zero -- lam[1]
-	lam[1] -- lam[2]
-	...
-	lam[n] -- infinity
+This is a model of a surface that absorbs and emits radiation with varying 
+emissivity in different user-defined wavelength bands. The 0..n bands are 
+defined by the boundary values of lam[1..n]:
 
-The surface is assumed to have absorbed a certain amount of head Q_inc. At
-present we are not modelling the absorption process, nor any other loss 
-mechanisms (eg conduction, convection). 
+	interval i=0:   zero -- lam[1]
+	interval i=1:   lam[1] -- lam[2]
+	    ...
+	interval i=n:   lam[n] -- infinity
+
+The emissivity is defined for each of the bands 0..n as eps[0..n].
+
+The incident solar flux is Qdd_sol [W/m^2]. The absorbed flux is Qdd_abs_tot
+and the thermal emission flux is Qdd_emit_tot. The incident flux Qdd_sol is 
+assumed to follow a black-body distribution at temperature T_sun.
 
 The Planck integral is evaluated according to the method of 
 Michels, T. E. Planck, 1968. "Functions and Integrals; Methods of Computation"
@@ -22,49 +26,75 @@ The function 'plnkin' from the above paper has been implemented as an 'external
 relation' in ASCEND, and is loaded by the above IMPORT statement.
 *)
 MODEL bandedemission;
-	T IS_A temperature;
+	T "surface temperature" IS_A temperature;
+	T_sun "sun temperature" IS_A temperature;
 
-	(* number of specified wavelengths; number of intervals will be n+1 *)
 	n IS_A integer_constant;
 	n :== 2;
-
-	(*   int0          int1             int n-1            int n   
-	   0..lam[1], lam[1]..lam[2],... lam[n-1]..lam[n], lam[n]..inf *)
-
 	lambda[1..n] "wavelength" IS_A distance;
 	I_lam[0..n+1] "normalised Planck integral" IS_A fraction;
-	I_lam[0] = 0;
-	I_lam[n+1] = 1;
+	z_eq0: I_lam[0] = 0;
+	z_eq1: I_lam[n+1] = 1;
 	FOR i IN [1..n] CREATE
-		I_eq[i]: planck(
+		z_eq2[i]: planck(
 			lambda[i], T : INPUT;
 			I_lam[i] :  OUTPUT
 		);
 	END FOR;
 
 	eps[0..n] "band emissivity" IS_A fraction;
+	eps_tot IS_A fraction;
 	Qdd_emit_tot, Qdd_emit[0..n] "band emissive power" IS_A energy_flux;
 	FOR i IN [0..n] CREATE
-		Qdd_emit[i] = eps[i] * 1{SIGMA_C} * T^4 * (I_lam[i+1] - I_lam[i]);
+		z_eq3[i]: Qdd_emit[i] = eps[i] * 1{SIGMA_C} * T^4 * (I_lam[i+1] - I_lam[i]);
 	END FOR;
+	z_eq35: Qdd_emit_tot = SUM[Qdd_emit[i] | i IN [0..n]];
+	z_eq4: eps_tot = SUM[eps[i] * (I_lam[i+1] - I_lam[i]) | i IN [0..n]];
 
-	Qdd_emit_tot = SUM[Qdd_emit[i] | i IN [0..n]];
+	(* absorbed flux *)
+	Qdd_sol, Qdd_abs[0..n], Qdd_abs_tot IS_A energy_flux;
+	G_lam[0..n+1], G_int[0..n] IS_A fraction;
+	z_eq5: G_lam[0] = 0;
+	z_eq6: G_lam[n+1] = 1;
+	FOR i IN [1..n] CREATE
+		z_eq7[i]: planck(
+			lambda[i], T_sun : INPUT;
+			G_lam[i] :  OUTPUT
+		);
+	END FOR;
+	FOR i IN [0..n] CREATE
+		z_eq8[i]: G_int[i] = G_lam[i+1] - G_lam[i];
+		z_eq9[i]: Qdd_abs[i] = eps[i] * Qdd_sol * (G_lam[i+1] - G_lam[i]);
+	END FOR;
+	z_eq10: Qdd_abs_tot = SUM[Qdd_abs[i] | i IN [0..n]];
 
-	Q_inc IS_A energy_flux;
-	
+	alpha_tot IS_A fraction;
+	z_eq11: alpha_tot = SUM[eps[i] * G_int[i] | i IN [0..n]];
+
+	(* convection heat loss *)
+	Qdd_conv IS_A energy_flux;
+	h IS_A heat_transfer_coefficient;
+	T_amb IS_A temperature;
+	z_eq12: Qdd_conv = h * (T - T_amb);
+
 	(* energy balance *)
-	Qdd_emit_tot = Q_inc;
+	z_eq13: Qdd_emit_tot + Qdd_conv = Qdd_abs_tot;
+
 METHODS
 METHOD on_load;
 	T := 350 {K};
-	FIX lambda[1] := 700 {nm};
+	FIX T_amb := 300 {K};
+	FIX T_sun :=  5800 {K};
+
+	FIX lambda[1] := 2000 {nm};
 	FIX lambda[2] := 5000 {nm};
 
-	FIX eps[0] := 0.95;
-	FIX eps[1] := 0.1;
-	FIX eps[2] := 0.7;
+	FIX eps[0] := 1;
+	FIX eps[1] := 0;
+	FIX eps[2] := 1;
 
-	FIX Q_inc := 800 {W/m^2};
+	FIX Qdd_sol := 800 {W/m^2};
+	FIX h := 6 {W/m^2/K};
 END on_load;
 END bandedemission;
 
