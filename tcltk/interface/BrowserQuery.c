@@ -721,7 +721,7 @@ int BrowWriteInstSet(char *ftorv, CONST struct set_t *s)
     len = Cardinality(s);
     for(c=1;c<=len;c++) {
       if (SetKind(s)==integer_set) {
-        sprintf(mark, (c<len) ? "%ld," : "%ld",FetchIntMember(s,c));
+        sprintf(mark, (c<len) ? "%u," : "%u",FetchIntMember(s,c));
       } else {
         sprintf(mark, (c<len) ? "'%s'," : "'%s'", SCP(FetchStrMember(s,c)));
       }

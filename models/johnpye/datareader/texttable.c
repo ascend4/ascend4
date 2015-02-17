@@ -493,8 +493,14 @@ int texttable_reallocate(texttable *tt, size_t maxrows)
   size_t column;
 
   for (column=0;column<tt->columns;column++)
+#if 0
+    /* clang informs that the comparison <0 is tautology for unsigned enum */
     if (tt->type[column]<0 || tt->type[column]>=TEXTTABLE_UNKNOWN)
       return TEXTTABLE_EUNKTYPE;
+#else
+    if(tt->type[column]>=TEXTTABLE_UNKNOWN)
+      return TEXTTABLE_EUNKTYPE;
+#endif
 
   if (maxrows<tt->rows)
     tt->rows = maxrows;
