@@ -1,0 +1,49 @@
+(*
+	This model gives a simple estimation of how much a domestic gas hot water
+	bill should equal. Key required inputs are cold water temperature, hot water
+	temperature (which can be the shower outlet temperature, for example, after
+	mixing of hot and cold water), total volume of water used and duration of
+	use, and the cost of gas per unit energy (AUD/GJ in this example).
+
+	The model makes use of the 'boiler_simple' component for the fluid
+	properties calculation; the fluid is set to water and the correlation is
+	set to helmholtz, ie the IAPWS-95 correlation is used, via FPROPS
+
+	TODO this model could be modified to allow different gas-based appliances
+	to be added, eg gas heaters, gas cooking, etc. The model could also be
+	extended to include some of the typical charging structures for gas bills, 	
+	eg connection cost (fixed) + consumption cost (variable).
+*)
+REQUIRE "johnpye/fprops/rankine_fprops.a4c";
+
+MODEL gasbill;
+	BO IS_A boiler_simple;
+	BO.cd.component :== 'water';
+	BO.cd.type :== 'helmholtz';
+	Q_fuel IS_A energy;
+	Qdot_fuel ALIASES BO.Qdot_fuel;
+	t IS_A time;
+	Q_fuel = Qdot_fuel * t;
+	Vdot IS_A volume_rate;
+	Vdot = BO.mdot * BO.outlet.v;
+	V IS_A volume;
+	Vdot = V / t;
+	c_fuel IS_A cost_per_energy;
+	C IS_A monetary_unit;
+	C = c_fuel * Q_fuel;
+METHODS
+METHOD on_load;
+	RUN BO.default_self;
+	FIX BO.eta := 0.88;
+	FIX BO.outlet.p := 1 {bar};
+	FIX BO.inlet.T := 15 {K} +  273.15 {K};
+	FIX BO.outlet.T := 37 {K} + 273.15 {K};
+	FIX t := 90 {day};
+	FIX V := 9 {L/min} * 10 {min} * 2. * 90;
+	FIX c_fuel := 0.025 {AUD/MJ};
+
+	BO.outlet.h := 100 {kJ/kg};
+	BO.inlet.h := 99 {kJ/kg};
+END on_load;
+END gasbill;
+
