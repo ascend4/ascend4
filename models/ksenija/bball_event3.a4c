@@ -1,0 +1,61 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(* The Modelica version of the bouncing ball model. *)
+
+MODEL bball_event3;
+
+	y, r IS_A distance;
+	v IS_A speed;
+	g IS_A acceleration;
+	switch, flying IS_A boolean_var;
+	t IS_A time;
+	INDEPENDENT t;
+	DERIVATIVE OF y, v;
+	PREVIOUS v, y;
+
+	gravity: der(v) = -1*g;
+	diff_eq: v = der(y);
+	stop: der(v) = 0;
+
+	bnd: v = -pre(v)*0.9;
+
+	CONDITIONAL
+		boundary: y > r;
+		speed: v >= 0;
+	END CONDITIONAL;
+
+	switch == NOT SATISFIED(boundary);
+	flying == SATISFIED(boundary) OR SATISFIED(speed);
+
+	ev1: EVENT(switch)
+		CASE TRUE: USE bnd;
+	END EVENT;
+
+	WHEN(flying)
+	CASE TRUE: USE gravity;
+	CASE FALSE: USE stop;
+	END WHEN;
+
+METHODS
+	METHOD obs_init;
+		y.obs_id := 1;
+		flying.obs_id := 2;
+	END obs_init;
+	METHOD values;
+		FIX r, g;
+		g  := 9.8 {m/s^2};
+		r  := 10 {m};
+
+		y         := 40 {m};
+		v         := 0 {m/s};
+		der(v,t)  := 0 {m/s^2};
+		t         := 0 {s};
+		switch    := FALSE;
+		flying   := TRUE;
+	END values;
+	METHOD on_load;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+END bball_event3;

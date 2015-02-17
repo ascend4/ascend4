@@ -1,0 +1,68 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL thermostat;
+
+	C, P, A, h, T_amb, T IS_A solver_var;
+	too_high, too_low IS_A boolean_var;
+	t IS_A time;
+	INDEPENDENT t;
+	DERIVATIVE OF T;
+
+	rel: C*der(T) = P - h*A*(T - T_amb);
+
+	on: P = 3000;
+	off: P = 0;
+
+	CONDITIONAL
+		T_too_high: T >= 23;
+		T_too_low: T <= 19;
+	END CONDITIONAL;
+
+	sat1: too_high == SATISFIED(T_too_high);
+	sat2: too_low == SATISFIED(T_too_low);
+
+	ev1: EVENT (too_high)
+		CASE TRUE: USE off;
+	END EVENT;
+
+	ev2: EVENT (too_low)
+		CASE TRUE: USE on;
+	END EVENT;
+
+METHODS
+	METHOD obs_init;
+		T.obs_id := 1;
+	END obs_init;
+	METHOD values;
+		FIX C := 36000;
+		FIX P := 3000;
+		FIX A := 62;
+		FIX h := 4;
+		FIX T_amb := 15;
+		T := 20;
+		t := 0 {s};
+		too_high := FALSE;
+		too_low := FALSE;
+	END values;
+	METHOD on_load;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+	METHOD ev1;
+		FIX T;
+		FREE P;
+	END ev1;
+	METHOD ev1_end;
+		FREE T;
+		FIX P;
+	END ev1_end;
+	METHOD ev2;
+		FIX T;
+		FREE P;
+	END ev2;
+	METHOD ev2_end;
+		FREE T;
+		FIX P;
+	END ev2_end;
+END thermostat;

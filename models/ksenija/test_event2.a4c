@@ -1,0 +1,54 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL test_event2;
+
+	x IS_A solver_var;
+	a, b, c IS_A solver_var;
+	pa, pb, pc IS_A boolean_var;
+	t IS_A time;
+	INDEPENDENT t;
+	DERIVATIVE OF x;
+	PREVIOUS x;
+
+	der(x) = x;
+
+	at_bnd: x = pre(x) + 10;
+
+	CONDITIONAL
+		cond1: x >= 50;
+		cond2: x >= 100;
+		cond3: x >= 150;
+	END CONDITIONAL;
+
+	pa == SATISFIED(cond1);
+	pb == SATISFIED(cond2);
+	pc == SATISFIED(cond3);
+
+	EVENT (pa)
+		CASE TRUE: USE at_bnd;
+	END EVENT;
+	EVENT (pb)
+		CASE TRUE: USE at_bnd;
+	END EVENT;
+	EVENT (pc)
+		CASE TRUE: USE at_bnd;
+	END EVENT;
+
+
+METHODS
+	METHOD obs_init;
+		x.obs_id := 1;
+	END obs_init;
+	METHOD values;
+		FIX t := 0 {s};
+		x := 1;
+		pa := FALSE;
+		pb := FALSE;
+		pc := FALSE;
+	END values;
+	METHOD on_load;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+END test_event2;

@@ -1,0 +1,41 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+IMPORT "dopri5";
+
+(* Model of simple harmonic motion *)
+MODEL shm_der;
+	x IS_A factor;
+	DERIVATIVE OF x;
+	v IS_A factor;
+	DERIVATIVE OF v;
+	
+	xderiv: der(x) = v;
+	vderiv: der(v) = -x;
+	
+    INDEPENDENT t;
+	t IS_A time;
+METHODS
+
+METHOD values;
+	v := 0;
+	x := 10;
+	t := 0 {s};
+END values;
+
+METHOD specify;
+	FIX x, v;
+END specify;
+
+METHOD ode_init;
+	FREE x,v;
+	t := 0 {s};
+	x.obs_id := 1; v.obs_id := 2;
+	der(v).obs_id := 3;
+END ode_init;
+	
+METHOD on_load;
+	RUN reset; RUN values;
+	RUN ode_init;
+END on_load;
+
+END shm_der;

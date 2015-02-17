@@ -1,0 +1,64 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL bball_event;
+
+	y, v, F_g, r, g IS_A solver_var;
+	switch, switch1 IS_A boolean_var;
+	t IS_A time;
+	INDEPENDENT t;
+	DERIVATIVE OF y, v;
+	PREVIOUS v;
+
+	diff_eq1: der(v) = -1*g;
+	diff_eq2: v = der(y);
+
+	stop: v = 0;
+
+	bnd: v = -pre(v)*9/10;
+
+	CONDITIONAL
+		boundary: y <= r;
+	END CONDITIONAL;
+
+	switch == SATISFIED(boundary, 1e-8{s});
+
+	ev1: EVENT(switch)
+		CASE TRUE: USE bnd;
+	END EVENT;
+
+	CONDITIONAL
+		boundary1: abs(v) < 1/4;
+	END CONDITIONAL;
+
+	switch1 == SATISFIED(boundary1, 1e-4{s}) AND switch;
+
+	WHEN (switch1)
+		CASE TRUE:
+			USE stop;
+		OTHERWISE:
+			USE diff_eq1;
+			USE ev1;
+	END WHEN;
+
+METHODS
+	METHOD obs_init;
+		y.obs_id := 1;
+	END obs_init;
+	METHOD values;
+		FIX r, g;
+		g  := 9.8;
+		r  := 10;
+
+		y         := 40;
+		v         := 0;
+		der(v,t)  := 0;
+		t         := 0 {s};
+		switch    := FALSE;
+		switch1   := FALSE;
+	END values;
+	METHOD on_load;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+END bball_event;

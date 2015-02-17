@@ -1,0 +1,161 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL stadium_billiard;
+
+	x, y IS_A solver_var; (* coordinates of the particle *)
+	derx, dery IS_A solver_var; (* velocities *)
+	R IS_A solver_var; (* arc radius *)
+	xo1, yo1, xo2, yo2 IS_A solver_var; (* centers of the left and right arcs *)
+	ylower, yupper IS_A solver_var; (* y-coordinates of the straight lines *)
+	x0, y0, k, bb, k1, b1, xp, yp, x1, y1, derr IS_A solver_var;
+	q, m, B IS_A solver_var;
+	vnx, vtx, vny, vty, vnx1, vny1, vn1 IS_A solver_var;
+	rev, lev, cev IS_A boolean_var;
+	t IS_A time;
+	INDEPENDENT t;
+	DERIVATIVE OF x, y, derx, dery, R;
+	PREVIOUS dery;
+
+	der(x) = derx;
+	der(y) = dery;
+
+	der(derx) = (q*B*dery)/m;
+	der(dery) = -(q*B*derx)/m;
+
+	der(R) = 30*(1/4)*(1/3)*cos(t/3);
+
+	CONDITIONAL
+		rarc_x: xo1 + R - (R - sqrt(R*R - (ylower - yo1)^2)) < x;
+		rarc_rad: (x-xo1)^2 + (y-yo1)^2 > R^2;
+		lower_bound: y < ylower;
+		upper_bound: y > yupper;
+		larc_x: xo2 - R + (R - sqrt(R*R - (ylower - yo1)^2)) > x;
+		larc_rad: (x-xo2)^2 + (y-yo2)^2 > R^2;
+	END CONDITIONAL;
+
+	rev == SATISFIED(rarc_x) AND SATISFIED(rarc_rad);
+	cev == (NOT SATISFIED(rarc_x)) AND (NOT SATISFIED(larc_x)) AND (SATISFIED(lower_bound) OR SATISFIED(upper_bound));
+	lev == SATISFIED(larc_x) AND SATISFIED(larc_rad);
+
+	ev_right: EVENT(rev)
+	CASE TRUE:
+	END EVENT;
+
+	ev_center: EVENT(cev)
+	CASE TRUE:
+	END EVENT;
+
+	ev_left: EVENT(lev)
+	CASE TRUE:
+	END EVENT;
+
+METHODS
+	METHOD obs_init;
+		y.obs_id := 1;
+		x.obs_id := 2;
+		der(y).obs_id := 3;
+		der(x).obs_id := 4;
+		R.obs_id := 5;
+		vn1.obs_id := 6;
+	END obs_init;
+	METHOD prepare_integ;
+		FREE R, x, y, derx, dery;
+	END prepare_integ;
+	METHOD values;
+		FIX x := 30;
+		FIX y := 30;
+		FIX derx := 1;
+		FIX dery := 1.5;
+		FIX t := 0 {s};
+		rev   := FALSE;
+		cev   := FALSE;
+		lev   := FALSE;
+		FIX xo1 := 80;
+		FIX yo1 := 50;
+		FIX xo2 := 30;
+		FIX yo2 := 50;
+		FIX R := 40;
+
+		FIX ylower := yo1 - 30;
+		FIX yupper := yo1 + 30;
+
+		FIX q := 0.1;
+		FIX m := 1;
+		FIX B := 0;
+	END values;
+
+	METHOD on_load;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+
+	METHOD ev_right;
+		x0 := x - derx;
+		y0 := y - dery;
+		k  := (yo1 - y)/(xo1 - x);
+		bb  := y - k*x;
+		b1 := y0 + (1/k)*x0;
+		xp := (b1 - bb)/(k + (1/k));
+		yp := k*xp + bb;
+
+		vnx := x - xp;
+		vny := y - yp;
+		vtx := xp - x0;
+		vty := yp - y0;
+
+		derr := ((x-xo1)*derx+(y-yo1)*dery)/sqrt((x-xo1)^2+(y-yo1)^2);
+		vn1  := -derr + 2*der(R);
+		vnx1 := (vnx*vn1)/derr;
+		vny1 := (vny*vn1)/derr;
+
+		x1  := x + vnx1 + vtx;
+		y1  := y + vny1 + vty;
+
+		FIX derx := x1 - x;
+		FIX dery := y1 - y;
+	END ev_right;
+
+	METHOD ev_right_end;
+		FREE derx, dery;
+	END ev_right_end;
+
+	METHOD ev_center;
+		FIX dery  := -pre(dery);
+	END ev_center;
+
+	METHOD ev_center_end;
+		FREE dery;
+	END ev_center_end;
+
+	METHOD ev_left;
+		x0 := x - derx;
+		y0 := y - dery;
+		k  := (yo2 - y)/(xo2 - x);
+		bb  := y - k*x;
+		b1 := y0 + (1/k)*x0;
+		xp := (b1 - bb)/(k + (1/k));
+		yp := k*xp + bb;
+
+		vnx := x - xp;
+		vny := y - yp;
+		vtx := xp - x0;
+		vty := yp - y0;
+
+		derr := ((x-xo2)*derx+(y-yo2)*dery)/sqrt((x-xo2)^2+(y-yo2)^2);
+		vn1  := -derr + 2*der(R);
+		vnx1 := (vnx*vn1)/derr;
+		vny1 := (vny*vn1)/derr;
+
+		x1  := x + vnx1 + vtx;
+		y1  := y + vny1 + vty;
+
+		FIX derx := x1 - x;
+		FIX dery := y1 - y;
+	END ev_left;
+
+	METHOD ev_left_end;
+		FREE derx, dery;
+	END ev_left_end;
+
+END stadium_billiard;

@@ -1,0 +1,84 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL test_pre1;
+    DERIVATIVE OF x WITH t;
+    PREVIOUS x,y;
+    x,y,t IS_A solver_var;
+    c IS_A boolean_var;
+
+    rel1: x = pre(x);
+    rel2: y = pre(y);
+
+    CONDITIONAL
+      cnd: x = 0;
+    END CONDITIONAL;
+
+    c == SATISFIED(cnd);
+
+    x = der(x,t);
+    EVENT (c)
+    CASE TRUE: USE rel1; USE rel2;
+    END EVENT;
+
+END test_pre1;
+
+MODEL test_pre2;
+    a IS_A test_pre1;
+    y IS_A solver_var;
+    PREVIOUS a.x;
+    
+    y = pre(a.x);
+
+END test_pre2;
+
+MODEL test_pre3;
+    x,t IS_A solver_var;
+    DERIVATIVE OF x WITH t;
+    PREVIOUS x, der(x);
+    INDEPENDENT t;
+    
+    x = pre(der(x));
+
+END test_pre3;
+
+MODEL test_pre4;
+    x[1..5] IS_A solver_var;
+    PREVIOUS x[1..5];
+
+    FOR i IN [1..5] CREATE
+    x[i] = pre(x[i]);
+    END FOR;
+
+END test_pre4;
+
+MODEL test_pre5;
+    x, y IS_A solver_var;
+    PREVIOUS x, y;
+
+    x,y ARE_THE_SAME;
+    prex ALIASES pre(x);
+
+END test_pre5;
+
+MODEL test_pre6;
+    x[1..5] IS_A solver_var;
+    FOR i IN [1..5] CREATE
+      PREVIOUS x[i];
+    END FOR;
+
+    FOR i IN [1..5] CREATE
+    x[i] = pre(x[i]);
+    END FOR;
+
+END test_pre6;
+
+MODEL test_pre7;
+    x, y IS_A solver_var;
+    PREVIOUS x, y;
+
+    x,y ARE_ALIKE;
+    x IS_REFINED_TO distance;
+
+END test_pre7;
+

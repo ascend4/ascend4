@@ -1,0 +1,88 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(*
+   Auto-oscillations of fluid level in the vessel with simultaneous
+   inflow and outflow.
+*)
+
+MODEL vessel_with_siphon;
+
+	H IS_A distance; (* height of the fluid level *)
+	g IS_A acceleration;
+	(* The tube does not reach the bottom at the distance
+	H1 and above the height H2 it is bent, leaves the vessel
+	and goes down till the distance H3 from the bottom of the
+	siphon. *)
+	H1, H2, H3 IS_A distance;
+	PI IS_A solver_var;
+	sigma IS_A area; (* cross section of the siphon *)
+	S IS_A area; (* cross section of the vessel *)
+	Q IS_A volume_rate; (* intensity of fluid inflow *)
+	switch1, switch2 IS_A boolean_var;
+	ksi IS_A boolean_var; (* is the siphon filled? *)
+	t IS_A time;
+	INDEPENDENT t;
+	DERIVATIVE OF H;
+
+	rel1: S*der(H) = Q - sigma*sqrt(2*g*(H + H3));
+	rel2: S*der(H) = Q;
+
+	lrel1: ksi == TRUE;
+	lrel2: ksi == FALSE;
+
+	CONDITIONAL
+		boundary1: H >= H2;
+		boundary2: H <= H1;
+	END CONDITIONAL;
+
+	switch1 == SATISFIED(boundary1);
+	switch2 == SATISFIED(boundary2);
+
+	EVENT(switch1)
+		CASE TRUE: USE lrel1;
+	END EVENT;
+
+	EVENT(switch2)
+		CASE TRUE: USE lrel2;
+	END EVENT;
+
+	WHEN (ksi)
+		CASE TRUE:
+			USE rel1;
+		CASE FALSE:
+			USE rel2;
+	END WHEN;
+
+METHODS
+	METHOD obs_init;
+		H.obs_id := 1;
+		ksi.obs_id := 2;
+	END obs_init;
+	METHOD values;
+		FIX S, Q, g, H1, H2, H3, sigma, PI;
+		PI := 3.1416;
+		S := PI*2.5 {m^2};
+		Q := 1 {m^3/s};
+		g := 9.8067 {m/s^2};
+		H := 0 {m};
+		H1 := 15 {m};
+		H2 := 20 {m};
+		H3 := 5 {m};
+		sigma := PI*0.1 {m^2};
+
+		H := 6 {m};
+		switch1 := FALSE;
+		switch2 := TRUE;
+		ksi := FALSE;
+
+		H1.upper_bound := 1000000 {m};
+		H2.upper_bound := 1000000 {m};
+		H3.upper_bound := 1000000 {m};
+		H.upper_bound := 1000000 {m};
+	END values;
+	METHOD on_load;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+END vessel_with_siphon;

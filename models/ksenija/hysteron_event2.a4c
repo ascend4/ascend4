@@ -1,0 +1,96 @@
+(*	One more model of a hysteron.
+	This is an example from Krasnosel'skii, M.; Pokrovskii, A.. Systems with Hysteresis.
+
+	x(t) = min{h, u(t) - u(t0) + x(t0)}, if u(t) is non-decreasing,
+	       max{-h, u(t) - u(t0) + x(t0)}, if u(t) is non-increasing.
+
+*)
+
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL hysteron_event;
+	x, x0, u, u0, h, xincr, xdecr IS_A solver_var;
+	t IS_A time;
+	uincr, minb, maxb IS_A boolean_var;
+	INDEPENDENT t;
+	DERIVATIVE OF u;
+
+	diff_eq: u*sin(t) = -der(u)*cos(t);
+	incr: x = xincr;
+	decr: x = xdecr;
+
+	xincr1: xincr = h;
+	xincr2: xincr = u - u0 + x0;
+
+	xdecr1: xdecr = -h;
+	xdecr2: xdecr = u - u0 + x0;
+
+	x_initial: x0 = x;
+	u_initial: u0 = u;
+
+	WHEN (minb)
+		CASE TRUE: USE xincr1;
+		CASE FALSE: USE xincr2;
+	END WHEN;
+
+	WHEN (maxb)
+		CASE TRUE: USE xdecr1;
+		CASE FALSE: USE xdecr2;
+	END WHEN;
+
+	WHEN (uincr)
+		CASE FALSE: USE decr;
+		CASE TRUE: USE incr;
+	END WHEN;
+
+	CONDITIONAL
+		min: h < u - u0 + x0;
+		max: -h > u - u0 + x0;
+		uincreases: der(u) > 0;
+	END CONDITIONAL;
+
+	uincr == SATISFIED(uincreases);
+	minb == SATISFIED(min);
+	maxb == SATISFIED(max);
+
+	ev: EVENT (uincr)
+		CASE ANY: 
+			USE x_initial;
+			USE u_initial;
+	END EVENT;
+
+METHODS
+	METHOD obs_init;
+		u.obs_id := 1;
+		x.obs_id := 2;
+		x0.obs_id := 3;
+		der(u).obs_id := 4;
+	END obs_init;
+	METHOD specify;
+		FIX x0, u0, h, t;
+	END specify;
+	METHOD values;
+		uincr := FALSE;
+		der(u) := 0;
+		u := 5;
+		x := 5;
+		t := 0 {s};
+		x0 := x;
+		u0 := u;
+		h := 2;
+	END values;
+	METHOD on_load;
+		RUN specify;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+	METHOD ev;
+		FIX x, u;
+		FREE x0, u0;
+	END ev;
+	METHOD ev_end;
+		FIX x0, u0;
+		FREE x, u;
+	END ev_end;
+END hysteron_event;

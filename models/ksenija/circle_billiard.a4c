@@ -1,0 +1,95 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL circle_billiard;
+	y, x, a, b, R IS_A solver_var;
+	x0, y0, k, bb, k1, b1, xp, yp, x1, y1 IS_A solver_var;
+	q, m, B IS_A solver_var;
+	v, vnx, vtx, vny, vty, vnx1, vny1, vn1 IS_A solver_var;
+	derr IS_A solver_var;
+	oev IS_A boolean_var;
+	t IS_A time;
+	INDEPENDENT t;
+	DERIVATIVE OF x, y, a, b, R;
+
+	der(x) = a;
+	der(y) = b;
+	v = sqrt(a*a + b*b);
+
+	der(a) = (q*B*b)/m;
+	der(b) = -(q*B*a)/m;
+
+	der(R) = 40*(1/10)*(1/3)*cos(t/3);
+	(*der(R) = 0;*)
+
+	normal: derr = (x*a+y*b)/sqrt(x*x+y*y);
+
+	CONDITIONAL
+		outer: x*x + y*y > R*R;
+	END CONDITIONAL;
+
+	oev == SATISFIED(outer);
+
+	ev1: EVENT(oev)
+		CASE TRUE:
+		OTHERWISE: USE normal;
+	END EVENT;
+
+METHODS
+	METHOD obs_init;
+		y.obs_id := 1;
+		x.obs_id := 2;
+		der(y).obs_id := 3;
+		der(x).obs_id := 4;
+		v.obs_id := 5;
+		derr.obs_id := 6;
+	END obs_init;
+	METHOD values;
+		x     := 10;
+		y     := 20;
+		b := 1;
+		a := 1;
+		FIX t := 0 {s};
+		oev   := FALSE;
+		FIX q := 0.1;
+		FIX m := 1;
+		FIX B := 0;
+		R     := 40;
+	END values;
+
+	METHOD on_load;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+
+	METHOD ev1;
+		x0 := x - a;
+		y0 := y - b;
+		k  := (0 - y)/(0 - x);
+		bb := y - k*x;
+		b1 := y0 + (1/k)*x0;
+		xp := (b1 - bb)/(k + (1/k));
+		yp := k*xp + bb;
+
+		vnx := x - xp;
+		vny := y - yp;
+		vtx := xp - x0;
+		vty := yp - y0;
+
+		vn1 := -derr + 2*der(R);
+		vnx1 := (vnx*vn1)/derr;
+		vny1 := (vny*vn1)/derr;
+
+		x1  := x + vnx1 + vtx;
+		y1  := y + vny1 + vty;
+
+		FIX a  := x1 - x;
+		FIX b  := y1 - y;
+		derr := (x*a+y*b)/sqrt(x*x+y*y);
+	END ev1;
+
+	METHOD ev1_end;
+		FREE a, b;
+	END ev1_end;
+
+END circle_billiard;

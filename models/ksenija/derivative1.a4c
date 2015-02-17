@@ -1,0 +1,118 @@
+REQUIRE "atoms.a4l";
+REQUIRE "ksenija/derivative2.a4c";
+
+MODEL test1;
+    x,y,z IS_A distance;
+	t1,t2 IS_A time;
+    DERIVATIVE OF der(x,t1),x,y WITH t1;
+    DERIVATIVE OF z WITH t2;
+    der(x,t1), der(y,t1) ARE_THE_SAME;
+    t1,t2 ARE_THE_SAME;
+    der(x,t1), der(z,t2) ARE_THE_SAME;
+    
+    x/t2 = der(y,t1);
+    der(der(x,t1),t1) = 2*der(der(y,t1),t1);
+
+METHODS
+  METHOD on_load;
+    der(x,t1) := 1 {m/s};
+  END on_load;
+
+END test1;
+
+MODEL test2;
+    y1 IS_A distance;
+	t1 IS_A time;
+	INDEPENDENT t1;
+    t1,a.t2 ARE_THE_SAME;
+    DERIVATIVE OF y1;
+    a IS_A dermodel;
+
+    FOR i IN [1..3] CREATE
+      FOR j IN [1..3] CREATE
+        DERIVATIVE OF a.x[i][j];
+      END FOR;
+    END FOR;
+    der(a.x[1][1]) = y1/t1;
+
+END test2;
+
+MODEL test3;
+    y IS_A distance;
+	t IS_A time;
+	INDEPENDENT t;
+    b[1..3] IS_A test2;
+    DERIVATIVE OF der(b[1..3].a.x[1..3][1..3]);
+    DERIVATIVE OF b[1..3].a.x[1..3][1..3];
+    DERIVATIVE OF y;
+    t,b[1].t1,b[2].t1,b[3].t1 ARE_THE_SAME;
+    
+    der(b[1].a.x[1][1]) = der(y,b[1].t1);
+      FOR i IN [1..3] CREATE
+        FOR j IN [1..3] CREATE
+          der(der(b[1].a.x[i][j]),b[1].a.t2) = 2*y/(t*t);
+        END FOR;
+      END FOR;
+
+END test3;
+
+MODEL test4;
+
+  x[1..10][1..10] IS_A distance;
+  t IS_A time;
+  
+  FOR i IN [1..5] CREATE
+  FOR j IN [1..i] CREATE
+    DERIVATIVE OF x[i][j] WITH t;
+  END FOR;
+  END FOR;
+
+END test4;
+
+MODEL test5;
+
+  x['a','b','c'] IS_A distance;
+  t IS_A time;
+  
+  FOR i IN ['a','b','c'] CREATE
+    DERIVATIVE OF x[i] WITH t;
+  END FOR;
+
+END test5;
+
+MODEL test6;
+
+	x,t IS_A solver_var;
+    DERIVATIVE OF x WITH t;
+
+METHODS
+  METHOD on_load;
+    der(x,t).lower_bound := 0 {m/s};
+  END on_load;
+
+END test6;
+
+MODEL test7;
+
+    a IS_A dermodel;
+    t1 IS_A time;
+    t1,a.t2 ARE_THE_SAME;
+    y ALIASES a.x[1][1];
+    DERIVATIVE OF y WITH t1;
+    dy_dt ALIASES der(y,t1);
+    y = a.x[1][2];
+
+END test7;
+
+MODEL test8;
+
+    a IS_A dermodel;
+    t1 IS_A time;
+    t1,a.t2 ARE_THE_SAME;
+    x1, y1, z1 IS_A solver_var;
+    x1, a.x[1][1] ARE_THE_SAME;
+    y1, z1 ARE_ALIKE;
+    DERIVATIVE OF x1, y1, z1 WITH t1;
+    y1 IS_REFINED_TO distance;
+
+END test8;

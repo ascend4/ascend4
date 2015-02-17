@@ -1,0 +1,90 @@
+(*	A simple model of a hysteron, a better modification of models/test/ida/clearance.a4c.
+	This is an example from Krasnosel'skii, M.; Pokrovskii, A.. Systems with Hysteresis.
+	A piston is moving inside a cilinder, the position of the piston is the input u, the position
+	of the cilinder's right end is the output x.
+*)
+
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL hysteron_event;
+	x, x0, u, h, c IS_A solver_var;
+	t IS_A time;
+	left_end, right_end, uincr IS_A boolean_var;
+	INDEPENDENT t;
+	DERIVATIVE OF u;
+	PREVIOUS c;
+
+	diff_eq: u*sin(t) = -der(u)*cos(t);
+	inside: x = x0;
+	push: x = u;
+	pull: x = u + h;
+
+	x_initial: x0 = x;
+
+	CONDITIONAL
+		left_end_cond: u < x0 - h;
+		right_end_cond: u > x0;
+	END CONDITIONAL;
+
+	left_end == SATISFIED(left_end_cond);
+	right_end == SATISFIED(right_end_cond);
+
+
+	WHEN (left_end, right_end)
+		CASE FALSE,FALSE: USE inside;
+		CASE FALSE,TRUE: USE push;
+		CASE TRUE,FALSE: USE pull;
+	END WHEN;
+
+	CONDITIONAL
+		uincreases: der(u) > 0;
+	END CONDITIONAL;
+
+	uincr == SATISFIED(uincreases);
+
+	ev: EVENT (uincr)
+		CASE ANY: USE x_initial;
+		(*OTHERWISE: USE diff_eq;*)
+	END EVENT;
+
+METHODS
+	METHOD obs_init;
+		u.obs_id := 1;
+		x.obs_id := 2;
+		x0.obs_id := 3;
+		der(u).obs_id := 4;
+	END obs_init;
+	METHOD specify;
+		FIX x0, h, t;
+	END specify;
+	METHOD values;
+		c := 0;
+		uincr := FALSE;
+		left_end := FALSE;
+		right_end := FALSE;
+		der(u) := 0;
+		u := 5;
+		x := 5;
+		t := 0 {s};
+		x0 := x;
+		h := 2;
+	END values;
+	METHOD on_load;
+		RUN specify;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+	METHOD ev;
+		FIX x;
+		FREE x0;
+		c := pre(c) + 1;
+		(*x0 := x;
+		FIX u;*)
+	END ev;
+	METHOD ev_end;
+		(*FREE u;*)
+		FIX x0;
+		FREE x;
+	END ev_end;
+END hysteron_event;

@@ -1,0 +1,112 @@
+REQUIRE "atoms.a4l";
+
+(* A model for testing events
+   at the compiler side. *)
+
+MODEL test1;
+
+    x,y IS_A solver_var;
+    c IS_A boolean_var;
+    CONDITIONAL
+      cond: x >= 0;
+    END CONDITIONAL;
+    c == SATISFIED(cond);
+    rel1: x = y;
+    rel2: x = 2*y;
+    ev: EVENT (c) 
+      CASE TRUE:
+        USE rel1;
+      OTHERWISE:
+        USE rel2;
+    END EVENT;
+
+END test1;
+
+MODEL test2;
+
+    x,y IS_A solver_var;
+    c1,c2 IS_A boolean_var;
+    CONDITIONAL
+      cond1: x > 0;
+      cond2: y > 0;
+    END CONDITIONAL;
+    c1 == SATISFIED(cond1);
+    c2 == SATISFIED(cond2);
+    rel1: x = y;
+    WHEN (c1)
+      CASE TRUE:
+        ev: EVENT (c2) 
+          CASE TRUE:
+            USE rel1;
+        END EVENT;
+    END WHEN;
+
+END test2;
+
+MODEL test3;
+
+    x[1,2,3],y[1,2,3] IS_A solver_var;
+    c[1,2,3], d[1,2,3] IS_A boolean_var;
+    CONDITIONAL
+      FOR i IN [1,2,3] CREATE
+        cond[i]: x[i] > 0;
+      END FOR;
+    END CONDITIONAL;
+
+    FOR i IN [1,2,3] CREATE
+      rel[i]: x[i] = y[i];
+      rel1[i]: x[i] = 1;
+      c[i] == SATISFIED(cond[i]);
+    END FOR;
+
+    FOR i IN [1,2,3] CREATE
+      ev[i]: EVENT (c[i])
+        CASE TRUE:
+          USE rel[i];
+          EVENT (d[i])
+            CASE FALSE:
+              USE rel1[i];
+          END EVENT;
+      END EVENT;
+    END FOR;
+
+END test3;
+
+MODEL test4;
+
+    a,b IS_A test1;
+    x,y IS_A solver_var;
+    c IS_A boolean_var;
+    CONDITIONAL
+      cond: x > 0;
+    END CONDITIONAL;
+    c == SATISFIED(cond);
+    ev1: EVENT (c) 
+      CASE TRUE:
+        USE a;
+    END EVENT;
+
+    a,b ARE_THE_SAME;
+
+END test4;
+
+MODEL test5;
+
+    x,y IS_A solver_var;
+    c IS_A boolean_var;
+    PREVIOUS x;
+
+    rel1: x = pre(x) + 1;
+
+    CONDITIONAL
+      cond: x > 0;
+    END CONDITIONAL;
+
+    c == SATISFIED(cond);
+
+    ev1: EVENT (c) 
+      CASE TRUE:
+        USE rel1;
+    END EVENT;
+
+END test5;

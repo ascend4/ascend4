@@ -1,0 +1,84 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL bouncingball_der;
+
+	(* Variables *)
+	y       IS_A distance;       (* position of ball centre *)
+	v       IS_A speed;          (* velocity *)
+
+	F_net   IS_A force;          (* total force *)
+	F_g     IS_A force;          (* gravitational *)
+	F_d     IS_A force;          (* damping *)
+	F_s     IS_A force;          (* spring model of bounce *)
+
+	(* Constants *)	
+	m 	IS_A mass;               (* ball mass *)
+	g 	IS_A acceleration;       (* gravitational constant *)
+	r 	IS_A distance;           (* ball radius *)
+	k1	IS_A stiffness;          (* spring constant *)
+	k2	IS_A damping_coefficient;(* damping constant *)
+	
+	(*Independent *)
+	t IS_A time;
+
+	(* Booleans *)
+	switch IS_A boolean_var;	
+
+	(* Derivatives *)
+	DERIVATIVE OF y,v WITH t;
+
+	(* Equations *)
+	motion:		m*der(v,t)	= F_net;
+
+	gravity:	F_g 	= -1*m*g;
+	damping:	F_d	= -1*k2*v;
+	spring:		F_s	= k1*(r - y);	
+
+	vdum:		v	= der(y,t);	
+
+	airborn: 	F_net = F_g;
+	bouncing: 	F_net = F_g + F_d + F_s;
+
+CONDITIONAL
+	boundary: y <= r;
+END CONDITIONAL;
+
+	switch == SATISFIED(boundary, 1e-8{s});
+
+WHEN(switch)
+	CASE TRUE:
+		USE bouncing;
+	CASE FALSE:
+		USE airborn;
+END WHEN;
+
+
+METHODS
+	METHOD on_load;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+
+	METHOD values;
+		FIX m, k1, k2, r, g;
+		m  := 4 {kg};
+		g  := 9.8 {m/s^2};
+		r  := 10 {m};
+		k1 := 400 {N/m};
+		k2 := 4 {N*s/m};
+
+		(* Initial values *)
+		y         := 40 {m};
+		v         := 0 {m/s};
+		der(v,t)  := 0 {m/s^2};
+		t         := 0 {s};
+		switch    := FALSE;
+	END values;
+
+	METHOD obs_init;
+		y.obs_id	:= 1;
+	END obs_init;
+
+END bouncingball_der;
+

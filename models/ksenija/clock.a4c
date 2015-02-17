@@ -1,0 +1,44 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(* The model of the Galileo-Huygens clock *)
+
+MODEL test1;
+    f, d, w, p, a, derf IS_A solver_var;
+    bv1 IS_A boolean_var;
+    t IS_A time;
+    DERIVATIVE OF f, derf;
+    PREVIOUS der(f);
+    INDEPENDENT t;
+
+    rel: der(derf) + 2*d*der(f) + w*w*f = 0;
+    derf = der(f);
+    bnd: der(f) = pre(der(f)) + p;
+
+    CONDITIONAL
+    cnd1: f > a;
+    END CONDITIONAL;
+
+    bv1 == SATISFIED(cnd1);
+
+    ev: EVENT(bv1)
+      CASE TRUE: USE bnd;
+      OTHERWISE: USE rel;
+    END EVENT;
+
+METHODS
+METHOD on_load;
+    f.obs_id := 1;
+    der(f).obs_id := 2;
+    bv1 := FALSE;
+    t := 0 {s};
+    FIX f := 2;
+    FIX der(f) := 9;
+    FIX a := 1;
+    FIX p := 7;
+    FIX w := 5;
+    FIX d := 0.5;
+    bv1.obs_id := 3;
+END on_load;
+
+END test1;

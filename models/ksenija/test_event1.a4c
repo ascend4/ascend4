@@ -1,0 +1,55 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL test_event1;
+
+	x IS_A solver_var;
+	on, too_high, too_low IS_A boolean_var;
+	t IS_A time;
+	INDEPENDENT t;
+	DERIVATIVE OF x;
+
+	diff_eq1: der(x) = 5*x;
+	diff_eq2: der(x) = -x;
+
+	switch_on: on == TRUE;
+	switch_off: on == FALSE;
+
+	WHEN (on)
+		CASE FALSE: USE diff_eq2;
+		CASE TRUE: USE diff_eq1;
+	END WHEN;
+
+	CONDITIONAL
+		x_too_high: x >= 30;
+		x_too_low: x <= 2;
+	END CONDITIONAL;
+
+	sat1: too_high == SATISFIED(x_too_high);
+	sat2: too_low == SATISFIED(x_too_low);
+
+	EVENT (too_high)
+		CASE TRUE: USE switch_off;
+	END EVENT;
+
+	EVENT (too_low)
+		CASE TRUE: USE switch_on;
+	END EVENT;
+
+METHODS
+	METHOD obs_init;
+		x.obs_id := 1;
+		on.obs_id := 2;
+	END obs_init;
+	METHOD values;
+		x := 15;
+		t := 0 {s};
+		on := TRUE;
+		too_high := FALSE;
+		too_low := FALSE;
+	END values;
+	METHOD on_load;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+END test_event1;

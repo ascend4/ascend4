@@ -1,0 +1,69 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL test_event1;
+
+	x, y, a[1..m], b[1..n] IS_A solver_var;
+	m, n IS_A integer_constant;
+	b1[1..m], b2[1..n] IS_A boolean_var;
+	t IS_A time;
+	INDEPENDENT t;
+	DERIVATIVE OF x;
+	PREVIOUS der(x), y;
+
+	der(x) = x/1000;
+
+	rel1: der(x) = pre(der(x)) + y;
+	rel2: y = pre(y) + 5;
+
+	m :== 5;
+	n :== 10;
+
+	CONDITIONAL
+	FOR i IN [1..m] CREATE
+		bnd1[i]: t = a[i];
+	END FOR;
+	FOR i IN [1..n] CREATE
+		bnd2[i]: t = b[i];
+	END FOR;
+	END CONDITIONAL;
+
+	FOR i IN [1..m] CREATE
+		b1[i] == SATISFIED(bnd1[i]);
+		EVENT (b1[i])
+			CASE TRUE: USE rel1;
+		END EVENT;
+	END FOR;
+
+	FOR i IN [1..n] CREATE
+		b2[i] == SATISFIED(bnd2[i]);
+		ev[i]: EVENT (b2[i])
+			CASE TRUE: USE rel2;
+		END EVENT;	
+	END FOR;
+
+METHODS
+	METHOD obs_init;
+		x.obs_id := 1;
+		der(x).obs_id := 2;
+		y.obs_id := 3;
+	END obs_init;
+	METHOD values;
+		y := 5;
+		x := 10;
+		t := 0 {s};
+		FOR i IN [1..m] DO
+			FIX a[i] := 10*i;
+			b1[i] := FALSE;
+		END FOR;
+
+		FOR i IN [1..n] DO
+			FIX b[i] := 5*i;
+			b2[i] := FALSE;
+		END FOR;
+	END values;
+	METHOD on_load;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+END test_event1;

@@ -1,0 +1,10 @@
+REQUIRE "atoms.a4l";
+
+MODEL badtype;
+
+    x IS_A integer;
+	t IS_A solver_var;
+	
+    DERIVATIVE OF x WITH t;
+  
+END badtype;

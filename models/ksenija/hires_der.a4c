@@ -1,0 +1,71 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+(*
+	Sample problem 'HIRES' from the Test Set for IVP Solvers
+
+	'High Irradiance RESponse', from plant physiology, describing how light is
+	involved in morphogenesis.
+
+	http://pitagora.dm.uniba.it/~testset/problems/hires.php
+
+	We're not really concerned with the details of this problem. We're just	
+	trying to determine that our solver gets the right answer.	High-precision
+	solution results are provided online and we aim to reproduce those here.
+*)
+
+MODEL hires;
+	y[1..8] IS_A solver_var;
+	DERIVATIVE OF y[1..8] WITH t;
+
+	f1: der(y[1],t) = -1.71*y[1] + 0.43*y[2] + 8.32*y[3] + 0.0007;
+	
+	f2: der(y[2],t) = 1.71*y[1] - 8.75*y[2];
+
+	f3: der(y[3],t) = -10.03*y[3] + 0.43*y[4] + 0.035*y[5];
+	
+	f4: der(y[4],t) = 8.32*y[2] + 1.71*y[3] - 1.12*y[4];
+
+	f5: der(y[5],t) = -1.745*y[5] + 0.43*y[6] +0.43*y[7];
+
+	f6: der(y[6],t) = -280*y[6]*y[8] + 0.69*y[4] + 1.71*y[5] - 0.43*y[6] + 0.69*y[7];
+
+	f7: der(y[7],t) = 280*y[6]*y[8] - 1.81*y[7];
+
+	f8: der(y[8],t) = -280*y[6]*y[8] + 1.81*y[7];
+
+	t IS_A time;
+
+METHODS
+	METHOD values;
+		FOR i IN [1..8] DO
+			y[i] := 0;
+		END FOR;
+		y[1] := 1;
+		y[8] := 0.0057;
+		t := 0 {s};
+	END values;
+	(* integrate up to t = 321.8122 *)
+	METHOD ode_init;
+		FOR i IN [1..8] DO
+			y[i].obs_id := i;
+		END FOR;
+	END ode_init;
+	METHOD self_test;
+		ASSERT abs(y[1] - 0.7371312573325668e-3) < 1e-15;
+		ASSERT abs(y[2] - 0.1442485726316185e-3) < 1e-15;
+		ASSERT abs(y[3] - 0.5888729740967575e-4) < 1e-15;
+		ASSERT abs(y[4] - 0.1175651343283149e-2) < 1e-15;
+		ASSERT abs(y[5] - 0.2386356198831331e-2) < 1e-13;
+		ASSERT abs(y[6] - 0.6238968252742796e-2) < 1e-13;
+		ASSERT abs(y[7] - 0.2849998395185769e-2) < 1e-14;
+		ASSERT abs(y[8] - 0.2850001604814231e-2) < 1e-14;
+	END self_test;
+	METHOD specify;
+		(* nothing needs to be fixed *)
+	END specify;
+	METHOD on_load;
+		RUN reset; RUN values;
+		RUN ode_init;
+	END on_load;
+END hires;
+

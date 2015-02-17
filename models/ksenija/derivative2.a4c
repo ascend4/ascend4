@@ -1,0 +1,10 @@
+REQUIRE "atoms.a4l";
+
+MODEL dermodel;
+
+    x[1..3][1..3] IS_A distance;
+	t2 IS_A time;
+    INDEPENDENT t2;
+    x[1][1] = x[2][1];
+
+END dermodel;

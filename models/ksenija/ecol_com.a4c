@@ -1,0 +1,195 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(* Model of an ecological community. 
+Descriped in http://www.dmb.biophys.msu.ru/registry?article=95 *)
+
+MODEL community;
+  m, n, p IS_A integer_constant;
+  x[1..m] IS_A solver_var; (* Biomass of primary producers *)
+  y[1..n] IS_A solver_var; (* Consumers *)
+  c[1..p] IS_A solver_var; (* Substratum *)
+  F[1..m+n] IS_A solver_var; (* Birth rates *)
+  D[1..m+n] IS_A real_constant; (* Death rates *)
+  t IS_A solver_var;
+  V[1..m][1..n] IS_A real_constant; (* Consumption of the producers by the consumers *)
+  v[1..m][1..m] IS_A real_constant; (* Consumption of the consumers by the consumers *)
+  U[1..p][1..n] IS_A real_constant; (* Production of the substratum by the consumers *)
+  W[1..p][1..m] IS_A real_constant; (* Consumption of the substratum by the producers *)
+  DERIVATIVE OF x[1..m], y[1..n], c[1..p] WITH t;
+
+  m :== 6;
+  n :== 5;
+  p :== 3;
+
+  FOR i IN [1..m] CREATE
+  der(x[i],t) = (F[i] - D[i])*x[i] - SUM[V[i][l]*y[l] | l IN [1..n]];
+  END FOR;
+
+  FOR j IN [1..n] CREATE
+  der(y[j],t) = (F[m+j] - D[m+j])*y[j] - SUM[v[j][l]*y[l] | l IN [1..n]];
+  END FOR;
+
+  FOR k IN [1..p] CREATE
+  der(c[k],t) = SUM[U[k][l]*y[l] | l IN [1..n]] - SUM[W[k][l]*x[l] | l IN [1..m]];
+  END FOR;
+
+  F[1] = 3*x[1];
+  F[2] = 4*x[2];
+  F[3] = 9*x[3];
+  F[4] = 3*x[4];
+  F[5] = 7*x[5];
+  F[6] = 5*x[6];
+  F[7] = 3*y[1];
+  F[8] = 6*y[2];
+  F[9] = 8*y[3];
+  F[10] = 10*y[4];
+  F[11] = 2*y[5];
+
+  D[1] :== 48;
+  D[2] :== 53;
+  D[3] :== 61;
+  D[4] :== 49;
+  D[5] :== 54;
+  D[6] :== 39;
+  D[7] :== 15;
+  D[8] :== 47;
+  D[9] :== 60;
+  D[10] :== 54;
+  D[11] :== 19;
+
+  V[1][1] :== 0;
+  V[1][2] :== 0;
+  V[1][3] :== 5;
+  V[1][4] :== 5;
+  V[1][5] :== 4;
+  V[2][1] :== 0;
+  V[2][2] :== 0;
+  V[2][3] :== 7;
+  V[2][4] :== 3;
+  V[2][5] :== 5;
+  V[3][1] :== 0;
+  V[3][2] :== 4;
+  V[3][3] :== 1;
+  V[3][4] :== 0;
+  V[3][5] :== 3;
+  V[4][1] :== 0;
+  V[4][2] :== 3;
+  V[4][3] :== 2;
+  V[4][4] :== 0;
+  V[4][5] :== 4;
+  V[5][1] :== 0;
+  V[5][2] :== 2;
+  V[5][3] :== 0;
+  V[5][4] :== 0;
+  V[5][5] :== 1;
+  V[6][1] :== 0;
+  V[6][2] :== 0;
+  V[6][3] :== 0;
+  V[6][4] :== 0;
+  V[6][5] :== 6;
+
+  v[1][1] :== 0;
+  v[1][2] :== 0;
+  v[1][3] :== 0;
+  v[1][4] :== 0;
+  v[1][5] :== 0;
+  v[2][1] :== 1;
+  v[2][2] :== 0;
+  v[2][3] :== 0;
+  v[2][4] :== 0;
+  v[2][5] :== 0;
+  v[3][1] :== 40;
+  v[3][2] :== 0;
+  v[3][3] :== 0;
+  v[3][4] :== 0;
+  v[3][5] :== 0;
+  v[4][1] :== 35;
+  v[4][2] :== 5;
+  v[4][3] :== 2;
+  v[4][4] :== 0;
+  v[4][5] :== 0;
+  v[5][1] :== 0.3;
+  v[5][2] :== 0;
+  v[5][3] :== 0;
+  v[5][4] :== 0;
+  v[5][5] :== 0;
+
+  U[1][1] :== 5;
+  U[1][2] :== 5;
+  U[1][3] :== 4;
+  U[1][4] :== 3;
+  U[1][5] :== 5;
+  U[2][1] :== 6;
+  U[2][2] :== 3;
+  U[2][3] :== 4;
+  U[2][4] :== 2;
+  U[2][5] :== 6;
+  U[3][1] :== 7;
+  U[3][2] :== 3;
+  U[3][3] :== 5;
+  U[3][4] :== 4;
+  U[3][5] :== 8;
+
+  W[1][1] :== 3;
+  W[1][2] :== 3;
+  W[1][3] :== 1;
+  W[1][4] :== 2;
+  W[1][5] :== 3;
+  W[1][6] :== 5;
+  W[2][1] :== 4;
+  W[2][2] :== 1;
+  W[2][3] :== 2;
+  W[2][4] :== 2;
+  W[2][5] :== 6;
+  W[2][6] :== 3;
+  W[3][1] :== 4;
+  W[3][2] :== 4;
+  W[3][3] :== 2;
+  W[3][4] :== 3;
+  W[3][5] :== 1;
+  W[3][6] :== 3;
+
+METHODS
+  METHOD on_load;
+    RUN specify; 
+    RUN set_obs;
+    RUN values;
+  END on_load;
+
+  METHOD values;
+    x[1] := 15;
+    x[2] := 13;
+    x[3] := 7;
+    x[4] := 8;
+    x[5] := 2;
+    x[6] := 3;
+    y[1] := 5;
+    y[2] := 7;
+    y[3] := 10;
+    y[4] := 8;
+    y[5] := 4;
+    c[1] := 7;
+    c[2] := 6;
+    c[3] := 8;
+  END values;
+
+  METHOD specify;
+    FOR i IN [1..m] DO
+    FIX x[i];
+    END FOR;
+    FOR j IN [1..n] DO
+    FIX y[j];
+    END FOR;
+  END specify;
+
+  METHOD set_obs;
+    FOR i IN [1..m] DO
+    x[i].obs_id := i;
+    END FOR;
+    FOR j IN [1..n] DO
+    y[j].obs_id := m + j;
+    END FOR;
+  END set_obs;
+
+END community;

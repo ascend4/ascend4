@@ -1,0 +1,112 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+MODEL sinai_billiard;
+
+	x, y IS_A solver_var; (* coordinates of the particle *)
+	a, b IS_A solver_var; (* velocities *)
+	r, R IS_A solver_var; (* radius of the circle and half of the square side *)
+	xo, yo IS_A solver_var; (* center of the square and the circle *)
+	x0, y0, k, bb, k1, b1, xp, yp, x1, y1 IS_A solver_var;
+	q, m, B IS_A solver_var;
+	sevx, sevy, cev IS_A boolean_var;
+	t IS_A time;
+	INDEPENDENT t;
+	DERIVATIVE OF x, y, a, b;
+	PREVIOUS a, b;
+
+	der(x) = a;
+	der(y) = b;
+
+	der(a) = (q*B*b)/m;
+	der(b) = -(q*B*a)/m;
+
+	CONDITIONAL
+		square_left: xo-x > R;
+		square_right: x-xo > R;
+		square_top: y-yo > R;
+		square_bottom: yo-y > R;
+		circle: (x-xo)*(x-xo) + (y-yo)*(y-yo) < r*r;
+	END CONDITIONAL;
+
+	sevx == SATISFIED(square_left) OR SATISFIED(square_right);
+        sevy == SATISFIED(square_top) OR SATISFIED(square_bottom);
+	cev == SATISFIED(circle);
+
+	ev1: EVENT(sevx)
+		CASE TRUE:
+	END EVENT;
+
+	ev2: EVENT(sevy)
+		CASE TRUE:
+	END EVENT;
+
+	ev3: EVENT(cev)
+		CASE TRUE:
+	END EVENT;
+
+METHODS
+	METHOD obs_init;
+		y.obs_id := 1;
+		x.obs_id := 2;
+		der(y).obs_id := 3;
+		der(x).obs_id := 4;
+	END obs_init;
+	METHOD values;
+		x     := 10;
+		y     := 20;
+		b := 1.5;
+		a := 1;
+		t     := 0 {s};
+		sevx  := FALSE;
+		sevy  := FALSE;
+		cev   := FALSE;
+		FIX xo := 0;
+		FIX yo := 0;
+		FIX R := 40;
+		FIX r := 20;
+		FIX q := 0.1;
+		FIX m := 1;
+		FIX B := 0.1;
+	END values;
+
+	METHOD on_load;
+		RUN values;
+		RUN obs_init;
+	END on_load;
+
+	METHOD ev1;
+		FIX a := -pre(a);
+	END ev1;
+
+	METHOD ev1_end;
+		FREE a;
+	END ev1_end;
+
+	METHOD ev2;
+		FIX b := -pre(b);
+	END ev2;
+
+	METHOD ev2_end;
+		FREE b;
+	END ev2_end;
+
+	METHOD ev3;
+		x0 := x - a;
+		y0 := y - b;
+		k  := (yo - y)/(xo - x);
+		bb  := y - k*x;
+		b1 := y0 + (1/k)*x0;
+		xp := (b1 - bb)/(k + (1/k));
+		yp := k*xp + bb;
+		x1 := 2*xp - x0;
+		y1 := 2*yp - y0;
+		FIX a  := x1 - x;
+		FIX b  := y1 - y;
+	END ev3;
+
+	METHOD ev3_end;
+		FREE a, b;
+	END ev3_end;
+
+END sinai_billiard;
