@@ -1,7 +1,7 @@
 from fprops import *
 from pylab import *
-fb = fluid('carbon_dioxide','rpp','pengrob')
-fa = fluid('carbondioxide','iapws','helmholtz')
+fa = fluid('carbondioxide',"helmholtz")
+fb = fluid('carbon_dioxide',"pengrob","RPP")
 
 
 print "a type =",fa.type
