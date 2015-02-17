@@ -58,7 +58,6 @@ class DiagnoseWindow:
 		self.relresids = self.browser.builder.get_object("relresids")
 		self.relbuf = gtk.TextBuffer()
 		self.relview.set_buffer(self.relbuf)
-
 		self.im = None
 		self.block = 0
 		self.apply_prefs()
@@ -67,8 +66,17 @@ class DiagnoseWindow:
 		self.fill_values(block) # block zero
 
 	def run(self):
-		self.window.run()
-		self.window.hide()
+		status = ascpy.SolverStatus()
+		_p = self.browser.prefs
+		_close_on_converged = _p.getBoolPref("Diagnose","close_on_converged",True)
+		_close_on_nonconverged = _p.getBoolPref("Diagnose","close_on_nonconverged",False)
+		if status.isConverged() and _close_on_converged:
+			self.window.response(gtk.RESPONSE_CLOSE)
+		elif not status.isConverged() and _close_on_nonconverged:
+			self.window.response(gtk.RESPONSE_CLOSE)
+		else:
+			self.window.run()
+			self.window.hide()
 
 	def apply_prefs(self):
 		vc = self.browser.prefs.getBoolPref("Diagnose","varcollapsed",True)
@@ -198,7 +206,16 @@ class DiagnoseWindow:
 	def fill_selection_info(self):
 		if self.var:
 			self.varname.set_text(self.var.getName())
-			self.varval.set_text(str(self.var.getValue()))
+			default_units = self.var.getInstance().getType().getDimensions().getDefaultUnits().getName().toString()
+			if default_units=="1":
+				pref_units = self.var.getInstance().getType().getPreferredUnits()
+				if pref_units:
+					varval = str(self.var.getValue())+" "+pref_units.getName().toString()
+				else:
+					varval = str(self.var.getValue())
+			else:
+				varval = str(self.var.getValue())+" "+default_units
+			self.varval.set_text(varval)
 			self.varinfobutton.set_sensitive(True)
 		else:
 			self.varname.set_text("")
@@ -353,7 +370,14 @@ class DiagnoseWindow:
 	def on_varinfobutton_clicked(self,*args):
 		title = "Variable '%s'" % self.var
 		text = "%s\n%s\n" % (title,"(from the solver's view)")
-
+		units = " "
+		default_units = self.var.getInstance().getType().getDimensions().getDefaultUnits().getName().toString()
+		if default_units=="1":
+			pref_units = self.var.getInstance().getType().getPreferredUnits()
+			if pref_units:
+				units += pref_units.getName().toString()
+		else:
+			units += default_units
 		_rows = {
 			"Value": self.var.getValue()
 			,"Nominal": self.var.getNominal()
@@ -361,7 +385,7 @@ class DiagnoseWindow:
 			,"Upper bound": self.var.getUpperBound()
 		}
 		for k,v in _rows.iteritems():
-			text += "\n  %s\t%s" % (k,value_human(v))
+			text += "\n  %s\t%s" % (k,value_human(v)+units)
 		
 		text += "\n\nIncident with %d relations:" % self.var.getNumIncidentRelations()
 		for r in self.var.getIncidentRelations():
@@ -380,7 +404,15 @@ class DiagnoseWindow:
 
 		text += "\n\nIncident with %d variables:" % self.rel.getNumIncidentVariables()
 		for v in self.rel.getIncidentVariables():
-			text += "\n  %s\t= %s" % ( v.getName(),value_human(v.getValue()) )
+			units = " "
+			default_units = v.getInstance().getType().getDimensions().getDefaultUnits().getName().toString()
+			if default_units=="1":
+				pref_units = v.getInstance().getType().getPreferredUnits()
+				if pref_units:
+					units += pref_units.getName().toString()
+			else:
+				units += default_units
+			text += "\n  %s\t= %s" % ( v.getName(),value_human(v.getValue())+units )
 
 		_dialog = InfoDialog(self.browser,self.window,text,title,tabs=(150,300))
 		_dialog.run()

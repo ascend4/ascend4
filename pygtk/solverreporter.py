@@ -137,8 +137,8 @@ class PopupSolverReporter(PythonSolverReporter):
 			_p = self.browser.prefs;
 			_close_on_converged = _p.getBoolPref("SolverReporter","close_on_converged",True);
 			_close_on_nonconverged = _p.getBoolPref("SolverReporter","close_on_nonconverged",False);
-
-
+			print status
+			print type(status)
 			if status.isConverged() and _close_on_converged:
 				self.report_to_browser(status)
 				print "CLOSING ON CONVERGED"

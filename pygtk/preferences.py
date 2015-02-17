@@ -20,7 +20,7 @@ class Preferences:
 			else:
 				self.fname = os.path.expanduser("~/.ascend.ini");
 
-			#print "PREFERENCES FILE =",self.fname
+			print "PREFERENCES FILE =",self.fname
 				
 		self.n = self.n + 1;
 

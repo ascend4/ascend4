@@ -20,7 +20,6 @@ class BlockType():
 	def __init__(self, typedesc, notesdb):
 		self.type = typedesc
 		self.notesdb = notesdb
-		self.arrays = []
 
 		# FIXME BlockType should know what .a4c file to load in order to access
 		# its type definition, for use in unpickling.
@@ -31,29 +30,24 @@ class BlockType():
 		self.inputs = []
 		self.outputs = []
 		self.params = []
+		#self.duals = []
 		for n in nn:
 			t = n.getText()
-			#print t
 			if t[0:min(len(t),3)]=="in:":
-				self.inputs += [[n.getId(),self.type.findMember(n.getId()),str(t)]]
+				self.inputs += [[n.getId(),self.type.findMember(n.getId())]]
 			elif t[0:min(len(t),4)]=="out:":
-				self.outputs += [[n.getId(),self.type.findMember(n.getId()),str(t)]]
+				self.outputs += [[n.getId(),self.type.findMember(n.getId())]]
+			#elif t[0:min(len(t),5)]=="dual:":
+			#	self.duals += [n]
 			elif t[0:min(len(t),6)]=="param:":
-				self.params += [[n.getId(),self.type.findMember(n.getId()),str(t)]]
-				
+				self.params += [[n.getId(),self.type.findMember(n.getId())]]
+			
 		self.iconfile = None
 		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("icon"))
 		if nn:
 			n = nn[0].getText()
 			if os.path.exists(n):
 				self.iconfile = n
-		
-		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("array"))
-		for n in nn:
-			if n:
-				t = n.getText()
-				self.arrays.append([n.getText(),self.type.findMember(n.getText())])
-		print self.arrays
 		
 	def get_icon(self, width, height):
 		"""
@@ -66,22 +60,27 @@ class BlockType():
 		return gtk.gdk.pixbuf_new_from_file_at_size(f,width,height)
 
 	def __getstate__(self):
-		state = self.__dict__.copy()
-		state['type'] = str(self.type)
-		state['notesdb'] = None
-		state['inputs'] = []
-		state['outputs'] = []
-		state['params'] =  []
-		#state['inputs'] = [[str(x) for x in self.inputs[i]] for i in range(len(self.inputs))]
-		#state['outputs'] = [[str(x) for x in self.outputs[i]] for i in range(len(self.outputs))]
-		#state['params'] =  [[str(x) for x in self.params[i]] for i in range(len(self.params))]
-		return(state)
-	
+		print "GET STATE ON BLOCKTYPE %s" % self.type.getName()
+		ninput= len(self.inputs)
+		noutput=len(self.outputs)
+		name=str(self.type.getName())
+		return (name,ninput,noutput)
+
 	def __setstate__(self, state):
-		self.__dict__ = state
+		print "SET STATE ON BLOCKTYPE"
+		(typename,ninputs,noutputs) = state
+		print "Recreating type '%s' with %d inputs, %d outputs" % (typename,ninputs,noutputs)
+		self.type = None
+		self.notesdb = None
+		self._typename = typename
+		self.inputs = range(ninputs)
+		self.outputs = range(noutputs)
+		#self.instance = instance
+		#self.duals = range(nduals)
+		print "outputs =", self.outputs
 
 	def reattach_ascend(self,library, notesdb):
-		self.type = library.findType(self.type)
+		self.type = library.findType(self._typename)
 
 		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("inline"))
 
@@ -91,11 +90,11 @@ class BlockType():
 		for n in nn:
 			t = n.getText()
 			if t[0:min(len(t),3)]=="in:":
-				self.inputs += [[n.getId(),self.type.findMember(n.getId()),str(t)]]
+				self.inputs += [[n.getId(),self.type.findMember(n.getId())]]
 			elif t[0:min(len(t),4)]=="out:":
-				self.outputs += [[n.getId(),self.type.findMember(n.getId()),str(t)]]
+				self.outputs += [[n.getId(),self.type.findMember(n.getId())]]
 			elif t[0:min(len(t),6)]=="param:":
-				self.params += [[n.getId(),self.type.findMember(n.getId()),str(t)]]
+				self.params += [[n.getId(),self.type.findMember(n.getId())]]
 	
 		print "Reattached type '%s', with %d inputs, %d outputs" % (self.type.getName(), len(self.inputs), len(self.outputs))		
 

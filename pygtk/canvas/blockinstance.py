@@ -31,7 +31,6 @@ class BlockInstance:
 		self.color_b = 1
 		self.instance = 0
 		self.ports = {}
-		#self.stream = ''
 		for n in self.blocktype.inputs:
 			self.ports[n[0]] = PortInstance(self,n[0], n[1], PORT_IN)
 		for n in self.blocktype.outputs:
@@ -50,10 +49,10 @@ class BlockInstance:
 		return "%s%s" % (n, blocknameindex[n])
 
 	def __str__(self):
-		return "\t%s IS_A %s;\n" % (self.name,self.blocktype.type.getName())
+		return "\t%s IS_A %s;\n" % (self.name, self.blocktype.type.getName())
 
 	def reattach_ascend(self,ascwrap,notesdb):
-		if type(self.blocktype.type) == str:
+		if self.blocktype.type is None:
 			self.blocktype.reattach_ascend(ascwrap, notesdb)
 		
 		for port in self.ports:
@@ -64,12 +63,12 @@ class BlockInstance:
 		
 	def __getstate__(self):
 		#Return state values to pickle without  blockinstance.instance
-		state = self.__dict__.copy()
-		return(state)
+		return (self.blocktype, self.name, self.tab, self.ports, self.params, self.usercode)
 	
 	def __setstate__(self, state):
 		#Restore state values from pickle
-		self.__dict__ = state
+		self.blocktype, self.name, self.tab, self.ports, self.params, self.usercode = state
+		self.instance = None
 		
 				
 class PortInstance:
@@ -122,8 +121,8 @@ class ParamInstance:
 		# find the correct parameter
 		desc = ""
 		for p in self.blockinstance.blocktype.params:
-			if p[0] == self.name:
-				desc = p[2]
+			if p.getId() == self.name:
+				desc = p.getText()
 		return desc.split(":",2)[1].strip()
 	
 	def getValue(self):

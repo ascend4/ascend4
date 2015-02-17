@@ -237,7 +237,7 @@ class ObserverTab:
 		self.rows.append(_row)
 
 	def plot(self,x=None,y=None,y2=None):
-		"""create a plot from two columns in the ObserverTable"""
+		"""create a plot from two/more columns in the ObserverTable"""
 		import platform
 		import matplotlib
 		matplotlib.use('GTKAgg')
@@ -257,19 +257,20 @@ class ObserverTab:
 			y=self.cols[y]
 		if y2.__class__ is int and y2>=0 and y2<len(self.cols):
 			y2=self.cols[y2]
-
-		ncols = 2
 		start = None
-		if y2 is not None:
-			ncols+=1
 		_p = self.browser.prefs
 		_ignore = _p.getBoolPref("PlotDialog", "ignore_error_points", True)
 		r = {}
 		if _ignore == False:
-			for i in range(len(self.rows)-1):
+			for i in range(len(self.rows)):
 				try:
 					r = self.rows[i].get_values(self)
-					if r[x.index]!="" and r[y.index]!="":
+					flag = True
+					for j in y:
+						if r[j.index]=="":
+							flag = False
+							break
+					if r[x.index]!="" and flag==True:
 						if start == None:
 							start = i
 							break
@@ -278,26 +279,31 @@ class ObserverTab:
 			if start == None:
 				self.browser.reporter.reportError("Can't plot, could not get enough points.")
 				return
-			A = pylab.zeros((len(self.rows)-1-start,ncols),'f')
+			A = pylab.zeros((len(self.rows)-1-start,len(y)+1),'f')
 			i = 0
 			while start <len(self.rows)-1:
 				r = self.rows[start].get_values(self)
 				A[i,0]=r[x.index]
-				A[i,1]=r[y.index]
-				if y2 is not None:
-					A[i,2]=r[y2.index]
+				for k in range(len(y)):
+					A[i,k+1]=r[y[k].index]
 				start+=1
 				i+=1
 		else:
 			j = 0
 			k = 0
+			l = 0  
 			# we need to initiate A according to the number of error
 			# free rows/points going to be plotted
-			for i in range(len(self.rows)-1):
+			for i in range(len(self.rows)):
 				if self.rows[i].tainted is False:
 					try:
 						r = self.rows[i].get_values(self)
-						if r[x.index]!="" and r[y.index]!="":
+						flag = True
+						for l in y:
+							if r[l.index]=="":
+								flag = False
+								break
+						if r[x.index]!="" and flag == True:
 							if start == None:
 								start = i
 								j=0
@@ -307,30 +313,56 @@ class ObserverTab:
 			if start == None:
 				self.browser.reporter.reportError("Can't plot, could not get enough points.")
 				return
-			A = pylab.zeros((j,ncols),'f')
+			A = pylab.zeros((j,len(y)+1),'f')
 			while start<len(self.rows)-1:
 				if self.rows[start].tainted is True:
 					start+=1
 					continue
 				r = self.rows[start].get_values(self)
 				A[k,0]=r[x.index]
-				A[k,1]=r[y.index]
-				if y2 is not None:
-					A[k,2]=r[y2.index]
+				for j in range(len(y)):
+					A[k,j+1]=r[y[j].index]
 				k+=1
 				start+=1
-				
-		pylab.figure()
-		p1 = pylab.plot(A[:,0],A[:,1],'b-')
-		pylab.xlabel(x.title)
-		pylab.ylabel(y.title)
-
-		if y2 is not None:
-			ax2 = pylab.twinx()
-			p2 = pylab.plot(A[:,0],A[:,2],'r-')
-			pylab.ylabel(y2.title)
+		fig = pylab.figure(None,figsize=(10,6))   
+		#pylab.axis('auto')   
+		if len(y) == 2:
+			ax1 = pylab.subplot(111)   
+			ax1.set_xlabel(x.title)
+			ax1.set_ylabel(y[0].title,labelpad=20)
+			#pylab.plot(A[:,0],A[:,1],'b-',label=y[0].title)
+			l1 = ax1.plot(A[:,0],A[:,1],'b.',label=y[0].title)
+			#pylab.legend(loc='upper left')  
+			ax2 = ax1.twinx()  
+			l2 = ax2.plot(A[:,0],A[:,2],'r.',label=y[1].title)
+			ax2.set_ylabel(y[1].title,labelpad=20)
 			ax2.yaxis.tick_right()
-			pylab.legend([y.name,y2.name])
+			l = l1+l2
+			labels = [i.get_label() for i in l]
+			leg = ax1.legend(l,labels,loc='upper left')
+			leg.get_frame().set_alpha(0.3)
+
+		else :  
+			#pylab.gca().set_color_cycle(['red','green','yellow','blue'])   
+			color_cycle = ['b','r','g','y']
+			yprops = dict(rotation=0,
+					horizontalalignment='right',
+					verticalalignment='center')
+			axprops = dict([])
+			ax = range(len(y))
+			j = 0.83/len(y)
+			for i in range(len(y)):
+				ax[i] = fig.add_axes([0.27, 0.08+(i*(j+0.02)), 0.65, j-0.01], **axprops)
+				pylab.plot(A[:,0],A[:,i+1],color_cycle[i%4]+'.',label=y[i].title)
+				ax[i].yaxis.LABELPAD=0
+				ax[i].set_ylabel(y[i].title,labelpad=25,**yprops)
+				ax[i].yaxis.set_label('s')
+				if i==0:
+					axprops['sharex']=ax[0]
+					#axprops['sharey']=ax[0]
+					ax[i].set_xlabel(x.title,None)
+				leg = pylab.legend(loc='upper left')  
+				leg.get_frame().set_alpha(0.3)
 
 		pylab.ion()
 		pylab.show()
@@ -673,6 +705,7 @@ class PlotDialog:
 		self.plotbutton = self.browser.builder.get_object("plotbutton")
 		self.xview = self.browser.builder.get_object("treeview1")
 		self.yview = self.browser.builder.get_object("treeview2")
+		self.yview.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
 		self.ignorepoints = self.browser.builder.get_object("ignorepoints")
 		
 		_p = self.browser.prefs
@@ -750,33 +783,52 @@ class PlotDialog:
 				return
 				
 		_sel = widget.get_selection()
-		_view, _iter = _sel.get_selected()
-		if _iter is None:
+		_view, path_list = _sel.get_selected_rows()
+		if path_list is None:
 			return
-		_path = _view.get_path(_iter)
-		if _path is None:
-			return
-		
+		#_path = _view.get_path(_iter)
+		#_path = _iter[0]	
+		#if _path is None:
+		#	return
 		widget.grab_focus()
-		widget.set_cursor( _path, None, 0)
-		
 		_store = widget.get_model()
-		_iter = _store.get_iter(_path)
-		_col = _store.get_value(_iter,0)
-		if widget is self.xview:
-			self.xcol = _col
-		else:
-			self.ycol = _col
-		
-		if self.xcol is not None and self.ycol is not None:
-			if self.xcol.title == self.ycol.title:
-				if widget is self.xview:
-					self.yview.get_selection().unselect_all()
-					self.ycol = None
-				else:
-					self.xview.get_selection().unselect_all()
-					self.xcol = None
+		#_selx = self.xview.get_selection()
+		#_sely = self.yview.get_selection()
+
+		#widget.set_cursor( _path, None, 0)
+		flag=True
+		for _path in path_list:
+			if _path is None:
+				return
+			_iter = _store.get_iter(_path)
+			_col = _store.get_value(_iter,0)
+			if widget is self.xview:
+				self.xcol = _col
+				#_selx.select_iter(_iter)
+				break
 			else:
+				if flag==True:
+					self.ycol = []
+					flag=False
+				self.ycol.append(_col)
+				#_sely.select_iter(_iter)
+
+		if self.ycol is not None and type(self.ycol)!=type([]) :
+			self.ycol = [self.ycol]
+
+		flag=True
+		if self.xcol is not None and self.ycol is not None:
+			for yitem in self.ycol:
+				if self.xcol.title == yitem.title:
+					flag=False
+					if widget is self.xview:
+						self.yview.get_selection().unselect_all()
+						self.ycol = None
+					else:
+						self.xview.get_selection().unselect_all()
+						self.xcol = None
+					break
+			if flag==True:		
 				self.plotbutton.set_sensitive(True)
 	
 	def select_ycol(self, _col, _tab):
@@ -802,6 +854,8 @@ class PlotDialog:
 				_p = self.browser.prefs
 				_p.setBoolPref("PlotDialog", "ignore_error_points", self.ignorepoints.get_active())
 				self.plotwin.destroy()
+				if self.ycol is not None and type(self.ycol)!=type([]) :
+					self.ycol = [self.ycol]
 				return True
 			else:
 				self.plotwin.destroy()

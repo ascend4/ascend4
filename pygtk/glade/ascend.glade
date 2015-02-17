@@ -522,6 +522,7 @@ upper and lower bounds displayed.</property>
                         <property name="label">gtk-open</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Click to load a module</property>
                         <property name="use_action_appearance">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
@@ -533,6 +534,7 @@ upper and lower bounds displayed.</property>
                         <property name="label">_Reload</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Click to reload the current model</property>
                         <property name="use_action_appearance">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">False</property>
@@ -683,15 +685,48 @@ upper and lower bounds displayed.</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="diagnose_blocks">
-                        <property name="label">_Diagnose blocks...</property>
+                      <object class="GtkMenuItem" id="diagnose_blocks">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_action_appearance">False</property>
+                        <property name="label" translatable="yes">_Diagnose blocks</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">False</property>
-                        <accelerator key="D" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                        <signal name="activate" handler="on_diagnose_blocks_click" swapped="no"/>
+                        <child type="submenu">
+                          <object class="GtkMenu" id="diagnose_menu">
+                            <property name="can_focus">False</property>
+                            <property name="ubuntu_local">True</property>
+                            <child>
+                              <object class="GtkCheckMenuItem" id="show_diagnose_window">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="use_action_appearance">False</property>
+                                <property name="label" translatable="yes">Show _Window</property>
+                                <property name="use_underline">True</property>
+                                <signal name="toggled" handler="on_diagnose_show_window_toggle" swapped="no"/>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkCheckMenuItem" id="close_on_converged_diagnose">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="use_action_appearance">False</property>
+                                <property name="label" translatable="yes">Close on _Converged</property>
+                                <property name="use_underline">True</property>
+                                <signal name="toggled" handler="on_diagnose_close_on_converged_toggle" swapped="no"/>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkCheckMenuItem" id="close_on_nonconverged_diagnose">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="use_action_appearance">False</property>
+                                <property name="label" translatable="yes">Close on _Non-converged</property>
+                                <property name="use_underline">True</property>
+                                <signal name="toggled" handler="on_diagnose_close_on_nonconverged_toggle" swapped="no"/>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
                       </object>
                     </child>
                     <child>
@@ -1147,6 +1182,21 @@ upper and lower bounds displayed.</property>
                 <property name="can_focus">False</property>
                 <property name="use_action_appearance">False</property>
                 <property name="stock_id">gtk-open</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="view2">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">View</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-file</property>
+                <signal name="clicked" handler="view_click" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -3129,6 +3179,7 @@ upper and lower bounds displayed.</property>
                             <property name="secondary_icon_activatable">False</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
+                            <signal name="changed" handler="parse_entry" swapped="no"/>
                             <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
                           </object>
                           <packing>
@@ -3168,6 +3219,7 @@ upper and lower bounds displayed.</property>
                             <property name="secondary_icon_activatable">False</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
+                            <signal name="changed" handler="parse_entry" swapped="no"/>
                             <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
                           </object>
                           <packing>
@@ -3291,6 +3343,7 @@ upper and lower bounds displayed.</property>
                             <property name="secondary_icon_activatable">False</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
+                            <signal name="changed" handler="parse_entry" swapped="no"/>
                             <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
                           </object>
                           <packing>
@@ -3307,6 +3360,8 @@ upper and lower bounds displayed.</property>
                             <property name="secondary_icon_activatable">False</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
+                            <signal name="changed" handler="parse_entry" swapped="no"/>
+                            <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -3324,6 +3379,8 @@ upper and lower bounds displayed.</property>
                             <property name="secondary_icon_activatable">False</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
+                            <signal name="changed" handler="parse_entry" swapped="no"/>
+                            <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -3441,6 +3498,21 @@ upper and lower bounds displayed.</property>
         <col id="0" translatable="yes">Linear</col>
       </row>
     </data>
+  </object>
+  <object class="GtkMenu" id="modulemenu">
+    <property name="can_focus">False</property>
+    <property name="ubuntu_local">True</property>
+    <child>
+      <object class="GtkMenuItem" id="view">
+        <property name="visible">True</property>
+        <property name="sensitive">False</property>
+        <property name="can_focus">False</property>
+        <property name="tooltip_text" translatable="yes">View this model</property>
+        <property name="use_action_appearance">False</property>
+        <property name="label" translatable="yes">_View</property>
+        <property name="use_underline">True</property>
+      </object>
+    </child>
   </object>
   <object class="GtkMenu" id="observercontext">
     <property name="visible">True</property>

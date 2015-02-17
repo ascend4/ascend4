@@ -14,7 +14,6 @@ try:
 	import pygtk 
 	pygtk.require('2.0') 
 	import gtk
-		
 	import gtkexcepthook
 
 	import re
@@ -162,6 +161,10 @@ class Browser:
 			,default=True
 		)
 
+		parser.add_option("-t", "--test"
+			,action="store", type="string", dest="test"
+			,help="load a model and run contained tests without GUI")		
+
 		(self.options, args) = parser.parse_args()
 
 		#print "OPTIONS_______________:",self.options
@@ -179,7 +182,7 @@ class Browser:
 		loading.print_status("Loading preferences")
 
 		self.prefs = Preferences()
-
+		self.prefs.setBoolPref("Diagnose","show_window",False)
 		_prefpath = self.prefs.getStringPref("Directories","librarypath",None)
 		_preffileopenpath = self.prefs.getStringPref("Directories","fileopenpath",None)
 		self.filename = None
@@ -232,10 +235,23 @@ class Browser:
 		self.library = ascpy.Library(str(_path))
 
 		self.sim = None
+	
+		#--------
+		# report absence of solvers if nec.
+
+		if not len(ascpy.getSolvers()):
+			print "NO SOLVERS LOADED!"
+			self.reporter.reportError( "No solvers were loaded! ASCEND is probably not configured correctly." )
+
+		#--test option
+		if self.options.test:
+			print '================================================================================'
+			print 'IN TEST'
+			self.test()
+			return
 
 		#-------------------
 		# Set up the window and main widget actions
-
 		self.glade_file = os.path.join(self.assets_dir,config.GLADE_FILE)
 
 		loading.print_status("Setting up windows") #,"GLADE_FILE = %s" % self.glade_file)
@@ -561,13 +577,6 @@ class Browser:
 							%(_model, str(e))
 						);		
 
-
-		#--------
-		# report absence of solvers if nec.
-
-		if not len(ascpy.getSolvers()):
-			print "NO SOLVERS LOADED!"
-			self.reporter.reportError( "No solvers were loaded! ASCEND is probably not configured correctly." )
 	
 		#--------
 		# IPython console, if available
@@ -585,11 +594,21 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			)
 
 	def run(self):
-		#self.window.show()
-		loading.print_status("ASCEND is now running")
-		loading.complete()
-		self.auto_update_check()
-		gtk.main()
+		if not self.options.test:
+			#self.window.show()
+			loading.print_status("ASCEND is now running")
+			loading.complete()
+			self.auto_update_check()
+			gtk.main()
+
+	def test(self):
+		print sys.argv[1]
+		print sys.argv[3]
+		if len(sys.argv)==4:
+			ascpy.test_model(str(sys.argv[1]),str(sys.argv[3]))
+		#Call the function at the SWIG API level that runs all the tests and pass to it, the *args
+		#ascpy is accessible here
+
 
 #   ------------------
 #   SOLVER LIST
@@ -735,6 +754,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			print "Binary compilation set to",_v
 
 			self.sim = type_object.getSimulation(str(type_object.getName())+"_sim",False)
+			print type_object
+			print type_object.getSimulation
 
 			#self.reporter.reportNote("SIMULATION ASSIGNED")
 		except RuntimeError, e:
@@ -821,6 +842,14 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.stop_waiting()
 		
 		self.modelview.refreshtree()
+		if self.prefs.getBoolPref("Diagnose","show_window",True):
+			try:
+				_bl = self.sim.getActiveBlock()
+				_db = DiagnoseWindow(self,_bl)
+				_db.run()
+			except RuntimeError, e:
+				self.reporter.reportError(str(e))
+				return
 
 	def do_integrate(self):
 		if self.no_built_system():
@@ -972,14 +1001,17 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.reporter.reportNote("Repainting model view...")
 		self.modelview.refreshtree()
 
-	def on_diagnose_blocks_click(self,*args):
-		try:
-			_bl = self.sim.getActiveBlock()
-			_db = DiagnoseWindow(self,_bl)
-			_db.run();
-		except RuntimeError, e:
-			self.reporter.reportError(str(e))
-			return
+	def on_diagnose_show_window_toggle(self,checkmenuitem,*args):
+		_v = checkmenuitem.get_active()
+		self.prefs.setBoolPref("Diagnose","show_window",_v)
+
+	def on_diagnose_close_on_converged_toggle(self,checkmenuitem,*args):
+		_v = checkmenuitem.get_active()
+		self.prefs.setBoolPref("Diagnose","close_on_converged",_v)
+
+	def on_diagnose_close_on_nonconverged_toggle(self,checkmenuitem,*args):
+		_v = checkmenuitem.get_active()
+		self.prefs.setBoolPref("Diagnose","close_on_nonconverged",_v)
 
 	def on_add_observer_click(self,*args):
 		self.create_observer()
@@ -1175,6 +1207,38 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			except RuntimeError,e:
 				self.reporter.reportError(str(e))
 	
+	def view_click(self,*args):
+		#loading.print_status("CURRENT FILEOPENPATH is",self.fileopenpath)
+		dialog = gtk.FileChooserDialog("View ASCEND model...",
+			self.window,
+			gtk.FILE_CHOOSER_ACTION_OPEN,
+			(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK)
+		)
+		dialog.set_current_folder(self.fileopenpath)
+		dialog.set_default_response(gtk.RESPONSE_OK)
+		dialog.set_transient_for(self.window)
+		dialog.set_modal(True)
+
+		filter = gtk.FileFilter()
+		filter.set_name("*.a4c, *.a4l")
+		filter.add_pattern("*.[Aa]4[Cc]")
+		filter.add_pattern("*.[Aa]4[Ll]")
+		dialog.add_filter(filter)
+
+		filter = gtk.FileFilter()
+		filter.set_name("All files")
+		filter.add_pattern("*")
+		dialog.add_filter(filter)
+
+		response = dialog.run()
+		_filename = dialog.get_filename()
+		#print "\nFILENAME SELECTED:",_filename
+		dialog.hide()
+
+		if response == gtk.RESPONSE_OK:
+			self.reporter.reportNote("File %s selected." % _filename )
+			ViewModel(_filename,None)
+
 	def on_reloadwarn_toggled(self,*args):
 		self.prefs.setBoolPref("Browser","warn_on_reload",self.reloadwarn.get_active())
 
@@ -1268,6 +1332,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		#	self.reporter.reportSuccess("Auto mode is now OFF")
 
 	def on_file_quit_click(self,*args):
+		#self.exit_popup()
 		self.do_quit()
 
 	def on_tools_auto_toggle(self,checkmenuitem,*args):
@@ -1455,8 +1520,21 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			_o.sync()
 	
 	def delete_event(self, widget, event):
-		self.do_quit()	
 		return False
+		#return self.exit_popup()
+
+	def exit_popup(self):
+		dialog = gtk.MessageDialog(self.window, gtk.DIALOG_MODAL, gtk.MESSAGE_INFO,
+				gtk.BUTTONS_YES_NO, "Are you sure you want to Quit?")
+		dialog.set_title("Exit popup")
+		#dialog.set_default_size(600,300)
+		response = dialog.run()
+		dialog.destroy()
+		if response == gtk.RESPONSE_YES:
+			self.do_quit()
+			return False
+		else:
+			return True
 
 	def observe(self,instance):
 			if self.currentobservertab is None:
@@ -1492,7 +1570,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		
 	def disable_menu(self):
 		list=["free_variable","fix_variable","sparsity","propsmenuitem","copy_observer_matrix",
-                      "incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
+                      "incidencegraph","show_fixed_vars","show_freeable_vars",
                       "show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1",
                       "repaint_tree","checkbutton","solvebutton","integratebutton","methodrunbutton",
                       "check1","solve1","integrate1","units","add_observer","keep_observed","preferences","notes_view"]
@@ -1527,7 +1605,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				self.builder.get_object("propsmenuitem").set_sensitive(True)
 		
 	def enable_on_sim_build(self):
-		list=["sparsity","incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
+		list=["sparsity","incidencegraph","show_fixed_vars","show_freeable_vars",
                       "show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1","notes_view"]
 		for button in list:
 			self.builder.get_object(button).set_sensitive(True)
@@ -1602,4 +1680,4 @@ class AutoUpdateDialog:
 			elif _res == gtk.RESPONSE_NO or _res == gtk.RESPONSE_DELETE_EVENT or _res == gtk.RESPONSE_CLOSE:
 				self.win.destroy()
 				return False
-	
+
