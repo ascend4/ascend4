@@ -1,7 +1,7 @@
 import ascpy
 import time
 import sys
-import gtk
+from gi.repository import Gtk
 import time
 from varentry import *
 from preferences import *
@@ -9,7 +9,7 @@ from infodialog import *
 from observer import *
 import tempfile
 
-import gobject
+from gi.repository import GObject
 try:
 	import pylab
 except:
@@ -31,7 +31,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["integratorstatusdialog"])
 		self.browser.builder.connect_signals(self)
 		self.window=self.browser.builder.get_object("integratorstatusdialog")
-		self.window.set_transient_for(self.browser.window)
+		self.set_transient_for(self.browser.window)
 		self.label=self.browser.builder.get_object("integratorlabel")
 		self.label.set_text("Solving with "+self.getIntegrator().getName())
 		self.progress=self.browser.builder.get_object("integratorprogress")
@@ -76,8 +76,8 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.progress.set_text("Starting...")
 		self.progress.set_fraction(0.0)
 		#update the GUI
-		while gtk.events_pending():
-			gtk.main_iteration()
+		while Gtk.events_pending():
+			Gtk.main_iteration()
 		return 1
 
 	def closeOutput(self):
@@ -85,7 +85,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		integrator = self.getIntegrator()
 		# create an empty observer
 		try:
-			_label = gtk.Label();
+			_label = Gtk.Label();
 			INTEGRATOR_NUM = INTEGRATOR_NUM + 1
 			_name = "Integrator %d" % INTEGRATOR_NUM
 			self.browser.builder.add_objects_from_file(self.browser.glade_file,
@@ -132,8 +132,8 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			_frac = float(self.getIntegrator().getCurrentStep())/self.nsteps
 			self.progress.set_text("t = %f" % (self.getIntegrator().getCurrentTime()))
 			self.progress.set_fraction(_frac)
-			while gtk.events_pending():
-				gtk.main_iteration()
+			while Gtk.events_pending():
+				Gtk.main_iteration()
 			if self.cancelrequested:
 				return 0	
 			return 1
@@ -232,7 +232,7 @@ class IntegratorReporterPlot(ascpy.IntegratorReporterCxx):
 			self.y = []	
 			self.line, = pylab.plot(self.x,self.y,animated=True)	
 			self.bg = self.canvas.copy_from_bbox(self.ax.bbox)
-			gobject.idle_add(self.plotupdate)
+			GObject.idle_add(self.plotupdate)
 			pylab.show()
 		except Exception,e:
 			print "ERROR %s" % str(e)

@@ -130,72 +130,6 @@ static const HelmholtzData helmholtz_data_nitrogen = {
 	}
 };
 
-const ViscosityData visc_nitrogen = {
-	.source="E W Lemmon and R T Jacobsen, 2004. 'Viscosity and Thermal Conductivity Equations for Nitrogen, Oxygen, Argon, and Air', Int J Thermophys 25(1), pp. 21-69."
-	,.type=FPROPS_VISC_1
-	,.data={.v1={
-		.mu_star = 1e-6
-		,.T_star = NITROGEN_TC
-		,.rho_star = NITROGEN_RHOC
-		,.sigma = 0.3656 /* TODO see filedata.h; should convert to base SI */
-		,.M = 28.01348
-		,.eps_over_k = 98.94
-		,.ci={
-			FPROPS_CI_1
-			,.data={.ci1={
-				.nt=5
-				,.t=(const ViscCI1Term[]){
-					{0, 0.431}
-					,{1, -0.4623}
-					,{2, 0.08406}
-					,{3, 0.005341}
-					,{4, -0.00331}
-				}
-			}}
-		}
-		,.nt=5
-		,.t=(const ViscData1Term[]){
-			{10.72, 0.1, 2, 0}
-			,{0.03989, 0.25, 10, 1}
-			,{0.001208, 3.2, 12, 1}
-			,{-7.402, 0.9, 2, 2}
-			,{4.620, 0.3, 1, 3}
-		}
-	}}
-};
-
-const ThermalConductivityData thcond_nitrogen = {
-	.source = "Lemmon and Jacobsen, 2003. Int J Thermophys 25(1)."
-	,.type=FPROPS_THCOND_1
-	,.data={.k1={
-		.k_star = 1e-3
-		,.T_star = 126.192
-		,.rho_star = 11.1839
-		,.v1=&(visc_nitrogen.data.v1)
-		,.eps_over_k = 98.94
-		,.nc = 6
-		,.ct=(const ThCondCSTerm[]){
-			{0, 0.4226159}
-			,{1, 0.6280115}
-			,{2, -0.5387661}
-			,{3, 0.6735941}
-			,{6, -0.4362677}
-			,{7, 0.2255388}
-		}
-		,.nr=6
-		,.rt=(const ThCondData1Term[]){
-			{8.862,        0.,   1, 0}
-			,{31.11,       0.03, 2, 0}
-			,{-73.13,      0.2,  3, 1}
-			,{20.03,       0.8,  4, 2}
-			,{-0.7096,     0.6,  8, 2}
-			,{0.2672,      1.9, 10, 2}
-		}
-		,.crit = NULL
-	}}
-};
-
-
 EosData eos_nitrogen = {
 	"nitrogen"
 	,"Span, Lemmon, Jacobsen & Wagner, A Reference Quality Equation of State "
@@ -204,9 +138,8 @@ EosData eos_nitrogen = {
 	,100
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_nitrogen}
-	,.visc = &visc_nitrogen
-	,.thcond = &thcond_nitrogen
 };
+
 
 
 /*
@@ -220,8 +153,6 @@ EosData eos_nitrogen = {
 #ifdef TEST
 
 #include "../ideal_impl.h"
-#include "../visc.h"
-#include "../thcond.h"
 #include "../test.h"
 #include <math.h>
 #include <stdio.h>
@@ -238,7 +169,7 @@ int main(void){
 
 	FpropsError err=FPROPS_NO_ERROR;
 #define D P->data
-	double rho, T, p, u, h, a, s, cp0, w, mu;
+	double rho, T, p, u, h, a, s, cp0, w;
 
 	double maxerr = 0;
 
@@ -256,7 +187,7 @@ int main(void){
 #undef CP0_TEMP
 	}
 
-	fprintf(stderr,"\nTesting sample values from the Span paper...\n");
+	fprintf(stderr,"Testing sample values from the Span paper...\n");
 
 	//ReferenceState ref = {FPROPS_REF_IIR};
 	//fprops_set_reference_state(P, &ref);
@@ -288,54 +219,6 @@ int main(void){
 	ASSERT(fabs(w - 135.571) < 0.0005);
 	fprintf(stderr,"OK 2\n");
 
-	fprintf(stderr,"Testing viscosity values from Int J Thermophys 25(1) Jan 2004... ");
-	const ViscosityData *V = visc_prepare(&eos_nitrogen, P, &err);
-	ASSERT(FPROPS_NO_ERROR==err);
-	ASSERT(V != NULL);
-	P->visc = V;
-
-	// test data gives densities in mol/dm³
-#define VISC_TEST(T__1,RHO__1,MU__1,TOL__1) \
-	S = fprops_set_Trho(T__1, RHO__1*P->visc->data.v1.M, P, &err); \
-	mu = fprops_mu(S,&err); \
-fprintf(stderr,"mu(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,mu,MU__1); \
-	ASSERT(FPROPS_NO_ERROR==err); \
-	ASSERT(fabs(mu - MU__1)<TOL__1);
-
-	VISC_TEST(100,0,6.90349e-6, 0.000005e-6);
-	VISC_TEST(300,0,17.8771e-6, 0.00005e-6);
-	VISC_TEST(100,25,79.7418e-6, 0.00005e-6);
-	VISC_TEST(200,10,21.0810e-6, 0.00005e-6);
-	VISC_TEST(300,5,20.7430e-6, 0.00005e-6);
-	VISC_TEST(126.195,11.18,18.2978e-6, 0.00005e-6);
-
-	fprintf(stderr,"done\n");
-
-	//--------------------------------------------------------------------------
-	fprintf(stderr,"Testing thermal conductivity values from REFPROP 8.0\n");
-	thcond_prepare(P, &thcond_nitrogen, &err);
-	ASSERT(FPROPS_NO_ERROR==err);
-	ASSERT(V != NULL);
-
-	int kerr = 0;
-	double k;
-#define THCOND_TEST(T__1,RHO__1,K__1,TOL__1) \
-	S = fprops_set_Trho(T__1, RHO__1, P, &err); \
-	k = fprops_k(S,&err); \
-	fprintf(stderr,"k(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,k,K__1); \
-	ASSERT(FPROPS_NO_ERROR==err); \
-	if(fabs(k - K__1)<TOL__1)kerr++;
-
-	THCOND_TEST(100,0,          9.2775e-3, 0.00005e-3);
-	THCOND_TEST(300,0,          25.936e-3, 0.0005e-3);
-	THCOND_TEST(100,25,         10.309e-3, 0.0005e-3);
-	THCOND_TEST(200,10,         18.545e-3, 0.0005e-3);
-	THCOND_TEST(300,5,          26.085e-3, 0.0005e-3);
-	THCOND_TEST(126.195,11.180, 12.132e-3, 0.0005e-3);
-
-	ASSERT(kerr==0);
-
-	//--------------------------------------------------------------------------
 	fprintf(stderr,"CONSISTENCY TESTS (of test data): u, T, s, a... ");
 	for(i=0; i<n; ++i){
 		u = td[i].u*1e3;

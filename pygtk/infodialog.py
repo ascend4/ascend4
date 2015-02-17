@@ -1,8 +1,9 @@
 # General-purpose popup window for reporting texty stuff
 
-import gtk, pango
-import ascpy
-from varentry import *
+from gi.repository import Gtk
+from gi.repository import Pango
+#import ascpy
+#from varentry import *
 
 class InfoDialog:
 	def __init__(self,browser,parent,text,title,tabs=None):
@@ -20,7 +21,7 @@ class InfoDialog:
 		self.parent = None
 		if parent:
 			self.parent = parent
-			self.window.set_transient_for(self.parent)
+			self.set_transient_for(self.parent)
 
 		self.textview = self.browser.builder.get_object("textview")
 		self.closebutton = self.browser.builder.get_object("closebutton")
@@ -28,18 +29,18 @@ class InfoDialog:
 		if tabs:
 			self.setTabs(*tabs)
 
-		self.textbuff = gtk.TextBuffer();
+		self.textbuff = Gtk.TextBuffer();
 		self.textview.set_buffer(self.textbuff)
 
 		self.fill_values(text)
-		self.browser.builder.connect_signals(self)
+        #self.browser.builder.connect_signals(self)
 
 	def setTabs(self,*args):
 		n = len(args)
-		t = pango.TabArray(n,True)
+		t = Pango.TabArray(n,True)
 		i = 0
 		for v in args:
-			t.set_tab(i,pango.TAB_LEFT,v)
+			t.set_tab(i,Pango.TabAlign.LEFT,v)
 			i+=1;
 		self.textview.set_tabs(t)
 
@@ -47,8 +48,31 @@ class InfoDialog:
 		self.textbuff.set_text(text);
 
 	def on_infodialog_close(self,*args):
-		self.window.response(gtk.RESPONSE_CLOSE);
+		self.window.response(Gtk.ResponseType.CLOSE);
 
 	def run(self):
 		self.window.run()
 		self.window.hide()
+
+
+glade_file = "Specify the glade file here"
+
+class T:
+    def __init__(self):
+        self.glade_file = glade_file
+        self.icon = None
+        builder = Gtk.Builder()
+        builder.add_objects_from_file(glade_file,["integ_icon","browserwin","list_of_td"])
+        self.builder=builder
+        self.window=self.builder.get_object ("browserwin")
+
+
+def main():
+    t = T()
+    _d = InfoDialog(t,t.window,"text","title")
+    _d.run()
+    
+    
+if __name__ == "__main__":
+    main()
+

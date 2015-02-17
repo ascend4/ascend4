@@ -1,4 +1,7 @@
-import gtk, pango, gobject, re
+from gi.repository import Gtk
+from gi.repository import Pango
+from gi.repository import GObject
+import re
 
 class UnitsDialog:
 
@@ -16,7 +19,7 @@ class UnitsDialog:
 
 		self.applybutton.set_sensitive(False)
 
-		self.window.set_transient_for(self.browser.window)
+		self.set_transient_for(self.browser.window)
 
 		self.browser.builder.connect_signals(self)
 
@@ -29,26 +32,26 @@ class UnitsDialog:
 			#raise RuntimeError("no units available")
 
 		# set up columns in the units view:
-		_renderer0 = gtk.CellRendererToggle()
+		_renderer0 = Gtk.CellRendererToggle()
 		_renderer0.set_radio(True)
 		_renderer0.connect("toggled",self.unitsview_row_toggled)
-		_col0 = gtk.TreeViewColumn("",_renderer0,active=0)
+		_col0 = Gtk.TreeViewColumn("",_renderer0,active=0)
 		self.unitsview.append_column(_col0)
 	
-		_renderer1 = gtk.CellRendererText()	
-		_col1 = gtk.TreeViewColumn("Units", _renderer1, text=1, weight=3)
+		_renderer1 = Gtk.CellRendererText()	
+		_col1 = Gtk.TreeViewColumn("Units", _renderer1, text=1, weight=3)
 		self.unitsview.append_column(_col1)
 
 		# value column: 'editable' set by column 3 of the model data.
-		_renderer2 = gtk.CellRendererText()	
-		_col2 = gtk.TreeViewColumn("Conversion", _renderer2, text=2)
+		_renderer2 = Gtk.CellRendererText()	
+		_col2 = Gtk.TreeViewColumn("Conversion", _renderer2, text=2)
 		self.unitsview.append_column(_col2)
 
 		self.changed = {}
 		self.T = T
 		if T is not None:
 			if T.isRefinedReal():
-				self.typecombo.child.set_text(str(T.getName()))
+				self.typecombo.get_child().set_text(str(T.getName()))
 		self.update_typecombo()
 
 	def unitsview_row_toggled(self,widget,path,*args):
@@ -76,18 +79,18 @@ class UnitsDialog:
 		self.applybutton.set_sensitive(can_apply)
 
 	def update_typecombo(self,text = None):
-		m = gtk.ListStore(str)
+		m = Gtk.ListStore(str)
 		for t in self.realtypes:
 			if not text or re.compile("^%s"%re.escape(text)).match(str(t.getName())):
 				m.append([t.getName()])
 		self.typecombo.set_model(m)
 		if text and m.iter_n_children(None):
 			self.typecombo.popup()
-			self.typecombo.child.grab_focus()
+			self.typecombo.get_child().grab_focus()
 		self.typecombo.set_text_column(0)
 
 	def update_unitsview(self,T):
-		m = gtk.ListStore(bool,str,str,int)
+		m = Gtk.ListStore(bool,str,str,int)
 		if T is not None:
 			d = T.getDimensions()
 			up = T.getPreferredUnits()
@@ -103,9 +106,9 @@ class UnitsDialog:
 					selected = False
 				else:
 					selected = (u==up)
-				weight = pango.WEIGHT_NORMAL
+				weight = Pango.Weight.NORMAL
 				if selected:
-					weight = pango.WEIGHT_BOLD
+					weight = Pango.Weight.BOLD
 				du = u.getDimensions().getDefaultUnits().getName()
 				if str(du) == "1":
 					du = ""
@@ -126,11 +129,11 @@ class UnitsDialog:
 		self.update_unitsview(T)
 		
 	def run(self):
-		_res = gtk.RESPONSE_APPLY
-		while _res == gtk.RESPONSE_APPLY:
+		_res = Gtk.ResponseType.APPLY
+		while _res == Gtk.ResponseType.APPLY:
 			_res = self.window.run()
-			if _res == gtk.RESPONSE_APPLY or _res == gtk.RESPONSE_CLOSE:
-				if _res == gtk.RESPONSE_CLOSE and not len(self.realtypes):
+			if _res == Gtk.ResponseType.APPLY or _res == Gtk.ResponseType.CLOSE:
+				if _res == Gtk.ResponseType.CLOSE and not len(self.realtypes):
 					break
 				for k,v in self.changed.iteritems():
 					self.browser.prefs.setPreferredUnits(k,v)

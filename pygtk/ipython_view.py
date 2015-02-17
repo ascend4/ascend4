@@ -102,17 +102,6 @@ class IterableIPShell:
     self.history_level = 0
     self.complete_sep =  re.compile('[\s\{\}\[\]\(\)]')
 
-################################################################
-# Temporary fix for now
-
-# Mapping exit and quit calls to None
-    
-    self.updateNamespace({'exit':lambda:None})
-    self.updateNamespace({'quit':lambda:None})
-
-################################################################
-
-
     self.IP.readline_startup_hook(self.IP.pre_readline)
     self.__update_namespace()
 

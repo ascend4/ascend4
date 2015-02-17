@@ -1906,7 +1906,7 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
   SetDeclarativeContext(1); /* set up for procedural processing */
   InstanceNamePart(name,&instname,&procname);
 
-#if 0
+#ifdef INIT_DEBUG
   if(procname){
     CONSOLE_DEBUG("Procname = %s",SCP(procname));
   }
@@ -1964,7 +1964,7 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
             } /* else was a c-like RETURN;. don't pass upward */
             break;
           }
-#if 0
+#ifdef INIT_DEBUG
           CONSOLE_DEBUG("Destroying frame...");
 #endif
           DestroyProcFrame(newfm);

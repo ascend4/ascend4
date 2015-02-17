@@ -1,4 +1,4 @@
-import gtk
+from gi.repository import Gtk
 import ascpy
 from itertools import groupby
 from operator import itemgetter
@@ -21,12 +21,12 @@ class DiagnoseWindow:
 		self.browser.builder.connect_signals(self)
 		self.window = self.browser.builder.get_object("diagnosewin")
 		self.window.grab_focus()
-		self.window.set_transient_for(self.browser.window)
+		self.set_transient_for(self.browser.window)
 
 		self.prefs = Preferences()
 
 		try:
-			_icon = gtk.Image()
+			_icon = Gtk.Image()
 			_iconpath = browser.assets_dir+'diagnose'+config.ICON_EXTENSION
 			print "ICON PATH =",_iconpath
 			_icon.set_from_file(_iconpath)
@@ -56,7 +56,7 @@ class DiagnoseWindow:
 			self.preferred_units_check.set_active(False)
 
 		self.varview = self.browser.builder.get_object("varview")
-		self.varbuf = gtk.TextBuffer()
+		self.varbuf = Gtk.TextBuffer()
 		self.varview.set_buffer(self.varbuf)
 		self.varcollapsed = self.browser.builder.get_object("varcollapsed")
 		self.relview = self.browser.builder.get_object("relview")	
@@ -65,7 +65,7 @@ class DiagnoseWindow:
 		self.rellabels = self.browser.builder.get_object("rellabels")
 		self.relrels = self.browser.builder.get_object("relrels")
 		self.relresids = self.browser.builder.get_object("relresids")
-		self.relbuf = gtk.TextBuffer()
+		self.relbuf = Gtk.TextBuffer()
 		self.relview.set_buffer(self.relbuf)
 		self.im = None
 		self.block = 0
@@ -99,8 +99,8 @@ class DiagnoseWindow:
 		try:
 			if self.im.getNumBlocks()==0:
 				print "NO BLOCKS!"
-				self.image.set_from_stock(gtk.STOCK_DIALOG_ERROR
-					,gtk.ICON_SIZE_DIALOG
+				self.image.set_from_stock(Gtk.STOCK_DIALOG_ERROR
+					,Gtk.IconSize.DIALOG
 				)
 				self.browser.reporter.reportError(
 					"Can't 'Diagnose blocks' until solver has been used."
@@ -132,7 +132,7 @@ class DiagnoseWindow:
 		nc = int(ch-cl+1);
 
 		print "STARTING IMAGE CREATION"
-		# refer http://pygtk.org/pygtk2tutorial/sec-DrawingMethods.html
+		# refer http://pyGtk.org/pygtk2tutorial/sec-DrawingMethods.html
 		c = chr(255)
 		b = nr*nc*3*[c]
 		rowstride = 3 * nc
@@ -185,7 +185,7 @@ class DiagnoseWindow:
 
 		print "DONE IMAGE CREATION"
 	
-		self.pixbuf = gtk.gdk.pixbuf_new_from_data(d, gtk.gdk.COLORSPACE_RGB, False, 8 \
+		self.pixbuf = GdkPixbuf.Pixbuf.new_from_data(d, GdkPixbuf.Colorspace.RGB, False, 8 \
 				, nc, nr, rowstride);
 
 		self.nr = nr
@@ -258,9 +258,9 @@ class DiagnoseWindow:
 		self.zoomentry.set_text("%d %%" % (int(self.zoom*100)) )
 
 		if self.zoom < 2:
-			pb1 = self.pixbuf.scale_simple(w,h,gtk.gdk.INTERP_BILINEAR)
+			pb1 = self.pixbuf.scale_simple(w,h,GdkPixbuf.InterpType.BILINEAR)
 		else:
-			pb1 = self.pixbuf.scale_simple(w,h,gtk.gdk.INTERP_NEAREST)
+			pb1 = self.pixbuf.scale_simple(w,h,GdkPixbuf.InterpType.NEAREST)
 		
 		self.image.set_from_pixbuf(pb1)
 
@@ -349,7 +349,7 @@ class DiagnoseWindow:
 	# GUI EVENT HOOKS-----------------------------------------------------------
 
 	def on_diagnosewin_close(self,*args):
-		self.window.response(gtk.RESPONSE_CLOSE);
+		self.window.response(Gtk.ResponseType.CLOSE);
 
 	def on_preferred_units_toggle(self,widget):
 		_v = widget.get_active()
@@ -453,7 +453,7 @@ class DiagnoseWindow:
 		print "NO FOLLOWING 'BIG' BLOCKS"
 	
 	def on_blockentry_key_press_event(self,widget,event):
-		keyname = gtk.gdk.keyval_name(event.keyval)
+		keyname = Gdk.keyval_name(event.keyval)
 		print "KEY ",keyname
 		if keyname=="Return":
 			self.set_block( int(self.blockentry.get_text()) )
@@ -471,7 +471,7 @@ class DiagnoseWindow:
 		self.set_zoom(z)		
 
 	def on_zoomentry_key_press_event(self,widget,event):
-		keyname = gtk.gdk.keyval_name(event.keyval)
+		keyname = Gdk.keyval_name(event.keyval)
 		print "KEY ",keyname
 		if keyname=="Return":
 			t = self.zoomentry.get_text()
@@ -545,4 +545,3 @@ def get(indexed, item):
         item, idx = item[:-1].split('[')
         indexed.setdefault(item, []).append(int(idx))
     return item
-

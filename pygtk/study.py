@@ -1,5 +1,5 @@
-import gtk
-import pango
+from gi.repository import Gtk
+from gi.repository import Pango
 import ascpy
 
 from varentry import *
@@ -32,11 +32,11 @@ class StudyWin:
 		self.method = None
 	
 		# TODO add an integer index to the ListStore as well, to avoid string conversion
-		self.step_menu_model = gtk.ListStore(int,str)
+		self.step_menu_model = Gtk.ListStore(int,str)
 		self.step_menu_model.append([STEP_NUMBER,'No. of steps'])
 		self.step_menu_model.append([STEP_INCREM,'Step size'])
 		self.step_menu_model.append([STEP_RATIO, 'Step ratio'])
-		renderer = gtk.CellRendererText()
+		renderer = Gtk.CellRendererText()
 		self.step_menu.set_model(self.step_menu_model)
 		self.step_menu.pack_start(renderer, True)
 		self.step_menu.add_attribute(renderer, 'text',1)
@@ -48,13 +48,13 @@ class StudyWin:
 		self.checkbutton.set_active(_continue_on_fail)
 
 		# set up the distributions combobox		
-		_cell = gtk.CellRendererText()
+		_cell = Gtk.CellRendererText()
 		self.dist.pack_start(_cell, True)
 		self.dist.add_attribute(_cell, 'text', 0)
 		
 		# set up the methods combobox
 		_methodstore = self.browser.methodstore
-		_methodrenderer = gtk.CellRendererText()
+		_methodrenderer = Gtk.CellRendererText()
 		self.methodrun.set_model(_methodstore)
 		self.methodrun.pack_start(_methodrenderer, True)
 		self.methodrun.add_attribute(_methodrenderer, 'text',0)
@@ -114,7 +114,7 @@ class StudyWin:
 	def run(self):
 		while 1:
 			_res = self.studywin.run();
-			if _res == gtk.RESPONSE_OK:
+			if _res == Gtk.ResponseType.OK:
 				if self.validate_inputs():
 					# store inputs for later recall
 					_p = self.browser.prefs
@@ -128,21 +128,21 @@ class StudyWin:
 				else:
 					self.browser.reporter.reportError("Please review input errors in Study dialog.")
 					continue
-			elif _res==gtk.RESPONSE_CANCEL:
+			elif _res==Gtk.ResponseType.CANCEL:
 				# cancel... exit Study
 				break
 		self.studywin.destroy()
 		
 	def on_studywin_close(self,*args):
-		self.studywin.response(gtk.RESPONSE_CANCEL)
+		self.studywin.response(Gtk.ResponseType.CANCEL)
 
 	def on_key_press_event(self,widget,event):
-		keyname = gtk.gdk.keyval_name(event.keyval)
+		keyname = Gdk.keyval_name(event.keyval)
 		if keyname=="Return":
-			self.studywin.response(gtk.RESPONSE_OK)
+			self.studywin.response(Gtk.ResponseType.OK)
 			return True
 		elif keyname=="Escape":
-			self.studywin.response(gtk.RESPONSE_CANCEL)
+			self.studywin.response(Gtk.ResponseType.CANCEL)
 			return True;
 		return False;
 		
@@ -221,7 +221,7 @@ class StudyWin:
 				self.taint_entry(self.lowerb,msg=_msg)
 				self.taint_entry(self.upperb,msg=_msg)
 				return 0
-			self.check_dist.set_from_stock('gtk-yes', gtk.ICON_SIZE_BUTTON)
+			self.check_dist.set_from_stock('gtk-yes', Gtk.IconSize.BUTTON)
 			self.check_dist.set_tooltip_text("")
 			return 1
 
@@ -284,9 +284,9 @@ class StudyWin:
 		color = "white"
 		if not good:
 			color = "#FFBBBB"
-		for s in [gtk.STATE_NORMAL, gtk.STATE_ACTIVE]:
-			entry.modify_bg(s, gtk.gdk.color_parse(color))
-			entry.modify_base(s, gtk.gdk.color_parse(color))
+		for s in [Gtk.StateType.NORMAL, Gtk.StateType.ACTIVE]:
+			entry.modify_bg(s, Gdk.color_parse(color))
+			entry.modify_base(s, Gdk.color_parse(color))
 		# FIXME don't apply logic to hard-wired colour codes
 		if not good:
 			entry.set_property("secondary-icon-stock", 'gtk-dialog-error')
@@ -304,7 +304,7 @@ class StudyWin:
 			_icon = 'gtk-yes'
 		else:
 			_icon = 'gtk-dialog-error'		
-		self.check_dist.set_from_stock(_icon, gtk.ICON_SIZE_BUTTON)
+		self.check_dist.set_from_stock(_icon, Gtk.IconSize.BUTTON)
 		self.check_dist.set_tooltip_text(msg)
 
 	def parse_entry(self, entry):

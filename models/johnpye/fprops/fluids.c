@@ -1,20 +1,36 @@
 #include "fluids.h"
 #include "fluids/fluids_list.h"
 #include "fprops.h"
-#include "helmholtz.h"
-#include "pengrob.h"
 
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
 
 //#define FLUIDS_DEBUG
+#define FLUIDS_ERRORS
+
 #ifdef FLUIDS_DEBUG
 # include "color.h"
-# define MSG FPROPS_MSG
-# define ERRMSG FPROPS_ERRMSG
+# define MSG(FMT, ...) \
+	color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
+	color_on(stderr,ASC_FG_BRIGHTBLUE);\
+	fprintf(stderr,"%s: ",__func__);\
+	color_off(stderr);\
+	fprintf(stderr,FMT "\n",##__VA_ARGS__)
 #else
 # define MSG(ARGS...) ((void)0)
+#endif
+
+/* TODO centralise declaration of our error-reporting function somehow...? */
+#ifdef FLUIDS_ERRORS
+# include "color.h"
+# define ERRMSG(STR,...) \
+	color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"ERROR:");\
+	color_off(stderr);\
+	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
+#else
 # define ERRMSG(ARGS...) ((void)0)
 #endif
 
@@ -86,7 +102,7 @@ const PureFluid *fprops_get_fluid(int i){
 	return NULL;
 }
 
-void fprops_fluid_destroy(PureFluid *P){
+void fprops_fluid_destroy(const PureFluid *P){
 	MSG("Freeing data for lfuid '%s'",P->name);
 	switch(P->type){
 	case FPROPS_HELMHOLTZ:

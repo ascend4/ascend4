@@ -17,12 +17,6 @@ vars.Add(
 	,"${HOST_PREFIX}gcc"
 )
 
-vars.Add(
-	'CFLAGS'
-	,'C compiler flags'
-	,["-Wall"]
-)
-
 env = Environment(
 	toolpath=['scons']
 	,tools = [deft ,'substinfile','swig']

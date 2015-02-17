@@ -1,6 +1,6 @@
 # GUI for ASCEND solver_var properties
 
-import gtk
+from gi.repository import Gtk
 import ascpy
 from varentry import *
 from infodialog import *
@@ -13,14 +13,14 @@ class RelPropsWin:
 		# GUI config
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["relpropswin"])
 		self.window = self.browser.builder.get_object("relpropswin")
-		self.window.set_transient_for(self.browser.window)
+		self.set_transient_for(self.browser.window)
 
 		self.relname = self.browser.builder.get_object("relname")
 		self.residual = self.browser.builder.get_object("residual")
 		self.expr = self.browser.builder.get_object("expr")
 		self.included = self.browser.builder.get_object("included")
 		self.active = self.browser.builder.get_object("active")
-		self.exprbuff = gtk.TextBuffer();
+		self.exprbuff = Gtk.TextBuffer();
 		self.expr.set_buffer(self.exprbuff)
 		self.morepropsbutton = self.browser.builder.get_object("morepropsbutton");
 
@@ -42,12 +42,12 @@ class RelPropsWin:
 
 
 	def on_relpropswin_close(self,*args):
-		self.window.response(gtk.RESPONSE_CANCEL)
+		self.window.response(Gtk.ResponseType.CANCEL)
 
 	def on_entry_key_press_event(self,widget,event):
-		keyname = gtk.gdk.keyval_name(event.keyval)
+		keyname = Gdk.keyval_name(event.keyval)
 		if keyname=="Escape":
-			self.window.response(gtk.RESPONSE_CLOSE)
+			self.window.response(Gtk.ResponseType.CLOSE)
 			return True;
 		return False;
 
@@ -79,7 +79,7 @@ class VarPropsWin:
 		# GUI config
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["varpropswin"])
 		self.window = self.browser.builder.get_object("varpropswin")
-		self.window.set_transient_for(self.browser.window)
+		self.set_transient_for(self.browser.window)
 
 		self.varname = self.browser.builder.get_object("varname")
 		self.valueentry= self.browser.builder.get_object("valueentry");
@@ -163,10 +163,10 @@ class VarPropsWin:
 		self.browser.do_solve_if_auto()
 
 	def taint_entry(self, entry, color):
-		entry.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
-		entry.modify_bg(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
-		entry.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
-		entry.modify_base(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
+		entry.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse(color))
+		entry.modify_bg(Gtk.StateType.ACTIVE, Gdk.color_parse(color))
+		entry.modify_base(Gtk.StateType.NORMAL, Gdk.color_parse(color))
+		entry.modify_base(Gtk.StateType.ACTIVE, Gdk.color_parse(color))
 		if color == "#FFBBBB":
 			entry.set_property("secondary-icon-stock", 'gtk-dialog-error')
 		elif color == "white":
@@ -192,15 +192,15 @@ class VarPropsWin:
 		return _value
 		
 	def on_varpropswin_close(self,*args):
-		self.window.response(gtk.RESPONSE_CANCEL)
+		self.window.response(Gtk.ResponseType.CANCEL)
 
 	def on_entry_key_press_event(self,widget,event):
-		keyname = gtk.gdk.keyval_name(event.keyval)
+		keyname = Gdk.keyval_name(event.keyval)
 		if keyname=="Return":
-			self.window.response(gtk.RESPONSE_OK)
+			self.window.response(Gtk.ResponseType.OK)
 			return True
 		elif keyname=="Escape":
-			self.window.response(gtk.RESPONSE_CANCEL)
+			self.window.response(Gtk.ResponseType.CANCEL)
 			return True;
 		return False;
 
@@ -246,16 +246,13 @@ class VarPropsWin:
 		while _continue:
 			_res = self.window.run();
 			try:
-				if _res == gtk.RESPONSE_APPLY or _res == gtk.RESPONSE_OK:
+				if _res == Gtk.ResponseType.APPLY or _res == Gtk.ResponseType.OK:
 					self.apply_changes();
 			except InputError:
 				# if input error, assume that the gui has been updated appropriately
 				continue;
 
-			if _res == gtk.RESPONSE_OK or _res==gtk.RESPONSE_CANCEL:
+			if _res == Gtk.ResponseType.OK or _res==Gtk.ResponseType.CANCEL:
 				_continue = False;
 		
 		self.window.destroy();
-
-
-

@@ -1,6 +1,6 @@
 import ascpy
 import time
-import gtk
+from gi.repository import Gtk
 from diagnose import *
 
 class PythonSolverReporter(ascpy.SolverReporter):
@@ -53,7 +53,7 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.browser.builder.connect_signals(self)
 		if self.browser.icon:
 			self.window.set_icon(self.browser.icon)
-		self.window.set_transient_for(self.browser.window)
+		self.set_transient_for(self.browser.window)
 		
 		self.numvars = self.browser.builder.get_object("numvarsentry")
 		self.numblocks = self.browser.builder.get_object("numblocksentry")
@@ -85,8 +85,8 @@ class PopupSolverReporter(PythonSolverReporter):
 
 		self.nv = self.sim.getNumVars()
 
-		while gtk.events_pending():
-			gtk.main_iteration()
+		while Gtk.events_pending():
+			Gtk.main_iteration()
 
 	def on_diagnose_button_click(self,*args):
 		try:
@@ -132,8 +132,8 @@ class PopupSolverReporter(PythonSolverReporter):
 			#print "UPDATING!"
 			self.fill_values(status)
 
-		while gtk.events_pending():
-			gtk.main_iteration()		
+		while Gtk.events_pending():
+			Gtk.main_iteration()		
 
 		self.guitime = self.guitime + (time.clock() - _time)
 
@@ -153,14 +153,14 @@ class PopupSolverReporter(PythonSolverReporter):
 			if status.isConverged() and _close_on_converged:
 				self.report_to_browser(status)
 				print "CLOSING ON CONVERGED"
-				self.window.response(gtk.RESPONSE_CLOSE)
+				self.window.response(Gtk.ResponseType.CLOSE)
 				return
 			
 			if not status.isConverged() and _close_on_nonconverged:
 				print "CLOSING, NOT CONVERGED"
 				self.report_to_browser(status)
 				if self.window:
-					self.window.response(gtk.RESPONSE_CLOSE)
+					self.window.response(Gtk.ResponseType.CLOSE)
 				return
 
 			self.fill_values(status)
@@ -202,8 +202,8 @@ class SimpleSolverReporter(PythonSolverReporter):
 			_msg = "Solved %d vars in %d iterations" % (status.getNumConverged(),status.getIterationNum())
 			self.browser.statusbar.push(self.statusbarcontext, _msg )
 
-		while gtk.events_pending():
-			gtk.main_iteration()
+		while Gtk.events_pending():
+			Gtk.main_iteration()
 		return 0
 
 	def finalise(self,status):

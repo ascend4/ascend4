@@ -1,6 +1,5 @@
-
 import platform, os
-import gtk
+from gi.repository import Gtk
 
 class WinFileFilter:
 	def __init__(self,name,patternarray):
@@ -21,15 +20,15 @@ class FileChooser:
 			except ImportError:
 				pass
 		self.iswin = False
-		self.chooser = gtk.FileChooserDialog()
-		self.chooser.add_buttons(gtk.STOCK_OPEN,42)
+		self.chooser = Gtk.FileChooserDialog()
+		self.chooser.add_buttons(Gtk.STOCK_OPEN,42)
 
 	
 	def add_filter(self,name,patternarray):
 		if self.iswin:
 			self.filters.append(WinFileFilter(name,patternarray))
 		else:
-			_f = gtk.FileFilter()
+			_f = Gtk.FileFilter()
 			_f.set_name(name)
 			for _p in patternarray:
 				_f.add_pattern(_p)

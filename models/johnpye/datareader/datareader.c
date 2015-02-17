@@ -40,12 +40,7 @@
 
 #include "dr.h"
 
-//#define DATAREADER_DEBUG
-#ifdef DATAREADER_DEBUG
-# define MSG CONSOLE_DEBUG
-#else
-# define MSG(ARGS...) ((void)0)
-#endif
+#define DATAREADER_DEBUG 0
 
 /*------------------------------------------------------------------------------
   GLOBALS
@@ -83,7 +78,7 @@ ASC_EXPORT int datareader_register(){
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising data reader...\n");
 
-	MSG("EVALUATION FUNCTION AT %p",asc_datareader_calc);
+	/* (void)CONSOLE_DEBUG("EVALUATION FUNCTION AT %p",asc_datareader_calc); */
 
 	result += CreateUserFunctionBlackBox("datareader"
 		, asc_datareader_prepare
@@ -133,7 +128,7 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 		return 1;
 	}
 	fn = SCP(SYMC_INST(fninst)->value);
-	MSG("FILENAME: %s",fn);
+	CONSOLE_DEBUG("FILENAME: %s",fn);
 	if(fn==NULL || strlen(fn)==0){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'filename' is NULL or empty");
 		return 1;
@@ -157,7 +152,7 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 		return 1;
 	}
 	fmt = SCP(SYMC_INST(fmtinst)->value);
-	MSG("FORMAT: %s",fmt);
+	CONSOLE_DEBUG("FORMAT: %s",fmt);
 	if(fmt==NULL || strlen(fmt)==0){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'format' is NULL or empty");
 		return 1;
@@ -224,7 +219,7 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 		}
 	}
 
-	MSG("Created data reader at %p...",d);
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Created data reader at %p...",d);
 	/*assign the succesfully created datareader object to the
 	BlackBox Cache of the relation */
 	slv_interp->user_data = (void *)d; //BROKEN AT THE MOMENT
@@ -262,29 +257,33 @@ int asc_datareader_calc(struct BBoxInterp *slv_interp,
 		//return 1; warn about incompatibility but keep going ...JZap
 	}
 
-#ifdef DATAREADER_DEBUG
+#if DATAREADER_DEBUG
 	for(i=0; i< ninputs; ++i){
-		MSG("inputs[%d] = %f", i, inputs[i]);
+		CONSOLE_DEBUG("inputs[%d] = %f", i, inputs[i]);
 	}
 #endif
 
 	switch(slv_interp->task){
 		case bb_func_eval:
-			MSG("DATA READER EVALUATION");
+#if DATAREADER_DEBUG
+			CONSOLE_DEBUG("DATA READER EVALUATION");
+#endif
 			if(datareader_func(d,inputs,outputs)){
 				CONSOLE_DEBUG("Datareader evaluation error");
 				return 1;
 			}
-#ifdef DATAREADER_DEBUG
+#if DATAREADER_DEBUG
 			for(i=0; i< noutputs; ++i){
-				MSG("outputs[%d] = %f", i, outputs[i]);
+				CONSOLE_DEBUG("outputs[%d] = %f", i, outputs[i]);
 			}
 #endif
 			return 0; /* success */
 		case bb_deriv_eval:
-			MSG("DATA READER DERIVATIVE");
+#if DATAREADER_DEBUG
+			CONSOLE_DEBUG("DATA READER DERIVATIVE");
+#endif
 			if(datareader_deriv(d,inputs,outputs)){
-				MSG("Datareader derivative evaluation error");
+				CONSOLE_DEBUG("Datareader derivative evaluation error");
 				return 1;
 			}
 			return 0; /* success */
@@ -297,4 +296,3 @@ int asc_datareader_calc(struct BBoxInterp *slv_interp,
 void asc_datareader_close(struct BBoxInterp *slv_interp){
 	CONSOLE_DEBUG("NOT IMPLEMENTED");
 }
-

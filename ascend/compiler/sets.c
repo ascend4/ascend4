@@ -34,6 +34,8 @@
 #include <ascend/general/pool.h>
 #include <ascend/general/dstring.h>
 
+
+
 #include "functype.h"
 #include "expr_types.h"
 #include "sets.h"
@@ -43,6 +45,10 @@
 
 #ifndef TRUE
 #define TRUE 1
+#endif
+
+#ifndef lint
+static CONST char SetFuncsID[] = "$Id: sets.c,v 1.13 1998/01/27 11:00:21 ballan Exp $";
 #endif
 
 #define SETUSESPOOL TRUE

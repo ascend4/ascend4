@@ -3370,7 +3370,7 @@ static void structural_analysis(slv_system_t server, qrslv_system_t sys){
     slv_block_unify(server);
   }
 
-  //CONSOLE_DEBUG("In QRSlv, got vused = %d...",sys->vused);
+  CONSOLE_DEBUG("In QRSlv, got vused = %d...",sys->vused);
   if(slv_check_bounds(SERVER,sys->vused,-1,"fixed ")){
     sys->s.inconsistent = 1;
   }
@@ -3871,7 +3871,7 @@ static int qrslv_iterate(slv_system_t server, SlvClientToken asys){
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(ASCERR,"Direct solution of relation '");
       print_rel_name(ASCERR,sys,rel);
-      FPRINTF(ASCERR,"' gave a value of '");
+      FPRINTF(ASCERR,"' gave a\nvalue of '");
       print_var_name(ASCERR,sys,var);
       FPRINTF(ASCERR,"' outside its bounds.");
 	  error_reporter_end_flush();

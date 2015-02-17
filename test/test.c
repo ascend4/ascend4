@@ -84,7 +84,7 @@ int list_tests(const char *suitename0){
 int main(int argc, char* argv[]){
 	CU_BasicRunMode mode = CU_BRM_VERBOSE;
 	CU_ErrorAction error_action = CUEA_IGNORE;
-	CU_ErrorCode result = 0;
+	CU_ErrorCode result;
 	char suitename[1000];
 	char list = 0;
 

@@ -1,6 +1,6 @@
 import ascpy
 import time
-import gtk
+from gi.repository import Gtk
 import time
 from varentry import *
 from preferences import *
@@ -37,7 +37,7 @@ class IntegratorWindow:
 		self.browser.builder.connect_signals(self)
 
 		self.window = self.browser.builder.get_object("integratorwin")
-		self.window.set_transient_for(self.browser.window)
+		self.set_transient_for(self.browser.window)
 
 		self.engineselect = self.browser.builder.get_object("engineselect")
 		self.beginentry = self.browser.builder.get_object("beginentry")
@@ -70,9 +70,9 @@ class IntegratorWindow:
 			pass
 
 	def fill_values(self):
-		_enginestore = gtk.ListStore(str)
+		_enginestore = Gtk.ListStore(str)
 		self.engineselect.set_model(_enginestore)
-		_cell = gtk.CellRendererText()
+		_cell = Gtk.CellRendererText()
 		self.engineselect.pack_start(_cell, True)
 		self.engineselect.add_attribute(_cell, 'text', 0)
 		
@@ -127,15 +127,15 @@ class IntegratorWindow:
 
 	def on_integratorcancel_clicked(self,*args):
 		self.browser.reporter.reportNote("CANCELLING");
-		self.window.response(gtk.RESPONSE_CANCEL)
+		self.window.response(Gtk.ResponseType.CANCEL)
 
 	def on_entry_key_press_event(self,widget,event):
-		keyname = gtk.gdk.keyval_name(event.keyval)
+		keyname = Gdk.keyval_name(event.keyval)
 		if keyname=="Return":
-			self.window.response(gtk.RESPONSE_OK)
+			self.window.response(Gtk.ResponseType.OK)
 			return True
 		elif keyname=="Escape":
-			self.window.response(gtk.RESPONSE_CANCEL)
+			self.window.response(Gtk.ResponseType.CANCEL)
 			return True;
 		return False;
 
@@ -158,7 +158,7 @@ class IntegratorWindow:
 		print "CREATING SOLVERPARAMETERSWINDOW"
 		_paramswin = SolverParametersWindow(self.browser,_params,_name)
 		print "RUNNING SOLVERPARAMETERSWINDOW"
-		if _paramswin.run() == gtk.RESPONSE_OK:
+		if _paramswin.run() == Gtk.ResponseType.OK:
 			print "GOT OK RESPONSE"
 			self.integrator.setParameters(_params)
 			print "PARAMETERS UPDATED"
@@ -174,7 +174,7 @@ class IntegratorWindow:
 		while True:
 			try:
 				_res = self.window.run()
-				if _res == gtk.RESPONSE_OK:
+				if _res == Gtk.ResponseType.OK:
 					self.check_inputs()
 					_ok=True
 					break
@@ -214,18 +214,18 @@ class IntegratorWindow:
         def color_entry(self,entry,color):
                 # colour an input box if it doesn't have acceptable contents
                 # error messages would be reported by the 'errors panel' in the main win
-                entry.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
-                entry.modify_bg(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
-                entry.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
-                entry.modify_base(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
+                entry.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse(color))
+                entry.modify_bg(Gtk.StateType.ACTIVE, Gdk.color_parse(color))
+                entry.modify_base(Gtk.StateType.NORMAL, Gdk.color_parse(color))
+                entry.modify_base(Gtk.StateType.ACTIVE, Gdk.color_parse(color))
 
 	def taint_entry(self,entry,color):
 		# colour an input box if it doesn't have acceptable contents
 		# error messages would be reported by the 'errors panel' in the main win
-		entry.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
-		entry.modify_bg(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
-		entry.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
-		entry.modify_base(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
+		entry.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse(color))
+		entry.modify_bg(Gtk.StateType.ACTIVE, Gdk.color_parse(color))
+		entry.modify_base(Gtk.StateType.NORMAL, Gdk.color_parse(color))
+		entry.modify_base(Gtk.StateType.ACTIVE, Gdk.color_parse(color))
 		if color == "#FFBBBB":
 			entry.set_property("secondary-icon-stock", 'gtk-dialog-error')
 		elif color == "white":

@@ -32,12 +32,7 @@
 #include <ascend/general/panic.h>
 #include <ascend/utilities/ascEnvVar.h>
 
-//#define DR_DEBUG
-#ifdef DR_DEBUG
-# define MSG CONSOLE_DEBUG
-#else
-# define MSG(ARGS...) ((void)0)
-#endif
+#define DR_DEBUG 0
 
 /*------------------------------------------------------------------------------
   FORWARD DECLARATIONS
@@ -94,7 +89,7 @@ DataReader *datareader_new(const char *fn, int noutputs) {
     d->headerfn = NULL;
     d->eoffn = NULL;
 
-    MSG("Datareader created...");
+    CONSOLE_DEBUG("Datareader created...");
     return d;
 }
 /**read the parameter token and return an interpolation type.
@@ -141,7 +136,7 @@ int datareader_set_parameters(DataReader *d, const char *parameters) {
             if (LastTokWasNumeric) parcount++; //last was numeric, no interp_t declared
             d->cols[parcount] = atoi(partok);//assign to corresponding element array
             if (d->cols[parcount] > d->nmaxoutputs) {
-                MSG("col %d, max %d",d->cols[parcount],d->nmaxoutputs);
+                CONSOLE_DEBUG("col %d, max %d",d->cols[parcount],d->nmaxoutputs);
                 ERROR_REPORTER_HERE(ASC_USER_ERROR,
                 "Requested column %d out of range (limit %d). Check your data file and model declaration",d->cols[parcount],d->nmaxoutputs);
                 return 1; //failed due to column out of range
@@ -155,7 +150,7 @@ int datareader_set_parameters(DataReader *d, const char *parameters) {
         }
         partok = strtok(NULL,",:"); //reread parameter string for next token
     }
-	MSG("parcount: %d,noutoputs: %d",parcount,d->noutputs);
+	CONSOLE_DEBUG("parcount: %d,noutoputs: %d",parcount,d->noutputs);
     if (parcount+1 != d->noutputs) {
     	ERROR_REPORTER_HERE(ASC_USER_ERROR,
     	"Number of Columns in parameters and Model dont match, check model declaration");
@@ -193,7 +188,7 @@ int datareader_set_format(DataReader *d, const char *format) {
 
     int i;
 
-    MSG("FORMAT '%s'", format);
+    CONSOLE_DEBUG("FORMAT '%s'", format);
 
     DataReaderFormat found = DATAREADER_INVALID_FORMAT;
     for (i = 0; i < DATAREADER_INVALID_FORMAT; ++i) {
@@ -203,7 +198,7 @@ int datareader_set_format(DataReader *d, const char *format) {
         }
     }
 
-    MSG("FOUND DATA FORMAT %d", found);
+    CONSOLE_DEBUG("FOUND DATA FORMAT %d", found);
 
     switch (found) {
     case DATAREADER_FORMAT_TMY2:
@@ -348,13 +343,17 @@ int datareader_init(DataReader *d) {
             return 1;
         }
     }
-    MSG("About to open the data file");
+#if DR_DEBUG
+    CONSOLE_DEBUG("About to open the data file");
+#endif
     d->f = ospath_fopen(d->fp, "r");
     if (d->f == NULL) {
         ERROR_REPORTER_HERE(ASC_USER_ERROR, "Unable to open file '%s' for reading.", d->fn);
         return 1;
     }
-    MSG("Data file open ok");
+#if DR_DEBUG
+    CONSOLE_DEBUG("Data file open ok");
+#endif
     asc_assert(d->headerfn);
     asc_assert(d->eoffn);
     asc_assert(d->datafn);
@@ -372,9 +371,13 @@ int datareader_init(DataReader *d) {
             return 1;
         }
     }
-    MSG("Done retrieving data");
+#if DR_DEBUG
+    CONSOLE_DEBUG("Done retrieving data");
+#endif
     fclose(d->f);
-    MSG("Closed file");
+#if DR_DEBUG
+    CONSOLE_DEBUG("Closed file");
+#endif
 
     d->i = 0; /* set current position to zero */
 
@@ -442,7 +445,9 @@ int datareader_locate(DataReader *d, double t, double *t1, double *t2) {
             (*d->indepfn)(d, t2);
         } while (*t2 < t && d->i < d->ndata);
     }
-    MSG("d->i==%d, t1[0] = %lf, t2[0] = %lf", d->i, t1[0], t2[0]);
+#if DR_DEBUG
+    CONSOLE_DEBUG("d->i==%d, t1[0] = %lf, t2[0] = %lf", d->i, t1[0], t2[0]);
+#endif
 
     if (d->i == d->ndata || d->i == 0) {
         return 1;
@@ -473,17 +478,21 @@ int datareader_func(DataReader *d, double *inputs, double *outputs) {
 
     double t = inputs[0];
 
-    MSG("EVALUATING AT t = %lf", inputs[0]);
+#if DR_DEBUG
+    CONSOLE_DEBUG("EVALUATING AT t = %lf", inputs[0]);
+#endif
 
     asc_assert(d->indepfn);
 
     if (datareader_locate(d, t, t1, t2)) {
-        MSG("LOCATION ERROR");
+        CONSOLE_DEBUG("LOCATION ERROR");
         ERROR_REPORTER_HERE(ASC_USER_ERROR, "Time value t=%f is out of range", t);
         return 1;
     }
 
-    MSG("LOCATED AT t1 = %lf, t2 = %lf", t1[0], t2[0]);
+#if DR_DEBUG
+    CONSOLE_DEBUG("LOCATED AT t1 = %lf, t2 = %lf", t1[0], t2[0]);
+#endif
     if (d->i < d->ndata-1) {
         ++d->i; //go one step forward
         (*d->valfn)(d, v3); //take a data sample at t1+2
@@ -504,7 +513,9 @@ int datareader_func(DataReader *d, double *inputs, double *outputs) {
     }
     else AtStart = TRUE;
 
-    MSG("LOCATED OK, d->i = %d, t1 = %lf, t2 = %lf, v1=%lf, v2=%lf", d->i, t1[0], t2[0], v1[0], v2[0]);
+#if DR_DEBUG
+    CONSOLE_DEBUG("LOCATED OK, d->i = %d, t1 = %lf, t2 = %lf, v1=%lf, v2=%lf", d->i, t1[0], t2[0], v1[0], v2[0]);
+#endif
 
     for (i = 0;i < d->noutputs;++i) {
         j = d->cols[i]-1;
@@ -519,7 +530,9 @@ int datareader_func(DataReader *d, double *inputs, double *outputs) {
 
             break;
         }
-        MSG("[%d]: START = %lf, END = %lf, VALUE=%lf", i, v1[j],v2[j], outputs[i]);
+#if DR_DEBUG
+        CONSOLE_DEBUG("[%d]: START = %lf, END = %lf, VALUE=%lf", i, v1[j],v2[j], outputs[i]);
+#endif
     }
 
     return 0;
@@ -540,17 +553,21 @@ int datareader_deriv(DataReader *d, double *inputs, double *jacobian) {
 
     double t = inputs[0];
 
-    MSG("EVALUATING AT t = %lf", inputs[0]);
+#if DR_DEBUG
+    CONSOLE_DEBUG("EVALUATING AT t = %lf", inputs[0]);
+#endif
 
     asc_assert(d->indepfn);
 
     if (datareader_locate(d, t, t1, t2)) {
-        MSG("LOCATION ERROR");
+        CONSOLE_DEBUG("LOCATION ERROR");
         ERROR_REPORTER_HERE(ASC_USER_ERROR, "Time value t=%f is out of range", t);
         return 1;
     }
 
-    MSG("LOCATED AT t1 = %lf, t2 = %lf", t1[0], t2[0]);
+#if DR_DEBUG
+    CONSOLE_DEBUG("LOCATED AT t1 = %lf, t2 = %lf", t1[0], t2[0]);
+#endif
     if (d->i < d->ndata-1) {
         ++d->i; //go one step forward
         (*d->valfn)(d, v3); //take a data sample at t1+2
@@ -571,7 +588,9 @@ int datareader_deriv(DataReader *d, double *inputs, double *jacobian) {
     }
     else AtStart = TRUE;
 
-    MSG("LOCATED OK, d->i = %d, t1 = %lf, t2 = %lf, v1=%lf, v2=%lf", d->i, t1[0], t2[0], v1[0], v2[0]);
+#if DR_DEBUG
+    CONSOLE_DEBUG("LOCATED OK, d->i = %d, t1 = %lf, t2 = %lf, v1=%lf, v2=%lf", d->i, t1[0], t2[0], v1[0], v2[0]);
+#endif
 
     for (i = 0;i < d->noutputs;++i) {
         j = d->cols[i]-1;
@@ -586,7 +605,9 @@ int datareader_deriv(DataReader *d, double *inputs, double *jacobian) {
 
             break;
         }
-        MSG("[%d]: START = %lf, VALUE=%lf", i, v1[j], jacobian[i]);
+#if DR_DEBUG
+        CONSOLE_DEBUG("[%d]: START = %lf, VALUE=%lf", i, v1[j], jacobian[i]);
+#endif
     }
 
     return 0;
@@ -640,12 +661,14 @@ double dr_cubicinterp(DataReader *d, int j, double t, double *t1, double *t2, do
         d->a1[j] = a1;
         d->a2[j] = a2;
         d->a3[j] = a3;
-#ifdef DR_DEBUG
-        if (j == 1 )MSG("Cubic spline coefficients recalculated");
+#if DR_DEBUG
+        if (j == 1 )CONSOLE_DEBUG("Cubic spline coefficients recalculated");
 #endif
     }
     //calculate output value
-    MSG("v[%d]:%lf",j,d->a0[j] + d->a1[j]*t + d->a2[j]*pow(t,2) + d->a3[j]*pow(t,3));
+#if DR_DEBUG
+    CONSOLE_DEBUG("v[%d]:%lf",j,d->a0[j] + d->a1[j]*t + d->a2[j]*pow(t,2) + d->a3[j]*pow(t,3));
+#endif
     return d->a0[j] + d->a1[j]*t + d->a2[j]*pow(t,2) + d->a3[j]*pow(t,3);
 
 }
@@ -695,9 +718,9 @@ double dr_cubicderiv(DataReader *d, int j, double t, double *t1, double *t2, dou
         d->a1[j] = a1;
         d->a2[j] = a2;
         d->a3[j] = a3;
-#ifdef DR_DEBUG
-        if (j == 1 )MSG("Cubic spline derivatives recalculated");
-#endif
+        #if DR_DEBUG
+        if (j == 1 )CONSOLE_DEBUG("Cubic spline derivatives recalculated");
+        #endif
     }
     //calculate output value
     return d->a1[j] + 2*d->a2[j]*t + 3*d->a3[j]*pow(t,2);

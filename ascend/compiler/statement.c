@@ -65,6 +65,10 @@
 #define TRUE 1
 #endif
 
+#ifndef lint
+static CONST char StatementID[] = "$Id: statement.c,v 1.32 1998/04/21 23:49:48 ballan Exp $";
+#endif
+
 static
 struct Statement *stmallocF()
 {

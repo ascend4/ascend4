@@ -1,5 +1,5 @@
-#LyX 2.1 created this file. For more info see http://www.lyx.org/
-\lyxformat 474
+#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
 \begin_document
 \begin_header
 \textclass book
@@ -49,107 +49,50 @@
   backgroundcolor=\color{lightgrey} 
 }
 \end_preamble
-\use_default_options false
-\maintain_unincluded_children false
 \language english
-\language_package default
 \inputencoding auto
-\fontencoding global
-\font_roman default
-\font_sans default
-\font_typewriter default
-\font_math auto
-\font_default_family default
-\use_non_tex_fonts false
-\font_sc false
-\font_osf false
-\font_sf_scale 100
-\font_tt_scale 100
+\fontscheme default
 \graphics default
-\default_output_format default
-\output_sync 0
-\bibtex_command default
-\index_command default
 \paperfontsize default
 \spacing single
-\use_hyperref false
 \papersize a4paper
 \use_geometry false
-\use_package amsmath 2
-\use_package amssymb 2
-\use_package cancel 1
-\use_package esint 0
-\use_package mathdots 0
-\use_package mathtools 1
-\use_package mhchem 0
-\use_package stackrel 1
-\use_package stmaryrd 1
-\use_package undertilde 1
+\use_amsmath 2
 \cite_engine basic
-\cite_engine_type default
-\biblio_style plain
 \use_bibtopic false
-\use_indices false
 \paperorientation portrait
-\suppress_date false
-\justification true
-\use_refstyle 0
-\index Index
-\shortcut idx
-\color #008000
-\end_index
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
-\paragraph_indentation default
+\defskip medskip
 \quotes_language english
 \papercolumns 1
 \papersides 2
 \paperpagestyle default
 \tracking_changes false
-\output_changes false
-\html_math_output 0
-\html_css_as_file 0
-\html_be_strict false
+\output_changes true
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 Creating a plot
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-plot
-\end_layout
+\begin_inset LatexCommand \index{plot}
 
 \end_inset
 
  (using a library model
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-library model
-\end_layout
+\begin_inset LatexCommand \index{library model}
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-model, library
-\end_layout
+\begin_inset LatexCommand \index{model, library}
 
 \end_inset
 
 ) 
-\begin_inset CommandInset label
-LatexCommand label
-name "cha:model3"
+\begin_inset LatexCommand \label{cha:model3}
 
 \end_inset
 
@@ -165,12 +108,7 @@ In this chapter we are going to produce a plot by using a model that someone
  The approach we take is not the one you should take if your goal is simply
  to produce this plot.
  Our goal is pedagogical
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-pedagogical
-\end_layout
+\begin_inset LatexCommand \index{pedagogical}
 
 \end_inset
 
@@ -214,22 +152,12 @@ H_to_D_ratio
 Plot
 \series default
  option
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-tool, Plot
-\end_layout
+\begin_inset LatexCommand \index{tool, Plot}
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Plot tool
-\end_layout
+\begin_inset LatexCommand \index{Plot tool}
 
 \end_inset
 
@@ -244,38 +172,7 @@ Browser
 plt_plot_integer
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-plt
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-plot
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-integer
-\end_layout
+\begin_inset LatexCommand \index{plt\_plot\_integer}
 
 \end_inset
 
@@ -284,38 +181,7 @@ integer
 plt_plot_symbol
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-plt
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-plot
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-symbol
-\end_layout
+\begin_inset LatexCommand \index{plt\_plot\_symbol}
 
 \end_inset
 
@@ -330,9 +196,7 @@ models
 \family default
  directory which is distributed with ASCEND.
  Figure 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:model3.plot.a4l"
+\begin_inset LatexCommand \ref{fig:model3.plot.a4l}
 
 \end_inset
 
@@ -343,19 +207,12 @@ reference "fig:model3.plot.a4l"
 
 \begin_layout Standard
 The file plot.a4l
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-plot.a4l
-\end_layout
+\begin_inset LatexCommand \index{plot.a4l}
 
 \end_inset
 
 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:model3.plot.a4l"
+\begin_inset LatexCommand \label{fig:model3.plot.a4l}
 
 \end_inset
 
@@ -366,14 +223,14 @@ name "fig:model3.plot.a4l"
 \begin_inset ERT
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 
 \backslash
 lstset{language=ASCEND}
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 
 \backslash
@@ -397,12 +254,7 @@ As you can see, this file contains the two types we seek.
 
 \begin_layout Subsection
 Model refinement
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-refinement
-\end_layout
+\begin_inset LatexCommand \index{refinement}
 
 \end_inset
 
@@ -413,7 +265,7 @@ refinement
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Plain Layout
+\begin_layout Standard
 please, explain "refines"
 \end_layout
 
@@ -429,9 +281,7 @@ system.a4l
 \family default
 .
  We show the code for cmumodel in Figure 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:model3.cmumodel"
+\begin_inset LatexCommand \ref{fig:model3.cmumodel}
 
 \end_inset
 
@@ -453,49 +303,49 @@ status open
 \begin_inset ERT
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 
 \backslash
 begin{ascend}
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 MODEL cmumodel();
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 (*  This MODEL does nothing except provide a root
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
     for a collection of loosely related models.
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
     If it happens to reveal a few bugs in the software,
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
     and perhaps masks others, well, what me worry? BAA, 8/97.
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 *)
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 END cmumodel;
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 
 \backslash
@@ -507,29 +357,14 @@ end{ascend}
 
 \end_layout
 
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
+\begin_layout Caption
 The code for cmumodel
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-cmumodel
-\end_layout
+\begin_inset LatexCommand \index{cmumodel}
 
 \end_inset
 
 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:model3.cmumodel"
-
-\end_inset
-
-
-\end_layout
+\begin_inset LatexCommand \label{fig:model3.cmumodel}
 
 \end_inset
 
@@ -551,24 +386,14 @@ We need to introduce the concept of type refinement to understand these
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Plain Layout
+\begin_layout Standard
 parents
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-parents
-\end_layout
+\begin_inset LatexCommand \index{parents}
 
 \end_inset
 
  and children
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-children
-\end_layout
+\begin_inset LatexCommand \index{children}
 
 \end_inset
 
@@ -580,12 +405,7 @@ children
 Suppose model B refines model A.
  We call A the parent model and B the child.
  The child model B inherits
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-
-\end_layout
+\begin_inset LatexCommand \index{}
 
 \end_inset
 
@@ -605,14 +425,9 @@ status collapsed
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Plain Layout
+\begin_layout Standard
 order does not matter in nonprocedural code
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-nonprocedural code
-\end_layout
+\begin_inset LatexCommand \index{nonprocedural code}
 
 \end_inset
 
@@ -634,14 +449,9 @@ We are dealing in ASCEND with models defined by their variables and equations.
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Plain Layout
+\begin_layout Standard
 but it does in the procedural code
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-procedural code
-\end_layout
+\begin_inset LatexCommand \index{procedural code}
 
 \end_inset
 
@@ -663,29 +473,17 @@ In constrast, the methods are bits of procedural code -- i.e., they are run
 
 \begin_layout Standard
 If we look into this file we see the refinement hierarchy
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-refinement hierarchy
-\end_layout
+\begin_inset LatexCommand \index{refinement hierarchy}
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-hierarchy, refinement
-\end_layout
+\begin_inset LatexCommand \index{hierarchy, refinement}
 
 \end_inset
 
  shown in Figure 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:model3.refineHierPlot.a4l"
+\begin_inset LatexCommand \ref{fig:model3.refineHierPlot.a4l}
 
 \end_inset
 
@@ -711,48 +509,19 @@ wide false
 sideways false
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 \noun off
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
 
 \begin_inset Graphics
 	filename howto-model3Fig3.eps
@@ -762,19 +531,9 @@ status open
 
 \end_layout
 
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
+\begin_layout Caption
 The refinement hierarchy in the file plot.a4l
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:model3.refineHierPlot.a4l"
-
-\end_inset
-
-
-\end_layout
+\begin_inset LatexCommand \label{fig:model3.refineHierPlot.a4l}
 
 \end_inset
 
@@ -790,7 +549,7 @@ name "fig:model3.refineHierPlot.a4l"
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Plain Layout
+\begin_layout Standard
 reasons for refinement
 \end_layout
 
@@ -802,12 +561,7 @@ There are three reasons to support model refinement, with the last being
 
 \begin_layout Itemize
 We write more compact code
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-compact code
-\end_layout
+\begin_inset LatexCommand \index{compact code}
 
 \end_inset
 
@@ -820,12 +574,7 @@ compact code
 
 \begin_layout Itemize
 Changes we make to the parent propagate
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-propagate
-\end_layout
+\begin_inset LatexCommand \index{propagate}
 
 \end_inset
 
@@ -841,19 +590,14 @@ propagate
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Plain Layout
+\begin_layout Standard
 with the most important being we know what can substitute for what
 \end_layout
 
 \end_inset
 
 We know what can substitute
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-substitute
-\end_layout
+\begin_inset LatexCommand \index{substitute}
 
 \end_inset
 
@@ -910,25 +654,7 @@ plt_plot_symbol
 The first parameter we need is a 
 \family typewriter
 curve_set
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-curve
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-set
-\end_layout
+\begin_inset LatexCommand \index{curve\_set}
 
 \end_inset
 
@@ -980,38 +706,7 @@ H_to_D_ratio
 plt_plot_symbol
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-plt
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-plot
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-symbol
-\end_layout
+\begin_inset LatexCommand \index{plt\_plot\_symbol}
 
 \end_inset
 
@@ -1055,9 +750,7 @@ H_to_D_ratio
 You need now to add to the model tabulated_vessel_values
 \noun default
  in Figure 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:model3.vesselPlot"
+\begin_inset LatexCommand \ref{fig:model3.vesselPlot}
 
 \end_inset
 
@@ -1066,12 +759,7 @@ reference "fig:model3.vesselPlot"
  
 \noun default
 (it is saved as vesselPlot.a4c
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-vesselPlot.a4c
-\end_layout
+\begin_inset LatexCommand \index{vesselPlot.a4c}
 
 \end_inset
 
@@ -1091,38 +779,7 @@ plt_plot_symbol
 \family default
 \noun off
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-plt
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-plot
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-symbol
-\end_layout
+\begin_inset LatexCommand \index{plt\_plot\_symbol}
 
 \end_inset
 
@@ -1150,158 +807,158 @@ status open
 \begin_inset ERT
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 
 \backslash
 begin{ascend}
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 CurveSet "the index set for all the curves to be plotted"
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
             IS_A set OF symbol_constant;
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
     CurveSet :== ['5 mm'];
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
     Curves['5 mm'] 
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
       "the one curve of 20 points for metal_mass 
 \backslash
 
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
        vs.
  H_to_D_ratio"
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
             IS_A plt_curve(
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
                [1..n_entries], 
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
                metal_mass, 
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
                H_to_D_ratio
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
                ); 
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
     massVSratio "the object ASCEND can plot"
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
             IS_A plt_plot_symbol(
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
                CurveSet, 
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
                Curves
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
                );
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
     
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 METHODS
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
     METHOD default_self;
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
         (* set the title for the plot and the labels
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
            for the ordinate and abscissa *)
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
         massVSratio.title :=
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
             'Metal mass of the walls vs H to D ratio 
 \backslash
 
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
              for a thin-walled cylindrical vessel';
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
         massVSratio.XLabel := 'H to D ratio';
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
         massVSratio.YLabel := 'metal mass IN kg/m^3';
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
     END default_self;
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 
 \backslash
@@ -1313,20 +970,10 @@ end{ascend}
 
 \end_layout
 
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
+\begin_layout Caption
 The last bit of new code to include a plot in the model tabulated_vessel_values
  
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:model3.vesselPlot"
-
-\end_inset
-
-
-\end_layout
+\begin_inset LatexCommand \label{fig:model3.vesselPlot}
 
 \end_inset
 
@@ -1346,19 +993,19 @@ Also just after the first line in this file -- which reads
 \begin_inset ERT
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 
 \backslash
 begin{ascend}
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 REQUIRE "atoms.a4l";
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 
 \backslash
@@ -1378,19 +1025,19 @@ place the instruction
 \begin_inset ERT
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 
 \backslash
 begin{ascend}
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 REQUIRE "plot.a4l";
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 
 \backslash
@@ -1557,7 +1204,7 @@ V.vessel_vol
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Plain Layout
+\begin_layout Standard
 script recorded so far
 \end_layout
 
@@ -1571,59 +1218,59 @@ Turn off the recording button on the Script window.
 \begin_inset ERT
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 
 \backslash
 begin{ascend}
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 DELETE TYPES;
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 READ FILE {vesselMethods.a4c};
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 COMPILE V OF vessel;
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 BROWSE {V};
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 RUN {V.reset};
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 SOLVE {V} WITH QRSlv;
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 ASSIGN {V.metal_mass.fixed} TRUE {};
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 # you must type the next line in the script yourself.
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 ASSIGN {V.vessel_vol.fixed} FALSE {};
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 
 \backslash
@@ -1644,9 +1291,7 @@ vesselStudy.a4s
 \end_layout
 
 \begin_layout Subsection
-\begin_inset CommandInset label
-LatexCommand label
-name "sub:Case-study-examples"
+\begin_inset LatexCommand \label{sub:Case-study-examples}
 
 \end_inset
 
@@ -1724,9 +1369,7 @@ ASCPLOT CLOSE; #omit if you want to see data table
 
 \begin_layout Standard
 You should get a graph that looks something like Figure 4-5
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:StudyVolumeVsHtoD"
+\begin_inset LatexCommand \ref{fig:StudyVolumeVsHtoD}
 
 \end_inset
 
@@ -1740,7 +1383,7 @@ wide false
 sideways false
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 \begin_inset Graphics
 	filename howto-model3Fig5.eps
 	scale 80
@@ -1751,19 +1394,9 @@ status open
 
 \end_layout
 
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
+\begin_layout Caption
 Study of Volume as Function of H/D
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:StudyVolumeVsHtoD"
-
-\end_inset
-
-
-\end_layout
+\begin_inset LatexCommand \label{fig:StudyVolumeVsHtoD}
 
 \end_inset
 
@@ -1949,9 +1582,7 @@ STUDY
 \family default
  statement.
  As we saw in Section 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sub:Case-study-examples"
+\begin_inset LatexCommand \ref{sub:Case-study-examples}
 
 \end_inset
 

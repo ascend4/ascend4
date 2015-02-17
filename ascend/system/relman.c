@@ -52,8 +52,8 @@
 
 #include "slv_server.h"
 
-//#define DIFF_DEBUG
-//#define EVAL_DEBUG
+/* #define DIFF_DEBUG */
+/* #define EVAL_DEBUG */
 /* #define DSOLVE_DEBUG */
 
 #define IPTR(i) ((struct Instance *)(i))
@@ -378,12 +378,10 @@ real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){
 	asc_assert(calc_ok!=NULL);
 	asc_assert(rel!=NULL);
 	if(rel->type == e_rel_token){
-		//CONSOLE_DEBUG("token relation");
 		if(!RelationCalcResidualBinary(
-			GetInstanceRelationOnly(IPTR(rel->instance)
-		),&res)){
-			/* yes, it actually worked ok */
-			*calc_ok = 1;
+		        GetInstanceRelationOnly(IPTR(rel->instance)),&res)
+		){
+			*calc_ok = 1; /* calc_ok */
 			rel_set_residual(rel,res);
 			return res;
 		}/* else {
@@ -393,10 +391,9 @@ real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){
 	}
 
 	if(safe){
-		//CONSOLE_DEBUG("safe relation");
-		*calc_ok = RelationCalcResidualSafe(rel_instance(rel),&res); /* returns zero on success */
+		*calc_ok = RelationCalcResidualSafe(rel_instance(rel),&res);
 		if(*calc_ok){
-			/* ie *NOT* OK, there was an error */
+			/* this actually means there was an ERROR due to return protocol of ^^^ */
 #ifdef EVAL_DEBUG
 			CONSOLE_DEBUG("residual error, res = %g",res);
 #endif
@@ -407,10 +404,10 @@ real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){
 		}
 		/* always set the relation residual when using safe functions */
 		rel_set_residual(rel,res);
+		if(!(*calc_ok))CONSOLE_DEBUG("RELMAN_EVAL WAS NOT OK");
 		return res;
 	}
 
-	//CONSOLE_DEBUG("regular relation");
 	*calc_ok = RelationCalcResidual(rel_instance(rel),&res);
 	if(*calc_ok){
 		/* an error occured */
@@ -455,7 +452,7 @@ real64 relman_scale(struct rel_relation *rel){
 real64 relman_diff(struct rel_relation *rel, struct var_variable *var,
                    int safe
 ){
-		/* FIX FIX FIX meaning kirk couldn't be bothered... */
+		/* FIX FIX FIX meaning kirk couldn't be botghered... */
    real64 res = 0.0;
    switch(rel->type) {
    case e_glassbox:

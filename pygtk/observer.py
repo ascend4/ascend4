@@ -1,7 +1,7 @@
-import pygtk
-pygtk.require('2.0')
-import gtk
-import pango
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+from gi.repository import Pango
 import os.path
 
 from study import *
@@ -18,10 +18,10 @@ OBSERVER_DEAD_COLOR = "#ababab"
 
 OBSERVER_NUM=0
 
-class ClickableTreeColumn(gtk.TreeViewColumn):
+class ClickableTreeColumn(Gtk.TreeViewColumn):
 	def __init__(self, title="", *args, **kwargs):
 		super(ClickableTreeColumn, self).__init__(None, *args, **kwargs)
-		self.label = gtk.Label("%s" % title)
+		self.label = Gtk.Label(label="%s" % title)
 		self.label.show()
 		self.set_widget(self.label)
 		self.title = title
@@ -32,7 +32,7 @@ class ClickableTreeColumn(gtk.TreeViewColumn):
 		""" Connect the defined 'on_click' method. Note: must be called after
 		this object (ClickableTreeColumn) has been added to the TreeView,
 		eg mytreeview.append_column(col). """
-		button = self.label.get_ancestor(gtk.Button)
+		button = self.label.get_ancestor(Gtk.Button)
 		h = button.connect("clicked",self.on_click)
 		#button.clicked()
 		
@@ -173,20 +173,20 @@ class ObserverTab:
 		if self.alive:
 			self.browser.reporter.reportNote("New observer is 'alive'")
 
-		self.keptimg =  gtk.Image()
-		self.activeimg = gtk.Image()
-		self.errorimg = gtk.Image()
+		self.keptimg =  Gtk.Image()
+		self.activeimg = Gtk.Image()
+		self.errorimg = Gtk.Image()
 		self.activeimg.set_from_file(os.path.join(browser.options.assets_dir,"active.png"))
 		self.errorimg.set_from_file(os.path.join(browser.options.assets_dir,"solveerror.png"))
 		# create PixBuf objects from these?
 		self.rows = []
-		_store = gtk.TreeStore(object)
+		_store = Gtk.TreeStore(object)
 		self.cols = {}
 		self.tvcols = {}
 		self.renderers = {}
 
 		# create the 'active' pixbuf column
-		_renderer = gtk.CellRendererPixbuf()
+		_renderer = Gtk.CellRendererPixbuf()
 		_col = ClickableTreeColumn("")
 		_col.pack_start(_renderer,False)
 		_col.set_cell_data_func(_renderer, self.activepixbufvalue)
@@ -215,7 +215,7 @@ class ObserverTab:
 		self.browser.reporter.reportNote("Created observer '%s'" % self.name)
 		
 		_sel = self.view.get_selection()
-		_sel.set_mode(gtk.SELECTION_MULTIPLE)
+		_sel.set_mode(Gtk.SelectionMode.MULTIPLE)
 
 	def activepixbufvalue(self,column,cell,model,iter):
 		_rowobject = model.get_value(iter,0)
@@ -443,7 +443,7 @@ class ObserverTab:
 		self.colindex = self.colindex + 1
 
 		# create a new column
-		_renderer = gtk.CellRendererText()
+		_renderer = Gtk.CellRendererText()
 		_renderer.connect('edited',self.on_view_cell_edited, _col)
 		_tvcol = ClickableTreeColumn(_col.title)
 		_tvcol.pack_start(_renderer,False)
@@ -506,8 +506,8 @@ class ObserverTab:
 		
 		_sel = self.view.get_selection()
 		_model, _rowlist = _sel.get_selected_rows()
-		if event.type==gtk.gdk.KEY_PRESS:
-			_keyval = gtk.gdk.keyval_name(event.keyval)
+		if event.type==Gdk.KEY_PRESS:
+			_keyval = Gdk.keyval_name(event.keyval)
 			_path, _col = self.view.get_cursor()
 			if _path is not None:
 				if _keyval=='Menu':
@@ -517,7 +517,7 @@ class ObserverTab:
 				elif _keyval=='Delete' or _keyval=='BackSpace':
 					_delete_row = True
 				
-		elif event.type==gtk.gdk.BUTTON_PRESS:
+		elif event.type==Gdk.EventType.BUTTON_PRESS:
 			_x = int(event.x)
 			_y = int(event.y)
 			_button = event.button
@@ -529,7 +529,7 @@ class ObserverTab:
 					_contextmenu = True
 
 		if not (_contextmenu or _delete_row):
-			#print "NOT DOING ANYTHING ABOUT %s" % gtk.gdk.keyval_name(event.keyval)
+			#print "NOT DOING ANYTHING ABOUT %s" % Gdk.keyval_name(event.keyval)
 			return 
 		
 		if len(_rowlist)>1:
@@ -710,13 +710,13 @@ class CloseDialog:
 		browser.builder.connect_signals(self)
 		
 	def on_closeobserverdialog_close(self,*args):
-		self.alertwin.response(gtk.RESPONSE_CLOSE)
+		self.alertwin.response(Gtk.ResponseType.CLOSE)
 	
 	def run(self):
 		_continue = True
 		while _continue:
 			_res = self.alertwin.run()
-			if _res == gtk.RESPONSE_YES:
+			if _res == Gtk.ResponseType.YES:
 				self.alertwin.destroy()
 				return True
 			else:
@@ -734,25 +734,25 @@ class PlotDialog:
 		self.plotbutton = self.browser.builder.get_object("plotbutton")
 		self.xview = self.browser.builder.get_object("treeview1")
 		self.yview = self.browser.builder.get_object("treeview2")
-		self.yview.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+		self.yview.get_selection().set_mode(Gtk.SelectionMode.MULTIPLE)
 		self.ignorepoints = self.browser.builder.get_object("ignorepoints")
 		
 		_p = self.browser.prefs
 		_ignore = _p.getBoolPref("PlotDialog", "ignore_error_points", True)
 		self.ignorepoints.set_active(_ignore)
 		
-		_xstore = gtk.TreeStore(object)
+		_xstore = Gtk.TreeStore(object)
 		self.xview.set_model(_xstore)
-		_xrenderer = gtk.CellRendererText()
-		_xtvcol = gtk.TreeViewColumn("X axis")
+		_xrenderer = Gtk.CellRendererText()
+		_xtvcol = Gtk.TreeViewColumn("X axis")
 		_xtvcol.pack_start(_xrenderer,False)
 		_xtvcol.set_cell_data_func(_xrenderer, self.varlist)
 		self.xview.append_column(_xtvcol)
 		
-		_ystore = gtk.TreeStore(object)
+		_ystore = Gtk.TreeStore(object)
 		self.yview.set_model(_ystore)
-		_yrenderer = gtk.CellRendererText()
-		_ytvcol = gtk.TreeViewColumn("Y axis")
+		_yrenderer = Gtk.CellRendererText()
+		_ytvcol = Gtk.TreeViewColumn("Y axis")
 		_ytvcol.pack_start(_yrenderer,False)
 		_ytvcol.set_cell_data_func(_yrenderer, self.varlist)
 		self.yview.append_column(_ytvcol)
@@ -780,7 +780,7 @@ class PlotDialog:
 		self.browser.builder.connect_signals(self)
 		
 	def on_plotdialog_close(self,*args):
-		self.plotwin.response(gtk.RESPONSE_CANCEL)
+		self.plotwin.response(Gtk.ResponseType.CANCEL)
 		
 	def varlist(self,column,cell,model,iter):
 		_value = model.get_value(iter,0)
@@ -791,16 +791,16 @@ class PlotDialog:
 		_path = None
 		_col = None
 		self.plotbutton.set_sensitive(False)
-		if event.type==gtk.gdk.KEY_RELEASE:
-			_keyval = gtk.gdk.keyval_name(event.keyval)
+		if event.type==Gdk.KEY_RELEASE:
+			_keyval = Gdk.keyval_name(event.keyval)
 			if _keyval == "Escape":
-				self.plotwin.response(gtk.RESPONSE_CANCEL)
+				self.plotwin.response(Gtk.ResponseType.CANCEL)
 				return
 			_path, _tvcol = widget.get_cursor()
 			if _path is None:
 				return
 		
-		elif event.type==gtk.gdk.BUTTON_RELEASE:
+		elif event.type==Gdk.BUTTON_RELEASE:
 			_x = int(event.x)
 			_y = int(event.y)
 			_button = event.button
@@ -879,7 +879,7 @@ class PlotDialog:
 		_continue = True
 		while _continue:
 			_res = self.plotwin.run()
-			if _res == gtk.RESPONSE_YES:
+			if _res == Gtk.ResponseType.YES:
 				_p = self.browser.prefs
 				_p.setBoolPref("PlotDialog", "ignore_error_points", self.ignorepoints.get_active())
 				self.plotwin.destroy()
