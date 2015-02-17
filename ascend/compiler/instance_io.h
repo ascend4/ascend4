@@ -333,6 +333,12 @@ ASC_DLLSPEC int ArrayIsWhen(struct Instance *i);
  *  or when, 0 OTHERWISE.
  */
 
+ASC_DLLSPEC int ArrayIsEvent(struct Instance *i);
+/**<
+ *  Returns 1 if the instance sent in is a good event array
+ *  or event, 0 OTHERWISE.
+ */
+
 extern int ArrayIsModel(struct Instance *i);
 /**<
  *  Returns 1 if the instance sent in is a good model array

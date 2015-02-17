@@ -52,7 +52,7 @@ ASC_DLLSPEC void CheckInstanceLevel(FILE *f, CONST struct Instance *i, int pass)
  *  pass == 1: IS_As and other constructors only <br>
  *  pass == 2: relations also                    <br>
  *  pass == 3: logical relations also            <br>
- *  pass == 4: whens also                        <br>
+ *  pass == 4: whens and events also             <br>
  *  pass == 5: defaults also                     <br>
  */
 

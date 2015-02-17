@@ -56,7 +56,7 @@
 
 
 /* #define FEX_DEBUG  */
-#define JEX_DEBUG
+/* #define JEX_DEBUG  */
 /* #define DJEX_DEBUG */
 /* #define ROOT_DEBUG */
 
@@ -253,7 +253,13 @@ int integrator_ida_fex(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void 
 	Dense Jacobian evaluation. Only suitable for small problems!
 	Has been seen working for problems up to around 2000 vars, FWIW.
 */
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==5
+int integrator_ida_djex(long int Neq, realtype tt, realtype c_j
+		, N_Vector yy, N_Vector yp, N_Vector rr
+		, IDA_MTX_T Jac, void *jac_data
+		, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
+){
+#elif SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==4
 int integrator_ida_djex(int Neq, realtype tt, realtype c_j
 		, N_Vector yy, N_Vector yp, N_Vector rr
 		, IDA_MTX_T Jac, void *jac_data

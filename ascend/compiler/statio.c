@@ -52,6 +52,7 @@
 #include "braced.h"
 #include "instance_enum.h"
 #include "cmpfunc.h"
+#include "event.h"
 
 static int g_show_statement_detail = 1;
 /* global to control display detail. It's default value 1 means
@@ -208,6 +209,27 @@ void WriteSwitchList(FILE *f, struct SwitchList *sw, int i)
   }
 }
 
+static
+void WriteEventNode(FILE *f, struct EventList *e, int i)
+{
+  register struct Set *set;
+  Indent(f,i);
+  set = EventSetList(e);
+  FPRINTF(f,"CASE ");
+  WriteSet(f,set);
+  FPRINTF(f," :\n");
+  WriteStatementList(f,EventStatementList(e),i+INDENTATION);
+}
+
+static
+void WriteEventList(FILE *f, struct EventList *e, int i)
+{
+  while (e!=NULL) {
+    WriteEventNode(f,e,i);
+    e = NextEventCase(e);
+  }
+}
+
 struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl)
 {
   register unsigned long len,c;
@@ -234,6 +256,8 @@ struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl)
     case IRT:
       td=    GetStatType(s);
       break;
+    case ISDER:
+    case ISPRE:
     case ALIASES:
     case ARR: /* possible bug. ben */
     case ATS:
@@ -249,6 +273,7 @@ struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl)
     case RUN:
     case IF:
     case WHEN:
+    case EVENT:
     case FNAME:
     case SELECT:
     case SWITCH:
@@ -328,6 +353,20 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
               SCP(GetStatType(s)),SCP(GetStatSetType(s)));
     }
     break;
+  case ISDER:
+    FPRINTF(f,"DERIVATIVE OF ");
+    WriteVariableList(f,GetStatVarList(s));
+    if (GetStatIndVar(s)) {
+      FPRINTF(f," WITH ");
+      WriteName(f,GetStatIndVar(s));
+    }
+    FPRINTF(f,";\n");
+    break;
+  case ISPRE:
+    FPRINTF(f,"PREVIOUS ");
+    WriteVariableList(f,GetStatVarList(s));
+    FPRINTF(f,";\n");
+    break;
   case WILLBE:
     WriteVariableList(f,GetStatVarList(s));
     if (GetStatSetType(s)==NULL) {
@@ -394,6 +433,8 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
 		(ForContainsCAssigns(s)) ? " con" : "",
 		(ForContainsWhen(s)) ? " when" : "",
 		(ForContainsIsa(s)) ? " isa" : "",
+		(ForContainsIsder(s)) ? " isder" : "",
+		(ForContainsIspre(s)) ? " ispre" : "",
 		(ForContainsSelect(s)) ? " select" : "",
 		(ForContainsConditional(s)) ? " conditional" : "",
 		(ForContainsWillbe(s)) ? " wb" : "",
@@ -586,6 +627,18 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
     Indent(f,i);
     FPRINTF(f,"END;\n");
     break;
+  case EVENT:
+    if (EventStatName(s)!=NULL) {
+      WriteName(f,EventStatName(s));
+      FPRINTF(f," : ");
+    }
+    FPRINTF(f,"EVENT ");
+    WriteVariableList(f,EventStatCond(s));
+    FPRINTF(f,"\n");
+    WriteEventList(f,EventStatCases(s),i);
+    Indent(f,i);
+    FPRINTF(f,"END;\n");
+    break;
   case FNAME:
     FPRINTF(f,"USE ");
     WriteName(f,FnameStat(s));
@@ -698,7 +751,7 @@ void WriteStatementErrorMessage(
 	FILE *f, CONST struct Statement *stat
 	,CONST char *message, int noisy,int level
 ){
-  /* old behaviour */
+  /* old behavior */
   const char *filename=NULL;
   int line=0;
   error_severity_t sev;
@@ -733,32 +786,27 @@ void WriteStatementErrorMessage(
       WriteForTable(ASCERR,GetEvaluationForTable());
     }
   }else{
-    ASC_FPRINTF(f,"NULL STATEMENT!");
+    FPRINTF(f,"NULL STATEMENT!");
   }
 
   error_reporter_end_flush();
   CONSOLE_DEBUG("%s",message);
-  WriteStatementLocation(ASCERR,stat);
 }
 
 void WriteStatementLocation(FILE *f, CONST struct Statement *stat){
-	//CONSOLE_DEBUG("writing...");
 	const char *filename=NULL;
 	int line=0;
 
 	if(stat==NULL){
-		//CONSOLE_DEBUG("STATEMENT POINTER IS NULL");
-		ASC_FPRINTF(f,"NULL STATEMENT!");
+		FPRINTF(f,"NULL STATEMENT!");
 		return;
 	}
-	//CONSOLE_DEBUG("...");
 
 	filename=Asc_ModuleBestName(StatementModule(stat));
 	line=StatementLineNum(stat);
 
 	/* write some more detail */
-	ASC_FPRINTF(f,"%s:%d",filename,line);
-	CONSOLE_DEBUG("%s:%d",filename,line);
+	FPRINTF(f,"%s:%d",filename,line);
 }
 
 
@@ -817,6 +865,8 @@ symchar *StatementTypeString(CONST struct Statement *s)
     error_statement_sym = AddSymbol("Unknown-statement-type");
     g_statio_stattypenames[ALIASES] = AddSymbol("ALIASES");
     g_statio_stattypenames[ISA] = AddSymbol("IS_A");
+    g_statio_stattypenames[ISDER] = AddSymbol("ISDER");
+    g_statio_stattypenames[ISPRE] = AddSymbol("ISPRE");
     g_statio_stattypenames[ARR] = AddSymbol("ALIASES/IS_A");
     g_statio_stattypenames[IRT] = AddSymbol("IS_REFINED_TO");
     g_statio_stattypenames[ATS] = AddSymbol("ARE_THE_SAME");
@@ -832,6 +882,7 @@ symchar *StatementTypeString(CONST struct Statement *s)
     g_statio_stattypenames[RUN] = AddSymbol("RUN");
     g_statio_stattypenames[IF] = AddSymbol("IF");
     g_statio_stattypenames[WHEN] = GetBaseTypeName(when_type);
+    g_statio_stattypenames[EVENT] = GetBaseTypeName(event_type);
     g_statio_stattypenames[FNAME] = AddSymbol("FNAME");
     g_statio_stattypenames[SELECT] = AddSymbol("SELECT");
     g_statio_stattypenames[SWITCH] = AddSymbol("SWITCH");
@@ -854,6 +905,8 @@ symchar *StatementTypeString(CONST struct Statement *s)
   switch(StatementType(s)) {
   case ALIASES:
   case ISA:
+  case ISDER:
+  case ISPRE:
   case ARR:
   case IRT:
   case ATS:
@@ -869,6 +922,7 @@ symchar *StatementTypeString(CONST struct Statement *s)
   case RUN:
   case IF:
   case WHEN:
+  case EVENT:
   case FNAME:
   case SELECT:
   case SWITCH:

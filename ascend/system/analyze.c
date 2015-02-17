@@ -94,11 +94,13 @@
 #include <ascend/compiler/case.h>
 #include <ascend/compiler/when_util.h>
 #include <ascend/compiler/link.h>
+#include <ascend/compiler/pre.h>
 
 #include "slv_server.h"
 #include "cond_config.h"
 #include "diffvars.h"
 #include "analyse_impl.h"
+#include "cond_event.h"
 
 /* stuff to get rid of */
 #ifndef MAX_VAR_IN_LIST
@@ -138,7 +140,11 @@ struct gl_list_t *g_symbol_values_list = NULL;
   FORWARD DECLARATIONS
 */
 static void ProcessModelsInWhens(struct Instance *, struct gl_list_t *,
-                                 struct gl_list_t *, struct gl_list_t *);
+                                 struct gl_list_t *, struct gl_list_t *,
+                                 struct gl_list_t *);
+
+static void ProcessModelsInEvents(struct Instance *, struct gl_list_t *,
+                                  struct gl_list_t *, struct gl_list_t *);
 
 /*------------------------------------------------------------------------------
   SOME STUFF WITH INTERFACE POINTERS
@@ -311,6 +317,12 @@ int BooleanChildValue(struct Instance *i,symchar *sc){
   }
 }
 
+static
+void SetBooleanChildValue(struct Instance *i,symchar *sc, int v){
+  if(i != NULL && sc != NULL && (i=ChildByChar(i,sc)) != NULL)
+    SetBooleanAtomValue(i,v,0);
+}
+
 /**
 	As for BooleanChildValue but for integer child atoms (ode_type in this case)
 */
@@ -380,11 +392,21 @@ void CollectArrayRelsAndWhens(struct Instance *i, long modindex
       }
       gl_append_ptr(p_data->whens,(VOIDPTR)rip);
       break;
+    case EVENT_INST:
+      rip = SIP(GetInterfacePtr(child));
+      if(rip->u.ev.model == 0) {
+        rip->u.ev.model = modindex;
+      }else{
+        break;
+      }
+      gl_append_ptr(p_data->events,(VOIDPTR)rip);
+      break;
     case ARRAY_ENUM_INST:
     case ARRAY_INT_INST:
       if(ArrayIsRelation(child) ||
           ArrayIsLogRel(child) ||
-          ArrayIsWhen(child)
+          ArrayIsWhen(child) ||
+          ArrayIsEvent(child)
       ){
         CollectArrayRelsAndWhens(child,modindex,p_data);
       }
@@ -446,11 +468,17 @@ void CollectRelsAndWhens(struct solver_ipdata *ip
       rip->u.w.model = modindex;
       gl_append_ptr(p_data->whens,(VOIDPTR)rip);
       break;
+    case EVENT_INST:
+      rip = SIP(GetInterfacePtr(child));
+      rip->u.ev.model = modindex;
+      gl_append_ptr(p_data->events,(VOIDPTR)rip);
+      break;
     case ARRAY_ENUM_INST:
     case ARRAY_INT_INST:
       if(ArrayIsRelation(child) ||
           ArrayIsLogRel(child)||
-          ArrayIsWhen(child)
+          ArrayIsWhen(child) ||
+          ArrayIsEvent(child)
       ){
         CollectArrayRelsAndWhens(child,modindex,p_data);
       }
@@ -589,11 +617,16 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     if(solver_var(inst)){
 	  //printf("\n Variable name:%s \n",WriteInstanceNameString(inst,p_data->root));
       ip->u.v.solvervar = 1; /* must set this regardless of what list */
-      ip->u.v.fixed = BooleanChildValue(inst,FIXED_A);
+      if (!IsPre(inst)) ip->u.v.fixed = BooleanChildValue(inst,FIXED_A);
+      else {
+        ip->u.v.fixed = 1;
+        SetBooleanChildValue(inst,FIXED_A,1);
+      }
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
       ip->u.v.deriv = IntegerChildValue(inst,DERIV_A);
       ip->u.v.odeid = IntegerChildValue(inst,ODEID_A);
       ip->u.v.obsid = IntegerChildValue(inst,OBSID_A);
+      ip->u.v.pre = IsPre(inst);
 	  /* CONSOLE_DEBUG("FOUND A VAR: deriv = %d, %s = %d",ip->u.v.deriv,SCP(ODEID_A),ip->u.v.odeid); */
 
 	  if(ip->u.v.deriv == 0){
@@ -613,6 +646,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
 	gl_append_ptr(p_data->obsvars,(POINTER)ip);
 	/* CONSOLE_DEBUG("Added to obsvars"); */
       	  }
+	if(ip->u.v.pre) gl_append_ptr(p_data->prevars,(POINTER)ip);
 	/* make the algebraic/differential/derivative cut */
 	if(ip->u.v.odeid){
             gl_append_ptr(p_data->diffvars,(POINTER)ip);
@@ -662,23 +696,30 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     if(boolean_var(inst) ) {
       ip->u.dv.booleanvar = 1;
       ip->u.dv.fixed = BooleanChildValue(inst,FIXED_A);
+      ip->u.v.obsid = IntegerChildValue(inst,OBSID_A);
+      if(ip->u.dv.obsid) gl_append_ptr(p_data->dobsvars,(POINTER)ip);
     }else{
       ip->u.dv.fixed = 1;
       ip->u.dv.booleanvar=0;
     }
-    if(LogRelationsCount(inst) || WhensCount(inst) ) {
+    if(LogRelationsCount(inst) || WhensCount(inst) || EventsCount(inst)) {
       gl_append_ptr(p_data->dvars,(POINTER)ip);
       if(WhensCount(inst) ) {
         ip->u.dv.inwhen = 1;
       }else{
         ip->u.dv.inwhen = 0;
       }
+      if(EventsCount(inst) ) {
+        ip->u.dv.inevent = 1;
+      }else{
+        ip->u.dv.inevent = 0;
+      }
     }else{
       gl_append_ptr(p_data->dunas,(POINTER)ip);
     }
     return ip;
   case BOOLEAN_CONSTANT_INST:
-    if(!WhensCount(inst))return NULL;
+    if(!WhensCount(inst) && !EventsCount(inst))return NULL;
     ip = analyze_getip();
     ip->i = inst;
     ip->u.dv.isconst = 1;
@@ -787,6 +828,18 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     }else{
       ip->u.r.inwhen = 0;
     }
+    if(EventsCount(inst)){
+      ip->u.r.inevent = 1;
+      if (ip->u.r.inwhen == 1) {
+        ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+        FPRINTF(ASCERR, "The same relation instance '");
+        WriteInstanceName(ASCERR,inst,p_data->root);
+        FPRINTF(ASCERR, "' is referenced by both whens and events.");
+        error_reporter_end_flush();
+      }
+    }else{
+      ip->u.r.inevent = 0;
+    }
     ip->u.r.included = BooleanChildValue(inst,INCLUDED_A);
     ip->u.r.model = 0;
     ip->u.r.index = 0;
@@ -806,6 +859,18 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     }else{
       ip->u.lr.inwhen = 0;
     }
+    if( EventsCount(inst) ) {
+      ip->u.lr.inevent = 1;
+      if (ip->u.lr.inwhen == 1) {
+        ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+        FPRINTF(ASCERR, "The same logical relation instance '");
+        WriteInstanceName(ASCERR,inst,p_data->root);
+        FPRINTF(ASCERR, "' is referenced by both whens and events.");
+        error_reporter_end_flush();
+      }
+    }else{
+      ip->u.lr.inevent = 0;
+    }
     ip->u.lr.included = BooleanChildValue(inst,INCLUDED_A);
     ip->u.lr.model = 0;
     ip->u.lr.index = 0;
@@ -820,6 +885,11 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     }else{
       ip->u.m.inwhen = 0;
     }
+    if( EventsCount(inst) ) {
+      ip->u.m.inevent = 1;
+    }else{
+      ip->u.m.inevent = 0;
+    }
     gl_append_ptr(p_data->models,(POINTER)ip);
     return ip;
   case WHEN_INST:
@@ -830,6 +900,22 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
       ip->u.w.inwhen = 1;
     }else{
       ip->u.w.inwhen = 0;
+    }
+    return ip;
+    /* note we do NOT append it to lists here */
+  case EVENT_INST:
+    ip = analyze_getip();
+    ip->i = inst;
+    ip->u.ev.index = 0;
+    if( WhensCount(inst) ) {
+      ip->u.ev.inwhen = 1;
+    }else{
+      ip->u.ev.inwhen = 0;
+    }
+    if( EventsCount(inst) ) {
+      ip->u.ev.inevent = 1;
+    }else{
+      ip->u.ev.inevent = 0;
     }
     return ip;
     /* note we do NOT append it to lists here */
@@ -932,6 +1018,9 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
     case WHEN_INST:
       p_data->nw++;
       break;
+    case EVENT_INST:
+      p_data->nev++;
+      break;
     case MODEL_INST:
       p_data->nm++;
       break;
@@ -966,6 +1055,7 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
 	     - obj (0 constraint, -1 maximize, +1 minimize)
 	     - ext
 	     - inwhen
+	     - inevent
 	     - cond
 	     - included	(as flag)
 	  - discrete vars with correct ip values for:
@@ -976,16 +1066,23 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data){
 	     - fixed (as flag)
 	     - booleanvar (as flag)
 	     - inwhen
+	     - inevent
 	  - logrelations and conditional logrelations with correct ip values for:
 	     - index
 	     - model
 	     - included	(as flag)
 	     - inwhen
+	     - inevent
 	     - cond
 	  - whens with correct ip values for:
 	     - index
 	     - model
 	     - inwhen
+	  - events with correct ip values for:
+	     - index
+	     - model
+	     - inwhen
+	     - inevent
 	  - models with correct ip values for:
 	     - index
 
@@ -1012,6 +1109,7 @@ int analyze_make_master_lists(struct problem_t *p_data){
        p_data->nv + p_data->ndv +
        p_data->np + p_data->nu +  p_data->nud +  /* atoms */
        p_data->nw +                              /* when */
+       p_data->nev +                             /* event */
        p_data->nm;                               /* model */
   if(reqlen <1)  {
     return 2;
@@ -1044,10 +1142,13 @@ int analyze_make_master_lists(struct problem_t *p_data){
   CL(algebvars,nr); /* differential variables */
   CL(indepvars,nr); /* independent variables */ /* @TODO there's wasted memory here */
   CL(obsvars,nr); /* observed variables */
+  CL(dobsvars,nr); /* observed discrete variables */
+  CL(prevars,nr); /* pre() variables */
   CL(logcnds,ncl);/* conditional logrelations */
   CL(extrels,ne); /* extrelations */
   CL(objrels,no); /* objectives */
   CL(whens,nw);	/* whens */
+  CL(events,nev); /* events */
   CL(models,nm); /* models */
 #undef CL
 
@@ -1060,7 +1161,7 @@ int analyze_make_master_lists(struct problem_t *p_data){
   }
 
   /*
-  	collect relations, objectives, logrels and whens recording the
+  	collect relations, objectives, logrels, whens and events recording the
   	MODEL number in each rel's ip and setting incidence.
   */
   len = gl_length(p_data->models);
@@ -1071,7 +1172,8 @@ int analyze_make_master_lists(struct problem_t *p_data){
   if((long)gl_length(p_data->rels) != p_data->nr ||
       (long)gl_length(p_data->objrels) != p_data->no ||
       (long)gl_length(p_data->logrels) != p_data->nl ||
-      (long)gl_length(p_data->whens) != p_data->nw
+      (long)gl_length(p_data->whens) != p_data->nw ||
+      (long)gl_length(p_data->events) != p_data->nev
   ){
     ERROR_REPORTER_START_HERE(ASC_PROG_WARNING);
     FPRINTF(ASCERR,"Warning: Mismatch in problem census and problem found\n");
@@ -1079,6 +1181,7 @@ int analyze_make_master_lists(struct problem_t *p_data){
     FPRINTF(ASCERR,"Objs: Counted %lu\t Found %ld\n",gl_length(p_data->objrels), p_data->no);
     FPRINTF(ASCERR,"LogRels: Counted %lu\t Found %ld\n",gl_length(p_data->logrels),p_data->nl);
     FPRINTF(ASCERR,"Whens: Counted %lu\t Found %ld\n",gl_length(p_data->whens), p_data->nw);
+    FPRINTF(ASCERR,"Events: Counted %lu\t Found %ld\n",gl_length(p_data->events), p_data->nev);
     error_reporter_end_flush();
   }
   /*
@@ -1149,6 +1252,12 @@ int analyze_make_master_lists(struct problem_t *p_data){
   len = gl_length(p_data->whens);
   for (c=1; c <= len; c++) {
     SIP(gl_fetch(p_data->whens,c))->u.w.index = c;
+  }
+
+  /* mark index events */
+  len = gl_length(p_data->events);
+  for (c=1; c <= len; c++) {
+    SIP(gl_fetch(p_data->events,c))->u.ev.index = c;
   }
   /*
   	now we need to move all the nonincident vars off the var list
@@ -1287,27 +1396,32 @@ void analyze_free_lists(struct problem_t *p_data){
   ADUN(unas);   ADUN(dunas);  ADUN(rels);
   ADUN(objrels);  ADUN(models);  ADUN(cnds);
   ADUN(logrels);  ADUN(logcnds);  ADUN(whens);
+  ADUN(events);
   ADUN(diffvars);
   ADUN(algebvars);
   ADUN(indepvars);
   ADUN(obsvars); /* observed variables */
+  ADUN(dobsvars); /* observed discrete variables */
+  ADUN(prevars);  /* pre() variables */
 
   /* blocks of memory use AFUN */
   AFUN(blocks);  AFUN(reldata);  AFUN(objdata);
   AFUN(condata);  AFUN(lrdata);  AFUN(logcondata);
   AFUN(vardata);  AFUN(pardata);  AFUN(undata);
   AFUN(disdata);  AFUN(undisdata);  AFUN(whendata);
-  AFUN(bnddata);  AFUN(relincidence);  AFUN(varincidence);
-  AFUN(logrelinciden);
+  AFUN(eventdata);  AFUN(bnddata);  AFUN(relincidence);
+  AFUN(varincidence);  AFUN(logrelinciden);
   /* these variable names are a %*@#$ abomination */
   AFUN(mastervl);  AFUN(masterdl);  AFUN(masterrl);
   AFUN(masterol);  AFUN(mastercl);  AFUN(masterll);
   AFUN(mastercll);  AFUN(masterpl);  AFUN(masterul);
   AFUN(masterdul);  AFUN(masterwl);  AFUN(masterbl);
+  AFUN(masterel);
   AFUN(solvervl);  AFUN(solverdl);  AFUN(solverrl);
   AFUN(solverol);  AFUN(solvercl);  AFUN(solverll);
   AFUN(solvercll);  AFUN(solverpl);  AFUN(solverul);
   AFUN(solverdul);  AFUN(solverwl);  AFUN(solverbl);
+  AFUN(solverel);
 
 #undef AFUN
 #undef ADUN
@@ -1373,10 +1487,12 @@ void ProcessArraysInWhens(struct Instance *cur_inst
 		,struct gl_list_t *rels
 		,struct gl_list_t *logrels
 		,struct gl_list_t *whens
+		,struct gl_list_t *events
 ){
   struct rel_relation *rel;
   struct logrel_relation *lrel;
   struct w_when *w;
+  struct e_event *e;
   struct Instance *child;
   struct solver_ipdata *ip;
   unsigned long c,nch;
@@ -1405,14 +1521,21 @@ void ProcessArraysInWhens(struct Instance *cur_inst
       gl_append_ptr(whens,w);
       when_set_inwhen(w,TRUE);
       break;
+    case EVENT_INST:
+      ip = SIP(GetInterfacePtr(child));
+      e = ip->u.ev.data;
+      gl_append_ptr(events,e);
+      event_set_inwhen(e,TRUE);
+      break;
     case MODEL_INST:
-      ProcessModelsInWhens(child,rels,logrels,whens);
+      ProcessModelsInWhens(child,rels,logrels,whens,events);
       break;
     case ARRAY_ENUM_INST:
     case ARRAY_INT_INST:
       if(ArrayIsRelation(child) || ArrayIsWhen(child)
-         || ArrayIsLogRel(child) || ArrayIsModel(child)) {
-        ProcessArraysInWhens(child,rels,logrels,whens);
+         || ArrayIsLogRel(child) || ArrayIsModel(child)
+         || ArrayIsEvent(child)) {
+        ProcessArraysInWhens(child,rels,logrels,whens,events);
       }
       break;
     default:
@@ -1429,10 +1552,12 @@ void ProcessArraysInWhens(struct Instance *cur_inst
 static
 void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels
 		,struct gl_list_t *logrels, struct gl_list_t *whens
+		,struct gl_list_t *events
 ){
   struct rel_relation *rel;
   struct logrel_relation *lrel;
   struct w_when *w;
+  struct e_event *e;
   struct Instance *child;
   struct solver_ipdata *ip;
   unsigned long c,nch;
@@ -1461,14 +1586,21 @@ void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels
       gl_append_ptr(whens,w);
       when_set_inwhen(w,TRUE);
       break;
+    case EVENT_INST:
+      ip = SIP(GetInterfacePtr(child));
+      e = ip->u.ev.data;
+      gl_append_ptr(events,e);
+      event_set_inwhen(e,TRUE);
+      break;
     case MODEL_INST:
-      ProcessModelsInWhens(child,rels,logrels,whens);
+      ProcessModelsInWhens(child,rels,logrels,whens,events);
       break;
     case ARRAY_ENUM_INST:
     case ARRAY_INT_INST:
       if(ArrayIsRelation(child) || ArrayIsWhen(child)
-         || ArrayIsLogRel(child) || ArrayIsModel(child)) {
-        ProcessArraysInWhens(child,rels,logrels,whens);
+         || ArrayIsLogRel(child) || ArrayIsModel(child)
+         || ArrayIsEvent(child)) {
+        ProcessArraysInWhens(child,rels,logrels,whens,events);
       }
       break;
     default:
@@ -1503,6 +1635,7 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
   struct gl_list_t *rels;
   struct gl_list_t *logrels;
   struct gl_list_t *whens;
+  struct gl_list_t *events;
   struct gl_list_t *diswhens;
   struct Set *ValueList;
   struct Instance *cur_inst;
@@ -1512,6 +1645,7 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
   struct rel_relation *rel;
   struct logrel_relation *lrel;
   struct w_when *w;
+  struct e_event *e;
   struct when_case *cur_sol_case;
   int c,r,len,lref;
   int *value;
@@ -1551,6 +1685,7 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     rels = gl_create(lref);  /* maybe allocating less than needed (models) */
     logrels = gl_create(lref);  /* maybe allocating less than needed */
     whens = gl_create(lref); /* maybe allocating more than needed */
+    events = gl_create(lref); /* maybe allocating more than needed */
     for(r=1;r<=lref;r++){
       cur_inst = (struct Instance *)(gl_fetch(ref,r));
       switch(InstanceKind(cur_inst)){
@@ -1572,8 +1707,14 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
         gl_append_ptr(whens,w);
         when_set_inwhen(w,TRUE);
 	break;
+      case EVENT_INST:
+        ip = SIP(GetInterfacePtr(cur_inst));
+        e = ip->u.ev.data;
+        gl_append_ptr(events,e);
+        event_set_inwhen(e,TRUE);
+	break;
       case MODEL_INST:
-	ProcessModelsInWhens(cur_inst,rels,logrels,whens);
+	ProcessModelsInWhens(cur_inst,rels,logrels,whens,events);
         break;
       default:
 	break;
@@ -1582,10 +1723,279 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     when_case_set_rels_list(cur_sol_case,rels);
     when_case_set_logrels_list(cur_sol_case,logrels);
     when_case_set_whens_list(cur_sol_case,whens);
+    when_case_set_events_list(cur_sol_case,events);
     when_case_set_active(cur_sol_case,FALSE);
     gl_append_ptr(when->cases,cur_sol_case);
   }
 }
+
+/*------------------------------------------------------------------------------
+  'EVENT' PROCESSING
+*/
+
+/**
+	This function receives as argument the list of values of each of the
+	CASES of an EVENT statement. The values in the list can be integer values,
+	symbol values, or boolean values. So, the goal of this function is to
+	obtain an equivalent list of ONLY integer values for such a list. In this
+	way, for example, the boolean value TRUE is equivalent to the integer
+	1. The function GetIntFromSymbol is used to generate an integer value
+	which will be equivalent to a symbol value
+*/
+static
+void ProcessValueListEvent(struct Set *ValueList, int *value,
+		      struct gl_list_t *symbol_list
+){
+  CONST struct Expr *expr;
+  struct Set *s;
+
+  s = ValueList;
+  if(ValueList!=NULL) {
+    while (s != NULL) {
+      expr = GetSingleExpr(s);
+      switch(ExprType(expr)) {
+        case e_boolean:
+	  *value = ExprBValue(expr);
+	  if(*value == 2) {   /* ANY */
+	    *value = -2;
+	  }
+	  break;
+        default:
+	  break;
+      }
+      s = NextSet(s);
+      value++;
+    }
+  }else{
+    *value = -1;  /* OTHERWISE */
+  }
+}
+
+
+/**
+	Process arrays inside EVENTs (requires a recursive analysis).
+
+	@see ProcessSolverEvents
+*/
+static
+void ProcessArraysInEvents(struct Instance *cur_inst
+			,struct gl_list_t *rels
+			,struct gl_list_t *logrels
+			,struct gl_list_t *events
+){
+  struct rel_relation *rel;
+  struct logrel_relation *lrel;
+  struct e_event *e;
+  struct Instance *child;
+  struct solver_ipdata *ip;
+  unsigned long c,nch;
+
+  if(cur_inst==NULL) return;
+  nch = NumberChildren(cur_inst);
+  for (c=1;c<=nch;c++) {
+    child = InstanceChild(cur_inst,c);
+    if(child==NULL) continue;
+    switch (InstanceKind(child)) {
+    case REL_INST:
+      ip = SIP(GetInterfacePtr(child));
+      ip->u.r.active = 0;
+      rel = ip->u.r.data;
+      gl_append_ptr(rels,rel);
+      break;
+    case LREL_INST:
+      ip = SIP(GetInterfacePtr(child));
+      ip->u.lr.active = 0;
+      lrel = ip->u.lr.data;
+      gl_append_ptr(logrels,lrel);
+      break;
+    case EVENT_INST:
+      ip = SIP(GetInterfacePtr(child));
+      e = ip->u.ev.data;
+      gl_append_ptr(events,e);
+      event_set_inevent(e,TRUE);
+      break;
+    case MODEL_INST:
+      ProcessModelsInEvents(child,rels,logrels,events);
+      break;
+    case ARRAY_ENUM_INST:
+    case ARRAY_INT_INST:
+      if(ArrayIsRelation(child) || ArrayIsEvent(child)
+         || ArrayIsLogRel(child) || ArrayIsModel(child)) {
+        ProcessArraysInEvents(child,rels,logrels,events);
+      }
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+/**
+	Process MODELs inside EVENTs (requires a recursive analysis).
+
+	@see ProcessSolverEvents
+*/
+static
+void ProcessModelsInEvents(struct Instance *cur_inst, struct gl_list_t *rels
+		,struct gl_list_t *logrels, struct gl_list_t *events
+){
+  struct rel_relation *rel;
+  struct logrel_relation *lrel;
+  struct e_event *e;
+  struct Instance *child;
+  struct solver_ipdata *ip;
+  unsigned long c,nch;
+
+  if(cur_inst==NULL) return;
+  nch = NumberChildren(cur_inst);
+  for (c=1;c<=nch;c++) {
+    child = InstanceChild(cur_inst,c);
+    if(child==NULL) continue;
+    switch (InstanceKind(child)) {
+    case REL_INST:
+      ip = SIP(GetInterfacePtr(child));
+      ip->u.r.active = 0;
+      rel = ip->u.r.data;
+      gl_append_ptr(rels,rel);
+      break;
+    case LREL_INST:
+      ip = SIP(GetInterfacePtr(child));
+      ip->u.lr.active = 0;
+      lrel = ip->u.lr.data;
+      gl_append_ptr(logrels,lrel);
+      break;
+    case EVENT_INST:
+      ip = SIP(GetInterfacePtr(child));
+      e = ip->u.ev.data;
+      gl_append_ptr(events,e);
+      event_set_inevent(e,TRUE);
+      break;
+    case MODEL_INST:
+      ProcessModelsInEvents(child,rels,logrels,events);
+      break;
+    case ARRAY_ENUM_INST:
+    case ARRAY_INT_INST:
+      if(ArrayIsRelation(child) || ArrayIsEvent(child)
+         || ArrayIsLogRel(child) || ArrayIsModel(child)) {
+        ProcessArraysInEvents(child,rels,logrels,events);
+      }
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+
+/**
+	Fill in the list of cases and variables of an e_event structure with
+	the appropriate data.
+
+	The information required is provided by the corresponding when Instance
+	generated in the compilation time. So, what we do is:
+	1) Obtain the list of variables and the list of cases from each
+	   EVENT intance.
+	   The list of variables is actually a list of pointers to instances
+	2) From each CASE, obtain also the list of references. This list of
+	references contains a list of pointers to each relation,logrelation  and
+	model included inside the case.
+	3) The pointers to the variables, relations, logrelations and models are
+	used to obtain the solver data associated with the compiled instances.
+	4) Arrays and models are managed recursively with the two previous
+	functions.
+*/
+static
+void ProcessSolverEvents(struct e_event *event,struct Instance *i){
+  struct gl_list_t *scratch;
+  struct gl_list_t *evars;
+  struct gl_list_t *ref;
+  struct gl_list_t *rels;
+  struct gl_list_t *logrels;
+  struct gl_list_t *events;
+  struct gl_list_t *disevents;
+  struct Set *ValueList;
+  struct Instance *cur_inst;
+  struct Case *cur_case;
+  struct solver_ipdata *ip;
+  struct dis_discrete *dvar;
+  struct rel_relation *rel;
+  struct logrel_relation *lrel;
+  struct e_event *e;
+  struct event_case *cur_sol_case;
+  int c,r,len,lref;
+  int *value;
+
+  scratch = GetInstanceEventVars(i);
+  len = gl_length(scratch);
+  evars = gl_create(len);
+  event->dvars = evars;
+  for(c=1;c<=len;c++){
+    cur_inst = (struct Instance *)(gl_fetch(scratch,c));
+    ip = SIP(GetInterfacePtr(cur_inst));
+    dvar = ip->u.dv.data;
+    if(dis_events_list(dvar)==NULL){
+      disevents = gl_create(2L);
+      dis_set_events_list(dvar,disevents);
+    }else{
+      disevents = dis_events_list(dvar);
+    }
+    gl_append_ptr(disevents,event);
+    gl_append_ptr(event->dvars,dvar);
+  }
+
+  scratch = GetInstanceEventCases(i);
+  len = gl_length(scratch);
+  event->cases = gl_create(len);
+  for (c=1;c<=len;c++) {
+    cur_sol_case = event_case_create(NULL);
+    cur_case = (struct Case *)(gl_fetch(scratch,c));
+    ValueList = GetCaseValues(cur_case);
+    value = &(cur_sol_case->values[0]);
+    if(g_symbol_values_list == NULL) {
+      g_symbol_values_list = gl_create(2L);
+    }
+    ProcessValueListEvent(ValueList,value,g_symbol_values_list);
+    ref = GetCaseReferences(cur_case);
+    lref = gl_length(ref);
+    rels = gl_create(lref);  /* maybe allocating less than needed (models) */
+    logrels = gl_create(lref);  /* maybe allocating less than needed */
+    events = gl_create(lref); /* maybe allocating more than needed */
+    for(r=1;r<=lref;r++){
+      cur_inst = (struct Instance *)(gl_fetch(ref,r));
+      switch(InstanceKind(cur_inst)){
+      case REL_INST:
+        ip = SIP(GetInterfacePtr(cur_inst));
+		ip->u.r.active = 0;
+        rel = ip->u.r.data;
+        gl_append_ptr(rels,rel);
+	break;
+      case LREL_INST:
+        ip = SIP(GetInterfacePtr(cur_inst));
+	ip->u.lr.active = 0;
+        lrel = ip->u.lr.data;
+        gl_append_ptr(logrels,lrel);
+	break;
+      case EVENT_INST:
+        ip = SIP(GetInterfacePtr(cur_inst));
+        e = ip->u.ev.data;
+        gl_append_ptr(events,e);
+        event_set_inevent(e,TRUE);
+	break;
+      case MODEL_INST:
+	ProcessModelsInEvents(cur_inst,rels,logrels,events);
+        break;
+      default:
+	break;
+      }
+    }
+    event_case_set_rels_list(cur_sol_case,rels);
+    event_case_set_logrels_list(cur_sol_case,logrels);
+    event_case_set_events_list(cur_sol_case,events);
+    event_case_set_active(cur_sol_case,FALSE);
+    gl_append_ptr(event->cases,cur_sol_case);
+  }
+}
+
 
 /*------------------------------------------------------------------------------
   RECONFIGURATION OF CONDITIONAL MODELS
@@ -1705,10 +2115,12 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   CONST struct logrelation *lgut;
   struct Instance *i;
   struct Instance *i_r;
+  struct Instance *iprearg;
   struct solver_ipdata *rip = NULL, *vip;
-  struct solver_ipdata *lrip, *dvip, *wip;
+  struct solver_ipdata *lrip, *dvip, *wip, *eip;
   struct var_variable **incidence = NULL;
   struct rel_relation **varincidence = NULL;
+  const struct rel_relation **prevarinc = NULL;
   struct dis_discrete **logincidence = NULL;
   struct var_variable *var;
   struct rel_relation *rel;
@@ -1716,9 +2128,10 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   struct logrel_relation *lrel;
   struct bnd_boundary *bnd;
   struct w_when *when;
+  struct e_event *event;
   int nnzold;
   int lognnzold;
-  int c,len,v,vlen,r,found;
+  int c,len,v,vlen,r,found,inevent;
   uint32 flags;
 
   //order = MAX(gl_length(p_data->vars),gl_length(p_data->rels));
@@ -1865,6 +2278,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   AL(rel,nr,rel_relation);  AL(obj,no,rel_relation);  AL(con,nc,rel_relation);
   AL(lr,nl,logrel_relation);  AL(logcon,ncl,logrel_relation);
   AL(when,nw,w_when);
+  AL(event,nev,e_event);
   AL(bnd,nc + p_data->ncl,bnd_boundary);
 #undef AL
 
@@ -1874,6 +2288,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   AL(rl,nr,rel_relation);  AL(ol,no,rel_relation);  AL(cl,nc,rel_relation);
   AL(ll,nl,logrel_relation);  AL(cll,ncl,logrel_relation);
   AL(wl,nw,w_when);
+  AL(el,nev,e_event);
   AL(bl,nc + p_data->ncl,bnd_boundary);
 #undef AL
 
@@ -1883,6 +2298,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   AL(rl,nr,rel_relation);  AL(ol,no,rel_relation);  AL(cl,nc,rel_relation);
   AL(ll,nl,logrel_relation);  AL(cll,ncl,logrel_relation);
   AL(wl,nw,w_when);
+  AL(el,nev,e_event);
   AL(bl,nc + p_data->ncl,bnd_boundary);
 #undef AL
 
@@ -1913,7 +2329,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   C(ndv,dis);  C(nud,undis);
   C(nr,rel);  C(no,obj);  C(nc,con);
   C(nl,lr);  C(ncl,logcon);
-  C(nw,when);
+  C(nw,when);   C(nev,event);
   C(nc + p_data->ncl,bnd);
 #undef C
 
@@ -1927,7 +2343,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   C(dl);  C(dul);
   C(rl);  C(ol);  C(cl);
   C(ll);  C(cll);
-  C(wl);
+  C(wl);  C(el);
   C(bl);
 #undef C
 
@@ -1941,7 +2357,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
   C(dl);  C(dul);
   C(rl);  C(ol);  C(cl);
   C(ll);  C(cll);
-  C(wl);
+  C(wl);  C(el);
   C(bl);
 #undef C
 
@@ -1990,6 +2406,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(!vip->u.v.basis)    flags |= VAR_NONBASIC;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
     if(vip->u.v.deriv > 1) flags |= VAR_DERIV; /* so that we can do relman_diffs with just the ydot vars */
+    if(vip->u.v.pre)       flags |= VAR_PRE;
 
     var_set_flags(var,flags);
     p_data->mastervl[v] = var;
@@ -2038,9 +2455,11 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(vip->u.v.incident)  flags |= VAR_INCIDENT;
     if(vip->u.v.fixed)     flags |= VAR_FIXED;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
+    if(vip->u.v.pre)       flags |= VAR_PRE;
 	/* CONSOLE_DEBUG("VAR AT %p IS UNASSIGNED",var); */
     /* others may be appropriate (PVAR) */
     var_set_flags(var,flags);
+    var_set_incidences(var,0,NULL);
     p_data->masterul[v] = var;
     p_data->solverul[v] = var;
   }
@@ -2083,6 +2502,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(rip->u.r.ext) flags |= REL_BLACKBOX;
     if(rip->u.r.active) flags |= ( REL_ACTIVE | REL_INVARIANT);
     if(rip->u.r.inwhen) flags |= REL_INWHEN;
+    if(rip->u.r.inevent) flags |= REL_INEVENT;
     if( RelationRelop(GetInstanceRelationOnly(rip->i)) == e_equal ) {
       flags |= REL_EQUALITY;
     }
@@ -2232,6 +2652,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(dvip->u.dv.isconst)  flags |= DIS_CONST;
     if(dvip->u.dv.incident)  flags |= DIS_INCIDENT;
     if(dvip->u.dv.inwhen)  flags |= DIS_INWHEN;
+    if(dvip->u.dv.inevent)  flags |= DIS_INEVENT;
     if(dvip->u.dv.fixed)     flags |= DIS_FIXED;
     if(dvip->u.dv.booleanvar) flags |= DIS_BVAR;
     if(dis_kind(dvar) == e_dis_boolean_t) flags |= DIS_BOOLEAN;
@@ -2303,6 +2724,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(lrip->u.lr.included) flags |= LOGREL_INCLUDED;
     if(lrip->u.lr.active) flags |= LOGREL_ACTIVE;
     if(lrip->u.lr.inwhen) flags |= LOGREL_INWHEN;
+    if(lrip->u.lr.inevent) flags |= LOGREL_INEVENT;
     if( LogRelRelop(GetInstanceLogRelOnly(lrip->i)) == e_boolean_eq ) {
       flags |= LOGREL_EQUALITY;
     }
@@ -2471,11 +2893,50 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     ProcessSolverWhens(when,i);
   }
 
+/*
+	for c in eventlist copy eventdata.
+	for c in eventlist set masterel, solverel pointer to point to data.
+*/
+  /* process events */
+
+  len = gl_length(p_data->events);
+  for (v = 0; v < len; v++) {
+    event = &(p_data->eventdata[v]);
+    eip = SIP(gl_fetch(p_data->events,v+1));
+    event = event_create(eip->i,event);
+    eip->u.ev.data = event;
+    event_set_mindex(event,v);
+    event_set_sindex(event,v);
+    event_set_model(event,eip->u.ev.model-1);
+    p_data->masterel[v] = event;
+    p_data->solverel[v] = event;
+    flags = 0;
+    if(eip->u.ev.inwhen) flags |= EVENT_INWHEN;
+    if(eip->u.ev.inevent) flags |= EVENT_INEVENT;
+    flags |= EVENT_ACTIVE;
+    flags |= EVENT_METH;
+    flags |= EVENT_METH_END;
+    event_set_flags(event,flags);
+  }
+  p_data->masterel[len] = NULL; /* terminator */
+  p_data->solverel[len] = NULL; /* terminator */
+
+  /*
+  	Get data from the event instance to fill the
+  	list in the e_event instance
+  */
+
+  for (v = 0; v < len; v++) {
+    event = p_data->masterel[v];
+    i = (struct Instance *)(event_instance(event));
+    ProcessSolverEvents(event,i);
+  }
+
   /* configure the problem */
 
-  if(vlen > 0) { /* we have whens */
-    CONSOLE_DEBUG("ANALYSING %d 'WHENS' IN THE PROBLEM",vlen);
-    configure_conditional_problem(vlen,p_data->masterwl,
+  if(vlen > 0 || len > 0) { /* we have whens or events */
+    CONSOLE_DEBUG("ANALYSING %d 'WHENS' AND %d 'EVENTS' IN THE PROBLEM",vlen,len);
+    configure_conditional_problem(vlen,len,p_data->masterwl,p_data->masterel,
                                   p_data->solverrl,p_data->solverll,
 				  p_data->mastervl);
     /* Is consistency analysis required ? */
@@ -2576,6 +3037,30 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
       var_set_incidences(var,0,NULL);
     }
   }
+
+  vlen = gl_length(p_data->unas);
+  for (v = 0; v < vlen; v++) {
+    var = &(p_data->undata[v]);
+    var_set_incidences(var,0,NULL);
+  }
+
+  inevent = 0;
+  vlen = gl_length(p_data->prevars);
+  for (v = 1; v <= vlen; v++) {
+    vip = SIP(gl_fetch(p_data->prevars,v));
+    var = vip->u.v.data;
+    asc_assert(var_pre(var));
+    prevarinc = var_incidence_list(var);
+    len = var_n_incidences(var);
+    for( c = 0; c < len; c++ ) {
+        if (rel_in_event((struct rel_relation *)prevarinc[c])) inevent = 1;
+    }
+    if(!inevent)
+      ERROR_REPORTER_HERE(ASC_USER_ERROR,
+        "A pre() variable in a relation not referenced by any events.");
+    iprearg = PreArg((struct Instance *)var_instance(var));
+    var_set_prearg(var,SIP(GetInterfacePtr(iprearg))->u.v.data);
+  }
   return 0;
 }
 
@@ -2611,6 +3096,8 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
 
   slv_set_when_buf(sys,p_data->whendata,gl_length(p_data->whens));
   p_data->whendata = NULL;
+  slv_set_event_buf(sys,p_data->eventdata,gl_length(p_data->events));
+  p_data->eventdata = NULL;
   slv_set_bnd_buf(sys,p_data->bnddata, gl_length(p_data->cnds) + gl_length(p_data->logcnds));
   p_data->bnddata = NULL;
 
@@ -2634,6 +3121,7 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
   SL(var,vl,vars);  SL(par,pl,pars);  SL(dvar,dl,dvars);
   SL(rel,rl,rels);  SL(condrel,cl,cnds);  SL(obj,ol,objrels);
   SL(logrel,ll,logrels);  SL(condlogrel,cll,logcnds);  SL(when,wl,whens);
+  SL(event,el,events);
 
   slv_set_master_bnd_list(sys,p_data->masterbl, gl_length(p_data->cnds) + gl_length(p_data->logcnds));
   p_data->masterbl = NULL;
@@ -2646,6 +3134,7 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
   SL(var,vl,vars);  SL(par,pl,pars);  SL(dvar,dl,dvars);
   SL(rel,rl,rels);  SL(condrel,cl,cnds);  SL(obj,ol,objrels);
   SL(logrel,ll,logrels);  SL(condlogrel,cll,logcnds);  SL(when,wl,whens);
+  SL(event,el,events);
 
   slv_set_solvers_bnd_list(sys,p_data->solverbl, gl_length(p_data->cnds) + gl_length(p_data->logcnds));
   p_data->solverbl = NULL;
@@ -2745,6 +3234,8 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
 
   /* tell the slv_system_t about it, and undecorate ips from instances */
   analyze_configure_system(sys,p_data);
+  if (system_get_diffvars(sys)==NULL && slv_get_num_solvers_events(sys)!=0)
+    ERROR_REPORTER_HERE(ASC_USER_WARNING, "Events found in a non-dynamic model. May be you meant WHEN?");
   /* configure must set nulls in p_data for anything we want to keep */
   /* blow the temporary lists away */
   analyze_free_lists(p_data);

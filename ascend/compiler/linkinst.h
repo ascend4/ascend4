@@ -60,11 +60,47 @@ extern void ChangeWhenPointers(struct Instance *when,
 	instance when to "new".
 */
 
+extern void ChangeEventPointers(struct Instance *event,
+                                struct Instance *old,
+                                struct Instance *new);
+/**<
+	This procedure changes all references of "old" in event
+	instance event to "new".
+*/
+
 extern void ChangeParent(struct Instance *parent,
                          struct Instance *oldchild,
                          struct Instance *newchild);
 /**<
 	Tell a parent to point to newchild instead of pointing to oldchild
+*/
+
+void ChangeIderivPointers(struct Instance *deriv,
+                          struct Instance *old,
+			  struct Instance *new);
+/**<
+	Tell the derivatives to point to "new" instead of "old".
+*/
+
+void ChangeStatePointers(struct Instance *state,
+                         struct Instance *old,
+			 struct Instance *new);
+/**<
+	Tell the state variables to point to "new" instead of "old".
+*/
+
+void ChangeIndepPointers(struct Instance *indep,
+                         struct Instance *old,
+			 struct Instance *new);
+/**<
+	Tell the independent variables to point to "new" instead of "old".
+*/
+
+void ChangeSderivPointers(struct Instance *deriv,
+                          struct Instance *old,
+			  struct Instance *new);
+/**<
+	Tell the derivatives to point to "new" instead of "old".
 */
 
 extern void ReDirectParents(struct Instance *oldinst, struct Instance *newinst);
@@ -223,6 +259,41 @@ extern void FixWhens(struct Instance *old, struct Instance *new);
 	</pre>
 */
 
+extern void FixEvents(struct Instance *old, struct Instance *new);
+
+/**< 
+	This is called to tell events about a change in variable location
+	e.g. If two atoms are merged, point all the events that know about
+	ATOM old to ATOM new.<br><br>
+*/
+
+extern void FixDerInfo(struct RealAtomInstance *old, struct RealAtomInstance *new);
+/**< 
+	This is called to tell instances containing DerInfo about a change in
+        variable location e.g. If two atoms are merged, point all the DerInfo 
+        pointers that know about ATOM old to ATOM new.<br><br>
+	
+	A RealAtomInstance contains struct DerInfo, which contains gl_lists of its
+        derivatives, state and independent variables, and of derivatives with respect
+        to this variable. These are lists of pointers. The instances using in their
+        DerInfo a variable which is going to be destroyed must be notified about the
+        change. This is the goal of this function. It will vist the list of instances 
+        and it will tell them to use the  the "new" instance instead of the "old"
+        instance.
+*/
+
+extern void FixPreInfo(struct Instance *old, struct Instance *new);
+/**< 
+	This is called to tell instances containing PreInfo about a change in
+        variable location e.g. If two atoms are merged, point all the PreInfo 
+        pointers that know about ATOM old to ATOM new.<br><br>
+	
+	The instances using in their PreInfo a variable which is going to be
+        destroyed must be notified about the change. This is the goal of this
+        function. It will visit the list of instances and it will tell them to use
+        the  the "new" instance instead of the "old" instance.
+*/
+
 extern void FixWhensForRefinement(struct Instance *old, struct Instance *new);
 /**<
 	This function is almost equal to the previous function, the difference
@@ -234,6 +305,11 @@ extern void FixWhensForRefinement(struct Instance *old, struct Instance *new);
 	of whens of the old instance (which is NULL).That is precisely
 	the reason for which we wrote this other function, we want to visit
 	the list of whens of the new instance instead.
+*/
+
+extern void FixEventsForRefinement(struct Instance *old, struct Instance *new);
+/**<
+	This function is almost equal to the previous function.
 */
 
 /* @} */

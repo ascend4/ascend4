@@ -128,6 +128,12 @@ extern int CompareVariableLists(CONST struct VariableList *vl1,
  *  The NULL list is > all lists.
  */
 
+extern symchar *GetIdFromVlist(struct VariableList *vlist);
+/**<
+ *  Returns a symchar for the derivative name
+ *  which has arguments from vlist.
+ */
+
 /* @} */
 
 #endif /* ASC_VLIST_H */

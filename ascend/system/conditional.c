@@ -342,6 +342,15 @@ void when_case_set_whens_list( struct when_case *wc, struct gl_list_t *wlist){
    wc->whens = wlist;
 }
 
+struct gl_list_t *when_case_events_list( struct when_case *wc){
+   assert(wc);
+   return( wc->events );
+}
+
+void when_case_set_events_list( struct when_case *wc, struct gl_list_t *elist){
+   assert(wc);
+   wc->events = elist;
+}
 
 int32 when_case_case_number( struct when_case *wc){
   assert(wc);

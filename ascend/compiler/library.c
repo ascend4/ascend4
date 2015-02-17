@@ -55,9 +55,9 @@
 #define LIBHASHINDEX(p) (((((asc_intptr_t) (p))*1103515245) >> 20) & 1023)
 
 /* these make an important optimization possible.
- * The relation and when types must still be in the library,
+ * The relation and when/event types must still be in the library,
  * but heavy use clients can get the same pointers by
- * FindRelationType and  FindWhenType.
+ * FindRelationType and  FindWhenType/FindEventType.
  * AddType is responsible for maintaining these.
  * These pointers should never change values except
  * if the library is destroyed.
@@ -66,13 +66,14 @@ static struct TypeDescription *g_relation_type = NULL;
 static struct TypeDescription *g_logrel_type = NULL;
 static struct TypeDescription *g_dummy_type = NULL;
 static struct TypeDescription *g_when_type = NULL;
+static struct TypeDescription *g_event_type = NULL;
 static struct TypeDescription *g_set_type = NULL;
 static struct TypeDescription *g_externalmodel_type = NULL;
 
 /*
  * array of symbol table entries we need.
  */
-static symchar *g_symbols[14];
+static symchar *g_symbols[15];
 #define G__SYMBOL_NAME 	g_symbols[0]
 #define G__REAL_NAME	g_symbols[1]
 #define G__INTEGER_NAME	g_symbols[2]
@@ -83,10 +84,11 @@ static symchar *g_symbols[14];
 #define G__CON_BOOLEAN_NAME g_symbols[7]
 #define G__SET_NAME 	g_symbols[8]
 #define G__WHEN_NAME 	g_symbols[9]
-#define G__REL_NAME 	g_symbols[10]
-#define G__LOGREL_NAME 	g_symbols[11]
-#define G__UNSELECTED 	g_symbols[12]
-#define G__EXT_NAME 	g_symbols[13]
+#define G__EVENT_NAME 	g_symbols[10]
+#define G__REL_NAME 	g_symbols[11]
+#define G__LOGREL_NAME 	g_symbols[12]
+#define G__UNSELECTED 	g_symbols[13]
+#define G__EXT_NAME 	g_symbols[14]
 
 struct LibraryStructure {
   struct LibraryStructure *next;
@@ -112,6 +114,7 @@ void InitializeLibrary(void)
   G__CON_BOOLEAN_NAME = GetBaseTypeName(boolean_constant_type);
   G__SET_NAME 	= GetBaseTypeName(set_type);
   G__WHEN_NAME 	= GetBaseTypeName(when_type);
+  G__EVENT_NAME 	= GetBaseTypeName(event_type);
   G__REL_NAME 	= GetBaseTypeName(relation_type);
   G__LOGREL_NAME 	= GetBaseTypeName(logrel_type);
   G__UNSELECTED	= GetBaseTypeName(dummy_type);
@@ -158,6 +161,16 @@ struct TypeDescription *FindWhenType(void){
 	);
   }
   return g_when_type;
+}
+
+struct TypeDescription *FindEventType(void){
+  /* probably should be an assert instead of this if */
+  if (g_event_type==NULL) {
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR
+		,"FindEventType called before event defined. This is extremely odd!"
+	);
+  }
+  return g_event_type;
 }
 
 struct TypeDescription *FindDummyType(void){
@@ -220,6 +233,7 @@ void DestroyLibrary(void){
   g_logrel_type = NULL;
   g_dummy_type = NULL;
   g_when_type = NULL;
+  g_event_type = NULL;
   g_set_type = NULL;
 }
 
@@ -341,6 +355,11 @@ int AddType(struct TypeDescription *desc){
       /* and we will assume this pointer will replace any current whendef */
       /* in the one case where it does not replace, we will have to reset it */
     }
+  if (GetName(desc) == G__EVENT_NAME) {
+      g_event_type = desc;
+      /* and we will assume this pointer will replace any current eventdef */
+      /* in the one case where it does not replace, we will have to reset it */
+    }
     if (GetName(desc) == G__UNSELECTED) {
       g_dummy_type = desc;
       /* and we will assume this pointer will replace any current whendef */
@@ -387,6 +406,9 @@ int AddType(struct TypeDescription *desc){
             if (GetModule(desc)==NULL) {
               if (GetName(desc) == G__WHEN_NAME) {
                 g_when_type = ptr->type;
+              }
+              if (GetName(desc) == G__EVENT_NAME) {
+                g_event_type = ptr->type;
               }
               if (GetName(desc) == G__UNSELECTED) {
                 g_dummy_type = ptr->type;

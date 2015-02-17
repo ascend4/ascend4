@@ -384,7 +384,7 @@ extern void addLinkEntry(struct Instance *model, symchar *key
 			ERROR_REPORTER_HERE(ASC_USER_WARNING,"The LINK entry to-be added is already present in the non-declarative LINK table.");
 		}
 	}else{
-		if(link_entry->link_type == link_ignore) {
+		if(stat->v.lnk.key_type == 2) {
 			ignoreDeclLinkEntry(model,key,LINKStatVlist(stat));
 		}else {
 			modelType = InstanceTypeDesc(model);

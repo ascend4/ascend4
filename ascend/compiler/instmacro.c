@@ -65,6 +65,7 @@ struct ModelInstance *g_mod_inst;
 struct RelationInstance *g_rel_inst;
 struct LogRelInstance *g_lrel_inst;
 struct WhenInstance *g_when_inst;
+struct EventInstance *g_event_inst;
 #endif
 
 int NotAtomF(struct Instance *i)
@@ -78,6 +79,7 @@ int NotAtomF(struct Instance *i)
   case REL_INST:
   case LREL_INST:
   case WHEN_INST:
+  case EVENT_INST:
   case REAL_ATOM_INST:
   case BOOLEAN_ATOM_INST:
   case INTEGER_ATOM_INST:

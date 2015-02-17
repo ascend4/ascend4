@@ -707,7 +707,7 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 # endif /* ASC_SIGNAL_TRAPS */
 
 			d->lastwrite = clock();
-
+		    slv_presolve(blsys->system);
 		    res = dopri5 (my_neq, &integrator_dopri5_fex, x, y, xend
 				, rtoler, atoler, tolvect, integrator_dopri5_reporter, iout
 				, stdout, 0.0 /* uround */, 0.0 /*safe*/, 0.0 /*fac1*/, 0.0/*fac2*/

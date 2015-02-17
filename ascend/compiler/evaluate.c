@@ -906,7 +906,7 @@ struct gl_list_t *EvaluateNamesNeeded(CONST struct Expr *expr,
       n = ExprName(expr);
       n = NextName(n);
       while (n != NULL) {
-        if (NameId(n) == 0) {
+        if ((NameId(n) == 0)&&(NameDeriv(n)==0)&&(NamePre(n)==0)) {
           GNN = EvaluateSetNamesNeeded(NameSetPtr(n),GNN);
         }
         n = NextName(n);

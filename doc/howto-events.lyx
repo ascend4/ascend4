@@ -1,0 +1,666 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass book
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 2
+\tocdepth 2
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Using the EVENT syntax for creating variable structure models
+\begin_inset CommandInset label
+LatexCommand label
+name "cha:events"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Information about how to use ASCEND for creating dynamic simulations in
+ general can be found in 
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "cha:ivp"
+
+\end_inset
+
+.
+ This chapter describes creating models with events.
+\end_layout
+
+\begin_layout Standard
+An event is an action or a set of actions which are performed exactly at
+ the boundary, which is a point where some boolean valued variables change
+ their values.
+\end_layout
+
+\begin_layout Standard
+The syntax for events in ASCEND is the following:
+\end_layout
+
+\begin_layout LyX-Code
+event_name: EVENT (bvar)
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+CASE TRUE: USE rel1;
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+CASE FALSE: USE rel2;
+\end_layout
+
+\begin_layout LyX-Code
+...
+\end_layout
+
+\begin_layout LyX-Code
+OTHERWISE: USE rel3;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+END EVENT;
+\end_layout
+
+\begin_layout Standard
+where bvar is a boolean variable (or a list of boolean variables) the change
+ in which triggers the event, rel1 and rel2 are relations which are included
+ in the model at the corresponding boundary (for example rel1 is included
+ each time when bvar changes its value from FALSE to TRUE) and then are
+ switched off.
+ rel3 is included in the model during continious integration and at those
+ boundaries at which the event is not triggered.
+ event_name is an optional name of the EVENT instance (if it is not stated
+ explicitly, a name for the instance is auto-generated).
+\end_layout
+
+\begin_layout Subsubsection*
+Triggering an event.
+\end_layout
+
+\begin_layout Standard
+A model with events contains at least one real-valued condition declared
+ inside a CONDITIONAL statement:
+\end_layout
+
+\begin_layout LyX-Code
+CONDITIONAL:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+cond: a > b;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+END CONDITIONAL;
+\end_layout
+
+\begin_layout Standard
+where a, b are some real-valued variables.
+ It is recommended to use inequatilies as conditions for triggering events
+ even if the direction of the crossing doesn't matter.
+ In this case you may use ANY as the value of the CASE instead TRUE or FALSE.
+\end_layout
+
+\begin_layout Standard
+Each time when a root of this function is found (in this example every time
+ when the equation a = b is satisfied) is is checked if any events should
+ be triggered.
+\end_layout
+
+\begin_layout Standard
+The connection between the condition and the event is made by creating a
+ logical variable which would indicate if the inequality is satisfied:
+\end_layout
+
+\begin_layout LyX-Code
+bvar IS_A boolean_var;
+\end_layout
+
+\begin_layout LyX-Code
+bvar == SATISFIED(cond);
+\end_layout
+
+\begin_layout Standard
+Of course, you may write more complicated systems of logical equations using
+ the SATISFIED statement and any combination of logical operators and boolean
+ variables.
+\end_layout
+
+\begin_layout Standard
+If the event is:
+\end_layout
+
+\begin_layout LyX-Code
+myevent: EVENT (bvar)
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+CASE TRUE: USE rel1;
+\end_layout
+
+\begin_layout LyX-Code
+OTHERSISE: USE rel2;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+END EVENT;
+\end_layout
+
+\begin_layout Standard
+then it is triggered every time when bvar changes its value from FALSE to
+ TRUE.
+\end_layout
+
+\begin_layout Subsubsection*
+Actions at the boundary.
+\end_layout
+
+\begin_layout Standard
+There are two main actions which are performed at the boundary: solving
+ systems of equations and calling methods.
+\end_layout
+
+\begin_layout Standard
+In order not to include procedural functionality into the declarative part
+ the methods are not called explicitly from inside events, but they are
+ found by their names.
+ The method which is called before solving the boundary equations should
+ have the same name as the event, and the method which is called after the
+ boundary should have the same name but with 
+\begin_inset Quotes eld
+\end_inset
+
+_end
+\begin_inset Quotes erd
+\end_inset
+
+ at the end.
+ So the first method for the event above would be called 
+\begin_inset Quotes eld
+\end_inset
+
+myevent
+\begin_inset Quotes erd
+\end_inset
+
+ and the second method would be called 
+\begin_inset Quotes eld
+\end_inset
+
+myevent_end
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+So, when an event is found and activated first the methods associated with
+ the active events are called.
+ Then all the equations referenced in the OTHERWISE case are excluded from
+ the system, and the ones referenced by the active case are included into
+ the system.
+\end_layout
+
+\begin_layout Standard
+After this the whole system is solved with the QRSlv (non-linear) solver,
+ and after that - with the LRSlv (logical) solver.
+ If some boolean variables change their values, everything is repeated one
+ more time.
+\end_layout
+
+\begin_layout Standard
+After all events are processed and no more boolean variables change their
+ values the boundary equations are switched off and the OTHERWISE cases
+ are switched on.
+ The methods associated with events are called.
+ Then the integration continues.
+\end_layout
+
+\begin_layout Subsubsection*
+Accessing previous values of variables.
+\end_layout
+
+\begin_layout Standard
+At some boundaries it is needed to use previous values of some variables
+ - values before the boundary.
+ For accessing such values and distincting them from new values of the variables
+ a special pre() variable can be created.
+ It is declared by a PREVIOUS statement:
+\end_layout
+
+\begin_layout LyX-Code
+PREVIOUS x;
+\end_layout
+
+\begin_layout Standard
+Where x is a real-valued variable.
+\end_layout
+
+\begin_layout Standard
+After declaring a pre() variable you can use it in boundary and right-hand
+ sides of assignments, for example:
+\end_layout
+
+\begin_layout LyX-Code
+x = pre(x) + 1;
+\end_layout
+
+\begin_layout Standard
+A pre() variable is always FIXed and changes its value only at boundaries.
+ The user can't explicitly fix of free or assign values to pre() variables:
+ everything is done automatically.
+\end_layout
+
+\begin_layout Subsubsection*
+An example.
+\end_layout
+
+\begin_layout Standard
+Let us consider the model of a bouncing ball as an example:
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "ivpsystem.a4l";
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "atoms.a4l";
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+MODEL bball_event;
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+y, r IS_A distance;
+\end_layout
+
+\begin_layout LyX-Code
+v IS_A speed;
+\end_layout
+
+\begin_layout LyX-Code
+g IS_A acceleration;
+\end_layout
+
+\begin_layout LyX-Code
+switch, flying IS_A boolean_var;
+\end_layout
+
+\begin_layout LyX-Code
+t IS_A time;
+\end_layout
+
+\begin_layout LyX-Code
+INDEPENDENT t;
+\end_layout
+
+\begin_layout LyX-Code
+DERIVATIVE OF y, v;
+\end_layout
+
+\begin_layout LyX-Code
+PREVIOUS v, y;
+\end_layout
+
+\begin_layout LyX-Code
+gravity: der(v) = -1*g;
+\end_layout
+
+\begin_layout LyX-Code
+speed_eq: v = der(y);
+\end_layout
+
+\begin_layout LyX-Code
+stop: der(v) = 0;
+\end_layout
+
+\begin_layout LyX-Code
+bnd: v = -pre(v)*0.9;
+\end_layout
+
+\begin_layout LyX-Code
+CONDITIONAL
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+boundary: y > r;
+\end_layout
+
+\begin_layout LyX-Code
+speed: v >= 0;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+END CONDITIONAL;
+\end_layout
+
+\begin_layout LyX-Code
+switch == NOT SATISFIED(boundary);
+\end_layout
+
+\begin_layout LyX-Code
+flying == SATISFIED(boundary) OR SATISFIED(speed);
+\end_layout
+
+\begin_layout LyX-Code
+EVENT(switch)
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+CASE TRUE: USE bnd;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+END EVENT;
+\end_layout
+
+\begin_layout LyX-Code
+WHEN(flying)
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+CASE TRUE: USE gravity;
+\end_layout
+
+\begin_layout LyX-Code
+CASE FALSE: USE stop;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+END WHEN;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+METHODS
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+METHOD obs_init;
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+y.obs_id := 1;
+\end_layout
+
+\begin_layout LyX-Code
+flying.obs_id := 2;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+END obs_init;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD values;
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+FIX r, g;
+\end_layout
+
+\begin_layout LyX-Code
+g := 9.8 {m/s^2};
+\end_layout
+
+\begin_layout LyX-Code
+r := 10 {m};
+\end_layout
+
+\begin_layout LyX-Code
+y := 40 {m};
+\end_layout
+
+\begin_layout LyX-Code
+v := 0 {m/s};
+\end_layout
+
+\begin_layout LyX-Code
+der(v,t) := 0 {m/s^2};
+\end_layout
+
+\begin_layout LyX-Code
+t := 0 {s};
+\end_layout
+
+\begin_layout LyX-Code
+switch := FALSE;
+\end_layout
+
+\begin_layout LyX-Code
+flying := TRUE;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+END values;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD on_load;
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+RUN values;
+\end_layout
+
+\begin_layout LyX-Code
+RUN obs_init;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+END on_load;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+END bball_event;
+\end_layout
+
+\begin_layout Standard
+When the ball hits the ground, it instantly changes its speed.
+ This instant change is described by the event:
+\end_layout
+
+\begin_layout LyX-Code
+EVENT(switch)
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+CASE TRUE: USE bnd;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+END EVENT;
+\end_layout
+
+\begin_layout Standard
+When the coordinate of the center of the ball becomes smaller than the radius
+ of the ball, the ball reverses its speed.
+ This is done by including the 'bnd' relation into the system, solving the
+ system and then switching the boundary equation off.
+\end_layout
+
+\begin_layout Standard
+The 'bnd' relation uses a pre() variable:
+\end_layout
+
+\begin_layout LyX-Code
+bnd: v = -pre(v)*0.9;
+\end_layout
+
+\begin_layout Standard
+This means the following: value of 'v' after the boundary will be equal
+ to the value of 'v' before the boundary times -0.9.
+ The same change could also be modelled using an assignment in a method
+ associated with the event.
+\end_layout
+
+\begin_layout Standard
+The ball stops when both inequalities: y < r and v < 0 are satisfied.
+\end_layout
+
+\begin_layout Subsubsection*
+Some notes on modelling systems with complicated events.
+\end_layout
+
+\begin_layout Itemize
+If two or more events are sometimes triggered simultaneously, it may be
+ necessary to set the priorities.
+ For this you may use the OTHERWISE case.
+ For example:
+\end_layout
+
+\begin_layout LyX-Code
+ev1: EVENT (cond1)
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+CASE TRUE: USE rel1;
+\end_layout
+
+\begin_layout LyX-Code
+OTHERWISE: USE ev2;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+END EVENT;
+\end_layout
+
+\begin_layout LyX-Code
+ev2: EVENT (cond2)
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+CASE TRUE: USE rel2;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+END EVENT;
+\end_layout
+
+\begin_layout Standard
+If cond1 and cond2 are satisfied simultaneously, only ev1 will be triggered.
+\end_layout
+
+\begin_layout Itemize
+If you do not want to include some equations into the system at the boundary,
+ you can also use the OTHERWISE case.
+\end_layout
+
+\begin_layout Subsubsection*
+Using plotting tools for models with events.
+\end_layout
+
+\begin_layout Standard
+Those points where events were triggered are marked red on the plot.
+ You can see how the variables changed their values at each boundary in
+ the observer table.
+ You can also plot the points found at the boundary by right-clicking the
+ corresponding column and then choosing the time (or the value of some other
+ independent variable) at which the event was triggered.
+\end_layout
+
+\end_body
+\end_document

@@ -17,6 +17,7 @@
 #include "type.h"
 #include "instance.h"
 #include "variable.h"
+#include "disvar.h"
 #include "relation.h"
 #include "name.h"
 #include "reporter.h"
@@ -64,6 +65,11 @@ extern "C"{
 // Import the preferences module
 %pythoncode {
 	import preferences;
+}
+
+%pythoncode {
+	def der(state, indep):
+		return state.getDer(indep)
 }
 
 // Set-valued instance variable
@@ -346,6 +352,7 @@ public:
 	Instanc(Instance *, SymChar &name);
 	~Instanc();
 	std::vector<Instanc> getChildren();
+	Instanc getChild(const SymChar) const;
 	const std::string getKindStr() const;
 	const SymChar &getName();
 	const Type getType() const;
@@ -359,6 +366,7 @@ public:
 	const bool isRelation() const;
 	const bool isLogicalRelation() const;
 	const bool isWhen() const;
+	const bool isEvent() const;
 	const bool isSet() const; // a set (group) of things
 	const bool isSetInt() const;
 	const bool isSetString() const;
@@ -370,6 +378,8 @@ public:
 	const bool isSymbol() const;
 	const bool isReal() const;
 	const bool isModel() const;
+	const bool isPre() const;
+	const bool isPrearg() const;
 
 	const double getRealValue() const;
 	const bool isDimensionless() const;
@@ -396,7 +406,7 @@ public:
 	void setBoolValue(const bool &val);
 	void setIntValue(const long &val);
 	void setSymbolValue(const SymChar &sym);
-	void write(const char *fname);
+	void write(FILE *fp);
 
 	const InstanceStatus getStatus() const;
 
@@ -408,7 +418,15 @@ public:
 	const double  getNominal() const;
 
 	const std::vector<Instanc> getClique() const;
+	const std::vector<Instanc> getStateVars() const;
+	const std::vector<Instanc> getSderivs() const;
+	const std::vector<Instanc> getIderivs() const;
+	const std::vector<Instanc> getIndepVars() const;
+	const Instanc getPre() const;
+	const Instanc getPrearg() const;
 	const std::vector<std::string> getAliases() const;
+
+	Instanc getDer(const Instanc) const;
 };
 
 %extend Instanc{
@@ -450,6 +468,8 @@ public:
 				return self.getResidual()
 			elif self.isWhen():
 				return "WHEN"
+			elif self.isEvent():
+				return "EVENT"
 			elif self.isSet():
 				_s = set(self.getSetValue());
 				#for _v in self.getSetValue():

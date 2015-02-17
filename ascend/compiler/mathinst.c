@@ -68,6 +68,7 @@
 #include "universal.h"
 #include "cmpfunc.h"
 #include "tmpnum.h"
+#include "mergeinst.h"
 #include "mathinst.h"
 
 static const char panic_msg[]="Incorrect type '%s' passed";
@@ -186,6 +187,9 @@ struct gl_list_t *GetInstanceOperands(CONST struct Instance *i)
   case WHEN_INST:
     list = GetInstanceWhenVars(i);
     break;
+  case EVENT_INST:
+    list = GetInstanceEventVars(i);
+    break;
   default:
     return NULL;
   }
@@ -257,6 +261,8 @@ struct gl_list_t *GetInstanceWhens(CONST struct Instance *i)
       return LRELN_INST(i)->whens;
     case WHEN_INST:
       return W_INST(i)->whens;
+    case EVENT_INST:
+      return E_INST(i)->whens;
     default:
     PANIC_INCORRECT_TYPE(i);
   }
@@ -277,6 +283,68 @@ void SetWhenCases(struct Instance *i,struct gl_list_t *whencases)
   AssertMemory(i);
   if (i->t == WHEN_INST) {
     W_INST(i)->cases = whencases;
+  }else{
+     PANIC_INCORRECT_TYPE(i);
+  }
+}
+
+struct gl_list_t *GetInstanceEventVars(CONST struct Instance *i)
+{
+  AssertMemory(i);
+  if (i->t == EVENT_INST) {
+    return E_INST(i)->bvar;
+  }else{
+    PANIC_INCORRECT_TYPE(i);
+
+  }
+}
+
+struct gl_list_t *GetInstanceEventCases(CONST struct Instance *i)
+{
+  AssertMemory(i);
+  if (i->t == EVENT_INST) {
+    return E_INST(i)->cases;
+  }else{
+    PANIC_INCORRECT_TYPE(i);
+  }
+}
+
+struct gl_list_t *GetInstanceEvents(CONST struct Instance *i)
+{
+  AssertMemory(i);
+  switch(i->t) {
+    case BOOLEAN_ATOM_INST:
+      return BA_INST(i)->events;
+    case BOOLEAN_CONSTANT_INST:
+      return BC_INST(i)->events;
+    case MODEL_INST:
+      return MOD_INST(i)->events;
+    case REL_INST:
+      return RELN_INST(i)->events;
+    case LREL_INST:
+      return LRELN_INST(i)->events;
+    case EVENT_INST:
+      return E_INST(i)->events;
+    default:
+    PANIC_INCORRECT_TYPE(i);
+  }
+}
+
+void SetEventVarList(struct Instance *i,struct gl_list_t *eventvars)
+{
+  AssertMemory(i);
+  if (i->t == EVENT_INST) {
+    E_INST(i)->bvar = eventvars;
+  }else{
+    PANIC_INCORRECT_TYPE(i);
+  }
+}
+
+void SetEventCases(struct Instance *i,struct gl_list_t *eventcases)
+{
+  AssertMemory(i);
+  if (i->t == EVENT_INST) {
+    E_INST(i)->cases = eventcases;
   }else{
      PANIC_INCORRECT_TYPE(i);
   }
@@ -618,6 +686,12 @@ unsigned long WhensCount(struct Instance *i)
     }else{
       return 0;
     }
+  case EVENT_INST:
+    if (E_INST(i)->whens!=NULL) {
+      return gl_length(E_INST(i)->whens);
+    }else{
+      return 0;
+    }
   default:
     PANIC_INCORRECT_TYPE(i);
   }
@@ -687,6 +761,12 @@ struct Instance *WhensForInstance(struct Instance *i,
   case WHEN_INST:
     if (W_INST(i)->whens!=NULL) {
       return INST(gl_fetch(W_INST(i)->whens,c));
+    }else{
+      ASC_PANIC("c out of bounds in WhensForInstance.\n");
+    }
+  case EVENT_INST:
+    if (E_INST(i)->whens!=NULL) {
+      return INST(gl_fetch(E_INST(i)->whens,c));
     }else{
       ASC_PANIC("c out of bounds in WhensForInstance.\n");
     }
@@ -783,6 +863,13 @@ void AddWhen(struct Instance *i, struct Instance *when)
                  (char *)when,(CmpFunc)CmpWhens)==0)
       gl_append_ptr(W_INST(i)->whens,(VOIDPTR)when);
     break;
+  case EVENT_INST:
+    if (E_INST(i)->whens==NULL)
+      E_INST(i)->whens = gl_create(AVG_WHEN);
+    if (gl_search(E_INST(i)->whens,
+                 (char *)when,(CmpFunc)CmpWhens)==0)
+      gl_append_ptr(E_INST(i)->whens,(VOIDPTR)when);
+    break;
   default:
     PANIC_INCORRECT_TYPE(i);
   }
@@ -854,9 +941,476 @@ void RemoveWhen(struct Instance *i, struct Instance *when)
                  (char *)when,(CmpFunc)CmpWhens);
     if (c>0) gl_delete(W_INST(i)->whens,c,0);
     break;
+  case EVENT_INST:
+    if (E_INST(i)->whens==NULL) return;
+    c = gl_search(E_INST(i)->whens,
+                 (char *)when,(CmpFunc)CmpWhens);
+    if (c>0) gl_delete(E_INST(i)->whens,c,0);
+    break;
   default:
     PANIC_INCORRECT_TYPE(i);
   }
 }
 
+/*------------------------------------------------------------------------------
+  'EVENT' LIST STUFF
+*/
+
+unsigned long EventsCount(struct Instance *i)
+{
+  assert(i!=NULL);
+  AssertMemory(i);
+  switch(i->t) {
+  case BOOLEAN_ATOM_INST:
+    if (BA_INST(i)->events!=NULL) {
+      return gl_length(BA_INST(i)->events);
+    }else{
+      return 0;
+    }
+  case BOOLEAN_CONSTANT_INST:
+    if (BC_INST(i)->events!=NULL) {
+      return gl_length(BC_INST(i)->events);
+    }else{
+      return 0;
+    }
+  case MODEL_INST:
+    if (MOD_INST(i)->events!=NULL) {
+      return gl_length(MOD_INST(i)->events);
+    }else{
+      return 0;
+    }
+  case REL_INST:
+    if (RELN_INST(i)->events!=NULL) {
+      return gl_length(RELN_INST(i)->events);
+    }else{
+      return 0;
+    }
+  case LREL_INST:
+    if (LRELN_INST(i)->events!=NULL) {
+      return gl_length(LRELN_INST(i)->events);
+    }else{
+      return 0;
+    }
+  case EVENT_INST:
+    if (E_INST(i)->events!=NULL) {
+      return gl_length(E_INST(i)->events);
+    }else{
+      return 0;
+    }
+  default:
+    PANIC_INCORRECT_TYPE(i);
+  }
+}
+
+
+struct Instance *EventsForInstance(struct Instance *i,
+			      unsigned long int c)
+{
+  assert((i!=NULL)&&(c>0)&&(c<=EventsCount(i)));
+  AssertMemory(i);
+  switch(i->t) {
+  case BOOLEAN_ATOM_INST:
+    if (BA_INST(i)->events!=NULL)
+      return INST(gl_fetch(BA_INST(i)->events,c));
+    else{
+      ASC_PANIC("c out of bounds in EventsForInstance.\n");
+    }
+  case BOOLEAN_CONSTANT_INST:
+    if (BC_INST(i)->events!=NULL) {
+      return INST(gl_fetch(BC_INST(i)->events,c));
+    }else{
+      ASC_PANIC("c out of bounds in EventsForInstance.\n");
+    }
+  case MODEL_INST:
+    if (MOD_INST(i)->events!=NULL) {
+      return INST(gl_fetch(MOD_INST(i)->events,c));
+    }else{
+      ASC_PANIC("c out of bounds in EventsForInstance.\n");
+    }
+  case REL_INST:
+    if (RELN_INST(i)->events!=NULL) {
+      return INST(gl_fetch(RELN_INST(i)->events,c));
+    }else{
+      ASC_PANIC("c out of bounds in EventsForInstance.\n");
+    }
+  case LREL_INST:
+    if (LRELN_INST(i)->events!=NULL) {
+      return INST(gl_fetch(LRELN_INST(i)->events,c));
+    }else{
+      ASC_PANIC("c out of bounds in EventsForInstance.\n");
+    }
+  case EVENT_INST:
+    if (E_INST(i)->events!=NULL) {
+      return INST(gl_fetch(E_INST(i)->events,c));
+    }else{
+      ASC_PANIC("c out of bounds in EventsForInstance.\n");
+    }
+  default:
+    PANIC_INCORRECT_TYPE(i);
+  }
+  exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
+}
+
+
+void AddEvent(struct Instance *i, struct Instance *event)
+{
+  assert(i&&event&&(event->t==EVENT_INST));
+  AssertMemory(i);
+  switch(i->t){
+  case BOOLEAN_ATOM_INST:
+    if (BA_INST(i)->events==NULL)
+      BA_INST(i)->events = gl_create(AVG_EVENT);
+    if (gl_search(BA_INST(i)->events,
+                 (char *)event,(CmpFunc)CmpEvents)==0)
+      gl_append_ptr(BA_INST(i)->events,(VOIDPTR)event);
+    break;
+  case BOOLEAN_CONSTANT_INST:
+    if (BC_INST(i)->events==NULL)
+      BC_INST(i)->events = gl_create(AVG_EVENT);
+    if (gl_search(BC_INST(i)->events,
+                 (char *)event,(CmpFunc)CmpEvents)==0)
+      gl_append_ptr(BC_INST(i)->events,(VOIDPTR)event);
+    break;
+  case MODEL_INST:
+    if (MOD_INST(i)->events==NULL)
+      MOD_INST(i)->events = gl_create(AVG_EVENT);
+    if (gl_search(MOD_INST(i)->events,
+                 (char *)event,(CmpFunc)CmpEvents)==0)
+      gl_append_ptr(MOD_INST(i)->events,(VOIDPTR)event);
+    break;
+  case REL_INST:
+    if (RELN_INST(i)->events==NULL)
+      RELN_INST(i)->events = gl_create(AVG_EVENT);
+    if (gl_search(RELN_INST(i)->events,
+                 (char *)event,(CmpFunc)CmpEvents)==0)
+      gl_append_ptr(RELN_INST(i)->events,(VOIDPTR)event);
+    break;
+  case LREL_INST:
+    if (LRELN_INST(i)->events==NULL)
+      LRELN_INST(i)->events = gl_create(AVG_EVENT);
+    if (gl_search(LRELN_INST(i)->events,
+                 (char *)event,(CmpFunc)CmpEvents)==0)
+      gl_append_ptr(LRELN_INST(i)->events,(VOIDPTR)event);
+    break;
+  case EVENT_INST:
+    if (E_INST(i)->events==NULL)
+      E_INST(i)->events = gl_create(AVG_EVENT);
+    if (gl_search(E_INST(i)->events,
+                 (char *)event,(CmpFunc)CmpEvents)==0)
+      gl_append_ptr(E_INST(i)->events,(VOIDPTR)event);
+    break;
+  default:
+    PANIC_INCORRECT_TYPE(i);
+  }
+}
+
+void RemoveEvent(struct Instance *i, struct Instance *event)
+{
+  register unsigned long c;
+  assert(i&&event&&(event->t==EVENT_INST));
+  AssertMemory(i);
+  switch(i->t) {
+  case BOOLEAN_ATOM_INST:
+    if (BA_INST(i)->events==NULL) return;
+    c = gl_search(BA_INST(i)->events,
+                 (char *)event,(CmpFunc)CmpEvents);
+    if (c>0) gl_delete(BA_INST(i)->events,c,0);
+    break;
+  case BOOLEAN_CONSTANT_INST:
+    if (BC_INST(i)->events==NULL) return;
+    c = gl_search(BC_INST(i)->events,
+                 (char *)event,(CmpFunc)CmpEvents);
+    if (c>0) gl_delete(BC_INST(i)->events,c,0);
+    break;
+  case MODEL_INST:
+    if (MOD_INST(i)->events==NULL) return;
+    c = gl_search(MOD_INST(i)->events,
+                 (char *)event,(CmpFunc)CmpEvents);
+    if (c>0) gl_delete(MOD_INST(i)->events,c,0);
+    break;
+  case REL_INST:
+    if (RELN_INST(i)->events==NULL) return;
+    c = gl_search(RELN_INST(i)->events,
+                 (char *)event,(CmpFunc)CmpEvents);
+    if (c>0) gl_delete(RELN_INST(i)->events,c,0);
+    break;
+  case LREL_INST:
+    if (LRELN_INST(i)->events==NULL) return;
+    c = gl_search(LRELN_INST(i)->events,
+                 (char *)event,(CmpFunc)CmpEvents);
+    if (c>0) gl_delete(LRELN_INST(i)->events,c,0);
+    break;
+  case EVENT_INST:
+    if (E_INST(i)->events==NULL) return;
+    c = gl_search(E_INST(i)->events,
+                 (char *)event,(CmpFunc)CmpEvents);
+    if (c>0) gl_delete(E_INST(i)->events,c,0);
+    break;
+  default:
+    PANIC_INCORRECT_TYPE(i);
+  }
+}
+
+/*------------------------------------------------------------------------------
+  'DerInfo' STUFF
+*/
+
+unsigned long IderivsCount(CONST struct Instance *i)
+{
+  assert(i!=NULL);
+  AssertMemory(i);
+  switch(i->t) {
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->ideriv!=NULL) {
+      return gl_length(RA_INST(i)->derinf->ideriv);
+    }else{
+      return 0;
+    }
+  default:
+    ASC_PANIC("IderivsCount called with inappropriate argument.");
+
+  }
+}
+
+struct Instance *IderivsForAtom(CONST struct Instance *i,
+			        unsigned long int c)
+{
+  assert((i!=NULL)&&(c>0)&&(c<=IderivsCount(i)));
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->ideriv!=NULL) {
+      return INST(gl_fetch(RA_INST(i)->derinf->ideriv,c));
+    }else{
+      ASC_PANIC("c out of bounds in IderivsForAtom.");
+    }
+    break;
+  default:
+    Asc_Panic(2, NULL,
+              "IderivsForAtom called with inappropriate argument.");
+    break;
+  }
+  exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
+}
+
+/*  Search for a derivative of the same state variable as deriv. If found
+ *  one, merge it with deriv. If not found, append deriv to the list.
+ */
+void AddIderiv(struct Instance *i, struct Instance *deriv){
+  unsigned long c,c1,c2;
+  assert(i);
+  assert(deriv);
+  assert(deriv->t==REAL_ATOM_INST);
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->ideriv==NULL) {
+      RA_INST(i)->derinf->ideriv = gl_create(7L);
+    }
+    if (gl_search(RA_INST(i)->derinf->ideriv,(char*)deriv,(CmpFunc)CmpPtrs)==0){
+      for (c=1;c<=gl_length(RA_INST(i)->derinf->ideriv);c++) {
+        /* If at least one of the state variables is the same for the two derivatives,
+           merge the derivative instances */
+        for (c1=1;c1<=gl_length(RA_INST((struct Instance*)gl_fetch(RA_INST(i)->derinf->ideriv,c))->derinf->state);c1++) {
+          for(c2=1;c2<=gl_length(RA_INST(deriv)->derinf->state);c2++) {
+            if (gl_fetch(RA_INST((struct Instance*)gl_fetch(RA_INST(i)->derinf->ideriv,c))->derinf->state,c1) == gl_fetch(RA_INST(deriv)->derinf->state,c2)) {
+              MergeInstances((struct Instance*)gl_fetch(RA_INST(i)->derinf->ideriv,c),deriv);
+              return;
+            }
+          }
+        }
+      }
+      /* If have not found a derivative of the
+         same variable as deriv, add deriv to list. */
+      gl_append_ptr(RA_INST(i)->derinf->ideriv,(VOIDPTR)deriv);
+    }
+    break;
+  default:
+    PANIC_INCORRECT_TYPE(i);
+  }
+}
+
+unsigned long StatesCount(CONST struct Instance *i)
+{
+  assert(i!=NULL);
+  AssertMemory(i);
+  switch(i->t) {
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->state!=NULL) {
+      return gl_length(RA_INST(i)->derinf->state);
+    }else{
+      return 0;
+    }
+  default:
+    ASC_PANIC("StatesCount called with inappropriate argument.");
+
+  }
+}
+
+unsigned long IndepsCount(CONST struct Instance *i)
+{
+  assert(i!=NULL);
+  AssertMemory(i);
+  switch(i->t) {
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->indep!=NULL) {
+      return gl_length(RA_INST(i)->derinf->indep);
+    }else{
+      return 0;
+    }
+  default:
+    ASC_PANIC("IndepsCount called with inappropriate argument.");
+
+  }
+}
+
+struct Instance *StatesForAtom(CONST struct Instance *i,
+		               unsigned long int c)
+{
+  assert((i!=NULL)&&(c>0)&&(c<=StatesCount(i)));
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->state!=NULL) {
+      return INST(gl_fetch(RA_INST(i)->derinf->state,c));
+    }else{
+      ASC_PANIC("c out of bounds in StatesForAtom.");
+    }
+    break;
+  default:
+    Asc_Panic(2, NULL,
+              "StatesForAtom called with inappropriate argument.");
+    break;
+  }
+  exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
+}
+
+struct Instance *IndepsForAtom(CONST struct Instance *i,
+			       unsigned long int c)
+{
+  assert((i!=NULL)&&(c>0)&&(c<=IndepsCount(i)));
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->indep!=NULL) {
+      return INST(gl_fetch(RA_INST(i)->derinf->indep,c));
+    }else{
+      ASC_PANIC("c out of bounds in IndepsForAtom.");
+    }
+    break;
+  default:
+    Asc_Panic(2, NULL,
+              "IndepsForAtom called with inappropriate argument.");
+    break;
+  }
+  exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
+}
+
+/*  Search for a derivative of the same state variable as deriv. If found
+ *  one, merge it with deriv. If not found, append deriv to the list.
+ */
+void AddStateIndep(struct Instance *i, struct Instance *state, struct Instance *indep){
+  unsigned long c;
+  assert(i);
+  assert(state);
+  assert(state->t==REAL_ATOM_INST);
+  assert(indep);
+  assert(indep->t==REAL_ATOM_INST);
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->state==NULL) {
+      RA_INST(i)->derinf->state = gl_create(7L);
+    }
+    if (RA_INST(i)->derinf->indep==NULL) {
+      RA_INST(i)->derinf->indep = gl_create(7L);
+    }
+  for (c=1;c<=gl_length(RA_INST(i)->derinf->state);c++) {
+    if ((struct Instance*)gl_fetch(RA_INST(i)->derinf->state,c) == state) {
+      if ((struct Instance*)gl_fetch(RA_INST(i)->derinf->indep,c) == indep) return;
+    }
+  }
+    /* If have not found a pair of state and deriv, add state and deriv to lists. */
+    gl_append_ptr(RA_INST(i)->derinf->state,(VOIDPTR)state);
+    gl_append_ptr(RA_INST(i)->derinf->indep,(VOIDPTR)indep);
+    break;
+  default:
+    PANIC_INCORRECT_TYPE(i);
+  }
+}
+
+unsigned long SderivsCount(CONST struct Instance *i)
+{
+  assert(i!=NULL);
+  AssertMemory(i);
+  switch(i->t) {
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->sderiv!=NULL) {
+      return gl_length(RA_INST(i)->derinf->sderiv);
+    }else{
+      return 0;
+    }
+  default:
+    ASC_PANIC("SderivsCount called with inappropriate argument.");
+
+  }
+}
+
+struct Instance *SderivsForAtom(CONST struct Instance *i,
+			        unsigned long int c)
+{
+  assert((i!=NULL)&&(c>0)&&(c<=SderivsCount(i)));
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->sderiv!=NULL) {
+      return INST(gl_fetch(RA_INST(i)->derinf->sderiv,c));
+    }else{
+      ASC_PANIC("c out of bounds in SderivsForAtom.");
+    }
+    break;
+  default:
+    Asc_Panic(2, NULL,
+              "SderivsForAtom called with inappropriate argument.");
+    break;
+  }
+  exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
+}
+
+/*  Search for a derivative of the same state variable as deriv. If found
+ *  one, merge it with deriv. If not found, append deriv to the list.
+ */
+void AddSderiv(struct Instance *i, struct Instance *deriv){
+  unsigned long c,c1,c2;
+  assert(i);
+  assert(deriv);
+  assert(deriv->t==REAL_ATOM_INST);
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->sderiv==NULL) {
+      RA_INST(i)->derinf->sderiv = gl_create(7L);
+    }
+    if (gl_search(RA_INST(i)->derinf->sderiv,(char*)deriv,(CmpFunc)CmpPtrs)==0){
+      for (c=1;c<=gl_length(RA_INST(i)->derinf->sderiv);c++) {
+        /* If at least one of the independent variables is the same for the two derivatives,
+           merge the derivative instances */
+        for (c1=1;c1<=gl_length(RA_INST((struct Instance*)gl_fetch(RA_INST(i)->derinf->sderiv,c))->derinf->indep);c1++) {
+          for(c2=1;c2<=gl_length(RA_INST(deriv)->derinf->indep);c2++) {
+            if (gl_fetch(RA_INST((struct Instance*)gl_fetch(RA_INST(i)->derinf->sderiv,c))->derinf->indep,c1) == gl_fetch(RA_INST(deriv)->derinf->indep,c2)) {
+              MergeInstances((struct Instance*)gl_fetch(RA_INST(i)->derinf->sderiv,c),deriv);
+              return;
+            }
+          }
+        }
+      }
+      /* If have not found a derivative with respect to the
+         same variable as deriv, add deriv to list. */
+      gl_append_ptr(RA_INST(i)->derinf->sderiv,(VOIDPTR)deriv);
+    }
+    break;
+  default:
+    PANIC_INCORRECT_TYPE(i);
+  }
+}
 

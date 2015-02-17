@@ -71,6 +71,7 @@
 #include "instance_types.h"
 #include "cmpfunc.h"
 #include "slvreq.h"
+#include "event.h"
 
 
 static void DeleteIPtr(struct Instance *i){
@@ -117,6 +118,10 @@ static void DeleteIPtr(struct Instance *i){
   case WHEN_INST:
     (*InterfacePtrDelete)(i,W_INST(i)->interface_ptr);
     W_INST(i)->interface_ptr = NULL;
+    break;
+  case EVENT_INST:
+    (*InterfacePtrDelete)(i,E_INST(i)->interface_ptr);
+    E_INST(i)->interface_ptr = NULL;
     break;
   /* constants */
   case INTEGER_CONSTANT_INST:
@@ -298,6 +303,18 @@ void RemoveWhenLinks(struct Instance *i, struct gl_list_t *list)
   gl_destroy(list);
 }
 
+static
+void RemoveEventLinks(struct Instance *i, struct gl_list_t *list)
+{
+  register unsigned long c,length;
+  assert(list!=NULL);
+  length = gl_length(list);
+  for(c=1;c<=length;c++) {
+    ChangeEventPointers(INST(gl_fetch(list,c)),i,INST(NULL));
+  }
+  gl_destroy(list);
+}
+
 static void DestroyAtomChildren(
 	register struct Instance **i, register unsigned long int nc
 ){
@@ -341,6 +358,10 @@ static void DestroyInstanceParts(struct Instance *i){
       RemoveWhenLinks(i,MOD_INST(i)->whens);
       MOD_INST(i)->whens=NULL;
     }
+    if (MOD_INST(i)->events!=NULL) {
+      RemoveEventLinks(i,MOD_INST(i)->events);
+      MOD_INST(i)->events=NULL;
+    }
     DestroyBList(MOD_INST(i)->executed);
     MOD_INST(i)->executed = NULL;
     /* destroy reference to children */
@@ -375,6 +396,10 @@ static void DestroyInstanceParts(struct Instance *i){
     if (BC_INST(i)->whens!=NULL) {
       RemoveWhenLinks(i,BC_INST(i)->whens);
       BC_INST(i)->whens=NULL;
+    }
+    if (BC_INST(i)->events!=NULL) {
+      RemoveEventLinks(i,BC_INST(i)->events);
+      BC_INST(i)->events=NULL;
     }
     i->t = ERROR_INST;
     ascfree((char *)i);
@@ -436,6 +461,10 @@ static void DestroyInstanceParts(struct Instance *i){
     if (BA_INST(i)->whens!=NULL) {
       RemoveWhenLinks(i,BA_INST(i)->whens);
       BA_INST(i)->whens=NULL;
+    }
+    if (BA_INST(i)->events!=NULL) {
+      RemoveEventLinks(i,BA_INST(i)->events);
+      BA_INST(i)->events=NULL;
     }
     i->t = ERROR_INST;
     /* children are automatically deleted by the following */
@@ -510,6 +539,10 @@ static void DestroyInstanceParts(struct Instance *i){
       RemoveWhenLinks(i,RELN_INST(i)->whens);
       RELN_INST(i)->whens=NULL;
     }
+    if (RELN_INST(i)->events!=NULL) {
+      RemoveEventLinks(i,RELN_INST(i)->events);
+      RELN_INST(i)->events=NULL;
+    }
     /* delete references of reals to this expression */
     if(RELN_INST(i)->ptr != NULL){
       //CONSOLE_DEBUG("Destroying links to relation %p",i);
@@ -538,6 +571,10 @@ static void DestroyInstanceParts(struct Instance *i){
       RemoveWhenLinks(i,LRELN_INST(i)->whens);
       LRELN_INST(i)->whens=NULL;
     }
+    if (LRELN_INST(i)->events!=NULL) {
+      RemoveEventLinks(i,LRELN_INST(i)->events);
+      LRELN_INST(i)->events=NULL;
+    }
     if (LRELN_INST(i)->ptr != NULL){
       DestroyLogRelation(LRELN_INST(i)->ptr,i);
       LRELN_INST(i)->ptr = NULL;
@@ -562,6 +599,30 @@ static void DestroyInstanceParts(struct Instance *i){
     if (W_INST(i)->cases!=NULL) {
       DestroyWhenCaseList(W_INST(i)->cases,i);
       W_INST(i)->cases = NULL;
+    }
+    i->t = ERROR_INST;
+    ascfree((char *)i);
+    return;
+  case EVENT_INST:
+    DeleteTypeDesc(E_INST(i)->desc);
+    E_INST(i)->desc = NULL;
+    E_INST(i)->parent[0] = NULL;
+    E_INST(i)->parent[1] = NULL;
+    if (E_INST(i)->whens!=NULL) {
+      RemoveWhenLinks(i,E_INST(i)->whens);
+      E_INST(i)->whens=NULL;
+    }
+    if (E_INST(i)->events!=NULL) {
+      RemoveEventLinks(i,E_INST(i)->events);
+      E_INST(i)->events=NULL;
+    }
+    if (E_INST(i)->bvar!=NULL) {
+      DestroyEventVarList(E_INST(i)->bvar,i);
+      E_INST(i)->bvar = NULL;
+    }
+    if (E_INST(i)->cases!=NULL) {
+      DestroyEventCaseList(E_INST(i)->cases,i);
+      E_INST(i)->cases = NULL;
     }
     i->t = ERROR_INST;
     ascfree((char *)i);

@@ -73,6 +73,7 @@
 #include "tmpnum.h"
 #include "setinstval.h"
 #include "mergeinst.h"
+#include "deriv.h"
 
 //#define MERGE_DEBUG
 
@@ -524,6 +525,12 @@ void MergeParents(struct Instance *i1, struct Instance *i2)
     AddParent(i1,W_INST(i2)->parent[0]);
     W_INST(i2)->parent[0] = NULL;
     break;
+  case EVENT_INST:
+    assert((NumberParents(i1)==1)&&(NumberParents(i2)==1));
+    ChangeParent(E_INST(i2)->parent[0],i2,i1);
+    AddParent(i1,E_INST(i2)->parent[0]);
+    E_INST(i2)->parent[0] = NULL;
+    break;
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
     MergeParentLists(ARY_INST(i1)->parents,ARY_INST(i2)->parents,i2,i1);
@@ -576,6 +583,7 @@ struct Instance *MergeConstants(struct Instance *i1, struct Instance *i2)
     /* no interface pointers, no children */
     MergeParents(i1,i2);
     MergeCliques(i1,i2);
+    if(i2->t==BOOLEAN_CONSTANT_INST) FixEvents(i2,i1);
     if((i2->t==BOOLEAN_CONSTANT_INST)||(i2->t==INTEGER_CONSTANT_INST)||
        (i2->t==SYMBOL_CONSTANT_INST)) {
       FixWhens(i2,i1);
@@ -590,6 +598,7 @@ struct Instance *MergeConstants(struct Instance *i1, struct Instance *i2)
     if (MergeValues(i2,i1)) return NULL; /* check instance values */
     MergeParents(i2,i1);
     MergeCliques(i2,i1);
+    if(i1->t==BOOLEAN_CONSTANT_INST) FixEvents(i1,i2);
     if((i1->t==BOOLEAN_CONSTANT_INST)||
        (i1->t==INTEGER_CONSTANT_INST)||
        (i1->t==SYMBOL_CONSTANT_INST)) {
@@ -628,10 +637,13 @@ struct Instance *MergeAtoms(struct Instance *i1, struct Instance *i2)
     switch (i2->t) {
     case REAL_ATOM_INST:
       FixRelations(RA_INST(i2),RA_INST(i1));
+      FixDerInfo(RA_INST(i2),RA_INST(i1));
+      FixPreInfo(i2,i1);
       break;
     case BOOLEAN_ATOM_INST:
       FixLogRelations(i2,i1);
       FixWhens(i2,i1);
+      FixEvents(i2,i1);
       break;
     case INTEGER_ATOM_INST:
     case SYMBOL_ATOM_INST:
@@ -657,10 +669,13 @@ struct Instance *MergeAtoms(struct Instance *i1, struct Instance *i2)
     switch (i1->t) {
     case REAL_ATOM_INST:
       FixRelations(RA_INST(i1),RA_INST(i2));
+      FixDerInfo(RA_INST(i1),RA_INST(i2));
+      FixPreInfo(i1,i2);
       break;
     case BOOLEAN_ATOM_INST:
       FixLogRelations(i1,i2);
       FixWhens(i1,i2);
+      FixEvents(i1,i2);
       break;
     case INTEGER_ATOM_INST:
     case SYMBOL_ATOM_INST:
@@ -782,6 +797,7 @@ struct Instance *MergeModels(struct ModelInstance *i1,
     }
     FixExternalVars(INST(i1),INST(i2));
     FixWhens(INST(i1),INST(i2));
+    FixEvents(INST(i1),INST(i2));
     MergeModelValues(i1,i2);
     MergeModelChildren(i1,i2);
     MergeParents(INST(i1),INST(i2));
@@ -796,6 +812,7 @@ struct Instance *MergeModels(struct ModelInstance *i1,
     }
     FixExternalVars(INST(i2),INST(i1));
     FixWhens(INST(i2),INST(i1));
+    FixEvents(INST(i2),INST(i1));
     MergeModelValues(i2,i1);
     MergeModelChildren(i2,i1);
     MergeParents(INST(i2),INST(i1));
@@ -849,6 +866,7 @@ struct Instance *MergeRelations(struct RelationInstance *i1,
       MergeParents(INST(i1),INST(i2));
       FixLogRelations(INST(i1),INST(i2));
       FixWhens(INST(i1),INST(i2));
+      FixEvents(INST(i1),INST(i2));
       DestroyInstance(INST(i2),NULL);
       return INST(i1);
     case 2:
@@ -860,6 +878,7 @@ struct Instance *MergeRelations(struct RelationInstance *i1,
       MergeParents(INST(i2),INST(i1));
       FixLogRelations(INST(i2),INST(i1));
       FixWhens(INST(i2),INST(i1));
+      FixEvents(INST(i2),INST(i1));
       DestroyInstance(INST(i1),NULL);
       return INST(i2);
     default:
@@ -892,6 +911,7 @@ struct Instance *MergeLogRelations(struct LogRelInstance *i1,
       MergeParents(INST(i1),INST(i2));
       FixLogRelations(INST(i1),INST(i2));
       FixWhens(INST(i1),INST(i2));
+      FixEvents(INST(i1),INST(i2));
       DestroyInstance(INST(i2),NULL);
       return INST(i1);
     case 2:
@@ -903,6 +923,7 @@ struct Instance *MergeLogRelations(struct LogRelInstance *i1,
       MergeParents(INST(i2),INST(i1));
       FixLogRelations(INST(i2),INST(i1));
       FixWhens(INST(i2),INST(i1));
+      FixEvents(INST(i2),INST(i1));
       DestroyInstance(INST(i1),NULL);
       return INST(i2);
     default:
@@ -949,6 +970,44 @@ struct Instance *MergeWhens(struct WhenInstance *i1,
     }
   } else {
     BadMerge(ASCERR,"Unconformable ARE_THE_SAME of whens!\n",
+             INST(i1),INST(i2),"");
+    DifferentVersionCheck(i1->desc,i2->desc);
+    return NULL;
+  }
+}
+
+static
+struct Instance *MergeEvents(struct EventInstance *i1,
+			     struct EventInstance *i2)
+{
+  if (i1->desc==i2->desc){
+    switch(KeepWhichInstance(i1->desc,i2->desc,INST(i1),INST(i2))){
+    case 1:
+      if (InterfacePtrATS!=NULL) {
+	(*InterfacePtrATS)(INST(i1),INST(i2));
+      }
+      MergeParents(INST(i1),INST(i2));
+      FixWhens(INST(i1),INST(i2));
+      FixEvents(INST(i1),INST(i2));
+      DestroyInstance(INST(i2),NULL);
+      return INST(i1);
+    case 2:
+      if (InterfacePtrATS!=NULL) {
+	(*InterfacePtrATS)(INST(i2),INST(i1));
+      }
+      MergeParents(INST(i2),INST(i1));
+      FixWhens(INST(i2),INST(i1));
+      FixEvents(INST(i2),INST(i1));
+      DestroyInstance(INST(i1),NULL);
+      return INST(i2);
+    default:
+      BadMerge(ASCERR,"Unconformable ARE_THE_SAME of events!\n",
+               INST(i1),INST(i2),"");
+      DifferentVersionCheck(i1->desc,i2->desc);
+      return NULL;
+    }
+  } else {
+    BadMerge(ASCERR,"Unconformable ARE_THE_SAME of events!\n",
              INST(i1),INST(i2),"");
     DifferentVersionCheck(i1->desc,i2->desc);
     return NULL;
@@ -1060,7 +1119,18 @@ void CheckClique(struct Instance *i)
   }
 }
 
-/* basically checks arealikes recursively after merge */
+static
+void CheckDerivs(struct Instance *i)
+{
+  struct TypeDescription *type;
+  type = InstanceTypeDesc(i);
+  if (InstanceKind(i) == REAL_ATOM_INST) {
+    if (IsState(i)) RefineStateType(Sderivs(i),type);
+    if (IsIndep(i)) RefineIndepType(Iderivs(i),type);
+  }
+}
+
+/* basically checks derivatives and arealikes recursively after merge */
 void PostMergeCheck(struct Instance *i)
 {
   /* This can't use VisitInstanceTree because it could be called recursively
@@ -1071,6 +1141,7 @@ void PostMergeCheck(struct Instance *i)
   if (i==NULL) return;
   AssertMemory(i);
   CheckClique(i);
+  CheckDerivs(i);
   if (NotAtom(i)){ /* wrong -- atoms and constants can have cliques. fix me */
     nc = NumberChildren(i);
     for(c=1;c<=nc;c++) {
@@ -1126,6 +1197,9 @@ struct Instance *RecursiveMergeInstance(struct Instance *i1,
       break;
     case WHEN_INST:
       result = MergeWhens(W_INST(i1),W_INST(i2));
+      break;
+    case EVENT_INST:
+      result = MergeEvents(E_INST(i1),E_INST(i2));
       break;
     case ARRAY_INT_INST:
     case ARRAY_ENUM_INST:

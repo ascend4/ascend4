@@ -165,6 +165,7 @@ ASC_DLLSPEC int g_use_copyanon;
 #define BASE_REL_NAME           "relation"
 #define BASE_LOGREL_NAME        "logic_relation"
 #define BASE_WHEN_NAME          "when"
+#define BASE_EVENT_NAME         "event"
 #define BASE_EXT_NAME           "EXTERNAL_MODEL"
 #define BASE_UNSELECTED         "unSELECTed_part"
 /*

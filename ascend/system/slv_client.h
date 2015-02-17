@@ -284,6 +284,7 @@
 #include "rel.h"
 #include "discrete.h"
 #include "conditional.h"
+#include "cond_event.h"
 #include "logrel.h"
 #include "bnd.h"
 #include "slv_common.h"
@@ -527,7 +528,7 @@ ASC_DLLSPEC void slv_bnd_initialization(slv_system_t sys);
 	function provided in bndman.
 */
 
-extern void slv_set_solvers_var_list(slv_system_t sys,
+ASC_DLLSPEC void slv_set_solvers_var_list(slv_system_t sys,
                                      struct var_variable **vlist,
                                      int size);
 /**<
@@ -604,6 +605,13 @@ extern void slv_set_solvers_when_list(slv_system_t sys,
                                       struct w_when **wlist,
                                       int size);
 /**< Sets the system's when list to wlist.
+	@ref solverslists
+*/
+
+extern void slv_set_solvers_event_list(slv_system_t sys,
+                                       struct e_event **elist,
+                                       int size);
+/**< Sets the system's event list to elist.
 	@ref solverslists
 */
 
@@ -695,6 +703,12 @@ extern struct w_when **slv_get_solvers_when_list(slv_system_t sys);
 	@ref solverslists
 */
 
+extern struct e_event **slv_get_solvers_event_list(slv_system_t sys);
+/**<
+	Returns the (NULL-terminated) list of solver events.
+	@ref solverslists
+*/
+
 ASC_DLLSPEC struct bnd_boundary **slv_get_solvers_bnd_list(slv_system_t sys);
 /**<
 	Returns the (NULL-terminated) list of solver boundaries.
@@ -737,13 +751,19 @@ extern struct w_when **slv_get_master_when_list(slv_system_t sys);
 	@ref masterlists
 */
 
+extern struct e_event **slv_get_master_event_list(slv_system_t sys);
+/**<
+	Returns the (NULL-terminated) list of master events.
+	@ref masterlists
+*/
+
 extern struct bnd_boundary **slv_get_master_bnd_list(slv_system_t sys);
 /**<
 	Returns the (NULL-terminated) list of master boundaries.
 	@ref masterlists
 */
 
-extern struct gl_list_t *slv_get_symbol_list(slv_system_t sys);
+ASC_DLLSPEC struct gl_list_t *slv_get_symbol_list(slv_system_t sys);
 /**<
 	Returns the list of SymbolValues struct of a solver system.
 	@ref varlists
@@ -812,6 +832,12 @@ extern int32 slv_get_num_solvers_condlogrels(slv_system_t sys);
 
 extern int32 slv_get_num_solvers_whens(slv_system_t sys);
 /**< Returns the length of the solver whens list.
+	The length does NOT include the terminating NULL.
+	@ref solverslists
+*/
+
+ASC_DLLSPEC int32 slv_get_num_solvers_events(slv_system_t sys);
+/**< Returns the length of the solver events list.
 	The length does NOT include the terminating NULL.
 	@ref solverslists
 */

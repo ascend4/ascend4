@@ -41,15 +41,8 @@
 
 #define BIGNUM 1.0e8
 
-//#define SAFE_DEBUG
-#ifdef SAFE_DEBUG
-# define MSG CONSOLE_DEBUG
-#else
-# define MSG(ARGS...) ((void)0)
-#endif
-
 /*boolean safe_ok = TRUE;*/
-static int safe_print_errors = FALSE;
+static int safe_print_errors = TRUE;
 
 void safe_error_to_stderr(enum safe_err *not_safe){
   if (!safe_print_errors) {
@@ -199,32 +192,36 @@ static double sqrt_rec_1_m_sqr_Dn(double x,int n,enum safe_err *safe)
 }
 
 
-double safe_upower(double x, unsigned n, enum safe_err *safe){
+double safe_upower(double x, unsigned n, enum safe_err *safe)
+{
   double y = 1.0;
   (void)safe;
 
   for( ; n-- > 0 ; y = safe_mul_D0(y,x,safe) );
-  return y;
+  return(y);
 }
 
-double safe_factorial(unsigned n, enum safe_err *safe){
+double safe_factorial(unsigned n, enum safe_err *safe)
+{
    double x,y;
    (void)safe;
 
-   for( x = (double)n , y = 1.0 ; x >= 0.5 ; y = safe_mul_D0(y,x--,safe) );
-   return y;
+   for( x = (double)n , y = 1.0 ; x >= 0.5 ; y = safe_mul_D0(y,x--,safe) )
+      ;
+   return(y);
 }
 
-double safe_rec(double x,enum safe_err *safe){
-   if(x == 0.0) {
+double safe_rec(double x,enum safe_err *safe)
+{
+   if( x == 0.0 ) {
       double bogus = BIGNUM;
-      if(safe_print_errors) {
-         ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Divide by zero in 1/x expr: returning %g",bogus);
+      if( safe_print_errors ) {
+	 ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Divide by zero in 1/x expr: returning %g",bogus);
       }
       *safe = safe_div_by_zero;
       return( bogus );
    }
-   return 1.0/x;
+   return( 1.0/x );
 }
 
 #ifndef INV_CUBRTHUGE

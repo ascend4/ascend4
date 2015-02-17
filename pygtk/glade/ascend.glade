@@ -951,6 +951,23 @@ upper and lower bounds displayed.</property>
                       </object>
                     </child>
                     <child>
+                      <object class="GtkSeparatorMenuItem" id="separator10">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkCheckMenuItem" id="use_der_syntax">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="label" translatable="yes">Use the der() syntax</property>
+                        <property name="use_underline">True</property>
+                        <accelerator key="D" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+                        <signal name="activate" handler="on_use_der_syntax_toggle" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkSeparatorMenuItem" id="separator9">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -2519,6 +2536,11 @@ upper and lower bounds displayed.</property>
     <property name="can_focus">False</property>
     <property name="pixbuf">plot.png</property>
   </object>
+  <object class="GtkImage" id="image12">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">events.png</property>
+  </object>
   <object class="GtkImage" id="image2">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -3552,6 +3574,18 @@ upper and lower bounds displayed.</property>
         <signal name="activate" handler="on_plotmenuitem_activate" swapped="no"/>
       </object>
     </child>
+    <child>
+      <object class="GtkImageMenuItem" id="column_plot_events">
+        <property name="label" translatable="yes">Plot events</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_action_appearance">False</property>
+        <property name="image">image12</property>
+        <property name="use_stock">False</property>
+        <property name="always_show_image">True</property>
+        <signal name="activate" handler="on_column_plot_events" swapped="no"/>
+      </object>
+    </child>
   </object>
   <object class="GtkWindow" id="observerwin">
     <property name="visible">True</property>
@@ -4304,6 +4338,112 @@ upper and lower bounds displayed.</property>
       <action-widget response="-9">cancelbutton3</action-widget>
     </action-widgets>
   </object>
+
+  <object class="GtkDialog" id="colploteventsdialog">
+    <property name="can_focus">False</property>
+    <property name="border_width">5</property>
+    <property name="title" translatable="yes">Plot events</property>
+    <property name="window_position">center-on-parent</property>
+    <property name="type_hint">dialog</property>
+    <signal name="close" handler="on_colploteventsdialog_close" swapped="no"/>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox18">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area18">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="plotbutton">
+                <property name="label" translatable="yes">Plot</property>
+                <property name="visible">True</property>
+                <property name="sensitive">False</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="cancelbutton3">
+                <property name="label">gtk-cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <property name="use_stock">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label85">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Please select the time of the event</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="hbox9">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="spacing">3</property>
+              <child>
+                <object class="GTKScrolledWindow" id="sw1">
+                  <property name="height_request">300</property>
+                  <property name="visible">True</property>
+                  <property name="can_focus">True</property>
+                  <property name="hscrollbar_policy">automatic</property>
+                  <property name="vscrollbar_policy">automatic</property>
+                  <property name="shadow_type">in</property>
+                    <child>
+                      <object class="GtkTreeView" id="treeview1">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <signal name="key-release-event" handler="on_treeview_event" swapped="no"/>
+                        <signal name="button-release-event" handler="on_treeview_event" swapped="no"/>
+                      </object>
+                    </child>
+                </object>
+              </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="-8">plotbutton</action-widget>
+      <action-widget response="-9">cancelbutton3</action-widget>
+    </action-widgets>
+  </object>
+
   <object class="GtkMessageDialog" id="reloaddialog">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -6408,6 +6548,38 @@ upper and lower bounds displayed.</property>
                           </packing>
                         </child>
                         <child>
+                          <object class="GtkButton" id="derinfobutton">
+                            <property name="label" translatable="yes">Der_Info...</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="use_action_appearance">False</property>
+                            <property name="use_underline">True</property>
+                            <signal name="clicked" handler="on_derinfobutton_clicked" swapped="no"/>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="preinfobutton">
+                            <property name="label" translatable="yes">Pre_Info...</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="use_action_appearance">False</property>
+                            <property name="use_underline">True</property>
+                            <signal name="clicked" handler="on_preinfobutton_clicked" swapped="no"/>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">3</property>
+                          </packing>
+                        </child>
+                        <child>
                           <object class="GtkButton" id="morepropsbutton">
                             <property name="label" translatable="yes">_More properties...</property>
                             <property name="visible">True</property>
@@ -6420,7 +6592,7 @@ upper and lower bounds displayed.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
-                            <property name="position">2</property>
+                            <property name="position">4</property>
                           </packing>
                         </child>
                       </object>

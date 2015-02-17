@@ -158,6 +158,16 @@ struct system_structure {
 		int bufnum;
 	} whens;
 
+	/** EVENT..CASE structures for turning on and off relations at boundaries according to dvar values */
+	struct {
+		int snum;			/* length of the solver list */
+		int mnum;			/* length of the master list */
+		struct e_event **solver;
+		struct e_event **master;
+		struct e_event *buf;
+		int bufnum;
+	} events;
+
 	/** real-valued and logical-valued boundaries */
 	struct {
 		int snum;			/* length of the solver list */

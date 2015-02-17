@@ -216,6 +216,51 @@ class VarPropsWin:
 		_dialog = InfoDialog(self.browser,self.window,text,title)
 		_dialog.run()
 
+	def on_derinfobutton_clicked(self,*args):
+		title = "DerInfo of '%s'"%self.browser.sim.getInstanceName(self.instance)
+		text = title + "\n\n"
+		s = self.instance.getStateVars();
+		ind = self.instance.getIndepVars();
+		if s:
+			text += "The instance is a derivative of:\n"
+			for i in xrange(len(s)):
+				text += "%s"%self.browser.sim.getInstanceName(s[i])
+				text += " with respect to %s\n"%self.browser.sim.getInstanceName(ind[i])
+		else:
+			text += "The instance is not a derivative.\n"
+		s = self.instance.getSderivs();
+		if s:
+			text += "The derivatives of the instance are:\n"
+			for i in s:
+				text += "%s\n"%self.browser.sim.getInstanceName(i)
+		else:
+			text += "The instance does not have derivatives.\n"
+		s = self.instance.getIderivs();
+		if s:
+			text += "The derivatives with respect to the instance are:\n"
+			for i in s:
+				text += "%s\n"%self.browser.sim.getInstanceName(i)
+		else:
+			text += "There are no derivatives with respect to the instance.\n"
+		_dialog = InfoDialog(self.browser,self.window,text,title)
+		_dialog.run()
+
+	def on_preinfobutton_clicked(self,*args):
+		title = "PreInfo of '%s'"%self.browser.sim.getInstanceName(self.instance)
+		text = title + "\n\n"
+		if self.instance.isPrearg():
+			text += "The pre() variable of this instance are:\n"
+			text += "%s\n"%self.browser.sim.getInstanceName(self.instance.getPre())
+		else:
+			text += "The instance does not have a pre() variable.\n"
+		if self.instance.isPre():
+			text += "The instance is the pre() variable of:\n"
+			text += "%s\n"%self.browser.sim.getInstanceName(self.instance.getPrearg())
+		else:
+			text += "The instance is not a pre() variable.\n"
+		_dialog = InfoDialog(self.browser,self.window,text,title)
+		_dialog.run()
+
 	def on_aliasesbutton_clicked(self,*args):
 		title = "Aliases of '%s'"%self.browser.sim.getInstanceName(self.instance)
 		text = title + "\n\n"

@@ -158,6 +158,8 @@ ASC_DLLSPEC int system_block_debug(slv_system_t sys, FILE *fp);
 	Create debug output detailing the current block structure of the system.
 */
 
+ASC_DLLSPEC int system_log_block_debug(slv_system_t sys, FILE *fp);
+
 /*------------------------------------------------------------------------------
   PARTITIONING FOR DAE SYSTEMS
 */

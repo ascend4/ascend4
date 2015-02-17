@@ -82,6 +82,18 @@
 /* if ALIGNSTUPID, then 4 byte ptrs must fall on 8 byte boundaries */
 /* any architecture with such a restriction should be summarily torched */
 
+struct DerInfo {
+  struct gl_list_t *sderiv; /**< For state variables: pointers to the derivatives */
+  struct gl_list_t *ideriv; /**< For independent variables: pointers to the derivatives */
+  struct gl_list_t *state; /**< For derivatives: pointers to the state variables */
+  struct gl_list_t *indep; /**< For derivatives: pointers to the independent variables */
+};
+
+struct PreInfo {
+  struct Instance *prearg; /**< For pre variables: pointers to the arguments */
+  struct Instance *pre;    /**< For pre arguments: pointers to the pre variables */
+};
+
 
 /* FUNDAMENTAL INSTANCES */
 
@@ -182,6 +194,8 @@ struct RealAtomInstance {
   struct gl_list_t *relations;  /**< relations where this real appears */
   unsigned int assigned;        /**< the number of times it has been assigned */
   unsigned int depth;           /**< the depth of the last assignment */
+  struct DerInfo *derinf;
+  struct PreInfo *preinf;       /**< information about pre() variables */
   /* An even number of child pointers are packed here, the last of which
    * may not be valid because the number of children may be odd.
    * This extra should be eliminated for LONG pointer machines.
@@ -305,6 +319,7 @@ struct BooleanAtomInstance {
   /* atom value part */
   struct gl_list_t *logrelations; /**< logrelations where this boolean appears */
   struct gl_list_t *whens;      /**< whens where this boolean appears*/
+  struct gl_list_t *events;     /**< list of events on which it appears */
   unsigned assigned;            /**< the number of times it has been assigned */
   unsigned depth;               /**< the depth of the assignment */
   unsigned value;               /**< 0 false, 1 true */
@@ -428,6 +443,7 @@ struct BooleanConstantInstance {
   unsigned int anon_flags;      /**< anonymous field to be manipulated */
   struct gl_list_t *parents;    /**< link to parents */
   struct gl_list_t *whens;      /**< whens where this boolean appears*/
+  struct gl_list_t *events;     /**< list of events on which it appears */
   struct Instance *alike_ptr;   /**< circular linked list of clique members?*/
   struct TypeDescription *desc; /**< description of name, size */
 };
@@ -467,6 +483,7 @@ struct RelationInstance {
                                      type should be down in union RelationUnion*/
   struct relation *ptr;         /**< pointer to an instance relation */
   struct gl_list_t *whens;      /**< link to whens on which the rel appears */
+  struct gl_list_t *events;     /**< list of events on which it appears */
   struct gl_list_t *logrels;    /**< link to satified's on which rel appears */
   /* So child insts start packing on 8byte address after child ptrs, of
    * which there are (currently, 2/97) always an even number.
@@ -502,6 +519,7 @@ struct LogRelInstance {
   unsigned long tmp_num;        /**< used when an instance tree is being copied*/
   struct logrelation *ptr;      /**< pointer to an instance logical relation */
   struct gl_list_t *whens;      /**< link to whens on which the logrel appears */
+  struct gl_list_t *events;     /**< list of events on which it appears */
   struct gl_list_t *logrels;    /**< link to satified's on which lrel appears */
   unsigned int anon_flags;      /**< anonymous field to be manipulated */
   int padding;                  /**< so child insts start packing on 8byte
@@ -540,6 +558,7 @@ struct ModelInstance {
   VOIDPTR interface_ptr;
   struct gl_list_t *parents;  /**< link to parent instances */
   struct gl_list_t *whens;    /**< link to whens on which the model appears */
+  struct gl_list_t *events;     /**< list of events on which it appears */
   struct gl_list_t *link_table; /**< link_table for non-declarative LINKs */
   struct TypeDescription *desc;
   struct Instance *alike_ptr;
@@ -595,6 +614,22 @@ struct WhenInstance {
                                      normally they only have one.  They have
                                      two only during an ARE_THE_SAME */
   struct gl_list_t *whens;      /**< used in case of nested whens */
+  struct gl_list_t *cases;      /**< list of cases */
+  struct gl_list_t *bvar;       /**< list of references to boolean variables  */
+  struct TypeDescription *desc; /**< holds the child list stuff */
+  unsigned long visited;
+  unsigned long tmp_num;        /**< used when an instance tree is being copied*/
+  unsigned int anon_flags;      /**< anonymous field to be manipulated */
+};
+
+struct EventInstance {
+  enum inst_t t;
+  VOIDPTR interface_ptr;
+  struct Instance *parent[2];   /**< relations can have only two parents and
+                                     normally they only have one.  They have
+                                     two only during an ARE_THE_SAME */
+  struct gl_list_t *whens;      /**< link to whens on which the event appears */
+  struct gl_list_t *events;     /**< used in case of nested events */
   struct gl_list_t *cases;      /**< list of cases */
   struct gl_list_t *bvar;       /**< list of references to boolean variables  */
   struct TypeDescription *desc; /**< holds the child list stuff */

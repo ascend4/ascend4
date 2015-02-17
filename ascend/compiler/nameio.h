@@ -59,10 +59,18 @@ extern void WriteName2Str(Asc_DString *dstring, CONST struct Name *n);
  *  and no trailing newline is added.
  */
 
+extern void WriteIdName2Str(Asc_DString *dstring, CONST struct Name *n);
+/**<
+ *  Write identifiers from n to dstring. No leading or trailing spaces are added,
+ *  and no trailing newline is added.
+ */
+
 extern void WriteNameNode2Str(Asc_DString *dstring,CONST struct Name *n);
 /**<
  *  Write just this one name node, and not any of the ones following it.
  */
+
+extern symchar *WritePreName(CONST struct Name *n);
 
 /* @} */
 

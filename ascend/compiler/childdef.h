@@ -72,7 +72,9 @@ extern int BaseType(symchar *name);
 
 extern struct ChildDesc *MakeChildDesc(symchar *name,
                                        struct StatementList *sl,
-                                       ChildListPtr clist);
+                                       ChildListPtr clist,
+				       struct VariableList *lc,
+				       CONST dim_type *dims);
 /**<
  * Returns the child description array based on legal statements in sl.
  */

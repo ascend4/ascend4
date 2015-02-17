@@ -39,10 +39,14 @@
 #include "relman.h"
 #include "slv_server.h"
 #include "analyze.h"
+#include "k12_analyze.h"
 #include "slv_common.h"
+#include "diffvars.h"
 
 #define IPTR(i) ((struct Instance *) (i))
 #define DOTIME 1
+
+int g_use_dersyntax = 0;
 
 slv_system_t system_build(SlvBackendToken inst){
   slv_system_t sys;
@@ -66,7 +70,8 @@ slv_system_t system_build(SlvBackendToken inst){
     sys = NULL;
     return sys;
   }
-  stat = analyze_make_problem(sys,IPTR(inst));
+  if (g_use_dersyntax) stat = k12_analyze_make_problem(sys,IPTR(inst));
+  else stat = analyze_make_problem(sys,IPTR(inst));
   if(stat){
     system_destroy(sys);
     sys = NULL;
@@ -104,13 +109,13 @@ void system_destroy(slv_system_t sys){
 #define FN(FUNCNAME) \
 		l=(void*)FUNCNAME(sys); if(l!=NULL)ASC_FREE(l);
 #define F(N) FN(slv_get_master_##N##_list)
-	F(var); F(par); F(unattached); F(dvar); F(disunatt); F(rel);
-	F(condrel); F(obj); F(logrel); F(condlogrel); F(when); F(bnd);
+	F(var); F(par); F(unattached); F(dvar); F(disunatt); F(rel); F(condrel);
+	F(obj); F(logrel); F(condlogrel); F(when); F(event); F(bnd);
 #undef F
 
 #define F(N) FN(slv_get_solvers_##N##_list)
-	F(var); F(par); F(unattached); F(dvar); F(disunatt); F(rel);
-	F(condrel); F(obj); F(logrel); F(condlogrel); F(when); F(bnd);
+	F(var); F(par); F(unattached); F(dvar); F(disunatt); F(rel); F(condrel);
+	F(obj); F(logrel); F(condlogrel); F(when); F(event); F(bnd);
 #undef F
 #undef FN
 

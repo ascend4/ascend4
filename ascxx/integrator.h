@@ -41,6 +41,7 @@ const int IDA = INTEG_IDA;
 #include "units.h"
 #include "integratorreporter.h"
 #include "variable.h"
+#include "disvar.h"
 
 class Integrator{
 	friend class IntegratorReporterCxx;
@@ -68,6 +69,7 @@ public:
 	void setLogTimesteps(UnitsM units, double start, double end, unsigned long num);
 	std::vector<double> getCurrentObservations();
 	Variable getObservedVariable(const long &i);
+	Disvar getObservedDisvar(const long &i);
 	Variable getIndependentVariable();
 
 	void findIndependentVar(); /**< find the independent variable (must not presume a certain choice of integration engine) */
@@ -83,6 +85,7 @@ public:
 	long getNumSteps();
 	int getNumVars();
 	int getNumObservedVars();
+	int getNumObservedDisvars();
 
 protected:
 	IntegratorSystem *getInternalType();

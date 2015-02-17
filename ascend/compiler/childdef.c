@@ -98,6 +98,48 @@ int BaseType(symchar *name)
   return c;
 }
 
+/* Take the LIKE CHILDREN list and check the dimensions of the children.
+ * If the child is wild dimensioned, set the dimensions to the dimensions
+ * of the atom. Otherwise check if the dimensions of the child and the
+ * atom are equal. Return 0 on success.
+ */
+static
+int SetChildDimens(symchar *name,
+                    CONST struct VariableList *lc,
+		    ChildListPtr clist,
+		    struct ChildDesc *childd,
+		    CONST dim_type *dims)
+{
+  symchar *cname;
+  unsigned long place;
+  struct ChildDesc rec;
+  while (lc!=NULL) {
+    cname = SimpleNameIdPtr(NamePointer(lc));
+    assert(name!=NULL);
+    place = ChildPos(clist,cname);
+    if (!place) {
+      FPRINTF(ASCERR,"Unknown child name '%s' in LIKE CHILDREN in atom definition %s.",SCP(cname),SCP(name));
+      return 1;
+    }
+    rec = GetChildArrayElement(childd,place);
+    if (ChildDescType(rec)!=real_child) {
+        FPRINTF(ASCERR,"Non-real child '%s' in the LIKE CHILDREN list in atom definition %s.",SCP(cname),SCP(name));
+        return 1;
+    }
+    if (IsWild(RealDimensions(rec))) {AssignChildArrayElement(childd,place,
+                           MakeRealDesc(ValueAssigned(rec),RealDefaultValue(rec),dims));
+    }
+    else {
+      if (CmpDimen(RealDimensions(rec),dims)!=0) {
+        FPRINTF(ASCERR,"Dimensions of child '%s' from the LIKE CHILDREN list are not equal to dimensions of the atom in atom definition %s.",SCP(cname),SCP(name));
+        return 1;
+      }
+    }
+    lc = NextVariableNode(lc);
+  }
+  return 0;
+}
+
 static
 void TypeBooleanVarList(CONST struct VariableList *vlist,
 			ChildListPtr clist,
@@ -451,8 +493,8 @@ void MakeStatementPass(struct gl_list_t *l,
         EvaluateAssignment(stat,clist,childd,inited);
 	ClearBit(blist,c);
 	break;
-      default: /* IRT, ATS, AA, FOR, LREL, REL, RUN, IF, WHEN, EXT,
-                 REF, CASGN, COND, FNAME */
+      default: /* IRT, ATS, AA, FOR, LREL, REL, RUN, IF, WHEN, EVENT,
+                 EXT, REF, CASGN, COND, FNAME */
         break;
       }
     }
@@ -498,7 +540,9 @@ static void FillInValues(symchar *name,
 
 struct ChildDesc *MakeChildDesc(symchar *name,
 				struct StatementList *sl,
-				ChildListPtr clist)
+				ChildListPtr clist,
+				struct VariableList *lc,
+				CONST dim_type *dims)
 {
   register unsigned num_children;
   register struct ChildDesc *result;
@@ -506,6 +550,10 @@ struct ChildDesc *MakeChildDesc(symchar *name,
   if (num_children) {
     result = CreateChildDescArray(num_children);
     FillInValues(name,sl,clist,result);
+    if (SetChildDimens(name,lc,clist,result,dims)!=0) {
+      ASC_FREE(result);
+      return NULL;
+    }
   } else {
     result = CreateEmptyChildDescArray();
   }

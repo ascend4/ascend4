@@ -67,6 +67,7 @@ static const struct dis_discrete g_dis_defaults = {
    NULL,		/* sos */
    NULL,		/* source */
    NULL,		/* whens */
+   NULL,		/* events */
    -1,			/* range */
    -1,			/* value */
    -1,			/* pre_value */
@@ -154,6 +155,10 @@ void dis_destroy(struct dis_discrete *dis)
     gl_destroy(dis->whens);
     dis->whens = NULL;
   }
+  if (dis->events != NULL) {
+    gl_destroy(dis->events);
+    dis->events = NULL;
+  }
 }
 
 
@@ -168,6 +173,19 @@ void dis_set_whens_list( struct dis_discrete *dis, struct gl_list_t *wlist)
 {
    assert(dis);
    dis->whens = wlist;
+}
+
+struct gl_list_t *dis_events_list(struct dis_discrete *dis)
+{
+   assert(dis);
+   return( dis->events );
+}
+
+
+void dis_set_events_list( struct dis_discrete *dis, struct gl_list_t *elist)
+{
+   assert(dis);
+   dis->events = elist;
 }
 
 

@@ -208,8 +208,16 @@ public:
 /* Variables and relations belong to solvers, so they're here: */
 
 %include "variable.h"
+%include "disvar.h"
 
 %extend Variable {
+	%pythoncode{
+		def __repr__(self):
+			return self.getName()
+	}
+}
+
+%extend Disvar {
 	%pythoncode{
 		def __repr__(self):
 			return self.getName()
@@ -236,6 +244,7 @@ public:
 }
 
 %template(VariableVector) std::vector<Variable>;
+%template(DisvarVector) std::vector<Disvar>;
 %template(RelationVector) std::vector<Relation>;
 %template(SolverVector) std::vector<Solver>;
 

@@ -52,6 +52,7 @@
 #include "scanner.h"
 /* additional for statement comparisons */
 #include "instance_enum.h"
+#include "event.h"
 #include "cmpfunc.h"
 #include "child.h"
 #include "type_desc.h"
@@ -63,6 +64,10 @@
 
 #ifndef TRUE
 #define TRUE 1
+#endif
+
+#ifndef lint
+static CONST char StatementID[] = "$Id: statement.c,v 1.32 1998/04/21 23:49:48 ballan Exp $";
 #endif
 
 static
@@ -99,6 +104,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
   struct WhenList *w;
   struct SelectList *sel;
   struct SwitchList *sw;
+  struct EventList *e;
 
   if (StatementListLength(slist)==0) {
     return;
@@ -136,6 +142,18 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case RUN:
     case FNAME:
     case FLOW:
+      break;
+    case ISDER:
+      sublist = (struct StatementList *)GetStatSlist(s);
+      if (sublist!=NULL) {
+        AddContext(sublist,con);
+      }  
+      break;
+    case ISPRE:
+      sublist = (struct StatementList *)GetPreSlist(s);
+      if (sublist!=NULL) {
+        AddContext(sublist,con);
+      }  
       break;
     case FOR:
       sublist = ForStatStmts(s);
@@ -178,6 +196,16 @@ void AddContext(struct StatementList *slist, unsigned int con)
           AddContext(sublist,con);
         }
         w = NextWhenCase(w);
+      }
+      break;
+    case EVENT:
+      e = EventStatCases(s);
+      while (e!=NULL) {
+        sublist = EventStatementList(e);
+        if (sublist!=NULL) {
+          AddContext(sublist,con);
+        }
+        e = NextEventCase(e);
       }
       break;
     case SELECT:
@@ -234,7 +262,8 @@ struct Statement *CreateARR(struct VariableList *avlname,
 struct Statement *CreateISA(struct VariableList *vl,
 			    symchar *t,
                             struct Set *ta,
-			    symchar *st)
+			    symchar *st,
+			    int isatype)
 {
   struct Statement *result;
   result=create_statement_here(ISA);
@@ -243,6 +272,29 @@ struct Statement *CreateISA(struct VariableList *vl,
   result->v.i.typeargs = ta;
   result->v.i.settype = st;
   result->v.i.checkvalue = NULL;
+  result->v.i.isatype = isatype;
+  return result;
+}
+
+struct Statement *CreateISDER(struct StatementList *isa,
+                            struct VariableList *vl,
+                            struct Name *n)
+{
+  struct Statement *result;
+  result=create_statement_here(ISDER);
+  result->v.ider.isa = isa;
+  result->v.ider.vl = vl;
+  result->v.ider.ind = n;
+  return result;
+}
+
+struct Statement *CreateISPRE(struct StatementList *isa,
+                              struct VariableList *vl)
+{
+  struct Statement *result;
+  result=create_statement_here(ISPRE);
+  result->v.ispre.isa = isa;
+  result->v.ispre.vl = vl;
   return result;
 }
 
@@ -426,6 +478,12 @@ unsigned int SlistHasWhat(struct StatementList *slist)
     case ISA:
       what |= contains_ISA;
       break;
+    case ISDER:
+      what |= contains_ISDER;
+      break;
+    case ISPRE:
+      what |= contains_ISPRE;
+      break;
     case WILLBE:
       what |= contains_WILLBE;
       break;
@@ -467,6 +525,9 @@ unsigned int SlistHasWhat(struct StatementList *slist)
       break;
     case WHEN:
       what |= contains_WHEN;
+      break;
+    case EVENT:
+      what |= contains_EVENT;
       break;
     case SELECT:
       what |= contains_SELECT;
@@ -714,6 +775,23 @@ struct Statement *CreateWHEN(struct Name *wname, struct VariableList *vlist,
   return result;
 }
 
+struct Statement *CreateEVENT(struct Name *ename, struct VariableList *cond,
+                              struct EventList *el)
+{
+  struct StatementList *sl;
+  register struct Statement *result;
+  result=create_statement_here(EVENT);
+  result->v.ev.nptr = ename;
+  result->v.ev.cond = cond;
+  result->v.ev.el = el;
+  while (el!= NULL) {
+    sl = EventStatementList(el);
+    AddContext(sl,context_EVENT);
+    el = NextEventCase(el);
+  }
+  return result;
+}
+
 struct Statement *CreateFNAME(struct Name *name)
 {
   register struct Statement *result;
@@ -894,6 +972,22 @@ void DestroyStatement(struct Statement *s)
           s->v.i.typeargs = NULL;
         }
         break;
+      case ISDER:
+        DestroyStatementList(s->v.ider.isa);
+        s->v.ider.isa = NULL;
+        DestroyVariableList(s->v.ider.vl);
+        s->v.ider.vl = NULL;
+        if (s->v.ider.ind != NULL) {
+          DestroyName(s->v.ider.ind);
+          s->v.ider.ind = NULL;
+        }
+        break;
+      case ISPRE:
+        DestroyStatementList(s->v.ispre.isa);
+        s->v.ispre.isa = NULL;
+        DestroyVariableList(s->v.ispre.vl);
+        s->v.ider.vl = NULL;
+        break;
       case LNK:
       case UNLNK:
         DestroyVariableList(s->v.lnk.vl);
@@ -1015,6 +1109,14 @@ void DestroyStatement(struct Statement *s)
         DestroyVariableList(s->v.w.vl);
         s->v.w.vl = NULL;
         break;
+      case EVENT:
+        DestroyName(s->v.ev.nptr);
+        s->v.ev.nptr = NULL;
+        DestroyVariableList(s->v.ev.cond);
+        s->v.ev.cond = NULL;
+        DestroyEventList(s->v.ev.el);
+        s->v.ev.el = NULL;
+        break;
       case FNAME:
         DestroyName(s->v.n.wname);
         s->v.n.wname = NULL;
@@ -1099,6 +1201,15 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.i.vl = CopyVariableList(s->v.i.vl);
     result->v.i.checkvalue =  CopyExprList(s->v.i.checkvalue);
     /* is this complete for IS_A with args to type? */
+    break;
+  case ISDER:
+    result->v.ider.isa = CopyStatementList(s->v.ider.isa);
+    result->v.ider.vl = CopyVariableList(s->v.ider.vl);
+    result->v.ider.ind = CopyName(s->v.ider.ind);
+    break;
+  case ISPRE:
+    result->v.ispre.isa = CopyStatementList(s->v.ispre.isa);
+    result->v.ispre.vl = CopyVariableList(s->v.ispre.vl);
     break;
   case UNLNK:
   case LNK:
@@ -1200,6 +1311,11 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.w.vl = CopyVariableList(s->v.w.vl);
     result->v.w.cases = CopyWhenList(s->v.w.cases);
     break;
+  case EVENT:
+    result->v.ev.nptr = CopyName(s->v.ev.nptr);
+    result->v.ev.cond = CopyVariableList(s->v.ev.cond);
+    result->v.ev.el = CopyEventList(s->v.ev.el);
+    break;
   case FNAME:
     result->v.n.wname = CopyName(s->v.n.wname);
     break;
@@ -1238,6 +1354,8 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case ALIASES:
   case ARR:
   case ISA:
+  case ISDER:
+  case ISPRE:
   case WILLBE:
   case IRT:
   case AA:
@@ -1263,6 +1381,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case ASSERT:
   case IF:
   case WHEN:
+  case EVENT:
   case FNAME:
   case SELECT:
   case SWITCH:
@@ -1283,6 +1402,8 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case ALIASES:
   case ARR:
   case ISA:
+  case ISDER:
+  case ISPRE:
   case WILLBE:
   case IRT:
   case AA:
@@ -1308,6 +1429,7 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case ASSERT:
   case IF:
   case WHEN:
+  case EVENT:
   case FNAME:
   case SELECT:
   case SWITCH:
@@ -1330,6 +1452,8 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case ALIASES:
   case ARR:
   case ISA:
+  case ISDER:
+  case ISPRE:
   case WILLBE:
   case IRT:
   case AA:
@@ -1355,6 +1479,7 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case ASSERT:
   case IF:
   case WHEN:
+  case EVENT:
   case FNAME:
   case SELECT:
   case SWITCH:
@@ -1375,6 +1500,8 @@ struct VariableList *GetStatVarList(CONST struct Statement *s)
   assert(s!=NULL);
   assert(s->ref_count);
   assert(	(s->t==ISA) ||
+                (s->t==ISDER) ||
+                (s->t==ISPRE) ||
 		(s->t==WILLBE) ||
 		(s->t==IRT) ||
 		(s->t==AA)  ||
@@ -1391,6 +1518,10 @@ struct VariableList *GetStatVarList(CONST struct Statement *s)
   case WILLBE:
   case IRT:
     return (s)->v.i.vl;
+  case ISDER:
+    return (s)->v.ider.vl;
+  case ISPRE:
+    return (s)->v.ispre.vl;
   case LNK:
   case UNLNK:
     return (s)->v.lnk.vl;
@@ -1450,6 +1581,48 @@ CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s)
   assert(s->ref_count);
   assert(s->t==WILLBE);
   return s->v.i.checkvalue;
+}
+
+int IsaDerivF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==ISA);
+  if (s->v.i.isatype == 1) return 1;
+  return 0;
+}
+
+int IsaPreF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==ISA);
+  if (s->v.i.isatype == 2) return 1;
+  return 0;
+}
+
+CONST struct StatementList *GetStatSlistF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==ISDER);
+  return s->v.ider.isa;
+}
+
+CONST struct StatementList *GetPreSlistF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==ISPRE);
+  return s->v.ispre.isa;
+}
+
+CONST struct Name *GetStatIndVarF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==ISDER);
+  return s->v.ider.ind;
 }
 
 symchar *LINKStatKeyF(CONST struct Statement *s)
@@ -1596,11 +1769,32 @@ unsigned ForContainsWhenF(CONST struct Statement *s)
   return (s->v.f.contains & contains_WHEN);
 }
 
+unsigned ForContainsEventF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==FOR);
+  return (s->v.f.contains & contains_EVENT);
+}
+
 unsigned ForContainsIsaF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->t==FOR);
   return (s->v.f.contains & contains_ISA);
+}
+
+unsigned ForContainsIsderF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==FOR);
+  return (s->v.f.contains & contains_ISDER);
+}
+
+unsigned ForContainsIspreF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==FOR);
+  return (s->v.f.contains & contains_ISPRE);
 }
 
 unsigned ForContainsIrtF(CONST struct Statement *s)
@@ -1946,6 +2140,33 @@ struct WhenList *WhenStatCasesF(CONST struct Statement *s)
   return s->v.w.cases;
 }
 
+struct Name *EventStatNameF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==EVENT);
+  return s->v.ev.nptr;
+}
+
+struct VariableList *EventStatCondF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==EVENT);
+  return s->v.ev.cond;
+}
+
+struct EventList *EventStatCasesF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==EVENT);
+  return s->v.ev.el;
+}
+
+void SetEventName(struct Statement *s, struct Name *n)
+{
+  assert(s && (s->t==EVENT) && (s->v.ev.nptr==NULL));
+  s->v.ev.nptr = n;
+}
+
 
 /*
  * Compare functions for WHEN statements. It includes the
@@ -2160,11 +2381,32 @@ unsigned SelectContainsWhenF(CONST struct Statement *s)
   return (s->v.se.contains & contains_WHEN);
 }
 
+unsigned SelectContainsEventF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==SELECT);
+  return (s->v.se.contains & contains_EVENT);
+}
+
 unsigned SelectContainsIsaF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->t==SELECT);
   return (s->v.se.contains & contains_ISA);
+}
+
+unsigned SelectContainsIsderF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==SELECT);
+  return (s->v.se.contains & contains_ISDER);
+}
+
+unsigned SelectContainsIspreF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==SELECT);
+  return (s->v.se.contains & contains_ISPRE);
 }
 
 unsigned SelectContainsIrtF(CONST struct Statement *s)
@@ -2322,6 +2564,48 @@ int CompareSwitchStatements(CONST struct Statement *s1,
   return 0;
 }
 
+int CompareEventStatements(CONST struct Statement *s1,
+			   CONST struct Statement *s2)
+{
+  int ctmp; /* temporary comparison result */
+  unsigned long int ltmp;
+  struct VariableList *vl1, *vl2;
+  struct EventList *cases1,*cases2;
+  struct Set *val1, *val2;
+  struct StatementList *sl1, *sl2;
+
+  vl1 = EventStatCond(s1);
+  vl2 = EventStatCond(s2);
+
+  ctmp = CompareVariableLists(vl1,vl2);
+  if (ctmp != 0) {
+    return ctmp;
+  }
+
+  cases1 = EventStatCases(s1);
+  cases2 = EventStatCases(s2);
+
+  while ( (cases1!=NULL) && (cases2!=NULL) ) {
+    val1 = EventSetList(cases1);
+    val2 = EventSetList(cases2);
+
+    ctmp = CompareSetStructures(val1,val2);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+
+    sl1 = EventStatementList(cases1);
+    sl2 = EventStatementList(cases2);
+    ctmp = CompareStatementLists(sl1,sl2,&ltmp);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    cases1 = NextEventCase(cases1);
+    cases2 = NextEventCase(cases2);
+  }
+  return 0;
+}
+
 
 /*********************************************************************\
 CompareStatements(s1,s2);
@@ -2417,9 +2701,34 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     return CompareExprs(GetStatCheckValue(s1),GetStatCheckValue(s2));
+  case ISDER:
+    ctmp = CompareStatementLists(GetStatSlist(s1),GetStatSlist(s2),&ltmp);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (GetStatIndVar(s1) != NULL || GetStatIndVar(s2) != NULL) {
+      if (GetStatIndVar(s1) == NULL) { return -1; }
+      if (GetStatIndVar(s2) == NULL) { return 1; }
+      ctmp = CompareNames(GetStatIndVar(s1),GetStatIndVar(s2));
+      if (ctmp != 0) {
+        return ctmp;
+      }
+    }
+    return CompareVariableLists(GetStatVarList(s1),GetStatVarList(s2));
+  case ISPRE:
+    ctmp = CompareStatementLists(GetPreSlist(s1),GetPreSlist(s2),&ltmp);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    return CompareVariableLists(GetStatVarList(s1),GetStatVarList(s2));
   case LNK: /* fallthru */ /* FIXME check this? */
   case UNLNK: /* fallthru */
+    ctmp = CmpSymchar(LINKStatKey(s1),LINKStatKey(s2));
+    if (ctmp !=0) {
+      return ctmp;
+    }
     CONSOLE_DEBUG("CHECK HERE! don't we also need to check the TYPE of link?");
+    /* fallthru */
   case ATS: /* fallthru */
   case WBTS: /* fallthru */
   case WNBTS: /* fallthru */
@@ -2510,6 +2819,15 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     return CompareWhenStatements(s1,s2);
+  case EVENT:
+    ctmp = CompareNames(EventStatName(s1),EventStatName(s2));
+    if (ctmp!=0 &&
+        /* we need to skip this for system generated names */
+        !NameAuto(EventStatName(s1)) &&
+        !NameAuto(EventStatName(s2))) {
+      return ctmp;
+    }
+    return CompareEventStatements(s1,s2);
   case FNAME:
     return CompareNames(FnameStat(s1),FnameStat(s2));
   case SELECT:
@@ -2694,6 +3012,10 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     return CompareISLists(ForStatStmts(s1),ForStatStmts(s2),&ltmp);
+  case ISDER:
+    return CompareISLists(GetStatSlist(s1),GetStatSlist(s2),&ltmp);
+  case ISPRE:
+    return CompareISLists(GetPreSlist(s1),GetPreSlist(s2),&ltmp);
   case LOGREL:
   case REL:
     return CompareStatements(s1,s2);
@@ -2710,6 +3032,7 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
   case ASSERT:
   case IF:
   case WHEN:
+  case EVENT:
   case FNAME:
   case SELECT:
   case SWITCH:

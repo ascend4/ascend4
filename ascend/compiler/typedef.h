@@ -131,6 +131,7 @@ extern struct TypeDescription
                    CONST dim_type *dim_thing,      /* default dimensions */
                    long ival,                /* default int/bool */
                    symchar *sval,            /* default sym*/
+		   struct VariableList *lc, /* children with the same dimensions */
                    unsigned int err);
 /**<
  *  Creates an atom type definition.
@@ -156,7 +157,26 @@ extern struct TypeDescription
  *  @param dim        Dimensions of default value.
  *  @param ival       Default integer or boolean.
  *  @param sval       Default symbol.
+ *  @param lc         List of children which have the same dimensions as the atom has.
  *  @param err        If !=0 --> abandon input.
+ *  @return A pointer to the new TypeDescription structure.
+ */
+
+extern struct TypeDescription
+*CreateDerivAtomTypeDef(symchar *name,
+        		CONST struct TypeDescription *vartype,
+                        CONST struct TypeDescription *indtype,
+        		struct module_t *mod);
+
+/**<
+ *  Creates a derivative atom type definition.
+ *  It is assumed that the base types of vartype and indtype are real.
+ *  ival,sval are ignored.
+ *
+ *  @param name       Name of the type.
+ *  @param vartype    Type Description of the state variable.
+ *  @param indtype    Type Description of the independent variable.
+ *  @param mod        Module where the type is defined.
  *  @return A pointer to the new TypeDescription structure.
  */
 
@@ -212,6 +232,14 @@ extern struct TypeDescription
  *  @param pl         The list of initialization procedures OR NULL.
  *  @param err        If !=0 abandon input.
  *  @return A pointer to the new TypeDescription structure.
+ */
+
+extern
+CONST struct TypeDescription *GenerateType(CONST struct TypeDescription *type1,
+                                           CONST struct TypeDescription *type2);
+/**< 
+ *   Generates a type description for a derivative based on the types of 
+ *   its arguments.
  */
 
 ASC_DLLSPEC void DefineFundamentalTypes(void);

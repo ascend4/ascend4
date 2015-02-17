@@ -165,6 +165,8 @@ void SetNextCliqueMember(struct Instance *i, struct Instance *next){
               "Logical Relations can only be ALIKE with themselves.");
   case WHEN_INST:
     ASC_PANIC("WHEN's can only be ALIKE with themselves.");
+  case EVENT_INST:
+    ASC_PANIC("EVENT's can only be ALIKE with themselves.");
   case SIM_INST:
     ASC_PANIC("Simulations can only be ALIKE with themselves.");
   case ARRAY_INT_INST:
@@ -216,6 +218,7 @@ struct Instance *NextCliqueMember(CONST struct Instance *i){
   case REL_INST:
   case LREL_INST:
   case WHEN_INST:
+  case EVENT_INST:
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
   /* fundies */
@@ -252,6 +255,7 @@ VOIDPTR GetInterfacePtr(CONST struct Instance *i){
   case REL_INST: return RELN_INST(i)->interface_ptr;
   case LREL_INST: return LRELN_INST(i)->interface_ptr;
   case WHEN_INST: return W_INST(i)->interface_ptr;
+  case EVENT_INST: return E_INST(i)->interface_ptr;
   case SIM_INST: return SIM_INST(i)->interface_ptr;
   /* constants */
   case INTEGER_CONSTANT_INST: 	/* fall through */
@@ -309,6 +313,9 @@ void SetInterfacePtr(struct Instance *i, VOIDPTR c){
   case WHEN_INST:
     W_INST(i)->interface_ptr=c;
     break;
+  case EVENT_INST:
+    E_INST(i)->interface_ptr=c;
+    break;
   case SIM_INST:
     SIM_INST(i)->interface_ptr=c;
     break;
@@ -352,6 +359,8 @@ unsigned int GetAnonFlags(CONST struct Instance *i){
     return LRELN_INST(i)->anon_flags;
   case WHEN_INST:
     return W_INST(i)->anon_flags;
+  case EVENT_INST:
+    return E_INST(i)->anon_flags;
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
     return ARY_INST(i)->anon_flags;
@@ -400,6 +409,9 @@ void SetAnonFlags(struct Instance *i,unsigned int flags){
     break;
   case WHEN_INST:
     W_INST(i)->anon_flags = flags;
+    break;
+  case EVENT_INST:
+    E_INST(i)->anon_flags = flags;
     break;
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
@@ -505,6 +517,7 @@ unsigned long InstanceSize(CONST struct Instance *i){
     len += sizeof(struct ModelInstance);
     len += BitListBytes(MOD_INST(i)->executed);
     len += gl_capacity(MOD_INST(i)->whens) * sizeof(void *);
+    len += gl_capacity(MOD_INST(i)->events) * sizeof(void *);
     len += gl_capacity(MOD_INST(i)->parents)*sizeof(void *);
     len += ChildListLen(GetChildList(MOD_INST(i)->desc))*
            sizeof(struct Instance *);
@@ -517,6 +530,7 @@ unsigned long InstanceSize(CONST struct Instance *i){
     len += 2*sizeof(struct gl_list_t);
     len += gl_capacity(BC_INST(i)->parents) * sizeof(void *);
     len += gl_capacity(BC_INST(i)->whens) * sizeof(void *);
+    len += gl_capacity(BC_INST(i)->events) * sizeof(void *);
     return len;
   case INTEGER_CONSTANT_INST:
     len += 2*sizeof(struct gl_list_t);
@@ -538,6 +552,7 @@ unsigned long InstanceSize(CONST struct Instance *i){
     len += 3 * sizeof(struct gl_list_t);
     len += gl_capacity(BA_INST(i)->logrelations) * sizeof(void *);
     len += gl_capacity(BA_INST(i)->whens) * sizeof(void *);
+    len += gl_capacity(BA_INST(i)->events) * sizeof(void *);
     len += GetByteSize(InstanceTypeDesc(i));
     len += gl_capacity(((struct CommonAtomInstance *)(i))->parents)
            * sizeof(void *);
@@ -565,12 +580,14 @@ unsigned long InstanceSize(CONST struct Instance *i){
   case REL_INST:
     len += 2*sizeof(struct gl_list_t);
     len += gl_capacity(RELN_INST(i)->whens) * sizeof(void *);
+    len += gl_capacity(RELN_INST(i)->events) * sizeof(void *);
     len += gl_capacity(RELN_INST(i)->logrels) * sizeof(void *);
     len += GetByteSize(InstanceTypeDesc(i));
     return len;
   case LREL_INST:
     len += 2*sizeof(struct gl_list_t);
     len += gl_capacity(LRELN_INST(i)->whens) * sizeof(void *);
+    len += gl_capacity(LRELN_INST(i)->events) * sizeof(void *);
     len += gl_capacity(LRELN_INST(i)->logrels) * sizeof(void *);
     len += GetByteSize(InstanceTypeDesc(i));
     return len;
@@ -579,6 +596,14 @@ unsigned long InstanceSize(CONST struct Instance *i){
     len += gl_capacity(W_INST(i)->bvar) * sizeof(void *);
     len += gl_capacity(W_INST(i)->cases) * sizeof(void *);
     len += gl_capacity(W_INST(i)->whens) * sizeof(void *);
+    len += GetByteSize(InstanceTypeDesc(i));
+    return len;
+  case EVENT_INST:
+    len += 3*sizeof(struct gl_list_t);
+    len += gl_capacity(E_INST(i)->bvar) * sizeof(void *);
+    len += gl_capacity(E_INST(i)->cases) * sizeof(void *);
+    len += gl_capacity(E_INST(i)->whens) * sizeof(void *);
+    len += gl_capacity(E_INST(i)->events) * sizeof(void *);
     len += GetByteSize(InstanceTypeDesc(i));
     return len;
   case ARRAY_INT_INST:
@@ -645,6 +670,8 @@ struct TypeDescription *InstanceTypeDesc(CONST struct Instance *i){
     return LRELN_INST(i)->desc;
   case WHEN_INST:
     return W_INST(i)->desc;
+  case EVENT_INST:
+    return E_INST(i)->desc;
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
     return ARY_INST(i)->desc;
@@ -701,6 +728,8 @@ symchar *InstanceType(register CONST struct Instance *i){
     return GetName(FindLogRelType());
   case WHEN_INST:
     return GetName(FindWhenType());
+  case EVENT_INST:
+    return GetName(FindEventType());
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:			/* the following addsymbol calls suck */
     return AddSymbol("");
@@ -734,6 +763,7 @@ struct BitList *InstanceBitList(CONST struct Instance *i){
   case REL_INST:
   case LREL_INST:
   case WHEN_INST:
+  case EVENT_INST:
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
   case REAL_CONSTANT_INST:

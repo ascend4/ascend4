@@ -69,7 +69,8 @@ DEFINITION logic_relation
 END logic_relation;
 
 ATOM solver_var REFINES real
-	DEFAULT 0.5 {?};
+	DEFAULT 0.5 {?}
+    LIKE CHILDREN lower_bound, upper_bound, nominal;
 
     lower_bound	IS_A real;
     upper_bound IS_A real;

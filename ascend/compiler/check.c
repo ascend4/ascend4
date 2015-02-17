@@ -106,6 +106,7 @@ int CheckInstanceType(FILE *f, CONST struct Instance *i,
   case LREL_INST:
   case REL_INST:
   case WHEN_INST:
+  case EVENT_INST:
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
 
@@ -259,6 +260,8 @@ int SuppressNullInstance(CONST struct TypeDescription *d)
     return SUP(LOGREL);
   case when_type:
     return SUP(WHEN);
+  case event_type:
+    return SUP(EVENT);
   case set_type:
   case real_type:
   case integer_type:
@@ -437,7 +440,10 @@ void CheckInstanceLevel(FILE *f, CONST struct Instance *i,int pass)
   InitConsLists();
   g_suppressions = GetStatioSuppressions();
   if (pass<5) g_suppressions[ASGN]=1;
-  if (pass<4) g_suppressions[WHEN]=1;
+  if (pass<4) {
+    g_suppressions[WHEN]=1;
+    g_suppressions[EVENT]=1;
+  }
   if (pass<3) g_suppressions[LOGREL]=1;
   if (pass<2) g_suppressions[REL]=1;
   RecursiveCheckInstance(f,i,NULL,pass);
@@ -864,6 +870,7 @@ void AccStatistics(CONST struct Instance *i)
     g_num_unsel_instances++;
     break;
   case WHEN_INST:
+  case EVENT_INST:
   case LREL_INST:
     /* vicente we should be collecting info here */
     break;

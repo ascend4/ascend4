@@ -36,6 +36,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.label.set_text("Solving with "+self.getIntegrator().getName())
 		self.progress=self.browser.builder.get_object("integratorprogress")
 		self.data = None
+		self.eventdata = None
 
 		self.cancelrequested=False
 		
@@ -72,6 +73,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 	def initOutput(self):
 		# empty out the data table
 		self.data=[]
+		self.eventdata=[]
 		self.nsteps = self.getIntegrator().getNumSteps()
 		self.progress.set_text("Starting...")
 		self.progress.set_fraction(0.0)
@@ -89,7 +91,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			INTEGRATOR_NUM = INTEGRATOR_NUM + 1
 			_name = "Integrator %d" % INTEGRATOR_NUM
 			self.browser.builder.add_objects_from_file(self.browser.glade_file,
-				["observervbox","observercontext"] + ["image%d"%n for n in range(7,12)]
+				["observervbox","observercontext"] + ["image%d"%n for n in range(7,13)]
 			)
 			_vbox = self.browser.builder.get_object("observervbox")
 			toolbar_list = _vbox.get_children()
@@ -104,9 +106,27 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			self.browser.tabs[_tab]=_obs
 			
 			# add the columns
-			_obs.add_instance(integrator.getIndependentVariable().getInstance())
-			for _v in [integrator.getObservedVariable(_i) for _i in range(0,integrator.getNumObservedVars())]:
-				_obs.add_instance(_v.getInstance())
+			edata = []
+			if self.eventdata:
+				for _vals in self.eventdata:
+					edata.append([_vals[0],_vals[0]])
+				
+			_obs.add_instance(integrator.getIndependentVariable().getInstance(),edata)
+			for _i in range(0,integrator.getNumObservedVars()):
+				_v = integrator.getObservedVariable(_i)
+				edata = []
+				if self.eventdata:
+					for _t, _vals in self.eventdata:
+						edata.append([_t]+[_vals[_i]])
+				_obs.add_instance(_v.getInstance(),edata)
+
+			for _i in range(0,integrator.getNumObservedDisvars()):
+				_v = integrator.getObservedDisvar(_i) 
+				edata = []
+				if self.eventdata:
+					for _t, _vals in self.eventdata:
+						edata.append([_t]+[_vals[integrator.getNumObservedDisvars()+_i]])
+				_obs.add_instance(_v.getInstance(),edata)
 
 			for _time,_vals in self.data:
 				_obs.do_add_row([_time]+[_v for _v in _vals])
@@ -149,6 +169,16 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			self.data.append((i.getCurrentTime(),i.getCurrentObservations()))
 		except Exception,e:
 			print "\n\nERROR IN RECORDOBSERVEDVALUES!",str(e)
+			return 0
+		return 1
+
+	def recordEvent(self):
+		try:
+			i = self.getIntegrator()
+			print str(i.getCurrentObservations())
+			self.eventdata.append((i.getCurrentTime(),i.getCurrentObservations()))
+		except Exception,e:
+			print "\n\nERROR IN RECORDEVENT!",str(e)
 			return 0
 		return 1
 
@@ -208,6 +238,17 @@ class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 			return 0
 		return 1
 
+	def recordEvent(self):
+		try:
+			I = self.getIntegrator()
+			obs = I.getCurrentObservations()
+			self.filep.write("%f\t" % I.getCurrentTime())
+			self.filep.write("\t".join([str(i) for i in obs])+"\n")
+		except Exception,e:
+			print "ERROR %s" % str(e)
+			return 0
+		return 1
+
 class IntegratorReporterPlot(ascpy.IntegratorReporterCxx):
 	"""Plotting integrator reporter"""
 	def __init__(self,integrator):
@@ -258,6 +299,17 @@ class IntegratorReporterPlot(ascpy.IntegratorReporterCxx):
 			print "ERROR %s" % str(e)
 
 	def recordObservedValues(self):
+		try:
+			I = self.getIntegrator()
+			obs = I.getCurrentObservations()
+			self.x.append(I.getCurrentTime())
+			self.y.append(obs[0])
+		except Exception,e:
+			print "ERROR %s" % str(e)
+			return 0
+		return 1
+
+	def recordEvent(self):
 		try:
 			I = self.getIntegrator()
 			obs = I.getCurrentObservations()

@@ -52,27 +52,27 @@
 #endif
 
 /* a simple integrator reporter for testing */
-int test_ida_reporter_init(struct IntegratorSystemStruct *integ) {
+static int test_ida_reporter_init(struct IntegratorSystemStruct *integ) {
 	return 0;
 }
 
-int test_ida_reporter_write(struct IntegratorSystemStruct *integ) {
+static int test_ida_reporter_write(struct IntegratorSystemStruct *integ) {
 	double val;
 	val = var_value(integ->y[0]);
 	CONSOLE_DEBUG("y[0] = %g", val);
 	return 0; /* no interrupt */
 }
 
-int test_ida_reporter_writeobs(struct IntegratorSystemStruct *integ) {
+static int test_ida_reporter_writeobs(struct IntegratorSystemStruct *integ) {
 	CONSOLE_DEBUG("x = %f", var_value(integ->x));
 	return 0;
 }
 
-int test_ida_reporter_close(struct IntegratorSystemStruct *integ) {
+static int test_ida_reporter_close(struct IntegratorSystemStruct *integ) {
 	return 0;
 }
 
-IntegratorReporter test_ida_reporter = { test_ida_reporter_init,
+static IntegratorReporter test_ida_reporter = { test_ida_reporter_init,
 		test_ida_reporter_write, test_ida_reporter_writeobs,
 		test_ida_reporter_close };
 
@@ -277,6 +277,15 @@ static void test_boundary(){
 	system_destroy(sys);
 	system_free_reused_mem();
 
+	struct Instance *simroot = GetSimulationRoot(siminst);
+	CU_TEST(simroot != NULL);
+	struct Instance *iy = ChildByChar(simroot,AddSymbol("y"));
+	CU_TEST(iy != NULL);
+
+	CONSOLE_DEBUG("Final y = %e",RealAtomValue(iy));
+
+	CU_TEST(fabs(RealAtomValue(iy) - 10.10353 < 2e-3));
+
 	/* destroy all that stuff */
 	CONSOLE_DEBUG("Destroying instance tree");
 	CU_ASSERT(siminst != NULL);
@@ -285,9 +294,6 @@ static void test_boundary(){
 	integrator_free_engines();
 	sim_destroy(siminst);
 	Asc_CompilerDestroy();
-
-	/* FIXME this test only checks that nothing catastrophic happens... it's not
-	actually testing the answer. */
 }
 
 /*

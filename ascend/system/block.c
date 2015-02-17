@@ -1020,6 +1020,61 @@ extern int system_block_debug(slv_system_t sys, FILE *fp){
 	return 0;
 }
 
+extern int system_log_block_debug(slv_system_t sys, FILE *fp){
+	int i,j,nr,nc;
+	dof_t *dof;
+	char *relname, *varname;
+	struct dis_discrete **vlist;
+	struct logrel_relation **rlist;
+	mtx_region_t b;
+	dof = slv_get_log_dofdata(sys);
+	char s[80];
+	char color;
+
+	fprintf(fp,"\n\nSLV_SYSTEM BLOCK INFO\n\n");
+
+	fprintf(fp,"Structural rank: %d\n",dof->structural_rank);
+	fprintf(fp,"Included rels: %d\n",dof->n_rows);
+	fprintf(fp,"Incident, free vars: %d\n",dof->n_cols);
+	fprintf(fp,"Fixed vars: %d\n",dof->n_fixed);
+	fprintf(fp,"Unincluded rels: %d\n",dof->n_unincluded);
+	fprintf(fp,"Number of blocks: %d\n",dof->blocks.nblocks);
+
+	vlist = slv_get_solvers_dvar_list(sys);
+	rlist = slv_get_solvers_logrel_list(sys);
+	color = (fp == stderr || fp==stdout);
+	for(i=0;i<dof->blocks.nblocks;++i){
+		if(color){
+			if(i%2)color_on(fp,ASC_FG_BROWN);
+			else color_on(fp,ASC_FG_BLACK);
+		}
+		b = dof->blocks.block[i];
+		nr = b.row.high - b.row.low + 1;
+		nc = b.col.high - b.col.low + 1;
+		SNPRINTF(s,80,"BLOCK %d (%d x %d)",i,nr,nc);
+		fprintf(fp,"%-18s",s);
+		SNPRINTF(s,80,"%-18s","");
+		for(j=0;j<MAX(nr,nc); ++j){
+			fprintf(fp,"%s%d",(j?s:""),j);
+			if(j<nr){
+				relname = logrel_make_name(sys,rlist[b.row.low + j]);
+				fprintf(fp,"\t%-20s",relname);
+				ASC_FREE(relname);
+			}else{
+				fprintf(fp,"\t%-20s","");
+			}
+			if(j<nc){
+				varname = dis_make_name(sys,vlist[b.col.low + j]);
+				fprintf(fp,"\t%-20s",varname);
+				ASC_FREE(varname);
+			}
+			fprintf(fp,"\n");
+		}
+	}
+	if(color)color_off(fp);
+	return 0;
+}
+
 /*------------------------------------------------------------------------------
   PARTITIONING for DIFFERENTIAL/ALGEBRAIC SYSTEMS
 */

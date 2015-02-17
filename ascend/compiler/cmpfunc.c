@@ -87,6 +87,14 @@ int CmpWhensF(CONST struct Instance *p1, CONST struct Instance *p2)
   else return (p1 > p2);
 }
 
+int CmpEventsF(CONST struct Instance *p1, CONST struct Instance *p2)
+{
+  assert(p1!=NULL);
+  assert(p2!=NULL);
+  if (p1<p2) return -1;
+  else return (p1 > p2);
+}
+
 int CmpIntIndex(CONST struct ArrayChild *p1, CONST struct ArrayChild *p2)
 {
   assert((p1 != NULL) && (p2 != NULL));

@@ -247,6 +247,7 @@ void DestroyWhenCases(struct Case *cur_case, struct Instance *inst)
       case REL_INST:
       case LREL_INST:
       case WHEN_INST:
+      case EVENT_INST:
         RemoveWhen(ptr,inst);
         break;
       default:

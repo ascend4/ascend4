@@ -84,6 +84,7 @@ enum type_kind {
   relation_type = EQN_KIND | 0x1000,
   logrel_type =   EQN_KIND | 0x2000,
   when_type =     EQN_KIND | 0x4000,
+  event_type =    EQN_KIND | 0x8000,
   /* simply structured base types */
   real_type =     ATOM_KIND | REAL_KIND,
   integer_type =  ATOM_KIND | INT_KIND,
@@ -130,6 +131,25 @@ struct AtomTypeDesc {
     unsigned defbool;         /**< default value for boolean instances */
   } u;                        /**< union of default values */
   CONST dim_type *dimp;       /**< dimensions of instance */
+  struct VariableList *lc;   /**< list of children which have the same dimensions as the atom */
+};
+
+struct DerivAtomTypeDesc {
+  unsigned long byte_length;       /**< byte length of an instance */
+  struct ChildDesc *childinfo;     /**< description of children */
+  unsigned defaulted;              /**< 0 -> ignore default value and units
+                                   1 -> don't ignore them */
+  double defval;                   /**< default value for real instances */
+  union {
+    double defval;                 /**< default value for real instances */
+    long defint;                   /**< default value for integer instances */
+    symchar *defsym;               /**< default value for symbol instances */
+    unsigned defbool;              /**< default value for boolean instances */
+  } u;                             /**< union of default values */
+  CONST dim_type *dimp;            /**< dimensions of instance */
+  struct VariableList *lc;   /**< list of children which have the same dimensions as the atom */
+  CONST struct TypeDescription *vartype; /**< type of the state variable */
+  CONST struct TypeDescription *indtype; /**< type of the independent variable */
 };
 
 /**
@@ -168,6 +188,7 @@ struct ArrayDesc {
   int isrelation;     /**< TRUE in case of an array of relations */
   int islogrel;       /**< TRUE in case of array of logical relation */
   int iswhen;         /**< TRUE in case of array of WHEN */
+  int isevent;        /**< TRUE in case of array of EVENT */
 };
 
 
@@ -217,9 +238,11 @@ struct TypeDescription {
   struct gl_list_t *refiners;       /**< list of types that refine this. alpha */
   unsigned long ref_count;          /**< count includes instances, other types */
   long int parseid;                 /**< n as in 'nth definition made' */
+  short deriv;                      /**< TRUE derivative type, FALSE non-derivative */
   union {
     struct ArrayDesc array;             /**< description of array things */
     struct AtomTypeDesc atom;           /**< atom description stuff */
+    struct DerivAtomTypeDesc derivatom; /**< derivative atom description stuff */
     struct ConstantTypeDesc constant;   /**< constant description stuff */
     struct ModelArgs modarg;            /**< parameter list stuff */
   } u;                              /**< union of description stuff */
@@ -832,6 +855,14 @@ ASC_DLLSPEC struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *d);
  *  @return An int indicating whether d is an array of WHENs.
  */
 
+#define GetArrayBaseIsEvent(d) ((d)->u.array.isevent)
+/**<
+ *  Returns TRUE if the array is an array of EVENT's.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return An int indicating whether d is an array of EVENTs.
+ */
+
 #define GetArrayBaseIsInt(d) ((d)->u.array.isintset)
 /**<
  *  Returns TRUE if the array is a set.
@@ -1021,7 +1052,8 @@ extern struct TypeDescription
                     CONST dim_type *ddim,
                     int univ,
                     long ival,
-                    symchar *sval);
+                    symchar *sval,
+		    struct VariableList *lc);
 /**<
  *  Creates an Atom TypeDescription structure with the parameters given.
  *
@@ -1040,6 +1072,45 @@ extern struct TypeDescription
  *  @param univ       TRUE universal FALSE non-universal.
  *  @param ival       Defalut value for integer/boolean atoms.
  *  @param sval       Default value for symbol atoms.
+ *  @param lc         List of children which have the same dimensions as the atom has.
+ *  @return A pointer to the new TypeDescription structure.
+ */
+
+extern struct TypeDescription
+*CreateDerivAtomTypeDesc(symchar *name,
+			 struct TypeDescription *rdesc,
+			 CONST struct TypeDescription *vartype,
+			 CONST struct TypeDescription *indtype,
+			 struct module_t *mod,
+			 ChildListPtr childl,
+			 struct gl_list_t *procl,
+			 struct StatementList *statl,
+                   	 unsigned long bytesize,
+                    	 struct ChildDesc *childd,
+			 int defaulted,
+			 double dval,
+			 CONST dim_type *ddim,
+			 int univ,
+		         struct VariableList *lc);
+
+/**<
+ *  Creates a derivative Atom TypeDescription structure with the parameters given.
+ *
+ *  @param name       Name of type.
+ *  @param rdesc      Type description what it refines.
+ *  @param vartype    Type description of the state variable
+ *  @param indtype    Type description of the independent variable
+ *  @param mod        Module where the type is defined.
+ *  @param childl     List of children names.
+ *  @param procl      List of initialization procedures.
+ *  @param statl      List of declarative statements.
+ *  @param bytesize   Size of an instance in bytes.
+ *  @param childd     Description of the atom's children.
+ *  @param defaulted  Valid because a derivative is always real. TRUE indicates default value assigned.
+ *  @param dval       Default value.
+ *  @param ddim       Dimensions of default value.
+ *  @param univ       TRUE universal FALSE non-universal.
+ *  @param lc         List of children which have the same dimensions as the atom has.
  *  @return A pointer to the new TypeDescription structure.
  */
 
@@ -1095,12 +1166,26 @@ extern struct TypeDescription
  */
 
 extern struct TypeDescription
+*CreateEventTypeDesc(struct module_t *mod,
+                     struct gl_list_t *pl,
+                     struct StatementList *sl);
+/**<
+ *  Creates an Event TypeDescription structure with the parameters given.
+ *
+ *  @param mod The module where it is defined.
+ *  @param pl  The list of initialization procedures.
+ *  @param sl  The list of declarative statements.
+ *  @return A pointer to the new TypeDescription structure.
+ */
+
+extern struct TypeDescription
 *CreateArrayTypeDesc(struct module_t *mod,
                      struct TypeDescription *desc,
                      int isintset,
                      int isrel,
                      int islogrel,
                      int iswhen,
+                     int isevent,
                      struct gl_list_t *indices);
 /**<
  *  Creates an Array TypeDescription structure with the parameters given.
@@ -1111,6 +1196,7 @@ extern struct TypeDescription
  *  @param isrel    TRUE only when it is an array of relations.
  *  @param islogrel TRUE only when it is an array of logical relations.
  *  @param iswhen   TRUE only when it is an array of WHEN's.
+ *  @param isevent  TRUE only when it is an array of EVENT's.
  *  @param indices  A list of IndexType's this describes each array index.
  *  @return A pointer to the new TypeDescription structure.
  */

@@ -74,6 +74,10 @@
 #include "instmacro.h"
 #include "instquery.h"
 
+#ifndef lint
+static CONST char CreateInstModuleID[] = "$Id: createinst.c,v 1.19 1998/03/26 20:39:41 ballan Exp $";
+#endif
+
 void ZeroNewChildrenEntries(register struct Instance **child_ary,
 			    register unsigned long int num)
 {
@@ -110,6 +114,7 @@ struct Instance *CreateModelInstance(struct TypeDescription *type)
     result->interface_ptr = NULL;
     result->parents = gl_create(AVG_PARENTS);
     result->whens = NULL;
+    result->events = NULL;
     result->link_table = gl_create(AVG_LINKS); /**< DS: initially the link_table for a model is empty */
     result->desc = type;
     result->alike_ptr = INST(result);
@@ -331,6 +336,8 @@ struct Instance *CreateRealInstance(struct TypeDescription *type){
       result->dimen = GetRealDimens(type);
       result->relations = NULL;
       result->depth = UINT_MAX;
+      result->derinf = NULL;
+      result->preinf = NULL;
 
       if(AtomDefaulted(type)){
         result->value = GetRealDefault(type);
@@ -506,6 +513,7 @@ struct Instance *CreateBooleanInstance(struct TypeDescription *type)
       result->padding = INT_MAX;
       result->logrelations = NULL;
       result->whens = NULL;
+      result->events = NULL;
       if (AtomDefaulted(type)) {
         result->value = GetBoolDefault(type);
         result->assigned = 1;
@@ -540,6 +548,7 @@ struct Instance *CreateBooleanInstance(struct TypeDescription *type)
       result->parents = gl_create(AVG_ICONSTANT_PARENTS);
       result->alike_ptr = INST(result);
       result->whens = NULL;
+      result->events = NULL;
       result->interface_ptr = NULL;
       result->desc = type;
       result->visited = 0;
@@ -706,6 +715,7 @@ struct Instance *CreateRelationInstance(struct TypeDescription *type,
     /* CONSOLE_DEBUG("Creating relation instance at %p with NULL rel ptr",result); */
     result->ptr = NULL;
     result->whens = NULL;
+    result->events = NULL;
     result->logrels = NULL;
     result->type = reltype;
     /* Not required anymore :
@@ -746,6 +756,7 @@ struct Instance *CreateLogRelInstance(struct TypeDescription *type)
     result->tmp_num = 0;
     result->anon_flags = 0x0;
     result->whens = NULL;
+    result->events = NULL;
     result->logrels = NULL;
     result->padding = INT_MAX;
     /* relation stuff */
@@ -790,6 +801,35 @@ struct Instance *CreateWhenInstance(struct TypeDescription *type)
   }
   else{				/* a prototype exists which may be copied */
     result = W_INST(CopyInstance(INST(result)));
+    return INST(result);
+  }
+}
+
+struct Instance *CreateEventInstance(struct TypeDescription *type)
+{
+  register struct EventInstance *result;
+  if ((result=E_INST(LookupPrototype(GetName(type))))==NULL){
+    CopyTypeDesc(type);
+    result = E_INST(ascmalloc((unsigned)sizeof(struct EventInstance)));
+    result->t = EVENT_INST;
+    result->interface_ptr = NULL;
+    result->parent[0] = NULL;	/* relations can have only two parents */
+    result->parent[1] = NULL;	/* initially it has none */
+    result->whens = NULL;	/* initially it has none */
+    result->events = NULL;	/* initially it has none */
+    result->cases = NULL;
+    result->bvar = NULL;
+    result->desc = type;
+    result->visited = 0;
+    result->tmp_num = 0;
+    result->anon_flags = 0x0;
+
+    AddPrototype(CopyInstance(INST(result)));
+    AssertMemory(result);
+    return INST(result);
+  }
+  else{				/* a prototype exists which may be copied */
+    result = E_INST(CopyInstance(INST(result)));
     return INST(result);
   }
 }

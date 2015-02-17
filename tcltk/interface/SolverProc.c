@@ -1852,7 +1852,7 @@ int Asc_SolvEligSolver(ClientData cdata, Tcl_Interp *interp,
   int n;
   int tmpi;
   const SlvFunctionsT *S;
-  struct gl_list_t *L = NULL;
+  struct gl_list_t *L = 0;
 
   UNUSED_PARAMETER(cdata);
 
@@ -1872,11 +1872,11 @@ int Asc_SolvEligSolver(ClientData cdata, Tcl_Interp *interp,
   slv_get_parameters(g_solvsys_cur,&sp);
   cur = slv_get_selected_solver(g_solvsys_cur);
   if (argc==3 && !!sp.output.less_important) {
-  /* FIXME the variable 'L' is not initialised... something's missing here... JDP */
     FPRINTF(ASCERR,"Solver   Name       ?Eligible\n");
     FPRINTF(ASCERR,"-----------------------------\n");
+    FPRINTF(ASCERR," BUGBUGBUGBUGBUG!!! fixme\n");
     for(n=1 ; n<gl_length(L); ++n) {
-	  S = (SlvFunctionsT *)gl_fetch(L,n);
+	  S = (SlvFunctionsT *)gl_fetch(L,n); // FIXME: where is L supposed to be from?
       FPRINTF(ASCERR, "%c%3d     %-11s    %s\n", ((n==cur) ? '*' : ' '), n,
               S->name, YORN((S->celigible)(g_solvsys_cur)));
     }

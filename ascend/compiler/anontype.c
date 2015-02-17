@@ -55,6 +55,10 @@
 #include "anonmerg.h"
 #include "anontype.h"
 
+#ifndef lint
+static CONST char AnonTypeModuleID[] = "$Id: anontype.c,v 1.9 2000/01/25 02:25:55 ballan Exp $";
+#endif
+
 /*
  * Yo! Pinhead! Don't optimize anything until it has proved slow!
  */
@@ -1378,6 +1382,7 @@ struct AnonType *NearestAnonType(struct Instance *i,
   case SYMBOL_ATOM_INST:        /* FALL THROUGH */
   case BOOLEAN_ATOM_INST:       /* FALL THROUGH */
   case WHEN_INST:               /* FALL THROUGH */
+  case EVENT_INST:              /* FALL THROUGH */
   case DUMMY_INST:
     *exact = (b->anonlist != NULL);
     return b->anonlist;		/* done */
@@ -1632,6 +1637,7 @@ void WriteAnonEpilog(FILE *fp)
   FPRINTF(fp,"AT: name %d %s\n",REL_INST,"REL_INST");
   FPRINTF(fp,"AT: name %d %s\n",LREL_INST,"LREL_INST");
   FPRINTF(fp,"AT: name %d %s\n",WHEN_INST,"WHEN_INST");
+  FPRINTF(fp,"AT: name %d %s\n",EVENT_INST,"EVENT_INST");
   FPRINTF(fp,"AT: name %d %s\n",ARRAY_INT_INST,"ARRAY_INT_INST");
   FPRINTF(fp,"AT: name %d %s\n",ARRAY_ENUM_INST,"ARRAY_ENUM_INST");
   FPRINTF(fp,"AT: name %d %s\n",REAL_ATOM_INST,"REAL_ATOM_INST");

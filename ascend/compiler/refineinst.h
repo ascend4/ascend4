@@ -44,6 +44,18 @@
 	@{
 */
 
+extern void RefineStateType(struct gl_list_t *derivs, struct TypeDescription *stype);
+/**<
+ *  Check if stype is more refined than the type of the state variable stored in
+ *  the type descriptions of the derivatives. If yes, refine the derivative.
+ */
+
+extern void RefineIndepType(struct gl_list_t *derivs, struct TypeDescription *itype);
+/**<
+ *  Check if itype is more refined than the type of the independent variable stored
+ *  in the type descriptions of the derivatives. If yes, refine the derivative.
+ */
+
 extern struct Instance *RefineInstance(struct Instance *i,
                                        struct TypeDescription *type,
                                        struct Instance *arginst);

@@ -1,79 +1,37 @@
-#LyX 2.1 created this file. For more info see http://www.lyx.org/
-\lyxformat 474
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
 \begin_document
 \begin_header
 \textclass book
-\use_default_options false
-\maintain_unincluded_children false
 \language english
-\language_package default
 \inputencoding auto
-\fontencoding global
-\font_roman default
-\font_sans default
-\font_typewriter default
-\font_math auto
-\font_default_family default
-\use_non_tex_fonts false
-\font_sc false
-\font_osf false
-\font_sf_scale 100
-\font_tt_scale 100
+\fontscheme default
 \graphics default
-\default_output_format default
-\output_sync 0
-\bibtex_command default
-\index_command default
 \paperfontsize default
 \spacing single
-\use_hyperref false
 \papersize a4paper
 \use_geometry false
-\use_package amsmath 2
-\use_package amssymb 2
-\use_package cancel 1
-\use_package esint 0
-\use_package mathdots 0
-\use_package mathtools 1
-\use_package mhchem 0
-\use_package stackrel 1
-\use_package stmaryrd 1
-\use_package undertilde 1
+\use_amsmath 2
 \cite_engine basic
-\cite_engine_type default
-\biblio_style plain
 \use_bibtopic false
-\use_indices false
 \paperorientation portrait
-\suppress_date false
-\justification true
-\use_refstyle 0
-\index Index
-\shortcut idx
-\color #008000
-\end_index
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
-\paragraph_indentation default
+\defskip medskip
 \quotes_language english
 \papercolumns 1
 \papersides 2
 \paperpagestyle default
 \tracking_changes false
-\output_changes false
-\html_math_output 0
-\html_css_as_file 0
-\html_be_strict false
+\output_changes true
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 Managing model definitions, libraries, and projects 
-\begin_inset CommandInset label
-LatexCommand label
-name "cha:require"
+\begin_inset LatexCommand \label{cha:require}
 
 \end_inset
 
@@ -95,12 +53,7 @@ Using
 REQUIRE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-REQUIRE
-\end_layout
+\begin_inset LatexCommand \index{REQUIRE}
 
 \end_inset
 
@@ -109,12 +62,7 @@ REQUIRE
 PROVIDE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-PROVIDE
-\end_layout
+\begin_inset LatexCommand \index{PROVIDE}
 
 \end_inset
 
@@ -131,9 +79,7 @@ ing
 system.a4l
 \family default
 
-\begin_inset CommandInset label
-LatexCommand label
-name "ssec:require.requireSystem.a4l"
+\begin_inset LatexCommand \label{ssec:require.requireSystem.a4l}
 
 \end_inset
 
@@ -340,7 +286,7 @@ Better application modeling practice
 \begin_inset Marginal
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 never require system.a4l in an application model.
 \end_layout
 
@@ -416,12 +362,7 @@ END quick_n_clean;
 
 \begin_layout Subsection
 Substitute libraries
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-substitute libraries
-\end_layout
+\begin_inset LatexCommand \index{substitute libraries}
 
 \end_inset
 
@@ -430,12 +371,7 @@ substitute libraries
 PROVIDE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-PROVIDE
-\end_layout
+\begin_inset LatexCommand \index{PROVIDE}
 
 \end_inset
 
@@ -445,9 +381,7 @@ PROVIDE
 \begin_layout Standard
 ASCEND keeps a list of the already loaded files, as we hinted at in Section
  
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "ssec:require.requireSystem.a4l"
+\begin_inset LatexCommand \ref{ssec:require.requireSystem.a4l}
 
 \end_inset
 
@@ -508,9 +442,7 @@ ivpsystem.a4l
 " get added to the list of already loaded files.
  For one explanation of when this behavior might be desirable, see Section
  
-\begin_inset CommandInset ref
-LatexCommand vref
-reference "ssec:require.requireSystem.a4l"
+\begin_inset LatexCommand \vref{ssec:require.requireSystem.a4l}
 
 \end_inset
 
@@ -558,9 +490,7 @@ so system is not a valid substitute for ivpsystem.
 REQUIRE
 \family default
  and combining modeling packages
-\begin_inset CommandInset label
-LatexCommand label
-name "ssec:require.requireCombiningPackages"
+\begin_inset LatexCommand \label{ssec:require.requireCombiningPackages}
 
 \end_inset
 
@@ -635,12 +565,7 @@ ascend4/models
 
 \begin_layout Subsection
 ascdata
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ascdata
-\end_layout
+\begin_inset LatexCommand \index{ascdata}
 
 \end_inset
 
@@ -669,33 +594,18 @@ ascdata
 ascdata
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ascdata
-\end_layout
+\begin_inset LatexCommand \index{ascdata}
 
 \end_inset
 
  directory is typically put into your HOME
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-HOME
-\end_layout
+\begin_inset LatexCommand \index{HOME}
 
 \end_inset
 
- directory (see Section
-\begin_inset space ~
-\end_inset
+ directory (see Section\InsetSpace ~
 
-
-\begin_inset CommandInset ref
-LatexCommand vref
-reference "ssec:atoms.newVarType"
+\begin_inset LatexCommand \vref{ssec:atoms.newVarType}
 
 \end_inset
 
@@ -704,9 +614,7 @@ reference "ssec:atoms.newVarType"
 
 \begin_layout Subsection
 the current directory
-\begin_inset CommandInset label
-LatexCommand label
-name "ssec:require.currentDir"
+\begin_inset LatexCommand \label{ssec:require.currentDir}
 
 \end_inset
 
@@ -750,12 +658,7 @@ ascend4.exe
 
 \begin_layout Subsection
 Multiple modeling projects
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-multiple modeling projects
-\end_layout
+\begin_inset LatexCommand \index{multiple modeling projects}
 
 \end_inset
 
@@ -787,12 +690,7 @@ Example: Finding
 ben/bencolumn.a4l
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-bencolumn.a4l
-\end_layout
+\begin_inset LatexCommand \index{bencolumn.a4l}
 
 \end_inset
 
@@ -809,9 +707,7 @@ bencolumn.a4l
 ben
 \family default
  as shown in Section 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "ssec:require.requireCombiningPackages"
+\begin_inset LatexCommand \ref{ssec:require.requireCombiningPackages}
 
 \end_inset
 
@@ -911,9 +807,7 @@ How
 REQUIRE
 \family default
  handles file and definition conflicts
-\begin_inset CommandInset label
-LatexCommand label
-name "ssec:require.handleConflicts"
+\begin_inset LatexCommand \label{ssec:require.handleConflicts}
 
 \end_inset
 
@@ -958,12 +852,7 @@ Extending the list of searched directories
 
 \begin_layout Standard
 ASCEND uses the environment variable
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-environment variable
-\end_layout
+\begin_inset LatexCommand \index{environment variable}
 
 \end_inset
 
@@ -972,12 +861,7 @@ environment variable
 ASCENDLIBRARY
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ASCENDLIBRARY
-\end_layout
+\begin_inset LatexCommand \index{ASCENDLIBRARY}
 
 \end_inset
 

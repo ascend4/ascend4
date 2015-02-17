@@ -456,6 +456,21 @@ struct rel_relation **var_incidence_list_to_modify( struct var_variable *var)
 }
 
 
+void var_set_preargF(struct var_variable *var, struct var_variable *arg)
+{
+  if(var!=NULL && arg!=NULL) {
+    var->prearg = arg;
+    return;
+  }
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL var or arg");
+}
+
+const struct var_variable *var_prearg(struct var_variable *var)
+{
+  if (var==NULL) return NULL;
+  return( (const struct var_variable *)var->prearg );
+}
+
 
 /*
  * global for use with the push function. Sets the ip to the

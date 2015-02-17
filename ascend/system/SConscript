@@ -2,10 +2,10 @@
 Import('libascend_env')
 
 csrcs = Split("""
-	analyze.c block.c
+	analyze.c k12_analyze.c block.c
 	bnd.c bndman.c calc.c cond_config.c
-	conditional.c discrete.c
-	diffvars.c
+	cond_event.c conditional.c discrete.c
+	diffvars.c k12_diffvars.c
 	jacobian.c
 	logrel.c logrelman.c model_reorder.c
 	rel.c relman.c

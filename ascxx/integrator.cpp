@@ -251,9 +251,9 @@ Integrator::setLogTimesteps(UnitsM units, double start, double end, unsigned lon
 
 vector<double>
 Integrator::getCurrentObservations(){
-	double *d = ASC_NEW_ARRAY(double,getNumObservedVars());
+	double *d = ASC_NEW_ARRAY(double,getNumObservedVars()+getNumObservedDisvars());
 	integrator_get_observations(blsys,d);
-	vector<double> v=vector<double>(d,d+getNumObservedVars());
+	vector<double> v=vector<double>(d,d+getNumObservedVars()+getNumObservedDisvars());
 	// do I need to free d?
 	// can I do this in such a way as I avoid all this memory-copying?
 	return v;
@@ -263,6 +263,12 @@ Variable
 Integrator::getObservedVariable(const long &i){
 	var_variable *v = integrator_get_observed_var(blsys,i);
 	return Variable(&simulation,v);
+}
+
+Disvar
+Integrator::getObservedDisvar(const long &i){
+	dis_discrete *dv = integrator_get_observed_dvar(blsys,i);
+	return Disvar(&simulation,dv);
 }
 
 Variable
@@ -282,6 +288,11 @@ Integrator::getNumVars(){
 int
 Integrator::getNumObservedVars(){
 	return blsys->n_obs;
+}
+
+int
+Integrator::getNumObservedDisvars(){
+	return blsys->n_dobs;
 }
 
 void

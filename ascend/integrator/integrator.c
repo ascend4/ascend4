@@ -29,11 +29,14 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/compiler/packages.h>
 #include <ascend/compiler/link.h>
+#include <ascend/compiler/deriv.h>
 
 
 #include <ascend/system/slv_common.h>
 #include <ascend/system/slv_stdcalls.h>
 #include <ascend/system/block.h>
+#include <ascend/system/diffvars.h>
+#include <ascend/system/diffvars_impl.h>
 
 #include <ascend/solver/solver.h>
 
@@ -53,6 +56,7 @@
  * These should be supported directly in a future solveratominst.
  */
 
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
 static symchar *g_symbols[3];
 
 #define STATEFLAG g_symbols[0]
@@ -85,6 +89,7 @@ struct Integ_var_t {
   int varindx; /**< index into slv_get_master_vars_list, or -1 if not there */
   int isstate;
 };
+#endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
 /*------------------------------------------------------------------------------
   forward declarations
@@ -96,6 +101,7 @@ void integrator_free_engine(IntegratorSystem *sys);
 
 IntegratorAnalyseFn integrator_analyse_ode;
 
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
 typedef void (IntegratorVarVisitorFn)(IntegratorSystem *sys, struct var_variable *var, const int *varindx);
 void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitor);
 IntegratorVarVisitorFn integrator_ode_classify_var;
@@ -114,6 +120,7 @@ static void Integ_SetObsId(struct var_variable *v, long oindex);
 static long DynamicVarInfo(struct var_variable *v,long *vindex, IntegratorSystem *sys);
 static struct var_variable *ObservationVar(struct var_variable *v, long *oindex);
 static void IntegInitSymbols(void);
+#endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
 /*------------------------------------------------------------------------------
   INSTANTIATION AND DESTRUCTION
@@ -186,6 +193,7 @@ void integrator_free(IntegratorSystem *sys){
 	sys=NULL;
 }
 
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
 /**
 	Utility function to retreive pointers to the symbols we'll be looking for
 	in the instance hierarchy.
@@ -195,6 +203,7 @@ static void IntegInitSymbols(void){
 	STATEINDEX = AddSymbol("ode_id");
 	OBSINDEX = AddSymbol("obs_id");
 }
+#endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
 /*------------------------------------------------------------------------------
   INTEGRATOR ENGINE
@@ -428,6 +437,25 @@ int integrator_params_set(IntegratorSystem *sys, const slv_parameters_t *paramet
   "visit" method that needs to eventually be integrated with the code in
   <solver/analyze.c>. For the moment, we're just hacking in to the compiler.
 */
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
+#define INTEG_ADD_TO_LIST(info,TYPE,INDEX,VAR,VARINDX,LIST) \
+	info = ASC_NEW(struct Integ_var_t); \
+	if(info==NULL){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory (INTEG_VAR_NEW)"); \
+	} \
+	info->type=TYPE; \
+	info->index=INDEX; \
+	info->i=VAR; \
+	info->derivative=NULL; \
+	info->derivative_of=NULL; \
+    if(VARINDX==NULL){ \
+		info->varindx = -1; \
+	}else{ \
+		info->varindx = *VARINDX; \
+	} \
+	gl_append_ptr(LIST,(void *)info); \
+	info = NULL
+#endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
 /**
 	Locate the independent variable.
@@ -436,7 +464,8 @@ int integrator_params_set(IntegratorSystem *sys, const slv_parameters_t *paramet
 	integration engine being used. @ENDNOTE
 */
 int integrator_find_indep_var(IntegratorSystem *sys){
-	int result = 0;
+	const SolverDiffVarCollection *dv;
+	var_filter_t vfilt;
 #ifdef ANALYSE_DEBUG
 	char *varname;
 #endif
@@ -447,47 +476,34 @@ int integrator_find_indep_var(IntegratorSystem *sys){
 		return 0; /* success */
 	}
 
-	/* create a clear indepvars list */
-	if(sys->indepvars!=NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"indepvars should be NULL at this point");
-		return 1; /* error */
-	}
-	sys->indepvars = gl_create(10L);
-
-	IntegInitSymbols();
-
 	CONSOLE_DEBUG("Looking for independent var...");
-	integrator_visit_system_vars(sys,&integrator_classify_indep_var);
-#ifdef ANALYSE_DEBUG
-	if(gl_length(sys->indepvars)){
-		CONSOLE_DEBUG("Found %lu indepvars",gl_length(sys->indepvars));
-	}else{
+	dv = system_get_diffvars(sys->system);
+	if (dv == NULL || dv->nindep == 0) {
 		CONSOLE_DEBUG("NO INDEP VARS FOUND");
+		return 2;
 	}
-#endif
-
-	/* after visiting the instance tree, look at the candidates and return 0 on success */
-	result = integrator_check_indep_var(sys);
-
-	/* whatever happens, we clean up afterwards */
-	gl_free_and_destroy(sys->indepvars);
-	sys->indepvars = NULL;
+	vfilt.matchbits = VAR_SVAR;
+	vfilt.matchvalue = VAR_SVAR;
+	if (dv->nindep != 1) {
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"A model should contain only one independent variable.");
+		return 3;
+	}
+	asc_assert(dv->indep[0] != NULL && var_instance(dv->indep[0]) != NULL);
+	if (!var_apply_filter(dv->indep[0],&vfilt)) {
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"The independent variable is not a solver_var.");
+		return 1;
+	}
+	sys->x = dv->indep[0];
 
 #ifdef ANALYSE_DEBUG
 	asc_assert(sys->system);
-	if(!result){
-		asc_assert(sys->x);
-		varname = var_make_name(sys->system, sys->x);
-		CONSOLE_DEBUG("Indep var is '%s'",varname);
-		ASC_FREE(varname);
-	}else{
-		CONSOLE_DEBUG("No indep var was found");
-	}
+	asc_assert(sys->x);
+	varname = var_make_name(sys->system, sys->x);
+	CONSOLE_DEBUG("Indep var is '%s'",varname);
+	ASC_FREE(varname);
 #endif
 
-	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Returning result %d",result); */
-
-	return result;
+	return 0;
 }
 
 /**
@@ -532,7 +548,7 @@ int integrator_analyse(IntegratorSystem *sys){
 	return res;
 }
 
-
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
 void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *visitfn){
   struct var_variable **vlist;
   int i, vlen;
@@ -571,6 +587,8 @@ void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *
 
   /* CONSOLE_DEBUG("Checked %d unattached",vlen); */
 }
+#endif /* THIS_IS_AN_UNUSED_FUNCTION */
+
 /**
 	Analyse the ODE structure. We can assume that the independent variable was
 	already found.
@@ -578,12 +596,14 @@ void integrator_visit_system_vars(IntegratorSystem *sys,IntegratorVarVisitorFn *
 	@return 0 on success
 */
 int integrator_analyse_ode(IntegratorSystem *sys){
-  struct Integ_var_t *v1,*v2;
-  long half,i,len;
-  int happy=1;
-  char *varname1, *varname2;
+  long i,j;
+  const SolverDiffVarCollection *dv;
+  SolverDiffVarSequence seq;
+  var_filter_t vfilt;
 
   asc_assert(sys->system!=NULL);
+
+  if (slv_get_num_solvers_events(sys->system)!=0) ERROR_REPORTER_HERE(ASC_USER_WARNING,"Event handling is not supported by this integrator. For solving hybrid systems please use IDA.");
 
   if(strcmp(slv_solver_name(slv_get_selected_solver(sys->system)),"QRSlv")!=0){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"System must have solver 'QRSlv' assigned to it before integration");
@@ -592,112 +612,71 @@ int integrator_analyse_ode(IntegratorSystem *sys){
   CONSOLE_DEBUG("Checked that NLA solver is set to '%s'",slv_solver_name(slv_get_selected_solver(sys->system)));
 
   CONSOLE_DEBUG("Starting ODE analysis");
-  IntegInitSymbols();
 
-  /* collect potential states and derivatives */
-  sys->indepvars = gl_create(10L);  /* t var info */
-  sys->dynvars = gl_create(200L);  /* y ydot var info */
-  sys->obslist = gl_create(100L);  /* obs info */
-  if (sys->dynvars == NULL
-    || sys->obslist == NULL
-    || sys->indepvars == NULL
-  ){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
+  dv = system_get_diffvars(sys->system);
+  if (dv == NULL) {
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,"No differential variables found in the system.");
     return 1;
   }
-
-  sys->nstates = sys->nderivs = 0;
-
-  integrator_visit_system_vars(sys,&integrator_ode_classify_var);
-
-  integrator_print_var_stats(sys);
-
-  /* check sanity of state and var lists */
-
-  len = gl_length(sys->dynvars);
-  half = len/2;
-  CONSOLE_DEBUG("NUMBER OF DYNAMIC VARIABLES = %ld",half);
-
-  if (len % 2 || len == 0L || sys->nstates != sys->nderivs ) {
-    /* list length must be even for vars to pair off */
-    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"n_y != n_ydot, or no dynamic vars found. Fix your indexing.");
-    return 3;
+  system_diffvars_debug(sys->system,ASCERR);
+  sys->n_y = 0;
+  for (i=1;i<=dv->nseqs;i++) {
+    seq = dv->seqs[i-1];
+    if(seq.n == 2) {
+      sys->n_y++;
+    } else if (seq.n > 2) ERROR_REPORTER_HERE(ASC_USER_WARNING,"Higher-order (>=2) derivatives are not supported in ODEs.");
   }
-  gl_sort(sys->dynvars,(CmpFunc)Integ_CmpDynVars);
-  if (gl_fetch(sys->dynvars,len)==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Mysterious NULL found!");
-    return 4;
-  }
-  sys->states = gl_create(half);   /* state vars Integ_var_t references */
-  sys->derivs = gl_create(half);   /* derivative var atoms */
-  for (i=1;i < len; i+=2) {
-    v1 = (struct Integ_var_t *)gl_fetch(sys->dynvars,i);
-    v2 = (struct Integ_var_t *)gl_fetch(sys->dynvars,i+1);
-    if (v1->type!=1  || v2 ->type !=2 || v1->index != v2->index) {
-      varname1 = var_make_name(sys->system,v1->i);
-	  varname2 = var_make_name(sys->system,v2->i);
-
-      ERROR_REPORTER_HERE(ASC_USER_ERROR,"Mistyped or misindexed dynamic variables: %s (%s = %ld,%s = %ld) and %s (%s = %ld,%s = %ld).",
-             varname1, SCP(STATEFLAG),v1->type,SCP(STATEINDEX),v1->index,
-             varname2, SCP(STATEFLAG),v2->type,SCP(STATEINDEX),v2->index
-		);
-      ASC_FREE(varname1);
-      ASC_FREE(varname2);
-      happy=0;
-      break;
-    } else {
-      gl_append_ptr(sys->states,(POINTER)v1);
-      gl_append_ptr(sys->derivs,(POINTER)v2->i);
-    }
-  }
-  if (!happy) {
-	ERROR_REPORTER_HERE(ASC_USER_ERROR,"Problem with ode_id and ode_type values");
-    return 5;
-  }
-  sys->n_y = half;
-  sys->y = ASC_NEW_ARRAY(struct var_variable *, half);
-  sys->ydot = ASC_NEW_ARRAY(struct var_variable *, half);
-  sys->y_id = ASC_NEW_ARRAY(int, half);
+  sys->y = ASC_NEW_ARRAY(struct var_variable *,sys->n_y);
+  sys->ydot = ASC_NEW_ARRAY(struct var_variable *,sys->n_y);
+  sys->y_id = ASC_NEW_ARRAY(int,sys->n_y);
   if (sys->y==NULL || sys->ydot==NULL || sys->y_id==NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return 6;
   }
-  for (i = 1; i <= half; i++) {
-    v1 = (struct Integ_var_t *)gl_fetch(sys->states,i);
-    sys->y[i-1] = v1->i;
-    sys->y_id[i-1] = v1->index;
-    sys->ydot[i-1] = (struct var_variable *)gl_fetch(sys->derivs,i);
+  j = 0;
+  vfilt.matchbits = VAR_SVAR;
+  vfilt.matchvalue = VAR_SVAR;
+  for (i=1;i<=dv->nseqs;i++) {
+    seq = dv->seqs[i-1];
+    asc_assert(seq.vars[0] != NULL && var_instance(seq.vars[0]) != NULL);
+    if(seq.n == 2 &&
+       var_apply_filter(seq.vars[0],&vfilt) &&
+       var_apply_filter(seq.vars[1],&vfilt)
+       ) {
+      sys->y[j] = seq.vars[0];
+      sys->y_id[j] = seq.ode_id;
+      sys->ydot[j] = seq.vars[1];
+      j++;
+    }
   }
-
-  if(integrator_sort_obs_vars(sys)){
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error sorting observation variables");
-	return 7;
+  sys->obs = ASC_NEW_ARRAY(struct var_variable *,dv->nobs);
+  sys->obs_id = ASC_NEW_ARRAY(int,dv->nobs);
+  sys->n_obs = dv->nobs;
+  if ( sys->obs==NULL || sys->obs_id==NULL) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
+    return 1;
   }
-
+  j = 0;
+  for (i=0;i<dv->nobs;i++) {
+    asc_assert(dv->obs[i] != NULL && var_instance(dv->obs[i]) != NULL);
+    if (var_apply_filter(dv->obs[i],&vfilt)) {
+      sys->obs[i] = dv->obs[i];
+      sys->obs_id[i] = j;
+      j++;
+    }
+  }
   /* FIX all states */
   for(i=0; i<sys->n_y; ++i){
-	if(!var_fixed(sys->y[i])){
+      if(!var_fixed(sys->y[i])){
       ERROR_REPORTER_HERE(ASC_USER_WARNING,"Fixing state %d",i);
-	  var_set_fixed(sys->y[i], TRUE);
-	}
+      var_set_fixed(sys->y[i], TRUE);
+    }
   }
-
-  /* don't need the gl_lists now that we have arrays for everyone */
-  gl_destroy(sys->states);
-  gl_destroy(sys->derivs);
-  gl_free_and_destroy(sys->indepvars);  /* we own the objects in indepvars */
-  gl_free_and_destroy(sys->dynvars);    /* we own the objects in dynvars */
-  gl_free_and_destroy(sys->obslist);    /* and obslist */
-  sys->states = NULL;
-  sys->derivs = NULL;
-  sys->indepvars = NULL;
-  sys->dynvars = NULL;
-  sys->obslist = NULL;
-
   /* analysis completed OK */
   return 0;
 }
 
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
 /**
 	Reindex observations. Sort if the user mostly numbered. Take natural order
 	if user just booleaned.
@@ -804,30 +783,13 @@ static int integrator_check_indep_var(IntegratorSystem *sys){
   asc_assert(sys->x);
   return 0;
 }
+#endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
 /*------------------------------------------------------------------------------
   CLASSIFICATION OF VARIABLES (for ANALYSIS step)
 */
 
-#define INTEG_ADD_TO_LIST(info,TYPE,INDEX,VAR,VARINDX,LIST) \
-	info = ASC_NEW(struct Integ_var_t); \
-	if(info==NULL){ \
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory (INTEG_VAR_NEW)"); \
-		return; \
-	} \
-	info->type=TYPE; \
-	info->index=INDEX; \
-	info->i=VAR; \
-	info->derivative=NULL; \
-	info->derivative_of=NULL; \
-    if(VARINDX==NULL){ \
-		info->varindx = -1; \
-	}else{ \
-		info->varindx = *VARINDX; \
-	} \
-	gl_append_ptr(LIST,(void *)info); \
-	info = NULL
-
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
 /**
 	In a DAE, it's either the (single) independent variable, or it's a
 	variable in the model.
@@ -956,7 +918,7 @@ void integrator_classify_indep_var(IntegratorSystem *sys
 	if( var_apply_filter(var,&vfilt) ) {
 		type = DynamicVarInfo(var,&index,sys);
 
-		if(type==INTEG_OTHER_VAR){
+		if(type==INTEG_OTHER_VAR || IsIndep(var_instance(var))){
 			/* i.e. independent var */
 #ifdef CLASSIFY_DEBUG
 			CONSOLE_DEBUG("Var '%s' added to indepvars",varname);
@@ -1051,6 +1013,7 @@ static struct var_variable *ObservationVar(struct var_variable *v, long *index){
   }
   return v;
 }
+#endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
 /*------------------------------------------------------------------------------
   RUNNING THE SOLVER
@@ -1306,16 +1269,17 @@ double *integrator_get_atol(IntegratorSystem *sys, double *atol){
 */
 double *integrator_get_observations(IntegratorSystem *sys, double *obsi) {
   long i;
-
   if (obsi==NULL) {
-    obsi = ASC_NEW_ARRAY_CLEAR(double, sys->n_obs+1);
+    obsi = ASC_NEW_ARRAY_CLEAR(double, sys->n_obs+sys->n_dobs+1);
   }
-
   /* C obsi[0]  <==> ascend d.obs[1] */
 
   for (i=0; i < sys->n_obs; i++) {
     obsi[i] = var_value(sys->obs[i]);
     /* CONSOLE_DEBUG("*get_d_obs[%ld] = %g\n", i+1, obsi[i]); */
+  }
+  for (i=0; i < sys->n_dobs; i++) {
+    obsi[i + sys->n_obs] = dis_value(sys->dobs[i]);
   }
   return obsi;
 }
@@ -1324,6 +1288,12 @@ struct var_variable *integrator_get_observed_var(IntegratorSystem *sys, const lo
 	asc_assert(i>=0);
 	asc_assert(i<sys->n_obs);
 	return sys->obs[i];
+}
+
+struct dis_discrete *integrator_get_observed_dvar(IntegratorSystem *sys, const long i){
+	asc_assert(i>=0);
+	asc_assert(i<sys->n_dobs);
+	return sys->dobs[i];
 }
 
 /**
@@ -1378,7 +1348,7 @@ int integrator_debug(const IntegratorSystem *sys, FILE *fp){
  */
 #define AVG_NUM_INCIDENT 4
 
-
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
 /**
 	This function helps to arrange the observation variables in a sensible order.
 	The 'obs_id' child instance of v, if present, is assigned the value of the
@@ -1419,6 +1389,7 @@ static int Integ_CmpDynVars(struct Integ_var_t *v1, struct Integ_var_t *v2){
   if(v1->type > v2->type)return 1;
   return -1;
 }
+#endif /* THIS_IS_AN_UNUSED_FUNCTION */
 /*----------------------------
   Output handling to the GUI/interface.
 */
@@ -1464,6 +1435,19 @@ int integrator_output_write_obs(IntegratorSystem *sys){
 	}
 	if(!reported_already){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No integrator reporter write_obs method (this message only shown once)");
+		reported_already=1;
+	}
+	return 1;
+}
+
+int integrator_output_write_event(IntegratorSystem *sys){
+	static int reported_already=0;
+	asc_assert(sys!=NULL);
+	if(sys->reporter->write_event!=NULL){
+		return (*(sys->reporter->write_event))(sys);
+	}
+	if(!reported_already){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No integrator reporter write_event method (this message only shown once)");
 		reported_already=1;
 	}
 	return 1;

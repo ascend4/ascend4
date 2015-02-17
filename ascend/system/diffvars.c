@@ -252,9 +252,26 @@ int system_generate_diffvars(slv_system_t sys, struct problem_t *prob){
 		vip = (struct solver_ipdata *)gl_fetch(prob->obsvars,i+1);
 		diffvars->obs[i] = vip->u.v.data;
 	}
+
+	diffvars->ndobs = gl_length(prob->dobsvars);
+	diffvars->dobs = ASC_NEW_ARRAY(struct dis_discrete *,diffvars->ndobs);
+	for(i=0;i<diffvars->ndobs;++i){
+		vip = (struct solver_ipdata *)gl_fetch(prob->dobsvars,i+1);
+		diffvars->dobs[i] = vip->u.dv.data;
+	}
+
+	diffvars->npres = gl_length(prob->prevars);
+	diffvars->pres = ASC_NEW_ARRAY(struct var_variable *, diffvars->npres);
+	for(i=0;i<diffvars->npres;++i){
+		vip = (struct solver_ipdata *)gl_fetch(prob->prevars,i+1);
+		diffvars->pres[i] = vip->u.v.data;
+	}
+
 #ifdef DIFFVARS_DEBUG
 	CONSOLE_DEBUG("Identified %ld obs vers",diffvars->nobs);
+	CONSOLE_DEBUG("Identified %ld dobs vers",diffvars->ndobs);
 	CONSOLE_DEBUG("There were %ld rels",prob->nr);
+	CONSOLE_DEBUG("There were %ld pres",diffvars->npres);
 #endif
 
 	slv_set_diffvars(sys,(void *)diffvars);
@@ -284,6 +301,13 @@ int system_diffvars_debug(slv_system_t sys,FILE *fp){
 			fprintf(fp,"'%s'",varname);
 			ASC_FREE(varname);
 		}
+		fprintf(fp,"\n");
+	}
+	fprintf(fp,"Observed vars in slv_system...\n");
+	for(i=0; i<diffvars->nobs;++i){
+		varname = var_make_name(sys,diffvars->obs[i]);
+		fprintf(fp,"'%s'",varname);
+		ASC_FREE(varname);
 		fprintf(fp,"\n");
 	}
 	return 0;

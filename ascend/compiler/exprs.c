@@ -49,6 +49,12 @@
 #include "instance_enum.h"
 #include "cmpfunc.h"
 #include "exprs.h"
+#include "vlist.h"
+
+
+#ifndef lint
+static CONST char ExpressionID[] = "$Id: exprs.c,v 1.13 1998/02/05 16:35:58 ballan Exp $";
+#endif
 
 /*------------------------------------------------------------------------------
   MEMORY USAGE

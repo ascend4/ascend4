@@ -44,7 +44,7 @@ class ObserverColumn:
 		A class to identify the instance that relates to a specify column
 		and the units of measurement and column title, etc.
 	"""
-	def __init__(self,instance,index,name=None,units=None,browser=None):
+	def __init__(self,instance,index,name=None,units=None,browser=None,eventdata=None):
 		self.instance = instance
 		self.name = name
 		self.index = index
@@ -73,6 +73,7 @@ class ObserverColumn:
 		self.units = units
 		self.uname = uname
 		self.name = name
+		self.eventdata = eventdata
 	
 	def __repr__(self):
 		return "ObserverColumn(name="+self.name+")"
@@ -200,6 +201,7 @@ class ObserverTab:
 		self.deleterowmenuitem=self.browser.builder.get_object("delete_row")
 		self.deletecolumnmenuitem=self.browser.builder.get_object("delete_column")
 		self.plotmenuitem=self.browser.builder.get_object("plotmenuitem")
+		self.columnplotevents=self.browser.builder.get_object("column_plot_events")
 		# initially there will not be any other columns
 
 		if self.alive:
@@ -367,7 +369,17 @@ class ObserverTab:
 				else:
 					ax = pylab.subplot(len(y),1,i+1,sharex=sharex)
 				#ax[i] = fig.add_axes([0.27, 0.08+(i*(j+0.02)), 0.65, j-0.01], **axprops)
-				pylab.plot(A[:,0],A[:,i+1],'-'+color_cycle[i%4]+'o',label=y[i].title)
+				if y[i].eventdata:
+					arrx = []
+					arry = []
+					for _vals in y[i].eventdata:
+						arry.append(_vals[1])
+					for _vals in x.eventdata:
+						arrx.append(_vals[1])
+
+					pylab.plot(A[:,0],A[:,i+1],'-'+color_cycle[i%4]+'o',arrx,arry,'ro',label=y[i].title)
+				else:
+					pylab.plot(A[:,0],A[:,i+1],'-'+color_cycle[i%4]+'o',label=y[i].title)
 
 				# put the x-axis label only on the last plot
 				if i+1 != len(y):
@@ -431,8 +443,8 @@ class ObserverTab:
 		self.view.queue_draw()
 		#self.browser.reporter.reportNote("SYNC performed")
 
-	def add_instance(self,instance):
-		_col = ObserverColumn(instance,self.colindex,browser=self.browser)
+	def add_instance(self,instance,edata=None):
+		_col = ObserverColumn(instance,self.colindex,browser=self.browser,eventdata=edata)
 		
 		# the loop is to ensure that we dont add multiple columns for the same variable
 		for _cols in self.cols:
@@ -497,6 +509,7 @@ class ObserverTab:
 		self.studycolumnmenuitem.set_sensitive(True)
 		self.plotmenuitem.set_sensitive(True)
 		self.deletecolumnmenuitem.set_sensitive(True)
+		self.columnplotevents.set_sensitive(True)
 
 	def on_treeview_event(self,widget,event):
 	
@@ -606,9 +619,44 @@ class ObserverTab:
 		
 	def on_delete_column(self, *args):
 		# To delete columns
-		self.cols.pop(self.current_col_key)
+		for _col in self.cols:
+			if self.cols[_col].title == self.current_col.title:
+				current_col_key = _col
+		self.cols.pop(current_col_key)
 		self.view.remove_column(self.current_col)
-		
+
+	def on_column_plot_events(self, *args):
+		for _col in self.cols:
+			if self.cols[_col].title == self.current_col.title:
+				current_col_key = _col
+		_plotwin = ColPlotEventsDialog(self.browser, self)
+		_plot = _plotwin.run()
+		if _plot:
+			self.plot_event(x=self.cols[current_col_key], t=_plotwin.col, title = self.cols[0].title)
+
+	def plot_event(self, x, t, title):
+		import platform
+		import matplotlib
+		matplotlib.use('GTKAgg')
+		import pylab
+		pylab.ioff()
+
+		vals = []
+		for x1, x2 in x.eventdata:
+			if x1 == t:
+				vals.append(x2)
+		pylab.xlim(-1,len(vals))
+		vmin = min(vals)
+		vmax = max(vals)
+		pylab.ylim(vmin-1,vmax+1)
+		pylab.plot(vals,'rD')
+		pylab.suptitle("0 - before crossing the boundary,\n1 - after the first call of the logical solver,\n2 - after solving the boundary equations,\n3+ - added if solving the system changes the values of some boolean vars.",bbox={'facecolor':'green', 'alpha':0.5, 'pad':10})
+		pylab.xlabel(title + ' = ' + str(t))
+		pylab.ylabel(x.title)
+		pylab.tight_layout(pad = 7)
+		pylab.ion()
+		pylab.show()
+
 	def on_plotmenuitem_activate(self, *args):
 		# To preselect the column as y axis
 		try:
@@ -885,6 +933,99 @@ class PlotDialog:
 				self.plotwin.destroy()
 				if self.ycol is not None and type(self.ycol)!=type([]) :
 					self.ycol = [self.ycol]
+				return True
+			else:
+				self.plotwin.destroy()
+				return False
+
+class ColPlotEventsDialog:
+		
+		# a dialog where the user can select which events to plot
+		# FIXME: this window should be scrolled
+		
+	def __init__(self, browser, tab):
+		self.browser = browser
+		self.browser.builder.add_objects_from_file(browser.glade_file, ["colploteventsdialog"])
+		self.plotwin = self.browser.builder.get_object("colploteventsdialog")
+		self.plotbutton = self.browser.builder.get_object("plotbutton")
+		self.view = self.browser.builder.get_object("treeview1")
+		
+		_store = gtk.TreeStore(object)
+		self.view.set_model(_store)
+		_renderer = gtk.CellRendererText()
+		_tvcol = gtk.TreeViewColumn("t")
+		_tvcol.pack_start(_renderer,False)
+		_tvcol.set_cell_data_func(_renderer, self.vallist)
+		self.view.append_column(_tvcol)
+		
+		self.col = None
+		tprev = tab.cols[0].eventdata[0]
+		for _vals in tab.cols[0].eventdata:
+			if _vals[0] != tprev:
+				_temp = _store.append(None,[_vals[0]])
+				tprev = _vals[0]
+				if self.col is None:
+					self.col = _vals[0]
+					_iter = _temp
+		
+		self.browser.builder.connect_signals(self)
+		
+	def on_colploteventsdialog_close(self,*args):
+		self.plotwin.response(gtk.RESPONSE_CANCEL)
+		
+	def vallist(self,column,cell,model,iter):
+		_value = model.get_value(iter,0)
+		cell.set_property('text', _value)
+	
+	def on_treeview_event(self,widget,event):
+		_path = None
+		_col = None
+		self.plotbutton.set_sensitive(False)
+		if event.type==gtk.gdk.KEY_RELEASE:
+			_keyval = gtk.gdk.keyval_name(event.keyval)
+			if _keyval == "Escape":
+				self.plotwin.response(gtk.RESPONSE_CANCEL)
+				return
+			_path, _tvcol = widget.get_cursor()
+			if _path is None:
+				return
+		elif event.type==gtk.gdk.BUTTON_RELEASE:
+			_x = int(event.x)
+			_y = int(event.y)
+			_button = event.button
+			_pthinfo = widget.get_path_at_pos(_x, _y)
+			if _pthinfo is None:
+				return
+			_path, _tvcol, _cellx, _celly = _pthinfo
+			if _path is None:
+				return
+
+		_sel = widget.get_selection()
+		_view, path_list = _sel.get_selected_rows()
+		if path_list is None:
+			return
+		widget.grab_focus()
+		_store = widget.get_model()
+		flag=True
+		for _path in path_list:
+			if _path is None:
+				return
+			_iter = _store.get_iter(_path)
+			_col = _store.get_value(_iter,0)
+			if widget is self.view:
+				self.col = _col
+				break
+
+		flag=True
+		if self.col is not None:	
+				self.plotbutton.set_sensitive(True)
+			
+	def run(self):
+		_continue = True
+		while _continue:
+			_res = self.plotwin.run()
+			if _res == gtk.RESPONSE_YES:
+				self.plotwin.destroy()
 				return True
 			else:
 				self.plotwin.destroy()

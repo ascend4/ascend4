@@ -42,6 +42,10 @@ int IntegratorReporterNull::recordObservedValues(){
 	return 1;
 }
 
+int IntegratorReporterNull::recordEvent(){
+	return 1;
+}
+
 //------------------------------------------------------------------------------
 // SIMPLE CONSOLE INTEGRATOR REPORTER
 
@@ -91,6 +95,19 @@ int IntegratorReporterConsole::recordObservedValues(){
 	return 1;
 }
 
+int IntegratorReporterConsole::recordEvent(){
+	IntegratorSystem *sys = integrator->getInternalType();
+	f << setw(11) << integrator_get_t(sys);
+	vector<double> data(integrator->getNumObservedVars());
+	integrator_get_observations(sys,&data[0]);
+	//copy(data.begin(),data.end(),ostream_iterator<double>(f,"\t"));
+	for(vector<double>::iterator i=data.begin();i<data.end();++i){
+		f << "  " << setw(11) << *i;
+	}
+	f << endl;
+	return 1;
+}
+
 //----------------------------------------------------
 // DEFAULT INTEGRATOR REPORTER (reporter start and end, outputs time at each step)
 
@@ -99,6 +116,7 @@ IntegratorReporterCxx::IntegratorReporterCxx(Integrator *integrator){
 	reporter.init = &ascxx_integratorreporter_init;
 	reporter.write = &ascxx_integratorreporter_write;
 	reporter.write_obs = &ascxx_integratorreporter_write_obs;
+	reporter.write_event = &ascxx_integratorreporter_write_event;
 	reporter.close = &ascxx_integratorreporter_close;
 	this->integrator=integrator;
 }
@@ -137,6 +155,13 @@ IntegratorReporterCxx::recordObservedValues(){
 	return 0;
 }
 
+int
+IntegratorReporterCxx::recordEvent(){
+	double *data = ASC_NEW_ARRAY(double,integrator->getNumObservedVars());
+	integrator_get_observations(integrator->getInternalType(),data);
+	return 0;
+}
+
 Integrator *
 IntegratorReporterCxx::getIntegrator(){
 	return integrator;
@@ -158,6 +183,11 @@ int ascxx_integratorreporter_write(IntegratorSystem *blsys){
 int ascxx_integratorreporter_write_obs(IntegratorSystem *blsys){
 	IntegratorReporterCxx *r = (IntegratorReporterCxx *)blsys->clientdata;
 	return r->recordObservedValues();
+}
+
+int ascxx_integratorreporter_write_event(IntegratorSystem *blsys){
+	IntegratorReporterCxx *r = (IntegratorReporterCxx *)blsys->clientdata;
+	return r->recordEvent();
 }
 
 int ascxx_integratorreporter_close(IntegratorSystem *blsys){

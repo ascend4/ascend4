@@ -47,6 +47,7 @@
 #include "name.h"
 #include "nameio.h"
 #include "when.h"
+#include "event.h"
 #include "select.h"
 #include "sets.h"
 #include "setio.h"
@@ -66,6 +67,8 @@
 #include "childdef.h"
 #include "cmpfunc.h"
 #include "typedef.h"
+#include "vlistio.h"
+#include "switch.h"
 #include <ascend/general/mathmacros.h>
 
 /*
@@ -75,7 +78,7 @@
  */
 
 /*
- *  number of a relation,logrelation or when
+ *  number of a relation,logrelation,when or event
  */
 static unsigned long g_number= 0;
 
@@ -149,6 +152,10 @@ DoIS_A(CONST struct StatementList *stats);
 static
 enum typelinterr
 DoWhens(symchar *, CONST struct StatementList *, struct gl_list_t *);
+
+static
+enum typelinterr
+DoEvents(symchar *, CONST struct StatementList *, struct gl_list_t *);
 
 static
 enum typelinterr
@@ -447,8 +454,9 @@ int AddLCL(symchar *s,CONST struct TypeDescription *d, int nsubs,
   case LOGREL:
   case WHEN:
   case EXT:
+  case EVENT:
     /* not strictly kosher TRUE, but truer than saying an error */
-    /* all rel/logrel/when are implicitly IS_A'd/typed */
+    /* all rel/logrel/when/event are implicitly IS_A'd/typed */
     new->e.origin = origin_ISA;
     break;
   default:
@@ -559,8 +567,14 @@ DoNameF(CONST struct Name *nptr,
   CONSOLE_DEBUG(nstr);
   ascfree(nstr);*/
 
-  if (NameId(nptr) !=0){
+  if (NameId(nptr) !=0 || NameDeriv(nptr)!=0 || NamePre(nptr)!=0){
     name = NameIdPtr(nptr);
+    /* If DoName is called from DoIS_A, DoDers has not
+       been called yet and the symchar is NULL (it has not been
+       generated from the names of the derivative
+       arguments). Skip this name, we will do it later
+       in DoDers. */
+    if ((NameDeriv(nptr) || NamePre(nptr)) && name == NULL) return DEF_OKAY;
     switch (StatementType(stat)) {
     case EXT:
 	  /* CONSOLE_DEBUG("PROCESSING EXTERNAL RELATION"); */
@@ -573,6 +587,7 @@ DoNameF(CONST struct Name *nptr,
     case REL:
     case LOGREL:
     case WHEN:
+    case EVENT:
       nsubs = NameLength(nptr) - 1;
       break;
     case ALIASES:
@@ -614,7 +629,7 @@ DoNameF(CONST struct Name *nptr,
       }
       return DEF_NAME_DUPLICATE;
     }
-  } else {
+ } else {
     /* should never happen due to new upstream filters. */
     ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Bad name structure found in variable list.");
     return DEF_NAME_INCORRECT;
@@ -712,9 +727,15 @@ enum typelinterr VerifyALIASES(CONST struct StatementList *stats,
         }
         error_code = DEF_OKAY;
       } else {
-        error_code = DEF_NAME_MISSING;
-        TypeLintError(ASCERR,stat, error_code);
-        return error_code;
+        if (NameDeriv(AliasStatName(stat))) {
+          TypeLintError(ASCERR,stat,DEF_DERNAME_MISSING);
+        }else if(NamePre(AliasStatName(stat))) {
+          TypeLintError(ASCERR,stat,DEF_PRENAME_MISSING);
+        }else{
+          error_code = DEF_NAME_MISSING;
+          TypeLintError(ASCERR,stat, error_code);
+          return error_code;
+        }
       }
       break;
     case FOR:
@@ -739,7 +760,7 @@ enum typelinterr VerifyALIASES(CONST struct StatementList *stats,
     case REF:
     case ISA:
     case WHEN:
-    default: /* IRT, ATS, AA, LNK, REL, ASGN, RUN, IF, EXT, CASGN, too. */
+    default: /* IRT, ATS, AA, LNK, REL, ASGN, RUN, IF, EXT, CASGN, EVENT too. */
       break;
     }
   }
@@ -767,11 +788,13 @@ enum typelinterr DoIS_A(CONST struct StatementList *stats)
       /* the type part to the statement was checked during parse,
        * but not type arguments.
        */
-      error_code = DoVarList(GetStatVarList(stat),
+      if (!IsaDeriv(stat) && !IsaPre(stat)) {
+        error_code = DoVarList(GetStatVarList(stat),
                              FindType(GetStatType(stat)),stat);
-      if (error_code != DEF_OKAY) {
-        TypeLintError(ASCERR,stat, error_code);
-        return error_code;
+        if (error_code != DEF_OKAY) {
+          TypeLintError(ASCERR,stat, error_code);
+          return error_code;
+        }
       }
       break;
     case ALIASES:
@@ -833,7 +856,7 @@ enum typelinterr DoIS_A(CONST struct StatementList *stats)
         return error_code;
       }
       break;
-    default: /* IRT, ATS, AA, LNK, REL, ASGN, RUN, WHEN, IF, EXT, CASGN  */
+    default: /* IRT, ATS, AA, LNK, REL, ASGN, RUN, WHEN, IF, EXT, CASGN, EVENT  */
       break;
     }
   }
@@ -849,38 +872,51 @@ enum typelinterr DoIS_A(CONST struct StatementList *stats)
  */
 static
 symchar *GenerateId(symchar *type,
+                    symchar *id1,
+                    symchar *id2,
                     CONST char *module,
                     unsigned long int number)
 {
   unsigned length;
   symchar *result;
   char statname[MAXTOKENLENGTH+12],c;
-  sprintf(statname,"%s_%lu",SCP(type),number);
+  if (number){
+    sprintf(statname,"%s_%lu",SCP(type),number);
+  }else{ /* number is 0 for der variables and types names */
+    if (id1 && id2){
+    sprintf(statname,"der(%s,%s)",SCP(id1),SCP(id2));
+    }else{
+      Asc_Panic(2,NULL,"Generating der variable or type name with a NULL pointer to the independent or state variable.");
+    }
+  }
   result = AddSymbol(statname);
   if (FindLCL(result)==NULL) {
     return result;
-  }
-  length = SCLEN(result);
-  while( (length+1) < (MAXTOKENLENGTH+12) ) {
-    statname[length+1]='\0';
-    for(c='a';c<='z';c++){
-      statname[length]=c;
-      result = AddSymbol(statname);
-      if (FindLCL(result)==NULL) {
-        return result;
+  }else if(!number){
+    return FindLCL(result)->e.strptr;
+  }else{
+    length = SCLEN(result);
+    while( (length+1) < (MAXTOKENLENGTH+12) ) {
+      statname[length+1]='\0';
+      for(c='a';c<='z';c++){
+        statname[length]=c;
+        result = AddSymbol(statname);
+        if (FindLCL(result)==NULL) {
+          return result;
+        }
       }
+      length++;
     }
-    length++;
-  }
   Asc_Panic(2, NULL,
             "%s Unable to generate unique name.\n"
             "  The statement is in module %s.\n"
             "  Insufficiently uniqe name is \n%s.  Burp!\n",
             StatioLabel(4), module, statname);
-
+  }
 }
 
 static int IndexUsed(symchar *name, CONST struct Expr *expr);
+static int UsedInVar(symchar *name, CONST struct Name *nptr);
 
 static int UsedInSet(symchar *name, CONST struct Set *sptr)
 {
@@ -896,6 +932,15 @@ static int UsedInSet(symchar *name, CONST struct Set *sptr)
   return 0;
 }
 
+static
+int UsedInVlist(symchar *name, CONST struct VariableList *vlist)
+{
+  while(vlist!=NULL) {
+    if (UsedInVar(name,NamePointer(vlist))) return 1;
+    vlist = NextVariableNode(vlist);
+  }
+  return 0;
+}
 
 static
 int UsedInVar(symchar *name, CONST struct Name *nptr)
@@ -906,8 +951,15 @@ int UsedInVar(symchar *name, CONST struct Name *nptr)
     return 1;
   }
   while (nptr!=NULL){
-    if (!NameId(nptr))
-      if (UsedInSet(name,NameSetPtr(nptr))) return 1;
+    if (!NameId(nptr)) {
+      if (NameDeriv(nptr)) {
+        if (UsedInVlist(name,NameDerPtr(nptr)->vlist)) return 1;
+      } else if(NamePre(nptr)) {
+        if (UsedInVar(name,PreName(NamePrePtr(nptr)))) return 1;
+      } else {
+        if (UsedInSet(name,NameSetPtr(nptr))) return 1;
+      }
+    }
     nptr = NextName(nptr);
   }
   return 0;
@@ -964,7 +1016,7 @@ struct Name *GenerateRelationName(symchar *type,
   unsigned long activefors;
   symchar *idname;
   struct for_var_t *fv;
-  idname = GenerateId(type,module,relnum);
+  idname = GenerateId(type,NULL,NULL,module,relnum);
   result = CreateSystemIdName(idname);
   activefors = ActiveForLoops(ft);
   while (activefors>0){
@@ -987,7 +1039,7 @@ struct Name *GenerateWhenName(symchar *type,
   unsigned long activefors;
   symchar *idname;
   struct for_var_t *fv;
-  idname = GenerateId(type,module,linenum);
+  idname = GenerateId(type,NULL,NULL,module,linenum);
   result = CreateSystemIdName(idname);
   activefors = ActiveForLoops(ft);
   while (activefors>0){
@@ -998,6 +1050,35 @@ struct Name *GenerateWhenName(symchar *type,
   return result;
 }
 
+static
+struct Name *GenerateEventName(symchar *type,
+        		       CONST char *module,
+        		       unsigned long int linenum,
+        		       struct gl_list_t *ft)
+{
+  struct Name *result;
+  unsigned long activefors;
+  symchar *idname;
+  struct for_var_t *fv;
+  idname = GenerateId(type,NULL,NULL,module,linenum);
+  result = CreateSystemIdName(idname);
+  activefors = ActiveForLoops(ft);
+  while (activefors>0){
+    fv = LoopIndex(ft,activefors);
+    result = JoinNames(result,CreateIndexName(GetForName(fv)));
+    activefors--;
+  }
+  return result;
+}
+
+static
+symchar *GenerateDerTypeName(symchar *vartype1,
+			     symchar *vartype2)
+{
+  symchar *idname;
+  idname = GenerateId(NULL,vartype1,vartype2,NULL,0);
+  return idname;
+}
 
 /* this function makes sure the relation has a name, generating
  * one if required.
@@ -1040,6 +1121,22 @@ int DoWhen(symchar *type,
     SetWhenName(stat,nptr);
   }
   return DoName(nptr,FindWhenType(),stat);
+}
+
+static
+int DoEvent(symchar *type,
+            struct Statement *stat,
+            struct gl_list_t *ft)
+{
+  struct Name *nptr;
+  assert(stat && (StatementType(stat) == EVENT));
+  g_number++;
+  if ((nptr = EventStatName(stat))==NULL){
+    nptr = GenerateEventName(type,Asc_ModuleName(StatementModule(stat)),
+        		    g_number,ft);
+    SetEventName(stat,nptr);
+  }
+  return DoName(nptr,FindEventType(),stat);
 }
 
 static
@@ -1216,7 +1313,7 @@ enum typelinterr DoRelations(symchar *type,
         return error_code;
       }
       break;
-    default: /* ISA, IRT, ATS, AA, LNK, ASGN, WHEN, RUN, IF, REF, CASGN, CALL*/
+    default: /* ISA, IRT, ATS, AA, LNK, ASGN, WHEN, RUN, IF, REF, CASGN, CALL, EVENT */
       break;
     }
   }
@@ -1272,6 +1369,63 @@ enum typelinterr DoWhens(symchar *type,
   return DEF_OKAY;
 }
 
+static
+enum typelinterr DoEvents(symchar *type,
+                         CONST struct StatementList *stats,
+                         struct gl_list_t *ft)
+{
+  register struct gl_list_t *statements;
+  register unsigned long c,len;
+  register struct Statement *stat;
+  struct EventList *el;
+  struct WhenList *wl;
+  enum typelinterr error_code;
+  statements = GetList(stats);
+  len = gl_length(statements);
+  for(c=1;c<=len;c++){
+    stat = (struct Statement *)gl_fetch(statements,c);
+    switch(StatementType(stat)){
+    case EVENT:
+      error_code = DoEvent(type,stat,ft);
+      if (error_code != DEF_OKAY) {
+        TypeLintError(ASCERR,stat, error_code);
+        return error_code;
+      }
+      el = EventStatCases(stat);
+      while (el!=NULL) {
+        error_code = DoEvents(type,EventStatementList(el),ft);
+        if (error_code != DEF_OKAY) {
+          TypeLintError(ASCERR,stat, error_code);
+          return error_code;
+        }
+        el = NextEventCase(el);
+      }
+      break;
+    case FOR:
+      AddLoopVariable(ft,CreateForVar(ForStatIndex(stat)));
+      error_code = DoEvents(type,ForStatStmts(stat),ft);
+      RemoveForVariable(ft);
+      if (error_code != DEF_OKAY)  {
+        return error_code;
+      }
+      break;
+    case WHEN:
+      wl = WhenStatCases(stat);
+      while (wl!=NULL) {
+        error_code = DoEvents(type,WhenStatementList(wl),ft);
+        if (error_code != DEF_OKAY) {
+          TypeLintError(ASCERR,stat, error_code);
+          return error_code;
+        }
+        wl = NextWhenCase(wl);
+      }
+      break;
+    default:
+      break;
+    }
+  }
+  return DEF_OKAY;
+}
 
 /*****************************************************************\
   Functions to help determine the types of children.
@@ -1546,7 +1700,7 @@ CONST struct TypeDescription
   int alen,subseen,subsleft;
 
   assert(type!=NULL);
-  assert(NameId(nptr)!=0);
+  assert(NameId(nptr)!=0 || NameDeriv(nptr)!=0 || NamePre(nptr)!=0);
   assert(rval!=NULL);
   if ( GetBaseType(type)== patch_type) {
     type = GetPatchOriginal(type);
@@ -1680,7 +1834,7 @@ CONST struct TypeDescription *FindRHSType(CONST struct Name *nptr,
 
   *origin = origin_ERR;
   /* digest the first part of the name in the local scope */
-  if (!NameId(nptr)) {
+  if (!NameId(nptr) && !NameDeriv(nptr) && !NamePre(nptr)) {
     /* names  like [1] are obviouslly goop */
     *rval = FRC_badname;
     return NULL;
@@ -1777,6 +1931,47 @@ void MarkIfPassedArgs(CONST struct Name *nptr, CONST struct gl_list_t *clist)
   }
 }
 
+/* Find the type of a derivative. If FindRHSType is unable to find the type,
+ * recurses for each of the arguments and then generates the derivative type
+ * from the types of the arguments. If it cannot find a type, returns NULL.
+ */
+
+static
+struct TypeDescription *FindDerType(CONST struct Name *n,
+                                    struct Statement *stat,
+                                    CONST struct gl_list_t *lclgl,
+                                    struct module_t *mod,
+				    int *rlen,
+                                    enum e_findrhs *rval)
+{
+  unsigned int origin;
+  symchar *typename;
+  int len;
+  CONST struct TypeDescription *result, *vartype, *indtype;
+  result = FindRHSType(n,lclgl,rval,rlen,&origin);
+  if (*rval == FRC_array) {
+    ERROR_REPORTER_HERE(4,"Derivatives of non-scalar variables are not allowed.");
+    return NULL;
+  }
+  if (!NameDeriv(n) && *rval != FRC_ok) return NULL;
+  if (result) {
+    return (struct TypeDescription *)result;
+  } else if (NameDeriv(n)) {
+    vartype = FindDerType(NamePointer(DerVlist(NameDerPtr(n))),stat,lclgl,mod,rlen,rval);
+    if (!vartype) return NULL;
+    indtype = FindDerType(NamePointer(NextVariableNode(DerVlist(NameDerPtr(n)))),stat,lclgl,mod,&len,rval);
+    if (!vartype) return NULL;
+    typename = GenerateDerTypeName(GetName(vartype),GetName(indtype));
+    result = FindType(AddSymbol(SCP(typename)));
+    if (!result){
+      result = CreateDerivAtomTypeDef(typename,vartype,indtype,mod);
+      AddType((struct TypeDescription *)result);
+    }
+    return (struct TypeDescription *)result;
+  }
+  return NULL;
+}
+
 /*
  * This function tries to determine from the RHS name list of an
  * ALIASES-IS_A statement what the basetype of the array should be.
@@ -1800,6 +1995,7 @@ void MarkIfPassedArgs(CONST struct Name *nptr, CONST struct gl_list_t *clist)
 static
 CONST struct TypeDescription *FindCommonType(CONST struct VariableList *vl,
                                              CONST struct gl_list_t *clist,
+					     struct Statement *stat,
                                              enum e_findrhs *val,
                                              int *len,
                                              unsigned int *origin)
@@ -1816,7 +2012,9 @@ CONST struct TypeDescription *FindCommonType(CONST struct VariableList *vl,
 
   while (vl != NULL) {
     nptr = NamePointer(vl);
-    type = FindRHSType(nptr,clist,val,len,origin);
+    if (NameDeriv(nptr)) type = FindDerType(nptr,stat,clist,Asc_CurrentModule(),len,val);
+    else if (NamePre(nptr)) type = FindRHSType(PreName(NamePrePtr(nptr)),clist,val,len,origin);
+    else type = FindRHSType(nptr,clist,val,len,origin);
     if (type == NULL) {
       switch (*val) {
       case FRC_ok:
@@ -1938,7 +2136,7 @@ void SetLHSTypes(CONST struct VariableList *vlist,struct gl_list_t *clist,
  * where possible, which basically means over complete sets.
  */
 static
-int DeriveChildTypes(struct StatementList *stats, struct gl_list_t *clist)
+int DeriveChildTypes(struct StatementList *stats, struct gl_list_t *clist, struct module_t *mod)
 {
   struct AliasList *head, *tmp;
   CONST struct TypeDescription *rtype; /* rhs name type */
@@ -1963,38 +2161,83 @@ int DeriveChildTypes(struct StatementList *stats, struct gl_list_t *clist)
                       rval,subsopen,origin);
           tmp->bits = AL_DONE;
         } else {
-          switch (rval) {
-          case FRC_badname: /* definitely garbage rhs */
-            tmp->bits = AL_NORHS;
-            MarkStatContext(tmp->stat,context_WRONG);
-            STATEMENT_ERROR(tmp->stat,"Impossible RHS of ALIASES");
-            WSS(ASCERR,tmp->stat);
-            whines++;
-            break;
-          case FRC_attrname: /* ATOM child rhs */
-            tmp->bits = AL_DONE;
-            MarkStatContext(tmp->stat,context_WRONG);
-            STATEMENT_ERROR(tmp->stat,"Illegal subatomic RHS of ALIASES");
-            WSS(ASCERR,tmp->stat);
-            whines++;
-            break;
-          case FRC_fail:    /* permanently ambiguous rhs name of part */
-            WSEM(ASCWAR,tmp->stat,"Unable to determine child basetype");
-            whines++;
-            /* shouldn't happen, but symptom of certain screwups */
-            changed = 1;
-            tmp->bits = AL_DONE;
-            break;
-          case FRC_unable:  /* try later */
-            break;
-          default:
-            ASC_PANIC("NOT REACHED should never see other values");
-            break;
+	  if (NameDeriv(AliasStatName(tmp->stat)) || NamePre(AliasStatName(tmp->stat))) {
+            if (NameDeriv(AliasStatName(tmp->stat)))
+              rtype = FindDerType(AliasStatName(tmp->stat),tmp->stat,clist,
+                                  mod,&subsopen,&rval);
+            if (NamePre(AliasStatName(tmp->stat)))
+              rtype = FindRHSType(PreName(NamePrePtr(AliasStatName(tmp->stat))),
+                                  clist,&rval,&subsopen,&origin);
+            if (rtype) {
+              changed = 1;
+              origin = origin_ISA;
+              SetLHSTypes(GetStatVarList(tmp->stat),clist,rtype,
+                    rval,subsopen,origin);
+              tmp->bits = AL_DONE;
+            }else{
+              switch (rval) {
+              case FRC_array:
+              case FRC_badname: /* definitely garbage rhs */
+                tmp->bits = AL_NORHS;
+                MarkStatContext(tmp->stat,context_WRONG);
+                STATEMENT_ERROR(tmp->stat,"Impossible RHS of ALIASES");
+                WSS(ASCERR,tmp->stat);
+                whines++;
+                break;
+              case FRC_attrname: /* ATOM child rhs */
+                tmp->bits = AL_DONE;
+                MarkStatContext(tmp->stat,context_WRONG);
+                STATEMENT_ERROR(tmp->stat,"Illegal subatomic RHS of ALIASES");
+                WSS(ASCERR,tmp->stat);
+                whines++;
+                break;
+              case FRC_fail:    /* permanently ambiguous rhs name of part */
+                WSEM(ASCWAR,tmp->stat,"Unable to determine child basetype");
+                whines++;
+                /* shouldn't happen, but symptom of certain screwups */
+                changed = 1;
+                tmp->bits = AL_DONE;
+                break;
+              case FRC_unable:  /* try later */
+                break;
+              default:
+                break;
+              }
+            }
+          }else{
+            switch (rval) {
+            case FRC_badname: /* definitely garbage rhs */
+              tmp->bits = AL_NORHS;
+              MarkStatContext(tmp->stat,context_WRONG);
+              STATEMENT_ERROR(tmp->stat,"Impossible RHS of ALIASES");
+              WSS(ASCERR,tmp->stat);
+              whines++;
+              break;
+            case FRC_attrname: /* ATOM child rhs */
+              tmp->bits = AL_DONE;
+              MarkStatContext(tmp->stat,context_WRONG);
+              STATEMENT_ERROR(tmp->stat,"Illegal subatomic RHS of ALIASES");
+              WSS(ASCERR,tmp->stat);
+              whines++;
+              break;
+            case FRC_fail:    /* permanently ambiguous rhs name of part */
+              WSEM(ASCWAR,tmp->stat,"Unable to determine child basetype");
+              whines++;
+              /* shouldn't happen, but symptom of certain screwups */
+              changed = 1;
+              tmp->bits = AL_DONE;
+              break;
+            case FRC_unable:  /* try later */
+              break;
+            default:
+              ASC_PANIC("NOT REACHED should never see other values");
+              break;
+            }
           }
         }
         break;
       case AL_WARR:
-        rtype = FindCommonType(GetStatVarList(tmp->stat),clist,
+        rtype = FindCommonType(GetStatVarList(tmp->stat),clist,tmp->stat,
                                &rval,&subsopen,&origin);
         if (rtype != NULL) {
           changed = 1;
@@ -2046,6 +2289,384 @@ int DeriveChildTypes(struct StatementList *stats, struct gl_list_t *clist)
   }
   DestroyAliasesList(head);
   return whines;
+}
+
+static struct Statement* FindIndepStat (struct gl_list_t *stats) 
+{
+  register unsigned long c,len;
+  int indep_found = 0;
+  struct Statement *stat, *indep_stat;
+  len = gl_length(stats);
+  for(c=1;c<=len;c++){
+    stat = (struct Statement *)gl_fetch(stats,c);
+    /* Searching for an INDEPENDENT statement. */
+    switch(StatementType(stat)){ 
+    case LNK:
+      if (!strcmp(SCP(LINKStatKey(stat)),"independent")) {
+        indep_found++;
+        indep_stat = stat;
+      }
+    default: /* IRT, ATS, AA, LNK, RUN, WHEN, EXT, OPTION, ALIASES, ARR, REF, COND, ISA, SELECT, etc. */
+      break;
+    }
+  }
+  if (indep_found != 1) {
+    return NULL;
+  }
+  return indep_stat;
+}
+
+/*
+ * This function is called for ISA statements from ISDER statement lists.
+ * It searches for an independent variable and extends the varlists of
+ * the derivative names if the independent variable is found and there is
+ * no WITH in the DERIVATIVE statement. Then it generates the symchar and the
+ * type for the derivative and adds its name to the childlist.
+ */
+
+static
+enum typelinterr DoDerIsa(struct Statement *stat,
+                          struct gl_list_t *lclgl,
+                          struct module_t *mod,
+                          CONST struct StatementList *stats)
+{
+  CONST struct VariableList *vl, *dervl;
+  struct Name *dername, *varnptr, *indnptr;
+  CONST struct Name *nptr;
+  CONST struct TypeDescription *vartype, *indtype;
+  struct TypeDescription *dertype = NULL;
+  struct Statement *indep_stat;
+  symchar *typename;
+  enum typelinterr error_code;
+  int rlen;
+  enum e_findrhs rval;
+  vl = GetStatVarList(stat);
+  while(vl) {
+    dername = (struct Name *)NamePointer(vl);
+    /* Extend the varlist if needed */
+    if (VariableListLength(DerVlist(NameDerPtr(dername))) < 2) {
+      indep_stat = FindIndepStat(GetList(stats));
+      if (indep_stat) {
+        dername->val.der->vlist = JoinVariableLists(DerVlist(NameDerPtr(dername)), CopyVariableList(LINKStatVlist(indep_stat)));
+      }else return DEF_NO_INDEP;
+    }
+    dervl = DerVlist(NameDerPtr(dername));
+    if (VariableListLength(dervl) != 2) {
+      ASC_PANIC("Length of the variable list of the der expression should be 2.");
+    }
+    varnptr = CopyName(NamePointer(dervl));
+    dervl = NextVariableNode(dervl);
+    indnptr = CopyName(NamePointer(dervl));
+    dername->val.der->strname = GetIdFromVlist(DerVlist(NameDerPtr(dername)));
+    vartype = FindDerType(varnptr,stat,lclgl,mod,&rlen,&rval);
+    indtype = FindDerType(indnptr,stat,lclgl,mod,&rlen,&rval);
+    if (vartype == NULL || indtype == NULL || GetBaseType(vartype) != real_type || GetBaseType(indtype) != real_type) return DEF_ILLEGAL_DERARGS;
+    /* Copy the subscripts from the arguments names to the derivative name. */
+    dervl = DerVlist(NameDerPtr(dername));
+    nptr = NamePointer(dervl);
+    while(nptr) {
+      if (!NameDeriv(nptr) && !NameId(nptr) && !NamePre(nptr)) {
+        dername = AppendNameNode(dername,nptr);
+      }
+      nptr = NextName(nptr);
+    }
+    /* Create the type description */
+    typename = GenerateDerTypeName(GetName(vartype),GetName(indtype));
+    dertype = FindType(AddSymbol(SCP(typename)));
+    if (!dertype){
+      dertype = CreateDerivAtomTypeDef(typename,vartype,indtype,mod);
+      AddType(dertype);
+    }
+    error_code = DoName(dername,dertype,stat);
+    gl_insert_sorted(lclgl,g_lcl_pivot,(CmpFunc)CmpChildListEntries);
+    if (error_code != DEF_OKAY) return error_code;
+    vl = NextVariableNode(vl);
+  }
+  stat->v.i.type = typename;
+  return DEF_OKAY;
+}
+
+static
+enum typelinterr DoDerIsas(CONST struct StatementList *stats,
+                           struct gl_list_t *lclgl,
+                           struct module_t *mod,
+                           CONST struct StatementList *mstats)
+{
+  register struct gl_list_t *statements;
+  struct Statement *indep_stat = NULL;
+  register unsigned long c,len;
+  enum typelinterr error_code;
+  struct Statement *stat;
+  statements = GetList(stats);
+  len = gl_length(statements);
+  for(c=1;c<=len;c++){
+    stat = (struct Statement *)gl_fetch(statements,c);
+    switch(StatementType(stat)){
+    case ISDER:
+      if (!GetStatIndVar(stat)) {
+        indep_stat = FindIndepStat(GetList(mstats));
+        if (indep_stat) {
+          stat->v.ider.ind = CopyName(NamePointer(LINKStatVlist(indep_stat)));
+        }else {
+	  TypeLintError(ASCERR,stat,DEF_NO_INDEP);
+          return DEF_NO_INDEP;
+        } 
+      }
+      error_code = DoDerIsas(GetStatSlist(stat),lclgl,mod,mstats);
+      if (error_code != DEF_OKAY) {
+        TypeLintError(ASCERR,stat,error_code);
+        return error_code;
+      }
+      break;
+    case ISA:
+      if (IsaDeriv(stat)) {
+        error_code = DoDerIsa(stat,lclgl,mod,mstats);
+        if (error_code != DEF_OKAY) return error_code;
+      }
+      break;
+    case FOR:
+      error_code = DoDerIsas(ForStatStmts(stat),lclgl,mod,mstats);
+      if (error_code != DEF_OKAY) return error_code;
+      break;
+    default: /* IRT, ATS, AA, LNK, REL, ASGN, RUN, WHEN, IF, EXT, CASGN  */
+      break;
+    }
+  }
+  return DEF_OKAY;
+}
+
+static
+enum typelinterr DeriveDerType(struct Statement *stat,
+                               struct gl_list_t *lclgl,
+                               struct module_t *mod,
+                               CONST struct StatementList *stats)
+{
+  CONST struct VariableList *vl, *dervl;
+  struct Name *dername, *varnptr, *indnptr;
+  CONST struct TypeDescription *vartype, *indtype;
+  struct TypeDescription *dertype = NULL;
+  symchar *typename;
+  struct ChildListEntry test, *clep;
+  unsigned long pos;
+  int rlen;
+  enum e_findrhs rval;
+  vl = GetStatVarList(stat);
+  while(vl) {
+    dername = (struct Name *)NamePointer(vl);
+    test.strptr = NameIdPtr(dername);
+    pos = gl_search(lclgl,&test,(CmpFunc)CmpChildListEntries);
+    assert(pos!=0);
+    clep = (struct ChildListEntry *)gl_fetch(lclgl,pos);
+    dervl = DerVlist(NameDerPtr(dername));
+    varnptr = CopyName(NamePointer(dervl));
+    dervl = NextVariableNode(dervl);
+    indnptr = CopyName(NamePointer(dervl));
+    vartype = FindDerType(varnptr,stat,lclgl,mod,&rlen,&rval);
+    indtype = FindDerType(indnptr,stat,lclgl,mod,&rlen,&rval);
+    if(clep->typeptr==NULL || MoreRefined(vartype,clep->typeptr->u.derivatom.vartype) != clep->typeptr->u.derivatom.vartype || MoreRefined(indtype,clep->typeptr->u.derivatom.indtype) != clep->typeptr->u.derivatom.indtype) {
+      /* Create the new type description */
+      typename = GenerateDerTypeName(GetName(vartype),GetName(indtype));
+      dertype = FindType(AddSymbol(SCP(typename)));
+      if (!dertype){
+        dertype = CreateDerivAtomTypeDef(typename,vartype,indtype,mod);
+        AddType(dertype);
+      }
+      clep->typeptr = dertype;
+      stat->v.i.type = typename;
+    }
+    vl = NextVariableNode(vl);
+  }
+  return DEF_OKAY;
+}
+
+static
+enum typelinterr DeriveDerTypes(CONST struct StatementList *stats,
+                                struct gl_list_t *lclgl,
+                                struct module_t *mod,
+                                CONST struct StatementList *mstats)
+{
+  register struct gl_list_t *statements;
+  register unsigned long c,len;
+  enum typelinterr error_code;
+  struct Statement *stat;
+  statements = GetList(stats);
+  len = gl_length(statements);
+  for(c=1;c<=len;c++){
+    stat = (struct Statement *)gl_fetch(statements,c);
+    switch(StatementType(stat)){
+    case ISDER:
+      error_code = DeriveDerTypes(GetStatSlist(stat),lclgl,mod,mstats);
+      if (error_code != DEF_OKAY) {
+        TypeLintError(ASCERR,stat,error_code);
+        return error_code;
+      }
+      break;
+    case ISA:
+      if (IsaDeriv(stat)) {
+        error_code = DeriveDerType(stat,lclgl,mod,mstats);
+        if (error_code != DEF_OKAY) {
+          TypeLintError(ASCERR,stat,error_code);
+          return error_code;
+        }
+      }
+      break;
+    case FOR:
+      error_code = DeriveDerTypes(ForStatStmts(stat),lclgl,mod,mstats);
+      if (error_code != DEF_OKAY) {
+        TypeLintError(ASCERR,stat,error_code);
+        return error_code;
+      }
+      break;
+    default: /* IRT, ATS, AA, LNK, REL, ASGN, RUN, WHEN, IF, EXT, CASGN  */
+      break;
+    }
+  }
+  return DEF_OKAY;
+}
+
+/*
+ *  This function is called for ISA statements from ISPRE statement lists.
+ *  It generates the symchar and finds the type for the pre variable
+ *  and adds its name to the childlist.
+ */
+
+static
+enum typelinterr DoPreIsa(struct Statement *stat,
+                          struct gl_list_t *lclgl,
+                          struct module_t *mod,
+                          CONST struct StatementList *stats)
+{
+  CONST struct VariableList *vl;
+  struct Name *prename, *varnptr;
+  CONST struct TypeDescription *vartype;
+  enum typelinterr error_code;
+  int rlen;
+  enum e_findrhs rval;
+  unsigned int origin;
+  vl = GetStatVarList(stat);
+  while(vl) {
+    prename = (struct Name *)NamePointer(vl);
+    varnptr = PreName(NamePrePtr(prename));
+    prename->val.pre->strname = WritePreName(varnptr);
+    vartype = FindRHSType(varnptr,lclgl,&rval,&rlen,&origin);
+    if (vartype == NULL || GetBaseType(vartype) != real_type)
+      return DEF_ILLEGAL_PREARG;
+    /* Copy the subscripts from the argument name to the pre name. */
+    while(varnptr) {
+      if (!NameDeriv(varnptr) && !NameId(varnptr) && !NamePre(varnptr)) {
+        prename = AppendNameNode(prename,varnptr);
+      }
+      varnptr = NextName(varnptr);
+    }
+    error_code = DoName(prename,vartype,stat);
+    gl_insert_sorted(lclgl,g_lcl_pivot,(CmpFunc)CmpChildListEntries);
+    if (error_code != DEF_OKAY) return error_code;
+    vl = NextVariableNode(vl);
+  }
+  stat->v.i.type = GetName(vartype);
+  return DEF_OKAY;
+}
+
+static
+enum typelinterr DoPreIsas(CONST struct StatementList *stats,
+                           struct gl_list_t *lclgl,
+                           struct module_t *mod,
+                           CONST struct StatementList *mstats)
+{
+  register struct gl_list_t *statements;
+  register unsigned long c,len;
+  enum typelinterr error_code;
+  struct Statement *stat;
+  statements = GetList(stats);
+  len = gl_length(statements);
+  for(c=1;c<=len;c++){
+    stat = (struct Statement *)gl_fetch(statements,c);
+    switch(StatementType(stat)){
+    case ISPRE:
+      error_code = DoPreIsas(GetPreSlist(stat),lclgl,mod,mstats);
+      if (error_code != DEF_OKAY) {
+        TypeLintError(ASCERR,stat,error_code);
+        return error_code;
+      }
+      break;
+    case ISA:
+      if (IsaPre(stat)) {
+        error_code = DoPreIsa(stat,lclgl,mod,mstats);
+        if (error_code != DEF_OKAY) return error_code;
+      }
+      break;
+    case FOR:
+      error_code = DoPreIsas(ForStatStmts(stat),lclgl,mod,mstats);
+      if (error_code != DEF_OKAY) return error_code;
+      break;
+    default: /* IRT, ATS, AA, LNK, REL, ASGN, RUN, WHEN, IF, EXT, CASGN  */
+      break;
+    }
+  }
+  return DEF_OKAY;
+}
+
+static void DerivePreType(struct Statement *stat,
+                          struct gl_list_t *lclgl,
+                          struct module_t *mod,
+                          CONST struct StatementList *stats)
+{
+  CONST struct VariableList *vl;
+  struct Name *prename, *varnptr;
+  CONST struct TypeDescription *vartype;
+  struct ChildListEntry test, *clep;
+  unsigned long pos;
+  unsigned int origin;
+  int rlen;
+  enum e_findrhs rval;
+  vl = GetStatVarList(stat);
+  while(vl) {
+    prename = (struct Name *)NamePointer(vl);
+    test.strptr = NameIdPtr(prename);
+    pos = gl_search(lclgl,&test,(CmpFunc)CmpChildListEntries);
+    assert(pos!=0);
+    clep = (struct ChildListEntry *)gl_fetch(lclgl,pos);
+    varnptr = CopyName(PreName(NamePrePtr(prename)));
+    vartype = FindRHSType(varnptr,lclgl,&rval,&rlen,&origin);
+    if(clep->typeptr==NULL ||
+      MoreRefined(vartype,clep->typeptr) != clep->typeptr) {
+      clep->typeptr = vartype;
+    }
+    vl = NextVariableNode(vl);
+  }
+}
+
+/*
+ * Check if the pre() argument has changed its type (i.e. has been refined).
+ * If yes, changes the type of the pre() variable.
+ */
+
+static void DerivePreTypes(CONST struct StatementList *stats,
+                           struct gl_list_t *lclgl,
+                           struct module_t *mod,
+                           CONST struct StatementList *mstats)
+{
+  register struct gl_list_t *statements;
+  register unsigned long c,len;
+  struct Statement *stat;
+  statements = GetList(stats);
+  len = gl_length(statements);
+  for(c=1;c<=len;c++){
+    stat = (struct Statement *)gl_fetch(statements,c);
+    switch(StatementType(stat)){
+    case ISPRE:
+      DerivePreTypes(GetPreSlist(stat),lclgl,mod,mstats);
+      break;
+    case ISA:
+      if (IsaPre(stat)) DerivePreType(stat,lclgl,mod,mstats);
+      break;
+    case FOR:
+      DerivePreTypes(ForStatStmts(stat),lclgl,mod,mstats);
+      break;
+    default: /* IRT, ATS, AA, LNK, REL, ASGN, RUN, WHEN, IF, EXT, CASGN  */
+      break;
+    }
+  }
 }
 
 /*****************************************************************\
@@ -2538,6 +3159,885 @@ int SetNamesInLCL(CONST struct Set *sn)
 }
 
 /*
+ * If the der variable contains only one argument,
+ * searches for an independent variable and adds
+ * it to the varlist stored in the name. Generates
+ * a symchar for the derivative name.
+ */
+
+static
+enum typelinterr DoDer(CONST struct Name *nameptr,
+		       struct StatementList *mstats)
+{
+  struct Statement *indep_stat;
+  CONST struct Name *nptr;
+  CONST struct VariableList *vlist;
+  struct Name *tmp;
+  /* Extend the varlist if needed */
+  if (VariableListLength(DerVlist(NameDerPtr(nameptr))) < 2) {
+    indep_stat = FindIndepStat(GetList(mstats));
+    if (indep_stat) {
+      nameptr->val.der->vlist = JoinVariableLists(DerVlist(NameDerPtr(nameptr)), CopyVariableList(LINKStatVlist(indep_stat)));
+    }else return DEF_NO_INDEP;    
+  }
+  vlist = DerVlist(NameDerPtr(nameptr));
+  if (NameDeriv(NamePointer(vlist))) DoDer(NamePointer(vlist),mstats);
+  else if (NamePre(NamePointer(vlist))) return DEF_PRE_INDER;
+  vlist = NextVariableNode(vlist);
+  if (NameDeriv(NamePointer(vlist))) DoDer(NamePointer(vlist),mstats);
+  else if (NamePre(NamePointer(vlist))) return DEF_PRE_INDER;
+  nameptr->val.der->strname = GetIdFromVlist(DerVlist(NameDerPtr(nameptr)));
+  vlist = DerVlist(NameDerPtr(nameptr));
+  nptr = NamePointer(vlist);
+  tmp = NextName(nameptr);
+  ((struct Name *)nameptr)->next = NULL;
+  while (nptr) {
+    if (!NameDeriv(nptr) && !NameId(nptr) && !NamePre(nptr)) {
+      nameptr = AppendNameNode((struct Name *)nameptr,nptr);
+    }
+    if (nptr) nptr = NextName(nptr);
+  }
+  AppendNameNode((struct Name *)nameptr,tmp);
+  return DEF_OKAY;
+}
+
+static
+enum typelinterr DoDers(CONST struct StatementList *stats,
+			struct StatementList *modelstats)
+{
+  register struct gl_list_t *statements;
+  register unsigned long c,len;
+  register unsigned long i, expr_len;
+  enum typelinterr error_code;
+  struct Statement *stat;
+  struct Expr *expr;
+  struct Set *s;
+  CONST struct VariableList *vlist,*dervl;
+  struct SwitchList *sw;
+  struct EventList *e;
+  struct WhenList *wl;
+  struct Name *pn;
+  statements = GetList(stats);
+  len = gl_length(statements);
+  for(c=1;c<=len;c++){
+    stat = (struct Statement *)gl_fetch(statements,c);
+    /* Searching for statements that contain expressions. */
+    switch(StatementType(stat)){
+    case ISA:
+      if (IsaDeriv(stat)) {
+        vlist = GetStatVarList(stat);
+        while(vlist) {
+          dervl = DerVlist(NameDerPtr(NamePointer(vlist)));
+          while(dervl) {
+            if (NameDeriv(NamePointer(dervl))) {
+              error_code = DoDer(NamePointer(dervl),modelstats);
+              if (error_code != DEF_OKAY) {
+                TypeLintError(ASCERR,stat, error_code);
+                return error_code;
+              }
+            }
+            dervl = NextVariableNode(dervl);
+          }
+          vlist = NextVariableNode(vlist);
+        }
+      }else if(IsaPre(stat)) {
+        vlist = GetStatVarList(stat);
+          while(vlist) {
+          pn = PreName(NamePrePtr(NamePointer(vlist)));
+          if (NameDeriv(pn)) {
+            error_code = DoDer(pn,modelstats);
+            if (error_code != DEF_OKAY) {
+              TypeLintError(ASCERR,stat, error_code);
+              return error_code;
+            }
+          }
+          vlist = NextVariableNode(vlist);
+        }
+      }else{
+        vlist = GetStatVarList(stat);
+        while(vlist) {
+          if (NameDeriv(NamePointer(vlist))) {
+            TypeLintError(ASCERR,stat,DEF_DER_INCORRECT);
+            return DEF_DER_INCORRECT;
+          }
+          vlist = NextVariableNode(vlist);
+        }
+      }
+      break;
+    case ISDER:
+      vlist = GetStatVarList(stat);
+      while (vlist) {
+        if (NameDeriv(NamePointer(vlist))) {
+          error_code = DoDer(NamePointer(vlist),modelstats);
+          if (error_code != DEF_OKAY) {
+            TypeLintError(ASCERR,stat, error_code);
+            return error_code;
+          }
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      error_code = DoDers(GetStatSlist(stat),modelstats);
+      if (error_code != DEF_OKAY){
+        return error_code;
+      }
+      break; 
+    case ISPRE:
+      vlist = GetStatVarList(stat);
+      while (vlist) {
+        if (NameDeriv(NamePointer(vlist))) {
+          error_code = DoDer(NamePointer(vlist),modelstats);
+          if (error_code != DEF_OKAY) {
+            TypeLintError(ASCERR,stat, error_code);
+            return error_code;
+          }
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      error_code = DoDers(GetPreSlist(stat),modelstats);
+      if (error_code != DEF_OKAY){
+        return error_code;
+      }
+      break;
+    case ASGN:
+      expr = DefaultStatRHS(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NameDeriv(ExprName(expr))) {
+          error_code = DoDer(ExprName(expr),modelstats);
+          if (error_code != DEF_OKAY) {
+            TypeLintError(ASCERR,stat, error_code);
+            return error_code;
+          }
+        }
+        if (ExprType(expr)==e_var && NamePre(ExprName(expr))) {
+          pn = PreName(NamePrePtr(ExprName(expr)));
+          if (NameDeriv(pn)) {
+            error_code = DoDer(pn,modelstats);
+            if (error_code != DEF_OKAY) {
+              TypeLintError(ASCERR,stat, error_code);
+              return error_code;
+            }
+          }
+        }
+        expr = NextExpr(expr);
+      }
+      if (NameDeriv(DefaultStatVar(stat))) {
+        error_code = DoDer(DefaultStatVar(stat),modelstats);
+        if (error_code != DEF_OKAY) {
+          TypeLintError(ASCERR,stat, error_code);
+          return error_code;
+        }
+      }
+      break;
+    case CASGN:
+      expr = AssignStatRHS(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NameDeriv(ExprName(expr))) {
+          error_code = DoDer(ExprName(expr),modelstats);
+          if (error_code != DEF_OKAY) {
+            TypeLintError(ASCERR,stat, error_code);
+            return error_code;
+          }
+        }
+        expr = NextExpr(expr);
+      }
+      if (NameDeriv(AssignStatVar(stat))) {
+        TypeLintError(ASCERR,stat,DEF_DER_INCORRECT);
+        return DEF_DER_INCORRECT;
+      }
+      break;
+    case REL:
+      expr = RelationStatExpr(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NameDeriv(ExprName(expr))) {
+          error_code = DoDer(ExprName(expr),modelstats);
+          if (error_code != DEF_OKAY) {
+            TypeLintError(ASCERR,stat, error_code);
+            return error_code;
+          }
+        }
+        if (ExprType(expr)==e_var && NamePre(ExprName(expr))) {
+          pn = PreName(NamePrePtr(ExprName(expr)));
+          if (NameDeriv(pn)) {
+            error_code = DoDer(pn,modelstats);
+            if (error_code != DEF_OKAY) {
+              TypeLintError(ASCERR,stat, error_code);
+              return error_code;
+            }
+          }
+        }
+        expr = NextExpr(expr);
+      }
+      break;
+    case LOGREL:
+      expr = LogicalRelStatExpr(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NameDeriv(ExprName(expr))) {
+          error_code = DoDer(ExprName(expr),modelstats);
+          if (error_code != DEF_OKAY) {
+            TypeLintError(ASCERR,stat, error_code);
+            return error_code;
+          }
+        }
+        expr = NextExpr(expr);
+      }
+      break;
+    case FOR:
+      expr = ForStatExpr(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NameDeriv(ExprName(expr))) {
+          TypeLintError(ASCERR,stat,DEF_DER_INCORRECT);
+          return DEF_DER_INCORRECT;
+        }else if(ExprType(expr)==e_set){
+          s = ExprSValue(expr);
+          if (SetType(s)) {
+            if (ExprType(GetLowerExpr(s))==e_var && NameDeriv(ExprName(GetLowerExpr(s)))){
+              TypeLintError(ASCERR,stat,DEF_DER_INCORRECT);
+              return DEF_DER_INCORRECT;
+            }else if (ExprType(GetUpperExpr(s))==e_var && NameDeriv(ExprName(GetUpperExpr(s)))){
+              TypeLintError(ASCERR,stat,DEF_DER_INCORRECT);
+              return DEF_DER_INCORRECT;
+            }
+          } else{
+            int slen = SetLength(s);
+            for (i=1;i<=slen;i++) {
+              if (ExprType(GetSingleExpr(s))==e_var && NameDeriv(ExprName(GetSingleExpr(s)))) {
+                TypeLintError(ASCERR,stat,DEF_DER_INCORRECT);
+                return DEF_DER_INCORRECT;
+              }
+              s = NextSet(s);
+            }
+          }
+          expr = NextExpr(expr);
+        }
+      }
+      error_code = DoDers(ForStatStmts(stat),modelstats);
+      if (error_code != DEF_OKAY) {
+        return error_code;
+      }
+      break;
+    case ASSERT:
+      expr = AssertStatExpr(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NameDeriv(ExprName(expr))) {
+          error_code = DoDer(ExprName(expr),modelstats);
+          if (error_code != DEF_OKAY) {
+            TypeLintError(ASCERR,stat, error_code);
+            return error_code;
+          }
+        }
+        expr = NextExpr(expr);
+      }
+      break;
+    case ALIASES:
+      if (NameDeriv(AliasStatName(stat))) {
+        error_code = DoDer(AliasStatName(stat),modelstats);
+        if (error_code != DEF_OKAY) {
+          TypeLintError(ASCERR,stat, error_code);
+          return error_code;
+        }
+      }
+      if (NamePre(AliasStatName(stat))) {
+        pn = PreName(NamePrePtr(AliasStatName(stat)));
+        if (NameDeriv(pn)) {
+          error_code = DoDer(pn,modelstats);
+          if (error_code != DEF_OKAY) {
+            TypeLintError(ASCERR,stat, error_code);
+            return error_code;
+          }
+        }
+      }
+      vlist = GetStatVarList(stat);
+      while (vlist != NULL) {
+        if (NameDeriv(NamePointer(vlist))) {
+          TypeLintError(ASCERR,stat,DEF_DER_INCORRECT);
+          return error_code;
+        }
+        vlist = NextVariableNode(vlist);
+      }    
+      break;
+    case ATS:
+    case AA:
+    case IRT:
+    case ARR:
+      vlist = GetStatVarList(stat);
+      while (vlist != NULL) {
+        if (NameDeriv(NamePointer(vlist))) {
+          error_code = DoDer(NamePointer(vlist),modelstats);
+          if (error_code != DEF_OKAY) {
+            TypeLintError(ASCERR,stat, error_code);
+            return error_code;
+          }
+        }
+        if (NamePre(NamePointer(vlist))) {
+          pn = PreName(NamePrePtr(NamePointer(vlist)));
+          if (NameDeriv(pn)) {
+            error_code = DoDer(pn,modelstats);
+            if (error_code != DEF_OKAY) {
+              TypeLintError(ASCERR,stat, error_code);
+              return error_code;
+            }
+          }
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      break;
+    case IF:
+      expr = IfStatExpr(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NameDeriv(ExprName(expr))) {
+          error_code = DoDer(ExprName(expr),modelstats);
+          if (error_code!=DEF_OKAY) {
+            TypeLintError(ASCERR,stat,error_code);
+            return error_code;
+          }
+        }
+        expr = NextExpr(expr);
+      }
+      error_code = DoDers(IfStatThen(stat),modelstats);
+      if (error_code != DEF_OKAY) {
+        return error_code;
+      }
+      if (IfStatElse(stat)) {
+        error_code = DoDers(IfStatElse(stat),modelstats);
+        if (error_code != DEF_OKAY) {
+          return error_code;
+        }
+      }  
+      break;
+    case WHILE:
+      expr = WhileStatExpr(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NameDeriv(ExprName(expr))) {
+          error_code = DoDer(ExprName(expr),modelstats);
+          if (error_code!=DEF_OKAY) {
+            TypeLintError(ASCERR,stat,error_code);
+            return error_code;
+          }
+        }
+        expr = NextExpr(expr);
+      }
+      error_code = DoDers(WhileStatBlock(stat),modelstats);
+      if (error_code != DEF_OKAY) {
+        return error_code;
+      }  
+      break;
+    case FIX:
+    case FREE:
+      vlist = FixFreeStatVars(stat);
+      while(vlist) {
+        if (NameDeriv(NamePointer(vlist))) {
+          error_code = DoDer(NamePointer(vlist),modelstats);
+          if (error_code != DEF_OKAY) {
+            TypeLintError(ASCERR,stat,error_code);
+            return error_code;
+          }
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      break;
+    case COND:
+      error_code = DoDers(CondStatList(stat),modelstats);
+      if (error_code != DEF_OKAY){
+        return error_code;
+      }
+      break;
+    case WHEN:
+      vlist = WhenStatVL(stat);
+      while(vlist) {
+        if (NameDeriv(NamePointer(vlist))) {
+          TypeLintError(ASCERR,stat,DEF_DER_INCORRECT);
+          return DEF_DER_INCORRECT;
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      wl = WhenStatCases(stat);
+      while (wl!= NULL) {
+        error_code = DoDers(WhenStatementList(wl),modelstats);
+        wl = NextWhenCase(wl);
+      }
+      break;
+    case EVENT:
+      vlist = EventStatCond(stat);
+      while(vlist) {
+        if (NameDeriv(NamePointer(vlist))) {
+          TypeLintError(ASCERR,stat,DEF_DER_INCORRECT);
+          return DEF_DER_INCORRECT;
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      e = EventStatCases(stat);
+      while (e!= NULL) {
+        error_code = DoDers(EventStatementList(e),modelstats);
+        e = NextEventCase(e);
+      }
+      break;
+    case SWITCH:
+      vlist = SwitchStatVL(stat);
+      while(vlist) {
+        if (NameDeriv(NamePointer(vlist))) {
+          TypeLintError(ASCERR,stat,DEF_DER_INCORRECT);
+          return DEF_DER_INCORRECT;
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      sw = SwitchStatCases(stat);
+      while (sw!= NULL) {
+        error_code = DoDers(SwitchStatementList(sw),modelstats);
+        sw = NextSwitchCase(sw);
+      }
+      break;
+    default: /* LNK, RUN, EXT, OPTION, ARR, REF */
+      break;
+    }
+  }
+  return DEF_OKAY;
+}
+
+static
+enum typelinterr DoDersInMethods(struct gl_list_t *pl,
+				     struct StatementList *modelstats)
+{
+  register unsigned long c, len;
+  register struct StatementList *statements;
+  enum typelinterr error_code;
+  len = gl_length(pl);
+  struct InitProcedure *proc;
+  for(c = 1; c <= len; c++) {
+    proc = (struct InitProcedure*)gl_fetch(pl,c);
+    statements = ProcStatementList(proc);
+    error_code = DoDers(statements,modelstats);
+    if (error_code != DEF_OKAY) {
+      return error_code;
+    }
+  }
+  return DEF_OKAY;
+}
+
+static
+enum typelinterr VerifyDerVlist(CONST struct VariableList *vlist,
+                                struct gl_list_t *lclgl)
+{
+  CONST struct VariableList *dervl;
+  CONST struct Name *name;
+  CONST struct TypeDescription *rtype;
+  enum e_findrhs rval;
+  int rlen = 0;
+  unsigned int origin;
+  while(vlist) {
+    dervl = DerVlist(NameDerPtr(NamePointer(vlist)));
+    while(dervl) {
+      name = NamePointer(dervl);
+      rtype = FindRHSType(name,lclgl,&rval,&rlen,&origin);
+      if (rtype==NULL) {
+        return DEF_DERNAME_MISSING;
+      }
+      dervl = NextVariableNode(dervl);
+    }
+    vlist = NextVariableNode(vlist);
+  }
+  return DEF_OKAY;
+}
+
+/*
+ * Check if all the derivative arguments exist. If can't
+ * find an argument type, give a warning, but continue.
+ */
+
+static
+void VerifyDerIsas(CONST struct StatementList *stats,
+                               struct gl_list_t *lclgl)
+{
+  register struct gl_list_t *statements;
+  register unsigned long c,len;
+  enum typelinterr error_code;
+  struct Statement *stat;
+  statements = GetList(stats);
+  len = gl_length(statements);
+  for (c = 1; c <= len; c++) {
+    stat = (struct Statement *)gl_fetch(statements,c);
+    switch(StatementType(stat)){
+    case ISDER:
+      VerifyDerIsas(GetStatSlist(stat),lclgl);
+      break;
+    case ISA:
+      if (IsaDeriv(stat)) {
+        error_code = VerifyDerVlist(GetStatVarList(stat),lclgl);
+        if (error_code != DEF_OKAY) TypeLintError(ASCERR,stat,error_code);
+      }
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+/*
+ * Checks that there are no nested pre variables. Generates
+ * a symchar for the pre name.
+ */
+
+static
+enum typelinterr DoPre(CONST struct Name *nameptr,
+		       struct StatementList *mstats)
+{
+  CONST struct Name *nptr;
+  struct Name *tmp; 
+
+  nptr = PreName(NamePrePtr(nameptr));
+  if (NamePre(nptr)) return DEF_NESTED_PRE;
+  nameptr->val.pre->strname = WritePreName(nptr);
+  tmp = NextName(nameptr);
+  ((struct Name *)nameptr)->next = NULL;
+  while (nptr) {
+    if (!NameDeriv(nptr) && !NameId(nptr) && !NamePre(nptr)) {
+      nameptr = AppendNameNode((struct Name *)nameptr,nptr);
+    }
+    if (nptr) nptr = NextName(nptr);
+  }
+  AppendNameNode((struct Name *)nameptr,tmp);
+  return DEF_OKAY;
+}
+
+static
+enum typelinterr DoPres(CONST struct StatementList *stats,
+			struct StatementList *modelstats)
+{
+  register struct gl_list_t *statements;
+  register unsigned long c,len;
+  register unsigned long i, expr_len;
+  enum typelinterr error_code;
+  struct Statement *stat;
+  struct Expr *expr;
+  struct Set *s;
+  CONST struct VariableList *vlist;
+  struct Name *prename;
+  struct SwitchList *sw;
+  struct EventList *e;
+  struct WhenList *wl;
+  statements = GetList(stats);
+  len = gl_length(statements);
+  for(c=1;c<=len;c++){
+    stat = (struct Statement *)gl_fetch(statements,c);
+    /* Searching for statements that contain expressions. */
+    switch(StatementType(stat)){
+    case ISA:
+      if (IsaPre(stat)) {
+        vlist = GetStatVarList(stat);
+        while(vlist) {
+          prename = PreName(NamePrePtr(NamePointer(vlist)));
+          if (NamePre(prename)) {
+            TypeLintError(ASCERR,stat,DEF_NESTED_PRE);
+            return DEF_NESTED_PRE;
+          }
+          vlist = NextVariableNode(vlist);
+        }
+      }else{
+        vlist = GetStatVarList(stat);
+        while(vlist) {
+          if (NamePre(NamePointer(vlist))) {
+            TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+            return DEF_PRE_INCORRECT;
+          }
+          vlist = NextVariableNode(vlist);
+        }
+      }
+      break;
+    case ISDER:
+      vlist = GetStatVarList(stat);
+      while (vlist) {
+        if (NamePre(NamePointer(vlist))) {
+          TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+          return DEF_PRE_INCORRECT;
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      error_code = DoPres(GetStatSlist(stat),modelstats);
+      if (error_code != DEF_OKAY){
+        return error_code;
+      }
+      break; 
+    case ISPRE:
+      vlist = GetStatVarList(stat);
+      while (vlist) {
+        if (NamePre(NamePointer(vlist))) {
+          TypeLintError(ASCERR,stat,DEF_NESTED_PRE);
+          return DEF_NESTED_PRE;
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      error_code = DoPres(GetPreSlist(stat),modelstats);
+      if (error_code != DEF_OKAY){
+        return error_code;
+      }
+      break; 
+    case ASGN:
+      expr = DefaultStatRHS(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NamePre(ExprName(expr))) {
+          error_code = DoPre(ExprName(expr),modelstats);
+          if (error_code != DEF_OKAY) {
+            TypeLintError(ASCERR,stat, error_code);
+            return error_code;
+          }
+        }
+        expr = NextExpr(expr);
+      }
+      if (NamePre(DefaultStatVar(stat))) {
+        TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+        return DEF_PRE_INCORRECT;
+      }
+      break;
+    case CASGN:
+      expr = AssignStatRHS(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NamePre(ExprName(expr))) {
+          TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+          return DEF_PRE_INCORRECT;
+        }
+        expr = NextExpr(expr);
+      }
+      if (NamePre(AssignStatVar(stat))) {
+        TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+        return DEF_PRE_INCORRECT;
+      }
+      break;
+    case REL:
+      expr = RelationStatExpr(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NamePre(ExprName(expr))) {
+          error_code = DoPre(ExprName(expr),modelstats);
+          if (error_code != DEF_OKAY) {
+            TypeLintError(ASCERR,stat, error_code);
+            return error_code;
+          }
+        }
+        expr = NextExpr(expr);
+      }
+      break;
+    case LOGREL:
+      expr = LogicalRelStatExpr(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NamePre(ExprName(expr))) {
+          TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+          return DEF_PRE_INCORRECT;
+        }
+        expr = NextExpr(expr);
+      }
+      break;
+    case FOR:
+      expr = ForStatExpr(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NamePre(ExprName(expr))) {
+          TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+          return DEF_PRE_INCORRECT;
+        }else if(ExprType(expr)==e_set){
+          s = ExprSValue(expr);
+          if (SetType(s)) {
+            if (ExprType(GetLowerExpr(s))==e_var && NamePre(ExprName(GetLowerExpr(s)))){
+              TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+              return DEF_PRE_INCORRECT;
+            }else if (ExprType(GetUpperExpr(s))==e_var && NamePre(ExprName(GetUpperExpr(s)))){
+              TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+              return DEF_PRE_INCORRECT;
+            }
+          }else{
+            int slen = SetLength(s);
+            for (i=1;i<=slen;i++) {
+              if (ExprType(GetSingleExpr(s))==e_var && NamePre(ExprName(GetSingleExpr(s)))) {
+                TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+                return DEF_PRE_INCORRECT;
+              }
+              s = NextSet(s);
+            }
+          }
+          expr = NextExpr(expr);
+        }
+      }
+      error_code = DoPres(ForStatStmts(stat),modelstats);
+      if (error_code != DEF_OKAY) {
+        return error_code;
+      }
+      break;
+    case ASSERT:
+      expr = AssertStatExpr(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NamePre(ExprName(expr))) {
+          TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+          return DEF_PRE_INCORRECT;
+        }
+        expr = NextExpr(expr);
+      }
+      break;
+    case ALIASES:
+      if (NamePre(AliasStatName(stat))) {
+        error_code = DoPre(AliasStatName(stat),modelstats);
+        if (error_code != DEF_OKAY) {
+          TypeLintError(ASCERR,stat, error_code);
+          return error_code;
+        }
+      }
+      vlist = GetStatVarList(stat);
+      while (vlist != NULL) {
+        if (NamePre(NamePointer(vlist))) {
+          TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+          return error_code;
+        }
+        vlist = NextVariableNode(vlist);
+      }    
+      break;
+    case ATS:
+    case AA:
+    case IRT:
+    case ARR:
+      vlist = GetStatVarList(stat);
+      while (vlist != NULL) {
+        if (NamePre(NamePointer(vlist))) {
+          TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+          return DEF_PRE_INCORRECT;
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      break;
+    case IF:
+      expr = IfStatExpr(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NamePre(ExprName(expr))) {
+          TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+          return DEF_PRE_INCORRECT;
+        }
+        expr = NextExpr(expr);
+      }
+      error_code = DoPres(IfStatThen(stat),modelstats);
+      if (error_code != DEF_OKAY) {
+        return error_code;
+      }
+      if (IfStatElse(stat)) {
+        error_code = DoPres(IfStatElse(stat),modelstats);
+        if (error_code != DEF_OKAY) {
+          return error_code;
+        }
+      }  
+      break;
+    case WHILE:
+      expr = WhileStatExpr(stat);
+      expr_len = ExprListLength(expr);
+      for (i=1;i<=expr_len;i++) {
+        if (ExprType(expr)==e_var && NamePre(ExprName(expr))) {
+          TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+          return DEF_PRE_INCORRECT;
+        }
+        expr = NextExpr(expr);
+      }
+      error_code = DoPres(WhileStatBlock(stat),modelstats);
+      if (error_code != DEF_OKAY) {
+        return error_code;
+      }  
+      break;
+    case FIX:
+    case FREE:
+      vlist = FixFreeStatVars(stat);
+      while(vlist) {
+        if (NamePre(NamePointer(vlist))) {
+          TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+          return DEF_PRE_INCORRECT;
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      break;
+    case COND:
+      error_code = DoPres(CondStatList(stat),modelstats);
+      if (error_code != DEF_OKAY){
+        return error_code;
+      }
+      break;
+    case WHEN:
+      vlist = WhenStatVL(stat);
+      while(vlist) {
+        if (NamePre(NamePointer(vlist))) {
+          TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+          return DEF_PRE_INCORRECT;
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      wl = WhenStatCases(stat);
+      while (wl!= NULL) {
+        error_code = DoPres(WhenStatementList(wl),modelstats);
+        wl = NextWhenCase(wl);
+      }
+      break;
+    case EVENT:
+      vlist = EventStatCond(stat);
+      while(vlist) {
+        if (NamePre(NamePointer(vlist))) {
+          TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+          return DEF_PRE_INCORRECT;
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      e = EventStatCases(stat);
+      while (e!= NULL) {
+        error_code = DoPres(EventStatementList(e),modelstats);
+        e = NextEventCase(e);
+      }
+      break;
+    case SWITCH:
+      vlist = SwitchStatVL(stat);
+      while(vlist) {
+        if (NamePre(NamePointer(vlist))) {
+          TypeLintError(ASCERR,stat,DEF_PRE_INCORRECT);
+          return DEF_PRE_INCORRECT;
+        }
+        vlist = NextVariableNode(vlist);
+      }
+      sw = SwitchStatCases(stat);
+      while (sw!= NULL) {
+        error_code = DoPres(SwitchStatementList(sw),modelstats);
+        sw = NextSwitchCase(sw);
+      }
+      break;
+    default: /* LNK, RUN, EXT, OPTION, REF */
+      break;
+    }
+  }
+  return DEF_OKAY;
+}
+
+static
+enum typelinterr DoPresInMethods(struct gl_list_t *pl,
+				 struct StatementList *modelstats)
+{
+  register unsigned long c, len;
+  register struct StatementList *statements;
+  enum typelinterr error_code;
+  len = gl_length(pl);
+  struct InitProcedure *proc;
+  for(c = 1; c <= len; c++) {
+    proc = (struct InitProcedure*)gl_fetch(pl,c);
+    statements = ProcStatementList(proc);
+    error_code = DoPres(statements,modelstats);
+    if (error_code != DEF_OKAY) {
+      return error_code;
+    }
+  }
+  return DEF_OKAY;
+}
+
+/*
  * checks that lhs of :=  (declarative) are variables.
  * checks that lhs of :== are constants and not of parametric origin.
  * checks that rhs of :== are constants.
@@ -2560,6 +4060,7 @@ enum typelinterr VerifyDefsAsgns(symchar *name,
   enum e_findrhs rval;
   int subsopen;
   unsigned int origin;
+  struct EventList *e;
   enum typelinterr error_code=DEF_OKAY;
 
   statements = GetList(stats);
@@ -2602,18 +4103,24 @@ enum typelinterr VerifyDefsAsgns(symchar *name,
         rtype = FindRHSType(nptr,lclgl,&rval,&subsopen,&origin);
         if (rtype==NULL) {
           if (rval != FRC_attrname) {
-            char *iostring;
-            TLNM(ASCERR,nptr,"Unverifiable name in RHS: ",2);
-            error_code = DEF_NAME_MISSING;
-            iostring = (char *)ascmalloc(6+SCLEN(name));
-            sprintf(iostring,"In %s:\n",SCP(name));
-            TypeLintErrorAuxillary(ASCERR,iostring,DEF_MISC_WARNING,TRUE);
-            TypeLintError(ASCERR,stat, error_code);
-            ascfree(iostring);
-            error_code = DEF_OKAY;
-            /* here it would be nice if we could punt, but refinement
-             * rules that out since the name might be valid and we not know.
-             */
+	    if (NameDeriv(nptr)) {
+              TypeLintError(ASCERR,stat,DEF_DERNAME_MISSING);
+            }else if(NamePre(nptr)) {
+              TypeLintError(ASCERR,stat,DEF_PRENAME_MISSING);
+            }else{
+              char *iostring;
+              TLNM(ASCERR,nptr,"Unverifiable name in RHS: ",2);
+              error_code = DEF_NAME_MISSING;
+              iostring = (char *)ascmalloc(6+SCLEN(name));
+              sprintf(iostring,"In %s:\n",SCP(name));
+              TypeLintErrorAuxillary(ASCERR,iostring,DEF_MISC_WARNING,TRUE);
+              TypeLintError(ASCERR,stat, error_code);
+              ascfree(iostring);
+              error_code = DEF_OKAY;
+              /* here it would be nice if we could punt, but refinement
+               * rules that out since the name might be valid and we not know.
+               */
+            }
           }
           continue;
         }
@@ -2709,6 +4216,16 @@ enum typelinterr VerifyDefsAsgns(symchar *name,
         return error_code;
       }
       break;
+    case EVENT:
+      e = EventStatCases(stat);
+      while (e!=NULL) {
+        error_code = VerifyDefsAsgns(name,EventStatementList(e),lclgl,ft);
+        if (error_code != DEF_OKAY){
+          return error_code;
+        }
+        e = NextEventCase(e);
+      }
+      break;
     case SELECT:
       /* statements inside SELECT are analyzed as part of the flat
          list of statements */
@@ -2801,7 +4318,8 @@ enum typelinterr VerifyRefinementLegal(CONST struct StatementList *stats,
               switch(GetBaseType(atstype)) {
               case relation_type:
               case logrel_type:
-              case when_type: /* odd case indeed */
+              case when_type:
+              case event_type: /* odd case indeed */
                 TLNM(ASCERR,nptr,"Part with unmergable type: ",3);
                 TypeLintError(ASCERR,stat,DEF_ILLEGAL_ATS);
                 return DEF_ILLEGAL_ATS;
@@ -2846,7 +4364,8 @@ enum typelinterr VerifyRefinementLegal(CONST struct StatementList *stats,
               switch(GetBaseType(aatype)) {
               case relation_type:
               case logrel_type:
-              case when_type: /* odd case indeed */
+              case when_type:
+              case event_type: /* odd case indeed */
                 TLNM(ASCERR,nptr,"Part with illegal type: ",3);
                 TypeLintError(ASCERR,stat,DEF_ILLEGAL_AA);
                 return DEF_ILLEGAL_AA;
@@ -2917,10 +4436,14 @@ enum typelinterr VerifyRefinementLegal(CONST struct StatementList *stats,
             }
           }
         } else {
-          error_code = DEF_NAME_MISSING;
-          TLNNE(ASCERR,nptr,"Undefined name");
-          TypeLintError(ASCERR,stat, error_code);
-          return error_code;
+          if (NameDeriv(nptr)) TypeLintError(ASCERR,stat,DEF_DERNAME_MISSING);
+          else if (NamePre(nptr)) TypeLintError(ASCERR,stat,DEF_PRENAME_MISSING);
+          else{
+            error_code = DEF_NAME_MISSING;
+            TLNNE(ASCERR,nptr,"Undefined name");
+            TypeLintError(ASCERR,stat, error_code);
+            return error_code;
+          }
         }
         vl = NextVariableNode(vl);
       }
@@ -3580,7 +5103,7 @@ enum typelinterr VerifyRelationNames(symchar * name,
         return error_code;
       }
       break;
-    default: /* ISA, IRT, ATS, AA, LNK, ASGN, WHEN, RUN, IF, REF, CASGN*/
+    default: /* ISA, IRT, ATS, AA, LNK, ASGN, WHEN, RUN, IF, REF, CASGN, EVENT */
       break;
     }
   }
@@ -4545,7 +6068,8 @@ enum typelinterr MatchParameterWheres(symchar *name, /* goes w/wsl */
  * alias and relation sanity.
  */
 static
-ChildListPtr FinishChildList(symchar *type, struct StatementList *stats)
+ChildListPtr FinishChildList(symchar *type, struct StatementList *stats, struct module_t *mod,
+                             struct gl_list_t *pl)
 {
   ChildListPtr result;
   register struct gl_list_t *childlist;
@@ -4571,11 +6095,60 @@ ChildListPtr FinishChildList(symchar *type, struct StatementList *stats)
     ClearLCL();
     return NULL;
   }
+  ftable = CreateForTable();
+  error_code = DoEvents(type,stats,ftable);
+  DestroyForTable(ftable);
+  if (error_code !=DEF_OKAY){
+    ClearLCL();
+    return NULL;
+  }
+
+  error_code = DoDers(stats,stats);
+  if (error_code != DEF_OKAY){
+    ClearLCL();
+    return NULL;
+  }
+  if (pl) {
+    error_code = DoDersInMethods(pl,stats);
+    if (error_code != DEF_OKAY){
+      ClearLCL();
+      return NULL;
+    }
+  }
+
+  error_code = DoPres(stats,stats);
+  if (error_code != DEF_OKAY){
+    ClearLCL();
+    return NULL;
+  }
+  if (pl) {
+    error_code = DoPresInMethods(pl,stats);
+    if (error_code != DEF_OKAY){
+      ClearLCL();
+      return NULL;
+    }
+  }
+
   /* move all the data to a gllist */
   childlist = CopyLCLToGL();
+
   /* get the IS_A type of all children */
-  if (DeriveChildTypes(stats,childlist) > 0) {
+  if (DeriveChildTypes(stats,childlist,mod) > 0) {
     /* accept no whining! */
+    gl_destroy(childlist);
+    ClearLCL();
+    return NULL;
+  }
+
+  error_code = DoDerIsas(stats,childlist,mod,stats);
+  if (error_code != DEF_OKAY){
+    gl_destroy(childlist);
+    ClearLCL();
+    return NULL;
+  }
+
+  error_code = DoPreIsas(stats,childlist,mod,stats);
+  if (error_code != DEF_OKAY){
     gl_destroy(childlist);
     ClearLCL();
     return NULL;
@@ -4623,6 +6196,20 @@ ChildListPtr FinishChildList(symchar *type, struct StatementList *stats)
     ClearLCL();
     return NULL;
   }
+
+  error_code = DeriveDerTypes(stats,childlist,mod,stats);
+  if (error_code != DEF_OKAY){
+    gl_destroy(childlist);
+    ClearLCL();
+    return NULL;
+  }
+
+  DerivePreTypes(stats,childlist,mod,stats);
+
+  /* There is no need to check the return value of VerifyDerIsas,
+     because it is needed only to warn. */
+ 
+  VerifyDerIsas(stats,childlist);
 
   /* check for absurd IS_A args */
   ftable = CreateForTable();
@@ -4965,7 +6552,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
   gl_destroy(childlist);
   childlist = NULL;
   /* ok, eat regular body statements of new type */
-  clist = FinishChildList(name,sl);
+  clist = FinishChildList(name,sl,mod,pl);
   if (clist != NULL) {
     return CreateModelTypeDesc(name,rdesc,mod,
                                clist,pl,sl,univ,psl,rsl,tsl,wsl);
@@ -5119,6 +6706,7 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
         				  CONST dim_type *dim,
         				  long ival,
         				  symchar *sval,
+					  struct VariableList *lc,
                                           unsigned int err)
 {
   struct TypeDescription *rdesc;
@@ -5161,6 +6749,7 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
     if (GetUniversalFlag(rdesc)) univ=1;
     sl = AppendStatementLists(GetStatementList(rdesc),sl);
     pl = MergeProcedureLists(GetInitializationList(rdesc),pl);
+    lc = JoinVariableLists(rdesc->u.atom.lc,lc);
     if ((!defaulted)&&(AtomDefaulted(rdesc))){
       defaulted = 1;
       if (t==real_type) val = GetRealDefault(rdesc);
@@ -5174,12 +6763,12 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
   clist = MakeAtomChildList(sl); /* this thing should filter goop */
   if (clist!=NULL){
     /* make childd */
-    childd = MakeChildDesc(name,sl,clist);
+    childd = MakeChildDesc(name,sl,clist,lc,dim);
     if (childd!=NULL){
       /* calculate bytesize */
       bytesize = CalcByteSize(t,clist,childd);
       return CreateAtomTypeDesc(name,t,rdesc,mod,clist,pl,sl,bytesize,
-        			childd,defaulted,val,dim,univ,ival,sval);
+        			childd,defaulted,val,dim,univ,ival,sval,lc);
     } else {
       ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"CreateAtomTypeDef: unable to MakeChildDesc");
       DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
@@ -5188,6 +6777,47 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
   } else {
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"CreateAtomTypeDef: unable to MakeAtomChildList");
     DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
+    return NULL;
+  }
+}
+
+struct TypeDescription *CreateDerivAtomTypeDef(symchar *name,
+        				       CONST struct TypeDescription *vartype,
+                                               CONST struct TypeDescription *indtype,
+        				       struct module_t *mod){
+  struct TypeDescription *rdesc;
+  ChildListPtr clist;
+  struct ChildDesc *childd;
+  register unsigned long bytesize;
+  struct StatementList *sl;
+  int univ = 0, defaulted;
+  double val;
+  CONST dim_type *dim;
+  struct VariableList *lc = NULL;
+  /* Create dimension */
+  dim = DiffDimensions(vartype->u.atom.dimp,indtype->u.atom.dimp,0);
+  /* DerivAtomType refines solver_var */
+  rdesc = FindType(AddSymbol("solver_var"));
+  if (rdesc==NULL){
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to locate type solver_var for %s's type definition.",SCP(name));
+    return NULL;
+  }
+  if (GetUniversalFlag(vartype)) univ=1;
+  sl = EmptyStatementList();
+  sl = AppendStatementLists(GetStatementList(rdesc),sl);
+  lc = JoinVariableLists(rdesc->u.atom.lc,lc);
+  if (AtomDefaulted(rdesc)){
+    defaulted = 1;
+    val = GetRealDefault(rdesc);
+  }
+  clist = AppendChildList(rdesc->children,gl_create(1));
+  childd = MakeChildDesc(name,sl,clist,lc,dim);
+  if (childd!=NULL){
+    bytesize = CalcByteSize(real_type,clist,childd);
+    return CreateDerivAtomTypeDesc(name,rdesc,vartype,indtype,mod,clist,NULL,sl,bytesize,
+        			 childd,defaulted,val,dim,univ,lc);
+  } else {
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"CreateDerivAtomTypeDef: unable to MakeChildDesc");
     return NULL;
   }
 }
@@ -5203,7 +6833,7 @@ struct TypeDescription *CreateRelationTypeDef(struct module_t *mod,
   unsigned long bytesize;
   clist = MakeAtomChildList(sl);
   if (clist!=NULL){
-    childd = MakeChildDesc(name,sl,clist);
+    childd = MakeChildDesc(name,sl,clist,NULL,NULL);
     if (childd!=NULL){
       bytesize = CalcByteSize(relation_type,clist,childd);
       return CreateRelationTypeDesc(mod,clist,pl,sl,bytesize,childd);
@@ -5227,7 +6857,7 @@ struct TypeDescription *CreateLogRelTypeDef(struct module_t *mod,
   unsigned long bytesize;
   clist = MakeAtomChildList(sl);
   if (clist!=NULL){
-    childd = MakeChildDesc(name,sl,clist);
+    childd = MakeChildDesc(name,sl,clist,NULL,NULL);
     if (childd!=NULL){
       bytesize = CalcByteSize(logrel_type,clist,childd);
       return CreateLogRelTypeDesc(mod,clist,pl,sl,bytesize,childd);
@@ -5324,6 +6954,21 @@ static void DefineWhenType(void)
 }
 
 /*********************************************************************\
+DefineEventType();
+Creates the event typedef.
+\*********************************************************************/
+static void DefineEventType(void)
+{
+  struct TypeDescription *def;
+  def = CreateEventTypeDesc(NULL,NULL,EmptyStatementList());
+  if (def) {
+    AddType(def);
+  } else {
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to define EVENT type.");
+  }
+}
+
+/*********************************************************************\
 DefineCType(fname,basetype);
 Create a fundamental Constant type of name cname for type basetype.
 \*********************************************************************/
@@ -5348,7 +6993,7 @@ static void DefineFType(symchar *sym, enum type_kind t)
 {
   struct TypeDescription *def;
   def = CreateAtomTypeDef(sym,NULL,t,NULL,0,EmptyStatementList(),NULL,
-        		  0,0.0,WildDimension(),0,NULL,0);
+        		  0,0.0,WildDimension(),0,NULL,NULL,0);
   if (def) {
     AddType(def);
   } else {
@@ -5372,9 +7017,26 @@ void DefineFundamentalTypes(void)
   DefineCType(GetBaseTypeName(boolean_constant_type),boolean_constant_type);
   /* define when class */
   DefineWhenType();
+  /* define event class */
+  DefineEventType();
   /* define external MODEL class */
   DefineEMType(GetBaseTypeName(model_type&patch_type),model_type);
   /* define uncompiled class */
   DefineDType(GetBaseTypeName(dummy_type));
+}
+
+CONST
+struct TypeDescription *GenerateType(CONST struct TypeDescription *type1,
+                                     CONST struct TypeDescription *type2)
+{
+  symchar *name;
+  CONST struct TypeDescription *result;
+  name = GenerateDerTypeName(GetName(type1),GetName(type2));
+  result = FindType(name);
+  if (!result) {
+    result = CreateDerivAtomTypeDef(name,type1,type2,Asc_CurrentModule());
+    AddType((struct TypeDescription *)result);
+  }
+  return result;
 }
 

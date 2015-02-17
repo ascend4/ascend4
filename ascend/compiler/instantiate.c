@@ -87,6 +87,9 @@
 #include "parpend.h"
 #include "parpend.h"
 #include "bintoken.h"
+#include "deriv.h"
+#include "event.h"
+#include "pre.h"
 
 
 #include <stdarg.h>
@@ -126,7 +129,7 @@
                                  * > 1 */
 
 #define PASS4MAXNUMBER 1	/* maximum number of iterations allowed
-                                 * without change executing WHEN. In
+                                 * without change executing WHEN and EVENT. In
                                  * system where WHEN reference WHEN, > 1 */
 
 #define PASS5MAXNUMBER 1	/* maximum number of iterations allowed
@@ -134,9 +137,9 @@
                                  * system where LINK reference LINK, > 1 */
 
 #define AVG_CASES 2L		/* size to which all cases lists are */
-                                /* initialized (WHEN instance) */
+                                /* initialized (WHEN/EVENT instance) */
 #define AVG_REF 2L		/* size to which all list of references */
-                                /* in a case are initialized (WHEN) */
+                                /* in a case are initialized (WHEN/EVENT) */
 
 #define NO_INCIDENCES 7         /* avg number of vars in a external reln */
 
@@ -149,7 +152,7 @@ struct Instance *g_cursim;
 #define OLD_ext 0
 /**<
 	variable to check agreement in the number of boolean, integer or symbol
-	variables in the WHEN/SELECT statement with the number of boolean, integer
+	variables in the WHEN/SELECT/EVENT statement with the number of boolean, integer
 	or symbol values in each of the CASEs
 */
 
@@ -221,7 +224,8 @@ static char *g_trychildexpansion_errmessage = NULL;
 
 static void WriteForValueError(struct Statement *, struct value_t);
 static void MakeInstance(CONST struct Name *, struct TypeDescription *, int,
-                  struct Instance *, struct Statement *, struct Instance *);
+                  struct Instance *, struct Statement *, struct Instance *,
+                  struct gl_list_t *, struct gl_list_t *, struct gl_list_t *);
 static int CheckVarList(struct Instance *, struct Statement *);
 static int CheckWhereStatements(struct Instance *,struct StatementList *);
 static int ExecuteISA(struct Instance *, struct Statement *);
@@ -240,6 +244,7 @@ static int CheckARR(struct Instance *, struct Statement *);
 static int CheckISA(struct Instance *, struct Statement *);
 static int AssignStructuralValue(struct Instance *,struct value_t,struct Statement *);
 static int  CheckSELECT(struct Instance *, struct Statement *);
+static int  CheckEVENT(struct Instance *, struct Statement *);
 static int  CheckWHEN(struct Instance *, struct Statement *);
 static void MakeRealWhenCaseReferencesFOR(struct Instance *,
                                           struct Instance *,
@@ -249,6 +254,14 @@ static void MakeWhenCaseReferencesFOR(struct Instance *,
                                       struct Instance *,
                                       struct Statement *,
                                       struct gl_list_t *);
+static void MakeRealEventCaseReferencesFOR(struct Instance *,
+                                           struct Instance *,
+                                           struct Statement *,
+                                           struct gl_list_t *);
+static void MakeEventCaseReferencesFOR(struct Instance *,
+                                       struct Instance *,
+                                       struct Statement *,
+                                       struct gl_list_t *);
 static int  Pass1CheckFOR(struct Instance *, struct Statement *);
 static int  Pass1ExecuteFOR(struct Instance *, struct Statement *);
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
@@ -286,6 +299,7 @@ static int ExecuteSELECT(struct Instance *, unsigned long *,
 static void ExecuteDefaultsInSELECT(struct Instance *, unsigned long *,
                                     struct Statement *, unsigned long int *);
 static void RealExecuteWHEN(struct Instance *, struct Statement *);
+static void RealExecuteEVENT(struct Instance *, struct Statement *);
 static int  ExecuteUnSelectedSELECT(struct Instance *, unsigned long *,
                                     struct Statement *);
 static void ExecuteUnSelectedStatements(struct Instance *i,unsigned long *,
@@ -293,6 +307,9 @@ static void ExecuteUnSelectedStatements(struct Instance *i,unsigned long *,
 static void ExecuteUnSelectedWhenStatements(struct Instance *,
                                             struct StatementList *);
 static int ExecuteUnSelectedWHEN(struct Instance *, struct Statement *);
+static void ExecuteUnSelectedEventStatements(struct Instance *,
+                                            struct StatementList *);
+static int ExecuteUnSelectedEVENT(struct Instance *, struct Statement *);
 static void ReEvaluateSELECT(struct Instance *, unsigned long *,
                              struct Statement *, int, int *);
 static int ExecuteLNK(struct Instance *inst, struct Statement *statement);
@@ -477,7 +494,8 @@ static
 int ValueExpand(struct Instance *i, unsigned long int pos,
                  struct value_t value, int *changed,
                  struct Instance *rhsinst, struct Instance *arginst,
-                 struct gl_list_t *rhslist)
+                 struct gl_list_t *rhslist, struct Instance *sinst,
+                 struct Instance *indep, CONST struct Name *sname)
 {
   struct value_t setval;
   switch(ValueKind(value)){
@@ -486,7 +504,7 @@ int ValueExpand(struct Instance *i, unsigned long int pos,
     if (CheckSetVal(setval)) {
       return 1;
     }
-    ExpandArray(i,pos,SetValue(setval),rhsinst,arginst,rhslist);
+    ExpandArray(i,pos,SetValue(setval),rhsinst,arginst,rhslist,sinst,indep,sname);
     /* this may modify the pending instance list if
      * rhslist and rhsinst both == NULL.
      */
@@ -570,7 +588,10 @@ int TryChildExpansion(struct Instance *child,
                        int *changed,
                        struct Instance *rhsinst,
                        struct Instance *arginst,
-                       struct gl_list_t *rhslist)
+                       struct gl_list_t *rhslist,
+                       struct Instance *sinst,
+                       struct Instance *indep,
+                       CONST struct Name *sname)
 {
   unsigned long pos,oldpos=0;
   struct value_t value;
@@ -588,7 +609,7 @@ int TryChildExpansion(struct Instance *child,
       SetEvaluationContext(parent); /* could be wrong for mixed style arrays */
       value = EvaluateSet(setp,InstanceEvaluateName);
       SetEvaluationContext(NULL);
-      if (ValueExpand(child,pos,value,changed,rhsinst,arginst,rhslist) != 0) {
+      if (ValueExpand(child,pos,value,changed,rhsinst,arginst,rhslist,sinst,indep,sname) != 0) {
         error++;
       }
       DestroyValue(&value);
@@ -618,7 +639,7 @@ void TryArrayExpansion(struct Instance *work, int *changed)
         /* no alii, no parameterized types, no for loops allowed. */
         if ((!GetArrayBaseIsRelation(desc))&&(!RectangleArrayExpanded(child)) &&
              (!GetArrayBaseIsLogRel(desc)) ) {
-          if (TryChildExpansion(child,work,changed,NULL,NULL,NULL)!= 0) {
+          if (TryChildExpansion(child,work,changed,NULL,NULL,NULL,NULL,NULL,NULL)!= 0) {
             SignalChildExpansionFailure(work,c);
           }
         }
@@ -764,12 +785,12 @@ struct gl_list_t *ArrayIndices(CONST struct Name *name,
   int settype;
   CONST struct Set *sptr;
 
-  if (!NameId(name)) return NULL;
+  if (!NameId(name) && !NameDeriv(name) && !NamePre(name)) return NULL;
   name = NextName(name);
   if (name == NULL) return NULL;
   result = gl_create(2L);
   while (name!=NULL){
-    if (NameId(name)){
+    if (NameId(name) || NameDeriv(name) || NamePre(name)){
       DestroyIndexList(result);
       return NULL;
     }
@@ -924,7 +945,7 @@ struct gl_list_t *MakeIndices(struct Instance *inst,
 
   result = gl_create((unsigned long)NameLength(name));
   while(name != NULL){
-    if (NameId(name)){
+    if (NameId(name) || NameDeriv(name)){
       DestroyIndexList(result);
       return NULL;
     }
@@ -972,7 +993,7 @@ struct Instance *GetArrayHead(struct Instance *inst, CONST struct Name *name)
 {
   struct InstanceName rec;
   unsigned long pos;
-  if (NameId(name)){
+  if (NameId(name) || NameDeriv(name) || NamePre(name)){
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,NameIdPtr(name));
     pos=ChildSearch(inst,&rec);
@@ -1003,7 +1024,10 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
                              struct Instance *rhsinst, /*ALIASES*/
                              struct Instance *arginst, /* IS_A */
                              struct gl_list_t *rhslist, /*ARR*/
-                             int last /* ARR */)
+                             int last, /* ARR */
+                             struct Instance *state,
+                             struct Instance *indep,
+                             CONST struct Name *n)
 {
   CONST struct Set *sptr;
   struct value_t value;
@@ -1011,7 +1035,7 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
   long i;
   symchar *sym;
 
-  if (NameId(name) != 0) return NULL; /* must be subscript, i.e. set */
+  if (NameId(name) != 0 || NameDeriv(name) !=0 || NamePre(name) !=0) return NULL; /* must be subscript, i.e. set */
   sptr = NameSetPtr(name);
   if ((sptr==NULL)||(NextSet(sptr)!=NULL)||(SetType(sptr))) {
     return NULL;
@@ -1034,7 +1058,7 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
       /* we are at last subscript of ALIASES/IS_A in for loop. */
       /* expand using rhslist pretending dense array. */
       setval = CreateSetFromList(value);
-      ExpandArray(ptr,1L,SetValue(setval),NULL,NULL,rhslist);
+      ExpandArray(ptr,1L,SetValue(setval),NULL,NULL,rhslist,NULL,NULL,NULL);
       DestroyValue(&setval);
       DestroyValue(&value);
       return NULL;
@@ -1042,11 +1066,11 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
   case integer_value:
     i = IntegerValue(value);
     DestroyValue(&value);
-    return FindOrAddIntChild(ptr,i,rhsinst,arginst);
+    return FindOrAddIntChild(ptr,i,rhsinst,arginst,state,indep,n);
   case symbol_value:
     sym = SymbolValue(value);
     DestroyValue(&value);
-    return FindOrAddStrChild(ptr,sym,rhsinst,arginst);
+    return FindOrAddStrChild(ptr,sym,rhsinst,arginst,state,indep,n);
   case error_value:
     switch(ErrorValue(value)){
     case undefined_value:
@@ -1084,18 +1108,19 @@ struct Instance *AddArrayChild(struct Instance *parentofary,
                                struct Statement *stat,
                                struct Instance *rhsinst,
                                struct Instance *arginst,
-                               struct gl_list_t *rhslist)
+                               struct gl_list_t *rhslist,
+                               struct Instance *state,
+                               struct Instance *indep)
 {
   struct Instance *ptr;
   int last;
-
   ptr = GetArrayHead(parentofary,name);
   if(ptr != NULL) {
     name = NextName(name);
     while(name!=NULL){
       last = (rhslist != NULL && NextName(name)==NULL);
       ptr = DoNextArray(parentofary,ptr,name,stat,
-                        rhsinst,arginst,rhslist,last);
+                        rhsinst,arginst,rhslist,last,state,indep,NextName(name));
       if (ptr==NULL){
         return NULL;
       }
@@ -1130,7 +1155,9 @@ struct Instance *MakeSparseArray(struct Instance *parent,
                                  int intset,
                                  struct Instance *rhsinst,
                                  struct Instance *arginst,
-                                 struct gl_list_t *rhslist)
+                                 struct gl_list_t *rhslist,
+                                 struct Instance *state,
+                                 struct Instance *indep)
 {
   struct TypeDescription *desc = NULL;
   struct Instance *aryinst;
@@ -1141,29 +1168,34 @@ struct Instance *MakeSparseArray(struct Instance *parent,
     case REL:
       asc_assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
       desc = CreateArrayTypeDesc(StatementModule(stat),FindRelationType(),
-                                 0,1,0,0,indices);
+                                 0,1,0,0,0,indices);
       break;
     case EXT:
       asc_assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
       desc = CreateArrayTypeDesc(StatementModule(stat),FindRelationType(),
-                                 0,1,0,0,indices);
+                                 0,1,0,0,0,indices);
       break;
     case LOGREL:
       asc_assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
       desc = CreateArrayTypeDesc(StatementModule(stat),FindLogRelType(),
-                                 0,0,1,0,indices);
+                                 0,0,1,0,0,indices);
       break;
     case WHEN:
       asc_assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
       desc = CreateArrayTypeDesc(StatementModule(stat),
-                                 FindWhenType(),0,0,0,1,indices);
+                                 FindWhenType(),0,0,0,1,0,indices);
+      break;
+    case EVENT:
+      asc_assert(def==NULL && rhsinst==NULL && rhslist == NULL && arginst == NULL);
+      desc = CreateArrayTypeDesc(StatementModule(stat),
+                                 FindEventType(),0,0,0,0,1,indices);
       break;
     case ISA:
     case ALIASES:
     case ARR:
       asc_assert(def!=NULL);
       desc = CreateArrayTypeDesc(StatementModule(stat),def,
-                                 intset,0,0,0,indices);
+                                 intset,0,0,0,0,indices);
       break;
     default:
       STATEMENT_ERROR(stat, "Utter screw-up in MakeSparseArray");
@@ -1171,7 +1203,7 @@ struct Instance *MakeSparseArray(struct Instance *parent,
     }
     aryinst = CreateArrayInstance(desc,1);
     LinkToParentByName(parent,aryinst,NameIdPtr(name));
-    return AddArrayChild(parent,name,stat,rhsinst,arginst,rhslist);
+    return AddArrayChild(parent,name,stat,rhsinst,arginst,rhslist,state,indep);
   }else{
     return NULL;
   }
@@ -1257,12 +1289,12 @@ void MakeAliasInstance(CONST struct Name *name,
       if (!StatInFOR(statement)) {
         /* rectangle arrays */
         arydef = CreateArrayTypeDesc(StatementModule(statement),
-                                     def,intset,0,0,0,indices);
+                                     def,intset,0,0,0,0,indices);
         if (pos>0) {
           inst = CreateArrayInstance(arydef,1);
           if (inst!=NULL){
             changed = 0;
-            tce = TryChildExpansion(inst,parent,&changed,rhsinst,NULL,rhslist);
+            tce = TryChildExpansion(inst,parent,&changed,rhsinst,NULL,rhslist,NULL,NULL,NULL);
             /* we're not in a for loop, so can't fail unless user is idiot. */
             LinkToParentByPos(parent,inst,pos); /* don't want to lose memory */
             /* if user is idiot, whine. */
@@ -1288,12 +1320,12 @@ void MakeAliasInstance(CONST struct Name *name,
             /* should check for NULL return here */
             (void)
             MakeSparseArray(parent,name,statement,def,
-                            intset,rhsinst,NULL,rhslist);
+                            intset,rhsinst,NULL,rhslist,NULL,NULL);
           }else{
             /* need to add alias array element */
             /* should check for NULL return here */
             (void) AddArrayChild(parent,name,statement,
-                                 rhsinst,NULL,rhslist);
+                                 rhsinst,NULL,rhslist,NULL,NULL);
           }
         }else{
           STATEMENT_ERROR(statement,
@@ -1318,7 +1350,7 @@ int ExecuteALIASES(struct Instance *inst, struct Statement *statement)
 {
   CONST struct VariableList *vlist;
   struct gl_list_t *rhslist;
-  struct Instance *rhsinst;
+  struct Instance *rhsinst = NULL;
   CONST struct Name *name;
   enum find_errors ferr;
   int intset;
@@ -1337,18 +1369,22 @@ int ExecuteALIASES(struct Instance *inst, struct Statement *statement)
   }
   name = AliasStatName(statement);
   rhslist = FindInstances(inst,name,&ferr);
-  if (rhslist == NULL) {
-    WriteUnexecutedMessage(ASCERR,statement,
-      "Possibly undefined right hand side in ALIASES statement.");
-    return 0; /* rhs not compiled yet */
-  }
-  if (gl_length(rhslist)>1) {
-    STATEMENT_ERROR(statement,"ALIASES needs exactly 1 RHS");
+  if (rhslist != NULL) {
+    if (gl_length(rhslist)>1) {
+      STATEMENT_ERROR(statement,"ALIASES needs exactly 1 RHS");
+      gl_destroy(rhslist);
+      return 1; /* rhs not unique for current values of sets */
+    }
+    rhsinst = (struct Instance *)gl_fetch(rhslist,1);
     gl_destroy(rhslist);
-    return 1; /* rhs not unique for current values of sets */
+  }else{
+    if (rhsinst == NULL) {
+      WriteUnexecutedMessage(ASCERR,statement,
+        "Possibly undefined right hand side in ALIASES statement.");
+      return 0; /* rhs not compiled yet */
+    }
   }
-  rhsinst = (struct Instance *)gl_fetch(rhslist,1);
-  gl_destroy(rhslist);
+
   if (InstanceKind(rhsinst)==REL_INST || LREL_INST ==InstanceKind(rhsinst)) {
     STATEMENT_ERROR(statement,"Direct ALIASES of relations are not permitted");
     MarkStatContext(statement,context_WRONG);
@@ -1666,11 +1702,11 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
     rhsinst = (struct Instance *)gl_fetch(rhsinstlist,1);
     if (BaseTypeIsEquation(InstanceTypeDesc(rhsinst))) {
       STATEMENT_ERROR(statement,
-        "Direct ALIASES of rels/lrels/whens are not permitted");
+        "Direct ALIASES of rels/lrels/whens/events are not permitted");
       MarkStatContext(statement,context_WRONG);
       WSS(ASCERR,statement);
       gl_destroy(rhsinstlist);
-      return 1; /* (log)relations/whens only aliased through models */
+      return 1; /* (log)relations/whens/events only aliased through models */
     }
   }
 #endif
@@ -1693,7 +1729,7 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
   /* make set ATOM */
   vlist = ArrayStatSetName(statement);
   intset = ArrayStatIntSet(statement);
-  MakeInstance(NamePointer(vlist),FindSetType(),intset,inst,statement,NULL);
+  MakeInstance(NamePointer(vlist),FindSetType(),intset,inst,statement,NULL,NULL,NULL,NULL);
   /* get instance  and assign. */
   setinstl = FindInstances(inst,NamePointer(vlist),&ferr);
   if (setinstl == NULL || gl_length(setinstl) != 1L) {
@@ -1742,7 +1778,7 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
 */
 /**
 	Makes a single instance of the type given,which must not be array
-	or relation of any kind or when.
+	or relation of any kind or when/event.
 
 	If type is a MODEL, adds the MODEL to pending list.
 
@@ -1814,6 +1850,11 @@ struct Instance *MakeSimpleInstance(struct TypeDescription *def,
       FPRINTF(ASCERR,"Type '%s' is not allowed in IS_A.\n",
               SCP(GetBaseTypeName(when_type)));
       break;
+    case event_type:
+      inst = NULL;
+      FPRINTF(ASCERR,"Type '%s' is not allowed in IS_A.\n",
+              SCP(GetBaseTypeName(event_type)));
+      break;
     case array_type:
     default: /* picks up patch_type */
       STATEMENT_ERROR(statement, "MakeSimpleInstance error. PATCH/ARRAY found.\n");
@@ -1856,6 +1897,7 @@ int ArgValuesUnassigned(struct Instance *ipass)
   case REL_INST:
   case LREL_INST:
   case WHEN_INST:
+  case EVENT_INST:
     return 0;
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
@@ -3927,12 +3969,16 @@ void MakeInstance(CONST struct Name *name,
                   int intset,
                   struct Instance *parent,
                   struct Statement *statement,
-                  struct Instance *arginst)
+                  struct Instance *arginst,
+                  struct gl_list_t *states,
+                  struct gl_list_t *indeps,
+                  struct gl_list_t *preargs)
 {
   symchar *childname;
   int changed;
-  unsigned long pos;
-  struct Instance *inst;
+  unsigned long pos,spos;
+  struct Instance *inst = NULL, *sinst = NULL, *indep = NULL;
+  CONST struct Name *sname;
   struct InstanceName rec;
   struct TypeDescription *arydef;
   struct gl_list_t *indices;
@@ -3941,6 +3987,11 @@ void MakeInstance(CONST struct Name *name,
   nstr = WriteNameString(name);
   CONSOLE_DEBUG(nstr);
   ascfree(nstr); */
+  if (states && indeps) {
+    indep = (struct Instance*)gl_fetch(indeps,1);
+    sname = NamePointer(DerVlist(NameDerPtr(name)));
+  }
+  if (NamePre(name)) sname = PreName(NamePrePtr(name));
   if ((childname = SimpleNameIdPtr(name))!=NULL){ /* simple 1 element name */
     if (StatInFOR(statement) && StatWrong(statement)==0) {
       MarkStatContext(statement,context_WRONG);
@@ -3948,13 +3999,26 @@ void MakeInstance(CONST struct Name *name,
       WSS(ASCERR,statement);
       return;
     }
+    if (NameDeriv(name)) sinst = (struct Instance*)gl_fetch(states,1);
+    else if (NamePre(name)) sinst = (struct Instance *)gl_fetch(preargs,1);
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,childname);
     pos = ChildSearch(parent,&rec);
     if (pos>0) {
       if (InstanceChild(parent,pos)==NULL){
-        inst = MakeSimpleInstance(def,intset,statement,arginst);
-        LinkToParentByPos(parent,inst,pos);
+        if (sinst && indep) inst = FindDerByArgs(sinst,indep);
+        if (sinst && !indep) inst = FindPreByArg(sinst);
+	if (inst) {
+          StoreChildPtr(parent,pos,inst);
+          if (!SearchForParent(inst,parent))
+            AddParent(inst,parent);
+        }
+        else {
+          inst = MakeSimpleInstance(def,intset,statement,arginst);
+          LinkToParentByPos(parent,inst,pos);
+          if (NameDeriv(name)) SetDerInfo(inst,sinst,indep);
+          if (NamePre(name)) SetPreInfo(inst,sinst);
+        }
       }else{			/* redefining instance */
         char *msg = ASC_NEW_ARRAY(char,SCLEN(childname)+strlen(REDEFINE_CHILD_MESG)+1);
         strcpy(msg,REDEFINE_CHILD_MESG);
@@ -3976,12 +4040,26 @@ void MakeInstance(CONST struct Name *name,
       pos = ChildSearch(parent,&rec);
       if (!StatInFOR(statement)) { /* rectangle arrays */
         arydef = CreateArrayTypeDesc(StatementModule(statement),
-                                     def,intset,0,0,0,indices);
+                                     def,intset,0,0,0,0,indices);
         if (pos>0) {
           inst = CreateArrayInstance(arydef,1);
           if (inst!=NULL){
+
+            if (NameDeriv(name) || NamePre(name)) {
+              SetInstanceNameType(rec,StrName);
+              SetInstanceNameStrPtr(rec,NameIdPtr(sname));
+              spos = ChildSearch(parent,&rec);
+              sinst = InstanceChild(parent,spos);
+	      while(NameId(NextName(sname))) {
+                sname = NextName(sname);
+                SetInstanceNameType(rec,StrName);
+                SetInstanceNameStrPtr(rec,NameIdPtr(sname));
+                spos = ChildSearch(sinst,&rec);
+                sinst =  InstanceChild(sinst,spos);
+              }
+            }
             changed = 0;
-            tce = TryChildExpansion(inst,parent,&changed,NULL,arginst,NULL);
+            tce = TryChildExpansion(inst,parent,&changed,NULL,arginst,NULL,sinst,indep,sname);
             /* we're not in a for loop, so can't fail unless user is idiot. */
             LinkToParentByPos(parent,inst,pos);
             /* if user is idiot, whine. */
@@ -4000,15 +4078,17 @@ void MakeInstance(CONST struct Name *name,
         }
       }else{
         DestroyIndexList(indices);
+        if (NameDeriv(name)) sinst = (struct Instance*)gl_fetch(states,1);
+        else if (NamePre(name)) sinst = (struct Instance *)gl_fetch(preargs,1);
         if (pos>0) {
           if (InstanceChild(parent,pos)==NULL) {
-            /* must make IS_A array */
-            (void) /* should check for NULL return here */
-            MakeSparseArray(parent,name,statement,
-                            def,intset,NULL,arginst,NULL);
-          }else{
-            /* must add array element */ /* should check for NULL return here */
-            (void)AddArrayChild(parent,name,statement,NULL,arginst,NULL);
+              /* must make IS_A array */
+              (void) /* should check for NULL return here */
+              MakeSparseArray(parent,name,statement,
+                              def,intset,NULL,arginst,NULL,sinst,indep);
+          }else{       
+              /* must add array element */ /* should check for NULL return here */
+              (void)AddArrayChild(parent,name,statement,NULL,arginst,NULL,sinst,indep);
           }
         }else{
           STATEMENT_ERROR(statement,
@@ -4028,11 +4108,14 @@ void MakeInstance(CONST struct Name *name,
 static
 int ExecuteISA(struct Instance *inst, struct Statement *statement)
 {
+  enum find_errors err;
+  struct gl_list_t *states = NULL, *indeps = NULL, *preargs = NULL;
   struct TypeDescription *def;
   CONST struct VariableList *vlist;
   struct Instance *arginst = NULL;
   int mpi;
   int intset;
+  unsigned long c;
 
   asc_assert(StatementType(statement)==ISA);
   if (StatWrong(statement)) {
@@ -4073,13 +4156,43 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
     }
     vlist = GetStatVarList(statement);
     while (vlist!=NULL){
-      MakeInstance(NamePointer(vlist),def,intset,inst,statement,arginst);
+      if (NameDeriv(NamePointer(vlist))) {
+        states = FindInstances(inst,NamePointer(DerVlist(NameDerPtr(NamePointer(vlist)))),&err);
+        if (!states) {
+          WriteUnexecutedMessage(ASCERR,statement,
+           "State variable not found.");
+          return 0;
+        }
+        indeps = FindInstances(inst,NamePointer(NextVariableNode(DerVlist(NameDerPtr(NamePointer(vlist))))),&err);
+        if (!indeps) {
+          WriteUnexecutedMessage(ASCERR,statement,
+           "Independent variable not found.");
+          return 0;
+        }
+        if (gl_length(indeps)>1) {
+          for (c=2;c<=gl_length(indeps);c++) {
+            if ((struct Instance*)gl_fetch(indeps,c) != (struct Instance*)gl_fetch(indeps,c-1)) {
+              WriteUnexecutedMessage(ASCERR,statement,
+               "Multiple independent variables not allowed.");
+              return 0;
+            }
+          }
+        }
+      }
+      else if (NamePre(NamePointer(vlist))) {
+        preargs = FindInstances(inst,PreName(NamePrePtr(NamePointer(vlist))),&err);
+        if (!preargs) {
+          WriteUnexecutedMessage(ASCERR,statement,"pre() argument not found.");
+          return 0;
+        }
+      }
+      MakeInstance(NamePointer(vlist),def,intset,inst,statement,arginst,states,indeps,preargs);
       vlist = NextVariableNode(vlist);
     }
     if (arginst != NULL) {
       DestroyParameterInst(arginst);
     }
-    return 1;
+    return 1; 
   }else{
     /*
      * Should never happen, due to lint.
@@ -4091,6 +4204,63 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
     ascfree(msg);
     return 1;
   }
+}
+
+static
+int ExecuteISDER(struct Instance *inst, struct Statement *statement)
+{
+  CONST struct StatementList *statements;
+  struct InstanceName rec;
+  struct gl_list_t *stats;
+  unsigned long c,len,pos,ok = 1;
+  struct Statement *s;
+  statements = GetStatSlist(statement);
+  stats = GetList(statements);
+  len = gl_length(stats);
+  for(c=1;c<=len;c++) {
+    s = (struct Statement *)gl_fetch(stats,c);
+    if (StatementType(s) == ISA) {
+      if (!StatInFOR(s)) {
+        SetInstanceNameType(rec,StrName);
+        SetInstanceNameStrPtr(rec,NameIdPtr(NamePointer(GetStatVarList(s))));
+        pos = ChildSearch(inst,&rec);
+        if (pos>0) {
+          if (InstanceChild(inst,pos)==NULL){
+            if (!ExecuteISA(inst,s)) ok = 0;
+          }
+        }
+      }else {
+        if (!ExecuteISA(inst,s)) ok = 0;
+      }
+    }
+    else {
+      STATEMENT_ERROR(statement,"Illegal statement type in ISDER statement list. Should never happen.");
+      return 1;
+    }
+  }
+  return ok;
+}
+
+static
+int ExecuteISPRE(struct Instance *inst, struct Statement *statement)
+{
+  CONST struct StatementList *statements;
+  struct gl_list_t *stats;
+  unsigned long c,len,ok = 1;
+  struct Statement *s;
+  statements = GetPreSlist(statement);
+  stats = GetList(statements);
+  len = gl_length(stats);
+  for(c=1;c<=len;c++) {
+    s = (struct Statement *)gl_fetch(stats,c);
+    if (StatementType(s) == ISA) {
+      if (!ExecuteISA(inst,s)) ok = 0;
+    }else{
+      STATEMENT_ERROR(statement,"Illegal statement type in ISPRE statement list. Should never happen.");
+      return 1;
+    }
+  }
+  return ok;
 }
 
 /**
@@ -4565,7 +4735,14 @@ int ExecuteATS(struct Instance *inst, struct Statement *statement)
   enum find_errors err;
   unsigned long c,len;
   struct Instance *inst1,*inst2;
+  CONST struct VariableList *vl;
 
+  vl = GetStatVarList(statement);
+  while (vl != NULL) {
+    if (NamePre(NamePointer(vl)))
+      ASC_PANIC("pre variables should not be explicitly merged.");
+    vl = NextVariableNode(vl);
+  }
   instances = FindInsts(inst,GetStatVarList(statement),&err);
   if (instances != NULL){
     if (ListContainsFundamental(instances)){
@@ -4760,10 +4937,10 @@ struct Instance *MakeRelationInstance(struct Name *name,
     if (pos>0) {
       if (InstanceChild(parent,pos)==NULL){
         /* must make array */
-        child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL);
+        child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL,NULL,NULL);
       }else{
       	/* must add array element */
-        child = AddArrayChild(parent,name,stat,NULL,NULL,NULL);
+        child = AddArrayChild(parent,name,stat,NULL,NULL,NULL,NULL,NULL);
       }
       return child;
     }else{
@@ -5095,9 +5272,9 @@ struct Instance *MakeLogRelInstance(struct Name *name,
     SetInstanceNameStrPtr(rec,childname);
     if(0 != (pos = ChildSearch(parent,&rec))){
       if (InstanceChild(parent,pos)==NULL){ /* need to make array */
-        child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL);
+        child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL,NULL,NULL);
       }else{			/* need to add array element */
-        child = AddArrayChild(parent,name,stat,NULL,NULL,NULL);
+        child = AddArrayChild(parent,name,stat,NULL,NULL,NULL,NULL,NULL);
       }
       return child;
     }else{
@@ -6331,7 +6508,7 @@ int ArrayCheckNameList(struct Instance *inst,
         case ARRAY_ENUM_INST:
           /* ok, it was found. odd, that, but it might be ok */
           break;
-        /* fundamental, variable, relation, when, logrel, realcon, boolcon
+        /* fundamental, variable, relation, when, event, logrel, realcon, boolcon
          * can none of them figure in the definition of valid set.
          * so we exit early and execution will fail as required.
          */
@@ -6362,7 +6539,7 @@ int FailsCompoundArrayCheck(struct Instance *inst,
 
   while(name != NULL){
     /* foreach subscript */
-    if (NameId(name)!=0){ /* what's a . doing in the name? */
+    if (NameId(name)!=0 || NameDeriv(name)!=0 || NamePre(name)!=0){ /* what's a . doing in the name? */
       return 1;
     }
     sptr = NameSetPtr(name);
@@ -6406,7 +6583,7 @@ int FailsIndexCheck(CONST struct Name *name, struct Statement *statement,
 {
   CONST struct Set *sptr;
   struct gl_list_t *indices;
-  if (!NameId(name)) {
+  if (!NameId(name) && !NameDeriv(name) && !NamePre(name)) {
      return 0;	/* this is a different type of error */
   }
   /* hunt the subscripts */
@@ -6416,7 +6593,7 @@ int FailsIndexCheck(CONST struct Name *name, struct Statement *statement,
   }
   if (searchfor == 0) { /* not in FOR loop and not ALIASES of either sort */
     while (name != NULL){
-      if (NameId(name) !=0 ) {
+      if (NameId(name) !=0 || NameDeriv(name) !=0 || NamePre(name) !=0) {
         /* what's a . doing here? */
         return 0;
       }
@@ -6487,6 +6664,8 @@ int CheckALIASES(struct Instance *inst, struct Statement *stat)
   struct gl_list_t *rhslist;
   CONST struct Name *name;
   enum find_errors ferr;
+  CONST struct gl_list_t *stateinst, *indinst;
+  struct Instance *rhsinst = NULL;
 
   vlist = GetStatVarList(stat);
   while (vlist != NULL){
@@ -6502,16 +6681,22 @@ int CheckALIASES(struct Instance *inst, struct Statement *stat)
    */
   name = AliasStatName(stat);
   rhslist = FindInstances(inst,name,&ferr);
-  if (rhslist == NULL) {
+  if (rhslist==NULL && NameDeriv(name)) {
+    stateinst = FindInstances(inst,NamePointer(DerVlist(NameDerPtr(name))),&ferr);
+    indinst = FindInstances(inst,NamePointer(NextVariableNode(DerVlist(NameDerPtr(name)))),&ferr);
+    if (stateinst != NULL && indinst !=NULL) rhsinst = FindDerByArgs(gl_fetch(stateinst,1),gl_fetch(indinst,1));
+  }
+  if (rhslist == NULL && rhsinst == NULL) {
     WriteUnexecutedMessage(ASCERR,stat,
       "Possibly undefined right hand side in ALIASES statement.");
     return 0; /* rhs not compiled yet */
   }
-  if (gl_length(rhslist)>1) {
-    STATEMENT_ERROR(stat,"ALIASES needs exactly 1 RHS");
+  if (rhslist != NULL) {
+    if (gl_length(rhslist)>1) {
+      STATEMENT_ERROR(stat,"ALIASES needs exactly 1 RHS");
+    }
+    gl_destroy(rhslist);
   }
-  gl_destroy(rhslist);
-
   return 1;
 }
 
@@ -6629,6 +6814,42 @@ int CheckISA(struct Instance *inst, struct Statement *stat)
   return 1;
 }
 
+static
+int CheckISDER(struct Instance *inst, struct Statement *stat)
+{
+  CONST struct StatementList *statements;
+  struct gl_list_t *stats;
+  unsigned int c,len;
+  struct Statement *s;
+  CONST struct VariableList *vlist;
+  enum find_errors err;
+  statements = GetStatSlist(stat);
+  stats = GetList(statements);
+  len = gl_length(stats);
+  vlist = GetStatVarList(stat);
+  while (vlist) {
+    if (!FindInstances(inst,NamePointer(vlist),&err)) return 0;
+    vlist = NextVariableNode(vlist);
+  }
+  for(c=1;c<=len;c++) {
+    s = (struct Statement *)gl_fetch(stats,c);
+    if (StatementType(s) == ISA) {
+      if (CheckISA(inst,s)==0) return 0;
+    }
+    else {
+      STATEMENT_ERROR(stat,"Illegal statement type in ISDER statement list. Should never happen.");
+      return 1;
+    }
+  }
+  return 1;
+}
+
+static
+int CheckISPRE(struct Instance *inst, struct Statement *stat)
+{
+  return 1;
+}
+
 /**
 	checks that all the names in a varlist exist as instances.
 	returns 1 if TRUE, 0 if not.
@@ -6715,7 +6936,6 @@ int CheckCASGN(struct Instance *inst, struct Statement *statement)
   }
 }
 
-#ifdef THIS_IS_AN_UNUSED_FUNCTION
 static
 int CheckASGN(struct Instance *inst, struct Statement *statement)
 {
@@ -6751,7 +6971,6 @@ int CheckASGN(struct Instance *inst, struct Statement *statement)
     }
   }
 }
-#endif   /* THIS_IS_AN_UNUSED_FUNCTION */
 
 
 /**
@@ -6875,7 +7094,7 @@ int CheckLOGREL(struct Instance *inst, struct Statement *statement)
 	Checking FNAME statement (1)
 
 	["The following two functions..." -- ed] Check that the FNAME inside a WHEN
-	make reference to instance of models, relations, or arrays of
+	or EVENT make reference to instance of models, relations, or arrays of
 	models or relations previously created.
 */
 static
@@ -6900,7 +7119,7 @@ int CheckArrayRelMod(struct Instance *child)
       return 1;
     default:
       FPRINTF(ASCERR,
-      "Incorrect array instance name inside a WHEN statement\n");
+      "Incorrect array instance name inside a WHEN/EVENT statement\n");
       return 0;
   }
 }
@@ -6908,7 +7127,7 @@ int CheckArrayRelMod(struct Instance *child)
 /**
 	Checking FNAME statement (2)
 
-	Check that the FNAME inside a WHEN
+	Check that the FNAME inside a WHEN or EVENT
 	make reference to instance of models, relations, or arrays of
 	models or relations previously created.
 */
@@ -6922,7 +7141,7 @@ int CheckRelModName(struct Instance *work, struct Name *name)
   instances = FindInstances(work,name,&ferr);
   if (instances==NULL){
     instantiation_name_error(ASC_USER_ERROR,name,
-		"Un-made Relation/Model instance inside a 'WHEN':"
+		"Un-made Relation/Model instance inside a 'WHEN'/'EVENT':"
 	);
     gl_destroy(instances);
     return 0;
@@ -6933,6 +7152,7 @@ int CheckRelModName(struct Instance *work, struct Name *name)
      case REL_INST:
      case LREL_INST:
      case MODEL_INST:
+     case EVENT_INST:
        gl_destroy(instances);
        return 1;
      case ARRAY_INT_INST:
@@ -6949,14 +7169,14 @@ int CheckRelModName(struct Instance *work, struct Name *name)
       return 1;
      default:
        instantiation_name_error(ASC_USER_ERROR,name
-			,"Incorrect instance name (no Model/Relation) inside 'WHEN'"
+			,"Incorrect instance name (no Model/Relation) inside 'WHEN'/'EVENT'"
 	   );
        gl_destroy(instances);
        return 0;
      }
     }else{
     instantiation_name_error(ASC_USER_ERROR,name
-		,"Error in 'WHEN'. Name assigned to more than one instance type"
+		,"Error in 'WHEN'/'EVENT'. Name assigned to more than one instance type"
 	);
     gl_destroy(instances);
     return 0;
@@ -6997,6 +7217,8 @@ int Pass3CheckCondStatements(struct Instance *inst,
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
+    case ISPRE:
     case IRT:
     case ATS:
     case AA:
@@ -7008,6 +7230,7 @@ int Pass3CheckCondStatements(struct Instance *inst,
     case CASGN:
     case COND:
     case WHEN:
+    case EVENT:
     case FNAME:
     case SELECT:
       STATEMENT_ERROR(statement,
@@ -7063,6 +7286,8 @@ int Pass2CheckCondStatements(struct Instance *inst,
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
+    case ISPRE:
     case IRT:
     case ATS:
     case AA:
@@ -7073,6 +7298,7 @@ int Pass2CheckCondStatements(struct Instance *inst,
     case CASGN:
     case COND:
     case WHEN:
+    case EVENT:
     case FNAME:
     case SELECT:
          STATEMENT_ERROR(statement,
@@ -7107,6 +7333,429 @@ int Pass2CheckCOND(struct Instance *inst, struct Statement *statement)
 }
 
 /**
+	p1 and p2 are pointers to arrays of integers. Here we are checking
+	that the type (integer, boolean, symbol) of each variable in the
+	variable list of a WHEN (or a SELECT or EVENT) is the same as the
+	type of each value in the list of values a CASE
+*/
+static
+int CompListInArray(unsigned long numvar, int *p1, int *p2)
+{
+  unsigned long c;
+  for (c=1;c<=numvar;c++) {
+    if (*p2 != 3) { /* To account for ANY */
+      if (*p1 != *p2) return 0;
+    }
+    if (c < numvar) {
+      p1++;
+      p2++;
+    }
+  }
+  return 1;
+}
+
+
+/**
+	Inside an EVENT, only FNAMEs (name of models, relations or array of)
+	and nested EVENTs (and FOR loops of them) are allowed. This function
+	asks for the checking of these statements.
+*/
+static
+int CheckEventStatements(struct Instance *inst, struct Statement *statement){
+  asc_assert(inst&&statement);
+  switch(StatementType(statement)){
+    case EVENT:
+      return CheckEVENT(inst,statement);
+    case FNAME:
+      return CheckFNAME(inst,statement);
+    case FOR:
+      return Pass4RealCheckFOR(inst,statement);
+    case ASGN:
+      return CheckASGN(inst,statement);
+    case ALIASES:
+    case ARR:
+    case ISA:
+    case ISDER:
+    case ISPRE:
+    case IRT:
+    case ATS:
+    case AA:
+    case LNK:
+    case UNLNK:
+    case REL:
+    case LOGREL:
+    case EXT:
+    case CALL:
+    case SELECT:
+         STATEMENT_ERROR(statement,
+              "Statement not allowed inside an EVENT statement\n");
+         return 0;
+    default:
+      STATEMENT_ERROR(statement,"Inappropriate statement type");
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
+      return 1;
+    }
+}
+
+/**
+	Checking the list statements of statements inside each CASE of the
+	EVENT statement by calling CheckEventStatements
+*/
+static
+int CheckEventStatementList(struct Instance *inst, struct StatementList *sl)
+{
+  struct Statement *statement;
+  unsigned long c,len;
+  struct gl_list_t *list;
+  asc_assert(inst&&sl);
+  list = GetList(sl);
+  len = gl_length(list);
+  for(c=1;c<=len;c++){
+     statement = (struct Statement *)gl_fetch(list,c);
+     if (!CheckEventStatements(inst,statement)) return 0;
+  }
+  return 1;
+}
+
+
+/**
+	Checking that the values of the set of values of each CASE of an
+	EVENT statement are appropriate. This is, they
+	are symbol, integer or boolean. The first part of the
+	function was written for the case of EVENT statement
+	inside a FOR loop. This function also sorts
+	the kinds of values in the set by assigning a value
+	to the integer *p2
+*/
+static
+int CheckEventSetNode(struct Instance *ref, CONST struct Expr *expr,
+                     int *p2)
+{
+  symchar *str;
+  struct for_var_t *fvp;
+  struct Set *set;
+  CONST struct Expr *es;
+  switch (ExprType(expr)) {
+  case e_boolean:
+    if (ExprBValue(expr)==2) {
+      *p2 = 3;  /*  ANY */
+    }else{
+      *p2=1;
+    }
+    return 1;
+  case e_int:
+    *p2=0;
+    return 1;
+  case e_symbol:
+    *p2=2;
+    return 1;
+  case e_var:
+    if ((GetEvaluationForTable() != NULL) &&
+        (NULL != (str = SimpleNameIdPtr(ExprName(expr)))) &&
+        (NULL != (fvp=FindForVar(GetEvaluationForTable(),str)))) {
+      if (GetForKind(fvp)==f_integer){
+        *p2=0;
+        return 1;
+      }else{
+        if (GetForKind(fvp)==f_symbol){
+          *p2=2;
+          return 1;
+        }else{
+	  	  instantiation_name_error(ASC_USER_ERROR,ExprName(expr)
+			,"Inappropriate index in the list of values of a CASE in an 'EVENT'\n"
+			"(only symbols or integers are allowed)"
+		  );
+	  return 0;
+	}
+      }
+    }else{
+		instantiation_name_error(ASC_USER_ERROR,ExprName(expr),
+			"Inappropriate value type in the list of values of a CASE of an 'EVENT'\n"
+			"(index has not been created)"
+		);
+        return 0;
+    }
+  case e_set:
+    set = expr->v.s;
+    if (set->range) {
+      return 0;
+    }
+    es = GetSingleExpr(set);
+    return CheckEventSetNode(ref,es,p2);
+  default:
+    FPRINTF(ASCERR,"Innapropriate value type in the list of %s\n",
+	    "values of a CASE of an EVENT statement");
+    FPRINTF(ASCERR,"Only symbols or integers and booleans are allowed\n");
+    return 0;
+  }
+}
+
+
+/**
+	Call CheckEventSetNode for each value in the set of values included
+	in the CASE of an EVENT statement
+*/
+static
+int CheckEventSetList(struct Instance *inst, struct Set *s, int *p2)
+{
+  struct Set *set;
+  CONST struct  Expr *expr;
+  set = s;
+  while (set!=NULL) {
+    expr = GetSingleExpr(set);
+    if (!CheckEventSetNode(inst,expr,p2)) return 0;
+    set = NextSet(set);
+    p2++;
+  }
+  return 1;
+}
+
+
+/**
+	Checking that the variables of the list of variables of an
+	EVENT statement are appropriate. This is, they
+	are boolean, integer or symbol instances. The first part of the
+	function was written for the case of EVENT statement
+	inside a FOR loop. This function also sorts
+	the kinds of variables in the list by assigning a value
+	to the integer *p1
+*/
+static
+int CheckEventVariableNode(struct Instance *ref,
+                          CONST struct Name *name,
+                          int *p1)
+{
+  struct gl_list_t *instances;
+  struct Instance *inst;
+  enum find_errors err;
+  symchar *str;
+  struct for_var_t *fvp;
+  str = SimpleNameIdPtr(name);
+  if( str!=NULL &&
+      GetEvaluationForTable()!=NULL &&
+      (fvp=FindForVar(GetEvaluationForTable(),str))!=NULL) {
+
+    switch (GetForKind(fvp)) {
+    case f_integer:
+      *p1=0;
+      return 1;
+    case f_symbol:
+      *p1=2;
+      return 1;
+    default:
+      FPRINTF(ASCERR,"Innapropriate index in the list of %s\n",
+	      "variables of an EVENT statement");
+      FPRINTF(ASCERR,"only symbol or integer allowed\n");
+      return 0;
+    }
+
+  }
+  instances = FindInstances(ref,name,&err);
+  if (instances == NULL){
+    switch(err){
+    case unmade_instance:
+    case undefined_instance:
+      FPRINTF(ASCERR,"Unmade instance in the list of %s\n",
+	      "variables of an EVENT statement");
+      WriteName(ASCERR,name);
+      return 0;
+    default:
+      FPRINTF(ASCERR,"Unmade instance in the list of %s\n",
+	      "variables of an EVENT statement");
+      WriteName(ASCERR,name);
+      return 0;
+    }
+  }else{
+    if (gl_length(instances)==1) {
+      inst = (struct Instance *)gl_fetch(instances,1);
+      gl_destroy(instances);
+      switch(InstanceKind(inst)){
+      case BOOLEAN_ATOM_INST:
+        *p1=1;
+        return 1;
+      case BOOLEAN_CONSTANT_INST:
+        if (AtomAssigned(inst)) {
+          *p1=1;
+          return 1;
+        }else{
+          FPRINTF(ASCERR,"Undefined constant in the list of %s\n",
+	          "variables of an EVENT statement");
+          WriteName(ASCERR,name);
+          return 0;
+        }
+      default:
+        FPRINTF(ASCERR,"Inappropriate instance in the list of %s\n",
+		"variables of an EVENT statement");
+        FPRINTF(ASCERR,"Only booleans are allowed\n");
+        WriteName(ASCERR,name);
+	return 0;
+      }
+    }else{
+      gl_destroy(instances);
+      FPRINTF(ASCERR,"Inappropriate instance in the list of %s\n",
+	      "variables of an EVENT statement");
+      FPRINTF(ASCERR,"Multiple instances of\n");
+      WriteName(ASCERR,name);
+      return 0;
+    }
+  }
+}
+
+
+/**
+	Call CheckEventVariableNode for each variable vl in the variable
+	list of an EVENT statement
+*/
+static
+int CheckEventVariableList(struct Instance *inst, struct VariableList *vlist,
+                          int *p1)
+{
+  CONST struct Name *name;
+  CONST struct VariableList *vl;
+  vl = vlist;
+  while (vl!=NULL) {
+    name = NamePointer(vl);
+    if (!CheckEventVariableNode(inst,name,p1)) return 0;
+    vl = NextVariableNode(vl);
+    p1++;
+  }
+  return 1;
+}
+
+/**
+	Checking that not other instance has been created with the same
+	name of the current EVENT. If it has, it has to be an EVENT or a
+	DUMMY. return -1 for DUMMY. 1 for EVENT. 0 if the checking fails.
+*/
+static
+int CheckEventName(struct Instance *work, struct Name *name)
+{
+  struct gl_list_t *instances;
+  struct Instance *inst;
+  enum find_errors ferr;
+  instances = FindInstances(work,name,&ferr);
+  if (instances==NULL){
+    return 1;
+  }else{
+    if (gl_length(instances)==1){
+      inst = (struct Instance *)gl_fetch(instances,1);
+      asc_assert((InstanceKind(inst)==EVENT_INST)||(InstanceKind(inst)==DUMMY_INST) );
+      gl_destroy(instances);
+      if (InstanceKind(inst)==DUMMY_INST) {
+        return -1;
+      }
+      return 1;
+    }else {
+      gl_destroy(instances);
+      return 0;
+    }
+  }
+}
+
+/**
+	Checking of the Event statements. It checks that:
+	1) The name of the EVENT. If it was already created. It has to be
+	   an EVENT or a DUMMY. If a Dummy (case -1 of CheckEventName),
+	   do not check the structure of the EVENT statement, return 1.
+	2) The number of conditional variables is equal to the number
+	   of values in each of the CASEs.
+	3) That the conditional variables exist, and are boolean.
+	4) The number and the type  of conditional variables is the same
+	   as the number of values in each of the CASEs.
+	5) No OTHERWISE cases are present.
+	6) The statements inside an EVENT are only a FNAME or a nested EVENT,
+	   and ask for the checking of these interior statements.
+*/
+static
+int CheckEVENT(struct Instance *inst, struct Statement *statement) {
+  struct Name *ename;
+  struct VariableList *vlist;
+  struct EventList *e1;
+  struct Set *s;
+  struct StatementList *sl;
+  unsigned long numother;
+  unsigned long numvar;
+  unsigned long numset;
+  int vl[MAX_VAR_IN_LIST],*p1;
+  int casel[MAX_VAR_IN_LIST],*p2;
+  ename = EventStatName(statement);
+  if (ename!=NULL) {
+    if (!CheckEventName(inst,ename)) {
+    FPRINTF(ASCERR,"Name of an EVENT already exits in\n");
+    WriteInstanceName(ASCERR,inst,NULL);
+    STATEMENT_ERROR(statement,"The following statement will not be executed: \n");
+      return 0;
+    }
+    if ( CheckEventName(inst,ename) == -1) return 1;
+  }
+  vlist = EventStatCond(statement);
+  numvar = VariableListLength(vlist);
+  asc_assert(numvar<=MAX_VAR_IN_LIST);
+  p1 = &vl[0];
+  p2 = &casel[0];
+  numother = 0;
+  if (!CheckEventVariableList(inst,vlist,p1)) {
+    FPRINTF(ASCERR,"In ");
+    WriteInstanceName(ASCERR,inst,NULL);
+    STATEMENT_ERROR(statement," the following statement will not be executed:\n");
+    return 0;
+  }
+  e1 = EventStatCases(statement);
+  while (e1!=NULL){
+      s = EventSetList(e1);
+      if (s!=NULL) {
+          numset = SetLength(s);
+          if (numvar != numset) {
+            FPRINTF(ASCERR,"Number of variables different from %s\n",
+		    "number of values in a CASE");
+            FPRINTF(ASCERR,"In ");
+            WriteInstanceName(ASCERR,inst,NULL);
+            STATEMENT_ERROR(statement,
+		 " the following statement will not be executed: \n");
+	    return 0;
+	  }
+          if (!CheckEventSetList(inst,s,p2)) {
+            FPRINTF(ASCERR,"In ");
+            WriteInstanceName(ASCERR,inst,NULL);
+            STATEMENT_ERROR(statement,
+		 " the following statement will not be executed: \n");
+	    return 0;
+	  }
+          p1 = &vl[0];
+          p2 = &casel[0];
+          if (!CompListInArray(numvar,p1,p2)) {
+            FPRINTF(ASCERR,"Type of variables different from type %s\n",
+		    "of values in a CASE");
+            FPRINTF(ASCERR,"In ");
+            WriteInstanceName(ASCERR,inst,NULL);
+            STATEMENT_ERROR(statement,
+		 " the following statement will not be executed: \n");
+	    return 0;
+	  }
+      }else{
+          numother++;
+          if (numother>1) {
+            FPRINTF(ASCERR,"More than one default case in an EVENT\n");
+            FPRINTF(ASCERR,"In ");
+            WriteInstanceName(ASCERR,inst,NULL);
+            STATEMENT_ERROR(statement,
+		 " the following statement will not be executed: \n");
+	    return 0;
+	  }
+      }
+      sl = EventStatementList(e1);
+      if (!CheckEventStatementList(inst,sl)) {
+        FPRINTF(ASCERR,"In ");
+        WriteInstanceName(ASCERR,inst,NULL);
+        STATEMENT_ERROR(statement,
+	     " the following statement will not be executed: \n");
+	return 0;
+      }
+      e1 = NextEventCase(e1); }
+  return 1;
+}
+
+/**
 	Checking that not other instance has been created with the same
 	name of the current WHEN. If it has, it has to be a WHEN or a
 	DUMMY. return -1 for DUMMY. 1 for WHEN. 0 if the checking fails.
@@ -7134,28 +7783,6 @@ int CheckWhenName(struct Instance *work, struct Name *name)
       return 0;
     }
   }
-}
-
-/**
-	p1 and p2 are pointers to arrays of integers. Here we are checking
-	that the type (integer, boolean, symbol) of each variable in the
-	variable list of a WHEN (or a SELECT) is the same as the type of
-	each value in the list of values a CASE
-*/
-static
-int CompListInArray(unsigned long numvar, int *p1, int *p2)
-{
-  unsigned long c;
-  for (c=1;c<=numvar;c++) {
-    if (*p2 != 3) { /* To account for ANY */
-      if (*p1 != *p2) return 0;
-    }
-    if (c < numvar) {
-      p1++;
-      p2++;
-    }
-  }
-  return 1;
 }
 
 
@@ -7351,8 +7978,8 @@ int CheckWhenVariableNode(struct Instance *ref,
 
 /**
 	Inside a WHEN, only FNAMEs (name of models, relations or array of)
-	and nested WHENs ( and FOR loops of them) are allowed. This function
-	asks for the checking of these statements.
+	and nested WHENs and EVENTs ( and FOR loops of them) are allowed.
+	This function asks for the checking of these statements.
 */
 static
 int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
@@ -7360,6 +7987,8 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
   switch(StatementType(statement)){
     case WHEN:
       return CheckWHEN(inst,statement);
+    case EVENT:
+      return CheckEVENT(inst,statement);
     case FNAME:
       return CheckFNAME(inst,statement);
     case FOR:
@@ -7367,6 +7996,8 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
+    case ISPRE:
     case IRT:
     case ATS:
     case AA:
@@ -7574,6 +8205,8 @@ int CheckSelectStatements(struct Instance *inst, struct Statement *statement)
   switch(StatementType(statement)){
   case ALIASES:
   case ISA:
+  case ISDER:
+  case ISPRE:
   case IRT:
   case ATS:
   case AA:
@@ -7594,6 +8227,7 @@ int CheckSelectStatements(struct Instance *inst, struct Statement *statement)
   case EXT:
   case CALL:
   case WHEN:
+  case EVENT:
   case FNAME:
     if (g_iteration>=MAXNUMBER) { /* see WriteUnexecutedMessage */
        STATEMENT_ERROR(statement,
@@ -7872,10 +8506,13 @@ int CheckSELECT(struct Instance *inst, struct Statement *statement)
 static
 int Pass4CheckStatement(struct Instance *inst, struct Statement *stat)
 {
+  CONSOLE_DEBUG("PASS4 CHECK");
   asc_assert(stat&&inst);
   switch(StatementType(stat)){
   case WHEN:
     return CheckWHEN(inst,stat);
+  case EVENT:
+    return CheckEVENT(inst,stat);
   case FNAME:
     return CheckFNAME(inst,stat);
   case FOR:
@@ -7890,6 +8527,8 @@ int Pass4CheckStatement(struct Instance *inst, struct Statement *stat)
   case EXT:
   case LOGREL:
   case ISA:
+  case ISDER:
+  case ISPRE:
   case ARR:
   case ALIASES:
   case IRT:
@@ -7920,6 +8559,8 @@ int Pass3CheckStatement(struct Instance *inst, struct Statement *stat)
   case ALIASES:
   case ARR:
   case ISA:
+  case ISDER:
+  case ISPRE:
   case IRT:
   case ATS:
   case AA:
@@ -7928,6 +8569,7 @@ int Pass3CheckStatement(struct Instance *inst, struct Statement *stat)
   case CASGN:
   case ASGN:
   case WHEN:
+  case EVENT:
   case SELECT:
   case FNAME:
   default:
@@ -7953,6 +8595,8 @@ int Pass2CheckStatement(struct Instance *inst, struct Statement *stat)
   case ALIASES:
   case ARR:
   case ISA:
+  case ISDER:
+  case ISPRE:
   case IRT:
   case ATS:
   case AA:
@@ -7961,6 +8605,7 @@ int Pass2CheckStatement(struct Instance *inst, struct Statement *stat)
   case CASGN:
   case ASGN:
   case WHEN:
+  case EVENT:
   case SELECT:
   case FNAME:
   default:
@@ -7986,6 +8631,10 @@ int Pass1CheckStatement(struct Instance *inst, struct Statement *stat)
       return 0;
     }
     return MakeParameterInst(inst,stat,NULL,NOKEEPARGINST); /*1*/
+  case ISDER:
+    return CheckISDER(inst,stat);
+  case ISPRE:
+    return CheckISPRE(inst,stat);
   case IRT:
     if ( CheckIRT(inst,stat) == 0 ) {
       return 0;
@@ -8016,10 +8665,12 @@ int Pass1CheckStatement(struct Instance *inst, struct Statement *stat)
     return 1; /* ignore'm in phase 1 */
   case WHEN:
     return 1; /* ignore'm in phase 1 */
+  case EVENT:
+    return 1; /* ignore'm in phase 1 */
   case SELECT:
     return CheckSELECT(inst,stat);
   case FNAME:
-    FPRINTF(ASCERR,"FNAME are only allowed inside a WHEN Statement\n");
+    FPRINTF(ASCERR,"FNAME are only allowed inside a WHEN/EVENT Statement\n");
     return 0;
   default:
     STATEMENT_ERROR(stat,"Inappropriate statement type");
@@ -8099,7 +8750,7 @@ int Pass1CheckStatementList(struct Instance *inst, struct StatementList *sl)
 
 /**
 	The FNAME statement is just used to stand for the model relations or
-	arrays inside the CASES of a WHEN statement. Actually, this
+	arrays inside the CASES of a WHEN/EVENT statement. Actually, this
 	statement does not need to be executed. It is required only
 	for checking and for avoiding conflicts in the semantics.
 */
@@ -8480,6 +9131,517 @@ int ExecuteUnSelectedCOND(struct Instance *inst, struct Statement *statement)
 }
 
 /*------------------------------------------------------------------------------
+  'EVENT' STATEMENT PROCESSING
+*/
+
+/*- - - - - - - - - -  -  - - - - - - - - -
+	The following four functions create the gl_list of references of
+	each CASE of an EVENT instance. By list of references I mean the
+	list of pointers to relations, models or arrays which will become
+	active if such a CASE applies.
+*/
+
+/**
+	creating list of reference for each CASE in an EVENT: (1) dealing with arrays
+*/
+static
+void MakeEventArrayReference(struct Instance *event,
+                             struct Instance *child,
+                             struct gl_list_t *listref)
+{
+  struct Instance *arraychild;
+  unsigned long len,c;
+  switch (InstanceKind(child)) {
+  case REL_INST:
+    gl_append_ptr(listref,(VOIDPTR)child);
+    AddEvent(child,event);
+    relinst_set_in_event(child,TRUE);
+    return;
+  case LREL_INST:
+    gl_append_ptr(listref,(VOIDPTR)child);
+    AddEvent(child,event);
+    logrelinst_set_in_event(child,TRUE);
+    return;
+  case MODEL_INST:
+    gl_append_ptr(listref,(VOIDPTR)child);
+    AddEvent(child,event);
+    model_set_in_event(child,TRUE);
+    return;
+  case EVENT_INST:
+    gl_append_ptr(listref,(VOIDPTR)child);
+    AddEvent(child,event);
+    return;
+  case ARRAY_INT_INST:
+  case ARRAY_ENUM_INST:
+    len = NumberChildren(child);
+    for(c=1;c<=len;c++){
+      arraychild = InstanceChild(child,c);
+      MakeEventArrayReference(event,arraychild,listref);
+    }
+    return;
+  default:
+    Asc_Panic(2, NULL,
+              "Incorrect array instance name inside an EVENT statement\n");
+  }
+}
+
+/**
+	creating list of reference for each CASE in an EVENT: (2)
+*/
+static
+void MakeEventReference(struct Instance *ref,
+                        struct Instance *child,
+                        struct Name *name,
+                        struct gl_list_t *listref)
+{
+  struct Instance *inst,*arraychild;
+  struct gl_list_t *instances;
+  enum find_errors err;
+  unsigned long len,c;
+
+  instances = FindInstances(ref,name,&err);
+  if (instances==NULL){
+    gl_destroy(instances);
+    WriteName(ASCERR,name);
+    Asc_Panic(2, NULL,
+              "Name of an unmade instance (Relation-Model)"
+              " inside an EVENT statement \n");
+  }else{
+    if (gl_length(instances)==1){
+      inst = (struct Instance *)gl_fetch(instances,1);
+      gl_destroy(instances);
+      switch (InstanceKind(inst)) {
+        case REL_INST:
+          gl_append_ptr(listref,(VOIDPTR)inst);
+          AddEvent(inst,child);
+          relinst_set_in_event(inst,TRUE);
+          return;
+        case LREL_INST:
+          gl_append_ptr(listref,(VOIDPTR)inst);
+          AddEvent(inst,child);
+          logrelinst_set_in_event(inst,TRUE);
+          return;
+        case MODEL_INST:
+          gl_append_ptr(listref,(VOIDPTR)inst);
+          AddEvent(inst,child);
+          model_set_in_event(inst,TRUE);
+          return;
+        case EVENT_INST:
+          gl_append_ptr(listref,(VOIDPTR)inst);
+          AddEvent(inst,child);
+          return;
+        case ARRAY_INT_INST:
+        case ARRAY_ENUM_INST:
+          len = NumberChildren(inst);
+          for(c=1;c<=len;c++){
+            arraychild = InstanceChild(inst,c);
+            MakeEventArrayReference(child,arraychild,listref);
+          }
+          return;
+        default:
+          gl_destroy(instances);
+          WriteName(ASCERR,name);
+          Asc_Panic(2, NULL,
+                    "Incorrect instance name inside an EVENT statement\n");
+          break;
+      }
+    }else{
+      gl_destroy(instances);
+      WriteName(ASCERR,name);
+      Asc_Panic(2, NULL,
+                "Error in EVENT statement. Name assigned"
+                " to more than one instance type\n");
+    }
+  }
+}
+
+/**
+	creating list of reference for each CASE in an EVENT: (3) nested EVENTs,
+	nested FOR loops etc.
+*/
+static
+void MakeEventCaseReferences(struct Instance *inst,
+                             struct Instance *child,
+                             struct StatementList *sl,
+                             struct gl_list_t *listref)
+{
+  struct Statement *statement;
+  struct Name *name;
+  unsigned long c,len;
+  struct gl_list_t *list;
+  list = GetList(sl);
+  len = gl_length(list);
+  for(c=1;c<=len;c++){
+    statement = (struct Statement *)gl_fetch(list,c);
+    switch(StatementType(statement)){
+    case EVENT:
+      name = EventStatName(statement);
+      MakeEventReference(inst,child,name,listref);
+      break;
+    case FNAME:
+      name = FnameStat(statement);
+      MakeEventReference(inst,child,name,listref);
+      break;
+    case FOR:
+      MakeEventCaseReferencesFOR(inst,child,statement,listref);
+      break;
+    default:
+      WSEM(stderr,statement,
+                      "Inappropriate statement type in EVENT Statement");
+      ASC_PANIC("Inappropriate statement type in EVENT Statement");
+    }
+  }
+}
+
+/**
+	creating list of reference for each CASE in a EVENT: (4) almost identical
+	to the previous one.
+	They differ only in the case of a FOR loop. This function is
+	required to appropriately deal with nested FOR loops which
+	contain FNAMEs or EVENTs
+*/
+static
+void MakeRealEventCaseReferencesList(struct Instance *inst,
+                                     struct Instance *child,
+                                     struct StatementList *sl,
+                                     struct gl_list_t *listref)
+{
+  struct Statement *statement;
+  struct Name *name;
+  unsigned long c,len;
+  struct gl_list_t *list;
+  list = GetList(sl);
+  len = gl_length(list);
+  for(c=1;c<=len;c++){
+    statement = (struct Statement *)gl_fetch(list,c);
+    switch(StatementType(statement)){
+    case EVENT:
+      name = EventStatName(statement);
+      MakeEventReference(inst,child,name,listref);
+      break;
+    case FNAME:
+      name = FnameStat(statement);
+      MakeEventReference(inst,child,name,listref);
+      break;
+    case FOR:
+      MakeRealEventCaseReferencesFOR(inst,child,statement,listref);
+      break;
+    default:
+      STATEMENT_ERROR(statement,
+                      "Inappropriate statement type in declarative section");
+      ASC_PANIC("Inappropriate statement type in declarative section");
+      break;
+    }
+  }
+  return ;
+}
+
+/**
+	Executing the possible kind of statements inside an EVENT. It
+	considers the existence of FOR loops and nested EVENTs
+*/
+static
+void ExecuteEventStatements(struct Instance *inst,
+                            struct StatementList *sl)
+{
+  struct Statement *statement;
+  unsigned long c,len;
+  int return_value = 0;
+  struct gl_list_t *list;
+  list = GetList(sl);
+  len = gl_length(list);
+  for(c=1;c<=len;c++){
+    statement = (struct Statement *)gl_fetch(list,c);
+    switch(StatementType(statement)){
+    case EVENT:
+      return_value = 1;
+      RealExecuteEVENT(inst,statement);
+      break;
+    case FNAME:
+      return_value = ExecuteFNAME(inst,statement);
+      break;
+    case FOR:
+      return_value = 1;
+      Pass4ExecuteFOR(inst,statement);
+      break;
+    default:
+      WSEM(stderr,statement,
+                      "Inappropriate statement type in EVENT Statement");
+      ASC_PANIC("Inappropriate statement type in EVENT Statement");
+    }
+    asc_assert(return_value);
+  }
+}
+
+/**
+	Creates a CASE included in an EVENT statement. It involves the
+	allocation of memory of the CASE and the creation of the
+	gl_list of references (pointer to models, arrays, relations)
+	which will be contained in such a case.
+*/
+static
+struct Case *RealExecuteEventStatements(struct Instance *inst,
+                                        struct Instance *child,
+                                        struct EventList *e1)
+{
+  struct StatementList *sl;
+  struct Case *cur_case;
+  struct gl_list_t *listref;
+  struct Set *set;
+
+  listref = gl_create(AVG_REF);
+
+  set = EventSetList(e1);
+  cur_case = CreateCase(CopySetByReference(set),NULL);
+  sl = EventStatementList(e1);
+  ExecuteEventStatements(inst,sl);
+  MakeEventCaseReferences(inst,child,sl,listref);
+  SetCaseReferences(cur_case,listref);
+  return cur_case;
+}
+
+/**
+	Find the instances corresponding to the list of conditional
+	variables of an EVENT, and append ther pointers in a gl_list.
+	This gl_list becomes part of the EVENT instance.
+	Also, this function notify those instances that the EVENT is
+	pointing to them, so that their list of events is updated.
+*/
+static
+struct gl_list_t *MakeEventVarList(struct Instance *inst,
+                                   struct Instance *child,
+                                   CONST struct VariableList *vlist)
+{
+  CONST struct Name *name;
+  struct Instance *var;
+  struct gl_list_t *instances;
+  struct gl_list_t *eventvars;
+  enum find_errors err;
+  unsigned long numvar;
+
+  numvar = VariableListLength(vlist);
+  eventvars = gl_create(numvar);
+
+  while(vlist != NULL){
+    name = NamePointer(vlist);
+    instances = FindInstances(inst,name,&err);
+    if (instances == NULL){
+      ASC_PANIC("Instance not found in MakeEventVarList \n");
+    }else{
+      if (gl_length(instances)==1) {
+        var = (struct Instance *)gl_fetch(instances,1);
+        gl_destroy(instances);
+        switch(InstanceKind(var)){
+          case BOOLEAN_ATOM_INST:
+          case BOOLEAN_CONSTANT_INST:
+            gl_append_ptr(eventvars,(VOIDPTR)var);
+            AddEvent(var,child);
+            break;
+          default:
+            Asc_Panic(2, NULL,
+                      "Incorrect instance type in MakeEventVarList \n");
+        }
+      }else{
+        gl_destroy(instances);
+        Asc_Panic(2, NULL,
+                  "Variable name assigned to more than one instance \n");
+      }
+    }
+    vlist = NextVariableNode(vlist);
+  }
+  return eventvars;
+}
+
+/**
+	Make an EVENT instance or an array of EVENT instances by calling
+	CreateEventInstance. It does not create the lists of pointers
+	to the conditional variables or the models or relations.
+*/
+
+static
+struct Instance *MakeEventInstance(struct Instance *parent,
+                                  struct Name *name,
+                                  struct Statement *stat)
+{
+  symchar *event_name;
+  struct TypeDescription *desc;
+  struct Instance *child;
+  struct InstanceName rec;
+  unsigned long pos;
+  if ((event_name=SimpleNameIdPtr(name))!=NULL){
+    SetInstanceNameType(rec,StrName);
+    SetInstanceNameStrPtr(rec,event_name);
+    if(0 != (pos = ChildSearch(parent,&rec))){
+      asc_assert(InstanceChild(parent,pos)==NULL);
+      desc = FindEventType();
+      child = CreateEventInstance(desc);
+      LinkToParentByPos(parent,child,pos);
+      return child;
+    }else{
+      return NULL;
+    }
+  }else{				/* sparse array of event */
+    event_name = NameIdPtr(name);
+    SetInstanceNameType(rec,StrName);
+    SetInstanceNameStrPtr(rec,event_name);
+    if(0 != (pos = ChildSearch(parent,&rec))){
+      if (InstanceChild(parent,pos)==NULL){ /* need to make array */
+        child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL,NULL,NULL);
+      }else{			/* need to add array element */
+        child = AddArrayChild(parent,name,stat,NULL,NULL,NULL,NULL,NULL);
+      }
+      return child;
+    }else{
+      return NULL;
+    }
+  }
+}
+
+/**
+	Call the Creation of an EVENT instance. This function is also in charge
+	of filling the gl_list of conditional variables and the gl_list of
+	CASEs contained in the EVENT instance
+*/
+static
+void RealExecuteEVENT(struct Instance *inst, struct Statement *statement)
+{
+  struct VariableList *vlist;
+  struct EventList *e1;
+  struct Instance *child;
+  struct Name *ename;
+  struct Case *cur_case;
+  enum find_errors ferr;
+  struct gl_list_t *instances;
+  struct gl_list_t *eventvars;
+  struct gl_list_t *eventcases;
+
+  ename = EventStatName(statement);
+  instances = FindInstances(inst,ename,&ferr);
+  if (instances==NULL) {
+    child = MakeEventInstance(inst,ename,statement);
+    if (child == NULL) {
+      STATEMENT_ERROR(statement,"Unable to create event instance");
+      ASC_PANIC("Unable to create event instance");
+    }
+  }else{
+    if(gl_length(instances)==1){
+      child = (struct Instance *)gl_fetch(instances,1);
+      asc_assert((InstanceKind(child)==EVENT_INST) || (InstanceKind(child)==DUMMY_INST));
+      gl_destroy(instances);
+      if (InstanceKind(child)==DUMMY_INST) {
+        return;
+      }
+    }else{
+      STATEMENT_ERROR(statement, "Expression name refers to more than one object");
+      gl_destroy(instances);
+      ASC_PANIC("Expression name refers to more than one object");
+	  child = NULL;
+    }
+  }
+  vlist = EventStatCond(statement);
+  eventvars = MakeEventVarList(inst,child,vlist);
+  SetEventVarList(child,eventvars);
+  eventcases = gl_create(AVG_CASES);
+  e1 = EventStatCases(statement);
+  while (e1!=NULL){
+    cur_case = RealExecuteEventStatements(inst,child,e1);
+    gl_append_ptr(eventcases,(VOIDPTR)cur_case);
+    e1 = NextEventCase(e1);
+  }
+  SetEventCases(child,eventcases);
+}
+
+static
+int ExecuteEVENT(struct Instance *inst, struct Statement *statement)
+{
+  if (CheckEVENT(inst,statement)){
+    RealExecuteEVENT(inst,statement);
+    return 1;
+  }else{
+    return 0;
+  }
+}
+
+/**
+	Written because of the possiblity of nested EVENT and
+	Nested EVENT inside a FOR loop in an unselected case of
+	SELECT statement
+*/
+static
+void ExecuteUnSelectedEventStatements(struct Instance *inst,
+                                      struct StatementList *sl)
+{
+  struct Statement *statement;
+  unsigned long c,len;
+  int return_value = 0;
+  struct gl_list_t *list;
+  list = GetList(sl);
+  len = gl_length(list);
+  for(c=1;c<=len;c++){
+    statement = (struct Statement *)gl_fetch(list,c);
+    switch(StatementType(statement)){
+    case EVENT:
+      return_value = ExecuteUnSelectedEVENT(inst,statement);
+      break;
+    case FNAME:
+      return_value = 1;
+      break;
+    case FOR:
+      return_value = ExecuteUnSelectedForStatements(inst,
+                                                    ForStatStmts(statement));
+      break;
+    default:
+      WSEM(stderr,statement,
+                      "Inappropriate statement type in EVENT Statement");
+      ASC_PANIC("Inappropriate statement type in EVENT Statement");
+    }
+    asc_assert(return_value);
+  }
+}
+
+/*
+	For its use in ExecuteUnSelectedStatements.
+	Execute the WHEN statements inside those cases of a SELECT
+	which do not match the selection variables
+*/
+static
+int ExecuteUnSelectedEVENT(struct Instance *inst, struct Statement *statement)
+{
+  struct EventList *e1;
+  struct Instance *child;
+  struct Name *ename;
+  struct StatementList *sl;
+  enum find_errors ferr;
+  struct gl_list_t *instances;
+  struct TypeDescription *def;
+
+  ename = EventStatName(statement);
+  instances = FindInstances(inst,ename,&ferr);
+  if (instances==NULL) {
+    def = FindDummyType();
+    MakeDummyInstance(ename,def,inst,statement);
+  }else{
+    if(gl_length(instances)==1){
+      child = (struct Instance *)gl_fetch(instances,1);
+      asc_assert(InstanceKind(child)==DUMMY_INST);
+      gl_destroy(instances);
+    }else{
+      STATEMENT_ERROR(statement, "Expression name refers to more than one object");
+      gl_destroy(instances);
+      ASC_PANIC("Expression name refers to more than one object");
+    }
+  }
+
+  e1 = EventStatCases(statement);
+  while (e1!=NULL){
+    sl = EventStatementList(e1);
+    ExecuteUnSelectedEventStatements(inst,sl);
+    e1 = NextEventCase(e1);
+  }
+  return 1;
+}
+
+/*------------------------------------------------------------------------------
   'WHEN' STATEMENT PROCESSING
 */
 
@@ -8576,6 +9738,10 @@ void MakeWhenArrayReference(struct Instance *when,
     gl_append_ptr(listref,(VOIDPTR)child);
     AddWhen(child,when);
     return;
+  case EVENT_INST:
+    gl_append_ptr(listref,(VOIDPTR)child);
+    AddWhen(child,when);
+    return;
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
     len = NumberChildren(child);
@@ -8635,6 +9801,10 @@ void MakeWhenReference(struct Instance *ref,
           gl_append_ptr(listref,(VOIDPTR)inst);
           AddWhen(inst,child);
           return;
+        case EVENT_INST:
+          gl_append_ptr(listref,(VOIDPTR)inst);
+          AddWhen(inst,child);
+          return;
         case ARRAY_INT_INST:
         case ARRAY_ENUM_INST:
           len = NumberChildren(inst);
@@ -8683,6 +9853,10 @@ void MakeWhenCaseReferences(struct Instance *inst,
       name = WhenStatName(statement);
       MakeWhenReference(inst,child,name,listref);
       break;
+    case EVENT:
+      name = EventStatName(statement);
+      MakeWhenReference(inst,child,name,listref);
+      break;
     case FNAME:
       name = FnameStat(statement);
       MakeWhenReference(inst,child,name,listref);
@@ -8722,6 +9896,10 @@ void MakeRealWhenCaseReferencesList(struct Instance *inst,
     switch(StatementType(statement)){
     case WHEN:
       name = WhenStatName(statement);
+      MakeWhenReference(inst,child,name,listref);
+      break;
+    case EVENT:
+      name = EventStatName(statement);
       MakeWhenReference(inst,child,name,listref);
       break;
     case FNAME:
@@ -8777,9 +9955,9 @@ struct Instance *MakeWhenInstance(struct Instance *parent,
     SetInstanceNameStrPtr(rec,when_name);
     if(0 != (pos = ChildSearch(parent,&rec))){
       if (InstanceChild(parent,pos)==NULL){ /* need to make array */
-        child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL);
+        child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL,NULL,NULL);
       }else{			/* need to add array element */
-        child = AddArrayChild(parent,name,stat,NULL,NULL,NULL);
+        child = AddArrayChild(parent,name,stat,NULL,NULL,NULL,NULL,NULL);
       }
       return child;
     }else{
@@ -8808,6 +9986,9 @@ void ExecuteWhenStatements(struct Instance *inst,
     case WHEN:
       return_value = 1;
       RealExecuteWHEN(inst,statement);
+      break;
+    case EVENT:
+      return_value = ExecuteEVENT(inst,statement);
       break;
     case FNAME:
       return_value = ExecuteFNAME(inst,statement);
@@ -8950,6 +10131,9 @@ void ExecuteUnSelectedWhenStatements(struct Instance *inst,
     case WHEN:
       return_value = ExecuteUnSelectedWHEN(inst,statement);
       break;
+    case EVENT:
+      return_value = ExecuteUnSelectedEVENT(inst,statement);
+      break;
     case FNAME:
       return_value = 1;
       break;
@@ -9051,6 +10235,14 @@ void ExecuteSelectStatements(struct Instance *inst, unsigned long *count,
         return_value = ExecuteISA(inst,statement);
         if (return_value) ClearBit(blist,*count);
         break;
+      case ISDER:
+        return_value = ExecuteISDER(inst,statement);
+        if (return_value) ClearBit(blist,*count);
+        break;
+      case ISPRE:
+        return_value = ExecuteISPRE(inst,statement);
+        if (return_value) ClearBit(blist,*count);
+        break;
       case IRT:
         return_value = ExecuteIRT(inst,statement);
         if (return_value) ClearBit(blist,*count);
@@ -9081,6 +10273,10 @@ void ExecuteSelectStatements(struct Instance *inst, unsigned long *count,
       case COND:
       case CALL:
       case WHEN:
+        return_value = 1;  /* ignore'm */
+        ClearBit(blist,*count);
+        break;
+      case EVENT:
         return_value = 1;  /* ignore'm */
         ClearBit(blist,*count);
         break;
@@ -9170,6 +10366,10 @@ void ExecuteUnSelectedStatements(struct Instance *inst,unsigned long *count,
         break;
       case WHEN:
         return_value = ExecuteUnSelectedWHEN(inst,statement);
+        ClearBit(blist,*count);
+        break;
+      case EVENT:
+        return_value = ExecuteUnSelectedEVENT(inst,statement);
         ClearBit(blist,*count);
         break;
       case SELECT:
@@ -9479,6 +10679,10 @@ void SetBitsOnOfSELECTStats(struct Instance *inst, unsigned long *count,
             SetBit(blist,*count);
             (*changed)++;
             break;
+          case EVENT:
+            SetBit(blist,*count);
+            (*changed)++;
+            break;
           case FOR:
             if ( ForContainsWhen(s) ) {
               SetBit(blist,*count);
@@ -9498,6 +10702,10 @@ void SetBitsOnOfSELECTStats(struct Instance *inst, unsigned long *count,
 				case 5:			/**> DS: Added support for LINK statements inside SELECTs */
         switch(StatementType(s)) {
           case WHEN:
+            SetBit(blist,*count);
+            (*changed)++;
+            break;
+          case EVENT:
             SetBit(blist,*count);
             (*changed)++;
             break;
@@ -9792,9 +11000,12 @@ int Pass5ExecuteForStatements(struct Instance *inst,
            "SELECT statements are not allowed inside a FOR Statement");
       return 0;
     case WHEN:
+    case EVENT:
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
+    case ISPRE:
     case IRT:
     case ATS:
     case AA:
@@ -9838,6 +11049,9 @@ int Pass4ExecuteForStatements(struct Instance *inst,
     case WHEN:
       if (!ExecuteWHEN(inst,statement)) return 0;
       break;
+    case EVENT:
+      if (!ExecuteEVENT(inst,statement)) return 0;
+      break;
     case FNAME:
       if (!ExecuteFNAME(inst,statement)) return 0;
       break;
@@ -9852,6 +11066,8 @@ int Pass4ExecuteForStatements(struct Instance *inst,
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
+    case ISPRE:
     case IRT:
     case ATS:
     case AA:
@@ -9897,6 +11113,8 @@ int Pass3ExecuteForStatements(struct Instance *inst,
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
+    case ISPRE:
     case IRT:
     case ATS:
     case AA:
@@ -9909,11 +11127,12 @@ int Pass3ExecuteForStatements(struct Instance *inst,
     case EXT: /* ignore'm */
     case CASGN:
     case WHEN:
+    case EVENT:
       return_value = 1; /* ignore'm until pass 4 */
       break;
     case FNAME:
       STATEMENT_ERROR(statement,
-                 "FNAME statements are only allowed inside a WHEN Statement");
+                 "FNAME statements are only allowed inside a WHEN or EVENT Statement");
       return_value = 0;
       break;
     case SELECT:
@@ -9973,6 +11192,8 @@ void Pass2ExecuteForStatements(struct Instance *inst,
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
+    case ISPRE:
     case IRT:
     case ATS:
     case AA:
@@ -9986,6 +11207,7 @@ void Pass2ExecuteForStatements(struct Instance *inst,
       return_value = 1; /* ignore'm until pass 3 */
       break;
     case WHEN:
+    case EVENT:
       return_value = 1; /* ignore'm until pass 4 */
       break;
     case SELECT:
@@ -10076,6 +11298,12 @@ void Pass1ExecuteForStatements(struct Instance *inst,
     case ISA:
       return_value = ExecuteISA(inst,statement);
       break;
+    case ISDER:
+      return_value = ExecuteISDER(inst,statement);
+      break;
+    case ISPRE:
+      return_value = ExecuteISPRE(inst,statement);
+      break;
     case IRT:
       return_value = ExecuteIRT(inst,statement);
       break;
@@ -10104,6 +11332,7 @@ void Pass1ExecuteForStatements(struct Instance *inst,
     case LOGREL:
     case COND:
     case WHEN:
+    case EVENT:
       return_value = 1; /* ignore'm until pass 2, 3 or 4 */
       break;
     case REF:
@@ -10114,7 +11343,7 @@ void Pass1ExecuteForStatements(struct Instance *inst,
       break;
     case FNAME:
       STATEMENT_ERROR(statement,
-                "FNAME statements are only allowed inside a WHEN Statement");
+                "FNAME statements are only allowed inside a WHEN or EVENT Statement");
       return_value = 0;
       break;
     case SELECT:
@@ -10186,6 +11415,9 @@ int ExecuteUnSelectedForStatements(struct Instance *inst,
         break;
       case WHEN:
         return_value = ExecuteUnSelectedWHEN(inst,statement);
+        break;
+      case EVENT:
+        return_value = ExecuteUnSelectedEVENT(inst,statement);
         break;
       case COND:
         STATEMENT_ERROR(statement,
@@ -10442,6 +11674,83 @@ void MakeRealWhenCaseReferencesFOR(struct Instance *inst,
       for(c=1;c<=len;c++){
         SetForSymbol(fv,FetchStrMember(sptr,c));
         MakeRealWhenCaseReferencesList(inst,child,sl,listref);
+      }
+      RemoveForVariable(GetEvaluationForTable());
+      break;
+    }
+    DestroyValue(&value);
+  }
+}
+
+static
+void MakeRealEventCaseReferencesFOR(struct Instance *inst,
+                                    struct Instance *child,
+                                    struct Statement *statement,
+                                    struct gl_list_t *listref)
+{
+  symchar *name;
+  struct Expr *ex;
+  struct StatementList *sl;
+  unsigned long c,len;
+  struct value_t value;
+  struct set_t *sptr;
+  struct for_var_t *fv;
+  name = ForStatIndex(statement);
+  ex = ForStatExpr(statement);
+  sl = ForStatStmts(statement);
+  if (FindForVar(GetEvaluationForTable(),name)){ /* duplicated for variable */
+    STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
+    return ;
+  }
+  asc_assert(GetEvaluationContext()==NULL);
+  SetEvaluationContext(inst);
+  value = EvaluateExpr(ex,NULL,InstanceEvaluateName);
+  SetEvaluationContext(NULL);
+  switch(ValueKind(value)){
+  case error_value:
+    switch(ErrorValue(value)){
+    case name_unfound:
+    case undefined_value:
+      DestroyValue(&value);
+      STATEMENT_ERROR(statement, "Phase 2 FOR has undefined values");
+      break;
+    default:
+      WriteForValueError(statement,value);
+      DestroyValue(&value);
+      break;
+    }
+  case real_value:
+  case integer_value:
+  case symbol_value:
+  case boolean_value:
+  case list_value:
+    WriteStatement(ASCERR,statement,0);
+    FPRINTF(ASCERR,"FOR expression returns the wrong type.\n");
+    DestroyValue(&value);
+    break;
+  case set_value:
+    sptr = SetValue(value);
+    switch(SetKind(sptr)){
+    case empty_set: break;
+    case integer_set:
+      fv = CreateForVar(name);
+      SetForVarType(fv,f_integer);
+      AddLoopVariable(GetEvaluationForTable(),fv);
+      len = Cardinality(sptr);
+      for(c=1;c<=len;c++){
+        SetForInteger(fv,FetchIntMember(sptr,c));
+        MakeRealEventCaseReferencesList(inst,child,sl,listref);
+      }
+      RemoveForVariable(GetEvaluationForTable());
+      break;
+    case string_set:
+      fv = CreateForVar(name);
+      SetForVarType(fv,f_symbol);
+      AddLoopVariable(GetEvaluationForTable(),fv);
+      len = Cardinality(sptr);
+      for(c=1;c<=len;c++){
+        SetForSymbol(fv,FetchStrMember(sptr,c));
+        MakeRealEventCaseReferencesList(inst,child,sl,listref);
       }
       RemoveForVariable(GetEvaluationForTable());
       break;
@@ -10806,7 +12115,7 @@ void Pass2FORMarkCond(struct Instance *inst, struct Statement *statement)
 static
 void Pass1RealExecuteFOR(struct Instance *inst, struct Statement *statement)
 {
-	/*printf("\n Pass1RealExecuteFOR called \n");*/
+	printf("\n Pass1RealExecuteFOR called \n");
   symchar *name;
   struct Expr *ex;
   struct StatementList *sl;
@@ -11322,6 +12631,21 @@ void MakeWhenCaseReferencesFOR(struct Instance *inst,
 }
 
 static
+void MakeEventCaseReferencesFOR(struct Instance *inst,
+                                struct Instance *child,
+                                struct Statement *statement,
+                                struct gl_list_t *listref)
+{
+  struct for_table_t *SavedForTable;
+  SavedForTable = GetEvaluationForTable();
+  SetEvaluationForTable(CreateForTable());
+  MakeRealEventCaseReferencesFOR(inst,child,statement,listref);
+  DestroyForTable(GetEvaluationForTable());
+  SetEvaluationForTable(SavedForTable);
+  return;
+}
+
+static
 int Pass3ExecuteFOR(struct Instance *inst, struct Statement *statement)
 {
   struct for_table_t *SavedForTable;
@@ -11406,6 +12730,8 @@ int Pass4ExecuteStatement(struct Instance *inst,struct Statement *statement)
   switch(StatementType(statement)){ /* should be a WHEN statement */
   case WHEN:
     return ExecuteWHEN(inst,statement);
+  case EVENT:
+    return ExecuteEVENT(inst,statement);
   case FOR:
     return Pass4ExecuteFOR(inst,statement);
   case LNK:
@@ -11414,7 +12740,7 @@ int Pass4ExecuteStatement(struct Instance *inst,struct Statement *statement)
     return 1;
   default:
     return 1;
-    /* For anything else but a WHEN and FOR statement */
+    /* For anything else but a WHEN and FOR and EVENT statement */
   }
 }
 
@@ -11430,12 +12756,14 @@ int Pass3ExecuteStatement(struct Instance *inst,struct Statement *statement)
     return Pass3ExecuteCOND(inst,statement);
   case WHEN:
     return 1; /* assumed done  */
+  case EVENT:
+    return 1; /* assumed done  */
   case LNK:
     return 1; /* assumed done */
   case UNLNK:
     return 1;
   case FNAME:
-    STATEMENT_ERROR(statement,"FNAME are allowed only inside a WHEN statement");
+    STATEMENT_ERROR(statement,"FNAME are allowed only inside a WHEN or EVENT statement");
     return 0;
   default:
     return 0;
@@ -11471,12 +12799,14 @@ int Pass2ExecuteStatement(struct Instance *inst,struct Statement *statement)
 		return 1; /* assumed done */
   case WHEN:
     return 1; /* assumed done  */
+  case EVENT:
+    return 1; /* assumed done  */
   case LNK:
     return 1; /* assumed done */
   case UNLNK:
     return 0; /* meaning what??? FIXME */
   case FNAME:
-    STATEMENT_ERROR(statement,"FNAME are allowed only inside a WHEN statement");
+    STATEMENT_ERROR(statement,"FNAME are allowed only inside a WHEN or EVENT statement");
     return 0;
   default:
     return 0;
@@ -11495,6 +12825,10 @@ int Pass1ExecuteStatement(struct Instance *inst, unsigned long *c,
     return ExecuteARR(inst,statement);
   case ISA:
     return ExecuteISA(inst,statement);
+  case ISDER:
+    return ExecuteISDER(inst,statement);
+  case ISPRE:
+    return ExecuteISPRE(inst,statement);
   case IRT:
     return ExecuteIRT(inst,statement);
   case ATS:
@@ -11520,13 +12854,15 @@ int Pass1ExecuteStatement(struct Instance *inst, unsigned long *c,
     return 1; /* automatically assume done */
   case WHEN:
     return 1; /* automatically assume done */
+  case EVENT:
+    return 1; /* automatically assume done */
   case LNK:
     return 1; /* automatically assume done */
   case UNLNK:
     STATEMENT_ERROR(statement,"UNLINK is allowed only inside the declarative part of the model; statement not executed");
     return 0;
   case FNAME:
-    STATEMENT_ERROR(statement,"FNAME are allowed only inside a WHEN statement");
+    STATEMENT_ERROR(statement,"FNAME are allowed only inside a WHEN or EVENT statement");
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
     return 0;
   case SELECT:
@@ -11777,6 +13113,7 @@ void Pass4ProcessPendingInstances(void)
   /*
    * pending will have at least one instance, or while will fail
    */
+  if (NumberPending()==0) CONSOLE_DEBUG("num pend = 0");
   while((count < PASS4MAXNUMBER) && NumberPending()>0){
     changed = 0;
     c = 0;
@@ -12533,7 +13870,7 @@ void Pass4SetWhenBits(struct Instance *inst)
             c = c + SelectStatNumberStats(stat);
           }
         }else{
-          if ( st == WHEN || (st == FOR && ForContainsWhen(stat)) ) {
+          if ( st == WHEN || st == EVENT || (st == FOR && (ForContainsWhen(stat) || ForContainsEvent(stat))) ) {
             SetBit(blist,c);
             changed++;
           }
@@ -12983,6 +14320,11 @@ int ValidRealInstantiateType(struct TypeDescription *def)
   case integer_constant_type:
   case symbol_constant_type:
   case real_type:
+    if (def->deriv) {
+      FPRINTF(ASCERR,"You cannot instance derivative types by themselves.\n");
+      FPRINTF(ASCERR,"They can only be contained in models or arrays.\n");
+      return 1;
+    }
   case boolean_type:
   case integer_type:
   case symbol_type:
@@ -13001,6 +14343,7 @@ int ValidRealInstantiateType(struct TypeDescription *def)
   case relation_type:
   case logrel_type:
   case when_type:
+  case event_type:
     FPRINTF(ASCERR,
             "You cannot instance arrays and relations by themselves.\n");
     FPRINTF(ASCERR,"They can only be contained in models or arrays.\n");
@@ -13047,6 +14390,7 @@ struct Instance *NewRealInstantiate(struct TypeDescription *def,
   case relation_type:
   case logrel_type:
   case when_type:
+  case event_type:
     FPRINTF(ASCERR,
             "You cannot instance arrays and relations by themselves.\n");
     FPRINTF(ASCERR,

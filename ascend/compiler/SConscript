@@ -6,8 +6,8 @@ csrcs = Split("""
 	atomsize.c atomvalue.c bintoken.c braced.c
 	case.c check.c child.c childdef.c childio.c childinfo.c cmpfunc.c
 	commands.c copyinst.c createinst.c defaultpaths.c destroyinst.c
-	dimen.c dimen_io.c dump.c
-	evaluate.c exprio.c exprs.c exprsym.c extcall.c
+	deriv.c dimen.c dimen_io.c dump.c
+	evaluate.c event.c exprio.c exprs.c exprsym.c extcall.c
 	extfunc.c extinst.c find.c forvars.c fractions.c
 	freestore.c func.c findpath.c
 	importhandler.c initialize.c instance_io.c
@@ -15,7 +15,7 @@ csrcs = Split("""
 	library.c link.c linkinst.c logrel_io.c logrel_util.c
 	logrelation.c mathinst.c mergeinst.c module.c name.c
 	nameio.c notate.c notequery.c numlist.c parentchild.c
-	parpend.c pending.c plot.c proc.c procframe.c
+	parpend.c pending.c plot.c pre.c proc.c procframe.c
 	procio.c prototype.c qlfdid.c refineinst.c rel_common.c relation.c
 	rel_blackbox.c 
 	relation_io.c relation_util.c rootfind.c reverse_ad.c 

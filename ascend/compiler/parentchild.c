@@ -85,6 +85,10 @@ unsigned long NumberParents(CONST struct Instance *i)
     if (W_INST(i)->parent[1]) return 2;
     if (W_INST(i)->parent[0]) return 1;
     else return 0;
+  case EVENT_INST:
+    if (E_INST(i)->parent[1]) return 2;
+    if (E_INST(i)->parent[0]) return 1;
+    else return 0;
   case SIM_INST:
     return 0;
     /* fundamental instances have only zero or one parent */
@@ -160,6 +164,8 @@ struct Instance *InstanceParent(CONST struct Instance *i, unsigned long int n)
     return LRELN_INST(i)->parent[n - 1];
   case WHEN_INST:
     return W_INST(i)->parent[n - 1];
+  case EVENT_INST:
+    return E_INST(i)->parent[n - 1];
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
     return INST(gl_fetch(ARY_INST(i)->parents,n));
@@ -254,6 +260,16 @@ void DeleteParent(struct Instance *i, unsigned long int pos)
       W_INST(i)->parent[1] = NULL;
     }
     break;
+  case EVENT_INST:
+    if (pos == 1){
+      E_INST(i)->parent[0] = E_INST(i)->parent[1];
+      E_INST(i)->parent[1] = NULL;
+    }
+    else{
+      assert(pos==2);
+      E_INST(i)->parent[1] = NULL;
+    }
+    break;
   case REAL_INST:
     assert(pos==1);
     R_INST(i)->parent_offset = NULL;
@@ -317,6 +333,10 @@ unsigned long SearchForParent(CONST struct Instance *i,
   case WHEN_INST:
     if (W_INST(i)->parent[0]==p) return 1;
     if (W_INST(i)->parent[1]==p) return 2;
+    return 0;
+  case EVENT_INST:
+    if (E_INST(i)->parent[0]==p) return 1;
+    if (E_INST(i)->parent[1]==p) return 2;
     return 0;
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
@@ -395,6 +415,8 @@ struct InstanceName ParentsName(CONST struct Instance *p,
     break;
   case WHEN_INST:    /*  WHEN instances have no children */
     ASC_PANIC("ParentsName cannot be called on a WHEN instance.\n");
+  case EVENT_INST:    /*  EVENT instances have no children */
+    ASC_PANIC("ParentsName cannot be called on an EVENT instance.\n");
   case ARRAY_INT_INST:
     if (ARY_INST(p)->children!=NULL){
       SetInstanceNameType(result,IntArrayIndex);
@@ -549,6 +571,21 @@ void AddParent(struct Instance *i, struct Instance *p)
       ASC_PANIC("WHENs can only have two parents.\n");/*NOTREACHED*/
     }
     break;
+  case EVENT_INST:
+    if (E_INST(i)->parent[0]==NULL)
+      E_INST(i)->parent[0] = p;
+    else if (E_INST(i)->parent[1]==NULL){
+      if (p > E_INST(i)->parent[0])
+	E_INST(i)->parent[1] = p;
+      else{
+	E_INST(i)->parent[1] = E_INST(i)->parent[0];
+	E_INST(i)->parent[0] = p;
+      }
+    }
+    else{
+      ASC_PANIC("EVENTs can only have two parents.\n");/*NOTREACHED*/
+    }
+    break;
   /* fundamental atom instances can only have one parent */
   case REAL_INST:
   case INTEGER_INST:
@@ -666,6 +703,10 @@ struct Instance *InstanceChild(CONST struct Instance *i,
   case WHEN_INST:
     Asc_Panic(2, "InstanceChild",
               "InstanceChild shouldn't be called on WHEN instances\n");
+  /* EVENT instances don't have any children */
+  case EVENT_INST:
+    Asc_Panic(2, "InstanceChild",
+              "InstanceChild shouldn't be called on EVENT instances\n");
   /* fundamental atoms don't have any children */
   case REAL_INST:
   case INTEGER_INST:
@@ -874,6 +915,9 @@ struct InstanceName ChildName(CONST struct Instance *i, unsigned long int n)
   /* WHEN instances don't have any children */
   case WHEN_INST:
     ASC_PANIC("ChildName shouldn't be called on WHEN instances\n");
+  /* EVENT instances don't have any children */
+  case EVENT_INST:
+    ASC_PANIC("ChildName shouldn't be called on EVENT instances\n");
   /* fundamental, constant instances don't have children */
   case REAL_INST:
   case INTEGER_INST:
@@ -988,6 +1032,11 @@ unsigned long ChildSearch(CONST struct Instance *i,
   case WHEN_INST:
     FPRINTF(ASCERR,
       "ChildSearch shouldn't be called on WHEN instances\n");
+    break;
+  /* EVENT instances don't have any children */
+  case EVENT_INST:
+    FPRINTF(ASCERR,
+      "ChildSearch shouldn't be called on EVENT instances\n");
     break;
   case REAL_CONSTANT_INST:
   case INTEGER_CONSTANT_INST:
@@ -1160,6 +1209,10 @@ void StoreChildPtr(struct Instance *i, unsigned long int n,
   case WHEN_INST:
     Asc_Panic(2, "StoreChildPtr",
               "StoreChildPtr shouldn't be called on WHEN instances\n");
+  /* EVENT instances don't have any children */
+  case EVENT_INST:
+    Asc_Panic(2, "StoreChildPtr",
+              "StoreChildPtr shouldn't be called on EVENT instances\n");
   case REAL_CONSTANT_INST:
   case INTEGER_CONSTANT_INST:
   case BOOLEAN_CONSTANT_INST:

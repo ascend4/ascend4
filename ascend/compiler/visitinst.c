@@ -49,6 +49,10 @@
 #include "tmpnum.h"
 #include "visitinst.h"
 
+#ifndef lint
+static CONST char InstanceVisitModuleID[] = "$Id: visitinst.c,v 1.21 1998/02/26 15:59:37 mthomas Exp $";
+#endif
+
 unsigned long global_visit_num = 0;
 int g_iscomplete = 1;
 /************* VisitInstance stuff **************************************/
@@ -139,6 +143,13 @@ static int CheckVisitNumber(struct Instance *i)
   case WHEN_INST:
     if (global_visit_num > W_INST(i)->visited) {
       W_INST(i)->visited = global_visit_num;
+      return 1;
+    } else {
+      return 0;
+    }
+  case EVENT_INST:
+    if (global_visit_num > E_INST(i)->visited) {
+      E_INST(i)->visited = global_visit_num;
       return 1;
     } else {
       return 0;
@@ -249,6 +260,14 @@ static int CheckVisitNumber(struct Instance *i)
         return 0;
       }
     }
+    if (i->t == EVENT_INST) {
+      if (global_visit_num > E_INST(i)->visited) {
+        E_INST(i)->visited = global_visit_num;
+        return 1;
+      } else {
+        return 0;
+      }
+    }
   }
   /* fundamentals and rogues */
   if (IsFundamentalInstance(i) ) {
@@ -352,6 +371,12 @@ static int ZeroVisitNumber(struct Instance *i)
   case WHEN_INST:
     if (W_INST(i)->visited) {
       W_INST(i)->visited=0;
+      return 1;
+    }
+    else return 0;
+  case EVENT_INST:
+    if (E_INST(i)->visited) {
+      E_INST(i)->visited=0;
       return 1;
     }
     else return 0;

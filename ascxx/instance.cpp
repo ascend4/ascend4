@@ -37,6 +37,8 @@ extern "C"{
 #include <ascend/compiler/relation_util.h>
 #include <ascend/compiler/logrel_util.h>
 #include <ascend/compiler/mathinst.h>
+#include <ascend/compiler/deriv.h>
+#include <ascend/compiler/pre.h>
 }
 
 #include <iostream>
@@ -138,6 +140,7 @@ Instanc::getKindStr() const{
 		case REL_INST: ss << "Numerical Relation"; break;
 		case LREL_INST: ss << "Logical relation"; break;
 		case WHEN_INST: ss << "WHEN"; break;
+		case EVENT_INST: ss << "EVENT"; break;
 		case ARRAY_INT_INST: ss << "Indexed Array"; break;
 		case ARRAY_ENUM_INST: ss << "Enumerated Array"; break;
 		case REAL_INST: ss << "Real"; break;
@@ -232,6 +235,12 @@ Instanc::isLogicalRelation() const{
 const bool
 Instanc::isWhen() const{
 	if(getKind()==WHEN_INST)return true;
+	return false;
+}
+
+const bool
+Instanc::isEvent() const{
+	if(getKind()==EVENT_INST)return true;
 	return false;
 }
 
@@ -439,6 +448,18 @@ Instanc::getSymbolValue() const{
 	return SCP(GetSymbolAtomValue(i));
 }
 
+const bool
+Instanc::isPre() const{
+	if (IsPre(i)) return true;
+	else return false;
+}
+
+const bool
+Instanc::isPrearg() const{
+	if (IsPrearg(i)) return true;
+	else return false;
+}
+
 void
 Instanc::setSymbolValue(const SymChar &sym){
 	stringstream ss;
@@ -629,12 +650,9 @@ Instanc::getPlot() const{
 }
 
 void
-Instanc::write(const char *fname) const{
-	FILE *fp;
-	fp = fopen(fname,"wb");
+Instanc::write(FILE *fp) const{
 	if(!fp)throw runtime_error("NULL file pointer");
 	WriteInstance(fp,i);
-	fclose(fp);
 }
 
 //----------------------------
@@ -783,6 +801,94 @@ Instanc::getClique() const{
 	return v;
 }
 
+const vector<Instanc>
+Instanc::getStateVars() const{
+	vector<Instanc> v;
+	unsigned long c,len;
+	struct gl_list_t *state;
+	state = StateVars(i);
+	if (state!=NULL) {
+		len = gl_length(state);
+		for (c=1;c<=len;c++) {
+			v.push_back(Instanc((struct Instance *)gl_fetch(state,c)));
+		}
+		gl_destroy(state);
+	}
+	return v;
+}
+
+const vector<Instanc>
+Instanc::getSderivs() const{
+	vector<Instanc> v;
+	unsigned long c,len;
+	struct gl_list_t *state;
+	state = Sderivs(i);
+	if (state!=NULL) {
+		len = gl_length(state);
+		for (c=1;c<=len;c++) {
+			v.push_back(Instanc((struct Instance *)gl_fetch(state,c)));
+		}
+		gl_destroy(state);
+	}
+	return v;
+}
+
+const vector<Instanc>
+Instanc::getIderivs() const{
+	vector<Instanc> v;
+	unsigned long c,len;
+	struct gl_list_t *state;
+	state = Iderivs(i);
+	if (state!=NULL) {
+		len = gl_length(state);
+		for (c=1;c<=len;c++) {
+			v.push_back(Instanc((struct Instance *)gl_fetch(state,c)));
+		}
+		gl_destroy(state);
+	}
+	return v;
+}
+
+const vector<Instanc>
+Instanc::getIndepVars() const{
+	vector<Instanc> v;
+	unsigned long c,len;
+	struct gl_list_t *indep;
+	indep = IndepVars(i);
+	if (indep!=NULL) {
+		len = gl_length(indep);
+		for (c=1;c<=len;c++) {
+			v.push_back(Instanc((struct Instance *)gl_fetch(indep,c)));
+		}
+		gl_destroy(indep);
+	}
+	return v;
+}
+
+const Instanc
+Instanc::getPre() const{
+	stringstream ss;
+	struct Instance *pre;
+	pre = Pre(i);
+	if (pre==NULL) {
+		ss << "Pre() of '" << getName() << "' not found.";
+		throw runtime_error(ss.str());
+	}
+	return Instanc(pre);
+}
+
+const Instanc
+Instanc::getPrearg() const{
+	stringstream ss;
+	struct Instance *pa;
+	pa = PreArg(i);
+	if (pa==NULL) {
+		ss << "Pre() of '" << getName() << "' not found.";
+		throw runtime_error(ss.str());
+	}
+	return Instanc(pa);
+}
+
 const vector<string>
 Instanc::getAliases() const{
 	vector<string> v;
@@ -796,6 +902,17 @@ Instanc::getAliases() const{
 	}
 	gl_free_and_destroy(paths);
 	return v;
+}
+
+Instanc
+Instanc::getDer(const Instanc indep) const{
+	stringstream ss;
+	struct Instance *c = FindDerByArgs(i,indep.getInternalType());
+	if(c==NULL){
+		ss << "Derivative of '" << getName() << "' with respect to '" << indep.getName() << "' not found.";
+		throw runtime_error(ss.str());
+	}
+	return Instanc(c);
 }
 
 //------------------------------------------------------

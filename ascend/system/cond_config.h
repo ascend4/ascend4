@@ -28,6 +28,7 @@
 #include <ascend/compiler/instance_enum.h>
 
 #include "conditional.h"
+#include "cond_event.h"
 #include "rel.h"
 #include "logrel.h"
 
@@ -40,6 +41,12 @@ extern void set_rels_status_in_when(struct w_when *when, uint32 value);
 /**<
  * Set the ACTIVE bit to FALSE/TRUE for all the relations and logrelations
  * included in the list of when
+ */
+
+extern void set_rels_status_in_event(struct e_event *event, uint32 value);
+/**<
+ * Set the ACTIVE bit to FALSE/TRUE for all the relations and logrelations
+ * included in the list of event
  */
 
 extern void analyze_when(struct w_when *when);
@@ -167,6 +174,17 @@ extern void enumerate_cases_in_when(struct w_when *when);
  * function has to reinitialize that global variable if it is required.
  */
 
+extern void enumerate_cases_in_event(struct e_event *event);
+/**<
+ * Finds the number of cases in an event. This number will include nested
+ * cases (in nested when statements). It also assigns a identifier number
+ * to each case in the when statement. For more details see
+ * enumerate_cases_in_when above.
+ *
+ * This function uses the global variable g_case_number. Any caller
+ * function has to reinitialize that global variable if it is required.
+ */
+
 ASC_DLLSPEC int *cases_matching(struct gl_list_t *disvars, int *ncases);
 /**<
  * Given a list of discrete variables, it finds which cases apply
@@ -182,23 +200,33 @@ ASC_DLLSPEC int *cases_matching(struct gl_list_t *disvars, int *ncases);
  */
 
 extern void configure_conditional_problem(int numwhens,
+                                          int numevents,
                                           struct w_when **whenlist,
+                                          struct e_event **eventlist,
                                           struct rel_relation **solverrl,
                                           struct logrel_relation **solverll,
                                           struct var_variable **mastervl);
 /**<
- * Analyze the when statements included in our problem so that, we
- * determine which rels, vars, disvars, and logrels are currently
+ * Analyze the when and event statements included in our problem so that,
+ * we determine which rels, vars, disvars, and logrels are currently
  * active. It is called by analyze.c at the time of the system
  * building. For reconfiguration of the system call
  * reanalyze_solver_lists
  */
 
-ASC_DLLSPEC void reanalyze_solver_lists(slv_system_t sys);
+ASC_DLLSPEC int reanalyze_solver_lists(slv_system_t sys);
 /**<
  * For conditional modeling. This functions analyzes the WHENs
  * of the solver when list  and set the current value of the
  * flag ACTIVE for variables and relations in the solvers lists.
+ */
+
+ASC_DLLSPEC void reanalyze_solver_lists_cont(slv_system_t sys);
+/**<
+ * For conditional modeling. This function analyzes the EVENTs
+ * of the solver event list and sets FALSE the ACTIVE flag for
+ * variables and relations referenced by events (except the
+ * otherwise case).
  */
 
 ASC_DLLSPEC int32 system_reanalyze(slv_system_t sys);

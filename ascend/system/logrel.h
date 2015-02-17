@@ -356,6 +356,9 @@ ASC_DLLSPEC void logrel_set_flagbit(struct logrel_relation *logrel,
  * for clients.
  */
 
+#define LOGREL_INEVENT      0x80
+/**< Is logrelation in an event? Readonly for clients. */
+
 /*-------------------------
   BIT FLAG LOOKUPS
 */

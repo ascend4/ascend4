@@ -28,29 +28,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "../general/platform.h"
-#include "../general/ascMalloc.h"
-#include "../general/config.h"
-#include "../compiler/compiler.h"
-
-/* everything between here and the next comment is only here... */
-#include "../compiler/fractions.h"
-#include "../compiler/dimen.h"
-#include "../compiler/functype.h"
-#include "../compiler/func.h"
-#include "../compiler/expr_types.h"
-#include "../compiler/stattypes.h"
-#include "../compiler/fractions.h"
-#include "../compiler/proc.h"
-/* ...because ascParse.h has a nasty union we can't digest without them. */
-#include "../compiler/ascParse.h"
-
+#include "ascend/general/platform.h"
+#include "ascend/general/ascMalloc.h"
+#include "ascend/compiler/compiler.h"
+/* everything between here and the next comment is only here */
+#include "ascend/compiler/fractions.h"
+#include "ascend/compiler/dimen.h"
+#include "ascend/compiler/functype.h"
+#include "ascend/compiler/func.h"
+#include "ascend/compiler/expr_types.h"
+#include "ascend/compiler/stattypes.h"
+#include "ascend/compiler/fractions.h"
+#include "ascend/compiler/proc.h"
+/* because ascParse.h has a nasty union we can't digest without them. */
+#include "ascend/compiler/ascParse.h"
 /* these below we actually need */
-#include "../general/list.h"
-#include "../compiler/module.h"
-#include "../compiler/scanner.h"
-#include "../compiler/symtab.h"
-#include "../compiler/parser.h"
+#include "ascend/general/list.h"
+#include "ascend/compiler/module.h"
+#include "ascend/compiler/scanner.h"
+#include "ascend/compiler/symtab.h"
+#include "ascend/compiler/parser.h"
 
 #define YY_BREAK
 /*  Defining yybreak as above means that all of our matches must end
@@ -202,6 +199,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"CARD"			{ return CARD_TOK			; }
 <INITIAL>"CASE"			{ return CASE_TOK			; }
 <INITIAL>"CHECK"		{ return CHECK_TOK		; }
+<INITIAL>"CHILDREN"		{ return CHILDREN_TOK 	; }
 <INITIAL>"CHOICE"		{ return CHOICE_TOK	  	; }
 <INITIAL>"CONDITIONAL"		{ return CONDITIONAL_TOK		; }
 <INITIAL>"CONSTANT"		{ return CONSTANT_TOK		; }
@@ -212,11 +210,14 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"DEFAULT"		{ return DEFAULT_TOK		; }
 <INITIAL>"DEFINITION"		{ return DEFINITION_TOK		; }
 <INITIAL>"DER" { return DER_TOK ; }
+<INITIAL>"der" { return DERIV_TOK ; }
+<INITIAL>"DERIVATIVE"	{return DERIVATIVE_TOK	; }
 <INITIAL>"DIMENSION"		{ return DIMENSION_TOK		; }
 <INITIAL>"DIMENSIONLESS"	{ return DIMENSIONLESS_TOK	; }
 <INITIAL>"DO"			{ return DO_TOK			; }
 <INITIAL>"ELSE"			{ return ELSE_TOK			; }
 <INITIAL>"END"			{ return END_TOK			; }
+<INITIAL>"EVENT"		{ return EVENT_TOK		; }
 <INITIAL>"EXPECT"		{ return EXPECT_TOK		; }
 <INITIAL>"EXTERNAL"		{ return EXTERNAL_TOK		; }
 <INITIAL>"FALSE"		{ return FALSE_TOK		; }
@@ -237,6 +238,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"INTERSECTION"		{ return INTERSECTION_TOK		; }
 <INITIAL>"IS_A"			{ return ISA_TOK			; }
 <INITIAL>"IS_REFINED_TO"	{ return ISREFINEDTO_TOK		; }
+<INITIAL>"LIKE"			{ return LIKE_TOK		; }
 <INITIAL>"LINK"   		{ return LINK_TOK		; } 
 <INITIAL>"MAXIMIZE"		{ return MAXIMIZE_TOK		; }
 <INITIAL>"MAX_INTEGER"		{ return MAXINTEGER_TOK		; }
@@ -252,6 +254,8 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"OR"			{ return OR_TOK			; }
 <INITIAL>"OTHERWISE"		{ return OTHERWISE_TOK		; }
 <INITIAL>"OUTPUT"		{ return OUTPUT_TOK		; }
+<INITIAL>"pre"			{ return PRE_TOK		; }
+<INITIAL>"PREVIOUS"		{ return PREVIOUS_TOK		; }
 <INITIAL>"PROD"			{ return PROD_TOK			; }
 <INITIAL>"PROVIDE"		{ return PROVIDE_TOK		; }
 <INITIAL>"REFINES"		{ return REFINES_TOK		; }
@@ -834,7 +838,7 @@ Asc_ScannerPushBuffer(CONST char *filename)
   if( status == 5 ) {
     /* already required */
     RequireIndex--;
-    /*CONSOLE_DEBUG("REQUIREd module \"%s\" already PROVIDEd", filename);*/
+    CONSOLE_DEBUG("REQUIREd module \"%s\" already PROVIDEd", filename);
     return 1;
   }
   if( status == 4 ) {

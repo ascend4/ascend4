@@ -55,7 +55,6 @@
 #define F_LIM_SQR     1.0e154                 /**< sqrt(maxdouble) */
 
 
-#if 0
 #ifdef __STDC__
 # if __STDC__
 /**
@@ -74,7 +73,6 @@ extern double erf(double);
  * should provide cbrt, erf.
  */
 #endif /* stdc defined */
-#endif
 
 
 extern CONST struct Func *LookupFunc(CONST char *name);

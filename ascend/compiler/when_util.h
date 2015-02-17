@@ -173,21 +173,24 @@ extern void model_set_flagbit(struct Instance *mod,
  */
 
 /* model bit flags.*/
-#define MODEL_ON      0x1   /**< Bit flag - is the model part of my problem ? */
-#define MODEL_IN_WHEN 0x2   /**< Bit flag - is the MODEL inside a WHEN statement ? */
-#define MODEL_ACTIVE  0x4   /**< Bit flag - is the model active in the current iteration ? */
+#define MODEL_ON       0x1   /**< Bit flag - is the model part of my problem ? */
+#define MODEL_IN_WHEN  0x2   /**< Bit flag - is the MODEL inside a WHEN statement ? */
+#define MODEL_ACTIVE   0x4   /**< Bit flag - is the model active in the current iteration ? */
+#define MODEL_IN_EVENT 0x8   /**< Bit flag - is the MODEL inside an EVENT statement ? */
 
-#define model_on(m)      model_flagbit((m),MODEL_ON)
-#define model_in_when(m) model_flagbit((m),MODEL_IN_WHEN)
-#define model_active(m)  model_flagbit((m),MODEL_ACTIVE)
+#define model_on(m)       model_flagbit((m),MODEL_ON)
+#define model_in_when(m)  model_flagbit((m),MODEL_IN_WHEN)
+#define model_in_event(m) model_flagbit((m),MODEL_IN_EVENT)
+#define model_active(m)   model_flagbit((m),MODEL_ACTIVE)
 
 /*
  * bit flag assignments. any value other than 0 for bv turns the
  * named flag to 1. 0 sets it to 0.
  */
-#define model_set_on(m,bv)      model_set_flagbit((m),MODEL_ON,(bv))
-#define model_set_in_when(m,bv) model_set_flagbit((m),MODEL_IN_WHEN,(bv))
-#define model_set_active(m,bv)  model_set_flagbit((m),MODEL_ACTIVE,(bv))
+#define model_set_on(m,bv)       model_set_flagbit((m),MODEL_ON,(bv))
+#define model_set_in_when(m,bv)  model_set_flagbit((m),MODEL_IN_WHEN,(bv))
+#define model_set_in_event(m,bv) model_set_flagbit((m),MODEL_IN_EVENT,(bv))
+#define model_set_active(m,bv)   model_set_flagbit((m),MODEL_ACTIVE,(bv))
 
 
 /*
@@ -275,9 +278,12 @@ extern void logrelinst_set_flagbit(struct Instance *rel,
 #define RELINST_ON              0x1  /**< Bit flag - is the relation part of my problem? */
 #define RELINST_CONDITIONAL     0x2  /**< Bit flag - is the relation a boundary expression? */
 #define RELINST_IN_WHEN         0x4  /**< Bit flag - is the relation inside a WHEN statement? */
-#define LOGRELINST_ON           0x8  /**< Bit flag - is the logical relation part of my problem? */
-#define LOGRELINST_CONDITIONAL 0x10  /**< Bit flag - is the logical relation a boundary expression? */
-#define LOGRELINST_IN_WHEN     0x20  /**< Bit flag - is the logical relation inside a WHEN statement? */
+#define RELINST_IN_EVENT        0x8  /**< Bit flag - is the relation inside an EVENT statement? */
+#define LOGRELINST_ON           0x10  /**< Bit flag - is the logical relation part of my problem? */
+#define LOGRELINST_CONDITIONAL  0x20  /**< Bit flag - is the logical relation a boundary expression? */
+#define LOGRELINST_IN_WHEN      0x40  /**< Bit flag - is the logical relation inside a WHEN statement? */
+#define LOGRELINST_IN_EVENT     0x80  /**< Bit flag - is the logical relation inside an EVENT statement? */
+
 
 /* the bit flag lookups */
 #if 0
@@ -288,16 +294,20 @@ extern void logrelinst_set_flagbit(struct Instance *rel,
 #define relinst_on(r)              ((r)->anon_flags & RELINST_ON)
 #define relinst_conditional(r)     ((r)->anon_flags & RELINST_CONDITIONAL)
 #define relinst_in_when(r)         ((r)->anon_flags & RELINST_IN_WHEN)
+#define relinst_in_event(r)        ((r)->anon_flags & RELINST_IN_EVENT)
 #define logrelinst_on(lr)          ((lr)->anon_flags & LOGRELINST_ON)
 #define logrelinst_conditional(lr) ((lr)->anon_flags & LOGRELINST_CONDITIONAL)
 #define logrelinst_in_when(lr)     ((lr)->anon_flags & LOGRELINST_IN_WHEN)
+#define logrelinst_in_event(lr)    ((lr)->anon_flags & LOGRELINST_IN_EVENT)
 #else
 #define relinst_on(r)              relinst_flagbit((r),RELINST_ON)
 #define relinst_conditional(r)     relinst_flagbit((r),RELINST_CONDITIONAL)
 #define relinst_in_when(r)         relinst_flagbit((r),RELINST_IN_WHEN)
+#define relinst_in_event(r)        relinst_flagbit((r),RELINST_IN_EVENT)
 #define logrelinst_on(lr)          logrelinst_flagbit((lr),LOGRELINST_ON)
 #define logrelinst_conditional(lr) logrelinst_flagbit((lr),LOGRELINST_CONDITIONAL)
 #define logrelinst_in_when(lr)     logrelinst_flagbit((lr),LOGRELINST_IN_WHEN)
+#define logrelinst_in_event(lr)    logrelinst_flagbit((lr),LOGRELINST_IN_EVENT)
 #endif
 
 /*
@@ -308,12 +318,15 @@ extern void logrelinst_set_flagbit(struct Instance *rel,
 #define relinst_set_conditional(r,bv)  \
                        relinst_set_flagbit((r),RELINST_CONDITIONAL,(bv))
 #define relinst_set_in_when(r,bv) relinst_set_flagbit((r),RELINST_IN_WHEN,(bv))
+#define relinst_set_in_event(r,bv) relinst_set_flagbit((r),RELINST_IN_EVENT,(bv))
 #define logrelinst_set_on(lr,bv)    \
                        logrelinst_set_flagbit((lr),LOGRELINST_ON,(bv))
 #define logrelinst_set_conditional(lr,bv)  \
                        logrelinst_set_flagbit((lr),LOGRELINST_CONDITIONAL,(bv))
 #define logrelinst_set_in_when(lr,bv) \
                        logrelinst_set_flagbit((lr),LOGRELINST_IN_WHEN,(bv))
+#define logrelinst_set_in_event(lr,bv) \
+                       logrelinst_set_flagbit((lr),LOGRELINST_IN_EVENT,(bv))
 
 /* @} */
 

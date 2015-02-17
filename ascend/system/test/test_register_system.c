@@ -19,7 +19,8 @@
 #include <ascend/general/platform.h>
 
 #define TESTS(T) \
-	T(link)
+	T(link) \
+        T(event)
 
 #define PROTO_TEST(NAME) PROTO(system,NAME)
 TESTS(PROTO_TEST)

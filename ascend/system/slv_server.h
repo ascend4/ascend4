@@ -43,6 +43,7 @@
 #include "rel.h"
 #include "discrete.h"
 #include "conditional.h"
+#include "cond_event.h"
 #include "logrel.h"
 #include "bnd.h"
 #include "slv_common.h"
@@ -152,6 +153,11 @@ extern void slv_set_master_when_list(slv_system_t sys,
                                      int size);
 /**<  Set the master when list to wlist of length size. */
 
+extern void slv_set_master_event_list(slv_system_t sys,
+                                      struct e_event **elist,
+                                      int size);
+/**<  Set the master event list to elist of length size. */
+
 extern void slv_set_master_bnd_list(slv_system_t sys,
                                     struct bnd_boundary **wlist,
                                     int size);
@@ -237,6 +243,12 @@ extern void slv_set_condlogrel_buf(slv_system_t sys, struct logrel_relation *clb
 extern void slv_set_when_buf(slv_system_t sys, struct w_when *wbuf, int len);
 /**<
 	Set the array of whens for the system.
+	See slv_set_bnd_buf() for more information.
+*/
+
+extern void slv_set_event_buf(slv_system_t sys, struct e_event *ebuf, int len);
+/**<
+	Set the array of events for the system.
 	See slv_set_bnd_buf() for more information.
 */
 

@@ -72,6 +72,7 @@ extern struct ModelInstance *g_mod_inst;
 extern struct RelationInstance *g_rel_inst;
 extern struct LogRelInstance *g_lrel_inst;
 extern struct WhenInstance *g_when_inst;
+extern struct EventInstance *g_event_inst;
 #endif
 
 /* init parent list size */
@@ -82,9 +83,11 @@ extern struct WhenInstance *g_when_inst;
 #define AVG_PARENTS 2L
 /**< size to which all parent lists are initialized */
 #define AVG_CASES 2L
-/**< size to which all cases lists are initialized (WHEN instance) */
+/**< size to which all cases lists are initialized (WHEN/EVENT instance) */
 #define AVG_WHEN 2L
 /**< size to which all when lists are initialized (models, relations) */
+#define AVG_EVENT 2L
+/**< size to which all event lists are initialized (models, relations) */
 #define AVG_RELATIONS 7L
 /**< size to which all relation lists are initialized */
 #define AVG_LOGRELS 7L
@@ -110,6 +113,7 @@ extern struct WhenInstance *g_when_inst;
 #define ARY_INST(i) ((struct ArrayInstance *)(i))
 #define MOD_INST(i) ((struct ModelInstance *)(i))
 #define W_INST(i) ((struct WhenInstance *)(i))
+#define E_INST(i) ((struct EventInstance *)(i))
 /* fundies */
 #define R_INST(i) ((struct RealInstance *)(i))
 #define I_INST(i) ((struct IntegerInstance *)(i))

@@ -67,6 +67,10 @@
 #undef NUMLISTEXPORTIO
 #endif
 
+#ifndef lint
+static CONST char AnonMergeModuleID[] = "$Id: anonmerg.c,v 1.9 2000/01/25 02:25:52 ballan Exp $";
+#endif
+
 /* if want to compile unused functions, set to 1.
  */
 #define AMUNUSED 0
@@ -280,7 +284,7 @@ int IsIgnorableInstance(struct Instance *ch)
     ASC_PANIC("Called with bad instance");
     return 0; /* not reached */
   }
-  if (InstanceKind(ch) & (IFUND | ICONS | IDUMB | IWHEN | IRELN | ILRELN)) {
+  if (InstanceKind(ch) & (IFUND | ICONS | IDUMB | IWHEN | IEVENT | IRELN | ILRELN)) {
     return 1;
   }
   if (IsArrayInstance(ch) ) {

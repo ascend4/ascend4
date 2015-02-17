@@ -428,7 +428,7 @@ int Asc_IntegGetXSamplesCmd(ClientData cdata, Tcl_Interp *interp,
   const dim_type *dp;
   long i,len;
   double *uvalues = NULL;
-  char *ustring = NULL;
+  char *ustring;
   double *uv;
   int trydu=0, prec, stat=0;
 

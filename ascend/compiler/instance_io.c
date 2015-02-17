@@ -65,6 +65,7 @@
 #include "copyinst.h"
 #include "instance_io.h"
 #include "module.h"
+#include "event.h"
 
 /*------------------------------------------------------------------------------
   globals, forward decls, typedefs
@@ -819,6 +820,7 @@ void WriteTypeOrValue(FILE *f, CONST struct Instance *i)
   case LREL_INST:
   case MODEL_INST:
   case WHEN_INST:
+  case EVENT_INST:
   case DUMMY_INST:
     FPRINTF(f,SCP(InstanceType(i)));
     break;
@@ -1065,6 +1067,10 @@ void WriteInstance(FILE *f, CONST struct Instance *i)
      */
     FPRINTF(f,"WHEN INSTANCE.\nType: %s\n",SCP(InstanceType(i)));
     WriteWhen(f,i,NULL);
+    break;
+  case EVENT_INST:
+    FPRINTF(f,"EVENT INSTANCE.\nType: %s\n",SCP(InstanceType(i)));
+    WriteEvent(f,i,NULL);
     break;
   case ARRAY_INT_INST:
     FPRINTF(f,"ARRAY INSTANCE INDEXED BY integer.\n");
@@ -1932,6 +1938,18 @@ int ArrayIsWhen(struct Instance *i)
     i = InstanceChild(i,1L);
   }
   if (InstanceKind(i)==WHEN_INST) return 1; else return 0;
+}
+
+int ArrayIsEvent(struct Instance *i)
+{
+  if (i==NULL) return 0;
+  /* skip past all the indirection */
+  while( (InstanceKind(i)==ARRAY_INT_INST) ||
+         (InstanceKind(i)==ARRAY_ENUM_INST) ) {
+    if (NumberChildren(i)==0) break;
+    i = InstanceChild(i,1L);
+  }
+  if (InstanceKind(i)==EVENT_INST) return 1; else return 0;
 }
 
 int ArrayIsModel(struct Instance *i)

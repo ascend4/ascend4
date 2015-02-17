@@ -149,6 +149,34 @@ extern void SetWhenCases(struct Instance *i, struct gl_list_t *whencases);
 	Set the list of cases of a when instance to whencases
 */
 
+extern struct gl_list_t *GetInstanceEventVars(CONST struct Instance *i);
+/**< 
+	This returns the list of variables associated with this event
+	instance (EVENT_INST)
+*/
+
+extern struct gl_list_t *GetInstanceEventCases(CONST struct Instance *i);
+/**< 
+	This returns the list of cases associated with this event
+	instance (EVENT_INST)
+*/
+
+extern struct gl_list_t *GetInstanceEvents(CONST struct Instance *i);
+/**< 
+	This returns the list of events associated with this instance.
+	Instance can be a model, relation, event, boolean, integer or symbol.
+*/
+
+extern void SetEventVarList(struct Instance *i, struct gl_list_t *eventvars);
+/**< 
+	Set the list of variables of an event instance to eventvars
+*/
+
+extern void SetEventCases(struct Instance *i, struct gl_list_t *eventcases);
+/**< 
+	Set the list of cases of an event instance to eventcases
+*/
+
 /*------------------------------------------------------------------------------
 	SPECIAL REAL ATOM FUNCTIONS
 	
@@ -233,6 +261,122 @@ extern void RemoveWhen(struct Instance *i, struct Instance *when);
 /**<
 	Remove when from i's when list.  If 'when' isn't found in i's when
 	list, execution continues with a warning message.
+*/
+
+ASC_DLLSPEC unsigned long WhensCount(struct Instance *i);
+/**< 
+	This will return the number of whens that instance "i" is referenced in.
+*/
+
+ASC_DLLSPEC struct Instance *WhensForInstance(struct Instance *i,
+                                         unsigned long c);
+/**<
+	This routine will return the c'th when in instance i's when list.
+	0 < c <= WhensCount(i).
+*/
+
+extern void AddEvent(struct Instance *i, struct Instance *event);
+/**<
+	Add the event instance event to instance i's event list.  event must be of
+	type EVENT_INST.
+*/
+
+extern void RemoveEvent(struct Instance *i, struct Instance *event);
+/**<
+	Remove event from i's event list.  If 'event' isn't found in i's event
+	list, execution continues with a warning message.
+*/
+
+ASC_DLLSPEC unsigned long EventsCount(struct Instance *i);
+/**< 
+	This will return the number of events that instance "i" is referenced in.
+*/
+
+ASC_DLLSPEC struct Instance *EventsForInstance(struct Instance *i,
+                                         unsigned long c);
+/**<
+	This routine will return the c'th event in instance i's event list.
+	0 < c <= EventsCount(i).
+*/
+
+ASC_DLLSPEC unsigned long IderivsCount(CONST struct Instance *i);
+/**< 
+	This will return the number of derivatives with respect to instance "i".
+	"i" must be a REAL_ATOM_INST.  Otherwise, this routine will
+	bomb.
+*/
+
+ASC_DLLSPEC struct Instance *IderivsForAtom(CONST struct Instance *i,
+                                            unsigned long c);
+/**<
+ 	This routine will return the c'th derivative instance in the list of
+        derivatives with respect to "i".
+	"i" must be a REAL_ATOM_INST and 0 < c <= IderivsCount(i).
+*/
+
+extern void AddIderiv(struct Instance *i, struct Instance *deriv);
+/**< 
+	Add the derivative instance deriv to the list of derivatives with
+        respect to "i".
+        "i" and "deriv" must be of type REAL_ATOM_INST.
+*/
+
+ASC_DLLSPEC unsigned long StatesCount(CONST struct Instance *i);
+/**< 
+	This will return the number of state variables with derivative "i".
+	"i" must be a REAL_ATOM_INST.  Otherwise, this routine will
+	bomb.
+*/
+
+ASC_DLLSPEC unsigned long IndepsCount(CONST struct Instance *i);
+/**< 
+	This will return the number of independent variables for derivative "i".
+	"i" must be a REAL_ATOM_INST.  Otherwise, this routine will
+	bomb.
+*/
+
+ASC_DLLSPEC struct Instance *StatesForAtom(CONST struct Instance *i,
+                                           unsigned long c);
+/**<
+ 	This routine will return the c'th state variable instance in
+        the list of state variables with derivative "i".
+	"i" must be a REAL_ATOM_INST and 0 < c <= StatesCount(i).
+*/
+
+ASC_DLLSPEC struct Instance *IndepsForAtom(CONST struct Instance *i,
+                                           unsigned long c);
+/**<
+ 	This routine will return the c'th independent variable instance in
+        the list of independent variables for derivative "i".
+	"i" must be a REAL_ATOM_INST and 0 < c <= IndepsCount(i).
+*/
+
+extern void AddStateIndep(struct Instance *i, struct Instance *state, struct Instance *indep);
+/**< 
+	Add the state and independent variables instances deriv
+        and indep to the list of arguments of derivative "i".
+        "i" and "deriv" must be of type REAL_ATOM_INST.
+*/
+
+ASC_DLLSPEC unsigned long SderivsCount(CONST struct Instance *i);
+/**< 
+	This will return the number of derivatives of instance "i".
+	"i" must be a REAL_ATOM_INST.  Otherwise, this routine will
+	bomb.
+*/
+
+ASC_DLLSPEC struct Instance *SderivsForAtom(CONST struct Instance *i,
+                                            unsigned long c);
+/**<
+ 	This routine will return the c'th derivative instance in the list of
+        derivatives of "i".
+	"i" must be a REAL_ATOM_INST and 0 < c <= SderivsCount(i).
+*/
+
+extern void AddSderiv(struct Instance *i, struct Instance *deriv);
+/**< 
+	Add the derivative instance deriv to the list of derivatives of "i".
+        "i" and "deriv" must be of type REAL_ATOM_INST.
 */
 
 /* @} */

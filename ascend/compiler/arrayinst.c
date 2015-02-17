@@ -90,6 +90,8 @@
 #include "statement.h"
 #include "module.h"
 #include "library.h"
+#include "deriv.h"
+#include "pre.h"
 
 
 pool_store_t g_array_child_pool=NULL;
@@ -578,6 +580,11 @@ struct Instance *CreateArrayChildInst(struct Instance *i,
           return CreateWhenInstance(def);
         }
         /* fallthrough */
+      case event_type:
+        if (GetArrayBaseIsEvent(desc)) {
+          return CreateEventInstance(def);
+        }
+        /* fallthrough */
       default:
         FPRINTF(ASCERR,"Uggggh! CreateArrayChildInst.\n");
         break; /* oh boy did it... */
@@ -623,10 +630,14 @@ struct ArrayChild *FindRHSByString(struct gl_list_t *rhslist, symchar *s)
 static
 void ExpandIntegerSet(struct ArrayInstance *i, struct set_t *set,
                       struct Instance *rhsinst, struct Instance *arginst,
-                      struct gl_list_t *rhslist)
+                      struct gl_list_t *rhslist, struct Instance *sinst,
+                      struct Instance *indep, CONST struct Name *sname)
 {
-  register unsigned long c,len;
+  register unsigned long c,len,pos;
   register struct ArrayChild *ptr, *rptr;
+  struct Instance *schild;
+  struct InstanceName rec;
+  struct gl_list_t *list;
   AssertMemory(i);
   AssertMemory(set);
   assert(rhslist==NULL||rhsinst==NULL); /* one type of alias or other */
@@ -637,13 +648,40 @@ void ExpandIntegerSet(struct ArrayInstance *i, struct set_t *set,
     for(c=1;c<=len;c++){
       ptr = MALLOCPOOLAC;
       ptr->name.index = FetchIntMember(set,c);
+      ptr->inst = NULL;
       if (rhslist != NULL) {
         rptr = FindRHSByInt(rhslist,ptr->name.index);
         assert(rptr != NULL);
         rhsinst = rptr->inst;
         assert(rhsinst != NULL);
       }
-      ptr->inst = CreateArrayChildInst(INST(i),rhsinst,arginst);
+      list = GetArrayIndexList(i->desc);
+      if ((ARY_INST(i)->indirected+1)>=gl_length(list) && sinst) {
+        SetInstanceNameType(rec,IntArrayIndex);
+        SetInstanceNameIntIndex(rec,ptr->name.index);
+        pos = ChildSearch(sinst,&rec);
+        schild = InstanceChild(sinst,pos);
+        while(NextName(sname) && NameId(NextName(sname))) {
+          sname = NextName(sname);
+          SetInstanceNameType(rec,StrName);
+          SetInstanceNameStrPtr(rec,NameIdPtr(sname));
+          pos = ChildSearch(schild,&rec);
+          schild =  InstanceChild(schild,pos);
+          sname = NextName(sname);
+        }
+        if (sinst) {
+          if (indep) ptr->inst = FindDerByArgs(schild,indep);
+          else ptr->inst = FindPreByArg(schild);
+        }
+        if (!ptr->inst) {
+          ptr->inst = CreateArrayChildInst(INST(i),rhsinst,arginst);
+          if (indep) SetDerInfo(ptr->inst,schild,indep);
+          else SetPreInfo(ptr->inst,schild);
+        }
+        if (gl_search(RA_INST(ptr->inst)->parents,(char*)i,(CmpFunc)CmpParents)==0)  AddParent(ptr->inst,INST(i));
+        gl_append_ptr(i->children,(VOIDPTR)ptr);
+        gl_sort(i->children,(CmpFunc)CmpIntIndex);
+      }else{   ptr->inst = CreateArrayChildInst(INST(i),rhsinst,arginst);
       /* will return rhsinst or the next array layer in case of alias */
       /* will return new instance or the next array layer in case of IS_A */
       AssertContainedMemory(ptr,sizeof(struct ArrayChild));
@@ -656,6 +694,7 @@ void ExpandIntegerSet(struct ArrayInstance *i, struct set_t *set,
       gl_append_ptr(i->children,(VOIDPTR)ptr);
     }
     gl_sort(i->children,(CmpFunc)CmpIntIndex);
+    }
   } else {
     Asc_Panic(2, NULL,
               "Attempt to expand alias array with incorrect set type.\n");
@@ -665,10 +704,14 @@ void ExpandIntegerSet(struct ArrayInstance *i, struct set_t *set,
 static
 void ExpandStringSet(struct ArrayInstance *i, struct set_t *set,
                      struct Instance *rhsinst, struct Instance *arginst,
-                     struct gl_list_t *rhslist)
+                     struct gl_list_t *rhslist, struct Instance *sinst,
+                     struct Instance *indep, CONST struct Name *sname)
 {
-  register unsigned long c,len;
+  register unsigned long c,len,pos;
   register struct ArrayChild *ptr, *rptr;
+  struct Instance *schild;
+  struct InstanceName rec;
+  struct gl_list_t *list;
   AssertMemory(i);
   AssertMemory(set);
   assert(rhslist==NULL||rhsinst==NULL); /* one type of alias or other */
@@ -679,12 +722,40 @@ void ExpandStringSet(struct ArrayInstance *i, struct set_t *set,
     for(c=1;c<=len;c++){
       ptr = MALLOCPOOLAC;
       ptr->name.str = FetchStrMember(set,c);
+      ptr->inst = NULL;
       if (rhslist != NULL) {
         rptr = FindRHSByString(rhslist,ptr->name.str);
         assert(rptr != NULL);
         rhsinst = rptr->inst;
         assert(rhsinst != NULL);
       }
+      list = GetArrayIndexList(i->desc);
+      if ((ARY_INST(i)->indirected+1)>=gl_length(list) && sinst) {
+        SetInstanceNameType(rec,StrArrayIndex);
+        SetInstanceNameStrIndex(rec,ptr->name.str);
+        pos = ChildSearch(sinst,&rec);
+        schild = InstanceChild(sinst,pos);
+        while(NextName(sname) && NameId(NextName(sname))) {
+          sname = NextName(sname);
+          SetInstanceNameType(rec,StrName);
+          SetInstanceNameStrPtr(rec,NameIdPtr(sname));
+          pos = ChildSearch(schild,&rec);
+          schild =  InstanceChild(schild,pos);
+          sname = NextName(sname);
+        }
+        if (sinst) {
+          if (indep) ptr->inst = FindDerByArgs(schild,indep);
+          else ptr->inst = FindPreByArg(schild);
+        }
+        if (!ptr->inst) {
+          ptr->inst = CreateArrayChildInst(INST(i),rhsinst,arginst);
+          if (indep) SetDerInfo(ptr->inst,schild,indep);
+          else SetPreInfo(ptr->inst,schild);
+        }
+        if (gl_search(RA_INST(ptr->inst)->parents,(char*)i,(CmpFunc)CmpParents)==0)  AddParent(ptr->inst,INST(i));
+        gl_append_ptr(i->children,(VOIDPTR)ptr);
+        gl_sort(i->children,(CmpFunc)CmpStrIndex);
+      }else {
       ptr->inst = CreateArrayChildInst(INST(i),rhsinst,arginst);
       AssertContainedMemory(ptr,sizeof(struct ArrayChild));
       if (rhsinst==NULL || /* regular case */
@@ -696,6 +767,7 @@ void ExpandStringSet(struct ArrayInstance *i, struct set_t *set,
       gl_append_ptr(i->children,(VOIDPTR)ptr);
     }
     gl_sort(i->children,(CmpFunc)CmpStrIndex);
+    }
   } else {
     ASC_PANIC("Attempt to expand array with incorrect set type.\n");
   }
@@ -715,8 +787,11 @@ void ExpandStringSet(struct ArrayInstance *i, struct set_t *set,
 static
 void RecursiveExpand(struct Instance *i, unsigned long int num,
 		     struct set_t *set,struct Instance *rhsinst,
-                     struct Instance *arginst, struct gl_list_t *rhslist)
+                     struct Instance *arginst, struct gl_list_t *rhslist,
+                     struct Instance *sinst, struct Instance *indep,
+                     CONST struct Name *sname)
 {
+  CONST struct Name *n;
   AssertMemory(i);
   AssertMemory(set);
   if ((i->t!=ARRAY_INT_INST)&&(i->t!=ARRAY_ENUM_INST)){
@@ -727,19 +802,21 @@ void RecursiveExpand(struct Instance *i, unsigned long int num,
       switch(SetKind(set)){
       case empty_set: ARY_INST(i)->children = gl_create(0); break;
       case integer_set:
-	ExpandIntegerSet(ARY_INST(i),set,rhsinst,arginst,rhslist);
+	ExpandIntegerSet(ARY_INST(i),set,rhsinst,arginst,rhslist,sinst,indep,sname);
 	break;
       case string_set:
-	ExpandStringSet(ARY_INST(i),set,rhsinst,arginst,rhslist);
+	ExpandStringSet(ARY_INST(i),set,rhsinst,arginst,rhslist,sinst,indep,sname);
 	break;
       }
     } else {
       ASC_PANIC("Attempt to expand previously expanded array.\n");
     }
   } else {			/* not there yet recurse on each child */
-    register unsigned long c,len;
+    register unsigned long c,len,pos;
     register struct ArrayChild *child;
     register struct ArrayInstance *ptr;
+    struct InstanceName rec;
+    struct Instance *schild = NULL;
     ptr = ARY_INST(i);
     if (ptr->children==NULL){
       Asc_Panic(2, NULL,
@@ -750,20 +827,47 @@ void RecursiveExpand(struct Instance *i, unsigned long int num,
     for(c=1;c<=len;c++){
       child = (struct ArrayChild *)gl_fetch(ptr->children,c);
       AssertContainedMemory(child,sizeof(struct ArrayChild));
-      RecursiveExpand(child->inst,num,set,rhsinst,arginst,rhslist);
+      if (sinst) {
+        switch(SetKind(set)) {
+          case empty_set:
+            ASC_PANIC("Can not find the state variable by an empty set.");
+          case integer_set:
+            SetInstanceNameType(rec,IntArrayIndex);
+            SetInstanceNameIntIndex(rec,child->name.index);
+            break;
+          case string_set:
+            SetInstanceNameType(rec,StrArrayIndex);
+            SetInstanceNameStrIndex(rec,child->name.str);
+            break; 
+        }
+        pos = ChildSearch(sinst,&rec);
+        schild = InstanceChild(sinst,pos);
+        n = sname;
+        n = NextName(n);
+        while(NameId(NextName(n))) {
+          n = NextName(n);
+          SetInstanceNameType(rec,StrName);
+          SetInstanceNameStrPtr(rec,NameIdPtr(n));
+          pos = ChildSearch(schild,&rec);
+          schild =  InstanceChild(schild,pos);
+        }
+      }
+      RecursiveExpand(child->inst,num,set,rhsinst,arginst,rhslist,schild,indep,n);
     }
   }
 }
 
 void ExpandArray(struct Instance *i, unsigned long int num,
                  struct set_t *set, struct Instance *rhsinst,
-                 struct Instance *arginst, struct gl_list_t *rhslist)
+                 struct Instance *arginst, struct gl_list_t *rhslist,
+                 struct Instance *sinst, struct Instance *indep,
+                 CONST struct Name *sname)
 {
   if ((i->t==ARRAY_INT_INST)||(i->t==ARRAY_ENUM_INST)){
     assert((num >= 1)&&(num <= NumberofDereferences(i)));
     AssertMemory(i);
     AssertMemory(set);
-    RecursiveExpand(i,num,set,rhsinst,arginst,rhslist);
+    RecursiveExpand(i,num,set,rhsinst,arginst,rhslist,sinst,indep,sname);
   } else {
     ASC_PANIC("Incorrect instance type passed to ExpandArray.\n");
   }
@@ -773,16 +877,24 @@ void ExpandArray(struct Instance *i, unsigned long int num,
 static
 struct ArrayChild *MakeNextInst(struct Instance *ary, long int v,
 				symchar *sym, struct Instance *rhsinst,
-                                struct Instance *arginst)
+                                struct Instance *arginst, struct Instance *state,
+                                struct Instance *indep, CONST struct Name *n)
 {
   struct ArrayChild *ptr;
   ptr = MALLOCPOOLAC;
-  ptr->inst = CreateArrayChildInst(ary,rhsinst,arginst);
+  if (!n && state && indep) ptr->inst = FindDerByArgs(state,indep);
+  if (!n && state && !indep) ptr->inst = FindPreByArg(state);
+  else ptr->inst = NULL;
+  if (!ptr->inst) {
+    ptr->inst = CreateArrayChildInst(ary,rhsinst,arginst);
+    if (InstanceKind(ptr->inst)==REAL_ATOM_INST && state && indep) SetDerInfo(ptr->inst,state,indep);
+    else if (InstanceKind(ptr->inst)==REAL_ATOM_INST && state && !indep) SetPreInfo(ptr->inst,state);
+  }
   if (rhsinst==NULL || /* regular case */
       (rhsinst != NULL && /* alii */
        SearchForParent(ptr->inst,INST(ary))==0)
      ) {
-    AddParent(ptr->inst,INST(ary));
+    if ((!state || InstanceKind(ptr->inst)!=REAL_ATOM_INST) || gl_search(RA_INST(ptr->inst)->parents,(char*)ary,(CmpFunc)CmpParents)==0) AddParent(ptr->inst,INST(ary));
   }
   if(sym==NULL) {
     ptr->name.index = v;
@@ -794,7 +906,10 @@ struct ArrayChild *MakeNextInst(struct Instance *ary, long int v,
 
 struct Instance *FindOrAddIntChild(struct Instance *i, long int v,
                                    struct Instance *rhsinst,
-                                   struct Instance *arginst)
+                                   struct Instance *arginst,
+                                   struct Instance *state,
+                                   struct Instance *indep,
+                                   CONST struct Name *n)
 {
   struct ArrayChild rec,*ptr;
   unsigned long pos;
@@ -811,20 +926,22 @@ struct Instance *FindOrAddIntChild(struct Instance *i, long int v,
     } else {
       ARY_INST(i)->children = gl_create(AVG_ARY_CHILDREN);
     }
-    ptr = MakeNextInst(i,v,NULL,rhsinst,arginst);
+    ptr = MakeNextInst(i,v,NULL,rhsinst,arginst,state,indep,n);
     gl_insert_sorted(ARY_INST(i)->children,(char *)ptr,(CmpFunc)CmpIntIndex);
     return ptr->inst;
   case ARRAY_ENUM_INST:
     return NULL;
   default:
     ASC_PANIC("Wrong type passed to ForOrAddIntChild.\n");
-
   }
 }
 
 struct Instance *FindOrAddStrChild(struct Instance *i, symchar *sym,
                                    struct Instance *rhsinst,
-                                   struct Instance *arginst)
+                                   struct Instance *arginst,
+                                   struct Instance *state,
+                                   struct Instance *indep,
+                                   CONST struct Name *n)
 {
   struct ArrayChild rec,*ptr;
   unsigned long pos;
@@ -841,7 +958,7 @@ struct Instance *FindOrAddStrChild(struct Instance *i, symchar *sym,
     } else {
       ARY_INST(i)->children = gl_create(AVG_ARY_CHILDREN);
     }
-    ptr = MakeNextInst(i,0,sym,rhsinst,arginst);
+    ptr = MakeNextInst(i,0,sym,rhsinst,arginst,state,indep,n);
     gl_insert_sorted(ARY_INST(i)->children,ptr,(CmpFunc)CmpStrIndex);
     return ptr->inst;
   case ARRAY_INT_INST:

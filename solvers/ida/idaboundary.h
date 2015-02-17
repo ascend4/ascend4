@@ -36,12 +36,24 @@ int some_dis_vars_changed(slv_system_t sys);
 /**
  * Setup LRSlv for use with IDA. Solve the problem at startup to check the analysis
  */
-void ida_setup_lrslv(IntegratorSystem *integ);
+int ida_setup_lrslv(IntegratorSystem *integ, int qrslv_ind, int lrslv_ind);
 
 /**
- * Throw out old values and reanalyse the system after a boundary crossing
+ * Setup LRSlv and solve the logical problem.
+ */
+int ida_log_solve(IntegratorSystem *integ, int lrslv_ind);
+
+/**
+ * Throw out old values and reanalyse the system after a boundary crossing.
+ * Switch on all events.
  */
 int ida_bnd_reanalyse(IntegratorSystem *integ);
+
+/**
+ * Throw out old values and reanalyse the system after a boundary crossing.
+ * Switch off all events before continuing integration
+ */
+int ida_bnd_reanalyse_cont(IntegratorSystem *integ);
 
 /**
  * Update the relist, as equations may have been added/removed after a crossing
@@ -76,6 +88,6 @@ void ida_bnd_update_IC(IntegratorSystem *integ, realtype t0, N_Vector y0, N_Vect
 		-1					error with the logical solver
 */
 int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
-		int *bnd_cond_states);
+		int *bnd_cond_states, int qrslv_ind, int lrslv_ind);
 
 #endif  /* ASC_IDA_H */

@@ -186,6 +186,26 @@ extern int CmpWhensF(CONST struct Instance *i1, CONST struct Instance *i2);
  *                 <tr align="center"><td>    1   </td><td>   p1 >  p2  </td></tr></table>
  */
 
+#ifndef NDEBUG
+#define CmpEvents CmpRealPtrs
+#else
+#define CmpEvents CmpEventsF
+#endif
+/**<
+ *  Macro for redirection of CmpEvents based on debug mode.
+ *  @see CmpRealPtrs(), CmpEventsF()
+ */
+extern int CmpEventsF(CONST struct Instance *i1, CONST struct Instance *i2);
+/**<
+ *  Event instance pointer comparison function.
+ *  The comparison is for the pointers themselves, not what they point at.
+ *  Neither pointer may be NULL (checked by assertion).
+ *  @return <table><tr align="center"><td> Result </td><td>  Condition   </td></tr>
+ *                 <tr align="center"><td>   -1   </td><td>   p1 <  p2  </td></tr>
+ *                 <tr align="center"><td>    0   </td><td>   p1 == p2  </td></tr>
+ *                 <tr align="center"><td>    1   </td><td>   p1 >  p2  </td></tr></table>
+ */
+
 #ifdef ASC_INSTANCE_TYPES_H
 
 extern int CmpIntIndex(CONST struct ArrayChild *a, CONST struct ArrayChild *b);

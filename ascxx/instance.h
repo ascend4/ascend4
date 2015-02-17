@@ -74,8 +74,8 @@ public:
 	Instanc(const Instanc&);
 	~Instanc();
 	std::vector<Instanc> &getChildren();
-	Instanc getChild(const SymChar &) const;
-	Instanc getChild(const long &) const;
+	Instanc getChild(const SymChar&) const;
+	Instanc getChild(const long&) const;
 	const enum inst_t getKind() const;
 	const std::string getKindStr() const;
 	const Type getType() const;
@@ -89,6 +89,7 @@ public:
 	const bool isRelation() const;
 	const bool isLogicalRelation() const;
 	const bool isWhen() const;
+	const bool isEvent() const;
 	const bool isSet() const;
 	const bool isSetInt() const;
 	const bool isSetString() const;
@@ -109,6 +110,8 @@ public:
 	const bool getBoolValue() const;
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
+	const bool  isPre() const;
+	const bool isPrearg() const;
 
 	const std::string getValueAsString() const;
 	const std::string getRelationAsString(const Instanc &relative_to) const;
@@ -138,7 +141,7 @@ public:
 	}
 
 	const enum set_kind getSetType() const;
-	void write(const char *fname) const;
+	void write(FILE *fp) const;
 	Instance *getInternalType() const;
 
 	void setStatus(const InstanceStatus &); ///< make this one private, just for friend Simulation?
@@ -152,10 +155,18 @@ public:
 	const double  getNominal() const;
 
 	const std::vector<Instanc> getClique() const;
+	const std::vector<Instanc> getStateVars() const;
+	const std::vector<Instanc> getSderivs() const;
+	const std::vector<Instanc> getIderivs() const;
+	const std::vector<Instanc> getIndepVars() const;
+	const Instanc getPre() const;
+	const Instanc getPrearg() const;
 	const std::vector<std::string> getAliases() const;
 
 	const double getResidual() const;
 	const bool getLogicalResidual() const;
+
+	Instanc getDer(const Instanc) const;
 };
 
 #endif

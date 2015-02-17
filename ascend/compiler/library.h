@@ -107,6 +107,12 @@ extern struct TypeDescription *FindWhenType(void);
  *  Returns NULL if never defined, which is an extreme error.
  */
 
+extern struct TypeDescription *FindEventType(void);
+/**<
+ *  Finds the type description associated with EVENT statements.
+ *  Returns NULL if never defined, which is an extreme error.
+ */
+
 extern struct TypeDescription *FindExternalType(void);
 /**<
  *  Finds the type description associated with external statements.

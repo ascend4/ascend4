@@ -36,12 +36,17 @@
 #include "nameio.h"
 #include "sets.h"
 #include "setio.h"
+#include "vlistio.h"
 
 void WriteNameNode(FILE *f, CONST struct Name *n)
 {
   if (n==NULL) return;
   if (NameId(n)) {
     FPRINTF(f,"%s",SCP(NameIdPtr(n)));
+  } else if (NameDeriv(n)) {
+    FPRINTF(f,"%s",SCP(GetIdFromVlist(DerVlist(NameDerPtr(n)))));
+  } else if (NamePre(n)) {
+    FPRINTF(f,"pre(%s)",SCP(WriteNameString(PreName(NamePrePtr(n)))));
   } else {
     PUTC('[',f);
     WriteSet(f,NameSetPtr(n));
@@ -54,7 +59,7 @@ void WriteName(FILE *f, CONST struct Name *n)
   while (n!=NULL) {
     WriteNameNode(f,n);
     n = NextName(n);
-    if ((n!=NULL)&&(NameId(n))) PUTC('.',f);
+    if ((n!=NULL)&&((NameId(n)) || NameDeriv(n) || NamePre(n))) PUTC('.',f);
   }
 }
 
@@ -68,6 +73,10 @@ void WriteNameNode2Str(Asc_DString *dstring, CONST struct Name *n)
   if (n==NULL) return;
   if (NameId(n)) {
     Asc_DStringAppend(dstring,SCP(NameIdPtr(n)),-1);
+  } else if (NameDeriv(n)) {
+    Asc_DStringAppend(dstring,SCP(GetIdFromVlist(DerVlist(NameDerPtr(n)))),-1);
+  } else if (NamePre(n)) {
+    Asc_DStringAppend(dstring,SCP(WritePreName(PreName(NamePrePtr(n)))),-1);
   } else {
     Asc_DStringAppend(dstring,"[",1);
     WriteSet2Str(dstring,NameSetPtr(n));
@@ -92,9 +101,33 @@ void WriteName2Str(Asc_DString *dstring, CONST struct Name *n)
   while (n!=NULL) {
     WriteNameNode2Str(dstring,n);
     n = NextName(n);
-    if ((n!=NULL)&&(NameId(n)))
+    if ((n!=NULL)&&(NameId(n) || NameDeriv(n) || NamePre(n)))
       Asc_DStringAppend(dstring,".",-1);
   }
 }
 
+void WriteIdName2Str(Asc_DString *dstring, CONST struct Name *n)
+{
+  while (n!=NULL) {
+    WriteNameNode2Str(dstring,n);
+    n = NextIdName(n);
+    if ((n!=NULL)&&(NameId(n) || NameDeriv(n) || NamePre(n)))
+      Asc_DStringAppend(dstring,".",-1);
+  }
+}
 
+symchar *WritePreName(CONST struct Name *n)
+{
+  char *prename;
+  symchar *result;
+  Asc_DString ds, *dsPtr;
+  dsPtr = &ds;
+  Asc_DStringInit(dsPtr);
+  Asc_DStringAppend(dsPtr,"pre(",4);
+  WriteIdName2Str(dsPtr,n);
+  Asc_DStringAppend(dsPtr,")",1);
+  prename = Asc_DStringResult(dsPtr);
+  Asc_DStringFree(dsPtr);
+  result = AddSymbol(prename);
+  return result;
+}

@@ -65,6 +65,7 @@
 #include <ascend/compiler/when.h>
 #include <ascend/compiler/select.h>
 #include <ascend/compiler/switch.h>
+#include <ascend/compiler/event.h>
 #include <ascend/compiler/proc.h>
 #include <ascend/compiler/watchpt.h>
 #include <ascend/compiler/module.h>
@@ -165,6 +166,8 @@ static int g_defaulted;			/* used for atoms,constants */
 static CONST dim_type *g_dim_ptr;	  /* dim of last units parsed, or so */
 static CONST dim_type *g_atom_dim_ptr;	  /* dim of DIMENSION decl */
 static CONST dim_type *g_default_dim_ptr; /* dim of default value parsed */
+static struct VariableList *g_like_children; /* children of the last atom parsed
+                                                      from the LIKE_CHILDREN list */
 
 static double g_default_double;
 static long g_default_long;
@@ -316,6 +319,7 @@ static void CollectNote(struct Note *);
   struct SelectList *septr;
   struct SwitchList *swptr;
   struct WhenList *wptr;
+  struct EventList *evptr;
   struct NoteTmp *notesptr;	/* change this once struct Notes is defined */
   struct gl_list_t *listp;
   struct InitProcedure *procptr;
@@ -333,20 +337,20 @@ static void CollectNote(struct Note *);
 
 %token ADD_TOK ALIASES_TOK AND_TOK ANY_TOK AREALIKE_TOK ARETHESAME_TOK ARRAY_TOK ASSERT_TOK ATOM_TOK
 %token BEQ_TOK BNE_TOK BREAK_TOK
-%token CALL_TOK CARD_TOK CASE_TOK CHOICE_TOK CHECK_TOK CONDITIONAL_TOK CONSTANT_TOK
+%token CALL_TOK CARD_TOK CASE_TOK CHOICE_TOK CHECK_TOK CHILDREN_TOK CONDITIONAL_TOK CONSTANT_TOK
 %token CONTINUE_TOK CREATE_TOK
-%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DER_TOK DIMENSION_TOK
+%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DER_TOK DIMENSION_TOK DERIV_TOK DERIVATIVE_TOK
 %token DIMENSIONLESS_TOK DO_TOK
-%token ELSE_TOK END_TOK EXPECT_TOK EXTERNAL_TOK
+%token ELSE_TOK END_TOK EVENT_TOK EXPECT_TOK EXTERNAL_TOK
 %token FALSE_TOK FALLTHRU_TOK FIX_TOK FOR_TOK FREE_TOK FROM_TOK
 %token GLOBAL_TOK
 %token IF_TOK  IGNORE_TOK IMPORT_TOK IN_TOK INPUT_TOK INCREASING_TOK INTERACTIVE_TOK INDEPENDENT_TOK
 %token INTERSECTION_TOK ISA_TOK _IS_T ISREFINEDTO_TOK
-%token LINK_TOK
+%token LIKE_TOK LINK_TOK
 %token MAXIMIZE_TOK MAXINTEGER_TOK MAXREAL_TOK METHODS_TOK METHOD_TOK MINIMIZE_TOK MODEL_TOK
 %token NOT_TOK NOTES_TOK
 %token OF_TOK OPTION_TOK OR_TOK OTHERWISE_TOK OUTPUT_TOK
-%token PATCH_TOK PROD_TOK PROVIDE_TOK
+%token PATCH_TOK PRE_TOK PREVIOUS_TOK PROD_TOK PROVIDE_TOK
 %token REFINES_TOK REPLACE_TOK REQUIRE_TOK RETURN_TOK RUN_TOK
 %token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK
 %token THEN_TOK TRUE_TOK
@@ -374,25 +378,25 @@ static void CollectNote(struct Note *);
 %start definitions
 
 %type <real_value> default_val number realnumber opunits
-%type <int_value> end optional_sign universal 
+%type <int_value> end optional_sign universal
 %type <fkind> forexprend
 %type <frac_value> fraction fractail
 %type <id_ptr> optional_of optional_method type_identifier call_identifier
 %type <dquote_ptr> optional_notes
 %type <braced_ptr> optional_bracedtext
-%type <nptr> data_args fname name optional_scope
+%type <nptr> data_args fname name optional_scope optional_with
 %type <eptr> relation expr relop logrelop optional_with_value
 %type <sptr> set setexprlist optional_set_values
-%type <lptr> fvarlist input_args output_args varlist
+%type <lptr> fvarlist input_args output_args varlist like_children
 
-%type <statptr> statement isa_statement willbe_statement aliases_statement
+%type <statptr> statement isa_statement willbe_statement aliases_statement derivative_statement previous_statement
 %type <statptr> is_statement isrefinedto_statement arealike_statement link_statement unlink_statement der_statement independent_statement
 %type <statptr> arethesame_statement willbethesame_statement
 %type <statptr> willnotbethesame_statement assignment_statement
 %type <statptr> relation_statement glassbox_statement blackbox_statement
 %type <statptr> call_statement units_statement
 %type <statptr> external_statement for_statement run_statement if_statement assert_statement fix_statement free_statement
-%type <statptr> when_statement use_statement select_statement
+%type <statptr> when_statement use_statement select_statement event_statement
 %type <statptr> conditional_statement notes_statement
 %type <statptr> flow_statement while_statement
 %type <statptr> solve_statement solver_statement option_statement switch_statement
@@ -403,6 +407,7 @@ static void CollectNote(struct Note *);
 %type <septr> selectlist selectlistf
 %type <swptr> switchlist switchlistf
 %type <wptr> whenlist whenlistf
+%type <evptr> eventlist eventlistf
 %type <notesptr> notes_body noteslist
 %type <listp> methods proclist proclistf statements unitdeflist complex_statement fix_and_assign_statement
 %type <procptr> procedure
@@ -698,6 +703,7 @@ atom_def:
 	                                g_atom_dim_ptr,
 	                                g_default_long,
 	                                g_default_symbol,
+					g_like_children,
 	                                g_untrapped_error);
 	    if (def_ptr != NULL) {
 	      keepnotes = AddType(def_ptr);
@@ -723,12 +729,13 @@ atom_def:
     ;
 
 atom_head:
-    atom_id REFINES_TOK IDENTIFIER_TOK dims default_val ';'
+    atom_id REFINES_TOK IDENTIFIER_TOK dims default_val like_children ';'
 	{
 	  /* g_type_name = $1; */
 	  g_refines_name = $3;
 	  g_atom_dim_ptr = $4;
 	  g_default_double = $5;
+	  g_like_children = $6;
 	  g_header_linenum = LineNum();
 	}
     ;
@@ -775,6 +782,16 @@ default_val:
 	  g_defaulted = 0;
 	}
     ;
+
+like_children:
+    /* empty */
+	{
+	  $$ = NULL;
+	}
+    | LIKE_TOK CHILDREN_TOK fvarlist
+	{
+	  $$ = $3;
+	}
 
 constant_def:
     universal constant_head
@@ -1243,6 +1260,8 @@ statement:
     isa_statement
     | willbe_statement
     | aliases_statement
+    | derivative_statement
+    | previous_statement
     | is_statement
     | isrefinedto_statement
     | arealike_statement
@@ -1271,6 +1290,7 @@ statement:
     | while_statement
     | when_statement
     | use_statement
+    | event_statement
     | flow_statement
     | select_statement
     | switch_statement
@@ -1309,7 +1329,7 @@ isa_statement:
 	        g_untrapped_error++;
 	        $$ = NULL;
 	      } else {
-	        $$ = CreateISA($1,$3,g_typeargs,$4);
+	        $$ = CreateISA($1,$3,g_typeargs,$4,0);
 	      }
 	    } else {
 	      error_reporter_current_line(ASC_USER_ERROR,"IS_A uses the undefined type %s.", SCP($3));
@@ -1416,6 +1436,66 @@ optional_set_values:
     | WITH_VALUE_T '(' set ')'
 	{
 	  $$ = $3;
+	}
+    ;
+
+derivative_statement:
+    DERIVATIVE_TOK OF_TOK fvarlist optional_with
+	{
+	  CONST struct VariableList *vl;
+	  CONST struct Name *nptr;
+          struct VariableList *dervl;
+	  struct StatementList *statlist;
+          struct gl_list_t *stats;
+	  struct Statement *isa;
+	  struct Name *dername;
+          vl = $3;
+	  stats = gl_create(7L);
+          while(vl) {
+	    nptr = NamePointer(vl);
+	    dervl = CreateVariableNode(CopyName(nptr));
+	    if ($4) LinkVariableNodes(dervl,CreateVariableNode($4));
+	    dername = CreateDerivName(CreateDeriv(CopyVariableList(dervl)));
+	    isa = CreateISA(CreateVariableNode(dername),NULL,NULL,NULL,1);
+	    gl_append_ptr(stats,(VOIDPTR)isa);
+	    vl = NextVariableNode(vl);
+	  }
+	  statlist = CreateStatementList(stats);
+	  $$ = CreateISDER(statlist,$3,$4);
+	}
+    ;
+
+previous_statement:
+    PREVIOUS_TOK fvarlist
+	{
+	  CONST struct VariableList *vl;
+	  CONST struct Name *nptr;
+	  struct StatementList *statlist;
+          struct gl_list_t *stats;
+	  struct Statement *isa;
+	  struct Name *prename;
+          vl = $2;
+	  stats = gl_create(7L);
+          while(vl) {
+	    nptr = NamePointer(vl);
+	    prename = CreatePreName(CreatePre(CopyName(nptr)));
+	    isa = CreateISA(CreateVariableNode(prename),NULL,NULL,NULL,2);
+	    gl_append_ptr(stats,(VOIDPTR)isa);
+	    vl = NextVariableNode(vl);
+	  }
+	  statlist = CreateStatementList(stats);
+	  $$ = CreateISPRE(statlist,$2);
+	}
+    ;
+
+optional_with:
+    /* empty */
+	{
+	  $$ = NULL;
+	}
+    | WITH_TOK fname
+	{
+	  $$ = $2;
 	}
     ;
 
@@ -2009,6 +2089,71 @@ use_statement:
 	}
     ;
 
+event_statement:
+    EVENT_TOK fvarlist eventlist end
+	{
+	  if( $4 != EVENT_TOK ) {
+	    WarnMsg_MismatchEnd("EVENT", NULL, $4, NULL);
+	  }
+	  ErrMsg_Generic("() missing in EVENT statement.");
+	  DestroyEventList($3);
+	  DestroyVariableList($2);
+	  g_untrapped_error++;
+	  $$ = NULL;
+	}
+    | fname ':' EVENT_TOK fvarlist eventlist end
+	{
+	  if( $6 != EVENT_TOK ) {
+	    WarnMsg_MismatchEnd("EVENT", NULL, $6, NULL);
+	  }
+	  ErrMsg_Generic("() missing in EVENT statement.");
+	  DestroyEventList($5);
+	  DestroyVariableList($4);
+	  g_untrapped_error++;
+	  $$ = NULL;
+	}
+    | EVENT_TOK '(' fvarlist ')' eventlist end
+	{
+	  if( $6 != EVENT_TOK ) {
+	    WarnMsg_MismatchEnd("EVENT", NULL, $6, NULL);
+	  }
+	  $$ = CreateEVENT(NULL, $3, $5);
+	}
+    | fname ':' EVENT_TOK '(' fvarlist ')' eventlist end
+	{
+	  if( $8 != EVENT_TOK ) {
+	    WarnMsg_MismatchEnd("EVENT", NULL, $8, NULL);
+	  }
+	  $$ = CreateEVENT($1, $5, $7);
+	}
+    ;
+
+eventlist:
+    eventlistf
+	{
+	  $$ = ReverseEventCases($1);
+	}
+    ;
+
+eventlistf:
+    CASE_TOK set ':' fstatements
+	{
+	  $$ = CreateEvent($2,$4);
+	}
+    | OTHERWISE_TOK ':' fstatements
+	{
+	  $$ = CreateEvent(NULL,$3);
+	}
+    | eventlistf CASE_TOK set ':' fstatements
+	{
+	  $$ = LinkEventCases(CreateEvent($3,$5),$1);
+	}
+    | eventlistf OTHERWISE_TOK ':' fstatements
+	{
+	  $$ = LinkEventCases(CreateEvent(NULL,$4),$1);
+	}
+    ;
+
 select_statement:
     SELECT_TOK fvarlist selectlist end
 	{
@@ -2253,15 +2398,28 @@ name:
 	}
 	| name '[' set ']'
 	{
-	  if ($3 == NULL) {
-	    error_reporter_current_line(ASC_USER_ERROR,"syntax error: Empty set in name definition, name:");
-	    WriteName(ASCERR,$1);
-	    FPRINTF(ASCERR,"[]\n");
+          if (NameDeriv($1)) {
+	    error_reporter_current_line(ASC_USER_ERROR,"syntax error: For a derivative of an array element use der(argument[set]); name: %s",GetIdFromVlist(DerVlist(NameDerPtr($1))));
 	    g_untrapped_error++;
-	  } else {
-	    $$ = CreateSetName($3);
-	    LinkNames($$,$1);
-	  }
+          }else{
+	    if ($3 == NULL) {
+	      error_reporter_current_line(ASC_USER_ERROR,"syntax error: Empty set in name definition, name:");
+	      WriteName(ASCERR,$1);
+	      FPRINTF(ASCERR,"[]\n");
+	      g_untrapped_error++;
+	    } else {
+	      $$ = CreateSetName($3);
+	      LinkNames($$,$1);
+	    }
+          }
+	}
+	| DERIV_TOK '(' fvarlist ')'
+	{	
+	  $$ = CreateDerivName(CreateDeriv($3));
+	}
+	| PRE_TOK '(' fname ')'
+	{
+	  $$ = CreatePreName(CreatePre($3));
 	}
 	;
 
@@ -2270,6 +2428,11 @@ end:
 	{
 	  g_end_identifier = NULL;
 	  $$ = CONDITIONAL_TOK;
+	}
+	| END_TOK EVENT_TOK
+	{
+	  g_end_identifier = NULL;
+	  $$ = EVENT_TOK;
 	}
 	| END_TOK FOR_TOK
 	{
@@ -2740,7 +2903,7 @@ expr:
 	    $$ = NULL;
 	    error_reporter_current_line(ASC_USER_ERROR,"Function '%s' is not defined.",SCP($1));
 	    g_untrapped_error++;
-	  }
+	  }  
 	}
     | '(' expr ')'
 	{

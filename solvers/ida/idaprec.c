@@ -30,7 +30,7 @@
 #include <ascend/general/platform.h>
 #include <ascend/system/relman.h>
 
-#define PREC_DEBUG
+/* #define PREC_DEBUG */
 
 /*------
   Full jacobian preconditioner -- experimental

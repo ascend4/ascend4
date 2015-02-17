@@ -1,3 +1,4 @@
+import sys
 try:
 	import loading
 	#loading.print_status("Loading PSYCO")
@@ -20,7 +21,6 @@ try:
 	import optparse
 	import platform
 	import sys
-	import os
 
 	if platform.system() != "Windows":
 		try:
@@ -35,8 +35,11 @@ try:
 		# ascend library are made available to libraries dlopened within ASCEND:
 		sys.setdlopenflags(_dlflags)
 
+
+
 	loading.print_status("Loading LIBASCEND/ascpy")
 	import ascpy
+	import os.path
 
 	loading.print_status("Loading PyGTK, pango")
 
@@ -116,11 +119,8 @@ class Browser:
 	def __init__(self,librarypath=None,assetspath=None):
 
 		if assetspath==None:
-			if platform.system()=="Windows":
-				assetspath=os.path.normpath(os.path.join(os.path.dirname(__file__),"..","glade")) 
-			else:
-				assetspath=config.PYGTK_ASSETS
-
+			assetspath=config.PYGTK_ASSETS
+		
 		#--------
 		# load the file referenced in the command line, if any
 
@@ -312,6 +312,9 @@ class Browser:
 		self.use_binary_compilation=self.builder.get_object("use_binary_compilation")
 		self.use_binary_compilation.set_active(self.prefs.getBoolPref("Compiler","use_binary_compilation",False))
 		self.use_binary_compilation.set_sensitive(self.use_relation_sharing.get_active())
+
+		self.use_der_syntax=self.builder.get_object("use_der_syntax")
+		self.use_der_syntax.set_active(self.prefs.getBoolPref("Analyze","use_der_syntax",True))
 		
 		self.check_weekly=self.builder.get_object("check_weekly")
 		self.check_weekly.set_active(not(self.prefs.getBoolPref("Browser","disable_auto_check_for_updates",False)))
@@ -821,6 +824,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			return 1
 
 		try:
+			_v = self.prefs.getBoolPref("Analyze","use_der_syntax",True)
+			self.sim.setUseDerSyntax(_v)
 			self.sim.build()
 			self.enable_on_sim_build()
 		except RuntimeError,e:
@@ -858,6 +863,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			return
 
 		try:
+			_v = self.prefs.getBoolPref("Analyze","use_der_syntax",True)
+			self.sim.setUseDerSyntax(_v)
 			self.sim.build()
 		except RuntimeError,e:
 			self.reporter.reportError("Couldn't build system: %s",str(e))
@@ -987,18 +994,22 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def on_tools_incidencegraph_click(self,*args):
 		self.reporter.reportNote("Preparing incidence graph...")
-		fname = os.tempnam()
+		import tempfile
+		f,fname = tempfile.mkstemp(suffix=".png")
+		f = file(fname,'wb')
+		self.reporter.reportNote("temp file name = %s" % fname)
+		self.reporter.reportNote("file = %s" % f)
 		self.start_waiting("Creating incidence graph...")
 		try:
-			self.sim.write(fname,'dot') # create a PNG file in f
+			self.sim.write(f,'dot') # create a PNG file in f
 		except Exception,e:
 			self.stop_waiting()
 			self.reporter.reportError("Failed to create incidence graph: %s" % str(e))
 			return
+		f.close()
 		self.stop_waiting()
 		_ig = ImageWindow(self, self.window, fname, title="Incidence Graph", delete=True)
 		_ig.run()
-		self.reporter.reportNote("Deleted temporary file")
 
 	def on_tools_repaint_tree_activate(self,*args):
 		self.reporter.reportNote("Repainting model view...")
@@ -1042,6 +1053,11 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_v = checkmenuitem.get_active()
 		self.prefs.setBoolPref("Compiler","use_binary_compilation",_v)
 		self.reporter.reportNote("Binary compilation set to "+str(_v))
+
+	def on_use_der_syntax_toggle(self,checkmenuitem,*args):
+		_v = checkmenuitem.get_active()
+		self.prefs.setBoolPref("Analyze","use_der_syntax",_v)
+		self.reporter.reportNote("Use der syntax set to "+str(_v))
 
 	def on_show_solving_popup_toggle(self,checkmenuitem,*args):
 		_v = checkmenuitem.get_active()
@@ -1257,7 +1273,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def preferences_click(self,*args):
 		if not self.sim:
-			self.reporter.reportError("No simulation created yet!");		
+			self.reporter.reportError("No simulation created yet!");	
 		self.sim.setSolver(self.solver)
 		_params = self.sim.getParameters()
 		_paramswin = SolverParametersWindow(
@@ -1464,7 +1480,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def create_observer(self,name=None):
 		_imagelist = []
-		for i in range(5):
+		for i in range(6):
 			_imagelist.append("image%s" % (i+7))
 		self.builder.add_objects_from_file(self.glade_file, _imagelist)
 		

@@ -42,6 +42,7 @@ class IntegratorReporterCxx{
 	friend int ascxx_integratorreporter_init(IntegratorSystem *);
 	friend int ascxx_integratorreporter_write(IntegratorSystem *);
 	friend int ascxx_integratorreporter_write_obs(IntegratorSystem *);
+	friend int ascxx_integratorreporter_write_event(IntegratorSystem *);
 	friend int ascxx_integratorreporter_close(IntegratorSystem *);
 	friend class Integrator;
 
@@ -54,6 +55,7 @@ public:
 	virtual int closeOutput();
 	virtual int updateStatus();
 	virtual int recordObservedValues();
+	virtual int recordEvent();
 
 	Integrator *getIntegrator();
 
@@ -76,6 +78,7 @@ public:
 	virtual int closeOutput();
 	virtual int updateStatus();
 	virtual int recordObservedValues();
+	virtual int recordEvent();
 };
 
 /**
@@ -93,12 +96,14 @@ public:
 	virtual int closeOutput();
 	virtual int updateStatus();
 	virtual int recordObservedValues();
+	virtual int recordEvent();
 };
 
 
 int ascxx_integratorreporter_init(IntegratorSystem *blsys);
 int ascxx_integratorreporter_write(IntegratorSystem *blsys);
 int ascxx_integratorreporter_write_obs(IntegratorSystem *blsys);
+int ascxx_integratorreporter_write_event(IntegratorSystem *blsys);
 int ascxx_integratorreporter_close(IntegratorSystem *blsys);
 
 #endif

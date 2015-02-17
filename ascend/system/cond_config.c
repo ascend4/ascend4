@@ -35,9 +35,15 @@
 
 #include <ascend/linear/mtx.h>
 
+#include <ascend/compiler/initialize.h>
+#include <ascend/compiler/instmacro.h>
+#include <ascend/compiler/symtab.h>
+
 #include "slv_server.h"
 #include "system.h"
 #include "analyze.h"
+#include "diffvars.h"
+#include "diffvars_impl.h"
 
 #define USEDCODE 0
 
@@ -66,10 +72,12 @@ struct ds_case_list {
 	forward declarations
 */
 void analyze_when(struct w_when *);
+void analyze_event(struct e_event *, slv_system_t);
 static void simplified_analyze_when(struct w_when *);
 static void cases_matching_in_when_list(struct gl_list_t *,
 					struct ds_case_list *,
 					int32 *);
+void analyze_event_cont(struct e_event *,slv_system_t);
 
 /*
 	global variable for finding the number of cases in a when and
@@ -126,6 +134,88 @@ static void set_logrels_status_in_case(struct when_case *cur_case,
 }
 
 /*
+ * Set the ACTIVE bit to value for all the events
+ * included in the case
+ */
+static void set_events_status_in_case(struct when_case *cur_case,
+				      uint32 value)
+{
+  struct gl_list_t *events;
+  struct e_event *e;
+  int32 ev,elen;
+
+  events = when_case_events_list(cur_case);
+  if (events==NULL) return;
+  elen = gl_length(events);
+  for(ev=1;ev<=elen;ev++) {
+    e = (struct e_event *)(gl_fetch(events,ev));
+    event_set_active(e,value);
+  }
+}
+
+/**
+	Set the ACTIVE bit to value for all the relations
+	included in the case
+*/
+static void set_rels_status_in_ecase(struct event_case *cur_case,
+                                     uint32 value
+){
+  struct gl_list_t *rels;
+  struct rel_relation *rel;
+  int32 r,rlen;
+
+  rels = event_case_rels_list(cur_case);
+  rlen = gl_length(rels);
+  for(r=1;r<=rlen;r++) {
+    rel = (struct rel_relation *)(gl_fetch(rels,r));
+    rel_set_active(rel,value);
+  }
+}
+
+
+/*
+ * Set the ACTIVE bit to value for all the logrelations
+ * included in the case
+ */
+static void set_logrels_status_in_ecase(struct event_case *cur_case,
+				        uint32 value)
+{
+  struct gl_list_t *logrels;
+  struct logrel_relation *lrel;
+  int32 lr,lrlen;
+
+  logrels = event_case_logrels_list(cur_case);
+  if (logrels==NULL) return;
+  lrlen = gl_length(logrels);
+  for(lr=1;lr<=lrlen;lr++) {
+    lrel = (struct logrel_relation *)(gl_fetch(logrels,lr));
+    logrel_set_active(lrel,value);
+  }
+}
+
+/*
+ * Set the ACTIVE bit to value for all the events
+ * included in the case
+ */
+static void set_events_status_in_ecase(struct event_case *cur_case,
+				       uint32 value)
+{
+  struct gl_list_t *events;
+  struct e_event *e;
+  int32 ev,elen;
+
+  events = event_case_events_list(cur_case);
+  if (events==NULL) return;
+  elen = gl_length(events);
+  for(ev=1;ev<=elen;ev++) {
+    e = (struct e_event *)(gl_fetch(events,ev));
+    event_set_active(e,value);
+  }
+}
+
+
+
+/*
  * Set the ACTIVE bit to value for all the relations and logrelations
  * included in a when (implicitly or explcitly).
  */
@@ -153,6 +243,87 @@ void set_rels_status_in_when(struct w_when *when, uint32 value)
   }
 }
 
+/*
+ * Set the ACTIVE bit to value for all the events
+ * included in a when (implicitly or explcitly).
+ */
+void set_events_status_in_when(struct w_when *when, uint32 value)
+{
+  struct gl_list_t *cases;
+  struct gl_list_t *whens;
+  struct w_when *nested_when;
+  struct when_case *cur_case;
+  int32 c,clen,w,wlen;
+
+  cases = when_cases_list(when);
+  clen = gl_length(cases);
+  for (c=1;c<=clen;c++){
+    cur_case = (struct when_case *)(gl_fetch(cases,c));
+    when_case_set_active(cur_case,value);
+    set_events_status_in_case(cur_case,value);
+    whens = when_case_whens_list(cur_case);
+    wlen = gl_length(whens);  /* nested whens */
+    for (w=1;w<=wlen;w++){
+      nested_when = (struct w_when *)(gl_fetch(whens,w));
+      set_events_status_in_when(nested_when,value); /* recursion */
+    }
+  }
+}
+
+/*
+ * Set the ACTIVE bit to value for all the relations and logrelations
+ * included in an event (implicitly or explcitly).
+ */
+void set_rels_status_in_event(struct e_event *event, uint32 value)
+{
+  struct gl_list_t *cases;
+  struct gl_list_t *events;
+  struct e_event *nested_event;
+  struct event_case *cur_case;
+  int32 c,clen,e,elen;
+
+  cases = event_cases_list(event);
+  clen = gl_length(cases);
+  for (c=1;c<=clen;c++){
+    cur_case = (struct event_case *)(gl_fetch(cases,c));
+    set_rels_status_in_ecase(cur_case,value);
+    set_logrels_status_in_ecase(cur_case,value);
+    events = event_case_events_list(cur_case);
+    elen = gl_length(events);  /* nested events */
+    for (e=1;e<=elen;e++){
+      nested_event = (struct e_event *)(gl_fetch(events,e));
+      set_rels_status_in_event(nested_event,value); /* recursion */
+    }
+  }
+}
+
+/*
+ * Set the ACTIVE bit to value for all the events
+ * included in an event (implicitly or explcitly).
+ */
+void set_events_status_in_event(struct e_event *event, uint32 value)
+{
+  struct gl_list_t *cases;
+  struct gl_list_t *events;
+  struct e_event *nested_event;
+  struct event_case *cur_case;
+  int32 c,clen,e,elen;
+
+  cases = event_cases_list(event);
+  clen = gl_length(cases);
+  for (c=1;c<=clen;c++){
+    cur_case = (struct event_case *)(gl_fetch(cases,c));
+    event_case_set_active(cur_case,value);
+    set_events_status_in_ecase(cur_case,value);
+    events = event_case_events_list(cur_case);
+    elen = gl_length(events);  /* nested events */
+    for (e=1;e<=elen;e++){
+      nested_event = (struct e_event *)(gl_fetch(events,e));
+      set_events_status_in_event(nested_event,value); /* recursion */
+    }
+  }
+}
+
 
 /*
  * After a case is found to apply for the current values of the
@@ -166,9 +337,11 @@ static void apply_case(struct when_case *cur_case){
   struct gl_list_t *rels;
   struct gl_list_t *logrels;
   struct gl_list_t *whens;
+  struct gl_list_t *events;
   struct rel_relation *rel;
   struct logrel_relation *lrel;
   struct w_when *when;
+  struct e_event *event;
   int i,n;
 
 #ifdef WHEN_DEBUG
@@ -195,6 +368,18 @@ static void apply_case(struct when_case *cur_case){
 #endif
       lrel = (struct logrel_relation *)(gl_fetch(logrels,i));
       logrel_set_active(lrel,TRUE);
+    }
+  }
+
+  events = when_case_events_list(cur_case);
+  if(events != NULL) {
+    n = gl_length(events);
+    for(i=1; i<=n; i++) {
+#ifdef WHEN_DEBUG
+      CONSOLE_DEBUG("Setting event %d active in WHEN case %d", i, when_case_case_number(cur_case));
+#endif
+      event = (struct e_event *)(gl_fetch(events,i));
+      event_set_active(event,TRUE);
     }
   }
 
@@ -284,7 +469,9 @@ void analyze_when(struct w_when *when){
 	  ASC_FREE(whenname);
 #endif
       case_match = analyze_case(cur_case,dvars);
+#ifdef WHEN_DEBUG
       if(case_match)CONSOLE_DEBUG("FOUND MATCHING CASE");
+#endif
     }else{
       /* The case is 'OTHERWISE', set it active */
       asc_assert(case_match==0);
@@ -296,6 +483,307 @@ void analyze_when(struct w_when *when){
   if(!case_match){
     ERROR_REPORTER_HERE(ASC_USER_ERROR,"No case matched in when");
   }
+}
+
+/*
+ * After a case is found to apply for the current values of the
+ * conditional variables, the rel_relations and logrel_relations
+ * in such a case are set ACTIVE.
+ * If an EVENT is found in a CASE, the analysis of the EVENT is
+ * done recursively.
+ */
+
+static void apply_ecase(struct event_case *cur_case, slv_system_t sys, struct e_event *cur_event){
+  struct gl_list_t *rels;
+  struct gl_list_t *logrels;
+  struct gl_list_t *events;
+  struct rel_relation *rel;
+  struct logrel_relation *lrel;
+  struct e_event *event;
+  int i,n;
+
+  struct Name *name;
+  enum Proc_enum pe;
+
+  rels = event_case_rels_list(cur_case);
+  if(rels != NULL) {
+    n = gl_length(rels);
+    for(i=1; i<=n; i++) {
+      rel = (struct rel_relation *)(gl_fetch(rels,i));
+      rel_set_active(rel,TRUE);
+    }
+  }
+
+  logrels = event_case_logrels_list(cur_case);
+  if(logrels != NULL) {
+    n = gl_length(logrels);
+    for(i=1; i<=n; i++) {
+      lrel = (struct logrel_relation *)(gl_fetch(logrels,i));
+      logrel_set_active(lrel,TRUE);
+    }
+  }
+
+  events = event_case_events_list(cur_case);
+  if (events != NULL) {
+    n = gl_length(events);
+    for(i=1; i<=n; i++) {
+      event = (struct e_event *)(gl_fetch(events,i));
+      analyze_event(event,sys);
+    }
+  }
+  if (sys!=NULL) {
+    char *evname = event_make_name(sys,cur_event);
+    if (event_meth(cur_event)) {
+      name = CreateIdName(AddSymbol(evname));
+      pe = Initialize(INST(slv_instance(sys)),name,evname, ASCERR, 0, NULL, NULL);
+      if (pe==Proc_proc_not_found) {
+        ERROR_REPORTER_HERE(ASC_USER_NOTE,"Method %s not found",evname);
+        event_set_meth(cur_event,0);
+      }
+      else if (pe!=Proc_all_ok) ERROR_REPORTER_HERE(ASC_USER_ERROR,"Error occured when running method %s",evname);
+    }
+    ASC_FREE(evname);
+  }
+}
+
+/*
+ * After a case is found to apply for the current values of the
+ * conditional variables, the rel_relations and logrel_relations
+ * in such a case are set ACTIVE.
+ * If an EVENT is found in a CASE, the analysis of the EVENT is
+ * done recursively.
+ */
+
+static void apply_ecase_cont(struct event_case *cur_case, slv_system_t sys, char *evname){
+  struct gl_list_t *rels;
+  struct gl_list_t *logrels;
+  struct gl_list_t *events;
+  struct rel_relation *rel;
+  struct logrel_relation *lrel;
+  struct e_event *event;
+  int i,n;
+
+  rels = event_case_rels_list(cur_case);
+  if(rels != NULL) {
+    n = gl_length(rels);
+    for(i=1; i<=n; i++) {
+      rel = (struct rel_relation *)(gl_fetch(rels,i));
+      if (!(rel_in_when(rel) && !rel_active(rel))) rel_set_active(rel,TRUE);
+    }
+  }
+
+  logrels = event_case_logrels_list(cur_case);
+  if(logrels != NULL) {
+    n = gl_length(logrels);
+    for(i=1; i<=n; i++) {
+      lrel = (struct logrel_relation *)(gl_fetch(logrels,i));
+      if (!(logrel_in_when(lrel) && !logrel_active(lrel))) logrel_set_active(lrel,TRUE);
+    }
+  }
+
+  events = event_case_events_list(cur_case);
+  if (events != NULL) {
+    n = gl_length(events);
+    for(i=1; i<=n; i++) {
+      event = (struct e_event *)(gl_fetch(events,i));
+      analyze_event_cont(event,sys);
+    }
+  }
+}
+
+/*
+ * Compare current values of the conditional variables with
+ * the set of values in a CASE, and try to find is such
+ * values are the same. If they are, then apply_ecase
+ * is called.
+ */
+
+
+static int32 analyze_ecase(struct event_case *cur_case,
+			   struct gl_list_t *dvars,
+			   slv_system_t sys,
+                           struct e_event *cur_event)
+{
+
+  struct dis_discrete *dvar;
+  int32 d,dlen;
+  int32 values[MAX_VAR_IN_LIST];
+  int32 *value;
+  int32 *case_values,dindex;
+
+  value = &(values[0]);
+  case_values = event_case_values_list(cur_case);
+  for(dindex =0; dindex<MAX_VAR_IN_LIST; dindex++) {
+    *value = *case_values;
+    value++;
+    case_values++;
+  }
+  dlen = gl_length(dvars);
+  for (d=1;d<=dlen;d++) {
+    dvar = (struct dis_discrete *)(gl_fetch(dvars,d));
+    if ( (values[d-1]!= -2) && (values[d-1]!= dis_value(dvar)) ) {
+      return 0;
+    }
+  }
+  apply_ecase(cur_case,sys,cur_event);
+  event_case_set_active(cur_case,TRUE);
+  return 1;
+}
+
+/*
+ * This function will determine which case of an EVENT statement
+ * applies for the current values of the conditional variables.
+ * The relations in that case are set ACTIVE
+ */
+void analyze_event(struct e_event *event,slv_system_t sys){
+  struct gl_list_t *dvars;
+  struct gl_list_t *cases;
+  int32 values[MAX_VAR_IN_LIST];
+  struct event_case *cur_case;
+  int32 c,clen;
+  int case_match;
+  int32 *value;
+  int32 *case_values;
+
+  dvars = event_dvars_list(event);
+  cases = event_cases_list(event);
+  clen = gl_length(cases);
+
+  for(c=1, case_match=0; !case_match && c<=clen; c++){
+    asc_assert(case_match==0);
+    cur_case = (struct event_case *)(gl_fetch(cases,c));
+    value = &(values[0]);
+    case_values = event_case_values_list(cur_case);
+    *value = *case_values;
+    if(values[0]!=-1){
+      case_match = analyze_ecase(cur_case,dvars,sys,event);
+    }else{
+      /* The case is 'OTHERWISE', set it active */
+      asc_assert(case_match==0);
+      apply_ecase(cur_case,sys,event);
+      event_case_set_active(cur_case,TRUE);
+      case_match = 1;
+    }
+  }
+}
+
+/*
+ * This function will determine which case of an EVENT statement
+ * should be activated because of a change in values of the
+ * conditional variables. The relations in that case are set ACTIVE
+ */
+int analyze_event_at_bnd(struct e_event *event, slv_system_t sys){
+  struct gl_list_t *dvars;
+  struct gl_list_t *cases;
+  struct dis_discrete *dvar;
+  int32 values[MAX_VAR_IN_LIST];
+  struct event_case *cur_case;
+  int32 c,clen,d,dlen;
+  int case_match;
+  int32 *value;
+  int32 *case_values;
+
+  dvars = event_dvars_list(event);
+  cases = event_cases_list(event);
+  clen = gl_length(cases);
+
+  dlen = gl_length(dvars);
+  for (d=1;d<=dlen;d++) {
+    dvar = (struct dis_discrete *)(gl_fetch(dvars,d));
+    if (dis_value(dvar) == dis_previous_value(dvar) ) return 0;
+  }
+
+  for(c=1, case_match=0; !case_match && c<=clen; c++){
+    asc_assert(case_match==0);
+    cur_case = (struct event_case *)(gl_fetch(cases,c));
+    value = &(values[0]);
+    case_values = event_case_values_list(cur_case);
+    *value = *case_values;
+    if(values[0]!=-1){
+      case_match = analyze_ecase(cur_case,dvars,sys,event);
+    }else{
+      /* The case is 'OTHERWISE', set it active */
+      asc_assert(case_match==0);
+      /* The second argument is NULL because we
+         don't want to call a method for this event */
+      apply_ecase(cur_case,NULL,event);
+      event_case_set_active(cur_case,TRUE);
+    }
+  }
+  if(!case_match){
+    return 0;
+  }else{
+    cur_case = (struct event_case *)(gl_fetch(cases,gl_length(cases)));
+    value = &(values[0]);
+    case_values = event_case_values_list(cur_case);
+    *value = *case_values;
+    if(values[0]==-1){
+      set_events_status_in_ecase(cur_case,FALSE);
+      set_rels_status_in_ecase(cur_case,FALSE);
+    }
+  }
+  return 1;
+}
+
+/*
+ * This function will apply the otherwise case of
+ * an EVENT statement.
+ * The relations in that case are set ACTIVE
+ */
+void analyze_event_cont(struct e_event *event,slv_system_t sys){
+  struct gl_list_t *cases;
+  int32 values[MAX_VAR_IN_LIST];
+  struct event_case *cur_case;
+  int32 c,clen;
+  int32 *value;
+  int32 *case_values;
+  char *evname;
+  struct Name *name;
+  enum Proc_enum pe;
+  struct gl_list_t *events;
+  int i;
+
+  cases = event_cases_list(event);
+  clen = gl_length(cases);
+  evname = event_make_name(sys,event);
+  char tmp[strlen(evname)+4];
+
+  for(c=1; c<=clen; c++){
+    cur_case = (struct event_case *)(gl_fetch(cases,c));
+    value = &(values[0]);
+    case_values = event_case_values_list(cur_case);
+    *value = *case_values;
+    if(values[0]==-1){
+      /* The case is 'OTHERWISE', set it active */
+      apply_ecase_cont(cur_case,sys,evname);
+      event_case_set_active(cur_case,TRUE);
+      continue;
+    }
+    if (event_case_active(cur_case)) {
+      event_case_set_active(cur_case,FALSE);
+
+      events = event_case_events_list(cur_case);
+      if (events != NULL) {
+        for(i=1; i<=gl_length(events); i++) {
+          event = (struct e_event *)(gl_fetch(events,i));
+          analyze_event_cont(event,sys);
+        }
+      }
+
+      if (event_meth_end(event)) {
+        strcpy(tmp,evname);
+        strcat(tmp,"_end");
+        name = CreateIdName(AddSymbol(tmp));
+        pe = Initialize(INST(slv_instance(sys)),name,tmp, ASCERR, 0, NULL, NULL);
+        if (pe==Proc_proc_not_found) {
+          ERROR_REPORTER_HERE(ASC_USER_NOTE,"Method %s not found",tmp);
+          event_set_meth_end(event,0);
+        }
+        else if (pe!=Proc_all_ok) ERROR_REPORTER_HERE(ASC_USER_ERROR,"Error occured when running method %s",tmp);
+      }
+    }
+  }
+  ASC_FREE(evname);
 }
 
 
@@ -1597,6 +2085,44 @@ void enumerate_cases_in_when(struct w_when *when)
   when_set_num_cases(when,cur_num_cases);
 }
 
+void enumerate_cases_in_event(struct e_event *event)
+{
+  struct event_case *cur_case;
+  struct e_event *caseevent;
+  struct gl_list_t *cases;
+  struct gl_list_t *events;
+  int32 e,elen,c,clen;
+  int32 scratch;
+  int32 cur_num_cases; /* number of cases in current event */
+
+  scratch = g_case_number;
+
+  cases = event_cases_list(event);
+  if (cases == NULL) {
+    FPRINTF(ASCERR,"WARNING: No list of cases in Event\n");
+    return;
+  }
+
+  clen = gl_length (cases);
+  for (c=1; c<=clen; c++) {
+    cur_case = (struct event_case *)(gl_fetch(cases,c));
+    events = event_case_events_list(cur_case);
+    if ( (events == NULL) || (gl_length(events) == 0) ) {
+      g_case_number++;
+      event_case_set_case_number(cur_case,g_case_number);
+    }else{
+      elen = gl_length(events);
+      for (e=1;e<=elen;e++) {
+        event_case_set_case_number(cur_case,-1); /* nested cases */
+        caseevent = (struct e_event *)(gl_fetch(events,e));
+        enumerate_cases_in_event (caseevent);
+      }
+    }
+  }
+  cur_num_cases = g_case_number - scratch;
+  event_set_num_cases(event,cur_num_cases);
+}
+
 
 #define alloc_case_array(ncases,type)   \
    ((ncases) > 0 ? (type *)ascmalloc((ncases)*sizeof(type)) : NULL)
@@ -1767,20 +2293,23 @@ int32 *cases_matching(struct gl_list_t *disvars, int32 *ncases)
 
 /*
  * configure_conditional_problem
- * analyze the when statements included in our problem so that, we
- * determine which rels, vars, disvars, and logrels are currently
+ * analyze the when and event statements included in our problem so that,
+ * we determine which rels, vars, disvars, and logrels are currently
  * active. It is called by analyze.c at the time of the system
  * building. For reconfiguration of the system call
  * reanalyze_solver_lists
  */
 void configure_conditional_problem(int32 numwhens,
+                                   int32 numevents,
                                    struct w_when **whenlist,
+                                   struct e_event **eventlist,
                                    struct rel_relation **solverrl,
                                    struct logrel_relation **solverll,
 				   struct var_variable **mastervl)
 {
   int32 w,result;
   struct w_when *when;
+  struct e_event *event;
 
   /* Enumerate cases in when's */
   g_case_number = 0;
@@ -1788,6 +2317,13 @@ void configure_conditional_problem(int32 numwhens,
     when = whenlist[w];
     if (!when_inwhen(when)) {
       enumerate_cases_in_when(when);
+    }
+  }
+
+  for (w = 0; w < numevents; w++) {
+    event = eventlist[w];
+    if (!event_inevent(event)) {
+      enumerate_cases_in_event(event);
     }
   }
 
@@ -1799,12 +2335,21 @@ void configure_conditional_problem(int32 numwhens,
 
   /*
 	All rel_relations and logrel_relations explicitly or implicitly
-	(models) inside a w_when are deactivated
+	(models) inside a w_when and e_event are deactivated
    */
   for (w = 0; w < numwhens; w++) {
     when = whenlist[w];
     if (!when_inwhen(when)) {
       set_rels_status_in_when(when,FALSE);
+      set_events_status_in_when(when,FALSE);
+    }
+  }
+
+  for (w = 0; w < numevents; w++) {
+    event = eventlist[w];
+    if (!event_inevent(event)) {
+      set_rels_status_in_event(event,FALSE);
+      set_events_status_in_event(event,FALSE);
     }
   }
 
@@ -1822,6 +2367,17 @@ void configure_conditional_problem(int32 numwhens,
     }
   }
 
+  /*
+	Analyze events and find active relations and logrelations
+	in each of them
+   */
+  /*for (w = 0; w < numevents; w++) {
+    event = eventlist[w];
+    if(!event_inevent(event) && event_active(event)){
+      analyze_event(event,NULL);
+    }
+  }*/
+
   /* All variables in active relations are
    * set as active */
   set_active_vars_in_active_rels(solverrl);
@@ -1838,19 +2394,23 @@ void configure_conditional_problem(int32 numwhens,
  * are reanalyzed to set the bit ACTIVE for the vars, rels and
  * logrels corresponding to a possible new configuration.
  */
-void reanalyze_solver_lists(slv_system_t sys)
+int reanalyze_solver_lists(slv_system_t sys)
 {
   struct rel_relation **solverrl;
   struct rel_relation **solverol;
   struct logrel_relation **solverll;
   struct var_variable **solvervl;
+  struct var_variable **prevars;
   struct dis_discrete **solverdl;
   struct dis_discrete **dislist;
   struct w_when **whenlist;
   struct w_when *when;
+  struct e_event **eventlist, *event;
   struct dis_discrete *dvar;
   struct gl_list_t *symbol_list;
+  SolverDiffVarCollection *dv;
   int32 c;
+  int result = 0, npres = 0;
 
   solverrl = slv_get_solvers_rel_list(sys);
   solverol = slv_get_solvers_obj_list(sys);
@@ -1858,8 +2418,14 @@ void reanalyze_solver_lists(slv_system_t sys)
   solvervl = slv_get_solvers_var_list(sys);
   solverdl = slv_get_solvers_dvar_list(sys);
   whenlist = slv_get_solvers_when_list(sys);
+  eventlist = slv_get_solvers_event_list(sys);
   dislist =  slv_get_master_dvar_list(sys);
   symbol_list = slv_get_symbol_list(sys);
+  if(system_get_diffvars(sys)!=NULL) {
+    dv = system_get_diffvars(sys);
+    prevars = dv->pres;
+    npres = dv->npres;
+  }
 
   SET_WHENDEBUG(sys)
 
@@ -1868,15 +2434,23 @@ void reanalyze_solver_lists(slv_system_t sys)
   set_active_rels_in_list(solverrl);
   set_active_logrels_in_list(solverll);
 
-  for (c=0; dislist[c]!=NULL; c++) {
-    dvar = dislist[c];
-    dis_set_value_from_inst(dvar,symbol_list);
+  for(c=0; c<npres; c++) {
+    var_set_value(prevars[c],var_value(var_prearg(prevars[c])));
   }
 
   for (c=0; whenlist[c]!=NULL ; c++) {
     when = whenlist[c];
     if (!when_inwhen(when)) {
       set_rels_status_in_when(when,FALSE);
+      set_events_status_in_when(when,FALSE);
+    }
+  }
+
+  for (c=0; eventlist[c]!=NULL ; c++) {
+    event = eventlist[c];
+    if (!event_inevent(event)) {
+      set_rels_status_in_event(event,FALSE);
+      set_events_status_in_event(event,FALSE);
     }
   }
 
@@ -1889,9 +2463,107 @@ void reanalyze_solver_lists(slv_system_t sys)
       analyze_when(when);
     }
   }
+
+  /*
+	Analyze events and find active relations and logrelations
+	in each of them
+   */
+  for (c=0; eventlist[c]!=NULL; c++) {
+    event = eventlist[c];
+    if(!event_inevent(event) && event_active(event)){
+      if (analyze_event_at_bnd(event,sys)) result = 1;
+    }
+  }
+
+  for (c=0; dislist[c]!=NULL; c++) {
+    dvar = dislist[c];
+    dis_set_value_from_inst(dvar,symbol_list);
+  }
+
   set_active_vars_in_active_rels(solverrl);
   set_active_vars_in_active_rels(solverol);
   set_active_disvars_in_active_logrels(solverll);
+
+  for (c=0; solvervl[c]!=NULL ; c++) {
+    var_fixed(solvervl[c]);
+  }
+  return result;
+}
+
+/*
+ * Before continious integration, events are switched off and 
+ * the solver lists of variables, relations and logrelations
+ * are reanalyzed to set the bit ACTIVE for the vars, rels and
+ * logrels corresponding to a possible new configuration.
+ */
+
+ASC_DLLSPEC void reanalyze_solver_lists_cont(slv_system_t sys) {
+  struct rel_relation **solverrl;
+  struct rel_relation **solverol;
+  struct logrel_relation **solverll;
+  struct var_variable **solvervl;
+  struct dis_discrete **solverdl;
+  struct dis_discrete **dislist;
+  struct w_when **whenlist;
+  struct w_when *when;
+  struct e_event **eventlist, *event;
+  struct dis_discrete *dvar;
+  struct gl_list_t *symbol_list;
+  int32 c;
+
+  solverrl = slv_get_solvers_rel_list(sys);
+  solverol = slv_get_solvers_obj_list(sys);
+  solverll = slv_get_solvers_logrel_list(sys);
+  solvervl = slv_get_solvers_var_list(sys);
+  solverdl = slv_get_solvers_dvar_list(sys);
+  whenlist = slv_get_solvers_when_list(sys);
+  eventlist = slv_get_solvers_event_list(sys);
+  dislist =  slv_get_master_dvar_list(sys);
+  symbol_list = slv_get_symbol_list(sys);
+
+  SET_WHENDEBUG(sys)
+
+  set_inactive_vars_in_list(solvervl);
+  set_inactive_disvars_in_list(solverdl);
+  set_active_rels_in_list(solverrl);
+  set_active_logrels_in_list(solverll);
+
+  for (c=0; whenlist[c]!=NULL ; c++) {
+    when = whenlist[c];
+    if (!when_inwhen(when)) {
+      set_rels_status_in_when(when,FALSE);
+    }
+  }
+
+  for (c=0; eventlist[c]!=NULL ; c++) {
+    event = eventlist[c];
+    if (!event_inevent(event)) {
+      set_rels_status_in_event(event,FALSE);
+    }
+  }
+
+  /* All of the rels which are ACTIVE, are also INVARIANT */
+  set_active_rels_as_invariant(solverrl);
+
+  for (c=0; whenlist[c]!=NULL; c++) {
+    when = whenlist[c];
+    if (!when_inwhen(when)) { /* nested whens are analyzed recursively */
+      analyze_when(when);
+    }
+  }
+  for (c=0; eventlist[c]!=NULL ; c++) {
+    event = eventlist[c];
+    if (!event_inevent(event)) {
+      analyze_event_cont(event,sys);
+    }
+  }
+  set_active_vars_in_active_rels(solverrl);
+  set_active_vars_in_active_rels(solverol);
+  set_active_disvars_in_active_logrels(solverll);
+
+  for (c=0; solvervl[c]!=NULL ; c++) {
+    var_fixed(solvervl[c]);
+  }
 }
 
 
@@ -1909,7 +2581,7 @@ void reanalyze_solver_lists(slv_system_t sys)
 */
 int32 system_reanalyze(slv_system_t sys){
 	SET_WHENDEBUG(sys)
-    reanalyze_solver_lists(sys);
+    reanalyze_solver_lists_cont(sys);
     return 1;
 }
 

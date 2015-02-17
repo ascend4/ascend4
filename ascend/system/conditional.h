@@ -268,6 +268,7 @@ struct when_case {
   struct gl_list_t *rels;         /**< pointer to relations */
   struct gl_list_t *logrels;      /**< pointer to logrelations */
   struct gl_list_t *whens;        /**< pointer to whens */
+  struct gl_list_t *events;       /**< pointer to events */
   int32 case_number;              /**< number of case */
   int32 num_rels;                 /**< number of relations */
   int32 num_inc_var;              /**< number of incident variables */
@@ -317,6 +318,14 @@ extern void when_case_set_whens_list( struct when_case *wc,
                                       struct gl_list_t *wlist);
 /**<
  *  Sets the list of whens nested in the given case.
+ */
+
+extern struct gl_list_t *when_case_events_list( struct when_case *wc);
+/**<  Retrieves the list of events nested in the given case. */
+extern void when_case_set_events_list( struct when_case *wc,
+                                       struct gl_list_t *elist);
+/**<
+ *  Sets the list of events of the given case.
  */
 
 extern int32 when_case_case_number(struct when_case *wc);

@@ -125,7 +125,7 @@ extern void bnd_set_logrels(struct bnd_boundary *bnd,
  *  bnd may not be NULL (checked by asc_assertion).
  */
 
-extern struct gl_list_t *bnd_logrels(struct bnd_boundary *bnd);
+ASC_DLLSPEC struct gl_list_t *bnd_logrels(struct bnd_boundary *bnd);
 /**<
  *  Retrieves the list of pointers to the logrels using the condition.
  *  logrels is a gl_list of (struct logrel_relation *).
@@ -285,6 +285,8 @@ ASC_DLLSPEC void bnd_set_flagbit(struct bnd_boundary *bnd,
 #define BND_IDA_CROSSED 0x100	/**< Has IDA tagged this boundary as crossed? */
 #define BND_IDA_VALUE	0x200	/**< If IDA crossed what should the condition
 									 evaluate to? */
+#define BND_IDA_INCR    0x400   /**< The direction in which IDA has crossed the boundary */
+#define BND_IDA_FIRST_CROSS  0x800 /**< Is the boundary crossed by IDA for the first time? */
 /*
  * the bit flag lookups
  */
@@ -308,6 +310,8 @@ ASC_DLLSPEC void bnd_set_flagbit(struct bnd_boundary *bnd,
 #define bnd_perturb(b)     bnd_flagbit((b),BND_PERTURB)
 #define bnd_ida_crossed(b) bnd_flagbit((b),BND_IDA_CROSSED)
 #define bnd_ida_value(b)   bnd_flagbit((b),BND_IDA_VALUE)
+#define bnd_ida_incr(b)    bnd_flagbit((b),BND_IDA_INCR)
+#define bnd_ida_first_cross(b)   bnd_flagbit((b),BND_IDA_FIRST_CROSS)
 #endif /* NDEBUG */
 
 /*
@@ -324,6 +328,8 @@ ASC_DLLSPEC void bnd_set_flagbit(struct bnd_boundary *bnd,
 #define bnd_set_perturb(b,bv)        bnd_set_flagbit((b),BND_PERTURB,(bv))
 #define bnd_set_ida_crossed(b,bv)	 bnd_set_flagbit((b),BND_IDA_CROSSED,(bv))
 #define bnd_set_ida_value(b,bv)		 bnd_set_flagbit((b),BND_IDA_VALUE,(bv))
+#define bnd_set_ida_incr(b,bv)           bnd_set_flagbit((b),BND_IDA_INCR,(bv))
+#define bnd_set_ida_first_cross(b,bv)    bnd_set_flagbit((b),BND_IDA_FIRST_CROSS,(bv))
 
 ASC_DLLSPEC int32 bnd_status_cur(struct bnd_boundary *bnd);  /**< See bnd_status_pre(). */
 ASC_DLLSPEC int32 bnd_status_pre(struct bnd_boundary *bnd);

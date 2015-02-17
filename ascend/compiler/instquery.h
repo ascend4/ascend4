@@ -230,6 +230,7 @@ ASC_DLLSPEC VOIDPTR GetInterfacePtr(CONST struct Instance *i);
  *  - REL_INST
  *  - LREL_INST
  *  - WHEN_INST
+ *  - EVENT_INST
  *  - REAL_ATOM_INST
  *  - INTEGER_ATOM_INST
  *  - SYMBOL_ATOM_INST

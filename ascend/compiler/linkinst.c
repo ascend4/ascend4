@@ -66,6 +66,9 @@
 #include "linkinst.h"
 #include "mathinst.h"
 #include "parentchild.h"
+#include "deriv.h"
+#include "event.h"
+#include "mergeinst.h"
 
 #define PANIC_ILLEGAL_INSTANCE Asc_Panic(2, __FUNCTION__, "invalid instance type")
 
@@ -167,6 +170,7 @@ void ChangeWhenPointers(struct Instance *when, struct Instance *old,
       }
     case MODEL_INST:
     case WHEN_INST:
+    case EVENT_INST:
     case REL_INST:
     case LREL_INST:
       for(c=1;c<=len;c++) {
@@ -181,6 +185,95 @@ void ChangeWhenPointers(struct Instance *when, struct Instance *old,
     default:
       PANIC_ILLEGAL_INSTANCE;
   }
+}
+
+void ChangeEventPointers(struct Instance *event, struct Instance *old,
+		 	 struct Instance *new
+){
+  struct gl_list_t *varlist,*caselist,*reflist;
+  struct Instance *scratch;
+  struct Case *cur_case;
+  unsigned long c,len,pos;
+
+  varlist = E_INST(event)->bvar;
+  caselist = E_INST(event)->cases;
+  len = gl_length(caselist);
+
+  if (new == NULL) {
+    scratch = old;
+  }
+  else {
+    scratch = new;
+  }
+  assert(event->t==EVENT_INST);
+  AssertMemory(event);
+  switch(scratch->t){
+    case BOOLEAN_ATOM_INST:
+    case INTEGER_ATOM_INST:
+    case SYMBOL_ATOM_INST:
+    case BOOLEAN_CONSTANT_INST:
+    case INTEGER_CONSTANT_INST:
+    case SYMBOL_CONSTANT_INST:
+      if (varlist!=NULL){
+        ModifyEventPointers(varlist,old,new);
+        return;
+      }
+    case MODEL_INST:
+    case EVENT_INST:
+    case REL_INST:
+    case LREL_INST:
+      for(c=1;c<=len;c++) {
+        cur_case = (struct Case *)gl_fetch(caselist,c);
+        reflist = GetCaseReferences(cur_case);
+        if (reflist != NULL) {
+          if (0 != (pos = gl_search(reflist,old,(CmpFunc)CmpP)))
+            ModifyEventPointers(reflist,old,new);
+	}
+      }
+    return;
+    default:
+      PANIC_ILLEGAL_INSTANCE;
+  }
+}
+
+void ChangeIderivPointers(struct Instance *deriv, struct Instance *old,
+			    struct Instance *new
+){
+  assert(deriv!=NULL);
+  assert(deriv->t==REAL_ATOM_INST);
+  assert(RA_INST(deriv)->derinf !=NULL && RA_INST(deriv)->derinf->indep!=NULL);
+  AssertMemory(deriv);
+  ModifyIderivPointers(deriv,RA_INST(deriv)->derinf->indep,old,new);
+}
+
+void ChangeStatePointers(struct Instance *state, struct Instance *old,
+			    struct Instance *new
+){
+  assert(state!=NULL);
+  assert(state->t==REAL_ATOM_INST);
+  assert(RA_INST(state)->derinf !=NULL && RA_INST(state)->derinf->sderiv!=NULL);
+  AssertMemory(state);
+  ModifyStatePointers(state,RA_INST(state)->derinf->sderiv,old,new);
+}
+
+void ChangeIndepPointers(struct Instance *indep, struct Instance *old,
+			    struct Instance *new
+){
+  assert(indep!=NULL);
+  assert(indep->t==REAL_ATOM_INST);
+  assert(RA_INST(indep)->derinf !=NULL && RA_INST(indep)->derinf->ideriv!=NULL);
+  AssertMemory(indep);
+  ModifyIndepPointers(indep,RA_INST(indep)->derinf->ideriv,old,new);
+}
+
+void ChangeSderivPointers(struct Instance *deriv, struct Instance *old,
+			    struct Instance *new
+){
+  assert(deriv!=NULL);
+  assert(deriv->t==REAL_ATOM_INST);
+  assert(RA_INST(deriv)->derinf !=NULL && RA_INST(deriv)->derinf->state!=NULL);
+  AssertMemory(deriv);
+  ModifySderivPointers(deriv,RA_INST(deriv)->derinf->state,old,new);
 }
 
 /**
@@ -529,8 +622,287 @@ void FixWhens(struct Instance *old, struct Instance *new){
       }
       W_INST(old)->whens=NULL;
       break;
+    case EVENT_INST:
+      AssertMemory(E_INST(old));
+      AssertMemory(E_INST(new));
+      if((E_INST(new)->whens==NULL) ||
+        (E_INST(new)->whens==E_INST(old)->whens))  {
+        E_INST(new)->whens = E_INST(old)->whens;
+        FixWhensIf(old,new);
+      }
+      else{
+        FixWhensElse(old,new);
+        if (E_INST(old)->whens) gl_destroy(E_INST(old)->whens);
+      }
+      E_INST(old)->whens=NULL;
+      break;
     default:
       PANIC_ILLEGAL_INSTANCE;
+  }
+}
+
+static
+void FixEventsIf(struct Instance *old, struct Instance *new){
+  register unsigned long c,len;
+  if ((len=EventsCount(new))>0){
+    for(c=1;c<=len;c++) {
+      ChangeEventPointers(EventsForInstance(new,c),old,new);
+    }
+  }
+}
+
+static
+void FixEventsElse(struct Instance *old, struct Instance *new){
+  register unsigned long c,len;
+  if ((len=EventsCount(INST(old)))>0){
+    for(c=1;c<=len;c++){
+      ChangeEventPointers(EventsForInstance(old,c),old,new);
+      AddEvent(new,EventsForInstance(old,c));
+    }
+  }
+}
+
+void FixEvents(struct Instance *old, struct Instance *new){
+  switch(old->t){
+    case BOOLEAN_ATOM_INST:
+      AssertMemory(BA_INST(old));
+      AssertMemory(BA_INST(new));
+      if((BA_INST(new)->events==NULL) ||
+        (BA_INST(new)->events==BA_INST(old)->events))  {
+        BA_INST(new)->events = BA_INST(old)->events;
+        FixEventsIf(old,new);
+      }
+      else{
+        FixEventsElse(old,new);
+        if (BA_INST(old)->events) gl_destroy(BA_INST(old)->events);
+      }
+      BA_INST(old)->events=NULL;
+      break;
+    case BOOLEAN_CONSTANT_INST:
+      AssertMemory(BC_INST(old));
+      AssertMemory(BC_INST(new));
+      if((BC_INST(new)->events==NULL) ||
+        (BC_INST(new)->events==BC_INST(old)->events))  {
+        BC_INST(new)->events = BC_INST(old)->events;
+        FixEventsIf(old,new);
+      }
+      else{
+        FixEventsElse(old,new);
+        if (BC_INST(old)->events) gl_destroy(BC_INST(old)->events);
+      }
+      BC_INST(old)->events=NULL;
+      break;
+    case MODEL_INST:
+      AssertMemory(MOD_INST(old));
+      AssertMemory(MOD_INST(new));
+      if((MOD_INST(new)->events==NULL) ||
+        (MOD_INST(new)->events==MOD_INST(old)->events))  {
+        MOD_INST(new)->events = MOD_INST(old)->events;
+        FixEventsIf(old,new);
+      }
+      else{
+        FixEventsElse(old,new);
+        if (MOD_INST(old)->events) gl_destroy(MOD_INST(old)->events);
+      }
+      MOD_INST(old)->events=NULL;
+      break;
+    case REL_INST:
+      AssertMemory(RELN_INST(old));
+      AssertMemory(RELN_INST(new));
+      if((RELN_INST(new)->events==NULL) ||
+        (RELN_INST(new)->events==RELN_INST(old)->events))  {
+        RELN_INST(new)->events = RELN_INST(old)->events;
+        FixEventsIf(old,new);
+      }
+      else{
+        FixEventsElse(old,new);
+        if (RELN_INST(old)->events) gl_destroy(RELN_INST(old)->events);
+      }
+      RELN_INST(old)->events=NULL;
+      break;
+    case LREL_INST:
+      AssertMemory(LRELN_INST(old));
+      AssertMemory(LRELN_INST(new));
+      if((LRELN_INST(new)->events==NULL) ||
+        (LRELN_INST(new)->events==LRELN_INST(old)->events))  {
+        LRELN_INST(new)->events = LRELN_INST(old)->events;
+        FixEventsIf(old,new);
+      }
+      else{
+        FixEventsElse(old,new);
+        if (LRELN_INST(old)->events) gl_destroy(LRELN_INST(old)->events);
+      }
+      LRELN_INST(old)->events=NULL;
+      break;
+    case EVENT_INST:
+      AssertMemory(E_INST(old));
+      AssertMemory(E_INST(new));
+      if((E_INST(new)->events==NULL) ||
+        (E_INST(new)->events==E_INST(old)->events))  {
+        E_INST(new)->events = E_INST(old)->events;
+        FixEventsIf(old,new);
+      }
+      else{
+        FixEventsElse(old,new);
+        if (E_INST(old)->events) gl_destroy(E_INST(old)->events);
+      }
+      E_INST(old)->events=NULL;
+      break;
+    default:
+      PANIC_ILLEGAL_INSTANCE;
+  }
+}
+
+void FixIderivs(struct RealAtomInstance *old, struct RealAtomInstance *new)
+{
+  register unsigned long c,len;
+  AssertMemory(old);
+  AssertMemory(new);
+  if ((new->derinf==NULL)||(new->derinf->ideriv==NULL)||(new->derinf->ideriv==old->derinf->ideriv)){
+	/* new had no DerInfo or new has the identical DerInfo */
+    if (new->derinf==NULL) {
+      new->derinf = ASC_NEW(struct DerInfo);
+      new->derinf->sderiv = NULL;
+      new->derinf->indep = NULL;
+      new->derinf->state = NULL;
+    }
+    new->derinf->ideriv = old->derinf->ideriv;
+    if ((len=IderivsCount(INST(new)))>0){
+      for(c=1;c<=len;c++) {
+	ChangeIderivPointers(IderivsForAtom(INST(new),c),
+			       INST(old),INST(new));
+      }
+    }
+  } else {
+    len=IderivsCount(INST(old));
+    if (len>0) {
+      for(c=1;c<=len;c++){
+	ChangeIderivPointers(IderivsForAtom(INST(old),c),
+			       INST(old),INST(new));
+	AddIderiv(INST(new),IderivsForAtom(INST(old),c));
+      }
+    }
+    if (old->derinf->ideriv) {
+      gl_destroy(old->derinf->ideriv);
+    }
+  }
+  old->derinf->ideriv=NULL;
+}
+
+void FixStateIndep(struct RealAtomInstance *old, struct RealAtomInstance *new)
+{
+  register unsigned long c,len;
+  AssertMemory(old);
+  AssertMemory(new);
+  if ((new->derinf==NULL)||((new->derinf->state==NULL)&&(new->derinf->indep==NULL))||((new->derinf->state==old->derinf->state)&&(new->derinf->indep==old->derinf->indep))){
+	/* new had no DerInfo or new has the identical DerInfo */
+    if (new->derinf==NULL) {
+      new->derinf = ASC_NEW(struct DerInfo);
+      new->derinf->ideriv = NULL;
+      new->derinf->sderiv = NULL;
+    }
+    new->derinf->state = old->derinf->state;
+    new->derinf->indep = old->derinf->indep;
+    if (StatesCount(INST(old)) != IndepsCount(INST(old))) ASC_PANIC("The number of state and independent variables should be equal.");
+    if ((len=StatesCount(INST(new)))>0){
+      for(c=1;c<=len;c++) {
+	ChangeStatePointers(StatesForAtom(INST(new),c),
+			          INST(old),INST(new));
+	ChangeIndepPointers(IndepsForAtom(INST(new),c),
+			          INST(old),INST(new));
+      }
+    }
+  } else {
+    len=StatesCount(INST(old));
+    if (len != IndepsCount(INST(old))) ASC_PANIC("The number of state and independent variables should be equal.");
+    if (len>0) {
+      for(c=1;c<=len;c++){
+	ChangeStatePointers(StatesForAtom(INST(old),c),
+			          INST(old),INST(new));
+	ChangeIndepPointers(IndepsForAtom(INST(old),c),
+			          INST(old),INST(new));
+	AddStateIndep(INST(new),StatesForAtom(INST(old),c),IndepsForAtom(INST(old),c));
+      }
+    }
+    if (old->derinf->state) {
+      gl_destroy(old->derinf->state);
+    }
+    if (old->derinf->indep) {
+      gl_destroy(old->derinf->indep);
+    }
+  }
+  old->derinf->state=NULL;
+  old->derinf->indep=NULL;
+}
+
+void FixSderivs(struct RealAtomInstance *old, struct RealAtomInstance *new)
+{
+  register unsigned long c,len;
+  AssertMemory(old);
+  AssertMemory(new);
+  if ((new->derinf==NULL)||(new->derinf->sderiv==NULL)||(new->derinf->sderiv==old->derinf->sderiv)){
+	/* new had no DerInfo or new has the identical DerInfo */
+    if (new->derinf==NULL) {
+      new->derinf = ASC_NEW(struct DerInfo);
+      new->derinf->ideriv = NULL;
+      new->derinf->indep = NULL;
+      new->derinf->state = NULL;
+    }
+    new->derinf->sderiv = old->derinf->sderiv;
+    if ((len=SderivsCount(INST(new)))>0){
+      for(c=1;c<=len;c++) {
+	ChangeSderivPointers(SderivsForAtom(INST(new),c),
+			       INST(old),INST(new));
+      }
+    }
+  } else {
+    len=SderivsCount(INST(old));
+    if (len>0) {
+      for(c=1;c<=len;c++){
+	ChangeSderivPointers(SderivsForAtom(INST(old),c),
+			       INST(old),INST(new));
+	AddSderiv(INST(new),SderivsForAtom(INST(old),c));
+      }
+    }
+    if (old->derinf->sderiv) {
+      gl_destroy(old->derinf->sderiv);
+    }
+  }
+  old->derinf->sderiv=NULL;
+}
+
+void FixDerInfo(struct RealAtomInstance *old, struct RealAtomInstance *new)
+{
+  if (old->derinf == NULL) return;
+  if (old->derinf->ideriv != NULL) FixIderivs(old,new);
+  if (old->derinf->state != NULL && old->derinf->indep != NULL) FixStateIndep(old,new);
+  if (old->derinf->state != NULL && old->derinf->indep == NULL) ASC_PANIC("A derivative instance without independent variables");
+  if (old->derinf->state == NULL && old->derinf->indep != NULL) ASC_PANIC("A derivative instance without state variables");
+  if (old->derinf->sderiv != NULL) FixSderivs(old,new);
+}
+
+void FixPreInfo(struct Instance *old, struct Instance *new){
+  struct RealAtomInstance *rold, *rnew;
+  struct Instance *preinst;
+  if(InstanceKind(old)!=REAL_ATOM_INST) ASC_PANIC("Wrong instance kind in FixPreInfo.");
+  rold = RA_INST(old);
+  rnew = RA_INST(new);
+  if (rold->preinf == NULL) return;
+  if (rold->preinf->pre != NULL) {
+    if (rnew->preinf == NULL || rnew->preinf->pre == NULL) { /* new has no PreInfo */
+      if (rnew->preinf==NULL) {
+        rnew->preinf = ASC_NEW(struct PreInfo);
+        rnew->preinf->prearg = NULL;
+      }
+      rnew->preinf->pre = rold->preinf->pre;
+      preinst = rold->preinf->pre;
+      RA_INST(preinst)->preinf->prearg = new;
+    }else {
+      preinst = MergeInstances(rold->preinf->pre,rnew->preinf->pre);
+      RA_INST(preinst)->preinf->prearg = new;
+      rnew->preinf->pre = preinst;
+    }
+    rold->preinf->pre = NULL;
   }
 }
 
@@ -595,6 +967,55 @@ void FixWhensForRefinement(struct Instance *old, struct Instance *new){
       AssertMemory(W_INST(new));
       if(W_INST(new)->whens!=NULL) {
         FixWhensIf(old,new);
+      }
+      break;
+    case EVENT_INST:
+      AssertMemory(E_INST(new));
+      if(E_INST(new)->whens!=NULL) {
+        FixWhensIf(old,new);
+      }
+      break;
+    default:
+      PANIC_ILLEGAL_INSTANCE;
+  }
+}
+
+void FixEventsForRefinement(struct Instance *old, struct Instance *new){
+  switch(new->t){
+    case BOOLEAN_ATOM_INST:
+      AssertMemory(BA_INST(new));
+      if(BA_INST(new)->events!=NULL) {
+        FixEventsIf(old,new);
+      }
+      break;
+    case BOOLEAN_CONSTANT_INST:
+      AssertMemory(BC_INST(new));
+      if(BC_INST(new)->events!=NULL) {
+        FixEventsIf(old,new);
+      }
+      break;
+    case MODEL_INST:
+      AssertMemory(MOD_INST(new));
+      if(MOD_INST(new)->events!=NULL) {
+        FixEventsIf(old,new);
+      }
+      break;
+    case REL_INST:
+      AssertMemory(RELN_INST(new));
+      if(RELN_INST(new)->events!=NULL) {
+        FixEventsIf(old,new);
+      }
+      break;
+    case LREL_INST:
+      AssertMemory(LRELN_INST(new));
+      if(LRELN_INST(new)->events!=NULL) {
+        FixEventsIf(old,new);
+      }
+      break;
+    case EVENT_INST:
+      AssertMemory(E_INST(new));
+      if(E_INST(new)->events!=NULL) {
+        FixEventsIf(old,new);
       }
       break;
     default:

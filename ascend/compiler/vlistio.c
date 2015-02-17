@@ -27,12 +27,18 @@
 #include <ascend/general/platform.h>
 #include <ascend/general/dstring.h>
 
+
+
 #include "functype.h"
 #include "expr_types.h"
 #include "symtab.h"
 #include "vlist.h"
 #include "vlistio.h"
 #include "nameio.h"
+
+#ifndef lint
+static CONST char VariableListIOID[] = "$Id: vlistio.c,v 1.8 1997/12/02 12:00:21 ballan Exp $";
+#endif
 
 void WriteVariableList(FILE *f, CONST struct VariableList *n)
 {
@@ -51,4 +57,40 @@ void WriteVariableListNode(FILE *f, CONST struct VariableList *n)
 {
   if (n==NULL) return;
   WriteName(f,NamePointer(n));
+}
+
+/*
+ * These functions are similar to those above, but write to
+ * a dynamic string, rather than to a FILE *.
+ */
+void WriteVlistNode2Str(Asc_DString *dstring, CONST struct VariableList *n)
+{
+  if (n==NULL) return;
+  WriteName2Str(dstring,NamePointer(n));
+}
+
+void WriteVlist2Str(Asc_DString *dstring, CONST struct VariableList *n)
+{
+  while(n!=NULL) {
+    WriteVlistNode2Str(dstring,n);
+    n = NextVariableNode(n);
+    if (n!=NULL)
+      Asc_DStringAppend(dstring,",",-1);
+  }
+}
+
+void WriteDerVlistNode2Str(Asc_DString *dstring, CONST struct VariableList *n)
+{
+  if (n==NULL) return;
+  WriteIdName2Str(dstring,NamePointer(n));
+}
+
+void WriteDerVlist2Str(Asc_DString *dstring, CONST struct VariableList *n)
+{
+  while(n!=NULL) {
+    WriteDerVlistNode2Str(dstring,n);
+    n = NextVariableNode(n);
+    if (n!=NULL)
+      Asc_DStringAppend(dstring,",",-1);
+  }
 }

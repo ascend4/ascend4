@@ -423,6 +423,7 @@ struct TypeDescription
   result->flags |=  StatListHasDefaults(sl);
   result->flags |=  ParametersInType(sl,psl);
   result->flags |=  TYPESHOW;
+  result->deriv = 0;
   result->u.modarg.declarations = psl;
   result->u.modarg.absorbed = tsl;
   result->u.modarg.reductions = rsl;
@@ -453,6 +454,7 @@ struct TypeDescription
   result->universal = 1;
   result->flags = 0;
   result->flags |=  TYPESHOW;
+  result->deriv = 0;
   return result;
 }
 
@@ -486,6 +488,7 @@ struct TypeDescription *CreateConstantTypeDesc(
   result->universal = univ;
   result->flags = 0;
   result->flags |=  TYPESHOW;
+  result->deriv = 0;
   result->u.constant.byte_length = bytesize;
   result->u.constant.defaulted = (defaulted) ? 1 : 0;
   switch (t) {
@@ -524,7 +527,8 @@ struct TypeDescription
 		CONST dim_type *ddim, /* dimensions of default value */
 		int univ,
 		long ival,
-		symchar *sval
+		symchar *sval,
+		struct VariableList *lc
 ){
   register struct TypeDescription *result;
   result=ASC_NEW(struct TypeDescription);
@@ -548,6 +552,7 @@ struct TypeDescription
   result->flags = 0;
   result->flags |=  StatListHasDefaults(statl);
   result->flags |=  TYPESHOW;
+  result->deriv = 0;
   result->u.atom.byte_length = bytesize;
   result->u.atom.childinfo = childd;
   result->u.atom.defaulted = (defaulted) ? 1 : 0;
@@ -572,6 +577,58 @@ struct TypeDescription
     break;
   }
   result->u.atom.dimp = ddim;
+  result->u.atom.lc = lc;
+  return result;
+}
+
+struct TypeDescription
+  *CreateDerivAtomTypeDesc(symchar *name,	/* name of type */
+			   struct TypeDescription *rdesc, /* type description what it refines */
+			   CONST struct TypeDescription *vartype, /* type description of the state variable */
+			   CONST struct TypeDescription *indtype, /* type description of the independent variable */
+			   struct module_t *mod, /* module where the type is defined */
+			   ChildListPtr childl,	/* list of children names */
+			   struct gl_list_t *procl, /* list of initialization procedures */
+			   struct StatementList *statl, /* list of declarative statements */
+			   unsigned long int bytesize, /* size of an instance in bytes. */
+			   struct ChildDesc *childd,	/* description of the atom's children */
+			   int defaulted, /* TRUE indicates default value was assigned */
+			   double dval, /* default value for real atoms */
+			   CONST dim_type *ddim, /* dimensions of default value */
+			   int univ,
+		           struct VariableList *lc
+){
+  register struct TypeDescription *result;
+  result=ASC_NEW(struct TypeDescription);
+#if TYPELINKDEBUG
+  FPRINTF(ASCERR,"\n");
+#endif
+  result->t = real_type;
+  result->ref_count = 1;
+  result->name = name;
+  result->refines = rdesc;
+  result->refiners = NULL;
+  result->parseid = g_parse_count++;
+  ClaimNewMethodsTypeDesc(result->parseid,procl);
+  if (rdesc!=NULL) CopyTypeDesc(rdesc);
+  if (rdesc!=NULL) LinkTypeDesc(rdesc,result);
+  result->mod = mod;
+  result->children = childl;
+  result->init = procl;
+  result->stats = statl;
+  result->universal = univ;
+  result->flags = 0;
+  result->flags |=  StatListHasDefaults(statl);
+  result->flags |=  TYPESHOW;
+  result->deriv = 1;
+  result->u.derivatom.childinfo = childd;
+  result->u.derivatom.byte_length = bytesize;
+  result->u.derivatom.defaulted = (defaulted) ? 1 : 0;
+  result->u.derivatom.u.defval = dval;
+  result->u.derivatom.dimp = ddim;
+  result->u.derivatom.lc = lc;
+  result->u.derivatom.vartype = vartype;
+  result->u.derivatom.indtype = indtype;
   return result;
 }
 
@@ -608,6 +665,7 @@ int ArrayDescsEqual(struct TypeDescription *src,
 		int isrel,
 		int islogrel,
 		int iswhen,
+		int isevent,
 		struct gl_list_t *indices)
 {
   if (src->mod != mod) return 0;
@@ -618,6 +676,8 @@ int ArrayDescsEqual(struct TypeDescription *src,
      (islogrel&&!src->u.array.islogrel)) return 0;
   if ((src->u.array.iswhen&&!iswhen)||
      (iswhen&&!src->u.array.iswhen)) return 0;
+  if ((src->u.array.isevent&&!isevent)||
+     (isevent&&!src->u.array.isevent)) return 0;
   if ((src->u.array.isintset&&!isintset)||(isintset&&!src->u.array.isintset))
     return 0;
   return IndicesEqual(src->u.array.indices,indices);
@@ -630,6 +690,7 @@ struct TypeDescription *FindArray(struct module_t *mod,
 		int isrel,
 		int islogrel,
 		int iswhen,
+		int isevent,
 		struct gl_list_t *indices
 ){
   register struct ArrayDescList *ptr;
@@ -638,7 +699,7 @@ struct TypeDescription *FindArray(struct module_t *mod,
   while(ptr!=NULL){
    ade =
      ArrayDescsEqual(ptr->desc,mod,desc,isintset,
-                     isrel,islogrel,iswhen,indices);
+                     isrel,islogrel,iswhen,isevent,indices);
    if (ade) {
       CopyTypeDesc(ptr->desc);
       return ptr->desc;
@@ -689,13 +750,14 @@ struct TypeDescription *CreateArrayTypeDesc(struct module_t *mod,
 		int isrel,
 		int islogrel,
 		int iswhen,
+		int isevent,
 		struct gl_list_t *indices
 ){
   register struct TypeDescription *result;
 #if MAKEARRAYNAMES
   char name[64];
 #endif
-  if ((result =FindArray(mod,desc,isint,isrel,islogrel,iswhen,indices))==NULL){
+  if ((result =FindArray(mod,desc,isint,isrel,islogrel,iswhen,isevent,indices))==NULL){
     result=ASC_NEW(struct TypeDescription);
     result->t = array_type;
 #if MAKEARRAYNAMES
@@ -715,11 +777,13 @@ struct TypeDescription *CreateArrayTypeDesc(struct module_t *mod,
     result->flags = 0;
     result->flags |=  TYPESHOW;
     result->ref_count = 1;
+    result->deriv = 0;
     result->u.array.indices = indices;
     result->u.array.isintset = isint;
     result->u.array.isrelation = isrel;
     result->u.array.islogrel = islogrel;
     result->u.array.iswhen = iswhen;
+    result->u.array.isevent = isevent;
     if (desc) CopyTypeDesc(desc);
     result->u.array.desc = desc;
     AddArray(result);
@@ -756,6 +820,7 @@ struct TypeDescription *CreateRelationTypeDesc(struct module_t *mod,
   result->flags = 0;
   result->flags |=  StatListHasDefaults(statl);
   result->flags |=  TYPESHOW;
+  result->deriv = 0;
   result->u.atom.byte_length = bytesize;
   result->u.atom.childinfo = childd;
   result->u.atom.defaulted = 0;
@@ -788,6 +853,7 @@ struct TypeDescription *CreateLogRelTypeDesc(struct module_t *mod,
   result->flags = 0;
   result->flags |=  StatListHasDefaults(statl);
   result->flags |=  TYPESHOW;
+  result->deriv = 0;
   result->u.atom.byte_length = bytesize;
   result->u.atom.childinfo = childd;
   result->u.atom.defaulted = 0;
@@ -818,6 +884,32 @@ struct TypeDescription
   result->universal = 0;
   result->flags = 0;
   result->flags |=  TYPESHOW;
+  result->deriv = 0;
+  return result;
+}
+
+
+struct TypeDescription
+*CreateEventTypeDesc(struct module_t *mod,    /* module it is defined in */
+		     struct gl_list_t *plist,
+		     struct StatementList *statl
+){
+  struct TypeDescription *result;
+  result=ASC_NEW(struct TypeDescription);
+  result->ref_count = 1;
+  result->t = event_type;
+  result->name = GetBaseTypeName(event_type);
+  result->refines = NULL;
+  result->refiners = NULL;
+  result->parseid = g_parse_count++;
+  result->mod = mod;
+  result->children = NULL;
+  result->init = plist;
+  result->stats = statl;
+  result->universal = 0;
+  result->flags = 0;
+  result->flags |=  TYPESHOW;
+  result->deriv = 0;
   return result;
 }
 
@@ -846,6 +938,7 @@ struct TypeDescription
   result->flags = 0;
   result->flags |=  StatListHasDefaults(sl);
   result->flags |=  TYPESHOW;
+  result->deriv = 0;
   result->universal = 0;
   return result;
 }
@@ -855,6 +948,7 @@ struct TypeDescription *MoreRefined(CONST struct TypeDescription *desc1,
 				    CONST struct TypeDescription *desc2)
 {
   register CONST struct TypeDescription *ptr1,*ptr2;
+  struct TypeDescription *moreref;
   AssertAllocatedMemory(desc1,sizeof(struct TypeDescription));
   AssertAllocatedMemory(desc2,sizeof(struct TypeDescription));
   if (desc1->t!=desc2->t) return NULL; /* base types unequal */
@@ -871,6 +965,23 @@ struct TypeDescription *MoreRefined(CONST struct TypeDescription *desc1,
   if (ptr2==desc1) {
     /* desc2 is more refined */
     return (struct TypeDescription *)desc2;
+  }
+  if (desc1->deriv && desc2->deriv) {
+    if (desc1->u.derivatom.vartype != desc2->u.derivatom.vartype) {
+      moreref = MoreRefined(desc1->u.derivatom.vartype,desc2->u.derivatom.vartype);
+      if(moreref == desc1->u.derivatom.vartype) return (struct TypeDescription *)desc1;
+      if(moreref == desc2->u.derivatom.vartype) return (struct TypeDescription *)desc2;
+    }else{
+      moreref = MoreRefined(desc1->u.derivatom.indtype,desc2->u.derivatom.indtype);
+      if(moreref == desc1->u.derivatom.indtype) return (struct TypeDescription *)desc1;
+      if(moreref == desc2->u.derivatom.indtype) return (struct TypeDescription *)desc2;
+    }
+  }
+  if (desc1->deriv) {
+    if (!CmpDimen(desc1->u.derivatom.dimp,desc2->u.atom.dimp)) return (struct TypeDescription *)desc1;
+  }
+  if (desc2->deriv) {
+    if (!CmpDimen(desc2->u.derivatom.dimp,desc1->u.atom.dimp)) return (struct TypeDescription *)desc2;
   }
   return NULL;			/* unconformable */
 }
@@ -1296,6 +1407,8 @@ void DeleteTypeDesc(struct TypeDescription *d){
       break;
     case when_type:
       break;
+    case event_type:
+      break;
     case dummy_type:
       break;
     default:
@@ -1547,6 +1660,7 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
   case patch_type:
     return 0; /* patches are not to be checked in detail */
   case when_type:
+  case event_type:
   case dummy_type:
     return 0; /* not to be checked. and should never be sent. */
   default:
@@ -1630,6 +1744,7 @@ struct TypeDescription *GetStatTypeDesc(CONST struct Statement *s){
   case ASGN:
   case CASGN:
   case WHEN:
+  case EVENT:
   case FNAME:
   case SELECT:
   case EXT:

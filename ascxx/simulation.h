@@ -103,7 +103,7 @@ public:
 	std::vector<Variable> getallVariables();
 	Matrix getMatrix();
 
-	void write(const char *fname,const char *type=NULL) const;
+	void write(FILE *fp,const char *type=NULL) const;
 
 	void setSolver(Solver &s);
 	const Solver getSolver() const;
@@ -126,6 +126,8 @@ public:
 
 	void setSolverHooks(SolverHooks *H);
 	SolverHooks *getSolverHooks() const;
+
+	void setUseDerSyntax(const bool &use_dersyntax);
 };
 
 #endif

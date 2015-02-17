@@ -78,7 +78,9 @@ Type::getName() const{
 		case logrel_type:
 			return SymChar("logrel");
 		case when_type:
-			return SymChar("when");		
+			return SymChar("when");	
+		case event_type:
+			return SymChar("event");		
 		case set_type:
 			return SymChar("set");
 		default:
@@ -107,6 +109,7 @@ Type::getDimensions() const{
 	}else if( isRefinedReal() ){
 		return Dimensions( GetRealDimens(getInternalType()) );
 	}else{
+	if (isRefinedBoolean()) return NULL;
 	if( !isRefinedAtom() )throw runtime_error("Type::getDimensions: called with non-atom type");
 		throw runtime_error("Type::getDimensions: unrecognised type");
 	}
@@ -125,6 +128,11 @@ Type::isRefinedReal() const{
 const bool
 Type::isRefinedConstant() const{
 	return BaseTypeIsConstant(t);
+}
+
+const bool
+Type::isRefinedBoolean() const{
+	return BaseTypeIsBoolean(t);
 }
 
 /**

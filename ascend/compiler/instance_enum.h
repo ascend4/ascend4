@@ -86,15 +86,16 @@
 #define IWHEN   0x4000
 #define IAUTO   0x8000
 #define IDUMB   0x10000
+#define IEVENT  0x20000
 
 /** @todo future work */
 
-#define ICHILDLESS (IFUND | ICONS | IWHEN | IDUMB)
+#define ICHILDLESS (IFUND | ICONS | IWHEN | IEVENT | IDUMB)
 /* constants and fundamental types have no child list */
-/* when's have no children.  Better way of doing this?  */
+/* when's and event's have no children.  Better way of doing this?  */
 
 #define IERRINST ~(IREAL|IINT|IBOOL|ISYM|ISET|IARR|IENUM|IFUND|ICONS|IATOM| \
- ICOMP|IMOD|IRELN|ILRELN|IWHEN|IAUTO|IDUMB)
+ ICOMP|IMOD|IRELN|ILRELN|IWHEN|IEVENT|IAUTO|IDUMB)
 /**<
 	any of these bits on is an error 
 	@TODO explain this
@@ -114,6 +115,7 @@
 	D( REL_INST,             IRELN) X              /**< Relation(equality or inequality). */ \
 	D( LREL_INST,            ILRELN) X             /**< Logical relation( == || != ). */ \
 	D( WHEN_INST,            IWHEN) X              /**< WHEN instance  */ \
+	D( EVENT_INST,           IEVENT) X             /**< EVENT instance */ \
 	D( ARRAY_INT_INST,       ICOMP | IARR | IINT) X/**< Array instance integer */ \
 	D( ARRAY_ENUM_INST,      ICOMP | IARR | ISYM) X/**< Array instance enumed */ \
 	D( REAL_INST,            IFUND | IREAL) X      /**< Real instance. */ \
@@ -152,6 +154,7 @@
 	  - REL_INST -- a 'relation' i.e. equality or inequality (real-valued LHS and RHS)
 	  - LREL_INST -- a logical relation (true or false) (An '==' or '!=' between LHS and RHS).
 	  - WHEN_INST -- ...
+	  - EVENT_INST -- ...
 	  - ARRAY_INT_INST -- 'array instance integer'...
 	  - ARRAY_ENUM_INST -- 'array instance enumed'...
 	  - DUMMY_INST -- dummy instance - unselected 'IS_A' children.

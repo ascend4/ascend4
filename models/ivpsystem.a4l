@@ -77,12 +77,14 @@ ATOM boolean_var REFINES boolean
     DEFAULT TRUE;
 
     fixed     IS_A boolean;
+    obs_id    IS_A integer;
     fixed := FALSE;
 
 END boolean_var;
 
 ATOM solver_var REFINES real
-    DEFAULT 0.5 {?};
+    DEFAULT 0.5 {?}
+    LIKE CHILDREN lower_bound, upper_bound, nominal;
 
     lower_bound     IS_A real;
     upper_bound     IS_A real;

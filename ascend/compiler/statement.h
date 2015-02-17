@@ -114,7 +114,8 @@ extern struct Statement *CreateARR(struct VariableList *aname,
 extern struct Statement *CreateISA(struct VariableList *vl,
                                    symchar *t,
                                    struct Set *ta,
-                                   symchar *st);
+                                   symchar *st,
+				   int isatype);
 /**<
  *  Initializes the reference count to one.
  *  The statement's module is set to the current open module.
@@ -124,6 +125,31 @@ extern struct Statement *CreateISA(struct VariableList *vl,
  *  @param t  instance type
  *  @param ta arguments for type t
  *  @param st set type
+ *  @param autoderived shows whether the statement is automatically generated or not
+ */
+
+extern struct Statement *CreateISDER(struct StatementList *isa,
+                                      struct VariableList *vl,
+                                      struct Name *n);
+/**<
+ *  Initializes the reference count to one.
+ *  The statement's module is set to the current open module.
+ *  The statement's line number is set to the current line number.
+ *
+ *  @param isa list of isa statements
+ *  @param vl  list of state variables
+ *  @param n   independent variable
+ */
+
+extern struct Statement *CreateISPRE(struct StatementList *isa,
+                                     struct VariableList *vl);
+/**<
+ *  Initializes the reference count to one.
+ *  The statement's module is set to the current open module.
+ *  The statement's line number is set to the current line number.
+ *
+ *  @param isa list of isa statements
+ *  @param vl  list of variables for which pre() variables are created
  */
 
 extern struct Statement *CreateWILLBE(struct VariableList *vl,
@@ -422,6 +448,15 @@ extern struct Statement *CreateWHEN(struct Name *wname,
  *  The statement's line number is set to the current line number.
  */
 
+extern struct Statement *CreateEVENT(struct Name *ename,
+                                     struct VariableList *cond,
+                                     struct EventList *cases);
+/**<
+ *  Crease an EVENT statement structure.
+ *  The statement's module is set to the current open module.
+ *  The statement's line number is set to the current line number.
+ */
+
 extern struct Statement *CreateFNAME(struct Name *name);
 /**<
  *  Crease a FNAME statement structure.
@@ -607,6 +642,12 @@ extern unsigned int GetStatContextF(CONST struct Statement *s);
  *  the statement list of a WHEN statement.
  */
 
+#define StatInEVENT(stat) (GetStatContext(stat)&context_EVENT)
+/**<
+ *  Returns a nonzero value (context_EVENT) if the statement is inside
+ *  the statement list of an EVENT statement.
+ */
+
 #define StatInSELECT(stat) (GetStatContext(stat)&context_SELECT)
 /**<
  *  Returns a nonzero value (context_SELECT) if the statement is inside
@@ -656,7 +697,7 @@ extern void MarkStatContext(struct Statement *s, unsigned int bits);
 extern struct VariableList *GetStatVarList(CONST struct Statement *s);
 /**<
  *  Returns the variable list of a
- *  IS_A, LINK, IS_REFINED_TO, WILL_BE, WILL_BE_THE_SAME,
+ *  IS_A, ISDER, ISPRE, LINK, IS_REFINED_TO, WILL_BE, WILL_BE_THE_SAME,
  *  ARE_ALIKE, ARE_THE_SAME, ALIASES or ALIASES-ISA(ARR) statement.
  *  It must be passed one of these types of statement.
  *  Other statements will return NULL or crash.
@@ -747,6 +788,96 @@ extern CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s);
 /**<
  *  Implementation function for GetStatCheckValue().  Do not call this
  *  function directly - use GetStatCheckValue() instead.
+ */
+
+#ifdef NDEBUG
+#define IsaDeriv(s) (((s)->v.i.isatype == 1) ? 1 : 0)
+#else
+#define IsaDeriv(s) IsaDerivF(s)
+#endif
+/**<
+ *  Return 1 if the IS_A statement is a declaration of a
+ *  derivative.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @see IsaDerivF()
+ */
+extern int IsaDerivF(CONST struct Statement *s);
+/**<
+ *  Implementation function for IsaDeriv().  Do not call this
+ *  function directly - use IsaDeriv() instead.
+ */
+
+#ifdef NDEBUG
+#define IsaPre(s) (((s)->v.i.isatype == 2) ? 1 : 0)
+#else
+#define IsaPre(s) IsaPreF(s)
+#endif
+/**<
+ *  Return 1 if the IS_A statement is a declaration of a
+ *  pre() variable.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @see IsaPreF()
+ */
+extern int IsaPreF(CONST struct Statement *s);
+/**<
+ *  Implementation function for IsaPre().  Do not call this
+ *  function directly - use IsaPre() instead.
+ */
+
+/*== StateISDER ==*/
+
+#ifdef NDEBUG
+#define GetStatSlist(s) ((s)->v.ider.isa)
+#else
+#define GetStatSlist(s) GetStatSlistF(s)
+#endif
+/**<
+ *  Return the list of generated IS_A statements for a DERIVATIVE OF.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @return The statement list as a CONST struct StatementList*.
+ *  @see GetStatSlistF()
+ */
+extern CONST struct StatementList *GetStatSlistF(CONST struct Statement *s);
+/**<
+ *  Implementation function for GetStatSlist().  Do not call this
+ *  function directly - use GetStatSlist() instead.
+ */
+
+#ifdef NDEBUG
+#define GetStatIndVar(s) ((s)->v.ider.ind)
+#else
+#define GetStatIndVar(s) GetStatIndVarF(s)
+#endif
+/**<
+ *  Return the independent variable name for a DERIVATIVE OF. This may be NULL,
+ *  which means that there is no WITH part to the DERIVATIVE.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @return The independent variable as a CONST struct Name*.
+ *  @see GetStatIndVarF()
+ */
+extern CONST struct Name *GetStatIndVarF(CONST struct Statement *s);
+/**<
+ *  Implementation function for GetStatIndVar().  Do not call this
+ *  function directly - use GetStatIndVar() instead.
+ */
+
+/*== StateISPRE ==*/
+
+#ifdef NDEBUG
+#define GetPreSlist(s) ((s)->v.ispre.isa)
+#else
+#define GetPreSlist(s) GetPreSlistF(s)
+#endif
+/**<
+ *  Return the list of generated IS_A statements for a PREVIOUS.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @return The statement list as a CONST struct StatementList*.
+ *  @see GetPreSlistF()
+ */
+extern CONST struct StatementList *GetPreSlistF(CONST struct Statement *s);
+/**<
+ *  Implementation function for GetPreSlist().  Do not call this
+ *  function directly - use GetPreSlist() instead.
  */
 
 /* * * StateLink functions * * */
@@ -987,11 +1118,14 @@ extern enum ForOrder ForLoopOrderF(CONST struct Statement *s);
 #define ForContainsDefaults(s)     ((s)->v.f.contains & contains_DEF)
 #define ForContainsCAssigns(s)     ((s)->v.f.contains & contains_CAS)
 #define ForContainsWhen(s)         ((s)->v.f.contains & contains_WHEN)
+#define ForContainsEvent(s)        ((s)->v.f.contains & contains_EVENT)
 #define ForContainsAlike(s)        ((s)->v.f.contains & contains_AA)
 #define ForContainsLink(s)         ((s)->v.f.contains & contains_LNK)
 #define ForContainsAlias(s)        ((s)->v.f.contains & contains_ALI)
 #define ForContainsArray(s)        ((s)->v.f.contains & contains_ARR)
 #define ForContainsIsa(s)          ((s)->v.f.contains & contains_ISA)
+#define ForContainsIsder(s)        ((s)->v.f.contains & contains_ISDER)
+#define ForContainsIspre(s)        ((s)->v.f.contains & contains_ISPRE)
 #define ForContainsIrt(s)          ((s)->v.f.contains & contains_IRT)
 #define ForContainsAts(s)          ((s)->v.f.contains & contains_ATS)
 #define ForContainsWbts(s)         ((s)->v.f.contains & contains_WBTS)
@@ -1008,11 +1142,14 @@ extern enum ForOrder ForLoopOrderF(CONST struct Statement *s);
 #define ForContainsDefaults(s)     ForContainsDefaultsF(s)
 #define ForContainsCAssigns(s)     ForContainsCAssignsF(s)
 #define ForContainsWhen(s)         ForContainsWhenF(s)
+#define ForContainsEvent(s)        ForContainsEventF(s)
 #define ForContainsAlike(s)        ForContainsAlikeF(s)
 #define ForContainsLink(s)	   		 ForContainsLinkF(s)
 #define ForContainsAlias(s)        ForContainsAliasF(s)
 #define ForContainsArray(s)        ForContainsArrayF(s)
 #define ForContainsIsa(s)          ForContainsIsaF(s)
+#define ForContainsIsder(s)        ForContainsIsderF(s)
+#define ForContainsIspre(s)        ForContainsIspreF(s)
 #define ForContainsIrt(s)          ForContainsIrtF(s)
 #define ForContainsAts(s)          ForContainsAtsF(s)
 #define ForContainsWbts(s)         ForContainsWbtsF(s)
@@ -1029,11 +1166,14 @@ extern unsigned ForContainsLogRelationsF(CONST struct Statement *s);
 extern unsigned ForContainsDefaultsF(CONST struct Statement *s);
 extern unsigned ForContainsCAssignsF(CONST struct Statement *s);
 extern unsigned ForContainsWhenF(CONST struct Statement *s);
+extern unsigned ForContainsEventF(CONST struct Statement *s);
 extern unsigned ForContainsAlikeF(CONST struct Statement *s);
 extern unsigned ForContainsLinkF(CONST struct Statement *s);
 extern unsigned ForContainsAliasF(CONST struct Statement *s);
 extern unsigned ForContainsArrayF(CONST struct Statement *s);
 extern unsigned ForContainsIsaF(CONST struct Statement *s);
+extern unsigned ForContainsIsderF(CONST struct Statement *s);
+extern unsigned ForContainsIspreF(CONST struct Statement *s);
 extern unsigned ForContainsIrtF(CONST struct Statement *s);
 extern unsigned ForContainsAtsF(CONST struct Statement *s);
 extern unsigned ForContainsWbtsF(CONST struct Statement *s);
@@ -1734,6 +1874,64 @@ extern int CompareWhenStatements(CONST struct Statement *s1,
  *  same pattern for the comparation.
  */
 
+/* * * StateEvent functions * * */
+
+#ifdef NDEBUG
+#define EventStatName(s) ((s)->v.ev.nptr)
+#else
+#define EventStatName(s) EventStatNameF(s)
+#endif
+/**<
+ *  Return the name of an EVENT statement.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @return The name as a struct Name*.
+ *  @see EventStatNameF()
+ */
+extern struct Name *EventStatNameF(CONST struct Statement *s);
+/**<
+ *  Implementation function for EventStatName().  Do not call this
+ *  function directly - use EventStatName() instead.
+ */
+
+#ifdef NDEBUG
+#define EventStatCond(s) ((s)->v.ev.cond)
+#else
+#define EventStatCond(s) EventStatCondF(s)
+#endif
+/**<
+ *  Return the name of the condition of an EVENT statement.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @return The variable list as a struct VariableList*.
+ *  @see EventStatCondF()
+ */
+extern struct VariableList *EventStatCondF(CONST struct Statement *s);
+/**<
+ *  Implementation function for EventStatCond().  Do not call this
+ *  function directly - use EventStatCond() instead.
+ */
+
+#ifdef NDEBUG
+#define EventStatCases(s) ((s)->v.ev.el)
+#else
+#define EventStatCases(s) EventStatCasesF(s)
+#endif
+/**<
+ *  Return the list of cases of an EVENT statement.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @return The list as a struct EventList*.
+ *  @see EventCasesListF()
+ */
+extern struct EventList *EventStatCasesF(CONST struct Statement *s);
+/**<
+ *  Implementation function for EventStatCases().  Do not call this
+ *  function directly - use EventStatCases() instead.
+ */
+
+extern void SetEventName(struct Statement *s, struct Name *n);
+/**<
+ *  This procedure provides a mechanism for unnamed events to be named.
+ */
+
 /* * * StateFname functions * * */
 
 #ifdef NDEBUG
@@ -1884,11 +2082,14 @@ extern int CompareSelectStatements(CONST struct Statement *s1,
 #define SelectContainsDefaults(s) ((s)->v.se.contains & contains_DEF)
 #define SelectContainsCAssigns(s) ((s)->v.se.contains & contains_CAS)
 #define SelectContainsWhen(s) ((s)->v.se.contains & contains_WHEN)
+#define SelectContainsEvent(s) ((s)->v.se.contains & contains_EVENT)
 #define SelectContainsAlike(s) ((s)->v.se.contains & contains_AA)
 #define SelectContainsLink(s) ((s)->v.se.contains & contains_LNK)
 #define SelectContainsAlias(s) ((s)->v.se.contains & contains_ALI)
 #define SelectContainsArray(s) ((s)->v.se.contains & contains_ARR)
 #define SelectContainsIsa(s) ((s)->v.se.contains & contains_ISA)
+#define SelectContainsIsder(s) ((s)->v.se.contains & contains_ISDER)
+#define SelectContainsIspre(s) ((s)->v.se.contains & contains_ISPRE)
 #define SelectContainsIrt(s) ((s)->v.se.contains & contains_IRT)
 #define SelectContainsAts(s) ((s)->v.se.contains & contains_ATS)
 #define SelectContainsWbts(s) ((s)->v.se.contains & contains_WBTS)
@@ -1905,11 +2106,14 @@ extern int CompareSelectStatements(CONST struct Statement *s1,
 #define SelectContainsDefaults(s) SelectContainsDefaultsF(s)
 #define SelectContainsCAssigns(s) SelectContainsCAssignsF(s)
 #define SelectContainsWhen(s) SelectContainsWhenF(s)
+#define SelectContainsEvent(s) SelectContainsEventF(s)
 #define SelectContainsAlike(s) SelectContainsAlikeF(s)
 #define SelectContainsLink(s) SelectContainsLinkF(s)
 #define SelectContainsAlias(s) SelectContainsAliasF(s)
 #define SelectContainsArray(s) SelectContainsArrayF(s)
 #define SelectContainsIsa(s) SelectContainsIsaF(s)
+#define SelectContainsIsder(s) SelectContainsIsderF(s)
+#define SelectContainsIspre(s) SelectContainsIspreF(s)
 #define SelectContainsIrt(s) SelectContainsIrtF(s)
 #define SelectContainsAts(s) SelectContainsAtsF(s)
 #define SelectContainsWbts(s) SelectContainsWbtsF(s)
@@ -1926,11 +2130,14 @@ extern unsigned SelectContainsLogRelationsF(CONST struct Statement *s);
 extern unsigned SelectContainsDefaultsF(CONST struct Statement *s);
 extern unsigned SelectContainsCAssignsF(CONST struct Statement *s);
 extern unsigned SelectContainsWhenF(CONST struct Statement *s);
+extern unsigned SelectContainsEventF(CONST struct Statement *s);
 extern unsigned SelectContainsAlikeF(CONST struct Statement *s);
 extern unsigned SelectContainsLinkF(CONST struct Statement *s);
 extern unsigned SelectContainsAliasF(CONST struct Statement *s);
 extern unsigned SelectContainsArrayF(CONST struct Statement *s);
 extern unsigned SelectContainsIsaF(CONST struct Statement *s);
+extern unsigned SelectContainsIsderF(CONST struct Statement *s);
+extern unsigned SelectContainsIspreF(CONST struct Statement *s);
 extern unsigned SelectContainsIrtF(CONST struct Statement *s);
 extern unsigned SelectContainsAtsF(CONST struct Statement *s);
 extern unsigned SelectContainsWbtsF(CONST struct Statement *s);

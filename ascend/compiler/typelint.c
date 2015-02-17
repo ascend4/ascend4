@@ -48,6 +48,7 @@
 #include "when.h"
 #include "select.h"
 #include "switch.h"
+#include "event.h"
 #include "sets.h"
 #include "exprs.h"
 #include "forvars.h"
@@ -110,7 +111,7 @@ static struct errormessage g_DefinitionErrorMessages[] = {
   /*30*/{"SELECT statements are not allowed inside a FOR loop",3},
   {"Illegal relation -- too many relational operators (<,>,=,<=,>=,<>)",3},
   {"Illegal logical relation -- too many equality operators (!=,==)",3},
-  {"Illegal USE found outside WHEN statement",3},
+  {"Illegal USE found outside WHEN or EVENT statement",3},
   {"Illegal FOR used in a method must be FOR/DO",3},
   /*35*/{"Illegal FOR used in body must be FOR/CREATE",3},
   {"Illegal ATOM attribute or relation type in ARE_THE_SAME",3},
@@ -125,6 +126,15 @@ static struct errormessage g_DefinitionErrorMessages[] = {
   /*45*/{"Miscellaneous style",1},
   {"Miscellaneous warning",2},
   {"Miscellaneous error",3},
+  {"Der (single argument) expression used without specifying the inpedendent variable.",3},
+  {"Missing name or illegal type in a derivative.",3},
+  /*50*/{"Der variable not allowed in statement.",3},
+  {"Unverifiable derivative name.",2},
+  {"Pre variable not allowed in statement.",3},
+  {"Nested pre variables are not allowed.",3},
+  {"Missing variable name or illegal type in a pre().",3},
+  {"Unverifiable pre() variable name.",2},
+  {"Illegal pre() used inside der().",3},
   {"Unknown error encountered in statement",5}
 };
 
@@ -290,6 +300,7 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
   enum typelinterr rval = DEF_OKAY, tmperr;
   struct SelectList *selcase;
   struct WhenList *wcase;
+  struct EventList *ecase;
   struct StatementList *slint;
 
   g_tlibs_depth++;
@@ -335,6 +346,10 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
         rval = DEF_NAME_INCORRECT;
         TypeLintError(fp,s,rval);
       }
+      break;
+    case ISDER:
+      break;
+    case ISPRE:
       break;
     case ARR:
       /* like ALIASES, only different. */
@@ -467,11 +482,11 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
     case CASGN:
       break;
     case FNAME:
-      if ((context & context_WHEN) == 0) {
+      if ((context & context_WHEN) == 0 && (context & context_EVENT) == 0) {
         rval = DEF_USE_NOTWHEN;
         TypeLintError(fp,s,rval);
         if ((context & context_SELECT) != 0)  {
-          FPRINTF(fp,"  Perhaps the surrounding SELECT should be WHEN?\n");
+          FPRINTF(fp,"  Perhaps the surrounding SELECT should be WHEN or EVENT?\n");
         }
       }
       break;
@@ -492,6 +507,24 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
           rval = tmperr;
         }
         wcase = NextWhenCase(wcase);
+      }
+      break;
+    case EVENT:
+      /* check simple name */
+      if (NameCompound(EventStatName(s)) != 0) {
+        FPRINTF(fp,"  Cannot create events in another object.\n");
+        rval = DEF_NAME_INCORRECT;
+        TypeLintError(fp,s,rval);
+      }
+      ecase = EventStatCases(s);
+      while ( ecase!=NULL ) {
+        slint = EventStatementList(ecase);
+        tmperr = TypeLintIllegalBodyStats(fp,name,slint,
+                                          (context | context_EVENT));
+        if (tmperr != DEF_OKAY) {
+          rval = tmperr;
+        }
+        ecase = NextEventCase(ecase);
       }
       break;
     case SELECT:
@@ -525,7 +558,7 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
     case SWITCH:
       TypeLintError(fp,s,DEF_STAT_MISLOCATED);
       rval = DEF_STAT_MISLOCATED;
-      FPRINTF(fp,"  Perhaps SWITCH should be WHEN or SELECT?\n");
+      FPRINTF(fp,"  Perhaps SWITCH should be WHEN or SELECT or EVENT?\n");
       break;
     case FLOW: /* fallthrough */
     case WHILE:
@@ -536,7 +569,7 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
     case IF:
       TypeLintError(fp,s,DEF_STAT_MISLOCATED);
       rval = DEF_STAT_MISLOCATED;
-      FPRINTF(fp,"  Perhaps IF should be WHEN or SELECT?\n");
+      FPRINTF(fp,"  Perhaps IF should be WHEN or SELECT or EVENT?\n");
       break;
     case RUN:
     case CALL:
@@ -584,6 +617,7 @@ enum typelinterr TypeLintIllegalParamStats(FILE * fp,
       case relation_type:
       case logrel_type:
       case when_type:
+      case event_type:
         rval = DEF_ILLEGAL_PARAM;
         TypeLintError(fp,s,rval);
         break;
@@ -662,6 +696,7 @@ enum typelinterr TypeLintIllegalParamStats(FILE * fp,
     case ASGN:
     case CASGN:
     case WHEN:
+    case EVENT:
     case FNAME:
     case SELECT:
     case SWITCH:
@@ -731,6 +766,7 @@ TypeLintIllegalWhereStats(FILE * fp,
     case UNLNK:
     case ASGN:
     case WHEN:
+    case EVENT:
     case FNAME:
     case SELECT:
     case SWITCH:
@@ -798,6 +834,7 @@ TypeLintIllegalReductionStats(FILE * fp,
     case LOGREL:
     case ASGN:
     case WHEN:
+    case EVENT:
     case FNAME:
     case SELECT:
     case SWITCH:
@@ -847,6 +884,8 @@ TypeLintIllegalMethodStatList(FILE *fp,
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
+    case ISPRE:
     case IRT:
     case ATS:
     case WBTS:
@@ -855,6 +894,7 @@ TypeLintIllegalMethodStatList(FILE *fp,
     case REF:
     case COND:
     case WILLBE:
+    case EVENT:
     case FNAME:
       Asc_StatErrMsg_NotAllowedMethod(fp,s,"");
       rval = DEF_STAT_MISLOCATED;

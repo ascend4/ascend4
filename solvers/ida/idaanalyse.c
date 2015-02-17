@@ -36,7 +36,7 @@
 #include <ascend/system/cond_config.h>
 #include <ascend/solver/slvDOF.h>
 
-#define ANALYSE_DEBUG
+/* #define ANALYSE_DEBUG */
 
 /*
 	define DERIV_WITHOUT_DIFF to enable experimental handling of derivatives
@@ -78,10 +78,12 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 	const SolverDiffVarCollection *diffvars;
 	char *varname;
 	int n_y = 0;
-	int i, j;
+	int i, j, k, n;
 	struct var_variable *v;
 	SolverDiffVarSequence seq;
 	int vok;
+        struct var_variable **vlist, **oldvl;
+	int var_found;
 
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("BEFORE CHECKING VARS");
@@ -113,8 +115,7 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 		/* update the var_fixed flag */
 		(void)var_fixed(v);
 		vok = var_apply_filter(v,&integrator_ida_nonderiv);
-
-		if(vok && !var_incident(v)){
+		if(!var_incident(v) || !var_active(v)){
 			/* VARMSG("good var '%s' is not incident"); */
 			/* var meets our filter, but perhaps it's not incident? */
 			if(seq.n == 1 || var_apply_filter(seq.vars[1],&integrator_ida_nonderiv)){
@@ -122,12 +123,36 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 				var_set_active(v,0);
 				vok = 0;
 			}else{
-				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Non-incident var with an incident derivative. ASCEND can't handle this case at the moment, but we hope to fix it.");
+				var_found = 0;
 #ifdef DERIV_WITHOUT_DIFF
 				VARMSG("'%s' has a derivative present, so needs to be included in the system");
+#ifdef ANALYSE_DEBUG
 				CONSOLE_DEBUG("That var %s active",(var_active(v) ? "is" : "is NOT"));
-				var_set_incident(v,1);
-#else
+#endif
+				var_set_active(v,1);
+				vok = var_apply_filter(v,&integrator_ida_nonderiv);
+				if (vok) {
+					if (!var_incident(v)) var_set_incident(v,1);
+					n = slv_get_num_solvers_vars(integ->system);
+					vlist = ASC_NEW_ARRAY(struct var_variable*,n + 2);
+					oldvl = slv_get_solvers_var_list(integ->system);
+					for(k = 0; k < n; k++) {
+						vlist[k] = oldvl[k];
+						if (vlist[k]==v) var_found = 1;
+					}
+					vlist[n] = v;
+					vlist[n+1] = NULL;
+					if (var_found) {
+						slv_set_solvers_var_list(integ->system,oldvl,n);
+						ascfree(vlist);
+					}
+					else {
+						slv_set_solvers_var_list(integ->system,vlist,n+1);
+						ascfree(oldvl);
+					}
+				}
+#else				
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Non-incident var with an incident derivative. ASCEND can't handle this case at the moment, but we hope to fix it.");
 				return 1;
 #endif
 			}
@@ -208,7 +233,9 @@ static int integrator_ida_flag_rels(IntegratorSystem *integ){
 			/* CONSOLE_DEBUG("Rel %d is DIFFERENTIAL", i); */
 		}
 	}
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Found %d differential equations (so %d algebraic)",nd, n - nd);
+#endif
 	integ->n_diffeqs = nd;
 	return 0;
 }
@@ -368,6 +395,7 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 	int res, r;
 	struct SystemJacobianStruct df_dydp, dg_dya;
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("system has total of %d rels and %d vars"
 		,slv_get_num_solvers_rels(integ->system)
 		,slv_get_num_solvers_vars(integ->system)
@@ -376,11 +404,14 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 	CONSOLE_DEBUG("VAR_DERIV = 0x%x = %d",VAR_DERIV, VAR_DERIV);
 	CONSOLE_DEBUG("system_vfilter_deriv.matchbits = 0x%x",system_vfilter_deriv.matchbits);
 	CONSOLE_DEBUG("system_vfilter_deriv.matchvalue= 0x%x",system_vfilter_deriv.matchvalue);
+#endif
 
 	asc_assert(system_vfilter_deriv.matchbits & VAR_DERIV);
 	asc_assert(system_vfilter_deriv.matchvalue & VAR_DERIV);
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("system has %d vars matching deriv filter",slv_count_solvers_vars(integ->system, &system_vfilter_deriv));
+#endif
 
 	res = system_jacobian(integ->system
 		, &system_rfilter_diff
@@ -392,7 +423,10 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error calculating df/dyd'");
 	}
+
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("df/dyd': nr = %d, nv = %d",df_dydp.n_rels,df_dydp.n_vars);
+#endif
 
 	res = system_jacobian(integ->system
 		, &system_rfilter_algeb
@@ -404,7 +438,10 @@ int integrator_ida_check_index(IntegratorSystem *integ){
 	if(res){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error calculating dg/dya");
 	}
+
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("dg/dya: nr = %d, nv = %d",dg_dya.n_rels,dg_dya.n_vars);
+#endif
 
 	if((df_dydp.n_rels == 0) ^ (df_dydp.n_vars == 0)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"df/dyd' is a bit ambiguous");
@@ -512,6 +549,7 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 
 	asc_assert(integ->engine==INTEG_IDA);
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("System contains a total of %d bnds and %d rels"
 		,slv_get_num_solvers_bnds(integ->system)
 		,slv_get_num_solvers_rels(integ->system)
@@ -519,12 +557,15 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 
 	/* set the active flags on  variables depending on the state of WHENs */
 	CONSOLE_DEBUG("Currently %d rels active",slv_count_solvers_rels(integ->system, &integrator_ida_rel));
+#endif
 
-	reanalyze_solver_lists(integ->system);
+	reanalyze_solver_lists_cont(integ->system);
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("After analysing WHENs, there are %d rels active"
 		,slv_count_solvers_rels(integ->system, &integrator_ida_rel)
 	);
+#endif
 
 
 #ifdef ANALYSE_DEBUG
@@ -567,13 +608,14 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 		return 1;
 	}
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("After ida_create_lists, there are %d rels active"
 		,slv_count_solvers_rels(integ->system, &integrator_ida_rel)
 	);
+	CONSOLE_DEBUG("Checking lists");
+#endif
 
 #ifdef ANALYSE_DEBUG
-	CONSOLE_DEBUG("Checking lists");
-
 	asc_assert(integ->y);
 	asc_assert(integ->ydot);
 	asc_assert(integ->y_id);
@@ -587,9 +629,11 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 	}
 
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("After ida_check_diffindex, there are %d rels active"
 		,slv_count_solvers_rels(integ->system, &integrator_ida_rel)
 	);
+#endif
 
 	/* the following causes TestIDA.testincidence3 to fail:
 	if(integ->n_y != slv_get_num_solvers_rels(integ->system)){
@@ -636,9 +680,11 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 		return 100 + res;
 	}
 
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("After ida_check_index, there are %d rels active"
 		,slv_count_solvers_rels(integ->system, &integrator_ida_rel)
 	);
+#endif
 
 
 	/* get the the dervative chains from the system */
@@ -675,12 +721,26 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 #endif
 	}
 
+	integ->n_dobs = diffvars->ndobs;
+	integ->dobs = ASC_NEW_ARRAY(struct dis_discrete *,integ->n_dobs);
+	for(i=0;i<integ->n_dobs;++i){
+		/* we get them all, regardless of flags etc */
+		integ->dobs[i] = diffvars->dobs[i];
+#ifdef ANALYSE_DEBUG
+		varname = dis_make_name(integ->system,integ->dobs[i]);
+		CONSOLE_DEBUG("'%s' is observation",varname);
+		ASC_FREE(varname);
+#endif
+	}
+
+#ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("rels matchbits:  0x%x",integrator_ida_rel.matchbits);
 	CONSOLE_DEBUG("rels matchvalue: 0x%x",integrator_ida_rel.matchvalue);
 
 	CONSOLE_DEBUG("At the end of ida_analyse, there are %d rels active"
 		,slv_count_solvers_rels(integ->system, &integrator_ida_rel)
 	);
+#endif
 
 	return 0;
 }

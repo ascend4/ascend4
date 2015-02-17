@@ -21,8 +21,8 @@
 	@todo WHAT'S IN A NAME??? That which we call a rose
 	By any other name would smell as sweet.
 
-	A name is a linked list of symchars, integers, and potentially
-	unexpanded set definitions (array subscripts)
+	A name is a linked list of symchars, integers, potentially
+	unexpanded set definitions (array subscripts) and variable lists
 	that gives the route another instance starting at some root
 	instance i.  So if you have something's name and context instance, we
 	know how to find the child (grandchild, etc) with the given name.
@@ -62,6 +62,26 @@ ASC_DLLSPEC struct Name*CreateIdNameF(symchar *s, int bits);
 	Create a name node with the identifier s
 	and flag bits associated with it.  Implementation
 	function for CreateIdName() and CreateSystemIdName().
+*/
+
+extern struct Name *CreateDerivName(struct DerName *der);
+/**<
+	Create a name node of type derivative with the derivative structure associated with it.
+*/
+
+extern struct DerName *CreateDeriv(struct VariableList *vlist);
+/**<
+	Create a derivative structure with the varlist vlist associated with it.
+*/
+
+extern struct Name *CreatePreName(struct PreName *pre);
+/**<
+	Create a name node of type pre with the pre structure associated with it.
+*/
+
+extern struct PreName *CreatePre(struct Name *n);
+/**<
+	Create a pre structure with the name n associated with it.
 */
 
 extern struct Name *CreateSetName(struct Set *s);
@@ -137,6 +157,54 @@ extern int NameIdF(CONST struct Name *n);
 */
 
 #ifdef NDEBUG
+#define NameDeriv(n) ((n)->bits & NAMEBIT_DERIV)
+#else
+#define NameDeriv(n) NameDerivF(n)
+#endif
+/**<
+	Test whether a Name element is a derivative.
+	We should have analogous functions for CHAT and ATTR, but since no
+	clients yet use them, they aren't implemented.
+	@param n CONST struct Name*, Name to query.
+	@return An int:  NAMEBIT_DERIV if n is a derivative type Name or 0 otherwise.
+	@see NameDerivF()
+
+	@note This answers for just the *first* link in the name.
+		
+*/
+
+extern int NameDerivF(CONST struct Name *n);
+/**<
+	Return NAMEBIT_DERIV if n is a derivative type Name or 0 otherwise.
+	We should have analogous functions for CHAT and ATTR, but since no
+	clients yet use them, they aren't implemented.
+	Implementation function for NameDeriv().  Do not call this
+	function directly - use NameDeriv() instead.
+*/
+
+#ifdef NDEBUG
+#define NamePre(n) ((n)->bits & NAMEBIT_PRE)
+#else
+#define NamePre(n) NamePreF(n)
+#endif
+/**<
+	Test whether a Name element is a pre name.
+	@param n CONST struct Name*, Name to query.
+	@return An int:  NAMEBIT_PRE if n is a pre type Name or 0 otherwise.
+	@see NamePreF()
+
+	@note This answers for just the *first* link in the name.
+		
+*/
+
+extern int NamePreF(CONST struct Name *n);
+/**<
+	Return NAMEBIT_PRE if n is a pre type Name or 0 otherwise.
+	Implementation function for NamePre().  Do not call this
+	function directly - use NamePre() instead.
+*/
+
+#ifdef NDEBUG
 #define NameAuto(n) ((n)->bits & (NAMEBIT_AUTO|NAMEBIT_IDTY))
 #else
 #define NameAuto(n) NameAutoF(n)
@@ -158,7 +226,7 @@ extern int NameAutoF(CONST struct Name *n);
 */
 
 #ifdef NDEBUG
-#define NameIdPtr(n) ((n)->val.id)
+#define NameIdPtr(n) (NameId(n) ? (n)->val.id : (NameDeriv(n) ? (n)->val.der->strptr : (n)->val.pre->strptr))
 #else
 #define NameIdPtr(n) NameIdPtrF(n)
 #endif
@@ -213,6 +281,126 @@ extern CONST struct Set *NameSetPtrF(CONST struct Name *n);
 	function directly - use NameSetPtr() instead.
 */
 
+#ifdef NDEBUG
+#define NameDerPtr(n) ((n)->val.der)
+#else
+#define NameDerPtr(n) NameDerPtrF(n)
+#endif
+/**<
+	Returns the derivative pointer for derivative type name node n.
+	@param n CONST struct Name*, Name to query.
+	@return The derivative pointer as a CONST struct DerName*.
+	@see NameDerPtrF()
+*/
+extern CONST struct DerName *NameDerPtrF(CONST struct Name *n);
+/**<
+	Assumes that n is a derivative type name node.
+	Returns the derivative pointer.
+	Implementation function for NameDerPtr().  Do not call this
+	function directly - use NameDerPtr() instead.
+*/
+
+#ifdef NDEBUG
+#define DerStrPtr(n) ((n)->strname)
+#else
+#define DerStrPtr(n) DerStrPtrF(n)
+#endif
+/**<
+	Returns the symchar pointer for derivative structure n.
+	@param n CONST struct DerName*.
+	@return The symchar pointer as a symchar*.
+	@see DerStrPtrF()
+*/
+extern symchar *DerStrPtrF(CONST struct DerName *n);
+/**<
+	Returns the symchar pointer.
+	Implementation function for DerStrPtr().  Do not call this
+	function directly - use DerStrPtr() instead.
+*/
+
+#ifdef NDEBUG
+#define DerVlist(n) ((n)->vlist)
+#else
+#define DerVlist(n) DerVlistF(n)
+#endif
+/**<
+	Returns the variable list pointer for derivative structure n.
+	@param n CONST struct DerName*.
+	@return The variable list pointer as a struct VariableList*.
+	@see DerVlistF()
+*/
+extern struct VariableList *DerVlistF(CONST struct DerName *n);
+/**<
+	Returns the variable list pointer.
+	Implementation function for DerVlist().  Do not call this
+	function directly - use DerVlist() instead.
+*/
+
+extern struct DerName *CopyDerName(CONST struct DerName *n);
+/**<
+	Make and return a copy of the derivative structure.
+*/
+
+#ifdef NDEBUG
+#define NamePrePtr(n) ((n)->val.pre)
+#else
+#define NamePrePtr(n) NamePrePtrF(n)
+#endif
+/**<
+	Returns the pre pointer for pre type name node n.
+	@param n CONST struct Name*, Name to query.
+	@return The pre pointer as a CONST struct PreName*.
+	@see NamePrePtrF()
+*/
+extern CONST struct PreName *NamePrePtrF(CONST struct Name *n);
+/**<
+	Assumes that n is a pre type name node.
+	Returns the pre pointer.
+	Implementation function for NamePrePtr().  Do not call this
+	function directly - use NamePrePtr() instead.
+*/
+
+#ifdef NDEBUG
+#define PreStrPtr(n) ((n)->strname)
+#else
+#define PreStrPtr(n) PreStrPtrF(n)
+#endif
+/**<
+	Returns the symchar pointer for pre structure n.
+	@param n CONST struct PreName*.
+	@return The symchar pointer as a symchar*.
+	@see PreStrPtrF()
+*/
+extern symchar *PreStrPtrF(CONST struct PreName *n);
+/**<
+	Returns the symchar pointer.
+	Implementation function for PreStrPtr().  Do not call this
+	function directly - use PreStrPtr() instead.
+*/
+
+#ifdef NDEBUG
+#define PreName(n) ((n)->vlist)
+#else
+#define PreName(n) PreNameF(n)
+#endif
+/**<
+	Returns the name pointer for pre structure n.
+	@param n CONST struct PreName*.
+	@return The name pointer as a struct Name*.
+	@see PreNameF()
+*/
+extern struct Name *PreNameF(CONST struct PreName *n);
+/**<
+	Returns the name pointer.
+	Implementation function for PreName().  Do not call this
+	function directly - use PreName() instead.
+*/
+
+extern struct PreName *CopyPreName(CONST struct PreName *n);
+/**<
+	Make and return a copy of the pre structure.
+*/
+
 extern struct Name *CopyName(CONST struct Name *n);
 /**<
 	Make and return a copy of the whole name.
@@ -224,11 +412,28 @@ extern struct Name *CopyAppendNameNode(CONST struct Name *n, CONST struct Name *
 	head of a longer name). The result is totally disjoint from the inputs.
 */
 
+extern struct Name *AppendNameNode(struct Name *n1, CONST struct Name *n2);
+/**<
+	Append a copy of the node (which may be just the head of a longer name).
+*/
+
 ASC_DLLSPEC void DestroyName(struct Name *n);
 /**<
 	Deallocate the whole name linked list
 	Handles NULL input gracefully.
 */
+
+extern void DestroyDerName(struct DerName *der);
+/**<
+	Deallocate this derivative structure.
+	Handles NULL input gracefully.
+ */
+
+extern void DestroyPreName(struct PreName *pre);
+/**<
+	Deallocate this pre structure.
+	Handles NULL input gracefully.
+ */
 
 extern void DestroyNamePtr(struct Name *n);
 /**<
@@ -283,6 +488,16 @@ extern int CompareNames(CONST struct Name *n1, CONST struct Name *n2);
 /**<
 	Returns -1 0 1 as n1 < = > n2.
 	Will need fixing when we have supported attributes.
+*/
+
+extern int CompareDers(CONST struct DerName *n1, CONST struct DerName *n2);
+/**<
+	Returns -1 0 1 as n1 < = > n2.
+*/
+
+extern int ComparePres(CONST struct PreName *n1, CONST struct PreName *n2);
+/**<
+	Returns -1 0 1 as n1 < = > n2.
 */
 
 extern void name_init_pool(void);

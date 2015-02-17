@@ -1,0 +1,503 @@
+#LyX 1.6.7 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass book
+\use_default_options true
+\master book.lyx
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Chapter
+Using the der(x,t) syntax for creating dynamic models.
+\begin_inset CommandInset label
+LatexCommand label
+name "cha:dersyntax"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Information about how to use ASCEND for creating dynamic simulations in
+ general can be found in 
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "cha:ivp"
+
+\end_inset
+
+.
+ The chapter you are reading now describes creating a simple dynamic model
+ using the new derivative syntax.
+ We will use the same model as in chapter 12 as an example.
+\end_layout
+
+\begin_layout Subsubsection*
+The modified version of the code for tank using der() syntax.
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "ivpsystem.a4l";
+\end_layout
+
+\begin_layout LyX-Code
+REQUIRE "atoms.a4l";
+\end_layout
+
+\begin_layout LyX-Code
+MODEL dyn_tank; 
+\end_layout
+
+\begin_layout LyX-Code
+(* List of Variables *) 
+\end_layout
+
+\begin_layout LyX-Code
+M IS_A mole; 
+\end_layout
+
+\begin_layout LyX-Code
+input IS_A molar_rate; 
+\end_layout
+
+\begin_layout LyX-Code
+output IS_A molar_rate; 
+\end_layout
+
+\begin_layout LyX-Code
+Volume IS_A volume; 
+\end_layout
+
+\begin_layout LyX-Code
+density IS_A real_constant; 
+\end_layout
+
+\begin_layout LyX-Code
+dynamic IS_A boolean; t IS_A time; 
+\end_layout
+
+\begin_layout LyX-Code
+DERIVATIVE OF M WITH t;
+\end_layout
+
+\begin_layout LyX-Code
+(* Equations *) 
+\end_layout
+
+\begin_layout LyX-Code
+der(M,t) = input - output; 
+\end_layout
+
+\begin_layout LyX-Code
+M = Volume * density;
+\end_layout
+
+\begin_layout LyX-Code
+(* Assignment of values to Constants *) 
+\end_layout
+
+\begin_layout LyX-Code
+density :==10 {mol/m^3};
+\end_layout
+
+\begin_layout LyX-Code
+METHODS 
+\end_layout
+
+\begin_layout LyX-Code
+METHOD check_self; 
+\end_layout
+
+\begin_layout LyX-Code
+IF (input < 1e-4 {mole/s}) THEN 
+\end_layout
+
+\begin_layout LyX-Code
+STOP {Input dried up in tank}; 
+\end_layout
+
+\begin_layout LyX-Code
+END IF; 
+\end_layout
+
+\begin_layout LyX-Code
+IF (output < 1e-4 {mole/s}) THEN 
+\end_layout
+
+\begin_layout LyX-Code
+STOP {Output dried up in tank}; 
+\end_layout
+
+\begin_layout LyX-Code
+END IF; 
+\end_layout
+
+\begin_layout LyX-Code
+END check_self;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD check_all; 
+\end_layout
+
+\begin_layout LyX-Code
+RUN check_self; 
+\end_layout
+
+\begin_layout LyX-Code
+END check_all;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_self; 
+\end_layout
+
+\begin_layout LyX-Code
+dynamic := FALSE; 
+\end_layout
+
+\begin_layout LyX-Code
+t :=0 {sec}; der(M,t) :=0 {mol/sec}; 
+\end_layout
+
+\begin_layout LyX-Code
+input := 1 {mol/sec}; output := 1 {mol/sec}; 
+\end_layout
+
+\begin_layout LyX-Code
+END default_self;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD default_all; 
+\end_layout
+
+\begin_layout LyX-Code
+RUN default_self; 
+\end_layout
+
+\begin_layout LyX-Code
+END default_all;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD bound_self; 
+\end_layout
+
+\begin_layout LyX-Code
+END bound_self;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD bound_all; 
+\end_layout
+
+\begin_layout LyX-Code
+RUN bound_self; 
+\end_layout
+
+\begin_layout LyX-Code
+END bound_all;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD scale_self; 
+\end_layout
+
+\begin_layout LyX-Code
+END scale_self;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD scale_all; 
+\end_layout
+
+\begin_layout LyX-Code
+RUN scale_self; 
+\end_layout
+
+\begin_layout LyX-Code
+END scale_all;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD seqmod; 
+\end_layout
+
+\begin_layout LyX-Code
+FIX der(M,t); FREE M; 
+\end_layout
+
+\begin_layout LyX-Code
+FIX Volume; FIX input; 
+\end_layout
+
+\begin_layout LyX-Code
+FREE output; 
+\end_layout
+
+\begin_layout LyX-Code
+IF dynamic THEN 
+\end_layout
+
+\begin_layout LyX-Code
+FREE der(M,t); FIX M; 
+\end_layout
+
+\begin_layout LyX-Code
+FREE Volume; FIX output; 
+\end_layout
+
+\begin_layout LyX-Code
+END IF; 
+\end_layout
+
+\begin_layout LyX-Code
+END seqmod;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD specify; 
+\end_layout
+
+\begin_layout LyX-Code
+FIX input; 
+\end_layout
+
+\begin_layout LyX-Code
+RUN seqmod; 
+\end_layout
+
+\begin_layout LyX-Code
+END specify;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD set_obs; 
+\end_layout
+
+\begin_layout LyX-Code
+(* Set OBS_ID to any integer value greater than 0, the variable will be
+ recorded (i.e., observed) *) 
+\end_layout
+
+\begin_layout LyX-Code
+M.obs_id :=1; Volume.obs_id :=2; 
+\end_layout
+
+\begin_layout LyX-Code
+input.obs_id :=3; output.obs_id :=4; 
+\end_layout
+
+\begin_layout LyX-Code
+END set_obs;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD values; 
+\end_layout
+
+\begin_layout LyX-Code
+Volume :=5 {m^3}; input :=100 {mole/s}; 
+\end_layout
+
+\begin_layout LyX-Code
+END values;
+\end_layout
+
+\begin_layout LyX-Code
+METHOD on_load; 
+\end_layout
+
+\begin_layout LyX-Code
+RUN default_self; 
+\end_layout
+
+\begin_layout LyX-Code
+dynamic := TRUE; 
+\end_layout
+
+\begin_layout LyX-Code
+RUN reset; 
+\end_layout
+
+\begin_layout LyX-Code
+RUN specify; 
+\end_layout
+
+\begin_layout LyX-Code
+RUN set_obs; 
+\end_layout
+
+\begin_layout LyX-Code
+END on_load;
+\end_layout
+
+\begin_layout LyX-Code
+END dyn_tank;
+\end_layout
+
+\begin_layout Standard
+Before using the der(M,t) variable we need first to declare it with the
+ DERIVATIVE OF...WITH statement.
+ If there is no INDEPENDENT statement in the model (as it is in our example),
+ the WITH part of the statement is necessary.
+ In this case we need to state the independent variable in every name like
+ der(M,t).
+ Names like der(M) in this case will cause errors.
+ If there is an INDEPENDENT statement in the model, stating the independent
+ variable is optional.
+\end_layout
+
+\begin_layout Standard
+In the example the variable list of the DERIVATIVE OF statement contains
+ one variable M.
+ We could add more variables to the list in an arbitrary order.
+ These variables do not need to be of the same types.
+\end_layout
+
+\begin_layout Standard
+Unlike the original example, there is no set_ode method in this model.
+ When we write 
+\end_layout
+
+\begin_layout LyX-Code
+DERIVATIVE OF M WITH t;
+\end_layout
+
+\begin_layout Standard
+the variable declared by this statement will automatically become a derivative
+ of M, and M and t will be marked as state and independent variables, respective
+ly.
+\end_layout
+
+\begin_layout Standard
+For larger models, for example, which use tank models as parts before using
+ the derivative declared in the tank model we need to declare it one more
+ time:
+\end_layout
+
+\begin_layout LyX-Code
+tank_1 IS_A tank;
+\end_layout
+
+\begin_layout LyX-Code
+t IS_A time;
+\end_layout
+
+\begin_layout LyX-Code
+t, tank_1.t ARE_THE_SAME;
+\end_layout
+
+\begin_layout LyX-Code
+DERIVATIVE OF tank_1.M WITH t;
+\end_layout
+
+\begin_layout Standard
+Provided that a model contains the above statements, we can use the der(tank_1.M,
+t) name everywhere where usual names are accepted.
+\end_layout
+
+\begin_layout Standard
+It is possible to create arrays of derivatives:
+\end_layout
+
+\begin_layout LyX-Code
+n IS_A integer_constant; 
+\end_layout
+
+\begin_layout LyX-Code
+n :== 5; 
+\end_layout
+
+\begin_layout LyX-Code
+tank_1[1..n] IS_A tank; 
+\end_layout
+
+\begin_layout LyX-Code
+t IS_A time; 
+\end_layout
+
+\begin_layout LyX-Code
+t, tank_1.t ARE_THE_SAME; 
+\end_layout
+
+\begin_layout LyX-Code
+DERIVATIVE OF tank_1[1..n].M WITH t;
+\end_layout
+
+\begin_layout Standard
+In this case n derivatives will be created which can be accessed by names
+ like der(tank_1[i].M,t).
+ In this example the number of elements in the derivatives array is equal
+ to the number of elements in the array of tank models.
+ But this is not necessary.
+ You can create derivatives only of those array elements which you need.
+\end_layout
+
+\begin_layout Standard
+Not only you can create derivatives of variables contained in a model which
+ is an element of an array, as in the above example, but also you can create
+ derivatives of arrays of state variables and with respect to arrays of
+ variables.
+ Though in the last case (with respect to arrays of variables) the elements
+ of an array of independent variables should be merged using the ARE_THE_SAME
+ statement.
+\end_layout
+
+\begin_layout Standard
+Before solving the model you need to set the option "Use the der() syntax"
+ in the Tools menu of the PyGTK GUI.
+ By default it is set to false and the system tries to find the derivatives
+ by the old ode_ids and ode_types.
+ If it can't, the integrator throws an error.
+ In this case you need to reload your model and set the "Use the der() syntax"
+ option correctly.
+ 
+\end_layout
+
+\begin_layout Standard
+Derivatives can be accessed from Python scripts by using the 'der' function.
+ For example, der(x,y) where x and y are instance Python objects will return
+ the derivative instance.
+\end_layout
+
+\end_body
+\end_document

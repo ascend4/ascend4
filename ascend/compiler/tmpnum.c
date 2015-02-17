@@ -65,6 +65,8 @@ unsigned long GetTmpNum(CONST struct Instance *i)
     return LRELN_INST(i)->tmp_num;
   case WHEN_INST:
     return W_INST(i)->tmp_num;
+  case EVENT_INST:
+    return E_INST(i)->tmp_num;
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
     return ARY_INST(i)->tmp_num;
@@ -122,6 +124,9 @@ void SetTmpNum(struct Instance *i, unsigned long int cn)
   case WHEN_INST:
     W_INST(i)->tmp_num = cn;
     break;
+  case EVENT_INST:
+    E_INST(i)->tmp_num = cn;
+    break;
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
     ARY_INST(i)->tmp_num = cn;
@@ -169,6 +174,9 @@ unsigned long IncrementTmpNum(struct Instance *i)
   case WHEN_INST:
     W_INST(i)->tmp_num += 1;
     return W_INST(i)->tmp_num;
+  case EVENT_INST:
+    E_INST(i)->tmp_num += 1;
+    return E_INST(i)->tmp_num;
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
     ARY_INST(i)->tmp_num += 1;
@@ -233,6 +241,11 @@ unsigned long DecrementTmpNum(struct Instance *i)
       W_INST(i)->tmp_num -= 1;
     }
     return W_INST(i)->tmp_num;
+  case EVENT_INST:
+    if (E_INST(i)->tmp_num > 0) {
+      E_INST(i)->tmp_num -= 1;
+    }
+    return E_INST(i)->tmp_num;
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
     if (ARY_INST(i)->tmp_num >0) {

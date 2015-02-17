@@ -59,7 +59,11 @@ struct SolverDiffVarCollectionStruct{
     struct var_variable **indep; /** independent variable(s), in case user mistakenly flags more than one. Normally this would be 'time' or similar. */
     long nindep; /**< number of independent variables */
     struct var_variable **obs; /**< observed variables. These will have been flags somehow so that the Integrator will record their value as solution proceeds. */
+    struct dis_discrete **dobs; /**< observed discrete variables. */
+    struct var_variable **pres; /**< pre() variables */
     long nobs; /**< number of observed variables */
+    long ndobs; /**< number of observed discrete variables */
+    long npres;
     long maxorder; /**< Maximum length of derivative chains found. We can only usefully deal with maxorder==2 at this stage. */
 };
 

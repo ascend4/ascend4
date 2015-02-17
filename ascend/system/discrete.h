@@ -55,6 +55,7 @@ struct dis_discrete {
                                      booleans, members of sos, to point back to
                                      the variable which is using it */
   struct gl_list_t *whens;      /**< whens in which this variable is used */
+  struct gl_list_t *events;      /**< events in which this variable is used */
   int32 range;                  /**< Ranges for integer or symbols.Sme as above */
   int32 cur_value;              /**< current value */
   int32 pre_value;              /**< previous value */
@@ -112,7 +113,7 @@ extern struct dis_discrete *dis_create(SlvBackendToken instance,
  * @see dis_set_instanceF()
  */
 
-extern SlvBackendToken dis_instanceF(const struct dis_discrete *dis);
+ASC_DLLSPEC SlvBackendToken dis_instanceF(const struct dis_discrete *dis);
 /**<
  * Implementation function for dis_instance() (debug mode).
  * Do not call this function directly - use dis_instance() instead.
@@ -160,9 +161,17 @@ extern void dis_destroy(struct dis_discrete *dis);
 extern struct gl_list_t *dis_whens_list(struct dis_discrete *dis);
 /**<  Retrieves the list of whens of the given dis. */
 extern void dis_set_whens_list(struct dis_discrete *dis,
-                               struct gl_list_t *wlist);
+                               struct gl_list_t *elist);
 /**<
  *  Sets the list of whens of the given dis.
+ */
+
+extern struct gl_list_t *dis_events_list(struct dis_discrete *dis);
+/**<  Retrieves the list of events of the given dis. */
+extern void dis_set_events_list(struct dis_discrete *dis,
+                                struct gl_list_t *elist);
+/**<
+ *  Sets the list of events of the given dis.
  */
 
 #ifdef NDEBUG
@@ -302,7 +311,7 @@ ASC_DLLSPEC void dis_set_inst_and_field_value(struct dis_discrete *dis,
  *  the previous value field of the dis_discrete
  */
 
-extern void dis_set_value_from_inst(struct dis_discrete *dis,
+ASC_DLLSPEC void dis_set_value_from_inst(struct dis_discrete *dis,
                                     struct gl_list_t *symbol_list);
 /**<
  *  Set the current value of a dis_discrete based on the value of the
@@ -395,6 +404,7 @@ extern void dis_set_fixed(struct dis_discrete *dis, uint32 fixed);
 #define DIS_CHANGES_STRUCTURE 0x200  /**< Is this discrete variable associated with a WHEN
                                           changes the structural analysis of a conditional
                                           model */
+#define DIS_INEVENT           0x400  /**< is this variable in some EVENT in the slv_system? */
 
 #ifdef NDEBUG
 #define dis_flags(dis) ((dis)->flags)
@@ -457,6 +467,7 @@ extern int32 dis_apply_filter(const struct dis_discrete *dis,
 
 #ifdef NDEBUG
 #define dis_inwhen(dis)            ((dis)->flags & DIS_INWHEN)
+#define dis_inevent(dis)           ((dis)->flags & DIS_INEVENT)
 #define dis_const(dis)             ((dis)->flags & DIS_CONST)
 #define dis_in_block(dis)          ((dis)->flags & DIS_INBLOCK)
 #define dis_incident(dis)          ((dis)->flags & DIS_INCIDENT)
@@ -466,6 +477,7 @@ extern int32 dis_apply_filter(const struct dis_discrete *dis,
 #define dis_changes_structure(dis) ((dis)->flags & DIS_CHANGES_STRUCTURE)
 #else
 #define dis_inwhen(dis)            dis_flagbit((dis),DIS_INWHEN)
+#define dis_inevent(dis)           dis_flagbit((dis),DIS_INEVENT)
 #define dis_const(dis)             dis_flagbit((dis),DIS_CONST)
 #define dis_in_block(dis)          dis_flagbit((dis),DIS_INBLOCK)
 #define dis_incident(dis)          dis_flagbit((dis),DIS_INCIDENT)
@@ -476,6 +488,7 @@ extern int32 dis_apply_filter(const struct dis_discrete *dis,
 #endif /* NDEBUG */
 
 #define dis_set_inwhen(dis,b)      dis_set_flagbit((dis),DIS_INWHEN,(b))
+#define dis_set_inevent(dis,b)     dis_set_flagbit((dis),DIS_INEVENT,(b))
 #define dis_set_const(dis,b)       dis_set_flagbit((dis),DIS_CONST,(b))
 #define dis_set_in_block(dis,b)    dis_set_flagbit((dis),DIS_INBLOCK,(b))
 #define dis_set_incident(dis,b)    dis_set_flagbit((dis),DIS_INCIDENT,(b))

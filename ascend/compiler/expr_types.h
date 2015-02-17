@@ -192,9 +192,21 @@ struct Set {
   unsigned long ref_count;
 };
 
+struct DerName {
+  struct VariableList *vlist; /**< list of derivative arguments */
+  symchar *strname;           /**< stringified form of the variable list data */
+};
+
+struct PreName {
+  struct Name *n;      /**< name of pre() argument */
+  symchar *strname;    /**< stringified form of the name data */
+};
+
 union NameUnion {
   symchar *id;      /**< symbol table member */
   struct Set *s;
+  struct DerName *der;
+  struct PreName *pre;
   int attribute;    /**< supported attribute name index */
 };
 
@@ -215,11 +227,17 @@ struct Name {
    * perhaps at parse stage.
    * if NAMEBIT_AUTO 1,
    * this name element is system generated.
+   * if NAMEBIT_DERIV 1,
+   * this name is a name of a derivative.
+   * if NAMEBIT_PRE 1,
+   * this name is a name of a pre() variable.
    */
 #define NAMEBIT_IDTY	0x1
 #define NAMEBIT_ATTR	0x2
 #define NAMEBIT_CHAT	0x4
 #define NAMEBIT_AUTO	0x8
+#define NAMEBIT_DERIV   0x10
+#define NAMEBIT_PRE     0x20
   struct Name *next;
   union NameUnion val;
 };

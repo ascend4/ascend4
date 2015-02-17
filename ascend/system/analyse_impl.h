@@ -44,6 +44,7 @@ struct varip {
   int solvervar;	      /* set in classify_instance */
   int active;             /* is this var a part of my problem */
   int basis;              /* set in classify_instance */
+  int pre;                /* set in classify_instance */
 
   int deriv;              /* set in classify_instance */
   int odeid;              /* value loaded from the ode_id child integer atom */
@@ -60,8 +61,10 @@ struct disvarip {
   int value;                    /* integer value of the variable */
   int incident;                 /* is it incident in a logrel */
   int inwhen;                   /* is it in a when var list */
+  int inevent;                  /* is it in an event var list */
   int booleanvar;               /* Not sure if I need it */
   int active;                   /* is this disvar a part of my problem */
+  int obsid;                    /* value of obs_id from child integer atom */
 };
 
 
@@ -76,6 +79,7 @@ struct relip {
   int included;     /* set in classify_instance */
   int cond;         /* is it a conditional relation. set in classify_instance */
   int inwhen;       /* is it in a when */
+  int inevent;      /* is it in an event */
   int active;       /* is this rel a part of my problem */
 };
 
@@ -86,6 +90,7 @@ struct logrelip {
   int included; /* set in classify_instance */
   int cond;     /* is it a conditional logrelation.  */
   int inwhen;   /* is it in a when */
+  int inevent;  /* is it in an event */
   int active;   /* is this logrel a part of my problem */
 };
 
@@ -96,9 +101,18 @@ struct whenip{
   int inwhen;           /* is it in a when */
 };
 
+struct eventip{
+  struct e_event *data; /* ptr to destination of data */
+  long model;           /* event is in this model in model gllist */
+  int index;            /* master gllist index */
+  int inwhen;           /* is it in a when */
+  int inevent;          /* is it in an event */
+};
+
 struct modip {
   int index;        /* set in make master lists. 1..nmodels */
   int inwhen;       /* is it in a when */
+  int inevent;      /* is it in an event */
 };
 
 /* we will decorate the ascend instance tree with these in the interface
@@ -114,6 +128,7 @@ struct solver_ipdata {
     struct relip r;
     struct logrelip lr;
     struct whenip w;
+    struct eventip ev;
   } u;
 };
 
@@ -147,11 +162,12 @@ struct problem_t {
   long ndv;             /* number of discrete variables */
   long nud;             /* number of uninteresting discretes */
   long nc;              /* number of conditional relations */
-  long ncl;              /* number of conditional logrelations */
+  long ncl;             /* number of conditional logrelations */
   long nr;              /* number of algebraic relations */
   long no;              /* number of objective rels */
   long nl;              /* number of logical rels */
   long nw;              /* number of whens */
+  long nev;             /* number of events */
   long ne;              /* number of external rels subset overestimate*/
   long nm;              /* number of models */
   /*
@@ -174,6 +190,7 @@ struct problem_t {
   struct gl_list_t *dvars;	/* discrete variables */
   struct gl_list_t *dunas;	/* discrete variables of no use */
   struct gl_list_t *whens;	/* whens */
+  struct gl_list_t *events;     /* events */
   struct gl_list_t *cnds;	/* conditional relations */
   struct gl_list_t *logcnds;	/* conditional logrelations */
   struct gl_list_t *rels;	/* ascend relations. relips */
@@ -184,6 +201,8 @@ struct problem_t {
   struct gl_list_t *algebvars; /* subset of vars: all vars with ode_id == 0 */
   struct gl_list_t *indepvars; /* subset of vars: all vars with ode_type == -1 */
   struct gl_list_t *obsvars; /* subset of vars: all vars with ode_type == -1 */
+  struct gl_list_t *dobsvars;  /* subset of vars: all discrete vars with obs_id > 0 */
+  struct gl_list_t *prevars;   /* subset of vars: all pre() variables */
 
   /* bridge ip data */
   struct gl_list_t *oldips;	/* buffer of oldip crap we're protecting */
@@ -234,6 +253,7 @@ struct problem_t {
   struct dis_discrete *disdata;      /* dis var data space, mass allocated */
   struct dis_discrete *undisdata;    /*  data space, mass allocated */
   struct w_when *whendata;           /* when data space, mass allocated */
+  struct e_event *eventdata;         /* when data space, mass allocated */
   struct bnd_boundary *bnddata;      /* boundaries data space, allocated */
   struct var_variable **mastervl;	/* master null-terminated list */
   struct var_variable **solvervl;	/* solvers null-terminated list */
@@ -251,6 +271,8 @@ struct problem_t {
   struct logrel_relation **solvercll;	/* solvers null-terminated list */
   struct w_when **masterwl;     	/* master null-terminated list */
   struct w_when **solverwl;	        /* solvers null-terminated list */
+  struct e_event **masterel;     	/* master null-terminated list */
+  struct e_event **solverel;	        /* solvers null-terminated list */
   struct bnd_boundary **masterbl;     	/* master null-terminated list */
   struct bnd_boundary **solverbl;	/* solvers null-terminated list */
   struct var_variable **masterpl;	/* master null-terminated list */

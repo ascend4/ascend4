@@ -323,6 +323,15 @@ void WriteDefinition(FILE *f, struct TypeDescription *desc)
     }
     PUTC('\n',f);
     break;
+  case event_type:
+    FPRINTF(f,"EVENT %s",SCP(GetName(desc)));
+    if (GetRefinement(desc)!=NULL) {
+      FPRINTF(f," REFINES %s;\n",SCP(GetName(GetRefinement(desc))));
+    } else {
+      FPRINTF(f,";\n");
+    }
+    PUTC('\n',f);
+    break;
   case array_type:
     {
       struct gl_list_t *ilist;
@@ -361,9 +370,10 @@ void WriteDefinition(FILE *f, struct TypeDescription *desc)
       if (GetArrayBaseType(desc)!=NULL) {
         FPRINTF(f,"Base type:  %s\n",SCP(GetName(GetArrayBaseType(desc))));
       }
-      FPRINTF(f,"IsInt,IsRel,IsLog,IsWhen = %d %d %d %d\n",
+      FPRINTF(f,"IsInt,IsRel,IsLog,IsWhen, IsEvent = %d %d %d %d %d\n",
         GetArrayBaseIsInt(desc),GetArrayBaseIsRelation(desc),
-        GetArrayBaseIsLogRel(desc),GetArrayBaseIsWhen(desc));
+        GetArrayBaseIsLogRel(desc),GetArrayBaseIsWhen(desc),
+        GetArrayBaseIsEvent(desc));
       ilist = GetArrayIndexList(desc);
       if (ilist!=NULL && gl_length(ilist) !=0) {
         unsigned long c,len;
@@ -416,6 +426,7 @@ void WriteDiffDefinition(FILE *f, struct TypeDescription *desc)
   case relation_type: /* nobody refines relations, really */
   case logrel_type:
   case when_type:
+  case event_type:
   case array_type:
   case dummy_type:
     break;
@@ -441,7 +452,7 @@ void WriteDiffDefinition(FILE *f, struct TypeDescription *desc)
 /*
  * array of symbol table entries we need.
  */
-static symchar *g_symbols[17];
+static symchar *g_symbols[18];
 #define G_BASE_SYMBOL_NAME 	g_symbols[0]
 #define G_BASE_REAL_NAME	g_symbols[1]
 #define G_BASE_INTEGER_NAME	g_symbols[2]
@@ -452,13 +463,14 @@ static symchar *g_symbols[17];
 #define G_BASE_CON_BOOLEAN_NAME g_symbols[7]
 #define G_BASE_SET_NAME 	g_symbols[8]
 #define G_BASE_WHEN_NAME 	g_symbols[9]
-#define G_BASE_REL_NAME 	g_symbols[10]
-#define G_BASE_LOGREL_NAME 	g_symbols[11]
-#define G_BASE_UNSELECTED 	g_symbols[12]
-#define G_BASE_EXT_NAME 	g_symbols[13]
-#define G_BASE_MODEL_NAME 	g_symbols[14]
-#define G_BASE_ARRAY_NAME 	g_symbols[15]
-#define G_BASE_PATCH_NAME 	g_symbols[16]
+#define G_BASE_EVENT_NAME       g_symbols[10]
+#define G_BASE_REL_NAME 	g_symbols[11]
+#define G_BASE_LOGREL_NAME 	g_symbols[12]
+#define G_BASE_UNSELECTED 	g_symbols[13]
+#define G_BASE_EXT_NAME 	g_symbols[14]
+#define G_BASE_MODEL_NAME 	g_symbols[15]
+#define G_BASE_ARRAY_NAME 	g_symbols[16]
+#define G_BASE_PATCH_NAME 	g_symbols[17]
 
 symchar *GetBaseTypeName(enum type_kind bt)
 {
@@ -483,6 +495,8 @@ symchar *GetBaseTypeName(enum type_kind bt)
     return G_BASE_SET_NAME;
   case when_type:
     return G_BASE_WHEN_NAME;
+  case event_type:
+    return G_BASE_EVENT_NAME;
   case relation_type:
     return G_BASE_REL_NAME;
   case logrel_type:
@@ -513,6 +527,7 @@ void InitBaseTypeNames(void)
   G_BASE_CON_BOOLEAN_NAME = AddSymbol(BASE_CON_BOOLEAN_NAME);
   G_BASE_SET_NAME 	= AddSymbol(BASE_SET_NAME);
   G_BASE_WHEN_NAME 	= AddSymbol(BASE_WHEN_NAME);
+  G_BASE_EVENT_NAME 	= AddSymbol(BASE_EVENT_NAME);
   G_BASE_REL_NAME 	= AddSymbol(BASE_REL_NAME);
   G_BASE_LOGREL_NAME 	= AddSymbol(BASE_LOGREL_NAME);
   G_BASE_UNSELECTED	= AddSymbol(BASE_UNSELECTED);

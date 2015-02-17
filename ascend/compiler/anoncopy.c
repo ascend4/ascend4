@@ -130,6 +130,7 @@ struct Instance *CopyAnonRelationInstance(struct Instance *newparent,
   result->parent[0] = NULL;
   result->parent[1] = NULL;
   result->whens = NULL;
+  result->events = NULL;
   result->logrels = NULL;
   result->anon_flags = 0x0;
   CopyTypeDesc(result->desc);

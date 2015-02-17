@@ -232,6 +232,8 @@ CONST struct Name *ExtractChildName(CONST struct Statement *stat,
     return LogicalRelStatName(stat);
   case when_type:
     return WhenStatName(stat);
+  case event_type:
+    return EventStatName(stat);
   default:
     break;
   }

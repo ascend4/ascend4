@@ -20,7 +20,11 @@
 
 #define TESTS(T) \
 	T(ida) \
-	T(lsode)
+	T(lsode) \
+	T(idader) \
+	T(lsodeder) \
+	T(dopri5der) \
+	T(idaevent)
 
 #define PROTO_INTEG(NAME) PROTO(integrator,NAME)
 TESTS(PROTO_INTEG)

@@ -161,6 +161,12 @@ extern struct Instance *CreateWhenInstance(struct TypeDescription *type);
 	pointed to by type, so don't modify it or free it.
 */
 
+extern struct Instance *CreateEventInstance(struct TypeDescription *type);
+/**<
+	Create an event instance. The instance will use the memory
+	pointed to by type, so don't modify it or free it.
+*/
+
 /* @} */
 
 #endif  /* ASC_CREATEINST_H */

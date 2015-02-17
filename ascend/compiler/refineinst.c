@@ -67,6 +67,7 @@
 #include "cmpfunc.h"
 #include "copyinst.h"
 #include "createinst.h"
+#include "deriv.h"
 #include "destroyinst.h"
 #include "extinst.h"
 #include "instmacro.h"
@@ -76,6 +77,13 @@
 #include "parentchild.h"
 #include "instantiate.h"
 #include "refineinst.h"
+#include "typedef.h"
+#include "pre.h"
+
+#ifndef lint
+static CONST char RefineInstModuleID[] = "$Id: refineinst.c,v 1.10 1998/02/05 16:37:32 ballan Exp $";
+#endif
+
 
 /* checks children, and does some value copying in the process */
 static void CheckChild(struct Instance *old, struct Instance *new)
@@ -301,6 +309,7 @@ static struct Instance *RefineRealAtom(struct RealAtomInstance *i,
   i->parents = tmp;
   /* fix any relations which point to this instance */
   FixRelations(i,new);
+  FixDerInfo(i,new);
   /* check children values */
   if (NumberChildren(INST(i))==NumberChildren(INST(new))) {
     CheckAtomValuesOne(RA_CHILD(i,0),RA_CHILD(new,0),NumberChildren(INST(i)));
@@ -383,6 +392,7 @@ static struct Instance *RefineBooleanAtom(struct BooleanAtomInstance *i,
   FixLogRelations(INST(i),INST(new));
   /* fix any when which points to this instance */
   FixWhens(INST(i),INST(new));
+  FixEvents(INST(i),INST(new));
   /* check children values */
   if (NumberChildren(INST(i))==NumberChildren(INST(new)))
     CheckAtomValuesOne(BA_CHILD(i,0),BA_CHILD(new,0),NumberChildren(INST(i)));
@@ -460,6 +470,7 @@ static struct Instance *RefineIntegerAtom(struct IntegerAtomInstance *i,
   i->parents = tmp;
   /* fix any when which points to this instance */
   FixWhens(INST(i),INST(new));
+  FixEvents(INST(i),INST(new));
   /* check children values */
   if (NumberChildren(INST(i))==NumberChildren(INST(new)))
     CheckAtomValuesOne(IA_CHILD(i,0),IA_CHILD(new,0),NumberChildren(INST(i)));
@@ -573,6 +584,7 @@ static struct Instance *RefineSymbolAtom(struct SymbolAtomInstance *i,
   i->parents = tmp;
   /* fix any when which points to this instance */
   FixWhens(INST(i),INST(new));
+  FixEvents(INST(i),INST(new));
   /* check children values */
   if (NumberChildren(INST(i))==NumberChildren(INST(new)))
     CheckAtomValuesOne(SYMA_CHILD(i,0),SYMA_CHILD(new,0),
@@ -645,6 +657,7 @@ struct Instance *RefineModel(struct ModelInstance *i,
       FixExternalVars(INST(i),INST(result));
       /* fix whens */
       FixWhensForRefinement(INST(i),INST(result));
+      FixEventsForRefinement(INST(i),INST(result));
       ReDirectParents(INST(i),INST(result));
       ReDirectChildren(INST(i),INST(result));
       /* fix cliques */
@@ -678,6 +691,35 @@ struct Instance *RefineModel(struct ModelInstance *i,
   return INST(result);
 }
 
+void RefineStateType(struct gl_list_t *derivs, struct TypeDescription *stype)
+{
+  struct Instance *inst;
+  CONST struct TypeDescription *type;
+  unsigned long c,len;
+  len = gl_length(derivs);
+  for(c=1;c<=len;c++){
+    inst = (struct Instance *)gl_fetch(derivs,c);
+    if (stype != InstanceTypeDesc(inst)->u.derivatom.vartype && MoreRefined(stype,InstanceTypeDesc(inst)->u.derivatom.vartype)==stype) {
+      type = GenerateType(stype,InstanceTypeDesc(inst)->u.derivatom.indtype);
+      RefineClique(inst,(struct TypeDescription *)type,NULL);
+    }
+  }
+}
+
+void RefineIndepType(struct gl_list_t *derivs, struct TypeDescription *itype)
+{
+  struct Instance *inst;
+  CONST struct TypeDescription *type;
+  unsigned long c,len;
+  len = gl_length(derivs);
+  for(c=1;c<=len;c++){
+    inst = (struct Instance *)gl_fetch(derivs,c);
+    if (itype != InstanceTypeDesc(inst)->u.derivatom.indtype && MoreRefined(itype,InstanceTypeDesc(inst)->u.derivatom.indtype)==itype) {
+      type = GenerateType(InstanceTypeDesc(inst)->u.derivatom.vartype,itype);
+      RefineClique(inst,(struct TypeDescription *)type,NULL);
+    }
+  }
+}
 
 struct Instance *RefineInstance(struct Instance *i,
 				struct TypeDescription *type,
@@ -708,6 +750,9 @@ struct Instance *RefineInstance(struct Instance *i,
   case MODEL_INST:
     return RefineModel(MOD_INST(i),type,MOD_INST(arginst));
   case REAL_ATOM_INST:
+    if (IsState(i)) RefineStateType(Sderivs(i),type);
+    if (IsIndep(i)) RefineIndepType(Iderivs(i),type);
+    if (IsPrearg(i)) RefineInstance(Pre(i),type,arginst);
     return RefineRealAtom(RA_INST(i),type);
   case BOOLEAN_ATOM_INST:
     return RefineBooleanAtom(BA_INST(i),type);
@@ -730,11 +775,12 @@ struct Instance *RefineInstance(struct Instance *i,
   case REL_INST:
   case LREL_INST:
   case WHEN_INST:
+  case EVENT_INST:
   case SIM_INST:
     /* at the current time these are meaningless */
     Asc_Panic(2, NULL,
               "At the current time these refining"
-              " an array,when or relation is undefined");
+              " an array, when, event or relation is undefined");
   case REAL_INST:
   case INTEGER_INST:
   case BOOLEAN_INST:

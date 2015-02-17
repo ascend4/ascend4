@@ -191,6 +191,7 @@ DEFINE_SET_INCIDENCES(DEFINE_SET_INCIDENCE, DEFINE_SET_INCIDENCE_NONULLERROR)
 #define DEFINE_DESTROY_BUFFERS(D) \
 	D(dvar, dvars, dis_discrete, dis_destroy) \
 	D(when, whens, w_when, when_destroy) \
+	D(event, events, e_event, event_destroy) \
 	D(bnd, bnds, bnd_boundary, bnd_destroy)
 
 DEFINE_DESTROY_BUFFERS(DEFINE_DESTROY_BUFFER)
@@ -216,6 +217,7 @@ DEFINE_DESTROY_BUFFERS(DEFINE_DESTROY_BUFFER)
 	D(disunatt) \
 	D_GLOBAL(dvar, dvars) \
 	D_GLOBAL(when, whens) \
+	D_GLOBAL(event, events) \
 	D_GLOBAL(bnd, bnds)
 
 int slv_destroy(slv_system_t sys)
@@ -355,6 +357,7 @@ void slv_set_symbol_list(slv_system_t sys,
 	D(logrel,logrels,logrel_relation) \
 	D(condlogrel,condlogrels,logrel_relation) \
 	D(when,whens,w_when) \
+	D(event,events,e_event) \
 	D(bnd,bnds,bnd_boundary)
 
 DEFINE_SET_MASTER_LIST_METHODS(DEFINE_SET_MASTER_LIST_METHOD)
@@ -396,6 +399,7 @@ DEFINE_SET_MASTER_LIST_METHODS(DEFINE_SET_MASTER_LIST_METHOD)
 	D(condlogrel,condlogrels,logrel_relation) \
 	D_GLOBAL(dvar, dvars, dis_discrete) \
 	D_GLOBAL(when, whens, w_when) \
+	D_GLOBAL(event, events, e_event) \
 	D_GLOBAL(bnd,bnds,bnd_boundary)
 
 
@@ -592,6 +596,7 @@ struct gl_list_t *slv_get_symbol_list(slv_system_t sys)
 	D_RETURN(logrel,logrels,logrel_relation) \
 	D_RETURN(condlogrel,condlogrels,logrel_relation) \
 	D_RETURN(when,whens,w_when) \
+	D_RETURN(event,events,e_event) \
 	D_RETURN(bnd,bnds,bnd_boundary)
 
 /* the slv_set_solvers_*_list methods: some have a 'return' when sys->PROP.master==NULL; others do not: */
@@ -648,6 +653,7 @@ DEFINE_GETSET_LIST_METHODS(DEFINE_GET_MASTER_LIST_METHOD,DEFINE_GET_MASTER_LIST_
 	D(logrels) \
 	D(condlogrels) \
 	D(whens) \
+	D(events) \
 	D(bnds)
 
 DEFINE_SLV_METHODS(DEFINE_SOLVERS_GET_NUM_METHOD) /*;*/
@@ -737,6 +743,7 @@ int32 slv_need_consistency(slv_system_t sys)
 		          dvars
 		          logrels
 		          whens
+		          events
 		          bnds
 */
 

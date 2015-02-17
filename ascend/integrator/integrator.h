@@ -69,26 +69,16 @@
 
 /*---------------------------*/
 
-// TODO FIXME do we need all integrator IDs to be declare in here, or is it 
-// OK to add them later at runtime...?
-
 #ifdef ASC_WITH_IDA
 # define IDA_OPTIONAL S I(IDA,integrator_ida_internals)
 #else
 # define IDA_OPTIONAL
 #endif
 
-#ifdef ASC_WTH_DOPRI5
-# define DOPRI5_OPTIONAL S I(DOPRI5,integrator_dopri5_internals)
-#else
-# define DOPRI5_OPTIONAL
-#endif
-
 /* we add IDA to the list of integrators at build time, if it is selected */
 #define INTEG_LIST \
 	I(LSODE       ,integrator_lsode_internals) \
 	IDA_OPTIONAL \
-	DOPRI5_OPTIONAL \
 	S I(AWW       ,integrator_aww_internals)
 
 /**
@@ -137,6 +127,13 @@ typedef int IntegratorOutputWriteFn(struct IntegratorSystemStruct *);
 typedef int IntegratorOutputWriteObsFn(struct IntegratorSystemStruct *);
 
 /**
+	Event reporting. This hook should be implemented to record
+	observations in a way that can be presented to the use, recorded in a
+	file, etc.
+*/
+typedef int IntegratorOutputWriteEventFn(struct IntegratorSystemStruct *);
+
+/**
 	Finalisation. This hook can be used to terminate recording of observations,
 	close files, terminate GUI status reporting, etc.
 */
@@ -150,6 +147,7 @@ typedef struct IntegratorReporterStruct{
 	IntegratorOutputInitFn *init;
 	IntegratorOutputWriteFn *write;
 	IntegratorOutputWriteObsFn *write_obs;
+	IntegratorOutputWriteEventFn *write_event;
 	IntegratorOutputCloseFn *close;
 } IntegratorReporter;
 
@@ -263,11 +261,13 @@ struct IntegratorSystemStruct{
   struct var_variable **y;    /**< array form of states */
   struct var_variable **ydot; /**< array form of derivatives */
   struct var_variable **obs;  /**< array form of observed variables */
+  struct dis_discrete **dobs; /**< array form of observed boolean variables */
   int *y_id;                  /**< array form of y/ydot user indices, for DAEs we use negatives here for derivative vars */
   int *obs_id;                /**< array form of obs user indices */
   int n_y;
   int n_ydot;
   int n_obs;
+  int n_dobs;
   int n_diffeqs;              /**< number of differential equations (used by idaanalyse) */
   int currentstep;            /**< current step number (also @see integrator_getnsamples) */
 
@@ -537,6 +537,11 @@ ASC_DLLSPEC struct var_variable *integrator_get_observed_var(IntegratorSystem *b
 	Returns the var_variable contained in the ith position in the observed variable list.
 */
 
+ASC_DLLSPEC struct dis_discrete *integrator_get_observed_dvar(IntegratorSystem *blsys, const long i);
+/**<
+	Returns the dis_discrete contained in the ith position in the observed discrete variable list.
+*/
+
 ASC_DLLSPEC struct var_variable *integrator_get_independent_var(IntegratorSystem *blsys);
 /**<
 	Return a pointer to the variable identified as the independent variable.
@@ -574,6 +579,11 @@ ASC_DLLSPEC int integrator_output_write(IntegratorSystem *blsys);
 	also now calculated.
 */
 ASC_DLLSPEC int integrator_output_write_obs(IntegratorSystem *blsys);
+
+/**
+	Write out the 'observed values' for the integration at the boundary.
+*/
+ASC_DLLSPEC int integrator_output_write_event(IntegratorSystem *blsys);
 
 /**
 	This call will close file stream and perhaps perform some kind of

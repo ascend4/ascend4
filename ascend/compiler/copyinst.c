@@ -73,7 +73,13 @@
 #include "tmpnum.h"
 #include "cmpfunc.h"
 #include "setinstval.h"
+#include "event.h"
 #include "copyinst.h"
+
+#ifndef lint
+static CONST char CopyInstModuleID[] = "$Id: copyinst.c,v 1.18 1998/03/17 22:08:28 ballan Exp $";
+#endif
+
 
 /*
  * This function simply makes a first pass at determining
@@ -243,6 +249,7 @@ struct Instance *CopyBoolean(CONST struct Instance *i)
     result->alike_ptr = INST(result);
     result->logrelations = NULL;
     result->whens = NULL;
+    result->events = NULL;
     /* initially the copy isn't in any logical relation or when */
     CopyTypeDesc(result->desc);
     RedoChildPointers(ChildListLen(GetChildList(result->desc)),
@@ -263,6 +270,7 @@ struct Instance *CopyBoolean(CONST struct Instance *i)
     result->parents = gl_create(AVG_PARENTS);
     result->alike_ptr = INST(result);
     result->whens = NULL;
+    result->events = NULL;
     CopyTypeDesc(result->desc);
     AssertMemory(result);
     return INST(result);
@@ -348,6 +356,7 @@ struct Instance *CopyRelationInst(CONST struct Instance *i)
   result->parent[0] = NULL;
   result->parent[1] = NULL;
   result->whens = NULL;
+  result->events = NULL;
   result->logrels = NULL;
   result->anon_flags = 0x0;
   CopyTypeDesc(result->desc);
@@ -378,6 +387,7 @@ struct Instance *CopyLogRelInst(CONST struct Instance *i)
   result->parent[0] = NULL;
   result->parent[1] = NULL;
   result->whens = NULL;
+  result->events = NULL;
   result->logrels = NULL;
   result->anon_flags = 0x0;
   CopyTypeDesc(result->desc);
@@ -415,6 +425,26 @@ struct Instance *CopyWhenInst(CONST struct Instance *i)
   return INST(result);
 }
 
+static
+struct Instance *CopyEventInst(CONST struct Instance *i)
+{
+  register struct EventInstance *src,*result;
+  register unsigned long size;
+  AssertMemory(i);
+  src = E_INST(i);
+  size = sizeof(struct EventInstance);
+  result = E_INST(ascmalloc((unsigned)size));
+  ascbcopy((char *)src,(char *)result,(int)size);
+  result->parent[0] = NULL;
+  result->parent[1] = NULL;
+  CopyTypeDesc(result->desc);
+  result->events = NULL;
+  result->cases = NULL;
+  result->bvar = NULL;
+  AssertMemory(result);
+  return INST(result);
+}
+
 /*
  * We dont use bcopy here so that we have to make sure
  * that we individually copy the relevant fields from
@@ -439,6 +469,7 @@ struct Instance *CopyModel(CONST struct Instance *i)
   result->interface_ptr = mod->interface_ptr;
   result->parents = gl_create(gl_length(mod->parents));
   result->whens = NULL;
+  result->events = NULL;
   result->desc = type;
   result->alike_ptr = INST(result);
   result->visited = 0;
@@ -657,6 +688,84 @@ static void BuildWhenCasesList(CONST struct Instance *src,
 }
 
 
+static void BuildEventVarList(CONST struct Instance *src,
+			      struct gl_list_t *dest_list,
+			      struct gl_list_t *bvarlist)
+{
+  struct Instance *i,*ptr,*dest;
+  struct gl_list_t *src_bvarlist;
+  unsigned long len,c,copynum;
+
+  assert(src->t==EVENT_INST);
+  copynum = GetTmpNum(src);
+  dest = (struct Instance *)gl_fetch(dest_list,copynum);
+
+  src_bvarlist = GetInstanceEventVars(src);
+  if (!src_bvarlist) return;
+  len = gl_length(src_bvarlist);
+
+  for (c=1;c<=len;c++) {
+    i = (struct Instance *)gl_fetch(src_bvarlist,c);
+    copynum = GetTmpNum(i);
+    ptr = (struct Instance *)gl_fetch(dest_list,copynum);
+    gl_append_ptr(bvarlist,(VOIDPTR)ptr);
+  }
+  E_INST(dest)->bvar = CopyEventBVarList(dest,bvarlist);
+}
+
+
+static
+struct gl_list_t *BuildEventCasesRefList(struct Instance *dest,
+                                         struct gl_list_t *srcref_list,
+			                 struct gl_list_t *dest_list)
+{
+  struct Instance *i,*ptr;
+  struct gl_list_t *destref_list;
+  unsigned long ref,lref,copynum;
+
+  lref = gl_length(srcref_list);
+  destref_list = gl_create(lref);
+  for (ref=1;ref<=lref;lref++) {
+    i = (struct Instance *)gl_fetch(srcref_list,ref);
+    copynum = GetTmpNum(i);
+    ptr = (struct Instance *)gl_fetch(dest_list,copynum);
+    gl_append_ptr(destref_list,(VOIDPTR)ptr);
+    AddEvent(ptr,dest);
+  }
+  return destref_list;
+}
+
+
+static void BuildEventCasesList(CONST struct Instance *src,
+			       struct gl_list_t *dest_list)
+{
+  struct Instance *dest;
+  struct gl_list_t *src_caselist,*srcref_list;
+  struct gl_list_t *destref_list,*caselist;
+  struct Case *src_case,*dest_case;
+  unsigned long len,c,copynum;
+
+  assert(src->t==EVENT_INST);
+  copynum = GetTmpNum(src);
+  dest = (struct Instance *)gl_fetch(dest_list,copynum);
+
+  src_caselist = GetInstanceEventCases(src);
+  if (!src_caselist) return;
+  len = gl_length(src_caselist);
+  caselist = gl_create(len);
+
+  for (c=1;c<=len;c++) {
+    src_case = (struct Case *)gl_fetch(src_caselist,c);
+    dest_case = CreateCase(GetCaseValues(src_case),NULL);
+    srcref_list = GetCaseReferences(src_case);
+    destref_list = BuildEventCasesRefList(dest,srcref_list,dest_list);
+    SetCaseReferences(dest_case,destref_list);
+    gl_append_ptr(caselist,(VOIDPTR)dest_case);
+  }
+  E_INST(dest)->cases = caselist;
+}
+
+
 static
 void CopyRelationStructures(struct gl_list_t *src_list,
 			    struct gl_list_t *dest_list,
@@ -763,6 +872,27 @@ static void CopyWhenContents(struct gl_list_t *src_list,
   gl_destroy(scratch);
 }
 
+static void CopyEventContents(struct gl_list_t *src_list,
+		              struct gl_list_t *dest_list)
+{
+  CONST struct Instance *src;
+  struct gl_list_t *scratch;
+  unsigned long len,c;
+
+  len = gl_length(src_list);
+  scratch = gl_create(100L);
+
+  for (c=1;c<=len;c++) {
+    src = (CONST struct Instance *)gl_fetch(src_list,c);
+    if (src->t!=EVENT_INST)
+      continue;
+    BuildEventVarList(src,dest_list,scratch);
+    gl_reset(scratch);
+    BuildEventCasesList(src,dest_list);
+  }
+  gl_destroy(scratch);
+}
+
 static
 struct Instance *CopyDummy(CONST struct Instance *i)
 {
@@ -807,6 +937,8 @@ static struct Instance *CopyNode(CONST struct Instance *i)
     return CopyLogRelInst(i);
   case WHEN_INST:
     return CopyWhenInst(i);
+  case EVENT_INST:
+    return CopyEventInst(i);
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
     return CopyArray(i);
@@ -843,6 +975,7 @@ void CollectNodes(struct Instance *i, struct gl_list_t *data)
   case REL_INST:
   case LREL_INST:
   case WHEN_INST:
+  case EVENT_INST:
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
     gl_append_ptr(list,(VOIDPTR)i);
@@ -888,6 +1021,7 @@ static void CountNodes(struct Instance *i)
   case REL_INST:
   case LREL_INST:
   case WHEN_INST:
+  case EVENT_INST:
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
     g_copy_numnodes++;
@@ -993,7 +1127,7 @@ void LinkNodes_ListVersion(struct gl_list_t *original_list,
     assert(GetTmpNum(original)!=0);	/* copynum = 0 is invalid here */
     nch = NumberChildren(original);
     if ( ( InstanceKind(original) &
-           (ICONS | IATOM | IFUND | IRELN | ILRELN | IWHEN)
+           (ICONS | IATOM | IFUND | IRELN | ILRELN | IWHEN | IEVENT)
          ) ==0 /* bit test for no/only fundamental children */
        ) {
       for (cc=1;cc<=nch;cc++) {
@@ -1096,6 +1230,7 @@ struct Instance *CopyTree(CONST struct Instance *i)
   CopyRelationStructures(orig_list,new_list,c_reference);
   CopyLogRelStructures(orig_list,new_list,c_reference);
   CopyWhenContents(orig_list,new_list);
+  CopyEventContents(orig_list,new_list);
   /*
    * reset copy numbers to zero. This is crucial for
    * subsequent calls to this function.
@@ -1142,6 +1277,7 @@ struct Instance *DeepCopyTree(CONST struct Instance *i,
   if (copy_lrelns!=c_none)
     CopyLogRelStructures(orig_list,new_list,copy_lrelns);
   CopyWhenContents(orig_list,new_list);
+  CopyEventContents(orig_list,new_list);
   /*
    * reset copy numbers to zero. This is crucial for
    * subsequent calls to this function.
@@ -1189,6 +1325,8 @@ struct Instance *CopyInstance(CONST struct Instance *i)
     return CopyLogRelInst(i);
   case WHEN_INST:
     return CopyWhenInst(i);
+  case EVENT_INST:
+    return CopyEventInst(i);
   case ARRAY_INT_INST:
   case ARRAY_ENUM_INST:
     return CopyTree(i);

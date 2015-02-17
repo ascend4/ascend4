@@ -502,6 +502,8 @@ ASC_DLLSPEC void rel_set_flagbit(struct rel_relation *rel,
 	algebraic and differential equations in a system, for the purpose of
 	checking index problems).
 */
+#define REL_INEVENT      0x40000
+/**< Is relation in an event?  Readonly for clients. */
 
 /*
  * the bit flag lookups
@@ -527,6 +529,7 @@ ASC_DLLSPEC void rel_set_flagbit(struct rel_relation *rel,
 /**< Retrieves the INBLOCK member of the given relation flags
  *  which determines if the relation is within the current block. */
 #define rel_in_when(rel)          ((rel)->flags & REL_INWHEN)
+#define rel_in_event(rel)         ((rel)->flags & REL_INEVENT)
 #define rel_active(rel)           ((rel)->flags & REL_ACTIVE)
 #define rel_invariant(rel)        ((rel)->flags & REL_INVARIANT)
 #define rel_conditional(rel)      ((rel)->flags & REL_CONDITIONAL)
@@ -554,6 +557,7 @@ ASC_DLLSPEC void rel_set_flagbit(struct rel_relation *rel,
 /**< Retrieves the INBLOCK member of the given relation flags
  *  which determines if the relation is within the current block. */
 #define rel_in_when(rel)          rel_flagbit((rel),REL_INWHEN)
+#define rel_in_event(rel)         rel_flagbit((rel),REL_INEVENT)
 #define rel_active(rel)           rel_flagbit((rel),REL_ACTIVE)
 #define rel_invariant(rel)        rel_flagbit((rel),REL_INVARIANT)
 #define rel_conditional(rel)      rel_flagbit((rel),REL_CONDITIONAL)
