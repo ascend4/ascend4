@@ -1,0 +1,36 @@
+REQUIRE "johnpye/nrel/sunpos_nrel.a4c";
+
+MODEL sunpath;
+	loc IS_A location;
+	offset IS_A julian_day;
+
+	t IS_A time;
+	t_offset ALIASES offset.t_JD;
+
+	p IS_A pressure;
+	T IS_A temperature;
+
+	zenith, azimuth IS_A angle;
+
+	solar: sunpos_nrel(
+		t, p, T, t_offset : INPUT;
+		zenith, azimuth : OUTPUT;
+		loc : DATA
+	);
+
+	altitude IS_A angle;
+	altitude = 0.5{PI} - zenith;
+METHOD on_load;
+	RUN offset.on_load;
+
+	FIX p, T, t;
+	p := 1 {atm};
+	T := 20 {K} + 273.15 {K};
+	t := 0.5 {d};
+
+	(* to plot the analemma with this model, use the 'Observer' to observe
+	t, altitude and azimuth. Run a 'study' with t from 0 to 365 in steps of 1
+	day. Then click 'plot' and plot altitude vs azimuth. *)
+END on_load;
+END sunpath;
+
