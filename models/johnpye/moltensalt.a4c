@@ -1,72 +1,30 @@
 REQUIRE "johnpye/thermo_types.a4c";
-
-(*
-	Base model for various fluids that will be used in solar-thermal receiver
-	modelling.
-*)
-MODEL thermophysical_fluid_base;
-	T IS_A temperature;
-	p IS_A pressure; (* not sure if we should have this here; makes it easier to switch from other fluid models *)
-	h IS_A specific_enthalpy;
-	cp IS_A specific_heat_capacity;
-	rho IS_A mass_density;
-	s IS_A specific_entropy;
-	v IS_A specific_volume;
-	v_eq: v = 1. / rho;
-
-	u IS_A specific_energy;
-	u_eq: u = T - p*v;
-
-	mu IS_A viscosity;
-	k IS_A thermal_conductivity;
-END thermophysical_fluid_base;
-
+IMPORT "sensitivity/solve";
 
 (*
 	Model of 60% NaNO3 + 40% KNO3 as specified in Sandia National
 	Laboratories document SAND2001-2100 rev 0.
-
-	http://prod.sandia.gov/techlib/access-control.cgi/2001/012100.pdf
-
-#sympy input eg at http://live.sympy.org/ 
-T,T_C = symbols("T T_C") 
-rho1 = 2090 - 0.636 * T_C # kg/m³
-rho = simplify(rho1.subs(T_C,T-273.15))
-cp1 = 1443 + 0.172*T_C # J/kg/K
-cp = simplify(cp1.subs(T_C,T-273.15)) 
-mu1= 22.714 - 0.120*T_C + 2.281e-4 * T_C**2 - 1.474e-7 * T_C**3 # mPa*s
-mu = simplify(mu1.subs(T_C, T-273.15)) / 1e-3 # now in Pa*s
-k1 = 0.443 + 1.9e-4 * T_C # W/m/K
-k = simplify(k1.subs(T_C, T-273.15)) 
-# we integrate cp to get h,s: incompressible fluid assumption.
-h = integrate(cp,T) 
-s = integrate(cp/T,T)
-h_ref = h.subs(T,273.15)
-s_ref = s.subs(T,273.15)
 *)
-MODEL moltensalt_fluid REFINES thermophysical_fluid_base;
-(*	T_C IS_A delta_temperature;
-	T_C = T - 273.15;
-	T_F IS_A solver_var;
-	T_F = 9./5 * T_C/1{K} + 32;*)
+MODEL moltensalt_state;
+	T IS_A temperature;
+	h IS_A specific_enthalpy;
+	p IS_A pressure;
 
+	cp IS_A specific_heat_capacity;		
 	cp_eq: cp = 1396.0182 {J/kg/K} + 0.172 {J/kg/K^2} * T;
+
+	rho IS_A mass_density;
 	rho_eq: rho = 2263.7234 {kg/m^3} - 0.636 {kg/m^3/K} * T;
 
-	(* constants of integration set to give h = 0, s = 0 at 0 °C *)
-	h_eq: h = 0.086{J/kg/K^2}*T^2 + 1396.0182{J/kg/K}*T - 387.738910665{kJ/kg};
+	(* constant set to give h = 0 at 0 °C *)
+	h_eq: h = (1396.0182 {J/kg/K}) * T + 0.5 * (0.172 {J/kg/K^2}) * T^2 - 387.738910665 {kJ/kg};
 
-	s_eq: s = 0.172*T + 1396.0182*ln(T) - 7.87867335078{kJ/kg/K};
+	v IS_A specific_volume;
+	v_eq: v = 1. / rho;
 
-	mu_eq: mu/1{uPa*s} = -0.0001474*(T/1{K})^3 + 0.348886926471821*(T/1{K})^2
-		- 277.603979928015*(T/1{K}) + 75514.7595133316;
-
-	k_eq: k/1{W/m/K} = 0.00019*(T/1{K}) + 0.3911015;
+	u IS_A specific_energy;
+	u_eq: u = h - p*v;
 METHODS
-	METHOD default_self;
-		T := 400 {K};
-		p := 1 {bar};
-	END default_self;
 	METHOD solve;
 		EXTERNAL do_solve(SELF);
 	END solve;
@@ -77,15 +35,27 @@ METHODS
 	METHOD on_load;
 		RUN ClearAll;
 		RUN bound_self;
-		FIX T; T := 838.7055 {K}; (* 1050 °F *)
+		FIX T; T := 371.111 {K} + 273.15 {K}; (* 700 °F *)
 		FIX p; p := 1 {bar};
 	END on_load;
 	METHOD self_test;
-		(* tabulated values from SAND report for T=1050 degF *)
-		ASSERT abs(rho - 107.88 {lbm/ft^3}) < 0.5 {lbm/ft^3};
-		ASSERT abs(cp - 0.369 {btu/lbm/R}) < 0.002 {btu/lbm/R};
-		ASSERT abs(mu - 2.7623 {lbm/ft/hr}) < 0.0005 {lbm/ft/hr};
-		ASSERT abs(k - 0.319041 {btu/hr/ft/R}) < 0.001 {btu/hr/ft/R};
+		ASSERT abs(rho - 115.65 {lbm/ft^3}) < 0.1 {lbm/ft^3};
 	END self_test;
-END moltensalt_fluid;
+END moltensalt_state;
+
+MODEL moltensalt_node;
+	state IS_A moltensalt_state;
+	T ALIASES state.T;
+	h ALIASES state.h;
+	p ALIASES state.p;
+	v ALIASES state.v;
+	cp ALIASES state.cp;
+	mdot IS_A mass_rate;
+METHODS
+	METHOD solve;
+		EXTERNAL do_solve(SELF);
+	END solve;
+END moltensalt_node;
+
+
 

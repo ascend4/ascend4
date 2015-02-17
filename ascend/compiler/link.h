@@ -13,7 +13,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	Link table methods. GSOC project by Dante Stroe.
 *//*
@@ -28,7 +30,6 @@
 #include "statement.h"
 #include "stattypes.h"
 #include "instance_enum.h" 
-#include "find.h"
 #include <stdio.h>
 
 /**
@@ -223,9 +224,4 @@ extern int getOdeType(struct Instance *model,struct Instance *inst);
 	FIXME It will be removed eventually
 */
 void TestingRoutine(struct Instance* model);
-
-/* NOT EXTERN: internal use only in libascend */
-struct gl_list_t *FindInsts(
-	struct Instance *inst, const struct VariableList *list, enum find_errors *err
-);
 

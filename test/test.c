@@ -13,7 +13,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	Test runner for the 'base/generic' routines in ASCEND
 */
@@ -84,7 +86,7 @@ int list_tests(const char *suitename0){
 int main(int argc, char* argv[]){
 	CU_BasicRunMode mode = CU_BRM_VERBOSE;
 	CU_ErrorAction error_action = CUEA_IGNORE;
-	CU_ErrorCode result = 0;
+	CU_ErrorCode result;
 	char suitename[1000];
 	char list = 0;
 

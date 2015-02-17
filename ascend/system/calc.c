@@ -24,7 +24,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.  COPYING is found in ../compiler.
+ *
  */
 
 #include <math.h>
@@ -745,7 +748,7 @@ extern real64 calc_div_D1(real64 x, real64 y, int wrt)
   default:
     Asc_Panic(2, "calc_div_D1",
               "calc_div_D1: Passed %d as value for \'wrt\'", wrt);
-
+    
   }
 }
 
@@ -759,7 +762,7 @@ extern real64 calc_pow_D1(real64 x, real64 y, int wrt)
   default:
     Asc_Panic(2, "calc_pow_D1",
               "calc_pow_D1: Passed %d as value for \'wrt\'", wrt);
-
+    
   }
 }
 
@@ -776,7 +779,7 @@ extern real64 calc_div_D2(real64 x, real64 y, int wrt1, int wrt2)
   default:
     Asc_Panic(2, "calc_div_D2",
               "calc_div_D2: Passed bad values for \'wrt1\' and \'wrt2\'");
-
+    
   }
 }
 
@@ -795,7 +798,7 @@ real64 calc_pow_D2(real64 x, real64 y, int wrt1, int wrt2)
   default:
     Asc_Panic(2, "calc_pow_D2",
               "calc_pow_D2: Passed bad values for \'wrt1\' and \'wrt2\'");
-
+    
   }
 }
 

@@ -22,7 +22,9 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.  COPYING is found in ../compiler.
  */
 
 /** @file
@@ -47,7 +49,7 @@ extern int Asc_DebuGetBlkOfVar(ClientData cdata, Tcl_Interp *interp,
  *  Returns block # that var is in from C structure.
  *  Assumes g_solvsys_cur exists.
  *  var_block wrapper <br><br>
- *
+ *  
  *  Registered as:  dbg_get_blk_of_var varindex
  */
 
@@ -60,7 +62,7 @@ extern int Asc_DebuGetBlkOfEqn(ClientData cdata, Tcl_Interp *interp,
  *  Returns block # that eqn is in from C structure.
  *  Assumes g_solvsys_cur exists.
  *  rel_block wrapper <br><br>
- *
+ *  
  *  Registered as:  dbg_get_blk_of_eqn eqnindex
  */
 
@@ -72,7 +74,7 @@ extern int Asc_DebuGetBlkCoords(ClientData cdata, Tcl_Interp *interp,
  *  Returns collo rowlo colhi rowhi from C structure.
  *  Assumes g_solvsys_cur exists.
  *  mtx_block wrapper <br><br>
- *
+ *  
  *  Registered as:  dbg_get_blk_coords blocknumber
  */
 
@@ -84,7 +86,7 @@ extern int Asc_DebuGetEqnOfVar(ClientData cdata, Tcl_Interp *interp,
  *  Returns tclerror if var isn't in system.
  *  Returns eqn # that var is assigned to from C structure.
  *  Assumes g_solvsys_cur. not yet working. needs some linsol. <br><br>
- *
+ *  
  *  Registered as:  dbg_get_eqn_of_var  varindex
  */
 
@@ -95,7 +97,7 @@ extern int Asc_DebuGetVarPartition(ClientData cdata, Tcl_Interp *interp,
  *  / separates partitions, space separates var #s. There's a trailing
  *  / at end.
  *  No args. <br><br>
- *
+ *  
  *  Registered as:  dbg_get_varpartition
  */
 
@@ -106,7 +108,7 @@ extern int Asc_DebuGetEqnPartition(ClientData cdata, Tcl_Interp *interp,
  *  / separates partitions, space separates eqn #s. There's a trailing
  *  / at end.
  *  No args. <br><br>
- *
+ *  
  *  Registered as:  dbg_get_eqnpartition
  */
 
@@ -118,7 +120,7 @@ extern int Asc_DebuListRels(ClientData cdata, Tcl_Interp *interp,
  *  Not all of filter.h is yet supported.
  *  Unrecognized filters return an error.
  *  Any argument in the anything position cause negation of the filter. <br><br>
- *
+ *  
  *  Registered as:  dbg_list_rels <filtercode> [anything]
  */
 
@@ -131,7 +133,7 @@ extern int Asc_DebuListVars(ClientData cdata, Tcl_Interp *interp,
  *  An argument in the anything position cause negation of the filter.
  *  Note: solvers which do not partition do not assign, e.g. MINOS
  *  leaves all variables 'unassigned'.<br><br>
- *
+ *  
  *  Registered as: dbg_list_vars <filtercode> [anything]
  */
 
@@ -152,7 +154,7 @@ extern int Asc_DebuWriteVar(ClientData cdata, Tcl_Interp *interp,
  *  an ampersand marks the root and should be edited in tcl before
  *  displaying the result. interp is returned as a list.
  *  If cdata 1,uses g_browsys_cur instead of g_solvsys_cur.<br><br>
- *
+ *  
  *  Registered as:  dbg_write_var out# Cindex detail# [string]
  */
 
@@ -201,7 +203,7 @@ extern int Asc_DebuWriteObj(ClientData cdata, Tcl_Interp *interp,
                             int argc, CONST84 char *argv[]);
 /**<
  *  Same as Asc_DebuWriteRel() except applies to objective relations. <br><br>
- *
+ *  
  *  Registered as:  dbg_write_obj
  */
 
@@ -229,8 +231,8 @@ extern int Asc_DebuRelIncluded(ClientData cdata, Tcl_Interp *interp,
                                int argc, CONST84 char *argv[]);
 /**<
  *  Returns 1 if rel included flag set true, 0 if not.
- *  This call, along with Asc_DebuVarFixed(), is used primarily
- *  for speed in the incidence matrix construction.  The normal
+ *  This call, along with Asc_DebuVarFixed(), is used primarily 
+ *  for speed in the incidence matrix construction.  The normal 
  *  rel and var queries give more useful information in most cases. <br><br>
  *
  *  Registered as:  dbg_rel_included <index>
@@ -240,7 +242,7 @@ extern int Asc_DebuVarFixed(ClientData cdata, Tcl_Interp *interp,
 /**<
  *  Returns 1 if var fixed flag set true, 0 if not.
  *  This call, along with Asc_DebuRelIncluded(), is used primarily
- *  for speed in the incidence matrix construction.  The normal
+ *  for speed in the incidence matrix construction.  The normal 
  *  rel and var queries give more useful information in most cases. <br><br>
  *
  *  Registered as:  dbg_var_fixed <index>
@@ -284,7 +286,7 @@ extern int Asc_DebuFindEligible(ClientData cdata, Tcl_Interp *interp,
  *  always a 1 item list whose first item is the list of indices.
  *  The DOF solver will do its own presolve, so our DOF analysis may
  *  not line up with an arbitrary clients.
- *  The list may come back empty if appropriate.
+ *  The list may come back empty if appropriate. 
  *  Operates on g_solvsys_cur. <br><br>
  *
  *  Registered as:  dbg_find_eligible <dest> 0= stdout 1 = stderr 2= list
@@ -421,7 +423,7 @@ extern int Asc_DebuCheckRelFp(ClientData cdata, Tcl_Interp *interp,
  *
  *  Registered as:  dbg_check_rels
  *
- *  @todo In Asc_DebuCheckRelFp(), dlstat, drstat are not
+ *  @todo In Asc_DebuCheckRelFp(), dlstat, drstat are not 
  *        currently implemented: always 0.
  */
 
@@ -498,7 +500,7 @@ extern int Asc_DebuMtxWritePlotCmd(ClientData cdata, Tcl_Interp *interp,
  *  Registered as:  debug_mtxwriteplot <file> <type> <fmt>
  *
  *  @todo Asc_DebuMtxWritePlotCmd() does not accept a block no.
- *  @todo Asc_DebuMtxWritePlotCmd() does not accept a set of
+ *  @todo Asc_DebuMtxWritePlotCmd() does not accept a set of 
  *        region coordinates.
  */
 

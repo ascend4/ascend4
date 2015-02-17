@@ -35,6 +35,7 @@
 #include "incidencematrix.h"
 #include "registry.h"
 #include "annotation.h"
+#include "simulation.h"
 
 extern "C"{
 #include <ascend/compiler/importhandler.h>
@@ -396,7 +397,7 @@ public:
 	void setBoolValue(const bool &val);
 	void setIntValue(const long &val);
 	void setSymbolValue(const SymChar &sym);
-	void write(const char *fname);
+	void write(FILE *fp);
 
 	const InstanceStatus getStatus() const;
 

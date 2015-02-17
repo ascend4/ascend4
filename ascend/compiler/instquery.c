@@ -22,7 +22,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
+ *
  */
 
 #include <stdarg.h>
@@ -229,7 +232,7 @@ struct Instance *NextCliqueMember(CONST struct Instance *i){
     return (struct Instance *)i;
   default:
     ASC_PANIC("Invalid arguments to NextCliqueMember.");
-
+    
   }
 }
 
@@ -268,7 +271,7 @@ VOIDPTR GetInterfacePtr(CONST struct Instance *i){
 	break;
   default:
     ASC_PANIC("Undefined instance type %d passed to GetInterfacePtr",i->t);
-  }
+  } 
   return NULL;
 }
 
@@ -370,7 +373,7 @@ unsigned int GetAnonFlags(CONST struct Instance *i){
     return 0;
   default:
     ASC_PANIC("Incorrect type in GetAnonFlags"); /*NOTREACHED*/
-
+    
   }
 }
 
@@ -593,7 +596,7 @@ unsigned long InstanceSize(CONST struct Instance *i){
     return len;
   default:
     ASC_PANIC("Invalid argument to InstanceSize.");
-
+    
   }
 }
 
@@ -606,7 +609,7 @@ int IntegerSetInstance(CONST struct Instance *i){
     return S_INST(i)->int_set;
   default:
     ASC_PANIC("IntegerSetInstance called with non-set argument.");
-
+    
   }
 }
 
@@ -656,7 +659,7 @@ struct TypeDescription *InstanceTypeDesc(CONST struct Instance *i){
     return NULL;
   default:
     ASC_PANIC("Unknown instance type (i->t=%d)!",i->t);
-
+    
   }
 }
 
@@ -716,7 +719,7 @@ symchar *InstanceType(register CONST struct Instance *i){
     return GetBaseTypeName(symbol_type);
   default:
     ASC_PANIC("InstanceType called on invalid instance.");
-
+    
   }
 }
 
@@ -749,7 +752,7 @@ struct BitList *InstanceBitList(CONST struct Instance *i){
     return NULL;
   default:
     ASC_PANIC("Unknown instance type passed to InstanceBitList.");
-
+    
   }
 }
 

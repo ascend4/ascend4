@@ -22,7 +22,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
+ *
  */
 
 #include <stdarg.h>
@@ -63,6 +66,10 @@
 
 #ifndef TRUE
 #define TRUE 1
+#endif
+
+#ifndef lint
+static CONST char StatementID[] = "$Id: statement.c,v 1.32 1998/04/21 23:49:48 ballan Exp $";
 #endif
 
 static
@@ -895,8 +902,8 @@ void DestroyStatement(struct Statement *s)
         }
         break;
       case LNK:
-      case UNLNK:
-        DestroyVariableList(s->v.lnk.vl);
+      case UNLNK: 
+        DestroyVariableList(s->v.lnk.vl); 
         s->v.lnk.vl = NULL;
         break;
       case ATS:
@@ -1378,7 +1385,7 @@ struct VariableList *GetStatVarList(CONST struct Statement *s)
 		(s->t==WILLBE) ||
 		(s->t==IRT) ||
 		(s->t==AA)  ||
-		(s->t==LNK)  ||
+		(s->t==LNK)  || 
 		(s->t==UNLNK) ||
 		(s->t==ATS)  ||
 		(s->t==WBTS) ||

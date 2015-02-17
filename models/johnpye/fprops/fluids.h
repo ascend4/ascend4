@@ -1,16 +1,13 @@
 #ifndef FPROPS_FLUIDS_H
 #define FPROPS_FLUIDS_H
 
-#include "fprops.h"
-#include "rundata.h"
+#include "helmholtz.h"
 
 /**
 	Look up the named fluid and return its internal data structure, or
 	NULL if not found.
 */
-const PureFluid *fprops_fluid(const char *name, const char *corrtype, const char *source);
-
-void fprops_fluid_destroy(PureFluid *fluid);
+const HelmholtzData *fprops_fluid(const char *name);
 
 /**
 	@return number of fluids in the database.
@@ -18,13 +15,10 @@ void fprops_fluid_destroy(PureFluid *fluid);
 int fprops_num_fluids();
 
 /**
-	Retrieve fluid according to its position in the list of added fluids. The
-	index number can't be assumed to be stable; this function is simply to
-	allow iteration through all the fluids, searching, etc.
-	@param i fluid index number [0,fprops_num_fluids()-1]
+	Retrieve fluid according to its position in the list of added fluids.
 	@return NULL if i is out of bounds.
 */
-const PureFluid *fprops_get_fluid(int i);
+const HelmholtzData *fprops_get_fluid(int i);
 
 #endif
 

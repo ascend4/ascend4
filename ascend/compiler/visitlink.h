@@ -22,7 +22,9 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
  */
 
 /** @file
@@ -43,7 +45,7 @@
 */
 
 typedef void (*VisitNameProc)(struct Instance *,struct gl_list_t *);
-/**<
+/**< 
  *  Typedef for a function that takes an instance;
  *  Used with VisitNameTree() (if/when implemented).
  */

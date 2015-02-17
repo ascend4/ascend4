@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	Brent solver callable as an ASCEND 'EXTERNAL' method.
@@ -101,7 +103,7 @@ int brent_check_args(struct gl_list_t *arglist,struct Instance **arg){
 	if(InstanceKind(arg[1])!=REAL_ATOM_INST){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Second argument of 'brent' EXTERNAL method should be real-valued atom instance");
 		return 1;
-	}
+	}		
 
 	c = ChildByChar(arg[2],nom);
 	if(c==NULL){
@@ -127,7 +129,7 @@ int brent_check_args(struct gl_list_t *arglist,struct Instance **arg){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Upper bound not found in third argument");
 		return 1;
 	}
-	arg[4] = c;
+	arg[4] = c;	
 
 
 	c = ChildByChar(arg[2],fixed);
@@ -139,7 +141,7 @@ int brent_check_args(struct gl_list_t *arglist,struct Instance **arg){
 	if(GetBooleanAtomValue(c)!=TRUE){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"The third ('by changing') argument of 'brent' EXTERNAL method should first be fixed");
 		return 1;
-	}
+	}		
 
 	return 0;
 }
@@ -150,7 +152,7 @@ struct InitProcedure *brent_find_solve_method(struct Instance **arg){
 	struct TypeDescription *type;
 	type = InstanceTypeDesc(arg[0]);
 	asc_assert(type);
-	return FindMethod(type,name);
+	return FindMethod(type,name);	
 }
 
 struct BrentProblem{
@@ -186,10 +188,10 @@ static int brent_resid(int *mode, int *m, int *n, double *x, double *u, double *
 	(void)u;
 	(void)g;
 	prob = (struct BrentProblem *)mode; /* sneaky, eh! */
-
+	
 
 	SetRealAtomValue(prob->bychanging,x[0],0);
-	enum Proc_enum pe;
+	enum Proc_enum pe;	
 	pe = Initialize(prob->model, CreateIdName(ProcName(prob->solvemethod))
 		,(char *)SCP(prob->solvemethod->name)
 		,ASCERR
@@ -199,8 +201,8 @@ static int brent_resid(int *mode, int *m, int *n, double *x, double *u, double *
 	ERROR_REPORTER_HERE(ASC_USER_NOTE,"x = %f --> u = %f",x[0],f[0]);
 	if(pe!=Proc_all_ok)return 1;
 	return 0;
-};
-
+};		
+	
 int brent_solve(struct BrentProblem *prob){
 	int iserr;
 

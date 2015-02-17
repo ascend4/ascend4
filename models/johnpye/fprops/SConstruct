@@ -1,53 +1,46 @@
-#!/usr/bin/env python
 # Standalone 'SConstruct' to demonstrate how you can build
 # this ASCEND external library against an existing copy of
 # ASCEND installed on your system.
 
-import os, platform, sys
+import os.path
 
-deft = "default"
-if platform.system()=="Windows":
-	deft = "mingw"
-
-vars = Variables()
-
-vars.Add(
-	'CC'
-	,'C Compiler command'
-	,"${HOST_PREFIX}gcc"
-)
-
-vars.Add(
-	'CFLAGS'
-	,'C compiler flags'
-	,["-Wall"]
-)
-
-env = Environment(
+fprops_env = Environment(
 	toolpath=['scons']
-	,tools = [deft ,'substinfile','swig']
-	,ENV={"TERM":os.environ.get('TERM'), "PATH":os.environ.get('PATH')}
-	,HOST_PREFIX=os.environ.get('HOST_PREFIX')
+	,tools = ['default','substinfile']
 )
-
-Help(vars.GenerateHelpText(env))
-vars.Update(env)
 
 if WhereIs('ascend-config'):
-	env.ParseConfig(['ascend-config','--libs','--cppflags'])
-	env['WITH_ASCEND'] = 1
+	fprops_env.ParseConfig(['ascend-config','--libs','--cppflags'])
 else:
-	print "WARNING: no ascend-config in path, won't build ASCEND wrapper"
-	env['WITH_ASCEND'] = 0
+	print "ERROR: no ascend-config in path"
+	fprops_env.Append(
+		LIBS=["ascend"]
+		,LIBPATH=["#/../../.."]
+		,CPPPATH=["#/../../.."]
+	)
 
-env.Append(
+fprops_env.Append(
 	CFLAGS=['-g','-Wall']
 )
 
-env['EXTLIB_SUFFIX'] = "_ascend" + env.subst("$SHLIBSUFFIX")
-env['EXTLIB_PREFIX'] = env.subst("$SHLIBPREFIX")
-env['extfns'] = []
-env['WITH_PYTHON'] = 1
+#if WhereIs('gsl-config'):
+#	fprops_env.ParseConfig(['gsl-config','--libs','--cflags'])
 
-env.SConscript("SConscript",["env"])
+srcs = ['mbwr.c','asc_mbwr.c']
+
+fprops_env.SharedLibrary('mbwr_ascend',srcs)
+
+fprops_env.SConscript("fluids/SConscript",['fprops_env'])
+
+fprops_env.Depends('fluids.c','fluids/fluids_list.h')
+
+coresrcs = ['ideal.c', 'helmholtz.c', 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'fluids.c']
+
+srcs = coresrcs + fprops_env['fluids']
+
+fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
+
+fprops_env.SharedLibrary('helmholtz_ascend',fprops_env['shobjs'] + ['asc_helmholtz.c'])
+
+fprops_env.SConscript('python/SConscript',['fprops_env'])
 

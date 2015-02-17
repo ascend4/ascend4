@@ -15,7 +15,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//*
 	by Karl Michael Westerberg
 	Created: 2/6/90
@@ -81,13 +83,13 @@
 /* define symchar names needed */
 static symchar *g_strings[1];
 #define INCLUDED_R g_strings[0]
-//Do we need more gstrings for relations? eg: for obtaining relation upper and lower bounds??
+//Do we need more gstrings for relations? eg: for obtaining relation upper and lower bounds?? 
 
 static const struct rel_relation g_rel_defaults = {
    NULL,		    /* instance */
    NULL,		    /* extnode */
    NULL,		    /* incidence */
-   e_rel_token,	    /* e_token */
+   e_undefined,	    /* e_token */
    0,			    /* n_incidences */
    -1,		    	/* mindex */
    -1,			    /* sindex */

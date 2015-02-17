@@ -14,7 +14,8 @@
  *  See the GNU General Public License for more details.
  *  
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.
  *)
 REQUIRE "atoms.a4l";
 PROVIDE "components.a4l";
@@ -4961,10 +4962,10 @@ MODEL td_component_constants(
 		Vc :== 73.4 {cm^3/g_mole};
 		Zc :== 0.288;
 		omega :== 0.025;
-		cpvapa :== 2.811e1 {J/g_mole/K};
-		cpvapb :== -3.680e-6 {J/g_mole/K^2};
-		cpvapc :== 1.746e-5 {J/g_mole/K^3};
-		cpvapd :== -1.065e-8 {J/g_mole/K^4};
+		cpvapa :== 2.811e1 {cal/g_mole/K};
+		cpvapb :== -3.680e-6 {cal/g_mole/K^2};
+		cpvapc :== 1.746e-5 {cal/g_mole/K^3};
+		cpvapd :== -1.065e-8 {cal/g_mole/K^4};
 		Hf :== 0.00 {J/g_mole};
 		Gf :== 0.00 {J/g_mole};
 		vpa :== -6.28275;
@@ -4993,10 +4994,10 @@ MODEL td_component_constants(
 		Vc :== 89.8 {cm^3/g_mole};
 		Zc :== 0.290;
 		omega :== 0.039;
-		cpvapa :== 3.115e1 {J/g_mole/K};
-		cpvapb :== -1.357e-2 {J/g_mole/K^2};
-		cpvapc :== 2.680e-5 {J/g_mole/K^3};
-		cpvapd :== -1.168e-8 {J/g_mole/K^4};
+		cpvapa :== 3.115e1 {cal/g_mole/K};
+		cpvapb :== -1.357e-2 {cal/g_mole/K^2};
+		cpvapc :== 2.680e-5 {cal/g_mole/K^3};
+		cpvapd :== -1.168e-8 {cal/g_mole/K^4};
 		Hf :== 0.00 {J/g_mole};
 		Gf :== 0.00 {J/g_mole};
 		vp_correlation :== 1;

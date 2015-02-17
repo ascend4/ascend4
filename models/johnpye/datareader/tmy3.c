@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	Data Reader implementation for the TMY3 weather data format.
@@ -31,7 +33,7 @@
 	5. site latitude (deg, with decimal fraction)
 	6. site longitude (deg, with decimal fraction)
 	7. site elevation (m)
-
+	
 	Second line of the file contains the field names with units of measurement.
 
 	Key fields (not all listed here):
@@ -131,7 +133,7 @@ int datareader_tmy3_header(DataReader *d){
 	char rubbish[2049];
 
 	if(!(
-		parseLocation(p,&loc)
+		parseLocation(p,&loc) 
 		&& parseStrExcept(p,"\r\n",rubbish,2048)
 		&& parseEOL(p)
 	)){
@@ -173,7 +175,7 @@ int datareader_tmy3_eof(DataReader *d){
 	}
 	return 0; /* no, more data still */
 }
-
+	
 /**
 	Read a line of data and store in d.
 	@return 0 on success
@@ -267,7 +269,7 @@ int datareader_tmy3_data(DataReader *d){
 	DATA(d)->rows[d->i] = row;
 
 	//CONSOLE_DEBUG("Read i = %d, t = %f d, T = %.1f°C, rh = %.1f %",d->i,row.t / 3600. / 24., T, row.rh*100);
-
+	
 	d->i++;
 	return 0;
 }

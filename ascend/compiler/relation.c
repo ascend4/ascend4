@@ -15,7 +15,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//*
 	@file
 	Relation construction routines
@@ -3388,18 +3390,13 @@ static void DestroyTermSide(struct relation_side_temp *temp)
   temp->length=0L;
 }
 
-/**
-	From a list of variables, remove all references to relation 'inst'.
-	@param l 	list of variables (gl_list of struct Instance *)
-	@param inst	relation instance to be removed from the relations list belonging to each variable
-*/
-void DestroyVarList(struct gl_list_t *l, struct Instance *relinst){
+void DestroyVarList(struct gl_list_t *l, struct Instance *inst)
+{
   register struct Instance *ptr;
   register unsigned long c;
-  for(c=gl_length(l);c>=1;c--){
-    if(NULL != (ptr = (struct Instance *)gl_fetch(l,c))){
-      //CONSOLE_DEBUG("Destroy var list");
-      RemoveRelation(ptr,relinst);
+  for(c=gl_length(l);c>=1;c--) {
+    if (NULL != (ptr = (struct Instance *)gl_fetch(l,c))) {
+      RemoveRelation(ptr,inst);
     }
   }
   gl_destroy(l);
@@ -3413,7 +3410,6 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
   if (--(RelationRefCount(rel))==0) {
     switch (GetInstanceRelationType(relinst)) {
     case e_token:
-      //CONSOLE_DEBUG("Destroy token rel");
       if (RTOKEN(rel).lhs!=NULL) {
         ascfree(RTOKEN(rel).lhs);
       }
@@ -3425,7 +3421,6 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
       }
       break;
     case e_opcode:
-      //CONSOLE_DEBUG("Destroy opcode rel");
       if (ROPCODE(rel).lhs) {
         ascfree((char *)ROPCODE(rel).lhs);
       }
@@ -3437,13 +3432,11 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
       }
       break;
     case e_glassbox:
-      //CONSOLE_DEBUG("Destroy glass rel");
       if (RGBOX(rel).args) {
         ascfree((char *)(RGBOX(rel).args));
       }
       break;
     case e_blackbox:
-      //CONSOLE_DEBUG("Destroy black rel");
       if (RBBOX(rel).inputArgs) {
         ascfree((void *)(RBBOX(rel).inputArgs));
         RBBOX(rel).inputArgs = NULL;
@@ -3464,10 +3457,8 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
     }
   }
 
-  //CONSOLE_DEBUG("Running DestroyVarList on rel->vars for rel %p",rel);
   if (rel->vars) DestroyVarList(rel->vars,relinst);
   ascfree((char *)rel);
-  //CONSOLE_DEBUG("...");
 }
 
 /*------------------------------------------------------------------------------
@@ -3658,45 +3649,48 @@ void RecomputeVarListPointers(struct Instance *relinst,
 * 4-	null; new is NULL, in which case we just overwrite first instance of
 *	old in the list with null. This is probably incorrect in refcount terms.
 */
-void ModifyTokenRelationPointers(struct Instance *relinst
-	, struct relation *rel, CONST struct Instance *old
-	, CONST struct Instance *new
-){
+void ModifyTokenRelationPointers(struct Instance *relinst,
+			         struct relation *rel,
+			         CONST struct Instance *old,
+			         CONST struct Instance *new)
+{
   unsigned long pos,other;
 
   (void)relinst;    /*  stop gcc whine about unused parameter  */
   /* FIXME: ModifyTokenRelationPointers. we may have a problem here handling relation shared
-  merge/split operations and the sorted/unsorted assumption. */
+	merge/split operations and the sorted/unsorted assumption.
+  */
 
   assert(rel!=NULL);
 
-  if(old==new){
+  if (old==new) {
     return;
   }
-  if(new!=NULL){
+  if (new!=NULL){
     pos = gl_search(rel->vars,old,(CmpFunc)CmpP);
-    if(pos != 0){
+    if (pos != 0) {
       other = gl_search(rel->vars,new,(CmpFunc)CmpP);
-      if(other != 0L){
-        if(RelationRefCount(rel) > 1){
-          /* must copy and split off a separate token string so as not to mess
-          up sharer's varlists. */
+      if (other != 0L) {
+        if (RelationRefCount(rel) > 1) {
+          /* must copy and split off a separate token string
+           * so as not to mess up sharer's varlists.
+           */
           RelationRefCount(rel)--; /* adjusts the shared data refcount */
           rel->share = CopyRelationShare(rel->share,e_token);
           RelationRefCount(rel) = 1; /* init the new copied data refcount */
         }
-        gl_store(rel->vars,pos,(VOIDPTR)new);
-        DeleteAndChange(rel,pos,other);		/* case 3 */
-      }else{
-        gl_store(rel->vars,pos,(char *)new);	/* case 2 */
+	gl_store(rel->vars,pos,(VOIDPTR)new);
+	DeleteAndChange(rel,pos,other);		/* case 3 */
+      } else {
+	gl_store(rel->vars,pos,(char *)new);	/* case 2 */
       }
-    }else{					/* case 1 */
+    } else{					/* case 1 */
       FPRINTF(ASCERR,"Warning ModifyTokenRelationPointers arg not found.\n");
       FPRINTF(ASCERR,"This shouldn't affect your usage at all.\n");
     }
-  }else{						/* case 4 */
+  } else {						/* case 4 */
     pos = gl_search(rel->vars,old,(CmpFunc)CmpP);
-    if(pos){
+    if (pos) {
       gl_store(rel->vars,pos,(VOIDPTR)new);
     }
   }
@@ -3732,13 +3726,12 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
       gl_store(rel->vars,pos,(VOIDPTR)new);
 }
 
-#if 0 /* unused static function, was part of the blackbox stuff, but disused now, apparently -- JP */
 /* After the instance list has been updated, we must recollect
    the input argument indices into the relation varlist.
 */
-static void UpdateInputArgsList(struct Instance *relinst
-	, struct relation *rel, char destroy
-){
+static
+void UpdateInputArgsList(struct Instance *relinst, struct relation *rel)
+{
   struct ExternalFunc *efunc;
   unsigned long n_input_args,c,pos,len;
   unsigned long *inputArgs;
@@ -3747,6 +3740,7 @@ static void UpdateInputArgsList(struct Instance *relinst
   CONST struct gl_list_t *varlist;
   struct BlackBoxCache *common;
   int32 inputsLen, argloc;
+  char *context;
   struct Instance *var;
 
   /* FIXME-  UpdateInputArgsList */
@@ -3757,6 +3751,7 @@ static void UpdateInputArgsList(struct Instance *relinst
   inputs = LinearizeArgList(argListNames,1,n_input_args);
   common = RelationBlackBoxCache(rel);
   inputsLen = common->inputsLen;
+  context = WriteInstanceNameString(relinst,NULL);
   varlist = RelationVarList(rel);
 
   assert(inputsLen == (int32)gl_length(inputs));
@@ -3767,27 +3762,22 @@ static void UpdateInputArgsList(struct Instance *relinst
   */
   argloc = 0;
   len = inputsLen;
-  for(c=1; c<=len; c++){
+  for (c=1; c<=len; c++) {
     var = (struct Instance *)gl_fetch(inputs,c);
     pos = gl_search(varlist,var,(CmpFunc)CmpP);
-    if(pos){
+    if (pos) {
       inputArgs[argloc] = pos;
-    }else if(!destroy){
-      /*char *context = WriteInstanceNameString(relinst,NULL);*/
-      char *context = "[unknown]";
+    } else {
       FPRINTF(ASCERR,"Screwed up merge of input variable %d in %s\n", argloc, context);
-	  ascfree(context);
       inputArgs[argloc] = 0;
     }
     argloc++;
   }
 
   gl_destroy(inputs);
+  ascfree(context);
 }
-#endif
-
-
-/**
+/*
 	This procedure should change all references of "old" in relation
 	instance rel to "new.
 	Remember:
@@ -3797,72 +3787,60 @@ static void UpdateInputArgsList(struct Instance *relinst
 
 	If the varlist length is changed, we must rebuild the
 	indexing array.
-	@param relinst the relation instance.
-	@param rel the relation structure, which must be from a blackbox relation.
-	@param new the variable instance being used to replace old.
-
-	Five cases that need to be dealt with here:
-	0-	no-op; old and new are the same already; do nothing.
-	1-	notfound; old is not in the varlist; do nothing.
-	2-	replace; old is found and new is not in list. overwrite old. ref count?
-		bbox arg indexing remains the same.
-	3-	merge; old and new are both in varlist, which shrinks varlist. This
-		will break the indexing, which is part of the shared RelationUnion,
-		and we will need to copy.
-	4-	null; new is NULL, in which case we just overwrite first instance of
-		old in the list with null. This is probably incorrect in refcount terms.
+* @param relinst the relation instance.
+* @param rel the relation structure, which must be from a blackbox relation.
+* @param new the variable instance being used to replace old.
+* 5 cases:
+* 0-	no-op; old and new are the same already; do nothing.
+* 1-	notfound; old is not in the varlist; do nothing.
+* 2-	replace; old is found and new is not in list. overwrite old. ref count?
+*       bbox arg indexing remains the same.
+* 3-	merge; old and new are both in varlist, which shrinks varlist. This
+*	will break the indexing, which is part of the shared RelationUnion,
+*	and we will need to copy.
+*
+* 4-	null; new is NULL, in which case we just overwrite first instance of
+*	old in the list with null. This is probably incorrect in refcount terms.
 */
 void ModifyBlackBoxRelPointers(struct Instance *relinst,
 			       struct relation *rel,
 			       CONST struct Instance *old,
 			       CONST struct Instance *new
 ){
-	unsigned long pos;
+	unsigned long len1,c1,len2,c2;
+	struct gl_list_t *branch, *extvars;
+	struct Instance *arg;
 
-	if(old==new)return;/* case 1 */
+	UNUSED_PARAMETER(relinst);
 
-	if(0==new){/* case 4 */
-		//CONSOLE_DEBUG("Blackbox relation %p: clear reference to var 'old'=%p",relinst,old);
-		pos = gl_search(rel->vars, old, (CmpFunc)CmpP);
-		if(pos){
-			gl_store(rel->vars, pos, NULL);
-		}
-		return;
-	}
-	
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Unhandled case");
+  /* FIXME: kirk never dealt with varlist rel->properly under merge. ModifyBlackBoxRelPointers
+this gets used in interactive merge/refinement.
+This should have just gone away perhaps now that we don't store
+instance pointers anywhere except the varlist. maybe we must reindex,though.
+ */
 
-#if 0
-	/* FIXME: kirk never dealt with varlist rel->properly under merge. ModifyBlackBoxRelPointers
-	this gets used in interactive merge/refinement.
-	This should have just gone away perhaps now that we don't store
-	instance pointers anywhere except the varlist. maybe we must reindex,though. */
+  assert(rel!=NULL);
+  if (old==new) return;
+  extvars = RelationBlackBoxArgNames(rel);
+  if (extvars==NULL) return;
 
-	assert(rel!=NULL);
-	if(old==new)return;/* case 1 */
-
-	extvars = RelationBlackBoxArgNames(rel);
-	if(extvars==NULL)return;
-
-	len1 = gl_length(extvars);
-	if(!len1)return;
-	for(c1=1;c1<=len1;c1++){ /* find all occurrences and change them */
-		branch = (struct gl_list_t *)gl_fetch(extvars,c1);
-		if(branch){
-			len2 = gl_length(branch);
-			for(c2=1;c2<=len2;c2++){
-				arg = (struct Instance *)gl_fetch(branch,c2);
-				if(arg==old) {
-					CONSOLE_DEBUG("Rewriting reference to %p to be %p",c2,new);
-					gl_store(branch,c2,(VOIDPTR)new);
-				}
-			}
-		}
-	}
-	/* fix up inputs lookup table. */
-	UpdateInputArgsList(relinst,rel,(new==NULL));
-	/* still need to fix up lhsvar index. */
-#endif
+  len1 = gl_length(extvars);
+  if (!len1) return;
+  for (c1=1;c1<=len1;c1++){	/* find all occurrences and change them */
+    branch = (struct gl_list_t *)gl_fetch(extvars,c1);
+    if (branch){
+      len2 = gl_length(branch);
+      for (c2=1;c2<=len2;c2++){
+	arg = (struct Instance *)gl_fetch(branch,c2);
+	if (arg==old) {
+	  gl_store(branch,c2,(VOIDPTR)new);
+        }
+      }
+    }
+  }
+  /* fix up inputs lookup table. */
+  UpdateInputArgsList(relinst,rel);
+  /* still need to fix up lhsvar index. */
 }
 
 /**

@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	Data Reader implementation for the CSV format.
@@ -35,14 +37,7 @@
 #include <ascend/utilities/error.h>
 
 #include "csv.h"
-
-//#define CSV_DEBUG
-#ifdef CSV_DEBUG
-# define MSG CONSOLE_DEBUG
-#else
-# define MSG(ARGS...) ((void)0)
-#endif
-
+#define CSV_DEBUG 0
 int datareader_csv_header(DataReader *d) {
     char str[9999];
     char key[] = "abcdfghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVXYZ";//e is ommited
@@ -91,8 +86,8 @@ int datareader_csv_header(DataReader *d) {
 
 int datareader_csv_eof(DataReader *d) {
     if (feof(d->f)) {
-        MSG("REACHED END OF FILE");
-        MSG(ASC_PROG_NOTE,"Read: %d rows",d->ndata);
+        CONSOLE_DEBUG("REACHED END OF FILE");
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Read: %d rows",d->ndata);
         return 1;
     }
     return 0;
@@ -102,8 +97,8 @@ int datareader_csv_data(DataReader *d) {
     double *csv = ASC_NEW_ARRAY(double, d->nmaxoutputs+1);
     char *tok;
     int k = 0;
-#ifdef CSV_DEBUG
-    MSG("Reading row %d",d->i);
+#if CSV_DEBUG
+    CONSOLE_DEBUG("Reading row %d",d->i);
 #endif
 
     if (fscanf (d->f, "%9998s",str) == 0) { //copy the csv line to str
@@ -132,7 +127,10 @@ int datareader_csv_data(DataReader *d) {
 
     for (k = 0; k<= d->nmaxoutputs;k++) { //write values in datareader data array
         *((double *)d->data + d->i*(d->nmaxoutputs+1) + k) = csv[k];
-        MSG("[%d]-[%d]:%f",d->i,k, *((double *)d->data + d->i*(d->nmaxoutputs+1) + k));
+#if CSV_DEBUG
+        CONSOLE_DEBUG("[%d]-[%d]:%f",d->i,k,
+                      *((double *)d->data + d->i*(d->nmaxoutputs+1) + k));
+#endif
     }
 
 
@@ -159,8 +157,10 @@ int datareader_csv_vals(DataReader *d, double *v) {
 
     for (i = 1;i <= d->nmaxoutputs;i++) {
         v[i-1]=*((double *)d->data + d->i*(d->nmaxoutputs+1) + i) ;
-        MSG("At d->i=%d, v[%d] = %lf",d->i,i-1,
+#if CSV_DEBUG
+        CONSOLE_DEBUG("At d->i=%d, v[%d] = %lf",d->i,i-1,
                       *((double *)d->data + d->i*(d->nmaxoutputs+1) + i));
+#endif
     }
     return 0;
 }

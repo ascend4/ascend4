@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	Routines to calculate saturation properties using Helmholtz correlation
 	data. We first include some 'generic' saturation equations that make use
@@ -23,19 +25,12 @@
 	solver to converge to an accurate result.
 */
 
-#include "rundata.h"
 #include "sat.h"
-#include "fprops.h"
-#include "zeroin.h"
+#include "helmholtz_impl.h"
 
-// report lots of stuff
 //#define SAT_DEBUG
-#define SAT_ERRORS
 
-// assertions for NANs etc
-//#define SAT_ASSERT
-
-#ifdef SAT_ASSERT
+#ifdef SAT_DEBUG 
 # include <assert.h>
 #else
 # define assert(ARGS...)
@@ -46,14 +41,7 @@
 
 #define SQ(X) ((X)*(X))
 
-#define TCRIT(DATA) (DATA->data->T_c)
-#define PCRIT(DATA) (DATA->data->p_c)
-#define RHOCRIT(DATA) (DATA->data->rho_c)
-#define OMEGA(DATA) (DATA->data->omega)
-#define RGAS(DATA) (DATA->data->R)
-#define TTRIP(DATA) (DATA->data->T_t)
-
-#define THROW_FPE
+//#define THROW_FPE
 
 #ifdef THROW_FPE
 #define _GNU_SOURCE
@@ -63,41 +51,22 @@ int fedisableexcept (int excepts);
 int fegetexcept (void);
 #endif
 
-# include "color.h"
-
 #ifdef SAT_DEBUG
-# define MSG(FMT, ...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
-	color_on(stderr,ASC_FG_BRIGHTBLUE);\
-	fprintf(stderr,"%s: ",__func__);\
-	color_off(stderr);\
-	fprintf(stderr,FMT "\n",##__VA_ARGS__)
+# define MSG(STR,...) fprintf(stderr,"%s:%d: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
 #else
-# define MSG(ARGS...) ((void)0)
+# define MSG(ARGS...)
 #endif
-
-#ifdef SAT_ERRORS
-# define ERRMSG(STR,...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"ERROR:");\
-	color_off(stderr);\
-	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
-#else
-# define ERRMSG(ARGS...) ((void)0)
-#endif
+#define ERRMSG(STR,...) fprintf(stderr,"%s:%d: ERROR: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
 
 /**
 	Estimate of saturation pressure using H W Xiang ''The new simple extended
 	corresponding-states principle: vapor pressure and second virial
 	coefficient'', Chemical Engineering Science,
 	57 (2002) pp 1439-1449.
-
-	This seems to be hopeless, or buggy. Tried with water at 373 K, gives
-	525 kPa...
 */
-double fprops_psat_T_xiang(double T, const FluidData *data){
-	double Zc = data->p_c / (8314. * data->rho_c * data->T_c);
+double fprops_psat_T_xiang(double T, const HelmholtzData *d){
+	double p_c = fprops_pc(d);
+	double Zc = p_c / (8314. * d->rho_c * d->T_c);
 
 #ifdef TEST
 	fprintf(stderr,"Zc = %f\n",Zc);
@@ -114,11 +83,11 @@ double fprops_psat_T_xiang(double T, const FluidData *data){
 	            , 11.65859, 46.78273, -1672.179
 	};
 
-	double a0 = aa[0] + aa[1]*data->omega + aa[2]*theta;
-	double a1 = aa[3] + aa[4]*data->omega + aa[5]*theta;
-	double a2 = aa[6] + aa[7]*data->omega + aa[8]*theta;
+	double a0 = aa[0] + aa[1]*d->omega + aa[2]*theta;
+	double a1 = aa[3] + aa[4]*d->omega + aa[5]*theta;
+	double a2 = aa[6] + aa[7]*d->omega + aa[8]*theta;
 
-	double Tr = T / data->T_c;
+	double Tr = T / d->T_c;
 	double tau = 1 - Tr;
 
 	double taupow = pow(tau, 1.89);
@@ -136,30 +105,17 @@ double fprops_psat_T_xiang(double T, const FluidData *data){
 	fprintf(stderr,"p_r = %f\n", p_r);
 #endif
 
-	return p_r * data->p_c;
+	return p_r * p_c;
 }
 
 /**
 	Estimate saturation pressure using acentric factor. This algorithm
 	is used for first estimates for later refinement in the program REFPROP.
-
-	This is derived from the definition of the acentric factor,
-	omega = -log10(psat(T1) - 1 where T1/Tc = Tr = 0.7
-	
-	together with the saturation curve obtained if h_fg(T) is assumed constant:
-	ln(psat(T)) = A - B/(T + C)
-
-	See Sandler 5e, p 320.	
-
-s	Such a curve will pass through (pc,Tc) and (psat(Tr),Tr) where Tr = 0.7,
-	but will probably be inaccurate at Tt. Given additional data, such as the
-	normal boiling point, a better equation like the Antoine equation can be
-	fitted. But we don't use that here.
-
 */
-double fprops_psat_T_acentric(double T, const FluidData *data){
+double fprops_psat_T_acentric(double T, const HelmholtzData *d){
 	/* first guess using acentric factor */
-	double p = data->p_c * pow(10, -7./3 * (1.+data->omega) * (data->T_c / T - 1.));
+	double p_c = fprops_pc(d);
+	double p = p_c * pow(10, -7./3 * (1.+d->omega) * (d->T_c / T - 1.));
 	return p;
 }
 
@@ -168,46 +124,37 @@ double fprops_psat_T_acentric(double T, const FluidData *data){
 	Saturated liquid density correlation of Rackett, Spencer & Danner (1972)
 	see http://dx.doi.org/10.1002/aic.690250412
 */
-double fprops_rhof_T_rackett(double T, const FluidData *data){
-	//MSG("RHOCRIT=%f, RGAS=%f, TCRIT=%f, PCRIT=%f",data->rho_c,data->R,data->T_c,data->p_c);
-	double Zc = data->rho_c * data->R * data->T_c / data->p_c;
-	double Tau = 1. - T/data->T_c;
-	//MSG("Zc = %f, Tau = %f",Zc,Tau);
-	double vf = (data->R * data->T_c / data->p_c) * pow(Zc, -1 - pow(Tau, 2./7));
-	//MSG("got vf(T=%f) = %f",T,vf);
+double fprops_rhof_T_rackett(double T, const HelmholtzData *D){
+	double p_c = fprops_pc(D);
+	double Zc = D->rho_c * D->R * D->T_c / p_c;
+	double Tau = 1. - T/D->T_c;
+	double vf = (D->R * D->T_c / p_c) * pow(Zc, -1 - pow(Tau, 2./7));
+
 	return 1./vf;
 }
 
-/*
-	TODO add Yamada & Gunn sat rhof equation eg from RPP5 eq 4-11.4a, should
-	be more accurate?
-
-	^Sean? I think you are referring to http://dx.doi.org/10.1002/aic.690170613,
-	is that correct? That equation requires extra data for V_SC according to
-	the paper. I don't have RPP5, only RPP4 unfortunately -- JP.
-*/
-
 /**
-	Inverse of fprops_rhof_T_rackett. TODO: this need checking.
+	Inverse of fprops_rhof_T_rackett. FIXME this need checking.
 */
-double fprops_T_rhof_rackett(double rhof, const FluidData *data){
-	double Zc = data->rho_c * data->R * data->T_c / data->p_c;
-	double f1 = data->p_c / data->R / data->T_c / rhof;
+double fprops_T_rhof_rackett(double rhof, const HelmholtzData *D){
+	double p_c = fprops_pc(D);
+	double Zc = D->rho_c * D->R * D->T_c / p_c;
+	double f1 = p_c / D->R / D->T_c / rhof;
 	double f2 = -log(f1)/log(Zc);
 	return pow(f2 -1, 3./2);
 }
-
 
 /**
 	Saturated vapour density correlation of Chouaieb, Ghazouani, Bellagi
 	see http://dx.doi.org/10.1016/j.tca.2004.05.017
 */
-double fprops_rhog_T_chouaieb(double T, const FluidData *data){
-	double Tau = 1. - T/data->T_c;
+double fprops_rhog_T_chouaieb(double T, const HelmholtzData *D){
+	double Tau = 1. - T/D->T_c;
 #if 0
-	double Zc = RHOCRIT(d) * RGAS(d) * TCRIT(d) / PCRIT(d);
+	double p_c = fprops_pc(D);
+	double Zc = D->rho_c * D->R * D->T_c / p_c;
 # define N1 -0.1497547
-# define N2 0.6006565
+# define N2 0.6006565 
 # define P1 -19.348354
 # define P2 -41.060325
 # define P3 1.1878726
@@ -216,7 +163,7 @@ double fprops_rhog_T_chouaieb(double T, const FluidData *data){
 	double PPP = Zc / (P1 + P2*Zc*log(Zc) + P3/Zc);
 	fprintf(stderr,"PPP = %f\n",PPP);
 	//PPP = -0.6240188;
-	double NNN = PPP + 1./(N1*D->omega + N2);
+	double NNN = PPP + 1./(N1*D->omega + N2);	
 #else
 /* exact values from Chouaieb for CO2 */
 # define MMM 2.4686277
@@ -225,143 +172,210 @@ double fprops_rhog_T_chouaieb(double T, const FluidData *data){
 #endif
 
 	double alpha = exp(pow(Tau,1./3) + sqrt(Tau) + Tau + pow(Tau, MMM));
-	return data->rho_c * exp(PPP * (pow(alpha,NNN) - exp(1-alpha)));
-}
-
-void fprops_sat_T(double T, double *psat, double *rhof, double *rhog, const PureFluid *d, FpropsError *err){
-	*psat = d->sat_fn(T,rhof,rhog,d->data,err);
+	return D->rho_c * exp(PPP * (pow(alpha,NNN) - exp(1-alpha)));
 }
 
 /**
-	Calculate the triple point pressure and densities using T_t from the FluidData.
+	Solve saturation condition for a specified temperature.
+	@param T temperature [K]
+	@param psat_out output, saturation pressure [Pa]
+	@param rhof_out output, saturated liquid density [kg/m^3]
+	@param rhog_out output, saturated vapour density [kg/m^3]
+	@param d helmholtz data object for the fluid in question.
+	@return 0 on success, non-zero on error (eg algorithm failed to converge, T out of range, etc.)
 */
-void fprops_triple_point(double *p_t_out, double *rhof_t_out, double *rhog_t_out, const PureFluid *d, FpropsError *err){
-	static const PureFluid *d_last = NULL;
+int fprops_sat_T(double T, double *psat_out, double *rhof_out, double * rhog_out, const HelmholtzData *d){
+	double tau = d->T_c / T;
+	double delf = 1.1 * fprops_rhof_T_rackett(T,d) / d->rho_c;
+	double delg = 0.9 * fprops_rhog_T_chouaieb(T,d) / d->rho_c;
+#ifdef THROW_FPE
+	feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+#endif
+#ifdef SAT_DEBUG
+	fprintf(stderr,"%s: calculating for %s, T = %.12e\n",__func__,d->name,T);
+#endif
+
+	if(T < d->T_t - 1e-8){
+		ERRMSG("Input temperature is below triple-point temperature");
+		return 1;
+	}
+
+	if(fabs(T - d->T_c) < 1e-9){
+		*psat_out = fprops_pc(d);
+		*rhof_out = d->rho_c;
+		*rhog_out = d->rho_c;
+		return 0;
+	}
+
+	int i = 0;
+	while(i++ < 20){
+		assert(!__isnan(delg));
+#ifdef SAT_DEBUG
+		fprintf(stderr,"%s: iter %d: rhof = %f, rhog = %f\n",__func__,i,delf*d->rho_c, delg*d->rho_c);
+#endif
+		double phirf = helm_resid(tau,delf,d);
+		double phirf_d = helm_resid_del(tau,delf,d);
+		double phirf_dd = helm_resid_deldel(tau,delf,d);
+		double phirg = helm_resid(tau,delg,d);
+		double phirg_d = helm_resid_del(tau,delg,d);
+		double phirg_dd = helm_resid_deldel(tau,delg,d);
+		assert(!__isnan(phirf));
+		assert(!__isnan(phirf_d));
+		assert(!__isnan(phirf_dd));
+		assert(!__isnan(phirg));
+		assert(!__isnan(phirg_d));
+		assert(!__isnan(phirg_dd));
+
+#define J(FG) (del##FG * (1. + del##FG * phir##FG##_d))
+#define K(FG) (del##FG * phir##FG##_d + phir##FG + log(del##FG))
+#define J_del(FG) (1 + 2 * del##FG * phir##FG##_d + SQ(del##FG) * phir##FG##_dd)
+#define K_del(FG) (2 * phir##FG##_d + del##FG * phir##FG##_dd + 1./del##FG)
+		double Jf = J(f);
+		double Jg = J(g);
+		double Kf = K(f);
+		double Kg = K(g);
+		double Jf_del = J_del(f);
+		double Jg_del = J_del(g);
+		double Kf_del = K_del(f);
+		double Kg_del = K_del(g);
+
+		double DELTA = Jg_del * Kf_del - Jf_del * Kg_del;
+		assert(!__isnan(DELTA));
+
+#define gamma 1.0
+		delf += gamma/DELTA * ((Kg - Kf) * Jg_del - (Jg - Jf) * Kg_del);
+		delg += gamma/DELTA * ((Kg - Kf) * Jf_del - (Jg - Jf) * Kf_del);
+
+		assert(!__isnan(delg));
+		assert(!__isnan(delf));
+
+		if(fabs(Kg - Kf) + fabs(Jg - Jf) < 1e-8){
+			//fprintf(stderr,"%s: CONVERGED\n",__func__);
+			*rhof_out = delf * d->rho_c;
+			*rhog_out = delg * d->rho_c;
+			if(__isnan(*rhog_out)){
+				fprintf(stderr,"%s: T = %.12e\n",__func__,T);
+			}
+			*psat_out = helmholtz_p_raw(T, *rhog_out, d);
+			return 0;
+		}
+		if(delg < 0)delg = -0.5*delg;
+		if(delf < 0)delf = -0.5*delf;
+	}
+	*rhof_out = delf * d->rho_c;
+	*rhog_out = delg * d->rho_c;
+	*psat_out = helmholtz_p_raw(T, *rhog_out, d);
+	ERRMSG("Not converged: '%s' with T = %e (rhof=%f, rhog=%f).",d->name,T,*rhof_out,*rhog_out);
+	return 1;
+
+}
+
+/**
+	Calculate the critical pressure using the T_c and rho_c values in the HelmholtzData.
+*/
+double fprops_pc(const HelmholtzData *d){
+	static const HelmholtzData *d_last = NULL;
+	static double p_c = 0;
+	if(d == d_last){
+		return p_c;
+	}
+	p_c = helmholtz_p_raw(d->T_c, d->rho_c,d);
+	d_last = d;
+	return p_c;
+}
+
+/**
+	Calculate the critical pressure using the T_c and rho_c values in the HelmholtzData.
+*/
+int fprops_triple_point(double *p_t_out, double *rhof_t_out, double *rhog_t_out, const HelmholtzData *d){
+	static const HelmholtzData *d_last = NULL;
 	static double p_t, rhof_t, rhog_t;
 	if(d == d_last){
 		*p_t_out = p_t;
 		*rhof_t_out = rhof_t;
 		*rhog_t_out = rhog_t;
-		return;
+		return 0;
 	}
-
-	if(d->data->T_t == 0){
-		ERRMSG("Note: data for '%s' does not include a valid triple point temperature.",d->name);
+	MSG("Calculating saturation for T = %f",d->T_t);
+	int res = fprops_sat_T(d->T_t, &p_t, &rhof_t, &rhog_t,d);
+	if(res)return res;
+	else{
+		d_last = d;
+		*p_t_out = p_t;
+		*rhof_t_out = rhof_t;
+		*rhog_t_out = rhog_t;
+		return 0;
 	}
-
-	MSG("Calculating for '%s' (type %d, T_t = %f, T_c = %f, p_c = %f)",d->name, d->type, d->data->T_t, d->data->T_c, d->data->p_c);
-	fprops_sat_T(d->data->T_t, &p_t, &rhof_t, &rhog_t,d,err);
-	if(*err)return;
-	d_last = d;
-	*p_t_out = p_t;
-	*rhof_t_out = rhof_t;
-	*rhog_t_out = rhog_t;
-	MSG("p_t = %f, rhof_t = %f, rhog_t = %f", p_t, rhof_t, rhog_t);
 }
-
-
-typedef struct{
-	const PureFluid *P;
-	double logp;
-	FpropsError *err;
-	double Terr;
-#ifdef SAT_DEBUG
-	int neval;
-#endif
-} SatPResidData;
-
-static ZeroInSubjectFunction sat_p_resid;
-static double sat_p_resid(double rT, void *user_data){
-#define D ((SatPResidData *)user_data)
-	double p, rhof, rhog, resid;
-	fprops_sat_T(1/rT, &p, &rhof, &rhog, D->P, D->err);
-	if(*(D->err))D->Terr = 1/rT;
-	resid = log(p) - D->logp;
-	MSG("T = %f --> p = %f, rhof = %f, rhog = %f, RESID %f", 1/rT, p, rhof, rhog, resid);
-	//if(*(D->err))MSG("Error: %s",fprops_error(*(D->err)));
-	//if(*(D->err))return -1;
-#ifdef SAT_DEBUG
-	D->neval++;
-#endif
-	return resid;
-#undef D
-}
-
+	
 
 /**
-	Solve saturation conditions as a function of pressure. 
-
-	Currently this is just a Brent solver. We've tried to improve it slightly
-	by solving for the residual of log(p)-log(p1) as a function of 1/T, which
-	should make the function a bit more linear.
-
-	TODO Shouldn't(?) be hard at all to improve this to use a Newton solver via
-	the Clapeyron equation?
-
-	dp/dT = h_fg/(T*v_fg)
-	
-	where
-
-	h_fg = h(T, rhog) - h(T, rhof)
-	v_fg = 1/rhog - 1/rhof
-	rhof, rhog are evaluated at T.
-
-	We guess T, calculate saturation conditions at T, then evaluate dp/dT,
-	use Newton solver to converge, while checking that we remain within 
-	Tt < T < Tc. It may be faster to iterate using 1/T as the free variable,
-	and log(p) as the residual variable.
-
-	TODO Better still would be to reexamine the EOS and find a strategy similar to
-	the Akasaka algorithm that works with with rhof, rhog as the free variables,
-	see helmholtz.c...? Method above uses nested iteration on T inside p, so is
-	going to be slooooooow, even if it's fairly reliable.
+	Solve saturation properties in terms of pressure.
+	This function makes calls to fprops_sat_T, and solves for temperature using
+	a Newton solver algorith. Derivatives dp/dT are calculated using the
+	Clapeyron equation.
+	@return 0 on success.
 */
-void fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const PureFluid *P, FpropsError *err){
-	if(*err){
-		MSG("ERROR FLAG ALREADY SET");
-	}
-	if(p == P->data->p_c){
-		MSG("Requested pressure is critical point pressure, returning CP conditions");
-		*T_sat = P->data->T_c;
-		*rho_f = P->data->rho_c;
-		*rho_g = P->data->rho_c;
-		return;
-	}
-	/* FIXME what about checking triple point pressure? */
-	
-
-	SatPResidData D = {
-		P, log(p), err, 0
-#ifdef SAT_DEBUG
-		,0
-#endif
-	};
-	MSG("Solving saturation conditions at p = %f", p);
-	double p1, rT, T, resid;
-	int errn;
-	double Tt = P->data->T_t;
-	if(Tt == 0)Tt = 0.2* P->data->T_c;
-	errn = zeroin_solve(&sat_p_resid, &D, 1./P->data->T_c, 1./Tt, 1e-10, &rT, &resid);
-	if(*err){
-		MSG("FPROPS error within zeroin_solve iteration ('%s', p = %f, p_c = %f): %s"
-			, P->name, p, P->data->p_c, fprops_error(*err)
-		);
-	}
-	if(errn){
-		ERRMSG("Failed to solve saturation at p = %f.",p);
-		*err = FPROPS_SAT_CVGC_ERROR;
-		return;
+int fprops_sat_p(double p, double *Tsat_out, double *rhof_out, double * rhog_out, const HelmholtzData *d){
+	MSG("Calculating for %s at p = %.12e Pa",d->name,p);
+	double T1;
+	double p_c = fprops_pc(d);
+	if(fabs(p - p_c)/p_c < 1e-6){
+		MSG("Very close to critical pressure: using critical temperature without iteration.");
+		T1 = d->T_c;
+		double p1, rhof, rhog;
+		int res = fprops_sat_T(T1, &p1, &rhof, &rhog, d);
+		*Tsat_out = T1;
+		*rhof_out = rhof;
+		*rhog_out = rhog;
+		return res;
 	}else{
-		if(*err){
-			ERRMSG("Ignoring error inside zeroin_solve iteration at T = %f",D.Terr);
+		/*
+		Estimate of saturation temperature using definition	of acentric factor and
+		the assumed p(T) relationship:
+			log10(p)=A + B/T
+		See Reid, Prausnitz and Poling, 4th Ed., section 2.3. 
+		*/
+		T1 = d->T_c / (1. - 3./7. / (1.+d->omega) * log10(p / p_c));
+		MSG("Estimated using acentric factor: T = %f",T1);
+		if(T1 < d->T_t){
+			T1 = d->T_t;
+			MSG("Estimate moved up to T_t = %f",T1);
 		}
-		*err = FPROPS_NO_ERROR;
 	}
-	T = 1./rT;
-	fprops_sat_T(T, &p1, rho_f, rho_g, P, err);
-	if(!*err)*T_sat = T;
-	MSG("Got p1 = %f, p = %f in %d iterations", p1, p, D.neval);
+	double p1, rhof, rhog;
+	int i = 0;
+	while(i++ < 50){
+		int res = fprops_sat_T(T1, &p1, &rhof, &rhog, d);
+		if(res){
+			MSG("Got error %d from fprops_sat_T at T = %.12e", res,T1);
+			return 1;
+		}
+		MSG("T1 = %f ——> p = %f bar\trhof = %f\trhog = %f",T1, p1/1e5, rhof, rhog);
+		if(fabs(p1 - p) < 1e-5){
+			*Tsat_out = T1;
+			*rhof_out = rhof;
+			*rhog_out = rhog;
+			return 0;
+		}
+		double hf = helmholtz_h_raw(T1, rhof, d);
+		double hg = helmholtz_h_raw(T1, rhog, d);
+		double dpdT_sat = (hg - hf) / T1 / (1./rhog - 1./rhof);
+		//fprintf(stderr,"\t\tdpdT_sat = %f bar/K\n",dpdT_sat/1e5);
+		double delta_T = -(p1 - p)/dpdT_sat;
+		if(T1 + delta_T < d->T_t - 1e-2){
+			MSG("Correcting sub-triple-point temperature guess");
+			T1 = 0.5 * (d->T_t + T1);
+		}
+		else T1 += delta_T;
+	}
+	MSG("Exceeded iteration limit, returning last guess with error code");
+	*Tsat_out = T1;
+	*rhof_out = rhof;
+	*rhog_out = rhog;
+	return 1;
 }
+
 
 
 /**
@@ -369,60 +383,51 @@ void fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const P
 	first guess Temperatures when solving for the coordinates (p,h).
 	This function uses the secant method for the iterative solution.
 */
-void fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_out, double *rhog_out, const PureFluid *P, FpropsError *err){
-	double T1 = 0.4 * P->data->T_t + 0.6 * P->data->T_c;
-	double T2 = P->data->T_t;
+int fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_out, double *rhog_out, const HelmholtzData *d){
+	double T1 = 0.4 * d->T_t + 0.6 * d->T_c;
+	double T2 = d->T_t;
 	double h1, h2, p, rhof, rhog;
-	fprops_sat_T(T2, &p, &rhof, &rhog, P, err);
-	if(*err){
-		ERRMSG("Failed to solve psat(T_t = %.12e) for %s",T2,P->name);
-		return;
+	int res = fprops_sat_T(T2, &p, &rhof, &rhog, d);
+	if(res){
+		ERRMSG("Failed to solve psat(T_t = %.12e) for %s",T2,d->name);
+		return 1;
 	}
 	double tol = 1e-6;
-	h2 = P->h_fn(T2,rhof,P->data, err);
-	if(*err){
-		ERRMSG("Unable to calculate h(T=%f K,rhof=%f kg/m3",T2,rhof);
-	}
+	h2 = helmholtz_h(T2,rhof,d);
 	if(hf < h2){
 		ERRMSG("Value given for hf = %.12e is below that calculated for triple point liquid hf_t = %.12e",hf,h2);
-		*err = FPROPS_RANGE_ERROR;
-		return;
+		return 2;
 	}
 
 	int i = 0;
 	while(i++ < 60){
-		assert(T1 >= P->data->T_t - 1e-4);
-		assert(T1 <= P->data->T_c);
+		assert(T1 >= d->T_t - 1e-4);
+		assert(T1 <= d->T_c);
 		MSG("T1 = %f\n",T1);
-		fprops_sat_T(T1, &p, &rhof, &rhog, P, err);
-		if(*err){
-			ERRMSG("Failed to solve psat(T = %.12e) for %s",T1,P->name);
-			return;
+		res = fprops_sat_T(T1, &p, &rhof, &rhog, d);
+		if(res){
+			ERRMSG("Failed to solve psat(T = %.12e) for %s",T1,d->name);
+			return 1;
 		}
-		h1 = P->h_fn(T1,rhof, P->data, err);
-		if(*err){
-			ERRMSG("Unable to calculate h");
-			return;
-		}
+		h1 = helmholtz_h(T1,rhof, d);
 		if(fabs(h1 - hf) < tol){
 			*Tsat_out = T1;
 			*psat_out = p;
 			*rhof_out = rhof;
 			*rhog_out = rhog;
-			return; /* SUCCESS */
+			return 0;
 		}
 		if(h1 == h2){
-			MSG("With %s, got h1 = h2 = %.12e, but hf = %.12e!",P->name,h1,hf);
-			*err = FPROPS_SAT_CVGC_ERROR;
-			return;
+			MSG("With %s, got h1 = h2 = %.12e, but hf = %.12e!",d->name,h1,hf);
+			return 2;
 		}
 
 		double delta_T = -(h1 - hf) * (T1 - T2) / (h1 - h2);
 		T2 = T1;
 		h2 = h1;
-		while(T1 + delta_T > P->data->T_c)delta_T *= 0.5;
+		while(T1 + delta_T > d->T_c)delta_T *= 0.5;
 		T1 += delta_T;
-		if(T1 < P->data->T_t)T1 = P->data->T_t;
+		if(T1 < d->T_t)T1 = d->T_t;
 		if(i==20 || i==30)tol*=100;
 	}
 	fprintf(stderr,"Failed to solve Tsat for hf = %f (got to T = %f)\n",hf,T1);
@@ -430,7 +435,8 @@ void fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_o
 	*psat_out = p;
 	*rhof_out = rhof;
 	*rhog_out = rhog;
-	*err = FPROPS_SAT_CVGC_ERROR;
+	return 1;
 }
+
 
 

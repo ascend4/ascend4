@@ -22,7 +22,9 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.  COPYING is found in ../compiler.
  */
 
 #define ASC_BUILDING_INTERFACE
@@ -48,6 +50,11 @@
 #include "ProbeProc.h"
 #include "UnitsProc.h"
 #include "ProbeProc.h"
+
+#ifndef lint
+static CONST char ProbeProcID[] = "$Id: ProbeProc.c,v 1.38 2003/08/23 18:43:07 ballan Exp $";
+#endif
+
 
 /*
  * the number of arguments required to specify a complete filter.

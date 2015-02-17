@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	black box semantics test.
@@ -44,7 +46,7 @@ ExtBBoxFinalFunc bboxtest_final;
 #define N_INPUT_ARGS 1 /* formal arg count */
 #define N_OUTPUT_ARGS 1 /* formal arg count */
 
-extern
+extern 
 ASC_EXPORT int bboxtest_register(void){
 	double epsilon = 1.0e-14;
 
@@ -67,7 +69,7 @@ ASC_EXPORT int bboxtest_register(void){
 
 struct BBOXTEST_problem {
 	double coef; /* coef in y=coef*x*/
-	int n; /* number of inputs passed to this bbox? */
+	int n; /* number of equations. */
 };
 
 static int GetCoef( struct Instance *data, struct BBOXTEST_problem *problem);
@@ -157,10 +159,10 @@ int bboxtest_preslv(struct BBoxInterp *interp,
 
 /*----------------------------------------------------------------------------*/
 
-/**
+/** 
 	Evaluate residuals
 
-	@return 0 on success
+	@return 0 on success 
 */
 int bboxtest_fex(struct BBoxInterp *interp,
 		int ninputs,
@@ -184,10 +186,10 @@ int bboxtest_jex(struct BBoxInterp *interp,
 		double *outputs,
 		double *jacobian
 ){
-	(void)noutputs;
+	(void)noutputs; 
 	(void)outputs;
 	(void)inputs;
-
+	
 	return DoDeriv(interp, ninputs, jacobian);
 }
 
@@ -312,7 +314,7 @@ int DoDeriv(struct BBoxInterp *interp, int ninputs, double *jacobian){
 	for (i = 0; i< len; i++) {
 		jacobian[i] = 0;
 	}
-
+	
 	for (i = 0; i< ninputs; i++) {
 		jacobian[i*ninputs+i] = coef;
 	}

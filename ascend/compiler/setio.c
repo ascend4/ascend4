@@ -21,17 +21,26 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
  */
 
 #include <ascend/general/platform.h>
 #include <ascend/general/dstring.h>
 
 #include "functype.h"
+
+
 #include "expr_types.h"
 #include "sets.h"
 #include "setio.h"
 #include "exprio.h"
+
+#ifndef lint
+static CONST char SetIOID[] = "$Id: setio.c,v 1.9 1997/12/02 12:00:23 ballan Exp $";
+#endif
+
 
 void WriteSetNode(FILE *f, CONST struct Set *s)
 {

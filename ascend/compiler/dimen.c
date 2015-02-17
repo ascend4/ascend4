@@ -22,7 +22,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
+ *
  */
 
 #include "dimen.h"
@@ -38,6 +41,9 @@
 
 struct gl_list_t *g_dimen_list;
 dim_type *g_wild_dimen,*g_trig_dimen,*g_dimensionless;
+#ifndef lint
+static CONST char DimenID[] = "$Id: dimen.c,v 1.9 1997/10/28 19:20:32 mthomas Exp $";
+#endif
 
 #define WILD(d) ((d)->wild & DIM_WILD)
 /* test a DIMENSION pointer for being wild or not */
@@ -434,7 +440,7 @@ ASC_DLLSPEC void PrintDimenMessage(CONST char *message
 		error_reporter_end_flush();
 #else
 	(void)message; (void)label1; (void)d1; (void)d2; (void)label2;
-#endif
+#endif	
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid dimensions");
 }
 

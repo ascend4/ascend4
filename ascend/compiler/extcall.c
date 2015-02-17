@@ -13,7 +13,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//*
 	by Kirk Andre Abbott
 	Created: Jun 1, 1995.
@@ -101,7 +103,6 @@ void DestroyExtCall(struct ExtCallNode *ext, struct Instance *relinst){
       len2 = gl_length(branch);
       for (c2=len2;c2>=1;c2--) {
 	if ( (ptr = (struct Instance *)gl_fetch(branch,c2)) !=NULL)
-      CONSOLE_DEBUG("Remove relation...");
 	  RemoveRelation(ptr,relinst);
       }
       gl_destroy(branch);

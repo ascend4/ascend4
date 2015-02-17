@@ -22,7 +22,9 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.  COPYING is found in ../compiler.
  */
 
 #define ASC_BUILDING_INTERFACE
@@ -1313,7 +1315,7 @@ int Asc_SolvGetPathName(ClientData cdata, Tcl_Interp *interp,
 }
 
 
-#if 0
+#if 0 
 /*
  *  Solves g_curinst with solver specified.
  *  This is for commandline use only.
@@ -1827,7 +1829,7 @@ int Asc_SolvSolverName(ClientData cdata, Tcl_Interp *interp
 		Tcl_AppendElement(interp,solver->name);
 		return TCL_OK;
 	}
-}
+}	
 
 int Asc_SolvLinsolNames(ClientData cdata, Tcl_Interp *interp,
                       int argc, CONST84 char *argv[])
@@ -1852,7 +1854,7 @@ int Asc_SolvEligSolver(ClientData cdata, Tcl_Interp *interp,
   int n;
   int tmpi;
   const SlvFunctionsT *S;
-  struct gl_list_t *L = NULL;
+  struct gl_list_t *L;
 
   UNUSED_PARAMETER(cdata);
 
@@ -1872,7 +1874,6 @@ int Asc_SolvEligSolver(ClientData cdata, Tcl_Interp *interp,
   slv_get_parameters(g_solvsys_cur,&sp);
   cur = slv_get_selected_solver(g_solvsys_cur);
   if (argc==3 && !!sp.output.less_important) {
-  /* FIXME the variable 'L' is not initialised... something's missing here... JDP */
     FPRINTF(ASCERR,"Solver   Name       ?Eligible\n");
     FPRINTF(ASCERR,"-----------------------------\n");
     for(n=1 ; n<gl_length(L); ++n) {

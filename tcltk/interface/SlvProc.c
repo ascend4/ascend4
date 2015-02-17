@@ -22,7 +22,9 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.  COPYING is found in ../compiler.
  */
 
 #include <math.h>
@@ -39,6 +41,11 @@
 #include "SolverGlobals.h"
 #include "Commands.h" /* for registration function */
 #include "SlvProc.h"
+
+#ifndef lint
+static CONST char SlvProcID[] = "$Id: SlvProc.c,v 1.6 2003/08/23 18:43:08 ballan Exp $";
+#endif
+
 
 #ifndef MAXIMUM_STRING_LENGTH
 #define MAXIMUM_STRING_LENGTH 256

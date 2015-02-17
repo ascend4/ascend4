@@ -21,8 +21,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License along
+ *  with the program; if not, write to the Free Software Foundation, Inc., 675
+ *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 #include <stdio.h>
 #include <assert.h>
@@ -40,6 +41,11 @@
 #include "when.h"
 
 #define WMALLOC(x) x = ASC_NEW(struct WhenList)
+
+#ifndef lint
+static CONST char WhenRCSid[] = "$Id: when.c,v 1.11 1997/07/29 15:52:56 rv2a Exp $";
+#endif
+
 
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
 static

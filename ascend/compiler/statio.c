@@ -13,7 +13,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	Temporary Statement Output routines
 *//*
@@ -698,7 +700,7 @@ void WriteStatementErrorMessage(
 	FILE *f, CONST struct Statement *stat
 	,CONST char *message, int noisy,int level
 ){
-  /* old behaviour */
+  /* old behavior */
   const char *filename=NULL;
   int line=0;
   error_severity_t sev;
@@ -733,32 +735,27 @@ void WriteStatementErrorMessage(
       WriteForTable(ASCERR,GetEvaluationForTable());
     }
   }else{
-    ASC_FPRINTF(f,"NULL STATEMENT!");
+    FPRINTF(f,"NULL STATEMENT!");
   }
 
   error_reporter_end_flush();
-  CONSOLE_DEBUG("%s",message);
-  WriteStatementLocation(ASCERR,stat);
+  CONSOLE_DEBUG(message);
 }
 
 void WriteStatementLocation(FILE *f, CONST struct Statement *stat){
-	//CONSOLE_DEBUG("writing...");
 	const char *filename=NULL;
 	int line=0;
 
 	if(stat==NULL){
-		//CONSOLE_DEBUG("STATEMENT POINTER IS NULL");
-		ASC_FPRINTF(f,"NULL STATEMENT!");
+		FPRINTF(f,"NULL STATEMENT!");
 		return;
 	}
-	//CONSOLE_DEBUG("...");
 
 	filename=Asc_ModuleBestName(StatementModule(stat));
 	line=StatementLineNum(stat);
 
 	/* write some more detail */
-	ASC_FPRINTF(f,"%s:%d",filename,line);
-	CONSOLE_DEBUG("%s:%d",filename,line);
+	FPRINTF(f,"%s:%d",filename,line);
 }
 
 

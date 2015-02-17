@@ -25,7 +25,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.  COPYING is found in ../compiler.
+ *
  */
 
 #include "safe.h"
@@ -41,15 +44,8 @@
 
 #define BIGNUM 1.0e8
 
-//#define SAFE_DEBUG
-#ifdef SAFE_DEBUG
-# define MSG CONSOLE_DEBUG
-#else
-# define MSG(ARGS...) ((void)0)
-#endif
-
 /*boolean safe_ok = TRUE;*/
-static int safe_print_errors = FALSE;
+static int safe_print_errors = TRUE;
 
 void safe_error_to_stderr(enum safe_err *not_safe){
   if (!safe_print_errors) {
@@ -199,32 +195,36 @@ static double sqrt_rec_1_m_sqr_Dn(double x,int n,enum safe_err *safe)
 }
 
 
-double safe_upower(double x, unsigned n, enum safe_err *safe){
+double safe_upower(double x, unsigned n, enum safe_err *safe)
+{
   double y = 1.0;
   (void)safe;
 
   for( ; n-- > 0 ; y = safe_mul_D0(y,x,safe) );
-  return y;
+  return(y);
 }
 
-double safe_factorial(unsigned n, enum safe_err *safe){
+double safe_factorial(unsigned n, enum safe_err *safe)
+{
    double x,y;
    (void)safe;
 
-   for( x = (double)n , y = 1.0 ; x >= 0.5 ; y = safe_mul_D0(y,x--,safe) );
-   return y;
+   for( x = (double)n , y = 1.0 ; x >= 0.5 ; y = safe_mul_D0(y,x--,safe) )
+      ;
+   return(y);
 }
 
-double safe_rec(double x,enum safe_err *safe){
-   if(x == 0.0) {
+double safe_rec(double x,enum safe_err *safe)
+{
+   if( x == 0.0 ) {
       double bogus = BIGNUM;
-      if(safe_print_errors) {
-         ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Divide by zero in 1/x expr: returning %g",bogus);
+      if( safe_print_errors ) {
+	 ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Divide by zero in 1/x expr: returning %g",bogus);
       }
       *safe = safe_div_by_zero;
       return( bogus );
    }
-   return 1.0/x;
+   return( 1.0/x );
 }
 
 #ifndef INV_CUBRTHUGE
@@ -985,7 +985,7 @@ double safe_div_D1(double x,double y,int wrt,enum safe_err *safe)
     return( -safe_mul_D0(safe_sqr_D0(y,safe),x,safe) );
   default:
     ASC_PANIC("'wrt' out of range!");
-
+    
   }
 }
 
@@ -1001,7 +1001,7 @@ double safe_ipow_D1( double x,double y, int wrt,enum safe_err *safe)
                   * assume integers are constant */
   default:
     ASC_PANIC("'wrt' out of range!");
-
+    
   }
 }
 
@@ -1014,7 +1014,7 @@ double safe_pow_D1(double x,double y,int wrt,enum safe_err *safe)
     return( safe_mul_D0( safe_ln_D0(x,safe) , safe_pow_D0(x,y,safe) ,safe) );
   default:
     ASC_PANIC("'wrt' out of range!");
-
+    
   }
 }
 
@@ -1030,7 +1030,7 @@ double safe_div_D2(double x,double y,int wrt1,int wrt2,enum safe_err *safe)
     return( safe_rec(0.5*safe_mul_D0(y,safe_sqr_D0(y,safe),safe),safe) );
   default:
     ASC_PANIC("'wrt' out of range!");
-
+    
   }
 }
 
@@ -1053,7 +1053,7 @@ double safe_ipow_D2( double x,double y, int wrt1,int wrt2,enum safe_err *safe)
                         safe_ipow_D0(x,y,safe),safe) );
   default:
     ASC_PANIC("'wrt' out of range!");
-
+    
   }
 }
 
@@ -1074,7 +1074,7 @@ double safe_pow_D2(double x,double y,int wrt1,int wrt2,enum safe_err *safe)
                         safe_pow_D0(x,y,safe),safe) );
   default:
     ASC_PANIC("'wrt' out of range!");
-
+    
   }
 }
 

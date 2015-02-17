@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	Conditional Modeling Solver (CMSlv) module.
@@ -2215,15 +2217,11 @@ real64 return_to_first_boundary(slv_system_t server,
   int32 count,n_incidences,inc,conv_flag,still_crossed;
   int32 numbnds,numbndf,b,ind;
   int32 iter,n_iterations;
-#if SHOW_BOUNDARY_ANALYSIS_DETAILS
   FILE *lif;
-#endif
 
   sys = SLV9(asys);
   check_system(sys);
-#if SHOW_BOUNDARY_ANALYSIS_DETAILS
   lif = LIF(sys);
-#endif
 
   if(sys->blist == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) return_to_first_boundary\n");

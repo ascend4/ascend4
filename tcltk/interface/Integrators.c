@@ -13,7 +13,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	Tcl/Tk interface functions for the Integration feature
@@ -428,7 +430,7 @@ int Asc_IntegGetXSamplesCmd(ClientData cdata, Tcl_Interp *interp,
   const dim_type *dp;
   long i,len;
   double *uvalues = NULL;
-  char *ustring = NULL;
+  char *ustring;
   double *uv;
   int trydu=0, prec, stat=0;
 
@@ -827,7 +829,7 @@ int Asc_IntegSetupCmd(ClientData cdata,Tcl_Interp *interp,
     Tcl_SetResult(interp, "Unsupported integrator", TCL_STATIC);
     Tcl_AppendResult(interp," ",engine,SNULL);
     return TCL_ERROR;
-  }
+  } 
 
   integrator_set_reporter(blsys, reporter);
   integrator_set_samples(blsys,&l_samplelist);

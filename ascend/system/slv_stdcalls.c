@@ -13,7 +13,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//*
 	by Benjamin Andrew Allan
 	5/19/96
@@ -248,17 +250,19 @@ int slv_ensure_bounds(slv_system_t sys,int32 lo,int32 hi, FILE *mif)
 		ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
         FPRINTF(ASCERR,"Variable '");
         var_write_name(sys,var,ASCERR);
-        FPRINTF(ASCERR,"' was set below its lower bound. It will be moved to its lower bound.");
+        FPRINTF(ASCERR,"' was set below its lower bound.\n");
+        FPRINTF(ASCERR,"It will be moved to its lower bound.");
 		error_reporter_end_flush();
       }
       var_set_value(var, low);
     } else {
       if( val > high ) {
         if (mif!=NULL) {
-          ERROR_REPORTER_START_NOLINE(ASC_USER_WARNING);
+          ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
           FPRINTF(ASCERR,"Variable '");
           var_write_name(sys,var,ASCERR);
-          FPRINTF(ASCERR,"' was set above its upper bound. It will be moved to its upper bound.");
+          FPRINTF(ASCERR,"' was set above its upper bound.\n");
+          FPRINTF(ASCERR,"It will be moved to its upper bound.");
 		  error_reporter_end_flush();
         }
         var_set_value(var, high);

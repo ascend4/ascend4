@@ -14,7 +14,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	Real Ascend Instance Types
 *//*
@@ -80,7 +82,7 @@
 /* # define ALIGNSTUPID 1 */
 /* # endif */
 /* if ALIGNSTUPID, then 4 byte ptrs must fall on 8 byte boundaries */
-/* any architecture with such a restriction should be summarily torched */
+/* any architecture with such a restrict should be summarily torched */
 
 
 /* FUNDAMENTAL INSTANCES */
@@ -193,7 +195,7 @@ struct RealAtomInstance {
 
 #if 0
 /** future work.
- * needs parser and interpreter support. Not yet used.
+ * needs parser and interpretter support. Not yet used.
  * @todo Implement SolverAtomInstance.
  */
 struct SolverAtomInstance {
@@ -540,7 +542,7 @@ struct ModelInstance {
   VOIDPTR interface_ptr;
   struct gl_list_t *parents;  /**< link to parent instances */
   struct gl_list_t *whens;    /**< link to whens on which the model appears */
-  struct gl_list_t *link_table; /**< link_table for non-declarative LINKs */
+	struct gl_list_t *link_table; /**< link_table for non-declarative LINKs */
   struct TypeDescription *desc;
   struct Instance *alike_ptr;
   struct BitList *executed;   /**< bit list to keep track of which

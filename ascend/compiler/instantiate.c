@@ -14,7 +14,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//*
 	@file
 	Ascend Instantiator Implementation
@@ -230,6 +232,9 @@ static int DigestArguments(struct Instance *,
                     struct gl_list_t *, struct StatementList *,
                     struct StatementList *, struct Statement *);
 static int DeriveSetType(CONST struct Set *, struct Instance *,CONST unsigned int);
+
+static struct gl_list_t *FindInsts(struct Instance *, CONST struct VariableList *,
+                            enum find_errors *);
 
 static void MissingInsts(struct Instance *, CONST struct VariableList *,int);
 static struct gl_list_t *FindArgInsts(struct Instance *, struct Set *,
@@ -4255,6 +4260,33 @@ struct gl_list_t *FindArgInsts(struct Instance *parent,
   return result;
 }
 
+/**
+	Find instances: Make sure at least one thing is found for each name item
+	on list (else returned list will be NULL) and return the collected instances.
+*/
+static
+struct gl_list_t *FindInsts(struct Instance *inst,
+                            CONST struct VariableList *list,
+                            enum find_errors *err)
+{
+  struct gl_list_t *result,*temp;
+  unsigned c,len;
+  result = gl_create(7L);
+  while(list!=NULL){
+    temp = FindInstances(inst,NamePointer(list),err);
+    if (temp==NULL){
+      gl_destroy(result);
+      return NULL;
+    }
+    len = gl_length(temp);
+    for(c=1;c<=len;c++) {
+      gl_append_ptr(result,gl_fetch(temp,c));
+    }
+    gl_destroy(temp);
+    list = NextVariableNode(list);
+  }
+  return result;
+}
 
 /**
    Missing instances: makes sure at least one thing is found for
@@ -10806,7 +10838,7 @@ void Pass2FORMarkCond(struct Instance *inst, struct Statement *statement)
 static
 void Pass1RealExecuteFOR(struct Instance *inst, struct Statement *statement)
 {
-	/*printf("\n Pass1RealExecuteFOR called \n");*/
+	printf("\n Pass1RealExecuteFOR called \n");
   symchar *name;
   struct Expr *ex;
   struct StatementList *sl;

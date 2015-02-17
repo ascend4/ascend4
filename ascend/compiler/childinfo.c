@@ -21,8 +21,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License along with
+ *  the program; if not, write to the Free Software Foundation, Inc., 675
+ *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 #include <ascend/general/platform.h>
 
@@ -33,6 +34,11 @@
 #include "setinstval.h"
 #include "childinfo.h"
 #include <ascend/general/mathmacros.h>
+
+#ifndef lint
+static CONST char ChildDescID[] = "$Id: childinfo.c,v 1.10 1998/02/05 16:35:39 ballan Exp $";
+#endif
+
 
 void CDescInit(struct ChildDesc *v)
 {

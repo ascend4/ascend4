@@ -1,5 +1,4 @@
 Import('fprops_env')
-import os
 
 pyenv = fprops_env.Clone()
 
@@ -32,15 +31,12 @@ if not fprops_env.get('PYTHON_LIBPATH'):
 			python_linkflags += cfig['LIBS'].split(' ')
 	fprops_env['PYTHON_LIBPATH'] = python_libpath
 
-lib = pyenv.SharedLibrary('fprops',['fprops.i'] + fprops_env['shobjs']
-	,LIBPATH=['..'] + fprops_env['PYTHON_LIBPATH']
+lib = pyenv.SharedLibrary('fprops',['fprops.i'] + pyenv['shobjs']
+	,LIBPATH=['#'] + fprops_env['PYTHON_LIBPATH']
 	,CPPPATH=['#',distutils.sysconfig.get_python_inc()]
-	,LIBS=["m",python_lib % (sys.version_info[0],sys.version_info[1])]
+	,LIBS=[python_lib % (sys.version_info[0],sys.version_info[1])]
 	,SWIGFLAGS=['-python']
 )
-
-pyenv.Depends(lib,"fprops_wrap.c")
-#pyenv.Depends(lib,fprops_env['libfprops'])
 
 fprops_env['pyfprops'] = lib
 

@@ -59,7 +59,7 @@ int slvreq_c_set_solver(const char *solvername, void *user_data){
 	SlvReqC *S = (SlvReqC *)user_data;
 	int index = slv_lookup_client(solvername);
 	if(index == -1){
-		CONSOLE_DEBUG("Failed to locate solver '%s'",solvername);
+		CONSOLE_DEBUG("Failed to locate solve '%s'",solvername);
 		return 1;
 	}
 

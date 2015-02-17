@@ -22,7 +22,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
+ *
  */
 
 #include <stdarg.h>
@@ -45,6 +48,10 @@
 #include "when_util.h"
 #include "instance_types.h"
 #include "visitlink.h"
+
+#ifndef lint
+static CONST char NameVisitModuleID[] = "$Id: visitlink.c,v 1.3 1997/12/20 17:51:57 ballan Exp $";
+#endif
 
 static
 void SlowVisitTreeTwo(struct Instance *inst,

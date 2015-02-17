@@ -61,12 +61,12 @@ END equipment;
 
 MODEL pump REFINES equipment;
 	NOTES
-		'block' SELF {Pump}
+		'block' SELF {Pump piece}
 		'icon' SELF {pump.svg}
 		'graphic' SELF {5,5,5,2,0
 					2.5,9.325-0,10-10,10-7.5,9.325}
-		'port_in' SELF {inlet:0,5}
-		'port_out' SELF {outlet:10,5}
+		'port_in' SELF {0,5}
+		'port_out' SELF {10,5}
 	END NOTES;
 	inlet.p - 1 {bar} = outlet.p;
 END pump;
@@ -78,8 +78,8 @@ MODEL tee REFINES equipment;
 		'graphic' SELF {0,0-0,10
 				0,0-10,5
 				10,5-0,10}
-		'port_in' SELF {inlet:0,5}
-		'port_out' SELF {outlet:10,4-side:10,6}
+		'port_in' SELF {0,5}
+		'port_out' SELF {10,4 10,6}
 	END NOTES;
 	side "out:" IS_A stream;
 	inlet.mdot = outlet.mdot + side.mdot;
@@ -87,7 +87,7 @@ END tee;
 
 MODEL join REFINES equipment;
 	NOTES
-		'block' SELF {Joiner}
+		'block' SELF {Joiner piece}
 		'inline' inlet {in: AS NAMED IN 'join'}
 		'icon' SELF {join.svg}
 		'graphic' SELF {2,1-8,1
@@ -120,7 +120,7 @@ END heater;
 
 MODEL turbine;
 	NOTES
-		'block' SELF {Turbine}
+		'block' SELF {Turbine model}
 		'icon' SELF {turbine.svg}
 		'graphic' SELF {0,2-0,8-10,10-10,0-0,2}
 	END NOTES;
@@ -132,8 +132,8 @@ MODEL Default REFINES equipment;
 	NOTES
 		'block' SELF {Default model}
 		'icon' SELF {}
-		'port_in' SELF {inlet:0,5}
-		'port_out' SELF {outlet:10,5}
+		'port_in' SELF {0,5}
+		'port_out' SELF {10,5}
 	END NOTES;
 	V "param:" IS_A volume;
 END Default;
@@ -226,7 +226,7 @@ END reservoir_out_test;
 
 MODEL pipesegment REFINES equipment ;
 	NOTES
-		'block' SELF {Pipe Segment}
+		'block' SELF {Pipesegment}
 		'icon' SELF {pipesegment.png}
 		'graphic' SELF {0,0-3,0-3,3-10,3-10,6-3,6-3,10-0,10}
 	END NOTES;
@@ -315,5 +315,4 @@ MODEL pump_minimal_test REFINES equipment;
 	inlet.cp, outlet.cp ARE_THE_SAME;
 
 END pump_minimal_test;
-
 

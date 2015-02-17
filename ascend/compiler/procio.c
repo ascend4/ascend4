@@ -21,8 +21,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License along
+ *  with the program; if not, write to the Free Software Foundation, Inc., 675
+ *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 #include<math.h>
 #include<stdio.h>
@@ -53,9 +54,7 @@ void WriteInitWarn(struct procFrame *fm, const char *str){
 }
 
 void WriteInitErr(struct procFrame *fm, const char *str){
-  //WriteStatementErrorMessage(fm->err, fm->stat, str,1,2);
   WSEM(fm->err,fm->stat,str);
-  WriteStatementLocation(fm->err,fm->stat);
   FFLUSH(fm->err);
 }
 

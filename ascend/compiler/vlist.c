@@ -21,8 +21,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License along
+ *  with the program; if not, write to the Free Software Foundation, Inc., 675
+ *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
 #include<stdio.h>
@@ -41,6 +42,10 @@
 
 #ifndef TRUE
 #define TRUE 1
+#endif
+
+#ifndef lint
+static CONST char VariableListID[] = "$Id: vlist.c,v 1.7 1997/07/18 12:36:36 mthomas Exp $";
 #endif
 
 struct VariableList *CreateVariableNode(struct Name *n)

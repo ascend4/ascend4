@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	Unit test functions for FIX and FREE argument lists, especially where
@@ -46,7 +48,7 @@ static struct Instance *load_model(const char *name){
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-
+	
 	/* load the file */
 	m = Asc_OpenModule("test/compiler/fixfree.a4c",&status);
 	CU_ASSERT(status == 0);
@@ -95,7 +97,7 @@ static void test_test1(void){
 	CHECK_FREE("x");
 	CHECK_FIXED("y");
 	CHECK_FREE("z");
-
+	
 	sim_destroy(sim);
 	Asc_CompilerDestroy();
 }
@@ -119,7 +121,7 @@ static void test_test2(void){
 	CHECK_FREE("y");
 	CHECK_FIXED("x");
 	CHECK_FREE("z"); /* we expect names after the wrong ones not to have been changed */
-
+	
 	sim_destroy(sim);
 	Asc_CompilerDestroy();
 }
@@ -141,7 +143,7 @@ static void test_test3(void){
 
 	CHECK_FIXED("x");
 	CHECK_FREE("z");
-
+	
 	sim_destroy(sim);
 	Asc_CompilerDestroy();
 }
@@ -156,6 +158,6 @@ static void test_test3(void){
 	T(test1) \
 	T(test2) \
 	T(test3)
-
+	
 REGISTER_TESTS_SIMPLE(compiler_fixfree, TESTS)
 

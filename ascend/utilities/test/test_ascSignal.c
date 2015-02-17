@@ -16,7 +16,9 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
  */
 
 #include <ascend/utilities/ascSignal.h>
@@ -230,10 +232,10 @@ static void test_pushpop(void){
 
 
 void test_raise(){
-  //SigHandlerFn* old_handler;
+  SigHandlerFn* old_handler;
   volatile int signal1_caught;
-  //volatile int signal2_caught;
-  //volatile int signal3_caught;
+  volatile int signal2_caught;
+  volatile int signal3_caught;
 
   unsigned long prior_meminuse;
   prior_meminuse = ascmeminuse();             /* save meminuse() at start of test function */
@@ -343,7 +345,7 @@ for signal handling. more work required. */
          //Asc_SignalTrap(SIGFPE);
          //CONSOLE_DEBUG("and here");
       }else{
-        /* catching our first SIGFPE, labelled 'signal 3' */
+        /* catching our first SIGFPE, labelled 'signal 3' */ 
         CONSOLE_DEBUG("got here");
         CU_TEST(f_handler1_called == FALSE);
         CU_TEST(f_handler1_sigval == 0);
@@ -377,9 +379,9 @@ for signal handling. more work required. */
     CU_TEST(FALSE == signal1_caught);
     CU_TEST(TRUE == signal2_caught);
     CU_TEST(FALSE == signal3_caught);
-
+    
     CU_TEST(0 == Asc_SignalHandlerPop(SIGFPE, my_handler2));
-
+    
     f_handler1_called = FALSE;
     f_handler1_sigval = 0;
     f_handler2_called = FALSE;
@@ -398,9 +400,9 @@ for signal handling. more work required. */
   CU_TEST(TRUE == signal1_caught);
   CU_TEST(FALSE == signal2_caught);
   CU_TEST(FALSE == signal3_caught);
-
+  
   CU_TEST(0 == Asc_SignalHandlerPop(SIGFPE, my_handler1));
-
+  
   f_handler1_called = FALSE;                              /* initialize flags for detecting flow */
   f_handler1_sigval = 0;
   f_handler2_called = FALSE;

@@ -292,6 +292,7 @@ class ModelView:
 #   CONTEXT MENU
 
 	def on_treeview_event(self,widget,event):
+	
 		_path = None
 		_contextmenu = False
 		if event.type==gtk.gdk.KEY_RELEASE:

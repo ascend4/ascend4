@@ -25,12 +25,10 @@ SymChar::SymChar(const char *name){
 	sc = AddSymbol(name);
 }
 
-#if 0
-SymChar::SymChar(const symchar *hash) : sc(){
+SymChar::SymChar(const symchar *hash) : sc(sc){
 	cerr << "CREATING SymChar from symchar*, '" << toString() << "'" << endl;
 	// nothing else
 }
-#endif
 
 SymChar::SymChar(const struct InstanceName &in) {
 
