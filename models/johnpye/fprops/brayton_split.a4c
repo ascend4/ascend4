@@ -192,7 +192,7 @@ MODEL brayton_split_co2 REFINES brayton_split_common;
 	HEH.n :== 8;
 	heatex_temp_eq: CO1.outlet.T = HEH.inlet.T;
 METHODS
-METHOD on_load;
+METHOD config;
 	ME.cons_mass.included := FALSE;
 	RUN default_self;
 	RUN ClearAll;
@@ -209,7 +209,6 @@ METHOD on_load;
 	FIX CO2.eta := 0.8;
 	FIX CO1.eta := 0.8;
 	FIX BO.eta; BO.eta := 1.0;
-
 	(* with HEL.outlet_hot.T specified, we get a nice solution, but we find
 	that we can FREE that temperature after solution has completed, and then re-
 	included heatex_temp_eq and the system still solves and is square... is
@@ -218,7 +217,9 @@ METHOD on_load;
 	FIX mdot := 1.0 {kg/s};
 	FIX HEL.outlet_hot.T := 350 {K};
 	heatex_temp_eq.included := FALSE;
-
+END config;
+METHOD on_load;
+	RUN config;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 	OPTION iterationlimit 400;

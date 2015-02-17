@@ -1,6 +1,11 @@
 REQUIRE "johnpye/fprops/brayton_split.a4c";
 REQUIRE "johnpye/moltensalt.a4c";
 
+(* we changed the moltensalt model now, need to add mass flow rate to model *)
+MODEL moltensalt_node REFINES moltensalt_fluid;
+	mdot IS_A mass_rate;
+END moltensalt_node;
+
 (*
 	This is a very simplified salt heat exchanger model. It has to be done
 	differently from heatex_pinch because we don't yet have support for 
@@ -15,7 +20,6 @@ MODEL boiler_heatex_salt REFINES boiler_simple;
 
 	(* Qdot is positive if heat is added to the cold-side flow *)
 	Qdot = inlet_salt.mdot * (inlet_salt.h - outlet_salt.h);
-
 END boiler_heatex_salt;	
 
 MODEL brayton_split_salt_co2 REFINES brayton_split_co2;
@@ -27,10 +31,13 @@ MODEL brayton_split_salt_co2 REFINES brayton_split_co2;
 	HEH.n :== 8;	
 METHODS
 METHOD on_load;
+	RUN brayton_split_co2::config;
 	FIX BO.inlet_salt.T := 565 {K} + 263.15 {K};
 	FIX BO.inlet_salt.p := 1 {bar};
 	FIX BO.mdot_salt := 1 {kg/s};
-	RUN brayton_split_co2::on_load;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 400;
 END on_load;
 METHOD self_test;
 	ASSERT BO.inlet_salt.T == 565 {K} + 263.15 {K};
