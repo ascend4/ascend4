@@ -23,8 +23,8 @@ class BlockType():
         self.notesdb = notesdb
         self.arrays = []
         self.gr = [] # this data structure is for Graphical Representation for custom icons
-        self.port_in = [] # this list is for location of input ports in custom icons
-        self.port_out = [] # this list is for location of output ports in custom icons
+        self.port_in = {} # this list is for location of input ports in custom icons
+        self.port_out = {} # this list is for location of output ports in custom icons
 
         # FIXME BlockType should know what .a4c file to load in order to access
         # its type definition, for use in unpickling.
@@ -80,21 +80,27 @@ class BlockType():
         if nn:
             n = nn[0].getText().split(" ")
             for m in n:
-                tt = m.split(",")
-                pp = []
+                tt = m.split("-")
                 for k in tt:
-                    pp.append(k)
-                self.port_in.append(pp)
+                    tpp = k.split(":")
+                    loc = tpp[1].split(",")
+                    xy = []
+                    xy.append(loc[0])
+                    xy.append(loc[1])
+                    self.port_in[str(tpp[0])] = xy
 
         nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("port_out"))
         if nn:
             n = nn[0].getText().split(" ")
             for m in n:
-                tt = m.split(",")
-                pp = []
+                tt = m.split("-")
                 for k in tt:
-                    pp.append(k)
-                self.port_out.append(pp)
+                    tpp = k.split(":")
+                    loc = tpp[1].split(",")
+                    xy = []
+                    xy.append(loc[0])
+                    xy.append(loc[1])
+                    self.port_out[str(tpp[0])] = xy
 
         nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("array"))
         for n in nn:

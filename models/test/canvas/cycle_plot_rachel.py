@@ -113,6 +113,35 @@ def cycle_plot_brayton_rachel(self):
 	ion()
 	show()
 	savefig(os.path.expanduser("~/Desktop/brayton.eps"))
+
+def cycle_plot_brayton_split_rachel(self):
+	"""Plot T-s diagram for a split Brayton cycle"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()
+	hold(1)
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	sat_curve(D)
+
+	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
+	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
+	heh_hot_curve = pconst (self.HEH.inlet_hot, self.HEH.outlet_hot,100)
+	hel_hot_curve = pconst (self.HEL.inlet_hot, self.HEL.outlet_hot,100)
+	hel_curve = pconst(self.HEL.inlet, self.HEL.outlet,100)
+	heh_curve = pconst(self.HEH.inlet, self,HEH.outlet,100)
+	SS = boiler_curve + [self.TU.inlet, self.TU.outlet] + heh_hot_curve + hel_hot_curve + condenser_curve + [self.PU2.inlet, self.PU2.outlet]+ hel_curve + heh_curve
+	plot_Ts(SS)
+
+	title(unicode(r"Brayton cycle with %s" % D.name))
+	ylabel(unicode(r"T / [°C]"))
+	aa = axis(); axis([aa[0],aa[1],-100,600])
+	xlabel("s / [kJ/kg/K]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+	savefig(os.path.expanduser("~/Desktop/brayton.eps"))
 	
 def cycle_plot_rankine_regen2(self):
 	"""Plot T-s diagram for a regenerative Rankine cycle (bleed steam regen)"""
@@ -255,6 +284,34 @@ def cycle_plot_brayton_regen(self):
 	show()
 	savefig(os.path.expanduser("~/Desktop/brayton_regen.eps"))
 
+	#--- simple split turbine models ---
+
+
+def cycle_plot_brayton_split_regen(self):
+	"""Plot T-s diagran for regenerative gas turbine"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()		
+	hold(1)
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	sat_curve(D)
+	
+	# plot gas turbine cycle
+	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
+	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
+	SS = [self.PU2.inlet, self.PU2.outlet, self.HEL.inlet, self.HEL.outlet, self.HEH.inlet, self.HEH.outlet] + boiler_curve + [self.TU.inlet, self.TU.outlet,self.HEH.inlet_hot, self.HEH.outlet_hot, self.HEL.inlet_hot, self.HEL.outlet_hot, self.CO.inlet, self.CO.outlet, self.PU2.inlet]
+	plot_Ts(SS)
+	hold(1)
+
+	title(unicode(r"Split Regenerative Brayton cycle"))
+	ylabel(unicode(r"T / [°C]"))
+	xlabel("s / [kJ/kg/K]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+	savefig(os.path.expanduser("~/Desktop/brayton__split_regen.eps"))
 
 def cycle_plot_brayton_reheat(self):
 	"""Plot T-s diagram for reheat gas turbine"""
@@ -421,9 +478,11 @@ extpy.registermethod(cycle_plot_rankine_regen1)
 extpy.registermethod(cycle_plot_rankine_regen2)
 extpy.registermethod(cycle_plot_brayton_regen)
 extpy.registermethod(cycle_plot_ccgt)
+extpy.registermethod(cycle_plot_brayton_split_regen)
 extpy.registermethod(heater_closed_plot)
 extpy.registermethod(air_stream_heat_exchanger_plot)
 extpy.registermethod(regenerator_plot_fprops)
+extpy.registermethod(cycle_plot_brayton_split_rachel)
 extpy.registermethod(cycle_plot_brayton_reheat_regen)
 extpy.registermethod(cycle_plot_brayton_reheat)
 extpy.registermethod(cycle_plot_brayton_reheat_regen_intercool)

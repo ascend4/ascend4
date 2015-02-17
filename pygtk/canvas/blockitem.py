@@ -95,9 +95,9 @@ class BlockItem(ElementNoPorts):
         if not (len(self.port_in)==0 and len(self.port_out)==0):
             for w in self._ports:
                 if(w.get_portinstance().io == PORT_IN):
-                    w.point._set_pos(Position(((float(self.port_in[w.get_portlabel()][0]) * self.normx),(float(self.port_in[w.get_portlabel()][1]) * self.normy))))
+                    w.point._set_pos(Position(((float(self.port_in[w.portinstance.name][0]) * self.normx),(float(self.port_in[w.portinstance.name][1]) * self.normy))))
                 else:
-                    w.point._set_pos(Position(((float(self.port_out[w.get_portlabel()][0]) * self.normx),(float(self.port_out[w.get_portlabel()][1]) * self.normy))))
+                    w.point._set_pos(Position(((float(self.port_out[w.portinstance.name][0]) * self.normx),(float(self.port_out[w.portinstance.name][1]) * self.normy))))
 
     #Here combination of translate(x,y),rotate(angle),translate(-x,-y) is used to perform
     #rotation and flip about centre(x,y)
@@ -138,24 +138,24 @@ class BlockItem(ElementNoPorts):
             for p in self._ports:
                 if hasattr(p,"point") and checkportscanconnect(p.portinstance, SET_CONNECTION_FLAG[1]):
                     c.rectangle(p.point.x - phalfsize, p.point.y - phalfsize, 2*phalfsize, 2*phalfsize)
-                    c.set_source_rgba(0.8,0.8,1, 0.8)
+                    c.set_source_rgba(0.9,0.9,0.9, 0.8)
                     c.fill_preserve()
-                    c.set_source_rgb(0.8,0.8,1)
+                    c.set_source_rgb(0,0,1) # blue when connect able
                     c.stroke()
 
                 elif hasattr(p,"point") and not checkportscanconnect(p.portinstance, SET_CONNECTION_FLAG[1]):
                     c.rectangle(p.point.x - phalfsize, p.point.y - phalfsize, 2*phalfsize, 2*phalfsize)
-                    c.set_source_rgba(0.8,0.8,1, 0.8)
+                    c.set_source_rgba(0,0,0, 0.8)
                     c.fill_preserve()
-                    c.set_source_rgb(0.8,0.8,0)
+                    c.set_source_rgb(0,0,0) # black when not connect able
                     c.stroke()
         else:
             for p in self._ports:
                 if hasattr(p,"point"):
                     c.rectangle(p.point.x - phalfsize, p.point.y - phalfsize, 2*phalfsize, 2*phalfsize)
-                    c.set_source_rgba(0.8,0.8,1, 0.8)
+                    c.set_source_rgba(0,0,0, 0.8)
                     c.fill_preserve()
-                    c.set_source_rgb(0.8,0.8,0)
+                    c.set_source_rgb(0,0,0)
                     c.stroke()
 
     #port-labels will be displayed when mouse is hovered over the item's context
@@ -180,7 +180,7 @@ class BlockItem(ElementNoPorts):
                         text_align(c,w.point.x+3.5*len(str(w.get_portname())),w.point.y,str(w.get_portname()))
 
         c.set_source_rgb(0,0,0)
-        text_center(c,self.h[SE].pos.x/2,self.h[SE].y/2,self.blockinstance.name)
+        text_center(c,self.h[SE].pos.x/2,self.h[SE].y/0.9,self.blockinstance.name)
 
     def pre_update(self,context):
     #print "PRE-UPDATE BLOCK"
@@ -230,33 +230,36 @@ class GraphicalBlockItem(BlockItem):
         noutputs = len(blockinstance.blocktype.outputs)
         ii, oi = (0,0) # input and output index counters
         _ports = []
-        if not (len(self.port_in)==0 and len(self.port_out)==0):
-            for i in self.blockinstance.ports:
-                if self.blockinstance.ports[i].io is PORT_IN:
-                    p = BlockPort(blockinstance, i,self.port_in[ii],ii)
-                    ii += 1
-                elif self.blockinstance.ports[i].io is PORT_OUT:
-                    p = BlockPort(blockinstance, i,self.port_out[oi],oi)
-                    oi += 1
-                else:
-                    raise RuntimeError("Unknown port type")
-                _ports.append(p)
-        else:
-            for i in self.blockinstance.ports:
-                if self.blockinstance.ports[i].io is PORT_IN:
-                    p = BlockPort(blockinstance, i,[0,0],ii)
-                    self._constraints.append(eq(p.point.x, self.h_nw.x))
-                    self._constraints.append(bal(band=(self.h_nw.y, self.h_sw.y),v=p.point.y, balance=(0.5 + ii)/ninputs))
-                    ii += 1
-                elif self.blockinstance.ports[i].io is PORT_OUT:
-                    p = BlockPort(blockinstance, i,[0,0],oi)
-                    self._constraints.append(eq(p.point.x, self.h_ne.x))
-                    self._constraints.append(bal(band=(self.h_ne.y,self.h_se.y),v=p.point.y, balance=(0.5 + oi)/noutputs))
-                    oi += 1
-                else:
-                    raise RuntimeError("Unknown port type")
-                _ports.append(p)
-
+        try:
+            if not (len(self.port_in)==0 and len(self.port_out)==0):
+                for i in self.blockinstance.ports:
+                    if self.blockinstance.ports[i].io is PORT_IN:
+                        p = BlockPort(blockinstance, i,self.port_in[i],ii)
+                        ii += 1
+                    elif self.blockinstance.ports[i].io is PORT_OUT:
+                        p = BlockPort(blockinstance, i,self.port_out[i],oi)
+                        oi += 1
+                    else:
+                        raise RuntimeError("Unknown port type")
+                    _ports.append(p)
+            else:
+                for i in self.blockinstance.ports:
+                    if self.blockinstance.ports[i].io is PORT_IN:
+                        p = BlockPort(blockinstance, i,[0,0],ii)
+                        self._constraints.append(eq(p.point.x, self.h_nw.x))
+                        self._constraints.append(bal(band=(self.h_nw.y, self.h_sw.y),v=p.point.y, balance=(0.5 + ii)/ninputs))
+                        ii += 1
+                    elif self.blockinstance.ports[i].io is PORT_OUT:
+                        p = BlockPort(blockinstance, i,[0,0],oi)
+                        self._constraints.append(eq(p.point.x, self.h_ne.x))
+                        self._constraints.append(bal(band=(self.h_ne.y,self.h_se.y),v=p.point.y, balance=(0.5 + oi)/noutputs))
+                        oi += 1
+                    else:
+                        raise RuntimeError("Unknown port type")
+                    _ports.append(p)
+        except KeyError:
+            print "Error Reporter to be called as it is a user error"
+            print "Syntax error while defining ports or some ports-location are left to be added"
         self._ports = _ports
 
     def up(self):
@@ -317,35 +320,39 @@ class DefaultBlockItem(BlockItem):
         ii, oi = (0,0) # input and output index counters
         _ports = []
 
+        try:
         # check to ensure if there is no port_in and port_out string
         # it will draw ports at default location in that case
-        if not (len(self.port_in)==0 and len(self.port_out)==0):
-            for i in self.blockinstance.ports:
-                if self.blockinstance.ports[i].io is PORT_IN:
-                    p = BlockPort(blockinstance, i,self.port_in[ii],ii)
-                    ii += 1
-                elif self.blockinstance.ports[i].io is PORT_OUT:
-                    p = BlockPort(blockinstance, i,self.port_out[oi],oi)
-                    oi += 1
-                else:
-                    raise RuntimeError("Unknown port type")
-                _ports.append(p)
-        else:
-            for i in self.blockinstance.ports:
-                if self.blockinstance.ports[i].io is PORT_IN:
-                    p = BlockPort(blockinstance, i,[0,0],ii)
-                    self._constraints.append(eq(p.point.x, self.h_nw.x))
-                    self._constraints.append(bal(band=(self.h_nw.y, self.h_sw.y),v=p.point.y, balance=(0.5 + ii)/ninputs))
-                    ii += 1
-                elif self.blockinstance.ports[i].io is PORT_OUT:
-                    p = BlockPort(blockinstance, i,[0,0],oi)
-                    self._constraints.append(eq(p.point.x, self.h_ne.x))
-                    self._constraints.append(bal(band=(self.h_ne.y,self.h_se.y),v=p.point.y, balance=(0.5 + oi)/noutputs))
-                    oi += 1
-                else:
-                    raise RuntimeError("Unknown port type")
-                _ports.append(p)
-
+            if not (len(self.port_in)==0 and len(self.port_out)==0):
+                for i in self.blockinstance.ports:
+                    if self.blockinstance.ports[i].io is PORT_IN:
+                        p = BlockPort(blockinstance, i,self.port_in[i],ii)
+                        #print self.port_in[i],i
+                        ii += 1
+                    elif self.blockinstance.ports[i].io is PORT_OUT:
+                        p = BlockPort(blockinstance, i,self.port_out[i],oi)
+                        oi += 1
+                    else:
+                        raise RuntimeError("Unknown port type")
+                    _ports.append(p)
+            else:
+                for i in self.blockinstance.ports:
+                    if self.blockinstance.ports[i].io is PORT_IN:
+                        p = BlockPort(blockinstance, i,[0,0],ii)
+                        self._constraints.append(eq(p.point.x, self.h_nw.x))
+                        self._constraints.append(bal(band=(self.h_nw.y, self.h_sw.y),v=p.point.y, balance=(0.5 + ii)/ninputs))
+                        ii += 1
+                    elif self.blockinstance.ports[i].io is PORT_OUT:
+                        p = BlockPort(blockinstance, i,[0,0],oi)
+                        self._constraints.append(eq(p.point.x, self.h_ne.x))
+                        self._constraints.append(bal(band=(self.h_ne.y,self.h_se.y),v=p.point.y, balance=(0.5 + oi)/noutputs))
+                        oi += 1
+                    else:
+                        raise RuntimeError("Unknown port type")
+                    _ports.append(p)
+        except KeyError:
+            print "Error Reporter to be called as it is a user error"
+            print "Syntax error while defining ports or some ports-location are left to be added"
         self._ports = _ports   
 
     def draw(self, context):

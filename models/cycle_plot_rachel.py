@@ -14,21 +14,20 @@ except:
 
 #--- for (T,s) plots ---
 
-def sat_curve(D):
-	Tt = D.T_t
-	Tc = D.T_c
+def sat_curve(d):
+	Tt = d.T_t
+	Tc = d.T_c
 	TT = []
 	pp = []
 	ssf = []
 	ssg = []
 	for T in linspace(Tt,Tc,100):
-		# TODO this is inefficient because of repeated saturation solutions.
-		SF = D.set_Tx(T,0)
-		SG = D.set_Tx(T,1)
-		TT.append(SF.T - 273.15)
-		pp.append(SF.p)
-		ssf.append(SF.s/1.e3)
-		ssg.append(SG.s/1.e3)
+		res,p,rf,rg = fprops.fprops_sat_T(T,d)
+		if not res:
+			TT.append(T - 273.15)
+			pp.append(p)
+			ssf.append(fprops.helmholtz_s_raw(T,rf,d)/1.e3)
+			ssg.append(fprops.helmholtz_s_raw(T,rg,d)/1.e3)
 	plot(ssf,TT,"b--")
 	plot(ssg,TT,"r--")
 
@@ -42,12 +41,13 @@ def write(msg):
 
 def pconst(S1,S2,n):
 	"""Return a set of (T,s) points between two states, with pressure held constant."""
-	D = fprops.fluid(str(S1.cd.component.getSymbolValue()),str(S1.cd.type.getSymbolValue()))	
+	D = fprops.fprops_fluid(str(S1.cd.component.getSymbolValue()))	
 	out = []
 	hh = linspace(float(S1.h), float(S2.h), n)
 	for h in hh:
-		S = D.set_ph(float(S1.p), h)
-		out += [TSPoint(S.T,S.s)]
+		res, T, rho = fprops.fprops_solve_ph(float(S1.p), h, 0, D)
+		if not res:
+			out += [TSPoint(T,fprops.helmholtz_s(T,rho,D))]
 	return out
 
 
@@ -69,14 +69,14 @@ class THPoint:
 
 def pconsth(S1,S2,n):
 	"""Return a set of (T,H) points between two states, with pressure constant"""
-	D = fprops.fluid(str(S1.cd.component.getSymbolValue()),str(S1.cd.type.getSymbolValue()))	
+	D = fprops.fprops_fluid(str(S1.cd.component.getSymbolValue()))	
 	out = []
 	hh = linspace(float(S1.h), float(S2.h), n)
 	mdot = float(S1.mdot)
 	for h in hh:
-		# TODO add try/except
-		S = D.set_ph(float(S1.p),h)
-		out += [THPoint(S.T,h * mdot)]
+		res, T, rho = fprops.fprops_solve_ph(float(S1.p), h, 0, D)
+		if not res:
+			out += [THPoint(T,h * mdot)]
 	return out
 
 def plot_TH(SS,style='b-',Href = 0):
@@ -89,19 +89,48 @@ def plot_TH(SS,style='b-',Href = 0):
 
 #--- various Rankine cycle configurations ---
 
-def cycle_plot_brayton(self):
+def cycle_plot_brayton_rachel(self):
 	"""Plot T-s diagram for a simple Brayton cycle"""
 	import loading
 	loading.load_matplotlib(throw=True)
 	ioff()
 	figure()
-	D = fprops.fluid(str(self.cd.component.getSymbolValue()),str(self.cd.type.getSymbolValue()))
-	sat_curve(D)
 	hold(1)
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	sat_curve(D)
 
 	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
 	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
 	SS = [self.PU.outlet, self.BO.inlet] + boiler_curve + [self.TU.inlet, self.TU.outlet] + condenser_curve + [self.CO.outlet, self.PU.outlet]
+	plot_Ts(SS)
+
+	title(unicode(r"Brayton cycle with %s" % D.name))
+	ylabel(unicode(r"T / [°C]"))
+	aa = axis(); axis([aa[0],aa[1],-100,600])
+	xlabel("s / [kJ/kg/K]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+	savefig(os.path.expanduser("~/Desktop/brayton.eps"))
+
+def cycle_plot_brayton_split_rachel(self):
+	"""Plot T-s diagram for a split Brayton cycle"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()
+	hold(1)
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	sat_curve(D)
+
+	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
+	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
+	heh_hot_curve = pconst (self.HEH.inlet_hot, self.HEH.outlet_hot,100)
+	hel_hot_curve = pconst (self.HEL.inlet_hot, self.HEL.outlet_hot,100)
+	hel_curve = pconst(self.HEL.inlet, self.HEL.outlet,100)
+	heh_curve = pconst(self.HEH.inlet, self,HEH.outlet,100)
+	SS = boiler_curve + [self.TU.inlet, self.TU.outlet] + heh_hot_curve + hel_hot_curve + condenser_curve + [self.PU2.inlet, self.PU2.outlet]+ hel_curve + heh_curve
 	plot_Ts(SS)
 
 	title(unicode(r"Brayton cycle with %s" % D.name))
@@ -121,7 +150,7 @@ def cycle_plot_rankine_regen2(self):
 	ioff()
 	figure()
 	hold(1)
-	D = fprops.fluid(str(self.cd.component.getSymbolValue()),str(self.cd.type.getSymbolValue()))
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
 	sat_curve(D)
 
 	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
@@ -164,7 +193,7 @@ def cycle_plot_rankine_regen1(self):
 	ioff()
 	figure()
 	hold(1)
-	D = fprops.fluid(str(self.cd.component.getSymbolValue()),str(self.cd.type.getSymbolValue()))
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
 	sat_curve(D)
 
 	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
@@ -205,7 +234,7 @@ def heater_closed_plot(self):
 	ioff()
 	figure()
 	hold(1)
-	D = fprops.fluid(str(self.cd.component.getSymbolValue()),str(self.cd.type.getSymbolValue()))
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
 	HE = self.HE
 
 	extpy.getbrowser().reporter.reportNote("Fluid is %s" % D.name)	
@@ -237,7 +266,7 @@ def cycle_plot_brayton_regen(self):
 	ioff()
 	figure()
 	hold(1)
-	D = fprops.fluid(str(self.cd.component.getSymbolValue()),str(self.cd.type.getSymbolValue()))
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
 	sat_curve(D)	
 
 	# plot gas turbine cycle
@@ -255,7 +284,34 @@ def cycle_plot_brayton_regen(self):
 	show()
 	savefig(os.path.expanduser("~/Desktop/brayton_regen.eps"))
 
+	#--- simple split turbine models ---
 
+
+def cycle_plot_brayton_split_regen(self):
+	"""Plot T-s diagran for regenerative gas turbine"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()		
+	hold(1)
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	sat_curve(D)
+	
+	# plot gas turbine cycle
+	boiler_curve = pconst(self.BO.inlet, self.BO.outlet,100)
+	condenser_curve = pconst(self.CO.inlet,self.CO.outlet,100)
+	SS = [self.PU2.inlet, self.PU2.outlet, self.HEL.inlet, self.HEL.outlet, self.HEH.inlet, self.HEH.outlet] + boiler_curve + [self.TU.inlet, self.TU.outlet,self.HEH.inlet_hot, self.HEH.outlet_hot, self.HEL.inlet_hot, self.HEL.outlet_hot, self.CO.inlet, self.CO.outlet, self.PU2.inlet]
+	plot_Ts(SS)
+	hold(1)
+
+	title(unicode(r"Split Regenerative Brayton cycle"))
+	ylabel(unicode(r"T / [°C]"))
+	xlabel("s / [kJ/kg/K]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+	savefig(os.path.expanduser("~/Desktop/brayton__split_regen.eps"))
 
 def cycle_plot_brayton_reheat(self):
 	"""Plot T-s diagram for reheat gas turbine"""
@@ -264,7 +320,7 @@ def cycle_plot_brayton_reheat(self):
 	ioff()
 	figure()		
 	hold(1)
-	D = fprops.fluid(str(self.cd.component.getSymbolValue()),str(self.cd.type.getSymbolValue()))
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
 	sat_curve(D)
 	
 	# plot gas turbine cycle
@@ -291,7 +347,7 @@ def cycle_plot_brayton_reheat_regen(self):
 	ioff()
 	figure()		
 	"""hold(1)
-	D = fprops.fluid(str(self.cd.component.getSymbolValue()))
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
 	sat_curve(D)"""
 	
 	# plot gas turbine cycle
@@ -310,6 +366,58 @@ def cycle_plot_brayton_reheat_regen(self):
 	ion()
 	show()
 	#savefig(os.path.expanduser("~/Desktop/brayton__split_regen.eps"))	
+
+
+
+def cycle_plot_brayton_reheat_regen_intercool(self):
+	"""Plot T-s diagram for reheat-regenerative gas turbine"""
+	import loading
+	loading.load_matplotlib(throw=True)
+	ioff()
+	figure()		
+	hold(1)
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	sat_curve(D)
+	
+	# add some dots for the points in the cycle
+	seq = "CO1.inlet DI2.inlet CO2.inlet RE.inlet BU1.inlet TU1.inlet BU2.inlet TU2.inlet RE.inlet_hot DI1.inlet".split(" ")
+	lalign = "TU2.inlet RE.inlet_hot BU2.inlet DI1.inlet DI2.inlet CO1.inlet".split(" ")
+	SS1 = []; SS1a = []
+	for s in seq:
+		print "looking at '%s'"%s
+		p = reduce(getattr,s.split("."),self)
+		SS1.append(p)
+		SS1a.append((p,s))
+	plot_Ts(SS1,'bo')
+
+	print "ANNOTATIONS"
+	for s in SS1a:
+		align = "right"
+		if s[1] in lalign:
+			align = "left"
+		annotate(s[1]+"  ", xy =(float(s[0].s)/1.e3,float(s[0].T) - 273.15)
+			,horizontalalignment=align
+		)
+
+	# plot the cycle with smooth curves
+	BU1_curve = pconst(self.BU1.inlet, self.BU1.outlet,30)
+	BU2_curve = pconst(self.BU2.inlet, self.BU2.outlet,20)
+	DI1_curve = pconst(self.DI1.inlet,self.DI1.outlet,20)
+	DI2_curve = pconst(self.DI2.inlet,self.DI2.outlet,20)
+	REH_curve = pconst(self.RE.inlet_hot,self.RE.outlet_hot,50)
+	REL_curve = pconst(self.RE.inlet,self.RE.outlet,50)
+
+	SS2 = [self.CO1.inlet, self.CO1.outlet] + DI2_curve + [self.CO2.inlet, self.CO2.outlet] + REL_curve + BU1_curve + [self.TU1.inlet, self.TU1.outlet] + BU2_curve + [self.TU2.inlet, self.TU2.outlet] + REH_curve + DI1_curve + [self.CO1.inlet]
+	plot_Ts(SS2)
+
+	title(unicode(r"Reheat Regenerative Brayton cycle with Intercooling"))
+	ylabel(unicode(r"T / [°C]"))
+	xlabel("s / [kJ/kg/K]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+
 		
 def air_stream_heat_exchanger_plot(self):
 	"""Plot T-H diagram of heat transfer in a heater_closed model"""
@@ -318,7 +426,7 @@ def air_stream_heat_exchanger_plot(self):
 	ioff()
 	figure()
 	hold(1)
-	D = fprops.fluid(str(self.cd_cold.component.getSymbolValue()),str(self.cd_cold.type.getSymbolValue()))
+	D = fprops.fprops_fluid(str(self.cd_cold.component.getSymbolValue()))
 
 	n = self.n.getIntValue()
 	extpy.getbrowser().reporter.reportNote("Fluid is %s" % D.name)	
@@ -341,15 +449,42 @@ def air_stream_heat_exchanger_plot(self):
 	show()
 	#savefig(os.path.expanduser("~/Desktop/air_stream_heatex.eps"))
 
-extpy.registermethod(cycle_plot_brayton)
+def regenerator_plot_fprops(self):
+	"""Plot T-H diagram of regenerator"""
+	import loading; loading.load_matplotlib(throw=True)
+	ioff();	figure(); hold(1)
+	D = fprops.fprops_fluid(str(self.cd.component.getSymbolValue()))
+	extpy.getbrowser().reporter.reportNote("Fluid is %s" % D.name)	
+
+	plot_TH(pconsth(self.inlet_hot, self.outlet_hot, 50),'r-',
+		Href = (float(self.outlet_hot.h)*float(self.outlet_hot.mdot))\
+	)
+
+	plot_TH(pconsth(self.inlet, self.outlet, 50),'b-',
+		Href = (float(self.inlet.h)*float(self.inlet.mdot))\
+	)
+
+	title(unicode(r"%s heat exchanger" % D.name))
+	ylabel(unicode(r"T / [°C]"))
+	xlabel("H / [MW]")
+
+	extpy.getbrowser().reporter.reportNote("Plotting completed")
+	ion()
+	show()
+
+
+extpy.registermethod(cycle_plot_brayton_rachel)
 extpy.registermethod(cycle_plot_rankine_regen1)
 extpy.registermethod(cycle_plot_rankine_regen2)
 extpy.registermethod(cycle_plot_brayton_regen)
 extpy.registermethod(cycle_plot_ccgt)
-extpy.registermethod(cycle_plot_brayton_split)
+extpy.registermethod(cycle_plot_brayton_split_regen)
 extpy.registermethod(heater_closed_plot)
 extpy.registermethod(air_stream_heat_exchanger_plot)
+extpy.registermethod(regenerator_plot_fprops)
+extpy.registermethod(cycle_plot_brayton_split_rachel)
 extpy.registermethod(cycle_plot_brayton_reheat_regen)
 extpy.registermethod(cycle_plot_brayton_reheat)
+extpy.registermethod(cycle_plot_brayton_reheat_regen_intercool)
 
 #the above method can be called using "EXTERNAL fourbarplot(SELF)" in ASCEND.

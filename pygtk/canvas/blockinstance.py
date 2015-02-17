@@ -104,8 +104,9 @@ class ParamInstance:
         self.blockinstance = blockinstance
         self.name = name
         self.type = type
+        self.fix = False
         self.value = self.get_initial_value()
-        self.fix = self.get_initial_state()
+        self.fix = self.set_initial_state()
         if self.type.getPreferredUnits():
             self.units=str(self.type.getPreferredUnits().getName())
         else:
@@ -141,24 +142,35 @@ class ParamInstance:
 
         temp = desc.split(":",2)[1].strip().split("=")
 
-        if(len(temp)==1):
-            return None
-        else:
-            return temp[1].strip()
 
-    def get_initial_state(self):
+        if(len(temp)==1):
+            return None     # for no value
+
+        temp2 = temp[1].split("[")
+
+        # for free state
+        # print len(temp2)
+        if(len(temp2)>1):
+            self.fix = False
+        else:
+            self.fix = True
+
+        #print self.fix
+        if(self.fix):
+            return temp[1].strip().split("{")[0].strip() + temp[1].strip().split("{")[1].strip().split("}")[0].strip()# for fixed state
+        else:
+            return temp2[1].split("]")[0].strip()   # for free state
+
+    def set_initial_state(self):
         '''
         This will return initial state of the parameter i.e. FIX or FREE
         '''
-
-        temp = self.get_initial_value()
-        if (temp != None ):
-            if(len(temp.split("["))>0):
-                return True
-            else:
-                return False
+        self.get_initial_value()
+        if (self.fix):
+            return True  # for fix
         else:
-            return False
+            return False    # for free
+
 
     def getValue(self):
         if self.value:

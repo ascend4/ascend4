@@ -27,8 +27,8 @@ REQUIRE "johnpye/thermo_types.a4c";
 REQUIRE "johnpye/airprops.a4c";
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 
-(*IMPORT "johnpye/extpy/extpy";*)
-(*IMPORT "test/canvas/cycle_plot_rachel";*)
+IMPORT "johnpye/extpy/extpy";
+IMPORT "cycle_plot_rachel";
 
 (*------------------------------------------------------------------------------
   MERGE PIECE
@@ -40,6 +40,9 @@ REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 MODEL merge;
 	NOTES
 		'block' SELF {Model of a joining of two flow streams}
+		'port_in' SELF {inlet:0,5-inlet_branch:5,0}
+		'port_out' SELF {outlet:10,5}
+		'graphic' SELF {0,0-10,0-10,10-0,10-0,0}
 	END NOTES;
 
 	inlet "in:" IS_A stream_node;
@@ -80,8 +83,8 @@ MODEL brayton_common;
 
 	BO IS_A boiler_simple;
 	TU IS_A turbine_simple;
-	CO IS_A condenser_simple;
-	PU IS_A pump_simple;
+	CO IS_A dissipator;
+	PU IS_A compressor_simple;
 	cd ALIASES BO.cd;
 
 	BO.outlet, TU.inlet ARE_THE_SAME;
@@ -139,9 +142,9 @@ METHOD default_self;
 	RUN CO.default_self;
 	RUN PU.default_self;
 END default_self;
-(*METHOD cycle_plot_rachel;
+METHOD cycle_plot_rachel;
 	EXTERNAL cycle_plot_brayton_rachel(SELF);
-END cycle_plot_rachel;*)
+END cycle_plot_rachel;
 END brayton_common;
 
 
@@ -188,10 +191,15 @@ END brayton_co2;
 MODEL regenerator REFINES stream_equipment;
 	NOTES
 		'block' SELF {Model of a Regenerator}
+		'graphic' SELF {0,0-10,0-10,10-0,10-0,0
+					0,3.33-1,3.33-2,4.33-3,3.33-4,4.33-5,3.33-6,4.33-7,3.33-8,4.33-9,3.33-10,3.33
+					0,6.66-1,6.66-2,5.66-3,6.66-4,5.66-5,6.66-6,5.66-7,6.66-8,5.66-9,6.66-10,6.66}
+		'port_in' SELF {inlet:0,3.33-inlet_hot:0,6.66}
+		'port_out' SELF {outlet:10,3.33-outlet_hot:10,6.66}
 	END NOTES;
 
-	inlet_hot "in:" IS_A stream_node;
 	outlet_hot "out:" IS_A stream_node;
+	inlet_hot "in:" IS_A stream_node;
 	
 	inlet.p, outlet.p ARE_THE_SAME;
 	inlet_hot.p, outlet_hot.p ARE_THE_SAME;
@@ -207,7 +215,7 @@ MODEL regenerator REFINES stream_equipment;
 
 	(* for perfect eps=1 case: inlet_hot.T, outlet.T ARE_THE_SAME;*)
 
-	epsilon IS_A fraction;
+	epsilon "param: effectiveness of regenerator" IS_A fraction;
 
 	Qdot IS_A energy_rate;
 	mdot_min IS_A mass_rate;
@@ -223,9 +231,9 @@ METHOD bound_self;
 	DT2.lower_bound := 0 {K};
 	DT.lower_bound := 0 {K};
 END bound_self;
-(*METHOD regenerator_plot;
+METHOD regenerator_plot;
 	EXTERNAL regenerator_plot_fprops(SELF);
-END regenerator_plot;*)
+END regenerator_plot;
 END regenerator;
 
 MODEL regenerator_test REFINES regenerator;
@@ -264,8 +272,8 @@ MODEL brayton_regenerative;
 	
 	BO IS_A boiler_simple;
 	TU IS_A turbine_simple;
-	CO IS_A condenser_simple;
-	PU IS_A pump_simple;
+	CO IS_A dissipator;
+	PU IS_A compressor_simple;
 	RE IS_A regenerator;
 	cd ALIASES BO.cd;
 	cd.component :== 'carbondioxide';
@@ -326,19 +334,19 @@ METHOD on_load;
 	FIX RE.epsilon;
 	RE.epsilon := 0.8;
 END on_load;
-(*METHOD cycle_plot_rachel;
+METHOD cycle_plot_rachel;
 	EXTERNAL cycle_plot_brayton_regen(SELF);
-END cycle_plot_rachel;	*)
+END cycle_plot_rachel;	
 END brayton_regenerative;
 
 
 MODEL brayton_regen_reheat_intercool;
 	BU1, BU2 IS_A boiler_simple;
 	TU1, TU2 IS_A turbine_simple;
-	CO1, CO2 IS_A pump_simple;
+	CO1, CO2 IS_A compressor_simple;
 	RE IS_A regenerator;
-	DI1 IS_A condenser_simple; (* let's call it a 'dissipator' in this case *)
-	DI2 IS_A condenser_simple;
+	DI1 IS_A dissipator;
+	DI2 IS_A dissipator;
 	cd ALIASES BU1.cd;
 
 	BU1.outlet, TU1.inlet ARE_THE_SAME;
@@ -380,9 +388,9 @@ METHOD on_load;
 	FIX RE.epsilon := 0.8;
 	FIX BU1.mdot := 1{kg/s};
 END on_load;
-(*METHOD cycle_plot;
+METHOD cycle_plot;
 	EXTERNAL cycle_plot_brayton_reheat_regen_intercool(SELF);
-END cycle_plot;	*)
+END cycle_plot;	
 END brayton_regen_reheat_intercool;
 
 

@@ -162,7 +162,7 @@ MODEL stream_node;
 	T ALIASES state.T;
 	s ALIASES state.s;
 	x ALIASES state.x;
-	mdot IS_A mass_rate;
+	mdot "param: mass rate" IS_A mass_rate;
 METHODS
 
 METHOD default_self;
@@ -183,8 +183,9 @@ END on_load;
 END stream_node;
 
 MODEL stream_equipment;
-	inlet "in: inlet steam stream" IS_A stream_node;
+	
 	outlet "out: outlet steam stream" IS_A stream_node;
+	inlet "in: inlet steam stream" IS_A stream_node;
 	inlet.cd, outlet.cd ARE_THE_SAME;
 	inlet.mdot, outlet.mdot ARE_THE_SAME;
 	cd ALIASES inlet.cd;
@@ -195,28 +196,26 @@ END stream_equipment;
   PUMP COMPONENT
 *)
 
-MODEL pump_simple REFINES stream_equipment;
+MODEL compressor_simple REFINES stream_equipment;
 	NOTES
-		'block' SELF {Simple model of a pump using isentropic efficiency}
-		'graphic' SELF {0,5-5,0
-			0,5-5,10
-			5,0-10,5
-			5,10-10,5
-			2.5,7.5-0,10
-			0,10-10,10
-			7.5,7.5-10,10}
-		'port_in' SELF {0,5}
-		'port_out' SELF {10,5}
+		'block' SELF {Simple model of a compressor using isentropic efficiency}
+		'graphic' SELF {0,0-0,10-10,6-10,4-0,0
+						1,0.4-1,9.6
+						9,3.6-9,6.4	}
+		'port_in' SELF {inlet:0,5}
+		'port_out' SELF {outlet:10,5}
 	END NOTES;
 
-	dp "param" IS_A delta_pressure;
+	dp "param: it is in fixed state = 20{atm}" IS_A delta_pressure;
+	
 	inlet.p + dp = outlet.p;
 
 	outlet_is IS_A stream_state;
 	outlet_is.p, outlet.p ARE_THE_SAME;
 	outlet_is.cd, outlet.cd ARE_THE_SAME;
 	outlet_is.s, inlet.s ARE_THE_SAME;
-	eta IS_A fraction;
+	eta "param: efficiency of the compressor" IS_A fraction;
+	
 	
 	eta_eq:eta * (inlet.h - outlet.h) = (inlet.h - outlet_is.h);
 
@@ -232,12 +231,9 @@ METHOD default_self;
 	RUN outlet.default_self;
 	RUN outlet_is.default_self;
 END default_self;
-END pump_simple;
+END compressor_simple;
 
-MODEL pump_simple_test REFINES pump_simple;
-NOTES
-	'block' SELF {das}
-END NOTES;
+MODEL compressor_test REFINES compressor_simple;
 	cd.component :== 'water';
 METHODS
 METHOD on_load;
@@ -255,7 +251,7 @@ METHOD on_load;
 	OPTION convopt 'RELNOM_SCALE';
 	OPTION iterationlimit 200;
 END on_load;
-END pump_simple_test;
+END compressor_test;
 
 (*------------------------------------------------------------------------------
   TURBINE COMPONENT
@@ -265,11 +261,12 @@ MODEL turbine_simple REFINES stream_equipment;
 	NOTES
 		'block' SELF {Simple turbine model}
 		'graphic' SELF {10,0-10,10-0,8-0,2-10,0}
-		'port_in' SELF {2.5,0}
-		'port_out' SELF {7.5,0}
+		'port_in' SELF {inlet:3.34,1.332}
+		'port_out' SELF {outlet:6.67,0.667}
 	END NOTES;
 
-	dp IS_A delta_pressure;
+	
+	dp "param: it is in free state = [10{atm}]"  IS_A delta_pressure;
 	inlet.p + dp = outlet.p;
 	
 	outlet_is IS_A stream_state;
@@ -277,7 +274,7 @@ MODEL turbine_simple REFINES stream_equipment;
 	outlet_is.p, outlet.p ARE_THE_SAME;
 	outlet_is.s, inlet.s ARE_THE_SAME;
 
-	eta IS_A fraction;
+	eta "param: efficiency of turbine" IS_A fraction;
 	eta_eq:eta * (inlet.h - outlet_is.h) = (inlet.h - outlet.h);
 	
 	(* work done on the environment, will be positive *)
@@ -324,8 +321,7 @@ END turbine_simple_test;
 MODEL boiler_simple REFINES stream_equipment;
 	NOTES
 		'block' SELF {Simple boiler model}
-		'graphic' SELF {0,0-10,0-10,10-0,10-0,0
-					0,5-1,2-2,4-3,2-4,4-5,2-6,4-7,2-8,4-9,2-10,5}
+		'graphic' SELF {0,0-10,0-10,10-0,10-0,0}
 	END NOTES;
 
 	inlet.p, outlet.p ARE_THE_SAME;
@@ -334,10 +330,10 @@ MODEL boiler_simple REFINES stream_equipment;
 	q IS_A specific_energy;
 	q = (outlet.h - inlet.h);
 
-	Qdot IS_A energy_rate;
+	Qdot "param: energy rate" IS_A energy_rate;
 	Qdot = mdot * q;
 
-	eta IS_A fraction;
+	eta "param: efficiency of boiler" IS_A fraction;
 	Qdot = eta * Qdot_fuel;
 METHODS
 METHOD default_self;
@@ -373,10 +369,11 @@ END boiler_simple_test;
 	this is really simple (fluid props permitting): just work out the heat
 	that must be expelled to get the water down to a certain state
 *)
-MODEL condenser_simple REFINES stream_equipment;
+MODEL dissipator REFINES stream_equipment;
 	NOTES
-		'block' SELF {Simple condenser model}
-		'inline' inlet {in: yahoooo}
+		'block' SELF {Dissipator model}
+		'graphic' SELF {0,0-10,0-10,10-0,10-0,0
+						0,5-1.5,5-2,6-3,4-4,6-5,4-6,6-7,4-8,6-8.5,5-10,5}
 	END NOTES;
 
 	inlet.p, outlet.p ARE_THE_SAME;
@@ -388,9 +385,9 @@ METHOD default_self;
 	RUN inlet.default_self;
 	RUN outlet.default_self;
 END default_self;
-END condenser_simple;
+END dissipator;
 
-MODEL condenser_simple_test REFINES condenser_simple;
+MODEL dissipator_test REFINES dissipator;
 	cd.component :== 'water';
 METHODS
 METHOD on_load;
@@ -404,7 +401,7 @@ METHOD on_load;
 	outlet.h := 500 {kJ/kg};
 	mdot := 900 {t/d};
 END on_load;
-END condenser_simple_test;
+END dissipator_test;
 
 (*------------------------------------------------------------------------------
   FEEDWATER HEATER
@@ -417,6 +414,9 @@ END condenser_simple_test;
 MODEL heater_open;
 	NOTES
 		'block' SELF {Simple open feedwater heater model}
+		'port_in' SELF {inlet:0,5-inlet_heat:5,0}
+		'port_out' SELF {outlet:10,5}
+		'graphic' SELF {0,0-10,0-10,10-0,10-0,0}
 	END NOTES;
 
 	inlet "in:" IS_A stream_node;
@@ -463,6 +463,9 @@ END heater_open_test;
 MODEL heater_open2;
 	NOTES
 		'block' SELF {Simple open feedwater heater model}
+		'port_in' SELF {inlet:0,5-inlet_heat1:3.33,0-inlet_heat2:6.66,0}
+		'port_out' SELF {outlet:10,5}
+		'graphic' SELF {0,0-10,0-10,10-0,10-0,0}
 	END NOTES;
 
 	inlet "in:" IS_A stream_node;
@@ -491,12 +494,15 @@ END heater_open2;
 MODEL heater_closed;
 	NOTES
 		'block' SELF {Simple open feedwater heater model}
+		'port_in' SELF {inlet:0,5-inlet_heat:5,0}
+		'port_out' SELF {outlet:10,3.33-outlet_heat:10,6.66}
+		'graphic' SELF {0,0-10,0-10,10-0,10-0,0}
 	END NOTES;
 
 	inlet "in:" IS_A stream_node;
 	inlet_heat "in:" IS_A stream_node;
-	outlet "out:" IS_A stream_node;
 	outlet_heat "out:" IS_A stream_node;
+	outlet "out:" IS_A stream_node;
 	
 	inlet.cd, outlet.cd ARE_THE_SAME;
 	inlet_heat.cd, outlet_heat.cd ARE_THE_SAME;
@@ -564,6 +570,8 @@ END heater_closed_test;
 MODEL tee;
 	NOTES
 		'block' SELF {Model of a branching of two flow streams}
+		'graphic' SELF {0,5-10,3.33-10,6.66-0,5}
+		'port_out' SELF {outlet:10,3.33-outlet_branch:10,6.66}
 	END NOTES;
 
 	inlet "in:" IS_A stream_node;
@@ -595,8 +603,8 @@ MODEL rankine_common;
 
 	BO IS_A boiler_simple;
 	TU IS_A turbine_simple;
-	CO IS_A condenser_simple;
-	PU IS_A pump_simple;
+	CO IS_A dissipator;
+	PU IS_A compressor_simple;
 	cd ALIASES BO.cd;
 
 	BO.outlet, TU.inlet ARE_THE_SAME;
@@ -836,8 +844,8 @@ MODEL rankine_reheat_common;
 	BO2 IS_A boiler_simple;
 	TU1 IS_A turbine_simple;
 	TU2 IS_A turbine_simple;
-	CO IS_A condenser_simple;
-	PU IS_A pump_simple;
+	CO IS_A dissipator;
+	PU IS_A compressor_simple;
 
 	BO1.outlet, TU1.inlet ARE_THE_SAME;
 	TU1.outlet, BO2.inlet ARE_THE_SAME;

@@ -440,7 +440,7 @@ class mainWindow(gtk.Window):
         except Exception,e:
             self.status.push(0,"Canvasmodel could not be loaded : " + str(e))
             self.reporter.ReportError("Canvasmodel could not be loaded : " + str(e))
-            self.reporter.ReportNote(" Error occured while attempting to 'Load' the file")
+            self.reporter.ReportNote(" Error occured while attempting to load the file")
         finally:
             f.close()
         self.load_presaved_canvas(None)
@@ -709,7 +709,7 @@ class mainWindow(gtk.Window):
             self.status.push(0,"File %s Loaded." % filename)
             self.view.canvas.filename = filename
         except Exception,e:
-            self.reporter.reportError(" Error occured while attempting to 'Load' the file. File could be loaded properly.")
+            self.reporter.reportError(" Error occured while attempting to load the file. File could not be loaded properly.")
             print e
         finally:
             f.close()

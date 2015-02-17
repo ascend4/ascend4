@@ -44,6 +44,7 @@ class BlockProperties(object):
         #Set the 'Name:'
         self.block_name = xml.get_widget('block_name')
         self.block_name.set_text(self.block.name)
+        self.block_name.set_editable(True)
 
         #Set the 'Type:'
         self.type_name = xml.get_widget('type_name')
@@ -299,10 +300,10 @@ class displayModel(object):
         self.units_column = gtk.TreeViewColumn('Value',self.units_render,text=1, foreground =4, weight=5)
 
         self.view.append_column(self.name_column)
-        self.view.append_column(self.description_column)
         self.view.append_column(self.toggle_column)
         #self.view.append_column(self.param_column)
         self.view.append_column(self.units_column)
+        self.view.append_column(self.description_column)
 
         return self.view
 
