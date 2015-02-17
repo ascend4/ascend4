@@ -65,6 +65,7 @@ extern "C"{
 // Import the preferences module
 %pythoncode {
 	import preferences;
+	from nameparser import *
 }
 
 // Set-valued instance variable
@@ -347,6 +348,7 @@ public:
 	Instanc(Instance *, SymChar &name);
 	~Instanc();
 	std::vector<Instanc> getChildren();
+	Instanc getChild(const SymChar) const;
 	const std::string getKindStr() const;
 	const SymChar &getName();
 	const Type getType() const;
@@ -431,6 +433,10 @@ public:
 	}
 		
 	%pythoncode {
+		def getInst(self,str):
+			np = NameParser(self)
+			name = np.run(str)
+			return self.getChild(SymChar(name))
 		def getSetValue(self):
 			"""Return the value of a set, as a integer or string Python sequence."""
 			if self.isSetInt():
@@ -531,6 +537,15 @@ public:
 			return b + a
 	}
 }
+
+%include "simulation.h"
+%extend Simulation{
+	%pythoncode{
+		def getInst(self,str):
+			return self.getModel().getInst(str)
+	}
+}
+
 
 /*
 	This 'registry' thing is a bit of a hack that allows interface pointers to 

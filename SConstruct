@@ -1565,6 +1565,15 @@ int main(){
 }
 """
 
+sundials_version_text2 = """
+#include <sundials/sundials_config.h>
+#include <stdio.h>
+int main(){
+	printf("%s",SUNDIALS_PACKAGE_VERSION);
+	return 0;
+}
+"""
+
 ida_test_text = """
 #if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR==2
 # include <sundials/sundials_config.h>
@@ -1590,6 +1599,7 @@ def CheckSUNDIALS(context):
 	keep = KeepContext(context,'SUNDIALS')
 	context.Message("Checking for SUNDIALS... ")
 	(is_ok,output) = context.TryRun(sundials_version_text,'.c')
+	#(is_ok, output) = 1,"2.4.0"
 	keep.restore(context)
 	if not is_ok:
 		context.Result(0)
@@ -1635,6 +1645,7 @@ def CheckIDA(context):
 	context.env.AppendUnique(CPPPATH=context.env['SUNDIALS_CPPPATH_EXTRA'])
 
 	is_ok = context.TryLink(ida_test_text,".c")
+	#is_ok = 1
 	context.Result(is_ok)
 	
 	if cppdef:

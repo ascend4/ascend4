@@ -89,6 +89,7 @@
 #include "parpend.h"
 #include "parpend.h"
 #include "bintoken.h"
+#include "deriv.h"
 
 
 #include <stdarg.h>
@@ -223,7 +224,8 @@ static char *g_trychildexpansion_errmessage = NULL;
 
 static void WriteForValueError(struct Statement *, struct value_t);
 static void MakeInstance(CONST struct Name *, struct TypeDescription *, int,
-                  struct Instance *, struct Statement *, struct Instance *);
+                  struct Instance *, struct Statement *, struct Instance *,
+                  struct gl_list_t *, struct gl_list_t *);
 static int CheckVarList(struct Instance *, struct Statement *);
 static int CheckWhereStatements(struct Instance *,struct StatementList *);
 static int ExecuteISA(struct Instance *, struct Statement *);
@@ -482,7 +484,8 @@ static
 int ValueExpand(struct Instance *i, unsigned long int pos,
                  struct value_t value, int *changed,
                  struct Instance *rhsinst, struct Instance *arginst,
-                 struct gl_list_t *rhslist)
+                 struct gl_list_t *rhslist, struct Instance *sinst,
+                 struct Instance *indep, CONST struct Name *sname)
 {
   struct value_t setval;
   switch(ValueKind(value)){
@@ -491,7 +494,7 @@ int ValueExpand(struct Instance *i, unsigned long int pos,
     if (CheckSetVal(setval)) {
       return 1;
     }
-    ExpandArray(i,pos,SetValue(setval),rhsinst,arginst,rhslist);
+    ExpandArray(i,pos,SetValue(setval),rhsinst,arginst,rhslist,sinst,indep,sname);
     /* this may modify the pending instance list if
      * rhslist and rhsinst both == NULL.
      */
@@ -575,7 +578,10 @@ int TryChildExpansion(struct Instance *child,
                        int *changed,
                        struct Instance *rhsinst,
                        struct Instance *arginst,
-                       struct gl_list_t *rhslist)
+                       struct gl_list_t *rhslist,
+                       struct Instance *sinst,
+                       struct Instance *indep,
+                       CONST struct Name *sname)
 {
   unsigned long pos,oldpos=0;
   struct value_t value;
@@ -593,7 +599,7 @@ int TryChildExpansion(struct Instance *child,
       SetEvaluationContext(parent); /* could be wrong for mixed style arrays */
       value = EvaluateSet(setp,InstanceEvaluateName);
       SetEvaluationContext(NULL);
-      if (ValueExpand(child,pos,value,changed,rhsinst,arginst,rhslist) != 0) {
+      if (ValueExpand(child,pos,value,changed,rhsinst,arginst,rhslist,sinst,indep,sname) != 0) {
         error++;
       }
       DestroyValue(&value);
@@ -623,7 +629,7 @@ void TryArrayExpansion(struct Instance *work, int *changed)
         /* no alii, no parameterized types, no for loops allowed. */
         if ((!GetArrayBaseIsRelation(desc))&&(!RectangleArrayExpanded(child)) &&
              (!GetArrayBaseIsLogRel(desc)) ) {
-          if (TryChildExpansion(child,work,changed,NULL,NULL,NULL)!= 0) {
+          if (TryChildExpansion(child,work,changed,NULL,NULL,NULL,NULL,NULL,NULL)!= 0) {
             SignalChildExpansionFailure(work,c);
           }
         }
@@ -769,12 +775,12 @@ struct gl_list_t *ArrayIndices(CONST struct Name *name,
   int settype;
   CONST struct Set *sptr;
 
-  if (!NameId(name)) return NULL;
+  if (!NameId(name) && !NameDeriv(name)) return NULL;
   name = NextName(name);
   if (name == NULL) return NULL;
   result = gl_create(2L);
   while (name!=NULL){
-    if (NameId(name)){
+    if (NameId(name) || NameDeriv(name)){
       DestroyIndexList(result);
       return NULL;
     }
@@ -929,7 +935,7 @@ struct gl_list_t *MakeIndices(struct Instance *inst,
 
   result = gl_create((unsigned long)NameLength(name));
   while(name != NULL){
-    if (NameId(name)){
+    if (NameId(name) || NameDeriv(name)){
       DestroyIndexList(result);
       return NULL;
     }
@@ -977,7 +983,7 @@ struct Instance *GetArrayHead(struct Instance *inst, CONST struct Name *name)
 {
   struct InstanceName rec;
   unsigned long pos;
-  if (NameId(name)){
+  if (NameId(name) || NameDeriv(name)){
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,NameIdPtr(name));
     pos=ChildSearch(inst,&rec);
@@ -1008,7 +1014,10 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
                              struct Instance *rhsinst, /*ALIASES*/
                              struct Instance *arginst, /* IS_A */
                              struct gl_list_t *rhslist, /*ARR*/
-                             int last /* ARR */)
+                             int last, /* ARR */
+                             struct Instance *state,
+                             struct Instance *indep,
+                             CONST struct Name *n)
 {
   CONST struct Set *sptr;
   struct value_t value;
@@ -1016,7 +1025,7 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
   long i;
   symchar *sym;
 
-  if (NameId(name) != 0) return NULL; /* must be subscript, i.e. set */
+  if (NameId(name) != 0 || NameDeriv(name) !=0) return NULL; /* must be subscript, i.e. set */
   sptr = NameSetPtr(name);
   if ((sptr==NULL)||(NextSet(sptr)!=NULL)||(SetType(sptr))) {
     return NULL;
@@ -1039,7 +1048,7 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
       /* we are at last subscript of ALIASES/IS_A in for loop. */
       /* expand using rhslist pretending dense array. */
       setval = CreateSetFromList(value);
-      ExpandArray(ptr,1L,SetValue(setval),NULL,NULL,rhslist);
+      ExpandArray(ptr,1L,SetValue(setval),NULL,NULL,rhslist,NULL,NULL,NULL);
       DestroyValue(&setval);
       DestroyValue(&value);
       return NULL;
@@ -1047,11 +1056,11 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
   case integer_value:
     i = IntegerValue(value);
     DestroyValue(&value);
-    return FindOrAddIntChild(ptr,i,rhsinst,arginst);
+    return FindOrAddIntChild(ptr,i,rhsinst,arginst,state,indep,n);
   case symbol_value:
     sym = SymbolValue(value);
     DestroyValue(&value);
-    return FindOrAddStrChild(ptr,sym,rhsinst,arginst);
+    return FindOrAddStrChild(ptr,sym,rhsinst,arginst,state,indep,n);
   case error_value:
     switch(ErrorValue(value)){
     case undefined_value:
@@ -1089,18 +1098,19 @@ struct Instance *AddArrayChild(struct Instance *parentofary,
                                struct Statement *stat,
                                struct Instance *rhsinst,
                                struct Instance *arginst,
-                               struct gl_list_t *rhslist)
+                               struct gl_list_t *rhslist,
+                               struct Instance *state,
+                               struct Instance *indep)
 {
   struct Instance *ptr;
   int last;
-
   ptr = GetArrayHead(parentofary,name);
   if(ptr != NULL) {
     name = NextName(name);
     while(name!=NULL){
       last = (rhslist != NULL && NextName(name)==NULL);
       ptr = DoNextArray(parentofary,ptr,name,stat,
-                        rhsinst,arginst,rhslist,last);
+                        rhsinst,arginst,rhslist,last,state,indep,NextName(name));
       if (ptr==NULL){
         return NULL;
       }
@@ -1135,7 +1145,9 @@ struct Instance *MakeSparseArray(struct Instance *parent,
                                  int intset,
                                  struct Instance *rhsinst,
                                  struct Instance *arginst,
-                                 struct gl_list_t *rhslist)
+                                 struct gl_list_t *rhslist,
+                                 struct Instance *state,
+                                 struct Instance *indep)
 {
   struct TypeDescription *desc = NULL;
   struct Instance *aryinst;
@@ -1176,7 +1188,7 @@ struct Instance *MakeSparseArray(struct Instance *parent,
     }
     aryinst = CreateArrayInstance(desc,1);
     LinkToParentByName(parent,aryinst,NameIdPtr(name));
-    return AddArrayChild(parent,name,stat,rhsinst,arginst,rhslist);
+    return AddArrayChild(parent,name,stat,rhsinst,arginst,rhslist,state,indep);
   }else{
     return NULL;
   }
@@ -1267,7 +1279,7 @@ void MakeAliasInstance(CONST struct Name *name,
           inst = CreateArrayInstance(arydef,1);
           if (inst!=NULL){
             changed = 0;
-            tce = TryChildExpansion(inst,parent,&changed,rhsinst,NULL,rhslist);
+            tce = TryChildExpansion(inst,parent,&changed,rhsinst,NULL,rhslist,NULL,NULL,NULL);
             /* we're not in a for loop, so can't fail unless user is idiot. */
             LinkToParentByPos(parent,inst,pos); /* don't want to lose memory */
             /* if user is idiot, whine. */
@@ -1293,12 +1305,12 @@ void MakeAliasInstance(CONST struct Name *name,
             /* should check for NULL return here */
             (void)
             MakeSparseArray(parent,name,statement,def,
-                            intset,rhsinst,NULL,rhslist);
+                            intset,rhsinst,NULL,rhslist,NULL,NULL);
           }else{
             /* need to add alias array element */
             /* should check for NULL return here */
             (void) AddArrayChild(parent,name,statement,
-                                 rhsinst,NULL,rhslist);
+                                 rhsinst,NULL,rhslist,NULL,NULL);
           }
         }else{
           STATEMENT_ERROR(statement,
@@ -1323,7 +1335,7 @@ int ExecuteALIASES(struct Instance *inst, struct Statement *statement)
 {
   CONST struct VariableList *vlist;
   struct gl_list_t *rhslist;
-  struct Instance *rhsinst;
+  struct Instance *rhsinst = NULL;
   CONST struct Name *name;
   enum find_errors ferr;
   int intset;
@@ -1342,18 +1354,22 @@ int ExecuteALIASES(struct Instance *inst, struct Statement *statement)
   }
   name = AliasStatName(statement);
   rhslist = FindInstances(inst,name,&ferr);
-  if (rhslist == NULL) {
-    WriteUnexecutedMessage(ASCERR,statement,
-      "Possibly undefined right hand side in ALIASES statement.");
-    return 0; /* rhs not compiled yet */
-  }
-  if (gl_length(rhslist)>1) {
-    STATEMENT_ERROR(statement,"ALIASES needs exactly 1 RHS");
+  if (rhslist != NULL) {
+    if (gl_length(rhslist)>1) {
+      STATEMENT_ERROR(statement,"ALIASES needs exactly 1 RHS");
+      gl_destroy(rhslist);
+      return 1; /* rhs not unique for current values of sets */
+    }
+    rhsinst = (struct Instance *)gl_fetch(rhslist,1);
     gl_destroy(rhslist);
-    return 1; /* rhs not unique for current values of sets */
+  }else{
+    if (rhsinst == NULL) {
+      WriteUnexecutedMessage(ASCERR,statement,
+        "Possibly undefined right hand side in ALIASES statement.");
+      return 0; /* rhs not compiled yet */
+    }
   }
-  rhsinst = (struct Instance *)gl_fetch(rhslist,1);
-  gl_destroy(rhslist);
+
   if (InstanceKind(rhsinst)==REL_INST || LREL_INST ==InstanceKind(rhsinst)) {
     STATEMENT_ERROR(statement,"Direct ALIASES of relations are not permitted");
     MarkStatContext(statement,context_WRONG);
@@ -1698,7 +1714,7 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
   /* make set ATOM */
   vlist = ArrayStatSetName(statement);
   intset = ArrayStatIntSet(statement);
-  MakeInstance(NamePointer(vlist),FindSetType(),intset,inst,statement,NULL);
+  MakeInstance(NamePointer(vlist),FindSetType(),intset,inst,statement,NULL,NULL,NULL);
   /* get instance  and assign. */
   setinstl = FindInstances(inst,NamePointer(vlist),&ferr);
   if (setinstl == NULL || gl_length(setinstl) != 1L) {
@@ -3932,12 +3948,15 @@ void MakeInstance(CONST struct Name *name,
                   int intset,
                   struct Instance *parent,
                   struct Statement *statement,
-                  struct Instance *arginst)
+                  struct Instance *arginst,
+                  struct gl_list_t *states,
+                  struct gl_list_t *indeps)
 {
   symchar *childname;
   int changed;
-  unsigned long pos;
-  struct Instance *inst;
+  unsigned long pos,spos;
+  struct Instance *inst, *sinst = NULL, *indep = NULL;
+  CONST struct Name *sname;
   struct InstanceName rec;
   struct TypeDescription *arydef;
   struct gl_list_t *indices;
@@ -3946,6 +3965,10 @@ void MakeInstance(CONST struct Name *name,
   nstr = WriteNameString(name);
   CONSOLE_DEBUG(nstr);
   ascfree(nstr); */
+  if (states && indeps) {
+    indep = (struct Instance*)gl_fetch(indeps,1);
+    sname = NamePointer(DerVlist(NameDerPtr(name)));
+  }
   if ((childname = SimpleNameIdPtr(name))!=NULL){ /* simple 1 element name */
     if (StatInFOR(statement) && StatWrong(statement)==0) {
       MarkStatContext(statement,context_WRONG);
@@ -3953,13 +3976,19 @@ void MakeInstance(CONST struct Name *name,
       WSS(ASCERR,statement);
       return;
     }
+    if (NameDeriv(name)) sinst = (struct Instance*)gl_fetch(states,1);
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,childname);
     pos = ChildSearch(parent,&rec);
     if (pos>0) {
       if (InstanceChild(parent,pos)==NULL){
-        inst = MakeSimpleInstance(def,intset,statement,arginst);
-        LinkToParentByPos(parent,inst,pos);
+        inst = FindDerByArgs(sinst,indep);
+        if (inst) StoreChildPtr(parent,pos,inst);
+        else {
+          inst = MakeSimpleInstance(def,intset,statement,arginst);
+          LinkToParentByPos(parent,inst,pos);
+          if (NameDeriv(name)) SetDerInfo(inst,sinst,indep);
+        }
       }else{			/* redefining instance */
         char *msg = ASC_NEW_ARRAY(char,SCLEN(childname)+strlen(REDEFINE_CHILD_MESG)+1);
         strcpy(msg,REDEFINE_CHILD_MESG);
@@ -3985,8 +4014,22 @@ void MakeInstance(CONST struct Name *name,
         if (pos>0) {
           inst = CreateArrayInstance(arydef,1);
           if (inst!=NULL){
+
+      if (NameDeriv(name)) {
+        SetInstanceNameType(rec,StrName);
+        SetInstanceNameStrPtr(rec,NameIdPtr(sname));
+        spos = ChildSearch(parent,&rec);
+        sinst = InstanceChild(parent,spos);
+	while(NameId(NextName(sname))) {
+          sname = NextName(sname);
+          SetInstanceNameType(rec,StrName);
+          SetInstanceNameStrPtr(rec,NameIdPtr(sname));
+          spos = ChildSearch(sinst,&rec);
+          sinst =  InstanceChild(sinst,spos);
+        }
+      }
             changed = 0;
-            tce = TryChildExpansion(inst,parent,&changed,NULL,arginst,NULL);
+            tce = TryChildExpansion(inst,parent,&changed,NULL,arginst,NULL,sinst,indep,sname);
             /* we're not in a for loop, so can't fail unless user is idiot. */
             LinkToParentByPos(parent,inst,pos);
             /* if user is idiot, whine. */
@@ -4005,15 +4048,16 @@ void MakeInstance(CONST struct Name *name,
         }
       }else{
         DestroyIndexList(indices);
+        if (NameDeriv(name)) sinst = (struct Instance*)gl_fetch(states,1);
         if (pos>0) {
           if (InstanceChild(parent,pos)==NULL) {
-            /* must make IS_A array */
-            (void) /* should check for NULL return here */
-            MakeSparseArray(parent,name,statement,
-                            def,intset,NULL,arginst,NULL);
-          }else{
-            /* must add array element */ /* should check for NULL return here */
-            (void)AddArrayChild(parent,name,statement,NULL,arginst,NULL);
+              /* must make IS_A array */
+              (void) /* should check for NULL return here */
+              MakeSparseArray(parent,name,statement,
+                              def,intset,NULL,arginst,NULL,sinst,indep);
+          }else{       
+              /* must add array element */ /* should check for NULL return here */
+              (void)AddArrayChild(parent,name,statement,NULL,arginst,NULL,sinst,indep);
           }
         }else{
           STATEMENT_ERROR(statement,
@@ -4033,11 +4077,14 @@ void MakeInstance(CONST struct Name *name,
 static
 int ExecuteISA(struct Instance *inst, struct Statement *statement)
 {
+  enum find_errors err;
+  struct gl_list_t *states = NULL, *indeps = NULL;
   struct TypeDescription *def;
   CONST struct VariableList *vlist;
   struct Instance *arginst = NULL;
   int mpi;
   int intset;
+  unsigned long c;
 
   asc_assert(StatementType(statement)==ISA);
   if (StatWrong(statement)) {
@@ -4078,13 +4125,36 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
     }
     vlist = GetStatVarList(statement);
     while (vlist!=NULL){
-      MakeInstance(NamePointer(vlist),def,intset,inst,statement,arginst);
+      if (NameDeriv(NamePointer(vlist))) {
+        states = FindInstances(inst,NamePointer(DerVlist(NameDerPtr(NamePointer(vlist)))),&err);
+        if (!states) {
+          WriteUnexecutedMessage(ASCERR,statement,
+           "State variable not found.");
+          return 0;
+        }
+        indeps = FindInstances(inst,NamePointer(NextVariableNode(DerVlist(NameDerPtr(NamePointer(vlist))))),&err);
+        if (!indeps) {
+          WriteUnexecutedMessage(ASCERR,statement,
+           "Independent variable not found.");
+          return 0;
+        }
+        if (gl_length(indeps)>1) {
+          for (c=2;c<=gl_length(indeps);c++) {
+            if ((struct Instance*)gl_fetch(indeps,c) != (struct Instance*)gl_fetch(indeps,c-1)) {
+              WriteUnexecutedMessage(ASCERR,statement,
+               "Multiple independent variables not allowed.");
+              return 0;
+            }
+          }
+        }
+      }
+      MakeInstance(NamePointer(vlist),def,intset,inst,statement,arginst,states,indeps);
       vlist = NextVariableNode(vlist);
     }
     if (arginst != NULL) {
       DestroyParameterInst(arginst);
     }
-    return 1;
+    return 1; 
   }else{
     /*
      * Should never happen, due to lint.
@@ -4096,6 +4166,44 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
     ascfree(msg);
     return 1;
   }
+}
+
+static
+int ExecuteISDER(struct Instance *inst, struct Statement *statement)
+{
+  CONST struct StatementList *statements;
+  struct InstanceName rec;
+  struct gl_list_t *stats;
+  unsigned long c,len,pos,ok = 1;
+  struct Statement *s;
+  CONST struct VariableList *vlist;
+  vlist = GetStatVarList(statement);
+  statements = GetStatSlist(statement);
+  stats = GetList(statements);
+  len = gl_length(stats);
+  for(c=1;c<=len;c++) {
+    s = (struct Statement *)gl_fetch(stats,c);
+    if (StatementType(s) == ISA) {
+      if (!StatInFOR(s)) {
+        SetInstanceNameType(rec,StrName);
+        SetInstanceNameStrPtr(rec,NameIdPtr(NamePointer(GetStatVarList(s))));
+        pos = ChildSearch(inst,&rec);
+        if (pos>0) {
+          if (InstanceChild(inst,pos)==NULL){
+            if (!ExecuteISA(inst,s)) ok = 0;
+          }
+        }
+      }else {
+        if (!ExecuteISA(inst,s)) ok = 0;
+      }
+    }
+    else {
+      STATEMENT_ERROR(statement,"Illegal statement type in ISDER statement list. Should never happen.");
+      return 1;
+    }
+    vlist = NextVariableNode(vlist);
+  }
+  return ok;
 }
 
 /**
@@ -4724,23 +4832,24 @@ int ExecuteLNK(struct Instance *inst, struct Statement *statement){
 	key = LINKStatKey(statement);
 
 	if((instances != NULL) && (key != NULL)){
+
 		switch (def_inst->t) {
 		case model_type:
-			if(statement->v.lnk.key_type == 2) {/* in case the LINK entry has the 'ignore' key */
-				CONSOLE_DEBUG("Ignore declarative link");
-				ignoreDeclLinkEntry(inst,key,LINKStatVlist(statement));
-			}else{
-				CONSOLE_DEBUG("Adding declarative link");
-				addLinkEntry(inst,key,instances,statement,1);
-			}
-			return 1;
-		default:
+			if(statement->v.lnk.key_type == 2) {/* in case the LINK entry has the 'ignore' key */ 
+					CONSOLE_DEBUG("Ignore declarative link");
+					ignoreDeclLinkEntry(inst,key,LINKStatVlist(statement));
+				}else{
+					CONSOLE_DEBUG("Adding declarative link");
+					addLinkEntry(inst,key,instances,statement,1);
+				}
+			  	return 1;
+		  default:
 			STATEMENT_ERROR(statement, "LINK is not called by a model");
-			return 1;
+			return 1;  
 		}
 	}else if(key == NULL){
 		STATEMENT_ERROR(statement, "declarative LINK contains impossible key");
-		return 1;
+		return 1;	
 	}else{
 		switch(err){
 		case impossible_instance:
@@ -4753,7 +4862,7 @@ int ExecuteLNK(struct Instance *inst, struct Statement *statement){
 			return 0;
 		}
 	}
-}
+ }
 /*------------------------------------------------------------------------------
 	RELATION PROCESSING
 */
@@ -4792,10 +4901,10 @@ struct Instance *MakeRelationInstance(struct Name *name,
     if (pos>0) {
       if (InstanceChild(parent,pos)==NULL){
         /* must make array */
-        child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL);
+        child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL,NULL,NULL);
       }else{
       	/* must add array element */
-        child = AddArrayChild(parent,name,stat,NULL,NULL,NULL);
+        child = AddArrayChild(parent,name,stat,NULL,NULL,NULL,NULL,NULL);
       }
       return child;
     }else{
@@ -5127,9 +5236,9 @@ struct Instance *MakeLogRelInstance(struct Name *name,
     SetInstanceNameStrPtr(rec,childname);
     if(0 != (pos = ChildSearch(parent,&rec))){
       if (InstanceChild(parent,pos)==NULL){ /* need to make array */
-        child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL);
+        child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL,NULL,NULL);
       }else{			/* need to add array element */
-        child = AddArrayChild(parent,name,stat,NULL,NULL,NULL);
+        child = AddArrayChild(parent,name,stat,NULL,NULL,NULL,NULL,NULL);
       }
       return child;
     }else{
@@ -6394,7 +6503,7 @@ int FailsCompoundArrayCheck(struct Instance *inst,
 
   while(name != NULL){
     /* foreach subscript */
-    if (NameId(name)!=0){ /* what's a . doing in the name? */
+    if (NameId(name)!=0 || NameDeriv(name)!=0){ /* what's a . doing in the name? */
       return 1;
     }
     sptr = NameSetPtr(name);
@@ -6438,7 +6547,7 @@ int FailsIndexCheck(CONST struct Name *name, struct Statement *statement,
 {
   CONST struct Set *sptr;
   struct gl_list_t *indices;
-  if (!NameId(name)) {
+  if (!NameId(name) && !NameDeriv(name)) {
      return 0;	/* this is a different type of error */
   }
   /* hunt the subscripts */
@@ -6448,7 +6557,7 @@ int FailsIndexCheck(CONST struct Name *name, struct Statement *statement,
   }
   if (searchfor == 0) { /* not in FOR loop and not ALIASES of either sort */
     while (name != NULL){
-      if (NameId(name) !=0 ) {
+      if (NameId(name) !=0 || NameDeriv(name) !=0) {
         /* what's a . doing here? */
         return 0;
       }
@@ -6519,6 +6628,8 @@ int CheckALIASES(struct Instance *inst, struct Statement *stat)
   struct gl_list_t *rhslist;
   CONST struct Name *name;
   enum find_errors ferr;
+  CONST struct gl_list_t *stateinst, *indinst;
+  struct Instance *rhsinst = NULL;
 
   vlist = GetStatVarList(stat);
   while (vlist != NULL){
@@ -6534,16 +6645,22 @@ int CheckALIASES(struct Instance *inst, struct Statement *stat)
    */
   name = AliasStatName(stat);
   rhslist = FindInstances(inst,name,&ferr);
-  if (rhslist == NULL) {
+  if (rhslist==NULL && NameDeriv(name)) {
+    stateinst = FindInstances(inst,NamePointer(DerVlist(NameDerPtr(name))),&ferr);
+    indinst = FindInstances(inst,NamePointer(NextVariableNode(DerVlist(NameDerPtr(name)))),&ferr);
+    if (stateinst != NULL && indinst !=NULL) rhsinst = FindDerByArgs(gl_fetch(stateinst,1),gl_fetch(indinst,1));
+  }
+  if (rhslist == NULL && rhsinst == NULL) {
     WriteUnexecutedMessage(ASCERR,stat,
       "Possibly undefined right hand side in ALIASES statement.");
     return 0; /* rhs not compiled yet */
   }
-  if (gl_length(rhslist)>1) {
-    STATEMENT_ERROR(stat,"ALIASES needs exactly 1 RHS");
+  if (rhslist != NULL) {
+    if (gl_length(rhslist)>1) {
+      STATEMENT_ERROR(stat,"ALIASES needs exactly 1 RHS");
+    }
+    gl_destroy(rhslist);
   }
-  gl_destroy(rhslist);
-
   return 1;
 }
 
@@ -6657,6 +6774,36 @@ int CheckISA(struct Instance *inst, struct Statement *stat)
       return 0;
     }
     vlist = NextVariableNode(vlist);
+  }
+  return 1;
+}
+
+static
+int CheckISDER(struct Instance *inst, struct Statement *stat)
+{
+  CONST struct StatementList *statements;
+  struct gl_list_t *stats;
+  unsigned int c,len;
+  struct Statement *s;
+  CONST struct VariableList *vlist;
+  enum find_errors err;
+  statements = GetStatSlist(stat);
+  stats = GetList(statements);
+  len = gl_length(stats);
+  vlist = GetStatVarList(stat);
+  while (vlist) {
+    if (!FindInstances(inst,NamePointer(vlist),&err)) return 0;
+    vlist = NextVariableNode(vlist);
+  }
+  for(c=1;c<=len;c++) {
+    s = (struct Statement *)gl_fetch(stats,c);
+    if (StatementType(s) == ISA) {
+      if (CheckISA(inst,s)==0) return 0;
+    }
+    else {
+      STATEMENT_ERROR(stat,"Illegal statement type in ISDER statement list. Should never happen.");
+      return 1;
+    }
   }
   return 1;
 }
@@ -7029,6 +7176,7 @@ int Pass3CheckCondStatements(struct Instance *inst,
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
     case IRT:
     case ATS:
     case AA:
@@ -7095,6 +7243,7 @@ int Pass2CheckCondStatements(struct Instance *inst,
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
     case IRT:
     case ATS:
     case AA:
@@ -7399,6 +7548,7 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
     case IRT:
     case ATS:
     case AA:
@@ -7606,6 +7756,7 @@ int CheckSelectStatements(struct Instance *inst, struct Statement *statement)
   switch(StatementType(statement)){
   case ALIASES:
   case ISA:
+  case ISDER:
   case IRT:
   case ATS:
   case AA:
@@ -7922,6 +8073,7 @@ int Pass4CheckStatement(struct Instance *inst, struct Statement *stat)
   case EXT:
   case LOGREL:
   case ISA:
+  case ISDER:
   case ARR:
   case ALIASES:
   case IRT:
@@ -7952,6 +8104,7 @@ int Pass3CheckStatement(struct Instance *inst, struct Statement *stat)
   case ALIASES:
   case ARR:
   case ISA:
+  case ISDER:
   case IRT:
   case ATS:
   case AA:
@@ -7985,6 +8138,7 @@ int Pass2CheckStatement(struct Instance *inst, struct Statement *stat)
   case ALIASES:
   case ARR:
   case ISA:
+  case ISDER:
   case IRT:
   case ATS:
   case AA:
@@ -8018,6 +8172,8 @@ int Pass1CheckStatement(struct Instance *inst, struct Statement *stat)
       return 0;
     }
     return MakeParameterInst(inst,stat,NULL,NOKEEPARGINST); /*1*/
+  case ISDER:
+    return CheckISDER(inst,stat);
   case IRT:
     if ( CheckIRT(inst,stat) == 0 ) {
       return 0;
@@ -8809,9 +8965,9 @@ struct Instance *MakeWhenInstance(struct Instance *parent,
     SetInstanceNameStrPtr(rec,when_name);
     if(0 != (pos = ChildSearch(parent,&rec))){
       if (InstanceChild(parent,pos)==NULL){ /* need to make array */
-        child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL);
+        child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL,NULL,NULL);
       }else{			/* need to add array element */
-        child = AddArrayChild(parent,name,stat,NULL,NULL,NULL);
+        child = AddArrayChild(parent,name,stat,NULL,NULL,NULL,NULL,NULL);
       }
       return child;
     }else{
@@ -9081,6 +9237,10 @@ void ExecuteSelectStatements(struct Instance *inst, unsigned long *count,
         break;
       case ISA:
         return_value = ExecuteISA(inst,statement);
+        if (return_value) ClearBit(blist,*count);
+        break;
+      case ISDER:
+        return_value = ExecuteISDER(inst,statement);
         if (return_value) ClearBit(blist,*count);
         break;
       case IRT:
@@ -9827,6 +9987,7 @@ int Pass5ExecuteForStatements(struct Instance *inst,
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
     case IRT:
     case ATS:
     case AA:
@@ -9884,6 +10045,7 @@ int Pass4ExecuteForStatements(struct Instance *inst,
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
     case IRT:
     case ATS:
     case AA:
@@ -9929,6 +10091,7 @@ int Pass3ExecuteForStatements(struct Instance *inst,
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
     case IRT:
     case ATS:
     case AA:
@@ -10005,6 +10168,7 @@ void Pass2ExecuteForStatements(struct Instance *inst,
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
     case IRT:
     case ATS:
     case AA:
@@ -10107,6 +10271,9 @@ void Pass1ExecuteForStatements(struct Instance *inst,
       break;
     case ISA:
       return_value = ExecuteISA(inst,statement);
+      break;
+    case ISDER:
+      return_value = ExecuteISDER(inst,statement);
       break;
     case IRT:
       return_value = ExecuteIRT(inst,statement);
@@ -10294,7 +10461,7 @@ int Pass5RealExecuteFOR(struct Instance *inst, struct Statement *statement)
       len = Cardinality(sptr);
       for(c=1;c<=len;c++){
         SetForInteger(fv,FetchIntMember(sptr,c));
-        if (!Pass5ExecuteForStatements(inst,sl)) return 0;
+        if (!Pass5ExecuteForStatements(inst,sl)) return 0; 
       }
       RemoveForVariable(GetEvaluationForTable());
       break;
@@ -11527,6 +11694,8 @@ int Pass1ExecuteStatement(struct Instance *inst, unsigned long *c,
     return ExecuteARR(inst,statement);
   case ISA:
     return ExecuteISA(inst,statement);
+  case ISDER:
+    return ExecuteISDER(inst,statement);
   case IRT:
     return ExecuteIRT(inst,statement);
   case ATS:
@@ -12495,7 +12664,7 @@ void Pass5SetLinkBits(struct Instance *inst)
             c = c + SelectStatNumberStats(stat);
           }
         }else{
-          if ( st == LNK || (st == FOR && ForContainsLink(stat)) ) {
+          if ( st == LNK || (st == FOR && ForContainsLink(stat)) ) { 
             SetBit(blist,c);
             changed++;
           }
@@ -12951,7 +13120,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
 	  /* note, the order of the visit might be better 1 than 0. don't know */
 	  /* at present order 0, so we do lower models before those near root */
 		result = Pass5InstantiateModel(result,&pass5pendings);
-		/* result will not move as currently implemented <-DS: what do you really mean by this? */
+		/* result will not move as currently implemented <-DS: what do you really mean by this? */ 
   }else{
     return result;
   }

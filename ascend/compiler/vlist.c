@@ -29,6 +29,7 @@
 #include<stdio.h>
 #include<assert.h>
 #include <ascend/general/platform.h>
+#include <ascend/general/dstring.h>
 
 #include <ascend/general/ascMalloc.h>
 
@@ -37,6 +38,8 @@
 #include "expr_types.h"
 #include "vlist.h"
 #include "name.h"
+#include "symtab.h"
+#include "vlistio.h"
 
 #define NLMALLOC ASC_NEW(struct VariableList)
 
@@ -167,3 +170,20 @@ int CompareVariableLists(CONST struct VariableList *vl1,
   if (vl2!=NULL) { return -1; }
   return 0;
 }
+
+symchar *GetIdFromVlist(struct VariableList *vlist)
+{
+  char *dername;
+  symchar *result;
+  Asc_DString ds, *dsPtr;
+  dsPtr = &ds;
+  Asc_DStringInit(dsPtr);
+  Asc_DStringAppend(dsPtr,"der(",4);
+  WriteDerVlist2Str(dsPtr,vlist);
+  Asc_DStringAppend(dsPtr,")",1);
+  dername = Asc_DStringResult(dsPtr);
+  Asc_DStringFree(dsPtr);
+  result = AddSymbol(dername);
+  return result;
+}
+

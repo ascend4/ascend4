@@ -59,3 +59,39 @@ void WriteVariableListNode(FILE *f, CONST struct VariableList *n)
   if (n==NULL) return;
   WriteName(f,NamePointer(n));
 }
+
+/*
+ * These functions are similar to those above, but write to
+ * a dynamic string, rather than to a FILE *.
+ */
+void WriteVlistNode2Str(Asc_DString *dstring, CONST struct VariableList *n)
+{
+  if (n==NULL) return;
+  WriteName2Str(dstring,NamePointer(n));
+}
+
+void WriteVlist2Str(Asc_DString *dstring, CONST struct VariableList *n)
+{
+  while(n!=NULL) {
+    WriteVlistNode2Str(dstring,n);
+    n = NextVariableNode(n);
+    if (n!=NULL)
+      Asc_DStringAppend(dstring,",",-1);
+  }
+}
+
+void WriteDerVlistNode2Str(Asc_DString *dstring, CONST struct VariableList *n)
+{
+  if (n==NULL) return;
+  WriteIdName2Str(dstring,NamePointer(n));
+}
+
+void WriteDerVlist2Str(Asc_DString *dstring, CONST struct VariableList *n)
+{
+  while(n!=NULL) {
+    WriteDerVlistNode2Str(dstring,n);
+    n = NextVariableNode(n);
+    if (n!=NULL)
+      Asc_DStringAppend(dstring,",",-1);
+  }
+}

@@ -29,7 +29,8 @@
 	T(bintok) \
 	T(fixfree) \
 	T(blackbox) \
-	T(fixassign)
+	T(fixassign) \
+        T(derivative)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)

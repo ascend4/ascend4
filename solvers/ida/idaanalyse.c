@@ -80,10 +80,11 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 	const SolverDiffVarCollection *diffvars;
 	char *varname;
 	int n_y = 0;
-	int i, j;
+	int i, j, k, n;
 	struct var_variable *v;
 	SolverDiffVarSequence seq;
 	int vok;
+        struct var_variable **vlist, **oldvl;
 
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("BEFORE CHECKING VARS");
@@ -129,6 +130,15 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 				VARMSG("'%s' has a derivative present, so needs to be included in the system");
 				CONSOLE_DEBUG("That var %s active",(var_active(v) ? "is" : "is NOT"));
 				var_set_incident(v,1);
+				n = slv_get_num_solvers_vars(integ->system);
+				vlist = ASC_NEW_ARRAY(struct var_variable*,n + 2);
+				oldvl = slv_get_solvers_var_list(integ->system);
+				for(k = 0; k < n; k++) {
+					vlist[k] = oldvl[k];
+				}
+				vlist[n] = v;
+				vlist[n+1] = NULL;
+				slv_set_solvers_var_list(integ->system,vlist,n+1);
 #else				
 				return 1;
 #endif

@@ -68,6 +68,7 @@
 #include "universal.h"
 #include "cmpfunc.h"
 #include "tmpnum.h"
+#include "mergeinst.h"
 #include "mathinst.h"
 
 static const char panic_msg[]="Incorrect type passed";
@@ -859,4 +860,262 @@ void RemoveWhen(struct Instance *i, struct Instance *when)
   }
 }
 
+unsigned long IderivsCount(CONST struct Instance *i)
+{
+  assert(i!=NULL);
+  AssertMemory(i);
+  switch(i->t) {
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->ideriv!=NULL) {
+      return gl_length(RA_INST(i)->derinf->ideriv);
+    }else{
+      return 0;
+    }
+  default:
+    ASC_PANIC("IderivsCount called with inappropriate argument.");
+
+  }
+}
+
+struct Instance *IderivsForAtom(CONST struct Instance *i,
+			        unsigned long int c)
+{
+  assert((i!=NULL)&&(c>0)&&(c<=IderivsCount(i)));
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->ideriv!=NULL) {
+      return INST(gl_fetch(RA_INST(i)->derinf->ideriv,c));
+    }else{
+      ASC_PANIC("c out of bounds in IderivsForAtom.");
+    }
+    break;
+  default:
+    Asc_Panic(2, NULL,
+              "IderivsForAtom called with inappropriate argument.");
+    break;
+  }
+  exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
+}
+
+/*  Search for a derivative of the same state variable as deriv. If found
+ *  one, merge it with deriv. If not found, append deriv to the list.
+ */
+void AddIderiv(struct Instance *i, struct Instance *deriv){
+  unsigned long c,c1,c2;
+  assert(i);
+  assert(deriv);
+  assert(deriv->t==REAL_ATOM_INST);
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->ideriv==NULL) {
+      RA_INST(i)->derinf->ideriv = gl_create(7L);
+    }
+    if (gl_search(RA_INST(i)->derinf->ideriv,(char*)deriv,(CmpFunc)CmpPtrs)==0){
+      for (c=1;c<=gl_length(RA_INST(i)->derinf->ideriv);c++) {
+        /* If at least one of the state variables is the same for the two derivatives,
+           merge the derivative instances */
+        for (c1=1;c1<=gl_length(RA_INST((struct Instance*)gl_fetch(RA_INST(i)->derinf->ideriv,c))->derinf->state);c1++) {
+          for(c2=1;c2<=gl_length(RA_INST(deriv)->derinf->state);c2++) {
+            if (gl_fetch(RA_INST((struct Instance*)gl_fetch(RA_INST(i)->derinf->ideriv,c))->derinf->state,c1) == gl_fetch(RA_INST(deriv)->derinf->state,c2)) {
+              MergeInstances((struct Instance*)gl_fetch(RA_INST(i)->derinf->ideriv,c),deriv);
+              return;
+            }
+          }
+        }
+      }
+      /* If have not found a derivative of the
+         same variable as deriv, add deriv to list. */
+      gl_append_ptr(RA_INST(i)->derinf->ideriv,(VOIDPTR)deriv);
+    }
+    break;
+  default:
+    PANIC_INCORRECT_TYPE;
+  }
+}
+
+unsigned long StatesCount(CONST struct Instance *i)
+{
+  assert(i!=NULL);
+  AssertMemory(i);
+  switch(i->t) {
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->state!=NULL) {
+      return gl_length(RA_INST(i)->derinf->state);
+    }else{
+      return 0;
+    }
+  default:
+    ASC_PANIC("StatesCount called with inappropriate argument.");
+
+  }
+}
+
+unsigned long IndepsCount(CONST struct Instance *i)
+{
+  assert(i!=NULL);
+  AssertMemory(i);
+  switch(i->t) {
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->indep!=NULL) {
+      return gl_length(RA_INST(i)->derinf->indep);
+    }else{
+      return 0;
+    }
+  default:
+    ASC_PANIC("IndepsCount called with inappropriate argument.");
+
+  }
+}
+
+struct Instance *StatesForAtom(CONST struct Instance *i,
+		               unsigned long int c)
+{
+  assert((i!=NULL)&&(c>0)&&(c<=StatesCount(i)));
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->state!=NULL) {
+      return INST(gl_fetch(RA_INST(i)->derinf->state,c));
+    }else{
+      ASC_PANIC("c out of bounds in StatesForAtom.");
+    }
+    break;
+  default:
+    Asc_Panic(2, NULL,
+              "StatesForAtom called with inappropriate argument.");
+    break;
+  }
+  exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
+}
+
+struct Instance *IndepsForAtom(CONST struct Instance *i,
+			       unsigned long int c)
+{
+  assert((i!=NULL)&&(c>0)&&(c<=IndepsCount(i)));
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->indep!=NULL) {
+      return INST(gl_fetch(RA_INST(i)->derinf->indep,c));
+    }else{
+      ASC_PANIC("c out of bounds in IndepsForAtom.");
+    }
+    break;
+  default:
+    Asc_Panic(2, NULL,
+              "IndepsForAtom called with inappropriate argument.");
+    break;
+  }
+  exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
+}
+
+/*  Search for a derivative of the same state variable as deriv. If found
+ *  one, merge it with deriv. If not found, append deriv to the list.
+ */
+void AddStateIndep(struct Instance *i, struct Instance *state, struct Instance *indep){
+  unsigned long c;
+  assert(i);
+  assert(state);
+  assert(state->t==REAL_ATOM_INST);
+  assert(indep);
+  assert(indep->t==REAL_ATOM_INST);
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->state==NULL) {
+      RA_INST(i)->derinf->state = gl_create(7L);
+    }
+    if (RA_INST(i)->derinf->indep==NULL) {
+      RA_INST(i)->derinf->indep = gl_create(7L);
+    }
+  for (c=1;c<=gl_length(RA_INST(i)->derinf->state);c++) {
+    if ((struct Instance*)gl_fetch(RA_INST(i)->derinf->state,c) == state) {
+      if ((struct Instance*)gl_fetch(RA_INST(i)->derinf->indep,c) == indep) return;
+    }
+  }
+    /* If have not found a pair of state and deriv, add state and deriv to lists. */
+    gl_append_ptr(RA_INST(i)->derinf->state,(VOIDPTR)state);
+    gl_append_ptr(RA_INST(i)->derinf->indep,(VOIDPTR)indep);
+    break;
+  default:
+    PANIC_INCORRECT_TYPE;
+  }
+}
+
+unsigned long SderivsCount(CONST struct Instance *i)
+{
+  assert(i!=NULL);
+  AssertMemory(i);
+  switch(i->t) {
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->sderiv!=NULL) {
+      return gl_length(RA_INST(i)->derinf->sderiv);
+    }else{
+      return 0;
+    }
+  default:
+    ASC_PANIC("SderivsCount called with inappropriate argument.");
+
+  }
+}
+
+struct Instance *SderivsForAtom(CONST struct Instance *i,
+			        unsigned long int c)
+{
+  assert((i!=NULL)&&(c>0)&&(c<=SderivsCount(i)));
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->sderiv!=NULL) {
+      return INST(gl_fetch(RA_INST(i)->derinf->sderiv,c));
+    }else{
+      ASC_PANIC("c out of bounds in SderivsForAtom.");
+    }
+    break;
+  default:
+    Asc_Panic(2, NULL,
+              "SderivsForAtom called with inappropriate argument.");
+    break;
+  }
+  exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
+}
+
+/*  Search for a derivative of the same state variable as deriv. If found
+ *  one, merge it with deriv. If not found, append deriv to the list.
+ */
+void AddSderiv(struct Instance *i, struct Instance *deriv){
+  unsigned long c,c1,c2;
+  assert(i);
+  assert(deriv);
+  assert(deriv->t==REAL_ATOM_INST);
+  AssertMemory(i);
+  switch(i->t){
+  case REAL_ATOM_INST:
+    if (RA_INST(i)->derinf->sderiv==NULL) {
+      RA_INST(i)->derinf->sderiv = gl_create(7L);
+    }
+    if (gl_search(RA_INST(i)->derinf->sderiv,(char*)deriv,(CmpFunc)CmpPtrs)==0){
+      for (c=1;c<=gl_length(RA_INST(i)->derinf->sderiv);c++) {
+        /* If at least one of the independent variables is the same for the two derivatives,
+           merge the derivative instances */
+        for (c1=1;c1<=gl_length(RA_INST((struct Instance*)gl_fetch(RA_INST(i)->derinf->sderiv,c))->derinf->indep);c1++) {
+          for(c2=1;c2<=gl_length(RA_INST(deriv)->derinf->indep);c2++) {
+            if (gl_fetch(RA_INST((struct Instance*)gl_fetch(RA_INST(i)->derinf->sderiv,c))->derinf->indep,c1) == gl_fetch(RA_INST(deriv)->derinf->indep,c2)) {
+              MergeInstances((struct Instance*)gl_fetch(RA_INST(i)->derinf->sderiv,c),deriv);
+              return;
+            }
+          }
+        }
+      }
+      /* If have not found a derivative with respect to the
+         same variable as deriv, add deriv to list. */
+      gl_append_ptr(RA_INST(i)->derinf->sderiv,(VOIDPTR)deriv);
+    }
+    break;
+  default:
+    PANIC_INCORRECT_TYPE;
+  }
+}
 

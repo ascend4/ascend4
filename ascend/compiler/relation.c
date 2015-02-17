@@ -3740,6 +3740,7 @@ void UpdateInputArgsList(struct Instance *relinst, struct relation *rel)
   CONST struct gl_list_t *varlist;
   struct BlackBoxCache *common;
   int32 inputsLen, argloc;
+  char *context;
   struct Instance *var;
 
   /* FIXME-  UpdateInputArgsList */
@@ -3750,6 +3751,7 @@ void UpdateInputArgsList(struct Instance *relinst, struct relation *rel)
   inputs = LinearizeArgList(argListNames,1,n_input_args);
   common = RelationBlackBoxCache(rel);
   inputsLen = common->inputsLen;
+  context = WriteInstanceNameString(relinst,NULL);
   varlist = RelationVarList(rel);
 
   assert(inputsLen == (int32)gl_length(inputs));
@@ -3760,24 +3762,21 @@ void UpdateInputArgsList(struct Instance *relinst, struct relation *rel)
   */
   argloc = 0;
   len = inputsLen;
-  for(c=1; c<=len; c++){
+  for (c=1; c<=len; c++) {
     var = (struct Instance *)gl_fetch(inputs,c);
     pos = gl_search(varlist,var,(CmpFunc)CmpP);
-    if(pos){
+    if (pos) {
       inputArgs[argloc] = pos;
-    }else{
-	  char *context = WriteInstanceNameString(relinst,NULL);
+    } else {
       FPRINTF(ASCERR,"Screwed up merge of input variable %d in %s\n", argloc, context);
-	  ascfree(context);
       inputArgs[argloc] = 0;
     }
     argloc++;
   }
 
   gl_destroy(inputs);
+  ascfree(context);
 }
-
-
 /*
 	This procedure should change all references of "old" in relation
 	instance rel to "new.

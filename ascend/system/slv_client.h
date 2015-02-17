@@ -529,7 +529,7 @@ ASC_DLLSPEC void slv_bnd_initialization(slv_system_t sys);
 	function provided in bndman.
 */
 
-extern void slv_set_solvers_var_list(slv_system_t sys,
+ASC_DLLSPEC void slv_set_solvers_var_list(slv_system_t sys,
                                      struct var_variable **vlist,
                                      int size);
 /**<

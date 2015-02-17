@@ -237,6 +237,86 @@ extern void RemoveWhen(struct Instance *i, struct Instance *when);
 	list, execution continues with a warning message.
 */
 
+ASC_DLLSPEC unsigned long IderivsCount(CONST struct Instance *i);
+/**< 
+	This will return the number of derivatives with respect to instance "i".
+	"i" must be a REAL_ATOM_INST.  Otherwise, this routine will
+	bomb.
+*/
+
+ASC_DLLSPEC struct Instance *IderivsForAtom(CONST struct Instance *i,
+                                            unsigned long c);
+/**<
+ 	This routine will return the c'th derivative instance in the list of
+        derivatives with respect to "i".
+	"i" must be a REAL_ATOM_INST and 0 < c <= IderivsCount(i).
+*/
+
+extern void AddIderiv(struct Instance *i, struct Instance *deriv);
+/**< 
+	Add the derivative instance deriv to the list of derivatives with
+        respect to "i".
+        "i" and "deriv" must be of type REAL_ATOM_INST.
+*/
+
+ASC_DLLSPEC unsigned long StatesCount(CONST struct Instance *i);
+/**< 
+	This will return the number of state variables with derivative "i".
+	"i" must be a REAL_ATOM_INST.  Otherwise, this routine will
+	bomb.
+*/
+
+ASC_DLLSPEC unsigned long IndepsCount(CONST struct Instance *i);
+/**< 
+	This will return the number of independent variables for derivative "i".
+	"i" must be a REAL_ATOM_INST.  Otherwise, this routine will
+	bomb.
+*/
+
+ASC_DLLSPEC struct Instance *StatesForAtom(CONST struct Instance *i,
+                                           unsigned long c);
+/**<
+ 	This routine will return the c'th state variable instance in
+        the list of state variables with derivative "i".
+	"i" must be a REAL_ATOM_INST and 0 < c <= StatesCount(i).
+*/
+
+ASC_DLLSPEC struct Instance *IndepsForAtom(CONST struct Instance *i,
+                                           unsigned long c);
+/**<
+ 	This routine will return the c'th independent variable instance in
+        the list of independent variables for derivative "i".
+	"i" must be a REAL_ATOM_INST and 0 < c <= IndepsCount(i).
+*/
+
+extern void AddStateIndep(struct Instance *i, struct Instance *state, struct Instance *indep);
+/**< 
+	Add the state and independent variables instances deriv
+        and indep to the list of arguments of derivative "i".
+        "i" and "deriv" must be of type REAL_ATOM_INST.
+*/
+
+ASC_DLLSPEC unsigned long SderivsCount(CONST struct Instance *i);
+/**< 
+	This will return the number of derivatives of instance "i".
+	"i" must be a REAL_ATOM_INST.  Otherwise, this routine will
+	bomb.
+*/
+
+ASC_DLLSPEC struct Instance *SderivsForAtom(CONST struct Instance *i,
+                                            unsigned long c);
+/**<
+ 	This routine will return the c'th derivative instance in the list of
+        derivatives of "i".
+	"i" must be a REAL_ATOM_INST and 0 < c <= SderivsCount(i).
+*/
+
+extern void AddSderiv(struct Instance *i, struct Instance *deriv);
+/**< 
+	Add the derivative instance deriv to the list of derivatives of "i".
+        "i" and "deriv" must be of type REAL_ATOM_INST.
+*/
+
 /* @} */
 
 #endif  /* ASC_MATHINST_H */

@@ -590,7 +590,7 @@ Instanc::getChildren()
 }
 
 Instanc
-Instanc::getChild(const SymChar &name) const{
+Instanc::getChild(const SymChar name) const{
 	struct Instance *c = ChildByChar(i,name.getInternalType());
 	stringstream ss;
 	if(c==NULL){
@@ -601,7 +601,7 @@ Instanc::getChild(const SymChar &name) const{
 }
 
 Instanc
-Instanc::getChild(const long &index) const{
+Instanc::getChild(const long index) const{
 	if(!isArray()){
 		stringstream ss;
 		ss << "Instance '" << getName() << "' is not an array; can't retrieve child index " << index;

@@ -51,6 +51,7 @@
 #include "instance_enum.h"
 #include "cmpfunc.h"
 #include "exprs.h"
+#include "vlist.h"
 
 
 #ifndef lint

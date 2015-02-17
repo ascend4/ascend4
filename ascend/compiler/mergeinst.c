@@ -629,6 +629,7 @@ struct Instance *MergeAtoms(struct Instance *i1, struct Instance *i2)
     switch (i2->t) {
     case REAL_ATOM_INST:
       FixRelations(RA_INST(i2),RA_INST(i1));
+      FixDerInfo(RA_INST(i2),RA_INST(i1));
       break;
     case BOOLEAN_ATOM_INST:
       FixLogRelations(i2,i1);
@@ -658,6 +659,7 @@ struct Instance *MergeAtoms(struct Instance *i1, struct Instance *i2)
     switch (i1->t) {
     case REAL_ATOM_INST:
       FixRelations(RA_INST(i1),RA_INST(i2));
+      FixDerInfo(RA_INST(i1),RA_INST(i2));
       break;
     case BOOLEAN_ATOM_INST:
       FixLogRelations(i1,i2);

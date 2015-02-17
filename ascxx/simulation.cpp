@@ -1020,3 +1020,11 @@ Simulation::getSolverHooks() const{
 	return this->solverhooks;
 }
 
+void
+Simulation::setUseDerSyntax(const bool &use_dersyntax){
+	g_use_dersyntax = 0;
+	if(use_dersyntax){
+		g_use_dersyntax = 1;
+	}
+}
+

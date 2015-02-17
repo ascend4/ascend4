@@ -32,7 +32,6 @@
 #include <ascend/compiler/safe.h>
 #include <ascend/compiler/qlfdid.h>
 #include <ascend/compiler/instance_io.h>
-#include <ascend/compiler/packages.h>
 
 #include <ascend/compiler/slvreq.h>
 
@@ -48,8 +47,8 @@ static void test_boundaries(){
 	struct module_t *m;
 
 	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models" OSPATH_DIV "solvers/lrslv");
-	CU_TEST_FATAL(0 == package_load("lrslv",NULL));
+	Asc_PutEnv(ASC_ENV_LIBRARY "=/home/leon/ascend/lib/ascend/models:models:solvers/lrslv");
+	SlvRegisterStandardClients();
 
 	/* load the file */
 	char path[PATH_MAX] = "test/ida/boundaries.a4c";
@@ -66,7 +65,9 @@ static void test_boundaries(){
 	struct Instance *sim = SimsCreateInstance(AddSymbol("boundaries"), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(sim!=NULL);
 
-    /** Call on_load */
+    CONSOLE_DEBUG("RUNNING ON_LOAD");
+
+	/** Call on_load */
 	struct Name *name = CreateIdName(AddSymbol("on_load"));
 	enum Proc_enum pe = Initialize(GetSimulationRoot(sim),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
 	CU_ASSERT(pe==Proc_all_ok);
@@ -78,7 +79,7 @@ static void test_boundaries(){
 
 	slv_system_t sys = system_build(GetSimulationRoot(sim));
 	CU_ASSERT_FATAL(sys != NULL);
-
+	
 	CU_ASSERT_FATAL(slv_select_solver(sys,index));
 	CONSOLE_DEBUG("Assigned solver '%s'...",solvername);
 
@@ -100,7 +101,7 @@ static void test_boundaries(){
 
 	/* Set t := 4 {s} */
 	struct Instance *inst;
-	CU_ASSERT((inst = ChildByChar(GetSimulationRoot(sim),AddSymbol("t"))) && InstanceKind(inst)==REAL_ATOM_INST);
+	CU_ASSERT((inst = ChildByChar(GetSimulationRoot(sim),AddSymbol("t"))) && InstanceKind(inst)==REAL_ATOM_INST); 
 	SetRealAtomValue(inst, 4.0, 0);
 	CU_ASSERT(RealAtomValue(inst)==4.0);
 
@@ -119,7 +120,7 @@ static void test_boundaries(){
 	name = CreateIdName(AddSymbol("check_satduring"));
 	pe = Initialize(GetSimulationRoot(sim),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
 	CU_ASSERT(pe==Proc_all_ok);
-
+	
 	CONSOLE_DEBUG("Destroying system...");
 	if(sys)system_destroy(sys);
 	system_free_reused_mem();

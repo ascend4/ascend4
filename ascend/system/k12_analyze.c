@@ -68,6 +68,7 @@
 */
 
 #include "analyze.h"
+#include "k12_analyze.h"
 
 #include <ascend/general/panic.h>
 #include <ascend/general/ascMalloc.h>
@@ -96,10 +97,12 @@
 #include <ascend/compiler/case.h>
 #include <ascend/compiler/when_util.h>
 #include <ascend/compiler/link.h>
+#include <ascend/compiler/deriv.h>
 
 #include "slv_server.h"
 #include "cond_config.h"
 #include "diffvars.h"
+#include "k12_diffvars.h"
 #include "analyse_impl.h"
 
 /* stuff to get rid of */
@@ -134,7 +137,7 @@ static struct reuse_t {
 
 
 /* used to give an integer value to each symbol used in a when */
-struct gl_list_t *g_symbol_values_list = NULL;
+struct gl_list_t *k12_g_symbol_values_list = NULL;
 
 /*-----------------------------------------------------------------------------
   FORWARD DECLARATIONS
@@ -495,68 +498,6 @@ static void analyze_CountRelation(struct Instance *inst
 }
 
 
-/**
-	Obtain an integer value from a symbol value
-	Used for a WHEN statement. Each symbol value is stored in a symbol list.
-	It checks if the symval is already in the solver symbol list,
-	if it is, returns the integer corresponding to the position of symval
-	if it is not, appends the symval to the list and then returns the int
-
-	@NOTE This is terrible inefficient as the number of symbols grows.
-	I am keeping it by now, are they going to be so many symbols in
-	whens anyway ?
-*/
-int GetIntFromSymbol(CONST char *symval
-		,struct gl_list_t *symbol_list
-){
-
-  struct SymbolValues *entry,*dummy;
-  unsigned long length;
-  int len,c,value;
-  int symbol_list_count;
-
-  if(symbol_list != NULL) {
-    len = gl_length(symbol_list);
-    for (c=1; c<= len; c++) {
-      dummy = (struct SymbolValues *)(gl_fetch(symbol_list,c));
-      if(!strcmp(dummy->name,symval)) {
-	return (dummy->value);
-      }
-    }
-    symbol_list_count = len;
-  }else{
-    symbol_list_count = 0;
-    symbol_list = gl_create(2L);
-  }
-  length = (unsigned long)strlen(symval);
-  length++;
-  symbol_list_count++;
-  entry = (struct SymbolValues *)ascmalloc(sizeof(struct SymbolValues));
-  entry->name = ASC_NEW_ARRAY(char,length);
-  strcpy(entry->name,symval);
-  entry->value = symbol_list_count;
-  value = entry->value;
-  gl_append_ptr(symbol_list,entry);
-  return value;
-}
-
-
-void DestroySymbolValuesList(struct gl_list_t *symbol_list){
-  struct SymbolValues *entry;
-  int len,c;
-  if(symbol_list != NULL) {
-    len = gl_length(symbol_list);
-    for (c=1; c<= len; c++) {
-      entry = (struct SymbolValues *)(gl_fetch(symbol_list,c));
-      ascfree((char *)entry->name); /* Do I need this ? */
-      ascfree((char *)entry);
-    }
-    gl_destroy(symbol_list);
-    symbol_list = NULL;
-  }
-}
-
-
 /*------------------------------------------------------------------------------
   CLASSIFICATION OF INSTANCES, CREATING INTERFACE POINTERS
 */
@@ -574,7 +515,7 @@ void DestroySymbolValuesList(struct gl_list_t *symbol_list){
 	vp is a struct problem_t.
 */
 static
-void *classify_instance(struct Instance *inst, VOIDPTR vp){
+void *k12_classify_instance(struct Instance *inst, VOIDPTR vp){
   struct solver_ipdata *ip;
   struct problem_t *p_data;
   CONST char *symval;
@@ -593,22 +534,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
       ip->u.v.solvervar = 1; /* must set this regardless of what list */
       ip->u.v.fixed = BooleanChildValue(inst,FIXED_A);
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
-      ip->u.v.deriv = IntegerChildValue(inst,DERIV_A);
-      ip->u.v.odeid = IntegerChildValue(inst,ODEID_A);
       ip->u.v.obsid = IntegerChildValue(inst,OBSID_A);
-	  /* CONSOLE_DEBUG("FOUND A VAR: deriv = %d, %s = %d",ip->u.v.deriv,SCP(ODEID_A),ip->u.v.odeid); */
-			
-	  if(ip->u.v.deriv == 0){					
-		ip->u.v.deriv = getOdeType(p_data->root,inst);
-		ip->u.v.odeid = getOdeId(p_data->root,inst);
-	  }
-	  printf("\n ode_type: %d, ode_id: %d \n",ip->u.v.deriv,ip->u.v.odeid);
-
-	  if(ip->u.v.deriv == 0){
-		ip->u.v.deriv = getOdeType(p_data->root,inst);
-		ip->u.v.odeid = getOdeId(p_data->root,inst);
-	  }
-	  //printf("\n ode_type: %d, ode_id: %d \n",ip->u.v.deriv,ip->u.v.odeid);
 
       if(RelationsCount(inst)) {
         asc_assert(ip!=(void *)0x1);
@@ -621,33 +547,16 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
 	gl_append_ptr(p_data->obsvars,(POINTER)ip);
 	/* CONSOLE_DEBUG("Added to obsvars"); */
       	  }
+
 	/* make the algebraic/differential/derivative cut */
-	if(ip->u.v.odeid){
-            gl_append_ptr(p_data->diffvars,(POINTER)ip);
-	/* CONSOLE_DEBUG("Added var to diffvars"); */
-          }else{
-	if(ip->u.v.deriv==-1){
-		//printf("\n smth smth \n");
-		struct solver_ipdata *original_indep_var;
-		if(gl_length(p_data->indepvars) != 0) {
-			original_indep_var = (struct solver_ipdata *)gl_fetch(p_data->indepvars,1);
-			//printf("\n asadada %d \n",original_indep_var->i == inst);
-		  }
-		  /*>>DS: Checking that the independent variable is the same one in each derivative chains */
-		  if(gl_length(p_data->indepvars) == 0 || strcmp(WriteInstanceNameString(original_indep_var->i,p_data->root),WriteInstanceNameString(inst,p_data->root))== 0 ) {
-			//printf("\n ttttttt %ld %s \n",gl_length(p_data->indepvars),WriteInstanceNameString(inst,p_data->root));
-		        gl_append_ptr(p_data->indepvars,(POINTER)ip);
-			/* CONSOLE_DEBUG("Added to indep vars"); */
-		  }else{
-		    ERROR_REPORTER_HERE(ASC_USER_ERROR,"Set the same independent variable for all derivative chains!" );
-			FPRINTF(ASCERR,"All derivative chains must contain one and the same independent variable \n");
-			/* ASC_PANIC("Set the same independent variable for all derivative chains!.\n"); */
-		  }
-		}else{
-		  gl_append_ptr(p_data->algebvars,(POINTER)ip);
-		  /* CONSOLE_DEBUG("Added var to algebvars"); */
-		}
+	if (IsDeriv(inst) || IsState(inst)) gl_append_ptr(p_data->diffvars,(POINTER)ip);
+	if (IsIndep(inst)) {
+	  if(gl_length(p_data->indepvars) != 0) {
+	    if(inst != (struct Instance*)gl_fetch(p_data->indepvars,1)) ERROR_REPORTER_HERE(ASC_USER_ERROR,"All derivative chains must contain one and the same independent variable.");
 	  }
+	  gl_append_ptr(p_data->indepvars,(POINTER)ip);
+        }
+	if (!IsDeriv(inst) && !IsState(inst) && !IsIndep(inst)) gl_append_ptr(p_data->algebvars,(POINTER)ip);
     }else{
       ip->u.v.fixed = 1;
       ip->u.v.solvervar=0;
@@ -726,10 +635,10 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     ip->u.dv.booleanvar=0;
     ip->u.dv.fixed = 0;
     ip->u.dv.active = 0;
-    if(g_symbol_values_list == NULL) {
-      g_symbol_values_list = gl_create(2L);
+    if(k12_g_symbol_values_list == NULL) {
+      k12_g_symbol_values_list = gl_create(2L);
     }
-    ip->u.dv.value = GetIntFromSymbol(symval,g_symbol_values_list);
+    ip->u.dv.value = GetIntFromSymbol(symval,k12_g_symbol_values_list);
     gl_append_ptr(p_data->dvars,(POINTER)ip);
     return ip;
   case INTEGER_CONSTANT_INST:
@@ -759,10 +668,10 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
     ip->u.dv.booleanvar=0;
     ip->u.dv.fixed = 1;
     ip->u.dv.active = 0;
-    if(g_symbol_values_list == NULL) {
-      g_symbol_values_list = gl_create(2L);
+    if(k12_g_symbol_values_list == NULL) {
+      k12_g_symbol_values_list = gl_create(2L);
     }
-    ip->u.dv.value = GetIntFromSymbol(symval,g_symbol_values_list);
+    ip->u.dv.value = GetIntFromSymbol(symval,k12_g_symbol_values_list);
     gl_append_ptr(p_data->dvars,(POINTER)ip);
     return ip;
   case REL_INST:               /* Relation (or conditional or objective) */
@@ -1060,7 +969,7 @@ int analyze_make_master_lists(struct problem_t *p_data){
 #undef CL
 
   /* decorate the instance tree with ips, collecting vars and models. */
-  p_data->oldips = PushInterfacePtrs(p_data->root,classify_instance,
+  p_data->oldips = PushInterfacePtrs(p_data->root,k12_classify_instance,
                                     g_reuse.ipcap,1,p_data);
   if(p_data->oldips == NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
@@ -1550,10 +1459,10 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     cur_case = (struct Case *)(gl_fetch(scratch,c));
     ValueList = GetCaseValues(cur_case);
     value = &(cur_sol_case->values[0]);
-    if(g_symbol_values_list == NULL) {
-      g_symbol_values_list = gl_create(2L);
+    if(k12_g_symbol_values_list == NULL) {
+      k12_g_symbol_values_list = gl_create(2L);
     }
-    ProcessValueList(ValueList,value,g_symbol_values_list);
+    ProcessValueList(ValueList,value,k12_g_symbol_values_list);
     ref = GetCaseReferences(cur_case);
     lref = gl_length(ref);
     rels = gl_create(lref);  /* maybe allocating less than needed (models) */
@@ -1593,50 +1502,6 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i){
     when_case_set_active(cur_sol_case,FALSE);
     gl_append_ptr(when->cases,cur_sol_case);
   }
-}
-
-/*------------------------------------------------------------------------------
-  RECONFIGURATION OF CONDITIONAL MODELS
-*/
-
-/**
-	Is this (discrete) variable inside a WHEN?
-
-	@return
-		1 if discrete var is a member of the when var list,
-		else 0
-
-	@DEPRECATED we want to get rid of this in order to clean up the
-	solver interface (divorce it from dependencies on compiler)
-*/
-int dis_var_in_a_when(struct Instance *var, struct w_when *when){
-  struct Instance *winst;
-
-  winst = (struct Instance *)(when_instance(when));
-  return VarFoundInWhen(var,winst);
-}
-
-
-/**
-	Determine if the conditional variable inst is part of the
-	variable list of some when in the when list.
-
-	@DEPRECATED we want to get rid of this in order to clean up the
-	solver interface (divorce it from dependencies on compiler)
-*/
-int varinst_found_in_whenlist(slv_system_t sys, struct Instance *inst){
-  struct w_when **whenlist;
-  struct w_when *when;
-  int c;
-
-  whenlist = slv_get_solvers_when_list(sys);
-  for (c=0; whenlist[c]!=NULL; c++) {
-    when = whenlist[c];
-    if(dis_var_in_a_when(inst,when)) {
-      return 1;
-    }
-  }
-  return 0;
 }
 
 /*------------------------------------------------------------------------------
@@ -1708,7 +1573,7 @@ void GetTolerance(struct bnd_boundary *bnd){
 	contain at least one variable in one equation
 */
 static
-int analyze_make_solvers_lists(struct problem_t *p_data){
+int k12_analyze_make_solvers_lists(struct problem_t *p_data){
   CONST struct relation *gut;
   CONST struct logrelation *lgut;
   struct Instance *i;
@@ -1997,7 +1862,7 @@ int analyze_make_solvers_lists(struct problem_t *p_data){
     if(vip->u.v.fixed)     flags |= VAR_FIXED;
     if(!vip->u.v.basis)    flags |= VAR_NONBASIC;
     if(vip->u.v.solvervar) flags |= VAR_SVAR;
-    if(vip->u.v.deriv > 1) flags |= VAR_DERIV; /* so that we can do relman_diffs with just the ydot vars */
+    if(IsDeriv(vip->i))    flags |= VAR_DERIV; /* so that we can do relman_diffs with just the ydot vars */
 
     var_set_flags(var,flags);
     p_data->mastervl[v] = var;
@@ -2634,8 +2499,8 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
   p_data->varincidence = NULL;
   slv_set_logincidence(sys,p_data->logrelinciden,p_data->lrelincsize);
   p_data->logrelinciden = NULL;
-  slv_set_symbol_list(sys,g_symbol_values_list);
-  g_symbol_values_list = NULL;
+  slv_set_symbol_list(sys,k12_g_symbol_values_list);
+  k12_g_symbol_values_list = NULL;
 
   /* do the slv_set_master_var_list (etc) calls... */
 #define SL(N,L,L2) slv_set_master_##N##_list(sys,p_data->master##L,gl_length(p_data->L2)); p_data->master##L=NULL;
@@ -2697,7 +2562,7 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data){
 	errors -- in particular because we must leave the interface ptrs
 	in the state they were found.
 */
-int analyze_make_problem(slv_system_t sys, struct Instance *inst){
+int k12_analyze_make_problem(slv_system_t sys, struct Instance *inst){
   int stat;
 
   struct problem_t thisproblem; /* note default zero intitialisation. note also: local var! */
@@ -2734,7 +2599,7 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   }
 
   /* rearrange all the stuff we found and index things */
-  stat = analyze_make_solvers_lists(p_data);
+  stat = k12_analyze_make_solvers_lists(p_data);
   if(stat == 2){
     analyze_free_lists(p_data);
     ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Nothing to make lists from (solver's lists)");
@@ -2745,7 +2610,7 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
     return 1;
   }
 
-  stat = system_generate_diffvars(sys,p_data);
+  stat = k12_system_generate_diffvars(sys,p_data);
   if(stat){
 	analyze_free_lists(p_data);
 	return 3;
@@ -2757,10 +2622,6 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst){
   /* blow the temporary lists away */
   analyze_free_lists(p_data);
   return 0;
-}
-
-extern void analyze_free_reused_mem(void){
-  resize_ipbuf((size_t)0,0);
 }
 
 /* :ex: set ts=4 : */

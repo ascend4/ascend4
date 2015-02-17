@@ -84,6 +84,13 @@
 /* if ALIGNSTUPID, then 4 byte ptrs must fall on 8 byte boundaries */
 /* any architecture with such a restrict should be summarily torched */
 
+struct DerInfo {
+  struct gl_list_t *sderiv; /**< For state variables: pointers to the derivatives */
+  struct gl_list_t *ideriv; /**< For independent variables: pointers to the derivatives */
+  struct gl_list_t *state; /**< For derivatives: pointers to the state variables */
+  struct gl_list_t *indep; /**< For derivatives: pointers to the independent variables */
+};
+
 
 /* FUNDAMENTAL INSTANCES */
 
@@ -184,6 +191,7 @@ struct RealAtomInstance {
   struct gl_list_t *relations;  /**< relations where this real appears */
   unsigned int assigned;        /**< the number of times it has been assigned */
   unsigned int depth;           /**< the depth of the last assignment */
+  struct DerInfo *derinf;
   /* An even number of child pointers are packed here, the last of which
    * may not be valid because the number of children may be odd.
    * This extra should be eliminated for LONG pointer machines.

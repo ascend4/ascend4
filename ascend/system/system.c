@@ -40,10 +40,13 @@
 #include "relman.h"
 #include "slv_server.h"
 #include "analyze.h"
+#include "k12_analyze.h"
 #include "slv_common.h"
 
 #define IPTR(i) ((struct Instance *) (i))
 #define DOTIME 1
+
+int g_use_dersyntax = 0;
 
 slv_system_t system_build(SlvBackendToken inst){
   slv_system_t sys;
@@ -67,7 +70,8 @@ slv_system_t system_build(SlvBackendToken inst){
     sys = NULL;
     return sys;
   }
-  stat = analyze_make_problem(sys,IPTR(inst));
+  if (g_use_dersyntax) stat = k12_analyze_make_problem(sys,IPTR(inst));
+  else stat = analyze_make_problem(sys,IPTR(inst));
   if(stat){
     system_destroy(sys);
     sys = NULL;

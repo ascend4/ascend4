@@ -23,8 +23,8 @@
 	@todo WHAT'S IN A NAME??? That which we call a rose
 	By any other name would smell as sweet.
 
-	A name is a linked list of symchars, integers, and potentially
-	unexpanded set definitions (array subscripts)
+	A name is a linked list of symchars, integers, potentially
+	unexpanded set definitions (array subscripts) and variable lists
 	that gives the route another instance starting at some root
 	instance i.  So if you have something's name and context instance, we
 	know how to find the child (grandchild, etc) with the given name.
@@ -64,6 +64,16 @@ ASC_DLLSPEC struct Name*CreateIdNameF(symchar *s, int bits);
 	Create a name node with the identifier s
 	and flag bits associated with it.  Implementation
 	function for CreateIdName() and CreateSystemIdName().
+*/
+
+extern struct Name *CreateDerivName(struct DerName *der);
+/**<
+	Create a name node of type derivative with the derivative structure associated with it.
+*/
+
+extern struct DerName *CreateDeriv(struct VariableList *vlist);
+/**<
+	Create a derivative structure with the varlist vlist associated with it.
 */
 
 extern struct Name *CreateSetName(struct Set *s);
@@ -139,6 +149,55 @@ extern int NameIdF(CONST struct Name *n);
 */
 
 #ifdef NDEBUG
+#define NameDeriv(n) ((n)->bits & NAMEBIT_DERIV)
+#else
+#define NameDeriv(n) NameDerivF(n)
+#endif
+/**<
+	Test whether a Name element is a derivative.
+	We should have analogous functions for CHAT and ATTR, but since no
+	clients yet use them, they aren't implemented.
+	@param n CONST struct Name*, Name to query.
+	@return An int:  NAMEBIT_DERIV if n is a derivative type Name or 0 otherwise.
+	@see NameDerivF()
+
+	@note This answers for just the *first* link in the name.
+		
+*/
+
+extern int NameDerivF(CONST struct Name *n);
+/**<
+	Return NAMEBIT_DERIV if n is a derivative type Name or 0 otherwise.
+	We should have analogous functions for CHAT and ATTR, but since no
+	clients yet use them, they aren't implemented.
+	Implementation function for NameDeriv().  Do not call this
+	function directly - use NameDeriv() instead.
+*/
+
+#ifdef NDEBUG
+#define NameHasder(n) ((n)->bits & NAMEBIT_HASDER)
+#else
+#define NameHasder(n) NameHasderF(n)
+#endif
+/**<
+	Test whether a Name contains a derivative in the list of name elements.
+	@param n CONST struct Name*, Name to query.
+	@return An int:  NAMEBIT_HASDER if n contains a derivative name or 0 otherwise.
+	@see NameHasderF()
+
+	@note This answers for all links in the name.
+		
+*/
+
+extern int NameHasderF(CONST struct Name *n);
+/**<
+	Return NAMEBIT_HASDER if n contains a derivative in the list of
+        name elements or 0 otherwise.
+	Implementation function for NameHasder().  Do not call this
+	function directly - use NameHasder() instead.
+*/
+
+#ifdef NDEBUG
 #define NameAuto(n) ((n)->bits & (NAMEBIT_AUTO|NAMEBIT_IDTY))
 #else
 #define NameAuto(n) NameAutoF(n)
@@ -160,7 +219,7 @@ extern int NameAutoF(CONST struct Name *n);
 */
 
 #ifdef NDEBUG
-#define NameIdPtr(n) ((n)->val.id)
+#define NameIdPtr(n) (NameId(n) ? (n)->val.id : (n)->val.der->strptr)
 #else
 #define NameIdPtr(n) NameIdPtrF(n)
 #endif
@@ -215,6 +274,71 @@ extern CONST struct Set *NameSetPtrF(CONST struct Name *n);
 	function directly - use NameSetPtr() instead.
 */
 
+#ifdef NDEBUG
+#define NameDerPtr(n) ((n)->val.der)
+#else
+#define NameDerPtr(n) NameDerPtrF(n)
+#endif
+/**<
+	Returns the derivative pointer for derivative type name node n.
+	@param n CONST struct Name*, Name to query.
+	@return The derivative pointer as a CONST struct DerName*.
+	@see NameDerPtrF()
+*/
+extern CONST struct DerName *NameDerPtrF(CONST struct Name *n);
+/**<
+	Assumes that n is a derivative type name node.
+	Returns the derivative pointer.
+	Implementation function for NameDerPtr().  Do not call this
+	function directly - use NameDerPtr() instead.
+*/
+
+#ifdef NDEBUG
+#define DerStrPtr(n) ((n)->strname)
+#else
+#define DerStrPtr(n) DerStrPtrF(n)
+#endif
+/**<
+	Returns the symchar pointer for derivative structure n.
+	@param n CONST struct DerName*.
+	@return The symchar pointer as a symchar*.
+	@see DerStrPtrF()
+*/
+extern symchar *DerStrPtrF(CONST struct DerName *n);
+/**<
+	Returns the symchar pointer.
+	Implementation function for DerStrPtr().  Do not call this
+	function directly - use DerStrPtr() instead.
+*/
+
+#ifdef NDEBUG
+#define DerVlist(n) ((n)->vlist)
+#else
+#define DerVlist(n) DerVlistF(n)
+#endif
+/**<
+	Returns the variable list pointer for derivative structure n.
+	@param n CONST struct DerName*.
+	@return The variable list pointer as a struct VariableList*.
+	@see DerStrPtrF()
+*/
+extern struct VariableList *DerVlistF(CONST struct DerName *n);
+/**<
+	Returns the variable list pointer.
+	Implementation function for DerVlist().  Do not call this
+	function directly - use DerVlist() instead.
+*/
+
+extern void SetHasder(struct Name *n);
+/**<
+	Sets NAMEBIT_HASDER of all nodes of the name to 1.
+*/
+
+extern struct DerName *CopyDerName(CONST struct DerName *n);
+/**<
+	Make and return a copy of the derivative structure.
+*/
+
 extern struct Name *CopyName(CONST struct Name *n);
 /**<
 	Make and return a copy of the whole name.
@@ -226,11 +350,22 @@ extern struct Name *CopyAppendNameNode(CONST struct Name *n, CONST struct Name *
 	head of a longer name). The result is totally disjoint from the inputs.
 */
 
+extern struct Name *AppendNameNode(struct Name *n1, CONST struct Name *n2);
+/**<
+	Append a copy of the node (which may be just the head of a longer name).
+*/
+
 ASC_DLLSPEC void DestroyName(struct Name *n);
 /**<
 	Deallocate the whole name linked list
 	Handles NULL input gracefully.
 */
+
+extern void DestroyDerName(struct DerName *der);
+/**<
+	Deallocate this derivative structure.
+	Handles NULL input gracefully.
+ */
 
 extern void DestroyNamePtr(struct Name *n);
 /**<
@@ -285,6 +420,11 @@ extern int CompareNames(CONST struct Name *n1, CONST struct Name *n2);
 /**<
 	Returns -1 0 1 as n1 < = > n2.
 	Will need fixing when we have supported attributes.
+*/
+
+extern int CompareDers(CONST struct DerName *n1, CONST struct DerName *n2);
+/**<
+	Returns -1 0 1 as n1 < = > n2.
 */
 
 extern void name_init_pool(void);

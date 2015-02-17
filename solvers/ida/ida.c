@@ -77,10 +77,10 @@
  */
 
 /*
-	The following functions are declared static because we don't want them
-	ever to be called directly from outside code. Instead, they are call via
-	function pointers passed through the ida_register function.
-*/
+ The following functions are declared static because we don't want them
+ ever to be called directly from outside code. Instead, they are call via
+ function pointers passed through the ida_register function.
+ */
 static IntegratorCreateFn integrator_ida_create;
 static IntegratorParamsDefaultFn integrator_ida_params_default;
 static IntegratorSolveFn integrator_ida_solve;
@@ -1270,3 +1270,4 @@ static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s) {
 }
 
 /* vim: set ts=4: */
+

@@ -577,6 +577,54 @@ struct TypeDescription
   return result;
 }
 
+struct TypeDescription
+  *CreateDerivAtomTypeDesc(symchar *name,	/* name of type */
+			   struct TypeDescription *rdesc, /* type description what it refines */
+			   CONST struct TypeDescription *vartype, /* type description of the state variable */
+			   CONST struct TypeDescription *indtype, /* type description of the independent variable */
+			   struct module_t *mod, /* module where the type is defined */
+			   ChildListPtr childl,	/* list of children names */
+			   struct gl_list_t *procl, /* list of initialization procedures */
+			   struct StatementList *statl, /* list of declarative statements */
+			   unsigned long int bytesize, /* size of an instance in bytes. */
+			   struct ChildDesc *childd,	/* description of the atom's children */
+			   int defaulted, /* TRUE indicates default value was assigned */
+			   double dval, /* default value for real atoms */
+			   CONST dim_type *ddim, /* dimensions of default value */
+			   int univ
+){
+  register struct TypeDescription *result;
+  result=ASC_NEW(struct TypeDescription);
+#if TYPELINKDEBUG
+  FPRINTF(ASCERR,"\n");
+#endif
+  result->t = real_type;
+  result->ref_count = 1;
+  result->name = name;
+  result->refines = rdesc;
+  result->refiners = NULL;
+  result->parseid = g_parse_count++;
+  ClaimNewMethodsTypeDesc(result->parseid,procl);
+  if (rdesc!=NULL) CopyTypeDesc(rdesc);
+  if (rdesc!=NULL) LinkTypeDesc(rdesc,result);
+  result->mod = mod;
+  result->children = childl;
+  result->init = procl;
+  result->stats = statl;
+  result->universal = univ;
+  result->flags = 0;
+  result->flags |=  StatListHasDefaults(statl);
+  result->flags |=  TYPESHOW;
+  result->u.derivatom.childinfo = childd;
+  result->u.derivatom.byte_length = bytesize;
+  result->u.derivatom.defaulted = (defaulted) ? 1 : 0;
+  result->u.derivatom.u.defval = dval;
+  result->u.derivatom.dimp = ddim;
+  result->u.derivatom.vartype = vartype;
+  result->u.derivatom.indtype = vartype;
+  return result;
+}
+
 static
 int IndicesEqual(struct gl_list_t *i1, struct gl_list_t *i2){
   unsigned long c,len;

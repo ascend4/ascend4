@@ -268,8 +268,14 @@ ASC_DLLSPEC struct FilePath *ospath_root(struct FilePath *fp);
 
 ASC_DLLSPEC int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2);
 
+/**
+	Concatenate fp1 and fp2. No change to fp1 or fp2
+*/
 ASC_DLLSPEC struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath *fp2);
 
+/**
+	Append fp1 to fp. No change to fp1. fp contains the new path.
+*/
 ASC_DLLSPEC void ospath_append(struct FilePath *fp, struct FilePath *fp1);
 
 /**
@@ -324,6 +330,27 @@ ASC_DLLSPEC struct FilePath *ospath_searchpath_iterate(
 		, FilePathTestFn *testfn
 		, void *searchdata
 );
+
+/*-------------------------------*/
+/* GETCWD AND CHDIR */
+
+/**
+	Set the current working directory to fp.
+	@return 0 on success, else platform-specific error codes as per unistd.h
+
+	The caller retains ownership of fp.
+*/
+ASC_DLLSPEC int ospath_chdir(struct FilePath *fp);
+
+/**
+	Query the current working directory.
+	@return NULL if there is some problem, else struct FilePath for current loc.
+
+	The caller owns the resulting FilePath object and must ospath_free it when 
+	no longer required.
+*/
+ASC_DLLSPEC struct FilePath *ospath_getwd();
+
 
 /* @} */
 

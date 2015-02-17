@@ -236,6 +236,7 @@ struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl)
     case IRT:
       td=    GetStatType(s);
       break;
+    case ISDER:
     case ALIASES:
     case ARR: /* possible bug. ben */
     case ATS:
@@ -330,6 +331,15 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
               SCP(GetStatType(s)),SCP(GetStatSetType(s)));
     }
     break;
+  case ISDER:
+    FPRINTF(f,"DERIVATIVE OF ");
+    WriteVariableList(f,GetStatVarList(s));
+    if (GetStatIndVar(s)) {
+      FPRINTF(f," WITH ");
+      WriteName(f,GetStatIndVar(s));
+    }
+    FPRINTF(f,";\n");
+    break;
   case WILLBE:
     WriteVariableList(f,GetStatVarList(s));
     if (GetStatSetType(s)==NULL) {
@@ -396,6 +406,7 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
 		(ForContainsCAssigns(s)) ? " con" : "",
 		(ForContainsWhen(s)) ? " when" : "",
 		(ForContainsIsa(s)) ? " isa" : "",
+		(ForContainsIsder(s)) ? " isder" : "",
 		(ForContainsSelect(s)) ? " select" : "",
 		(ForContainsConditional(s)) ? " conditional" : "",
 		(ForContainsWillbe(s)) ? " wb" : "",
@@ -814,6 +825,7 @@ symchar *StatementTypeString(CONST struct Statement *s)
     error_statement_sym = AddSymbol("Unknown-statement-type");
     g_statio_stattypenames[ALIASES] = AddSymbol("ALIASES");
     g_statio_stattypenames[ISA] = AddSymbol("IS_A");
+    g_statio_stattypenames[ISDER] = AddSymbol("ISDER");
     g_statio_stattypenames[ARR] = AddSymbol("ALIASES/IS_A");
     g_statio_stattypenames[IRT] = AddSymbol("IS_REFINED_TO");
     g_statio_stattypenames[ATS] = AddSymbol("ARE_THE_SAME");
@@ -851,6 +863,7 @@ symchar *StatementTypeString(CONST struct Statement *s)
   switch(StatementType(s)) {
   case ALIASES:
   case ISA:
+  case ISDER:
   case ARR:
   case IRT:
   case ATS:

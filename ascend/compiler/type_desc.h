@@ -134,6 +134,23 @@ struct AtomTypeDesc {
   CONST dim_type *dimp;       /**< dimensions of instance */
 };
 
+struct DerivAtomTypeDesc {
+  unsigned long byte_length;       /**< byte length of an instance */
+  struct ChildDesc *childinfo;     /**< description of children */
+  unsigned defaulted;              /**< 0 -> ignore default value and units
+                                   1 -> don't ignore them */
+  double defval;                   /**< default value for real instances */
+  union {
+    double defval;                 /**< default value for real instances */
+    long defint;                   /**< default value for integer instances */
+    symchar *defsym;               /**< default value for symbol instances */
+    unsigned defbool;              /**< default value for boolean instances */
+  } u;                             /**< union of default values */
+  CONST dim_type *dimp;            /**< dimensions of instance */
+  CONST struct TypeDescription *vartype; /**< type of the state variable */
+  CONST struct TypeDescription *indtype; /**< type of the independent variable */
+};
+
 /**
 	IndexType has been modified to store a key, and a string
 	representation of the set of indices. As it stands the set
@@ -222,6 +239,7 @@ struct TypeDescription {
   union {
     struct ArrayDesc array;             /**< description of array things */
     struct AtomTypeDesc atom;           /**< atom description stuff */
+    struct DerivAtomTypeDesc derivatom; /**< derivative atom description stuff */
     struct ConstantTypeDesc constant;   /**< constant description stuff */
     struct ModelArgs modarg;            /**< parameter list stuff */
   } u;                              /**< union of description stuff */
@@ -1042,6 +1060,42 @@ extern struct TypeDescription
  *  @param univ       TRUE universal FALSE non-universal.
  *  @param ival       Defalut value for integer/boolean atoms.
  *  @param sval       Default value for symbol atoms.
+ *  @return A pointer to the new TypeDescription structure.
+ */
+
+extern struct TypeDescription
+*CreateDerivAtomTypeDesc(symchar *name,
+			 struct TypeDescription *rdesc,
+			 CONST struct TypeDescription *vartype,
+			 CONST struct TypeDescription *indtype,
+			 struct module_t *mod,
+			 ChildListPtr childl,
+			 struct gl_list_t *procl,
+			 struct StatementList *statl,
+                   	 unsigned long bytesize,
+                    	 struct ChildDesc *childd,
+			 int defaulted,
+			 double dval,
+			 CONST dim_type *ddim,
+			 int univ);
+
+/**<
+ *  Creates a derivative Atom TypeDescription structure with the parameters given.
+ *
+ *  @param name       Name of type.
+ *  @param rdesc      Type description what it refines.
+ *  @param vartype    Type description of the state variable
+ *  @param indtype    Type description of the independent variable
+ *  @param mod        Module where the type is defined.
+ *  @param childl     List of children names.
+ *  @param procl      List of initialization procedures.
+ *  @param statl      List of declarative statements.
+ *  @param bytesize   Size of an instance in bytes.
+ *  @param childd     Description of the atom's children.
+ *  @param defaulted  Valid because a derivative is always real. TRUE indicates default value assigned.
+ *  @param dval       Default value.
+ *  @param ddim       Dimensions of default value.
+ *  @param univ       TRUE universal FALSE non-universal.
  *  @return A pointer to the new TypeDescription structure.
  */
 

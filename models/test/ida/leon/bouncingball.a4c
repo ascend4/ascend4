@@ -42,7 +42,7 @@ CONDITIONAL
 	boundary: y <= r;
 END CONDITIONAL;
 
-	switch == SATISFIED(boundary, 1e-8{m});
+	switch == SATISFIED(boundary, 1e-8{s});
 
 WHEN(switch)
 	CASE TRUE:

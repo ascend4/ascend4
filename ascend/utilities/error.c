@@ -41,7 +41,11 @@ static error_reporter_meta_t *error_reporter_meta_new(){
 */
 int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 	char *sevmsg="";
-	enum ConsoleColor color = 0;
+#ifdef __WIN32__
+	int color=0;
+#else
+	char *color=NULL;
+#endif
 	char *endtxt="\n";
 	int res=0;
 	switch(sev){

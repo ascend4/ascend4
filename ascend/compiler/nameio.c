@@ -38,11 +38,12 @@
 #include "nameio.h"
 #include "sets.h"
 #include "setio.h"
+#include "vlistio.h"
 
 void WriteNameNode(FILE *f, CONST struct Name *n)
 {
   if (n==NULL) return;
-  if (NameId(n)) {
+  if (NameId(n) || NameDeriv(n)) {
     FPRINTF(f,"%s",SCP(NameIdPtr(n)));
   } else {
     PUTC('[',f);
@@ -56,7 +57,7 @@ void WriteName(FILE *f, CONST struct Name *n)
   while (n!=NULL) {
     WriteNameNode(f,n);
     n = NextName(n);
-    if ((n!=NULL)&&(NameId(n))) PUTC('.',f);
+    if ((n!=NULL)&&((NameId(n)) || NameDeriv(n))) PUTC('.',f);
   }
 }
 
@@ -70,6 +71,10 @@ void WriteNameNode2Str(Asc_DString *dstring, CONST struct Name *n)
   if (n==NULL) return;
   if (NameId(n)) {
     Asc_DStringAppend(dstring,SCP(NameIdPtr(n)),-1);
+  } else if (NameDeriv(n)) {
+    Asc_DStringAppend(dstring,"der(",4);
+    WriteDerVlist2Str(dstring,NameDerPtr(n)->vlist);
+    Asc_DStringAppend(dstring,")",1);
   } else {
     Asc_DStringAppend(dstring,"[",1);
     WriteSet2Str(dstring,NameSetPtr(n));
@@ -94,9 +99,17 @@ void WriteName2Str(Asc_DString *dstring, CONST struct Name *n)
   while (n!=NULL) {
     WriteNameNode2Str(dstring,n);
     n = NextName(n);
-    if ((n!=NULL)&&(NameId(n)))
+    if ((n!=NULL)&&(NameId(n) || NameDeriv(n)))
       Asc_DStringAppend(dstring,".",-1);
   }
 }
 
-
+void WriteIdName2Str(Asc_DString *dstring, CONST struct Name *n)
+{
+  while (n!=NULL) {
+    WriteNameNode2Str(dstring,n);
+    n = NextIdName(n);
+    if ((n!=NULL)&&(NameId(n) || NameDeriv(n)))
+      Asc_DStringAppend(dstring,".",-1);
+  }
+}

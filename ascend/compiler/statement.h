@@ -116,7 +116,8 @@ extern struct Statement *CreateARR(struct VariableList *aname,
 extern struct Statement *CreateISA(struct VariableList *vl,
                                    symchar *t,
                                    struct Set *ta,
-                                   symchar *st);
+                                   symchar *st,
+				   int autoderived);
 /**<
  *  Initializes the reference count to one.
  *  The statement's module is set to the current open module.
@@ -126,6 +127,20 @@ extern struct Statement *CreateISA(struct VariableList *vl,
  *  @param t  instance type
  *  @param ta arguments for type t
  *  @param st set type
+ *  @param autoderived shows whether the statement is automatically generated or not
+ */
+
+extern struct Statement *CreateISDER(struct StatementList *isa,
+                                      struct VariableList *vl,
+                                      struct Name *n);
+/**<
+ *  Initializes the reference count to one.
+ *  The statement's module is set to the current open module.
+ *  The statement's line number is set to the current line number.
+ *
+ *  @param isa list of isa statements
+ *  @param vl  list of state variables
+ *  @param n   independent variable
  */
 
 extern struct Statement *CreateWILLBE(struct VariableList *vl,
@@ -658,7 +673,7 @@ extern void MarkStatContext(struct Statement *s, unsigned int bits);
 extern struct VariableList *GetStatVarList(CONST struct Statement *s);
 /**< 
  *  Returns the variable list of a
- *  IS_A, LINK, IS_REFINED_TO, WILL_BE, WILL_BE_THE_SAME,
+ *  IS_A, ISDER, LINK, IS_REFINED_TO, WILL_BE, WILL_BE_THE_SAME,
  *  ARE_ALIKE, ARE_THE_SAME, ALIASES or ALIASES-ISA(ARR) statement.
  *  It must be passed one of these types of statement.
  *  Other statements will return NULL or crash.
@@ -749,6 +764,60 @@ extern CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s);
 /**<
  *  Implementation function for GetStatCheckValue().  Do not call this
  *  function directly - use GetStatCheckValue() instead.
+ */
+
+#ifdef NDEBUG
+#define IsaDeriv(s) ((s)->v.i.deriv)
+#else
+#define IsaDeriv(s) IsaDerivF(s)
+#endif
+/**<
+ *  Return 1 if the IS_A statement is a declaration of a
+ *  derivative.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @see IsaDerivF()
+ */
+extern int IsaDerivF(CONST struct Statement *s);
+/**<
+ *  Implementation function for IsaDeriv().  Do not call this
+ *  function directly - use IsaDeriv() instead.
+ */
+
+/*== StateISDER ==*/
+
+#ifdef NDEBUG
+#define GetStatSlist(s) ((s)->v.ider.isa)
+#else
+#define GetStatSlist(s) GetStatSlistF(s)
+#endif
+/**<
+ *  Return the list of generated IS_A statements for a DERIVATIVE OF.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @return The statement list as a CONST struct StatementList*.
+ *  @see GetStatSlistF()
+ */
+extern CONST struct StatementList *GetStatSlistF(CONST struct Statement *s);
+/**<
+ *  Implementation function for GetStatSlist().  Do not call this
+ *  function directly - use GetStatSlist() instead.
+ */
+
+#ifdef NDEBUG
+#define GetStatIndVar(s) ((s)->v.ider.ind)
+#else
+#define GetStatIndVar(s) GetStatIndVarF(s)
+#endif
+/**<
+ *  Return the independent variable name for a DERIVATIVE OF. This may be NULL,
+ *  which means that there is no WITH part to the DERIVATIVE.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @return The independent variable as a CONST struct Name*.
+ *  @see GetStatIndVarF()
+ */
+extern CONST struct Name *GetStatIndVarF(CONST struct Statement *s);
+/**<
+ *  Implementation function for GetStatIndVar().  Do not call this
+ *  function directly - use GetStatIndVar() instead.
  */
 
 /* * * StateLink functions * * */
@@ -994,6 +1063,7 @@ extern enum ForOrder ForLoopOrderF(CONST struct Statement *s);
 #define ForContainsAlias(s)        ((s)->v.f.contains & contains_ALI)
 #define ForContainsArray(s)        ((s)->v.f.contains & contains_ARR)
 #define ForContainsIsa(s)          ((s)->v.f.contains & contains_ISA)
+#derine ForContainsIsder(s)        ((s)->v.f.contains & contains_ISDER)
 #define ForContainsIrt(s)          ((s)->v.f.contains & contains_IRT)
 #define ForContainsAts(s)          ((s)->v.f.contains & contains_ATS)
 #define ForContainsWbts(s)         ((s)->v.f.contains & contains_WBTS)
@@ -1015,6 +1085,7 @@ extern enum ForOrder ForLoopOrderF(CONST struct Statement *s);
 #define ForContainsAlias(s)        ForContainsAliasF(s)
 #define ForContainsArray(s)        ForContainsArrayF(s)
 #define ForContainsIsa(s)          ForContainsIsaF(s)
+#define ForContainsIsder(s)        ForContainsIsderF(s)
 #define ForContainsIrt(s)          ForContainsIrtF(s)
 #define ForContainsAts(s)          ForContainsAtsF(s)
 #define ForContainsWbts(s)         ForContainsWbtsF(s)
@@ -1036,6 +1107,7 @@ extern unsigned ForContainsLinkF(CONST struct Statement *s);
 extern unsigned ForContainsAliasF(CONST struct Statement *s);
 extern unsigned ForContainsArrayF(CONST struct Statement *s);
 extern unsigned ForContainsIsaF(CONST struct Statement *s);
+extern unsigned ForContainsIsderF(CONST struct Statement *s);
 extern unsigned ForContainsIrtF(CONST struct Statement *s);
 extern unsigned ForContainsAtsF(CONST struct Statement *s);
 extern unsigned ForContainsWbtsF(CONST struct Statement *s);
@@ -1891,6 +1963,7 @@ extern int CompareSelectStatements(CONST struct Statement *s1,
 #define SelectContainsAlias(s) ((s)->v.se.contains & contains_ALI)
 #define SelectContainsArray(s) ((s)->v.se.contains & contains_ARR)
 #define SelectContainsIsa(s) ((s)->v.se.contains & contains_ISA)
+#define SelectContainsIsder(s) ((s)->v.se.contains & contains_ISDER)
 #define SelectContainsIrt(s) ((s)->v.se.contains & contains_IRT)
 #define SelectContainsAts(s) ((s)->v.se.contains & contains_ATS)
 #define SelectContainsWbts(s) ((s)->v.se.contains & contains_WBTS)
@@ -1912,6 +1985,7 @@ extern int CompareSelectStatements(CONST struct Statement *s1,
 #define SelectContainsAlias(s) SelectContainsAliasF(s)
 #define SelectContainsArray(s) SelectContainsArrayF(s)
 #define SelectContainsIsa(s) SelectContainsIsaF(s)
+#define SelectContainsIsder(s) SelectContainsIsderF(s)
 #define SelectContainsIrt(s) SelectContainsIrtF(s)
 #define SelectContainsAts(s) SelectContainsAtsF(s)
 #define SelectContainsWbts(s) SelectContainsWbtsF(s)
@@ -1933,6 +2007,7 @@ extern unsigned SelectContainsLinkF(CONST struct Statement *s);
 extern unsigned SelectContainsAliasF(CONST struct Statement *s);
 extern unsigned SelectContainsArrayF(CONST struct Statement *s);
 extern unsigned SelectContainsIsaF(CONST struct Statement *s);
+extern unsigned SelectContainsIsderF(CONST struct Statement *s);
 extern unsigned SelectContainsIrtF(CONST struct Statement *s);
 extern unsigned SelectContainsAtsF(CONST struct Statement *s);
 extern unsigned SelectContainsWbtsF(CONST struct Statement *s);

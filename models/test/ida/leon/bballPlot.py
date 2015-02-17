@@ -1,6 +1,7 @@
 
 import ascpy
 import TReport
+import NullReport
 
 
 import matplotlib as mpl

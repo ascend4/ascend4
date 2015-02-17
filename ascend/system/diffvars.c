@@ -286,6 +286,13 @@ int system_diffvars_debug(slv_system_t sys,FILE *fp){
 		}
 		fprintf(fp,"\n");
 	}
+	fprintf(fp,"Observed vars in slv_system...\n");
+	for(i=0; i<diffvars->nobs;++i){
+		varname = var_make_name(sys,diffvars->obs[i]);
+		fprintf(fp,"'%s'",varname);
+		ASC_FREE(varname);
+		fprintf(fp,"\n");
+	}
 	return 0;
 }
 

@@ -126,6 +126,8 @@ public:
 
 	void setSolverHooks(SolverHooks *H);
 	SolverHooks *getSolverHooks() const;
+
+	void setUseDerSyntax(const bool &use_dersyntax);
 };
 
 #endif

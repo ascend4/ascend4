@@ -127,6 +127,10 @@ static struct errormessage g_DefinitionErrorMessages[] = {
   /*45*/{"Miscellaneous style",1},
   {"Miscellaneous warning",2},
   {"Miscellaneous error",3},
+  {"Der (single argument) expression used without specifying the inpedendent variable.",3},
+  {"Unverifiable name or illegal type in a derivative.",3},
+  /*50*/{"Der variable not allowed in statement.",3},
+  {"Unverifiable derivative name.",2},
   {"Unknown error encountered in statement",5}
 };
 
@@ -306,20 +310,22 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
     s = (struct Statement *)gl_fetch(gl,c);
     switch(StatementType(s)) {
     case ISA:
-      d = FindType(GetStatType(s));
-      if (GetBaseType(d)== model_type || GetBaseType(d) == patch_type) {
-        /* check arg list length. can't do types until after. */
-        if (GetModelParameterCount(d) != SetLength(GetStatTypeArgs(s))) {
-          if (TLINT_ERROR) {
-            FPRINTF(fp,"%sType %s needs %u arguments. Got %lu.\n",
-              StatioLabel(3),
-              SCP(GetStatType(s)),
-              GetModelParameterCount(d),
-              SetLength(GetStatTypeArgs(s)));
+      if (!IsaDeriv(s)) {
+        d = FindType(GetStatType(s));
+        if (GetBaseType(d)== model_type || GetBaseType(d) == patch_type) {
+          /* check arg list length. can't do types until after. */
+          if (GetModelParameterCount(d) != SetLength(GetStatTypeArgs(s))) {
+            if (TLINT_ERROR) {
+              FPRINTF(fp,"%sType %s needs %u arguments. Got %lu.\n",
+                StatioLabel(3),
+                SCP(GetStatType(s)),
+                GetModelParameterCount(d),
+                SetLength(GetStatTypeArgs(s)));
+            }
+            rval = DEF_ARGNUM_INCORRECT;
+            TypeLintError(fp,s,rval);
+            break;
           }
-          rval = DEF_ARGNUM_INCORRECT;
-          TypeLintError(fp,s,rval);
-          break;
         }
       }
       /* fall through */
@@ -337,6 +343,8 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
         rval = DEF_NAME_INCORRECT;
         TypeLintError(fp,s,rval);
       }
+      break;
+    case ISDER:
       break;
     case ARR:
       /* like ALIASES, only different. */
@@ -849,6 +857,7 @@ TypeLintIllegalMethodStatList(FILE *fp,
     case ALIASES:
     case ARR:
     case ISA:
+    case ISDER:
     case IRT:
     case ATS:
     case WBTS:

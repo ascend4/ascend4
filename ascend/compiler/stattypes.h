@@ -94,6 +94,7 @@ enum ExternalKind {
 enum stat_t {
   ALIASES = 0,  /**< ALIASES */
   ISA,          /**< IS_A */
+  ISDER,        /**< DERIVATIVE OF */
   ARR,          /**< CREATE ARRAY i AND SIZE j FROM(list) */
   IRT,          /**< IS_REFINED_TO */
   ATS,          /**< ARE_THE_SAME */
@@ -242,9 +243,16 @@ struct StateIS {
   struct Set *typeargs;     /**< all, parameter list. may be NULL */
   symchar *settype;         /**< IS_A only */
   struct Expr *checkvalue;  /**< WILL_BE only */
+  int deriv;
   /* note that checkvalue!=NULL and typeargs!=NULL are mutually exclusive
    * because checkvalues go with constants which are never parameterized.
    */
+};
+
+struct StateISDER {
+  struct StatementList *isa;  /**< a list of generated IS_A statements */
+  struct VariableList *vl;    /**< original fvarlist */
+  struct Name* ind;           /**< optional independent variable */
 };
 
 /** used for ARR, the compound ALIASES/set IS_A. */
@@ -429,13 +437,15 @@ struct StateLINK {
                                      CONDITIONAL statement. VRR */
 #define contains_EXT 0x10000	/*< contains a External statement. */
 #define contains_LNK 0x20000	/**< true if LINK in stmts list */
-#define contains_UNLNK 0x40000 /**< true if UNLINK in statements list */
-#define contains_ILL 0x80000    /**< true if illegal statement in loop */
+#define contains_UNLNK 0x40000  /**< true if UNLINK in statements list */
+#define contains_ISDER 0x80000 /**< true if DERIVATIVE OF in statements lists */
+#define contains_ILL 0x100000   /**< true if illegal statement in loop */
 /* unsupported values, meaning we should be using them but don't yet */
 
 union StateUnion {
   struct StateAlias      ali;
   struct StateIS         i;
+  struct StateISDER      ider;
   struct StateARE        a;
   struct StateAssign     asgn;
   struct StateRelation   rel;

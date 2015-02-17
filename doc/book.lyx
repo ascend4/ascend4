@@ -1,5 +1,5 @@
-#LyX 1.5.6 created this file. For more info see http://www.lyx.org/
-\lyxformat 276
+#LyX 1.6.7 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
 \begin_document
 \begin_header
 \textclass book
@@ -50,6 +50,7 @@
 }
 \end_preamble
 \options figuresright
+\use_default_options false
 \language english
 \inputencoding auto
 \font_roman palatino
@@ -60,9 +61,11 @@
 \font_osf false
 \font_sf_scale 100
 \font_tt_scale 100
+
 \graphics default
 \paperfontsize default
 \spacing single
+\use_hyperref false
 \papersize custom
 \use_geometry true
 \use_amsmath 1
@@ -104,7 +107,7 @@ The ASCEND Modelling and Simulation Environment
 \begin_inset ERT
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
@@ -114,12 +117,21 @@ vspace*{6.0cm}
 \end_inset
 
 
-\newline
-(c) 2006-2008 Carnegie Mellon University
-\newline
+\begin_inset Newline newline
+\end_inset
 
-\begin_inset LatexCommand htmlurl
-target "http://ascend.cheme.cmu.edu/"
+(c) 2006-2008 Carnegie Mellon University
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://ascend.cheme.cmu.edu/
+\end_layout
 
 \end_inset
 
@@ -130,7 +142,7 @@ target "http://ascend.cheme.cmu.edu/"
 \begin_inset ERT
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
@@ -140,7 +152,8 @@ frontmatter
 \end_inset
 
 
-\begin_inset LatexCommand tableofcontents
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
 
 \end_inset
 
@@ -167,7 +180,7 @@ frontmatter
 \begin_inset ERT
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
@@ -184,8 +197,9 @@ Tutorial
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-overview.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-overview.lyx"
 
 \end_inset
 
@@ -193,8 +207,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-model1.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-model1.lyx"
 
 \end_inset
 
@@ -202,8 +217,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-model2.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-model2.lyx"
 
 \end_inset
 
@@ -211,8 +227,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-model3.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-model3.lyx"
 
 \end_inset
 
@@ -220,8 +237,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-require.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-require.lyx"
 
 \end_inset
 
@@ -229,8 +247,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-plot.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-plot.lyx"
 
 \end_inset
 
@@ -238,8 +257,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-atoms.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-atoms.lyx"
 
 \end_inset
 
@@ -247,8 +267,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-dimeqns.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-dimeqns.lyx"
 
 \end_inset
 
@@ -256,8 +277,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-units.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-units.lyx"
 
 \end_inset
 
@@ -265,8 +287,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-methods.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-methods.lyx"
 
 \end_inset
 
@@ -274,8 +297,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-physprops.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-physprops.lyx"
 
 \end_inset
 
@@ -283,8 +307,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-ivp.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-ivp.lyx"
 
 \end_inset
 
@@ -292,8 +317,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-conditional.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-conditional.lyx"
 
 \end_inset
 
@@ -301,8 +327,19 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{howto-bvp.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-bvp.lyx"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand input
+filename "howto-dersyntax.lyx"
 
 \end_inset
 
@@ -314,8 +351,9 @@ Language Reference
 \end_layout
 
 \begin_layout Standard
-\begin_inset Include \input{syntax.lyx}
-preview false
+\begin_inset CommandInset include
+LatexCommand input
+filename "syntax.lyx"
 
 \end_inset
 
@@ -324,9 +362,10 @@ preview false
 
 \begin_layout Standard
 \start_of_appendix
-\begin_inset LatexCommand bibtex
-options "bibtotoc,plain"
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
 bibfiles "ascend"
+options "bibtotoc,plain"
 
 \end_inset
 
@@ -334,7 +373,8 @@ bibfiles "ascend"
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand printindex
+\begin_inset CommandInset index_print
+LatexCommand printindex
 
 \end_inset
 

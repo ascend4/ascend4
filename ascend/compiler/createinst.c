@@ -103,6 +103,7 @@ struct Instance *CreateModelInstance(struct TypeDescription *type)
   register struct ModelInstance *result, *proto;
   register unsigned long num_children;
   register CONST struct StatementList *stats;
+  printf("I am creating a model right now \n");
   proto = MOD_INST(LookupPrototype(GetName(type)));
   if (proto==NULL) {
     CopyTypeDesc(type);
@@ -338,6 +339,7 @@ struct Instance *CreateRealInstance(struct TypeDescription *type){
       result->dimen = GetRealDimens(type);
       result->relations = NULL;
       result->depth = UINT_MAX;
+      result->derinf = NULL;
 
       if(AtomDefaulted(type)){
         result->value = GetRealDefault(type);

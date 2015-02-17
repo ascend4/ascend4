@@ -68,6 +68,7 @@
 #include "linkinst.h"
 #include "mathinst.h"
 #include "parentchild.h"
+#include "deriv.h"
 
 #define PANIC_ILLEGAL_INSTANCE Asc_Panic(2, __FUNCTION__, "invalid instance type")
 
@@ -182,6 +183,50 @@ void ChangeWhenPointers(struct Instance *when, struct Instance *old,
     return;
     default:
       PANIC_ILLEGAL_INSTANCE;
+  }
+}
+
+void ChangeIderivPointers(struct Instance *deriv, struct Instance *old,
+			    struct Instance *new
+){
+  assert(deriv!=NULL);
+  assert(deriv->t==REAL_ATOM_INST);
+  AssertMemory(deriv);
+  if (RA_INST(deriv)->derinf->indep!=NULL) {
+    ModifyIderivPointers(deriv,RA_INST(deriv)->derinf->indep,old,new);
+  }
+}
+
+void ChangeStatePointers(struct Instance *state, struct Instance *old,
+			    struct Instance *new
+){
+  assert(state!=NULL);
+  assert(state->t==REAL_ATOM_INST);
+  AssertMemory(state);
+  if (RA_INST(state)->derinf->sderiv!=NULL) {
+    ModifyStatePointers(state,RA_INST(state)->derinf->sderiv,old,new);
+  }
+}
+
+void ChangeIndepPointers(struct Instance *indep, struct Instance *old,
+			    struct Instance *new
+){
+  assert(indep!=NULL);
+  assert(indep->t==REAL_ATOM_INST);
+  AssertMemory(indep);
+  if (RA_INST(indep)->derinf->ideriv!=NULL) {
+    ModifyIndepPointers(indep,RA_INST(indep)->derinf->ideriv,old,new);
+  }
+}
+
+void ChangeSderivPointers(struct Instance *deriv, struct Instance *old,
+			    struct Instance *new
+){
+  assert(deriv!=NULL);
+  assert(deriv->t==REAL_ATOM_INST);
+  AssertMemory(deriv);
+  if (RA_INST(deriv)->derinf->state!=NULL) {
+    ModifySderivPointers(deriv,RA_INST(deriv)->derinf->state,old,new);
   }
 }
 
@@ -534,6 +579,132 @@ void FixWhens(struct Instance *old, struct Instance *new){
     default:
       PANIC_ILLEGAL_INSTANCE;
   }
+}
+
+void FixIderivs(struct RealAtomInstance *old, struct RealAtomInstance *new)
+{
+  register unsigned long c,len;
+  AssertMemory(old);
+  AssertMemory(new);
+  if ((new->derinf==NULL)||(new->derinf->ideriv==NULL)||(new->derinf->ideriv==old->derinf->ideriv)){
+	/* new had no DerInfo or new has the identical DerInfo */
+    if (new->derinf==NULL) {
+      new->derinf = ASC_NEW(struct DerInfo);
+      new->derinf->sderiv = NULL;
+      new->derinf->indep = NULL;
+      new->derinf->state = NULL;
+    }
+    new->derinf->ideriv = old->derinf->ideriv;
+    if ((len=IderivsCount(INST(new)))>0){
+      for(c=1;c<=len;c++) {
+	ChangeIderivPointers(IderivsForAtom(INST(new),c),
+			       INST(old),INST(new));
+      }
+    }
+  } else {
+    len=IderivsCount(INST(old));
+    if (len>0) {
+      for(c=1;c<=len;c++){
+	ChangeIderivPointers(IderivsForAtom(INST(old),c),
+			       INST(old),INST(new));
+	AddIderiv(INST(new),IderivsForAtom(INST(old),c));
+      }
+    }
+    if (old->derinf->ideriv) {
+      gl_destroy(old->derinf->ideriv);
+    }
+  }
+  old->derinf->ideriv=NULL;
+}
+
+void FixStateIndep(struct RealAtomInstance *old, struct RealAtomInstance *new)
+{
+  register unsigned long c,len;
+  AssertMemory(old);
+  AssertMemory(new);
+  if ((new->derinf==NULL)||((new->derinf->state==NULL)&&(new->derinf->indep==NULL))||((new->derinf->state==old->derinf->state)&&(new->derinf->indep==old->derinf->indep))){
+	/* new had no DerInfo or new has the identical DerInfo */
+    if (new->derinf==NULL) {
+      new->derinf = ASC_NEW(struct DerInfo);
+      new->derinf->ideriv = NULL;
+      new->derinf->sderiv = NULL;
+    }
+    new->derinf->state = old->derinf->state;
+    new->derinf->indep = old->derinf->indep;
+    if (StatesCount(INST(old)) != IndepsCount(INST(old))) ASC_PANIC("The number of state and independent variables should be equal.");
+    if ((len=StatesCount(INST(new)))>0){
+      for(c=1;c<=len;c++) {
+	ChangeStatePointers(StatesForAtom(INST(new),c),
+			          INST(old),INST(new));
+	ChangeIndepPointers(IndepsForAtom(INST(new),c),
+			          INST(old),INST(new));
+      }
+    }
+  } else {
+    len=StatesCount(INST(old));
+    if (len != IndepsCount(INST(old))) ASC_PANIC("The number of state and independent variables should be equal.");
+    if (len>0) {
+      for(c=1;c<=len;c++){
+	ChangeStatePointers(StatesForAtom(INST(old),c),
+			          INST(old),INST(new));
+	ChangeIndepPointers(IndepsForAtom(INST(old),c),
+			          INST(old),INST(new));
+	AddStateIndep(INST(new),StatesForAtom(INST(old),c),IndepsForAtom(INST(old),c));
+      }
+    }
+    if (old->derinf->state) {
+      gl_destroy(old->derinf->state);
+    }
+    if (old->derinf->indep) {
+      gl_destroy(old->derinf->indep);
+    }
+  }
+  old->derinf->state=NULL;
+  old->derinf->indep=NULL;
+}
+
+void FixSderivs(struct RealAtomInstance *old, struct RealAtomInstance *new)
+{
+  register unsigned long c,len;
+  AssertMemory(old);
+  AssertMemory(new);
+  if ((new->derinf==NULL)||(new->derinf->sderiv==NULL)||(new->derinf->sderiv==old->derinf->sderiv)){
+	/* new had no DerInfo or new has the identical DerInfo */
+    if (new->derinf==NULL) {
+      new->derinf = ASC_NEW(struct DerInfo);
+      new->derinf->ideriv = NULL;
+      new->derinf->indep = NULL;
+      new->derinf->state = NULL;
+    }
+    new->derinf->sderiv = old->derinf->sderiv;
+    if ((len=SderivsCount(INST(new)))>0){
+      for(c=1;c<=len;c++) {
+	ChangeSderivPointers(SderivsForAtom(INST(new),c),
+			       INST(old),INST(new));
+      }
+    }
+  } else {
+    len=SderivsCount(INST(old));
+    if (len>0) {
+      for(c=1;c<=len;c++){
+	ChangeSderivPointers(SderivsForAtom(INST(old),c),
+			       INST(old),INST(new));
+	AddSderiv(INST(new),SderivsForAtom(INST(old),c));
+      }
+    }
+    if (old->derinf->sderiv) {
+      gl_destroy(old->derinf->sderiv);
+    }
+  }
+  old->derinf->sderiv=NULL;
+}
+
+void FixDerInfo(struct RealAtomInstance *old, struct RealAtomInstance *new)
+{
+  if (old->derinf == NULL) return;
+  if (old->derinf->ideriv != NULL) FixIderivs(old,new);
+  if (old->derinf->state != NULL && old->derinf->indep != NULL) FixStateIndep(old,new);
+  if (old->derinf->sderiv != NULL) FixSderivs(old,new);
 }
 
 

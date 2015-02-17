@@ -163,6 +163,24 @@ extern struct TypeDescription
  */
 
 extern struct TypeDescription
+*CreateDerivAtomTypeDef(symchar *name,
+        		CONST struct TypeDescription *vartype,
+                        CONST struct TypeDescription *indtype,
+        		struct module_t *mod);
+
+/**<
+ *  Creates a derivative atom type definition.
+ *  It is assumed that the base types of vartype and indtype are real.
+ *  ival,sval are ignored.
+ *
+ *  @param name       Name of the type.
+ *  @param vartype    Type Description of the state variable.
+ *  @param indtype    Type Description of the independent variable.
+ *  @param mod        Module where the type is defined.
+ *  @return A pointer to the new TypeDescription structure.
+ */
+
+extern struct TypeDescription
 *CreateRelationTypeDef(struct module_t *mod,
                        symchar *name,
                        struct StatementList *sl,

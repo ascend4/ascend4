@@ -50,6 +50,11 @@
 	@{
 */
 
+ASC_DLLSPEC int g_use_dersyntax;
+/**<
+ * Turn on/off the der() syntax.
+ */
+
 ASC_DLLSPEC slv_system_t system_build(SlvBackendToken inst);
 /**<
 	In ascend, backendtoken is a struct Instance *.

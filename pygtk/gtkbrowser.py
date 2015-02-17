@@ -291,6 +291,9 @@ class Browser:
 		self.use_binary_compilation=self.builder.get_object("use_binary_compilation")
 		self.use_binary_compilation.set_active(self.prefs.getBoolPref("Compiler","use_binary_compilation",False))
 		self.use_binary_compilation.set_sensitive(self.use_relation_sharing.get_active())
+
+		self.use_der_syntax=self.builder.get_object("use_der_syntax")
+		self.use_der_syntax.set_active(self.prefs.getBoolPref("Analyze","use_der_syntax",True))
 		
 		self.check_weekly=self.builder.get_object("check_weekly")
 		self.check_weekly.set_active(not(self.prefs.getBoolPref("Browser","disable_auto_check_for_updates",False)))
@@ -790,6 +793,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			return 1
 
 		try:
+			_v = self.prefs.getBoolPref("Analyze","use_der_syntax",True)
+			self.sim.setUseDerSyntax(_v)
 			self.sim.build()
 			self.enable_on_sim_build()
 		except RuntimeError,e:
@@ -827,6 +832,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			return
 
 		try:
+			_v = self.prefs.getBoolPref("Analyze","use_der_syntax",True)
+			self.sim.setUseDerSyntax(_v)
 			self.sim.build()
 		except RuntimeError,e:
 			self.reporter.reportError("Couldn't build system: %s",str(e))
@@ -1010,6 +1017,11 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_v = checkmenuitem.get_active()
 		self.prefs.setBoolPref("Compiler","use_binary_compilation",_v)
 		self.reporter.reportNote("Binary compilation set to "+str(_v))
+
+	def on_use_der_syntax_toggle(self,checkmenuitem,*args):
+		_v = checkmenuitem.get_active()
+		self.prefs.setBoolPref("Analyze","use_der_syntax",_v)
+		self.reporter.reportNote("Use der syntax set to "+str(_v))
 
 	def on_show_solving_popup_toggle(self,checkmenuitem,*args):
 		_v = checkmenuitem.get_active()
@@ -1226,7 +1238,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def preferences_click(self,*args):
 		if not self.sim:
-			self.reporter.reportError("No simulation created yet!");		
+			self.reporter.reportError("No simulation created yet!");	
 		self.sim.setSolver(self.solver)
 		_params = self.sim.getParameters()
 		_paramswin = SolverParametersWindow(

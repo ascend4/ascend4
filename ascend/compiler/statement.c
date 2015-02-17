@@ -144,6 +144,12 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case FNAME:
     case FLOW:
       break;
+    case ISDER:
+      sublist = GetStatSlist(s);
+      if (sublist!=NULL) {
+        AddContext(sublist,con);
+      }  
+      break;
     case FOR:
       sublist = ForStatStmts(s);
       if (sublist!=NULL) {
@@ -241,7 +247,8 @@ struct Statement *CreateARR(struct VariableList *avlname,
 struct Statement *CreateISA(struct VariableList *vl,
 			    symchar *t,
                             struct Set *ta,
-			    symchar *st)
+			    symchar *st,
+			    int deriv)
 {
   struct Statement *result;
   result=create_statement_here(ISA);
@@ -250,6 +257,19 @@ struct Statement *CreateISA(struct VariableList *vl,
   result->v.i.typeargs = ta;
   result->v.i.settype = st;
   result->v.i.checkvalue = NULL;
+  result->v.i.deriv = deriv;
+  return result;
+}
+
+struct Statement *CreateISDER(struct StatementList *isa,
+                            struct VariableList *vl,
+                            struct Name *n)
+{
+  struct Statement *result;
+  result=create_statement_here(ISDER);
+  result->v.ider.isa = isa;
+  result->v.ider.vl = vl;
+  result->v.ider.ind = n;
   return result;
 }
 
@@ -432,6 +452,9 @@ unsigned int SlistHasWhat(struct StatementList *slist)
       break;
     case ISA:
       what |= contains_ISA;
+      break;
+    case ISDER:
+      what |= contains_ISDER;
       break;
     case WILLBE:
       what |= contains_WILLBE;
@@ -901,6 +924,16 @@ void DestroyStatement(struct Statement *s)
           s->v.i.typeargs = NULL;
         }
         break;
+      case ISDER:
+        DestroyStatementList(s->v.ider.isa);
+        s->v.ider.isa = NULL;
+        DestroyVariableList(s->v.ider.vl);
+        s->v.ider.vl = NULL;
+        if (s->v.ider.ind != NULL) {
+          DestroyName(s->v.ider.ind);
+          s->v.ider.ind = NULL;
+        }
+        break;
       case LNK:
       case UNLNK: 
         DestroyVariableList(s->v.lnk.vl); 
@@ -1107,6 +1140,11 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.i.checkvalue =  CopyExprList(s->v.i.checkvalue);
     /* is this complete for IS_A with args to type? */
     break;
+  case ISDER:
+    result->v.ider.isa = CopyStatementList(s->v.ider.isa);
+    result->v.ider.vl = CopyVariableList(s->v.ider.vl);
+    result->v.ider.ind = CopyName(s->v.ider.ind);
+    break;
   case UNLNK:
   case LNK:
     result->v.lnk.key = s->v.lnk.key;
@@ -1245,6 +1283,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case ALIASES:
   case ARR:
   case ISA:
+  case ISDER:
   case WILLBE:
   case IRT:
   case AA:
@@ -1290,6 +1329,7 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case ALIASES:
   case ARR:
   case ISA:
+  case ISDER:
   case WILLBE:
   case IRT:
   case AA:
@@ -1337,6 +1377,7 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case ALIASES:
   case ARR:
   case ISA:
+  case ISDER:
   case WILLBE:
   case IRT:
   case AA:
@@ -1382,6 +1423,7 @@ struct VariableList *GetStatVarList(CONST struct Statement *s)
   assert(s!=NULL);
   assert(s->ref_count);
   assert(	(s->t==ISA) ||
+                (s->t==ISDER) ||
 		(s->t==WILLBE) ||
 		(s->t==IRT) ||
 		(s->t==AA)  ||
@@ -1398,6 +1440,8 @@ struct VariableList *GetStatVarList(CONST struct Statement *s)
   case WILLBE:
   case IRT:
     return (s)->v.i.vl;
+  case ISDER:
+    return (s)->v.ider.vl;
   case LNK:
   case UNLNK:
     return (s)->v.lnk.vl;
@@ -1457,6 +1501,30 @@ CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s)
   assert(s->ref_count);
   assert(s->t==WILLBE);
   return s->v.i.checkvalue;
+}
+
+int IsaDerivF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==ISA);
+  return s->v.i.deriv;
+}
+
+CONST struct StatementList *GetStatSlistF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==ISDER);
+  return s->v.ider.isa;
+}
+
+CONST struct Name *GetStatIndVarF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->ref_count);
+  assert(s->t==ISDER);
+  return s->v.ider.ind;
 }
 
 symchar *LINKStatKeyF(CONST struct Statement *s)
@@ -1608,6 +1676,13 @@ unsigned ForContainsIsaF(CONST struct Statement *s)
   assert(s!=NULL);
   assert(s->t==FOR);
   return (s->v.f.contains & contains_ISA);
+}
+
+unsigned ForContainsIsderF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==FOR);
+  return (s->v.f.contains & contains_ISDER);
 }
 
 unsigned ForContainsIrtF(CONST struct Statement *s)
@@ -2174,6 +2249,13 @@ unsigned SelectContainsIsaF(CONST struct Statement *s)
   return (s->v.se.contains & contains_ISA);
 }
 
+unsigned SelectContainsIsderF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==SELECT);
+  return (s->v.se.contains & contains_ISDER);
+}
+
 unsigned SelectContainsIrtF(CONST struct Statement *s)
 {
   assert(s!=NULL);
@@ -2424,9 +2506,28 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     return CompareExprs(GetStatCheckValue(s1),GetStatCheckValue(s2));
+  case ISDER:
+    ctmp = CompareStatementLists(GetStatSlist(s1),GetStatSlist(s2),&ltmp);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (GetStatIndVar(s1) != NULL || GetStatIndVar(s2) != NULL) {
+      if (GetStatIndVar(s1) == NULL) { return -1; }
+      if (GetStatIndVar(s2) == NULL) { return 1; }
+      ctmp = CompareNames(GetStatIndVar(s1),GetStatIndVar(s2));
+      if (ctmp != 0) {
+        return ctmp;
+      }
+    }
+    return CompareVariableLists(GetStatVarList(s1),GetStatVarList(s2));
   case LNK: /* fallthru */ /* FIXME check this? */
-  case UNLNK: /* fallthru */
+  case UNLNK:
+    ctmp = CmpSymchar(LINKStatKey(s1),LINKStatKey(s2));
+    if (ctmp !=0) {
+      return ctmp;
+    }
     CONSOLE_DEBUG("CHECK HERE! don't we also need to check the TYPE of link?");
+    /* fallthru */
   case ATS: /* fallthru */
   case WBTS: /* fallthru */
   case WNBTS: /* fallthru */
@@ -2701,6 +2802,8 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     return CompareISLists(ForStatStmts(s1),ForStatStmts(s2),&ltmp);
+  case ISDER:
+    return CompareISLists(GetStatSlist(s1),GetStatSlist(s2),&ltmp);
   case LOGREL:
   case REL:
     return CompareStatements(s1,s2);

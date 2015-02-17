@@ -23,7 +23,7 @@ MODEL clearance;
 	inside: x = x0;
 	push: x = u;
 	pull: x = u + h;
-	increase: x0 = -A;
+	increase: x0 = -A + h;
 	decrease: x0 = A;
 
 	CONDITIONAL

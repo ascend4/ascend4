@@ -45,6 +45,28 @@ extern void WriteVariableListNode(FILE *f, CONST struct VariableList *n);
  *  following it.
  */
 
+extern void WriteVlistNode2Str(Asc_DString *dstring, CONST struct VariableList *n);
+/**<
+ *  Write this variable list node.
+ */
+
+extern void WriteVlist2Str(Asc_DString *dstring, CONST struct VariableList *n);
+/**< 
+ *  Output the variable list with ',' between variable nodes.
+ */
+
+extern void WriteDerVlistNode2Str(Asc_DString *dstring, CONST struct VariableList *n);
+/**<
+ *  Write the identifiers from this variable list node.
+ */
+
+extern void WriteDerVlist2Str(Asc_DString *dstring, CONST struct VariableList *n);
+/**< 
+ *  Output the identifiers from the variable list with ',' between variable nodes.
+ *  So, the name of an element of an array of derivatives is output like der(x)[i],
+ *  not der(x[i])[i].
+ */
+
 /* @} */
 
 #endif /* ASC_VLISTIO_H */

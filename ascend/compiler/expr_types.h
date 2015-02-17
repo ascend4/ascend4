@@ -194,9 +194,15 @@ struct Set {
   unsigned long ref_count;
 };
 
+struct DerName {
+  struct VariableList *vlist; /**< list of derivative arguments */
+  symchar *strname;           /**< stringified form of the variable list data */
+};
+
 union NameUnion {
   symchar *id;      /**< symbol table member */
   struct Set *s;
+  struct DerName *der;
   int attribute;    /**< supported attribute name index */
 };
 
@@ -217,11 +223,18 @@ struct Name {
    * perhaps at parse stage.
    * if NAMEBIT_AUTO 1,
    * this name element is system generated.
+   * if NAMEBIT_DERIV 1,
+   * this name is a name of a derivative.
+   * if NAMEBIT_HASDER 1,
+   * this name contains in the list of name elements a
+   * derivative name.
    */
 #define NAMEBIT_IDTY	0x1
 #define NAMEBIT_ATTR	0x2
 #define NAMEBIT_CHAT	0x4
 #define NAMEBIT_AUTO	0x8
+#define NAMEBIT_DERIV   0x10
+#define NAMEBIT_HASDER  0x20
   struct Name *next;
   union NameUnion val;
 };

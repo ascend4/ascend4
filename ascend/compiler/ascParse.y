@@ -337,7 +337,7 @@ static void CollectNote(struct Note *);
 %token BEQ_TOK BNE_TOK BREAK_TOK
 %token CALL_TOK CARD_TOK CASE_TOK CHOICE_TOK CHECK_TOK CONDITIONAL_TOK CONSTANT_TOK
 %token CONTINUE_TOK CREATE_TOK
-%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DER_TOK DIMENSION_TOK
+%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DER_TOK DIMENSION_TOK DERIV_TOK DERIVATIVE_TOK
 %token DIMENSIONLESS_TOK DO_TOK
 %token ELSE_TOK END_TOK EXPECT_TOK EXTERNAL_TOK
 %token FALSE_TOK FALLTHRU_TOK FIX_TOK FOR_TOK FREE_TOK FROM_TOK
@@ -376,18 +376,18 @@ static void CollectNote(struct Note *);
 %start definitions
 
 %type <real_value> default_val number realnumber opunits
-%type <int_value> end optional_sign universal 
+%type <int_value> end optional_sign universal
 %type <fkind> forexprend
 %type <frac_value> fraction fractail
 %type <id_ptr> optional_of optional_method type_identifier call_identifier
 %type <dquote_ptr> optional_notes
 %type <braced_ptr> optional_bracedtext
-%type <nptr> data_args fname name optional_scope
+%type <nptr> data_args fname name optional_scope optional_with
 %type <eptr> relation expr relop logrelop optional_with_value
 %type <sptr> set setexprlist optional_set_values
 %type <lptr> fvarlist input_args output_args varlist
 
-%type <statptr> statement isa_statement willbe_statement aliases_statement
+%type <statptr> statement isa_statement willbe_statement aliases_statement derivative_statement
 %type <statptr> is_statement isrefinedto_statement arealike_statement link_statement unlink_statement der_statement independent_statement
 %type <statptr> arethesame_statement willbethesame_statement
 %type <statptr> willnotbethesame_statement assignment_statement
@@ -1245,6 +1245,7 @@ statement:
     isa_statement
     | willbe_statement
     | aliases_statement
+    | derivative_statement
     | is_statement
     | isrefinedto_statement
     | arealike_statement
@@ -1311,7 +1312,7 @@ isa_statement:
 	        g_untrapped_error++;
 	        $$ = NULL;
 	      } else {
-	        $$ = CreateISA($1,$3,g_typeargs,$4);
+	        $$ = CreateISA($1,$3,g_typeargs,$4,0);
 	      }
 	    } else {
 	      error_reporter_current_line(ASC_USER_ERROR,"IS_A uses the undefined type %s.", SCP($3));
@@ -1418,6 +1419,43 @@ optional_set_values:
     | WITH_VALUE_T '(' set ')'
 	{
 	  $$ = $3;
+	}
+    ;
+
+derivative_statement:
+    DERIVATIVE_TOK OF_TOK fvarlist optional_with
+	{
+	  CONST struct VariableList *vl;
+	  CONST struct Name *nptr;
+          struct VariableList *dervl;
+	  struct StatementList *statlist;
+          struct gl_list_t *stats;
+	  struct Statement *isa;
+	  struct Name *dername;
+          vl = $3;
+	  stats = gl_create(7L);
+          while(vl) {
+	    nptr = NamePointer(vl);
+	    dervl = CreateVariableNode(CopyName(nptr));
+	    if ($4) LinkVariableNodes(dervl,CreateVariableNode($4));
+	    dername = CreateDerivName(CreateDeriv(CopyVariableList(dervl)));
+	    isa = CreateISA(CreateVariableNode(dername),NULL,NULL,NULL,1);
+	    gl_append_ptr(stats,(VOIDPTR)isa);
+	    vl = NextVariableNode(vl);
+	  }
+	  statlist = CreateStatementList(stats);
+	  $$ = CreateISDER(statlist,$3,$4);
+	}
+    ;
+
+optional_with:
+    /* empty */
+	{
+	  $$ = NULL;
+	}
+    | WITH_TOK fname
+	{
+	  $$ = $2;
 	}
     ;
 
@@ -2255,15 +2293,25 @@ name:
 	}
 	| name '[' set ']'
 	{
-	  if ($3 == NULL) {
-	    error_reporter_current_line(ASC_USER_ERROR,"syntax error: Empty set in name definition, name:");
-	    WriteName(ASCERR,$1);
-	    FPRINTF(ASCERR,"[]\n");
+          if (NameDeriv($1)) {
+	    error_reporter_current_line(ASC_USER_ERROR,"syntax error: For a derivative of an array element use der(argument[set]); name: %s",GetIdFromVlist(DerVlist(NameDerPtr($1))));
 	    g_untrapped_error++;
-	  } else {
-	    $$ = CreateSetName($3);
-	    LinkNames($$,$1);
-	  }
+          }else{
+	    if ($3 == NULL) {
+	      error_reporter_current_line(ASC_USER_ERROR,"syntax error: Empty set in name definition, name:");
+	      WriteName(ASCERR,$1);
+	      FPRINTF(ASCERR,"[]\n");
+	      g_untrapped_error++;
+	    } else {
+	      $$ = CreateSetName($3);
+	      LinkNames($$,$1);
+	    }
+          }
+	}
+	| DERIV_TOK '(' fvarlist ')'
+	{
+	  WriteVariableList(ASCERR,$3); /* for debugging only */	
+	  $$ = CreateDerivName(CreateDeriv($3));
 	}
 	;
 
@@ -2742,7 +2790,7 @@ expr:
 	    $$ = NULL;
 	    error_reporter_current_line(ASC_USER_ERROR,"Function '%s' is not defined.",SCP($1));
 	    g_untrapped_error++;
-	  }
+	  }  
 	}
     | '(' expr ')'
 	{

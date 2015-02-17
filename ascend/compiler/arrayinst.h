@@ -256,7 +256,10 @@ extern void ExpandArray(struct Instance *i,
                         struct set_t *set,
                         struct Instance *rhsinst,
                         struct Instance *arginst,
-                        struct gl_list_t *rhslist);
+                        struct gl_list_t *rhslist,
+                        struct Instance *sinst,
+                        struct Instance *indep,
+                        CONST struct Name *sname);
 /**<
  *  This will expand the num'th index over the set of index values given by
  *  set.  set is returned unchanged.<br><br>
@@ -284,7 +287,10 @@ extern void ExpandArray(struct Instance *i,
 extern struct Instance *FindOrAddIntChild(struct Instance *i,
                                           long v,
                                           struct Instance *rhsinst,
-                                          struct Instance *arginst);
+                                          struct Instance *arginst,
+                                          struct Instance *state,
+                                          struct Instance *indep,
+                                          CONST struct Name *n);
 /**<
  *  Add sparse array child at location defined by current ForTable
  *  after instantiating child if rhsinst is NULL (an ISA).
@@ -295,7 +301,10 @@ extern struct Instance *FindOrAddIntChild(struct Instance *i,
 extern struct Instance *FindOrAddStrChild(struct Instance *i,
                                           symchar *sym,
                                           struct Instance *rhsinst,
-                                          struct Instance *arginst);
+                                          struct Instance *arginst,
+                                          struct Instance *state,
+                                          struct Instance *indep,
+                                          CONST struct Name *n);
 /**<
  *  Add sparse array child at location defined by current ForTable
  *  after instantiating child if rhsinst is NULL (an ISA).

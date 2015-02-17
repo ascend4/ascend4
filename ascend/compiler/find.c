@@ -62,6 +62,8 @@
 #include "logical_relation.h"
 #include "logrelation.h"
 #include "logrel_util.h"
+#include "vlist.h"
+#include "deriv.h"
 
 
 #define NAMELISTSIZE 20L
@@ -686,7 +688,8 @@ static struct gl_list_t *FindArrayChildren(struct gl_list_t *list,
 static
 struct gl_list_t *FindNextNameElement(CONST struct Name *n,
 				      struct gl_list_t *list,
-				      enum find_errors *errval)
+				      enum find_errors *errval,
+                                      CONST struct Instance *i)
 {
   unsigned long pos,c,len;
   struct InstanceName rec;
@@ -694,8 +697,8 @@ struct gl_list_t *FindNextNameElement(CONST struct Name *n,
   struct value_t setvalue,oldvalue;
   CONST struct Set *sptr;
   struct gl_list_t *result;
-
   *errval = correct_instance;
+
   if (NameId(n)){
     result = gl_create(NAMELISTSIZE);
     SetInstanceNameType(rec,StrName);
@@ -726,38 +729,38 @@ struct gl_list_t *FindNextNameElement(CONST struct Name *n,
     }
     return result;
   } else {
-    sptr = NameSetPtr(n);
-    setvalue = EvaluateSet(sptr,InstanceEvaluateName);
-    switch(ValueKind(setvalue)){
-    case integer_value:
-    case symbol_value:
-    case list_value:
-      oldvalue = setvalue;
-      if (ListMode) {
-	setvalue = CreateOrderedSetFromList(oldvalue);
-      } else {
-	setvalue = CreateSetFromList(oldvalue);
-      }
-      DestroyValue(&oldvalue);
-      /* intended to fall through to next case */
-    case set_value:
-      result = FindArrayChildren(list,SetValue(setvalue),errval);
-      DestroyValue(&setvalue);
-      return result;
-    case error_value:
-      switch(ErrorValue(setvalue)){
-      case illegal_set_use:
-	*errval = impossible_instance;
-	break;
+      sptr = NameSetPtr(n);
+      setvalue = EvaluateSet(sptr,InstanceEvaluateName);
+      switch(ValueKind(setvalue)){
+      case integer_value:
+      case symbol_value:
+      case list_value:
+        oldvalue = setvalue;
+        if (ListMode) {
+	  setvalue = CreateOrderedSetFromList(oldvalue);
+        } else {
+	  setvalue = CreateSetFromList(oldvalue);
+        }
+        DestroyValue(&oldvalue);
+        /* intended to fall through to next case */
+      case set_value:
+        result = FindArrayChildren(list,SetValue(setvalue),errval);
+        DestroyValue(&setvalue);
+        return result;
+      case error_value:
+        switch(ErrorValue(setvalue)){
+        case illegal_set_use:
+	  *errval = impossible_instance;
+	  break;
+        default:
+	  *errval = undefined_instance;
+	  break;
+	  /* more needs to be added here */
+        }
+        DestroyValue(&setvalue);
+        return NULL;
       default:
-	*errval = undefined_instance;
-	break;
-	/* more needs to be added here */
-      }
-      DestroyValue(&setvalue);
-      return NULL;
-    default:
-      ASC_PANIC("Need to add to FindNextNameElement.\n");
+        ASC_PANIC("Need to add to FindNextNameElement.\n");
       
     }
   }
@@ -772,7 +775,47 @@ struct gl_list_t *RealFindInstances(CONST struct Instance *i,
   result = gl_create(NAMELISTSIZE);
   gl_append_ptr(result,(VOIDPTR)i);
   while(n!=NULL){
-    next = FindNextNameElement(n,result,errval);
+    next = FindNextNameElement(n,result,errval,i);
+    gl_destroy(result);
+    if (next!=NULL){
+      result = next;
+      n = NextName(n);
+    } else {
+      return NULL;
+    }
+  }
+  return result;
+}
+
+static
+struct gl_list_t *FindDerInstances(CONST struct Instance *i,
+				   CONST struct Name *n,
+				   enum find_errors *errval)
+{
+  struct gl_list_t *result, *states, *indeps, *next;
+  unsigned long c;
+  struct Instance *deriv;
+  CONST struct Name *name;
+  result = gl_create(NAMELISTSIZE);
+  SetEvaluationContext(NULL);
+  states = FindInstances(i,NamePointer(DerVlist(NameDerPtr(n))),errval);
+  indeps = FindInstances(i,NamePointer(NextVariableNode(DerVlist(NameDerPtr(n)))),errval);
+  if (!states || !indeps) {
+    *errval = unmade_instance;
+    return NULL;
+  }
+  SetEvaluationContext(i);
+  for(c=1;c<=gl_length(states);c++) {
+    deriv = FindDerByArgs((struct Instance*)gl_fetch(states,c),(struct Instance*)gl_fetch(indeps,1));
+    if (deriv) gl_append_ptr(result,(VOIDPTR)deriv);
+    else {
+      *errval = unmade_instance;
+      return NULL;
+    }
+  }
+  n = NextIdName(n);
+  while(n) {
+    next = FindNextNameElement(n,result,errval,i);
     gl_destroy(result);
     if (next!=NULL){
       result = next;
@@ -789,13 +832,15 @@ struct gl_list_t *FindInstances(CONST struct Instance *i,
 				enum find_errors *errval)
 {
   struct gl_list_t *result;
+  unsigned long c;
   *errval = impossible_instance;
   if (i == NULL) return NULL;
   AssertMemory(i);
   assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(i);
   *errval = correct_instance;
-  result = RealFindInstances(i,n,errval);
+  if (!NameDeriv(n)) result = RealFindInstances(i,n,errval);
+  else result = FindDerInstances(i,n,errval);
   SetEvaluationContext(NULL);
   return result;
 }

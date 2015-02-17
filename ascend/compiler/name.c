@@ -43,6 +43,8 @@
 #include "exprs.h"
 #include "sets.h"
 #include "name.h"
+#include "vlist.h"
+#include "nameio.h"
 
 #ifndef NULL
 #define NULL 0
@@ -162,7 +164,7 @@ struct Name *CreateIdNameF(symchar *s,int bits)
   assert(s!=NULL);
   result = IDNMALLOC;
   assert(result!=NULL);
-  bits &= (NAMEBIT_IDTY | NAMEBIT_ATTR | NAMEBIT_AUTO | NAMEBIT_CHAT);
+  bits &= (NAMEBIT_IDTY | NAMEBIT_ATTR | NAMEBIT_AUTO | NAMEBIT_CHAT | NAMEBIT_DERIV | NAMEBIT_HASDER);
   result->bits = bits;
   result->val.id = s;
   result->next = NULL;
@@ -173,7 +175,7 @@ symchar *SimpleNameIdPtr(CONST struct Name *nptr)
 {
   if (nptr==NULL) return NULL;
   if (NextName(nptr)!=NULL) return NULL;
-  return NameId(nptr) ? NameIdPtr(nptr) : NULL;
+  return (NameId(nptr) || NameDeriv(nptr)) ? NameIdPtr(nptr) : NULL;
 }
 
 unsigned int NameLength(CONST struct Name *n)
@@ -184,6 +186,29 @@ unsigned int NameLength(CONST struct Name *n)
     n = NextName(n);
   }
   return length;
+}
+
+struct DerName *CreateDeriv(struct VariableList *vlist)
+{
+  register struct DerName *result;
+  assert(vlist!=NULL);
+  result = ASC_NEW(struct DerName);
+  assert(result!=NULL);
+  result->vlist = vlist;
+  result->strname = NULL;
+  return result;
+}
+
+struct Name *CreateDerivName(struct DerName *der)
+{
+  register struct Name *result;
+  assert(der!=NULL);
+  result = IDNMALLOC;
+  assert(result!=NULL);
+  result->bits = NAMEBIT_DERIV | NAMEBIT_HASDER;
+  result->val.der = der;
+  result->next = NULL;
+  return result;
 }
 
 struct Name *CreateSetName(struct Set *s)
@@ -255,6 +280,18 @@ int NameIdF(CONST struct Name *n)
   return ((n->bits & NAMEBIT_IDTY) != 0);
 }
 
+int NameDerivF(CONST struct Name *n)
+{
+  if(n==NULL) return 0;
+  return ((n->bits & NAMEBIT_DERIV) != 0);
+}
+
+int NameHasderF(CONST struct Name *n)
+{
+  assert(n!=NULL);
+  return ((n->bits & NAMEBIT_HASDER) != 0);
+}
+
 int NameAutoF(CONST struct Name *n)
 {
   assert(n!=NULL);
@@ -264,13 +301,50 @@ int NameAutoF(CONST struct Name *n)
 symchar *NameIdPtrF(CONST struct Name *n)
 {
   assert(n!=NULL);
-  return n->val.id;
+  if (NameId(n)) return n->val.id;
+  else return n->val.der->strname;
 }
 
 CONST struct Set *NameSetPtrF(CONST struct Name *n)
 {
   assert(n!=NULL);
   return n->val.s;
+}
+
+CONST struct DerName *NameDerPtrF(CONST struct Name *n)
+{
+  assert(n!=NULL);
+  return n->val.der;
+}
+
+symchar *DerStrPtrF(CONST struct DerName *n)
+{
+  assert(n!=NULL);
+  return n->strname;
+}
+
+struct VariableList *DerVlistF(CONST struct DerName *n)
+{
+  assert(n!=NULL);
+  return n->vlist;
+}
+
+void SetHasder(struct Name *n)
+{
+  while(n!=NULL) {
+    n->bits |= NAMEBIT_HASDER;
+    n = NextName(n);
+  }
+}
+
+struct DerName *CopyDerName(CONST struct DerName *n)
+{
+  register struct DerName *result;
+  if (n==NULL) return NULL;
+  result = ASC_NEW(struct DerName);
+  result->vlist = CopyVariableList(n->vlist);
+  result->strname = n->strname;
+  return result;
 }
 
 struct Name *CopyName(CONST struct Name *n)
@@ -282,7 +356,11 @@ struct Name *CopyName(CONST struct Name *n)
   result = IDNMALLOC;
   *result = *np;
   if (!(np->bits & NAMEBIT_IDTY)) {
-    result->val.s = CopySetList(np->val.s);
+    if (np->bits & NAMEBIT_DERIV) {
+      result->val.der = CopyDerName(np->val.der);
+    }else{
+      result->val.s = CopySetList(np->val.s);
+    }
   }
   p = result;
    while (np->next!=NULL) {
@@ -291,7 +369,11 @@ struct Name *CopyName(CONST struct Name *n)
      np = np->next;
      *p = *np;
      if (!(np->bits & NAMEBIT_IDTY)) {
-       p->val.s = CopySetList(np->val.s);
+       if (np->bits & NAMEBIT_DERIV) {
+         p->val.der = CopyDerName(np->val.der);
+       }else{
+         p->val.s = CopySetList(np->val.s);
+       }
      }
    }
   return result;
@@ -307,12 +389,43 @@ struct Name *CopyAppendNameNode(CONST struct Name *n, CONST struct Name *node)
     tmp = IDNMALLOC;
     *tmp = *node;
     if (!(tmp->bits & NAMEBIT_IDTY)) {
-      tmp->val.s = CopySetList(node->val.s);
+      if (tmp->bits & NAMEBIT_DERIV) {
+        tmp->val.der = CopyDerName(node->val.der);
+      }else{
+        tmp->val.s = CopySetList(node->val.s);
+      }
     }
     tmp->next = NULL;
   }
   result = JoinNames(result,tmp);
   return result;
+}
+
+struct Name *AppendNameNode(struct Name *n1, CONST struct Name *n2)
+{
+  register struct Name *p, *tmp;
+  tmp = NULL;
+  if (n2 != NULL) {
+    tmp = IDNMALLOC;
+    *tmp = *n2;
+    if (!(tmp->bits & NAMEBIT_IDTY)) {
+      if (tmp->bits & NAMEBIT_DERIV) {
+        tmp->val.der = CopyDerName(n2->val.der);
+      }else{
+        tmp->val.s = CopySetList(n2->val.s);
+      }
+    }
+    tmp->next = NULL;
+  }
+  if (!n1) return tmp;
+  /* find end of name list */
+  p = n1;
+  while (p->next) {
+    p = p->next;
+  }
+  /* link to n2 */
+  p->next = tmp;
+  return n1;
 }
 
 void DestroyName(register struct Name *n)
@@ -321,7 +434,11 @@ void DestroyName(register struct Name *n)
   while(n!=NULL) {
     next = n->next;
     if (!(n->bits & NAMEBIT_IDTY)) {
-      DestroySetList(n->val.s);
+      if (n->bits & NAMEBIT_DERIV) {
+        DestroyDerName(n->val.der);
+      }else{
+        DestroySetList(n->val.s);
+      }
     }
     IDNFREE((char *)n);
 #if NAMEDEBUG
@@ -331,11 +448,23 @@ void DestroyName(register struct Name *n)
   }
 }
 
+void DestroyDerName(register struct DerName *der)
+{
+  if (der!=NULL) {
+    DestroyVariableList(der->vlist);
+    ascfree((char *)der);
+  }
+}
+
 void DestroyNamePtr(struct Name *n)
 {
   if (n!=NULL) {
     if (!(n->bits & NAMEBIT_IDTY)) {
-      DestroySetList(n->val.s);
+      if (n->bits & NAMEBIT_DERIV) {
+        DestroyDerName(n->val.der);
+      }else{
+        DestroySetList(n->val.s);
+      }
     }
 #if NAMEDEBUG
     g_num_names_cur--;
@@ -347,10 +476,18 @@ void DestroyNamePtr(struct Name *n)
 struct Name *JoinNames(struct Name *n1, struct Name *n2)
 {
   register struct Name *p;
+  int derseen = 0;
   if (n1==NULL) return n2;
   /* find end of name list */
   p = n1;
-  while (p->next) p = p->next;
+  if (NameHasder(p)) derseen = 1;
+  if (NameHasder(n2)) p->bits |= NAMEBIT_HASDER;
+  while (p->next) {
+    p = p->next;
+    if (NameHasder(p)) derseen = 1;
+    if (NameHasder(n2)) p->bits |= NAMEBIT_HASDER;
+  }
+  if (derseen) n2->bits |= NAMEBIT_HASDER;
   /* link to n2 */
   p->next = n2;
   return n1;
@@ -359,9 +496,9 @@ struct Name *JoinNames(struct Name *n1, struct Name *n2)
 CONST struct Name *NextIdName(register CONST struct Name *n)
 {
   if (n==NULL) return NULL;
-  assert(NameId(n)!=0);
+  assert(NameId(n)!=0 || NameDeriv(n)!=0);
   n = n->next;
-  while (n!=NULL && !NameId(n)) {
+  while (n!=NULL && !NameId(n) && !NameDeriv(n)) {
     n = n->next;
   }
   return n;
@@ -384,7 +521,7 @@ int NameCompound(CONST struct Name *n)
 {
   int dotseen = 0, idseen = 0, count=0;
   while (n != NULL) {
-    if (NameId(n)!=0) {
+    if (NameId(n)!=0 || NameDeriv(n)!=0) {
       idseen++;
       if (count) {
         /* the id follows an array subscript */
@@ -403,10 +540,15 @@ int NamesEqual(CONST struct Name *n1, CONST struct Name *n2)
   if (n1==n2) return 1;
   while ((n1!=NULL)&&(n2!=NULL)){
     if (NameId(n1)!=NameId(n2)) return 0;
+    if (NameDeriv(n1)!=NameDeriv(n2)) return 0;
     if (NameId(n1)){
       if (NameIdPtr(n1) != NameIdPtr(n2)) return 0;
     } else {
-      if (!SetStructuresEqual(NameSetPtr(n1),NameSetPtr(n2))) return 0;
+      if (NameDeriv(n1)){
+        if (CompareDers(NameDerPtr(n1),NameDerPtr(n2))) return 0;
+      }else{
+        if (!SetStructuresEqual(NameSetPtr(n1),NameSetPtr(n2))) return 0;
+      }
     }
     n1 = NextName(n1);
     n2 = NextName(n2);
@@ -415,7 +557,7 @@ int NamesEqual(CONST struct Name *n1, CONST struct Name *n2)
 }
 
 /*
- * nameids  > subscripts.
+ * derivatives > nameids  > subscripts.
  * this needs to be revisited when supported attributes are done.
  * longer names are > shorter names.
  */
@@ -424,20 +566,25 @@ int CompareNames(CONST struct Name *n1, CONST struct Name *n2)
   int ctmp;
   if (n1==n2) return 0;
   while ((n1!=NULL)&&(n2!=NULL)){
-    if (NameId(n1)!=NameId(n2)) {
-      /* if id status !=, then one must be id and other set */
-      if (NameId(n1)) {
+    if (NameId(n1)!=NameId(n2) || NameDeriv(n1)!=NameDeriv(n2)) {
+      if (NameId(n1)) { /* If n1 is an id, n2 can be either a derivative or a subscript */
+	if (NameDeriv(n2)) return -1;
+        else return 1;
+      } else if (NameDeriv(n1)) {
         return 1;
-      } else {
+      } else { /* n1 is a subscript */
         return -1;
       }
     }
-    /* of same type: set or id */
+    /* of same type: set or id or derivative */
     if (NameId(n1)){ /* id type */
       ctmp = 0;
       if (NameIdPtr(n1) != NameIdPtr(n2)) {
         ctmp = CmpSymchar(NameIdPtr(n1),NameIdPtr(n2));
       }
+      if (ctmp!=0) return ctmp;
+    } else if (NameDeriv(n1)) { /* derivative type */
+      ctmp = CompareDers(NameDerPtr(n1),NameDerPtr(n2));
       if (ctmp!=0) return ctmp;
     } else { /* set type */
       ctmp = CompareSetStructures(NameSetPtr(n1),NameSetPtr(n2));
@@ -455,3 +602,8 @@ int CompareNames(CONST struct Name *n1, CONST struct Name *n2)
   return 0;
 }
 
+int CompareDers(CONST struct DerName *n1, CONST struct DerName *n2)
+{
+ if (n1==n2) return 0;
+ return CompareVariableLists(n1->vlist,n2->vlist);
+}

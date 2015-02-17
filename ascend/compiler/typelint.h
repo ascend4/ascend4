@@ -102,6 +102,10 @@ enum typelinterr {
   DEF_MISC_STYLE       =  45,
   DEF_MISC_WARNING     =  46,
   DEF_MISC_ERROR       =  47,
+  DEF_NO_INDEP         =  48,
+  DEF_ILLEGAL_DERARGS  =  49,
+  DEF_DER_INCORRECT    =  50,
+  DEF_DERNAME_MISSING  =  51,
   DEF_UNKNOWN_ERR
 };
 
