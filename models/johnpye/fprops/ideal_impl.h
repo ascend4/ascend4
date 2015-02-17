@@ -30,17 +30,11 @@
 	We provide this header file just the purpose of diagnostic testing.
 */
 
-double helm_ideal(double tau, double delta, const IdealData *data);
-double helm_ideal_tau(double tau, double delta, const IdealData *data);
-double helm_ideal_tautau(double tau, const IdealData *data);
-
-double helm_cp0(double T, const IdealData *data);
-
 /*
 	Note: the cross partial derivative with respect to delta and tau is
 	identically zero
 */
-#define HELM_IDEAL_DELTAU(TAU, DELTA, DATA) (0)
+
 
 
 #endif

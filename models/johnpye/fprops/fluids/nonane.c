@@ -12,36 +12,40 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define NONANE_M 128.2551 /* kg/kmol */
 #define NONANE_R (8314.472/NONANE_M) /* J/kg/K */
-#define NONANE_TSTAR 594.55 /* K */
+#define NONANE_TC 594.55 /* K */
 
-const IdealData ideal_data_nonane = {
-	10.7927224829 /* constant */
-	, -8.2418318753 /* linear */
-	, NONANE_TSTAR /* Tstar */
-	, NONANE_R /* cp0star */
-	, 1 /* power terms */
-	, (const IdealPowTerm[]){
-		{17.349,	0.0}
-	}
-	, 4 /* exponential terms */
-	, (const IdealExpTerm[]){
-		{24.926,	1221.0}
-		,{24.842,	2244.0}
-		,{11.188,	5008.0}
-		,{17.483,	11724.0}
-	}
+static const IdealData ideal_data_nonane = {
+	IDEAL_CP0,{.cp0={
+		NONANE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{17.349,	0.0}
+		}
+		, 4 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{24.926,	1221.0}
+			,{24.842,	2244.0}
+			,{11.188,	5008.0}
+			,{17.483,	11724.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_nonane = {
-	"nonane"
-	, /* R */ NONANE_R /* J/kg/K */
+static const HelmholtzData helmholtz_data_nonane = {
+	/* R */ NONANE_R /* J/kg/K */
 	, /* M */ NONANE_M /* kg/kmol */
 	, /* rho_star */ 1.81*NONANE_M /* kg/m3(= rho_c for this model) */
-	, /* T_star */ NONANE_TSTAR /* K (= T_c for this model) */
+	, /* T_star */ NONANE_TC /* K (= T_c for this model) */
 
-	, /* T_c */ NONANE_TSTAR
+	, /* T_c */ NONANE_TC
 	, /* rho_c */ 1.81*NONANE_M /* kg/m3 */
 	, /* T_t */ 219.7
+
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = 10.7927224829 /* constant */
+		, .m = -8.2418318753 /* linear */
+	}}}
 
 	, 0.4433 /* acentric factor */
 	, &ideal_data_nonane
@@ -61,10 +65,16 @@ const HelmholtzData helmholtz_data_nonane = {
 		, {-0.012982,	14.5,	3.0,	3.0}
 		, {0.0044325,	12.0,	4.0,	3.0}
 	}
-	, 0 /* gaussian terms */
-	, 0
-	, 0 /* critical terms */
-	, 0
+};
+
+EosData eos_nonane = {
+	"nonane"
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_nonane}
 };
 
 /*
@@ -83,14 +93,9 @@ const HelmholtzData helmholtz_data_nonane = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_nonane, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_nonane, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_nonane, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_nonane, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_nonane, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_nonane, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_nonane, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_nonane, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_nonane,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*

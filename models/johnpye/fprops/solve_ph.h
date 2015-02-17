@@ -1,6 +1,6 @@
 /*
 ASCEND modelling environment
-Copyright (C) 2004-2011 John Pye
+Copyright (C) 2004-2010 John Pye
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,10 +23,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define FPROPS_NON 0
 #define FPROPS_SAT 1
-#define FPROPS_ERR -1
+#define FPROPS_ERROR -1
 
-int fprops_region_ph(double p, double h, const HelmholtzData *D);
-int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, const HelmholtzData *D);
+int fprops_region_ph(double p, double h, const PureFluid *fluid);
+int fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess, const PureFluid *fluid);
 
 #if 0
 /* functions for reporting steps back to python */

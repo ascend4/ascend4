@@ -1,5 +1,5 @@
-/* This file is created by Hongke Zhu, 06-10-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 06-10-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
 
 LITERATURE REFERENCE
@@ -13,36 +13,40 @@ Fluid Phase Equilibria, 228-229C:173-187, 2005.
 
 #define TRANSBUTENE_M 56.10632 /* kg/kmol */
 #define TRANSBUTENE_R (8314.472/TRANSBUTENE_M) /* J/kg/K */
-#define TRANSBUTENE_TSTAR 428.61 /* K */
+#define TRANSBUTENE_TC 428.61 /* K */
 
-const IdealData ideal_data_transbutene = {
-    0.5917816 /* constant */
-    , 2.1427758 /* linear */
-    , TRANSBUTENE_TSTAR /* Tstar */
-    , TRANSBUTENE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {3.9988,	0.0}
-    }
-    , 4 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {5.3276,    362.0}
-        ,{13.290,   1603.0}
-        ,{9.6745,   3729.0}
-        ,{0.40087,  4527.0}
-    } 
+static const IdealData ideal_data_transbutene = {
+	IDEAL_CP0,{.cp0={
+		TRANSBUTENE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{3.9988,	0.0}
+		}
+		, 4 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{5.3276,    362.0}
+			,{13.290,   1603.0}
+			,{9.6745,   3729.0}
+			,{0.40087,  4527.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_transbutene = {
-	"transbutene"
-    , /* R */ TRANSBUTENE_R /* J/kg/K */
+static const HelmholtzData helmholtz_data_transbutene = {
+	/* R */ TRANSBUTENE_R /* J/kg/K */
     , /* M */ TRANSBUTENE_M /* kg/kmol */
     , /* rho_star */ 4.213*TRANSBUTENE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ TRANSBUTENE_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ TRANSBUTENE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ TRANSBUTENE_TSTAR
+    , /* T_c */ TRANSBUTENE_TC
     , /* rho_c */ 4.213*TRANSBUTENE_M /* kg/m3 */
     , /* T_t */ 167.6
+
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = 0.5917816 /* constant */
+    	, .m = 2.1427758 /* linear */
+    }}}
 
     , 0.21 /* acentric factor */
     , &ideal_data_transbutene
@@ -62,10 +66,17 @@ const HelmholtzData helmholtz_data_transbutene = {
         , {-0.024737,       15.0,    3.0,   3}
         , {0.011843,       14.0,     4.0,   3}
     }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+};
+
+EosData eos_transbutene = {
+	"transbutene"
+	,"E W Lemmon and E C Ihmels, 2005. 'Thermodynamic Properties of "
+	"the Butenes.  Part II. Short Fundamental Equations of State', "
+	"Fluid Phase Equilibria, 228-229C:173-187."
+	,"http://dx.doi.org/10.1016/j.fluid.2004.09.004"
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_transbutene}
 };
 
 /*
@@ -84,18 +95,13 @@ const HelmholtzData helmholtz_data_transbutene = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_transbutene, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_transbutene, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_transbutene, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_transbutene, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_transbutene, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_transbutene, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_transbutene, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_transbutene, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_transbutene,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

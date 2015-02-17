@@ -25,8 +25,9 @@ etc., for saturation and non-saturation regions.
 */
 
 #include "derivs.h"
-#include "helmholtz.h"
+#include "fprops.h"
 #include "sat.h"
+#include "rundata.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +48,7 @@ etc., for saturation and non-saturation regions.
 */
 
 /**
-	Calculates the derivative 
+	Calculates the derivative
 
 	 ⎰ ∂z ⎱
 	 ⎱ ∂x ⎰y
@@ -62,13 +63,14 @@ etc., for saturation and non-saturation regions.
 
 	@return the numerical value of the derivative (∂z/∂x)y.
 */
-double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, double rho, const HelmholtzData *D){
+double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, double rho, const PureFluid *fluid){
+	FpropsError err;
 	StateData S;
 	S.rho = rho; S.T = T;
 	char sat = 0;
-
+#define D fluid->data
 	if(T < D->T_c){
-		int res = fprops_sat_T(T,&S.psat, &S.rhof, &S.rhog, D);\
+		int res = fprops_sat_T(T,&S.psat, &S.rhof, &S.rhog, fluid);\
 		if(res){
 			fprintf(stderr,"Failed to calculation saturation props\n");
 			exit(1);
@@ -81,10 +83,10 @@ double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, doubl
 
 	double ZTV, ZVT, XTV, XVT, YTV, YVT;
 	if(sat){
-		/* saturated. first use clapeyron equation for (∂p/∂T)v */ 
+		/* saturated. first use clapeyron equation for (∂p/∂T)v */
 		double hf, hg;
-		hf = helmholtz_h(S.T, S.rhof,D);
-		hg = helmholtz_h(S.T, S.rhog,D);
+		hf = fprops_h(S.T, S.rhof,fluid,&err);
+		hg = fprops_h(S.T, S.rhog,fluid,&err);
 		S.dpdT_sat = (hg - hf) / T / (1./S.rhog - 1./S.rhof);
 
 		fprintf(stderr,"Saturation region derivatives not yet implemented.\n");
@@ -98,8 +100,8 @@ double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, doubl
 		YTV = TVSAT(y); YVT = VTSAT(y);
 	}else{
 		/* non-saturated */
-#define TVNON(X) fprops_non_dZdT_v(X,T,rho,D)
-#define VTNON(X) fprops_non_dZdv_T(X,T,rho,D)
+#define TVNON(X) fprops_non_dZdT_v(X,T,rho,fluid)
+#define VTNON(X) fprops_non_dZdv_T(X,T,rho,fluid)
 		ZTV = TVNON(z); ZVT = VTNON(z);
 		XTV = TVNON(x); XVT = VTNON(x);
 		YTV = TVNON(y); YVT = VTNON(y);
@@ -117,19 +119,20 @@ double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, doubl
 */
 
 /*
-	FIXME the following macros avoid calculating unneeded results eg within VT3 
-	but at the level of freesteam_deriv, there is wasted effort, because eg 'p' 
+	FIXME: the following macros avoid calculating unneeded results eg within VT3
+	but at the level of freesteam_deriv, there is wasted effort, because eg 'p'
 	will be calculated several times in different calls to VT3.
 */
 
-#define p helmholtz_p_raw(T,rho,D)
-#define cv helmholtz_cv(T,rho,D)
+#define p (fluid->p_fn(T,rho,fluid->data,&err))
+#define cv (fluid->cv_fn(T,rho,fluid->data,&err))
 #define v (1./rho)
-#define s helmholtz_s_raw(T,rho,D)
-#define alphap helmholtz_alphap(T,rho,D)
-#define betap helmholtz_betap(T,rho,D)
+#define s (fluid->s_fn(T,rho,fluid->data,&err))
+#define alphap (fluid->alphap_fn(T,rho,fluid->data,&err))
+#define betap (fluid->betap_fn(T,rho,fluid->data,&err))
 
-double fprops_non_dZdv_T(FPROPS_CHAR x, double T, double rho, const HelmholtzData *D){
+double fprops_non_dZdv_T(FPROPS_CHAR x, double T, double rho, const PureFluid *fluid){
+    FpropsError err;
 	double res;
 	switch(x){
 		case 'p': res = -p*betap; break;
@@ -146,7 +149,7 @@ double fprops_non_dZdv_T(FPROPS_CHAR x, double T, double rho, const HelmholtzDat
 			exit(1);
 	}
 #if 1
-	if(__isnan(res)){
+	if(isnan(res)){
 		fprintf(stderr,"calculating '%c'\n",x);
 	}
 #endif
@@ -155,7 +158,8 @@ double fprops_non_dZdv_T(FPROPS_CHAR x, double T, double rho, const HelmholtzDat
 	return res;
 }
 
-double fprops_non_dZdT_v(FPROPS_CHAR x, double T, double rho, const HelmholtzData *D){
+double fprops_non_dZdT_v(FPROPS_CHAR x, double T, double rho, const PureFluid *fluid){
+    FpropsError err;
 	double res;
 	switch(x){
 		case 'p': res = p*alphap; break;
@@ -221,15 +225,15 @@ double fprops_sat_dZdT_v(FPROPS_CHAR z, const StateData *S){
 	double dvgdT = -1./SQ(S->rhog) * drhogdT;
 	assert(!isnan(dvgdT));
 
-#define TVNON(X,RHO) fprops_non_dZdT_v(X,S->T,RHO,S->D)
-#define VTNON(X,RHO) fprops_non_dZdv_T(X,S->T,RHO,S->D)
+#define TVNON(X,RHO) fprops_non_dZdT_v(X,S->T,RHO,S->fluid)
+#define VTNON(X,RHO) fprops_non_dZdv_T(X,S->T,RHO,S->fluid)
 	dzfdT = VTNON(z,S->rhof)*dvfdT + TVNON(z,S->rhof);
 	dzgdT = VTNON(z,S->rhog)*dvgdT + TVNON(z,S->rhog);
 
 	assert(!isnan(dzfdT));
 	assert(!isnan(dzgdT));
 
-	/* FIXME this is not the correct solution, this is for x const, not rho const. */
+	/* FIXME: this is not the correct solution, this is for x const, not rho const. */
 
 	double x = (1./S->rho - 1./S->rhof) / (1./S->rhog - 1./S->rhof);
 	res = dzfdT*(1-x) + dzgdT*x;
@@ -253,14 +257,15 @@ double fprops_sat_dZdT_v(FPROPS_CHAR z, const StateData *S){
 	Need to double-check theory in this section.
 */
 double fprops_sat_dZdv_T(FPROPS_CHAR z, const StateData *S){
+    FpropsError err;
 	switch(z){
 		case 'p': return 0;
 		case 'T': return 0;
 	}
 	double zf, zg;
 #define ZFG(Z,P,T) \
-	zf = helmholtz_##Z(S->T,S->rhof,S->D);\
-	zg = helmholtz_##Z(S->T,S->rhog,S->D)
+	zf = fprops_##Z(S->T,S->rhof,S->fluid,&err);\
+	zg = fprops_##Z(S->T,S->rhog,S->fluid,&err)
 	switch(z){
 		case 'v': zf = 1./S->rhof; zg = 1./S->rhog; break;
 		case 'u': ZFG(u,p,T); break;

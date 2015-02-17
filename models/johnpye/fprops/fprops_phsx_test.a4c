@@ -2,7 +2,7 @@
 
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
-IMPORT "johnpye/fprops/helmholtz";
+IMPORT "johnpye/fprops/fprops";
 
 MODEL helmholtz_conf(
 	component IS_A symbol_constant;
@@ -22,9 +22,9 @@ MODEL fprops_phsx_test;
 
 	rho * v = 1.;
 
-	conf IS_A helmholtz_conf('carbondioxide');
+	conf IS_A helmholtz_conf('carbondioxide,helmholtz');
 
-	sat: helmholtz_phsx_vT(
+	sat: fprops_phsx_vT(
 		v, T : INPUT;
 		p, h, s, x : OUTPUT;
 		conf : DATA

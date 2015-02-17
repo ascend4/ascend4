@@ -30,13 +30,13 @@ typedef struct{
 	double rhof;
 	double rhog;
 	double dpdT_sat;
-	const HelmholtzData *D;
+	const PureFluid *fluid;
 } StateData;
 
-double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, double rho, const HelmholtzData *D);
+double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, double rho, const PureFluid *fluid);
 
-double fprops_non_dZdv_T(FPROPS_CHAR x, double T, double rho, const HelmholtzData *D);
-double fprops_non_dZdT_v(FPROPS_CHAR x, double T, double rho, const HelmholtzData *D);
+double fprops_non_dZdv_T(FPROPS_CHAR x, double T, double rho, const PureFluid *fluid);
+double fprops_non_dZdT_v(FPROPS_CHAR x, double T, double rho, const PureFluid *fluid);
 
 /* the StateData object must be filled in/calculated external to the following
 functions */

@@ -79,7 +79,7 @@ MODEL valve REFINES stream_equipment;
 END valve;
 
 MODEL valve_test REFINES valve;
-	cd.component :== 'water';
+	cd.component :== 'water,iapws,helmholtz';
 	type :== 'linear';
 METHODS
 METHOD on_load;

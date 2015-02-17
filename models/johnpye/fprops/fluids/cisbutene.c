@@ -1,5 +1,5 @@
-/* This file is created by Hongke Zhu, 06-10-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 06-10-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
 
 LITERATURE REFERENCE
@@ -13,36 +13,40 @@ Fluid Phase Equilibria, 228-229C:173-187, 2005.
 
 #define CISBUTENE_M 56.10632 /* kg/kmol */
 #define CISBUTENE_R (8314.472/CISBUTENE_M) /* J/kg/K */
-#define CISBUTENE_TSTAR 435.75 /* K */
+#define CISBUTENE_TC 435.75 /* K */
 
-const IdealData ideal_data_cisbutene = {
-    0.2591542 /* constant */
-    , 2.4189888 /* linear */
-    , CISBUTENE_TSTAR /* Tstar */
-    , CISBUTENE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {3.9687,	0.0}
-    }
-    , 4 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {3.2375,    248.0}
-        ,{7.0437,   1183.0}
-        ,{11.414,   2092.0}
-        ,{7.3722,   4397.0}
-    } 
+static const IdealData ideal_data_cisbutene = {
+	IDEAL_CP0,{.cp0={
+		CISBUTENE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{3.9687,	0.0}
+		}
+		, 4 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{3.2375,    248.0}
+			,{7.0437,   1183.0}
+			,{11.414,   2092.0}
+			,{7.3722,   4397.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_cisbutene = {
-	"cisbutene"
-    , /* R */ CISBUTENE_R /* J/kg/K */
+static HelmholtzData helmholtz_data_cisbutene = {
+	/* R */ CISBUTENE_R /* J/kg/K */
     , /* M */ CISBUTENE_M /* kg/kmol */
     , /* rho_star */ 4.244*CISBUTENE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ CISBUTENE_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ CISBUTENE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ CISBUTENE_TSTAR
+    , /* T_c */ CISBUTENE_TC
     , /* rho_c */ 4.244*CISBUTENE_M /* kg/m3 */
     , /* T_t */ 134.3
+
+	,{FPROPS_REF_PHI0,{.phi0={
+	    .c = 0.2591542 /* constant */
+	    , .m = 2.4189888 /* linear */
+	}}}
 
     , 0.202 /* acentric factor */
     , &ideal_data_cisbutene
@@ -62,10 +66,17 @@ const HelmholtzData helmholtz_data_cisbutene = {
         , {-0.026547,      15.0,     3.0,   3}
         , {0.012032,       14.0,     4.0,   3}
     }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+};
+
+EosData eos_cisbutene = {
+	"cisbutene"
+	,"E W Lemmon and E C Ihmels, 2005. 'Thermodynamic Properties of "
+	"the Butenes.  Part II. Short Fundamental Equations of State', "
+	"Fluid Phase Equilibria, 228-229C:173-187."
+	,"http://dx.doi.org/10.1016/j.fluid.2004.09.004"
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_cisbutene}
 };
 
 /*
@@ -84,18 +95,13 @@ const HelmholtzData helmholtz_data_cisbutene = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_cisbutene, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_cisbutene, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_cisbutene, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_cisbutene, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_cisbutene, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_cisbutene, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_cisbutene, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_cisbutene, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_cisbutene,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

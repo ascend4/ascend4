@@ -12,59 +12,70 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define NEOPENTANE_M 72.14878 /* kg/kmol */
 #define NEOPENTANE_R (8314.472/NEOPENTANE_M) /* J/kg/K */
-#define NEOPENTANE_TSTAR 433.74 /* K */
+#define NEOPENTANE_TC 433.74 /* K */
 
-const IdealData ideal_data_neopentane = {
-    0.8702452614 /* constant */
-    , 1.6071746358 /* linear */
-    , NEOPENTANE_TSTAR /* Tstar */
-    , NEOPENTANE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.0,	0.0}
-    }
-    , 4 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {14.422,	710.0}
-        ,{12.868,	1725.0}
-        ,{17.247,	3280.0}
-        ,{12.663,	7787.0}
-    }
+static const IdealData ideal_data_neopentane = {
+	IDEAL_CP0,{.cp0={
+		NEOPENTANE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{4.0,	0.0}
+		}
+		, 4 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{14.422,	710.0}
+			,{12.868,	1725.0}
+			,{17.247,	3280.0}
+			,{12.663,	7787.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_neopentane = {
-    "neopentane"
-	, /* R */ NEOPENTANE_R /* J/kg/K */
-    , /* M */ NEOPENTANE_M /* kg/kmol */
-    , /* rho_star */ 3.27*NEOPENTANE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ NEOPENTANE_TSTAR /* K (= T_c for this model) */
+static const HelmholtzData helmholtz_data_neopentane = {
+	/* R */ NEOPENTANE_R /* J/kg/K */
+	, /* M */ NEOPENTANE_M /* kg/kmol */
+	, /* rho_star */ 3.27*NEOPENTANE_M /* kg/m3(= rho_c for this model) */
+	, /* T_star */ NEOPENTANE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ NEOPENTANE_TSTAR
-    , /* rho_c */ 3.27*NEOPENTANE_M /* kg/m3 */
-    , /* T_t */ 256.6
+	, /* T_c */ NEOPENTANE_TC
+	, /* rho_c */ 3.27*NEOPENTANE_M /* kg/m3 */
+	, /* T_t */ 256.6
 
-    , 0.1961 /* acentric factor */
-    , &ideal_data_neopentane
-    , 12 /* power terms */
-    , (const HelmholtzPowTerm[]){
-        /* a_i, 	t_i, 	d_i, 	l_i */
-        {1.1136,	0.25,	1.0,	0.0}
-        , {-3.1792,	1.125,	1.0,	0.0}
-        , {1.1411,	1.5,	1.0,	0.0}
-        , {-0.10467,	1.375,	2.0,	0.0}
-        , {0.11754,	0.25,	3.0,	0.0}
-        , {0.00034058,	0.875,	7.0,	0.0}
-        , {0.29553,	0.625,	2.0,	1.0}
-        , {-0.074765,	1.75,	5.0,	1.0}
-        , {-0.31474,	3.625,	1.0,	2.0}
-        , {-0.099401,	3.625,	4.0,	2.0}
-        , {-0.039569,	14.5,	3.0,	3.0}
-        , {0.023177,	12.0,	4.0,	3.0}
-    }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = 0.8702452614 /* constant */
+		, .m = 1.6071746358 /* linear */
+	}}}
+
+	, 0.1961 /* acentric factor */
+	, &ideal_data_neopentane
+	, 12 /* power terms */
+	, (const HelmholtzPowTerm[]){
+		/* a_i, 	t_i, 	d_i, 	l_i */
+		{1.1136,	0.25,	1.0,	0.0}
+		, {-3.1792,	1.125,	1.0,	0.0}
+		, {1.1411,	1.5,	1.0,	0.0}
+		, {-0.10467,	1.375,	2.0,	0.0}
+		, {0.11754,	0.25,	3.0,	0.0}
+		, {0.00034058,	0.875,	7.0,	0.0}
+		, {0.29553,	0.625,	2.0,	1.0}
+		, {-0.074765,	1.75,	5.0,	1.0}
+		, {-0.31474,	3.625,	1.0,	2.0}
+		, {-0.099401,	3.625,	4.0,	2.0}
+		, {-0.039569,	14.5,	3.0,	3.0}
+		, {0.023177,	12.0,	4.0,	3.0}
+	}
+	// no more terms
+};
+
+EosData eos_neopentane = {
+	"neopentane"
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_neopentane}
 };
 
 /*
@@ -83,14 +94,9 @@ const HelmholtzData helmholtz_data_neopentane = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_neopentane, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_neopentane, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_neopentane, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_neopentane, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_neopentane, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_neopentane, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_neopentane, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_neopentane, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_neopentane,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*

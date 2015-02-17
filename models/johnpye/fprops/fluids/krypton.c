@@ -12,32 +12,33 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define KRYPTON_M 83.798 /* kg/kmol */
 #define KRYPTON_R (8314.472/KRYPTON_M) /* J/kg/K */
-#define KRYPTON_TSTAR 209.48 /* K */
+#define KRYPTON_TC 209.48 /* K */
 
-const IdealData ideal_data_krypton = {
-    -3.7506412806 /* constant */
-    , 3.7798018435 /* linear */
-    , KRYPTON_TSTAR /* Tstar */
-    , KRYPTON_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {2.5,	0.0}
-    }
-    , 0 /* exponential terms */
-    , 0
+static const IdealData ideal_data_krypton = {
+	IDEAL_CP0,{.cp0={
+		KRYPTON_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{2.5,	0.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_krypton = {
-	"krypton"
-    , /* R */ KRYPTON_R /* J/kg/K */
+static const HelmholtzData helmholtz_data_krypton = {
+    /* R */ KRYPTON_R /* J/kg/K */
     , /* M */ KRYPTON_M /* kg/kmol */
     , /* rho_star */ 10.85*KRYPTON_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ KRYPTON_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ KRYPTON_TC /* K (= T_c for this model) */
 
-    , /* T_c */ KRYPTON_TSTAR
+    , /* T_c */ KRYPTON_TC
     , /* rho_c */ 10.85*KRYPTON_M /* kg/m3 */
     , /* T_t */ 115.77
 
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = -3.7506412806 /* constant */
+		, .m = 3.7798018435 /* linear */
+	}}}
     , -0.00089 /* acentric factor */
     , &ideal_data_krypton
     , 12 /* power terms */
@@ -56,10 +57,16 @@ const HelmholtzData helmholtz_data_krypton = {
         , {-0.021454,	14.5,	3.0,	3.0}
         , {0.0069397,	12.0,	4.0,	3.0}
     }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+};
+
+EosData eos_krypton = {
+	"krypton"
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_krypton}
 };
 
 /*
@@ -78,14 +85,9 @@ const HelmholtzData helmholtz_data_krypton = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_krypton, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_krypton, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_krypton, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_krypton, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_krypton, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_krypton, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_krypton, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_krypton, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_krypton,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*

@@ -30,22 +30,22 @@
 	We provide this header file just the purpose of diagnostic testing.
 */
 
-double helm_resid(double tau, double delta, const HelmholtzData *data);
-double helm_resid_del(double tau, double delta, const HelmholtzData *data);
-double helm_resid_tau(double tau, double delta, const HelmholtzData *data);
-double helm_resid_deltau(double tau, double delta, const HelmholtzData *data);
-double helm_resid_deldel(double tau, double delta, const HelmholtzData *data);
-double helm_resid_tautau(double tau, double delta, const HelmholtzData *data);
+double helm_resid(double tau, double delta, const HelmholtzRunData *data);
+double helm_resid_del(double tau, double delta, const HelmholtzRunData *data);
+double helm_resid_tau(double tau, double delta, const HelmholtzRunData *data);
+double helm_resid_deltau(double tau, double delta, const HelmholtzRunData *data);
+double helm_resid_deldel(double tau, double delta, const HelmholtzRunData *data);
+double helm_resid_tautau(double tau, double delta, const HelmholtzRunData *data);
 
 #ifdef INCLUDE_THIRD_DERIV_CODE
-double helm_resid_deldeldel(double tau, double delta, const HelmholtzData *data);
+double helm_resid_deldeldel(double tau, double delta, const HelmholtzRunData *data);
 #endif
 
 /*
 	Note: the cross partial derivative with respect to delta and tau is
 	identically zero
 */
-#define HELM_IDEAL_DELTAU(TAU, DELTA, DATA) (0)
+//#define HELM_IDEAL_DELTAU(TAU, DELTA, DATA, ERROR) (0)
 
 
 #endif

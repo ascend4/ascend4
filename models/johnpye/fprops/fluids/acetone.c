@@ -1,6 +1,8 @@
-/* This file is created by Hongke Zhu, 02-03-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 02-03-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
+
+Modified by John Pye 2012 for new data structures.
 
 LITERATURE REFERENCE \
 Lemmon, E.W. and Span, R.,
@@ -12,59 +14,72 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define ACETONE_M 58.07914 /* kg/kmol */
 #define ACETONE_R (8314.472/ACETONE_M) /* J/kg/K */
-#define ACETONE_TSTAR 508.1 /* K */
+#define ACETONE_TC 508.1 /* K */
 
-const IdealData ideal_data_acetone = {
-    -9.4883659997 /* constant, a_1, adjust to solver s */
-    , 7.1422719708 /* linear, a_2, adjust to solver h */
-    , ACETONE_TSTAR /* Tstar */
-    , ACETONE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.0,	0.0}
-    }
-    , 3 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {3.7072,	310.0}
-        ,{7.0675,	3480.0}
-        ,{11.012,	1576.0}
-    }
+static const IdealData ideal_data_acetone = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = ACETONE_R /* cp0star */
+		, .Tstar = 1. /* Tstar */
+		, .np = 1 /* power terms */
+		, .pt = (const Cp0PowTerm[]){
+		    {4.0,	0.0}
+		}
+		, .ne = 3 /* exponential terms */
+		, .et = (const Cp0ExpTerm[]){
+		    {3.7072,	310.0}
+		    ,{7.0675,	3480.0}
+		    ,{11.012,	1576.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_acetone = {
+static HelmholtzData helmholtz_data_acetone = {
+	.R = ACETONE_R /* J/kg/K */
+	, .M = ACETONE_M /* kg/kmol */
+	, .rho_star = 4.7*ACETONE_M /* kg/m3(= rho_c for this model) */
+	, .T_star = ACETONE_TC /* K (= T_c for this model) */
+	, .T_c = ACETONE_TC
+	, .rho_c = 4.7*ACETONE_M /* kg/m3 */
+	, .T_t = 178.5
+	, .ref = {FPROPS_REF_PHI0,{.phi0={
+		.c = -9.4883659997 /* constant, a_1, adjust to solver s */
+		, .m = 7.1422719708 /* linear, a_2, adjust to solver h */
+	}}}
+	, .omega = 0.3071 /* acentric factor */
+	, .ideal = &ideal_data_acetone
+	, .np = 12 /* power terms */
+	, .pt = (const HelmholtzPowTerm[]){
+		/* a_i, 	t_i, 	d_i, 	l_i */
+		{0.90041,	0.25,	1.0,	0.0}
+		, {-2.1267,	1.25,	1.0,	0.0}
+		, {-0.083409,	1.5,	1.0,	0.0}
+		, {0.065683,	0.25,	3.0,	0.0}
+		, {0.00016527,	0.875,	7.0,	0.0}
+		, {-0.039663,	2.375,	1.0,	1.0}
+		, {0.72085,	2.0,	2.0,	1.0}
+		, {0.0092318,	2.125,	5.0,	1.0}
+		, {-0.17217,	3.5,	1.0,	2.0}
+		, {-0.14961,	6.5,	1.0,	2.0}
+		, {-0.076124,	4.75,	4.0,	2.0}
+		, {-0.018166,	12.5,	2.0,	3.0}
+	}
+	, .ng = 0 /* gaussian terms */
+	, .gt = 0
+	, .nc = 0 /* critical terms */
+	, .ct = 0
+};
+
+EosData eos_acetone = {
 	"acetone"
-    , /* R */ ACETONE_R /* J/kg/K */
-    , /* M */ ACETONE_M /* kg/kmol */
-    , /* rho_star */ 4.7*ACETONE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ ACETONE_TSTAR /* K (= T_c for this model) */
-
-    , /* T_c */ ACETONE_TSTAR
-    , /* rho_c */ 4.7*ACETONE_M /* kg/m3 */
-    , /* T_t */ 178.5
-
-    , 0.3071 /* acentric factor */
-    , &ideal_data_acetone
-    , 12 /* power terms */
-    , (const HelmholtzPowTerm[]){
-        /* a_i, 	t_i, 	d_i, 	l_i */
-        {0.90041,	0.25,	1.0,	0.0}
-        , {-2.1267,	1.25,	1.0,	0.0}
-        , {-0.083409,	1.5,	1.0,	0.0}
-        , {0.065683,	0.25,	3.0,	0.0}
-        , {0.00016527,	0.875,	7.0,	0.0}
-        , {-0.039663,	2.375,	1.0,	1.0}
-        , {0.72085,	2.0,	2.0,	1.0}
-        , {0.0092318,	2.125,	5.0,	1.0}
-        , {-0.17217,	3.5,	1.0,	2.0}
-        , {-0.14961,	6.5,	1.0,	2.0}
-        , {-0.076124,	4.75,	4.0,	2.0}
-        , {-0.018166,	12.5,	2.0,	3.0}
-    }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_acetone}
 };
+
 
 /*
     Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
@@ -82,18 +97,13 @@ const HelmholtzData helmholtz_data_acetone = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_acetone, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_acetone, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_acetone, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_acetone, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_acetone, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_acetone, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_acetone, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_acetone, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_acetone,NULL);
+	return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

@@ -26,10 +26,10 @@
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 
-IMPORT "johnpye/fprops/helmholtz";
-(*IMPORT "sensitivity/solve";
+IMPORT "johnpye/fprops/fprops";
+IMPORT "sensitivity/solve";
 IMPORT "johnpye/extpy/extpy";
-IMPORT "johnpye/fprops/cycle_plot";*)
+IMPORT "johnpye/fprops/cycle_plot";
 
 (*------------------------------------------------------------------------------
   BACKGROUND STUFF
@@ -52,12 +52,12 @@ MODEL stream_state;
 	s IS_A specific_entropy;
 	x IS_A fraction;
 
-	(*calc_vT: helmholtz_phsx_vT(
+	(*calc_vT: fprops_phsx_vT(
 		v, T : INPUT;
 		p, h, s, x : OUTPUT;
 		cd : DATA
 	);*)
-	calc_ph: helmholtz_Tvsx_ph(
+	calc_ph: fprops_Tvsx_ph(
 		p, h : INPUT;
 		T, v, s, x : OUTPUT;
 		cd : DATA
@@ -66,10 +66,10 @@ METHODS
 METHOD default;
 	p := 10{bar};
 	p.nominal := 42 {bar};
-	IF cd.component == 'water' THEN
+	IF cd.component == 'water,iapws,helmholtz' THEN
 		h := 2000 {kJ/kg};
 	ELSE 
-		IF cd.component == 'carbondioxide' THEN
+		IF cd.component == 'carbondioxide,iapws,helmholtz' THEN
 			h := 350 {kJ/kg};
 		ELSE
 			h := 350 {kJ/kg};
@@ -105,7 +105,7 @@ END solve;
 END stream_state;
 
 MODEL stream_state_test REFINES stream_state;
-	cd.component :== 'water';
+	cd.component :== 'water,iapws,helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_all;
@@ -124,7 +124,7 @@ END	stream_state_test;
 
 
 MODEL stream_state_test_co2 REFINES stream_state;
-	cd.component :== 'carbondioxide';
+	cd.component :== 'carbondioxide,iapws,helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_all;
@@ -139,7 +139,7 @@ END stream_state_test_co2;
 
 
 MODEL stream_state_test_toluene REFINES stream_state;
-	cd.component :== 'toluene';
+	cd.component :== 'toluene,iapws,helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_all;
@@ -226,7 +226,7 @@ END default_self;
 END pump_simple;
 
 MODEL pump_simple_test REFINES pump_simple;
-	cd.component :== 'water';
+	cd.component :== 'water,iapws,helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -280,7 +280,7 @@ END default_self;
 END turbine_simple;
 
 MODEL turbine_simple_test REFINES turbine_simple;
-	cd.component :== 'water';
+	cd.component :== 'water,iapws,helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -318,7 +318,7 @@ MODEL boiler_simple REFINES stream_equipment;
 	q = (outlet.h - inlet.h);
 
 	Qdot IS_A energy_rate;
-	heateqn: Qdot = mdot * q;
+	Qdot = mdot * q;
 
 	eta IS_A fraction;
 	Qdot = eta * Qdot_fuel;
@@ -330,7 +330,7 @@ END default_self;
 END boiler_simple;
 
 MODEL boiler_simple_test REFINES boiler_simple;
-	cd.component :== 'water';
+	cd.component :== 'water,iapws,helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -374,7 +374,7 @@ END default_self;
 END condenser_simple;
 
 MODEL condenser_simple_test REFINES condenser_simple;
-	cd.component :== 'water';
+	cd.component :== 'water,iapws,helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -425,7 +425,7 @@ END default_self;
 END heater_open;
 
 MODEL heater_open_test REFINES heater_open;
-	cd.component :== 'water';
+	cd.component :== 'water,iapws,helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -514,8 +514,8 @@ END default_self;
 END heater_closed;
 
 MODEL heater_closed_test REFINES heater_closed;
-	cd.component :== 'water';
-	cd_heat.component :== 'water';
+	cd.component :== 'water,iapws,helmholtz';
+	cd_heat.component :== 'water,iapws,helmholtz';
 METHODS
 METHOD on_load;
 	FIX inlet.p, inlet.h, inlet.mdot;
@@ -619,7 +619,7 @@ END rankine_common;
 
 
 MODEL rankine_water REFINES rankine_common;
-	cd.component :== 'water';
+	cd.component :== 'water,iapws,helmholtz';
 METHODS
 (* first test case: just some plausible values *)
 METHOD on_load;
@@ -699,7 +699,7 @@ END default_self;
 END rankine_water;
 
 MODEL rankine_co2 REFINES rankine_common;
-	cd.component :== 'carbondioxide';
+	cd.component :== 'carbondioxide,iapws,helmholtz';
 METHODS
 METHOD on_load_1;
 	RUN ClearAll;
@@ -744,7 +744,7 @@ END default_self;
 END rankine_co2;
 
 MODEL rankine_toluene REFINES rankine_common;
-	cd.component :== 'toluene';
+	cd.component :== 'toluene,iapws,helmholtz';
 METHODS
 METHOD on_load;
 	RUN ClearAll;
@@ -778,7 +778,7 @@ END rankine_toluene;
 
 
 MODEL rankine_ammonia REFINES rankine_common;
-	cd.component :== 'ammonia';
+	cd.component :== 'ammonia,iapws,helmholtz';
 METHODS
 METHOD on_load;
 	RUN ClearAll;
@@ -862,7 +862,7 @@ END rankine_reheat_common;
 	A model for Rankine cycle with water as the working fluid
 *)
 MODEL rankine_reheat_water REFINES rankine_reheat_common;
-	BO1.cd.component :== 'water';
+	BO1.cd.component :== 'water,iapws,helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;

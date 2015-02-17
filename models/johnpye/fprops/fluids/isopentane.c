@@ -1,5 +1,5 @@
-/* This file is created by Hongke Zhu, 05-30-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 05-30-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
 
 LITERATURE REFERENCE
@@ -12,36 +12,40 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define ISOPENTANE_M 72.14878 /* kg/kmol */
 #define ISOPENTANE_R (8314.472/ISOPENTANE_M) /* J/kg/K */
-#define ISOPENTANE_TSTAR 460.35 /* K */
+#define ISOPENTANE_TC 460.35 /* K */
 
-const IdealData ideal_data_isopentane = {
-    2.5822330405 /* constant */
-    , 1.1609103419 /* linear */
-    , ISOPENTANE_TSTAR /* Tstar */
-    , ISOPENTANE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.0,	0.0}
-    }
-    , 4 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {7.4056,	442.0}
-        ,{9.5772,	1109.0}
-        ,{15.765,	2069.0}
-        ,{12.119,	4193.0}
-    }
+static const IdealData ideal_data_isopentane = {
+    IDEAL_CP0,{.cp0={
+		ISOPENTANE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{4.0,	0.0}
+		}
+		, 4 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{7.4056,	442.0}
+			,{9.5772,	1109.0}
+			,{15.765,	2069.0}
+			,{12.119,	4193.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_isopentane = {
-	"isopentane"
-	,/* R */ ISOPENTANE_R /* J/kg/K */
+static HelmholtzData helmholtz_data_isopentane = {
+	/* R */ ISOPENTANE_R /* J/kg/K */
     , /* M */ ISOPENTANE_M /* kg/kmol */
     , /* rho_star */ 3.271*ISOPENTANE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ ISOPENTANE_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ ISOPENTANE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ ISOPENTANE_TSTAR
+    , /* T_c */ ISOPENTANE_TC
     , /* rho_c */ 3.271*ISOPENTANE_M /* kg/m3 */
     , /* T_t */ 112.65
+
+	,{FPROPS_REF_PHI0,{.phi0={
+		.c = 2.5822330405 /* constant */
+    	, .m = 1.1609103419 /* linear */
+    }}}
 
     , 0.2274 /* acentric factor */
     , &ideal_data_isopentane
@@ -61,10 +65,17 @@ const HelmholtzData helmholtz_data_isopentane = {
         , {-0.035484,	14.5,	3.0,	3.0}
         , {0.018156,	12.0,	4.0,	3.0}
     }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+    // no more terms
+};
+
+EosData eos_isopentane = {
+	"isopentane"
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_isopentane}
 };
 
 /*
@@ -83,18 +94,13 @@ const HelmholtzData helmholtz_data_isopentane = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_isopentane, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_isopentane, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_isopentane, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_isopentane, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_isopentane, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_isopentane, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_isopentane, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_isopentane, ntd, td, 'C');
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_isopentane, NULL);
+    return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

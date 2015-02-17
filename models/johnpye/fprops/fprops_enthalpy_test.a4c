@@ -1,0 +1,62 @@
+(* test via ASCEND of the fluid properties routines implemented in fprops.c *)
+
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/fprops/fprops";
+
+MODEL peng_conf;
+	component IS_A symbol_constant;
+	component :== 'methane,rpp,pengrob';
+END peng_conf;
+
+MODEL helm_conf;
+	component IS_A symbol_constant;
+	component :== 'methane,iapws,helmholtz';
+END helm_conf;
+
+MODEL fprops_test;
+
+	pengrobh IS_A specific_enthalpy;
+        helmholtzh IS_A specific_enthalpy;
+	T IS_A temperature;
+	rho IS_A mass_density;
+
+	pconf IS_A peng_conf;
+        hconf IS_A helm_conf;
+
+	props1: fprops_h(
+		T, rho : INPUT;
+		pengrobh : OUTPUT;
+		pconf : DATA
+	);
+
+	props2: fprops_h(
+		T, rho : INPUT;
+		helmholtzh : OUTPUT;
+		hconf : DATA
+	);
+
+
+METHODS
+METHOD on_load;
+	RUN ClearAll;
+	FIX rho, T;
+	rho := 39.278 {kg/m^3};
+	T := 300 {K} + 273.15 {K};
+END on_load;
+METHOD self_test;
+	ASSERT abs(p - 10 {MPa}) < 0.001 {MPa};
+	ASSERT abs(h - 2238.2 {kJ/kg}) < 0.1 {kJ/kg};
+END self_test;
+
+METHOD values_2;
+	RUN on_load;
+	rho := 74.732 {kg/m^3};
+	T := 150 {K} + 273.15 {K};
+END values_2;
+METHOD self_test_2;
+	ASSERT abs(p - 10 {MPa}) < 0.001 {MPa};
+	ASSERT abs(h - 1688.5 {kJ/kg}) < 0.1 {kJ/kg};
+END self_test_2;
+END fprops_test;
+

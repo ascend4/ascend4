@@ -1,6 +1,8 @@
-/* This file is created by Hongke Zhu, 02-03-2010. 
-Chemical & Materials Engineering Department, 
+/* This file is created by Hongke Zhu, 02-03-2010.
+Chemical & Materials Engineering Department,
 University of Alabama in Huntsville, United States.
+
+Updated to new format John Pye 2012
 
 LITERATURE REFERENCE \
 Lemmon, E.W. and Span, R.,
@@ -12,36 +14,40 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 
 #define DECANE_M 142.28168 /* kg/kmol */
 #define DECANE_R (8314.472/DECANE_M) /* J/kg/K */
-#define DECANE_TSTAR 617.7 /* K */
+#define DECANE_TC 617.7 /* K */
 
-const IdealData ideal_data_decane = {
-    13.9361966549 /* constant, a_1, adjust to solver s */
-    , -10.5265128286 /* linear, a_2, adjust to solver h */
-    , DECANE_TSTAR /* Tstar */
-    , DECANE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {19.109,	0.0}
-    }
-    , 4 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {25.685,	1193.0}
-        ,{28.233,	2140.0}
-        ,{12.417,	4763.0}
-        ,{10.035,	10862.0}
-    }
+static const IdealData ideal_data_decane = {
+	IDEAL_CP0,{.cp0={
+		DECANE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{19.109,	0.0}
+		}
+		, 4 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{25.685,	1193.0}
+			,{28.233,	2140.0}
+			,{12.417,	4763.0}
+			,{10.035,	10862.0}
+		}
+    }}
 };
 
-const HelmholtzData helmholtz_data_decane = {
-	"decane"
-    , /* R */ DECANE_R /* J/kg/K */
+static const HelmholtzData helmholtz_data_decane = {
+    /* R */ DECANE_R /* J/kg/K */
     , /* M */ DECANE_M /* kg/kmol */
     , /* rho_star */ 1.64*DECANE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ DECANE_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ DECANE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ DECANE_TSTAR
+    , /* T_c */ DECANE_TC
     , /* rho_c */ 1.64*DECANE_M /* kg/m3 */
     , /* T_t */ 243.5
+
+    , {FPROPS_REF_PHI0,{.phi0={
+        .c = 13.9361966549 /* constant, a_1, adjust to solver s */
+	    , .m = -10.5265128286 /* linear, a_2, adjust to solver h */
+	}}}
 
     , 0.4884 /* acentric factor */
     , &ideal_data_decane
@@ -61,11 +67,19 @@ const HelmholtzData helmholtz_data_decane = {
         , {-0.020775,	14.5,	3.0,	3.0}
         , {0.012335,	12.0,	4.0,	3.0}
     }
-    , 0 /* gaussian terms */
-    , 0
-    , 0 /* critical terms */
-    , 0
+    // no other terms
 };
+
+EosData eos_decane = {
+	"decane"
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_decane}
+};
+
 
 /*
     Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
@@ -83,18 +97,12 @@ const HelmholtzData helmholtz_data_decane = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-    //return helm_check_u(&helmholtz_data_decane, ntd, td);
-    //return helm_check_dpdT_rho(&helmholtz_data_decane, ntd, td);
-    //return helm_check_dpdrho_T(&helmholtz_data_decane, ntd, td);
-    //return helm_check_dhdT_rho(&helmholtz_data_decane, ntd, td);
-    //return helm_check_dhdrho_T(&helmholtz_data_decane, ntd, td);
-    //return helm_check_dudT_rho(&helmholtz_data_decane, ntd, td);
-    //return helm_check_dudrho_T(&helmholtz_data_decane, ntd, td);
-    return helm_run_test_cases(&helmholtz_data_decane, ntd, td, 'C');
+	PureFluid *P = helmholtz_prepare(&eos_decane,NULL);
+    return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation. 
+A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
 const TestData td[] = {

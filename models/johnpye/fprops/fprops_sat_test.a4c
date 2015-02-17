@@ -1,13 +1,13 @@
-(* test of the fluid properties routines currently implemented in helmholtz.c *)
+(* test of the fluid properties routines currently implemented in fprops.c *)
 
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
-IMPORT "johnpye/fprops/helmholtz";
+IMPORT "johnpye/fprops/fprops";
 
-MODEL helmholtz_conf(
+MODEL peng_conf;
 	component IS_A symbol_constant;
-);
-END helmholtz_conf;
+	component :== 'methane,rpp,pengrob';
+END peng_conf;
 
 
 MODEL fprops_sat_test;
@@ -17,28 +17,28 @@ MODEL fprops_sat_test;
 	rho_f, rho_g IS_A mass_density;
 	g IS_A specific_energy;
 
-	conf IS_A helmholtz_conf('carbondioxide');
+	conf IS_A peng_conf;
 
 (*
-	E1: helmholtz_p(
+	E1: fprops_p(
 		T, rho_f : INPUT;
 		p : OUTPUT;
 		conf : DATA
 	);
 
-	E2: helmholtz_p(
+	E2: fprops_p(
 		T, rho_g : INPUT;
 		p : OUTPUT;
 		conf : DATA
 	);
 	
-	E3: helmholtz_g(
+	E3: fprops_g(
 		T, rho_f : INPUT;
 		g : OUTPUT;
 		conf : DATA
 	);
 
-	E4: helmholtz_g(
+	E4: fprops_g(
 		T, rho_g : INPUT;
 		g : OUTPUT;
 		conf : DATA
@@ -50,7 +50,7 @@ MODEL fprops_sat_test;
 		err[i] = 0;
 	END FOR;
 
-	sat: helmholtz_phase(
+	sat: fprops_sat_T_cubic(
 		T, p, rho_f, rho_g : INPUT;
 		err[1], err[2], err[3] : OUTPUT;
 		conf : DATA

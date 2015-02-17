@@ -21,44 +21,44 @@ that article. -- jpye
 
 #define TOLUENE_M 92.13842 /* kg/kmol */
 #define TOLUENE_R (8314.472/TOLUENE_M) /* J/kg/K */
-#define TOLUENE_TSTAR 591.75 /* K */
+#define TOLUENE_TC 591.75 /* K */
 
-const IdealData ideal_data_toluene = {
-#ifdef TEST
-    3.5241174832 /* constant */
-    , 1.1360823464 /* linear */
-#else
-	/* these values have been selected to give zero enthalpy and zero
-	entropy at the triple point for this fluid, see test.c 'helm_calc_offsets'*/
-    -1.04342666628772882120e+01 /* constant */
-    , 7.59094882818676630620e+00 /* linear */
-#endif
-    , TOLUENE_TSTAR /* Tstar */
-    , TOLUENE_R /* cp0star */
-    , 1 /* power terms */
-    , (const IdealPowTerm[]){
-        {4.0,	0.0}
-    }
-    , 5 /* exponential terms */
-    , (const IdealExpTerm[]){
-        {1.6994,	190.0}
-        ,{8.0577,	797.0}
-        ,{17.059,	1619.0}
-        ,{8.4567,	3072.0}
-        ,{8.6423,	7915.0}
-    }
+static const IdealData ideal_data_toluene = {
+	IDEAL_CP0
+	,.data={.cp0={
+		TOLUENE_R /* cp0star */
+		, 1. /* Tstar */
+		, 1 /* power terms */
+		, (const Cp0PowTerm[]){
+			{4.0,	0.0}
+		}
+		, 5 /* exponential terms */
+		, (const Cp0ExpTerm[]){
+			{1.6994,	190.0}
+			,{8.0577,	797.0}
+			,{17.059,	1619.0}
+			,{8.4567,	3072.0}
+			,{8.6423,	7915.0}
+		}
+	}}
 };
 
-const HelmholtzData helmholtz_data_toluene = {
-    "toluene"
-	, /* R */ TOLUENE_R /* J/kg/K */
+static HelmholtzData helmholtz_data_toluene = {
+	/* R */ TOLUENE_R /* J/kg/K */
     , /* M */ TOLUENE_M /* kg/kmol */
     , /* rho_star */ 3.169*TOLUENE_M /* kg/m3(= rho_c for this model) */
-    , /* T_star */ TOLUENE_TSTAR /* K (= T_c for this model) */
+    , /* T_star */ TOLUENE_TC /* K (= T_c for this model) */
 
-    , /* T_c */ TOLUENE_TSTAR
+    , /* T_c */ TOLUENE_TC
     , /* rho_c */ 3.169*TOLUENE_M /* kg/m3 */
     , /* T_t */ 178.15
+
+	,{FPROPS_REF_TRHS,{.trhs={
+		.T0 = 273.15
+		, .rho0 = 8.85419387005E+2
+		, .h0 = -1.99730529336E+5
+		, .s0 = -6.10308234395E+2
+	}}}
 
     , 0.2657 /* acentric factor */
     , &ideal_data_toluene
@@ -84,6 +84,16 @@ const HelmholtzData helmholtz_data_toluene = {
     , 0
 };
 
+EosData eos_toluene = {
+	"toluene"
+	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	,NULL
+	,100
+	,FPROPS_HELMHOLTZ
+	,.data = {.helm = &helmholtz_data_toluene}
+};
+
 /*
     Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
 
@@ -100,12 +110,8 @@ const HelmholtzData helmholtz_data_toluene = {
 const TestData td[]; const unsigned ntd;
 
 int main(void){
-	const HelmholtzData *d = &helmholtz_data_toluene;
-	double p,rhof,rhog;
-	int res = fprops_triple_point(&p,&rhof,&rhog,d);
-	helm_calc_offsets(d->T_t, rhof, 0, 0, d);
-
-    return helm_run_test_cases(&helmholtz_data_toluene, ntd, td, 'C');
+	PureFluid *P = helmholtz_prepare(&eos_toluene, NULL);
+    return helm_run_test_cases(P, ntd, td, 'C');
 }
 
 /*
