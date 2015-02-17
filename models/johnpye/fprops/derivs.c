@@ -13,24 +13,20 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 *//** @file
-FPROPS derivatives modules. Calculates thermodynamic property derivatives
-using the method given in IAPWS, 2008, Revised Advisory Note No. 3 
-Thermodynamic Derivatives from IAPWS Formulation, http://www.iapws.org.
+The following are the functions
 
-TODO we still need to figure out how this works in general for simpler non-
-Helmholtz correlations such as pengrob and potentially others. It seems
-plausible that this will 'just work' if each of those correlations provides 
-functions for p, cv, v, s, alphap and betap as functions of FluidState (T,rho).
-But we need to check that, and find out if there's an easier or more efficient
-approach as well.
+	 ⎰ ∂z ⎱   ___\   VTn
+	 ⎱ ∂v ⎰T     /
+
+etc., for saturation and non-saturation regions.
 */
 
 #include "derivs.h"
-#include "fprops.h"
+#include "helmholtz.h"
 #include "sat.h"
-#include "rundata.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,43 +39,8 @@ approach as well.
 # define assert(ARGS...)
 #endif
 
-struct SatStateData_struct{
-	FluidState state;
-	double psat;
-	double rhof;
-	double rhog;
-	double dpdT_sat;
-};
 
 #define SQ(X) ((X)*(X))
-
-//#define DERIV_DEBUG
-#define DERIV_ERRORS
-
-#ifdef DERIV_DEBUG
-# include "color.h"
-# define MSG(FMT, ...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
-	color_on(stderr,ASC_FG_BRIGHTBLUE);\
-	fprintf(stderr,"%s: ",__func__);\
-	color_off(stderr);\
-	fprintf(stderr,FMT "\n",##__VA_ARGS__)
-#else
-# define MSG(ARGS...) ((void)0)
-#endif
-
-/* TODO centralise declaration of our error-reporting function somehow...? */
-#ifdef DERIV_ERRORS
-# include "color.h"
-# define ERRMSG(STR,...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"ERROR:");\
-	color_off(stderr);\
-	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
-#else
-# define ERRMSG(ARGS...) ((void)0)
-#endif
 
 /*------------------------------------------------------------------------------
   EXPORTED FUNCTION(S)
@@ -101,86 +62,50 @@ struct SatStateData_struct{
 
 	@return the numerical value of the derivative (∂z/∂x)y.
 */
-double fprops_deriv(FluidState state, char *vars, FpropsError *err){
-	SatStateData ssd;
-	ssd.state = state;
-	int i, sat = 0;
+double fprops_deriv(FPROPS_CHAR z, FPROPS_CHAR x, FPROPS_CHAR y, double T, double rho, const HelmholtzData *D){
+	StateData S;
+	S.rho = rho; S.T = T;
+	char sat = 0;
 
-	if(!vars || strlen(vars)!=3){
-		ERRMSG("Invalid 'vars' string");
-		*err = FPROPS_INVALID_REQUEST;
-		return 0;
-	}
-	const char *valid = "pTvuhsgaf";
-	for(i=0; i<3; ++i){
-		if(!strchr(valid,vars[i])){
-			ERRMSG("Invalid '%c' found in vars '%s' (valid are: %s)",vars[i],vars,valid);
-			*err = FPROPS_INVALID_REQUEST;
-			return 0;
+	if(T < D->T_c){
+		int res = fprops_sat_T(T,&S.psat, &S.rhof, &S.rhog, D);\
+		if(res){
+			fprintf(stderr,"Failed to calculation saturation props\n");
+			exit(1);
 		}
-	}
-
-#define D fluid->data
-	if(state.T < state.fluid->data->T_c
-		&& state.T > state.fluid->data->T_t
-	){
-		fprops_sat_T(state.T, &ssd.psat, &ssd.rhof, &ssd.rhog, state.fluid, err);
-		if(*err){
-			ERRMSG("Failed to calculate saturation props");
-			*err = FPROPS_SAT_CVGC_ERROR;
-			return 0;
-		}
-		if(state.rho < ssd.rhof && state.rho > ssd.rhog){
+		if(rho < S.rhof && rho > S.rhog){
 			/* we're in the saturation region */
 			sat = 1;
 		}
 	}
 
-	/* vars to hold various partial derivs, nomenclature as follows:
-	  ⎰ ∂z ⎱   →   ZVT
-	  ⎱ ∂v ⎰T
-	*/
 	double ZTV, ZVT, XTV, XVT, YTV, YVT;
-
-#define TVSAT(X) fprops_sat_dZdT_v(X,&ssd,err)
-#define VTSAT(X) fprops_sat_dZdv_T(X,&ssd,err)
-#define TVNON(X) fprops_non_dZdT_v(X,state.T,state.rho,state.fluid,err)
-#define VTNON(X) fprops_non_dZdv_T(X,state.T,state.rho,state.fluid,err)
-#define z vars[0]
-#define x vars[1]
-#define y vars[2]
-	
-	if(!sat){
-		/* non-saturated */
-		ZTV = TVNON(z); ZVT = VTNON(z);
-		XTV = TVNON(x); XVT = VTNON(x);
-		YTV = TVNON(y); YVT = VTNON(y);
-	}else{
-		/* saturated. first use Clapeyron equation for (∂p/∂T)v */
+	if(sat){
+		/* saturated. first use clapeyron equation for (∂p/∂T)v */ 
 		double hf, hg;
-		/* TODO add checks for error state */
-		hf = fprops_h(fprops_set_Trho(state.T, ssd.rhof, state.fluid, err),err);
-		hg = fprops_h(fprops_set_Trho(state.T, ssd.rhog, state.fluid, err),err);
-		ssd.dpdT_sat = (hg - hf) / state.T / (1./ssd.rhog - 1./ssd.rhof);
+		hf = helmholtz_h(S.T, S.rhof,D);
+		hg = helmholtz_h(S.T, S.rhog,D);
+		S.dpdT_sat = (hg - hf) / T / (1./S.rhog - 1./S.rhof);
 
 		fprintf(stderr,"Saturation region derivatives not yet implemented.\n");
-		*err = FPROPS_NOT_IMPLEMENTED;
-		return 0;
+		exit(1);
 
 		/* ...then call the partial deriv routines, which use dpdT_sat */
-
+#define TVSAT(X) fprops_sat_dZdT_v(X,&S)
+#define VTSAT(X) fprops_sat_dZdv_T(X,&S)
 		ZTV = TVSAT(z); ZVT = VTSAT(z);
 		XTV = TVSAT(x); XVT = VTSAT(x);
 		YTV = TVSAT(y); YVT = VTSAT(y);
+	}else{
+		/* non-saturated */
+#define TVNON(X) fprops_non_dZdT_v(X,T,rho,D)
+#define VTNON(X) fprops_non_dZdv_T(X,T,rho,D)
+		ZTV = TVNON(z); ZVT = VTNON(z);
+		XTV = TVNON(x); XVT = VTNON(x);
+		YTV = TVNON(y); YVT = VTNON(y);
 	}
-
-#undef TVSAT
-#undef VTSAT
 #undef TVNON
 #undef VTNON
-#undef z
-#undef x
-#undef y
 
 	double deriv = ((ZTV*YVT-ZVT*YTV)/(XTV*YVT-XVT*YTV));
 	//fprintf(stderr,"Calculated (∂%c/∂%c)%c = %g\n",z,x,y,deriv);
@@ -192,22 +117,21 @@ double fprops_deriv(FluidState state, char *vars, FpropsError *err){
 */
 
 /*
-	FIXME: the following macros avoid calculating unneeded results eg within VT3 
+	FIXME the following macros avoid calculating unneeded results eg within VT3 
 	but at the level of freesteam_deriv, there is wasted effort, because eg 'p' 
 	will be calculated several times in different calls to VT3.
 */
 
-#define p (fluid->p_fn(T,rho,fluid->data,err))
-#define cv (fluid->cv_fn(T,rho,fluid->data,err))
+#define p helmholtz_p_raw(T,rho,D)
+#define cv helmholtz_cv(T,rho,D)
 #define v (1./rho)
-#define s (fluid->s_fn(T,rho,fluid->data,err))
-#define alphap (fluid->alphap_fn(T,rho,fluid->data,err))
-#define betap (fluid->betap_fn(T,rho,fluid->data,err))
+#define s helmholtz_s_raw(T,rho,D)
+#define alphap helmholtz_alphap(T,rho,D)
+#define betap helmholtz_betap(T,rho,D)
 
-double fprops_non_dZdv_T(FPROPS_CHAR z, double T, double rho, const PureFluid *fluid, FpropsError *err){
-	MSG("Calculating (d%c/dv)_T in non-saturated region",z);
-    double res;
-	switch(z){
+double fprops_non_dZdv_T(FPROPS_CHAR x, double T, double rho, const HelmholtzData *D){
+	double res;
+	switch(x){
 		case 'p': res = -p*betap; break;
 		case 'T': res = 0; break;
 		case 'v': res = 1; break;
@@ -218,23 +142,22 @@ double fprops_non_dZdv_T(FPROPS_CHAR z, double T, double rho, const PureFluid *f
 		case 'a':
 		case 'f': res = -p; break;
 		default:
-			fprintf(stderr,"%s (%s:%d): Invalid variable '%c'\n", __func__,__FILE__,__LINE__,z);
-			*err = FPROPS_INVALID_REQUEST;
-			return 0;
+			fprintf(stderr,"%s (%s:%d): Invalid variable '%c'\n", __func__,__FILE__,__LINE__,x);
+			exit(1);
 	}
 #if 1
-	if(isnan(res)){
-		fprintf(stderr,"NAN when calculating '%c'\n",z);
+	if(__isnan(res)){
+		fprintf(stderr,"calculating '%c'\n",x);
 	}
 #endif
 	assert(!__isnan(res));
-	MSG("(∂%c/∂v)T = %f\n",z,res);
+	//fprintf(stderr,"(∂%c/∂v)T = %f\n",x,res);
 	return res;
 }
 
-double fprops_non_dZdT_v(FPROPS_CHAR z, double T, double rho, const PureFluid *fluid, FpropsError *err){
-    double res;
-	switch(z){
+double fprops_non_dZdT_v(FPROPS_CHAR x, double T, double rho, const HelmholtzData *D){
+	double res;
+	switch(x){
 		case 'p': res = p*alphap; break;
 		case 'T': res = 1; break;
 		case 'v': res = 0; break;
@@ -245,17 +168,16 @@ double fprops_non_dZdT_v(FPROPS_CHAR z, double T, double rho, const PureFluid *f
 		case 'a':
 		case 'f': res = -s; break;
 		default:
-			fprintf(stderr,"%s (%s:%d): Invalid variable '%c'\n", __func__,__FILE__,__LINE__,z);
-			*err = FPROPS_INVALID_REQUEST;
-			return 0;
+			fprintf(stderr,"%s (%s:%d): Invalid variable '%c'\n", __func__,__FILE__,__LINE__,x);
+			exit(1);
 	}
 #if 0
 	if(__isnan(res)){
-		fprintf(stderr,"calculating '%c'\n",z);
+		fprintf(stderr,"calculating '%c'\n",x);
 	}
 #endif
 	assert(!__isnan(res));
-	//fprintf(stderr,"(∂%c/∂T)v = %f\n",z,res);
+	//fprintf(stderr,"(∂%c/∂T)v = %f\n",x,res);
 	return res;
 }
 #undef p
@@ -274,42 +196,42 @@ derivatives are going to be within the saturation region.
 */
 
 /*
-	⎰ ∂z ⎱  = ⎰∂z_f⎱ (1 - x) + ⎰∂z_g⎱ x
-	⎱ ∂T ⎰v   ⎱ ∂T ⎰          ⎱ ∂T ⎰
+	⎰ ∂z ⎱   =  ⎰∂z_f⎱ (1 - x) + ⎰∂z_g⎱ x
+	⎱ ∂T ⎰v     ⎱ ∂T ⎰           ⎱ ∂T ⎰
 
 	Need to review the theory of this section, might not be correct.
 */
-double fprops_sat_dZdT_v(FPROPS_CHAR z, const SatStateData *ssd, FpropsError *err){
+double fprops_sat_dZdT_v(FPROPS_CHAR z, const StateData *S){
 	double res;
 	switch(z){
 		/* a couple of easy cases, first: */
-		case 'p': return ssd->dpdT_sat;
+		case 'p': return S->dpdT_sat;
 		case 'T': return 1.;
 	}
 
-	double drhofdT = fprops_drhofdT(ssd,err);
-	double drhogdT = fprops_drhogdT(ssd,err);
+	double drhofdT = fprops_drhofdT(S);
+	double drhogdT = fprops_drhogdT(S);
 
 	double dzfdT, dzgdT;
 
-	assert(ssd->rhof!=0);
-	assert(ssd->rhog!=0);
-	double dvfdT = -1./SQ(ssd->rhof) * drhofdT;
+	assert(S->rhof!=0);
+	assert(S->rhog!=0);
+	double dvfdT = -1./SQ(S->rhof) * drhofdT;
 	assert(!isnan(dvfdT));
-	double dvgdT = -1./SQ(ssd->rhog) * drhogdT;
+	double dvgdT = -1./SQ(S->rhog) * drhogdT;
 	assert(!isnan(dvgdT));
 
-#define TVNON(X,RHO) fprops_non_dZdT_v(X,ssd->state.T,RHO,ssd->state.fluid,err)
-#define VTNON(X,RHO) fprops_non_dZdv_T(X,ssd->state.T,RHO,ssd->state.fluid,err)
-	dzfdT = VTNON(z,ssd->rhof)*dvfdT + TVNON(z,ssd->rhof);
-	dzgdT = VTNON(z,ssd->rhog)*dvgdT + TVNON(z,ssd->rhog);
+#define TVNON(X,RHO) fprops_non_dZdT_v(X,S->T,RHO,S->D)
+#define VTNON(X,RHO) fprops_non_dZdv_T(X,S->T,RHO,S->D)
+	dzfdT = VTNON(z,S->rhof)*dvfdT + TVNON(z,S->rhof);
+	dzgdT = VTNON(z,S->rhog)*dvgdT + TVNON(z,S->rhog);
 
 	assert(!isnan(dzfdT));
 	assert(!isnan(dzgdT));
 
-	/* FIXME: this is not the correct solution, this is for x const, not rho const. */
+	/* FIXME this is not the correct solution, this is for x const, not rho const. */
 
-	double x = (1./ssd->state.rho - 1./ssd->rhof) / (1./ssd->rhog - 1./ssd->rhof);
+	double x = (1./S->rho - 1./S->rhof) / (1./S->rhog - 1./S->rhof);
 	res = dzfdT*(1-x) + dzgdT*x;
 	//fprintf(stderr,"(∂%c/∂T)x = %g\n",z,res);
 	return res;
@@ -319,7 +241,7 @@ double fprops_sat_dZdT_v(FPROPS_CHAR z, const SatStateData *ssd, FpropsError *er
 	These derivatives are simply the gradient within the two-phase region,
 	and is very simply calculated as
 
-	⎰ ∂z ⎱   =  (z_g - z_f) / (rho_g - rho_f)  where z in {v,u,h,z,s,g,a}.
+	⎰ ∂z   ⎱   =  (z_g - z_f) / (rho_g - rho_f)  where z in {v,u,h,z,s,g,a}.
 	⎱ ∂v ⎰T
 
 	or, otherwise,
@@ -330,17 +252,17 @@ double fprops_sat_dZdT_v(FPROPS_CHAR z, const SatStateData *ssd, FpropsError *er
 
 	Need to double-check theory in this section.
 */
-double fprops_sat_dZdv_T(FPROPS_CHAR z, const SatStateData *ssd, FpropsError *err){
+double fprops_sat_dZdv_T(FPROPS_CHAR z, const StateData *S){
 	switch(z){
 		case 'p': return 0;
 		case 'T': return 0;
 	}
 	double zf, zg;
 #define ZFG(Z,P,T) \
-	zf = ssd->state.fluid->Z##_fn(ssd->state.T,ssd->rhof,ssd->state.fluid->data,err);\
-	zg = ssd->state.fluid->Z##_fn(ssd->state.T,ssd->rhog,ssd->state.fluid->data,err)
+	zf = helmholtz_##Z(S->T,S->rhof,S->D);\
+	zg = helmholtz_##Z(S->T,S->rhog,S->D)
 	switch(z){
-		case 'v': zf = 1./ssd->rhof; zg = 1./ssd->rhog; break;
+		case 'v': zf = 1./S->rhof; zg = 1./S->rhog; break;
 		case 'u': ZFG(u,p,T); break;
 		case 'h': ZFG(h,p,T); break;
 		case 's': ZFG(s,p,T); break;
@@ -348,8 +270,7 @@ double fprops_sat_dZdv_T(FPROPS_CHAR z, const SatStateData *ssd, FpropsError *er
 		case 'a': case 'f': ZFG(a,p,T); break;
 		default:
 			fprintf(stderr,"%s (%s:%d): Invalid character x = '%c'\n", __func__,__FILE__,__LINE__,z);
-			*err = FPROPS_INVALID_REQUEST;
-			return 0;
+			exit(1);
 	}
 #undef ZFG
 	//fprintf(stderr,"(∂%c/∂x)T = %g\n",z,zg-zf);
@@ -360,16 +281,16 @@ double fprops_sat_dZdv_T(FPROPS_CHAR z, const SatStateData *ssd, FpropsError *er
   DERIVATIVES OF rhof and rhog with temperature
 */
 
-double fprops_drhofdT(const SatStateData *ssd, FpropsError *err){
-	double dpdT = TVNON('p',ssd->rhof);
-	double dpdrho = -1./SQ(ssd->rhof) * VTNON('p',ssd->rhof);
-	return (ssd->dpdT_sat - dpdT)/dpdrho;
+double fprops_drhofdT(const StateData *S){
+	double dpdT = TVNON('p',S->rhof);
+	double dpdrho = -1./SQ(S->rhof) * VTNON('p',S->rhof);
+	return (S->dpdT_sat - dpdT)/dpdrho;
 }
 
-double fprops_drhogdT(const SatStateData *ssd, FpropsError *err){
-	double dpdT = TVNON('p',ssd->rhog);
-	double dpdrho = -1./SQ(ssd->rhog) * VTNON('p',ssd->rhog);
-	return (ssd->dpdT_sat - dpdT)/dpdrho;
+double fprops_drhogdT(const StateData *S){
+	double dpdT = TVNON('p',S->rhog);
+	double dpdrho = -1./SQ(S->rhog) * VTNON('p',S->rhog);
+	return (S->dpdT_sat - dpdT)/dpdrho;
 }
 
 

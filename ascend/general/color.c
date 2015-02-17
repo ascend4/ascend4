@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//* @file
 	Platform-independent console colour output.
 */
@@ -45,7 +47,7 @@ static int color_test(){
 		}
 # else
 		if(term!=NULL){
-			if(strcmp(term,"xterm")==0 || strcmp(term,"xterm-256color")==0){
+			if(strcmp(term,"xterm")==0){
 				/* MSYS (rxvt), putty, xterm. */
 				use_xterm_color=1;
 			}else{

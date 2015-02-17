@@ -14,7 +14,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
+ *
  */
 
 #include <stdarg.h>
@@ -27,6 +30,7 @@
 #include <ascend/general/dstring.h>
 
 #include "symtab.h"
+
 
 #include "functype.h"
 #include "expr_types.h"
@@ -59,7 +63,11 @@
 #define NAMELISTSIZE 20L
 #define DEFTOLERANCE 1e-08
 
-typedef struct IAndName
+#ifndef lint
+static CONST char FindRCSid[]="$Id: find.c,v 1.24 1998/03/26 20:39:44 ballan Exp $";
+#endif /* lint */
+
+typedef struct IAndName 
 {
 	CONST struct Instance *i;
 	struct Name *n;

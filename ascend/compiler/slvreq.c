@@ -19,6 +19,8 @@ int slvreq_assign_hooks(struct Instance *siminst
 	h->set_solver_fn = set_solver_fn;
 	h->set_option_fn = set_option_fn;
 	h->do_solve_fn = do_solve_fn;
+	h->set_integrator_fn = NULL;
+	h->set_sub_solver_fn = NULL;
 	h->user_data = user_data;
 
 	if(((struct SimulationInstance *)siminst)->slvreq_hooks){
@@ -28,7 +30,32 @@ int slvreq_assign_hooks(struct Instance *siminst
 
 	return 0;
 }
+int slvreq_assign_hooks_ex(struct Instance *siminst
+		, SlvReqSetSolverFn *set_solver_fn
+		, SlvReqSetOptionFn *set_option_fn
+		, SlvReqDoSolveFn *do_solve_fn
+		, SlvReqSetIntegratorFn *set_integrator_fn
+		, SlvReqSetSubSolverFn *set_sub_solver_fn
+		, void *user_data
+){
+	/* check that it's the right kind */
+	assert(InstanceKind(siminst)==SIM_INST);
 
+	SlvReqHooks *h = ASC_NEW(SlvReqHooks);
+	h->set_solver_fn = set_solver_fn;
+	h->set_option_fn = set_option_fn;
+	h->do_solve_fn = do_solve_fn;
+	h->set_integrator_fn = set_integrator_fn;
+	h->set_sub_solver_fn = set_sub_solver_fn;
+	h->user_data = user_data;
+
+	if(((struct SimulationInstance *)siminst)->slvreq_hooks){
+		ASC_FREE(((struct SimulationInstance *)siminst)->slvreq_hooks);
+	}
+	((struct SimulationInstance *)siminst)->slvreq_hooks = h;
+
+	return 0;
+}
 
 ASC_DLLSPEC void slvreq_destroy_hooks(struct Instance *inst){
 	/* FIXME check its the right kind */
@@ -80,4 +107,25 @@ int slvreq_do_solve(struct Instance *inst){
 	}
 
 	return (*(hooks->do_solve_fn))(inst, hooks->user_data);
+}
+
+int slvreq_set_integrator(struct Instance *inst, const char *integratorname,double from,double to, double steps){
+	struct Instance *sim = FindSimulationInstance(inst);
+	SlvReqHooks *hooks = ((struct SimulationInstance *)sim)->slvreq_hooks;
+	if(hooks==NULL || hooks->set_integrator_fn==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No INTEGRATE hook set");
+		return -1;
+	}
+
+	return (*(hooks->set_integrator_fn))(integratorname, from, to, steps, hooks->user_data);
+}
+
+int slvreq_set_sub_solver(struct Instance *inst, const char *solvername){
+	struct Instance *sim = FindSimulationInstance(inst);
+	SlvReqHooks *hooks = ((struct SimulationInstance *)sim)->slvreq_hooks;
+	if(hooks==NULL || hooks->set_sub_solver_fn==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"No SUB SOLVER hook set");
+		return -1;
+	}
+	return (*(hooks->set_sub_solver_fn))(solvername, hooks->user_data);
 }

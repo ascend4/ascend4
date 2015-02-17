@@ -24,7 +24,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.  COPYING is found in ../compiler.
+ *
  */
 
 #include "var.h"
@@ -289,7 +292,7 @@ double var_odeatol(struct var_variable *var){
 	}
 	return RealAtomValue(c);
 }
-
+	
 
 uint32 var_flagsF(const struct var_variable *var)
 {
@@ -408,7 +411,7 @@ void var_set_flagbit(struct var_variable *var, uint32 field,uint32 one)
   }
 }
 
-int32 var_apply_filter(const struct var_variable *var,
+int32 var_apply_filter(const struct var_variable *var, 
 	const var_filter_t *filter
 ){
   if (var==NULL || filter==NULL || var->ratom == NULL) {
@@ -457,7 +460,7 @@ struct rel_relation **var_incidence_list_to_modify( struct var_variable *var)
 
 
 
-/*
+/* 
  * global for use with the push function. Sets the ip to the
  * value in g_var_tag;
  * should be using vp instead of a global counter.
@@ -577,7 +580,7 @@ boolean set_solver_types(void) {
   NOMINAL_V = AddSymbol("nominal");
   FIXED_V = AddSymbol("fixed");
   INTERFACE_V = AddSymbol("interface");
-  ODEATOL_V = AddSymbol("ode_atol");
+  ODEATOL_V = AddSymbol("ode_atol"); 
   return nerr;
 }
 

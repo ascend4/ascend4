@@ -13,7 +13,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	Special stuff for handling external relations in the instance hierarchy.
 
@@ -62,7 +64,7 @@ extern void FixExternalVars(struct Instance *old, struct Instance *new);
 	Replaces old with new in the table.
 	This will be called only for MODEL_INSTS.
 
-	Just used in MergeModels and RefineModel -- JP.
+	Used by MergeModels, RefineModels, apparently -- JP.
 */
 
 extern void SetSimulationExtVars(struct Instance *i, struct Instance **extvars);

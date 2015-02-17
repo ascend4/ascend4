@@ -25,8 +25,7 @@ class UnitsDialog:
 
 		if not len(self.realtypes):
 			self.browser.reporter.reportError("No dimensioned atom types available yet (have you loaded a model yet?)")
-			return
-			#raise RuntimeError("no units available")
+			raise RuntimeError("no units available")
 
 		# set up columns in the units view:
 		_renderer0 = gtk.CellRendererToggle()
@@ -123,6 +122,7 @@ class UnitsDialog:
 		except:
 			T = None
 			self.dimensionlabel.set_text("")
+
 		self.update_unitsview(T)
 		
 	def run(self):
@@ -130,8 +130,6 @@ class UnitsDialog:
 		while _res == gtk.RESPONSE_APPLY:
 			_res = self.window.run()
 			if _res == gtk.RESPONSE_APPLY or _res == gtk.RESPONSE_CLOSE:
-				if _res == gtk.RESPONSE_CLOSE and not len(self.realtypes):
-					break
 				for k,v in self.changed.iteritems():
 					self.browser.prefs.setPreferredUnits(k,v)
 				self.changed = {}

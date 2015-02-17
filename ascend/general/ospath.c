@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	Platform-agnostic filesystem path manipulation functions.
@@ -34,7 +36,7 @@
 
 #include "ospath.h"
 
-//#define OSPATH_DEBUG
+/* #define OSPATH_DEBUG */
 
 #ifndef __GNUC__
 # ifndef __FUNCTION__
@@ -42,7 +44,8 @@
 # endif
 #endif
 
-//#define VERBOSE
+
+/* #define VERBOSE */
 
 #if !defined(VERBOSE)
 #ifndef NDEBUG
@@ -1058,13 +1061,6 @@ struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath
 	char temp2[PATH_MAX];
 	struct FilePath *r;
 
-	X(fp1->path);
-	X(fp2->path);
-#ifdef WINPATHS
-	X(fp1->drive);
-	X(fp2->drive);
-#endif
-
 	fp = (struct FilePath *)MALLOC(sizeof(struct FilePath));
 
 	if(!ospath_isvalid(fp1)){
@@ -1097,7 +1093,8 @@ struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath
 	STRNCPY(temp[1], fp2->path,PATH_MAX);
 
 	/* make sure temp has a / on the end. */
-	if(temp[0][strlen(temp[0]) - 1] != PATH_SEPARATOR_CHAR){
+	if(temp[0][strlen(temp[0]) - 1] != PATH_SEPARATOR_CHAR)
+	{
 		STRNCAT(temp[0],PATH_SEPARATOR_STR,PATH_MAX-strlen(temp[0]));
 	}
 
@@ -1106,7 +1103,7 @@ struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath
 	ospath_fixslash(temp[1]);
 #endif
 
-#if 1
+#if 0
 	V(strlen(temp[0]));
 	X(temp[0]);
 	V(strlen(temp[1]));
@@ -1121,7 +1118,7 @@ struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath
 	/* create a new path object with the two path strings appended together.*/
 	STRNCPY(temp2,temp[0],PATH_MAX);
 	STRNCAT(temp2,temp[1],PATH_MAX-strlen(temp2));
-#if 1
+#if 0
 	V(strlen(temp2));
 	X(temp2);
 #endif

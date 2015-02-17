@@ -22,7 +22,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
+ *
  */
 
 #include <stdarg.h>
@@ -63,6 +66,10 @@
 
 #ifndef TRUE
 #define TRUE 1
+#endif
+
+#ifndef lint
+static CONST char StatementID[] = "$Id: statement.c,v 1.32 1998/04/21 23:49:48 ballan Exp $";
 #endif
 
 static
@@ -133,6 +140,9 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case SOLVER:
     case OPTION:
     case SOLVE:
+    case INTEGRATOR:
+    case INTEGRATE:
+    case SUBSOLVER:
     case RUN:
     case FNAME:
     case FLOW:
@@ -379,6 +389,32 @@ struct Statement *CreateOPTION(CONST char *optname, struct Expr *rhs){
 struct Statement *CreateSOLVE(){
 	register struct Statement *result;
 	result=create_statement_here(SOLVE);
+	return result;
+}
+
+struct Statement *CreateINTEGRATOR(CONST char *solvername){
+	register struct Statement *result;
+	result=create_statement_here(INTEGRATOR);
+	result->v.solver.name = solvername;
+	/*CONSOLE_DEBUG("CREATED INTEGRATOR STATEMENT");*/
+	return result;
+}
+
+struct Statement *CreateINTEGRATE(CONST char *solvername,struct Expr *fromExp,struct Expr *toExp,struct Expr *stepsExp){
+	register struct Statement *result;
+	result=create_statement_here(INTEGRATE);
+	result->v.intg.name = solvername;
+	result->v.intg.from = fromExp;
+	result->v.intg.to = toExp;
+	result->v.intg.steps = stepsExp;
+	/*CONSOLE_DEBUG("CREATED INTEGRATE STATEMENT");*/
+	return result;
+}
+
+struct Statement *CreateSUBSOLVER(CONST char *solvername){
+	register struct Statement *result;
+	result=create_statement_here(SUBSOLVER);
+	result->v.solver.name = solvername;
 	return result;
 }
 
@@ -895,8 +931,8 @@ void DestroyStatement(struct Statement *s)
         }
         break;
       case LNK:
-      case UNLNK:
-        DestroyVariableList(s->v.lnk.vl);
+      case UNLNK: 
+        DestroyVariableList(s->v.lnk.vl); 
         s->v.lnk.vl = NULL;
         break;
       case ATS:
@@ -985,8 +1021,16 @@ void DestroyStatement(struct Statement *s)
         break;
 
       case SOLVER:
+      case SUBSOLVER:
+      case INTEGRATOR:
         s->v.solver.name = NULL;
         break;
+      case INTEGRATE:
+	DestroyExprList(s->v.intg.from);
+	DestroyExprList(s->v.intg.to);
+	DestroyExprList(s->v.intg.steps);
+	s->v.intg.name = NULL;
+	break;
 
       case OPTION:
         s->v.option.name = NULL;
@@ -1173,10 +1217,18 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.fx.vars = CopyVariableList(s->v.fx.vars);
     break;
 
+  case INTEGRATOR:
   case SOLVER:
+  case SUBSOLVER:
     result->v.solver.name = s->v.solver.name;
     break;
-
+  case INTEGRATE:
+    result->v.intg.name = s->v.intg.name;
+    result->v.intg.from = CopyExprList(s->v.intg.from);
+    result->v.intg.to = CopyExprList(s->v.intg.to);
+    result->v.intg.steps = CopyExprList(s->v.intg.steps);
+    break;
+  
   case OPTION:
     result->v.option.name = s->v.option.name;
     result->v.option.rhs = CopyExprList(s->v.option.rhs);
@@ -1258,6 +1310,9 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case FIX:
   case FREE:
   case SOLVER:
+  case SUBSOLVER:
+  case INTEGRATOR:
+  case INTEGRATE:
   case OPTION:
   case SOLVE:
   case ASSERT:
@@ -1303,8 +1358,11 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case FIX:
   case FREE:
   case SOLVER:
+  case SUBSOLVER:
   case OPTION:
   case SOLVE:
+  case INTEGRATOR:
+  case INTEGRATE:
   case ASSERT:
   case IF:
   case WHEN:
@@ -1350,8 +1408,11 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case FIX:
   case FREE:
   case SOLVER:
+  case SUBSOLVER:
   case OPTION:
   case SOLVE:
+  case INTEGRATOR:
+  case INTEGRATE:
   case ASSERT:
   case IF:
   case WHEN:
@@ -1378,7 +1439,7 @@ struct VariableList *GetStatVarList(CONST struct Statement *s)
 		(s->t==WILLBE) ||
 		(s->t==IRT) ||
 		(s->t==AA)  ||
-		(s->t==LNK)  ||
+		(s->t==LNK)  || 
 		(s->t==UNLNK) ||
 		(s->t==ATS)  ||
 		(s->t==WBTS) ||

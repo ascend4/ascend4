@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	Routines in this file provide a way for libascend to request its 
@@ -43,11 +45,15 @@
 typedef int SlvReqSetSolverFn(const char *solvername, void *user_data);
 typedef int SlvReqSetOptionFn(const char *optionname, struct value_t *val, void *user_data);
 typedef int SlvReqDoSolveFn(struct Instance *instance, void *user_data);
+typedef	int SlvReqSetIntegratorFn(const char *intgratorname, double from,double to,double steps,void *user_data);
+typedef int SlvReqSetSubSolverFn(const char *subsolvername, void *user_data);
 
 typedef struct SlvReqHooks_struct{
 	SlvReqSetSolverFn *set_solver_fn;
 	SlvReqSetOptionFn *set_option_fn;
 	SlvReqDoSolveFn *do_solve_fn;
+	SlvReqSetIntegratorFn *set_integrator_fn;
+	SlvReqSetSubSolverFn *set_sub_solver_fn;
 	void *user_data;
 } SlvReqHooks;
 
@@ -60,7 +66,17 @@ ASC_DLLSPEC int slvreq_assign_hooks(struct Instance *siminst
 		, SlvReqDoSolveFn *do_solve_fn
 		, void *user_data
 );
-
+/**
+	Store hook functions in the simulation instance.
+*/
+ASC_DLLSPEC int slvreq_assign_hooks_ex(struct Instance *siminst
+		, SlvReqSetSolverFn *set_solver_fn
+		, SlvReqSetOptionFn *set_option_fn
+		, SlvReqDoSolveFn *do_solve_fn
+		, SlvReqSetIntegratorFn *set_integrator_fn
+		, SlvReqSetSubSolverFn *set_sub_solver_fn
+		, void *user_data
+);
 /**
 	Free the little bit of memory where slvreq hooks are stored, if
 	necessary. The function will find its way up to the SimulationInstance
@@ -140,5 +156,8 @@ int slvreq_set_option(struct Instance *inst, const char *optionname, struct valu
 */
 int slvreq_do_solve(struct Instance *inst);
 
+int slvreq_set_integrator(struct Instance *inst, const char *integratorname,double from,double to, double steps);
+
+int slvreq_set_sub_solver(struct Instance *inst, const char *solvername);
 #endif /* ASC_SLVREQ_H */
 

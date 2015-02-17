@@ -4,10 +4,10 @@
 # much less tested.
 
 # version number for this ASCEND build:
-version = "0.9.10"
+version = "0.9.8"
 
 # shared library API numbering, for Linux (FIXME windows too?)
-soname_major_int = "1"
+soname_major = ".1"
 soname_minor = ".0"
 
 import sys, os, commands, platform, distutils.sysconfig, os.path, re, types
@@ -18,22 +18,14 @@ pyversion = "%d.%d" % (sys.version_info[0],sys.version_info[1])
 
 # architecture label
 winarchtag = "-win32"
-mingw64suff = ""
-mingw64excpt ="_dw2"
 if platform.architecture()[0] == "64bit":
 	winarchtag="-amd64"
-	mingw64suff = "_64"
-	mingw64excpt ="_seh"
-
-import SCons.Warnings
-SCons.Warnings.suppressWarningClass(SCons.Warnings.VisualCMissingWarning) 
 
 #------------------------------------------------------
 # PLATFORM DEFAULTS
 
 #print "PLATFORM = ",platform.system()
 
-soname_major = "." + soname_major_int
 default_install_prefix = '/usr/local'
 default_install_bin = "$INSTALL_PREFIX/bin"
 default_install_lib = "$INSTALL_PREFIX/lib"
@@ -42,7 +34,7 @@ default_install_solvers = "$INSTALL_LIB/ascend/solvers"
 default_install_assets = "$INSTALL_ASCDATA/glade/"
 default_install_ascdata = "$INSTALL_SHARE/ascend"
 default_install_include = "$INSTALL_PREFIX/include"
-default_install_python = distutils.sysconfig.get_python_lib(plat_specific=1)
+default_install_python = distutils.sysconfig.get_python_lib()
 default_install_python_ascend = "$INSTALL_PYTHON/ascend"
 default_tcl = '/usr'
 default_tcl_libpath = "$TCL/lib"
@@ -54,7 +46,7 @@ default_tk_lib = "tk8.5"
 default_tktable_lib = "Tktable2.9"
 default_ida_prefix="$DEFAULT_PREFIX"
 default_ipopt_libpath = "$IPOPT_PREFIX/lib"
-default_ipopt_dll = ["$DEFAULT_PREFIX/bin/%s.dll"%i for i in ["libgfortran$MINGW64SUFF-3", "libstdc++$MINGW64SUFF-6","libquadmath$MINGW64SUFF-0","libgcc_s$MINGW64EXCPT$MINGW64SUFF-1"]]+[None] # should be five here
+default_ipopt_dll = [None,None,None, None, None] # should be five here
 default_ipopt_libs = ["$F2C_LIB","blas","lapack","pthread","ipopt"]
 default_conopt_prefix="$DEFAULT_PREFIX"
 default_conopt_libpath="$CONOPT_PREFIX"
@@ -69,12 +61,11 @@ default_swig="swig"
 icon_extension = '.png'
 
 if platform.system()=="Windows":
-	try:
-		d = os.path.split(os.path.dirname(WhereIs("gcc.exe")))[0]
-		default_prefix=d
-	except:
-		default_prefix="c:\\mingw"
-
+	if os.path.exists("c:\\MinGW"):
+		default_prefix="c:\\MinGW"
+	elif os.path.exists("c:\MinGW64"):
+		default_prefix="c:\\MinGW64"
+	
 	default_libpath="$DEFAULT_PREFIX\\lib"
 	default_cpppath="$DEFAULT_PREFIX\\include"	
 
@@ -83,9 +74,7 @@ if platform.system()=="Windows":
 	default_tk_lib = "tk85"
 	default_tktable_lib = "Tktable28"
 
-	# on windows, we locate explicitly in gtkbrowser.py:
-	default_install_assets = ""
-
+	default_install_assets = "glade/"
 	default_tcl = "c:\\Tcl"
 	if os.environ.get('MSYSTEM'):
 		default_tcl_libpath="$TCL\\bin"
@@ -104,7 +93,7 @@ if platform.system()=="Windows":
 	default_ida_prefix = "$DEFAULT_PREFIX"
 	
 	# IPOPT. we now prefer to build our own version.
-	default_ipopt_libs = ["ipopt",'stdc++','coinmumps','coinmetis','coinlapack','coinblas','gfortran','pthread']
+	default_ipopt_libs = ["ipopt",'stdc++','coinmumps','coinmetis','coinlapack','coinblas','gfortran']
 
 	# where to look for CONOPT when compiling
 	default_conopt_prefix = "c:\\Program Files\\CONOPT"
@@ -466,16 +455,6 @@ if platform.system()=="Windows":
 	vars.Add('IPOPT_CPPPATH'
 		,"Where is your IPOPT coin/IpStdCInterface.h (do not include the 'coin' in the path)"
 		,"$IPOPT_PREFIX/include"
-	)
-
-	vars.Add('MINGW64SUFF'
-		,"Suffix for 64-bit GCC-related DLLs for bundling with the installer"
-		,mingw64suff
-	)
-
-	vars.Add('MINGW64EXCPT'
-		,"Suffix to specify exception style for GCC-related DLLs to be bundled with the installer"
-		,mingw64excpt
 	)
 
 	for i in range(5):
@@ -937,20 +916,21 @@ if platform.system()=='Windows':
 
 env['CAN_INSTALL']=can_install
 
-#print "TCL=",env['TCL']
-#print "TCL_CPPPATH =",env['TCL_CPPPATH']
-#print "TCL_LIBPATH =",env['TCL_LIBPATH']
-#print "TCL_LIB =",env['TCL_LIB']
+print "TCL=",env['TCL']
+print "TCL_CPPPATH =",env['TCL_CPPPATH']
+print "TCL_LIBPATH =",env['TCL_LIBPATH']
+print "TCL_LIB =",env['TCL_LIB']
 
-#print "ABSOLUTE PATHS =",env['ABSOLUTE_PATHS']
-#print "INSTALL_ASCDATA =",env['INSTALL_ASCDATA']
-#print "INSTALL_PREFIX =",env['INSTALL_PREFIX']
-#print "INSTALL_MODELS =",env['INSTALL_MODELS']
-#print "INSTALL_SOLVERS =",env['INSTALL_SOLVERS']
-#print "INSTALL_PYTHON =",env['INSTALL_PYTHON']
-#print "INSTALL_PYTHON_ASCEND =",env['INSTALL_PYTHON_ASCEND']
-#print "DEFAULT_ASCENDLIBRARY =",env['DEFAULT_ASCENDLIBRARY']
-#print "DEFAULT_ASCENDSOLVERS =",env['DEFAULT_ASCENDSOLVERS']
+print "ABSOLUTE PATHS =",env['ABSOLUTE_PATHS']
+print "INSTALL_ASCDATA =",env['INSTALL_ASCDATA']
+print "INSTALL_PREFIX =",env['INSTALL_PREFIX']
+print "INSTALL_MODELS =",env['INSTALL_MODELS']
+print "INSTALL_SOLVERS =",env['INSTALL_SOLVERS']
+print "INSTALL_PYTHON =",env['INSTALL_PYTHON']
+print "INSTALL_PYTHON_ASCEND =",env['INSTALL_PYTHON_ASCEND']
+
+print "DEFAULT_ASCENDLIBRARY =",env['DEFAULT_ASCENDLIBRARY']
+print "DEFAULT_ASCENDSOLVERS =",env['DEFAULT_ASCENDSOLVERS']
 
 
 #------------------------------------------------------
@@ -1021,34 +1001,6 @@ def CheckFortran(context):
 	return is_ok
 	
 #----------------
-# Address Sanitizer
-
-asan_test_text = """
-#if !defined(__has_feature)
-# error "__has_feature" not defined"
-#else
-# if !__has_feature(address_sanitizer)
-#  error "address_sanitizer is not available"
-# endif
-#endif
-int main(void){
-	return 0;
-}
-"""
-
-def CheckASan(context):
-	context.Message("Checking for AddressSanitizer... ")
-	ccf = context.env.get('CCFLAGS')
-	context.env.AppendUnique(CCFLAGS=['-O1','-g','-fsanitize=address','-fno-omit-frame-pointer'])
-	is_ok = context.TryCompile(asan_test_text,".c")
-	context.Result(is_ok)
-	if ccf is None:
-		del context.env['CCFLAGS']
-	else:
-		context.env['CCFLAGS'] = ccf	
-	return is_ok
-
-#----------------
 # SWIG
 
 import os,re
@@ -1091,7 +1043,7 @@ def CheckSwigVersion(context):
 		):
 		msg = "ok"
 		res = True
-	elif maj == 2 or maj==3:
+	elif maj == 2:
 		msg = "ok"
 		res = True
 
@@ -1177,8 +1129,6 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False,testna
 		context.Message( 'Checking for '+testname+'... ' )
 		
 	if varprefix==None:
-		if not isinstance(libname,str):
-			raise RuntimeError("varprefix must be provided, as libname is not a string")
 		varprefix = libname.upper()
 	
 	#print "LIBS is currently:",context.env.get('LIBS')
@@ -1187,10 +1137,7 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False,testna
 	if not context.env.has_key(varprefix+'_LIB') and not context.env.has_key(varprefix+'_LIBS'):
 		# if varprefix_LIB were in env, KeepContext would 
 		# have appended it already
-		if isinstance(libname,str):
-			context.env.Append(LIBS=[libname])
-		else:
-			context.env.Append(LIBS=libname)
+		context.env.Append(LIBS=[libname])
 
 	is_ok = context.TryLink(text,ext)
 	
@@ -1379,48 +1326,24 @@ def CheckDMalloc(context):
 #----------------
 # graphviz test
 
-# test graphviz agraph...
-graphviz_agraph_test_text = """
+graphviz_test_text = """
 #ifdef __WIN32__
 # include <gvc.h>
 #else
-# include <graphviz/gvc.h>
-#endif
-#ifdef WITH_CGRAPH
-# error WITH_CGRAPH is defined!
-#endif
-int main(void){
-	Agraph_t *g;
-	g = agopen("g", AGDIGRAPH);
-	return 0;
-}
-"""
-def CheckGraphVizAgraph(context):
-	return CheckExtLib(context,'gvc',graphviz_agraph_test_text,ext=".c",varprefix="GRAPHVIZ",testname="graphviz agraph")
-
-# test graphviz cgraph
-graphviz_cgraph_test_text = """
-#ifdef __WIN32__
-# include <gvc.h>
-#else
-# include <graphviz/cgraph.h>
 # include <graphviz/gvc.h>
 #endif
 int main(void){
 	Agraph_t *g;
 	GVC_t *gvc;
 	gvc = gvContext();
-	g = agopen("g", Agdirected, 0);
+	g = agopen("g", AGDIGRAPH);
 	return 0;
 }
 """
-def CheckGraphVizCgraph(context):
-	return CheckExtLib(context,['gvc','cgraph'],graphviz_cgraph_test_text,ext=".c",varprefix="GRAPHVIZ",testname="graphviz cgraph")
 
-#	GVC_t *gvc;
-#	gvc = gvContext();
+def CheckGraphViz(context):
+	return CheckExtLib(context,'graphviz',graphviz_test_text,ext=".c")
 
-# test for definition of 'boolean' in graphviz/types.h
 graphviz_boolean_test = """
 #ifdef __WIN32__
 # include <types.h>
@@ -1436,6 +1359,7 @@ int main(void){
 	return 0;
 }
 """
+
 def CheckGraphVizBoolean(context):
 	return CheckExtLib(context,'graphviz',graphviz_boolean_test,ext=".c" \
 		,testname="graphviz 'boolean' definition"
@@ -1629,7 +1553,7 @@ def CheckPythonLib(context):
 # IDA test
 
 sundials_version_major_required = 2
-sundials_version_minor_min = 4
+sundials_version_minor_min = 2
 sundials_version_minor_max = 4
 
 sundials_version_text = """
@@ -2050,21 +1974,36 @@ def CheckLatex2HTML(context):
 	return r
 
 #----------------
-# Check usable 'erf' function
+# 'lmodern' package for LaTeX available?
 
-erf_test_text = r"""
-#include <math.h>
-int main(){
-	double x = erf(0.5);
-	return 0;
-}
-"""
-def CheckErf(context):
-	context.Message("Checking for erf... ")
-	libsave=context.env.get('LIBS')
-	context.env.AppendUnique(LIBS=['m'])
-	(is_ok,output) = context.TryRun(erf_test_text,'.c')
+lmodern_test_text = r"""
+\documentclass{article}
+\usepackage{lmodern}
+\title{Cartesian closed categories and the price of eggs}
+\author{Jane Doe}
+\date{September 2012}
+\begin{document}
+   \maketitle
+   Hello world!
+\end{document}
+""";
+
+def CheckLModern(context):
+	context.Message("Checking for lmodern...")
+	b = context.env.get("DVI")
+	if not b:
+		context.Result(False)
+		return False
+	ff = context.env.get('LATEXFLAGS')
+	context.env.Append(LATEXFLAGS=['-interaction=nonstopmode','-halt-on-error'])
+	is_ok = context.TryBuild(builder=b,text=lmodern_test_text,extension=".latex")
+	print "is_ok=",is_ok
+	if ff is not None:
+		context.env['LATEXFLAGS'] = ff
+	else:
+		del context.env['LATEXFLAGS']
 	context.Result(is_ok)
+	return is_ok
 
 #----------------
 # GCC Version sniffing
@@ -2083,7 +2022,6 @@ conf = Configure(env
 		, 'CheckFortran' : CheckFortran
 		, 'CheckMath' : CheckMath
 		, 'CheckMalloc' : CheckMalloc
-		, 'CheckASan' : CheckASan
 		, 'CheckDLOpen' : CheckDLOpen
 		, 'CheckSwigVersion' : CheckSwigVersion
 		, 'CheckPythonLib' : CheckPythonLib
@@ -2091,8 +2029,8 @@ conf = Configure(env
 		, 'CheckDMalloc' : CheckDMalloc
 		, 'CheckLyx' : CheckLyx
 		, 'CheckLatex2HTML' : CheckLatex2HTML
-		, 'CheckGraphVizAgraph' : CheckGraphVizAgraph
-		, 'CheckGraphVizCgraph' : CheckGraphVizCgraph
+		, 'CheckLModern' : CheckLModern
+		, 'CheckGraphViz' : CheckGraphViz
 		, 'CheckGraphVizBoolean' : CheckGraphVizBoolean
 		, 'CheckUFSparse' : CheckUFSparse
 		, 'CheckTcl' : CheckTcl
@@ -2114,7 +2052,6 @@ conf = Configure(env
 		, 'CheckFPE' : CheckFPE
 		, 'CheckSIGINT' : CheckSIGINT
 		, 'CheckSigReset' : CheckSigReset
-		, 'CheckErf' : CheckErf
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -2161,11 +2098,6 @@ if conf.CheckCXX() is False:
 	print "You can set your C++ compiler using the CXX scons option."
 	Exit(1)
 
-if conf.CheckASan() is False:
-	conf.env['HAVE_ASAN'] = True
-else:
-	conf.env['HAVE_ASAN'] = False
-
 # stdio -- just to check that compiler is behaving
 
 if conf.CheckHeader('stdio.h') is False:
@@ -2202,12 +2134,6 @@ if conf.CheckFunc('sprintf') is False:
 	print "Didn't find sprintf";
 	Exit(1)
 
-if conf.CheckErf() is False:
-	print "Didn't find erf";
-	Exit(1)
-else:
-	conf.env['HAVE_ERF'] = True
-
 if conf.CheckFunc('strdup'):
 	conf.env['HAVE_STRDUP'] = True
 
@@ -2215,9 +2141,6 @@ if conf.CheckFunc('snprintf'):
 	conf.env['HAVE_SNPRINTF'] = True
 elif conf.CheckFunc('_snprintf'):
 	conf.env['HAVE__SNPRINTF'] = True
-
-if conf.CheckFunc('cpow'):
-	conf.env['HAVE_CPOW'] = True
 
 # attempt to support MSVCRT 7.1 on Windows
 
@@ -2357,11 +2280,10 @@ if with_dmalloc:
 # GRAPHVIZ
 
 if with_graphviz:
-	if not conf.CheckGraphVizCgraph():
-		if not conf.CheckGraphVizAgraph():
-			without_graphviz_reason = 'graphviz not found (cgraph nor agraph)'
-			with_graphviz = False
-			env['WITH_GRAPHVIZ'] = False
+	if not conf.CheckGraphViz():
+		without_graphviz_reason = 'graphviz not found'
+		with_graphviz = False
+		env['WITH_GRAPHVIZ'] = False
 	env['HAVE_GRAPHVIZ_BOOLEAN'] = conf.CheckGraphVizBoolean()		
 
 # UFSPARSE
@@ -2461,6 +2383,13 @@ if with_doc_build:
 		with_doc_build = False
 		without_doc_build_reason="unable to locate LyX"
 
+	if with_doc_build:
+		with_latex2html = conf.CheckLatex2HTML()
+
+		if conf.CheckLModern() is False:
+			with_doc_build = False
+			without_doc_build_reason="'lmodern' is not available"
+
 # TODO: -D_HPUX_SOURCE is needed
 
 # TODO: detect if dynamic libraries are possible or not
@@ -2506,7 +2435,6 @@ subst_dict = {
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
 	, '@VERSION@':version
 	, '@RELEASE@':release
-	, '@SONAME_MAJOR_INT@':soname_major_int
 	, '@DISTTAR_NAME@':env['DISTTAR_NAME']
 	, '@WEBHELPROOT@':'http://ascendwiki.cheme.cmu.edu/Category:Documentation'
 	, '@SHLIBSUFFIX@':env['SHLIBSUFFIX']
@@ -2561,7 +2489,6 @@ for k,v in {
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
 		,'HAVE_C99FPE':env.get('HAVE_C99FPE')
 		,'HAVE_IEEE':env.get('HAVE_IEEE')
-		,'HAVE_ERF':env.get('HAVE_ERF')
 		,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
 		,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY')
@@ -2791,7 +2718,6 @@ else:
 # EXTERNAL SOLVERS
 
 env['extfns']=[]
-env['BUILDING_ASCEND'] = 1
 
 env.SConscript(['solvers/SConscript'],'env')
 
@@ -2960,15 +2886,11 @@ env.Append(
 		,r"ascend/utilities/config\.h$", r"pygtk/config\.h$", r"pygtk/config\.py$"
 		,r"pygtk/ascdev$", r"ascxx/testconopt$", r"ascend/compiler/scanner\.c$"
 		,r"datareader/.*TY\.csv$"
-		,r"[a-z]+/.*/.*\.spec$"
 		,r"ascxx/ascpy_wrap\.h",r"ascxx/config\.h$"
 		,r"tcltk/interface/ascend4$",r"ascxx/testslvreq$",r"test/test$"
 		,r"models/johnpye/datareader/.*\.tm2\.Z$"
 		,r"models/johnpye/fprops/[a-z][a-z0-9]+(.*\.exe)?$" # FPROPS test executables
 		,r"fprops/fluids/fluids_list\.h$" # FPROPS fluids list
-		,r"fprops/test/ph$"
-		,r"fprops/test/sat$"
-		,r"fprops/test/sat1$"
 	]
 )
 

@@ -14,7 +14,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	ASCEND lexer
 
@@ -28,29 +30,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "../general/platform.h"
-#include "../general/ascMalloc.h"
-#include "../general/config.h"
-#include "../compiler/compiler.h"
-
-/* everything between here and the next comment is only here... */
-#include "../compiler/fractions.h"
-#include "../compiler/dimen.h"
-#include "../compiler/functype.h"
-#include "../compiler/func.h"
-#include "../compiler/expr_types.h"
-#include "../compiler/stattypes.h"
-#include "../compiler/fractions.h"
-#include "../compiler/proc.h"
-/* ...because ascParse.h has a nasty union we can't digest without them. */
-#include "../compiler/ascParse.h"
-
+#include "ascend/general/platform.h"
+#include "ascend/general/ascMalloc.h"
+#include "ascend/compiler/compiler.h"
+/* everything between here and the next comment is only here */
+#include "ascend/compiler/fractions.h"
+#include "ascend/compiler/dimen.h"
+#include "ascend/compiler/functype.h"
+#include "ascend/compiler/func.h"
+#include "ascend/compiler/expr_types.h"
+#include "ascend/compiler/stattypes.h"
+#include "ascend/compiler/fractions.h"
+#include "ascend/compiler/proc.h"
+/* because ascParse.h has a nasty union we can't digest without them. */
+#include "ascend/compiler/ascParse.h"
 /* these below we actually need */
-#include "../general/list.h"
-#include "../compiler/module.h"
-#include "../compiler/scanner.h"
-#include "../compiler/symtab.h"
-#include "../compiler/parser.h"
+#include "ascend/general/list.h"
+#include "ascend/compiler/module.h"
+#include "ascend/compiler/scanner.h"
+#include "ascend/compiler/symtab.h"
+#include "ascend/compiler/parser.h"
 
 #define YY_BREAK
 /*  Defining yybreak as above means that all of our matches must end
@@ -266,6 +265,11 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"SIZE"			{ return SIZE_TOK			; }
 <INITIAL>"SOLVE"		{ return SOLVE_TOK		; }
 <INITIAL>"SOLVER"		{ return SOLVER_TOK		; }
+<INITIAL>"ISINTEGRATOR"		{ return ISINTEGRATOR_TOK	; }
+<INITIAL>"INTEGRATE"		{ return INTEGRATE_TOK		; }
+<INITIAL>"STEPS"		{ return STEPS_TOK		; }
+<INITIAL>"TO"			{ return TO_TOK		; }
+<INITIAL>"SUBSOLVER"		{ return SUBSOLVER_TOK		; }
 <INITIAL>"SWITCH"		{ return SWITCH_TOK		; }
 <INITIAL>"STOP"			{ return STOP_TOK			; }
 <INITIAL>"THEN"			{ return THEN_TOK			; }
@@ -834,7 +838,7 @@ Asc_ScannerPushBuffer(CONST char *filename)
   if( status == 5 ) {
     /* already required */
     RequireIndex--;
-    /*CONSOLE_DEBUG("REQUIREd module \"%s\" already PROVIDEd", filename);*/
+    CONSOLE_DEBUG("REQUIREd module \"%s\" already PROVIDEd", filename);
     return 1;
   }
   if( status == 4 ) {

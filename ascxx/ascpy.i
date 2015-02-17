@@ -35,7 +35,9 @@
 #include "incidencematrix.h"
 #include "registry.h"
 #include "annotation.h"
-
+#include "simulation.h"
+#include "container.h"
+#include "ascxxset.h"
 extern "C"{
 #include <ascend/compiler/importhandler.h>
 #include <ascend/general/ascMalloc.h>
@@ -105,21 +107,21 @@ public:
 }
 
 
-%template(ModuleVector) std::vector<Module>;
-%template(TypeVector) std::vector<Type>;
-%template(MethodVector) std::vector<Method>;
-%template(InstancVector) std::vector<Instanc>;
-%template(ExtMethodVector) std::vector<ExtMethod>;
-%template(SetInt) ASCXX_Set<long>;
-%template(SetString) ASCXX_Set<SymChar>;
-%template(DoubleVector) std::vector<double>;
-%template(IntVector) std::vector<int>;
-%template(CurveVector) std::vector<Curve>;
-%template(StringVector) std::vector<std::string>;
-%template(IntStringMap) std::map<int,std::string>;
-%template(AnnotationVector) std::vector<Annotation>;
-%template(UnitsVector) std::vector<UnitsM>;
-%template(TypeSet) std::set<Type>;
+//%template(ModuleVector) std::vector<Module>;
+//%template(TypeVector) std::vector<Type>;
+//%template(MethodVector) std::vector<Method>;
+//%template(InstancVector) std::vector<Instanc>;
+//%template(ExtMethodVector) std::vector<ExtMethod>;
+//%template(SetInt) ASCXX_Set<long>;
+//%template(SetString) ASCXX_Set<SymChar>;
+//%template(DoubleVector) std::vector<double>;
+//%template(IntVector) std::vector<int>;
+//%template(CurveVector) std::vector<Curve>;
+//%template(StringVector) std::vector<std::string>;
+//%template(IntStringMap) std::map<int,std::string>;
+//%template(AnnotationVector) std::vector<Annotation>;
+//%template(UnitsVector) std::vector<UnitsM>;
+//%template(TypeSet) std::set<Type>;
 
 %rename(Instance) Instanc;
 %rename(Name) Nam;
@@ -396,7 +398,7 @@ public:
 	void setBoolValue(const bool &val);
 	void setIntValue(const long &val);
 	void setSymbolValue(const SymChar &sym);
-	void write(const char *fname);
+	void write(FILE *fp);
 
 	const InstanceStatus getStatus() const;
 
@@ -563,4 +565,8 @@ void shutdown(){
 %ignore Curve::Curve();
 
 %include "curve.h"
+
+%include "container.h"
+
+%include "ascxxset.h"
 

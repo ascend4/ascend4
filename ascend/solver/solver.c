@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	Solver API for ASCEND, for solving NLA, LP, NLP, MINLP problems (anything
@@ -247,8 +249,8 @@ int SlvRegisterStandardClients(void){
 	for(i=0; slv_reg[i].importname!=NULL;++i){
 		error = package_load(slv_reg[i].importname,NULL);
 		if(error){
-			ERROR_REPORTER_HERE(ASC_PROG_NOTE
-				,"Unable to register solver '%s' (error %d).\n"
+			ERROR_REPORTER_HERE(ASC_PROG_ERR
+				,"Unable to register solver '%s' (error %d)."
 				,slv_reg[i].importname,error
 			);
 		}else{

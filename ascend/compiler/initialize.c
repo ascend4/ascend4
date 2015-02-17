@@ -14,7 +14,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	Initialization Routines (Support for running METHODs in ASCEND).
 *//*
@@ -372,6 +374,69 @@ ExecuteInitSolver(struct procFrame *fm, struct Statement *stat){
 		fm->ErrNo = Proc_all_ok;
 	}
 	/*CONSOLE_DEBUG("Solver set to %s, OK",stat->v.solver.name);*/
+}
+
+static void 
+ExecuteInitIntegrate(struct procFrame *fm, struct Statement *stat){
+	struct value_t from,to,steps;
+	assert(GetEvaluationContext()==NULL);
+	SetEvaluationContext(fm->i);
+	from = EvaluateExpr(stat->v.intg.from,NULL,InstanceEvaluateName);
+	to = EvaluateExpr(stat->v.intg.to,NULL,InstanceEvaluateName);
+	steps = EvaluateExpr(stat->v.intg.steps,NULL,InstanceEvaluateName);
+	SetEvaluationContext(NULL);
+
+	//check types
+	if(ValueKind(from) != real_value 
+		|| ValueKind(to) != real_value
+		|| ValueKind(steps) != real_value){
+		fm->flow = FrameError;
+		fm->ErrNo = Proc_slvreq_integrate_error;
+		ProcWriteSlvReqError(fm);
+		DestroyValue(&from);
+		DestroyValue(&to);
+		DestroyValue(&steps);
+		return;
+	}
+
+	CONST char *integratorname = stat->v.intg.name;
+	int res;
+	res = slvreq_set_integrator(fm->i, integratorname, from.u.r.value, to.u.r.value, steps.u.r.value);
+
+	DestroyValue(&from);
+	DestroyValue(&to);
+	DestroyValue(&steps);
+
+	if(res){
+		switch(res){
+			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
+			case SLVREQ_SOLVER_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
+			case SLVREQ_UNKNOWN_SOLVER: fm->ErrNo = Proc_slvreq_unknown_solver; break;
+		}
+		ProcWriteSlvReqError(fm);
+		return;
+	}else{
+		fm->ErrNo = Proc_all_ok;
+	}	
+}
+
+static void 
+ExecuteInitSubSolver(struct procFrame *fm, struct Statement *stat){
+	int res;
+	CONST char *solvername = stat->v.solver.name;
+	assert(fm->i!=NULL);
+	res = slvreq_set_sub_solver(fm->i, solvername);
+	if(res){
+		switch(res){
+			case SLVREQ_NOT_IMPLEMENTED: fm->ErrNo = Proc_slvreq_not_implemented; break;
+			case SLVREQ_SOLVER_HOOK_NOT_SET: fm->ErrNo = Proc_slvreq_unhooked; break;
+			case SLVREQ_UNKNOWN_SOLVER: fm->ErrNo = Proc_slvreq_unknown_solver; break;
+		}
+		ProcWriteSlvReqError(fm);
+		return;
+	}else{
+		fm->ErrNo = Proc_all_ok;
+	}
 }
 
 static void
@@ -1625,6 +1690,36 @@ void ExecuteInitAsgn(struct procFrame *fm, struct Statement *stat)
   return /* Proc_all_ok */;
 }
 
+/**
+
+	DS: Find instances: Make sure at least one thing is found for each name item
+	on list (else returned list will be NULL) and return the collected instances.
+*/
+static
+struct gl_list_t *FindInsts(struct Instance *inst,
+                            CONST struct VariableList *list,
+                            enum find_errors *err)
+{
+  struct gl_list_t *result,*temp;
+  unsigned c,len;
+  result = gl_create(7L);
+  while(list!=NULL){
+    temp = FindInstances(inst,NamePointer(list),err);
+    if (temp==NULL){
+      gl_destroy(result);
+      return NULL;
+    }
+    len = gl_length(temp);
+    for(c=1;c<=len;c++) {
+      gl_append_ptr(result,gl_fetch(temp,c));
+    }
+    gl_destroy(temp);
+    list = NextVariableNode(list);
+  }
+  return result;
+}
+
+
 /*DS : Implement Non-declarative LINK statement here*/
 static void ExecuteInitLnk(struct procFrame *fm, struct Statement *stat){
 	//printf("\nDS: ExecuteInitLnk called\n");
@@ -1715,6 +1810,12 @@ void ExecuteInitStatement(struct procFrame *fm, struct Statement *stat)
 	break;
   case SOLVE:
     ExecuteInitSolve(fm,stat);
+	break;
+  case INTEGRATE:
+	ExecuteInitIntegrate(fm,stat);
+	break;
+  case SUBSOLVER:
+	ExecuteInitSubSolver(fm,stat);
 	break;
   case FLOW:
     ExecuteInitFlow(fm);
@@ -1906,7 +2007,7 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
   SetDeclarativeContext(1); /* set up for procedural processing */
   InstanceNamePart(name,&instname,&procname);
 
-#if 0
+#ifdef INIT_DEBUG
   if(procname){
     CONSOLE_DEBUG("Procname = %s",SCP(procname));
   }
@@ -1964,7 +2065,7 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
             } /* else was a c-like RETURN;. don't pass upward */
             break;
           }
-#if 0
+#ifdef INIT_DEBUG
           CONSOLE_DEBUG("Destroying frame...");
 #endif
           DestroyProcFrame(newfm);

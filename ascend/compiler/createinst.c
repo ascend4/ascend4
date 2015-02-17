@@ -24,7 +24,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
+ *
  */
 #include <stdarg.h>
 #include <ascend/general/platform.h>
@@ -73,6 +76,10 @@
 #include "linkinst.h"
 #include "instmacro.h"
 #include "instquery.h"
+
+#ifndef lint
+static CONST char CreateInstModuleID[] = "$Id: createinst.c,v 1.19 1998/03/26 20:39:41 ballan Exp $";
+#endif
 
 void ZeroNewChildrenEntries(register struct Instance **child_ary,
 			    register unsigned long int num)

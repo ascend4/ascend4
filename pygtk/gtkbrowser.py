@@ -1,3 +1,4 @@
+import sys
 try:
 	import loading
 	#loading.print_status("Loading PSYCO")
@@ -13,6 +14,7 @@ try:
 	import pygtk 
 	pygtk.require('2.0') 
 	import gtk
+		
 	import gtkexcepthook
 
 	import re
@@ -20,7 +22,6 @@ try:
 	import optparse
 	import platform
 	import sys
-	import os
 
 	if platform.system() != "Windows":
 		try:
@@ -35,8 +36,11 @@ try:
 		# ascend library are made available to libraries dlopened within ASCEND:
 		sys.setdlopenflags(_dlflags)
 
+
+
 	loading.print_status("Loading LIBASCEND/ascpy")
 	import ascpy
+	import os.path
 
 	loading.print_status("Loading PyGTK, pango")
 
@@ -116,10 +120,7 @@ class Browser:
 	def __init__(self,librarypath=None,assetspath=None):
 
 		if assetspath==None:
-			if platform.system()=="Windows":
-				assetspath=os.path.normpath(os.path.join(os.path.dirname(__file__),"..","glade")) 
-			else:
-				assetspath=config.PYGTK_ASSETS
+			assetspath=config.PYGTK_ASSETS
 
 		#--------
 		# load the file referenced in the command line, if any
@@ -161,18 +162,8 @@ class Browser:
 			,default=True
 		)
 
-		parser.add_option("-t", "--test"
-			,action="store", type="string", dest="test"
-			,help="load a model and run contained tests without GUI")		
-
 		(self.options, args) = parser.parse_args()
 
-		if len(args)>=1:
-			if os.path.isfile(args[0])==False:
-				error = '\033[91mERROR : %s is not a file\033[0m'%args[0]
-				print error
-				sys.exit()
-		
 		#print "OPTIONS_______________:",self.options
 
 		self.assets_dir = self.options.assets_dir
@@ -188,6 +179,7 @@ class Browser:
 		loading.print_status("Loading preferences")
 
 		self.prefs = Preferences()
+
 		_prefpath = self.prefs.getStringPref("Directories","librarypath",None)
 		_preffileopenpath = self.prefs.getStringPref("Directories","fileopenpath",None)
 		self.filename = None
@@ -240,23 +232,10 @@ class Browser:
 		self.library = ascpy.Library(str(_path))
 
 		self.sim = None
-	
-		#--------
-		# report absence of solvers if nec.
-
-		if not len(ascpy.getSolvers()):
-			print "NO SOLVERS LOADED!"
-			self.reporter.reportError( "No solvers were loaded! ASCEND is probably not configured correctly." )
-
-		#--test option
-		if self.options.test:
-			print '================================================================================'
-			print 'IN TEST'
-			self.test()
-			return
 
 		#-------------------
 		# Set up the window and main widget actions
+
 		self.glade_file = os.path.join(self.assets_dir,config.GLADE_FILE)
 
 		loading.print_status("Setting up windows") #,"GLADE_FILE = %s" % self.glade_file)
@@ -539,6 +518,7 @@ class Browser:
 
 		#--------
 		# options
+
 		if(len(args)==1):
 			try:
 				self.do_open(args[0])
@@ -581,6 +561,13 @@ class Browser:
 							%(_model, str(e))
 						);		
 
+
+		#--------
+		# report absence of solvers if nec.
+
+		if not len(ascpy.getSolvers()):
+			print "NO SOLVERS LOADED!"
+			self.reporter.reportError( "No solvers were loaded! ASCEND is probably not configured correctly." )
 	
 		#--------
 		# IPython console, if available
@@ -598,27 +585,11 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			)
 
 	def run(self):
-		if not self.options.test:
-			#self.window.show()
-			loading.print_status("ASCEND is now running")
-			loading.complete()
-			if self.prefs.getStringPref('Browser','first_run') == None:
-				self.prefs.setStringPref('Browser','first_run',time.time())
-			else:
-				time_now = time.time()
-				first_run_time = float(self.prefs.getStringPref('Browser','first_run'))
-				if ((time_now-first_run_time)/(3600*24)) >= 7:
-					self.auto_update_check()
-			gtk.main()
-
-	def test(self):
-		print sys.argv[1]
-		print sys.argv[3]
-		if len(sys.argv)==4:
-			ascpy.test_model(str(sys.argv[1]),str(sys.argv[3]))
-		#Call the function at the SWIG API level that runs all the tests and pass to it, the *args
-		#ascpy is accessible here
-
+		#self.window.show()
+		loading.print_status("ASCEND is now running")
+		loading.complete()
+		self.auto_update_check()
+		gtk.main()
 
 #   ------------------
 #   SOLVER LIST
@@ -704,8 +675,6 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.modelview.clear()
 		self.currentobservertab = None
 		for _obs in self.observers:
-			if _obs.alive == False:
-				_obs.reloaded = True
 			_obs.set_dead()
 		# self.library.clear()
 		#print "Filename =",filename
@@ -840,7 +809,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.start_waiting("Solving with %s..." % self.solver.getName())
 
 		if self.prefs.getBoolPref("SolverReporter","show_popup",True):
-			reporter = PopupSolverReporter(self,self.sim)
+			reporter = PopupSolverReporter(self,self.sim.getNumVars())
 		else:
 			reporter = SimpleSolverReporter(self)
 
@@ -862,11 +831,6 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		except RuntimeError,e:
 			self.reporter.reportError("Couldn't build system: %s",str(e))
 			return
-		integrator = ascpy.Integrator(self.sim)	
-		try:
-			integrator.findIndependentVar()
-		except RuntimeError,e:
-			self.reporter.reportNote(str(e))
 
 		integwin = IntegratorWindow(self,self.sim)		
 		_integratorreporter = integwin.run()
@@ -987,24 +951,28 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def on_tools_incidencegraph_click(self,*args):
 		self.reporter.reportNote("Preparing incidence graph...")
-		fname = os.tempnam()
+		import tempfile
+		f,fname = tempfile.mkstemp(suffix=".png")
+		f = file(fname,'wb')
+		self.reporter.reportNote("temp file name = %s" % fname)
+		self.reporter.reportNote("file = %s" % f)
 		self.start_waiting("Creating incidence graph...")
 		try:
-			self.sim.write(fname,'dot') # create a PNG file in f
+			self.sim.write(f,'dot') # create a PNG file in f
 		except Exception,e:
 			self.stop_waiting()
 			self.reporter.reportError("Failed to create incidence graph: %s" % str(e))
 			return
+		f.close()
 		self.stop_waiting()
 		_ig = ImageWindow(self, self.window, fname, title="Incidence Graph", delete=True)
 		_ig.run()
-		self.reporter.reportNote("Deleted temporary file")
 
 	def on_tools_repaint_tree_activate(self,*args):
 		self.reporter.reportNote("Repainting model view...")
 		self.modelview.refreshtree()
 
-	def on_diagnose_blocks_activate(self,*args):
+	def on_diagnose_blocks_click(self,*args):
 		try:
 			_bl = self.sim.getActiveBlock()
 			_db = DiagnoseWindow(self,_bl)
@@ -1046,6 +1014,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 	def on_show_solving_popup_toggle(self,checkmenuitem,*args):
 		_v = checkmenuitem.get_active()
 		self.prefs.setBoolPref("SolverReporter","show_popup",_v)
+		print "SET TO",_v
 		
 	def on_close_on_converged_toggle(self,checkmenuitem,*args):
 		_v = checkmenuitem.get_active()
@@ -1205,7 +1174,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				self.do_open( _filename)
 			except RuntimeError,e:
 				self.reporter.reportError(str(e))
-
+	
 	def on_reloadwarn_toggled(self,*args):
 		self.prefs.setBoolPref("Browser","warn_on_reload",self.reloadwarn.get_active())
 
@@ -1299,7 +1268,6 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		#	self.reporter.reportSuccess("Auto mode is now OFF")
 
 	def on_file_quit_click(self,*args):
-		#self.exit_popup()
 		self.do_quit()
 
 	def on_tools_auto_toggle(self,checkmenuitem,*args):
@@ -1487,22 +1455,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			_o.sync()
 	
 	def delete_event(self, widget, event):
-		self.do_quit()
+		self.do_quit()	
 		return False
-		#return self.exit_popup()
-
-	def exit_popup(self):
-		dialog = gtk.MessageDialog(self.window, gtk.DIALOG_MODAL, gtk.MESSAGE_INFO,
-				gtk.BUTTONS_YES_NO, "Are you sure you want to Quit?")
-		dialog.set_title("Exit popup")
-		#dialog.set_default_size(600,300)
-		response = dialog.run()
-		dialog.destroy()
-		if response == gtk.RESPONSE_YES:
-			self.do_quit()
-			return False
-		else:
-			return True
 
 	def observe(self,instance):
 			if self.currentobservertab is None:
@@ -1648,4 +1602,4 @@ class AutoUpdateDialog:
 			elif _res == gtk.RESPONSE_NO or _res == gtk.RESPONSE_DELETE_EVENT or _res == gtk.RESPONSE_CLOSE:
 				self.win.destroy()
 				return False
-
+	

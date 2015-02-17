@@ -22,7 +22,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
+ *
  */
 
 #include <ascend/general/platform.h>
@@ -37,6 +40,9 @@
 #include "setinstval.h"
 #include "setinst_io.h"
 
+#ifndef lint
+static CONST char ForVarRCSid[] = "$Id: forvars.c,v 1.11 1998/02/05 16:36:06 ballan Exp $";
+#endif
 #define FVMALLOC ForVarMalloc()
 
 /* LIFO forvar list. contents of forvar recycle list are only the heads,

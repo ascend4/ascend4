@@ -7,7 +7,7 @@
  *  Date last modified: $Date: 1998/01/27 11:00:21 $
  *  Last modified by: $Author: ballan $
  *
- *  This file is part of the Ascend Language Interpreter.
+ *  This file is part of the Ascend Language Interpreter.            
  *
  *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
  *
@@ -22,7 +22,9 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
  *
  *  This is the implementation of the set routines
  */
@@ -34,6 +36,8 @@
 #include <ascend/general/pool.h>
 #include <ascend/general/dstring.h>
 
+
+
 #include "functype.h"
 #include "expr_types.h"
 #include "sets.h"
@@ -43,6 +47,10 @@
 
 #ifndef TRUE
 #define TRUE 1
+#endif
+
+#ifndef lint
+static CONST char SetFuncsID[] = "$Id: sets.c,v 1.13 1998/01/27 11:00:21 ballan Exp $";
 #endif
 
 #define SETUSESPOOL TRUE

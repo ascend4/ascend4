@@ -25,7 +25,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
+ *
  */
 
 #include "arrayinst.h"
@@ -167,7 +170,7 @@ void ApplyToLeaves(struct Instance *i, AVProc func, int depth)
 }
 /*
  * It may happen that there are no leaves if the array is
- * defined over a NULL set in some portion.  So for example if
+ * defined over a NULL set in some portion.  So for example if 
  * c[8][9] IS_A real; b[1..2][4..5] ALIASES c;
  * then the instance b has 4 subscripts to the end user,
  * but the 'leaves' of b which we don't want to
@@ -246,7 +249,7 @@ int RectangleArrayExpanded(CONST struct Instance *i)
   } else {
     Asc_Panic(2, NULL,
               "Incorrect instance type passed to RectangleArrayExpanded.\n");
-
+    
   }
 }
 
@@ -305,7 +308,7 @@ struct set_t *ExtractIndices(CONST struct Instance *ai)
 
 /* return 1 if match,
  * 0 if not match,
- * and -1 if horribly mangled
+ * and -1 if horribly mangled 
  * and -2 if can't tell yet.
  */
 int RectangleSubscriptsMatch(CONST struct Instance *parent,
@@ -395,7 +398,7 @@ int RectangleSubscriptsMatch(CONST struct Instance *parent,
       if (setname != NULL) {
         /* more subscripts than children to fill them. */
         return -1;
-      }
+      } 
       /* else the including while will kick out because setname NULL,
        * then the if will pass because we force it to. it will
        * OTHERWISE fail because the IsArrayInstance would return 1.
@@ -447,7 +450,7 @@ unsigned long NextToExpand(CONST struct Instance *i)
     return 0;
   } else {
     ASC_PANIC("Incorrect instance type passed to NextToExpand.\n");
-
+    
   }
 }
 
@@ -476,7 +479,7 @@ CONST struct Set *IndexSet(CONST struct Instance *i, unsigned long int num)
     return GetIndexSet(ptr);
   } else {
     ASC_PANIC("Incorrect instance type passed to IndexSet.\n");
-
+    
   }
 }
 
@@ -818,7 +821,7 @@ struct Instance *FindOrAddIntChild(struct Instance *i, long int v,
     return NULL;
   default:
     ASC_PANIC("Wrong type passed to ForOrAddIntChild.\n");
-
+    
   }
 }
 
@@ -848,7 +851,7 @@ struct Instance *FindOrAddStrChild(struct Instance *i, symchar *sym,
     return NULL;
   default:
     ASC_PANIC("Wrong type passed to ForOrAddStrChild.\n");
-
+    
   }
 }
 

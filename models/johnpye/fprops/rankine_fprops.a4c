@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 	
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *)(*
 	A number of Rankine-cycle (steam turbine power cycle) models of increasing
 	complexity, following the general development of Moran & Shapiro, Çengel,
@@ -24,8 +26,8 @@
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 
-IMPORT "johnpye/fprops/fprops";
-(*IMPORT "sensitivity/solve";*)
+IMPORT "johnpye/fprops/helmholtz";
+IMPORT "sensitivity/solve";
 IMPORT "johnpye/extpy/extpy";
 IMPORT "johnpye/fprops/cycle_plot";
 
@@ -35,11 +37,10 @@ IMPORT "johnpye/fprops/cycle_plot";
 
 MODEL fluid;
 	component IS_A symbol_constant;
-	type IS_A symbol_constant;
 END fluid;
 
 (*
-	Thermo properties -- IAPWS-IF95
+	Thermo properties -- IAPWS-IF97
 *)
 MODEL stream_state;
 	cd IS_A fluid;
@@ -51,12 +52,12 @@ MODEL stream_state;
 	s IS_A specific_entropy;
 	x IS_A fraction;
 
-	calc_vT: fprops_phsx_vT(
+	(*calc_vT: helmholtz_phsx_vT(
 		v, T : INPUT;
 		p, h, s, x : OUTPUT;
 		cd : DATA
-	);
-	calc_ph: fprops_Tvsx_ph(
+	);*)
+	calc_ph: helmholtz_Tvsx_ph(
 		p, h : INPUT;
 		T, v, s, x : OUTPUT;
 		cd : DATA
@@ -71,7 +72,7 @@ METHOD default;
 		IF cd.component == 'carbondioxide' THEN
 			h := 350 {kJ/kg};
 		ELSE
-			h := 351 {kJ/kg};
+			h := 350 {kJ/kg};
 		END IF;
 	END IF;
 
@@ -87,14 +88,15 @@ METHOD default_self;
 END default_self;
 METHOD enable_vT;
 	FOR i IN [1..4] DO
-		calc_ph[i].included := FALSE;
-		calc_vT[i].included := TRUE;
+		(*calc_ph[i].included := FALSE;
+		calc_vT[i].included := TRUE;*)
+		calc_ph[i].included := TRUE;
 	END FOR;
 END enable_vT;
 METHOD enable_ph;
 	FOR i IN [1..4] DO
 		calc_ph[i].included := TRUE;
-		calc_vT[i].included := FALSE;
+		(*calc_vT[i].included := FALSE;*)
 	END FOR;
 END enable_ph;
 METHOD solve;
@@ -104,7 +106,6 @@ END stream_state;
 
 MODEL stream_state_test REFINES stream_state;
 	cd.component :== 'water';
-	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_all;
@@ -113,25 +114,23 @@ METHOD on_load;
 	h := 2000 {kJ/kg};
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
-END on_load;
-METHOD self_test;
+	SOLVE;
 	ASSERT abs(T - 453.03 {K}) < 0.01 {K};
 	ASSERT abs(v - 0.119808 {m^3/kg}) < 0.0001 {m^3/kg};
 	ASSERT abs(x - 0.6142) < 0.0001;
 	ASSERT abs(s - 4.8696 {kJ/kg/K}) < 0.0001 {kJ/kg/K};
-END self_test;
+END on_load;
 END	stream_state_test;
 
 
 MODEL stream_state_test_co2 REFINES stream_state;
 	cd.component :== 'carbondioxide';
-	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_all;
 	h := 350 {kJ/kg};
 	FIX p, x;
-	p := 6 {bar};
+	p := 9 {kPa};
 	x := 1e-6;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
@@ -140,8 +139,7 @@ END stream_state_test_co2;
 
 
 MODEL stream_state_test_toluene REFINES stream_state;
-	cd.component :== 'toluene';	
-	cd.type :== 'helmholtz';
+	cd.component :== 'toluene';
 METHODS
 METHOD on_load;
 	RUN default_all;
@@ -164,12 +162,14 @@ MODEL stream_node;
 	T ALIASES state.T;
 	s ALIASES state.s;
 	x ALIASES state.x;
-	mdot "param: mass flowrate" IS_A mass_rate;
+	mdot IS_A mass_rate;
 METHODS
+
 METHOD default_self;
 	RUN state.default_self;
 	RUN default;
 END default_self;
+
 METHOD default;
 	mdot.nominal := 2 {kg/s};
 END default;
@@ -182,19 +182,13 @@ METHOD on_load;
 END on_load;
 END stream_node;
 
-
 MODEL stream_equipment;
-	outlet "out: outlet stream" IS_A stream_node;
-	inlet "in: inlet stream" IS_A stream_node;
+	inlet "in: inlet steam stream" IS_A stream_node;
+	outlet "out: outlet steam stream" IS_A stream_node;
 	inlet.cd, outlet.cd ARE_THE_SAME;
 	inlet.mdot, outlet.mdot ARE_THE_SAME;
 	cd ALIASES inlet.cd;
 	mdot ALIASES inlet.mdot;
-METHODS
-METHOD default_self;
-	RUN inlet.default_self;
-	RUN outlet.default_self;
-END default_self;
 END stream_equipment;
 
 (*------------------------------------------------------------------------------
@@ -203,25 +197,17 @@ END stream_equipment;
 
 MODEL pump_simple REFINES stream_equipment;
 	NOTES
-		'block' SELF {Simple model of a compressor using isentropic efficiency}
-		'icon' SELF {Pump}
-		'graphic' SELF {0,0-0,10-10,6-10,4-0,0
-						1,0.4-1,9.6
-						9,3.6-9,6.4	}
-		'port_in' SELF {inlet:0,5}
-		'port_out' SELF {outlet:10,5}
+		'block' SELF {Simple model of a pump using isentropic efficiency}
 	END NOTES;
 
-	dp "param: it is in fixed state = 20{atm}" IS_A delta_pressure;
-	
+	dp IS_A delta_pressure;
 	inlet.p + dp = outlet.p;
 
 	outlet_is IS_A stream_state;
 	outlet_is.p, outlet.p ARE_THE_SAME;
 	outlet_is.cd, outlet.cd ARE_THE_SAME;
 	outlet_is.s, inlet.s ARE_THE_SAME;
-	eta "param: efficiency of the pump/compressor" IS_A fraction;
-	
+	eta IS_A fraction;
 	
 	eta_eq:eta * (inlet.h - outlet.h) = (inlet.h - outlet_is.h);
 
@@ -266,13 +252,9 @@ END pump_simple_test;
 MODEL turbine_simple REFINES stream_equipment;
 	NOTES
 		'block' SELF {Simple turbine model}
-		'graphic' SELF {10,0-10,10-0,8-0,2-10,0}
-		'port_in' SELF {inlet:3.34,1.332}
-		'port_out' SELF {outlet:6.67,0.667}
 	END NOTES;
 
-	
-	dp "param: pressure drop, default value = [10{atm}]"  IS_A delta_pressure;
+	dp IS_A delta_pressure;
 	inlet.p + dp = outlet.p;
 	
 	outlet_is IS_A stream_state;
@@ -280,7 +262,7 @@ MODEL turbine_simple REFINES stream_equipment;
 	outlet_is.p, outlet.p ARE_THE_SAME;
 	outlet_is.s, inlet.s ARE_THE_SAME;
 
-	eta "param: efficiency of turbine" IS_A fraction;
+	eta IS_A fraction;
 	eta_eq:eta * (inlet.h - outlet_is.h) = (inlet.h - outlet.h);
 	
 	(* work done on the environment, will be positive *)
@@ -327,7 +309,6 @@ END turbine_simple_test;
 MODEL boiler_simple REFINES stream_equipment;
 	NOTES
 		'block' SELF {Simple boiler model}
-		'graphic' SELF {0,0-10,0-10,10-0,10-0,0}
 	END NOTES;
 
 	inlet.p, outlet.p ARE_THE_SAME;
@@ -336,10 +317,10 @@ MODEL boiler_simple REFINES stream_equipment;
 	q IS_A specific_energy;
 	q = (outlet.h - inlet.h);
 
-	Qdot "param: energy rate" IS_A energy_rate;
-	heateqn: Qdot = mdot * q;
+	Qdot IS_A energy_rate;
+	Qdot = mdot * q;
 
-	eta "param: efficiency of boiler" IS_A fraction;
+	eta IS_A fraction;
 	Qdot = eta * Qdot_fuel;
 METHODS
 METHOD default_self;
@@ -377,10 +358,8 @@ END boiler_simple_test;
 *)
 MODEL condenser_simple REFINES stream_equipment;
 	NOTES
-		'block' SELF {Condenser}
-		'icon' SELF {Condenser}
-		'graphic' SELF {0,0-10,0-10,10-0,10-0,0
-						0,5-1.5,5-2,6-3,4-4,6-5,4-6,6-7,4-8,6-8.5,5-10,5}
+		'block' SELF {Simple condenser model}
+		'inline' inlet {in: yahoooo}
 	END NOTES;
 
 	inlet.p, outlet.p ARE_THE_SAME;
@@ -420,10 +399,7 @@ END condenser_simple_test;
 *)
 MODEL heater_open;
 	NOTES
-		'block' SELF {Simple open feedwater heater}
-		'port_in' SELF {inlet:0,5-inlet_heat:5,0}
-		'port_out' SELF {outlet:10,5}
-		'graphic' SELF {0,0-10,0-10,10-0,10-0,0}
+		'block' SELF {Simple open feedwater heater model}
 	END NOTES;
 
 	inlet "in:" IS_A stream_node;
@@ -469,10 +445,7 @@ END heater_open_test;
 
 MODEL heater_open2;
 	NOTES
-		'block' SELF {Two-heat-inlet open feedwater heater}
-		'port_in' SELF {inlet:0,5-inlet_heat1:3.33,0-inlet_heat2:6.66,0}
-		'port_out' SELF {outlet:10,5}
-		'graphic' SELF {0,0-10,0-10,10-0,10-0,0}
+		'block' SELF {Simple open feedwater heater model}
 	END NOTES;
 
 	inlet "in:" IS_A stream_node;
@@ -500,16 +473,13 @@ END heater_open2;
 
 MODEL heater_closed;
 	NOTES
-		'block' SELF {Closed feedwater heater model (heat exchanger)}
-		'port_in' SELF {inlet:0,5-inlet_heat:5,0}
-		'port_out' SELF {outlet:10,3.33-outlet_heat:10,6.66}
-		'graphic' SELF {0,0-10,0-10,10-0,10-0,0}
+		'block' SELF {Simple open feedwater heater model}
 	END NOTES;
 
 	inlet "in:" IS_A stream_node;
 	inlet_heat "in:" IS_A stream_node;
-	outlet_heat "out:" IS_A stream_node;
 	outlet "out:" IS_A stream_node;
+	outlet_heat "out:" IS_A stream_node;
 	
 	inlet.cd, outlet.cd ARE_THE_SAME;
 	inlet_heat.cd, outlet_heat.cd ARE_THE_SAME;
@@ -523,6 +493,7 @@ MODEL heater_closed;
 	
 	q IS_A specific_energy;
 	Qdot = q * inlet.mdot;
+
 	(* cons. mass *)
 	cons_mass: inlet.mdot = outlet.mdot;
 	cons_mass_heat: inlet_heat.mdot = outlet_heat.mdot;
@@ -575,9 +546,7 @@ END heater_closed_test;
 *)
 MODEL tee;
 	NOTES
-		'block' SELF {Tee piece: branching of flow}
-		'graphic' SELF {0,5-10,3.33-10,6.66-0,5}
-		'port_out' SELF {outlet:10,3.33-outlet_branch:10,6.66}
+		'block' SELF {Model of a branching of two flow streams}
 	END NOTES;
 
 	inlet "in:" IS_A stream_node;
@@ -595,57 +564,8 @@ MODEL tee;
 
 	phi IS_A fraction;
 	phi_eq: phi * inlet.mdot = outlet_branch.mdot;
-METHODS
-METHOD disable_cons_mass;
-	cons_mass.included := FALSE;
-END disable_cons_mass;
-METHOD enable_cons_mass;
-	cons_mass.included := TRUE;
-END enable_cons_mass;
-METHOD default_self;
-	RUN inlet.default_self;
-	RUN outlet.default_self;
-	RUN outlet_branch.default_self;
-END default_self;	
+
 END tee;	
-
-(*------------------------------------------------------------------------------
-  MERGE PIECE
-*)
-
-(*
-	Joining two streams
-*)
-MODEL merge;
-	NOTES
-		'block' SELF {Model of a joining of two flow streams}
-	END NOTES;
-
-	inlet "in:" IS_A stream_node;
-	inlet_branch "in:" IS_A stream_node;
-	outlet "out:" IS_A stream_node;
-
-	inlet.cd, inlet_branch.cd, outlet.cd ARE_THE_SAME;
-	cd ALIASES inlet.cd;
-
-	inlet.p, inlet_branch.p, outlet.p ARE_THE_SAME;
-	(*inlet.h, inlet_branch.h, outlet.h  ARE_THE_SAME;*)
-
-	(* cons. mass *)
-	cons_mass: inlet.mdot + inlet_branch.mdot= outlet.mdot;
-	
-	(* cons. energy*)
-	cons_energy: inlet.mdot*inlet.h+inlet_branch.mdot*inlet_branch.h= outlet.mdot*outlet.h;
-
-	phi IS_A fraction;
-	phi_eq: phi * outlet.mdot = inlet_branch.mdot;
-METHODS
-METHOD default_self;
-	RUN inlet.default_self;
-	RUN outlet.default_self;
-	RUN inlet_branch.default_self;
-END default_self;
-END merge;	
 
 (*------------------------------------------------------------------------------
   OVERALL CYCLE
@@ -700,7 +620,6 @@ END rankine_common;
 
 MODEL rankine_water REFINES rankine_common;
 	cd.component :== 'water';
-	cd.type :== 'helmholtz';
 METHODS
 (* first test case: just some plausible values *)
 METHOD on_load;
@@ -774,14 +693,13 @@ METHOD default_self;
 	RUN rankine_common::default_self;
 	BO.outlet.h := 3000 {kJ/kg}; (* guess *)
 	TU.outlet.h := 3000 {kJ/kg}; (* guess *)
-	CO.outlet.h := 300 {kJ/kg};
+	CO.outlet.h := 200 {kJ/kg};
 	CO.outlet.p := 10 {kPa};
 END default_self;
 END rankine_water;
 
 MODEL rankine_co2 REFINES rankine_common;
 	cd.component :== 'carbondioxide';
-	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load_1;
 	RUN ClearAll;
@@ -827,7 +745,6 @@ END rankine_co2;
 
 MODEL rankine_toluene REFINES rankine_common;
 	cd.component :== 'toluene';
-	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN ClearAll;
@@ -862,7 +779,6 @@ END rankine_toluene;
 
 MODEL rankine_ammonia REFINES rankine_common;
 	cd.component :== 'ammonia';
-	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN ClearAll;
@@ -905,7 +821,6 @@ MODEL rankine_reheat_common;
 	TU2 IS_A turbine_simple;
 	CO IS_A condenser_simple;
 	PU IS_A pump_simple;
-	cd ALIASES BO1.cd;
 
 	BO1.outlet, TU1.inlet ARE_THE_SAME;
 	TU1.outlet, BO2.inlet ARE_THE_SAME;
@@ -941,45 +856,35 @@ METHOD default_self;
 	RUN CO.default_self;
 	RUN PU.default_self;
 END default_self;
-METHOD cycle_plot;
-	EXTERNAL cycle_plot_rankine_reheat(SELF);
-END cycle_plot;
 END rankine_reheat_common;
 
 (*
-	A model for a reheat Rankine cycle with water as the working fluid.
+	A model for Rankine cycle with water as the working fluid
 *)
 MODEL rankine_reheat_water REFINES rankine_reheat_common;
-	cd.component :== 'water';
-	cd.type :== 'helmholtz';
+	BO1.cd.component :== 'water';
 METHODS
 METHOD on_load;
 	RUN default_self;
 	RUN cengel_ex_10_4;
-	(* make the default case slightly more realistic than the Cengel example *)
-	FIX TU1.eta := 0.9;
-	FIX TU2.eta := 0.9;
-	FIX PU.eta := 0.8;
-	FIX TU1.inlet.T := 500 {K} + 273.15 {K};
-	FIX BO2.outlet.T := TU1.inlet.T;
 END on_load;
 METHOD cengel_ex_10_4;
 	(* This example 10.4 from Cengel & Boles, 2011, 'Thermodynamics: An
 	Engineering Approach', 7th Ed., McGraw-Hill. *)
 	RUN ClearAll;
 	RUN default_self;
-	FIX BO1.eta := 1.0;
-	FIX TU1.eta := 1.0;
-	FIX TU2.eta := 1.0;
-	FIX PU.eta := 1.0;
+	FIX BO1.eta; BO1.eta := 1.0;
+	FIX TU1.eta; TU1.eta := 1.0;
+	FIX TU2.eta; TU2.eta := 1.0;
+	FIX PU.eta; PU.eta := 1.0;
 
-	FIX TU1.inlet.p := 15 {MPa};
-	FIX TU1.inlet.T := (600 {K} + 273.15 {K});
-	FIX BO2.outlet.T := TU1.inlet.T;
-	FIX TU2.outlet.x := 0.896;
-	FIX CO.inlet.p := 10 {kPa};
-	FIX CO.outlet.x := 1e-6;
-	FIX mdot := 1 {kg/s};
+	FIX TU1.inlet.p; TU1.inlet.p := 15 {MPa};
+	FIX TU1.inlet.T; TU1.inlet.T := (600 {K} + 273.15 {K});
+	FIX BO2.outlet.T; BO2.outlet.T := TU1.inlet.T;
+	FIX TU2.outlet.x; TU2.outlet.x := 0.896;
+	FIX CO.inlet.p; CO.inlet.p := 10 {kPa};
+	FIX CO.outlet.x; CO.outlet.x := 1e-6;
+	FIX mdot; mdot := 1 {kg/s};
 END cengel_ex_10_4;
 METHOD self_test_cengel;
 	ASSERT abs(TU2.outlet.s -7.3688 {kJ/kg/K}) < 0.0001 {kJ/kg/K};

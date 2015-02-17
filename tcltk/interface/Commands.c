@@ -22,7 +22,9 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.  COPYING is found in ../compiler.
  */
 
 #define KILLBDAG 0
@@ -906,7 +908,7 @@ void Asc_CreateCommands(Tcl_Interp *interp)
   );
 #endif /* DELETEME */
 
-#if 0
+#if 0 
   ASCADDCOM(interp,"solve",Asc_SolvCurInst,
     "solver",
     NULL,

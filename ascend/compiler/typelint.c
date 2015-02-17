@@ -22,7 +22,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
  */
 
 #include <math.h>
@@ -901,8 +903,11 @@ TypeLintIllegalMethodStatList(FILE *fp,
     case FREE:
     case CALL:
     case SOLVER:
+    case SUBSOLVER:
     case OPTION:
     case SOLVE:
+    case INTEGRATOR:
+    case INTEGRATE:
       break;
     case WHILE:
       if (WhileStatBlock(s) != NULL) {

@@ -21,8 +21,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License along
+ *  with the program; if not, write to the Free Software Foundation, Inc., 675
+ *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
 /** @file
@@ -115,6 +116,9 @@ enum stat_t {
   SOLVER,       /**< SOLVER statement */
   OPTION,       /**< OPTION statement */
   SOLVE,        /**< SOLVE statement */
+  SUBSOLVER,
+  INTEGRATOR,
+  INTEGRATE,
   SELECT,       /**< SELECT statement */
   SWITCH,       /**< SWITCH statement */
   WHILE,        /**< WHILE statement */
@@ -383,6 +387,14 @@ struct StateWhile {
   struct StatementList *block;
 };
 
+/** used for INTEGRATE statement */
+struct StateINTEGRATE{
+  CONST char *name; /**< name of the solver being requested */
+  struct Expr *from;
+  struct Expr *to;
+  struct Expr *steps;
+ };
+
 /** used for SOLVER statement */
 struct StateSOLVER{
   CONST char *name; /**< name of the solver being requested */
@@ -457,6 +469,7 @@ union StateUnion {
   struct StateSOLVER     solver;
   struct StateOPTION     option;
   struct StateLINK	     lnk;
+  struct StateINTEGRATE	 intg;
 };
 
 struct Statement {

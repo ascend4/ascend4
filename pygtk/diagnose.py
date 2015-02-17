@@ -7,7 +7,6 @@ import re
 
 import config
 from infodialog import *
-from preferences import *
 
 ZOOM_RE = re.compile(r"([0-9]+)\s*%?")
 MAX_ZOOM_SIZE = float(2000) # float
@@ -20,10 +19,7 @@ class DiagnoseWindow:
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["diagnosewin"])
 		self.browser.builder.connect_signals(self)
 		self.window = self.browser.builder.get_object("diagnosewin")
-		self.window.grab_focus()
 		self.window.set_transient_for(self.browser.window)
-
-		self.prefs = Preferences()
 
 		try:
 			_icon = gtk.Image()
@@ -49,11 +45,6 @@ class DiagnoseWindow:
 		self.relname = self.browser.builder.get_object("relname1")
 		self.relresid = self.browser.builder.get_object("relresid")
 		self.relinfobutton = self.browser.builder.get_object("relinfobutton")
-		self.preferred_units_check = self.browser.builder.get_object("preferred_units_check")
-		if self.prefs.getBoolPref("Diagnose","show_preferred_units")==True:
-			self.preferred_units_check.set_active(True)
-		else:
-			self.preferred_units_check.set_active(False)
 
 		self.varview = self.browser.builder.get_object("varview")
 		self.varbuf = gtk.TextBuffer()
@@ -67,6 +58,7 @@ class DiagnoseWindow:
 		self.relresids = self.browser.builder.get_object("relresids")
 		self.relbuf = gtk.TextBuffer()
 		self.relview.set_buffer(self.relbuf)
+
 		self.im = None
 		self.block = 0
 		self.apply_prefs()
@@ -206,16 +198,7 @@ class DiagnoseWindow:
 	def fill_selection_info(self):
 		if self.var:
 			self.varname.set_text(self.var.getName())
-			default_units = self.var.getInstance().getType().getDimensions().getDefaultUnits().getName().toString()
-			pref_units = self.var.getInstance().getType().getPreferredUnits()
-			if pref_units and self.prefs.getBoolPref("Diagnose","show_preferred_units",True):
-				varval = str(self.var.getValue())+" "+pref_units.getName().toString()
-			else:
-				if default_units=="?":
-					varval = str(self.var.getValue())
-				else:
-					varval = str(self.var.getValue())+" "+default_units
-			self.varval.set_text(varval)
+			self.varval.set_text(str(self.var.getValue()))
 			self.varinfobutton.set_sensitive(True)
 		else:
 			self.varname.set_text("")
@@ -351,11 +334,6 @@ class DiagnoseWindow:
 	def on_diagnosewin_close(self,*args):
 		self.window.response(gtk.RESPONSE_CLOSE);
 
-	def on_preferred_units_toggle(self,widget):
-		_v = widget.get_active()
-		self.prefs.setBoolPref("Diagnose","show_preferred_units",_v)
-		self.fill_selection_info()
-
 	# incidence data view
 
 	def on_varcollapsed_toggled(self,*args):
@@ -375,14 +353,7 @@ class DiagnoseWindow:
 	def on_varinfobutton_clicked(self,*args):
 		title = "Variable '%s'" % self.var
 		text = "%s\n%s\n" % (title,"(from the solver's view)")
-		units = " "
-		default_units = self.var.getInstance().getType().getDimensions().getDefaultUnits().getName().toString()
-		pref_units = self.var.getInstance().getType().getPreferredUnits()
-		if pref_units and self.prefs.getBoolPref("Diagnose","show_preferred_units",True):
-			units += pref_units.getName().toString()
-		else:
-			if default_units!="?":
-				units += default_units
+
 		_rows = {
 			"Value": self.var.getValue()
 			,"Nominal": self.var.getNominal()
@@ -390,7 +361,7 @@ class DiagnoseWindow:
 			,"Upper bound": self.var.getUpperBound()
 		}
 		for k,v in _rows.iteritems():
-			text += "\n  %s\t%s" % (k,value_human(v)+units)
+			text += "\n  %s\t%s" % (k,value_human(v))
 		
 		text += "\n\nIncident with %d relations:" % self.var.getNumIncidentRelations()
 		for r in self.var.getIncidentRelations():
@@ -409,15 +380,7 @@ class DiagnoseWindow:
 
 		text += "\n\nIncident with %d variables:" % self.rel.getNumIncidentVariables()
 		for v in self.rel.getIncidentVariables():
-			units = " "
-			default_units = v.getInstance().getType().getDimensions().getDefaultUnits().getName().toString()
-			pref_units = v.getInstance().getType().getPreferredUnits()
-			if pref_units and self.prefs.getBoolPref("Diagnose","show_preferred_units",True):
-				units += pref_units.getName().toString()
-			else:
-				if default_units != "?" :
-					units += default_units
-			text += "\n  %s\t= %s" % ( v.getName(),value_human(v.getValue())+units )
+			text += "\n  %s\t= %s" % ( v.getName(),value_human(v.getValue()) )
 
 		_dialog = InfoDialog(self.browser,self.window,text,title,tabs=(150,300))
 		_dialog.run()

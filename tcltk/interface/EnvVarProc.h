@@ -22,7 +22,9 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
  */
 
 /** @file
@@ -30,7 +32,7 @@
  *
  *  This file exists because win32, among others, can't keep their
  *  POSIX compliance up. In particular, getting and setting
- *  environment vars is exceedingly unreliable.  This file implements
+ *  environment vars is exceedingly unreliable.  This file implements 
  *  a general way to store and fetch multiple paths.
  *  It does not interact in any way the the Tcl global "env" array.
  *  <pre>

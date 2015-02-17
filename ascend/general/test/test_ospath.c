@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	CUnit tests for the ospath.c module.
@@ -271,7 +273,7 @@ static void test_up(void){
 
 static void test_concat(void){
 
-	struct FilePath *fp1, *fp2, *fp3, *fp4, *fp5;
+	struct FilePath *fp1, *fp2, *fp3, *fp4;
 
 	fp1 = ospath_new("/home");
 	fp2 = ospath_new("john");
@@ -294,29 +296,6 @@ static void test_concat(void){
 	M("Passed 'ospath_concat' test\n");
 
 	ospath_free(fp1); ospath_free(fp2); ospath_free(fp3); ospath_free(fp4);
-
-	M("TESTING CONCAT WITH ..");
-
-	fp1 = ospath_new_from_posix("/usr/bin/less");
-	fp2 = ospath_getdir(fp1);
-	fp3 = ospath_new_noclean("../share/icons/pkgconfig");
-	fp4 = ospath_concat(fp2,fp3);
-	ospath_cleanup(fp4);
-
-	fp5 = ospath_new_from_posix("/usr/share/icons/pkgconfig");
-
-#if 0
-	M("FP4:");
-	ospath_fwrite(fp4,stderr);
-	M("\nFP5:");
-	ospath_fwrite(fp5,stderr);
-	M("");
-#endif
-	
-	CU_TEST(ospath_cmp(fp4,fp5)==0);
-
-	ospath_free(fp1); ospath_free(fp2); ospath_free(fp3); ospath_free(fp4); ospath_free(fp5);
-
 	MEMUSED(0);
 }
 	//---------------------------

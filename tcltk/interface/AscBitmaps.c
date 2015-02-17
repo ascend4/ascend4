@@ -22,7 +22,9 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.  COPYING is found in ../compiler.
  */
 
 
@@ -30,6 +32,12 @@
 #include <tk.h>
 #include "config.h"
 #include "AscBitmaps.h"
+
+
+#ifndef lint
+static CONST char AscBitmapsID[] = "$Id: AscBitmaps.c,v 1.7 1998/04/25 18:14:13 ballan Exp $";
+#endif
+
 
 #define BITSTRING static unsigned char
 #define BITDATA(s) ((char *)&((s)[0]))

@@ -15,7 +15,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	QRSLV solver module for ASCEND.
@@ -3370,7 +3372,7 @@ static void structural_analysis(slv_system_t server, qrslv_system_t sys){
     slv_block_unify(server);
   }
 
-  //CONSOLE_DEBUG("In QRSlv, got vused = %d...",sys->vused);
+  CONSOLE_DEBUG("In QRSlv, got vused = %d...",sys->vused);
   if(slv_check_bounds(SERVER,sys->vused,-1,"fixed ")){
     sys->s.inconsistent = 1;
   }
@@ -3820,7 +3822,7 @@ static int qrslv_iterate(slv_system_t server, SlvClientToken asys){
    * Attempt direct solve if appropriate
    */
 
-  if(!OPTIMIZING(sys)
+  if(!OPTIMIZING(sys) 
   	&& sys->s.block.iteration == 1 && sys->s.block.current_size == 1
   ){
     struct var_variable *var;
@@ -3871,7 +3873,7 @@ static int qrslv_iterate(slv_system_t server, SlvClientToken asys){
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(ASCERR,"Direct solution of relation '");
       print_rel_name(ASCERR,sys,rel);
-      FPRINTF(ASCERR,"' gave a value of '");
+      FPRINTF(ASCERR,"' gave a\nvalue of '");
       print_var_name(ASCERR,sys,var);
       FPRINTF(ASCERR,"' outside its bounds.");
 	  error_reporter_end_flush();
@@ -3912,8 +3914,8 @@ static int qrslv_iterate(slv_system_t server, SlvClientToken asys){
   calc_multipliers(sys);
   calc_stationary(sys);
 
-  if(OPTIMIZING(sys)
-  	&& block_feasible(sys)
+  if(OPTIMIZING(sys) 
+  	&& block_feasible(sys) 
 	&& calc_sqrt_D0(sys->stationary.norm2) <= SLV_PARAM_REAL(&(sys->p),STAT_TOL)
   ){
     iteration_ends(sys);
@@ -3930,7 +3932,7 @@ static int qrslv_iterate(slv_system_t server, SlvClientToken asys){
   calc_gamma(sys);
   calc_Jgamma(sys);
 
-  if(!OPTIMIZING(sys)
+  if(!OPTIMIZING(sys) 
   	&& sys->gamma.norm2 <= SLV_PARAM_REAL(&(sys->p),TERM_TOL)*sys->phi
   ){
     ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);

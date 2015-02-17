@@ -22,7 +22,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
+ *
  */
 
 #include <stdarg.h>
@@ -31,6 +34,10 @@
 #include <ascend/general/panic.h>
 #include "rounded.h"
 #define IsOdd(i) ((i & 1)!=0)
+
+#ifndef lint
+static CONST char RoundedRCSid[] = "$Id: rounded.c,v 1.6 1997/07/21 16:56:47 kt2g Exp $";
+#endif
 
 #ifndef SLOPPY
 

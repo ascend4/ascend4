@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	The following functions give an automatic, default form for the
 	'default_all' and 'default_self' methods usually written as explicit
@@ -40,7 +42,7 @@
 #include <ascend/compiler/library.h>
 #include <ascend/compiler/initialize.h>
 
-#define DEFAULT_DEBUG
+// #define DEFAULT_DEBUG
 
 #ifdef DEFAULT_DEBUG
 # include <ascend/compiler/instance_io.h>
@@ -133,14 +135,9 @@ static int defaultself_visit_submodels1(struct Instance *inst
 int defaultself_visit_submodels(struct Instance *root
 		, struct gl_list_t *arglist, void *userdata
 ){
+	CONSOLE_DEBUG("starting");
 	struct DefaultAll_data data;
 	data.method_name = AddSymbol("default_self");
-
-#ifdef DEFAULT_DEBUG
-	char *name1 = WriteInstanceNameString(root,NULL);
-	CONSOLE_DEBUG("Running on '%s'",name1);
-	ASC_FREE(name1);
-#endif
 	
 	/* arglist is a list of gllist of instances */
 	if (arglist == NULL ||

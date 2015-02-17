@@ -21,14 +21,19 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License along
+ *  with the program; if not, write to the Free Software Foundation, Inc., 675
+ *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 #include<stdio.h>
 #include <ascend/general/platform.h>
 
 #include "setinstval.h"
 #include "setinst_io.h"
+
+#ifndef lint
+static CONST char SetInstIORCSid[]="$Id: setinst_io.c,v 1.7 1997/10/28 19:20:43 mthomas Exp $";
+#endif
 
 void WriteInstSet(FILE *f, CONST struct set_t *s)
 {

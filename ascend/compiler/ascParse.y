@@ -16,7 +16,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//*
 	ASCEND parser
 	by Tom Epperly
@@ -348,7 +350,7 @@ static void CollectNote(struct Note *);
 %token OF_TOK OPTION_TOK OR_TOK OTHERWISE_TOK OUTPUT_TOK
 %token PATCH_TOK PROD_TOK PROVIDE_TOK
 %token REFINES_TOK REPLACE_TOK REQUIRE_TOK RETURN_TOK RUN_TOK
-%token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK
+%token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK INTEGRATE_TOK TO_TOK STEPS_TOK SUBSOLVER_TOK ISINTEGRATOR_TOK
 %token THEN_TOK TRUE_TOK
 %token UNION_TOK UNITS_TOK UNIVERSAL_TOK UNLINK_TOK
 %token WHEN_TOK WHERE_TOK WHILE_TOK WILLBE_TOK WILLBETHESAME_TOK WILLNOTBETHESAME_TOK
@@ -395,7 +397,7 @@ static void CollectNote(struct Note *);
 %type <statptr> when_statement use_statement select_statement
 %type <statptr> conditional_statement notes_statement
 %type <statptr> flow_statement while_statement
-%type <statptr> solve_statement solver_statement option_statement switch_statement
+%type <statptr> solve_statement solver_statement option_statement switch_statement integrate_statement subsolver_statement
 
 %type <slptr> fstatements global_def optional_else
 %type <slptr> optional_model_parameters optional_parameter_reduction
@@ -1266,6 +1268,8 @@ statement:
     | solver_statement
     | solve_statement
     | option_statement
+    | integrate_statement
+    | subsolver_statement
     | assert_statement
     | if_statement
     | while_statement
@@ -1831,11 +1835,31 @@ free_statement:
 	}
 	;
 
+integrate_statement:
+	INTEGRATE_TOK IDENTIFIER_TOK FROM_TOK expr TO_TOK expr STEPS_TOK expr
+	{
+		CONSOLE_DEBUG("GOT 'INTEGRATE' STATEMENT from %d to %d steps %d", $4,$6,$8);
+		$$ = CreateINTEGRATE(SCP($2),$4,$6,$8);
+	}
+	;
+
+subsolver_statement:
+	SUBSOLVER_TOK IDENTIFIER_TOK
+	{
+		$$ = CreateSUBSOLVER(SCP($2));
+	};
+
 solver_statement:
 	SOLVER_TOK IDENTIFIER_TOK
 	{
-		/*CONSOLE_DEBUG("GOT 'SOLVER' STATEMENT WITH '%s'", SCP($2));*/
+		//CONSOLE_DEBUG("GOT 'SOLVER' STATEMENT WITH '%s'", SCP($2));
+                //printf("solver tok is integrator \n");
 		$$ = CreateSOLVER(SCP($2));
+	}
+	| SOLVER_TOK IDENTIFIER_TOK ISINTEGRATOR_TOK
+	{
+		//CONSOLE_DEBUG("GOT 'SOLVER is isintegrator' STATEMENT WITH '%s'", SCP($2));
+		$$ = CreateINTEGRATOR(SCP($2));
 	}
 	;
 

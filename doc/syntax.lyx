@@ -1,5 +1,5 @@
-#LyX 2.1 created this file. For more info see http://www.lyx.org/
-\lyxformat 474
+#LyX 1.5.6 created this file. For more info see http://www.lyx.org/
+\lyxformat 276
 \begin_document
 \begin_header
 \textclass book
@@ -7,76 +7,45 @@
 \usepackage[bookmarks]{hyperref}
 \usepackage{lmodern}
 \end_preamble
-\use_default_options false
-\maintain_unincluded_children false
 \language english
-\language_package default
 \inputencoding auto
-\fontencoding global
 \font_roman default
 \font_sans default
 \font_typewriter default
-\font_math auto
 \font_default_family default
-\use_non_tex_fonts false
 \font_sc false
 \font_osf false
 \font_sf_scale 100
 \font_tt_scale 100
 \graphics default
-\default_output_format default
-\output_sync 0
-\bibtex_command default
-\index_command default
 \paperfontsize default
 \spacing single
-\use_hyperref false
 \papersize default
 \use_geometry false
-\use_package amsmath 1
-\use_package amssymb 1
-\use_package cancel 1
-\use_package esint 0
-\use_package mathdots 0
-\use_package mathtools 1
-\use_package mhchem 0
-\use_package stackrel 1
-\use_package stmaryrd 1
-\use_package undertilde 1
+\use_amsmath 1
+\use_esint 0
 \cite_engine basic
-\cite_engine_type default
-\biblio_style plain
 \use_bibtopic false
-\use_indices false
 \paperorientation portrait
-\suppress_date false
-\justification true
-\use_refstyle 0
-\index Index
-\shortcut idx
-\color #008000
-\end_index
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
-\paragraph_indentation default
+\defskip medskip
 \quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
 \tracking_changes false
 \output_changes false
-\html_math_output 0
-\html_css_as_file 0
-\html_be_strict false
+\author "" 
+\author "" 
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 Syntax reference
-\begin_inset CommandInset label
-LatexCommand label
+\begin_inset LatexCommand label
 name "cha:ASCENDSyntax"
 
 \end_inset
@@ -97,24 +66,16 @@ We shall present an informal description of the ASCEND IV language.
 
 \begin_layout Standard
 Syntax
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-syntax
-\end_layout
+\begin_inset LatexCommand index
+name "syntax"
 
 \end_inset
 
  is the form or structure for the statements in ASCEND, where one worries
  about the exact words one uses, their ordering, the punctuation, etc.
  Semantics
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-semantics
-\end_layout
+\begin_inset LatexCommand index
+name "semantics"
 
 \end_inset
 
@@ -142,43 +103,27 @@ Rules on the syntax for this statement tell us we need a user supplied instance
 
 \begin_layout Standard
 The syntax for a computer language is often defined by using a Bachus-Naur
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Bachus-Naur
-\end_layout
+\begin_inset LatexCommand index
+name "Bachus-Naur"
 
 \end_inset
 
  formal (BNF
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-BNF
-\end_layout
+\begin_inset LatexCommand index
+name "BNF"
 
 \end_inset
 
 ) description.
  The complete YACC
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-YACC
-\end_layout
+\begin_inset LatexCommand index
+name "YACC"
 
 \end_inset
 
  and FLEX
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-FLEX
-\end_layout
+\begin_inset LatexCommand index
+name "FLEX"
 
 \end_inset
 
@@ -193,11 +138,9 @@ FLEX
  
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
 
 \end_layout
 
@@ -251,8 +194,7 @@ The syntax and semantics of ASCEND may seem at first a bit unusual.
 
 \begin_layout Standard
 We will describe, starting in Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sub:x.1.2Basic-Elements"
 
 \end_inset
@@ -262,27 +204,14 @@ reference "sub:x.1.2Basic-Elements"
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-ASCEND
-\begin_inset space ~
-\end_inset
-
-is
-\begin_inset space ~
-\end_inset
-
-cAsE
-\begin_inset space ~
-\end_inset
-
+ASCEND\InsetSpace ~
+is\InsetSpace ~
+cAsE\InsetSpace ~
 sensitive
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-case sensitive
-\end_layout
+\begin_inset LatexCommand index
+name "case sensitive"
 
 \end_inset
 
@@ -307,22 +236,14 @@ This case restriction makes our code very readable, but hard to type without
  find ourselves running out of good variable names if we are restricted
  to a 26 letter alphabet.
  We have developed smart add-ins for two UNIX editors, EMACS
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-EMACS
-\end_layout
+\begin_inset LatexCommand index
+name "EMACS"
 
 \end_inset
 
  and vi
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-vi
-\end_layout
+\begin_inset LatexCommand index
+name "vi"
 
 \end_inset
 
@@ -340,12 +261,8 @@ The ASCEND IV parser is very picky and pedantic.
 
 \begin_layout Section
 Punctuation
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-punctuation
-\end_layout
+\begin_inset LatexCommand index
+name "punctuation"
 
 \end_inset
 
@@ -358,15 +275,11 @@ This section covers both the punctuation that must be understood to read
  this document and the punctuation of ASCEND code.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 keywords
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-keywords
-\end_layout
+\begin_inset LatexCommand index
+name "keywords"
 
 \end_inset
 
@@ -375,36 +288,29 @@ keywords
  type names.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Minor
-\begin_inset space ~
-\end_inset
-
+Minor\InsetSpace ~
 items:
 \bar default
  Minor headings that are helpful in finding details are given in the left
  column in underline format.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 Tips: Special notes and hints are sometimes placed on the left.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
 LHS
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-LHS
-\end_layout
+\begin_inset LatexCommand index
+name "LHS"
 
 \end_inset
 
@@ -414,17 +320,13 @@ LHS
  Abbreviation used frequently.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
 RHS
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-RHS
-\end_layout
+\begin_inset LatexCommand index
+name "RHS"
 
 \end_inset
 
@@ -434,21 +336,14 @@ RHS
  Abbreviation used frequently.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Simple
-\begin_inset space ~
-\end_inset
-
+Simple\InsetSpace ~
 names
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-simple names
-\end_layout
+\begin_inset LatexCommand index
+name "simple names"
 
 \end_inset
 
@@ -459,32 +354,15 @@ simple names
  The underscore is used as a letter, but it cannot be the first letter in
  a name.
  The $
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-$
-\end_layout
-
-\end_inset
-
-
-\end_layout
+\begin_inset LatexCommand index
+name "\\$"
 
 \end_inset
 
  character is used exclusively as the first character in the name of system
  defined built-in parts.
  "$" is explained in more detail in Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sub:x.6.2Supported-attributes"
 
 \end_inset
@@ -494,21 +372,14 @@ reference "sub:x.6.2Supported-attributes"
  
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Compound
-\begin_inset space ~
-\end_inset
-
+Compound\InsetSpace ~
 names
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-compound names
-\end_layout
+\begin_inset LatexCommand index
+name "compound names"
 
 \end_inset
 
@@ -518,21 +389,18 @@ compound names
  See the description of "." below.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
 Groupings:
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-«
-\begin_inset space ~
-\end_inset
-
+«\InsetSpace ~
 »
 \bar default
  In documentation 
@@ -540,90 +408,60 @@ Groupings:
 optional fields
 \series default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-optional fields
-\end_layout
+\begin_inset LatexCommand index
+name "optional fields"
 
 \end_inset
 
  are surrounded by these markers.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family typewriter
-(*
-\begin_inset space ~
-\end_inset
-
+(*\InsetSpace ~
 *)
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-(* *)
-\end_layout
+\begin_inset LatexCommand index
+name "(* *)"
 
 \end_inset
 
  Comment.
  Anything inside these is a comment.
  Comments can nest
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-nest
-\end_layout
+\begin_inset LatexCommand index
+name "nest"
 
 \end_inset
 
  in ASCEND and span several lines.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family typewriter
-(
-\begin_inset space ~
-\end_inset
-
+(\InsetSpace ~
 )
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-( )
-\end_layout
+\begin_inset LatexCommand index
+name "( )"
 
 \end_inset
 
  Rounded parentheses
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-parentheses
-\end_layout
+\begin_inset LatexCommand index
+name "parentheses"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-rounded parentheses
-\end_layout
+\begin_inset LatexCommand index
+name "rounded parentheses"
 
 \end_inset
 
@@ -635,64 +473,29 @@ rounded parentheses
  
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Efficiency
-\begin_inset space ~
-\end_inset
-
-tip: The compiler can simplify relation definitions in a particularly efficient
- manner if constants are grouped together.
+Efficiency\InsetSpace ~
+tip: The compiler can simplify relation definitions in a particularly
+ efficient manner if constants are grouped together.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family typewriter
-{
-\begin_inset space ~
-\end_inset
-
+{\InsetSpace ~
 }
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-{
-\end_layout
-
-\end_inset
-
- 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
-
-\end_layout
+\begin_inset LatexCommand index
+name "{ }"
 
 \end_inset
 
  Curly braces
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Curly braces
-\end_layout
+\begin_inset LatexCommand index
+name "Curly braces"
 
 \end_inset
 
@@ -704,33 +507,22 @@ Curly braces
  interface, about which we will say more in another chapter.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family typewriter
-[
-\begin_inset space ~
-\end_inset
-
+[\InsetSpace ~
 ]
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-[ ]
-\end_layout
+\begin_inset LatexCommand index
+name "[ ]"
 
 \end_inset
 
  Square brackets
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-square brackets
-\end_layout
+\begin_inset LatexCommand index
+name "square brackets"
 
 \end_inset
 
@@ -742,29 +534,21 @@ square brackets
  object indexed over an integer set which includes the element 1.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family typewriter
 .
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-.
-\end_layout
+\begin_inset LatexCommand index
+name "."
 
 \end_inset
 
  Dot
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-dot
-\end_layout
+\begin_inset LatexCommand index
+name "dot"
 
 \end_inset
 
@@ -775,29 +559,21 @@ dot
  named vle.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family typewriter
 ..
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-..
-\end_layout
+\begin_inset LatexCommand index
+name ".."
 
 \end_inset
 
  Dot-dot or double dot
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-double dot
-\end_layout
+\begin_inset LatexCommand index
+name "double dot"
 
 \end_inset
 
@@ -810,29 +586,21 @@ double dot
  then the range is expanded and ordered as we would naturally expect.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family typewriter
 :
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-:
-\end_layout
+\begin_inset LatexCommand index
+name ":"
 
 \end_inset
 
  Colon
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-colon
-\end_layout
+\begin_inset LatexCommand index
+name "colon"
 
 \end_inset
 
@@ -841,29 +609,21 @@ colon
  relation apart from the definition.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family typewriter
 ::
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-::
-\end_layout
+\begin_inset LatexCommand index
+name "::"
 
 \end_inset
 
  Double colon
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-double colon
-\end_layout
+\begin_inset LatexCommand index
+name "double colon"
 
 \end_inset
 
@@ -871,8 +631,7 @@ double colon
  A separator used in the methods section for accessing methods defined on
  types other than the type the method is part of.
  Explained in Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sec:x.4Procedural-statements"
 
 \end_inset
@@ -880,29 +639,21 @@ reference "sec:x.4Procedural-statements"
 .[
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family typewriter
 ;
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-;
-\end_layout
+\begin_inset LatexCommand index
+name ";"
 
 \end_inset
 
  Semicolon
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-semicolon
-\end_layout
+\begin_inset LatexCommand index
+name "semicolon"
 
 \end_inset
 
@@ -913,18 +664,13 @@ semicolon
 \begin_deeper
 \begin_layout Section
 Basic Elements
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-basic elements
-\end_layout
+\begin_inset LatexCommand index
+name "basic elements"
 
 \end_inset
 
 
-\begin_inset CommandInset label
-LatexCommand label
+\begin_inset LatexCommand label
 name "sub:x.1.2Basic-Elements"
 
 \end_inset
@@ -933,33 +679,22 @@ name "sub:x.1.2Basic-Elements"
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Boolean
-\begin_inset space ~
-\end_inset
-
+Boolean\InsetSpace ~
 value
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-value, Boolean
-\end_layout
+\begin_inset LatexCommand index
+name "value, Boolean"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Boolean value
-\end_layout
+\begin_inset LatexCommand index
+name "Boolean value"
 
 \end_inset
 
@@ -968,12 +703,8 @@ Boolean value
 TRUE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-TRUE
-\end_layout
+\begin_inset LatexCommand index
+name "TRUE"
 
 \end_inset
 
@@ -982,12 +713,8 @@ TRUE
 FALSE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-FALSE
-\end_layout
+\begin_inset LatexCommand index
+name "FALSE"
 
 \end_inset
 
@@ -1004,49 +731,32 @@ FALSE
  (In the implementation, of course, they do.)
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-User
-\begin_inset space ~
-\end_inset
-
-interface
-\begin_inset space ~
-\end_inset
-
-tip: The ASCEND user interface programmers have found it very convenient,
- however, to allow T/F, 1/0, Y/N, and other obvious boolean conventions
- as interactive input when assigning boolean values.
+User\InsetSpace ~
+interface\InsetSpace ~
+tip: The ASCEND user interface programmers have found it very
+ convenient, however, to allow T/F, 1/0, Y/N, and other obvious boolean
+ conventions as interactive input when assigning boolean values.
  We are lazy users.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Integer
-\begin_inset space ~
-\end_inset
-
+Integer\InsetSpace ~
 value
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-value, integer
-\end_layout
+\begin_inset LatexCommand index
+name "value, integer"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-integer value
-\end_layout
+\begin_inset LatexCommand index
+name "integer value"
 
 \end_inset
 
@@ -1057,25 +767,8 @@ integer value
 MAX_INTEGER
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-MAX
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-INTEGER
-\end_layout
+\begin_inset LatexCommand index
+name "MAX\\_INTEGER"
 
 \end_inset
 
@@ -1100,46 +793,30 @@ MAX_INTEGER, typically 2147483647.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Real
-\begin_inset space ~
-\end_inset
-
+Real\InsetSpace ~
 value
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-value.
- real
-\end_layout
+\begin_inset LatexCommand index
+name "value. real"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-real value
-\end_layout
+\begin_inset LatexCommand index
+name "real value"
 
 \end_inset
 
  ASCEND represents reals almost exactly as any other mathematically oriented
  programming language does.
  The mantissa
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-mantissa
-\end_layout
+\begin_inset LatexCommand index
+name "mantissa"
 
 \end_inset
 
@@ -1161,25 +838,8 @@ E
 MAX_REAL
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-MAX
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-REAL
-\end_layout
+\begin_inset LatexCommand index
+name "MAX\\_REAL"
 
 \end_inset
 
@@ -1241,36 +901,20 @@ while the following are not:
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Reals
-\begin_inset space ~
-\end_inset
-
-stored
-\begin_inset space ~
-\end_inset
-
-in
-\begin_inset space ~
-\end_inset
-
+Reals\InsetSpace ~
+stored\InsetSpace ~
+in\InsetSpace ~
 SI
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-SI
-\end_layout
+\begin_inset LatexCommand index
+name "SI"
 
 \end_inset
 
-
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
 units
 \bar default
  
@@ -1279,22 +923,14 @@ units
 \begin_deeper
 \begin_layout Standard
 We store all real values as double precision
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-double precision
-\end_layout
+\begin_inset LatexCommand index
+name "double precision"
 
 \end_inset
 
  numbers in the metre-kilogram-second (MKS)
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-MKS
-\end_layout
+\begin_inset LatexCommand index
+name "MKS"
 
 \end_inset
 
@@ -1306,17 +942,13 @@ MKS
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
 Dimensionality
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-dimensionality
-\end_layout
+\begin_inset LatexCommand index
+name "dimensionality"
 
 \end_inset
 
@@ -1333,24 +965,16 @@ units
 \series default
  such as ft/s.
  ASCEND takes care of mapping between units
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-units
-\end_layout
+\begin_inset LatexCommand index
+name "units"
 
 \end_inset
 
  and dimensions.
  A value without units (this includes integer values) is taken to be dimensionle
 ss
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-dimensionless
-\end_layout
+\begin_inset LatexCommand index
+name "dimensionless"
 
 \end_inset
 
@@ -1358,257 +982,177 @@ dimensionless
  Dimensionality is built up from the following base dimensions:
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 Name 
 \bar under
 definition; typical units
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 L
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-L, length dimension
-\end_layout
+\begin_inset LatexCommand index
+name "L, length dimension"
 
 \end_inset
 
  length
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-length
-\end_layout
+\begin_inset LatexCommand index
+name "length"
 
 \end_inset
 
 ; metre, m
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 M
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-M, mass dimension
-\end_layout
+\begin_inset LatexCommand index
+name "M, mass dimension"
 
 \end_inset
 
  mass
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-mass
-\end_layout
+\begin_inset LatexCommand index
+name "mass"
 
 \end_inset
 
 ; kilogram, kg
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 T
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-T, time dimension
-\end_layout
+\begin_inset LatexCommand index
+name "T, time dimension"
 
 \end_inset
 
  time
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-time
-\end_layout
+\begin_inset LatexCommand index
+name "time"
 
 \end_inset
 
 ; second, s
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 E
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-E, electric current dimension
-\end_layout
+\begin_inset LatexCommand index
+name "E, electric current dimension"
 
 \end_inset
 
  electric current
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-electric current
-\end_layout
+\begin_inset LatexCommand index
+name "electric current"
 
 \end_inset
 
 ; ampere, A
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 Q
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Q, quantity dimension
-\end_layout
+\begin_inset LatexCommand index
+name "Q, quantity dimension"
 
 \end_inset
 
  quantity
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-quantity
-\end_layout
+\begin_inset LatexCommand index
+name "quantity"
 
 \end_inset
 
 ; mole, mole
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 TMP
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-TMP, temperature dimension
-\end_layout
+\begin_inset LatexCommand index
+name "TMP, temperature dimension"
 
 \end_inset
 
  temperature
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-temperature
-\end_layout
+\begin_inset LatexCommand index
+name "temperature"
 
 \end_inset
 
 ; Kelvin, K
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 LUM
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-LUM, luminous intensity dimension
-\end_layout
+\begin_inset LatexCommand index
+name "LUM, luminous intensity dimension"
 
 \end_inset
 
  luminous intensity
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-luminous intensity
-\end_layout
+\begin_inset LatexCommand index
+name "luminous intensity"
 
 \end_inset
 
 ; candela, cd
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 P
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-P, phase angle dimension
-\end_layout
+\begin_inset LatexCommand index
+name "P, phase angle dimension"
 
 \end_inset
 
  plane angle
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-plane angle
-\end_layout
+\begin_inset LatexCommand index
+name "plane angle"
 
 \end_inset
 
 ; radian, rad
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 S
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-S, solid angle dimension
-\end_layout
+\begin_inset LatexCommand index
+name "S, solid angle dimension"
 
 \end_inset
 
  solid angle
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-solid angle
-\end_layout
+\begin_inset LatexCommand index
+name "solid angle"
 
 \end_inset
 
 ; steradian, srad
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 C
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-C, currency dimension
-\end_layout
+\begin_inset LatexCommand index
+name "C, currency dimension"
 
 \end_inset
 
  currency
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-currency
-\end_layout
+\begin_inset LatexCommand index
+name "currency"
 
 \end_inset
 
@@ -1654,7 +1198,7 @@ l numbers are physically undefined
 \begin_inset Note Note
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 although we do seem them occasionally...
 \end_layout
 
@@ -1666,12 +1210,8 @@ although we do seem them occasionally...
 \begin_layout Standard
 If the dimensionality for a real value is undefined, then ASCEND gives it
  a wildcard dimensionality
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-wild card dimensionality
-\end_layout
+\begin_inset LatexCommand index
+name "wild card dimensionality"
 
 \end_inset
 
@@ -1699,47 +1239,26 @@ L/T
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Example
-\begin_inset space ~
-\end_inset
-
-of
-\begin_inset space ~
-\end_inset
-
-a
-\begin_inset space ~
-\end_inset
-
-dimensionally
-\begin_inset space ~
-\end_inset
-
+Example\InsetSpace ~
+of\InsetSpace ~
+a\InsetSpace ~
+dimensionally\InsetSpace ~
 consistent
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-dimensionally consistent
-\end_layout
+\begin_inset LatexCommand index
+name "dimensionally consistent"
 
 \end_inset
 
-
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
 equation.
  
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
  
 \family typewriter
 a + b = 3 {ft/s};
@@ -1765,23 +1284,16 @@ a
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Unit
-\begin_inset space ~
-\end_inset
-
+Unit\InsetSpace ~
 expression
 \bar default
  A unit expression
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-unit expression
-\end_layout
+\begin_inset LatexCommand index
+name "unit expression"
 
 \end_inset
 
@@ -1843,19 +1355,15 @@ R :== 1{GAS_C}
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
 Units
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-units
-\end_layout
+\begin_inset LatexCommand index
+name "units"
 
 \end_inset
 
@@ -1929,55 +1437,36 @@ power of units or dimensions must be integer.
 
 \end_deeper
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Symbol
-\begin_inset space ~
-\end_inset
-
+Symbol\InsetSpace ~
 Value
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-value, symbol
-\end_layout
+\begin_inset LatexCommand index
+name "value, symbol"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-symbol value
-\end_layout
+\begin_inset LatexCommand index
+name "symbol value"
 
 \end_inset
 
  The format for a symbol is that of an arbitrary character string enclosed
  between two single quotes.
  There is no way to embed a single quote
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-'
-\end_layout
+\begin_inset LatexCommand index
+name "'"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-single quote
-\end_layout
+\begin_inset LatexCommand index
+name "single quote"
 
 \end_inset
 
@@ -2021,29 +1510,18 @@ There is an arbitrary upper limit to the number of characters in a symbol
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Sets
-\begin_inset space ~
-\end_inset
-
+Sets\InsetSpace ~
 values
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-values, set
-\end_layout
+\begin_inset LatexCommand index
+name "values, set"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-set values
-\end_layout
+\begin_inset LatexCommand index
+name "set values"
 
 \end_inset
 
@@ -2090,41 +1568,21 @@ symbol_constant
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-More
-\begin_inset space ~
-\end_inset
-
-about
-\begin_inset space ~
-\end_inset
-
+More\InsetSpace ~
+about\InsetSpace ~
 sets
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-sets
-\end_layout
+\begin_inset LatexCommand index
+name "sets"
 
 \end_inset
 
+\InsetSpace ~
+in\InsetSpace ~
+Section\InsetSpace ~
 
-\begin_inset space ~
-\end_inset
-
-in
-\begin_inset space ~
-\end_inset
-
-Section
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sub:x.2.2Sets"
 
 \end_inset
@@ -2167,22 +1625,14 @@ n_stages
 \family default
  in the fourth set is ignored.
  The fifth set is the empty set
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-empty set
-\end_layout
+\begin_inset LatexCommand index
+name "empty set"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-set, empty
-\end_layout
+\begin_inset LatexCommand index
+name "set, empty"
 
 \end_inset
 
@@ -2194,12 +1644,8 @@ We use the term set in an almost pure mathematical sense.
  The elements have no order.
  One can only ask two things of a set: (1) if an element is a member of
  it and (2) its cardinality
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-cardinality
-\end_layout
+\begin_inset LatexCommand index
+name "cardinality"
 
 \end_inset
 
@@ -2208,12 +1654,8 @@ cardinality
 CARD
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-CARD
-\end_layout
+\begin_inset LatexCommand index
+name "CARD"
 
 \end_inset
 
@@ -2228,16 +1670,10 @@ CARD
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Sets
-\begin_inset space ~
-\end_inset
-
-are
-\begin_inset space ~
-\end_inset
-
+Sets\InsetSpace ~
+are\InsetSpace ~
 unordered.
  A set of integers may appear to be ordered to the modeler as the natural
  numbers have an order.
@@ -2247,19 +1683,15 @@ unordered.
  member of a set.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
 Arrays
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-arrays
-\end_layout
+\begin_inset LatexCommand index
+name "arrays"
 
 \end_inset
 
@@ -2339,12 +1771,8 @@ n_stages
 
 \begin_layout Standard
 There can be any number of subscripts
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-subscripts
-\end_layout
+\begin_inset LatexCommand index
+name "subscripts"
 
 \end_inset
 
@@ -2352,22 +1780,14 @@ subscripts
  We point out, however, that in virtually every application of arrays requiring
  more than two subscripts, there is usually a some underlying concept that
  is much better modeled as an object than as part of a deeply subscripted
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-subscripted, deeply
-\end_layout
+\begin_inset LatexCommand index
+name "subscripted, deeply"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-deeply subscripted
-\end_layout
+\begin_inset LatexCommand index
+name "deeply subscripted"
 
 \end_inset
 
@@ -2377,48 +1797,30 @@ deeply subscripted
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Arrays
-\begin_inset space ~
-\end_inset
-
-can
-\begin_inset space ~
-\end_inset
-
-be
-\begin_inset space ~
-\end_inset
-
+Arrays\InsetSpace ~
+can\InsetSpace ~
+be\InsetSpace ~
 jagged
 \bar default
 
-\begin_inset CommandInset label
-LatexCommand label
+\begin_inset LatexCommand label
 name "lyx:Arrays-can-be"
 
 \end_inset
 
  Arrays can be sparse
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-sparse
-\end_layout
+\begin_inset LatexCommand index
+name "sparse"
 
 \end_inset
 
  or jagged
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-jagged
-\end_layout
+\begin_inset LatexCommand index
+name "jagged"
 
 \end_inset
 
@@ -2482,20 +1884,11 @@ flow[3][4], flow[3][6]
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Arrays
-\begin_inset space ~
-\end_inset
-
-are
-\begin_inset space ~
-\end_inset
-
-also
-\begin_inset space ~
-\end_inset
-
+Arrays\InsetSpace ~
+are\InsetSpace ~
+also\InsetSpace ~
 instances 
 \end_layout
 
@@ -2545,23 +1938,13 @@ a[1..2]
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-No
-\begin_inset space ~
-\end_inset
-
-contiguous
-\begin_inset space ~
-\end_inset
-
+No\InsetSpace ~
+contiguous\InsetSpace ~
 storage
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-contiguous storage, no
-\end_layout
+\begin_inset LatexCommand index
+name "contiguous storage, no"
 
 \end_inset
 
@@ -2572,63 +1955,39 @@ contiguous storage, no
 \begin_layout Standard
 Just in case you still have not caught on, ASCEND arrays are not blocks
  of memory such as are seen in low-level languages like C
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-C, computer language
-\end_layout
+\begin_inset LatexCommand index
+name "C, computer language"
 
 \end_inset
 
 , FORTRAN
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-FORTRAN
-\end_layout
+\begin_inset LatexCommand index
+name "FORTRAN"
 
 \end_inset
 
 , and Matlab
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Matlab
-\end_layout
+\begin_inset LatexCommand index
+name "Matlab"
 
 \end_inset
 
 .
  The modeling language does not provide things like MatMult
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-MatMult
-\end_layout
+\begin_inset LatexCommand index
+name "MatMult"
 
 \end_inset
 
 , Transpose
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Transpose
-\end_layout
+\begin_inset LatexCommand index
+name "Transpose"
 
 \end_inset
 
 , and Inverse
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Inverse
-\end_layout
+\begin_inset LatexCommand index
+name "Inverse"
 
 \end_inset
 
@@ -2640,19 +1999,12 @@ Inverse
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Index
-\begin_inset space ~
-\end_inset
-
+Index\InsetSpace ~
 variable
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-index variable
-\end_layout
+\begin_inset LatexCommand index
+name "index variable"
 
 \end_inset
 
@@ -2684,15 +2036,11 @@ In this example i implicitly is of the same type as the values in the set
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 Label
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-label
-\end_layout
+\begin_inset LatexCommand index
+name "label"
 
 \end_inset
 
@@ -2770,19 +2118,15 @@ for the unlabeled 14th relation in the mixture definition.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
 Lists
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-lists
-\end_layout
+\begin_inset LatexCommand index
+name "lists"
 
 \end_inset
 
@@ -2809,31 +2153,20 @@ stage[1..n_stages]
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Ordered
-\begin_inset space ~
-\end_inset
-
+Ordered\InsetSpace ~
 lists
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-lists, ordered
-\end_layout
+\begin_inset LatexCommand index
+name "lists, ordered"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ordered lists
-\end_layout
+\begin_inset LatexCommand index
+name "ordered lists"
 
 \end_inset
 
@@ -2852,37 +2185,23 @@ Basic Concepts
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
 Instances
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-instances
-\end_layout
+\begin_inset LatexCommand index
+name "instances"
 
 \end_inset
 
-
-\begin_inset space ~
-\end_inset
-
-and
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
+and\InsetSpace ~
 types
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-types
-\end_layout
+\begin_inset LatexCommand index
+name "types"
 
 \end_inset
 
@@ -2921,33 +2240,22 @@ If one is in the context of the ASCEND interface, the system compiles an
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Implicit
-\begin_inset space ~
-\end_inset
-
+Implicit\InsetSpace ~
 types
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-types, implicit
-\end_layout
+\begin_inset LatexCommand index
+name "types, implicit"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-types, implicit
-\end_layout
+\begin_inset LatexCommand index
+name "types, implicit"
 
 \end_inset
 
@@ -2961,28 +2269,20 @@ implicit
 \begin_inset Foot
 status collapsed
 
-\begin_layout Plain Layout
+\begin_layout Standard
  (Some people use the word 
 \emph on
 anonymous
 \emph default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-type, anonymous
-\end_layout
+\begin_inset LatexCommand index
+name "type, anonymous"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-anonymous type
-\end_layout
+\begin_inset LatexCommand index
+name "anonymous type"
 
 \end_inset
 
@@ -3033,8 +2333,7 @@ j
 Instances which are either formally or implicitly type incompatible cannot
  be merged.
  This will be discussed further in Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sec:x.3Declarative-statements"
 
 \end_inset
@@ -3043,15 +2342,11 @@ reference "sec:x.3Declarative-statements"
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 Parsing
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-parsing
-\end_layout
+\begin_inset LatexCommand index
+name "parsing"
 
 \end_inset
 
@@ -3139,39 +2434,27 @@ input[2].H
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
 Instantiation
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-instantiation
-\end_layout
+\begin_inset LatexCommand index
+name "instantiation"
 
 \end_inset
 
  Creating an simulation based on a type definition is a multi-phase
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-multi-phase
-\end_layout
+\begin_inset LatexCommand index
+name "multi-phase"
 
 \end_inset
 
  process called compiling
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-compiling
-\end_layout
+\begin_inset LatexCommand index
+name "compiling"
 
 \end_inset
 
@@ -3179,12 +2462,8 @@ compiling
  When an instantiation cannot be completed because some structural parameter
  (a symbol_constant, real_constant, boolean_constant, integer_constant,
  or set) does not have a value there will be PENDING
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-PENDING
-\end_layout
+\begin_inset LatexCommand index
+name "PENDING"
 
 \end_inset
 
@@ -3195,12 +2474,8 @@ PENDING
 \begin_deeper
 \begin_layout Standard
 In phase
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-phases, compiler
-\end_layout
+\begin_inset LatexCommand index
+name "phases, compiler"
 
 \end_inset
 
@@ -3257,28 +2532,11 @@ if and only if
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 default_self
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-default
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-self
-\end_layout
+\begin_inset LatexCommand index
+name "default\\_self"
 
 \end_inset
 
@@ -3310,12 +2568,8 @@ Structure building or modifying statements that refer to model parts which
 
 \begin_layout Chapter
 Data Type Declarations
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-data type declarations
-\end_layout
+\begin_inset LatexCommand index
+name "data type declarations"
 
 \end_inset
 
@@ -3324,12 +2578,8 @@ data type declarations
 
 \begin_layout Standard
 In the spectrum of OO languages, ASCEND is best considered as being class-based
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-class-based
-\end_layout
+\begin_inset LatexCommand index
+name "class-based"
 
 \end_inset
 
@@ -3347,40 +2597,29 @@ instances
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Type
-\begin_inset space ~
-\end_inset
-
+Type\InsetSpace ~
 qualifiers
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-type qualifiers
-\end_layout
+\begin_inset LatexCommand index
+name "type qualifiers"
 
 \end_inset
 
 :
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 UNIVERSAL
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-UNIVERSAL
-\end_layout
+\begin_inset LatexCommand index
+name "UNIVERSAL"
 
 \end_inset
 
@@ -3441,40 +2680,19 @@ UNIVERSAL ATOM counter_1
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Tip:
-\begin_inset space ~
-\end_inset
-
-Do
-\begin_inset space ~
-\end_inset
-
-not
-\begin_inset space ~
-\end_inset
-
-use
-\begin_inset space ~
-\end_inset
-
+Tip:\InsetSpace ~
+Do\InsetSpace ~
+not\InsetSpace ~
+use\InsetSpace ~
 
 \family sans
 UNIVERSAL
 \family default
-
-\begin_inset space ~
-\end_inset
-
-variables
-\begin_inset space ~
-\end_inset
-
-in
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
+variables\InsetSpace ~
+in\InsetSpace ~
 relations.
 \end_layout
 
@@ -3508,19 +2726,15 @@ Models
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 MODEL
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-MODEL
-\end_layout
+\begin_inset LatexCommand index
+name "MODEL"
 
 \end_inset
 
@@ -3529,15 +2743,13 @@ MODEL
  Models are essentially containers for variables and relations.
  We will explain the various statements that can be made within models in
  Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sec:x.3Declarative-statements"
 
 \end_inset
 
  and Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sec:x.4Procedural-statements"
 
 \end_inset
@@ -3546,43 +2758,24 @@ reference "sec:x.4Procedural-statements"
 \end_layout
 
 \begin_layout Standard
-Simple
-\begin_inset space ~
-\end_inset
-
+Simple\InsetSpace ~
 models
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-models, simple
-\end_layout
+\begin_inset LatexCommand index
+name "models, simple"
 
 \end_inset
 
 :
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 foo 
 \family typewriter
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
 MODEL foo;
 \end_layout
 
@@ -3604,26 +2797,14 @@ END foo;
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 bar 
 \family typewriter
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
 MODEL bar REFINES foo;
 \end_layout
 
@@ -3645,23 +2826,16 @@ END bar;
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Parameterized
-\begin_inset space ~
-\end_inset
-
+Parameterized\InsetSpace ~
 Models
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-models, parameterized
-\end_layout
+\begin_inset LatexCommand index
+name "models, parameterized"
 
 \end_inset
 
@@ -3692,7 +2866,7 @@ There is no reason that other items could not also go in the parameter list,
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 column(n,s) 
 \end_layout
@@ -3723,7 +2897,7 @@ END column;
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 flowsheet
 \end_layout
@@ -3803,8 +2977,7 @@ symbol_constant
 \begin_layout Standard
 The use of parameters in ASCEND modeling requires some thought, and we will
  present that set of thoughts in Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sec:x.5Parameterized-models"
 
 \end_inset
@@ -3818,18 +2991,13 @@ reference "sec:x.5Parameterized-models"
 
 \begin_layout Section
 Sets
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-sets
-\end_layout
+\begin_inset LatexCommand index
+name "sets"
 
 \end_inset
 
 
-\begin_inset CommandInset label
-LatexCommand label
+\begin_inset LatexCommand label
 name "sub:x.2.2Sets"
 
 \end_inset
@@ -3839,8 +3007,7 @@ name "sub:x.2.2Sets"
 
 \begin_layout Standard
 Arrays in ASCEND, as already discussed in Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sub:x.1.2Basic-Elements"
 
 \end_inset
@@ -3855,14 +3022,11 @@ not
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Set
-\begin_inset space ~
-\end_inset
-
+Set\InsetSpace ~
 Declaration:
 \bar default
  A set is made of either symbol_constants or integer_constants, so a set
@@ -3883,19 +3047,15 @@ my_symbol_set IS_A set OF symbol_constant;
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family typewriter
 :==
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-:==
-\end_layout
+\begin_inset LatexCommand index
+name ":=="
 
 \end_inset
 
@@ -3915,14 +3075,11 @@ The RHS of such an assignment must be either the name of another set instance
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Set
-\begin_inset space ~
-\end_inset
-
+Set\InsetSpace ~
 Operations
 \bar default
  
@@ -3930,12 +3087,8 @@ Operations
 UNION
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-UNION
-\end_layout
+\begin_inset LatexCommand index
+name "UNION"
 
 \end_inset
 
@@ -3959,15 +3112,11 @@ UNION
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 +
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-+, sets
-\end_layout
+\begin_inset LatexCommand index
+name "+, sets"
 
 \end_inset
 
@@ -3976,24 +3125,15 @@ status collapsed
 UNION[list_of_sets]
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family typewriter
 A+B
 \family default
-
-\begin_inset space ~
-\end_inset
-
-is
-\begin_inset space ~
-\end_inset
-
-shorthand
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
+is\InsetSpace ~
+shorthand\InsetSpace ~
 for 
 \family typewriter
 UNION[A,B]
@@ -4033,19 +3173,15 @@ UNION[A, B]
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 INTERSECTION
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-INTERSECTION
-\end_layout
+\begin_inset LatexCommand index
+name "INTERSECTION"
 
 \end_inset
 
@@ -4054,15 +3190,11 @@ INTERSECTION
  
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 *
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-*, sets
-\end_layout
+\begin_inset LatexCommand index
+name "*, sets"
 
 \end_inset
 
@@ -4075,28 +3207,16 @@ INTERSECTION
 .
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family typewriter
 A*B
 \family default
-
-\begin_inset space ~
-\end_inset
-
-is
-\begin_inset space ~
-\end_inset
-
-shorthand
-\begin_inset space ~
-\end_inset
-
-for
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
+is\InsetSpace ~
+shorthand\InsetSpace ~
+for\InsetSpace ~
 I
 \family typewriter
 NTERSECTION[A,B]
@@ -4125,19 +3245,12 @@ not
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Set
-\begin_inset space ~
-\end_inset
-
+Set\InsetSpace ~
 difference
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-set difference
-\end_layout
+\begin_inset LatexCommand index
+name "set difference"
 
 \end_inset
 
@@ -4154,12 +3267,8 @@ set difference
 first_set
 \family default
  -
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
--, sets
-\end_layout
+\begin_inset LatexCommand index
+name "-, sets"
 
 \end_inset
 
@@ -4197,29 +3306,21 @@ B - A
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 CARD
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-CARD
-\end_layout
+\begin_inset LatexCommand index
+name "CARD"
 
 \end_inset
 
 [set] Cardinality
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-cardinality
-\end_layout
+\begin_inset LatexCommand index
+name "cardinality"
 
 \end_inset
 
@@ -4227,19 +3328,15 @@ cardinality
  Returns an integer constant value that is the number of items in the set.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 CHOICE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-CHOICE
-\end_layout
+\begin_inset LatexCommand index
+name "CHOICE"
 
 \end_inset
 
@@ -4289,19 +3386,15 @@ A_less_one :== A - [CHOICE[A]];
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 IN
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-IN
-\end_layout
+\begin_inset LatexCommand index
+name "IN"
 
 \end_inset
 
@@ -4342,7 +3435,7 @@ SUCH_THAT
 \begin_inset Note Note
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 fix this reference
 \end_layout
 
@@ -4351,32 +3444,15 @@ fix this reference
 .
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 SUCH_THAT
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-SUCH
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-THAT
-\end_layout
+\begin_inset LatexCommand index
+name "SUCH\\_THAT"
 
 \end_inset
 
@@ -4517,29 +3593,15 @@ MODEL set_example;
 END set_example;
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 "
 \family typewriter
 |
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-|
-\end_layout
-
-\end_inset
-
-
-\end_layout
+\begin_inset LatexCommand index
+name "|"
 
 \end_inset
 
@@ -4611,12 +3673,8 @@ gen_eqn[i]
 
 \begin_layout Section
 Constants
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-constants
-\end_layout
+\begin_inset LatexCommand index
+name "constants"
 
 \end_inset
 
@@ -4652,32 +3710,15 @@ Sets could be considered constant because they are assigned only once, however
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 real_constant
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-real
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-constant
-\end_layout
+\begin_inset LatexCommand index
+name "real\\_constant"
 
 \end_inset
 
@@ -4687,18 +3728,12 @@ constant
  pair of definitions.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-CONSTANT
-\begin_inset space ~
-\end_inset
-
-declaration
-\begin_inset space ~
-\end_inset
-
+CONSTANT\InsetSpace ~
+declaration\InsetSpace ~
 example:
 \end_layout
 
@@ -4720,32 +3755,15 @@ CONSTANT hydrogen_weight
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 integer_constant
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-integer
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-constant
-\end_layout
+\begin_inset LatexCommand index
+name "integer\\_constant"
 
 \end_inset
 
@@ -4773,32 +3791,15 @@ tray[1..n_trays] IS_A vl_equilibrium_tray;
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 symbol_constant
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-symbol
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-constant
-\end_layout
+\begin_inset LatexCommand index
+name "symbol\\_constant"
 
 \end_inset
 
@@ -4806,32 +3807,15 @@ constant
  May be used in determining model structure.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 boolean_constant
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-boolean
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-constant
-\end_layout
+\begin_inset LatexCommand index
+name "boolean\\_constant"
 
 \end_inset
 
@@ -4839,38 +3823,27 @@ constant
  May be used in determining model structure.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Setting
-\begin_inset space ~
-\end_inset
-
+Setting\InsetSpace ~
 constants
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-constants, setting
-\end_layout
+\begin_inset LatexCommand index
+name "constants, setting"
 
 \end_inset
 
 
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 :==
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-:==
-\end_layout
+\begin_inset LatexCommand index
+name ":=="
 
 \end_inset
 
@@ -4903,12 +3876,8 @@ Here it is required that the one or more items in the LHS be of the same
 
 \begin_layout Section
 Variables
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-variables
-\end_layout
+\begin_inset LatexCommand index
+name "variables"
 
 \end_inset
 
@@ -4939,19 +3908,15 @@ d).
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 ATOM
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ATOM
-\end_layout
+\begin_inset LatexCommand index
+name "ATOM"
 
 \end_inset
 
@@ -5002,59 +3967,38 @@ atom_type_name
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 DEFAULT
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-DEFAULT
-\end_layout
+\begin_inset LatexCommand index
+name "DEFAULT"
 
 \end_inset
 
 ,
 \family sans
-
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
 DIMENSION
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-DIMENSION
-\end_layout
+\begin_inset LatexCommand index
+name "DIMENSION"
 
 \end_inset
 
-,
-\begin_inset space ~
-\end_inset
-
-and
-\begin_inset space ~
-\end_inset
-
+,\InsetSpace ~
+and\InsetSpace ~
 
 \family sans
 DIMENSIONLESS
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-DIMENSIONLESS
-\end_layout
+\begin_inset LatexCommand index
+name "DIMENSIONLESS"
 
 \end_inset
 
@@ -5079,32 +4023,15 @@ DIMENSION
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 solver_var
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-solver
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-var
-\end_layout
+\begin_inset LatexCommand index
+name "solver\\_var"
 
 \end_inset
 
@@ -5113,8 +4040,7 @@ var
 ATOM
 \family default
  and we will say much more about it in Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sub:x.6.1Variables-for-solvers"
 
 \end_inset
@@ -5125,12 +4051,8 @@ reference "sub:x.6.1Variables-for-solvers"
 \begin_deeper
 \begin_layout LyX-Code
 ATOM solver_var REFINES real DEFAULT 0.5 {?
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-?
-\end_layout
+\begin_inset LatexCommand index
+name "?"
 
 \end_inset
 
@@ -5179,42 +4101,25 @@ The default field is also optional.
  with units which are compatible with this dimensionality.
  In the solver_var example, we see a DEFAULT value of 0.5 with the unspecified
  unit
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-unit, unspecified
-\end_layout
+\begin_inset LatexCommand index
+name "unit, unspecified"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-unspecified unit
-\end_layout
+\begin_inset LatexCommand index
+name "unspecified unit"
 
 \end_inset
 
  {?
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-
-\end_layout
+\begin_inset LatexCommand index
 
 \end_inset
 
 } which leaves the dimensionality wild
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-wild dimensionality
-\end_layout
+\begin_inset LatexCommand index
+name "wild dimensionality"
 
 \end_inset
 
@@ -5222,15 +4127,11 @@ wild dimensionality
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 real
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-real
-\end_layout
+\begin_inset LatexCommand index
+name "real"
 
 \end_inset
 
@@ -5245,15 +4146,11 @@ real
  beyond the ASCEND object definition language.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 integer
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-integer
-\end_layout
+\begin_inset LatexCommand index
+name "integer"
 
 \end_inset
 
@@ -5262,15 +4159,11 @@ integer
  and as attributes of solver_var atoms.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 boolean
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-boolean
-\end_layout
+\begin_inset LatexCommand index
+name "boolean"
 
 \end_inset
 
@@ -5279,8 +4172,7 @@ boolean
  They can also be used procedurally and as variables in logical programming
  models, subject to the logical solver tools semantics.
  (Compare solver_boolean and boolean_var in Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sec:x.6Miscellany"
 
 \end_inset
@@ -5288,15 +4180,11 @@ reference "sec:x.6Miscellany"
 .)
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 symbol
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-symbol
-\end_layout
+\begin_inset LatexCommand index
+name "symbol"
 
 \end_inset
 
@@ -5304,48 +4192,33 @@ symbol
  We do not yet have operators for building symbols out of other symbols.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Setting
-\begin_inset space ~
-\end_inset
-
+Setting\InsetSpace ~
 variables
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-variables, setting
-\end_layout
+\begin_inset LatexCommand index
+name "variables, setting"
 
 \end_inset
 
 
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 :=
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-:=
-\end_layout
+\begin_inset LatexCommand index
+name ":="
 
 \end_inset
 
  Procedural equals
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-equals, procedural
-\end_layout
+\begin_inset LatexCommand index
+name "equals, procedural"
 
 \end_inset
 
@@ -5371,28 +4244,13 @@ Note that variable assignments (also known as defaulting statements) written
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Note
-\begin_inset space ~
-\end_inset
-
-that
-\begin_inset space ~
-\end_inset
-
-:=
-\begin_inset space ~
-\end_inset
-
-IS
-\begin_inset space ~
-\end_inset
-
-NOT
-\begin_inset space ~
-\end_inset
-
+Note\InsetSpace ~
+that\InsetSpace ~
+:=\InsetSpace ~
+IS\InsetSpace ~
+NOT\InsetSpace ~
 =.
 \end_layout
 
@@ -5405,28 +4263,21 @@ We use an ordinary equals (=) when defining a real valued equation to state
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 \begin_inset Note Note
 status open
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Tabular
-\begin_inset space ~
-\end_inset
-
+Tabular\InsetSpace ~
 assignments
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-assignments, tabular
-\end_layout
+\begin_inset LatexCommand index
+name "assignments, tabular"
 
 \end_inset
 
@@ -5568,13 +4419,12 @@ END DATA;
 END tabular_ex;
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 For sparse arrays of variables or constants, the COLUMNS and (possibly)
  UNITS keywords are omitted and the array subscripts are simply enumerated
  along with the values to be assigned.
 \end_layout
 
-\end_deeper
 \end_inset
 
 
@@ -5587,12 +4437,8 @@ For sparse arrays of variables or constants, the COLUMNS and (possibly)
 
 \begin_layout Section
 Relations
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-relations
-\end_layout
+\begin_inset LatexCommand index
+name "relations"
 
 \end_inset
 
@@ -5600,31 +4446,20 @@ relations
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Mathematical
-\begin_inset space ~
-\end_inset
-
+Mathematical\InsetSpace ~
 expression
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-mathematical expression
-\end_layout
+\begin_inset LatexCommand index
+name "mathematical expression"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-expression, math
-\end_layout
+\begin_inset LatexCommand index
+name "expression, math"
 
 \end_inset
 
@@ -5668,33 +4503,22 @@ term[i] = a[i]*x^(i-1);
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Numerical
-\begin_inset space ~
-\end_inset
-
+Numerical\InsetSpace ~
 relations
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-relations, numerical
-\end_layout
+\begin_inset LatexCommand index
+name "relations, numerical"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-numerical relations
-\end_layout
+\begin_inset LatexCommand index
+name "numerical relations"
 
 \end_inset
 
@@ -5747,8 +4571,7 @@ MINIMIZE
  RHS and LHS must be one or more variables, constants, and operators in
  a normal algebraic expression.
  The operators allowed are defined below and in Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sub:x.6.3Single-operand-real"
 
 \end_inset
@@ -5764,116 +4587,66 @@ FOR/CREATE
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Relational
-\begin_inset space ~
-\end_inset
-
+Relational\InsetSpace ~
 operators
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-operators, relational
-\end_layout
+\begin_inset LatexCommand index
+name "operators, relational"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-relational operators
-\end_layout
+\begin_inset LatexCommand index
+name "relational operators"
 
 \end_inset
 
 :
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 =
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-=
-\end_layout
+\begin_inset LatexCommand index
+name "="
 
 \end_inset
 
-,
-\begin_inset space ~
-\end_inset
-
+,\InsetSpace ~
 >=
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
- >=
-\end_layout
+\begin_inset LatexCommand index
+name " >="
 
 \end_inset
 
-,
-\begin_inset space ~
-\end_inset
-
+,\InsetSpace ~
 <=
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-<=
-\end_layout
+\begin_inset LatexCommand index
+name "<="
 
 \end_inset
 
-,
-\begin_inset space ~
-\end_inset
-
+,\InsetSpace ~
 <
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-<
-\end_layout
+\begin_inset LatexCommand index
+name "<"
 
 \end_inset
 
-,
-\begin_inset space ~
-\end_inset
-
+,\InsetSpace ~
 >
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
->
-\end_layout
+\begin_inset LatexCommand index
+name ">"
 
 \end_inset
 
-,
-\begin_inset space ~
-\end_inset
-
+,\InsetSpace ~
 <>
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-<>
-\end_layout
+\begin_inset LatexCommand index
+name "<>"
 
 \end_inset
 
@@ -5894,37 +4667,26 @@ Equations must be dimensionally correct.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 MAXIMIZE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-MAXIMIZE
-\end_layout
+\begin_inset LatexCommand index
+name "MAXIMIZE"
 
 \end_inset
 
-,
-\begin_inset space ~
-\end_inset
-
+,\InsetSpace ~
 
 \family sans
 MINIMIZE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-MINIMIZE
-\end_layout
+\begin_inset LatexCommand index
+name "MINIMIZE"
 
 \end_inset
 
@@ -5938,31 +4700,20 @@ Objective function indicators.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Binary
-\begin_inset space ~
-\end_inset
-
+Binary\InsetSpace ~
 Operators
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-operators, binary
-\end_layout
+\begin_inset LatexCommand index
+name "operators, binary"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-binary operators
-\end_layout
+\begin_inset LatexCommand index
+name "binary operators"
 
 \end_inset
 
@@ -5972,15 +4723,11 @@ binary operators
  We follow the usual algebraic order of operations for binary operators.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 +
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-+, binary math
-\end_layout
+\begin_inset LatexCommand index
+name "+, binary math"
 
 \end_inset
 
@@ -5988,15 +4735,11 @@ status collapsed
  Numerical addition or set union.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 -
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
--, binary math
-\end_layout
+\begin_inset LatexCommand index
+name "-, binary math"
 
 \end_inset
 
@@ -6004,15 +4747,11 @@ status collapsed
  Numerical subtraction or set difference.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 *
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-*, binary math
-\end_layout
+\begin_inset LatexCommand index
+name "*, binary math"
 
 \end_inset
 
@@ -6020,15 +4759,11 @@ status collapsed
  Numerical multiplication or set intersection.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 /
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-/
-\end_layout
+\begin_inset LatexCommand index
+name "/"
 
 \end_inset
 
@@ -6037,15 +4772,11 @@ status collapsed
  In most cases it implies real division and not integer division.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 ^ Power
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-power
-\end_layout
+\begin_inset LatexCommand index
+name "power"
 
 \end_inset
 
@@ -6055,90 +4786,54 @@ power
  and dimensionless.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Unary
-\begin_inset space ~
-\end_inset
-
+Unary\InsetSpace ~
 Operators
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-operators, unary
-\end_layout
+\begin_inset LatexCommand index
+name "operators, unary"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-unary operators
-\end_layout
+\begin_inset LatexCommand index
+name "unary operators"
 
 \end_inset
 
 :
 \bar default
  -
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
--, unary
-\end_layout
+\begin_inset LatexCommand index
+name "-, unary"
 
 \end_inset
 
 , ordered_function()
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 - Unary minus.
  Numeric negation.
  There is no unary +
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-+, math unary
-\end_layout
+\begin_inset LatexCommand index
+name "+, math unary"
 
 \end_inset
 
  operator.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family typewriter
 ordered_function
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ordered
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-function
-\end_layout
+\begin_inset LatexCommand index
+name "ordered\\_function"
 
 \end_inset
 
@@ -6146,8 +4841,7 @@ function
 \family default
  unary real valued functions.
  The unary real functions we support are given in section Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sub:x.6.3Single-operand-real"
 
 \end_inset
@@ -6155,57 +4849,32 @@ reference "sub:x.6.3Single-operand-real"
 .
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Real
-\begin_inset space ~
-\end_inset
-
-functions
-\begin_inset space ~
-\end_inset
-
-of
-\begin_inset space ~
-\end_inset
-
-sets
-\begin_inset space ~
-\end_inset
-
-of
-\begin_inset space ~
-\end_inset
-
-real
-\begin_inset space ~
-\end_inset
-
+Real\InsetSpace ~
+functions\InsetSpace ~
+of\InsetSpace ~
+sets\InsetSpace ~
+of\InsetSpace ~
+real\InsetSpace ~
 terms:
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 SUM
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-SUM
-\end_layout
+\begin_inset LatexCommand index
+name "SUM"
 
 \end_inset
 
 
 \family typewriter
-[term
-\begin_inset space ~
-\end_inset
-
+[term\InsetSpace ~
 set]
 \family default
  Add all expressions in the functions list.
@@ -6238,30 +4907,18 @@ SUM[y[i] | i IN components] = 1;
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Empty
-\begin_inset space ~
-\end_inset
-
+Empty\InsetSpace ~
 
 \family sans
 SUM
 \family default
-
-\begin_inset space ~
-\end_inset
-
-yields
-\begin_inset space ~
-\end_inset
-
-wildcard
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
+yields\InsetSpace ~
+wildcard\InsetSpace ~
 
 \family typewriter
 0
@@ -6318,38 +4975,25 @@ not
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 PROD
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-PROD
-\end_layout
+\begin_inset LatexCommand index
+name "PROD"
 
 \end_inset
 
-[term
-\begin_inset space ~
-\end_inset
-
+[term\InsetSpace ~
 set] Multiply all the expressions in the products list.
  The product of an empty list is a dimensionless value, 1.0.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Possible
-\begin_inset space ~
-\end_inset
-
-future
-\begin_inset space ~
-\end_inset
-
+Possible\InsetSpace ~
+future\InsetSpace ~
 functions:
 \end_layout
 
@@ -6361,7 +5005,7 @@ functions:
 \begin_inset Note Note
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 Clarification required
 \end_layout
 
@@ -6371,41 +5015,27 @@ Clarification required
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 MAX
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-MAX
-\end_layout
+\begin_inset LatexCommand index
+name "MAX"
 
 \end_inset
 
-[term
-\begin_inset space ~
-\end_inset
-
+[term\InsetSpace ~
 set] (* 4+ *) maximum value on list of arguments
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 MIN
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-MIN
-\end_layout
+\begin_inset LatexCommand index
+name "MIN"
 
 \end_inset
 
-[term
-\begin_inset space ~
-\end_inset
-
+[term\InsetSpace ~
 set] (* 4+ *) minimum value on list of arguments
 \end_layout
 
@@ -6416,19 +5046,15 @@ status open
 
 \begin_layout Section
 Derivatives
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-derivatives
-\end_layout
+\begin_inset LatexCommand index
+name "derivatives"
 
 \end_inset
 
  in relations
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 Simply put, we would like to have general partial and full derivatives usable
  in writing equations, as there are many mathematically interesting things
  that can be said about both.
@@ -6445,22 +5071,14 @@ Simply put, we would like to have general partial and full derivatives usable
 
 \begin_layout Section
 External relations
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-relations, external
-\end_layout
+\begin_inset LatexCommand index
+name "relations, external"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-external relations
-\end_layout
+\begin_inset LatexCommand index
+name "external relations"
 
 \end_inset
 
@@ -6470,8 +5088,7 @@ external relations
 \begin_layout Standard
 We cannot document these at the present time.
  Some details are available in Kirk Abbott's thesis 
-\begin_inset CommandInset citation
-LatexCommand cite
+\begin_inset LatexCommand cite
 key "Abbott1996a"
 
 \end_inset
@@ -6483,22 +5100,14 @@ http://ascendwiki.cheme.cmu.edu/
 
 \begin_layout Section
 Conditional modelling
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-relations, conditional
-\end_layout
+\begin_inset LatexCommand index
+name "relations, conditional"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-conditional relations
-\end_layout
+\begin_inset LatexCommand index
+name "conditional relations"
 
 \end_inset
 
@@ -6547,33 +5156,22 @@ Logical relations
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Logical
-\begin_inset space ~
-\end_inset
-
+Logical\InsetSpace ~
 expression
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-expression, logical
-\end_layout
+\begin_inset LatexCommand index
+name "expression, logical"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-logical expression
-\end_layout
+\begin_inset LatexCommand index
+name "logical expression"
 
 \end_inset
 
@@ -6667,12 +5265,8 @@ Logical relations are then made by putting together logical expressions
 NOTES
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-NOTES
-\end_layout
+\begin_inset LatexCommand index
+name "NOTES"
 
 \end_inset
 
@@ -6991,28 +5585,19 @@ Experience has shown that even documentation embedded directly in models
 
 \begin_layout Chapter
 Declarative statements
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-statements, declarative
-\end_layout
+\begin_inset LatexCommand index
+name "statements, declarative"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-declarative statements
-\end_layout
+\begin_inset LatexCommand index
+name "declarative statements"
 
 \end_inset
 
 
-\begin_inset CommandInset label
-LatexCommand label
+\begin_inset LatexCommand label
 name "sec:x.3Declarative-statements"
 
 \end_inset
@@ -7041,19 +5626,15 @@ METHODS
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
 Statements
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-statements
-\end_layout
+\begin_inset LatexCommand index
+name "statements"
 
 \end_inset
 
@@ -7068,33 +5649,22 @@ statements
  
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Compound
-\begin_inset space ~
-\end_inset
-
+Compound\InsetSpace ~
 statements
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-statements, compound
-\end_layout
+\begin_inset LatexCommand index
+name "statements, compound"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-compound statements
-\end_layout
+\begin_inset LatexCommand index
+name "compound statements"
 
 \end_inset
 
@@ -7158,36 +5728,25 @@ END FOR
  
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 \bar under
 CASE
 \family default
-
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
 statements
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-statements, CASE
-\end_layout
+\begin_inset LatexCommand index
+name "statements, CASE"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-CASE statements
-\end_layout
+\begin_inset LatexCommand index
+name "CASE statements"
 
 \end_inset
 
@@ -7218,29 +5777,18 @@ s which statements to compile based on discrete constants.
  generalized form than the C language switch statement.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Type
-\begin_inset space ~
-\end_inset
-
+Type\InsetSpace ~
 declarations
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-declarations, type
-\end_layout
+\begin_inset LatexCommand index
+name "declarations, type"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-yype declarations
-\end_layout
+\begin_inset LatexCommand index
+name "yype declarations"
 
 \end_inset
 
@@ -7271,16 +5819,10 @@ END
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-ASCEND
-\begin_inset space ~
-\end_inset
-
-operator
-\begin_inset space ~
-\end_inset
-
+ASCEND\InsetSpace ~
+operator\InsetSpace ~
 synopses:
 \end_layout
 
@@ -7293,32 +5835,15 @@ Well start with an extremely brief synopsis of what each does and then give
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 IS_A
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-IS
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-A
-\end_layout
+\begin_inset LatexCommand index
+name "IS\\_A"
 
 \end_inset
 
@@ -7332,45 +5857,15 @@ A
  following the type name.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 IS_REFINED_TO
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-IS
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-REFINED
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-TO
-\end_layout
+\begin_inset LatexCommand index
+name "IS\\_REFINED\\_TO"
 
 \end_inset
 
@@ -7394,19 +5889,15 @@ IS_A
  
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 ALIASES
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ALIASES
-\end_layout
+\begin_inset LatexCommand index
+name "ALIASES"
 
 \end_inset
 
@@ -7416,7 +5907,7 @@ ALIASES
 \begin_inset Foot
 status collapsed
 
-\begin_layout Plain Layout
+\begin_layout Standard
 The equivalent of an 
 \family sans
 ALIASES
@@ -7434,32 +5925,15 @@ ARE_THE_SAME
  
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 ALIASES/IS_A
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ALIASES/IS
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-A
-\end_layout
+\begin_inset LatexCommand index
+name "ALIASES/IS\\_A"
 
 \end_inset
 
@@ -7477,32 +5951,15 @@ Creates an array of alternate names for a list of existing instances with
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 WILL_BE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-WILL
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-BE
-\end_layout
+\begin_inset LatexCommand index
+name "WILL\\_BE"
 
 \end_inset
 
@@ -7517,45 +5974,15 @@ WILL_BE
  Were it legal in the body of a model, compiling models would be very expensive.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 ARE_THE_SAME
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ARE
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-THE
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-SAME
-\end_layout
+\begin_inset LatexCommand index
+name "ARE\\_THE\\_SAME"
 
 \end_inset
 
@@ -7568,58 +5995,15 @@ SAME
  the instances destroyed during the merge.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 WILL_BE_THE_SAME
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-WILL
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-BE
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-THE
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-SAME
-\end_layout
+\begin_inset LatexCommand index
+name "WILL\\_BE\\_THE\\_SAME"
 
 \end_inset
 
@@ -7635,71 +6019,15 @@ d.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 WILL_NOT_BE_THE_SAME
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-WILL
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-NOT
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-BE
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-THE
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-SAME
-\end_layout
+\begin_inset LatexCommand index
+name "WILL\\_NOT\\_BE\\_THE\\_SAME"
 
 \end_inset
 
@@ -7718,70 +6046,27 @@ Structural condition statement restricting objects in a forward declaration.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 \begin_inset Note Note
 status open
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 ARE_NOT_THE_SAME
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ARE
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-NOT
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-THE
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-SAME
-\end_layout
+\begin_inset LatexCommand index
+name "ARE\\_NOT\\_THE\\_SAME"
 
 \end_inset
 
 
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 Cannot be merged.
  We believe it is useful to say that two objects cannot be merged and still
  represent a valid model.
@@ -7794,42 +6079,21 @@ Cannot be merged.
 
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 ARE_ALIKE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ARE
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-ALIKE
-\end_layout
+\begin_inset LatexCommand index
+name "ARE\\_ALIKE"
 
 \end_inset
 
  Refinement clique
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-clique
-\end_layout
+\begin_inset LatexCommand index
+name "clique"
 
 \end_inset
 
@@ -7841,19 +6105,15 @@ clique
  definition.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 FOR/CREATE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-FOR/CREATE
-\end_layout
+\begin_inset LatexCommand index
+name "FOR/CREATE"
 
 \end_inset
 
@@ -7861,48 +6121,36 @@ FOR/CREATE
  Required for creating arrays of relations and sparse arrays of other types.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 FOR/CHECK
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-FOR/CHECK
-\end_layout
+\begin_inset LatexCommand index
+name "FOR/CHECK"
 
 \end_inset
 
  Indexed checking of the conditions (WHERE
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-WHERE
-\end_layout
+\begin_inset LatexCommand index
+name "WHERE"
 
 \end_inset
 
  statements) of a parameterized model.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 SELECT/CASE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-SELECT/CASE
-\end_layout
+\begin_inset LatexCommand index
+name "SELECT/CASE"
 
 \end_inset
 
@@ -7926,19 +6174,15 @@ SELECT
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 CONDITIONAL
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-CONDITIONAL
-\end_layout
+\begin_inset LatexCommand index
+name "CONDITIONAL"
 
 \end_inset
 
@@ -7962,19 +6206,15 @@ WHEN
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 WHEN/CASE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-WHEN/CASE
-\end_layout
+\begin_inset LatexCommand index
+name "WHEN/CASE"
 
 \end_inset
 
@@ -7986,7 +6226,7 @@ WHEN/CASE
  
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 Reminder: In the following detailed statement descriptions, we show keywords
  in capital letters.
@@ -7998,43 +6238,20 @@ Reminder: In the following detailed statement descriptions, we show keywords
  We use names that describe the kind of name the user should use.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Operators
-\begin_inset space ~
-\end_inset
-
-in
-\begin_inset space ~
-\end_inset
-
+Operators\InsetSpace ~
+in\InsetSpace ~
 detail:
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 IS_A
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-IS
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-A
-\end_layout
+\begin_inset LatexCommand index
+name "IS\\_A"
 
 \end_inset
 
@@ -8077,41 +6294,11 @@ If a name is used twice in WILL_BE/IS_A/ALIASES statements of the same model,
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 IS_REFINED_TO
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-IS
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-REFINED
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-TO
-\end_layout
+\begin_inset LatexCommand index
+name "IS\\_REFINED\\_TO"
 
 \end_inset
 
@@ -8162,30 +6349,17 @@ This reconstruction does not occur until the arguments to the type satisfy
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 ALIASES
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ALIASES
-\end_layout
+\begin_inset LatexCommand index
+name "ALIASES"
 
 \end_inset
 
-
-\begin_inset space ~
-\end_inset
-
-(*
-\begin_inset space ~
-\end_inset
-
-4
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
 *) This statement has the syntax
 \end_layout
 
@@ -8273,43 +6447,17 @@ The ALIASES RHS can be an element or portion of a larger array with the
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 ALIASES/IS_A
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ALIASES/IS
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
+\begin_inset LatexCommand index
+name "ALIASES/IS\\_A"
 
 \end_inset
 
-A
-\end_layout
-
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-(*
-\begin_inset space ~
-\end_inset
-
-4
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
 *)
 \end_layout
 
@@ -8456,43 +6604,17 @@ If this explanation is unclear, just try it out.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 WILL_BE
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-WILL
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
+\begin_inset LatexCommand index
+name "WILL\\_BE"
 
 \end_inset
 
-BE
-\end_layout
-
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-(*
-\begin_inset space ~
-\end_inset
-
-4
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
 *) instance WILL_BE type_name;
 \end_layout
 
@@ -8525,41 +6647,11 @@ s.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 ARE_THE_SAME
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ARE
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-THE
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-SAME
-\end_layout
+\begin_inset LatexCommand index
+name "ARE\\_THE\\_SAME"
 
 \end_inset
 
@@ -8581,7 +6673,7 @@ wide false
 sideways false
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 \begin_inset Graphics
 	filename syntaxFig1.eps
 
@@ -8590,13 +6682,12 @@ status open
 
 \end_layout
 
-\begin_layout Plain Layout
-\begin_inset Caption Standard
+\begin_layout Standard
+\begin_inset Caption
 
-\begin_layout Plain Layout
+\begin_layout Standard
 Diagram of the Model Type Hierarchy for A, B, C, D, and E Example
-\begin_inset CommandInset label
-LatexCommand label
+\begin_inset LatexCommand label
 name "fig:HierarchyDiagram"
 
 \end_inset
@@ -8617,8 +6708,7 @@ name "fig:HierarchyDiagram"
 \begin_layout Standard
 All items on the list must have compatible types.
  For the example in Figure 
-\begin_inset CommandInset ref
-LatexCommand ref
+\begin_inset LatexCommand ref
 reference "fig:HierarchyDiagram"
 
 \end_inset
@@ -8715,20 +6805,11 @@ Note that the values of constants and sets are essentially type information,
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-WILL_BE_THE_SAME
-\begin_inset space ~
-\end_inset
-
-(*
-\begin_inset space ~
-\end_inset
-
-4
-\begin_inset space ~
-\end_inset
-
+WILL_BE_THE_SAME\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
 *)
 \end_layout
 
@@ -8739,20 +6820,11 @@ There is no further explanation of this operator.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-WILL_NOT_BE_THE_SAME
-\begin_inset space ~
-\end_inset
-
-(*
-\begin_inset space ~
-\end_inset
-
-4
-\begin_inset space ~
-\end_inset
-
+WILL_NOT_BE_THE_SAME\InsetSpace ~
+(*\InsetSpace ~
+4\InsetSpace ~
 *)
 \end_layout
 
@@ -8762,20 +6834,11 @@ There is no further explanation of this operator.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-ARE_NOT_THE_SAME
-\begin_inset space ~
-\end_inset
-
-(*
-\begin_inset space ~
-\end_inset
-
-4+
-\begin_inset space ~
-\end_inset
-
+ARE_NOT_THE_SAME\InsetSpace ~
+(*\InsetSpace ~
+4+\InsetSpace ~
 *)
 \end_layout
 
@@ -8785,28 +6848,11 @@ ARE_NOT_THE_SAME will be documented further when it is implemented.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 ARE_ALIKE
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ARE
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-ALIKE
-\end_layout
+\begin_inset LatexCommand index
+name "ARE\\_ALIKE"
 
 \end_inset
 
@@ -8895,15 +6941,11 @@ Finally, because ARE_ALIKE does not recursively put the parts of ARE_ALIKEd
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 FOR/CREATE
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-FOR/CREATE
-\end_layout
+\begin_inset LatexCommand index
+name "FOR/CREATE"
 
 \end_inset
 
@@ -8967,8 +7009,7 @@ FOR
 \family default
  loops can be nested to produce sparse arrays as illustrated in Arrays can
  be jagged(
-\begin_inset CommandInset ref
-LatexCommand vpageref
+\begin_inset LatexCommand vpageref
 reference "lyx:Arrays-can-be"
 
 \end_inset
@@ -8979,19 +7020,15 @@ reference "lyx:Arrays-can-be"
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 SELECT/CASE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-SELECT/CASE
-\end_layout
+\begin_inset LatexCommand index
+name "SELECT/CASE"
 
 \end_inset
 
@@ -9008,12 +7045,8 @@ Declarative.
 OTHERWISE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-OTHERWISE
-\end_layout
+\begin_inset LatexCommand index
+name "OTHERWISE"
 
 \end_inset
 
@@ -9043,19 +7076,15 @@ SELECT
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 CONDITIONAL
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-CONDITIONAL
-\end_layout
+\begin_inset LatexCommand index
+name "CONDITIONAL"
 
 \end_inset
 
@@ -9072,7 +7101,7 @@ CONDITIONAL
 \begin_inset Foot
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 
 \family sans
 CONDITIONAL
@@ -9095,19 +7124,15 @@ $boundary
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 WHEN/CASE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-WHEN/CASE
-\end_layout
+\begin_inset LatexCommand index
+name "WHEN/CASE"
 
 \end_inset
 
@@ -9134,28 +7159,19 @@ s are included in the problem to be solved.
 \begin_deeper
 \begin_layout Chapter
 Procedural statements
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-statements, procedural
-\end_layout
+\begin_inset LatexCommand index
+name "statements, procedural"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-procedural statements
-\end_layout
+\begin_inset LatexCommand index
+name "procedural statements"
 
 \end_inset
 
 
-\begin_inset CommandInset label
-LatexCommand label
+\begin_inset LatexCommand label
 name "sec:x.4Procedural-statements"
 
 \end_inset
@@ -9164,19 +7180,15 @@ name "sec:x.4Procedural-statements"
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 METHODS
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-METHODS
-\end_layout
+\begin_inset LatexCommand index
+name "METHODS"
 
 \end_inset
 
@@ -9226,36 +7238,23 @@ The detailed semantics of method inheritance, addition, and replacement
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
-ADD
-\begin_inset space ~
-\end_inset
-
-METHODS
-\begin_inset space ~
-\end_inset
-
+ADD\InsetSpace ~
+METHODS\InsetSpace ~
 IN
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ADD METHODS IN
-\end_layout
+\begin_inset LatexCommand index
+name "ADD METHODS IN"
 
 \end_inset
 
 
 \family typewriter
-
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
 type_name;
 \end_layout
 
@@ -9275,36 +7274,23 @@ e rules.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
-REPLACE
-\begin_inset space ~
-\end_inset
-
-METHODS
-\begin_inset space ~
-\end_inset
-
+REPLACE\InsetSpace ~
+METHODS\InsetSpace ~
 IN
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-REPLACE METHODS IN
-\end_layout
+\begin_inset LatexCommand index
+name "REPLACE METHODS IN"
 
 \end_inset
 
 
 \family typewriter
-
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
 type_name;
 \end_layout
 
@@ -9336,26 +7322,14 @@ type_name
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
-ADD
-\begin_inset space ~
-\end_inset
-
-METHODS
-\begin_inset space ~
-\end_inset
-
-IN
-\begin_inset space ~
-\end_inset
-
-DEFINITION
-\begin_inset space ~
-\end_inset
-
+ADD\InsetSpace ~
+METHODS\InsetSpace ~
+IN\InsetSpace ~
+DEFINITION\InsetSpace ~
 MODEL
 \family typewriter
 ;
@@ -9377,46 +7351,31 @@ basemodel.a4l
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Initialization
-\begin_inset space ~
-\end_inset
-
+Initialization\InsetSpace ~
 routines
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-routines, initialization
-\end_layout
+\begin_inset LatexCommand index
+name "routines, initialization"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-initialization routines
-\end_layout
+\begin_inset LatexCommand index
+name "initialization routines"
 
 \end_inset
 
 :
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 METHOD
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-METHOD
-\end_layout
+\begin_inset LatexCommand index
+name "METHOD"
 
 \end_inset
 
@@ -9436,7 +7395,7 @@ At present, there are no local variables or other structures in methods
 \begin_inset Foot
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 currently set to 20 in 
 \family typewriter
 compiler/initialize.h
@@ -9485,7 +7444,7 @@ ARE_ALIKE
 \begin_inset Note Note
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 (* 4+ *) In the near future, declarations of local instances (which are
  automatically destroyed when the method exits) will be allowed.
  Since methods are imperative, these local structure definitions are processed
@@ -9528,33 +7487,22 @@ method_name
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Procedural
-\begin_inset space ~
-\end_inset
-
+Procedural\InsetSpace ~
 assignment
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-assignment, procedural
-\end_layout
+\begin_inset LatexCommand index
+name "assignment, procedural"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-procedural assignment
-\end_layout
+\begin_inset LatexCommand index
+name "procedural assignment"
 
 \end_inset
 
@@ -9622,22 +7570,15 @@ DATA
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 FOR/DO
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-FOR/DO
-\end_layout
+\begin_inset LatexCommand index
+name "FOR/DO"
 
 \end_inset
 
-
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
 statement
 \end_layout
 
@@ -9703,19 +7644,15 @@ is a backward loop.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 IF
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-IF
-\end_layout
+\begin_inset LatexCommand index
+name "IF"
 
 \end_inset
 
@@ -9829,26 +7766,19 @@ NOT
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00.00.0000
 
 \family sans
 WHILE
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-WHILE
-\end_layout
+\begin_inset LatexCommand index
+name "WHILE"
 
 \end_inset
 
-
-\begin_inset space ~
-\end_inset
-
+\InsetSpace ~
 statement
 \end_layout
 
@@ -9879,19 +7809,15 @@ END WHILE;
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 SWITCH
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-SWITCH
-\end_layout
+\begin_inset LatexCommand index
+name "SWITCH"
 
 \end_inset
 
@@ -9913,12 +7839,12 @@ CASE
 \end_layout
 
 \begin_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 \begin_inset Note Note
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 EXAMPLE of SWITCH required here
 \end_layout
 
@@ -9928,19 +7854,15 @@ EXAMPLE of SWITCH required here
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 CALL
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-CALL
-\end_layout
+\begin_inset LatexCommand index
+name "CALL"
 
 \end_inset
 
@@ -9950,31 +7872,23 @@ CALL
 EXTERNAL
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-EXTERNAL
-\end_layout
+\begin_inset LatexCommand index
+name "EXTERNAL"
 
 \end_inset
 
  connection prototype originally created by Kirk Abbott.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 RUN
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-RUN
-\end_layout
+\begin_inset LatexCommand index
+name "RUN"
 
 \end_inset
 
@@ -10027,20 +7941,11 @@ RUN
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Type
-\begin_inset space ~
-\end_inset
-
-access
-\begin_inset space ~
-\end_inset
-
-to
-\begin_inset space ~
-\end_inset
-
+Type\InsetSpace ~
+access\InsetSpace ~
+to\InsetSpace ~
 methods:
 \end_layout
 
@@ -10051,12 +7956,8 @@ When
 model_type::
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-::
-\end_layout
+\begin_inset LatexCommand index
+name "::"
 
 \end_inset
 
@@ -10128,28 +8029,19 @@ END bar;
 
 \begin_layout Chapter
 Parameterized models
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-models, parameterized
-\end_layout
+\begin_inset LatexCommand index
+name "models, parameterized"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-parameterized models
-\end_layout
+\begin_inset LatexCommand index
+name "parameterized models"
 
 \end_inset
 
 
-\begin_inset CommandInset label
-LatexCommand label
+\begin_inset LatexCommand label
 name "sec:x.5Parameterized-models"
 
 \end_inset
@@ -10162,7 +8054,7 @@ Parameterized model definitions have the following general form
 \begin_inset Foot
 status collapsed
 
-\begin_layout Plain Layout
+\begin_layout Standard
 «» signify optional parts
 \end_layout
 
@@ -10205,8 +8097,7 @@ assignment_list
 
 \begin_layout Section
 The parameter list
-\begin_inset CommandInset label
-LatexCommand label
+\begin_inset LatexCommand label
 name "sub:x.5.1The-parameter-list"
 
 \end_inset
@@ -10351,22 +8242,14 @@ The
 WHERE
 \family default
  list
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-list, WHERE
-\end_layout
+\begin_inset LatexCommand index
+name "list, WHERE"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-WHERE list
-\end_layout
+\begin_inset LatexCommand index
+name "WHERE list"
 
 \end_inset
 
@@ -10431,22 +8314,14 @@ l guarantee of object compatibility.
 
 \begin_layout Section
 The assignment list
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-list, assignment
-\end_layout
+\begin_inset LatexCommand index
+name "list, assignment"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-assignment list
-\end_layout
+\begin_inset LatexCommand index
+name "assignment list"
 
 \end_inset
 
@@ -10472,12 +8347,8 @@ IS_A
 
 \begin_layout Section
 Refining
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-refining, parameterized types
-\end_layout
+\begin_inset LatexCommand index
+name "refining, parameterized types"
 
 \end_inset
 
@@ -10501,8 +8372,7 @@ S_A
  and then assigned in the assignment list are not repeated because the user
  no longer needs to supply these values.
  A refinement of the model test given in Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sub:x.5.1The-parameter-list"
 
 \end_inset
@@ -10571,8 +8441,7 @@ In expanded_test, we see that the type of the array q is more refined than
 
 \begin_layout Chapter
 Miscellany
-\begin_inset CommandInset label
-LatexCommand label
+\begin_inset LatexCommand label
 name "sec:x.6Miscellany"
 
 \end_inset
@@ -10582,8 +8451,7 @@ name "sec:x.6Miscellany"
 
 \begin_layout Section
 Variables for solvers
-\begin_inset CommandInset label
-LatexCommand label
+\begin_inset LatexCommand label
 name "sub:x.6.1Variables-for-solvers"
 
 \end_inset
@@ -10592,32 +8460,15 @@ name "sub:x.6.1Variables-for-solvers"
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 solver_var
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-solver
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-var
-\end_layout
+\begin_inset LatexCommand index
+name "solver\\_var"
 
 \end_inset
 
@@ -10652,7 +8503,7 @@ system.a4l
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
@@ -10663,102 +8514,60 @@ Attributes:
 type, default
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 lower_bound
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-lower
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-bound
-\end_layout
+\begin_inset LatexCommand index
+name "lower\\_bound"
 
 \end_inset
 
  real, 0.0
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 upper_bound
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-upper
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-bound
-\end_layout
+\begin_inset LatexCommand index
+name "upper\\_bound"
 
 \end_inset
 
  real, 0.0
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 nominal
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-nominal
-\end_layout
+\begin_inset LatexCommand index
+name "nominal"
 
 \end_inset
 
  real, 0.0
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 fixed
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-fixed
-\end_layout
+\begin_inset LatexCommand index
+name "fixed"
 
 \end_inset
 
@@ -10807,32 +8616,15 @@ system.a4l
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 generic_real
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-generic
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-real
-\end_layout
+\begin_inset LatexCommand index
+name "generic\\_real"
 
 \end_inset
 
@@ -10873,27 +8665,17 @@ system.a4l
 .
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Kluges
-\begin_inset space ~
-\end_inset
-
-for
-\begin_inset space ~
-\end_inset
-
+Kluges\InsetSpace ~
+for\InsetSpace ~
 MILPs
 \bar default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-MILPs
-\end_layout
+\begin_inset LatexCommand index
+name "MILPs"
 
 \end_inset
 
@@ -10902,106 +8684,45 @@ MILPs
 system.a4l
 \family default
  are the types for integer, binary, and semi-continuous variables
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-variables, semi-continuous
-\end_layout
+\begin_inset LatexCommand index
+name "variables, semi-continuous"
 
 \end_inset
 
 .
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 solver_semi
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-solver
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
+\begin_inset LatexCommand index
+name "solver\\_semi"
 
 \end_inset
 
-semi
-\end_layout
-
-\end_inset
-
-,
-\begin_inset space ~
-\end_inset
-
+,\InsetSpace ~
 
 \family sans
 solver_integer
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-solver
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
+\begin_inset LatexCommand index
+name "solver\\_integer"
 
 \end_inset
 
-integer
-\end_layout
-
-\end_inset
-
-,
-\begin_inset space ~
-\end_inset
-
+,\InsetSpace ~
 
 \family sans
 solver_binary
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-solver
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-binary
-\end_layout
+\begin_inset LatexCommand index
+name "solver\\_binary"
 
 \end_inset
 
@@ -11032,33 +8753,19 @@ solver_binary
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Integers
-\begin_inset space ~
-\end_inset
-
-are
-\begin_inset space ~
-\end_inset
-
+Integers\InsetSpace ~
+are\InsetSpace ~
 relaxable
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-relaxable integers
-\end_layout
+\begin_inset LatexCommand index
+name "relaxable integers"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-integers, relaxable
-\end_layout
+\begin_inset LatexCommand index
+name "integers, relaxable"
 
 \end_inset
 
@@ -11068,25 +8775,15 @@ integers, relaxable
  
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Kluges
-\begin_inset space ~
-\end_inset
-
-for
-\begin_inset space ~
-\end_inset
-
+Kluges\InsetSpace ~
+for\InsetSpace ~
 ODEs
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ODEs
-\end_layout
+\begin_inset LatexCommand index
+name "ODEs"
 
 \end_inset
 
@@ -11105,22 +8802,14 @@ ivpsystem.a4l
 solver_var
 \family default
  in order to support initial value problem (IVP
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-IVP
-\end_layout
+\begin_inset LatexCommand index
+name "IVP"
 
 \end_inset
 
 ) solvers (integrators
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-integrators
-\end_layout
+\begin_inset LatexCommand index
+name "integrators"
 
 \end_inset
 
@@ -11128,15 +8817,11 @@ integrators
  Integration in the ASCEND environment is explained in another chapter.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 ivpsystem.a4l
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ivpsystem.a4l
-\end_layout
+\begin_inset LatexCommand index
+name "ivpsystem.a4l"
 
 \end_inset
 
@@ -11167,7 +8852,7 @@ system.a4l
 \begin_inset Note Note
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 the first step towards this is the proposed LINK syntax currently in the
  pipeline.
 \end_layout
@@ -11180,8 +8865,7 @@ the first step towards this is the proposed LINK syntax currently in the
 \begin_deeper
 \begin_layout Section
 Supported attributes
-\begin_inset CommandInset label
-LatexCommand label
+\begin_inset LatexCommand label
 name "sub:x.6.2Supported-attributes"
 
 \end_inset
@@ -11216,7 +8900,7 @@ $
 \begin_inset Note Note
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 what's he talking about here? 'derivative syntax'???
 \end_layout
 
@@ -11234,18 +8918,13 @@ what's he talking about here? 'derivative syntax'???
 \end_deeper
 \begin_layout Section
 Single operand real functions
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-functions, real
-\end_layout
+\begin_inset LatexCommand index
+name "functions, real"
 
 \end_inset
 
 
-\begin_inset CommandInset label
-LatexCommand label
+\begin_inset LatexCommand label
 name "sub:x.6.3Single-operand-real"
 
 \end_inset
@@ -11253,19 +8932,15 @@ name "sub:x.6.3Single-operand-real"
 
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 exp
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-exp
-\end_layout
+\begin_inset LatexCommand index
+name "exp"
 
 \end_inset
 
@@ -11284,19 +8959,15 @@ exp
 )
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 ln
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ln
-\end_layout
+\begin_inset LatexCommand index
+name "ln"
 
 \end_inset
 
@@ -11307,19 +8978,15 @@ ln
 
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 sin
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-sin
-\end_layout
+\begin_inset LatexCommand index
+name "sin"
 
 \end_inset
 
@@ -11328,19 +8995,15 @@ sin
 ally)
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 cos
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-cos
-\end_layout
+\begin_inset LatexCommand index
+name "cos"
 
 \end_inset
 
@@ -11348,19 +9011,15 @@ cos
  argument must be an angle.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 tan
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-tan
-\end_layout
+\begin_inset LatexCommand index
+name "tan"
 
 \end_inset
 
@@ -11368,19 +9027,15 @@ tan
  argument must be an angle.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 arcsin
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-arcsin
-\end_layout
+\begin_inset LatexCommand index
+name "arcsin"
 
 \end_inset
 
@@ -11396,19 +9051,15 @@ arcsin
  radians.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 arccos
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-arccos
-\end_layout
+\begin_inset LatexCommand index
+name "arccos"
 
 \end_inset
 
@@ -11424,19 +9075,15 @@ arccos
  radians.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 arctan
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-arctan
-\end_layout
+\begin_inset LatexCommand index
+name "arctan"
 
 \end_inset
 
@@ -11452,162 +9099,126 @@ arctan
  radians.
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 erf
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-erf
-\end_layout
+\begin_inset LatexCommand index
+name "erf"
 
 \end_inset
 
 () error function (not available under Windows)
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 sinh
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-sinh
-\end_layout
+\begin_inset LatexCommand index
+name "sinh"
 
 \end_inset
 
 () hyperbolic sine
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 cosh
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-cosh
-\end_layout
+\begin_inset LatexCommand index
+name "cosh"
 
 \end_inset
 
 () hyperbolic cosine
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 tanh
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-tanh
-\end_layout
+\begin_inset LatexCommand index
+name "tanh"
 
 \end_inset
 
 () hyperbolic tangent
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 arcsinh
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-arcsinh
-\end_layout
+\begin_inset LatexCommand index
+name "arcsinh"
 
 \end_inset
 
 () inverse hyperbolic sine
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 arccosh
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-arccosh
-\end_layout
+\begin_inset LatexCommand index
+name "arccosh"
 
 \end_inset
 
 () inverse hyperbolic cosine
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 arctanh
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-arctanh
-\end_layout
+\begin_inset LatexCommand index
+name "arctanh"
 
 \end_inset
 
 () inverse hyperbolic tangent
 \end_layout
 
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 lnm
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-lnm
-\end_layout
+\begin_inset LatexCommand index
+name "lnm"
 
 \end_inset
 
 () modified natural logarithm
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-ln, modified
-\end_layout
+\begin_inset LatexCommand index
+name "ln, modified"
 
 \end_inset
 
@@ -11638,13 +9249,10 @@ lnm
 
 \begin_deeper
 \begin_layout Standard
-\begin_inset Formula 
-\[
+\begin_inset Formula \[
 \mathrm{lnm}(x)=\left\{ \begin{array}{cc}
 \ln(x) & \mathrm{for}\, x>a\\
-\frac{x-a}{a}+\ln(a) & \mathrm{for}\, x\le a
-\end{array}\right.
-\]
+\frac{x-a}{a}+\ln(a) & \mathrm{for}\, x\le a\end{array}\right.\]
 
 \end_inset
 
@@ -11704,7 +9312,7 @@ ln
 \begin_inset Note Note
 status open
 
-\begin_layout Plain Layout
+\begin_layout Standard
 need to check that.
 \end_layout
 
@@ -11714,24 +9322,12 @@ need to check that.
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
-Operand
-\begin_inset space ~
-\end_inset
-
-dimensionality
-\begin_inset space ~
-\end_inset
-
-must
-\begin_inset space ~
-\end_inset
-
-be
-\begin_inset space ~
-\end_inset
-
+Operand\InsetSpace ~
+dimensionality\InsetSpace ~
+must\InsetSpace ~
+be\InsetSpace ~
 correct.
 \end_layout
 
@@ -11764,21 +9360,14 @@ y = A*exp(-B/T);
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \bar under
-Discontinuous
-\begin_inset space ~
-\end_inset
-
+Discontinuous\InsetSpace ~
 functions
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-functions, discontinuous
-\end_layout
+\begin_inset LatexCommand index
+name "functions, discontinuous"
 
 \end_inset
 
@@ -11788,12 +9377,8 @@ functions, discontinuous
 \begin_deeper
 \begin_layout Standard
 Discontinuous functions may destroy a Newton
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Newton
-\end_layout
+\begin_inset LatexCommand index
+name "Newton"
 
 \end_inset
 
@@ -11802,19 +9387,15 @@ Newton
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 
 \family sans
 abs
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-abs
-\end_layout
+\begin_inset LatexCommand index
+name "abs"
 
 \end_inset
 
@@ -11829,12 +9410,8 @@ bs
 \begin_deeper
 \begin_layout Section
 Logical functions
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-functions, logical
-\end_layout
+\begin_inset LatexCommand index
+name "functions, logical"
 
 \end_inset
 
@@ -11842,15 +9419,11 @@ functions, logical
 \end_layout
 
 \end_deeper
-\begin_layout Labeling
+\begin_layout List
 \labelwidthstring 00000.00000.00000.000
 SATISFIED
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-SATISFIED
-\end_layout
+\begin_inset LatexCommand index
+name "SATISFIED"
 
 \end_inset
 
@@ -11867,12 +9440,8 @@ SATISFIED
 UNITS
 \family default
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-UNITS
-\end_layout
+\begin_inset LatexCommand index
+name "UNITS"
 
 \end_inset
 
@@ -11881,19 +9450,14 @@ UNITS
 
 \begin_layout Standard
 As noted in Section 
-\begin_inset CommandInset ref
-LatexCommand vref
+\begin_inset LatexCommand vref
 reference "sub:x.1.2Basic-Elements"
 
 \end_inset
 
 , ASCEND will recognize conversion factors
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-conversion factors
-\end_layout
+\begin_inset LatexCommand index
+name "conversion factors"
 
 \end_inset
 
@@ -11913,22 +9477,14 @@ x:= 0.5 {100};
 x == 50
 \family default
 , and that there are no `offset conversions
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-conversion, offset
-\end_layout
+\begin_inset LatexCommand index
+name "conversion, offset"
 
 \end_inset
 
 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-offset conversions
-\end_layout
+\begin_inset LatexCommand index
+name "offset conversions"
 
 \end_inset
 
@@ -12011,15 +9567,13 @@ The standard units library,
 measures.a4l
 \family default
 , is documented in the ASCEND manual, Section 
-\begin_inset CommandInset ref
-LatexCommand ref
+\begin_inset LatexCommand ref
 reference "cha:physprops"
 
 \end_inset
 
  
-\begin_inset CommandInset citation
-LatexCommand cite
+\begin_inset LatexCommand cite
 key "ASCEND2006"
 
 \end_inset
@@ -12027,6 +9581,5 @@ key "ASCEND2006"
 .
 \end_layout
 
-\end_deeper
 \end_body
 \end_document

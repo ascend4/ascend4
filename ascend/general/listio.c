@@ -24,7 +24,9 @@
  *  See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.  COPYING is found in ../compiler.
  */
 
 #include <stdio.h>
@@ -48,8 +50,7 @@ void gl_write_list(FILE *fp, struct gl_list_t *l)
   len = gl_length(l);
   for (c= 1; c <= len ; c++) {
 	/* FIXME the point to integer thing here is not working */
-    fprintf(myfp,"%lu: 0x%p (" ASC_PTRFMT ")\n",c,gl_fetch(l,c),
+    fprintf(myfp,"%lu: 0x%p (%lu)\n",c,gl_fetch(l,c),
              (asc_intptr_t)gl_fetch(l,c));
   }
 }
-

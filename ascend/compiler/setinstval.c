@@ -22,7 +22,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
+ *
  */
 #include <stdarg.h>
 #include <ascend/general/platform.h>
@@ -35,6 +38,10 @@
 #include "instance_enum.h"
 #include "cmpfunc.h"
 #include "setinstval.h"
+
+#ifndef lint
+static CONST char SetInstValID[] = "$Id: setinstval.c,v 1.9 1998/02/05 16:37:50 ballan Exp $";
+#endif
 
 #define MYMIN(x,y) (((x)<(y)) ? (x) : (y))
 

@@ -22,7 +22,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
+ *
  */
 
 #include <stdarg.h>
@@ -393,34 +396,28 @@ static void ClearConsLists(void)
 }
 
 static FILE *g_diagf;
-/**< global pointer so gliterate will have a file to print to in WriteConsLists */
+/*
+ * global pointer so gliterate will have a file to print to in WriteConsLists
+ */
 
-static void Diagnose(struct Instance *i){
-	if(InstanceKind(i)== REAL_CONSTANT_INST){
-		if(IsWild(RealAtomDims(i))) {
-		  FPRINTF(g_diagf,"Undimensioned ");
-		}
-		if(!AtomAssigned(i)){
-		  FPRINTF(g_diagf,"Unassigned ");
-		}
-		FPRINTF(g_diagf,"real constant ");
-		WriteInstanceName(g_diagf,i,NULL);
-		FPRINTF(g_diagf,"\n");
-	}else{
-		if(g_diagf == ASCERR){
-			ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
-		}
-		FPRINTF(g_diagf,"Unassigned constant \"");
-		WriteInstanceName(g_diagf,i,NULL);
-		FPRINTF(g_diagf,"\"");
-		if(g_diagf == ASCERR){
-			error_reporter_end_flush();
-		}else{
-			FPRINTF(g_diagf,"\n");
-		}
-	}
+static
+void Diagnose(struct Instance *i) {
+  if (InstanceKind(i)== REAL_CONSTANT_INST) {
+    if (IsWild(RealAtomDims(i))) {
+      FPRINTF(g_diagf,"Undimensioned ");
+    }
+    if (!AtomAssigned(i)) {
+      FPRINTF(g_diagf,"Unassigned ");
+    }
+    FPRINTF(g_diagf,"real constant ");
+    WriteInstanceName(g_diagf,i,NULL);
+    FPRINTF(g_diagf,"\n");
+  } else {
+    FPRINTF(g_diagf,"Unassigned constant ");
+    WriteInstanceName(g_diagf,i,NULL);
+    FPRINTF(g_diagf,"\n");
+  }
 }
-
 
 /* writes out the unassigned foo based on the flags given (pr,b,s,i) */
 static void WriteConsLists(FILE *f, int pr, int pb, int pi, int ps)

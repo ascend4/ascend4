@@ -20,7 +20,10 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.
+ *                 
  */
 
 /** @file
@@ -54,7 +57,7 @@
 /* When utility fuctions */
 
 extern unsigned long NumberWhenVariables(CONST struct Instance *when);
-/**<
+/**< 
  *  This will indicate the number of distinct variables to which the
  *  varlist of this when instance points.
  */
@@ -148,7 +151,7 @@ extern void model_set_flags(struct Instance *mod, unsigned int flags);
  */
 
 extern unsigned int model_flagbit(CONST struct Instance *mod, unsigned int name);
-/**<
+/**< 
  *  Returns the value of the bit specified from the model instance flags.
  *  name should be a MOD_xx flag
  */
@@ -237,7 +240,7 @@ extern void relinst_set_flagbit(struct Instance *rel,
 extern unsigned int logrelinst_flags(struct Instance *lrel);
 /**<  Returns the anon_flags field of the logical relation instance. */
 extern void logrelinst_set_flags(struct Instance *lrel, unsigned intflags);
-/**<
+/**< 
  *  Sets the entire anon_flags field to the value of flags given.
  *  <!--  logrelinst_flags(lrel) returns the anon_flags field of the lo-->gical
  *  <!--  relation instance.                                           -->

@@ -13,7 +13,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@defgroup general_platform General Platform-specific definitions
 	Platform-specific configuration parameters. This file has been renamed
@@ -45,8 +47,8 @@
 	@{
 */
 
-#ifndef ASC_PLATFORM_H
-#define ASC_PLATFORM_H
+#ifndef ASC_ASCCONFIG_H
+#define ASC_ASCCONFIG_H
 
 #ifndef ASC_BUILDING_INTERFACE
 # define ASC_BUILDING_LIBASCEND
@@ -283,17 +285,16 @@ ASC_DLLSPEC FILE*g_ascend_information;    /**< File stream to receive general me
 #define	BYTESIZE   8
 #define	WORDSIZE   (sizeof(unsigned)*BYTESIZE)
 
+#ifndef HAVE_BOOLEAN
+/* don't need to define this stuff if using GraphViz types.h (it's already defined identically there) */
 #ifndef TRUE
 # define	TRUE       1
 #endif
 #ifndef FALSE
 # define	FALSE      0
 #endif
-
 typedef	char       *POINTER;       /**< Generic pointer. */
 
-/* graphviz 'types.h' redefines this. we carefully avoid defining it just in the case of system/graph.c */
-#ifndef HAVE_BOOLEAN
 typedef	unsigned char boolean;        /**< Boolean type. */
 /* changed from 'char' to 'unsigned char' for compatibility with standard headers with MinGW GCC 3.4.2 */
 #endif
@@ -537,5 +538,5 @@ This macro returns a nonzero value if X is finite: not plus or
 #endif
 
 
-#endif /* ASC_PLATFORM_H */
+#endif /* ASC_ASCCONFIG_H */
 

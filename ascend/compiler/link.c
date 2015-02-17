@@ -13,7 +13,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	Link Routines.
@@ -33,10 +35,14 @@
 #include <ascend/utilities/error.h>
 
 #include "cmpfunc.h"
+#include "find.h"
 #include "forvars.h"
 #include "instance_types.h"
+#include "instance_enum.h"
 #include "instmacro.h"
 #include "instquery.h"
+#include "statement.h"
+#include "stattypes.h"
 #include "stdio.h"
 #include "symtab.h"
 #include "visitinst.h"
@@ -77,8 +83,8 @@ static struct gl_list_t *FindInstsNonFlat(
 	on list (else returned list will be NULL) and return the collected instances.
 	DS: it returns a flattened list of the instances
 */
-struct gl_list_t *FindInsts(
-	struct Instance *inst, const struct VariableList *list, enum find_errors *err
+static struct gl_list_t *FindInsts(
+	struct Instance *inst, CONST struct VariableList *list, enum find_errors *err
 ){
   struct gl_list_t *result,*temp;
   unsigned c,len;
@@ -338,7 +344,7 @@ extern void addLinkEntry(struct Instance *model, symchar *key
 	, struct gl_list_t *instances, struct Statement *stat, unsigned int declarative
 ){
 	struct TypeDescription *modelType;
-	struct link_entry_t *link_entry = NULL, *old_link_entry;
+	struct link_entry_t *link_entry, *old_link_entry;
 	struct for_var_t *ptr;
 	int c,len,exist = 0;
 

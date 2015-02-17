@@ -13,7 +13,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	Instance output routines
@@ -104,7 +106,7 @@ CONST char *instance_typename(CONST struct Instance *inst){
 		}
 	}
 	CONSOLE_DEBUG("No match");
-	ASC_PANIC("Invalid instance type (inst_t '%d' not found in list)",(int)inst->t);
+	Asc_Panic(2,__FUNCTION__,"Invalid instance type (inst_t '%d' not found in list)",(int)inst->t);
 }
 
 /*------------------------------------------------------------------------------
@@ -120,65 +122,65 @@ struct gl_list_t *ShortestPath(CONST struct Instance *i,
   struct gl_list_t *path,*shortest=NULL;
   unsigned long c,len;
   unsigned mybest= UINT_MAX;
-  if(height>=best) return NULL;
-  if(i==ref){
+  if (height>=best) return NULL;
+  if (i==ref) {
     shortest = gl_create(1L);
     gl_append_ptr(shortest,(VOIDPTR)ref);
     return shortest;
   }
-  if(0 != (len=NumberParents(i))){
+  if (0 != (len=NumberParents(i))){
     for(c=len;c>=1;c--){
       path = ShortestPath(InstanceParent(i,c),ref,height+1,mybest);
       if (path!=NULL){
 	if (shortest==NULL){
 	  shortest=path;
 	  mybest = height+gl_length(path);
-	}else{
-	  if(gl_length(path)<gl_length(shortest)){
+	} else{
+	  if (gl_length(path)<gl_length(shortest)){
 	    gl_destroy(shortest);
 	    shortest = path;
 	    mybest = height+gl_length(path);
-	  }else{
+	  } else {
             gl_destroy(path);
           }
 	}
       }
     }
-    if(shortest){
+    if (shortest){
       gl_append_ptr(shortest,NULL);
       for(c=gl_length(shortest);c>1;c--) {
 	gl_store(shortest,c,gl_fetch(shortest,c-1));
       }
-      gl_store(shortest,1,(VOIDPTR)i);
+      gl_store(shortest,1,(char *)i);
       assert((ref!=NULL)||(gl_length(shortest)==InstanceShortDepth(i)));
     }
-  }else{
-    if(ref==NULL) {
+  } else {
+    if (ref==NULL) {
       shortest = gl_create(1L);
       gl_append_ptr(shortest,(VOIDPTR)i);
       assert(gl_length(shortest)==InstanceShortDepth(i));
-    }else{
+    } else {
       return NULL;
     }
   }
   return shortest;
 }
 
-
-int WritePath(FILE *f, CONST struct gl_list_t *path){
+int WritePath(FILE *f, CONST struct gl_list_t *path)
+{
   CONST struct Instance *parent,*child;
   struct InstanceName name;
   unsigned long c;
   int count = 0;
 
-  if(path!=NULL){
+  if (path!=NULL){
     parent = gl_fetch(path,gl_length(path));
     for(c=gl_length(path)-1;c>=1;c--){
       child = gl_fetch(path,c);
       name = ParentsName(parent,child);
       switch (InstanceNameType(name)){
       case StrName:
-	if(c<(gl_length(path)-1)) PUTC('.',f);
+	if (c<(gl_length(path)-1)) PUTC('.',f);
 	FPRINTF(f,SCP(InstanceNameStr(name)));
 	count += SCLEN(InstanceNameStr(name));
 	break;
@@ -191,7 +193,8 @@ int WritePath(FILE *f, CONST struct gl_list_t *path){
       }
       parent = child;
     }
-  }else{
+  }
+  else{
     FPRINTF(ASCERR,"Cannot print name.\n");
     FPRINTF(f,"?????");
   }
@@ -232,8 +235,8 @@ static void WritePathDS(Asc_DString *dsPtr,CONST struct gl_list_t *path){
   }
 }
 
-
-char *WritePathString(CONST struct gl_list_t *path){
+char *WritePathString(CONST struct gl_list_t *path)
+{
   char *result;
   Asc_DString ds, *dsPtr;
   dsPtr = &ds;
@@ -844,7 +847,7 @@ void WriteTypeOrValue(FILE *f, CONST struct Instance *i)
 		SCP(GetName(GetArrayBaseType(InstanceTypeDesc(i)))));
     break;
   default:
-    ASC_PANIC("Unknown instance type in WriteTypeOrValue.");
+    ASC_PANIC("Unknown instance type in WriteTypeOrValue.\n");
     break;
   }
 }
@@ -1082,7 +1085,7 @@ void WriteInstance(FILE *f, CONST struct Instance *i)
     FPRINTF(f,"GlobalDummyInstance\n");
     break;
   default:
-    ASC_PANIC("Unknown instance type in WriteInstance.");
+    ASC_PANIC("Unknown instance type in WriteInstance.\n");
   }
 }
 
@@ -1512,7 +1515,7 @@ void Save__ComplexInsts(FILE *fp, struct Instance *inst)
     FPRINTF(fp,"UNSELECTED;\n");
     break;
   default:
-    ASC_PANIC("Unknown instance kind in Save__ComplexInsts.");
+    ASC_PANIC("Unknown instance kind in Save__ComplexInsts.\n");
     break;
   }
 }

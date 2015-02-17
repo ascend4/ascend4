@@ -14,7 +14,8 @@
 	See the GNU General Public License for more details.
 	
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with the program; if not, write to the Free Software
+	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.
  *)
 PROVIDE "measures.a4l";
 (*
@@ -277,7 +278,6 @@ bar = {1e5*Pa};
 mbar = {1e2*Pa};
 MPa = {1e6*Pa};
 GPa = {1e9*Pa};
-uPa = {micro*Pa};
 
 atm = {Pa*101325.0};
 mmHg = {13.5951*g/cm^3*9.80665*m/s^2*1*mm};

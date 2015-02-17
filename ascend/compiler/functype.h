@@ -21,9 +21,9 @@
  *  General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- *  Revision notes:
+ *  along with the program; if not, write to the Free Software Foundation,
+ *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
+ *  COPYING.  Revision notes:
  *
  *  If CHRIS_FUNC defined, auxillary quantities to func structure.
  *  2/96 baa Probably somebody should properly set these evaluation
@@ -42,15 +42,13 @@
 #ifndef ASC_FUNCTYPE_H
 #define ASC_FUNCTYPE_H
 
-#include <ascend/general/config.h>
-
 /**	@addtogroup compiler_rel Compiler Relations
 	@{
 */
 
-/**
+/** 
  *  Safe math error codes.
- *  If you add to this enum be sure to add to safe_error_to_stderr
+ *  If you add to this enum be sure to add to safe_error_to_stderr 
  */
 enum safe_err {
   safe_problem = -1,
@@ -68,9 +66,9 @@ enum Func_enum {
    F_SIN, F_COS, F_TAN,
    F_ARCSIN, F_ARCCOS, F_ARCTAN,
    F_SQR, F_SQRT,
-#ifdef HAVE_ERF
+ #ifdef HAVE_ERF
    F_ERF,
-#endif
+ #endif
    F_LNM, F_SINH, F_COSH, F_TANH,
    F_ARCSINH, F_ARCCOSH, F_ARCTANH,
    F_CUBE, F_CBRT, F_ABS, F_HOLD

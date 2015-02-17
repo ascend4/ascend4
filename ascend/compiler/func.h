@@ -13,7 +13,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	Function-of-one-variable module.
 
@@ -55,7 +57,6 @@
 #define F_LIM_SQR     1.0e154                 /**< sqrt(maxdouble) */
 
 
-#if 0
 #ifdef __STDC__
 # if __STDC__
 /**
@@ -74,7 +75,6 @@ extern double erf(double);
  * should provide cbrt, erf.
  */
 #endif /* stdc defined */
-#endif
 
 
 extern CONST struct Func *LookupFunc(CONST char *name);

@@ -14,7 +14,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//*
 	@file
 	Ascend Instance Tree Link Management
@@ -73,7 +75,6 @@
 void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
 			    struct Instance *new
 ){
-  //if(NULL==new)CONSOLE_DEBUG("Want to remove reference to var %p in relation %p",old,rel);
   assert(rel!=NULL);
   assert(rel->t==REL_INST);
   AssertMemory(rel);
@@ -87,6 +88,7 @@ void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
       ModifyGlassBoxRelPointers(rel,RELN_INST(rel)->ptr,old,new);
       return;
     case e_blackbox:
+      CONSOLE_DEBUG("MODIFY BLACK BOX POINTERS");
       ModifyBlackBoxRelPointers(rel,RELN_INST(rel)->ptr,old,new);
       return;
     case e_undefined:

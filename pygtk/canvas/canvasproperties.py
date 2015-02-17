@@ -127,6 +127,3 @@ class CanvasProperties(object):
 if __name__ == '__main__':
 	cp = CanvasProperties(None)
 	cp.run()
-
-# vim: set ts=4 noet:
-

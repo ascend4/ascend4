@@ -13,7 +13,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//**
 	@file
 	Ascend Instance Math Object Functions.
@@ -179,8 +181,8 @@ extern void AddRelation(struct Instance *i, struct Instance *reln);
 
 extern void RemoveRelation(struct Instance *i, struct Instance *reln);
 /**< 
-	Remove reln from the relation list of variable instance 'i'. If reln isn't
-	found in i's relation list, execution continues with a warning message.
+	Remove reln from i's relation list.  If 'reln' isn't found in i's relation
+	list, execution continues with a warning message.
 */
 
 ASC_DLLSPEC unsigned long LogRelationsCount(CONST struct Instance *i);
