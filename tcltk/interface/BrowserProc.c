@@ -707,7 +707,7 @@ void BrowWriteUnformattedSet(Tcl_Interp *interp,struct Instance *i)
     len = Cardinality(s);
     for(c=1;c<=len;c++) {
       if (SetKind(s)==integer_set) {
-        sprintf(value,"%ld", FetchIntMember(s,c));
+        sprintf(value,"%u", FetchIntMember(s,c));
         Tcl_AppendResult(interp,value," ",(char *)NULL);
       } else {
         Tcl_AppendResult(interp,"'",SCP(FetchStrMember(s,c)),"' ",
