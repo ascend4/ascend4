@@ -15,7 +15,7 @@ MODEL thermophysical_fluid_base;
 	v_eq: v = 1. / rho;
 
 	u IS_A specific_energy;
-	u_eq: u = T - p*v;
+	u_eq: u = h - p*v;
 
 	mu IS_A viscosity;
 	k IS_A thermal_conductivity;
