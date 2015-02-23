@@ -1,0 +1,86 @@
+(*
+This is a first experiment on trying to use FPROPS to calculate chemical
+equilibrium. WORK IN PROGRESS, PLEASE DON'T USE YET.
+
+John Pye, 23 Feb 2015
+*)
+REQUIRE "johnpye/fprops/rankine_fprops.a4c";
+
+MODEL reactant REFINES stream_state;
+	M IS_A molar_weight_constant;
+	g IS_A specific_energy;
+	rho IS_A mass_density;
+	rho = 1/v;
+	calc_g: fprops_g(
+		T, rho : INPUT;
+		g : OUTPUT;
+		cd : DATA
+	);
+	Gbar IS_A molar_energy;
+	Gbar = g * M;
+METHODS
+METHOD default_self;
+	RUN stream_state::default_self;
+	g := 1 {kJ/kg};
+END default_self;
+END reactant;
+
+MODEL watergasshift;
+	n IS_A set OF symbol_constant;
+	components[n] IS_A symbol_constant;
+	n :== ['CO2','H2','CO','H2O'];
+	components['CO2'] :== 'carbondioxide';
+	components['H2'] :== 'hydrogen';
+	components['CO'] :== 'carbonmonoxide';
+	components['H2O'] :== 'water';
+
+	species[n] IS_A reactant;
+	FOR i IN n CREATE
+		species[i].cd.component :== components[i];
+		species[i].cd.type :== 'helmholtz';
+	END FOR;
+
+	(* molar masses *)
+	species['CO2'].M :== 44.0098 {g/mol};
+	species['H2'].M :== 2.01594 {g/mol};
+	species['CO'].M :== 28.0101 {g/mol};
+	species['H2O'].M :== 18.015242 {g/mol};
+
+	(* stoichiometric coefficients: CO2 + H2 <=> CO + H2O *)
+	v[n] IS_A real_constant;
+	v['CO2'] :== -1;
+	v['H2'] :== -1;
+	v['CO'] :== 1;
+	v['H2O'] :== 1;
+
+	X "reaction extent" IS_A fraction;
+	N0[n] "initial moles" IS_A positive_factor;
+	N[n] "final moles" IS_A positive_factor;
+
+	FOR i IN n CREATE
+		N[i] = N0[i] + v[i]*X;
+	END FOR;
+
+	(* all reactants at same temperature and pressure *)
+	T IS_A temperature;
+	p IS_A pressure;
+	T, species[n].T ARE_THE_SAME;
+	p, species[n].p ARE_THE_SAME;
+
+	(* let's add up the gibbs free energy *)
+	G IS_A specific_energy;
+	G = SUM[v[i]*species[i].g | i IN n];
+METHODS
+METHOD on_load;
+	RUN species[n].default_self;
+	FIX N0['CO2','H2'] := 1;
+	FIX N0['CO','H2O'] := 0;
+	FIX T := 400 {K} + 273.15 {K};
+	FIX p := 50 {bar};
+	FIX X := 1;
+	species['H2O'].h := 6000 {kJ/kg};
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END on_load;
+END watergasshift;
+
