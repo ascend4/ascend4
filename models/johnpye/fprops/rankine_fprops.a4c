@@ -241,6 +241,7 @@ END pump_simple;
 
 MODEL pump_simple_test REFINES pump_simple;
 	cd.component :== 'water';
+	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
