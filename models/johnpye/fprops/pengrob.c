@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	Implementation of the Peng-Robinson equation of state.
 
@@ -31,7 +33,6 @@
 #include "zeroin.h"
 #include <math.h>
 #include <stdio.h>
-#include <assert.h>
 
 #include "helmholtz.h" // for helmholtz_prepare
 
@@ -49,16 +50,21 @@ PropEvalFn pengrob_dpdrho_T;
 PropEvalFn pengrob_alphap;
 PropEvalFn pengrob_betap;
 SatEvalFn pengrob_sat;
-//SatEvalFn pengrob_sat_akasaka;
 
 static double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err);
 
-#define PR_DEBUG
+//#define PR_DEBUG
 #define PR_ERRORS
 
 #ifdef PR_DEBUG
 # include "color.h"
-# define MSG FPROPS_MSG
+# define MSG(FMT, ...) \
+	color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
+	color_on(stderr,ASC_FG_BRIGHTBLUE);\
+	fprintf(stderr,"%s: ",__func__);\
+	color_off(stderr);\
+	fprintf(stderr,FMT "\n",##__VA_ARGS__)
 #else
 # define MSG(ARGS...) ((void)0)
 #endif
@@ -66,10 +72,15 @@ static double MidpointPressureCubic(double T, const FluidData *data, FpropsError
 /* TODO centralise declaration of our error-reporting function somehow...? */
 #ifdef PR_ERRORS
 # include "color.h"
-# define ERRMSG FPROPS_ERRMSG
+# define ERRMSG(STR,...) \
+	color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"ERROR:");\
+	color_off(stderr);\
+	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
 #else
 # define ERRMSG(ARGS...) ((void)0)
 #endif
+
 
 PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 	MSG("Preparing PR fluid...");
@@ -77,9 +88,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 	P->data = FPROPS_NEW(FluidData);
 
 	/* metadata */
-	// TODO should we copy this so that we can uncouple the filedata? */
 	P->name = E->name;
-	P->source = E->source;
 	P->type = FPROPS_PENGROB;
 
 #define D P->data
@@ -93,10 +102,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		D->T_c = I->T_c;
 		D->rho_c = I->rho_c;
 		D->omega = I->omega;
-
-		D->Tstar = I->T_c;
-		D->rhostar = I->rho_c;
-		D->cp0 = cp0_prepare(I->ideal, D->R, D->Tstar);
+		D->cp0 = cp0_prepare(I->ideal, D->R, D->T_c);
 
 		// helmholtz data doesn't include p_c so we need to calculate it somehow...
 
@@ -130,9 +136,8 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 				return NULL;
 			}
 			double Zc = 0.307;
-			D->rho_c = D->p_c / (Zc * D->R * D->T_c);
-			helmholtz_destroy(PH);
-		}
+			D->rho_c = D->p_c / (Zc * D->R * D->T_c); 
+		}			
 #endif
 		break;
 #undef I
@@ -143,33 +148,9 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		D->T_t = I->T_t;
 		D->T_c = I->T_c;
 		D->p_c = I->p_c;
-#if 1
-		double Zc = 0.307;
-		D->rho_c = D->p_c / (Zc * D->R * D->T_c); 
-		if(I->rho_c != -1){
-			/* missing rho_c data, calculate using EOS */
-#define RHOC_ERROR_ACCEPTABLE 5e-2
-			if(fabs(I->rho_c - D->rho_c)/I->rho_c > RHOC_ERROR_ACCEPTABLE){
-				MSG("Warning: rho_c data contradicts PR value by more than %0.3f%%",RHOC_ERROR_ACCEPTABLE*100.);
-			}
-		}
-#else
-		double Zc = 0.307;
-		/* use rho_c from FileData unless missing */
-		if(I->rho_c == -1){
-			D->rho_c = D->p_c / (Zc * D->R * D->T_c); 
-		}else{
-			D->rho_c = I->rho_c;
-			/* ensure p_c is consistent with value of rho_c */
-			D->p_c = D->rho_c * (Zc * D->R * D->T_c); 
-		}
-#endif
+		D->rho_c = I->rho_c;
 		D->omega = I->omega;
-
-		D->Tstar = I->T_c;
-		D->rhostar = I->rho_c;
-		MSG("R = %f, Tstar = %f",D->R, D->Tstar);
-		D->cp0 = cp0_prepare(I->ideal, D->R, D->Tstar);
+		D->cp0 = cp0_prepare(I->ideal, D->R, D->T_c);
 		break;
 	default:
 		fprintf(stderr,"Invalid EOS data\n");
@@ -194,8 +175,6 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 	C = FPROPS_NEW(PengrobRunData);
 	C->aTc = 0.45724 * SQ(D->R * D->T_c) / D->p_c;
 	C->b = 0.07780 * D->R * D->T_c / D->p_c;
-
-	// note possible correction required? http://kshmakov.org/fluid/note/3/
 	C->kappa = 0.37464 + (1.54226 - 0.26992 * D->omega) * D->omega;
 
 	/* function pointers... more to come still? */
@@ -207,17 +186,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 #undef I
 #undef D
 #undef C
-	//P->sat_fn = &pengrob_sat_akasaka;
-
 	return P;
-}
-
-
-void pengrob_destroy(PureFluid *P){
-	cp0_destroy(P->data->cp0);
-	FPROPS_FREE(P->data->corr.pengrob);
-	FPROPS_FREE(P->data);
-	FPROPS_FREE(P);
 }
 
 
@@ -277,11 +246,6 @@ double pengrob_h(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_SQRTALPHA;
 	DEFINE_A;
 	DEFINE_V;
-	if(rho > 1./PD->b){
-		MSG("Density exceeds limit value 1/b = %f",1./PD->b);
-		*err = FPROPS_RANGE_ERROR;
-		return 0;
-	}
 	double h0 = ideal_h(T,rho,data,err);
 	double p = pengrob_p(T, rho, data, err);
 	double Z = p * v / (data->R * T);
@@ -315,6 +279,11 @@ double pengrob_s(double T, double rho, const FluidData *data, FpropsError *err){
 
 double pengrob_a(double T, double rho, const FluidData *data, FpropsError *err){
 	// FIXME maybe we can improve this with more direct maths
+	double b = PD->b;
+	if(rho > 1./b){
+		MSG("Density exceeds limit value 1/b = %f",1./b);
+		*err = FPROPS_RANGE_ERROR;
+	}
 	double h = pengrob_h(T,rho,data,err);
 	double s = pengrob_s(T,rho,data,err); // duplicated calculation of p!
 	double p = pengrob_p(T,rho,data,err); // duplicated calculation of p!
@@ -335,27 +304,17 @@ double pengrob_u(double T, double rho, const FluidData *data, FpropsError *err){
 }
 
 double pengrob_g(double T, double rho, const FluidData *data, FpropsError *err){
-	if(rho > 1./PD->b){
-		MSG("Density exceeds limit value 1/b = %f",1./PD->b);
-		*err = FPROPS_RANGE_ERROR;
-	}
-#if 0
 	double h = pengrob_h(T,rho,data,err);
 	double s = pengrob_s(T,rho,data,err); // duplicated calculation of p!
-	if(isnan(h))MSG("h is nan");
-	if(isnan(s))MSG("s is nan");
 	return h - T*s;
-#else
-	//	previous code from Richard, probably fine but need to check
-	DEFINE_SQRTALPHA;
-	DEFINE_A;
-	DEFINE_V;
-	double p = pengrob_p(T, rho, data, err);
-	double Z = p*v/(data->R * T);
-	double B = p*PD->b/(data->R * T);
-	double A = p * a / SQ(data->R * T);
-	return log(fabs(Z-B))-(A/(sqrt(8)*B))*log(fabs((Z+(1+sqrt(2))*B)/(Z+(1-sqrt(2))*B)))+Z-1;
-#endif
+//	previous code from Richard, probably fine but need to check
+//	DEFINE_A;
+//	DEFINE_V;
+//	double p = pengrob_p(T, rho, data, err);
+//	double Z = p*v/(data->R * T);
+//	double B = p*PD->b/(data->R * T);
+//	double A = p * a / SQ(data->R * T);
+//	return -log(fabs(Z-B))-(A/(sqrt(8)*B))*log(fabs((Z+(1+sqrt(2))*B)/(Z+(1-sqrt(2))*B)))+Z-1;
 }
 
 /**
@@ -375,6 +334,7 @@ double pengrob_g(double T, double rho, const FluidData *data, FpropsError *err){
 	ratsimp(%);
 */
 double pengrob_cv(double T, double rho, const FluidData *data, FpropsError *err){
+    DEFINE_SQRTALPHA;
 	DEFINE_V;
 	DEFINE_D2ADT2;
 	double cv0 = ideal_cv(T, rho, data, err);
@@ -534,21 +494,14 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 	double sqrt2 = sqrt(2);
 
 	double p = fprops_psat_T_acentric(T, data);
-	MSG("Initial guess: p = %f from acentric factor",p);
 
 	int i = 0;
 	double Zg, Z1, Zf, vg, vf;
-	double oldfratio = 1e9;
-
-#ifdef PR_DEBUG
-	FILE *F1 = fopen("pf.txt","w");
-#endif
-
 	// FIXME test upper iteration limit required
-	while(++i < 200){
+	while(++i < 100){
 		MSG("iter %d: p = %f, rhof = %f, rhog = %f", i, p, 1/vf, 1/vg);
 		// Peng & Robinson eq 17
-		double sqrtalpha = 1. + PD->kappa * (1. - sqrt(T / PD_TCRIT));
+		double sqrtalpha = 1 + PD->kappa * (1 - sqrt(T / PD_TCRIT));
 		// Peng & Robinson eq 12
 		double a = PD->aTc * SQ(sqrtalpha);
 		// Peng & Robinson eq 6
@@ -556,11 +509,7 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 		B = PD->b * p / (data->R*T);
 		
 		// use GSL function to return real roots of polynomial: Peng & Robinson eq 5
-		Zf = 0; Z1 = 0; Zg = 0;
-		if(3 == cubicroots(-(1.-B), A-3.*SQ(B)-2.*B, -(A*B-SQ(B)*(1.+B)), &Zf,&Z1,&Zg)){
-			assert(Zf < Z1);
-			assert(Z1 < Zg);
-				
+		if(3 == cubicroots(-(1-B), A-3*SQ(B)-2*B, -(A*B-SQ(B)*(1+B)), &Zf,&Z1,&Zg)){
 			//MSG("    roots: Z = %f, %f, %f", Zf, Z1, Zg);
 			//MSG("    Zf = %f, Zg = %f", Zf, Zg);
 			// three real roots in this case
@@ -582,7 +531,7 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 			double ff = FUG(Zf,A,B);
             double fg = FUG(Zg,A,B);
 			double fratio = ff/fg;
-			MSG("    ff = %f, fg = %f, fratio = %f", ff, fg, fratio);
+			//MSG("    ff = %f, fg = %f, fratio = %f", ff, fg, fratio);
 
 			//double hf = pengrob_h(T, 1/vf, data, err);
 			//double hg = pengrob_h(T, 1/vg, data, err);
@@ -593,33 +542,15 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 				*rhog_ret = 1 / vg;
 				p = pengrob_p(T, *rhog_ret, data, err);
 				MSG("Solved for T = %f: p = %f, rhof = %f, rhog = %f", T, p, *rhof_ret, *rhog_ret);
-#ifdef PR_DEBUG
-				fclose(F1);
-#endif
 				return p;
 			}
-#ifdef PR_DEBUG
-			fprintf(F1,"%f\t%f\t%f\n",p,ff,fg);
-#endif
-			if(fratio > oldfratio){
-				MSG("fratio increased!");
-				//fratio = 0.5 + 0.5*fratio;
-			}
 			p *= fratio;
-			if(p < 0){
-				p = 0.5 * p/fratio;
-			}
-			oldfratio = fratio;
 		}else{
-			MSG("Midpoint pressure calculation");
 			/* In this case we need to adjust our guess p(T) such that we get 
 			into the narrow range of values that gives multiple solutions. */
 			p = MidpointPressureCubic(T, data, err);
 			if(*err){
 				ERRMSG("Failed to solve for a midpoint pressure");
-#ifdef PR_DEBUG
-				fclose(F1);
-#endif
 				return p;
 			}
 			MSG("    single root: Z = %f. new pressure guess: %f", Zf, p);
@@ -627,14 +558,11 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 	}
 	MSG("Did not converge");
 	*err = FPROPS_SAT_CVGC_ERROR;
-#ifdef PR_DEBUG
-	fclose(F1);
-#endif
 	return 0;
 }
 
 /*
-	FIXME can we generalise this to work with other *cubic* EOS as well?
+	FIXME can we generalise this to work with other cubic EOS as well?
 	Currently not easily done since pointers are kept at a higher level in our
 	data structures than FluidData.
 */
@@ -660,7 +588,7 @@ static ZeroInSubjectFunction resid_dpdrho_T;
 */
 double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err){
 	MidpointSolveData msd = {data, err, T};
-	double rhomin = 0.9 * data->rho_c;
+	double rhomin = 0.5 * data->rho_c;
 	double rhomax = data->rho_c;
 	double rho, resid;
 
@@ -681,7 +609,7 @@ double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err){
 
 	// look for the other stationary point in density range less than rho_c
 	rhomin = data->rho_c;
-	rhomax = 1.1 * data->rho_c;
+	rhomax = 2 * data->rho_c;
 	if(rhomax + 1e-2 > 1./(data->corr.pengrob->b)) rhomax = 1./(data->corr.pengrob->b) - 1e-3;
 
 	res = zeroin_solve(&resid_dpdrho_T, &msd, rhomin, rhomax, 1e-9, &rho, &resid);
@@ -694,6 +622,7 @@ double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err){
 	double p2 = pengrob_p(T,rho, data, err);
 	return 0.5*(p1 + p2);
 }
+
 
 static double resid_dpdrho_T(double rho, void *user_data){
 #define D ((MidpointSolveData *)user_data)

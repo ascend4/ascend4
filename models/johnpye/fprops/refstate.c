@@ -4,15 +4,31 @@
 #include "zeroin.h"
 
 #include <stdio.h>
-#include <math.h>
 
 //#define REF_DEBUG
+#define REF_ERRORS
+
 #ifdef REF_DEBUG
 # include "color.h"
-# define MSG FPROPS_MSG
-# define ERRMSG FPROPS_ERRMSG
+# define MSG(FMT, ...) \
+	color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
+	color_on(stderr,ASC_FG_BRIGHTBLUE);\
+	fprintf(stderr,"%s: ",__func__);\
+	color_off(stderr);\
+	fprintf(stderr,FMT "\n",##__VA_ARGS__)
 #else
 # define MSG(ARGS...) ((void)0)
+#endif
+
+#ifdef REF_ERRORS
+# include "color.h"
+# define ERRMSG(STR,...) \
+	color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"ERROR:");\
+	color_off(stderr);\
+	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
+#else
 # define ERRMSG(ARGS...) ((void)0)
 #endif
 
@@ -32,29 +48,13 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 	FluidState S1, S2;
 	double T, p, rho, rho_f, rho_g, h1, h2, s1, s2, resid;
 #ifdef REF_DEBUG
-	double u, g2;
+	double u;
 #endif
-
-	if(ref->type == FPROPS_REF_REF0){
-		ref = &(P->data->ref0);
-	}
-
 	switch(ref->type){
 	case FPROPS_REF_PHI0:
 		P->data->cp0->c = ref->data.phi0.c;
 		P->data->cp0->m = ref->data.phi0.m;
 		MSG("Set PHI0 reference state.");
-		return 0;
-
-	case FPROPS_REF_TPHS0:
-		T = ref->data.tphs.T0;
-		p = ref->data.tphs.p0;
-		h1 = ref->data.tphs.h0;
-		s1 = ref->data.tphs.s0;
-		/* rho at this state = p/R*T by ideal gas equation */
-		P->data->cp0->m = h1/P->data->R/P->data->T_c;
-		P->data->cp0->c = -s1/P->data->R - 1. - log(p/(P->data->rhostar*P->data->R*T)) + log(P->data->Tstar/T);
-		MSG("Set TPHS0 reference state.");
 		return 0;
 
 	case FPROPS_REF_IIR:
@@ -141,7 +141,6 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
 		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
-		MSG("Set TRHS reference state.");
 		return 0;
 
 	case FPROPS_REF_TPUS:
@@ -184,8 +183,8 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		MSG("...at T = %f K , rho = %f kg/m3",T, rho);
 #endif
 
-		MSG("Set TRUS reference state.");
 		return 0;
+
 
 	case FPROPS_REF_TPHS:
 		/* need to solve for T,p first... */
@@ -225,8 +224,8 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		MSG("Resulting reference values: h = %f, s = %f, p = %f kPa",h2,s2,p);
 		MSG("...at T = %f K , rho = %f kg/m3",T, rho);
 
-		MSG("Set TPHS reference state.");
 		return 0;
+
 
 	case FPROPS_REF_TPF:
 		T = P->data->T_t;
@@ -242,7 +241,6 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		s2 = 0;
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
 		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
-		MSG("Set TPF reference state.");
 		return 0;
 
 	case FPROPS_REF_TPFU:
@@ -259,67 +257,6 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		s2 = 0;
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
 		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
-		MSG("Set TPFU reference state.");
-		return 0;
-
-	case FPROPS_REF_TPHG:
-		MSG("Setting formation enthalpy/gibbs energy reference state");
-
-		/* TODO What if p = 0 (ideal gas reference state?) --> density is also zero, does that cause errors? can we use the cp0 function? */
-
-		/* as per TPHS, we need to solve for T,p first... */
-		T = ref->data.tphg.T0;
-		p = ref->data.tphg.p0;
-
-		if(isnan(ref->data.tphg.h0)){
-			ERRMSG("Unable to set reference state: h0 is not a number (missing data)");
-			return 11000;
-		}
-		if(isnan(ref->data.tphg.g0)){
-			ERRMSG("Unable to set reference state: g0 is not a number (missing data)");
-			return 12000;
-		}
-
-
-		// find value rho in (T0,rho) corresponding to (T0,p0)
-		{
-			/* let's try zeroin... */
-			RefStateTPData D = {P, T, p};
-			MSG("Upper bound rho = %f",5*P->data->rho_c);
-			err = zeroin_solve(&refstate_perr_Trho, &D, 1e-10, 5*P->data->rho_c, 1e-5, &rho, &resid);
-			if(err){
-				fprintf(stderr,"Unable to set T,p for reference state (T = %f K, p = %f kPa)\n",T,p/1e3);
-				return 1000 + err;
-			}
-			MSG("Solved rho = %f for T = %f, p = %f",rho,T,p);
-			MSG("Check: p(T,rho) = %f", fprops_p(fprops_set_Trho(T,rho,P,&res),&res));
-		}
-
-		S1 = fprops_set_Trho(T,rho,P,&res);
-		h1 = fprops_h(S1,&res);
-		if(res)return 2000+res;
-		s1 = fprops_g(S1,&res);
-		if(res)return 3000+res;
-
-		// calculuate target entropy value from reference h0, g0, T0 (using g = h - Ts)
-		h2 = ref->data.tphg.h0;
-		s2 = (ref->data.tphg.h0 - ref->data.tphg.g0) / ref->data.tphg.T0;
-
-		P->data->cp0->c = -(s2 - s1)/P->data->R;
-		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
-
-		S2 = fprops_set_Trho(T,rho,P,&res);
-		h2 = fprops_h(S2,&res);
-#ifdef REFSTATE_DEBUG
-		g2 = fprops_g(S2,&res);
-#endif
-		p = fprops_p(S2,&res);
-		if(res)return 4000+res;
-
-		MSG("Resulting reference values: h = %f, g = %f, p = %f kPa",h2,g2,p);
-		MSG("...at T = %f K , rho = %f kg/m3",T, rho);
-
-		MSG("Set TPHG reference state.");
 		return 0;
 
 	default:

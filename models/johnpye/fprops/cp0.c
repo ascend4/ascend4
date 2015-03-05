@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	Ideal-gas components of helmholtz fundamental functions, calculated using
 	terms in cp0 in a standard power series form. For details see the
@@ -34,7 +36,13 @@
 //#define CP0_DEBUG
 #ifdef CP0_DEBUG
 # include "color.h"
-# define MSG FPROPS_MSG
+# define MSG(FMT, ...) \
+	color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
+	color_on(stderr,ASC_FG_BRIGHTBLUE);\
+	fprintf(stderr,"%s: ",__func__);\
+	color_off(stderr);\
+	fprintf(stderr,FMT "\n",##__VA_ARGS__)
 #else
 # define MSG(ARGS...) ((void)0)
 #endif
@@ -43,20 +51,7 @@
   PREPARATION OF IDEAL RUNDATA from FILEDATA
 */
 
-/**
-	This function prepares the ideal part of the helmholtz function, phi (\$f \phi = \frac{a}{R T}\f$).
-	If we have IdealData of type IDEAL_PHI0, then we just copy the data directly.
-	We assume that we don't need to normalise for Tstar or R in that case (it's
-	not even checked).
-
-	If we have IdealData of type IDEAL_CP0, then we have to do some conversions
-	in order to be able to obtain the required internal $\f\ \phi(\tau,\delta) \$f
-	function required here. The complication is that in general, cp0 can be
-	expressed with different normalising parameter cp0star and Tstar than those
-	used for the residual part function. So in that case, we normalise to R and
-	Tstar which are provided as parameters to this function. Except it doesn't \
-	work correctly for Peng-Robinson or Ideal EOS yet.
-
+/*
 	FIXME
 
 	we have changed the definition of the cp0 expression to cp/R = sum( c *T/T*)^t )
@@ -64,20 +59,9 @@
 	but now we need to fix the re-derive the conversion from the cp0 to alpha0
 	expressions
 
-	currently there is an error! 
-
-	TODO check if ^^^ is still true
+	currently there is an error!
 */
 Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
-	MSG("Tstar = %f",Tstar);
-#ifdef CP0_DEBUG
-	if(I->type==IDEAL_CP0){
-		MSG("R=%f,Tstar=%f (cp0 data: cp0star=%f, Tstar=%f)",R,Tstar,I->data.cp0.cp0star, I->data.cp0.Tstar);
-	}else{
-		MSG("R=%f,Tstar=%f (cp0 data: Tstar=%f)",R,Tstar,I->data.phi0.Tstar);
-	}
-#endif
-
 	Phi0RunData *N = FPROPS_NEW(Phi0RunData);
 	int i, add_const_term=1;
 	double Tred, cp0red, p;
@@ -94,7 +78,7 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 		MSG("cp0red = %f, R = %f", cp0red, R);
 
 		for(i=0; i < N->np; ++i)if(I->data.cp0.pt[i].t == 0)add_const_term = 0;
-		//MSG("add_const_term = %d",add_const_term);
+		MSG("add_const_term = %d",add_const_term);
 
 		N->pt = FPROPS_NEW_ARRAY(Phi0RunPowTerm,N->np + add_const_term);
 		N->et = FPROPS_NEW_ARRAY(Phi0RunExpTerm, N->ne);
@@ -113,7 +97,7 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 		}
 
 		if(add_const_term){
-			//MSG("WARNING: adding constant term %d in cp0, is that what you really want?",i);
+			fprintf(stderr,"WARNING: adding constant term %d in cp0, is that what you really want?\n",i);
 			N->pt[i].a = -1;
 			N->pt[i].p = 0;
 			N->np++;
@@ -125,7 +109,7 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 		}
 
 		if(cp0red != R){
-			//MSG("WARNING: adjusting for R (=%f) != cp0red (=%f)...\n",R,cp0red);
+			fprintf(stderr,"WARNING: adjusting for R (=%f) != cp0red (=%f)...\n",R,cp0red);
 			double X = cp0red / R;
 			// scale for any differences in R and cpstar */
 			for(i=0; i < N->np; ++i)N->pt[i].a *= X;
@@ -137,7 +121,7 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 		// TODO add checks for disallowed terms, eg p = 0 or p = 1?
 		N->np = I->data.phi0.np;
 		N->ne = I->data.phi0.ne;
-		//MSG("Preparing PHI0 data for ideal fluid (np = %d, ne = %d)",N->np, N->ne);
+		MSG("Preparing PHI0 data for ideal fluid (np = %d, ne = %d)",N->np, N->ne);
 
 		// power terms
 		N->pt = FPROPS_NEW_ARRAY(Phi0RunPowTerm,N->np);
@@ -161,25 +145,17 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar){
 	return N;
 }
 
-void cp0_destroy(Phi0RunData *N){
-	if(N->pt)FPROPS_FREE(N->pt);
-	if(N->et)FPROPS_FREE(N->et);
-	FPROPS_FREE(N);
-}
-
 /*---------------------------------------------
   IDEAL COMPONENT RELATIONS
 */
 
 /*
+	Hypothesis:
 	in calculating the ideal component relations, we have some integration
 	constants that ultimately allow the arbitrary scales of h and s to
 	be specified. Hence we can ignore components of helm_ideal that
 	are either constant or linear in tau, and work them out later when we
 	stick in the values of data->c and data->m.
-
-	See refstate.h, ReferenceState for the various ways we have for setting
-	c and m using reference state specifications.
 */
 
 //#define IDEAL_DEBUG
@@ -314,7 +290,7 @@ double ideal_phi_tautau(double tau, const Phi0RunData *data){
 	double sum = 0;
 	double term;
 
-#ifdef IDEAL_DEBUG
+#ifdef CP0_DEBUG
 	fprintf(stderr,"\ttau = %f\n",tau);
 #endif
 
@@ -326,7 +302,7 @@ double ideal_phi_tautau(double tau, const Phi0RunData *data){
 		}else{
 			term = -pt->a * pt->p * (pt->p - 1) * pow(tau, pt->p);
 		}
-#ifdef IDEAL_DEBUG
+#ifdef CP0_DEBUG
 		fprintf(stderr,"\tpt[%d] = ap(p-1)*tau^p (a = %e, p = %e) = %f\n",i,pt->a, pt->p, term);
 #endif
 		sum += term;
@@ -339,14 +315,12 @@ double ideal_phi_tautau(double tau, const Phi0RunData *data){
 		double e = exp(-x);
 		double d = (1-e)*(1-e);
 		term = et->n * x*x * e / d;
-#ifdef IDEAL_DEBUG
+#ifdef CP0_DEBUG
 		fprintf(stderr,"\tet[%d] = n x^2 exp(-x)/(1 - exp(-x))^2  (n = %e, x=gamma*tau, gamma = %e) = %f\n",i,et->n, et->gamma, term);
 #endif
 		sum += term;
 	}
 	/* note, at this point, sum == cp0/R - 1 */
-#ifdef IDEAL_DEBUG
 	MSG("sum = %f, phi_tautau = %f",sum, -sum/SQ(tau));
-#endif
 	return -sum/SQ(tau);
 }

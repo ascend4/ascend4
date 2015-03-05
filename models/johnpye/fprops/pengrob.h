@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 */
 #ifndef PENGROB_H
 #define PENGROB_H
@@ -20,7 +22,5 @@
 #include "rundata.h"
 
 PureFluid *pengrob_prepare(const EosData *data, const ReferenceState *ref);
-
-void pengrob_destroy(PureFluid *data);
 
 #endif //PENGROB_H

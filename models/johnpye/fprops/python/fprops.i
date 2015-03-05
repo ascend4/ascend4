@@ -76,7 +76,7 @@ const ReferenceState *REF_PHI0(double c, double m);
 		return NULL;
 	}
 }
-PureFluid *fprops_fluid(char *name, const char *corrtype = NULL, const char *source = NULL);
+PureFluid *fprops_fluid(char *name, const char *corrtype = NULL);
 
 // get a fluid by index position (don't assume that these numbers are constant!)
 %rename(get_fluid) fprops_get_fluid;
@@ -96,16 +96,12 @@ typedef struct{} FluidState;
 typedef struct{} PureFluid;
 
 /* FIXME what should we do with ctors and dtors...? */
-//%nodefaultdtor PureFluid;
-%nodefaultctor PureFluid;
+//%nodefaultdtor;
 
 // use SWIG's generalised exceptions
 %include <exception.i>
 
 %extend PureFluid{
-	// destructor: doesn't see to work
-	~PureFluid();
-
 	// use a local _fprops___err variable to catch and raise errors from FPROPS
 	%typemap(in,numinputs=0) FpropsError *err (FpropsError _fprops___err = 0) {
 		$1 = &_fprops___err;
@@ -188,17 +184,6 @@ typedef struct{} PureFluid;
 		return p;
 	}
 
-	double sat_T(double T, double *rho_f, double *rho_g, FpropsError *err){
-		double p;
-		fprops_sat_T(T, &p, rho_f, rho_g, $self, err);
-		return p;
-	}
-
-	double sat_p(double p, double *rho_f, double *rho_g, FpropsError *err){
-		double T;
-		fprops_sat_p(p, &T, rho_f, rho_g, $self, err);
-		return T;
-	}
 
 	// raise exception if user attempts to write to these variables
 	//%typemap(in) double{
@@ -216,15 +201,9 @@ typedef struct{} PureFluid;
 	%immutable;
 	char *name;
 	int type;
-	char *source;
 }
 
 %{
-void delete_PureFluid(PureFluid *P){
-	fprintf(stderr,"DESTROY\n");
-	fprops_fluid_destroy(P);
-}
-
 // TODO trim this stuff down using some macro magic
 
 double PureFluid_T_t_get(const PureFluid *fluid){
@@ -250,9 +229,6 @@ double PureFluid_R_get(PureFluid *fluid){
 }
 const char *PureFluid_name_get(const PureFluid *fluid){
 	return fluid->name;
-}
-const char *PureFluid_source_get(const PureFluid *fluid){
-	return fluid->source;
 }
 int PureFluid_type_get(PureFluid *fluid){
 	return fluid->type;
@@ -295,7 +271,6 @@ exception types? */
 	%immutable;
 	double T, rho, v;
 	double x, p, u, h, s, a, cv, cp, w, g, alphap, betap, cp0, dpdT_rho;
-	double mu, lam;
 }
 
 %{
@@ -313,8 +288,7 @@ double FluidState_v_get(FluidState *state){
 }
 
 #define FNS(G,X) G(x) X G(p) X G(u) X G(h) X G(s) X G(a) X G(cv) \
-	X G(cp) X G(w) X G(g) X G(alphap) X G(betap) X G(cp0) X G(dpdT_rho) \
-	X G(mu) X G(lam)
+	X G(cp) X G(w) X G(g) X G(alphap) X G(betap) X G(cp0) X G(dpdT_rho)
 #define GETTER(N) \
 	double FluidState_##N##_get(FluidState *state){\
 		return fprops_##N(*state,&_fprops_fluidstate_err);\

@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	This file implements a Helmholtz fundamental equation correlation for
 	Carbon Dioxide using the results from
@@ -72,14 +74,20 @@ static const IdealData ideal_data_carbondioxide = {
 static HelmholtzData helmholtz_data_carbondioxide = {
 	/* R */ CARBONDIOXIDE_R /* 1000 * kJ/kmolK / kg/kmol = J/kgK */
 	, /* M */ CARBONDIOXIDE_M /* kg/kmol */
-	, /* rho_star */ CARBONDIOXIDE_RHOC /* kg/m3 (= rho_c for this model) */
+	, /* rho_star */ CARBONDIOXIDE_RHOC /* kg/mÂ³ (= rho_c for this model) */
 	, /* T_star */ CARBONDIOXIDE_TC /* K (= T_c for this model) */
 
 	, /* T_c */ CARBONDIOXIDE_TC
 	, /* rho_c */ CARBONDIOXIDE_RHOC
 	, /* T_t */ 216.592
 
-	, {FPROPS_REF_TPF}
+	, {
+		FPROPS_REF_PHI0
+		, .data = {.phi0 = {
+			.c = 8.37304456
+			, .m = -3.70454304
+		}}
+	}
 	,  0.2239 /* acentric factor, from Reid, Prausnitz & Polling */
 	, &ideal_data_carbondioxide
 	, 34 /* power terms */
@@ -138,74 +146,6 @@ static HelmholtzData helmholtz_data_carbondioxide = {
 	}
 };
 
-#define CARBONDIOXIDE_SIGMA 0.419373083367276
-// sqrt(0.0266958*sqrt(CARBONDIOXIDE_M)/1.00697)
-// = sqrt(0.0266958*sqrt(44.0098)/1.00697)
-
-const ViscosityData visc_carbondioxide = {
-	.source="A Fenghour, W A Wakeham and V Vesovic, 1998. 'The Viscosity of Carbon Dioxide', J Phys Chem Ref Data 27(1)"
-	,.type=FPROPS_VISC_1
-	,.data={.v1={
-		.mu_star = 1e-6
-		,.T_star = 251.196
-		,.rho_star = 1
-		,.sigma = CARBONDIOXIDE_SIGMA
-		,.M = CARBONDIOXIDE_M
-		,.eps_over_k = 251.196 /* K */
-		,.ci={
-			FPROPS_CI_1
-			,.data={.ci1={
-				.nt=5
-				,.t=(const ViscCI1Term[]){
-					{0, 0.235156}
-					,{1, -0.491266}
-					,{2, 5.211155e-2}
-					,{3, 5.247906e-2}
-					,{4, -1.537102e-2}
-				}
-			}}
-		}
-		,.nt=5
-		,.t=(const ViscData1Term[]){
-			// N             t    d  l
-			{0.4071119e-2,   1-1, 1, 0}
-			,{0.7198037e-4,  1-1, 2, 0}
-			,{0.2411697e-16, 4-1, 6, 0}
-			,{0.2971072e-22, 1-1, 8, 0}
-			,{-0.1627888e-22,2-1, 8, 0}
-		}
-	}}
-};
-
-const ThermalConductivityData thcond_carbondioxide = {
-	.source = "Vesovic et al, 1990"
-	,.type=FPROPS_THCOND_1
-	,.data={.k1={
-		.k_star = 1e-3
-		,.T_star = 1
-		,.rho_star = 1
-		//,.v1=&(visc_carbondioxide.data.v1)
-		,.eps_over_k = 251.196
-		,.nc = 6
-		,.ct=(const ThCondCSTerm[]){ // TERMS ARE.... constant / (T/(eps/k))^exponent == c tau^p WHERE tau = eps_on_k / T
-			{0, 0.4226159}
-			,{1, 0.6280115}
-			,{2, -0.5387661}
-			,{3, 0.6735941}
-			,{6, -0.4362677}
-			,{7, 0.2255388}
-		}
-		,.nr=4
-		,.rt=(const ThCondData1Term[]){
-			{2.447164e-2,  0, 1, 0}
-			,{8.705605e-5, 0, 2, 0}
-			,{-6.547950e-8,0, 3, 0}
-			,{6.594919e-11,0, 4, 0}
-		}
-		,.crit = NULL
-	}}
-};
-
 EosData eos_carbondioxide = {
 	"carbondioxide"
 	,"R Span & W Wagner ''A new equation of state for carbon dioxide covering the "
@@ -215,17 +155,11 @@ EosData eos_carbondioxide = {
 	,100
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_carbondioxide}
-	,.visc = &visc_carbondioxide
-	,.thcond = &thcond_carbondioxide
 };
 
 #ifdef TEST
 #include "../test.h"
 #include "../sat.h"
-#include "../refstate.h"
-#include "../visc.h"
-#include "../thcond.h"
-
 /*
 	Test suite. These tests attempt to validate the current code using
 	a few sample figures output by REFPROP 7.0.
@@ -243,18 +177,14 @@ EosData eos_carbondioxide = {
 const TestData td[]; const unsigned ntd;
 const TestDataSat tds[]; const unsigned nsd;
 
-typedef struct{double T, k;} TestThCond0Data;
-typedef struct{double rho, k;} TestThCondrData;
-typedef struct{double T, rho, k;} TestThCondData;
-
 int main(void){
 	test_init();
 	FpropsError err = FPROPS_NO_ERROR;
-	ReferenceState R = {FPROPS_REF_IIR};
-	PureFluid *d = helmholtz_prepare(&eos_carbondioxide,&R);
-	FluidState S;
+	//unsigned n;
+	//double rho, T, cp0, p, u, h, s;
+
+	PureFluid *d = helmholtz_prepare(&eos_carbondioxide,NULL);
 	double maxerr = 0;
-	int i;
 
 #if 0
 	double rhof,rhog;
@@ -270,161 +200,9 @@ int main(void){
 	ASSERT_PROP(p, fprops_set_Trho(300.000, 268.58, d, &err), &err, 6.7131e6, 0.0001e6);
 	ASSERT_PROP(p, fprops_set_Trho(304.1282, 467.60, d, &err), &err, 7.3773e6, 0.0001e6);
 
-	//--------------------------------------------------------------------------
-	fprintf(stderr,"Testing viscosity values from A Fenghour and W A Wakeham, 1998...\n");
-	const ViscosityData *V = visc_prepare(&eos_carbondioxide, d, &err);
-	double mu;
-	ASSERT(FPROPS_NO_ERROR==err);
-	ASSERT(V != NULL);
-	d->visc = V;
-
-	// test data gives densities in mol/dm³
-#define VISC_TEST(T__1,RHO__1,MU__1,TOL__1) \
-	S = fprops_set_Trho(T__1, RHO__1, d, &err); \
-	mu = fprops_mu(S,&err); \
-	/*fprintf(stderr,"mu(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,mu,MU__1);*/ \
-	ASSERT(FPROPS_NO_ERROR==err); \
-	ASSERT(fabs(mu - MU__1)<TOL__1);
-
-	VISC_TEST(220, 2.43941203164E+0, 11.06e-6,  0.005e-6);
-	VISC_TEST(220, 1.19495544507E+3,  269.46e-6, 0.005e-6);
-	VISC_TEST(300, 7.33897247783E+2, 60.34e-6,  0.005e-6);
-	VISC_TEST(660, 9.57637753042E+2, 117.8e-6, 0.05e-6);
-	VISC_TEST(560, 9.4559470136E-1, 26.44e-6,  0.05e-6);
-
-	fprintf(stderr,"done\n");
-
-	//--------------------------------------------------------------------------
-
-	fprintf(stderr,"Preparing thermal conductivity data...\n");
-
-	thcond_prepare(d, &thcond_carbondioxide, &err);
-	ASSERT(FPROPS_NO_ERROR==err);
-
-
-	fprintf(stderr,"Testing zero-density conductivity values from Vesovic paper...\n");
-	/*TestThCondData tdk[] = {
-		{191.7,   8.997e-3}
-		,{346.2,  20.422e-3}
-		,{621.4,  42.260e-3}
-		,{809.7,  55.809e-3}
-		,{1217.6, 79.778e-3}
-	};*/
-	TestThCond0Data tdk0[] = {
-		{450,  29.3489431694e-3}
-		,{800, 56.6311984024e-3}
-		,{1150,80.2145018812e-3}
-	};
-	const unsigned ntdk0 = sizeof(tdk0)/sizeof(TestThCond0Data);
-	fprintf(stderr,"%d points...\n",ntdk0);
-	for(i=0; i<ntdk0; ++i){
-		//fprintf(stderr,"i=%d: T = %f, k = %f\n", i, tdk0[i].T, tdk0[i].k);
-		S = fprops_set_Trho(tdk0[i].T, 1, d, &err);
-		ASSERT(err==FPROPS_NO_ERROR);
-		S.rho = 0;
-		double lam0 = thcond1_lam0(S, &err);
-		ASSERT(err==FPROPS_NO_ERROR);
-		//fprintf(stderr, "T = %8.3f --> lam0 = %f (source data: %f, ratio calc/source = %f)\n", tdk0[i].T, lam0, tdk0[i].k, lam0/tdk0[i].k);
-		ASSERT_TOL_VAL(lam0,tdk0[i].k,0.00001e-3);
-	}
-
-
-	fprintf(stderr,"Testing residual conductivity values from Vesovic paper...\n");
-	TestThCondrData tdkr[] = {
-		/*{0, 0},*/
-		{200,  7.958252704e-3}
-		,{400, 21.215235264e-3}
-		,{600, 40.426605024e-3}
-		,{800, 68.780468224e-3}
-	};
-	const unsigned ntdkr = sizeof(tdkr)/sizeof(TestThCond0Data);
-	fprintf(stderr,"%d points...\n",ntdkr);
-	for(i=0; i<ntdkr; ++i){
-		//fprintf(stderr,"i=%d: rho = %f, k = %f\n", i, tdkr[i].rho, tdkr[i].k);
-		S = fprops_set_Trho(273.15, tdkr[i].rho, d, &err);
-		ASSERT(err==FPROPS_NO_ERROR);
-		double lamr = thcond1_lamr(S, &err);
-		ASSERT(err==FPROPS_NO_ERROR);
-		//fprintf(stderr, "T = %8.3f --> lam0 = %f (source data: %f, ratio calc/source = %f)\n", tdk0[i].T, lam0, tdk0[i].k, lam0/tdk0[i].k);
-		ASSERT_TOL_VAL(lamr,tdkr[i].k,0.00001e-3);
-	}
-
-
-	fprintf(stderr,"Testing lam0+lamr against conductivity values calculated using thcond.ods spreadsheet...\n");
-	TestThCondData tdk0r[] = {
-		{220, 2.4394120316, 10.8976062394e-3}
-		,{220, 1.19495544507E+3, 187.1284380256e-3}
-		,{300, 7.33897247783E+2, 74.8267322207e-3}
-		,{660, 9.57637753042E+2, 147.4645224115e-3}
-		,{560, 9.4559470136E-1, 38.4156295443e-3}
-	};
-	const unsigned ntdk0r = sizeof(tdk0r)/sizeof(TestThCondData);
-	fprintf(stderr,"%d points...\n",ntdk0r);
-	for(i=0; i<ntdk0r; ++i){
-		//fprintf(stderr,"i=%d: T = %f, rho = %f, k = %f\n", i, tdk0r[i].T, tdk0r[i].rho, tdk0r[i].k);
-		S = fprops_set_Trho(tdk0r[i].T, tdk0r[i].rho, d, &err);
-		ASSERT(err==FPROPS_NO_ERROR);
-		double lam = thcond1_lam0(S, &err);
-		ASSERT(err==FPROPS_NO_ERROR);
-		lam += thcond1_lamr(S,&err);
-		ASSERT(err==FPROPS_NO_ERROR);
-		//fprintf(stderr, "T = %8.3f --> lam0 = %f (source data: %f, ratio calc/source = %f)\n", tdk0r[i].T, lam0, tdk0r[i].k, lam0/tdk0r[i].k);
-		ASSERT_TOL_VAL(lam,tdk0r[i].k,0.00001e-3);
-	}
-
-	fprintf(stderr,"Testing lamc against Vesovic et al, 1990, Fig. 8...\n");
-	TestThCondData tdkc[] = {
-		{323.15, 60.4316546763,  0.498557176358e-3}
-		,{323.15, 192.805755396, 4.6520370444e-3}
-		,{323.15, 313.669064748, 11.0086012958e-3}
-		,{323.15, 421.582733813, 15.1592432132e-3}
-		,{323.15, 480.575539568, 14.7793473508e-3}
-		,{323.15, 592.805755396, 9.95811439246e-3}
-		,{323.15, 722.302158273, 4.55877419611e-3}
-		,{323.15, 906.474820144, 1.56356770937e-3}
-		,{348.15, 90.6474820144, 0.61808497953e-3}
-		,{348.15, 187.050359712, 2.87236376645e-3}
-		,{348.15, 300.71942446,  6.13417067451e-3}
-		,{348.15, 435.971223022, 7.89019436385e-3}
-		,{348.15, 633.09352518,  4.50974999006e-3}
-		,{348.15, 785.611510791, 2.16832942486e-3}
-		,{348.15, 907.913669065, 1.2930164156e-3}
-	};
-	const unsigned ntdkc = sizeof(tdkc)/sizeof(TestThCondData);
-	fprintf(stderr,"%d points...\n",ntdkc);
-	for(i=0; i<ntdkc; ++i){
-		/*fprintf(stderr,"i=%d: T = %f, rho = %f, k = %f\n", i, tdkc[i].T, tdkc[i].rho, tdkc[i].k);*/
-		S = fprops_set_Trho(tdkc[i].T, tdkc[i].rho, d, &err);
-		ASSERT(err==FPROPS_NO_ERROR);
-		double lamc = thcond1_lamc(S, &err);
-		ASSERT(err==FPROPS_NO_ERROR);
-		/*fprintf(stderr, "T = %8.3f, rho = %f --> lamc = %f (source data: %f, ratio calc/source = %f)\n", tdkc[i].T, tdkc[i].rho, lamc, tdkc[i].k, lamc/tdkc[i].k);*/
-		ASSERT(!isnan(lamc));
-		ASSERT(err==FPROPS_NO_ERROR);
-		ASSERT_TOL_VAL(lamc,tdkc[i].k,5e-3);
-	}
-
-
-
-	fprintf(stderr,"Testing thermal conductivity values from REFPROP 8.0...\n");
-
-	double lam;
-#define THCOND_TEST(T__1,RHO__1,K__1,TOL__1) \
-	S = fprops_set_Trho(T__1, RHO__1, d, &err); \
-	lam = fprops_lam(S,&err); \
-	/*fprintf(stderr,"k(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,k,K__1);*/ \
-	ASSERT(FPROPS_NO_ERROR==err); \
-	ASSERT_TOL_VAL(lam,K__1,TOL__1);
-
-	THCOND_TEST(220, 2.43941203164E+0, 10.902e-3, 0.05e-3);
-	THCOND_TEST(220, 1.19495544507E+3, 187.32e-3, 0.5e-3);
-	//THCOND_TEST(300, 7.33897247783E+2, 80.995e-3, 0.5e-3);
-	THCOND_TEST(560, 9.4559470136E-1,  38.367e-3, 0.05e-3);
-	THCOND_TEST(660, 9.57637753042E+2, 147.45e-3, 0.05e-3);
-
-	//ASSERT(1==0);
-
-	//--------------------------------------------------------------------------
+	/* need a new reference point for the REFPROP data... */
+	ReferenceState ref = {FPROPS_REF_IIR};
+	fprops_set_reference_state(d,&ref);
 
 	err += helm_run_test_cases(d, ntd, td, 'K');
 

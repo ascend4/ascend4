@@ -12,18 +12,15 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 */
 #ifndef FPROPS_IDEAL_H
 #define FPROPS_IDEAL_H
 
 #include "rundata.h"
 
-/**
-	Prepare a PureFluid object for evaluation of ideal gas fluid properties,
-	from an appropriate EosData input, using the specified ReferenceState for
-	enthalpy and entropy scales.
-*/
 PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref);
 
 PropEvalFn ideal_p;
@@ -38,7 +35,6 @@ PropEvalFn ideal_w;
 PropEvalFn ideal_alphap;
 PropEvalFn ideal_betap;
 PropEvalFn ideal_dpdrho_T;
-SatEvalFn ideal_sat;
 
 #define HELM_IDEAL_DELTAU(TAU, DELTA, DATA, ERROR) (0)
 

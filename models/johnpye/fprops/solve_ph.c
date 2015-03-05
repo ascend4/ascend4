@@ -13,7 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "solve_ph.h"
@@ -26,11 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <stdlib.h>
 
-//#define SOLVE_PH_DEBUG
-#define SOLVE_PH_ERRORS
-
 //#define FPE_DEBUG
-//#define ASSERT_DEBUG
+#define ASSERT_DEBUG
 
 #ifdef ASSERT_DEBUG
 # include <assert.h>
@@ -49,6 +47,7 @@ int fedisableexcept(int excepts);
 int fegetexcept(void);
 #endif
 
+#define SOLVE_PH_DEBUG
 #ifdef SOLVE_PH_DEBUG
 # include "color.h"
 # define MSG(FMT, ...) \
@@ -62,16 +61,7 @@ int fegetexcept(void);
 # define MSG(ARGS...) ((void)0)
 #endif
 
-#ifdef SOLVE_PH_ERRORS
-# include "color.h"
-# define ERRMSG(STR,...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"ERROR:");\
-	color_off(stderr);\
-	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
-#else
-# define ERRMSG(ARGS...) ((void)0)
-#endif
+#define ERRMSG(STR,...) fprintf(stderr,"%s:%d: ERROR: " STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
 
 int fprops_region_ph(double p, double h, const PureFluid *fluid, FpropsError *err){
     double Tsat, rhof, rhog;
@@ -115,7 +105,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 	double rhof_t;
 	double p_c = fluid->data->p_c;
 
-	MSG("Solving for p=%f bar, h=%f kJ/kgK (EOS type %d, '%s')",p/1e5,h/1e3,fluid->type,fluid->name);
+	MSG("Solving for p=%f bar, h=%f kJ/kgK (EOS type %d)",p/1e5,h/1e3,fluid->type);
 
 #ifdef FPE_DEBUG
     feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
@@ -126,8 +116,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 #endif
 		MSG("p_c = %f bar",p_c/1e5);
 		if(p < p_c){
-			/* TODO what about testing for p >= p_t? */
-			MSG("Calculate saturation Tsat(p < p_c) with p = %f",p);
+			MSG("Calculate saturation Tsat(p < p_c)");
 			fprops_sat_p(p, &Tsat, &rhof, &rhog, fluid, err);
 			if(*err){
 				ERRMSG("Unable to solve saturation state");
@@ -136,9 +125,9 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 			}
 			hf = fluid->h_fn(Tsat, rhof, fluid->data, err);
 			hg = fluid->h_fn(Tsat, rhog, fluid->data, err);
-			MSG("at p = %f bar, T_sat = %f, rhof = %f, hf = %f kJ/kg, hg = %f",p/1e5,Tsat,rhof, hf/1e3,hg/1e3);
+			MSG("at p = %f bar, T_sat = %f, hf = %f kJ/kg, hg = %f",p/1e5,Tsat,hf/1e3,hg/1e3);
 
-			if(hf <= h && h <= hg){
+			if(hf < h && h < hg){
 				MSG("SATURATION REGION");
 				/* saturation region... easy */
 				double x = (h - hf)/(hg - hf);
@@ -153,7 +142,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 				if(!use_guess){
 					*T = Tsat;
 					*rho = rhof;
-					MSG("h < hf; LIQUID GUESS: T = %f, rho = %f",*T, *rho);
+					MSG("LIQUID GUESS: T = %f, rho = %f",*T, *rho);
 				}
 			}else if(!use_guess){
 				*T = 1.1 * Tsat;
@@ -211,8 +200,8 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 
 		if(liquid_iteration){
 			double pt,rhogt;
-			fprops_triple_point(&pt, &rhof_t, &rhogt, fluid, err);
-			if(*err){
+			fprops_sat_T(fluid->data->T_t,&pt,&rhof_t, &rhogt, fluid, err);
+			if(err){
 				ERRMSG("Unable to solve triple point liquid density.");
 				*err = FPROPS_SAT_CVGC_ERROR;
 				return;
@@ -221,40 +210,23 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 
 		/* try our own home-baked newton iteration */
 		int i = 0;
-		*err = FPROPS_NO_ERROR;
+			err = FPROPS_NO_ERROR;
 		double delta_T = 0;
 		double delta_rho = 0;
 		MSG("STARTING ITERATION");
-		MSG("rhof_t = %f",rhof_t);
 		while(i++ < 200){
 			double p1 = fluid->p_fn(T1,rho1, fluid->data, err);
-			if(*err){
+			if(err){
 				MSG("Got an error ('%s') in p_fn calculation",fprops_error(*err));
 			} 
 			double h1 = fluid->h_fn(T1,rho1, fluid->data, err);
 			assert(!isnan(h1));
 
-			if(i >= 2){
-				int nred = 10;
-				while(p1 <= 0 && nred){
-					rho1 = rho1 - delta_rho;
-					T1 = T1 - delta_T;
-					delta_rho *= 0.5;
-					delta_T *= 0.5;
-					rho1 = rho1 + delta_rho;
-					T1 = T1 + delta_T;
-					p1 = fluid->p_fn(T1,rho1,fluid->data, err);
-					MSG("Set smaller step as p < 0. T1 = %f, rho1 = %f --> p1 = %f",T1, rho1, p1);
-					nred--;
-				}
-			}
-
 			MSG("  %d: T = %f, rho = %f\tp = %f bar, h = %f kJ/kg", i, T1, rho1, p1/1e5, h1/1e3);
-			//MSG("      p error = %f bar",(p1 - p)/1e5);
-			//MSG("      h error = %f kJ/kg",(h1 - h)/1e3);
+			MSG("      p error = %f bar",(p1 - p)/1e5);
+			MSG("      h error = %f kJ/kg",(h1 - h)/1e3);
 
 			if(p1 < 0){
-				MSG("p1 < 0, reducing dT, drho");
 				T1 -= (delta_T *= 0.5);
 				rho1 -= (delta_rho *= 0.5);
 				continue;
@@ -324,28 +296,18 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 #endif
 			}
 			/* don't go too dense */
-#if 1
 			if(liquid_iteration){
-				MSG("rho1 = %f, delta_rho = %f, rho1+delta_rho = %f", rho1, delta_rho, rho1+delta_rho);
-				if(rho1 + delta_rho > rhof_t){
-					MSG("Limit rho to be less than rhof_t");
-					delta_rho = rhof_t - rho1;
-				}
+				if(rho1 + delta_rho > rhof_t) delta_rho = rhof_t;
 			}
-#endif
 
 			/* don't go too hot */
 			if(T1 + delta_T > 5000) delta_T = 5000 - T1;
 
 			/* avoid huge step */
-			while(fabs(delta_T / T1) > 0.7){
-				MSG("Reduce delta_T");
+			while(fabs(delta_T / T1) > 0.6){
 				delta_T *= 0.5;
 			}
-
-			/* NOTE if step limit is less than 0.5, we're getting errors */
-			while(fabs(delta_rho / rho1) > 0.7){
-				MSG("Reduce delta_rho");
+			while(fabs(delta_rho / rho1) > 0.2){
 				delta_rho *= 0.5;
 			}
 
@@ -363,7 +325,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 
 	*T = T1;
 	*rho = rho1;
-	ERRMSG("Iteration failed for '%s' with p = %.12e, h = %.12e",fluid->name, p,h);
+	ERRMSG("Iteration failed for p = %.12e, h = %.12e",p,h);
 	*err = FPROPS_NUMERIC_ERROR;
 	return;
 

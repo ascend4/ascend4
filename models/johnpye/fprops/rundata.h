@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 This file contains declarations of the data structures passed to
 functions that EVALUATE fluid properties. We allow from some preprocessing of
@@ -29,6 +31,7 @@ Data declarations as provided in input files are given in filedata.h
 /* TODO remove this dependency eventually (some helmholtz data objects are not yet being copied into new structures*/
 #include "filedata.h"
 
+
 /** Power terms for phi0 (including polynomial) */
 typedef struct Cp0RunPowTerm_struct{
 	double a;
@@ -42,8 +45,7 @@ typedef struct Cp0RunExpTerm_struct{
 } Phi0RunExpTerm;
 
 /**
-	Runtime data for ideal gas properties, which are stored in the
-	form of reduced ideal-gas compnent of helmholtz energy (see http://fprops.org)
+	Zero-pressure specific heat capacity data for a fluid
 
 	There is no 'R' or 'cp0star' in this structure. If cp0star != R in the filedata, that
 	difference will be corrected for when this structure is created.
@@ -84,26 +86,13 @@ typedef union CorrelationUnion_union{
 	/* maybe more later */
 } CorrelationUnion;
 
-/** All runtime 'core' data for all possible correlations, with exception of 
-correlation-type-ID, function pointers and metadata (URLs, publications etc)
+/* TODO Regarding Cp0Data: some source publications present Cp0 data eg in the
+form of polynomials etc, and others present phi0 data (nondimensionalised ideal
+helmholtz energy). There is a straightforward conversion between the two, see
+precalc.c (although that is still incomplete). What is not clear is whether it
+is better to keep phi0 or cp0 values in the runtime data here. */
 
-TODO FluidData (or PureFluid?) could/should be extended to include the following
-frequently-calculated items:
-	- fluid properties at triple point (rhoft, rhogt, pt...)
-	- fluid properties at critical point (hc, ...)
-	- accurate saturation curve data (interpolation/spline/something like that)
-	- solutions of iterative solver results, eg (p,h) pairs.
-
-This data would be held at this level unless it is correlation-specific in 
-nature, in which case it would belong in lower-level rundata structures.
-
-For fluids without phase change (incompressible, ideal), we
-	- set T_c to zero,
-	- use a value of 1 K for Tstar
-	- provide a _sat SatEvalFn that always returns an error.
-...but maybe there's a better way. It's up to the particular PropEvalFn to 
-make use of Tstar or T_c as desired, but this data is stored here 
-*/
+/** All runtime 'core' data for all possible correlations, with exception of correlation-type-ID, function pointers and metadata */
 typedef struct FluidData_struct{
 	/* common data across all correlations */
 	double R;     /**< specific gas constant */
@@ -113,17 +102,15 @@ typedef struct FluidData_struct{
 	double p_c;   /**< critical pressure */
 	double rho_c; /**< critical density */
 	double omega; /**< acentric factor (possibly calculated from correlation data)*/
-	double Tstar;   /**< reference for reduced temperature */
-	double rhostar; /**< reference for reduced density */
 	Phi0RunData *cp0; /* data for ideal component of Helmholtz energy */
-	ReferenceState ref0;
+
 	/* correlation-specific stuff here */
 	CorrelationUnion corr;
 } FluidData;
 
 
 /* Definition of a fluid property function pointer */
-typedef double PropEvalFn(double T,double rho,const FluidData *data, FpropsError *err);
+typedef double PropEvalFn(double,double,const FluidData *data, FpropsError *err);
 
 /** @return psat */
 typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *data, FpropsError *err);
@@ -134,9 +121,8 @@ typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *d
 */
 typedef struct PureFluid_struct{
     const char *name;
-	const char *source;
 	EosType type;
-	FluidData *data; // everything we need at runtime in the following functions should be in here
+	FluidData *data; // everything we need at runtime in the following functions should be inside this
 	//Pointers to departure functions
 	PropEvalFn *p_fn;
 	PropEvalFn *u_fn;
@@ -151,10 +137,6 @@ typedef struct PureFluid_struct{
 	PropEvalFn *betap_fn;
 	PropEvalFn *dpdrho_T_fn; // this derivative is required for saturation properties by Akasaka method
 	SatEvalFn *sat_fn; // function to return {psat,rhof,rhog}(T) for this pure fluid
-
-	const ViscosityData *visc; // TODO should it be here? or inside FluidData?? probably yes, but needs review.
-	const ThermalConductivityData *thcond; // TODO should it be here? probably yes, but needs review.
 } PureFluid;
 
 #endif
-

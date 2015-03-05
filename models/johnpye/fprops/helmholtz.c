@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	Implementation of the reduced molar Helmholtz free energy equation of state.
 
@@ -61,11 +63,16 @@ double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsErr
 
 //#define HELM_DEBUG
 #define HELM_ERRORS
-//#define SAT_DEBUG
 
 #ifdef HELM_DEBUG
 # include "color.h"
-# define MSG FPROPS_MSG
+# define MSG(FMT, ...) \
+	color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
+	color_on(stderr,ASC_FG_BRIGHTBLUE);\
+	fprintf(stderr,"%s: ",__func__);\
+	color_off(stderr);\
+	fprintf(stderr,FMT "\n",##__VA_ARGS__)
 #else
 # define MSG(ARGS...) ((void)0)
 #endif
@@ -73,13 +80,17 @@ double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsErr
 /* TODO centralise declaration of our error-reporting function somehow...? */
 #ifdef HELM_ERRORS
 # include "color.h"
-# define ERRMSG FPROPS_ERRMSG
+# define ERRMSG(STR,...) \
+	color_on(stderr,ASC_FG_BRIGHTRED);\
+	fprintf(stderr,"ERROR:");\
+	color_off(stderr);\
+	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
 #else
 # define ERRMSG(ARGS...) ((void)0)
 #endif
 
 
-//#define ASSERT_DEBUG
+#define ASSERT_DEBUG
 #ifdef ASSERT_DEBUG
 # include <assert.h>
 #else
@@ -111,7 +122,7 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	PureFluid *P = FPROPS_NEW(PureFluid);
 
 	if(E->type != FPROPS_HELMHOLTZ){
-		ERRMSG("invalid EOS data, wrong type");
+		fprintf(stderr,"%s: Error: invalid EOS data, wrong type\n",__func__);
 		return NULL;
 	}
 
@@ -121,9 +132,7 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	P->data->corr.helm = FPROPS_NEW(HelmholtzRunData);
 
 	/* metadata */
-	/* FIXME strings should be copied, not just referenced */
 	P->name = E->name;
-	P->source = E->source;
 	P->type = E->type;
 	MSG("name = %s",P->name);
 
@@ -140,8 +149,6 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	P->data->p_c = 0; // we calculate this later...
 	P->data->rho_c = I->rho_c;
 	P->data->omega = I->omega;
-	P->data->Tstar = I->T_c;
-	P->data->rhostar = I->rho_c;
 	P->data->cp0 = cp0_prepare(E->data.helm->ideal, P->data->R, P->data->T_c);
 
 	/* data specific to helmholtz correlations */
@@ -149,7 +156,7 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	H->rho_star = I->rho_star;
 	H->T_star = I->T_star;
 	H->np = I->np;
-	// FIXME copy et, ct, pt to runtime struct?, FIXME see helmholtz_destroy below.
+	// FIXME copy et, ct, pt to runtime struct?
 	H->pt = I->pt;
 	H->ng = I->ng;
 	H->gt = I->gt;
@@ -171,18 +178,15 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	MSG("Calculating critical pressure at T_c = %f K, rho_c = %f kg/m3",P->data->T_c, P->data->rho_c);
 	P->data->p_c = helmholtz_p(P->data->T_c, P->data->rho_c, P->data, &err);
 	if(err){
-		ERRMSG("Failed to calculate critical pressure.");
+		fprintf(stderr,"Failed to calculate critical pressure\n");
 		FPROPS_FREE(P->data);
 		FPROPS_FREE(P->data->corr.helm);
 		return NULL;
 	}
 	if(P->data->p_c <= 0){
-		ERRMSG("Calculated a critical pressure <= 0! (value = %f)",P->data->p_c);
+		fprintf(stderr,"Calculated a critical pressure <= 0! (value = %f)\n",P->data->p_c);
 		//return NULL;
 	}
-
-	// ref0 is not yet supported for this fluid type:
-	P->data->ref0 = (ReferenceState){FPROPS_REF_TPHG,{.tphg={298.15,0,NAN,NAN}}};
 
 	// fix up the reference point now...
 	if(ref == NULL){
@@ -191,20 +195,12 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	}
 	int res = fprops_set_reference_state(P,ref);
 	if(res){
-		ERRMSG("Unable to apply reference state (type %d, err %d)",ref->type,res);
+		fprintf(stderr,"Unable to apply reference state (type %d, err %d)\n",ref->type,res);
 		return NULL;
 	}
 
 #undef I
 	return P;
-}
-
-void helmholtz_destroy(PureFluid *P){
-	assert(FPROPS_HELMHOLTZ == P->data);
-	cp0_destroy(P->data->cp0);
-	FPROPS_FREE(P->data->corr.helm);
-	FPROPS_FREE(P->data);
-	FPROPS_FREE(P);
 }
 
 /**
@@ -588,9 +584,9 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 		return FPROPS_RANGE_ERROR;
 	}
 
-	if(T > data->T_c + 1e-8){
+	if(T > data->T_c){
 		ERRMSG("Input temperature is above critical point temperature");
-		*err = FPROPS_RANGE_ERROR;
+		return FPROPS_RANGE_ERROR;
 	}
 
 	// we're at the critical point
@@ -613,12 +609,12 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 	double pc = data->p_c;
 
 #ifdef SAT_DEBUG
-	MSG("initial guess rho_f = %f, rho_g = %f",rhof,rhog);
-	MSG("calculating at T = %.12e",T);
+	MSG("initial guess rho_f = %f, rho_g = %f\n",rhof,rhog);
+	MSG("calculating for %s, T = %.12e",d->name,T);
 #endif
 
 	int i = 0;
-	while(i++ < 200){
+	while(i++ < 70){
 		assert(!isnan(rhog));
 		assert(!isnan(rhof));
 #ifdef SAT_DEBUG
@@ -654,10 +650,7 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 
 		double DET = Ff*Gg - Fg*Gf;
 		//MSG("DET = %f",DET);
-
-		// 'gamma' needs to be increased to 0.5 for water to solve correctly (see 'test/sat.c')
-		// 'gamma' needs to be not more than 0.4 for ethanol to solve correctly (see 'test/sat.c')
-#define gamma 0.40
+#define gamma 0.4
 		rhof += gamma/DET * (Fg*G - Gg*F);
 		rhog += gamma/DET * ( Gf*F - Ff*G);
 #undef gamma
@@ -790,7 +783,7 @@ double helm_resid(double tau, double delta, const HelmholtzRunData *HD){
 	n = HD->np;
 	pt = &(HD->pt[0]);
 
-	//MSG("tau=%f, del=%f",tau,delta);
+	MSG("tau=%f, del=%f",tau,delta);
 	//if(isinf(tau))abort();
 
 	/* power terms */
@@ -1213,12 +1206,10 @@ double helm_resid_deldel(double tau,double delta,const HelmholtzRunData *HD){
 			}
 		}
 	}
-#if RESID_DEBUG
 	if(isnan(res)){
-		fprintf(stderr,"got NAN in %s: tau = %.12e, del = %.12e\n",__func__,tau,delta);
+		fprintf(stderr,"tau = %.12e, del = %.12e\n",tau,delta);
 	}
 	assert(!__isnan(res));
-#endif
 
 	/* gaussian terms */
 	n = HD->ng;

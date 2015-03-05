@@ -53,7 +53,12 @@ static HelmholtzData helmholtz_data_toluene = {
     , /* rho_c */ 3.169*TOLUENE_M /* kg/m3 */
     , /* T_t */ 178.15
 
-	,{FPROPS_REF_TPF}
+	,{FPROPS_REF_TRHS,{.trhs={
+		.T0 = 273.15
+		, .rho0 = 8.85419387005E+2
+		, .h0 = -1.99730529336E+5
+		, .s0 = -6.10308234395E+2
+	}}}
 
     , 0.2657 /* acentric factor */
     , &ideal_data_toluene
@@ -82,7 +87,7 @@ static HelmholtzData helmholtz_data_toluene = {
 EosData eos_toluene = {
 	"toluene"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
-	"20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
+	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
 	,NULL
 	,100
 	,FPROPS_HELMHOLTZ
@@ -98,7 +103,6 @@ EosData eos_toluene = {
 #ifdef TEST
 
 #include "../test.h"
-#include "../refstate.h"
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
@@ -107,9 +111,6 @@ const TestData td[]; const unsigned ntd;
 
 int main(void){
 	PureFluid *P = helmholtz_prepare(&eos_toluene, NULL);
-	// refprop test test is evaluated with NBP refstate.
-	ReferenceState R = {FPROPS_REF_NBP};
-	fprops_set_reference_state(P, &R);
     return helm_run_test_cases(P, ntd, td, 'C');
 }
 

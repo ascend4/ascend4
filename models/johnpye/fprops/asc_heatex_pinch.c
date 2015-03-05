@@ -53,7 +53,7 @@ better later on, hopefully. */
 #endif
 
 typedef struct{
-	const PureFluid *comp[2];/* 0 = cold, 1 = hot */
+	const HelmholtzData *comp[2];/* 0 = cold, 1 = hot */
 	int n;
 } HeatExData;
 
@@ -116,8 +116,6 @@ ASC_EXPORT int heatex_pinch_register(){
 /**
    'heatex_prepare' just gets the stream details and the number of slices for
 	internal calculation, and checks that the stream names are valid in FPROPS.
-
-	TODO FIXME allow general support for specification of components, incl type,source.
 */
 int heatex_prepare(struct BBoxInterp *bbox,
 	   struct Instance *data,
@@ -169,7 +167,7 @@ int heatex_prepare(struct BBoxInterp *bbox,
 			goto fail;
 		}
 
-		hxd->comp[i] = fprops_fluid(comp[i], NULL,NULL);
+		hxd->comp[i] = fprops_fluid(comp[i]);
 		if(hxd->comp[i] == NULL){
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Heat exchanger %s name '%s' not recognised. Check list of supported species.",SCP(heatex_symbols[i]),comp[i]);
 			goto fail;
@@ -223,29 +221,26 @@ int heatex_calc(struct BBoxInterp *bbox,
 	double DT_min = DBL_MAX;
 	int i, n = heatex_data->n;
 
-	//CONSOLE_DEBUG("hot: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",hot.p/1e5, hot.h/1e3, hot.mdot);
-	//CONSOLE_DEBUG("cold: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",cold.p/1e5, cold.h/1e3, cold.mdot);
+	CONSOLE_DEBUG("hot: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",hot.p/1e5, hot.h/1e3, hot.mdot);
+	CONSOLE_DEBUG("cold: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",cold.p/1e5, cold.h/1e3, cold.mdot);
 
 	double Th,Tc,rhoh,rhoc;
 	/* loop from i=0 (cold inlet) to i=n (cold outlet) */
 	for(i=0;i<=n;++i){
 		double hh = hot.h - Q/hot.mdot*(n-i)/n;
 		double hc = cold.h + Q/cold.mdot*i/n;
-		FpropsError err = FPROPS_NO_ERROR;
 		/* FIXME make use of guess values? */
-		fprops_solve_ph(hot.p, hh, &Th, &rhoh, 0, heatex_data->comp[1], &err);
-		if(err){
+		if(fprops_solve_ph(hot.p, hh, &Th, &rhoh, 0, heatex_data->comp[1])){
 			/* error solving (p,h) hotside */
 		}
-		fprops_solve_ph(cold.p, hc, &Tc, &rhoc, 0, heatex_data->comp[0], &err);
-		if(err){
+		if(fprops_solve_ph(cold.p, hc, &Tc, &rhoc, 0, heatex_data->comp[0])){
 			/* error solving (p,h) coldside */
 		}
 		double DT = Th - Tc;
 		if(DT<DT_min)DT_min = DT;
 	}
 
-	//CONSOLE_DEBUG("DT = %f K",DT_min);
+	CONSOLE_DEBUG("DT = %f K",DT_min);
 
 	/* non-saturated */
 	outputs[0] = DT_min;

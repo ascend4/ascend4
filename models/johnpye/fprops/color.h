@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//* @file
 	Platform-independent console colour output.
 */
@@ -68,21 +70,5 @@ enum ConsoleColor{
 int color_on(FILE *f, int colorcode);
 
 int color_off(FILE *f);
-
-#define FPROPS_MSG(FMT, ...) \
-	{color_on(stderr,ASC_FG_BROWN);\
-	fprintf(stderr,"%s:%d",__FILE__,__LINE__);\
-	color_on(stderr,ASC_FG_BRIGHTBLUE);\
-	fprintf(stderr,"(%s):",__func__);\
-	color_off(stderr);\
-	fprintf(stderr," " FMT "\n",##__VA_ARGS__);}
-
-#define FPROPS_ERRMSG(STR,...) \
-	{color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"ERROR:");\
-	color_on(stderr,ASC_FG_BRIGHTBLUE);\
-	fprintf(stderr,"%s:%d(%s):", __FILE__, __LINE__ ,__func__); \
-	color_off(stderr);\
-	fprintf(stderr," " STR "\n", ##__VA_ARGS__);}
 
 #endif /* ASC_COLOR_H */

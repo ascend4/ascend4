@@ -12,7 +12,9 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
 *//** @file
 	Routines to calculate saturation properties using Helmholtz correlation
 	data. We first include some 'generic' saturation equations that make use
@@ -143,19 +145,7 @@ double fprops_psat_T_xiang(double T, const FluidData *data){
 	Estimate saturation pressure using acentric factor. This algorithm
 	is used for first estimates for later refinement in the program REFPROP.
 
-	This is derived from the definition of the acentric factor,
-	omega = -log10(psat(T1) - 1 where T1/Tc = Tr = 0.7
-	
-	together with the saturation curve obtained if h_fg(T) is assumed constant:
-	ln(psat(T)) = A - B/(T + C)
-
-	See Sandler 5e, p 320.	
-
-s	Such a curve will pass through (pc,Tc) and (psat(Tr),Tr) where Tr = 0.7,
-	but will probably be inaccurate at Tt. Given additional data, such as the
-	normal boiling point, a better equation like the Antoine equation can be
-	fitted. But we don't use that here.
-
+	Is this Antoine equation or something? FIXME check this and correct.
 */
 double fprops_psat_T_acentric(double T, const FluidData *data){
 	/* first guess using acentric factor */
@@ -216,7 +206,7 @@ double fprops_rhog_T_chouaieb(double T, const FluidData *data){
 	double PPP = Zc / (P1 + P2*Zc*log(Zc) + P3/Zc);
 	fprintf(stderr,"PPP = %f\n",PPP);
 	//PPP = -0.6240188;
-	double NNN = PPP + 1./(N1*D->omega + N2);
+	double NNN = PPP + 1./(N1*OMEGA(d) + N2);
 #else
 /* exact values from Chouaieb for CO2 */
 # define MMM 2.4686277
@@ -249,41 +239,32 @@ void fprops_triple_point(double *p_t_out, double *rhof_t_out, double *rhog_t_out
 		ERRMSG("Note: data for '%s' does not include a valid triple point temperature.",d->name);
 	}
 
-	MSG("Calculating for '%s' (type %d, T_t = %f, T_c = %f, p_c = %f)",d->name, d->type, d->data->T_t, d->data->T_c, d->data->p_c);
+
+	MSG("Calculating saturation for '%s' (T_c = %f, p_c = %f) at T = %f",d->name, d->data->T_c, d->data->p_c, d->data->T_t);
 	fprops_sat_T(d->data->T_t, &p_t, &rhof_t, &rhog_t,d,err);
 	if(*err)return;
 	d_last = d;
 	*p_t_out = p_t;
 	*rhof_t_out = rhof_t;
 	*rhog_t_out = rhog_t;
-	MSG("p_t = %f, rhof_t = %f, rhog_t = %f", p_t, rhof_t, rhog_t);
 }
 
 
 typedef struct{
 	const PureFluid *P;
-	double logp;
+	double p;
 	FpropsError *err;
-	double Terr;
-#ifdef SAT_DEBUG
-	int neval;
-#endif
 } SatPResidData;
 
 static ZeroInSubjectFunction sat_p_resid;
-static double sat_p_resid(double rT, void *user_data){
+static double sat_p_resid(double T, void *user_data){
 #define D ((SatPResidData *)user_data)
-	double p, rhof, rhog, resid;
-	fprops_sat_T(1/rT, &p, &rhof, &rhog, D->P, D->err);
-	if(*(D->err))D->Terr = 1/rT;
-	resid = log(p) - D->logp;
-	MSG("T = %f --> p = %f, rhof = %f, rhog = %f, RESID %f", 1/rT, p, rhof, rhog, resid);
+	double p, rhof, rhog;
+	fprops_sat_T(T, &p, &rhof, &rhog, D->P, D->err);
+	MSG("T = %f --> p = %f, rhof = %f, rhog = %f, RESID %f", T, p, rhof, rhog, (p - D->p));
 	//if(*(D->err))MSG("Error: %s",fprops_error(*(D->err)));
 	//if(*(D->err))return -1;
-#ifdef SAT_DEBUG
-	D->neval++;
-#endif
-	return resid;
+	return p - D->p;
 #undef D
 }
 
@@ -291,32 +272,13 @@ static double sat_p_resid(double rT, void *user_data){
 /**
 	Solve saturation conditions as a function of pressure. 
 
-	Currently this is just a Brent solver. We've tried to improve it slightly
-	by solving for the residual of log(p)-log(p1) as a function of 1/T, which
-	should make the function a bit more linear.
-
-	TODO Shouldn't(?) be hard at all to improve this to use a Newton solver via
-	the Clapeyron equation?
-
-	dp/dT = h_fg/(T*v_fg)
-	
-	where
-
-	h_fg = h(T, rhog) - h(T, rhof)
-	v_fg = 1/rhog - 1/rhof
-	rhof, rhog are evaluated at T.
-
-	We guess T, calculate saturation conditions at T, then evaluate dp/dT,
-	use Newton solver to converge, while checking that we remain within 
-	Tt < T < Tc. It may be faster to iterate using 1/T as the free variable,
-	and log(p) as the residual variable.
-
-	TODO Better still would be to reexamine the EOS and find a strategy similar to
-	the Akasaka algorithm that works with with rhof, rhog as the free variables,
-	see helmholtz.c...? Method above uses nested iteration on T inside p, so is
-	going to be slooooooow, even if it's fairly reliable.
-*/
+	TODO Currently, we will just attempt a Brent solver (zeroin) but hopefully 
+	we can do better later. In particular with cubic EOS this approach seems
+	very inefficient. At the very least we should be able to manage a Newton
+	solver...
+*/	
 void fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const PureFluid *P, FpropsError *err){
+	MSG("HELLO");
 	if(*err){
 		MSG("ERROR FLAG ALREADY SET");
 	}
@@ -327,40 +289,25 @@ void fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const P
 		*rho_g = P->data->rho_c;
 		return;
 	}
-	/* FIXME what about checking triple point pressure? */
-	
-
-	SatPResidData D = {
-		P, log(p), err, 0
-#ifdef SAT_DEBUG
-		,0
-#endif
-	};
+	SatPResidData D = {P, p, err};
 	MSG("Solving saturation conditions at p = %f", p);
-	double p1, rT, T, resid;
+	double p1, T, resid;
 	int errn;
 	double Tt = P->data->T_t;
 	if(Tt == 0)Tt = 0.2* P->data->T_c;
-	errn = zeroin_solve(&sat_p_resid, &D, 1./P->data->T_c, 1./Tt, 1e-10, &rT, &resid);
+	errn = zeroin_solve(&sat_p_resid, &D, Tt, P->data->T_c, 1e-5, &T, &resid);
 	if(*err){
-		MSG("FPROPS error within zeroin_solve iteration ('%s', p = %f, p_c = %f): %s"
-			, P->name, p, P->data->p_c, fprops_error(*err)
-		);
+		ERRMSG("Error during zeroin_solve: %s", fprops_error(*err));
+		return;
 	}
 	if(errn){
 		ERRMSG("Failed to solve saturation at p = %f.",p);
 		*err = FPROPS_SAT_CVGC_ERROR;
 		return;
-	}else{
-		if(*err){
-			ERRMSG("Ignoring error inside zeroin_solve iteration at T = %f",D.Terr);
-		}
-		*err = FPROPS_NO_ERROR;
 	}
-	T = 1./rT;
 	fprops_sat_T(T, &p1, rho_f, rho_g, P, err);
 	if(!*err)*T_sat = T;
-	MSG("Got p1 = %f, p = %f in %d iterations", p1, p, D.neval);
+	MSG("Got p1 = %f, p = %f", p1, p);
 }
 
 
