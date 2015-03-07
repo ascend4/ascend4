@@ -47,17 +47,32 @@ enum bintoken_kind {
 };
 
 /**
- * Set the configurations for building code.
- * This function must be called before Create is.<br><br>
- *
- * srcname, objname, libname, buildcommand, unlinkcommand
- * are all OS/compiler specific.
- * maxreln is the largest number of relations to be allowed in a
- * single generated C file.
- * verbose, if nonzero, causes human-edible comments in generated
- * code. housekeep, if given, will cause limited OS housekeeping
- * of unneeded files; specifically $srcname, objname will be deleted
- * after a successful link.
+	Set the configuration options for compiling relations as external C code.
+	This function must be called before BinTokensCreate is called.
+
+	In general, we need to allow the user to provide their choice of filenames
+	and build/unlink commands here, since these items are system dependent.
+	ABIs for C programs are not compiler specific (right?) so it should be OK
+	for the user to use a different compiler to that with which ASCEND itself
+	was built.
+
+	@param srcname        path to file where source code should be written
+	@param objname        path to object file, if necessary
+	@param libname        path to shared library, for AscDynaLoad
+	@param buildcommand   command for compiling the shared library file ('make' 
+	                      plus arguments, typically)
+	@param unlinkcommand  command for deleting bintoken files once no longer 
+	                      required
+	@param maxreln        is the largest number of relations to be allowed in a 
+	                      single generated C file.
+	@param verbose        if nonzero, causes human-edible comments in generated 
+	                      code.
+	@param housekeep      if given, will cause limited OS housekeeping 
+	                      of unneeded files; specifically srcname, objname will 
+	                      be deleted after a successful link.
+
+	TODO perhaps the 'housekeep' stuff can be automated inside the build 
+	command?
  */
 ASC_DLLSPEC int BinTokenSetOptions(
 	CONST char *srcname, CONST char *objname, CONST char *libname

@@ -108,7 +108,6 @@
 #include <ascend/general/dstring.h>
 
 #if TIMECOMPILER
-#include <time.h>
 #include <ascend/general/tm_time.h>
 #endif
 
@@ -5800,7 +5799,7 @@ int ExecuteGlassBoxEXT(struct Instance *inst, struct Statement *statement)
     case unmade_instance:
       return 0;
     case undefined_instance:
-      return 0; 		/* for the time being give another crack */
+      return 0; /* for the time being give another crack */
     case impossible_instance:
       instantiation_error(ASC_PROG_ERROR,statement
 			,"Statement contains impossible instance\n");
@@ -11909,7 +11908,7 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
   int anychange = 0;		/* will become 1 if any change anywhere */
   unsigned long c,n,alen,clen;
 #if TIMECOMPILER
-  clock_t start,classt;
+  double start,classt;
 #endif
   /*CONSOLE_DEBUG("...");*/
 
@@ -11918,14 +11917,13 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
 
   if (NumberPending() > 0) {
 #if TIMECOMPILER
-    start = clock();
+    start = tm_cpu_time();
 #endif
     atl = Asc_DeriveAnonList(result);
 #if TIMECOMPILER
-    classt = clock();
-    CONSOLE_DEBUG("Classification: %lu (for relation sharing)",
-            (unsigned long)(classt-start));
-    start = clock();
+    classt = tm_cpu_time();
+    CONSOLE_DEBUG("Classification: %0.6f s (for relation sharing)",(classt-start));
+    start = tm_cpu_time();
 #endif
     alen = gl_length(atl);
     /* iterate over all anontypes, working on only models. */
@@ -11965,16 +11963,14 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
     }else{
       /* we did something, so try the binary compile */
 #if TIMECOMPILER
-      classt = clock();
-      CONSOLE_DEBUG("Making tokens: %lu (for relations)",
-            (unsigned long)(classt-start));
-      start = clock();
+      classt = tm_cpu_time();
+      CONSOLE_DEBUG("Making tokens: %0.6f s (for relations)",(classt-start));
+      start = tm_cpu_time();
 #endif
       BinTokensCreate(result,BT_C);
 #if TIMECOMPILER
-      classt = clock();
-      CONSOLE_DEBUG("build/link: %lu (for bintokens)",
-              (unsigned long)(classt-start));
+      classt = tm_cpu_time();
+      CONSOLE_DEBUG("build/link: %0.6f s (for bintokens)",(classt-start));
 #endif
     }
   }
@@ -12822,7 +12818,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   struct Instance *result;
   unsigned long pass1pendings,pass2pendings,pass3pendings,pass4pendings,pass5pendings;
 #if TIMECOMPILER
-  clock_t start, phase1t,phase2t,phase3t,phase4t,phase5t,phase6t;
+  double start, phase1t,phase2t,phase3t,phase4t,phase5t,phase6t;
 #endif
 
 #ifdef INST_DEBUG
@@ -12835,13 +12831,13 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   pass4pendings = 0L;
 	pass5pendings = 0L;
 #if TIMECOMPILER
-  start = clock();
+  start = tm_cpu_time();
 #endif
   result = Pass1InstantiateModel(def,&pass1pendings,NULL);
 
 #if TIMECOMPILER
-  phase1t = clock();
-  CONSOLE_DEBUG("Phase 1 models = %lu",(unsigned long)phase1t-start);
+  phase1t = tm_cpu_time();
+  CONSOLE_DEBUG("Phase 1 models = %0.6f s",phase1t-start);
 #endif
 
   /* At this point, there may be unexecuted non-relation
@@ -12870,8 +12866,8 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   }
 
 #if TIMECOMPILER
-  phase2t = clock();
-  CONSOLE_DEBUG("Phase 2 relations = %lu",(unsigned long)(phase2t-phase1t));
+  phase2t = tm_cpu_time();
+  CONSOLE_DEBUG("Phase 2 relations = %0.6f s",(phase2t-phase1t));
 #endif
 
   /* CONSOLE_DEBUG("Starting phase 3..."); */
@@ -12893,8 +12889,8 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   }
 
 #if TIMECOMPILER
-  phase3t = clock();
-  CONSOLE_DEBUG("Phase 3 logicals = %lu",(unsigned long)(phase3t-phase2t));
+  phase3t = tm_cpu_time();
+  CONSOLE_DEBUG("Phase 3 logicals = %0.6f s",(phase3t-phase2t));
 #endif
 
   if (result!=NULL) {
@@ -12909,8 +12905,8 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   }
 
 #if TIMECOMPILER
-  phase4t = clock();
-  CONSOLE_DEBUG("Phase 4 when-case = %lu",(unsigned long)(phase4t-phase3t));
+  phase4t = tm_cpu_time();
+  CONSOLE_DEBUG("Phase 4 when-case = %0.6f s",(phase4t-phase3t));
 #endif
 
   if (result!=NULL) {
@@ -12924,8 +12920,8 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
     return result;
   }
 #if TIMECOMPILER
-  phase5t = clock();
-  CONSOLE_DEBUG("Phase 5 LINK-case = %lu",(unsigned long)(phase5t-phase4t));
+  phase5t = tm_cpu_time();
+  CONSOLE_DEBUG("Phase 5 LINK-case = %0.6f s",(phase5t-phase4t));
 #endif
   if (result!=NULL) {
     if (!pass1pendings && !pass2pendings && !pass3pendings && !pass4pendings && !pass5pendings){
@@ -12937,29 +12933,17 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   }
 
 #if TIMECOMPILER
-  phase6t = clock();
-  CONSOLE_DEBUG("Phase 6 defaults = %lu",(unsigned long)(phase6t-phase5t));
+  phase6t = tm_cpu_time();
+  CONSOLE_DEBUG("Phase 6 defaults = %0.6f s",(phase6t-phase5t));
   if (pass1pendings || pass2pendings || pass3pendings || pass4pendings || pass5pendings) {
-# ifdef __WIN32__
-    char *timeunit = "milliseconds";
-# else
-    char *timeunit = "microseconds";
-# endif
-    CONSOLE_DEBUG("Compilation times (%s):\n",timeunit);
-    CONSOLE_DEBUG("Phase 1 models \t\t%lu\n",
-            (unsigned long)(phase1t-start));
-    CONSOLE_DEBUG("Phase 2 relations \t\t%lu\n",
-            (unsigned long)(phase2t-phase1t));
-    CONSOLE_DEBUG("Phase 3 logical \t\t%lu\n",
-            (unsigned long)(phase3t-phase2t));
-    CONSOLE_DEBUG("Phase 4 when-case \t\t%lu\n",
-            (unsigned long)(phase4t-phase3t));
-		CONSOLE_DEBUG("Phase 5 LINK-case \t\t%lu\n",
-            (unsigned long)(phase5t-phase4t));
-    CONSOLE_DEBUG("Phase 6 defaults\t\t%lu\n",
-            (unsigned long)(phase6t-phase5t));
+    CONSOLE_DEBUG("Phase 1 models \t\t%0.6f s\n", (phase1t-start));
+    CONSOLE_DEBUG("Phase 2 relations \t\t%0.6f s\n", (phase2t-phase1t));
+    CONSOLE_DEBUG("Phase 3 logical \t\t%0.6f s\n", (phase3t-phase2t));
+    CONSOLE_DEBUG("Phase 4 when-case \t\t%0.6f s\n", (phase4t-phase3t));
+    CONSOLE_DEBUG("Phase 5 LINK-case \t\t%0.6f s\n", (phase5t-phase4t));
+    CONSOLE_DEBUG("Phase 6 defaults\t\t%0.6f s\n", (phase6t-phase5t));
   }
-  CONSOLE_DEBUG("Total = %lu",(unsigned long)(phase6t-start));
+  CONSOLE_DEBUG("Total = %0.6f s",(phase6t-start));
 # if 0 /* deep performance tuning */
   gl_reportrecycler(ASCERR);
 # endif
@@ -13172,7 +13156,7 @@ void NewReInstantiate(struct Instance *i)
   struct Instance *result;
   unsigned long pass1pendings,pass2pendings,pass3pendings,pass4pendings,pass5pendings;
 #if TIMECOMPILER
-  time_t start, phase1t,phase2t,phase3t,phase4t,phase5t,phase6t;
+  double start, phase1t,phase2t,phase3t,phase4t,phase5t,phase6t;
 #endif
   ++g_compiler_counter;/*instance tree will change:increment compiler counter*/
   asc_assert(i!=NULL);
@@ -13185,11 +13169,11 @@ void NewReInstantiate(struct Instance *i)
   pass4pendings = 0L;
   pass5pendings = 0L;
 #if TIMECOMPILER
-  start = clock();
+  start = tm_cpu_time();
 #endif
   result = Pass1InstantiateModel(NULL,&pass1pendings,i);
 #if TIMECOMPILER
-  phase1t = clock();
+  phase1t = tm_cpu_time();
 #endif
   if (result!=NULL) {
     SilentVisitInstanceTree(result,Pass2SetRelationBits,0,0);
@@ -13198,7 +13182,7 @@ void NewReInstantiate(struct Instance *i)
     ASC_PANIC("Reinstantiation phase 2 went insane. Bye!\n");
   }
 #if TIMECOMPILER
-  phase2t = clock();
+  phase2t = tm_cpu_time();
 #endif
   if (result!=NULL) {
     SilentVisitInstanceTree(result,Pass3SetLogRelBits,0,0);
@@ -13207,7 +13191,7 @@ void NewReInstantiate(struct Instance *i)
     ASC_PANIC("Reinstantiation phase 3 went insane. Bye!\n");
   }
 #if TIMECOMPILER
-  phase3t = clock();
+  phase3t = tm_cpu_time();
 #endif
   if (result!=NULL) {
     SilentVisitInstanceTree(result,Pass4SetWhenBits,0,0);
@@ -13216,7 +13200,7 @@ void NewReInstantiate(struct Instance *i)
     ASC_PANIC("Reinstantiation phase 4 went insane. Bye!\n");
   }
 #if TIMECOMPILER
-  phase4t = clock();
+  phase4t = tm_cpu_time();
 #endif
 	if (result!=NULL) {
     SilentVisitInstanceTree(result,Pass5SetLinkBits,0,0);
@@ -13225,7 +13209,7 @@ void NewReInstantiate(struct Instance *i)
     ASC_PANIC("Reinstantiation phase 5 went insane. Bye!\n");
   }
 #if TIMECOMPILER
-  phase5t = clock();
+  phase5t = tm_cpu_time();
 #endif
   if (result!=NULL) {
     if (!pass1pendings && !pass2pendings && !pass3pendings && !pass4pendings && !pass5pendings){
@@ -13238,15 +13222,15 @@ void NewReInstantiate(struct Instance *i)
     ASC_PANIC("Reinstantiation phase 6 went insane. Bye!\n");
   }
 #if TIMECOMPILER
-  phase6t = clock();
-  CONSOLE_DEBUG("Reinstantiation times (microseconds):\n");
-  CONSOLE_DEBUG("Phase 1 models \t\t%lu\n",(unsigned long)(phase1t-start));
-  CONSOLE_DEBUG("Phase 2 relations \t\t%lu\n",(unsigned long)(phase2t-phase1t));
-  CONSOLE_DEBUG("Phase 3 logicals \t\t%lu\n",(unsigned long)(phase3t-phase2t));
-  CONSOLE_DEBUG("Phase 4 when-case \t\t%lu\n",(unsigned long)(phase4t-phase3t));
-  CONSOLE_DEBUG("Phase 5 LINKs \t\t%lu\n",(unsigned long)(phase5t-phase4t));
-  CONSOLE_DEBUG("Phase 6 defaults \t\t%lu\n",(unsigned long)(phase6t-phase5t));
-  CONSOLE_DEBUG("Total\t\t%lu\n",(unsigned long)(phase6t-start));
+  phase6t = tm_cpu_time();
+  CONSOLE_DEBUG("Reinstantiation times:\n");
+  CONSOLE_DEBUG("Phase 1 models \t\t%0.6f s\n",(phase1t-start));
+  CONSOLE_DEBUG("Phase 2 relations \t\t%0.6f s\n",(phase2t-phase1t));
+  CONSOLE_DEBUG("Phase 3 logicals \t\t%0.6f s\n",(phase3t-phase2t));
+  CONSOLE_DEBUG("Phase 4 when-case \t\t%0.6f s\n",(phase4t-phase3t));
+  CONSOLE_DEBUG("Phase 5 LINKs \t\t%0.6f s\n",(phase5t-phase4t));
+  CONSOLE_DEBUG("Phase 6 defaults \t\t%0.6f s\n",(phase6t-phase5t));
+  CONSOLE_DEBUG("Total\t\t%0.6f s\n",(phase6t-start));
 #endif
   return;
 }

@@ -1506,7 +1506,7 @@ struct gl_list_t *Asc_DeriveAnonList(struct Instance *i)
   struct AnonVisitInfo info;
   VOIDPTR vp;
 #if (TIMECOMPILER && AMSTAT)
-  clock_t start,classt;
+  double start,classt;
 #endif
 
 #if AWAL
@@ -1540,13 +1540,13 @@ struct gl_list_t *Asc_DeriveAnonList(struct Instance *i)
    * will all be classified before the parent is classified.
    */
 #if (TIMECOMPILER && AMSTAT)
-    start = clock();
+    start = tm_cpu_time();
 #endif
   vp = Asc_AnonMergeMarkIPs(i);
 #if (TIMECOMPILER && AMSTAT)
-    classt = clock();
+    classt = tm_cpu_time();
     FPRINTF(ASCERR,
-            "Mergedetect\t\t%lu\n",(unsigned long)(classt-start));
+            "Mergedetect\t\t%0.3f s\n",(classt-start));
 #endif
   SilentVisitInstanceTreeTwo(i,(VisitTwoProc)DeriveAnonType,1,0,(void *)&info);
 
@@ -1556,7 +1556,7 @@ struct gl_list_t *Asc_DeriveAnonList(struct Instance *i)
     FILE *fp;
 
 #if TIMECOMPILER
-    FPRINTF(ASCERR, "start atmlist: %lu\n",(unsigned long)clock());
+    FPRINTF(ASCERR, "start atmlist: %lld\n",(unsigned long)uclock());
 #endif
 
 #ifdef __WIN32__
@@ -1580,7 +1580,7 @@ struct gl_list_t *Asc_DeriveAnonList(struct Instance *i)
     }
 
 #if TIMECOMPILER
-    FPRINTF(ASCERR, "done atmlist: %lu\n",(unsigned long)clock());
+    FPRINTF(ASCERR, "done atmlist: %lld\n",(unsigned long)uclock());
 #endif
 
   }
