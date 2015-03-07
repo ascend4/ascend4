@@ -45,7 +45,7 @@
 	ASC_NO_TRAPS -- compiler -D flag. Turn off traps/setjmp/longjump.
 */
 
-/* #define TIMECOMPILER 1 */
+#define TIMECOMPILER 1
 
 #ifndef TIMECOMPILER
 # define TIMECOMPILER 0
