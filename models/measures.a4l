@@ -277,6 +277,7 @@ bar = {1e5*Pa};
 mbar = {1e2*Pa};
 MPa = {1e6*Pa};
 GPa = {1e9*Pa};
+uPa = {micro*Pa};
 
 atm = {Pa*101325.0};
 mmHg = {13.5951*g/cm^3*9.80665*m/s^2*1*mm};

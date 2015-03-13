@@ -1,0 +1,104 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/datareader/testtmy3.a4c";
+REQUIRE "johnpye/moltensalt.a4c";
+
+(*
+	This is a proof-of-concept test of a model for solar power plant
+	dynamics in ASCEND. The system being modelled has a lossless solar thermal
+	collector, a perfectly mixed storage tank, and a turbine that produces 
+	electricity.
+
+	The boundaries defined are
+	(1) if solar GHI > 300 W/m2, then the collector provides heat to the tank
+	                  < 200 W/m2, then the collector switches off.
+	(2) if the tank temperature exceeds 550C, the turbine switches on
+	                            drops below 400C, the turbine switches off.
+
+	The data file mentioned below can be downloaded from 
+	http://rredc.nrel.gov/solar/old_data/nsrdb/1991-2005/data/tmy3/723815TYA.CSV
+*)
+MODEL solardynamics;
+	t IS_A time;
+	INDEPENDENT t;
+
+	(* Weather data reader *)
+	dr IS_A tmy3;
+	dr.tmydata.filename :== 'johnpye/datareader/723815TYA.csv';
+	dr.t, t ARE_THE_SAME;
+	T_amb ALIASES dr.T;
+
+	(* Solar collector *)
+	C IS_A factor;
+	A IS_A area;
+	G ALIASES dr.GHI;
+	Qdot_abs IS_A energy_rate;
+	col_on: Qdot_abs = C*A*G;
+	col_off: Qdot_abs = 0;
+
+	(* Storage *)
+	m IS_A mass;
+	TA IS_A moltensalt_fluid;
+	h ALIASES TA.h;
+	T ALIASES TA.T;
+	DERIVATIVE OF h;
+	Qdot_elec IS_A energy_rate;
+	m * der(h) = Qdot_abs - Qdot_elec;
+
+	(* Power block *)
+	Wdot_elec, Qdot_elec_des IS_A energy_rate;
+	eta IS_A fraction;
+	(* power cycle efficiency: chambadal novikov efficiency *)
+	eta = 1 - sqrt(T_amb / T); 
+	Qdot_elec*eta = Wdot_elec;
+	pow_on: Qdot_elec = Qdot_elec_des;
+	pow_off: Qdot_elec = 0;
+
+	(* Switching logic *)
+	is_G_high, is_G_low, is_T_start, is_T_stop IS_A boolean_var;
+	CONDITIONAL
+		G_high: G > 300 {W/m^2};
+		G_low: G < 200 {W/m^2};
+		T_start: T > (550 {K} + 273.15 {K});
+		T_stop: T < (400 {K} + 273.15 {K});
+	END CONDITIONAL;
+	is_G_high == SATISFIED(G_high);
+	is_G_low == SATISFIED(G_low);
+	is_T_start == SATISFIED(T_start);
+	is_T_stop == SATISFIED(T_stop);
+	ev1: EVENT (is_G_high)
+		CASE TRUE: USE col_on;
+	END EVENT;
+	ev2: EVENT (is_G_low)
+		CASE TRUE: USE col_off;
+	END EVENT;
+	ev3: EVENT (is_T_start)
+		CASE TRUE: USE pow_on;
+	END EVENT;
+	ev4: EVENT (is_T_stop)
+		CASE TRUE: USE pow_off;
+	END EVENT;
+METHODS
+	METHOD obs_init;
+		G.obs_id := 1;
+		T_amb.obs_id := 2;
+		T.obs_id := 3;
+		Wdot_elec.obs_id := 4;
+	END obs_init;
+	METHOD specify;
+		FIX C := 2000;
+		FIX Qdot_elec_des := 1 {MW};
+		FIX A := 2000 {m^2};
+		t := 0 {s};
+		T := 300 {K} + 273.15 {K};
+		is_G_high := FALSE;
+		is_G_low := TRUE;
+		is_T_start := FALSE;
+		is_T_stop := TRUE;
+	END specify;
+	METHOD on_load;
+		RUN specify;
+		RUN obs_init;
+	END on_load;
+END thermostat;
