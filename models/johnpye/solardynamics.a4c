@@ -28,11 +28,15 @@ MODEL solardynamics;
 	dr.tmydata.filename :== 'johnpye/datareader/723815TYA.CSV';
 	dr.t, t ARE_THE_SAME;
 	T_amb ALIASES dr.T;
+	G ALIASES dr.GHI;
+	(*
+	T_amb IS_A temperature;
+	G IS_A power_per_area;
+	*)
 
 	(* Solar collector *)
 	C IS_A factor;
 	A IS_A area;
-	G ALIASES dr.GHI;
 	Qdot_abs IS_A energy_rate;
 	col_on: Qdot_abs = C*A*G;
 	col_off: Qdot_abs = 0;
@@ -90,6 +94,7 @@ METHODS
 		FIX C := 2000;
 		FIX Qdot_elec_des := 1 {MW};
 		FIX A := 2000 {m^2};
+		FIX TA.p := 1 {bar};
 		t := 0 {s};
 		T := 300 {K} + 273.15 {K};
 		is_G_high := FALSE;
@@ -101,4 +106,6 @@ METHODS
 		RUN specify;
 		RUN obs_init;
 	END on_load;
-END thermostat;
+END solardynamics;
+
+
