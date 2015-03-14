@@ -128,7 +128,9 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 		return 1;
 	}
 	fn = SCP(SYMC_INST(fninst)->value);
+#if DATAREADER_DEBUG
 	CONSOLE_DEBUG("FILENAME: %s",fn);
+#endif
 	if(fn==NULL || strlen(fn)==0){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'filename' is NULL or empty");
 		return 1;
@@ -152,7 +154,9 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 		return 1;
 	}
 	fmt = SCP(SYMC_INST(fmtinst)->value);
+#if DATAREADER_DEBUG
 	CONSOLE_DEBUG("FORMAT: %s",fmt);
+#endif
 	if(fmt==NULL || strlen(fmt)==0){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'format' is NULL or empty");
 		return 1;

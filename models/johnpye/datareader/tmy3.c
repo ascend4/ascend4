@@ -58,13 +58,20 @@
 #include "sun.h"
 
 #include <stdio.h>
+#include <math.h>
 
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/error.h>
 
 #include "parse/parse.h"
 
-//#define TMY3_DEBUG 1
+#define TMY3_DEBUG 0
+#ifdef TM3_DEBUG
+# define PMSG(MSG,...) assign(fprint(stderr,"%s:%s Parse error, line %d:" MSG "\n"\
+	,__FILE__,__LINE__,p->line, args))
+#else
+# define PMSG(...) (1)
+#endif
 
 /**
 	Data extracted from the E/E data file, doesn't have to included everything,
@@ -138,7 +145,7 @@ int datareader_tmy3_header(DataReader *d){
 		ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Parser error in header part of file");
 	}
 
-	CONSOLE_DEBUG("TMY3 file for '%s' at (%.2fN,%.2fE)",loc.stationname,loc.latitude,loc.longitude);
+	CONSOLE_DEBUG("TMY3 file for '%s' at (%.2f%s,%.2f%s)",loc.stationname,fabs(loc.latitude),(loc.latitude>=0?"N":"S"),fabs(loc.longitude),(loc.longitude>=0?"E":"W"));
 
     // set the value of some of the Data Reader parameters
     d->i = 0;
@@ -157,7 +164,9 @@ int datareader_tmy3_header(DataReader *d){
 int datareader_tmy3_eof(DataReader *d){
 	parse *p = DATA(d)->p;
 	if(parseEnd(p)){
+#if TMY3_DEBUG
 		CONSOLE_DEBUG("REACHED END OF FILE");
+#endif
 		if(d->i < d->ndata){
 			ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Incomplete data set found (%d rows < %d expected",d->i, d->ndata);
 		}
@@ -218,6 +227,8 @@ int datareader_tmy3_data(DataReader *d){
 
 	// TODO what to do with 'missing' values??
 	parse *p = DATA(d)->p;
+#define TAILLENGTH 2048
+	char tail[TAILLENGTH];
 
 #define PARSEINT(NAME) parseDouble(p,&tmy3_field_##NAME)
 #define PARSECHAR(NAME) parseAChar(p,&tmy3_field_##NAME)
@@ -226,23 +237,29 @@ int datareader_tmy3_data(DataReader *d){
 // example row:
 // 01/25/1988,12:00,821,1411,530,1,13,580,1,9,192,1,13,565,1,13,593,1,9,219,1,13,442,1,21,10,A,7,4,A,7,13.3,A,7,-8.9,A,7,21,A,7,960,A,7,60,A,7,3.6,A,7,80500,A,7,77777,A,7,0.5,E,8,0.030,F,8,-9900.000,?,0,-9900,-9900,?,0
 
+// example row (as of 14 Mar 2015):
+// 01/01/1988,01:00,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,1,A,7,0,A,7,-2.2,A,7,-5.6,A,7,78,A,7,959,A,7,270,A,7,3.6,A,7,24100,B,7,77777,A,7,0.6,E,8,0.000,F,8,0.00,?,0,0,1,D,9,00,C,8
 	if(!(
 		(( /* parse the date and time first... */
-		parseNumber(p,&month)
+		parseNumber(p,&month) && PMSG("Month = %d",month)
 		&& parseThisString(p,"/")
-		&& parseNumber(p,&day)
+		&& parseNumber(p,&day) && PMSG("Date = %d",day)
 		&& parseThisString(p,"/")
-		&& parseNumber(p,&year)
+		&& parseNumber(p,&year)&& PMSG("Year = %d",year)
 		&& parseThisString(p,",")
-		&& parseNumber(p,&hour)
+		&& parseNumber(p,&hour)&& PMSG("Hour = %d",hour)
 		&& parseThisString(p,":")
-		&& parseNumber(p,&minute)
+		&& parseNumber(p,&minute)&& PMSG("Minute = %d",minute)
 		&& parseThisString(p,",")
 		/* then come the data fields */
 		&& NUMFIELDS(PARSECHAR,PARSEINT,ANDTHEN)
 		) || parseError(p,"Missing/incorrect data field")
 		) && (
-			parseEOL(p) || parseError(p,"Expected end-of-line")
+			/*parseEOL(p) ||*/ (
+				parseStrExcept(p,"\r\n",tail,TAILLENGTH)
+				&& parseEOL(p) 
+				&& PMSG("Got unexpected text at end of line \"%s\"",tail)
+			)
 		)
 	)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Failed to parse E/E data file");
@@ -266,7 +283,9 @@ int datareader_tmy3_data(DataReader *d){
 
 	DATA(d)->rows[d->i] = row;
 
-	//CONSOLE_DEBUG("Read i = %d, t = %f d, T = %.1f°C, rh = %.1f %",d->i,row.t / 3600. / 24., T, row.rh*100);
+#if TMY3_DEBUG
+	CONSOLE_DEBUG("Read i = %d, t = %f d, T = %.1f°C, rh = %.1f %%",d->i,row.t / 3600. / 24., row.T - 273.15, row.rh*100);
+#endif
 
 	d->i++;
 	return 0;

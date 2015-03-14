@@ -89,7 +89,9 @@ DataReader *datareader_new(const char *fn, int noutputs) {
     d->headerfn = NULL;
     d->eoffn = NULL;
 
+#if DR_DEBUG
     CONSOLE_DEBUG("Datareader created...");
+#endif
     return d;
 }
 /**read the parameter token and return an interpolation type.
@@ -150,7 +152,9 @@ int datareader_set_parameters(DataReader *d, const char *parameters) {
         }
         partok = strtok(NULL,",:"); //reread parameter string for next token
     }
-	CONSOLE_DEBUG("parcount: %d,noutoputs: %d",parcount,d->noutputs);
+#if DR_DEBUG
+    CONSOLE_DEBUG("parcount: %d,noutoputs: %d",parcount,d->noutputs);
+#endif
     if (parcount+1 != d->noutputs) {
     	ERROR_REPORTER_HERE(ASC_USER_ERROR,
     	"Number of Columns in parameters and Model dont match, check model declaration");
@@ -188,8 +192,9 @@ int datareader_set_format(DataReader *d, const char *format) {
 
     int i;
 
+#if DR_DEBUG
     CONSOLE_DEBUG("FORMAT '%s'", format);
-
+#endif
     DataReaderFormat found = DATAREADER_INVALID_FORMAT;
     for (i = 0; i < DATAREADER_INVALID_FORMAT; ++i) {
         if (strcmp(format, fmts[i]) == 0) {
@@ -198,7 +203,9 @@ int datareader_set_format(DataReader *d, const char *format) {
         }
     }
 
+#if DR_DEBUG
     CONSOLE_DEBUG("FOUND DATA FORMAT %d", found);
+#endif
 
     switch (found) {
     case DATAREADER_FORMAT_TMY2:

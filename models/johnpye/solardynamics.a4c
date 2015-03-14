@@ -25,7 +25,7 @@ MODEL solardynamics;
 
 	(* Weather data reader *)
 	dr IS_A tmy3;
-	dr.tmydata.filename :== 'johnpye/datareader/723815TYA.csv';
+	dr.tmydata.filename :== 'johnpye/datareader/723815TYA.CSV';
 	dr.t, t ARE_THE_SAME;
 	T_amb ALIASES dr.T;
 
