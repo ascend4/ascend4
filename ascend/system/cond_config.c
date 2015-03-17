@@ -38,6 +38,8 @@
 #include <ascend/compiler/initialize.h>
 #include <ascend/compiler/instmacro.h>
 #include <ascend/compiler/symtab.h>
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/instance_io.h>
 
 #include "slv_server.h"
 #include "system.h"
@@ -502,8 +504,10 @@ static void apply_ecase(struct event_case *cur_case, slv_system_t sys, struct e_
   struct e_event *event;
   int i,n;
 
-  struct Name *name;
+  struct Instance* p;
   enum Proc_enum pe;
+  char *chname_in_subm, *evname;
+  struct Name *name_in_subm;
 
   rels = event_case_rels_list(cur_case);
   if(rels != NULL) {
@@ -532,17 +536,21 @@ static void apply_ecase(struct event_case *cur_case, slv_system_t sys, struct e_
     }
   }
   if (sys!=NULL) {
-    char *evname = event_make_name(sys,cur_event);
     if (event_meth(cur_event)) {
-      name = CreateIdName(AddSymbol(evname));
-      pe = Initialize(INST(slv_instance(sys)),name,evname, ASCERR, 0, NULL, NULL);
+      p = InstanceParent((struct Instance*)(event_instance(cur_event)),1);
+      WriteInstanceName(stdout,p,INST(slv_instance(sys)));
+      chname_in_subm = WriteInstanceNameString(event_instance(cur_event),p);
+      name_in_subm = CreateIdName(AddSymbol(chname_in_subm));
+      pe = Initialize(p,name_in_subm,chname_in_subm, ASCERR, 0, NULL, NULL);
       if (pe==Proc_proc_not_found) {
+        evname = event_make_name(sys,cur_event);
         ERROR_REPORTER_HERE(ASC_USER_NOTE,"Method %s not found",evname);
         event_set_meth(cur_event,0);
+        ASC_FREE(evname);
       }
       else if (pe!=Proc_all_ok) ERROR_REPORTER_HERE(ASC_USER_ERROR,"Error occured when running method %s",evname);
+      ASC_FREE(chname_in_subm);
     }
-    ASC_FREE(evname);
   }
 }
 
@@ -737,16 +745,15 @@ void analyze_event_cont(struct e_event *event,slv_system_t sys){
   int32 c,clen;
   int32 *value;
   int32 *case_values;
-  char *evname;
-  struct Name *name;
+  char *evname, *chname_in_subm;
   enum Proc_enum pe;
   struct gl_list_t *events;
   int i;
+  struct Instance* p;
+  struct Name *name_in_subm;
 
   cases = event_cases_list(event);
   clen = gl_length(cases);
-  evname = event_make_name(sys,event);
-  char tmp[strlen(evname)+4];
 
   for(c=1; c<=clen; c++){
     cur_case = (struct event_case *)(gl_fetch(cases,c));
@@ -771,19 +778,26 @@ void analyze_event_cont(struct e_event *event,slv_system_t sys){
       }
 
       if (event_meth_end(event)) {
+        evname = event_make_name(sys,event);
+        char tmp[strlen(evname)+4];
         strcpy(tmp,evname);
         strcat(tmp,"_end");
-        name = CreateIdName(AddSymbol(tmp));
-        pe = Initialize(INST(slv_instance(sys)),name,tmp, ASCERR, 0, NULL, NULL);
+        p = InstanceParent((struct Instance*)(event_instance(event)),1);
+        WriteInstanceName(stdout,p,INST(slv_instance(sys)));
+        chname_in_subm = WriteInstanceNameString(event_instance(event),p);
+        strcat(chname_in_subm,"_end");
+        name_in_subm = CreateIdName(AddSymbol(chname_in_subm));
+        pe = Initialize(p,name_in_subm,chname_in_subm, ASCERR, 0, NULL, NULL);
         if (pe==Proc_proc_not_found) {
           ERROR_REPORTER_HERE(ASC_USER_NOTE,"Method %s not found",tmp);
           event_set_meth_end(event,0);
         }
         else if (pe!=Proc_all_ok) ERROR_REPORTER_HERE(ASC_USER_ERROR,"Error occured when running method %s",tmp);
+        ASC_FREE(chname_in_subm);
+        ASC_FREE(evname);
       }
     }
   }
-  ASC_FREE(evname);
 }
 
 
