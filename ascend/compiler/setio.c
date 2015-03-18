@@ -28,17 +28,10 @@
 #include <ascend/general/dstring.h>
 
 #include "functype.h"
-
-
 #include "expr_types.h"
 #include "sets.h"
 #include "setio.h"
 #include "exprio.h"
-
-#ifndef lint
-static CONST char SetIOID[] = "$Id: setio.c,v 1.9 1997/12/02 12:00:23 ballan Exp $";
-#endif
-
 
 void WriteSetNode(FILE *f, CONST struct Set *s)
 {

@@ -39,7 +39,7 @@ MODEL fluid;
 END fluid;
 
 (*
-	Thermo properties -- IAPWS-IF97
+	Thermo properties -- IAPWS-IF95
 *)
 MODEL stream_state;
 	cd IS_A fluid;
@@ -113,12 +113,13 @@ METHOD on_load;
 	h := 2000 {kJ/kg};
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
-	SOLVE;
+END on_load;
+METHOD self_test;
 	ASSERT abs(T - 453.03 {K}) < 0.01 {K};
 	ASSERT abs(v - 0.119808 {m^3/kg}) < 0.0001 {m^3/kg};
 	ASSERT abs(x - 0.6142) < 0.0001;
 	ASSERT abs(s - 4.8696 {kJ/kg/K}) < 0.0001 {kJ/kg/K};
-END on_load;
+END self_test;
 END	stream_state_test;
 
 
@@ -240,6 +241,7 @@ END pump_simple;
 
 MODEL pump_simple_test REFINES pump_simple;
 	cd.component :== 'water';
+	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -522,7 +524,6 @@ MODEL heater_closed;
 	
 	q IS_A specific_energy;
 	Qdot = q * inlet.mdot;
-
 	(* cons. mass *)
 	cons_mass: inlet.mdot = outlet.mdot;
 	cons_mass_heat: inlet_heat.mdot = outlet_heat.mdot;
@@ -596,12 +597,56 @@ MODEL tee;
 	phi IS_A fraction;
 	phi_eq: phi * inlet.mdot = outlet_branch.mdot;
 METHODS
+METHOD disable_cons_mass;
+	cons_mass.included := FALSE;
+END disable_cons_mass;
+METHOD enable_cons_mass;
+	cons_mass.included := TRUE;
+END enable_cons_mass;
 METHOD default_self;
 	RUN inlet.default_self;
 	RUN outlet.default_self;
 	RUN outlet_branch.default_self;
 END default_self;	
 END tee;	
+
+(*------------------------------------------------------------------------------
+  MERGE PIECE
+*)
+
+(*
+	Joining two streams
+*)
+MODEL merge;
+	NOTES
+		'block' SELF {Model of a joining of two flow streams}
+	END NOTES;
+
+	inlet "in:" IS_A stream_node;
+	inlet_branch "in:" IS_A stream_node;
+	outlet "out:" IS_A stream_node;
+
+	inlet.cd, inlet_branch.cd, outlet.cd ARE_THE_SAME;
+	cd ALIASES inlet.cd;
+
+	inlet.p, inlet_branch.p, outlet.p ARE_THE_SAME;
+	(*inlet.h, inlet_branch.h, outlet.h  ARE_THE_SAME;*)
+
+	(* cons. mass *)
+	cons_mass: inlet.mdot + inlet_branch.mdot= outlet.mdot;
+	
+	(* cons. energy*)
+	cons_energy: inlet.mdot*inlet.h+inlet_branch.mdot*inlet_branch.h= outlet.mdot*outlet.h;
+
+	phi IS_A fraction;
+	phi_eq: phi * outlet.mdot = inlet_branch.mdot;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+	RUN inlet_branch.default_self;
+END default_self;
+END merge;	
 
 (*------------------------------------------------------------------------------
   OVERALL CYCLE

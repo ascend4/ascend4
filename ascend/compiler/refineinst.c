@@ -77,11 +77,6 @@
 #include "instantiate.h"
 #include "refineinst.h"
 
-#ifndef lint
-static CONST char RefineInstModuleID[] = "$Id: refineinst.c,v 1.10 1998/02/05 16:37:32 ballan Exp $";
-#endif
-
-
 /* checks children, and does some value copying in the process */
 static void CheckChild(struct Instance *old, struct Instance *new)
 {

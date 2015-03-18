@@ -33,7 +33,8 @@
 	struct, too, or else find some other way to cache them.
 
 	TODO perhaps eventually we can different different correlations using
-	different independent variables, in which case this state could be 
+	different independent variables, in which case this state could be modified/
+	expanded/improved.
 */
 typedef struct FluidState_struct{
 	double T; ///< temperature / K
@@ -50,22 +51,26 @@ and also what reference state, as another option. */
 
 /*The following take the fluid data and use the function pointers
   to call the correct function (e.g. fprops_p -> helmholtz_p)*/
-double fprops_p(FluidState state, FpropsError *err);
-double fprops_u(FluidState state, FpropsError *err);
-double fprops_h(FluidState state, FpropsError *err);
-double fprops_s(FluidState state, FpropsError *err);
-double fprops_a(FluidState state, FpropsError *err);
-double fprops_cv(FluidState state, FpropsError *err);
-double fprops_cp(FluidState state, FpropsError *err);
-double fprops_w(FluidState state, FpropsError *err);
-double fprops_g(FluidState state, FpropsError *err);
+
+double fprops_p(FluidState state, FpropsError *err); ///< Pressure / [Pa]
+double fprops_u(FluidState state, FpropsError *err); ///< Specific internal energy / [J/kg]
+double fprops_h(FluidState state, FpropsError *err); ///< Specific enthalpy / [J/kg]
+double fprops_s(FluidState state, FpropsError *err); ///< Specific entropy / [J/kg/K]
+double fprops_a(FluidState state, FpropsError *err); ///< Specific helmholtz energy / [J/kg]
+double fprops_cv(FluidState state, FpropsError *err);///< Specific isochoric heat capacity / [J/kg/K]
+double fprops_cp(FluidState state, FpropsError *err);///< Specific isobaric heat capacity / [J/kg/K]
+double fprops_w(FluidState state, FpropsError *err); ///< Speed of sound / [m/s]
+double fprops_g(FluidState state, FpropsError *err); ///< Specific Gibbs energy / [J/kg]
 
 double fprops_alphap(FluidState state, FpropsError *err);
 double fprops_betap(FluidState state, FpropsError *err);
 
-double fprops_cp0(FluidState state, FpropsError *err);
+double fprops_cp0(FluidState state, FpropsError *err); ///< Specific isobaric heat capacity at zero pressure / [J/kg/K] (ideal gas limit)
 
-double fprops_dpdT_rho(FluidState state, FpropsError *err);
+/**	\brief Partial derivative of pressure wrt temperature at density constant.
+	\f$\left(\frac{\partial p}{\partial T}\right)_{\rho}\f$
+*/
+double fprops_dpdT_rho(FluidState state, FpropsError *err); 
 
 /// return the fluid quality; 0 if subcooled, 1 if superheated, error if both T>T_c and p>p_c
 double fprops_x(FluidState state, FpropsError *err);
@@ -81,12 +86,18 @@ double fprops_dudT_rho(const FluidState state, FpropsError *err);
 double fprops_dudrho_T(const FluidState state, FpropsError *err);
 #endif
 
+
+double fprops_mu(FluidState state, FpropsError *err); ///< Dynamic viscosity / [Pa*s]
+double fprops_lam(FluidState state, FpropsError *err); ///< Thermal conductivity / [W/m/K]
+
 /**
 	Convert file data E into a PureFluid object, doing any necessary pre-calculation
 	along the way. The PureFluid should implement the named correlation type.
 	@return NULL on failure.
 */
 PureFluid *fprops_prepare(const EosData *E, const char *corrtype);
+
+/* TODO what about a function to destroy the PureFluid structure? */
 
 /**
 	Check if the file data E is suitable for preparing a PureFluid

@@ -3,9 +3,20 @@
 
 #define SWAP(a,b) do { double tmp = b ; b = a ; a = tmp ; } while(0)
 
-
+/* note that MinGW32 doesn't provide cpow function, so some changes made here: */
+#ifndef HAVE_CPOW
+double complex fprops_ccbrt(double complex z){
+	double r = cabs(z);
+	double th1 = carg(z) / 3.;
+	return pow(r,1./3) * (cos(th1) + _Complex_I *sin(th1));
+}
+# define CCBRT(Z) fprops_ccbrt((Z))
+#else
+# define CCBRT(Z) cpow((Z), 1./3)
+#endif
 
 #if 1
+
 /*
 This function was originally taken from the Ankit branch.  I have modified it so that the equation is not "deflated" by dividing by the pressure.
 Because we are using specific volume, and in some cases large pressure, we may need a more numerically sound method that won't return nan's
@@ -18,14 +29,14 @@ int cubicroots(double B, double C, double D, double *Z0, double *Z1, double *Z2)
     #define PI 3.14159265
     double discriminant = 18*B*C*D - 4*B*B*B*D + C*C*B*B - 4*C*C*C - 27*D*D;
 	double term1 = (2*B*B*B)-(9*B*C)+(27*D);
-	double _Complex term2;
+	double complex term2;
 	if(discriminant>0)term2 = _Complex_I * sqrt(27*discriminant);
 	else term2 = sqrt(-27*discriminant);
 
-	double _Complex cuberootpos = cpow(.5*(term1+term2),1./3);
-	double _Complex cuberootneg = cpow(.5*(term1-term2),1./3);
-	double _Complex complextermpos = (1 + _Complex_I*sqrt(3))/6;
-	double _Complex complextermneg = (1 - _Complex_I*sqrt(3))/6;
+	double complex cuberootpos = CCBRT(.5*(term1+term2));
+	double complex cuberootneg = CCBRT(.5*(term1-term2));
+	double complex complextermpos = (1 + _Complex_I*sqrt(3))/6;
+	double complex complextermneg = (1 - _Complex_I*sqrt(3))/6;
     
 	*Z0 = -B/3 - 1./3 * cuberootpos - 1./3 * cuberootneg;
 	*Z1 = -B/3 + complextermpos * cuberootpos + complextermneg * cuberootneg;

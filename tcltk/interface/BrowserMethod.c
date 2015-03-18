@@ -58,11 +58,6 @@
 #include "UnitsProc.h"
 #include "Qlfdid.h"
 
-#ifndef lint
-static CONST char BrowserMethodID[] = "$Id: BrowserMethod.c,v 1.24 2003/08/23 18:43:04 ballan Exp $";
-#endif
-
-
 #define MAXID 256
 
 #ifndef MAXIMUM_STRING_LENGTH

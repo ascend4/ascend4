@@ -46,10 +46,6 @@
 #include "instance_types.h"
 #include "visitlink.h"
 
-#ifndef lint
-static CONST char NameVisitModuleID[] = "$Id: visitlink.c,v 1.3 1997/12/20 17:51:57 ballan Exp $";
-#endif
-
 static
 void SlowVisitTreeTwo(struct Instance *inst,
                       VisitNameTwoProc proc,

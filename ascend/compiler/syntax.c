@@ -36,10 +36,6 @@
 #define NULL 0
 #endif
 
-#ifndef lint
-static CONST char SyntaxModuleRCSid[] = "$Id: syntax.c,v 1.11 1998/04/12 18:31:14 ballan Exp $";
-#endif
-
 unsigned NumberOfRelOps(struct Expr *ex)
 {
   register unsigned count=0;

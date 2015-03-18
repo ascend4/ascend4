@@ -64,7 +64,12 @@ extern "C"{
 #include "matrix.h"
 #include "solverhooks.h"
 
-#define SIMULATION_DEBUG 0
+//#define SIMULATION_DEBUG
+#ifdef SIMULATION_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 /**
 	Create an instance of a type (call compiler etc)
@@ -72,9 +77,7 @@ extern "C"{
 	@TODO fix mutex on compile command filenames
 */
 Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), simroot(GetSimulationRoot(i),SymChar("simroot")){
-#if SIMULATION_DEBUG
-	CONSOLE_DEBUG("Created simulation at %p",this);	
-#endif
+	MSG("Created simulation at %p",this);	
 	sys = NULL;
 	solverhooks = NULL;
 	//is_built = false;
@@ -86,9 +89,7 @@ Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), sim
 
 Simulation::Simulation(const Simulation &old) : Instanc(old), simroot(old.simroot){
 	//is_built = old.is_built;
-#if SIMULATION_DEBUG
-	CONSOLE_DEBUG("Copying Simulation...");
-#endif
+	MSG("Copying Simulation...");
 	sys = old.sys;
 	sing = NULL;
 	solverhooks = old.solverhooks;
@@ -150,7 +151,7 @@ Simulation::getNumVars(){
 	A general purpose routine for reporting from simulations.
 */
 void
-Simulation::write(FILE *fp, const char *type) const{
+Simulation::write(const char *fname, const char *type) const{
 	int res;
 
 #if 0
@@ -167,15 +168,17 @@ Simulation::write(FILE *fp, const char *type) const{
 
 	if(type==NULL){
 		CONSOLE_DEBUG("Writing simroot...");
-		simroot.write(fp);
+		simroot.write(fname);
 		return;
 	}else if(string(type) == "dot"){
 		if(!sys)throw runtime_error("Can't write DOT file: simulation not built");
 		CONSOLE_DEBUG("Writing graph...");
+		FILE *fp = fopen(fname, "wb");
 		if(!fp){
-			throw runtime_error("Need a file to write to in Simulation::write");
+			throw runtime_error("Unable to open file for writing");
 		}
 		res = system_write_graph(sys, fp, "png");
+		fclose(fp);
 		if(res){
 			stringstream ss;
 			ss << "Error running system_write_graph (err " << res << ")";
@@ -227,7 +230,7 @@ Simulation::run(const Method &method, Instanc &model){
 		CONSOLE_DEBUG("WARNING, SIMULATION NOT YET BUILT");
 	}*/
 
-	CONSOLE_DEBUG("Running method '%s' on simulation '%s'...", method.getName(), (const char *)(getName().getInternalType()));
+	MSG("Running method '%s' on simulation '%s'...", method.getName(), (const char *)(getName().getInternalType()));
 
 	Nam name = Nam(method.getSym());
 	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
@@ -370,7 +373,7 @@ Simulation::checkDoF() const{
     /*if(!is_built){
 		throw runtime_error("System not yet built");
     }*/
-	CONSOLE_DEBUG("Calling slvDOF_status...");
+	MSG("Calling slvDOF_status...");
     slvDOF_status(sys, &status, &dof);
     switch(status){
         case ASCXX_DOF_UNDERSPECIFIED:
@@ -448,7 +451,7 @@ Simulation::checkStructuralSingularity(){
 	}
 
 
-	CONSOLE_DEBUG("processing singularity data...");
+	MSG("processing singularity data...");
 	sing = new SingularityInfo();
 
 	struct var_variable **varlist = slv_get_solvers_var_list(sys);
@@ -475,11 +478,11 @@ Simulation::checkStructuralSingularity(){
 	ASC_FREE(fil);
 
 	if(sing->isSingular()){
-		CONSOLE_DEBUG("singularity found");
+		MSG("singularity found");
 		this->sing = sing;
 		return FALSE;
 	}
-	CONSOLE_DEBUG("no singularity");
+	MSG("no singularity");
 	delete sing;
 	return TRUE;
 }
@@ -514,9 +517,7 @@ Simulation::setSolver(Solver &solver){
 		throw runtime_error(ss.str());
 	}
 
-#if SIMULATION_DEBUG
-	CONSOLE_DEBUG("Selecting solver '%s'",solver.getName().c_str());
-#endif
+	MSG("Selecting solver '%s'",solver.getName().c_str());
 
 	int selected = slv_select_solver(sys, solver.getIndex());
 #if SIMULATION_DEBUB
@@ -560,7 +561,7 @@ Simulation::build(){
 		//CONSOLE_DEBUG("System is already built (%p)",sys);
 		return;
 	}else{
-		CONSOLE_DEBUG("Building system...");
+		MSG("Building system...");
 	}
 
 	if(simroot.getKind() != MODEL_INST){
@@ -571,16 +572,14 @@ Simulation::build(){
 		throw runtime_error("System has pending instances; can't yet send to solver.");
 	}
 
-#if SIMULATION_DEBUG
-	CONSOLE_DEBUG("============== REALLY building system...");
-#endif
+	MSG("============== REALLY building system...");
 	sys = system_build(simroot.getInternalType());
 	if(!sys){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to build system");
 		throw runtime_error("Unable to build system");
 	}
 
-	CONSOLE_DEBUG("System built OK");
+	MSG("System built OK");
 }
 
 
@@ -606,9 +605,7 @@ Simulation::getParameters() const{
 void
 Simulation::setParameters(SolverParameters &P){
 	if(!sys)throw runtime_error("Can't set solver parameters: simulation has not been built yet.");
-#if SIMULATION_DEBUG
-	CONSOLE_DEBUG("Calling slv_set_parameters");
-#endif
+	MSG("Calling slv_set_parameters");
 	slv_set_parameters(sys, &(P.getInternalType()));
 }
 
@@ -632,7 +629,7 @@ Simulation::getFixableVariables(){
 	int32 *vip; /** TODO ensure 32 bit integers are used */
 
 	// Get IDs of elegible variables in array at vip...
-	CONSOLE_DEBUG("Calling slvDOF_eligible");
+	MSG("Calling slvDOF_eligible");
 	if(!slvDOF_eligible(sys,&vip)){
 		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"No fixable variables found.");
 	}else{
@@ -714,7 +711,7 @@ Simulation::getVariablesNearBounds(const double &epsilon){
 	}
 
 	int *vip;
-	CONSOLE_DEBUG("Calling slv_near_bounds...");
+	MSG("Calling slv_near_bounds...");
 	if(slv_near_bounds(sys,epsilon,&vip)){
 		struct var_variable **vp = slv_get_solvers_var_list(sys);
 		struct var_variable *var;
@@ -752,7 +749,7 @@ Simulation::getVariablesFarFromNominals(const double &bignum){
 
 	int *vip;
 	int nv;
-	CONSOLE_DEBUG("Calling slv_far_from_nominals...");
+	MSG("Calling slv_far_from_nominals...");
 	if((nv=slv_far_from_nominals(sys, bignum, &vip))){
 		struct var_variable **vp = slv_get_solvers_var_list(sys);
 		struct var_variable *var;
@@ -789,16 +786,12 @@ void
 Simulation::solve(Solver solver, SolverReporter &reporter){
 	int res;
 
-#if SIMULATION_DEBUG
-	cerr << "-----------------set solver----------------" << endl;
-#endif
+	MSG("-----------------set solver----------------");
 
 	//CONSOLE_DEBUG("Setting solver to '%s'",solver.getName().c_str());
 	setSolver(solver);
 
-#if SIMULATION_DEBUG
-	cerr << "-----------------presolve----------------" << endl;
-#endif
+	MSG("-----------------presolve----------------");
 
 	//cerr << "PRESOLVING SYSTEM...";
 	//CONSOLE_DEBUG("Calling slv_presolve...");
@@ -809,15 +802,15 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		throw runtime_error("Error in slv_presolve");
 	}
 
-#if SIMULATION_DEBUG
-	cerr << "-----------------solve----------------" << endl;
+	MSG("-----------------solve----------------");
+#ifdef SIMULATION_DEBUG
+	double starttime = tm_cpu_time();
 #endif
 	//cerr << "DONE" << endl;
 
 	//cerr << "SOLVING SYSTEM..." << endl;
 	//double updateinterval = 0.02;
 
-	double starttime = tm_cpu_time();
 	//double lastupdate = starttime;
 	SolverStatus status;
 	//int solved_vars=0;
@@ -828,12 +821,10 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 
 	unsigned iter;
 	for(iter = 0; stop==false; ++iter){
-#if SIMULATION_DEBUG
-		CONSOLE_DEBUG("Iter %d",iter);
-#endif
+		MSG("Iter %d",iter);
 		if(status.isReadyToSolve()){
 			res = slv_iterate(sys);
-			if(res)CONSOLE_DEBUG("slv_iterate returns %d",res);
+			if(res)MSG("slv_iterate returns %d",res);
 		}else{
 			stop = true;
 		}
@@ -846,10 +837,9 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		}
 	}
 
+#ifdef SIMULATION_DEBUG
 	double elapsed = tm_cpu_time() - starttime;
-
-#if SIMULATION_DEBUG
-	CONSOLE_DEBUG("Elapsed time %0.3f for %d iterations (solver completed)", elapsed,iter);
+	MSG("Elapsed time %0.3f for %d iterations (solver completed)", elapsed,iter);
 #endif
 
 	activeblock = status.getCurrentBlockNum();
@@ -858,7 +848,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		// reporter can do output of num of iterations etc, if it wants to.
 		reporter.finalise(&status);
 	}catch(std::exception &e){
-		CONSOLE_DEBUG("Error finalising solver reporter (%s)",e.what());
+		MSG("Error finalising solver reporter (%s)",e.what());
 	}
 
 	// communicate solver variable status back to the instance tree
@@ -938,9 +928,7 @@ Simulation::processVarStatus(){
 		cerr << "Variable statuses can't be set: block structure not yet determined." << endl;
 		return;
 	}else{
-#if SIMULATION_DEBUG
-		CONSOLE_DEBUG("There are %d blocks", status.block.number_of);
-#endif
+		MSG("There are %d blocks", status.block.number_of);
 	}
 
 	if(!bb->block){
@@ -1006,17 +994,13 @@ Simulation::processVarStatus(){
 
 void
 Simulation::setSolverHooks(SolverHooks *H){
-#if SIMULATION_DEBUG
-	CONSOLE_DEBUG("Setting SolverHooks to %p for Simulation at %p",H,this);
-#endif
+	MSG("Setting SolverHooks to %p for Simulation at %p",H,this);
 	this->solverhooks = H;
 }
 
 SolverHooks *
 Simulation::getSolverHooks() const{
-#if SIMULATION_DEBUG
-	CONSOLE_DEBUG("Got SolverHooks at %p for Simulation at %p",this->solverhooks,this);
-#endif
+	MSG("Got SolverHooks at %p for Simulation at %p",this->solverhooks,this);
 	return this->solverhooks;
 }
 

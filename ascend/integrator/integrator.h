@@ -69,16 +69,26 @@
 
 /*---------------------------*/
 
+// TODO FIXME do we need all integrator IDs to be declare in here, or is it 
+// OK to add them later at runtime...?
+
 #ifdef ASC_WITH_IDA
 # define IDA_OPTIONAL S I(IDA,integrator_ida_internals)
 #else
 # define IDA_OPTIONAL
 #endif
 
+#ifdef ASC_WTH_DOPRI5
+# define DOPRI5_OPTIONAL S I(DOPRI5,integrator_dopri5_internals)
+#else
+# define DOPRI5_OPTIONAL
+#endif
+
 /* we add IDA to the list of integrators at build time, if it is selected */
 #define INTEG_LIST \
 	I(LSODE       ,integrator_lsode_internals) \
 	IDA_OPTIONAL \
+	DOPRI5_OPTIONAL \
 	S I(AWW       ,integrator_aww_internals)
 
 /**

@@ -1,5 +1,5 @@
 #ifndef FPROPS_REFSTATE_H
-#define FPORPS_REFSTATE_H
+#define FPROPS_REFSTATE_H
 #include "rundata.h"
 
 /**

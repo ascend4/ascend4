@@ -24,8 +24,10 @@ OutFile ${OUTFILE}
 ; The default installation directory
 !ifdef INST64
 InstallDir $PROGRAMFILES64\ASCEND
+!define SMNAME "ASCEND (64-bit)"
 !else
 InstallDir $PROGRAMFILES32\ASCEND
+!define SMNAME "ASCEND"
 !endif
 
 ; NOTE we *don't* user InstallDirRegKey because it doesn't work correctly on Win64.
@@ -401,32 +403,32 @@ Section "Start Menu Shortcuts" sect_menu
   
 	WriteRegDWORD HKLM "SOFTWARE\ASCEND" "StartMenu" 1
 
-	CreateDirectory "$SMPROGRAMS\ASCEND"  
+	CreateDirectory "$SMPROGRAMS\${SMNAME}"  
 
 	; Link to PyGTK GUI
 	${If} $PYINSTALLED == "1"
-		CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND.lnk" "$PYPATH\pythonw.exe" '"$INSTDIR\ascend"' "$INSTDIR\ascend.ico" 0
+		CreateShortCut "$SMPROGRAMS\${SMNAME}\ASCEND.lnk" "$PYPATH\pythonw.exe" '"$INSTDIR\ascend"' "$INSTDIR\ascend.ico" 0
 	${EndIf}
 
 	; Model library shortcut
-	CreateShortCut "$SMPROGRAMS\ASCEND\Model Library.lnk" "$INSTDIR\models" "" "$INSTDIR\models" 0
+	CreateShortCut "$SMPROGRAMS\${SMNAME}\Model Library.lnk" "$INSTDIR\models" "" "$INSTDIR\models" 0
 
 ;	; Link to Tcl/Tk GUI  
 ;	${If} $TCLINSTALLED == "1"
-;		CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND Tcl/Tk.lnk" "$INSTDIR\ascend4.exe" "" "$INSTDIR\ascend4.exe" 0
+;		CreateShortCut "$SMPROGRAMS\${SMNAME}\ASCEND Tcl/Tk.lnk" "$INSTDIR\ascend4.exe" "" "$INSTDIR\ascend4.exe" 0
 ;	${EndIf}
 	
 	; Documentation
 	${If} $PDFINSTALLED == "1"
-		CreateShortCut "$SMPROGRAMS\ASCEND\User's Manual.lnk" "$INSTDIR\book.pdf" "" "$INSTDIR\book.pdf" 0
+		CreateShortCut "$SMPROGRAMS\${SMNAME}\User's Manual.lnk" "$INSTDIR\book.pdf" "" "$INSTDIR\book.pdf" 0
 	${EndIf}
 
 	; Information files
-	CreateShortCut "$SMPROGRAMS\ASCEND\LICENSE.lnk" "$INSTDIR\LICENSE.txt" '' "$INSTDIR\LICENSE.txt" 0
-	CreateShortCut "$SMPROGRAMS\ASCEND\CHANGELOG.lnk" "$INSTDIR\CHANGELOG.txt" '' "$INSTDIR\CHANGELOG.txt" 0
-	CreateShortCut "$SMPROGRAMS\ASCEND\README.lnk" "$INSTDIR\README-windows.txt" '' "$INSTDIR\README-windows.txt" 0
+	CreateShortCut "$SMPROGRAMS\${SMNAME}\LICENSE.lnk" "$INSTDIR\LICENSE.txt" '' "$INSTDIR\LICENSE.txt" 0
+	CreateShortCut "$SMPROGRAMS\${SMNAME}\CHANGELOG.lnk" "$INSTDIR\CHANGELOG.txt" '' "$INSTDIR\CHANGELOG.txt" 0
+	CreateShortCut "$SMPROGRAMS\${SMNAME}\README.lnk" "$INSTDIR\README-windows.txt" '' "$INSTDIR\README-windows.txt" 0
 
-	CreateShortCut "$SMPROGRAMS\ASCEND\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
+	CreateShortCut "$SMPROGRAMS\${SMNAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   
 SectionEnd
 
@@ -561,7 +563,7 @@ Section "Uninstall"
 	${If} $0 <> 0
 		; Remove shortcuts, if any
 		DetailPrint "--- REMOVING START MENU SHORTCUTS ---"
-		RmDir /r "$SMPROGRAMS\ASCEND"
+		RmDir /r "$SMPROGRAMS\${SMNAME}"
 	${EndIf}
 
 ;--- common components ---

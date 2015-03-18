@@ -42,7 +42,8 @@ typedef struct Cp0RunExpTerm_struct{
 } Phi0RunExpTerm;
 
 /**
-	Zero-pressure specific heat capacity data for a fluid
+	Runtime data for ideal gas properties, which are stored in the
+	form of reduced ideal-gas compnent of helmholtz energy (see http://fprops.org)
 
 	There is no 'R' or 'cp0star' in this structure. If cp0star != R in the filedata, that
 	difference will be corrected for when this structure is created.
@@ -95,6 +96,13 @@ frequently-calculated items:
 
 This data would be held at this level unless it is correlation-specific in 
 nature, in which case it would belong in lower-level rundata structures.
+
+For fluids without phase change (incompressible, ideal), we
+	- set T_c to zero,
+	- use a value of 1 K for Tstar
+	- provide a _sat SatEvalFn that always returns an error.
+...but maybe there's a better way. It's up to the particular PropEvalFn to 
+make use of Tstar or T_c as desired, but this data is stored here 
 */
 typedef struct FluidData_struct{
 	/* common data across all correlations */
@@ -105,15 +113,17 @@ typedef struct FluidData_struct{
 	double p_c;   /**< critical pressure */
 	double rho_c; /**< critical density */
 	double omega; /**< acentric factor (possibly calculated from correlation data)*/
+	double Tstar;   /**< reference for reduced temperature */
+	double rhostar; /**< reference for reduced density */
 	Phi0RunData *cp0; /* data for ideal component of Helmholtz energy */
-
+	ReferenceState ref0;
 	/* correlation-specific stuff here */
 	CorrelationUnion corr;
 } FluidData;
 
 
 /* Definition of a fluid property function pointer */
-typedef double PropEvalFn(double,double,const FluidData *data, FpropsError *err);
+typedef double PropEvalFn(double T,double rho,const FluidData *data, FpropsError *err);
 
 /** @return psat */
 typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *data, FpropsError *err);
@@ -141,6 +151,10 @@ typedef struct PureFluid_struct{
 	PropEvalFn *betap_fn;
 	PropEvalFn *dpdrho_T_fn; // this derivative is required for saturation properties by Akasaka method
 	SatEvalFn *sat_fn; // function to return {psat,rhof,rhog}(T) for this pure fluid
+
+	const ViscosityData *visc; // TODO should it be here? or inside FluidData?? probably yes, but needs review.
+	const ThermalConductivityData *thcond; // TODO should it be here? probably yes, but needs review.
 } PureFluid;
 
 #endif
+

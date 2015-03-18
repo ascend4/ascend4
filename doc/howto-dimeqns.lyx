@@ -1,42 +1,89 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
-\lyxformat 245
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
 \begin_document
 \begin_header
 \textclass book
+\use_default_options false
+\maintain_unincluded_children false
 \language english
+\language_package default
 \inputencoding auto
-\fontscheme default
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
 \graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
 \paperfontsize default
 \spacing single
+\use_hyperref false
 \papersize a4paper
 \use_geometry false
-\use_amsmath 2
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 1
+\use_package esint 0
+\use_package mathdots 0
+\use_package mathtools 1
+\use_package mhchem 0
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
 \cite_engine basic
+\cite_engine_type default
+\biblio_style plain
 \use_bibtopic false
+\use_indices false
 \paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
-\defskip medskip
+\paragraph_indentation default
 \quotes_language english
 \papercolumns 1
 \papersides 2
 \paperpagestyle default
 \tracking_changes false
-\output_changes true
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 Entering Dimensional Equations
-\begin_inset LatexCommand \index{equation, dimensional}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+equation, dimensional
+\end_layout
 
 \end_inset
 
  from Handbooks
-\begin_inset LatexCommand \label{cha:dimeqns}
+\begin_inset CommandInset label
+LatexCommand label
+name "cha:dimeqns"
 
 \end_inset
 
@@ -45,7 +92,12 @@ Entering Dimensional Equations
 
 \begin_layout Standard
 Often in creating an ASCEND model one needs to enter a correlation
-\begin_inset LatexCommand \index{correlation}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+correlation
+\end_layout
 
 \end_inset
 
@@ -57,7 +109,12 @@ Often in creating an ASCEND model one needs to enter a correlation
 
 \begin_layout Section
 Example 1-- vapor pressure
-\begin_inset LatexCommand \index{pressure, vapor}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+pressure, vapor
+\end_layout
 
 \end_inset
 
@@ -66,7 +123,12 @@ Example 1-- vapor pressure
 
 \begin_layout Standard
 Our first example is the equation to express vapor pressure using an Antoine
-\begin_inset LatexCommand \index{Antoine}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Antoine
+\end_layout
 
 \end_inset
 
@@ -74,8 +136,10 @@ Our first example is the equation to express vapor pressure using an Antoine
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula \begin{equation}
-\ln(P_{sat})=A-\frac{B}{T+C}\label{eqn:dimeqns.lnPsat}\end{equation}
+\begin_inset Formula 
+\begin{equation}
+\ln(P_{sat})=A-\frac{B}{T+C}\label{eqn:dimeqns.lnPsat}
+\end{equation}
 
 \end_inset
 
@@ -112,7 +176,12 @@ How should one enter this equation into ASCEND so one can then enter the
 
 \begin_layout Standard
 ASCEND uses SI
-\begin_inset LatexCommand \index{SI}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+SI
+\end_layout
 
 \end_inset
 
@@ -123,7 +192,9 @@ ASCEND uses SI
 
 \begin_layout Standard
 Eqn 
-\begin_inset LatexCommand \ref{eqn:dimeqns.lnPsat}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eqn:dimeqns.lnPsat"
 
 \end_inset
 
@@ -172,7 +243,9 @@ Note that P_atm has to be a dimensionless quantity here.
 
 \begin_layout Standard
 We then rewrite the LHS of Equation 
-\begin_inset LatexCommand \ref{eqn:dimeqns.lnPsat}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eqn:dimeqns.lnPsat"
 
 \end_inset
 
@@ -191,12 +264,22 @@ Suppose P = 2 {atm}.
  In SI units, the dimensional constant 1{atm} is about 101,325 {kg/m/s^2}.
  Using this definition, P_atm has the value 2 and is dimensionless.
  ASCEND will not complain with P_atm as the argument of the ln
-\begin_inset LatexCommand \index{ln}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+ln
+\end_layout
 
 \end_inset
 
  () function, as it can take the natural log of the dimensionless
-\begin_inset LatexCommand \index{dimensionless}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+dimensionless
+\end_layout
 
 \end_inset
 
@@ -209,7 +292,9 @@ Converting the RHS
 
 \begin_layout Standard
 We next convert the RHS of Equation 
-\begin_inset LatexCommand \ref{eqn:dimeqns.lnPsat}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eqn:dimeqns.lnPsat"
 
 \end_inset
 
@@ -250,12 +335,19 @@ as a correct form for the dimensional equation.
 
 \begin_layout Section
 Fahrenheit
-\begin_inset LatexCommand \index{Fahrenheit}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Fahrenheit
+\end_layout
 
 \end_inset
 
 -- variables with offset
-\begin_inset LatexCommand \label{sec:dimeqns.Fahrenheit}
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:dimeqns.Fahrenheit"
 
 \end_inset
 
@@ -264,7 +356,9 @@ Fahrenheit
 
 \begin_layout Standard
 What if we write Equation 
-\begin_inset LatexCommand \ref{eqn:dimeqns.lnPsat}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eqn:dimeqns.lnPsat"
 
 \end_inset
 
@@ -282,7 +376,9 @@ T{F} = T{K}*1.8 - 459.67
 and the 459.67 is an offset.
  ASCEND does not support an offset for units conversion.
  We shall discuss the reasons for this apparent limitation in Section 
-\begin_inset LatexCommand \ref{ssec:dimeqns.handlingUnitConv}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "ssec:dimeqns.handlingUnitConv"
 
 \end_inset
 
@@ -307,7 +403,9 @@ T_degF = T/1{R} - 459.67;
 
 \begin_layout Standard
 Then code 
-\begin_inset LatexCommand \ref{eqn:dimeqns.lnPsat}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eqn:dimeqns.lnPsat"
 
 \end_inset
 
@@ -331,7 +429,9 @@ when entering it into ASCEND.
 
 \begin_layout Section
 Example 3-- pressure drop
-\begin_inset LatexCommand \label{ssec:dimeqns.pressure drop}
+\begin_inset CommandInset label
+LatexCommand label
+name "ssec:dimeqns.pressure drop"
 
 \end_inset
 
@@ -340,17 +440,32 @@ Example 3-- pressure drop
 
 \begin_layout Standard
 From the Chemical Engineering Handbook
-\begin_inset LatexCommand \index{Chemical Engineering Handbook}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Chemical Engineering Handbook
+\end_layout
 
 \end_inset
 
  by Perry
-\begin_inset LatexCommand \index{Perry}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Perry
+\end_layout
 
 \end_inset
 
  and Chilton
-\begin_inset LatexCommand \index{Chilton}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Chilton
+\end_layout
 
 \end_inset
 
@@ -358,8 +473,10 @@ From the Chemical Engineering Handbook
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula \[
-\Delta P_{a}^{\prime}=\frac{y(V_{g}-V_{l})G^{2}}{144g}\]
+\begin_inset Formula 
+\[
+\Delta P_{a}^{\prime}=\frac{y(V_{g}-V_{l})G^{2}}{144g}
+\]
 
 \end_inset
 
@@ -387,7 +504,9 @@ delPa/1{psi} = y*(Vg-Vl)/1{ft^3/lbm}*
 
 \begin_layout Section
 The difficulty of handling unit conversions defined with offset
-\begin_inset LatexCommand \label{ssec:dimeqns.handlingUnitConv}
+\begin_inset CommandInset label
+LatexCommand label
+name "ssec:dimeqns.handlingUnitConv"
 
 \end_inset
 
@@ -449,12 +568,22 @@ We could create the above discussion just as easily in terms of pressure
 
 \begin_layout Subsection
 General offset
-\begin_inset LatexCommand \index{offset}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+offset
+\end_layout
 
 \end_inset
 
  and difference units
-\begin_inset LatexCommand \index{difference units}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+difference units
+\end_layout
 
 \end_inset
 
@@ -469,8 +598,10 @@ Unfortunately, we find we have to think much more generally than the above.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula \begin{equation}
-t_{1}+t_{2}-(t+t_{4})=0\label{eqn:t1+t2}\end{equation}
+\begin_inset Formula 
+\begin{equation}
+t_{1}+t_{2}-(t+t_{4})=0\label{eqn:t1+t2}
+\end{equation}
 
 \end_inset
 

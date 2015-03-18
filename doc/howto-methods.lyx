@@ -1,37 +1,79 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
-\lyxformat 245
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
 \begin_document
 \begin_header
 \textclass book
+\use_default_options false
+\maintain_unincluded_children false
 \language english
+\language_package default
 \inputencoding auto
-\fontscheme default
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
 \graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
 \paperfontsize default
 \spacing single
+\use_hyperref false
 \papersize a4paper
 \use_geometry false
-\use_amsmath 2
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 1
+\use_package esint 0
+\use_package mathdots 0
+\use_package mathtools 1
+\use_package mhchem 0
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
 \cite_engine basic
+\cite_engine_type default
+\biblio_style plain
 \use_bibtopic false
+\use_indices false
 \paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
-\defskip medskip
+\paragraph_indentation default
 \quotes_language english
 \papercolumns 1
 \papersides 2
 \paperpagestyle default
 \tracking_changes false
-\output_changes true
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 Writing METHODs
-\begin_inset LatexCommand \label{cha:methods}
+\begin_inset CommandInset label
+LatexCommand label
+name "cha:methods"
 
 \end_inset
 
@@ -51,21 +93,31 @@ In this chapter we describe a methodology (pun intended) which can help
 \begin_inset Note Note
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 See ***vessel something*** for detailed examples
 \end_layout
 
 \end_inset
 
  One of the advantages of this methodology is that it allows almost automatic
-\begin_inset LatexCommand \index{methods, automatic generation}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+methods, automatic generation
+\end_layout
 
 \end_inset
 
  generation of methods for a model based on the declarative structure (defined
- parts and variables) in the model, as we shall see in Section\InsetSpace ~
+ parts and variables) in the model, as we shall see in Section
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand \ref{sec:methods.automation}
+
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:methods.automation"
 
 \end_inset
 
@@ -74,11 +126,16 @@ See ***vessel something*** for detailed examples
 .
  Even if you skip much of this chapter, read 
 \noun default
-Section\InsetSpace ~
+Section
+\begin_inset space ~
+\end_inset
+
 
 \noun off
 
-\begin_inset LatexCommand \ref{sec:methods.automation}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:methods.automation"
 
 \end_inset
 
@@ -147,7 +204,7 @@ _all
 \begin_inset Note Note
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 This needs more explanation: I don't find it completely clear.
 \end_layout
 
@@ -293,12 +350,48 @@ STOP
 
 \begin_layout Section
 Methods *_self
-\begin_inset LatexCommand \index{methods, \_self}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+methods, 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+self
+\end_layout
 
 \end_inset
 
  VS *_all
-\begin_inset LatexCommand \index{methods, \_all}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+methods, 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+all
+\end_layout
 
 \end_inset
 
@@ -316,7 +409,12 @@ When you create a model definition, you create a container holding variables,
 MODEL
 \family default
  parameter list), by creating ALIASES
-\begin_inset LatexCommand \index{ALIASES}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+ALIASES
+\end_layout
 
 \end_inset
 
@@ -329,14 +427,24 @@ MODEL
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Too many cooks
-\begin_inset LatexCommand \index{cooks}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+cooks
+\end_layout
 
 \end_inset
 
  spoil the broth
-\begin_inset LatexCommand \index{broth}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+broth
+\end_layout
 
 \end_inset
 
@@ -376,7 +484,7 @@ the model that creates the variable in the first place
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Use *_self methods on locally created variables and parts
 \end_layout
 
@@ -464,9 +572,9 @@ solver_var
 \family typewriter
 my_variable
 \family default
- and the
+ and the 
 \family typewriter
- nother_part
+nother_part
 \family default
  we call 
 \family typewriter
@@ -548,7 +656,7 @@ out_thingy.default_self
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Use *_all methods to manage a troublesome part
 \end_layout
 
@@ -581,20 +689,38 @@ out_thingy.scale_all
 WILL_BE
 \family default
 
-\begin_inset LatexCommand \index{WILL\_BE}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+WILL
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+BE
+\end_layout
 
 \end_inset
 
  statements.
- Finally
+ Finally 
 \family typewriter
- scale_all
+scale_all
 \family default
- will call its local
+ will call its local 
 \family typewriter
- *_self 
+*_self
 \family default
-to do all the normal scaling.
+ to do all the normal scaling.
 \end_layout
 
 \begin_layout Standard
@@ -609,7 +735,9 @@ That's the big picture of
  methods.
  Each kind of method (bound, scale, default, check) has its own peculiarities,
  which we cover in Section 
-\begin_inset LatexCommand \ref{sec:methods.selfMethods}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:methods.selfMethods"
 
 \end_inset
 
@@ -620,7 +748,9 @@ That's the big picture of
 Section 
 \noun off
 
-\begin_inset LatexCommand \ref{sec:methods.allMethods}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:methods.allMethods"
 
 \end_inset
 
@@ -641,7 +771,25 @@ _all
 \family default
 \noun off
  only), IS_A
-\begin_inset LatexCommand \index{IS\_A}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+IS
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+A
+\end_layout
 
 \end_inset
 
@@ -662,12 +810,22 @@ ALIASES
 
 \begin_layout Section
 How to write ClearAll
-\begin_inset LatexCommand \index{ClearAll}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+ClearAll
+\end_layout
 
 \end_inset
 
  and reset
-\begin_inset LatexCommand \index{reset}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+reset
+\end_layout
 
 \end_inset
 
@@ -761,9 +919,9 @@ This standard state is not necessarily the most useful starting state for
  case for a flash unit so it corresponds to an isothermal flash calculation.
  Chemical engineers understand this case and can make changes from it to
  set up other cases, such as an adiabatic flash, relatively easily by setting
- and resetting but one or two
+ and resetting but one or two 
 \family typewriter
- .fixed
+.fixed
 \family default
  flags.
  There is no one perfect "reset"' for all purposes.
@@ -775,7 +933,7 @@ reset_*
 \begin_inset Foot
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 The name of a method, for example 
 \family typewriter
 reset_someOtherPurpose
@@ -800,12 +958,31 @@ The
 *_self
 \family default
 
-\begin_inset LatexCommand \index{\_self}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+self
+\end_layout
 
 \end_inset
 
  methods
-\begin_inset LatexCommand \label{sec:methods.selfMethods}
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:methods.selfMethods"
 
 \end_inset
 
@@ -829,7 +1006,25 @@ MODEL
 METHOD check_self
 \family default
 
-\begin_inset LatexCommand \index{check\_self}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+check
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+self
+\end_layout
 
 \end_inset
 
@@ -900,7 +1095,12 @@ If a check fails, use a
 STOP
 \family default
 
-\begin_inset LatexCommand \index{STOP}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+STOP
+\end_layout
 
 \end_inset
 
@@ -930,7 +1130,25 @@ STOP
 
 \family typewriter
 METHOD default_self
-\begin_inset LatexCommand \index{default\_self}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+default
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+self
+\end_layout
 
 \end_inset
 
@@ -947,9 +1165,9 @@ IS_A
  If the default value declared for the atom type, of which the variable
  is an instance, is appropriate (and typically it is), then you need not
  set a specific default value here.
- This method also should run
+ This method also should run 
 \family typewriter
- default_self
+default_self
 \family default
  on all the complex parts that are declared locally (with 
 \family typewriter
@@ -994,7 +1212,25 @@ IS_A
 
 \family typewriter
 METHOD bound_self
-\begin_inset LatexCommand \index{bound\_self}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+bound
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+self
+\end_layout
 
 \end_inset
 
@@ -1028,8 +1264,10 @@ A common formula for updating bounds is to define a region around the current
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula \begin{equation}
-x_{bound}=x\pm\Delta\cdot x_{nominal}\label{eq:methods.bound-width}\end{equation}
+\begin_inset Formula 
+\begin{equation}
+x_{bound}=x\pm\Delta\cdot x_{nominal}\label{eq:methods.bound-width}
+\end{equation}
 
 \end_inset
 
@@ -1038,7 +1276,12 @@ or, in ASCEND syntax,
 
 \begin_layout LyX-Code
 v.upper_bound := v + 
-\begin_inset LatexCommand \index{boundwidth}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+boundwidth
+\end_layout
 
 \end_inset
 
@@ -1090,7 +1333,7 @@ boundwidth
 \begin_inset Note Note
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 We need an example here
 \end_layout
 
@@ -1103,12 +1346,32 @@ We need an example here
 
 \family typewriter
 METHOD scale_self
-\begin_inset LatexCommand \index{scale\_self}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+scale
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+self
+\end_layout
 
 \end_inset
 
 
-\begin_inset LatexCommand \label{ssec:methods.scaleself}
+\begin_inset CommandInset label
+LatexCommand label
+name "ssec:methods.scaleself"
 
 \end_inset
 
@@ -1140,8 +1403,10 @@ IS_A
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula \begin{equation}
-0\leq abs\left(\frac{x}{x_{nominal}}\right)\leq10\label{eq:methods.choiceNominal}\end{equation}
+\begin_inset Formula 
+\begin{equation}
+0\leq abs\left(\frac{x}{x_{nominal}}\right)\leq10\label{eq:methods.choiceNominal}
+\end{equation}
 
 \end_inset
 
@@ -1157,9 +1422,9 @@ As one is dividing by the nominal value for the variable to establish its
 \begin_layout Standard
 This method should not change the 
 \family typewriter
-.nominal 
+.nominal
 \family default
-values for models and variables that are received through the parameter
+ values for models and variables that are received through the parameter
  list of the model.
 \end_layout
 
@@ -1174,7 +1439,12 @@ Variables (like fractions), when bounded such that they cannot be too far
 Some solvers, but not all, will attempt to scale the equations and variables
  by heuristic matrix-based methods.
  This works, but inconsistently; user-defined scaling
-\begin_inset LatexCommand \index{scaling}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+scaling
+\end_layout
 
 \end_inset
 
@@ -1193,7 +1463,9 @@ The
 *_all
 \family default
  methods
-\begin_inset LatexCommand \label{sec:methods.allMethods}
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:methods.allMethods"
 
 \end_inset
 
@@ -1204,7 +1476,25 @@ The
 
 \family typewriter
 METHOD default_all
-\begin_inset LatexCommand \index{default\_all}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+default
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+all
+\end_layout
 
 \end_inset
 
@@ -1237,7 +1527,25 @@ default_self
 
 \family typewriter
 METHOD check_all
-\begin_inset LatexCommand \index{check\_all}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+check
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+all
+\end_layout
 
 \end_inset
 
@@ -1267,7 +1575,25 @@ check_self
 
 \family typewriter
 METHOD bound_all
-\begin_inset LatexCommand \index{bound\_all}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+bound
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+all
+\end_layout
 
 \end_inset
 
@@ -1295,7 +1621,25 @@ bound_self
 
 \family typewriter
 METHOD scale_all
-\begin_inset LatexCommand \index{scale\_all}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+scale
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+all
+\end_layout
 
 \end_inset
 
@@ -1326,7 +1670,12 @@ scale_self
 METHOD specify
 \family default
 
-\begin_inset LatexCommand \index{specify}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+specify
+\end_layout
 
 \end_inset
 
@@ -1346,9 +1695,9 @@ specify
  There are two issues involved.
  First, the model must be square - i.e., it must have as many free variables
  as it has eligible equations available to compute them.
- Second, it should be a setting of
+ Second, it should be a setting of 
 \family typewriter
- .fixed
+.fixed
 \family default
  flags that the modeler knows will solve numerically.
  This latter requirement requires one to have an intuitive feel for the
@@ -2116,7 +2465,7 @@ indexed
 \begin_inset Note Note
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 need a cross reference here to the appropriate part of the manual
 \end_layout
 
@@ -2228,7 +2577,12 @@ specify_whatElseYouWant
 
 \family typewriter
 METHOD values
-\begin_inset LatexCommand \index{values}
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+values
+\end_layout
 
 \end_inset
 
@@ -2255,7 +2609,7 @@ Summary
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 adding our standard methods to a model definition
 \end_layout
 
@@ -2265,7 +2619,9 @@ We have defined a set of standard methods for ASCEND models which we insist
  a modeler provide before we will allow a model to be placed in any of our
  model libraries.
  These are listed in Table 
-\begin_inset LatexCommand \ref{tab:methods.stdMethodReqd}
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:methods.stdMethodReqd"
 
 \end_inset
 
@@ -2285,45 +2641,55 @@ wide false
 sideways false
 status open
 
-\begin_layout Caption
-\begin_inset LatexCommand \label{tab:methods.stdMethodReqd}
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:methods.stdMethodReqd"
 
 \end_inset
 
 Standard methods required for types in our ASCEND model library 
 \end_layout
 
-\begin_layout Standard
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="8" columns="2">
-<features islongtable="true">
-<column alignment="center" valignment="top" leftline="true" width="0">
-<column alignment="center" valignment="top" leftline="true" rightline="true" width="4in">
-<row topline="true" bottomline="true">
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<features rotate="0" islongtable="true" longtabularalignment="center">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top" width="4in">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 method
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 description
 \end_layout
 
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 default_self
@@ -2334,7 +2700,7 @@ default_self
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 a method called automatically when any simulation is compiled to provide
  default values and adjust bounds for any locally created variables which
  may have unsuitable defaultsin their ATOM definitions.
@@ -2348,11 +2714,11 @@ d if given poor initial guesses or bounds (e.g., zero).
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 ClearAll
@@ -2363,7 +2729,7 @@ ClearAll
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 a method to set all the fixed flags for variables in the type to FALSE.
  This puts these flags into a known standard state -- i.e., all are FALSE.
  All models inherit this method from the base model and the need to rewrite
@@ -2374,11 +2740,11 @@ a method to set all the fixed flags for variables in the type to FALSE.
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 specify
@@ -2389,7 +2755,7 @@ specify
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 a method which assumes all the 
 \family typewriter
 fixed
@@ -2418,11 +2784,11 @@ TRUE
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 reset
@@ -2433,7 +2799,7 @@ reset
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 a method which first runs the 
 \family typewriter
 ClearAll
@@ -2457,11 +2823,11 @@ ClearAll
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 values
@@ -2472,7 +2838,7 @@ values
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 a method to establish typical values for the variables we have fixed in
  an application or test model.
  We may also supply values for some of the variables we will be computing
@@ -2485,11 +2851,11 @@ a method to establish typical values for the variables we have fixed in
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 bound_self
@@ -2500,7 +2866,7 @@ bound_self
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 a method to update the 
 \family typewriter
 .upper_bound
@@ -2526,11 +2892,11 @@ IS_A
 \end_inset
 </cell>
 </row>
-<row topline="true" bottomline="true">
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 scale_self
@@ -2538,10 +2904,10 @@ scale_self
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 a method to update the 
 \family typewriter
 .nominal
@@ -2578,7 +2944,9 @@ IS_A
 
 \begin_layout Section
 Method writing automation 
-\begin_inset LatexCommand \label{sec:methods.automation}
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:methods.automation"
 
 \end_inset
 
@@ -2589,7 +2957,7 @@ Method writing automation
 \begin_inset Marginal
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Hit the button Library/Edit/Suggest methods and tweak the results
 \end_layout
 
@@ -2629,7 +2997,7 @@ If you have suggestions for general improvements to the generated method
 \begin_inset Note Note
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Closing the chapter you find below the suggested methods ASCEND generates
  for the ***vessel*** model.
 \end_layout

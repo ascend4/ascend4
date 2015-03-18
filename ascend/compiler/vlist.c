@@ -43,10 +43,6 @@
 #define TRUE 1
 #endif
 
-#ifndef lint
-static CONST char VariableListID[] = "$Id: vlist.c,v 1.7 1997/07/18 12:36:36 mthomas Exp $";
-#endif
-
 struct VariableList *CreateVariableNode(struct Name *n)
 {
   register struct VariableList *result;

@@ -656,7 +656,7 @@ enum bintoken_error BinTokenSharesToC(struct Instance *root,
   CLINE("\treturn status;");
   if (verbose) {
     FPRINTF(fp,"\t/* %lu unique equations */\n",gl_length(eql.ue));
-    FPRINTF(ASCERR,"Prepared %lu external C functions.\n",gl_length(eql.ue));
+    CONSOLE_DEBUG("Prepared %lu external C functions.\n",gl_length(eql.ue));
   }
   CLINE("}");
 
@@ -670,10 +670,11 @@ static
 enum bintoken_error BinTokenCompileC(char *buildcommand)
 {
   int status;
-  ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Starting build, command:\n%s\n",buildcommand);
+  //ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Starting build, command:\n%s\n",buildcommand);
   status = system(buildcommand);
   if (status) {
-    CONSOLE_DEBUG("BUILD returned %d",status);
+    CONSOLE_DEBUG("buildcommand: %s",buildcommand);
+    CONSOLE_DEBUG("...returned status %d",status);
     return BTE_build;
   }
 #ifdef BINTOKEN_VERBOSE
@@ -770,7 +771,7 @@ void BinTokenErrorMessage(enum bintoken_error err,
     mess="Unknown error in BinTokenErrorMessage";
     break;
   }
-  error_reporter(ASC_PROG_ERR,filename,0,"%s",mess);
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s: %s",filename, mess);
 }
 
 void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
@@ -803,30 +804,32 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
 
   rellist =
     CollectTokenRelationsWithUniqueBINlessShares(root,g_bt_data.maxrels);
-  if (rellist==NULL) {
+  if(rellist==NULL){
     ERROR_REPORTER_HERE(ASC_PROG_WARNING
         ,"BinaryTokensCreate found 0 or too many unique relations."
     );
     return;
   }
 
-  ERROR_REPORTER_HERE(ASC_USER_NOTE,"Creating bintokens\n");
-  CONSOLE_DEBUG("buildcommand = %s",buildcommand);
+  CONSOLE_DEBUG("Creating bintokens");
+  //CONSOLE_DEBUG("buildcommand = %s",buildcommand);
 
-  switch (method) {
+  switch(method){
   case BT_C:
     /* generate code */
     status = BinTokenSharesToC(root,rellist,srcname,verbose);
-    if (status != BTE_ok) {
+    if(status != BTE_ok){
       BinTokenErrorMessage(status,root,srcname,buildcommand);
       break; /* leave source file there if partial */
     }
     status = BinTokenCompileC(buildcommand);
-    if (status != BTE_ok) {
-      BinTokenErrorMessage(status,root,objname,buildcommand);
+    if(status != BTE_ok){
+      CONSOLE_DEBUG("WRiting error msg");
+      BinTokenErrorMessage(status,root,srcname,buildcommand);
       break; /* leave source file there to debug */
-    } else {
-      if (g_bt_data.housekeep) {
+    }else{
+      CONSOLE_DEBUG("BinTokenCompileC completed OK");
+      if(g_bt_data.housekeep){
         /* trash src */
         cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(srcname)+1);
         assert(cbuf!=NULL);
@@ -842,12 +845,12 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
       }
 
       status = BinTokenLoadC(rellist,libname,g_bt_data.regname);
-      if (status != BTE_ok) {
+      if(status != BTE_ok){
         BinTokenErrorMessage(status,root,libname,buildcommand);
         /* leave source,binary files there to debug */
-      }/*else{
-        FPRINTF(ASCERR,"BINTOKENLOADC OK\n");
-      }*/
+      }else{
+        CONSOLE_DEBUG("BinTokenLoadC completed OK");
+      }
     }
     break;
   default:

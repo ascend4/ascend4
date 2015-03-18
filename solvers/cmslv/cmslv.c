@@ -2215,11 +2215,15 @@ real64 return_to_first_boundary(slv_system_t server,
   int32 count,n_incidences,inc,conv_flag,still_crossed;
   int32 numbnds,numbndf,b,ind;
   int32 iter,n_iterations;
+#if SHOW_BOUNDARY_ANALYSIS_DETAILS
   FILE *lif;
+#endif
 
   sys = SLV9(asys);
   check_system(sys);
+#if SHOW_BOUNDARY_ANALYSIS_DETAILS
   lif = LIF(sys);
+#endif
 
   if(sys->blist == NULL ) {
     FPRINTF(ASCERR,"ERROR:  (slv9) return_to_first_boundary\n");

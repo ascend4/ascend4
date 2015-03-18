@@ -26,6 +26,7 @@ Runtime data is in rundata.h
 #define FPROPS_FILEDATA_H
 
 #include "common.h"
+#include <math.h> // needed for NAN
 
 /*---------------------------COMMON-------------------------------*/
 
@@ -45,17 +46,28 @@ typedef struct CriticalData_struct{
 	give h=0, s=0 at certain conditions. It seems that we might need to
 	facilitate a few different ways of dealing with this stuff, so we'll
 	provide a data structure here that allows a few different options.
+
+	For chemical reactions, we need to use a reference state defined by the
+	enthalpy of formation and absolute entropy at defined conditions. Many 
+	sources seem to specify ~ambient pressure and ~25 degC, but RPP specifes
+	298.2 K and 'ideal gas', which I take to mean zero pressure. I am not sure
+	that case is correctly handled by FPROPS_REF_TPHG -- still working on that.
 */
 
 typedef enum{
-	FPROPS_REF_PHI0 /**< phi0 reference point means that 'c' and 'm' in the phi0 expression are provided */
-	,FPROPS_REF_IIR /**< International Institute of Refrigeration reference state: h=200 kJ/kg, s = 1 kJ/kg/K at saturated liquid, 0 deg C */
-	,FPROPS_REF_NBP /**< Set h and s to zero for the saturated liquid at normal atmospheric pressure (101.325 kPa) */
-	,FPROPS_REF_TRHS /**< Reference state specified by T0, p0, h0 and s0 */
-	,FPROPS_REF_TPUS /**< Reference state specified by T0, p0, h0 and s0 */
-	,FPROPS_REF_TPHS /**< Reference state specified by T0, p0, h0 and s0 */
-	,FPROPS_REF_TPF /**< Reference state of h=0 and s=0 for liquid at the triple point */
-	,FPROPS_REF_TPFU /**< Reference state of u=0 and s=0 for liquid at the triple point */
+	FPROPS_REF_UNDEFINED = 0 /**< undefined reference state, should be first to catch cases where ReferenceState is not initialised correctly */
+	,FPROPS_REF_PHI0 = 1 /**< phi0 reference point means that 'c' and 'm' in the phi0 expression are provided */
+	,FPROPS_REF_IIR = 2  /**< International Institute of Refrigeration reference state: h=200 kJ/kg, s = 1 kJ/kg/K at saturated liquid, 0 deg C */
+	,FPROPS_REF_NBP = 3  /**< Set h and s to zero for the saturated liquid at normal atmospheric pressure (101.325 kPa) */
+	,FPROPS_REF_TRHS = 4 /**< Reference state specified by T0, p0, h0 and s0 */
+	,FPROPS_REF_TPUS = 5 /**< Reference state specified by T0, p0, h0 and s0 */
+	,FPROPS_REF_TPHS = 6 /**< Reference state specified by T0, p0, h0 and s0 */
+	,FPROPS_REF_TPF = 7  /**< Reference state of h=0 and s=0 for liquid at the triple point */
+	,FPROPS_REF_TPFU = 8 /**< Reference state of u=0 and s=0 for liquid at the triple point */
+	,FPROPS_REF_TPHG = 9 /**< Reference state specified by T0, p0, h0 and g0 (Gibbs energy) */
+	,FPROPS_REF_TPHS0 = 10 /**< Reference state specified by T0, p0, h0 and s0 for ideal (zero-pressure) case */
+/* HACK?: */
+	,FPROPS_REF_REF0 /**< Special case: apply the 'ref0' reference state, which should allow calculuation of enthalpy of formation and absolute entropy */
 } ReferenceStateType;
 
 /**
@@ -81,6 +93,10 @@ typedef struct ReferenceStateTPHS_struct{
 	double T0, p0, h0, s0;
 } ReferenceStateTPHS;
 
+typedef struct ReferenceStateTPHG_struct{
+	double T0, p0, h0, g0;
+} ReferenceStateTPHG;
+
 /* TODO add a reference state as defined by coefficients A_6, A_7 of the 
 NASA SP-273 polynomials (the constant terms in the H0(T) and S0(T) polynomials),
 this would open the way to a fairly easy support for the NASA fluid database, 
@@ -93,6 +109,7 @@ typedef struct ReferenceState_struct{
 		ReferenceStateTRHS trhs;
 		ReferenceStateTPUS tpus;
 		ReferenceStateTPHS tphs;
+		ReferenceStateTPHG tphg;
 	} data;
 } ReferenceState;
 
@@ -197,7 +214,7 @@ typedef struct IdealData_struct{
 
 typedef struct IdealFluid_struct{
 	double M;
-	double T0, p0, h0, s0;
+	//double T0, p0, h0, s0;
 	const IdealData data;
 	// reference state information
 } IdealFluid;
@@ -297,11 +314,12 @@ typedef struct HelmholtzData_struct{
 	PR, RK, etc EOSs. Hopefully.
 */
 typedef struct CubicData_struct{
-	double M;  //Molar Mass
-	double T_c, p_c, rho_c; ///< critical point properties
-	double T_t; ///< triple-point temperature?
-	double omega; //Acentric Factor
-	const ReferenceState ref;
+	double M;                ///< molar mass (kg/kmol)
+	double T_c, p_c, rho_c;  // critical point properties
+	double T_t;              ///< triple-point temperature (K)
+	double omega;            ///< acentric Factor
+	const ReferenceState ref; ///< default reference state, e.g. to reproduce original published data
+	const ReferenceState ref0; ///< formation state, for calculation of enthalpy of formation and absolute entropy
 	const IdealData *ideal;
 } CubicData;
 
@@ -318,12 +336,131 @@ typedef struct MbwrData_struct{
 	double beta[32]; /**< constants in MBWR for the fluid in question */
 } MbwrData;
 
+/*--------------------------VISCOSITY------------------------------*/
+
+typedef enum ViscosityType_enum{
+	FPROPS_VISC_NONE = 0
+	,FPROPS_VISC_1 = 1 /**< first viscosity model, as per Lemmon and Jacobsen 2004, "Viscosity and Thermal Conductivity Equations for Nitrogen, Oxygen, Argon, and Air" */
+} ViscosityType;
+
+typedef enum ViscCollisionIntegType_enum{
+	FPROPS_CI_1 = 1 /**< first collision integral type, as per Lemmon and Jacobsen 2004, "Viscosity and Thermal Conductivity Equations for Nitrogen, Oxygen, Argon, and Air" */
+} ViscCollisionIntegType;
+
+typedef struct ViscCI1Term_struct{
+	int i; /**< exponent of ln(T/(e/k))*/
+	double b; /**< coefficient of ln(T/(e/k)) */
+} ViscCI1Term;
+
+typedef struct ViscCI1Data_struct{
+	unsigned nt;
+	const ViscCI1Term *t;
+} ViscCI1Data;
+
+typedef struct ViscCollisionIntegData_struct{
+	ViscCollisionIntegType type;
+	union {
+		ViscCI1Data ci1;
+	} data;
+} ViscCollisionIntegData;
+
+typedef struct ViscData1Term_struct{
+	double N, t;
+	int d, l;
+} ViscData1Term;
+
+/**
+	This model doesn't yet include critical viscosity enhancement, which is
+	"often neglected in engineering applications" (Vesovic, 1990).
+*/
+typedef struct ViscosityData1_struct{
+	double mu_star; //< normalisation parameter for viscosity (eg use 1e-6 for correlations returning value in µPa·s)
+	double T_star; //< normalisation temperature for inverse normalised temperature $\tau = \frac{T^{{}*{}}}{T}$
+	double rho_star; //< normalisation tempearture for normalised density $\delta = \frac{\rho}{\rho^{{}*{}}}$
+	double sigma; //< length scaling parameter for zero-density viscosity [nm]. FIXME should convert to [m] for consistency.
+	double M;
+	double eps_over_k;
+	ViscCollisionIntegData ci;
+	unsigned nt;
+	const ViscData1Term *t;
+} ViscosityData1;
+
+typedef struct ViscosityData_struct{
+	const char *source;
+	ViscosityType type;
+	union{
+		ViscosityData1 v1;
+	} data;
+} ViscosityData;
+
+/*--------------------THERMAL CONDUCTIVITY-------------------------*/
+
+typedef enum ThCondType_enum{
+	FPROPS_THCOND_NONE = 0
+	,FPROPS_THCOND_1 = 1 /**< first thermal conductivity model, as per Vesovic et al 1990 (for CO2) and Lemmon and Jacobsen 2004 (for N2,O2,Ar,air). */
+} ThCondType;
+
+/**
+	Data to allow calculation of deviation of conductivity in the vicinity of
+	the critical point. Method suggested by Vesovic (1990) for CO2, citing publication
+	of Olchowy and Sengers. Wow, and this is the 'simplified' approach :-)
+*/
+typedef struct ThCondCritEnhOlchowyData_struct{
+	double qd_inv; //< $q_d^-1$ 'a modified effective cutoff parameter' [metres]
+	// data for calculating 'correlation length' (xi)
+	double xi0;
+	double Gamma;
+	double Tref; // reference temperature for $\Delta \chi$ expression.
+	double nu;
+	double gamma;
+} ThCondCritEnhOlchowyData;
+
+typedef struct ThCondData1Term_struct{
+	double N, t;
+	int d, l;
+} ThCondData1Term;
+
+typedef struct ThCondCSTerm_struct{
+	int i;
+	double b;
+} ThCondCSTerm;
+
+typedef struct ThermalConductivityData1_struct{
+	double k_star; //< normalisation parameter for viscosity (eg use 1e-6 for correlations returning value in µPa·s)
+	double T_star; //< normalisation temperature for inverse normalised temperature $\tau = \frac{T^{{}*{}}}{T}$
+	double rho_star; //< normalisation tempearture for normalised density $\delta = \frac{\rho}{\rho^{{}*{}}}$
+
+	// zero-density limit data
+	const ViscosityData1 *v1; //< we need an eta0 function to evaluate low-p gas conductivity!
+	double eps_over_k;
+	unsigned nc; // number of reduced collision cross-section terms
+	const ThCondCSTerm *ct; // collision cross-section terms
+
+	// residual conductivity data
+	unsigned nr;
+	const ThCondData1Term *rt;
+
+	// critical enhancement data (optional)
+	ThCondCritEnhOlchowyData *crit;
+} ThermalConductivityData1;
+
+
+typedef struct ThermalConductivityData_struct{
+	const char *source;
+	ThCondType type;
+	union{
+		ThermalConductivityData1 k1;
+	} data;
+} ThermalConductivityData;
+
+
 
 /*------------------------DATA WRAPPER-----------------------------*/
 
 /** EOS correlation types */
 typedef enum EosType_enum{
-	FPROPS_IDEAL = 0 /**< we need to be able to flag IDEAL at runtime! */
+	/* note, enum should not allow value of zero, as that return value is needed for errors in fprops_corr_avail */
+	FPROPS_IDEAL = 7 /**< we need to be able to flag IDEAL at runtime! */
 	,FPROPS_CUBIC = 1 /**< should only exist in source data, not in PureFluid object */
 	,FPROPS_PENGROB = 2
 	,FPROPS_REDKW = 3
@@ -349,6 +486,8 @@ typedef struct EosData_struct{
 	const double quality; /**< data quality, higher means more accurate */
 	const EosType type;
 	const EosUnion data;
+	const ViscosityData *visc;
+	const ThermalConductivityData *thcond;
 } EosData;
 
 #endif

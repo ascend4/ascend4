@@ -1,5 +1,5 @@
-#LyX 1.5.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 276
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
 \begin_document
 \begin_header
 \textclass book
@@ -49,50 +49,86 @@
   backgroundcolor=\color{lightgrey} 
 }
 \end_preamble
+\use_default_options false
+\maintain_unincluded_children false
 \language english
+\language_package default
 \inputencoding auto
+\fontencoding global
 \font_roman default
 \font_sans default
 \font_typewriter default
+\font_math auto
 \font_default_family default
+\use_non_tex_fonts false
 \font_sc false
 \font_osf false
 \font_sf_scale 100
 \font_tt_scale 100
 \graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
 \paperfontsize default
 \spacing single
+\use_hyperref false
 \papersize a4paper
 \use_geometry false
-\use_amsmath 2
-\use_esint 0
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 1
+\use_package esint 0
+\use_package mathdots 0
+\use_package mathtools 1
+\use_package mhchem 0
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
 \cite_engine basic
+\cite_engine_type default
+\biblio_style plain
 \use_bibtopic false
+\use_indices false
 \paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
-\defskip medskip
+\paragraph_indentation default
 \quotes_language english
 \papercolumns 1
 \papersides 2
 \paperpagestyle default
 \tracking_changes false
 \output_changes false
-\author "" 
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
 \end_header
 
 \begin_body
 
 \begin_layout Chapter
 Preparing a model for reuse
-\begin_inset LatexCommand index
-name "reuse"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+reuse
+\end_layout
 
 \end_inset
 
  
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "cha:model2"
 
 \end_inset
@@ -114,34 +150,39 @@ There are four major ways to prepare a model for reuse.
 \begin_inset Foot
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 More detail on these is available in papers and reports by Allan, Zaher,
  Chittur et al 
-\begin_inset LatexCommand cite
+\begin_inset CommandInset citation
+LatexCommand cite
 key "Allan1997d"
 
 \end_inset
 
 ,
-\begin_inset LatexCommand cite
+\begin_inset CommandInset citation
+LatexCommand cite
 key "Allan1997b"
 
 \end_inset
 
 ,
-\begin_inset LatexCommand cite
+\begin_inset CommandInset citation
+LatexCommand cite
 key "Allan1997"
 
 \end_inset
 
 ,
-\begin_inset LatexCommand cite
+\begin_inset CommandInset citation
+LatexCommand cite
 key "Krishnan1993"
 
 \end_inset
 
 ,
-\begin_inset LatexCommand cite
+\begin_inset CommandInset citation
+LatexCommand cite
 key "Zaher1991"
 
 \end_inset
@@ -156,14 +197,22 @@ key "Zaher1991"
 
 \begin_layout Section
 Adding comments
-\begin_inset LatexCommand index
-name "comments"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+comments
+\end_layout
 
 \end_inset
 
  and notes
-\begin_inset LatexCommand index
-name "notes"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+notes
+\end_layout
 
 \end_inset
 
@@ -179,8 +228,12 @@ In ASCEND we can create traditional comments for a model -- i.e., add text
 (*
 \family default
 
-\begin_inset LatexCommand index
-name "(*"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+(*
+\end_layout
 
 \end_inset
 
@@ -189,8 +242,12 @@ name "(*"
 *)
 \family default
 
-\begin_inset LatexCommand index
-name "*)"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+*)
+\end_layout
 
 \end_inset
 
@@ -202,19 +259,19 @@ name "*)"
 \begin_inset ERT
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
 begin{ascend}
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 (* This is a comment *)
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
@@ -230,14 +287,22 @@ end{ascend}
 is a comment in ASCEND.
  Traditional comments are only visible when we display the code using the
  Display code tool
-\begin_inset LatexCommand index
-name "Display code tool"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Display code tool
+\end_layout
 
 \end_inset
 
 
-\begin_inset LatexCommand index
-name "tool, Display code"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+tool, Display code
+\end_layout
 
 \end_inset
 
@@ -253,13 +318,18 @@ We suggest we can do more for the modeler with the concept of Notes, a form
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand index
-name "comments, active"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+comments, active
+\end_layout
 
 \end_inset
 
 In Figure 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "fig:model2.vesselWithNotes"
 
 \end_inset
@@ -311,13 +381,18 @@ NOTES
 vesselNotes.a4c
 \family default
 
-\begin_inset LatexCommand index
-name "vesselNotes.a4c"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+vesselNotes.a4c
+\end_layout
 
 \end_inset
 
 )
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "fig:model2.vesselWithNotes"
 
 \end_inset
@@ -329,21 +404,21 @@ name "fig:model2.vesselWithNotes"
 \begin_inset ERT
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
 lstset{language=ASCEND}
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
 lstinputlisting[firstline=24]{../models/vesselNotes.a4c}
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \end_layout
 
@@ -367,14 +442,22 @@ short notes
 \series default
  we can attach to every variable in the model.
  A "one liner
-\begin_inset LatexCommand index
-name "notes, one liner"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+notes, one liner
+\end_layout
 
 \end_inset
 
 
-\begin_inset LatexCommand index
-name "one liner"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+one liner
+\end_layout
 
 \end_inset
 
@@ -384,7 +467,8 @@ name "one liner"
 
 \begin_layout Standard
 The last few lines of Figure 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "fig:model2.vesselWithNotes"
 
 \end_inset
@@ -404,8 +488,12 @@ ADD NOTES IN
 \family default
 \noun off
  syntax
-\begin_inset LatexCommand index
-name "ADD NOTES IN object"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+ADD NOTES IN object
+\end_layout
 
 \end_inset
 
@@ -423,14 +511,22 @@ name "ADD NOTES IN object"
 
 \begin_layout Section
 Adding methods
-\begin_inset LatexCommand index
-name "methods, adding"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+methods, adding
+\end_layout
 
 \end_inset
 
 
-\begin_inset LatexCommand index
-name "adding methods"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+adding methods
+\end_layout
 
 \end_inset
 
@@ -447,7 +543,8 @@ We would next like to pass along our experiences in getting this model to
  Methods are procedural code that we can request be run through the interface
  while browsing a model instance.
  We shall include methods as described in Table 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "tab:model2.reqdMethods"
 
 \end_inset
@@ -479,8 +576,12 @@ Running method specify in v
 
 \begin_layout LyX-Code
 Found STOP
-\begin_inset LatexCommand index
-name "STOP"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+STOP
+\end_layout
 
 \end_inset
 
@@ -503,8 +604,12 @@ basemodel.a4l:307
 
 \begin_layout LyX-Code
   STOP {Error
-\begin_inset LatexCommand index
-name "error"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+error
+\end_layout
 
 \end_inset
 
@@ -517,8 +622,12 @@ name "error"
 
 \begin_layout Standard
 This message is telling you that you have just run the default specify method
-\begin_inset LatexCommand index
-name "specify method, default"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+specify method, default
+\end_layout
 
 \end_inset
 
@@ -531,8 +640,12 @@ name "specify method, default"
 
 \begin_layout Standard
 Try running the ClearAll
-\begin_inset LatexCommand index
-name "ClearAll"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+ClearAll
+\end_layout
 
 \end_inset
 
@@ -548,18 +661,23 @@ wide false
 sideways false
 status open
 
-\begin_layout Standard
-\begin_inset Caption
+\begin_layout Plain Layout
+\begin_inset Caption Standard
 
-\begin_layout Standard
-\begin_inset LatexCommand label
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
 name "tab:model2.reqdMethods"
 
 \end_inset
 
  Some of the methods
-\begin_inset LatexCommand index
-name "methods, required"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+methods, required
+\end_layout
 
 \end_inset
 
@@ -571,44 +689,48 @@ name "methods, required"
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="5" columns="2">
-<features>
-<column alignment="center" valignment="top" leftline="true" width="1.25in">
-<column alignment="center" valignment="top" leftline="true" rightline="true" width="3.5in">
-<row topline="true" bottomline="true">
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top" width="1.25in">
+<column alignment="center" valignment="top" width="3.5in">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \end_layout
 
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 ClearAll
 \family default
 
-\begin_inset LatexCommand index
-name "ClearAll"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+ClearAll
+\end_layout
 
 \end_inset
 
@@ -620,7 +742,7 @@ name "ClearAll"
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 a method to set all the .fixed flags for variables in the type to FALSE.
  This puts these flags into a known standard state -- i.e., all are FALSE.
  All models inherit this method from the base model and the need to rewrite
@@ -630,18 +752,22 @@ a method to set all the .fixed flags for variables in the type to FALSE.
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 specify
 \family default
 
-\begin_inset LatexCommand index
-name "specify"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+specify
+\end_layout
 
 \end_inset
 
@@ -653,7 +779,7 @@ name "specify"
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family roman
 \series medium
@@ -673,18 +799,22 @@ a method which assumes all the fixed flags are currently FALSE and which
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 reset
 \family default
 
-\begin_inset LatexCommand index
-name "reset"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+reset
+\end_layout
 
 \end_inset
 
@@ -696,7 +826,7 @@ name "reset"
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family roman
 \series medium
@@ -717,18 +847,22 @@ a method which first runs the ClearAll method and then the specify method.
 \end_inset
 </cell>
 </row>
-<row topline="true" bottomline="true">
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 values
 \family default
 
-\begin_inset LatexCommand index
-name "values"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+values
+\end_layout
 
 \end_inset
 
@@ -737,10 +871,10 @@ name "values"
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family roman
 \series medium
@@ -867,7 +1001,8 @@ specify
 
 \begin_layout Standard
 Figure 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "fig:model2.vesselWithMethods"
 
 \end_inset
@@ -902,13 +1037,18 @@ METHODS
 vesselMethods.a4c
 \family default
 
-\begin_inset LatexCommand index
-name "vesselMethods.a4c"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+vesselMethods.a4c
+\end_layout
 
 \end_inset
 
 )
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "fig:model2.vesselWithMethods"
 
 \end_inset
@@ -920,14 +1060,14 @@ name "fig:model2.vesselWithMethods"
 \begin_inset ERT
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
 lstset{language=ASCEND}
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
@@ -941,7 +1081,8 @@ lstinputlisting[firstline=23]{../models/vesselMethods.a4c}
 
 \begin_layout Standard
 In Table 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "tab:model2.addedReqdMethods"
 
 \end_inset
@@ -958,8 +1099,24 @@ _self
 \family default
 \noun off
 
-\begin_inset LatexCommand index
-name "\\_self"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+self
+\end_layout
 
 \end_inset
 
@@ -972,16 +1129,36 @@ _all
 \family default
 \noun off
 
-\begin_inset LatexCommand index
-name "\\_all"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+all
+\end_layout
 
 \end_inset
 
  is for a method to do something for parts that are defined within an `outer'
  model that has an instance of this model as a part.
  The `outer' model is at a higher scope
-\begin_inset LatexCommand index
-name "scope"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+scope
+\end_layout
 
 \end_inset
 
@@ -992,7 +1169,8 @@ name "scope"
 Section 
 \noun off
 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "sec:model2.parameterizingVessel"
 
 \end_inset
@@ -1013,7 +1191,8 @@ _self
 Figure 
 \noun off
 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "fig:model2.vesselWithMethods"
 
 \end_inset
@@ -1027,18 +1206,24 @@ wide false
 sideways false
 status open
 
-\begin_layout Standard
-\begin_inset Caption
+\begin_layout Plain Layout
+\begin_inset Caption Standard
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Additional methods
-\begin_inset LatexCommand index
-name "methods. required"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+methods.
+ required
+\end_layout
 
 \end_inset
 
  required for model in ASCEND libraries
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "tab:model2.addedReqdMethods"
 
 \end_inset
@@ -1051,50 +1236,84 @@ name "tab:model2.addedReqdMethods"
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="5" columns="2">
-<features>
-<column alignment="center" valignment="top" leftline="true" width="1.25in">
-<column alignment="center" valignment="top" leftline="true" rightline="true" width="3.5in">
-<row topline="true" bottomline="true">
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top" width="1.25in">
+<column alignment="center" valignment="top" width="3.5in">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 method
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 description
 \end_layout
 
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 default_self
-\begin_inset LatexCommand index
-name "default\\_self"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+default
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+self
+\end_layout
 
 \end_inset
 
 , default_all
 \family default
 
-\begin_inset LatexCommand index
-name "default\\_all"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+default
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+all
+\end_layout
 
 \end_inset
 
@@ -1106,7 +1325,7 @@ name "default\\_all"
 <cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none" width="3.5in">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family roman
 \series medium
@@ -1126,24 +1345,58 @@ d if given poor initial guesses or bounds (e.g., zero).
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 bound_self
-\begin_inset LatexCommand index
-name "bound\\_self"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+bound
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+self
+\end_layout
 
 \end_inset
 
 , bound_all
 \family default
 
-\begin_inset LatexCommand index
-name "bound\\_all"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+bound
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+all
+\end_layout
 
 \end_inset
 
@@ -1155,7 +1408,7 @@ name "bound\\_all"
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family roman
 \series medium
@@ -1174,24 +1427,58 @@ a method to update the .
 \end_inset
 </cell>
 </row>
-<row topline="true">
+<row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 scale_self
-\begin_inset LatexCommand index
-name "scale\\_self"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+scale
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+self
+\end_layout
 
 \end_inset
 
 , scale_all
 \family default
 
-\begin_inset LatexCommand index
-name "scale\\_all"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+scale
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+all
+\end_layout
 
 \end_inset
 
@@ -1203,7 +1490,7 @@ name "scale\\_all"
 <cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family roman
 \series medium
@@ -1222,24 +1509,58 @@ a method to update the .
 \end_inset
 </cell>
 </row>
-<row topline="true" bottomline="true">
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family typewriter
 check_self
-\begin_inset LatexCommand index
-name "check\\_self"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+check
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+self
+\end_layout
 
 \end_inset
 
 , check_all
 \family default
 
-\begin_inset LatexCommand index
-name "check\\_all"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+check
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+all
+\end_layout
 
 \end_inset
 
@@ -1248,10 +1569,10 @@ name "check\\_all"
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \family roman
 \series medium
@@ -1353,7 +1674,8 @@ Repeat the last step but this time select the method reset.
 \begin_layout Standard
 In the Browser, examine the values for the variables listed in the method
  values in Figure 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "fig:model2.vesselWithMethods"
 
 \end_inset
@@ -1396,7 +1718,8 @@ The inclusion of methods has made the process of making this model much
 
 \begin_layout Section
 Parameterizing the vessel model
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "sec:model2.parameterizingVessel"
 
 \end_inset
@@ -1474,7 +1797,8 @@ wall_thickness
 
 \begin_layout Standard
 The code in Figure 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "fig:model2.parameterizedVessel"
 
 \end_inset
@@ -1486,14 +1810,19 @@ reference "fig:model2.parameterizedVessel"
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "fig:model2.parameterizedVessel"
 
 \end_inset
 
 The parameterized version of vessel model (
-\begin_inset LatexCommand index
-name "1014608"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+1014608
+\end_layout
 
 \end_inset
 
@@ -1504,14 +1833,14 @@ vesselParams.a4c)
 \begin_inset ERT
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
 lstset{language=ASCEND}
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
@@ -1525,7 +1854,8 @@ lstinputlisting[firstline=24]{../models/vesselParams.a4c}
 
 \begin_layout Standard
 Substitute the statements in Figure 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "fig:model2.parameterizedVessel"
 
 \end_inset
@@ -1537,7 +1867,8 @@ reference "fig:model2.parameterizedVessel"
 Figure 
 \noun off
 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "fig:model2.vesselWithMethods"
 
 \end_inset
@@ -1548,14 +1879,22 @@ reference "fig:model2.vesselWithMethods"
 
 \begin_layout Standard
 Note the use of the 
-\begin_inset LatexCommand index
-name "1014610"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+1014610
+\end_layout
 
 \end_inset
 
 
-\begin_inset LatexCommand index
-name "1014609"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+1014609
+\end_layout
 
 \end_inset
 
@@ -1575,8 +1914,12 @@ Using the parameterized vessel model
 
 \begin_layout Standard
 A type definition  will set up our 
-\begin_inset LatexCommand index
-name "1014611"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+1014611
+\end_layout
 
 \end_inset
 
@@ -1585,7 +1928,8 @@ table of H_to_D_ratio values vs.
  ASCEND allows us to create arrays of instances of any type.
  Here we shall create an array of vessels.
  The type definition is shown in Figure 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "fig:model2.tabulatedVessel"
 
 \end_inset
@@ -1599,7 +1943,8 @@ reference "fig:model2.tabulatedVessel"
 
 \begin_layout Standard
 tabulated_vessel_values model
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "fig:model2.tabulatedVessel"
 
 \end_inset
@@ -1611,14 +1956,14 @@ name "fig:model2.tabulatedVessel"
 \begin_inset ERT
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
 lstset{language=ASCEND}
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
@@ -1636,8 +1981,12 @@ Add this model to the end of the file
 vesselParam.a4c
 \family default
 
-\begin_inset LatexCommand index
-name "vesselTabulated.a4c"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+vesselTabulated.a4c
+\end_layout
 
 \end_inset
 
@@ -1668,13 +2017,18 @@ H_to_D_ratio
 
 \begin_layout Section
 Creating a script
-\begin_inset LatexCommand index
-name "script, creating"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+script, creating
+\end_layout
 
 \end_inset
 
  to demonstrate this model
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "sec:model2.creatingScript"
 
 \end_inset
@@ -1723,8 +2077,12 @@ Script
 \series default
  window you will see the license agreement information for ASCEND.
  First clear the license agreement
-\begin_inset LatexCommand index
-name "license agreement"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+license agreement
+\end_layout
 
 \end_inset
 
@@ -1944,7 +2302,8 @@ Script
 Script
 \series default
  window at this point will be similar to that in Figure 
-\begin_inset LatexCommand ref
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "fig:model2.scriptVesselTabulated"
 
 \end_inset
@@ -1997,7 +2356,8 @@ You will run the same sequence of instructions you ran to create the script.
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "fig:model2.scriptVesselTabulated"
 
 \end_inset
@@ -2011,8 +2371,12 @@ vesselTabulated.a4c
 vesselTabulated.a4s
 \family default
 
-\begin_inset LatexCommand index
-name "vesselTabultated.a4s"
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+vesselTabultated.a4s
+\end_layout
 
 \end_inset
 
@@ -2023,7 +2387,7 @@ name "vesselTabultated.a4s"
 \begin_inset ERT
 status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash

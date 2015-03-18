@@ -81,11 +81,6 @@
 #include "Commands.h"
 #include "Driver.h"
 
-#ifndef lint
-static CONST char BrowserProcID[] = "$Id: BrowserProc.c,v 1.36 2003/08/23 18:43:04 ballan Exp $";
-#endif
-
-
 #ifndef MAXIMUM_STRING_LENGTH
 #define MAXIMUM_STRING_LENGTH 1024
 #endif
@@ -712,7 +707,7 @@ void BrowWriteUnformattedSet(Tcl_Interp *interp,struct Instance *i)
     len = Cardinality(s);
     for(c=1;c<=len;c++) {
       if (SetKind(s)==integer_set) {
-        sprintf(value,"%ld", FetchIntMember(s,c));
+        sprintf(value,"%u", FetchIntMember(s,c));
         Tcl_AppendResult(interp,value," ",(char *)NULL);
       } else {
         Tcl_AppendResult(interp,"'",SCP(FetchStrMember(s,c)),"' ",

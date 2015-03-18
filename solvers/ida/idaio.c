@@ -92,9 +92,10 @@ void integrator_ida_write_stats(IntegratorIdaStats *stats){
 	hopefully be a useful way to examine stability of some spatial
 	discretisation schemes for PDAE systems.
 
-	http://ascendserver.cheme.cmu.edu/wiki/index.php/IDA#Stability
+	http://ascend4.org/IDA#Stability
 */
 int integrator_ida_transfer_matrix(const IntegratorSystem *integ, struct SystemJacobianStruct *J){
+#ifdef STILL_NEED_TO_IMPLEMENT_THIS
 	int i=0, res;
 	enum submat{II_GA=0, II_GD, II_FA, II_FD, II_FDP, II_NUM};
 
@@ -121,6 +122,8 @@ int integrator_ida_transfer_matrix(const IntegratorSystem *integ, struct SystemJ
 	}
 
 	/* compute inverses for matrices that need it */
+#endif
+
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented");
 	return 1;
 }
@@ -128,7 +131,7 @@ int integrator_ida_transfer_matrix(const IntegratorSystem *integ, struct SystemJ
 /**
 	Our task here is to write the matrices that IDA *should* be seeing. We
 	are actually making calls to relman_diff in order to do that, so we're
-	really going back to the variables in the actualy system and computing
+	really going back to the variables in the actual system and computing
 	row by row what the values are. This should mean just a single call to
 	each blackbox present in the system (if blackbox caching is working
 	correctly).
@@ -388,11 +391,13 @@ void integrator_ida_error(int error_code
 		, const char *module, const char *function
 		, char *msg, void *eh_data
 ){
-	IntegratorSystem *integ;
 	error_severity_t sev;
 
 	/* cast back the IntegratorSystem, just in case we need it */
+#ifdef WE_DONT_NEED_THIS_YET
+	IntegratorSystem *integ;
 	integ = (IntegratorSystem *)eh_data;
+#endif
 
 	/* severity depends on the sign of the error_code value */
 	if(error_code <= 0){

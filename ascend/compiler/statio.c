@@ -698,7 +698,7 @@ void WriteStatementErrorMessage(
 	FILE *f, CONST struct Statement *stat
 	,CONST char *message, int noisy,int level
 ){
-  /* old behavior */
+  /* old behaviour */
   const char *filename=NULL;
   int line=0;
   error_severity_t sev;
@@ -733,27 +733,32 @@ void WriteStatementErrorMessage(
       WriteForTable(ASCERR,GetEvaluationForTable());
     }
   }else{
-    FPRINTF(f,"NULL STATEMENT!");
+    ASC_FPRINTF(f,"NULL STATEMENT!");
   }
 
   error_reporter_end_flush();
   CONSOLE_DEBUG("%s",message);
+  WriteStatementLocation(ASCERR,stat);
 }
 
 void WriteStatementLocation(FILE *f, CONST struct Statement *stat){
+	//CONSOLE_DEBUG("writing...");
 	const char *filename=NULL;
 	int line=0;
 
 	if(stat==NULL){
-		FPRINTF(f,"NULL STATEMENT!");
+		//CONSOLE_DEBUG("STATEMENT POINTER IS NULL");
+		ASC_FPRINTF(f,"NULL STATEMENT!");
 		return;
 	}
+	//CONSOLE_DEBUG("...");
 
 	filename=Asc_ModuleBestName(StatementModule(stat));
 	line=StatementLineNum(stat);
 
 	/* write some more detail */
-	FPRINTF(f,"%s:%d",filename,line);
+	ASC_FPRINTF(f,"%s:%d",filename,line);
+	CONSOLE_DEBUG("%s:%d",filename,line);
 }
 
 

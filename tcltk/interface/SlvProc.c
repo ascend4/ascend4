@@ -40,11 +40,6 @@
 #include "Commands.h" /* for registration function */
 #include "SlvProc.h"
 
-#ifndef lint
-static CONST char SlvProcID[] = "$Id: SlvProc.c,v 1.6 2003/08/23 18:43:08 ballan Exp $";
-#endif
-
-
 #ifndef MAXIMUM_STRING_LENGTH
 #define MAXIMUM_STRING_LENGTH 256
 #endif

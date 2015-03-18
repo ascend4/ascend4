@@ -28,13 +28,7 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/dstring.h>
 
-
-
 #include "dimen_io.h"
-
-#ifndef lint
-static CONST char DimenIORCSid[] = "$Id: dimen_io.c,v 1.8 1998/04/11 01:31:06 ballan Exp $";
-#endif
 
 static
 void WriteFrac(FILE *f, struct fraction frac, CONST char *str, int *CONST p)

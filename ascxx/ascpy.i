@@ -396,7 +396,7 @@ public:
 	void setBoolValue(const bool &val);
 	void setIntValue(const long &val);
 	void setSymbolValue(const SymChar &sym);
-	void write(FILE *fp);
+	void write(const char *fname);
 
 	const InstanceStatus getStatus() const;
 

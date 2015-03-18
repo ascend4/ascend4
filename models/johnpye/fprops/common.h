@@ -25,7 +25,7 @@ Common data declarations etc.
 
 /** Departure function error codes */
 typedef enum FpropsError_enum{
-	FPROPS_NO_ERROR
+	FPROPS_NO_ERROR = 0
 	,FPROPS_NUMERIC_ERROR
 	,FPROPS_SAT_CVGC_ERROR /* something went wrong when solving saturation state */
 	,FPROPS_RANGE_ERROR

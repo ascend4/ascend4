@@ -33,20 +33,18 @@
 #include "sat.h"
 //#include "redkw.h"
 #include "pengrob.h"
+#include "visc.h"
+#include "thcond.h"
 //#include "mbwr.h"
 
-#define FPR_DEBUG
+//#define FPR_DEBUG
 #ifdef FPR_DEBUG
 # include "color.h"
-# define MSG(FMT, ...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
-	color_on(stderr,ASC_FG_BRIGHTBLUE);\
-	fprintf(stderr,"%s: ",__func__);\
-	color_off(stderr);\
-	fprintf(stderr,FMT "\n",##__VA_ARGS__)
+# define MSG FPROPS_MSG
+# define ERRMSG FPROPS_ERRMSG
 #else
 # define MSG(ARGS...) ((void)0)
+# define ERRMSG(ARGS...) ((void)0)
 #endif
 
 #include <stdio.h>
@@ -97,17 +95,45 @@ int fprops_corr_avail(const EosData *E, const char *corrtype){
 
 
 PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
+	PureFluid *P = NULL;
+	FpropsError err = FPROPS_NO_ERROR;
+	MSG("Working with EosData name '%s', source '%s", E->name, E->source);
+	MSG("Chosen correlation: %d (requested %s)", fprops_corr_avail(E,corrtype),corrtype);
 	switch(fprops_corr_avail(E,corrtype)){
 	case FPROPS_HELMHOLTZ:
-		return helmholtz_prepare(E,NULL);
+		P = helmholtz_prepare(E,NULL);
+		break;
 	case FPROPS_PENGROB:
-		return pengrob_prepare(E,NULL);
+		P = pengrob_prepare(E,NULL);
+		break;
 	case FPROPS_IDEAL:
-		return ideal_prepare(E,NULL);
+		P = ideal_prepare(E,NULL);
+		break;
 	default:
-		MSG("Invalid EOS data, unimplemented correlation type requested");
+		ERRMSG("Invalid EOS data, unimplemented correlation type requested");
 		return NULL;
 	}
+	/* next: add preparation of viscosity, thermal conductivity, surface tension, ... */
+
+	MSG("Preparing viscosity data...");
+	P->visc = visc_prepare(E,P,&err);
+	if(err){
+		ERRMSG("Invalid viscosity data for '%s",P->name);
+		/* visc_prepare should return NULL if there was an error, so result is
+		same as when there is no viscosity data at all */
+	}
+
+	MSG("Preparing thermal conductivity data...");
+	err = FPROPS_NO_ERROR;
+	if(E->thcond){
+		thcond_prepare(P,E->thcond,&err);
+		if(err){
+			ERRMSG("Invalid viscosity data for '%s",P->name);
+			/* visc_prepare should return NULL if there was an error, so result is
+			same as when there is no viscosity data at all */
+		}
+	}
+	return P;
 }
 
 FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsError *err){
@@ -120,7 +146,7 @@ FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsE
 /*
 	TODO need some kind of support for freezing line, especially for water
 	since for temperatures 0.degC up to 0.01 degC liquid phase is possible
-	for for ambient pressure, but this is BELOW triple line. Hmmm.
+	for ambient pressure, but this is BELOW triple line. Hmmm.
 
 	Also sublimation curve needs to be added.
 */
@@ -181,6 +207,35 @@ double fprops_betap(FluidState state, FpropsError *err){
 	return 0;
 }
 #endif
+
+/// TODO reimplement with function pointer?
+double fprops_mu(FluidState state, FpropsError *err){
+	if(NULL!=state.fluid->visc){
+		switch(state.fluid->visc->type){
+		case FPROPS_VISC_1:
+			return visc1_mu(state,err);
+		default:
+			break;
+		}	
+	}
+	*err = FPROPS_NOT_IMPLEMENTED;
+	return NAN;
+}
+
+/// TODO reimplement with function pointer?
+double fprops_lam(FluidState state, FpropsError *err){
+	if(NULL!=state.fluid->thcond){
+		switch(state.fluid->thcond->type){
+		case FPROPS_THCOND_1:
+			return thcond1_lam(state,err);
+		default:
+			break;
+		}	
+	}
+	*err = FPROPS_NOT_IMPLEMENTED;
+	return NAN;
+}
+
 
 double fprops_cp0(FluidState state, FpropsError *err){
 	return ideal_cp(state.T,0,state.fluid->data,err);

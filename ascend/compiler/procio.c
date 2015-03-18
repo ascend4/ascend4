@@ -53,7 +53,9 @@ void WriteInitWarn(struct procFrame *fm, const char *str){
 }
 
 void WriteInitErr(struct procFrame *fm, const char *str){
+  //WriteStatementErrorMessage(fm->err, fm->stat, str,1,2);
   WSEM(fm->err,fm->stat,str);
+  WriteStatementLocation(fm->err,fm->stat);
   FFLUSH(fm->err);
 }
 

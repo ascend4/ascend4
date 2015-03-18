@@ -10,7 +10,7 @@
 */
 const PureFluid *fprops_fluid(const char *name, const char *corrtype, const char *source);
 
-void fprops_fluid_destroy(const PureFluid *fluid);
+void fprops_fluid_destroy(PureFluid *fluid);
 
 /**
 	@return number of fluids in the database.

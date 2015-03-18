@@ -80,7 +80,7 @@ static void test_test1(){
 	struct FilePath *fp2 = ospath_getabs(fp1);
 	char *fp2str = ospath_str(fp2);
 	char makecmd[2 * PATH_MAX];
-	strcpy(makecmd, "make -f ");
+	strcpy(makecmd, "/usr/bin/make -f ");
 	strncat(makecmd, fp2str, PATH_MAX - strlen(makecmd));
 	strncat(makecmd, " ASCBT_SRC=" T_BTSRC " ASCBT_TARGET=" T_BTLIB, PATH_MAX - strlen(makecmd));
 

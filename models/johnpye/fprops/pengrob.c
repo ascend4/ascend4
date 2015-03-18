@@ -53,18 +53,12 @@ SatEvalFn pengrob_sat;
 
 static double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err);
 
-//#define PR_DEBUG
+#define PR_DEBUG
 #define PR_ERRORS
 
 #ifdef PR_DEBUG
 # include "color.h"
-# define MSG(FMT, ...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
-	color_on(stderr,ASC_FG_BRIGHTBLUE);\
-	fprintf(stderr,"%s: ",__func__);\
-	color_off(stderr);\
-	fprintf(stderr,FMT "\n",##__VA_ARGS__)
+# define MSG FPROPS_MSG
 #else
 # define MSG(ARGS...) ((void)0)
 #endif
@@ -72,15 +66,10 @@ static double MidpointPressureCubic(double T, const FluidData *data, FpropsError
 /* TODO centralise declaration of our error-reporting function somehow...? */
 #ifdef PR_ERRORS
 # include "color.h"
-# define ERRMSG(STR,...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"ERROR:");\
-	color_off(stderr);\
-	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
+# define ERRMSG FPROPS_ERRMSG
 #else
 # define ERRMSG(ARGS...) ((void)0)
 #endif
-
 
 PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 	MSG("Preparing PR fluid...");
@@ -104,7 +93,10 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		D->T_c = I->T_c;
 		D->rho_c = I->rho_c;
 		D->omega = I->omega;
-		D->cp0 = cp0_prepare(I->ideal, D->R, D->T_c);
+
+		D->Tstar = I->T_c;
+		D->rhostar = I->rho_c;
+		D->cp0 = cp0_prepare(I->ideal, D->R, D->Tstar);
 
 		// helmholtz data doesn't include p_c so we need to calculate it somehow...
 
@@ -173,7 +165,11 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		}
 #endif
 		D->omega = I->omega;
-		D->cp0 = cp0_prepare(I->ideal, D->R, D->T_c);
+
+		D->Tstar = I->T_c;
+		D->rhostar = I->rho_c;
+		MSG("R = %f, Tstar = %f",D->R, D->Tstar);
+		D->cp0 = cp0_prepare(I->ideal, D->R, D->Tstar);
 		break;
 	default:
 		fprintf(stderr,"Invalid EOS data\n");
@@ -198,6 +194,8 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 	C = FPROPS_NEW(PengrobRunData);
 	C->aTc = 0.45724 * SQ(D->R * D->T_c) / D->p_c;
 	C->b = 0.07780 * D->R * D->T_c / D->p_c;
+
+	// note possible correction required? http://kshmakov.org/fluid/note/3/
 	C->kappa = 0.37464 + (1.54226 - 0.26992 * D->omega) * D->omega;
 
 	/* function pointers... more to come still? */
@@ -702,118 +700,4 @@ static double resid_dpdrho_T(double rho, void *user_data){
     return pengrob_dpdrho_T(D->T,rho,D->data,D->err);
 #undef D
 }
-
-
-#if 0
-
-/* we would like to try the Akasaka approach and use it with cubic EOS.
-but at this stage it's not working correctly. Not sure why... */
-
-/**
-	Solve saturation condition for a specified temperature using approach of
-	Akasaka, but adapted for general use to non-helmholtz property correlations.
-	@param T temperature [K]
-	@param psat_out output, saturation pressure [Pa]
-	@param rhof_out output, saturated liquid density [kg/m^3]
-	@param rhog_out output, saturated vapour density [kg/m^3]
-	@param d helmholtz data object for the fluid in question.
-	@return 0 on success, non-zero on error (eg algorithm failed to converge, T out of range, etc.)
-*/
-double pengrob_sat_akasaka(double T, double *rhof_out, double * rhog_out, const FluidData *data, FpropsError *err){
-	if(T < data->T_t - 1e-8){
-		ERRMSG("Input temperature %f K is below triple-point temperature %f K",T,data->T_t);
-		return FPROPS_RANGE_ERROR;
-	}
-
-	if(T > data->T_c){
-		ERRMSG("Input temperature is above critical point temperature");
-		return FPROPS_RANGE_ERROR;
-	}
-
-	// we're at the critical point
-	if(fabs(T - data->T_c) < 1e-9){
-		*rhof_out = data->rho_c;
-		*rhog_out = data->rho_c;
-		return data->p_c;
-	}
-
-	// FIXME at present step-length multiplier is set to 0.4 just because of 
-	// ONE FLUID, ethanol. Probably our initial guess data isn't good enough,
-	// or maybe there's a problem with the acentric factor or something like
-	// that. This factor 0.4 will be slowing down the whole system, so it's not
-	// good. TODO XXX.
-
-	// initial guesses for liquid and vapour density
-	double rhof = fprops_rhof_T_rackett(T,data);
-	double rhog= fprops_rhog_T_chouaieb(T,data);
-	double R = data->R;
-	double pc = data->p_c;
-
-	MSG("initial guess rho_f = %f, rho_g = %f\n",rhof,rhog);
-	MSG("calculating for T = %.12e",T);
-
-	int i = 0;
-	while(i++ < 70){
-		if(rhof > 1/PD->b){
-			MSG("limit rhof to 1/b");
-			rhof = 1/PD->b;
-		}
-
-		MSG("iter %d: T = %f, rhof = %f, rhog = %f",i,T, rhof, rhog);
-
-		double pf = pengrob_p(T,rhof,data,err);
-		double pg = pengrob_p(T,rhog,data,err);
-		double gf = pengrob_g(T,rhof,data,err);
-		double gg = pengrob_g(T,rhog,data,err);
-		double dpdrf = pengrob_dpdrho_T(T,rhof,data,err);
-		double dpdrg = pengrob_dpdrho_T(T,rhog,data,err);
-		if(*err){
-			ERRMSG("error returned");
-		}
-
-		MSG("gf = %f, gg = %f", gf, gg);
-
-		// jacobian for [F;G](rhof, rhog) --- derivatives wrt rhof and rhog
-		double F = (pf - pg)/pc;
-		double G = (gf - gg)/R/T;
-
-		if(fabs(F) + fabs(G) < 1e-12){
-			//fprintf(stderr,"%s: CONVERGED\n",__func__);
-			*rhof_out = rhof;
-			*rhog_out = rhog;
-			return pengrob_p(T, *rhog_out, data, err);
-			/* SUCCESS */
-		}
-
-		double Ff = dpdrf/pc;
-		double Fg = -dpdrg/pc;
-		MSG("Ff = %e, Fg = %e",Ff,Fg);
-
-		double Gf = dpdrf/rhof/R/T;
-		double Gg = -dpdrg/rhog/R/T;
-		MSG("Gf = %e, Gg = %e",Gf,Gg);
-
-		double DET = Ff*Gg - Fg*Gf;
-		MSG("DET = %f",DET);
-
-		MSG("F = %f, G = %f", F, G);
-
-		// 'gamma' needs to be increased to 0.5 for water to solve correctly (see 'test/sat.c')
-#define gamma 1
-		rhof += gamma/DET * (Fg*G - Gg*F);
-		rhog += gamma/DET * ( Gf*F - Ff*G);
-#undef gamma
-
-		if(rhog < 0)rhog = -0.5*rhog;
-		if(rhof < 0)rhof = -0.5*rhof;
-	}
-	*rhof_out = rhof;
-	*rhog_out = rhog;
-	*err = FPROPS_SAT_CVGC_ERROR;
-	ERRMSG("Not converged: with T = %e (rhof=%f, rhog=%f).",T,*rhof_out,*rhog_out);
-	return pengrob_p(T, rhog, data, err);
-}
-
-#endif
-
 

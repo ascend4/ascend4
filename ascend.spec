@@ -1,33 +1,42 @@
+# prevent filtering for 'provides' tagging of ASCEND models/solvers
+%{?filter_setup:
+%filter_provides_in %{_libdir}/ascend/models/.*\.so$
+%filter_provides_in %{_libdir}/ascend/solvers/.*\.so$
+%filter_setup
+}
+%{!?python2_sitearch: %global python2_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(pat_specific=1)")}
+%global gtksourceview_lang_file %{_datadir}/gtksourceview-3.0/language-specs/ascend.lang
+
 Name:		ascend
 Summary:	ASCEND modelling environment
-Version:	0.9.8
-
-# Use release 0.* so that other users can do patch releases with a higher number
-# and still have the update occur automatically.
+Version:	0.9.9
 Release:	0%{?dist}
-
-Group:		Applications/Engineering
 License:	GPLv2+
-URL:		http://ascend.cheme.cmu.edu/
-Source:		ascend-0.9.8.tar.bz2
-
-Prefix:		%{_prefix}
-Packager:	John Pye
-Vendor:		Carnegie Mellon University
+URL:		http://ascend4.org/
+Source:		http://ascend4.org/ascend-0.9.9.tar.bz2
 
 #------ build dependencies -------
 BuildRequires: scons >= 0.96.92
 BuildRequires: bison
 BuildRequires: flex >= 2.5.4
 BuildRequires: swig >= 1.3.24
-BuildRequires: gcc-gfortran gcc-c++ >= 4
+BuildRequires: gcc-gfortran >= 4
 BuildRequires: blas-devel
 BuildRequires: sundials-devel >= 2.4.0
-BuildRequires: ipopt-devel >= 3.10
-BuildRequires: python-devel >= 2.4
-BuildRequires: tk-devel, tk, tcl-devel, tcl, tktable
+#BuildRequires: tk-devel, tk, tcl-devel, tcl, tktable
 BuildRequires: graphviz-devel
 BuildRequires: desktop-file-utils
+%if 0%{?fedora}
+BuildRequires: python2-devel
+BuildRequires: coin-or-Ipopt-devel >= 3.10
+BuildRequires: MUMPS-devel
+BuildRequires: lapack-devel
+BuildRequires: CUnit-devel
+%else
+BuildRequires: python-devel >= 2.4
+BuildRequires: gcc-c++ >= 4
+BuildRequires: ipopt-devel >= 3.10 or 
+%endif
 
 # ... documentation
 # There are no dependencies for documentation as the tarball
@@ -38,33 +47,22 @@ BuildRequires: desktop-file-utils
 #------ runtime dependencies --------
 Requires: blas%{?_isa}
 Requires: sundials%{?_isa}
-Requires: ipopt%{?_isa}
+Requires: coin-or-Ipopt%{?_isa}
 
-# ...pygtk
+# ... pygtk
 Requires: python%{?_isa} >= 2.4
 Requires: pygtk2 >= 2.6
-# does this one get picked up automatically?
+#	^...libglade is no longer required; we use gtk.Builder
+
 Requires: python-matplotlib
 Requires: numpy
 Requires: ipython
-
-# ... file association
-Requires(post): desktop-file-utils shared-mime-info
-Requires(postun): desktop-file-utils shared-mime-info
-
-# syntax highlighting for gedit
+# ... syntax highlighting for gedit
 Requires: gtksourceview3
 
-%define pyver %(python -c 'import sys ; print sys.version[:3]')
-%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(plat_specific=0)")}
-%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(pat_specific=1)")}
-%define gtksourceview_lang_file %{_datadir}/gtksourceview-3.0/language-specs/ascend.lang
-
-%{?filter_setup:
-%filter_provides_in %{_libdir}/ascend/models/.*\.so$
-%filter_provides_in %{_libdir}/ascend/solvers/.*\.so$
-%filter_setup
-}
+# ... file association
+#Requires(post): desktop-file-utils shared-mime-info
+#Requires(postun): desktop-file-utils shared-mime-info
 
 %description
 ASCEND IV is both a large-scale object-oriented mathematical
@@ -74,57 +72,22 @@ Engineers, great care has been exercised to assure that it is
 domain independent. ASCEND can support modeling activities in
 fields from Architecture to (computational) Zoology.
 
-# for the moment we'll just make one big super-package, to keep things 
-# simple for end-users.
-
 %package devel
-Summary: Developer files ASCEND
-Group: Applications/Engineering
-Requires: %{name}
+Summary: ASCEND developer files
+Requires: %{name} = %{version}-%{release}
 %description devel
 Developer files for ASCEND, in the form for C header files for the core
 ASCEND library, 'libascend'.
 
 %package doc
-Summary: Documentation for ASCEND
-Group: Applications/Engineering
+Summary: ASCEND documentation
+Requires: %{name} = %{version}-%{release}
 %description doc
 Documentation for ASCEND, in the form of a PDF User's Manual.
 
-#%package -n libascend1
-#Summary: Shared library for core ASCEND functionality
-#Group: Applications/Engineering
-#%description -n libascend1
-#Shared library for ASCEND, providing core functionality including compiler 
-#and solver API.
-
-#%package -n ascend-python
-#Version:    %{version}
-#Summary:    PyGTK user interface for ASCEND
-#Group:		Applications/Engineering
-#
-#%description -n ascend-python
-#PyGTK user interface for ASCEND. This is a new interface that follows GNOME
-#human interface guidelines as closely as possible. It does not as yet provide
-#access to all of the ASCEND functionality provided by the Tcl/Tk interface.
-#
-
-%package tcltk
-Summary: Tcl/Tk user interface for ASCEND
-Group: Applications/Engineering
-Requires: xgraph >= 11
-Requires: tcl%{?_isa} >= 8.3
-Requires: tk%{?_isa} >= 8.3
-Requires: tktable < 2.10, tktable >= 2.8
-
-%description tcltk
-Tcl/Tk user interface for ASCEND. This is the original ASCEND IV interface
-and is a more complete and mature interface than the alternative PyGTK
-interface. Use this interface if you need to use ASCEND *.a4s files or other
-functionality not provided by the PyGTK interface.
-
 %prep
-%setup -q -n ascend-0.9.8
+%setup -q -n %{name}-%{version}
+# note Antonio Trande had some sed actions to insert directories into SConstruct, not sure that's needed actually.
 
 %build
 scons %{_smp_mflags} \
@@ -138,13 +101,14 @@ scons %{_smp_mflags} \
 	DEBUG=1 \
 	WITH_DOC_BUILD=0 \
 	WITH_DOC_INSTALL=0 \
+	WITH_TCLTK=0 \
 	WITH_SOLVERS=QRSLV,LSODE,CMSLV,IDA,LRSLV,CONOPT,DOPRI5,IPOPT \
 	ABSOLUTE_PATHS=1 \
-	%{?__cc:CC="%__cc"} %{?__cxx:CXX="%__cxx"} \
+	%{?__cc:CC="%{?ccache} %__cc"} %{?__cxx:CXX="%{?ccache} %__cxx"} \
 	ascend ascxx pygtk tcltk models solvers
 
 %install
-scons %{_smp_mflags} install
+scons install
 
 # Install menu entry for PyGTK interface, gtksourceview syntax highlighting, and MIME definition
 pushd pygtk/gnome
@@ -160,32 +124,53 @@ install -m 644 -D ascend-doc-48x48.svg %{buildroot}/%{_datadir}/icons/text-x-asc
 popd
 
 # language file for use with gedit
-# FIXME gtksourceview-3.0?
-pushd tools/gtksourceview-2.0
+pushd tools/gtksourceview-3.0
 install -m 644 -D ascend.lang %{buildroot}/%{gtksourceview_lang_file}
-popd
-
-# Install menu entry for Tcl/Tk interface
-pushd tcltk/gnome
-install -m 644 -D ascend4.desktop %{buildroot}/%{_datadir}/applications/ascend4.desktop
-install -m 644 -D ascend4.png %{buildroot}/%{_datadir}/icons/ascend4-app.png
-install -m 644 -D ascend4.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend4.png
 popd
 
 #/usr/lib/rpm/redhat/brp-strip-shared /usr/bin/strip
 
-%clean
-rm -rf %{buildroot}
+##Tricks
+# Fix .desktop files entries
+desktop-file-install \
+	--set-icon=ascend-app \
+	--remove-key=Encoding \
+	%{buildroot}/%{_datadir}/applications/%{name}.desktop
+
+# Fixed execute permission
+pushd %{buildroot}/%{_libdir}
+ for i in `find . -perm /644 -type f \( -name "*.so" -o -name "*.sh" -o -name "*.py" \)`; do
+ chmod a+x $i
+done
+popd
+
+pushd %{buildroot}%{python2_sitearch}
+ for i in `find . -perm /644 -type f \( -name "*.so" -o -name "*.py" \)`; do
+ chmod a+x $i
+done
+popd
+
+chmod a+x %{buildroot}/%{_libdir}/libascend.so.1.0
+
+#for file in %{buildroot}%{johnpye}/fprops/test/{ph,sat,sat1,ideal}; do
+#   chmod a+x $file
+#done
 
 %post
 /sbin/ldconfig
-update-desktop-database
+update-desktop-database &> /dev/null || :
 update-mime-database /usr/share/mime &> /dev/null || :
+touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
 
 %postun
 /sbin/ldconfig
-update-desktop-database
+update-desktop-database &> /dev/null || :
 update-mime-database /usr/share/mime &> /dev/null || :
+touch --no-create %{_datadir}/icons/hicolor &>/dev/null
+gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
+
+%posttrans
+gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 
 %files
 %defattr(644,root,root)
@@ -198,11 +183,9 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %{gtksourceview_lang_file}
 %{_datadir}/icons/text-x-ascend-model.svg
 
-#%files -n libascend1
 %defattr(755,root,root)
 %{_libdir}/libascend.so.*
 
-# %package python
 %defattr(755,root,root)
 %{_bindir}/ascend
 %{python_sitearch}/ascend/_ascpy.so
@@ -214,22 +197,12 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %{_datadir}/icons/ascend-app.png
 %{_datadir}/icons/hicolor/64x64/ascend.png
 
-# %package -n python-fprops
+# ...files python-fprops
 %defattr(755,root,root)
 %{python_sitearch}/_fprops.so
 %defattr(644,root,root)
 %{python_sitearch}/fprops.py
 %{python_sitearch}/fprops.py[oc]
-
-%files tcltk
-%defattr(755,root,root)
-%{_bindir}/ascend4
-%{_libdir}/libascendtcl.so
-%defattr(644,root,root)
-%{_datadir}/ascend/tcltk
-%{_datadir}/applications/ascend4.desktop
-%{_datadir}/icons/ascend4-app.png
-%{_datadir}/icons/hicolor/64x64/ascend4.png
 
 %files devel
 %defattr(755,root,root)
@@ -242,6 +215,10 @@ update-mime-database /usr/share/mime &> /dev/null || :
 %doc doc/book.pdf
 
 %changelog
+* Mon Jun 23 2014 John Pye <john.pye@anu.edu.au> 0.9.8
+- Incorporating changes from Antonio Trande's official Fedora packaging
+- See: http://pkgs.fedoraproject.org/cgit/ascend.git/tree/
+
 * Wed Dec 12 2012 John Pye <john.pye@anu.edu.au> 0.9.8
 - New version
 
@@ -264,7 +241,7 @@ update-mime-database /usr/share/mime &> /dev/null || :
 - Links in Help menu fixed (problem with call to Python webbrowser component).
 - License re-tagged according to Fedora requirements.
 
-* Sun Jul 25 2007 John Pye <john.pye@anu.edu.au> 0.9.5.112
+* Sun Jul 22 2007 John Pye <john.pye@anu.edu.au> 0.9.5.112
 - solvers are now all built as separate shared libraries
 - mime-type icon added
 - RPM now builds on Fedora 5,6,7 and SUSE 10.0 and newer. Not Mandriva though.
@@ -292,8 +269,5 @@ update-mime-database /usr/share/mime &> /dev/null || :
 * Mon Apr 24 2006 John Pye <john.pye@student.unsw.edu.au>
 - Modified for removed dir in pygtk source hierachy
 
-* Thu Apr 04 2006 John Pye <john.pye@student.unsw.edu.au>
+* Thu Apr 06 2006 John Pye <john.pye@student.unsw.edu.au>
 - First RPM package for new SCons build
-
-# vim: set syntax=spec:
-

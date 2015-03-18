@@ -19,6 +19,11 @@
 
 #include "rundata.h"
 
+/**
+	Prepare a PureFluid object for evaluation of ideal gas fluid properties,
+	from an appropriate EosData input, using the specified ReferenceState for
+	enthalpy and entropy scales.
+*/
 PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref);
 
 PropEvalFn ideal_p;
@@ -33,6 +38,7 @@ PropEvalFn ideal_w;
 PropEvalFn ideal_alphap;
 PropEvalFn ideal_betap;
 PropEvalFn ideal_dpdrho_T;
+SatEvalFn ideal_sat;
 
 #define HELM_IDEAL_DELTAU(TAU, DELTA, DATA, ERROR) (0)
 

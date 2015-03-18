@@ -74,10 +74,6 @@
 #include "instmacro.h"
 #include "instquery.h"
 
-#ifndef lint
-static CONST char CreateInstModuleID[] = "$Id: createinst.c,v 1.19 1998/03/26 20:39:41 ballan Exp $";
-#endif
-
 void ZeroNewChildrenEntries(register struct Instance **child_ary,
 			    register unsigned long int num)
 {

@@ -16,6 +16,9 @@ objs =[]
 for c in csrcs:
 	objs += libascend_env.SharedObject(c)
 
+#required for clock_gettime()
+libascend_env.AppendUnique(LIBS=['rt'])
+
 #--------------------
 # INSTALL
 

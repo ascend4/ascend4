@@ -65,13 +65,7 @@ double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsErr
 
 #ifdef HELM_DEBUG
 # include "color.h"
-# define MSG(FMT, ...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"%s:%d: ",__FILE__,__LINE__);\
-	color_on(stderr,ASC_FG_BRIGHTBLUE);\
-	fprintf(stderr,"%s: ",__func__);\
-	color_off(stderr);\
-	fprintf(stderr,FMT "\n",##__VA_ARGS__)
+# define MSG FPROPS_MSG
 #else
 # define MSG(ARGS...) ((void)0)
 #endif
@@ -79,11 +73,7 @@ double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsErr
 /* TODO centralise declaration of our error-reporting function somehow...? */
 #ifdef HELM_ERRORS
 # include "color.h"
-# define ERRMSG(STR,...) \
-	color_on(stderr,ASC_FG_BRIGHTRED);\
-	fprintf(stderr,"ERROR:");\
-	color_off(stderr);\
-	fprintf(stderr," %s:%d:" STR "\n", __func__, __LINE__ ,##__VA_ARGS__)
+# define ERRMSG FPROPS_ERRMSG
 #else
 # define ERRMSG(ARGS...) ((void)0)
 #endif
@@ -150,6 +140,8 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	P->data->p_c = 0; // we calculate this later...
 	P->data->rho_c = I->rho_c;
 	P->data->omega = I->omega;
+	P->data->Tstar = I->T_c;
+	P->data->rhostar = I->rho_c;
 	P->data->cp0 = cp0_prepare(E->data.helm->ideal, P->data->R, P->data->T_c);
 
 	/* data specific to helmholtz correlations */
@@ -188,6 +180,9 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 		ERRMSG("Calculated a critical pressure <= 0! (value = %f)",P->data->p_c);
 		//return NULL;
 	}
+
+	// ref0 is not yet supported for this fluid type:
+	P->data->ref0 = (ReferenceState){FPROPS_REF_TPHG,{.tphg={298.15,0,NAN,NAN}}};
 
 	// fix up the reference point now...
 	if(ref == NULL){

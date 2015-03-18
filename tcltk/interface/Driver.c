@@ -1066,7 +1066,7 @@ Asc_Prompt(Tcl_Interp *interp, int partial)
   Tcl_Channel outChannel, errChannel;
   CONST84 char *subPrompt;
 
-  color_on(stdout,"0;32");
+  color_on(stdout,ASC_FG_GREEN);
 
   errChannel = Tcl_GetChannel(interp, "stderr", NULL);
 
