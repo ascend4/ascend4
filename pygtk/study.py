@@ -1,4 +1,4 @@
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 from gi.repository import Pango
 import ascpy
 
@@ -305,7 +305,8 @@ class StudyWin:
 		else:
 			_icon = 'gtk-dialog-error'		
 		self.check_dist.set_from_stock(_icon, Gtk.IconSize.BUTTON)
-		self.check_dist.set_tooltip_text(msg)
+		if msg!=None:
+		    self.check_dist.set_tooltip_text(msg)
 
 	def parse_entry(self, entry):
 		"""

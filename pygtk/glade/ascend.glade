@@ -1272,7 +1272,7 @@ upper and lower bounds displayed.</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <child>
-                              <object class="GtkComboBox" id="methodsel">
+                              <object class="GtkComboBoxText" id="methodsel">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                               </object>
@@ -1857,7 +1857,6 @@ upper and lower bounds displayed.</property>
                                     <property name="xalign">0</property>
                                     <property name="yalign">0</property>
                                     <property name="stock">gtk-missing-image</property>
-                                    <signal name="motion-notify-event" handler="on_image_motion_notify_event" swapped="no"/>
                                   </object>
                                 </child>
                               </object>
@@ -3568,6 +3567,7 @@ upper and lower bounds displayed.</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="toolbar_style">both</property>
+            <property name="icon_size">3</property>
             <child>
               <object class="GtkToolItem" id="toolitem4">
                 <property name="visible">True</property>
@@ -3635,7 +3635,7 @@ upper and lower bounds displayed.</property>
                           <object class="GtkHBox" id="hbox22">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="spacing">2</property>
+                            <property name="spacing">5</property>
                             <child>
                               <object class="GtkImage" id="image907">
                                 <property name="visible">True</property>
@@ -3685,7 +3685,7 @@ upper and lower bounds displayed.</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">To add columns here, right-click variables in the 'Simulation' tab, and click 'Observe'</property>
-                    <property name="wrap">True</property>
+                    <property name="wrap">False</property>
                   </object>
                 </child>
               </object>
@@ -3858,6 +3858,7 @@ upper and lower bounds displayed.</property>
                 <property name="hscrollbar_policy">automatic</property>
                 <property name="vscrollbar_policy">automatic</property>
                 <property name="shadow_type">in</property>
+                <property name="min-content-height">300</property>
                 <child>
                   <object class="GtkViewport" id="viewport4">
                     <property name="visible">True</property>
@@ -5847,7 +5848,7 @@ upper and lower bounds displayed.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkComboBox" id="dist">
+              <object class="GtkComboBoxText" id="dist">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="model">list_of_dist</property>
@@ -6094,9 +6095,10 @@ upper and lower bounds displayed.</property>
             <property name="n_rows">3</property>
             <property name="n_columns">2</property>
             <child>
-              <object class="GtkComboBoxEntry" id="typecombo">
+              <object class="GtkComboBoxText" id="typecombo">
                 <property name="width_request">400</property>
                 <property name="visible">True</property>
+                <property name="has-entry">TRUE</property>
                 <property name="can_focus">False</property>
                 <signal name="changed" handler="on_typecombo_changed" swapped="no"/>
                 <child internal-child="entry">

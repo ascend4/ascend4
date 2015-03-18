@@ -21,7 +21,7 @@ class SolverParametersWindow:
 		self.browser=browser
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["paramswin"])
 		self.window = self.browser.builder.get_object("paramswin")
-		self.set_transient_for(self.parent.window)
+		self.window.set_transient_for(self.parent.window)
 		self.window.set_visible(True)
 		self.paramdescription = self.browser.builder.get_object("paramdescription1")
 		self.paramname = self.browser.builder.get_object("paramname")
@@ -52,6 +52,7 @@ class SolverParametersWindow:
 		_col2 = Gtk.TreeViewColumn("Range", _renderer2, text=2, background=4)
 		self.paramsview.append_column(_col2)
 
+
 		self.populate()
 
 		self.paramsview.expand_all()	
@@ -59,10 +60,10 @@ class SolverParametersWindow:
 	def on_paramsview_row_activated(self,treeview,path,view_column,*args,**kwargs):
 		# get back the object we just clicked
 
-		if not self.otank.has_key(path):
+		if not self.otank.has_key(path.to_string()):
 			return
 		
-		_iter,_param = self.otank[path]
+		_iter,_param = self.otank[path.to_string()]
 
 		if _param.isBool():
 			newvalue = not _param.getBoolValue()
@@ -81,17 +82,18 @@ class SolverParametersWindow:
 			_pathinfo = self.paramsview.get_path_at_pos(_x, _y)
 			if _pathinfo != None:
 				_path, _col, _cellx, _celly = _pathinfo
-				if not self.otank.has_key(_path):
+				if not self.otank.has_key(_path.to_string()):
 					return
-				_iter, _param = self.otank[_path]
+				_iter, _param = self.otank[_path.to_string()]
 
 				# update the description field
-				self.paramdescription.set_text(_param.getDescription())
-				self.paramname.set_text(_param.getName())
+				self.paramdescription.set_text(str(_param.getDescription()))
+				self.paramname.set_text(str(_param.getName()))
+
 
 				if _param.isStr():
 					_menu = Gtk.Menu();
-					_head = Gtk.ImageMenuItem("Options",True)
+					_head = Gtk.ImageMenuItem("Options")
 					_head.show()
 					_head.set_sensitive(False)
 					_img = Gtk.Image()
@@ -104,7 +106,7 @@ class SolverParametersWindow:
 
 					_item = None;
 					for i in _param.getStrOptions():
-						_item = Gtk.RadioMenuItem(group=_item, label=i);
+						_item = Gtk.RadioMenuItem(label=i);
 						if i == _param.getStrValue():
 							_item.set_active(True)
 						else:
@@ -114,7 +116,7 @@ class SolverParametersWindow:
 						_menu.append(_item)
 									
 					_menu.show()
-					_menu.popup(None, None, None, event.button, _time)
+					_menu.popup(None, None,lambda _menu,data: (event.get_root_coords()[0],event.get_root_coords()[1], True), None,event.button, _time)
 
 	def on_menu_activate(self, menuitem, param, iter, newvalue):
 		if param.getStrValue() != newvalue:
@@ -126,18 +128,19 @@ class SolverParametersWindow:
 	
 	def on_paramsview_cursor_changed(self, *args, **kwargs):
 		_path, _col = self.paramsview.get_cursor()
-		if not self.otank.has_key(_path):
-			self.paramdescription.set_text("")
-			self.paramname.set_text("")
-			return
-		_iter, _param = self.otank[_path]
-		self.paramdescription.set_text(_param.getDescription())	
-		self.paramname.set_text(_param.getName())
+		if _path:
+		    if not self.otank.has_key(_path.to_string()):
+			    self.paramdescription.set_text("")
+			    self.paramname.set_text("")
+			    return
+		    _iter, _param = self.otank[_path.to_string()]
+		    self.paramdescription.set_text(_param.getDescription())	
+		    self.paramname.set_text(_param.getName())
 		#self.paramsview.set_cursor(_path,self.paramsview.get_column(1));		
 
 	def on_paramsview_edited(self, renderer, path, newtext, **kwargs):
 		# get back the Instance object we just edited (having to use this seems like a bug)
-		path = tuple( map(int,path.split(":")) )
+#path = tuple( map(int,path.split(":")) )
 
 		if not self.otank.has_key(path):
 			raise RuntimeError("cell_edited_callback: invalid path '%s'" % path)
@@ -178,7 +181,7 @@ class SolverParametersWindow:
 				_changed = True
 
 		if _changed:
-			self.paramstore.set_value(_iter, 1, newvalue)
+			self.paramstore.set_value(_iter, 1, str(newvalue))
 			self.paramstore.set_value(_iter, 4, CHANGED_COLOR)			
 		else:
 			print "NO CHANGE"
@@ -227,7 +230,7 @@ class SolverParametersWindow:
 					_param = data[_page][_number]
 					_piter = self.paramstore.append( _pageiter, self.create_row_data(_param) )
 					_path = self.paramstore.get_path(_piter)
-					self.otank[ _path ] = (_piter, _param)
+					self.otank[ _path.to_string() ] = (_piter, _param)
 				_pagenum = _pagenum + 1
 
 	def doErrorDialog(self,msg=None):

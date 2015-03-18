@@ -1,6 +1,6 @@
 # GUI for ASCEND solver_var properties
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 import ascpy
 from varentry import *
 from infodialog import *
@@ -13,7 +13,7 @@ class RelPropsWin:
 		# GUI config
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["relpropswin"])
 		self.window = self.browser.builder.get_object("relpropswin")
-		self.set_transient_for(self.browser.window)
+		self.window.set_transient_for(self.browser.window)
 
 		self.relname = self.browser.builder.get_object("relname")
 		self.residual = self.browser.builder.get_object("residual")
@@ -79,7 +79,7 @@ class VarPropsWin:
 		# GUI config
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["varpropswin"])
 		self.window = self.browser.builder.get_object("varpropswin")
-		self.set_transient_for(self.browser.window)
+		self.window.set_transient_for(self.browser.window)
 
 		self.varname = self.browser.builder.get_object("varname")
 		self.valueentry= self.browser.builder.get_object("valueentry");

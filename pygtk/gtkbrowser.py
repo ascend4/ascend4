@@ -49,22 +49,22 @@ try:
 
 	loading.print_status("Loading ASCEND python modules")
 	from preferences import *      # loading/saving of .ini options
-#	from solverparameters import * # 'solver parameters' window
+	from solverparameters import * # 'solver parameters' window
 	from help import *             # viewing help files
 	from incidencematrix import *  # incidence/sparsity matrix matplotlib window
-#	from imagewindow import *      # image viewer window
-#	from observer import *         # observer tab support
+	from imagewindow import *      # image viewer window
+	from observer import *         # observer tab support
 	from properties import *       # solver_var properties dialog
 	from varentry import *         # for inputting of variables with units
-#	from diagnose import * 	       # for diagnosing block non-convergence
-#	from solverreporter import *   # solver status reporting
+	from diagnose import * 	       # for diagnosing block non-convergence
+	from solverreporter import *   # solver status reporting
 	from moduleview import *       # module browser
 	from modelview import *        # model browser
-#	from integrator import *       # integrator dialog	
+	from integrator import *       # integrator dialog	
 	from infodialog import *       # general-purpose textual information dialog
 	from versioncheck import *     # version check (contacts ascend.cruncher2.dyndns.org)
 	from unitsdialog import *      # general-purpose textual information dialog
-#	from solverhooks import *      # solver hooks for use from Python layer
+	from solverhooks import *      # solver hooks for use from Python layer
 	import config
 
 	#loading.complete();
@@ -367,14 +367,6 @@ class Browser:
 
 		_gdkw = self.window.get_screen().get_active_window()
 		self.waitwin = _gdkw
-#Edit
-# not sure of this one        
-#Gdk.Window(_gdkw,
-#            _gdkw.get_width(),
-#            _gdkw.get_height())
-#Gdk.WindowType.CHILD,
-#			0,
-#			Gdk.WindowWindowClass.INPUT_ONLY)
 
 		_cursor = Gdk.Cursor.new(Gdk.CursorType.WATCH)
 		self.waitwin.set_cursor(_cursor)
@@ -494,7 +486,7 @@ class Browser:
 		# set up the module view
 
 		self.modtank = {}
-		self.moduleview = ModuleView(self, self.builder, self.library)
+		self.moduleview = ModuleView(self,self.builder,self.library)
 	
 		#--------------------
 		# set up the methods combobox
@@ -503,7 +495,7 @@ class Browser:
 		self.methodsel.set_model(self.methodstore)
 		_methodrenderer = Gtk.CellRendererText()
 		self.methodsel.pack_start(_methodrenderer, True)
-		self.methodsel.add_attribute(_methodrenderer, 'text',0)
+#self.methodsel.add_attribute(_methodrenderer, 'text',0)
 
 		#--------
 		# set up the instance browser view
@@ -537,8 +529,8 @@ class Browser:
 		# Set up SolverHooks
 
 		print "PYTHON: SETTING UP SOLVER HOOKS"
-#self.solverhooks = SolverHooksPythonBrowser(self)
-#ascpy.SolverHooksManager_Instance().setHooks(self.solverhooks)
+		self.solverhooks = SolverHooksPythonBrowser(self)
+		ascpy.SolverHooksManager_Instance().setHooks(self.solverhooks)
 
 		#--------
 		# options
@@ -588,8 +580,8 @@ class Browser:
 		#--------
 		# IPython console, if available
 
-#import console
-#		console.create_widget(self)
+		import console
+		console.create_widget(self)
 
 		import locale
 		if locale.localeconv()['decimal_point'] != '.':
@@ -613,6 +605,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				if ((time_now-first_run_time)/(3600*24)) >= 7:
 					self.auto_update_check()
 			Gtk.main()
+
+
 
 	def test(self):
 		print sys.argv[1]
@@ -1555,7 +1549,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 	def disable_on_leave_sim_tab(self):
 		list =["free_variable","fix_variable","propsmenuitem","units"]
 		for button in list:
-			self.builder.get_object(button).set_sensitive(False)
+			if self.builder.get_object(button)!=None:
+			    self.builder.get_object(button).set_sensitive(False)
 			
 	def enable_on_enter_sim_tab(self):
 		list =["free_variable","fix_variable","propsmenuitem","units"]
@@ -1583,20 +1578,24 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		list=["sparsity","incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
                       "show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1","notes_view"]
 		for button in list:
-			self.builder.get_object(button).set_sensitive(True)
+			if self.builder.get_object(button) != None:
+			   self.builder.get_object(button).set_sensitive(True)
 	def disable_on_first_run(self):
 		list=["reloadbutton","reload","show_external_functions","notes_view"]
 		for button in list:
-			self.builder.get_object(button).set_sensitive(False)
+			if self.builder.get_object(button) != None:
+			   self.builder.get_object(button).set_sensitive(True)
 	def enable_on_file_open(self):
 		list=["reloadbutton","reload","show_external_functions"]
 		for button in list:
-			self.builder.get_object(button).set_sensitive(True)
+			if self.builder.get_object(button) != None:
+			   self.builder.get_object(button).set_sensitive(True)
 	def enable_on_model_tree_build(self):
 		list=["repaint_tree","checkbutton","solvebutton","integratebutton","methodrunbutton",
                       "check1","solve1","integrate1","units","add_observer","preferences","notes_view"]
 		for button in list:
-			self.builder.get_object(button).set_sensitive(True)
+			if self.builder.get_object(button) != None:
+			   self.builder.get_object(button).set_sensitive(True)
 if __name__ == "__main__":
 	b = Browser();
 	b.run()

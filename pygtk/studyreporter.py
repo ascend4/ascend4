@@ -13,7 +13,7 @@ class StudyReporter(PythonSolverReporter):
 		self.browser.builder.connect_signals(self)
 		if self.browser.icon:
 			self.window.set_icon(self.browser.icon)
-		self.set_transient_for(self.browser.window)
+		self.window.set_transient_for(self.browser.window)
 		
 		self.studyvar = self.browser.builder.get_object("studyvarentry")
 		self.currentvalue = self.browser.builder.get_object("currentvalueentry")

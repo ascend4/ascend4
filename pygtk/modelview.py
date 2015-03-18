@@ -162,9 +162,11 @@ class ModelView:
 					self.modelstore.set_value(_iter,3,BROWSER_FIXED_COLOR)
 				elif not _instance.isFixed() and self.modelstore.get_value(_iter,3)==BROWSER_FIXED_COLOR:
 					self.modelstore.set_value(_iter,3,BROWSER_FREE_COLOR)
-				self.modelstore.set_value(_iter, 6, self.browser.statusicons[_instance.getStatus()+1])
+				if self.browser.statusicons[_instance.getStatus()] != None:
+					self.modelstore.set_value(_iter, 6, self.browser.statusicons[_instance.getStatus()])
 			elif _instance.isRelation():
-				self.modelstore.set_value(_iter, 6, self.browser.statusicons[_instance.getStatus()+1])
+				if self.browser.statusicons[_instance.getStatus()] != None:
+					self.modelstore.set_value(_iter, 6, self.browser.statusicons[_instance.getStatus()])
 				if _instance.isIncluded():
 					self.modelstore.set_value(_iter,3,BROWSER_INCLUDED_COLOR)
 				else:
@@ -183,13 +185,13 @@ class ModelView:
 	
 	def cell_edited_callback(self, renderer, path, newtext, **kwargs):
 		# get back the Instance object we just edited (having to use this seems like a bug)
-		path = tuple( map(int,path.split(":")) )
+#path = tuple( map(int,path.split(":")) )
 
-		if not self.otank.has_key(path.to_string()):
+		if not self.otank.has_key(path):
 			raise RuntimeError("cell_edited_callback: invalid path '%s'" % path)
 			return
 
-		_name, _instance = self.otank[path.to_string()]
+		_name, _instance = self.otank[path]
 
 		if _instance.isReal():
 			if _instance.getValue() == newtext:
@@ -255,12 +257,15 @@ class ModelView:
 				try:
 					_name = child.getName();
 					_piter = self.make_row(piter,_name,child)
+					if child.isCompound() and len(child.getChildren())>0:
+					    self.make_children(child,_piter)
 					_path = self.modelstore.get_path(_piter)
 					self.otank[_path.to_string()]=(_name,child)
 					#self.browser.reporter.reportError("2 Added %s at path %s" % (_name,repr(_path)))
 				except Exception,e:
 					self.browser.reporter.reportError("%s: %s" % (_name,e))
 	
+                    
 	def make(self, name=None, value=None, path=None, depth=1):
 		if path is None:
 			# make root node
@@ -281,9 +286,10 @@ class ModelView:
 		if depth:
 		    for i in range( self.modelstore.iter_n_children( piter ) ):
 		        path.append_index(i)
-		        self.make( path = path, depth = depth - 1 )
+		        if path.to_string() in self.otank.keys():
+		           self.make( path = path, depth = depth - 1 )
 		else:
-			self.modelview.expand_row(Gtk.TreePath(),False)
+			self.modelview.expand_row(self.modelstore.get_path(self.modelstore.get_iter_first()),False) # Edit here only.
 
 	def row_expanded( self, modelview, piter, path ):
 		self.make( path = path )
@@ -375,7 +381,7 @@ class ModelView:
 			self.modelview.grab_focus()
 			self.modelview.set_cursor(_path,_col,0)
 			print "RUNNING POPUP MENU"
-			_menu.popup(None,None,None,_button,event.time)
+			_menu.popup(None,None,lambda _menu,data: (event.get_root_coords()[0],event.get_root_coords()[1], True),None,_button,event.time)
 			return
 
 		if not _canpop:
@@ -383,7 +389,7 @@ class ModelView:
 
 		self.modelview.grab_focus()
 		self.modelview.set_cursor( _path, _col, 0)
-		self.treecontext.popup( None, None, None, _button, event.time)
+		self.treecontext.popup( None, None, None,None, _button, event.time)
 		return 1
 
 	def get_model_context_menu(self,instance):
@@ -401,7 +407,7 @@ class ModelView:
 			sep = Gtk.SeparatorMenuItem(); sep.show()
 			menu.append(sep)
 		
-		mi = Gtk.ImageMenuItem("Run method...",False)
+		mi = Gtk.ImageMenuItem("Run method...")
 		mi.set_sensitive(False)
 		img = Gtk.Image()
 		img.set_from_stock(Gtk.STOCK_EXECUTE,Gtk.IconSize.MENU)
@@ -416,7 +422,7 @@ class ModelView:
 		ml = t.getMethods()
 		if len(ml):
 			for m in ml:
-				mi = Gtk.MenuItem(m.getName(),False)
+				mi = Gtk.MenuItem(m.getName())
 				mi.show()
 				mi.connect("activate",self.run_activate,instance,m)
 				menu.append(mi)		
@@ -433,14 +439,14 @@ class ModelView:
 
 	def fix_activate(self,widget):
 		_path,_col = self.modelview.get_cursor()
-		_name, _instance = self.otank[_path]
+		_name, _instance = self.otank[_path.to_string()]
 		self.set_fixed(_instance,True);
 		_instance.setFixed(True)
 		return 1
 
 	def free_activate(self,widget):
 		_path,_col = self.modelview.get_cursor()
-		_instance = self.otank[_path][1]
+		_instance = self.otank[_path.to_string()][1]
 		self.set_fixed(_instance,False)
 		return 1
 
@@ -469,7 +475,7 @@ class ModelView:
 			self.browser.reporter.reportError("Can't show properties until a simulation has been created.");
 			return
 		_path,_col = self.modelview.get_cursor()
-		_instance = self.otank[_path][1]
+		_instance = self.otank[_path.to_string()][1]
 		if _instance.isRelation():
 			print "Relation '"+_instance.getName().toString()+"':", \
 				_instance.getRelationAsString(self.sim.getModel())
@@ -483,19 +489,19 @@ class ModelView:
 
 	def observe_activate(self,widget,*args):
 		_path,_col = self.modelview.get_cursor()
-		_instance = self.otank[_path][1]
+		_instance = self.otank[_path.to_string()][1]
 		if _instance.getType().isRefinedSolverVar():
 			print "OBSERVING",_instance.getName().toString()
 			self.browser.observe(_instance)
 
 	def on_fix_variable_activate(self,*args):
 		_path,_col = self.modelview.get_cursor()
-		_instance = self.otank[_path][1]
+		_instance = self.otank[_path.to_string()][1]
 		self.set_fixed(_instance,True)
 
 	def on_free_variable_activate(self,*args):
 		_path,_col = self.modelview.get_cursor()
-		_instance = self.otank[_path][1]
+		_instance = self.otank[_path.to_string()][1]
 		self.set_fixed(_instance,False)
 
 	def set_fixed(self,instance,val):
@@ -508,16 +514,16 @@ class ModelView:
 
 	def study_activate(self, *args):
 		_path,_col = self.modelview.get_cursor()
-		_instance = self.otank[_path][1]
+		_instance = self.otank[_path.to_string()][1]
 		self.browser.observe(_instance)
 		_dia = StudyWin(self.browser,_instance);
 		_dia.run()
 
 	def units_activate(self,*args):
 		T = self.get_selected_type()
-		try:
-			_un = UnitsDialog(self.browser,T)
-			_un.run()
-		except:
-			self.browser.reporter.reportError("Unable to display units dialog.")
+#try:
+		_un = UnitsDialog(self.browser,T)
+		_un.run()
+#		except:
+#			self.browser.reporter.reportError("Unable to display units dialog.")
 

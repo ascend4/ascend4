@@ -19,7 +19,7 @@ class UnitsDialog:
 
 		self.applybutton.set_sensitive(False)
 
-		self.set_transient_for(self.browser.window)
+		self.window.set_transient_for(self.browser.window)
 
 		self.browser.builder.connect_signals(self)
 
@@ -82,12 +82,12 @@ class UnitsDialog:
 		m = Gtk.ListStore(str)
 		for t in self.realtypes:
 			if not text or re.compile("^%s"%re.escape(text)).match(str(t.getName())):
-				m.append([t.getName()])
+				m.append([str(t.getName())])
 		self.typecombo.set_model(m)
 		if text and m.iter_n_children(None):
-			self.typecombo.popup()
+#self.typecombo.popup()
 			self.typecombo.get_child().grab_focus()
-		self.typecombo.set_text_column(0)
+			self.typecombo.set_entry_text_column(0)
 
 	def update_unitsview(self,T):
 		m = Gtk.ListStore(bool,str,str,int)
@@ -112,7 +112,7 @@ class UnitsDialog:
 				du = u.getDimensions().getDefaultUnits().getName()
 				if str(du) == "1":
 					du = ""
-				m.append([selected,u.getName(),"%g %s" %(u.getConversion(),du),weight])
+				m.append([selected,str(u.getName()),"%g %s" %(u.getConversion(),du),weight])
 		self.unitsview.set_model(m)
 
 	def on_typecombo_changed(self,widget,*args):

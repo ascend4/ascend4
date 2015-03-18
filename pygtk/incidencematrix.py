@@ -1,11 +1,13 @@
 import config
 import loading
 import platform
+from gi.repository import Gtk
 
 try:
 	import matplotlib		
-	import pylab
 	from matplotlib.colors import LinearSegmentedColormap
+	import pylab
+
 except:
 	pass
 
@@ -20,6 +22,14 @@ class IncidenceMatrixWindow:
 
 	def run(self):
 		# convert incidence map to pylab numarray type:
+
+		# Warning dialog message box
+
+#		_d = Gtk.MessageDialog(None,Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,Gtk.MessageType.ERROR,Gtk.ButtonsType.CLOSE,"Plotting functions are not available unless you have 'matplotlib' installed.\n\nSee http://matplotlib.sf.net/\n\nFailed to load matplotlib" )
+#		_d.run()
+#		_d.destroy()
+#		return
+##########################################
 		_id = self.im.getIncidenceData();
 
 		self.data = pylab.zeros((self.im.getNumRows(), self.im.getNumCols(), ))
@@ -50,17 +60,15 @@ class IncidenceMatrixWindow:
 		_im_cmap =  LinearSegmentedColormap('im_cmap',  cmapdata, n+1)
 
 		pylab.ioff()
-		pylab.figure()
-		ax = pylab.subplot(111)
-		ax.axis('equal') # aspect ratio = 1.0
+		f = pylab.figure()
+		ax = f.add_subplot(111)
 		ax.imshow(self.data, cmap=_im_cmap, interpolation='nearest',vmin=0, vmax=n) 
-			# integer 'type' values become reals 0..1, which are then coloured
-			# according to cmapdata
+#		# integer 'type' values become reals 0..1, which are then coloured
+#		# according to cmapdata
 		pylab.title("Incidence Matrix")
 		pylab.xlabel("Variables")
 		pylab.ylabel("Relations")
-		#pylab.connect('motion_notify_event',self.on_sparsity_motion_notify)
-		ax.format_coord = self.incidence_get_coord_str
+#		#pylab.connect('motion_notify_event',self.on_sparsity_motion_notify)
 		pylab.ion()
 		pylab.show()
 
@@ -68,7 +76,6 @@ class IncidenceMatrixWindow:
 		
 			_col = int(x+0.5)
 			_row = int(y+0.5)
-
 
 			try:
 				if self.data[_row, _col] == 0:

@@ -1,6 +1,6 @@
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 from gi.repository import Pango
 import os.path
 
@@ -217,7 +217,7 @@ class ObserverTab:
 		_sel = self.view.get_selection()
 		_sel.set_mode(Gtk.SelectionMode.MULTIPLE)
 
-	def activepixbufvalue(self,column,cell,model,iter):
+	def activepixbufvalue(self,column,cell,model,iter, dummy):
 		_rowobject = model.get_value(iter,0)
 		if _rowobject.active:
 			cell.set_property('pixbuf',self.activeimg.get_pixbuf())
@@ -244,7 +244,7 @@ class ObserverTab:
 		"""create a plot from two/more columns in the ObserverTable"""
 		import platform
 		import matplotlib
-		matplotlib.use('GTKAgg')
+		matplotlib.use('module://backend_gtk3',False)
 		import pylab
 		pylab.ioff()
 
@@ -388,6 +388,12 @@ class ObserverTab:
 		pylab.show()
 		
 	def on_plot_clicked(self,*args):
+
+        # Disabled plotting for now.
+#_d = Gtk.MessageDialog(None,Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,Gtk.MessageType.ERROR,Gtk.ButtonsType.CLOSE,"Plotting functions are not available unless you have 'matplotlib' installed.\n\nSee http://matplotlib.sf.net/\n\nFailed to load matplotlib" )
+#		_d.run()
+#		_d.destroy()
+#		return
 		try:
 			if len(self.cols)<2:
 				raise Exception("Not enough columns to plot (need 2+)")
@@ -506,7 +512,7 @@ class ObserverTab:
 		
 		_sel = self.view.get_selection()
 		_model, _rowlist = _sel.get_selected_rows()
-		if event.type==Gdk.KEY_PRESS:
+		if event.type==Gdk.EventType.KEY_PRESS:
 			_keyval = Gdk.keyval_name(event.keyval)
 			_path, _col = self.view.get_cursor()
 			if _path is not None:
@@ -567,7 +573,7 @@ class ObserverTab:
 				return 0
 			if self.current_instance.isFixed() == False:
 				self.studycolumnmenuitem.set_sensitive(False)
-			self.treecontext.popup( None, None, None, _button, event.time)
+			self.treecontext.popup(None, None,lambda _menu,data: (event.get_root_coords()[0],event.get_root_coords()[1], True), None,_button, event.time)
 		return 1
 		
 	def on_study_column_activate(self, *args):
@@ -611,6 +617,11 @@ class ObserverTab:
 		
 	def on_plotmenuitem_activate(self, *args):
 		# To preselect the column as y axis
+        # Disabled plotting for now.
+		_d = Gtk.MessageDialog(None,Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,Gtk.MessageType.ERROR,Gtk.ButtonsType.CLOSE,"Plotting functions are not available unless you have 'matplotlib' installed.\n\nSee http://matplotlib.sf.net/\n\nFailed to load matplotlib" )
+		_d.run()
+		_d.destroy()
+		return
 		try:
 			if len(self.cols)<2:
 				raise Exception("Not enough columns to plot (need 2+)")
@@ -782,7 +793,7 @@ class PlotDialog:
 	def on_plotdialog_close(self,*args):
 		self.plotwin.response(Gtk.ResponseType.CANCEL)
 		
-	def varlist(self,column,cell,model,iter):
+	def varlist(self,column,cell,model,iter, dummy):
 		_value = model.get_value(iter,0)
 		cell.set_property('text', _value.title)
 	
@@ -791,7 +802,7 @@ class PlotDialog:
 		_path = None
 		_col = None
 		self.plotbutton.set_sensitive(False)
-		if event.type==Gdk.KEY_RELEASE:
+		if event.type==Gdk.EventType.KEY_RELEASE:
 			_keyval = Gdk.keyval_name(event.keyval)
 			if _keyval == "Escape":
 				self.plotwin.response(Gtk.ResponseType.CANCEL)
@@ -800,7 +811,7 @@ class PlotDialog:
 			if _path is None:
 				return
 		
-		elif event.type==Gdk.BUTTON_RELEASE:
+		elif event.type==Gdk.EventType.BUTTON_RELEASE:
 			_x = int(event.x)
 			_y = int(event.y)
 			_button = event.button

@@ -1,4 +1,4 @@
-from gi.repository import Gtk
+from gi.repository import Gtk, GdkPixbuf, Gdk
 import ascpy
 from itertools import groupby
 from operator import itemgetter
@@ -21,7 +21,7 @@ class DiagnoseWindow:
 		self.browser.builder.connect_signals(self)
 		self.window = self.browser.builder.get_object("diagnosewin")
 		self.window.grab_focus()
-		self.set_transient_for(self.browser.window)
+		self.window.set_transient_for(self.browser.window)
 
 		self.prefs = Preferences()
 
@@ -184,6 +184,7 @@ class DiagnoseWindow:
 		d = ''.join(b)
 
 		print "DONE IMAGE CREATION"
+		return
 	
 		self.pixbuf = GdkPixbuf.Pixbuf.new_from_data(d, GdkPixbuf.Colorspace.RGB, False, 8 \
 				, nc, nr, rowstride);

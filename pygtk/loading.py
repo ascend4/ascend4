@@ -42,9 +42,8 @@ def load_matplotlib(throw=False,alert=False):
 	print_status("Loading python matplotlib")
 	try:
 		import matplotlib
-#matplotlib.use('GTKAgg')
-#Had to do this. Segmentation Fault.
-
+        # Added a new backend backend_gtk3. File bundle exists in PYTHONPATH
+		matplotlib.use('module://backend_gtk3')
 		try:
 			print_status("Trying python numpy")
 			import numpy

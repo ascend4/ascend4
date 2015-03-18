@@ -31,7 +31,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["integratorstatusdialog"])
 		self.browser.builder.connect_signals(self)
 		self.window=self.browser.builder.get_object("integratorstatusdialog")
-		self.set_transient_for(self.browser.window)
+		self.window.set_transient_for(self.browser.window)
 		self.label=self.browser.builder.get_object("integratorlabel")
 		self.label.set_text("Solving with "+self.getIntegrator().getName())
 		self.progress=self.browser.builder.get_object("integratorprogress")

@@ -23,7 +23,7 @@ class ImageDialog:
 		self.parent = None
 		if parent:
 			self.parent = parent
-			self.set_transient_for(self.parent)
+			self.window.set_transient_for(self.parent)
 		
 		s = Gtk.ScrolledWindow()
 		self.imageview = Gtk.Image()

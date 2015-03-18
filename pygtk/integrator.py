@@ -37,7 +37,7 @@ class IntegratorWindow:
 		self.browser.builder.connect_signals(self)
 
 		self.window = self.browser.builder.get_object("integratorwin")
-		self.set_transient_for(self.browser.window)
+		self.window.set_transient_for(self.browser.window)
 
 		self.engineselect = self.browser.builder.get_object("engineselect")
 		self.beginentry = self.browser.builder.get_object("beginentry")

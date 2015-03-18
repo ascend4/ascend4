@@ -1,4 +1,4 @@
-from gi.repository import Gtk
+from gi.repository import Gtk, GtkSource, GObject
 from gi.repository import Pango
 import ascpy
 #import gtksourceview2 as gtksourceview
@@ -95,7 +95,7 @@ class ModuleView:
 			else:
 				self.moduleview.expand_row(path,False)
 			#self.browser.reporter.reportNote("Launching of external editor not yet implemented")
-		elif len(path.to_string())==3:
+		elif len(path.to_string())>=3:
 			if self.modtank.has_key(path.to_string()):
 				_type = self.modtank[path.to_string()];
 				if not _type.isModel():
@@ -126,11 +126,11 @@ class ModuleView:
 			if len(y[0].get_path(y[1]).to_string())==1:
 				self.modulename=y[0].get_value(y[1],0)
 				self.modelname=None
-			elif len(y[0].get_path(y[1]))==2:	
+			elif len(y[0].get_path(y[1]).to_string())==3:	
 				self.modelname = y[0].get_value(y[1],0)
 				self.modulename = None
 			self.viewmenuitem.set_sensitive(True)
-			self.modulemenu.popup(None,None,None,3,event.time)
+			self.modulemenu.popup(None,None,None,None,3,event.time)
 		
 	def view_activate(self,widget,*args):
 		filename=''
@@ -182,8 +182,8 @@ class ModuleView:
 class ViewModel:
 	"""
 	A window to display the content of an ASCEND model in syntax-highlighted text
-	NOTE: syntax highlighting as implemented here requires the gtksourceview-2.0
-	syntax file to be installed in /usr/share/gtksourceview-2.0/language-specs,
+	NOTE: syntax highlighting as implemented here requires the gtksourceview-3.0
+	syntax file to be installed in /usr/share/gtksourceview-3.0/language-specs,
 	which requires install-time configuration.
 	"""
 	#TODO Enable Model Editing (REALLY? That would be complicated -- JP)
@@ -205,10 +205,11 @@ class ViewModel:
 		box.show()
 		
 		#Get the ASCEND language
-		mgr = gtksourceview.language_manager_get_default()
+		GObject.type_register(GtkSource.View)
+		mgr = GtkSource.LanguageManager.get_default()
 		op = mgr.get_search_path()
-		if os.path.join('..','tools','gtksourceview-2.0') not in op:
-			op.append(os.path.join('..','tools','gtksourceview-2.0'))
+		if os.path.join('..','tools','gtksourceview-3.0') not in op:
+			op.append(os.path.join('..','tools','gtksourceview-3.0'))
 			mgr.set_search_path(op)
 		lang = mgr.get_language('ascend')
 
@@ -219,9 +220,9 @@ class ViewModel:
 		#Creating a ScrolledWindow for the textview widget
 		scroll = Gtk.ScrolledWindow()
 		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-		view = gtksourceview.View()
+		view = GtkSource.View()
 		view.set_editable(False)
-		buff = gtksourceview.Buffer()
+		buff = GtkSource.Buffer()
 		buff.set_language(lang)
 		buff.set_highlight_syntax(True)
 		view.set_buffer(buff)
