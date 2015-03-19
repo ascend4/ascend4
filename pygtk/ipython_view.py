@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 '''
 Provides IPython console widget.
 
@@ -18,6 +18,8 @@ from gi.repository import Gtk as gtk
 from gi.repository import Gdk as gdk
 from gi.repository import GLib
 from gi.repository import Pango
+
+from pkg_resources import parse_version
 
 import re
 import sys
@@ -70,7 +72,10 @@ class IterableIPShell:
     '''
     io = IPython.utils.io
     if input_func:
-      IPython.frontend.terminal.interactiveshell.raw_input_original = input_func
+      if parse_version(IPython.release.version) >= parse_version("1.2.1"):
+        IPython.terminal.interactiveshell.raw_input_original = input_func
+      else:
+        IPython.frontend.terminal.interactiveshell.raw_input_original = input_func
     if cin:
       io.stdin = io.IOStream(cin)
     if cout:
@@ -98,11 +103,12 @@ class IterableIPShell:
 
     # InteractiveShell inherits from SingletonConfigurable, so use instance()
     #
-    self.IP = IPython.frontend.terminal.embed.InteractiveShellEmbed.instance(\
-            config=cfg, user_ns=user_ns)
-
-    from IPython.core.inputsplitter import InputSplitter, IPythonInputSplitter
-    self.isp = IPythonInputSplitter()
+    if parse_version(IPython.release.version) >= parse_version("1.2.1"):
+      self.IP = IPython.terminal.embed.InteractiveShellEmbed.instance(\
+              config=cfg, user_ns=user_ns)
+    else:
+      self.IP = IPython.frontend.terminal.embed.InteractiveShellEmbed.instance(\
+              config=cfg, user_ns=user_ns)
 
     sys.stdout, sys.stderr = old_stdout, old_stderr
 
@@ -116,9 +122,9 @@ class IterableIPShell:
     sys.excepthook = excepthook
     self.iter_more = 0
     self.history_level = 0
-    self.indent_level = 0
-    self.indent_string = "   "
     self.complete_sep =  re.compile('[\s\{\}\[\]\(\)]')
+    self.updateNamespace({'exit':lambda:None})
+    self.updateNamespace({'quit':lambda:None})
     self.IP.readline_startup_hook(self.IP.pre_readline)
     # Workaround for updating namespace with sys.modules
     #
@@ -159,16 +165,12 @@ class IterableIPShell:
 
     try:
       line = self.IP.raw_input(self.prompt)
-      temp = line
     except KeyboardInterrupt:
       self.IP.write('\nKeyboardInterrupt\n')
       self.IP.input_splitter.reset()
-      self.isp.reset()
     except:
       self.IP.showtraceback()
     else:
-      for i in range(self.iter_more):
-          line = self.indent_string + line
       self.IP.input_splitter.push(line)
       self.iter_more = self.IP.input_splitter.push_accepts_more()
       self.prompt = self.generatePrompt(self.iter_more)
@@ -176,9 +178,16 @@ class IterableIPShell:
           self.IP.autoedit_syntax):
           self.IP.edit_syntax_error()
       if not self.iter_more:
-          source_raw = self.IP.input_splitter.source_raw_reset()[1]
+          if parse_version(IPython.release.version) >= parse_version("2.0.0-dev"):
+            source_raw = self.IP.input_splitter.raw_reset()
+          else:
+            source_raw = self.IP.input_splitter.source_raw_reset()[1]
           self.IP.run_cell(source_raw, store_history=True)
+          self.IP.rl_do_indent = False
       else:
+          # TODO: Auto-indent
+          #
+          self.IP.rl_do_indent = True
           pass
 
     sys.stdout = orig_stdout
@@ -196,18 +205,15 @@ class IterableIPShell:
 
     '''
 
-    # Backwards compatibility with previous versions of ipython
+    # Backwards compatibility with ipyton-0.11
     #
     ver = IPython.__version__
-    if '0.11' in ver or '0.10' in ver:
+    if '0.11' in ver:
         prompt = self.IP.hooks.generate_prompt(is_continuation)
     else:
         if is_continuation:
             prompt = self.IP.prompt_manager.render('in2')
-            for i in range(self.iter_more):
-                prompt = prompt + self.indent_string
         else:
-            self.indent_level = 0
             prompt = self.IP.prompt_manager.render('in')
 
     return prompt
@@ -470,6 +476,10 @@ class ConsoleView(gtk.TextView):
     self.text_buffer.move_mark(self.line_start, self.text_buffer.get_end_iter())
     self.text_buffer.place_cursor(self.text_buffer.get_end_iter())
 
+    if self.IP.rl_do_indent:
+      indentation = self.IP.input_splitter.indent_spaces * ' '
+      self.text_buffer.insert_at_cursor(indentation)
+
   def onKeyPress(self, widget, event):
     '''
     Key press callback used for correcting behavior for console-like 
@@ -608,3 +618,4 @@ class IPythonView(ConsoleView, IterableIPShell):
     if rv: rv = rv.strip('\n')
     self.showReturned(rv)
     self.cout.truncate(0)
+    self.cout.seek(0)
