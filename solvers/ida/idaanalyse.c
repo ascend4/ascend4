@@ -36,7 +36,7 @@
 #include <ascend/system/cond_config.h>
 #include <ascend/solver/slvDOF.h>
 
-/* #define ANALYSE_DEBUG */
+#define ANALYSE_DEBUG
 
 /*
 	define DERIV_WITHOUT_DIFF to enable experimental handling of derivatives
@@ -641,7 +641,7 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 		return 2;
 	}*/
 
-#if 0
+#if 1
 	/* check structural singularity for the two IDACalcIC scenarios */
 
 	/* ...(1) FIX the derivatives */

@@ -472,7 +472,7 @@ int integrator_find_indep_var(IntegratorSystem *sys){
 
 	/* if the indep var has been found, we don't look again (we assume the user won't fiddle with ode_type!) */
 	if(sys->x != NULL){
-		CONSOLE_DEBUG("sys->x already set");
+		CONSOLE_DEBUG("sys->x already set (indep var already found)");
 		return 0; /* success */
 	}
 
@@ -536,11 +536,14 @@ int integrator_analyse(IntegratorSystem *sys){
 		}
 #ifdef ANALYSE_DEBUG
 		else{
-			CONSOLE_DEBUG("got 0 from  integrator_find_indep_var");
+			CONSOLE_DEBUG("ok, got 0 from  integrator_find_indep_var");
 		}
 #endif
 	}
 
+#ifdef ANALYSE_DEBUG
+	CONSOLE_DEBUG("calling integrator analyse funciton...");
+#endif
 	res = (sys->internals->analysefn)(sys);
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("integrator_analyse returning %d",res);
