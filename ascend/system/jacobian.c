@@ -75,8 +75,10 @@ int system_jacobian(slv_system_t sys
 	}
 	asc_assert(n==nv);
 
+#ifdef JACOBIAN_DEBUG
 	CONSOLE_DEBUG("nr = %d",nr);
 	CONSOLE_DEBUG("nv = %d",nv);
+#endif
 
 	derivvals = ASC_NEW_ARRAY(double,nv);
 	derivvars = ASC_NEW_ARRAY(int,nv);

@@ -44,6 +44,7 @@
 #include "samplelist.h"
 
 #define ANALYSE_DEBUG
+/* #define REGISTER_DEBUG */
 /* #define SOLVE_DEBUG */
 /* #define CLASSIFY_DEBUG */
 /* #define DESTROY_DEBUG */
@@ -222,9 +223,9 @@ static struct gl_list_t *integrator_get_list(int free_space){
 	int i, error;
 	/* standard integrators that we will register */
 	static char *defaultintegrators[] = {
-		"lsode"
-		,"ida"
-		,NULL
+		"lsode",
+		"ida",
+		NULL
 	};
 
 	if(free_space){
@@ -248,8 +249,10 @@ static struct gl_list_t *integrator_get_list(int free_space){
 					,"Unable to register integrator '%s' (error %d)."
 					,defaultintegrators[i],error
 				);
+#ifdef REGISTER_DEBUG
 			}else{
 				CONSOLE_DEBUG("Integrator '%s' registered OK",defaultintegrators[i]);
+#endif
 			}
 		}
 	}
@@ -287,7 +290,9 @@ int integrator_set_engine(IntegratorSystem *sys, const char *name){
 	if(Ifound){
 		/** @TODO tests for applicability of this engine... */
 
+#ifdef REGISTER_DEBUG
 		CONSOLE_DEBUG("Setting engine...");
+#endif
 		if(Ifound->engine == sys->engine){
 			// already set...
 			return 0;
@@ -374,8 +379,10 @@ int integrator_register(const IntegratorInternals *integ){
 	struct gl_list_t *L;
 	L = integrator_get_engines_growable();
 
+#ifdef REGISTER_DEBUG
 	CONSOLE_DEBUG("REGISTERING INTEGRATOR");
 	CONSOLE_DEBUG("There were %lu registered integrators", gl_length(integrator_get_list(0)));
+#endif
 
 	int i;
 	IntegratorInternals *I;
@@ -391,11 +398,15 @@ int integrator_register(const IntegratorInternals *integ){
 		}
 	}
 
+#ifdef REGISTER_DEBUG
 	CONSOLE_DEBUG("Adding engine '%s'",integ->name);
+#endif
 
 	gl_append_ptr(L,(void *)integ);
 
+#ifdef REGISTER_DEBUG
 	CONSOLE_DEBUG("There are now %lu registered integrators", gl_length(integrator_get_list(0)));
+#endif
 	return 0;
 }
 

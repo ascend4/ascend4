@@ -80,7 +80,7 @@ extern
 ASC_EXPORT int sunpos_nrel_register(){
 	int result = 0;
 
-	ERROR_REPORTER_HERE(ASC_USER_WARNING,"SUNPOS_NREL is still EXPERIMENTAL. Use with caution.\n");
+	ERROR_REPORTER_HERE(ASC_USER_WARNING,"SUNPOS_NREL is still EXPERIMENTAL. Use with caution.");
 
 #define CALCFN(NAME,INPUTS,OUTPUTS) \
 	result += CreateUserFunctionBlackBox(#NAME \

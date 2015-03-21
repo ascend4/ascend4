@@ -177,7 +177,7 @@ int datareader_tmy3_eof(DataReader *d){
 			if(t < tmin)tmin = t;
 			if(t > tmax)tmax = t;
 		}
-		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Read %d rows, t in range [%f,%f] d",d->ndata,tmin/3600./24.,tmax/3600./24.);
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Read %d rows, t in range [%f,%f] d\n",d->ndata,tmin/3600./24.,tmax/3600./24.);
 		return 1; /* yes, end of file */
 	}
 	return 0; /* no, more data still */

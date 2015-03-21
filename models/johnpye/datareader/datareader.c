@@ -223,7 +223,7 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 		}
 	}
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Created data reader at %p...",d);
+	CONSOLE_DEBUG("Created data reader at %p...",d);
 	/*assign the succesfully created datareader object to the
 	BlackBox Cache of the relation */
 	slv_interp->user_data = (void *)d; //BROKEN AT THE MOMENT

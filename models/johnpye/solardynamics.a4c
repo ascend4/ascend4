@@ -11,10 +11,10 @@ REQUIRE "johnpye/moltensalt.a4c";
 	electricity.
 
 	The boundaries defined are
-	(1) if solar GHI > 300 W/m2, then the collector provides heat to the tank
+	(1) if solar GHI: > 300 W/m2, then the collector provides heat to the tank
 	                  < 200 W/m2, then the collector switches off.
-	(2) if the tank temperature exceeds 550C, the turbine switches on
-	                            drops below 400C, the turbine switches off.
+	(2) if the tank temperature: exceeds 550C, then turbine switches on
+	                             drops below 400C, then turbine switches off.
 
 	The data file mentioned below can be downloaded from 
 	http://rredc.nrel.gov/solar/old_data/nsrdb/1991-2005/data/tmy3/723815TYA.CSV
