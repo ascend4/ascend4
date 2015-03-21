@@ -41,6 +41,11 @@
 /*
 	define DERIV_WITHOUT_DIFF to enable experimental handling of derivatives
 	for which corresponding differential vars were not found to be incident.
+
+	(this is important! it means that if we have eg "Qdot = der(Q)" in our model, 
+	but Q itself isn't referred to anywhere. We want IDA to include Q in our 
+	system in that case, because we want to calculate the integral of Qdot, Q, 
+	as time marches forward. -- JP)
 */
 #define DERIV_WITHOUT_DIFF
 
@@ -103,6 +108,7 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 	}
 
 #ifdef ANALYSE_DEBUG
+	CONSOLE_DEBUG("AFTER system_get_diffvars...");
 	system_var_list_debug(integ->system);
 #endif
 
@@ -159,19 +165,24 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 		}
 
 		if(!vok){
-			/*VARMSG("'%s' fails non-deriv filter");
+#ifdef ANALYSE_DEBUG
 			if(var_fixed(v)){
-				CONSOLE_DEBUG("(var is fixed");
+				VARMSG("Fixed variable '%s' fails non-deriv filter");
+			}else{
+				VARMSG("'%s' fails non-deriv filter");
 			}
 			CONSOLE_DEBUG("passes nonderiv? %s (flags = 0x%x)"
 				, (var_apply_filter(v,&integrator_ida_nonderiv) ? "TRUE" : "false")
 				, var_flags(v)
-			);*/
+			);
+#endif
 			for(j=1;j<seq.n;++j){
 				v = seq.vars[j];
 				var_set_active(v,FALSE);
 				var_set_value(v,0);
-				/* VARMSG("Derivative '%s' SET ZERO AND INACTIVE"); */
+#ifdef ANALYSE_DEBUG
+				VARMSG("Derivative '%s' SET ZERO AND INACTIVE");
+#endif
 			}
 			continue;
 		}
@@ -244,7 +255,7 @@ static int integrator_ida_flag_rels(IntegratorSystem *integ){
 	Sort the lists. First we will put the non-derivative vars, then we will
 	put the derivative vars. Then we will put all the others.
 
-	See http://ascendwiki.cheme.cmu.edu/File:Diffvars.png
+	See http://ascend4.org/File:Diffvars.png
 */
 static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 	int ny1, nydot, nr;
@@ -641,7 +652,8 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 		return 2;
 	}*/
 
-#if 1
+#if 0
+	/* WARNING: uncommenting this section seems to break the solver!!!! -- JP */
 	/* check structural singularity for the two IDACalcIC scenarios */
 
 	/* ...(1) FIX the derivatives */
