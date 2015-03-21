@@ -128,7 +128,7 @@ typedef int IntegratorOutputWriteObsFn(struct IntegratorSystemStruct *);
 
 /**
 	Event reporting. This hook should be implemented to record
-	observations in a way that can be presented to the use, recorded in a
+	observations in a way that can be presented to the user, recorded in a
 	file, etc.
 */
 typedef int IntegratorOutputWriteEventFn(struct IntegratorSystemStruct *);

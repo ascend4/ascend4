@@ -73,6 +73,57 @@ const rel_filter_t integrator_ida_rel = {
 	REL_INCLUDED | REL_EQUALITY | REL_ACTIVE
 };
 
+static int integrator_ida_vars_debug(IntegratorSystem *integ){
+	struct var_variable **list;
+	int n, i;
+	/* get all the var names, get the length of the longest one */
+	n = slv_get_num_solvers_vars(integ->system);
+	list = slv_get_solvers_var_list(integ->system);
+	char *name[n]; // we'll need to free all these pointers later
+	int lmax = 0;
+	for(i=0;i<n;++i){
+		name[i] = var_make_name(integ->system,list[i]);
+		int l = strlen(name[i]);
+		if(l>lmax)lmax=l;
+	}
+
+#define FSTRING " %-10s %-*s %8s %8s %8s %8s"
+#define AST(F) ((var_##F(v))?"*":"")
+	fprintf(stderr,"%4s" FSTRING "\n","","",lmax,"","incid","active","fixed","deriv");
+	fprintf(stderr,"%4s" FSTRING "\n","","",lmax,"","-----","------","-----","-----");
+	struct var_variable *v;
+	for(i=0;i<integ->n_y;++i){
+		v = list[i];
+		fprintf(stderr,"%4d" FSTRING "\n",i,(integ->ydot?(integ->ydot[i]?"diff":"algeb"):"?"),lmax,name[i]
+			,AST(incident),AST(active),AST(fixed),AST(deriv)
+		);
+	}
+	fprintf(stderr,"-------\n");
+	for(i=integ->n_y;i<integ->n_y+integ->n_ydot;++i){
+		v = list[i];
+		fprintf(stderr,"%4d" FSTRING " (of %s)\n",i,"deriv",lmax,name[i]
+			,AST(incident),AST(active),AST(fixed),AST(deriv)
+			,integ->y_id?(name[integ->y_id[i - integ->n_y]]):"?"
+		);
+	}
+	fprintf(stderr,"-------\n");
+	for(i=integ->n_y+integ->n_ydot;i<n;++i){
+		v = list[i];
+		fprintf(stderr,"%4d" FSTRING "\n",i,"other",lmax,name[i]
+			,AST(incident),AST(active),AST(fixed),AST(deriv)
+		);
+	}
+	fprintf(stderr,"=======\n");
+#undef FSTRING
+#undef AST
+	for(i=0;i<n;++i){
+		ASC_FREE(name[i]);
+	}
+
+	return 0;
+}
+
+
 /**
 	This is the first step in the DAE analysis process. We inspect the
 	derivative chains from the solver's analyse() routine.
@@ -279,6 +330,7 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Cut %d non-derivative vars to start of list. cf integ->n_y = %d",ny1,integ->n_y);
+	integrator_ida_vars_debug(integ);
 #endif
 	asc_assert(ny1 == integ->n_y);
 
@@ -631,6 +683,7 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 	asc_assert(integ->ydot);
 	asc_assert(integ->y_id);
 
+	integrator_ida_vars_debug(integ);
 	integrator_ida_debug(integ,stderr);
 #endif
 

@@ -64,61 +64,80 @@ static int test_ida_reporter_writeobs(struct IntegratorSystemStruct *integ) {
 	return 0;
 }
 
+static int test_ida_reporter_writeevent(struct IntegratorSystemStruct *integ) {
+	CONSOLE_DEBUG("EVENT AT x = %f", var_value(integ->x));
+	return 0;
+}
+
 static int test_ida_reporter_close(struct IntegratorSystemStruct *integ) {
 	return 0;
 }
 
 static IntegratorReporter test_ida_reporter = { test_ida_reporter_init,
 		test_ida_reporter_write, test_ida_reporter_writeobs,
-		test_ida_reporter_close };
+		test_ida_reporter_writeevent, test_ida_reporter_close
+};
 
-static void test_hysteron(){
 
-	Asc_CompilerInit(1);
+#define LOAD_AND_INITIALISE(MODELPATH,FILESTEM) \
+	Asc_CompilerInit(1);\
+	/* set paths relative to test executable */\
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");\
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv:solvers/qrslv");\
+	CU_TEST_FATAL(0 == package_load("lrslv",NULL));\
+	CU_TEST_FATAL(0 == package_load("qrslv",NULL));\
+	/* load the file */\
+	char path[PATH_MAX] = MODELPATH "/" FILESTEM ".a4c";\
+	{int status;Asc_OpenModule(path, &status);CU_ASSERT_FATAL(status == 0);}\
+	/* parse it */\
+	CU_ASSERT(0 == zz_parse());\
+	/* find the model */\
+	CU_ASSERT(FindType(AddSymbol(FILESTEM))!=NULL);\
+	/* instantiate it */\
+	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM), AddSymbol("sim1"), e_normal, NULL);\
+	CU_ASSERT_FATAL(siminst!=NULL);\
+	CONSOLE_DEBUG("RUNNING ON_LOAD");\
+	/** Call on_load */\
+	struct Name *name = CreateIdName(AddSymbol("on_load"));\
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);\
+	CU_ASSERT(pe==Proc_all_ok);\
+	/* create the integrator */\
+	g_use_dersyntax = 1;\
+	slv_system_t sys = system_build(GetSimulationRoot(siminst));\
+	CU_ASSERT_FATAL(sys != NULL);\
+	IntegratorSystem *integ = integrator_new(sys,siminst);\
+	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"IDA"));\
+	/*CONSOLE_DEBUG("Assigned integrator '%s'...",integ->internals->name);*/\
 
-	/* set paths relative to test executable */
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv:solvers/qrslv");
-	CU_TEST_FATAL(0 == package_load("lrslv",NULL));
-	CU_TEST_FATAL(0 == package_load("qrslv",NULL));
-
-	/* load the file */
-#define FILESTEM "hysteron_event"
-	char path[PATH_MAX] = "ksenija/" FILESTEM ".a4c";
-	{
-		int status;
-		Asc_OpenModule(path, &status);
-		CU_ASSERT_FATAL(status == 0);
+#define SET_LINEAR_SAMPLELIST(START,END,NUM)\
+	SampleList *samplelist = NULL;\
+	{\
+		/* set a linearly-distributed samplelist */\
+		double start = (START), end = (END);\
+		int num = (NUM);\
+		dim_type d;\
+		SetDimFraction(d,D_TIME,CreateFraction(1,1));\
+		samplelist = samplelist_new(num+1, &d);\
+		double val = start;\
+		double inc = (end-start)/(num);\
+		unsigned long i;\
+		for(i=0; i<=num; ++i){\
+			samplelist_set(samplelist,i,val);\
+			val += inc;\
+		}\
+		integrator_set_samples(integ,samplelist);\
 	}
 
-	/* parse it */
-	CU_ASSERT(0 == zz_parse());
+#define CLEAN_UP(SIMINST)\
+	/* destroy all that stuff */\
+	CU_ASSERT((SIMINST) != NULL);\
+	solver_destroy_engines();\
+	integrator_free_engines();\
+	sim_destroy(SIMINST);\
+	Asc_CompilerDestroy();
 
-	/* find the model */
-	CU_ASSERT(FindType(AddSymbol(FILESTEM))!=NULL);
-
-	/* instantiate it */
-	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(siminst!=NULL);
-#undef FILESTEM
-
-	CONSOLE_DEBUG("RUNNING ON_LOAD");
-
-	/** Call on_load */
-	struct Name *name = CreateIdName(AddSymbol("on_load"));
-	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT(pe==Proc_all_ok);
-
-	/* create the integrator */
-
-	g_use_dersyntax = 1;
-	slv_system_t sys = system_build(GetSimulationRoot(siminst));
-	CU_ASSERT_FATAL(sys != NULL);
-
-	IntegratorSystem *integ = integrator_new(sys,siminst);
-
-	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"IDA"));
-	CONSOLE_DEBUG("Assigned integrator '%s'...",integ->internals->name);
+static void test_hysteron(){
+	LOAD_AND_INITIALISE("ksenija","hysteron_event");
 
 	slv_parameters_t p;
 	CU_ASSERT(0 == integrator_params_get(integ,&p));
@@ -127,7 +146,6 @@ static void test_hysteron(){
 	/* perform problem analysis */
 	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
 
-	/* TODO assign an integrator reporter */
 	integrator_set_reporter(integ, &test_ida_reporter);
 
 	integrator_set_minstep(integ,0.00001);
@@ -135,20 +153,7 @@ static void test_hysteron(){
 	integrator_set_stepzero(integ,0.0001);
 	integrator_set_maxsubsteps(integ,200);
 
-	/* set a linearly-distributed samplelist */
-	double start = 0, end = 30;
-	int num = 60;
-	dim_type d;
-	SetDimFraction(d,D_TIME,CreateFraction(1,1));
-	SampleList *samplelist = samplelist_new(num+1, &d);
-	double val = start;
-	double inc = (end-start)/(num);
-	unsigned long i;
-	for(i=0; i<=num; ++i){
-		samplelist_set(samplelist,i,val);
-		val += inc;
-	}
-	integrator_set_samples(integ,samplelist);
+	SET_LINEAR_SAMPLELIST(0., 30., 60);
 
 	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
 
@@ -172,55 +177,11 @@ static void test_hysteron(){
 	CU_TEST(fabs(RealAtomValue(ix) - 0.7756) < 1e-4);
 	CU_TEST(fabs(RealAtomValue(ix0) - -3.0353) < 1e-4);
 
-	/* destroy all that stuff */
-	CU_ASSERT(siminst != NULL);
-
-	solver_destroy_engines();
-	integrator_free_engines();
-	sim_destroy(siminst);
-	Asc_CompilerDestroy();
+	CLEAN_UP(siminst);
 }
 
 static void test_test1(){
-
-	Asc_CompilerInit(1);
-
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv:solvers/qrslv");
-	CU_TEST_FATAL(0 == package_load("lrslv",NULL));
-	CU_TEST_FATAL(0 == package_load("qrslv",NULL));
-
-#define FILESTEM "test_event1"
-	char path[PATH_MAX] = "ksenija/" FILESTEM ".a4c";
-	{
-		int status;
-		Asc_OpenModule(path, &status);
-		CU_ASSERT_FATAL(status == 0);
-	}
-
-	CU_ASSERT(0 == zz_parse());
-
-	CU_ASSERT(FindType(AddSymbol(FILESTEM))!=NULL);
-
-	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(siminst!=NULL);
-#undef FILESTEM
-
-	CONSOLE_DEBUG("RUNNING ON_LOAD");
-
-	struct Name *name = CreateIdName(AddSymbol("on_load"));
-	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT(pe==Proc_all_ok);
-
-
-	g_use_dersyntax = 1;
-	slv_system_t sys = system_build(GetSimulationRoot(siminst));
-	CU_ASSERT_FATAL(sys != NULL);
-
-	IntegratorSystem *integ = integrator_new(sys,siminst);
-
-	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"IDA"));
-	CONSOLE_DEBUG("Assigned integrator '%s'...",integ->internals->name);
+	LOAD_AND_INITIALISE("ksenija","test_event1");
 
 	slv_parameters_t p;
 	CU_ASSERT(0 == integrator_params_get(integ,&p));
@@ -234,19 +195,7 @@ static void test_test1(){
 	integrator_set_stepzero(integ,0.0001);
 	integrator_set_maxsubsteps(integ,200);
 
-	double start = 0, end = 30;
-	int num = 100;
-	dim_type d;
-	SetDimFraction(d,D_TIME,CreateFraction(1,1));
-	SampleList *samplelist = samplelist_new(num+1, &d);
-	double val = start;
-	double inc = (end-start)/(num);
-	unsigned long i;
-	for(i=0; i<=num; ++i){
-		samplelist_set(samplelist,i,val);
-		val += inc;
-	}
-	integrator_set_samples(integ,samplelist);
+	SET_LINEAR_SAMPLELIST(0., 30., 100);
 
 	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
 
@@ -266,54 +215,11 @@ static void test_test1(){
 
 	CU_TEST(fabs(RealAtomValue(ix) - 16.2269) < 1e-4);
 
-	CU_ASSERT(siminst != NULL);
-
-	solver_destroy_engines();
-	integrator_free_engines();
-	sim_destroy(siminst);
-	Asc_CompilerDestroy();
+	CLEAN_UP(siminst);
 }
 
 static void test_test2(){
-
-	Asc_CompilerInit(1);
-
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv:solvers/qrslv");
-	CU_TEST_FATAL(0 == package_load("lrslv",NULL));
-	CU_TEST_FATAL(0 == package_load("qrslv",NULL));
-
-#define FILESTEM "test_event2"
-	char path[PATH_MAX] = "ksenija/" FILESTEM ".a4c";
-	{
-		int status;
-		Asc_OpenModule(path, &status);
-		CU_ASSERT_FATAL(status == 0);
-	}
-
-	CU_ASSERT(0 == zz_parse());
-
-	CU_ASSERT(FindType(AddSymbol(FILESTEM))!=NULL);
-
-	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(siminst!=NULL);
-#undef FILESTEM
-
-	CONSOLE_DEBUG("RUNNING ON_LOAD");
-
-	struct Name *name = CreateIdName(AddSymbol("on_load"));
-	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT(pe==Proc_all_ok);
-
-
-	g_use_dersyntax = 1;
-	slv_system_t sys = system_build(GetSimulationRoot(siminst));
-	CU_ASSERT_FATAL(sys != NULL);
-
-	IntegratorSystem *integ = integrator_new(sys,siminst);
-
-	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"IDA"));
-	CONSOLE_DEBUG("Assigned integrator '%s'...",integ->internals->name);
+	LOAD_AND_INITIALISE("ksenija","test_event2");
 
 	slv_parameters_t p;
 	CU_ASSERT(0 == integrator_params_get(integ,&p));
@@ -327,19 +233,7 @@ static void test_test2(){
 	integrator_set_stepzero(integ,0.0001);
 	integrator_set_maxsubsteps(integ,200);
 
-	double start = 0, end = 5;
-	int num = 100;
-	dim_type d;
-	SetDimFraction(d,D_TIME,CreateFraction(1,1));
-	SampleList *samplelist = samplelist_new(num+1, &d);
-	double val = start;
-	double inc = (end-start)/(num);
-	unsigned long i;
-	for(i=0; i<=num; ++i){
-		samplelist_set(samplelist,i,val);
-		val += inc;
-	}
-	integrator_set_samples(integ,samplelist);
+	SET_LINEAR_SAMPLELIST(0., 5., 100);
 
 	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
 
@@ -359,62 +253,12 @@ static void test_test2(){
 
 	CU_TEST(fabs(RealAtomValue(ix) - 208.966) < 1e-4);
 
-	CU_ASSERT(siminst != NULL);
-
-	solver_destroy_engines();
-	integrator_free_engines();
-	sim_destroy(siminst);
-	Asc_CompilerDestroy();
+	CLEAN_UP(siminst);
 }
 
 
 static void test_successive(){
-
-	Asc_CompilerInit(1);
-
-	/* set paths relative to test executable */
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv:solvers/qrslv");
-	CU_TEST_FATAL(0 == package_load("lrslv",NULL));
-	CU_TEST_FATAL(0 == package_load("qrslv",NULL));
-
-	/* load the file */
-#define FILESTEM "successive"
-	char path[PATH_MAX] = "ksenija/" FILESTEM ".a4c";
-	{
-		int status;
-		Asc_OpenModule(path, &status);
-		CU_ASSERT_FATAL(status == 0);
-	}
-
-	/* parse it */
-	CU_ASSERT(0 == zz_parse());
-
-	/* find the model */
-	CU_ASSERT(FindType(AddSymbol(FILESTEM))!=NULL);
-
-	/* instantiate it */
-	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(siminst!=NULL);
-#undef FILESTEM
-
-	CONSOLE_DEBUG("RUNNING ON_LOAD");
-
-	/** Call on_load */
-	struct Name *name = CreateIdName(AddSymbol("on_load"));
-	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT(pe==Proc_all_ok);
-
-	/* create the integrator */
-
-	g_use_dersyntax = 1;
-	slv_system_t sys = system_build(GetSimulationRoot(siminst));
-	CU_ASSERT_FATAL(sys != NULL);
-
-	IntegratorSystem *integ = integrator_new(sys,siminst);
-
-	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"IDA"));
-	CONSOLE_DEBUG("Assigned integrator '%s'...",integ->internals->name);
+	LOAD_AND_INITIALISE("ksenija","successive");
 
 	slv_parameters_t p;
 	CU_ASSERT(0 == integrator_params_get(integ,&p));
@@ -423,7 +267,6 @@ static void test_successive(){
 	/* perform problem analysis */
 	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
 
-	/* TODO assign an integrator reporter */
 	integrator_set_reporter(integ, &test_ida_reporter);
 
 	integrator_set_minstep(integ,0.00001);
@@ -431,20 +274,7 @@ static void test_successive(){
 	integrator_set_stepzero(integ,0.0001);
 	integrator_set_maxsubsteps(integ,200);
 
-	/* set a linearly-distributed samplelist */
-	double start = 0, end = 10;
-	int num = 100;
-	dim_type d;
-	SetDimFraction(d,D_TIME,CreateFraction(1,1));
-	SampleList *samplelist = samplelist_new(num+1, &d);
-	double val = start;
-	double inc = (end-start)/(num);
-	unsigned long i;
-	for(i=0; i<=num; ++i){
-		samplelist_set(samplelist,i,val);
-		val += inc;
-	}
-	integrator_set_samples(integ,samplelist);
+	SET_LINEAR_SAMPLELIST(0., 10., 60);
 
 	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
 
@@ -464,62 +294,11 @@ static void test_successive(){
 
 	CU_TEST(fabs(RealAtomValue(ix) - 210) < 1e-4);
 
-	/* destroy all that stuff */
-	CU_ASSERT(siminst != NULL);
-
-	solver_destroy_engines();
-	integrator_free_engines();
-	sim_destroy(siminst);
-	Asc_CompilerDestroy();
+	CLEAN_UP(siminst);
 }
 
 static void test_bball(){
-
-	Asc_CompilerInit(1);
-
-	/* set paths relative to test executable */
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lrslv:solvers/qrslv");
-	CU_TEST_FATAL(0 == package_load("lrslv",NULL));
-	CU_TEST_FATAL(0 == package_load("qrslv",NULL));
-
-	/* load the file */
-#define FILESTEM "bball_event3"
-	char path[PATH_MAX] = "ksenija/" FILESTEM ".a4c";
-	{
-		int status;
-		Asc_OpenModule(path, &status);
-		CU_ASSERT_FATAL(status == 0);
-	}
-
-	/* parse it */
-	CU_ASSERT(0 == zz_parse());
-
-	/* find the model */
-	CU_ASSERT(FindType(AddSymbol(FILESTEM))!=NULL);
-
-	/* instantiate it */
-	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(siminst!=NULL);
-#undef FILESTEM
-
-	CONSOLE_DEBUG("RUNNING ON_LOAD");
-
-	/** Call on_load */
-	struct Name *name = CreateIdName(AddSymbol("on_load"));
-	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT(pe==Proc_all_ok);
-
-	/* create the integrator */
-
-	g_use_dersyntax = 1;
-	slv_system_t sys = system_build(GetSimulationRoot(siminst));
-	CU_ASSERT_FATAL(sys != NULL);
-
-	IntegratorSystem *integ = integrator_new(sys,siminst);
-
-	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"IDA"));
-	CONSOLE_DEBUG("Assigned integrator '%s'...",integ->internals->name);
+	LOAD_AND_INITIALISE("ksenija","bball_event3");
 
 	slv_parameters_t p;
 	CU_ASSERT(0 == integrator_params_get(integ,&p));
@@ -528,7 +307,6 @@ static void test_bball(){
 	/* perform problem analysis */
 	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
 
-	/* TODO assign an integrator reporter */
 	integrator_set_reporter(integ, &test_ida_reporter);
 
 	integrator_set_minstep(integ,0.00001);
@@ -536,20 +314,7 @@ static void test_bball(){
 	integrator_set_stepzero(integ,0.0001);
 	integrator_set_maxsubsteps(integ,200);
 
-	/* set a linearly-distributed samplelist */
-	double start = 0, end = 60;
-	int num = 100;
-	dim_type d;
-	SetDimFraction(d,D_TIME,CreateFraction(1,1));
-	SampleList *samplelist = samplelist_new(num+1, &d);
-	double val = start;
-	double inc = (end-start)/(num);
-	unsigned long i;
-	for(i=0; i<=num; ++i){
-		samplelist_set(samplelist,i,val);
-		val += inc;
-	}
-	integrator_set_samples(integ,samplelist);
+	SET_LINEAR_SAMPLELIST(0., 60., 100);
 
 	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
 
@@ -571,13 +336,50 @@ static void test_bball(){
 
 	CU_TEST(fabs(RealAtomValue(ix) - RealAtomValue(ir)) < 1e-4);
 
-	/* destroy all that stuff */
-	CU_ASSERT(siminst != NULL);
+	CLEAN_UP(siminst);
+}
 
-	solver_destroy_engines();
-	integrator_free_engines();
-	sim_destroy(siminst);
-	Asc_CompilerDestroy();
+
+static void test_solardynamics(){
+	LOAD_AND_INITIALISE("johnpye","solardynamics");
+
+	slv_parameters_t p;
+	CU_ASSERT(0 == integrator_params_get(integ,&p));
+	/* TODO set some parameters? */
+
+	/* perform problem analysis */
+	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
+
+#if 0
+	integrator_set_reporter(integ, &test_ida_reporter);
+
+	integrator_set_minstep(integ,0.00001);
+	integrator_set_maxstep(integ,0.01);
+	integrator_set_stepzero(integ,0.0001);
+	integrator_set_maxsubsteps(integ,200);
+
+	SET_LINEAR_SAMPLELIST(0., 60., 100);
+
+	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
+
+	integrator_free(integ);
+	samplelist_free(samplelist);
+
+	CU_ASSERT_FATAL(NULL != sys);
+	system_destroy(sys);
+	system_free_reused_mem();
+
+	struct Instance *simroot = GetSimulationRoot(siminst);
+	CU_TEST(simroot != NULL);
+	struct Instance *ix = ChildByChar(simroot,AddSymbol("y"));
+	CU_TEST(ix != NULL);
+	struct Instance *ir = ChildByChar(simroot,AddSymbol("r"));
+	CU_TEST(ix != NULL);
+
+	CONSOLE_DEBUG("Final y = %e",RealAtomValue(ix));
+	CU_TEST(fabs(RealAtomValue(ix) - RealAtomValue(ir)) < 1e-4);
+#endif
+	CLEAN_UP(siminst);
 }
 
 
@@ -590,8 +392,8 @@ static void test_bball(){
 	T(test1) \
 	T(test2) \
 	T(successive) \
-	T(bball)
-
+	T(bball) \
+	T(solardynamics)
 
 REGISTER_TESTS_SIMPLE(integrator_idaevent, TESTS)
 
