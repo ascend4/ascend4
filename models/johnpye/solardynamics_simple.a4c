@@ -54,13 +54,13 @@ METHODS
 		C.obs_id := 3;
 		Qdot_out.obs_id := 4;
 	END on_load;
-	METHOD c1; FIX T; FREE C; END c1;
-	METHOD c1_end; FIX C; FREE T; END c1_end;
-	METHOD c0; FIX T; FREE C; END c0;
-	METHOD c0_end; FIX C; FREE T; END c0_end;
-	METHOD p1; FIX E; FREE Qdot_out; END p1;
-	METHOD p1_end; FIX Qdot_out; FREE E; END p1_end;
-	METHOD p0; FIX E; FREE Qdot_out;END p0;
-	METHOD p0_end; FIX Qdot_out; FREE E; END p0_end;
+	METHOD e_c1;     FIX T; FREE C;        END e_c1;
+	METHOD e_c1_end; FIX C; FREE T;        END e_c1_end;
+	METHOD e_c0;     FIX T; FREE C;        END e_c0;
+	METHOD e_c0_end; FIX C; FREE T;        END e_c0_end;
+	METHOD e_p1;     FIX E; FREE Qdot_out; END e_p1;
+	METHOD e_p1_end; FIX Qdot_out; FREE E; END e_p1_end;
+	METHOD e_p0;     FIX E; FREE Qdot_out; END e_p0;
+	METHOD e_p0_end; FIX Qdot_out; FREE E; END e_p0_end;
 END solardynamics_simple;
 
