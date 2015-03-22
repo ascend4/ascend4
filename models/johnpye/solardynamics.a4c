@@ -29,17 +29,12 @@ MODEL solardynamics;
 	dr.t, t ARE_THE_SAME;
 	T_amb ALIASES dr.T;
 	G ALIASES dr.GHI;
-	(*
-	T_amb IS_A temperature;
-	G IS_A power_per_area;
-	*)
 
 	(* Solar collector *)
-	(*C IS_A factor;
-	A IS_A area;*)
+	C IS_A factor;
+	A IS_A area;
 	Qdot_abs IS_A energy_rate;
-	col_on: Qdot_abs = 800.*100.*G;
-	col_off: Qdot_abs = 0;
+	Qdot_abs = C*A*G;
 
 	(* Storage *)
 	m IS_A mass;
@@ -56,9 +51,13 @@ MODEL solardynamics;
 	(* power cycle efficiency: chambadal novikov efficiency *)
 	eta_eq: eta = 1 - sqrt(T_amb / T); 
 	Wdot_eq: Qdot_elec*eta = Wdot_elec;
+
+	(* these 'event equations' are *only* active within the event calculation
+	hence note the related event METHODs below *)
 	pow_on: Qdot_elec = Qdot_elec_des;
 	pow_off: Qdot_elec = 0;
-
+	col_on: C = 800;
+	col_off: C = 0;
 	(* Switching logic *)
 	is_G_high, is_G_low, is_T_start, is_T_stop IS_A boolean_var;
 	CONDITIONAL
@@ -91,9 +90,9 @@ METHODS
 		Wdot_elec.obs_id := 4;
 	END obs_init;
 	METHOD specify;
-		(*FIX C := 2000;*)
-		FIX Qdot_elec_des := 1 {MW};
-		(*FIX A := 2000 {m^2};*)
+		FIX Qdot_elec := 1 {MW};
+		FIX C := 800;
+		FIX A := 2000 {m^2};
 		FIX TA.p := 1 {bar};
 		FIX m := 20 {t};
 		t := 0 {s};
@@ -111,6 +110,18 @@ METHODS
 		RUN specify;
 		RUN obs_init;
 	END on_load;
+
+	(* these methods do the work of FIXing/FREEing variables before and after
+	the event calculation. TODO we would *really* like to find a way to avoid
+	having to explicitly write these methods! *)
+	METHOD pow_on; FIX T; FREE Qdot_elec; END pow_on;
+	METHOD pow_on_end; FREE T; FIX Qdot_elec; END pow_on_end;
+	METHOD pow_off; FIX T; FREE Qdot_elec; END pow_off; 
+	METHOD pow_off_end; FREE T; FIX Qdot_elec; END pow_off_end;
+	METHOD col_on; FIX G; FREE C; END col_on;
+	METHOD col_on_end; FREE G; FIX C; END col_on_end;
+	METHOD col_off; FIX G; FREE C; END col_off;
+	METHOD col_off_end; FREE G; FIX C; END col_off_end;
 END solardynamics;
 
 

@@ -179,8 +179,8 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 #ifdef ANALYSE_DEBUG
 	CONSOLE_DEBUG("Creating lists");
 
-	CONSOLE_DEBUG("BEFORE MAKING LISTS");
-	integrator_ida_debug(integ,stderr);
+	//CONSOLE_DEBUG("BEFORE MAKING LISTS");
+	//integrator_ida_debug(integ,stderr);
 #endif
 
 	res = integrator_ida_create_lists(integ);
@@ -202,7 +202,7 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 	asc_assert(integ->y_id);
 
 	integrator_ida_vars_debug(integ);
-	integrator_ida_debug(integ,stderr);
+	//integrator_ida_debug(integ,stderr);
 #endif
 
 	if(integrator_ida_check_diffindex(integ)){
@@ -1151,7 +1151,7 @@ static int integrator_ida_rels_debug(IntegratorSystem *integ){
 		if(l>lmax)lmax=l;
 	}
 
-#define FSTRING " %-10s %-*s %4s %6s %4s %5s %4s %4s %4s"
+#define FSTRING " %-10s %-*s %4s %6s %4s %4s %5s %4s %4s"
 #define AST(F) ((rel_##F(r))?"*":"")
 	fprintf(stderr,"%6s" FSTRING "\n","sindex","",lmax,"","incl","active","diff","cond","event","when","bbox");
 	fprintf(stderr,"%6s" FSTRING "\n","------","",lmax,"","----","------","----","----","-----","----","----");
@@ -1160,7 +1160,7 @@ static int integrator_ida_rels_debug(IntegratorSystem *integ){
 		r = list[i];
 		fprintf(stderr,"%6d" FSTRING "\n",i,(rel_differential(r)?"diff":"algeb")
 			,lmax,name[i]
-			,AST(included),AST(active),AST(differential),AST(conditional),AST(in_when),AST(in_event),AST(blackbox)
+			,AST(included),AST(active),AST(differential),AST(conditional),AST(in_event),AST(in_when),AST(blackbox)
 		);
 	}
 	fprintf(stderr,"%6s %-10s\n","","=======");

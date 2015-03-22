@@ -53,14 +53,14 @@ static int test_ida_reporter_init(struct IntegratorSystemStruct *integ) {
 }
 
 static int test_ida_reporter_write(struct IntegratorSystemStruct *integ) {
-	/*double val;
-	val = var_value(integ->y[0]);
-	CONSOLE_DEBUG("y[0] = %g", val);*/
+	double y0 = var_value(integ->y[0]);
+	double x = var_value(integ->x);
+	CONSOLE_DEBUG("x = %g: y[0] = %g", x, y0);
 	return 1; /* no interrupt */
 }
 
 static int test_ida_reporter_writeobs(struct IntegratorSystemStruct *integ) {
-	/*CONSOLE_DEBUG("x = %f", var_value(integ->x));*/
+	CONSOLE_DEBUG("x = %f", var_value(integ->x));
 	return 0;
 }
 
@@ -148,10 +148,10 @@ static void test_hysteron(){
 
 	integrator_set_reporter(integ, &test_ida_reporter);
 
-	integrator_set_minstep(integ,0.00001);
-	integrator_set_maxstep(integ,0.01);
-	integrator_set_stepzero(integ,0.0001);
-	integrator_set_maxsubsteps(integ,200);
+	integrator_set_minstep(integ,1);
+	integrator_set_maxstep(integ,3600);
+	integrator_set_stepzero(integ,60);
+	integrator_set_maxsubsteps(integ,100000);
 
 	SET_LINEAR_SAMPLELIST(0., 30., 60);
 
@@ -341,7 +341,7 @@ static void test_bball(){
 
 
 static void test_solardynamics(){
-	LOAD_AND_INITIALISE("johnpye","solardynamics");
+	LOAD_AND_INITIALISE("johnpye","solardynamics_simple");
 
 	slv_parameters_t p;
 	CU_ASSERT(0 == integrator_params_get(integ,&p));
@@ -350,15 +350,13 @@ static void test_solardynamics(){
 	/* perform problem analysis */
 	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
 
-#if 0
 	integrator_set_reporter(integ, &test_ida_reporter);
-
-	integrator_set_minstep(integ,0.00001);
+	//integrator_set_minstep(integ,0.00001);
 	integrator_set_maxstep(integ,0.01);
 	integrator_set_stepzero(integ,0.0001);
 	integrator_set_maxsubsteps(integ,200);
 
-	SET_LINEAR_SAMPLELIST(0., 60., 100);
+	SET_LINEAR_SAMPLELIST(0., 24.*3600., 100);
 
 	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
 
@@ -369,6 +367,7 @@ static void test_solardynamics(){
 	system_destroy(sys);
 	system_free_reused_mem();
 
+#if 0
 	struct Instance *simroot = GetSimulationRoot(siminst);
 	CU_TEST(simroot != NULL);
 	struct Instance *ix = ChildByChar(simroot,AddSymbol("y"));
@@ -376,9 +375,10 @@ static void test_solardynamics(){
 	struct Instance *ir = ChildByChar(simroot,AddSymbol("r"));
 	CU_TEST(ix != NULL);
 
-	CONSOLE_DEBUG("Final y = %e",RealAtomValue(ix));
-	CU_TEST(fabs(RealAtomValue(ix) - RealAtomValue(ir)) < 1e-4);
+	//CONSOLE_DEBUG("Final y = %e",RealAtomValue(ix));
+	//CU_TEST(fabs(RealAtomValue(ix) - RealAtomValue(ir)) < 1e-4);
 #endif
+
 	CLEAN_UP(siminst);
 }
 

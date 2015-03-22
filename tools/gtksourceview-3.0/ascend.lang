@@ -132,11 +132,13 @@
 					<keyword>DATA</keyword>
 					<keyword>DEFAULT</keyword>
 					<keyword>DEFINITION</keyword>
+					<keyword>DERIVATIVE</keyword>
 					<keyword>DIMENSION</keyword>
 					<keyword>DIMENSIONLESS</keyword>
 					<keyword>DO</keyword>
 					<keyword>ELSE</keyword>
 					<keyword>END</keyword>
+					<keyword>EVENT</keyword>
 					<keyword>EXTERNAL</keyword>
 					<keyword>FIX</keyword>
 					<keyword>FOR</keyword>
@@ -144,6 +146,7 @@
 					<keyword>IF</keyword>
 					<keyword>IMPORT</keyword>
 					<keyword>IN</keyword>
+					<keyword>INDEPENDENT</keyword>
 					<keyword>INPUT</keyword>
 					<keyword>INTERSECTION</keyword>
 					<keyword>IS_A</keyword>

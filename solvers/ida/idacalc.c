@@ -330,7 +330,7 @@ int integrator_ida_djex(long int Neq, realtype tt
 	}
 
 	/* print step size */
-	CONSOLE_DEBUG("<c_j> = %g",c_j);
+	CONSOLE_DEBUG("step size <c_j> = %g",c_j);
 #endif
 
 	/* build up the dense jacobian matrix... */
@@ -375,18 +375,22 @@ int integrator_ida_djex(long int Neq, realtype tt
 			fprintf(stderr,"d(%s)/d(%s) = %g",relname,varname,derivatives[j]);
 			ASC_FREE(varname);
 #endif
-			if(!var_deriv(variables[j])){
+			if(!var_deriv(variables[j]) && !var_nonbasic(variables[j])){
 #ifdef DJEX_DEBUG
 				fprintf(stderr," --> J[%d,%d] += %g\n", i,j,derivatives[j]);
 				asc_assert(var_sindex(variables[j]) >= 0);
+
+				/* if the variable is 't' then it might have an index that's too high... */
 				ASC_ASSERT_LT(var_sindex(variables[j]) , Neq);
 #endif
 				DENSE_ELEM(Jac,i,var_sindex(variables[j])) += derivatives[j];
-			}else{
+			}else if(var_deriv(variables[j])){
 				DENSE_ELEM(Jac,i,integrator_ida_diffindex(integ,variables[j])) += derivatives[j] * c_j;
 #ifdef DJEX_DEBUG
 				fprintf(stderr," --> * c_j --> J[%d,%d] += %g\n", i,j,derivatives[j] * c_j);
 #endif
+			}else{
+				/* it's the independent variable... why are are looking at it? */
 			}
 		}
 	}

@@ -141,22 +141,27 @@ const rel_filter_t system_rfilter_all = {
 };
 
 
+/** algebraic variables: dependent variables for which no derivative is used */
 const var_filter_t system_vfilter_algeb = {
-	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV | VAR_DIFF,
+	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV | VAR_DIFF | VAR_NONBASIC,
+	VAR_SVAR | VAR_ACTIVE | 0         | 0         | 0        | 0
+};
+
+/** differential variables: dependent variables for which a derivative *is* used */
+const var_filter_t system_vfilter_diff = {
+	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV | VAR_DIFF | VAR_NONBASIC,
+	VAR_SVAR | VAR_ACTIVE | 0         | 0         | VAR_DIFF | 0
+};
+
+/** derivatives: variables that are the derivative of another variable in the model */
+const var_filter_t system_vfilter_deriv = {
+	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV | VAR_NONBASIC,
+	VAR_SVAR | VAR_ACTIVE | 0         | VAR_DERIV | 0
+};
+
+/** non-derivatives: either algebraic or differential as above */
+const var_filter_t system_vfilter_nonderiv = {
+	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV | VAR_NONBASIC,
 	VAR_SVAR | VAR_ACTIVE | 0         | 0         | 0
 };
 
-const var_filter_t system_vfilter_diff = {
-	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV | VAR_DIFF,
-	VAR_SVAR | VAR_ACTIVE | 0         | 0         | VAR_DIFF
-};
-
-const var_filter_t system_vfilter_deriv = {
-	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV ,
-	VAR_SVAR | VAR_ACTIVE | 0         | VAR_DERIV
-};
-
-const var_filter_t system_vfilter_nonderiv = {
-	VAR_SVAR | VAR_ACTIVE | VAR_FIXED | VAR_DERIV ,
-	VAR_SVAR | VAR_ACTIVE | 0         | 0
-};

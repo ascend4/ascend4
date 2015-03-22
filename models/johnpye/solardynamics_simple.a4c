@@ -1,0 +1,66 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+(* stripped-back version of 'solardynamics' with just enough detail to 
+provide the same switching behaviour, hopefully *)
+MODEL solardynamics_simple;
+	t IS_A time;
+	INDEPENDENT t;
+
+	E "stored energy" IS_A energy;
+	Qdot_in,Qdot_out IS_A energy_rate;
+	C "concentration ratio" IS_A factor;
+
+	(* sinusoidal 'sunlight' between 0 and 1000 W/m2 *)
+	Qdot_in = C * 100 {m^2} * 1000 {W/m^2} * 0.5*(sin(t / 24{h} * 2{PI}) + 1);
+
+	cp IS_A specific_heat_capacity;
+	T, T_0 IS_A temperature;
+	m IS_A mass;
+	E = m * cp * (T - T_0);
+
+	DERIVATIVE OF E;
+	der(E) = Qdot_in - Qdot_out;
+
+	c1: C = 800;
+	c0: C = 0;
+	p1: Qdot_out = 20 {MW};
+	p0: Qdot_out = 0 {MW};
+	CONDITIONAL
+		c_c1: Qdot_in > 800 * 100 {m^2} * 800 {W/m^2};
+		c_c0: Qdot_in < 800 * 100 {m^2} * 500 {W/m^2};
+		c_p1: T > 550 {K} + 273.15 {K};
+		c_p0: T < 450 {K} + 273.15 {K};
+	END CONDITIONAL;
+	b_c1, b_c0, b_p1, b_p0 IS_A boolean_var;
+	b_c1 == SATISFIED(c_c1);b_c0 == SATISFIED(c_c0);
+	b_p1 == SATISFIED(c_p1);b_p0 == SATISFIED(c_p0);
+	e_c1:EVENT(b_c1) CASE TRUE: USE c1; END EVENT;
+	e_c0:EVENT(b_c0) CASE TRUE: USE c0; END EVENT;
+	e_p1:EVENT(b_p1) CASE TRUE: USE p1; END EVENT;
+	e_p0:EVENT(b_p0) CASE TRUE: USE p0; END EVENT;
+METHODS
+	METHOD on_load;
+		FIX T_0 := 0 {K} + 273.15 {K};
+		T := 200 {K} + 273.15 {K};
+		FIX C := 800;
+		FIX Qdot_out := 0 {MW};
+		t := 0 {s};
+		FIX cp := 4 {kJ/kg/K};
+		FIX m := 100 {t};
+		Qdot_in.obs_id := 1;
+		T.obs_id := 2;
+		C.obs_id := 3;
+		Qdot_out.obs_id := 4;
+	END on_load;
+	METHOD c1; FIX T; FREE C; END c1;
+	METHOD c1_end; FIX C; FREE T; END c1_end;
+	METHOD c0; FIX T; FREE C; END c0;
+	METHOD c0_end; FIX C; FREE T; END c0_end;
+	METHOD p1; FIX E; FREE Qdot_out; END p1;
+	METHOD p1_end; FIX Qdot_out; FREE E; END p1_end;
+	METHOD p0; FIX E; FREE Qdot_out;END p0;
+	METHOD p0_end; FIX Qdot_out; FREE E; END p0_end;
+END solardynamics_simple;
+
