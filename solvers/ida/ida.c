@@ -1191,7 +1191,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 							return 1;
 						}
 #ifdef IDA_BND_DEBUG
-						CONSOLE_DEBUG("Boundaries were crossed: need to reinitialise solver...");
+						CONSOLE_DEBUG("Boundary(ies) crossed at x=%f: need to reinitialize solver",tret);
 #endif
 						/* so, now we need to restart the integration. we will assume that
 						 everything changes: number of variables, etc, etc, etc. */

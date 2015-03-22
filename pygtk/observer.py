@@ -243,7 +243,11 @@ class ObserverTab:
 		self.rows.append(_row)
 
 	def plot(self,x=None,y=None):
-		"""create a plot from two/more columns in the ObserverTable"""
+		"""Create a plot from specified columns in the ObserverTable
+		
+		There will be points for each timestep in the 'samplelist', and also
+		points for each event/boundary-crossing if any occurred.
+		"""
 		import platform
 		import matplotlib
 		matplotlib.use('GTKAgg')
@@ -356,10 +360,11 @@ class ObserverTab:
 			labels = [i.get_label() for i in l]
 			leg = ax1.legend(l,labels,loc='upper left')
 			leg.get_frame().set_alpha(0.3)
-			leg.draggable()
+			leg.draggable() #doesn't work?
+			#FIXME the events haven't been plotted in this case
 		else :  
-			color_cycle = ['b','r','g','y']
-
+			_colcyc = ['r','g','b','y','m','c']
+			_ncc = len(_colcyc)
 			sharex = None
 			j = 0.83/len(y)
 			for i in range(len(y)):
@@ -370,16 +375,20 @@ class ObserverTab:
 					ax = pylab.subplot(len(y),1,i+1,sharex=sharex)
 				#ax[i] = fig.add_axes([0.27, 0.08+(i*(j+0.02)), 0.65, j-0.01], **axprops)
 				if y[i].eventdata:
+					# FIXME the 'get_values' function used above does unit conversion
+					# but this 'eventdata' (hack!) doesn't do that, which breaks the plots
+					# when there are non-base-SI units used in the Observer.
 					arrx = []
 					arry = []
 					for _vals in y[i].eventdata:
-						arry.append(_vals[1])
+						arry.append(_vals[1]) 
 					for _vals in x.eventdata:
 						arrx.append(_vals[1])
 
-					pylab.plot(A[:,0],A[:,i+1],'-'+color_cycle[i%4]+'o',arrx,arry,'ro',label=y[i].title)
+					pylab.plot(A[:,0],A[:,i+1],'-',color=_colcyc[i%_ncc],marker='o',label=y[i].title)
+					pylab.plot(arrx,arry,'s',color='black')
 				else:
-					pylab.plot(A[:,0],A[:,i+1],'-'+color_cycle[i%4]+'o',label=y[i].title)
+					pylab.plot(A[:,0],A[:,i+1],'-',color=_colcyc[i%_ncc],market='o',label=y[i].title)
 
 				# put the x-axis label only on the last plot
 				if i+1 != len(y):
@@ -400,6 +409,7 @@ class ObserverTab:
 		pylab.show()
 		
 	def on_plot_clicked(self,*args):
+		"""This is the 'plot' button at the top of the observer tab"""
 		try:
 			if len(self.cols)<2:
 				raise Exception("Not enough columns to plot (need 2+)")
@@ -635,6 +645,7 @@ class ObserverTab:
 			self.plot_event(x=self.cols[current_col_key], t=_plotwin.col, title = self.cols[0].title)
 
 	def plot_event(self, x, t, title):
+		"""Plot internal details of event handling for an individual variable"""
 		import platform
 		import matplotlib
 		matplotlib.use('GTKAgg')
@@ -1030,3 +1041,5 @@ class ColPlotEventsDialog:
 			else:
 				self.plotwin.destroy()
 				return False
+
+

@@ -53,14 +53,26 @@ static int test_ida_reporter_init(struct IntegratorSystemStruct *integ) {
 }
 
 static int test_ida_reporter_write(struct IntegratorSystemStruct *integ) {
+#if 0
 	double y0 = var_value(integ->y[0]);
 	double x = var_value(integ->x);
 	CONSOLE_DEBUG("x = %g: y[0] = %g", x, y0);
+#endif
 	return 1; /* no interrupt */
 }
 
 static int test_ida_reporter_writeobs(struct IntegratorSystemStruct *integ) {
-	CONSOLE_DEBUG("x = %f", var_value(integ->x));
+	//CONSOLE_DEBUG("x = %f", var_value(integ->x));
+	if(integ->n_obs){
+		int i;
+		fprintf(stderr,"x=%g: (",var_value(integ->x));
+		for(i=0;i<integ->n_obs;++i){
+			char *n = var_make_name(integ->system,integ->obs[i]);
+			fprintf(stderr,"%s%s=%g",(i?", ":""),n,var_value(integ->obs[i]));
+			ASC_FREE(n);
+		}
+		fprintf(stderr,")\n");
+	}
 	return 0;
 }
 
