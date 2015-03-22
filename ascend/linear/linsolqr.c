@@ -391,7 +391,10 @@ void linsolqr_set_region(linsolqr_system_t sys,mtx_region_t region){
      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. coef mtx not set.");
      return;
    }
-   CONSOLE_DEBUG("Region rows=[%d,%d], cols=[%d,%d]",region.row.low,region.row.high,region.col.low,region.col.high);
+#if LINSOL_DEBUG
+   CONSOLE_DEBUG("Region rows=[%d,%d], cols=[%d,%d]",region.row.low
+       ,region.row.high,region.col.low,region.col.high);
+#endif
    sys->reg = region;
 }
 

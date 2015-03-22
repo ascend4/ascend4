@@ -655,7 +655,7 @@ int ranki2_entry(linsolqr_system_t sys, mtx_region_t *region){
   }
   sys->factored = TRUE;
 
-#define KAA_DEBUG 1
+#define KAA_DEBUG 0
 #if KAA_DEBUG
   if (g_linsolqr_timing) {
     int anz;
@@ -664,8 +664,7 @@ int ranki2_entry(linsolqr_system_t sys, mtx_region_t *region){
     fnz = mtx_nonzeros_in_region(sys->factors,region) +
       mtx_nonzeros_in_region(sys->inverse,0);
     comptime = tm_cpu_time() - comptime;
-    CONSOLE_DEBUG("A-NNZ: %d Factor time: %f Fill %g",
-      anz,comptime,( anz>0 ? (double)fnz/(double)anz : 0));
+    CONSOLE_DEBUG("A-NNZ: %d Factor time: %f Fill %g", anz,comptime,( anz>0 ? (double)fnz/(double)anz : 0));
   }
 #endif /* KAA_DEBUG */
 #undef KAA_DEBUG

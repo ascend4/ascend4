@@ -356,7 +356,7 @@ static void test_solardynamics(){
 	integrator_set_stepzero(integ,1.);
 	integrator_set_maxsubsteps(integ,10000);
 
-	SET_LINEAR_SAMPLELIST(0., 2*24.*3600., 100);
+	SET_LINEAR_SAMPLELIST(0., 23.*3600., 100);
 
 	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
 

@@ -68,7 +68,7 @@
 
 /* #define FEX_DEBUG */
 /* #define SOLVE_DEBUG */
-/* #define IDA_BND_DEBUG */
+#define IDA_BND_DEBUG
 /* #define STATS_DEBUG */
 /* #define DESTROY_DEBUG */
 
@@ -362,7 +362,6 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 int ida_load_rellist(IntegratorSystem *integ) {
 	IntegratorIdaData *enginedata;
 	struct rel_relation **rels;
-	char *relname;
 	int i, j, n_solverrels, n_active_rels;
 
 	enginedata = integrator_ida_enginedata(integ);
@@ -394,9 +393,11 @@ int ida_load_rellist(IntegratorSystem *integ) {
 	for (i = 0; i < n_solverrels; ++i) {
 		if (rel_apply_filter(rels[i], &integrator_ida_rel)) {
 #ifdef SOLVE_DEBUG
-			relname = rel_make_name(integ->system, rels[i]);
-			CONSOLE_DEBUG("rel '%s': 0x%x", relname, rel_flags(rels[i]));
-			ASC_FREE(relname);
+			{
+				char *relname = rel_make_name(integ->system, rels[i]);
+				CONSOLE_DEBUG("rel '%s': 0x%x", relname, rel_flags(rels[i]));
+				ASC_FREE(relname);
+			}
 #endif
 			enginedata->rellist[j++] = rels[i];
 		}
@@ -883,15 +884,17 @@ int ida_prepare_integrator(IntegratorSystem *integ, void *ida_mem,
 	y0 	= ida_bnd_new_zero_NV(integ->n_y);
 	yp0 = ida_bnd_new_zero_NV(integ->n_y);
 
+#if 0
 	int i;
 	double val;
-	//CONSOLE_DEBUG("Values of the derivatives present in the model");
+	CONSOLE_DEBUG("Values of the derivatives present in the model");
 	for(i=0; i < integ->n_y; i++) {
 		if(integ->ydot[i]){
 			val = var_value(integ->ydot[i]);
-			//CONSOLE_DEBUG("ydot[%d]= %g", i, val);
+			CONSOLE_DEBUG("ydot[%d]= %g", i, val);
 		}
 	}
+#endif
 
 	t0 = integrator_get_t(integ);
 	ida_retrieve_IVs(integ, t0, y0, yp0);
@@ -899,10 +902,9 @@ int ida_prepare_integrator(IntegratorSystem *integ, void *ida_mem,
 #ifdef IDA_BND_DEBUG
 	CONSOLE_DEBUG("Retrived IVs BEFORE IDACalcIC \n y0:");
 	N_VPrint_Serial(y0);
-	CONSOLE_DEBUG(yp0);
+	CONSOLE_DEBUG("yp0");
 	N_VPrint_Serial(yp0);
-	CONSOLE_DEBUG("rah rah")
-
+	CONSOLE_DEBUG("rah rah");
 #endif
 
 	/* allocate internal memory  */
@@ -994,7 +996,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
     int after_root = 0;
 
-#ifdef SOLVE_DEBUG
+#if defined(SOLVE_DEBUG) || defined(IDA_BND_DEBUG)
 	char *relname;
 #endif
 
@@ -1043,7 +1045,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	}
 
 	/* store reference to list of relations (in enginedata) */
-		ida_load_rellist(integ);
+	ida_load_rellist(integ);
 
 	/* create IDA object */
 	ida_mem = IDACreate();
@@ -1052,7 +1054,9 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	tout = samplelist_get(integ->samples, start_index + 1);
 	ida_prepare_integrator(integ, ida_mem, tout);
 
-	tol = 0.0001*(samplelist_get(integ->samples, finish_index) - samplelist_get(integ->samples, start_index))/samplelist_length(integ->samples);
+	tol = 0.0001*(samplelist_get(integ->samples, finish_index) 
+					- samplelist_get(integ->samples, start_index))
+				/samplelist_length(integ->samples);
 	tmin = tol;
 
 	/* -- set up the IntegratorReporter */
@@ -1081,11 +1085,12 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 		CONSOLE_DEBUG("Integrating from t0 = %f to t = %f", t0, tout);
 #endif
 
-		if (!after_root) {
+		if(!after_root) {
+			/* reset the root-crossing-direction flags */
 			for(i = 0; i < enginedata->nbnds; i++) {
 				rootdir[i] = 0;
 			}
-			if (enginedata->nbnds) IDASetRootDirection(ida_mem, rootdir);
+			if(enginedata->nbnds) IDASetRootDirection(ida_mem, rootdir);
 		}
 
 		/**
@@ -1097,9 +1102,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 		 * @TODO "Sufficiently far" is currently tol = 0.0001, i.e complete arbitrary
 		 * Should reflect IDACalcIC's requirements?
 		 */
-
-		do {
-
+		do{
 			if(need_to_reinteg && !after_root) {
 #ifdef IDA_BND_DEBUG
 				CONSOLE_DEBUG("Resuming integration from %f to %f", integrator_get_t(integ), tout);
@@ -1108,7 +1111,9 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 			}
 
 #ifdef IDA_BND_DEBUG
-			if (after_root && (tout - tret) > tol) CONSOLE_DEBUG("Resuming integration from %f to %f", integrator_get_t(integ), tret + tmin);
+			if(after_root && (tout - tret) > tol){
+				CONSOLE_DEBUG("Resuming integration from %f to %f", integrator_get_t(integ), tret + tmin);
+			}
 #endif
 
 			/* Control flags for boundary crossings */
@@ -1117,16 +1122,17 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 #ifdef ASC_SIGNAL_TRAPS
 			Asc_SignalHandlerPushDefault(SIGINT);
-			if (setjmp(g_int_env) == 0) {
+			if(setjmp(g_int_env) == 0) {
 #endif
-				if (after_root && (tout - tret) > tmin) flag = IDASolve(ida_mem, tret + tmin, &tret, yret, ypret, IDA_NORMAL);
-				else flag = IDASolve(ida_mem, tout, &tret, yret, ypret, IDA_NORMAL);
-
+				if(after_root && (tout - tret) > tmin){
+					flag = IDASolve(ida_mem, tret + tmin, &tret, yret, ypret, IDA_NORMAL);
+				}else{
+					flag = IDASolve(ida_mem, tout, &tret, yret, ypret, IDA_NORMAL);
+				}
 				if (after_root) {
 					ida_log_solve(integ, lrslv_ind);
 					after_root = 0;
 				}
-
 #ifdef ASC_SIGNAL_TRAPS
 			} else {
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Caught interrupt");
@@ -1136,12 +1142,10 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 #endif
 
 			if (enginedata->nbnds) {
-
 				if (flag == IDA_ROOT_RETURN) {
 #ifdef IDA_BND_DEBUG
 					CONSOLE_DEBUG("IDA reports root found!");
 #endif
-
 					/* Store the root index */
 					rootsfound = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
 
@@ -1151,12 +1155,11 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 					}
 
 #ifdef IDA_BND_DEBUG
+					/* write out the boundaries that were crossed */
 					for (i = 0; i < enginedata->nbnds; i++) {
-
 						if (rootsfound[i]) {
-
 							relname = bnd_make_name(integ->system, enginedata->bndlist[i]);
-							CONSOLE_DEBUG("Boundary '%s' crossed, rf = %d",relname,rootsfound[i]);
+							CONSOLE_DEBUG("Boundary '%s' crossed, rf = %d (x = %f)",relname,rootsfound[i],tret);
 							ASC_FREE(relname);
 						}
 					}
@@ -1173,21 +1176,22 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 						}
 					}
 
-					if (!after_root) need_to_reconfigure = ida_cross_boundary(integ, rootsfound,
+					if(!after_root){
+						need_to_reconfigure = ida_cross_boundary(integ, rootsfound,
 							bnd_cond_states, qrslv_ind, lrslv_ind);
-					if (need_to_reconfigure == 2) {
+					}
+					if(need_to_reconfigure == 2) {
 						ERROR_REPORTER_HERE(ASC_USER_ERROR,"Analysis after the boundary failed.");
 						return 1;
 					}
-					if (need_to_reconfigure) {
+					if(need_to_reconfigure){
 						after_root = 1;
 						if (ida_bnd_update_relist(integ) != 0) {
 							/* system not square, failure */
 							return 1;
 						}
 #ifdef IDA_BND_DEBUG
-						CONSOLE_DEBUG("Boundaries were crossed; "
-								"need to reinitialise solver...");
+						CONSOLE_DEBUG("Boundaries were crossed: need to reinitialise solver...");
 #endif
 						/* so, now we need to restart the integration. we will assume that
 						 everything changes: number of variables, etc, etc, etc. */
