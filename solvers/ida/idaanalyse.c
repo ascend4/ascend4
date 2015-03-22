@@ -80,8 +80,10 @@ static int integrator_ida_check_vars(IntegratorSystem *integ);
 static int integrator_ida_flag_rels(IntegratorSystem *integ);
 static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ);
 static int integrator_ida_create_lists(IntegratorSystem *integ);
-static int integrator_ida_vars_debug(IntegratorSystem *integ);
 static int integrator_ida_check_index(IntegratorSystem *integ);
+
+static int integrator_ida_vars_debug(IntegratorSystem *integ);
+static int integrator_ida_rels_debug(IntegratorSystem *integ);
 
 /*------------------------------------------------------------------------------
   ANALYSIS ROUTINE (new implementation)
@@ -318,6 +320,8 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 	CONSOLE_DEBUG("rels matchbits:  0x%x",integrator_ida_rel.matchbits);
 	CONSOLE_DEBUG("rels matchvalue: 0x%x",integrator_ida_rel.matchvalue);
 
+	integrator_ida_rels_debug(integ);
+
 	CONSOLE_DEBUG("At the end of ida_analyse, there are %d rels active"
 		,slv_count_solvers_rels(integ->system, &integrator_ida_rel)
 	);
@@ -550,16 +554,22 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem cutting derivs");
 		return 1;
 	}
+#ifdef ANALYSE_DEBUG
+	CONSOLE_DEBUG("Cut %d derivatives to just after the non-derivatives",nydot);
+#endif
 
 	if(system_cut_rels(integ->system, 0, &integrator_ida_rel, &nr)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem cutting derivs");
 		return 1;
 	}
 
+#if 0
+	/* TODO we need to work out if it's reasonable to return an error now, or not... */
 	if(ny1 != nr){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem is not square (ny = %d, nr = %d)",ny1,nr);
 		return 2;
 	}
+#endif
 
 	return 0;
 }
@@ -1067,7 +1077,7 @@ int integrator_ida_block_check(IntegratorSystem *integ){
 #endif /* disused code */
 
 /*------------------------------------------------------------------------------
-  DEBUGGING/OUTPUT ROUTINES
+  DEBUGGING/OUTPUT ROUTINES (should be moved to idaio.c)
 */
 
 /**
@@ -1092,31 +1102,31 @@ static int integrator_ida_vars_debug(IntegratorSystem *integ){
 
 #define FSTRING " %-10s %-*s %6s %6s %6s %6s %6s"
 #define AST(F) ((var_##F(v))?"*":"")
-	fprintf(stderr,"%4s" FSTRING "\n","","",lmax,"","incid","active","fixed","deriv","indep");
-	fprintf(stderr,"%4s" FSTRING "\n","","",lmax,"","-----","------","-----","-----","-----");
+	fprintf(stderr,"%6s" FSTRING "\n","sindex","",lmax,"","incid","active","fixed","deriv","indep");
+	fprintf(stderr,"%6s" FSTRING "\n","------","",lmax,"","-----","------","-----","-----","-----");
 	struct var_variable *v;
 	for(i=0;i<integ->n_y;++i){
 		v = list[i];
-		fprintf(stderr,"%4d" FSTRING "\n",i,(integ->ydot?(integ->ydot[i]?"diff":"algeb"):"?"),lmax,name[i]
+		fprintf(stderr,"%6d" FSTRING "\n",i,(integ->ydot?(integ->ydot[i]?"diff":"algeb"):"?"),lmax,name[i]
 			,AST(incident),AST(active),AST(fixed),AST(deriv),AST(nonbasic)
 		);
 	}
-	fprintf(stderr,"-------\n");
+	fprintf(stderr,"%6s %-10s\n","","-------");
 	for(i=integ->n_y;i<integ->n_y+integ->n_ydot;++i){
 		v = list[i];
-		fprintf(stderr,"%4d" FSTRING " (of %s)\n",i,"deriv",lmax,name[i]
+		fprintf(stderr,"%6d" FSTRING " (of %s)\n",i,"deriv",lmax,name[i]
 			,AST(incident),AST(active),AST(fixed),AST(deriv),AST(nonbasic)
 			,integ->y_id?(name[integ->y_id[i - integ->n_y]]):"?"
 		);
 	}
-	fprintf(stderr,"-------\n");
+	fprintf(stderr,"%6s %-10s\n","","-------");
 	for(i=integ->n_y+integ->n_ydot;i<n;++i){
 		v = list[i];
-		fprintf(stderr,"%4d" FSTRING "\n",i,"other",lmax,name[i]
+		fprintf(stderr,"%6d" FSTRING "\n",i,"other",lmax,name[i]
 			,AST(incident),AST(active),AST(fixed),AST(deriv),AST(nonbasic)
 		);
 	}
-	fprintf(stderr,"=======\n");
+	fprintf(stderr,"%6s %-10s\n","","=======");
 #undef FSTRING
 #undef AST
 	for(i=0;i<n;++i){
@@ -1126,6 +1136,44 @@ static int integrator_ida_vars_debug(IntegratorSystem *integ){
 	return 0;
 }
 
+
+static int integrator_ida_rels_debug(IntegratorSystem *integ){
+	struct rel_relation **list;
+	int n, i;
+	/* get all the rel names, get the length of the longest one */
+	n = slv_get_num_solvers_rels(integ->system);
+	list = slv_get_solvers_rel_list(integ->system);
+	char *name[n]; // we'll need to free all these pointers later
+	int lmax = 0;
+	for(i=0;i<n;++i){
+		name[i] = rel_make_name(integ->system,list[i]);
+		int l = strlen(name[i]);
+		if(l>lmax)lmax=l;
+	}
+
+#define FSTRING " %-10s %-*s %4s %6s %4s %5s %4s %4s %4s"
+#define AST(F) ((rel_##F(r))?"*":"")
+	fprintf(stderr,"%6s" FSTRING "\n","sindex","",lmax,"","incl","active","diff","cond","event","when","bbox");
+	fprintf(stderr,"%6s" FSTRING "\n","------","",lmax,"","----","------","----","----","-----","----","----");
+	struct rel_relation *r;
+	for(i=0;i<n;++i){
+		r = list[i];
+		fprintf(stderr,"%6d" FSTRING "\n",i,(rel_differential(r)?"diff":"algeb")
+			,lmax,name[i]
+			,AST(included),AST(active),AST(differential),AST(conditional),AST(in_when),AST(in_event),AST(blackbox)
+		);
+	}
+	fprintf(stderr,"%6s %-10s\n","","=======");
+#undef FSTRING
+#undef AST
+	for(i=0;i<n;++i){
+		ASC_FREE(name[i]);
+	}
+}
+
+/*------------------------------------------------------------------------------
+  UTILITY FUNCTIONS (used elsewhere, not only in this file)
+*/
 
 /**
 	Given a derivative variable, return the index of its corresponding differential

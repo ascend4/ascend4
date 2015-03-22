@@ -35,10 +35,10 @@ MODEL solardynamics;
 	*)
 
 	(* Solar collector *)
-	C IS_A factor;
-	A IS_A area;
+	(*C IS_A factor;
+	A IS_A area;*)
 	Qdot_abs IS_A energy_rate;
-	col_on: Qdot_abs = C*A*G;
+	col_on: Qdot_abs = 800.*100.*G;
 	col_off: Qdot_abs = 0;
 
 	(* Storage *)
@@ -48,14 +48,14 @@ MODEL solardynamics;
 	T ALIASES TA.T;
 	DERIVATIVE OF h;
 	Qdot_elec IS_A energy_rate;
-	m * der(h) = Qdot_abs - Qdot_elec;
+	en_eq: m * der(h) = Qdot_abs - Qdot_elec;
 
 	(* Power block *)
 	Wdot_elec, Qdot_elec_des IS_A energy_rate;
 	eta IS_A fraction;
 	(* power cycle efficiency: chambadal novikov efficiency *)
-	eta = 1 - sqrt(T_amb / T); 
-	Qdot_elec*eta = Wdot_elec;
+	eta_eq: eta = 1 - sqrt(T_amb / T); 
+	Wdot_eq: Qdot_elec*eta = Wdot_elec;
 	pow_on: Qdot_elec = Qdot_elec_des;
 	pow_off: Qdot_elec = 0;
 
@@ -91,10 +91,11 @@ METHODS
 		Wdot_elec.obs_id := 4;
 	END obs_init;
 	METHOD specify;
-		FIX C := 2000;
+		(*FIX C := 2000;*)
 		FIX Qdot_elec_des := 1 {MW};
-		FIX A := 2000 {m^2};
+		(*FIX A := 2000 {m^2};*)
 		FIX TA.p := 1 {bar};
+		FIX m := 20 {t};
 		t := 0 {s};
 		T := 300 {K} + 273.15 {K};
 		is_G_high := FALSE;
@@ -102,6 +103,10 @@ METHODS
 		is_T_start := FALSE;
 		is_T_stop := TRUE;
 	END specify;
+	METHOD nla_init;
+		FIX T;
+		FIX t := 20.5 {d};
+	END nla_init;
 	METHOD on_load;
 		RUN specify;
 		RUN obs_init;
