@@ -148,9 +148,9 @@ static void test_hysteron(){
 
 	integrator_set_reporter(integ, &test_ida_reporter);
 
-	integrator_set_minstep(integ,0.000001);
+	integrator_set_minstep(integ,0.00001);
 	integrator_set_maxstep(integ,0.01);
-	integrator_set_stepzero(integ,0.00001);
+	integrator_set_stepzero(integ,0.0001);
 	integrator_set_maxsubsteps(integ,200);
 
 	SET_LINEAR_SAMPLELIST(0., 30., 60);
