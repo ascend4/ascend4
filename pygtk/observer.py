@@ -385,7 +385,7 @@ class ObserverTab:
 					for _vals in x.eventdata:
 						arrx.append(_vals[1])
 
-					pylab.plot(A[:,0],A[:,i+1],'-',color=_colcyc[i%_ncc],marker='o',label=y[i].title)
+					pylab.plot(A[:,0],A[:,i+1],'-',color=_colcyc[i%_ncc],marker='',lw=2,label=y[i].title)
 					pylab.plot(arrx,arry,'s',color='black')
 				else:
 					pylab.plot(A[:,0],A[:,i+1],'-',color=_colcyc[i%_ncc],market='o',label=y[i].title)
