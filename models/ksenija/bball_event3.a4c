@@ -3,6 +3,14 @@ REQUIRE "atoms.a4l";
 
 (* The Modelica version of the bouncing ball model. *)
 
+(* Suggested integrator settings for this model, from test_idaevent.c:
+	integrator_set_minstep(integ,0.00001);
+	integrator_set_maxstep(integ,0.01);
+	integrator_set_stepzero(integ,0.0001);
+	integrator_set_maxsubsteps(integ,200);
+	SET_LINEAR_SAMPLELIST(0., 60., 100);
+*)
+
 MODEL bball_event3;
 
 	y, r IS_A distance;

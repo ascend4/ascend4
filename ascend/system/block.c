@@ -1090,7 +1090,7 @@ extern int system_log_block_debug(slv_system_t sys, FILE *fp){
 		n = slv_get_num_solvers_##TYPE##s(sys); \
 		list = slv_get_solvers_##TYPE##_list(sys); \
 	 \
-		CONSOLE_DEBUG("printing " #TYPE " list"); \
+		CONSOLE_DEBUG("printing " #TYPE " list (%d)",n); \
 		char *name; \
 		for(i=0;i<n;++i){ \
 			name = TYPE##_make_name(sys,list[i]); \

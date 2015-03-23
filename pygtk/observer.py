@@ -388,7 +388,7 @@ class ObserverTab:
 					pylab.plot(A[:,0],A[:,i+1],'-',color=_colcyc[i%_ncc],marker='',lw=2,label=y[i].title)
 					pylab.plot(arrx,arry,'s',color='black')
 				else:
-					pylab.plot(A[:,0],A[:,i+1],'-',color=_colcyc[i%_ncc],market='o',label=y[i].title)
+					pylab.plot(A[:,0],A[:,i+1],'-',color=_colcyc[i%_ncc],marker='o',label=y[i].title)
 
 				# put the x-axis label only on the last plot
 				if i+1 != len(y):

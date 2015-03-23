@@ -77,7 +77,7 @@
 #define VAR_BINARY    0x20
 /**< do we think this var a solver_binary?  */
 #define VAR_SEMICONT  0x40
-/**< do we think this var a solver_semi(continuous) ?  */
+/**< do we think this var a solver_semi(continuous) ? NEVER USED */
 
 /*
 	Added this one. Not sure if it belongs 'above the line' here or
@@ -103,7 +103,7 @@
 */
 
 #define VAR_PARAM         0x1000
-/**< is this variable considered parametric currently? */
+/**< is this variable considered parametric currently? NEVER USED */
 #define VAR_FIXED         0x2000
 /**< is this variable considered fixed currently? */
 #define VAR_INBLOCK       0x4000

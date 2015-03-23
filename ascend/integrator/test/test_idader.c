@@ -82,7 +82,7 @@ static void test_shmder(){
 
 	/* set paths relative to test executable */
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lsode");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ida" OSPATH_DIV "solvers/lsode" OSPATH_DIV "solvers/qrslv");
 
 	/* load the file */
 #define FILESTEM "shm_der"

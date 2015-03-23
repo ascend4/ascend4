@@ -82,8 +82,10 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ);
 static int integrator_ida_create_lists(IntegratorSystem *integ);
 static int integrator_ida_check_index(IntegratorSystem *integ);
 
+#ifdef ANALYSE_DEBUG
 static int integrator_ida_vars_debug(IntegratorSystem *integ);
 static int integrator_ida_rels_debug(IntegratorSystem *integ);
+#endif
 
 /*------------------------------------------------------------------------------
   ANALYSIS ROUTINE (new implementation)
@@ -563,13 +565,11 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 		return 1;
 	}
 
-#if 0
 	/* TODO we need to work out if it's reasonable to return an error now, or not... */
 	if(ny1 != nr){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem is not square (ny = %d, nr = %d)",ny1,nr);
 		return 2;
 	}
-#endif
 
 	return 0;
 }
@@ -1080,13 +1080,14 @@ int integrator_ida_block_check(IntegratorSystem *integ){
   DEBUGGING/OUTPUT ROUTINES (should be moved to idaio.c)
 */
 
-/**
-	This function prints out a table of the solvers_var_list with the relevant
-	variable tags also shown. It is aimed to allow debugging of problems with
-	the IDA analysis routines, but perhaps it could be useful enough to be
-	reported back to the user?
-*/
+#ifdef ANALYSE_DEBUG
 static int integrator_ida_vars_debug(IntegratorSystem *integ){
+	/**<
+		This function prints out a table of the solvers_var_list with the relevant
+		variable tags also shown. It is aimed to allow debugging of problems with
+		the IDA analysis routines, but perhaps it could be useful enough to be
+		reported back to the user?
+	*/
 	struct var_variable **list;
 	int n, i;
 	/* get all the var names, get the length of the longest one */
@@ -1135,8 +1136,9 @@ static int integrator_ida_vars_debug(IntegratorSystem *integ){
 
 	return 0;
 }
+#endif
 
-
+#ifdef ANALYSE_DEBUG
 static int integrator_ida_rels_debug(IntegratorSystem *integ){
 	struct rel_relation **list;
 	int n, i;
@@ -1170,6 +1172,7 @@ static int integrator_ida_rels_debug(IntegratorSystem *integ){
 		ASC_FREE(name[i]);
 	}
 }
+#endif
 
 /*------------------------------------------------------------------------------
   UTILITY FUNCTIONS (used elsewhere, not only in this file)
