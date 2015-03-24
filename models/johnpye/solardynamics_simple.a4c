@@ -21,23 +21,23 @@ MODEL solardynamics_simple;
 	C "concentration ratio" IS_A factor;
 
 	(* sinusoidal 'sunlight' gives us up to 1000 W *)
-	Qdot_in = 1000 {W} * 0.5*(1 - cos(t * 2{PI}/1{d}));
+	qin_eq: Qdot_in = 1000 {W} * 0.5*(1 - cos(t * 2{PI}/1{d}));
 
 	cp IS_A specific_heat_capacity;
 	T, T_0 IS_A temperature;
 	m IS_A mass;
-	E = m * cp * (T - T_0);
+	en_eq: E = m * cp * (T - T_0);
 
 	DERIVATIVE OF E;
-	der(E) = C*Qdot_in - Qdot_out;
+	dyn_eq: der(E) = C*Qdot_in - Qdot_out;
 
 	c1: C = 1;
 	c0: C = 0;
 	p1: Qdot_out = 2000 {W};
 	p0: Qdot_out = 0 {MW};
 	CONDITIONAL
-		c_c1: Qdot_in > 800 {W};
-		c_c0: Qdot_in < 500 {W};
+		c_c1: Qdot_in > 500 {W};
+		c_c0: Qdot_in < 300 {W};
 		c_p1: T > 200 {K};
 		c_p0: T < 150 {K};
 	END CONDITIONAL;
@@ -50,8 +50,9 @@ MODEL solardynamics_simple;
 	e_p0:EVENT(b_p0) CASE TRUE: USE p0; END EVENT;
 METHODS
 	METHOD on_load;
-		FIX T_0 := 100 {K};
+		FIX T_0 := 180 {K};
 		T := 200 {K};
+		E := 40 {MJ};
 		FIX C := 0;
 		FIX Qdot_out := 0 {W};
 		t := 0 {d};
@@ -67,13 +68,33 @@ METHODS
 		b_p1.obs_id := 8;
 		b_p0.obs_id := 9;
 	END on_load;
-	METHOD e_c1;     FIX T; FREE C;        END e_c1;
-	METHOD e_c1_end; FREE T; FIX C;        END e_c1_end;
-	METHOD e_c0;     FIX T; FREE C;        END e_c0;
-	METHOD e_c0_end; FREE T; FIX C;        END e_c0_end;
-	METHOD e_p1;     FIX T; FREE Qdot_out; END e_p1;
-	METHOD e_p1_end; FREE T; FIX Qdot_out; END e_p1_end;
-	METHOD e_p0;     FIX T; FREE Qdot_out; END e_p0;
-	METHOD e_p0_end; FREE T; FIX Qdot_out; END e_p0_end;
+	METHOD e_c1;     RUN freeze_c;        END e_c1;
+	METHOD e_c1_end; RUN thaw_c;          END e_c1_end;
+	METHOD e_c0;     RUN freeze_c;        END e_c0;
+	METHOD e_c0_end; RUN thaw_c;          END e_c0_end;
+	METHOD e_p1;     RUN freeze_p;        END e_p1;
+	METHOD e_p1_end; RUN thaw_p;          END e_p1_end;
+	METHOD e_p0;     RUN freeze_p;        END e_p0;
+	METHOD e_p0_end; RUN thaw_p;          END e_p0_end;
+	METHOD freeze_c; 
+		FREE C;
+		FIX T, E, der(E), Qdot_out, Qdot_in, t;
+		qin_eq.included := FALSE; en_eq.included := FALSE; dyn_eq.included := FALSE;
+	END freeze_c;
+	METHOD thaw_c;
+		FIX C;
+		FREE T, E, der(E), Qdot_out, Qdot_in, t;
+		qin_eq.included := TRUE; en_eq.included := TRUE; dyn_eq.included := TRUE;
+	END thaw_c;
+	METHOD freeze_p; 
+		FREE Qdot_out;
+		FIX T, E, der(E), Qdot_out, Qdot_in, t;
+		qin_eq.included := FALSE; en_eq.included := FALSE; dyn_eq.included := FALSE;
+	END freeze_c;
+	METHOD thaw_p; 
+		FIX Qdot_out;
+		FREE T, E, der(E), Qdot_out, Qdot_in, t;
+		qin_eq.included := TRUE; en_eq.included := TRUE; dyn_eq.included := TRUE;
+	END freeze_c;
 END solardynamics_simple;
 

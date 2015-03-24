@@ -40,6 +40,8 @@ int ida_setup_lrslv(IntegratorSystem *integ, int qrslv_ind, int lrslv_ind);
 
 /**
  * Setup LRSlv and solve the logical problem.
+
+	@return 1 on success.
  */
 int ida_log_solve(IntegratorSystem *integ, int lrslv_ind);
 

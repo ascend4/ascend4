@@ -26,7 +26,7 @@
 #include <ascend/system/block.h>
 #include <ascend/system/bndman.h>
 
-/* #define IDA_BND_DEBUG */
+#define IDA_BND_DEBUG
 
 /*
  *
@@ -81,15 +81,10 @@ static void ida_write_values(IntegratorSystem *integ) {
 }
 
 int ida_setup_lrslv(IntegratorSystem *integ, int qrslv_ind, int lrslv_ind) {
-	int32 c;
-	struct dis_discrete **dvl;
-	slv_status_t status;
-
 	ida_log_solve(integ, lrslv_ind);
-
-	dvl = slv_get_solvers_dvar_list(integ->system);
-
-	if (some_dis_vars_changed(integ->system)) return ida_bnd_reanalyse_cont(integ);
+	if(some_dis_vars_changed(integ->system)){
+		return ida_bnd_reanalyse_cont(integ);
+	}
 	return 0;
 }
 
@@ -240,8 +235,9 @@ int ida_log_solve(IntegratorSystem *integ, int lrslv_ind) {
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error attempting to load LRSlv");
 	}
 #ifdef IDA_BND_DEBUG
-	CONSOLE_DEBUG("Solver selected is '%s'",slv_solver_name
-		(slv_get_selected_solver(integ->system)));
+	CONSOLE_DEBUG("Solver selected is '%s'"
+		,slv_solver_name(slv_get_selected_solver(integ->system))
+	);
 #endif
 
 	/* Flip LRSlv into ida mode */
@@ -262,6 +258,10 @@ int ida_log_solve(IntegratorSystem *integ, int lrslv_ind) {
 	if (!status.converged) {
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-convergence in logical solver.");
 		return 0;
+#ifdef IDA_BND_DEBUG
+	}else{
+		CONSOLE_DEBUG("Converged");
+#endif
 	}
 	return 1;
 }
@@ -296,51 +296,54 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 	enginedata = integ->enginedata;
 	num_bnds = enginedata->nbnds;
 	bnd_prev_eval = ASC_NEW_ARRAY(double,num_bnds);
-	for (i = 0; i < num_bnds; i++) {
+	for(i = 0; i < num_bnds; i++) {
 		bnd_prev_eval[i] = bndman_real_eval(enginedata->bndlist[i]);
-		if (rootsfound[i]) {
+		if(rootsfound[i]) {
 			bnd = enginedata->bndlist[i];
 			bnd_set_ida_crossed(bnd, 1);
-			if (bnd_ida_first_cross(bnd) || !((rootsfound[i] == 1 && bnd_ida_incr(bnd)) || (rootsfound[i] == -1 && !bnd_ida_incr(bnd))) ) {
-				if (bnd_cond_states[i] == 0) {
+			if(bnd_ida_first_cross(bnd) || !((rootsfound[i] == 1 && bnd_ida_incr(bnd)) || (rootsfound[i] == -1 && !bnd_ida_incr(bnd))) ) {
+				if(bnd_cond_states[i] == 0) {
 					bnd_set_ida_value(bnd, 1);
 					bnd_cond_states[i] = 1;
-				} else {
+				}else{
 					bnd_set_ida_value(bnd, 0);
 					bnd_cond_states[i] = 0;
 				}
 			}else{ /* Boundary crossed twice in one direction
 				  This is very unlikely to happen */
 				/* The aim of the following two lines is to set
-                                   the value of the boolean variable to such a
-                                   value as if the boundary was crossed in the
-                                   opposite direction before */
-				if (!prevals) {
+					the value of the boolean variable to such a
+					value as if the boundary was crossed in the
+					opposite direction before */
+				if(!prevals){
 					num_dvars = slv_get_num_solvers_dvars(integ->system);
 					dvl = slv_get_solvers_dvar_list(integ->system);
 					prevals = ASC_NEW_ARRAY(int32,num_dvars);
-					for (c = 0; dvl[c] != NULL; c++)
+					for(c = 0; dvl[c] != NULL; c++)
 						prevals[c] = dis_value(dvl[c]);	
 				}
 				bnd_set_ida_value(bnd, !bnd_cond_states[i]);
-				if (!ida_log_solve(integ,lrslv_ind)) return -1;
+				if(!ida_log_solve(integ,lrslv_ind))
+					return -1;
 				bnd_set_ida_value(bnd,bnd_cond_states[i]);
 			}
 			bnd_set_ida_first_cross(bnd,0);
-			if (rootsfound[i]>0) bnd_set_ida_incr(bnd,1);
-			else bnd_set_ida_incr(bnd,0);
+			if
+				(rootsfound[i]>0) bnd_set_ida_incr(bnd,1);
+			else
+				bnd_set_ida_incr(bnd,0);
 		}
 	}
-	if (!ida_log_solve(integ,lrslv_ind)) return -1;
+	if(!ida_log_solve(integ,lrslv_ind)) return -1;
 
 	/* If there was a double crossing, because of ida_log_solve the previous values
 	of discrete variables may be equal to their current values, which would mean that
 	the discrete vars haven't changed their values, but actually they did. So here we
 	restore the previous values of those variables, which are not connected with the
 	boundary which was double-crossed. */
-	if (prevals) {
-		for (c = 0; dvl[c] != NULL; c++)
-			if (!(dis_value(dvl[c]) == prevals[c] && dis_value(dvl[c]) != dis_previous_value(dvl[c])))
+	if(prevals){
+		for(c = 0; dvl[c] != NULL; c++)
+			if(!(dis_value(dvl[c]) == prevals[c] && dis_value(dvl[c]) != dis_previous_value(dvl[c])))
 				dis_set_previous_value(dvl[c],prevals[c]);
 		ASC_FREE(prevals);
 	}
@@ -348,37 +351,68 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 	integrator_output_write(integ);
 	integrator_output_write_obs(integ);
 	integrator_output_write_event(integ);
-	if (!some_dis_vars_changed(integ->system)){
+	if(!some_dis_vars_changed(integ->system)){
 		/* Boundary crossing that has no effect on system */
-
 		ASC_FREE(bnd_prev_eval);
 
 		/* Reset the boundary flag */
-		for (i = 0; i < num_bnds; i++)
+		for(i = 0; i < num_bnds; i++)
 			bnd_set_ida_crossed(enginedata->bndlist[i], 0);
 		return 0;
 	}
 	/* update the main system if required */
 	int events_triggered = 1;
-	if (slv_get_num_solvers_events(integ->system)!=0) {
-		while (some_dis_vars_changed(integ->system) && events_triggered)  {
-
-			if (ida_bnd_reanalyse(integ)) {
-
-				if (slv_select_solver(integ->system, qrslv_ind) == -1) {
+	if(slv_get_num_solvers_events(integ->system)!=0) {
+		while(some_dis_vars_changed(integ->system) && events_triggered)  {
+			if(ida_bnd_reanalyse(integ)) {
+				/* select QRSlv solver, and solve the system */
+				if(slv_select_solver(integ->system, qrslv_ind) == -1) {
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error attempting to load QRSlv");
 				}
 #ifdef IDA_BND_DEBUG
-				CONSOLE_DEBUG("Solver selected is '%s'",slv_solver_name
-					(slv_get_selected_solver(integ->system)));
+# if 0
+				CONSOLE_DEBUG("Solver selected is '%s'"
+					,slv_solver_name(slv_get_selected_solver(integ->system))
+				);
+#endif
+				{
+					struct var_variable **vl = slv_get_solvers_var_list(integ->system);
+					int i, n=slv_get_num_solvers_vars(integ->system), first=1;
+					CONSOLE_DEBUG("In boundary problem: variables (active, incident, free):");
+					for(i=0;i<n;++i){
+						if(var_incident(vl[i])&&!var_fixed(vl[i])&&var_active(vl[i])){
+							char *name = var_make_name(integ->system,vl[i]);
+							fprintf(stderr,"%s%s",(first?"\t":", "),name);
+							first=0; ASC_FREE(name);
+						}
+					}
+					fprintf(stderr,"\n");
+				}
+				{
+					struct rel_relation **rl = slv_get_solvers_rel_list(integ->system);
+					int i, n=slv_get_num_solvers_rels(integ->system), first=1;
+					CONSOLE_DEBUG("...relations (equality, included, active):");
+					for(i=0;i<n;++i){
+						if(rel_equality(rl[i])&&rel_active(rl[i])&&rel_included(rl[i])){
+							char *name = rel_make_name(integ->system,rl[i]);
+							fprintf(stderr,"%s%s",(first?"\t":", "),name);
+							first=0; ASC_FREE(name);
+						}
+					}
+					fprintf(stderr,"\n");
+				}
 #endif
 				slv_presolve(integ->system);
 				slv_solve(integ->system);
 
 				slv_get_status(integ->system, &status);
 				if (!status.converged) {
-					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-convergence in non-linear solver at "
-						"boundary");
+					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-convergence in "
+						"non-linear solver at boundary");
+#ifdef IDA_BND_DEBUG
+				}else{
+					CONSOLE_DEBUG("Converged");
+#endif
 				}
 
 				for (i = 0; i < num_bnds; i++) {
