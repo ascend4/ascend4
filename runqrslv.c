@@ -101,7 +101,7 @@ int main(int argc, char *argv[]){
 	assert(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv"));
 	/* read back and display the ASCENDLIBRARY setting */
 	char *lib = Asc_GetEnv(ASC_ENV_LIBRARY);
-	CONSOLE_DEBUG("%s = %s\n",ASC_ENV_LIBRARY,lib);
+	CONSOLE_DEBUG("%s = %s",ASC_ENV_LIBRARY,lib);
 	ASC_FREE(lib);
 
 	/* load the QRSlv solver, presumably from the ASCENDSOLVERS path */
@@ -138,14 +138,17 @@ int main(int argc, char *argv[]){
 	assert(sys != NULL);
 
 	/* assign the solver to the system */
+	CONSOLE_DEBUG("Assigning solver");
 	assert(slv_select_solver(sys,qrslv_index));
 	CONSOLE_DEBUG("Assigned solver '%s'...",slv_solver_name(slv_get_selected_solver(sys)));
 
 	/* presolve, check it's ready, then solve */
+	CONSOLE_DEBUG("Presolve...");
 	assert(0 == slv_presolve(sys));
 	slv_status_t status1;
 	slv_get_status(sys, &status1);
 	assert(status1.ready_to_solve);
+	CONSOLE_DEBUG("Solve...");
 	slv_solve(sys);
 	/* check that solver status was 'ok' */
 	slv_get_status(sys, &status1);
