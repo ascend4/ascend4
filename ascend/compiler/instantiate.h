@@ -41,13 +41,13 @@
 	of general and utilities files, as well as some 'internal' packages.
 
 	For further information about ASCEND, see the Developers' Wiki at
-	http://ascendwiki.cheme.cmu.edu/
+	http://ascend4.org/
 
 	@section license License
 
 	ASCEND is licensed under the GNU General Public License. See the the file
 	'LICENSE.txt' for more information, which is available at:
-	http://ascendcode.cheme.cmu.edu/viewvc.cgi/code/trunk/LICENSE.txt?view=markup
+	http://code.ascend4.org/ascend/trunk/LICENSE.txt?view=co
 */
 
 #ifndef ASC_INSTANTIATE_H
