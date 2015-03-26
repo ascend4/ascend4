@@ -206,6 +206,13 @@ static void test_bug564(void){
 	load_solve_test_qrslv("models","test/bug564/combinedcycle_fprops.a4c","combinedcycle_water",1)
 }
 
+/**
+	http://ascend4.org/b564 an even simpler test case.
+*/
+static void test_bug564(void){
+	load_solve_test_qrslv("models","test/qrslv/akash_eos.a4c","akash_eos",1)
+}
+
 /*===========================================================================*/
 /* Registration information */
 

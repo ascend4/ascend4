@@ -10,7 +10,7 @@
 
 	Starting in the directory where this file is located, it can be compiled
 	using
-	  gcc -orunqrslv runqrslv.c -lascend
+	  gcc -I. -orunqrslv runqrslv.c -L. -lascend
 	providing ASCEND itself has already been compiled 
 	(see http://ascend4.org/Building_ASCEND for details on how to do that)
 */
