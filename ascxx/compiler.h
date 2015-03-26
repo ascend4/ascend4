@@ -1,6 +1,9 @@
 #ifndef ASCXX_COMPILER_H
 #define ASCXX_COMPILER_H
 
+#include <string>
+
+
 /**
 	This class holds compiler configuration. At the moment there is only one
 	possible compiler, although one day there might be different compilers
@@ -12,10 +15,12 @@
 
 	The GUI must also access the Compiler object when it wants to set
 	configuration options.
+
+	The Compiler in libascend is not really a data structure so much as a
+	collection of functions and some global variables that control its 
+	behaviour. Eventually we would like to eliminate those global variables and
+	keep them contained in a structure something like this one (but in C).
 */
-
-#include <string>
-
 class Compiler{
 private:
 	Compiler();
