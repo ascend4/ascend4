@@ -49,7 +49,7 @@
 	will result in the test failing.
 */
 static void load_solve_test_qrslv(const char *librarypath, const char *modelfile, const char *modelname, int simplify){
-	const char env1[2*PATH_MAX]
+	char env1[2*PATH_MAX];
 	int status;
 	int qrslv_index;
 
@@ -58,7 +58,7 @@ static void load_solve_test_qrslv(const char *librarypath, const char *modelfile
 
 	/* set the needed environment variables so that models, solvers can be found */
 	snprintf(env1,2*PATH_MAX,ASC_ENV_LIBRARY "=%s",librarypath);
-	CU_TEST(0 == Asc_PutEnv(env1);
+	CU_TEST(0 == Asc_PutEnv(env1));
 	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv"));
 	/* read back and display the ASCENDLIBRARY setting */
 	char *lib = Asc_GetEnv(ASC_ENV_LIBRARY);
@@ -68,7 +68,7 @@ static void load_solve_test_qrslv(const char *librarypath, const char *modelfile
 	/* load the QRSlv solver, presumably from the ASCENDSOLVERS path */
 	package_load("qrslv",NULL);
 	qrslv_index = slv_lookup_client("QRSlv");
-	CU_ASSERT_FATAL(index != -1);
+	CU_ASSERT_FATAL(qrslv_index != -1);
 
 	/* load the model file */
 	Asc_OpenModule(modelfile,&status);
@@ -100,18 +100,18 @@ static void load_solve_test_qrslv(const char *librarypath, const char *modelfile
 	CU_ASSERT_FATAL(sys != NULL);
 
 	/* assign the solver to the system */
-	CU_ASSERT_FATAL(slv_select_solver(sys,index));
-	CONSOLE_DEBUG("Assigned solver '%s'...",solvername);
+	CU_ASSERT_FATAL(slv_select_solver(sys,qrslv_index));
+	CONSOLE_DEBUG("Assigned solver '%s'...",slv_solver_name(slv_get_selected_solver(sys)));
 
 	/* presolve, check it's ready, then solve */
 	CU_ASSERT_FATAL(0 == slv_presolve(sys));
-	slv_status_t status;
-	slv_get_status(sys, &status);
-	CU_ASSERT_FATAL(status.ready_to_solve);
+	slv_status_t status1;
+	slv_get_status(sys, &status1);
+	CU_ASSERT_FATAL(status1.ready_to_solve);
 	slv_solve(sys);
 	/* check that solver status was 'ok' */
-	slv_get_status(sys, &status);
-	CU_ASSERT(status.ok);
+	slv_get_status(sys, &status1);
+	CU_ASSERT(status1.ok);
 
 	/* clean up the 'system' -- we don't need that any more */
 	CONSOLE_DEBUG("Destroying system...");
@@ -140,22 +140,22 @@ static void test_qrslv(const char *filenamestem, int simplify){
 	/* load the file */
 	char modelpath[PATH_MAX];
 	strcpy((char *)modelpath,"test/qrslv/");
-	strncat(path, filenamestem, PATH_MAX - strlen(modelpath));
-	strncat(path, ".a4c", PATH_MAX - strlen(modelpath));
+	strncat(modelpath, filenamestem, PATH_MAX - strlen(modelpath));
+	strncat(modelpath, ".a4c", PATH_MAX - strlen(modelpath));
 	
 	load_solve_test_qrslv("models",modelpath,filenamestem,simplify);
 }
 
-static void test_bug513_simplify(void){
+static void test_fixedbug513_simplify(void){
 	test_qrslv("bug513",1);
 }
 
-static void test_bug513_no_simplify(void){
+static void test_fixedbug513_no_simplify(void){
 	test_qrslv("bug513",0);
 }
 
 /* http://ascend4.org/b567, sim_destroy crash (seen at r4354 in trunk). */
-static void test_bug567(void){
+static void test_fixedbug567(void){
 	/* this test doesn't use the method abouve, because we don't need to solve */
 	Asc_CompilerInit(1);
 	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
@@ -203,28 +203,27 @@ static void test_bug567(void){
 	of some sort.
 */
 static void test_bug564(void){
-	load_solve_test_qrslv("models","test/bug564/combinedcycle_fprops.a4c","combinedcycle_water",1)
+	load_solve_test_qrslv("models","test/bug564/combinedcycle_fprops.a4c","combinedcycle_water",1);
 }
 
-/**
-	http://ascend4.org/b564 an even simpler test case.
-*/
-static void test_bug564(void){
-	load_solve_test_qrslv("models","test/qrslv/akash_eos.a4c","akash_eos",1)
+static void test_bug564_eos(void){
+	load_solve_test_qrslv("models","test/qrslv/akash_eos.a4c","akash_eos",1);
 }
 
 /*===========================================================================*/
 /* Registration information */
 
 #define TESTS1(T,X) \
-	T(bug513_no_simplify) \
-	X T(bug513_simplify) \
-	X T(bug567) \
-	X T(bug564)
+	T(fixedbug513_no_simplify) \
+	X T(fixedbug513_simplify) \
+	X T(fixedbug567) \
+	X T(bug564) \
+	X T(bug564_eos)
 
 #define X
 #define TESTS(T) TESTS1(T,X)
 
 REGISTER_TESTS_SIMPLE(solver_qrslv, TESTS)
 #undef X
+
 
