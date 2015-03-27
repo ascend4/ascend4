@@ -144,6 +144,10 @@ END srk_comp;
 
 (* for easy use with 'runqrslv' *)
 MODEL akash_eos REFINES testsrk;
+METHODS
+METHOD self_test;
+	ASSERT 1 > 0;
+END self_test;
 END akash_eos;
 
 

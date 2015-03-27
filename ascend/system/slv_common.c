@@ -56,6 +56,8 @@
 #include "var.h"
 #include "discrete.h"
 
+#define DSOLVE_DEBUG
+
 #define SAFE_FIX_ME 0
 
 /* vector math stuff moved to mtx_vector.c */
@@ -204,6 +206,15 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
   int32 able, status;
   int nsolns, allsolns;
   real64 *slist, save;
+
+#ifdef DSOLVE_DEBUG
+	{
+		char *vnm = var_make_name(server,var);
+		char *rnm = rel_make_name(server,rel);
+		CONSOLE_DEBUG("directly solving var '%s' (%p) in rel '%s' (%p)",vnm,var,rnm,rel);
+		ASC_FREE(vnm); ASC_FREE(rnm);
+	}
+#endif
 
   slist = relman_directly_solve_new(rel,var,&able,&nsolns,epsilon);
   if( !able ) {
