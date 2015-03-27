@@ -4199,7 +4199,7 @@ static int qrslv_solve(slv_system_t server, SlvClientToken asys){
 			fprintf(stderr,"%s%d:%s",(j?", ":""),j,n);
 			ASC_FREE(n);
 		}
-		fprintf(stderr,"\n");
+		fprintf(stderr,")\n");
 	}
   }
 #endif
