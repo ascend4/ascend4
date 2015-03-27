@@ -1027,14 +1027,18 @@ real64 *relman_directly_solve_new( struct rel_relation *rel,
 	   switch (rel->type ) {
 			case e_rel_token:
 				{
+					/* FIXME bug 564 is caused somewhere in the code called 
+					from here, but only in some cases, on 64-bit machines. */
 					int nvars,n;
 					const struct var_variable **vlist;
 					unsigned long vindex; /* index to the compiler */
 					nvars = rel_n_incidences(rel);
 					vlist = rel_incidence_list(rel);
 					vindex = 0;
+					/* this loop finds out the position of the unknown variable
+					in the incidence list for this equation */
 					for (n=0; n < nvars; n++) {
-					    if (vlist[n]==solvefor) {
+					    if(vlist[n]==solvefor) {
 						    vindex = n+1; /*compiler counts from 1 */
 						    break;
 					    }
