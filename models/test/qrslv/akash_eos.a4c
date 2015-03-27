@@ -68,7 +68,7 @@ MODEL testsrk;
 	V IS_A molar_volume;
 	Z IS_A factor; 
 	f IS_A factor;
-	tsrk IS_A srk(P,T,V,f,Z,cd.data[c1]); 
+	tsrk IS_A srk(P,T,V,Z,f,cd.data[c1]); 
 
 	eqTr: Tr = T/cd.data[c1].Tc;
 	eqPr: Pr = P/cd.data[c1].Pc;
@@ -109,7 +109,7 @@ MODEL srk_comp(
 	V IS_A molar_volume;
 	Z IS_A factor;
 	f IS_A factor;
-	tsrk IS_A srk(P,T,V,f,Z,cd.data[c1]); 
+	tsrk IS_A srk(P,T,V,Z,f,cd.data[c1]); 
 
 	eqTr: Tr = T/cd.data[c1].Tc;
 	eqPr: Pr = P/cd.data[c1].Pc;

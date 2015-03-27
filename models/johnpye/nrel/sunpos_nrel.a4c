@@ -30,11 +30,15 @@ MODEL sunpos_nrel;
 END sunpos_nrel;
 
 MODEL sunpos_nrel_test REFINES sunpos_nrel;
-	(* greenwich *)
+	(* canberra *)
+	loc.longitude :== 149 {deg};
+	loc.latitude :== -35 {deg};
+	loc.elevation :== 0 {m};
+	(*(* greenwich *)
 	loc.latitude :== 51.4778 {deg};
 	loc.longitude :== 0 {deg};
 	loc.elevation :== 215.9 {ft};
-	(*(* albuquerque *)
+	(* albuquerque *)
 	loc.latitude :== +35 {deg} + 6.{deg}/60 + 39.{deg}/3600;
 	loc.longitude :== -106{deg} + 36.{deg}/60 + 36.{deg}/3600;
 	loc.elevation :== 1619 {m};
