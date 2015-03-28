@@ -1031,7 +1031,7 @@ real64 *relman_directly_solve_new( struct rel_relation *rel,
 					from here, but only in some cases, on 64-bit machines. */
 					int nvars,n;
 					const struct var_variable **vlist;
-					unsigned long vindex; /* index to the compiler */
+					int vindex; /* index to the compiler */
 					nvars = rel_n_incidences(rel);
 					vlist = rel_incidence_list(rel);
 					vindex = 0;

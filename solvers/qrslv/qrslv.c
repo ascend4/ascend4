@@ -4178,12 +4178,13 @@ static int qrslv_solve(slv_system_t server, SlvClientToken asys){
   {
 	int i,j;
 	int nv = slv_get_num_solvers_vars(server);
-	const struct var_variable **v = slv_get_solvers_var_list(server);
+	struct var_variable **v = slv_get_solvers_var_list(server);
 	CONSOLE_DEBUG("Variable list");
 	for(i=0;i<nv;++i){
 		char *n = var_make_name(server,v[i]);
 		fprintf(stderr,"\t%d\t%-15p\t%s\n",i,v[i],n);
 		ASC_FREE(n);
+		var_set_value(v[i],var_value(v[i]));
 	}
 	int nr = slv_get_num_solvers_rels(server);
 	struct rel_relation **r = slv_get_solvers_rel_list(server);
@@ -4192,7 +4193,7 @@ static int qrslv_solve(slv_system_t server, SlvClientToken asys){
 		char *n = rel_make_name(server,r[i]);
 		fprintf(stderr,"\t%d\t%-15p\t%-20s (",i,r[i],n);
 		nv = rel_n_incidences(r[i]);
-		v = rel_incidence_list(r[i]);
+		const struct var_variable **v = rel_incidence_list(r[i]);
 		ASC_FREE(n);
 		for(j=0;j<nv;++j){
 			char *n = var_make_name(server,v[j]);
