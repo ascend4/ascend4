@@ -3143,7 +3143,6 @@ double *RelationFindRoots(struct Instance *i,
     assert(glob_rel!=NULL);
     glob_done = 0;
     list = RelationVarList(glob_rel);
-    CONSOLE_DEBUG("*varnum=%d",*varnum);
     if( *varnum >= 1 && *varnum <= gl_length(list)){
       glob_done = 1;
     }
@@ -3208,7 +3207,7 @@ double *RelationFindRoots(struct Instance *i,
       return soln_list.soln;
     }
     /* CALL ITERATIVE SOLVER */
-    CONSOLE_DEBUG("Solving iteratively...");
+    //CONSOLE_DEBUG("Solving iteratively...");
     *soln_list.soln = RootFind(glob_rel,&(lower_bound),
         		       &(upper_bound),&(nominal),
         		       &(tolerance),
@@ -4036,7 +4035,6 @@ int CalcResidGivenValue(int *mode, int *m, int *varnum,
   UNUSED_PARAMETER(u);
   UNUSED_PARAMETER(g);
 
-  CONSOLE_DEBUG("*varnum=%d",*varnum);
   SetRealAtomValue(
       ((struct Instance *)gl_fetch(RelationVarList(glob_rel),*varnum)),
       val[*varnum],
@@ -4112,9 +4110,7 @@ double RootFind(struct relation *rel,
     var = (struct Instance *)gl_fetch(vlist,(unsigned long)(j+1));
     x[j] = RealAtomValue(var);
   }
-  CONSOLE_DEBUG("varnum=%d",varnum);
   n = (int)varnum;
-  CONSOLE_DEBUG("n=%d",n);
 
   /*
    * Get the evaluation function.
