@@ -684,7 +684,7 @@ ASC_DLLSPEC enum safe_err RelationCalcHessianMtxSafe(struct Instance *i, hessian
 double *RelationFindRoots(struct Instance *i,
         double lower_bound, double upper_bound,
         double nominal, double tolerance,
-        unsigned long *varnum,
+        int *varnum,
         int *able,
         int *nsolns);
 /**<
