@@ -196,17 +196,7 @@ static void test_fixedbug567(void){
 	Asc_CompilerDestroy();
 }
 
-
-/**
-	http://ascend4.org/b564 error in solution of model; the solver causes fixed
-	variables to change to crazy values, looks like a memory management problem
-	of some sort.
-*/
-static void test_bug564(void){
-	load_solve_test_qrslv("models","test/bug564/combinedcycle_fprops.a4c","combinedcycle_water",1);
-}
-
-static void test_bug564_eos(void){
+static void test_fixedbug564(void){
 	load_solve_test_qrslv("models","test/qrslv/akash_eos.a4c","akash_eos",1);
 }
 
@@ -217,8 +207,7 @@ static void test_bug564_eos(void){
 	T(fixedbug513_no_simplify) \
 	X T(fixedbug513_simplify) \
 	X T(fixedbug567) \
-	X T(bug564) \
-	X T(bug564_eos)
+	X T(fixedbug564)
 
 #define X
 #define TESTS(T) TESTS1(T,X)
