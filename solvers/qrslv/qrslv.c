@@ -59,7 +59,7 @@
 /**< makes lots of extra spew */
 
 /* #define PIVOT_DEBUG */
-#define LISTS_DEBUG /* show lists of vars and rels before solving */
+/* #define LISTS_DEBUG *//* show lists of vars and rels before solving */
 
 #define QRSLV(s) ((qrslv_system_t)(s))
 #define SERVER (sys->slv)

@@ -56,7 +56,7 @@
 #include "var.h"
 #include "discrete.h"
 
-#define DSOLVE_DEBUG
+/* #define DSOLVE_DEBUG */
 
 #define SAFE_FIX_ME 0
 
