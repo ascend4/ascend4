@@ -739,6 +739,10 @@ int ida_setup_IC(IntegratorSystem *integ, void *ida_mem,
 	char *varname;
 #endif
 
+#ifdef IDA_BND_DEBUG
+	CONSOLE_DEBUG("Solving initial conditions...");
+#endif
+
 	icopt = 0;
 	if(strcmp(SLV_PARAM_CHAR(&integ->params,IDA_PARAM_CALCIC), "Y") == 0) {
 #ifdef SOLVE_DEBUG
@@ -746,8 +750,7 @@ int ida_setup_IC(IntegratorSystem *integ, void *ida_mem,
 #endif
 		icopt = IDA_Y_INIT;
 		asc_assert(icopt!=0);
-	}else if (strcmp(SLV_PARAM_CHAR(&integ->params,IDA_PARAM_CALCIC), "YA_YDP")
-			== 0) {
+	}else if(0==strcmp(SLV_PARAM_CHAR(&integ->params,IDA_PARAM_CALCIC), "YA_YDP")){
 #ifdef SOLVE_DEBUG
 		CONSOLE_DEBUG("Solving initial conditions using values of yd");
 #endif
@@ -1016,7 +1019,6 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	integrator_ida_debug(integ, stderr);
 #endif
 
-
 	/* Initialise boundary condition states if appropriate. Reconfigure if necessary */
 	if(enginedata->nbnds){
 		CONSOLE_DEBUG("Initialising boundary states");
@@ -1027,18 +1029,26 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 #endif
 		bnd_cond_states = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
 
+		/* identify if we're exactly *on* any boundaries currently */
 		for(i = 0; i < enginedata->nbnds; i++) {
+#ifdef IDA_BND_DEBUG
+			relname = bnd_make_name(integ->system,enginedata->bndlist[i]);
+#endif
 			bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
+			bnd_set_ida_first_cross(enginedata->bndlist[i],1);
 			if(bndman_real_eval(enginedata->bndlist[i]) == 0) {
+				/* if the residual for the boundary is zero (ie looks like we are *on* the boundary?) JP */
+#ifdef IDA_BND_DEBUG
+				CONSOLE_DEBUG("Boundary '%s': not set",relname);
+#endif
 				bnd_not_set[i] = 1;
 				all_bnds_set = 0;
-			}else
+			}else{
 				bnd_not_set[i] = 0;
-			bnd_set_ida_first_cross(enginedata->bndlist[i],1);
+			}
 #ifdef IDA_BND_DEBUG
-				char *n = bnd_make_name(integ->system,enginedata->bndlist[i]);
-				CONSOLE_DEBUG("Conditional '%s' is %d",n,bnd_cond_states[i]);
-				ASC_FREE(n);
+			CONSOLE_DEBUG("Boundary '%s' is %d",relname,bnd_cond_states[i]);
+			ASC_FREE(relname);
 #endif
 		}
 		CONSOLE_DEBUG("Setting up LRSlv...");
@@ -1057,6 +1067,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	/* Setup parameter inputs and initial conditions for IDA. */
 	tout = samplelist_get(integ->samples, start_index + 1);
+	/* solve the initial conditions, allocate memory, other stuff... */
 	ida_prepare_integrator(integ, ida_mem, tout);
 
 	tol = 0.0001*(samplelist_get(integ->samples, finish_index) 
@@ -1096,8 +1107,8 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 				rootdir[i] = 0;
 #ifdef IDA_BND_DEBUG
 				char *n = bnd_make_name(integ->system,enginedata->bndlist[i]);
-				CONSOLE_DEBUG("Boundary '%s': value=%d; (trigger dirn=%s)"
-					,n, bndman_calc_satisfied(enginedata->bndlist[i])
+				CONSOLE_DEBUG("Boundary '%s': bnd_cond_states[%d]=%d, bndman_calc_satisfied=%d; (trigger dirn=%s)"
+					,n, i, bnd_cond_states[i], bndman_calc_satisfied(enginedata->bndlist[i])
 					,rootdir[i]==1?"UP":(rootdir[i]==-1?"DOWN":"both")
 				);
 				ASC_FREE(n);
@@ -1187,18 +1198,39 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 					}
 #endif
 
+					
 					if(all_bnds_set == 0){
+#ifdef IDA_BND_DEBUG
+						CONSOLE_DEBUG("Unset bounds exist; evaluate them explicitly...");
+#endif
 						all_bnds_set = 1;
 						for(i = 0; i < enginedata->nbnds; i++){
 							if(bnd_not_set[i]){
-								if(!rootsfound[i])
+								if(!rootsfound[i]){
 									bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
-								else all_bnds_set = 0;
+#ifdef IDA_BND_DEBUG
+									relname = bnd_make_name(integ->system, enginedata->bndlist[i]);
+									CONSOLE_DEBUG("Boundary '%s': bnd_cond_states[%d] = %d"
+										,relname,i,bnd_cond_states[i]
+									);
+									ASC_FREE(relname);
+#endif
+								}else all_bnds_set = 0;
 							}
 						}
 					}
 
 					if(!after_root){
+#ifdef IDA_BND_DEBUG
+						CONSOLE_DEBUG("Just 'after_root'...");
+						for(i=0;i<enginedata->nbnds;++i){
+							relname = bnd_make_name(integ->system, enginedata->bndlist[i]);
+							CONSOLE_DEBUG("Boundary '%s': bnd_cond_states[%d] = %d"
+								,relname,i,bnd_cond_states[i]
+							);
+							ASC_FREE(relname);
+						}
+#endif
 						need_to_reconfigure = ida_cross_boundary(integ, rootsfound,
 							bnd_cond_states, qrslv_ind, lrslv_ind);
 					}
@@ -1266,6 +1298,11 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 			for(i = 0; i < enginedata->nbnds; i++) {
 				if(bnd_not_set[i]) {
 					bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
+#ifdef IDA_BND_DEBUG
+					char *n = bnd_make_name(integ->system,enginedata->bndlist[i]);
+					CONSOLE_DEBUG("Boundary '%s' not set; satisfied=%d",n,bnd_cond_states[i]);
+					ASC_FREE(n);
+#endif
 				}
 			}
 		}

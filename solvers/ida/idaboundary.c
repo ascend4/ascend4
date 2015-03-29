@@ -52,7 +52,7 @@ int some_dis_vars_changed(slv_system_t sys) {
 			if(dis_value(cur_dis) != dis_previous_value(cur_dis)){
 #ifdef IDA_BND_DEBUG
 				dis_name = dis_make_name(sys, cur_dis);
-				CONSOLE_DEBUG("Boundary %s (i=%d) has changed (current=%d, prev=%d)", dis_name,
+				CONSOLE_DEBUG("Boolean %s (i=%d) has changed (current=%d, prev=%d)", dis_name,
 						i, dis_value(cur_dis), dis_previous_value(cur_dis));
 				ASC_FREE(dis_name);
 #endif
@@ -306,6 +306,13 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 					/* reminder: 'rootsfound[i] == 1 for UP or -1 for DOWN. */
 			/* this boundary was one of the boundaries triggered */
 			bnd = enginedata->bndlist[i];
+#ifdef IDA_BND_DEBUG
+			char *name = bnd_make_name(integ->system,enginedata->bndlist[i]);
+			CONSOLE_DEBUG("Boundary '%s': ida_incr=%d, dirn=%d,ida_value=%d,ida_first_cross=%d,bnd_cond_states[i]=%d"
+				,name,bnd_ida_incr(bnd),rootsfound[i],bnd_ida_value(bnd)
+				,bnd_ida_first_cross(bnd)!=0,bnd_cond_states[i]
+			);
+#endif
 			bnd_set_ida_crossed(bnd, 1);
 			if(bnd_ida_first_cross(bnd) /* not crossed before */
 				|| !((rootsfound[i] == 1 && bnd_ida_incr(bnd)) /* not crossing upwards twice in a row */
@@ -319,9 +326,7 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 					bnd_cond_states[i] = 0;
 				}
 #ifdef IDA_BND_DEBUG
-				char *n = bnd_make_name(integ->system,bnd);
-				CONSOLE_DEBUG("Set boundary '%s' to %d",n,bnd_ida_value(bnd)?1:0);
-				ASC_FREE(n);
+				CONSOLE_DEBUG("Set boundary '%s' to %d (single cross)",name,bnd_ida_value(bnd)!=0);
 #endif
 			}else{
 				/* Boundary crossed twice in one direction. Very unlikey! */
@@ -344,15 +349,16 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 				}
 				bnd_set_ida_value(bnd,bnd_cond_states[i]);
 #ifdef IDA_BND_DEBUG
-				char *n = bnd_make_name(integ->system,bnd);
-				CONSOLE_DEBUG("After double-cross, set boundary '%s' to %d",n,bnd_ida_value(bnd)?1:0);
-				ASC_FREE(n);
+				CONSOLE_DEBUG("After double-cross, set boundary '%s' to %d",name,bnd_ida_value(bnd)?1:0);
 #endif
 			}
 			/* flag this boundary as having previously been crossed */
 			bnd_set_ida_first_cross(bnd,0);
 			/* store this recent crossing-direction for future reference */
 			bnd_set_ida_incr(bnd,(rootsfound[i] > 0));
+#ifdef IDA_BND_DEBUG
+			ASC_FREE(name);
+#endif
 		}
 	}
 	if(!ida_log_solve(integ,lrslv_ind)) return -1;
