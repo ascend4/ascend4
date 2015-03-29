@@ -36,7 +36,8 @@
 #include <ascend/system/cond_config.h>
 #include <ascend/solver/slvDOF.h>
 
-/* #define ANALYSE_DEBUG */
+#define ANALYSE_DEBUG
+/* #define LISTS_DEBUG */
 
 /*
 	define DERIV_WITHOUT_DIFF to enable experimental handling of derivatives
@@ -116,6 +117,7 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 #ifdef ANALYSE_DEBUG
 	char *varname;
 #endif
+	CONSOLE_DEBUG("Analysing system...");
 
 	asc_assert(integ->engine==INTEG_IDA);
 
@@ -144,7 +146,7 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 
 #if 1
 	{
-		CONSOLE_DEBUG("Setting 'nonbasic' flags...");
+		//CONSOLE_DEBUG("Setting 'nonbasic' flags...");
 		/* set the VAR_NONBASIC flag only for the indep var */
 		struct var_variable **list = slv_get_solvers_var_list(integ->system);
 		int n = slv_get_num_solvers_vars(integ->system);
@@ -319,8 +321,8 @@ int integrator_ida_analyse(IntegratorSystem *integ){
 	}
 
 #ifdef ANALYSE_DEBUG
-	CONSOLE_DEBUG("rels matchbits:  0x%x",integrator_ida_rel.matchbits);
-	CONSOLE_DEBUG("rels matchvalue: 0x%x",integrator_ida_rel.matchvalue);
+	//CONSOLE_DEBUG("rels matchbits:  0x%x",integrator_ida_rel.matchbits);
+	//CONSOLE_DEBUG("rels matchvalue: 0x%x",integrator_ida_rel.matchvalue);
 
 	integrator_ida_rels_debug(integ);
 
@@ -354,7 +356,7 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 	struct var_variable **vlist, **oldvl;
 	int var_found;
 
-#ifdef ANALYSE_DEBUG
+#ifdef LISTS_DEBUG
 	CONSOLE_DEBUG("BEFORE CHECKING VARS");
 	system_diffvars_debug(integ->system,stderr);
 #endif
@@ -371,7 +373,7 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 		return 1;
 	}
 
-#ifdef ANALYSE_DEBUG
+#ifdef LISTS_DEBUG
 	CONSOLE_DEBUG("AFTER system_get_diffvars...");
 	system_var_list_debug(integ->system);
 #endif
@@ -429,7 +431,7 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 		}
 
 		if(!vok){
-#ifdef ANALYSE_DEBUG
+#if 0 && defined(ANALYSE_DEBUG)
 			if(var_fixed(v)){
 				VARMSG("Fixed variable '%s' fails non-deriv filter");
 			}else{
@@ -475,8 +477,10 @@ static int integrator_ida_check_vars(IntegratorSystem *integ){
 		n_y++;
 	}
 
+#if 0
 #ifdef ANALYSE_DEBUG
 	system_var_list_debug(integ->system);
+#endif
 #endif
 
 	/* we assert that all vars in y meet the integrator_ida_nonderiv filter */
@@ -529,7 +533,7 @@ static int integrator_ida_flag_rels(IntegratorSystem *integ){
 static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 	int ny1, nydot, nr;
 
-#ifdef ANALYSE_DEBUG
+#ifdef LISTS_DEBUG
 	CONSOLE_DEBUG("BEFORE SORTING RELS AND VARS");
 	system_diffvars_debug(integ->system,stderr);
 #endif
@@ -551,7 +555,6 @@ static int integrator_ida_sort_rels_and_vars(IntegratorSystem *integ){
 #endif
 	asc_assert(ny1 == integ->n_y);
 
-	ERROR_REPORTER_HERE(ASC_USER_NOTE,"moving derivs to start of remainder\n");
 	if(system_cut_vars(integ->system, ny1, &integrator_ida_deriv, &nydot)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem cutting derivs");
 		return 1;
@@ -850,9 +853,9 @@ static int integrator_ida_check_index(IntegratorSystem *integ){
 		,slv_get_num_solvers_vars(integ->system)
 	);
 
-	CONSOLE_DEBUG("VAR_DERIV = 0x%x = %d",VAR_DERIV, VAR_DERIV);
-	CONSOLE_DEBUG("system_vfilter_deriv.matchbits = 0x%x",system_vfilter_deriv.matchbits);
-	CONSOLE_DEBUG("system_vfilter_deriv.matchvalue= 0x%x",system_vfilter_deriv.matchvalue);
+	//CONSOLE_DEBUG("VAR_DERIV = 0x%x = %d",VAR_DERIV, VAR_DERIV);
+	//CONSOLE_DEBUG("system_vfilter_deriv.matchbits = 0x%x",system_vfilter_deriv.matchbits);
+	//CONSOLE_DEBUG("system_vfilter_deriv.matchvalue= 0x%x",system_vfilter_deriv.matchvalue);
 #endif
 
 	asc_assert(system_vfilter_deriv.matchbits & VAR_DERIV);
@@ -1171,6 +1174,7 @@ static int integrator_ida_rels_debug(IntegratorSystem *integ){
 	for(i=0;i<n;++i){
 		ASC_FREE(name[i]);
 	}
+	return 0;
 }
 #endif
 

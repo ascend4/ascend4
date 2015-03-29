@@ -102,7 +102,7 @@ static const IntegratorInternals integrator_ida_internals = {
  to solving problems.
  */
 extern ASC_EXPORT int ida_register(void) {
-	CONSOLE_DEBUG("Registering IDA...");
+	//CONSOLE_DEBUG("Registering IDA...");
 	return integrator_register(&integrator_ida_internals);
 }
 
@@ -128,10 +128,10 @@ static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
  the time when IDA is assigned to a particular system as its integrator.
  */
 static void integrator_ida_create(IntegratorSystem *integ) {
-	CONSOLE_DEBUG("ALLOCATING IDA ENGINE DATA");
+	//CONSOLE_DEBUG("ALLOCATING IDA ENGINE DATA");
 	IntegratorIdaData *enginedata;
 	enginedata = ASC_NEW(IntegratorIdaData);
-	CONSOLE_DEBUG("enginedata = %p",enginedata);
+	//CONSOLE_DEBUG("enginedata = %p",enginedata);
 	enginedata->rellist = NULL;
 	enginedata->safeeval = 0;
 	enginedata->vfilter.matchbits = VAR_SVAR | VAR_INCIDENT | VAR_ACTIVE
@@ -227,13 +227,13 @@ static int integrator_ida_params_default(IntegratorSystem *integ) {
 	slv_destroy_parms(p);
 
 	if (p->parms == NULL) {
-		CONSOLE_DEBUG("params NULL");
+		//CONSOLE_DEBUG("params NULL");
 		p->parms = ASC_NEW_ARRAY(struct slv_parameter, IDA_PARAMS_SIZE);
 		if (p->parms == NULL)
 			return -1;
 		p->dynamic_parms = 1;
 	} else {
-		CONSOLE_DEBUG("params not NULL");
+		//CONSOLE_DEBUG("params not NULL");
 	}
 
 	/* reset the number of parameters to zero so that we can check it at the end */
@@ -900,11 +900,10 @@ int ida_prepare_integrator(IntegratorSystem *integ, void *ida_mem,
 	ida_retrieve_IVs(integ, t0, y0, yp0);
 
 #ifdef IDA_BND_DEBUG
-	CONSOLE_DEBUG("Retrived IVs BEFORE IDACalcIC \n y0:");
+	CONSOLE_DEBUG("Initial values BEFORE IDACalcIC: y0 =");
 	N_VPrint_Serial(y0);
-	CONSOLE_DEBUG("yp0");
+	CONSOLE_DEBUG("yp0 = ");
 	N_VPrint_Serial(yp0);
-	CONSOLE_DEBUG("rah rah");
 #endif
 
 	/* allocate internal memory  */
@@ -1020,7 +1019,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	/* Initialise boundary condition states if appropriate. Reconfigure if necessary */
 	if(enginedata->nbnds){
-
+		CONSOLE_DEBUG("Initialising boundary states");
 #if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR<4
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING, "Warning: boundary detection is"
 				"unreliable with SUNDIALS pre version 2.4.0. Please update if you"
@@ -1036,7 +1035,13 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 			}else
 				bnd_not_set[i] = 0;
 			bnd_set_ida_first_cross(enginedata->bndlist[i],1);
+#ifdef IDA_BND_DEBUG
+				char *n = bnd_make_name(integ->system,enginedata->bndlist[i]);
+				CONSOLE_DEBUG("Conditional '%s' is %d",n,bnd_cond_states[i]);
+				ASC_FREE(n);
+#endif
 		}
+		CONSOLE_DEBUG("Setting up LRSlv...");
 		if(ida_setup_lrslv(integ,qrslv_ind,lrslv_ind)){
 			ERROR_REPORTER_HERE(ASC_USER_ERROR, "Idaanalyse failed.");
 			return 1;
@@ -1089,7 +1094,16 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 			/* reset the root-crossing-direction flags */
 			for(i = 0; i < enginedata->nbnds; i++){
 				rootdir[i] = 0;
+#ifdef IDA_BND_DEBUG
+				char *n = bnd_make_name(integ->system,enginedata->bndlist[i]);
+				CONSOLE_DEBUG("Boundary '%s': value=%d; (trigger dirn=%s)"
+					,n, bndman_calc_satisfied(enginedata->bndlist[i])
+					,rootdir[i]==1?"UP":(rootdir[i]==-1?"DOWN":"both")
+				);
+				ASC_FREE(n);
+#endif
 			}
+			
 			if(enginedata->nbnds) IDASetRootDirection(ida_mem, rootdir);
 		}
 
@@ -1125,14 +1139,17 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 			if(setjmp(g_int_env) == 0) {
 #endif
 				if(after_root && (tout - tret) > tmin){
+					CONSOLE_DEBUG("Continuing (slightly after root)...");
 					/* after a root, we advance time by a tiny amount to ensure
 					we traverse past the switching poing -- FIXME a bit hacky? */
 					flag = IDASolve(ida_mem, tret + tmin, &tret, yret, ypret, IDA_NORMAL);
 				}else{
+					CONSOLE_DEBUG("Continuing immediately...");
 					/* if we didn't pass a root, continue immediately from prev end time */
 					flag = IDASolve(ida_mem, tout, &tret, yret, ypret, IDA_NORMAL);
 				}
 				if(after_root){
+					CONSOLE_DEBUG("Running logic solver after root...");
 					ida_log_solve(integ, lrslv_ind);
 					after_root = 0;
 				}
@@ -1162,7 +1179,9 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 					for(i = 0; i < enginedata->nbnds; i++) {
 						if(rootsfound[i]) {
 							relname = bnd_make_name(integ->system, enginedata->bndlist[i]);
-							CONSOLE_DEBUG("Boundary '%s' crossed, rf = %d (x = %f)",relname,rootsfound[i],tret);
+							CONSOLE_DEBUG("Boundary '%s' crossed at time x = %f, direction %s"
+								,relname,tret,(rootsfound>0?"UP":"DOWN")
+							);
 							ASC_FREE(relname);
 						}
 					}
@@ -1216,8 +1235,14 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 					 * to ignore double crossings */
 					for(i = 0; i < enginedata->nbnds; i++) {
 						rootdir[i] = -1*rootsfound[i];
+#ifdef IDA_BND_DEBUG
+						char *n = bnd_make_name(integ->system,enginedata->bndlist[i]);
+						CONSOLE_DEBUG("Set direction=%d for boundary '%s'",rootdir[i],n);
+						ASC_FREE(n);
+#endif
 					}
-					IDASetRootDirection(ida_mem, rootdir);
+					IDASetRootDirection(ida_mem, rootdir);\
+					/*^^^ FIXME what about setting root direction for 'normal' roots? */
 #endif
 					ASC_FREE(rootsfound);
 					ida_reinit_integrator(integ, ida_mem, tout);

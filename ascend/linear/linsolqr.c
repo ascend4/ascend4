@@ -363,12 +363,12 @@ void linsolqr_destroy(linsolqr_system_t sys){
      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad linsolqr_system_t found. Not destroyed.");
      return;
    }
-   if( NOTNULL(sys->coef) ) {
-     CONSOLE_DEBUG("linsolqr contains coef mtx which will NOT be destroyed");
+   if(NOTNULL(sys->coef)) {
+     //CONSOLE_DEBUG("linsolqr contains coef mtx which will NOT be destroyed");
    }
-   if( NOTNULL(sys->inverse) )
+   if(NOTNULL(sys->inverse))
       mtx_destroy(sys->inverse);
-   if( NOTNULL(sys->factors) )
+   if(NOTNULL(sys->factors))
       mtx_destroy(sys->factors);
    destroy_rhs_list(sys->rl);
    destroy_qrdata(sys->qrdata);

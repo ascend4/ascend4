@@ -90,11 +90,11 @@ METHODS
 		FREE Qdot_out;
 		FIX T, E, der(E), Qdot_out, Qdot_in, t;
 		qin_eq.included := FALSE; en_eq.included := FALSE; dyn_eq.included := FALSE;
-	END freeze_c;
+	END freeze_p;
 	METHOD thaw_p; 
 		FIX Qdot_out;
 		FREE T, E, der(E), Qdot_out, Qdot_in, t;
 		qin_eq.included := TRUE; en_eq.included := TRUE; dyn_eq.included := TRUE;
-	END freeze_c;
+	END thaw_p;
 END solardynamics_simple;
 

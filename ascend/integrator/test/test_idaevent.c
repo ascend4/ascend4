@@ -108,13 +108,14 @@ static IntegratorReporter test_ida_reporter = { test_ida_reporter_init,
 	/* instantiate it */\
 	struct Instance *siminst = SimsCreateInstance(AddSymbol(FILESTEM), AddSymbol("sim1"), e_normal, NULL);\
 	CU_ASSERT_FATAL(siminst!=NULL);\
-	CONSOLE_DEBUG("RUNNING ON_LOAD");\
+	CONSOLE_DEBUG("Running 'on_load' method...");\
 	/** Call on_load */\
 	struct Name *name = CreateIdName(AddSymbol("on_load"));\
 	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);\
 	CU_ASSERT(pe==Proc_all_ok);\
 	/* create the integrator */\
 	g_use_dersyntax = 1;\
+	CONSOLE_DEBUG("Building system...");\
 	slv_system_t sys = system_build(GetSimulationRoot(siminst));\
 	CU_ASSERT_FATAL(sys != NULL);\
 	IntegratorSystem *integ = integrator_new(sys,siminst);\
@@ -360,6 +361,7 @@ static void test_solardynamics(){
 	/* TODO set some parameters? */
 
 	/* perform problem analysis */
+	CONSOLE_DEBUG("Analysing problem...");
 	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
 
 	integrator_set_reporter(integ, &test_ida_reporter);
@@ -370,6 +372,7 @@ static void test_solardynamics(){
 
 	SET_LINEAR_SAMPLELIST(0., 23.*3600., 100);
 
+	CONSOLE_DEBUG("Starting integration...");
 	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
 
 	integrator_free(integ);

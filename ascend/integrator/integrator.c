@@ -1079,7 +1079,7 @@ int integrator_solve(IntegratorSystem *sys, long i0, long i1){
 		return -4;
 	}
 
-	CONSOLE_DEBUG("RUNNING INTEGRATION...");
+	//CONSOLE_DEBUG("RUNNING INTEGRATION...");
 
 	return (sys->internals->solvefn)(sys,start_index,finish_index);
 }

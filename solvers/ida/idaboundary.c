@@ -28,10 +28,8 @@
 
 #define IDA_BND_DEBUG
 
-/*
- *
- *
- * Check to see if and of the system discrete variables have changed.
+/**
+ * Check to see if any of the system discrete variables have changed.
  *
  * @return 1 if any of the values have changed (does not necessarily mean
  * 			 the system needs to be reconfigured)
@@ -48,22 +46,21 @@ int some_dis_vars_changed(slv_system_t sys) {
 
 	for (i = 0; i < numDVs; i++) {
 		cur_dis = dvlist[i];
-
-
+		if((dis_kind(cur_dis) == e_dis_boolean_t)
+			&& (dis_inwhen(cur_dis) || dis_inevent(cur_dis))
+		){
+			if(dis_value(cur_dis) != dis_previous_value(cur_dis)){
 #ifdef IDA_BND_DEBUG
-		dis_name = dis_make_name(sys, cur_dis);
-		CONSOLE_DEBUG("Boundary %s index, current, prev = %d, %d, %d ", dis_name,
-				i, dis_value(cur_dis), dis_previous_value(cur_dis));
-		ASC_FREE(dis_name);
+				dis_name = dis_make_name(sys, cur_dis);
+				CONSOLE_DEBUG("Boundary %s (i=%d) has changed (current=%d, prev=%d)", dis_name,
+						i, dis_value(cur_dis), dis_previous_value(cur_dis));
+				ASC_FREE(dis_name);
 #endif
-
-		if ((dis_kind(cur_dis) == e_dis_boolean_t) && (dis_inwhen(cur_dis) || dis_inevent(cur_dis))) {
-			if (dis_value(cur_dis) != dis_previous_value(cur_dis)) {
 				return 1;
 			}
 		}
 	}
-
+	CONSOLE_DEBUG("No boundary vars have changed");
 	return 0;
 
 }
@@ -81,8 +78,10 @@ static void ida_write_values(IntegratorSystem *integ) {
 }
 
 int ida_setup_lrslv(IntegratorSystem *integ, int qrslv_ind, int lrslv_ind) {
+	CONSOLE_DEBUG("Running logical solver...");
 	ida_log_solve(integ, lrslv_ind);
 	if(some_dis_vars_changed(integ->system)){
+		CONSOLE_DEBUG("Some discrete vars changed; reanalysing");
 		return ida_bnd_reanalyse_cont(integ);
 	}
 	return 0;
@@ -119,6 +118,7 @@ int ida_bnd_reanalyse(IntegratorSystem *integ){
 }
 
 int ida_bnd_reanalyse_cont(IntegratorSystem *integ){
+	CONSOLE_DEBUG("Clearing memory from previous calls...");
 	if (integ->y_id != NULL) {
 		ASC_FREE(integ->y_id);
 		integ->y_id = NULL;
@@ -288,50 +288,71 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 
 	double *bnd_prev_eval;
 
+	CONSOLE_DEBUG("Crossing boundary...");
+
 	integrator_output_write(integ);
 	integrator_output_write_obs(integ);
 	integrator_output_write_event(integ);
+	/*^^^ FIXME should we write the above event? It may not have crossed in correct direction...? */
 
 	/* Flag the crossed boundary and update bnd_cond_states */
 	enginedata = integ->enginedata;
 	num_bnds = enginedata->nbnds;
 	bnd_prev_eval = ASC_NEW_ARRAY(double,num_bnds);
 	for(i = 0; i < num_bnds; i++) {
+		/* get the value of the boundary condition before crossing */
 		bnd_prev_eval[i] = bndman_real_eval(enginedata->bndlist[i]);
-		if(rootsfound[i]) {
+		if(rootsfound[i]){
+					/* reminder: 'rootsfound[i] == 1 for UP or -1 for DOWN. */
+			/* this boundary was one of the boundaries triggered */
 			bnd = enginedata->bndlist[i];
 			bnd_set_ida_crossed(bnd, 1);
-			if(bnd_ida_first_cross(bnd) || !((rootsfound[i] == 1 && bnd_ida_incr(bnd)) || (rootsfound[i] == -1 && !bnd_ida_incr(bnd))) ) {
-				if(bnd_cond_states[i] == 0) {
+			if(bnd_ida_first_cross(bnd) /* not crossed before */
+				|| !((rootsfound[i] == 1 && bnd_ida_incr(bnd)) /* not crossing upwards twice in a row */
+				|| (rootsfound[i] == -1 && !bnd_ida_incr(bnd))) /* not crossing downwards twice in a row */
+			){
+				if(bnd_cond_states[i] == 0){
 					bnd_set_ida_value(bnd, 1);
 					bnd_cond_states[i] = 1;
 				}else{
 					bnd_set_ida_value(bnd, 0);
 					bnd_cond_states[i] = 0;
 				}
-			}else{ /* Boundary crossed twice in one direction
-				  This is very unlikely to happen */
-				/* The aim of the following two lines is to set
-					the value of the boolean variable to such a
-					value as if the boundary was crossed in the
-					opposite direction before */
+#ifdef IDA_BND_DEBUG
+				char *n = bnd_make_name(integ->system,bnd);
+				CONSOLE_DEBUG("Set boundary '%s' to %d",n,bnd_ida_value(bnd)?1:0);
+				ASC_FREE(n);
+#endif
+			}else{
+				/* Boundary crossed twice in one direction. Very unlikey! */
+
+				/* The aim of the following two lines is to set the value of 
+					the boolean variable to such a value as if the boundary 
+					was crossed in the opposite direction before */
+				CONSOLE_DEBUG("DOUBLE CROSS");
 				if(!prevals){
 					num_dvars = slv_get_num_solvers_dvars(integ->system);
 					dvl = slv_get_solvers_dvar_list(integ->system);
 					prevals = ASC_NEW_ARRAY(int32,num_dvars);
 					for(c = 0; dvl[c] != NULL; c++)
-						prevals[c] = dis_value(dvl[c]);	
+						prevals[c] = dis_value(dvl[c]);
 				}
 				bnd_set_ida_value(bnd, !bnd_cond_states[i]);
-				if(!ida_log_solve(integ,lrslv_ind))
+				if(!ida_log_solve(integ,lrslv_ind)){
+					CONSOLE_DEBUG("Error in logic solve in double-cross");
 					return -1;
+				}
 				bnd_set_ida_value(bnd,bnd_cond_states[i]);
+#ifdef IDA_BND_DEBUG
+				char *n = bnd_make_name(integ->system,bnd);
+				CONSOLE_DEBUG("After double-cross, set boundary '%s' to %d",n,bnd_ida_value(bnd)?1:0);
+				ASC_FREE(n);
+#endif
 			}
+			/* flag this boundary as having previously been crossed */
 			bnd_set_ida_first_cross(bnd,0);
-			if
-				(rootsfound[i]>0) bnd_set_ida_incr(bnd,1);
-			else
-				bnd_set_ida_incr(bnd,0);
+			/* store this recent crossing-direction for future reference */
+			bnd_set_ida_incr(bnd,(rootsfound[i] > 0));
 		}
 	}
 	if(!ida_log_solve(integ,lrslv_ind)) return -1;
@@ -352,6 +373,7 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 	integrator_output_write_obs(integ);
 	integrator_output_write_event(integ);
 	if(!some_dis_vars_changed(integ->system)){
+		CONSOLE_DEBUG("Crossed boundary but no effect on system");
 		/* Boundary crossing that has no effect on system */
 		ASC_FREE(bnd_prev_eval);
 
@@ -370,11 +392,6 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error attempting to load QRSlv");
 				}
 #ifdef IDA_BND_DEBUG
-# if 0
-				CONSOLE_DEBUG("Solver selected is '%s'"
-					,slv_solver_name(slv_get_selected_solver(integ->system))
-				);
-#endif
 				{
 					struct var_variable **vl = slv_get_solvers_var_list(integ->system);
 					int i, n=slv_get_num_solvers_vars(integ->system), first=1;
