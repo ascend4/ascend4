@@ -1,4 +1,5 @@
 import sys
+
 try:
 	import loading
 	#loading.print_status("Loading PSYCO")
@@ -991,7 +992,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.reporter.reportNote("file = %s" % f)
 		self.start_waiting("Creating incidence graph...")
 		try:
-			self.sim.write(f,'dot') # create a PNG file in f
+			self.sim.write(fname,'dot') # create a PNG file in f
 		except Exception,e:
 			self.stop_waiting()
 			self.reporter.reportError("Failed to create incidence graph: %s" % str(e))

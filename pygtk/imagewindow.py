@@ -1,12 +1,12 @@
 # General-purpose popup window for reporting graphical stuff
 
-from gi.repository import Gtk
+from gi.repository import Gtk, GdkPixbuf
 from gi.repository import Pango
 import ascpy
 from varentry import *
 import os,shutil
 
-class ImageWindow1:
+class ImageWindow:
 	def __init__(self,browser,parent,imagefilename,title,delete=False):
 		self.browser = browser;
 		self.imagefilename = imagefilename
@@ -25,7 +25,7 @@ class ImageWindow1:
 		self.parent = None
 		if parent:
 			self.parent = parent
-			self.set_transient_for(self.parent)
+			self.window.set_transient_for(self.parent)
 		
 		self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagefilename)
 		self.w_orig = self.pixbuf.get_width()
