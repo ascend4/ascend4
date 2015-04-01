@@ -506,7 +506,7 @@ upper and lower bounds displayed.</property>
           <object class="GtkMenuBar" id="browsermenu">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="ubuntu_local">True</property>
+            <!--<property name="ubuntu_local">True</property>-->
             <child>
               <object class="GtkMenuItem" id="filemenu">
                 <property name="visible">True</property>
@@ -3474,7 +3474,7 @@ upper and lower bounds displayed.</property>
   </object>
   <object class="GtkMenu" id="modulemenu">
     <property name="can_focus">False</property>
-    <property name="ubuntu_local">True</property>
+    <!--<property name="ubuntu_local">True</property>-->
     <child>
       <object class="GtkMenuItem" id="view">
         <property name="visible">True</property>
