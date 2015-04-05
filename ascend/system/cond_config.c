@@ -542,13 +542,13 @@ static void apply_ecase(struct event_case *cur_case, slv_system_t sys, struct e_
       chname_in_subm = WriteInstanceNameString(event_instance(cur_event),p);
       name_in_subm = CreateIdName(AddSymbol(chname_in_subm));
       pe = Initialize(p,name_in_subm,chname_in_subm, ASCERR, 0, NULL, NULL);
+      evname = event_make_name(sys,cur_event);
       if (pe==Proc_proc_not_found) {
-        evname = event_make_name(sys,cur_event);
         ERROR_REPORTER_HERE(ASC_USER_NOTE,"Method %s not found",evname);
         event_set_meth(cur_event,0);
-        ASC_FREE(evname);
       }
       else if (pe!=Proc_all_ok) ERROR_REPORTER_HERE(ASC_USER_ERROR,"Error occured when running method %s",evname);
+      ASC_FREE(evname);
       ASC_FREE(chname_in_subm);
     }
   }

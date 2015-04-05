@@ -1019,6 +1019,20 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	integrator_ida_debug(integ, stderr);
 #endif
 
+	/* store reference to list of relations (in enginedata) */
+	ida_load_rellist(integ);
+
+	/* create IDA object */
+	ida_mem = IDACreate();
+
+	/* Setup parameter inputs and initial conditions for IDA. */
+	tout = samplelist_get(integ->samples, start_index + 1);
+	/* solve the initial conditions, allocate memory, other stuff... */
+	ida_prepare_integrator(integ, ida_mem, tout);
+
+
+
+
 	/* Initialise boundary condition states if appropriate. Reconfigure if necessary */
 	if(enginedata->nbnds){
 		CONSOLE_DEBUG("Initialising boundary states");
@@ -1059,16 +1073,8 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 
 	}
 
-	/* store reference to list of relations (in enginedata) */
-	ida_load_rellist(integ);
 
-	/* create IDA object */
-	ida_mem = IDACreate();
 
-	/* Setup parameter inputs and initial conditions for IDA. */
-	tout = samplelist_get(integ->samples, start_index + 1);
-	/* solve the initial conditions, allocate memory, other stuff... */
-	ida_prepare_integrator(integ, ida_mem, tout);
 
 	tol = 0.0001*(samplelist_get(integ->samples, finish_index) 
 					- samplelist_get(integ->samples, start_index))
