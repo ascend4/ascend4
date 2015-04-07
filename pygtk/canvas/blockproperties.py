@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
-import gtk, gobject, os, pango, re
+from gi.repository import Gtk, Gdk, GObject
+import os
 import blockinstance
-import preferences
-import gtksourceview2 as gtksourceview
 import modeltree
 from unitsdialog import UnitsDialog
 from varentry_canvas import *
@@ -11,8 +10,8 @@ SAVED_TAB = 0
 
 #Not a good place to do this, but makes implementation very easy.
 #TODO: Set up a central mechanism to handle icons, images, colors.
-_iconfixed = gtk.Image()
-_iconfree = gtk.Image()
+_iconfixed = Gtk.Image()
+_iconfree = Gtk.Image()
 _iconfixed.set_from_file(os.path.join('..','glade','locked.png'))
 _iconfree.set_from_file(os.path.join('..','glade','unlocked.png'))
 _iconfixed = _iconfixed.get_pixbuf()
@@ -22,7 +21,6 @@ _colorfree = '#000000'
 _weightfixed = 700
 _weightfree = 400
 
-
 class BlockProperties(object):
 	'''
 	Pop up window for viewing and editing ASCEND block properties.
@@ -31,8 +29,9 @@ class BlockProperties(object):
 	def __init__(self, parent, item, tab= None):
 		#Get the XML
 		glade_file_path = os.path.join('..','glade','bp.glade')
-		xml = gtk.glade.XML(glade_file_path,root = None,domain="",typedict={})
-		self.dialog = xml.get_widget('dialog')
+		builder = Gtk.Builder()
+		builder.add_from_file(glade_file_path)
+		self.dialog = builder.get_object('dialog')
 		self.parent = parent
 		self.units = self.parent.ascwrap.library.getUnits()
 
@@ -42,17 +41,17 @@ class BlockProperties(object):
 
 		##General Tab##
 		#Set the 'Name:'
-		self.block_name = xml.get_widget('block_name')
+		self.block_name = builder.get_object('block_name')
 		self.block_name.set_text(self.block.name)
 		self.block_name.set_editable(True)
 
 		#Set the 'Type:'
-		self.type_name = xml.get_widget('type_name')
+		self.type_name = builder.get_object('type_name')
 		text = self.block.blocktype.type
 		self.type_name.set_text(str(text))
 		self.type_name.set_editable(False)
 		#Set the 'Ports:'
-		self.type_name = xml.get_widget('port_name')
+		self.type_name = builder.get_object('port_name')
 		ports = self.block.ports
 		sorted_ports = [[],[],[]]
 
@@ -65,7 +64,7 @@ class BlockProperties(object):
 			elif j.type == blockinstance.PORT_INOUT:
 				sorted_ports[2].append(j.name)
 
-		self.general_entry = [xml.get_widget('port_name_input'), xml.get_widget('port_name_output'), xml.get_widget('port_name_inputoutput')]
+		self.general_entry = [builder.get_object('port_name_input'), builder.get_object('port_name_output'), builder.get_object('port_name_inputoutput')]
 
 		#Display the ports, set them not editable
 		for i in range(len(self.general_entry)):
@@ -75,7 +74,7 @@ class BlockProperties(object):
 
 		#Stream
 		#self.stream = xml.get_widget('comboboxentry1')
-		#self.stream_store = gtk.ListStore(gobject.TYPE_STRING)
+		#self.stream_store = Gtk.ListStore(GObject.TYPE_STRING)
 
 		'''
 		for stream in self.parent.ascwrap.streams:
@@ -107,12 +106,12 @@ class BlockProperties(object):
 		##End of General Tab##
 
 		##Parameters Tab##
-		#Hint: This uses the gtk.TreeView and gtk.ListStore
+		#Hint: This uses the Gtk.TreeView and Gtk.ListStore
 
 		self.param_list_store = paramListStore(self.block.params)
 		self.param_tree_model = self.param_list_store.get_model()
 		self.param_tree_view = displayModel(self.parent)
-		self.view_param = self.param_tree_view.draw_view(self.param_tree_model,xml,self.units)
+		self.view_param = self.param_tree_view.draw_view(self.param_tree_model,builder,self.units)
 		self.view_param.columns_autosize()
 		self.param_tree_view.view.connect("button-press-event", self.on_treeview_event )
 		self.param_tree_view.view.connect("key-press-event",self.on_treeview_event )
@@ -141,19 +140,19 @@ class BlockProperties(object):
 
 		##Instance Tab##
 		try:
-			self.instance_box = xml.get_widget('instance')
+			self.instance_box = builder.get_object('instance_box')
 			self.instance_model = modeltree.TreeView(self.block.instance)
 			self.instance_box.add(self.instance_model.treeview)
 			self.instance_model.treeview.show()
 		except Exception as e:
-			self.instance_box = xml.get_widget('instance')
-			self.instance_label = gtk.Label()
+			self.instance_box = builder.get_object('instance_box')
+			self.instance_label = Gtk.Label()
 			self.instance_box.add_with_viewport(self.instance_label)
 			self.instance_label.set_text('Instance not Built, Solve the Canvas Model first!')
 			self.instance_label.show()
 		##End of Instance Tab##
 
-		self.notebook = xml.get_widget('notebook1')
+		self.notebook = builder.get_object('notebook1')
 
 		global SAVED_TAB
 		if tab is not None:
@@ -162,19 +161,19 @@ class BlockProperties(object):
 			self.notebook.set_current_page(SAVED_TAB)
 
 		##Attach callback to OK##
-		OK_button = xml.get_widget('ok')
+		OK_button = builder.get_object('ok')
 		OK_button.connect('clicked',self.save_changes,self.parent,self.block)
 		OK_button.grab_default()
 
 		##Context Menu##
-		self.treecontext = gtk.Menu();
-		self.fixmenuitem = gtk.ImageMenuItem("_Fix/ _Free",True);
-		self.unitsmenuitem = gtk.ImageMenuItem("Select _Units",True);
+		self.treecontext = Gtk.Menu();
+		self.fixmenuitem = Gtk.ImageMenuItem("_Fix/ _Free",True);
+		self.unitsmenuitem = Gtk.ImageMenuItem("Select _Units",True);
 		self.fixmenuitem.show(); self.fixmenuitem.set_sensitive(False)
 		self.unitsmenuitem.show(); self.unitsmenuitem.set_sensitive(False)
 
 		self.treecontext.append(self.fixmenuitem)
-		_sep = gtk.SeparatorMenuItem(); _sep.show()
+		_sep = Gtk.SeparatorMenuItem(); _sep.show()
 		self.treecontext.append(_sep);
 		self.treecontext.append(self.unitsmenuitem)
 		self.fixmenuitem.connect("activate",self.fixfree_toggle)
@@ -188,7 +187,7 @@ class BlockProperties(object):
 
 		parent.view.canvas.canvasmodelstate = 'Modified'
 		parent.status.push(0,"Modified Block Properties")
-		parent.view.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#FFF'))
+		parent.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#FFF'))
 
 	def on_treeview_event(self,widget,event):
 
@@ -196,7 +195,7 @@ class BlockProperties(object):
 		self.fixmenuitem.set_sensitive(False)
 		_contextmenu = False
 
-		if event.type==gtk.gdk.BUTTON_PRESS:
+		if event.type==Gdk.EventType.BUTTON_PRESS:
 			_x = int(event.x)
 			_y = int(event.y)
 			_button = event.button
@@ -236,7 +235,7 @@ class BlockProperties(object):
 
 class displayModel(object):
 	'''
-	Draws the gtk.TreeView, used for the setting of parameters
+	Draws the Gtk.TreeView, used for the setting of parameters
 	'''
 	def __init__(self,parent):
 		self.parent = parent
@@ -247,23 +246,23 @@ class displayModel(object):
 		self.view.set_tooltip_column(6)
 		self.model = model
 		#Set the row renderers
-		self.name_render = gtk.CellRendererText()
+		self.name_render = Gtk.CellRendererText()
 		self.name_render.set_property('foreground-set',True)
 		self.name_render.set_property('weight-set',True)
 
-		#self.param_render = gtk.CellRendererText()
+		#self.param_render = Gtk.CellRendererText()
 		#self.param_render.set_property('editable',True)
 		#self.param_render.connect('edited', self.set_param_callback,model)
 		#self.param_render.set_property('foreground-set',True)
 		#self.param_render.set_property('weight-set',True)
 
-		self.icon_render = gtk.CellRendererPixbuf()
+		self.icon_render = Gtk.CellRendererPixbuf()
 
-		self.toggle_render = gtk.CellRendererToggle()
+		self.toggle_render = Gtk.CellRendererToggle()
 		self.toggle_render.connect('toggled',self.toggle_callback,model)
 		self.toggle_render.set_property('indicator-size',0)
 
-		self.units_render = gtk.CellRendererText()
+		self.units_render = Gtk.CellRendererText()
 		self.units_render.set_property('editable',True)
 		#self.units_render.set_property('model',self.umodel)
 		#self.units_render.set_property('text-column',0)
@@ -275,29 +274,29 @@ class displayModel(object):
 		#self.units_render.connect('editing-started',self.populate_units,model,self.units)
 		self.units_render.connect('edited',self.set_units_callback,model)
 
-		self.description_render = gtk.CellRendererText()
+		self.description_render = Gtk.CellRendererText()
 		self.description_render.set_property('foreground-set',True)
 		self.description_render.set_property('weight-set',True)
 
 		#Set the column views
-		self.name_column = gtk.TreeViewColumn('Parameter',self.name_render,text=0,foreground =4, weight=5)
+		self.name_column = Gtk.TreeViewColumn('Parameter',self.name_render,text=0,foreground =4, weight=5)
 		#self.name_column.pack_start(self.toggle_render_name,False)
 		#self.name_column.set_attributes(self.param_render,text=1)
 
-		self.description_column = gtk.TreeViewColumn('Description',self.description_render,text=6,foreground =4, weight=5)
+		self.description_column = Gtk.TreeViewColumn('Description',self.description_render,text=6,foreground =4, weight=5)
 
-		#self.param_column = gtk.TreeViewColumn('Value')
+		#self.param_column = Gtk.TreeViewColumn('Value')
 		#self.param_column.set_expand(False)
 		#self.param_column.pack_start(self.param_render,False)
 		#self.param_column.set_attributes(self.param_render,text=1, foreground =5, weight=6)
 		#self.param_column.set_expand(False)
 
-		self.toggle_column = gtk.TreeViewColumn('Status')
+		self.toggle_column = Gtk.TreeViewColumn('Status')
 		self.toggle_column.pack_start(self.icon_render,False)
 		self.toggle_column.pack_start(self.toggle_render,False)
 		self.toggle_column.set_attributes(self.icon_render,pixbuf=2)
 
-		self.units_column = gtk.TreeViewColumn('Value',self.units_render,text=1, foreground =4, weight=5)
+		self.units_column = Gtk.TreeViewColumn('Value',self.units_render,text=1, foreground =4, weight=5)
 
 		self.view.append_column(self.name_column)
 		self.view.append_column(self.toggle_column)
@@ -399,7 +398,7 @@ class displayModel(object):
 
 class paramListStore(object):
 	'''
-	Stores the Parameters in a gtk.ListStore for gtk.TreeView
+	Stores the Parameters in a Gtk.ListStore for Gtk.TreeView
 	First Column:	Name
 	Second Column:   Value
 	Fourth Column:   Lock/Unlock Icon Status
@@ -408,7 +407,7 @@ class paramListStore(object):
 	Seventh Column:  Tootip Description
 	'''
 	def __init__(self,params):
-		self.list_store = gtk.ListStore(gobject.TYPE_STRING,gobject.TYPE_STRING,gtk.gdk.Pixbuf,gobject.TYPE_PYOBJECT,gobject.TYPE_STRING, gobject.TYPE_INT,gobject.TYPE_STRING)
+		self.list_store = Gtk.ListStore(GObject.TYPE_STRING,GObject.TYPE_STRING,GdkPixbuf.Pixbuf,GObject.TYPE_PYOBJECT,GObject.TYPE_STRING, GObject.TYPE_INT,GObject.TYPE_STRING)
 		self.params = params
 		for name in self.params.keys():
 			pi=self.params[name]

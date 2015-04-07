@@ -1,6 +1,7 @@
-import pygtk
-pygtk.require('2.0')
-import gtk, pango
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+from gi.repository import Pango
 import blockinstance
 
 BROWSER_FIXED_COLOR = "#008800"
@@ -13,17 +14,17 @@ BROWSER_UNINCLUDED_COLOR = "#888888"
 class TreeView:
 	def __init__(self, instance):
 		self.data = {}
-		columns = [str,str,str,str,int,bool,gtk.gdk.Pixbuf]
-		self.treestore = gtk.TreeStore(*columns)
-		self.treeview = gtk.TreeView(self.treestore)
+		columns = [str,str,str,str,int,bool,GdkPixbuf.Pixbuf]
+		self.treestore = Gtk.TreeStore(*columns)
+		self.treeview = Gtk.TreeView(self.treestore)
 		self.otank = {}	
 		titles = [" Name"," Type"," Value"];
-		self.tvcolumns = [ gtk.TreeViewColumn() for _type in columns[:len(titles)] ]
+		self.tvcolumns = [ Gtk.TreeViewColumn() for _type in columns[:len(titles)] ]
 		i = 0
 		for tvcolumn in self.tvcolumns[:len(titles)]:
 			tvcolumn.set_title(titles[i])
 			self.treeview.append_column(tvcolumn)			
-			renderer = gtk.CellRendererText()
+			renderer = Gtk.CellRendererText()
 			tvcolumn.pack_start(renderer, True)
 			tvcolumn.add_attribute(renderer, 'text', i)
 			tvcolumn.add_attribute(renderer, 'foreground', 3)
@@ -37,17 +38,17 @@ class TreeView:
 		_type = str(instance.getType())
 		_name = str(instance.getName())
 		_fgcolor = BROWSER_INCLUDED_COLOR
-		_fontweight = pango.WEIGHT_NORMAL
+		_fontweight = Pango.Weight.NORMAL
 		_editable = False
 		_statusicon = None
 		if instance.getType().isRefinedSolverVar():
 			_editable = False
-			_fontweight = pango.WEIGHT_BOLD
+			_fontweight = Pango.Weight.BOLD
 			if instance.isFixed():
 				_fgcolor = BROWSER_FIXED_COLOR
 			else:
 				_fgcolor = BROWSER_FREE_COLOR
-				_fontweight = pango.WEIGHT_BOLD
+				_fontweight = Pango.Weight.BOLD
 				_status = instance.getStatus();
 				#_statusicon = self.browser.statusicons[_status]
 		elif instance.isRelation():
@@ -59,11 +60,11 @@ class TreeView:
 			# TODO can't edit constants that have already been refined
 			_editable = False
 			_fgcolor = BROWSER_SETTING_COLOR
-			_fontweight = pango.WEIGHT_BOLD
+			_fontweight = Pango.Weight.BOLD
 		elif instance.isSymbol() and not instance.isConst():
 			_editable = False
 			_fgcolor = BROWSER_SETTING_COLOR
-			_fontweight = pango.WEIGHT_BOLD
+			_fontweight = Pango.Weight.BOLD
 		self.data[str(instance.getName())] = [_name, _type, _value, _fgcolor, _fontweight, _editable, _statusicon]
 		return [_name, _type, _value, _fgcolor, _fontweight, _editable, _statusicon]
 		

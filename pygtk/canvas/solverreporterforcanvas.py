@@ -1,4 +1,4 @@
-import gtk
+from gi.repository import Gtk
 import ascpy
 import time
 
@@ -12,23 +12,23 @@ class PythonSolverReporter(ascpy.SolverReporter):
 class PopupSolverReporter(PythonSolverReporter):
 	def __init__(self,browser,numvars):
 		PythonSolverReporter.__init__(self,browser)
-		self.progress_dialog = gtk.Dialog("Solver Status")
+		self.progress_dialog = Gtk.Dialog("Solver Status")
 
 		
-		self.numvars = gtk.Label()
-		self.numblocks = gtk.Label()
-		self.elapsedtime = gtk.Label()
-		self.numiterations = gtk.Label()
+		self.numvars = Gtk.Label()
+		self.numblocks = Gtk.Label()
+		self.elapsedtime = Gtk.Label()
+		self.numiterations = Gtk.Label()
 	
-		self.progressbar = gtk.ProgressBar()
-		self.progress_dialog.vbox.pack_start(self.numvars)
-		self.progress_dialog.vbox.pack_start(self.numblocks)
-		self.progress_dialog.vbox.pack_start(self.elapsedtime)
-		self.progress_dialog.vbox.pack_start(self.numiterations)
-		self.progress_dialog.vbox.pack_start(self.progressbar)
+		self.progressbar = Gtk.ProgressBar()
+		self.progress_dialog.vbox.pack_start(self.numvars, True, True, 0)
+		self.progress_dialog.vbox.pack_start(self.numblocks, True, True, 0)
+		self.progress_dialog.vbox.pack_start(self.elapsedtime, True, True, 0)
+		self.progress_dialog.vbox.pack_start(self.numiterations, True, True, 0)
+		self.progress_dialog.vbox.pack_start(self.progressbar, True, True, 0)
 		
-		self.closebutton = self.progress_dialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
-		self.stopbutton = self.progress_dialog.add_button(gtk.STOCK_QUIT, gtk.RESPONSE_CANCEL)
+		self.closebutton = self.progress_dialog.add_button(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
+		self.stopbutton = self.progress_dialog.add_button(Gtk.STOCK_QUIT, Gtk.ResponseType.CANCEL)
 		self.closebutton.connect("clicked", self.on_progressdialog_close)
 		self.stopbutton.connect("clicked",self.on_progressdialog_stop)
 		self.closebutton.grab_default()
@@ -45,8 +45,8 @@ class PopupSolverReporter(PythonSolverReporter):
 
 		self.nv = numvars
 
-		while gtk.events_pending():
-			gtk.main_iteration()
+		while Gtk.events_pending():
+			Gtk.main_iteration()
 			
 	def on_progressdialog_stop(self,*args):
 		self.guiinterrupt = True;
@@ -76,8 +76,8 @@ class PopupSolverReporter(PythonSolverReporter):
 			self.blocktime = _time - self.blockstart
 			print "UPDATING!"
 			self.fill_values(status)
-		while gtk.events_pending():
-			gtk.main_iteration()		
+		while Gtk.events_pending():
+			Gtk.main_iteration()		
 
 		self.guitime = self.guitime + (time.clock() - _time)
 		if status.isConverged() or status.isDiverged() or status.isInterrupted():

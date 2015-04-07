@@ -1,4 +1,6 @@
-import pango, ascpy, gtk
+from gi.repository import Pango
+import ascpy
+from gi.repository import Gtk
 		
 class ErrorReporter():
 	
@@ -9,14 +11,14 @@ class ErrorReporter():
 		self.iconerror = iconerror
 
 		# set up the error view		
-		self.errorview = gtk.TreeView()
+		self.errorview = Gtk.TreeView()
 		#print dir(self.errorview)
 		#self.errorview.set_headers_visible(True)	
-		errstorecolstypes = [gtk.gdk.Pixbuf,str,str,str,int]
-		self.errorstore = gtk.TreeStore(*errstorecolstypes)
+		errstorecolstypes = [GdkPixbuf.Pixbuf,str,str,str,int]
+		self.errorstore = Gtk.TreeStore(*errstorecolstypes)
 		errtitles = ["","Location","Message"];
 		self.errorview.set_model(self.errorstore)
-		self.errcols = [ gtk.TreeViewColumn() for _type in errstorecolstypes]
+		self.errcols = [ Gtk.TreeViewColumn() for _type in errstorecolstypes]
 
 		i = 0
 		for tvcolumn in self.errcols[:len(errtitles)]:
@@ -24,14 +26,14 @@ class ErrorReporter():
 			self.errorview.append_column(tvcolumn)			
 
 			if i>0:
-				_renderer = gtk.CellRendererText()
+				_renderer = Gtk.CellRendererText()
 				tvcolumn.pack_start(_renderer, True)				
 				tvcolumn.add_attribute(_renderer, 'text', i)
 				if(i==2):
 					tvcolumn.add_attribute(_renderer, 'foreground', 3)
 					tvcolumn.add_attribute(_renderer, 'weight', 4)
 			else:
-				_renderer1 = gtk.CellRendererPixbuf()
+				_renderer1 = Gtk.CellRendererPixbuf()
 				tvcolumn.pack_start(_renderer1, False)				
 				tvcolumn.add_attribute(_renderer1, 'pixbuf', int(0))
 
@@ -64,9 +66,9 @@ class ErrorReporter():
 		except KeyError:
 			_sevicon = self.iconerror
 
-		_fontweight = pango.WEIGHT_NORMAL
+		_fontweight = Pango.Weight.NORMAL
 		if sev==32 or sev==64:
-			_fontweight = pango.WEIGHT_BOLD
+			_fontweight = Pango.Weight.BOLD
 		
 		_fgcolor = "black"
 		if sev==8:

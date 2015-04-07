@@ -1,8 +1,7 @@
-import pygtk
-import re
+import gi
 
-pygtk.require('2.0')
-import gtk
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import ascpy
 import os.path
 import cairo
@@ -118,7 +117,7 @@ class BlockType():
 		f = self.iconfile
 		if self.iconfile is None:
 			f = "defaultblock.svg"
-		return gtk.gdk.pixbuf_new_from_file_at_size(str(f),width,height)
+		return GdkPixbuf.Pixbuf.new_from_file_at_size(str(f),width,height)
 
 	def create_icon(self,width,height):
 		properties = self.gr
