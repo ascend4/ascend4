@@ -1,12 +1,11 @@
 # Pan and Zoom tools for Gaphas by John Pye, 4 Nov 2008.
 
-import gtk
-import gtk.gdk as gdk
+from gi.repository import Gtk, Gdk
 
 from gaphas.tool import Tool
 
-ZOOM_MASK = gdk.CONTROL_MASK | gdk.SHIFT_MASK | gdk.MOD1_MASK
-ZOOM_VALUE =gdk.CONTROL_MASK
+ZOOM_MASK = Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK | Gdk.ModifierType.MOD1_MASK
+ZOOM_VALUE =Gdk.ModifierType.CONTROL_MASK
 
 class ZoomTool(Tool):
 	"""
@@ -25,7 +24,7 @@ class ZoomTool(Tool):
 
 	def on_button_press(self, context, event):
 		if event.button == 2 \
-				and event.state & ZOOM_MASK == ZOOM_VALUE:
+				and event.get_state() & ZOOM_MASK == ZOOM_VALUE:
 			context.grab()
 			self.x0 = event.x
 			self.y0 = event.y
@@ -38,7 +37,7 @@ class ZoomTool(Tool):
 		return True
 
 	def on_motion_notify(self, context, event):
-		if event.state & ZOOM_MASK == ZOOM_VALUE:
+		if event.get_state() & ZOOM_MASK == ZOOM_VALUE:
 			view = context.view
 			dy = event.y - self.y0
 
@@ -65,7 +64,7 @@ class ZoomTool(Tool):
 			return True
 
 	def on_scroll(self, context, event):
-		if event.state & gtk.gdk.CONTROL_MASK:
+		if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
 			view = context.view
 			context.grab()
 			sx = view._matrix[0]
@@ -73,7 +72,7 @@ class ZoomTool(Tool):
 			ox = (view._matrix[4] - event.x) / sx
 			oy = (view._matrix[5] - event.y) / sy
 			factor = 0.9
-			if event.direction == gtk.gdk.SCROLL_UP:	
+			if event.direction == Gdk.ScrollDirection.UP:	
 				factor = 1. / factor
 			view._matrix.translate(-ox, -oy)
 			view._matrix.scale(factor, factor)
@@ -107,7 +106,7 @@ class PanTool(Tool):
         return True
 
     def on_motion_notify(self, context, event):
-        if event.state & gtk.gdk.BUTTON2_MASK:
+        if event.get_state() & Gdk.ModifierType.BUTTON2_MASK:
             view = context.view
             self.x1, self.y1 = event.x, event.y
             dx = self.x1 - self.x0

@@ -1,6 +1,6 @@
 from gi.repository import Pango
 import ascpy
-from gi.repository import Gtk
+from gi.repository import Gtk, GdkPixbuf
 		
 class ErrorReporter():
 	

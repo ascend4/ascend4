@@ -5,12 +5,14 @@ if __name__ == '__main__':
 	print "ERROR: ASCEND Canvas should now be invoked using the file 'canvas.py' instead of 'blocklist.py'."
 	exit(1)
 
-import gtk
-import os, os.path, glob
+from gi.repository import Gtk, GdkPixbuf
+import os
+import os.path
+import glob
 import cairo
 import ascpy
 
-class BlockIconView(gtk.IconView):
+class BlockIconView(Gtk.IconView):
 	"""
 	 IconView containing the palette of BlockTypes available for use in the
 	 canvas. The list of blocks is supplied currently as an initialisation
@@ -20,7 +22,7 @@ class BlockIconView(gtk.IconView):
 	 that is not yet implemented.
 	 """
 	def __init__(self,blocks=None,app=None):
-		self.model = gtk.ListStore(str, gtk.gdk.Pixbuf)
+		self.model = Gtk.ListStore(str, GdkPixbuf.Pixbuf)
 		self.app = app
 		self.otank = {}
 		try:
@@ -33,7 +35,7 @@ class BlockIconView(gtk.IconView):
 		except Exception as e:
 			pass
 
-		gtk.IconView.__init__(self)
+		Gtk.IconView.__init__(self)
 		self.set_model(self.model)
 		self.set_text_column(0)
 		self.set_pixbuf_column(1)
@@ -100,7 +102,7 @@ def BlockToolChain():
 	chain.append(RubberbandTool())
 	return chain
 
-class mainWindow(gtk.Window):
+class mainWindow(Gtk.Window):
 
 	menu_xml = '''<ui>
 	<menubar name='MenuBar'>
@@ -154,63 +156,63 @@ class mainWindow(gtk.Window):
 		self.ascwrap= library
 		self.errorvars = []
 		self.errorblocks = []
-		self.status = gtk.Statusbar()
+		self.status = Gtk.Statusbar()
 		self.temp = []
 		self.act = 1 #to be used for storing canvas zoom in/out related data.
 		# the Gaphas canvas
 		canvas = BlockCanvas()
 
 		# the main window
-		gtk.Window.__init__(self)
-		self.iconok = self.render_icon(gtk.STOCK_YES,gtk.ICON_SIZE_MENU)
-		self.iconinfo = self.render_icon(gtk.STOCK_DIALOG_INFO,gtk.ICON_SIZE_MENU)
-		self.iconwarning = self.render_icon(gtk.STOCK_DIALOG_WARNING,gtk.ICON_SIZE_MENU)
-		self.iconerror = self.render_icon(gtk.STOCK_DIALOG_ERROR,gtk.ICON_SIZE_MENU)
+		Gtk.Window.__init__(self)
+		self.iconok = self.render_icon(Gtk.STOCK_YES,Gtk.IconSize.MENU)
+		self.iconinfo = self.render_icon(Gtk.STOCK_DIALOG_INFO,Gtk.IconSize.MENU)
+		self.iconwarning = self.render_icon(Gtk.STOCK_DIALOG_WARNING,Gtk.IconSize.MENU)
+		self.iconerror = self.render_icon(Gtk.STOCK_DIALOG_ERROR,Gtk.IconSize.MENU)
 
 		self.set_title("ASCEND Canvas Modeller")
 		self.set_default_size(650,650)
-		self.connect("destroy", gtk.main_quit)
+		self.connect("destroy", Gtk.main_quit)
 
-		windowicon = gtk.Image()
+		windowicon = Gtk.Image()
 		windowicon.set_from_file(os.path.join('..','glade','ascend.svg'))
 		self.set_icon(windowicon.get_pixbuf())
 
-		vbox = gtk.VBox()
+		vbox = Gtk.VBox()
 
-		ui_manager = gtk.UIManager()
+		ui_manager = Gtk.UIManager()
 		accelgroup = ui_manager.get_accel_group()
 		self.add_accel_group(accelgroup)
 
-		actiongroup = gtk.ActionGroup('CanvasActionGroup')
+		actiongroup = Gtk.ActionGroup('CanvasActionGroup')
 
 		self.prefs = Preferences()
 
 		actions = [('File', None, '_File')
-			,('Quit', gtk.STOCK_QUIT, '_Quit', None,'Quit the Program', self.quit)
-			,('New', gtk.STOCK_NEW,'_New',None,'Start a new Simulation', self.new)
-			,('Open', gtk.STOCK_OPEN,'_Open',None,'Open a saved Canvas file', self.fileopen)
-			,('Save', gtk.STOCK_SAVE,'_Save',None,'Open a saved Canvas file', self.save_canvas)
-			,('SaveAs', gtk.STOCK_SAVE_AS,'_Save As...',None,'Open a saved Canvas file', self.filesave)
-			,('Export', gtk.STOCK_PRINT, '_Export SVG', None,'Quit the Program', self.export_svg_as)
-			,('Library', gtk.STOCK_OPEN, '_Load Library...', '<Control>l','Load Library', self.load_library_dialog)
+			,('Quit', Gtk.STOCK_QUIT, '_Quit', None,'Quit the Program', self.quit)
+			,('New', Gtk.STOCK_NEW,'_New',None,'Start a new Simulation', self.new)
+			,('Open', Gtk.STOCK_OPEN,'_Open',None,'Open a saved Canvas file', self.fileopen)
+			,('Save', Gtk.STOCK_SAVE,'_Save',None,'Open a saved Canvas file', self.save_canvas)
+			,('SaveAs', Gtk.STOCK_SAVE_AS,'_Save As...',None,'Open a saved Canvas file', self.filesave)
+			,('Export', Gtk.STOCK_PRINT, '_Export SVG', None,'Quit the Program', self.export_svg_as)
+			,('Library', Gtk.STOCK_OPEN, '_Load Library...', '<Control>l','Load Library', self.load_library_dialog)
 			,('Edit', None, '_Edit')
-			,('Undo', gtk.STOCK_UNDO, '_Undo', '<Control>z', 'Undo Previous Action', self.undo_canvas)
-			,('Redo',gtk.STOCK_REDO, '_Redo', '<Control>y', 'Redo Previous Undo', self.redo_canvas)
-			,('BlockProperties',gtk.STOCK_PROPERTIES, '_Block Properties', None, 'Edit Block Properties', self.bp)
-			,('Delete', gtk.STOCK_DELETE, '_Delete', 'Delete', 'Delete Selected Item', self.delblock)
+			,('Undo', Gtk.STOCK_UNDO, '_Undo', '<Control>z', 'Undo Previous Action', self.undo_canvas)
+			,('Redo',Gtk.STOCK_REDO, '_Redo', '<Control>y', 'Redo Previous Undo', self.redo_canvas)
+			,('BlockProperties',Gtk.STOCK_PROPERTIES, '_Block Properties', None, 'Edit Block Properties', self.bp)
+			,('Delete', Gtk.STOCK_DELETE, '_Delete', 'Delete', 'Delete Selected Item', self.delblock)
 			,('View', None, '_View')
-			,('Fullscreen', gtk.STOCK_FULLSCREEN, '_Full Screen', 'F11', 'Toggle Full Screen', self.fullscrn)
-			,('ZoomIn', gtk.STOCK_ZOOM_IN, '_Zoom In', None, 'Zoom In Canvas', self.zoom)
-			,('ZoomOut', gtk.STOCK_ZOOM_OUT, '_Zoom Out', None, 'Zoom Out Canvas', self.zoom)
-			#,('BestFit', gtk.STOCK_ZOOM_FIT, '_Best Fit', None, 'Best Fit Canvas',self.zoom)
+			,('Fullscreen', Gtk.STOCK_FULLSCREEN, '_Full Screen', 'F11', 'Toggle Full Screen', self.fullscrn)
+			,('ZoomIn', Gtk.STOCK_ZOOM_IN, '_Zoom In', None, 'Zoom In Canvas', self.zoom)
+			,('ZoomOut', Gtk.STOCK_ZOOM_OUT, '_Zoom Out', None, 'Zoom Out Canvas', self.zoom)
+			#,('BestFit', Gtk.STOCK_ZOOM_FIT, '_Best Fit', None, 'Best Fit Canvas',self.zoom)
 			,('Tools', None, '_Tools')
 			,('Debug', None, '_Debug', None, 'View Instance Browser',self.debug_canvas)
-			,('Run', gtk.STOCK_EXECUTE, '_Run', None, 'Solve Canvas', self.run_canvas)
-			,('Preview', gtk.STOCK_PRINT_PREVIEW, '_Preview', None, 'Preview Generated Code', self.preview_canvas)
+			,('Run', Gtk.STOCK_EXECUTE, '_Run', None, 'Solve Canvas', self.run_canvas)
+			,('Preview', Gtk.STOCK_PRINT_PREVIEW, '_Preview', None, 'Preview Generated Code', self.preview_canvas)
 			,('Help', None, '_Help')
-			,('Development', gtk.STOCK_INFO, '_Development', None, 'Check Development', self.on_get_help_online_click)
+			,('Development', Gtk.STOCK_INFO, '_Development', None, 'Check Development', self.on_get_help_online_click)
 			,('ReportBug', None, '_Report Bug', None, 'Report a Bug!', self.on_report_a_bug_click)
-			,('About', gtk.STOCK_ABOUT, '_About', None, 'About Us', self.about)
+			,('About', Gtk.STOCK_ABOUT, '_About', None, 'About Us', self.about)
 		]
 
 		actiongroup.add_actions(actions)
@@ -220,59 +222,59 @@ class mainWindow(gtk.Window):
 
 		#Creating Menu Bar
 		menubar = ui_manager.get_widget('/MenuBar')
-		vbox.pack_start(menubar,False,False)
+		vbox.pack_start(menubar,False,False,0)
 
 		#Creating Tool Bar
 		toolbar = ui_manager.get_widget('/ToolBar')
-		vbox.pack_start(toolbar,False,False)
+		vbox.pack_start(toolbar,False,False,0)
 
 		'''The Toolbar Definations start here'''
 
-		tb = gtk.Toolbar()
+		tb = Gtk.Toolbar()
 		#Load Button
-		loadbutton = gtk.ToolButton(gtk.STOCK_OPEN)
+		loadbutton = Gtk.ToolButton(Gtk.STOCK_OPEN)
 		loadbutton.connect("clicked",self.fileopen)
 		tb.insert(loadbutton,0)
 
 		#Save Button
-		savebutton = gtk.ToolButton(gtk.STOCK_SAVE)
+		savebutton = Gtk.ToolButton(Gtk.STOCK_SAVE)
 		savebutton.connect("clicked",self.save_canvas)
 		tb.insert(savebutton,1)
 
 		#Debug Button
-		debugbutton = gtk.ToolButton(gtk.STOCK_PROPERTIES)
+		debugbutton = Gtk.ToolButton(Gtk.STOCK_PROPERTIES)
 		debugbutton.set_label("Debug")
 		debugbutton.connect("clicked",self.debug_canvas)
 		tb.insert(debugbutton,2)
 
 		#Preview Button
-		previewb = gtk.ToolButton(gtk.STOCK_PRINT_PREVIEW)
+		previewb = Gtk.ToolButton(Gtk.STOCK_PRINT_PREVIEW)
 		previewb.set_label("Preview")
 		previewb.connect("clicked",self.preview_canvas)
 		tb.insert(previewb,3)
 
 		#Export Button
-		exportbutton = gtk.ToolButton(gtk.STOCK_CONVERT)
+		exportbutton = Gtk.ToolButton(Gtk.STOCK_CONVERT)
 		exportbutton.set_label("Export SVG")
 		exportbutton.connect("clicked",self.export_svg_as)
 		tb.insert(exportbutton,2)
 
 		#Run Button
-		runb = gtk.ToolButton(gtk.STOCK_EXECUTE)
+		runb = Gtk.ToolButton(Gtk.STOCK_EXECUTE)
 		runb.set_label("Run")
 		runb.connect("clicked",self.run_canvas)
 		tb.insert(runb, 4)
 
 		##Custom Entry
-		#m_entry = gtk.ToolButton(gtk.STOCK_SAVE_AS)
+		#m_entry = Gtk.ToolButton(Gtk.STOCK_SAVE_AS)
 		#m_entry.set_label("Custom METHOD")
 		#m_entry.connect("clicked",self.custommethod)
 		#tb.insert(m_entry,5)
 
-		vbox.pack_start(tb, False, False)
+		vbox.pack_start(tb, False, False,0)
 
 		# hbox occupies top part of vbox, with icons on left & canvas on right.
-		paned = gtk.HPaned()
+		paned = Gtk.HPaned()
 
 		# the 'view' widget implemented by Gaphas
 		#gaphas.view.DEBUG_DRAW_BOUNDING_BOX = True
@@ -280,22 +282,22 @@ class mainWindow(gtk.Window):
 		self.view.tool =  BlockToolChain()
 
 		# table containing scrollbars and main canvas
-		t = gtk.Table(2,2)
+		t = Gtk.Table(2,2)
 		self.view.canvas = canvas
 		self.view.zoom(1)
 		self.view.set_size_request(600, 450)
-		hs = gtk.HScrollbar(self.view.hadjustment)
-		vs = gtk.VScrollbar(self.view.vadjustment)
+		hs = Gtk.HScrollbar(self.view.hadjustment)
+		vs = Gtk.VScrollbar(self.view.vadjustment)
 		t.attach(self.view, 0, 1, 0, 1)
-		t.attach(hs, 0, 1, 1, 2, xoptions=gtk.FILL, yoptions=gtk.FILL)
-		t.attach(vs, 1, 2, 0, 1, xoptions=gtk.FILL, yoptions=gtk.FILL)
+		t.attach(hs, 0, 1, 1, 2, xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
+		t.attach(vs, 1, 2, 0, 1, xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
 
 		# a scrolling window to contain the icon palette
-		self.scroll = gtk.ScrolledWindow()
+		self.scroll = Gtk.ScrolledWindow()
 		self.scroll.set_border_width(2)
-		self.scroll.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+		self.scroll.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
 
-		self.scroll.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
+		self.scroll.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
 
 		self.blockiconview = BlockIconView(blocks=self.ascwrap.canvas_blocks,app=self)
 		self.scroll.add(self.blockiconview)
@@ -303,21 +305,21 @@ class mainWindow(gtk.Window):
 
 		paned.pack1(self.scroll, False, True)
 		paned.pack2(t, True, True)
-		vbox.pack_start(paned, True, True)
-		vpane = gtk.VPaned()
+		vbox.pack_start(paned, True, True, 0)
+		vpane = Gtk.VPaned()
 		vpane.pack1(vbox)
-		lower_vbox = gtk.VBox()
+		lower_vbox = Gtk.VBox()
 
 		self.ET = errorreporter.ErrorReporter( self.reporter,self.iconok,self.iconinfo,self.iconwarning,self.iconerror)
-		self.notebook = gtk.Notebook()
-		self.notebook.set_tab_pos(gtk.POS_TOP)
-		label = gtk.Label('Error / Status Reporter Console')
-		scrolledwindow = gtk.ScrolledWindow()
-		scrolledwindow.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
+		self.notebook = Gtk.Notebook()
+		self.notebook.set_tab_pos(Gtk.PositionType.TOP)
+		label = Gtk.Label(label='Error / Status Reporter Console')
+		scrolledwindow = Gtk.ScrolledWindow()
+		scrolledwindow.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
 		scrolledwindow.add(self.ET.errorview)
 		self.notebook.append_page(scrolledwindow, label)
-		lower_vbox.pack_start(self.notebook,True, True)
-		lower_vbox.pack_start(self.status, False, False)
+		lower_vbox.pack_start(self.notebook,True, True, 0)
+		lower_vbox.pack_start(self.status, False, False, 0)
 		vpane.pack2(lower_vbox,False,False)
 
 		self.undo_manager = undo.undoManager(self)
@@ -371,12 +373,12 @@ class mainWindow(gtk.Window):
 			while(len(self.view.selected_items)!=0):
 				self.view.canvas.remove(self.view._selected_items.pop())
 				self.status.push(0,"Item deleted.")
-				self.view.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#FFF'))
+				self.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#FFF'))
 
 		'''if self.view.focused_item:
 			self.view.canvas.remove(self.view.focused_item)
 			self.status.push(0,"Item deleted.")
-			self.view.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#FFF'))'''
+			self.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#FFF'))'''
 
 
 
@@ -389,7 +391,7 @@ class mainWindow(gtk.Window):
 		self.view.canvas.filename = None
 		self.view.canvas.canvasmodelstate = 'Unsolved'
 		self.status.push(0,"Canvasmodel state : %s"% self.view.canvas.canvasmodelstate)
-		self.view.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#FFF'))
+		self.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#FFF'))
 
 	def debug_canvas(self,widget):
 		"""
@@ -416,8 +418,8 @@ class mainWindow(gtk.Window):
 			print "ERROR:",str(e)
 			self.status.push(0,"Canvasmodel could not be saved : " + str(e))
 			b = obrowser.Browser("canvas",self.view.canvas)
-			d = gtk.Dialog("Error",self,gtk.DIALOG_DESTROY_WITH_PARENT,(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-			d.vbox.add(gtk.Label(str(e)))
+			d = Gtk.Dialog("Error",self,Gtk.DialogFlags.DESTROY_WITH_PARENT,(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+			d.vbox.add(Gtk.Label(label=str(e)))
 			d.show_all()
 			d.run()
 			d.hide()
@@ -481,10 +483,10 @@ class mainWindow(gtk.Window):
 	def export_svg_as(self,widget):
 
 		f = None
-		dialog = gtk.FileChooserDialog("Export Canvas As...", None,
-			gtk.FILE_CHOOSER_ACTION_SAVE, (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_SAVE, gtk.RESPONSE_OK))
-		dialog.set_default_response(gtk.RESPONSE_OK)
-		filter = gtk.FileFilter()
+		dialog = Gtk.FileChooserDialog("Export Canvas As...", None,
+			Gtk.FileChooserAction.SAVE, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
+		dialog.set_default_response(Gtk.ResponseType.OK)
+		filter = Gtk.FileFilter()
 		filter.set_name("Image File")
 		filter.add_pattern("*.svg")
 		dialog.add_filter(filter)
@@ -502,7 +504,7 @@ class mainWindow(gtk.Window):
 		tmpcr.show_page()
 		tmpsurface.flush()
 
-		if response == gtk.RESPONSE_OK:
+		if response == Gtk.ResponseType.OK:
 			name = dialog.get_filename()
 			if '.svg' not in name:
 				name += '.svg'
@@ -657,39 +659,39 @@ class mainWindow(gtk.Window):
 			self.view.canvas.saved_data[str(i.getName())] = i.getValue()
 
 	def about(self, widget):
-		about = gtk.AboutDialog()
+		about = Gtk.AboutDialog()
 		about.set_program_name("ASCEND CANVAS")
 		about.set_version("0.9.6x alpha")
 		about.set_copyright("Carnegie Mellon University")
 		about.set_comments("Canvas - Based GUI Modeller for Energy Systems")
 		about.set_website("http://www.ascend.cheme.cmu.edu")
-		windowicon = gtk.Image()
+		windowicon = Gtk.Image()
 		windowicon.set_from_file(os.path.join("../glade/ascend.svg"))
 		about.set_icon(windowicon.get_pixbuf())
-		about.set_logo(gtk.gdk.pixbuf_new_from_file("../glade/ascend.png"))
+		about.set_logo(GdkPixbuf.Pixbuf.new_from_file("../glade/ascend.png"))
 		about.run()
 		about.destroy()
 
 	def dummy(self, widget):
-		dum = gtk.MessageDialog(self, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE, "Sorry ! This fuctionality is not implemented yet.")
+		dum = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Sorry ! This fuctionality is not implemented yet.")
 		dum.run()
 		dum.destroy()
 
 	def fileopen(self, widget):
-		dialog = gtk.FileChooserDialog("Open..",self,gtk.FILE_CHOOSER_ACTION_OPEN, (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK))
-		dialog.set_default_response(gtk.RESPONSE_OK)
-		filter = gtk.FileFilter()
+		dialog = Gtk.FileChooserDialog("Open..",self,Gtk.FileChooserAction.OPEN, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+		dialog.set_default_response(Gtk.ResponseType.OK)
+		filter = Gtk.FileFilter()
 		filter.set_name("Canvas Files")
 		filter.add_mime_type("Canvas Files/a4b")
 		filter.add_pattern("*.a4b")
 		dialog.add_filter(filter)
-		filter = gtk.FileFilter()
+		filter = Gtk.FileFilter()
 		filter.set_name("All files")
 		filter.add_pattern("*")
 		dialog.add_filter(filter)
 
 		res = dialog.run()
-		if res == gtk.RESPONSE_OK:
+		if res == Gtk.ResponseType.OK:
 			result = dialog.get_filename()
 			self.load_canvas_file(result)
 		dialog.destroy()
@@ -703,7 +705,7 @@ class mainWindow(gtk.Window):
 				self.loadlib(self, self.view.canvas.model_library)
 			self.view.canvas.reattach_ascend(self.ascwrap.library,self.ascwrap.annodb)
 			self.view.canvas.update_now()
-			self.view.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#FFF'))
+			self.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#FFF'))
 			self.load_presaved_canvas(None)
 			self.reporter.reportError(" File %s successfully loaded." % filename)
 			self.status.push(0,"File %s Loaded." % filename)
@@ -716,11 +718,11 @@ class mainWindow(gtk.Window):
 
 	def filesave(self, widget):
 		f = None
-		dialog = gtk.FileChooserDialog("Save..", self, gtk.FILE_CHOOSER_ACTION_SAVE, (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_SAVE, gtk.RESPONSE_OK))
-		dialog.set_default_response(gtk.RESPONSE_OK)
+		dialog = Gtk.FileChooserDialog("Save..", self, Gtk.FileChooserAction.SAVE, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
+		dialog.set_default_response(Gtk.ResponseType.OK)
 		if self.view.canvas.filestate == 0:
 			dialog.set_filename("untitled")
-		filter = gtk.FileFilter()
+		filter = Gtk.FileFilter()
 		filter.set_name("Canvas File")
 		filter.add_pattern("*.a4b")
 		dialog.add_filter(filter)
@@ -728,7 +730,7 @@ class mainWindow(gtk.Window):
 		dialog.set_do_overwrite_confirmation(True)
 		#dialog.connect("confirm-overwrite", self.confirm_overwrite_callback)
 		response = dialog.run()
-		if response == gtk.RESPONSE_OK:
+		if response == Gtk.ResponseType.OK:
 			name = dialog.get_filename()
 			if '.a4b' not in name:
 				name += '.a4b'
@@ -743,8 +745,8 @@ class mainWindow(gtk.Window):
 			except Exception,e:
 				print "ERROR:",str(e)
 				b = obrowser.Browser("canvas",self.view.canvas)
-				d = gtk.Dialog("Error",self,gtk.DIALOG_DESTROY_WITH_PARENT,(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-				d.vbox.add(gtk.Label(str(e)))
+				d = Gtk.Dialog("Error",self,Gtk.DialogFlags.DESTROY_WITH_PARENT,(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+				d.vbox.add(Gtk.Label(label=str(e)))
 				d.show_all()
 				d.run()
 				d.hide()
@@ -757,11 +759,11 @@ class mainWindow(gtk.Window):
 		uri = widget.get_filename()
 		if is_uri_read_only(uri):
 			if user_wants_to_replace_read_only_file (uri):
-				return gtk.FILE_CHOOSER_CONFIRMATION_ACCEPT_FILENAME
+				return Gtk.FILE_CHOOSER_CONFIRMATION_ACCEPT_FILENAME
 			else:
-				return gtk.FILE_CHOOSER_CONFIRMATION_SELECT_AGAIN
+				return Gtk.FILE_CHOOSER_CONFIRMATION_SELECT_AGAIN
 		else:
-			return gtk.FILE_CHOOSER_CONFIRMATION_CONFIRM
+			return Gtk.FILE_CHOOSER_CONFIRMATION_CONFIRM
 		return
 
 
@@ -769,7 +771,7 @@ class mainWindow(gtk.Window):
 		if self.view.focused_item:
 			blockproperties.BlockProperties(self, self.view.focused_item).run()
 		else:
-			m = gtk.MessageDialog(self, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE, "No Block was selected! Please select a Block to view its properties.")
+			m = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "No Block was selected! Please select a Block to view its properties.")
 			m.run()
 			m.destroy()
 
@@ -838,30 +840,30 @@ class mainWindow(gtk.Window):
 		print "updating canvas"
 		self.view.canvas.update_now()
 		if flag == 1:
-			self.view.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#F88'))
+			self.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#F88'))
 			flag = 0
 		else:
-			self.view.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#AFA'))
+			self.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#AFA'))
 
 	def load_library_dialog(self,widget):
 		#TODO: separate
-		dialog = gtk.FileChooserDialog('Load Library...',self, gtk.FILE_CHOOSER_ACTION_OPEN,(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK))
-		dialog.set_default_response(gtk.RESPONSE_OK)
+		dialog = Gtk.FileChooserDialog('Load Library...',self, Gtk.FileChooserAction.OPEN,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+		dialog.set_default_response(Gtk.ResponseType.OK)
 		dialog.set_current_folder(os.path.join(self.ascwrap.defaultlibraryfolder))
 
-		filter = gtk.FileFilter()
+		filter = Gtk.FileFilter()
 		filter.set_name("Canvas Files")
 		filter.add_mime_type("Canvas Files/a4c")
 		filter.add_pattern("*.a4c")
 		dialog.add_filter(filter)
 
-		filter = gtk.FileFilter()
+		filter = Gtk.FileFilter()
 		filter.set_name("All files")
 		filter.add_pattern("*")
 		dialog.add_filter(filter)
 
 		res = dialog.run()
-		if res == gtk.RESPONSE_OK:
+		if res == Gtk.ResponseType.OK:
 			result = dialog.get_filename()
 			self.loadlib(lib_name = os.path.basename(result))
 		dialog.destroy()
@@ -871,12 +873,12 @@ class mainWindow(gtk.Window):
 	##TODO: Separate
 	#if loadcondition == 1:
 	#if self.view.canvas.model_library == lib_name:
-	#m = gtk.MessageDialog(self, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_WARNING, gtk.BUTTONS_CLOSE, "The selected Library is already loaded. ")
+	#m = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.WARNING, Gtk.ButtonsType.CLOSE, "The selected Library is already loaded. ")
 	#m.run()
 	#m.destroy()
 	#return
 	#if self.view.canvas.get_all_items():
-	#m = gtk.MessageDialog(self, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE, "Unable to switch Library ! The canvas contains models from present Model Library. ")
+	#m = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Unable to switch Library ! The canvas contains models from present Model Library. ")
 	#m.run()
 	#m.destroy()
 	#return

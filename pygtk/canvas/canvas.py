@@ -2,8 +2,9 @@
 ''' This is the main application for the Canvas modeller, it handles the ASCEND solver and the GUI'''
 
 from __future__ import with_statement
-import os, sys
-import gtk
+import os
+import sys
+from gi.repository import Gtk
 
 os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))
 
@@ -63,7 +64,7 @@ class Application(object):
 			self.window.load_canvas_file(options.file)
 			
 	def run(self):
-		gtk.main()
+		Gtk.main()
 
 if __name__ == '__main__':
 	from optparse import OptionParser
