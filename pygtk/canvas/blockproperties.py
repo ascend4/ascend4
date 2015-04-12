@@ -2,7 +2,7 @@
 
 import os
 
-from gi.repository import Gtk, Gdk, GObject
+from gi.repository import Gtk, Gdk, GObject, GdkPixbuf
 
 import blockinstance
 import modeltree

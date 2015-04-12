@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-from collections import namedtuple
 
 if __name__ == '__main__':
 	print "ERROR: ASCEND Canvas should now be invoked using the file 'canvas.py' instead of 'blocklist.py'."
 	exit(1)
 
-from gi.repository import Gtk, GdkPixbuf, Gdk
+from gi.repository import Gtk, GdkPixbuf, Gdk, GObject
 import os
 import os.path
 import glob
@@ -270,8 +269,9 @@ class mainWindow(Gtk.Window):
 		#gaphas.view.DEBUG_DRAW_BOUNDING_BOX = True
 		self.view = GtkView()
 		# workaround to provide proper adjustments
-		d = {"name": "hadjustment"}
-		self.view.do_set_property(namedtuple('s', d.keys())(**d), None)
+		hadj = GObject.ParamSpecObject
+		hadj.name = "hadjustment"
+		self.view.do_set_property(hadj, None)
 
 		self.view.tool = BlockToolChain()
 
