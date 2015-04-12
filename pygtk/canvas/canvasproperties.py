@@ -23,6 +23,7 @@ class CanvasProperties(object):
 		builder.add_from_file(glade_file_path)
 		
 		self.dialog = builder.get_object('dialog')
+		self.dialog.set_transient_for(parent)
 		self.parent = parent
 		
 		##Get the ASCEND lang##
