@@ -1,6 +1,16 @@
 <?xml version="1.0"?>
 <!--*- mode: xml -*-->
 <interface>
+  <object class="GtkAdjustment" id="hadjustment">
+    <property name="upper">480</property>
+    <property name="page_increment">432</property>
+    <property name="page_size">480</property>
+  </object>
+  <object class="GtkAdjustment" id="vadjustment">
+    <property name="upper">400</property>
+    <property name="page_increment">284.4</property>
+    <property name="page_size">316</property>
+  </object>
   <object class="GtkDialog" id="dialog">
     <property name="border_width">5</property>
     <property name="title" translatable="yes">Block Description</property>
@@ -79,8 +89,8 @@
                     <property name="visible">True</property>
                     <property name="width">400</property>
                     <property name="height">400</property>
-                    <property name="hadjustment">0 0 480 0 432 480</property>
-                    <property name="vadjustment">0 0 400 0 284.4 316</property>
+                    <property name="hadjustment">hadjustment</property>
+                    <property name="vadjustment">vadjustment</property>
                     <child>
                       <object class="GtkEntry" id="block_name">
                         <property name="width_request">0</property>
