@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from collections import namedtuple
 import math
 
 if __name__ == '__main__':
@@ -279,6 +280,10 @@ class mainWindow(Gtk.Window):
 		# the 'view' widget implemented by Gaphas
 		#gaphas.view.DEBUG_DRAW_BOUNDING_BOX = True
 		self.view = GtkView()
+		# workaround to provide proper adjustments
+		d = {"name": "hadjustment"}
+		self.view.do_set_property(namedtuple('s', d.keys())(**d), None)
+
 		self.view.tool =  BlockToolChain()
 
 		# table containing scrollbars and main canvas
