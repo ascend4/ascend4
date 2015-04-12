@@ -30,7 +30,7 @@ class BlockIconView(Gtk.IconView):
 			for b in blocks:
 				pixbuf = b.get_icon(48,48)
 				#print pixbuf
-				iter = self.model.append([b.type.getName(), pixbuf])
+				iter = self.model.append([b.name, pixbuf])
 				path = self.model.get_path(iter)
 				self.otank[path] = b
 		except Exception as e:
@@ -300,10 +300,11 @@ class mainWindow(Gtk.Window):
 		self.scroll.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
 
 		self.blockiconview = BlockIconView(blocks=self.ascwrap.canvas_blocks,app=self)
+		self.scroll.set_size_request(250, 300)
 		self.scroll.add(self.blockiconview)
 		self.reporter = self.ascwrap.reporter
 
-		paned.pack1(self.scroll)
+		paned.pack1(self.scroll, False, False)
 		paned.pack2(t)
 		vbox.pack_start(paned, True, True, 0)
 		vpane = Gtk.VPaned()
