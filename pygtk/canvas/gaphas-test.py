@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
-import pygtk
-pygtk.require('2.0')
+import gi
+gi.require_version('Gtk', '3.0')
 
-import gtk
+from gi.repository import Gtk
 from gaphas import GtkView
 from gaphas.tool import PlacementTool, HandleTool
 from gaphas.tool import DefaultTool
 from blockcanvas import BlockCanvas
 from blockitem  import DefaultBlockItem
-#painter.DEBUG_DRAW_BOUNDING_BOX = True
-
-#from port import *
 
 def factory(view, cls):
     """
@@ -27,31 +24,31 @@ def create_window(canvas, title, zoom=1.0):
     view = GtkView()
     view.tool = DefaultTool()
 
-    w = gtk.Window()
+    w = Gtk.Window()
     w.set_title(title)
     #w.set_default_size(800,600)
-    h = gtk.HBox()
+    h = Gtk.HBox()
     w.add(h)
 
     # VBox contains buttons that can be used to manipulate the canvas:
-    v = gtk.VBox()
+    v = Gtk.VBox()
     v.set_property('border-width', 3)
     v.set_property('spacing', 2)
-    f = gtk.Frame()
+    f = Gtk.Frame()
     f.set_property('border-width', 1)
     f.add(v)
-    h.pack_start(f, expand=False)
+    h.pack_start(f, False, True, 0)
     
-    b = gtk.Button('Add block')
+    b = Gtk.Button('Add block')
 
     def on_clicked(button, view):
-        #view.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.CROSSHAIR))
+        #view.window.set_cursor(Gdk.Cursor.new(Gdk.CursorType.CROSSHAIR))
         view.tool.grab(PlacementTool(factory(view, DefaultBlockItem), HandleTool(), 2))
 
     b.connect('clicked', on_clicked, view)
     v.add(b)
 
-    b = gtk.Button('Add line')
+    b = Gtk.Button('Add line')
 
     def on_clicked(button):
         view.tool.grab(PlacementTool(factory(view, Line), HandleTool(), 1))
@@ -60,7 +57,7 @@ def create_window(canvas, title, zoom=1.0):
     v.add(b)
 
 
-    b = gtk.Button('Delete focused')
+    b = Gtk.Button('Delete focused')
 
     def on_clicked(button):
         if view.focused_item:
@@ -72,19 +69,19 @@ def create_window(canvas, title, zoom=1.0):
 
     # Add the actual View:
 
-    t = gtk.Table(2,2)
+    t = Gtk.Table(2,2)
     h.add(t)
 
-    w.connect('destroy', gtk.main_quit)
+    w.connect('destroy', Gtk.main_quit)
 
     view.canvas = canvas
     view.zoom(zoom)
     view.set_size_request(800, 600)
-    hs = gtk.HScrollbar(view.hadjustment)
-    vs = gtk.VScrollbar(view.vadjustment)
+    hs = Gtk.HScrollbar(view.hadjustment)
+    vs = Gtk.VScrollbar(view.vadjustment)
     t.attach(view, 0, 1, 0, 1)
-    t.attach(hs, 0, 1, 1, 2, xoptions=gtk.FILL, yoptions=gtk.FILL)
-    t.attach(vs, 1, 2, 0, 1, xoptions=gtk.FILL, yoptions=gtk.FILL)
+    t.attach(hs, 0, 1, 1, 2, xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
+    t.attach(vs, 1, 2, 0, 1, xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
 
     w.show_all()
     
@@ -108,7 +105,7 @@ def main():
     c.add(b)
     
     # run
-    gtk.main()
+    Gtk.main()
 
 if __name__ == '__main__':
     main()
