@@ -701,7 +701,7 @@ class mainWindow(Gtk.Window):
 			self.view.canvas.update_now()
 			self.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#FFF'))
 			self.load_presaved_canvas(None)
-			self.reporter.reportError(" File %s successfully loaded." % filename)
+			self.reporter.reportSuccess(" File %s successfully loaded." % filename)
 			self.status.push(0,"File %s Loaded." % filename)
 			self.view.canvas.filename = filename
 		except Exception,e:
