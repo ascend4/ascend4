@@ -19,7 +19,7 @@ class Browser:
 			for _name, _value in value.__dict__.items():
 				_piter = self.make_row( piter, "."+_name, _value )
 				_path = self.treestore.get_path( _piter )
-				self.otank[ _path ] = (_name, _value)
+				self.otank[ _path.to_string() ] = (_name, _value)
 
 	def make_mapping( self, value, piter ):
 		keys = []
@@ -28,7 +28,7 @@ class Browser:
 				_name = "[%s]"%str(k)
 				_piter = self.make_row( piter, _name, v )
 				_path = self.treestore.get_path( _piter )
-				self.otank[ _path ] = (_name, v)
+				self.otank[_path.to_string()] = (_name, v)
 			return
 		elif hasattr(value,'__getitem__') and hasattr(value,'__len__'):
 			keys = range(len(value))
@@ -38,26 +38,23 @@ class Browser:
 				_name = "..."
 				_piter = self.make_row(piter,_name, v)
 				_path = self.treestore.get_path(_piter)
-				self.otank[_path] = (_name,v)
+				self.otank[_path.to_string()] = (_name,v)
 			return
 
 		for key in keys:
 			_name = "[%s]"%str(key)
 			_piter = self.make_row( piter, _name, value[key] )
 			_path = self.treestore.get_path( _piter )
-			self.otank[ _path ] = (_name, value[key])
+			self.otank[_path.to_string()] = (_name, value[key])
 
 	def make(self, name=None, value=None, path=None, depth=1):
 		if path is None:
 			# make root node
 			piter = self.make_row( None, name, value )
 			path = self.treestore.get_path( piter )
-			self.otank[ path ] = (name, value)
+			self.otank[path.to_string()] = (name, value)
 		else:
-			# this is need, due to different hashes between key and path
-			keys = self.otank.keys()
-			key = keys[keys.index(path)]
-			name, value = self.otank[key]
+			name, value = self.otank[path.to_string()]
 
 		piter = self.treestore.get_iter( path )
 		if not self.treestore.iter_has_child( piter ):
