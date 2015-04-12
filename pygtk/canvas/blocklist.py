@@ -31,7 +31,7 @@ class BlockIconView(Gtk.IconView):
 				#print pixbuf
 				iter = self.model.append([b.name, pixbuf])
 				path = self.model.get_path(iter)
-				self.otank[path] = b
+				self.otank[path.to_string()] = b
 		except Exception as e:
 			pass
 
@@ -50,7 +50,7 @@ class BlockIconView(Gtk.IconView):
 	def selection_changed(self,iconview):
 		s = self.get_selected_items()
 		if len(s)==1:
-			b = self.otank[s[0]]
+			b = self.otank[s[0].to_string()]
 			self.app.set_placement_tool(b)
 
 	def item_activated(self,iconview, path):
@@ -330,7 +330,6 @@ class mainWindow(Gtk.Window):
 		  icon palette.
 		  """
 		# TODO: add undo handler
-		label = blocktype.type.getName()
 		graphic = blocktype.gr
 		def my_block_factory():
 			def wrapper():
