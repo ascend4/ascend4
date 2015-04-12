@@ -143,8 +143,6 @@ class mainWindow(Gtk.Window):
 		<menuitem action='About' />
 	  </menu>
 	</menubar>
-	<toolbar name='ToolBar'>
-	</toolbar>
 	</ui>
 	'''
 
@@ -226,9 +224,6 @@ class mainWindow(Gtk.Window):
 		vbox.pack_start(menubar,False,False,0)
 
 		#Creating Tool Bar
-		toolbar = ui_manager.get_widget('/ToolBar')
-		vbox.pack_start(toolbar,False,False,0)
-
 		'''The Toolbar Definations start here'''
 
 		tb = Gtk.Toolbar()
@@ -284,13 +279,13 @@ class mainWindow(Gtk.Window):
 		d = {"name": "hadjustment"}
 		self.view.do_set_property(namedtuple('s', d.keys())(**d), None)
 
-		self.view.tool =  BlockToolChain()
+		self.view.tool = BlockToolChain()
 
 		# table containing scrollbars and main canvas
 		t = Gtk.Table(2,2)
 		self.view.canvas = canvas
 		self.view.zoom(1)
-		self.view.set_size_request(600, 450)
+		self.view.set_size_request(450, 300)
 		hs = Gtk.HScrollbar(self.view.hadjustment)
 		vs = Gtk.VScrollbar(self.view.vadjustment)
 		t.attach(self.view, 0, 1, 0, 1)
@@ -308,11 +303,11 @@ class mainWindow(Gtk.Window):
 		self.scroll.add(self.blockiconview)
 		self.reporter = self.ascwrap.reporter
 
-		paned.pack1(self.scroll, False, True)
-		paned.pack2(t, True, True)
+		paned.pack1(self.scroll)
+		paned.pack2(t)
 		vbox.pack_start(paned, True, True, 0)
 		vpane = Gtk.VPaned()
-		vpane.pack1(vbox)
+		vpane.pack1(vbox, False, False)
 		lower_vbox = Gtk.VBox()
 
 		self.ET = errorreporter.ErrorReporter( self.reporter,self.iconok,self.iconinfo,self.iconwarning,self.iconerror)
