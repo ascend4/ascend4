@@ -1,10 +1,9 @@
 from gaphas.tool import ConnectHandleTool
 from gaphas.aspect import HandleFinder, Connector, ConnectionSink
+from gaphas.state import reversible_pair
+
 from blockline import BlockLine
-from blockitem import DefaultBlockItem,checkportscanconnect
-from blockinstance import LineInstance
-from gaphas.connector import LinePort
-from gaphas.state import observed, reversible_pair
+
 
 #TODO: Do not use flags! [<In connection>,<PortInstance Object>]
 #Note that both Input/Output type and ASCEND Type should match to have port highlighted

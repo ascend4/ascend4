@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 import pygtk
-pygtk.require('2.0') 
+pygtk.require('2.0')
 
-import math
 import gtk
-import cairo
-from gaphas import GtkView, View
-from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
-from gaphas.tool import ItemTool, RubberbandTool, DefaultTool
+from gaphas import GtkView
+from gaphas.tool import PlacementTool, HandleTool
+from gaphas.tool import DefaultTool
 from blockcanvas import BlockCanvas
 from blockitem  import DefaultBlockItem
-from gaphas import painter
 #painter.DEBUG_DRAW_BOUNDING_BOX = True
 
 #from port import *

@@ -1,5 +1,3 @@
-from gaphas.item import Line
-
 class LineInstance:
 	"""
 	Class representation of the ASCEND 'ARE_THE_SAME' relationship

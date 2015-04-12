@@ -1,6 +1,8 @@
+import time
+
 from gi.repository import Gtk
 import ascpy
-import time
+
 
 class PythonSolverReporter(ascpy.SolverReporter):
 	def __init__(self,browser,message=None):

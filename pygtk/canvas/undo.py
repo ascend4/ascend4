@@ -12,10 +12,12 @@ TODO ::
     3. Implement Redo.
 '''
 
-from gaphas.state import observers,revert_handler,subscribers,saveapply,reversible_pair
 import threading
+
+from gaphas.state import observers,revert_handler,subscribers,saveapply
 from decorator import decorator
 from gaphas.tool import Tool
+
 
 mutex = threading.Lock()
 

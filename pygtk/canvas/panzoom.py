@@ -1,6 +1,6 @@
 # Pan and Zoom tools for Gaphas by John Pye, 4 Nov 2008.
 
-from gi.repository import Gtk, Gdk
+from gi.repository import Gdk
 
 from gaphas.tool import Tool
 

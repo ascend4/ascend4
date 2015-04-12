@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 from collections import namedtuple
-import math
 
 if __name__ == '__main__':
 	print "ERROR: ASCEND Canvas should now be invoked using the file 'canvas.py' instead of 'blocklist.py'."
@@ -59,18 +58,15 @@ class BlockIconView(Gtk.IconView):
 
 
 from gaphas import GtkView, View
-from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain, DEBUG_TOOL_CHAIN
-#from gaphas.tool import LineSegmentTool
-from gaphas.tool import Tool, ItemTool, RubberbandTool
+from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
+from gaphas.tool import ItemTool, RubberbandTool
 from gaphas.painter import ItemPainter
 from blockconnecttool import BlockConnectTool
 from blockline import BlockLine
-from blockitem import DefaultBlockItem,CustomBlockItem_turbine,CustomBlockItem_pump,GraphicalBlockItem
+from blockitem import DefaultBlockItem, GraphicalBlockItem
 from contextmenutool import ContextMenuTool
 from connectortool import ConnectorTool
 from blockcanvas import BlockCanvas
-#from panzoom import ZoomTool
-#from panzoom import PanTool
 from gaphas.tool import PanTool, ZoomTool
 from blockinstance import BlockInstance
 from solverreporterforcanvas import PopupSolverReporter
@@ -79,11 +75,9 @@ import blockproperties
 import undo
 from undo import UndoMonitorTool
 import errorreporter
-import gaphas.view
 import pickle as pickle
-import gaphas.picklers
 import obrowser
-import urllib, help
+import help
 from preferences import Preferences
 
 def BlockToolChain():

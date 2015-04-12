@@ -1,9 +1,10 @@
-from gaphas import Canvas
-from gaphas.item import Line
 import re
+
+from gaphas import Canvas
+
 from blockitem import DefaultBlockItem, GraphicalBlockItem
 from blockline import BlockLine
-from blockstream import BlockStream
+
 
 UNITS_RE = re.compile("([-+]?(\d+(\.\d*)?|\d*\.d+)([eE][-+]?\d+)?)\s*(.*)");
 

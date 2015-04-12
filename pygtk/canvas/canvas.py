@@ -4,7 +4,9 @@
 from __future__ import with_statement
 import os
 import sys
+
 from gi.repository import Gtk
+
 
 os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))
 
@@ -28,7 +30,7 @@ sys.path.append("../../ascxx")
 if sys.platform.startswith("win"):
     # Fetchs gtk2 path from registry
 	import _winreg
-	import msvcrt
+
 	try:
 		k = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "Software\\GTK\\2.0")
 	except EnvironmentError:

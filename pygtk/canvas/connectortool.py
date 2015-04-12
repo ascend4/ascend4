@@ -1,12 +1,9 @@
-
-from gaphas.tool import HandleTool, PlacementTool
-from gaphas import geometry
-from gaphas.aspect import Connector, ConnectionSink, HandleInMotion
+from gaphas.aspect import Connector, ConnectionSink
 from gaphas.segment import Segment
+
 from blockconnecttool import BlockConnectTool
 from blockline import BlockLine
-import cairo
-import undo
+
 
 class ConnectorTool(BlockConnectTool):
 	"""

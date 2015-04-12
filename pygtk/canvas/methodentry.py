@@ -1,5 +1,7 @@
 from gi.repository import Gtk
+
 import blockcanvas
+
 
 class MethodEntry:
 	def __init__(self):

@@ -2,7 +2,6 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 from gi.repository import Pango
-import blockinstance
 
 BROWSER_FIXED_COLOR = "#008800"
 BROWSER_FREE_COLOR = "#000088"

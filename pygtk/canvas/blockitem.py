@@ -1,19 +1,15 @@
-from gaphas.constraint import LineConstraint, LessThanConstraint, EqualsConstraint, Constraint, _update, BalanceConstraint,LineAlignConstraint, EquationConstraint
-from gaphas.item import Line, SW, NE, NW, SE, Item, Handle, Element
+import math
+
+from gaphas.constraint import EqualsConstraint, BalanceConstraint
+from gaphas.item import SW, NE, NW, SE, Handle, Element
 from gaphas.util import *
 from gaphas.connector import Position
-from gaphas.solver import solvable, WEAK, NORMAL, STRONG, VERY_STRONG, Variable, REQUIRED
-from gaphas.state import observed, reversible_method, reversible_pair, reversible_property
-from gaphas.geometry import distance_rectangle_point
-from gaphas.examples import Circle
-from gaphas.canvas import Canvas
-from gaphas.matrix import Matrix
+from gaphas.solver import solvable, VERY_STRONG, REQUIRED
 from numpy import *
-import math
-import cairo
 
 from blockport import BlockPort
 from blockinstance import PORT_IN, PORT_OUT, PORT_INOUT
+
 
 class ElementNoPorts(Element):
 	"""

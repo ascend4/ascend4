@@ -1,8 +1,6 @@
 from gaphas.connector import PointPort
-from blockinstance import PortInstance
 from gaphas.connector import Position
-from gaphas.solver import Variable
-from gaphas.solver import WEAK
+
 
 class BlockPort(PointPort):
 	"""

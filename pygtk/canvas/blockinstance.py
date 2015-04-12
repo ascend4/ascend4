@@ -1,5 +1,3 @@
-from blocktype import *
-
 blocknameindex = {}
 
 PORT_IN = 0

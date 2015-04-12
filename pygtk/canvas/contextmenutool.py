@@ -1,17 +1,12 @@
-import gaphas
 from gaphas.tool import Tool
 import gi
-import math
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
-import blockinstance
 import blockproperties
 import canvasproperties
 import undo
-from blockitem import CustomBlockItem_turbine
 
-import ascpy
 
 class ContextMenuTool(Tool):
 	"""

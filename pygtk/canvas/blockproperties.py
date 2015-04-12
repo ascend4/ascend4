@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
-from gi.repository import Gtk, Gdk, GObject
 import os
+
+from gi.repository import Gtk, Gdk, GObject
+
 import blockinstance
 import modeltree
 from unitsdialog import UnitsDialog
 from varentry_canvas import *
+
 SAVED_TAB = 0
 
 #Not a good place to do this, but makes implementation very easy.

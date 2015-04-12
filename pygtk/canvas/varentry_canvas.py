@@ -3,7 +3,9 @@
 #
 
 import re
+
 import ascpy
+
 
 # RE for units matching
 UNITS_RE = re.compile("([-+]?(\d+(\.\d*)?|\d*\.d+)([eE][-+]?\d+)?)\s*(.*)");

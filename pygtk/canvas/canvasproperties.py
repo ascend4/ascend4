@@ -2,11 +2,14 @@
 Canvas Properties Dialog Pop Up 
 Author: Grivan Thapar, July 2010
 '''
+import os
+
 from gi.repository import Gtk
 from gi.repository import GObject
-import os
 from gi.repository import GtkSource
+
 import modeltree
+
 
 class CanvasProperties(object):
 	'''

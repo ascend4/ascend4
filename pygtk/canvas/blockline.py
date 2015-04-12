@@ -1,6 +1,7 @@
-
 from gaphas.item import Line
+
 from blockinstance import LineInstance
+
 
 class BlockLine(Line):
 	"""
