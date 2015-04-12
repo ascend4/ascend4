@@ -5,7 +5,7 @@ if __name__ == '__main__':
 	print "ERROR: ASCEND Canvas should now be invoked using the file 'canvas.py' instead of 'blocklist.py'."
 	exit(1)
 
-from gi.repository import Gtk, GdkPixbuf
+from gi.repository import Gtk, GdkPixbuf, Gdk
 import os
 import os.path
 import glob
@@ -477,7 +477,7 @@ class mainWindow(Gtk.Window):
 	def export_svg_as(self,widget):
 
 		f = None
-		dialog = Gtk.FileChooserDialog("Export Canvas As...", None,
+		dialog = Gtk.FileChooserDialog("Export Canvas As...", self,
 			Gtk.FileChooserAction.SAVE, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
 		dialog.set_default_response(Gtk.ResponseType.OK)
 		filter = Gtk.FileFilter()
