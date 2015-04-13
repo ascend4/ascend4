@@ -24,9 +24,14 @@
 #include "panic.h"
 #include "tm_time.h"
 
+#ifdef __WIN32__
+# include "Windows.h"
+#endif
+
 static boolean f_first = TRUE;
 
 double tm_cpu_time(void){
+#ifndef __WIN32__
 	static struct timespec ref;
 	struct timespec now;
 
@@ -36,6 +41,17 @@ double tm_cpu_time(void){
 	}
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
 	return (now.tv_sec - ref.tv_sec) + 1e-9*(now.tv_nsec - ref.tv_nsec);
+#else /* WIN32 */
+	LARGE_INTEGER n1, f;
+	LARGE_INTEGER n2;
+	if(f_first){
+		QueryPerformanceFrequency(&f);
+		QueryPerformanceCounter(&n1);
+		return 0;
+	}
+	QueryPerformanceCounter(&n2);
+	return((n2.QuadPart - n1.QuadPart)/f.QuadPart);
+#endif
 }
 
 double tm_reset_cpu_time(void)
