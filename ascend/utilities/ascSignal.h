@@ -139,6 +139,7 @@
 #endif
 
 #ifdef __WIN32__
+extern void _fpreset(void);
 # define FPRESET _fpreset()
 #else
 # define FPRESET (void)0
