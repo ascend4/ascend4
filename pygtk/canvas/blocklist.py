@@ -663,6 +663,7 @@ class mainWindow(Gtk.Window):
 		windowicon.set_from_file(os.path.join("../glade/ascend.svg"))
 		about.set_icon(windowicon.get_pixbuf())
 		about.set_logo(GdkPixbuf.Pixbuf.new_from_file("../glade/ascend.png"))
+		about.set_transient_for(self)
 		about.run()
 		about.destroy()
 
