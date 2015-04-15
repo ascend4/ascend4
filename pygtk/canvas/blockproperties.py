@@ -35,6 +35,7 @@ class BlockProperties(object):
 		builder = Gtk.Builder()
 		builder.add_from_file(glade_file_path)
 		self.dialog = builder.get_object('dialog')
+		self.dialog.set_transient_for(parent)
 		self.parent = parent
 		self.units = self.parent.ascwrap.library.getUnits()
 
@@ -143,12 +144,12 @@ class BlockProperties(object):
 
 		##Instance Tab##
 		try:
-			self.instance_box = builder.get_object('instance_box')
+			self.instance_box = builder.get_object('instance')
 			self.instance_model = modeltree.TreeView(self.block.instance)
 			self.instance_box.add(self.instance_model.treeview)
 			self.instance_model.treeview.show()
 		except Exception as e:
-			self.instance_box = builder.get_object('instance_box')
+			self.instance_box = builder.get_object('instance')
 			self.instance_label = Gtk.Label()
 			self.instance_box.add_with_viewport(self.instance_label)
 			self.instance_label.set_text('Instance not Built, Solve the Canvas Model first!')
@@ -243,8 +244,8 @@ class displayModel(object):
 	def __init__(self,parent):
 		self.parent = parent
 
-	def draw_view(self,model,xml,units):
-		self.view = xml.get_widget('param_tree')
+	def draw_view(self,model,builder,units):
+		self.view = builder.get_object('param_tree')
 		self.view.set_model(model)
 		self.view.set_tooltip_column(6)
 		self.model = model
