@@ -1,6 +1,7 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
+from gi.repository import GdkPixbuf
 from gi.repository import Pango
 
 BROWSER_FIXED_COLOR = "#008800"
@@ -86,7 +87,7 @@ class TreeView:
 					_name = child.getName();
 					_piter = self.make_row(piter,_name,child)
 					_path = self.treestore.get_path(_piter)
-					self.otank[_path]=(_name,child)
+					self.otank[_path.to_string()]=(_name,child)
 				except Exception,e:
 					pass
 				
@@ -99,7 +100,7 @@ class TreeView:
 					_name = child.getName();
 					_piter = self.make_row_from_presaved(piter,_name,child)
 					_path = self.treestore.get_path(_piter)
-					self.otank[_path]=(_name,child)
+					self.otank[_path.to_string()]=(_name,child)
 				except Exception,e:
 					pass
 				
@@ -108,21 +109,23 @@ class TreeView:
 		# make root node
 			piter = self.make_row( None, name, value )
 			path = self.treestore.get_path( piter )
-			self.otank[ path ] = (name, value)
+			self.otank[ path.to_string() ] = (name, value)
 		else:
-			name, value = self.otank[ path ]
+			name, value = self.otank[ path.to_string() ]
 		
 		assert(value)
 		
 		piter = self.treestore.get_iter( path )
 		if not self.treestore.iter_has_child( piter ):
 			self.make_children(value,piter)
-		
+
 		if depth:
 			for i in range( self.treestore.iter_n_children( piter ) ):
-				self.make( path = path+(i,), depth = depth - 1 )
+				tmp_path = path.copy()
+				tmp_path.append_index(i)
+				self.make( path = tmp_path, depth = depth - 1 )
 		else:
-			self.treeview.expand_row("0",False)			
+			self.treeview.expand_row(Gtk.TreePath.new_first(), False)
 	
 	#def make_from_presaved(self, name=None, value=None, path=None, depth=1):
 		#if path is None:
