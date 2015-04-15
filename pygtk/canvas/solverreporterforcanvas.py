@@ -14,7 +14,7 @@ class PythonSolverReporter(ascpy.SolverReporter):
 class PopupSolverReporter(PythonSolverReporter):
 	def __init__(self,browser,numvars):
 		PythonSolverReporter.__init__(self,browser)
-		self.progress_dialog = Gtk.Dialog("Solver Status")
+		self.progress_dialog = Gtk.Dialog("Solver Status", browser)
 
 		
 		self.numvars = Gtk.Label()
