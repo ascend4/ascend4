@@ -75,6 +75,8 @@ import undo
 from undo import UndoMonitorTool
 import errorreporter
 import pickle as pickle
+# needed to allow cairo.Matrix to be pickled
+import gaphas.picklers
 import obrowser
 import help
 from preferences import Preferences
