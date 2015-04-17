@@ -164,7 +164,7 @@ class mainWindow(Gtk.Window):
 		self.iconerror = self.render_icon(Gtk.STOCK_DIALOG_ERROR,Gtk.IconSize.MENU)
 
 		self.set_title("ASCEND Canvas Modeller")
-		self.set_default_size(650,650)
+		self.set_default_size(800,650)
 		self.connect("destroy", Gtk.main_quit)
 
 		windowicon = Gtk.Image()
