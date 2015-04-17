@@ -66,7 +66,7 @@ from blockitem import DefaultBlockItem, GraphicalBlockItem
 from contextmenutool import ContextMenuTool
 from connectortool import ConnectorTool
 from blockcanvas import BlockCanvas
-from gaphas.tool import PanTool, ZoomTool
+from panzoom import PanTool, ZoomTool
 from blockinstance import BlockInstance
 from solverreporterforcanvas import PopupSolverReporter
 import canvasproperties

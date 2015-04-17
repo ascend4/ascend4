@@ -1,120 +1,50 @@
 # Pan and Zoom tools for Gaphas by John Pye, 4 Nov 2008.
 
 from gi.repository import Gdk
+from gaphas.tool import ZoomTool, PanTool
 
-from gaphas.tool import Tool
+class ZoomTool(ZoomTool):
 
-ZOOM_MASK = Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK | Gdk.ModifierType.MOD1_MASK
-ZOOM_VALUE =Gdk.ModifierType.CONTROL_MASK
+	def __init__(self, view=None):
+		super(ZoomTool, self).__init__(view)
 
-class ZoomTool(Tool):
-	"""
-	Tool for zooming using either of two techniquies:
-		* ctrl + middle-mouse dragging in the up-down direction.
-		* ctrl + mouse-wheeel
-
-	This tool checks for correct modifier key
-	
-	
-	"""
-
-	def __init__(self):
-		self.x0, self.y0 = 0, 0
-		self.lastdiff = 0;
-
-	def on_button_press(self, context, event):
-		if event.button == 2 \
-				and event.get_state() & ZOOM_MASK == ZOOM_VALUE:
-			context.grab()
-			self.x0 = event.x
-			self.y0 = event.y
-			self.lastdiff = 0
-			return True
-
-	def on_button_release(self, context, event):
-		context.ungrab()
-		self.lastdiff = 0
-		return True
-
-	def on_motion_notify(self, context, event):
-		if event.get_state() & ZOOM_MASK == ZOOM_VALUE:
-			view = context.view
-			dy = event.y - self.y0
-
+	def on_scroll(self, event):
+		if event.get_state()[1] & Gdk.ModifierType.CONTROL_MASK:
+			view = self.view
 			sx = view._matrix[0]
 			sy = view._matrix[3]
-			ox = (view._matrix[4] - self.x0) / sx
-			oy = (view._matrix[5] - self.y0) / sy
-
-			if abs(dy - self.lastdiff) > 20:
-				if dy - self.lastdiff < 0:
-					factor = 1./0.9
-				else:
-					factor = 0.9
-
-				view._matrix.translate(-ox, -oy)
-				view._matrix.scale(factor, factor)
-				view._matrix.translate(+ox, +oy)
-
-				# Make sure everything's updated
-				map(view.update_matrix, view._canvas.get_all_items())
-				view.request_update(view._canvas.get_all_items())
-
-				self.lastdiff = dy;
-			return True
-
-	def on_scroll(self, context, event):
-		if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
-			view = context.view
-			context.grab()
-			sx = view._matrix[0]
-			sy = view._matrix[3]
-			ox = (view._matrix[4] - event.x) / sx
-			oy = (view._matrix[5] - event.y) / sy
+			ox = (view._matrix[4] - event.scroll.x) / sx
+			oy = (view._matrix[5] - event.scroll.y) / sy
 			factor = 0.9
-			if event.direction == Gdk.ScrollDirection.UP:	
+			if event.scroll.direction == Gdk.ScrollDirection.UP:
 				factor = 1. / factor
 			view._matrix.translate(-ox, -oy)
 			view._matrix.scale(factor, factor)
 			view._matrix.translate(+ox, +oy)
 			# Make sure everything's updated
-			map(view.update_matrix, view._canvas.get_all_items())
-			view.request_update(view._canvas.get_all_items())
-			context.ungrab()
+			view.request_update((), view._canvas.get_all_items())
 			return True
 
+PAN_MASK = Gdk.ModifierType.SHIFT_MASK | Gdk.ModifierType.MOD1_MASK | Gdk.ModifierType.CONTROL_MASK
+PAN_VALUE = 0
 
+class PanTool(PanTool):
+	def __init__(self, view=None):
+		super(PanTool, self).__init__(view)
 
-class PanTool(Tool):
-    """
-    Captures drag events with the middle mouse button and uses them to
-    translate the canvas within the view. Trumps the ZoomTool, so should be
-    placed later in the ToolChain.
-    """
-    def __init__(self):
-        self.x0, self.y0 = 0, 0
-
-    def on_button_press(self,context,event):
-        if event.button == 2:
-            context.grab()
-            self.x0, self.y0 = event.x, event.y
-            return True
-
-    def on_button_release(self, context, event):
-        context.ungrab()
-        self.x0, self.y0 = event.x, event.y
-        return True
-
-    def on_motion_notify(self, context, event):
-        if event.get_state() & Gdk.ModifierType.BUTTON2_MASK:
-            view = context.view
-            self.x1, self.y1 = event.x, event.y
-            dx = self.x1 - self.x0
-            dy = self.y1 - self.y0
-            view._matrix.translate(dx/view._matrix[0],dy/view._matrix[3])
-            # Make sure everything's updated
-            map(view.update_matrix, view._canvas.get_all_items())
-            view.request_update(view._canvas.get_all_items())
-            self.x0 = self.x1
-            self.y0 = self.y1
-            return True
+	def on_scroll(self, event):
+		# Ensure no modifiers
+		if not event.get_state()[1] & PAN_MASK == PAN_VALUE:
+			return False
+		view = self.view
+		direction = event.scroll.direction
+		if direction == Gdk.ScrollDirection.LEFT:
+			view._matrix.translate(self.speed/view._matrix[0], 0)
+		elif direction == Gdk.ScrollDirection.RIGHT:
+			view._matrix.translate(-self.speed/view._matrix[0], 0)
+		elif direction == Gdk.ScrollDirection.UP:
+			view._matrix.translate(0, self.speed/view._matrix[3])
+		elif direction == Gdk.ScrollDirection.DOWN:
+			view._matrix.translate(0, -self.speed/view._matrix[3])
+		view.request_update((), view._canvas.get_all_items())
+		return True
