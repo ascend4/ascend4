@@ -131,7 +131,7 @@ class CanvasProperties(object):
 		if self.sourceviewBuffMethod.get_modified():
 			startiter = self.sourceviewBuffMethod.get_start_iter()
 			enditer = self.sourceviewBuffMethod.get_end_iter()
-			usertext = self.sourceviewBuffMethod.get_text(startiter, enditer)
+			usertext = self.sourceviewBuffMethod.get_text(startiter, enditer, True)
 			self.parent.view.canvas.user_code = usertext
 			
 if __name__ == '__main__':
