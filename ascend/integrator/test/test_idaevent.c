@@ -365,12 +365,42 @@ static void test_solardynamics(){
 	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
 
 	integrator_set_reporter(integ, &test_ida_reporter);
-	//integrator_set_minstep(integ,0.00001);
 	integrator_set_maxstep(integ,60.);
 	integrator_set_stepzero(integ,1.);
 	integrator_set_maxsubsteps(integ,10000);
 
 	SET_LINEAR_SAMPLELIST(0., 23.*3600., 100);
+
+	CONSOLE_DEBUG("Starting integration...");
+	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
+
+	integrator_free(integ);
+	samplelist_free(samplelist);
+
+	CU_ASSERT_FATAL(NULL != sys);
+	system_destroy(sys);
+	system_free_reused_mem();
+
+	CLEAN_UP(siminst);
+}
+
+
+static void test_solardynamics2(){
+	LOAD_AND_INITIALISE("johnpye","solardynamics");
+
+	slv_parameters_t p;
+	CU_ASSERT(0 == integrator_params_get(integ,&p));
+
+	/* perform problem analysis */
+	CONSOLE_DEBUG("Analysing problem...");
+	CU_ASSERT_FATAL(0 == integrator_analyse(integ));
+
+	integrator_set_reporter(integ, &test_ida_reporter);
+	integrator_set_maxstep(integ,3600.);
+	integrator_set_stepzero(integ,10.);
+	integrator_set_maxsubsteps(integ,1000);
+
+	SET_LINEAR_SAMPLELIST(10.*24*3600, 11.*24.*3600., 400);
 
 	CONSOLE_DEBUG("Starting integration...");
 	CU_ASSERT_FATAL(0 == integrator_solve(integ, 0, samplelist_length(samplelist)-1));
@@ -397,8 +427,6 @@ static void test_solardynamics(){
 	CLEAN_UP(siminst);
 }
 
-
-
 /*===========================================================================*/
 /* Registration information */
 
@@ -408,7 +436,8 @@ static void test_solardynamics(){
 	T(test2) \
 	T(successive) \
 	T(bball) \
-	T(solardynamics)
+	T(solardynamics) \
+	T(solardynamics2)
 
 REGISTER_TESTS_SIMPLE(integrator_idaevent, TESTS)
 

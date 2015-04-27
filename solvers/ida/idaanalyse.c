@@ -902,7 +902,12 @@ static int integrator_ida_check_index(IntegratorSystem *integ){
 	if(dg_dya.n_rels <= 0){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"No algebraic equations were found in the DAE system!");
 	}else if(dg_dya.n_rels != dg_dya.n_vars){
-		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"The algebraic part of the DAE jacobian, dg/dya, is not square!");
+		ERROR_REPORTER_HERE(ASC_PROG_ERROR,"The algebraic part of the DAE jacobian, dg/dya, is not square!");
+#ifdef ANALYSE_DEBUG
+		integrator_ida_rels_debug(integ);
+		integrator_ida_vars_debug(integ);
+#endif
+		return 1;
 	}else{
 		/* check the rank */
 		range.low = 0; range.high = mtx_order(dg_dya.M) - 1;

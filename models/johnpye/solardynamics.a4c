@@ -34,7 +34,7 @@ MODEL solardynamics;
 	C IS_A factor;
 	A IS_A area;
 	Qdot_abs IS_A energy_rate;
-	Qdot_abs = C*A*G;
+	qin_eq: Qdot_abs = C*A*G;
 
 	(* Storage *)
 	m IS_A mass;
@@ -43,45 +43,34 @@ MODEL solardynamics;
 	T ALIASES TA.T;
 	DERIVATIVE OF h;
 	Qdot_elec IS_A energy_rate;
-	en_eq: m * der(h) = Qdot_abs - Qdot_elec;
+	dyn_eq: m * der(h) = Qdot_abs - Qdot_elec;
 
 	(* Power block *)
 	Wdot_elec, Qdot_elec_des IS_A energy_rate;
 	eta IS_A fraction;
 	(* power cycle efficiency: chambadal novikov efficiency *)
 	eta_eq: eta = 1 - sqrt(T_amb / T); 
-	Wdot_eq: Qdot_elec*eta = Wdot_elec;
+	en_eq: Qdot_elec*eta = Wdot_elec;
 
 	(* these 'event equations' are *only* active within the event calculation
 	hence note the related event METHODs below *)
-	pow_on: Qdot_elec = Qdot_elec_des;
-	pow_off: Qdot_elec = 0;
-	col_on: C = 800;
-	col_off: C = 0;
-	(* Switching logic *)
-	is_G_high, is_G_low, is_T_start, is_T_stop IS_A boolean_var;
+	c1: C = 800;
+	c0: C = 0;
+	p1: Qdot_elec = Qdot_elec_des;
+	p0: Qdot_elec = 0 {MW};
 	CONDITIONAL
-		G_high: G > 300 {W/m^2};
-		G_low: G < 200 {W/m^2};
-		T_start: T > (550 {K} + 273.15 {K});
-		T_stop: T < (400 {K} + 273.15 {K});
+		c_c1: G > 500 {W};
+		c_c0: G < 300 {W};
+		c_p1: T > 565 {K} + 273.15 {K};
+		c_p0: T < 300 {K} + 273.15 {K};
 	END CONDITIONAL;
-	is_G_high == SATISFIED(G_high);
-	is_G_low == SATISFIED(G_low);
-	is_T_start == SATISFIED(T_start);
-	is_T_stop == SATISFIED(T_stop);
-	ev1: EVENT (is_G_high)
-		CASE TRUE: USE col_on;
-	END EVENT;
-	ev2: EVENT (is_G_low)
-		CASE TRUE: USE col_off;
-	END EVENT;
-	ev3: EVENT (is_T_start)
-		CASE TRUE: USE pow_on;
-	END EVENT;
-	ev4: EVENT (is_T_stop)
-		CASE TRUE: USE pow_off;
-	END EVENT;
+	b_c1, b_c0, b_p1, b_p0 IS_A boolean_var;
+	b_c1 == SATISFIED(c_c1);b_c0 == SATISFIED(c_c0);
+	b_p1 == SATISFIED(c_p1);b_p0 == SATISFIED(c_p0);
+	e_c1:EVENT(b_c1) CASE TRUE: USE c1; OTHERWISE: USE qin_eq; USE en_eq; USE eta_eq; USE dyn_eq; END EVENT;
+	e_c0:EVENT(b_c0) CASE TRUE: USE c0; OTHERWISE: USE qin_eq; USE en_eq; USE eta_eq; USE dyn_eq; END EVENT;
+	e_p1:EVENT(b_p1) CASE TRUE: USE p1; OTHERWISE: USE qin_eq; USE en_eq; USE eta_eq; USE dyn_eq; END EVENT;
+	e_p0:EVENT(b_p0) CASE TRUE: USE p0; OTHERWISE: USE qin_eq; USE en_eq; USE eta_eq; USE dyn_eq; END EVENT;
 METHODS
 	METHOD obs_init;
 		G.obs_id := 1;
@@ -90,17 +79,21 @@ METHODS
 		Wdot_elec.obs_id := 4;
 	END obs_init;
 	METHOD specify;
-		FIX Qdot_elec := 1 {MW};
+		FIX Qdot_elec_des := 1 {MW};
+		FIX Qdot_elec := Qdot_elec_des;
 		FIX C := 800;
 		FIX A := 2000 {m^2};
 		FIX TA.p := 1 {bar};
 		FIX m := 20 {t};
-		t := 0 {s};
-		T := 300 {K} + 273.15 {K};
-		is_G_high := FALSE;
-		is_G_low := TRUE;
-		is_T_start := FALSE;
-		is_T_stop := TRUE;
+		TA.mu.lower_bound := -1e10 {Pa*s};
+		dr.p.lower_bound := -1e10 {Pa};
+		t := 4 {h};
+		T := 250 {K} + 273.15 {K};
+(*		b_c1 := FALSE;
+		b_c0 := TRUE;
+		b_p1 := FALSE;
+		b_p0 := TRUE;
+*)
 	END specify;
 	METHOD nla_init;
 		FIX T;
@@ -114,14 +107,30 @@ METHODS
 	(* these methods do the work of FIXing/FREEing variables before and after
 	the event calculation. TODO we would *really* like to find a way to avoid
 	having to explicitly write these methods! *)
-	METHOD pow_on; FIX T; FREE Qdot_elec; END pow_on;
-	METHOD pow_on_end; FREE T; FIX Qdot_elec; END pow_on_end;
-	METHOD pow_off; FIX T; FREE Qdot_elec; END pow_off; 
-	METHOD pow_off_end; FREE T; FIX Qdot_elec; END pow_off_end;
-	METHOD col_on; FIX G; FREE C; END col_on;
-	METHOD col_on_end; FREE G; FIX C; END col_on_end;
-	METHOD col_off; FIX G; FREE C; END col_off;
-	METHOD col_off_end; FREE G; FIX C; END col_off_end;
+	METHOD e_c1;     RUN freeze_c;        END e_c1;
+	METHOD e_c1_end; RUN thaw_c;          END e_c1_end;
+	METHOD e_c0;     RUN freeze_c;        END e_c0;
+	METHOD e_c0_end; RUN thaw_c;          END e_c0_end;
+	METHOD e_p1;     RUN freeze_p;        END e_p1;
+	METHOD e_p1_end; RUN thaw_p;          END e_p1_end;
+	METHOD e_p0;     RUN freeze_p;        END e_p0;
+	METHOD e_p0_end; RUN thaw_p;          END e_p0_end;
+	METHOD freeze_c; 
+		FREE C;
+		FIX T, E, der(E), Qdot_in, t;
+	END freeze_c;
+	METHOD thaw_c;
+		FIX C;
+		FREE T, E, der(E), Qdot_in, t;
+	END thaw_c;
+	METHOD freeze_p; 
+		FREE Qdot_out;
+		FIX T, E, der(E), Qdot_in, t;
+	END freeze_p;
+	METHOD thaw_p; 
+		FIX Qdot_out;
+		FREE T, E, der(E), Qdot_in, t;
+	END thaw_p;
 END solardynamics;
 
 

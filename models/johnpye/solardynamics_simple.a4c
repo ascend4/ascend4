@@ -79,22 +79,18 @@ METHODS
 	METHOD freeze_c; 
 		FREE C;
 		FIX T, E, der(E), Qdot_in, t;
-		(*qin_eq.included := FALSE; en_eq.included := FALSE; dyn_eq.included := FALSE;*)
 	END freeze_c;
 	METHOD thaw_c;
 		FIX C;
 		FREE T, E, der(E), Qdot_in, t;
-		(*qin_eq.included := TRUE; en_eq.included := TRUE; dyn_eq.included := TRUE;*)
 	END thaw_c;
 	METHOD freeze_p; 
 		FREE Qdot_out;
 		FIX T, E, der(E), Qdot_in, t;
-		(*qin_eq.included := FALSE; en_eq.included := FALSE; dyn_eq.included := FALSE;*)
 	END freeze_p;
 	METHOD thaw_p; 
 		FIX Qdot_out;
 		FREE T, E, der(E), Qdot_in, t;
-		(*qin_eq.included := TRUE; en_eq.included := TRUE; dyn_eq.included := TRUE;*)
 	END thaw_p;
 END solardynamics_simple;
 
