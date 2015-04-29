@@ -33,28 +33,28 @@ class ContextMenuTool(Tool):
 		menu.add(menublockstreams)
 		'''
 		window = context.view.get_parent().get_parent().get_parent().get_parent().get_parent()
-		menurename = Gtk.MenuItem("Re_name",True)
+		menurename = Gtk.MenuItem("Re_name")
 		menurename.set_use_underline(True)
 		menurename.connect("activate",self.rename,context.view.hovered_item,window)
 		self.menu.add(menurename)
 		'''menublockstreams.set_sensitive(False)'''
 
-		menudelete = Gtk.MenuItem("_Delete",True)
+		menudelete = Gtk.MenuItem("_Delete")
 		menudelete.connect("activate",self.delete,context.view.hovered_item,context.view)
 		menudelete.set_use_underline(True)
 		self.menu.add(menudelete)
 
 		self.menu.add(Gtk.SeparatorMenuItem())
 
-		menurotate_clock = Gtk.MenuItem("Rotate clockwise",True)
+		menurotate_clock = Gtk.MenuItem("Rotate clockwise")
 		menurotate_clock.connect("activate",self.blockrotate_clock,context.view.hovered_item,window)
 		self.menu.add(menurotate_clock)
 
-		menurotate_anti = Gtk.MenuItem("Rotate counterclockwise",True)
+		menurotate_anti = Gtk.MenuItem("Rotate counterclockwise")
 		menurotate_anti.connect("activate",self.blockrotate_anti,context.view.hovered_item,window)
 		self.menu.add(menurotate_anti)
 
-		menuflip = Gtk.MenuItem("Flip",True)
+		menuflip = Gtk.MenuItem("Flip")
 		menuflip.connect("activate",self.blockflip,context.view.hovered_item,window)
 		self.menu.add(menuflip)
 
@@ -93,7 +93,7 @@ class ContextMenuTool(Tool):
 
 		self.menu.add(Gtk.SeparatorMenuItem())
 
-		menucanvas = Gtk.MenuItem("_Canvas Properties",True)
+		menucanvas = Gtk.MenuItem("_Canvas Properties")
 		menucanvas.set_use_underline(True)
 		menucanvas.connect("activate",self.canvasproperties,window ,context)
 		self.menu.add(menucanvas)
