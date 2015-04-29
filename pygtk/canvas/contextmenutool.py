@@ -80,7 +80,7 @@ class ContextMenuTool(Tool):
 
 		menublockinstance = Gtk.MenuItem("_Instance")
 		menublockinstance.set_use_underline(True)
-		menublockinstance.connect("activate",self.blockproperties, window, context, context.view.hovered_item, 3)
+		menublockinstance.connect("activate",self.blockproperties, window, context, context.view.hovered_item, 2)
 		self.menu.add(menublockinstance)
 		'''
 		menublockstreams = Gtk.MenuItem("_Streams")
