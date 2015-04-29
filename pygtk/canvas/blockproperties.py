@@ -171,8 +171,8 @@ class BlockProperties(object):
 
 		##Context Menu##
 		self.treecontext = Gtk.Menu();
-		self.fixmenuitem = Gtk.ImageMenuItem("_Fix/ _Free",True);
-		self.unitsmenuitem = Gtk.ImageMenuItem("Select _Units",True);
+		self.fixmenuitem = Gtk.ImageMenuItem("_Fix/ _Free");
+		self.unitsmenuitem = Gtk.ImageMenuItem("Select _Units");
 		self.fixmenuitem.show(); self.fixmenuitem.set_sensitive(False)
 		self.unitsmenuitem.show(); self.unitsmenuitem.set_sensitive(False)
 
