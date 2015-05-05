@@ -30,47 +30,39 @@ MODEL solardynamics;
 	T_amb ALIASES dr.T;
 	G ALIASES dr.GHI;
 
-	(* Solar collector *)
-	C IS_A factor;
+	E "stored energy" IS_A energy;
+	Qdot_in,Wdot_out IS_A energy_rate;
+	C "concentration ratio" IS_A factor;
 	A IS_A area;
-	Qdot_abs IS_A energy_rate;
-	qin_eq: Qdot_abs = C*A*G;
 
-	(* Storage *)
+	cp IS_A specific_heat_capacity;
+	T, T_0 IS_A temperature;
 	m IS_A mass;
-	TA IS_A moltensalt_fluid;
-	h ALIASES TA.h;
-	T ALIASES TA.T;
-	DERIVATIVE OF h;
-	Qdot_elec IS_A energy_rate;
-	dyn_eq: m * der(h) = Qdot_abs - Qdot_elec;
+	en_eq: E = m * cp * (T - T_0);
 
-	(* Power block *)
-	Wdot_elec, Qdot_elec_des IS_A energy_rate;
-	eta IS_A fraction;
-	(* power cycle efficiency: chambadal novikov efficiency *)
-	eta_eq: eta = 1 - sqrt(T_amb / T); 
-	en_eq: Qdot_elec*eta = Wdot_elec;
+	eta IS_A factor;
+	eta = 1 - sqrt(T_amb / T);
 
-	(* these 'event equations' are *only* active within the event calculation
-	hence note the related event METHODs below *)
-	c1: C = 800;
+	DERIVATIVE OF E;
+	dyn_eq: der(E) = C*A*G - Wdot_out/eta;
+
+	c1: C = 1;
 	c0: C = 0;
-	p1: Qdot_elec = Qdot_elec_des;
-	p0: Qdot_elec = 0 {MW};
+	p1: Wdot_out = 2 {kW};
+	p0: Wdot_out = 0 {W};
 	CONDITIONAL
-		c_c1: G > 500 {W};
-		c_c0: G < 300 {W};
-		c_p1: T > 565 {K} + 273.15 {K};
-		c_p0: T < 300 {K} + 273.15 {K};
+		c_c1: Qdot_in > 500 {W};
+		c_c0: Qdot_in < 300 {W};
+		c_p1: T > 200 {K};
+		c_p0: T < 150 {K};
 	END CONDITIONAL;
 	b_c1, b_c0, b_p1, b_p0 IS_A boolean_var;
 	b_c1 == SATISFIED(c_c1);b_c0 == SATISFIED(c_c0);
 	b_p1 == SATISFIED(c_p1);b_p0 == SATISFIED(c_p0);
-	e_c1:EVENT(b_c1) CASE TRUE: USE c1; OTHERWISE: USE qin_eq; USE en_eq; USE eta_eq; USE dyn_eq; END EVENT;
-	e_c0:EVENT(b_c0) CASE TRUE: USE c0; OTHERWISE: USE qin_eq; USE en_eq; USE eta_eq; USE dyn_eq; END EVENT;
-	e_p1:EVENT(b_p1) CASE TRUE: USE p1; OTHERWISE: USE qin_eq; USE en_eq; USE eta_eq; USE dyn_eq; END EVENT;
-	e_p0:EVENT(b_p0) CASE TRUE: USE p0; OTHERWISE: USE qin_eq; USE en_eq; USE eta_eq; USE dyn_eq; END EVENT;
+	e_c1:EVENT(b_c1) CASE TRUE: USE c1; OTHERWISE: USE tmy3; USE en_eq; USE dyn_eq; END EVENT;
+	e_c0:EVENT(b_c0) CASE TRUE: USE c0; OTHERWISE: USE tmy3; USE en_eq; USE dyn_eq; END EVENT;
+	e_p1:EVENT(b_p1) CASE TRUE: USE p1; OTHERWISE: USE tmy3; USE en_eq; USE dyn_eq; END EVENT;
+	e_p0:EVENT(b_p0) CASE TRUE: USE p0; OTHERWISE: USE tmy3; USE en_eq; USE dyn_eq; END EVENT;
 METHODS
 	METHOD obs_init;
 		G.obs_id := 1;
@@ -89,11 +81,10 @@ METHODS
 		dr.p.lower_bound := -1e10 {Pa};
 		t := 4 {h};
 		T := 250 {K} + 273.15 {K};
-(*		b_c1 := FALSE;
+		b_c1 := FALSE;
 		b_c0 := TRUE;
 		b_p1 := FALSE;
 		b_p0 := TRUE;
-*)
 	END specify;
 	METHOD nla_init;
 		FIX T;
@@ -117,19 +108,19 @@ METHODS
 	METHOD e_p0_end; RUN thaw_p;          END e_p0_end;
 	METHOD freeze_c; 
 		FREE C;
-		FIX T, E, der(E), Qdot_in, t;
+		FIX T, E, der(E), dr.p, dr.rh, G, dr.GHI, dr.v_wind, dr.d_wind, t;
 	END freeze_c;
 	METHOD thaw_c;
 		FIX C;
-		FREE T, E, der(E), Qdot_in, t;
+		FREE T, E, der(E), dr.p, dr.rh, G, dr.GHI, dr.v_wind, dr.d_wind, t;
 	END thaw_c;
 	METHOD freeze_p; 
 		FREE Qdot_out;
-		FIX T, E, der(E), Qdot_in, t;
+		FIX T, E, der(E), dr.p, dr.rh, G, dr.GHI, dr.v_wind, dr.d_wind, t;
 	END freeze_p;
 	METHOD thaw_p; 
 		FIX Qdot_out;
-		FREE T, E, der(E), Qdot_in, t;
+		FREE T, E, der(E), dr.p, dr.rh, G, dr.GHI, dr.v_wind, dr.d_wind, t;
 	END thaw_p;
 END solardynamics;
 
