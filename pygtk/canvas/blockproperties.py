@@ -188,7 +188,7 @@ class BlockProperties(object):
 		##End of Context Menu##
 
 	def save_changes(self,button,parent,block):
-
+		block.name = self.block_name.get_text()
 		parent.view.canvas.canvasmodelstate = 'Modified'
 		parent.status.push(0,"Modified Block Properties")
 		parent.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#FFF'))
