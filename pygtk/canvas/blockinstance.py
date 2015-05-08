@@ -63,6 +63,7 @@ class BlockInstance:
 	def __getstate__(self):
 		#Return state values to pickle without  blockinstance.instance
 		state = self.__dict__.copy()
+		del state['instance']
 		return(state)
 
 	def __setstate__(self, state):
