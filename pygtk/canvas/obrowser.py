@@ -30,7 +30,7 @@ class Browser:
 				_path = self.treestore.get_path( _piter )
 				self.otank[_path.to_string()] = (_name, v)
 			return
-		elif hasattr(value,'__getitem__') and hasattr(value,'__len__'):
+		elif hasattr(value,'__getitem__') and hasattr(value,'__len__') and len(value) > 1:
 			keys = range(len(value))
 		elif hasattr(value,"__iter__"):
 			# handle 'set' objects...
