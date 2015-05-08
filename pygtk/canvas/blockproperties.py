@@ -298,7 +298,7 @@ class displayModel(object):
 		self.toggle_column = Gtk.TreeViewColumn('Status')
 		self.toggle_column.pack_start(self.icon_render,False)
 		self.toggle_column.pack_start(self.toggle_render,False)
-		self.toggle_column.set_attributes(self.icon_render,pixbuf=2)
+		self.toggle_column.add_attribute(self.icon_render, "pixbuf", 2)
 
 		self.units_column = Gtk.TreeViewColumn('Value',self.units_render,text=1, foreground =4, weight=5)
 
