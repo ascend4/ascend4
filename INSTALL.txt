@@ -12,6 +12,14 @@ with the version you are currently looking at.
 https://ascendserver.cheme.cmu.edu/svn/ascend/code/branches/extfn/INSTALL.txt?view=log
 
 -----
+GUI PRE REQUIREMENTS
+
+New ASCEND GUI uses Gtk3 library, so some dependencies have to support this version of Gtk.
+If you want to use Canvas GUI you need to have gaphas library (gtk3 branch), which is available on github.com. You can use this command to download it automatically: 
+git clone -b gtk3 http://github.com/amolenaar/gaphas.git gaphastmp
+Then you should copy gaphastmp/gaphas directory either to canvas directory or to python site-packages (usually: /usr/lib/python2.*/site-packages).
+
+-----
 BUILDING ON LINUX AND WINDOWS
 
 To build ASCEND we recommend using SCons. This is supported
