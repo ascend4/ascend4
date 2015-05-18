@@ -58,7 +58,7 @@ class BlockIconView(Gtk.IconView):
 
 from gaphas import GtkView, View
 from gaphas.tool import HoverTool, PlacementTool, HandleTool, ToolChain
-from gaphas.tool import ItemTool, RubberbandTool
+from gaphas.tool import ItemTool, RubberbandTool, PanTool, ZoomTool
 from gaphas.painter import ItemPainter
 from blockconnecttool import BlockConnectTool
 from blockline import BlockLine
@@ -66,7 +66,6 @@ from blockitem import DefaultBlockItem, GraphicalBlockItem
 from contextmenutool import ContextMenuTool
 from connectortool import ConnectorTool
 from blockcanvas import BlockCanvas
-from panzoom import PanTool, ZoomTool
 from blockinstance import BlockInstance
 from solverreporterforcanvas import PopupSolverReporter
 import canvasproperties
@@ -270,11 +269,6 @@ class mainWindow(Gtk.Window):
 		# the 'view' widget implemented by Gaphas
 		#gaphas.view.DEBUG_DRAW_BOUNDING_BOX = True
 		self.view = GtkView()
-		# workaround to provide proper adjustments
-		hadj = GObject.ParamSpecObject
-		hadj.name = "hadjustment"
-		self.view.do_set_property(hadj, None)
-
 		self.view.tool = BlockToolChain()
 
 		# table containing scrollbars and main canvas
