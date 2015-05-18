@@ -241,20 +241,6 @@ class Browser:
 		self.library = ascpy.Library(str(_path))
 
 		self.sim = None
-	
-		#--------
-		# report absence of solvers if nec.
-
-		if not len(ascpy.getSolvers()):
-			print "NO SOLVERS LOADED!"
-			self.reporter.reportError( "No solvers were loaded! ASCEND is probably not configured correctly." )
-
-		#--test option
-		if self.options.test:
-			print '================================================================================'
-			print 'IN TEST'
-			self.test()
-			return
 
 		#-------------------
 		# Set up the window and main widget actions
@@ -417,6 +403,21 @@ class Browser:
 		# set up the error reporter callback
 		self.reporter = ascpy.getReporter()
 		self.reporter.setPythonErrorCallback(self.error_callback)
+
+
+		#--------
+		# report absence of solvers if nec.
+
+		if not len(ascpy.getSolvers()):
+			print "NO SOLVERS LOADED!"
+			self.reporter.reportError( "No solvers were loaded! ASCEND is probably not configured correctly." )
+
+		#--test option
+		if self.options.test:
+			print '================================================================================'
+			print 'IN TEST'
+			self.test()
+			return
 
 
 		#-------
