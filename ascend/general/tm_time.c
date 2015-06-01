@@ -26,6 +26,26 @@
 
 static boolean f_first = TRUE;
 
+/* the code with clock_gettime() cannot be used on windows due to posix compability */
+#ifdef __WIN32__
+double tm_cpu_time(void)
+{
+   static clock_t ref;
+   static double dref;
+   clock_t now;
+   double dnow;
+
+   if( f_first ) {
+      ref = clock();
+      dref = (double) ref;
+      f_first = FALSE;
+   }
+   now = clock();
+   dnow = (double) now;
+
+   return((dnow - dref) / CLOCKS_PER_SEC);
+}
+#else
 double tm_cpu_time(void){
 	static struct timespec ref;
 	struct timespec now;
@@ -37,6 +57,7 @@ double tm_cpu_time(void){
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
 	return (now.tv_sec - ref.tv_sec) + 1e-9*(now.tv_nsec - ref.tv_nsec);
 }
+#endif
 
 double tm_reset_cpu_time(void)
 {
