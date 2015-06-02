@@ -88,26 +88,59 @@ int main(void){
 	double rho[NFLUIDS];
 	for(i=N2;i<NFLUIDS;i++){
 		rho[i] = P / Ideals[i]->data->R / T;
+		printf("\n\t%s%s is :  %.4f kg/m3", "The mass density of ", FluidNames[i], rho[i]);
 	}
 
 	/* mixture properties */
 	double rho_mx = mixture_rho(NFLUIDS, x, rho);
 	double p_mx=0.0, /* pressure and enthalpy, calculated from mixture mass densities */
 		   h_mx=0.0;
+
+	/* Calculate pressures and enthalpies with the Ideal model (ideal-gas mixture) */
+	double p_i, h_i; /* these will hold individual pressures and enthalpies */
+	printf("\n The ideal-gas case:");
 	for(i=N2;i<NFLUIDS;i++){
-		static double p_i, hi;
-		p_i = fprops_p((FluidState){T,rho[i],Helms[i]}, &err);
-		h_i = fprops_h((FluidState){T,rho[i],Helms[i]}, &err);
+		p_i = ideal_p(T, rho[i], Ideals[i]->data, &err);
+		h_i = ideal_h(T, rho[i], Ideals[i]->data, &err);
 		printf("\n\t%s %s\n\t\t%s  %g Pa;\n\t\t%s  %g J/kg.\n",
-				"For the substance ", FluidNames[i],
+				"For the substance", FluidNames[i],
 				"the pressure is  :", p_i,
 				"the enthalpy is  :", h_i);
 		p_mx += x[i] * p_i;
 		h_mx += x[i] * h_i;
 	}
-	printf("\n\t%s\t:\t  %f kg/m3\n\t%s\t:\t  %g Pa\n\t%s\t:\t  %g J/kg\n",
+	printf("\n\t%s\t\t:\t  %f kg/m3\n\t%s\t:\t  %g Pa\n\t%s\t\t:\t  %g J/kg\n",
 			"The density of the mixture is", rho_mx,
 			"The average pressure of the mixture is", p_mx,
 			"The enthalpy of the mixture is", h_mx);
+
+	/* Calculate pressures and enthalpies from Helmholtz model */
+	printf("\n The non-ideal-gas case:");
+	p_mx=0.0; /* reset mixture pressure and enthalpy to zero */
+	h_mx=0.0;
+	for(i=N2;i<NFLUIDS;i++){
+		p_i = fprops_p((FluidState){T,rho[i],Helms[i]}, &err);
+		h_i = fprops_h((FluidState){T,rho[i],Helms[i]}, &err);
+		printf("\n\t%s %s\n\t\t%s  %g Pa;\n\t\t%s  %g J/kg.\n",
+				"For the substance", FluidNames[i],
+				"the pressure is  :", p_i,
+				"the enthalpy is  :", h_i);
+		p_mx += x[i] * p_i;
+		h_mx += x[i] * h_i;
+	}
+	printf("\n\t%s\t\t:\t  %f kg/m3\n\t%s\t:\t  %g Pa\n\t%s\t\t:\t  %g J/kg\n",
+			"The density of the mixture is", rho_mx,
+			"The average pressure of the mixture is", p_mx,
+			"The enthalpy of the mixture is", h_mx);
+
+	/** 
+		Now I drop the assumption that densities can be calculated from the 
+		ideal-gas model, and use a root-finding method to find the densities 
+		that each component must have to be at the pressure P.
+
+		That is, since ideal-solution mixing is isobaric (constant pressure), the 
+		density of each component is found by assuming it is at pressure P before 
+		mixing, and solving for the density that will satisfy that condition.
+	 */
 	return 0;
 }
