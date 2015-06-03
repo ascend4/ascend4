@@ -1,4 +1,24 @@
-/**
+/*	ASCEND modelling environment 
+	Copyright (C) Carnegie Mellon University 
+
+	This program is free software; you can redistribute it and/or modify 
+	it under the terms of the GNU General Public License as published by 
+	the Free Software Foundation; either version 2, or (at your option) 
+	any later version.
+
+	This program is distributed in the hope that it will be useful, but 
+	WITHOUT ANY WARRANTY; without even the implied warranty of 
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
+	General Public License for more details.
+
+	You should have received a copy of the GNU General Public License 
+	along with this program; if not, write to the Free Software 
+	Foundation --
+
+	Free Software Foundation, Inc.
+	59 Temple Place - Suite 330
+	Boston, MA 02111-1307, USA.
+*//**
 	Initial model of a simple mixture, to get the procedure right.  This 
 	is in preparation for a general algorithm to find mixing conditions 
 	in the ideal-mixture case.
@@ -11,7 +31,8 @@
 	[x]	remove `NFLUIDS' from array declarations of all but `FluidAbbrevs'
 	[x]	un-comment all members in arrays other than `FluidAbbrevs' (so the members 
 		 used are controlled only by the value of `NFLUIDS' in `FluidAbbrevs')
-		any other changes can probably wait for re-implementation in another file.
+	[x]	change calculation of densities to fit the physically accurate model!
+		 (cf. ascend4.org/User:Jacob#Explainations_and_Analysis)
  */
 
 #include "../helmholtz.h"
@@ -28,6 +49,10 @@
 /* TODO: maybe add nice colors from `color.h', later.
    Too much of a distraction to figure it out now. */
 
+/** 
+	The fluids I want available for the mixture: nitrogen, ammonia, carbon 
+	dioxide, methane, water
+ */
 extern const EosData eos_rpp_nitrogen;
 extern const EosData eos_rpp_ammonia;
 extern const EosData eos_rpp_carbon_dioxide;
@@ -44,24 +69,20 @@ extern const EosData eos_rpp_water;
 	@return mass density of mixture
  */
 double mixture_rho(unsigned nPure, double *x, double *rhos){
-	double rho_mix;
+	double vol_mix;
 
 	int i;
-	for(i=0,rho_mix=0.0;i<nPure;i++){
-		rho_mix += x[i]*rhos[i]; /* mixture mass density is simply sum of each mass density weighted by the mass fraction */
+	for(i=0,vol_mix=0.0;i<nPure;i++){
+		vol_mix += x[i] / rhos[i]; /* mixture volume per unit mass is the sum of each mass 
+									  fraction divided by the corresponding mass density */
 	}
-	return rho_mix;
+	return 1 / vol_mix;
 }
 
 /**
-	Get data for the fluids I want available for the mixture:
-		nitrogen
-		ammonia
-		carbon dioxide
-		methane
-		water
-		
-	Then, establish mixture conditions, and find individual densities
+	Establish mixture conditions and find individual densities and 
+	enthalpies, find pressure corresponding to density and temperature for each 
+	substance, and determine mixture conditions
  */
 int main(void){
 	enum FluidAbbrevs {N2,NH3,CO2,/*CH4,H2O,*/NFLUIDS};
@@ -95,7 +116,7 @@ int main(void){
 	double x[NFLUIDS] = {0.5, 0.3, 0.2}; /* mass fraction */
 	double rho[NFLUIDS]; /* individual densities, kg/m3 */
 
-	/** 
+	/* 
 		Density is found as ideal-gas density for now, as I check that the 
 		property functions yield reasonable results...
 	 */
@@ -103,8 +124,7 @@ int main(void){
 		rho[i] = P / Ideals[i]->data->R / T;
 		printf("\n\t%s%s is :  %.4f kg/m3", "The mass density of ", 
 				FluidNames[i], rho[i]);
-	}
-	puts("");
+	} puts("");
 
 	/* mixture properties */
 	double rho_mx = mixture_rho(NFLUIDS, x, rho);
@@ -148,7 +168,7 @@ int main(void){
 			"The average pressure of the mixture is", p_mx,
 			"The enthalpy of the mixture is", h_mx);
 
-	/** 
+	/*
 		Now I drop the assumption that densities can be calculated from the 
 		ideal-gas model, and use a root-finding method to find the densities 
 		that each component must have to be at the pressure P.
@@ -194,8 +214,10 @@ int main(void){
 				"with error in pressure of", error);
 	}
 
-	/*	Now, find the individual pressures and entropies, and the average of each. 
-		This is the same as  */
+	/*
+		Now, find the individual pressures and entropies, and the average of each. 
+		This is the same as
+	 */
 	p_mx=0.0; /* reset mixture pressure and enthalpy to zero */
 	h_mx=0.0;
 	double cp_mx=0.0, /* might as well calculate the heat capacities, etc. also */
@@ -222,6 +244,7 @@ int main(void){
 		cv_mx += x[i] * cv_i;
 		u_mx  += x[i] * u_i;
 	}
+	rho_mx = mixture_rho(NFLUIDS, x, rho);
 	printf("\n\t%s\t\t:\t  %f kg/m3"
 			"\n\t%s\t:\t  %g Pa"
 			"\n\t%s\t\t:\t  %g J/kg"
@@ -234,7 +257,7 @@ int main(void){
 			"The internal energy of the mixture is", u_mx,
 			"The constant-pressure heat capacity is", cp_mx,
 			"The constant-volume heat capacity is", cv_mx);
-	/**	
+	/*
 		Notice that the results from even the last simulation of this system give 
 		results very close to the ideal-gas case.  We are still in the area of 
 		ideal-gas behavior.
@@ -246,7 +269,9 @@ int main(void){
 		
 		Now we have to solve for the set of individual densities that (1) sum, 
 		when weighted by their mass fractions, to the overall density; (2) all 
-		yield the same pressure at the given temperature T.
+		yield the same pressure at the given temperature T.  That is:
+			\rho^{is} = \frac{1}{\sum\limits_i \frac{X_i}{\rho_i}}
+			P_1(T, \rho_1) = P_2(T, \rho_2) = ... = P_n(T, \rho_n)
 
 		Other initial conditions (e.g. a list of individual enthalpies, 
 		individual entropies, etc.) may involve similar root-finding problems
