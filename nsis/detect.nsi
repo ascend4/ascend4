@@ -31,52 +31,22 @@ Function DetectPython
 FunctionEnd
 
 ;--------------------------------------------------------------------
-; Prefer the current user's installation of GTK, fall back to the local machine
+; Is GTK3 available?
 
 Function DetectGTK
-!ifdef INST64
-	SetRegView 64
-!endif	
-	; Search in the registry in the first instance
-	ReadRegStr $R6 HKLM "SOFTWARE\GTK+-${GTK_VER}" "InstallDir"
-	${If} $R6 == ''
-		; If not found in the registory, look in ${GTKSEARCHPATH}
-		;MessageBox MB_OK "No GTK found in HKLM"
-		${If} ${FileExists} "${GTKSEARCHPATH}\manifest\${GTK_MFT}"
-				;MessageBox MB_OK "GTK OK in ${GTKSEARCHPATH}\manifest"
-				StrCpy $GTKPATH "${GTKSEARCHPATH}\bin"
-				StrCpy $HAVE_GTK "OK"
-				Return
-		${EndIf}
+	${If} ${FileExists} "$PYPATH\Lib\site-packages\gnome\libgtk-3-0.dll"
+		StrCpy $HAVE_GTK "OK"
 	${Else}
-		; Found in the registry. Check for the GTK DLL, but don't insist
-		; on exactly matching manifest ID in this case.
-		${If} ${FileExists} "$R6\bin\libgtk-win32-2.0-0.dll"
-			;MessageBox MB_OK "GTK OK in $R6 (from registry)"
-			StrCpy $GTKPATH "$R6\bin"
-			StrCpy $HAVE_GTK "OK"
-			Return
-		${EndIf}
+		;MessageBox MB_OK "No PyCairo in $PYPATH"		
+		StrCpy $HAVE_GTK "NOK"
 	${EndIf}
-	;MessageBox MB_OK "Failed to locate GTK (searched registry\nand also ${GTKSEARCHPATH})"
-	StrCpy $GTKPATH "GTK not found in registry or ${GTKSEARCHPATH}"
-	StrCpy $HAVE_GTK "NOK"
 FunctionEnd
 
 ;--------------------------------------------------------------------
-; Are necessary PyGTK bits and pieces available?
-
-Function DetectPyGTK
-	${If} ${FileExists} "$PYPATH\Lib\site-packages\gtk-2.0\gtk\__init__.py"
-		StrCpy $HAVE_PYGTK "OK"
-	${Else}
-		;MessageBox MB_OK "No PyGTK in $PYPATH"		
-		StrCpy $HAVE_PYGTK "NOK"
-	${EndIf}
-FunctionEnd
+; Are necessary Python packages and pieces available?
 
 Function DetectPyCairo
-	${If} ${FileExists} "$PYPATH\Lib\site-packages\cairo\__init__.py"
+	${If} ${FileExists} "$PYPATH\Lib\site-packages\gnome\libcairo-gobject-2.dll"
 		StrCpy $HAVE_PYCAIRO "OK"
 	${Else}
 		;MessageBox MB_OK "No PyCairo in $PYPATH"		
@@ -85,7 +55,7 @@ Function DetectPyCairo
 FunctionEnd
 
 Function DetectPyGObject
-	${If} ${FileExists} "$PYPATH\Lib\site-packages\gtk-2.0\gobject\__init__.py"
+	${If} ${FileExists} "$PYPATH\Lib\site-packages\gnome\libgobject-2.0-0.dll"
 		StrCpy $HAVE_PYGOBJECT "OK"
 	${Else}
 		;MessageBox MB_OK "No PyGObject in $PYPATH"		

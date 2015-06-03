@@ -60,8 +60,6 @@ Var DEFAULTPATH
 Var HAVE_PYTHON
 Var PYPATH
 Var HAVE_GTK
-Var GTKPATH
-Var HAVE_PYGTK
 Var HAVE_PYGOBJECT
 Var HAVE_PYCAIRO
 Var PYINSTALLED
@@ -71,10 +69,6 @@ Var PDFINSTALLED
 Var PATH
 
 Var NEED_PYTHON
-Var NEED_GTK
-Var NEED_PYGTK
-Var NEED_PYCAIRO
-Var NEED_PYGOBJECT
 
 Var ASCENDINIFOUND
 Var ASCENDENVVARFOUND
@@ -94,44 +88,19 @@ Var PYTHONTARGETDIR
 !define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive ALLUSERS=1 TARGETDIR=$PYTHONTARGETDIR"
 
 !define THIRDPARTY_DIR "http://downloads.sourceforge.net/project/ascend-sim/thirdparty/"
-!define GTK_VER "2.22"
 
 !ifdef INST64
 !define WINXX "win64"
 !define AMDXX ".win-amd64"
 !define NNBIT "64-bit"
 !define X64I386 "x64"
-!define GTK_PATCH ".1-20101229"
 !else
 !define WINXX "win32"
 !define AMDXX ".win32"
 !define X64I386 "i386"
 !define NNBIT "32-bit"
-!define GTK_PATCH ".1-20101227"
 !endif
 
-; Host our own GTK bundles, repackaged as installers.
-; User should still be able to use the ftp.gnome.org zip files, we just can't easily install them from here.
-; Also, but having GTK installer, we can store the installation location in the registry (and have both 64 and 32 bit versions)
-!define GTK_FN "gtk+-${GTK_VER}${GTK_PATCH}-${X64I386}-a4.exe"
-!define GTK_URL "${THIRDPARTY_DIR}${GTK_FN}"
-!define GTK_MFT "gtk+-bundle_${GTK_VER}${GTK_PATCH}_${WINXX}.mft"
-!define GTK_CMD "$DAI_TMPFILE /S"
-
-; We will host the PyGTK, PyGObject and PyCairo dependencies on SF.net ourselves... for the moment.
-; Note that PyGTK version should match GTK+ version.
-!define PYGTK_PATCH ".0"
-!define PYCAIRO_VER "1.10.0"
-!define PYGOBJECT_VER "2.28.6"
-!define PYGTK_FN "pygtk-${GTK_VER}${PYGTK_PATCH}${AMDXX}-py${PYVERSION}.exe"
-!define PYCAIRO_FN "py2cairo-${PYCAIRO_VER}${AMDXX}-py${PYVERSION}.exe"
-!define PYGOBJECT_FN "pygobject-${PYGOBJECT_VER}${AMDXX}-py${PYVERSION}.exe"
-!define PYGTK_URL "${THIRDPARTY_DIR}${PYGTK_FN}"
-!define PYCAIRO_URL "${THIRDPARTY_DIR}${PYCAIRO_FN}"
-!define PYGOBJECT_URL "${THIRDPARTY_DIR}${PYGOBJECT_FN}"
-!define PYGTK_CMD "$DAI_TMPFILE"
-!define PYCAIRO_CMD "$DAI_TMPFILE"
-!define PYGOBJECT_CMD "$DAI_TMPFILE"
 
 !include "download.nsi"
 
@@ -142,50 +111,6 @@ Section "-python"
 		Call DetectPython
 		${If} $HAVE_PYTHON == 'NOK'
 			MessageBox MB_OK "Python installation appears to have failed. You may need to retry manually."
-		${EndIf}
-        ${EndIf}
-SectionEnd
-
-Section "-gtk"
-	DetailPrint "--- DOWNLOAD GTK ---"
-	${If} $NEED_GTK == '1'
-		!insertmacro downloadAndInstall "GTK" "${GTK_URL}" "${GTK_FN}" "${GTK_CMD}"
-		Call DetectGTK
-		${If} $HAVE_GTK == 'NOK'
-			MessageBox MB_OK "GTK installation appears to have failed. You may need to retry manually."
-		${EndIf}
-        ${EndIf}
-SectionEnd
-
-Section "-pygtk"
-	DetailPrint "--- DOWNLOAD PYGTK ---"
-	${If} $NEED_PYGTK == '1'
-		!insertmacro downloadAndInstall "PyGTK" "${PYGTK_URL}" "${PYGTK_FN}" "${PYGTK_CMD}"
-		Call DetectPyGTK
-		${If} $HAVE_PYGTK == 'NOK'
-			MessageBox MB_OK "PyGTK installation appears to have failed. You may need to retry manually"
-		${EndIf}
-        ${EndIf}
-SectionEnd
-
-Section "-pycairo"
-	DetailPrint "--- DOWNLOAD PYCAIRO ---"
-	${If} $NEED_PYCAIRO == '1'
-		!insertmacro downloadAndInstall "PyCAIRO" "${PYCAIRO_URL}" "${PYCAIRO_FN}" "${PYCAIRO_CMD}"
-		Call DetectPyCairo
-		${If} $HAVE_PYCAIRO == 'NOK'
-			MessageBox MB_OK "PyCairo installation appears to have failed. You may need to retry manually."
-		${EndIf}
-        ${EndIf}
-SectionEnd
-
-Section "-pygobject"
-	DetailPrint "--- DOWNLOAD PYGOBJECT ---"
-	${If} $NEED_PYGOBJECT == '1'
-		!insertmacro downloadAndInstall "PyGObject" "${PYGOBJECT_URL}" "${PYGOBJECT_FN}" "${PYGOBJECT_CMD}"
-		Call DetectPyGObject
-		${If} $HAVE_PYGOBJECT == 'NOK'
-			MessageBox MB_OK "PyGObject installation appears to have failed. You may need to retry manually."
 		${EndIf}
         ${EndIf}
 SectionEnd
@@ -265,7 +190,6 @@ Section "ASCEND (required)"
 	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_ASCDATA" "$INSTDIR"
 	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_MODELS" "$INSTDIR\models"
 	WriteRegStr HKLM SOFTWARE\ASCEND "INSTALL_SOLVERS" "$INSTDIR\solvers"
-	WriteRegStr HKLM SOFTWARE\ASCEND "GTKLIBS" "$GTKPATH"
 	
 	; Write default values of ASCENDLIBRARY and ASCENDSOLVERS (user can override with env vars)
 	WriteRegStr HKLM SOFTWARE\ASCEND "ASCENDLIBRARY" "$INSTDIR\models"
@@ -276,21 +200,19 @@ SectionEnd
 
 ;--------------------------------
 
-Section "PyGTK GUI" sect_pygtk
+Section "GTK GUI" sect_pygtk
 !ifdef INST64
 	SetRegView 64
 !endif
 	; Check the dependencies of the PyGTK GUI before proceding...
 	${If} $HAVE_PYTHON == 'NOK'
-		MessageBox MB_OK "PyGTK GUI can not be installed, because Python was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(PYPATH=$PYPATH)"
+		MessageBox MB_OK "GTK GUI can not be installed, because Python was not found on this system.$\nIf you do want to use the GTK GUI, please check the installation instructions$\n$\n(PYPATH=$PYPATH)"
 	${ElseIf} $HAVE_GTK == 'NOK'
-		MessageBox MB_OK "PyGTK GUI cannot be installed, because GTK+ 2.x was not found on this system.$\nIf you do want to use the PyGTK GUI, please check the installation instructions$\n$\n(GTKPATH=$GTKPATH)"
-	${ElseIf} $HAVE_PYGTK == "NOK"
-		MessageBox MB_OK "PyGTK GUI cannot be installed, because PyGTK was not found on this system.$\nPlease check the installation instructions.$\n$\n(PYPATH=$PYPATH)"
-	${ElseIf} $HAVE_PYCAIRO == "NOK"
-		MessageBox MB_OK "PyGTK GUI cannot be installed, because PyCairo was not found on this system.$\nPlease check the installation instructions.$\n$\n(PYPATH=$PYPATH)"
-	${ElseIf} $HAVE_PYGOBJECT == "NOK"
-		MessageBox MB_OK "PyGTK GUI cannot be installed, because PyGObject was not found on this system.$\nPlease check the installation instructions.$\n$\n(PYPATH=$PYPATH)"
+		MessageBox MB_OK "GTK GUI cannot be installed, because GTK+ 3.x was not found on this system.$\nIf you do want to use the GTK GUI, please install GTK3 from PyGObject for Windows$\n"
+	${ElseIf} $HAVE_PYCAIRO == 'NOK'
+		MessageBox MB_OK "GTK GUI cannot be installed, because PyCairo was not found on this system.$\nIf you do want to use the GTK GUI, please install Cairo from PyGObject for Windows$\n"
+	${ElseIf} $HAVE_PYGOBJECT == 'NOK'
+		MessageBox MB_OK "GTK GUI cannot be installed, because PyGObject was not found on this system.$\nIf you do want to use the GTK GUI, please install GOBject from PyGObject for Windows$\n"
 	${Else}
 		;MessageBox MB_OK "Python: $PYPATH, GTK: $GTKPATH"
 
@@ -652,12 +574,11 @@ Function .onInit
 
 	Call DetectPython
 	Call DetectGTK
-	Call DetectPyGTK
 	Call DetectPyGObject
 	Call DetectPyCairo
 	
 	;MessageBox MB_OK "GTK path is $GTKPATH"
-	StrCpy $PATH "$GTKPATH;$DEFAULTPATH;$PYPATH"
+	StrCpy $PATH "$DEFAULTPATH;$PYPATH"
 
 	ReadRegStr $0 HKLM "SOFTWARE\ASCEND" "Install_Dir"
 	${If} $0 != ""	
