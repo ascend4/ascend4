@@ -8,6 +8,8 @@
 #include "../fprops.h"
 #include "../refstate.h"
 #include "../sat.h"
+
+#include <stdio.h>
 #include <assert.h>
 #include <math.h>
 

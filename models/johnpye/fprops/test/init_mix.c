@@ -5,6 +5,13 @@
 
 	Started May 28, 2015
 	Real work on this started June 2, "
+
+	TODO -
+	[x]	change first `FluidNames' to `FluidAbbrevs'
+	[x]	remove `NFLUIDS' from array declarations of all but `FluidAbbrevs'
+	[x]	un-comment all members in arrays other than `FluidAbbrevs' (so the members 
+		 used are controlled only by the value of `NFLUIDS' in `FluidAbbrevs')
+		any other changes can probably wait for re-implementation in another file.
  */
 
 #include "../helmholtz.h"
@@ -57,19 +64,19 @@ double mixture_rho(unsigned nPure, double *x, double *rhos){
 	Then, establish mixture conditions, and find individual densities
  */
 int main(void){
-	enum FluidNames {N2,NH3,CO2,/*CH4,H2O,*/NFLUIDS};
+	enum FluidAbbrevs {N2,NH3,CO2,/*CH4,H2O,*/NFLUIDS};
 	ReferenceState ref = {FPROPS_REF_REF0};
 
-	const EosData *IdealEos[NFLUIDS]={
-		&eos_rpp_nitrogen
-			, &eos_rpp_ammonia
-			, &eos_rpp_carbon_dioxide
-			// , &eos_rpp_methane
-			// , &eos_rpp_water
+	const EosData *IdealEos[]={
+		&eos_rpp_nitrogen, 
+		&eos_rpp_ammonia, 
+		&eos_rpp_carbon_dioxide, 
+		&eos_rpp_methane, 
+		&eos_rpp_water
 	};
 	
-	char *FluidNames[NFLUIDS]={
-		"nitrogen", "ammonia", "carbondioxide"/* , "methane", "water" */
+	char *FluidNames[]={
+		"nitrogen", "ammonia", "carbondioxide", "methane", "water"
 	};
 
 	PureFluid *Ideals[NFLUIDS];
@@ -244,9 +251,9 @@ int main(void){
 		Other initial conditions (e.g. a list of individual enthalpies, 
 		individual entropies, etc.) may involve similar root-finding problems
 
-		However, the algorithm for these cases can wait until I write root-finding 
-		methods for given (T,P), and test them under conditions not so nearly 
-		identical to ideal-gas conditions!
+		However, the algorithm for these cases can wait until I write 
+		root-finding methods for rho given (T,P), and test them under 
+		conditions not so nearly identical to ideal-gas conditions!
 	 */
 	return 0;
 }
