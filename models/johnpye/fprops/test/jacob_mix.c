@@ -55,13 +55,15 @@ extern const EosData eos_rpp_methane;
 extern const EosData eos_rpp_water;
 
 /* Function prototypes */
-// void ig_rhos(double *rho_out, unsigned nPure, double T, double P, PureFluid **I, char **Names);
+void ig_rhos(double *rho_out, unsigned nPure, double T, double P, PureFluid **I, char **Names);
 void pressure_rhos(double *rho_out, unsigned nPure, double T, double P, double tol, PureFluid **PF, char **Names, FpropsError *err);
 double mixture_rho(unsigned nPure, double *x, double *rhos);
 double mixture_u(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
 double mixture_h(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
 double mixture_cp(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
 double mixture_cv(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
+double mixture_x_ln_x(unsigned nPure, double *xs, PureFluid **PFs);
+double mixture_M_avg(unsigned nPure, double *xs, PureFluid **PFs);
 
 
 /* 
@@ -105,8 +107,8 @@ void pressure_rhos(double *rho_out, unsigned nPure, double T, double P, double t
 
 			if(fabs(P - p1) < tol){ /* Success! */
 				rho_out[i1] = rho1;
-				printf("\nRoot-finding succeeded at rho1 = %.6e kg/m3, p1 = %.6e Pa "
-						"(and P = %.6e Pa), after %d iterations.", 
+				printf("\n\tRoot-finding succeeded at rho1 = %.5f kg/m3, p1 = %.0f Pa "
+						"(and P = %.0f Pa), after %d iterations.", 
 						rho1, p1, P, i2);
 				break;
 			}
@@ -141,8 +143,9 @@ double mixture_rho(unsigned nPure, double *xs, double *rhos){
 	double vol_mix=0.0;
 
 	for(i=0;i<nPure;i++){
-		vol_mix += xs[i] / rhos[i]; /* mixture volume per unit mass is the sum of each mass 
-									  fraction divided by the corresponding mass density */
+		vol_mix += xs[i] / rhos[i]; /* mixture volume per unit mass is the sum 
+									   of each mass fraction divided by the 
+									   corresponding mass density */
 	}
 	return 1 / vol_mix;
 }
@@ -159,12 +162,13 @@ double mixture_rho(unsigned nPure, double *xs, double *rhos){
 	@param err error argument
  */
 double mixture_u(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err){
+	unsigned i;
+	/* double u_n;       #<{(| internal energy of the n[Pure]th component |)}># */
 	double u_mix=0.0; /* internal energy of the mixture, iteratively summed */
-	double u_n;       /* internal energy of the n[Pure]th component */
 
-	for(;nPure>0;nPure--){ /* count *down* through `nPure' */
-		u_n = fprops_u((FluidState){T,rhos[nPure],PFs[nPure]}, err);
-		u_mix += xs[nPure] * u_n;
+	for(i=0;i<nPure;i++){ /* count up until `nPure' */
+		/* u_n =  */
+		u_mix += xs[i] * fprops_u((FluidState){T,rhos[i],PFs[i]}, err);
 	}
 	return u_mix;
 }
@@ -181,12 +185,13 @@ double mixture_u(unsigned nPure, double *xs, double *rhos, double T, PureFluid *
 	@param err error argument
  */
 double mixture_h(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err){
+	unsigned i;
+	/* double h_n;       #<{(| the enthalpy of the n[Pure]th component |)}># */
 	double h_mix=0.0; /* enthalpy of mixture, to be iteratively summed */
-	double h_n;       /* the enthalpy of the n[Pure]th component */
 
-	for(;nPure>0;nPure--){ /* count *down* through `nPure' */
-		h_n = fprops_h((FluidState){T,rhos[nPure],PFs[nPure]}, err);
-		h_mix += xs[nPure] * h_n;
+	for(i=0;i<nPure;i++){
+		/* h_n =  */
+		h_mix += xs[i] * fprops_h((FluidState){T,rhos[i],PFs[i]}, err);
 	}
 	return h_mix;
 }
@@ -209,7 +214,7 @@ double mixture_cp(unsigned nPure, double *xs, double *rhos, double T, PureFluid 
 	double cp_mix=0.0;
 
 	for(i=0;i<nPure;i++){
-		cp_mix += xs[i] * fprops_cp((FluidState){T,rhos[nPure],PFs[nPure]}, err);
+		cp_mix += xs[i] * fprops_cp((FluidState){T,rhos[i],PFs[i]}, err);
 	}
 	return cp_mix;
 }
@@ -232,9 +237,65 @@ double mixture_cv(unsigned nPure, double *xs, double *rhos, double T, PureFluid 
 	double cv_mix=0.0;
 
 	for(i=0;i<nPure;i++){
-		cv_mix += xs[i] * fprops_cv((FluidState){T,rhos[nPure],PFs[nPure]}, err);
+		cv_mix += xs[i] * fprops_cv((FluidState){T,rhos[i],PFs[i]}, err);
 	}
 	return cv_mix;
+}
+
+/*
+	Calculate the value of the sum over all *mole* fractions x_i, of the mole 
+	fraction times the natural logarithm of the mole fraction:
+		\sum\limits_i x_i \ln(x_i)
+
+	This quantity is used in calculating second-law mixture properties for ideal 
+	solutions
+
+	@param nPure number of pure components
+	@param xs array with mass fraction of each component
+	@param PFs array of pointers to PureFluid structures representing components
+
+	@return sum over all components of mole fraction times natural logarithm of 
+	mole fraction.
+ */
+double mixture_x_ln_x(unsigned nPure, double *x_mass, PureFluid **PFs){
+	unsigned i;
+	double x_mole,     /* mole fraction of current component in the loop */
+		   rM_avg=0.0, /* reciprocal average molar mass */
+		   x_ln_x=0.0; /* sum of (x_i * ln(x_i)) over all `i' */
+
+	for(i=0;i<nPure;i++){ /* find the reciprocal average molar mass */
+		/* add mass fraction over molar mass */
+		rM_avg += x_mass[i] / PFs[i]->data->M;
+	}
+
+	for(i=0;i<nPure;i++){ /* Find the summation we came for */
+		x_mole  = (x_mass[i] / PFs[i]->data->M) * rM_avg;
+		x_ln_x += x_mass[i] / PFs[i]->data->M * log(x_mole);
+	}
+	return x_ln_x;
+}
+
+/* 
+	Calculate the average molar mass of the solution.  This is useful in 
+	converting mass-specific quantities (e.g. enthalpy in J/kg) into molar 
+	quantities (e.g. enthalpy in J/kmol).  The molar masses provided by 
+	PureFluid structs in FPROPS have units of kg/kmol, so this molar mass will 
+	have the same.
+
+	@param nPure number of pure components
+	@param xs array with mass fraction of each component
+	@param PFs array of pointers to PureFluid structures representing components
+
+	@return average molar mass of the solution
+ */
+double mixture_M_avg(unsigned nPure, double *x_mass, PureFluid **PFs){
+	unsigned i;
+	double rM_avg=0.0;
+
+	for(i=0;i<nPure;i++){
+		rM_avg += x_mass[i] / PFs[i]->data->M;
+	}
+	return 1. / rM_avg;
 }
 
 
@@ -266,10 +327,12 @@ int main(){
 	ReferenceState ref = {FPROPS_REF_REF0}; /* reference and error */
 	FpropsError err = FPROPS_NO_ERROR;
 
-	/**	Fill the `Ideals' and `Helms' PureFluid arrays with data for ideal and 
+	/*	
+		Fill the `Ideals' and `Helms' PureFluid arrays with data for ideal and 
 		helmholtz equations of state.  Ideal-gas equation of state is used for 
 		comparison, although eventually I will try to set conditions far from 
-		the ideal-gas case */
+		the ideal-gas case
+	 */
 	for(i=N2;i<NFLUIDS;i++){
 		Ideals[i] = ideal_prepare(IdealEos[i],&ref);
 		Helms[i] = fprops_fluid(FluidNames[i],"helmholtz",NULL);
@@ -280,15 +343,9 @@ int main(){
 	double P=1e5; /* Pa */
 	double x[NFLUIDS]={0.3,0.5,0.2}; /* mass fractions */
 	double rho[NFLUIDS];             /* individual densities */
-		   // rho_id[NFLUIDS];          /* ideal-gas densities */
 
 	/* Find ideal-gas density, to use as a starting point */
 	ig_rhos(rho, NFLUIDS, T, P, Ideals, FluidNames);
-	/*for(i=N2;i<NFLUIDS;i++){
-		rho_id[i] = P / Ideals[i]->data->R / T;
-		printf("\n\t%s%s is :  %.4f kg/m3", "The ideal-gas mass density of ",
-				FluidNames[i], rho_id[i]);
-	} puts("");*/ /* extra line for formatting purposes */
 
 	/*
 		Find actual density by searching for the individual densities which 
@@ -310,45 +367,6 @@ int main(){
 			fprops_solve_ph            in  solve_ph.c (uses fprops_sat_p from sat.c)
 		This is partly for my own reference.
 	 */
-	// int ii; /* dedicated counter for iterative search */
-	// double tol;
-	// tol=1e-9;
-
-	// double p1, p2,     /* pressures */
-	// 	   rho1, rho2, /* densities */
-	// 	   delta_rho;  /* change in density for one step */
-
-	// for(i=N2;i<NFLUIDS;i++){
-	// 	rho1 = rho_id[i];
-	// 	rho2 = 1.1 * rho1;
-	// 	PZeroData PZ = {P,T,Helms[i],&err};
-
-	// 	for(ii=0; ii<20; ii++){
-	// 		p1 = fprops_p((FluidState){T, rho1, Helms[i]}, &err);
-	// 		p2 = fprops_p((FluidState){T, rho2, Helms[i]}, &err);
-
-	// 		if(fabs(P - p1) < tol){ /* Success! */
-	// 			rho[i] = rho1;
-	// 			printf("\nRoot-finding succeeded at rho1 = %.6e kg/m3, p1 = %.6e Pa "
-	// 					"(and P = %.6e Pa), after %d iterations.", 
-	// 					rho1, p1, P, ii);
-	// 			break;
-	// 		}
-	// 		if(p1==p2){
-	// 			printf("\nWith %s, got p1 = p2 = %.6e Pa, but P = %.6e Pa!",
-	// 					FluidNames[i], p1, P);
-	// 		}
-
-	// 		/*
-	// 			unlike in sat.c, here delta_rho does not need to check bounds, 
-	// 			since we do not need to stay in the saturation region
-	// 		 */
-	// 		delta_rho = (P - p1) * (rho1 - rho2) / (p1 - p2);
-	// 		rho2 = rho1;
-	// 		p2 = p1;
-	// 		rho1 += delta_rho;
-	// 	}
-	// }
 	double tol = 1e-9;
 	pressure_rhos(rho, NFLUIDS, T, P, tol, Helms, FluidNames, &err);
 
@@ -357,15 +375,19 @@ int main(){
 		   h_mx1   = mixture_h(NFLUIDS, x, rho, T, Helms, &err),
 		   cp_mx1  = mixture_cp(NFLUIDS, x, rho, T, Helms, &err),
 		   cv_mx1  = mixture_cv(NFLUIDS, x, rho, T, Helms, &err);
-	double u_mx2, /* alternate mixture properties */
-		   h_mx2,
-		   cp_mx2,
-		   cv_mx2;
-	double p_i, /* component properties */
-		   u_i,
-		   h_i,
-		   cp_i,
-		   cv_i;
+
+	double x_ln_x_mx1 = mixture_x_ln_x(NFLUIDS, x, Helms),
+		   M_avg_mx1  = mixture_M_avg(NFLUIDS, x, Helms);
+
+	double u_mx2=0.0, /* alternate mixture properties */
+		   h_mx2=0.0,
+		   cp_mx2=0.0,
+		   cv_mx2=0.0;
+	double p_i=0.0, /* component properties */
+		   u_i=0.0,
+		   h_i=0.0,
+		   cp_i=0.0,
+		   cv_i=0.0;
 	FluidState fs_i;
 	/* Find mixture properties in a loop */
 	for(i=0;i<NFLUIDS;i++){
@@ -375,38 +397,56 @@ int main(){
 		h_i  = fprops_h(fs_i, &err);
 		cp_i = fprops_cp(fs_i, &err);
 		cv_i = fprops_cv(fs_i, &err);
-		printf("\n\t%s %s\n\t\t%s  %g Pa;\n\t\t%s  %g J/kg.\n",
+		printf("\n\t%s %s"
+				"\n\t\t%s\t\t:  %.3f;"
+				"\n\t\t%s\t\t\t:  %.0f Pa;"
+				"\n\t\t%s\t\t:  %g J/kg;"
+				"\n\t\t%s\t\t\t:  %g J/kg;"
+				"\n\t\t%s\t:  %g J/kg/K;"
+				"\n\t\t%s\t:  %g J/kg/K.\n",
 				"For the substance", FluidNames[i],
-				"the pressure is  :", p_i,
-				"the enthalpy is  :", h_i);
+				"the mass fraction is", x[i],
+				"the pressure is", p_i,
+				"the internal energy is", u_i,
+				"the enthalpy is", h_i,
+				"the isobaric heat capacity is", cp_i,
+				"the isometric heat capacity is", cv_i);
 		u_mx2  += x[i] * u_i;
 		h_mx2  += x[i] * h_i;
 		cp_mx2 += x[i] * cp_i;
 		cv_mx2 += x[i] * cv_i;
-		/* the following is used in calculating second-law properties */
-		/* x_ln_x_mx += */
 	}
-	// rho_mx = mixture_rho(NFLUIDS, x, rho);
-	printf("\n%s\n\t%s\t\t:\t  %f kg/m3"
+	printf("\n  %s\n\t%s\t\t:\t  %f kg/m3"
 			"\n\t%s\t\t:\t  %g J/kg"
 			"\n\t%s\t:\t  %g J/kg"
 			"\n\t%s\t:\t  %g J/kg/K"
 			"\n\t%s\t:\t  %g J/kg/K\n",
-			"  For the mixture properties calculated with functions",
+			"For the mixture properties calculated with functions",
 			"The density of the mixture is", rho_mx1,
-			"The enthalpy of the mixture is", h_mx1,
 			"The internal energy of the mixture is", u_mx1,
+			"The enthalpy of the mixture is", h_mx1,
 			"The constant-pressure heat capacity is", cp_mx1,
 			"The constant-volume heat capacity is", cv_mx1);
-	printf("\n%s\n\t%s\t\t:\t  %g J/kg"
+	printf("\n  %s\n\t%s\t\t:\t  %g J/kg"
 			"\n\t%s\t:\t  %g J/kg"
 			"\n\t%s\t:\t  %g J/kg/K"
 			"\n\t%s\t:\t  %g J/kg/K\n",
-			"  For the mixture properties calculated directly",
-			"The enthalpy of the mixture is", h_mx2,
+			"For the mixture properties calculated directly",
 			"The internal energy of the mixture is", u_mx2,
+			"The enthalpy of the mixture is", h_mx2,
 			"The constant-pressure heat capacity is", cp_mx2,
 			"The constant-volume heat capacity is", cv_mx2);
+	printf("\n  %s:\n\t%s %s %s,\n\t%s %s %s,\n\t%s %s %s,\n\t%s %s %s.\n",
+			"For the mixture properties calculated in different ways",
+			"The internal energies", (u_mx1==u_mx2 ? "are" : "are NOT"), "equal",
+			"The enthalpies", (h_mx1==h_mx2 ? "are" : "are NOT"), "equal",
+			"The constant-pressure heat capacities",
+			(cp_mx1==cp_mx2 ? "are" : "are NOT"), "equal",
+			"The constant-volume heat capacities",
+			(cv_mx1==cv_mx2 ? "are" : "are NOT"), "equal");
+	printf("\n  %s:\n\t%s\t:  %.5f\n\t%s\t:  %.5f kg/kmol.\n",
+			"The second-law properties of the solution are",
+			"sum of (x ln(x))", x_ln_x_mx1, "average molar mass", M_avg_mx1);
 
 	return 0;
 }
