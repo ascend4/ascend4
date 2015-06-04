@@ -355,8 +355,9 @@ class Browser:
 		_gdkw = self.window.get_screen().get_active_window()
 		self.waitwin = _gdkw
 
-		_cursor = Gdk.Cursor.new(Gdk.CursorType.WATCH)
-		self.waitwin.set_cursor(_cursor)
+		if self.waitwin:
+			_cursor = Gdk.Cursor.new(Gdk.CursorType.WATCH)
+			self.waitwin.set_cursor(_cursor)
 
 		#-------------------
 		# pixbufs to be used in the error listing
