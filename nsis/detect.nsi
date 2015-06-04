@@ -34,7 +34,7 @@ FunctionEnd
 ; Is GTK3 available?
 
 Function DetectGTK
-	${If} ${FileExists} "$PYPATH\Lib\site-packages\gnome\libgtk-3-0.dll"
+	${If} ${FileExists} "$PYPATH\Lib\site-packages\gnome\libgtk-3*.dll"
 		StrCpy $HAVE_GTK "OK"
 	${Else}
 		;MessageBox MB_OK "No PyCairo in $PYPATH"		
@@ -42,11 +42,20 @@ Function DetectGTK
 	${EndIf}
 FunctionEnd
 
+Function DetectGTKSourceView
+	${If} ${FileExists} "$PYPATH\Lib\site-packages\gnome\libgtksourceview-3*.dll"
+		StrCpy $HAVE_GTKSOURCEVIEW "OK"
+	${Else}
+		;MessageBox MB_OK "No PyCairo in $PYPATH"		
+		StrCpy $HAVE_GTKSOURCEVIEW "NOK"
+	${EndIf}
+FunctionEnd
+
 ;--------------------------------------------------------------------
 ; Are necessary Python packages and pieces available?
 
 Function DetectPyCairo
-	${If} ${FileExists} "$PYPATH\Lib\site-packages\gnome\libcairo-gobject-2.dll"
+	${If} ${FileExists} "$PYPATH\Lib\site-packages\gnome\libcairo-gobject-2*.dll"
 		StrCpy $HAVE_PYCAIRO "OK"
 	${Else}
 		;MessageBox MB_OK "No PyCairo in $PYPATH"		
@@ -55,7 +64,7 @@ Function DetectPyCairo
 FunctionEnd
 
 Function DetectPyGObject
-	${If} ${FileExists} "$PYPATH\Lib\site-packages\gnome\libgobject-2.0-0.dll"
+	${If} ${FileExists} "$PYPATH\Lib\site-packages\gnome\libgobject-2*.dll"
 		StrCpy $HAVE_PYGOBJECT "OK"
 	${Else}
 		;MessageBox MB_OK "No PyGObject in $PYPATH"		

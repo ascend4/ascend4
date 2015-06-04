@@ -62,6 +62,7 @@ Var PYPATH
 Var HAVE_GTK
 Var HAVE_PYGOBJECT
 Var HAVE_PYCAIRO
+Var HAVE_GTKSOURCEVIEW
 Var PYINSTALLED
 
 Var PDFINSTALLED
@@ -172,7 +173,7 @@ Section "ASCEND (required)"
 	${IfNot} $ASCENDLIBRARY == "%ASCENDLIBRARY%"
 		StrCpy $ASCENDENVVARFOUND "1"
 	${EndIf}
-
+	
 	; Write the installation path into the registry
 	WriteRegStr HKLM SOFTWARE\ASCEND "Install_Dir" "$INSTDIR"
 
@@ -213,6 +214,8 @@ Section "GTK GUI" sect_pygtk
 		MessageBox MB_OK "GTK GUI cannot be installed, because PyCairo was not found on this system.$\nIf you do want to use the GTK GUI, please install Cairo from PyGObject for Windows$\n"
 	${ElseIf} $HAVE_PYGOBJECT == 'NOK'
 		MessageBox MB_OK "GTK GUI cannot be installed, because PyGObject was not found on this system.$\nIf you do want to use the GTK GUI, please install GOBject from PyGObject for Windows$\n"
+	${ElseIf} $HAVE_GTKSOURCEVIEW == 'NOK'
+		MessageBox MB_OK "GTK GUI cannot be installed, because PyGObject was not found on this system.$\nIf you do want to use the GTK GUI, please install GTKSourceView from PyGObject for Windows$\n"
 	${Else}
 		;MessageBox MB_OK "Python: $PYPATH, GTK: $GTKPATH"
 
@@ -574,6 +577,7 @@ Function .onInit
 
 	Call DetectPython
 	Call DetectGTK
+	Call DetectGTKSourceView
 	Call DetectPyGObject
 	Call DetectPyCairo
 	

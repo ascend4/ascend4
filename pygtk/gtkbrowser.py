@@ -42,7 +42,7 @@ try:
 	import ascpy
 	import os.path
 
-	loading.print_status("Loading PyGTK, pango")
+	loading.print_status("Loading PyGI, pango")
 
 	from gi.repository import Pango
 

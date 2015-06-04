@@ -22,15 +22,15 @@ except Exception,e:
 			prototype = WINFUNCTYPE(c_int, HWND, LPCSTR, LPCSTR, UINT)
 			paramflags = (1, "hwnd", 0), (1, "text", "Hi"), (1, "caption", None), (1, "flags", 0)
 			MessageBox = prototype(("MessageBoxA", windll.user32), paramflags)
-			MessageBox(text="""ASCEND could not load PyGTK. Probably this is because
-either PyGTK, PyCairo, PyGObject or GTK+ are not installed on your
+			MessageBox(text="""ASCEND could not load PyGI. Probably this is because
+either PyGI, PyCairo, PyGObject or GTK3+ are not installed on your
 system. Please try re-installing ASCEND to rectify the problem.""")
 		except:	
 			pass
 	else:
-		print "PyGTK COULD NOT BE LOADED (is it installed? do you have X-Windows running?) (%s)" % str(e)
+		print "PyGI COULD NOT BE LOADED (is it installed? do you have X-Windows running?) (%s)" % str(e)
 		
-	sys.exit("FATAL ERROR: PyGTK not available, unable to start ASCEND.")
+	sys.exit("FATAL ERROR: PyGI not available, unable to start ASCEND.")
 
 global _messages
 _messages = []

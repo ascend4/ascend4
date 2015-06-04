@@ -19,7 +19,7 @@ Function dependenciesCreate
 	${AndIf} $HAVE_GTK == 'OK'
 	${AndIf} $HAVE_PYGOBJECT == 'OK'
 	${AndIf} $HAVE_PYCAIRO == 'OK'
-	;${AndIf} $TCLOK == 'OK'
+	${AndIf} $HAVE_GTKSOURCEVIEW == 'OK'
 		; do nothing in this page
 	${Else}
 		nsDialogs::Create /NOUNLOAD 1018
@@ -33,35 +33,43 @@ Function dependenciesCreate
 		${NSD_CreateLabel} 0% 32% 100% 15% "and install required packages. This installer will then install only the parts for which the prerequisites are already satisfied."
 		
 		${If} $HAVE_PYTHON == 'NOK'
-			${NSD_CreateCheckbox} 10% 50% 100% 8u "Python ${PYVERSION} (${NNBIT})"
+			${NSD_CreateCheckbox} 10% 50% 100% 8% "Python ${PYVERSION} (${NNBIT})"
 			Pop $CHECKPY
 			!insertmacro setCheckboxChecked $CHECKPY
 		${Else}
-			${NSD_CreateLabel} 10% 50% 100% 10% "Python:$\t$\t OK"
+			${NSD_CreateLabel} 10% 50% 100% 8% "Python:$\t$\t OK"
 			Pop $0
 		${EndIf}	
 
 		${If} $HAVE_GTK == 'NOK'
-			${NSD_CreateLabel} 10% 60% 100% 10% "GTK3:$\t$\t not found"
+			${NSD_CreateLabel} 10% 58% 100% 8% "GTK3:$\t$\t not found"
 			Pop $0
 		${Else}
-			${NSD_CreateLabel} 10% 60% 100% 10% "GTK3:$\t$\t OK"
+			${NSD_CreateLabel} 10% 58% 100% 8% "GTK3:$\t$\t OK"
+			Pop $0
+		${EndIf}
+		
+		${If} $HAVE_GTKSOURCEVIEW == 'NOK'
+			${NSD_CreateLabel} 10% 66% 100% 8% "GTKSourceView:$\t not found"
+			Pop $0
+		${Else}
+			${NSD_CreateLabel} 10% 66% 100% 8% "GTKSourceView:$\t OK"
 			Pop $0
 		${EndIf}
 		
 		${If} $HAVE_PYCAIRO == 'NOK'
-			${NSD_CreateLabel} 10% 70% 100% 10% "PyCairo:$\t not found"
+			${NSD_CreateLabel} 10% 74% 100% 8% "PyCairo:$\t not found"
 			Pop $0
 		${Else}
-			${NSD_CreateLabel} 10% 70% 100% 10% "PyCairo:$\t OK"
+			${NSD_CreateLabel} 10% 74% 100% 8% "PyCairo:$\t OK"
 			Pop $0
 		${EndIf}
 
 		${If} $HAVE_PYGOBJECT == 'NOK'
-			${NSD_CreateLabel} 10% 80% 100% 10% "PyGObject:$\t not found"
+			${NSD_CreateLabel} 10% 82% 100% 8% "PyGObject:$\t not found"
 			Pop $0
 		${Else}
-			${NSD_CreateLabel} 10% 80% 100% 10% "PyGObject:$\t OK"
+			${NSD_CreateLabel} 10% 82% 100% 8% "PyGObject:$\t OK"
 			Pop $0
 		${EndIf}
 
