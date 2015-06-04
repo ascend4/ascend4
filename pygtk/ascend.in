@@ -48,7 +48,6 @@ if platform.system()=="Windows":
 	INSTALL_MODELS,t = wreg.QueryValueEx(k,"INSTALL_MODELS")
 	INSTALL_LIB,t = wreg.QueryValueEx(k,"INSTALL_LIB")
 	INSTALL_ASCDATA,t = wreg.QueryValueEx(k,"INSTALL_ASCDATA")
-	GTKLIBPATH,t = wreg.QueryValueEx(k,"GTKLIBS");
 	DEFAULT_ASCENDLIBRARY="%s;%s" % (INSTALL_SOLVERS,INSTALL_MODELS)
 	
 	ASCEND_PYTHON = os.path.join(INSTALL_ASCDATA,"python")	
@@ -92,29 +91,6 @@ else:
 
 if not os.environ.get('ASC_GDB'):
 	# restarting messes up GDB so don't allow it
-
-	if platform.system()=="Windows":
-		# Put INSTALL_LIB then GTK at start of path
-		if GTKLIBPATH not in LDPATH:
-			restart = 1
-		if INSTALL_LIB not in LDPATH:
-			restart = 1
-		if GTKLIBPATH in LDPATH:
-			LDPATH.remove(GTKLIBPATH)
-		if GTKLIBPATH:
-			LDPATH = [INSTALL_LIB,GTKLIBPATH] + LDPATH
-		else:
-			LDPATH = [INSTALL_LIB] + LDPATH
-		os.environ[LDPATHVAR] = SEP.join(LDPATH)
-	elif INSTALL_LIB != "/usr/lib" and not INSTALL_LIB in LDPATH:
-		# don't worry about GTK location; just ensure that LDPATH includes INSTALL_LIB
-		if GTKLIBPATH:
-			LDPATH = [INSTALL_LIB,GTKLIBPATH] + LDPATH
-		else:
-			LDPATH = [INSTALL_LIB] + LDPATH
-		os.environ[LDPATHVAR] = SEP.join(LDPATH)
-		restart = 1
-
 	if platform.system()=="Darwin":
 		if not 'GTK_PATH' in os.environ:
 			os.environ['XDG_DATA_HOME']=os.path.expanduser('~/.local/share')
