@@ -69,10 +69,10 @@ extern const EosData eos_rpp_water;
 	@return mass density of mixture
  */
 double mixture_rho(unsigned nPure, double *x, double *rhos){
-	double vol_mix;
+	double vol_mix=0.0;
 
 	int i;
-	for(i=0,vol_mix=0.0;i<nPure;i++){
+	for(i=0;i<nPure;i++){
 		vol_mix += x[i] / rhos[i]; /* mixture volume per unit mass is the sum of each mass 
 									  fraction divided by the corresponding mass density */
 	}
@@ -234,10 +234,16 @@ int main(void){
 		cp_i = fprops_cp(fs_i, &err);
 		cv_i = fprops_cv(fs_i, &err);
 		u_i  = fprops_u(fs_i, &err);
-		printf("\n\t%s %s\n\t\t%s  %g Pa;\n\t\t%s  %g J/kg.\n",
+		printf("\n\t%s %s"
+				"\n\t\t%s\t:  %.4f;"
+				"\n\t\t%s\t:  %g Pa;"
+				"\n\t\t%s\t:  %.4f kg/m3;"
+				"\n\t\t%s\t:  %g J/kg.\n",
 				"For the substance", FluidNames[i],
-				"the pressure is  :", p_i,
-				"the enthalpy is  :", h_i);
+				"the mass fraction is", x[i],
+				"the pressure is  ", p_i,
+				"the density is   ", rho[i],
+				"the enthalpy is  ", h_i);
 		p_mx  += x[i] * p_i;
 		h_mx  += x[i] * h_i;
 		cp_mx += x[i] * cp_i;
@@ -247,14 +253,14 @@ int main(void){
 	rho_mx = mixture_rho(NFLUIDS, x, rho);
 	printf("\n\t%s\t\t:\t  %f kg/m3"
 			"\n\t%s\t:\t  %g Pa"
-			"\n\t%s\t\t:\t  %g J/kg"
 			"\n\t%s\t:\t  %g J/kg"
+			"\n\t%s\t\t:\t  %g J/kg"
 			"\n\t%s\t:\t  %g J/kg/K"
 			"\n\t%s\t:\t  %g J/kg/K\n",
 			"The density of the mixture is", rho_mx,
 			"The average pressure of the mixture is", p_mx,
-			"The enthalpy of the mixture is", h_mx,
 			"The internal energy of the mixture is", u_mx,
+			"The enthalpy of the mixture is", h_mx,
 			"The constant-pressure heat capacity is", cp_mx,
 			"The constant-volume heat capacity is", cv_mx);
 	/*

@@ -19,7 +19,7 @@
 	59 Temple Place - Suite 330
 	Boston, MA 02111-1307, USA.
 *//*
-	by Jacob Shealy, June 3, 2015
+	by Jacob Shealy, June 3, 2015-
 	
 	Initial model of a simple mixture, to get the procedure right.  This 
 	is in preparation for a general algorithm to find mixing conditions 
@@ -27,7 +27,19 @@
 
 	TODO -
 		add error handling in functions:
-			check that sum of mass fractions is really one
+		[x]	check that sum of mass fractions is really one
+			we will need to add different values to the FpropsError enum to represent errors
+		how do we want inconsistent mass fractions to be handled?  Strategies:
+			1. for an n-component system, only specify (n-1) mass fractions; 
+			   remaining mass fraction is (1 - (sum over other mass fractions))
+			2. specify all mass fractions, but check that they sum to 1 (within 
+			   some tolerance), and return error otherwise.
+			3. specify all mass fractions, but check that they sum to 1 (within 
+			   some tolerance), and adjust value of last mass fraction if 
+			   incorrect sum occurs only because of that fraction.  If incorrect 
+			   sum occurs before the last mass fraction, return an error.  This 
+			   strategy is very dangerous, since it involves changing 
+			   user-provided data.
  */
 
 #include "../helmholtz.h"
@@ -40,6 +52,11 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
+
+/* Macro/Preprocessor definitions; prefixed with `MIX_' */
+#define MIX_XTOL 1e-6
+#define MIX_ERROR "  ERROR: "
+#define MIX_XSUM_ERROR MIX_ERROR "the sum over all mass fractions, which should be exactly 1.00, is %.10f\n"
 
 /* TODO: maybe add nice colors from `color.h', later.
    Too much of a distraction to figure it out now. */
@@ -64,6 +81,7 @@ double mixture_cp(unsigned nPure, double *xs, double *rhos, double T, PureFluid 
 double mixture_cv(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
 double mixture_x_ln_x(unsigned nPure, double *xs, PureFluid **PFs);
 double mixture_M_avg(unsigned nPure, double *xs, PureFluid **PFs);
+double mixture_s(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
 
 
 /* 
@@ -92,6 +110,26 @@ void ig_rhos(double *rho_out, unsigned nPure, double T, double P, PureFluid **I,
 	densities are consistent with the given temperature and pressure
  */
 void pressure_rhos(double *rho_out, unsigned nPure, double T, double P, double tol, PureFluid **PF, char **Names, FpropsError *err){
+	/*
+		Find actual density by searching for the individual densities which 
+		each satisfy the equation P_i(T, \rho_i) = P, starting from ideal-gas 
+		density.
+
+		In production code, it might be advantageous to find several different 
+		starting points for this search; e.g. if P > critical pressure, start 
+		from critical density, etc.
+
+		I take inspiration from the structure of `zeroin_solve' in how it takes 
+		inputs and outputs
+
+		Compare with:
+			zeroin_solve               in  zeroin.c
+			helmholtz_sat              in  helmholtz.c
+			sat_p_resid, fprops_sat_p  in  sat.c (example of using zeroin_solve)
+			fprops_sat_hf              in  sat.c
+			fprops_solve_ph            in  solve_ph.c (uses fprops_sat_p from sat.c)
+		This is partly for my own reference.
+	 */
 	unsigned i1, i2;   /* counter variables */
 	double p1, p2,     /* pressures */
 		   rho1, rho2, /* densities */
@@ -140,12 +178,15 @@ void pressure_rhos(double *rho_out, unsigned nPure, double T, double P, double t
  */
 double mixture_rho(unsigned nPure, double *xs, double *rhos){
 	unsigned i;
-	double vol_mix=0.0;
+	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
+	double vol_mix=0.0; /* volume per unit mass of the mixture, iteratively summed */
 
 	for(i=0;i<nPure;i++){
-		vol_mix += xs[i] / rhos[i]; /* mixture volume per unit mass is the sum 
-									   of each mass fraction divided by the 
-									   corresponding mass density */
+		vol_mix += xs[i] / rhos[i];
+		x_total += xs[i];
+	}
+	if(fabs(x_total - 1) > MIX_XTOL){
+		printf(MIX_XSUM_ERROR, x_total);
 	}
 	return 1 / vol_mix;
 }
@@ -163,12 +204,15 @@ double mixture_rho(unsigned nPure, double *xs, double *rhos){
  */
 double mixture_u(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err){
 	unsigned i;
-	/* double u_n;       #<{(| internal energy of the n[Pure]th component |)}># */
-	double u_mix=0.0; /* internal energy of the mixture, iteratively summed */
+	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
+	double u_mix=0.0;   /* internal energy of the mixture, iteratively summed */
 
-	for(i=0;i<nPure;i++){ /* count up until `nPure' */
-		/* u_n =  */
+	for(i=0;i<nPure;i++){
 		u_mix += xs[i] * fprops_u((FluidState){T,rhos[i],PFs[i]}, err);
+		x_total += xs[i];
+	}
+	if(fabs(x_total - 1) > MIX_XTOL){
+		printf(MIX_XSUM_ERROR, x_total);
 	}
 	return u_mix;
 }
@@ -186,12 +230,15 @@ double mixture_u(unsigned nPure, double *xs, double *rhos, double T, PureFluid *
  */
 double mixture_h(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err){
 	unsigned i;
-	/* double h_n;       #<{(| the enthalpy of the n[Pure]th component |)}># */
-	double h_mix=0.0; /* enthalpy of mixture, to be iteratively summed */
+	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
+	double h_mix=0.0;   /* enthalpy of mixture, iteratively summed */
 
 	for(i=0;i<nPure;i++){
-		/* h_n =  */
 		h_mix += xs[i] * fprops_h((FluidState){T,rhos[i],PFs[i]}, err);
+		x_total += xs[i];
+	}
+	if(fabs(x_total - 1) > MIX_XTOL){
+		printf(MIX_XSUM_ERROR, x_total);
 	}
 	return h_mix;
 }
@@ -211,10 +258,15 @@ double mixture_h(unsigned nPure, double *xs, double *rhos, double T, PureFluid *
  */
 double mixture_cp(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err){
 	unsigned i;
-	double cp_mix=0.0;
+	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
+	double cp_mix=0.0;  /* constant-pressure heat capacity of mixture, iteratively summed */
 
 	for(i=0;i<nPure;i++){
 		cp_mix += xs[i] * fprops_cp((FluidState){T,rhos[i],PFs[i]}, err);
+		x_total += xs[i];
+	}
+	if(fabs(x_total - 1) > MIX_XTOL){
+		printf(MIX_XSUM_ERROR, x_total);
 	}
 	return cp_mix;
 }
@@ -234,10 +286,15 @@ double mixture_cp(unsigned nPure, double *xs, double *rhos, double T, PureFluid 
  */
 double mixture_cv(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err){
 	unsigned i;
-	double cv_mix=0.0;
+	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
+	double cv_mix=0.0;  /* constant-volume heat capacity of mixture, iteratively summed */
 
 	for(i=0;i<nPure;i++){
 		cv_mix += xs[i] * fprops_cv((FluidState){T,rhos[i],PFs[i]}, err);
+		x_total += xs[i];
+	}
+	if(fabs(x_total - 1) > MIX_XTOL){
+		printf(MIX_XSUM_ERROR, x_total);
 	}
 	return cv_mix;
 }
@@ -259,13 +316,19 @@ double mixture_cv(unsigned nPure, double *xs, double *rhos, double T, PureFluid 
  */
 double mixture_x_ln_x(unsigned nPure, double *x_mass, PureFluid **PFs){
 	unsigned i;
-	double x_mole,     /* mole fraction of current component in the loop */
-		   rM_avg=0.0, /* reciprocal average molar mass */
-		   x_ln_x=0.0; /* sum of (x_i * ln(x_i)) over all `i' */
+	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
+		   x_mole,      /* mole fraction of current component in the loop */
+		   rM_avg=0.0,  /* reciprocal average molar mass */
+		   x_ln_x=0.0;  /* sum of (x_i * ln(x_i)) over all `i' */
 
 	for(i=0;i<nPure;i++){ /* find the reciprocal average molar mass */
 		/* add mass fraction over molar mass */
 		rM_avg += x_mass[i] / PFs[i]->data->M;
+		x_total += x_mass[i];
+	}
+	/* return error if sum of mole fractions is not 1.00 */
+	if(fabs(x_total - 1) > MIX_XTOL){
+		printf(MIX_XSUM_ERROR, x_total);
 	}
 
 	for(i=0;i<nPure;i++){ /* Find the summation we came for */
@@ -280,7 +343,7 @@ double mixture_x_ln_x(unsigned nPure, double *x_mass, PureFluid **PFs){
 	converting mass-specific quantities (e.g. enthalpy in J/kg) into molar 
 	quantities (e.g. enthalpy in J/kmol).  The molar masses provided by 
 	PureFluid structs in FPROPS have units of kg/kmol, so this molar mass will 
-	have the same.
+	have the same units.
 
 	@param nPure number of pure components
 	@param xs array with mass fraction of each component
@@ -290,13 +353,19 @@ double mixture_x_ln_x(unsigned nPure, double *x_mass, PureFluid **PFs){
  */
 double mixture_M_avg(unsigned nPure, double *x_mass, PureFluid **PFs){
 	unsigned i;
-	double rM_avg=0.0;
+	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
+	double rM_avg=0.0;  /* reciprocal average molar mass */
 
 	for(i=0;i<nPure;i++){
 		rM_avg += x_mass[i] / PFs[i]->data->M;
 	}
 	return 1. / rM_avg;
 }
+
+/*
+	Calculate the overall ideal-solution entropy per unit mass in a mixture of 
+	pure components
+ */
 
 
 /*
@@ -341,32 +410,12 @@ int main(){
 	/* Mixing conditions (temperature,pressure), and mass fractions */
 	double T=300; /* K */
 	double P=1e5; /* Pa */
-	double x[NFLUIDS]={0.3,0.5,0.2}; /* mass fractions */
+	double x[NFLUIDS]={0.5, 0.3, 0.2}; /* mass fractions */
 	double rho[NFLUIDS];             /* individual densities */
 
 	/* Find ideal-gas density, to use as a starting point */
 	ig_rhos(rho, NFLUIDS, T, P, Ideals, FluidNames);
 
-	/*
-		Find actual density by searching for the individual densities which 
-		each satisfy the equation P_i(T, \rho_i) = P, starting from ideal-gas 
-		density.
-
-		In production code, it might be advantageous to find several different 
-		starting points for this search; e.g. if P > critical pressure, start 
-		from critical density, etc.
-
-		I take inspiration from the structure of `zeroin_solve' in how it takes 
-		inputs and outputs
-
-		Compare with:
-			zeroin_solve               in  zeroin.c
-			helmholtz_sat              in  helmholtz.c
-			sat_p_resid, fprops_sat_p  in  sat.c (example of using zeroin_solve)
-			fprops_sat_hf              in  sat.c
-			fprops_solve_ph            in  solve_ph.c (uses fprops_sat_p from sat.c)
-		This is partly for my own reference.
-	 */
 	double tol = 1e-9;
 	pressure_rhos(rho, NFLUIDS, T, P, tol, Helms, FluidNames, &err);
 
@@ -390,7 +439,7 @@ int main(){
 		   cv_i=0.0;
 	FluidState fs_i;
 	/* Find mixture properties in a loop */
-	for(i=0;i<NFLUIDS;i++){
+	for(i=N2;i<NFLUIDS;i++){
 		fs_i = (FluidState){T,rho[i],Helms[i]};
 		p_i  = fprops_p(fs_i, &err);
 		u_i  = fprops_u(fs_i, &err);
@@ -416,21 +465,21 @@ int main(){
 		cp_mx2 += x[i] * cp_i;
 		cv_mx2 += x[i] * cv_i;
 	}
-	printf("\n  %s\n\t%s\t\t:\t  %f kg/m3"
-			"\n\t%s\t\t:\t  %g J/kg"
-			"\n\t%s\t:\t  %g J/kg"
-			"\n\t%s\t:\t  %g J/kg/K"
-			"\n\t%s\t:\t  %g J/kg/K\n",
+	printf("\n  %s\n\t%s\t\t:  %f kg/m3"
+			"\n\t%s\t:  %g J/kg"
+			"\n\t%s\t\t:  %g J/kg"
+			"\n\t%s\t:  %g J/kg/K"
+			"\n\t%s\t:  %g J/kg/K\n",
 			"For the mixture properties calculated with functions",
 			"The density of the mixture is", rho_mx1,
 			"The internal energy of the mixture is", u_mx1,
 			"The enthalpy of the mixture is", h_mx1,
 			"The constant-pressure heat capacity is", cp_mx1,
 			"The constant-volume heat capacity is", cv_mx1);
-	printf("\n  %s\n\t%s\t\t:\t  %g J/kg"
-			"\n\t%s\t:\t  %g J/kg"
-			"\n\t%s\t:\t  %g J/kg/K"
-			"\n\t%s\t:\t  %g J/kg/K\n",
+	printf("\n  %s\n\t%s\t:  %g J/kg"
+			"\n\t%s\t\t:  %g J/kg"
+			"\n\t%s\t:  %g J/kg/K"
+			"\n\t%s\t:  %g J/kg/K\n",
 			"For the mixture properties calculated directly",
 			"The internal energy of the mixture is", u_mx2,
 			"The enthalpy of the mixture is", h_mx2,
