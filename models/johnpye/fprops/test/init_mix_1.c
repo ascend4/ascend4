@@ -35,6 +35,7 @@
 		 (cf. ascend4.org/User:Jacob#Explainations_and_Analysis)
  */
 
+#include "../mixtures/init_mixfuncs.h"
 #include "../helmholtz.h"
 #include "../fluids.h"
 #include "../fprops.h"
@@ -59,25 +60,6 @@ extern const EosData eos_rpp_carbon_dioxide;
 extern const EosData eos_rpp_methane;
 extern const EosData eos_rpp_water;
 
-/** 
-	Calculate overall mass density of a mixture of components, given mass 
-	density of components.
-
-	@param nPure number of pure components
-	@param x mass fractions of components
-	@param rhos mass density of each component
-	@return mass density of mixture
- */
-double mixture_rho(unsigned nPure, double *x, double *rhos){
-	double vol_mix=0.0;
-
-	int i;
-	for(i=0;i<nPure;i++){
-		vol_mix += x[i] / rhos[i]; /* mixture volume per unit mass is the sum of each mass 
-									  fraction divided by the corresponding mass density */
-	}
-	return 1 / vol_mix;
-}
 
 /**
 	Establish mixture conditions and find individual densities and 

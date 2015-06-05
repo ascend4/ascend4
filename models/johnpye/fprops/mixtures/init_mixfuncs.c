@@ -424,84 +424,29 @@ double mixture_M_avg(unsigned nPure, double *x_mass, PureFluid **PFs){
 	Calculate the overall ideal-solution entropy per unit mass in a mixture of 
 	pure components
  */
+double mixture_s(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err){
+	unsigned i;
+	double s_mix=0.0;
+
+	return s_mix;
+}
 
 /*
-	Calculate and print mixture properties by various means
+	Calculate
  */
-void solve_mixture_conditions(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, char **Names, FpropsError *err){
-	int i; /* loop counter */
-	double rho_mx1 = mixture_rho(nPure, xs, rhos), /* mixture properties */
-		   u_mx1   = mixture_u(nPure, xs, rhos, T, PFs, err),
-		   h_mx1   = mixture_h(nPure, xs, rhos, T, PFs, err),
-		   cp_mx1  = mixture_cp(nPure, xs, rhos, T, PFs, err),
-		   cv_mx1  = mixture_cv(nPure, xs, rhos, T, PFs, err);
+double mixture_g(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err){
+	unsigned i;
+	double g_mix=0.0;
 
-	double x_ln_x_mx1 = mixture_x_ln_x(nPure, xs, PFs),
-		   M_avg_mx1  = mixture_M_avg(nPure, xs, PFs);
+	return g_mix;
+}
 
-	double u_mx2=0.0,  /* alternate mixture properties */
-		   h_mx2=0.0,
-		   cp_mx2=0.0,
-		   cv_mx2=0.0;
-	double p_i=0.0,    /* component properties */
-		   u_i=0.0,
-		   h_i=0.0,
-		   cp_i=0.0,
-		   cv_i=0.0;
-	FluidState fs_i;
-	/* Find mixture properties in a loop */
-	for(i=0;i<nPure;i++){
-		fs_i = (FluidState){T,rhos[i],PFs[i]};
-		p_i  = fprops_p(fs_i, err);
-		u_i  = fprops_u(fs_i, err);
-		h_i  = fprops_h(fs_i, err);
-		cp_i = fprops_cp(fs_i, err);
-		cv_i = fprops_cv(fs_i, err);
-		printf("\n\t%s %s"
-				"\n\t\t%s\t\t:  %.3f;"
-				"\n\t\t%s\t\t\t:  %.0f Pa;"
-				"\n\t\t%s\t\t:  %g J/kg;"
-				"\n\t\t%s\t\t\t:  %g J/kg;"
-				"\n\t\t%s\t:  %g J/kg/K;"
-				"\n\t\t%s\t:  %g J/kg/K.\n",
-				"For the substance", Names[i],
-				"the mass fraction is", xs[i],
-				"the pressure is", p_i,
-				"the internal energy is", u_i,
-				"the enthalpy is", h_i,
-				"the isobaric heat capacity is", cp_i,
-				"the isometric heat capacity is", cv_i);
-		u_mx2  += xs[i] * u_i;
-		h_mx2  += xs[i] * h_i;
-		cp_mx2 += xs[i] * cp_i;
-		cv_mx2 += xs[i] * cv_i;
-	}
-	printf("\n  %s\n\t%s\t\t:  %f kg/m3"
-			"\n\t%s\t:  %g J/kg \n\t%s\t\t:  %g J/kg"
-			"\n\t%s\t:  %g J/kg/K \n\t%s\t:  %g J/kg/K\n",
-			"For the mixture properties calculated with functions",
-			"The density of the mixture is", rho_mx1,
-			"The internal energy of the mixture is", u_mx1,
-			"The enthalpy of the mixture is", h_mx1,
-			"The constant-pressure heat capacity is", cp_mx1,
-			"The constant-volume heat capacity is", cv_mx1);
-	printf("\n  %s\n\t%s\t:  %g J/kg \n\t%s\t\t:  %g J/kg"
-			"\n\t%s\t:  %g J/kg/K \n\t%s\t:  %g J/kg/K\n",
-			"For the mixture properties calculated directly",
-			"The internal energy of the mixture is", u_mx2,
-			"The enthalpy of the mixture is", h_mx2,
-			"The constant-pressure heat capacity is", cp_mx2,
-			"The constant-volume heat capacity is", cv_mx2);
-	printf("\n  %s:\n\t%s %s %s,\n\t%s %s %s,\n\t%s %s %s,\n\t%s %s %s.\n",
-			"For the mixture properties calculated in different ways",
-			"The internal energies", (u_mx1==u_mx2 ? "are" : "are NOT"), "equal",
-			"The enthalpies", (h_mx1==h_mx2 ? "are" : "are NOT"), "equal",
-			"The constant-pressure heat capacities",
-			(cp_mx1==cp_mx2 ? "are" : "are NOT"), "equal",
-			"The constant-volume heat capacities",
-			(cv_mx1==cv_mx2 ? "are" : "are NOT"), "equal");
-	printf("\n  %s:\n\t%s\t:  %.5f\n\t%s\t:  %.5f kg/kmol.\n",
-			"The second-law properties of the solution are",
-			"sum of (x ln(x))", x_ln_x_mx1, "average molar mass", M_avg_mx1);
-} /* end of `solve_mixture_conditions' */
+/*
+	Calculate
+ */
+double mixture_a(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err){
+	unsigned i;
+	double a_mix=0.0;
 
+	return a_mix;
+}

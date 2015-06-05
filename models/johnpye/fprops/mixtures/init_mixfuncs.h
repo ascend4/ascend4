@@ -28,6 +28,16 @@
 #ifndef INIT_MIXTURE_HEADER
 #define INIT_MIXTURE_HEADER
 
+#include "../helmholtz.h"
+#include "../fluids.h"
+#include "../fprops.h"
+#include "../refstate.h"
+#include "../sat.h"
+
+#include <stdio.h>
+/* #include <assert.h> */
+#include <math.h>
+
 #define MIX_XTOL 1e-6
 #define MIX_ERROR "  ERROR: "
 #define MIX_XSUM_ERROR MIX_ERROR "the sum over all mass fractions, which should be exactly 1.00, is %.10f\n"
@@ -46,7 +56,8 @@ double mixture_cv(unsigned nPure, double *xs, double *rhos, double T, PureFluid 
 double mixture_x_ln_x(unsigned nPure, double *xs, PureFluid **PFs);
 double mixture_M_avg(unsigned nPure, double *xs, PureFluid **PFs);
 double mixture_s(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
-void solve_mixture_conditions(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, char **Names, FpropsError *err);
+double mixture_g(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
+double mixture_a(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
 
 #endif
 
