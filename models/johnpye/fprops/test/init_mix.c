@@ -18,273 +18,114 @@
 	Free Software Foundation, Inc.
 	59 Temple Place - Suite 330
 	Boston, MA 02111-1307, USA.
-*//**
+*//*
+	by Jacob Shealy, June 4, 2015
+	
 	Initial model of a simple mixture, to get the procedure right.  This 
 	is in preparation for a general algorithm to find mixing conditions 
 	in the ideal-mixture case.
 
-	Started May 28, 2015
-	Real work on this started June 2, "
-
 	TODO -
-	[x]	change first `FluidNames' to `FluidAbbrevs'
-	[x]	remove `NFLUIDS' from array declarations of all but `FluidAbbrevs'
-	[x]	un-comment all members in arrays other than `FluidAbbrevs' (so the members 
-		 used are controlled only by the value of `NFLUIDS' in `FluidAbbrevs')
-	[x]	change calculation of densities to fit the physically accurate model!
-		 (cf. ascend4.org/User:Jacob#Explainations_and_Analysis)
+		add error handling in functions:
+		[x]	check that sum of mass fractions is really one
+			we will need to add different values to the FpropsError enum to represent errors
+		how do we want inconsistent mass fractions to be handled?  Strategies:
+			1. for an n-component system, only specify (n-1) mass fractions; 
+			   remaining mass fraction is (1 - (sum over other mass fractions))
+			2. specify all mass fractions, but check that they sum to 1 (within 
+			   some tolerance), and return error otherwise.
+			3. specify all mass fractions, but check that they sum to 1 (within 
+			   some tolerance), and adjust value of last mass fraction if 
+			   incorrect sum occurs only because of that fraction.  If incorrect 
+			   sum occurs before the last mass fraction, return an error.  This 
+			   strategy is very dangerous, since it involves changing 
+			   user-provided data.
+		Maybe add colors from `color.h' later.  Too involved for now.
  */
 
+#include "init_mixfuncs.h"
 #include "../helmholtz.h"
 #include "../fluids.h"
 #include "../fprops.h"
 #include "../refstate.h"
 #include "../sat.h"
-#include "../zeroin.h"
 
 #include <stdio.h>
-#include <assert.h>
+/* #include <assert.h> */
 #include <math.h>
 
-/* TODO: maybe add nice colors from `color.h', later.
-   Too much of a distraction to figure it out now. */
+/* Macro/Preprocessor definitions; prefixed with `MIX_' */
+#define MIX_XTOL 1e-6
+#define MIX_ERROR "  ERROR: "
+#define MIX_XSUM_ERROR MIX_ERROR "the sum over all mass fractions, which should be exactly 1.00, is %.10f\n"
 
-/** 
-	The fluids I want available for the mixture: nitrogen, ammonia, carbon 
-	dioxide, methane, water
- */
 extern const EosData eos_rpp_nitrogen;
 extern const EosData eos_rpp_ammonia;
 extern const EosData eos_rpp_carbon_dioxide;
 extern const EosData eos_rpp_methane;
 extern const EosData eos_rpp_water;
 
-/** 
-	Calculate overall mass density of a mixture of components, given mass 
-	density of components.
-
-	@param nPure number of pure components
-	@param x mass fractions of components
-	@param rhos mass density of each component
-	@return mass density of mixture
- */
-double mixture_rho(unsigned nPure, double *x, double *rhos){
-	double vol_mix=0.0;
-
-	int i;
-	for(i=0;i<nPure;i++){
-		vol_mix += x[i] / rhos[i]; /* mixture volume per unit mass is the sum of each mass 
-									  fraction divided by the corresponding mass density */
-	}
-	return 1 / vol_mix;
-}
-
-/**
-	Establish mixture conditions and find individual densities and 
-	enthalpies, find pressure corresponding to density and temperature for each 
-	substance, and determine mixture conditions
- */
-int main(void){
-	enum FluidAbbrevs {N2,NH3,CO2,/*CH4,H2O,*/NFLUIDS};
-	ReferenceState ref = {FPROPS_REF_REF0};
-
-	const EosData *IdealEos[]={
-		&eos_rpp_nitrogen, 
-		&eos_rpp_ammonia, 
-		&eos_rpp_carbon_dioxide, 
-		&eos_rpp_methane, 
-		&eos_rpp_water
-	};
+/*
+	Establish mixing conditions (T,P), find individual densities, and use those 
+	along with the temperature to find first-law properties for individual 
+	components and the whole mixture.
 	
+	As a check, find pressure corresponding to temperature and component density 
+	for each component -- this should equal the overall pressure
+
+	The fluids I use in the mixture are nitrogen, ammonia, carbon dioxide, and 
+	methane.
+
+	I may add other substances later, such as methyl chloride, carbon monoxide, 
+	nitrous oxide, and hydrogen sulfide.
+ */
+int main(){
+	enum FluidAbbrevs {N2,NH3,CO2,CH4,/* H2O, */NFLUIDS}; /* fluids that will be used */
+
 	char *FluidNames[]={
 		"nitrogen", "ammonia", "carbondioxide", "methane", "water"
 	};
-
-	PureFluid *Ideals[NFLUIDS];
 	PureFluid *Helms[NFLUIDS];
-
 	FpropsError err = FPROPS_NO_ERROR;
+
+	/*	
+		Fill the `Helms' PureFluid array with data from the helmholtz equation 
+		of state.
+	 */
 	int i;
 	for(i=N2;i<NFLUIDS;i++){
-		Ideals[i] = ideal_prepare(IdealEos[i],&ref);
 		Helms[i] = fprops_fluid(FluidNames[i],"helmholtz",NULL);
 	}
 
-	/* 	Mixing conditions, in temperature and pressure */
-	double T=300; /* K */
-	double P=1e5; /* Pa */
-	double x[NFLUIDS] = {0.5, 0.3, 0.2}; /* mass fraction */
-	double rho[NFLUIDS]; /* individual densities, kg/m3 */
+	/* Mixing conditions (temperature,pressure), and mass fractions */
+	double T=250;        /* K */
+	double P=1.5e5;      /* Pa */
+	double rho[NFLUIDS]; /* individual densities */
+	double x[NFLUIDS];   /* mass fractions */
 
-	/* 
-		Density is found as ideal-gas density for now, as I check that the 
-		property functions yield reasonable results...
-	 */
-	for(i=N2;i<NFLUIDS;i++){
-		rho[i] = P / Ideals[i]->data->R / T;
-		printf("\n\t%s%s is :  %.4f kg/m3", "The mass density of ", 
-				FluidNames[i], rho[i]);
-	} puts("");
+	double props[] = {1, 3, 2, 1.5, 2.5}; /* proportions of mass fractions */
+	mixture_x_props(NFLUIDS, x, props);
 
-	/* mixture properties */
-	double rho_mx = mixture_rho(NFLUIDS, x, rho);
-	double p_mx=0.0, /* pressure and enthalpy, calculated from mixture mass densities */
-		   h_mx=0.0;
+	/* Find ideal-gas density, to use as a starting point */
+	initial_rhos(rho, NFLUIDS, T, P, Helms, FluidNames, &err);
 
-	/* Calculate pressures and enthalpies with the Ideal model (ideal-gas mixture) */
-	double p_i, h_i; /* these will hold individual pressures and enthalpies */
-	printf("\n The ideal-gas case:");
-	for(i=N2;i<NFLUIDS;i++){
-		p_i = ideal_p(T, rho[i], Ideals[i]->data, &err);
-		h_i = ideal_h(T, rho[i], Ideals[i]->data, &err);
-		printf("\n\t%s %s\n\t\t%s  %g Pa;\n\t\t%s  %g J/kg.\n",
-				"For the substance", FluidNames[i],
-				"the pressure is  :", p_i,
-				"the enthalpy is  :", h_i);
-		p_mx += x[i] * p_i;
-		h_mx += x[i] * h_i;
-	}
-	printf("\n\t%s\t\t:\t  %f kg/m3\n\t%s\t:\t  %g Pa\n\t%s\t\t:\t  %g J/kg\n",
-			"The density of the mixture is", rho_mx,
-			"The average pressure of the mixture is", p_mx,
-			"The enthalpy of the mixture is", h_mx);
+	double tol = 1e-9;
+	pressure_rhos(rho, NFLUIDS, T, P, tol, Helms, FluidNames, &err);
 
-	/* Calculate pressures and enthalpies from Helmholtz model */
-	printf("\n The non-ideal-gas case:");
-	p_mx=0.0; /* reset mixture pressure and enthalpy to zero */
-	h_mx=0.0;
-	for(i=N2;i<NFLUIDS;i++){
-		p_i = fprops_p((FluidState){T,rho[i],Helms[i]}, &err);
-		h_i = fprops_h((FluidState){T,rho[i],Helms[i]}, &err);
-		printf("\n\t%s %s\n\t\t%s  %g Pa;\n\t\t%s  %g J/kg.\n",
-				"For the substance", FluidNames[i],
-				"the pressure is  :", p_i,
-				"the enthalpy is  :", h_i);
-		p_mx += x[i] * p_i;
-		h_mx += x[i] * h_i;
-	}
-	printf("\n\t%s\t\t:\t  %f kg/m3\n\t%s\t:\t  %g Pa\n\t%s\t\t:\t  %g J/kg\n",
-			"The density of the mixture is", rho_mx,
-			"The average pressure of the mixture is", p_mx,
-			"The enthalpy of the mixture is", h_mx);
-
-	/*
-		Now I drop the assumption that densities can be calculated from the 
-		ideal-gas model, and use a root-finding method to find the densities 
-		that each component must have to be at the pressure P.
-
-		That is, since ideal-solution mixing is isobaric (constant pressure), 
-		the density of each component is found by assuming it is at pressure P 
-		before mixing, and solving for the density that will satisfy that 
-		condition.
-
-		For now, I use `zeroin_solve' to find the densities that satisfy 
-		P(T,rho,fluid) = P
-
-		This is not the best function to use; in fact, it is relatively unsuited 
-		to this sort of problems.  We KNOW that as pressure increases density 
-		does as well; any other result is physically impossible.  Therefore the 
-		trend of pressure vs. density is monotonic and a single starting point 
-		should suffice.
-	 */
-	printf("\n\n Solve for individual densities that match the given pressure:");
-	typedef struct{ /* structure to provide extra data for `zeroin_solve' */
-		double P;         /* the pressure, Pa */
-		double T;         /* the temperature, K */
-		PureFluid *Fluid; /* the fluid */
-		FpropsError *err;
-	} PZeroData;
-
-	double delta_P(double rho, void *user_data){ /* function to be zeroed by `zeroin_solve' */
-		PZeroData *PZ = (PZeroData *)user_data;
-		return PZ->P - fprops_p((FluidState){PZ->T,rho,PZ->Fluid}, PZ->err);
+	int usr_cont;
+	char temp_str[100];
+	printf("\n  %s\n\t%s\n\t%s",
+			"Continue to calculate and print solution properties?",
+			"0 - No", "1 - Yes");
+	do{
+		printf("\n    %s ", "Choice?");
+		fgets(temp_str, 100, stdin);
+	}while((1 != sscanf(temp_str, "%i", &usr_cont) || (0>usr_cont || 1<usr_cont)) 
+			&& printf("\n  %s", "You must enter either 0 or 1"));
+	if(1==usr_cont){
+		solve_mixture_conditions(NFLUIDS, x, rho, T, Helms, FluidNames, &err);
 	}
 
-	double lower,upper,toler,error;
-	char succeed;
-	for(i=N2;i<NFLUIDS;i++){
-		PZeroData PZ = {P,T,Helms[i],&err};
-		lower=0.2;
-		upper=2.5;
-		toler=1e-9;
-		
-		/* succeed = */ zeroin_solve(&delta_P, &PZ, lower, upper, toler, (rho+i), &error);
-		printf("\n\t%s%s is :  %.4f kg/m3,  %s :  %.2e Pa",
-				"The mass density of ", FluidNames[i], rho[i], 
-				"with error in pressure of", error);
-	}
-
-	/*
-		Now, find the individual pressures and entropies, and the average of each. 
-		This is the same as
-	 */
-	p_mx=0.0; /* reset mixture pressure and enthalpy to zero */
-	h_mx=0.0;
-	double cp_mx=0.0, /* might as well calculate the heat capacities, etc. also */
-		   cv_mx=0.0,
-		   u_mx=0.0;
-	double cp_i, /* single-component heat capacities, etc. */
-		   cv_i,
-		   u_i;
-	FluidState fs_i; /* single-component FluidState; fill this only once per loop */
-	for(i=N2;i<NFLUIDS;i++){
-		fs_i = (FluidState){T,rho[i],Helms[i]};
-		p_i  = fprops_p(fs_i, &err);
-		h_i  = fprops_h(fs_i, &err);
-		cp_i = fprops_cp(fs_i, &err);
-		cv_i = fprops_cv(fs_i, &err);
-		u_i  = fprops_u(fs_i, &err);
-		printf("\n\t%s %s"
-				"\n\t\t%s\t:  %.4f;"
-				"\n\t\t%s\t:  %g Pa;"
-				"\n\t\t%s\t:  %.4f kg/m3;"
-				"\n\t\t%s\t:  %g J/kg.\n",
-				"For the substance", FluidNames[i],
-				"the mass fraction is", x[i],
-				"the pressure is  ", p_i,
-				"the density is   ", rho[i],
-				"the enthalpy is  ", h_i);
-		p_mx  += x[i] * p_i;
-		h_mx  += x[i] * h_i;
-		cp_mx += x[i] * cp_i;
-		cv_mx += x[i] * cv_i;
-		u_mx  += x[i] * u_i;
-	}
-	rho_mx = mixture_rho(NFLUIDS, x, rho);
-	printf("\n\t%s\t\t:\t  %f kg/m3"
-			"\n\t%s\t:\t  %g Pa"
-			"\n\t%s\t:\t  %g J/kg"
-			"\n\t%s\t\t:\t  %g J/kg"
-			"\n\t%s\t:\t  %g J/kg/K"
-			"\n\t%s\t:\t  %g J/kg/K\n",
-			"The density of the mixture is", rho_mx,
-			"The average pressure of the mixture is", p_mx,
-			"The internal energy of the mixture is", u_mx,
-			"The enthalpy of the mixture is", h_mx,
-			"The constant-pressure heat capacity is", cp_mx,
-			"The constant-volume heat capacity is", cv_mx);
-	/*
-		Notice that the results from even the last simulation of this system give 
-		results very close to the ideal-gas case.  We are still in the area of 
-		ideal-gas behavior.
-		
-		The most challenging initial condition occurs when the overall solution 
-		density, or individual initial densities, are provided instead of an 
-		overall pressure.  (The overall density can be found from the individual 
-		densities, as their sum when weighted by mass fractions.)
-		
-		Now we have to solve for the set of individual densities that (1) sum, 
-		when weighted by their mass fractions, to the overall density; (2) all 
-		yield the same pressure at the given temperature T.  That is:
-			\rho^{is} = \frac{1}{\sum\limits_i \frac{X_i}{\rho_i}}
-			P_1(T, \rho_1) = P_2(T, \rho_2) = ... = P_n(T, \rho_n)
-
-		Other initial conditions (e.g. a list of individual enthalpies, 
-		individual entropies, etc.) may involve similar root-finding problems
-
-		However, the algorithm for these cases can wait until I write 
-		root-finding methods for rho given (T,P), and test them under 
-		conditions not so nearly identical to ideal-gas conditions!
-	 */
 	return 0;
-}
+} /* end of `main' */
+
