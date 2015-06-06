@@ -22,7 +22,7 @@ mingw64suff = ""
 mingw64excpt ="_dw2"
 if platform.architecture()[0] == "64bit":
 	winarchtag="-amd64"
-	mingw64suff = "_64"
+	mingw64suff = ""
 	mingw64excpt ="_seh"
 
 import SCons.Warnings
