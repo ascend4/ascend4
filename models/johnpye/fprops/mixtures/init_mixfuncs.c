@@ -190,13 +190,13 @@ void pressure_rhos(double *rho_out, unsigned nPure, double T, double P, double t
 
 			if(fabs(P - p1) < tol){ /* Success! */
 				rho_out[i1] = rho1;
-				printf("\n\tRoot-finding succeeded for substance %s after %d iterations;\n"
+				printf("\n\tRoot-finding for substance %s SUCCEEDED after %d iterations;\n"
 						"\t  at rho1=%.5f kg/m3, p1=%.0f Pa (and P=%.0f Pa).", 
 						Names[i1], i2, rho1, p1, P);
 				break;
 			}
 			if(p1==p2){
-				printf("\n\tRoot-finding FAILED for substance %s after %d iterations;\n"
+				printf("\n\tRoot-finding for substance %s FAILED after %d iterations;\n"
 						"\t  at rho1=%.5f kg/m3, rho2=%.5f, got p1=p2=%.6e Pa, but P = %.6e Pa!",
 						Names[i1], i2, rho1, rho2, p1, P);
 				break;
@@ -426,27 +426,54 @@ double mixture_M_avg(unsigned nPure, double *x_mass, PureFluid **PFs){
  */
 double mixture_s(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err){
 	unsigned i;
-	double s_mix=0.0;
+	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
+		   s_mix=0.0;   /* entropy of mixture, iteratively summed */
+	double R = PFs[0]->data->R * PFs[0]->data->M; /* ideal gas constant */
 
-	return s_mix;
+	for(i=0;i<nPure;i++){
+		s_mix += xs[i] * fprops_s((FluidState){T,rhos[i],PFs[i]}, err);
+		x_total += xs[i];
+	}
+	if(fabs(x_total - 1) > MIX_XTOL){
+		printf(MIX_XSUM_ERROR, x_total);
+	}
+	return s_mix - (R * mixture_x_ln_x(nPure,xs,PFs));
 }
 
 /*
-	Calculate
+	Calculate overall ideal-solution Gibbs energy per unit mass in a mixture
  */
 double mixture_g(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err){
 	unsigned i;
-	double g_mix=0.0;
+	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
+		   g_mix=0.0;   /* entropy of mixture, iteratively summed */
+	double R = PFs[0]->data->R * PFs[0]->data->M; /* ideal gas constant */
 
-	return g_mix;
+	for(i=0;i<nPure;i++){
+		g_mix += xs[i] * fprops_g((FluidState){T,rhos[i],PFs[i]}, err);
+		x_total += xs[i];
+	}
+	if(fabs(x_total - 1) > MIX_XTOL){
+		printf(MIX_XSUM_ERROR, x_total);
+	}
+	return g_mix + (R * T * mixture_x_ln_x(nPure,xs,PFs));
 }
 
 /*
-	Calculate
+	Calculate overall ideal-solution Helmholtz energy per unit mass in a mixture
  */
 double mixture_a(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err){
 	unsigned i;
-	double a_mix=0.0;
+	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
+		   a_mix=0.0;   /* entropy of mixture, iteratively summed */
+	double R = PFs[0]->data->R * PFs[0]->data->M; /* ideal gas constant */
 
-	return a_mix;
+	for(i=0;i<nPure;i++){
+		a_mix += xs[i] + fprops_a((FluidState){T,rhos[i],PFs[i]}, err);
+		x_total += xs[i];
+	}
+	if(fabs(x_total - 1) > MIX_XTOL){
+		printf(MIX_XSUM_ERROR, x_total);
+	}
+	return a_mix + (R * T * mixture_x_ln_x(nPure,xs,PFs));
 }

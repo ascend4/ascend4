@@ -35,12 +35,45 @@
 #include "../sat.h"
 
 #include <stdio.h>
-/* #include <assert.h> */
 #include <math.h>
 
 #define MIX_XTOL 1e-6
 #define MIX_ERROR "  ERROR: "
 #define MIX_XSUM_ERROR MIX_ERROR "the sum over all mass fractions, which should be exactly 1.00, is %.10f\n"
+
+#define PREPARE_TABLE(ROWS,COLS,T_HEAD,T_SIDE,T_VALS,T_FORM,T_CONT) \
+	for(i2=0;i2<COLS-1;i2++){ \
+		T_CONT[0][i2+1] = T_HEAD[i2]; \
+	} \
+	for(i1=0;i1<ROWS;i1++){ \
+		T_CONT[i1][0] = T_SIDE[i1]; \
+	} \
+	for(i1=0;i1<ROWS-1;i1++){ \
+		for(i2=0;i2<COLS-1;i2++){ \
+			T_CONT[i1+1][i2+1] = (char *)malloc(20); \
+			snprintf(T_CONT[i1+1][i2+1], 100, T_FORM[i1], T_VALS[i1][i2]); \
+		} \
+	}
+
+#define PRINT_STR_TABLE(ROWS,COLS,CWIDTH,CELLS) \
+	for(i1=0;i1<ROWS;i1++){ \
+		for(i2=0;i2<COLS;i2++){ \
+			if(strlen(CELLS[i1][i2])>=CWIDTH[i2]){ \
+				CWIDTH[i2] = strlen(CELLS[i1][i2]); \
+			} \
+		} \
+	} \
+	printf("\n"); \
+	for(i1=0;i1<ROWS;i1++){ \
+		for(i2=0;i2<COLS;i2++){ \
+			printf(" %s ", CELLS[i1][i2]); \
+			for(i3=0;i3<(CWIDTH[i2] - strlen(CELLS[i1][i2]));i3++){ \
+				printf("%c", ' '); \
+			} \
+		} \
+		printf("\n"); \
+	}
+
 
 /* Function prototypes */
 void mixture_x_props(unsigned nPure, double *xs, double *props);

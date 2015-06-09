@@ -51,7 +51,6 @@
 #include "../sat.h"
 
 #include <stdio.h>
-/* #include <assert.h> */
 #include <math.h>
 
 /* Macro/Preprocessor definitions; prefixed with `MIX_' */
@@ -66,86 +65,200 @@ extern const EosData eos_rpp_methane;
 extern const EosData eos_rpp_water;
 
 /* single function header */
-void solve_mixture_conditions(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, char **Names, FpropsError *err);
+void solve_mixture_conditions(unsigned n_pure, double *xs, double *rhos, double T, PureFluid **PFs, char **Names, FpropsError *err);
+void print_mixture_properties(char *how_calc, double rho, double u, double h, double cp, double cv, double s, double g, double a);
+void print_row(unsigned columns, char *label, char *format, double *contents);
+void print_substances_properties(unsigned subst, char **headers, double *xs, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as);
+void print_cases_properties(unsigned cases, char **headers, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as);
+
+/*
+	Print properties of a mixture, with correct formatting
+ */
+void print_mixture_properties(char *how_calc, double rho, double u, double h, double cp, double cv, double s, double g, double a){
+	printf("\n  %s %s"
+			"\n\t%s is\t\t:  %.6f kg/m3"
+			"\n\t%s is\t:  %g J/kg"
+			"\n\t%s is\t\t:  %g J/kg"
+			"\n\t%s is\t:  %g J/kg/K"
+			"\n\t%s is\t:  %g J/kg/K"
+			"\n\t%s is\t\t:  %g J/kg/K"
+			"\n\t%s is\t:  %g J/kg"
+			"\n\t%s is\t:  %g J/kg\n",
+			"For the mixture properties calculated", how_calc,
+			"The density of the mixture", rho,
+			"The internal energy of the mixture", u,
+			"The enthalpy of the mixture", h,
+			"The constant-pressure heat capacity", cp,
+			"The constant-volume heat capacity", cv,
+			"The entropy of the mixture", s,
+			"The Gibbs energy of the mixture", g,
+			"The Helmholtz energy of the mixture", a);
+}
+
+/*
+	Print a row of a table
+ */
+void print_row(unsigned columns, char *label, char *format, double *contents){
+	unsigned i;
+
+	printf("\n %s  ", label);
+	for(i=0;i<columns;i++){
+		printf(format, contents[i]);
+	}
+}
+
+/*
+	Print table of properties for different substances
+ */
+void print_substances_properties(const unsigned subst, char **headers, double *xs, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as){
+#define TBL_ROWS 11
+
+	unsigned i1,i2,i3;
+	unsigned col_width[20]={0};
+
+	double *vals[TBL_ROWS-1]={
+		xs, rhos, ps, us, hs, cps, cvs, ss, gs, as
+	};
+
+	char *forms[TBL_ROWS-1]={
+		"% .6f", "% .6f", "%9.1f", "% .6g", "% .6g", "% .6g",
+		"% .6g", "% .6g", "% .6g", "% .6g"
+	};
+	char *sides[TBL_ROWS]={
+		"SUBSTANCES",
+		"MASS FRACTION",
+		"DENSITY (kg/m3)",
+		"PRESSURE (Pa)",
+		"INTERNAL ENERGY (J/kg)",
+		"ENTHALPY (J/kg)",
+		"C_P (J/kg/K)",
+		"C_V (J/kg/K)",
+		"ENTROPY (J/kg/K)",
+		"GIBBS ENERGY (J/kg)",
+		"HELMHOLTZ ENERGY (J/kg)"
+	};
+	char *cont[TBL_ROWS][subst+1];
+
+	PREPARE_TABLE(TBL_ROWS,subst+1,headers,sides,vals,forms,cont);
+	PRINT_STR_TABLE(TBL_ROWS,subst+1,col_width,cont);
+
+#undef TBL_ROWS
+}
+
+/*
+	Print table of properties for different cases
+ */
+void print_cases_properties(unsigned cases, char **headers, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as){
+	/* unsigned i;
+
+	printf("\n %s\t\t  ", "CASES");
+	for(i=0;i<cases;i++){
+		printf("%s\t  ", headers[i]);
+	}
+	print_row(cases, "DENSITY (kg/m3)", "%6f\t  ", rhos);
+	print_row(cases,"PRESSURE (Pa)\t"                               ,"%9.1f\t  "   ,ps);
+	print_row(cases,"INTERNAL\n ENERGY (J/kg)\t"                    ,"% .6g  \t  " ,us);
+	print_row(cases,"ENTHALPY (J/kg)"                               ,"% .6g  \t  " ,hs);
+	print_row(cases,"CONSTANT-PRESSURE HEAT CAPACITY\n (J/kg/K)\t\t","% .6g  \t  " ,cps);
+	print_row(cases,"CONSTANT-VOLUME HEAT CAPACITY"                 ,"% .6g  \t  " ,cvs);
+	print_row(cases,"ENTROPY (J/kg/K)"                              ,"% .6g  \t   ",ss);
+	print_row(cases,"GIBBS\n ENERGY (J/kg)"                         ,"% .6g  \t  " ,gs);
+	print_row(cases,"HELMHOLTZ\n ENERGY (J/kg)"                     ,"% .6g  \t  " ,as); */
+#define TBL_ROWS 10
+
+	unsigned i1,i2,i3;
+	unsigned col_width[20]={0};
+
+	double *vals[TBL_ROWS-1]={
+		rhos, ps, us, hs, cps, cvs, ss, gs, as
+	};
+
+	char *forms[TBL_ROWS-1]={
+		"% .6f", "%9.1f", "% .6g", "% .6g", "% .6g", 
+		"% .6g", "% .6g", "% .6g", "% .6g"
+	};
+	char *sides[TBL_ROWS]={
+		"CASES",
+		"DENSITY (kg/m3)",
+		"PRESSURE (Pa)",
+		"INTERNAL ENERGY (J/kg)",
+		"ENTHALPY (J/kg)",
+		"C_P (J/kg/K)",
+		"C_V (J/kg/K)",
+		"ENTROPY (J/kg/K)",
+		"GIBBS ENERGY (J/kg)",
+		"HELMHOLTZ ENERGY (J/kg)"                     
+	};
+	char *cont[TBL_ROWS][cases+1];
+
+	/* printf("\n  prepared all contributing arrays for cases"); */
+	PREPARE_TABLE(TBL_ROWS,cases+1,headers,sides,vals,forms,cont);
+	/* printf("\n  prepared string array for cases"); */
+	PRINT_STR_TABLE(TBL_ROWS,cases+1,col_width,cont);
+
+#undef TBL_ROWS
+}
 
 /*
 	Calculate and print mixture properties by various means
  */
-void solve_mixture_conditions(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, char **Names, FpropsError *err){
+void solve_mixture_conditions(unsigned n_pure, double *xs, double *rhos, double T, PureFluid **PFs, char **Names, FpropsError *err){
 	int i; /* loop counter */
-	double rho_mx1 = mixture_rho(nPure, xs, rhos), /* mixture properties */
-		   u_mx1   = mixture_u(nPure, xs, rhos, T, PFs, err),
-		   h_mx1   = mixture_h(nPure, xs, rhos, T, PFs, err),
-		   cp_mx1  = mixture_cp(nPure, xs, rhos, T, PFs, err),
-		   cv_mx1  = mixture_cv(nPure, xs, rhos, T, PFs, err);
+	double rho_mx[] = {mixture_rho(n_pure, xs, rhos), 0.0}, /* mixture properties */
+		   p_mx[] = {
+			   fprops_p((FluidState){T,rhos[0],PFs[0]}, err),
+			   fprops_p((FluidState){T,rhos[1],PFs[1]}, err)
+		   },
+		   u_mx[]  = {mixture_u(n_pure, xs, rhos, T, PFs, err), 0.0},
+		   h_mx[]  = {mixture_h(n_pure, xs, rhos, T, PFs, err), 0.0},
+		   cp_mx[] = {mixture_cp(n_pure, xs, rhos, T, PFs, err), 0.0},
+		   cv_mx[] = {mixture_cv(n_pure, xs, rhos, T, PFs, err), 0.0},
+		   s_mx[]  = {
+			   mixture_s(n_pure, xs, rhos, T, PFs, err),
+			   -(PFs[0]->data->R * PFs[0]->data->M) * mixture_x_ln_x(n_pure, xs, PFs)
+		   },
+		   g_mx[] = {
+			   mixture_g(n_pure, xs, rhos, T, PFs, err),
+			   (PFs[0]->data->R * T * PFs[0]->data->M) * mixture_x_ln_x(n_pure, xs, PFs)
+		   },
+		   a_mx[] = {
+			   mixture_a(n_pure, xs, rhos, T, PFs, err),
+			   (PFs[0]->data->R * T * PFs[0]->data->M) * mixture_x_ln_x(n_pure, xs, PFs)
+		   };
+	char *calc_types[]={
+		"Calculate by Functions", "Calculate Directly"
+	};
 
-	double x_ln_x_mx1 = mixture_x_ln_x(nPure, xs, PFs),
-		   M_avg_mx1  = mixture_M_avg(nPure, xs, PFs);
-
-	double u_mx2=0.0,  /* alternate mixture properties */
-		   h_mx2=0.0,
-		   cp_mx2=0.0,
-		   cv_mx2=0.0;
-	double p_i=0.0,    /* component properties */
-		   u_i=0.0,
-		   h_i=0.0,
-		   cp_i=0.0,
-		   cv_i=0.0;
+	double ps[n_pure],  /* component properties */
+		   us[n_pure],
+		   hs[n_pure],
+		   cps[n_pure],
+		   cvs[n_pure],
+		   ss[n_pure],
+		   gs[n_pure],
+		   as[n_pure];
 	FluidState fs_i;
 	/* Find mixture properties in a loop */
-	for(i=0;i<nPure;i++){
-		fs_i = (FluidState){T,rhos[i],PFs[i]};
-		p_i  = fprops_p(fs_i, err);
-		u_i  = fprops_u(fs_i, err);
-		h_i  = fprops_h(fs_i, err);
-		cp_i = fprops_cp(fs_i, err);
-		cv_i = fprops_cv(fs_i, err);
-		printf("\n\t%s %s"
-				"\n\t\t%s\t\t:  %.3f;"
-				"\n\t\t%s\t\t\t:  %.0f Pa;"
-				"\n\t\t%s\t\t:  %g J/kg;"
-				"\n\t\t%s\t\t\t:  %g J/kg;"
-				"\n\t\t%s\t:  %g J/kg/K;"
-				"\n\t\t%s\t:  %g J/kg/K.\n",
-				"For the substance", Names[i],
-				"the mass fraction is", xs[i],
-				"the pressure is", p_i,
-				"the internal energy is", u_i,
-				"the enthalpy is", h_i,
-				"the isobaric heat capacity is", cp_i,
-				"the isometric heat capacity is", cv_i);
-		u_mx2  += xs[i] * u_i;
-		h_mx2  += xs[i] * h_i;
-		cp_mx2 += xs[i] * cp_i;
-		cv_mx2 += xs[i] * cv_i;
+	for(i=0;i<n_pure;i++){
+		fs_i   = (FluidState){T,rhos[i],PFs[i]};
+		ps[i]  = fprops_p(fs_i, err);
+		us[i]  = fprops_u(fs_i, err);
+		hs[i]  = fprops_h(fs_i, err);
+		cps[i] = fprops_cp(fs_i, err);
+		cvs[i] = fprops_cv(fs_i, err);
+		ss[i]  = fprops_s(fs_i, err);
+		gs[i]  = fprops_g(fs_i, err);
+		as[i]  = fprops_a(fs_i, err);
+		u_mx[1]  += xs[i] * us[i];
+		h_mx[1]  += xs[i] * hs[i];
+		cp_mx[1] += xs[i] * cps[i];
+		cv_mx[1] += xs[i] * cvs[i];
+		s_mx[1]  += xs[i] * ss[i];
+		g_mx[1]  += xs[i] * gs[i];
+		a_mx[1]  += xs[i] * as[i];
 	}
-	printf("\n  %s\n\t%s\t\t:  %f kg/m3"
-			"\n\t%s\t:  %g J/kg \n\t%s\t\t:  %g J/kg"
-			"\n\t%s\t:  %g J/kg/K \n\t%s\t:  %g J/kg/K\n",
-			"For the mixture properties calculated with functions",
-			"The density of the mixture is", rho_mx1,
-			"The internal energy of the mixture is", u_mx1,
-			"The enthalpy of the mixture is", h_mx1,
-			"The constant-pressure heat capacity is", cp_mx1,
-			"The constant-volume heat capacity is", cv_mx1);
-	printf("\n  %s\n\t%s\t:  %g J/kg \n\t%s\t\t:  %g J/kg"
-			"\n\t%s\t:  %g J/kg/K \n\t%s\t:  %g J/kg/K\n",
-			"For the mixture properties calculated directly",
-			"The internal energy of the mixture is", u_mx2,
-			"The enthalpy of the mixture is", h_mx2,
-			"The constant-pressure heat capacity is", cp_mx2,
-			"The constant-volume heat capacity is", cv_mx2);
-	printf("\n  %s:\n\t%s %s %s,\n\t%s %s %s,\n\t%s %s %s,\n\t%s %s %s.\n",
-			"For the mixture properties calculated in different ways",
-			"The internal energies", (u_mx1==u_mx2 ? "are" : "are NOT"), "equal",
-			"The enthalpies", (h_mx1==h_mx2 ? "are" : "are NOT"), "equal",
-			"The constant-pressure heat capacities",
-			(cp_mx1==cp_mx2 ? "are" : "are NOT"), "equal",
-			"The constant-volume heat capacities",
-			(cv_mx1==cv_mx2 ? "are" : "are NOT"), "equal");
-	printf("\n  %s:\n\t%s\t:  %.5f\n\t%s\t:  %.5f kg/kmol.\n",
-			"The second-law properties of the solution are",
-			"sum of (x ln(x))", x_ln_x_mx1, "average molar mass", M_avg_mx1);
+	print_substances_properties(n_pure, Names, xs, rhos, ps, us, hs, cps, cvs, ss, gs, as);
+	print_cases_properties(2, calc_types, rho_mx, p_mx, u_mx, h_mx, cp_mx, cv_mx, s_mx, g_mx, a_mx);
 } /* end of `solve_mixture_conditions' */
 
 /*
