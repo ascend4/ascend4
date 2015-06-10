@@ -25,6 +25,8 @@ class ClickableTreeColumn(Gtk.TreeViewColumn):
 		self.label.show()
 		self.set_widget(self.label)
 		self.title = title
+		if title != "":
+			self.set_resizable(True)
 		#self.set_sort_column_id(0)
 		#self.set_clickable(True)
 
