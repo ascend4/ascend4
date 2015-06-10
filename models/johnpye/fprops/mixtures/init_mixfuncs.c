@@ -33,10 +33,9 @@
 #include "../sat.h"
 
 #include <stdio.h>
-/* #include <assert.h> */
 #include <math.h>
 
-
+/* Mixture-Preparation Functions */
 /*	
 	Calculate mass fractions from an array of numbers, with each mass fraction 
 	sized proportionally to its corresponding number
@@ -166,7 +165,7 @@ void pressure_rhos(double *rho_out, unsigned nPure, double T, double P, double t
 
 		In production code, it might be advantageous to find several different 
 		starting points for this search; e.g. if P > critical pressure, start 
-		from critical density, etc.
+		from critical density, etc. [NOTE: this is done in initial_rhos, above]
 
 		Compare with:
 			zeroin_solve               in  zeroin.c
@@ -174,6 +173,8 @@ void pressure_rhos(double *rho_out, unsigned nPure, double T, double P, double t
 			sat_p_resid, fprops_sat_p  in  sat.c (example of using zeroin_solve)
 			fprops_sat_hf              in  sat.c
 			fprops_solve_ph            in  solve_ph.c (uses fprops_sat_p from sat.c)
+			densities_to_mixture       in  init_mix.c or this file
+			densities_Ts_to_mixture    in  init_mix.c or this file
 	 */
 	unsigned i1, i2;   /* counter variables */
 	double p1, p2,     /* pressures */
@@ -190,13 +191,13 @@ void pressure_rhos(double *rho_out, unsigned nPure, double T, double P, double t
 
 			if(fabs(P - p1) < tol){ /* Success! */
 				rho_out[i1] = rho1;
-				printf("\n\tRoot-finding for substance %s SUCCEEDED after %d iterations;\n"
+				printf("\n\n\tRoot-finding for substance %s SUCCEEDED after %d iterations;\n"
 						"\t  at rho1=%.5f kg/m3, p1=%.0f Pa (and P=%.0f Pa).", 
 						Names[i1], i2, rho1, p1, P);
 				break;
 			}
 			if(p1==p2){
-				printf("\n\tRoot-finding for substance %s FAILED after %d iterations;\n"
+				printf("\n\n\tRoot-finding for substance %s FAILED after %d iterations;\n"
 						"\t  at rho1=%.5f kg/m3, rho2=%.5f, got p1=p2=%.6e Pa, but P = %.6e Pa!",
 						Names[i1], i2, rho1, rho2, p1, P);
 				break;
@@ -217,6 +218,7 @@ void pressure_rhos(double *rho_out, unsigned nPure, double T, double P, double t
 	} puts("");
 }
 
+/* Mixture-Property Functions */
 /*
 	Calculate overall mass density of a mixture of components
 
@@ -469,7 +471,7 @@ double mixture_a(unsigned nPure, double *xs, double *rhos, double T, PureFluid *
 	double R = PFs[0]->data->R * PFs[0]->data->M; /* ideal gas constant */
 
 	for(i=0;i<nPure;i++){
-		a_mix += xs[i] + fprops_a((FluidState){T,rhos[i],PFs[i]}, err);
+		a_mix += xs[i] * fprops_a((FluidState){T,rhos[i],PFs[i]}, err);
 		x_total += xs[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
@@ -477,3 +479,104 @@ double mixture_a(unsigned nPure, double *xs, double *rhos, double T, PureFluid *
 	}
 	return a_mix + (R * T * mixture_x_ln_x(nPure,xs,PFs));
 }
+
+/* Mixture-Display Functions */
+/*
+	Print properties of a mixture, with correct formatting
+ */
+void print_mixture_properties(char *how_calc, double rho, double u, double h, double cp, double cv, double s, double g, double a){
+	printf("\n  %s %s"
+			"\n\t%s is\t\t:  %.6f kg/m3"
+			"\n\t%s is\t:  %g J/kg"
+			"\n\t%s is\t\t:  %g J/kg"
+			"\n\t%s is\t:  %g J/kg/K"
+			"\n\t%s is\t:  %g J/kg/K"
+			"\n\t%s is\t\t:  %g J/kg/K"
+			"\n\t%s is\t:  %g J/kg"
+			"\n\t%s is\t:  %g J/kg\n",
+			"For the mixture properties calculated", how_calc,
+			"The density of the mixture", rho,
+			"The internal energy of the mixture", u,
+			"The enthalpy of the mixture", h,
+			"The constant-pressure heat capacity", cp,
+			"The constant-volume heat capacity", cv,
+			"The entropy of the mixture", s,
+			"The Gibbs energy of the mixture", g,
+			"The Helmholtz energy of the mixture", a);
+}
+
+/*
+	Print table of properties for different substances
+ */
+void print_substances_properties(const unsigned subst, char **headers, double *xs, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as){
+#define TBL_ROWS 11
+
+	unsigned i1,i2,i3;
+	unsigned col_width[20]={0};
+
+	double *vals[TBL_ROWS-1]={
+		xs, rhos, ps, us, hs, cps, cvs, ss, gs, as
+	};
+
+	char *forms[TBL_ROWS-1]={
+		"% .6f", "% .6f", "%9.1f", "% .6g", "% .6g", "% .6g",
+		"% .6g", "% .6g", "% .6g", "% .6g"
+	};
+	char *sides[TBL_ROWS]={
+		"SUBSTANCES",
+		"MASS FRACTION",
+		"DENSITY (kg/m3)",
+		"PRESSURE (Pa)",
+		"INTERNAL ENERGY (J/kg)",
+		"ENTHALPY (J/kg)",
+		"C_P (J/kg/K)",
+		"C_V (J/kg/K)",
+		"ENTROPY (J/kg/K)",
+		"GIBBS ENERGY (J/kg)",
+		"HELMHOLTZ ENERGY (J/kg)"
+	};
+	char *cont[TBL_ROWS][subst+1];
+
+	PREPARE_TABLE(TBL_ROWS,subst+1,headers,sides,vals,forms,cont);
+	PRINT_STR_TABLE(TBL_ROWS,subst+1,col_width,cont);
+
+#undef TBL_ROWS
+}
+
+/*
+	Print table of properties for different cases
+ */
+void print_cases_properties(unsigned cases, char **headers, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as){
+#define TBL_ROWS 10
+
+	unsigned i1,i2,i3;
+	unsigned col_width[20]={0};
+
+	double *vals[TBL_ROWS-1]={
+		rhos, ps, us, hs, cps, cvs, ss, gs, as
+	};
+
+	char *forms[TBL_ROWS-1]={
+		"% .6f", "%9.1f", "% .6g", "% .6g", "% .6g", 
+		"% .6g", "% .6g", "% .6g", "% .6g"
+	};
+	char *sides[TBL_ROWS]={
+		"CASES",
+		"DENSITY (kg/m3)",
+		"PRESSURE (Pa)",
+		"INTERNAL ENERGY (J/kg)",
+		"ENTHALPY (J/kg)",
+		"C_P (J/kg/K)",
+		"C_V (J/kg/K)",
+		"ENTROPY (J/kg/K)",
+		"GIBBS ENERGY (J/kg)",
+		"HELMHOLTZ ENERGY (J/kg)"                     
+	};
+	char *cont[TBL_ROWS][cases+1];
+
+	PREPARE_TABLE(TBL_ROWS,cases+1,headers,sides,vals,forms,cont);
+	PRINT_STR_TABLE(TBL_ROWS,cases+1,col_width,cont);
+
+#undef TBL_ROWS
+}
+

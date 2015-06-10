@@ -81,6 +81,7 @@ double mixture_x_fill_in(unsigned nPure, double *xs);
 void ig_rhos(double *rho_out, unsigned nPure, double T, double P, PureFluid **I, char **Names);
 void initial_rhos(double *rho_out, unsigned nPure, double T, double P, PureFluid **PFs, char **names, FpropsError *err);
 void pressure_rhos(double *rho_out, unsigned nPure, double T, double P, double tol, PureFluid **PF, char **Names, FpropsError *err);
+
 double mixture_rho(unsigned nPure, double *x, double *rhos);
 double mixture_u(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
 double mixture_h(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
@@ -91,6 +92,10 @@ double mixture_M_avg(unsigned nPure, double *xs, PureFluid **PFs);
 double mixture_s(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
 double mixture_g(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
 double mixture_a(unsigned nPure, double *xs, double *rhos, double T, PureFluid **PFs, FpropsError *err);
+
+void print_mixture_properties(char *how_calc, double rho, double u, double h, double cp, double cv, double s, double g, double a);
+void print_substances_properties(unsigned subst, char **headers, double *xs, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as);
+void print_cases_properties(unsigned cases, char **headers, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as);
 
 #endif
 
