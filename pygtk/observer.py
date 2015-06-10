@@ -110,7 +110,7 @@ class ObserverColumn:
 		except IndexError:
 			_dataval = ""
 
-		cell.set_property('text', _dataval)
+		cell.set_property('text', str(_dataval))
 
 class ObserverRow:
 	"""
