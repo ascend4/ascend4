@@ -391,7 +391,7 @@ class ObserverTab:
 		
 	def on_plot_clicked(self,*args):
 
-        # Disabled plotting for now.
+# Disabled plotting for now.
 #_d = Gtk.MessageDialog(None,Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,Gtk.MessageType.ERROR,Gtk.ButtonsType.CLOSE,"Plotting functions are not available unless you have 'matplotlib' installed.\n\nSee http://matplotlib.sf.net/\n\nFailed to load matplotlib" )
 #		_d.run()
 #		_d.destroy()
@@ -619,7 +619,7 @@ class ObserverTab:
 		
 	def on_plotmenuitem_activate(self, *args):
 		# To preselect the column as y axis
-        # Disabled plotting for now.
+		# Disabled plotting for now.
 		_d = Gtk.MessageDialog(None,Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,Gtk.MessageType.ERROR,Gtk.ButtonsType.CLOSE,"Plotting functions are not available unless you have 'matplotlib' installed.\n\nSee http://matplotlib.sf.net/\n\nFailed to load matplotlib" )
 		_d.run()
 		_d.destroy()
@@ -744,6 +744,7 @@ class PlotDialog:
 		self.browser = browser
 		self.browser.builder.add_objects_from_file(browser.glade_file, ["plotdialog"])
 		self.plotwin = self.browser.builder.get_object("plotdialog")
+		self.plotwin.set_transient_for(browser.window)
 		self.plotbutton = self.browser.builder.get_object("plotbutton")
 		self.xview = self.browser.builder.get_object("treeview1")
 		self.yview = self.browser.builder.get_object("treeview2")
