@@ -101,7 +101,17 @@ int main(){
 	double rho[NFLUIDS];             /* individual densities */
 
 	/* Find ideal-gas density, to use as a starting point */
-	ig_rhos(rho, NFLUIDS, T, P, Ideals, FluidNames);
+	MixtureSpec MX1 = {
+		NFLUIDS,
+		x,
+		Ideals
+	};
+	MixtureState MS = {
+		T,
+		rho,
+		&MX1
+	};
+	ig_rhos(&MS, P, FluidNames);
 
 	/*
 		Find actual density by searching for the individual densities which 
@@ -124,13 +134,19 @@ int main(){
 		This is partly for my own reference.
 	 */
 	double tol = 1e-9;
-	pressure_rhos(rho, NFLUIDS, T, P, tol, Helms, FluidNames, &err);
+	/* pressure_rhos(rho, NFLUIDS, T, P, tol, Helms, FluidNames, &err); */
+	MixtureSpec MX = {
+		NFLUIDS,
+		x,
+		Helms
+	};
+	pressure_rhos(&MS, P, tol, FluidNames, &err);
 
-	double rho_mx1 = mixture_rho(NFLUIDS, x, rho), /* mixture properties */
-		   u_mx1   = mixture_u(NFLUIDS, x, rho, T, Helms, &err),
-		   h_mx1   = mixture_h(NFLUIDS, x, rho, T, Helms, &err),
-		   cp_mx1  = mixture_cp(NFLUIDS, x, rho, T, Helms, &err),
-		   cv_mx1  = mixture_cv(NFLUIDS, x, rho, T, Helms, &err);
+	double rho_mx1 = mixture_rho(&MS), /* mixture properties */
+		   u_mx1   = mixture_u(&MS, &err),
+		   h_mx1   = mixture_h(&MS, &err),
+		   cp_mx1  = mixture_cp(&MS, &err),
+		   cv_mx1  = mixture_cv(&MS, &err);
 
 	double x_ln_x_mx1 = mixture_x_ln_x(NFLUIDS, x, Helms),
 		   M_avg_mx1  = mixture_M_avg(NFLUIDS, x, Helms);

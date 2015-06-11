@@ -108,8 +108,14 @@ int main(void){
 				FluidNames[i], rho[i]);
 	} puts("");
 
+	MixtureSpec MX = {
+		NFLUIDS, x, Ideals
+	};
+	MixtureState MS = {
+		T, rho, &MX
+	};
 	/* mixture properties */
-	double rho_mx = mixture_rho(NFLUIDS, x, rho);
+	double rho_mx = mixture_rho(&MS);
 	double p_mx=0.0, /* pressure and enthalpy, calculated from mixture mass densities */
 		   h_mx=0.0;
 
@@ -232,7 +238,7 @@ int main(void){
 		cv_mx += x[i] * cv_i;
 		u_mx  += x[i] * u_i;
 	}
-	rho_mx = mixture_rho(NFLUIDS, x, rho);
+	rho_mx = mixture_rho(&MS);
 	printf("\n\t%s\t\t:\t  %f kg/m3"
 			"\n\t%s\t:\t  %g Pa"
 			"\n\t%s\t:\t  %g J/kg"
