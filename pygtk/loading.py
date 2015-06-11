@@ -62,7 +62,7 @@ def load_matplotlib(throw=False,alert=False):
 			_d.run()
 			_d.destroy()
 			while Gtk.events_pending():
-				Gtk.main_iteration(False)		
+				Gtk.main_iteration_do(False)		
 		if throw:
 			raise RuntimeError("Failed to load plotting library 'matplotlib'. (%s)" % str(e))
 

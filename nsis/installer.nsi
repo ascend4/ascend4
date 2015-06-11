@@ -229,7 +229,7 @@ Section "GTK GUI" sect_pygtk
 		; Python interface
 		SetOutPath $INSTDIR\python
 		File "..\ascxx\_ascpy.pyd"
-		File "..\ascxx\ascpy.py"
+		File "..\ascxx\*.py"
 		File "..\pygtk\*.py"
 		
 		; FPROPS: python bindings
