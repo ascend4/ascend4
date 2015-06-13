@@ -49,7 +49,7 @@ if sys.platform.startswith("win"):
         # the same name in the path...
         os.environ['PATH'] = "%s/lib;%s/bin;" % (gtkdir[0], gtkdir[0]) + os.environ['PATH']
 	
-class Application(object):
+class Application():
 	
 	def __init__(self,options):
 		from asclibrary import ascPy

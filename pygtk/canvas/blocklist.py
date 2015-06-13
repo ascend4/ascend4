@@ -269,6 +269,11 @@ class mainWindow(Gtk.Window):
 		# the 'view' widget implemented by Gaphas
 		#gaphas.view.DEBUG_DRAW_BOUNDING_BOX = True
 		self.view = GtkView()
+		# workaround to provide proper adjustments
+		hadj = GObject.ParamSpecObject
+		hadj.name = "hadjustment"
+		self.view.do_set_property(hadj, None)
+
 		self.view.tool = BlockToolChain()
 
 		# table containing scrollbars and main canvas
