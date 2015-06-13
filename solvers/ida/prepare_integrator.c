@@ -39,11 +39,15 @@ int ida_prepare_integrator(IntegratorSystem *integ){
 
 
 
+
 	/*-------------------                 RECORDING INTEGRATOR PREFERENCES                  --------------------*
 			     The following block sets several preferences based on user choices.
 			     The code implemented in this block was initially obtained from 
 			     ida.c in the Ksenija2 directory.
  	*-----------------------------------------------------------------------------------------------------------*/
+
+
+
 
 
 
@@ -151,14 +155,14 @@ int ida_prepare_integrator(IntegratorSystem *integ){
 							}, TRUE});
 
 	slv_param_int(p,IDA_PARAM_MAXNCF
-			,(SlvParameterInitInt) { {"maxncf"
+			,(SlvParameterInitInt){{"maxncf"
 							,"Max nonlinear solver convergence failures per step", 2
 							,"Maximum number of allowable nonlinear solver convergence failures"
 							" on one step. See IDA manual section 5.5.6.1."
 							}, 10,0,1000});
 
 	slv_param_char(p,IDA_PARAM_PREC
-			,(SlvParameterInitChar) { {"prec"
+			,(SlvParameterInitChar){{"prec"
 							,"Preconditioner",1
 							,"See IDA manual, section section 5.6.8."
 							},"NONE"}, (char *[]) {"NONE","DIAG",NULL});
@@ -171,6 +175,11 @@ int ida_prepare_integrator(IntegratorSystem *integ){
 
 
 
+
+
+
+
+
 	/*-------------------               PASSING ON USER PREFERENCES TO INTEGRATOR           --------------------*
 	                     In the following block, the user preferences for several integrator 
 			     settings are passed on to the integrator engine.		        
@@ -178,7 +187,18 @@ int ida_prepare_integrator(IntegratorSystem *integ){
  	*-----------------------------------------------------------------------------------------------------------*/
 
 
+
+
+
+
+
+
+
+
+
+
 	/*Passing initial calculation details*/
+													/*Passing initial calculation details*/
 	icopt = 0;
 	if (strcmp(SLV_PARAM_CHAR(&integ->params,IDA_PARAM_CALCIC), "Y") == 0) {
 		CONSOLE_DEBUG("Solving initial conditions using values of yddot");
@@ -190,28 +210,258 @@ int ida_prepare_integrator(IntegratorSystem *integ){
 		asc_assert(icopt!=0);
 	flag = IDACalcIC(ida_mem, icopt, tout1);
 
-	/*Passing safe-evaluation option*/
+	/*Passing safe-evaluation option*/								/*Passing safe-evaluation option*/
 
-#ifdef ASC_SIGNAL_TRAPS
+#ifdef ASC_SIGNAL_TRAPS                                                                                  /*Fix Dependencies here? Re-visit!*/
 		if(enginedata->safeeval) {
 		CONSOLE_DEBUG("SETTING TO IGNORE SIGFPE...");
 		Asc_SignalHandlerPush(SIGFPE, SIG_DFL);
 		}else{
-# ifdef FEX_DEBUG
+#ifdef FEX_DEBUG
 			CONSOLE_DEBUG("SETTING TO CATCH SIGFPE...");
-# endif
+#endif
 	Asc_SignalHandlerPushDefault(SIGFPE);
 		}
 
-	/*Passing safe-evaluation option*/
+	/*Passing tolerance preferences*/								/*Passing tolerance preferences*/
+
+	int ida_malloc(IntegratorSystem *integ, void *ida_mem, realtype t0,
+		N_Vector y0, N_Vector yp0) {
+		int flag;
+		N_Vector abstolvect;
+		realtype reltol, abstol;
+		/* relative error tolerance */
+		reltol = SLV_PARAM_REAL(&(integ->params),IDA_PARAM_RTOL);
+		//CONSOLE_DEBUG("rtol = %8.2e",reltol);
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+		flag = IDAInit(ida_mem, &integrator_ida_fex, t0, y0 ,yp0);
+#else
+		if(SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_ATOLVECT)) {
+			/* vector of absolute tolerances */
+			CONSOLE_DEBUG("USING VECTOR OF ATOL VALUES");
+			abstolvect = N_VNew_Serial(integ->n_y);
+			integrator_get_atol(integ, NV_DATA_S(abstolvect));
+			flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SV, 
+			reltol, abstolvect);
+			N_VDestroy_Serial(abstolvect);
+		}else{
+		/* scalar absolute tolerance (one value for all) */
+		abstol = SLV_PARAM_REAL(&(integ->params),IDA_PARAM_ATOL);
+		CONSOLE_DEBUG("USING SCALAR ATOL VALUE = %8.2e",abstol);
+		flag = IDAMalloc(ida_mem, &integrator_ida_fex, t0, y0, yp0, IDA_SS,
+		reltol, &abstol);
+		}
+#endif
+
+	/*Passing solver-type preferences*/								/*Passing solver-type preferences*/
+linsolver = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_LINSOLVER);
+	//CONSOLE_DEBUG("ASSIGNING LINEAR SOLVER '%s'",linsolver);
+	if(strcmp(linsolver, "ASCEND") == 0) {
+		CONSOLE_DEBUG("ASCEND DIRECT SOLVER, size = %d",integ->n_y);
+		IDAASCEND(ida_mem, integ->n_y);
+		IDAASCENDSetJacFn(ida_mem, &integrator_ida_sjex, (void *) integ);
+		enginedata->flagfntype = "IDAASCEND";
+		enginedata->flagfn = &IDAASCENDGetLastFlag;
+		enginedata->flagnamefn = &IDAASCENDGetReturnFlagName;
+	}else if (strcmp(linsolver, "DENSE") == 0){
+		//CONSOLE_DEBUG("DENSE DIRECT SOLVER, size = %d",integ->n_y);
+		flag = IDADense(ida_mem, integ->n_y);
+		switch(flag){
+		case IDADENSE_SUCCESS:
+			break;
+		case IDADENSE_MEM_NULL:
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
+			return 5;
+		case IDADENSE_ILL_INPUT:
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDADENSE is not compatible with current nvector module");
+			return 5;
+		case IDADENSE_MEM_FAIL:
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed for IDADENSE");
+			return 5;
+		default:
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"bad return");
+			return 5;
+		}
+
+		if(SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_AUTODIFF)) {
+			//CONSOLE_DEBUG("USING AUTODIFF");
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+			flag = IDADlsSetDenseJacFn(ida_mem, &integrator_ida_djex);
+#else
+			flag = IDADenseSetJacFn(ida_mem, &integrator_ida_djex,
+					(void *) integ);
+#endif
+			switch (flag) {
+			case IDADENSE_SUCCESS:
+				break;
+			default:
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed IDADenseSetJacFn");
+				return 6;
+			}
+		}else{
+			CONSOLE_DEBUG("USING NUMERICAL DIFF");
+		}
+
+		enginedata->flagfntype = "IDADENSE";
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+		enginedata->flagfn = &IDADlsGetLastFlag;
+		enginedata->flagnamefn = &IDADlsGetReturnFlagName;
+#else
+		enginedata->flagfn = &IDADenseGetLastFlag;
+		enginedata->flagnamefn = &IDADenseGetReturnFlagName;
+#endif
+		}else{
+		/* remaining methods are all SPILS */
+		CONSOLE_DEBUG("IDA SPILS");
+		maxl = SLV_PARAM_INT(&(integ->params),IDA_PARAM_MAXL);
+		CONSOLE_DEBUG("maxl = %d",maxl);
+		
+		/* what preconditioner for SPILS solver? */
+
+		pname = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_PREC);
+		if(strcmp(pname, "NONE") == 0){
+			prec = NULL;
+		}else if(strcmp(pname, "JACOBI") == 0){
+			prec = &prec_jacobi;
+		}else{
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid preconditioner choice '%s'",pname);
+			return 7;
+		}
+
+		/* which SPILS linear solver? */
+		if(strcmp(linsolver, "SPGMR") == 0){
+			CONSOLE_DEBUG("IDA SPGMR");
+			flag = IDASpgmr(ida_mem, maxl); /* 0 means use the default max Krylov dimension of 5 */
+		}else if(strcmp(linsolver, "SPBCG") == 0){
+			CONSOLE_DEBUG("IDA SPBCG");
+			flag = IDASpbcg(ida_mem, maxl);
+		}else if(strcmp(linsolver, "SPTFQMR") == 0){
+			CONSOLE_DEBUG("IDA SPTFQMR");
+			flag = IDASptfqmr(ida_mem, maxl);
+		}else{
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown IDA linear solver choice '%s'",linsolver);
+			return 8;
+		}
+
+		if(prec){
+			/* assign the preconditioner to the linear solver */
+			(prec->pcreate)(integ);
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+			IDASpilsSetPreconditioner(ida_mem,prec->psetup,prec->psolve);
+#else
+			IDASpilsSetPreconditioner(ida_mem, prec->psetup, prec->psolve,
+					(void *) integ);
+#endif
+			CONSOLE_DEBUG("PRECONDITIONER = %s",pname);
+		}else{
+			CONSOLE_DEBUG("No preconditioner");
+		}
+
+		enginedata->flagfntype = "IDASPILS";
+		enginedata->flagfn = &IDASpilsGetLastFlag;
+		enginedata->flagnamefn = &IDASpilsGetReturnFlagName;
+		if(flag == IDASPILS_MEM_NULL){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
+			return 9;
+		}else if (flag == IDASPILS_MEM_FAIL) {
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to allocate memory (IDASpgmr)");
+			return 9;
+		}/* else success */
+		/* assign the J*v function */
+		if(SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_AUTODIFF)) {
+			CONSOLE_DEBUG("USING AUTODIFF");
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+			flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex);
+#else
+			flag = IDASpilsSetJacTimesVecFn(ida_mem, &integrator_ida_jvex,
+					(void *) integ);
+#endif
+			if(flag == IDASPILS_MEM_NULL) {
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
+				return 10;
+			}else if (flag == IDASPILS_LMEM_NULL) {
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDASPILS linear solver has not been initialized");
+				return 10;
+			}/* else success */
+		}else{
+			CONSOLE_DEBUG("USING NUMERICAL DIFF");
+		}
+		if(strcmp(linsolver, "SPGMR") == 0) {
+			/* select Gram-Schmidt orthogonalisation */
+			if(SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_GSMODIFIED)) {
+				CONSOLE_DEBUG("USING MODIFIED GS");
+				flag = IDASpilsSetGSType(ida_mem, MODIFIED_GS);
+				if(flag != IDASPILS_SUCCESS) {
+					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
+					return 11;
+				}
+			}else{
+				CONSOLE_DEBUG("USING CLASSICAL GS");
+				flag = IDASpilsSetGSType(ida_mem, CLASSICAL_GS);
+				if(flag != IDASPILS_SUCCESS) {
+					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to set GS_MODIFIED");
+					return 11;
+				}
+			}
+		}
+	}
+
+	/*Passing Maxord and Maxncf values*/							/*Passing Maxord and Maxncf values*/
+
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
+	IDASetUserData(ida_mem, (void *)integ);
+#else
+	IDASetRdata(ida_mem, (void *) integ);
+#endif
+	IDASetMaxStep(ida_mem, integrator_get_maxstep(integ));
+	IDASetInitStep(ida_mem, integrator_get_stepzero(integ));
+	IDASetMaxNumSteps(ida_mem, integrator_get_maxsubsteps(integ));
+	if (integrator_get_minstep(integ) > 0) {
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"IDA does not support minstep (ignored)\n");
+	}
+	//CONSOLE_DEBUG("MAXNCF = %d",SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXNCF));
+	IDASetMaxConvFails(ida_mem, SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXNCF));
+	//CONSOLE_DEBUG("MAXORD = %d",SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXORD));
+	IDASetMaxOrd(ida_mem, SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXORD));
 
 
 
 
 
 
-//////////////////////////////////////////////////////////////*TO BE CONTINUED*//////////////////////////////////////////////////
 
 
-					
+	/*-------------------                            ANALYSE EQUATIONS                      --------------------*
+			     The following block analyses the equations passed on from the 
+			     GUI to aid integration. This block runs a series of checks, the 
+			     process is stopped when flag takes a non-zero value.
+ 	*-----------------------------------------------------------------------------------------------------------*/
+
+	flag =  integrator_ida_check_vars(integ) + integrator_ida_flag_rels(integ) 
+	+ integrator_ida_sort_rels_and_vars(integ) + integrator_ida_create_lists(integ) + 
+	integrator_ida_analyse(integ) + integrator_ida_check_partitioning(integ)+
+	integrator_ida_check_diffindex(integ);
+
+	if(flag!=0){
+	return -2;						/*Failed analysis*/
+	}
+
+
+
+
+
+
+
+	/*-------------------                     ALLOCATE MEMORY FOR YDOT, Y ETC              --------------------*
+			     Last block of prepare_integrator. To be completed.
+ 	*-----------------------------------------------------------------------------------------------------------*/
+
+
+
+
+
+
+
+
+return 0;		/*prepare_integrator successful!*/					
 }	
