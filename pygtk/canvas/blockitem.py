@@ -5,7 +5,6 @@ from gaphas.item import SW, NE, NW, SE, Handle, Element
 from gaphas.util import *
 from gaphas.connector import Position
 from gaphas.solver import solvable, VERY_STRONG, REQUIRED
-from numpy import *
 
 from blockport import BlockPort
 from blockinstance import PORT_IN, PORT_OUT, PORT_INOUT
