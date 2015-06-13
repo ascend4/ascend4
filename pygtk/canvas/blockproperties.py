@@ -6,7 +6,7 @@ from gi.repository import Gtk, Gdk, GObject, GdkPixbuf
 
 import blockinstance
 import modeltree
-from unitsdialog import UnitsDialog
+from canvasunitsdialog import UnitsDialog
 from varentry_canvas import *
 
 SAVED_TAB = 0
