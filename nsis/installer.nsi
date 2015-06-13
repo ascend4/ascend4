@@ -60,8 +60,6 @@ Var DEFAULTPATH
 Var HAVE_PYTHON
 Var PYPATH
 Var HAVE_GTK
-Var HAVE_PYGOBJECT
-Var HAVE_PYCAIRO
 Var HAVE_GTKSOURCEVIEW
 Var PYINSTALLED
 
@@ -70,6 +68,8 @@ Var PDFINSTALLED
 Var PATH
 
 Var NEED_PYTHON
+Var NEED_GTK
+Var NEED_GTKSOURCEVIEW
 
 Var ASCENDINIFOUND
 Var ASCENDENVVARFOUND
@@ -89,6 +89,7 @@ Var PYTHONTARGETDIR
 !define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive ALLUSERS=1 TARGETDIR=$PYTHONTARGETDIR"
 
 !define THIRDPARTY_DIR "http://downloads.sourceforge.net/project/ascend-sim/thirdparty/"
+!define TMP_DROPBOX_DIR "https://dl.dropboxusercontent.com/u/79623370/ascend/better/"
 
 !ifdef INST64
 !define WINXX "win64"
@@ -102,6 +103,11 @@ Var PYTHONTARGETDIR
 !define NNBIT "32-bit"
 !endif
 
+!define PYGI_VER "3.14.0"
+!define PYGI_REV "rev18"
+!define PYGI_FN "pygi-aio-${PYGI_VER}_${PYGI_REV}-min-setup.exe"
+!define PYGI_URL "${TMP_DROPBOX_DIR}${PYGI_FN}"
+!define PYGI_CMD "$DAI_TMPFILE"
 
 !include "download.nsi"
 
@@ -112,6 +118,22 @@ Section "-python"
 		Call DetectPython
 		${If} $HAVE_PYTHON == 'NOK'
 			MessageBox MB_OK "Python installation appears to have failed. You may need to retry manually."
+		${EndIf}
+        ${EndIf}
+SectionEnd
+
+Section "-pygi"
+	DetailPrint "--- DOWNLOAD PYGI ---"
+        ${If} $NEED_GTK == '1'
+		${OrIf} $NEED_GTKSOURCEVIEW == '1'
+		!insertmacro downloadAndInstall "PyGI" "${PYGI_URL}" "${PYGI_FN}" "${PYGI_CMD}"
+		Call DetectGTK
+		Call DetectGTKSourceView
+		${If} $HAVE_GTK == 'NOK'
+			MessageBox MB_OK "GTK installation appears to have failed. You may need to retry manually."
+		${EndIf}
+		${If} $HAVE_GTKSOURCEVIEW == 'NOK'
+			MessageBox MB_OK "GTKSourceView installation appears to have failed. You may need to retry manually."
 		${EndIf}
         ${EndIf}
 SectionEnd
@@ -210,10 +232,6 @@ Section "GTK GUI" sect_pygtk
 		MessageBox MB_OK "GTK GUI can not be installed, because Python was not found on this system.$\nIf you do want to use the GTK GUI, please check the installation instructions$\n$\n(PYPATH=$PYPATH)"
 	${ElseIf} $HAVE_GTK == 'NOK'
 		MessageBox MB_OK "GTK GUI cannot be installed, because GTK+ 3.x was not found on this system.$\nIf you do want to use the GTK GUI, please install GTK3 from PyGObject for Windows$\n"
-	${ElseIf} $HAVE_PYCAIRO == 'NOK'
-		MessageBox MB_OK "GTK GUI cannot be installed, because PyCairo was not found on this system.$\nIf you do want to use the GTK GUI, please install Cairo from PyGObject for Windows$\n"
-	${ElseIf} $HAVE_PYGOBJECT == 'NOK'
-		MessageBox MB_OK "GTK GUI cannot be installed, because PyGObject was not found on this system.$\nIf you do want to use the GTK GUI, please install GOBject from PyGObject for Windows$\n"
 	${ElseIf} $HAVE_GTKSOURCEVIEW == 'NOK'
 		MessageBox MB_OK "GTK GUI cannot be installed, because PyGObject was not found on this system.$\nIf you do want to use the GTK GUI, please install GTKSourceView from PyGObject for Windows$\n"
 	${Else}
@@ -231,6 +249,8 @@ Section "GTK GUI" sect_pygtk
 		File "..\ascxx\_ascpy.pyd"
 		File "..\ascxx\*.py"
 		File "..\pygtk\*.py"
+		
+		File "..\pygtk\canvas\*.py"
 		
 		; FPROPS: python bindings
 		File "..\models\johnpye\fprops\python\_fprops.pyd"
@@ -578,8 +598,6 @@ Function .onInit
 	Call DetectPython
 	Call DetectGTK
 	Call DetectGTKSourceView
-	Call DetectPyGObject
-	Call DetectPyCairo
 	
 	;MessageBox MB_OK "GTK path is $GTKPATH"
 	StrCpy $PATH "$DEFAULTPATH;$PYPATH"

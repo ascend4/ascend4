@@ -50,24 +50,3 @@ Function DetectGTKSourceView
 		StrCpy $HAVE_GTKSOURCEVIEW "NOK"
 	${EndIf}
 FunctionEnd
-
-;--------------------------------------------------------------------
-; Are necessary Python packages and pieces available?
-
-Function DetectPyCairo
-	${If} ${FileExists} "$PYPATH\Lib\site-packages\gnome\libcairo-gobject-2*.dll"
-		StrCpy $HAVE_PYCAIRO "OK"
-	${Else}
-		;MessageBox MB_OK "No PyCairo in $PYPATH"		
-		StrCpy $HAVE_PYCAIRO "NOK"
-	${EndIf}
-FunctionEnd
-
-Function DetectPyGObject
-	${If} ${FileExists} "$PYPATH\Lib\site-packages\gnome\libgobject-2*.dll"
-		StrCpy $HAVE_PYGOBJECT "OK"
-	${Else}
-		;MessageBox MB_OK "No PyGObject in $PYPATH"		
-		StrCpy $HAVE_PYGOBJECT "NOK"
-	${EndIf}
-FunctionEnd
