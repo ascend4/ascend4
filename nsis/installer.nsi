@@ -61,15 +61,22 @@ Var HAVE_PYTHON
 Var PYPATH
 Var HAVE_GTK
 Var HAVE_GTKSOURCEVIEW
+Var HAVE_GAPHAS
+Var HAVE_SIMPLEGENERIC
+Var HAVE_DECORATOR
 Var PYINSTALLED
 
 Var PDFINSTALLED
 
 Var PATH
+Var GTK_GUI
 
 Var NEED_PYTHON
 Var NEED_GTK
 Var NEED_GTKSOURCEVIEW
+Var NEED_GAPHAS
+Var NEED_SIMPLEGENERIC
+Var NEED_DECORATOR
 
 Var ASCENDINIFOUND
 Var ASCENDENVVARFOUND
@@ -109,6 +116,19 @@ Var PYTHONTARGETDIR
 !define PYGI_URL "${TMP_DROPBOX_DIR}${PYGI_FN}"
 !define PYGI_CMD "$DAI_TMPFILE"
 
+!define SG_VER "0.8.1"
+!define GAP_VER "0.8.0"
+!define DEC_VER "3.4.2"
+!define SG_FN "simplegeneric-${SG_VER}${AMDXX}-py${PYVERSION}.exe"
+!define DEC_FN "decorator-${DEC_VER}${AMDXX}-py${PYVERSION}.exe"
+!define GAP_FN "gaphas-${GAP_VER}${AMDXX}-py${PYVERSION}.exe"
+!define SG_URL "${TMP_DROPBOX_DIR}${SG_FN}"
+!define DEC_URL "${TMP_DROPBOX_DIR}${DEC_FN}"
+!define GAP_URL "${TMP_DROPBOX_DIR}${GAP_FN}"
+!define SG_CMD "$DAI_TMPFILE"
+!define DEC_CMD "$DAI_TMPFILE"
+!define GAP_CMD "$DAI_TMPFILE"
+
 !include "download.nsi"
 
 Section "-python"
@@ -138,6 +158,38 @@ Section "-pygi"
         ${EndIf}
 SectionEnd
 
+Section "-simplegeneric"
+	DetailPrint "--- DOWNLOAD SIMPLEGENERIC ---"
+        ${If} $NEED_SIMPLEGENERIC == '1'
+		!insertmacro downloadAndInstall "SimpleGeneric" "${SG_URL}" "${SG_FN}" "${SG_CMD}"
+		Call DetectSimpleGeneric
+		${If} $HAVE_SIMPLEGENERIC == 'NOK'
+			MessageBox MB_OK "SimpleGeneric installation appears to have failed. You may need to retry manually."
+		${EndIf}
+        ${EndIf}
+SectionEnd
+
+Section "-decorator"
+	DetailPrint "--- DOWNLOAD DECORATOR ---"
+        ${If} $NEED_DECORATOR == '1'
+		!insertmacro downloadAndInstall "Decorator" "${DEC_URL}" "${DEC_FN}" "${DEC_CMD}"
+		Call DetectDecorator
+		${If} $HAVE_DECORATOR == 'NOK'
+			MessageBox MB_OK "Decorator installation appears to have failed. You may need to retry manually."
+		${EndIf}
+        ${EndIf}
+SectionEnd
+
+Section "-gaphas"
+	DetailPrint "--- DOWNLOAD GAPHAS ---"
+        ${If} $NEED_GAPHAS == '1'
+		!insertmacro downloadAndInstall "Gaphas" "${GAP_URL}" "${GAP_FN}" "${GAP_CMD}"
+		Call DetectGaphas
+		${If} $HAVE_GAPHAS == 'NOK'
+			MessageBox MB_OK "Gaphas installation appears to have failed. You may need to retry manually."
+		${EndIf}
+        ${EndIf}
+SectionEnd
 ;------------------------------------------------------------------------
 ; INSTALL CORE STUFF including model library
 
@@ -222,18 +274,18 @@ Section "ASCEND (required)"
 SectionEnd
 
 ;--------------------------------
-
 Section "GTK GUI" sect_pygtk
 !ifdef INST64
 	SetRegView 64
 !endif
-	; Check the dependencies of the PyGTK GUI before proceding...
+	StrCpy $GTK_GUI "YES"
+	; Check the dependencies of the GTK GUI before proceding...
 	${If} $HAVE_PYTHON == 'NOK'
 		MessageBox MB_OK "GTK GUI can not be installed, because Python was not found on this system.$\nIf you do want to use the GTK GUI, please check the installation instructions$\n$\n(PYPATH=$PYPATH)"
 	${ElseIf} $HAVE_GTK == 'NOK'
 		MessageBox MB_OK "GTK GUI cannot be installed, because GTK+ 3.x was not found on this system.$\nIf you do want to use the GTK GUI, please install GTK3 from PyGObject for Windows$\n"
 	${ElseIf} $HAVE_GTKSOURCEVIEW == 'NOK'
-		MessageBox MB_OK "GTK GUI cannot be installed, because PyGObject was not found on this system.$\nIf you do want to use the GTK GUI, please install GTKSourceView from PyGObject for Windows$\n"
+		MessageBox MB_OK "GTK GUI cannot be installed, because GTKSourceView was not found on this system.$\nIf you do want to use the GTK GUI, please install GTKSourceView from PyGObject for Windows$\n"
 	${Else}
 		;MessageBox MB_OK "Python: $PYPATH, GTK: $GTKPATH"
 
@@ -249,7 +301,6 @@ Section "GTK GUI" sect_pygtk
 		File "..\ascxx\_ascpy.pyd"
 		File "..\ascxx\*.py"
 		File "..\pygtk\*.py"
-		File "..\pygtk\canvas\*.py"
 		
 		; FPROPS: python bindings
 		File "..\models\johnpye\fprops\python\_fprops.pyd"
@@ -328,6 +379,39 @@ a4cskip:
 
 		System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
 
+	${EndIf}
+	Return
+
+SectionEnd
+
+Section "Canvas GUI" sect_canvas
+!ifdef INST64
+	SetRegView 64
+!endif
+	; Check the dependencies of the Canvas GUI before proceding...
+	${If} $GTK_GUI == 'NO'
+		MessageBox MB_OK "Canvas cannot be installed, because GTK GUI was not installed on this system.$\nIf you do want to use the Canvas, please firstly install GTK GUI$\n"
+	${ElseIf} $HAVE_PYTHON == 'NOK'
+		MessageBox MB_OK "Canvas cannot be installed, because Python was not found on this system.$\nIf you do want to use the Canvas, please check the installation instructions$\n$\n(PYPATH=$PYPATH)"
+	${ElseIf} $HAVE_GTK == 'NOK'
+		MessageBox MB_OK "Canvas cannot be installed, because GTK+ 3.x was not found on this system.$\nIf you do want to use the Canvas, please install GTK3 from PyGObject for Windows$\n"
+	${ElseIf} $HAVE_GTKSOURCEVIEW == 'NOK'
+		MessageBox MB_OK "Canvas cannot be installed, because GTKSourceView was not found on this system.$\nIf you do want to use the Canvas, please install GTKSourceView from PyGObject for Windows$\n"
+	${ElseIf} $HAVE_SIMPLEGENERIC == 'NOK'
+		MessageBox MB_OK "Canvas cannot be installed, because SimpleGeneric was not found on this system.$\nIf you do want to use the Canvas, please install SimpleGeneric python package$\n"
+	${ElseIf} $HAVE_DECORATOR == 'NOK'
+		MessageBox MB_OK "Canvas cannot be installed, because Decorator was not found on this system.$\nIf you do want to use the Canvas, please install Decorator python package$\n"
+	${ElseIf} $HAVE_GAPHAS == 'NOK'
+		MessageBox MB_OK "Canvas cannot be installed, because Gaphas was not found on this system.$\nIf you do want to use the Canvas, please install Gaphas python package$\n"
+	${Else}
+		;MessageBox MB_OK "Python: $PYPATH, GTK: $GTKPATH"
+
+		DetailPrint "--- Canvas ---"
+		; Python interface
+		SetOutPath $INSTDIR\python
+		File "..\pygtk\canvas\*.py"
+
+		WriteRegDWORD HKLM "SOFTWARE\ASCEND" "Canvas" 1	
 	${EndIf}
 	Return
 
@@ -586,7 +670,7 @@ Function .onInit
 	${EndIf}
 	; FIXME we should check whether that directory already exists before going ahead...
 !endif
-
+	StrCpy $GTK_GUI "NO"
 	StrCpy $PYINSTALLED ""
 	StrCpy $ASCENDINIFOUND ""
 	StrCpy $PDFINSTALLED ""
@@ -597,6 +681,9 @@ Function .onInit
 	Call DetectPython
 	Call DetectGTK
 	Call DetectGTKSourceView
+	Call DetectDecorator
+	Call DetectSimpleGeneric
+	Call DetectGaphas
 	
 	;MessageBox MB_OK "GTK path is $GTKPATH"
 	StrCpy $PATH "$DEFAULTPATH;$PYPATH"
@@ -615,6 +702,18 @@ Function .onInit
 			SectionGetFlags "${sect_pygtk}" $1
 			IntOp $1 $1 ^ ${SF_RO}
 			SectionSetFlags "${sect_pygtk}" $1		
+		${EndIf}
+		
+		ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "Canvas"
+		${If} $0 = 0
+			;MessageBox MB_OK "Python was previously deselected"
+			SectionGetFlags "${sect_canvas}" $1
+			IntOp $1 $1 ^ ${SF_SELECTED}
+			SectionSetFlags "${sect_canvas}" $1
+		${Else}
+			SectionGetFlags "${sect_canvas}" $1
+			IntOp $1 $1 ^ ${SF_RO}
+			SectionSetFlags "${sect_canvas}" $1		
 		${EndIf}
 
 		ReadRegDWORD $0 HKLM "SOFTWARE\ASCEND" "PDF"
