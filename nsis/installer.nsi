@@ -249,7 +249,6 @@ Section "GTK GUI" sect_pygtk
 		File "..\ascxx\_ascpy.pyd"
 		File "..\ascxx\*.py"
 		File "..\pygtk\*.py"
-		
 		File "..\pygtk\canvas\*.py"
 		
 		; FPROPS: python bindings

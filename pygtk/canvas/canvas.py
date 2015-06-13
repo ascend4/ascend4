@@ -4,6 +4,7 @@
 from __future__ import with_statement
 import os
 import sys
+import platform
 
 from gi.repository import Gtk
 
@@ -27,27 +28,17 @@ os.environ['ASCENDSOLVERS'] = os.path.join('..','..','solvers','qrslv')
 sys.path.append("..")
 sys.path.append("../../ascxx")
 
-if sys.platform.startswith("win"):
-    # Fetchs gtk2 path from registry
-	import _winreg
+if platform.system() == "Windows":
+	import _winreg as wreg
 
-	try:
-		k = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "Software\\GTK\\2.0")
-	except EnvironmentError:
-		# use TkInter to report the error :-)
-		from TkInter import *
-		root = Tk()
-		w = Label(root,"You must install the Gtk+ 2.2 Runtime Environment to run this program")
-		w.pack()
-		root.mainloop()
-		sys.exit(1)
-	else:
-		gtkdir = _winreg.QueryValueEx(k, "Path")
-        import os
-        # we must make sure the gtk2 path is the first thing in the path
-        # otherwise, we can get errors if the system finds other libs with
-        # the same name in the path...
-        os.environ['PATH'] = "%s/lib;%s/bin;" % (gtkdir[0], gtkdir[0]) + os.environ['PATH']
+	k = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, "SOFTWARE\ASCEND")
+	INSTALL_LIB,t = wreg.QueryValueEx(k,"INSTALL_LIB")
+	INSTALL_SOLVERS,t = wreg.QueryValueEx(k,"INSTALL_SOLVERS")
+	INSTALL_MODELS,t = wreg.QueryValueEx(k,"INSTALL_MODELS")
+	os.environ['PATH'] = os.environ['PATH'] + INSTALL_LIB
+	os.environ['ASCENDLIBRARY'] = INSTALL_MODELS
+	os.environ['ASCENDSOLVERS'] = INSTALL_SOLVERS
+	DEFAULT_CANVAS_MODEL_LIBRARY = os.path.join(INSTALL_MODELS,'test','canvas')
 	
 class Application():
 	

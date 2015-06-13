@@ -1,6 +1,15 @@
 '''Import the SWIG wrapper'''
 import os
-DEFAULT_CANVAS_MODEL_LIBRARY_FOLDER = os.path.join('..','..','models','test','canvas')
+import platform
+
+if platform.system() == "Windows":
+	import _winreg as wreg
+
+	k = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, "SOFTWARE\ASCEND")
+	INSTALL_MODELS,t = wreg.QueryValueEx(k,"INSTALL_MODELS")
+	DEFAULT_CANVAS_MODEL_LIBRARY_FOLDER = os.path.join(INSTALL_MODELS,'test','canvas')
+else:
+	DEFAULT_CANVAS_MODEL_LIBRARY_FOLDER = os.path.join('..','..','models','test','canvas')
 
 try:
 	import ascpy
