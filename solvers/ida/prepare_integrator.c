@@ -30,9 +30,51 @@
 */
 
 
+
+
+
+#define _GNU_SOURCE								
+
+#include "ida.h"
+#include "idalinear.h"
+#include "idaanalyse.h"
+#include "idatypes.h"										/* The list of includes needs cleaning up! Once basic files are written,  
+#include "idaprec.h"										all commonly called functions can be added in just one header file.
+#include "idacalc.h"										Once that's done, these includes must be revisited*/
+#include "idaio.h"
+#include "idaboundary.h"
+
+#include <signal.h>										/*Check if these includes are necessary*/
+#include <setjmp.h>
+#include <fenv.h>
+#include <math.h>
+
+#ifdef ASC_WITH_MMIO
+# include <mmio.h>
+#endif
+
+#include <ascend/general/platform.h>
+#include <ascend/utilities/error.h>
+#include <ascend/utilities/ascSignal.h>
+#include <ascend/general/panic.h>
+#include <ascend/compiler/instance_enum.h>
+
+
+#include <ascend/system/slv_client.h>
+#include <ascend/system/relman.h>
+#include <ascend/system/block.h>
+#include <ascend/system/slv_stdcalls.h>
+#include <ascend/system/jacobian.h>
+#include <ascend/system/bndman.h>
+
+#include <ascend/utilities/config.h>
+#include <ascend/integrator/integrator.h>
+
+
 int ida_prepare_integrator(IntegratorSystem *integ){
 	/*Allocating memory for the ida_mem object*/
 	ida_mem = IDACreate();
+	flag = IDAInit(ida_mem, &integrator_ida_fex, t0, y0 ,yp0);
 
 
 
@@ -453,10 +495,17 @@ linsolver = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_LINSOLVER);
 
 
 	/*-------------------                     ALLOCATE MEMORY FOR YDOT, Y ETC              --------------------*
-			     Last block of prepare_integrator. To be completed.
+			     The following block analyses the equations passed on from the 
+			     GUI to aid integration. This block runs a series of checks, the 
+			     process is stopped when flag takes a non-zero value.
  	*-----------------------------------------------------------------------------------------------------------*/
 
 
+
+		/*This block has to be discussed with Ksenija before implamentation. Is this block necessary? 
+		The IDA Manual says that most memory allocation procedures are taken care of. Also there's the 
+		implementation of IDAMalloc, which needs to be cleared up. Also ida_malloc has already been called above
+		this does the same job of allocating ydot and ypdot. Anything else needs to be done here? */
 
 
 
