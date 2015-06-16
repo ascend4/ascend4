@@ -1314,7 +1314,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		self.builder.add_objects_from_file(self.glade_file,["aboutdialog"])
 		_about = self.builder.get_object("aboutdialog")
-		_about.set_transient_for(self.window);
+		_about.set_transient_for(self.window)
 		_about.set_version(config.VERSION)
 		_about.run()
 		_about.destroy()

@@ -1,8 +1,5 @@
-from gi.repository import Gtk, GdkPixbuf, Gdk
-from gi.repository import Pango
+from gi.repository import GdkPixbuf
 import ascpy
-
-from varentry import *
 from properties import *
 from unitsdialog import *
 from study import *
@@ -22,7 +19,7 @@ class ModelView:
 		self.notes = browser.library.getAnnotationDatabase()	
 
 		self.modelview = builder.get_object("browserview")
-		
+
 		# name, type, value, foreground, weight, editable, status-icon
 		columns = [str,str,str,str,int,bool,GdkPixbuf.Pixbuf]
 
@@ -140,10 +137,10 @@ class ModelView:
 			_editable = True
 			_fgcolor = BROWSER_SETTING_COLOR
 			_fontweight = Pango.Weight.BOLD
-			
+
 		#if(len(_value) > 80):
 		#	_value = _value[:80] + "..."
-		
+
 		return [_name, _type, _value, _fgcolor, _fontweight, _editable, _statusicon]
 
 	def make_row( self, piter, name, value ): # for instance browser
@@ -176,13 +173,12 @@ class ModelView:
 		return self.get_selected_instance().getType()
 
 	def get_selected_instance(self):
-		model,iter = self.modelview.get_selection().get_selected()
-		if iter is None:
+		model, pathlist = self.modelview.get_selection().get_selected_rows()
+		if len(pathlist) == 0:
 			return None
-		path = model.get_path(iter)
-		name,instance = self.otank[path.to_string()]
+		name, instance = self.otank[pathlist[0].to_string()]
 		return instance
-	
+
 	def cell_edited_callback(self, renderer, path, newtext, **kwargs):
 		# get back the Instance object we just edited (having to use this seems like a bug)
 #path = tuple( map(int,path.split(":")) )
@@ -197,7 +193,7 @@ class ModelView:
 			if _instance.getValue() == newtext:
 				return
 			# only real-valued things can have units
-			
+
 			_e = RealAtomEntry(_instance,newtext);
 			try:
 				_e.checkEntry()
@@ -258,14 +254,14 @@ class ModelView:
 					_name = child.getName();
 					_piter = self.make_row(piter,_name,child)
 					if child.isCompound() and len(child.getChildren())>0:
-					    self.make_children(child,_piter)
+						self.make_children(child,_piter)
 					_path = self.modelstore.get_path(_piter)
 					self.otank[_path.to_string()]=(_name,child)
 					#self.browser.reporter.reportError("2 Added %s at path %s" % (_name,repr(_path)))
 				except Exception,e:
 					self.browser.reporter.reportError("%s: %s" % (_name,e))
 	
-                    
+
 	def make(self, name=None, value=None, path=None, depth=1):
 		if path is None:
 			# make root node
@@ -284,10 +280,10 @@ class ModelView:
 			self.make_children(value,piter)
 
 		if depth:
-		    for i in range( self.modelstore.iter_n_children( piter ) ):
-		        path.append_index(i)
-		        if path.to_string() in self.otank.keys():
-		           self.make( path = path, depth = depth - 1 )
+			for i in range( self.modelstore.iter_n_children( piter ) ):
+				path.append_index(i)
+				if path.to_string() in self.otank.keys():
+					self.make( path = path, depth = depth - 1 )
 		else:
 			self.modelview.expand_row(self.modelstore.get_path(self.modelstore.get_iter_first()),False) # Edit here only.
 
@@ -347,7 +343,7 @@ class ModelView:
 			#print "NOT DOING ANYTHING ABOUT %s" % Gdk.keyval_name(event.keyval)
 			return 
 
-		_canpop = False;
+		_canpop = False
 		# self.browser.reporter.reportError("Right click on %s" % self.otank[_path][0])
 
 		self.unitsmenuitem.set_sensitive(False)
@@ -356,6 +352,29 @@ class ModelView:
 		self.observemenuitem.set_sensitive(False)
 		self.studymenuitem.set_sensitive(False)
 		self.propsmenuitem.set_sensitive(False)					
+
+		# if selected more than one row
+		model, pathlist = self.modelview.get_selection().get_selected_rows()
+		if len(pathlist) > 1 and _path in pathlist:
+			_fixed = False
+			_free = False
+			_observe = False
+			for p in pathlist:
+				_name, _instance = self.otank[p.to_string()]
+				if _instance.isReal():
+					_fixed |= _instance.isFixed()
+					_free |= not _instance.isFixed()
+				if _instance.getType().isRefinedSolverVar():
+					_observe = True
+			if _fixed:
+				self.freemenuitem.set_sensitive(True)
+			if _free:
+				self.fixmenuitem.set_sensitive(True)
+			if _observe:
+				self.observemenuitem.set_sensitive(True)
+			self.modelview.grab_focus()
+			self.treecontext.popup(None, None, None, None, _button, event.time)
+			return 1
 
 		if _instance.isReal():
 			print "CAN POP: real atom"
@@ -438,16 +457,19 @@ class ModelView:
 		self.refreshtree()		
 
 	def fix_activate(self,widget):
-		_path,_col = self.modelview.get_cursor()
-		_name, _instance = self.otank[_path.to_string()]
-		self.set_fixed(_instance,True);
-		_instance.setFixed(True)
+		_model, _pathlist = self.modelview.get_selection().get_selected_rows()
+		for _path in _pathlist:
+			_name, _instance = self.otank[_path.to_string()]
+			self.set_fixed(_instance, True)
+		self.browser.do_solve_if_auto()
 		return 1
 
 	def free_activate(self,widget):
-		_path,_col = self.modelview.get_cursor()
-		_instance = self.otank[_path.to_string()][1]
-		self.set_fixed(_instance,False)
+		_model, _pathlist = self.modelview.get_selection().get_selected_rows()
+		for _path in _pathlist:
+			_name, _instance = self.otank[_path.to_string()]
+			self.set_fixed(_instance, False)
+		self.browser.do_solve_if_auto()
 		return 1
 
 	def plot_activate(self,widget):
@@ -488,28 +510,24 @@ class ModelView:
 			self.browser.reporter.reportWarning("Select a variable or relation first...")
 
 	def observe_activate(self,widget,*args):
-		_path,_col = self.modelview.get_cursor()
-		_instance = self.otank[_path.to_string()][1]
-		if _instance.getType().isRefinedSolverVar():
-			print "OBSERVING",_instance.getName().toString()
-			self.browser.observe(_instance)
+		_model, _pathlist = self.modelview.get_selection().get_selected_rows()
+		for _path in _pathlist:
+			_name, _instance = self.otank[_path.to_string()]
+			if _instance.getType().isRefinedSolverVar():
+				print "OBSERVING",_instance.getName().toString()
+				self.browser.observe(_instance)
 
-	def on_fix_variable_activate(self,*args):
-		_path,_col = self.modelview.get_cursor()
-		_instance = self.otank[_path.to_string()][1]
-		self.set_fixed(_instance,True)
+	def on_fix_variable_activate(self, widget):
+		self.fix_activate(widget)
 
-	def on_free_variable_activate(self,*args):
-		_path,_col = self.modelview.get_cursor()
-		_instance = self.otank[_path.to_string()][1]
-		self.set_fixed(_instance,False)
+	def on_free_variable_activate(self, widget):
+		self.free_activate(widget)
 
 	def set_fixed(self,instance,val):
 		if instance.getType().isRefinedSolverVar():
-			f = instance.isFixed();
+			f = instance.isFixed()
 			if (f and not val) or (not f and val):
 				instance.setFixed(val)
-				self.browser.do_solve_if_auto()
 
 
 	def study_activate(self, *args):
