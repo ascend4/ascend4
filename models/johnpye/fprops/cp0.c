@@ -64,7 +64,7 @@
 	but now we need to fix the re-derive the conversion from the cp0 to alpha0
 	expressions
 
-	currently there is an error! 
+	currently there is an error!
 
 	TODO check if ^^^ is still true
 */
@@ -246,7 +246,7 @@ double ideal_phi(double tau, double delta, const Phi0RunData *data){
 }
 
 /**
-	Partial dervivative of ideal component (phi0) of normalised helmholtz
+	Partial derivative of ideal component (phi0) of normalised helmholtz
 	residual function (phi), with respect to tau.
 */
 double ideal_phi_tau(double tau, double delta, const Phi0RunData *data){
@@ -298,7 +298,7 @@ double ideal_phi_tau(double tau, double delta, const Phi0RunData *data){
 
 
 /**
-	Second partial dervivative of ideal component (phi0) of normalised helmholtz
+	Second partial derivative of ideal component (phi0) of normalised helmholtz
 	residual function (phi), with respect to tau. This one is easy!
 	It's not a function of delta.
 
@@ -350,3 +350,16 @@ double ideal_phi_tautau(double tau, const Phi0RunData *data){
 #endif
 	return -sum/SQ(tau);
 }
+
+
+/**
+	Third partial derivative of ideal component (phi0) of normalised helmholtz
+	residual function (phi), with respect to tau.
+	It's not a function of delta.
+
+
+double ideal_phi_tautautau(double tau, const Phi0RunData *data){
+
+}
+
+*/

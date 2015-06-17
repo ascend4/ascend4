@@ -33,11 +33,16 @@ int main(void){
 #define FNAME(F) #F
 #define COMMA ,
 	const char *helmfluids[] = { FLUIDS(FNAME,COMMA) COMMA RPPFLUIDS(FNAME,COMMA) };
+
+  //  int ii;
+	//for(ii=0; ii< sizeof(helmfluids)/sizeof(char *) ; ii++)
+      //  printf("%s \n",helmfluids[ii]);
+      printf("SIZE %d\n",sizeof(helmfluids)/sizeof(char *));
 #undef FNAME
-	const char *corrtypes[] = {"pengrob","helmholtz"};
+	const char *corrtypes[] = {"pengrob","helmholtz"}; // takes enum corrtypes_enum as index
 	const char *corrinitial[] = {"P","H"};
 	enum corrtypes_enum {CORRTYPE_PENGROB,CORRTYPE_HELMHOLTZ,CORRTYPE_N};
-#define FHELM(F) CORRTYPE_HELMHOLTZ
+#define FHELM(F) CORRTYPE_HELMHOLTZ  //not stringified with #
 #define FPR(F) CORRTYPE_PENGROB
 	const enum corrtypes_enum corrfluids[] = {FLUIDS(FHELM,COMMA) COMMA RPPFLUIDS(FPR,COMMA) };
 #undef FHELM
@@ -45,6 +50,9 @@ int main(void){
 #define FRPP(F) "RPP"
 #define FUN(F) NULL
 	const char *srcfluids[] = {FLUIDS(FUN,COMMA) COMMA RPPFLUIDS(FRPP,COMMA) };
+//	int ii;
+//	for(ii=0; ii< sizeof(srcfluids)/sizeof(char *) ; ii++)
+ //       printf("%s \n",srcfluids[ii]);
 #undef FUN
 #undef FRPP
 #undef COMMA
@@ -89,7 +97,7 @@ int main(void){
 				}
 			}else{
 				color_on(stdout,ASC_FG_BRIGHTGREEN);
-				fprintf(stdout,"%s",corrinitial[corrfluids[i]]);
+				fprintf(stdout,"%s",corrinitial[corrfluids[i]]);// prints bright green H or P in  output for helmholtz fluid
 				color_off(stdout);
 			}
 			double nT = 500;
@@ -102,17 +110,17 @@ int main(void){
 				fprops_sat_T(T, &psat, &rhof, &rhog, P, &err);
 				if(err){
 					nerr++;
-					color_on(stdout,ASC_FG_BRIGHTRED);
-					fprintf(stdout,"C");
+					color_on(stdout,ASC_FG_BRIGHTRED);//print error
+					fprintf(stdout,"C");//print error
 					color_off(stdout);
-					ERRLOG("sat_T(%f) for '%s', omega=%f",T,P->name,P->data->omega);
+					ERRLOG("sat_T(%f) for '%s', omega=%f",T,P->name,P->data->omega);//log the error
 				}else{
-					fprintf(stdout,".");
+					fprintf(stdout,".");//just a dot for success
 				}
 				rT += drT;
 			}
 		}
-		fprintf(stdout,":%s\n",helmfluids[i]);
+		fprintf(stdout,":%s\n",helmfluids[i]);  // after test name of the fluid
 		if(nerr)errfluids[nerrfluids++] = helmfluids[i];
 		fprops_fluid_destroy(P); P = NULL;
 	}

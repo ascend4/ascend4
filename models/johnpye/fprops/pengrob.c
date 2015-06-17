@@ -53,7 +53,7 @@ SatEvalFn pengrob_sat;
 
 static double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err);
 
-#define PR_DEBUG
+//#define PR_DEBUG
 #define PR_ERRORS
 
 #ifdef PR_DEBUG
@@ -145,7 +145,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		D->p_c = I->p_c;
 #if 1
 		double Zc = 0.307;
-		D->rho_c = D->p_c / (Zc * D->R * D->T_c); 
+		D->rho_c = D->p_c / (Zc * D->R * D->T_c);
 		if(I->rho_c != -1){
 			/* missing rho_c data, calculate using EOS */
 #define RHOC_ERROR_ACCEPTABLE 5e-2
@@ -157,11 +157,11 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		double Zc = 0.307;
 		/* use rho_c from FileData unless missing */
 		if(I->rho_c == -1){
-			D->rho_c = D->p_c / (Zc * D->R * D->T_c); 
+			D->rho_c = D->p_c / (Zc * D->R * D->T_c);
 		}else{
 			D->rho_c = I->rho_c;
 			/* ensure p_c is consistent with value of rho_c */
-			D->p_c = D->rho_c * (Zc * D->R * D->T_c); 
+			D->p_c = D->rho_c * (Zc * D->R * D->T_c);
 		}
 #endif
 		D->omega = I->omega;
@@ -188,7 +188,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 	*/
 
 	/* NOTE: we're using a mass basis for all our property calculations. That
-	means that our 'b' is the usual 'b/M' since our 'R' is 'Rm/M'. Because of 
+	means that our 'b' is the usual 'b/M' since our 'R' is 'Rm/M'. Because of
 	this, our p is still OK, since Ru/M / (Vm/M - b/M) is still the same value.*/
 #define C P->data->corr.pengrob
 	C = FPROPS_NEW(PengrobRunData);
@@ -491,7 +491,7 @@ double pengrob_alphap(double T, double rho, const FluidData *data, FpropsError *
 	\f[ \beta_p = - \frac{1}{p} \left( \frac{\partial p}{\partial v} \right)_T \f]
 
 	Maxima code:
-	p(T,v) := R*T/(v-b) - a(T)/(v*(v+b)+b*(v-b))	 
+	p(T,v) := R*T/(v-b) - a(T)/(v*(v+b)+b*(v-b))
 */
 double pengrob_betap(double T, double rho, const FluidData *data, FpropsError *err){
 	double p = pengrob_p(T, rho, data, err);
@@ -500,7 +500,7 @@ double pengrob_betap(double T, double rho, const FluidData *data, FpropsError *e
 
 /**
 	Saturation calculation for a pure Peng-Robinson fluid. Algorithm as
-	outlined in Sandler 5e, sect 7.5. Another source of information is at 
+	outlined in Sandler 5e, sect 7.5. Another source of information is at
 	https://www.e-education.psu.edu/png520/m17.html
 
 	@return psat(T)
@@ -554,13 +554,13 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 		// Peng & Robinson eq 6
         A = a * p / SQ(data->R*T);
 		B = PD->b * p / (data->R*T);
-		
+
 		// use GSL function to return real roots of polynomial: Peng & Robinson eq 5
 		Zf = 0; Z1 = 0; Zg = 0;
 		if(3 == cubicroots(-(1.-B), A-3.*SQ(B)-2.*B, -(A*B-SQ(B)*(1.+B)), &Zf,&Z1,&Zg)){
 			assert(Zf < Z1);
 			assert(Z1 < Zg);
-				
+
 			//MSG("    roots: Z = %f, %f, %f", Zf, Z1, Zg);
 			//MSG("    Zf = %f, Zg = %f", Zf, Zg);
 			// three real roots in this case
@@ -587,7 +587,7 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 			//double hf = pengrob_h(T, 1/vf, data, err);
 			//double hg = pengrob_h(T, 1/vg, data, err);
 			//MSG("    HMf = %f, HMg = %f", hf*data->M/1000, hg*data->M/1000);
-		
+
 			if(fabs(fratio - 1) < 1e-7){
 				*rhof_ret = 1 / vf;
 				*rhog_ret = 1 / vg;
@@ -612,7 +612,7 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 			oldfratio = fratio;
 		}else{
 			MSG("Midpoint pressure calculation");
-			/* In this case we need to adjust our guess p(T) such that we get 
+			/* In this case we need to adjust our guess p(T) such that we get
 			into the narrow range of values that gives multiple solutions. */
 			p = MidpointPressureCubic(T, data, err);
 			if(*err){
@@ -653,8 +653,8 @@ static ZeroInSubjectFunction resid_dpdrho_T;
 	close to the critical temperature.
 
 	We return the midpoint of the pressure between these two.
-	
-	It is assumed that if using this function we are close enough to the 
+
+	It is assumed that if using this function we are close enough to the
 	critical point that vf < vc < vg, and that the stationary points
 	will be within those interval, ie vf < v1 < vc < v2 < vg.
 */

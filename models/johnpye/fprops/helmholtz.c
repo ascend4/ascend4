@@ -93,6 +93,7 @@ double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsErr
 /* macros and forward decls */
 
 #define SQ(X) ((X)*(X))
+#define CU(X) ((X)*(X)*(X))
 
 #include "helmholtz_impl.h"
 
@@ -500,6 +501,9 @@ double helmholtz_dpdrho_T(double T, double rho, const FluidData *data, FpropsErr
 	return HD_R * T * (1 + 2*delta*phir_del + SQ(delta)*phir_deldel);
 }
 
+/**
+	Calculate partial second order derivative of p with respect to rho, with T constant
+*/
 
 double helmholtz_d2pdrho2_T(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
@@ -515,6 +519,54 @@ double helmholtz_d2pdrho2_T(double T, double rho, const FluidData *data, FpropsE
 
 	return HD_R * T / rho * delta * (2*phir_del + delta*(4*phir_deldel + delta*phir_deldeldel));
 }
+
+
+/**
+	Calculate partial second order derivative of p with respect to T, with rho constant
+*/
+
+double helmholtz_d2pdT2_rho(double T, double rho, const FluidData *data, FpropsError *err){
+    DEFINE_TD;
+
+    double phir_tautaudel = helm_resid_deltautau(tau,delta,HD);
+#ifdef TEST
+	assert(!isnan(phir_tautaudel));
+	assert(!isinf(phir_tautaudel));
+#endif
+    return HD_R * rho / T   * SQ(tau) * delta * phir_tautaudel;
+
+}
+
+/**
+	Calculate partial second order mixed derivative of p with respect to rho, T
+*/
+
+double helmholtz_d2pdrhodT(double T, double rho, const FluidData *data, FpropsError *err){
+    DEFINE_TD;
+    double phir_del = helm_resid_del(tau,delta,HD);
+	double phir_deldel = helm_resid_deldel(tau,delta,HD);
+	double phir_taudel = helm_resid_deltau(tau,delta,HD);
+    double phir_taudeldel = helm_resid_deldeltau(tau,delta,HD);
+#ifdef TEST
+	assert(!isinf(phir_del));
+	assert(!isinf(phir_deldel));
+	assert(!isinf(phir_taudel));
+	assert(!isinf(phir_taudeldel));
+	assert(!isnan(phir_del));
+	assert(!isnan(phir_deldel));
+	assert(!isnan(phir_taudel));
+	assert(!isnan(phir_taudeldel));
+#endif
+    double res = HD_R * ( 1 + 2*delta* phir_del +  SQ(delta) * phir_deldel - 2*tau*delta*phir_taudel - tau*SQ(delta)*phir_taudeldel);
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+
 
 /**
 	Calculate partial derivative of h with respect to T, with rho constant
@@ -543,8 +595,120 @@ double helmholtz_dhdrho_T(double T, double rho, const FluidData *data, FpropsErr
 	double phir_deltau = helm_resid_deltau(tau,delta,HD);
 	double phir_deldel = helm_resid_deldel(tau,delta,HD);
 
-	return HD_R * T / rho * (tau*delta*(0 + phir_deltau) + delta * phir_del + SQ(delta)*phir_deldel);
+	return HD_R * T / rho * (tau*delta*(phir_deltau) + delta * phir_del + SQ(delta)*phir_deldel);
 }
+
+
+
+
+/**
+	Calculate partial second order derivative of h with respect to rho, with T constant
+*/
+
+double helmholtz_d2hdrho2_T(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+	double phir_deldel = helm_resid_deldel(tau,delta,HD);
+	double phir_deldeldel = helm_resid_deldeldel(tau,delta,HD);
+	double phir_taudeldel = helm_resid_deldeltau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phir_deldel));
+	assert(!isinf(phir_deldeldel));
+	assert(!isinf(phir_taudeldel));
+	assert(!isnan(phir_deldel));
+	assert(!isnan(phir_deldeldel));
+	assert(!isnan(phir_taudeldel));
+#endif
+
+    double res = HD_R * T / SQ(rho) * ( tau*SQ(delta)*phir_taudeldel + 2*SQ(delta)*phir_deldel + CU(delta)*phir_deldeldel );
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+/**
+	Calculate partial second order derivative of h with respect to T, with rho constant
+*/
+
+double helmholtz_d2hdT2_rho(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+
+	double phi0_tautau = ideal_phi_tautau(tau,HD_CP0);
+	double phi0_tautautau = ideal_phi_tautautau(tau,HD_CP0);
+
+	double phir_tautau = helm_resid_tautau(tau,delta,HD);
+	double phir_tautaudel = helm_resid_deltautau(tau,delta,HD);
+	double phir_tautautau = helm_resid_tautautau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phi0_tautau));
+	assert(!isinf(phi0_tautautau));
+	assert(!isinf(phir_tautau));
+	assert(!isinf(phir_tautaudel));
+	assert(!isinf(phir_tautautau));
+	assert(!isnan(phi0_tautau));
+	assert(!isnan(phi0_tautautau));
+	assert(!isnan(phir_tautau));
+	assert(!isnan(phir_tautaudel));
+	assert(!isnan(phir_tautautau));
+#endif
+
+    double res = HD_R / T * ( CU(tau)*(phi0_tautautau+phir_tautautau) + 2*SQ(tau)*(phi0_tautau+phir_tautau) + SQ(tau)*delta*phir_tautaudel );
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+/**
+	Calculate partial second order mixed derivative of h with respect to rho, T
+*/
+
+double helmholtz_d2hdrhodT(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+	double phir_deldel = helm_resid_deldel(tau,delta,HD);
+	double phir_tautaudel = helm_resid_deltautau(tau,delta,HD);
+	double phir_del = helm_resid_del(tau,delta,HD);
+	double phir_taudeldel = helm_resid_deldeltau(tau,delta,HD);
+	double phir_taudel = helm_resid_deltau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phir_deldel));
+	assert(!isinf(phir_tautaudel));
+	assert(!isinf(phir_del));
+	assert(!isinf(phir_taudeldel));
+	assert(!isinf(phir_taudel));
+	assert(!isnan(phir_deldel));
+	assert(!isnan(phir_tautaudel));
+	assert(!isnan(phir_del));
+	assert(!isnan(phir_taudeldel));
+	assert(!isnan(phir_taudel));
+#endif
+
+    double res = HD_R / rho * ( SQ(delta)*(phir_deldel) - SQ(tau)*delta*(phir_tautaudel) + delta*phir_del - SQ(delta)*tau*(phir_taudeldel) -  tau*delta*(phir_taudel) );
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+
+
+
+
+
+
+
 
 
 /**
@@ -570,6 +734,385 @@ double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsErr
 
 	return HD_R * T / rho * (tau * delta * phir_deltau);
 }
+
+/**
+	Calculate partial second order derivative of u with respect to rho, with T constant
+*/
+
+double helmholtz_d2udrho2_T(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+	double phir_taudeldel = helm_resid_deldeltau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phir_taudeldel));
+	assert(!isnan(phir_taudeldel));
+#endif
+
+    double res = HD_R * T / SQ(rho) * ( tau * SQ(delta) * phir_taudeldel);
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+/**
+	Calculate partial second order derivative of u with respect to T, with rho constant
+*/
+
+double helmholtz_d2udT2_rho(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+
+	double phi0_tautau = ideal_phi_tautau(tau,HD_CP0);
+	double phi0_tautautau = ideal_phi_tautautau(tau,HD_CP0);
+
+	double phir_tautau = helm_resid_tautau(tau,delta,HD);
+	double phir_tautautau = helm_resid_tautautau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phi0_tautau));
+	assert(!isinf(phi0_tautautau));
+	assert(!isinf(phir_tautau));
+	assert(!isinf(phir_tautautau));
+	assert(!isnan(phi0_tautau));
+	assert(!isnan(phi0_tautautau));
+	assert(!isnan(phir_tautau));
+	assert(!isnan(phir_tautautau));
+#endif
+
+    double res = HD_R / T * ( CU(tau)*(phi0_tautautau+phir_tautautau) + 2*SQ(tau)*(phi0_tautau+phir_tautau) );
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+/**
+	Calculate partial second order mixed derivative of u with respect to rho, T
+*/
+
+double helmholtz_d2udrhodT(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+	double phir_tautaudel = helm_resid_deltautau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phir_tautaudel));
+	assert(!isnan(phir_tautaudel));
+#endif
+
+    double res = HD_R / rho * ( -SQ(tau)*delta*phir_tautaudel);
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+
+
+
+
+
+
+
+
+/**
+	Calculate partial derivative of s with respect to T, with rho constant
+*/
+double helmholtz_dsdT_rho(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+	double phi0_tautau = ideal_phi_tautau(tau,HD_CP0);
+	double phir_tautau = helm_resid_tautau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phi0_tautau));
+	assert(!isinf(phir_tautau));
+	assert(!isnan(phi0_tautau));
+	assert(!isnan(phir_tautau));
+#endif
+
+    double res = HD_R / T * ( -SQ(tau) * (phi0_tautau + phir_tautau) );
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+/**
+	Calculate partial derivative of s with respect to rho, with T constant
+*/
+double helmholtz_dsdrho_T(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+	double phir_del = helm_resid_del(tau,delta,HD);
+	double phir_taudel = helm_resid_deltau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phir_del));
+	assert(!isinf(phir_taudel));
+	assert(!isnan(phir_del));
+	assert(!isnan(phir_taudel));
+#endif
+
+    double res = HD_R / rho * (-1 - delta*phir_del + tau*delta*phir_taudel);
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+/**
+	Calculate partial second order derivative of s with respect to rho, with T constant
+*/
+double helmholtz_d2sdrho2_T(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+	double phir_taudeldel = helm_resid_deldeltau(tau,delta,HD);
+	double phir_deldel = helm_resid_deldel(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phir_taudeldel));
+	assert(!isinf(phir_deldel));
+	assert(!isnan(phir_taudeldel));
+	assert(!isnan(phir_deldel));
+#endif
+
+    double res = HD_R / SQ(rho) * (1 - SQ(delta)*phir_deldel + tau*SQ(delta)*phir_taudeldel);
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+/**
+	Calculate partial second order derivative of s with respect to T, with rho constant
+*/
+double helmholtz_d2sdT2_rho(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+	double phi0_tautau = ideal_phi_tautau(tau,HD_CP0);
+	double phi0_tautautau = ideal_phi_tautautau(tau,HD_CP0);
+
+	double phir_tautau = helm_resid_tautau(tau,delta,HD);
+	double phir_tautautau = helm_resid_tautautau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phi0_tautau));
+	assert(!isinf(phi0_tautautau));
+	assert(!isinf(phir_tautau));
+	assert(!isinf(phir_tautautau));
+	assert(!isnan(phi0_tautau));
+	assert(!isnan(phi0_tautautau));
+	assert(!isnan(phir_tautau));
+	assert(!isnan(phir_tautautau));
+#endif
+
+    double res = HD_R / SQ(T) * ( CU(tau)*(phi0_tautautau+phir_tautautau) + 3*SQ(tau)*(phi0_tautau+phir_tautau) );
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+
+/**
+	Calculate partial second order mixed derivative of s with respect to rho, T
+*/
+double helmholtz_d2sdrhodT(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+	double phir_tautaudel = helm_resid_deltautau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phir_tautaudel));
+	assert(!isnan(phir_tautaudel));
+#endif
+
+    double res = HD_R / (T*rho) * ( -SQ(tau)*delta*phir_tautaudel);
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+	Calculate partial derivative of g with respect to T, with rho constant
+*/
+double helmholtz_dgdT_rho(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+    double phi0 = helm_resid_deldel(tau,delta,HD);
+	double phi0_tau = helm_resid_deltautau(tau,delta,HD);
+	double phir = helm_resid_del(tau,delta,HD);
+	double phir_tau = helm_resid_deldeltau(tau,delta,HD);
+	double phir_del = helm_resid_deltau(tau,delta,HD);
+	double phir_taudel = helm_resid_deltau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phi0));
+	assert(!isinf(phi0_tau));
+	assert(!isinf(phir));
+	assert(!isinf(phir_tau));
+	assert(!isinf(phir_del));
+	assert(!isinf(phir_taudel));
+	assert(!isnan(phi0));
+	assert(!isnan(phi0_tau));
+	assert(!isnan(phir));
+	assert(!isnan(phir_tau));
+	assert(!isnan(phir_del));
+	assert(!isnan(phir_taudel));
+#endif
+
+    double res = HD_R * ( - tau*(phi0_tau + phir_tau) + (phi0 + phir) + (1 + delta*phir_del - tau*delta*phir_taudel) );
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+
+    return res;
+}
+
+/**
+	Calculate partial derivative of g with respect to rho, with T constant
+*/
+double helmholtz_dgdrho_T(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+	double phir_del = helm_resid_deltau(tau,delta,HD);
+	double phir_deldel = helm_resid_deltau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phir_del));
+	assert(!isinf(phir_deldel));
+	assert(!isnan(phir_del));
+	assert(!isnan(phir_deldel));
+#endif
+
+    double res = HD_R * T / rho *  (1 + 2*delta*phir_del - SQ(delta)*phir_deldel) ;
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+
+    return res;
+}
+
+/**
+	Calculate partial second order derivative of g with respect to rho, with T constant
+*/
+double helmholtz_d2gdrho2_T(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+	double phir_deldel = helm_resid_deldel(tau,delta,HD);
+	double phir_deldeldel = helm_resid_deldeldel(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phir_deldel));
+	assert(!isinf(phir_deldeldel));
+	assert(!isnan(phir_deldel));
+	assert(!isnan(phir_deldeldel));
+#endif
+
+    double res = HD_R * T / SQ(rho) * ( -1 + 3 * SQ(delta) * phir_deldel + CU(delta) * phir_deldeldel );
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+/**
+	Calculate partial second order derivative of g with respect to T, with rho constant
+*/
+double helmholtz_d2gdT2_rho(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+	double phi0_tautau = ideal_phi_tautau(tau,HD_CP0);
+	double phir_tautau = helm_resid_tautau(tau,delta,HD);
+	double phir_tautaudel = helm_resid_deltautau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phi0_tautau));
+	assert(!isinf(phir_tautau));
+	assert(!isinf(phir_tautaudel));
+	assert(!isnan(phi0_tautau));
+	assert(!isnan(phir_tautau));
+	assert(!isnan(phir_tautaudel));
+#endif
+
+    double res = HD_R / T * ( SQ(tau)*(phi0_tautau+phir_tautau) + SQ(tau)*delta*phir_tautaudel );
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+/**
+	Calculate partial second order mixed derivative of g with respect to rho, T
+*/
+double helmholtz_d2gdrhodT(double T, double rho, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+
+	double phir_deldel = helm_resid_deldel(tau,delta,HD);
+	double phir_del = helm_resid_del(tau,delta,HD);
+	double phir_taudeldel = helm_resid_deldeltau(tau,delta,HD);
+	double phir_taudel = helm_resid_deltau(tau,delta,HD);
+
+#ifdef TEST
+	assert(!isinf(phir_deldel));
+	assert(!isinf(phir_del));
+	assert(!isinf(phir_taudeldel));
+	assert(!isinf(phir_taudel));
+	assert(!isnan(phir_deldel));
+	assert(!isnan(phir_del));
+	assert(!isnan(phir_taudeldel));
+	assert(!isnan(phir_taudel));
+#endif
+
+    double res = HD_R / rho * ( 1 + 2*delta*phir_del - 2*tau*delta*phir_taudel + SQ(delta)*phir_deldel - tau*SQ(delta)*phir_taudeldel );
+
+#ifdef TEST
+	assert(!isinf(res));
+	assert(!isnan(res));
+#endif
+    return res;
+}
+
+
 
 
 /**
@@ -600,7 +1143,7 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 		return data->p_c;
 	}
 
-	// FIXME at present step-length multiplier is set to 0.4 just because of 
+	// FIXME at present step-length multiplier is set to 0.4 just because of
 	// ONE FLUID, ethanol. Probably our initial guess data isn't good enough,
 	// or maybe there's a problem with the acentric factor or something like
 	// that. This factor 0.4 will be slowing down the whole system, so it's not
@@ -863,7 +1406,6 @@ double helm_resid(double tau, double delta, const HelmholtzRunData *HD){
 #ifdef RESID_DEBUG
 		MSG("i = %d, CRITICAL, n = %e, a = %f, b = %f, beta = %f, A = %f, B = %f, C = %f, D = %f\n",i+1, ct->n, ct->a, ct->b, ct->beta, ct->A, ct->B, ct->C, ct->D);
 #endif
-
 		DEFINE_DELTA;
 		DEFINE_DELB;
 
@@ -1029,7 +1571,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzRunData *HD){
 	n = HD->ng;
 	gt = &(HD->gt[0]);
 	for(i=0; i<n; ++i){
-#ifdef RESID_DEBUG
+#ifdef RESID_DEBUGrundata
 		fprintf(stderr,"i = %d, GAUSSIAN, n = %e, t = %f, d = %f, alpha = %f, beta = %f, gamma = %f, epsilon = %f\n",i+1, gt->n, gt->t, gt->d, gt->alpha, gt->beta, gt->gamma, gt->epsilon);
 #endif
 
@@ -1499,6 +2041,27 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzRunData *HD){
 	return res;
 }
 
-#endif
+/**
+	Third derivative of helmholtz residual function, with respect to
+	delta once and tau (twice).
+*/
+//double helm_resid_deltautau(double tau,double delta,const HelmholtzRunData *HD);
 
+
+
+/**
+	Third derivative of helmholtz residual function, with respect to
+	delta (thrice).
+*/
+//double helm_resid_deldeltau(double tau,double delta,const HelmholtzRunData *HD);
+
+
+
+/**
+	Third derivative of helmholtz residual function, with respect to
+	tau (thrice).
+*/
+//double helm_resid_tautautau(double tau,double delta,const HelmholtzRunData *HD);
+
+#endif
 

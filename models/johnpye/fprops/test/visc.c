@@ -32,6 +32,7 @@ int main(void){
 	const PureFluid *P;
 	const char *fluids[] = {"carbondioxide",NULL};
 	const char **fi = fluids;
+	//printf("%s \n %s  %s \n", *fi,*(fi+1),*(fi+2));
 	int nfluiderrors = 0;
 	while(*fi){
 		MSG("Testing fluid '%s'",*fi);
@@ -53,7 +54,7 @@ int main(void){
 		if(err)nfluiderrors++;
 		++fi;
 	}
-	
+
 	if(nfluiderrors){
 		ERRMSG("There were %d fluids with viscosity errors",nfluiderrors);
 		return 1;
@@ -64,7 +65,7 @@ int main(void){
 	fprintf(stderr,"\n");
 	color_on(stderr,ASC_FG_BRIGHTGREEN);
 	fprintf(stderr,"SUCCESS (%s)",__FILE__);
-	color_off(stderr);	
+	color_off(stderr);
 	fprintf(stderr,"\n");
 	return 0;
 }
