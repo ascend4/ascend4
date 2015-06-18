@@ -361,10 +361,9 @@ class ModelView:
 			_observe = False
 			for p in pathlist:
 				_name, _instance = self.otank[p.to_string()]
-				if _instance.isReal():
+				if _instance.getType().isRefinedSolverVar():
 					_fixed |= _instance.isFixed()
 					_free |= not _instance.isFixed()
-				if _instance.getType().isRefinedSolverVar():
 					_observe = True
 			if _fixed:
 				self.freemenuitem.set_sensitive(True)
