@@ -107,9 +107,9 @@ int main(){
 		Ideals
 	};
 	MixtureState MS = {
-		T,
-		rho,
-		&MX1
+		.T=T,
+		.rhos=rho,
+		.X=&MX1
 	};
 	ig_rhos(&MS, P, FluidNames);
 

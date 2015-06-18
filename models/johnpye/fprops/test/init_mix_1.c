@@ -112,7 +112,7 @@ int main(void){
 		NFLUIDS, x, Ideals
 	};
 	MixtureState MS = {
-		T, rho, &MX
+		.T=T, .rhos=rho, .X=&MX
 	};
 	/* mixture properties */
 	double rho_mx = mixture_rho(&MS);
@@ -176,14 +176,16 @@ int main(void){
 		should suffice.
 	 */
 	printf("\n\n Solve for individual densities that match the given pressure:");
-	typedef struct{ /* structure to provide extra data for `zeroin_solve' */
+	/* structure to provide extra data for `zeroin_solve' */
+	typedef struct{
 		double P;         /* the pressure, Pa */
 		double T;         /* the temperature, K */
 		PureFluid *Fluid; /* the fluid */
 		FpropsError *err;
 	} PZeroData;
 
-	double delta_P(double rho, void *user_data){ /* function to be zeroed by `zeroin_solve' */
+	/* function to be zeroed by `zeroin_solve' */
+	double delta_P(double rho, void *user_data){
 		PZeroData *PZ = (PZeroData *)user_data;
 		return PZ->P - fprops_p((FluidState){PZ->T,rho,PZ->Fluid}, PZ->err);
 	}

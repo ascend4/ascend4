@@ -77,22 +77,35 @@
 /* Experimental structures to capture mixture properties */
 typedef struct MixtureSpec_Struct {
 	unsigned pures; /* number of components */
-	double *xs;     /* mass fractions of components */
+	double *Xs;     /* mass fractions of components */
 	PureFluid **PF; /* pure fluid characteristics of components */
 } MixtureSpec;
 
 typedef struct MixtureState_Struct {
-	double T;        /* mixture temperature */
-	double *rhos;    /* (current) mass densities of components */
+	double T;       /* mixture temperature */
+	double *rhos;   /* (current) mass densities of components */
 	MixtureSpec *X; /* specification of pure-component members of mixture */
 } MixtureState;
+
+/* Enumerations to hold phase-equilibrium conditions and names of phases */
+typedef enum PhaseEquilibrium_Enum {GAS_PHASE, LIQ_PHASE, VLE_PHASE, LLE_PHASE} PhaseEqb;
+typedef enum PhaseNames_Enum {GAS, LIQ_1, LIQ_2, LIQ_3, LIQ_4, SOLID_1, SOLID_2} PhaseNames;
+
+typedef struct MixturePhaseState_Struct {
+	double T;             /* mixture temperature */
+	double **rhos;        /* (current) mass densities of components */
+	MixtureSpec *X;       /* specification of pure-component members of mixture */
+	PhaseEqb ph;          /* type of phase equilibrium */
+	double *phase_splits; /* fraction of mass in each phase */
+	double **Xs;          /* mass fractions within each phase */
+} MixturePhaseState;
 
 /* Function prototypes */
 double my_min(unsigned nelems, double *nums);
 double my_max(unsigned nelems, double *nums);
 
-void mixture_x_props(unsigned nPure, double *xs, double *props);
-double mixture_x_fill_in(unsigned nPure, double *xs);
+void mixture_x_props(unsigned nPure, double *Xs, double *props);
+double mixture_x_fill_in(unsigned nPure, double *Xs);
 void ig_rhos(MixtureState *M, double P, char **Names);
 void initial_rhos(MixtureState *M, double P, char **names, FpropsError *err);
 void pressure_rhos(MixtureState *M, double P, double tol, char **Names, FpropsError *err);
@@ -103,14 +116,14 @@ double mixture_u(MixtureState *M, FpropsError *err);
 double mixture_h(MixtureState *M, FpropsError *err);
 double mixture_cp(MixtureState *M, FpropsError *err);
 double mixture_cv(MixtureState *M, FpropsError *err);
-double mixture_x_ln_x(unsigned nPure, double *xs, PureFluid **PFs);
-double mixture_M_avg(unsigned nPure, double *xs, PureFluid **PFs);
+double mixture_x_ln_x(unsigned nPure, double *Xs, PureFluid **PFs);
+double mixture_M_avg(unsigned nPure, double *Xs, PureFluid **PFs);
 double mixture_s(MixtureState *M, FpropsError *err);
 double mixture_g(MixtureState *M, FpropsError *err);
 double mixture_a(MixtureState *M, FpropsError *err);
 
 void print_mixture_properties(char *how_calc, double rho, double u, double h, double cp, double cv, double s, double g, double a);
-void print_substances_properties(unsigned subst, char **headers, double *xs, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as);
+void print_substances_properties(unsigned subst, char **headers, double *Xs, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as);
 void print_cases_properties(unsigned cases, char **headers, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as);
 
 #endif

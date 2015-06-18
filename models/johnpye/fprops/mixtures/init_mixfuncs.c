@@ -63,7 +63,7 @@ double my_max(unsigned nelems, double *nums){
 	Calculate mass fractions from an array of numbers, with each mass fraction 
 	sized proportionally to its corresponding number
  */
-void mixture_x_props(unsigned nPure, double *xs, double *props){
+void mixture_x_props(unsigned nPure, double *Xs, double *props){
 	unsigned i;
 	double x_total=0.0; /* sum of proportions */
 
@@ -75,7 +75,7 @@ void mixture_x_props(unsigned nPure, double *xs, double *props){
 		over all proportions.
 	 */
 	for(i=0;i<nPure;i++){
-		xs[i] = props[i] / x_total; 
+		Xs[i] = props[i] / x_total; 
 	}
 }
 
@@ -83,12 +83,12 @@ void mixture_x_props(unsigned nPure, double *xs, double *props){
 	Calculate last of (n) mass fractions given an array of (n-1) mass 
 	fractions, such that the sum over all mass fractions will equal one.
  */
-double mixture_x_fill_in(unsigned nPure, double *xs){
+double mixture_x_fill_in(unsigned nPure, double *Xs){
 	unsigned i;
 	double x_total;
 
 	for(i=0;i<(nPure-1);i++){ /* sum only for nPure-1 loops */
-		x_total += xs[i];
+		x_total += Xs[i];
 	}
 	if(x_total>0){
 		printf(MIX_ERROR "%.6f.", x_total);
@@ -234,10 +234,10 @@ void pressure_rhos(MixtureState *M, double P, double tol, char **Names, FpropsEr
 	for(i1=0;i1<NPURE;i1++){
 		rho1 = RHOS[i1];
 		rho2 = 1.01 * rho1;
+		p2 = fprops_p((FluidState){T, rho2, PF[i1]}, err);
 
 		for(i2=0;i2<20;i2++){
 			p1 = fprops_p((FluidState){T, rho1, PF[i1]}, err);
-			p2 = fprops_p((FluidState){T, rho2, PF[i1]}, err);
 
 			if(fabs(P - p1) < tol){ /* Success! */
 				RHOS[i1] = rho1;
@@ -295,9 +295,8 @@ void pressure_rhos(MixtureState *M, double P, double tol, char **Names, FpropsEr
 	The uniform-pressure condition (1) is satisfied automatically by using a 
 	single pressure to find densities.
  */
-
 void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError *err){
-#define XS M->X->xs
+#define XS M->X->Xs
 	unsigned i;
 	double u_avg = mixture_u(M, err); /* original average internal energy */
 	double h_avg = mixture_h(M, err); /* original average enthalpy */
@@ -336,9 +335,7 @@ void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError
 			break;
 		}
 
-		/*
-			Update pressure p1 for next iteration:
-		 */
+		/* Update pressure p1 for next iteration: */
 		delta_p = (u_avg - u1) * (p1 - p2) / (u1 - u2);
 		u2 = u1;
 		p2 = p1;
@@ -383,7 +380,7 @@ double mixture_rho(MixtureState *M){
 	double vol_mix=0.0; /* volume per unit mass of the mixture, iteratively summed */
 
 #if 0
-#define XS M->X->xs
+#define XS M->X->Xs
 #endif
 	for(i=0;i<NPURE;i++){
 		vol_mix += XS[i] / RHOS[i];
@@ -507,7 +504,7 @@ double mixture_cv(MixtureState *M, FpropsError *err){
 	solutions
 
 	@param nPure number of pure components
-	@param xs array with mass fraction of each component
+	@param Xs array with mass fraction of each component
 	@param PFs array of pointers to PureFluid structures representing components
 
 	@return sum over all components of mole fraction times natural logarithm of 
@@ -545,7 +542,7 @@ double mixture_x_ln_x(unsigned nPure, double *x_mass, PureFluid **PFs){
 	have the same units.
 
 	@param nPure number of pure components
-	@param xs array with mass fraction of each component
+	@param Xs array with mass fraction of each component
 	@param PFs array of pointers to PureFluid structures representing components
 
 	@return average molar mass of the solution
@@ -669,14 +666,14 @@ void print_mixture_properties(char *how_calc, double rho, double u, double h, do
 /*
 	Print table of properties for different substances
  */
-void print_substances_properties(const unsigned subst, char **headers, double *xs, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as){
+void print_substances_properties(const unsigned subst, char **headers, double *Xs, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as){
 #define TBL_ROWS 11
 
 	unsigned i1,i2,i3;
 	unsigned col_width[20]={0};
 
 	double *vals[TBL_ROWS-1]={
-		xs, rhos, ps, us, hs, cps, cvs, ss, gs, as
+		Xs, rhos, ps, us, hs, cps, cvs, ss, gs, as
 	};
 
 	char *forms[TBL_ROWS-1]={
