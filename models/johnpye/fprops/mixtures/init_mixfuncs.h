@@ -91,6 +91,8 @@ typedef struct MixtureState_Struct {
 typedef enum PhaseEquilibrium_Enum {GAS_PHASE, LIQ_PHASE, VLE_PHASE, LLE_PHASE} PhaseEqb;
 typedef enum PhaseNames_Enum {GAS, LIQ_1, LIQ_2, LIQ_3, LIQ_4, SOLID_1, SOLID_2} PhaseNames;
 
+typedef double SecantSubjectFunction(double, void *user_data);
+
 typedef struct MixturePhaseState_Struct {
 	double T;             /* mixture temperature */
 	double **rhos;        /* (current) mass densities of components */
@@ -103,6 +105,10 @@ typedef struct MixturePhaseState_Struct {
 /* Function prototypes */
 double my_min(unsigned nelems, double *nums);
 double my_max(unsigned nelems, double *nums);
+double my_sum(unsigned nelems, double *nums);
+unsigned index_of_min(unsigned nelems, double *nums);
+unsigned index_of_max(unsigned nelems, double *nums);
+void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], double tol);
 
 void mixture_x_props(unsigned nPure, double *Xs, double *props);
 double mixture_x_fill_in(unsigned nPure, double *Xs);
