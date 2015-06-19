@@ -112,7 +112,7 @@ void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *er
 		   p_d,
 		   rp_d=0.0;  /* reciprocal dew-point pressure */
 	double Ks[NPURE]; /* K-factor: ratio (vapor mole fraction)/(liquid mole fraction) */
-	double V_frac[]={0.50, 0.52}; /* vapor mass fraction */
+	double V[]={0.50, 0.52}; /* vapor mass fraction */
 	double xs[NPURE],
 		   ys[NPURE],
 		   zs[NPURE];
@@ -125,10 +125,7 @@ void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *er
 		ZM_sum += zs[i];
 	}
 	for(i=0;i<NPURE;i++){
-		printf("\n\tFinding partial pressure and overall mole fractions for substance:"
-				"\n\t  %s", Names[i]);
 		zs[i] /= ZM_sum;      /* divide by reciprocal average molar mass to obtain mole fractions */
-		printf("\n\t%.5f\t%.5f\t%.5f\t%.5f", RHOS[0][0], RHOS[0][1], RHOS[1][0], RHOS[1][1]);
 		fprops_sat_T(M->T, &p_sat, (RHOS[1]+i), (RHOS[0]+i), PFL[i], err);
 		p_b += zs[i] * p_sat;
 		rp_d += zs[i] / p_sat;
@@ -144,62 +141,34 @@ void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *er
 		puts("\n\tMixture is all liquid.");
 	}else{                     /* system may be in vapor-liquid equilibrium */
 		RRData RR = {NPURE, zs, Ks};
-		double tol = 1.e-3;
+		double tol = 1.e-6;
 
-		secant_solve(&rachford_rice, &RR, V_frac, tol);
+		secant_solve(&rachford_rice, &RR, V, tol);
 
 		for(i=0;i<NPURE-1;i++){
-			printf("\n\n\tFor substance %s", Names[i]);
-			ys[i] = (zs[i] * Ks[i]) / ((1 - V_frac[0]) + V_frac[0]*Ks[i]);
-			printf("\n\t  vapor mole fraction is %.5f", ys[i]);
-			xs[i] = zs[i] / (1 + (V_frac[0] * (Ks[i] - 1)));
-			printf("\n\t  liquid mole fraction is %.5f", xs[i]);
-			/* printf("\n\tThe vapor-phase mole fraction is %.5f,"
-					" and the liquid-phase mole fraction is %.5f", ys[i], xs[i]); */
+			ys[i] = (zs[i] * Ks[i]) / ((1 - V[0]) + V[0]*Ks[i]);
+			xs[i] = zs[i] / (1 + (V[0] * (Ks[i] - 1)));
 		}
 		ys[NPURE-1] = 1 - my_sum(NPURE-1, ys); /* ys[0] starts as 0.0, so the fractions should sum correctly */
 		xs[NPURE-1] = 1 - my_sum(NPURE-1, xs);
-		// printf("\n\n\tFor substance %s", Names[NPURE-1]);
-		// printf("\n\t  vapor mole fraction is %.5f", ys[NPURE-1]);
-		// printf("\n\t  liquid mole fraction is %.5f", xs[NPURE-1]);
 
 		for(i=0;i<NPURE;i++){
-			printf("\n\n\tFor substance number %u", i);
-			printf("\n\tThat is, substance %s", Names[i]);
 			XS[0][i] = ys[i] * D->M; /* first step in calculating mass fractions */
-			printf("\n\t  vapor mass fraction is %.5f", XS[0][i]);
 			XS[1][i] = xs[i] * D->M;
-			printf("\n\t  liquid mass fraction is %.5f", XS[1][i]);
 
 			XM_sum += xs[i] * D->M;
 			YM_sum += ys[i] * D->M;
 		}
 		for(i=0;i<NPURE;i++){
-			printf("\n\tFinal mass fractions for substance %s", Names[i]);
-			XS[1][i] /= YM_sum;
-			XS[0][i] /= XM_sum;
-			printf("\n\tAssigning densities for substance %s", Names[i]);
+			XS[0][i] /= YM_sum;
+			XS[1][i] /= XM_sum;
 		}
-		// M->rhos = rhos;
-		// M->Xs = Xs;
-		M->phase_splits[0] = V_frac[0];
-		M->phase_splits[1] = 1 - V_frac[0];
-		printf("\n\n\tThe mole split between vapor and liquid is"
-				" %.5f vapor, %.5f liquid\n",
-				V_frac[0], 1 - V_frac[0]);
-		printf("\n\tThe mass fractions in the different phases are:"
-				"\n\t\tvapor\t -- %s %.5f"
-				"\n\t\t\t -- %s %.5f"
-				"\n\t\tliquid\t -- %s %.5f"
-				"\n\t\t\t -- %s %.5f\n",
-				// Names[0], M->Xs[0][0],
-				// Names[1], M->Xs[0][1],
-				// Names[0], M->Xs[1][0],
-				// Names[1], M->Xs[1][1]);
-				Names[0], XS[0][0],
-				Names[1], XS[0][1],
-				Names[0], XS[1][0],
-				Names[1], XS[1][1]);
+		M->phase_splits[0] = (V[0] * YM_sum) / ((V[0] * YM_sum) + ((1 - V[0]) * XM_sum));
+		M->phase_splits[1] = 1 - M->phase_splits[0];
+
+		for(i=0;i<NPURE;i++){
+			printf("\n\tMolar mass of %s is %.3f kg/kmol;", Names[i], D->M);
+		}
 	}
 
 #undef RHOS
@@ -214,7 +183,7 @@ void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *er
 	Establish mixing conditions (T,P), find individual densities, and use those 
 	along with the temperature to find first-law properties for individual 
 	components and the whole mixture.
-	
+
 	As a check, find pressure corresponding to temperature and component density 
 	for each component -- this should equal the overall pressure
 
@@ -286,12 +255,8 @@ int main(){
 	};
 
 	double mp_ps[] = {0.0, 0.0};
-	double mp_xs[2][2] = {
-		{0.0, 0.0}, {0.0, 0.0}
-	};
-	double mp_rhos[2][2] = {
-		{0.0, 0.0}, {0.0, 0.0}
-	};
+	double *mp_xs[] = {NULL, NULL};
+	double *mp_rhos[] = {NULL, NULL};
 	MixturePhaseState MP = {
 		.T=T[2]
 		, .X=&MX
@@ -299,19 +264,34 @@ int main(){
 		, .Xs = mp_xs
 		, .rhos = mp_rhos
 	};
+	MP.Xs[0] = (double *)malloc(2*sizeof(double));
+	MP.Xs[1] = (double *)malloc(2*sizeof(double));
+	MP.rhos[0] = (double *)malloc(2*sizeof(double));
+	MP.rhos[1] = (double *)malloc(2*sizeof(double));
 	
+	/* printf("\n\tAt %.1f K and %.0f Pa, the mixture is in vapor-liquid equilibrium:"
+			"\n\t  %.5f of the mass is in the vapor"
+			"\n\t    %s mass fraction in the vapor is %.5f"
+			"\n\t    %s mass fraction in the vapor is %.5f"
+			"\n\t  %.5f of the mass is in the liquid"
+			"\n\t    %s mass fraction in the liquid is %.5f"
+			"\n\t    %s mass fraction in the liquid is %.5f"
+			"\n",
+			MP.T, P[2], MP.phase_splits[0], fluid_names[0], MP.Xs[0][0], 
+			fluid_names[1], MP.Xs[0][1], MP.phase_splits[1], fluid_names[0], 
+			MP.Xs[1][0], fluid_names[1], MP.Xs[1][1]); */
 	mixture_flash(&MP, P[2], fluid_names, &err);
 	printf("\n\tAt %.1f K and %.0f Pa, the mixture is in vapor-liquid equilibrium:"
 			"\n\t  %.5f of the mass is in the vapor"
 			"\n\t    %s mass fraction in the vapor is %.5f"
 			"\n\t    %s mass fraction in the vapor is %.5f"
 			"\n\t  %.5f of the mass is in the liquid"
-			/* "\n\t    %s mass fraction in the liquid is %.5f" */
-			/* "\n\t    %s mass fraction in the liquid is %.5f" */
+			"\n\t    %s mass fraction in the liquid is %.5f"
+			"\n\t    %s mass fraction in the liquid is %.5f"
 			"\n",
 			MP.T, P[2], MP.phase_splits[0], fluid_names[0], MP.Xs[0][0], 
-			fluid_names[1], MP.Xs[0][1], MP.phase_splits[1]/* , fluid_names[0], 
-			MP.Xs[1][0], fluid_names[1], MP.Xs[1][1] */);
+			fluid_names[1], MP.Xs[0][1], MP.phase_splits[1], fluid_names[0], 
+			MP.Xs[1][0], fluid_names[1], MP.Xs[1][1]);
 
 	return 0;
 } /* end of `main' */
