@@ -189,12 +189,12 @@ double mixture_x_fill_in(unsigned nPure, double *Xs){
 void ig_rhos(MixtureState *M, double P, char **Names){
 	unsigned i; /* counter variable */
 
-#define T M->T
+#define TT M->T
 #define RHOS M->rhos
 #define NPURE M->X->pures
 #define PF M->X->PF
 	for(i=0;i<NPURE;i++){
-		RHOS[i] = P / PF[i]->data->R / T;
+		RHOS[i] = P / PF[i]->data->R / TT;
 		printf("\n\t%s%s is :  %.4f kg/m3", "The ideal-gas mass density of ",
 				Names[i], RHOS[i]);
 	} puts("");
@@ -202,7 +202,7 @@ void ig_rhos(MixtureState *M, double P, char **Names){
 #undef PF
 #undef NPURE
 #undef RHOS
-#undef T
+#undef TT
 #endif
 }
 
@@ -223,24 +223,24 @@ void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
 	};
 
 #if 0
-#define T M->T
+#define TT M->T
 #define RHOS M->rhos
 #define NPURE M->X->pures
 #define PF M->X->PF
 #endif
 #define D PF[i]->data
 	for(i=0;i<NPURE;i++){
-		if(T >= D->T_c){ /* temperature >= critical temperature */
+		if(TT >= D->T_c){ /* temperature >= critical temperature */
 			if(P >= D->p_c){       /* pressure >= critical pressure */
 				RHOS[i] = D->rho_c;     /* super-critical fluid */
 				Region = SUPERCRIT;
 			}else{                 /* true gas (as opposed to sub-critical vapor) */
-				RHOS[i] = P / D->R / T; /* density from ideal gas */
+				RHOS[i] = P / D->R / TT; /* density from ideal gas */
 				Region = GASEOUS;
 			}
 		}else{
 			if(P >= D->p_c){ /* pressure >= critical pressure -- liquid */
-				RHOS[i] = fprops_rhof_T_rackett(T, D); /* density from saturation liquid */
+				RHOS[i] = fprops_rhof_T_rackett(TT, D); /* density from saturation liquid */
 				Region = LIQUID;
 			}else{ /* now we're getting into hard conditions */
 				double T_sat,   /* find saturation temperature, densities */
@@ -248,7 +248,7 @@ void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
 					   rho_vap;
 				fprops_sat_p(P, &T_sat, &rho_liq, &rho_vap, PF[i], err);
 
-				if(T > T_sat){ /* this is the last condition that we can precisely find */
+				if(TT > T_sat){ /* this is the last condition that we can precisely find */
 					RHOS[i] = rho_vap; /* vapor phase */
 					Region = VAPOR;
 				}else{
@@ -269,22 +269,41 @@ void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
 				"\t  it is in the %s region, since\n"
 				"\t\tCritical temperature T_c=%.2f K \tand current temperature T=%.2f K;\n"
 				"\t\tCritical pressure    P_c=%.0f Pa\tand current pressure    P=%.0f Pa.",
-				Names[i], RHOS[i], region_names[Region], D->T_c, T, D->p_c, P);
+				Names[i], RHOS[i], region_names[Region], D->T_c, TT, D->p_c, P);
 	}
 #undef D
 #if 0
 #undef NPURE
 #undef RHOS
-#undef T
+#undef TT
 #undef PF
 #endif
+}
+
+/*
+	Structure to hold auxiliary data for function to find the error in pressure 
+	at a given density
+ */
+typedef struct PressureRhoData_Struct {
+	double T;
+	double P;
+	PureFluid *pfl;
+	FpropsError *err;
+} PRData;
+
+SecantSubjectFunction pressure_rho_error;
+double pressure_rho_error(double rho, void *user_data){
+	PRData *prd = (PRData *)user_data;
+	FluidState fst = {prd->T, rho, prd->pfl};
+	
+	return fabs(prd->P - fprops_p(fst, prd->err));
 }
 
 /* 
 	Calculate realistic densities `rho_out' in ideal-solution, such that 
 	densities are consistent with the given temperature and pressure
  */
-void pressure_rhos(MixtureState *M, double P, double tol, char **Names, FpropsError *err){
+void pressure_rhos(MixtureState *M, double P, double tol, /* char **Names, */ FpropsError *err){
 	/*
 		Find actual density by searching for the individual densities which 
 		each satisfy the equation P_i(T, \rho_i) = P, starting from ideal-gas 
@@ -304,58 +323,37 @@ void pressure_rhos(MixtureState *M, double P, double tol, char **Names, FpropsEr
 			densities_Ts_to_mixture    in  init_mix.c or this file
 	 */
 	unsigned i1, i2;   /* counter variables */
-	double p1, p2,     /* pressures */
-		   rho1, rho2, /* densities */
-		   delta_rho;  /* change in density for one step */
+	// double p1, p2,     /* pressures */
+	// 	   rho1, rho2, /* densities */
+	// 	   delta_rho;  /* change in density for one step */
 
-#if 0
-#define NPURE M->X->pures
-#define RHOS M->rhos
-#define T M->T
-#define PF M->X->PF
-#endif
 	for(i1=0;i1<NPURE;i1++){
-		rho1 = RHOS[i1];
-		rho2 = 1.01 * rho1;
-		p2 = fprops_p((FluidState){T, rho2, PF[i1]}, err);
+		PRData prd = {TT, P, PF[i1], err};
+		double rhos[] = {RHOS[i1], 1.01*RHOS[i1]};
 
-		for(i2=0;i2<20;i2++){
-			p1 = fprops_p((FluidState){T, rho1, PF[i1]}, err);
+		secant_solve(&pressure_rho_error, &prd, rhos, tol);
 
-			if(fabs(P - p1) < tol){ /* Success! */
-				RHOS[i1] = rho1;
-				printf("\n\n\tRoot-finding for substance %s SUCCEEDED after %d iterations;\n"
-						"\t  at rho1=%.5f kg/m3, p1=%.0f Pa (and P=%.0f Pa).", 
-						Names[i1], i2, rho1, p1, P);
-				break;
-			}
-			if(p1==p2){
-				printf("\n\n\tRoot-finding for substance %s FAILED after %d iterations;\n"
-						"\t  at rho1=%.5f kg/m3, rho2=%.5f, got p1=p2=%.6e Pa, but P = %.6e Pa!",
-						Names[i1], i2, rho1, rho2, p1, P);
-				break;
-			}
+		RHOS[i1] = rhos[0];
+	}
+}
 
-			/*
-				Unlike in sat.c, here delta_rho does not need to check bounds, 
-				since we do not need to stay in the saturation region.
+/*
+	Structure to hold auxiliary data for function to find error in internal 
+	energy at a given pressure.
+ */
+typedef struct IntEnergyPressure_Struct {
+	double U;
+	double tol;
+	MixtureState *M;
+	FpropsError *err;
+} IEData;
 
-				However, I will eventually need to provide for correct handling 
-				of saturation conditions.
-			 */
-			delta_rho = (P - p1) * (rho1 - rho2) / (p1 - p2);
-			rho2 = rho1;
-			p2 = p1;
-			rho1 += delta_rho;
-		}
-	} puts("");
+SecantSubjectFunction energy_p_error;
+double energy_p_error(double P, void *user_data){
+	IEData *ied = (IEData *)user_data;
+	pressure_rhos(ied->M, P, ied->tol, ied->err);
 
-#if 0
-#undef PF
-#undef NPURE
-#undef RHOS
-#undef T
-#endif
+	return fabs(ied->U - mixture_u(ied->M, ied->err));
 }
 
 /*
@@ -384,19 +382,22 @@ void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError
 	double u_avg = mixture_u(M, err); /* original average internal energy */
 	double h_avg = mixture_h(M, err); /* original average enthalpy */
 
-	double p1=0.0, p2, /* pressures for root-finding */
-		   u1, u2, /* overall densities for root-finding */
-		   delta_p;    /* change in pressure */
+	double p[]={0.0, 0.0};
+	// 	   p2,      /* pressures for root-finding */
+	// 	   u1, u2,  /* overall densities for root-finding */
+	// 	   delta_p; /* change in pressure */
 
 	/*	
 		Find average pressure in the solution, and set p1 equal to that; set p2
 	 */
 	for(i=0;i<NPURE;i++){
-		p1 += fprops_p((FluidState){T,RHOS[i],PF[i]}, err);
+		p[0] += fprops_p((FluidState){TT,RHOS[i],PF[i]}, err);
 	}
-	p1 /= NPURE;
-	p2 = 1.1 * p1;
+	p[0] /= NPURE;
+	p[1] = 1.1 * p[0];
+	/* p2 = 1.1 * p1; */
 
+#if 0
 	/* set initial value for rho2 (this will be copied from rho1 in the loop) */
 	pressure_rhos(M, p2, tol, Names, err); /* densities for pressure 2 */
 	u2 = mixture_u(M, err); /* average internal energy for pressure 2 */
@@ -424,6 +425,11 @@ void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError
 		p2 = p1;
 		p1 += delta_p;
 	} puts("");
+#else
+	IEData ied = {u_avg, tol, M, err};
+
+	secant_solve(&energy_p_error, &ied, p, tol);
+#endif
 
 	/* confirm that when internal energy does not change, neither does enthalpy */
 	if(fabs(h_avg - mixture_h(M,err)) < 2*tol){
@@ -478,7 +484,7 @@ double mixture_rho(MixtureState *M){
 #undef PF
 #undef NPURE
 #undef RHOS
-#undef T
+#undef TT
 #endif
 }
 
@@ -497,7 +503,7 @@ double mixture_u(MixtureState *M, FpropsError *err){
 	double u_mix=0.0;   /* internal energy of the mixture, iteratively summed */
 
 	for(i=0;i<NPURE;i++){
-		u_mix += XS[i] * fprops_u((FluidState){T,RHOS[i],PF[i]}, err);
+		u_mix += XS[i] * fprops_u((FluidState){TT,RHOS[i],PF[i]}, err);
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
@@ -521,7 +527,7 @@ double mixture_h(MixtureState *M, FpropsError *err){
 	double h_mix=0.0;   /* enthalpy of mixture, iteratively summed */
 
 	for(i=0;i<NPURE;i++){
-		h_mix += XS[i] * fprops_h((FluidState){T,RHOS[i],PF[i]}, err);
+		h_mix += XS[i] * fprops_h((FluidState){TT,RHOS[i],PF[i]}, err);
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
@@ -545,7 +551,7 @@ double mixture_cp(MixtureState *M, FpropsError *err){
 	double cp_mix=0.0;  /* constant-pressure heat capacity of mixture, iteratively summed */
 
 	for(i=0;i<NPURE;i++){
-		cp_mix += XS[i] * fprops_cp((FluidState){T,RHOS[i],PF[i]}, err);
+		cp_mix += XS[i] * fprops_cp((FluidState){TT,RHOS[i],PF[i]}, err);
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
@@ -569,7 +575,7 @@ double mixture_cv(MixtureState *M, FpropsError *err){
 	double cv_mix=0.0;  /* constant-volume heat capacity of mixture, iteratively summed */
 
 	for(i=0;i<NPURE;i++){
-		cv_mix += XS[i] * fprops_cv((FluidState){T,RHOS[i],PF[i]}, err);
+		cv_mix += XS[i] * fprops_cv((FluidState){TT,RHOS[i],PF[i]}, err);
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
@@ -660,7 +666,7 @@ double mixture_s(MixtureState *M, FpropsError *err){
 	double R = D->R * D->M; /* ideal gas constant */
 
 	for(i=0;i<NPURE;i++){
-		s_mix += XS[i] * fprops_s((FluidState){T,RHOS[i],PF[i]}, err);
+		s_mix += XS[i] * fprops_s((FluidState){TT,RHOS[i],PF[i]}, err);
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
@@ -682,13 +688,13 @@ double mixture_g(MixtureState *M, FpropsError *err){
 	double R = D->R * D->M; /* ideal gas constant */
 
 	for(i=0;i<NPURE;i++){
-		g_mix += XS[i] * fprops_g((FluidState){T,RHOS[i],PF[i]}, err);
+		g_mix += XS[i] * fprops_g((FluidState){TT,RHOS[i],PF[i]}, err);
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
 		printf(MIX_XSUM_ERROR, x_total);
 	}
-	return g_mix + (R * T * mixture_x_ln_x(NPURE,XS,PF));
+	return g_mix + (R * TT * mixture_x_ln_x(NPURE,XS,PF));
 }
 
 /*
@@ -704,20 +710,20 @@ double mixture_a(MixtureState *M, FpropsError *err){
 	double R = D->R * D->M; /* ideal gas constant */
 
 	for(i=0;i<NPURE;i++){
-		a_mix += XS[i] * fprops_a((FluidState){T,RHOS[i],PF[i]}, err);
+		a_mix += XS[i] * fprops_a((FluidState){TT,RHOS[i],PF[i]}, err);
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
 		printf(MIX_XSUM_ERROR, x_total);
 	}
-	return a_mix + (R * T * mixture_x_ln_x(NPURE,XS,PF));
+	return a_mix + (R * TT * mixture_x_ln_x(NPURE,XS,PF));
 #if 1
 #undef D
 #undef XS
 #undef PF
 #undef NPURE
 #undef RHOS
-#undef T
+#undef TT
 #endif
 }
 

@@ -140,7 +140,7 @@ int main(){
 		x,
 		Helms
 	};
-	pressure_rhos(&MS, P, tol, FluidNames, &err);
+	pressure_rhos(&MS, P, tol, /* FluidNames, */ &err);
 
 	double rho_mx1 = mixture_rho(&MS), /* mixture properties */
 		   u_mx1   = mixture_u(&MS, &err),

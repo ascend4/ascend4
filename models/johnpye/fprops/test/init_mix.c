@@ -163,8 +163,8 @@ void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *er
 			XS[0][i] /= YM_sum;
 			XS[1][i] /= XM_sum;
 		}
-		M->phase_splits[0] = (V[0] * YM_sum) / ((V[0] * YM_sum) + ((1 - V[0]) * XM_sum));
-		M->phase_splits[1] = 1 - M->phase_splits[0];
+		M->ph_frac[0] = (V[0] * YM_sum) / ((V[0] * YM_sum) + ((1 - V[0]) * XM_sum));
+		M->ph_frac[1] = 1 - M->ph_frac[0];
 
 		for(i=0;i<NPURE;i++){
 			printf("\n\tMolar mass of %s is %.3f kg/kmol;", Names[i], D->M);
@@ -180,20 +180,138 @@ void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *er
 }
 
 /*
-	Establish mixing conditions (T,P), find individual densities, and use those 
-	along with the temperature to find first-law properties for individual 
-	components and the whole mixture.
-
-	As a check, find pressure corresponding to temperature and component density 
-	for each component -- this should equal the overall pressure
-
-	The fluids I use in the mixture are nitrogen, ammonia, carbon dioxide, and 
-	methane.
-
-	I may add other substances later, such as methyl chloride, carbon monoxide, 
-	nitrous oxide, and hydrogen sulfide.
+	Calculate and print mixture properties, given several temperatures and 
+	densities
  */
-int main(){
+void test_one(double *Ts, double *Ps){
+	int i; /* counter variable */
+	enum FluidAbbrevs {N2,NH3,CO2,CH4,/* H2O, */NFLUIDS}; /* fluids that will be used */
+
+	char *fluids[]={
+		"nitrogen", "ammonia", "carbondioxide", "methane", "water"
+	};
+	char *fluid_names[]={
+		"Nitrogen", "Ammonia", "Carbon Dioxide", "Methane", "Water"
+	};
+	const EosData *IdealEos[]={
+		&eos_rpp_nitrogen, 
+		&eos_rpp_ammonia, 
+		&eos_rpp_carbon_dioxide, 
+		&eos_rpp_methane, 
+		&eos_rpp_water
+	};
+
+	PureFluid *Helms[NFLUIDS];
+	/* PureFluid *Pengs[NFLUIDS]; */
+	/* PureFluid *Ideals[NFLUIDS]; */
+	ReferenceState ref = {FPROPS_REF_REF0};
+	FpropsError err = FPROPS_NO_ERROR;
+
+	/*	
+		Fill the `Helms' PureFluid array with data from the helmholtz equation 
+		of state.
+	 */
+	for(i=0;i<NFLUIDS;i++){
+		Helms[i] = fprops_fluid(fluids[i],"helmholtz",NULL);
+		/* Pengs[i] = fprops_fluid(fluids[i],"pengrob",NULL); */
+		/* Ideals[i] = ideal_prepare(IdealEos[i],&ref); */
+	}
+
+	double x[NFLUIDS];                    /* mass fractions */
+
+	double props[] = {1, 3, 2, 1.5, 2.5}; /* proportions of mass fractions */
+	mixture_x_props(NFLUIDS, x, props);   /* mass fractions from proportions */
+
+	/*
+		choose which model to use by commenting and uncommenting the array names 
+		(only one name uncommented at a time)
+	 */
+	MixtureSpec MX = {
+		.pures=NFLUIDS
+		, .Xs=x
+		, .PF=Helms
+		/* .PF=Ideals */
+		/* .PF=Pengs */
+	};
+
+	char **Names = fluid_names;
+	MixtureSpec *M = &MX;
+	unsigned n_sims = 5;
+
+	double rhos[n_sims][M->pures]; /* individual densities */
+	double rho_mix[n_sims],
+		   u_mix[n_sims],
+		   h_mix[n_sims],
+		   cp_mix[n_sims],
+		   cv_mix[n_sims],
+		   s_mix[n_sims],
+		   g_mix[n_sims],
+		   a_mix[n_sims];
+
+	int usr_cont=1;
+	double tol = 1e-9;
+	char temp_str[100];
+	char *headers[n_sims];
+
+#if 0
+#define MIXTURE_CALC(PROP) mixture_##PROP(n_pure, xs, rhos[i], Ts[i], PFs, err)
+#define MIXTURE_CALC(PROP) mixture_##PROP(M, Ts[i] err)
+#else
+#define MIXTURE_CALC(PROP) mixture_##PROP(&MS, &err)
+#endif
+	for(i=0;i<n_sims;i++){
+		/*	
+			For each set of conditions simulated, find initial densities to use as a 
+			starting point, and then find more exact densities to use
+		 */
+		MixtureState MS = {
+			.T=Ts[i],
+			.rhos=rhos[i],
+			.X=M,
+		};
+		initial_rhos(&MS, Ps[i], Names, &err);
+		pressure_rhos(&MS, Ps[i], tol, /* Names, */ &err);
+
+		/*
+			Check that user wants to continue (user can interrupt simulation if 
+			bad results were encountered)
+		 */
+		printf("\n  %s\n\t%s\n\t%s",
+				"Continue to calculate and print solution properties?",
+				"0 - No", "1 - Yes");
+		do{
+			printf("\n    %s ", "Choice?");
+			fgets(temp_str, 100, stdin);
+		}while((1 != sscanf(temp_str, "%i", &usr_cont) || (0>usr_cont || 1<usr_cont)) 
+				&& printf("\n  %s", "You must enter either 0 or 1"));
+		if(1!=usr_cont){
+			break;
+		}
+
+		/* Calculate solution properties */
+		rho_mix[i] = mixture_rho(&MS);
+		u_mix[i] = MIXTURE_CALC(u);
+		h_mix[i] = MIXTURE_CALC(h);
+		cp_mix[i] = MIXTURE_CALC(cp);
+		cv_mix[i] = MIXTURE_CALC(cv);
+		s_mix[i] = MIXTURE_CALC(s);
+		g_mix[i] = MIXTURE_CALC(g);
+		a_mix[i] = MIXTURE_CALC(a);
+
+		/* Fill in header */
+		headers[i] = (char *)malloc(40);
+		snprintf(headers[i], 40, "[T=%.1f K, P=%.2f bar]", Ts[i], Ps[i]/1.e5);
+	}
+#undef MIXTURE_CALC
+
+	print_cases_properties(n_sims, headers, rho_mix, Ps, u_mix, h_mix, cp_mix, cv_mix, s_mix, g_mix, a_mix);
+}
+
+/*
+	Perform vapor-liquid equilibrium on a mixture of water and ammonia, to test 
+	function for modeling flash processes
+ */
+void test_two(double T, double P){
 	int i; /* counter variable */
 	enum FluidAbbrevs {/* N2, */NH3,/* CO2,CH4, */H2O,NFLUIDS}; /* fluids that will be used */
 
@@ -212,8 +330,7 @@ int main(){
 	};
 
 	PureFluid *Helms[NFLUIDS];
-	PureFluid *Pengs[NFLUIDS];
-	PureFluid *Ideals[NFLUIDS];
+	/* PureFluid *Pengs[NFLUIDS]; */
 	ReferenceState ref = {FPROPS_REF_REF0};
 	FpropsError err = FPROPS_NO_ERROR;
 
@@ -223,24 +340,13 @@ int main(){
 	 */
 	for(i=0;i<NFLUIDS;i++){
 		Helms[i] = fprops_fluid(fluids[i],"helmholtz",NULL);
-		Pengs[i] = fprops_fluid(fluids[i],"pengrob",NULL);
-		Ideals[i] = ideal_prepare(IdealEos[i],&ref);
+		/* Pengs[i] = fprops_fluid(fluids[i],"pengrob",NULL); */
 	}
 
-	/* Mixing conditions (temperature,pressure), and mass fractions */
-	double T[]={250, 300, 300, 350, 350, 400};             /* K */
-	double P[]={1.5e5, 1.5e5, 1.9e5, 1.9e5, 2.1e5, 2.1e5}; /* Pa */
 	double x[NFLUIDS];                    /* mass fractions */
 
 	double props[] = {1, 3, 2, 1.5, 2.5}; /* proportions of mass fractions */
 	mixture_x_props(NFLUIDS, x, props);   /* mass fractions from proportions */
-
-	double rho1[]={
-		2, 3, 2.5, 1.7, 1.9
-	};
-	double rho2[]={
-		1.1, 2, 1.5, 1.7, 1.9
-	};
 
 	/*
 		choose which model to use by commenting and uncommenting the array names 
@@ -258,9 +364,9 @@ int main(){
 	double *mp_xs[] = {NULL, NULL};
 	double *mp_rhos[] = {NULL, NULL};
 	MixturePhaseState MP = {
-		.T=T[2]
+		.T=T
 		, .X=&MX
-		, .phase_splits = mp_ps
+		, .ph_frac = mp_ps
 		, .Xs = mp_xs
 		, .rhos = mp_rhos
 	};
@@ -268,19 +374,8 @@ int main(){
 	MP.Xs[1] = (double *)malloc(2*sizeof(double));
 	MP.rhos[0] = (double *)malloc(2*sizeof(double));
 	MP.rhos[1] = (double *)malloc(2*sizeof(double));
-	
-	/* printf("\n\tAt %.1f K and %.0f Pa, the mixture is in vapor-liquid equilibrium:"
-			"\n\t  %.5f of the mass is in the vapor"
-			"\n\t    %s mass fraction in the vapor is %.5f"
-			"\n\t    %s mass fraction in the vapor is %.5f"
-			"\n\t  %.5f of the mass is in the liquid"
-			"\n\t    %s mass fraction in the liquid is %.5f"
-			"\n\t    %s mass fraction in the liquid is %.5f"
-			"\n",
-			MP.T, P[2], MP.phase_splits[0], fluid_names[0], MP.Xs[0][0], 
-			fluid_names[1], MP.Xs[0][1], MP.phase_splits[1], fluid_names[0], 
-			MP.Xs[1][0], fluid_names[1], MP.Xs[1][1]); */
-	mixture_flash(&MP, P[2], fluid_names, &err);
+
+	mixture_flash(&MP, P, fluid_names, &err);
 	printf("\n\tAt %.1f K and %.0f Pa, the mixture is in vapor-liquid equilibrium:"
 			"\n\t  %.5f of the mass is in the vapor"
 			"\n\t    %s mass fraction in the vapor is %.5f"
@@ -289,9 +384,112 @@ int main(){
 			"\n\t    %s mass fraction in the liquid is %.5f"
 			"\n\t    %s mass fraction in the liquid is %.5f"
 			"\n",
-			MP.T, P[2], MP.phase_splits[0], fluid_names[0], MP.Xs[0][0], 
-			fluid_names[1], MP.Xs[0][1], MP.phase_splits[1], fluid_names[0], 
+			MP.T, P, MP.ph_frac[0], fluid_names[0], MP.Xs[0][0], 
+			fluid_names[1], MP.Xs[0][1], MP.ph_frac[1], fluid_names[0], 
 			MP.Xs[1][0], fluid_names[1], MP.Xs[1][1]);
+	printf("\n\n\tCross-check on mass fractions:");
+	for(i=0;i<NFLUIDS;i++){
+		printf("\n\t  Total %s mass fraction is (%.4f x %.4f) + (%.4f x %.4f) = %.5f",
+				fluid_names[i], MP.ph_frac[0], MP.Xs[0][i], MP.ph_frac[1], MP.Xs[1][i],
+				((MP.ph_frac[0] * MP.Xs[0][i]) + (MP.ph_frac[1] * MP.Xs[1][i])));
+	} puts("");
+	for(i=0;i<NFLUIDS;i++){
+		printf("\n\t  Total %s mass fraction should be %.5f", fluid_names[i], MP.X->Xs[i]);
+	} puts("");
+}
+
+void test_three(double T, double *rhos){
+	unsigned i;
+	enum FluidAbbrevs {N2,NH3,CO2,CH4,/* H2O, */NFLUIDS}; /* fluids that will be used */
+
+	char *fluids[]={
+		"nitrogen", "ammonia", "carbondioxide", "methane", "water"
+	};
+	char *fluid_names[]={
+		"Nitrogen", "Ammonia", "Carbon Dioxide", "Methane", "Water"
+	};
+	const EosData *IdealEos[]={
+		&eos_rpp_nitrogen, 
+		&eos_rpp_ammonia, 
+		&eos_rpp_carbon_dioxide, 
+		&eos_rpp_methane, 
+		&eos_rpp_water
+	};
+
+	PureFluid *Helms[NFLUIDS];
+	/* PureFluid *Pengs[NFLUIDS]; */
+	/* PureFluid *Ideals[NFLUIDS]; */
+	ReferenceState ref = {FPROPS_REF_REF0};
+	FpropsError err = FPROPS_NO_ERROR;
+
+	/*	
+		Fill the `Helms' PureFluid array with data from the helmholtz equation 
+		of state.
+	 */
+	for(i=0;i<NFLUIDS;i++){
+		Helms[i] = fprops_fluid(fluids[i],"helmholtz",NULL);
+		/* Pengs[i] = fprops_fluid(fluids[i],"pengrob",NULL); */
+		/* Ideals[i] = ideal_prepare(IdealEos[i],&ref); */
+	}
+
+	double x[NFLUIDS];                    /* mass fractions */
+
+	double props[] = {1, 3, 2, 1.5, 2.5}; /* proportions of mass fractions */
+	mixture_x_props(NFLUIDS, x, props);   /* mass fractions from proportions */
+
+	/*
+		choose which model to use by commenting and uncommenting the array names 
+		(only one name uncommented at a time)
+	 */
+	MixtureSpec MX = {
+		.pures=NFLUIDS
+		, .Xs=x
+		, .PF=Helms
+		/* .PF=Ideals */
+		/* .PF=Pengs */
+	};
+
+	MixtureState MS = {
+		.T=T
+		, .rhos=rhos
+		, .X = &MX
+	};
+
+	double tol=1.e-6;
+
+	densities_to_mixture(&MS, tol, fluid_names, &err);
+}
+
+/*
+	Establish mixing conditions (T,P), find individual densities, and use those 
+	along with the temperature to find first-law properties for individual 
+	components and the whole mixture.
+
+	As a check, find pressure corresponding to temperature and component density 
+	for each component -- this should equal the overall pressure
+
+	The fluids I use in the mixture are nitrogen, ammonia, carbon dioxide, and 
+	methane.
+
+	I may add other substances later, such as methyl chloride, carbon monoxide, 
+	nitrous oxide, and hydrogen sulfide.
+ */
+int main(){
+
+	/* Mixing conditions (temperature,pressure), and mass fractions */
+	double T[]={250, 300, 300, 350, 350, 400};             /* K */
+	double P[]={1.5e5, 1.5e5, 1.9e5, 1.9e5, 2.1e5, 2.1e5}; /* Pa */
+
+	double rho1[]={
+		2, 3, 2.5, 1.7, 1.9
+	};
+	double rho2[]={
+		1.1, 2, 1.5, 1.7, 1.9
+	};
+
+	/* test_one(T, P); */
+	test_two(T[1], P[1]);
+	test_three(T[1], rho1);
 
 	return 0;
 } /* end of `main' */

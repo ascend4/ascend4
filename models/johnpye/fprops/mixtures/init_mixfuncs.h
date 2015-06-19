@@ -94,12 +94,12 @@ typedef enum PhaseNames_Enum {GAS, LIQ_1, LIQ_2, LIQ_3, LIQ_4, SOLID_1, SOLID_2}
 typedef double SecantSubjectFunction(double, void *user_data);
 
 typedef struct MixturePhaseState_Struct {
-	double T;             /* mixture temperature */
-	double **rhos;        /* (current) mass densities of components */
-	MixtureSpec *X;       /* specification of pure-component members of mixture */
-	PhaseEqb ph;          /* type of phase equilibrium */
-	double *phase_splits; /* fraction of mass in each phase */
-	double **Xs;          /* mass fractions within each phase */
+	double T;        /* mixture temperature */
+	double **rhos;   /* (current) mass densities of components */
+	MixtureSpec *X;  /* specification of pure-component members of mixture */
+	PhaseEqb ph;     /* type of phase equilibrium */
+	double *ph_frac; /* fraction of mass in each phase */
+	double **Xs;     /* mass fractions within each phase */
 } MixturePhaseState;
 
 /* Function prototypes */
@@ -114,7 +114,7 @@ void mixture_x_props(unsigned nPure, double *Xs, double *props);
 double mixture_x_fill_in(unsigned nPure, double *Xs);
 void ig_rhos(MixtureState *M, double P, char **Names);
 void initial_rhos(MixtureState *M, double P, char **names, FpropsError *err);
-void pressure_rhos(MixtureState *M, double P, double tol, char **Names, FpropsError *err);
+void pressure_rhos(MixtureState *M, double P, double tol, /* char **Names, */ FpropsError *err);
 void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError *err);
 
 double mixture_rho(MixtureState *M);
