@@ -51,7 +51,7 @@ class UnitsDialog:
 		self.T = T
 		if T is not None:
 			if T.isRefinedReal():
-				self.typecombo.get_child().set_text(str(T.getName()))
+				self.typecombo.append_text(str(T.getName()))
 		self.update_typecombo()
 
 	def unitsview_row_toggled(self,widget,path,*args):
@@ -120,7 +120,7 @@ class UnitsDialog:
 		self.update_typecombo(s)
 		#self.browser.reporter.reportNote("value changed to '%s'" % s)
 		try:
-			T = self.browser.library.findType(widget.get_active_text())
+			T = self.browser.library.findType(s)
 			dt = str(T.getDimensions())
 			self.dimensionlabel.set_text(dt)
 		except:
