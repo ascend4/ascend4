@@ -68,6 +68,13 @@ double rachford_rice(double V, void *user_data);
 void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *err);
 void solve_mixture_conditions(unsigned n_sims, double *Ts, double *Ps, MixtureSpec *M, char **Names, FpropsError *err);
 void densities_Ts_to_mixture(MixtureState *MS, double *P_out, double *T_in, double tol, char **Names, FpropsError *err);
+void pengrob_phi_pure(double *phi_out, MixtureSpec *M, double T, double *rhos, FpropsError *err);
+void pengrob_phi_mix(double *phi_out, MixtureSpec *M, double T, double *rhos, FpropsError *err);
+void mole_fractions(unsigned n_pure, double *x_mole, double *X_mass, PureFluid **PF);
+void test_one(double *Ts, double *Ps);
+void test_two(double T, double P);
+void test_three(double T, double *rhos);
+void test_four(double T, double P);
 
 /*
 	Structure to pass constant parameters into the Rachford-Rice function
@@ -177,6 +184,151 @@ void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *er
 #undef XS
 #undef ZS
 #undef NPURE
+}
+
+/*
+	Establish mixing conditions (T,P), find individual densities, and use those 
+	along with the temperature to find first-law properties for individual 
+	components and the whole mixture.
+
+	As a check, find pressure corresponding to temperature and component density 
+	for each component -- this should equal the overall pressure
+
+	The fluids I use in the mixture are nitrogen, ammonia, carbon dioxide, and 
+	methane.
+
+	I may add other substances later, such as methyl chloride, carbon monoxide, 
+	nitrous oxide, and hydrogen sulfide.
+ */
+int main(){
+
+	/* Mixing conditions (temperature,pressure), and mass fractions */
+	double T[]={250, 300, 300, 350, 350, 400};             /* K */
+	double P[]={1.5e5, 1.5e5, 1.9e5, 1.9e5, 2.1e5, 2.1e5}; /* Pa */
+
+	double rho1[]={
+		2, 3, 2.5, 1.7, 1.9
+	};
+	double rho2[]={
+		1.1, 2, 1.5, 1.7, 1.9
+	};
+
+	/* test_one(T, P); */
+	test_two(T[1], P[1]);
+	test_three(T[1], rho1);
+	test_four(T[1], P[1])
+
+	return 0;
+} /* end of `main' */
+
+void pengrob_phi_pure(double *phi_out, MixtureSpec *M, double T, double *rhos, FpropsError *err){
+#define NPURE M->pures
+#define D M->PF[i]->data
+#define RR D->R
+#define PR D->corr.pengrob
+	unsigned i;
+	double P,     /* pressure */
+		   aT,    /* parameter `a' at the temperature */
+		   alpha, /* intermediate variable in calculating aT */
+		   Tr,    /* reduced temperature */
+		   A,     /* two variables */
+		   B,
+		   Z;     /* compressibility */
+	double cpx_ln; /* rather involved part of the fugacity coefficient */
+	
+	for(i=0;i<NPURE;i++){ /* find fugacity coefficient for each component */
+		P = fprops_p((FluidState){T, rhos[i], M->PF[i]}, err);
+
+		Tr = T/D->T_c;
+		alpha = (1 + PR->kappa * (1 - sqrt(Tr)));
+		aT = PR->aTc * alpha * alpha;
+
+		A = aT * P / (RR * RR * T * T);
+		B = PR->b * P / (RR * T);
+		Z = P / (rhos[i] * RR * T);
+
+		cpx_ln = log( (Z + (1 + M_SQRT2)*B)/(Z + (1 - M_SQRT2)*B) );
+		phi_out[i] = exp( Z - 1 - log(Z - B) - (A / 2 / M_SQRT2) * cpx_ln )
+	}
+
+#undef PR
+#undef RR
+#undef D
+#undef NPURE
+}
+
+void pengrob_phi_mix(double *phi_out, MixtureSpec *M, double T, double *rhos, FpropsError *err){
+#define NPURE M->pures
+#define D M->PF[i]->data
+#define RMOL D->R * D->M
+#define PR D->corr.pengrob
+	unsigned i, j;
+	double as[NPURE], /* parameters a,b for each species */
+		   bs[NPURE];
+	double a_mix=0.0, /* parameters a,b for the mixture */
+		   b_mix=0.0,
+		   M_mix,     /* average molar mass of mixture */
+		   P,         /* pressure */
+		   alpha,     /* intermediate variable in calculating aT */
+		   Tr,        /* reduced temperature */
+		   A,         /* two variables */
+		   B,
+		   Z;         /* compressibility */
+	double cpx_term,
+		   a_sum=0.0;
+	double x_mole[NPURE];
+	mole_fractions(NPURE, x_mole, M->Xs, M->PF); /* mole fractions */
+
+	for(i=0;i<NPURE;i++){
+		Tr = T/D->T_c;
+		alpha = (1 + PR->kappa * (1 - sqrt(Tr)));
+		a[i] = PR->aTc * alpha * alpha * D->M * D->M; /* individual parameters converted to use molar units for proper combining */
+		b[i] = PR->b * D->M;
+		b_mix += b[i];
+	}
+	for(i=0;i<NPURE;i++){
+		for(j=0;j<NPURE;j++){
+			a_mix += sqrt(a[i]*a[j]) * M->Xs[i] * M->Xs[j];
+		}
+	}
+
+	i = 0;
+	M_mix = mixture_M_avg(NPURE, M->Xs, M->PF);
+	MixtureState MS = {
+		T, rhos, M
+	};
+	v_mix = M_mix / mixture_rho(&MS);
+	P = RMOL / (v_mix - b_mix) - a_mix / (v_mix * (v_mix + b_mix) + b_mix * (v_mix - b_mix));
+	A = a_mix * P / (RMOL * RMOL * T * T);
+	B = b_mix * P / (RMOL * T);
+	Z = P * v_mix / (RMOL * T);
+
+	for(i=0;i<NPURE;i++){
+		for(j=0;j<NPURE;j++){
+			a_sum += x_mole[j] * sqrt(a[i]*a[j]);
+		}
+		cpx_term = (2*a_sum/a_mix - b[i]/b_mix) * log( (Z + (1 + M_SQRT2)*B) / (Z + (1 - M_SQRT2)*B) );
+		phi_out[i] = b[i]*(Z-1)/b_mix - log(Z - B) - (A/(2*M_SQRT2*B) * cpx_term);
+	}
+
+#undef PR
+#undef RMOL
+#undef D
+#undef NPURE
+}
+
+void mole_fractions(unsigned n_pure, double *x_mole, double *X_mass, PureFluid **PF){
+#define D PF[i]->data
+	unsigned i;
+	double XM_sum=0.0; /* sum of mass fraction over molar mass terms */
+
+	for(i=0;i<n_pure;i++){
+		XM_sum += X_mass[i] / D->M;
+	}
+	for(i=0;i<n_pure;i++){
+		x_mole[i] = X_mass[i] / D->M / XM_sum;
+	}
+#undef D
 }
 
 /*
@@ -445,8 +597,8 @@ void test_three(double T, double *rhos){
 		.pures=NFLUIDS
 		, .Xs=x
 		, .PF=Helms
-		/* .PF=Ideals */
-		/* .PF=Pengs */
+		/* , .PF=Ideals */
+		/* , .PF=Pengs */
 	};
 
 	MixtureState MS = {
@@ -460,37 +612,48 @@ void test_three(double T, double *rhos){
 	densities_to_mixture(&MS, tol, fluid_names, &err);
 }
 
-/*
-	Establish mixing conditions (T,P), find individual densities, and use those 
-	along with the temperature to find first-law properties for individual 
-	components and the whole mixture.
+void test_four(double T, double P){
+	unsigned i;
+	enum FluidAbbrevs {N2,NH3,CO2,CH4,/* H2O, */NFLUIDS}; /* fluids that will be used */
 
-	As a check, find pressure corresponding to temperature and component density 
-	for each component -- this should equal the overall pressure
-
-	The fluids I use in the mixture are nitrogen, ammonia, carbon dioxide, and 
-	methane.
-
-	I may add other substances later, such as methyl chloride, carbon monoxide, 
-	nitrous oxide, and hydrogen sulfide.
- */
-int main(){
-
-	/* Mixing conditions (temperature,pressure), and mass fractions */
-	double T[]={250, 300, 300, 350, 350, 400};             /* K */
-	double P[]={1.5e5, 1.5e5, 1.9e5, 1.9e5, 2.1e5, 2.1e5}; /* Pa */
-
-	double rho1[]={
-		2, 3, 2.5, 1.7, 1.9
+	char *fluids[]={
+		"nitrogen", "ammonia", "carbondioxide", "methane", "water"
 	};
-	double rho2[]={
-		1.1, 2, 1.5, 1.7, 1.9
+	char *fluid_names[]={
+		"Nitrogen", "Ammonia", "Carbon Dioxide", "Methane", "Water"
 	};
 
-	/* test_one(T, P); */
-	test_two(T[1], P[1]);
-	test_three(T[1], rho1);
+	PureFluid *Pengs[NFLUIDS];
+	FpropsError err = FPROPS_NO_ERROR;
 
-	return 0;
-} /* end of `main' */
+	for(i=0;i<NFLUIDS;i++){
+		/* Helms[i] = fprops_fluid(fluids[i],"helmholtz",NULL); */
+		Pengs[i] = fprops_fluid(fluids[i],"pengrob",NULL);
+	}
 
+	double rhos[NFLUIDS] = {0.0};
+	double x[NFLUIDS];                    /* mass fractions */
+
+	double props[] = {1, 3, 2, 1.5, 2.5}; /* proportions of mass fractions */
+	mixture_x_props(NFLUIDS, x, props);   /* mass fractions from proportions */
+
+	MixtureSpec MX = {
+		.pures=NFLUIDS
+		, .Xs=x
+		, .PF=Pengs
+	};
+	MixtureState MS = {
+		.T=T
+		, .rhos=rhos
+		, .X = &MX
+	};
+
+	double phi_1[NFLUIDS],
+		   phi_2[NFLUIDS];
+
+	initial_rhos(&MS, P, fluid_names, &err);
+	pressure_rhos(&MS, P, fluid_names, &err);
+
+	pengrob_phi_pure(phi_1, &MX, T, &MS->rhos, &err);
+	pengrob_phi_mix(phi_1, &MX, T, &MS->rhos, &err);
+}
