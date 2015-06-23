@@ -69,7 +69,7 @@ void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *er
 void solve_mixture_conditions(unsigned n_sims, double *Ts, double *Ps, MixtureSpec *M, char **Names, FpropsError *err);
 void densities_Ts_to_mixture(MixtureState *MS, double *P_out, double *T_in, double tol, char **Names, FpropsError *err);
 void pengrob_phi_pure(double *phi_out, MixtureSpec *M, double T, double *rhos, FpropsError *err);
-void pengrob_phi_mix(double *phi_out, MixtureSpec *M, double T, double *rhos, FpropsError *err);
+void pengrob_phi_mix(double *phi_out, MixtureState *M, double P, FpropsError *err);
 void mole_fractions(unsigned n_pure, double *x_mole, double *X_mass, PureFluid **PF);
 void test_one(double *Ts, double *Ps);
 void test_two(double T, double P);
@@ -203,8 +203,8 @@ void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *er
 int main(){
 
 	/* Mixing conditions (temperature,pressure), and mass fractions */
-	double T[]={250, 300, 300, 350, 350, 400};             /* K */
-	double P[]={1.5e5, 1.5e5, 1.9e5, 1.9e5, 2.1e5, 2.1e5}; /* Pa */
+	double T[]={250, 300, 300, 350, 350, 400, 900};               /* K */
+	double P[]={1.5e5, 1.5e5, 1.9e5, 1.9e5, 2.1e5, 2.1e5, 3.2e6}; /* Pa */
 
 	double rho1[]={
 		2, 3, 2.5, 1.7, 1.9
@@ -216,7 +216,7 @@ int main(){
 	/* test_one(T, P); */
 	test_two(T[1], P[1]);
 	test_three(T[1], rho1);
-	test_four(T[1], P[1])
+	test_four(T[5], P[6]);
 
 	return 0;
 } /* end of `main' */
@@ -238,6 +238,7 @@ void pengrob_phi_pure(double *phi_out, MixtureSpec *M, double T, double *rhos, F
 	
 	for(i=0;i<NPURE;i++){ /* find fugacity coefficient for each component */
 		P = fprops_p((FluidState){T, rhos[i], M->PF[i]}, err);
+		printf("\n  Substance number %u\n\tPressure is now %.0f Pa", i, P);
 
 		Tr = T/D->T_c;
 		alpha = (1 + PR->kappa * (1 - sqrt(Tr)));
@@ -246,9 +247,12 @@ void pengrob_phi_pure(double *phi_out, MixtureSpec *M, double T, double *rhos, F
 		A = aT * P / (RR * RR * T * T);
 		B = PR->b * P / (RR * T);
 		Z = P / (rhos[i] * RR * T);
+		printf("\n\tCompressibility is %.6g;\n\t`A' is %.6g\n\t`B' is %.6g", Z, A, B);
 
 		cpx_ln = log( (Z + (1 + M_SQRT2)*B)/(Z + (1 - M_SQRT2)*B) );
-		phi_out[i] = exp( Z - 1 - log(Z - B) - (A / 2 / M_SQRT2) * cpx_ln )
+		phi_out[i] = exp( Z - 1 - log(Z - B) - (A / 2 / M_SQRT2) * cpx_ln );
+		printf("\n\tLog of fugacity coefficient is %.6g", Z - 1 - log(Z - B) - (A / (2*M_SQRT2))*cpx_ln);
+		printf("\n\tFugacity coefficient is %.6g", phi_out[i]);
 	}
 
 #undef PR
@@ -257,9 +261,11 @@ void pengrob_phi_pure(double *phi_out, MixtureSpec *M, double T, double *rhos, F
 #undef NPURE
 }
 
-void pengrob_phi_mix(double *phi_out, MixtureSpec *M, double T, double *rhos, FpropsError *err){
-#define NPURE M->pures
-#define D M->PF[i]->data
+void pengrob_phi_mix(double *phi_out, MixtureState *M, double P, FpropsError *err){
+#define NPURE M->X->pures
+#define XS M->X->Xs
+#define TT M->T
+#define D M->X->PF[i]->data
 #define RMOL D->R * D->M
 #define PR D->corr.pengrob
 	unsigned i, j;
@@ -268,7 +274,8 @@ void pengrob_phi_mix(double *phi_out, MixtureSpec *M, double T, double *rhos, Fp
 	double a_mix=0.0, /* parameters a,b for the mixture */
 		   b_mix=0.0,
 		   M_mix,     /* average molar mass of mixture */
-		   P,         /* pressure */
+		   v_mix,     /* molar volume of mixture */
+		   P_calc,    /* pressure */
 		   alpha,     /* intermediate variable in calculating aT */
 		   Tr,        /* reduced temperature */
 		   A,         /* two variables */
@@ -277,43 +284,53 @@ void pengrob_phi_mix(double *phi_out, MixtureSpec *M, double T, double *rhos, Fp
 	double cpx_term,
 		   a_sum=0.0;
 	double x_mole[NPURE];
-	mole_fractions(NPURE, x_mole, M->Xs, M->PF); /* mole fractions */
+	mole_fractions(NPURE, x_mole, XS, M->X->PF); /* mole fractions */
 
+	puts("\n  Mixture fugacity coefficient calculations:");
 	for(i=0;i<NPURE;i++){
-		Tr = T/D->T_c;
+		Tr = TT/D->T_c;
 		alpha = (1 + PR->kappa * (1 - sqrt(Tr)));
-		a[i] = PR->aTc * alpha * alpha * D->M * D->M; /* individual parameters converted to use molar units for proper combining */
-		b[i] = PR->b * D->M;
-		b_mix += b[i];
+		as[i] = PR->aTc * alpha * alpha * D->M * D->M; /* individual parameters converted to use molar units for proper combining */
+		bs[i] = PR->b * D->M;
+		printf("\n\tSubstance number %u\n\t  Parameter `a' %.6g\n\t  Parameter `b' %.6g",
+				i, as[i], bs[i]);
+		b_mix += bs[i] * XS[i];
 	}
 	for(i=0;i<NPURE;i++){
 		for(j=0;j<NPURE;j++){
-			a_mix += sqrt(a[i]*a[j]) * M->Xs[i] * M->Xs[j];
+			a_mix += sqrt(as[i]*as[j]) * XS[i] * XS[j];
 		}
 	}
+	printf("\n\tMixture-wide parameter `a' %.6g\n\tMixture-wide parameter `b' %.6g", a_mix, b_mix);
 
 	i = 0;
-	M_mix = mixture_M_avg(NPURE, M->Xs, M->PF);
-	MixtureState MS = {
-		T, rhos, M
-	};
-	v_mix = M_mix / mixture_rho(&MS);
-	P = RMOL / (v_mix - b_mix) - a_mix / (v_mix * (v_mix + b_mix) + b_mix * (v_mix - b_mix));
-	A = a_mix * P / (RMOL * RMOL * T * T);
-	B = b_mix * P / (RMOL * T);
-	Z = P * v_mix / (RMOL * T);
+	M_mix = mixture_M_avg(NPURE, XS, M->X->PF);
+
+	v_mix = M_mix / mixture_rho(M);
+	printf("\n\tMixture average molar mass %.2f kg/kmol\n\tMixture mass density %.4f kg/m3"
+			"\n\tMixture molar volume %.6g m3/kmol", M_mix, mixture_rho(M), v_mix);
+	P_calc = (RMOL * TT / (v_mix - b_mix)) - (a_mix / (v_mix * (v_mix + b_mix) + b_mix * (v_mix - b_mix)));
+	A = a_mix * P_calc / (RMOL * RMOL * TT * TT);
+	B = b_mix * P_calc / (RMOL * TT);
+	Z = v_mix * P_calc / (RMOL * TT);
+	printf("\n  Mixture fugacity coefficient:\n\tPressure is %.0f Pa;"
+			"\n\tCompressibility is %.5f;\n\t`A' is %.6g\n\t`B' is %.6g",
+			P_calc, Z, A, B);
 
 	for(i=0;i<NPURE;i++){
 		for(j=0;j<NPURE;j++){
-			a_sum += x_mole[j] * sqrt(a[i]*a[j]);
+			a_sum += x_mole[j] * sqrt(as[i]*as[j]);
 		}
-		cpx_term = (2*a_sum/a_mix - b[i]/b_mix) * log( (Z + (1 + M_SQRT2)*B) / (Z + (1 - M_SQRT2)*B) );
-		phi_out[i] = b[i]*(Z-1)/b_mix - log(Z - B) - (A/(2*M_SQRT2*B) * cpx_term);
+		cpx_term = (2*a_sum/a_mix - bs[i]/b_mix) * log( (Z + (1 + M_SQRT2)*B) / (Z + (1 - M_SQRT2)*B) );
+		phi_out[i] = bs[i]*(Z-1)/b_mix - log(Z - B) - (A/(2*M_SQRT2*B) * cpx_term);
+		printf("\n\tFugacity coefficient is %.6g", phi_out[i]);
 	}
 
 #undef PR
 #undef RMOL
 #undef D
+#undef TT
+#undef XS
 #undef NPURE
 }
 
@@ -345,18 +362,18 @@ void test_one(double *Ts, double *Ps){
 	char *fluid_names[]={
 		"Nitrogen", "Ammonia", "Carbon Dioxide", "Methane", "Water"
 	};
-	const EosData *IdealEos[]={
+	/* const EosData *IdealEos[]={
 		&eos_rpp_nitrogen, 
 		&eos_rpp_ammonia, 
 		&eos_rpp_carbon_dioxide, 
 		&eos_rpp_methane, 
 		&eos_rpp_water
-	};
+	}; */
 
 	PureFluid *Helms[NFLUIDS];
 	/* PureFluid *Pengs[NFLUIDS]; */
 	/* PureFluid *Ideals[NFLUIDS]; */
-	ReferenceState ref = {FPROPS_REF_REF0};
+	/* ReferenceState ref = {FPROPS_REF_REF0}; */
 	FpropsError err = FPROPS_NO_ERROR;
 
 	/*	
@@ -483,7 +500,7 @@ void test_two(double T, double P){
 
 	PureFluid *Helms[NFLUIDS];
 	/* PureFluid *Pengs[NFLUIDS]; */
-	ReferenceState ref = {FPROPS_REF_REF0};
+	/* ReferenceState ref = {FPROPS_REF_REF0}; */
 	FpropsError err = FPROPS_NO_ERROR;
 
 	/*	
@@ -571,7 +588,7 @@ void test_three(double T, double *rhos){
 	PureFluid *Helms[NFLUIDS];
 	/* PureFluid *Pengs[NFLUIDS]; */
 	/* PureFluid *Ideals[NFLUIDS]; */
-	ReferenceState ref = {FPROPS_REF_REF0};
+	/* ReferenceState ref = {FPROPS_REF_REF0}; */
 	FpropsError err = FPROPS_NO_ERROR;
 
 	/*	
@@ -623,11 +640,12 @@ void test_four(double T, double P){
 		"Nitrogen", "Ammonia", "Carbon Dioxide", "Methane", "Water"
 	};
 
+	PureFluid *Helms[NFLUIDS];
 	PureFluid *Pengs[NFLUIDS];
 	FpropsError err = FPROPS_NO_ERROR;
 
 	for(i=0;i<NFLUIDS;i++){
-		/* Helms[i] = fprops_fluid(fluids[i],"helmholtz",NULL); */
+		Helms[i] = fprops_fluid(fluids[i],"helmholtz",NULL);
 		Pengs[i] = fprops_fluid(fluids[i],"pengrob",NULL);
 	}
 
@@ -650,10 +668,52 @@ void test_four(double T, double P){
 
 	double phi_1[NFLUIDS],
 		   phi_2[NFLUIDS];
+	double tol = 1.e-6;
 
 	initial_rhos(&MS, P, fluid_names, &err);
-	pressure_rhos(&MS, P, fluid_names, &err);
+	pressure_rhos(&MS, P, tol, /* fluid_names, */ &err);
 
-	pengrob_phi_pure(phi_1, &MX, T, &MS->rhos, &err);
-	pengrob_phi_mix(phi_1, &MX, T, &MS->rhos, &err);
+	pengrob_phi_pure(phi_1, &MX, T, MS.rhos, &err);
+	pengrob_phi_mix(phi_2, &MS, P, &err);
+
+	puts("\n  Pure-component fugacity coefficients:");
+	for(i=0;i<NFLUIDS;i++){
+		printf("\t%s %.6g\n", fluid_names[i], phi_1[i]);
+	}
+	puts("\n  Ideal-solution fugacity:");
+	for(i=0;i<NFLUIDS;i++){
+		printf("\t%s %.6g Pa\n", fluid_names[i], phi_1[i] * MS.X->Xs[i] * P);
+	}
+	puts("\n  Mixture fugacity coefficients:");
+	for(i=0;i<NFLUIDS;i++){
+		printf("\t%s %.6g\n", fluid_names[i], phi_2[i]);
+	}
+	puts("\n  Mixture fugacity:");
+	for(i=0;i<NFLUIDS;i++){
+		printf("\t%s %.6g\n", fluid_names[i], phi_2[i] * P);
+	}
+
+/* 	double tau, delta;
+	double B_mix, B_centi, B_milli,
+		   d_helm;
+	puts("\n  Attempt to find virial coefficients from Helmholtz EOS:");
+#define CH Helms[i]->data->corr.helm
+	for(i=0;i<NFLUIDS;i++){
+		tau = CH->T_star / T;
+		delta = rhos[i] / CH->rho_star;
+		printf("\tFor substance %s\n\t  Tau is %.6g\n\t  Delta is %.6g\n",
+				fluid_names[i], tau, delta);
+
+		B_mix = helm_resid_del(tau, delta, CH) / Helms[i]->data->rho_c;
+		B_centi = helm_resid_del(tau, delta / 100., CH) / Helms[i]->data->rho_c;
+		B_milli = helm_resid_del(tau, delta / 1000., CH) / Helms[i]->data->rho_c;
+		d_helm = helm_resid_del(tau, 0, CH);
+
+		printf("\n\t  V.C. from derivative at mixture conditions: %.6g"
+				"\n\t  V.C. from derivative at tau = 0.01 of mixture conditions: %.6g"
+				"\n\t  V.C. from derivative at tau = 0.001 of mixture conditions: %.6g"
+				"\n\t  derivative at tau = 0 : %.6g" "\n\n" ,B_mix ,B_centi ,B_milli
+				,d_helm);
+	} */
+#undef CH
 }
