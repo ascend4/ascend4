@@ -1,0 +1,76 @@
+(* Outline of ASCEND multi-component ideal-solution routine *)
+
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/fprops/ideal_solution";
+
+(*
+	The mixture_spec model specifies the composition of the mixture.
+
+	Such a model, which will be passed into the mixture functions as 
+	DATA, _must_ contain the following members:
+		npure, an integer
+		components, an array of symbol constants representing the fluids
+		xs, an array of mass fractions
+	the following members are optional:
+		type, a symbol_constant representing the type of correlation (equation of state)
+			'ideal' -- ideal-gas
+			'pengrob' -- Peng-Robinson
+			'helmholtz' -- Helmholtz equation of state
+
+			for now, eos only gives good VLE when 'pengrob' is used
+		source, the source of the correlation type
+		model, a symbol_constant specifying whether the solution is ideal or real
+*)
+MODEL mixture_spec1;
+	npure IS_A integer_constant;
+
+	indices IS_A set OF integer;
+	indices :== [1 .. npure];
+
+	components[indices] IS_A symbol_constant;
+	xs[indices] IS_A mass_fraction;
+	eos IS_A symbol_constant;
+
+	components :== ['nitrogen', 'methane' 'ammonia' 'carbondioxide'];
+	xs :== [0.4, 0.2, 0.1, 0.3];
+	eos :== 'pengrob';
+
+END mixture_spec1;
+
+(*MODEL mixture_state;
+	component[4] IS_A symbol_constant;
+	x[4] IS_A mass_fraction;
+	T IS_A temperature;
+	rhos[4] IS_A mass_density;
+	END mixture_state;*)
+
+MODEL mixture_test;
+	p IS_A pressure;
+	T IS_A temperature;
+	(* rhos[] IS_A mass_density; *)
+	h IS_A specific_enthalpy;
+	u IS_A specific_energy;
+	a IS_A specific_energy;
+	s IS_A specific_entropy;
+
+	mixt IS_A mixture_spec1;
+	(*mix_st IS_A mixture_state;*)
+
+	mix_pressure : mixture_p(
+		T : INPUT;
+		p : OUTPUT;
+		mixt : DATA;
+	)
+
+	mix_density : mixture_rho(
+		T, p : INPUT;
+		rho : OUTPUT;
+		mixt : DATA;
+	)
+
+METHODS
+METHOD on_load;
+	RUN ClearAll;
+	FIX T, p;
+END mixture_test;

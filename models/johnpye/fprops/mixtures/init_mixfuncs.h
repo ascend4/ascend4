@@ -28,6 +28,7 @@
 #ifndef INIT_MIXTURE_HEADER
 #define INIT_MIXTURE_HEADER
 
+#include "mixture_struct.h"
 #include "../helmholtz.h"
 #include "../fluids.h"
 #include "../fprops.h"
@@ -37,7 +38,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#define MIX_XTOL 1e-6
 #define MIX_ERROR "  ERROR: "
 #define MIX_XSUM_ERROR MIX_ERROR "the sum over all mass fractions, which should be exactly 1.00, is %.10f\n"
 
@@ -74,48 +74,17 @@
 		printf("\n"); \
 	}
 
-/* Experimental structures to capture mixture properties */
-typedef struct MixtureSpec_Struct {
-	unsigned pures; /* number of components */
-	double *Xs;     /* mass fractions of components */
-	PureFluid **PF; /* pure fluid characteristics of components */
-} MixtureSpec;
-
-typedef struct MixtureState_Struct {
-	double T;       /* mixture temperature */
-	double *rhos;   /* (current) mass densities of components */
-	MixtureSpec *X; /* specification of pure-component members of mixture */
-} MixtureState;
-
-/* Enumerations to hold phase-equilibrium conditions and names of phases */
-typedef enum PhaseEquilibrium_Enum {GAS_PHASE, LIQ_PHASE, VLE_PHASE, LLE_PHASE} PhaseEqb;
-typedef enum PhaseNames_Enum {GAS, LIQ_1, LIQ_2, LIQ_3, LIQ_4, SOLID_1, SOLID_2} PhaseNames;
-
 typedef double SecantSubjectFunction(double, void *user_data);
 
-typedef struct MixturePhaseState_Struct {
-	double T;        /* mixture temperature */
-	double **rhos;   /* (current) mass densities of components */
-	MixtureSpec *X;  /* specification of pure-component members of mixture */
-	PhaseEqb ph;     /* type of phase equilibrium */
-	double *ph_frac; /* fraction of mass in each phase */
-	double **Xs;     /* mass fractions within each phase */
-} MixturePhaseState;
-
 /* Function prototypes */
-double my_min(unsigned nelems, double *nums);
-double my_max(unsigned nelems, double *nums);
-double my_sum(unsigned nelems, double *nums);
-unsigned index_of_min(unsigned nelems, double *nums);
-unsigned index_of_max(unsigned nelems, double *nums);
-void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], double tol);
-
 void mixture_x_props(unsigned nPure, double *Xs, double *props);
 double mixture_x_fill_in(unsigned nPure, double *Xs);
 void ig_rhos(MixtureState *M, double P, char **Names);
 void initial_rhos(MixtureState *M, double P, char **names, FpropsError *err);
 void pressure_rhos(MixtureState *M, double P, double tol, /* char **Names, */ FpropsError *err);
 void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError *err);
+
+MixtureSpec *mixture_specify(unsigned npure, double *Xs, void **fluids, char *type, char *source);
 
 double mixture_rho(MixtureState *M);
 double mixture_u(MixtureState *M, FpropsError *err);

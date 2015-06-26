@@ -25,6 +25,9 @@
 	these from the test files init_mix1, init_mix2, etc. to de-clutter them.
  */
 
+#include "mixture_generics.h"
+#include "mixture_prepare.h"
+#include "mixture_struct.h"
 #include "init_mixfuncs.h"
 #include "../helmholtz.h"
 #include "../fluids.h"
@@ -34,112 +37,6 @@
 
 #include <stdio.h>
 #include <math.h>
-
-/* Generic Functions */
-double my_min(unsigned nelems, double *nums){
-	unsigned i;
-	double min=nums[0];
-	for(i=1;i<nelems;i++){
-		if(nums[i]<min){
-			min = nums[i];
-		}
-	}
-	return min;
-}
-
-double my_max(unsigned nelems, double *nums){
-	unsigned i;
-	double max=nums[0];
-	for(i=1;i<nelems;i++){
-		if(nums[i]>max){
-			max = nums[i];
-		}
-	}
-	return max;
-}
-
-double my_sum(unsigned nelems, double *nums){
-	unsigned i;
-	double sum=0.0;
-	for(i=0;i<nelems;i++){
-		sum += nums[i];
-	}
-	return sum;
-}
-
-/*
-	Find index of the minimum value in the array `nums', with maximum index 
-	`nelems'
- */
-unsigned index_of_min(unsigned nelems, double *nums){
-	unsigned i;
-	unsigned min_ix=0;  /* the index of the minimum element */
-	double min=nums[0]; /* the minimum element */
-
-	for(i=1;i<nelems;i++){
-		if(nums[i]<min){
-			min_ix = i;    /* update both `min' and `min_ix' */
-			min = nums[i];
-		}
-	}
-	return min_ix;
-}
-
-/*
-	Find index of the maximum value in the array `nums', with maximum index 
-	`nelems'
- */
-unsigned index_of_max(unsigned nelems, double *nums){
-	unsigned i;
-	unsigned max_ix=0;  /* the index of the minimum element */
-	double max=nums[0]; /* the minimum element */
-
-	for(i=1;i<nelems;i++){
-		if(nums[i]>max){
-			max_ix = i;    /* update both `min' and `min_ix' */
-			max = nums[i];
-		}
-	}
-	return max_ix;
-}
-
-/*
-	Generic root-finding function that uses the secant method, starting from 
-	the positions in `x' and setting the first element of `x' to the position 
-	at which `func' equals zero within the given tolerance `tol'
- */
-void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], double tol){
-#define MAX_ITER 30
-	unsigned i;
-	double y[2];
-	double delta_x;
-
-	y[1] = (*func)(x[1], user_data);
-
-	for(i=0;i<MAX_ITER;i++){
-		y[0] = (*func)(x[0], user_data);
-		if(fabs(y[0])<tol){
-			printf("\n\n\tRoot-finding SUCCEEDED after %u iterations;"
-					"\n\t  zeroed function has value %.6g at postion %.6g\n", i, y[0], x[0]);
-			break;
-		}
-		if(x[0]==x[1]){
-			printf("\n\n\tRoot-finding FAILED after %u iterations;"
-					"\n\t  independent variables equal at %.6g,"
-					"\n\t  function is not zero, but %.6g",
-					i, x[0], y[0]);
-			break;
-		}
-
-		/* update independent variable x[0] */
-		delta_x = -y[0] * (x[0] - x[1])/(y[0] - y[1]);
-		x[1] = x[0];     /* reassign second position to first position */
-		y[1] = y[0];
-		x[0] += delta_x; /* shift first position to more accurate value */
-	}
-	/* puts("\n\tLeaving secant root-finding routine now"); */
-#undef MAX_ITER
-}
 
 /* Mixture-Preparation Functions */
 /*	
@@ -213,12 +110,14 @@ void ig_rhos(MixtureState *M, double P, char **Names){
  */
 void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
 	unsigned i;
-	enum Region_Enum {SUPERCRIT, GASEOUS, LIQUID, VAPOR, SAT_VLE} Region;
+	/* enum Region_Enum {SUPERCRIT, GASEOUS, LIQUID, VAPOR, SAT_VLE} Region; */
+	#define SAT_VLE LIQUID+VAPOR
 	char *region_names[] = {
 		"super-critical",
 		"gaseous",
-		"liquid",
 		"vapor",
+		"liquid",
+		"solid",
 		"vapor-liquid equilibrium (saturation)"
 	};
 
@@ -236,7 +135,7 @@ void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
 				Region = SUPERCRIT;
 			}else{                 /* true gas (as opposed to sub-critical vapor) */
 				RHOS[i] = P / D->R / TT; /* density from ideal gas */
-				Region = GASEOUS;
+				Region = GAS;
 			}
 		}else{
 			if(P >= D->p_c){ /* pressure >= critical pressure -- liquid */
@@ -383,9 +282,6 @@ void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError
 	double h_avg = mixture_h(M, err); /* original average enthalpy */
 
 	double p[]={0.0, 0.0};
-	// 	   p2,      /* pressures for root-finding */
-	// 	   u1, u2,  /* overall densities for root-finding */
-	// 	   delta_p; /* change in pressure */
 
 	/*	
 		Find average pressure in the solution, and set p1 equal to that; set p2
@@ -395,41 +291,9 @@ void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError
 	}
 	p[0] /= NPURE;
 	p[1] = 1.1 * p[0];
-	/* p2 = 1.1 * p1; */
 
-#if 0
-	/* set initial value for rho2 (this will be copied from rho1 in the loop) */
-	pressure_rhos(M, p2, tol, Names, err); /* densities for pressure 2 */
-	u2 = mixture_u(M, err); /* average internal energy for pressure 2 */
-
-	for(i=0;i<20;i++){
-		pressure_rhos(M, p1, tol, Names, err); /* densities for pressure 1 */
-		u1 = mixture_u(M, err); /* average internal energy for pressure 1 */
-
-		if(fabs(u_avg - u1) < tol){
-			printf("\n\n\tRoot-finding SUCCEEDED after %u iterations;\n"
-					"\t  at overall internal energy u1=%.5f kg/m3, pressure p1=%.0f Pa.",
-					i, u1, p1);
-			break;
-		}
-		if(p1==p2){
-			printf("\n\n\tRoot-finding FAILED after %u iterations;"
-					"\n\t  density conditions not satisfied at u1=%.5f =/= average internal energy u_avg=%.5f;"
-					"\n\t  pressure currently p1=%.6e Pa.", i, u1, u_avg, p1);
-			break;
-		}
-
-		/* Update pressure p1 for next iteration: */
-		delta_p = (u_avg - u1) * (p1 - p2) / (u1 - u2);
-		u2 = u1;
-		p2 = p1;
-		p1 += delta_p;
-	} puts("");
-#else
 	IEData ied = {u_avg, tol, M, err};
-
 	secant_solve(&energy_p_error, &ied, p, tol);
-#endif
 
 	/* confirm that when internal energy does not change, neither does enthalpy */
 	if(fabs(h_avg - mixture_h(M,err)) < 2*tol){
