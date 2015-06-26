@@ -101,6 +101,7 @@ int ida_main_solve(IntegratorSystem *integ, unsigned long start_index, unsigned 
 	int after_root = 0;
 	int peaw = 0;                  /*Flag returned by process_events_and_whens*/
 	int subpeaw = 0; 		/*Sub-flag used to control auxiliay integration steps*/
+	int auxcount = 1;
 #if defined(SOLVE_DEBUG) || defined(IDA_BND_DEBUG)
 	char *relname;
 	//CONSOLE_DEBUG("STARTING IDA...");
@@ -130,36 +131,57 @@ int ida_main_solve(IntegratorSystem *integ, unsigned long start_index, unsigned 
 	ypret 	= ida_bnd_new_zero_NV(integ->n_y);
 	/* advance solution in time, return values as yret and derivatives as ypret */
 	integ->currentstep = 1;
-	rootdir = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds); 
+	
+
+
+	rootdir = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);					
+	for(i = 0; i < enginedata->nbnds; i++){
+		rootdir[i] = 0;
+#ifdef IDA_BND_DEBUG
+		char *n = bnd_make_name(integ->system,enginedata->bndlist[i]);
+		CONSOLE_DEBUG("Boundary '%s': bnd_cond_states[%d]=%d, bndman_calc_satisfied=%d; (trigger dirn=%s)"
+		,n, i, bnd_cond_states[i], bndman_calc_satisfied(enginedata->bndlist[i])
+		,rootdir[i]==1?"UP":(rootdir[i]==-1?"DOWN":"both")
+		);
+		ASC_FREE(n);
+#endif
+	}
 	
 
 	for(t_index = start_index + 1; t_index <= finish_index; ++t_index, ++integ->currentstep){
 		tout = samplelist_get(integ->samples, t_index);
 		t0 = integrator_get_t(integ);
 		asc_assert(tout > t0);
+
 #ifdef SOLVE_DEBUG
 		CONSOLE_DEBUG("Integrating from t0 = %f to t = %f", t0, tout);
 #endif			
 		if(integ->nbnds){
-			peaw = process_events_and_whens(IntegratorSystem *integ, void *ida_mem, 
-			unsigned long t_index, unsigned long finish_index);}
+			peaw = process_events_and_whens(integ, ida_mem, t0, tout, rootdir);}
 	
 
-	
 	 	if(peaw==143){								/*Flag for rootsfound - system is reconfigured already!*/
-			
-			subpeaw = 0;
 
-			flag = IDASolve(ida_mem, t0 + tmin, &t0, yret, ypret, IDA_NORMAL);
+			do{
+				subpeaw = 0;							/*Flag for taking auxiliary small steps after root*/
+				flag = IDASolve(ida_mem, t0 + auxcount*tmin, &t0, yret, ypret, IDA_NORMAL);
+				/*Todo: Error care for integrator*/
+				/*Now, take small timesteps and check for further roots*/
+				for(i = 0; i < enginedata->nbnds; i++) {
+					rootdir[i] = -1*rootsfound[i];
+#ifdef IDA_BND_DEBUG
+					char *n = bnd_make_name(integ->system,enginedata->bndlist[i]);
+					CONSOLE_DEBUG("Set direction=%d for boundary '%s'",rootdir[i],n);
+					ASC_FREE(n);
+#endif
+				}
+				subpeaw = process_events_and_whens(integ, ida_mem, t0, t0 + auxcount*tmin, rootdir);
+			}while{subpeaw == 143 && auxcount < 20}		/*Arbitrary limit. Still better limit: auxcount < (tout-t0)/tmin ?*/
 			
+			/*Important Todo ---- Time needs to be reset*/
+						
 
-		  	2. Call process_events_and_whens again and see if any new roots have been detected. Take rootdir into consideration.
-		  	3. After reconfiguring, continue with integration
-			4. Increment timestep. 		
 		}
-
-
-
 
 		
 	 	if(peaw==657){
@@ -167,11 +189,8 @@ int ida_main_solve(IntegratorSystem *integ, unsigned long start_index, unsigned 
 		}
 
 
+	}/*End of Main integration For Loop*/
 
 
-	
-
-	}/*End of For Loop*/
-
-	
+/*Todo: free memory, output values, etc*/	
 }	
