@@ -35,6 +35,7 @@
 #include "pengrob.h"
 #include "visc.h"
 #include "thcond.h"
+#include "ttse.h"
 //#include "mbwr.h"
 
 //#define FPR_DEBUG
@@ -133,6 +134,11 @@ PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 			same as when there is no viscosity data at all */
 		}
 	}
+
+	//TTSE Calls
+	P->Table->UseTTSE = 0;
+	ttse_prepare(P);
+
 	return P;
 }
 
@@ -216,7 +222,7 @@ double fprops_mu(FluidState state, FpropsError *err){
 			return visc1_mu(state,err);
 		default:
 			break;
-		}	
+		}
 	}
 	*err = FPROPS_NOT_IMPLEMENTED;
 	return NAN;
@@ -230,7 +236,7 @@ double fprops_lam(FluidState state, FpropsError *err){
 			return thcond1_lam(state,err);
 		default:
 			break;
-		}	
+		}
 	}
 	*err = FPROPS_NOT_IMPLEMENTED;
 	return NAN;

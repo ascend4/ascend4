@@ -2045,15 +2045,24 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzRunData *HD){
 	Third derivative of helmholtz residual function, with respect to
 	delta once and tau (twice).
 */
-//double helm_resid_deltautau(double tau,double delta,const HelmholtzRunData *HD);
+double helm_resid_deltautau(double tau,double delta,const HelmholtzRunData *HD){
 
+	double ddel = 0.0000000001;
+	return (helm_resid_tautau(tau,delta+ddel,HD) - helm_resid_tautau(tau,delta,HD))/ddel;
+
+}
 
 
 /**
 	Third derivative of helmholtz residual function, with respect to
 	delta (thrice).
 */
-//double helm_resid_deldeltau(double tau,double delta,const HelmholtzRunData *HD);
+double helm_resid_deldeltau(double tau,double delta,const HelmholtzRunData *HD){
+
+	double ddel = 0.0000000001;
+	return (helm_resid_deltau(tau,delta+ddel,HD) - helm_resid_deltau(tau,delta,HD))/ddel;
+
+}
 
 
 
@@ -2061,7 +2070,11 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzRunData *HD){
 	Third derivative of helmholtz residual function, with respect to
 	tau (thrice).
 */
-//double helm_resid_tautautau(double tau,double delta,const HelmholtzRunData *HD);
+double helm_resid_tautautau(double tau,double delta,const HelmholtzRunData *HD){
+
+	double dtau = 0.0000000001;
+	return (helm_resid_tautau(tau+dtau,delta,HD) - helm_resid_tautau(tau,delta,HD))/dtau;
+}
 
 #endif
 

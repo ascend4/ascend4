@@ -84,7 +84,7 @@ typedef union CorrelationUnion_union{
 	/* maybe more later */
 } CorrelationUnion;
 
-/** All runtime 'core' data for all possible correlations, with exception of 
+/** All runtime 'core' data for all possible correlations, with exception of
 correlation-type-ID, function pointers and metadata (URLs, publications etc)
 
 TODO FluidData (or PureFluid?) could/should be extended to include the following
@@ -94,15 +94,15 @@ frequently-calculated items:
 	- accurate saturation curve data (interpolation/spline/something like that)
 	- solutions of iterative solver results, eg (p,h) pairs.
 
-This data would be held at this level unless it is correlation-specific in 
+This data would be held at this level unless it is correlation-specific in
 nature, in which case it would belong in lower-level rundata structures.
 
 For fluids without phase change (incompressible, ideal), we
 	- set T_c to zero,
 	- use a value of 1 K for Tstar
 	- provide a _sat SatEvalFn that always returns an error.
-...but maybe there's a better way. It's up to the particular PropEvalFn to 
-make use of Tstar or T_c as desired, but this data is stored here 
+...but maybe there's a better way. It's up to the particular PropEvalFn to
+make use of Tstar or T_c as desired, but this data is stored here
 */
 typedef struct FluidData_struct{
 	/* common data across all correlations */
@@ -127,6 +127,27 @@ typedef double PropEvalFn(double T,double rho,const FluidData *data, FpropsError
 
 /** @return psat */
 typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *data, FpropsError *err);
+
+
+
+/*structure for tables*/
+
+typedef struct ttse_struct{
+
+    int IsTableBuilt;
+    int DoesFileExist;
+    int UseTTSE;
+
+
+
+
+    double ** dsdT,** d2sdT2,** dsdRho,** d2sdRho2,** d2sdTdRho;
+    double ** dPdT,** d2PdT2,** dPdRho,** d2PdRho2,** d2PdTdRho;
+    double ** dudT,** d2udT2,** dudRho,** d2udRho2,** d2udTdRho;
+    double ** dgdT,** d2gdT2,** dgdRho,** d2gdRho2,** d2gdTdRho;
+    double ** dhdT,** d2hdT2,** dhdRho,** d2hdRho2,** d2hdTdRho;
+
+}ttse;
 
 /**
 	Structure containing all the necessary data and metadata for run-time
@@ -154,7 +175,11 @@ typedef struct PureFluid_struct{
 
 	const ViscosityData *visc; // TODO should it be here? or inside FluidData?? probably yes, but needs review.
 	const ThermalConductivityData *thcond; // TODO should it be here? probably yes, but needs review.
+	ttse * Table;
 } PureFluid;
+
+
+
 
 #endif
 
