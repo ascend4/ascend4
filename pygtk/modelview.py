@@ -1,4 +1,5 @@
 from gi.repository import GdkPixbuf
+
 import ascpy
 from properties import *
 from unitsdialog import *
@@ -20,15 +21,12 @@ class ModelView:
 
 		self.modelview = builder.get_object("browserview")
 
-		# name, type, value, foreground, weight, editable, status-icon
-		columns = [str,str,str,str,int,bool,GdkPixbuf.Pixbuf]
-
 		self.otank = {}
 
 		# name, type, value, foreground, weight, editable, status-icon
-		columns = [str,str,str,str,int,bool,GdkPixbuf.Pixbuf]
+		columns = [str,str,str,str,int,bool,GdkPixbuf.Pixbuf,str]
 		self.modelstore = Gtk.TreeStore(*columns)
-		titles = ["Name","Type","Value"];
+		titles = ["Name","Type","Value"]
 		self.modelview.set_model(self.modelstore)
 		self.tvcolumns = [ Gtk.TreeViewColumn() for _type in columns[:len(titles)] ]
 		
@@ -74,13 +72,23 @@ class ModelView:
 		self.observemenuitem = self.browser.builder.get_object("observe1")
 		self.studymenuitem = self.browser.builder.get_object("study1")
 		self.unitsmenuitem = self.browser.builder.get_object("units1")
-		
+		self.hidevariable = self.browser.builder.get_object("hide_var")
+		self.showallmenuitem = self.browser.builder.get_object("show_variables_all")
+		self.hideallmenuitem = self.browser.builder.get_object("hide_variables_all")
+		self.showmenuitem = self.browser.builder.get_object("show_variables")
+		self.hidemenuitem = self.browser.builder.get_object("hide_variables")
+
 		self.fixmenuitem.connect("activate",self.fix_activate)
 		self.freemenuitem.connect("activate",self.free_activate)
 		self.propsmenuitem.connect("activate",self.props_activate)
 		self.observemenuitem.connect("activate",self.observe_activate)
 		self.studymenuitem.connect("activate", self.study_activate)
 		self.unitsmenuitem.connect("activate",self.units_activate)
+		self.showallmenuitem.connect("activate", self.show_all_variables)
+		self.hideallmenuitem.connect("activate", self.hide_all_variables)
+		self.hidevariable.connect("activate", self.show_variable)
+
+		self.variables = {"showed": [], "hidden": []}
 
 		if not self.treecontext:
 			raise RuntimeError("Couldn't create browsercontext")
@@ -95,8 +103,110 @@ class ModelView:
 			self.make( self.sim.getName(),self.sim.getModel() )
 			self.browser.enable_on_model_tree_build()
 		except Exception,e:
-			self.browser.reporter.reportError("Error building tree: %s" % e);
-		self.browser.maintabs.set_current_page(1);
+			self.browser.reporter.reportError("Error building tree: %s" % e)
+
+		self.fill_variables_menus()
+
+		filtered_model = self.modelstore.filter_new()
+		filtered_model.set_visible_func(self.filter_rows)
+		self.modelview.set_model(filtered_model)
+		self.modelview.expand_row(filtered_model.get_path(filtered_model.get_iter_first()), False)
+
+		self.browser.maintabs.set_current_page(1)
+
+	def fill_variables_menus(self):
+		# show all variables
+		vars = []
+		for instance in self.otank.values():
+			if not str(instance[1].getType()) in vars:
+				vars.append(str(instance[1].getType()))
+		self.variables["showed"] = sorted(vars)
+		for instype in self.variables["showed"]:
+			menuitem = Gtk.MenuItem(instype)
+			menuitem.connect("activate", self.show_variable)
+			self.hidemenuitem.get_submenu().append(menuitem)
+		self.hidemenuitem.show_all()
+		self.hideallmenuitem.set_sensitive(True)
+
+	def show_all_variables(self, *args):
+		for instype in list(self.variables["hidden"]):
+			self.set_variable_visibility(instype, True)
+
+		model = self.modelview.get_model()
+		model.refilter()
+		self.modelview.expand_row(model.get_path(model.get_iter_first()), False)
+
+	def hide_all_variables(self, *args):
+		for instype in list(self.variables["showed"]):
+			self.set_variable_visibility(instype, False)
+
+		self.modelview.get_model().refilter()
+
+	def show_variable(self, widget):
+		# if context menu
+		if widget.get_label().startswith("Hide "):
+			_model, _pathlist = self.modelview.get_selection().get_selected_rows()
+			for _path in _pathlist:
+				piter = _model.get_iter(_path)
+				originalpath = _model.get_value(piter, 7)
+				_, ins = self.otank[originalpath]
+				self.set_variable_visibility(str(ins.getType()), False)
+		# if main menu
+		else:
+			instype = widget.get_label()
+			if widget in self.hidemenuitem.get_submenu().get_children():
+				self.set_variable_visibility(instype, False)
+			else:
+				self.set_variable_visibility(instype, True)
+
+		self.modelview.get_model().refilter()
+
+	def set_variable_visibility(self, instype, show):
+		if show:
+			if instype in self.variables["hidden"]:
+				self.variables["hidden"].remove(instype)
+			self.variables["showed"].append(instype)
+			menuitem = None
+			for item in self.showmenuitem.get_submenu().get_children():
+				if item.get_label() == instype:
+					menuitem = item
+					break
+			if menuitem is not None:
+				self.showmenuitem.get_submenu().remove(menuitem)
+				self.hidemenuitem.get_submenu().insert(menuitem, self.get_menu_position(menuitem, self.hidemenuitem))
+
+		else:
+			if instype in self.variables["showed"]:
+				self.variables["showed"].remove(instype)
+			self.variables["hidden"].append(instype)
+			menuitem = None
+			for item in self.hidemenuitem.get_submenu().get_children():
+				if item.get_label() == instype:
+					menuitem = item
+					break
+			if menuitem is not None:
+				self.hidemenuitem.get_submenu().remove(menuitem)
+				self.showmenuitem.get_submenu().insert(menuitem, self.get_menu_position(menuitem, self.showmenuitem))
+
+		self.hideallmenuitem.set_sensitive(len(self.variables["showed"]) > 0)
+		self.showallmenuitem.set_sensitive(len(self.variables["hidden"]) > 0)
+
+	def get_menu_position(self, menuitem, menu):
+		children = menu.get_submenu().get_children()
+		for i in range(1, len(children)):
+			if children[i].get_label() > menuitem.get_label():
+				return i
+
+		return len(children)
+
+	def filter_rows(self, model, piter, data):
+		path = model.get_path(piter)
+		if str(path) not in self.otank:
+			return False
+
+		name, value = self.otank[path.to_string()]
+		instype = str(value.getType())
+		return instype in self.variables["showed"]
 
 	def clear(self):
 		self.modelstore.clear()
@@ -141,11 +251,13 @@ class ModelView:
 		#if(len(_value) > 80):
 		#	_value = _value[:80] + "..."
 
-		return [_name, _type, _value, _fgcolor, _fontweight, _editable, _statusicon]
+		return [_name, _type, _value, _fgcolor, _fontweight, _editable, _statusicon, None]
 
 	def make_row( self, piter, name, value ): # for instance browser
 		assert(value)
-		_piter = self.modelstore.append( piter, self.get_tree_row_data(value) )
+		_piter = self.modelstore.append(piter, self.get_tree_row_data(value))
+		path = self.modelstore.get_path(_piter)
+		self.modelstore.set_value(_piter, 7, str(path))
 		return _piter
 
 	def refreshtree(self):
@@ -287,8 +399,9 @@ class ModelView:
 		else:
 			self.modelview.expand_row(self.modelstore.get_path(self.modelstore.get_iter_first()),False) # Edit here only.
 
-	def row_expanded( self, modelview, piter, path ):
-		self.make( path = path )
+	def row_expanded(self, modelview, piter, path):
+		originalpath = Gtk.TreePath.new_from_string(modelview.get_model().get_value(piter, 7))
+		self.make(path=originalpath)
 
 
 #   ------------------------------
@@ -318,8 +431,14 @@ class ModelView:
 				if event.button == 3:
 					_contextmenu = True
 
+		if not _contextmenu:
+			#print "NOT DOING ANYTHING ABOUT %s" % Gdk.keyval_name(event.keyval)
+			return
+
 		if _path:
-			_name,_instance = self.otank[_path.to_string()]
+			piter = self.modelview.get_model().get_iter(_path)
+			originalpath = self.modelview.get_model().get_value(piter, 7)
+			_name, _instance = self.otank[originalpath]
 			# set the statusbar
 			nn = self.notes.getNotes(self.sim.getModel().getType(),ascpy.SymChar("inline"),_name)
 			for n in nn:
@@ -339,19 +458,13 @@ class ModelView:
 			elif _instance.isRelation():
 				self.builder.get_object("propsmenuitem").set_sensitive(True)
 
-		if not _contextmenu:
-			#print "NOT DOING ANYTHING ABOUT %s" % Gdk.keyval_name(event.keyval)
-			return 
-
-		_canpop = False
-		# self.browser.reporter.reportError("Right click on %s" % self.otank[_path][0])
-
 		self.unitsmenuitem.set_sensitive(False)
 		self.fixmenuitem.set_sensitive(False)
 		self.freemenuitem.set_sensitive(False)
 		self.observemenuitem.set_sensitive(False)
 		self.studymenuitem.set_sensitive(False)
 		self.propsmenuitem.set_sensitive(False)					
+		self.hidevariable.set_sensitive(False)
 
 		# if selected more than one row
 		model, pathlist = self.modelview.get_selection().get_selected_rows()
@@ -360,7 +473,9 @@ class ModelView:
 			_free = False
 			_observe = False
 			for p in pathlist:
-				_name, _instance = self.otank[p.to_string()]
+				piter = self.modelview.get_model().get_iter(p)
+				originalpath = self.modelview.get_model().get_value(piter, 7)
+				_name, _instance = self.otank[originalpath]
 				if _instance.getType().isRefinedSolverVar():
 					_fixed |= _instance.isFixed()
 					_free |= not _instance.isFixed()
@@ -371,17 +486,19 @@ class ModelView:
 				self.fixmenuitem.set_sensitive(True)
 			if _observe:
 				self.observemenuitem.set_sensitive(True)
+
+			self.hidevariable.set_sensitive(True)
+			self.hidevariable.set_label("Hide selected types")
+
 			self.modelview.grab_focus()
 			self.treecontext.popup(None, None, None, None, _button, event.time)
 			return 1
 
 		if _instance.isReal():
 			print "CAN POP: real atom"
-			_canpop = True
 			self.unitsmenuitem.set_sensitive(True)
 
 		if _instance.getType().isRefinedSolverVar():
-			_canpop = True
 			self.propsmenuitem.set_sensitive(True)
 			self.observemenuitem.set_sensitive(True)
 			if _instance.isFixed():
@@ -391,8 +508,7 @@ class ModelView:
 			else:
 				self.fixmenuitem.set_sensitive(True)
 		elif _instance.isRelation():
-			_canpop = True
-			self.propsmenuitem.set_sensitive(True)					
+			self.propsmenuitem.set_sensitive(True)
 		elif _instance.isModel():
 			# MODEL instances have a special context menu:
 			_menu = self.get_model_context_menu(_instance)
@@ -402,8 +518,8 @@ class ModelView:
 			_menu.popup(None,None,lambda _menu,data: (event.get_root_coords()[0],event.get_root_coords()[1], True),None,_button,event.time)
 			return
 
-		if not _canpop:
-			return 
+		self.hidevariable.set_label("Hide " + str(_instance.getType()))
+		self.hidevariable.set_sensitive(True)
 
 		self.modelview.grab_focus()
 		self.modelview.set_cursor( _path, _col, 0)

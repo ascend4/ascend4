@@ -1569,7 +1569,7 @@ upper and lower bounds displayed.</property>
         <property name="always_show_image">True</property>
       </object>
     </child>
-    <child>
+   <child>
       <object class="GtkImageMenuItem" id="study1">
         <property name="label">Study</property>
         <property name="use_action_appearance">False</property>
@@ -1580,6 +1580,22 @@ upper and lower bounds displayed.</property>
         <property name="image">image4</property>
         <property name="use_stock">False</property>
         <property name="always_show_image">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="separator_hide">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="hide_var">
+        <property name="label">Hide</property>
+        <property name="use_action_appearance">False</property>
+        <property name="visible">True</property>
+        <property name="sensitive">False</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">False</property>
       </object>
     </child>
     <child>
@@ -2164,6 +2180,58 @@ upper and lower bounds displayed.</property>
                     </child>
                     <child>
                       <object class="GtkSeparatorMenuItem" id="separator7">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                    </child>
+<child>
+                      <object class="GtkMenuItem" id="show_variables">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Show variables</property>
+                        <property name="use_underline">True</property>
+                        <child type="submenu">
+                          <object class="GtkMenu" id="menu2">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <child>
+                              <object class="GtkMenuItem" id="show_variables_all">
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">All</property>
+                                <property name="use_underline">True</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="hide_variables">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Hide variables</property>
+                        <property name="use_underline">True</property>
+                        <child type="submenu">
+                          <object class="GtkMenu" id="menu3">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <child>
+                              <object class="GtkMenuItem" id="hide_variables_all">
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">All</property>
+                                <property name="use_underline">True</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorMenuItem" id="separator997">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                       </object>
