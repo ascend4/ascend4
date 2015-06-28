@@ -38,7 +38,7 @@
 #include "ttse.h"
 //#include "mbwr.h"
 
-//#define FPR_DEBUG
+#define FPR_DEBUG //sid change
 #ifdef FPR_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG

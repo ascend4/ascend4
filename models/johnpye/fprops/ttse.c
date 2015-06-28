@@ -11,6 +11,18 @@
 #define NRhoPoints 200
 
 
+#define FLUIDS_DEBUG //sid change
+#ifdef FLUIDS_DEBUG
+# include "color.h"
+# define MSG FPROPS_MSG
+# define ERRMSG FPROPS_ERRMSG
+#else
+# define MSG(ARGS...) ((void)0)
+# define ERRMSG(ARGS...) ((void)0)
+#endif
+
+
+
 inline double ** alloc_matrix(int TP, int RhoP) {
 
     double ** matrix = (double**) malloc(sizeof(double*) * TP);
@@ -113,6 +125,9 @@ void remove_tables(ttse *table)
 }
 
 void ttse_prepare(PureFluid *P){
+
+
+    MSG("Inside TTSE \n");
 
     if(!P->Table->UseTTSE)
         return;

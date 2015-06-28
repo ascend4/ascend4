@@ -196,6 +196,8 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 		return NULL;
 	}
 
+	P->Table = FPROPS_NEW(ttse);  //sid
+
 #undef I
 	return P;
 }

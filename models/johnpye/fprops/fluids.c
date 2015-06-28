@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-//#define FLUIDS_DEBUG
+#define FLUIDS_DEBUG //sid change
 #ifdef FLUIDS_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
@@ -48,6 +48,8 @@ static int nfluids = 0 + FLUIDS(F,X) + RPPFLUIDS(F,X);
 
 const PureFluid *fprops_fluid(const char *name, const char *corrtype, const char *source){
 	int i;
+
+
 	MSG("Looking for fluid '%s' of type '%s', with source text '%s'",name,corrtype,source);
 	for(i = 0; i < nfluids; ++i){
 		if(0==strcmp(name, fluids[i]->name)){
