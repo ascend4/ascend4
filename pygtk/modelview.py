@@ -12,6 +12,8 @@ BROWSER_SETTING_COLOR = "#4444AA"
 BROWSER_INCLUDED_COLOR = "black"
 BROWSER_UNINCLUDED_COLOR = "#888888"
 
+ORIGINAL_PATH_INDEX = 7
+
 class ModelView:
 	def __init__(self,browser,builder):
 		self.browser = browser # the parent object: the entire ASCEND browser
@@ -148,7 +150,7 @@ class ModelView:
 			_model, _pathlist = self.modelview.get_selection().get_selected_rows()
 			for _path in _pathlist:
 				piter = _model.get_iter(_path)
-				originalpath = _model.get_value(piter, 7)
+				originalpath = _model.get_value(piter, ORIGINAL_PATH_INDEX)
 				_, ins = self.otank[originalpath]
 				self.set_variable_visibility(str(ins.getType()), False)
 		# if main menu
@@ -257,7 +259,7 @@ class ModelView:
 		assert(value)
 		_piter = self.modelstore.append(piter, self.get_tree_row_data(value))
 		path = self.modelstore.get_path(_piter)
-		self.modelstore.set_value(_piter, 7, str(path))
+		self.modelstore.set_value(_piter, ORIGINAL_PATH_INDEX, str(path))
 		return _piter
 
 	def refreshtree(self):
@@ -288,18 +290,22 @@ class ModelView:
 		model, pathlist = self.modelview.get_selection().get_selected_rows()
 		if len(pathlist) == 0:
 			return None
-		name, instance = self.otank[pathlist[0].to_string()]
+
+		piter = self.modelview.get_model().get_iter(pathlist[0])
+		originalpath = self.modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX)
+		name, instance = self.otank[originalpath]
 		return instance
 
 	def cell_edited_callback(self, renderer, path, newtext, **kwargs):
 		# get back the Instance object we just edited (having to use this seems like a bug)
 #path = tuple( map(int,path.split(":")) )
-
-		if not self.otank.has_key(path):
+		piter = self.modelview.get_model().get_iter(path)
+		originalpath = self.modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX)
+		if not self.otank.has_key(originalpath):
 			raise RuntimeError("cell_edited_callback: invalid path '%s'" % path)
 			return
 
-		_name, _instance = self.otank[path]
+		_name, _instance = self.otank[originalpath]
 
 		if _instance.isReal():
 			if _instance.getValue() == newtext:
@@ -400,7 +406,7 @@ class ModelView:
 			self.modelview.expand_row(self.modelstore.get_path(self.modelstore.get_iter_first()),False) # Edit here only.
 
 	def row_expanded(self, modelview, piter, path):
-		originalpath = Gtk.TreePath.new_from_string(modelview.get_model().get_value(piter, 7))
+		originalpath = Gtk.TreePath.new_from_string(modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX))
 		self.make(path=originalpath)
 
 
@@ -437,7 +443,7 @@ class ModelView:
 
 		if _path:
 			piter = self.modelview.get_model().get_iter(_path)
-			originalpath = self.modelview.get_model().get_value(piter, 7)
+			originalpath = self.modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX)
 			_name, _instance = self.otank[originalpath]
 			# set the statusbar
 			nn = self.notes.getNotes(self.sim.getModel().getType(),ascpy.SymChar("inline"),_name)
@@ -474,7 +480,7 @@ class ModelView:
 			_observe = False
 			for p in pathlist:
 				piter = self.modelview.get_model().get_iter(p)
-				originalpath = self.modelview.get_model().get_value(piter, 7)
+				originalpath = self.modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX)
 				_name, _instance = self.otank[originalpath]
 				if _instance.getType().isRefinedSolverVar():
 					_fixed |= _instance.isFixed()
@@ -574,7 +580,9 @@ class ModelView:
 	def fix_activate(self,widget):
 		_model, _pathlist = self.modelview.get_selection().get_selected_rows()
 		for _path in _pathlist:
-			_name, _instance = self.otank[_path.to_string()]
+			piter = self.modelview.get_model().get_iter(_path)
+			originalpath = self.modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX)
+			_name, _instance = self.otank[originalpath]
 			self.set_fixed(_instance, True)
 		self.browser.do_solve_if_auto()
 		return 1
@@ -582,16 +590,20 @@ class ModelView:
 	def free_activate(self,widget):
 		_model, _pathlist = self.modelview.get_selection().get_selected_rows()
 		for _path in _pathlist:
-			_name, _instance = self.otank[_path.to_string()]
+			piter = self.modelview.get_model().get_iter(_path)
+			originalpath = self.modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX)
+			_name, _instance = self.otank[originalpath]
 			self.set_fixed(_instance, False)
 		self.browser.do_solve_if_auto()
 		return 1
 
 	def plot_activate(self,widget):
-	
+
 		self.browser.reporter.reportNote("plot_activate...");
 		_path,_col = self.modelview.get_cursor()
-		_instance = self.otank[_path][1]
+		piter = self.modelview.get_model().get_iter(_path)
+		originalpath = self.modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX)
+		_instance = self.otank[originalpath][1]
 		if not _instance.isPlottable():
 			self.browser.reporter.reportError("Can't plot instance %s" % _instance.getName().toString())
 			return
@@ -612,7 +624,9 @@ class ModelView:
 			self.browser.reporter.reportError("Can't show properties until a simulation has been created.");
 			return
 		_path,_col = self.modelview.get_cursor()
-		_instance = self.otank[_path.to_string()][1]
+		piter = self.modelview.get_model().get_iter(_path)
+		originalpath = self.modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX)
+		_instance = self.otank[originalpath][1]
 		if _instance.isRelation():
 			print "Relation '"+_instance.getName().toString()+"':", \
 				_instance.getRelationAsString(self.sim.getModel())
@@ -627,7 +641,9 @@ class ModelView:
 	def observe_activate(self,widget,*args):
 		_model, _pathlist = self.modelview.get_selection().get_selected_rows()
 		for _path in _pathlist:
-			_name, _instance = self.otank[_path.to_string()]
+			piter = self.modelview.get_model().get_iter(_path)
+			originalpath = self.modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX)
+			_name, _instance = self.otank[originalpath]
 			if _instance.getType().isRefinedSolverVar():
 				print "OBSERVING",_instance.getName().toString()
 				self.browser.observe(_instance)
@@ -647,9 +663,11 @@ class ModelView:
 
 	def study_activate(self, *args):
 		_path,_col = self.modelview.get_cursor()
-		_instance = self.otank[_path.to_string()][1]
+		piter = self.modelview.get_model().get_iter(_path)
+		originalpath = self.modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX)
+		_instance = self.otank[originalpath][1]
 		self.browser.observe(_instance)
-		_dia = StudyWin(self.browser,_instance);
+		_dia = StudyWin(self.browser,_instance)
 		_dia.run()
 
 	def units_activate(self,*args):
