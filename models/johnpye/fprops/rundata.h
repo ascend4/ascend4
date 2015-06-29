@@ -131,23 +131,31 @@ typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *d
 
 
 /*structure for tables*/
+#define NTP 200
+#define NRHOP 200
+
+typedef double (*TtseMatrix) [NRHOP];
 
 typedef struct ttse_struct{
 
-    int IsTableBuilt;
-    int DoesFileExist;
-    int UseTTSE;
+    int istablebuilt;
+    int doesfileexist;
+    int usettse;
 
+    double tmin,tmax,rhomin,rhomax;
 
+    TtseMatrix s, dsdt, d2sdt2, dsdrho, d2sdrho2, d2sdtdrho;
+    TtseMatrix p, dpdt, d2pdt2, dpdrho, d2pdrho2, d2pdtdrho;
+    TtseMatrix u, dudt, d2udt2, dudrho, d2udrho2, d2udtdrho;
+    TtseMatrix g, dgdt, d2gdt2, dgdrho, d2gdrho2, d2gdtdrho;
+    TtseMatrix h, dhdt, d2hdt2, dhdrho, d2hdrho2, d2hdtdrho;
 
-
-    double ** dsdT,** d2sdT2,** dsdRho,** d2sdRho2,** d2sdTdRho;
-    double ** dPdT,** d2PdT2,** dPdRho,** d2PdRho2,** d2PdTdRho;
-    double ** dudT,** d2udT2,** dudRho,** d2udRho2,** d2udTdRho;
-    double ** dgdT,** d2gdT2,** dgdRho,** d2gdRho2,** d2gdTdRho;
-    double ** dhdT,** d2hdT2,** dhdRho,** d2hdRho2,** d2hdTdRho;
-
-}ttse;
+  //double ** dsdT,** d2sdT2,** dsdRho,** d2sdRho2,** d2sdTdRho;
+  //double ** dPdT,** d2PdT2,** dPdRho,** d2PdRho2,** d2PdTdRho;
+  //double ** dudT,** d2udT2,** dudRho,** d2udRho2,** d2udTdRho;
+  //double ** dgdT,** d2gdT2,** dgdRho,** d2gdRho2,** d2gdTdRho;
+  //double ** dhdT,** d2hdT2,** dhdRho,** d2hdRho2,** d2hdTdRho;
+}Ttse;
 
 /**
 	Structure containing all the necessary data and metadata for run-time
@@ -170,12 +178,16 @@ typedef struct PureFluid_struct{
 	PropEvalFn *g_fn;
 	PropEvalFn *alphap_fn;
 	PropEvalFn *betap_fn;
-	PropEvalFn *dpdrho_T_fn; // this derivative is required for saturation properties by Akasaka method
+	PropEvalFn *dpdrho_T_fn, *d2pdrho2_T_fn, *dpdT_rho_fn, *d2pdT2_rho_fn, *d2pdTdrho_fn;
+	PropEvalFn *dhdrho_T_fn, *d2hdrho2_T_fn, *dhdT_rho_fn, *d2hdT2_rho_fn, *d2hdTdrho_fn;
+	PropEvalFn *dsdrho_T_fn, *d2sdrho2_T_fn, *dsdT_rho_fn, *d2sdT2_rho_fn, *d2sdTdrho_fn;
+	PropEvalFn *dudrho_T_fn, *d2udrho2_T_fn, *dudT_rho_fn, *d2udT2_rho_fn, *d2udTdrho_fn;
+	PropEvalFn *dgdrho_T_fn, *d2gdrho2_T_fn, *dgdT_rho_fn, *d2gdT2_rho_fn, *d2gdTdrho_fn;  // this derivative is required for saturation properties by Akasaka method
 	SatEvalFn *sat_fn; // function to return {psat,rhof,rhog}(T) for this pure fluid
 
 	const ViscosityData *visc; // TODO should it be here? or inside FluidData?? probably yes, but needs review.
 	const ThermalConductivityData *thcond; // TODO should it be here? probably yes, but needs review.
-	ttse * Table;
+	Ttse * table;
 } PureFluid;
 
 

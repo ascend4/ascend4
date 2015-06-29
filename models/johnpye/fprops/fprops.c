@@ -136,7 +136,7 @@ PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 	}
 
 	//TTSE Calls
-	P->Table->UseTTSE = 0;
+	P->table->usettse = 1;
 	ttse_prepare(P);
 
 	return P;
@@ -193,10 +193,11 @@ FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsE
 		return state.fluid->VAR##_fn(state.T,state.rho,state.fluid->data,err);\
 	}
 
+
 EVALFN(p); EVALFN(u); EVALFN(h); EVALFN(s); EVALFN(a); EVALFN(g);
 EVALFN_SATUNDEFINED(cp); EVALFN_SATUNDEFINED(cv);
 EVALFN_SATUNDEFINED(w);
-EVALFN(dpdrho_T);
+EVALFN(dpdrho_T); EVALFN(d2pdrho2_T);  EVALFN(dpdT_rho);  EVALFN(d2pdT2_rho); EVALFN(d2pdTdrho);
 
 EVALFN(alphap); EVALFN(betap);
 // EVALFN(dpdT_rho);
@@ -260,7 +261,7 @@ double fprops_x(FluidState state, FpropsError *err){
 	*err = FPROPS_VALUE_UNDEFINED;
 	return 0;
 }
-
+/*
 double fprops_dpdT_rho(FluidState state, FpropsError *err){
 	*err = FPROPS_NOT_IMPLEMENTED;
 	return 0;
@@ -269,7 +270,7 @@ double fprops_dpdT_rho(FluidState state, FpropsError *err){
 double fprops_d2pdrho2_T(FluidState state, FpropsError *err){
 	*err = FPROPS_NOT_IMPLEMENTED;
 	return 0;
-}
+}*/
 
 double fprops_dhdT_rho(FluidState state, FpropsError *err){
 	*err = FPROPS_NOT_IMPLEMENTED;

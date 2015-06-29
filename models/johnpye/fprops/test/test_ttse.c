@@ -76,7 +76,7 @@ int main(void){
 	}\
 	nloggederrors++;
 */
-    const char *helmfluids[] = { "acetone"};
+    const char *helmfluids[] = { "water"};
 	const int n = sizeof(helmfluids)/sizeof(char *);
 	int i,j;
 

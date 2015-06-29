@@ -50,13 +50,37 @@ PropEvalFn helmholtz_betap;
 SatEvalFn helmholtz_sat;
 
 double helmholtz_dpdT_rho(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2pdT2_rho(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_dpdrho_T(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_d2pdrho2_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2pdTdrho(double T, double rho, const FluidData *data, FpropsError *err);
 
 double helmholtz_dhdT_rho(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2hdT2_rho(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_dhdrho_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2hdrho2_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2hdTdrho(double T, double rho, const FluidData *data, FpropsError *err);
+
+double helmholtz_dsdT_rho(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2sdT2_rho(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_dsdrho_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2sdrho2_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2sdTdrho(double T, double rho, const FluidData *data, FpropsError *err);
+
 
 double helmholtz_dudT_rho(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2udT2_rho(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2udrho2_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2udTdrho(double T, double rho, const FluidData *data, FpropsError *err);
+
+
+double helmholtz_dgdT_rho(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2gdT2_rho(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_dgdrho_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2gdrho2_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2gdTdrho(double T, double rho, const FluidData *data, FpropsError *err);
+
 
 
 //#define HELM_DEBUG
@@ -106,6 +130,8 @@ double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsErr
 #define DEFINE_TD \
 	double tau = data->corr.helm->T_star / T; \
 	double delta = rho / data->corr.helm->rho_star
+
+
 
 
 PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
@@ -162,13 +188,19 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	/* function pointers... more to come still? */
 #define FN(VAR) P->VAR##_fn = &helmholtz_##VAR
 	FN(p); FN(u); FN(h); FN(s); FN(a); FN(g); FN(cp); FN(cv); FN(w);
-	FN(alphap); FN(betap); FN(dpdrho_T);
+	FN(alphap); FN(betap);
+	FN(dpdrho_T);FN(d2pdrho2_T);FN(dpdT_rho);FN(d2pdT2_rho);FN(d2pdTdrho);
+	FN(dhdrho_T);FN(d2hdrho2_T);FN(dhdT_rho);FN(d2hdT2_rho);FN(d2hdTdrho);
+	FN(dsdrho_T);FN(d2sdrho2_T);FN(dsdT_rho);FN(d2sdT2_rho);FN(d2sdTdrho);
+	FN(dudrho_T);FN(d2udrho2_T);FN(dudT_rho);FN(d2udT2_rho);FN(d2udTdrho);
+	FN(dgdrho_T);FN(d2gdrho2_T);FN(dgdT_rho);FN(d2gdT2_rho);FN(d2gdTdrho);
 	FN(sat);
 #undef FN
 
 	FpropsError err = 0;
 
-	/* calculate critical pressure (doesn't require h0, s0) */
+	/* calculate critical pressur
+	P->data->cp0 = cp0_prepare(E->data.helm->ideal, P->dae (doesn't require h0, s0) */
 	MSG("Calculating critical pressure at T_c = %f K, rho_c = %f kg/m3",P->data->T_c, P->data->rho_c);
 	P->data->p_c = helmholtz_p(P->data->T_c, P->data->rho_c, P->data, &err);
 	if(err){
@@ -196,7 +228,7 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 		return NULL;
 	}
 
-	P->Table = FPROPS_NEW(ttse);  //sid
+	P->table = FPROPS_NEW(Ttse);  //sid
 
 #undef I
 	return P;
@@ -237,6 +269,8 @@ double helmholtz_p(double T, double rho, const FluidData *data, FpropsError *err
 	//fprintf(stderr,"rhob = %f, rhob* = %f, delta = %f\n", rho/HD->M, HD->rho_star/HD->M, delta);
 
 	double p = HD_R * T * rho * (1 + delta * helm_resid_del(tau,delta,HD));
+
+	//printf("%e\n",p);
 #if 0
 	if(isnan(p)){
 		fprintf(stderr,"T = %.12e, rho = %.12e\n",T,rho);
@@ -500,7 +534,11 @@ double helmholtz_dpdrho_T(double T, double rho, const FluidData *data, FpropsErr
 	assert(!isinf(phir_del));
 	assert(!isinf(phir_deldel));
 #endif
-	return HD_R * T * (1 + 2*delta*phir_del + SQ(delta)*phir_deldel);
+	double ret =  HD_R * T * (1 + 2*delta*phir_del + SQ(delta)*phir_deldel);
+
+
+	//printf ("%e   %e   %e   %e\n", phir_del, phir_deldel, HD_R, ret);
+	return ret;
 }
 
 /**
@@ -543,7 +581,7 @@ double helmholtz_d2pdT2_rho(double T, double rho, const FluidData *data, FpropsE
 	Calculate partial second order mixed derivative of p with respect to rho, T
 */
 
-double helmholtz_d2pdrhodT(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_d2pdTdrho(double T, double rho, const FluidData *data, FpropsError *err){
     DEFINE_TD;
     double phir_del = helm_resid_del(tau,delta,HD);
 	double phir_deldel = helm_resid_deldel(tau,delta,HD);
@@ -673,7 +711,7 @@ double helmholtz_d2hdT2_rho(double T, double rho, const FluidData *data, FpropsE
 	Calculate partial second order mixed derivative of h with respect to rho, T
 */
 
-double helmholtz_d2hdrhodT(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_d2hdTdrho(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	double phir_deldel = helm_resid_deldel(tau,delta,HD);
@@ -798,7 +836,7 @@ double helmholtz_d2udT2_rho(double T, double rho, const FluidData *data, FpropsE
 	Calculate partial second order mixed derivative of u with respect to rho, T
 */
 
-double helmholtz_d2udrhodT(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_d2udTdrho(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	double phir_tautaudel = helm_resid_deltautau(tau,delta,HD);
@@ -935,7 +973,7 @@ double helmholtz_d2sdT2_rho(double T, double rho, const FluidData *data, FpropsE
 /**
 	Calculate partial second order mixed derivative of s with respect to rho, T
 */
-double helmholtz_d2sdrhodT(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_d2sdTdrho(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	double phir_tautaudel = helm_resid_deltautau(tau,delta,HD);
@@ -1086,7 +1124,7 @@ double helmholtz_d2gdT2_rho(double T, double rho, const FluidData *data, FpropsE
 /**
 	Calculate partial second order mixed derivative of g with respect to rho, T
 */
-double helmholtz_d2gdrhodT(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_d2gdTdrho(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	double phir_deldel = helm_resid_deldel(tau,delta,HD);
