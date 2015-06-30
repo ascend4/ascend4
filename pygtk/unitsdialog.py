@@ -49,10 +49,12 @@ class UnitsDialog:
 
 		self.changed = {}
 		self.T = T
+		model = Gtk.ListStore(str)
+		self.typecombo.set_model(model)
 		if T is not None:
 			if T.isRefinedReal():
 				self.typecombo.append_text(str(T.getName()))
-		self.update_typecombo()
+		self.update_typecombo(str(T.getName()))
 
 	def unitsview_row_toggled(self,widget,path,*args):
 		i = self.unitsview.get_model().get_iter_from_string(path)
@@ -79,13 +81,11 @@ class UnitsDialog:
 		self.applybutton.set_sensitive(can_apply)
 
 	def update_typecombo(self,text = None):
-		m = Gtk.ListStore(str)
+		m = self.typecombo.get_model()
 		for t in self.realtypes:
-			if not text or re.compile("^%s"%re.escape(text)).match(str(t.getName())):
+			if not text or re.compile("^%s" % re.escape(text)).match(str(t.getName())):
 				m.append([str(t.getName())])
-		self.typecombo.set_model(m)
 		if text and m.iter_n_children(None):
-#self.typecombo.popup()
 			self.typecombo.get_child().grab_focus()
 			self.typecombo.set_entry_text_column(0)
 
