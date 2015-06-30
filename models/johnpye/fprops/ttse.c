@@ -161,11 +161,13 @@ void build_tables(PureFluid *P){
     double tmin,tmax,rhomin,rhomax;
 
 //Pseudo values for water
-
+//Should be implemented else where per fluid
     PT->tmin = 200;
     PT->tmax = 800;
     PT->rhomin = 400;
     PT->rhomax = 1400;
+
+
 
     tmin = PT->tmin;
     tmax = PT->tmax;
