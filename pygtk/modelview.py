@@ -439,8 +439,7 @@ class ModelView:
 			elif _keyval == 'F2':
 				print "F2 pressed"
 				self.modelview.set_cursor(_path,self.tvcolumns[2],1)
-												
-				return
+				return True
 		elif event.type==Gdk.EventType.BUTTON_PRESS:
 			_x = int(event.x)
 			_y = int(event.y)
@@ -453,7 +452,7 @@ class ModelView:
 
 		if not _contextmenu:
 			#print "NOT DOING ANYTHING ABOUT %s" % Gdk.keyval_name(event.keyval)
-			return
+			return False
 
 		if _path:
 			piter = self.modelview.get_model().get_iter(_path)
@@ -512,7 +511,7 @@ class ModelView:
 
 			self.modelview.grab_focus()
 			self.treecontext.popup(None, None, None, None, _button, event.time)
-			return 1
+			return True
 
 		if _instance.isReal():
 			print "CAN POP: real atom"
@@ -531,12 +530,12 @@ class ModelView:
 			self.propsmenuitem.set_sensitive(True)
 		elif _instance.isModel():
 			# MODEL instances have a special context menu:
-			_menu = self.get_model_context_menu(_instance)
+			self.modelmenu = self.get_model_context_menu(_instance)
 			self.modelview.grab_focus()
 			self.modelview.set_cursor(_path,_col,0)
 			print "RUNNING POPUP MENU"
-			_menu.popup(None,None,lambda _menu,data: (event.get_root_coords()[0],event.get_root_coords()[1], True),None,_button,event.time)
-			return
+			self.modelmenu.popup(None, None, None, None, _button, event.time)
+			return True
 
 		self.hidevariable.set_label("Hide " + str(_instance.getType()))
 		self.hidevariable.set_sensitive(True)
@@ -544,7 +543,7 @@ class ModelView:
 		self.modelview.grab_focus()
 		self.modelview.set_cursor( _path, _col, 0)
 		self.treecontext.popup( None, None, None,None, _button, event.time)
-		return 1
+		return True
 
 	def get_model_context_menu(self,instance):
 		menu = Gtk.Menu()
