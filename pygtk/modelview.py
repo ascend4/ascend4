@@ -130,6 +130,19 @@ class ModelView:
 		self.hidemenuitem.show_all()
 		self.hideallmenuitem.set_sensitive(True)
 
+	def clear_variables_menus(self):
+		self.variables = {"showed": [], "hidden": []}
+		allitem = self.hidemenuitem.get_submenu().get_children()[0]
+		for item in list(self.hidemenuitem.get_submenu().get_children()):
+			self.hidemenuitem.get_submenu().remove(item)
+		self.hidemenuitem.get_submenu().append(allitem)
+		allitem.set_sensitive(False)
+		allitem = self.showmenuitem.get_submenu().get_children()[0]
+		for item in list(self.showmenuitem.get_submenu().get_children()):
+			self.showmenuitem.get_submenu().remove(item)
+		self.showmenuitem.get_submenu().append(allitem)
+		allitem.set_sensitive(False)
+
 	def show_all_variables(self, *args):
 		for instype in list(self.variables["hidden"]):
 			self.set_variable_visibility(instype, True)
@@ -211,6 +224,7 @@ class ModelView:
 		return instype in self.variables["showed"]
 
 	def clear(self):
+		self.clear_variables_menus()
 		self.modelstore.clear()
 		self.otank = {}
 
