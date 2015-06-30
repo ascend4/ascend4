@@ -129,24 +129,27 @@ void remove_tables(Ttse *table)
 
 
 
-void nearest_neighbor(double t, double rho, int *i, int *j){
-
-
-
-}
-
+/*
+    This will load the binary file from tables/ for the liquid of interest and the EOS and populate the matrices.
+    If the files are not present in tables/ then build_tables() should be used.
+*/
 
 void load_tables(PureFluid *P){
 
 
 }
 
-
+/*
+    After building the tables once this should be called to save the files in binary inside tables/
+*/
 void save_tables(PureFluid *P){
 
 
 }
 
+/*
+    Actual building of tables is done here.
+*/
 void build_tables(PureFluid *P){
 
     #ifndef PT
@@ -157,10 +160,12 @@ void build_tables(PureFluid *P){
 
     double tmin,tmax,rhomin,rhomax;
 
-    PT->tmin = 260;
-    PT->tmax = 400;
-    PT->rhomin = 0.00001;
-    PT->rhomax = 2;
+//Pseudo values for water
+
+    PT->tmin = 200;
+    PT->tmax = 800;
+    PT->rhomin = 400;
+    PT->rhomax = 1400;
 
     tmin = PT->tmin;
     tmax = PT->tmax;
@@ -171,7 +176,8 @@ void build_tables(PureFluid *P){
     double drho = (rhomax-rhomin)/NRHOP;
 
 
-    MSG("%e  %e",dt,drho);
+//    MSG("%e  %e",dt,drho);
+    MSG("BUILDING TABLES",dt,drho);
 
     clock_t start = clock();
 
@@ -208,7 +214,7 @@ void build_tables(PureFluid *P){
 
     clock_t end = clock();
     double msec = (double)(end - start) / (CLOCKS_PER_SEC/1000);
-    MSG("Table prepared in %f seconds", msec/1000);
+    MSG("Tables built in %f seconds", msec/1000);
 
 
 
@@ -221,7 +227,6 @@ void build_tables(PureFluid *P){
 #define EVALTTSEFN(VAR) \
 	double evaluate_ttse_##VAR(PureFluid *P , double t, double rho){\
             int i,j;\
-            FpropsError err = FPROPS_NO_ERROR;\
             double tmin = P->table->tmin; double tmax = P->table->tmax;\
             double rhomin  = P->table->rhomin; double rhomax= P->table->rhomax;\
             double dt = (tmax-tmin)/NTP;\
@@ -298,7 +303,6 @@ void ttse_prepare(PureFluid *P){
     if(!P->table->usettse)
         return;
 
-    FpropsError err = FPROPS_NO_ERROR;
 
     MSG("Inside TTSE");
 
@@ -306,27 +310,17 @@ void ttse_prepare(PureFluid *P){
 
     build_tables(P);
 
-    MSG("helmholtz computed %f  ", P->p_fn(380, 1, P->data,&err) );
-    MSG("TTSE Evaluated %f  ", evaluate_ttse_p(P,380, 1) );
-
-
-
-    MSG("helmholtz computed %f  ", P->h_fn(380, 1, P->data,&err) );
-    MSG("TTSE Evaluated %f  ", evaluate_ttse_h(P,380, 1) );
-
-
-
-    MSG("helmholtz computed %f  ", P->s_fn(380, 1, P->data,&err) );
-    MSG("TTSE Evaluated %f  ", evaluate_ttse_s(P,380, 1) );
-
 #ifdef TTSE_DEBUG
     fclose(F1);
 #endif
+
 
 }
 
 
 void ttse_clean(PureFluid *P){
     remove_tables(P->table);
+
+
 }
 

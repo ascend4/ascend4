@@ -20,7 +20,6 @@
 
 #ifndef FPROPS_H
 #define FPROPS_H
-
 #include "rundata.h"
 
 /**
@@ -70,7 +69,7 @@ double fprops_cp0(FluidState state, FpropsError *err); ///< Specific isobaric he
 /**	\brief Partial derivative of pressure wrt temperature at density constant.
 	\f$\left(\frac{\partial p}{\partial T}\right)_{\rho}\f$
 */
-double fprops_dpdT_rho(FluidState state, FpropsError *err); 
+double fprops_dpdT_rho(FluidState state, FpropsError *err);
 
 /// return the fluid quality; 0 if subcooled, 1 if superheated, error if both T>T_c and p>p_c
 double fprops_x(FluidState state, FpropsError *err);

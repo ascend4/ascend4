@@ -24,6 +24,7 @@ Data declarations as provided in input files are given in filedata.h
 #ifndef FPROPS_RUNDATA_H
 #define FPROPS_RUNDATA_H
 
+#include <stdio.h>
 #include "common.h"
 
 /* TODO remove this dependency eventually (some helmholtz data objects are not yet being copied into new structures*/
@@ -178,16 +179,17 @@ typedef struct PureFluid_struct{
 	PropEvalFn *g_fn;
 	PropEvalFn *alphap_fn;
 	PropEvalFn *betap_fn;
-	PropEvalFn *dpdrho_T_fn, *d2pdrho2_T_fn, *dpdT_rho_fn, *d2pdT2_rho_fn, *d2pdTdrho_fn;
+	PropEvalFn *dpdrho_T_fn, *d2pdrho2_T_fn, *dpdT_rho_fn, *d2pdT2_rho_fn, *d2pdTdrho_fn;// dpdrho_T_fn this derivative is required for saturation properties by Akasaka method
 	PropEvalFn *dhdrho_T_fn, *d2hdrho2_T_fn, *dhdT_rho_fn, *d2hdT2_rho_fn, *d2hdTdrho_fn;
 	PropEvalFn *dsdrho_T_fn, *d2sdrho2_T_fn, *dsdT_rho_fn, *d2sdT2_rho_fn, *d2sdTdrho_fn;
 	PropEvalFn *dudrho_T_fn, *d2udrho2_T_fn, *dudT_rho_fn, *d2udT2_rho_fn, *d2udTdrho_fn;
-	PropEvalFn *dgdrho_T_fn, *d2gdrho2_T_fn, *dgdT_rho_fn, *d2gdT2_rho_fn, *d2gdTdrho_fn;  // this derivative is required for saturation properties by Akasaka method
+	PropEvalFn *dgdrho_T_fn, *d2gdrho2_T_fn, *dgdT_rho_fn, *d2gdT2_rho_fn, *d2gdTdrho_fn;
 	SatEvalFn *sat_fn; // function to return {psat,rhof,rhog}(T) for this pure fluid
 
 	const ViscosityData *visc; // TODO should it be here? or inside FluidData?? probably yes, but needs review.
 	const ThermalConductivityData *thcond; // TODO should it be here? probably yes, but needs review.
 	Ttse * table;
+	FILE * file_table; //file pointer to open the binary files for TTSE tables.
 } PureFluid;
 
 
