@@ -178,7 +178,7 @@ void build_tables(PureFluid *P){
     double drho = (rhomax-rhomin)/NRHOP;
 
 
-//    MSG("%e  %e",dt,drho);
+    MSG("DTemp is %f and DRho is  %f",dt,drho);
     MSG("BUILDING TABLES");
 
     clock_t start = clock();

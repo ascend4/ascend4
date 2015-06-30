@@ -39,11 +39,11 @@ int main(void){
 	 PureFluid *P;
 	FpropsError err;
     const char *helmfluids[] = { "water"};
-	const int n = sizeof(helmfluids)/sizeof(char *);
+	//const int n = sizeof(helmfluids)/sizeof(char *);
 	int i;
 
 
-    printf("%d %s\n",n,helmfluids[0]);
+    MSG("Which Fluid? -->  %s",helmfluids[0]);
 
     P = (PureFluid *)fprops_fluid(helmfluids[0],"helmholtz",NULL);
 
