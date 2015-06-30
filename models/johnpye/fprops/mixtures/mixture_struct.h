@@ -24,7 +24,14 @@
 	Enumerations and structures used in modeling mixtures
  */
 
+#ifndef MIX_STRUCT_HEADER
+#define MIX_STRUCT_HEADER
+
+#include "../rundata.h"
+
 #define MIX_XTOL 1e-6
+
+typedef double SecantSubjectFunction(double, void *user_data);
 
 /* Enumerations to hold phase-equilibrium conditions and names of phases */
 typedef enum PhaseEquilibrium_Enum {
@@ -73,7 +80,7 @@ typedef struct PhaseSpec_Struct {
 	PhaseName *ph_name; /* type of each phase */
 	double *ph_frac;    /* fraction of total mass in each phase */
 	double **Xs;        /* mass fractions of components in each phase */
-	double **rhos       /* densities of components in each phase */
+	double **rhos;      /* densities of components in each phase */
 } PhaseSpec;
 
 /*
@@ -104,9 +111,10 @@ typedef struct MixturePhaseState_Struct {
 	suspect it may prove superior to the MixturePhaseState structure above.
  */
 typedef struct PhaseMixtureState_Struct {
-	double T;       /* temperature */
-	double p;       /* pressure */
-	PhaseSpec *PH;  /* specification of phases */
-	MixtureSpec *MX /* specification of mixture */
+	double T;        /* temperature */
+	double p;        /* pressure */
+	PhaseSpec *PH;   /* specification of phases */
+	MixtureSpec *MX; /* specification of mixture */
 } PhaseMixState;
 
+#endif

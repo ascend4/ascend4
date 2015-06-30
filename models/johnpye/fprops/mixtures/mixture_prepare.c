@@ -74,11 +74,11 @@ MixtureSpec *mixture_specify(unsigned npure, double *Xs, void **fluids, char *ty
 	}
 
 	MixtureSpec MS = {
-		.pures = npure;
-		.Xs = Xs;
-		.PF = PF;
-	}
+		.pures = npure,
+		.Xs = Xs,
+		.PF = PF,
+	};
 
-	return &MS
+	return &MS;
 }
 

@@ -25,9 +25,16 @@
 	Function headers for generic functions used in modeling mixtures
  */
 
+#ifndef MIX_GENERICS_HEADER
+#define MIX_GENERICS_HEADER
+
+#include "mixture_struct.h"
+
 double my_min(unsigned nelems, double *nums);
 double my_max(unsigned nelems, double *nums);
 double my_sum(unsigned nelems, double *nums);
 unsigned index_of_min(unsigned nelems, double *nums);
 unsigned index_of_max(unsigned nelems, double *nums);
 void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], double tol);
+
+#endif

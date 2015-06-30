@@ -130,7 +130,7 @@
 	D( BOOLEAN_CONSTANT_INST,ICONS | IINT) X       /**< Boolean constant instance. */ \
 	D( INTEGER_CONSTANT_INST,ICONS | IBOOL) X      /**< Int constant instance. */ \
 	D( SYMBOL_CONSTANT_INST, ICONS | ISYM) X       /**< Symbol constant instance. */ \
-	D( DUMMY_INST,           IDUMB)                /**< Dummy instance - unselected IS_A children. */
+	D( DUMMY_INST,           IDUMB) /* X */              /**< Dummy instance - unselected IS_A children. */ \
     /* AUTO_INST = ICOMP | IMOD | IAUTO, */ /* future stack instance, would come after 'MODEL_INST' */
 
 /**

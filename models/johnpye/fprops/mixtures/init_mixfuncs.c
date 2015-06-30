@@ -110,6 +110,7 @@ void ig_rhos(MixtureState *M, double P, char **Names){
  */
 void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
 	unsigned i;
+	int Region;
 	/* enum Region_Enum {SUPERCRIT, GASEOUS, LIQUID, VAPOR, SAT_VLE} Region; */
 	#define SAT_VLE LIQUID+VAPOR
 	char *region_names[] = {

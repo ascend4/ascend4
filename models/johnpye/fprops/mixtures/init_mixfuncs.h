@@ -74,8 +74,6 @@
 		printf("\n"); \
 	}
 
-typedef double SecantSubjectFunction(double, void *user_data);
-
 /* Function prototypes */
 void mixture_x_props(unsigned nPure, double *Xs, double *props);
 double mixture_x_fill_in(unsigned nPure, double *Xs);
@@ -83,8 +81,6 @@ void ig_rhos(MixtureState *M, double P, char **Names);
 void initial_rhos(MixtureState *M, double P, char **names, FpropsError *err);
 void pressure_rhos(MixtureState *M, double P, double tol, /* char **Names, */ FpropsError *err);
 void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError *err);
-
-MixtureSpec *mixture_specify(unsigned npure, double *Xs, void **fluids, char *type, char *source);
 
 double mixture_rho(MixtureState *M);
 double mixture_u(MixtureState *M, FpropsError *err);

@@ -2,10 +2,10 @@
 
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
-IMPORT "johnpye/fprops/ideal_solution";
+IMPORT "johnpye/fprops/mixture";
 
-(*
-	The mixture_spec model specifies the composition of the mixture.
+(*  The mixture_spec model specifies the composition of the         ///1
+	mixture.
 
 	Such a model, which will be passed into the mixture functions as 
 	DATA, _must_ contain the following members:
@@ -13,7 +13,8 @@ IMPORT "johnpye/fprops/ideal_solution";
 		components, an array of symbol constants representing the fluids
 		xs, an array of mass fractions
 	the following members are optional:
-		type, a symbol_constant representing the type of correlation (equation of state)
+		type, a symbol_constant representing the type of correlation 
+		(equation of state)
 			'ideal' -- ideal-gas
 			'pengrob' -- Peng-Robinson
 			'helmholtz' -- Helmholtz equation of state
@@ -22,55 +23,56 @@ IMPORT "johnpye/fprops/ideal_solution";
 		source, the source of the correlation type
 		model, a symbol_constant specifying whether the solution is ideal or real
 *)
-MODEL mixture_spec1;
+MODEL mixture_spec; (* ///1 *)
 	npure IS_A integer_constant;
 
-	indices IS_A set OF integer;
-	indices :== [1 .. npure];
-
-	components[indices] IS_A symbol_constant;
-	xs[indices] IS_A mass_fraction;
+	components[1 .. npure] IS_A symbol_constant;
+	xs[1 .. npure] IS_A mass_fraction;
 	eos IS_A symbol_constant;
 
-	components :== ['nitrogen', 'methane' 'ammonia' 'carbondioxide'];
-	xs :== [0.4, 0.2, 0.1, 0.3];
-	eos :== 'pengrob';
+METHODS
+METHOD specify; (* ///2 *)
+	FIX xs[1.. npure];
+END specify;
+END mixture_spec; (* //\1 *)
 
-END mixture_spec1;
-
-(*MODEL mixture_state;
-	component[4] IS_A symbol_constant;
-	x[4] IS_A mass_fraction;
-	T IS_A temperature;
-	rhos[4] IS_A mass_density;
-	END mixture_state;*)
-
-MODEL mixture_test;
+MODEL mixture_test; (* ///1 *)
 	p IS_A pressure;
 	T IS_A temperature;
-	(* rhos[] IS_A mass_density; *)
-	h IS_A specific_enthalpy;
-	u IS_A specific_energy;
-	a IS_A specific_energy;
-	s IS_A specific_entropy;
+	rho IS_A mass_density;
 
-	mixt IS_A mixture_spec1;
-	(*mix_st IS_A mixture_state;*)
-
-	mix_pressure : mixture_p(
-		T : INPUT;
-		p : OUTPUT;
-		mixt : DATA;
-	)
+	mixt IS_A mixture_spec;
+	mixt.npure :== 3;
+	mixt.components[1] :== 'ammonia';
+	mixt.components[2] :== 'carbondioxide';
+	mixt.components[3] :== 'cyclohexane';
+	mixt.eos :== 'pengrob';
 
 	mix_density : mixture_rho(
 		T, p : INPUT;
 		rho : OUTPUT;
-		mixt : DATA;
-	)
+		mixt : DATA
+	);
 
 METHODS
-METHOD on_load;
-	RUN ClearAll;
-	FIX T, p;
-END mixture_test;
+METHOD specify; (* ///2 *)
+	RUN mixt.specify;
+	FIX T;
+	FIX p;
+	FIX rho;
+END specify;
+METHOD values; (* ///2 *)
+	T := 300 {K} + 273.15 {K};
+	p := 2 {bar};
+	mixt.xs := [0.4, 0.35, 0.25];
+END values;
+METHOD options; (* ///2 *)
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END options;
+METHOD setup; (* ///2 *)
+	RUN specify;
+	RUN values;
+	RUN options;
+END setup;
+END mixture_test; (* //\1 *)

@@ -26,6 +26,7 @@
  */
 
 #include "mixture_generics.h"
+#include "mixture_struct.h"
 
 double my_min(unsigned nelems, double *nums){
 	unsigned i;

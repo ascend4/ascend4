@@ -26,8 +26,8 @@
 
 #include <ascend/utilities/error.h>
 #include <ascend/general/platform.h>
-#include <ascend/general/extfunc.h>
 #include <ascend/general/list.h>
+#include <ascend/compiler/extfunc.h>
 #include <ascend/compiler/parentchild.h>
 /*
 	#include <ascend/compiler/child.h>
@@ -63,8 +63,8 @@ ExtBBoxFunc mixture_rho_calc;
 static symchar *mix_symbols[5];
 enum Symbol_Enum {NPURE_SYM, COMP_SYM, X_SYM, TYPE_SYM, SOURCE_SYM};
 
-static const char *mixture_p_help = "Calculate pressure for the mixture, using ideal solution assumption, and report if pressure is inconsistent among the densities"
-static const char *mixture_rho_help = "Calculate overall density of the solution, using ideal-solution assumption"
+static const char *mixture_p_help = "Calculate pressure for the mixture, using ideal solution assumption, and report if pressure is inconsistent among the densities";
+static const char *mixture_rho_help = "Calculate overall density of the solution, using ideal-solution assumption";
 
 /*
 	Register all functions that will be exported
@@ -75,8 +75,11 @@ extern ASC_EXPORT int mixture_register(){
 	ERROR_REPORTER_HERE(ASC_USER_WARNING,
 			"FPROPS in general, and IN PARTICULAR this mixture module, "
 			"are still EXPERIMENTAL.  Use with caution.");
+
+#define QQZX 3
+	
 #define CALCFN(NAME,INPUTS,OUTPUTS) \
-	result += CreateUserFunctionBlackBox(#Name \
+	result += CreateUserFunctionBlackBox( #NAME \
 			, asc_mixture_prepare \
 			, NAME##_calc              /* value */ \
 			, (ExtBBoxFunc *)NULL      /* derivatives -- none */ \
@@ -99,12 +102,12 @@ extern ASC_EXPORT int mixture_register(){
 /*
 	Function which prepares persistent data
  */
-int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g_list_t *arglist){
+int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct gl_list_t *arglist){
 
 #define CHECK_TYPE(VAR,TYPE,NAME,TYPENAME) \
 	if(InstanceKind(VAR)!=TYPE){ \
 		ERROR_REPORTER_HERE(ASC_USER_ERROR \
-			, "DATA member '%s' has type-value %x, but must have %s (value %x)" \
+			, "DATA member '%s' has type-value %#o, but must have %s (value %#o)" \
 			, NAME, InstanceKind(VAR), TYPENAME, TYPE); \
 		return 1; \
 	}
@@ -117,7 +120,7 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	CHECK_TYPE(VAR,TYPE,NAME,TYPENAME)
 
 	struct Instance *npureinst, *compinst, *xinst, *typeinst, *srcinst;
-	const unsigned npure;
+	unsigned npure;
 
 	mix_symbols[0] = AddSymbol("npure");
 	mix_symbols[1] = AddSymbol("components");
@@ -140,22 +143,12 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	} */
 	npure = (int *)IC_INST(npureinst)->value;
 
-	const gl_list_t *comps_gl;
-	const char *comps[npure], *type=NULL, *src=NULL;
+	const struct gl_list_t *comps_gl;
+	const char *comps[npure], *type=NULL, *source=NULL;
 	const double *xs[npure];
 
 	/* component names -- required */
 	compinst = ChildByChar(data, mix_symbols[COMP_SYM]);
-	/* if(!compinst){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR
-			, "Couldn't locate 'component' in DATA, please check usage");
-	}
-	if(InstanceKind(compinst)!=ARRAY_ENUM_INST){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR
-			, "DATA member 'component' was of type number %x, "
-			"but must be an array of symbol_constant(s) %x",
-			InstanceKind(compinst), )
-	} */
 	CHECK_EXIST_TYPE(compinst, ARRAY_ENUM_INST, "components",
 			"array of symbol_constant(s)");
 	comps_gl = ARY_INST(compinst)->children;

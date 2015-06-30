@@ -24,5 +24,12 @@
 	Prototypes for functions to prepare structs to represent mixtures to model
  */
 
-MixtureSpec *mixture_specify(unsigned npure, double *Xs, void **fluids, char *type, char *source);
+#ifndef MIX_PREPARE_HEADER
+#define MIX_PREPARE_HEADER
 
+#include "mixture_generics.h"
+#include "mixture_struct.h"
+
+MixtureSpec *mixture_specify(unsigned npure, double *Xs, void **fluids, char *type, char **source, MixtureError *merr);
+
+#endif
