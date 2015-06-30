@@ -39,8 +39,7 @@ int main(void){
 		FpropsError err = FPROPS_NO_ERROR;
 		P = fprops_fluid(*fi,NULL,"Span");
 		assert(P);
-		int testedpoints;
-		int nerr;
+
 
 		double T = 300.;
 		double rho = 1300.;

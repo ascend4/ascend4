@@ -36,7 +36,7 @@
 
 
 int main(void){
-	const PureFluid *P;
+	 PureFluid *P;
 	FpropsError err;
     const char *helmfluids[] = { "water"};
 	const int n = sizeof(helmfluids)/sizeof(char *);
@@ -45,7 +45,7 @@ int main(void){
 
     printf("%d %s\n",n,helmfluids[0]);
 
-    P = fprops_fluid(helmfluids[0],"helmholtz",NULL);
+    P = (PureFluid *)fprops_fluid(helmfluids[0],"helmholtz",NULL);
 
     MSG("Comparing Helmholtz vs TTSE");
 
@@ -96,7 +96,7 @@ int main(void){
 
 
     MSG("Percentage Errors");
-    MSG("Temp   Pressure   Entropy     Enthalpy");
+    MSG("Temp        Pressure   Entropy     Enthalpy");
 
 
 

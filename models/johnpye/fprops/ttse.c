@@ -179,7 +179,7 @@ void build_tables(PureFluid *P){
 
 
 //    MSG("%e  %e",dt,drho);
-    MSG("BUILDING TABLES",dt,drho);
+    MSG("BUILDING TABLES");
 
     clock_t start = clock();
 

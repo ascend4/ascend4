@@ -28,7 +28,6 @@
 int main(void){
 	const PureFluid *P;
 	FpropsError err;
-	FluidState S;
 
 #define FNAME(F) #F
 #define COMMA ,
@@ -37,7 +36,7 @@ int main(void){
   //  int ii;
 	//for(ii=0; ii< sizeof(helmfluids)/sizeof(char *) ; ii++)
       //  printf("%s \n",helmfluids[ii]);
-      printf("SIZE %d\n",sizeof(helmfluids)/sizeof(char *));
+      //printf("SIZE %d\n",sizeof(helmfluids)/sizeof(char *));
 #undef FNAME
 	const char *corrtypes[] = {"pengrob","helmholtz"}; // takes enum corrtypes_enum as index
 	const char *corrinitial[] = {"P","H"};
@@ -122,7 +121,7 @@ int main(void){
 		}
 		fprintf(stdout,":%s\n",helmfluids[i]);  // after test name of the fluid
 		if(nerr)errfluids[nerrfluids++] = helmfluids[i];
-		fprops_fluid_destroy(P); P = NULL;
+		fprops_fluid_destroy((PureFluid *)P); P = NULL;
 	}
 
 	if(nerrfluids){
