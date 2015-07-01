@@ -114,7 +114,7 @@ class UnitsDialog:
 			units = preferences.Preferences().getPreferredUnitsOrigin(str(T.getName()))
 			if units == CelsiusUnits.get_celsius_sign():
 				up = None
-			m.append(CelsiusUnits.get_units_row(up is None))
+			m.append(CelsiusUnits.get_units_row(up is None and units is not None))
 		##### CELSIUS TEMPERATURE WORKAROUND
 		for u in self.units:
 			if T is None or u.getDimensions()==d:
