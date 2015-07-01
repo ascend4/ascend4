@@ -928,7 +928,7 @@ double helmholtz_d2sdrho2_T(double T, double rho, const FluidData *data, FpropsE
 	assert(!isnan(phir_deldel));
 #endif
 
-    double res = HD_R / SQ(rho) * (1 - SQ(delta)*phir_deldel + tau*SQ(delta)*phir_taudeldel);
+    double res = (HD_R / SQ(rho)) * (1 - SQ(delta)*phir_deldel + tau*SQ(delta)*phir_taudeldel);
 
 #ifdef TEST
 	assert(!isinf(res));
