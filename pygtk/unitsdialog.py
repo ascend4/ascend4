@@ -1,7 +1,7 @@
 from gi.repository import Gtk
 from gi.repository import Pango
-from gi.repository import GObject
 import re
+import preferences
 
 class UnitsDialog:
 
@@ -78,6 +78,15 @@ class UnitsDialog:
 				#print "CAN APPLY: for type '%s', pref units currently '%s', now selected '%s'" % (T.getName(),T.getPreferredUnits().getName(), v)
 				can_apply = True
 				break
+		##### CELSIUS TEMPERATURE WORKAROUND
+		if str(T.getDimensions()) == 'TMP':
+			units = preferences.Preferences().getPreferredUnitsOrigin(str(T.getName()))
+			if units == CelsiusUnits.get_celsius_sign():
+				if units != self.changed.items()[0][1]:
+					can_apply = True
+				else:
+					can_apply = False
+		##### CELSIUS TEMPERATURE WORKAROUND
 		self.applybutton.set_sensitive(can_apply)
 
 	def update_typecombo(self,text = None):
@@ -100,12 +109,19 @@ class UnitsDialog:
 				print "preferred units =",up.getName()
 		else:
 			up = None
+		##### CELSIUS TEMPERATURE WORKAROUND
+		if str(d) == 'TMP':
+			units = preferences.Preferences().getPreferredUnitsOrigin(str(T.getName()))
+			if units == CelsiusUnits.get_celsius_sign():
+				up = None
+			m.append(CelsiusUnits.get_units_row(up is None))
+		##### CELSIUS TEMPERATURE WORKAROUND
 		for u in self.units:
 			if T is None or u.getDimensions()==d:
 				if up is None:
 					selected = False
 				else:
-					selected = (u==up)
+					selected = (u == up)
 				weight = Pango.Weight.NORMAL
 				if selected:
 					weight = Pango.Weight.BOLD
@@ -113,6 +129,7 @@ class UnitsDialog:
 				if str(du) == "1":
 					du = ""
 				m.append([selected,str(u.getName()),"%g %s" %(u.getConversion(),du),weight])
+
 		self.unitsview.set_model(m)
 
 	def on_typecombo_changed(self,widget,*args):
@@ -149,3 +166,27 @@ class UnitsDialog:
 						_obs.units_refresh(self.T)
 		self.window.hide()
 
+##### CELSIUS TEMPERATURE WORKAROUND
+class CelsiusUnits:
+
+	@staticmethod
+	def get_units_row(selected):
+		weight = Pango.Weight.NORMAL
+		if selected:
+			weight = Pango.Weight.BOLD
+		return [selected, CelsiusUnits.get_celsius_sign(), "1 K -273.15 K", weight]
+
+	@staticmethod
+	def get_celsius_sign():
+		return u"\u2103".encode("utf8")
+
+	@staticmethod
+	def convert_celsius_to_kelvin(value):
+		temp = float(value)
+		return str(temp + 273.15)
+
+	@staticmethod
+	def convert_kelvin_to_celsius(value):
+		temp = float(value)
+		return str(temp - 273.15)
+##### CELSIUS TEMPERATURE WORKAROUND

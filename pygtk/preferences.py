@@ -6,6 +6,7 @@ import platform
 
 ## @TODO implement this differently; the __del__ stuff is not working correctly
 ## in the context of the extpy extension.
+from unitsdialog import CelsiusUnits
 
 class Preferences:
 	__sharedstate = {}
@@ -70,9 +71,17 @@ class Preferences:
 			self.ini.add_section("Geometry:"+str(displayname))
 		self.ini.set("Geometry:"+str(displayname),key,str(value))		
 
-	def getPreferredUnits(self,key):
+	def getPreferredUnits(self, key):
+		_u = self.getPreferredUnitsOrigin(key)
+		##### CELSIUS TEMPERATURE WORKAROUND
+		if _u == CelsiusUnits().get_celsius_sign():
+			_u = "K"
+		##### CELSIUS TEMPERATURE WORKAROUND
+		return _u
+
+	def getPreferredUnitsOrigin(self, key):
 		try:
-			_u = self.ini.get("PreferredUnits",key);
+			_u = self.ini.get("PreferredUnits", key)
 		except ConfigParser.NoSectionError:
 			return None
 		except ConfigParser.NoOptionError:

@@ -281,7 +281,15 @@ class ModelView:
 		for _path in self.otank: # { path : (name,value) }
 			_iter = self.modelstore.get_iter(_path)
 			_name, _instance = self.otank[_path]
-			self.modelstore.set_value(_iter, 2, str(_instance.getValue()))
+			_value = str(_instance.getValue())
+			##### CELSIUS TEMPERATURE WORKAROUND
+			if _instance.getType().isRefinedReal() and str(_instance.getType().getDimensions()) == 'TMP':
+				units = preferences.Preferences().getPreferredUnitsOrigin(str(_instance.getType().getName()))
+				if units == CelsiusUnits.get_celsius_sign():
+					temp = _value.split(" ")[0]
+					_value = CelsiusUnits.convert_kelvin_to_celsius(temp) + " " + CelsiusUnits.get_celsius_sign()
+			##### CELSIUS TEMPERATURE WORKAROUND
+			self.modelstore.set_value(_iter, 2, _value)
 			if _instance.getType().isRefinedSolverVar():
 				if _instance.isFixed() and self.modelstore.get_value(_iter,3)==BROWSER_FREE_COLOR:
 					self.modelstore.set_value(_iter,3,BROWSER_FIXED_COLOR)
@@ -326,7 +334,14 @@ class ModelView:
 				return
 			# only real-valued things can have units
 
-			_e = RealAtomEntry(_instance,newtext);
+			##### CELSIUS TEMPERATURE WORKAROUND
+			if str(_instance.getType().getDimensions()) == 'TMP':
+				units = preferences.Preferences().getPreferredUnitsOrigin(str(_instance.getType().getName()))
+				if units == CelsiusUnits.get_celsius_sign():
+					newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext.split(" ")[0])
+			##### CELSIUS TEMPERATURE WORKAROUND
+
+			_e = RealAtomEntry(_instance, newtext)
 			try:
 				_e.checkEntry()
 				_e.setValue()
@@ -685,9 +700,9 @@ class ModelView:
 
 	def units_activate(self,*args):
 		T = self.get_selected_type()
-#try:
-		_un = UnitsDialog(self.browser,T)
-		_un.run()
-#		except:
-#			self.browser.reporter.reportError("Unable to display units dialog.")
+		try:
+			_un = UnitsDialog(self.browser,T)
+			_un.run()
+		except:
+			self.browser.reporter.reportError("Unable to display units dialog.")
 
