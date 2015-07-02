@@ -392,7 +392,7 @@ class ModelView:
 		
 		self.browser.do_solve_if_auto()
 
-	def make_children(self, value, piter ):
+	def make_children(self, value, piter, depth = 5):
 		assert(value)
 		if value.isCompound():
 			children=value.getChildren();
@@ -400,8 +400,8 @@ class ModelView:
 				try:
 					_name = child.getName();
 					_piter = self.make_row(piter,_name,child)
-					if child.isCompound() and len(child.getChildren())>0:
-						self.make_children(child,_piter)
+					if child.isCompound() and len(child.getChildren()) > 0 and depth > 0:
+						self.make_children(child, _piter, depth - 1)
 					_path = self.modelstore.get_path(_piter)
 					self.otank[_path.to_string()]=(_name,child)
 					#self.browser.reporter.reportError("2 Added %s at path %s" % (_name,repr(_path)))
@@ -428,9 +428,12 @@ class ModelView:
 
 		if depth:
 			for i in range( self.modelstore.iter_n_children( piter ) ):
-				path.append_index(i)
-				if path.to_string() in self.otank.keys():
-					self.make( path = path, depth = depth - 1 )
+				tmp_path = path.copy()
+				tmp_path.append_index(i)
+				if tmp_path.to_string() not in self.otank.keys():
+					continue
+
+				self.make(path=tmp_path, depth=depth - 1)
 		else:
 			self.modelview.expand_row(self.modelstore.get_path(self.modelstore.get_iter_first()),False) # Edit here only.
 
