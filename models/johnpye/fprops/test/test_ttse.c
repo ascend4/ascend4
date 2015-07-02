@@ -52,9 +52,9 @@ int main(void){
 
 
 
-    #define NPOINTS 500
+    #define NPOINTS 100000
     double temp_s = 400;
-    double temp_f = 500;
+    double temp_f = 1200;
     int nT = NPOINTS;
     double dT = (temp_f-temp_s)/nT;
 
@@ -108,7 +108,7 @@ int main(void){
         pererrp = 100*((pressT[i]-pressH[i])/pressH[i]);
         pererrh = 100*((enthalpyT[i]-enthalpyH[i])/enthalpyH[i]);
 
-        MSG("%3.6f\t%3.6f\t%3.6f",T, pererrp,pererrh );
+      //  MSG("%3.6f\t%3.6f\t%3.6f",T, pererrp,pererrh );
     }
 
 
@@ -122,7 +122,7 @@ int main(void){
         pererru = 100*((intuT[i]-intuH[i])/intuH[i]);
         pererrg = 100*((gibbsgT[i]-gibbsgH[i])/gibbsgH[i]);
 
-        MSG("%3.6f\t%3.6f\t%3.6f\t%3.6f",T, pererrs,pererru,pererrg );
+     //   MSG("%3.6f\t%3.6f\t%3.6f\t%3.6f",T, pererrs,pererru,pererrg );
     }
 
     double av[5]={0,0,0,0,0};
