@@ -34,12 +34,12 @@
 typedef double SecantSubjectFunction(double, void *user_data);
 
 /* Enumerations to hold phase-equilibrium conditions and names of phases */
-typedef enum PhaseEquilibrium_Enum {
+/* typedef enum PhaseEquilibrium_Enum {
 	GAS_PHASE, LIQ_PHASE, VLE_PHASE, LLE_PHASE
-} PhaseEqb;
+} PhaseEqb; */
 
 typedef enum PhaseNames_Enum {
-	SUPERCRIT, GAS, VAPOR, LIQUID, SOLID
+	SUPERCRIT, GAS, VAPOR, LIQUID, SOLID/* , SAT_VLE */
 } PhaseName;
 
 /*
@@ -98,12 +98,13 @@ typedef struct MixtureState_Struct {
 	Representation of mixture with phases
  */
 typedef struct MixturePhaseState_Struct {
-	double T;        /* mixture temperature */
-	double **rhos;   /* (current) mass densities of components */
-	MixtureSpec *X;  /* specification of pure-component members of mixture */
-	PhaseEqb ph;     /* type of phase equilibrium */
-	double *ph_frac; /* fraction of mass in each phase */
-	double **Xs;     /* mass fractions within each phase */
+	double T;           /* mixture temperature */
+	double **rhos;      /* (current) mass densities of components */
+	MixtureSpec *X;     /* specification of pure-component members of mixture */
+	unsigned phases;    /* number of phases */
+	PhaseName *ph_name; /* type of each phase */
+	double *ph_frac;    /* fraction of mass in each phase */
+	double **Xs;        /* mass fractions within each phase */
 } MixturePhaseState;
 
 /*

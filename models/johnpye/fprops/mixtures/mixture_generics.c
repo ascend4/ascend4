@@ -28,7 +28,7 @@
 #include "mixture_generics.h"
 #include "mixture_struct.h"
 
-double my_min(unsigned nelems, double *nums){
+double min_element(unsigned nelems, double *nums){
 	unsigned i;
 	double min=nums[0];
 	for(i=1;i<nelems;i++){
@@ -39,7 +39,7 @@ double my_min(unsigned nelems, double *nums){
 	return min;
 }
 
-double my_max(unsigned nelems, double *nums){
+double max_element(unsigned nelems, double *nums){
 	unsigned i;
 	double max=nums[0];
 	for(i=1;i<nelems;i++){
@@ -50,7 +50,7 @@ double my_max(unsigned nelems, double *nums){
 	return max;
 }
 
-double my_sum(unsigned nelems, double *nums){
+double sum_elements(unsigned nelems, double *nums){
 	unsigned i;
 	double sum=0.0;
 	for(i=0;i<nelems;i++){

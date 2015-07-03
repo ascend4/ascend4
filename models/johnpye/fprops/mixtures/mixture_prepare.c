@@ -32,6 +32,7 @@
 #include "../fprops.h"
 #include "../refstate.h"
 #include "../sat.h"
+#include <stdio.h>
 
 /**
 	Specify a mixture, without specifying state (temperature, pressure, or 
@@ -46,10 +47,9 @@
 	
 	@return a mixture specification (struct MixtureSpec)
  */
-MixtureSpec *mixture_specify(unsigned npure, double *Xs, void **fluids, char *type, char **source, MixtureError *merr){
+void mixture_specify(MixtureSpec *MS, unsigned npure, double *Xs, void **fluids, char *type, char **source, MixtureError *merr){
 	unsigned i;
 	double X_sum=0.0;
-	PureFluid *PF[npure];
 
 	for(i=0;i<npure;i++){
 		X_sum += Xs[i];
@@ -58,27 +58,55 @@ MixtureSpec *mixture_specify(unsigned npure, double *Xs, void **fluids, char *ty
 		*merr = MIXTURE_XSUM_ERROR;
 	}
 
-	if(strcmp(type, "ideal")){ /* model fluids with ideal-gas equation of state */
+	if(0==strcmp(type, "ideal")){ /* model fluids with ideal-gas equation of state */
 		EosData **ig_fluids = (EosData **)fluids;
 		ReferenceState ref = {FPROPS_REF_REF0};
 
 		for(i=0;i<npure;i++){
-			PF[i] = ideal_prepare(ig_fluids[i], &ref);
+			MS->PF[i] = ideal_prepare(ig_fluids[i], &ref);
 		}
 	}else{ /* use some other equation of state */
 		char **fluid_names = (char **)fluids;
 
 		for(i=0;i<npure;i++){
-			PF[i] = fprops_fluid(fluid_names[i],type,source[i]);
+			MS->PF[i] = fprops_fluid(fluid_names[i],type,source[i]);
+			/* printf("\nprepared fluid %s", fluid_names[i]); */
 		}
 	}
 
-	MixtureSpec MS = {
-		.pures = npure,
-		.Xs = Xs,
-		.PF = PF,
-	};
+	/* *MS = ASC_NEW(MixtureSpec); */
+	/* MS->pures = npure; */
+	/* MS->Xs = Xs; */
+	/* MS->PF = PF; */
 
-	return &MS;
+	for(i=0;i<npure;i++){
+		printf("\nfluid number %u at %p is %s, modeled with %u"
+				, i, MS->PF[i], MS->PF[i]->name, MS->PF[i]->type);
+	}
 }
 
+void mixture_fluid_spec(MixtureSpec *MS, unsigned npure, void **fluids, char *type, char **source, MixtureError *merr){
+	unsigned i;
+	double X_sum=0.0;
+
+	if(0==strcmp(type, "ideal")){ /* model fluids with ideal-gas equation of state */
+		EosData **ig_fluids = (EosData **)fluids;
+		ReferenceState ref = {FPROPS_REF_REF0};
+
+		for(i=0;i<npure;i++){
+			MS->PF[i] = ideal_prepare(ig_fluids[i], &ref);
+		}
+	}else{ /* use some other equation of state */
+		char **fluid_names = (char **)fluids;
+
+		for(i=0;i<npure;i++){
+			MS->PF[i] = fprops_fluid(fluid_names[i],type,source[i]);
+			/* printf("\nprepared fluid %s", fluid_names[i]); */
+		}
+	}
+
+	/* for(i=0;i<npure;i++){
+		printf("\nfluid number %u at %p is %s, modeled with %u"
+				, i, MS->PF[i], MS->PF[i]->name, MS->PF[i]->type);
+	} */
+}

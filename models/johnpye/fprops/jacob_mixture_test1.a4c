@@ -27,6 +27,7 @@ MODEL mixture_spec; (* ///1 *)
 	npure IS_A integer_constant;
 
 	components[1 .. npure] IS_A symbol_constant;
+	(*components[1 .. npure] IS_A integer_constant;*)
 	xs[1 .. npure] IS_A mass_fraction;
 	eos IS_A symbol_constant;
 
@@ -36,9 +37,29 @@ METHOD specify; (* ///2 *)
 END specify;
 END mixture_spec; (* //\1 *)
 
-MODEL mixture_test; (* ///1 *)
-	p IS_A pressure;
+(*MODEL mixture_state; ( * ///1 * )
 	T IS_A temperature;
+	p IS_A pressure;
+	MS IS_A mixture_spec;
+
+	nphase IS_A integer_constant;
+	phase[1 .. nphase] IS_A symbol_constant;
+	ph_frac[1 .. nphase] IS_A mass_fraction;
+	ph_xs[1 .. nphase][1 .. MS.npure] IS_A mass_fraction;
+	ph_rhos[1 .. nphase][1 .. MS.npure] IS_A mass_density;
+
+METHODS
+METHOD specify; ( * ///2 * )
+	MS.specify;
+	FIX ph_frac;
+	FIX ph_xs;
+	FIX ph_rhos;
+END specify;
+END mixture_state; ( * //\1 *)
+
+MODEL mixture_test; (* ///1 *)
+	T IS_A temperature;
+	p IS_A pressure;
 	rho IS_A mass_density;
 
 	mixt IS_A mixture_spec;
@@ -46,7 +67,10 @@ MODEL mixture_test; (* ///1 *)
 	mixt.components[1] :== 'ammonia';
 	mixt.components[2] :== 'carbondioxide';
 	mixt.components[3] :== 'cyclohexane';
-	mixt.eos :== 'pengrob';
+ (*mixt.components[1] :== 2;
+	mixt.components[2] :== 4;
+	mixt.components[3] :== 16;
+	mixt.eos :== 'pengrob';*)
 
 	mix_density : mixture_rho(
 		T, p : INPUT;

@@ -30,6 +30,7 @@
 #include "mixture_generics.h"
 #include "mixture_struct.h"
 
-MixtureSpec *mixture_specify(unsigned npure, double *Xs, void **fluids, char *type, char **source, MixtureError *merr);
+void mixture_specify(MixtureSpec *MS, unsigned npure, double *Xs, void **fluids, char *type, char **source, MixtureError *merr);
+void mixture_fluid_spec(MixtureSpec *MS, unsigned npure, void **fluids, char *type, char **source, MixtureError *merr);
 
 #endif

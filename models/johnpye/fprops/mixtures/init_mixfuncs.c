@@ -158,9 +158,6 @@ void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
 						cannot be determined without knowing how much of the 
 						substance is in the vapor and how much in the liquid.
 					 */
-					/*printf("\n\tThe substance %s is in vapor-liquid equilibrium; "
-							"it has been assigned a provisional density %.5f kg/m3.",
-							Names[i], RHOS[i]);*/
 					Region = SAT_VLE;
 				}
 			}
@@ -195,6 +192,8 @@ SecantSubjectFunction pressure_rho_error;
 double pressure_rho_error(double rho, void *user_data){
 	PRData *prd = (PRData *)user_data;
 	FluidState fst = {prd->T, rho, prd->pfl};
+	printf("\n\tPressure while seeking pressure at density = %.6g kg/m^3 is %.0f Pa"
+			, rho, fprops_p(fst, prd->err));
 	
 	return fabs(prd->P - fprops_p(fst, prd->err));
 }
@@ -222,10 +221,7 @@ void pressure_rhos(MixtureState *M, double P, double tol, /* char **Names, */ Fp
 			densities_to_mixture       in  init_mix.c or this file
 			densities_Ts_to_mixture    in  init_mix.c or this file
 	 */
-	unsigned i1, i2;   /* counter variables */
-	// double p1, p2,     /* pressures */
-	// 	   rho1, rho2, /* densities */
-	// 	   delta_rho;  /* change in density for one step */
+	unsigned i1;   /* counter variables */
 
 	for(i1=0;i1<NPURE;i1++){
 		PRData prd = {TT, P, PF[i1], err};

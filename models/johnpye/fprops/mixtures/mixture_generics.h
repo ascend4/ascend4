@@ -28,11 +28,19 @@
 #ifndef MIX_GENERICS_HEADER
 #define MIX_GENERICS_HEADER
 
-#include "mixture_struct.h"
+#if 0
+#include <ascend/general/ascMalloc.h>
+#else
+#define ASC_NEW(TYPE) (TYPE*)malloc(sizeof(TYPE))
+#define ASC_NEW_ARRAY(TYPE,COUNT) (TYPE*)malloc((COUNT)*sizeof(TYPE))
+#endif
 
-double my_min(unsigned nelems, double *nums);
-double my_max(unsigned nelems, double *nums);
-double my_sum(unsigned nelems, double *nums);
+#include "mixture_struct.h"
+#include <stdio.h>
+
+double min_element(unsigned nelems, double *nums);
+double max_element(unsigned nelems, double *nums);
+double sum_elements(unsigned nelems, double *nums);
 unsigned index_of_min(unsigned nelems, double *nums);
 unsigned index_of_max(unsigned nelems, double *nums);
 void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], double tol);

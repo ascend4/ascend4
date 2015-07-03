@@ -44,6 +44,7 @@
  */
 
 #include "../mixtures/init_mixfuncs.h"
+#include "../mixtures/mixture_prepare.h"
 #include "../helmholtz.h"
 #include "../pengrob.h"
 #include "../fluids.h"
@@ -64,17 +65,24 @@ extern const EosData eos_rpp_methane;
 extern const EosData eos_rpp_water;
 
 /* Function prototypes */
-double rachford_rice(double V, void *user_data);
+SecantSubjectFunction rachford_rice;
+SecantSubjectFunction pressure_rho_error;
+double rho_from_pressure(double T, double p, double rho_start, double tol, PureFluid *PF, FpropsError *err);
+
+PhaseMixState *mixture_phase_prepare(MixtureSpec *MX, double T, double P, FpropsError *err);
 void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *err);
 void solve_mixture_conditions(unsigned n_sims, double *Ts, double *Ps, MixtureSpec *M, char **Names, FpropsError *err);
 void densities_Ts_to_mixture(MixtureState *MS, double *P_out, double *T_in, double tol, char **Names, FpropsError *err);
-void pengrob_phi_pure(double *phi_out, MixtureSpec *M, double T, double *rhos, FpropsError *err);
-void pengrob_phi_mix(double *phi_out, MixtureState *M, double P, FpropsError *err);
-void mole_fractions(unsigned n_pure, double *x_mole, double *X_mass, PureFluid **PF);
+
+void pengrob_phi_all(double *phi_out, MixtureSpec *M, double T, double *rhos, FpropsError *err);
+double pengrob_phi_pure(PureFluid *PF, double T, double rho, FpropsError *err);
+double poynting_factor(PureFluid *PF, double T, double rho, FpropsError *err);
+
 void test_one(double *Ts, double *Ps);
 void test_two(double T, double P);
 void test_three(double T, double *rhos);
 void test_four(double T, double P);
+void test_five(double T, double P);
 
 /*
 	Structure to pass constant parameters into the Rachford-Rice function
@@ -141,12 +149,19 @@ void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *er
 	p_d = 1./rp_d;
 
 	if(P<=p_d){                /* system will be all-gas */
-		M->ph = GAS_PHASE;
+		M->phases = 1;
+		M->ph_name[0] = VAPOR;
 		puts("\n\tMixture is all gas/vapor.");
 	}else if(P>=p_b){          /* system will be all-liquid */
-		M->ph = LIQ_PHASE;
+		M->phases = 1;
+		M->ph_name[0] = LIQUID;
 		puts("\n\tMixture is all liquid.");
 	}else{                     /* system may be in vapor-liquid equilibrium */
+		M->phases = 2;
+		M->ph_name[0] = VAPOR;
+		M->ph_name[1] = LIQUID;
+		M->ph_name[2] = SUPERCRIT;
+
 		RRData RR = {NPURE, zs, Ks};
 		double tol = 1.e-6;
 
@@ -156,8 +171,8 @@ void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *er
 			ys[i] = (zs[i] * Ks[i]) / ((1 - V[0]) + V[0]*Ks[i]);
 			xs[i] = zs[i] / (1 + (V[0] * (Ks[i] - 1)));
 		}
-		ys[NPURE-1] = 1 - my_sum(NPURE-1, ys); /* ys[0] starts as 0.0, so the fractions should sum correctly */
-		xs[NPURE-1] = 1 - my_sum(NPURE-1, xs);
+		ys[NPURE-1] = 1 - sum_elements(NPURE-1, ys); /* fractions should sum correctly */
+		xs[NPURE-1] = 1 - sum_elements(NPURE-1, xs);
 
 		for(i=0;i<NPURE;i++){
 			XS[0][i] = ys[i] * D->M; /* first step in calculating mass fractions */
@@ -206,22 +221,23 @@ int main(){
 	double T[]={250, 300, 300, 350, 350, 400, 900};               /* K */
 	double P[]={1.5e5, 1.5e5, 1.9e5, 1.9e5, 2.1e5, 2.1e5, 3.2e6}; /* Pa */
 
-	double rho1[]={
+	/* double rho1[]={
 		2, 3, 2.5, 1.7, 1.9
 	};
 	double rho2[]={
 		1.1, 2, 1.5, 1.7, 1.9
-	};
+	}; */
 
 	/* test_one(T, P); */
-	test_two(T[1], P[1]);
-	test_three(T[1], rho1);
-	test_four(T[5], P[6]);
+	/* test_two(T[1], P[1]); */
+	/* test_three(T[1], rho1); */
+	/* test_four(T[5], P[6]); */
+	test_five(270, 1.5e5);
 
 	return 0;
 } /* end of `main' */
 
-void pengrob_phi_pure(double *phi_out, MixtureSpec *M, double T, double *rhos, FpropsError *err){
+void pengrob_phi_all(double *phi_out, MixtureSpec *M, double T, double *rhos, FpropsError *err){
 #define NPURE M->pures
 #define D M->PF[i]->data
 #define RR D->R
@@ -238,7 +254,7 @@ void pengrob_phi_pure(double *phi_out, MixtureSpec *M, double T, double *rhos, F
 	
 	for(i=0;i<NPURE;i++){ /* find fugacity coefficient for each component */
 		P = fprops_p((FluidState){T, rhos[i], M->PF[i]}, err);
-		printf("\n  Substance number %u\n\tPressure is now %.0f Pa", i, P);
+		/* printf("\n  Substance number %u\n\tPressure is now %.0f Pa", i, P); */
 
 		Tr = T/D->T_c;
 		alpha = (1 + PR->kappa * (1 - sqrt(Tr)));
@@ -247,12 +263,12 @@ void pengrob_phi_pure(double *phi_out, MixtureSpec *M, double T, double *rhos, F
 		A = aT * P / (RR * RR * T * T);
 		B = PR->b * P / (RR * T);
 		Z = P / (rhos[i] * RR * T);
-		printf("\n\tCompressibility is %.6g;\n\t`A' is %.6g\n\t`B' is %.6g", Z, A, B);
+		/* printf("\n\tCompressibility is %.6g;\n\t`A' is %.6g\n\t`B' is %.6g", Z, A, B); */
 
 		cpx_ln = log( (Z + (1 + M_SQRT2)*B)/(Z + (1 - M_SQRT2)*B) );
 		phi_out[i] = exp( Z - 1 - log(Z - B) - (A / 2 / M_SQRT2) * cpx_ln );
-		printf("\n\tLog of fugacity coefficient is %.6g", Z - 1 - log(Z - B) - (A / (2*M_SQRT2))*cpx_ln);
-		printf("\n\tFugacity coefficient is %.6g", phi_out[i]);
+		/* printf("\n\tLog of fugacity coefficient is %.6g", Z - 1 - log(Z - B) - (A / (2*M_SQRT2))*cpx_ln); */
+		/* printf("\n\tFugacity coefficient is %.6g", phi_out[i]); */
 	}
 
 #undef PR
@@ -261,91 +277,100 @@ void pengrob_phi_pure(double *phi_out, MixtureSpec *M, double T, double *rhos, F
 #undef NPURE
 }
 
-void pengrob_phi_mix(double *phi_out, MixtureState *M, double P, FpropsError *err){
-#define NPURE M->X->pures
-#define XS M->X->Xs
-#define TT M->T
-#define D M->X->PF[i]->data
-#define RMOL D->R * D->M
-#define PR D->corr.pengrob
-	unsigned i, j;
-	double as[NPURE], /* parameters a,b for each species */
-		   bs[NPURE];
-	double a_mix=0.0, /* parameters a,b for the mixture */
-		   b_mix=0.0,
-		   M_mix,     /* average molar mass of mixture */
-		   v_mix,     /* molar volume of mixture */
-		   P_calc,    /* pressure */
-		   alpha,     /* intermediate variable in calculating aT */
-		   Tr,        /* reduced temperature */
-		   A,         /* two variables */
+double pengrob_phi_pure(PureFluid *PF, double T, double rho, FpropsError *err){
+#define RR PF->data->R
+#define PR PF->data->corr.pengrob
+	double P,     /* pressure */
+		   Tr,    /* reduced temperature */
+		   aT,    /* parameter `a' at the temperature */
+		   alpha, /* intermediate variable in calculating aT */
+		   A,     /* two variables */
 		   B,
-		   Z;         /* compressibility */
-	double cpx_term,
-		   a_sum=0.0;
-	double x_mole[NPURE];
-	mole_fractions(NPURE, x_mole, XS, M->X->PF); /* mole fractions */
+		   Z,     /* compressibility */
+		   cpx_ln; /* rather involved part of the fugacity coefficient */
+	
+	P = fprops_p((FluidState){T, rho, PF}, err);
+	printf("\nPressure is now %.0f Pa", P);
+	Tr = T / PF->data->T_c;
+	alpha = (1 + PR->kappa * (1 - sqrt(Tr)));
+	aT = PR->aTc * alpha * alpha;
 
-	puts("\n  Mixture fugacity coefficient calculations:");
-	for(i=0;i<NPURE;i++){
-		Tr = TT/D->T_c;
-		alpha = (1 + PR->kappa * (1 - sqrt(Tr)));
-		as[i] = PR->aTc * alpha * alpha * D->M * D->M; /* individual parameters converted to use molar units for proper combining */
-		bs[i] = PR->b * D->M;
-		printf("\n\tSubstance number %u\n\t  Parameter `a' %.6g\n\t  Parameter `b' %.6g",
-				i, as[i], bs[i]);
-		b_mix += bs[i] * XS[i];
-	}
-	for(i=0;i<NPURE;i++){
-		for(j=0;j<NPURE;j++){
-			a_mix += sqrt(as[i]*as[j]) * XS[i] * XS[j];
-		}
-	}
-	printf("\n\tMixture-wide parameter `a' %.6g\n\tMixture-wide parameter `b' %.6g", a_mix, b_mix);
+	A = aT * P / (RR * RR * T * T);
+	B = PR->b * P / (RR * T);
+	Z = P / (rho * RR * T);
+	printf("\n\tCompressibility is %.6g;\n\t`A' is %.6g\n\t`B' is %.6g", Z, A, B);
 
-	i = 0;
-	M_mix = mixture_M_avg(NPURE, XS, M->X->PF);
-
-	v_mix = M_mix / mixture_rho(M);
-	printf("\n\tMixture average molar mass %.2f kg/kmol\n\tMixture mass density %.4f kg/m3"
-			"\n\tMixture molar volume %.6g m3/kmol", M_mix, mixture_rho(M), v_mix);
-	P_calc = (RMOL * TT / (v_mix - b_mix)) - (a_mix / (v_mix * (v_mix + b_mix) + b_mix * (v_mix - b_mix)));
-	A = a_mix * P_calc / (RMOL * RMOL * TT * TT);
-	B = b_mix * P_calc / (RMOL * TT);
-	Z = v_mix * P_calc / (RMOL * TT);
-	printf("\n  Mixture fugacity coefficient:\n\tPressure is %.0f Pa;"
-			"\n\tCompressibility is %.5f;\n\t`A' is %.6g\n\t`B' is %.6g",
-			P_calc, Z, A, B);
-
-	for(i=0;i<NPURE;i++){
-		for(j=0;j<NPURE;j++){
-			a_sum += x_mole[j] * sqrt(as[i]*as[j]);
-		}
-		cpx_term = (2*a_sum/a_mix - bs[i]/b_mix) * log( (Z + (1 + M_SQRT2)*B) / (Z + (1 - M_SQRT2)*B) );
-		phi_out[i] = bs[i]*(Z-1)/b_mix - log(Z - B) - (A/(2*M_SQRT2*B) * cpx_term);
-		printf("\n\tFugacity coefficient is %.6g", phi_out[i]);
-	}
-
+	cpx_ln = log( (Z + (1 + M_SQRT2)*B)/(Z + (1 - M_SQRT2)*B) );
+	return exp( Z - 1 - log(Z - B) - (A / 2 / M_SQRT2) * cpx_ln );
 #undef PR
-#undef RMOL
-#undef D
-#undef TT
-#undef XS
-#undef NPURE
+#undef RR
 }
 
-void mole_fractions(unsigned n_pure, double *x_mole, double *X_mass, PureFluid **PF){
-#define D PF[i]->data
-	unsigned i;
-	double XM_sum=0.0; /* sum of mass fraction over molar mass terms */
+/*
+	Calculate the Poynting Factor.  This approximately accounts for the volume 
+	deviation of a liquid in phase equilibrium that results from the pressure 
+	effects due to not being at the saturation pressure.
+ */
+double poynting_factor(PureFluid *PF, double T, double rho, FpropsError *err){
+	double p,
+		   p_sat,
+		   rho_liq, rho_vap,
+		   ln_pf; /* natural logarithm of Poynting Factor */
 
-	for(i=0;i<n_pure;i++){
-		XM_sum += X_mass[i] / D->M;
+	p = fprops_p((FluidState){T, rho, PF}, err);
+
+	fprops_sat_T(T, &p_sat, &rho_liq, &rho_vap, PF, err);
+
+	ln_pf = (p - p_sat) / (rho_liq * PF->data->R * T);
+	return exp(ln_pf);
+}
+
+/* Finding density from pressure */
+/*
+	Structure to hold auxiliary data for function to find the error in pressure 
+	at a given density
+ */
+typedef struct PressureRhoData_Struct {
+	double T;
+	double P;
+	PureFluid *pfl;
+	FpropsError *err;
+} PRData;
+
+/*
+	Return error in pressure given a certain density
+ */
+/* double pressure_rho_error(double rho, void *user_data){
+	PRData *prd = (PRData *)user_data;
+	FluidState fst = {prd->T, rho, prd->pfl};
+	
+	return fabs(prd->P - fprops_p(fst, prd->err));
+} */
+
+/*
+	Return reasonable value of density at a given temperature and pressure, and 
+	from a given starting density.
+ */
+double rho_from_pressure(double T, double P, double rho_start, double tol, PureFluid *PF, FpropsError *err){
+	double rhos[] = {rho_start, 1.01*rho_start};
+	PRData prd = {T, P, PF, err};
+
+	while(rhos[1] < rhos[0]){ /* density is in the unstable region where dP/dv > 0; get out of there! */
+		rhos[1] /= 1.3;       /* I'm just guessing that this is a reasonable factor */
 	}
-	for(i=0;i<n_pure;i++){
-		x_mole[i] = X_mass[i] / D->M / XM_sum;
-	}
-#undef D
+	secant_solve(&pressure_rho_error, &prd, rhos, tol);
+
+	return rhos[0];
+}
+
+/* Finding phase-equilibrium conditions */
+/*
+	Apportion components into either critical/supercritical or saturation/VLE 
+	regions, and find saturation pressure, liquid and vapor densities for 
+	species in the saturation region.  Return this data 
+ */
+PhaseMixState *mixture_phase_prepare(MixtureSpec *MX, double T, double P, FpropsError *err){
+	/* unsigned i; */
 }
 
 /*
@@ -490,13 +515,13 @@ void test_two(double T, double P){
 	char *fluid_names[]={
 		/* "Nitrogen", */ "Ammonia", /* "Carbon Dioxide", "Methane", */ "Water"
 	};
-	const EosData *IdealEos[]={
+	/* const EosData *IdealEos[]={
 		&eos_rpp_nitrogen, 
 		&eos_rpp_ammonia, 
 		&eos_rpp_carbon_dioxide, 
 		&eos_rpp_methane, 
 		&eos_rpp_water
-	};
+	}; */
 
 	PureFluid *Helms[NFLUIDS];
 	/* PureFluid *Pengs[NFLUIDS]; */
@@ -529,12 +554,15 @@ void test_two(double T, double P){
 		/* .PF=Pengs */
 	};
 
-	double mp_ps[] = {0.0, 0.0};
-	double *mp_xs[] = {NULL, NULL};
-	double *mp_rhos[] = {NULL, NULL};
+	double mp_ps[] = {0.0, 0.0, 0.0};
+	unsigned mp_pn[] = {0, 0, 0};
+	double *mp_xs[] = {NULL, NULL, NULL};
+	double *mp_rhos[] = {NULL, NULL, NULL};
 	MixturePhaseState MP = {
 		.T=T
 		, .X=&MX
+		, .phases = 0
+		, .ph_name = mp_pn
 		, .ph_frac = mp_ps
 		, .Xs = mp_xs
 		, .rhos = mp_rhos
@@ -577,13 +605,13 @@ void test_three(double T, double *rhos){
 	char *fluid_names[]={
 		"Nitrogen", "Ammonia", "Carbon Dioxide", "Methane", "Water"
 	};
-	const EosData *IdealEos[]={
+	/* const EosData *IdealEos[]={
 		&eos_rpp_nitrogen, 
 		&eos_rpp_ammonia, 
 		&eos_rpp_carbon_dioxide, 
 		&eos_rpp_methane, 
 		&eos_rpp_water
-	};
+	}; */
 
 	PureFluid *Helms[NFLUIDS];
 	/* PureFluid *Pengs[NFLUIDS]; */
@@ -673,8 +701,8 @@ void test_four(double T, double P){
 	initial_rhos(&MS, P, fluid_names, &err);
 	pressure_rhos(&MS, P, tol, /* fluid_names, */ &err);
 
-	pengrob_phi_pure(phi_1, &MX, T, MS.rhos, &err);
-	pengrob_phi_mix(phi_2, &MS, P, &err);
+	pengrob_phi_all(phi_1, &MX, T, MS.rhos, &err);
+	/* pengrob_phi_mix(phi_2, &MS, P, &err); */
 
 	puts("\n  Pure-component fugacity coefficients:");
 	for(i=0;i<NFLUIDS;i++){
@@ -716,4 +744,137 @@ void test_four(double T, double P){
 				,d_helm);
 	} */
 #undef CH
+}
+
+void test_five(double T, double P){
+	unsigned i;
+#define NPURE 4
+#define D MS->PF[i]->data
+	char *fluids[] = {
+		/* "isohexane", */ "krypton", "carbonmonoxide", "ammonia", "water"
+	};
+	char *fluid_names[] = {
+		/* "isohexane", */ "krypton", "carbon monoxide", "ammonia", "water"
+	};
+	double Xs[] = {0.55, 0.20, 0.10, 0.05, 0.10};
+	char *src[] = {
+		NULL, NULL, NULL, NULL, NULL
+	};
+	FpropsError err = FPROPS_NO_ERROR;
+	MixtureError merr = MIXTURE_NO_ERROR;
+
+	MixtureSpec *MS = ASC_NEW(MixtureSpec);
+	MS->pures = NPURE;
+	MS->Xs = Xs;
+	MS->PF = ASC_NEW_ARRAY(PureFluid,NPURE);
+	/* {
+		.pures = NPURE
+		, .Xs = Xs
+		, .PF = (PureFluid *)pf;
+	} */
+	mixture_fluid_spec(MS, NPURE, (void *)fluids, "pengrob", src, &merr);
+
+	/* for(i=0;i<NPURE;i++){ 
+		printf("\n%s T_c = %.2f K, P_c = %.0f Pa", MS->PF[i]->name, D->T_c, D->p_c);
+	} */
+
+	/* declare variables used when finding phase equilibrium */
+	double tol = 1.e-5;
+	double p_sat[NPURE] = {0.0},
+		   T_sat[NPURE] = {0.0};
+	double rho_l[NPURE] = {0.0},
+		   rho_v[NPURE] = {0.0},
+		   rho_sc[NPURE] = {0.0},
+		   rho_dummy = 0.0;
+	double p_rho,
+		   p_b = 0.0,    /* bubble pressure */
+		   rp_d = 0.0,   /* reciprocal dew pressure */
+		   p_d;          /* dew pressure */
+	double phi_l[NPURE],
+		   phi_v[NPURE],
+		   pf_l[NPURE];
+	double x_vle[NPURE], /* overall mole fractions in vapor-liquid equilibrium */
+		   xs[4][NPURE]; /* per-phase mole fractions */
+	double x_sum=0.0;    /* sum of mole fractions */
+
+	for(i=0;i<NPURE;i++){
+		if(T < D->T_c){
+			/*
+				We want to find saturation pressure, and densities to use in 
+				calculating compressibilities later on.  Liquid density is at 
+				(T, p_sat), and vapor density is at (T, P).  So the liquid 
+				density that comes out of fprops_sat_T is correct, but the vapor 
+				density may be too high.  We find a more reasonable vapor 
+				density from fprops_sat_p, and can search from there.
+			 */
+			fprops_sat_T(T, (p_sat+i), (rho_l+i), (rho_v+i), MS->PF[i], &err);
+			fprops_sat_p(P, (T_sat+i), &rho_dummy, (rho_v+i), MS->PF[i], &err);
+
+			x_vle[i] = Xs[i] / D->M;
+			x_sum += x_vle[i];
+		}else{
+			rho_sc[i] = D->rho_c;
+		}
+		if(rho_v[i]!=0 && rho_l[i]!=0){
+			p_rho = fprops_p((FluidState){T,rho_v[i],MS->PF[i]}, &err);
+			if(p_rho<P){
+				rho_v[i] = rho_from_pressure(T, P, rho_v[i]*P/p_rho, tol, MS->PF[i], &err);
+			}else{
+				rho_v[i] = rho_from_pressure(T, P, rho_v[i], tol, MS->PF[i], &err);
+			}
+		}else{
+			p_rho = fprops_p((FluidState){T,rho_sc[i],MS->PF[i]}, &err);
+			if(p_rho>P){
+				rho_sc[i] = rho_from_pressure(T, P, rho_sc[i]*P/p_rho, tol, MS->PF[i], &err);
+			}else{
+				rho_sc[i] = rho_from_pressure(T, P, rho_sc[i], tol, MS->PF[i], &err);
+			}
+		}
+	}
+	for(i=0;i<NPURE;i++){
+		if(rho_v[i]!=0 && rho_l[i]!=0){
+			x_vle[i] /= x_sum;
+
+			phi_l[i] = pengrob_phi_pure(MS->PF[i], T, rho_l[i], &err);
+			phi_v[i] = pengrob_phi_pure(MS->PF[i], T, rho_v[i], &err);
+		}
+	}
+	for(i=0;i<NPURE;i++){
+		if(rho_v[i]!=0 && rho_l[i]!=0){
+			rho_dummy = rho_l[i];
+			rho_dummy = rho_from_pressure(T, P, rho_dummy, tol, MS->PF[i], &err);
+			pf_l[i] = poynting_factor(MS->PF[i], T, rho_dummy, &err);
+
+			p_b += x_vle[i] * p_sat[i] * pf_l[i] / phi_v[i];
+			rp_d += x_vle[i] * phi_v[i] / (p_sat[i] * pf_l[i]);
+		}
+	}
+
+	p_d = 1./rp_d;
+
+	for(i=0;i<NPURE;i++){
+		if(rho_v[i]!=0 && rho_l[i]!=0){
+			printf("\n  Saturation pressure for %s at T=%.2f K is %.0f Pa;"
+					"\n\tliquid density is %.6g kg/m^3"
+					"\n  Saturation temperature at P=%.0f Pa is %.2f K"
+					"\n\tvapor density is %.6g kg/m^3"
+					"\n  Poynting Factor is %.6g"
+					"\n\tliquid-phase fugacity coefficient is %.6g"
+					"\n\tvapor-phase fugacity coefficient is %.6g\n"
+					"\n\tmole fraction is %.6g\n"
+					, fluid_names[i] , T, p_sat[i], rho_l[i]
+					, P, T_sat[i], rho_v[i]
+					, pf_l[i], phi_l[i], phi_v[i], x_vle[i]);
+		}else{
+			printf("\n  Supercritical density for %s is %.6g kg/m^3;"
+					"\n\tthe calculated pressure from this density is %.0f Pa\n"
+					, fluid_names[i], rho_sc[i]
+					, fprops_p((FluidState){T, rho_sc[i], MS->PF[i]}, &err));
+		}
+	}
+	printf("\n  Bubble pressure is %.0f Pa,"
+			"\n  Reciprocal dew pressure is %.6g Pa^-1, and dew pressure is %.0f Pa\n"
+			, p_b, rp_d, p_d);
+#undef D
+#undef NPURE
 }
