@@ -27,6 +27,7 @@
 
 #include "mixture_generics.h"
 #include "mixture_struct.h"
+#include <math.h>
 
 double min_element(unsigned nelems, double *nums){
 	unsigned i;
@@ -122,6 +123,14 @@ void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], dou
 					i, x[0], y[0]);
 			break;
 		}
+		if(x[0]==INFINITY || y[0]==INFINITY 
+				|| x[0]!=x[0] || y[0]!=y[0]){
+			printf("\n\nRoot-finding FAILED after %u iterations;"
+					"\n\t  independent variable equals %.6g,"
+					"\n\t  function output equals %.6g"
+					, i, x[0], y[0]);
+			break;
+		}
 
 		/* update independent variable x[0] */
 		delta_x = -y[0] * (x[0] - x[1])/(y[0] - y[1]);
@@ -131,5 +140,19 @@ void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], dou
 	}
 	/* puts("\n\tLeaving secant root-finding routine now"); */
 #undef MAX_ITER
+}
+
+void mole_fractions(unsigned n_pure, double *x_mole, double *X_mass, PureFluid **PF){
+#define D PF[i]->data
+	unsigned i;
+	double XM_sum=0.0; /* sum of mass fraction over molar mass terms */
+
+	for(i=0;i<n_pure;i++){
+		XM_sum += X_mass[i] / D->M;
+	}
+	for(i=0;i<n_pure;i++){
+		x_mole[i] = X_mass[i] / D->M / XM_sum;
+	}
+#undef D
 }
 

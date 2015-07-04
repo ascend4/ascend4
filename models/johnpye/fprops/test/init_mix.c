@@ -67,7 +67,11 @@ extern const EosData eos_rpp_water;
 /* Function prototypes */
 SecantSubjectFunction rachford_rice;
 SecantSubjectFunction pressure_rho_error;
+SecantSubjectFunction dew_p_error;
+SecantSubjectFunction bubble_p_error;
 double rho_from_pressure(double T, double p, double rho_start, double tol, PureFluid *PF, FpropsError *err);
+double dew_pressure(MixtureSpec *MS, double T, FpropsError *err);
+double bubble_pressure(MixtureSpec *MS, double T, FpropsError *err);
 
 PhaseMixState *mixture_phase_prepare(MixtureSpec *MX, double T, double P, FpropsError *err);
 void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *err);
@@ -85,9 +89,45 @@ void test_four(double T, double P);
 void test_five(double T, double P);
 
 /*
+	Establish mixing conditions (T,P), find individual densities, and use those 
+	along with the temperature to find first-law properties for individual 
+	components and the whole mixture.
+
+	As a check, find pressure corresponding to temperature and component density 
+	for each component -- this should equal the overall pressure
+
+	The fluids I use in the mixture are nitrogen, ammonia, carbon dioxide, and 
+	methane.
+
+	I may add other substances later, such as methyl chloride, carbon monoxide, 
+	nitrous oxide, and hydrogen sulfide.
+ */
+int main(){
+
+	/* Mixing conditions (temperature,pressure), and mass fractions */
+	// double T[]={250, 300, 300, 350, 350, 400, 900};               /* K */
+	// double P[]={1.5e5, 1.5e5, 1.9e5, 1.9e5, 2.1e5, 2.1e5, 3.2e6}; /* Pa */
+
+	/* double rho1[]={
+		2, 3, 2.5, 1.7, 1.9
+	};
+	double rho2[]={
+		1.1, 2, 1.5, 1.7, 1.9
+	}; */
+
+	/* test_one(T, P); */
+	/* test_two(T[1], P[1]); */
+	/* test_three(T[1], rho1); */
+	/* test_four(T[5], P[6]); */
+	test_five(270, 1.5e5);
+
+	return 0;
+} /* end of `main' */
+
+/*
 	Structure to pass constant parameters into the Rachford-Rice function
  */
-typedef struct{
+typedef struct RachRiceData_Struct {
 	unsigned pures;
 	double *zs;
 	double *Ks;
@@ -201,42 +241,6 @@ void mixture_flash(MixturePhaseState *M, double P, char **Names, FpropsError *er
 #undef NPURE
 }
 
-/*
-	Establish mixing conditions (T,P), find individual densities, and use those 
-	along with the temperature to find first-law properties for individual 
-	components and the whole mixture.
-
-	As a check, find pressure corresponding to temperature and component density 
-	for each component -- this should equal the overall pressure
-
-	The fluids I use in the mixture are nitrogen, ammonia, carbon dioxide, and 
-	methane.
-
-	I may add other substances later, such as methyl chloride, carbon monoxide, 
-	nitrous oxide, and hydrogen sulfide.
- */
-int main(){
-
-	/* Mixing conditions (temperature,pressure), and mass fractions */
-	double T[]={250, 300, 300, 350, 350, 400, 900};               /* K */
-	double P[]={1.5e5, 1.5e5, 1.9e5, 1.9e5, 2.1e5, 2.1e5, 3.2e6}; /* Pa */
-
-	/* double rho1[]={
-		2, 3, 2.5, 1.7, 1.9
-	};
-	double rho2[]={
-		1.1, 2, 1.5, 1.7, 1.9
-	}; */
-
-	/* test_one(T, P); */
-	/* test_two(T[1], P[1]); */
-	/* test_three(T[1], rho1); */
-	/* test_four(T[5], P[6]); */
-	test_five(270, 1.5e5);
-
-	return 0;
-} /* end of `main' */
-
 void pengrob_phi_all(double *phi_out, MixtureSpec *M, double T, double *rhos, FpropsError *err){
 #define NPURE M->pures
 #define D M->PF[i]->data
@@ -290,7 +294,7 @@ double pengrob_phi_pure(PureFluid *PF, double T, double rho, FpropsError *err){
 		   cpx_ln; /* rather involved part of the fugacity coefficient */
 	
 	P = fprops_p((FluidState){T, rho, PF}, err);
-	printf("\nPressure is now %.0f Pa", P);
+	printf("\n\tPressure is now %.0f Pa", P);
 	Tr = T / PF->data->T_c;
 	alpha = (1 + PR->kappa * (1 - sqrt(Tr)));
 	aT = PR->aTc * alpha * alpha;
@@ -373,6 +377,151 @@ PhaseMixState *mixture_phase_prepare(MixtureSpec *MX, double T, double P, Fprops
 	/* unsigned i; */
 }
 
+typedef struct DewBubbleData_Struct {
+	MixtureSpec *MS;  /* components and mass fractions */
+	double T;         /* temperature */
+	double *p_sat;    /* saturation pressures for all components */
+	// double *rho_v; /* vapor densities at dew pressure for all components */
+	// double *rho_l; /* liquid densities at dew pressure for all components */
+	double *rhos;     /* vapor-phase densities at dew pressure */
+	double *sat_rhos; /* liquid saturation densities for all components */
+	double tol;       /* tolerance to which to solve */
+	FpropsError *err; /* error enumeration */
+} DBData;
+
+double dew_p_error(double P_D, void *user_data){
+#define NPURE dbd->MS->pures
+#define YS dbd->MS->Xs
+#define PF dbd->MS->PF
+#define TT dbd->T
+#define PSAT dbd->p_sat
+#define RHOS dbd->rhos
+/* #define RHOV dbd->rho_v */
+/* #define RHOL dbd->rho_l */
+#define SATRHO dbd->sat_rhos
+#define TOL dbd->tol
+#define ERR dbd->err
+	printf("\n  <dew_p_error>: entered the function");
+	unsigned i;
+	double p_d_term,
+		   rp_d = 0.0;
+
+	DBData *dbd = (DBData *)user_data;
+	printf("\n\t%s", "<dew_p_error>: unpacked the user_data struct");
+
+	for(i=0;i<NPURE;i++){
+		RHOS[i] = rho_from_pressure(TT, P_D, RHOS[i], TOL, PF[i], ERR);
+		/* RHOV[i] = rho_from_pressure(TT, P_D, RHOV[i], TOL, PF[i], ERR); */
+		/* RHOL[i] = rho_from_pressure(TT, P_D, RHOL[i], TOL, PF[i], ERR); */
+
+		/* p_d_term = YS[i] * pengrob_phi_pure(PF[i], TT, RHOS[i], ERR) / PSAT[i]; */
+
+		rp_d += YS[i] * pengrob_phi_pure(PF[i], TT, RHOS[i], ERR) / PSAT[i];
+	}
+	return P_D - 1./rp_d;
+#if 0
+#undef ERR
+#undef TOL
+#undef SATRHO
+#undef RHOV
+#undef RHOL
+#undef PSAT
+#undef TT
+#undef PF
+#undef YS
+#undef NPURE
+#else
+#undef YS
+#endif
+}
+
+double bubble_p_error(double P_B, void *user_data){
+#define XS dbd->MS->Xs
+	unsigned i;
+	double p_b_term,
+		   p_b = 0.0;
+
+	DBData *dbd = (DBData *)user_data;
+
+	for(i=0;i<NPURE;i++){
+		RHOS[i] = rho_from_pressure(TT, P_B, RHOS[i], TOL, PF[i], ERR);
+		/* RHOV[i] = rho_from_pressure(TT, P_B, RHOV[i], TOL, PF[i], ERR); */
+		/* RHOL[i] = rho_from_pressure(TT, P_B, RHOL[i], TOL, PF[i], ERR); */
+
+		/* p_b_term = XS[i] * pengrob_phi_pure(PF[i], TT, SATRHO[i], ERR) 
+			* PSAT[i] * poynting_factor(PF[i], TT, RHOL[i], ERR);
+		p_b_term /= pengrob_phi_pure(PF[i], TT, RHOV[i], ERR); */
+
+		p_b += XS[i] * PSAT[i] / pengrob_phi_pure(PF[i], TT, RHOS[i], ERR);
+	}
+	return P_B - p_b;
+#undef ERR
+#undef TOL
+#undef SATRHO
+#undef RHOV
+#undef RHOL
+#undef PSAT
+#undef TT
+#undef PF
+#undef XS
+#undef NPURE
+}
+
+/*
+	Find the dew-point pressure for a mixture at a given temperature
+ */
+double dew_pressure(MixtureSpec *MS, double T, FpropsError *err){
+#define NPURE MS->pures
+#define PF MS->PF
+#define XS MS->Xs
+	unsigned i;
+	double p_d[2],
+		   rp_d = 0.0;
+	double p_sat[NPURE],
+		   rho_l[NPURE],
+		   rho_v[NPURE];
+	double tol = 1.e-5;
+
+	/* find ideal-gas dew pressure as a starting point */
+	for(i=0;i<NPURE;i++){
+		printf("\n  <dew_pressure>: Calculating saturation pressure for substance %s (at index %u)"
+				"\n\tfrom temperature T=%.2f K...", PF[i]->name, i, T);
+		fprops_sat_T(T, (p_sat+i), (rho_l+i), (rho_v+i), PF[i], err);
+		rp_d += XS[i] / p_sat[i];
+		printf("\n\tsaturation pressure was P_sat=%.0f Pa", p_sat[i]);
+	}
+	p_d[0] = 1./rp_d;
+	printf("\n  <dew_pressure>: Ideal-gas dew pressure is P_D = %.0f Pa", p_d[0]);
+	p_d[1] = 1.01/rp_d;
+
+	DBData dbd = {
+		.MS = MS
+		, .T = T
+		, .p_sat = p_sat
+		, .rhos = rho_v
+		, .sat_rhos = rho_l
+		, .tol = tol
+		, .err = err
+	};
+	printf("\n  <dew_pressure>: Created DBData struct");
+	puts("");
+
+	secant_solve(&dew_p_error, &dbd, &p_d, tol);
+
+	return p_d[0];
+#undef XS
+#undef PF
+#undef NPURE
+}
+
+/*
+	Find the bubble-point pressure for a mixture at a given temperature
+ */
+double bubble_pressure(MixtureSpec *MS, double T, FpropsError *err){
+	return 0.0;
+}
+
+/* Functions to test/demonstrate other functionality */
 /*
 	Calculate and print mixture properties, given several temperatures and 
 	densities
@@ -751,12 +900,12 @@ void test_five(double T, double P){
 #define NPURE 4
 #define D MS->PF[i]->data
 	char *fluids[] = {
-		/* "isohexane", */ "krypton", "carbonmonoxide", "ammonia", "water"
+		"isohexane", "krypton", "carbonmonoxide", "ammonia", "water"
 	};
 	char *fluid_names[] = {
-		/* "isohexane", */ "krypton", "carbon monoxide", "ammonia", "water"
+		"isohexane", "krypton", "carbon monoxide", "ammonia", "water"
 	};
-	double Xs[] = {0.55, 0.20, 0.10, 0.05, 0.10};
+	double Xs[] = {0.55, 0.20, 0.10, 0.15, 0.10};
 	char *src[] = {
 		NULL, NULL, NULL, NULL, NULL
 	};
@@ -766,7 +915,7 @@ void test_five(double T, double P){
 	MixtureSpec *MS = ASC_NEW(MixtureSpec);
 	MS->pures = NPURE;
 	MS->Xs = Xs;
-	MS->PF = ASC_NEW_ARRAY(PureFluid,NPURE);
+	MS->PF = ASC_NEW_ARRAY(PureFluid *,NPURE);
 	/* {
 		.pures = NPURE
 		, .Xs = Xs
@@ -782,9 +931,9 @@ void test_five(double T, double P){
 	double tol = 1.e-5;
 	double p_sat[NPURE] = {0.0},
 		   T_sat[NPURE] = {0.0};
-	double rho_l[NPURE] = {0.0},
-		   rho_v[NPURE] = {0.0},
-		   rho_sc[NPURE] = {0.0},
+	double rho_l[NPURE] = {0.0}, /* liquid-phase densities */
+		   rho_v[NPURE] = {0.0}, /* vapor-phase densities */
+		   rho_sc[NPURE] = {0.0}, /* supercritical densities */
 		   rho_dummy = 0.0;
 	double p_rho,
 		   p_b = 0.0,    /* bubble pressure */
@@ -797,6 +946,24 @@ void test_five(double T, double P){
 		   xs[4][NPURE]; /* per-phase mole fractions */
 	double x_sum=0.0;    /* sum of mole fractions */
 
+	MixtureSpec *MS_vle = ASC_NEW(MixtureSpec);
+#define VPURE MS_vle->pures
+#define VXS MS_vle->Xs
+#define VPF MS_vle->PF
+	VPURE = 0;
+	// VXS = ASC_NEW_ARRAY(double,NPURE);
+	VXS = (double *)malloc(sizeof(double)*NPURE);
+	// VPF = ASC_NEW_ARRAY(PureFluid *,NPURE);
+	VPF = (PureFluid **)malloc(sizeof(PureFluid *)*NPURE);
+
+	MixtureSpec *MS_sc = ASC_NEW(MixtureSpec);
+#define SPURE MS_sc->pures
+#define SXS MS_sc->Xs
+#define SPF MS_sc->PF
+	SPURE = 0;
+	SXS = ASC_NEW_ARRAY(double,NPURE);
+	SPF = ASC_NEW_ARRAY(PureFluid *,NPURE);
+
 	for(i=0;i<NPURE;i++){
 		if(T < D->T_c){
 			/*
@@ -807,14 +974,25 @@ void test_five(double T, double P){
 				density may be too high.  We find a more reasonable vapor 
 				density from fprops_sat_p, and can search from there.
 			 */
+			printf("\n  Adding substance %s to vapor-liquid equilibrium", fluid_names[i]);
+			VPF[VPURE] = MS->PF[i]; /* add new component and mass fraction, in next place */
+			VXS[VPURE] = MS->Xs[i];
+			VPURE ++;               /* increment number of pures in VLE */
+			/*
 			fprops_sat_T(T, (p_sat+i), (rho_l+i), (rho_v+i), MS->PF[i], &err);
 			fprops_sat_p(P, (T_sat+i), &rho_dummy, (rho_v+i), MS->PF[i], &err);
 
 			x_vle[i] = Xs[i] / D->M;
 			x_sum += x_vle[i];
+			*/
 		}else{
-			rho_sc[i] = D->rho_c;
+			printf("\n  Adding substance %s to supercritical phase", fluid_names[i]);
+			SPF[SPURE] = MS->PF[i]; /* add new component and mass fraction, in next place */
+            SXS[VPURE] = MS->Xs[i];
+			SPURE ++;               /* increment number of pures in supercritical condition */
+			/* rho_sc[i] = D->rho_c; */
 		}
+		/*
 		if(rho_v[i]!=0 && rho_l[i]!=0){
 			p_rho = fprops_p((FluidState){T,rho_v[i],MS->PF[i]}, &err);
 			if(p_rho<P){
@@ -830,28 +1008,27 @@ void test_five(double T, double P){
 				rho_sc[i] = rho_from_pressure(T, P, rho_sc[i], tol, MS->PF[i], &err);
 			}
 		}
+		*/
+		printf("\n  VPURE = %u, and SPURE = %u; i = %u", VPURE, SPURE, i);
 	}
+	for(i=0;i<VPURE;i++){
+		fprops_sat_T(T, (p_sat+i), (rho_l+i), (rho_v+i), VPF[i], &err);
+		fprops_sat_p(P, (T_sat+i), &rho_dummy, (rho_v+i), VPF[i], &err);
+
+		x_vle[i] /= x_sum;
+
+		// phi_l[i] = pengrob_phi_pure(MS->PF[i], T, rho_l[i], &err);
+		// phi_v[i] = pengrob_phi_pure(MS->PF[i], T, rho_v[i], &err);
+	}
+	/*
 	for(i=0;i<NPURE;i++){
 		if(rho_v[i]!=0 && rho_l[i]!=0){
-			x_vle[i] /= x_sum;
-
-			phi_l[i] = pengrob_phi_pure(MS->PF[i], T, rho_l[i], &err);
-			phi_v[i] = pengrob_phi_pure(MS->PF[i], T, rho_v[i], &err);
 		}
 	}
-	for(i=0;i<NPURE;i++){
-		if(rho_v[i]!=0 && rho_l[i]!=0){
-			rho_dummy = rho_l[i];
-			rho_dummy = rho_from_pressure(T, P, rho_dummy, tol, MS->PF[i], &err);
-			pf_l[i] = poynting_factor(MS->PF[i], T, rho_dummy, &err);
+	*/
 
-			p_b += x_vle[i] * p_sat[i] * pf_l[i] / phi_v[i];
-			rp_d += x_vle[i] * phi_v[i] / (p_sat[i] * pf_l[i]);
-		}
-	}
-
-	p_d = 1./rp_d;
-
+	/* p_d = 1./rp_d; */
+	/*
 	for(i=0;i<NPURE;i++){
 		if(rho_v[i]!=0 && rho_l[i]!=0){
 			printf("\n  Saturation pressure for %s at T=%.2f K is %.0f Pa;"
@@ -875,6 +1052,26 @@ void test_five(double T, double P){
 	printf("\n  Bubble pressure is %.0f Pa,"
 			"\n  Reciprocal dew pressure is %.6g Pa^-1, and dew pressure is %.0f Pa\n"
 			, p_b, rp_d, p_d);
+	*/
+	for(i=0;i<VPURE;i++){
+		printf("\n  Saturation pressure for %s at T=%.2f K is %.0f Pa;"
+				"\n\tliquid density is %.6g kg/m^3"
+				"\n  Saturation temperature at P=%.0f Pa is %.2f K"
+				"\n\tvapor density is %.6g kg/m^3"
+				"\n"
+				, fluid_names[i], T, p_sat[i], rho_l[i]
+				, P, T_sat[i], rho_v[i]);
+	}
+
+	p_d = dew_pressure(MS_vle, T, &err);
+	printf("\n  Dew pressure is %.0f Pa\n", p_d);
+#undef SPF
+#undef SXS
+#undef SPURE
+#undef VPF
+#undef VXS
+#undef VPURE
+
 #undef D
 #undef NPURE
 }

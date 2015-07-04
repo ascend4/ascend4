@@ -74,10 +74,10 @@ void mixture_specify(MixtureSpec *MS, unsigned npure, double *Xs, void **fluids,
 		}
 	}
 
-	/* *MS = ASC_NEW(MixtureSpec); */
-	/* MS->pures = npure; */
-	/* MS->Xs = Xs; */
-	/* MS->PF = PF; */
+	/* *MS = ASC_NEW(MixtureSpec);
+	MS->pures = npure;
+	MS->Xs = Xs;
+	MS->PF = PF; */
 
 	for(i=0;i<npure;i++){
 		printf("\nfluid number %u at %p is %s, modeled with %u"
@@ -87,7 +87,7 @@ void mixture_specify(MixtureSpec *MS, unsigned npure, double *Xs, void **fluids,
 
 void mixture_fluid_spec(MixtureSpec *MS, unsigned npure, void **fluids, char *type, char **source, MixtureError *merr){
 	unsigned i;
-	double X_sum=0.0;
+	/* double X_sum=0.0; */
 
 	if(0==strcmp(type, "ideal")){ /* model fluids with ideal-gas equation of state */
 		EosData **ig_fluids = (EosData **)fluids;
@@ -101,7 +101,7 @@ void mixture_fluid_spec(MixtureSpec *MS, unsigned npure, void **fluids, char *ty
 
 		for(i=0;i<npure;i++){
 			MS->PF[i] = fprops_fluid(fluid_names[i],type,source[i]);
-			/* printf("\nprepared fluid %s", fluid_names[i]); */
+			printf("\nprepared fluid %s", fluid_names[i]);
 		}
 	}
 

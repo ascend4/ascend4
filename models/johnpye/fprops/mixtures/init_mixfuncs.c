@@ -192,8 +192,8 @@ SecantSubjectFunction pressure_rho_error;
 double pressure_rho_error(double rho, void *user_data){
 	PRData *prd = (PRData *)user_data;
 	FluidState fst = {prd->T, rho, prd->pfl};
-	printf("\n\tPressure while seeking pressure at density = %.6g kg/m^3 is %.0f Pa"
-			, rho, fprops_p(fst, prd->err));
+	printf("\n\tPressure while seeking P=%.0f Pa, trying rho=%.6g kg/m^3, here P=%.0f Pa"
+			,prd->P, rho, fprops_p(fst, prd->err));
 	
 	return fabs(prd->P - fprops_p(fst, prd->err));
 }

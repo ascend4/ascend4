@@ -18,8 +18,7 @@
 	Free Software Foundation, Inc.
 	59 Temple Place - Suite 330
 	Boston, MA 02111-1307, USA.
-*/
-/*
+*//*
 	by Jacob Shealy, June 25-, 2015
 
 	Function headers for generic functions used in modeling mixtures
@@ -32,7 +31,7 @@
 #include <ascend/general/ascMalloc.h>
 #else
 #define ASC_NEW(TYPE) (TYPE*)malloc(sizeof(TYPE))
-#define ASC_NEW_ARRAY(TYPE,COUNT) (TYPE*)malloc((COUNT)*sizeof(TYPE))
+#define ASC_NEW_ARRAY(TYPE,COUNT) (TYPE*)malloc(sizeof(TYPE)*(COUNT))
 #endif
 
 #include "mixture_struct.h"
@@ -44,5 +43,6 @@ double sum_elements(unsigned nelems, double *nums);
 unsigned index_of_min(unsigned nelems, double *nums);
 unsigned index_of_max(unsigned nelems, double *nums);
 void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], double tol);
+void mole_fractions(unsigned n_pure, double *x_mole, double *X_mass, PureFluid **PF);
 
 #endif
