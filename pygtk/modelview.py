@@ -336,9 +336,11 @@ class ModelView:
 
 			##### CELSIUS TEMPERATURE WORKAROUND
 			if str(_instance.getType().getDimensions()) == 'TMP':
-				units = preferences.Preferences().getPreferredUnitsOrigin(str(_instance.getType().getName()))
-				if units == CelsiusUnits.get_celsius_sign():
+				pref = preferences.Preferences()
+				units = pref.getPreferredUnitsOrigin(str(_instance.getType().getName()))
+				if units == CelsiusUnits.get_celsius_sign() and newtext.split(" ")[1] == "" or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign():
 					newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext.split(" ")[0])
+					pref.setPreferredUnits(str(_instance.getType().getName()), CelsiusUnits.get_celsius_sign())
 			##### CELSIUS TEMPERATURE WORKAROUND
 
 			_e = RealAtomEntry(_instance, newtext)

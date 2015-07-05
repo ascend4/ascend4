@@ -178,7 +178,7 @@ class CelsiusUnits:
 
 	@staticmethod
 	def get_celsius_sign():
-		return u"\u2103".encode("utf8")
+		return "degC"
 
 	@staticmethod
 	def convert_celsius_to_kelvin(value):
