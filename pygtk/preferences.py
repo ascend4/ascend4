@@ -6,7 +6,7 @@ import platform
 
 ## @TODO implement this differently; the __del__ stuff is not working correctly
 ## in the context of the extpy extension.
-from unitsdialog import CelsiusUnits
+from celsiusunits import CelsiusUnits
 
 class Preferences:
 	__sharedstate = {}

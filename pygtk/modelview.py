@@ -284,7 +284,7 @@ class ModelView:
 			_value = str(_instance.getValue())
 			##### CELSIUS TEMPERATURE WORKAROUND
 			if _instance.getType().isRefinedReal() and str(_instance.getType().getDimensions()) == 'TMP':
-				units = preferences.Preferences().getPreferredUnitsOrigin(str(_instance.getType().getName()))
+				units = Preferences().getPreferredUnitsOrigin(str(_instance.getType().getName()))
 				if units == CelsiusUnits.get_celsius_sign():
 					temp = _value.split(" ")[0]
 					_value = CelsiusUnits.convert_kelvin_to_celsius(temp) + " " + CelsiusUnits.get_celsius_sign()
@@ -336,9 +336,9 @@ class ModelView:
 
 			##### CELSIUS TEMPERATURE WORKAROUND
 			if str(_instance.getType().getDimensions()) == 'TMP':
-				pref = preferences.Preferences()
+				pref = Preferences()
 				units = pref.getPreferredUnitsOrigin(str(_instance.getType().getName()))
-				if units == CelsiusUnits.get_celsius_sign() and newtext.split(" ")[1] == "" or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign():
+				if units == CelsiusUnits.get_celsius_sign() and len(newtext.split(" ")) == 1 or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign():
 					newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext.split(" ")[0])
 					pref.setPreferredUnits(str(_instance.getType().getName()), CelsiusUnits.get_celsius_sign())
 			##### CELSIUS TEMPERATURE WORKAROUND

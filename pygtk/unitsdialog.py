@@ -1,7 +1,9 @@
 from gi.repository import Gtk
 from gi.repository import Pango
 import re
-import preferences
+from celsiusunits import CelsiusUnits
+from preferences import Preferences
+
 
 class UnitsDialog:
 
@@ -80,7 +82,7 @@ class UnitsDialog:
 				break
 		##### CELSIUS TEMPERATURE WORKAROUND
 		if str(T.getDimensions()) == 'TMP':
-			units = preferences.Preferences().getPreferredUnitsOrigin(str(T.getName()))
+			units = Preferences().getPreferredUnitsOrigin(str(T.getName()))
 			if units == CelsiusUnits.get_celsius_sign():
 				if units != self.changed.items()[0][1]:
 					can_apply = True
@@ -111,7 +113,7 @@ class UnitsDialog:
 			up = None
 		##### CELSIUS TEMPERATURE WORKAROUND
 		if str(d) == 'TMP':
-			units = preferences.Preferences().getPreferredUnitsOrigin(str(T.getName()))
+			units = Preferences().getPreferredUnitsOrigin(str(T.getName()))
 			if units == CelsiusUnits.get_celsius_sign():
 				up = None
 			m.append(CelsiusUnits.get_units_row(up is None and units is not None))
@@ -165,28 +167,3 @@ class UnitsDialog:
 					if _obs.alive:
 						_obs.units_refresh(self.T)
 		self.window.hide()
-
-##### CELSIUS TEMPERATURE WORKAROUND
-class CelsiusUnits:
-
-	@staticmethod
-	def get_units_row(selected):
-		weight = Pango.Weight.NORMAL
-		if selected:
-			weight = Pango.Weight.BOLD
-		return [selected, CelsiusUnits.get_celsius_sign(), "1 K -273.15 K", weight]
-
-	@staticmethod
-	def get_celsius_sign():
-		return "degC"
-
-	@staticmethod
-	def convert_celsius_to_kelvin(value):
-		temp = float(value)
-		return str(temp + 273.15)
-
-	@staticmethod
-	def convert_kelvin_to_celsius(value):
-		temp = float(value)
-		return str(temp - 273.15)
-##### CELSIUS TEMPERATURE WORKAROUND
