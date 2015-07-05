@@ -72,15 +72,7 @@
 
 
 int ida_prepare_integrator(IntegratorSystem *integ){
-	/*Allocating memory for the ida_mem object*/
-	ida_mem = IDACreate();
 	flag = IDAInit(ida_mem, &integrator_ida_fex, t0, y0 ,yp0);
-
-
-
-
-
-
 
 	/*-------------------                 RECORDING INTEGRATOR PREFERENCES                  --------------------*
 			     The following block sets several preferences based on user choices.

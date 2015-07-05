@@ -102,6 +102,7 @@ int ida_main_solve(IntegratorSystem *integ, unsigned long start_index, unsigned 
 	int peaw = 0;                  /*Flag returned by process_events_and_whens*/
 	int subpeaw = 0; 		/*Sub-flag used to control auxiliay integration steps*/
 	int auxcount = 1;
+	int first_run = 1;
 #if defined(SOLVE_DEBUG) || defined(IDA_BND_DEBUG)
 	char *relname;
 	//CONSOLE_DEBUG("STARTING IDA...");
@@ -109,31 +110,19 @@ int ida_main_solve(IntegratorSystem *integ, unsigned long start_index, unsigned 
 #ifdef SOLVE_DEBUG
 	integrator_ida_debug(integ, stderr);
 #endif
-	/* store reference to list of relations (in enginedata) */
-	ida_load_rellist(integ);
 	/* create IDA object */
 	ida_mem = IDACreate();
 	/* Setup parameter inputs and initial conditions for IDA. */
 	call to solve_initial_conditions_and_whens;
 	/* solve the initial conditions, allocate memory, other stuff... */
-	ida_prepare_integrator(integ, ida_mem, tout);						/*Change call to new function*/
+	ida_prepare_integrator(IntegratorSystem *integ);						/*Change call to new function*/
+	/* store reference to list of relations (in enginedata) */
+	ida_load_rellist(integ);
+	
 	tol = 0.0001*(samplelist_get(integ->samples, finish_index) 
 					- samplelist_get(integ->samples, start_index))
 				/samplelist_length(integ->samples);
 	tmin = tol;
-	/* -- set up the IntegratorReporter */
-	integrator_output_init(integ);
-	/* -- store the initial values of all the stuff */
-	integrator_output_write(integ);
-	integrator_output_write_obs(integ);
-	/* specify where the returned values should be stored */
-	yret 	= ida_bnd_new_zero_NV(integ->n_y);
-	ypret 	= ida_bnd_new_zero_NV(integ->n_y);
-	/* advance solution in time, return values as yret and derivatives as ypret */
-	integ->currentstep = 1;
-	
-
-
 	rootdir = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);					
 	for(i = 0; i < enginedata->nbnds; i++){
 		rootdir[i] = 0;
@@ -156,8 +145,12 @@ int ida_main_solve(IntegratorSystem *integ, unsigned long start_index, unsigned 
 #ifdef SOLVE_DEBUG
 		CONSOLE_DEBUG("Integrating from t0 = %f to t = %f", t0, tout);
 #endif			
-		if(integ->nbnds){
-			peaw = process_events_and_whens(integ, ida_mem, t0, tout, rootdir);}
+		if(integ->nbnds || first_run){
+			peaw = process_events_and_whens(integ, ida_mem, t0, tout, rootdir, first_run);
+			if(first_run == 1){
+				first_run = 0;
+			}
+		}
 	
 
 	 	if(peaw==143){								/*Flag for rootsfound - system is reconfigured already!*/
@@ -175,7 +168,7 @@ int ida_main_solve(IntegratorSystem *integ, unsigned long start_index, unsigned 
 					ASC_FREE(n);
 #endif
 				}
-				subpeaw = process_events_and_whens(integ, ida_mem, t0, t0 + auxcount*tmin, rootdir);
+				subpeaw = process_events_and_whens(integ, ida_mem, t0, t0 + auxcount*tmin, rootdir,first_run);
 			}while{subpeaw == 143 && auxcount < 20}		/*Arbitrary limit. Still better limit: auxcount < (tout-t0)/tmin ?*/
 			
 			/*Important Todo ---- Time needs to be reset*/
@@ -191,6 +184,14 @@ int ida_main_solve(IntegratorSystem *integ, unsigned long start_index, unsigned 
 
 	}/*End of Main integration For Loop*/
 
-
-/*Todo: free memory, output values, etc*/	
+/* -- set up the IntegratorReporter */
+	integrator_output_init(integ);
+	/* -- store the initial values of all the stuff */
+	integrator_output_write(integ);
+	integrator_output_write_obs(integ);
+	/* specify where the returned values should be stored */
+	yret 	= ida_bnd_new_zero_NV(integ->n_y);
+	ypret 	= ida_bnd_new_zero_NV(integ->n_y);
+	/* advance solution in time, return values as yret and derivatives as ypret */
+	integ->currentstep = 1;	
 }	
