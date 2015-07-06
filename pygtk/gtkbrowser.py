@@ -464,7 +464,8 @@ class Browser:
 		_pref_solver = self.prefs.getStringPref("Solver","engine","QRSlv")
 		_mi = self.solver_engine_menu_dict.get(_pref_solver)
 		if _mi:
-			_mi.set_active(1)
+			_mi.set_active(True)
+		self.set_solver(_pref_solver)
 
 		#--------
 		# Assign an icon to the main window
