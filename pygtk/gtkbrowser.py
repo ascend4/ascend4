@@ -431,14 +431,14 @@ class Browser:
 		self.solver_engine_menu_dict = {}
 		_fmi = None
 		for _s in _slvlist:
-			_mi = Gtk.RadioMenuItem(_s.getName())#Edit
-			if _fmi==None:
+			_mi = Gtk.RadioMenuItem(label=_s.getName(), group=_fmi)
+			if _fmi is None:
 				_fmi = _mi
 			_mi.show()
 			_mi.connect('toggled',self.on_select_solver_toggled,_s.getName())
 			self.solver_engine_menu.append(_mi)
 			self.solver_engine_menu_dict[_s.getName()]=_mi	
-		
+
 		#-------
 		# Recent file list
 
