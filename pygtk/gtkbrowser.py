@@ -490,7 +490,7 @@ class Browser:
 
 		self.modtank = {}
 		self.moduleview = ModuleView(self,self.builder,self.library)
-	
+
 		#--------------------
 		# set up the methods combobox
 
@@ -702,6 +702,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		self.errorstore.clear()
 		self.modelview.clear()
+		self.moduleview.clear()
 		self.currentobservertab = None
 		for _obs in self.observers:
 			if _obs.alive == False:

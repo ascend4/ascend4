@@ -179,6 +179,9 @@ class ModuleView:
 						break
 				ViewModel(text=''.join(displaytext),title="Model '%s'" % (self.modelname))
 
+	def clear(self):
+		self.modulestore.clear()
+
 class ViewModel:
 	"""
 	A window to display the content of an ASCEND model in syntax-highlighted text
