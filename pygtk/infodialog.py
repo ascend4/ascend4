@@ -7,10 +7,9 @@ from varentry import *
 
 class InfoDialog:
 	def __init__(self,browser,parent,text,title,tabs=None):
-		self.browser = browser;
+		self.browser = browser
 
 		# GUI config
-		self.browser.builder = Gtk.Builder()
 		self.browser.builder.add_objects_from_file(self.browser.glade_file,["infodialog"])
 		self.browser.builder.connect_signals(self)
 		self.window = self.browser.builder.get_object("infodialog")
