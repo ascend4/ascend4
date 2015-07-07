@@ -69,7 +69,8 @@ SecantSubjectFunction rachford_rice;
 SecantSubjectFunction pressure_rho_error;
 SecantSubjectFunction dew_p_error;
 SecantSubjectFunction bubble_p_error;
-double rho_from_pressure(double T, double p, double rho_start, double tol, PureFluid *PF, FpropsError *err);
+void transit_non_physical(double T, double *rhos, const PureFluid *PF, FpropsError *err, int from_vap);
+double rho_from_pressure(double T, double p, double rho_start, double tol, const PureFluid *PF, FpropsError *err);
 double dew_pressure(MixtureSpec *MS, double T, FpropsError *err);
 double bubble_pressure(MixtureSpec *MS, double T, FpropsError *err);
 
@@ -87,6 +88,7 @@ void test_two(double T, double P);
 void test_three(double T, double *rhos);
 void test_four(double T, double P);
 void test_five(double T, double P);
+void test_six(void);
 
 /*
 	Establish mixing conditions (T,P), find individual densities, and use those 
@@ -120,6 +122,7 @@ int main(){
 	/* test_three(T[1], rho1); */
 	/* test_four(T[5], P[6]); */
 	test_five(270, 1.5e5);
+	/* test_six(); */
 
 	return 0;
 } /* end of `main' */
@@ -355,16 +358,143 @@ typedef struct PressureRhoData_Struct {
 	Return reasonable value of density at a given temperature and pressure, and 
 	from a given starting density.
  */
-double rho_from_pressure(double T, double P, double rho_start, double tol, PureFluid *PF, FpropsError *err){
-	double rhos[] = {rho_start, 1.01*rho_start};
+double rho_from_pressure(double T, double P, double rho_start, double tol, const PureFluid *PF, FpropsError *err){
+#define MAX_ITER 20
+#define ALPHA 2.35
+	unsigned i, j,
+			 ix_low,  /* index of point (density, pressure) with lower error in P */
+			 ix_high; /* index of point with higher error in P */
+	int transit=0;    /* records whether the search has passed through the region of non-physical (dP/d(rho)) behavior */
+	double ps[2],
+		   /* delta_rho, */
+		   rhos[] = {rho_start, 1.02*rho_start};
+	double rho_new[3],
+		   p_new[3];
+	double A = 1.05,
+		   B = 2.35,
+		   C = 0.43;
 	PRData prd = {T, P, PF, err};
 
-	while(rhos[1] < rhos[0]){ /* density is in the unstable region where dP/dv > 0; get out of there! */
-		rhos[1] /= 1.3;       /* I'm just guessing that this is a reasonable factor */
-	}
-	secant_solve(&pressure_rho_error, &prd, rhos, tol);
+	ps[1] = pressure_rho_error(rhos[1], &prd);
 
+	for(i=0;i<MAX_ITER;i++){
+		ps[0] = pressure_rho_error(rhos[0], &prd);
+		ix_low = (fabs(ps[1]) < fabs(ps[0])) ? 1 : 0; /* which position has smallest error? */
+		ix_high = 1 - ix_low;
+
+		if(fabs(ps[0])<tol){
+			printf("\n\t<rho_from_pressure>: Search for correct density SUCCEEDED after %u iterations "
+					"at rho=%.6g kg/m^3"
+					, i, rhos[0]);
+			return rhos[0];
+		}
+		if(fabs(rhos[0]-rhos[1])<tol){
+			/*
+				Algorithm has converged on an extremum that does not satisfy the 
+				pressure given.  Transition through non-physical region if it 
+				has not already done so; otherwise, return an error.
+			 */
+			if(!transit){
+				transit = 1; /* mark that algorithm has transitioned */
+				transit_non_physical(T, rhos, PF, err, (ps[0]<P) ? 1 : 0);
+				printf("\n\t<rho_from_pressure>: Transitioning across non-physical region");
+			}else{
+				printf("\n\t<rho_from_pressure>: Search for correct density FAILED after %u iterations,"
+						"\n\t  densities equal at rho[0]=rho[1]=%.6g"
+						, i, rhos[0]);
+				return rhos[0];
+			}
+		}
+		if(rhos[0]==INFINITY || rhos[1]==INFINITY 
+				|| rhos[0]!=rhos[0] || rhos[1]!=rhos[1]){
+			printf("\n\t<rho_from_pressure>: Search for correct density FAILED after %u iterations,"
+					"\n\t  densities infinite or not-a-number at rho[0]=%.6g, rho[1]=%.6g"
+					, i, rhos[0], rhos[1]);
+			return rhos[0];
+		}
+
+		/*
+			
+		 */
+		/* if((ps[0]-ps[1])/(rhos[0]-rhos[1]) > 0 || ){
+			delta_rho = -ps[0] * (rhos[0] - rhos[1]) / (ps[0] - ps[1]);
+			/ *
+				If magnitude of change in density is greater than a certain 
+				amount, reduce it to that magnitude.  This prevents the density 
+				changes from growing too large, and is necessary for a 
+				non-monotonic function like this one.
+			 * /
+			if(fabs(delta_rho) > ALPHA * fabs(rhos[0]-rhos[1])){
+				delta_rho *= ALPHA / fabs(delta_rho);
+			}
+			rhos[1] = rhos[ix_low]; / * reassign second to lowest-error position * /
+			ps[1] = ps[ix_low];
+			rho[0] += delta_rho; 
+		} */
+		rho_new[0] = (1 + A)*rhos[ix_low] - A*rhos[ix_high];
+		rho_new[1] = (1 - B)*rhos[ix_low] + B*rho_new[0];
+		rho_new[2] = (1 - C)*rhos[ix_low] + C*rhos[ix_high];
+
+		for(j=0;j<3;j++){
+			p_new[j] = fabs(pressure_rho_error(rho_new[j], &prd));
+		}
+
+		rhos[1] = rhos[ix_low];
+		ps[1] = ps[ix_low];
+		rhos[0] = rho_new[index_of_min(3, p_new)];
+
+		if(*err!=FPROPS_NO_ERROR){
+			*err = FPROPS_NO_ERROR;
+		}
+	}
+
+	printf("\n\t<rho_from_pressure>: Reached maximum number of iterations (%u) without converging on density;"
+			"\n\trhos[0]=%.8g, rhos[1]=%.8g, P[0]=%.8g, P[1]=%.8g, tolerance=%g"
+			, MAX_ITER, rhos[0], rhos[1], ps[0], ps[1], tol);
 	return rhos[0];
+#undef MAX_ITER
+}
+
+/*
+	Transition across the non-physical portion of the pressure-density curve, 
+	where dP/d(rho) < 0, that is, where density decreases with increasing 
+	pressure.
+
+	For this function, it is essential that the starting point be at or very 
+	close to the peak of the P/rho curve, so that the first step takes the 
+	density solidly into the non-physical region.
+ */
+void transit_non_physical(double T, double *rhos, const PureFluid *PF, FpropsError *err, int from_vap){
+	unsigned i=0;
+	double delta_rho;
+
+	if(from_vap){
+		rhos[1] = 1.05 * rhos[0];
+		printf("\n  <transit_non_physical>: rhos[0]=%.6g, rhos[1]=%.6g, P[0]=%.1f Pa, P[1]=%.1f"
+				, rhos[0], rhos[1]
+				, fprops_p((FluidState){T, rhos[0], PF}, err)
+				, fprops_p((FluidState){T, rhos[1], PF}, err));
+		while(fprops_p((FluidState){T, rhos[0], PF}, err) > fprops_p((FluidState){T, rhos[1], PF}, err)){
+			delta_rho = 1.5 * (rhos[1] - rhos[0]);
+			rhos[0] = rhos[1];    /* rho[0], the trailing edge of the line segment, is shifted first */
+			rhos[1] += delta_rho; /* then rho[1], the leading edge, is shifted */
+			i++;
+		}
+		rhos[0] = 1.05 * rhos[1];
+	}else{
+		rhos[0] = 0.95 * rhos[1];
+		printf("\n  <transit_non_physical>: rhos[0]=%.6g, rhos[1]=%.6g, P[0]=%.1f Pa, P[1]=%.1f"
+				, rhos[0], rhos[1]
+				, fprops_p((FluidState){T, rhos[0], PF}, err)
+				, fprops_p((FluidState){T, rhos[1], PF}, err));
+		while(fprops_p((FluidState){T, rhos[0], PF}, err) > fprops_p((FluidState){T, rhos[1], PF}, err)){
+			rhos[1] = rhos[0]; /* rho[1] is now the trailing edge of the line segment, and is shifted first */
+			rhos[0] *= 0.7;    /* then rho[0], the leading edge, is shifted */
+			i++;
+		}
+		rhos[1] = 0.95 * rhos[0];
+	}
+	printf("\n\t<transit_non_physical>: Shifted to rho[0]=%.8g, after %u iterations", rhos[0], i);
 }
 
 /* Finding phase-equilibrium conditions */
@@ -506,7 +636,7 @@ double dew_pressure(MixtureSpec *MS, double T, FpropsError *err){
 	printf("\n  <dew_pressure>: Created DBData struct");
 	puts("");
 
-	secant_solve(&dew_p_error, &dbd, &p_d, tol);
+	secant_solve(&dew_p_error, &dbd, p_d, tol);
 
 	return p_d[0];
 #undef XS
@@ -1071,6 +1201,93 @@ void test_five(double T, double P){
 #undef VPF
 #undef VXS
 #undef VPURE
+
+#undef D
+#undef NPURE
+}
+
+void test_six(void){
+#define NPURE 2
+#define C_PURE 0
+#define NROWS 14
+#define NCOLS 9
+#define D MS->PF[i]->data
+	unsigned i1=0,i2=0,i3=0;
+	double T,rho;
+	char *fluids[] = {
+		"isohexane", "ammonia"
+	};
+	char *fluid_names[] = {
+		"isohexane", "ammonia"
+	};
+	double Xs[] = {0.55, 0.20, 0.10, 0.15, 0.10};
+	char *src[] = {
+		NULL, NULL, NULL, NULL, NULL
+	};
+	FpropsError err = FPROPS_NO_ERROR;
+	MixtureError merr = MIXTURE_NO_ERROR;
+
+	MixtureSpec *MS = ASC_NEW(MixtureSpec);
+	MS->pures = NPURE;
+	MS->Xs = Xs;
+	MS->PF = ASC_NEW_ARRAY(PureFluid *,NPURE);
+	mixture_fluid_spec(MS, NPURE, (void *)fluids, "pengrob", src, &merr);
+
+	double P[NROWS][NCOLS];
+	char *heads[NCOLS],
+		 *sides[NROWS+1],
+		 *forms[NROWS] = {"%.6g"},
+		 *conts[NROWS+1][NCOLS+1];
+	unsigned widths[NCOLS],
+			 temp_len; /* temporary string length */
+	sides[0] = "";
+
+	for(rho=1.0,i1=0;rho<5200.0;rho*=1.9,i1++){
+		/* printf("\n  Modeling substance %s at density %.6g kg/m^3", MS->PF[C_PURE]->name, rho); */
+		/* if((temp_len = asprintf((sides+i1+1), "rho=%.2f", rho)) < 1 || temp_len > 100){
+			sides[i1] = "";
+		} */
+		/* printf("\n  length of output string was %u", temp_len); */
+		asprintf((sides+i1+1), "rho=%.2f", rho);
+
+		for(T=100.0,i2=0;T<=500.0;T+=50.0,i2++){
+			/* printf("\n\tat temperature %.2f K", T); */
+			if(i1==0){
+				/* if((temp_len = asprintf((heads+i2), "T=%.6g", T)) < 1 || temp_len > 100){
+					heads[i2] = "";
+				} */
+				/* printf("\n\t  length of output string was %u", temp_len); */
+				asprintf((heads+i2), "T=%.6g", T);
+			}
+
+			P[i1][i2] = fprops_p((FluidState){T, rho, MS->PF[C_PURE]}, &err);
+			/* printf("\n\t  pressure is %.6g at i1=%u, i2=%u, T=%.2f, rho=%.6g, err=%i"
+					, P[i1][i2], i1, i2, T, rho, err); */
+			if(err==FPROPS_RANGE_ERROR){
+				/* printf("\n  Error in range"); */
+			}
+			err = FPROPS_NO_ERROR;
+		}
+	}
+	/* puts("");
+	for(i1=0;i1<NROWS+1;i1++){
+		printf("\n  -%s", sides[i1]);
+	}
+	puts("");
+	for(i1=0;i1<NCOLS;i1++){
+		printf("\n  %s", heads[i1]);
+	}
+	puts(""); */
+
+	/* PREPARE_TABLE(NROWS+1,NCOLS+1,heads,sides,P,forms,conts); */
+	for(i1=0;i1<NROWS;i1++){
+		/* printf("\n %s\t%s\t", sides[i1+1]); */
+		for(i2=0;i2<NCOLS;i2++){
+			printf("\n%s\t%s\t%.6g", sides[i1+1], heads[i2], P[i1][i2]);
+		}
+	}
+	puts("");
+	/* PRINT_STR_TABLE(NROWS+1,NCOLS+1,widths,conts); */
 
 #undef D
 #undef NPURE

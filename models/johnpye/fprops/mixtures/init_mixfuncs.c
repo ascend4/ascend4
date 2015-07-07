@@ -195,7 +195,7 @@ double pressure_rho_error(double rho, void *user_data){
 	printf("\n\tPressure while seeking P=%.0f Pa, trying rho=%.6g kg/m^3, here P=%.0f Pa"
 			,prd->P, rho, fprops_p(fst, prd->err));
 	
-	return fabs(prd->P - fprops_p(fst, prd->err));
+	return fabs(prd->P - fprops_p(fst, prd->err)) / fabs(prd->P);
 }
 
 /* 

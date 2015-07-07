@@ -103,7 +103,8 @@ unsigned index_of_max(unsigned nelems, double *nums){
  */
 void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], double tol){
 #define MAX_ITER 30
-	unsigned i;
+	unsigned i,
+			 ix_low; /* index of point (x,y) with smallest y-error */
 	double y[2];
 	double delta_x;
 
@@ -111,12 +112,13 @@ void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], dou
 
 	for(i=0;i<MAX_ITER;i++){
 		y[0] = (*func)(x[0], user_data);
+		ix_low = (fabs(y[0]) < fabs(y[1])) ? 0 : 1; /* find point with smallest y-error */
 		if(fabs(y[0])<tol){
 			printf("\n\n\tRoot-finding SUCCEEDED after %u iterations;"
 					"\n\t  zeroed function has value %.6g at postion %.6g\n", i, y[0], x[0]);
 			break;
 		}
-		if(x[0]==x[1]){
+		if(fabs(x[0]==x[1])<tol){
 			printf("\n\n\tRoot-finding FAILED after %u iterations;"
 					"\n\t  independent variables equal at %.6g,"
 					"\n\t  function is not zero, but %.6g",

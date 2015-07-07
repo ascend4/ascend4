@@ -50,19 +50,29 @@
 	} \
 	for(i1=0;i1<ROWS-1;i1++){ \
 		for(i2=0;i2<COLS-1;i2++){ \
-			T_CONT[i1+1][i2+1] = (char *)malloc(20); \
-			snprintf(T_CONT[i1+1][i2+1], 100, T_FORM[i1], T_VALS[i1][i2]); \
+			/* T_CONT[i1+1][i2+1] = (char *)malloc(20); */ \
+			asprintf((T_CONT[i1+1]+i2+1), T_FORM[i1], T_VALS[i1][i2]); \
+			printf("\n%s", T_CONT[i1+1][i2+1]); \
 		} \
 	}
 
 #define PRINT_STR_TABLE(ROWS,COLS,CWIDTH,CELLS) \
+	/* printf("\n\n  Setting column widths to zero..."); */ \
+	for(i1=0;i1<COLS;i1++){ \
+		CWIDTH[i1] = 0; \
+		/* printf("\n\tSet column %u width to zero", i1); */ \
+	} \
+	/* printf("\n  Finding column widths..."); */ \
 	for(i1=0;i1<ROWS;i1++){ \
 		for(i2=0;i2<COLS;i2++){ \
-			if(strlen(CELLS[i1][i2])>=CWIDTH[i2]){ \
+			if(strlen(CELLS[i1][i2])>CWIDTH[i2]){ \
 				CWIDTH[i2] = strlen(CELLS[i1][i2]); \
+				/* printf("\n\tSet column %u width to %u, from cell in row %u" \
+						, i1, CWIDTH[i2], i2); */ \
 			} \
 		} \
 	} \
+	/* printf("\n  Printing table..."); */ \
 	printf("\n"); \
 	for(i1=0;i1<ROWS;i1++){ \
 		for(i2=0;i2<COLS;i2++){ \
