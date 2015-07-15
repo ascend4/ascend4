@@ -287,7 +287,7 @@ class ModelView:
 				units = Preferences().getPreferredUnitsOrigin(str(_instance.getType().getName()))
 				if units == CelsiusUnits.get_celsius_sign():
 					temp = _value.split(" ")[0]
-					_value = CelsiusUnits.convert_kelvin_to_celsius(temp) + " " + CelsiusUnits.get_celsius_sign()
+					_value = CelsiusUnits.convert_kelvin_to_celsius(temp, str(_instance.getType())) + " " + CelsiusUnits.get_celsius_sign()
 			##### CELSIUS TEMPERATURE WORKAROUND
 			self.modelstore.set_value(_iter, 2, _value)
 			if _instance.getType().isRefinedSolverVar():
@@ -339,7 +339,7 @@ class ModelView:
 				pref = Preferences()
 				units = pref.getPreferredUnitsOrigin(str(_instance.getType().getName()))
 				if units == CelsiusUnits.get_celsius_sign() and len(newtext.split(" ")) == 1 or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign():
-					newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext.split(" ")[0])
+					newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext.split(" ")[0], str(_instance.getType()))
 					pref.setPreferredUnits(str(_instance.getType().getName()), CelsiusUnits.get_celsius_sign())
 			##### CELSIUS TEMPERATURE WORKAROUND
 
