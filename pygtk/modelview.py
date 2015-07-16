@@ -450,17 +450,17 @@ class ModelView:
 	def on_treeview_event(self,widget,event):
 		_path = None
 		_contextmenu = False
-		if event.type==Gdk.EventType.KEY_RELEASE:
+		if event.type == Gdk.EventType.KEY_RELEASE:
 			_keyval = Gdk.keyval_name(event.keyval)
 			_path, _col = self.modelview.get_cursor()
-			if _keyval=='Menu':
+			if _keyval == 'Menu':
 				_contextmenu = True
 				_button = 3
-			elif _keyval == 'F2':
+			elif _keyval == 'F2' or _keyval == 'Return':
 				print "F2 pressed"
-				self.modelview.set_cursor(_path,self.tvcolumns[2],1)
+				self.modelview.set_cursor(_path, self.tvcolumns[2], 1)
 				return True
-		elif event.type==Gdk.EventType.BUTTON_PRESS:
+		elif event.type == Gdk.EventType.BUTTON_PRESS:
 			_x = int(event.x)
 			_y = int(event.y)
 			_button = event.button
