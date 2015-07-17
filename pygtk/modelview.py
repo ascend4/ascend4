@@ -269,11 +269,13 @@ class ModelView:
 
 		return [_name, _type, _value, _fgcolor, _fontweight, _editable, _statusicon, None]
 
-	def make_row( self, piter, name, value ): # for instance browser
+	def make_row(self, piter, value, name=None): # for instance browser
 		assert(value)
 		_piter = self.modelstore.append(piter, self.get_tree_row_data(value))
 		path = self.modelstore.get_path(_piter)
 		self.modelstore.set_value(_piter, ORIGINAL_PATH_INDEX, str(path))
+		if name is not None:
+			self.modelstore.set_value(_piter, 0, str(name))
 		return _piter
 
 	def refreshtree(self):
@@ -394,18 +396,44 @@ class ModelView:
 		
 		self.browser.do_solve_if_auto()
 
-	def make_children(self, value, piter, depth = 5):
+	##### EXTERNAL RELATION WORKAROUND
+	def get_external_relation_outputs(self, value):
+		relation = str(value.getRelationAsString(self.browser.sim.getModel()))
+		relation = relation[relation.find('(') + 1:relation.find(')')]
+		relation = relation.replace(',', '').replace(';', '')
+		params = relation.split('\n')
+		result = []
+		for r in params:
+			if "OUTPUT" in r:
+				result.append(r.split("OUTPUT")[0].strip())
+		return result
+	##### EXTERNAL RELATION WORKAROUND
+
+	def make_children(self, value, piter, depth=5):
 		assert(value)
 		if value.isCompound():
 			children=value.getChildren();
+			##### EXTERNAL RELATION WORKAROUND
+			index = 0
+			relation_outputs = None
+			##### EXTERNAL RELATION WORKAROUND
 			for child in children:
 				try:
-					_name = child.getName();
-					_piter = self.make_row(piter,_name,child)
+					_name = child.getName()
+					##### EXTERNAL RELATION WORKAROUND
+					if str(value.getType().getName()) == "array" and str(child.getType().getName()) == "relation":
+						if relation_outputs is None:
+							relation_outputs = self.get_external_relation_outputs(child)
+
+						if len(relation_outputs) > 0:
+							_name = relation_outputs[index]
+							index += 1
+					##### EXTERNAL RELATION WORKAROUND
+					_piter = self.make_row(piter, child, _name)
 					if child.isCompound() and len(child.getChildren()) > 0 and depth > 0:
 						self.make_children(child, _piter, depth - 1)
 					_path = self.modelstore.get_path(_piter)
-					self.otank[_path.to_string()]=(_name,child)
+					self.otank[_path.to_string()] = (child.getName(), child)
 					#self.browser.reporter.reportError("2 Added %s at path %s" % (_name,repr(_path)))
 				except Exception,e:
 					self.browser.reporter.reportError("%s: %s" % (_name,e))
@@ -414,7 +442,7 @@ class ModelView:
 	def make(self, name=None, value=None, path=None, depth=1):
 		if path is None:
 			# make root node
-			piter = self.make_row( None, name, value )
+			piter = self.make_row(None, value)
 			path = self.modelstore.get_path( piter )
 			self.otank[ path.to_string() ] = (name, value)
 			#self.browser.reporter.reportError("4 Added %s at path %s" % (name, path))
