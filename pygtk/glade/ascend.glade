@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Generated with glade 3.16.1 -->
 <interface>
-  <requires lib="gtk+" version="3.0"/>
+  <requires lib="gtk+" version="3.2"/>
   <object class="GtkAboutDialog" id="aboutdialog">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1974,7 +1974,7 @@ upper and lower bounds displayed.</property>
     <property name="pixbuf">integrator-sm.png</property>
   </object>
   <object class="GtkWindow" id="browserwin">
-    <property name="width_request">530</property>
+    <property name="width_request">580</property>
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="can_default">True</property>
@@ -4133,9 +4133,11 @@ upper and lower bounds displayed.</property>
                 <property name="border_width">1</property>
                 <child>
                   <object class="GtkLabel" id="label16">
+                    <property name="width_request">250</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">To add columns here, right-click variables in the 'Simulation' tab, and click 'Observe'</property>
+                    <property name="wrap">True</property>
                   </object>
                 </child>
               </object>
@@ -4156,6 +4158,7 @@ upper and lower bounds displayed.</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="border_width">3</property>
                     <property name="use_stock">True</property>
                     <signal name="clicked" handler="on_close_observer_clicked" swapped="no"/>
                   </object>
