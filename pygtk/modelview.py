@@ -574,7 +574,7 @@ class ModelView:
 					self.studymenuitem.set_sensitive(True)
 			else:
 				self.fixmenuitem.set_sensitive(True)
-		elif _instance.isRelation():
+		elif _instance.isRelation() or _instance.isLogicalRelation() or _instance.isWhen():
 			self.propsmenuitem.set_sensitive(True)
 		elif _instance.isModel():
 			# MODEL instances have a special context menu:
@@ -688,14 +688,14 @@ class ModelView:
 		piter = self.modelview.get_model().get_iter(_path)
 		originalpath = self.modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX)
 		_instance = self.otank[originalpath][1]
-		if _instance.isRelation():
-			print "Relation '"+_instance.getName().toString()+"':", \
-				_instance.getRelationAsString(self.sim.getModel())
-			_dia = RelPropsWin(self.browser,_instance);
-			_dia.run();
+		if _instance.isRelation() or _instance.isLogicalRelation() or _instance.isWhen():
+			# print "Relation '"+_instance.getName().toString()+"':", \
+			# 	_instance.getRelationAsString(self.sim.getModel())
+			_dia = RelPropsWin(self.browser, _instance)
+			_dia.run()
 		elif _instance.getType().isRefinedSolverVar():
-			_dia = VarPropsWin(self.browser,_instance);
-			_dia.run();
+			_dia = VarPropsWin(self.browser, _instance)
+			_dia.run()
 		else:
 			self.browser.reporter.reportWarning("Select a variable or relation first...")
 

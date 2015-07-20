@@ -7,8 +7,8 @@ from infodialog import *
 
 class RelPropsWin:
 	def __init__(self,browser,instance):
-		self.instance = instance;
-		self.browser = browser;
+		self.instance = instance
+		self.browser = browser
 
 		# GUI config
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["relpropswin"])
@@ -20,26 +20,36 @@ class RelPropsWin:
 		self.expr = self.browser.builder.get_object("expr")
 		self.included = self.browser.builder.get_object("included")
 		self.active = self.browser.builder.get_object("active")
-		self.exprbuff = Gtk.TextBuffer();
+		self.exprbuff = Gtk.TextBuffer()
 		self.expr.set_buffer(self.exprbuff)
-		self.morepropsbutton = self.browser.builder.get_object("morepropsbutton");
+		self.morepropsbutton = self.browser.builder.get_object("morepropsbutton1")
 
-		self.statusimg = self.browser.builder.get_object("rel_statusimg");
-		self.statusmessage = self.browser.builder.get_object("rel_statusmessage");
+		self.statusimg = self.browser.builder.get_object("rel_statusimg")
+		self.statusmessage = self.browser.builder.get_object("rel_statusmessage")
 
 		self.fill_values()
 		self.browser.builder.connect_signals(self)
 
 	def fill_values(self):
-		self.relname.set_text( self.browser.sim.getInstanceName(self.instance) )
-		self.residual.set_text( str( self.instance.getResidual() ) )
-		self.exprbuff.set_text( self.instance.getRelationAsString(self.browser.sim.getModel() ) )
-		self.included.set_active( self.instance.isIncluded() )
+		self.window.set_title(self.instance.getKindStr())
+		self.relname.set_text(self.browser.sim.getInstanceName(self.instance))
+		_status = self.instance.getStatus()
+		self.statusimg.set_from_pixbuf(self.browser.statusicons[_status])
+		self.statusmessage.set_text(self.browser.statusmessages[_status])
+		if self.instance.isRelation():
+			self.exprbuff.set_text(self.instance.getRelationAsString(self.browser.sim.getModel()))
+		elif self.instance.isLogicalRelation():
+			self.exprbuff.set_text(self.instance.getLogrelAsString(self.browser.sim.getModel()))
+		elif self.instance.isWhen():
+			self.exprbuff.set_text(self.instance.getWhenAsString(self.browser.sim.getModel()))
 
-		_status = self.instance.getStatus()		
-		self.statusimg.set_from_pixbuf(self.browser.statusicons[_status]);
-		self.statusmessage.set_text(self.browser.statusmessages[_status]);
-
+		if str(self.instance.getType()) == "relation":
+			self.residual.set_text(str(self.instance.getResidual()))
+			self.included.set_active(self.instance.isIncluded())
+		else:
+			self.morepropsbutton.set_sensitive(False)
+			self.residual.set_sensitive(False)
+			self.included.set_sensitive(False)
 
 	def on_relpropswin_close(self,*args):
 		self.window.response(Gtk.ResponseType.CANCEL)

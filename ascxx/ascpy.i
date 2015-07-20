@@ -378,7 +378,8 @@ public:
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
 	const std::string getValueAsString() const; ///< Use carefully: rounding will occur for doubles!
-
+	const std::string getWhenAsString(const Instanc &relative_to) const;
+	const std::string getLogrelAsString(const Instanc &relative_to) const;
 	const std::string getRelationAsString(const Instanc &relative_to) const;
 	const double getResidual() const;
 	const bool getLogicalResidual() const;
