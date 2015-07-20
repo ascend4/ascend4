@@ -57,6 +57,7 @@ class UnitsDialog:
 			if T.isRefinedReal():
 				self.typecombo.append_text(str(T.getName()))
 		self.update_typecombo(str(T.getName()))
+		self.typecombo.set_active(0)
 
 	def unitsview_row_toggled(self,widget,path,*args):
 		i = self.unitsview.get_model().get_iter_from_string(path)
