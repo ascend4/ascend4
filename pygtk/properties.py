@@ -251,8 +251,7 @@ class VarPropsWin:
 		_dialog.run()
 
 	def run(self):
-		self.valueentry.grab_focus()
-		_continue = True;
+		_continue = True
 		while _continue:
 			_res = self.window.run();
 			try:
