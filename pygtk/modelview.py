@@ -34,7 +34,7 @@ class ModelView:
 		
 		self.modelview.connect("row-expanded", self.row_expanded )
 		self.modelview.connect("button-press-event", self.on_treeview_event )
-		self.modelview.connect("key-release-event",self.on_treeview_event )
+		self.modelview.connect("key-press-event",self.on_treeview_event )
 
 		# data columns are: name type value colour weight editable
 		
@@ -478,7 +478,7 @@ class ModelView:
 	def on_treeview_event(self,widget,event):
 		_path = None
 		_contextmenu = False
-		if event.type == Gdk.EventType.KEY_RELEASE:
+		if event.type == Gdk.EventType.KEY_PRESS:
 			_keyval = Gdk.keyval_name(event.keyval)
 			_path, _col = self.modelview.get_cursor()
 			if _keyval == 'Menu':
