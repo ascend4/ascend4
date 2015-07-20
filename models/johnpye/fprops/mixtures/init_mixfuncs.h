@@ -40,6 +40,8 @@
 
 #define MIX_ERROR "  ERROR: "
 #define MIX_XSUM_ERROR MIX_ERROR "the sum over all mass fractions, which should be exactly 1.00, is %.10f\n"
+#define MIX_COMPR_ERROR MIX_ERROR "the compressibility has assumed a non-physical value"
+#define MIX_PI M_PI
 
 #define PREPARE_TABLE(ROWS,COLS,T_HEAD,T_SIDE,T_VALS,T_FORM,T_CONT) \
 	for(i2=0;i2<COLS-1;i2++){ \

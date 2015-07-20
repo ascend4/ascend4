@@ -38,6 +38,7 @@
 #include <stdio.h>
 
 double min_element(unsigned nelems, double *nums);
+int min_positive_elem(double *min, unsigned nelems, double *nums);
 double max_element(unsigned nelems, double *nums);
 double sum_elements(unsigned nelems, double *nums);
 unsigned index_of_min(unsigned nelems, double *nums);

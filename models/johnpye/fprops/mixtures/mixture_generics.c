@@ -19,7 +19,7 @@
 	59 Temple Place - Suite 330
 	Boston, MA 02111-1307, USA.
 *//*
-	by Jacob Shealy, June 25-, 2015
+	by Jacob Shealy, June 25-July 13, 2015
 
 	Generic functions that are used in modeling mixtures, but that do not have 
 	anything specifically to do with mixtures.
@@ -29,9 +29,16 @@
 #include "mixture_struct.h"
 #include <math.h>
 
+/*
+	Find minimum element from an array of doubles.
+
+	Sets minimum value to the first element in the array initially; then it is 
+	re-sets it to any element smaller than its current value.
+ */
 double min_element(unsigned nelems, double *nums){
 	unsigned i;
 	double min=nums[0];
+
 	for(i=1;i<nelems;i++){
 		if(nums[i]<min){
 			min = nums[i];
@@ -40,9 +47,47 @@ double min_element(unsigned nelems, double *nums){
 	return min;
 }
 
+/*
+	Find minimum *positive* (meaning greater than one, not just non-zero) 
+	element from an array of doubles.
+
+	This works differently from 'min_element' above: the variable to hold the 
+	minimum is passed in by reference, and the function returns whether the 
+	search for a positive element was a success or failure.
+
+	Initially, minimum value is set to -1, so that if no elements are positive, 
+	the function can return 1 (failure: no minimum value was found).  Otherwise, 
+	the function returns 0 (success).  Minimum value is iteratively set to any 
+	positive element that is smaller than its current value, with the exception 
+	of the first assignment -- first assignment (minimum is still negative) only 
+	requires a positive number.
+ */
+int min_positive_elem(double *min, unsigned nelems, double *nums){
+	unsigned i;
+	*min = -1;
+
+	for(i=0;i<nelems;i++){
+		if(nums[i]>0 && (nums[i]<*min || *min<0)){
+			*min = nums[i];
+		}
+	}
+	if(*min<0){
+		return 1; /* no positive minimum element found -- failure */
+	}else{
+		return 0;
+	}
+}
+
+/*
+	Find maximum element from an array of doubles.
+
+	Initially, maximum value is set equal to the first element in the array; 
+	then it is re-assigned to equal any element larger than its current value.
+ */
 double max_element(unsigned nelems, double *nums){
 	unsigned i;
 	double max=nums[0];
+
 	for(i=1;i<nelems;i++){
 		if(nums[i]>max){
 			max = nums[i];
@@ -51,9 +96,15 @@ double max_element(unsigned nelems, double *nums){
 	return max;
 }
 
+/*
+	Calculate sum of the elements of an array of doubles.
+
+	The sum is initially set to zero, then elements are added in turn.
+ */
 double sum_elements(unsigned nelems, double *nums){
 	unsigned i;
 	double sum=0.0;
+
 	for(i=0;i<nelems;i++){
 		sum += nums[i];
 	}
@@ -61,13 +112,17 @@ double sum_elements(unsigned nelems, double *nums){
 }
 
 /*
-	Find index of the minimum value in the array `nums', with maximum index 
-	`nelems'
+	Find index of the minimum element in an array of doubles.
+
+	Sets index of minimum element to zero initially and minimum value to first 
+	element; then re-sets index to the index of any element smaller than the 
+	minimum, and re-sets minimum value also.  Note that the loop indexes from 1, 
+	since the initial (0) element has already been treated.
  */
 unsigned index_of_min(unsigned nelems, double *nums){
 	unsigned i;
-	unsigned min_ix=0;  /* the index of the minimum element */
-	double min=nums[0]; /* the minimum element */
+	unsigned min_ix=0;  /* index of the minimum value */
+	double min=nums[0]; /* minimum value */
 
 	for(i=1;i<nelems;i++){
 		if(nums[i]<min){
@@ -79,17 +134,21 @@ unsigned index_of_min(unsigned nelems, double *nums){
 }
 
 /*
-	Find index of the maximum value in the array `nums', with maximum index 
-	`nelems'
+	Find index of the maximum value in an array of doubles.
+
+	Sets index of maximum element to zero initially and maximum value to first 
+	element; then re-sets index to the index of any element larger than the 
+	maximum, and re-sets maximum value also.  Note that the loop indexes from 1, 
+	since the initial (0) element has already been treated.
  */
 unsigned index_of_max(unsigned nelems, double *nums){
 	unsigned i;
-	unsigned max_ix=0;  /* the index of the minimum element */
-	double max=nums[0]; /* the minimum element */
+	unsigned max_ix=0;  /* index of the maximum element */
+	double max=nums[0]; /* maximum element */
 
 	for(i=1;i<nelems;i++){
 		if(nums[i]>max){
-			max_ix = i;    /* update both `min' and `min_ix' */
+			max_ix = i;    /* update both 'max' and 'max_ix' */
 			max = nums[i];
 		}
 	}
@@ -118,13 +177,14 @@ void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], dou
 					"\n\t  zeroed function has value %.6g at postion %.6g\n", i, y[0], x[0]);
 			break;
 		}
-		if(fabs(x[0]==x[1])<tol){
+		if(fabs(x[0] - x[1])<tol){
 			printf("\n\n\tRoot-finding FAILED after %u iterations;"
 					"\n\t  independent variables equal at %.6g,"
 					"\n\t  function is not zero, but %.6g",
 					i, x[0], y[0]);
 			break;
 		}
+		/* Break if variables are infinity or NaN */
 		if(x[0]==INFINITY || y[0]==INFINITY 
 				|| x[0]!=x[0] || y[0]!=y[0]){
 			printf("\n\nRoot-finding FAILED after %u iterations;"
@@ -144,6 +204,18 @@ void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], dou
 #undef MAX_ITER
 }
 
+/*
+	Find mole fractions of a mixture from the mass fractions and identities of 
+	the fluids that form the solution.  This implements the relation
+
+	Mole Fraction of component 'i' = (Mass Fraction of 'i'/Molar Mass of 'i') /
+	                                 (Sum over components 'j' (Mass Fraction of 'j'/Molar Mass of 'j'))
+
+	x_i^{mole} = \frac{\frac{x_i^{mass}}{M_i}}{\sum\limits_j \frac{x_j^{mass}}{M_j}}
+
+	Unfortunately, we can't use 'sum_elements' to find the sum 'XM_sum', so it 
+	is calculated in a loop.
+ */
 void mole_fractions(unsigned n_pure, double *x_mole, double *X_mass, PureFluid **PF){
 #define D PF[i]->data
 	unsigned i;
