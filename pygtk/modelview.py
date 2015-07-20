@@ -322,18 +322,17 @@ class ModelView:
 
 	def cell_edited_callback(self, renderer, path, newtext, **kwargs):
 		# get back the Instance object we just edited (having to use this seems like a bug)
-#path = tuple( map(int,path.split(":")) )
+		#path = tuple( map(int,path.split(":")) )
 		piter = self.modelview.get_model().get_iter(path)
 		originalpath = self.modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX)
 		if not self.otank.has_key(originalpath):
 			raise RuntimeError("cell_edited_callback: invalid path '%s'" % path)
-			return
 
 		_name, _instance = self.otank[originalpath]
 
 		if _instance.isReal():
 			if _instance.getValue() == newtext:
-				return
+				return True
 			# only real-valued things can have units
 
 			##### CELSIUS TEMPERATURE WORKAROUND
@@ -352,7 +351,7 @@ class ModelView:
 				_e.exportPreferredUnits(self.browser.prefs)
 			except InputError, e:
 				self.browser.reporter.reportError(str(e))
-				return;
+				return True
 
 		else:
 			if _instance.isBool():
@@ -363,38 +362,39 @@ class ModelView:
 					newtext = 0
 				else:
 					self.browser.reporter.reportError("Invalid entry for a boolean variable: '%s'" % newtext)
-					return
+					return True
 				_val = bool(newtext);
 				if _val == _instance.getValue():
 					self.browser.reporter.reportNote("Boolean atom '%s' was not altered" % _instance.getName())
-					return
+					return True
 				_instance.setBoolValue(_val)
 
 			elif _instance.isInt():
 				_val = int(newtext)
 				if _val == _instance.getValue():
 					self.browser.reporter.reportNote("Integer atom '%s' was not altered" % _instance.getName())
-					return
+					return True
 				_instance.setIntValue(_val)
 			elif _instance.isSymbol():
 				_val = str(newtext)
 				if _val == _instance.getValue():
 					self.browser.reporter.reportNote("Symbol atom '%s' was not altered" % _instance.getName())
-					return
+					return True
 				_instance.setSymbolValue(ascpy.SymChar(_val))
 						
 			else:
 				self.browser.reporter.reportError("Attempt to set a non-real, non-boolean, non-integer value!")
-				return
+				return True
 
 		# now that the variable is set, update the GUI and re-solve if desired
 		_iter = self.modelstore.get_iter(path)
-		self.modelstore.set_value(_iter,2,_instance.getValue())
+		self.modelstore.set_value(_iter,2, str(_instance.getValue()))
 
 		if _instance.getType().isRefinedSolverVar():
 			self.modelstore.set_value(_iter,3,BROWSER_FIXED_COLOR) # set the row green as fixed
 		
 		self.browser.do_solve_if_auto()
+		return True
 
 	##### EXTERNAL RELATION WORKAROUND
 	def get_external_relation_outputs(self, value):
@@ -425,7 +425,7 @@ class ModelView:
 						if relation_outputs is None:
 							relation_outputs = self.get_external_relation_outputs(child)
 
-						if len(relation_outputs) > 0:
+						if index < len(relation_outputs):
 							_name = relation_outputs[index]
 							index += 1
 					##### EXTERNAL RELATION WORKAROUND
