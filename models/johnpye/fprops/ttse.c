@@ -179,7 +179,7 @@ void build_tables(PureFluid *P){
 
     double Tt = P->data->T_t;
     double Tc = P->data->T_c;
-    double dt = (Tc - Tt)/(NSAT-1);
+    double dt = (Tc - Tt)/(NSAT);
 
     MSG("triple point and critical temperature -->  %f  %f",Tt,Tc);
 
@@ -337,7 +337,7 @@ void build_tables(PureFluid *P){
         double tmax = P->data->T_c;\
 		if(t >= tmin  && t< tmax) {\
             double dt = (tmax-tmin)/NSAT;\
-            i = (int)round(((t - P->data->T_t)/(P->data->T_c - P->data->T_t)*(NSAT-1)));\
+            i = (int)round(((t - tmin)/(tmax - tmin)*(NSAT)));\
             double delt = t - ( tmin + i*dt);\
             rho_f =  P->table->satFRho[i] + delt*P->table->satFdRhodt[i] + 0.5*delt*delt*P->table->satFd2RhodT2[i];\
             rho_g =  P->table->satGRho[i] + delt*P->table->satGdRhodt[i] + 0.5*delt*delt*P->table->satGd2RhodT2[i];\
@@ -354,8 +354,8 @@ void build_tables(PureFluid *P){
         double rhomax = P->table->rhomax;\
         double dt = (tmax-tmin)/NTP;\
         double drho = (rhomax-rhomin)/NRHOP;\
-        i = (int)round(((t-tmin)/(tmax-tmin)*(NTP-1)));\
-        j = (int)round(((rho-rhomin)/(rhomax-rhomin)*(NRHOP-1)));\
+        i = (int)round(((t-tmin)/(tmax-tmin)*(NTP)));\
+        j = (int)round(((rho-rhomin)/(rhomax-rhomin)*(NRHOP)));\
         double delt = t - ( tmin + i*dt);\
         double delrho = rho - ( rhomin + j*drho);\
         double ttse##VAR = P->table->VAR[i][j]\

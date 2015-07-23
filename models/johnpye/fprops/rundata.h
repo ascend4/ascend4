@@ -134,7 +134,7 @@ typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *d
 /*structure for tables*/
 #define NTP 200
 #define NRHOP 200
-#define NSAT 1000
+#define NSAT 400
 typedef double (*TtseMatrix) [NRHOP];
 typedef double* TtseLine;
 

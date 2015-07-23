@@ -54,55 +54,60 @@ int main(void){
 
     double rho = 1000;
 
-/* //Plot in Mathematica Saturation dome
-    #define SPOINTS 1000
-
-    double Tt = P->data->T_t;
-    double Tc = P->data->T_c;
-    double dt2p = (Tc - Tt)/SPOINTS;
+//Plot in Mathematica Saturation dome
 
     printf("{");
-    for(i=0;i<SPOINTS+1;i++)
+    for(i=0;i<NSAT;i++)
     {
-        double T = Tt + i*dt2p;
+        double Tt = P->data->T_t;
+        double Tc = P->data->T_c;
+        double dt2p = (Tc - Tt)/NSAT;
+        double T = Tt + (i+0.1)*dt2p;
         double psat, rhof,rhog;
         fprops_sat_T(T,&psat,&rhof,&rhog,P,&err);
 
-        if(i!= SPOINTS)
-            printf("{%f, %f, %f},\n",T, rhof,rhog);
-        else
-            printf("{%f, %f, %f}};\n",T, rhof,rhog);
+        int j = (int)round(  ((T - Tt)/(Tc - Tt))*(NSAT)  );
+        double delt = T - ( Tt + j*dt2p);
+        double rhofT,rhogT;
+        rhofT =   P->table->satFRho[j] + delt*P->table->satFdRhodt[j]+ 0.5*delt*delt*P->table->satFd2RhodT2[j];
+        rhogT =   P->table->satGRho[j] + delt*P->table->satGdRhodt[j]+ 0.5*delt*delt*P->table->satGd2RhodT2[j];
+
+        MSG("%f %f  %f  %f  %f  %f  %f", delt,rhof,rhofT,rhog,rhogT, 100*(rhof-rhofT)/rhof,100*(rhog-rhogT)/rhog );
+       // if(i!= SPOINTS)
+       //     printf("{%f, %f, %f},\n",T, rhof,rhog);
+       // else
+        //    printf("{%f, %f, %f}};\n",T, rhof,rhog);
     }
 
     exit(1);
-*/
 
 
 
 
 
 /*****************************************Two Phase Table Testing*****************************************/
+/*
     double Tt = P->data->T_t;
     double Tc = P->data->T_c;
     double t = Tc - 53.341233;
     double psat, rhof,rhog;
     fprops_sat_T(t,&psat,&rhof,&rhog,P,&err);
-    double dT = (Tc-Tt)/NSAT;
+    double dt = (Tc-Tt)/NSAT;
     i = (int)round(((t - Tt)/(Tc - Tt)*(NSAT-1)));
-    double delt = t - ( Tt + i*dT);
+    double delt = t - ( Tt + i*dt);
 
     double rhofT,rhogT;
     rhofT =   P->table->satFRho[i] + delt*P->table->satFdRhodt[i];// + 0.5*delt*delt*P->table->satFd2RhodT2[i];
     rhogT =   P->table->satGRho[i] + delt*P->table->satGdRhodt[i];// + 0.5*delt*delt*P->table->satGd2RhodT2[i];
 
     MSG("SAT TEST ::: %f   %f",100*(rhof-rhofT)/rhof,100*(rhog-rhogT)/rhog);
-
+*/
 /*****************************************Single Phase Table Testing*****************************************/
     #define NPOINTS 100000
     double temp_s = 650;
     double temp_f = 1650;
     int nT = NPOINTS;
-    dT = (temp_f-temp_s)/nT;
+    double dT = (temp_f-temp_s)/nT;
 
 
     double pressH[NPOINTS],enthalpyH[NPOINTS];
