@@ -1010,11 +1010,11 @@ double helmholtz_d2sdTdrho(double T, double rho, const FluidData *data, FpropsEr
 double helmholtz_dgdT_rho(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
-    double phi0 = helm_resid_deldel(tau,delta,HD);
-	double phi0_tau = helm_resid_deltautau(tau,delta,HD);
-	double phir = helm_resid_del(tau,delta,HD);
-	double phir_tau = helm_resid_deldeltau(tau,delta,HD);
-	double phir_del = helm_resid_deltau(tau,delta,HD);
+    double phi0 = ideal_phi(tau,delta,HD_CP0);
+	double phi0_tau = ideal_phi_tau(tau,delta,HD_CP0);
+	double phir = helm_resid(tau,delta,HD);
+	double phir_tau = helm_resid_tau(tau,delta,HD);
+	double phir_del = helm_resid_del(tau,delta,HD);
 	double phir_taudel = helm_resid_deltau(tau,delta,HD);
 
 #ifdef TEST
@@ -1048,8 +1048,8 @@ double helmholtz_dgdT_rho(double T, double rho, const FluidData *data, FpropsErr
 double helmholtz_dgdrho_T(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
-	double phir_del = helm_resid_deltau(tau,delta,HD);
-	double phir_deldel = helm_resid_deltau(tau,delta,HD);
+	double phir_del = helm_resid_del(tau,delta,HD);
+	double phir_deldel = helm_resid_deldel(tau,delta,HD);
 
 #ifdef TEST
 	assert(!isinf(phir_del));
@@ -1170,7 +1170,6 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 		ERRMSG("Input temperature %f K is below triple-point temperature %f K",T,data->T_t);
 		return FPROPS_RANGE_ERROR;
 	}
-
 	if(T > data->T_c + 1e-8){
 		ERRMSG("Input temperature is above critical point temperature");
 		*err = FPROPS_RANGE_ERROR;

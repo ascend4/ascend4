@@ -25,8 +25,8 @@
 
 #define INIT -23456789.123
 
-#define FO
-//#define SO
+//#define FO
+#define SO
 inline TtseMatrix alloc_matrix(int tp, int rhop) {
 
     TtseMatrix matrix =  ASC_NEW_ARRAY (TtseMatrix, tp*rhop);  //tp rows and rhop columns
@@ -50,6 +50,15 @@ inline void remove_matrix(TtseMatrix mat , int tp){
 
 void alloc_tables(Ttse * table)
 {
+
+    table->satFRho =  ASC_NEW_ARRAY ( double , NSAT);
+    table->satFdRhodt =  ASC_NEW_ARRAY (double, NSAT);
+    table->satFd2RhodT2 =  ASC_NEW_ARRAY (double, NSAT);
+    table->satGRho =  ASC_NEW_ARRAY (double, NSAT);
+    table->satGdRhodt =  ASC_NEW_ARRAY (double, NSAT);
+    table->satGd2RhodT2 =  ASC_NEW_ARRAY (double, NSAT);
+
+
 
     table->s = alloc_matrix(NTP,NRHOP);
     table->dsdt = alloc_matrix(NTP,NRHOP);
@@ -95,6 +104,15 @@ void alloc_tables(Ttse * table)
 
 void remove_tables(Ttse *table)
 {
+
+    ASC_FREE(table->satFRho );
+    ASC_FREE(table->satFdRhodt );
+    ASC_FREE(table->satFd2RhodT2 );
+
+    ASC_FREE(table->satGRho );
+    ASC_FREE(table->satGdRhodt );
+    ASC_FREE(table->satGd2RhodT2 );
+
     remove_matrix(table->dsdt,NTP);
     remove_matrix(table->d2sdt2,NTP);
     remove_matrix(table->dsdrho,NTP);
@@ -159,10 +177,69 @@ void build_tables(PureFluid *P){
     int i,j;
     FpropsError err = FPROPS_NO_ERROR;
 
+    double Tt = P->data->T_t;
+    double Tc = P->data->T_c;
+    double dt = (Tc - Tt)/(NSAT-1);
+
+    MSG("triple point and critical temperature -->  %f  %f",Tt,Tc);
+
+    for(i=0; i<NSAT; ++i)
+    {
+
+        double T = Tt + i*dt;
+
+        double  rhof,rhog;
+        P->sat_fn(T,&rhof,&rhog,P->data,&err);
+
+
+        //The fluid saturation line rho's and 1st & 2nd  derivatives of rho with respect to T
+
+        double dpdT_rho  = P->dpdT_rho_fn(T,rhof,P->data,&err);
+        double dpdrho_T  = P->dpdrho_T_fn(T,rhof,P->data,&err);
+
+        double d2pdrho2_T = P->d2pdrho2_T_fn(T,rhof,P->data,&err);
+        double d2pdrhodT = P->d2pdTdrho_fn(T,rhof,P->data,&err);
+        double d2pdT2_rho = P->d2pdT2_rho_fn(T,rhof,P->data,&err);
+
+
+        double ddrho_drhodT_p_constT = ( dpdT_rho*d2pdrho2_T - dpdrho_T*d2pdrhodT ) / pow(dpdrho_T,2);
+        double ddT_drhodT_p_constrho = ( dpdT_rho*d2pdrhodT - dpdrho_T*d2pdT2_rho ) / pow(dpdrho_T,2);
+
+        double drhodT_p =  (-dpdT_rho )/(dpdrho_T);
+
+
+        PT->satFRho[i] = rhof;
+        PT->satFdRhodt[i] = drhodT_p;
+        PT->satFd2RhodT2[i] =  ddT_drhodT_p_constrho  +  ddrho_drhodT_p_constT * drhodT_p;
+
+
+        //The Vapour saturation line rho's and 1st & 2nd derivatives of rho with respect to T
+
+        dpdT_rho  = P->dpdT_rho_fn(T,rhog,P->data,&err);
+        dpdrho_T  = P->dpdrho_T_fn(T,rhog,P->data,&err);
+
+        d2pdrho2_T = P->d2pdrho2_T_fn(T,rhog,P->data,&err);
+        d2pdrhodT = P->d2pdTdrho_fn(T,rhog,P->data,&err);
+        d2pdT2_rho = P->d2pdT2_rho_fn(T,rhog,P->data,&err);
+
+        ddrho_drhodT_p_constT = ( dpdT_rho*d2pdrho2_T - dpdrho_T*d2pdrhodT ) / pow(dpdrho_T,2);
+        ddT_drhodT_p_constrho = ( dpdT_rho*d2pdrhodT - dpdrho_T*d2pdT2_rho ) / pow(dpdrho_T,2);
+
+        drhodT_p =  (-dpdT_rho )/(dpdrho_T);
+
+
+        PT->satGRho[i] = rhog;
+        PT->satGdRhodt[i] = drhodT_p;
+        PT->satGd2RhodT2[i] =  ddT_drhodT_p_constrho  +  ddrho_drhodT_p_constT * drhodT_p;
+
+
+    }
+
+
     double tmin,tmax,rhomin,rhomax;
 
 //Pseudo values for water
-//Should be implemented else where per fluid
+//Should be implemented elsewhere per fluid
     PT->tmin = 200;
     PT->tmax = 4200;
     PT->rhomin = 400;
@@ -175,7 +252,7 @@ void build_tables(PureFluid *P){
     rhomin = PT->rhomin;
     rhomax = PT->rhomax;
 
-    double dt = (tmax-tmin)/NTP;
+    dt = (tmax-tmin)/NTP;
     double drho = (rhomax-rhomin)/NRHOP;
 
 
@@ -253,20 +330,39 @@ void build_tables(PureFluid *P){
 #ifdef SO
 #define EVALTTSEFN(VAR) \
 	double evaluate_ttse_##VAR(PureFluid *P , double t, double rho){\
-            int i,j;\
-            double tmin = P->table->tmin; double tmax = P->table->tmax;\
-            double rhomin  = P->table->rhomin; double rhomax= P->table->rhomax;\
-            double dt = (tmax-tmin)/NTP;\
-            double drho = (rhomax-rhomin)/NRHOP;\
-            i = (int)round(((t-tmin)/(tmax-tmin)*(NTP-1)));\
-            j = (int)round(((rho-rhomin)/(rhomax-rhomin)*(NRHOP-1)));\
+		double rho_f, rho_g;\
+		FpropsError err;\
+        int i,j;\
+        double tmin = P->data->T_t;\
+        double tmax = P->data->T_c;\
+		if(t >= tmin  && t< tmax) {\
+            double dt = (tmax-tmin)/NSAT;\
+            i = (int)round(((t - P->data->T_t)/(P->data->T_c - P->data->T_t)*(NSAT-1)));\
             double delt = t - ( tmin + i*dt);\
-            double delrho = rho - ( rhomin + j*drho);\
-            double ttse##VAR = P->table->VAR[i][j]\
-                 + delt*P->table->d##VAR##dt[i][j] + 0.5*delt*delt*P->table->d2##VAR##dt2[i][j]\
-                 + delrho*P->table->d##VAR##drho[i][j] + 0.5*delrho*delrho*P->table->d2##VAR##drho2[i][j]\
-                 + delrho*delt*P->table->d2##VAR##dtdrho[i][j];\
-            return ttse##VAR;\
+            rho_f =  P->table->satFRho[i] + delt*P->table->satFdRhodt[i] + 0.5*delt*delt*P->table->satFd2RhodT2[i];\
+            rho_g =  P->table->satGRho[i] + delt*P->table->satGdRhodt[i] + 0.5*delt*delt*P->table->satGd2RhodT2[i];\
+            if(rho_g < rho && rho < rho_f){\
+                    double x = rho_g*(rho_f/rho - 1)/(rho_f - rho_g);\
+                    double Qf = P->VAR##_fn( t,rho_f,P->data,&err);\
+                    double Qg = P->VAR##_fn( t,rho_g,P->data,&err);\
+                    return x*Qg + (1-x)*Qf;\
+                }\
+            }\
+        tmin = P->table->tmin;\
+        tmax = P->table->tmax;\
+        double rhomin  = P->table->rhomin;\
+        double rhomax = P->table->rhomax;\
+        double dt = (tmax-tmin)/NTP;\
+        double drho = (rhomax-rhomin)/NRHOP;\
+        i = (int)round(((t-tmin)/(tmax-tmin)*(NTP-1)));\
+        j = (int)round(((rho-rhomin)/(rhomax-rhomin)*(NRHOP-1)));\
+        double delt = t - ( tmin + i*dt);\
+        double delrho = rho - ( rhomin + j*drho);\
+        double ttse##VAR = P->table->VAR[i][j]\
+             + delt*P->table->d##VAR##dt[i][j] + 0.5*delt*delt*P->table->d2##VAR##dt2[i][j]\
+             + delrho*P->table->d##VAR##drho[i][j] + 0.5*delrho*delrho*P->table->d2##VAR##drho2[i][j]\
+             + delrho*delt*P->table->d2##VAR##dtdrho[i][j];\
+        return ttse##VAR;\
         }
 #endif
 

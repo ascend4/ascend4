@@ -34,7 +34,7 @@
 #define TOL_RHO 1e-3
 
 int main(void){
-	 PureFluid *P;
+    PureFluid *P;
 	FpropsError err;
     const char *helmfluids[] = { "water"};
 	//const int n = sizeof(helmfluids)/sizeof(char *);
@@ -45,19 +45,64 @@ int main(void){
 
     P = (PureFluid *)fprops_fluid(helmfluids[0],"helmholtz",NULL);
 
+
+    MSG("Triple Point Tt %f  & Crit Temp  %f",P->data->T_t,P->data->T_c);
+
+
     MSG("Comparing Helmholtz vs TTSE");
 
 
-    double rho = 1200;
+    double rho = 1000;
+
+/* //Plot in Mathematica Saturation dome
+    #define SPOINTS 1000
+
+    double Tt = P->data->T_t;
+    double Tc = P->data->T_c;
+    double dt2p = (Tc - Tt)/SPOINTS;
+
+    printf("{");
+    for(i=0;i<SPOINTS+1;i++)
+    {
+        double T = Tt + i*dt2p;
+        double psat, rhof,rhog;
+        fprops_sat_T(T,&psat,&rhof,&rhog,P,&err);
+
+        if(i!= SPOINTS)
+            printf("{%f, %f, %f},\n",T, rhof,rhog);
+        else
+            printf("{%f, %f, %f}};\n",T, rhof,rhog);
+    }
+
+    exit(1);
+*/
 
 
 
+
+
+/*****************************************Two Phase Table Testing*****************************************/
+    double Tt = P->data->T_t;
+    double Tc = P->data->T_c;
+    double t = Tc - 53.341233;
+    double psat, rhof,rhog;
+    fprops_sat_T(t,&psat,&rhof,&rhog,P,&err);
+    double dT = (Tc-Tt)/NSAT;
+    i = (int)round(((t - Tt)/(Tc - Tt)*(NSAT-1)));
+    double delt = t - ( Tt + i*dT);
+
+    double rhofT,rhogT;
+    rhofT =   P->table->satFRho[i] + delt*P->table->satFdRhodt[i];// + 0.5*delt*delt*P->table->satFd2RhodT2[i];
+    rhogT =   P->table->satGRho[i] + delt*P->table->satGdRhodt[i];// + 0.5*delt*delt*P->table->satGd2RhodT2[i];
+
+    MSG("SAT TEST ::: %f   %f",100*(rhof-rhofT)/rhof,100*(rhog-rhogT)/rhog);
+
+/*****************************************Single Phase Table Testing*****************************************/
     #define NPOINTS 100000
-    double temp_s = 400;
-    double temp_f = 1200;
+    double temp_s = 650;
+    double temp_f = 1650;
     int nT = NPOINTS;
-    double dT = (temp_f-temp_s)/nT;
-
+    dT = (temp_f-temp_s)/nT;
 
 
     double pressH[NPOINTS],enthalpyH[NPOINTS];
@@ -72,7 +117,8 @@ int main(void){
         err = FPROPS_NO_ERROR;
 
         double T = temp_s + i*dT;
-
+        //FluidState S = fprops_set_Trho(T,rho,P,&err);
+        //pressH[i] = fprops_p(S,&err) ;
         pressH[i] = P->p_fn(T, rho, P->data,&err) ;
         enthalpyH[i] = P->h_fn(T, rho, P->data,&err) ;
         entH[i] = P->s_fn(T, rho, P->data,&err) ;
@@ -100,11 +146,11 @@ int main(void){
     double msecT = (double)(end - start) / (CLOCKS_PER_SEC/1000);
 
 
-    MSG("Percentage Errors");
-    MSG("Temp     \tPressure \tEnthalpy ");
+  //  MSG("Percentage Errors");
+  //  MSG("Temp     \tPressure \tEnthalpy ");
     double pererrp,pererrh;
     for(i=0; i<nT; ++i){
-        double T = temp_s + i*dT;
+        //double T = temp_s + i*dT;
         pererrp = 100*((pressT[i]-pressH[i])/pressH[i]);
         pererrh = 100*((enthalpyT[i]-enthalpyH[i])/enthalpyH[i]);
 
@@ -112,12 +158,12 @@ int main(void){
     }
 
 
-    MSG("Percentage Errors");
-    MSG("Temp     \t\tEntropy  \t\tU        \t\tG        ");
+   // MSG("Percentage Errors");
+  //  MSG("Temp     \t\tEntropy  \t\tU        \t\tG        ");
     double pererrs,pererru,pererrg;
 
     for(i=0; i<nT; ++i){
-        double T = temp_s + i*dT;
+      //  double T = temp_s + i*dT;
         pererrs = 100*((entT[i]-entH[i])/entH[i]);
         pererru = 100*((intuT[i]-intuH[i])/intuH[i]);
         pererrg = 100*((gibbsgT[i]-gibbsgH[i])/gibbsgH[i]);
@@ -141,8 +187,8 @@ int main(void){
         ++i;
     }
 
-    MSG("AVERAGE percentage errors for 5 variables p h s u and g");
-    MSG("%3.6f\t%3.6f\t%3.6f\t%3.6f\t%3.6f\n",av[0]/nT,av[1]/nT,av[2]/nT,av[3]/nT,av[4]/nT);
+    MSG("AVERAGE percentage errors for 5 variables p h s u and g respectively -->");
+    MSG("%3.6f\t%3.6f\t%3.6f\t%3.6f\t%3.6f",av[0]/nT,av[1]/nT,av[2]/nT,av[3]/nT,av[4]/nT);
 
     MSG("Helmholtz did %d calculations in %e seconds", nT*5,msecH/1000);
     MSG("TTSE did %d calculations in %e seconds", nT*5,msecT/1000);

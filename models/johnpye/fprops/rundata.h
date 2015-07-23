@@ -134,8 +134,9 @@ typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *d
 /*structure for tables*/
 #define NTP 200
 #define NRHOP 200
-
+#define NSAT 1000
 typedef double (*TtseMatrix) [NRHOP];
+typedef double* TtseLine;
 
 typedef struct ttse_struct{
 
@@ -150,6 +151,9 @@ typedef struct ttse_struct{
     TtseMatrix u, dudt, d2udt2, dudrho, d2udrho2, d2udtdrho;
     TtseMatrix g, dgdt, d2gdt2, dgdrho, d2gdrho2, d2gdtdrho;
     TtseMatrix h, dhdt, d2hdt2, dhdrho, d2hdrho2, d2hdtdrho;
+
+    TtseLine satFRho,satFdRhodt,satFd2RhodT2;
+    TtseLine satGRho,satGdRhodt,satGd2RhodT2;
 
   //double ** dsdT,** d2sdT2,** dsdRho,** d2sdRho2,** d2sdTdRho;
   //double ** dPdT,** d2PdT2,** dPdRho,** d2PdRho2,** d2PdTdRho;

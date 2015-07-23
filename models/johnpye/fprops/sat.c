@@ -145,11 +145,11 @@ double fprops_psat_T_xiang(double T, const FluidData *data){
 
 	This is derived from the definition of the acentric factor,
 	omega = -log10(psat(T1) - 1 where T1/Tc = Tr = 0.7
-	
+
 	together with the saturation curve obtained if h_fg(T) is assumed constant:
 	ln(psat(T)) = A - B/(T + C)
 
-	See Sandler 5e, p 320.	
+	See Sandler 5e, p 320.
 
 s	Such a curve will pass through (pc,Tc) and (psat(Tr),Tr) where Tr = 0.7,
 	but will probably be inaccurate at Tt. Given additional data, such as the
@@ -229,6 +229,9 @@ double fprops_rhog_T_chouaieb(double T, const FluidData *data){
 }
 
 void fprops_sat_T(double T, double *psat, double *rhof, double *rhog, const PureFluid *d, FpropsError *err){
+
+
+
 	*psat = d->sat_fn(T,rhof,rhog,d->data,err);
 }
 
@@ -289,7 +292,7 @@ static double sat_p_resid(double rT, void *user_data){
 
 
 /**
-	Solve saturation conditions as a function of pressure. 
+	Solve saturation conditions as a function of pressure.
 
 	Currently this is just a Brent solver. We've tried to improve it slightly
 	by solving for the residual of log(p)-log(p1) as a function of 1/T, which
@@ -299,7 +302,7 @@ static double sat_p_resid(double rT, void *user_data){
 	the Clapeyron equation?
 
 	dp/dT = h_fg/(T*v_fg)
-	
+
 	where
 
 	h_fg = h(T, rhog) - h(T, rhof)
@@ -307,7 +310,7 @@ static double sat_p_resid(double rT, void *user_data){
 	rhof, rhog are evaluated at T.
 
 	We guess T, calculate saturation conditions at T, then evaluate dp/dT,
-	use Newton solver to converge, while checking that we remain within 
+	use Newton solver to converge, while checking that we remain within
 	Tt < T < Tc. It may be faster to iterate using 1/T as the free variable,
 	and log(p) as the residual variable.
 
@@ -328,7 +331,7 @@ void fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const P
 		return;
 	}
 	/* FIXME what about checking triple point pressure? */
-	
+
 
 	SatPResidData D = {
 		P, log(p), err, 0
