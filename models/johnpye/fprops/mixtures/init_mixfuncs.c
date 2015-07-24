@@ -64,6 +64,7 @@ void mixture_x_props(unsigned nPure, double *Xs, double *props){
 	fractions, such that the sum over all mass fractions will equal one.
  */
 double mixture_x_fill_in(unsigned nPure, double *Xs){
+#define TITLE "<mixture_x_fill_in>: "
 	unsigned i;
 	double x_total;
 
@@ -71,9 +72,10 @@ double mixture_x_fill_in(unsigned nPure, double *Xs){
 		x_total += Xs[i];
 	}
 	if(x_total>0){
-		printf(MIX_ERROR "%.6f.", x_total);
+		printf("\n  " TITLE MIX_ERROR "%.6f.", x_total);
 	}
 	return 1-x_total;
+#undef TITLE
 }
 
 /* 
@@ -84,6 +86,7 @@ double mixture_x_fill_in(unsigned nPure, double *Xs){
 	temperature), and P < P_c (sub-critical pressure).
  */
 void ig_rhos(MixtureState *M, double P, char **Names){
+#define TITLE "<ig_rhos>: "
 	unsigned i; /* counter variable */
 
 #define TT M->T
@@ -92,8 +95,8 @@ void ig_rhos(MixtureState *M, double P, char **Names){
 #define PF M->X->PF
 	for(i=0;i<NPURE;i++){
 		RHOS[i] = P / PF[i]->data->R / TT;
-		printf("\n\t%s%s is :  %.4f kg/m3", "The ideal-gas mass density of ",
-				Names[i], RHOS[i]);
+		printf("\n  " TITLE "The ideal-gas mass density of %s is :  %.4f kg/m3"
+				, Names[i], RHOS[i]);
 	} puts("");
 #if 0
 #undef PF
@@ -101,6 +104,7 @@ void ig_rhos(MixtureState *M, double P, char **Names){
 #undef RHOS
 #undef TT
 #endif
+#undef TITLE
 }
 
 /*
@@ -109,6 +113,7 @@ void ig_rhos(MixtureState *M, double P, char **Names){
 	saturation regions.
  */
 void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
+#define TITLE "<initial_rhos>: "
 	unsigned i;
 	int Region;
 	/* enum Region_Enum {SUPERCRIT, GASEOUS, LIQUID, VAPOR, SAT_VLE} Region; */
@@ -162,10 +167,10 @@ void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
 				}
 			}
 		}
-		printf("\n\tThe substance %s was assigned a density of %.5f kg/m3;\n"
-				"\t  it is in the %s region, since\n"
-				"\t\tCritical temperature T_c=%.2f K \tand current temperature T=%.2f K;\n"
-				"\t\tCritical pressure    P_c=%.0f Pa\tand current pressure    P=%.0f Pa.",
+		printf("\n  " TITLE "The substance %s was assigned a density of %.5f kg/m3;"
+				"\n\t  it is in the %s region, since"
+				"\n\t\tCritical temperature T_c=%.2f K \tand current temperature T=%.2f K;"
+				"\n\t\tCritical pressure    P_c=%.0f Pa\tand current pressure    P=%.0f Pa.",
 				Names[i], RHOS[i], region_names[Region], D->T_c, TT, D->p_c, P);
 	}
 #undef D
@@ -175,6 +180,7 @@ void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
 #undef TT
 #undef PF
 #endif
+#undef TITLE
 }
 
 /*
@@ -190,12 +196,14 @@ typedef struct PressureRhoData_Struct {
 
 SecantSubjectFunction pressure_rho_error;
 double pressure_rho_error(double rho, void *user_data){
+#define TITLE "<pressure_rho_error>: "
 	PRData *prd = (PRData *)user_data;
 	FluidState fst = {prd->T, rho, prd->pfl};
-	printf("\n\tPressure while seeking P=%.0f Pa, trying rho=%.6g kg/m^3, here P=%.0f Pa"
+	printf("\n  " TITLE "Pressure while seeking P=%.0f Pa, trying rho=%.6g kg/m^3, here P=%.0f Pa"
 			,prd->P, rho, fprops_p(fst, prd->err));
 	
 	return fabs(prd->P - fprops_p(fst, prd->err)) / fabs(prd->P);
+#undef TITLE
 }
 
 /* 
@@ -273,6 +281,7 @@ double energy_p_error(double P, void *user_data){
 	single pressure to find densities.
  */
 void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError *err){
+#define TITLE "<densities_to_mixture>: "
 #define XS M->X->Xs
 	unsigned i;
 	double u_avg = mixture_u(M, err); /* original average internal energy */
@@ -294,9 +303,9 @@ void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError
 
 	/* confirm that when internal energy does not change, neither does enthalpy */
 	if(fabs(h_avg - mixture_h(M,err)) < 2*tol){
-		printf("\n  Average enthalpy remained constant at h=% .6g in mixing", h_avg);
+		printf("\n  " TITLE "Average enthalpy remained constant at h=% .6g in mixing", h_avg);
 	}else{
-		printf("\n  Average enthalpy did not remain constant:"
+		printf("\n  " TITLE "Average enthalpy did not remain constant:"
 				"\n\tthe average from before mixing is h=% .6g,"
 				"\n\tthe average from after mixing is  h=% .6g",
 				h_avg, mixture_h(M, err));
@@ -325,6 +334,7 @@ void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError
 	@return mass density of mixture
  */
 double mixture_rho(MixtureState *M){
+#define TITLE "<mixture_rho>: "
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double vol_mix=0.0; /* volume per unit mass of the mixture, iteratively summed */
@@ -337,7 +347,7 @@ double mixture_rho(MixtureState *M){
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
-		printf(MIX_XSUM_ERROR, x_total);
+		printf("\n  " TITLE MIX_XSUM_ERROR, x_total);
 	}
 	return 1 / vol_mix;
 #if 0
@@ -347,6 +357,7 @@ double mixture_rho(MixtureState *M){
 #undef RHOS
 #undef TT
 #endif
+#undef TITLE
 }
 
 /* 
@@ -359,6 +370,7 @@ double mixture_rho(MixtureState *M){
 	@return ideal-solution internal energy
  */
 double mixture_u(MixtureState *M, FpropsError *err){
+#define TITLE "<mixture_u>: "
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double u_mix=0.0;   /* internal energy of the mixture, iteratively summed */
@@ -368,9 +380,10 @@ double mixture_u(MixtureState *M, FpropsError *err){
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
-		printf(MIX_XSUM_ERROR, x_total);
+		printf("\n  " TITLE MIX_XSUM_ERROR, x_total);
 	}
 	return u_mix;
+#undef TITLE
 }
 
 /*
@@ -383,6 +396,7 @@ double mixture_u(MixtureState *M, FpropsError *err){
 	@return ideal-solution enthalpy
  */
 double mixture_h(MixtureState *M, FpropsError *err){
+#define TITLE "<mixture_h>: "
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double h_mix=0.0;   /* enthalpy of mixture, iteratively summed */
@@ -392,9 +406,10 @@ double mixture_h(MixtureState *M, FpropsError *err){
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
-		printf(MIX_XSUM_ERROR, x_total);
+		printf("\n  " TITLE MIX_XSUM_ERROR, x_total);
 	}
 	return h_mix;
+#undef TITLE
 }
 
 /* 
@@ -407,6 +422,7 @@ double mixture_h(MixtureState *M, FpropsError *err){
 	@return ideal-solution heat capacity (constant-pressure)
  */
 double mixture_cp(MixtureState *M, FpropsError *err){
+#define TITLE "<mixture_cp>: "
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double cp_mix=0.0;  /* constant-pressure heat capacity of mixture, iteratively summed */
@@ -416,9 +432,10 @@ double mixture_cp(MixtureState *M, FpropsError *err){
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
-		printf(MIX_XSUM_ERROR, x_total);
+		printf("\n  " TITLE MIX_XSUM_ERROR, x_total);
 	}
 	return cp_mix;
+#undef TITLE
 }
 
 /* 
@@ -431,6 +448,7 @@ double mixture_cp(MixtureState *M, FpropsError *err){
 	@return ideal-solution heat capacity (constant-volume)
  */
 double mixture_cv(MixtureState *M, FpropsError *err){
+#define TITLE "<mixture_cv>: "
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double cv_mix=0.0;  /* constant-volume heat capacity of mixture, iteratively summed */
@@ -440,9 +458,10 @@ double mixture_cv(MixtureState *M, FpropsError *err){
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
-		printf(MIX_XSUM_ERROR, x_total);
+		printf("\n  " TITLE MIX_XSUM_ERROR, x_total);
 	}
 	return cv_mix;
+#undef TITLE
 }
 
 /*
@@ -461,6 +480,7 @@ double mixture_cv(MixtureState *M, FpropsError *err){
 	mole fraction.
  */
 double mixture_x_ln_x(unsigned nPure, double *x_mass, PureFluid **PFs){
+#define TITLE "<mixture_x_ln_x>: "
 	unsigned i;
 	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
 		   x_mole,      /* mole fraction of current component in the loop */
@@ -474,7 +494,7 @@ double mixture_x_ln_x(unsigned nPure, double *x_mass, PureFluid **PFs){
 	}
 	/* return error if sum of mole fractions is not 1.00 */
 	if(fabs(x_total - 1) > MIX_XTOL){
-		printf(MIX_XSUM_ERROR, x_total);
+		printf("\n  " TITLE MIX_XSUM_ERROR, x_total);
 	}
 
 	for(i=0;i<nPure;i++){ /* Find the summation we came for */
@@ -482,6 +502,7 @@ double mixture_x_ln_x(unsigned nPure, double *x_mass, PureFluid **PFs){
 		x_ln_x += x_mass[i] / PFs[i]->data->M * log(x_mole);
 	}
 	return x_ln_x;
+#undef TITLE
 }
 
 /* 
@@ -498,6 +519,7 @@ double mixture_x_ln_x(unsigned nPure, double *x_mass, PureFluid **PFs){
 	@return average molar mass of the solution
  */
 double mixture_M_avg(unsigned nPure, double *x_mass, PureFluid **PFs){
+#define TITLE "<mixture_M_avg>: "
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double rM_avg=0.0;  /* reciprocal average molar mass */
@@ -507,10 +529,11 @@ double mixture_M_avg(unsigned nPure, double *x_mass, PureFluid **PFs){
 		x_total += x_mass[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
-		printf(MIX_XSUM_ERROR, x_total);
+		printf("\n  " TITLE MIX_XSUM_ERROR, x_total);
 	}
 	return 1. / rM_avg;
-} /* end of `mixture_M_avg' */
+#undef TITLE
+}
 
 /*
 	Calculate the overall ideal-solution entropy per unit mass in a mixture of 
@@ -520,6 +543,7 @@ double mixture_M_avg(unsigned nPure, double *x_mass, PureFluid **PFs){
 	@param err error argument
  */
 double mixture_s(MixtureState *M, FpropsError *err){
+#define TITLE "<mixture_s>: "
 #define D PF[0]->data
 	unsigned i;
 	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
@@ -531,9 +555,10 @@ double mixture_s(MixtureState *M, FpropsError *err){
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
-		printf(MIX_XSUM_ERROR, x_total);
+		printf("\n  " TITLE MIX_XSUM_ERROR, x_total);
 	}
 	return s_mix - (R * mixture_x_ln_x(NPURE,XS,PF));
+#undef TITLE
 }
 
 /*
@@ -543,6 +568,7 @@ double mixture_s(MixtureState *M, FpropsError *err){
 	@param err error argument
  */
 double mixture_g(MixtureState *M, FpropsError *err){
+#define TITLE "<mixture_g>: "
 	unsigned i;
 	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
 		   g_mix=0.0;   /* entropy of mixture, iteratively summed */
@@ -553,9 +579,10 @@ double mixture_g(MixtureState *M, FpropsError *err){
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
-		printf(MIX_XSUM_ERROR, x_total);
+		printf("\n  " TITLE MIX_XSUM_ERROR, x_total);
 	}
 	return g_mix + (R * TT * mixture_x_ln_x(NPURE,XS,PF));
+#undef TITLE
 }
 
 /*
@@ -565,6 +592,7 @@ double mixture_g(MixtureState *M, FpropsError *err){
 	@param err error argument
  */
 double mixture_a(MixtureState *M, FpropsError *err){
+#define TITLE "<mixture_a>: "
 	unsigned i;
 	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
 		   a_mix=0.0;   /* entropy of mixture, iteratively summed */
@@ -575,7 +603,7 @@ double mixture_a(MixtureState *M, FpropsError *err){
 		x_total += XS[i];
 	}
 	if(fabs(x_total - 1) > MIX_XTOL){
-		printf(MIX_XSUM_ERROR, x_total);
+		printf("\n  " TITLE MIX_XSUM_ERROR, x_total);
 	}
 	return a_mix + (R * TT * mixture_x_ln_x(NPURE,XS,PF));
 #if 1
@@ -586,6 +614,7 @@ double mixture_a(MixtureState *M, FpropsError *err){
 #undef RHOS
 #undef TT
 #endif
+#undef TITLE
 }
 
 /* Mixture-Display Functions */
