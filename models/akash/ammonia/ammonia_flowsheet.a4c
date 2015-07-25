@@ -1,0 +1,508 @@
+
+(* This is written in the ASCEND Language ... ASCEND is an
+environment to pose modeling problems and solve the resulting
+equations in an object oriented fashion ... ASCEND is
+copyrighted by Carnegie Mellon University ... the project
+has been directed by Prof. Art Westerberg in the Chemical
+Engineering Department ...*)
+
+(* ASCEND is free software, released under GNU ... and you
+can get it from http://www.cs.cmu.edu/~ascend ... The
+software has been released WITH source code ... it compiles
+under Solaris, Linux and IRIX (SGI) ... thanks to the excellent
+job in putting the software together by the folks at CMU! ...
+and autoconf ... I have no idea of how people compiled things
+before ./configure ! *)
+
+(* This model is for simulating the formation of Ammonia using Haber-Bosch Process, written by Akash Deep Singhal (akigupta131@gmail.com)
+Chemical Engineering Department, IIT Bombay in Mumabai *)
+
+(*Motivated from models/kchittur/frpg508.a4c by Prof. Krishnan Chittur *)
+
+REQUIRE "atoms.a4l";
+
+MODEL reactor_smr1;
+
+    in_methane IS_A mole;
+    in_steam IS_A mole;
+
+    out_methane IS_A mole;
+    out_steam IS_A mole;
+    out_carbonmonoxide IS_A mole;
+    out_hydrogen IS_A mole;
+    out_total IS_A mole;
+    
+    smr1_extent IS_A mole;
+
+eq1: out_methane = in_methane - smr1_extent;
+eq2: out_steam = in_steam - smr1_extent;
+eq3: out_carbonmonoxide = smr1_extent;
+eq4: out_hydrogen = 3.0*smr1_extent;
+eq5: out_total = out_methane + out_steam + out_carbonmonoxide + out_hydrogen;
+
+eq6: smr1_extent*(smr1_extent*3)^3 = 1617.2*(out_total^2)*(out_methane)*(out_steam);
+
+
+METHODS
+     METHOD clear;
+         in_methane.fixed := FALSE;
+         out_methane.fixed := FALSE;
+         in_steam.fixed := FALSE;
+         out_steam.fixed := FALSE;
+         out_carbonmonoxide.fixed := FALSE;
+         out_hydrogen.fixed := FALSE;
+         out_total.fixed := FALSE;
+         smr1_extent.fixed := FALSE;
+     END clear;
+
+     METHOD specify;
+         in_methane.fixed := FALSE;
+         out_methane.fixed := FALSE;
+         in_steam.fixed := FALSE;
+         out_steam.fixed := FALSE;
+         out_carbonmonoxide.fixed := FALSE;
+         out_hydrogen.fixed := FALSE;
+         out_total.fixed := FALSE;
+         smr1_extent.fixed := FALSE;
+     END specify;
+
+     METHOD values;
+        smr1_extent := in_steam;
+
+        smr1_extent.nominal := in_steam;
+        out_methane.nominal := in_methane;
+        out_carbonmonoxide.nominal := in_methane;
+        out_steam.nominal := in_steam;
+        out_hydrogen.nominal := in_methane;
+        out_total.nominal := in_methane;
+
+        smr1_extent.upper_bound := in_methane*2;
+     END values;
+
+     METHOD seqmod;
+         RUN clear;
+         RUN specify;
+         RUN values;
+     END seqmod;
+
+END reactor_smr1;
+
+
+MODEL reactor_smr2;
+
+    in_methane IS_A mole;
+    in_carbonmonoxide IS_A mole;
+    in_hydrogen IS_A mole;
+    in_oxygen IS_A mole;
+    in_nitrogen IS_A mole;
+
+    out_methane IS_A mole;
+    out_carbonmonoxide IS_A mole;
+    out_hydrogen IS_A mole;
+    out_oxygen IS_A mole;
+    out_nitrogen IS_A mole;
+
+    out_total IS_A mole;
+    smr2_extent IS_A mole;
+
+eq7: out_methane = 0;
+eq8: out_oxygen = 0;
+eq9: in_oxygen = in_methane/2;
+eq10: in_nitrogen = 4*in_oxygen; (*Assuming air consists of 80% Nitrogen and 20% Oxygen*)
+eq11: out_nitrogen = in_nitrogen; (*Nitrogen is not undergoing any reaction*)
+eq12: out_carbonmonoxide = 2.0*smr2_extent;
+eq13: out_hydrogen = 4.0*smr2_extent;
+
+eq14: out_total = out_nitrogen + out_hydrogen + out_carbonmonoxide;
+
+
+
+METHODS
+    METHOD clear;
+        in_methane.fixed := FALSE;
+        out_methane.fixed := FALSE;
+
+        in_carbonmonoxide.fixed := FALSE;
+        out_carbonmonoxide.fixed := FALSE;
+
+        in_hydrogen.fixed := FALSE;
+        out_hydrogen.fixed := FALSE;
+
+        in_oxygen.fixed := FALSE;
+        out_oxygen.fixed := FALSE;
+
+        in_nitrogen.fixed := FALSE;
+        out_nitrogen.fixed := FALSE;
+
+        out_total.fixed := FALSE;
+        smr2_extent.fixed := FALSE;
+    END clear;
+
+    METHOD specify;
+        in_methane.fixed := FALSE;
+        out_methane.fixed := FALSE;
+
+        in_carbonmonoxide.fixed := FALSE;
+        out_carbonmonoxide.fixed := FALSE;
+
+        in_hydrogen.fixed := FALSE;
+        out_hydrogen.fixed := FALSE;
+
+        in_oxygen.fixed := FALSE;
+        out_oxygen.fixed := FALSE;
+
+        in_nitrogen.fixed := FALSE;
+        out_nitrogen.fixed := FALSE;
+
+        out_total.fixed := FALSE;
+        smr2_extent.fixed := FALSE;
+    END specify;
+
+    METHOD values;
+        smr2_extent := in_methane/2;
+
+        smr2_extent.nominal := smr2_extent;
+        out_methane.nominal := in_methane;
+        out_carbonmonoxide.nominal := in_methane;
+        out_nitrogen.nominal := in_nitrogen;
+        out_hydrogen.nominal := in_methane;
+        out_total.nominal := in_methane;
+
+        smr2_extent.upper_bound := in_methane*2;
+    END values;
+
+    METHOD seqmod;
+        RUN clear;
+        RUN specify;
+        RUN values;
+    END seqmod;
+
+END reactor_smr2;
+
+
+(* Catalyzer acts as Water-gas shift reactor *)
+
+MODEL catalyzer;
+    in_carbonmonoxide IS_A mole;
+    in_hydrogen IS_A mole;
+    in_nitrogen IS_A mole;
+    in_steam IS_A mole;
+
+    out_carbondioxide IS_A mole;
+    out_hydrogen IS_A mole;
+    out_nitrogen IS_A mole;
+    out_steam IS_A mole;
+
+    out_main IS_A mole;
+    out_purge IS_A mole;
+
+eq15: out_nitrogen = in_nitrogen; (*Nitrogen is not undergoing any reaction*)
+eq16: out_hydrogen = in_hydrogen + in_carbonmonoxide;
+eq17: out_carbondioxide = in_carbonmonoxide;
+eq18: out_steam = in_steam - in_carbonmonoxide;
+
+eq19: out_main = out_nitrogen + out_hydrogen;
+eq20: out_purge = out_carbondioxide + out_steam;
+
+
+
+METHODS
+    METHOD clear;
+        in_carbonmonoxide.fixed := FALSE;
+        in_hydrogen.fixed := FALSE;
+        in_nitrogen.fixed := FALSE;
+        in_steam.fixed := FALSE;
+
+        out_carbondioxide.fixed := FALSE;
+        out_hydrogen.fixed := FALSE;
+        out_nitrogen.fixed := FALSE;
+        out_steam.fixed := FALSE;
+
+        out_main.fixed := FALSE;
+        out_purge.fixed := FALSE;
+    END clear;
+
+    METHOD specify;
+        in_carbonmonoxide.fixed := FALSE;
+        in_hydrogen.fixed := FALSE;
+        in_nitrogen.fixed := FALSE;
+        in_steam.fixed := FALSE;
+
+        out_carbondioxide.fixed := FALSE;
+        out_hydrogen.fixed := FALSE;
+        out_nitrogen.fixed := FALSE;
+        out_steam.fixed := FALSE;
+
+        out_main.fixed := FALSE;
+        out_purge.fixed := FALSE;
+    END specify;
+
+    METHOD values;
+        out_carbondioxide.nominal := in_carbonmonoxide;
+        out_hydrogen.nominal := in_carbonmonoxide;
+        out_nitrogen.nominal := in_nitrogen;
+        out_steam.nominal := in_steam;
+
+        out_main.nominal := in_carbonmonoxide;
+        out_purge.nominal := in_carbonmonoxide;
+    END values;
+
+     METHOD seqmod;
+         RUN clear;
+         RUN specify;
+         RUN values;
+     END seqmod;
+
+END catalyzer;
+
+
+MODEL mixer_ammonia;
+    in_nitrogen, in_hydrogen IS_A mole;
+    recycled_nitrogen, recycled_hydrogen IS_A mole;
+    out_nitrogen, out_hydrogen IS_A mole;
+
+eq21: out_nitrogen = in_nitrogen + recycled_nitrogen;
+eq22: out_hydrogen = in_hydrogen + recycled_hydrogen;
+
+
+METHODS
+    METHOD clear;
+        in_nitrogen.fixed := FALSE;
+        recycled_nitrogen.fixed := FALSE;
+        out_nitrogen.fixed := FALSE;
+
+        in_hydrogen.fixed := FALSE;
+        recycled_hydrogen.fixed := FALSE;
+        out_hydrogen.fixed := FALSE;
+    END clear;
+
+    METHOD specify;
+        in_nitrogen.fixed := FALSE;
+        recycled_nitrogen.fixed := FALSE;
+        out_nitrogen.fixed := TRUE;
+
+        in_hydrogen.fixed := FALSE;
+        recycled_hydrogen.fixed := FALSE;
+        out_hydrogen.fixed := TRUE;
+    END specify;
+
+    METHOD values;
+        out_nitrogen := 100.0 {mole};
+        out_hydrogen := 300.0 {mole};
+    END values;
+
+    METHOD seqmod;
+        RUN clear;
+        RUN specify;
+        RUN values;
+    END seqmod;
+
+END mixer_ammonia;
+
+
+MODEL reactor_ammonia;
+    
+    in_nitrogen IS_A mole;
+    in_hydrogen IS_A mole;
+
+    out_nitrogen IS_A mole;
+    out_hydrogen IS_A mole;
+    out_ammonia IS_A mole;
+
+    ammonia_extent IS_A mole;
+
+    out_total IS_A mole;
+
+eq23: out_nitrogen = in_nitrogen - ammonia_extent;
+eq24: out_hydrogen = in_hydrogen - 3*ammonia_extent;
+eq25: out_ammonia = 2*ammonia_extent;
+eq26: out_total = out_nitrogen + out_hydrogen + out_ammonia;
+
+METHODS
+    METHOD clear;
+        in_nitrogen.fixed := FALSE;
+        out_nitrogen.fixed := FALSE;
+
+        in_hydrogen.fixed := FALSE;
+        out_hydrogen.fixed := FALSE;
+
+        out_ammonia.fixed := FALSE;
+
+        out_total.fixed := FALSE;
+        ammonia_extent.fixed := FALSE;
+    END clear;
+
+    METHOD specify;
+        in_nitrogen.fixed := TRUE;
+        out_nitrogen.fixed := FALSE;
+
+        in_hydrogen.fixed := TRUE;
+        out_hydrogen.fixed := FALSE;
+
+        out_ammonia.fixed := FALSE;
+
+        out_total.fixed := FALSE;
+        ammonia_extent.fixed := TRUE;
+    END specify;
+
+    METHOD values;
+        ammonia_extent := 15.0 {mole};
+
+        ammonia_extent.nominal := 15.0 {mole};
+        out_nitrogen.nominal := in_nitrogen;
+        out_hydrogen.nominal := in_hydrogen;
+        out_ammonia.nominal := in_nitrogen;
+        out_total.nominal := in_nitrogen;
+
+        ammonia_extent.upper_bound := in_nitrogen*2;
+    END values;
+
+    METHOD seqmod;
+        RUN clear;
+        RUN specify;
+        RUN values;
+    END seqmod;
+
+END reactor_ammonia;
+
+
+MODEL separator_ammonia;
+    in_nitrogen IS_A mole;
+    in_hydrogen IS_A mole;
+    in_ammonia IS_A mole;
+
+    out_nitrogen IS_A mole;
+    out_hydrogen IS_A mole;
+    out_ammonia IS_A mole;
+
+    recycled_nitrogen IS_A mole;
+    recycled_hydrogen IS_A mole;
+
+    out_total_main IS_A mole;
+    out_total_recycle IS_A mole;
+
+(*
+    Assuming the separator to be SMB, which separates Ammonia from the mixture completely and 
+    separates Nitrogen and Hydrogen to recycle back into the mixer
+*)
+
+eq27: out_total_main = out_ammonia; (*Out stream contains only final Ammonia, which is to be cooled and compressed(fluidized) to be stored *)
+eq28: out_total_recycle = out_nitrogen + out_hydrogen;
+
+eq29: in_nitrogen = out_nitrogen + recycled_nitrogen;
+eq30: in_hydrogen = out_hydrogen + recycled_hydrogen;
+eq31: out_ammonia = in_ammonia;
+
+METHODS
+    METHOD clear;
+    in_nitrogen.fixed := FALSE;
+    out_nitrogen.fixed := FALSE;
+
+    in_hydrogen.fixed := FALSE;
+    out_hydrogen.fixed := FALSE;
+
+    in_ammonia.fixed := FALSE;
+    out_ammonia.fixed := FALSE;
+
+    recycled_nitrogen.fixed := FALSE;
+    recycled_hydrogen.fixed := FALSE;
+
+    out_total_main.fixed := FALSE;
+    out_total_recycle.fixed := TRUE;
+    END clear;
+
+    METHOD specify;
+    in_nitrogen.fixed := FALSE;
+    out_nitrogen.fixed := FALSE;
+
+    in_hydrogen.fixed := FALSE;
+    out_hydrogen.fixed := FALSE;
+
+    in_ammonia.fixed := FALSE;
+    out_ammonia.fixed := FALSE;
+
+    recycled_nitrogen.fixed := FALSE;
+    recycled_hydrogen.fixed := FALSE;
+
+    out_total_main.fixed := FALSE;
+    out_total_recycle.fixed := TRUE;
+    END specify;
+
+    METHOD values;
+    END values;
+    
+    METHOD seqmod;
+    RUN clear;
+    RUN specify;
+    RUN values;
+    END seqmod;
+
+END separator_ammonia;
+
+
+(* Now is the time to wire up the complete set of models into one model. *)
+
+MODEL flowsheet;
+    r1 IS_A reactor_smr1;
+    r2 IS_A reactor_smr2;
+    r3 IS_A catalyzer;
+
+    m1 IS_A mixer_ammonia;
+    r4 IS_A reactor_ammonia;
+    s1 IS_A separator_ammonia;
+
+    r1.out_methane, r2.in_methane ARE_THE_SAME;
+    r1.out_carbonmonoxide, r2.in_carbonmonoxide ARE_THE_SAME;
+    r1.out_hydrogen, r2.in_hydrogen ARE_THE_SAME;
+
+    r2.out_carbonmonoxide, r3.in_carbonmonoxide ARE_THE_SAME;
+    r2.out_nitrogen, r3.in_nitrogen ARE_THE_SAME;
+    r2.out_hydrogen, r3.in_hydrogen ARE_THE_SAME;
+
+    r3.out_nitrogen, m1.in_nitrogen ARE_THE_SAME;
+    r3.out_hydrogen, m1.in_hydrogen ARE_THE_SAME;
+
+    m1.out_nitrogen, r4.in_nitrogen ARE_THE_SAME;
+    m1.out_hydrogen, r4.in_hydrogen ARE_THE_SAME;
+
+    r4.out_nitrogen, s1.in_nitrogen ARE_THE_SAME;
+    r4.out_nitrogen, s1.in_hydrogen ARE_THE_SAME;
+    r4.out_ammonia, s1.in_ammonia ARE_THE_SAME;
+
+    s1.recycled_nitrogen, m1.recycled_nitrogen ARE_THE_SAME;
+    s1.recycled_hydrogen, m1.recycled_hydrogen ARE_THE_SAME;
+
+METHODS
+    METHOD clear;
+        RUN r1.clear;
+        RUN r2.clear;
+        RUN r3.clear;
+        RUN m1.clear;
+        RUN r4.clear;
+        RUN s1.clear;
+    END clear;
+
+    METHOD specify;
+        RUN r1.specify;
+        RUN r2.specify;
+        RUN r3.specify;
+        RUN m1.specify;
+        RUN r4.specify;
+        RUN s1.specify;
+    END specify;
+
+    METHOD values;
+        RUN r1.values;
+        RUN r2.values;
+        RUN r3.values;
+        RUN m1.values;
+        RUN r4.values;
+        RUN s1.values;
+    END values;
+
+    METHOD seqmod;
+        RUN clear;
+        RUN specify;
+        RUN values;
+    END seqmod;
+END flowsheet;

@@ -1,0 +1,242 @@
+
+(* This is written in the ASCEND Language ... ASCEND is an
+environment to pose modeling problems and solve the resulting
+equations in an object oriented fashion ... ASCEND is
+copyrighted by Carnegie Mellon University ... the project
+has been directed by Prof. Art Westerberg in the Chemical
+Engineering Department ...*)
+
+(* ASCEND is free software, released under GNU ... and you
+can get it from http://www.cs.cmu.edu/~ascend ... The
+software has been released WITH source code ... it compiles
+under Solaris, Linux and IRIX (SGI) ... thanks to the excellent
+job in putting the software together by the folks at CMU! ...
+and autoconf ... I have no idea of how people compiled things
+before ./configure ! *)
+
+(* This example written by Akash Deep Singhal (akigupta131@gmail.com)
+Chemical Engineering Department, IIT Bombay in Mumabai *)
+
+(*This example is motivated from models/kchittur/frpg508.a4c by Prof. Krishnan Chittur *)
+
+REQUIRE "atoms.a4l";
+MODEL mixer;
+
+ fresh_methane, recycled_methane, total_methane IS_A mole;
+ fresh_steam, recycled_steam, total_steam IS_A mole;
+
+ eq1: total_methane = fresh_methane + recycled_methane;
+ eq2: total_steam = fresh_steam + recycled_steam;
+ eq3: fresh_methane = fresh_steam;
+ eq4: recycled_methane = recycled_steam;
+
+
+METHODS
+    METHOD clear;
+    fresh_methane.fixed := FALSE;
+    recycled_methane.fixed := FALSE;
+    total_methane.fixed := FALSE;
+
+    fresh_steam.fixed := FALSE;
+    recycled_steam.fixed := FALSE;
+    total_steam.fixed := FALSE;
+    END clear;
+
+    METHOD specify;
+    fresh_methane.fixed := FALSE;
+    recycled_methane.fixed := FALSE;
+    total_methane.fixed := TRUE;
+
+    fresh_steam.fixed := FALSE;
+    recycled_steam.fixed := FALSE;
+    total_steam.fixed := TRUE;
+    END specify;
+
+    METHOD values;
+    total_methane := 100.0 {mole};
+    total_steam := 100.0 {mole};
+    END values;
+
+    METHOD seqmod;
+    RUN clear;
+    RUN specify;
+    RUN values;
+    END seqmod;
+
+END mixer;
+
+(* Notice what we have done in the mixer model.  We have four
+METHODS - clear, specify, values and something called
+seqmod.  seqmod (as used in the original literature by
+Art Westerberg and group) refers to setting the model in the
+we would in a Sequential Modular Simulation - set all FLAGS
+to false, then set the appropriate FLAGS to true,
+supply values to those variables whose FLAGS are true and
+RUN these METHODS using seqmod.  *)
+
+MODEL reactor;
+
+    in_methane IS_A mole;
+    in_steam IS_A mole;
+    out_methane, out_steam, out_carbonmonoxide,
+    out_hydrogen IS_A mole;
+    out_total IS_A mole;
+
+(*  For now, we are working only on Steam-reformation steap and not the Water-gas-shift reaction
+    So only reaction_one_extent is useful.
+*)
+
+    reaction_one_extent IS_A mole;
+
+eq5: out_methane = in_methane - reaction_one_extent;
+eq6: out_steam = in_steam - reaction_one_extent;
+eq7: out_carbonmonoxide = reaction_one_extent;
+eq8: out_hydrogen = 3.0*reaction_one_extent;
+eq9: out_total = in_methane + in_steam + 2.0*reaction_one_extent;
+
+eq10: reaction_one_extent*(reaction_one_extent*3)^3 = 1617.2*(out_total^2)*(out_methane)*(out_steam);
+
+
+METHODS
+     METHOD clear;
+     in_methane.fixed := FALSE;
+     out_methane.fixed := FALSE;
+     in_steam.fixed := FALSE;
+     out_steam.fixed := FALSE;
+     out_carbonmonoxide.fixed := FALSE;
+     out_hydrogen.fixed := FALSE;
+     out_total.fixed := FALSE;
+     reaction_one_extent.fixed := FALSE;
+     END clear;
+
+     METHOD specify;
+     in_methane.fixed := TRUE;
+     out_methane.fixed := FALSE;
+     in_steam.fixed := TRUE;
+     out_steam.fixed := FALSE;
+     out_carbonmonoxide.fixed := FALSE;
+     out_hydrogen.fixed := FALSE;
+     out_total.fixed := FALSE;
+     reaction_one_extent.fixed := FALSE;
+     END specify;
+
+     METHOD values;
+        reaction_one_extent := in_methane* 0.9;
+
+        reaction_one_extent.nominal := reaction_one_extent;
+        out_methane.nominal := in_methane;
+        out_carbonmonoxide.nominal := in_methane;
+        out_steam.nominal := in_steam;
+        out_hydrogen.nominal := in_methane;
+        out_total.nominal := in_methane;
+
+        reaction_one_extent.upper_bound := in_methane*2;
+     END values;
+
+     METHOD seqmod;
+     RUN clear;
+     RUN specify;
+     RUN values;
+     END seqmod;
+
+END reactor;
+
+MODEL separator;
+
+     in_methane, in_steam, in_carbonmonoxide, in_hydrogen, out_methane, out_steam, out_carbonmonoxide, out_hydrogen, recycled_methane, recycled_steam IS_A mole;
+
+     eq11: out_methane = 0.9*in_methane;
+     eq12: in_methane = out_methane + recycled_methane;
+     eq13: out_steam = in_steam;
+     eq14: out_carbonmonoxide = in_carbonmonoxide;
+     eq15: out_hydrogen = in_hydrogen;
+
+METHODS
+    METHOD clear;
+    in_methane.fixed := FALSE;
+    in_steam.fixed := FALSE;
+    in_carbonmonoxide.fixed := FALSE;
+    in_hydrogen.fixed := FALSE;
+
+    out_methane.fixed := FALSE;
+    out_steam.fixed := FALSE;
+    out_carbonmonoxide.fixed := FALSE;
+    out_hydrogen.fixed := FALSE;
+
+    recycled_methane.fixed := FALSE;
+    recycled_steam.fixed := FALSE;
+    END clear;
+
+    METHOD specify;
+    in_methane.fixed := FALSE;
+    in_steam.fixed := FALSE;
+    in_carbonmonoxide.fixed := FALSE;
+    in_hydrogen.fixed := FALSE;
+
+    out_methane.fixed := FALSE;
+    out_steam.fixed := FALSE;
+    out_carbonmonoxide.fixed := FALSE;
+    out_hydrogen.fixed := FALSE;
+
+    recycled_methane.fixed := FALSE;
+    recycled_steam.fixed := FALSE;
+    END specify;
+
+    METHOD values;
+    END values;
+    
+    METHOD seqmod;
+    RUN clear;
+    RUN specify;
+    RUN values;
+    END seqmod;
+
+END separator;
+
+(* the separator is written similarly ... equations,
+flags set to false or true and running methods to set
+those flags.  Again note that there is NO connection
+between the separator model and the other two *)
+
+(* We start wiring up the model in the model called a flowsheet *)
+
+MODEL flowsheet;
+
+    m1 IS_A mixer;
+    r1 IS_A reactor;
+    s1 IS_A separator;
+
+    m1.total_methane, r1.in_methane ARE_THE_SAME;
+    m1.total_steam, r1.in_steam ARE_THE_SAME;
+
+    m1.recycled_methane, s1.recycled_methane ARE_THE_SAME;
+    m1.recycled_steam, s1.recycled_steam ARE_THE_SAME;
+
+    r1.out_methane, s1.in_methane ARE_THE_SAME;
+    r1.out_steam, s1.in_steam ARE_THE_SAME;
+    r1.out_carbonmonoxide, s1.in_carbonmonoxide ARE_THE_SAME;
+    r1.out_hydrogen, s1.in_hydrogen ARE_THE_SAME;
+    
+
+METHODS
+    METHOD clear;
+    RUN m1.clear;
+    RUN r1.clear;
+    RUN s1.clear;
+    END clear;
+    METHOD specify;
+    RUN m1.specify;
+    RUN r1.specify;
+    RUN s1.specify;
+    END specify;
+    METHOD values;
+    RUN m1.values;
+    RUN s1.values;
+    RUN r1.values;
+    END values;
+    METHOD seqmod;
+    RUN clear;
+    RUN specify;
+    RUN values;
+    END seqmod;
+END flowsheet;
