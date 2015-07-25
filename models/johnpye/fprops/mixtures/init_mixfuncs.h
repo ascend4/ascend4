@@ -54,12 +54,10 @@
 	}
 
 #define PRINT_STR_TABLE(ROWS,COLS,CWIDTH,CELLS) \
-	/* printf("\n\n  Setting column widths to zero..."); */ \
 	for(i1=0;i1<COLS;i1++){ \
 		CWIDTH[i1] = 0; \
 		/* printf("\n\tSet column %u width to zero", i1); */ \
 	} \
-	/* printf("\n  Finding column widths..."); */ \
 	for(i1=0;i1<ROWS;i1++){ \
 		for(i2=0;i2<COLS;i2++){ \
 			if(strlen(CELLS[i1][i2])>CWIDTH[i2]){ \
@@ -69,7 +67,6 @@
 			} \
 		} \
 	} \
-	/* printf("\n  Printing table..."); */ \
 	printf("\n"); \
 	for(i1=0;i1<ROWS;i1++){ \
 		for(i2=0;i2<COLS;i2++){ \

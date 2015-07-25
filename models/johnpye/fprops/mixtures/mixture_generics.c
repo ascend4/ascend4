@@ -174,12 +174,12 @@ void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], dou
 		y[0] = (*func)(x[0], user_data);
 		/* ix_low = (fabs(y[0]) < fabs(y[1])) ? 0 : 1; */ /* find point with smallest y-error */
 		if(fabs(y[0])<tol){
-			printf("\n\n\tRoot-finding SUCCEEDED after %u iterations;"
+			MSG("Root-finding SUCCEEDED after %u iterations;"
 					"\n\t  zeroed function has value %.6g at postion %.6g\n", i, y[0], x[0]);
 			break;
 		}
 		if(fabs(x[0] - x[1])<tol){
-			printf("\n\n\tRoot-finding FAILED after %u iterations;"
+			MSG("Root-finding FAILED after %u iterations;"
 					"\n\t  independent variables equal at %.6g,"
 					"\n\t  function is not zero, but %.6g",
 					i, x[0], y[0]);
@@ -188,7 +188,7 @@ void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], dou
 		/* Break if variables are infinity or NaN */
 		if(x[0]==INFINITY || y[0]==INFINITY 
 				|| x[0]!=x[0] || y[0]!=y[0]){
-			printf("\n\nRoot-finding FAILED after %u iterations;"
+			MSG("Root-finding FAILED after %u iterations;"
 					"\n\t  independent variable equals %.6g,"
 					"\n\t  function output equals %.6g"
 					, i, x[0], y[0]);
@@ -218,6 +218,7 @@ void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], dou
 	is calculated in a loop.
  */
 void mole_fractions(unsigned n_pure, double *x_mole, double *X_mass, PureFluid **PF){
+#define TITLE "<mole_fractions>: "
 #define D PF[i]->data
 	unsigned i;
 	double XM_sum=0.0; /* sum of mass fraction over molar mass terms */

@@ -27,11 +27,32 @@
 #ifndef MIX_GENERICS_HEADER
 #define MIX_GENERICS_HEADER
 
+#include "../color.h"
+
 #if 0
 #include <ascend/general/ascMalloc.h>
 #else
 #define ASC_NEW(TYPE) (TYPE*)malloc(sizeof(TYPE))
 #define ASC_NEW_ARRAY(TYPE,COUNT) (TYPE*)malloc(sizeof(TYPE)*(COUNT))
+#endif
+
+#define MIX_DEBUG
+#define MIX_ERROR
+
+#ifdef MIX_DEBUG
+#define MSG FPROPS_MSG
+#define MSG_MARK(MARK) MSG("mark " MARK)
+#else
+#define MSG(ARGS...) ((void)0)
+#define MSG_MARK(ARGS...) ((void)0)
+#endif
+
+#ifdef MIX_ERROR
+#define ERRMSG FPROPS_ERRMSG
+#define ERRMSG_XSUM(SUM) FPROPS_ERRMSG(MIX_XSUM_ERROR, SUM)
+#else
+#define ERRMSG(ARGS...) ((void)0)
+#define ERRMSG_XSUM(ARGS...) ((void)0)
 #endif
 
 #include "mixture_struct.h"

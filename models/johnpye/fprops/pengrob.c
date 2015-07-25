@@ -53,7 +53,7 @@ SatEvalFn pengrob_sat;
 
 static double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err);
 
-#define PR_DEBUG
+/* #define PR_DEBUG */
 #define PR_ERRORS
 
 #ifdef PR_DEBUG
@@ -594,7 +594,9 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 				p = pengrob_p(T, *rhog_ret, data, err);
 				MSG("Solved for T = %f: p = %f, rhof = %f, rhog = %f", T, p, *rhof_ret, *rhog_ret);
 #ifdef PR_DEBUG
+#ifdef F1
 				fclose(F1);
+#endif
 #endif
 				return p;
 			}

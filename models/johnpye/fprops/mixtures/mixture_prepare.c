@@ -70,7 +70,7 @@ void mixture_specify(MixtureSpec *MS, unsigned npure, double *Xs, void **fluids,
 
 		for(i=0;i<npure;i++){
 			MS->PF[i] = fprops_fluid(fluid_names[i],type,source[i]);
-			/* printf("\nprepared fluid %s", fluid_names[i]); */
+			/* MSG("Prepared fluid %s", fluid_names[i]); */
 		}
 	}
 
@@ -80,7 +80,7 @@ void mixture_specify(MixtureSpec *MS, unsigned npure, double *Xs, void **fluids,
 	MS->PF = PF; */
 
 	for(i=0;i<npure;i++){
-		printf("\nfluid number %u at %p is %s, modeled with %u"
+		MSG("Fluid number %u at %p is %s, modeled with %u"
 				, i, MS->PF[i], MS->PF[i]->name, MS->PF[i]->type);
 	}
 }
@@ -101,12 +101,12 @@ void mixture_fluid_spec(MixtureSpec *MS, unsigned npure, void **fluids, char *ty
 
 		for(i=0;i<npure;i++){
 			MS->PF[i] = fprops_fluid(fluid_names[i],type,source[i]);
-			printf("\nprepared fluid %s", fluid_names[i]);
+			MSG("Prepared fluid %s", fluid_names[i]);
 		}
 	}
 
 	/* for(i=0;i<npure;i++){
-		printf("\nfluid number %u at %p is %s, modeled with %u"
+		MSG("Fluid number %u at %p is %s, modeled with %u"
 				, i, MS->PF[i], MS->PF[i]->name, MS->PF[i]->type);
 	} */
 }

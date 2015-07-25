@@ -29,9 +29,14 @@
 
 #include "../rundata.h"
 
-#define MIX_ERROR " ERROR: "
+#if 0
 #define MIX_XSUM_ERROR MIX_ERROR "the sum over all mass fractions, which should be exactly 1.00, is %.10f\n"
 #define MIX_COMPR_ERROR MIX_ERROR "the compressibility has assumed a non-physical value"
+#else
+#define MIX_XSUM_ERROR "Sum over all mass fractions, which should be exactly 1.00, is %.10f\n"
+#define MIX_COMPR_ERROR "Compressibility has assumed a non-physical value"
+#endif
+
 #define MIX_PI M_PI
 #define MIX_XTOL 1e-6
 
