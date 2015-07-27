@@ -232,3 +232,50 @@ void mole_fractions(unsigned n_pure, double *x_mole, double *X_mass, PureFluid *
 #undef D
 }
 
+/*
+	Find all real roots of a cubic equation of the form 
+		a*x^3 + b*x^2 + c*x + d = 0
+	There will be at least one, and possibly two or three, real roots.
+ */
+int cubic_solution(double coef[4], double *roots){
+	double p, q, r,
+		   a, b,
+		   cond;
+
+	p = coef[1]/coef[0];
+	q = coef[2]/coef[0];
+	r = coef[3]/coef[0];
+	a = (3*q - pow(p, 2)) / 3;
+	b = (2*pow(p, 3) - (9*p*q) + (27*r)) / 27;
+	cond = (pow(b, 2) / 4) + (pow(a, 3) / 27);
+
+	if(cond>0){
+		roots[0] = cbrt(-b/2 + sqrt(cond)) + cbrt(-b/2 - sqrt(cond)) - p/3;
+		return 1;
+	}else if(cond<0){
+		double R, phi;
+
+		R = pow(b, 2) / (4 * (-pow(a, 3)/27));
+		phi = acos(sqrt(R));
+
+		int i;
+		for(i=0;i<3;i++){
+			if(b>0){
+				roots[i] = -2 * sqrt(-a/3) * cos(phi/3 + (MIX_PI*2*i)/3) - p/3;
+			}else{
+				roots[i] = 2 * sqrt(-a/3) * cos(phi/3 + (MIX_PI*2*i)/3) - p/3;
+			}
+		}
+		return 3;
+	}else{ /* cond equals zero */
+		double A;
+
+		A = sqrt(a/3) * ((b>0) ? -1 : 1);
+		roots[0] = 2*A - p/3;
+		roots[1] = -A - p/3;
+
+		return 2;
+	}
+	return 0; /* error -- no roots returned */
+}
+
