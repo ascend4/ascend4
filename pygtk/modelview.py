@@ -339,7 +339,7 @@ class ModelView:
 			if str(_instance.getType().getDimensions()) == 'TMP':
 				pref = Preferences()
 				units = pref.getPreferredUnitsOrigin(str(_instance.getType().getName()))
-				if units == CelsiusUnits.get_celsius_sign() and len(newtext.split(" ")) == 1 or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign():
+				if units == CelsiusUnits.get_celsius_sign() and (len(newtext.split(" ")) == 1 or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign()):
 					newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext.split(" ")[0], str(_instance.getType()))
 					pref.setPreferredUnits(str(_instance.getType().getName()), CelsiusUnits.get_celsius_sign())
 			##### CELSIUS TEMPERATURE WORKAROUND
