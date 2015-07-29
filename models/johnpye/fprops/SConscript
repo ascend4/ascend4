@@ -44,8 +44,8 @@ if fprops_env.get('BUILDING_ASCEND') or fprops_env.get('WITH_ASCEND'):
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)
 
-	lib3 = asc_env.SharedLibrary("idealsol"
-		,['mixtures/asc_idealsolution.c'] + fprops_env['shobjs']
+	lib3 = asc_env.SharedLibrary("mixture"
+		,['asc_mixture.c'] + fprops_env['shobjs']
 		,LIBS = ["ascend"]
 		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']

@@ -67,16 +67,15 @@ MODEL mixture_test; (* ///1 *)
 	mixt.components[1] :== 'ammonia';
 	mixt.components[2] :== 'carbondioxide';
 	mixt.components[3] :== 'cyclohexane';
- (*mixt.components[1] :== 2;
-	mixt.components[2] :== 4;
-	mixt.components[3] :== 16;
-	mixt.eos :== 'pengrob';*)
+	mixt.eos :== 'pengrob';
 
 	mix_density : mixture_rho(
 		T, p : INPUT;
 		rho : OUTPUT;
 		mixt : DATA
 	);
+
+	rho = p * T;
 
 METHODS
 METHOD specify; (* ///2 *)
@@ -88,7 +87,9 @@ END specify;
 METHOD values; (* ///2 *)
 	T := 300 {K} + 273.15 {K};
 	p := 2 {bar};
-	mixt.xs := [0.4, 0.35, 0.25];
+	mixt.xs[1] := 0.4;
+	mixt.xs[2] := 0.35;
+	mixt.xs[3] := 0.25;
 END values;
 METHOD options; (* ///2 *)
 	SOLVER QRSlv;

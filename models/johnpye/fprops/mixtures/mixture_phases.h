@@ -40,6 +40,7 @@ double bubble_pressure(MixtureSpec *MS, double T, FpropsError *err);
 
 double pengrob_phi_pure(PureFluid *PF, double T, double P, PhaseName type, FpropsError *err);
 double poynting_factor(PureFluid *PF, double T, double P, FpropsError *err);
+void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsError *err);
 
 /*
 	Structure to pass constant parameters into the Rachford-Rice function

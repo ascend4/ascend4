@@ -39,46 +39,6 @@
 #include <math.h>
 
 /* Mixture-Preparation Functions */
-/*	
-	Calculate mass fractions from an array of numbers, with each mass fraction 
-	sized proportionally to its corresponding number
- */
-void mixture_x_props(unsigned nPure, double *Xs, double *props){
-	unsigned i;
-	double x_total=0.0; /* sum of proportions */
-
-	for(i=0;i<nPure;i++){
-		x_total += props[i]; /* find sum of proportions */
-	}
-	/*	
-		Each mass fraction is its corresponding proportion, divided by the sum 
-		over all proportions.
-	 */
-	for(i=0;i<nPure;i++){
-		Xs[i] = props[i] / x_total; 
-	}
-}
-
-/*
-	Calculate last of (n) mass fractions given an array of (n-1) mass 
-	fractions, such that the sum over all mass fractions will equal one.
- */
-double mixture_x_fill_in(unsigned nPure, double *Xs){
-#define TITLE "<mixture_x_fill_in>: "
-	unsigned i;
-	double x_total;
-
-	for(i=0;i<(nPure-1);i++){ /* sum only for nPure-1 loops */
-		x_total += Xs[i];
-	}
-	if(x_total>0){
-		/* printf("\n  " TITLE MIX_XSUM_ERROR "%.6f.", x_total); */
-		ERRMSG("Sum over all but one mass fraction, which should be exactly 1.00, is %.10f", x_total);
-	}
-	return 1-x_total;
-#undef TITLE
-}
-
 /* 
 	Calculate ideal-gas densities `rho_out' from the temperature and pressure 
 	(used as starting densities for other routines)
@@ -87,7 +47,6 @@ double mixture_x_fill_in(unsigned nPure, double *Xs){
 	temperature), and P < P_c (sub-critical pressure).
  */
 void ig_rhos(MixtureState *M, double P, char **Names){
-#define TITLE "<ig_rhos>: "
 	unsigned i; /* counter variable */
 
 #define TT M->T
@@ -106,7 +65,6 @@ void ig_rhos(MixtureState *M, double P, char **Names){
 #undef RHOS
 #undef TT
 #endif
-#undef TITLE
 }
 
 /*
@@ -115,7 +73,6 @@ void ig_rhos(MixtureState *M, double P, char **Names){
 	saturation regions.
  */
 void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
-#define TITLE "<initial_rhos>: "
 	unsigned i;
 	int Region;
 	/* enum Region_Enum {SUPERCRIT, GASEOUS, LIQUID, VAPOR, SAT_VLE} Region; */
@@ -182,7 +139,6 @@ void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
 #undef TT
 #undef PF
 #endif
-#undef TITLE
 }
 
 /*
@@ -198,14 +154,12 @@ typedef struct PressureRhoData_Struct {
 
 SecantSubjectFunction pressure_rho_error;
 double pressure_rho_error(double rho, void *user_data){
-#define TITLE "<pressure_rho_error>: "
 	PRData *prd = (PRData *)user_data;
 	FluidState fst = {prd->T, rho, prd->pfl};
 	MSG("Pressure while seeking P=%.0f Pa, trying rho=%.6g kg/m^3, here P=%.0f Pa"
 			,prd->P, rho, fprops_p(fst, prd->err));
 	
 	return fabs(prd->P - fprops_p(fst, prd->err)) / fabs(prd->P);
-#undef TITLE
 }
 
 /* 
@@ -283,7 +237,6 @@ double energy_p_error(double P, void *user_data){
 	single pressure to find densities.
  */
 void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError *err){
-#define TITLE "<densities_to_mixture>: "
 #define XS M->X->Xs
 	unsigned i;
 	double u_avg = mixture_u(M, err); /* original average internal energy */
@@ -336,7 +289,6 @@ void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError
 	@return mass density of mixture
  */
 double mixture_rho(MixtureState *M){
-#define TITLE "<mixture_rho>: "
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double vol_mix=0.0; /* volume per unit mass of the mixture, iteratively summed */
@@ -359,7 +311,6 @@ double mixture_rho(MixtureState *M){
 #undef RHOS
 #undef TT
 #endif
-#undef TITLE
 }
 
 /* 
@@ -372,7 +323,6 @@ double mixture_rho(MixtureState *M){
 	@return ideal-solution internal energy
  */
 double mixture_u(MixtureState *M, FpropsError *err){
-#define TITLE "<mixture_u>: "
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double u_mix=0.0;   /* internal energy of the mixture, iteratively summed */
@@ -385,7 +335,6 @@ double mixture_u(MixtureState *M, FpropsError *err){
 		ERRMSG(MIX_XSUM_ERROR, x_total);
 	}
 	return u_mix;
-#undef TITLE
 }
 
 /*
@@ -398,7 +347,6 @@ double mixture_u(MixtureState *M, FpropsError *err){
 	@return ideal-solution enthalpy
  */
 double mixture_h(MixtureState *M, FpropsError *err){
-#define TITLE "<mixture_h>: "
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double h_mix=0.0;   /* enthalpy of mixture, iteratively summed */
@@ -411,7 +359,6 @@ double mixture_h(MixtureState *M, FpropsError *err){
 		ERRMSG(MIX_XSUM_ERROR, x_total);
 	}
 	return h_mix;
-#undef TITLE
 }
 
 /* 
@@ -424,7 +371,6 @@ double mixture_h(MixtureState *M, FpropsError *err){
 	@return ideal-solution heat capacity (constant-pressure)
  */
 double mixture_cp(MixtureState *M, FpropsError *err){
-#define TITLE "<mixture_cp>: "
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double cp_mix=0.0;  /* constant-pressure heat capacity of mixture, iteratively summed */
@@ -437,7 +383,6 @@ double mixture_cp(MixtureState *M, FpropsError *err){
 		ERRMSG(MIX_XSUM_ERROR, x_total);
 	}
 	return cp_mix;
-#undef TITLE
 }
 
 /* 
@@ -450,7 +395,6 @@ double mixture_cp(MixtureState *M, FpropsError *err){
 	@return ideal-solution heat capacity (constant-volume)
  */
 double mixture_cv(MixtureState *M, FpropsError *err){
-#define TITLE "<mixture_cv>: "
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double cv_mix=0.0;  /* constant-volume heat capacity of mixture, iteratively summed */
@@ -463,7 +407,6 @@ double mixture_cv(MixtureState *M, FpropsError *err){
 		ERRMSG(MIX_XSUM_ERROR, x_total);
 	}
 	return cv_mix;
-#undef TITLE
 }
 
 /*
@@ -482,7 +425,6 @@ double mixture_cv(MixtureState *M, FpropsError *err){
 	mole fraction.
  */
 double mixture_x_ln_x(unsigned nPure, double *x_mass, PureFluid **PFs){
-#define TITLE "<mixture_x_ln_x>: "
 	unsigned i;
 	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
 		   x_mole,      /* mole fraction of current component in the loop */
@@ -504,37 +446,6 @@ double mixture_x_ln_x(unsigned nPure, double *x_mass, PureFluid **PFs){
 		x_ln_x += x_mass[i] / PFs[i]->data->M * log(x_mole);
 	}
 	return x_ln_x;
-#undef TITLE
-}
-
-/* 
-	Calculate the average molar mass of the solution.  This is useful in 
-	converting mass-specific quantities (e.g. enthalpy in J/kg) into molar 
-	quantities (e.g. enthalpy in J/kmol).  The molar masses provided by 
-	PureFluid structs in FPROPS have units of kg/kmol, so this molar mass will 
-	have the same units.
-
-	@param nPure number of pure components
-	@param Xs array with mass fraction of each component
-	@param PFs array of pointers to PureFluid structures representing components
-
-	@return average molar mass of the solution
- */
-double mixture_M_avg(unsigned nPure, double *x_mass, PureFluid **PFs){
-#define TITLE "<mixture_M_avg>: "
-	unsigned i;
-	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
-	double rM_avg=0.0;  /* reciprocal average molar mass */
-
-	for(i=0;i<nPure;i++){
-		rM_avg += x_mass[i] / PFs[i]->data->M;
-		x_total += x_mass[i];
-	}
-	if(fabs(x_total - 1) > MIX_XTOL){
-		ERRMSG(MIX_XSUM_ERROR, x_total);
-	}
-	return 1. / rM_avg;
-#undef TITLE
 }
 
 /*
@@ -545,7 +456,6 @@ double mixture_M_avg(unsigned nPure, double *x_mass, PureFluid **PFs){
 	@param err error argument
  */
 double mixture_s(MixtureState *M, FpropsError *err){
-#define TITLE "<mixture_s>: "
 #define D PF[0]->data
 	unsigned i;
 	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
@@ -560,7 +470,6 @@ double mixture_s(MixtureState *M, FpropsError *err){
 		ERRMSG(MIX_XSUM_ERROR, x_total);
 	}
 	return s_mix - (R * mixture_x_ln_x(NPURE,XS,PF));
-#undef TITLE
 }
 
 /*
@@ -570,7 +479,6 @@ double mixture_s(MixtureState *M, FpropsError *err){
 	@param err error argument
  */
 double mixture_g(MixtureState *M, FpropsError *err){
-#define TITLE "<mixture_g>: "
 	unsigned i;
 	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
 		   g_mix=0.0;   /* entropy of mixture, iteratively summed */
@@ -584,7 +492,6 @@ double mixture_g(MixtureState *M, FpropsError *err){
 		ERRMSG(MIX_XSUM_ERROR, x_total);
 	}
 	return g_mix + (R * TT * mixture_x_ln_x(NPURE,XS,PF));
-#undef TITLE
 }
 
 /*
@@ -594,7 +501,6 @@ double mixture_g(MixtureState *M, FpropsError *err){
 	@param err error argument
  */
 double mixture_a(MixtureState *M, FpropsError *err){
-#define TITLE "<mixture_a>: "
 	unsigned i;
 	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
 		   a_mix=0.0;   /* entropy of mixture, iteratively summed */
@@ -616,7 +522,6 @@ double mixture_a(MixtureState *M, FpropsError *err){
 #undef RHOS
 #undef TT
 #endif
-#undef TITLE
 }
 
 /* Mixture-Display Functions */

@@ -47,9 +47,6 @@ extern const EosData eos_rpp_methane;
 extern const EosData eos_rpp_water;
 
 /* Function prototypes */
-
-void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsError *err);
-
 void test_five(double T, double P);
 void test_six(void);
 void test_seven(void);
@@ -92,279 +89,6 @@ int main(){
 	return 0;
 } /* end of `main' */
 
-/* Finding phase-equilibrium conditions */
-/*
-	Find whether a mixture flashes (is in vapor-liquid equilibrium), and if so, 
-	what are the characteristics of the flash (phases present, mass/mole 
-	fraction in the vapor & liquid, mass/mole fraction of each component in each 
-	phase, etc.)
- */
-void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsError *err){
-#define TITLE "<mixture_flash>: "
-#define NPURE MS->pures
-#define MXS MS->Xs
-#define MPF MS->PF
-#define D MPF[i]->data
-#define NPHASE PS->phases
-#define PTYPE PS->ph_type
-#define PFRAC PS->ph_frac
-#define PPH PS->PH
-	MSG("Entered the function");
-	unsigned i, j
-		, i_v = 0         /* indices of vapor, liquid, supercritical phases in PS */
-		, i_l = 0
-		, i_sc = 0
-		;
-	int flag_sc = 0       /* encountered any supercritical components? */
-		, flag_vle = 0    /* encountered any subcritical components? */
-		;
-	double p_b, p_d       /* bubble and dew pressures */
-		, xs_ph[2], mm[2] /* mole fractions & molar masses of super/subcritical phases */
-		, rho_d[2]        /* density used in finding the saturation pressure */
-		, tol = MIX_XTOL
-		;
-
-	PTYPE = ASC_NEW_ARRAY(PhaseName,3);
-	PFRAC = ASC_NEW_ARRAY(double,3);
-	PPH = ASC_NEW_ARRAY(Phase *,3);
-	for(i=0;i<3;i++){
-		PPH[i] = ASC_NEW(Phase);
-		PPH[i]->ncomps = 0;
-		PPH[i]->c  = ASC_NEW_ARRAY(unsigned,NPURE);
-		PPH[i]->Xs = ASC_NEW_ARRAY(double,NPURE);
-		PPH[i]->xs = ASC_NEW_ARRAY(double,NPURE);
-		PPH[i]->PF = ASC_NEW_ARRAY(PureFluid *,NPURE);
-	}
-	NPHASE = 0;
-
-	for(i=0;i<NPURE;i++){
-		if(T<D->T_c){
-			/*
-				Current component is subcritical.  If no subcritical component 
-				was encountered previously, set the index of the subcritical 
-				phase equal to the current number of phases (in last place) and 
-				increment the number of phases by one.
-				
-				Set the type of the phase to VAPOR, set the next component index 
-				for the subcritical phase to the current index 'i', copy the 
-				mass fraction in the subcritical phase from the current 
-				component in the mixture specification 'MS', and increment the 
-				number of components in the subcritical phase.  Confirm that a 
-				subcritical phase has been encountered, by setting 'flag_vle'.
-			 */
-			i_v += (flag_vle) ? 0 : NPHASE;
-			NPHASE += (flag_vle) ? 0 : 1;
-
-			PTYPE[i_v] = VAPOR;
-			PPH[i_v]->c[PPH[i_v]->ncomps] = i;
-			PPH[i_v]->Xs[PPH[i_v]->ncomps] = MXS[i];
-			PPH[i_v]->PF[PPH[i_v]->ncomps] = MPF[i];
-
-			PPH[i_v]->ncomps ++;
-
-			flag_vle = 1;
-		}else{
-			/*
-				Current component is supercritical.  Operations are analogous to 
-				subcritical condition discussed above.
-			 */
-			i_sc += (flag_sc) ? 0 : NPHASE;
-			NPHASE += (flag_sc) ? 0 : 1;
-
-			PTYPE[i_sc] = SUPERCRIT;
-			PPH[i_sc]->c[PPH[i_sc]->ncomps] = i;
-			PPH[i_sc]->Xs[PPH[i_sc]->ncomps] = MXS[i];
-			PPH[i_sc]->PF[PPH[i_sc]->ncomps] = MPF[i];
-			PPH[i_sc]->ncomps ++;
-
-			flag_sc = 1;
-		}
-	}
-
-	/*
-		Rearrange order of supercritical/subcritical phases, and determine mass 
-		fractions of the mixture that are in any supercritical phase.
-	 */
-	if(NPHASE==2){
-		if(PTYPE[0]==VAPOR){
-			PTYPE[0] = SUPERCRIT;
-			PTYPE[1] = VAPOR;
-			/*	Rearrange indices that refer to the number of the supercritical 
-				and vapor phases */
-			i_sc = 0;
-			i_v = 1;
-			Phase *A = PPH[0]; /* holds reference to phase[0] */
-			PPH[0] = PPH[1];
-			PPH[1] = A;
-		}
-		if(PTYPE[0]!=SUPERCRIT || PTYPE[1]!=VAPOR){
-			ERRMSG("Two phases, but types are %i and %i, not VAPOR and SUPERCRIT.\n"
-					, PTYPE[0], PTYPE[1]);
-		}
-
-		/*
-			Determine values of 'PFRAC', the fraction of system mass in each phase
-		 */
-		PFRAC = ASC_NEW_ARRAY(double,2);
-		for(i=0;i<PPH[i_sc]->ncomps;i++){
-			PFRAC[i_sc] += PPH[i_sc]->Xs[i]; /* supercritical phase */
-		}
-		PFRAC[i_v] = 1.0 - PFRAC[i_sc];       /* subcritical phase(s) */
-
-		for(i=0;i<NPHASE;i++){ 
-			mixture_x_props(PPH[i]->ncomps, PPH[i]->Xs, PPH[i]->Xs);
-		}
-		mm[0] = mixture_M_avg(PPH[0]->ncomps, PPH[0]->Xs, PPH[0]->PF);
-		mm[1] = mixture_M_avg(PPH[1]->ncomps, PPH[1]->Xs, PPH[1]->PF);
-
-		xs_ph[0] = PFRAC[0] / mm[0] / ((PFRAC[0] / mm[0]) + (PFRAC[1] / mm[1]));
-		xs_ph[1] = PFRAC[1] / mm[1] / ((PFRAC[0] / mm[0]) + (PFRAC[1] / mm[1]));
-
-		PFRAC[0] = xs_ph[0];
-		PFRAC[1] = xs_ph[1];
-
-		MSG("For the current mixture");
-		MSG("\tSupercritical mass fraction is %.6g,\tsubcritical mass fraction is %.6g"
-				, PFRAC[i_sc], PFRAC[i_v]);
-		MSG("\tSupercritical molar mass is %.6g,   \tsubcritical molar mass is %.6g"
-				, mm[i_sc], mm[i_v]);
-		MSG("\tSupercritical mole fraction is %.6g, subcritical mole fraction is %.6g"
-				, PFRAC[i_sc], PFRAC[i_v]);
-		for(i=0;i<NPHASE;i++){ 
-			MSG("For %s phase", (PTYPE[i]==SUPERCRIT) ? "supercritical" : "subcritical");
-			for(j=0;j<PPH[i]->ncomps;j++){
-				MSG("\tmass fraction of %s is %.6g"
-						, PPH[i]->PF[j]->name, PPH[i]->Xs[j]);
-				MSG("\tmole fraction of %s is %.6g"
-						, PPH[i]->PF[j]->name, PPH[i]->xs[j]);
-			}
-		}
-
-	}else if(NPHASE>=3){
-		ERRMSG("More than two phases occurred (there should be only up to two, "
-				"a supercritical and subcritical).");
-	}else{
-		PFRAC[0] = 1.0;
-	}
-
-	/*
-		Determine bubble pressure and dew pressure of any subcritical mixture
-	 */
-	if(NPHASE==2 || PTYPE[0]==VAPOR){
-		/*
-			Declare arrays sized to the subcritical phase(s)
-		 */
-		double phi_v[PPH[i_v]->ncomps]
-			, p_sat[PPH[i_v]->ncomps]
-			, K[PPH[i_v]->ncomps]
-			;
-		/*
-			Obtain mole fractions for vapor phase -- these represent the overall 
-			mole fractions in all subcritical phases, since vapor phase is being 
-			used as an alias for all subcritical phases considered together.
-		 */
-		mole_fractions(PPH[i_v]->ncomps, PPH[i_v]->xs, PPH[i_v]->Xs, PPH[i_v]->PF);
-
-		/*
-			Create a new array of MixtureSpec structures to hold PureFluid 
-			structures for supercritical and subcritical phases.
-		 */
-		MixtureSpec MS_temp = {
-			PPH[i_v]->ncomps
-			, PPH[i_v]->xs
-			, PPH[i_v]->PF
-		};
-		p_b = bubble_pressure(&MS_temp, T, err);
-		p_d = dew_pressure(&MS_temp, T, err);
-
-		/*
-			If the system pressure is above the bubble pressure, subcritical 
-			components are all in the liquid; if pressure is below dew pressure, 
-			system components are all in the vapor; and if pressure is between 
-			bubble and dew pressures, they are in vapor-liquid equilibrium.
-		 */
-		if(P > p_b){
-			i_l = i_v;
-			PTYPE[i_l] = LIQUID;
-		}else if(P < p_d){
-			;
-		}else{
-			NPHASE = 3;
-			i_l = i_v + 1;
-			PTYPE[i_l] = LIQUID;
-
-			/*
-				Read each component in the vapor phase into the liquid phase as 
-				well.  Find the saturation temperature, vapor-phase fugacity 
-				coefficient, and K-factor to use in calculating liquid and vapor 
-				mole fractions.
-			 */
-			MSG("Calculating K-factors...");
-			for(i=0;i<PPH[i_v]->ncomps;i++){
-				fprops_sat_T(T, (p_sat+i), (rho_d), (rho_d+1), PPH[i_v]->PF[i], err);
-				phi_v[i] = pengrob_phi_pure(PPH[i_v]->PF[i], T, p_b, VAPOR, err);
-				K[i] = p_sat[i] / (phi_v[i] * P);
-				MSG("K-factor for %s is %.6g"
-						, PPH[i_v]->PF[i]->name, K[i]);
-			}
-			RRData RR = {PPH[i_v]->ncomps, PPH[i_v]->xs, K};
-			double V[] = {0.5, 0.51};
-
-			/* secant_solve(&flash_error, &FD, V, tol); */
-			secant_solve(&rachford_rice, &RR, V, tol);
-
-			PPH[i_l]->ncomps = PPH[i_v]->ncomps;
-			PPH[i_l]->c = PPH[i_v]->c;
-			PPH[i_l]->PF = PPH[i_v]->PF;
-
-			MSG("Subcritical mole fraction is %.6g, and vapor mole fraction "
-					"within this is %.6g", PFRAC[i_v], V[0]);
-
-			PFRAC[i_l] = PFRAC[i_v] * (1 - V[0]);
-			PFRAC[i_v] *= V[0];
-
-			MSG("Vapor mole fraction in mixture is %.6g, and liquid mole fraction "
-					"is %.6g", PFRAC[i_v], PFRAC[i_l]);
-
-			for(i=0;i<PPH[i_v]->ncomps;i++){
-				PPH[i_l]->xs[i] = PPH[i_v]->xs[i] / (1 + V[0]*(K[i] - 1));
-				PPH[i_v]->xs[i] *= K[i] / (1 + V[0]*(K[i] - 1));
-			}
-		}
-	}
-	if(PTYPE[0]==SUPERCRIT){
-		mole_fractions(PPH[i_sc]->ncomps, PPH[i_sc]->xs, PPH[i_sc]->Xs, PPH[i_sc]->PF);
-	}
-
-#if 1
-	MSG("At temperature %.2f K and pressure %.0f Pa, there are %u phases;"
-			, T, P, NPHASE);
-	for(i=0;i<NPHASE;i++){
-		MSG("\t%.6g of total moles are in %s phase"
-				, PFRAC[i], (PTYPE[i]==SUPERCRIT) ? "supercritical" :
-				(PTYPE[i]==VAPOR) ? "vapor" : "liquid");
-		for(j=0;j<PPH[i]->ncomps;j++){
-			MSG("\t  mole fraction of %s in this phase is %.6g"
-					, PPH[i]->PF[j]->name, PPH[i]->xs[j]);
-		}
-	}
-	if(NPHASE>=2){
-		MSG("\tbubble pressure is %.1f Pa", p_b);
-		MSG("\tdew pressure is %.1f Pa", p_d);
-	}
-	puts("");
-#endif
-
-#undef PPH
-#undef PFRAC
-#undef PTYPE
-#undef NPHASE
-#undef D
-#undef MXS
-#undef NPURE
-#undef TITLE
-}
-
 /* Functions to test/demonstrate other functionality */
 void test_five(double T, double P){
 #define NPURE 4
@@ -386,9 +110,10 @@ void test_five(double T, double P){
 
 	MixtureSpec *MS = ASC_NEW(MixtureSpec);
 	MS->pures = NPURE;
-	MS->Xs = Xs;
-	MS->PF = ASC_NEW_ARRAY(PureFluid *,NPURE);
-	mixture_fluid_spec(MS, NPURE, (void *)fluids, "pengrob", src, &merr);
+	/* MS->Xs = Xs; */
+	/* MS->PF = ASC_NEW_ARRAY(PureFluid *,NPURE); */
+	/* mixture_fluid_spec(MS, NPURE, (void *)fluids, "pengrob", src, &merr); */
+	mixture_specify(MS, NPURE, Xs, (void *)fluids, "pengrob", src, &merr);
 
 	/* for(i=0;i<NPURE;i++){ 
 		MSG("%s T_c = %.2f K, P_c = %.0f Pa", MS->PF[i]->name, D->T_c, D->p_c);
@@ -543,10 +268,11 @@ void test_six(void){
 	MixtureError merr = MIXTURE_NO_ERROR;
 
 	MixtureSpec *MS = ASC_NEW(MixtureSpec);
-	MS->pures = NPURE;
-	MS->Xs = Xs;
-	MS->PF = ASC_NEW_ARRAY(PureFluid *,NPURE);
-	mixture_fluid_spec(MS, NPURE, (void *)fluids, "pengrob", src, &merr);
+	/* MS->pures = NPURE; */
+	/* MS->Xs = Xs; */
+	/* MS->PF = ASC_NEW_ARRAY(PureFluid *,NPURE); */
+	/* mixture_fluid_spec(MS, NPURE, (void *)fluids, "pengrob", src, &merr); */
+	mixture_specify(MS, NPURE, Xs, (void *)fluids, "pengrob", src, &merr);
 
 	double P[NROWS][NCOLS];
 	char *heads[NCOLS]
@@ -584,8 +310,6 @@ void test_six(void){
 			}
 
 			P[i1][i2] = fprops_p((FluidState){T, rho, MS->PF[C_PURE]}, &err);
-			/* printf("\n\t  pressure is %.6g at i1=%u, i2=%u, T=%.2f, rho=%.6g, err=%i"
-					, P[i1][i2], i1, i2, T, rho, err); */
 			if(err==FPROPS_RANGE_ERROR){
 				/* printf("\n  Error in range"); */
 			}
@@ -607,7 +331,7 @@ void test_six(void){
 }
 
 void test_seven(void){
-#define NPURE 4
+#define NPURE 5
 #define D MS->PF[i]->data
 #define TEMPS 4
 #define PRESSURES 3
@@ -615,15 +339,10 @@ void test_seven(void){
 	char *fluids[] = {
 		"isohexane", "krypton", "carbonmonoxide", "ammonia", "water"
 	};
-	char *fluid_names[] = {
-		"isohexane", "krypton", "carbon monoxide", "ammonia", "water"
-	};
 	double props[] = {11, 4, 2, 3, 2};
 	double Xs[NPURE];
 	mixture_x_props(NPURE, Xs, props);
-	char *src[] = {
-		NULL, NULL, NULL, NULL, NULL
-	};
+	char *src[NPURE] = {NULL};
 	FpropsError err = FPROPS_NO_ERROR;
 	MixtureError merr = MIXTURE_NO_ERROR;
 
@@ -647,10 +366,11 @@ void test_seven(void){
 #define PXS(IX) PPH[ IX ]->xs
 #endif
 
-	MS->pures = NPURE;
+	/* MS->pures = NPURE;
 	MS->Xs = Xs;
 	MS->PF = ASC_NEW_ARRAY(PureFluid *,NPURE);
-	mixture_fluid_spec(MS, NPURE, (void *)fluids, "pengrob", src, &merr);
+	mixture_fluid_spec(MS, NPURE, (void *)fluids, "pengrob", src, &merr); */
+	mixture_specify(MS, NPURE, Xs, (void *)fluids, "pengrob", src, &merr);
 
 #if 0
 	double tol = 1.e-7
@@ -667,7 +387,6 @@ void test_seven(void){
 		;
 #endif
 	double Ts[] = {270, 310, 350, 390, 430, 470}
-		/* , P = 1.5e5 */
 		, Ps[] = {1.5e5, 2.5e5, 4e5, 6e5}
 		;
 
@@ -824,7 +543,6 @@ void test_seven(void){
 #define PFRAC PS_2[i1][i2]->ph_frac
 #define PTYPE PS_2[i1][i2]->ph_type
 #define PPH PS_2[i1][i2]->PH
-	/* MSG_MARK("1"); */
 	unsigned i1, i2;
 	for(i1=0;i1<TEMPS;i1++){ 
 		for(i2=0;i2<PRESSURES;i2++){ 
@@ -836,17 +554,12 @@ void test_seven(void){
 						, PFRAC[i], (PTYPE[i]==SUPERCRIT) ? "supercritical" :
 						(PTYPE[i]==VAPOR) ? "vapor" : "liquid");
 				for(j=0;j<PPH[i]->ncomps;j++){
-					printf("\n\t  mole fraction of %s in this phase is %.6g"
+					printf("\n\t  mass fraction of %s in this phase is  %.6g"
+							, PPH[i]->PF[j]->name, PPH[i]->Xs[j]);
+					printf("\n\t   mole fraction of %s in this phase is %.6g"
 							, PPH[i]->PF[j]->name, PPH[i]->xs[j]);
 				}
 			}
-#if 0
-			if(NPHASE>=2){
-				printf("\n\tbubble pressure is %.1f Pa"
-						"\n\tdew pressure is %.1f Pa"
-						, p_b, p_d);
-			}
-#endif
 			puts("");
 		}
 	}

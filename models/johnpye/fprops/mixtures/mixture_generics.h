@@ -29,9 +29,7 @@
 
 #include "../color.h"
 
-#if 0
-#include <ascend/general/ascMalloc.h>
-#else
+#ifndef ASC_NEW
 #define ASC_NEW(TYPE) (TYPE*)malloc(sizeof(TYPE))
 #define ASC_NEW_ARRAY(TYPE,COUNT) (TYPE*)malloc(sizeof(TYPE)*(COUNT))
 #endif
@@ -65,6 +63,11 @@ double sum_elements(unsigned nelems, double *nums);
 unsigned index_of_min(unsigned nelems, double *nums);
 unsigned index_of_max(unsigned nelems, double *nums);
 void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], double tol);
+int cubic_solution(double coef[4], double *roots);
+
 void mole_fractions(unsigned n_pure, double *x_mole, double *X_mass, PureFluid **PF);
+void mixture_x_props(unsigned nPure, double *Xs, double *props);
+double mixture_x_fill_in(unsigned nPure, double *Xs);
+double mixture_M_avg(unsigned nPure, double *Xs, PureFluid **PFs);
 
 #endif

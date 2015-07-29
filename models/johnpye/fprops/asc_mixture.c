@@ -21,7 +21,7 @@
 *//*
 	by Jacob Shealy, June 25-, 2015
 
-	Function exports for initial model of ideal-solution mixing
+	Exports functions for initial model of ideal-solution mixing
  */
 
 #include <ascend/utilities/error.h>
@@ -44,7 +44,9 @@
 #include <ascend/compiler/arrayinst.h>
 
 /* Code that is wrapped */
-#include "init_mixfuncs.h" /* rewrite to ideal_solution.h, ideal_solution.c */
+#include "mixtures/init_mixfuncs.h"
+#include "mixtures/mixture_generics.h"
+#include "mixtures/mixture_prepare.h"
 
 #ifndef ASC_EXPORT
 #error "ASC_EXPORT not found -- where is it?"
@@ -110,6 +112,9 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 			, "DATA member '%s' has type-value %#o, but must have %s (value %#o)" \
 			, NAME, InstanceKind(VAR), TYPENAME, TYPE); \
 		return 1; \
+	}else{ \
+		ERROR_REPORTER_HERE(ASC_USER_NOTE, "DATA member %s has correct type %s" \
+				, NAME, TYPENAME); \
 	}
 
 #define CHECK_EXIST_TYPE(VAR,TYPE,NAME,TYPENAME) \
@@ -119,6 +124,7 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	} \
 	CHECK_TYPE(VAR,TYPE,NAME,TYPENAME)
 
+	unsigned i;
 	struct Instance *npureinst, *compinst, *xinst, *typeinst, *srcinst;
 	unsigned npure;
 
@@ -128,64 +134,121 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	mix_symbols[3] = AddSymbol("type");
 	mix_symbols[4] = AddSymbol("source");
 
+	/* check existence of 'data' Instance */
+	if(! data){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR, "Couldn't locate 'data', please check usage");
+	}
+
 	/* number of pure components -- required */
 	npureinst = ChildByChar(data, mix_symbols[NPURE_SYM]);
-	CHECK_EXIST_TYPE(npureinst,INTEGER_CONSTANT_INST, "npure", "integer_constant");
-	/* if(!npureinst){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR
-			, "Couldn't locate 'npure' in DATA, please check usage");
-		return 1;
-	}
-	if(InstanceKind(npureinst)!=INTEGER_CONSTANT_INST){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR
-			, "DATA member 'npure' was %x, but must be an integer_constant %x",
-			InstanceKind(npureinst), INTEGER_CONSTANT_INST);
-	} */
-	npure = (int *)IC_INST(npureinst)->value;
+	CHECK_EXIST_TYPE(npureinst, INTEGER_CONSTANT_INST, "npure", "'integer constant'");
+	npure = (int *)(IC_INST(npureinst)->value);
+	ERROR_REPORTER_HERE(ASC_USER_NOTE, "Number of pures is %i", npure);
 
 	const struct gl_list_t *comps_gl;
-	const char *comps[npure], *type=NULL, *source=NULL;
-	const double *xs[npure];
+	const struct gl_list_t *xs_gl;
+	const char **comps
+		, *type = NULL
+		, **srcs = ASC_NEW_ARRAY(const char *, npure);
+	double xs[npure]
+		, *xs_aux;
 
-	/* component names -- required */
+	/* Component names -- required */
 	compinst = ChildByChar(data, mix_symbols[COMP_SYM]);
-	CHECK_EXIST_TYPE(compinst, ARRAY_ENUM_INST, "components",
-			"array of symbol_constant(s)");
+	CHECK_EXIST_TYPE(compinst, ARRAY_INT_INST, "components"
+			, "array indexed with integers");
 	comps_gl = ARY_INST(compinst)->children;
 
-	/* component correlation type (equation of state) -- not required */
+	/*
+		Component correlation type (equation of state) -- not required, so check 
+		for existence before checking type and assigning to the char array 'type'.
+	 */
 	typeinst = ChildByChar(data, mix_symbols[TYPE_SYM]);
 	if(typeinst){
-		CHECK_TYPE(typeinst, SYMBOL_CONSTANT_INST, "type", "symbol_constant");
-		type = SCP(SYMC_INST(typeinst)->value);
+		CHECK_TYPE(typeinst, SYMBOL_CONSTANT_INST, "type", "'symbol constant'");
+		type = SCP(SYMC_INST(typeinst)->value); /* read 'typeinst' into a string */
 		if(type && strlen(type)==0){
-			char t[] = "helmholtz";
+			char t[] = "pengrob";
 			type = t;
 		}
 	}
 
-	/* source data string -- not required */
+	/*
+		Data string representing source -- not required, so check for existence 
+		before checking type and assigning to the char array 'source'.
+	 */
 	srcinst = ChildByChar(data, mix_symbols[SOURCE_SYM]);
 	if(srcinst){
-		CHECK_TYPE(srcinst, SYMBOL_CONSTANT_INST, "source", "symbol_constant");
-		source = SCP(SYMC_INST(typeinst)->value);
-		if(source && strlen(source)==0){
-			source = NULL;
+		CHECK_TYPE(srcinst, SYMBOL_CONSTANT_INST, "source", "'symbol constant'");
+		srcs[0] = SCP(SYMC_INST(srcinst)->value); /* read 'srcinst' into a string */
+		if(srcs[0] && strlen(srcs[0])==0){
+			srcs[0] = NULL;
+		}
+		for(i=1;i<npure;i++){
+			srcs[i] = srcs[0];
 		}
 	}
 
-	/* mass fractions -- required */
-	/*
-		May extend this to handle mole fractions, at a later date?
-	 */
+	/* Mass fractions -- required */
 	xinst = ChildByChar(data, mix_symbols[X_SYM]);
-	ERROR_REPORTER_HERE(ASC_USER_ERROR
-		, "The type of the mass-fraction array is %x", InstanceKind(xinst));
+	CHECK_EXIST_TYPE(xinst, ARRAY_INT_INST, "xinst"
+			, "array indexed with integers");
+	xs_gl = ARY_INST(xinst)->children;
 
-	/* mixture model (ideal or real) -- not required */
+	/*
+		Check that the lengths of the arrays 'comps_gl' and 'xs_gl' are equal, 
+		and equal to 'npure'
+	 */
+	if(xs_gl->length!=npure){
+		if(comps_gl->length==xs_gl->length){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR
+					, "The components and mass fractions arrays both differ in length"
+					"\n\tfrom the given number of components 'npure', but are equal in"
+					"\n\tlength to each other.  Setting npure = length of the arrays...");
+			npure = xs_gl->length;
+		}else if(comps_gl->length!=npure){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR
+					, "The components and mass fractions arrays both differ in length"
+					"\n\tfrom the given number of components 'npure', and are not equal"
+					"\n\tin length to each other.  Setting npure = (smallest length)...");
+			double lens[] = {npure, xs_gl->length, comps_gl->length};
+			npure = min_element(3, lens);
+		}else{
+			ERROR_REPORTER_HERE(ASC_USER_ERROR
+					, "The mass fractions array differs in length from the given number"
+					"\n\tof components 'npure' and the length of the components array."
+					"\n\tSetting npure = (smallest length)...");
+			double lens[] = {npure, xs_gl->length};
+			npure = min_element(2, lens);
+		}
+	}else if(comps_gl->length!=npure){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+				, "The components array differs in length from the given number of"
+				"\n\tcomponents 'npure' and the length of the mass fractions array."
+				"\n\tSetting npure = (smallest length)...");
+		double lens[] = {npure, xs_gl->length};
+		npure = min_element(2, lens);
+	}
 
-	/* bbox->user_data = (void *)mixture_specify(npure, xs, comps, type, src); */
-	bbox->user_data = NULL;
+	/* Mixture model (ideal or real) -- not required */
+
+	ERROR_REPORTER_HERE(ASC_USER_NOTE, "Mark 1");
+
+	/* Read contents of 'comps_gl' and 'xs_gl' into 'comps' and 'xs' */
+	comps = (const char **) comps_gl->data;
+	for(i=0;i<npure;i++){
+		xs_aux = (double *) xs_gl->data[i];
+		xs[i] = *xs_aux;
+	}
+
+	/* Create mixture specification in a MixtureSpec struct */
+	MixtureSpec *MS = ASC_NEW(MixtureSpec);
+	MixtureError merr = MIXTURE_NO_ERROR;
+	mixture_specify(MS, npure, (const double *)xs, (const void **)comps, type
+			, srcs, &merr);
+	bbox->user_data = (void *) MS;
+
+	return 0;
 }
 
 /*
