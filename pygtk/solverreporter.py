@@ -47,7 +47,6 @@ class PopupSolverReporter(PythonSolverReporter):
 	def __init__(self,browser,sim):
 		PythonSolverReporter.__init__(self,browser)
 
-
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["solverstatusdialog"])
 		self.window = self.browser.builder.get_object("solverstatusdialog")
 		self.browser.builder.connect_signals(self)
@@ -84,9 +83,6 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.sim = sim
 
 		self.nv = self.sim.getNumVars()
-
-		while Gtk.events_pending():
-			Gtk.main_iteration()
 
 	def on_diagnose_button_click(self,*args):
 		try:
@@ -129,19 +125,14 @@ class PopupSolverReporter(PythonSolverReporter):
 			self.lasttime = _time;
 			self.elapsed = _time - self.starttime
 			self.blocktime = _time - self.blockstart
-			#print "UPDATING!"
 			self.fill_values(status)
-
-		while Gtk.events_pending():
-			Gtk.main_iteration()		
 
 		self.guitime = self.guitime + (time.clock() - _time)
 
-		if status.isConverged() or status.isDiverged() or status.isInterrupted():
-			return 1
 		if self.guiinterrupt:
-			return 2
-		return 0
+			return True
+
+		return False
 
 	def finalise(self,status):
 		try:
@@ -202,9 +193,7 @@ class SimpleSolverReporter(PythonSolverReporter):
 			_msg = "Solved %d vars in %d iterations" % (status.getNumConverged(),status.getIterationNum())
 			self.browser.statusbar.push(self.statusbarcontext, _msg )
 
-		while Gtk.events_pending():
-			Gtk.main_iteration()
-		return 0
+		return False
 
 	def finalise(self,status):
 		self.report_to_browser(status)

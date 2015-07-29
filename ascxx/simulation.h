@@ -95,6 +95,10 @@ public:
 	void build();
 
 	void solve(Solver s, SolverReporter &reporter);
+	void presolve(Solver s);
+	const int iterate();
+	void postsolve(SolverStatus status);
+	SolverStatus getStatus();
 
 	std::vector<Variable> getFixableVariables();
 	std::vector<Variable> getVariablesNearBounds(const double &epsilon=1e-4);

@@ -14,7 +14,7 @@ try:
 
 	import gi 
 	gi.require_version('Gtk', '3.0') 
-	from gi.repository import Gtk, GdkPixbuf, Gdk
+	from gi.repository import Gtk, GdkPixbuf, Gdk, GLib
 
 	import re
 	import urlparse
@@ -22,6 +22,7 @@ try:
 	import platform
 	import sys
 	import time
+	import threading
 
 	if platform.system() != "Windows":
 		try:
@@ -536,6 +537,7 @@ class Browser:
 		self.solverhooks = SolverHooksPythonBrowser(self)
 		ascpy.SolverHooksManager_Instance().setHooks(self.solverhooks)
 
+		self.solve_interrupt = False
 		#--------
 		# options
 		if(len(args)==1):
@@ -608,6 +610,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				first_run_time = float(self.prefs.getStringPref('Browser','first_run'))
 				if ((time_now-first_run_time)/(3600*24)) >= 7:
 					self.auto_update_check()
+
+			GObject.threads_init()
 			Gtk.main()
 
 
@@ -830,7 +834,32 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			return 1
 		
 		return 0;
-	
+
+	def do_solve_update(self, reporter, status):
+		self.solve_interrupt = reporter.report(status)
+		return False
+
+	def do_solve_finish(self, reporter, status):
+		reporter.finalise(status)
+		self.modelview.refreshtree()
+
+	def do_solve_thread(self, reporter):
+		try:
+			self.sim.presolve(self.solver)
+			status = self.sim.getStatus()
+			while status.isReadyToSolve() and not self.solve_interrupt:
+				res = self.sim.iterate()
+				status.getSimulationStatus(self.sim)
+				GLib.idle_add(self.do_solve_update, reporter, status)
+				# needed to 'make' some time for gui update
+				time.sleep(0.001)
+				if res != 0:
+					break
+			self.sim.postsolve(status)
+			GLib.idle_add(self.do_solve_finish, reporter, status)
+		except RuntimeError, err:
+			self.reporter.reportError(str(err))
+
 	def do_solve(self):
 		if self.no_built_system():
 			return
@@ -839,21 +868,15 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.reporter.reportError("No solver assigned!")
 			return
 
-		self.start_waiting("Solving with %s..." % self.solver.getName())
-
 		if self.prefs.getBoolPref("SolverReporter","show_popup",True):
 			reporter = PopupSolverReporter(self,self.sim)
 		else:
 			reporter = SimpleSolverReporter(self)
 
-		try:
-			self.sim.solve(self.solver,reporter)
-		except RuntimeError,e:
-			self.reporter.reportError(str(e))	
-
-		self.stop_waiting()
-		
-		self.modelview.refreshtree()
+		self.solve_interrupt = False
+		thread = threading.Thread(target=self.do_solve_thread, args=(reporter,))
+		thread.daemon = True
+		thread.start()
 
 	def do_integrate(self):
 		if self.no_built_system():
@@ -1544,10 +1567,10 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		
 	def disable_menu(self):
 		list=["free_variable","fix_variable","sparsity","propsmenuitem","copy_observer_matrix",
-                      "incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
-                      "show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1",
-                      "repaint_tree","checkbutton","solvebutton","integratebutton","methodrunbutton",
-                      "check1","solve1","integrate1","units","add_observer","keep_observed","preferences","notes_view"]
+				"incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
+				"show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1",
+				"repaint_tree","checkbutton","solvebutton","integratebutton","methodrunbutton",
+				"check1","solve1","integrate1","units","add_observer","keep_observed","preferences","notes_view"]
 		for button in list:
 			self.builder.get_object(button).set_sensitive(False)
 			
@@ -1555,7 +1578,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		list =["free_variable","fix_variable","propsmenuitem","units"]
 		for button in list:
 			if self.builder.get_object(button)!=None:
-			    self.builder.get_object(button).set_sensitive(False)
+				self.builder.get_object(button).set_sensitive(False)
 			
 	def enable_on_enter_sim_tab(self):
 		list =["free_variable","fix_variable","propsmenuitem","units"]
@@ -1581,7 +1604,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		
 	def enable_on_sim_build(self):
 		list=["sparsity","incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
-                      "show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1","notes_view"]
+				"show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1","notes_view"]
 		for button in list:
 			if self.builder.get_object(button) != None:
 			   self.builder.get_object(button).set_sensitive(True)
@@ -1597,7 +1620,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			   self.builder.get_object(button).set_sensitive(True)
 	def enable_on_model_tree_build(self):
 		list=["repaint_tree","checkbutton","solvebutton","integratebutton","methodrunbutton",
-                      "check1","solve1","integrate1","units","add_observer","preferences","notes_view"]
+				"check1","solve1","integrate1","units","add_observer","preferences","notes_view"]
 		for button in list:
 			if self.builder.get_object(button) != None:
 			   self.builder.get_object(button).set_sensitive(True)
