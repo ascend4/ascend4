@@ -855,8 +855,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				time.sleep(0.001)
 				if res != 0:
 					break
-			self.sim.postsolve(status)
 			GLib.idle_add(self.do_solve_finish, reporter, status)
+			self.sim.postsolve(status)
 		except RuntimeError, err:
 			self.reporter.reportError(str(err))
 
