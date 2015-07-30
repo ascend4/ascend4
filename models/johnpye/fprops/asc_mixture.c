@@ -52,6 +52,8 @@
 #error "ASC_EXPORT not found -- where is it?"
 #endif
 
+#define NULL_STR(STR) (STR==NULL) ? "NULL" : STR
+
 /*
 	Forward Declarations
  */
@@ -147,11 +149,10 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 
 	const struct gl_list_t *comps_gl;
 	const struct gl_list_t *xs_gl;
-	const char **comps
-		, *type = NULL
+	const char *type = NULL
 		, **srcs = ASC_NEW_ARRAY(const char *, npure);
-	double xs[npure]
-		, *xs_aux;
+	struct SymbolInstance **comps;
+	struct RealInstance **xs;
 
 	/* Component names -- required */
 	compinst = ChildByChar(data, mix_symbols[COMP_SYM]);
@@ -171,6 +172,9 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 			char t[] = "pengrob";
 			type = t;
 		}
+	}else{
+		char t[] = "pengrob";
+		type = t;
 	}
 
 	/*
@@ -183,10 +187,14 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 		srcs[0] = SCP(SYMC_INST(srcinst)->value); /* read 'srcinst' into a string */
 		if(srcs[0] && strlen(srcs[0])==0){
 			srcs[0] = NULL;
+		}else if(!srcs[0]){
+			srcs[0] = NULL;
 		}
-		for(i=1;i<npure;i++){
-			srcs[i] = srcs[0];
-		}
+	}else{
+		srcs[0] = NULL;
+	}
+	for(i=1;i<npure;i++){
+		srcs[i] = srcs[0];
 	}
 
 	/* Mass fractions -- required */
@@ -235,17 +243,26 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	ERROR_REPORTER_HERE(ASC_USER_NOTE, "Mark 1");
 
 	/* Read contents of 'comps_gl' and 'xs_gl' into 'comps' and 'xs' */
-	comps = (const char **) comps_gl->data;
-	for(i=0;i<npure;i++){
-		xs_aux = (double *) xs_gl->data[i];
-		xs[i] = *xs_aux;
-	}
+	comps = (struct SymbolInstance **) comps_gl->data;
+	xs    = (struct RealInstance **) xs_gl->data;
+	/* for(i=0;i<npure;i++){
+		
+	} */
 
 	/* Create mixture specification in a MixtureSpec struct */
 	MixtureSpec *MS = ASC_NEW(MixtureSpec);
 	MixtureError merr = MIXTURE_NO_ERROR;
-	mixture_specify(MS, npure, (const double *)xs, (const void **)comps, type
-			, srcs, &merr);
+	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The location of the MixtureSpec is %p", MS);
+	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The number of components is %u", npure);
+	ERROR_REPORTER_HERE(ASC_USER_NOTE, "  from 'comps', is %lu", comps_gl->length);
+	ERROR_REPORTER_HERE(ASC_USER_NOTE, "  from 'xs', is %lu", xs_gl->length);
+	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The equation of state used is %s", NULL_STR(type));
+	for(i=0;i<npure;i++){
+		ERROR_REPORTER_HERE(ASC_USER_NOTE
+				, "For the component %i (type %i), the source is %s" 
+				, /* SCP(comps[i]->value) */ i, comps[i]->t, NULL_STR(srcs[i]));
+	}
+	/* mixture_specify(MS, npure, (const double *)xs, (const void **)comps, type , srcs, &merr); */
 	bbox->user_data = (void *) MS;
 
 	return 0;

@@ -277,15 +277,15 @@ int cubic_solution(double coef[4], double *roots){
 	Unfortunately, we can't use 'sum_elements' to find the sum 'XM_sum', so 
 	instead it is calculated in a loop.
  */
-void mole_fractions(unsigned n_pure, double *x_mole, double *X_mass, PureFluid **PF){
+void mole_fractions(unsigned npure, double *x_mole, double *X_mass, PureFluid **PF){
 #define D PF[i]->data
 	unsigned i;
 	double XM_sum=0.0; /* sum of (mass fraction over molar mass) terms */
 
-	for(i=0;i<n_pure;i++){
+	for(i=0;i<npure;i++){
 		XM_sum += X_mass[i] / D->M;
 	}
-	for(i=0;i<n_pure;i++){
+	for(i=0;i<npure;i++){
 		x_mole[i] = X_mass[i] / D->M / XM_sum;
 	}
 #undef D
@@ -315,21 +315,21 @@ void mass_fractions(unsigned npure, double *X_mass, double *x_mole, PureFluid **
 }
 
 /*	
-	Calculate mass fractions from an array of numbers, with each mass fraction 
-	sized proportionally to its corresponding number
+	Calculate mass fractions 'Xs' from an array of numbers 'props', with each 
+	mass fraction sized proportionally to its corresponding number
  */
-void mixture_x_props(unsigned nPure, double *Xs, double *props){
+void mixture_x_props(unsigned npure, double *Xs, double *props){
 	unsigned i;
 	double x_total=0.0; /* sum of proportions */
 
-	for(i=0;i<nPure;i++){
+	for(i=0;i<npure;i++){
 		x_total += props[i]; /* find sum of proportions */
 	}
 	/*	
 		Each mass fraction is its corresponding proportion, divided by the sum 
 		over all proportions.
 	 */
-	for(i=0;i<nPure;i++){
+	for(i=0;i<npure;i++){
 		Xs[i] = props[i] / x_total; 
 	}
 }
@@ -338,11 +338,11 @@ void mixture_x_props(unsigned nPure, double *Xs, double *props){
 	Calculate last of (n) mass fractions given an array of (n-1) mass 
 	fractions, such that the sum over all mass fractions will equal one.
  */
-double mixture_x_fill_in(unsigned nPure, double *Xs){
+double mixture_x_fill_in(unsigned npure, double *Xs){
 	unsigned i;
 	double x_total;
 
-	for(i=0;i<(nPure-1);i++){ /* sum only for nPure-1 loops */
+	for(i=0;i<(npure-1);i++){ /* sum only for npure-1 loops */
 		x_total += Xs[i];
 	}
 	if(x_total>0){
@@ -358,19 +358,13 @@ double mixture_x_fill_in(unsigned nPure, double *Xs){
 	quantities (e.g. enthalpy in J/kmol).  The molar masses provided by 
 	PureFluid structs in FPROPS have units of kg/kmol, so this molar mass will 
 	have the same units.
-
-	@param nPure number of pure components
-	@param Xs array with mass fraction of each component
-	@param PFs array of pointers to PureFluid structures representing components
-
-	@return average molar mass of the solution
  */
-double mixture_M_avg(unsigned nPure, double *x_mass, PureFluid **PFs){
+double mixture_M_avg(unsigned npure, double *x_mass, PureFluid **PFs){
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double rM_avg=0.0;  /* reciprocal average molar mass */
 
-	for(i=0;i<nPure;i++){
+	for(i=0;i<npure;i++){
 		rM_avg += x_mass[i] / PFs[i]->data->M;
 		x_total += x_mass[i];
 	}
