@@ -38,7 +38,8 @@
 #include "ida.h"
 #include "idalinear.h"
 #include "idaanalyse.h"
-#include "idatypes.h"										/* The list of includes needs cleaning up! Once basic files are written,  
+#include "idatypes.h"	
+#include "prepare_integrator.h"										/* The list of includes needs cleaning up! Once basic files are written,  
 #include "idaprec.h"										all commonly called functions can be added in just one header file.
 #include "idacalc.h"										Once that's done, these includes must be revisited*/
 #include "idaio.h"
@@ -71,7 +72,7 @@
 #include <ascend/integrator/integrator.h>
 
 
-int ida_prepare_integrator(IntegratorSystem *integ){
+extern int prepare_integrator(IntegratorSystem *integ){
 	flag = IDAInit(ida_mem, &integrator_ida_fex, t0, y0 ,yp0);
 
 	/*-------------------                 RECORDING INTEGRATOR PREFERENCES                  --------------------*

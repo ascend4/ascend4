@@ -81,6 +81,7 @@
 #include <ascend/utilities/config.h>
 #include <ascend/integrator/integrator.h>
 
+
  
 int integrate_ida_solve(IntegratorSystem *integ, unsigned long start_index, unsigned long finish_index){
 	void *ida_mem;
@@ -97,6 +98,7 @@ int integrate_ida_solve(IntegratorSystem *integ, unsigned long start_index, unsi
 	int all_bnds_set = 1;
 	int need_to_reconfigure;	/** < Flag to indicate system rebuild after crossing */
 	int need_to_reinteg = 0;	/** < Flag for when crossings happen on or very close to timesteps */
+	int preparesuccess = 0;
 	int skipping_output;		/** < Flag to skip output to reporter */
 	int qrslv_ind, lrslv_ind;
 	int after_root = 0;
@@ -114,7 +116,7 @@ int integrate_ida_solve(IntegratorSystem *integ, unsigned long start_index, unsi
 	/* create IDA object */
 	ida_mem = IDACreate();
 	/* solve the initial conditions, allocate memory, other stuff... */
-	ida_prepare_integrator(integ);	/*Change call to new function*/
+	preparesuccess = prepare_integrator(integ);	
 	/* store reference to list of relations (in enginedata) */
 	ida_load_rellist(integ);
 	
@@ -196,3 +198,86 @@ int integrate_ida_solve(IntegratorSystem *integ, unsigned long start_index, unsi
 return 0;	
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+int ida_load_rellist(IntegratorSystem *integ) {
+	IntegratorIdaData *enginedata;
+	struct rel_relation **rels;
+	int i, j, n_solverrels, n_active_rels;
+
+	enginedata = integrator_ida_enginedata(integ);
+
+	n_solverrels = slv_get_num_solvers_rels(integ->system);
+	n_active_rels = slv_count_solvers_rels(integ->system, &integrator_ida_rel);
+	rels = slv_get_solvers_rel_list(integ->system);
+
+	if (enginedata->rellist != NULL) {
+		ASC_FREE(enginedata->rellist);
+		enginedata->rellist = NULL;
+	}
+
+	enginedata->rellist
+			= ASC_NEW_ARRAY(struct rel_relation *, n_active_rels);
+
+#ifdef SOLVE_DEBUG
+	CONSOLE_DEBUG("rels matchbits:  0x%x",integrator_ida_rel.matchbits);
+	CONSOLE_DEBUG("rels matchvalue: 0x%x",integrator_ida_rel.matchvalue);
+
+	CONSOLE_DEBUG("Number of relations: %d",n_solverrels);
+	CONSOLE_DEBUG("Number of active relations: %d",n_active_rels);
+	CONSOLE_DEBUG("Number of dependent vars: %d",integ->n_y);
+	CONSOLE_DEBUG("Number of boundaries: %d",enginedata->nbnds);
+#endif
+
+
+	j = 0;
+	for (i = 0; i < n_solverrels; ++i) {
+		if (rel_apply_filter(rels[i], &integrator_ida_rel)) {
+#ifdef SOLVE_DEBUG
+			{
+				char *relname = rel_make_name(integ->system, rels[i]);
+				CONSOLE_DEBUG("rel '%s': 0x%x", relname, rel_flags(rels[i]));
+				ASC_FREE(relname);
+			}
+#endif
+			enginedata->rellist[j++] = rels[i];
+		}
+	}
+
+	asc_assert(j == n_active_rels);
+	enginedata->nrels = n_active_rels;
+
+	if (enginedata->nrels != integ->n_y) {
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+				,"Integration problem is not square (%d active rels, %d vars)"
+				,n_active_rels, integ->n_y
+		);
+		return 1; /* failure */
+	}
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
