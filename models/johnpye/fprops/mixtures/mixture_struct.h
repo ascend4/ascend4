@@ -28,17 +28,37 @@
 #define MIX_STRUCT_HEADER
 
 #include "../rundata.h"
-
-#if 0
-#define MIX_XSUM_ERROR MIX_ERROR "the sum over all mass fractions, which should be exactly 1.00, is %.10f\n"
-#define MIX_COMPR_ERROR MIX_ERROR "the compressibility has assumed a non-physical value"
-#else
-#define MIX_XSUM_ERROR "Sum over all mass fractions, which should be exactly 1.00, is %.10f\n"
-#define MIX_COMPR_ERROR "Compressibility has assumed a non-physical value"
-#endif
+#include "../color.h"
 
 #define MIX_PI M_PI
 #define MIX_XTOL 1e-6
+#define MIX_XSUM_ERROR "Sum over all mass fractions, which should be exactly 1.00, is %.10f\n"
+#define MIX_PSUM_ERROR "Sum over all phase mass fractions, which should be exactly 1.00, is %.10f\n"
+#define MIX_COMPR_ERROR "Compressibility has assumed a non-physical value"
+
+#ifndef ASC_NEW
+#define ASC_NEW(TYPE) (TYPE*)malloc(sizeof(TYPE))
+#define ASC_NEW_ARRAY(TYPE,COUNT) (TYPE*)malloc(sizeof(TYPE)*(COUNT))
+#endif
+
+#define MIX_DEBUG
+#define MIX_ERROR
+
+#ifdef MIX_DEBUG
+#define MSG FPROPS_MSG
+#define MSG_MARK(MARK) MSG("mark " MARK)
+#else
+#define MSG(ARGS...) ((void)0)
+#define MSG_MARK(ARGS...) ((void)0)
+#endif
+
+#ifdef MIX_ERROR
+#define ERRMSG FPROPS_ERRMSG
+#define ERRMSG_XSUM(SUM) FPROPS_ERRMSG(MIX_XSUM_ERROR, SUM)
+#else
+#define ERRMSG(ARGS...) ((void)0)
+#define ERRMSG_XSUM(ARGS...) ((void)0)
+#endif
 
 typedef double SecantSubjectFunction(double, void *user_data);
 
@@ -81,12 +101,12 @@ typedef struct MixtureSpec_Struct {
 	present in the phase, indices of the components, etc.
  */
 typedef struct Phase_Struct {
-	unsigned ncomps; /* number of components in the phase */
-	unsigned *c;     /* index within a MixtureSpec of each component present in the phase */
-	double *Xs;      /* mass fractions of components in the phase */
-	double *xs;      /* mole (NOT mass) fractions of components in the phase */
-	PureFluid **PF;  /* pure fluid characteristics of components */
-	double *rhos;    /* densities of components in the phase */
+	unsigned pures; /* number of components in the phase */
+	unsigned *c;    /* index within a MixtureSpec of each component present in the phase */
+	double *Xs;     /* mass fractions of components in the phase */
+	double *xs;     /* mole (NOT mass) fractions of components in the phase */
+	PureFluid **PF; /* pure fluid characteristics of components */
+	double *rhos;   /* densities of components in the phase */
 } Phase;
 
 /*
@@ -112,7 +132,7 @@ typedef struct PhaseMixtureState_Struct {
 	double T;        /* temperature */
 	double p;        /* pressure */
 	PhaseSpec *PS;   /* specification of phases */
-	MixtureSpec *MX; /* specification of mixture */
+	MixtureSpec *MS; /* specification of mixture */
 } PhaseMixState;
 
 /*
@@ -142,5 +162,50 @@ typedef struct MixturePhaseState_Struct {
 	double *ph_frac;    /* fraction of mass in each phase */
 	double **Xs;        /* mass fractions within each phase */
 } MixturePhaseState;
+
+/*
+	Macros to initialize MixtureSpec, PhaseSpec, and PhaseMixState structs
+ */
+#if 0
+#define CREATE_NEW_MIX_SPEC(NAME,N_PURE) \
+	NAME = ASC_NEW(MixtureSpec); \
+	NAME##->pures = N_PURE; \
+	NAME->Xs    = ASC_NEW_ARRAY(double,N_PURE); \
+	NAME->PF    = ASC_NEW_ARRAY(PureFluid *,N_PURE);
+
+#define CREATE_NEW_PHASE(NAME,N_PURE) \
+	NAME = ASC_NEW(Phase); \
+	NAME->pures = N_PURE; \
+	NAME->c      = ASC_NEW_ARRAY(unsigned,N_PURE); \
+	NAME->Xs     = ASC_NEW_ARRAY(double,N_PURE); \
+	NAME->xs     = ASC_NEW_ARRAY(double,N_PURE); \
+	NAME->PF     = ASC_NEW_ARRAY(PureFluid *,N_PURE); \
+	NAME->rhos   = ASC_NEW_ARRAY(double,N_PURE);
+
+#define CREATE_NEW_PHASE_SPEC(NAME,N_PURE,N_PHASE) \
+	NAME = ASC_NEW(PhaseSpec); \
+	NAME->phases  = 0; \
+	NAME->ph_type = ASC_NEW_ARRAY(PhaseName,N_PHASE); \
+	NAME->ph_frac = ASC_NEW_ARRAY(double,N_PHASE); \
+	NAME->PH      = ASC_NEW_ARRAY(Phase *,N_PHASE); \
+#ifndef i_ph_spec \
+	unsigned i_ph_spec; \
+#endif \
+	for(i_ph_spec=0;i_ph_spec<N_PHASE;i_ph_spec++){ \
+		CREATE_NEW_PHASE( NAME->PH[i_ph_spec], N_PURE ); \
+	}
+
+#define CREATE_NEW_PHASE_MIX_SPEC(NAME,N_PURE,N_PHASE,TEMP,PRESSURE) \
+	NAME = ASC_NEW(PhaseMixSpec); \
+	NAME->T = TEMP; \
+	NAME->p = PRESSURE; \
+	CREATE_NEW_MIX_SPEC(NAME->MX,N_PURE); \
+	CREATE_NEW_PHASE_SPEC(NAME->PS,N_PURE,N_PHASE);
+#endif
+
+MixtureSpec *new_MixtureSpec(unsigned npure);
+Phase *new_Phase(unsigned npure);
+PhaseSpec *new_PhaseSpec(unsigned npure, unsigned nphase);
+PhaseMixState *new_PhaseMixState(unsigned npure, unsigned nphase, double T, double P);
 
 #endif

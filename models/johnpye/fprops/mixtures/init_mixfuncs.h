@@ -38,55 +38,15 @@
 #include <stdio.h>
 #include <math.h>
 
-#define PREPARE_TABLE(ROWS,COLS,T_HEAD,T_SIDE,T_VALS,T_FORM,T_CONT) \
-	for(i2=0;i2<COLS-1;i2++){ \
-		T_CONT[0][i2+1] = T_HEAD[i2]; \
-	} \
-	for(i1=0;i1<ROWS;i1++){ \
-		T_CONT[i1][0] = T_SIDE[i1]; \
-	} \
-	for(i1=0;i1<ROWS-1;i1++){ \
-		for(i2=0;i2<COLS-1;i2++){ \
-			/* T_CONT[i1+1][i2+1] = (char *)malloc(20); */ \
-			asprintf((T_CONT[i1+1]+i2+1), T_FORM[i1], T_VALS[i1][i2]); \
-			printf("\n%s", T_CONT[i1+1][i2+1]); \
-		} \
-	}
-
-#define PRINT_STR_TABLE(ROWS,COLS,CWIDTH,CELLS) \
-	for(i1=0;i1<COLS;i1++){ \
-		CWIDTH[i1] = 0; \
-		/* printf("\n\tSet column %u width to zero", i1); */ \
-	} \
-	for(i1=0;i1<ROWS;i1++){ \
-		for(i2=0;i2<COLS;i2++){ \
-			if(strlen(CELLS[i1][i2])>CWIDTH[i2]){ \
-				CWIDTH[i2] = strlen(CELLS[i1][i2]); \
-				/* printf("\n\tSet column %u width to %u, from cell in row %u" \
-						, i1, CWIDTH[i2], i2); */ \
-			} \
-		} \
-	} \
-	printf("\n"); \
-	for(i1=0;i1<ROWS;i1++){ \
-		for(i2=0;i2<COLS;i2++){ \
-			printf(" %s ", CELLS[i1][i2]); \
-			for(i3=0;i3<(CWIDTH[i2] - strlen(CELLS[i1][i2]));i3++){ \
-				printf("%c", ' '); \
-			} \
-		} \
-		printf("\n"); \
-	}
-
 /* Function prototypes */
-void ig_rhos(MixtureState *M, double P, char **Names);
-void initial_rhos(MixtureState *M, double P, char **names, FpropsError *err);
-void pressure_rhos(MixtureState *M, double P, double tol, /* char **Names, */ FpropsError *err);
-void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError *err);
+/* void ig_rhos(MixtureState *M, double P); */
+/* void initial_rhos(MixtureState *M, double P, FpropsError *err); */
+/* void pressure_rhos(MixtureState *M, double P, double tol, FpropsError *err); */
+void densities_to_mixture(MixtureState *M, double tol, FpropsError *err);
 
-double mixture_rho(MixtureState *M);
-double mixture_u(MixtureState *M, FpropsError *err);
-double mixture_h(MixtureState *M, FpropsError *err);
+/* double mixture_rho(MixtureState *M); */
+/* double mixture_u(MixtureState *M, FpropsError *err); */
+/* double mixture_h(MixtureState *M, FpropsError *err); */
 double mixture_cp(MixtureState *M, FpropsError *err);
 double mixture_cv(MixtureState *M, FpropsError *err);
 double mixture_x_ln_x(unsigned nPure, double *Xs, PureFluid **PFs);
@@ -94,9 +54,8 @@ double mixture_s(MixtureState *M, FpropsError *err);
 double mixture_g(MixtureState *M, FpropsError *err);
 double mixture_a(MixtureState *M, FpropsError *err);
 
-void print_mixture_properties(char *how_calc, double rho, double u, double h, double cp, double cv, double s, double g, double a);
-void print_substances_properties(unsigned subst, char **headers, double *Xs, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as);
-void print_cases_properties(unsigned cases, char **headers, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as);
+/* void print_mixture_properties(char *how_calc, double rho, double u, double h, double cp, double cv, double s, double g, double a); */
+/* void print_substances_properties(unsigned subst, char **headers, double *Xs, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as); */
+/* void print_cases_properties(unsigned cases, char **headers, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as); */
 
 #endif
-

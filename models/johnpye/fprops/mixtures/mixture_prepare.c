@@ -53,22 +53,22 @@ void mixture_specify(MixtureSpec *MS, const unsigned npure, const double *Xs
 	unsigned i;
 	double X_sum=0.0;
 
-	MSG_MARK("1");
+	/* MSG_MARK("1"); */
 	MS->pures = npure;
 	MS->Xs = ASC_NEW_ARRAY(double,npure);
 	MS->PF = ASC_NEW_ARRAY(PureFluid *,npure);
-	MSG_MARK("2");
+	/* MSG_MARK("2"); */
 
 	for(i=0;i<npure;i++){
 		X_sum += Xs[i];
 		MS->Xs[i] = Xs[i];
 	}
-	MSG_MARK("3");
+	/* MSG_MARK("3"); */
 	if(fabs(X_sum - 1.0) > MIX_XTOL){
 		MSG_MARK("  3.1");
 		*merr = MIXTURE_XSUM_ERROR;
 	}
-	MSG_MARK("4");
+	/* MSG_MARK("4"); */
 #if 0
 	if(0==strcmp(type, "ideal")){ /* model fluids with ideal-gas equation of state */
 		MSG_MARK("  4.1");
@@ -83,51 +83,21 @@ void mixture_specify(MixtureSpec *MS, const unsigned npure, const double *Xs
 		MSG_MARK("  4.3");
 	}else{ /* use some other equation of state */
 #endif
-		MSG_MARK("  4.4");
+		/* MSG_MARK("  4.4"); */
 		char **fluid_names = (char **)fluids;
 
-		MSG_MARK("  4.5");
+		/* MSG_MARK("  4.5"); */
 		for(i=0;i<npure;i++){
 			MS->PF[i] = fprops_fluid(fluid_names[i],type,source[i]);
 			MSG("Prepared fluid %s", fluid_names[i]);
 		}
-		MSG_MARK("  4.6");
+		/* MSG_MARK("  4.6"); */
 	/* } */
-	MSG_MARK("5");
-
-	/* *MS = ASC_NEW(MixtureSpec);
-	MS->pures = npure;
-	MS->Xs = Xs;
-	MS->PF = PF; */
+	/* MSG_MARK("5"); */
 
 	for(i=0;i<npure;i++){
 		MSG("Fluid number %u at %p is %s, modeled with %u"
 				, i, MS->PF[i], MS->PF[i]->name, MS->PF[i]->type);
 	}
 }
-
-#if 0
-/*
-	Add several fluids to a MixtureSpec, 
- */
-void mixture_fluid_spec(MixtureSpec *MS, unsigned npure, void **fluids, char *type, char **source, MixtureError *merr){
-	unsigned i;
-
-	if(0==strcmp(type, "ideal")){ /* model fluids with ideal-gas equation of state */
-		EosData **ig_fluids = (EosData **)fluids;
-		ReferenceState ref = {FPROPS_REF_REF0};
-
-		for(i=0;i<npure;i++){
-			MS->PF[i] = ideal_prepare(ig_fluids[i], &ref);
-		}
-	}else{ /* use some other equation of state */
-		char **fluid_names = (char **)fluids;
-
-		for(i=0;i<npure;i++){
-			MS->PF[i] = fprops_fluid(fluid_names[i],type,source[i]);
-			MSG("Prepared fluid %s", fluid_names[i]);
-		}
-	}
-}
-#endif
 

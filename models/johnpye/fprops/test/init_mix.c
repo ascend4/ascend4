@@ -26,7 +26,9 @@
 	ideal-mixture case.
  */
 
-#include "../mixtures/init_mixfuncs.h"
+/* #include "../mixtures/init_mixfuncs.h" */
+#include "../mixtures/mixture_struct.h"
+#include "../mixtures/mixture_properties.h"
 #include "../mixtures/mixture_prepare.h"
 #include "../mixtures/mixture_phases.h"
 #include "../helmholtz.h"
@@ -40,6 +42,45 @@
 #include <stdio.h>
 #include <math.h>
 
+#define PREPARE_TABLE(ROWS,COLS,T_HEAD,T_SIDE,T_VALS,T_FORM,T_CONT) \
+	for(i2=0;i2<COLS-1;i2++){ \
+		T_CONT[0][i2+1] = T_HEAD[i2]; \
+	} \
+	for(i1=0;i1<ROWS;i1++){ \
+		T_CONT[i1][0] = T_SIDE[i1]; \
+	} \
+	for(i1=0;i1<ROWS-1;i1++){ \
+		for(i2=0;i2<COLS-1;i2++){ \
+			/* T_CONT[i1+1][i2+1] = ASC_NEW_ARRAY(char,40); */ \
+			asprintf((T_CONT[i1+1]+i2+1), T_FORM[i1], T_VALS[i1][i2]); \
+			/* snprintf(T_CONT[i1+1][i2+1], 39, T_FORM[i1], T_VALS[i1][i2]); */ \
+			printf("\n%s", T_CONT[i1+1][i2+1]); \
+		} \
+	}
+
+#define PRINT_STR_TABLE(ROWS,COLS,CWIDTH,CELLS) \
+	for(i1=0;i1<COLS;i1++){ \
+		CWIDTH[i1] = 0; \
+	} \
+	for(i1=0;i1<ROWS;i1++){ \
+		for(i2=0;i2<COLS;i2++){ \
+			if(strlen(CELLS[i1][i2])>CWIDTH[i2]){ \
+				CWIDTH[i2] = strlen(CELLS[i1][i2]); \
+				MSG("The length of the string %s is %u", CWIDTH[i2]); \
+			} \
+		} \
+	} \
+	printf("\n"); \
+	for(i1=0;i1<ROWS;i1++){ \
+		for(i2=0;i2<COLS;i2++){ \
+			printf(" %s ", CELLS[i1][i2]); \
+			for(i3=0;i3<(CWIDTH[i2] - strlen(CELLS[i1][i2]));i3++){ \
+				printf("%c", ' '); \
+			} \
+		} \
+		printf("\n"); \
+	}
+
 extern const EosData eos_rpp_nitrogen;
 extern const EosData eos_rpp_ammonia;
 extern const EosData eos_rpp_carbon_dioxide;
@@ -47,8 +88,9 @@ extern const EosData eos_rpp_methane;
 extern const EosData eos_rpp_water;
 
 /* Function prototypes */
-void test_five(double T, double P);
-void test_six(void);
+void test_one(double *T, double *P);
+// void test_five(double T, double P);
+// void test_six(void);
 void test_seven(void);
 
 /*
@@ -68,266 +110,112 @@ void test_seven(void);
 int main(){
 
 	/* Mixing conditions (temperature,pressure), and mass fractions */
-	// double T[]={250, 300, 300, 350, 350, 400, 900};               /* K */
-	// double P[]={1.5e5, 1.5e5, 1.9e5, 1.9e5, 2.1e5, 2.1e5, 3.2e6}; /* Pa */
+	double T[]={250, 300, 300, 350, 350, 400, 900};               /* K */
+	double P[]={1.5e5, 1.5e5, 1.9e5, 1.9e5, 2.1e5, 2.1e5, 3.2e6}; /* Pa */
 
-	/* double rho1[]={
-		2, 3, 2.5, 1.7, 1.9
-	};
-	double rho2[]={
-		1.1, 2, 1.5, 1.7, 1.9
-	}; */
-
-	/* test_one(T, P); */
-	/* test_two(T[1], P[1]); */
-	/* test_three(T[1], rho1); */
-	/* test_four(T[5], P[6]); */
-	/* test_five(270, 1.5e5); */
-	/* test_six(); */
-	test_seven();
+	test_one(T, P);
+	/* test_seven(); */
 
 	return 0;
 } /* end of `main' */
 
 /* Functions to test/demonstrate other functionality */
-void test_five(double T, double P){
-#define NPURE 4
-#define D MS->PF[i]->data
-#define TRIALS 5
-	unsigned i;
-	char *fluids[] = {
-		"isohexane", "krypton", "carbonmonoxide", "ammonia", "water"
+void test_one(double *T, double *P){
+#define NFLUIDS 4
+#define NSIMS 1
+	unsigned i, j; /* counter variable */
+	enum FluidAbbrevs {N2,NH3,CO2,CH4,H2O}; /* fluids that will be used */
+
+	char *fluids[]={
+		"nitrogen", "ammonia", "carbondioxide", "methane", "water"
 	};
-	char *fluid_names[] = {
-		"isohexane", "krypton", "carbon monoxide", "ammonia", "water"
-	};
-	double Xs[] = {0.55, 0.20, 0.10, 0.15, 0.10};
-	char *src[] = {
-		NULL, NULL, NULL, NULL, NULL
-	};
+
+	MixtureSpec *MS = new_MixtureSpec(NFLUIDS);
+	PhaseSpec *PS = new_PhaseSpec(NFLUIDS,3);
 	FpropsError err = FPROPS_NO_ERROR;
 	MixtureError merr = MIXTURE_NO_ERROR;
 
-	MixtureSpec *MS = ASC_NEW(MixtureSpec);
-	MS->pures = NPURE;
-	/* MS->Xs = Xs; */
-	/* MS->PF = ASC_NEW_ARRAY(PureFluid *,NPURE); */
-	/* mixture_fluid_spec(MS, NPURE, (void *)fluids, "pengrob", src, &merr); */
-	mixture_specify(MS, NPURE, Xs, (void *)fluids, "pengrob", src, &merr);
+	const char *source[NFLUIDS] = {NULL};
+	double xs[NFLUIDS];                  /* mass fractions */
+	double props[] = {2, 6, 4, 3, 5};    /* proportions of mass fractions */
+	mixture_x_props(NFLUIDS, xs, props); /* mass fractions from proportions */
 
-	/* for(i=0;i<NPURE;i++){ 
-		MSG("%s T_c = %.2f K, P_c = %.0f Pa", MS->PF[i]->name, D->T_c, D->p_c);
-	} */
+	mixture_specify(MS, NFLUIDS, xs, (const void **) fluids, "pengrob", source, &merr);
 
-	/* declare variables used when finding phase equilibrium */
-	/* double tol = 1.e-5; */
-	double p_sat[NPURE] = {0.0},
-		   T_sat[NPURE] = {0.0};
-	double rho_l[NPURE] = {0.0},  /* liquid-phase densities */
-		   rho_v[NPURE] = {0.0},  /* vapor-phase densities */
-		   /* rho_sc[NPURE] = {0.0}, */ /* supercritical densities */
-		   rho_dummy = 0.0;
-	double p_b[TRIALS] = {0.0},   /* bubble pressure */
-		   p_d[TRIALS] = {0.0};   /* dew pressure */
-	double x_vle[NPURE]           /* overall mole fractions in vapor-liquid equilibrium */
-		   /* , xs[4][NPURE] */;        /* per-phase mole fractions */
-	double x_sum=0.0;             /* sum of mole fractions */
-	double Ts[] = {
-		270
-		, 310
-		, 350
-		, 390
-		, 430
-		, 470
-	};
-
-	MixtureSpec *MS_vle = ASC_NEW(MixtureSpec);
-#define VPURE MS_vle->pures
-#define VXS MS_vle->Xs
-#define VPF MS_vle->PF
-	VPURE = 0;
-	VXS = ASC_NEW_ARRAY(double,NPURE);
-	VPF = ASC_NEW_ARRAY(PureFluid *,NPURE);
-
-	MixtureSpec *MS_sc = ASC_NEW(MixtureSpec);
-#define SPURE MS_sc->pures
-#define SXS MS_sc->Xs
-#define SPF MS_sc->PF
-	SPURE = 0;
-	SXS = ASC_NEW_ARRAY(double,NPURE);
-	SPF = ASC_NEW_ARRAY(PureFluid *,NPURE);
-
-	for(i=0;i<NPURE;i++){
-		if(T < D->T_c){
-			/*
-				We want to find saturation pressure, and densities to use in 
-				calculating compressibilities later on.  Liquid density is at 
-				(T, p_sat), and vapor density is at (T, P).  So the liquid 
-				density that comes out of fprops_sat_T is correct, but the vapor 
-				density may be too high.  We find a more reasonable vapor 
-				density from fprops_sat_p, and can search from there.
-			 */
-			MSG("Adding substance %s to vapor-liquid equilibrium", fluid_names[i]);
-			VPF[VPURE] = MS->PF[i]; /* add new component and mass fraction, in next place */
-			VXS[VPURE] = MS->Xs[i];
-			VPURE ++;               /* increment number of pures in VLE */
-		}else{
-			MSG("Adding substance %s to supercritical phase", fluid_names[i]);
-			SPF[SPURE] = MS->PF[i]; /* add new component and mass fraction, in next place */
-            SXS[SPURE] = MS->Xs[i];
-			SPURE ++;               /* increment number of pures in supercritical condition */
-		}
-		MSG("VPURE = %u, and SPURE = %u; i = %u", VPURE, SPURE, i);
-	}
-	for(i=0;i<VPURE;i++){
-		fprops_sat_T(T, (p_sat+i), (rho_l+i), (rho_v+i), VPF[i], &err);
-		fprops_sat_p(P, (T_sat+i), &rho_dummy, (rho_v+i), VPF[i], &err);
-
-		x_vle[i] /= x_sum;
-	}
-
-	/*
-	for(i=0;i<NPURE;i++){
-		if(rho_v[i]!=0 && rho_l[i]!=0){
-			MSG("Saturation pressure for %s at T=%.2f K is %.0f Pa;"
-					"\n\tliquid density is %.6g kg/m^3"
-					"\n  Saturation temperature at P=%.0f Pa is %.2f K"
-					"\n\tvapor density is %.6g kg/m^3"
-					"\n  Poynting Factor is %.6g"
-					"\n\tliquid-phase fugacity coefficient is %.6g"
-					"\n\tvapor-phase fugacity coefficient is %.6g\n"
-					"\n\tmole fraction is %.6g\n"
-					, fluid_names[i] , T, p_sat[i], rho_l[i]
-					, P, T_sat[i], rho_v[i]
-					, pf_l[i], phi_l[i], phi_v[i], x_vle[i]);
-		}else{
-			MSG("Supercritical density for %s is %.6g kg/m^3;"
-					"\n\tthe calculated pressure from this density is %.0f Pa\n"
-					, fluid_names[i], rho_sc[i]
-					, fprops_p((FluidState){T, rho_sc[i], MS->PF[i]}, &err));
-		}
-	}
-	MSG("Bubble pressure is %.0f Pa,"
-			"\n  Reciprocal dew pressure is %.6g Pa^-1, and dew pressure is %.0f Pa\n"
-			, p_b, rp_d, p_d);
-	*/
-	for(i=0;i<VPURE;i++){
-		MSG("Saturation pressure for %s at T=%.2f K is %.0f Pa;"
-				"\n\tliquid density is %.6g kg/m^3"
-				"\n  Saturation temperature at P=%.0f Pa is %.2f K"
-				"\n\tvapor density is %.6g kg/m^3"
-				"\n"
-				, fluid_names[i], T, p_sat[i], rho_l[i]
-				, P, T_sat[i], rho_v[i]);
-	}
-
-	for(i=0;i<TRIALS;i++){
-		p_d[i] = dew_pressure(MS_vle, Ts[i], &err);
-		p_b[i] = bubble_pressure(MS_vle, Ts[i], &err);
-	}
-	/* p_d = dew_pressure(MS_vle, T, &err);
-	p_b = bubble_pressure(MS_vle, T, &err);
-	MSG("Dew pressure is %.0f Pa", p_d);
-	MSG("\n  Bubble pressure is %.0f Pa", p_b);
-	puts(""); */
-	for(i=0;i<TRIALS;i++){
-		MSG("At temperature %.2f K, dew pressure is %.0f Pa, bubble pressure is %.0f Pa"
-				, Ts[i], p_d[i], p_b[i]);
-	}
-	puts("");
-#undef SPF
-#undef SXS
-#undef SPURE
-#undef VPF
-#undef VXS
-#undef VPURE
-
-#undef D
-#undef NPURE
-}
-
-void test_six(void){
-#define NPURE 2
-#define C_PURE 0
-#define NROWS 14
-#define NCOLS 9
-#define D MS->PF[i]->data
-	unsigned i1=0,i2=0,i3=0;
-	double T,rho;
-	char *fluids[] = {
-		"isohexane", "ammonia"
-	};
-	/* char *fluid_names[] = {
-		"isohexane", "ammonia"
-	}; */
-	double Xs[] = {0.55, 0.20, 0.10, 0.15, 0.10};
-	char *src[] = {
-		NULL, NULL, NULL, NULL, NULL
-	};
-	FpropsError err = FPROPS_NO_ERROR;
-	MixtureError merr = MIXTURE_NO_ERROR;
-
-	MixtureSpec *MS = ASC_NEW(MixtureSpec);
-	/* MS->pures = NPURE; */
-	/* MS->Xs = Xs; */
-	/* MS->PF = ASC_NEW_ARRAY(PureFluid *,NPURE); */
-	/* mixture_fluid_spec(MS, NPURE, (void *)fluids, "pengrob", src, &merr); */
-	mixture_specify(MS, NPURE, Xs, (void *)fluids, "pengrob", src, &merr);
-
-	double P[NROWS][NCOLS];
-	char *heads[NCOLS]
-		, *sides[NROWS+1]
-#if 0
-		, *forms[NROWS] = {"%.6g"}
-		, *conts[NROWS+1][NCOLS+1]
+	double rho_mix[NSIMS] = {0}
+		, u_mix[NSIMS] = {0}
+		, h_mix[NSIMS] = {0}
+		/* , cp_mix[NSIMS]
+		, cv_mix[NSIMS]
+		, s_mix[NSIMS]
+		, g_mix[NSIMS]
+		, a_mix[NSIMS] */
 		;
-	unsigned widths[NCOLS]
-		, temp_len /* temporary string length */
-#endif
+	double rhos[NSIMS][3] = {{0}}
+		, u_ph[NSIMS][3] = {{0}}
+		, h_ph[NSIMS][3] = {{0}}
 		;
-	sides[0] = "";
 
-	for(rho=1.0,i1=0;rho<5200.0;rho*=1.9,i1++){
-#if 0
-		MSG("Modeling substance %s at density %.6g kg/m^3", MS->PF[C_PURE]->name, rho);
-		if((temp_len = asprintf((sides+i1+1), "rho=%.2f", rho)) < 1 || temp_len > 100){
-			sides[i1] = "";
+	int usr_cont=1;
+	double tol = 1e-9;
+	char temp_str[100];
+	char *headers[NSIMS];
+
+#define MIXTURE_CALC(PROP) mixture_##PROP(&PM, PROP##_ph[i], &err)
+	for(i=0;i<NSIMS;i++){
+		mixture_flash(PS, MS, T[i], P[i], &err); /* flash mixture, obtaining phases */
+		mixture_rhos_sat(PS, T[i], P[i], &err);  /* find densities in each phase */
+
+		/*
+			Check that user wants to continue (user can interrupt simulation if 
+			bad results were encountered)
+		 */
+		printf("\n  %s\n\t%s\n\t%s",
+				"Continue to calculate and print solution properties?",
+				"0 - No", "1 - Yes");
+		do{
+			printf("\n    %s ", "Choice?");
+			fgets(temp_str, 100, stdin);
+		}while((1 != sscanf(temp_str, "%i", &usr_cont) || (0>usr_cont || 1<usr_cont)) 
+				&& printf("\n  %s", "You must enter either 0 or 1"));
+		if(1!=usr_cont){
+			break;
 		}
-		MSG("Length of output string was %u", temp_len);
-#endif
-		asprintf((sides+i1+1), "rho=%.2f", rho);
 
-		for(T=100.0,i2=0;T<=500.0;T+=50.0,i2++){
-			/* printf("\n\tat temperature %.2f K", T); */
-			if(i1==0){
-#if 0
-				if((temp_len = asprintf((heads+i2), "T=%.6g", T)) < 1 || temp_len > 100){
-					heads[i2] = "";
-				}
-				printf("\n\t  length of output string was %u", temp_len);
-#endif
-				asprintf((heads+i2), "T=%.6g", T);
-			}
+		/* Calculate solution properties */
+		PhaseMixState PM = {
+			.T = T[i]
+			, .p = P[i]
+			, .PS = PS
+			, .MS = MS
+		};
+		rho_mix[i] = mixture_rho(&PM, rhos[i]);
+		u_mix[i] = MIXTURE_CALC(u);
+		h_mix[i] = MIXTURE_CALC(h);
+		/* cp_mix[i] = MIXTURE_CALC(cp);
+		cv_mix[i] = MIXTURE_CALC(cv);
+		s_mix[i] = MIXTURE_CALC(s);
+		g_mix[i] = MIXTURE_CALC(g);
+		a_mix[i] = MIXTURE_CALC(a); */
 
-			P[i1][i2] = fprops_p((FluidState){T, rho, MS->PF[C_PURE]}, &err);
-			if(err==FPROPS_RANGE_ERROR){
-				/* printf("\n  Error in range"); */
-			}
-			err = FPROPS_NO_ERROR;
+		/* Fill in header */
+		/* headers[i] = ASC_NEW_ARRAY(char,40); */
+		/* snprintf(headers[i], 40, "[T=%.1f K, P=%.2f bar]", T[i], P[i]/1.e5); */
+	}
+#undef MIXTURE_CALC
+
+	for(i=0;i<NSIMS;i++){ 
+		MSG("At T=%.1f K, P=%.0f Pa, the overall density is %g kg/m^3"
+				, T[i], P[i], rho_mix[i]);
+		MSG("  The overall internal energy is %g J/kg, and enthalpy is %g J/kg"
+				, u_mix[i], h_mix[i]);
+		for(j=0;j<3;j++){
+			MSG("\tFor phase number %u, the phase density is %g kg/m^3", j, rhos[i][j]);
+			MSG("\t  The phase internal energy is %g J/kg, and enthalpy is %g J/kg"
+					, u_ph[i][j], h_ph[i][j]);
 		}
 	}
-
-	/* PREPARE_TABLE(NROWS+1,NCOLS+1,heads,sides,P,forms,conts); */
-	for(i1=0;i1<NROWS;i1++){
-		for(i2=0;i2<NCOLS;i2++){
-			MSG("%s\t%s\t%.6g", sides[i1+1], heads[i2], P[i1][i2]);
-		}
-	}
-	puts("");
-	/* PRINT_STR_TABLE(NROWS+1,NCOLS+1,widths,conts); */
-
-#undef D
-#undef NPURE
+	/* print_cases_properties(NSIMS, headers, rho_mix, Ps, u_mix, h_mix, cp_mix, cv_mix, s_mix, g_mix, a_mix); */
 }
 
 void test_seven(void){
@@ -342,7 +230,7 @@ void test_seven(void){
 	double props[] = {11, 4, 2, 3, 2};
 	double Xs[NPURE];
 	mixture_x_props(NPURE, Xs, props);
-	char *src[NPURE] = {NULL};
+	const char *src[NPURE] = {NULL};
 	FpropsError err = FPROPS_NO_ERROR;
 	MixtureError merr = MIXTURE_NO_ERROR;
 
@@ -553,7 +441,7 @@ void test_seven(void){
 				printf("\n\t%.6g of total moles are in %s phase"
 						, PFRAC[i], (PTYPE[i]==SUPERCRIT) ? "supercritical" :
 						(PTYPE[i]==VAPOR) ? "vapor" : "liquid");
-				for(j=0;j<PPH[i]->ncomps;j++){
+				for(j=0;j<PPH[i]->pures;j++){
 					printf("\n\t  mass fraction of %s in this phase is  %.6g"
 							, PPH[i]->PF[j]->name, PPH[i]->Xs[j]);
 					printf("\n\t   mole fraction of %s in this phase is %.6g"

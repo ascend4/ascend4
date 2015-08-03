@@ -44,7 +44,7 @@
 #include <ascend/compiler/arrayinst.h>
 
 /* Code that is wrapped */
-#include "mixtures/init_mixfuncs.h"
+#include "mixtures/mixture_properties.h"
 #include "mixtures/mixture_generics.h"
 #include "mixtures/mixture_prepare.h"
 
@@ -66,6 +66,11 @@ ExtBBoxFunc mixture_rho_calc;
  */
 static symchar *mix_symbols[5];
 enum Symbol_Enum {NPURE_SYM, COMP_SYM, X_SYM, TYPE_SYM, SOURCE_SYM};
+
+typedef struct UserData_Struct {
+	MixtureSpec *MS;
+	struct Instance *xinst;
+} UsrData;
 
 static const char *mixture_p_help = "Calculate pressure for the mixture, using ideal solution assumption, and report if pressure is inconsistent among the densities";
 static const char *mixture_rho_help = "Calculate overall density of the solution, using ideal-solution assumption";
@@ -107,6 +112,8 @@ extern ASC_EXPORT int mixture_register(){
 	Function which prepares persistent data
  */
 int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct gl_list_t *arglist){
+
+#define II i+1 /* index increased by one, counts from one for Instance children */
 
 #define CHECK_TYPE(VAR,TYPE,NAME,TYPENAME) \
 	if(InstanceKind(VAR)!=TYPE){ \
@@ -150,9 +157,9 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	const struct gl_list_t *comps_gl;
 	const struct gl_list_t *xs_gl;
 	const char *type = NULL
+		, **comps = ASC_NEW_ARRAY(const char *, npure)
 		, **srcs = ASC_NEW_ARRAY(const char *, npure);
-	struct SymbolInstance **comps;
-	struct RealInstance **xs;
+	double *xs = ASC_NEW_ARRAY(double, npure);
 
 	/* Component names -- required */
 	compinst = ChildByChar(data, mix_symbols[COMP_SYM]);
@@ -202,6 +209,7 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	CHECK_EXIST_TYPE(xinst, ARRAY_INT_INST, "xinst"
 			, "array indexed with integers");
 	xs_gl = ARY_INST(xinst)->children;
+	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The pointer to the instance 'xs' is %p", xinst);
 
 	/*
 		Check that the lengths of the arrays 'comps_gl' and 'xs_gl' are equal, 
@@ -242,27 +250,31 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 
 	ERROR_REPORTER_HERE(ASC_USER_NOTE, "Mark 1");
 
-	/* Read contents of 'comps_gl' and 'xs_gl' into 'comps' and 'xs' */
-	comps = (struct SymbolInstance **) comps_gl->data;
-	xs    = (struct RealInstance **) xs_gl->data;
-	/* for(i=0;i<npure;i++){
-		
-	} */
+	/* Read contents of 'comps_gl' and 'xs_gl' into 'comps_child' and 'xs_child' */
+	for(i=0;i<npure;i++){
+		comps[i] = SCP(SYMC_INST(InstanceChild(compinst, II))->value);
+		xs[i] = RC_INST(InstanceChild(xinst, II))->value;
+		/* xs[i] = 0.0; */
+	}
 
 	/* Create mixture specification in a MixtureSpec struct */
 	MixtureSpec *MS = ASC_NEW(MixtureSpec);
 	MixtureError merr = MIXTURE_NO_ERROR;
+
+#if 1
 	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The location of the MixtureSpec is %p", MS);
 	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The number of components is %u", npure);
-	ERROR_REPORTER_HERE(ASC_USER_NOTE, "  from 'comps', is %lu", comps_gl->length);
-	ERROR_REPORTER_HERE(ASC_USER_NOTE, "  from 'xs', is %lu", xs_gl->length);
+	ERROR_REPORTER_HERE(ASC_USER_NOTE, "  -- from 'comps_gl', is %lu", comps_gl->length);
+	ERROR_REPORTER_HERE(ASC_USER_NOTE, "  -- from 'xs_gl', is %lu", xs_gl->length);
 	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The equation of state used is %s", NULL_STR(type));
 	for(i=0;i<npure;i++){
 		ERROR_REPORTER_HERE(ASC_USER_NOTE
-				, "For the component %i (type %i), the source is %s" 
-				, /* SCP(comps[i]->value) */ i, comps[i]->t, NULL_STR(srcs[i]));
+				, "\tFor component #%i, %s, the source is %s and the mass fraction is %g"
+				, i, comps[i], NULL_STR(srcs[i]), xs[i]);
 	}
-	/* mixture_specify(MS, npure, (const double *)xs, (const void **)comps, type , srcs, &merr); */
+#endif
+
+	mixture_specify(MS, npure, xs, (const void **)comps, type, srcs, &merr);
 	bbox->user_data = (void *) MS;
 
 	return 0;
@@ -287,7 +299,7 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	if(bbox==NULL){ \
 		return -5; \
 	} \
-	const MixtureSpec *MX = (const MixtureSpec *)bbox->user_data; \
+	/* const MixtureSpec *MX = (const MixtureSpec *)bbox->user_data;  */\
 	FpropsError err=FPROPS_NO_ERROR;
 
 int mixture_p_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
@@ -306,10 +318,24 @@ int mixture_rho_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 		double *inputs, double *outputs, double *jacobian){
 	CALCPREP(2,1);
 
-	ERROR_REPORTER_HERE(ASC_USER_NOTE
-			, "Function 'mixture_rho_calc' -- this function has no contents as yet.");
+	/* ERROR_REPORTER_HERE(ASC_USER_NOTE
+			, "Function 'mixture_rho_calc' -- this function has no contents as yet."); */
 
-	outputs[0] = 0.0;
+	unsigned i;
+	MixtureSpec *MS = (MixtureSpec *) bbox->user_data;
+
+	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The number of pures is %u", MS->pures);
+	for(i=0;i<MS->pures;i++){
+		ERROR_REPORTER_HERE(ASC_USER_NOTE, "Mass fraction number %u is %g"
+				, i+1, MS->Xs[0]);
+	}
+
+	double T = inputs[0]
+		, p = inputs[1]
+		;
+	PhaseMixSpec *M = ASC_NEW(PhaseMixSpec);
+
+	outputs[0] = mixture_rho(M);
 
 	return 0;
 }

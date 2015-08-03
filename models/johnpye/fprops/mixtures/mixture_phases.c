@@ -25,7 +25,9 @@
 	handle only supercritical (gas/fluid), vapor, and liquid phases.
  */
 
+#include "mixture_struct.h"
 #include "mixture_phases.h"
+#include "mixture_properties.h"
 #include "../helmholtz.h"
 #include "../pengrob.h"
 #include "../fluids.h"
@@ -327,16 +329,16 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 #define PPH PS->PH
 	MSG("Entered the function");
 	unsigned i, j
-		, i_v = 0         /* indices of vapor, liquid, supercritical phases in PS */
+		, i_v = 0          /* indices of vapor, liquid, supercritical phases in PS */
 		, i_l = 0
 		, i_sc = 0
 		;
-	int flag_sc = 0       /* encountered any supercritical components? */
-		, flag_vle = 0    /* encountered any subcritical components? */
+	int flag_sc = 0        /* encountered any supercritical components? */
+		, flag_vle = 0     /* encountered any subcritical components? */
 		;
-	double p_b, p_d       /* bubble and dew pressures */
-		, xs_ph[2], mm[2] /* mole fractions & molar masses of super/subcritical phases */
-		, rho_d[2]        /* density used in finding the saturation pressure */
+	double p_b, p_d, p_sat /* bubble, dew, and (throwaway) saturation pressures */
+		, xs_ph[2], mm[2]  /* mole fractions & molar masses of super/subcritical phases */
+		, rho_d[2]         /* density used in finding the saturation pressure */
 		, tol = MIX_XTOL
 		;
 
@@ -345,11 +347,12 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 	PPH = ASC_NEW_ARRAY(Phase *,3);
 	for(i=0;i<3;i++){
 		PPH[i] = ASC_NEW(Phase);
-		PPH[i]->ncomps = 0;
+		PPH[i]->pures = 0;
 		PPH[i]->c  = ASC_NEW_ARRAY(unsigned,NPURE);
 		PPH[i]->Xs = ASC_NEW_ARRAY(double,NPURE);
 		PPH[i]->xs = ASC_NEW_ARRAY(double,NPURE);
 		PPH[i]->PF = ASC_NEW_ARRAY(PureFluid *,NPURE);
+		PPH[i]->rhos = ASC_NEW_ARRAY(double,NPURE);
 	}
 	NPHASE = 0;
 
@@ -372,11 +375,11 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 			NPHASE += (flag_vle) ? 0 : 1;
 
 			PTYPE[i_v] = VAPOR;
-			PPH[i_v]->c[PPH[i_v]->ncomps] = i;
-			PPH[i_v]->Xs[PPH[i_v]->ncomps] = MXS[i];
-			PPH[i_v]->PF[PPH[i_v]->ncomps] = MPF[i];
+			PPH[i_v]->c[PPH[i_v]->pures] = i;
+			PPH[i_v]->Xs[PPH[i_v]->pures] = MXS[i];
+			PPH[i_v]->PF[PPH[i_v]->pures] = MPF[i];
 
-			PPH[i_v]->ncomps ++;
+			PPH[i_v]->pures ++;
 
 			flag_vle = 1;
 		}else{
@@ -388,10 +391,10 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 			NPHASE += (flag_sc) ? 0 : 1;
 
 			PTYPE[i_sc] = SUPERCRIT;
-			PPH[i_sc]->c[PPH[i_sc]->ncomps] = i;
-			PPH[i_sc]->Xs[PPH[i_sc]->ncomps] = MXS[i];
-			PPH[i_sc]->PF[PPH[i_sc]->ncomps] = MPF[i];
-			PPH[i_sc]->ncomps ++;
+			PPH[i_sc]->c[PPH[i_sc]->pures] = i;
+			PPH[i_sc]->Xs[PPH[i_sc]->pures] = MXS[i];
+			PPH[i_sc]->PF[PPH[i_sc]->pures] = MPF[i];
+			PPH[i_sc]->pures ++;
 
 			flag_sc = 1;
 		}
@@ -421,8 +424,8 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 		/*
 			Determine values of 'PFRAC', the fraction of system mass in each phase
 		 */
-		PFRAC = ASC_NEW_ARRAY(double,2);
-		for(i=0;i<PPH[i_sc]->ncomps;i++){
+		/* PFRAC = ASC_NEW_ARRAY(double,2); */
+		for(i=0;i<PPH[i_sc]->pures;i++){
 			PFRAC[i_sc] += PPH[i_sc]->Xs[i]; /* supercritical phase */
 		}
 		PFRAC[i_v] = 1.0 - PFRAC[i_sc];       /* subcritical phase(s) */
@@ -437,10 +440,10 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 			fraction of each phase within the overall mixture.
 		 */
 		for(i=0;i<NPHASE;i++){ 
-			mixture_x_props(PPH[i]->ncomps, PPH[i]->Xs, PPH[i]->Xs);
+			mixture_x_props(PPH[i]->pures, PPH[i]->Xs, PPH[i]->Xs);
 		}
-		mm[0] = mixture_M_avg(PPH[0]->ncomps, PPH[0]->Xs, PPH[0]->PF);
-		mm[1] = mixture_M_avg(PPH[1]->ncomps, PPH[1]->Xs, PPH[1]->PF);
+		mm[0] = mixture_M_avg(PPH[0]->pures, PPH[0]->Xs, PPH[0]->PF);
+		mm[1] = mixture_M_avg(PPH[1]->pures, PPH[1]->Xs, PPH[1]->PF);
 		xs_ph[0] = PFRAC[0] / mm[0] / ((PFRAC[0] / mm[0]) + (PFRAC[1] / mm[1]));
 		xs_ph[1] = PFRAC[1] / mm[1] / ((PFRAC[0] / mm[0]) + (PFRAC[1] / mm[1]));
 
@@ -451,8 +454,8 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 			Obtain mole fractions for the supercritical and subcritical phases 
 			(subcritical phase is represented by the vapor).
 		 */
-		mole_fractions(PPH[i_v]->ncomps, PPH[i_v]->xs, PPH[i_v]->Xs, PPH[i_v]->PF);
-		mole_fractions(PPH[i_sc]->ncomps, PPH[i_sc]->xs, PPH[i_sc]->Xs, PPH[i_sc]->PF);
+		mole_fractions(PPH[i_v]->pures, PPH[i_v]->xs, PPH[i_v]->Xs, PPH[i_v]->PF);
+		mole_fractions(PPH[i_sc]->pures, PPH[i_sc]->xs, PPH[i_sc]->Xs, PPH[i_sc]->PF);
 #if 1
 		MSG("\tSupercritical molar mass is %.6g,   \tsubcritical molar mass is %.6g"
 				, mm[i_sc], mm[i_v]);
@@ -460,7 +463,7 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 				, PFRAC[i_sc], PFRAC[i_v]);
 		for(i=0;i<NPHASE;i++){ 
 			MSG("For %s phase", (PTYPE[i]==SUPERCRIT) ? "supercritical" : "subcritical");
-			for(j=0;j<PPH[i]->ncomps;j++){
+			for(j=0;j<PPH[i]->pures;j++){
 				MSG("\tmass fraction of %s is %.6g"
 						, PPH[i]->PF[j]->name, PPH[i]->Xs[j]);
 				MSG("\t mole fraction of %s is %.6g"
@@ -482,9 +485,9 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 		/*
 			Declare arrays sized to the subcritical phase(s)
 		 */
-		double phi_v[PPH[i_v]->ncomps]
-			, p_sat[PPH[i_v]->ncomps]
-			, K[PPH[i_v]->ncomps]
+		double phi_v[PPH[i_v]->pures]
+			, p_sat[PPH[i_v]->pures]
+			, K[PPH[i_v]->pures]
 			;
 
 		/*
@@ -492,7 +495,7 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 			structures for supercritical and subcritical phases.
 		 */
 		MixtureSpec MS_temp = {
-			PPH[i_v]->ncomps
+			PPH[i_v]->pures
 			, PPH[i_v]->xs
 			, PPH[i_v]->PF
 		};
@@ -516,7 +519,7 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 			i_l = i_v + 1;
 			PTYPE[i_l] = LIQUID;
 
-			PPH[i_l]->ncomps = PPH[i_v]->ncomps;
+			PPH[i_l]->pures = PPH[i_v]->pures;
 			PPH[i_l]->c = PPH[i_v]->c;
 			PPH[i_l]->PF = PPH[i_v]->PF;
 
@@ -525,12 +528,12 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 				structure and array of vapor fractions.  Use these to calculate 
 				flash conditions.
 			 */
-			for(i=0;i<PPH[i_v]->ncomps;i++){
+			for(i=0;i<PPH[i_v]->pures;i++){
 				fprops_sat_T(T, (p_sat+i), (rho_d), (rho_d+1), PPH[i_v]->PF[i], err);
 				phi_v[i] = pengrob_phi_pure(PPH[i_v]->PF[i], T, p_b, VAPOR, err);
 				K[i] = p_sat[i] / (phi_v[i] * P);
 			}
-			RRData RR = {PPH[i_v]->ncomps, PPH[i_v]->xs, K};
+			RRData RR = {PPH[i_v]->pures, PPH[i_v]->xs, K};
 			double V[] = {0.5, 0.51};
 
 			secant_solve(&rachford_rice, &RR, V, tol);
@@ -538,7 +541,7 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 			PFRAC[i_l] = PFRAC[i_v] * (1 - V[0]);
 			PFRAC[i_v] *= V[0];
 
-			for(i=0;i<PPH[i_v]->ncomps;i++){
+			for(i=0;i<PPH[i_v]->pures;i++){
 				PPH[i_l]->xs[i] = PPH[i_v]->xs[i] / (1 + V[0]*(K[i] - 1));
 				PPH[i_v]->xs[i] *= K[i] / (1 + V[0]*(K[i] - 1));
 			}
@@ -548,22 +551,22 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 				supercritical phase already has correct mass fractions
 			 */
 			/* double xm_sum[3] = {0.0};
-			for(i=0;i<PPH[i_v]->ncomps;i++){
+			for(i=0;i<PPH[i_v]->pures;i++){
 				xm_sum[i_v] += PPH[i_v]->xs[i] * PPH[i_v]->PF[i]->data->M;
 				xm_sum[i_l] += PPH[i_l]->xs[i] * PPH[i_l]->PF[i]->data->M;
 			}
-			for(i=0;i<PPH[i_v]->ncomps;i++){
+			for(i=0;i<PPH[i_v]->pures;i++){
 				PPH[i_v]->Xs[i] = PPH[i_v]->xs[i] * PPH[i_v]->PF[i]->data->M / xm_sum[i_v];
 				PPH[i_l]->Xs[i] = PPH[i_l]->xs[i] * PPH[i_l]->PF[i]->data->M / xm_sum[i_l];
 			} */
-			mass_fractions(PPH[i_v]->ncomps, PPH[i_v]->Xs, PPH[i_v]->xs, PPH[i_v]->PF);
-			mass_fractions(PPH[i_l]->ncomps, PPH[i_l]->Xs, PPH[i_l]->xs, PPH[i_l]->PF);
+			mass_fractions(PPH[i_v]->pures, PPH[i_v]->Xs, PPH[i_v]->xs, PPH[i_v]->PF);
+			mass_fractions(PPH[i_l]->pures, PPH[i_l]->Xs, PPH[i_l]->xs, PPH[i_l]->PF);
 		}
 	}
 	if(PTYPE[0]==SUPERCRIT){
 		;
 	}
-
+	/* mixture_rhos_sat(PS, T, P, err); */
 
 #if 1
 	MSG("At temperature %.2f K and pressure %.0f Pa, there are %u phases;"
@@ -572,7 +575,7 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 		MSG("\t%.6g of total moles are in %s phase"
 				, PFRAC[i], (PTYPE[i]==SUPERCRIT) ? "supercritical" :
 				(PTYPE[i]==VAPOR) ? "vapor" : "liquid");
-		for(j=0;j<PPH[i]->ncomps;j++){
+		for(j=0;j<PPH[i]->pures;j++){
 			MSG("\t  mole fraction of %s in this phase is  %.6g"
 					, PPH[i]->PF[j]->name, PPH[i]->xs[j]);
 			MSG("\t   mass fraction of %s in this phase is %.6g"

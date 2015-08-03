@@ -17,6 +17,7 @@ coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'peng
 	, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c', 'fluids.c','cp0.c'
 	, 'zeroin.c','cubicroots.c', 'visc.c', 'thcond.c', 'mixtures/init_mixfuncs.c'
 	, 'mixtures/mixture_prepare.c', 'mixtures/mixture_generics.c', 'mixtures/mixture_phases.c'
+	, 'mixtures/mixture_struct.c', 'mixtures/mixture_properties.c'
 ]
 
 srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']

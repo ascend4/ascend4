@@ -4,6 +4,10 @@ REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "johnpye/fprops/mixture";
 
+CONSTANT mass_fraction_constant
+REFINES real_constant DIMENSIONLESS;
+
+
 (*  The mixture_spec model specifies the composition of the         ///1
 	mixture.
 
@@ -27,8 +31,7 @@ MODEL mixture_spec; (* ///1 *)
 	npure IS_A integer_constant;
 
 	components[1 .. npure] IS_A symbol_constant;
-	(*components[1 .. npure] IS_A integer_constant;*)
-	xs[1 .. npure] IS_A mass_fraction;
+	xs[1 .. npure] IS_A mass_fraction_constant;
 	eos IS_A symbol_constant;
 
 METHODS
@@ -68,6 +71,9 @@ MODEL mixture_test; (* ///1 *)
 	mixt.components[2] :== 'carbondioxide';
 	mixt.components[3] :== 'cyclohexane';
 	mixt.eos :== 'pengrob';
+	mixt.xs[1] :== 0.4;
+	mixt.xs[2] :== 0.35;
+	mixt.xs[3] :== 0.25;
 
 	mix_density : mixture_rho(
 		T, p : INPUT;
@@ -75,21 +81,17 @@ MODEL mixture_test; (* ///1 *)
 		mixt : DATA
 	);
 
-	rho = p * T;
+	(* rho = p * T; *)
 
 METHODS
 METHOD specify; (* ///2 *)
 	RUN mixt.specify;
 	FIX T;
 	FIX p;
-	FIX rho;
 END specify;
 METHOD values; (* ///2 *)
 	T := 300 {K} + 273.15 {K};
 	p := 2 {bar};
-	mixt.xs[1] := 0.4;
-	mixt.xs[2] := 0.35;
-	mixt.xs[3] := 0.25;
 END values;
 METHOD options; (* ///2 *)
 	SOLVER QRSlv;

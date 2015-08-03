@@ -39,6 +39,15 @@
 #include <math.h>
 
 /* Mixture-Preparation Functions */
+#if 1
+#define TT M->T
+#define RHOS M->rhos
+#define NPURE M->X->pures
+#define PF M->X->PF
+#define XS M->X->Xs
+#endif
+
+#if 0
 /* 
 	Calculate ideal-gas densities `rho_out' from the temperature and pressure 
 	(used as starting densities for other routines)
@@ -46,18 +55,20 @@
 	Specifically, these densities may be useful if T > T_c (critical 
 	temperature), and P < P_c (sub-critical pressure).
  */
-void ig_rhos(MixtureState *M, double P, char **Names){
+void ig_rhos(MixtureState *M, double P){
 	unsigned i; /* counter variable */
 
+#if 1
 #define TT M->T
 #define RHOS M->rhos
 #define NPURE M->X->pures
 #define PF M->X->PF
+#endif
 	for(i=0;i<NPURE;i++){
 		RHOS[i] = P / PF[i]->data->R / TT;
 		// printf("\n  " TITLE "The ideal-gas mass density of %s is :  %.4f kg/m3"
-		// 		, Names[i], RHOS[i]);
-		MSG("Ideal-gas mass density of %s is :  %.4f kg/m3", Names[i], RHOS[i]);
+		// 		, PF[i]->name, RHOS[i]);
+		MSG("Ideal-gas mass density of %s is :  %.4f kg/m3", PF[i]->name, RHOS[i]);
 	} puts("");
 #if 0
 #undef PF
@@ -72,7 +83,7 @@ void ig_rhos(MixtureState *M, double P, char **Names){
 	temperature and pressure.  Considers whether a substance is in critical or 
 	saturation regions.
  */
-void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
+void initial_rhos(MixtureState *M, double P, FpropsError *err){
 	unsigned i;
 	int Region;
 	/* enum Region_Enum {SUPERCRIT, GASEOUS, LIQUID, VAPOR, SAT_VLE} Region; */
@@ -126,7 +137,8 @@ void initial_rhos(MixtureState *M, double P, char **Names, FpropsError *err){
 				}
 			}
 		}
-		MSG("The substance %s was assigned a density of %.5f kg/m3;", Names[i], RHOS[i]);
+		MSG("The substance %s was assigned a density of %.5f kg/m3;"
+				, PF[i]->name, RHOS[i]);
 		printf("\n\t  it is in the %s region, since"
 				"\n\t\tCritical temperature T_c=%.2f K \tand current temperature T=%.2f K;"
 				"\n\t\tCritical pressure    P_c=%.0f Pa\tand current pressure    P=%.0f Pa."
@@ -166,7 +178,7 @@ double pressure_rho_error(double rho, void *user_data){
 	Calculate realistic densities `rho_out' in ideal-solution, such that 
 	densities are consistent with the given temperature and pressure
  */
-void pressure_rhos(MixtureState *M, double P, double tol, /* char **Names, */ FpropsError *err){
+void pressure_rhos(MixtureState *M, double P, double tol, FpropsError *err){
 	/*
 		Find actual density by searching for the individual densities which 
 		each satisfy the equation P_i(T, \rho_i) = P, starting from ideal-gas 
@@ -236,7 +248,7 @@ double energy_p_error(double P, void *user_data){
 	The uniform-pressure condition (1) is satisfied automatically by using a 
 	single pressure to find densities.
  */
-void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError *err){
+void densities_to_mixture(MixtureState *M, double tol, FpropsError *err){
 #define XS M->X->Xs
 	unsigned i;
 	double u_avg = mixture_u(M, err); /* original average internal energy */
@@ -279,8 +291,10 @@ void densities_to_mixture(MixtureState *M, double tol, char **Names, FpropsError
 		better.
 	 */
 }
+#endif
 
 /* Mixture-Property Functions */
+#if 0
 /*
 	Calculate overall mass density of a mixture of components
 
@@ -360,6 +374,7 @@ double mixture_h(MixtureState *M, FpropsError *err){
 	}
 	return h_mix;
 }
+#endif
 
 /* 
 	Calculate overall ideal-solution constant-pressure heat capacity (per unit 
@@ -525,6 +540,7 @@ double mixture_a(MixtureState *M, FpropsError *err){
 }
 
 /* Mixture-Display Functions */
+#if 0
 /*
 	Print properties of a mixture, with correct formatting
  */
@@ -623,4 +639,4 @@ void print_cases_properties(unsigned cases, char **headers, double *rhos, double
 
 #undef TBL_ROWS
 }
-
+#endif
