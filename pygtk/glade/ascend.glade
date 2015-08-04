@@ -2872,7 +2872,6 @@ upper and lower bounds displayed.</property>
             <property name="position">421</property>
             <child>
               <object class="GtkScrolledWindow" id="scrolledwindow11">
-                <property name="height_request">400</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <child>
