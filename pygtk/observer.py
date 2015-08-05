@@ -61,21 +61,31 @@ class ObserverColumn:
 			units = instance.getType().getPreferredUnits()
 		if units is None:
 			units = instance.getType().getDimensions().getDefaultUnits()
-		
+
 		uname = str(units.getName())
+
+		self.units = units
+		self.uname = uname
+
+		##### CELSIUS TEMPERATURE WORKAROUND
+		self.instance = instance
+		if instance.getType().isRefinedReal() and str(instance.getType().getDimensions()) == 'TMP':
+			units = Preferences().getPreferredUnitsOrigin(str(instance.getType().getName()))
+			if units == CelsiusUnits.get_celsius_sign():
+				uname = CelsiusUnits.get_celsius_sign()
+		##### CELSIUS TEMPERATURE WORKAROUND
+
 		if len(uname) or uname.find("/")!=-1:
 			uname = "["+uname+"]"
 
 		if uname == "":
 			_title = "%s" % (name)
 		else:
-			_title = "%s / %s" % (name, uname) 
+			_title = "%s / %s" % (name, uname)
 
 		self.title = _title
-		self.units = units
-		self.uname = uname
 		self.name = name
-	
+
 	def __repr__(self):
 		return "ObserverColumn(name="+self.name+")"
 
@@ -109,7 +119,14 @@ class ObserverColumn:
 				cell.set_property('editable', False)
 			else:
 				cell.set_property('background', None)
-		except IndexError:
+
+			##### CELSIUS TEMPERATURE WORKAROUND
+			if self.instance.getType().isRefinedReal() and str(self.instance.getType().getDimensions()) == 'TMP':
+				units = Preferences().getPreferredUnitsOrigin(str(self.instance.getType().getName()))
+				if units == CelsiusUnits.get_celsius_sign():
+					_dataval = CelsiusUnits.convert_kelvin_to_celsius(_dataval, str(self.instance.getType()))
+			##### CELSIUS TEMPERATURE WORKAROUND
+		except Exception:
 			_dataval = ""
 
 		cell.set_property('text', str(_dataval))
@@ -412,7 +429,7 @@ class ObserverTab:
 			_row = ObserverRow()
 			self.rows.append(_row)
 			if self.activeiter is not None:
-				_oldrow = _store.get_value(self.activeiter,0)
+				_oldrow = _store.get_value(self.activeiter, 0)
 				_oldrow.make_static(self)
 			self.activeiter = _store.append(None,[_row])
 			_path = _store.get_path(self.activeiter)
@@ -426,6 +443,12 @@ class ObserverTab:
 			
 	def on_view_cell_edited(self, renderer, path, newtext, col):
 		# we can assume it's always the self.activeiter that is edited...
+		##### CELSIUS TEMPERATURE WORKAROUND
+		if str(col.instance.getType().getDimensions()) == 'TMP':
+			units = Preferences().getPreferredUnitsOrigin(str(col.instance.getType().getName()))
+			if units == CelsiusUnits.get_celsius_sign() and (len(newtext.split(" ")) == 1 or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign()):
+				newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext.split(" ")[0], str(col.instance.getType()))
+		##### CELSIUS TEMPERATURE WORKAROUND
 		if col.instance.isFixed():
 			val = float(newtext) * col.units.getConversion()
 			col.instance.setRealValue( val )

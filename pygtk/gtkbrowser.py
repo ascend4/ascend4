@@ -830,10 +830,10 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.sim.build()
 			self.enable_on_sim_build()
 		except RuntimeError,e:
-			self.reporter.reportError("Couldn't build system: %s" % str(e));
+			self.reporter.reportError("Couldn't build system: %s" % str(e))
 			return 1
 		
-		return 0;
+		return 0
 
 	def do_solve_update(self, reporter, status):
 		self.solve_interrupt = reporter.report(status)
