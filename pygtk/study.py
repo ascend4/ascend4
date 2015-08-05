@@ -1,6 +1,8 @@
 from gi.repository import Gtk, Gdk
 from gi.repository import Pango
 import ascpy
+from celsiusunits import CelsiusUnits
+from preferences import Preferences
 
 from varentry import *
 from studyreporter import *
@@ -94,8 +96,20 @@ class StudyWin:
 		_arr = {self.lowerb: self.instance.getRealValue()
 			,self.upperb: self.instance.getUpperBound() # this upper bound is probably stoopid
 		}
+
+		##### CELSIUS TEMPERATURE WORKAROUND
+		if self.instance.getType().isRefinedReal() and str(self.instance.getType().getDimensions()) == 'TMP':
+			units = Preferences().getPreferredUnitsOrigin(str(self.instance.getType().getName()))
+			if units == CelsiusUnits.get_celsius_sign():
+				self.convert = True
+		##### CELSIUS TEMPERATURE WORKAROUND
+
 		for _k,_v in _arr.iteritems():
 			_t = str(_v / _conversion)+" "+_u
+			##### CELSIUS TEMPERATURE WORKAROUND
+			if self.convert:
+				_t = CelsiusUnits.convert_kelvin_to_celsius(_v, str(self.instance.getType())) + " " + CelsiusUnits.get_celsius_sign()
+			##### CELSIUS TEMPERATURE WORKAROUND
 			_k.set_text(_t)
 		
 		self.browser.builder.connect_signals(self)
@@ -294,8 +308,10 @@ class StudyWin:
 			entry.set_property("secondary-icon-stock", 'gtk-dialog-error')
 		else:
 			entry.set_property("secondary-icon-stock", 'gtk-yes')
-			entry.set_property("secondary-icon-tooltip-text", "")
-		entry.set_property("secondary-icon-tooltip-text", msg)
+
+		# causes gtk-critical errors
+			# entry.set_property("secondary-icon-tooltip-text", "")
+		# entry.set_property("secondary-icon-tooltip-text", msg)
 
 	def taint_dist(self, good=0, msg=None):
 		"""
@@ -314,8 +330,14 @@ class StudyWin:
 		"""
 		Parse an input box and enforce dimensional agreement with self.instance.
 		"""
+		newtext = entry.get_text()
+		##### CELSIUS TEMPERATURE WORKAROUND
+		if self.convert:
+			if len(newtext) > 0 and (len(newtext.split(" ")) == 1 or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign()):
+				newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext.split(" ")[0], str(self.instance.getType()))
+		##### CELSIUS TEMPERATURE WORKAROUND
 		# FIXME Add missing units if they have not been entered.
-		i = RealAtomEntry(self.instance, entry.get_text())
+		i = RealAtomEntry(self.instance, newtext)
 		_msg = None
 		try:
 			i.checkEntry()
@@ -375,11 +397,11 @@ class StudyWin:
 		# FIXME move following code to the StudyReporter class?
 		i = 0
 		_val = _start
-		while i<=_nsteps and reporter.guiinterrupt == False:
+		while i <= _nsteps and reporter.guiinterrupt is False:
 			# run a method, if requested
 			if self.method:
 				try:
-					_b.sim.run(method)
+					_b.sim.run(self.method)
 				except RuntimeError,e:
 					_b.reporter.reportError(str(e))
 				

@@ -19,15 +19,21 @@ class CelsiusUnits:
 	def convert_celsius_to_kelvin(value, instype):
 		if instype.startswith("delta"):
 			return value
+		try:
+			temp = float(value)
+		except ValueError:
+			return value
 
-		temp = float(value)
 		return str(temp + 273.15)
 
 	@staticmethod
 	def convert_kelvin_to_celsius(value, instype):
 		if instype.startswith("delta"):
 			return value
+		try:
+			temp = float(value)
+		except ValueError:
+			return value
 
-		temp = float(value)
 		return str(temp - 273.15)
 ##### CELSIUS TEMPERATURE WORKAROUND
