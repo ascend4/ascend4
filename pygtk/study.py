@@ -98,6 +98,7 @@ class StudyWin:
 		}
 
 		##### CELSIUS TEMPERATURE WORKAROUND
+		self.convert = False
 		if self.instance.getType().isRefinedReal() and str(self.instance.getType().getDimensions()) == 'TMP':
 			units = Preferences().getPreferredUnitsOrigin(str(self.instance.getType().getName()))
 			if units == CelsiusUnits.get_celsius_sign():

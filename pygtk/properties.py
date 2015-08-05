@@ -108,7 +108,14 @@ class VarPropsWin:
 		self.cliquebutton = self.browser.builder.get_object("cliquebutton"); 
 		self.morepropsbutton = self.browser.builder.get_object("morepropsbutton");
 
+		##### CELSIUS TEMPERATURE WORKAROUND
 		self.convert = False
+		if self.instance.getType().isRefinedReal() and str(self.instance.getType().getDimensions()) == 'TMP':
+			units = Preferences().getPreferredUnitsOrigin(str(self.instance.getType().getName()))
+			if units == CelsiusUnits.get_celsius_sign():
+				self.convert = True
+		##### CELSIUS TEMPERATURE WORKAROUND
+
 		self.fill_values()
 
 		self.browser.builder.connect_signals(self)
@@ -129,13 +136,6 @@ class VarPropsWin:
 			,self.upperentry: self.instance.getUpperBound()
 			,self.nominalentry: self.instance.getNominal()
 		}
-
-		##### CELSIUS TEMPERATURE WORKAROUND
-		if self.instance.getType().isRefinedReal() and str(self.instance.getType().getDimensions()) == 'TMP':
-			units = Preferences().getPreferredUnitsOrigin(str(self.instance.getType().getName()))
-			if units == CelsiusUnits.get_celsius_sign():
-				self.convert = True
-		##### CELSIUS TEMPERATURE WORKAROUND
 
 		for _k,_v in _arr.iteritems():	
 			_t = str(_v / _conversion)+" "+_u
