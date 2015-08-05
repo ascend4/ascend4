@@ -842,6 +842,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 	def do_solve_finish(self, reporter, status):
 		reporter.finalise(status)
 		self.modelview.refreshtree()
+		return False
 
 	def do_solve_thread(self, reporter):
 		try:
@@ -851,7 +852,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				res = self.sim.iterate()
 				status.getSimulationStatus(self.sim)
 				GLib.idle_add(self.do_solve_update, reporter, status)
-				# needed to 'make' some time for gui update
+				# 'make' some time for gui update
 				time.sleep(0.001)
 				if res != 0:
 					break

@@ -53,8 +53,6 @@ class StudyReporter(PythonSolverReporter):
 		self.nsteps = nsteps
 		self.pointsdone = 0
 		self.allconverged = True
-		while Gtk.events_pending():
-			Gtk.main_iteration()
 
 	def on_stopbutton_activate(self,*args):
 		self.guiinterrupt = True
@@ -113,16 +111,12 @@ class StudyReporter(PythonSolverReporter):
 			#print "UPDATING!"
 			self.fill_values(status)
 
-		while Gtk.events_pending():
-			Gtk.main_iteration()
-
 		self.guitime = self.guitime + (time.clock() - _time)
 
-		if status.isConverged() or status.isDiverged() or status.isInterrupted():
-			return 1
 		if self.guiinterrupt:
-			return 2
-		return 0
+			return True
+
+		return False
 	
 	def finalise(self,status):
 		try:

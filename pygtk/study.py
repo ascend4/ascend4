@@ -1,3 +1,5 @@
+import threading
+from gi.overrides import GLib
 from gi.repository import Gtk, Gdk
 from gi.repository import Pango
 import ascpy
@@ -115,6 +117,7 @@ class StudyWin:
 		
 		self.browser.builder.connect_signals(self)
 		self.lowerb.select_region(0, -1)
+		self.solve_interrupt = False
 	
 	def get_step_type(self):
 		_s = self.step_menu.get_active_iter()
@@ -395,44 +398,70 @@ class StudyWin:
 		self.studywin.destroy()
 		reporter = StudyReporter(_b, _b.sim.getNumVars(), self.instance, _nsteps, self)
 
-		# FIXME move following code to the StudyReporter class?
+		self.solve_interrupt = False
+		thread = threading.Thread(target=self.solve_thread, args=(_b, reporter, _start, _step, _nsteps, _dist))
+		thread.daemon = True
+		thread.start()
+
+	def solve_thread(self, browser, reporter, start, step, nsteps, dist):
 		i = 0
-		_val = _start
-		while i <= _nsteps and reporter.guiinterrupt is False:
+		while i <= nsteps and not self.solve_interrupt:
 			# run a method, if requested
 			if self.method:
 				try:
-					_b.sim.run(self.method)
-				except RuntimeError,e:
-					_b.reporter.reportError(str(e))
-				
+					browser.sim.run(self.method)
+				except RuntimeError, e:
+					browser.reporter.reportError(str(e))
+
+			# any issue with accumulation of rounding errors here?
+			if dist == DIST_LOG:
+				_val = exp(log(start) + i * step)
+			else:
+				_val = start + i * step
+
 			# set the value (do it inside the loop to avoid METHOD possibly unfixing)
 			if self.instance.getType().isRefinedSolverVar():
 				# for solver vars, set the 'fixed' flag as well
-				## FIXME this function seems to somehow be repeatedly parsing units: avoid doing that every step.
 				self.instance.setFixedValue(_val)
 			else:
 				# what other kind of variable is it possible to study, if not a solver_var? integer? not suppported?
 				self.instance.setRealValue(_val)
-			
-			#solve
-			# FIXME where is the continue_on_fail thing?
+
+			GLib.idle_add(self.solve_update, reporter, i)
 			try:
-				reporter.updateVarDetails(i)
-				_b.sim.solve(_b.solver, reporter)
-			except RuntimeError,e:
-				_b.reporter.reportError(str(e))
+				browser.sim.presolve(browser.solver)
+				status = browser.sim.getStatus()
+				while status.isReadyToSolve() and not self.solve_interrupt:
+					res = browser.sim.iterate()
+					status.getSimulationStatus(browser.sim)
+					GLib.idle_add(self.solve_update_step, reporter, status)
+					# 'make' some time for gui update
+					time.sleep(0.001)
+					if res != 0:
+						break
+				GLib.idle_add(self.solve_finish_step, reporter, status)
+				browser.sim.postsolve(status)
+			except RuntimeError, err:
+				browser.reporter.reportError(str(err))
 
 			i += 1
-			# any issue with accumulation of rounding errors here?
-			if _dist==DIST_LOG:
-				_val = exp(log(_start)+i*_step)
-			else:
-				_val = _start + i*_step
 
-		if reporter.continue_on_fail == True:
-			reporter.updateVarDetails(i)
-		
-		_b.stop_waiting()
-		_b.modelview.refreshtree()
-		
+		GLib.idle_add(self.solve_update, reporter, i)
+		GLib.idle_add(self.solve_finish, browser)
+
+	def solve_update(self, reporter, i):
+		reporter.updateVarDetails(i)
+		return False
+
+	def solve_update_step(self, reporter, status):
+		self.solve_interrupt = reporter.report(status)
+		return False
+
+	def solve_finish_step(self, reporter, status):
+		reporter.finalise(status)
+		return False
+
+	def solve_finish(self, browser):
+		browser.stop_waiting()
+		browser.modelview.refreshtree()
+		return False
