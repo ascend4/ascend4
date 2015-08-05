@@ -700,6 +700,12 @@ class ObserverTab:
 					name = self.browser.sim.getInstanceName(_col.instance)
 
 				_uname = str(_units.getName())
+				##### CELSIUS TEMPERATURE WORKAROUND
+				if _col.instance.getType().isRefinedReal() and str(_col.instance.getType().getDimensions()) == 'TMP':
+					units = Preferences().getPreferredUnitsOrigin(str(_col.instance.getType().getName()))
+					if units == CelsiusUnits.get_celsius_sign():
+						_uname = CelsiusUnits.get_celsius_sign()
+				##### CELSIUS TEMPERATURE WORKAROUND
 				if len(_uname) or _uname.find("/")!=-1:
 					_uname = "["+_uname+"]"
 

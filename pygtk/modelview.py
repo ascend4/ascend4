@@ -339,7 +339,7 @@ class ModelView:
 			if str(_instance.getType().getDimensions()) == 'TMP':
 				pref = Preferences()
 				units = pref.getPreferredUnitsOrigin(str(_instance.getType().getName()))
-				if units == CelsiusUnits.get_celsius_sign() and (len(newtext.split(" ")) == 1 or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign()):
+				if units == CelsiusUnits.get_celsius_sign() and len(newtext.split(" ")) == 1 or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign():
 					newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext.split(" ")[0], str(_instance.getType()))
 					pref.setPreferredUnits(str(_instance.getType().getName()), CelsiusUnits.get_celsius_sign())
 			##### CELSIUS TEMPERATURE WORKAROUND
@@ -392,8 +392,11 @@ class ModelView:
 
 		if _instance.getType().isRefinedSolverVar():
 			self.modelstore.set_value(_iter,3,BROWSER_FIXED_COLOR) # set the row green as fixed
-		
+
 		self.browser.do_solve_if_auto()
+		for _obs in self.browser.observers:
+			if _obs.alive:
+				_obs.units_refresh(self.get_selected_instance().getType())
 		return True
 
 	##### EXTERNAL RELATION WORKAROUND
