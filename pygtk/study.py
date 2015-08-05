@@ -47,11 +47,13 @@ class StudyWin:
 		_continue_on_fail = _p.getBoolPref("StudyReporter", "continue_on_fail", True)
 		self.checkbutton.set_active(_continue_on_fail)
 
-		# set up the distributions combobox		
-		_cell = Gtk.CellRendererText()
-		self.dist.pack_start(_cell, True)
-		self.dist.add_attribute(_cell, 'text', 0)
-		
+		# set up the distributions combobox
+		dist_model = Gtk.ListStore(str)
+		dist_model.append([DIST_LINEAR])
+		dist_model.append([DIST_LOG])
+		self.dist.set_model(dist_model)
+		self.dist.set_active(0)
+
 		# set up the methods combobox
 		_methodstore = self.browser.methodstore
 		_methodrenderer = Gtk.CellRendererText()
@@ -147,7 +149,9 @@ class StudyWin:
 		return False;
 		
 	def on_methodrun_changed(self, *args):
-		_sel = self.methodrun.get_active_text()
+		index = self.methodrun.get_active()
+		piter = self.methodrun.get_model().get_iter(Gtk.TreePath.new_from_string(str(index)))
+		_sel = self.methodrun.get_model().get_value(piter, 0)
 		if _sel:
 			_methods = self.browser.sim.getType().getMethods()
 			for _m in _methods:
@@ -203,8 +207,6 @@ class StudyWin:
 			if self.get_step_type() == STEP_INCREM:
 				self.set_step_type(STEP_RATIO)
 				flag = 1
-			self.step_menu.remove_text(1)
-			self.step_menu.insert_text(1,"Step ratio")
 			if flag == 1:
 				self.step_menu.set_active(1)
 			if _start == 0 or _end == 0:
