@@ -1,6 +1,6 @@
-import ascpy
-import time
-from gi.repository import Gtk
+from multiprocessing.pool import ThreadPool
+import threading
+from gi.repository import GLib
 from solverreporter import *
 
 class SolverHooksPython(ascpy.SolverHooks):
@@ -44,21 +44,50 @@ class SolverHooksPython(ascpy.SolverHooks):
 class SolverHooksPythonBrowser(SolverHooksPython):
 	def __init__(self,browser):
 		self.browser = browser
+		self.solve_interrupt = False
 		SolverHooksPython.__init__(self)
 	def doSolve(self,inst,sim):
 		try:
 			if self.browser.prefs.getBoolPref("SolverReporter","show_popup",True):
-				reporter = PopupSolverReporter(self.browser,sim.getNumVars())
+				reporter = PopupSolverReporter(self.browser, sim)
 			else:
 				reporter = SimpleSolverReporter(self.browser)
 		except Exception,e:
 			print "PYTHON ERROR:",str(e)
 			return 4
-		try:
-			print "PYTHON: SOLVING",sim.getName(),"WITH",sim.getSolver().getName()
-			sim.solve(sim.getSolver(),reporter)
-		except Exception,e:
-			print "PYTHON ERROR:",str(e)
-			return 3
+
+		print "PYTHON: SOLVING",sim.getName(),"WITH",sim.getSolver().getName()
+		thread = threading.Thread(target=self.do_solve_thread, args=(sim, reporter))
+		thread.daemon = True
+		thread.start()
+		# FIXME improve in case of error in solving
+		# unfortunately there is no possibility to get result from async task without waiting
+		# so we assume everything is fine
 		return 0
 
+	# the same functions like in gtkbrowser, but a little bit other implementation
+	def do_solve_update(self, reporter, status):
+		self.solve_interrupt = reporter.report(status)
+		return False
+
+	def do_solve_finish(self, reporter, status):
+		reporter.finalise(status)
+		return False
+
+	def do_solve_thread(self, sim, reporter):
+		try:
+			sim.presolve(sim.getSolver())
+			status = sim.getStatus()
+			while status.isReadyToSolve() and not self.solve_interrupt:
+				res = sim.iterate()
+				status.getSimulationStatus(sim)
+				GLib.idle_add(self.do_solve_update, reporter, status)
+				# need more time than in gtkbrowser to update gui
+				# probably because it's hook
+				time.sleep(0.02)
+				if res != 0:
+					break
+			GLib.idle_add(self.do_solve_finish, reporter, status)
+			sim.postsolve(status)
+		except Exception, e:
+			print "PYTHON ERROR:", str(e)
