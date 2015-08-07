@@ -294,7 +294,6 @@ void densities_to_mixture(MixtureState *M, double tol, FpropsError *err){
 #endif
 
 /* Mixture-Property Functions */
-#if 0
 /*
 	Calculate overall mass density of a mixture of components
 
@@ -302,7 +301,7 @@ void densities_to_mixture(MixtureState *M, double tol, FpropsError *err){
 
 	@return mass density of mixture
  */
-double mixture_rho(MixtureState *M){
+double amixture_rho(MixtureState *M){
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double vol_mix=0.0; /* volume per unit mass of the mixture, iteratively summed */
@@ -336,7 +335,7 @@ double mixture_rho(MixtureState *M){
 
 	@return ideal-solution internal energy
  */
-double mixture_u(MixtureState *M, FpropsError *err){
+double amixture_u(MixtureState *M, FpropsError *err){
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double u_mix=0.0;   /* internal energy of the mixture, iteratively summed */
@@ -360,7 +359,7 @@ double mixture_u(MixtureState *M, FpropsError *err){
 
 	@return ideal-solution enthalpy
  */
-double mixture_h(MixtureState *M, FpropsError *err){
+double amixture_h(MixtureState *M, FpropsError *err){
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double h_mix=0.0;   /* enthalpy of mixture, iteratively summed */
@@ -374,7 +373,6 @@ double mixture_h(MixtureState *M, FpropsError *err){
 	}
 	return h_mix;
 }
-#endif
 
 /* 
 	Calculate overall ideal-solution constant-pressure heat capacity (per unit 
@@ -385,7 +383,7 @@ double mixture_h(MixtureState *M, FpropsError *err){
 
 	@return ideal-solution heat capacity (constant-pressure)
  */
-double mixture_cp(MixtureState *M, FpropsError *err){
+double amixture_cp(MixtureState *M, FpropsError *err){
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double cp_mix=0.0;  /* constant-pressure heat capacity of mixture, iteratively summed */
@@ -409,7 +407,7 @@ double mixture_cp(MixtureState *M, FpropsError *err){
 
 	@return ideal-solution heat capacity (constant-volume)
  */
-double mixture_cv(MixtureState *M, FpropsError *err){
+double amixture_cv(MixtureState *M, FpropsError *err){
 	unsigned i;
 	double x_total=0.0; /* sum over all mass fractions -- to check consistency */
 	double cv_mix=0.0;  /* constant-volume heat capacity of mixture, iteratively summed */
@@ -470,7 +468,7 @@ double mixture_x_ln_x(unsigned nPure, double *x_mass, PureFluid **PFs){
 	@param M MixtureState with temperature, mass fractions, component densities, etc.
 	@param err error argument
  */
-double mixture_s(MixtureState *M, FpropsError *err){
+double amixture_s(MixtureState *M, FpropsError *err){
 #define D PF[0]->data
 	unsigned i;
 	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
@@ -493,7 +491,7 @@ double mixture_s(MixtureState *M, FpropsError *err){
 	@param M MixtureState with temperature, mass fractions, component densities, etc.
 	@param err error argument
  */
-double mixture_g(MixtureState *M, FpropsError *err){
+double amixture_g(MixtureState *M, FpropsError *err){
 	unsigned i;
 	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
 		   g_mix=0.0;   /* entropy of mixture, iteratively summed */
@@ -515,7 +513,7 @@ double mixture_g(MixtureState *M, FpropsError *err){
 	@param M MixtureState with temperature, mass fractions, component densities, etc.
 	@param err error argument
  */
-double mixture_a(MixtureState *M, FpropsError *err){
+double amixture_a(MixtureState *M, FpropsError *err){
 	unsigned i;
 	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
 		   a_mix=0.0;   /* entropy of mixture, iteratively summed */

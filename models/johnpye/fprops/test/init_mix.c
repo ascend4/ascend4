@@ -26,7 +26,7 @@
 	ideal-mixture case.
  */
 
-/* #include "../mixtures/init_mixfuncs.h" */
+#include "../mixtures/init_mixfuncs.h"
 #include "../mixtures/mixture_struct.h"
 #include "../mixtures/mixture_properties.h"
 #include "../mixtures/mixture_prepare.h"
@@ -88,6 +88,7 @@ extern const EosData eos_rpp_methane;
 extern const EosData eos_rpp_water;
 
 /* Function prototypes */
+void extract_rhos(PhaseSpec *PS, unsigned npure, double *rhos);
 void test_one(double *T, double *P);
 // void test_five(double T, double P);
 // void test_six(void);
@@ -119,10 +120,36 @@ int main(){
 	return 0;
 } /* end of `main' */
 
+/* Extract densities for each fluid from a PhaseSpec (for testing purposes) */
+void extract_rhos(PhaseSpec *PS, unsigned npure, double *rhos){
+#define PPH PS->PH
+#define NPHASE PS->phases
+#define NPURE PPH[i]->pures
+	unsigned i, j;
+
+	for(i=0;i<npure;i++){
+		rhos[i] = -1; /* set all densities to minus one for later check */
+	}
+	for(i=0;i<2 && i<NPHASE;i++){
+		for(j=0;j<NPURE;j++){
+			rhos[PPH[i]->c[j]] = PPH[i]->rhos[j];
+		}
+	}
+	for(i=0;i<npure;i++){
+		if(rhos[i]==-1){
+			ERRMSG("Density number %u was not assigned", i);
+			rhos[i] = 1;
+		}
+	}
+#undef NPURE
+#undef NPHASE
+#undef PPH
+}
+
 /* Functions to test/demonstrate other functionality */
 void test_one(double *T, double *P){
 #define NFLUIDS 4
-#define NSIMS 1
+#define NSIMS 6
 	unsigned i, j; /* counter variable */
 	enum FluidAbbrevs {N2,NH3,CO2,CH4,H2O}; /* fluids that will be used */
 
@@ -145,26 +172,68 @@ void test_one(double *T, double *P){
 	double rho_mix[NSIMS] = {0}
 		, u_mix[NSIMS] = {0}
 		, h_mix[NSIMS] = {0}
-		/* , cp_mix[NSIMS]
+		, cp_mix[NSIMS]
 		, cv_mix[NSIMS]
 		, s_mix[NSIMS]
 		, g_mix[NSIMS]
-		, a_mix[NSIMS] */
+		, a_mix[NSIMS]
+		;
+	double rho_amix[NSIMS] = {0}
+		, u_amix[NSIMS] = {0}
+		, h_amix[NSIMS] = {0}
+		, cp_amix[NSIMS] = {0}
+		, cv_amix[NSIMS] = {0}
+		, s_amix[NSIMS] = {0}
+		, g_amix[NSIMS] = {0}
+		, a_amix[NSIMS] = {0}
+		, rhos_single[NFLUIDS] = {0}
+		;
+	double u_bmix[NSIMS] = {0}
+		, h_bmix[NSIMS] = {0}
+		, cp_bmix[NSIMS] = {0}
+		, cv_bmix[NSIMS] = {0}
+		, s_bmix[NSIMS] = {0}
+		, g_bmix[NSIMS] = {0}
+		, a_bmix[NSIMS] = {0}
 		;
 	double rhos[NSIMS][3] = {{0}}
 		, u_ph[NSIMS][3] = {{0}}
 		, h_ph[NSIMS][3] = {{0}}
+		, cp_ph[NSIMS][3] = {{0}}
+		, cv_ph[NSIMS][3] = {{0}}
+		, s_ph[NSIMS][3] = {{0}}
+		, g_ph[NSIMS][3] = {{0}}
+		, a_ph[NSIMS][3] = {{0}}
 		;
+	double u_bph[NSIMS][3] = {{0}}
+		, h_bph[NSIMS][3] = {{0}}
+		, cp_bph[NSIMS][3] = {{0}}
+		, cv_bph[NSIMS][3] = {{0}}
+		, s_bph[NSIMS][3] = {{0}}
+		, g_bph[NSIMS][3] = {{0}}
+		, a_bph[NSIMS][3] = {{0}}
+		;
+	unsigned nphase[NSIMS] = {0};
 
 	int usr_cont=1;
 	double tol = 1e-9;
 	char temp_str[100];
 	char *headers[NSIMS];
 
-#define MIXTURE_CALC(PROP) mixture_##PROP(&PM, PROP##_ph[i], &err)
+#define MIXTURE_CALC(PROP) old_mixture_##PROP(&PM, PROP##_ph[i], &err)
+#define AMIXTURE_CALC(PROP) amixture_##PROP(&MT, &err)
+#define BMIXTURE_CALC(PROP) mixture_##PROP(&PM, PROP##_bph[i], &err)
 	for(i=0;i<NSIMS;i++){
+		MSG("Error is %i (1)", err);
 		mixture_flash(PS, MS, T[i], P[i], &err); /* flash mixture, obtaining phases */
+		MSG("Error is %i (2)", err);
 		mixture_rhos_sat(PS, T[i], P[i], &err);  /* find densities in each phase */
+		if(err!=FPROPS_NO_ERROR){
+			MSG("Error is %i; resetting it to zero", err);
+			err = FPROPS_NO_ERROR;
+		}
+		extract_rhos(PS, MS->pures, rhos_single); /* find densities for one phase */
+		nphase[i] = PS->phases;
 
 		/*
 			Check that user wants to continue (user can interrupt simulation if 
@@ -189,31 +258,90 @@ void test_one(double *T, double *P){
 			, .PS = PS
 			, .MS = MS
 		};
+		MixtureState MT = {
+			.T = T[i]
+			, .rhos = rhos_single
+			, .X = MS
+		};
 		rho_mix[i] = mixture_rho(&PM, rhos[i]);
 		u_mix[i] = MIXTURE_CALC(u);
 		h_mix[i] = MIXTURE_CALC(h);
-		/* cp_mix[i] = MIXTURE_CALC(cp);
-		cv_mix[i] = MIXTURE_CALC(cv);
+		cp_mix[i] = MIXTURE_CALC(cp);
+		/* cv_mix[i] = MIXTURE_CALC(cv);
 		s_mix[i] = MIXTURE_CALC(s);
 		g_mix[i] = MIXTURE_CALC(g);
 		a_mix[i] = MIXTURE_CALC(a); */
+
+		rho_amix[i] = amixture_rho(&MT);
+		u_amix[i] = AMIXTURE_CALC(u);
+		h_amix[i] = AMIXTURE_CALC(h);
+		cp_amix[i] = AMIXTURE_CALC(cp);
+		cv_amix[i] = AMIXTURE_CALC(cv);
+		s_amix[i] = AMIXTURE_CALC(s);
+		g_amix[i] = AMIXTURE_CALC(g);
+		a_amix[i] = AMIXTURE_CALC(a);
+
+		u_bmix[i] = BMIXTURE_CALC(u);
+		/* MSG("The value of the internal energy returned from the MACRO is %g", BMIXTURE_CALC(u)) */
+		h_bmix[i] = BMIXTURE_CALC(h);
+		/* MSG("The value of the enthalpy returned from the MACRO is %g", BMIXTURE_CALC(h)) */
+		cp_bmix[i] = BMIXTURE_CALC(cp);
+		cv_bmix[i] = BMIXTURE_CALC(cv);
+		s_bmix[i] = BMIXTURE_CALC(s);
+		g_bmix[i] = BMIXTURE_CALC(g);
+		a_bmix[i] = BMIXTURE_CALC(a);
 
 		/* Fill in header */
 		/* headers[i] = ASC_NEW_ARRAY(char,40); */
 		/* snprintf(headers[i], 40, "[T=%.1f K, P=%.2f bar]", T[i], P[i]/1.e5); */
 	}
 #undef MIXTURE_CALC
+#undef AMIXTURE_CALC
 
 	for(i=0;i<NSIMS;i++){ 
 		MSG("At T=%.1f K, P=%.0f Pa, the overall density is %g kg/m^3"
 				, T[i], P[i], rho_mix[i]);
 		MSG("  The overall internal energy is %g J/kg, and enthalpy is %g J/kg"
 				, u_mix[i], h_mix[i]);
-		for(j=0;j<3;j++){
+		MSG("  The overall constant-pressure heat capacity is %g J/kg", cp_mix[i]);
+		for(j=0;j<nphase[i];j++){
 			MSG("\tFor phase number %u, the phase density is %g kg/m^3", j, rhos[i][j]);
 			MSG("\t  The phase internal energy is %g J/kg, and enthalpy is %g J/kg"
 					, u_ph[i][j], h_ph[i][j]);
 		}
+	}
+	puts("");
+	for(i=0;i<NSIMS;i++){ 
+		MSG("At T=%.1f K, P=%.0f Pa, the overall internal energy from macros is "
+				"%g J/kg and the enthalpy from \" is %g J/kg"
+				, T[i], P[i], u_bmix[i], h_bmix[i]);
+		MSG("  The overall constant-pressure heat capacity is %g J/kg", cp_bmix[i]);
+		MSG("  The overall constant-volume heat capacity is %g J/kg", cv_bmix[i]);
+		MSG("  The overall entropy is %g J/(kg K)", s_bmix[i]);
+		MSG("  The overall Gibbs energy is %g J/(kg K)", g_bmix[i]);
+		MSG("  The overall Helmholtz energy is %g J/(kg K)", a_bmix[i]);
+		for(j=0;j<nphase[i];j++){
+			MSG("\tFor phase number %u, the phase density is %g kg/m^3", j, rhos[i][j]);
+			MSG("\t  The phase internal energy is %g J/kg, and enthalpy is %g J/kg"
+					, u_bph[i][j], h_bph[i][j]);
+			MSG("\t  The phase constant-pressure heat capacity is %g J/kg", cp_bph[i][j]);
+			MSG("\t  The phase constant-volume heat capacity is %g J/kg", cv_bph[i][j]);
+			MSG("\t  The phase entropy is %g J/(kg K)", s_bph[i][j]);
+			MSG("\t  The phase Gibbs energy is %g J/kg, and Helmholtz energy is %g J/kg"
+					, g_bph[i][j], a_bph[i][j]);
+		}
+	}
+	puts("");
+	for(i=0;i<NSIMS;i++){ 
+		MSG("At T=%.1f K, P=%.0f Pa, the overall density from the old functions is %g kg/m^3"
+				, T[i], P[i], rho_amix[i]);
+		MSG("  Overall internal energy is %g J/kg", u_amix[i]);
+		MSG("  Overall enthalpy is %g J/kg", h_amix[i]);
+		MSG("  Overall constant-pressure heat capacity is %g J/kg", cp_amix[i]);
+		MSG("  Overall constant-volume heat capacity is %g J/kg", cv_amix[i]);
+		MSG("  Overall entropy is %g J/kg", s_amix[i]);
+		MSG("  Overall Gibbs energy is %g J/kg", g_amix[i]);
+		MSG("  Overall Helmholtz energy is %g J/kg", a_amix[i]);
 	}
 	/* print_cases_properties(NSIMS, headers, rho_mix, Ps, u_mix, h_mix, cp_mix, cv_mix, s_mix, g_mix, a_mix); */
 }

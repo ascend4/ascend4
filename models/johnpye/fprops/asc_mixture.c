@@ -47,6 +47,8 @@
 #include "mixtures/mixture_properties.h"
 #include "mixtures/mixture_generics.h"
 #include "mixtures/mixture_prepare.h"
+#include "mixtures/mixture_phases.h"
+#include "mixtures/mixture_struct.h"
 
 #ifndef ASC_EXPORT
 #error "ASC_EXPORT not found -- where is it?"
@@ -60,6 +62,21 @@
 ExtBBoxInitFunc asc_mixture_prepare;
 ExtBBoxFunc mixture_p_calc;
 ExtBBoxFunc mixture_rho_calc;
+ExtBBoxFunc mixture_phase_rho_calc;
+ExtBBoxFunc mixture_u_calc;
+ExtBBoxFunc mixture_phase_u_calc;
+ExtBBoxFunc mixture_h_calc;
+ExtBBoxFunc mixture_phase_h_calc;
+ExtBBoxFunc mixture_cp_calc;
+ExtBBoxFunc mixture_phase_cp_calc;
+ExtBBoxFunc mixture_cv_calc;
+ExtBBoxFunc mixture_phase_cv_calc;
+ExtBBoxFunc mixture_s_calc;
+ExtBBoxFunc mixture_phase_s_calc;
+ExtBBoxFunc mixture_g_calc;
+ExtBBoxFunc mixture_phase_g_calc;
+ExtBBoxFunc mixture_a_calc;
+ExtBBoxFunc mixture_phase_a_calc;
 
 /*
 	Global Variables
@@ -72,8 +89,28 @@ typedef struct UserData_Struct {
 	struct Instance *xinst;
 } UsrData;
 
-static const char *mixture_p_help = "Calculate pressure for the mixture, using ideal solution assumption, and report if pressure is inconsistent among the densities";
-static const char *mixture_rho_help = "Calculate overall density of the solution, using ideal-solution assumption";
+#define MIX_HELP(PROP) "Calculate overall " PROP " of the mixture, using ideal-solution assumption."
+#define MIX_PHASE_HELP(PROP) "Calculate " PROP " of the mixture for a single phase, using ideal-solution assumption."
+
+static const char *mixture_p_help = "Calculate pressure for the mixture, using ideal solution assumption, and report if pressure is inconsistent among the densities.";
+static const char *mixture_rho_help = MIX_HELP("density");
+static const char *mixture_phase_rho_help = MIX_PHASE_HELP("density");
+static const char *mixture_u_help = MIX_HELP("internal energy");
+static const char *mixture_phase_u_help = MIX_PHASE_HELP("internal energy");
+static const char *mixture_h_help = MIX_HELP("enthalpy");
+static const char *mixture_phase_h_help = MIX_PHASE_HELP("enthalpy");
+
+static const char *mixture_cp_help = MIX_HELP("constant-pressure heat capacity");
+static const char *mixture_phase_cp_help = MIX_PHASE_HELP("constant-pressure heat capacity");
+static const char *mixture_cv_help = MIX_HELP("constant-volume heat capacity");
+static const char *mixture_phase_cv_help = MIX_PHASE_HELP("constant-volume heat capacity");
+
+static const char *mixture_s_help = MIX_HELP("entropy");
+static const char *mixture_phase_s_help = MIX_PHASE_HELP("entropy");
+static const char *mixture_g_help = MIX_HELP("Gibbs energy");
+static const char *mixture_phase_g_help = MIX_PHASE_HELP("Gibbs energy");
+static const char *mixture_a_help = MIX_HELP("Helmholtz energy");
+static const char *mixture_phase_a_help = MIX_PHASE_HELP("Helmholtz energy");
 
 /*
 	Register all functions that will be exported
@@ -99,8 +136,17 @@ extern ASC_EXPORT int mixture_register(){
 			, 0.0 \
 		)
 	
-	CALCFN(mixture_p,1,1);
+	CALCFN(mixture_p,2,1);
 	CALCFN(mixture_rho,2,1);
+	CALCFN(mixture_phase_rho,3,1);
+	CALCFN(mixture_u,2,1);
+	CALCFN(mixture_phase_u,3,1);
+	CALCFN(mixture_h,2,1);
+	CALCFN(mixture_phase_h,3,1);
+	CALCFN(mixture_cp,2,1);
+	CALCFN(mixture_phase_cp,3,1);
+	CALCFN(mixture_cv,2,1);
+	CALCFN(mixture_phase_cv,3,1);
 
 	if(result){
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"CreateUserFunctionBlackBox result is %d\n",result);
@@ -299,8 +345,14 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	if(bbox==NULL){ \
 		return -5; \
 	} \
-	/* const MixtureSpec *MX = (const MixtureSpec *)bbox->user_data;  */\
-	FpropsError err=FPROPS_NO_ERROR;
+	FpropsError err=FPROPS_NO_ERROR; \
+	const MixtureSpec *MS = (const MixtureSpec *)bbox->user_data; \
+	const PhaseSpec *PS = new_PhaseSpec(MS->pures, 3); \
+	double T = inputs[0] \
+		, p = inputs[1]; \
+	mixture_flash(PS, MS, T, p, &err); \
+	mixture_rhos_sat(PS, T, p, &err); \
+	PhaseMixState *PM = fill_PhaseMixState(T, p, PS, MS);
 
 int mixture_p_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 		double *inputs, double *outputs, double *jacobian){
@@ -318,24 +370,112 @@ int mixture_rho_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 		double *inputs, double *outputs, double *jacobian){
 	CALCPREP(2,1);
 
-	/* ERROR_REPORTER_HERE(ASC_USER_NOTE
-			, "Function 'mixture_rho_calc' -- this function has no contents as yet."); */
-
 	unsigned i;
+#if 0
 	MixtureSpec *MS = (MixtureSpec *) bbox->user_data;
+	PhaseSpec *PS = new_PhaseSpec(MS->pures, 3);
 
 	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The number of pures is %u", MS->pures);
 	for(i=0;i<MS->pures;i++){
-		ERROR_REPORTER_HERE(ASC_USER_NOTE, "Mass fraction number %u is %g"
-				, i+1, MS->Xs[0]);
+		ERROR_REPORTER_HERE(ASC_USER_NOTE
+				, "Mass fraction number %u is %g", i+1, MS->Xs[0]);
 	}
 
 	double T = inputs[0]
-		, p = inputs[1]
-		;
-	PhaseMixSpec *M = ASC_NEW(PhaseMixSpec);
+		, p = inputs[1];
 
-	outputs[0] = mixture_rho(M);
+	mixture_flash(PS, MS, T, p, &err);
+
+	PhaseMixState *PM = ASC_NEW(PhaseMixState);
+	PM->T = T;
+	PM->p = p;
+	PM->MS = MS;
+	PM->PS = PS;
+#endif
+
+	double rhos[MS->pures];
+	outputs[0] = mixture_rho(PM, rhos);
+
+	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The overall mixture density is %g", outputs[0]);
+	for(i=0;i<PS->phases;i++){
+		ERROR_REPORTER_HERE(ASC_USER_NOTE
+				, "The density of phase number %u is %g kg/m3", i, rhos[i]);
+	}
 
 	return 0;
 }
+
+int mixture_phase_rho_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
+		double *inputs, double *outputs, double *jacobian){
+	CALCPREP(3,1);
+
+	double rhos[PS->phases] /* individual phase densities */
+		, rho;              /* the overall mixture density */
+
+	rho = mixture_rho(PM, rhos);
+	outputs[0] = rhos[(int) inputs[2]]; /* assign density of one phase to output */
+
+	return 0;
+}
+
+#define MIX_PROP_EXTFUNC(PROP) \
+	int mixture_##PROP##_calc(struct BBoxInterp *bbox, int ninputs, int noutputs, \
+			double *inputs, double *outputs, double *jacobian){ \
+		CALCPREP(2,1); \
+		double props[PS->phases]; /* internal by-phase property values */ \
+		outputs[0] = mixture_##PROP(PM, props, &err); \
+		return 0; \
+	}
+
+#define MIX_PHASE_EXTFUNC(PROP) \
+	int mixture_phase_##PROP##_calc(struct BBoxInterp *bbox, int ninputs, int noutputs, \
+			double *inputs, double *outputs, double *jacobian){ \
+		CALCPREP(3,1); \
+		double props[PS->phases] /* internal by-phase property values */ \
+			, prop;              /* overall mixture property value */ \
+		prop = mixture_##PROP(PM, props, &err); \
+		outputs[0] = props[(int) inputs[2]]; /* assign property of one phase to output */ \
+		return 0; \
+	}
+
+MIX_PROP_EXTFUNC(u); MIX_PROP_EXTFUNC(h);
+MIX_PHASE_EXTFUNC(u); MIX_PHASE_EXTFUNC(h);
+
+#if 0
+int mixture_u_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
+		double *inputs, double *outputs, double *jacobian){
+	CALCPREP(2,1);
+
+	double u_s[PS->phases]; /* individual phase internal energies */
+	outputs[0] = mixture_u(PM, u_s, &err);
+
+	return 0;
+}
+
+int mixture_phase_u_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
+		double *inputs, double *outputs, double *jacobian){
+	CALCPREP(3,1);
+
+	double u_s[PS->phases] /* individual phase internal energies */
+		, u;               /* the overall mixture internal energy */
+
+	u = mixture_u(PM, u_s, &err);
+	outputs[0] = u_s[(int) inputs[2]]; /* assign energy of one phase to output */
+
+	return 0;
+}
+
+int mixture_h_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
+		double *inputs, double *outputs, double *jacobian){
+	CALCPREP(2,1);
+
+	return 0;
+}
+
+int mixture_phase_h_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
+		double *inputs, double *outputs, double *jacobian){
+	CALCPREP(3,1);
+
+	return 0;
+}
+#endif

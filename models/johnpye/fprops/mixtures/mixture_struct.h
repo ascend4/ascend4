@@ -153,6 +153,7 @@ typedef struct MixtureState_Struct {
 /*
 	Representation of mixture with phases
  */
+#if 0
 typedef struct MixturePhaseState_Struct {
 	double T;           /* mixture temperature */
 	double **rhos;      /* (current) mass densities of components */
@@ -162,6 +163,7 @@ typedef struct MixturePhaseState_Struct {
 	double *ph_frac;    /* fraction of mass in each phase */
 	double **Xs;        /* mass fractions within each phase */
 } MixturePhaseState;
+#endif
 
 /*
 	Macros to initialize MixtureSpec, PhaseSpec, and PhaseMixState structs

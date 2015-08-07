@@ -42,17 +42,17 @@
 /* void ig_rhos(MixtureState *M, double P); */
 /* void initial_rhos(MixtureState *M, double P, FpropsError *err); */
 /* void pressure_rhos(MixtureState *M, double P, double tol, FpropsError *err); */
-void densities_to_mixture(MixtureState *M, double tol, FpropsError *err);
+/* void densities_to_mixture(MixtureState *M, double tol, FpropsError *err); */
 
-/* double mixture_rho(MixtureState *M); */
-/* double mixture_u(MixtureState *M, FpropsError *err); */
-/* double mixture_h(MixtureState *M, FpropsError *err); */
-double mixture_cp(MixtureState *M, FpropsError *err);
-double mixture_cv(MixtureState *M, FpropsError *err);
+double amixture_rho(MixtureState *M);
+double amixture_u(MixtureState *M, FpropsError *err);
+double amixture_h(MixtureState *M, FpropsError *err);
+double amixture_cp(MixtureState *M, FpropsError *err);
+double amixture_cv(MixtureState *M, FpropsError *err);
 double mixture_x_ln_x(unsigned nPure, double *Xs, PureFluid **PFs);
-double mixture_s(MixtureState *M, FpropsError *err);
-double mixture_g(MixtureState *M, FpropsError *err);
-double mixture_a(MixtureState *M, FpropsError *err);
+double amixture_s(MixtureState *M, FpropsError *err);
+double amixture_g(MixtureState *M, FpropsError *err);
+double amixture_a(MixtureState *M, FpropsError *err);
 
 /* void print_mixture_properties(char *how_calc, double rho, double u, double h, double cp, double cv, double s, double g, double a); */
 /* void print_substances_properties(unsigned subst, char **headers, double *Xs, double *rhos, double *ps, double *us, double *hs, double *cps, double *cvs, double *ss, double *gs, double *as); */

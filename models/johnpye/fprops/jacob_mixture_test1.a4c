@@ -3,63 +3,9 @@
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "johnpye/fprops/mixture";
+REQUIRE "johnpye/fprops/mixtures.a4l";
 
-CONSTANT mass_fraction_constant
-REFINES real_constant DIMENSIONLESS;
-
-
-(*  The mixture_spec model specifies the composition of the         ///1
-	mixture.
-
-	Such a model, which will be passed into the mixture functions as 
-	DATA, _must_ contain the following members:
-		npure, an integer
-		components, an array of symbol constants representing the fluids
-		xs, an array of mass fractions
-	the following members are optional:
-		type, a symbol_constant representing the type of correlation 
-		(equation of state)
-			'ideal' -- ideal-gas
-			'pengrob' -- Peng-Robinson
-			'helmholtz' -- Helmholtz equation of state
-
-			for now, eos only gives good VLE when 'pengrob' is used
-		source, the source of the correlation type
-		model, a symbol_constant specifying whether the solution is ideal or real
-*)
-MODEL mixture_spec; (* ///1 *)
-	npure IS_A integer_constant;
-
-	components[1 .. npure] IS_A symbol_constant;
-	xs[1 .. npure] IS_A mass_fraction_constant;
-	eos IS_A symbol_constant;
-
-METHODS
-METHOD specify; (* ///2 *)
-	FIX xs[1.. npure];
-END specify;
-END mixture_spec; (* //\1 *)
-
-(*MODEL mixture_state; ( * ///1 * )
-	T IS_A temperature;
-	p IS_A pressure;
-	MS IS_A mixture_spec;
-
-	nphase IS_A integer_constant;
-	phase[1 .. nphase] IS_A symbol_constant;
-	ph_frac[1 .. nphase] IS_A mass_fraction;
-	ph_xs[1 .. nphase][1 .. MS.npure] IS_A mass_fraction;
-	ph_rhos[1 .. nphase][1 .. MS.npure] IS_A mass_density;
-
-METHODS
-METHOD specify; ( * ///2 * )
-	MS.specify;
-	FIX ph_frac;
-	FIX ph_xs;
-	FIX ph_rhos;
-END specify;
-END mixture_state; ( * //\1 *)
-
+(* The mixture_test model *)
 MODEL mixture_test; (* ///1 *)
 	T IS_A temperature;
 	p IS_A pressure;
@@ -75,17 +21,21 @@ MODEL mixture_test; (* ///1 *)
 	mixt.xs[2] :== 0.35;
 	mixt.xs[3] :== 0.25;
 
+	(*
+	phase_xs[1..3][1..mixt.npure] IS_A mass_fraction;
+	phase_frac[1..3] IS_A mass_fraction;
+	phase_rho[1..3][1..mixt.npure] IS_A mass_density;
+	*)
+
 	mix_density : mixture_rho(
 		T, p : INPUT;
 		rho : OUTPUT;
 		mixt : DATA
 	);
 
-	(* rho = p * T; *)
-
 METHODS
 METHOD specify; (* ///2 *)
-	RUN mixt.specify;
+	(*RUN mixt.specify;*)
 	FIX T;
 	FIX p;
 END specify;
