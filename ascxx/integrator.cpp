@@ -128,11 +128,13 @@ Integrator::analyse(){
 */
 void
 Integrator::solve(){
+	// clear previous values and reserve space for new ones in order to avoid memory reallocation
+	obs.clear();
+	obs.reserve((unsigned long) getNumSteps());
 
 	// check the integration limits
 	// trigger of the solution process
 	// report errors?
-
 	assert(samplelist!=NULL);
 	assert(samplelist->ns>0);
 
@@ -259,6 +261,13 @@ Integrator::getCurrentObservations(){
 	return v;
 }
 
+void
+Integrator::saveObservations() {
+	std::vector<double> v = getCurrentObservations();
+	v.push_back(getCurrentTime());
+	obs.push_back(v);
+}
+
 Variable
 Integrator::getObservedVariable(const long &i){
 	var_variable *v = integrator_get_observed_var(blsys,i);
@@ -307,4 +316,8 @@ Integrator::setMaxSubSteps(int n){
 IntegratorSystem *
 Integrator::getInternalType(){
 	return blsys;
+}
+
+std::vector<std::vector<double> > Integrator::getObservations() {
+	return obs;
 }

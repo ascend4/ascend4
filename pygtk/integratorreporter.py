@@ -1,15 +1,10 @@
-import ascpy
-import time
 import sys
-from gi.repository import Gtk
-import time
-from varentry import *
-from preferences import *
-from infodialog import *
-from observer import *
-import tempfile
 
 from gi.repository import GObject
+
+from preferences import *
+from observer import *
+
 try:
 	import pylab
 except:
@@ -25,7 +20,7 @@ INTEGRATOR_NUM = 0
 class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 	def __init__(self,browser,integrator):
 		self.browser=browser
-	 	ascpy.IntegratorReporterCxx.__init__(self,integrator)
+		ascpy.IntegratorReporterCxx.__init__(self,integrator)
 		
 		# GUI elements
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["integratorstatusdialog"])
@@ -35,52 +30,63 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.label=self.browser.builder.get_object("integratorlabel")
 		self.label.set_text("Solving with "+self.getIntegrator().getName())
 		self.progress=self.browser.builder.get_object("integratorprogress")
-		self.data = None
-
+		self.solve_status = 1
 		self.cancelrequested=False
-		
-	def run(self):
-		# run the dialog: start solution, monitor use events
+
+	def solve_thread(self):
 		try:
 			self.getIntegrator().solve()
+			GLib.idle_add(self.close_output)
+		except RuntimeError, e:
+			GLib.idle_add(self.report_error, e)
 
-		except RuntimeError,e:
-			self.browser.reporter.reportError("Integrator failed: %s" % e)
+		GLib.idle_add(self.finish)
 
-			if self.browser.prefs.getBoolPref("Integrator","writeendmatrix",True):
-				if platform.system()=="Windows":
-					_deffn = "\\TEMP\\ascintegratormatrix.mtx"
-				else:
-					_deffn = "/tmp/ascintegratormatrix.mtx"
-				_fn = self.browser.prefs.getStringPref("Integrator","matrixfilepath",_deffn)
-				self.browser.reporter.reportNote("Writing matrix to file '%s'" % _fn)
-				_fp = file(_fn,"w")
+	def report_error(self, e):
+		self.browser.reporter.reportError("Integrator failed: %s" % e)
+
+		if self.browser.prefs.getBoolPref("Integrator", "writeendmatrix", True):
+			if platform.system() == "Windows":
+				_deffn = "\\TEMP\\ascintegratormatrix.mtx"
+			else:
+				_deffn = "/tmp/ascintegratormatrix.mtx"
+			_fn = self.browser.prefs.getStringPref("Integrator", "matrixfilepath", _deffn)
+			self.browser.reporter.reportNote("Writing matrix to file '%s'" % _fn)
+			_fp = file(_fn,"w")
+			try:
 				try:
-					try: 
-						self.getIntegrator().writeMatrix(_fp,None)
-					except RuntimeError,e:
-						self.browser.reporter.reportError(str(e))
-				finally:
-					_fp.close()
+					self.getIntegrator().writeMatrix(_fp, None)
+				except RuntimeError, e:
+					self.browser.reporter.reportError(str(e))
+			finally:
+				_fp.close()
+
+	def finish(self):
 		self.window.destroy()
-		
-		return
+		self.browser.sim.processVarStatus()
+		self.browser.modelview.refreshtree()
+		return False
+
+	def run(self):
+		self.solve_status = 1
+		self.init_output()
+		thread = threading.Thread(target=self.solve_thread)
+		thread.daemon = True
+		thread.start()
+		GLib.idle_add(self.update_status)
 
 	def on_cancelbutton_clicked(self,*args):
 		self.cancelrequested=True
 
-	def initOutput(self):
-		# empty out the data table
-		self.data=[]
+	def init_output(self):
 		self.nsteps = self.getIntegrator().getNumSteps()
 		self.progress.set_text("Starting...")
 		self.progress.set_fraction(0.0)
-		#update the GUI
-		while Gtk.events_pending():
-			Gtk.main_iteration()
+
+	def initOutput(self):
 		return 1
 
-	def closeOutput(self):
+	def close_output(self):
 		global INTEGRATOR_NUM
 		integrator = self.getIntegrator()
 		# create an empty observer
@@ -102,54 +108,51 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			_label.set_text(_obs.name)
 			self.browser.observers.append(_obs)
 			self.browser.tabs[_tab]=_obs
-			
+
 			# add the columns
 			_obs.add_instance(integrator.getIndependentVariable().getInstance())
 			for _v in [integrator.getObservedVariable(_i) for _i in range(0,integrator.getNumObservedVars())]:
 				_obs.add_instance(_v.getInstance())
 
-			for _time,_vals in self.data:
-				_obs.do_add_row([_time]+[_v for _v in _vals])
+			obs = self.getIntegrator().getObservations()
+			for data in obs:
+				# time is always last element in tuple
+				_vals, _time = data[:-1], data[-1]
+				_obs.do_add_row([_time] + [_v for _v in _vals])
 		except Exception,e:
-			sys.stderr.write("\n\n\nIntegratorReporter::closeOutput: error: %s: %s\n\n\n" % (e.__class__,str(e)))
-			return 1
+			sys.stderr.write("\n\n\nIntegratorReporter.close_output: error: %s: %s\n\n\n" % (e.__class__,str(e)))
+			self.solve_status = 1
+
+		self.cancelrequested = True
+		return False
+
+	def closeOutput(self):
 		return 0
 
-	def closeOutput1(self):
-		# output the results (to the console, for now)
-		for _t,_vals in self.data:
-			print _t,_vals
-
-		self.progress.set_fraction(1.0)
-		self.progress.set_text("Finished.")
-		return 1
-
-	def updateStatus(self):
-		# outdate the GUI
+	def update_status(self):
 		try:
-			# TODO: change so it's not updating every step!
-			t = self.getIntegrator().getCurrentTime()
-			_frac = float(self.getIntegrator().getCurrentStep())/self.nsteps
-			self.progress.set_text("t = %f" % (self.getIntegrator().getCurrentTime()))
-			self.progress.set_fraction(_frac)
-			while Gtk.events_pending():
-				Gtk.main_iteration()
 			if self.cancelrequested:
-				return 0	
-			return 1
+				self.solve_status = 0
+				return False
+
+			self.progress.set_text("t = %f" % (self.getIntegrator().getCurrentTime()))
+			_frac = float(self.getIntegrator().getCurrentStep())/self.nsteps
+			self.progress.set_fraction(_frac)
+			self.solve_status = 1
 		except Exception,e:
 			print "\n\nERROR IN UPDATESTATUS!",str(e)
-			return 0
+			self.solve_status = 0
+			return False
+
+		return True
+
+	def updateStatus(self):
+		# time needed to update gui, due to GIL
+		time.sleep(0.000001)
+		return self.solve_status
 
 	def recordObservedValues(self):
-		# just add to our in-memory data structure for now...
-		try:
-			i = self.getIntegrator()
-			print str(i.getCurrentObservations())		
-			self.data.append((i.getCurrentTime(),i.getCurrentObservations()))
-		except Exception,e:
-			print "\n\nERROR IN RECORDOBSERVEDVALUES!",str(e)
-			return 0
+		self.getIntegrator().saveObservations()
 		return 1
 
 class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
@@ -157,7 +160,7 @@ class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 		self.filep=filep
 		self.numsteps=0
 		self.indepname="t"
-	 	ascpy.IntegratorReporterCxx.__init__(self,integrator)
+		ascpy.IntegratorReporterCxx.__init__(self,integrator)
 		
 		
 	def run(self):
@@ -213,7 +216,7 @@ class IntegratorReporterPlot(ascpy.IntegratorReporterCxx):
 	def __init__(self,integrator):
 		self.numsteps=0
 		self.indepname="t"
-	 	ascpy.IntegratorReporterCxx.__init__(self,integrator)		
+		ascpy.IntegratorReporterCxx.__init__(self,integrator)
 		
 	def run(self):
 		import loading

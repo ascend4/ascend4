@@ -898,9 +898,6 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_integratorreporter = integwin.run()
 		if _integratorreporter!=None:
 			_integratorreporter.run()
-			self.sim.processVarStatus()
-			self.modelview.refreshtree()
-		
 
 	def do_check(self):
 		if self.no_built_system():

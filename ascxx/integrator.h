@@ -67,6 +67,8 @@ public:
 	void setLinearTimesteps(UnitsM units, double start, double end, unsigned long num);
 	void setLogTimesteps(UnitsM units, double start, double end, unsigned long num);
 	std::vector<double> getCurrentObservations();
+	void saveObservations();
+	std::vector<std::vector<double> > getObservations();
 	Variable getObservedVariable(const long &i);
 	Variable getIndependentVariable();
 
@@ -90,6 +92,7 @@ private:
 	Simulation &simulation;
 	SampleList *samplelist;
 	IntegratorSystem *blsys;
+	std::vector<std::vector<double> > obs;
 };
 
 #endif
