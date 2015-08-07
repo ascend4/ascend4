@@ -3140,6 +3140,7 @@ upper and lower bounds displayed.</property>
                 <property name="can_focus">False</property>
                 <property name="pulse_step">0.10000000149</property>
                 <property name="text" translatable="yes">Starting...</property>
+                <property name="show-text">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -6040,7 +6041,7 @@ upper and lower bounds displayed.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="text" translatable="yes">Starting...</property>
-                <property name="show_text">True</property>
+                <property name="show-text">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -6053,6 +6054,7 @@ upper and lower bounds displayed.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="text" translatable="yes">Starting...</property>
+                <property name="show-text">True</property>
               </object>
               <packing>
                 <property name="expand">True</property>
