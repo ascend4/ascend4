@@ -143,10 +143,10 @@ extern ASC_EXPORT int mixture_register(){
 	CALCFN(mixture_phase_u,3,1);
 	CALCFN(mixture_h,2,1);
 	CALCFN(mixture_phase_h,3,1);
-	CALCFN(mixture_cp,2,1);
-	CALCFN(mixture_phase_cp,3,1);
-	CALCFN(mixture_cv,2,1);
-	CALCFN(mixture_phase_cv,3,1);
+	// CALCFN(mixture_cp,2,1);
+	// CALCFN(mixture_phase_cp,3,1);
+	// CALCFN(mixture_cv,2,1);
+	// CALCFN(mixture_phase_cv,3,1);
 
 	if(result){
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"CreateUserFunctionBlackBox result is %d\n",result);
