@@ -10,6 +10,11 @@ MODEL mixture_test; (* ///1 *)
 	T IS_A temperature;
 	p IS_A pressure;
 	rho IS_A mass_density;
+	u IS_A specific_energy;
+	h IS_A specific_enthalpy;
+	s IS_A specific_entropy;
+	g IS_A specific_secondary_energy;
+	a IS_A specific_secondary_energy;
 
 	mixt IS_A mixture_spec;
 	mixt.npure :== 3;
@@ -21,11 +26,9 @@ MODEL mixture_test; (* ///1 *)
 	mixt.xs[2] :== 0.35;
 	mixt.xs[3] :== 0.25;
 
-	(*
-	phase_xs[1..3][1..mixt.npure] IS_A mass_fraction;
+	nphase IS_A phase_count;
 	phase_frac[1..3] IS_A mass_fraction;
-	phase_rho[1..3][1..mixt.npure] IS_A mass_density;
-	*)
+	phase_rho[1..3] IS_A mass_density;
 
 	mix_density : mixture_rho(
 		T, p : INPUT;
@@ -33,23 +36,57 @@ MODEL mixture_test; (* ///1 *)
 		mixt : DATA
 	);
 
+	mix_phases : mixture_flash_phases(
+		T, p : INPUT;
+		nphase, phase_frac[1], phase_frac[2], phase_frac[3] : OUTPUT;
+		mixt : DATA
+	);
+
+	mix_u : mixture_u(
+		T, p : INPUT;
+		u : OUTPUT;
+		mixt : DATA
+	);
+
+	mix_h : mixture_h(
+		T, p : INPUT;
+		h : OUTPUT;
+		mixt : DATA
+	);
+
+	mix_s : mixture_s(
+		T, p : INPUT;
+		s : OUTPUT;
+		mixt : DATA
+	);
+
+	mix_g : mixture_g(
+		T, p : INPUT;
+		g : OUTPUT;
+		mixt : DATA
+	);
+
+	mix_a : mixture_a(
+		T, p : INPUT;
+		a : OUTPUT;
+		mixt : DATA
+	);
 METHODS
-METHOD specify; (* ///2 *)
-	(*RUN mixt.specify;*)
+METHOD specify;
 	FIX T;
 	FIX p;
 END specify;
-METHOD values; (* ///2 *)
+METHOD values;
 	T := 300 {K} + 273.15 {K};
 	p := 2 {bar};
 END values;
-METHOD options; (* ///2 *)
+METHOD options;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 END options;
-METHOD setup; (* ///2 *)
+METHOD setup;
 	RUN specify;
 	RUN values;
 	RUN options;
 END setup;
-END mixture_test; (* //\1 *)
+END mixture_test;

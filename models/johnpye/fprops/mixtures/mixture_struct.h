@@ -35,6 +35,8 @@
 #define MIX_XSUM_ERROR "Sum over all mass fractions, which should be exactly 1.00, is %.10f\n"
 #define MIX_PSUM_ERROR "Sum over all phase mass fractions, which should be exactly 1.00, is %.10f\n"
 #define MIX_COMPR_ERROR "Compressibility has assumed a non-physical value"
+#define MIX_PHASE_STRING(PTYPE) (PTYPE==SUPERCRIT) ? "supercritical" : \
+									   (PTYPE==VAPOR) ? "vapor" : "liquid"
 
 #ifndef ASC_NEW
 #define ASC_NEW(TYPE) (TYPE*)malloc(sizeof(TYPE))

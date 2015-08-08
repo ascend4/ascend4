@@ -1,6 +1,6 @@
-
 REQUIRE "atoms.a4l";
-(* PROVIDE "mixtures.a4l"; *)
+IMPORT "johnpye/fprops/mixture";
+PROVIDE "mixtures.a4l";
 (*
    	mixtures.a4l, by Jacob Shealy 8/4
 
@@ -13,6 +13,28 @@ REQUIRE "atoms.a4l";
 	provides a dedicated type.
 *)
 CONSTANT mass_fraction_constant REFINES real_constant DIMENSIONLESS;
+
+ATOM phase_count REFINES solver_var
+	DIMENSIONLESS
+	DEFAULT 1.0;
+	lower_bound := 0.0;
+	nominal := 1.0;
+END phase_count;
+
+(*
+	Specific energy for properties governed by the Second Law of Thermodynamics 
+	-- Gibbs energy and Helmholtz energy.  These are typically negative, so the 
+	'specific_energy' atom from <models/johnpye/thermo_types.a4c> (which can 
+	only take positive values) cannot be used.  Instead, use this atom, 
+	which can assume either negative or positive values.
+ *)
+ATOM specific_secondary_energy REFINES solver_var
+		DIMENSION L^2/T^2
+		DEFAULT -1000{kJ/kg};
+	lower_bound := -1e50{kJ/kg};
+	upper_bound := 1e50{kJ/kg};
+	nominal := 1000{kJ/kg};
+END specific_secondary_energy;
 
 (*  The mixture_spec model specifies the composition of the mixture.  
 
@@ -44,3 +66,51 @@ MODEL mixture_spec;
 	(* until non-ideal solution models are provided, 'source' should 
 	   continue to be defined as an empty string *)
 END mixture_spec;
+
+(*
+	Model of a single component, which can be used to extract component-specific 
+	mixture properties.
+ *)
+MODEL mixture_component(
+	grandparent WILL_BE mixture_spec;
+	num_phase WILL_BE integer;
+	num_comp WILL_BE integer;
+	T WILL_BE temperature;
+	p WILL_BE pressure;
+);
+	index IS_A integer_constant;
+	name IS_A symbol_constant;
+
+	component_index : mixture_component_cnum(
+		T, p, num_phase, num_comp : INPUT;
+		index : OUTPUT;
+		grandparent : DATA
+	);
+	name :== grandparent.components[index];
+END mixture_component;
+
+(* 
+	Model of a single phase, which can be used to extract phase-specific mixture 
+	properties.
+ *)
+MODEL mixture_phase(
+	parent WILL_BE mixture_spec; (* the mixture_spec from which the phase descends *)
+	num_phase WILL_BE integer;   (* the 'number' of the phase (first, second,...) *)
+	T WILL_BE temperature;       (* the mixture temperature *)
+	p WILL_BE pressure;          (* the mixture pressure *)
+);
+	num_comps IS_A integer; (* the number of components in that phase *)
+	phase_components : mixture_phase_components(
+		T, p, num_phase : INPUT;
+		num_comps : OUTPUT;
+		parent : DATA
+	);
+
+	(* components[1..num_comps] ; *)
+
+	indices IS_A set OF integer;
+	indices = [1..num_comps];
+	FOR i IN indices CREATE
+		components[i] IS_A mixture_component(parent, num_phase, indices[1], T, p);
+	END FOR;
+END mixture_phase;
