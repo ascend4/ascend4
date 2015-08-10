@@ -1,12 +1,11 @@
 import sys
 
-from gi.repository import GObject
-
+import loading
 from preferences import *
 from observer import *
 
 try:
-	import pylab
+	import matplotlib.pyplot as plt
 except:
 	pass
 		
@@ -31,7 +30,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.label.set_text("Solving with "+self.getIntegrator().getName())
 		self.progress=self.browser.builder.get_object("integratorprogress")
 		self.solve_status = 1
-		self.cancelrequested=False
+		self.cancelrequested = False
 
 	def solve_thread(self):
 		try:
@@ -87,6 +86,8 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		return 1
 
 	def close_output(self):
+		# update gui last time
+		self.update_status()
 		global INTEGRATOR_NUM
 		integrator = self.getIntegrator()
 		# create an empty observer
@@ -155,6 +156,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		self.getIntegrator().saveObservations()
 		return 1
 
+# no need to move solving to background task because there is no way to interrupt it
 class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 	def __init__(self,integrator,filep):
 		self.filep=filep
@@ -211,64 +213,69 @@ class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 			return 0
 		return 1
 
-class IntegratorReporterPlot(ascpy.IntegratorReporterCxx):
+class IntegratorReporterPlot(IntegratorReporterPython):
 	"""Plotting integrator reporter"""
-	def __init__(self,integrator):
-		self.numsteps=0
-		self.indepname="t"
-		ascpy.IntegratorReporterCxx.__init__(self,integrator)
-		
+	def __init__(self, browser, integrator, start, stop):
+		self.start = start
+		self.stop = stop
+		self.x = []
+		self.y = []
+		self.figure = None
+		self.ax = None
+		self.lines = None
+		loading.load_matplotlib(alert=True)
+		IntegratorReporterPython.__init__(self, browser, integrator)
+
+	def init_output(self):
+		IntegratorReporterPython.init_output(self)
+		# set up plot
+		self.figure, self.ax = plt.subplots()
+		self.lines, = self.ax.plot([], [], 'o')
+		# autoscale on unknown axis and known lims on the other
+		self.ax.set_xlim(self.start, self.stop)
+		self.ax.set_autoscaley_on(True)
+		self.ax.grid()
+		plt.ion()
+		plt.show()
+
 	def run(self):
-		import loading
-		loading.load_matplotlib(throw=True)
-		self.getIntegrator().solve()
+		IntegratorReporterPython.run(self)
 
 	def initOutput(self):
-		try:
-			sys.stderr.write("Integrating...\n")
-			self.ax = pylab.subplot(111)
-			self.canvas = self.ax.figure.canvas
-			I = self.getIntegrator()
-			self.numsteps=I.getNumSteps()
-			self.indepname = I.getIndependentVariable().getName()
-			self.x = []
-			self.y = []	
-			self.line, = pylab.plot(self.x,self.y,animated=True)	
-			self.bg = self.canvas.copy_from_bbox(self.ax.bbox)
-			GObject.idle_add(self.plotupdate)
-			pylab.show()
-		except Exception,e:
-			print "ERROR %s" % str(e)
-			return 0
-		return 1
+		return IntegratorReporterPython.initOutput(self)
 
 	def closeOutput(self):
-		sys.stderr.write(" "*20+chr(8)*20)
-		sys.stderr.write("Finished, %d samples recorded.\n" % self.numsteps)
-		return 0
+		return IntegratorReporterPython.closeOutput(self)
 
 	def updateStatus(self):
-		return 1
+		# more time for plot update
+		time.sleep(0.01)
+		return IntegratorReporterPython.updateStatus(self)
 
-	def plotupdate(self):
-		sys.stderr.write("%d...\r " % len(self.x))
+	def update_status(self):
 		try:
-			self.canvas.restore_region(self.bg)
-			self.line.set_data(self.x, self.y)
-			self.ax.draw_artist(self.line)
-			self.canvas.blit(self.ax.bbox)
+			self.lines.set_xdata(self.x)
+			self.lines.set_ydata(self.y)
+			# need both of these in order to rescale
+			self.ax.relim()
+			self.ax.autoscale_view()
+			# we need to draw *and* flush
+			self.figure.canvas.draw()
+			self.figure.canvas.flush_events()
 		except Exception,e:
-			print "ERROR %s" % str(e)
+			print "ERROR plotupdate %s" % str(e)
+			self.solve_status = 0
+
+		return IntegratorReporterPython.update_status(self)
 
 	def recordObservedValues(self):
 		try:
-			I = self.getIntegrator()
-			obs = I.getCurrentObservations()
-			self.x.append(I.getCurrentTime())
+			i = self.getIntegrator()
+			obs = i.getCurrentObservations()
+			self.x.append(i.getCurrentTime())
 			self.y.append(obs[0])
-		except Exception,e:
-			print "ERROR %s" % str(e)
-			return 0
-		return 1
-	
+		except Exception, e:
+			print "ERROR record %s" % str(e)
+			self.solve_status = 0
 
+		return IntegratorReporterPython.recordObservedValues(self)

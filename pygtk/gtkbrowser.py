@@ -614,8 +614,6 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			GObject.threads_init()
 			Gtk.main()
 
-
-
 	def test(self):
 		print sys.argv[1]
 		print sys.argv[3]

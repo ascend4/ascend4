@@ -1,13 +1,10 @@
+import tempfile
+
 import ascpy
-import time
-from gi.repository import Gtk
-import time
-from varentry import *
-from preferences import *
 from integratorreporter import *
 from solverparameters import *
 from infodialog import *
-import tempfile
+
 
 class IntegratorError(RuntimeError):
 	def __init__(self,msg):
@@ -44,6 +41,7 @@ class IntegratorWindow:
 		self.durationentry = self.browser.builder.get_object("durationentry")
 		self.nstepsentry = self.browser.builder.get_object("nstepsentry")
 		self.timedistributionselect = self.browser.builder.get_object("timedistributionselect")
+		self.liveplotcheck = self.browser.builder.get_object("liveplotcheck")
 		self.settings = {
 			# input field: [pref name, default value, export-to-integrator function]
 			"initialstep": [1,lambda x:self.integrator.setInitialSubStep(float(x))]
@@ -52,6 +50,7 @@ class IntegratorWindow:
 			,"maxsteps":[100,lambda x:self.integrator.setMaxSubSteps(int(x))]
 		}
 
+		self.liveplot = False
 		self.integratorentries={}
 		for _k in self.settings.keys():
 			_w = self.browser.builder.get_object(_k+"entry")
@@ -75,7 +74,9 @@ class IntegratorWindow:
 		_cell = Gtk.CellRendererText()
 		self.engineselect.pack_start(_cell, True)
 		self.engineselect.add_attribute(_cell, 'text', 0)
-		
+
+		self.liveplot = self.prefs.getBoolPref("Integrator", "liveplot", False)
+		self.liveplotcheck.set_active(self.liveplot)
 		_engpref = self.prefs.getStringPref("Integrator","engine","LSODE")
 		_engindex = 0
 		_i = 0
@@ -201,9 +202,20 @@ class IntegratorWindow:
 					_dialog = InfoDialog(self.browser,self.browser.window,text,title,tabs=(70,200,300,400,500))
 					_dialog.run()					
 
-				return None							
+				return None
 			# if we're all ok, create the reporter window and close this one
-			_integratorreporter = IntegratorReporterPython(self.browser,self.integrator)
+			if self.liveplot:
+				start = float(self.beginentry.get_text().split(" ")[0])
+				stop = float(self.durationentry.get_text().split(" ")[0]) + start
+				try:
+					loading.load_matplotlib(True)
+					_integratorreporter = IntegratorReporterPlot(self.browser, self.integrator, start, stop)
+				except RuntimeError, e:
+					self.browser.reporter.reportError(str(e))
+					_integratorreporter = IntegratorReporterPython(self.browser, self.integrator)
+			else:
+				_integratorreporter = IntegratorReporterPython(self.browser, self.integrator)
+
 			self.integrator.setReporter(_integratorreporter)
 			self.window.destroy()
 			return _integratorreporter # means proceed to solve
@@ -272,9 +284,10 @@ class IntegratorWindow:
 		self.integrator.setLinearTimesteps(ascpy.Units(units), _val["begin"], (_val["begin"]+_val["duration"]), _val["num"]);
 		self.begin=_val["begin"]
 		self.duration=_val["duration"]
+		self.liveplot = self.liveplotcheck.get_active()
 
 		self.prefs.setStringPref("Integrator","duration",str(self.duration))
-		
+		self.prefs.setBoolPref("Integrator", "liveplot", self.liveplot)
 		# set substep parameters (ie settings common to any integrator engine)
 		_failed=False
 		x={}
