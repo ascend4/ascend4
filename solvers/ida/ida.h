@@ -52,7 +52,6 @@
 # include <sundials/sundials_config.h>
 # include <sundials/sundials_nvector.h>
 # include <ida/ida_spgmr.h>
-# include <ida.h>
 # include <nvector_serial.h>
 #else
 # include <sundials/sundials_config.h>

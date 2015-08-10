@@ -39,13 +39,12 @@
 #include "idalinear.h"
 #include "idaanalyse.h"
 #include "idatypes.h"	
-#include "prepare_integrator.h"										/* The list of includes needs cleaning up! Once basic files are written,  
-#include "idaprec.h"										all commonly called functions can be added in just one header file.
-#include "idacalc.h"										Once that's done, these includes must be revisited*/
-#include "idaio.h"
+#include "prepare_integrator.h"										#include "idaio.h"
 #include "idaboundary.h"
-
-#include <signal.h>										/*Check if these includes are necessary*/
+#include "idaprec.h"	
+#include "idacalc.h"
+#include "idaprec.h"	
+#include <signal.h>										
 #include <setjmp.h>
 #include <fenv.h>
 #include <math.h>
@@ -72,25 +71,9 @@
 #include <ascend/integrator/integrator.h>
 
 
+
 extern int prepare_integrator(IntegratorSystem *integ){
 	flag = IDAInit(ida_mem, &integrator_ida_fex, t0, y0 ,yp0);
-
-	/*-------------------                 RECORDING INTEGRATOR PREFERENCES                  --------------------*
-			     The following block sets several preferences based on user choices.
-			     The code implemented in this block was initially obtained from 
-			     ida.c in the Ksenija2 directory.
- 	*-----------------------------------------------------------------------------------------------------------*/
-
-
-
-
-
-
-
-
-
-
-
 	/*Takes in a host of parameters for specifying integrator preferences*/
 	static int integrator_ida_params_default(IntegratorSystem *integ) {
 		asc_assert(integ!=NULL);
@@ -122,6 +105,7 @@ extern int prepare_integrator(IntegratorSystem *integ){
 							" or use the the values of the differential variables (yd) to solve"
 							" for the pure algebraic variables (ya) along with the derivatives"
 							" of the differential variables (yddot) (YA_YDP), or else don't solve"
+
 							" the intial conditions at all (NONE). See IDA manual p 41 (IDASetId)"
 						}, "YA_YDP"}, (char *[]) {"Y", "YA_YDP", "NONE",NULL});
 
@@ -164,7 +148,7 @@ extern int prepare_integrator(IntegratorSystem *integ){
 							" direct linear solver bundled with ASCEND, 'DENSE' to use the dense"
 							" solver bundled with IDA, or one of the Krylov solvers SPGMR, SPBCG"
 							" or SPTFQMR (which still need preconditioners to be implemented"
-							" before they can be very useful."},"DENSE"},(char *[]){"ASCEND","DENSE","BAND","SPGMR","SPBCG","SPTFQMR",NULL});
+							" before they can be very useful.)"},"DENSE"},(char *[]){"ASCEND","DENSE","BAND","SPGMR","SPBCG","SPTFQMR",NULL});
 
 	slv_param_int(p,IDA_PARAM_MAXL
 			,(SlvParameterInitInt){{"maxl"
@@ -216,6 +200,7 @@ extern int prepare_integrator(IntegratorSystem *integ){
 
 
 	/*-------------------               PASSING ON USER PREFERENCES TO INTEGRATOR           --------------------*
+
 	                     In the following block, the user preferences for several integrator 
 			     settings are passed on to the integrator engine.		        
 
@@ -242,7 +227,7 @@ extern int prepare_integrator(IntegratorSystem *integ){
 	}else if (strcmp(SLV_PARAM_CHAR(&integ->params,IDA_PARAM_CALCIC), "YA_YDP") == 0){
 		CONSOLE_DEBUG("Solving initial conditions using values of yd");
 		icopt = IDA_YA_YDP_INIT;
-		asc_assert(icopt!=0);
+		asc_assert(icopt!=0);}
 	flag = IDACalcIC(ida_mem, icopt, tout1);
 
 	/*Passing safe-evaluation option*/								/*Passing safe-evaluation option*/
@@ -257,6 +242,13 @@ extern int prepare_integrator(IntegratorSystem *integ){
 #endif
 	Asc_SignalHandlerPushDefault(SIGFPE);
 		}
+#endif
+	
+	}
+return 0;
+}
+
+
 
 	/*Passing tolerance preferences*/								/*Passing tolerance preferences*/
 
@@ -332,7 +324,7 @@ linsolver = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_LINSOLVER);
 			default:
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed IDADenseSetJacFn");
 				return 6;
-			}
+		
 		}else{
 			CONSOLE_DEBUG("USING NUMERICAL DIFF");
 		}
@@ -354,6 +346,7 @@ linsolver = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_LINSOLVER);
 		/* what preconditioner for SPILS solver? */
 
 		pname = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_PREC);
+		}
 		if(strcmp(pname, "NONE") == 0){
 			prec = NULL;
 		}else if(strcmp(pname, "JACOBI") == 0){
@@ -403,6 +396,9 @@ linsolver = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_LINSOLVER);
 			return 9;
 		}/* else success */
 		/* assign the J*v function */
+		
+
+
 		if(SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_AUTODIFF)) {
 			CONSOLE_DEBUG("USING AUTODIFF");
 #if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
@@ -414,15 +410,15 @@ linsolver = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_LINSOLVER);
 			if(flag == IDASPILS_MEM_NULL) {
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"ida_mem is NULL");
 				return 10;
-			}else if (flag == IDASPILS_LMEM_NULL) {
+			}else if(flag == IDASPILS_LMEM_NULL) {
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"IDASPILS linear solver has not been initialized");
 				return 10;
-			}/* else success */
+			}
 		}else{
 			CONSOLE_DEBUG("USING NUMERICAL DIFF");
 		}
 		if(strcmp(linsolver, "SPGMR") == 0) {
-			/* select Gram-Schmidt orthogonalisation */
+
 			if(SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_GSMODIFIED)) {
 				CONSOLE_DEBUG("USING MODIFIED GS");
 				flag = IDASpilsSetGSType(ida_mem, MODIFIED_GS);
@@ -441,7 +437,13 @@ linsolver = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_LINSOLVER);
 		}
 	}
 
-	/*Passing Maxord and Maxncf values*/							/*Passing Maxord and Maxncf values*/
+
+
+
+
+
+
+
 
 #if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
 	IDASetUserData(ida_mem, (void *)integ);
@@ -455,7 +457,7 @@ linsolver = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_LINSOLVER);
 		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"IDA does not support minstep (ignored)\n");
 	}
 	//CONSOLE_DEBUG("MAXNCF = %d",SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXNCF));
-	IDASetMaxConvFails(ida_mem, SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXNCF));
+	IDASetMaxConvFails(ida_mem, SLV_PARAM_INT(&(integ->params),IDA_PARAM_MAXNCF));
 	//CONSOLE_DEBUG("MAXORD = %d",SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXORD));
 	IDASetMaxOrd(ida_mem, SLV_PARAM_INT(&integ->params,IDA_PARAM_MAXORD));
 
@@ -463,47 +465,24 @@ linsolver = SLV_PARAM_CHAR(&(integ->params),IDA_PARAM_LINSOLVER);
 
 
 
-
-
-
-	/*-------------------                            ANALYSE EQUATIONS                      --------------------*
-			     The following block analyses the equations passed on from the 
-			     GUI to aid integration. This block runs a series of checks, the 
-			     process is stopped when flag takes a non-zero value.
- 	*-----------------------------------------------------------------------------------------------------------*/
-
-	flag =  integrator_ida_check_vars(integ) + integrator_ida_flag_rels(integ) 
+	
+flag =  integrator_ida_check_vars(integ) + integrator_ida_flag_rels(integ) 
 	+ integrator_ida_sort_rels_and_vars(integ) + integrator_ida_create_lists(integ) + 
 	integrator_ida_analyse(integ) + integrator_ida_check_partitioning(integ)+
 	integrator_ida_check_diffindex(integ);
 
 	if(flag!=0){
-	return -2;						/*Failed analysis*/
+	return -2;						
 	}
 
 
 
-
-
-
-
-	/*-------------------                     ALLOCATE MEMORY FOR YDOT, Y ETC              --------------------*
-			     The following block analyses the equations passed on from the 
-			     GUI to aid integration. This block runs a series of checks, the 
-			     process is stopped when flag takes a non-zero value.
- 	*-----------------------------------------------------------------------------------------------------------*/
-
-
-
-		/*This block has to be discussed with Ksenija before implamentation. Is this block necessary? 
-		The IDA Manual says that most memory allocation procedures are taken care of. Also there's the 
-		implementation of IDAMalloc, which needs to be cleared up. Also ida_malloc has already been called above
-		this does the same job of allocating ydot and ypdot. Anything else needs to be done here? */
+return 0;							
+}
+*/
 
 
 
 
 
-
-return 0;		/*prepare_integrator successful!*/					
-}	
+	
