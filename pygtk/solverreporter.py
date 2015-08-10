@@ -88,7 +88,7 @@ class PopupSolverReporter(PythonSolverReporter):
 		try:
 			_bl = self.sim.getActiveBlock()
 			_db = DiagnoseWindow(self.browser,_bl)
-			_db.run();
+			_db.run()
 		except RuntimeError, e:
 			self.reporter.reportError(str(e))
 			return

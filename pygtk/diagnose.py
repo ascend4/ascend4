@@ -12,7 +12,7 @@ from preferences import *
 ZOOM_RE = re.compile(r"([0-9]+)\s*%?")
 MAX_ZOOM_SIZE = float(2000) # float
 MAX_ZOOM_RATIO = float(16) # float
-AT_BOUND_TOL = 0.0001;
+AT_BOUND_TOL = 0.0001
 
 class DiagnoseWindow:
 	def __init__(self,browser,block=0):
@@ -27,11 +27,11 @@ class DiagnoseWindow:
 
 		try:
 			_icon = Gtk.Image()
-			_iconpath = browser.assets_dir+'diagnose'+config.ICON_EXTENSION
+			_iconpath = os.path.join(browser.assets_dir, 'diagnose' + config.ICON_EXTENSION)
 			print "ICON PATH =",_iconpath
 			_icon.set_from_file(_iconpath)
 			print "ICON = ",_icon
-			self.window.set_icon(_icon)
+			self.window.set_icon(_icon.get_pixbuf())
 		except:
 			pass
 		
@@ -184,10 +184,8 @@ class DiagnoseWindow:
 		d = ''.join(b)
 
 		print "DONE IMAGE CREATION"
-		return
-	
-		self.pixbuf = GdkPixbuf.Pixbuf.new_from_data(d, GdkPixbuf.Colorspace.RGB, False, 8 \
-				, nc, nr, rowstride);
+
+		self.pixbuf = GdkPixbuf.Pixbuf.new_from_data(d, GdkPixbuf.Colorspace.RGB, False, 8, nc, nr, rowstride)
 
 		self.nr = nr
 		self.nc = nc
@@ -199,7 +197,7 @@ class DiagnoseWindow:
 		self.fill_var_names()
 		self.fill_rel_names()
 		self.fill_block_status()
-	
+
 		self.fill_selection_info()
 
 		print "DONE FILL VALUES"
@@ -234,7 +232,7 @@ class DiagnoseWindow:
 
 	def do_zoom(self):
 		if self.zoom == -1:
-			w, h = self.imagescroll.size_request()
+			w, h = self.imagescroll.get_size_request()
 			#print "SCALE TO FIX, w=%d, h=%d" % (w,h)
 			if self.nc/self.nr > w/h:
 				# a 'wide' image	
@@ -253,8 +251,8 @@ class DiagnoseWindow:
 			self.zoom = MAX_ZOOM_SIZE / max(self.nc,self.nr)
 
 		#self.browser.reporter.reportNote("Diagnose window: matrix zoom = %f" % self.zoom)
-		w = int(self.zoom * self.nc);
-		h = int(self.zoom * self.nr);
+		w = int(self.zoom * self.nc)
+		h = int(self.zoom * self.nr)
 			
 		self.zoomentry.set_text("%d %%" % (int(self.zoom*100)) )
 
