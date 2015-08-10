@@ -42,6 +42,7 @@ class IntegratorWindow:
 		self.nstepsentry = self.browser.builder.get_object("nstepsentry")
 		self.timedistributionselect = self.browser.builder.get_object("timedistributionselect")
 		self.liveplotcheck = self.browser.builder.get_object("liveplotcheck")
+		self.okbutton = self.browser.builder.get_object("integratorok")
 		self.settings = {
 			# input field: [pref name, default value, export-to-integrator function]
 			"initialstep": [1,lambda x:self.integrator.setInitialSubStep(float(x))]
@@ -245,6 +246,7 @@ class IntegratorWindow:
 			entry.set_property("secondary-icon-tooltip-text", "")
 
 	def parse_entry(self, entry):
+		self.okbutton.set_sensitive(True)
 		# A simple function to get the real value from the entered text
 		# and taint the entry box accordingly
 		i = RealAtomEntry(self.indepvar.getInstance(), entry.get_text())
@@ -252,6 +254,7 @@ class IntegratorWindow:
 			i.checkEntry()
 			_value = i.getValue()
 		except InputError, e:
+			self.okbutton.set_sensitive(False)
 			_value = None
 			_error = re.split('Input Error: ', str(e), 1)
 			entry.set_property("secondary-icon-tooltip-text", _error[1])
