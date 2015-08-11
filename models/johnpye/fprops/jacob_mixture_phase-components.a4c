@@ -12,11 +12,6 @@ MODEL mixture_test;
 	rho IS_A mass_density;
 	u IS_A specific_energy;
 	u_ph1 IS_A specific_energy;
-	(* h IS_A specific_enthalpy;
-	s IS_A specific_entropy;
-	g IS_A specific_secondary_energy;
-	a IS_A specific_secondary_energy; *)
-	p_bubble IS_A pressure;
 
 	nphase IS_A phase_count;
 	phase_frac[1..3] IS_A mass_fraction;
@@ -33,8 +28,9 @@ MODEL mixture_test;
 	mixt.xs[3] :== 0.25;
 
 	ii IS_A phase_count;
-	(* mix_phase IS_A mixture_phase(mixt, ii, T, p);
-	num_comps IS_A phase_count;
+	mix_comp IS_A mixture_component;
+
+	(* num_comps IS_A phase_count;
 	mix_phase_components : mixture_phase_components(
 		T, p, ii : INPUT;
 		num_comps : OUTPUT;
@@ -65,46 +61,23 @@ MODEL mixture_test;
 		mixt : DATA
 	);
 
-	(* mix_h : mixture_h(
-		T, p : INPUT;
-		h : OUTPUT;
-		mixt : DATA
-	);
-
-	mix_s : mixture_s(
-		T, p : INPUT;
-		s : OUTPUT;
-		mixt : DATA
-	);
-
-	mix_g : mixture_g(
-		T, p : INPUT;
-		g : OUTPUT;
-		mixt : DATA
-	);
-
-	mix_a : mixture_a(
-		T, p : INPUT;
-		a : OUTPUT;
-		mixt : DATA
-	); *)
-	
-	mix_bubble_p : mixture_bubble_p(
-		T : INPUT;
-		p_bubble : OUTPUT;
-		mixt : DATA
-	);
-
 METHODS
 METHOD specify;
 	FIX T;
 	FIX p;
 	FIX ii;
+	FIX mix_comp;
 END specify;
 METHOD values;
-	T := 300 {K} + 273.15 {K};
-	p := 2 {bar};
+	T  := 300 {K} + 273.15 {K};
+	p  := 2 {bar};
 	ii := 1;
+
+	mix_comp.grandparent := mixt;
+	mix_comp.phase_num   := 1;
+	mix_comp.comp_num    := 1;
+	mix_comp.T           := T;
+	mix_comp.p           := p;
 END values;
 METHOD options;
 	SOLVER QRSlv;

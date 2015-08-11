@@ -12,10 +12,10 @@ MODEL mixture_test;
 	rho IS_A mass_density;
 	u IS_A specific_energy;
 	u_ph1 IS_A specific_energy;
-	(* h IS_A specific_enthalpy;
+	h IS_A specific_enthalpy;
 	s IS_A specific_entropy;
 	g IS_A specific_secondary_energy;
-	a IS_A specific_secondary_energy; *)
+	a IS_A specific_secondary_energy;
 	p_bubble IS_A pressure;
 
 	nphase IS_A phase_count;
@@ -33,13 +33,6 @@ MODEL mixture_test;
 	mixt.xs[3] :== 0.25;
 
 	ii IS_A phase_count;
-	(* mix_phase IS_A mixture_phase(mixt, ii, T, p);
-	num_comps IS_A phase_count;
-	mix_phase_components : mixture_phase_components(
-		T, p, ii : INPUT;
-		num_comps : OUTPUT;
-		mixt : DATA
-	); *)
 
 	mix_density : mixture_rho(
 		T, p : INPUT;
@@ -65,7 +58,7 @@ MODEL mixture_test;
 		mixt : DATA
 	);
 
-	(* mix_h : mixture_h(
+	mix_h : mixture_h(
 		T, p : INPUT;
 		h : OUTPUT;
 		mixt : DATA
@@ -87,7 +80,7 @@ MODEL mixture_test;
 		T, p : INPUT;
 		a : OUTPUT;
 		mixt : DATA
-	); *)
+	);
 	
 	mix_bubble_p : mixture_bubble_p(
 		T : INPUT;

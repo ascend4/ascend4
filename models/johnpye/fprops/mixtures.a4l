@@ -2,13 +2,12 @@ REQUIRE "atoms.a4l";
 IMPORT "johnpye/fprops/mixture";
 PROVIDE "mixtures.a4l";
 (*
-   	mixtures.a4l, by Jacob Shealy 8/4
+   	mixtures.a4l, by Jacob Shealy, 8/4
 
 	Basic types used for mixtures.
 *)
 
-(*
-   	A constant to represent mass fractions; this cannot be restricted in 
+(*	A constant to represent mass fractions; this cannot be restricted in 
 	its range, like the type 'mass_fraction' in atoms.a4l, but at least 
 	provides a dedicated type.
 *)
@@ -21,8 +20,7 @@ ATOM phase_count REFINES solver_var
 	nominal := 1.0;
 END phase_count;
 
-(*
-	Specific energy for properties governed by the Second Law of Thermodynamics 
+(*	Specific energy for properties governed by the Second Law of Thermodynamics 
 	-- Gibbs energy and Helmholtz energy.  These are typically negative, so the 
 	'specific_energy' atom from <models/johnpye/thermo_types.a4c> (which can 
 	only take positive values) cannot be used.  Instead, use this atom, 
@@ -63,54 +61,61 @@ MODEL mixture_spec;
 	source IS_A symbol_constant;
 
 	source :== '';
-	(* until non-ideal solution models are provided, 'source' should 
-	   continue to be defined as an empty string *)
 END mixture_spec;
 
-(*
-	Model of a single component, which can be used to extract component-specific 
+(*	Model of a single component, which can be used to extract component-specific 
 	mixture properties.
  *)
-MODEL mixture_component(
-	grandparent WILL_BE mixture_spec;
-	num_phase WILL_BE integer;
-	num_comp WILL_BE integer;
-	T WILL_BE temperature;
-	p WILL_BE pressure;
-);
-	index IS_A integer_constant;
-	name IS_A symbol_constant;
+MODEL mixture_component;
+	grandparent IS_A mixture_spec;
+	phase_num IS_A phase_count; (* x *)
+	comp_num IS_A phase_count; (* x *)
+	T IS_A temperature;
+	p IS_A pressure;
 
-	component_index : mixture_component_cnum(
-		T, p, num_phase, num_comp : INPUT;
-		index : OUTPUT;
+	mix_comp_num IS_A phase_count;
+	name IS_A symbol;
+
+	mix_component_numbers : mixture_component_cnum(
+		T, p, phase_num, comp_num : INPUT;
+		mix_comp_num : OUTPUT;
 		grandparent : DATA
 	);
-	name :== grandparent.components[index];
+METHODS
+METHOD default_self;
+	name := grandparent.components[mix_comp_num];
+END default_self;
 END mixture_component;
 
-(* 
-	Model of a single phase, which can be used to extract phase-specific mixture 
+(*	Model of a single phase, which can be used to extract phase-specific mixture 
 	properties.
  *)
 MODEL mixture_phase(
-	parent WILL_BE mixture_spec; (* the mixture_spec from which the phase descends *)
-	num_phase WILL_BE integer;   (* the 'number' of the phase (first, second,...) *)
-	T WILL_BE temperature;       (* the mixture temperature *)
-	p WILL_BE pressure;          (* the mixture pressure *)
+	parent WILL_BE mixture_spec;   (* the mixture_spec in which the phase exists *)
+	phase_num WILL_BE phase_count; (* phase is the first, second,... in the mixture *)
+	T WILL_BE temperature;         (* the mixture temperature *)
+	p WILL_BE pressure;            (* the mixture pressure *)
 );
-	num_comps IS_A integer; (* the number of components in that phase *)
+
+	num_comps IS_A phase_count;    (* the number of components in that phase *)
 	phase_components : mixture_phase_components(
-		T, p, num_phase : INPUT;
+		T, p, phase_num : INPUT;
 		num_comps : OUTPUT;
 		parent : DATA
 	);
 
-	(* components[1..num_comps] ; *)
+	components[1..num_comps] IS_A mixture_component;
+	i IS_A phase_count;
 
-	indices IS_A set OF integer;
-	indices = [1..num_comps];
-	FOR i IN indices CREATE
-		components[i] IS_A mixture_component(parent, num_phase, indices[1], T, p);
-	END FOR;
+METHODS
+METHOD default_self;
+	i := 1;
+	WHILE i < num_comps+1 DO
+		components[i].grandparent := parent;
+		components[i].phase_num := phase_num;
+		components[i].comp_num := i;
+		components[i].T := T;
+		components[i].p := p;
+	END WHILE;
+END default_self;
 END mixture_phase;
