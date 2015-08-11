@@ -1,4 +1,5 @@
 (* Outline of ASCEND multi-component ideal-solution routine *)
+(* To perform the simulation, load the file into ASCEND and run 'setup'. *)
 
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
