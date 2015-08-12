@@ -141,7 +141,7 @@ typedef double* TtseLine;
 typedef struct ttse_struct{
 
     int istablebuilt;
-    int doesfileexist;
+    int doesdbexist;
     int usettse;
 
     double tmin,tmax,rhomin,rhomax;
@@ -154,12 +154,6 @@ typedef struct ttse_struct{
 
     TtseLine satFRho,satFdRhodt,satFd2RhodT2;
     TtseLine satGRho,satGdRhodt,satGd2RhodT2;
-
-  //double ** dsdT,** d2sdT2,** dsdRho,** d2sdRho2,** d2sdTdRho;
-  //double ** dPdT,** d2PdT2,** dPdRho,** d2PdRho2,** d2PdTdRho;
-  //double ** dudT,** d2udT2,** dudRho,** d2udRho2,** d2udTdRho;
-  //double ** dgdT,** d2gdT2,** dgdRho,** d2gdRho2,** d2gdTdRho;
-  //double ** dhdT,** d2hdT2,** dhdRho,** d2hdRho2,** d2hdTdRho;
 }Ttse;
 
 /**

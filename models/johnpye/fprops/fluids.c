@@ -89,7 +89,7 @@ const PureFluid *fprops_get_fluid(int i){
 }
 
 void fprops_fluid_destroy(PureFluid *P){
-	MSG("Freeing data for lfuid '%s'",P->name);
+	MSG("Freeing data for fluid '%s'",P->name);
 	switch(P->type){
 	case FPROPS_HELMHOLTZ:
 		helmholtz_destroy(P);

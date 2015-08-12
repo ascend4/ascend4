@@ -48,7 +48,7 @@ typedef struct CriticalData_struct{
 	provide a data structure here that allows a few different options.
 
 	For chemical reactions, we need to use a reference state defined by the
-	enthalpy of formation and absolute entropy at defined conditions. Many 
+	enthalpy of formation and absolute entropy at defined conditions. Many
 	sources seem to specify ~ambient pressure and ~25 degC, but RPP specifes
 	298.2 K and 'ideal gas', which I take to mean zero pressure. I am not sure
 	that case is correctly handled by FPROPS_REF_TPHG -- still working on that.
@@ -97,9 +97,9 @@ typedef struct ReferenceStateTPHG_struct{
 	double T0, p0, h0, g0;
 } ReferenceStateTPHG;
 
-/* TODO add a reference state as defined by coefficients A_6, A_7 of the 
+/* TODO add a reference state as defined by coefficients A_6, A_7 of the
 NASA SP-273 polynomials (the constant terms in the H0(T) and S0(T) polynomials),
-this would open the way to a fairly easy support for the NASA fluid database, 
+this would open the way to a fairly easy support for the NASA fluid database,
 although note that it's only giving ideal gas EOS data */
 
 typedef struct ReferenceState_struct{
@@ -304,6 +304,9 @@ typedef struct HelmholtzData_struct{
 	const HelmholtzGausTerm *gt; /* critical terms of the first kind */
 	unsigned nc; /* number of critical terms of the second kind */
 	const HelmholtzCritTerm *ct; /* critical terms of the second kind */
+
+	double rhomax,rhomin,tmax,tmin;
+	double hmax,hmin,pmax,pmin;
 } HelmholtzData;
 
 /*___________________________CUBIC_________________________________*/
@@ -466,7 +469,8 @@ typedef enum EosType_enum{
 	,FPROPS_REDKW = 3
 	,FPROPS_SOAVE = 4
 	,FPROPS_HELMHOLTZ = 5
-	,FPROPS_MBWR = 6//etc.
+	,FPROPS_MBWR = 6
+	,FPROPS_TTSE = 8//etc.
 } EosType;
 
 /** Union of all possible EOS data structures */

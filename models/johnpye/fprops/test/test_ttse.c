@@ -40,7 +40,6 @@ int main(void){
 	//const int n = sizeof(helmfluids)/sizeof(char *);
 	int i;
 
-
     MSG("Which Fluid? -->  %s",helmfluids[0]);
 
     P = (PureFluid *)fprops_fluid(helmfluids[0],"helmholtz",NULL);
@@ -50,34 +49,38 @@ int main(void){
 
 
     MSG("Comparing Helmholtz vs TTSE");
-
-
     double rho = 1000;
 
 //Plot in Mathematica Saturation dome
-
-    printf("{");
-    for(i=0;i<NSAT;i++)
+    double avgprf=0,avgprg=0;
+    for(i=0;i<NSAT-1;i++)
     {
         double Tt = P->data->T_t;
         double Tc = P->data->T_c;
         double dt2p = (Tc - Tt)/NSAT;
-        double T = Tt + (i+0.1)*dt2p;
+        double T = Tt + (i+0.5)*dt2p;
         double psat, rhof,rhog;
         fprops_sat_T(T,&psat,&rhof,&rhog,P,&err);
-
         int j = (int)round(  ((T - Tt)/(Tc - Tt))*(NSAT)  );
         double delt = T - ( Tt + j*dt2p);
         double rhofT,rhogT;
-        rhofT =   P->table->satFRho[j] + delt*P->table->satFdRhodt[j]+ 0.5*delt*delt*P->table->satFd2RhodT2[j];
-        rhogT =   P->table->satGRho[j] + delt*P->table->satGdRhodt[j]+ 0.5*delt*delt*P->table->satGd2RhodT2[j];
+        psat=evaluate_ttse_sat(T,&rhofT,&rhogT,P,&err);
 
-        MSG("%f %f  %f  %f  %f  %f  %f", delt,rhof,rhofT,rhog,rhogT, 100*(rhof-rhofT)/rhof,100*(rhog-rhogT)/rhog );
+
+     //   rhofT =   P->table->satFRho[j] + delt*P->table->satFdRhodt[j]+ 0.5*delt*delt*P->table->satFd2RhodT2[j];
+      //  rhogT =   P->table->satGRho[j] + delt*P->table->satGdRhodt[j]+ 0.5*delt*delt*P->table->satGd2RhodT2[j];
+
+        avgprf += fabs(100*(rhof-rhofT)/rhof);
+        avgprg += fabs(100*(rhog-rhogT)/rhog);
+        MSG("%f  %f  %f  %f  %f  %f", rhof,rhofT,rhog,rhogT, 100*(rhof-rhofT)/rhof,100*(rhog-rhogT)/rhog );
        // if(i!= SPOINTS)
        //     printf("{%f, %f, %f},\n",T, rhof,rhog);
        // else
         //    printf("{%f, %f, %f}};\n",T, rhof,rhog);
     }
+    avgprf /= NSAT;
+    avgprg /= NSAT;
+    MSG("%f  %f",avgprf,avgprg);
 
     exit(1);
 
@@ -140,11 +143,11 @@ int main(void){
 
         double T = temp_s + i*dT;
 
-        pressT[i] = evaluate_ttse_p(P,T, rho) ;
-        enthalpyT[i] =  evaluate_ttse_h(P,T, rho)  ;
-        entT[i] = evaluate_ttse_s(P,T, rho)  ;
-        intuT[i] =  evaluate_ttse_u(P,T, rho) ;
-        gibbsgT[i] = evaluate_ttse_g(P,T, rho) ;
+        pressT[i] = evaluate_ttse_p(T, rho,P->table) ;
+        enthalpyT[i] =  evaluate_ttse_h(T, rho,P->table)  ;
+        entT[i] = evaluate_ttse_s(T, rho,P->table)  ;
+        intuT[i] =  evaluate_ttse_u(T, rho,P->table) ;
+        gibbsgT[i] = evaluate_ttse_g(T, rho,P->table) ;
     }
 
     end = clock();

@@ -202,15 +202,16 @@ void build_tables(PureFluid *P){
         double d2pdT2_rho = P->d2pdT2_rho_fn(T,rhof,P->data,&err);
 
 
-        double ddrho_drhodT_p_constT = ( dpdT_rho*d2pdrho2_T - dpdrho_T*d2pdrhodT ) / pow(dpdrho_T,2);
-        double ddT_drhodT_p_constrho = ( dpdT_rho*d2pdrhodT - dpdrho_T*d2pdT2_rho ) / pow(dpdrho_T,2);
+     //   double ddrho_drhodT_p_constT = ( dpdT_rho*d2pdrho2_T - dpdrho_T*d2pdrhodT ) / pow(dpdrho_T,2);
+     //   double ddT_drhodT_p_constrho = ( dpdT_rho*d2pdrhodT - dpdrho_T*d2pdT2_rho ) / pow(dpdrho_T,2);
 
         double drhodT_p =  (-dpdT_rho )/(dpdrho_T);
 
 
         PT->satFRho[i] = rhof;
         PT->satFdRhodt[i] = drhodT_p;
-        PT->satFd2RhodT2[i] =  ddT_drhodT_p_constrho  +  ddrho_drhodT_p_constT * drhodT_p;
+        //PT->satFd2RhodT2[i] =  ddT_drhodT_p_constrho  +  ddrho_drhodT_p_constT * drhodT_p;
+        PT->satFd2RhodT2[i] =  (-1.0/pow(dpdrho_T,3))*( d2pdrho2_T*dpdT_rho*dpdT_rho -2*dpdT_rho*dpdrho_T*d2pdrhodT + dpdrho_T*dpdrho_T*d2pdT2_rho );
 
 
         //The Vapour saturation line rho's and 1st & 2nd derivatives of rho with respect to T
@@ -222,15 +223,16 @@ void build_tables(PureFluid *P){
         d2pdrhodT = P->d2pdTdrho_fn(T,rhog,P->data,&err);
         d2pdT2_rho = P->d2pdT2_rho_fn(T,rhog,P->data,&err);
 
-        ddrho_drhodT_p_constT = ( dpdT_rho*d2pdrho2_T - dpdrho_T*d2pdrhodT ) / pow(dpdrho_T,2);
-        ddT_drhodT_p_constrho = ( dpdT_rho*d2pdrhodT - dpdrho_T*d2pdT2_rho ) / pow(dpdrho_T,2);
+     //   ddrho_drhodT_p_constT = ( dpdT_rho*d2pdrho2_T - dpdrho_T*d2pdrhodT ) / pow(dpdrho_T,2);
+     //   ddT_drhodT_p_constrho = ( dpdT_rho*d2pdrhodT - dpdrho_T*d2pdT2_rho ) / pow(dpdrho_T,2);
 
         drhodT_p =  (-dpdT_rho )/(dpdrho_T);
 
 
         PT->satGRho[i] = rhog;
         PT->satGdRhodt[i] = drhodT_p;
-        PT->satGd2RhodT2[i] =  ddT_drhodT_p_constrho  +  ddrho_drhodT_p_constT * drhodT_p;
+        //PT->satGd2RhodT2[i] =  ddT_drhodT_p_constrho  +  ddrho_drhodT_p_constT * drhodT_p;
+        PT->satGd2RhodT2[i] =  (-1.0/pow(dpdrho_T,3))*( d2pdrho2_T*dpdT_rho*dpdT_rho -2*dpdT_rho*dpdrho_T*d2pdrhodT + dpdrho_T*dpdrho_T*d2pdT2_rho );
 
 
     }
@@ -324,48 +326,84 @@ void build_tables(PureFluid *P){
 }
 
 
+
+double evaluate_ttse_sat(double T, double *rhof_out, double * rhog_out, PureFluid *P, FpropsError *err){
+    int i,j;
+    double tmin = P->data->T_t;
+    double tmax = P->data->T_c;
+    if(T < tmin-1e-8){
+    ERRMSG("Input Temperature %f K is below triple-point temperature %f K",T,P->data->T_t);
+    return FPROPS_RANGE_ERROR;
+    }
+
+    if(T > tmax+1e-8){
+    ERRMSG("Input Temperature is above critical point temperature");
+    *err = FPROPS_RANGE_ERROR;
+    }
+
+    double dt = (tmax-tmin)/NSAT;
+    i = (int)round(((T - tmin)/(tmax - tmin)*(NSAT)));
+    double delt = T - ( tmin + i*dt);
+    *rhof_out =  P->table->satFRho[i] + delt*P->table->satFdRhodt[i] + 0.5*delt*delt*P->table->satFd2RhodT2[i];
+    *rhog_out =  P->table->satGRho[i] + delt*P->table->satGdRhodt[i] + 0.5*delt*delt*P->table->satGd2RhodT2[i];
+
+
+
+/* return Psat from the single phase table        */
+    tmin = P->table->tmin;
+    tmax = P->table->tmax;
+    double rhomin  = P->table->rhomin;
+    double rhomax = P->table->rhomax;
+    dt = (tmax-tmin)/NTP;
+    double drho = (rhomax-rhomin)/NRHOP;
+    i = (int)round(((T-tmin)/(tmax-tmin)*(NTP)));
+    j = (int)round(((*rhog_out-rhomin)/(rhomax-rhomin)*(NRHOP)));
+    delt = T - ( tmin + i*dt);
+    double delrho = *rhog_out - ( rhomin + j*drho);
+    double ttseP = P->table->p[i][j]
+         + delt*P->table->dpdt[i][j] + 0.5*delt*delt*P->table->d2pdt2[i][j]
+         + delrho*P->table->dpdrho[i][j] + 0.5*delrho*delrho*P->table->d2pdrho2[i][j]
+         + delrho*delt*P->table->d2pdtdrho[i][j];
+
+    return ttseP; // return P_sat
+}
+
 /*
     Second Order Taylor series expansion
 */
 #ifdef SO
 #define EVALTTSEFN(VAR) \
-	double evaluate_ttse_##VAR(PureFluid *P , double t, double rho){\
-		double rho_f, rho_g;\
-		FpropsError err;\
+	double evaluate_ttse_##VAR( double t, double rho , Ttse* table){\
         int i,j;\
-        double tmin = P->data->T_t;\
-        double tmax = P->data->T_c;\
-		if(t >= tmin  && t< tmax) {\
-            double dt = (tmax-tmin)/NSAT;\
-            i = (int)round(((t - tmin)/(tmax - tmin)*(NSAT)));\
-            double delt = t - ( tmin + i*dt);\
-            rho_f =  P->table->satFRho[i] + delt*P->table->satFdRhodt[i] + 0.5*delt*delt*P->table->satFd2RhodT2[i];\
-            rho_g =  P->table->satGRho[i] + delt*P->table->satGdRhodt[i] + 0.5*delt*delt*P->table->satGd2RhodT2[i];\
-            if(rho_g < rho && rho < rho_f){\
-                    double x = rho_g*(rho_f/rho - 1)/(rho_f - rho_g);\
-                    double Qf = P->VAR##_fn( t,rho_f,P->data,&err);\
-                    double Qg = P->VAR##_fn( t,rho_g,P->data,&err);\
-                    return x*Qg + (1-x)*Qf;\
-                }\
-            }\
-        tmin = P->table->tmin;\
-        tmax = P->table->tmax;\
-        double rhomin  = P->table->rhomin;\
-        double rhomax = P->table->rhomax;\
+        double tmin = table->tmin;\
+        double tmax = table->tmax;\
+        double rhomin = table->rhomin;\
+        double rhomax = table->rhomax;\
         double dt = (tmax-tmin)/NTP;\
         double drho = (rhomax-rhomin)/NRHOP;\
         i = (int)round(((t-tmin)/(tmax-tmin)*(NTP)));\
         j = (int)round(((rho-rhomin)/(rhomax-rhomin)*(NRHOP)));\
         double delt = t - ( tmin + i*dt);\
         double delrho = rho - ( rhomin + j*drho);\
-        double ttse##VAR = P->table->VAR[i][j]\
-             + delt*P->table->d##VAR##dt[i][j] + 0.5*delt*delt*P->table->d2##VAR##dt2[i][j]\
-             + delrho*P->table->d##VAR##drho[i][j] + 0.5*delrho*delrho*P->table->d2##VAR##drho2[i][j]\
-             + delrho*delt*P->table->d2##VAR##dtdrho[i][j];\
+        double ttse##VAR = table->VAR[i][j]\
+             + delt*table->d##VAR##dt[i][j] + 0.5*delt*delt*table->d2##VAR##dt2[i][j]\
+             + delrho*table->d##VAR##drho[i][j] + 0.5*delrho*delrho*table->d2##VAR##drho2[i][j]\
+             + delrho*delt*table->d2##VAR##dtdrho[i][j];\
         return ttse##VAR;\
         }
 #endif
-
+/*  snippet for generic calls
+        double tmin = P->data->T_t;\
+        double tmax = P->data->T_c;\
+		if(t >= tmin  && t< tmax) {\
+            evaluate_ttse_sat(t, &rho_f, &rho_g, P, &err);\
+            if(rho_g < rho && rho < rho_f){\
+                    double x = rho_g*(rho_f/rho - 1)/(rho_f - rho_g);\
+                    double Qf = P->VAR##_fn( t,rho_f,P->data,&err);\
+                    double Qg = P->VAR##_fn( t,rho_g,P->data,&err);\
+                    return x*Qg + (1-x)*Qf;\
+                }\
+            }\*/
 /*
     First Order Taylor series expansion
 */
@@ -396,7 +434,6 @@ EVALTTSEFN(s);
 EVALTTSEFN(g);
 EVALTTSEFN(u);
 #endif
-
 
 //First order accurate evaluation
 #ifdef FO
@@ -479,7 +516,5 @@ void ttse_prepare(PureFluid *P){
 
 void ttse_clean(PureFluid *P){
     remove_tables(P->table);
-
-
 }
 

@@ -229,6 +229,9 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	}
 
 	P->table = FPROPS_NEW(Ttse);  //sid
+	P->table->istablebuilt =0;
+	P->table->istablebuilt =0;
+	P->table->istablebuilt =0;
 
 #undef I
 	return P;
@@ -481,7 +484,7 @@ double helmholtz_alphap(double T, double rho, const FluidData *data, FpropsError
 }
 
 /**
-	beta_p function from IAPWS Advisory Note 3 , used in calculation of partial
+	beta_p function from IAPWS Advisory Note 3, used in calculation of partial
 	property derivatives.
 */
 double helmholtz_betap(double T, double rho, const FluidData *data, FpropsError *err){
