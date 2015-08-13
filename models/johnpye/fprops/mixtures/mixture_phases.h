@@ -43,35 +43,46 @@ typedef struct DewBubbleData_Struct {
 	MixtureSpec *MS;  /* components and mass fractions */
 	double T;         /* temperature */
 	double *p_sat;    /* saturation pressures for all components */
-	/* double *rho_v; */ /* vapor densities at dew pressure for all components */
-	/* double *rho_l; */ /* liquid densities at dew pressure for all components */
-	double *rhos;     /* vapor-phase densities at dew pressure */
-	double *sat_rhos; /* liquid saturation densities for all components */
 	double tol;       /* tolerance to which to solve */
 	FpropsError *err; /* error enumeration */
 } DBData;
 /**
-	Structure to pass constant parameters into the dew-point and bubble-point 
-	functions
+	Struct to pass constant parameters into the dew-pressure and bubble-pressure 
+	functions.  This only works in the functions that calculate pressures.
+ */
+
+typedef struct DewBubbleTemperatureData_Struct {
+	MixtureSpec *MS;  /* components and mass fractions */
+	double p;         /* pressure */
+	double tol;       /* tolerance to which to solve */
+	FpropsError *err; /* error enumeration */
+} DBTempData;
+/**
+	Struct to pass constant parameters into the dew-temperature and 
+	bubble-temperature functions.  This only works in the functions that 
+	calculate temperatures.
  */
 
 SecantSubjectFunction rachford_rice;
 SecantSubjectFunction dew_p_error;
 SecantSubjectFunction bubble_p_error;
+SecantSubjectFunction dew_T_error;
+SecantSubjectFunction bubble_T_error;
 
-double dew_pressure(MixtureSpec *MS, double T, FpropsError *err);
+double dew_pressure(MixtureSpec *MS, double T, double tol, FpropsError *err);
 /**
 	Find the dew pressure using the function 'dew_p_error'.  This should only be 
 	called after determining which components in a mixture are subcritical.
 
 	@param MS a MixtureSpec struct which describes the mixture composition
 	@param T the temperature of the mixture
+	@param tol the tolerance to which to find the dew pressure
 	@param err an FpropsError struct to pass to other FPROPS functions
 
 	@return the dew pressure at T
  */
 
-double bubble_pressure(MixtureSpec *MS, double T, FpropsError *err);
+double bubble_pressure(MixtureSpec *MS, double T, double tol, FpropsError *err);
 /**
 	Find the bubble pressure using the function 'bubble_p_error'.  This should 
 	only be called after determining which components in a mixture are 
@@ -79,6 +90,7 @@ double bubble_pressure(MixtureSpec *MS, double T, FpropsError *err);
 
 	@param MS a MixtureSpec struct which describes the mixture composition
 	@param T the temperature of the mixture
+	@param tol the tolerance to which to find the bubble pressure
 	@param err an FpropsError struct to pass to other FPROPS functions
 
 	@return the bubble pressure of the mixture
@@ -110,7 +122,7 @@ double poynting_factor(PureFluid *PF, double T, double P, FpropsError *err);
 	@return the value of the Poynting Factor at the given conditions
  */
 
-void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsError *err);
+int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsError *err);
 /**
 	Find what phases a mixture splits into at a given temperature and pressure, 
 	and the mass/mole fractions of each phase and each component within each 
@@ -121,6 +133,62 @@ void mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErr
 	@param T the temperature
 	@param P the pressure
 	@param err an FpropsError struct to pass to other FPROPS functions
+ */
+
+int mixture_dew_pressure(double *p_d, MixtureSpec *MS, double T, FpropsError *err);
+/**
+	Find the mixture dew pressure using the function 'dew_p_error'.  This 
+	checks for the presence of subcritical pure components, so it can be called 
+	directly on a mixture.
+
+	@param p_d a double which will hold the dew pressure
+	@param MS a MixtureSpec struct which describes the mixture composition
+	@param T the temperature of the mixture
+	@param err an FpropsError struct to pass to other FPROPS functions
+
+	@return whether the calculation succeeded or failed
+ */
+
+int mixture_bubble_pressure(double *p_b, MixtureSpec *MS, double T, FpropsError *err);
+/**
+	Find the mixture bubble pressure using the function 'bubble_p_error'.  This 
+	checks for the presence of subcritical pure components, so it can be called 
+	directly on a mixture.
+
+	@param p_b a double which will hold the bubble pressure
+	@param MS a MixtureSpec struct which describes the mixture composition
+	@param T the temperature of the mixture
+	@param err an FpropsError struct to pass to other FPROPS functions
+
+	@return whether the calculation succeeded or failed
+ */
+
+int mixture_dew_temperature(double *T_d, MixtureSpec *MS, double p, FpropsError *err);
+/**
+	Find the mixture dew temperature using the function 'dew_T_error'.  Checks 
+	for the presence of subcritical components, so it can be called directly on 
+	a mixture.
+
+	@param T_d a double which will hold the dew temperature
+	@param MS a MixtureSpec struct which describes the mixture composition
+	@param p the pressure of the mixture
+	@param err an FpropsError struct to pass to other FPROPS functions
+
+	@return whether the calculation succeeded or failed
+ */
+
+int mixture_bubble_temperature(double *T_b, MixtureSpec *MS, double p, FpropsError *err);
+/**
+	Find the mixture bubble temperature using the function 'dew_T_error'.  
+	Checks for the presence of subcritical components, so it can be called 
+	directly on a mixture.
+
+	@param T_b a double which will hold the bubble temperature
+	@param MS a MixtureSpec struct which describes the mixture composition
+	@param p the pressure of the mixture
+	@param err an FpropsError struct to pass to other FPROPS functions
+
+	@return whether the calculation succeeded or failed
  */
 
 #endif

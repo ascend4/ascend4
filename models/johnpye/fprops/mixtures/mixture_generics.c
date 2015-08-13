@@ -19,7 +19,7 @@
 	59 Temple Place - Suite 330
 	Boston, MA 02111-1307, USA.
 *//*
-	by Jacob Shealy, June 25-July 13, 2015
+	by Jacob Shealy, June 25-August 12, 2015
 
 	Generic functions that are used in modeling mixtures, but that may not have 
 	anything specifically to do with mixtures, or which may be peripheral to 
@@ -28,6 +28,7 @@
 
 #include "mixture_generics.h"
 #include "mixture_struct.h"
+#include "../zeroin.h"
 #include <math.h>
 
 /* ---------------------------------------------------------------------
@@ -163,12 +164,16 @@ unsigned index_of_max(unsigned nelems, double *nums){
 	Generic root-finding function that uses the secant method, starting from 
 	the positions in `x' and setting the first element of `x' to the position 
 	at which `func' equals zero within the given tolerance `tol'
+
+	Return values indicate:
+		0 - function succeeded
+		1 - function converged on a non-solution point
+		2 - function converged on infinity or NaN
+		3 - function reached the maximum number of iterations without converging
  */
-void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], double tol){
-#define MAX_ITER 30
-	unsigned i
-		/* , ix_low */ /* index of point (x,y) with smallest y-error */
-		;
+int secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], double tol){
+#define MAX_ITER 50
+	unsigned i;
 	double y[2];
 	double delta_x;
 
@@ -176,18 +181,17 @@ void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], dou
 
 	for(i=0;i<MAX_ITER;i++){
 		y[0] = (*func)(x[0], user_data);
-		/* ix_low = (fabs(y[0]) < fabs(y[1])) ? 0 : 1; */ /* find point with smallest y-error */
 		if(fabs(y[0])<tol){
 			MSG("Root-finding SUCCEEDED after %u iterations;"
 					"\n\t  zeroed function has value %.6g at postion %.6g\n", i, y[0], x[0]);
-			break;
+			return 0;
 		}
 		if(fabs(x[0] - x[1])<tol){
 			MSG("Root-finding FAILED after %u iterations;"
 					"\n\t  independent variables equal at %.6g,"
 					"\n\t  function is not zero, but %.6g",
 					i, x[0], y[0]);
-			break;
+			return 1;
 		}
 		/* Break if variables are infinity or NaN */
 		if(x[0]==INFINITY || y[0]==INFINITY 
@@ -196,16 +200,36 @@ void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], dou
 					"\n\t  independent variable equals %.6g,"
 					"\n\t  function output equals %.6g"
 					, i, x[0], y[0]);
-			break;
+			return 2;
 		}
 
-		/* update independent variable x[0] */
-		delta_x = -y[0] * (x[0] - x[1])/(y[0] - y[1]);
-		x[1] = x[0];     /* reassign second position to first position */
-		y[1] = y[0];
-		x[0] += delta_x; /* shift first position to more accurate value */
+		MSG("At iteration %u, (x,y) pairs are (%g, %g), (%g, %g)"
+				, i+1, x[0], y[0], x[1], y[1]);
+
+		if(y[0]*y[1] < 0.0){
+			/*
+				If one of the values in 'y' is positive and one is negative (so 
+				that their product is negative), then the solution must be 
+				between x[0] and x[1].  Use zeroin_solve to find the solution.
+			 */
+			double x_min = (x[0]<x[1]) ? x[0] : x[1];
+			double x_max = (x[0]<x[1]) ? x[1] : x[0];
+			double err = 0.0;
+
+			MSG("Solution is bound by (x,y) pairs; entering 'zeroin_solve'...");
+
+			return (int) zeroin_solve(func, user_data, x_min, x_max, tol, (x), &err);
+		}else{
+			/* Otherwise, update independent variables in 'x'. */
+			delta_x = -y[0] * (x[0] - x[1])/(y[0] - y[1]);
+			x[1] = x[0];     /* reassign second position to first position */
+			y[1] = y[0];
+			x[0] += delta_x; /* shift first position to a more accurate value */
+		}
 	}
-	/* puts("\n\tLeaving secant root-finding routine now"); */
+
+	MSG("Reached maximum number of iterations");
+	return 3;
 #undef MAX_ITER
 }
 
@@ -267,7 +291,7 @@ int cubic_solution(double coef[4], double *roots){
  */
 /*
 	Find mole fractions of a mixture from the mass fractions and identities of 
-	the fluids that form the solution.  This implements the relation
+	the fluids that form the solution.  This implements the equality
 
 	Mole Fraction 'i' = (Mass Fraction 'i' / Molar Mass 'i') /
 	                    (Sum over 'j' (Mass Fraction 'j' / Molar Mass 'j'))
@@ -280,7 +304,7 @@ int cubic_solution(double coef[4], double *roots){
 void mole_fractions(unsigned npure, double *x_mole, double *X_mass, PureFluid **PF){
 #define D PF[i]->data
 	unsigned i;
-	double XM_sum=0.0; /* sum of (mass fraction over molar mass) terms */
+	double XM_sum=0.0; /* sum of (mass fraction divided by molar mass) terms */
 
 	for(i=0;i<npure;i++){
 		XM_sum += X_mass[i] / D->M;
@@ -293,7 +317,7 @@ void mole_fractions(unsigned npure, double *x_mole, double *X_mass, PureFluid **
 
 /*
 	Find mass fractions of a mixture from the mole fractions and identities of 
-	the components that form the solution.  This implements the relation
+	the components that form the solution.  This implements the equality
 
 	Mass fraction 'i' = (Mole fraction 'i' * Molar mass 'i') /
 	                    (Sum over 'j' (Mole fraction 'j' * Molar mass 'j'))
@@ -342,11 +366,10 @@ double mixture_x_fill_in(unsigned npure, double *Xs){
 	unsigned i;
 	double x_total;
 
-	for(i=0;i<(npure-1);i++){ /* sum only for npure-1 loops */
+	for(i=0;i<(npure-1);i++){ /* sum only for (npure - 1) loops */
 		x_total += Xs[i];
 	}
 	if(x_total>0){
-		/* printf("\n  " TITLE MIX_XSUM_ERROR "%.6f.", x_total); */
 		ERRMSG("Sum over all but one mass fraction, which should be exactly 1.00, is %.10f", x_total);
 	}
 	return 1-x_total;

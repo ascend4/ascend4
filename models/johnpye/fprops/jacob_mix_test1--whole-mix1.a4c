@@ -18,6 +18,7 @@ MODEL mixture_test;
 	g IS_A specific_secondary_energy;
 	a IS_A specific_secondary_energy; *)
 	p_bubble IS_A pressure;
+	p_dew IS_A pressure;
 
 	nphase IS_A phase_count;
 	phase_frac[1..3] IS_A mass_fraction;
@@ -93,6 +94,12 @@ MODEL mixture_test;
 	mix_bubble_p : mixture_bubble_p(
 		T : INPUT;
 		p_bubble : OUTPUT;
+		mixt : DATA
+	);
+	
+	mix_dew_p : mixture_dew_p(
+		T : INPUT;
+		p_dew : OUTPUT;
 		mixt : DATA
 	);
 

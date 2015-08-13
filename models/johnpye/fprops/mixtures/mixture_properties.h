@@ -39,11 +39,7 @@
 
 typedef double MixPropertyFunc(PhaseMixState *PM, double *p_phases, FpropsError *err);
 
-void mixture_rhos_sat(PhaseSpec *PS, double T, double P, FpropsError *err);
-
-/* double mixture_u(PhaseMixState *PM, double *u_phases, FpropsError *err);
-double mixture_h(PhaseMixState *PM, double *h_phases, FpropsError *err); */
-
+int mixture_rhos_sat(PhaseSpec *PS, double T, double P, FpropsError *err);
 double mixture_rho(PhaseMixState *PM, double *rhos);
 /* MixPropertyFunc old_mixture_u;
 MixPropertyFunc old_mixture_h;

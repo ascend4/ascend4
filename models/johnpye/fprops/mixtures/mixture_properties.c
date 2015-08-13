@@ -61,20 +61,26 @@ double pressure_rho_error(double rho, void *user_data){
 }
 
 /*
-	Find the vapor and liquid densities at saturation conditions for each 
+	Find the vapor and liquid densities at saturation conditions for each phase 
+	in the mixture.
+
+	Return values indicate:
+		0 - success
+		1 - 
  */
-void mixture_rhos_sat(PhaseSpec *PS, double T, double P, FpropsError *err){
+int mixture_rhos_sat(PhaseSpec *PS, double T, double P, FpropsError *err){
 #define PPH PS->PH
 #define NPURE PPH[i]->pures
 #define RHOS(IX) PPH[ IX ]->rhos
 	unsigned i, j;
 	int i_v = -1
 		, i_l = -1
+		, sec = 0  /* whether the secant root-finding method succeeded */
 		;
 	double p_sat
 		, rho_d
-		, rhos[2] /* densities used in searching for supercritical densities */
-		, tol = 1.e-6
+		, rhos[2]        /* densities used in searching for supercritical densities */
+		, tol = MIX_XTOL /* tolerance used in root-finding function */
 		;
 
 	for(i=0;i<PS->phases;i++){
@@ -83,12 +89,13 @@ void mixture_rhos_sat(PhaseSpec *PS, double T, double P, FpropsError *err){
 				PRData prd = {T, P, PPH[i]->PF[j], err};
 				rhos[0] = P / PPH[i]->PF[j]->data->R / T; /* start at ideal-gas density */
 
-				MSG("Error is %i (1) (reset to zero)", *err);
 				if(*err!=FPROPS_NO_ERROR){
 					*err = FPROPS_NO_ERROR;
 				}
-				secant_solve(&pressure_rho_error, &prd, rhos, tol);
-				MSG("Error is %i (2)", *err);
+				sec = secant_solve(&pressure_rho_error, &prd, rhos, tol);
+				if(sec){
+					return sec;
+				}
 
 				PPH[i]->rhos[j] = rhos[0];
 			}
@@ -101,20 +108,18 @@ void mixture_rhos_sat(PhaseSpec *PS, double T, double P, FpropsError *err){
 	if(i_v>-1 && i_l>-1){
 		for(i=0;i<PPH[i_v]->pures;i++){
 			fprops_sat_T(T, &p_sat, RHOS(i_l)+i, RHOS(i_v)+i, PPH[i_v]->PF[i], err);
-			MSG("Error is %i (3)", *err);
 		}
-		
 	}else if(i_v>-1){
 		for(i=0;i<PPH[i_v]->pures;i++){
 			fprops_sat_T(T, &p_sat, &rho_d, RHOS(i_v)+i, PPH[i_v]->PF[i], err);
-			MSG("Error is %i (4)", *err);
 		}
 	}else if(i_l>-1){
 		for(i=0;i<PPH[i_l]->pures;i++){
 			fprops_sat_T(T, &p_sat, RHOS(i_l)+i, &rho_d, PPH[i_l]->PF[i], err);
-			MSG("Error is %i (5)", *err);
 		}
 	}
+
+	return 0;
 #undef RHOS
 #undef NPURE
 #undef PPH
@@ -167,6 +172,7 @@ double mixture_rho(PhaseMixState *PM, double *rhos){
 	return 1 / vol_mix;
 }
 
+#if 0
 double old_mixture_u(PhaseMixState *PM, double *u_phases, FpropsError *err){
 	MSG("Entered the function...");
 	unsigned i, j;
@@ -250,6 +256,7 @@ double old_mixture_cp(PhaseMixState *PM, double *p_phases, FpropsError *err){
 	}
 	return p_mix;
 }
+#endif
 
 #define MIX_FUNC_FIRST(PROP) \
 	double mixture_##PROP(PhaseMixState *PM, double *p_phases, FpropsError *err){ \

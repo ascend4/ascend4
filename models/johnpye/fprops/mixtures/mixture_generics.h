@@ -34,6 +34,7 @@
 /*
 	Maxima and Minima
  */
+double min_element(unsigned nelems, double *nums);
 /**
 	Finds the minimum element within an array of doubles
 
@@ -42,8 +43,8 @@
 
 	@return minimum element of 'nums'
  */
-double min_element(unsigned nelems, double *nums);
 
+int min_positive_elem(double *min, unsigned nelems, double *nums);
 /**
 	Finds the minimum positive element within an array of doubles
 
@@ -54,8 +55,8 @@ double min_element(unsigned nelems, double *nums);
 	@return whether a qualifying element was found (array contents might all be
 	negative...)
  */
-int min_positive_elem(double *min, unsigned nelems, double *nums);
 
+double max_element(unsigned nelems, double *nums);
 /**
 	Find the maximum element in an array of doubles
 
@@ -64,8 +65,8 @@ int min_positive_elem(double *min, unsigned nelems, double *nums);
 
 	@return maximum element of 'nums'
  */
-double max_element(unsigned nelems, double *nums);
 
+double sum_elements(unsigned nelems, double *nums);
 /**
 	Sum element of an array of doubles
 
@@ -74,8 +75,8 @@ double max_element(unsigned nelems, double *nums);
 
 	@return sum of the elements of 'nums'
  */
-double sum_elements(unsigned nelems, double *nums);
 
+unsigned index_of_min(unsigned nelems, double *nums);
 /**
 	Find the index of the minimum element in an array of doubles
 
@@ -84,8 +85,8 @@ double sum_elements(unsigned nelems, double *nums);
 
 	@return index of the minimum element within 'nums'
  */
-unsigned index_of_min(unsigned nelems, double *nums);
 
+unsigned index_of_max(unsigned nelems, double *nums);
 /**
 	Find the index of the maximum element in an array of doubles
 
@@ -94,25 +95,11 @@ unsigned index_of_min(unsigned nelems, double *nums);
 
 	@return index of the maximum element within 'nums'
  */
-unsigned index_of_max(unsigned nelems, double *nums);
 
 /*
 	Finding the Roots of Equations
  */
-/**
-	Find the intersection (root) of a function by the secant method (like 
-	Newton's method, but using secants rather than derivatives)
-
-	@param func the function for which to find the root
-	@param user_data extra data (not varied by secant_solve) used by 'func'
-	@param x starting values of the variable being zeroed; these should be relatively close.
-	@param tol maximum value of 'func' at the solution
-
-	@return (void) sets the first element in 'x' to the value at which 'func' is 
-	within 'tol' distance of zero
- */
-void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], double tol);
-
+int secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], double tol);
 /**
 	Find only the real roots of a cubic equation
 
@@ -121,11 +108,25 @@ void secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], dou
 
 	@return the number of roots (1-3)
  */
+
 int cubic_solution(double coef[4], double *roots);
+/**
+	Find the intersection (root) of a function by the secant method (like 
+	Newton's method, but using secants rather than derivatives)
+
+	@param func the function for which to find the root
+	@param user_data extra data (not varied in secant_solve) used by 'func'
+	@param x starting values of the variable being zeroed; these should be relatively close.
+	@param tol maximum value of 'func' at the solution
+
+	@return (void) sets the first element in 'x' to the value at which 'func' is 
+	within 'tol' distance of zero
+ */
 
 /*
 	Finding and Interconverting Fractions
  */
+void mole_fractions(unsigned npure, double *x_mole, double *X_mass, PureFluid **PF);
 /**
 	Find the mole fractions of a mixture from the mass fractions
 
@@ -134,8 +135,8 @@ int cubic_solution(double coef[4], double *roots);
 	@param X_mass an array of mass fractions
 	@param PF an array of fluids, the mixture components
  */
-void mole_fractions(unsigned npure, double *x_mole, double *X_mass, PureFluid **PF);
 
+void mass_fractions(unsigned npure, double *X_mass, double *x_mole, PureFluid **PF);
 /**
 	Find the mass fractions of a mixture from the mole fractions
 
@@ -144,8 +145,8 @@ void mole_fractions(unsigned npure, double *x_mole, double *X_mass, PureFluid **
 	@param x_mole an array of mole fractions
 	@param PF an array of fluids, the mixture components
  */
-void mass_fractions(unsigned npure, double *X_mass, double *x_mole, PureFluid **PF);
 
+void mixture_x_props(unsigned npure, double *Xs, double *props);
 /**
 	Find fractions (e.g. mass or mole fractions) that sum to 1.0 and bear a 
 	particular set of ratios to each other.
@@ -154,8 +155,8 @@ void mass_fractions(unsigned npure, double *X_mass, double *x_mole, PureFluid **
 	@param Xs an output array of fractions, which sum to 1.0
 	@param props an array of numbers, which bear the same ratios to each other as the members of 'Xs' do
  */
-void mixture_x_props(unsigned npure, double *Xs, double *props);
 
+double mixture_x_fill_in(unsigned npure, double *Xs);
 /**
 	Find the last of a set of fractions that sum to 1.0
 
@@ -164,8 +165,8 @@ void mixture_x_props(unsigned npure, double *Xs, double *props);
 
 	@return the difference between 1.0 and the sum over all elements of 'Xs'
  */
-double mixture_x_fill_in(unsigned npure, double *Xs);
 
+double mixture_M_avg(unsigned npure, double *Xs, PureFluid **PF);
 /*
 	Find the average molar mass of a mixture
 
@@ -175,6 +176,5 @@ double mixture_x_fill_in(unsigned npure, double *Xs);
 
 	@return the average molar mass of the mixture so specified
  */
-double mixture_M_avg(unsigned npure, double *Xs, PureFluid **PF);
 
 #endif
