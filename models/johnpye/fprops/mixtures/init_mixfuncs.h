@@ -38,6 +38,12 @@
 #include <stdio.h>
 #include <math.h>
 
+typedef struct MixtureState_Struct {
+	double T;       /* mixture temperature */
+	double *rhos;   /* (current) mass densities of components */
+	MixtureSpec *X; /* specification of pure-component members of mixture */
+} MixtureState;
+
 /* Function prototypes */
 /* void ig_rhos(MixtureState *M, double P); */
 /* void initial_rhos(MixtureState *M, double P, FpropsError *err); */

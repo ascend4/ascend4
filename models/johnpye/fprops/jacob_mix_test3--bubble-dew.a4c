@@ -1,0 +1,117 @@
+(* Outline of ASCEND multi-component ideal-solution routine *)
+(* To perform the simulation, load the file into ASCEND and run 'setup'. *)
+
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/fprops/mixture";
+REQUIRE "johnpye/fprops/mixtures.a4l";
+
+(* The mixture_test model *)
+MODEL mixture_test;
+	T,
+	T_bubble,
+	T_dew     IS_A temperature;
+	p,
+	p_bubble,
+	p_dew     IS_A pressure;
+
+	rho,
+	rho_dewT,
+	rho_bubbleP IS_A mass_density;
+
+	u,
+	u_ph1 IS_A specific_energy;
+
+	ii IS_A phase_count;
+
+	mixt IS_A mixture_spec;
+	mixt.npure :== 4;
+	mixt.components[1] :== 'ammonia';
+	mixt.components[2] :== 'carbonmonoxide';
+	mixt.components[3] :== 'cyclohexane';
+	mixt.components[4] :== 'benzene';
+	mixt.eos :== 'pengrob';
+	mixt.xs[1] :== 0.3;
+	mixt.xs[2] :== 0.35;
+	mixt.xs[3] :== 0.20;
+	mixt.xs[4] :== 0.15;
+
+	(* -----------------------------------------------------------------
+	   Calculate bubble, dew temperatures and pressures *)
+	mix_bubble_temperature : mixture_bubble_T(
+		p : INPUT;
+		T_bubble : OUTPUT;
+		mixt : DATA
+	);
+	mix_dew_temperature : mixture_dew_T(
+		p : INPUT;
+		T_dew : OUTPUT;
+		mixt : DATA
+	);
+	mix_bubble_pressure : mixture_bubble_p(
+		T : INPUT;
+		p_bubble : OUTPUT;
+		mixt : DATA
+	);
+	mix_dew_pressure : mixture_dew_p(
+		T : INPUT;
+		p_dew : OUTPUT;
+		mixt : DATA
+	);
+
+
+	(* -----------------------------------------------------------------
+	   Calculate density at several conditions *)
+	mix_density : mixture_rho(
+		T, p : INPUT;
+		rho : OUTPUT;
+		mixt : DATA
+	);
+	mix_density_dew_T : mixture_rho(
+		T_dew, p : INPUT;
+		rho_dewT : OUTPUT;
+		mixt : DATA
+	);
+	mix_density_bubble_p : mixture_rho(
+		T, p_bubble : INPUT;
+		rho_bubbleP : OUTPUT;
+		mixt : DATA
+	);
+
+
+	(* -----------------------------------------------------------------
+	   Calculate internal energy for whole mixture, one phase *)
+	mix_u : mixture_u(
+		T, p : INPUT;
+		u : OUTPUT;
+		mixt : DATA
+	);
+
+	mix_phase_u : mixture_phase_u(
+		T, p, ii : INPUT;
+		u_ph1 : OUTPUT;
+		mixt : DATA
+	);
+	
+METHODS
+METHOD specify;
+	FIX T;
+	FIX p;
+	FIX ii;
+END specify;
+METHOD values;
+	T := 100 {K} + 273.15 {K};
+	p := 2 {bar};
+	ii := 1;
+END values;
+METHOD options;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END options;
+METHOD setup;
+	RUN specify;
+	RUN values;
+	RUN options;
+END setup;
+END mixture_test;
+

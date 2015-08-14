@@ -11,12 +11,15 @@ MODEL mixture_test;
 	T IS_A temperature;
 	p IS_A pressure;
 	rho IS_A mass_density;
-	u IS_A specific_energy;
-	u_ph1 IS_A specific_energy;
+	(* u, *)
+	u_ph1  IS_A specific_energy;
+	h_ph1  IS_A specific_enthalpy;
+	cp_ph1 IS_A heat_capacity;
+	g_ph1  IS_A specific_secondary_energy;
 
 	nphase IS_A phase_count;
 	phase_frac[1..3] IS_A mass_fraction;
-	phase_rho[1..3] IS_A mass_density;
+	(* phase_rho[1..3] IS_A mass_density; *)
 
 	mixt IS_A mixture_spec;
 	mixt.npure :== 3;
@@ -29,9 +32,9 @@ MODEL mixture_test;
 	mixt.xs[3] :== 0.25;
 
 	ii IS_A phase_count;
-	mix_comp IS_A mixture_component;
+	(* mix_comp IS_A mixture_component;
 
-	(* num_comps IS_A phase_count;
+	num_comps IS_A phase_count;
 	mix_phase_components : mixture_phase_components(
 		T, p, ii : INPUT;
 		num_comps : OUTPUT;
@@ -50,15 +53,30 @@ MODEL mixture_test;
 		mixt : DATA
 	);
 
-	mix_u : mixture_u(
+	(* mix_u : mixture_u(
 		T, p : INPUT;
 		u : OUTPUT;
 		mixt : DATA
-	);
+	); *)
 
 	mix_phase_u : mixture_phase_u(
 		T, p, ii : INPUT;
 		u_ph1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_phase_h : mixture_phase_h(
+		T, p, ii : INPUT;
+		h_ph1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_phase_cp : mixture_phase_cp(
+		T, p, ii : INPUT;
+		cp_ph1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_phase_g : mixture_phase_g(
+		T, p, ii : INPUT;
+		g_ph1 : OUTPUT;
 		mixt : DATA
 	);
 
@@ -67,18 +85,18 @@ METHOD specify;
 	FIX T;
 	FIX p;
 	FIX ii;
-	FIX mix_comp;
+	(* FIX mix_comp; *)
 END specify;
 METHOD values;
 	T  := 300 {K} + 273.15 {K};
 	p  := 2 {bar};
 	ii := 1;
 
-	mix_comp.grandparent := mixt;
+	(* mix_comp.grandparent := mixt;
 	mix_comp.phase_num   := 1;
 	mix_comp.comp_num    := 1;
 	mix_comp.T           := T;
-	mix_comp.p           := p;
+	mix_comp.p           := p; *)
 END values;
 METHOD options;
 	SOLVER QRSlv;

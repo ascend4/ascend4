@@ -422,6 +422,7 @@ double amixture_cv(MixtureState *M, FpropsError *err){
 	return cv_mix;
 }
 
+#if 0
 /*
 	Calculate the value of the sum over all *mole* fractions x_i, of the mole 
 	fraction times the natural logarithm of the mole fraction:
@@ -460,6 +461,7 @@ double mixture_x_ln_x(unsigned nPure, double *x_mass, PureFluid **PFs){
 	}
 	return x_ln_x;
 }
+#endif
 
 /*
 	Calculate the overall ideal-solution entropy per unit mass in a mixture of 

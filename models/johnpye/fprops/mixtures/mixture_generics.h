@@ -28,8 +28,10 @@
 #define MIX_GENERICS_HEADER
 
 #include "mixture_struct.h"
-#include <stdio.h>
+#include "../zeroin.h"
 
+#include <stdio.h>
+#include <math.h>
 
 /*
 	Maxima and Minima
@@ -101,26 +103,25 @@ unsigned index_of_max(unsigned nelems, double *nums);
  */
 int secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], double tol);
 /**
+	Find the intersection (root) of a function by the secant method (like 
+	Newton's method, but using secants rather than derivatives)
+
+	@param func the function for which to find the root
+	@param user_data extra data (not varied by secant_solve) used by 'func'
+	@param x the starting values of the variable being zeroed; x[0] will be set to the approximate zero point of 'func'
+	@param tol how close 'func' has to be to zero to declare the solution a success
+
+	@return whether the root-finding succeeded
+ */
+
+int cubic_solution(double coef[4], double *roots);
+/**
 	Find only the real roots of a cubic equation
 
 	@param coef an array of equation coefficients
 	@param roots an array which will hold the real roots
 
 	@return the number of roots (1-3)
- */
-
-int cubic_solution(double coef[4], double *roots);
-/**
-	Find the intersection (root) of a function by the secant method (like 
-	Newton's method, but using secants rather than derivatives)
-
-	@param func the function for which to find the root
-	@param user_data extra data (not varied in secant_solve) used by 'func'
-	@param x starting values of the variable being zeroed; these should be relatively close.
-	@param tol maximum value of 'func' at the solution
-
-	@return (void) sets the first element in 'x' to the value at which 'func' is 
-	within 'tol' distance of zero
  */
 
 /*
@@ -167,7 +168,7 @@ double mixture_x_fill_in(unsigned npure, double *Xs);
  */
 
 double mixture_M_avg(unsigned npure, double *Xs, PureFluid **PF);
-/*
+/**
 	Find the average molar mass of a mixture
 
 	@param npure the number of pure components
@@ -175,6 +176,21 @@ double mixture_M_avg(unsigned npure, double *Xs, PureFluid **PF);
 	@param PF an array of fluids, the components in the mixture
 
 	@return the average molar mass of the mixture so specified
+ */
+
+double mixture_x_ln_x(unsigned npure, double *x_mass, PureFluid **PF);
+/**
+	Find the sum over all mole fractions, of mole fraction times natural 
+	logarithm of the mole fraction:
+		\sum\limits_i x_i \ln(x_i)
+
+	This quantity is used in calculating second-law properties.
+
+	@param npure the number of pure components
+	@param Xs an array of mass fractions
+	@param PF an array of PureFluid structs
+
+	@return sum of mole fraction x_i times ln(x_i)
  */
 
 #endif

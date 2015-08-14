@@ -122,7 +122,7 @@ double poynting_factor(PureFluid *PF, double T, double P, FpropsError *err);
 	@return the value of the Poynting Factor at the given conditions
  */
 
-int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsError *err);
+int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol, FpropsError *err);
 /**
 	Find what phases a mixture splits into at a given temperature and pressure, 
 	and the mass/mole fractions of each phase and each component within each 
@@ -135,7 +135,7 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, FpropsErro
 	@param err an FpropsError struct to pass to other FPROPS functions
  */
 
-int mixture_dew_pressure(double *p_d, MixtureSpec *MS, double T, FpropsError *err);
+int mixture_dew_pressure(double *p_d, MixtureSpec *MS, double T, double tol, FpropsError *err);
 /**
 	Find the mixture dew pressure using the function 'dew_p_error'.  This 
 	checks for the presence of subcritical pure components, so it can be called 
@@ -149,7 +149,7 @@ int mixture_dew_pressure(double *p_d, MixtureSpec *MS, double T, FpropsError *er
 	@return whether the calculation succeeded or failed
  */
 
-int mixture_bubble_pressure(double *p_b, MixtureSpec *MS, double T, FpropsError *err);
+int mixture_bubble_pressure(double *p_b, MixtureSpec *MS, double T, double tol, FpropsError *err);
 /**
 	Find the mixture bubble pressure using the function 'bubble_p_error'.  This 
 	checks for the presence of subcritical pure components, so it can be called 
@@ -163,7 +163,7 @@ int mixture_bubble_pressure(double *p_b, MixtureSpec *MS, double T, FpropsError 
 	@return whether the calculation succeeded or failed
  */
 
-int mixture_dew_temperature(double *T_d, MixtureSpec *MS, double p, FpropsError *err);
+int mixture_dew_temperature(double *T_d, MixtureSpec *MS, double p, double tol, FpropsError *err);
 /**
 	Find the mixture dew temperature using the function 'dew_T_error'.  Checks 
 	for the presence of subcritical components, so it can be called directly on 
@@ -177,7 +177,7 @@ int mixture_dew_temperature(double *T_d, MixtureSpec *MS, double p, FpropsError 
 	@return whether the calculation succeeded or failed
  */
 
-int mixture_bubble_temperature(double *T_b, MixtureSpec *MS, double p, FpropsError *err);
+int mixture_bubble_temperature(double *T_b, MixtureSpec *MS, double p, double tol, FpropsError *err);
 /**
 	Find the mixture bubble temperature using the function 'dew_T_error'.  
 	Checks for the presence of subcritical components, so it can be called 

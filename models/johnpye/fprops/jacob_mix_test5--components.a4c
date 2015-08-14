@@ -1,0 +1,80 @@
+(* Outline of ASCEND multi-component ideal-solution routine *)
+(* To perform the simulation, load the file into ASCEND and run 'setup'. *)
+
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/fprops/mixture";
+REQUIRE "johnpye/fprops/mixtures.a4l";
+
+(* The mixture_test model *)
+MODEL mixture_test;
+	T IS_A temperature;
+	p IS_A pressure;
+	rho IS_A mass_density;
+	h_comp1,
+	h_comp2 IS_A specific_enthalpy;
+
+	ph1,
+	cmp1,
+	cmp2 IS_A phase_count;
+
+	mixt IS_A mixture_spec;
+	mixt.npure :== 4;
+	mixt.components[1] :== 'ammonia';
+	mixt.components[2] :== 'carbonmonoxide';
+	mixt.components[3] :== 'cyclohexane';
+	mixt.components[4] :== 'benzene';
+	mixt.eos :== 'pengrob';
+	mixt.xs[1] :== 0.3;
+	mixt.xs[2] :== 0.35;
+	mixt.xs[3] :== 0.20;
+	mixt.xs[4] :== 0.15;
+
+	mix_density : mixture_rho(
+		T, p : INPUT;
+		rho : OUTPUT;
+		mixt : DATA
+	);
+	mix_comp1_enthalpy : mixture_comps_h(
+		T, p, ph1, cmp1 : INPUT;
+		h_comp1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_comp2_enthalpy : mixture_comps_h(
+		T, p, ph1, cmp2 : INPUT;
+		h_comp2 : OUTPUT;
+		mixt : DATA
+	);
+
+METHODS
+METHOD specify;
+	FIX T;
+	FIX p;
+	FIX ph1;
+	FIX cmp1;
+	FIX cmp2;
+	(* FIX mix_comp; *)
+END specify;
+METHOD values;
+	T  := 150 {K} + 273.15 {K};
+	p  := 2 {bar};
+	ph1 := 1;
+	cmp1 := 1;
+	cmp2 := 2;
+
+	(* mix_comp.grandparent := mixt;
+	mix_comp.phase_num   := 1;
+	mix_comp.comp_num    := 1;
+	mix_comp.T           := T;
+	mix_comp.p           := p; *)
+END values;
+METHOD options;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END options;
+METHOD setup;
+	RUN specify;
+	RUN values;
+	RUN options;
+END setup;
+END mixture_test;

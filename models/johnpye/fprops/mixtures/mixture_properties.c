@@ -27,7 +27,7 @@
 #include "mixture_generics.h"
 #include "mixture_prepare.h"
 #include "mixture_struct.h"
-#include "init_mixfuncs.h"
+/* #include "init_mixfuncs.h" */
 #include "../helmholtz.h"
 #include "../fluids.h"
 #include "../fprops.h"

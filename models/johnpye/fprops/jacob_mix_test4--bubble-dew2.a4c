@@ -10,93 +10,95 @@ REQUIRE "johnpye/fprops/mixtures.a4l";
 MODEL mixture_test;
 	T IS_A temperature;
 	p IS_A pressure;
+
+	ii IS_A phase_count;
+	nphase IS_A phase_count;
+	phase_frac[1..3] IS_A mass_fraction;
+
 	rho IS_A mass_density;
-	u IS_A specific_energy;
+	u,
 	u_ph1 IS_A specific_energy;
 	h IS_A specific_enthalpy;
 	s IS_A specific_entropy;
-	g IS_A specific_secondary_energy;
-	a IS_A specific_secondary_energy;
-
-	nphase IS_A phase_count;
-	phase_frac[1..3] IS_A mass_fraction;
-	phase_rho[1..3] IS_A mass_density;
+	(* g,
+	a IS_A specific_secondary_energy; *)
 
 	mixt IS_A mixture_spec;
-	mixt.npure :== 3;
+	mixt.npure :== 4;
 	mixt.components[1] :== 'ammonia';
-	mixt.components[2] :== 'carbondioxide';
+	mixt.components[2] :== 'carbonmonoxide';
 	mixt.components[3] :== 'cyclohexane';
+	mixt.components[4] :== 'benzene';
 	mixt.eos :== 'pengrob';
-	mixt.xs[1] :== 0.4;
+	mixt.xs[1] :== 0.3;
 	mixt.xs[2] :== 0.35;
-	mixt.xs[3] :== 0.25;
+	mixt.xs[3] :== 0.20;
+	mixt.xs[4] :== 0.15;
 
-	ii IS_A phase_count;
-
-	num_comps IS_A phase_count;
-	mix_phase_components : mixture_phase_components(
-		T, p, ii : INPUT;
-		num_comps : OUTPUT;
+	(* -----------------------------------------------------------------
+	   Calculate bubble, dew temperatures and pressures *)
+	mix_temperature : mixture_dew_T(
+		p : INPUT;
+		T : OUTPUT;
 		mixt : DATA
 	);
-
-	mix_density : mixture_rho(
-		T, p : INPUT;
-		rho : OUTPUT;
-		mixt : DATA
-	);
-
 	mix_phase_data : mixture_flash_phases(
 		T, p : INPUT;
 		nphase, phase_frac[1], phase_frac[2], phase_frac[3] : OUTPUT;
 		mixt : DATA
 	);
 
+	(* -----------------------------------------------------------------
+	   Calculate density at several conditions *)
+	mix_density : mixture_rho(
+		T, p : INPUT;
+		rho : OUTPUT;
+		mixt : DATA
+	);
+
+	(* -----------------------------------------------------------------
+	   Calculate internal energy for whole mixture and one phase, and other 
+	   properties for the whole mixture.
+	 *)
 	mix_u : mixture_u(
 		T, p : INPUT;
 		u : OUTPUT;
 		mixt : DATA
 	);
-
 	mix_phase_u : mixture_phase_u(
 		T, p, ii : INPUT;
 		u_ph1 : OUTPUT;
 		mixt : DATA
 	);
-
 	mix_h : mixture_h(
 		T, p : INPUT;
 		h : OUTPUT;
 		mixt : DATA
 	);
-
 	mix_s : mixture_s(
 		T, p : INPUT;
 		s : OUTPUT;
 		mixt : DATA
 	);
-
-	mix_g : mixture_g(
+	(* mix_g : mixture_g(
 		T, p : INPUT;
 		g : OUTPUT;
 		mixt : DATA
 	);
-
 	mix_a : mixture_a(
 		T, p : INPUT;
 		a : OUTPUT;
 		mixt : DATA
-	);
+	); *)
 	
 METHODS
 METHOD specify;
-	FIX T;
+	(* FIX T; *)
 	FIX p;
 	FIX ii;
 END specify;
 METHOD values;
-	T := 300 {K} + 273.15 {K};
+	(* T := 100 {K} + 273.15 {K}; *)
 	p := 2 {bar};
 	ii := 1;
 END values;

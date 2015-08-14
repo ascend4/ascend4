@@ -29,6 +29,8 @@
 #include "mixture_generics.h"
 #include "mixture_struct.h"
 #include "../zeroin.h"
+
+#include <stdio.h>
 #include <math.h>
 
 /* ---------------------------------------------------------------------
@@ -395,5 +397,37 @@ double mixture_M_avg(unsigned npure, double *x_mass, PureFluid **PFs){
 		ERRMSG(MIX_XSUM_ERROR, x_total);
 	}
 	return 1. / rM_avg;
+}
+
+/*
+	Calculate the value of the sum over all *mole* fractions x_i, of the mole 
+	fraction times the natural logarithm of the mole fraction:
+		\sum\limits_i x_i \ln(x_i)
+
+	This quantity is used in calculating second-law mixture properties for ideal 
+	solutions
+ */
+double mixture_x_ln_x(unsigned npure, double *x_mass, PureFluid **PF){
+	unsigned i;
+	double x_total=0.0, /* sum over all mass fractions -- to check consistency */
+		   x_mole,      /* mole fraction of current component in the loop */
+		   rM_avg=0.0,  /* reciprocal average molar mass */
+		   x_ln_x=0.0;  /* sum of (x_i * ln(x_i)) over all `i' */
+
+	for(i=0;i<npure;i++){ /* find the reciprocal average molar mass */
+		/* add mass fraction over molar mass */
+		rM_avg += x_mass[i] / PF[i]->data->M;
+		x_total += x_mass[i];
+	}
+	/* return error if sum of mole fractions is not 1.00 */
+	if(fabs(x_total - 1) > MIX_XTOL){
+		ERRMSG(MIX_XSUM_ERROR, x_total);
+	}
+
+	for(i=0;i<npure;i++){ /* Find the summation we came for */
+		x_mole  = (x_mass[i] / PF[i]->data->M) * rM_avg;
+		x_ln_x += x_mass[i] / PF[i]->data->M * log(x_mole);
+	}
+	return x_ln_x;
 }
 

@@ -68,8 +68,8 @@ PhaseMixState *new_PhaseMixState(unsigned npure, unsigned nphase, double T, doub
 	PhaseMixState *P = ASC_NEW(PhaseMixState);
 	P->T  = T;
 	P->p  = p;
-	P->MS = new_MixtureSpec(npure);
 	P->PS = new_PhaseSpec(npure,nphase);
+	P->MS = new_MixtureSpec(npure);
 
 	return P;
 }
@@ -89,4 +89,40 @@ PhaseMixState *fill_PhaseMixState(double T, double p, PhaseSpec *P, MixtureSpec 
 	PM->PS = P;
 	PM->MS = M;
 	return PM;
+}
+
+/*
+	Build a MixtureSpec struct from scratch, creating PureFluid structs to 
+	represent the components.
+ */
+MixtureSpec *build_MixtureSpec(unsigned npure, double *Xs, void **fluids, char *type, char **source, MixtureError *merr){
+	MSG("Entered the function...");
+	unsigned i;
+	double X_sum = 0.0;
+	MixtureSpec *MS = ASC_NEW(MixtureSpec);
+
+	MS->pures = npure;
+	MS->Xs = ASC_NEW_ARRAY(double,npure);
+	MS->PF = ASC_NEW_ARRAY(PureFluid *,npure);
+
+	for(i=0;i<npure;i++){
+		X_sum += Xs[i];
+		MS->Xs[i] = Xs[i];
+	}
+	if(fabs(X_sum - 1.0) > MIX_XTOL){
+		MSG_MARK("  3.1");
+		*merr = MIXTURE_XSUM_ERROR;
+	}
+	char **fluid_names = (char **)fluids;
+
+	for(i=0;i<npure;i++){
+		MS->PF[i] = fprops_fluid(fluid_names[i],type,source[i]);
+		MSG("Prepared fluid %s", fluid_names[i]);
+	}
+
+	for(i=0;i<npure;i++){
+		MSG("Fluid number %u at %p is %s, modeled with %u"
+				, i, MS->PF[i], MS->PF[i]->name, MS->PF[i]->type);
+	}
+	return MS;
 }

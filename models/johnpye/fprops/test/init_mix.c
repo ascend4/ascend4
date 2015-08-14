@@ -31,6 +31,7 @@
 #include "../mixtures/mixture_properties.h"
 #include "../mixtures/mixture_prepare.h"
 #include "../mixtures/mixture_phases.h"
+#include "../mixtures/init_mixfuncs.h"
 #include "../helmholtz.h"
 #include "../pengrob.h"
 #include "../fluids.h"
@@ -108,6 +109,7 @@ void test_seven(void);
  */
 int main(){
 
+#if 1
 	int usr_cont=1;
 	char temp_str[100];
 
@@ -127,6 +129,7 @@ int main(){
 	if(1!=usr_cont){
 		return 0;
 	}
+#endif
 
 	test_seven();
 
@@ -172,17 +175,19 @@ void test_one(double *T, double *P){
 		"nitrogen", "ammonia", "carbondioxide", "methane", "water"
 	};
 
-	MixtureSpec *MS = new_MixtureSpec(NFLUIDS);
+	/* MixtureSpec *MS = new_MixtureSpec(NFLUIDS); */
 	PhaseSpec *PS = new_PhaseSpec(NFLUIDS,3);
 	FpropsError err = FPROPS_NO_ERROR;
 	MixtureError merr = MIXTURE_NO_ERROR;
 
-	const char *source[NFLUIDS] = {NULL};
+	char *source[NFLUIDS] = {NULL};
 	double xs[NFLUIDS];                  /* mass fractions */
 	double props[] = {2, 6, 4, 3, 5};    /* proportions of mass fractions */
+	double tol = MIX_XTOL;               /* tolerance to which to find solutions */
 	mixture_x_props(NFLUIDS, xs, props); /* mass fractions from proportions */
 
-	mixture_specify(MS, NFLUIDS, xs, (const void **) fluids, "pengrob", source, &merr);
+	/* mixture_specify(MS, NFLUIDS, xs, (const void **) fluids, "pengrob", source, &merr); */
+    MixtureSpec *MS = build_MixtureSpec(NFLUIDS, xs, (void **) fluids, "pengrob", source, &merr);
 
 	double rho_mix[NSIMS] = {0}
 		/* , u_mix[NSIMS] = {0}
@@ -238,7 +243,7 @@ void test_one(double *T, double *P){
 #define AMIXTURE_CALC(PROP) amixture_##PROP(&MT, &err)
 #define BMIXTURE_CALC(PROP) mixture_##PROP(&PM, PROP##_bph[i], &err)
 	for(i=0;i<NSIMS;i++){
-		flash[i] = mixture_flash(PS, MS, T[i], P[i], &err); /* flash mixture, obtaining phases */
+		flash[i] = mixture_flash(PS, MS, T[i], P[i], tol, &err); /* flash mixture, obtaining phases */
 		rsat[i]  = mixture_rhos_sat(PS, T[i], P[i], &err);  /* find densities in each phase */
 		if(flash[i] || rsat[i]){
 			MSG("The flash-calculation function returned %i", flash[i]);
@@ -366,33 +371,39 @@ void test_seven(void){
 #define TEMPS 4
 #define PRESSURES 3
 	unsigned j, i;
-	int flash[TEMPS][PRESSURES]
-		, pdew[TEMPS][PRESSURES]
-		, pbubl[TEMPS][PRESSURES]
-		;
+	int flash, pdew, pbubl, Tdew, Tbubl;
 	char *fluids[] = {
 		"isohexane", "krypton", "carbonmonoxide", "ammonia", "water"
 	};
 	double props[] = {11, 4, 2, 3, 2};
 	double Xs[NPURE]
-		, p_d[TEMPS][PRESSURES] = {{0}}
-		, p_b[TEMPS][PRESSURES] = {{0}}
+		, p_d[TEMPS][PRESSURES] = {{0}} /* dew pressure */
+		, p_b[TEMPS][PRESSURES] = {{0}} /* bubble pressure */
+		, T_d[TEMPS][PRESSURES] = {{0}} /* dew temperature */
+		, T_b[TEMPS][PRESSURES] = {{0}} /* bubble temperature */
+		, tol = MIX_XTOL
 		;
 
 	mixture_x_props(NPURE, Xs, props);
-	const char *src[NPURE] = {NULL};
+	char *src[NPURE] = {NULL};
 	FpropsError err = FPROPS_NO_ERROR;
 	MixtureError merr = MIXTURE_NO_ERROR;
 
-	MixtureSpec *MS = ASC_NEW(MixtureSpec);
+	// MixtureSpec *MS = ASC_NEW(MixtureSpec);
 
-	mixture_specify(MS, NPURE, Xs, (void *)fluids, "pengrob", src, &merr);
+	// mixture_specify(MS, NPURE, Xs, (void *)fluids, "pengrob", src, &merr);
+    MixtureSpec *MS = build_MixtureSpec(NPURE, Xs, (void **) fluids, "pengrob", src, &merr);
 
 	double Ts[] = {270, 310, 350, 390, 430, 470}
 		, Ps[] = {1.5e5, 2.5e5, 4e5, 6e5}
 		;
 
 	MSG("Declared all variables...");
+    MSG("The mixture specification is at %p ; it holds %u components", MS, MS->pures);
+    for(i=0;i<NPURE;i++){
+        MSG("  Component number %u is %s, and has mass fraction %g"
+                , i, MS->PF[i]->name, MS->Xs[i]);
+    }
 
 	PhaseSpec ***PS_2 = ASC_NEW_ARRAY(PhaseSpec **,TEMPS);
 	for(i=0;i<TEMPS;i++){
@@ -400,14 +411,20 @@ void test_seven(void){
 		for(j=0;j<PRESSURES;j++){
 			PS_2[i][j] = ASC_NEW(PhaseSpec);
 
-			flash[i][j] = mixture_flash(PS_2[i][j], MS, Ts[i], Ps[j], &err);
-			pdew[i][j]  = mixture_dew_pressure((p_d[i]+j), MS, Ts[i], &err);
-			pbubl[i][j] = mixture_bubble_pressure((p_b[i]+j), MS, Ts[i], &err);
+			flash = mixture_flash(PS_2[i][j], MS, Ts[i], Ps[j], tol, &err);
 
-			if(flash[i][j] || pdew[i][j] || pbubl[i][j]){
-				MSG("The flash-calculation function returned %i", flash[i][j]);
-				MSG("The dew-pressure function returned %i", pdew[i][j]);
-				MSG("The bubble-pressure function returned %i", pbubl[i][j]);
+			pdew  = mixture_dew_pressure((p_d[i]+j), MS, Ts[i], tol, &err);
+			pbubl = mixture_bubble_pressure((p_b[i]+j), MS, Ts[i], tol, &err);
+
+			Tdew  = mixture_dew_temperature((T_d[i]+j), MS, Ps[j], tol, &err);
+			Tbubl = mixture_bubble_temperature((T_b[i]+j), MS, Ps[j], tol, &err);
+
+			if(flash || pdew || pbubl || Tdew || Tbubl){
+				MSG("The flash-calculation function returned %i", flash);
+				MSG("The dew-pressure function returned %i", pdew);
+				MSG("The bubble-pressure function returned %i", pbubl);
+				MSG("The dew-temperature function returned %i", Tdew);
+				MSG("The bubble-temperature function returned %i", Tbubl);
 				return;
 			}
 		}
@@ -438,6 +455,8 @@ void test_seven(void){
 			}
 			printf("\n\tThe dew pressure is %.1f Pa", p_d[i1][i2]);
 			printf("\n\tThe bubble pressure is %.1f Pa", p_b[i1][i2]);
+            printf("\n\tThe dew temperature is %.2f K", T_d[i1][i2]);
+            printf("\n\tThe bubble temperature is %.2f K", T_b[i1][i2]);
 			puts("");
 		}
 	}

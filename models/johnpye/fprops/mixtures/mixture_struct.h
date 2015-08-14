@@ -146,6 +146,7 @@ typedef struct PhaseMixtureState_Struct {
 	phase data.  Therefore, this structure SHOULD NOT be used in production 
 	code.
  */
+#if 0
 typedef struct MixtureState_Struct {
 	double T;       /* mixture temperature */
 	double *rhos;   /* (current) mass densities of components */
@@ -155,7 +156,6 @@ typedef struct MixtureState_Struct {
 /*
 	Representation of mixture with phases
  */
-#if 0
 typedef struct MixturePhaseState_Struct {
 	double T;           /* mixture temperature */
 	double **rhos;      /* (current) mass densities of components */
@@ -167,49 +167,15 @@ typedef struct MixturePhaseState_Struct {
 } MixturePhaseState;
 #endif
 
-/*
-	Macros to initialize MixtureSpec, PhaseSpec, and PhaseMixState structs
- */
-#if 0
-#define CREATE_NEW_MIX_SPEC(NAME,N_PURE) \
-	NAME = ASC_NEW(MixtureSpec); \
-	NAME##->pures = N_PURE; \
-	NAME->Xs    = ASC_NEW_ARRAY(double,N_PURE); \
-	NAME->PF    = ASC_NEW_ARRAY(PureFluid *,N_PURE);
-
-#define CREATE_NEW_PHASE(NAME,N_PURE) \
-	NAME = ASC_NEW(Phase); \
-	NAME->pures = N_PURE; \
-	NAME->c      = ASC_NEW_ARRAY(unsigned,N_PURE); \
-	NAME->Xs     = ASC_NEW_ARRAY(double,N_PURE); \
-	NAME->xs     = ASC_NEW_ARRAY(double,N_PURE); \
-	NAME->PF     = ASC_NEW_ARRAY(PureFluid *,N_PURE); \
-	NAME->rhos   = ASC_NEW_ARRAY(double,N_PURE);
-
-#define CREATE_NEW_PHASE_SPEC(NAME,N_PURE,N_PHASE) \
-	NAME = ASC_NEW(PhaseSpec); \
-	NAME->phases  = 0; \
-	NAME->ph_type = ASC_NEW_ARRAY(PhaseName,N_PHASE); \
-	NAME->ph_frac = ASC_NEW_ARRAY(double,N_PHASE); \
-	NAME->PH      = ASC_NEW_ARRAY(Phase *,N_PHASE); \
-#ifndef i_ph_spec \
-	unsigned i_ph_spec; \
-#endif \
-	for(i_ph_spec=0;i_ph_spec<N_PHASE;i_ph_spec++){ \
-		CREATE_NEW_PHASE( NAME->PH[i_ph_spec], N_PURE ); \
-	}
-
-#define CREATE_NEW_PHASE_MIX_SPEC(NAME,N_PURE,N_PHASE,TEMP,PRESSURE) \
-	NAME = ASC_NEW(PhaseMixSpec); \
-	NAME->T = TEMP; \
-	NAME->p = PRESSURE; \
-	CREATE_NEW_MIX_SPEC(NAME->MX,N_PURE); \
-	CREATE_NEW_PHASE_SPEC(NAME->PS,N_PURE,N_PHASE);
-#endif
-
 MixtureSpec *new_MixtureSpec(unsigned npure);
+MixtureSpec *fill_MixtureSpec(unsigned npure, double *X, PureFluid **P);
+MixtureSpec *build_MixtureSpec(unsigned npure, double *Xs, void **fluids, char *type, char **source, MixtureError *merr);
+
 Phase *new_Phase(unsigned npure);
+
 PhaseSpec *new_PhaseSpec(unsigned npure, unsigned nphase);
+
 PhaseMixState *new_PhaseMixState(unsigned npure, unsigned nphase, double T, double P);
+PhaseMixState *fill_PhaseMixState(double T, double p, PhaseSpec *P, MixtureSpec *M);
 
 #endif

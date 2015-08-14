@@ -1,5 +1,5 @@
 REQUIRE "atoms.a4l";
-IMPORT "johnpye/fprops/mixture";
+REQUIRE "johnpye/thermo_types.a4c";
 PROVIDE "mixtures.a4l";
 (*
    	mixtures.a4l, by Jacob Shealy, 8/4

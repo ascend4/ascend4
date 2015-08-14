@@ -56,13 +56,18 @@
 	Forward Declarations
  */
 ExtBBoxInitFunc asc_mixture_prepare;
-#define MIX_EXTFUNC(NAME) ExtBBoxFunc mixture_##NAME##_calc;
-#define MIX_PROP_EXTFUNC(PROP) MIX_EXTFUNC(PROP) MIX_EXTFUNC(phase_##PROP)
 
-MIX_PROP_EXTFUNC(rho); MIX_PROP_EXTFUNC(u); MIX_PROP_EXTFUNC(h); MIX_PROP_EXTFUNC(cp);
-MIX_PROP_EXTFUNC(cv); MIX_PROP_EXTFUNC(s); MIX_PROP_EXTFUNC(g); MIX_PROP_EXTFUNC(a);
-MIX_EXTFUNC(flash_phases); MIX_EXTFUNC(flash_component); MIX_EXTFUNC(bubble_p);
-MIX_EXTFUNC(dew_p); MIX_EXTFUNC(phase_components); MIX_EXTFUNC(component_cnum);
+/* Macros to declare external functions (forward declarations) */
+#define MIX_EXTDECL(NAME) ExtBBoxFunc mixture_##NAME##_calc;
+#define MIX_PROP_EXTDECL(PROP) MIX_EXTDECL(PROP) MIX_EXTDECL(phase_##PROP) \
+    MIX_EXTDECL(comps_##PROP)
+
+MIX_PROP_EXTDECL(rho); MIX_PROP_EXTDECL(u); MIX_PROP_EXTDECL(h); MIX_PROP_EXTDECL(cp);
+MIX_PROP_EXTDECL(cv); MIX_PROP_EXTDECL(s); MIX_PROP_EXTDECL(g); MIX_PROP_EXTDECL(a);
+
+MIX_EXTDECL(flash_phases); MIX_EXTDECL(flash_component); MIX_EXTDECL(dew_p);
+MIX_EXTDECL(bubble_p); MIX_EXTDECL(phase_components); MIX_EXTDECL(component_cnum);
+MIX_EXTDECL(dew_T); MIX_EXTDECL(bubble_T);
 
 /* ---------------------------------------------------------------------
 	Global Variables
@@ -70,24 +75,27 @@ MIX_EXTFUNC(dew_p); MIX_EXTFUNC(phase_components); MIX_EXTFUNC(component_cnum);
 static symchar *mix_symbols[6];
 enum Symbol_Enum {NPURE_SYM, COMP_SYM, X_SYM, TYPE_SYM, SOURCE_SYM};
 
+/* Macros to define help texts for external functions */
 #define MIX_HELP_TEXT(NAME) "Calculate overall " NAME " of the mixture, using ideal-solution assumption."
 #define MIX_PHASE_HELP_TEXT(NAME) "Calculate " NAME " of the mixture for a single phase, using ideal-solution assumption."
+#define MIX_COMPS_HELP_TEXT(NAME) "Calculate " NAME " for a single component in one phase of the mixture, using ideal-solution assumption."
 
 #define MIX_HELP_DECL(PROP,MESSAGE) static const char *mixture_##PROP##_help = MESSAGE;
 #define MIX_PH_HELP_DECL(PROP,MESSAGE) static const char *mixture_phase_##PROP##_help = MESSAGE;
+#define MIX_CMP_HELP_DECL(PROP,MESSAGE) static const char *mixture_comps_##PROP##_help = MESSAGE;
 
-#define MIX_HELP_FUNC(PROP,NAME) MIX_HELP_DECL(PROP, MIX_HELP_TEXT(NAME)) \
-								 MIX_PH_HELP_DECL(PROP, MIX_PHASE_HELP_TEXT(NAME))
+#define MIX_HELP_DOUBLE(PROP,NAME) MIX_HELP_DECL(PROP, MIX_HELP_TEXT(NAME)) \
+            MIX_PH_HELP_DECL(PROP, MIX_PHASE_HELP_TEXT(NAME)) \
+            MIX_CMP_HELP_DECL(PROP, MIX_COMPS_HELP_TEXT(NAME))
 
-/* static const char *mixture_p_help = "Calculate pressure for the mixture, using ideal solution assumption, and report if pressure is inconsistent among the densities."; */
-MIX_HELP_FUNC(rho, "density");
-MIX_HELP_FUNC(u, "internal energy");
-MIX_HELP_FUNC(h, "enthalpy");
-MIX_HELP_FUNC(cp, "constant-pressure heat capacity");
-MIX_HELP_FUNC(cv, "contant-volume heat capacity");
-MIX_HELP_FUNC(s, "entropy");
-MIX_HELP_FUNC(g, "Gibbs energy");
-MIX_HELP_FUNC(a, "Helmholtz energy");
+MIX_HELP_DOUBLE(rho, "density");
+MIX_HELP_DOUBLE(u, "internal energy");
+MIX_HELP_DOUBLE(h, "enthalpy");
+MIX_HELP_DOUBLE(cp, "constant-pressure heat capacity");
+MIX_HELP_DOUBLE(cv, "contant-volume heat capacity");
+MIX_HELP_DOUBLE(s, "entropy");
+MIX_HELP_DOUBLE(g, "Gibbs energy");
+MIX_HELP_DOUBLE(a, "Helmholtz energy");
 
 MIX_HELP_DECL(flash_phases, "Calculate and return number of phases in the mixture, and "
 		"mass fraction of the mixture in each phase.");
@@ -95,10 +103,10 @@ MIX_HELP_DECL(flash_component, "Return mass or mole fraction of a component with
 MIX_HELP_DECL(phase_components, "Return number of components within a phase of the mixture.");
 MIX_HELP_DECL(component_cnum, "Return index that gives the location of a component from "
 		"a phase, within a mixture specification (MixtureSpec)");
-MIX_HELP_FUNC(dew_p, "dew pressure");
-MIX_HELP_FUNC(bubble_p, "bubble pressure");
-MIX_HELP_FUNC(dew_T, "dew temperature");
-MIX_HELP_FUNC(bubble_T, "bubble temperature");
+MIX_HELP_DECL(dew_p, MIX_HELP_TEXT("dew pressure"));
+MIX_HELP_DECL(bubble_p, MIX_HELP_TEXT("bubble pressure"));
+MIX_HELP_DECL(dew_T, MIX_HELP_TEXT("dew temperature"));
+MIX_HELP_DECL(bubble_T, MIX_HELP_TEXT("bubble temperature"));
 
 /*
 	Register all functions that will be exported
@@ -125,14 +133,19 @@ extern ASC_EXPORT int mixture_register(){
 	/* CALCFN(mixture_p,2,1); */
 	CALCFN(mixture_rho,2,1);
 	CALCFN(mixture_phase_rho,3,1);
+    /* CALCFN(mixture_comps_rho,4,1); */
 	CALCFN(mixture_u,2,1);
 	CALCFN(mixture_phase_u,3,1);
+    CALCFN(mixture_comps_u,4,1);
 	CALCFN(mixture_h,2,1);
 	CALCFN(mixture_phase_h,3,1);
+    CALCFN(mixture_comps_h,4,1);
 	CALCFN(mixture_cp,2,1);
 	CALCFN(mixture_phase_cp,3,1);
+    CALCFN(mixture_comps_cp,4,1);
 	CALCFN(mixture_cv,2,1);
 	CALCFN(mixture_phase_cv,3,1);
+    CALCFN(mixture_comps_cv,4,1);
 
 	CALCFN(mixture_s,2,1);
 	CALCFN(mixture_phase_s,3,1);
@@ -157,7 +170,8 @@ extern ASC_EXPORT int mixture_register(){
 }
 
 /*
-	Function which prepares persistent data
+	Function to prepare persistent data, namely the MixtureSpec struct which 
+	will be used in modeling the mixture.
  */
 int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct gl_list_t *arglist){
 
@@ -170,8 +184,8 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 			, NAME, InstanceKind(VAR), TYPENAME, TYPE); \
 		return 1; \
 	}else{ \
-		ERROR_REPORTER_HERE(ASC_USER_NOTE, "DATA member %s has correct type %s" \
-				, NAME, TYPENAME); \
+		/* ERROR_REPORTER_HERE(ASC_USER_NOTE, "DATA member %s has correct type %s" */ \
+				/* , NAME, TYPENAME); */ \
 	}
 
 #define CHECK_EXIST_TYPE(VAR,TYPE,NAME,TYPENAME) \
@@ -200,13 +214,13 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	npureinst = ChildByChar(data, mix_symbols[NPURE_SYM]);
 	CHECK_EXIST_TYPE(npureinst, INTEGER_CONSTANT_INST, "npure", "'integer constant'");
 	npure = (int *)(IC_INST(npureinst)->value);
-	ERROR_REPORTER_HERE(ASC_USER_NOTE, "Number of pures is %i", npure);
+	/* ERROR_REPORTER_HERE(ASC_USER_NOTE, "Number of pures is %i", npure); */
 
 	const struct gl_list_t *comps_gl;
 	const struct gl_list_t *xs_gl;
-	const char *type = NULL
-		, **comps = ASC_NEW_ARRAY(const char *, npure)
-		, **srcs = ASC_NEW_ARRAY(const char *, npure);
+	/* const */ char *type = NULL
+		, **comps = ASC_NEW_ARRAY(/* const */ char *, npure)
+		, **srcs = ASC_NEW_ARRAY(/* const */ char *, npure);
 	double *xs = ASC_NEW_ARRAY(double, npure);
 
 	/* Component names -- required */
@@ -297,28 +311,11 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	for(i=0;i<npure;i++){
 		comps[i] = SCP(SYMC_INST(InstanceChild(compinst, II))->value);
 		xs[i] = RC_INST(InstanceChild(xinst, II))->value;
-		/* xs[i] = 0.0; */
 	}
 
 	/* Create mixture specification in a MixtureSpec struct */
-	MixtureSpec *MS = ASC_NEW(MixtureSpec);
 	MixtureError merr = MIXTURE_NO_ERROR;
-
-#if 0
-	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The location of the MixtureSpec is %p", MS);
-	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The number of components is %u", npure);
-	ERROR_REPORTER_HERE(ASC_USER_NOTE, "  -- from 'comps_gl', is %lu", comps_gl->length);
-	ERROR_REPORTER_HERE(ASC_USER_NOTE, "  -- from 'xs_gl', is %lu", xs_gl->length);
-	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The equation of state used is %s", NULL_STR(type));
-	for(i=0;i<npure;i++){
-		ERROR_REPORTER_HERE(ASC_USER_NOTE
-				, "\tFor component #%i, %s, the source is %s and the mass fraction is %g"
-				, i, comps[i], NULL_STR(srcs[i]), xs[i]);
-	}
-#endif
-
-	mixture_specify(MS, npure, xs, (const void **)comps, type, srcs, &merr);
-	bbox->user_data = (void *) MS;
+	bbox->user_data = (void *) build_MixtureSpec(npure, xs, (void **)comps, type, srcs, &merr);
 
 	return 0;
 }
@@ -349,9 +346,8 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	PhaseSpec *PS = new_PhaseSpec(MS->pures, 3); \
 	double T = inputs[0] \
 		, p = inputs[1]; \
-	mixture_flash(PS, MS, T, p, &err); \
+	mixture_flash(PS, MS, T, p, MIX_XTOL, &err); \
 	mixture_rhos_sat(PS, T, p, &err); \
-	PhaseMixState *PM = fill_PhaseMixState(T, p, PS, MS);
 
 #if 0
 int mixture_p_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
@@ -379,12 +375,12 @@ int mixture_rho_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 #define PTYPE PS->ph_type[i]
 	CALCPREP(2,1);
 	CALCFLASH;
-
-	unsigned i;
+	PhaseMixState *PM = fill_PhaseMixState(T, p, PS, MS);
 
 	double rhos[MS->pures];
 	outputs[0] = mixture_rho(PM, rhos);
 #if 0
+    unsigned i;
 	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The overall mixture density is %g", outputs[0]);
 	for(i=0;i<NPHASE;i++){
 		ERROR_REPORTER_HERE(ASC_USER_NOTE, "\tThe density of %s phase is %g kg/m3"
@@ -403,14 +399,26 @@ int mixture_phase_rho_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 		double *inputs, double *outputs, double *jacobian){
 	CALCPREP(3,1);
 	CALCFLASH;
+	PhaseMixState *PM = fill_PhaseMixState(T, p, PS, MS);
 
 	double rhos[PS->phases] /* individual phase densities */
-		, rho;              /* the overall mixture density */
+        ;
 
-	rho = mixture_rho(PM, rhos);
+	mixture_rho(PM, rhos);
 	outputs[0] = rhos[((int) inputs[2]) - 1]; /* assign density of one phase to output */
 
 	return 0;
+}
+
+int mixture_comps_rho_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
+		double *inputs, double *outputs, double *jacobian){
+    CALCPREP(4,1);
+    CALCFLASH;
+
+    unsigned phase = ((int) inputs[2]) - 1 /* number of the phase */
+        , comp = ((int) inputs[3]) - 1; /* number of the component */
+    outputs[0] = PS->PH[phase]->rhos[comp];
+    return 0;
 }
 
 /*
@@ -421,6 +429,7 @@ int mixture_phase_rho_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 			double *inputs, double *outputs, double *jacobian){ \
 		CALCPREP(2,1); \
 		CALCFLASH; \
+        PhaseMixState *PM = fill_PhaseMixState(T, p, PS, MS); \
 		double props[PS->phases]; /* internal by-phase property values */ \
 		outputs[0] = mixture_##PROP(PM, props, &err); \
 		return 0; \
@@ -431,12 +440,25 @@ int mixture_phase_rho_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 			double *inputs, double *outputs, double *jacobian){ \
 		CALCPREP(3,1); \
 		CALCFLASH; \
-		double props[PS->phases] /* internal by-phase property values */ \
-			, prop;              /* overall mixture property value */ \
-		prop = mixture_##PROP(PM, props, &err); \
+        PhaseMixState *PM = fill_PhaseMixState(T, p, PS, MS); \
+		double props[PS->phases]; /* internal by-phase property values */ \
+		mixture_##PROP(PM, props, &err); \
 		outputs[0] = props[((int) inputs[2]) - 1]; /* assign property of one phase to output */ \
 		return 0; \
 	}
+
+#define MIX_COMPS_EXTFUNC(PROP) \
+    int mixture_comps_##PROP##_calc(struct BBoxInterp *bbox, int ninputs, int noutputs, \
+			double *inputs, double *outputs, double *jacobian){ \
+        CALCPREP(4,1); \
+        CALCFLASH; \
+        unsigned phase = ((int) inputs[2]) - 1 /* number of the phase */ \
+            , comp = ((int) inputs[3]) - 1; /* number of the component */ \
+        /* Access the property function from FPROPS for an individual component */ \
+        outputs[0] = fprops_##PROP((FluidState){T, PS->PH[phase]->rhos[comp] \
+                , PS->PH[phase]->PF[comp]}, &err); \
+        return 0; \
+    }
 
 MIX_PROP_EXTFUNC(u); MIX_PROP_EXTFUNC(h); MIX_PROP_EXTFUNC(cp); MIX_PROP_EXTFUNC(cv);
 MIX_PROP_EXTFUNC(s); MIX_PROP_EXTFUNC(g); MIX_PROP_EXTFUNC(a);
@@ -444,6 +466,9 @@ MIX_PROP_EXTFUNC(s); MIX_PROP_EXTFUNC(g); MIX_PROP_EXTFUNC(a);
 MIX_PHASE_EXTFUNC(u); MIX_PHASE_EXTFUNC(h); MIX_PHASE_EXTFUNC(cp);
 MIX_PHASE_EXTFUNC(cv); MIX_PHASE_EXTFUNC(s); MIX_PHASE_EXTFUNC(g);
 MIX_PHASE_EXTFUNC(a);
+
+MIX_COMPS_EXTFUNC(u); MIX_COMPS_EXTFUNC(h); MIX_COMPS_EXTFUNC(cp); MIX_COMPS_EXTFUNC(cv);
+MIX_COMPS_EXTFUNC(s); MIX_COMPS_EXTFUNC(g); MIX_COMPS_EXTFUNC(a);
 
 /* ---------------------------------------------------------------------
 	Phase-equilibrium functions
@@ -554,38 +579,40 @@ int mixture_dew_p_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 		double *inputs, double *outputs, double *jacobian){
 	CALCPREP(1,1);
 
+	int result;
 	double T = inputs[0] /* the mixture temperature */
-		, p_d;           /* the mixture dew pressure (if there is any) */
+		, p_d            /* the mixture dew pressure (if there is any) */
+		, tol = MIX_XTOL /* tolerance to use in solving for dew pressure */
+		;
 
-	switch (mixture_dew_pressure(&p_d, MS, T, &err)){
-		case 0:
-			outputs[0] = p_d;
-			break;
-		case 1:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "The dew pressure converged on a non-solution point.");
-			outputs[0] = MIN_P;
-			break;
-		case 2:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "The dew pressure converged on Infinity or NaN.");
-			outputs[0] = MIN_P;
-			break;
-		case 3:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "The root-finding algorithm that searches for the dew pressure "
-					"\nfailed to converge in the maximum number of iterations.");
-			outputs[0] = MIN_P;
-			break;
-		case 4:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "There is no dew pressure; all components are supercritical at "
-					"\ntemperature %g K.", T);
-			outputs[0] = MIN_P;
-			break;
+	result = mixture_dew_pressure(&p_d, MS, T, tol, &err);
+	if(result){
+		switch(result){
+			case 1:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "The dew pressure converged on a non-solution point.");
+				break;
+			case 2:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "The dew pressure converged on Infinity or NaN.");
+				break;
+			case 3:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "The root-finding algorithm that searches for the dew pressure "
+						"\nfailed to converge in the maximum number of iterations.");
+				break;
+			case 4:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "There is no dew pressure; all components are supercritical at "
+						"\ntemperature %g K.", T);
+				break;
+		}
+		outputs[0] = MIN_P;
+		return 1;
+	}else{
+		outputs[0] = p_d;
+		return 0;
 	}
-
-	return 0;
 }
 
 /*
@@ -595,113 +622,120 @@ int mixture_bubble_p_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 		double *inputs, double *outputs, double *jacobian){
 	CALCPREP(1,1);
 
+	int result;
 	double T = inputs[0] /* the mixture temperature */
-		, p_b;           /* the mixture bubble pressure (if there is any) */
+		, p_b            /* the mixture bubble pressure (if there is any) */
+		, tol = MIX_XTOL /* tolerance to use in solving for bubble pressure */
+		;
 
-	switch (mixture_bubble_pressure(&p_b, MS, T, &err)){
-		case 0:
-			outputs[0] = p_b;
-			break;
-		case 1:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "The bubble pressure converged on a non-solution point.");
-			outputs[0] = MIN_P;
-			break;
-		case 2:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "The bubble pressure converged on Infinity or NaN.");
-			outputs[0] = MIN_P;
-			break;
-		case 3:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "The root-finding algorithm that searches for the bubble pressure "
-					"\nfailed to converge in the maximum number of iterations.");
-			outputs[0] = MIN_P;
-			break;
-		case 4:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "There is no bubble pressure; all components are supercritical at "
-					"\ntemperature %g K.", T);
-			outputs[0] = MIN_P;
-			break;
+	result = mixture_bubble_pressure(&p_b, MS, T, tol, &err);
+	if(result){
+		switch(result){
+			case 1:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "The bubble pressure converged on a non-solution point.");
+				break;
+			case 2:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "The bubble pressure converged on Infinity or NaN.");
+				break;
+			case 3:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "The root-finding algorithm that searches for the bubble pressure "
+						"\nfailed to converge in the maximum number of iterations.");
+				break;
+			case 4:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "There is no bubble pressure; all components are supercritical at "
+						"\ntemperature %g K.", T);
+				break;
+		}
+		outputs[0] = MIN_P;
+		return 1;
+	}else{
+		outputs[0] = p_b;
+		return 0;
 	}
-	return 0;
 }
 
 int mixture_dew_T_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 		double *inputs, double *outputs, double *jacobian){
 	CALCPREP(1,1);
 
+    int result;
 	double p = inputs[0] /* the mixture pressure */
-		, T_d;           /* the mixture dew temperature (if there is any) */
+		, T_d            /* the mixture dew temperature (if there is any) */
+		, tol = MIX_XTOL /* tolerance to use in solving for dew temperature */
+		;
 
-	switch (mixture_dew_temperature(&T_d, MS, p, &err)){
-		case 0:
-			outputs[0] = T_d;
-			break;
-		case 1:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "The dew temperature converged on a non-solution point");
-			outputs[0] = MIN_T;
-			break;
-		case 2:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "The dew temperature converged on Infinity or NaN.");
-			outputs[0] = MIN_T;
-			break;
-		case 3:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "The root-finding algorithm that searches for the dew temperature "
-					"\nfailed to converge in the maximum number of iterations.");
-			outputs[0] = MIN_T;
-			break;
-		case 4:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "There is no dew temperature; all components are supercritical at "
-					"\npressure %.2f Pa.", p);
-			outputs[0] = MIN_T;
-			break;
+	result = mixture_dew_temperature(&T_d, MS, p, tol, &err);
+	if(result){
+		switch(result){
+			case 1:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "The dew temperature converged on a non-solution point");
+				break;
+			case 2:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "The dew temperature converged on Infinity or NaN.");
+				break;
+			case 3:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "The root-finding algorithm that searches for the dew temperature "
+						"\nfailed to converge in the maximum number of iterations.");
+				break;
+			case 4:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "There is no dew temperature; all components are supercritical at "
+						"\npressure %.2f Pa.", p);
+				break;
+		}
+		outputs[0] = MIN_T;
+		return 1;
+	}else{
+		outputs[0] = T_d;
+		return 0;
 	}
-
-	return 0;
 }
 
 int mixture_bubble_T_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 		double *inputs, double *outputs, double *jacobian){
 	CALCPREP(1,1);
 
+    int result;
 	double p = inputs[0] /* the mixture pressure */
-		, T_b;           /* the mixture bubble temperature (if there is any) */
+		, T_b            /* the mixture bubble temperature (if there is any) */
+		, tol = MIX_XTOL /* tolerance to use in solving for dew temperature */
+		;
 
-	switch (mixture_bubble_temperature(&T_b, MS, p, &err)){
-		case 0:
-			outputs[0] = T_b;
-			break;
-		case 1:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "The bubble temperature converged on a non-solution point");
-			outputs[0] = MIN_T;
-			break;
-		case 2:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "The bubble temperature converged on Infinity or NaN.");
-			outputs[0] = MIN_T;
-			break;
-		case 3:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "The root-finding algorithm that searches for the bubble "
-					"\ntemperature ailed to converge in the maximum number of "
-					"\niterations.");
-			outputs[0] = MIN_T;
-			break;
-		case 4:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "There is no bubble temperature; all components are supercritical "
-					"\nat pressure %.2f Pa.", p);
-			outputs[0] = MIN_T;
-			break;
+	result = mixture_bubble_temperature(&T_b, MS, p, tol, &err);
+	if(result){
+		switch(result){
+			case 1:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "The bubble temperature converged on a non-solution point");
+				break;
+			case 2:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "The bubble temperature converged on Infinity or NaN.");
+				break;
+			case 3:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "The root-finding algorithm that searches for the bubble "
+						"\ntemperature failed to converge in the maximum number of "
+						"\niterations.");
+				break;
+			case 4:
+				ERROR_REPORTER_HERE(ASC_USER_ERROR
+						, "There is no bubble temperature; all components are supercritical "
+						"\nat pressure %.2f Pa.", p);
+				break;
+		}
+		outputs[0] = MIN_T;
+		return 1;
+	}else{
+		outputs[0] = T_b;
+		return 0;
 	}
-
-	return 0;
 }
 
