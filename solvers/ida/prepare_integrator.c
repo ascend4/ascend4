@@ -146,7 +146,7 @@ extern int prepare_integrator(IntegratorSystem *integ){
 							,"Linear solver",1
 							,"See IDA manual, section 5.5.3. Choose 'ASCEND' to use the linsolqr"
 							" direct linear solver bundled with ASCEND, 'DENSE' to use the dense"
-							" solver bundled with IDA, or one of the Krylov solvers SPGMR, SPBCG"
+							" slver bundled with IDA, or one of the Krylov solvers SPGMR, SPBCG"
 							" or SPTFQMR (which still need preconditioners to be implemented"
 							" before they can be very useful.)"},"DENSE"},(char *[]){"ASCEND","DENSE","BAND","SPGMR","SPBCG","SPTFQMR",NULL});
 

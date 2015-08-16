@@ -172,7 +172,7 @@ int integrate_ida_solve(IntegratorSystem *integ, unsigned long start_index, unsi
 				subpeaw = process_events_and_whens(integ, ida_mem, t0, t0 + auxcount*tmin, rootdir,first_run);
 			}while(subpeaw == 143 && auxcount < 20);		/*Arbitrary limit. Still better limit: auxcount < (tout-t0)/tmin ?*/
 			
-			/*Important Todo ---- Time needs to be reset*/
+			
 						
 
 		}
