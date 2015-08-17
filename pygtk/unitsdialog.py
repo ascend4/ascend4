@@ -95,7 +95,7 @@ class UnitsDialog:
 	def update_typecombo(self,text = None):
 		m = self.typecombo.get_model()
 		for t in self.realtypes:
-			if not text or re.compile("^%s" % re.escape(text)).match(str(t.getName())):
+			if not text and re.compile("^%s" % re.escape(text)).match(str(t.getName())):
 				m.append([str(t.getName())])
 		if text and m.iter_n_children(None):
 			self.typecombo.get_child().grab_focus()
@@ -137,7 +137,6 @@ class UnitsDialog:
 
 	def on_typecombo_changed(self,widget,*args):
 		s = widget.get_active_text()
-		self.update_typecombo(s)
 		#self.browser.reporter.reportNote("value changed to '%s'" % s)
 		try:
 			T = self.browser.library.findType(s)
