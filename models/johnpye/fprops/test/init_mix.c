@@ -92,6 +92,7 @@ extern const EosData eos_rpp_water;
 void extract_rhos(PhaseSpec *PS, unsigned npure, double *rhos);
 void test_one(double *T, double *P);
 void test_seven(void);
+void test_eight(double *p, double *h);
 
 /*
 	Establish mixing conditions (T,P), find individual densities, and use those 
@@ -109,7 +110,7 @@ void test_seven(void);
  */
 int main(){
 
-#if 1
+#if 0
 	int usr_cont=1;
 	char temp_str[100];
 
@@ -130,8 +131,11 @@ int main(){
 		return 0;
 	}
 #endif
+	double p[]={1.5e5, 1.5e5, 1.9e5, 1.9e5, 2.1e5, 2.1e5, 3.2e6}; /* Pa */
+	double h[]={5.3e5, 5.2e5, 7.1e5, 7.3e5, 1.1e6, 1.05e6, 1.1e6}; /* J/kg */
 
-	test_seven();
+	/* test_seven(); */
+	test_eight(p, h);
 
 	return 0;
 } /* end of `main' */
@@ -244,7 +248,7 @@ void test_one(double *T, double *P){
 #define BMIXTURE_CALC(PROP) mixture_##PROP(&PM, PROP##_bph[i], &err)
 	for(i=0;i<NSIMS;i++){
 		flash[i] = mixture_flash(PS, MS, T[i], P[i], tol, &err); /* flash mixture, obtaining phases */
-		rsat[i]  = mixture_rhos_sat(PS, T[i], P[i], &err);  /* find densities in each phase */
+		rsat[i]  = mixture_rhos_sat(PS, T[i], P[i], tol, &err);  /* find densities in each phase */
 		if(flash[i] || rsat[i]){
 			MSG("The flash-calculation function returned %i", flash[i]);
 			MSG("The density-calculation function returned %i", rsat[i]);
@@ -363,6 +367,8 @@ void test_one(double *T, double *P){
 		printf("\n\tOverall Helmholtz energy is %g J/kg", a_amix[i]);
 		puts("");
 	}
+#undef NSIMS
+#undef NFLUIDS
 }
 
 void test_seven(void){
@@ -471,4 +477,52 @@ void test_seven(void){
 #undef TEMPS
 #undef D
 #undef NPURE
+}
+
+void test_eight(double *p, double *h){
+#define NFLUIDS 4
+#define NSIMS 3
+	unsigned i, j; /* counter variable */
+	int phT[NSIMS]; /* whether temperature seeking succeeds */
+
+	enum FluidAbbrevs {N2,NH3,CO2,CH4,H2O}; /* fluids that will be used */
+	char *fluids[]={
+		"nitrogen", "ammonia", "carbondioxide", "methane", "water"
+	};
+
+	/* MixtureSpec *MS = new_MixtureSpec(NFLUIDS); */
+	FpropsError err = FPROPS_NO_ERROR;
+	MixtureError merr = MIXTURE_NO_ERROR;
+
+	char *source[NFLUIDS] = {NULL};
+	double xs[NFLUIDS];                  /* mass fractions */
+	double props[] = {2, 6, 4, 3, 5};    /* proportions of mass fractions */
+	double tol = MIX_XTOL;               /* tolerance to which to find solutions */
+	mixture_x_props(NFLUIDS, xs, props); /* mass fractions from proportions */
+
+    MixtureSpec *MS = build_MixtureSpec(NFLUIDS, xs, (void **) fluids, "pengrob", source, &merr);
+	PhaseSpec **PS = ASC_NEW_ARRAY(PhaseSpec *,NSIMS);
+	PhaseMixState **PM = ASC_NEW_ARRAY(PhaseMixState *,NSIMS);
+
+	double T[NSIMS] = {0};
+	double h_ph[3];
+
+	for(i=0;i<NSIMS;i++){
+		phT[i] = mixture_T_ph((T+i), MS, p[i], h[i], tol, &err);
+		MSG("SUCCESSFULLY FOUND TEMPERATURE number %u to be %.2f K", i, T[i])
+		PS[i] = new_PhaseSpec(NFLUIDS,3);
+
+		mixture_flash(PS[i], MS, T[i], p[i], tol, &err);
+		mixture_rhos_sat(PS[i], T[i], p[i], tol, &err);
+		PM[i] = fill_PhaseMixState(T[i], p[i], PS[i], MS);
+		MSG("ENTHALPY at temperature %.2f K, pressure %.2f Pa, (original h= %g J/kg):"
+				, T[i], p[i], h[i]);
+		MSG("\tEnthalpy is %g J/kg", mixture_h(PM[i], h_ph, &err));
+	}
+	for(i=0;i<NSIMS;i++){
+		MSG("At P=%.2f Pa, h=%.2f J/kg, the temperature is %.2f K", p[i], h[i], T[i]);
+		MSG("  This gives an enthalpy of %g J/kg", mixture_h(PM[i], h_ph, &err));
+	}
+#undef NSIMS
+#undef NFLUIDS
 }

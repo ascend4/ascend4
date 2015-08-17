@@ -24,8 +24,9 @@
 	Functions to calculate mixture properties under the ideal-solution model.
  */
 
+#include "mixture_properties.h"
 #include "mixture_generics.h"
-#include "mixture_prepare.h"
+#include "mixture_phases.h"
 #include "mixture_struct.h"
 #include "../helmholtz.h"
 #include "../fluids.h"
@@ -55,7 +56,7 @@ typedef struct PressureRhoData_Struct{
 typedef struct EnthalpyTData_Struct{
 	double h;         /* the whole-mixture enthalpy being sought */
 	double p;         /* the pressure of the mixture */
-	MixtureSpeca *MS; /* specification of mixture composition */
+	MixtureSpec *MS;  /* specification of mixture composition */
     double tol;       /* error to be used in solving flash condition for mixture */
 	FpropsError *err; /* necessary error variable */
 } HTData;
@@ -78,16 +79,46 @@ double pressure_rho_error(double rho, void *user_data){
     the density at a given pressure.
  */
 double enthalpy_T_error(double T, void *user_data){
+	MSG("Entered the function...");
 	HTData *htd = (HTData *)user_data;
+#if 1
+	MSG("Unpacked user data: pressure %.2f Pa, enthalpy %.2f J/kg, temperature %.2f K"
+			, htd->p, htd->h, T);
+	MSG("The FpropsError is %i", (int) htd->err[0]);
+#endif
 
-    PhaseSpec *PS = ASC_NEW(PhaseSpec);
-    mixture_flash(PS, htd->MS, T, htd->p, htd->tol, htd->err);
+    PhaseSpec *PS = new_PhaseSpec(htd->MS->pures,3);
+	/* unsigned i; */
+	int flash = mixture_flash(PS, htd->MS, T, htd->p, htd->tol, htd->err);
+	int rsat = mixture_rhos_sat(PS, T, htd->p, htd->tol, htd->err);
+#if 1
+	MSG("Flashed the mixture: there are %u phases, with result %i", PS->phases, flash);
+	MSG("Found mixture densities, with result %i", rsat);
+	MSG("The FpropsError is %i", (int) htd->err[0]);
+#endif
 
-    double *h_phases = ASC_NEW_ARRAY(double,PS->phases);
+    double h_phases[PS->phases];
+#if 0
+	for(i=0;i<PS->phases;i++){
+		h_phases[i] = 0;
+	}
+#endif
 
     PhaseMixState *PM = fill_PhaseMixState(T, htd->p, PS, htd->MS);
+#if 1
+	MSG("The PhaseMixState temperature is %.2f K, pressure is %.2f Pa", PM->T, PM->p);
+	MSG("  The number of phases is %u, number of pures is %u", PM->PS->phases
+			, PM->MS->pures);
+	MSG("The FpropsError is %i", (int) htd->err[0]);
 	
+	double h = mixture_h(PM, h_phases, htd->err);
+	MSG("The enthalpy is %g J/kg", h);
+	double error = (htd->h - h) / fabs(htd->h);
+	MSG("The error in the enthalpy is %g J/kg", error);
+	puts("");
+#endif
 	return (htd->h - mixture_h(PM, h_phases, htd->err)) / fabs(htd->h);
+	/* return error; */
 }
 
 /*
@@ -162,17 +193,74 @@ int mixture_rhos_sat(PhaseSpec *PS, double T, double P, double tol, FpropsError 
 #undef PPH
 }
 
-int mixture_T_ph(double *T, MixtureSpec *MS, double p, double h, double tol, FpropsError *err){
-    HTData htd = {h, p, MS, tol, err};
-    int sec = 0;
-    double T_ph[2] = {288, 298}; /* temperatures used in searching for enthalpy */
+/*
+	Find the temperature at which the mixture has the pressure and enthalpy 
+	given. 
 
-    sec = secant_solve(&enthalpy_T_error, &htd, T_ph, tol);
-    if(sec==2){
-        return sec;
-    }
-    *T = T_d[0];
-    return sec;
+	Finding a root in temperature (as for all the functions that invole finding 
+	a property with a constrained range, e.g. T > 0) tends to be fragile.  This 
+	function only uses the secant root-finding method if the enthalpy is high 
+	enough that the temperature can be above the critical temperature of the 
+	component with the highest critical temperature, just to be safe.  In all 
+	other cases (more common?), zeroin_solve is used to find the temperature, 
+	and searches between zero and the maximum critical temperature.
+ */
+int mixture_T_ph(double *T, MixtureSpec *MS, double p, double h, double tol, FpropsError *err){
+#define NPURE MS->pures
+
+	unsigned i;
+	int flash, rsat;  /* result (success/failure) of finding mixture phases, densities */
+	double T_c[NPURE] /* array of critical temperatures */
+		, T_cmax      /* maximum critical temperature */
+		, T_t[NPURE]  /* array of triple-point temperatures */
+		, T_tmax      /* maximum triple-point temperature */
+		, h_cmax;     /* enthalpy at maximum critical temperature */
+    HTData htd = {h, p, MS, tol, err};
+	PhaseSpec *PS = new_PhaseSpec(NPURE,3);
+
+	for(i=0;i<NPURE;i++){
+		T_c[i] = MS->PF[i]->data->T_c; /* save critical temperatures */
+		T_t[i] = MS->PF[i]->data->T_t; /* save triple-point temperatures */
+	}
+	T_cmax = max_element(NPURE, T_c);
+	T_tmax = max_element(NPURE, T_t);
+
+	/*
+		Flash the mixture to find its phases, and calculate the component 
+		densities.
+	 */
+	flash = mixture_flash(PS, MS, T_cmax, p, tol, err);
+	rsat = mixture_rhos_sat(PS, T_cmax, p, tol, err);
+	if(flash){
+		MSG("The mixture flash returned %i", flash);
+		return flash;
+	}else if(rsat){
+		MSG("The mixture density calculation returned %i", rsat);
+		return rsat;
+	}
+
+	PhaseMixState *PM = fill_PhaseMixState(T_cmax, p, PS, MS);
+	double h_ph[PS->phases];
+	h_cmax = mixture_h(PM, h_ph, err);
+
+	if(h > h_cmax){
+		int sec = 0;
+		double T_ph[2] = {298, 308}; /* temperatures used in searching for enthalpy */
+
+		MSG("Using 'secant_solve' to find the temperature");
+		sec = secant_solve(&enthalpy_T_error, &htd, T_ph, tol);
+		if(sec==2){
+			return sec;
+		}
+		*T = T_ph[0];
+		return sec;
+	}else{
+		double error = 0.0;
+		MSG("Using 'zeroin_solve' to find the temperature");
+		zeroin_solve(&enthalpy_T_error, &htd, T_tmax, T_cmax, tol, T, &error);
+		return 0;
+	}
+#undef NPURE
 }
 
 /*
@@ -224,7 +312,7 @@ double mixture_rho(PhaseMixState *PM, double *rhos){
 
 #define MIX_FUNC_FIRST(PROP) \
 	double mixture_##PROP(PhaseMixState *PM, double *p_phases, FpropsError *err){ \
-		/* MSG("Entered the function..."); */ \
+		MSG("Entered the function..."); \
 		unsigned i, j; \
 		double x_mix = 0.0 \
 			, p_mix = 0.0 /* the property being calculated -- for the entire mixture */ \
@@ -234,12 +322,16 @@ double mixture_rho(PhaseMixState *PM, double *rhos){
 			p_phases[i] = 0.0; \
 			for(j=0;j<PPURE;j++){ \
 				p_phases[i] += PXS[j] * fprops_##PROP((FluidState){PM->T,RHO[j],PPF[j]}, err); \
+				/* MSG("  The current value of '" #PROP "' in phase number %u is %g", i, p_phases[i]); */ \
+				/* MSG("  The mole fraction %u in phase number %u is %g", j, i, PXS[j]); */ \
 				x_ph[i] += PXS[j]; \
 			} \
 			if(fabs(x_ph[i] - 1)>MIX_XTOL){ \
 				ERRMSG(MIX_XSUM_ERROR, x_ph[i]); \
 			} \
+			/* MSG("  The final value of '" #PROP "' in phase number %u is %g", i, p_phases[i]); */ \
 			p_mix += PFRAC * p_phases[i]; \
+			/* MSG(" The current value of '" #PROP "' for the whole mixture is %g", p_mix); */ \
 			x_mix += PFRAC; \
 		} \
 		if(fabs(x_mix - 1) > MIX_XTOL){ \

@@ -335,7 +335,7 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol
 #define PFRAC PS->ph_frac
 #define PPH PS->PH
 	MSG("Entered the function...");
-	unsigned i, j
+	unsigned i /* , j */
 		, i_v = 0          /* indices of vapor, liquid, supercritical phases in PS */
 		, i_l = 0
 		, i_sc = 0
@@ -354,6 +354,8 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol
 	PFRAC = ASC_NEW_ARRAY(double,3);
 	PPH = ASC_NEW_ARRAY(Phase *,3);
 	for(i=0;i<3;i++){
+		PPH[i] = new_Phase(NPURE);
+#if 0
 		PPH[i] = ASC_NEW(Phase);
 		PPH[i]->pures = 0;
 		PPH[i]->c  = ASC_NEW_ARRAY(unsigned,NPURE);
@@ -361,6 +363,7 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol
 		PPH[i]->xs = ASC_NEW_ARRAY(double,NPURE);
 		PPH[i]->PF = ASC_NEW_ARRAY(PureFluid *,NPURE);
 		PPH[i]->rhos = ASC_NEW_ARRAY(double,NPURE);
+#endif
 	}
 	NPHASE = 0;
 
@@ -774,15 +777,15 @@ int mixture_dew_temperature(double *T_d, MixtureSpec *MS, double p, double tol, 
 	unsigned i
 		, n_sub = 0;
 	/* int sec; */
-	double tt_d[2]     /* provisional dew temperatures from which to search */
-		, t_sat[NPURE] /* saturation temperatures */
-		, rho_l[NPURE] /* liquid-phase densities */
-		, rho_v[NPURE] /* vapor-phase densities */
-		, T_c[NPURE]   /* critical temperatures for subcritical components */
-		, T_t[NPURE]   /* triple-point temperatures for subcritical components */
-		/* , xs[NPURE]      subcritical mass fractions */
-		, Xs[NPURE]      /* subcritical mole fractions */
+	double T_c[NPURE] /* critical temperatures for subcritical components */
+		, T_t[NPURE]  /* triple-point temperatures for subcritical components */
+		, Xs[NPURE]   /* subcritical mole fractions */
 		, error = 0.0 /* error for any use of 'zeroin_solve' */
+		/* , tt_d[2]     provisional dew temperatures from which to search */
+		/* , t_sat[NPURE] saturation temperatures */
+		/* , rho_l[NPURE] liquid-phase densities */
+		/* , rho_v[NPURE] vapor-phase densities */
+		/* , xs[NPURE]      subcritical mass fractions */
 		;
 	PureFluid **pfs = ASC_NEW_ARRAY(PureFluid *,NPURE); /* subcritical pure liquids */
 	
@@ -875,15 +878,15 @@ int mixture_bubble_temperature(double *T_b, MixtureSpec *MS, double p, double to
 	unsigned i
 		, n_sub = 0;
 	/* int sec; */
-	double tt_b[2]     /* provisional bubble temperatures from which to search */
-		, t_sat[NPURE] /* saturation temperatures */
-		, rho_l[NPURE] /* liquid-phase densities */
-		, rho_v[NPURE] /* vapor-phase densities */
-		, T_c[NPURE]   /* critical temperatures for subcritical components */
+	double T_c[NPURE]   /* critical temperatures for subcritical components */
 		, T_t[NPURE]   /* triple-point temperatures for subcritical components */
-		/* , xs[NPURE]      subcritical mass fractions */
 		, Xs[NPURE]      /* subcritical mole fractions */
 		, error = 0.0 /* error for any use of 'zeroin_solve' */
+		/* , tt_b[2]     provisional bubble temperatures from which to search */
+		/* , t_sat[NPURE] saturation temperatures */
+		/* , rho_l[NPURE] liquid-phase densities */
+		/* , rho_v[NPURE] vapor-phase densities */
+		/* , xs[NPURE]    subcritical mass fractions */
 		;
 	PureFluid **pfs = ASC_NEW_ARRAY(PureFluid *,NPURE); /* subcritical pure liquids */
 	

@@ -2,7 +2,7 @@ REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 PROVIDE "mixtures.a4l";
 (*
-   	mixtures.a4l, by Jacob Shealy, 8/4
+   	mixtures.a4l, by Jacob Shealy, August 4-August 17, 2015
 
 	Basic types used for mixtures.
 *)

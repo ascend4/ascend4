@@ -38,7 +38,7 @@ MixtureSpec *new_MixtureSpec(unsigned npure){
 
 Phase *new_Phase(unsigned npure){
 	Phase *P = ASC_NEW(Phase);
-	P->pures = npure;
+	P->pures = 0;
 	P->c     = ASC_NEW_ARRAY(unsigned,npure);
 	P->Xs    = ASC_NEW_ARRAY(double,npure);
 	P->xs    = ASC_NEW_ARRAY(double,npure);
