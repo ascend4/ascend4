@@ -185,7 +185,7 @@ class DiagnoseWindow:
 
 		print "DONE IMAGE CREATION"
 
-		self.pixbuf = GdkPixbuf.Pixbuf.new_from_data(d, GdkPixbuf.Colorspace.RGB, False, 8, nc, nr, rowstride)
+		self.pixbuf = GdkPixbuf.Pixbuf.new_from_data(d, GdkPixbuf.Colorspace.RGB, False, 8, nc, nr, rowstride, None, None)
 
 		self.nr = nr
 		self.nc = nc
