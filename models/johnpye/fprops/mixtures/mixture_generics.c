@@ -184,29 +184,26 @@ int secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], doub
 	for(i=0;i<MAX_ITER;i++){
 		y[0] = (*func)(x[0], user_data);
 		if(fabs(y[0])<tol){
-			MSG("Root-finding SUCCEEDED after %u iterations;"
-					"\n\t  zeroed function has value %.6g at postion %.6g\n", i, y[0], x[0]);
+			MSG("Root-finding SUCCEEDED after %u iterations;", i);
+			/* MSG("  zeroed function has value %.6g at postion %.6g\n", y[0], x[0]); */
 			return 0;
 		}
 		if(fabs(x[0] - x[1])<tol){
-			MSG("Root-finding FAILED after %u iterations;"
-					"\n\t  independent variables equal at %.6g,"
-					"\n\t  function is not zero, but %.6g",
-					i, x[0], y[0]);
+			MSG("Root-finding FAILED after %u iterations;", i);
+			MSG("  independent variables equal at %.6g,", x[0]);
+			MSG("  function is not zero, but %.6g", y[0]);
 			return 1;
 		}
 		/* Break if variables are infinity or NaN */
 		if(x[0]==INFINITY || y[0]==INFINITY 
 				|| x[0]!=x[0] || y[0]!=y[0]){
-			MSG("Root-finding FAILED after %u iterations;"
-					"\n\t  independent variable equals %.6g,"
-					"\n\t  function output equals %.6g"
-					, i, x[0], y[0]);
+			MSG("Root-finding FAILED after %u iterations;", i);
+			MSG("  independent variable equals %.6g,", x[0]);
+			MSG("  function output equals %.6g", y[0]);
 			return 2;
 		}
 
-		MSG("At iteration %u, (x,y) pairs are (%g, %g), (%g, %g)"
-				, i+1, x[0], y[0], x[1], y[1]);
+		/* MSG("At iteration %u, (x,y) pairs are (%g, %g), (%g, %g)", i+1, x[0], y[0], x[1], y[1]); */
 
 		if(y[0]*y[1] < 0.0){
 			/*
@@ -218,7 +215,7 @@ int secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], doub
 			double x_max = (x[0]<x[1]) ? x[1] : x[0];
 			double err = 0.0;
 
-			MSG("Solution is bound by (x,y) pairs; entering 'zeroin_solve'...");
+			/* MSG("Solution is bound by (x,y) pairs; entering 'zeroin_solve'..."); */
 
 			return (int) zeroin_solve(func, user_data, x_min, x_max, tol, (x), &err);
 		}else{
@@ -230,7 +227,7 @@ int secant_solve(SecantSubjectFunction *func, void *user_data, double x[2], doub
 		}
 	}
 
-	MSG("Reached maximum number of iterations");
+	/* MSG("Reached maximum number of iterations"); */
 	return 3;
 #undef MAX_ITER
 }

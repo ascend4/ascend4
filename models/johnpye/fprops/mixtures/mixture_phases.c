@@ -436,7 +436,7 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol
 			PFRAC[i_sc] += PPH[i_sc]->Xs[i]; /* supercritical phase */
 		}
 		PFRAC[i_v] = 1.0 - PFRAC[i_sc];       /* subcritical phase(s) */
-#if 1
+#if 0
 		MSG("For the current mixture");
 		MSG("\tSupercritical mass fraction is %.6g,\tsubcritical mass fraction is %.6g"
 				, PFRAC[i_sc], PFRAC[i_v]);
@@ -463,7 +463,7 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol
 		 */
 		mole_fractions(PPH[i_v]->pures, PPH[i_v]->xs, PPH[i_v]->Xs, PPH[i_v]->PF);
 		mole_fractions(PPH[i_sc]->pures, PPH[i_sc]->xs, PPH[i_sc]->Xs, PPH[i_sc]->PF);
-#if 1
+#if 0
 		MSG("\tSupercritical molar mass is %.6g,   \tsubcritical molar mass is %.6g"
 				, mm[i_sc], mm[i_v]);
 		MSG("\tSupercritical mole fraction is %.6g, subcritical mole fraction is %.6g"
@@ -568,7 +568,7 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol
 		;
 	}
 
-#if 1
+#if 0
 	MSG("At temperature %.2f K and pressure %.0f Pa, there are %u phases;"
 			, T, P, NPHASE);
 	for(i=0;i<NPHASE;i++){

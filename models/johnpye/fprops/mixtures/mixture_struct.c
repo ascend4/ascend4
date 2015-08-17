@@ -96,7 +96,7 @@ PhaseMixState *fill_PhaseMixState(double T, double p, PhaseSpec *P, MixtureSpec 
 	represent the components.
  */
 MixtureSpec *build_MixtureSpec(unsigned npure, double *Xs, void **fluids, char *type, char **source, MixtureError *merr){
-	MSG("Entered the function...");
+	/* MSG("Entered the function..."); */
 	unsigned i;
 	double X_sum = 0.0;
 	MixtureSpec *MS = ASC_NEW(MixtureSpec);
@@ -110,19 +110,14 @@ MixtureSpec *build_MixtureSpec(unsigned npure, double *Xs, void **fluids, char *
 		MS->Xs[i] = Xs[i];
 	}
 	if(fabs(X_sum - 1.0) > MIX_XTOL){
-		MSG_MARK("  3.1");
 		*merr = MIXTURE_XSUM_ERROR;
 	}
 	char **fluid_names = (char **)fluids;
 
 	for(i=0;i<npure;i++){
 		MS->PF[i] = fprops_fluid(fluid_names[i],type,source[i]);
-		MSG("Prepared fluid %s", fluid_names[i]);
+		/* MSG("Prepared fluid %s", fluid_names[i]); */
 	}
 
-	for(i=0;i<npure;i++){
-		MSG("Fluid number %u at %p is %s, modeled with %u"
-				, i, MS->PF[i], MS->PF[i]->name, MS->PF[i]->type);
-	}
 	return MS;
 }

@@ -27,7 +27,6 @@
 #include "mixture_generics.h"
 #include "mixture_prepare.h"
 #include "mixture_struct.h"
-/* #include "init_mixfuncs.h" */
 #include "../helmholtz.h"
 #include "../fluids.h"
 #include "../fprops.h"
@@ -41,34 +40,71 @@
 	Structure to hold auxiliary data for function to find the error in pressure 
 	at a given density
  */
-typedef struct PressureRhoData_Struct {
-	double T;
-	double P;
-	PureFluid *pfl;
-	FpropsError *err;
+typedef struct PressureRhoData_Struct{
+	double T;         /* mixture temperature */
+	double p;         /* mixture pressure */
+	PureFluid *pfl;   /* pure fluid from the mixture */
+	FpropsError *err; /* necessary error variable */
 } PRData;
 
-SecantSubjectFunction pressure_rho_error;
+/*
+	Structure to hold auxiliary data for function that will return the error in 
+	temperature when trying to find the temperature corresponding to a given 
+	enthalpy.
+ */
+typedef struct EnthalpyTData_Struct{
+	double h;         /* the whole-mixture enthalpy being sought */
+	double p;         /* the pressure of the mixture */
+	MixtureSpeca *MS; /* specification of mixture composition */
+    double tol;       /* error to be used in solving flash condition for mixture */
+	FpropsError *err; /* necessary error variable */
+} HTData;
+
+/*
+    Find the difference between a given pressure and a pressure calculated from 
+    the density, for a single component in a mixture.  Passed to root-finding 
+    functions when searching for the density at a given pressure.
+ */
 double pressure_rho_error(double rho, void *user_data){
 	PRData *prd = (PRData *)user_data;
 	FluidState fst = {prd->T, rho, prd->pfl};
-	// MSG("Error is %i (1)", prd->err[0]);
-	// MSG("Pressure while seeking P=%.0f Pa, trying rho=%.6g kg/m^3, here P=%.0f Pa"
-	// 		,prd->P, rho, fprops_p(fst, prd->err));
-	// MSG("Error is %i (2)", prd->err[0]);
 	
-	return fabs(prd->P - fprops_p(fst, prd->err)) / fabs(prd->P);
+	return fabs(prd->p - fprops_p(fst, prd->err)) / fabs(prd->p);
+}
+
+/*
+    Find the difference between a given mixture enthalpy and that calculated 
+    from the temperature.  Passed to root-finding functions when searching for 
+    the density at a given pressure.
+ */
+double enthalpy_T_error(double T, void *user_data){
+	HTData *htd = (HTData *)user_data;
+
+    PhaseSpec *PS = ASC_NEW(PhaseSpec);
+    mixture_flash(PS, htd->MS, T, htd->p, htd->tol, htd->err);
+
+    double *h_phases = ASC_NEW_ARRAY(double,PS->phases);
+
+    PhaseMixState *PM = fill_PhaseMixState(T, htd->p, PS, htd->MS);
+	
+	return (htd->h - mixture_h(PM, h_phases, htd->err)) / fabs(htd->h);
 }
 
 /*
 	Find the vapor and liquid densities at saturation conditions for each phase 
-	in the mixture.
+    in the mixture.  This function MUST receive a PhaseSpec '*PS' which has been 
+    successfully filled with phase/mass fraction data using the function 
+    'mixture_flash' or some other function.
 
 	Return values indicate:
 		0 - success
-		1 - 
+        1 - the root-finding algorithm that finds component mass fractions 
+            converged on a single non-solution point
+		2 - the root-finding algorithm converged on infinity or NaN
+		3 - the root-finding algorithm reached the maximum number of iterations 
+			without converging.
  */
-int mixture_rhos_sat(PhaseSpec *PS, double T, double P, FpropsError *err){
+int mixture_rhos_sat(PhaseSpec *PS, double T, double P, double tol, FpropsError *err){
 #define PPH PS->PH
 #define NPURE PPH[i]->pures
 #define RHOS(IX) PPH[ IX ]->rhos
@@ -80,7 +116,7 @@ int mixture_rhos_sat(PhaseSpec *PS, double T, double P, FpropsError *err){
 	double p_sat
 		, rho_d
 		, rhos[2]        /* densities used in searching for supercritical densities */
-		, tol = MIX_XTOL /* tolerance used in root-finding function */
+		/* , tol = MIX_XTOL tolerance used in root-finding function */
 		;
 
 	for(i=0;i<PS->phases;i++){
@@ -88,6 +124,7 @@ int mixture_rhos_sat(PhaseSpec *PS, double T, double P, FpropsError *err){
 			for(j=0;j<NPURE;j++){
 				PRData prd = {T, P, PPH[i]->PF[j], err};
 				rhos[0] = P / PPH[i]->PF[j]->data->R / T; /* start at ideal-gas density */
+                rhos[0] = 1.01 * rhos[0];
 
 				if(*err!=FPROPS_NO_ERROR){
 					*err = FPROPS_NO_ERROR;
@@ -123,6 +160,19 @@ int mixture_rhos_sat(PhaseSpec *PS, double T, double P, FpropsError *err){
 #undef RHOS
 #undef NPURE
 #undef PPH
+}
+
+int mixture_T_ph(double *T, MixtureSpec *MS, double p, double h, double tol, FpropsError *err){
+    HTData htd = {h, p, MS, tol, err};
+    int sec = 0;
+    double T_ph[2] = {288, 298}; /* temperatures used in searching for enthalpy */
+
+    sec = secant_solve(&enthalpy_T_error, &htd, T_ph, tol);
+    if(sec==2){
+        return sec;
+    }
+    *T = T_d[0];
+    return sec;
 }
 
 /*
@@ -172,95 +222,9 @@ double mixture_rho(PhaseMixState *PM, double *rhos){
 	return 1 / vol_mix;
 }
 
-#if 0
-double old_mixture_u(PhaseMixState *PM, double *u_phases, FpropsError *err){
-	MSG("Entered the function...");
-	unsigned i, j;
-	double x_mix = 0.0
-		, u_mix = 0.0
-		, x_ph[NPHASE]
-		;
-	for(i=0;i<NPHASE;i++){
-		x_ph[i] = 0.0;
-		u_phases[i] = 0.0;
-
-		for(j=0;j<PPURE;j++){
-			u_phases[i] += PXS[j] * fprops_u((FluidState){PM->T,RHO[j],PPF[j]},err);
-			x_ph[i] += PXS[j];
-		}
-		if(fabs(x_ph[i] - 1) > MIX_XTOL){
-			ERRMSG(MIX_XSUM_ERROR, x_ph[i]);
-		}
-
-		u_mix += PFRAC * u_phases[i];
-		x_mix += PFRAC;
-	}
-	if(fabs(x_mix - 1) > MIX_XTOL){
-		ERRMSG(MIX_PSUM_ERROR, x_mix);
-	}
-	return u_mix;
-}
-
-double old_mixture_h(PhaseMixState *PM, double *h_phases, FpropsError *err){
-	MSG("Entered the function...");
-	unsigned i, j;
-	double x_mix = 0.0
-		, h_mix = 0.0
-		, x_ph[NPHASE]
-		;
-	for(i=0;i<NPHASE;i++){
-		x_ph[i] = 0.0;
-		h_phases[i] = 0.0;
-
-		for(j=0;j<PPURE;j++){
-			h_phases[i] += PXS[j] * fprops_h((FluidState){PM->T,RHO[j],PPF[j]},err);
-			x_ph[i] += PXS[j];
-		}
-		if(fabs(x_ph[i] - 1) > MIX_XTOL){
-			ERRMSG(MIX_XSUM_ERROR, x_ph[i]);
-		}
-
-		h_mix += PFRAC * h_phases[i];
-		x_mix += PFRAC;
-	}
-	if(fabs(x_mix - 1) > MIX_XTOL){
-		ERRMSG(MIX_PSUM_ERROR, x_mix);
-	}
-	return h_mix;
-}
-
-double old_mixture_cp(PhaseMixState *PM, double *p_phases, FpropsError *err){
-	MSG("Entered the function...");
-	unsigned i, j;
-	double x_mix = 0.0
-		, p_mix = 0.0
-		, x_ph[NPHASE]
-		;
-	for(i=0;i<NPHASE;i++){
-		x_ph[i] = 0.0;
-		p_phases[i] = 0.0;
-
-		for(j=0;j<PPURE;j++){
-			p_phases[i] += PXS[j] * fprops_cp((FluidState){PM->T,RHO[j],PPF[j]},err);
-			x_ph[i] += PXS[j];
-		}
-		if(fabs(x_ph[i] - 1) > MIX_XTOL){
-			ERRMSG(MIX_XSUM_ERROR, x_ph[i]);
-		}
-
-		p_mix += PFRAC * p_phases[i];
-		x_mix += PFRAC;
-	}
-	if(fabs(x_mix - 1) > MIX_XTOL){
-		ERRMSG(MIX_PSUM_ERROR, x_mix);
-	}
-	return p_mix;
-}
-#endif
-
 #define MIX_FUNC_FIRST(PROP) \
 	double mixture_##PROP(PhaseMixState *PM, double *p_phases, FpropsError *err){ \
-		MSG("Entered the function..."); \
+		/* MSG("Entered the function..."); */ \
 		unsigned i, j; \
 		double x_mix = 0.0 \
 			, p_mix = 0.0 /* the property being calculated -- for the entire mixture */ \
@@ -281,13 +245,12 @@ double old_mixture_cp(PhaseMixState *PM, double *p_phases, FpropsError *err){
 		if(fabs(x_mix - 1) > MIX_XTOL){ \
 			ERRMSG(MIX_PSUM_ERROR, x_mix); \
 		} \
-		MSG(" The value of p_mix is now %g", p_mix); \
 		return p_mix; \
 	}
 
 #define MIX_FUNC_SECOND(PROP,RFACTOR) \
 	double mixture_##PROP(PhaseMixState *PM, double *p_phases, FpropsError *err){ \
-		MSG("Entered the function..."); \
+		/* MSG("Entered the function..."); */ \
 		unsigned i, j; \
 		double x_mix = 0.0 \
 			, p_mix = 0.0 /* the property being calculated -- for the entire mixture */ \
@@ -297,7 +260,6 @@ double old_mixture_cp(PhaseMixState *PM, double *p_phases, FpropsError *err){
 			p_phases[i] = 0.0; \
 			for(j=0;j<PPURE;j++){ \
 				p_phases[i] += PXS[j] * fprops_##PROP((FluidState){PM->T,RHO[j],PPF[j]}, err); \
-				/* MSG(" The value of p_phases[%u] is now %g", i, p_phases[i]); */ \
 				x_ph[i] += PXS[j]; \
 			} \
 			if(fabs(x_ph[i] - 1)>MIX_XTOL){ \
@@ -310,7 +272,6 @@ double old_mixture_cp(PhaseMixState *PM, double *p_phases, FpropsError *err){
 		if(fabs(x_mix - 1) > MIX_XTOL){ \
 			ERRMSG(MIX_PSUM_ERROR, x_mix); \
 		} \
-		MSG(" The value of p_mix is now %g", p_mix); \
 		return p_mix; \
 	}
 

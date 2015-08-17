@@ -10,13 +10,35 @@ REQUIRE "johnpye/fprops/mixtures.a4l";
 MODEL mixture_test;
 	T IS_A temperature;
 	p IS_A pressure;
-	rho IS_A mass_density;
+
+	rho,
+	rho_ph1,
+	rho_ph2,
+	rho_comp1,
+	rho_comp2 IS_A mass_density;
+
+	h_ph1,
+	h_ph2,
 	h_comp1,
 	h_comp2 IS_A specific_enthalpy;
 
-	ph1,
-	cmp1,
-	cmp2 IS_A phase_count;
+	cp_ph1,
+	cp_comp1,
+	cp_comp2,
+	cv_ph1,
+	cv_comp2 IS_A specific_heat_capacity;
+
+	g_ph1,
+	g_ph2,
+	g_comp1,
+	g_comp2 IS_A specific_secondary_energy;
+
+	phases,
+	comp_num[1..3],
+	ph1, ph2, ph3,
+	cmp1, cmp2 IS_A phase_count;
+
+	ph_frac[1..3] IS_A mass_fraction;
 
 	mixt IS_A mixture_spec;
 	mixt.npure :== 4;
@@ -30,9 +52,68 @@ MODEL mixture_test;
 	mixt.xs[3] :== 0.20;
 	mixt.xs[4] :== 0.15;
 
+	(* -----------------------------------------------------------------
+	   Find number of phases, mass fractions of phases, and number of components 
+	   in each phase *)
+	mix_phases : mixture_count_phases(
+		T, p : INPUT;
+		phases, ph_frac[1], ph_frac[2], ph_frac[3] : OUTPUT;
+		mixt : DATA
+	);
+	mix_phase1_comps : mixture_count_components(
+		T, p, ph1 : INPUT;
+		comp_num[1] : OUTPUT;
+		mixt : DATA
+	);
+	mix_phase2_comps : mixture_count_components(
+		T, p, ph2 : INPUT;
+		comp_num[2] : OUTPUT;
+		mixt : DATA
+	);
+	mix_phase3_comps : mixture_count_components(
+		T, p, ph3 : INPUT;
+		comp_num[3] : OUTPUT;
+		mixt : DATA
+	);
+
+	(* -----------------------------------------------------------------
+	   Find phase and component densities *)
 	mix_density : mixture_rho(
 		T, p : INPUT;
 		rho : OUTPUT;
+		mixt : DATA
+	);
+	mix_phase1_density : mixture_phase_rho(
+		T, p, ph1 : INPUT;
+		rho_ph1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_phase2_density : mixture_phase_rho(
+		T, p, ph2 : INPUT;
+		rho_ph2 : OUTPUT;
+		mixt : DATA
+	);
+	mix_comp1_density : mixture_comps_rho(
+		T, p, ph1, cmp1 : INPUT;
+		rho_comp1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_comp2_density : mixture_comps_rho(
+		T, p, ph1, cmp2 : INPUT;
+		rho_comp2 : OUTPUT;
+		mixt : DATA
+	);
+
+	(* -----------------------------------------------------------------
+	   Find phase and component enthalpies *)
+	mix_phase1_enthalpy : mixture_phase_h(
+		T, p, ph1 : INPUT;
+		h_ph1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_phase2_enthalpy : mixture_phase_h(
+		T, p, ph2 : INPUT;
+		h_ph2 : OUTPUT;
 		mixt : DATA
 	);
 	mix_comp1_enthalpy : mixture_comps_h(
@@ -46,27 +127,75 @@ MODEL mixture_test;
 		mixt : DATA
 	);
 
+	(* -----------------------------------------------------------------
+	   Find phase and component heat capacities *)
+	mix_phase1_cp : mixture_phase_cp(
+		T, p, ph1 : INPUT;
+		cp_ph1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_phase1_cv : mixture_phase_cv(
+		T, p, ph1 : INPUT;
+		cv_ph1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_comp1_cp : mixture_comps_cp(
+		T, p, ph1, cmp1 : INPUT;
+		cp_comp1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_comp2_cp : mixture_comps_cp(
+		T, p, ph1, cmp2 : INPUT;
+		cp_comp2 : OUTPUT;
+		mixt : DATA
+	);
+	mix_comp2_cv : mixture_comps_cv(
+		T, p, ph1, cmp2 : INPUT;
+		cv_comp2 : OUTPUT;
+		mixt : DATA
+	);
+
+	(* -----------------------------------------------------------------
+	   Find phase and component Gibbs energy data *)
+	mix_phase1_g : mixture_phase_g(
+		T, p, ph1 : INPUT;
+		g_ph1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_phase2_g : mixture_phase_g(
+		T, p, ph2 : INPUT;
+		g_ph2 : OUTPUT;
+		mixt : DATA
+	);
+	mix_comp1_g : mixture_comps_g(
+		T, p, ph1, cmp1 : INPUT;
+		g_comp1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_comp2_g : mixture_comps_g(
+		T, p, ph1, cmp2 : INPUT;
+		g_comp2 : OUTPUT;
+		mixt : DATA
+	);
+
 METHODS
 METHOD specify;
 	FIX T;
 	FIX p;
 	FIX ph1;
+	FIX ph2;
+	FIX ph3;
 	FIX cmp1;
 	FIX cmp2;
-	(* FIX mix_comp; *)
 END specify;
 METHOD values;
 	T  := 150 {K} + 273.15 {K};
 	p  := 2 {bar};
 	ph1 := 1;
+	ph2 := 2;
+	ph3 := 3;
 	cmp1 := 1;
 	cmp2 := 2;
-
-	(* mix_comp.grandparent := mixt;
-	mix_comp.phase_num   := 1;
-	mix_comp.comp_num    := 1;
-	mix_comp.T           := T;
-	mix_comp.p           := p; *)
 END values;
 METHOD options;
 	SOLVER QRSlv;
