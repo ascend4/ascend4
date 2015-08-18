@@ -56,7 +56,7 @@
 #else
 # include <sundials/sundials_config.h>
 # include <nvector/nvector_serial.h>
-
+# include <ida/ida.h>
 #endif
 
 #include <sundials/sundials_dense.h>
@@ -69,4 +69,5 @@
 #ifndef IDA_SUCCESS
 # error "Failed to include SUNDIALS IDA header file"
 #endif
+
 

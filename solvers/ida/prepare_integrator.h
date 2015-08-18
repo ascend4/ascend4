@@ -50,4 +50,35 @@
 # error "Failed to include SUNDIALS IDA header file"
 #endif
 
-extern int prepare_integrator(IntegratorSystem *integ);
+ static int integrator_ida_params_default(IntegratorSystem *integ);
+ static void integrator_ida_free(void *enginedata);
+ //int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s);
+ static void integrator_ida_create(IntegratorSystem *integ);
+extern ASC_EXPORT int ida_register(void);
+
+
+
+
+
+typedef void ( IntegratorVarVisitorFn)(IntegratorSystem *integ,
+		struct var_variable *var, const int *varindx);
+
+enum ida_parameters {
+	IDA_PARAM_LINSOLVER,
+	IDA_PARAM_MAXL,
+	IDA_PARAM_MAXORD,
+	IDA_PARAM_AUTODIFF,
+	IDA_PARAM_CALCIC,
+	IDA_PARAM_SAFEEVAL,
+	IDA_PARAM_RTOL,
+	IDA_PARAM_ATOL,
+	IDA_PARAM_ATOLVECT,
+	IDA_PARAM_GSMODIFIED,
+	IDA_PARAM_MAXNCF,
+	IDA_PARAM_PREC,
+	IDA_PARAMS_SIZE
+};
+
+
+
+
