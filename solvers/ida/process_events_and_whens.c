@@ -94,22 +94,21 @@ int process_events_and_whens(IntegratorSystem *integ, void *ida_mem, unsigned lo
 	int i, flag;
 	int *rootsfound;			/** < IDA rootfinder reports root index in here */
 	int *bnd_cond_states;		/** < Record of boundary states so that IDA can tell LRSlv how to evaluate a boundary crossing */
+int need_to_reconfigure = 1;
 	int *bnd_not_set;
 	int all_bnds_set = 1;
-	int need_to_reconfigure = 0;	/** < Flag to indicate system rebuild after crossing */
 	int qrslv_ind, lrslv_ind;
 	int after_root = 0;
 	int system_discrete_change = 0;
-	int numDVs, i;
 	slv_status_t status;
 	struct bnd_boundary *bnd = NULL;
-	int i, num_bnds, num_dvars;
+	int num_bnds, num_dvars;
 	struct dis_discrete **dvl;
 	int32 c, *prevals = NULL;
 	double *bnd_prev_eval;
 	int updateflag = 400;
 	int reanalyseflag = 400;
-	int first_run = 1;
+	first_run = 1;
 
 	struct dis_discrete **dvlist, *cur_dis;	
 #if defined(SOLVE_DEBUG) || defined(IDA_BND_DEBUG)
@@ -127,7 +126,6 @@ int process_events_and_whens(IntegratorSystem *integ, void *ida_mem, unsigned lo
 	enginedata = integrator_ida_enginedata(integ);
 	enginedata->bndlist = slv_get_solvers_bnd_list(integ->system);
 	enginedata->nbnds = slv_get_num_solvers_bnds(integ->system);
-	enginedata->safeeval = SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_SAFEEVAL);
 	//CONSOLE_DEBUG("safeeval = %d",enginedata->safeeval);    
 	qrslv_ind = slv_lookup_client("QRSlv");
 	lrslv_ind = slv_lookup_client("LRSlv");
@@ -194,7 +192,7 @@ int process_events_and_whens(IntegratorSystem *integ, void *ida_mem, unsigned lo
 #endif
 
 	if(!IDA_ROOT_RETURN){
-		need_to_reconfigure = ida_cross_boundary(integ, rootsfound, bnd_cond_states);   /*************EVEN IF NO ROOT IS RETURNED LRSLV MUST BE CALLED TO UPDATE BOOLS**********************/										
+		   /*************EVEN IF NO ROOT IS RETURNED LRSLV MUST BE CALLED TO UPDATE BOOLS**********************/										
 		if (need_to_reconfigure == 0){
 			return 657;
 		}
@@ -256,7 +254,7 @@ int process_events_and_whens(IntegratorSystem *integ, void *ida_mem, unsigned lo
 			ASC_FREE(relname);
 		}
 #endif
-		need_to_reconfigure = ida_cross_boundary(integ, rootsfound, bnd_cond_states);
+		
 		if(need_to_reconfigure == 1){
 			updateflag = ida_bnd_update_relist(integ);
 		}
@@ -299,103 +297,6 @@ int process_events_and_whens(IntegratorSystem *integ, void *ida_mem, unsigned lo
 
 
 
-int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
-	int *bnd_cond_states) {
-	IntegratorIdaData *enginedata;
-	slv_status_t status;
-	struct bnd_boundary *bnd;
-	int i, num_bnds;
-	/* Flag the crossed boundary and update bnd_cond_states */
-	enginedata = integ->enginedata;
-	num_bnds = enginedata->nbnds;
-	for (i = 0; i < num_bnds; i++) {
-		if (rootsfound[i]) {
-			integrator_output_write(integ);
-			bnd = enginedata->bndlist[i];
-  			bnd_set_ida_crossed(bnd, 1);
-	/* Flag boundary for change, update bnd_cond_state */
-			if (bnd_cond_states[i] == 0) {
-				bnd_set_ida_value(bnd, 1);
-				bnd_cond_states[i] = 1;
-			}else{
-				bnd_set_ida_value(bnd, 0);
-				bnd_cond_states[i] = 0;
-			}
-		break;
-		}
-	}
- 	/* solve the logical relations in the model, if possible */
-	slv_presolve(integ->system);
-	slv_solve(integ->system);
-	/* Check for convergence */
-	slv_get_status(integ->system, &status);
-	if (!status.converged) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-convergence in logical solver.");
-		return -1;
-	}
- 
-	/* Reset the boundary flag */
-	bnd_set_ida_crossed(bnd, 0);
- 	/* update the main system if required */
-	if (some_dis_vars_changed(integ->system)) {
-		ida_bnd_reanalyse(integ);
-		return 1;
-	}else{
-        /* Boundary crossing that has no effect on system */
-	return 0;
-     }
-}
 
 
 
-
-
-
-
-
-
-
-
-
-int ida_bnd_update_relist(IntegratorSystem *integ){
-	IntegratorIdaData *enginedata;
-	struct rel_relation **rels;
-	int i,j,n_solverrels,n_active_rels;
-
-	enginedata = integrator_ida_enginedata(integ);
-
-	n_solverrels = slv_get_num_solvers_rels(integ->system);
-	n_active_rels = slv_count_solvers_rels(integ->system, &integrator_ida_rel);
-	rels = slv_get_solvers_rel_list(integ->system);
-
-	if(enginedata->rellist != NULL){
-		ASC_FREE(enginedata->rellist);
-		enginedata->rellist = NULL;
-		enginedata->rellist = ASC_NEW_ARRAY(struct rel_relation *, n_active_rels);
-	}
-
-	j = 0;
-	for (i = 0; i < n_solverrels; ++i) {
-		if (rel_apply_filter(rels[i], &integrator_ida_rel)) {
-#ifdef IDA_BND_DEBUG
-			char *relname;
-			relname = rel_make_name(integ->system, rels[i]);
-			CONSOLE_DEBUG("rel '%s': 0x%x", relname, rel_flags(rels[i]));
-			ASC_FREE(relname);
-#endif
-			enginedata->rellist[j++] = rels[i];
-		}
-	}
-	asc_assert(j == n_active_rels);
-	enginedata->nrels = n_active_rels;
-
-	if (enginedata->nrels != integ->n_y) {
-		ERROR_REPORTER_HERE(ASC_USER_ERROR
-				,"Integration problem is not square (%d active rels, %d vars)"
-				,n_active_rels, integ->n_y
-		);
-		return 1; /* failure */
-	}
-
-	return 0;
-}
