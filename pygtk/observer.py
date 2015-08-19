@@ -1,7 +1,5 @@
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk
-from gi.repository import Pango
 import os.path
 
 from study import *
@@ -121,12 +119,9 @@ class ObserverColumn:
 				cell.set_property('background', None)
 
 			##### CELSIUS TEMPERATURE WORKAROUND
-			if self.instance.getType().isRefinedReal() and str(self.instance.getType().getDimensions()) == 'TMP':
-				units = Preferences().getPreferredUnitsOrigin(str(self.instance.getType().getName()))
-				if units == CelsiusUnits.get_celsius_sign():
-					_dataval = CelsiusUnits.convert_kelvin_to_celsius(_dataval, str(self.instance.getType()))
+			_dataval = CelsiusUnits.convert_show(self.instance, str(_dataval), False)
 			##### CELSIUS TEMPERATURE WORKAROUND
-		except Exception:
+		except Exception, e:
 			_dataval = ""
 
 		cell.set_property('text', str(_dataval))
@@ -261,7 +256,6 @@ class ObserverTab:
 
 	def plot(self,x=None,y=None):
 		"""create a plot from two/more columns in the ObserverTable"""
-		import platform
 		import matplotlib
 		matplotlib.use('module://backend_gtk3',False)
 		import pylab
@@ -444,10 +438,7 @@ class ObserverTab:
 	def on_view_cell_edited(self, renderer, path, newtext, col):
 		# we can assume it's always the self.activeiter that is edited...
 		##### CELSIUS TEMPERATURE WORKAROUND
-		if str(col.instance.getType().getDimensions()) == 'TMP':
-			units = Preferences().getPreferredUnitsOrigin(str(col.instance.getType().getName()))
-			if units == CelsiusUnits.get_celsius_sign() and (len(newtext.split(" ")) == 1 or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign()):
-				newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext.split(" ")[0], str(col.instance.getType()))
+		newtext = CelsiusUnits.convert_edit(col.instance, newtext, False)
 		##### CELSIUS TEMPERATURE WORKAROUND
 		if col.instance.isFixed():
 			val = float(newtext) * col.units.getConversion()

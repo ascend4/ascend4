@@ -1,6 +1,5 @@
 from gi.repository import GdkPixbuf
 
-import ascpy
 from properties import *
 from unitsdialog import *
 from study import *
@@ -285,11 +284,7 @@ class ModelView:
 			_name, _instance = self.otank[_path]
 			_value = str(_instance.getValue())
 			##### CELSIUS TEMPERATURE WORKAROUND
-			if _instance.getType().isRefinedReal() and str(_instance.getType().getDimensions()) == 'TMP':
-				units = Preferences().getPreferredUnitsOrigin(str(_instance.getType().getName()))
-				if units == CelsiusUnits.get_celsius_sign():
-					temp = _value.split(" ")[0]
-					_value = CelsiusUnits.convert_kelvin_to_celsius(temp, str(_instance.getType())) + " " + CelsiusUnits.get_celsius_sign()
+			_value = CelsiusUnits.convert_show(_instance, _value, True)
 			##### CELSIUS TEMPERATURE WORKAROUND
 			self.modelstore.set_value(_iter, 2, _value)
 			if _instance.getType().isRefinedSolverVar():
@@ -336,14 +331,7 @@ class ModelView:
 			# only real-valued things can have units
 
 			##### CELSIUS TEMPERATURE WORKAROUND
-			if str(_instance.getType().getDimensions()) == 'TMP':
-				pref = Preferences()
-				units = pref.getPreferredUnitsOrigin(str(_instance.getType().getName()))
-				if units == CelsiusUnits.get_celsius_sign() and len(newtext.split(" ")) == 1 or newtext.find(CelsiusUnits.get_celsius_sign()) != -1:
-					if newtext.find(CelsiusUnits.get_celsius_sign()) == -1:
-						newtext += CelsiusUnits.get_celsius_sign()
-					newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext[:newtext.find(CelsiusUnits.get_celsius_sign())], str(_instance.getType()))
-					pref.setPreferredUnits(str(_instance.getType().getName()), CelsiusUnits.get_celsius_sign())
+			newtext = CelsiusUnits.convert_edit(_instance, newtext, True)
 			##### CELSIUS TEMPERATURE WORKAROUND
 
 			_e = RealAtomEntry(_instance, newtext)

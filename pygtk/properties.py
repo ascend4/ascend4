@@ -1,11 +1,10 @@
 # GUI for ASCEND solver_var properties
 
-from gi.repository import Gtk, Gdk
-import ascpy
+from gi.repository import Gdk
+
 from celsiusunits import CelsiusUnits
-from preferences import Preferences
-from varentry import *
 from infodialog import *
+
 
 class RelPropsWin:
 	def __init__(self,browser,instance):
@@ -108,14 +107,6 @@ class VarPropsWin:
 		self.cliquebutton = self.browser.builder.get_object("cliquebutton"); 
 		self.morepropsbutton = self.browser.builder.get_object("morepropsbutton");
 
-		##### CELSIUS TEMPERATURE WORKAROUND
-		self.convert = False
-		if self.instance.getType().isRefinedReal() and str(self.instance.getType().getDimensions()) == 'TMP':
-			units = Preferences().getPreferredUnitsOrigin(str(self.instance.getType().getName()))
-			if units == CelsiusUnits.get_celsius_sign():
-				self.convert = True
-		##### CELSIUS TEMPERATURE WORKAROUND
-
 		self.fill_values()
 
 		self.browser.builder.connect_signals(self)
@@ -140,8 +131,7 @@ class VarPropsWin:
 		for _k,_v in _arr.iteritems():	
 			_t = str(_v / _conversion)+" "+_u
 			##### CELSIUS TEMPERATURE WORKAROUND
-			if self.convert:
-				_t = CelsiusUnits.convert_kelvin_to_celsius(_v, str(self.instance.getType())) + " " + CelsiusUnits.get_celsius_sign()
+			_t = CelsiusUnits.convert_show(self.instance, str(_v), True, default=_t)
 			##### CELSIUS TEMPERATURE WORKAROUND
 			_k.set_text(_t)
 			self.parse_entry(_k)
@@ -172,9 +162,7 @@ class VarPropsWin:
 		for _k,_v in _arr.iteritems():
 			newtext = _k.get_text()
 			##### CELSIUS TEMPERATURE WORKAROUND
-			if self.convert:
-				if len(newtext.split(" ")) == 1 or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign():
-					newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext.split(" ")[0], str(self.instance.getType()))
+			newtext = CelsiusUnits.convert_edit(self.instance, newtext, False)
 			##### CELSIUS TEMPERATURE WORKAROUND
 
 			i = RealAtomEntry(self.instance, newtext)
@@ -210,9 +198,7 @@ class VarPropsWin:
 		# and taint the entry box accordingly
 		newtext = entry.get_text()
 		##### CELSIUS TEMPERATURE WORKAROUND
-		if self.convert:
-			if len(newtext) > 0 and (len(newtext.split(" ")) == 1 or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign()):
-				newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext.split(" ")[0], str(self.instance.getType()))
+		newtext = CelsiusUnits.convert_edit(self.instance, newtext, False)
 		##### CELSIUS TEMPERATURE WORKAROUND
 		i = RealAtomEntry(self.instance, newtext)
 		try:

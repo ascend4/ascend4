@@ -1,14 +1,12 @@
 import threading
-from gi.overrides import GLib
-from gi.repository import Gtk, Gdk
-from gi.repository import Pango
-import ascpy
-from celsiusunits import CelsiusUnits
-from preferences import Preferences
+from math import log, exp
 
+from gi.overrides import GLib
+from gi.repository import Gdk
+
+from celsiusunits import CelsiusUnits
 from varentry import *
 from studyreporter import *
-from math import log, exp
 
 STEP_NUMBER = 0
 STEP_INCREM = 1
@@ -99,19 +97,10 @@ class StudyWin:
 			,self.upperb: self.instance.getUpperBound() # this upper bound is probably stoopid
 		}
 
-		##### CELSIUS TEMPERATURE WORKAROUND
-		self.convert = False
-		if self.instance.getType().isRefinedReal() and str(self.instance.getType().getDimensions()) == 'TMP':
-			units = Preferences().getPreferredUnitsOrigin(str(self.instance.getType().getName()))
-			if units == CelsiusUnits.get_celsius_sign():
-				self.convert = True
-		##### CELSIUS TEMPERATURE WORKAROUND
-
 		for _k,_v in _arr.iteritems():
 			_t = str(_v / _conversion)+" "+_u
 			##### CELSIUS TEMPERATURE WORKAROUND
-			if self.convert:
-				_t = CelsiusUnits.convert_kelvin_to_celsius(_v, str(self.instance.getType())) + " " + CelsiusUnits.get_celsius_sign()
+			_t = CelsiusUnits.convert_show(self.instance, str(_v), True, default=_t)
 			##### CELSIUS TEMPERATURE WORKAROUND
 			_k.set_text(_t)
 		
@@ -336,9 +325,7 @@ class StudyWin:
 		"""
 		newtext = entry.get_text()
 		##### CELSIUS TEMPERATURE WORKAROUND
-		if self.convert:
-			if len(newtext) > 0 and (len(newtext.split(" ")) == 1 or newtext.split(" ")[1] == CelsiusUnits.get_celsius_sign()):
-				newtext = CelsiusUnits.convert_celsius_to_kelvin(newtext.split(" ")[0], str(self.instance.getType()))
+		newtext = CelsiusUnits.convert_edit(self.instance, newtext, False)
 		##### CELSIUS TEMPERATURE WORKAROUND
 		# FIXME Add missing units if they have not been entered.
 		i = RealAtomEntry(self.instance, newtext)

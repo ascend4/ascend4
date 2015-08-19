@@ -6,7 +6,6 @@ import platform
 
 ## @TODO implement this differently; the __del__ stuff is not working correctly
 ## in the context of the extpy extension.
-from celsiusunits import CelsiusUnits
 
 class Preferences:
 	__sharedstate = {}
@@ -74,7 +73,7 @@ class Preferences:
 	def getPreferredUnits(self, key):
 		_u = self.getPreferredUnitsOrigin(key)
 		##### CELSIUS TEMPERATURE WORKAROUND
-		if _u == CelsiusUnits().get_celsius_sign():
+		if _u == "degC":
 			_u = "K"
 		##### CELSIUS TEMPERATURE WORKAROUND
 		return _u
