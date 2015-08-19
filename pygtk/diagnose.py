@@ -1,9 +1,10 @@
-from gi.repository import Gtk, GdkPixbuf, Gdk
-import ascpy
+import array
 from itertools import groupby
 from operator import itemgetter
 import math
-import re
+
+import cairo
+from gi.repository import GdkPixbuf, Gdk
 
 import config
 from infodialog import *
@@ -134,8 +135,8 @@ class DiagnoseWindow:
 		print "STARTING IMAGE CREATION"
 		# refer http://pyGtk.org/pygtk2tutorial/sec-DrawingMethods.html
 		c = chr(255)
-		b = nr*nc*3*[c]
-		rowstride = 3 * nc
+		b = nr * nc * 4 * [c]
+		rowstride = 4 * nc
 		
 		blackdot = [chr(0)]*3;
 		reddot = [chr(255), chr(0), chr(0)]
@@ -150,11 +151,11 @@ class DiagnoseWindow:
 		for i in self.data:
 			if i.row < rl or i.row > rh or i.col < cl or i.col > ch:
 				continue
-			r = i.row - rl;
-			c = i.col - cl;
-			pos = rowstride*r + 3*c
-			dot = blackdot;
-			var = self.im.getVariable(i.col);
+			r = i.row - rl
+			c = i.col - cl
+			pos = rowstride * r + 4 * c
+			dot = blackdot
+			var = self.im.getVariable(i.col)
 			if abs( (var.getValue()-var.getUpperBound())/ var.getNominal() )  < AT_BOUND_TOL:
 				dot = reddot
 			elif abs( var.getValue() - var.getLowerBound() ) / var.getNominal() < AT_BOUND_TOL:
@@ -178,14 +179,14 @@ class DiagnoseWindow:
 							dot = blackdot
 					except ValueError, e:
 						pass
-			#print "DOT: ",dot
-			b[pos], b[pos+1], b[pos+2] = dot
+			b[pos + 2], b[pos + 1], b[pos] = dot
 
 		d = ''.join(b)
 
 		print "DONE IMAGE CREATION"
-
-		self.pixbuf = GdkPixbuf.Pixbuf.new_from_data(d, GdkPixbuf.Colorspace.RGB, False, 8, nc, nr, rowstride, None, None)
+		buff = array.array('c', d)
+		surface = cairo.ImageSurface.create_for_data(buff, cairo.FORMAT_ARGB32, nc, nr)
+		self.pixbuf = Gdk.pixbuf_get_from_surface(surface, 0, 0, surface.get_width(), surface.get_height())
 
 		self.nr = nr
 		self.nc = nc
@@ -260,7 +261,7 @@ class DiagnoseWindow:
 			pb1 = self.pixbuf.scale_simple(w,h,GdkPixbuf.InterpType.BILINEAR)
 		else:
 			pb1 = self.pixbuf.scale_simple(w,h,GdkPixbuf.InterpType.NEAREST)
-		
+
 		self.image.set_from_pixbuf(pb1)
 
 	def fill_block_status(self):
