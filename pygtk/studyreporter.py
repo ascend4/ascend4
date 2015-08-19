@@ -117,7 +117,14 @@ class StudyReporter(PythonSolverReporter):
 			return True
 
 		return False
-	
+
+	def report_observed(self, data):
+		#add row in the observer tabs
+		for tabs in self.browser.observers:
+			if tabs.alive:
+				for v in data[tabs.name]:
+					tabs.do_add_row(v)
+
 	def finalise(self,status):
 		try:
 			_time = time.clock()
@@ -128,10 +135,6 @@ class StudyReporter(PythonSolverReporter):
 			if status.isConverged():
 				self.report_to_browser(status)
 				# print "Converged for %s = %s" % (self.browser.sim.getInstanceName(self.instance), self.instance.getRealValue())
-				#add row in the observer tabs
-				for tabs in self.browser.observers:
-					if tabs.alive:
-						tabs.do_add_row()
 				if self.pointsdone == (self.nsteps):
 					self.window.response(Gtk.ResponseType.CLOSE)
 				return
@@ -141,9 +144,6 @@ class StudyReporter(PythonSolverReporter):
 				      self.instance.getRealValue())
 				self.allconverged = False
 				self.report_to_browser(status)
-				for tabs in self.browser.observers:
-					if tabs.alive:
-						tabs.do_add_row()
 				if self.continue_on_fail is True:
 					if self.pointsdone == self.nsteps:
 						self.closebutton.set_sensitive(True)

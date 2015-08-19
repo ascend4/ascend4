@@ -141,14 +141,17 @@ class ObserverRow:
 		self.dead = False
 		self.error_msg = None
 
-	def make_static(self,table):
+	def make_static(self, table, values=None):
 		self.active = False
 		#print "TABLE COLS:",table.cols
 		#print "ROW VALUES:",self.values
-		_v = {}
-		for col in table.cols.values():
-			_v[col.index] = col.instance.getRealValue()
-		self.values = _v
+		if values is None:
+			_v = {}
+			for col in table.cols.values():
+				_v[col.index] = col.instance.getRealValue()
+			self.values = _v
+		else:
+			self.values = values
 		#print "Made static, values:",self.values
 
 	def get_values(self,table):
@@ -240,6 +243,12 @@ class ObserverTab:
 		else:
 			cell.set_property('pixbuf',self.keptimg.get_pixbuf())
 
+	def get_values(self):
+		_v = []
+		for col in self.cols.values():
+			_v.append(col.instance.getRealValue())
+		return _v
+
 	def on_add_clicked(self,*args):
 		self.do_add_row()
 
@@ -269,6 +278,17 @@ class ObserverTab:
 				x=self.cols[0]
 			if y is None:
 				y=[self.cols[1]]
+
+		##### CELSIUS TEMPERATURE WORKAROUND
+		size = len(CelsiusUnits.get_celsius_sign())
+		xtit = x.title.find(CelsiusUnits.get_celsius_sign())
+		if xtit != -1:
+			x.title = x.title[:xtit] + "K" + x.title[xtit + size:]
+		for yy in y:
+			ytit = yy.title.find(CelsiusUnits.get_celsius_sign())
+			if ytit != -1:
+				yy.title = yy.title[:ytit] + "K" + yy.title[ytit + size:]
+		##### CELSIUS TEMPERATURE WORKAROUND
 
 		# if column indices are provided instead of columns, convert them
 		if x.__class__ is int and x>=0 and x<len(self.cols):
@@ -424,7 +444,7 @@ class ObserverTab:
 			self.rows.append(_row)
 			if self.activeiter is not None:
 				_oldrow = _store.get_value(self.activeiter, 0)
-				_oldrow.make_static(self)
+				_oldrow.make_static(self, values)
 			self.activeiter = _store.append(None,[_row])
 			_path = _store.get_path(self.activeiter)
 			_oldpath,_oldcol = self.view.get_cursor()

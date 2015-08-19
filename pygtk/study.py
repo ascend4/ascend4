@@ -107,6 +107,7 @@ class StudyWin:
 		self.browser.builder.connect_signals(self)
 		self.lowerb.select_region(0, -1)
 		self.solve_interrupt = False
+		self.data = {}
 	
 	def get_step_type(self):
 		_s = self.step_menu.get_active_iter()
@@ -385,6 +386,10 @@ class StudyWin:
 		self.studywin.destroy()
 		reporter = StudyReporter(_b, _b.sim.getNumVars(), self.instance, _nsteps, self)
 
+		self.data = {}
+		for tab in self.browser.observers:
+			if tab.alive:
+				self.data[tab.name] = []
 		self.solve_interrupt = False
 		thread = threading.Thread(target=self.solve_thread, args=(_b, reporter, _start, _step, _nsteps, _dist))
 		thread.daemon = True
@@ -426,6 +431,7 @@ class StudyWin:
 					time.sleep(0.001)
 					if res != 0:
 						break
+				self.save_data()
 				GLib.idle_add(self.solve_finish_step, reporter, status)
 				browser.sim.postsolve(status)
 			except RuntimeError, err:
@@ -434,7 +440,13 @@ class StudyWin:
 			i += 1
 
 		GLib.idle_add(self.solve_update, reporter, i)
-		GLib.idle_add(self.solve_finish, browser)
+		GLib.idle_add(self.solve_finish, browser, reporter)
+
+	def save_data(self):
+		for tab in self.browser.observers:
+			if tab.alive:
+				v = tab.get_values()
+				self.data[tab.name].append(v)
 
 	def solve_update(self, reporter, i):
 		reporter.updateVarDetails(i)
@@ -448,7 +460,8 @@ class StudyWin:
 		reporter.finalise(status)
 		return False
 
-	def solve_finish(self, browser):
+	def solve_finish(self, browser, reporter):
+		reporter.report_observed(self.data)
 		browser.stop_waiting()
 		browser.modelview.refreshtree()
 		return False
