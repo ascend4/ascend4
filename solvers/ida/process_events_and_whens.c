@@ -117,7 +117,7 @@ int need_to_reconfigure = 1;
 #endif
 
 
-	if(first_run){
+	if(first_run||all_bnds_set==0){
 	/***********HAVE TO SOLVE INITIAL CONDITIONS**************/
 	}
 
@@ -191,20 +191,17 @@ int need_to_reconfigure = 1;
 	Asc_SignalHandlerPopDefault(SIGINT);
 #endif
 
-	if(!IDA_ROOT_RETURN){
+	
 		   /*************EVEN IF NO ROOT IS RETURNED LRSLV MUST BE CALLED TO UPDATE BOOLS**********************/										
 		if (need_to_reconfigure == 0){
 			return 657;
 		}
 		if (need_to_reconfigure == 1){							/********HIGHLY UNLIKELY*******/					
 			return 143; 
-		}
+		
 	}
 
-	if(IDA_ROOT_RETURN){
-#ifdef IDA_BND_DEBUG
-		CONSOLE_DEBUG("IDA reports root found!");
-#endif
+
 			/* Store the root index */
 		rootsfound = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
 		if(IDA_SUCCESS != IDAGetRootInfo(ida_mem, rootsfound)) {
@@ -282,7 +279,7 @@ int need_to_reconfigure = 1;
 				return 657;				/**********CASE WHERE ROOTS FOUND BUT NO NEED TO UPDATE**************/
 			}
 		}
-	}
+	
 }
 
 	
