@@ -390,7 +390,7 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 	}
 	/* update the main system if required */
 	int events_triggered = 1;
-	if(slv_get_num_solvers_events(integ->system)!=0) {
+	if(slv_get_num_solvers_bnds(integ->system)!=0) {
 		while(some_dis_vars_changed(integ->system) && events_triggered)  {
 			if(ida_bnd_reanalyse(integ)) {
 				/* select QRSlv solver, and solve the system */
