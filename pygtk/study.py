@@ -1,8 +1,8 @@
 import threading
 from math import log, exp
 
-from gi.overrides import GLib
 from gi.repository import Gdk
+from gi.repository import GObject
 
 from celsiusunits import CelsiusUnits
 from varentry import *
@@ -419,28 +419,28 @@ class StudyWin:
 				# what other kind of variable is it possible to study, if not a solver_var? integer? not suppported?
 				self.instance.setRealValue(_val)
 
-			GLib.idle_add(self.solve_update, reporter, i)
+			GObject.idle_add(self.solve_update, reporter, i)
 			try:
 				browser.sim.presolve(browser.solver)
 				status = browser.sim.getStatus()
 				while status.isReadyToSolve() and not self.solve_interrupt:
 					res = browser.sim.iterate()
 					status.getSimulationStatus(browser.sim)
-					GLib.idle_add(self.solve_update_step, reporter, status)
+					GObject.idle_add(self.solve_update_step, reporter, status)
 					# 'make' some time for gui update
 					time.sleep(0.001)
 					if res != 0:
 						break
 				self.save_data()
-				GLib.idle_add(self.solve_finish_step, reporter, status)
+				GObject.idle_add(self.solve_finish_step, reporter, status)
 				browser.sim.postsolve(status)
 			except RuntimeError, err:
 				browser.reporter.reportError(str(err))
 
 			i += 1
 
-		GLib.idle_add(self.solve_update, reporter, i)
-		GLib.idle_add(self.solve_finish, browser, reporter)
+		GObject.idle_add(self.solve_update, reporter, i)
+		GObject.idle_add(self.solve_finish, browser, reporter)
 
 	def save_data(self):
 		for tab in self.browser.observers:

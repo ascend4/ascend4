@@ -1,7 +1,9 @@
-from multiprocessing.pool import ThreadPool
 import threading
-from gi.repository import GLib
+
+from gi.repository import GObject
+
 from solverreporter import *
+
 
 class SolverHooksPython(ascpy.SolverHooks):
 	def __init__(self):
@@ -81,13 +83,13 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 			while status.isReadyToSolve() and not self.solve_interrupt:
 				res = sim.iterate()
 				status.getSimulationStatus(sim)
-				GLib.idle_add(self.do_solve_update, reporter, status)
+				GObject.idle_add(self.do_solve_update, reporter, status)
 				# need more time than in gtkbrowser to update gui
 				# probably because it's hook
 				time.sleep(0.02)
 				if res != 0:
 					break
-			GLib.idle_add(self.do_solve_finish, reporter, status)
+			GObject.idle_add(self.do_solve_finish, reporter, status)
 			sim.postsolve(status)
 		except Exception, e:
 			print "PYTHON ERROR:", str(e)

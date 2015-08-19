@@ -1,4 +1,5 @@
 import sys
+from gi.repository import GObject
 
 import loading
 from preferences import *
@@ -35,11 +36,11 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 	def solve_thread(self):
 		try:
 			self.getIntegrator().solve()
-			GLib.idle_add(self.close_output)
+			GObject.idle_add(self.close_output)
 		except RuntimeError, e:
-			GLib.idle_add(self.report_error, e)
+			GObject.idle_add(self.report_error, e)
 
-		GLib.idle_add(self.finish)
+		GObject.idle_add(self.finish)
 
 	def report_error(self, e):
 		self.browser.reporter.reportError("Integrator failed: %s" % e)
@@ -72,7 +73,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		thread = threading.Thread(target=self.solve_thread)
 		thread.daemon = True
 		thread.start()
-		GLib.idle_add(self.update_status)
+		GObject.idle_add(self.update_status)
 
 	def on_cancelbutton_clicked(self,*args):
 		self.cancelrequested=True

@@ -849,12 +849,12 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			while status.isReadyToSolve() and not self.solve_interrupt:
 				res = self.sim.iterate()
 				status.getSimulationStatus(self.sim)
-				GLib.idle_add(self.do_solve_update, reporter, status)
+				GObject.idle_add(self.do_solve_update, reporter, status)
 				# 'make' some time for gui update
 				time.sleep(0.001)
 				if res != 0:
 					break
-			GLib.idle_add(self.do_solve_finish, reporter, status)
+			GObject.idle_add(self.do_solve_finish, reporter, status)
 			self.sim.postsolve(status)
 		except RuntimeError, err:
 			self.reporter.reportError(str(err))
