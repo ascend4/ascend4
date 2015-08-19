@@ -36,10 +36,10 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 	def solve_thread(self):
 		try:
 			self.getIntegrator().solve()
-			GObject.idle_add(self.close_output)
 		except RuntimeError, e:
 			GObject.idle_add(self.report_error, e)
 
+		GObject.idle_add(self.close_output)
 		GObject.idle_add(self.finish)
 
 	def report_error(self, e):
