@@ -34,6 +34,9 @@
 #define TOL_RHO 1e-3
 
 int main(void){
+
+    #ifndef PT
+    #define PT P->data->table
     PureFluid *P;
 	FpropsError err;
     const char *helmfluids[] = { "water"};
@@ -42,7 +45,7 @@ int main(void){
 
     MSG("Which Fluid? -->  %s",helmfluids[0]);
 
-    P = (PureFluid *)fprops_fluid(helmfluids[0],"helmholtz",NULL);
+    P = (PureFluid *)fprops_fluid(helmfluids[0],"ttse",NULL);
 
 
     MSG("Triple Point Tt %f  & Crit Temp  %f",P->data->T_t,P->data->T_c);
@@ -55,6 +58,7 @@ int main(void){
     double avgprf=0,avgprg=0;
     for(i=0;i<NSAT-1;i++)
     {
+
         double Tt = P->data->T_t;
         double Tc = P->data->T_c;
         double dt2p = (Tc - Tt)/NSAT;
@@ -62,12 +66,12 @@ int main(void){
         double psat, rhof,rhog;
         fprops_sat_T(T,&psat,&rhof,&rhog,P,&err);
         int j = (int)round(  ((T - Tt)/(Tc - Tt))*(NSAT)  );
+        assert(j>=0 && j<NSAT);
         double delt = T - ( Tt + j*dt2p);
         double rhofT,rhogT;
         psat=evaluate_ttse_sat(T,&rhofT,&rhogT,P,&err);
 
-
-     //   rhofT =   P->table->satFRho[j] + delt*P->table->satFdRhodt[j]+ 0.5*delt*delt*P->table->satFd2RhodT2[j];
+      //  rhofT =   P->table->satFRho[j] + delt*P->table->satFdRhodt[j]+ 0.5*delt*delt*P->table->satFd2RhodT2[j];
       //  rhogT =   P->table->satGRho[j] + delt*P->table->satGdRhodt[j]+ 0.5*delt*delt*P->table->satGd2RhodT2[j];
 
         avgprf += fabs(100*(rhof-rhofT)/rhof);
@@ -143,11 +147,11 @@ int main(void){
 
         double T = temp_s + i*dT;
 
-        pressT[i] = evaluate_ttse_p(T, rho,P->table) ;
-        enthalpyT[i] =  evaluate_ttse_h(T, rho,P->table)  ;
-        entT[i] = evaluate_ttse_s(T, rho,P->table)  ;
-        intuT[i] =  evaluate_ttse_u(T, rho,P->table) ;
-        gibbsgT[i] = evaluate_ttse_g(T, rho,P->table) ;
+        pressT[i] = evaluate_ttse_p(T, rho,PT) ;
+        enthalpyT[i] =  evaluate_ttse_h(T, rho,PT)  ;
+        entT[i] = evaluate_ttse_s(T, rho,PT)  ;
+        intuT[i] =  evaluate_ttse_u(T, rho,PT) ;
+        gibbsgT[i] = evaluate_ttse_g(T, rho,PT) ;
     }
 
     end = clock();
@@ -202,6 +206,10 @@ int main(void){
     MSG("TTSE did %d calculations in %e seconds", nT*5,msecT/1000);
 
     return 1;
+
+
+
+    #endif // PT
 }
 
 

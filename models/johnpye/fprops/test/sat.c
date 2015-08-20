@@ -28,15 +28,11 @@
 int main(void){
 	const PureFluid *P;
 	FpropsError err;
+	FluidState S;
 
 #define FNAME(F) #F
 #define COMMA ,
 	const char *helmfluids[] = { FLUIDS(FNAME,COMMA) COMMA RPPFLUIDS(FNAME,COMMA) };
-
-  //  int ii;
-	//for(ii=0; ii< sizeof(helmfluids)/sizeof(char *) ; ii++)
-      //  printf("%s \n",helmfluids[ii]);
-      //printf("SIZE %d\n",sizeof(helmfluids)/sizeof(char *));
 #undef FNAME
 	const char *corrtypes[] = {"pengrob","helmholtz"}; // takes enum corrtypes_enum as index
 	const char *corrinitial[] = {"P","H"};
@@ -49,9 +45,6 @@ int main(void){
 #define FRPP(F) "RPP"
 #define FUN(F) NULL
 	const char *srcfluids[] = {FLUIDS(FUN,COMMA) COMMA RPPFLUIDS(FRPP,COMMA) };
-//	int ii;
-//	for(ii=0; ii< sizeof(srcfluids)/sizeof(char *) ; ii++)
- //       printf("%s \n",srcfluids[ii]);
 #undef FUN
 #undef FRPP
 #undef COMMA

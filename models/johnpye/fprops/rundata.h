@@ -105,6 +105,33 @@ For fluids without phase change (incompressible, ideal), we
 ...but maybe there's a better way. It's up to the particular PropEvalFn to
 make use of Tstar or T_c as desired, but this data is stored here
 */
+
+
+/*structure for tables*/
+#define NTP 200
+#define NRHOP 200
+#define NSAT 500
+typedef double (*TtseMatrix) [NRHOP];
+typedef double * TtseLine;
+
+typedef struct ttse_struct{
+
+    int doesdbexist;
+    int usettse;
+
+    double tmin,tmax,rhomin,rhomax;
+
+    TtseMatrix s, dsdt, d2sdt2, dsdrho, d2sdrho2, d2sdtdrho;
+    TtseMatrix p, dpdt, d2pdt2, dpdrho, d2pdrho2, d2pdtdrho;
+    TtseMatrix u, dudt, d2udt2, dudrho, d2udrho2, d2udtdrho;
+    TtseMatrix g, dgdt, d2gdt2, dgdrho, d2gdrho2, d2gdtdrho;
+    TtseMatrix h, dhdt, d2hdt2, dhdrho, d2hdrho2, d2hdtdrho;
+
+    TtseLine satFRho,satFdRhodt,satFd2RhodT2;
+    TtseLine satGRho,satGdRhodt,satGd2RhodT2;
+}Ttse;
+
+
 typedef struct FluidData_struct{
 	/* common data across all correlations */
 	double R;     /**< specific gas constant */
@@ -120,6 +147,12 @@ typedef struct FluidData_struct{
 	ReferenceState ref0;
 	/* correlation-specific stuff here */
 	CorrelationUnion corr;
+
+//Table related stuffs
+	int UseTable;
+    int IsTableBuilt;
+    char* path;
+	Ttse * table;
 } FluidData;
 
 
@@ -131,30 +164,6 @@ typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *d
 
 
 
-/*structure for tables*/
-#define NTP 200
-#define NRHOP 200
-#define NSAT 400
-typedef double (*TtseMatrix) [NRHOP];
-typedef double* TtseLine;
-
-typedef struct ttse_struct{
-
-    int istablebuilt;
-    int doesdbexist;
-    int usettse;
-
-    double tmin,tmax,rhomin,rhomax;
-
-    TtseMatrix s, dsdt, d2sdt2, dsdrho, d2sdrho2, d2sdtdrho;
-    TtseMatrix p, dpdt, d2pdt2, dpdrho, d2pdrho2, d2pdtdrho;
-    TtseMatrix u, dudt, d2udt2, dudrho, d2udrho2, d2udtdrho;
-    TtseMatrix g, dgdt, d2gdt2, dgdrho, d2gdrho2, d2gdtdrho;
-    TtseMatrix h, dhdt, d2hdt2, dhdrho, d2hdrho2, d2hdtdrho;
-
-    TtseLine satFRho,satFdRhodt,satFd2RhodT2;
-    TtseLine satGRho,satGdRhodt,satGd2RhodT2;
-}Ttse;
 
 /**
 	Structure containing all the necessary data and metadata for run-time
@@ -186,12 +195,8 @@ typedef struct PureFluid_struct{
 
 	const ViscosityData *visc; // TODO should it be here? or inside FluidData?? probably yes, but needs review.
 	const ThermalConductivityData *thcond; // TODO should it be here? probably yes, but needs review.
-	Ttse * table;
-	FILE * file_table; //file pointer to open the binary files for TTSE tables.
+
 } PureFluid;
-
-
-
 
 #endif
 

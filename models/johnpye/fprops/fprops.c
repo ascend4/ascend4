@@ -90,6 +90,13 @@ int fprops_corr_avail(const EosData *E, const char *corrtype){
 		default:
 			return 0;
 		}
+	}else if(strcmp(corrtype,"ttse")==0){
+		switch(E->type){
+		case FPROPS_HELMHOLTZ:
+			return FPROPS_HELMHOLTZ;
+		default:
+			return 0;
+		}
 	}
 	return 0;
 }
@@ -103,6 +110,10 @@ PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 	switch(fprops_corr_avail(E,corrtype)){
 	case FPROPS_HELMHOLTZ:
 		P = helmholtz_prepare(E,NULL);
+        if(0==strcmp(corrtype,"ttse")){
+           ttse_prepare(P);
+           P->data->UseTable=1;
+        }
 		break;
 	case FPROPS_PENGROB:
 		P = pengrob_prepare(E,NULL);
@@ -134,11 +145,6 @@ PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 			same as when there is no viscosity data at all */
 		}
 	}
-
-	//TTSE Calls
-	P->table->usettse = 1;
-	ttse_prepare(P);
-
 	return P;
 }
 
@@ -192,7 +198,6 @@ FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsE
 		}\
 		return state.fluid->VAR##_fn(state.T,state.rho,state.fluid->data,err);\
 	}
-
 
 EVALFN(p); EVALFN(u); EVALFN(h); EVALFN(s); EVALFN(a); EVALFN(g);
 EVALFN_SATUNDEFINED(cp); EVALFN_SATUNDEFINED(cv);
@@ -321,6 +326,8 @@ char *fprops_corr_type(EosType type){
 		return "helmholtz";
 	case FPROPS_MBWR:
 		return "mbwr";
+	case FPROPS_TTSE:
+		return "ttse";
 	}
 	return NULL;
 }

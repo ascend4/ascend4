@@ -111,7 +111,7 @@ void test_ph_array(const PureFluid *P, int nT, int nv, double Trmin, double Trma
 			if(*err){ERRMSG("Couldn't calculate p");return;}
 
 			if(p / pc > prskip)continue;
-	
+
 			double h = fprops_h(S,err);
 			if(*err){ERRMSG("Couldn't calculate h");return;}
 
@@ -124,7 +124,7 @@ void test_ph_array(const PureFluid *P, int nT, int nv, double Trmin, double Trma
 				(*nerr)++;
 				continue;
 			}
-			
+
 			double Terr = fabs(T1 - T)/T;
 			double verr = fabs(1./rho1 - v)/v;
 			if(Terr > TOLT || verr > TOLV){
@@ -148,12 +148,12 @@ void test_ph_array(const PureFluid *P, int nT, int nv, double Trmin, double Trma
 int main(void){
 	const PureFluid *P;
 	//const char *fluids[] = {"water","toluene","ethanol","isohexane","n_eicosane", NULL};
-	const char *fluids[] = {"isohexane",NULL};
+	const char *fluids[] = {"water",NULL};
 	const char **fi = fluids;
 	int nfluiderrors = 0;
 	while(*fi){
 		FpropsError err = FPROPS_NO_ERROR;
-		P = fprops_fluid(*fi,"pengrob",NULL);
+		P = fprops_fluid(*fi,"helmholtz",NULL);
 		assert(P);
 		int testedpoints;
 		int nerr;
@@ -161,7 +161,7 @@ int main(void){
 		if(err)nfluiderrors++;
 		++fi;
 	}
-	
+
 	if(nfluiderrors){
 		ERRMSG("There were %d fluids with (p,h) errors",nfluiderrors);
 		ERRMSG("Run 'python python/view_ph_results.py' to view results from '%s'",*(fi-1));
@@ -223,7 +223,7 @@ int main(void){
 	assert(P);
 
 	TEST_PH(119.6, 807.530551164909);
-	
+
 	P = fprops_fluid("water","helmholtz",NULL);
 	assert(P);
 
@@ -244,7 +244,7 @@ int main(void){
 	fprintf(stderr,"\n");
 	color_on(stderr,ASC_FG_BRIGHTGREEN);
 	fprintf(stderr,"SUCCESS (%s)",__FILE__);
-	color_off(stderr);	
+	color_off(stderr);
 	fprintf(stderr,"\n");
 	return 0;
 }

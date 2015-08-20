@@ -23,7 +23,7 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/error.h>
 
-#define INIT -23456789.123
+#define TAB_FOLDER  "tables"
 
 //#define FO
 #define SO
@@ -146,33 +146,13 @@ void remove_tables(Ttse *table)
 
 }
 
-
-
-/*
-    This will load the binary file from tables/ for the liquid of interest and the EOS and populate the matrices.
-    If the files are not present in tables/ then build_tables() should be used.
-*/
-
-void load_tables(PureFluid *P){
-
-
-}
-
-/*
-    After building the tables once this should be called to save the files in binary inside tables/
-*/
-void save_tables(PureFluid *P){
-
-
-}
-
 /*
     Actual building of tables is done here.
 */
 void build_tables(PureFluid *P){
 
     #ifndef PT
-    #define PT P->table
+    #define PT P->data->table
 
     int i,j;
     FpropsError err = FPROPS_NO_ERROR;
@@ -181,7 +161,9 @@ void build_tables(PureFluid *P){
     double Tc = P->data->T_c;
     double dt = (Tc - Tt)/(NSAT);
 
-    MSG("triple point and critical temperature -->  %f  %f",Tt,Tc);
+    double  rho1,rho2;
+    P->sat_fn(Tc,&rho1,&rho2,P->data,&err);
+    MSG("triple point and critical temperature and critical density-->  %f  %f  %f",Tt,Tc,rho1);
 
     for(i=0; i<NSAT; ++i)
     {
@@ -196,16 +178,12 @@ void build_tables(PureFluid *P){
 
         double dpdT_rho  = P->dpdT_rho_fn(T,rhof,P->data,&err);
         double dpdrho_T  = P->dpdrho_T_fn(T,rhof,P->data,&err);
+        double drhodT_p =  (-dpdT_rho )/(dpdrho_T);
+
 
         double d2pdrho2_T = P->d2pdrho2_T_fn(T,rhof,P->data,&err);
         double d2pdrhodT = P->d2pdTdrho_fn(T,rhof,P->data,&err);
         double d2pdT2_rho = P->d2pdT2_rho_fn(T,rhof,P->data,&err);
-
-
-     //   double ddrho_drhodT_p_constT = ( dpdT_rho*d2pdrho2_T - dpdrho_T*d2pdrhodT ) / pow(dpdrho_T,2);
-     //   double ddT_drhodT_p_constrho = ( dpdT_rho*d2pdrhodT - dpdrho_T*d2pdT2_rho ) / pow(dpdrho_T,2);
-
-        double drhodT_p =  (-dpdT_rho )/(dpdrho_T);
 
 
         PT->satFRho[i] = rhof;
@@ -218,6 +196,8 @@ void build_tables(PureFluid *P){
 
         dpdT_rho  = P->dpdT_rho_fn(T,rhog,P->data,&err);
         dpdrho_T  = P->dpdrho_T_fn(T,rhog,P->data,&err);
+        drhodT_p =  (-dpdT_rho )/(dpdrho_T);
+
 
         d2pdrho2_T = P->d2pdrho2_T_fn(T,rhog,P->data,&err);
         d2pdrhodT = P->d2pdTdrho_fn(T,rhog,P->data,&err);
@@ -226,7 +206,6 @@ void build_tables(PureFluid *P){
      //   ddrho_drhodT_p_constT = ( dpdT_rho*d2pdrho2_T - dpdrho_T*d2pdrhodT ) / pow(dpdrho_T,2);
      //   ddT_drhodT_p_constrho = ( dpdT_rho*d2pdrhodT - dpdrho_T*d2pdT2_rho ) / pow(dpdrho_T,2);
 
-        drhodT_p =  (-dpdT_rho )/(dpdrho_T);
 
 
         PT->satGRho[i] = rhog;
@@ -234,18 +213,12 @@ void build_tables(PureFluid *P){
         //PT->satGd2RhodT2[i] =  ddT_drhodT_p_constrho  +  ddrho_drhodT_p_constT * drhodT_p;
         PT->satGd2RhodT2[i] =  (-1.0/pow(dpdrho_T,3))*( d2pdrho2_T*dpdT_rho*dpdT_rho -2*dpdT_rho*dpdrho_T*d2pdrhodT + dpdrho_T*dpdrho_T*d2pdT2_rho );
 
-
+        MSG("%f  %f  %f ---  %f  %f  %f",PT->satFRho[i] , PT->satFdRhodt[i], PT->satFd2RhodT2[i],PT->satGRho[i] , PT->satGdRhodt[i], PT->satGd2RhodT2[i]) ;
     }
 
 
     double tmin,tmax,rhomin,rhomax;
 
-//Pseudo values for water
-//Should be implemented elsewhere per fluid
-    PT->tmin = 200;
-    PT->tmax = 4200;
-    PT->rhomin = 400;
-    PT->rhomax = 4400;
 
 
 
@@ -319,7 +292,7 @@ void build_tables(PureFluid *P){
     double msec = (double)(end - start) / (CLOCKS_PER_SEC/1000);
     MSG("Tables built in %f seconds", msec/1000);
 
-
+    P->data->IsTableBuilt=1;
 
     #undef PT
     #endif
@@ -328,6 +301,10 @@ void build_tables(PureFluid *P){
 
 
 double evaluate_ttse_sat(double T, double *rhof_out, double * rhog_out, PureFluid *P, FpropsError *err){
+
+    #ifndef PT
+    #define PT P->data->table
+
     int i,j;
     double tmin = P->data->T_t;
     double tmax = P->data->T_c;
@@ -343,29 +320,39 @@ double evaluate_ttse_sat(double T, double *rhof_out, double * rhog_out, PureFlui
 
     double dt = (tmax-tmin)/NSAT;
     i = (int)round(((T - tmin)/(tmax - tmin)*(NSAT)));
+    assert(i>=0 && i<NSAT);
     double delt = T - ( tmin + i*dt);
-    *rhof_out =  P->table->satFRho[i] + delt*P->table->satFdRhodt[i] + 0.5*delt*delt*P->table->satFd2RhodT2[i];
-    *rhog_out =  P->table->satGRho[i] + delt*P->table->satGdRhodt[i] + 0.5*delt*delt*P->table->satGd2RhodT2[i];
-
+    *rhof_out =  PT->satFRho[i] + delt*PT->satFdRhodt[i] + 0.5*delt*delt*PT->satFd2RhodT2[i];
+    *rhog_out =  PT->satGRho[i] + delt*PT->satGdRhodt[i] + 0.5*delt*delt*PT->satGd2RhodT2[i];
 
 
 /* return Psat from the single phase table        */
-    tmin = P->table->tmin;
-    tmax = P->table->tmax;
-    double rhomin  = P->table->rhomin;
-    double rhomax = P->table->rhomax;
+    tmin = PT->tmin;
+    tmax = PT->tmax;
+    double rhomin  = PT->rhomin;
+    double rhomax = PT->rhomax;
+
+
+
     dt = (tmax-tmin)/NTP;
     double drho = (rhomax-rhomin)/NRHOP;
     i = (int)round(((T-tmin)/(tmax-tmin)*(NTP)));
     j = (int)round(((*rhog_out-rhomin)/(rhomax-rhomin)*(NRHOP)));
+
+    assert(i>=0&&i<NTP);
+    assert(j>=0&&j<NRHOP);
     delt = T - ( tmin + i*dt);
     double delrho = *rhog_out - ( rhomin + j*drho);
-    double ttseP = P->table->p[i][j]
-         + delt*P->table->dpdt[i][j] + 0.5*delt*delt*P->table->d2pdt2[i][j]
-         + delrho*P->table->dpdrho[i][j] + 0.5*delrho*delrho*P->table->d2pdrho2[i][j]
-         + delrho*delt*P->table->d2pdtdrho[i][j];
-
+  //  MSG("%d  %d  %f  %f  %f  %f  %f  %f  %f",i,j,T,*rhof_out,*rhog_out,tmin,tmax,rhomin,rhomax);
+    double ttseP = PT->p[i][j]
+         + delt*PT->dpdt[i][j] + 0.5*delt*delt*PT->d2pdt2[i][j]
+         + delrho*PT->dpdrho[i][j] + 0.5*delrho*delrho*PT->d2pdrho2[i][j]
+         + delrho*delt*PT->d2pdtdrho[i][j];
     return ttseP; // return P_sat
+
+    #undef PT
+    #endif
+
 }
 
 /*
@@ -444,49 +431,106 @@ EVALTTSEFNFO(g);
 EVALTTSEFNFO(u);
 #endif
 
+
+
+
 /*
-double evaluate_ttse_p(PureFluid *P , double t, double rho)
-{
-
-    #ifndef PT
-    #define PT P->table
-
-    int i,j;
-    FpropsError err = FPROPS_NO_ERROR;
-
-    double tmin = PT->tmin;
-    double tmax = PT->tmax;
-    double rhomin  = PT->rhomin;
-    double rhomax= PT->rhomax;
-
-    double dt = (tmax-tmin)/NTP;
-    double drho = (rhomax-rhomin)/NRHOP;
-
-	i = (int)round(((t-tmin)/(tmax-tmin)*(NTP-1)));
-	j = (int)round(((rho-rhomin)/(rhomax-rhomin)*(NRHOP-1)));
-
-    double delt = t - ( tmin + i*dt);
-    double delrho = rho - ( rhomin + j*drho);
-
-    MSG("%f %f",i ,j ,delt ,delrho );
-    MSG("%f  %f  %f  %f  %f  %f", PT->p[i][j], PT->dpdt[i][j], PT->d2pdt2[i][j], PT->dpdrho[i][j], PT->d2pdrho2[i][j], PT->d2pdtdrho[i][j]);
-
-
-    double ttse_p = PT->p[i][j] + delt*PT->dpdt[i][j] + 0.5*delt*delt*PT->d2pdt2[i][j]
-            + delrho*PT->dpdrho[i][j] + 0.5*delrho*delrho*PT->d2pdrho2[i][j]
-            + delrho*delt*PT->d2pdtdrho[i][j];
-
-
-    MSG("%e  %e", ttse_p , P->p_fn(t, rho, P->data,&err)  );
-
-
-    return(ttse_p)
-    #undef PT
-    #endif
-}
-
+    This will load the binary file from tables/ for the liquid of interest and the EOS and populate the matrices.
+    If the files are not present in tables/ then build_tables() should be used.
 */
 
+void load_tables(PureFluid *P){
+
+    int i;
+    MSG("Table file exists @ %s",P->data->path);
+    FILE * readtablefile = fopen(P->data->path,"rb");
+
+
+    #define RD(VAR)\
+        fread( P->data->table->VAR, sizeof(double), NSAT, readtablefile );
+    RD(satFRho);    RD(satFdRhodt);    RD(satFd2RhodT2);
+    RD(satGRho);    RD(satGdRhodt);    RD(satGd2RhodT2);
+    #undef RD
+
+
+    #define RD(VAR)\
+    for(i=0;i<NTP;i++)\
+        fread( P->data->table->VAR[i] ,sizeof(double), NRHOP, readtablefile );
+    RD(s);  RD(dsdt); RD(d2sdt2); RD(dsdrho); RD(d2sdrho2); RD(d2sdtdrho);
+    RD(p);  RD(dpdt); RD(d2pdt2); RD(dpdrho); RD(d2pdrho2); RD(d2pdtdrho);
+    RD(u);  RD(dudt); RD(d2udt2); RD(dudrho); RD(d2udrho2); RD(d2udtdrho);
+    RD(g);  RD(dgdt); RD(d2gdt2); RD(dgdrho); RD(d2gdrho2); RD(d2gdtdrho);
+    RD(h);  RD(dhdt); RD(d2hdt2); RD(dhdrho); RD(d2hdrho2); RD(d2hdtdrho);
+    #undef RD
+
+
+
+    fclose(readtablefile);
+
+    P->data->IsTableBuilt=1;
+
+}
+
+/*
+    After building the tables once this should be called to save the files in binary inside tables/
+*/
+void save_tables(PureFluid *P){
+
+    int i;
+    MSG("Saving table %s",P->data->path);
+    FILE * writetablefile = fopen(P->data->path,"wb");
+
+
+    #define WR(VAR)\
+        fwrite( P->data->table->VAR, sizeof(double), NSAT, writetablefile );
+    WR(satFRho);     WR(satFdRhodt);    WR(satFd2RhodT2);
+    WR(satGRho);     WR(satGdRhodt);    WR(satGd2RhodT2);
+    #undef WR
+
+
+    #define WR(VAR)\
+    for(i=0;i<NTP;i++)\
+        fwrite( P->data->table->VAR[i] ,sizeof(double), NRHOP, writetablefile );
+    WR(s);  WR(dsdt); WR(d2sdt2); WR(dsdrho); WR(d2sdrho2); WR(d2sdtdrho);
+    WR(p);  WR(dpdt); WR(d2pdt2); WR(dpdrho); WR(d2pdrho2); WR(d2pdtdrho);
+    WR(u);  WR(dudt); WR(d2udt2); WR(dudrho); WR(d2udrho2); WR(d2udtdrho);
+    WR(g);  WR(dgdt); WR(d2gdt2); WR(dgdrho); WR(d2gdrho2); WR(d2gdtdrho);
+    WR(h);  WR(dhdt); WR(d2hdt2); WR(dhdrho); WR(d2hdrho2); WR(d2hdtdrho);
+    #undef WR
+
+
+    fclose(writetablefile);
+}
+
+
+
+int doesdbexist(PureFluid *P)
+{
+    char  path[200]  = TAB_FOLDER;
+
+
+    strcat(path,"/helm_");
+    strcat(path, P->name );
+    strcat(path,"_TR.bin");
+
+    P->data->path = FPROPS_NEW_ARRAY( char,strlen(path)+1 );
+    strcpy(P->data->path, path);
+    P->data->path[strlen(path)]='\0';
+
+  //  MSG("Table file path --> <%s>",P->path);
+
+    FILE *test=fopen(P->data->path,"r");
+
+    if(test)
+    {
+        MSG("Saved Table Found");
+        fclose(test);
+        return 1;
+    }
+
+    MSG("NO Saved Table");
+    return 0;
+}
 
 void ttse_prepare(PureFluid *P){
 
@@ -496,16 +540,32 @@ void ttse_prepare(PureFluid *P){
 #endif
 
 
-    if(!P->table->usettse)
+    if(P->data->IsTableBuilt)
         return;
-
 
     MSG("Inside TTSE");
 
-    alloc_tables(P->table);
+	P->data->table = FPROPS_NEW(Ttse);
+    alloc_tables(P->data->table);
 
-    build_tables(P);
+//Pseudo values for water
+//Should be implemented elsewhere per fluid
+    P->data->table->tmin = 200;
+    P->data->table->tmax = 4200;
+    P->data->table->rhomin = 0.0001;
+    P->data->table->rhomax = 2000;
 
+
+
+    if(doesdbexist(P))//file exists in tables/
+        load_tables(P);
+    else
+    {
+        build_tables(P);
+        save_tables(P);
+    }
+
+//exit(1);
 #ifdef TTSE_DEBUG
     //fclose(F1);
 #endif
@@ -514,7 +574,7 @@ void ttse_prepare(PureFluid *P){
 }
 
 
-void ttse_clean(PureFluid *P){
-    remove_tables(P->table);
+void ttse_destroy(PureFluid *P){
+    remove_tables(P->data->table);
 }
 

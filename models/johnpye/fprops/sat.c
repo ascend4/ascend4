@@ -145,11 +145,11 @@ double fprops_psat_T_xiang(double T, const FluidData *data){
 
 	This is derived from the definition of the acentric factor,
 	omega = -log10(psat(T1) - 1 where T1/Tc = Tr = 0.7
-
+	
 	together with the saturation curve obtained if h_fg(T) is assumed constant:
 	ln(psat(T)) = A - B/(T + C)
 
-	See Sandler 5e, p 320.
+	See Sandler 5e, p 320.	
 
 s	Such a curve will pass through (pc,Tc) and (psat(Tr),Tr) where Tr = 0.7,
 	but will probably be inaccurate at Tt. Given additional data, such as the
@@ -331,7 +331,7 @@ void fprops_sat_p(double p, double *T_sat, double *rho_f, double *rho_g, const P
 		return;
 	}
 	/* FIXME what about checking triple point pressure? */
-
+	
 
 	SatPResidData D = {
 		P, log(p), err, 0

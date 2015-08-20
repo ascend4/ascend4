@@ -3,6 +3,7 @@
 #include "fprops.h"
 #include "helmholtz.h"
 #include "pengrob.h"
+#include "ttse.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -48,8 +49,6 @@ static int nfluids = 0 + FLUIDS(F,X) + RPPFLUIDS(F,X);
 
 const PureFluid *fprops_fluid(const char *name, const char *corrtype, const char *source){
 	int i;
-
-
 	MSG("Looking for fluid '%s' of type '%s', with source text '%s'",name,corrtype,source);
 	for(i = 0; i < nfluids; ++i){
 		if(0==strcmp(name, fluids[i]->name)){
@@ -89,13 +88,16 @@ const PureFluid *fprops_get_fluid(int i){
 }
 
 void fprops_fluid_destroy(PureFluid *P){
-	MSG("Freeing data for fluid '%s'",P->name);
+	MSG("Freeing data for lfuid '%s'",P->name);
 	switch(P->type){
 	case FPROPS_HELMHOLTZ:
 		helmholtz_destroy(P);
 		break;
 	case FPROPS_PENGROB:
 		pengrob_destroy(P);
+		break;
+	case FPROPS_TTSE:
+		ttse_destroy(P);
 		break;
 	case FPROPS_CUBIC:
 		assert(FPROPS_CUBIC != P->type);

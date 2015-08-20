@@ -31,6 +31,7 @@
 #include "sat.h"
 #include "cp0.h"
 #include "refstate.h"
+#include "ttse.h"
 
 
 
@@ -50,16 +51,22 @@ PropEvalFn helmholtz_betap;
 SatEvalFn helmholtz_sat;
 
 double helmholtz_dpdT_rho(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2pdrho2_T(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_d2pdT2_rho(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_dpdrho_T(double T, double rho, const FluidData *data, FpropsError *err);
-double helmholtz_d2pdrho2_T(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_d2pdTdrho(double T, double rho, const FluidData *data, FpropsError *err);
 
 double helmholtz_dhdT_rho(double T, double rho, const FluidData *data, FpropsError *err);
-double helmholtz_d2hdT2_rho(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_dhdrho_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2hdT2_rho(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_d2hdrho2_T(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_d2hdTdrho(double T, double rho, const FluidData *data, FpropsError *err);
+
+double helmholtz_dudT_rho(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2udT2_rho(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2udrho2_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_d2udTdrho(double T, double rho, const FluidData *data, FpropsError *err);
 
 double helmholtz_dsdT_rho(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_d2sdT2_rho(double T, double rho, const FluidData *data, FpropsError *err);
@@ -67,20 +74,11 @@ double helmholtz_dsdrho_T(double T, double rho, const FluidData *data, FpropsErr
 double helmholtz_d2sdrho2_T(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_d2sdTdrho(double T, double rho, const FluidData *data, FpropsError *err);
 
-
-double helmholtz_dudT_rho(double T, double rho, const FluidData *data, FpropsError *err);
-double helmholtz_d2udT2_rho(double T, double rho, const FluidData *data, FpropsError *err);
-double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsError *err);
-double helmholtz_d2udrho2_T(double T, double rho, const FluidData *data, FpropsError *err);
-double helmholtz_d2udTdrho(double T, double rho, const FluidData *data, FpropsError *err);
-
-
 double helmholtz_dgdT_rho(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_d2gdT2_rho(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_dgdrho_T(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_d2gdrho2_T(double T, double rho, const FluidData *data, FpropsError *err);
 double helmholtz_d2gdTdrho(double T, double rho, const FluidData *data, FpropsError *err);
-
 
 
 //#define HELM_DEBUG
@@ -132,11 +130,8 @@ double helmholtz_d2gdTdrho(double T, double rho, const FluidData *data, FpropsEr
 	double delta = rho / data->corr.helm->rho_star
 
 
-
-
 PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	PureFluid *P = FPROPS_NEW(PureFluid);
-
 	if(E->type != FPROPS_HELMHOLTZ){
 		ERRMSG("invalid EOS data, wrong type");
 		return NULL;
@@ -146,6 +141,8 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 
 	P->data = FPROPS_NEW(FluidData);
 	P->data->corr.helm = FPROPS_NEW(HelmholtzRunData);
+    P->data->UseTable = 0;
+    P->data->IsTableBuilt = 0;
 
 	/* metadata */
 	/* FIXME strings should be copied, not just referenced */
@@ -188,8 +185,8 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	/* function pointers... more to come still? */
 #define FN(VAR) P->VAR##_fn = &helmholtz_##VAR
 	FN(p); FN(u); FN(h); FN(s); FN(a); FN(g); FN(cp); FN(cv); FN(w);
-	FN(alphap); FN(betap);
-	FN(dpdrho_T);FN(d2pdrho2_T);FN(dpdT_rho);FN(d2pdT2_rho);FN(d2pdTdrho);
+	FN(alphap); FN(betap); FN(dpdrho_T);
+				 FN(d2pdrho2_T);FN(dpdT_rho);FN(d2pdT2_rho);FN(d2pdTdrho);
 	FN(dhdrho_T);FN(d2hdrho2_T);FN(dhdT_rho);FN(d2hdT2_rho);FN(d2hdTdrho);
 	FN(dsdrho_T);FN(d2sdrho2_T);FN(dsdT_rho);FN(d2sdT2_rho);FN(d2sdTdrho);
 	FN(dudrho_T);FN(d2udrho2_T);FN(dudT_rho);FN(d2udT2_rho);FN(d2udTdrho);
@@ -199,8 +196,7 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 
 	FpropsError err = 0;
 
-	/* calculate critical pressur
-	P->data->cp0 = cp0_prepare(E->data.helm->ideal, P->dae (doesn't require h0, s0) */
+	/* calculate critical pressure (doesn't require h0, s0) */
 	MSG("Calculating critical pressure at T_c = %f K, rho_c = %f kg/m3",P->data->T_c, P->data->rho_c);
 	P->data->p_c = helmholtz_p(P->data->T_c, P->data->rho_c, P->data, &err);
 	if(err){
@@ -228,11 +224,6 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 		return NULL;
 	}
 
-	P->table = FPROPS_NEW(Ttse);  //sid
-	P->table->istablebuilt =0;
-	P->table->istablebuilt =0;
-	P->table->istablebuilt =0;
-
 #undef I
 	return P;
 }
@@ -254,6 +245,7 @@ void helmholtz_destroy(PureFluid *P){
 	@return pressure in Pa
 */
 double helmholtz_p(double T, double rho, const FluidData *data, FpropsError *err){
+	if(data->UseTable) evaluate_ttse_p(T,rho,data->table);
 	DEFINE_TD;
 
 	assert(HD->rho_star!=0);
@@ -272,8 +264,6 @@ double helmholtz_p(double T, double rho, const FluidData *data, FpropsError *err
 	//fprintf(stderr,"rhob = %f, rhob* = %f, delta = %f\n", rho/HD->M, HD->rho_star/HD->M, delta);
 
 	double p = HD_R * T * rho * (1 + delta * helm_resid_del(tau,delta,HD));
-
-	//printf("%e\n",p);
 #if 0
 	if(isnan(p)){
 		fprintf(stderr,"T = %.12e, rho = %.12e\n",T,rho);
@@ -293,6 +283,7 @@ double helmholtz_p(double T, double rho, const FluidData *data, FpropsError *err
 	@return internal energy in ???
 */
 double helmholtz_u(double T, double rho, const FluidData *data, FpropsError *err){
+	if(data->UseTable) evaluate_ttse_u(T,rho,data->table);
 	DEFINE_TD;
 
 #ifdef TEST
@@ -321,6 +312,7 @@ double helmholtz_u(double T, double rho, const FluidData *data, FpropsError *err
 	@return enthalpy in J/kg
 */
 double helmholtz_h(double T, double rho, const FluidData *data, FpropsError *err){
+	if(data->UseTable) evaluate_ttse_h(T,rho,data->table);
 	DEFINE_TD;
 
 //#ifdef TEST
@@ -345,6 +337,7 @@ double helmholtz_h(double T, double rho, const FluidData *data, FpropsError *err
 	@return entropy in J/kgK
 */
 double helmholtz_s(double T, double rho, const FluidData *data, FpropsError *err){
+	if(data->UseTable) evaluate_ttse_s(T,rho,data->table);
 	DEFINE_TD;
 
 #ifdef ENTROPY_DEBUG
@@ -463,6 +456,7 @@ double helmholtz_w(double T, double rho, const FluidData *data, FpropsError *err
 	@return Gibbs energy, in J/kg.
 */
 double helmholtz_g(double T, double rho, const FluidData *data, FpropsError *err){
+	if(data->UseTable) evaluate_ttse_g(T,rho,data->table);
 	DEFINE_TD;
 
 	double phir_d = helm_resid_del(tau,delta,HD);
@@ -484,7 +478,7 @@ double helmholtz_alphap(double T, double rho, const FluidData *data, FpropsError
 }
 
 /**
-	beta_p function from IAPWS Advisory Note 3, used in calculation of partial
+	beta_p function from IAPWS Advisory Note 3 , used in calculation of partial
 	property derivatives.
 */
 double helmholtz_betap(double T, double rho, const FluidData *data, FpropsError *err){
@@ -537,11 +531,7 @@ double helmholtz_dpdrho_T(double T, double rho, const FluidData *data, FpropsErr
 	assert(!isinf(phir_del));
 	assert(!isinf(phir_deldel));
 #endif
-	double ret =  HD_R * T * (1 + 2*delta*phir_del + SQ(delta)*phir_deldel);
-
-
-	//printf ("%e   %e   %e   %e\n", phir_del, phir_deldel, HD_R, ret);
-	return ret;
+	return HD_R * T * (1 + 2*delta*phir_del + SQ(delta)*phir_deldel);
 }
 
 /**
@@ -638,7 +628,7 @@ double helmholtz_dhdrho_T(double T, double rho, const FluidData *data, FpropsErr
 	double phir_deltau = helm_resid_deltau(tau,delta,HD);
 	double phir_deldel = helm_resid_deldel(tau,delta,HD);
 
-	return HD_R * T / rho * (tau*delta*(phir_deltau) + delta * phir_del + SQ(delta)*phir_deldel);
+	return HD_R * T / rho * (tau*delta*(0 + phir_deltau) + delta * phir_del + SQ(delta)*phir_deldel);
 }
 
 
@@ -1173,6 +1163,7 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 		ERRMSG("Input temperature %f K is below triple-point temperature %f K",T,data->T_t);
 		return FPROPS_RANGE_ERROR;
 	}
+
 	if(T > data->T_c + 1e-8){
 		ERRMSG("Input temperature is above critical point temperature");
 		*err = FPROPS_RANGE_ERROR;
@@ -1448,6 +1439,7 @@ double helm_resid(double tau, double delta, const HelmholtzRunData *HD){
 #ifdef RESID_DEBUG
 		MSG("i = %d, CRITICAL, n = %e, a = %f, b = %f, beta = %f, A = %f, B = %f, C = %f, D = %f\n",i+1, ct->n, ct->a, ct->b, ct->beta, ct->A, ct->B, ct->C, ct->D);
 #endif
+
 		DEFINE_DELTA;
 		DEFINE_DELB;
 
@@ -1613,7 +1605,7 @@ double helm_resid_tau(double tau,double delta,const HelmholtzRunData *HD){
 	n = HD->ng;
 	gt = &(HD->gt[0]);
 	for(i=0; i<n; ++i){
-#ifdef RESID_DEBUGrundata
+#ifdef RESID_DEBUG
 		fprintf(stderr,"i = %d, GAUSSIAN, n = %e, t = %f, d = %f, alpha = %f, beta = %f, gamma = %f, epsilon = %f\n",i+1, gt->n, gt->t, gt->d, gt->alpha, gt->beta, gt->gamma, gt->epsilon);
 #endif
 
@@ -2083,37 +2075,29 @@ double helm_resid_deldeldel(double tau,double delta,const HelmholtzRunData *HD){
 	return res;
 }
 
-/**
-	Third derivative of helmholtz residual function, with respect to
+/*	Third derivative of helmholtz residual function, with respect to
 	delta once and tau (twice).
 */
-double helm_resid_deltautau(double tau,double delta,const HelmholtzRunData *HD){
 
+double helm_resid_deltautau(double tau,double delta,const HelmholtzRunData *HD){
 	double ddel = 0.0000000001;
 	return (helm_resid_tautau(tau,delta+ddel,HD) - helm_resid_tautau(tau,delta,HD))/ddel;
-
 }
 
 
-/**
-	Third derivative of helmholtz residual function, with respect to
+/*	Third derivative of helmholtz residual function, with respect to
 	delta (thrice).
 */
-double helm_resid_deldeltau(double tau,double delta,const HelmholtzRunData *HD){
 
+double helm_resid_deldeltau(double tau,double delta,const HelmholtzRunData *HD){
 	double ddel = 0.0000000001;
 	return (helm_resid_deltau(tau,delta+ddel,HD) - helm_resid_deltau(tau,delta,HD))/ddel;
-
 }
 
-
-
-/**
-	Third derivative of helmholtz residual function, with respect to
+/*	Third derivative of helmholtz residual function, with respect to
 	tau (thrice).
 */
 double helm_resid_tautautau(double tau,double delta,const HelmholtzRunData *HD){
-
 	double dtau = 0.0000000001;
 	return (helm_resid_tautau(tau+dtau,delta,HD) - helm_resid_tautau(tau,delta,HD))/dtau;
 }

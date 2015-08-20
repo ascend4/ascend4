@@ -174,7 +174,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 					MSG("Unable to solve saturation at p = %f",p);
 					*T = Tsat1;
 					*rho = rhof1;
-#else					
+#else
 					MSG("h < 0.9 hc... using saturation Tsat(hf) for starting guess");
 					double Tsat1, psat1, rhof1, rhog1;
 					fprops_sat_hf(h, &Tsat1, &psat1, &rhof1, &rhog1, fluid, err);
@@ -230,7 +230,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 			double p1 = fluid->p_fn(T1,rho1, fluid->data, err);
 			if(*err){
 				MSG("Got an error ('%s') in p_fn calculation",fprops_error(*err));
-			} 
+			}
 			double h1 = fluid->h_fn(T1,rho1, fluid->data, err);
 			assert(!isnan(h1));
 
