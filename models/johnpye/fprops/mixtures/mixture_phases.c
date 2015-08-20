@@ -191,18 +191,22 @@ double dew_pressure(MixtureSpec *MS, double T, double tol, FpropsError *err){
 	secant_solve(&dew_p_error, &dbd, p_d, tol);
 
 	return p_d[0];
+#if 0
 #undef XS
 #undef PF
 #undef NPURE
+#endif
 }
 
 /*
 	Find the bubble-point pressure for a mixture at a given temperature
  */
 double bubble_pressure(MixtureSpec *MS, double T, double tol, FpropsError *err){
+#if 0
 #define NPURE MS->pures
 #define PF MS->PF
 #define XS MS->Xs
+#endif
 	MSG("Entered the function...");
 	unsigned i;
 	double p_b[2] = {0.0}
@@ -234,7 +238,7 @@ double bubble_pressure(MixtureSpec *MS, double T, double tol, FpropsError *err){
 	return p_b[0];
 #undef XS
 #undef PF
-#undef NPURE
+/* #undef NPURE */
 }
 
 /*
@@ -326,7 +330,7 @@ double poynting_factor(PureFluid *PF, double T, double P, FpropsError *err){
 			without converging.
  */
 int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol, FpropsError *err){
-#define NPURE MS->pures
+/* #define NPURE MS->pures */
 #define MXS MS->Xs
 #define MPF MS->PF
 #define D MPF[i]->data
@@ -877,16 +881,10 @@ int mixture_bubble_temperature(double *T_b, MixtureSpec *MS, double p, double to
 	MSG("Entered the function...");
 	unsigned i
 		, n_sub = 0;
-	/* int sec; */
 	double T_c[NPURE]   /* critical temperatures for subcritical components */
 		, T_t[NPURE]   /* triple-point temperatures for subcritical components */
 		, Xs[NPURE]      /* subcritical mole fractions */
 		, error = 0.0 /* error for any use of 'zeroin_solve' */
-		/* , tt_b[2]     provisional bubble temperatures from which to search */
-		/* , t_sat[NPURE] saturation temperatures */
-		/* , rho_l[NPURE] liquid-phase densities */
-		/* , rho_v[NPURE] vapor-phase densities */
-		/* , xs[NPURE]    subcritical mass fractions */
 		;
 	PureFluid **pfs = ASC_NEW_ARRAY(PureFluid *,NPURE); /* subcritical pure liquids */
 	
@@ -948,5 +946,27 @@ int mixture_bubble_temperature(double *T_b, MixtureSpec *MS, double p, double to
 #undef D
 #undef PF
 #undef NPURE
+}
+
+/*
+	Find in what phases a component appears within a PhaseSpec struct
+ */
+void component_phase_indexes(unsigned *indexes, PhaseSpec *PS, unsigned component){
+#define NPHASE PS->phases
+#define PPH PS->PH
+#define PPURE PPH[i]->pures
+	unsigned i, j;
+
+	for(i=0;i<NPHASE;i++){
+		indexes[i] = 0;
+		for(j=0;j<PPURE;j++){
+			if(PPH[i]->c[j]==component){
+				indexes[i] = j;
+			}
+		}
+	}
+#undef PPURE
+#undef PPH
+#undef NPHASE
 }
 

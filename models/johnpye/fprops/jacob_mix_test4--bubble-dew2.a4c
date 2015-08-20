@@ -1,5 +1,14 @@
-(* Outline of ASCEND multi-component ideal-solution routine *)
-(* To perform the simulation, load the file into ASCEND and run 'setup'. *)
+(* ASCEND multi-component ideal-solution routine
+
+   To perform the simulation, load the file into ASCEND and run 'setup'.
+
+   This file performs further dew-point calculations, with the goal of 
+   confirming that a user can simply set the temperature equal to the 
+   dew or bubble temperature, and find other properties normally.
+
+   Since temperature is set at the dew temperature, there should be no 
+   liquid, or only a negligible amount.
+ *)
 
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
@@ -8,21 +17,21 @@ REQUIRE "johnpye/fprops/mixtures.a4l";
 
 (* The mixture_test model *)
 MODEL mixture_test;
-	T IS_A temperature;
-	p IS_A pressure;
+	(* Declare variables to hold various mixture properties *)
+	T IS_A temperature;         (* mixture (dew) temperature *)
+	p IS_A pressure;            (* mixture pressure; with 'T' this sets the state *)
+	rho IS_A mass_density;      (* mixture density *)
+	u,                          (* mixture internal energy *)
+	u_ph1 IS_A specific_energy; (* phase 1 internal energy *)
+	h IS_A specific_enthalpy;   (* mixture enthalpy *)
+	s IS_A specific_entropy;    (* mixture entropy *)
 
-	ii IS_A phase_count;
-	nphase IS_A phase_count;
-	phase_frac[1..3] IS_A mass_fraction;
+	(* Declare variables to hold phase-accounting data *)
+	nphase,                              (* number of phases *)
+	ph IS_A phase_count;                 (* first phase *)
+	phase_frac[1..3] IS_A mass_fraction; (* mass fraction of each phase *)
 
-	rho IS_A mass_density;
-	u,
-	u_ph1 IS_A specific_energy;
-	h IS_A specific_enthalpy;
-	s IS_A specific_entropy;
-	(* g,
-	a IS_A specific_secondary_energy; *)
-
+	(* Declare and specify a mixture with its composition *)
 	mixt IS_A mixture_spec;
 	mixt.npure :== 4;
 	mixt.components[1] :== 'ammonia';
@@ -66,7 +75,7 @@ MODEL mixture_test;
 		mixt : DATA
 	);
 	mix_phase_u : mixture_phase_u(
-		T, p, ii : INPUT;
+		T, p, ph : INPUT;
 		u_ph1 : OUTPUT;
 		mixt : DATA
 	);
@@ -80,32 +89,24 @@ MODEL mixture_test;
 		s : OUTPUT;
 		mixt : DATA
 	);
-	(* mix_g : mixture_g(
-		T, p : INPUT;
-		g : OUTPUT;
-		mixt : DATA
-	);
-	mix_a : mixture_a(
-		T, p : INPUT;
-		a : OUTPUT;
-		mixt : DATA
-	); *)
 	
 METHODS
+(* Fix the variables that are to be fixed *)
 METHOD specify;
-	(* FIX T; *)
 	FIX p;
-	FIX ii;
+	FIX ph;
 END specify;
+(* Set values of the fixed variables *)
 METHOD values;
-	(* T := 100 {K} + 273.15 {K}; *)
 	p := 2 {bar};
-	ii := 1;
+	ph := 1;
 END values;
+(* Set solver and other options *)
 METHOD options;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 END options;
+(* Quick alias for all preceeding methods; readies the model for solving *)
 METHOD setup;
 	RUN specify;
 	RUN values;

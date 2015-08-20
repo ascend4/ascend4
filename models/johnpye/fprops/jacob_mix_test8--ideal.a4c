@@ -1,0 +1,248 @@
+(* ASCEND multi-component ideal-solution routine
+
+   To perform the simulation, load the file into ASCEND and run 'setup'.
+
+   This file contains an attempt to test whether the ideal-gas equation 
+   of state can be used with the mixture (ideal solution) routines.  
+   Also performs further test of calculating one variable provided to 
+   external relations as an input (pressure) from another fixed variable 
+   that is provided as an output (density).
+
+   Conclusion: the 'mixture_flash' function would have to be modified to 
+   accommodate ideal-gas modeling of the components, for ideal-gas 
+   solutions to work.
+ *)
+
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/fprops/mixture";
+REQUIRE "johnpye/fprops/mixtures.a4l";
+
+(* ---------------------------------------------------------------------
+   First model, which uses the ideal-gas equation of state *)
+MODEL mixture_test1;
+	(* -----------------------------------------------------------------
+	   Declare variables to hold various mixture properties *)
+	T1,
+	T2,
+	T3 IS_A temperature;       (* mixture temperatures *)
+
+	p1,
+	p2,
+	p3 IS_A pressure;          (* pressures calculated from density *)
+	rho IS_A mass_density;     (* mixture density *)
+
+	h1,
+	h2,
+	h3 IS_A specific_enthalpy; (* mixture enthalpies *)
+
+	(* -----------------------------------------------------------------
+	   Declare variables to hold phase-accounting data *)
+	phases,                           (* number of phases *)
+	ph1, ph2 IS_A phase_count;        (* phases 1 and 2 *)
+	ph_frac[1..3] IS_A mass_fraction; (* mass fraction of each phase *)
+
+	(* -----------------------------------------------------------------
+	   Declare and specify a mixture with its composition *)
+	mixt IS_A mixture_spec;
+	mixt.npure :== 4;
+	mixt.components[1] :== 'ammonia';
+	mixt.components[2] :== 'cyclohexane';
+	mixt.components[3] :== 'water';
+	mixt.components[4] :== 'toluene';
+	mixt.eos :== 'ideal';
+	mixt.xs[1] :== 0.30;
+	mixt.xs[2] :== 0.25;
+	mixt.xs[3] :== 0.35;
+	mixt.xs[4] :== 0.10;
+
+	(* -----------------------------------------------------------------
+	   Find pressures from overall density and temperature *)
+	mix_density1 : mixture_rho(
+		T1, p1 : INPUT;
+		rho : OUTPUT;
+		mixt : DATA
+	);
+	mix_density2 : mixture_rho(
+		T2, p2 : INPUT;
+		rho : OUTPUT;
+		mixt : DATA
+	);
+	mix_density3 : mixture_rho(
+		T3, p3 : INPUT;
+		rho : OUTPUT;
+		mixt : DATA
+	);
+
+	(* -----------------------------------------------------------------
+	   Find enthalpy from temperature *)
+	mix_enthalpy1 : mixture_h(
+		T1, p1 : INPUT;
+		h1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_enthalpy2 : mixture_h(
+		T2, p2 : INPUT;
+		h2 : OUTPUT;
+		mixt : DATA
+	);
+	mix_enthalpy3 : mixture_h(
+		T3, p3 : INPUT;
+		h3 : OUTPUT;
+		mixt : DATA
+	);
+
+	(* -----------------------------------------------------------------
+	   Find number of phases, mass fractions of phases *)
+	mix_phases : mixture_count_phases(
+		T1, p1 : INPUT;
+		phases, ph_frac[1], ph_frac[2], ph_frac[3] : OUTPUT;
+		mixt : DATA
+	);
+
+METHODS
+(* Fix the variables that are to be fixed *)
+METHOD specify;
+	FIX T1;
+	FIX T2;
+	FIX T3;
+	FIX rho;
+	FIX ph1;
+	FIX ph2;
+END specify;
+(* Set values of the fixed variables *)
+METHOD values;
+	T1  := 800 {K};
+	T2  := 2*T1;
+	T3  := 3*T1;
+	rho := 2.055 {kg/m^3};
+	ph1 := 1;
+	ph2 := 2;
+END values;
+(* Set solver and other options *)
+METHOD options;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END options;
+(* Quick alias for all preceeding methods; readies the model for solving *)
+METHOD setup;
+	RUN specify;
+	RUN values;
+	RUN options;
+END setup;
+END mixture_test1;
+
+
+(* ---------------------------------------------------------------------
+   Second model, which uses the Peng-Robinson equation of state *)
+MODEL mixture_test2;
+	(* -----------------------------------------------------------------
+	   Declare variables to hold various mixture properties *)
+	T1,
+	T2,
+	T3 IS_A temperature;       (* mixture temperatures *)
+                                                                               
+	p1,
+	p2,
+	p3 IS_A pressure;          (* pressures calculated from density *)
+	rho IS_A mass_density;     (* mixture density *)
+                                                                               
+	h1,
+	h2,
+	h3 IS_A specific_enthalpy; (* mixture enthalpies *)
+
+	(* -----------------------------------------------------------------
+	   Declare variables to hold phase-accounting data *)
+	phases,                           (* number of phases *)
+	ph1, ph2 IS_A phase_count;        (* phases 1 and 2 *)
+	ph_frac[1..3] IS_A mass_fraction; (* mass fraction of each phase *)
+
+	(* -----------------------------------------------------------------
+	   Declare and specify a mixture with its composition *)
+	mixt IS_A mixture_spec;
+	mixt.npure :== 4;
+	mixt.components[1] :== 'ammonia';
+	mixt.components[2] :== 'cyclohexane';
+	mixt.components[3] :== 'water';
+	mixt.components[4] :== 'toluene';
+	mixt.eos :== 'ideal';
+	mixt.xs[1] :== 0.30;
+	mixt.xs[2] :== 0.25;
+	mixt.xs[3] :== 0.35;
+	mixt.xs[4] :== 0.10;
+
+	(* -----------------------------------------------------------------
+	   Find pressure from overall density, phase densities from pressure *)
+	mix_density1 : mixture_rho(
+		T1, p1 : INPUT;
+		rho : OUTPUT;
+		mixt : DATA
+	);
+	mix_density2 : mixture_rho(
+		T2, p2 : INPUT;
+		rho : OUTPUT;
+		mixt : DATA
+	);
+	mix_density3 : mixture_rho(
+		T3, p3 : INPUT;
+		rho : OUTPUT;
+		mixt : DATA
+	);
+
+	(* -----------------------------------------------------------------
+	   Find enthalpy from temperature *)
+	mix_enthalpy1 : mixture_h(
+		T1, p1 : INPUT;
+		h1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_enthalpy2 : mixture_h(
+		T2, p2 : INPUT;
+		h2 : OUTPUT;
+		mixt : DATA
+	);
+	mix_enthalpy3 : mixture_h(
+		T3, p3 : INPUT;
+		h3 : OUTPUT;
+		mixt : DATA
+	);
+
+	(* -----------------------------------------------------------------
+	   Find number of phases, mass fractions of phases *)
+	mix_phases : mixture_count_phases(
+		T1, p1 : INPUT;
+		phases, ph_frac[1], ph_frac[2], ph_frac[3] : OUTPUT;
+		mixt : DATA
+	);
+
+METHODS
+(* Fix the variables that are to be fixed *)
+METHOD specify;
+	FIX T1;
+	FIX T2;
+	FIX T3;
+	FIX rho;
+	FIX ph1;
+	FIX ph2;
+END specify;
+(* Set values of the fixed variables *)
+METHOD values;
+	T1  := 800 {K};
+	T2  := 2*T1;
+	T3  := 3*T1;
+	rho := 2.055 {kg/m^3};
+	ph1 := 1;
+	ph2 := 2;
+END values;
+(* Set solver and other options *)
+METHOD options;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END options;
+(* Quick alias for all preceeding methods; readies the model for solving *)
+METHOD setup;
+	RUN specify;
+	RUN values;
+	RUN options;
+END setup;
+END mixture_test2;

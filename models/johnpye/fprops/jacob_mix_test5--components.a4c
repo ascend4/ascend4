@@ -1,5 +1,10 @@
-(* Outline of ASCEND multi-component ideal-solution routine *)
-(* To perform the simulation, load the file into ASCEND and run 'setup'. *)
+(* ASCEND multi-component ideal-solution routine
+   
+   To perform the simulation, load the file into ASCEND and run 'setup'.
+
+   This file tests those functions which return properties for 
+   individual components.
+ *)
 
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
@@ -8,38 +13,53 @@ REQUIRE "johnpye/fprops/mixtures.a4l";
 
 (* The mixture_test model *)
 MODEL mixture_test;
-	T IS_A temperature;
-	p IS_A pressure;
+	(* -----------------------------------------------------------------
+	   Declare variables to hold various mixture properties *)
+	T IS_A temperature; (* mixture temperature *)
+	p IS_A pressure;    (* mixture pressure; with 'T' this sets the state *)
 
-	rho,
-	rho_ph1,
-	rho_ph2,
-	rho_comp1,
-	rho_comp2 IS_A mass_density;
+	rho,                         (* whole-mixture *)
+	rho_ph1,                     (* phase 1 *)
+	rho_ph2,                     (* phase 2 *)
+	rho_comp1,                   (* phase 1, component 1 *)
+	rho_comp2 IS_A mass_density; (* phase 1, component 2 *)
 
-	h_ph1,
-	h_ph2,
-	h_comp1,
-	h_comp2 IS_A specific_enthalpy;
+	(* -----------------------------------------------------------------
+	   Declare enthalpy variables *)
+	h,                              (* whole-mixture *)
+	h_ph1,                          (* phase 1 *)
+	h_ph2,                          (* phase 2 *)
+	h_comp1,                        (* phase 1, component 1 *)
+	h_comp2 IS_A specific_enthalpy; (* phase 1, component 2 *)
 
-	cp_ph1,
-	cp_comp1,
-	cp_comp2,
-	cv_ph1,
-	cv_comp2 IS_A specific_heat_capacity;
+	(* -----------------------------------------------------------------
+	   Declare constant-pressure heat capacity variables *)
+	cp,       (* whole-mixture *)
+	cp_comp1, (* phase 1, component 1 *)
+	cp_comp2, (* phase 1, component 2 *)
 
-	g_ph1,
-	g_ph2,
-	g_comp1,
-	g_comp2 IS_A specific_secondary_energy;
+	(* Declare constant-volume heat capacity variables *)
+	cv_ph1,                               (* phase 1, component 1 *)
+	cv_comp2 IS_A specific_heat_capacity; (* phase 1, component 2 *)
 
-	phases,
-	comp_num[1..3],
-	ph1, ph2, ph3,
-	cmp1, cmp2 IS_A phase_count;
+	(* -----------------------------------------------------------------
+	   Declare Gibbs energy variables *)
+	g,                                      (* whole-mixture *)
+	g_ph1,                                  (* phase 1 *)
+	g_ph2,                                  (* phase 2 *)
+	g_comp1,                                (* phase 1, component 1 *)
+	g_comp2 IS_A specific_secondary_energy; (* phase 1, component 2 *)
 
-	ph_frac[1..3] IS_A mass_fraction;
+	(* -----------------------------------------------------------------
+	   Declare variables to hold phase-accounting data *)
+	phases,                      (* number of phases *)
+	comp_num[1..3],              (* number of components in each phase *)
+	ph1, ph2, ph3,               (* phases 1, 2, 3 *)
+	cmp1, cmp2 IS_A phase_count; (* components 1, 2 *)
+	ph_frac[1..3] IS_A mass_fraction; (* mass fraction of each phase *)
 
+	(* -----------------------------------------------------------------
+	   Declare and specify a mixture with its composition *)
 	mixt IS_A mixture_spec;
 	mixt.npure :== 4;
 	mixt.components[1] :== 'ammonia';
@@ -106,6 +126,11 @@ MODEL mixture_test;
 
 	(* -----------------------------------------------------------------
 	   Find phase and component enthalpies *)
+	mix_whole_enthalpy : mixture_h(
+		T, p : INPUT;
+		h : OUTPUT;
+		mixt : DATA
+	);
 	mix_phase1_enthalpy : mixture_phase_h(
 		T, p, ph1 : INPUT;
 		h_ph1 : OUTPUT;
@@ -129,14 +154,9 @@ MODEL mixture_test;
 
 	(* -----------------------------------------------------------------
 	   Find phase and component heat capacities *)
-	mix_phase1_cp : mixture_phase_cp(
-		T, p, ph1 : INPUT;
-		cp_ph1 : OUTPUT;
-		mixt : DATA
-	);
-	mix_phase1_cv : mixture_phase_cv(
-		T, p, ph1 : INPUT;
-		cv_ph1 : OUTPUT;
+	mix_whole_cp : mixture_cp(
+		T, p : INPUT;
+		cp : OUTPUT;
 		mixt : DATA
 	);
 	mix_comp1_cp : mixture_comps_cp(
@@ -149,6 +169,14 @@ MODEL mixture_test;
 		cp_comp2 : OUTPUT;
 		mixt : DATA
 	);
+
+	(* -----------------------------------------------------------------
+	   Find phase and component constant-volume heat capacities *)
+	mix_phase1_cv : mixture_phase_cv(
+		T, p, ph1 : INPUT;
+		cv_ph1 : OUTPUT;
+		mixt : DATA
+	);
 	mix_comp2_cv : mixture_comps_cv(
 		T, p, ph1, cmp2 : INPUT;
 		cv_comp2 : OUTPUT;
@@ -157,6 +185,11 @@ MODEL mixture_test;
 
 	(* -----------------------------------------------------------------
 	   Find phase and component Gibbs energy data *)
+	mix_whole_g : mixture_g(
+		T, p : INPUT;
+		g : OUTPUT;
+		mixt : DATA
+	);
 	mix_phase1_g : mixture_phase_g(
 		T, p, ph1 : INPUT;
 		g_ph1 : OUTPUT;
@@ -179,6 +212,7 @@ MODEL mixture_test;
 	);
 
 METHODS
+(* Fix the variables that are to be fixed *)
 METHOD specify;
 	FIX T;
 	FIX p;
@@ -188,6 +222,7 @@ METHOD specify;
 	FIX cmp1;
 	FIX cmp2;
 END specify;
+(* Set values of the fixed variables *)
 METHOD values;
 	T  := 150 {K} + 273.15 {K};
 	p  := 2 {bar};
@@ -197,10 +232,12 @@ METHOD values;
 	cmp1 := 1;
 	cmp2 := 2;
 END values;
+(* Set solver and other options *)
 METHOD options;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 END options;
+(* Quick alias for all preceeding methods; readies the model for solving *)
 METHOD setup;
 	RUN specify;
 	RUN values;

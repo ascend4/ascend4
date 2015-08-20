@@ -112,11 +112,21 @@ MixtureSpec *build_MixtureSpec(unsigned npure, double *Xs, void **fluids, char *
 	if(fabs(X_sum - 1.0) > MIX_XTOL){
 		*merr = MIXTURE_XSUM_ERROR;
 	}
-	char **fluid_names = (char **)fluids;
 
-	for(i=0;i<npure;i++){
-		MS->PF[i] = fprops_fluid(fluid_names[i],type,source[i]);
-		/* MSG("Prepared fluid %s", fluid_names[i]); */
+	if(0==strcmp(type, "ideal")){ /* model fluids with ideal-gas equation of state */
+		EosData **ig_fluids = (EosData **)fluids;
+		ReferenceState ref = {FPROPS_REF_REF0};
+
+		for(i=0;i<npure;i++){
+			MS->PF[i] = ideal_prepare(ig_fluids[i], &ref);
+		}
+	}else{
+		char **fluid_names = (char **)fluids;
+
+		for(i=0;i<npure;i++){
+			MS->PF[i] = fprops_fluid(fluid_names[i],type,source[i]);
+			/* MSG("Prepared fluid %s", fluid_names[i]); */
+		}
 	}
 
 	return MS;

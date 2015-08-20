@@ -1,0 +1,104 @@
+(* ASCEND multi-component ideal-solution routine
+
+   To perform the simulation, load the file into ASCEND and run 'setup'.
+
+   This file finds pressure from density, the reverse of the usual 
+   order.  The pressure is found purely in ASCEND.
+ *)
+
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/fprops/mixture";
+REQUIRE "johnpye/fprops/mixtures.a4l";
+
+(* The mixture_test model *)
+MODEL mixture_test;
+	(* -----------------------------------------------------------------
+	   Declare variables to hold various mixture properties *)
+	T IS_A temperature;                 (* mixture temperature *)
+	p IS_A pressure;                    (* pressure calculated from density *)
+	rho IS_A mass_density;              (* mixture density *)
+	rho_ph1, rho_ph2 IS_A mass_density; (* density of phases 1 and 2 *)
+	h IS_A specific_enthalpy;           (* mixture enthalpy *)
+
+	(* -----------------------------------------------------------------
+	   Declare variables to hold phase-accounting data *)
+	phases,                           (* number of phases *)
+	ph1, ph2 IS_A phase_count;        (* phases 1 and 2 *)
+	ph_frac[1..3] IS_A mass_fraction; (* mass fraction of each phase *)
+
+	(* -----------------------------------------------------------------
+	   Declare and specify a mixture with its composition *)
+	mixt IS_A mixture_spec;
+	mixt.npure :== 4;
+	mixt.components[1] :== 'ammonia';
+	mixt.components[2] :== 'cyclohexane';
+	mixt.components[3] :== 'water';
+	mixt.components[4] :== 'toluene';
+	mixt.eos :== 'pengrob';
+	mixt.xs[1] :== 0.30;
+	mixt.xs[2] :== 0.25;
+	mixt.xs[3] :== 0.35;
+	mixt.xs[4] :== 0.10;
+
+	(* -----------------------------------------------------------------
+	   Find pressure from overall density, phase densities from pressure *)
+	mix_density : mixture_rho(
+		T, p : INPUT;
+		rho : OUTPUT;
+		mixt : DATA
+	);
+	mix_phase1_density : mixture_phase_rho(
+		T, p, ph1 : INPUT;
+		rho_ph1 : OUTPUT;
+		mixt : DATA
+	);
+	mix_phase2_density : mixture_phase_rho(
+		T, p, ph2 : INPUT;
+		rho_ph2 : OUTPUT;
+		mixt : DATA
+	);
+
+	(* -----------------------------------------------------------------
+	   Find enthalpy from temperature *)
+	mix_temperature : mixture_h(
+		T, p : INPUT;
+		h : OUTPUT;
+		mixt : DATA
+	);
+
+	(* -----------------------------------------------------------------
+	   Find number of phases, mass fractions of phases *)
+	mix_phases : mixture_count_phases(
+		T, p : INPUT;
+		phases, ph_frac[1], ph_frac[2], ph_frac[3] : OUTPUT;
+		mixt : DATA
+	);
+
+METHODS
+(* Fix the variables that are to be fixed *)
+METHOD specify;
+	FIX T;
+	FIX rho;
+	FIX ph1;
+	FIX ph2;
+END specify;
+(* Set values of the fixed variables *)
+METHOD values;
+	T   := 510 {K};
+	rho := 2.055 {kg/m^3};
+	ph1 := 1;
+	ph2 := 2;
+END values;
+(* Set solver and other options *)
+METHOD options;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END options;
+(* Quick alias for all preceeding methods; readies the model for solving *)
+METHOD setup;
+	RUN specify;
+	RUN values;
+	RUN options;
+END setup;
+END mixture_test;

@@ -122,7 +122,7 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	mix_symbols[0] = AddSymbol("npure");
 	mix_symbols[1] = AddSymbol("components");
 	mix_symbols[2] = AddSymbol("xs");
-	mix_symbols[3] = AddSymbol("type");
+	mix_symbols[3] = AddSymbol("eos");
 	mix_symbols[4] = AddSymbol("source");
 
 	/* check existence of 'data' Instance */
@@ -236,6 +236,7 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	/* Create mixture specification in a MixtureSpec struct */
 	MixtureError merr = MIXTURE_NO_ERROR;
 	bbox->user_data = (void *) build_MixtureSpec(npure, xs, (void **)comps, type, srcs, &merr);
+	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The equation of state is %s", type);
 
 	return 0;
 }

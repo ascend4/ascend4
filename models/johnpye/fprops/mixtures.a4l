@@ -23,8 +23,8 @@ END phase_count;
 (*	Specific energy for properties governed by the Second Law of Thermodynamics 
 	-- Gibbs energy and Helmholtz energy.  These are typically negative, so the 
 	'specific_energy' atom from <models/johnpye/thermo_types.a4c> (which can 
-	only take positive values) cannot be used.  Instead, use this atom, 
-	which can assume either negative or positive values.
+	only take positive values) cannot be used.  Instead, use this atom, which 
+	takes either negative or positive values.
  *)
 ATOM specific_secondary_energy REFINES solver_var
 		DIMENSION L^2/T^2
@@ -33,6 +33,7 @@ ATOM specific_secondary_energy REFINES solver_var
 	upper_bound := 1e50{kJ/kg};
 	nominal := 1000{kJ/kg};
 END specific_secondary_energy;
+
 
 (*  The mixture_spec model specifies the composition of the mixture.  
 
@@ -51,71 +52,55 @@ END specific_secondary_energy;
 
 		source, the source of the correlation type
 		model, a symbol_constant specifying whether the solution is ideal or real
-*)
+ *)
 MODEL mixture_spec;
-	npure IS_A integer_constant;
+	npure IS_A integer_constant;                 (* number of pures in the mixture *)
 
-	components[1 .. npure] IS_A symbol_constant;
-	xs[1 .. npure] IS_A mass_fraction_constant;
-	eos IS_A symbol_constant;
-	source IS_A symbol_constant;
+	components[1 .. npure] IS_A symbol_constant; (* component names *)
+	xs[1 .. npure] IS_A mass_fraction_constant;  (* component mass fractions *)
+	eos IS_A symbol_constant;                    (* equation of state to model the mixture *)
+	source IS_A symbol_constant;                 (* source of correlation data (optional) *)
 
 	source :== '';
 END mixture_spec;
 
-(*	Model of a single component, which can be used to extract component-specific 
-	mixture properties.
+
+(* The mixture_component model holds data on a single component from a mixture 
+   specified in a mixture_spec model.
  *)
-MODEL mixture_component;
-	grandparent IS_A mixture_spec;
-	phase_num IS_A phase_count; (* x *)
-	comp_num IS_A phase_count; (* x *)
-	T IS_A temperature;
-	p IS_A pressure;
+MODEL mixture_component(
+	component WILL_BE phase_count; (* index of the component within 'mixt' *)
+	mixt WILL_BE mixture_spec;     (* specification of the mixture *)
+	T WILL_BE temperature;         (* mixture temperature *)
+	p WILL_BE pressure;            (* mixture pressure *)
+);
+	phases,
+	ph_num[1..3],
+	ph_comps[1..3] IS_A phase_count;
+	(* comp_num[1..3] IS_A phase_count; *)
+	ph_frac[1..3] IS_A mass_fraction;
 
-	mix_comp_num IS_A phase_count;
-	name IS_A symbol;
-
-	mix_component_numbers : mixture_component_cnum(
-		T, p, phase_num, comp_num : INPUT;
-		mix_comp_num : OUTPUT;
-		grandparent : DATA
+	mix_phases : mixture_count_phases(
+		T, p : INPUT;
+		phases, ph_frac[1], ph_frac[2], ph_frac[3] : OUTPUT;
+		mixt : DATA
 	);
+
+	FOR i IN [1..3] CREATE
+		mix_phase_comps : mixture_count_components(
+			T, p, ph_num[i] : INPUT;
+			ph_comps[i] : OUTPUT;
+			mixt : DATA
+		);
+	END FOR;
+
 METHODS
 METHOD default_self;
-	name := grandparent.components[mix_comp_num];
+	FIX ph_num[1];
+	FIX ph_num[2];
+	FIX ph_num[3];
+	ph_num[1] := 1.0;
+	ph_num[2] := 2.0;
+	ph_num[3] := 3.0;
 END default_self;
 END mixture_component;
-
-(*	Model of a single phase, which can be used to extract phase-specific mixture 
-	properties.
- *)
-MODEL mixture_phase(
-	parent WILL_BE mixture_spec;   (* the mixture_spec in which the phase exists *)
-	phase_num WILL_BE phase_count; (* phase is the first, second,... in the mixture *)
-	T WILL_BE temperature;         (* the mixture temperature *)
-	p WILL_BE pressure;            (* the mixture pressure *)
-);
-
-	num_comps IS_A phase_count;    (* the number of components in that phase *)
-	phase_components : mixture_phase_components(
-		T, p, phase_num : INPUT;
-		num_comps : OUTPUT;
-		parent : DATA
-	);
-
-	components[1..num_comps] IS_A mixture_component;
-	i IS_A phase_count;
-
-METHODS
-METHOD default_self;
-	i := 1;
-	WHILE i < num_comps+1 DO
-		components[i].grandparent := parent;
-		components[i].phase_num := phase_num;
-		components[i].comp_num := i;
-		components[i].T := T;
-		components[i].p := p;
-	END WHILE;
-END default_self;
-END mixture_phase;

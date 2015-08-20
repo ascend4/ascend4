@@ -1,25 +1,52 @@
-(* Outline of ASCEND multi-component ideal-solution routine *)
-(* To perform the simulation, load the file into ASCEND and run 'setup'. *)
+(* ASCEND multi-component ideal-solution routine
+
+   To perform the simulation, load the file into ASCEND and run 'setup'.
+
+   This file finds temperature from enthalpy, the reverse of the usual 
+   order.  Two methods are used -- solving for the temperature in 
+   Ascend, and solving for it with a special-purpose .c function.
+   
+   The main difference between 'jacob_mix_test6--reverse-solve.a4c' and 
+   this file is that the pressure and enthalpy are set significantly 
+   higher in this file; the intention here is to test the modeling 
+   library at high temperatures and pressures.
+
+   The (provisional) conclusion from this file's results is that the 
+   different methods of finding temperature from enthalpy do not always 
+   give the same results (possibly due to the effect of changing phase 
+   equilibrium), and the external relation may not always successfully 
+   converge.
+ *)
 
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "johnpye/fprops/mixture";
 REQUIRE "johnpye/fprops/mixtures.a4l";
 
-(* The mixture_test model *)
+(* ---------------------------------------------------------------------
+   The mixture_test model *)
 MODEL mixture_test;
-	T,
-	T_ext IS_A temperature;
-	p IS_A pressure;
-	h IS_A specific_enthalpy;
+	(* -----------------------------------------------------------------
+	   Declare variables to hold various mixture properties *)
+	T,                                  (* temperature calculated from enthalpy in ASCEND *)
+	T_ext IS_A temperature;             (* temperature calculated with external relation *)
+	p IS_A pressure;                    (* mixture pressure *)
 
-	rho,
-	rho_ph1, rho_ph2 IS_A mass_density;
+	h,                                  (* fixed enthalpy used to find temperatures *)
+	h_back,                             (* enthalpy calculated from temperature *)
+	h_back_ext IS_A specific_enthalpy;  (* enthalpy calculated from temperature *)
 
-	phases,
-	ph1, ph2 IS_A phase_count;
-	ph_frac[1..3] IS_A mass_fraction;
+	rho,                                (* mixture density *)
+	rho_ph1, rho_ph2 IS_A mass_density; (* density of phases 1 and 2 *)
 
+	(* -----------------------------------------------------------------
+	   Declare variables to hold phase-accounting data *)
+	phases,                           (* number of phases *)
+	ph1, ph2 IS_A phase_count;        (* phases 1 and 2 *)
+	ph_frac[1..3] IS_A mass_fraction; (* mass fraction of each phase *)
+
+	(* -----------------------------------------------------------------
+	   Declare and specify a mixture with its composition *)
 	mixt IS_A mixture_spec;
 	mixt.npure :== 4;
 	mixt.components[1] :== 'ammonia';
@@ -42,6 +69,19 @@ MODEL mixture_test;
 	mix_temperature_external : mixture_state_T_ph(
 		p, h : INPUT;
 		T_ext : OUTPUT;
+		mixt : DATA
+	);
+
+	(* -----------------------------------------------------------------
+	   Find enthalpies again from temperatures *)
+	mix_enthalpy_back : mixture_h(
+		T, p : INPUT;
+		h_back : OUTPUT;
+		mixt : DATA
+	);
+	mix_enthalpy_back_ext : mixture_h(
+		T_ext, p : INPUT;
+		h_back_ext : OUTPUT;
 		mixt : DATA
 	);
 
@@ -72,22 +112,26 @@ MODEL mixture_test;
 	);
 
 METHODS
+(* Fix the variables that are to be fixed *)
 METHOD specify;
 	FIX h;
 	FIX p;
 	FIX ph1;
 	FIX ph2;
 END specify;
+(* Set values of the fixed variables *)
 METHOD values;
-	h  := 1000000 {J/kg};
+	h  := 1500000 {J/kg};
 	p  := 10 {bar};
 	ph1 := 1;
 	ph2 := 2;
 END values;
+(* Set solver and other options *)
 METHOD options;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 END options;
+(* Quick alias for all preceeding methods; readies the model for solving *)
 METHOD setup;
 	RUN specify;
 	RUN values;

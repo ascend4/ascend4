@@ -1,5 +1,10 @@
-(* Outline of ASCEND multi-component ideal-solution routine *)
-(* To perform the simulation, load the file into ASCEND and run 'setup'. *)
+(* Outline of ASCEND multi-component ideal-solution routine
+
+   To perform the simulation, load the file into ASCEND and run 'setup'.
+
+   This file performs more testing on whole-component properties, and 
+   also calculates the mixture bubble pressure.
+ *)
 
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
@@ -8,21 +13,28 @@ REQUIRE "johnpye/fprops/mixtures.a4l";
 
 (* The mixture_test model *)
 MODEL mixture_test;
-	T IS_A temperature;
-	p IS_A pressure;
-	rho IS_A mass_density;
-	u IS_A specific_energy;
-	u_ph1 IS_A specific_energy;
-	h IS_A specific_enthalpy;
-	s IS_A specific_entropy;
-	g IS_A specific_secondary_energy;
-	a IS_A specific_secondary_energy;
-	p_bubble IS_A pressure;
+	(* -----------------------------------------------------------------
+	   Declare variables to hold various mixture properties *)
+	T IS_A temperature;                (* mixture temperature *)
+	p IS_A pressure;                   (* mixture pressure; with 'T' this sets the state*)
+	rho,                               (* mixture density *)
+	phase_rho[1..3] IS_A mass_density; (* mass density of each phase *)
+	u,                                 (* mixture internal energy *)
+	u_ph1 IS_A specific_energy;        (* phase 1 internal energy *)
+	h IS_A specific_enthalpy;          (* mixture enthalpy *)
+	s IS_A specific_entropy;           (* mixture entropy *)
+	g IS_A specific_secondary_energy;  (* mixture Gibbs energy *)
+	a IS_A specific_secondary_energy;  (* mixture Helmholtz energy *)
+	p_bubble IS_A pressure;            (* mixture bubble pressure *)
 
-	nphase IS_A phase_count;
-	phase_frac[1..3] IS_A mass_fraction;
-	phase_rho[1..3] IS_A mass_density;
+	(* -----------------------------------------------------------------
+	   Declare variables to hold phase-accounting data *)
+	nphase,                              (* number of phases *)
+	ph IS_A phase_count;                 (* first phase *)
+	phase_frac[1..3] IS_A mass_fraction; (* mass fraction of each phase *)
 
+	(* -----------------------------------------------------------------
+	   Declare and specify a mixture with its composition *)
 	mixt IS_A mixture_spec;
 	mixt.npure :== 3;
 	mixt.components[1] :== 'ammonia';
@@ -33,56 +45,63 @@ MODEL mixture_test;
 	mixt.xs[2] :== 0.35;
 	mixt.xs[3] :== 0.25;
 
-	ii IS_A phase_count;
 
+	(* -----------------------------------------------------------------
+	   Find the whole-mixture mass density *)
 	mix_density : mixture_rho(
 		T, p : INPUT;
 		rho : OUTPUT;
 		mixt : DATA
 	);
 
+	(* -----------------------------------------------------------------
+	   Find the number of phases and phase mass fractions in the mixture *)
 	mix_phase_data : mixture_flash_phases(
 		T, p : INPUT;
 		nphase, phase_frac[1], phase_frac[2], phase_frac[3] : OUTPUT;
 		mixt : DATA
 	);
 
+	(* -----------------------------------------------------------------
+	   Find the first-law properties: overall and by-phase internal 
+	   energy, overall enthalpy *)
 	mix_u : mixture_u(
 		T, p : INPUT;
 		u : OUTPUT;
 		mixt : DATA
 	);
-
 	mix_phase_u : mixture_phase_u(
-		T, p, ii : INPUT;
+		T, p, ph : INPUT;
 		u_ph1 : OUTPUT;
 		mixt : DATA
 	);
-
 	mix_h : mixture_h(
 		T, p : INPUT;
 		h : OUTPUT;
 		mixt : DATA
 	);
 
+	(* -----------------------------------------------------------------
+	   Find second-law properties: overall entropy, Gibbs energy, and 
+	   Helmholtz energy *)
 	mix_s : mixture_s(
 		T, p : INPUT;
 		s : OUTPUT;
 		mixt : DATA
 	);
-
 	mix_g : mixture_g(
 		T, p : INPUT;
 		g : OUTPUT;
 		mixt : DATA
 	);
-
 	mix_a : mixture_a(
 		T, p : INPUT;
 		a : OUTPUT;
 		mixt : DATA
 	);
 	
+	(* -----------------------------------------------------------------
+	   Find the mixture bubble pressure *)
 	mix_bubble_p : mixture_bubble_p(
 		T : INPUT;
 		p_bubble : OUTPUT;
@@ -90,20 +109,24 @@ MODEL mixture_test;
 	);
 
 METHODS
+(* Fix the variables that are to be fixed *)
 METHOD specify;
 	FIX T;
 	FIX p;
-	FIX ii;
+	FIX ph;
 END specify;
+(* Set values of the fixed variables *)
 METHOD values;
 	T := 300 {K} + 273.15 {K};
 	p := 2 {bar};
-	ii := 1;
+	ph := 1;
 END values;
+(* Set solver and other options *)
 METHOD options;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 END options;
+(* Quick alias for all preceeding methods; readies the model for solving *)
 METHOD setup;
 	RUN specify;
 	RUN values;

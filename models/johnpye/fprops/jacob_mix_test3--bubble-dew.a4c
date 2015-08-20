@@ -1,29 +1,37 @@
-(* Outline of ASCEND multi-component ideal-solution routine *)
-(* To perform the simulation, load the file into ASCEND and run 'setup'. *)
+(* Outline of ASCEND multi-component ideal-solution routine
+
+   To perform the simulation, load the file into ASCEND and run 'setup'.
+ *)
 
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "johnpye/fprops/mixture";
 REQUIRE "johnpye/fprops/mixtures.a4l";
 
-(* The mixture_test model *)
+(* ---------------------------------------------------------------------
+   The mixture_test model *)
 MODEL mixture_test;
-	T,
-	T_bubble,
-	T_dew     IS_A temperature;
-	p,
-	p_bubble,
-	p_dew     IS_A pressure;
+	(* -----------------------------------------------------------------
+	   Declare variables to hold various mixture properties *)
+	T,                             (* fixed mixture temperature *)
+	T_bubble,                      (* mixture bubble temperature at p *)
+	T_dew     IS_A temperature;    (* mixture dew temperature at p *)
 
-	rho,
-	rho_dewT,
-	rho_bubbleP IS_A mass_density;
+	p,                             (* fixed mixture pressure *)
+	p_bubble,                      (* mixture bubble pressure at T *)
+	p_dew     IS_A pressure;       (* mixture dew pressure at T *)
 
-	u,
-	u_ph1 IS_A specific_energy;
+	rho,                           (* mixture density at fixed (T,p) *)
+	rho_dewT,                      (* mixture density at (T_dew,p) *)
+	rho_bubbleP IS_A mass_density; (* mixture density at (T,p_bubble) *)
 
-	ii IS_A phase_count;
+	u,                             (* mixture enthalpy at (T,p) *)
+	u_ph1 IS_A specific_energy;    (* phase 1 enthalpy *)
 
+	ph IS_A phase_count;           (* number of phase 1 *)
+
+	(* -----------------------------------------------------------------
+	   Declare and specify a mixture with its composition *)
 	mixt IS_A mixture_spec;
 	mixt.npure :== 4;
 	mixt.components[1] :== 'ammonia';
@@ -59,7 +67,6 @@ MODEL mixture_test;
 		mixt : DATA
 	);
 
-
 	(* -----------------------------------------------------------------
 	   Calculate density at several conditions *)
 	mix_density : mixture_rho(
@@ -78,7 +85,6 @@ MODEL mixture_test;
 		mixt : DATA
 	);
 
-
 	(* -----------------------------------------------------------------
 	   Calculate internal energy for whole mixture, one phase *)
 	mix_u : mixture_u(
@@ -86,28 +92,31 @@ MODEL mixture_test;
 		u : OUTPUT;
 		mixt : DATA
 	);
-
 	mix_phase_u : mixture_phase_u(
-		T, p, ii : INPUT;
+		T, p, ph : INPUT;
 		u_ph1 : OUTPUT;
 		mixt : DATA
 	);
 	
 METHODS
+(* Fix the variables that are to be fixed *)
 METHOD specify;
 	FIX T;
 	FIX p;
-	FIX ii;
+	FIX ph;
 END specify;
+(* Set values of the fixed variables *)
 METHOD values;
 	T := 100 {K} + 273.15 {K};
 	p := 2 {bar};
-	ii := 1;
+	ph := 1;
 END values;
+(* Set solver and other options *)
 METHOD options;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 END options;
+(* Quick alias for all preceeding methods; readies the model for solving *)
 METHOD setup;
 	RUN specify;
 	RUN values;
