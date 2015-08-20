@@ -96,7 +96,7 @@ Var PYTHONTARGETDIR
 !define PYTHON_CMD "msiexec /i $DAI_TMPFILE /passive ALLUSERS=1 TARGETDIR=$PYTHONTARGETDIR"
 
 !define THIRDPARTY_DIR "http://downloads.sourceforge.net/project/ascend-sim/thirdparty/"
-!define TMP_DROPBOX_DIR "https://dl.dropboxusercontent.com/u/79623370/ascend/better/"
+!define TMP_DROPBOX_DIR "https://dl.dropboxusercontent.com/u/79623370/ascend/"
 
 !ifdef INST64
 !define WINXX "win64"
