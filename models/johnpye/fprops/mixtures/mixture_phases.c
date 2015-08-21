@@ -19,7 +19,7 @@
 	59 Temple Place - Suite 330
 	Boston, MA 02111-1307, USA.
 *//*
-	by Jacob Shealy, July 26-, 2015 (GSOC 2015)
+	by Jacob Shealy, July 26-August 21, 2015
 
 	Phase-equilibrium routines for ideal solution mixtures; generally these 
 	handle only supercritical (gas/fluid), vapor, and liquid phases.
@@ -35,7 +35,6 @@
 #include "../refstate.h"
 #include "../sat.h"
 #include "../color.h"
-/* #include "../zeroin.h" */
 
 /*
 	Calculate the Rachford-Rice function for a given set of parameters and value 
@@ -53,6 +52,10 @@ double rachford_rice(double V, void *user_data){
 	return F;
 }
 
+/*
+	Calculate the error in the dew pressure at a given initial dew pressure and 
+	temperature.
+ */
 double dew_p_error(double P_D, void *user_data){
 #define NPURE dbd->MS->pures
 #define YS dbd->MS->Xs
@@ -80,6 +83,10 @@ double dew_p_error(double P_D, void *user_data){
 #undef YS
 }
 
+/*
+	Calculate the error in the bubble pressure at a given initial bubble 
+	pressure and temperature.
+ */
 double bubble_p_error(double P_B, void *user_data){
 #define XS dbd->MS->Xs
 	unsigned i;
@@ -97,55 +104,7 @@ double bubble_p_error(double P_B, void *user_data){
 #endif
 	}
 	return P_B - p_b;
-#if 0
-#undef ERR
-#undef TOL
-#undef SATRHO
-#undef PSAT
-#undef TT
-#undef PF
-#undef XS
-#undef NPURE
-#endif
-}
 
-double dew_T_error(double T_D, void *user_data){
-	int sec;
-	double p_d;
-	DBTempData *dbd = (DBTempData *)user_data;
-
-	sec = mixture_dew_pressure(&p_d, dbd->MS, T_D, TOL, ERR);
-	if(sec==4){
-		/*
-			If T_D is high enough that no subcritical components are present, 
-			return the pressure unreduced, plus the current temperature.  This 
-			will increase with temperature, so must necessarily lead the 
-			root-finding function to 'back out' from this region as the results 
-			grow larger.
-		 */
-		/* return dbd->p + T_D; */
-	}
-	return dbd->p - p_d;
-}
-
-double bubble_T_error(double T_B, void *user_data){
-	int sec;
-	double p_b;
-	DBTempData *dbd = (DBTempData *)user_data;
-
-	sec = mixture_bubble_pressure(&p_b, dbd->MS, T_B, TOL, ERR);
-	if(sec==4){
-		/*
-			If T_B is high enough that no subcritical components are present, 
-			return the pressure unreduced, plus the current temperature.  This 
-			will increase with temperature, so must necessarily lead the 
-			root-finding function to 'back out' from this region.
-		 */
-		/* return dbd->p + T_B; */
-	}else if(sec==5){}
-	return dbd->p - p_b;
-#undef ERR
-#undef TOL
 #undef SATRHO
 #undef PSAT
 #undef TT
@@ -155,13 +114,56 @@ double bubble_T_error(double T_B, void *user_data){
 }
 
 /*
+	Calculate the error in the dew temperature at a given initial dew 
+	temperature and pressure.
+ */
+double dew_T_error(double T_D, void *user_data){
+	int sec;
+	double p_d;
+	DBTempData *dbd = (DBTempData *)user_data;
+
+	sec = mixture_dew_pressure(&p_d, dbd->MS, T_D, TOL, ERR);
+	if(sec==4){
+		/*
+			If T_D is high enough that no subcritical components are present, 
+			it would be useful to return some value which will lead the 
+			root-finding function to 'back out' from this region as the results 
+			grow larger.
+		 */
+	}
+	return dbd->p - p_d;
+}
+
+/*
+	Calculate the error in the bubble temperature at a given initial bubble 
+	temperature and pressure.
+ */
+double bubble_T_error(double T_B, void *user_data){
+	int sec;
+	double p_b;
+	DBTempData *dbd = (DBTempData *)user_data;
+
+	sec = mixture_bubble_pressure(&p_b, dbd->MS, T_B, TOL, ERR);
+	if(sec==4){
+		/*
+			If T_B is high enough that no subcritical components are present, 
+			it would be useful to return some value which will lead the 
+			root-finding function to 'back out' from this region as the results 
+			grow larger.
+		 */
+	}else if(sec==5){}
+	return dbd->p - p_b;
+#undef ERR
+#undef TOL
+}
+
+/*
 	Find the dew-point pressure for a mixture at a given temperature
  */
 double dew_pressure(MixtureSpec *MS, double T, double tol, FpropsError *err){
 #define NPURE MS->pures
 #define PF MS->PF
 #define XS MS->Xs
-	MSG("Entered the function...");
 	unsigned i;
 	double p_d[2],
 		   rp_d = 0.0;
@@ -169,7 +171,7 @@ double dew_pressure(MixtureSpec *MS, double T, double tol, FpropsError *err){
 		, rho_l[NPURE]
 		, rho_v[NPURE]
 		, xs[NPURE];
-	/* double tol = 1.e-5; */
+
 	mole_fractions(NPURE, xs, XS, PF);
 
 	/* Find ideal-gas dew pressure as a starting point */
@@ -180,42 +182,24 @@ double dew_pressure(MixtureSpec *MS, double T, double tol, FpropsError *err){
 	p_d[0] = 1./rp_d;
 	p_d[1] = 1.01/rp_d;
 
-	DBData dbd = {
-		MS
-		, T
-		, p_sat
-		, tol
-		, err
-	};
+	DBData dbd = {MS, T, p_sat, tol, err};
 
 	secant_solve(&dew_p_error, &dbd, p_d, tol);
 
 	return p_d[0];
-#if 0
-#undef XS
-#undef PF
-#undef NPURE
-#endif
 }
 
 /*
 	Find the bubble-point pressure for a mixture at a given temperature
  */
 double bubble_pressure(MixtureSpec *MS, double T, double tol, FpropsError *err){
-#if 0
-#define NPURE MS->pures
-#define PF MS->PF
-#define XS MS->Xs
-#endif
-	MSG("Entered the function...");
 	unsigned i;
 	double p_b[2] = {0.0}
 		, p_sat[NPURE]
 		, rho_l[NPURE]
 		, rho_v[NPURE]
-		, xs[NPURE]
-		/* , tol = 1.e-5 */
-		;
+		, xs[NPURE];
+
 	mole_fractions(NPURE, xs, XS, PF);
 
 	/* Find ideal-gas bubble pressure as a starting point */
@@ -225,20 +209,13 @@ double bubble_pressure(MixtureSpec *MS, double T, double tol, FpropsError *err){
 	}
 	p_b[1] = 1.01*p_b[0];
 
-	DBData dbd = {
-		MS
-		, T
-		, p_sat
-		, tol
-		, err
-	};
+	DBData dbd = {MS, T, p_sat, tol, err};
 
 	secant_solve(&bubble_p_error, &dbd, p_b, tol);
 
 	return p_b[0];
 #undef XS
 #undef PF
-/* #undef NPURE */
 }
 
 /*
@@ -271,10 +248,6 @@ double pengrob_phi_pure(PureFluid *PF, double T, double P, PhaseName type, Fprop
         , A - 2*B - 3*pow(B, 2)
         , pow(B, 3) + pow(B, 2) - A*B
 	};
-	/* z_coef[0] = 1;
-	z_coef[1] = B - 1;
-	z_coef[2] = A - 2*B - 3*pow(B, 2);
-	z_coef[3] = pow(B, 3) + pow(B, 2) - A*B; */
 	z_num = cubic_solution(z_coef, Z_rt);
 	if(z_num==1){
 		Z = Z_rt[0];
@@ -289,10 +262,6 @@ double pengrob_phi_pure(PureFluid *PF, double T, double P, PhaseName type, Fprop
 			}
 		}
 	}
-	/* MSG("The available compressibilities are:");
-	for(i=0;i<z_num;i++){ 
-		MSG("%.6g", Z_rt[0]);
-	} */
 	cpx_ln = log( (Z + (1 + M_SQRT2)*B)/(Z + (1 - M_SQRT2)*B) );
 	return exp( Z - 1 - log(Z - B) - (A / 2 / M_SQRT2) * cpx_ln );
 #undef PR
@@ -306,8 +275,8 @@ double pengrob_phi_pure(PureFluid *PF, double T, double P, PhaseName type, Fprop
  */
 double poynting_factor(PureFluid *PF, double T, double P, FpropsError *err){
 	double p_sat
-		, rho_liq, rho_vap
-		, ln_pf; /* natural logarithm of Poynting Factor */
+		, rho_liq, rho_vap /* liquid and vapor densities */
+		, ln_pf;           /* natural logarithm of Poynting Factor */
 
 	fprops_sat_T(T, &p_sat, &rho_liq, &rho_vap, PF, err);
 
@@ -330,7 +299,6 @@ double poynting_factor(PureFluid *PF, double T, double P, FpropsError *err){
 			without converging.
  */
 int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol, FpropsError *err){
-/* #define NPURE MS->pures */
 #define MXS MS->Xs
 #define MPF MS->PF
 #define D MPF[i]->data
@@ -338,7 +306,7 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol
 #define PTYPE PS->ph_type
 #define PFRAC PS->ph_frac
 #define PPH PS->PH
-	MSG("Entered the function...");
+	/* MSG("Entered the function..."); */
 	unsigned i /* , j */
 		, i_v = 0          /* indices of vapor, liquid, supercritical phases in PS */
 		, i_l = 0
@@ -359,15 +327,6 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol
 	PPH = ASC_NEW_ARRAY(Phase *,3);
 	for(i=0;i<3;i++){
 		PPH[i] = new_Phase(NPURE);
-#if 0
-		PPH[i] = ASC_NEW(Phase);
-		PPH[i]->pures = 0;
-		PPH[i]->c  = ASC_NEW_ARRAY(unsigned,NPURE);
-		PPH[i]->Xs = ASC_NEW_ARRAY(double,NPURE);
-		PPH[i]->xs = ASC_NEW_ARRAY(double,NPURE);
-		PPH[i]->PF = ASC_NEW_ARRAY(PureFluid *,NPURE);
-		PPH[i]->rhos = ASC_NEW_ARRAY(double,NPURE);
-#endif
 	}
 	NPHASE = 0;
 
@@ -443,11 +402,6 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol
 			PFRAC[i_sc] += PPH[i_sc]->Xs[i]; /* supercritical phase */
 		}
 		PFRAC[i_v] = 1.0 - PFRAC[i_sc];       /* subcritical phase(s) */
-#if 0
-		MSG("For the current mixture");
-		MSG("\tSupercritical mass fraction is %.6g,\tsubcritical mass fraction is %.6g"
-				, PFRAC[i_sc], PFRAC[i_v]);
-#endif
 		/*
 			Scale mass fractions to sum to one within each phase, and calculate 
 			average molar mass for each phase.  Then calculate true mole 
@@ -470,21 +424,6 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol
 		 */
 		mole_fractions(PPH[i_v]->pures, PPH[i_v]->xs, PPH[i_v]->Xs, PPH[i_v]->PF);
 		mole_fractions(PPH[i_sc]->pures, PPH[i_sc]->xs, PPH[i_sc]->Xs, PPH[i_sc]->PF);
-#if 0
-		MSG("\tSupercritical molar mass is %.6g,   \tsubcritical molar mass is %.6g"
-				, mm[i_sc], mm[i_v]);
-		MSG("\tSupercritical mole fraction is %.6g, subcritical mole fraction is %.6g"
-				, PFRAC[i_sc], PFRAC[i_v]);
-		for(i=0;i<NPHASE;i++){ 
-			MSG("For %s phase", (PTYPE[i]==SUPERCRIT) ? "supercritical" : "subcritical");
-			for(j=0;j<PPH[i]->pures;j++){
-				MSG("\tmass fraction of %s is %.6g"
-						, PPH[i]->PF[j]->name, PPH[i]->Xs[j]);
-				MSG("\t mole fraction of %s is %.6g"
-						, PPH[i]->PF[j]->name, PPH[i]->xs[j]);
-			}
-		}
-#endif
 	}else if(NPHASE>=3){
 		ERRMSG("More than two phases occurred (there should be only up to two, "
 				"a supercritical and subcritical).");
@@ -575,26 +514,6 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol
 		;
 	}
 
-#if 0
-	MSG("At temperature %.2f K and pressure %.0f Pa, there are %u phases;"
-			, T, P, NPHASE);
-	for(i=0;i<NPHASE;i++){
-		MSG("\t%.6g of total moles are in %s phase"
-				, PFRAC[i], (PTYPE[i]==SUPERCRIT) ? "supercritical" :
-				(PTYPE[i]==VAPOR) ? "vapor" : "liquid");
-		for(j=0;j<PPH[i]->pures;j++){
-			MSG("\t  mole fraction of %s in this phase is  %.6g"
-					, PPH[i]->PF[j]->name, PPH[i]->xs[j]);
-			MSG("\t   mass fraction of %s in this phase is %.6g"
-					, PPH[i]->PF[j]->name, PPH[i]->Xs[j]);
-		}
-	}
-	if(NPHASE>=2){
-		MSG("\tbubble pressure is %.1f Pa", p_b);
-		MSG("\tdew pressure is %.1f Pa", p_d);
-	}
-	puts("");
-#endif
 	return sec;
 
 #undef PPH
@@ -603,7 +522,7 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol
 #undef NPHASE
 #undef D
 #undef MXS
-#undef NPURE
+/* #undef NPURE */
 }
 
 /*
@@ -621,7 +540,7 @@ int mixture_flash(PhaseSpec *PS, MixtureSpec *MS, double T, double P, double tol
 		4 - no subcritical components found, so there is no dew pressure.
  */
 int mixture_dew_pressure(double *p_d, MixtureSpec *MS, double T, double tol, FpropsError *err){
-#define NPURE MS->pures
+/* #define NPURE MS->pures */
 #define PF MS->PF
 #define D PF[i]->data
 #define XS MS->Xs
@@ -635,9 +554,7 @@ int mixture_dew_pressure(double *p_d, MixtureSpec *MS, double T, double tol, Fpr
 		, rho_l[NPURE]    /* liquid-phase densities */
 		, rho_v[NPURE]    /* vapor-phase densities */
 		, xs[NPURE]       /* subcritical mass fractions */
-		, Xs[NPURE]       /* subcritical mole fractions */
-		/* , tol = MIX_XTOL tolerance to use in root-finding functions */
-		;
+		, Xs[NPURE];      /* subcritical mole fractions */
 
 	PureFluid **pfs = ASC_NEW_ARRAY(PureFluid *,NPURE); /* subcritical pure fluids */
 
@@ -666,13 +583,8 @@ int mixture_dew_pressure(double *p_d, MixtureSpec *MS, double T, double tol, Fpr
 	pp_d[1] = 1.01/rp_d;
 
 	MixtureSpec *MS_temp = fill_MixtureSpec(n_sub, Xs, pfs);
-	DBData dbd = {
-		MS_temp
-		, T
-		, p_sat
-		, tol
-		, err
-	};
+	DBData dbd = {MS_temp, T, p_sat, tol, err};
+
 	sec = secant_solve(&dew_p_error, &dbd, pp_d, tol);
 	if(sec==2){
 		return sec;
@@ -736,13 +648,7 @@ int mixture_bubble_pressure(double *p_b, MixtureSpec *MS, double T, double tol, 
 	pp_b[1] = 1.01*pp_b[0];
 
 	MixtureSpec *MS_temp = fill_MixtureSpec(n_sub, Xs, pfs);
-	DBData dbd = {
-		MS_temp
-		, T
-		, p_sat
-		, tol
-		, err
-	};
+	DBData dbd = {MS_temp, T, p_sat, tol, err};
 
 	sec = secant_solve(&bubble_p_error, &dbd, pp_b, tol);
 	if(sec==2){
@@ -780,17 +686,10 @@ int mixture_dew_temperature(double *T_d, MixtureSpec *MS, double p, double tol, 
 	MSG("Entered the function...");
 	unsigned i
 		, n_sub = 0;
-	/* int sec; */
-	double T_c[NPURE] /* critical temperatures for subcritical components */
-		, T_t[NPURE]  /* triple-point temperatures for subcritical components */
-		, Xs[NPURE]   /* subcritical mole fractions */
-		, error = 0.0 /* error for any use of 'zeroin_solve' */
-		/* , tt_d[2]     provisional dew temperatures from which to search */
-		/* , t_sat[NPURE] saturation temperatures */
-		/* , rho_l[NPURE] liquid-phase densities */
-		/* , rho_v[NPURE] vapor-phase densities */
-		/* , xs[NPURE]      subcritical mass fractions */
-		;
+	double T_c[NPURE]  /* critical temperatures for subcritical components */
+		, T_t[NPURE]   /* triple-point temperatures for subcritical components */
+		, Xs[NPURE]    /* subcritical mole fractions */
+		, error = 0.0; /* error for any use of 'zeroin_solve' */
 	PureFluid **pfs = ASC_NEW_ARRAY(PureFluid *,NPURE); /* subcritical pure liquids */
 	
 	for(i=0;i<NPURE;i++){
@@ -809,30 +708,8 @@ int mixture_dew_temperature(double *T_d, MixtureSpec *MS, double p, double tol, 
 		return 4;
 	}
 	mixture_x_props(n_sub, Xs, Xs);     /* set mass fractions to sum to one */
-#if 0
-	mole_fractions(n_sub, xs, Xs, pfs); find subcritical mole fractions
 
-	/* Find average of saturation temperatures as a starting point. */
-	for(i=0;i<n_sub;i++){
-		fprops_sat_p(p, (t_sat+i), (rho_l+i), (rho_v+i), pfs[i], err);
-		tt_d[0] += Xs[i] * t_sat[i];
-		MSG("The saturation temperature of %s is %.2f K, and the mass fraction is %g"
-				, pfs[i]->name, t_sat[i], Xs[i]);
-		MSG("So now the sum to reach average temperature is %.2f K", tt_d[0]);
-	}
-	tt_d[1] = 1.01 * tt_d[0];
-	MSG("The first provisional dew-temperature is %.2f K, and the second is %.2f K"
-			, tt_d[0], tt_d[1]);
-
-	MixtureSpec *MS_temp = fill_MixtureSpec(n_sub, Xs, pfs);
-#endif
-
-	DBTempData dbd = {
-		MS
-		, p
-		, tol
-		, err
-	};
+	DBTempData dbd = {MS, p, tol, err};
 
 	/*
 		Seek solution between maximum critical and minimum triple-point 
@@ -842,15 +719,6 @@ int mixture_dew_temperature(double *T_d, MixtureSpec *MS, double p, double tol, 
 		, T_min = min_element(n_sub, T_t);
 	zeroin_solve(&dew_T_error, &dbd, T_min, T_max, tol, T_d, &error);
 
-#if 0
-	sec = secant_solve(&dew_T_error, &dbd, tt_d, tol);
-	if(sec==2){
-		return sec;
-	}
-	*T_d = tt_d[0];
-
-	return sec;
-#endif
 	return 0;
 }
 
@@ -904,25 +772,8 @@ int mixture_bubble_temperature(double *T_b, MixtureSpec *MS, double p, double to
 		return 4;
 	}
 	mixture_x_props(n_sub, Xs, Xs);     /* set mass fractions to sum to one */
-#if 0
-	mole_fractions(n_sub, xs, Xs, pfs); /* find subcritical mole fractions */
 
-	/* Find average of saturation temperatures as a starting point. */
-	for(i=0;i<n_sub;i++){
-		fprops_sat_p(p, (t_sat+i), (rho_l+i), (rho_v+i), pfs[i], err);
-		tt_b[0] += xs[i] * t_sat[i];
-	}
-	tt_b[1] = 1.01 * tt_b[0];
-
-	MixtureSpec *MS_temp = fill_MixtureSpec(n_sub, Xs, pfs);
-#endif
-
-	DBTempData dbd = {
-		MS
-		, p
-		, tol
-		, err
-	};
+	DBTempData dbd = {MS, p, tol, err};
 
 	/*
 		Seek solution between maximum critical and minimum triple-point 
@@ -932,15 +783,6 @@ int mixture_bubble_temperature(double *T_b, MixtureSpec *MS, double p, double to
 		, T_min = min_element(n_sub, T_t);
 	zeroin_solve(&bubble_T_error, &dbd, T_min, T_max, tol, T_b, &error);
 
-#if 0
-	sec = secant_solve(&bubble_T_error, &dbd, tt_b, tol);
-	if(sec==2){
-		return sec;
-	}
-	*T_b = tt_b[0];
-
-	return sec;
-#endif
 	return 0;
 #undef XS
 #undef D

@@ -19,7 +19,7 @@
 	59 Temple Place - Suite 330
 	Boston, MA 02111-1307, USA.
 *//*
-	by Jacob Shealy, July 30-, 2015
+	by Jacob Shealy, July 30-August 21, 2015
 
 	Functions to calculate mixture properties under the ideal-solution model.
  */
@@ -36,30 +36,6 @@
 
 #include <stdio.h>
 #include <math.h>
-
-/*
-	Structure to hold auxiliary data for function to find the error in pressure 
-	at a given density
- */
-typedef struct PressureRhoData_Struct{
-	double T;         /* mixture temperature */
-	double p;         /* mixture pressure */
-	PureFluid *pfl;   /* pure fluid from the mixture */
-	FpropsError *err; /* necessary error variable */
-} PRData;
-
-/*
-	Structure to hold auxiliary data for function that will return the error in 
-	temperature when trying to find the temperature corresponding to a given 
-	enthalpy.
- */
-typedef struct EnthalpyTData_Struct{
-	double h;         /* the whole-mixture enthalpy being sought */
-	double p;         /* the pressure of the mixture */
-	MixtureSpec *MS;  /* specification of mixture composition */
-    double tol;       /* error to be used in solving flash condition for mixture */
-	FpropsError *err; /* necessary error variable */
-} HTData;
 
 /*
     Find the difference between a given pressure and a pressure calculated from 
@@ -81,7 +57,7 @@ double pressure_rho_error(double rho, void *user_data){
 double enthalpy_T_error(double T, void *user_data){
 	MSG("Entered the function...");
 	HTData *htd = (HTData *)user_data;
-#if 1
+#if 0
 	MSG("Unpacked user data: pressure %.2f Pa, enthalpy %.2f J/kg, temperature %.2f K"
 			, htd->p, htd->h, T);
 	MSG("The FpropsError is %i", (int) htd->err[0]);
@@ -91,21 +67,16 @@ double enthalpy_T_error(double T, void *user_data){
 	/* unsigned i; */
 	int flash = mixture_flash(PS, htd->MS, T, htd->p, htd->tol, htd->err);
 	int rsat = mixture_rhos_sat(PS, T, htd->p, htd->tol, htd->err);
-#if 1
+#if 0
 	MSG("Flashed the mixture: there are %u phases, with result %i", PS->phases, flash);
 	MSG("Found mixture densities, with result %i", rsat);
 	MSG("The FpropsError is %i", (int) htd->err[0]);
 #endif
 
     double h_phases[PS->phases];
-#if 0
-	for(i=0;i<PS->phases;i++){
-		h_phases[i] = 0;
-	}
-#endif
 
     PhaseMixState *PM = fill_PhaseMixState(T, htd->p, PS, htd->MS);
-#if 1
+#if 0
 	MSG("The PhaseMixState temperature is %.2f K, pressure is %.2f Pa", PM->T, PM->p);
 	MSG("  The number of phases is %u, number of pures is %u", PM->PS->phases
 			, PM->MS->pures);
@@ -118,7 +89,6 @@ double enthalpy_T_error(double T, void *user_data){
 	puts("");
 #endif
 	return (htd->h - mixture_h(PM, h_phases, htd->err)) / fabs(htd->h);
-	/* return error; */
 }
 
 /*
@@ -140,15 +110,13 @@ int mixture_rhos_sat(PhaseSpec *PS, double T, double P, double tol, FpropsError 
 #define NPURE PPH[i]->pures
 #define RHOS(IX) PPH[ IX ]->rhos
 	unsigned i, j;
-	int i_v = -1
+	int i_v = -1   /* indexes of the vapor and liquid phases, if any */
 		, i_l = -1
 		, sec = 0  /* whether the secant root-finding method succeeded */
 		;
-	double p_sat
-		, rho_d
-		, rhos[2]        /* densities used in searching for supercritical densities */
-		/* , tol = MIX_XTOL tolerance used in root-finding function */
-		;
+	double p_sat   /* saturation pressure */
+		, rho_d    /* dummy density used as a placeholder */
+		, rhos[2]; /* densities used in searching for supercritical densities */
 
 	for(i=0;i<PS->phases;i++){
 		if(PS->ph_type[i]==SUPERCRIT){

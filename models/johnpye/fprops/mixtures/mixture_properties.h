@@ -18,10 +18,20 @@
 	Free Software Foundation, Inc.
 	59 Temple Place - Suite 330
 	Boston, MA 02111-1307, USA.
-*//*
-	by Jacob Shealy, July 30-,2015
+*//** @file
+	Functions that calculate mixture properties.
 
-	Headers for functions that calculate mixture properties.
+	The functions here fall into two broad categories.  First, those that are 
+	used to set or determine the state of the mixture.  These are represented by 
+	`mixture_rhos_sat` and `mixture_T_ph`, and by the secant subject functions 
+	`pressure_rho_error` and `enthalpy_T_error` which they use.
+	
+	All other functions fall into the second category, those which calculate 
+	mixture properties for each phase of a mixture and for the whole mixture.  
+	In each case, whole-mixture and by-phase properties are calculated by a 
+	single function.
+*//*
+	by Jacob Shealy, July 30-August 21, 2015
  */
 
 #ifndef MIX_PROPERTIES_HEADER
@@ -39,147 +49,179 @@
 
 typedef double MixPropertyFunc(PhaseMixState *PM, double *p_phases, FpropsError *err);
 
-SecantSubjectFunction pressure_rho_error;
+
+/*----------------------------------------------------------------------
+	ESSENTIAL STRUCTURES 
+ */
+/**
+	Passes constant parameters into the function that finds the error in 
+	pressure at a given density.
+ */
+typedef struct PressureRhoData_Struct{
+	double T;         /**< mixture temperature */
+	double p;         /**< mixture pressure */
+	PureFluid *pfl;   /**< pure fluid from the mixture */
+	FpropsError *err; /**< necessary error variable */
+} PRData;
+
+/**
+	Passes constant parameters into the function that finds the error in 
+	temperature at a given enthalpy.
+ */
+typedef struct EnthalpyTData_Struct{
+	double h;         /**< the whole-mixture enthalpy being sought */
+	double p;         /**< the pressure of the mixture */
+	MixtureSpec *MS;  /**< specification of mixture composition */
+    double tol;       /**< error to be used in solving flash condition for mixture */
+	FpropsError *err; /**< necessary error variable */
+} HTData;
+
+/*----------------------------------------------------------------------
+	SET/FIND MIXTURE STATE
+ */
 /**
 	Finds the error in the current density value, for finding density from 
 	pressure.
 
-	@param rho a conjectural value for the density
-	@param user_data extra (constant) data used to calculate the density
-
-	@return the difference between the conjectured and calculated densities
+	@param rho [in] a conjectural value for the density
+	@param user_data [in] extra (constant) data used to calculate the density
+	@return Difference between the conjectured and calculated densities
  */
+SecantSubjectFunction pressure_rho_error;
 
-SecantSubjectFunction enthalpy_T_error;
 /**
 	Finds the error in the current temperature value, for finding temperature 
 	from enthalpy.
 
-	@param T a conjectural value for the temperature
-	@param user_data extra (constant) data used to calculate the temperature
-
-	@return the difference between the conjectured and calculated temperatures
+	@param T [in] a conjectural value for the temperature
+	@param user_data [in] extra (constant) data used to calculate the temperature
+	@return Difference between the conjectured and calculated temperatures
  */
+SecantSubjectFunction enthalpy_T_error;
 
-int mixture_rhos_sat(PhaseSpec *PS, double T, double P, double tol, FpropsError *err);
 /**
 	Find the density of each component within each phase of a mixture, at which 
 	the temperature and pressure are as given.
 
-	@param PS a PhaseSpec struct representing the mixture with phases
-	@param T the mixture temperature
-	@param P the mixture pressure
-	@param tol a tolerance for the root-finding function that seeks the density
-	@param err an error variable necessary to calculate component properties
+	@param PS [out] a PhaseSpec struct representing the mixture with phases
+	@param T [in] the mixture temperature
+	@param P [in] the mixture pressure
+	@param tol [in] a tolerance for the root-finding function that seeks the density
+	@param err [in] an error variable necessary to calculate component properties
 
-	@return whether setting the densities succeeded or failed
+	@return 0 on success
  */
+int mixture_rhos_sat(PhaseSpec *PS, double T, double P, double tol, FpropsError *err);
 
-int mixture_T_ph(double *T, MixtureSpec *MS, double p, double h, double tol, FpropsError *err);
 /**
 	Find the temperature at which the pressure and enthalpy are as given.
 
-	@param T an output, the mixture temperature
-	@param MS a MixtureSpec struct representing the mixture composition
-	@param p the mixture pressure
-	@param h the mixture enthalpy
-	@param tol a tolerance for the root-finding function which seeks the temperature
-	@param err an error variable necessary to calculate component properties
+	@param T [out] the mixture temperature
+	@param MS [in] a MixtureSpec struct representing the mixture composition
+	@param p [in] the mixture pressure
+	@param h [in] the mixture enthalpy
+	@param tol [in] a tolerance for the root-finding function that seeks the temperature
+	@param err [in] an error variable necessary to calculate component properties
 
-	@return whether setting the temperature succeeded or failed
+	@return 0 on success
  */
+int mixture_T_ph(double *T, MixtureSpec *MS, double p, double h, double tol, FpropsError *err);
 
-double mixture_rho(PhaseMixState *PM, double *rhos);
+
+/*----------------------------------------------------------------------
+	MIXTURE PROPERTY FUNCTIONS
+ */
 /**
 	Calculate the density of the whole mixture, and density of each phase.
 
-	@param PM a PhaseMixState struct representing the mixture, with phases
-	@param p_phases an output array that will hold the by-phase density
-	@param err an error variable necessary to calculate component properties
+	@param PM [in] a PhaseMixState struct representing the mixture, with phases
+	@param p_phases [out] an array to hold the by-phase density
+	@param err [in] an error variable necessary to calculate component properties
 
-	@return the mixture density
+	@return Mixture density
  */
+double mixture_rho(PhaseMixState *PM, double *rhos);
 
-MixPropertyFunc mixture_u;
 /**
 	Calculates the internal energy of the whole mixture, and internal energy of 
 	each phase.
 
-	@param PM a PhaseMixState struct representing the mixture, with phases
-	@param p_phases an output array that will hold the by-phase internal energy
-	@param err an error variable necessary to calculate component properties
+	@param PM [in] a PhaseMixState struct representing the mixture, with phases
+	@param p_phases [out] an array to hold the by-phase internal energy
+	@param err [in] an error variable necessary to calculate component properties
 
-	@return the mixture internal energy
+	@return Mixture internal energy
  */
+MixPropertyFunc mixture_u;
 
-MixPropertyFunc mixture_h;
 /**
 	Calculates the enthalpy of the whole mixture, and enthalpy of each phase.
 
-	@param PM a PhaseMixState struct representing the mixture, with phases
-	@param p_phases an output array that will hold the by-phase enthalpy
-	@param err an error variable necessary to calculate component properties
+	@param PM [in] a PhaseMixState struct representing the mixture, with phases
+	@param p_phases [out] an array to hold the by-phase enthalpy
+	@param err [in] an error variable necessary to calculate component properties
 
-	@return the mixture enthalpy
+	@return Mixture enthalpy
  */
+MixPropertyFunc mixture_h;
 
-MixPropertyFunc mixture_cp;
 /**
 	Calculates the constant-pressure heat capacity of the whole mixture, and 
 	constant-pressure heat capacity of each phase.
 
-	@param PM a PhaseMixState struct representing the mixture, with phases
-	@param p_phases an output array that will hold the by-phase heat capacity
-	@param err an error variable necessary to calculate component properties
+	@param PM [in] a PhaseMixState struct representing the mixture, with phases
+	@param p_phases [out] an array to hold the by-phase heat capacity
+	@param err [in] an error variable necessary to calculate component properties
 
-	@return the mixture constant-pressure heat capacity
+	@return Mixture constant-pressure heat capacity
  */
+MixPropertyFunc mixture_cp;
 
-MixPropertyFunc mixture_cv;
 /**
 	Calculates the constant-volume heat capacity of the whole mixture, and 
 	constant-volume heat capacity of each phase.
 
-	@param PM a PhaseMixState struct representing the mixture, with phases
-	@param p_phases an output array that will hold the by-phase heat capacity
-	@param err an error variable necessary to calculate component properties
+	@param PM [in] a PhaseMixState struct representing the mixture, with phases
+	@param p_phases [out] an array to hold the by-phase heat capacity
+	@param err [in] an error variable necessary to calculate component properties
 
-	@return the mixture constant-volume heat capacity
+	@return Mixture constant-volume heat capacity
  */
+MixPropertyFunc mixture_cv;
 
-MixPropertyFunc mixture_s;
 /**
 	Calculates the entropy of the whole mixture, and entropy of each phase.
 
-	@param PM a PhaseMixState struct representing the mixture, with phases
-	@param p_phases an output array that will hold the by-phase entropy
-	@param err an error variable necessary to calculate component properties
+	@param PM [in] a PhaseMixState struct representing the mixture, with phases
+	@param p_phases [out] an array to hold the by-phase entropy
+	@param err [in] an error variable necessary to calculate component properties
 
-	@return the mixture entropy
+	@return Mixture entropy
  */
+MixPropertyFunc mixture_s;
 
-MixPropertyFunc mixture_g;
 /**
 	Calculates the Gibbs energy of the whole mixture, and Gibbs energy of each 
 	phase.
 
-	@param PM a PhaseMixState struct representing the mixture, with phases
-	@param p_phases an output array that will hold the by-phase Gibbs energy
-	@param err an error variable necessary to calculate component properties
+	@param PM [in] a PhaseMixState struct representing the mixture, with phases
+	@param p_phases [out] an array to hold the by-phase Gibbs energy
+	@param err [in] an error variable necessary to calculate component properties
 
-	@return the mixture Gibbs energy
+	@return Mixture Gibbs energy
  */
+MixPropertyFunc mixture_g;
 
-MixPropertyFunc mixture_a;
 /**
 	Calculates the Helmholtz energy of the whole mixture, and Helmholtz energy 
 	of each phase.
 
-	@param PM a PhaseMixState struct representing the mixture, with phases
-	@param p_phases an output array that will hold the by-phase Helmholtz energy
-	@param err an error variable necessary to calculate component properties
+	@param PM [in] a PhaseMixState struct representing the mixture, with phases
+	@param p_phases [out] an output array that will hold the by-phase Helmholtz energy
+	@param err [in] an error variable necessary to calculate component properties
 
-	@return the mixture Helmholtz energy
+	@return Mixture Helmholtz energy
  */
+MixPropertyFunc mixture_a;
 
 #endif

@@ -19,7 +19,7 @@
 	59 Temple Place - Suite 330
 	Boston, MA 02111-1307, USA.
 *//*
-	by Jacob Shealy, July 31-,2015
+	by Jacob Shealy, July 31-August 21,2015
 
 	Functions to initialize some of the structs defined in the header file
  */

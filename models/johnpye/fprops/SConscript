@@ -15,8 +15,8 @@ fprops_env.Depends("fluids.c","fluids/fluids_list.h")
 
 coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'pengrob.c'
 	, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c', 'fluids.c','cp0.c'
-	, 'zeroin.c','cubicroots.c', 'visc.c', 'thcond.c', 'mixtures/init_mixfuncs.c'
-	, 'mixtures/mixture_prepare.c', 'mixtures/mixture_generics.c', 'mixtures/mixture_phases.c'
+	, 'zeroin.c','cubicroots.c', 'visc.c', 'thcond.c' 
+	, 'mixtures/mixture_generics.c', 'mixtures/mixture_phases.c' 
 	, 'mixtures/mixture_struct.c', 'mixtures/mixture_properties.c'
 ]
 

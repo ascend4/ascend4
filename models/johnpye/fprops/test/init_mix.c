@@ -190,7 +190,6 @@ void test_one(double *T, double *P){
 	double tol = MIX_XTOL;               /* tolerance to which to find solutions */
 	mixture_x_props(NFLUIDS, xs, props); /* mass fractions from proportions */
 
-	/* mixture_specify(MS, NFLUIDS, xs, (const void **) fluids, "pengrob", source, &merr); */
     MixtureSpec *MS = build_MixtureSpec(NFLUIDS, xs, (void **) fluids, "pengrob", source, &merr);
 
 	double rho_mix[NSIMS] = {0}
@@ -244,7 +243,7 @@ void test_one(double *T, double *P){
 	char *headers[NSIMS];
 
 #define MIXTURE_CALC(PROP) old_mixture_##PROP(&PM, PROP##_ph[i], &err)
-#define AMIXTURE_CALC(PROP) amixture_##PROP(&MT, &err)
+#define AMIXTURE_CALC(PROP) mixture_##PROP(&MT, &err)
 #define BMIXTURE_CALC(PROP) mixture_##PROP(&PM, PROP##_bph[i], &err)
 	for(i=0;i<NSIMS;i++){
 		flash[i] = mixture_flash(PS, MS, T[i], P[i], tol, &err); /* flash mixture, obtaining phases */
@@ -294,7 +293,7 @@ void test_one(double *T, double *P){
 		h_mix[i] = MIXTURE_CALC(h);
 		cp_mix[i] = MIXTURE_CALC(cp); */
 
-		rho_amix[i] = amixture_rho(&MT);
+		rho_amix[i] = mixture_rho(&MT);
 		u_amix[i] = AMIXTURE_CALC(u);
 		h_amix[i] = AMIXTURE_CALC(h);
 		cp_amix[i] = AMIXTURE_CALC(cp);
@@ -395,9 +394,6 @@ void test_seven(void){
 	FpropsError err = FPROPS_NO_ERROR;
 	MixtureError merr = MIXTURE_NO_ERROR;
 
-	// MixtureSpec *MS = ASC_NEW(MixtureSpec);
-
-	// mixture_specify(MS, NPURE, Xs, (void *)fluids, "pengrob", src, &merr);
     MixtureSpec *MS = build_MixtureSpec(NPURE, Xs, (void **) fluids, "pengrob", src, &merr);
 
 	double Ts[] = {270, 310, 350, 390, 430, 470}
