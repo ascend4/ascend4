@@ -11,13 +11,16 @@ REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "johnpye/fprops/mixture";
 REQUIRE "johnpye/fprops/mixtures.a4l";
 
-(* The mixture_test model *)
+(* ---------------------------------------------------------------------
+   The mixture_test model *)
 MODEL mixture_test;
 	(* -----------------------------------------------------------------
 	   Declare variables to hold various mixture properties *)
 	T IS_A temperature; (* mixture temperature *)
 	p IS_A pressure;    (* mixture pressure; with 'T' this sets the state *)
 
+	(* -----------------------------------------------------------------
+	   Declare variables to hold the densities *)
 	rho,                         (* whole-mixture *)
 	rho_ph1,                     (* phase 1 *)
 	rho_ph2,                     (* phase 2 *)

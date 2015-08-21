@@ -41,6 +41,8 @@
 #include <ascend/compiler/sets.h>
 #include <ascend/compiler/arrayinst.h>
 
+#include <stdio.h>
+
 /* Code that is wrapped up in this file */
 #include "mixtures/mixture_properties.h"
 #include "mixtures/mixture_generics.h"
@@ -53,8 +55,10 @@
 #endif
 
 #define NULL_STR(STR) (STR==NULL) ? "NULL" : STR
-#define MIN_P 0.001 /* minimum pressure */
-#define MIN_T 1.e-6 /* minimum temperature */
+#define MIN_P 0.001        /* minimum pressure */
+#define MIN_T 1.e-6        /* minimum temperature */
+#define MIN_S 0.0          /* minimum entropy */
+#define MIN_HEAT_CAPAC 0.0 /* minimum heat capacity */
 
 /* ---------------------------------------------------------------------
 	Forward Declarations
@@ -72,7 +76,7 @@ MIX_PROP_EXTDECL(rho); MIX_PROP_EXTDECL(u); MIX_PROP_EXTDECL(h); MIX_PROP_EXTDEC
 MIX_PROP_EXTDECL(cv); MIX_PROP_EXTDECL(s); MIX_PROP_EXTDECL(g); MIX_PROP_EXTDECL(a);
 
 MIX_EXTDECL(count_phases); MIX_EXTDECL(count_components); MIX_EXTDECL(component_frac);
-MIX_EXTDECL(component_cnum); MIX_EXTDECL(dew_p); MIX_EXTDECL(bubble_p);
+MIX_EXTDECL(component_index); MIX_EXTDECL(dew_p); MIX_EXTDECL(bubble_p);
 MIX_EXTDECL(dew_T); MIX_EXTDECL(bubble_T); MIX_EXTDECL(state_T_ph);
 
 /* ---------------------------------------------------------------------
@@ -111,9 +115,8 @@ MIX_HELP_DOUBLE(a, "Helmholtz energy");
 MIX_HELP_DECL(count_phases, "Calculate and return number of phases in the mixture, and "
 		"mass fraction of the mixture in each phase.");
 MIX_HELP_DECL(count_components, "Return number of components within a phase of the mixture.");
-MIX_HELP_DECL(component_frac, "Return mass or mole fraction of a component within a phase in the mixture.");
-MIX_HELP_DECL(component_cnum, "Return index that gives the location of a component from "
-		"a phase, within a mixture specification (MixtureSpec)");
+MIX_HELP_DECL(component_frac, "Return mass fractions of a component in all phases throughout the mixture.");
+MIX_HELP_DECL(component_index, "Return indexes that give the location of a component in all phases of the mixture");
 MIX_HELP_DECL(dew_p, MIX_HELP_TEXT("dew pressure"));
 MIX_HELP_DECL(bubble_p, MIX_HELP_TEXT("bubble pressure"));
 MIX_HELP_DECL(dew_T, MIX_HELP_TEXT("dew temperature"));

@@ -948,25 +948,3 @@ int mixture_bubble_temperature(double *T_b, MixtureSpec *MS, double p, double to
 #undef NPURE
 }
 
-/*
-	Find in what phases a component appears within a PhaseSpec struct
- */
-void component_phase_indexes(unsigned *indexes, PhaseSpec *PS, unsigned component){
-#define NPHASE PS->phases
-#define PPH PS->PH
-#define PPURE PPH[i]->pures
-	unsigned i, j;
-
-	for(i=0;i<NPHASE;i++){
-		indexes[i] = 0;
-		for(j=0;j<PPURE;j++){
-			if(PPH[i]->c[j]==component){
-				indexes[i] = j;
-			}
-		}
-	}
-#undef PPURE
-#undef PPH
-#undef NPHASE
-}
-

@@ -26,6 +26,15 @@
 
 #include "asc_mixture.h"
 
+/* ---------------------------------------------------------------------
+	Widely used macros
+ */
+#define NPHASE PS->phases
+#define NPURE MS->pures
+#define PTYPE PS->ph_type
+#define PPH PS->PH
+#define PPURE PPH[i]->pures
+
 /*
 	Register all functions that will be exported
  */
@@ -48,7 +57,6 @@ extern ASC_EXPORT int mixture_register(){
 			, 0.0 \
 		)
 	
-	/* CALCFN(mixture_p,2,1); */
 	CALCFN(mixture_rho,2,1);
 	CALCFN(mixture_phase_rho,3,1);
     CALCFN(mixture_comps_rho,4,1);
@@ -77,8 +85,8 @@ extern ASC_EXPORT int mixture_register(){
 
 	CALCFN(mixture_count_phases,2,4);
 	CALCFN(mixture_count_components,3,1);
-	CALCFN(mixture_component_frac,4,1);
-	CALCFN(mixture_component_cnum,4,1);
+	CALCFN(mixture_component_frac,3,3);
+	CALCFN(mixture_component_index,3,3);
 	CALCFN(mixture_dew_p,1,1);
 	CALCFN(mixture_bubble_p,1,1);
 	CALCFN(mixture_dew_T,1,1);
@@ -242,23 +250,6 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 }
 
 /* ---------------------------------------------------------------------
-	Functions which calculate results
- */
-#if 0
-int mixture_p_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
-		double *inputs, double *outputs, double *jacobian){
-	CALCPREP(1,1);
-	
-	ERROR_REPORTER_HERE(ASC_USER_NOTE
-		, "Function 'mixture_p_calc' -- this function has no contents as yet.");
-
-	outputs[0] = 0.0;
-
-	return 0;
-}
-#endif
-
-/* ---------------------------------------------------------------------
 	Mixture property-calculation functions
  */
 /*
@@ -266,8 +257,6 @@ int mixture_p_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
  */
 int mixture_rho_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 		double *inputs, double *outputs, double *jacobian){
-#define NPHASE PS->phases
-#define PTYPE PS->ph_type[i]
 	CALCPREP(2,1);
 	CALCFLASH;
 	PhaseMixState *PM = fill_PhaseMixState(T, p, PS, MS);
@@ -279,12 +268,10 @@ int mixture_rho_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 	ERROR_REPORTER_HERE(ASC_USER_NOTE, "The overall mixture density is %g", outputs[0]);
 	for(i=0;i<NPHASE;i++){
 		ERROR_REPORTER_HERE(ASC_USER_NOTE, "\tThe density of %s phase is %g kg/m3"
-				, MIX_PHASE_STRING(PTYPE), rhos[i]);
+				, MIX_PHASE_STRING(PTYPE[i]), rhos[i]);
 	}
 #endif
 	return 0;
-#undef PTYPE
-#undef NPHASE
 }
 
 /*
@@ -296,14 +283,14 @@ int mixture_phase_rho_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 	CALCFLASH;
 	PhaseMixState *PM = fill_PhaseMixState(T, p, PS, MS);
 
-	unsigned ph_num = ((unsigned) inputs[2]) - 1; /* number of the phase */
+	unsigned ph = ((unsigned) inputs[2]) - 1; /* number of the phase */
 	double rhos[PS->phases];                      /* individual phase densities */
 
 	mixture_rho(PM, rhos);
-	if(ph_num < PS->phases){
-		outputs[0] = rhos[ph_num]; /* assign density of one phase to output */
+	if(ph < PS->phases){
+		outputs[0] = rhos[ph]; /* assign density of one phase to output */
 	}else{
-		ERROR_REPORTER_HERE(ASC_USER_ERROR, "There is no phase number %u", ph_num+1);
+		ERROR_REPORTER_HERE(ASC_USER_ERROR, "There is no phase number %u", ph+1);
 		outputs[0] = 0.0;
 	}
 	return 0;
@@ -314,20 +301,20 @@ int mixture_comps_rho_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
     CALCPREP(4,1);
     CALCFLASH;
 
-    unsigned ph_num = ((int) inputs[2]) - 1 /* number of the phase */
-        , comp_num = ((int) inputs[3]) - 1; /* number of the component */
+    unsigned ph = ((unsigned) inputs[2]) - 1 /* number of the phase */
+        , comp = ((unsigned) inputs[3]) - 1; /* number of the component */
 
-	if(ph_num < PS->phases){
-		if(comp_num < PS->PH[ph_num]->pures){
-			outputs[0] = PS->PH[ph_num]->rhos[comp_num];
+	if(ph < PS->phases){
+		if(comp < PPH[ph]->pures){
+			outputs[0] = PPH[ph]->rhos[comp];
 		}else{
 			ERROR_REPORTER_HERE(ASC_USER_ERROR
 					, "There is no component number %u in phase %u."
-					, comp_num+1, ph_num+1);
+					, comp+1, ph+1);
 			outputs[0] = 0.0;
 		}
 	}else{
-		ERROR_REPORTER_HERE(ASC_USER_ERROR, "There is no phase number %u.", ph_num+1);
+		ERROR_REPORTER_HERE(ASC_USER_ERROR, "There is no phase number %u.", ph+1);
 		outputs[0] = 0.0;
 	}
     return 0;
@@ -353,44 +340,17 @@ int mixture_comps_rho_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 		CALCPREP(3,1); \
 		CALCFLASH; \
         PhaseMixState *PM = fill_PhaseMixState(T, p, PS, MS); \
-		unsigned ph_num = ((unsigned) inputs[2]) - 1; /* number of the phase */ \
+		unsigned ph = ((unsigned) inputs[2]) - 1; /* number of the phase */ \
 		double props[PS->phases]; /* internal by-phase property values */ \
 		mixture_##PROP(PM, props, &err); \
-		if(ph_num < PS->phases){ \
-			outputs[0] = props[ph_num]; /* assign property of one phase to output */ \
+		if(ph < PS->phases){ \
+			outputs[0] = props[ph]; /* assign property of one phase to output */ \
 		}else{ \
-			ERROR_REPORTER_HERE(ASC_USER_ERROR, "There is no phase number %u.", ph_num+1); \
+			ERROR_REPORTER_HERE(ASC_USER_ERROR, "There is no phase number %u.", ph+1); \
 			outputs[0] = 0.0; \
 		} \
 		return 0; \
 	}
-
-#define RHO PS->PH[ph_num]->rhos[comp_num]
-#define PPF PS->PH[ph_num]->PF[comp_num]
-
-#define MIX_COMPS_EXTFUNC(PROP) \
-    int mixture_comps_##PROP##_calc(struct BBoxInterp *bbox, int ninputs, int noutputs, \
-			double *inputs, double *outputs, double *jacobian){ \
-        CALCPREP(4,1); \
-        CALCFLASH; \
-        unsigned ph_num = ((int) inputs[2]) - 1 /* number of the phase */ \
-            , comp_num = ((int) inputs[3]) - 1; /* number of the component */ \
-        /* Access the property function from FPROPS for an individual component */ \
-		if(ph_num < PS->phases){ \
-			if(comp_num < PS->PH[ph_num]->pures){ \
-				outputs[0] = fprops_##PROP((FluidState){T, RHO, PPF}, &err); \
-			}else{ \
-				ERROR_REPORTER_HERE(ASC_USER_ERROR \
-						, "There is no component number %u in phase %u." \
-						, comp_num+1, ph_num+1); \
-				outputs[0] = 0.0; \
-			} \
-		}else{ \
-			ERROR_REPORTER_HERE(ASC_USER_ERROR, "There is no phase number %u.", ph_num+1); \
-			outputs[0] = 0.0; \
-		} \
-        return 0; \
-    }
 
 MIX_PROP_EXTFUNC(u); MIX_PROP_EXTFUNC(h); MIX_PROP_EXTFUNC(cp);
 MIX_PROP_EXTFUNC(cv); MIX_PROP_EXTFUNC(s); MIX_PROP_EXTFUNC(g);
@@ -400,9 +360,36 @@ MIX_PHASE_EXTFUNC(u); MIX_PHASE_EXTFUNC(h); MIX_PHASE_EXTFUNC(cp);
 MIX_PHASE_EXTFUNC(cv); MIX_PHASE_EXTFUNC(s); MIX_PHASE_EXTFUNC(g);
 MIX_PHASE_EXTFUNC(a);
 
+#define RHO PPH[ph]->rhos[comp]
+#define PPF PPH[ph]->PF[comp]
+#define MIX_COMPS_EXTFUNC(PROP) \
+    int mixture_comps_##PROP##_calc(struct BBoxInterp *bbox, int ninputs, int noutputs, \
+			double *inputs, double *outputs, double *jacobian){ \
+        CALCPREP(4,1); \
+        CALCFLASH; \
+        unsigned ph = ((unsigned) inputs[2]) - 1 /* number of the phase */ \
+            , comp = ((unsigned) inputs[3]) - 1; /* number of the component */ \
+        /* Access the property function from FPROPS for an individual component */ \
+		if(ph < PS->phases){ \
+			if(comp < PPH[ph]->pures){ \
+				outputs[0] = fprops_##PROP((FluidState){T, RHO, PPF}, &err); \
+			}else{ \
+				ERROR_REPORTER_HERE(ASC_USER_ERROR \
+						, "There is no component number %u in phase %u." \
+						, comp+1, ph+1); \
+				outputs[0] = 0.0; \
+			} \
+		}else{ \
+			ERROR_REPORTER_HERE(ASC_USER_ERROR, "There is no phase number %u.", ph+1); \
+			outputs[0] = 0.0; \
+		} \
+        return 0; \
+    }
+
 MIX_COMPS_EXTFUNC(u); MIX_COMPS_EXTFUNC(h); MIX_COMPS_EXTFUNC(cp);
 MIX_COMPS_EXTFUNC(cv); MIX_COMPS_EXTFUNC(s); MIX_COMPS_EXTFUNC(g);
 MIX_COMPS_EXTFUNC(a);
+
 #undef PPF
 #undef RHOS
 
@@ -446,68 +433,162 @@ int mixture_count_components_calc(struct BBoxInterp *bbox, int ninputs, int nout
 	CALCPREP(3,1);
 	CALCFLASH;
 
-	unsigned ph_num = ((unsigned) inputs[2]) - 1; /* the number of the phase */
-	if(ph_num < PS->phases){
-		outputs[0] = (double) PS->PH[ph_num]->pures; /* the number of pures */
+	unsigned ph = ((unsigned) inputs[2]) - 1; /* the number of the phase */
+	if(ph < PS->phases){
+		outputs[0] = (double) PPH[ph]->pures; /* the number of pures */
 	}else{
-		ERROR_REPORTER_HERE(ASC_USER_ERROR, "There is no phase number %u", ph_num+1);
+		ERROR_REPORTER_HERE(ASC_USER_ERROR, "There is no phase number %u", ph+1);
 		outputs[0] = 0.0;
 	}
 	return 0;
 }
 
 /*
-	Find and return the mass fraction of some j_th component within the i_th 
-	phase of the mixture.
+	Find and return the mass fraction of a component within the mixture, in all 
+	phases of the mixture.
  */
 int mixture_component_frac_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 		double *inputs, double *outputs, double *jacobian){
-	CALCPREP(4,1);
+	CALCPREP(3,3);
 	CALCFLASH;
 
-	unsigned i = ((unsigned) inputs[2]) - 1
-		, j = ((unsigned) inputs[3]) - 1;
-	if(i < PS->phases){
-		if(j < PS->PH[i]->pures){
-			outputs[0] = (double) PS->PH[i]->xs[j];
+	unsigned i, j
+		/* , ph = ((unsigned) inputs[2]) - 1 */   /* the number of the phase */
+		, comp = ((unsigned) inputs[2]) - 1 /* the number of the component */
+		, index[NPURE]                      /* index of the component in the phase */
+		, sub_ix;                           /* one less than the current index; the .c 
+											   index of the component */
+
+	ERROR_REPORTER_HERE(ASC_USER_NOTE
+			, "The number of pures is %u, and the number of phases is %u", NPURE, NPHASE);
+
+#if 0
+	if(ph>=NPHASE){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+				, "There is no phase number %u in the mixture", ph+1);
+		for(i=0;i<3;i++){
+			outputs[i] = 0.0;
+		}
+		return 1;
+	}
+#endif
+	if(comp>=NPURE){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+				, "There is no component number %u in the mixture", comp+1);
+		for(i=0;i<3;i++){
+			outputs[i] = 0.0;
+		}
+		return 0;
+	}
+
+#if 1
+	for(i=0;i<NPHASE && i<3;i++){
+		index[i] = 0;
+		for(j=0;j<PPURE;j++){
+			if(PPH[i]->c[j]==comp){
+				index[i] = j+1;
+			}
+		}
+		if(index[i]){
+			sub_ix = index[i] - 1;
+			ERROR_REPORTER_HERE(ASC_USER_ERROR
+					, "Component %s is component number %u in the %s phase"
+					, PPH[i]->PF[sub_ix]->name, index
+					, MIX_PHASE_STRING(PTYPE[i]));
+			outputs[i] = PPH[i]->Xs[sub_ix];
 		}else{
 			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "There is no component number %u in phase %u", j+1, i+1);
-			outputs[0] = 0.0;
+					, "The component %s does not appear in the %s phase"
+					, MS->PF[comp]->name, MIX_PHASE_STRING(PTYPE[i]));
+			outputs[i] = 0.0;
 		}
-	}else{
-		ERROR_REPORTER_HERE(ASC_USER_ERROR, "There is no phase number %u", i+1);
-		outputs[0] = 0.0;
 	}
+	for(i=NPHASE;i<3;i++){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+				, "There is no phase number %u", i);
+		outputs[i] = 0.0;
+	}
+#endif
 	return 0;
 }
 
 /*
 	Find and return the value of the j_th index in member 'c' of some i_th phase 'PH' 
-	within the mixture (that is, 'PS->PH[i]->c[j]').
+	within the mixture (that is, 'PPH[i]->c[j]').
  */
-int mixture_component_cnum_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
+int mixture_component_index_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 		double *inputs, double *outputs, double *jacobian){
-	CALCPREP(4,1);
+	CALCPREP(3,3);
 	CALCFLASH;
 
-	unsigned i = ((unsigned) inputs[2]) - 1
-		, j = ((unsigned) inputs[3]) - 1;
-	if(i < PS->phases){
-		if(j < PS->PH[i]->pures){
-			outputs[0] = (double) PS->PH[i]->c[j];
+	unsigned i, j
+		/* , ph = ((unsigned) inputs[2]) - 1 */   /* the number of the phase */
+		, comp = ((unsigned) inputs[2]) - 1 /* the number of the component */
+		, sub_outp;                          /* one less than the output; the .c index 
+											   of the component */
+
+#if 1
+	ERROR_REPORTER_HERE(ASC_USER_NOTE
+			, "The number of pures is %u, and the number of phases is %u.", NPURE, NPHASE);
+	ERROR_REPORTER_HERE(ASC_USER_NOTE
+			, "The component number is %u, corresponding to ASCEND component %u.", comp, comp+1);
+#endif
+
+#if 0
+	if(ph>=NPHASE){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+				, "There is no phase number %u in the mixture", ph+1);
+		for(i=0;i<3;i++){
+			outputs[i] = 0.0;
+		}
+		return 1;
+	}
+#endif
+	if(comp>=NPURE){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+				, "There is no component number %u in the mixture", comp+1);
+		for(i=0;i<3;i++){
+			outputs[i] = 0.0;
+		}
+		return 0;
+	}
+
+#if 1
+	for(i=0;i<NPHASE && i<3;i++){
+		outputs[i] = 0.0;
+
+		for(j=0;j<PPURE;j++){
+			if(PPH[i]->c[j]==comp){
+				outputs[i] = j+1;
+			}
+		}
+		if((int) outputs[i]){
+			sub_outp = ((unsigned) outputs[i]) - 1;
+			ERROR_REPORTER_HERE(ASC_USER_NOTE
+					, "Component %s is component number %u in the %s phase."
+					, PPH[i]->PF[sub_outp]->name, sub_outp+1
+					, MIX_PHASE_STRING(PTYPE[i]));
+			// ERROR_REPORTER_HERE(ASC_USER_NOTE
+			// 		, "\tThe number of pures in this phase is %u.", PPURE);
 		}else{
 			ERROR_REPORTER_HERE(ASC_USER_ERROR
-					, "There is no component number %u in phase %u", j+1, i+1);
-			outputs[0] = 0.0;
+					, "Component %s does not appear in the %s phase."
+					, MS->PF[comp]->name, MIX_PHASE_STRING(PTYPE[i]));
+			// ERROR_REPORTER_HERE(ASC_USER_NOTE
+			// 		, "\tThe number of pures in this phase is %u.", PPURE);
 		}
-	}else{
-		ERROR_REPORTER_HERE(ASC_USER_ERROR, "There is no phase number %u", i+1);
-		outputs[0] = 0.0;
 	}
+	for(i=NPHASE;i<3;i++){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR, "There is no phase number %u", i);
+		outputs[i] = 0.0;
+	}
+#endif
 	return 0;
 }
 
+/* ---------------------------------------------------------------------
+	Bubble and dew-point functions
+ */
 /*
 	Find and return the mixture dew pressure at some temperature.
  */
@@ -700,3 +781,9 @@ int mixture_state_T_ph_calc(struct BBoxInterp *bbox, int ninputs, int noutputs,
 	outputs[0] = T;
 	return 0;
 }
+
+#undef PPURE
+#undef PPH
+#undef PTYPE
+#undef NPURE
+#undef NPHASE

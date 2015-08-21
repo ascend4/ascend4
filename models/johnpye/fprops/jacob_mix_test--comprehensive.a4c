@@ -1,0 +1,312 @@
+(* ASCEND multi-component ideal-solution routine To perform the simulation, load the file into ASCEND and run 'setup'.  This file tests those functions which return properties for individual components.
+ *)
+
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/fprops/mixture";
+REQUIRE "johnpye/fprops/mixtures.a4l";
+
+(* ---------------------------------------------------------------------
+   Generic mixture testing parametric model *)
+MODEL mixture_test(
+	(* -----------------------------------------------------------------
+	   Declare variables that define the mixture composition and state *)
+	mix "mixture composition" WILL_BE mixture_spec;
+	T    "mixture temperature" WILL_BE temperature;
+	p    "mixture pressure"    WILL_BE pressure;
+);
+
+	(* -----------------------------------------------------------------
+	   Declare variables to hold various mixture properties *)
+	ph[1..3]            "number of each phase",
+	comp[1..mix.npure] "number of components in each phase",
+
+	nphases                       "number of phases",
+	ncomps[1..3]                  "number of components in each phase",
+	comp_ind[1..mix.npure][1..3] "index of each component" IS_A phase_count;
+
+	ph_frac[1..3]    "mass fraction of each phase",
+	comp_frac[1..mix.npure][1..3] "component mass fractions" IS_A mass_fraction;
+
+	(* -----------------------------------------------------------------
+	   Declare variables to hold overall, by-phase, and by-component densities *)
+	rho                          "whole-mixture density",
+	rho_ph[1..3]                 "phase densities",
+	rho_comp[1..mix.npure][1..3] "component densities" IS_A mass_density;
+
+	(* Declare variables to hold first-law properties: internal energy, enthalpy, 
+	   constant-pressure and constant-volume heat capacities *)
+	u, u_ph[1..3],
+	u_comp[1..mix.npure][1..3] IS_A specific_energy;
+	h, h_ph[1..3],
+	h_comp[1..mix.npure][1..3] IS_A specific_enthalpy;
+	cp, cp_ph[1..3],
+	cp_comp[1..mix.npure][1..3] IS_A specific_heat_capacity;
+	cv, cv_ph[1..3],
+	cv_comp[1..mix.npure][1..3] IS_A specific_heat_capacity;
+
+	(* -----------------------------------------------------------------
+	   Find data for whole mixture: phases, phase fractions, density, and 
+	   mixture first-law properties *)
+	mix_phases : mixture_count_phases(
+		T, p : INPUT;
+		nphases, ph_frac[1], ph_frac[2], ph_frac[3] : OUTPUT;
+		mix : DATA
+	);
+	mix_density : mixture_rho(
+		T, p : INPUT;
+		rho : OUTPUT;
+		mix : DATA
+	);
+	mix_energy : mixture_u(
+		T, p : INPUT;
+		u : OUTPUT;
+		mix : DATA
+	);
+	mix_enthalpy : mixture_h(
+		T, p : INPUT;
+		h : OUTPUT;
+		mix : DATA
+	);
+	mix_cp_heat_capacity : mixture_cp(
+		T, p : INPUT;
+		cp : OUTPUT;
+		mix : DATA
+	);
+	mix_cv_heat_capacity : mixture_cv(
+		T, p : INPUT;
+		cv : OUTPUT;
+		mix : DATA
+	);
+
+	(* -----------------------------------------------------------------
+	   Find data for each phase: number of components in each phase, density, 
+	   and first-law properties *)
+	FOR i1 IN [1..3] CREATE
+		mix_count_comps[i1] : mixture_count_components(
+			T, p, ph[i1] : INPUT;
+			ncomps[i1] : OUTPUT;
+			mix : DATA
+		);
+		mix_phase_density[i1] : mixture_phase_rho(
+			T, p, ph[i1] : INPUT;
+			rho_ph[i1] : OUTPUT;
+			mix : DATA
+		);
+		mix_phase_energy[i1] : mixture_phase_u(
+			T, p, ph[i1] : INPUT;
+			u_ph[i1] : OUTPUT;
+			mix : DATA
+		);
+		mix_phase_enthalpy[i1] : mixture_phase_h(
+			T, p, ph[i1] : INPUT;
+			h_ph[i1] : OUTPUT;
+			mix : DATA
+		);
+		mix_phase_cp_heat_capacity[i1] : mixture_phase_cp(
+			T, p, ph[i1] : INPUT;
+			cp_ph[i1] : OUTPUT;
+			mix : DATA
+		);
+		mix_phase_cv_heat_capacity[i1] : mixture_phase_cv(
+			T, p, ph[i1] : INPUT;
+			cv_ph[i1] : OUTPUT;
+			mix : DATA
+		);
+	END FOR;
+
+	(* -----------------------------------------------------------------
+	   Find index(es) of each component within each phase, and mass fraction of 
+	   each component within each phase. *)
+	FOR i2 IN [1..mix.npure] CREATE
+		mix_component_ind[i2] : mixture_component_index(
+			T, p, comp[i2] : INPUT;
+			comp_ind[i2][1], comp_ind[i2][2], comp_ind[i2][3] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_fractions[i2] : mixture_component_frac(
+			T, p, comp[i2] : INPUT;
+			comp_frac[i2][1], comp_frac[i2][2], comp_frac[i2][3] : OUTPUT;
+			mix : DATA
+		);
+	END FOR;
+
+	(* -----------------------------------------------------------------
+	   Find data for each component in each phase: density and first-law 
+	   properties. *)
+	FOR i3 IN [1..mix.npure] CREATE
+		(* density *)
+		mix_component_density1[i3] : mixture_comps_rho(
+			T, p, ph[1], comp_ind[i3][1] : INPUT;
+			rho_comp[i3][1] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_density2[i3] : mixture_comps_rho(
+			T, p, ph[2], comp_ind[i3][2] : INPUT;
+			rho_comp[i3][2] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_density3[i3] : mixture_comps_rho(
+			T, p, ph[3], comp_ind[i3][3] : INPUT;
+			rho_comp[i3][3] : OUTPUT;
+			mix : DATA
+		);
+
+		(* internal energy *)
+		mix_component_energy1[i3] : mixture_comps_u(
+			T, p, ph[1], comp_ind[i3][1] : INPUT;
+			u_comp[i3][1] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_energy2[i3] : mixture_comps_u(
+			T, p, ph[2], comp_ind[i3][2] : INPUT;
+			u_comp[i3][2] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_energy3[i3] : mixture_comps_u(
+			T, p, ph[3], comp_ind[i3][3] : INPUT;
+			u_comp[i3][3] : OUTPUT;
+			mix : DATA
+		);
+
+		(* enthalpy *)
+		mix_component_enthalpy1[i3] : mixture_comps_h(
+			T, p, ph[1], comp_ind[i3][1] : INPUT;
+			h_comp[i3][1] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_enthalpy2[i3] : mixture_comps_h(
+			T, p, ph[2], comp_ind[i3][2] : INPUT;
+			h_comp[i3][2] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_enthalpy3[i3] : mixture_comps_h(
+			T, p, ph[3], comp_ind[i3][3] : INPUT;
+			h_comp[i3][3] : OUTPUT;
+			mix : DATA
+		);
+
+		(* constant-pressure heat capacity *)
+		mix_component_cp_heat_capacity1[i3] : mixture_comps_cp(
+			T, p, ph[1], comp_ind[i3][1] : INPUT;
+			cp_comp[i3][1] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_cp_heat_capacity2[i3] : mixture_comps_cp(
+			T, p, ph[2], comp_ind[i3][2] : INPUT;
+			cp_comp[i3][2] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_cp_heat_capacity3[i3] : mixture_comps_cp(
+			T, p, ph[3], comp_ind[i3][3] : INPUT;
+			cp_comp[i3][3] : OUTPUT;
+			mix : DATA
+		);
+
+		(* constant-volume heat capacity *)
+		mix_component_cv_heat_capacity1[i3] : mixture_comps_cv(
+			T, p, ph[1], comp_ind[i3][1] : INPUT;
+			cv_comp[i3][1] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_cv_heat_capacity2[i3] : mixture_comps_cv(
+			T, p, ph[2], comp_ind[i3][2] : INPUT;
+			cv_comp[i3][2] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_cv_heat_capacity3[i3] : mixture_comps_cv(
+			T, p, ph[3], comp_ind[i3][3] : INPUT;
+			cv_comp[i3][3] : OUTPUT;
+			mix : DATA
+		);
+	END FOR;
+
+METHODS
+(* ---------------------------------------------------------------------
+   Fix the variables that are to be fixed *)
+METHOD specify;
+	FIX T;
+	FIX p;
+	FIX ph[1..3];
+	FIX comp[1..mix.npure];
+END specify;
+(* ---------------------------------------------------------------------
+   Set values for the fixed variables *)
+METHOD values;
+	FOR j1 IN [1..3] DO
+		ph[j1] := j1;
+	END FOR;
+	FOR j2 IN [1..mix.npure] DO
+		comp[j2] := j2;
+	END FOR;
+END values;
+END mixture_test;
+
+
+(* ---------------------------------------------------------------------
+   First model of a mixture. *)
+MODEL mixture_test_1;
+	nsims IS_A integer_constant;
+	T[1..nsims] IS_A temperature;
+	p[1..nsims] IS_A pressure;
+
+	(* T IS_A temperature;
+	   p IS_A pressure; *)
+	mixt IS_A mixture_spec;
+
+	mixt.npure :== 4;
+	mixt.components[1] :== 'ammonia';
+	mixt.components[2] :== 'carbonmonoxide';
+	mixt.components[3] :== 'cyclohexane';
+	mixt.components[4] :== 'benzene';
+	mixt.eos :== 'pengrob';
+	mixt.xs[1] :== 0.3;
+	mixt.xs[2] :== 0.35;
+	mixt.xs[3] :== 0.20;
+	mixt.xs[4] :== 0.15;
+
+	nsims :== 2;
+	(* mix_test[1..nsims] IS_A mixture_test; *)
+
+	FOR i1 IN [1..nsims] CREATE
+		mix_test_here[i1] IS_A mixture_test(mixt, T[i1], p[i1]);
+	END FOR;
+
+METHODS
+(* ---------------------------------------------------------------------
+   Fix the variables that are to be fixed *)
+METHOD specify;
+	FIX T[1..nsims];
+	FIX p[1..nsims];
+	FOR i2 IN [1..nsims] DO
+		RUN mix_test_here[i2].specify;
+	END FOR;
+END specify;
+(* ---------------------------------------------------------------------
+   Set values for the fixed variables *)
+METHOD values;
+	T[1] := 423.15 {K};
+	p[1] := 1 {bar};
+
+	T[2] := 700 {K};
+	p[2] := 1.5 {bar};
+
+	FOR i3 IN [1..nsims] DO
+		RUN mix_test_here[i3].values;
+	END FOR;
+END values;
+(* ---------------------------------------------------------------------
+   Set solver and other options *)
+METHOD options;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END options;
+(* ---------------------------------------------------------------------
+   Quick alias for all preceeding methods; readies the model for solving *)
+METHOD setup;
+	RUN specify;
+	RUN values;
+	RUN options;
+END setup;
+END mixture_test_1;
+
