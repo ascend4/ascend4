@@ -1,4 +1,17 @@
-(* ASCEND multi-component ideal-solution routine To perform the simulation, load the file into ASCEND and run 'setup'.  This file tests those functions which return properties for individual components.
+(* Jacob Shealy, August 20-21 2015 *)
+(* ASCEND multi-component ideal-solution routine
+
+   To perform the simulation, load the file into ASCEND and run 'setup'.
+   
+   This file tests those functions which return properties for individual 
+   components.  The first model, 'mixture_test', allows simulations of mixtures 
+   to be constructed to calculate all available properties for the mixture.  
+   Whole-mixture, phase-specific, and component-specific properties are 
+   calculated.  The 'mixture_test' model is intended to provide an example of 
+   how properties may be conveniently obtained using external functions.
+
+   Subsequent models define mixtures and model them under various conditions 
+   using 'mixture_test'.
  *)
 
 REQUIRE "atoms.a4l";
@@ -246,13 +259,13 @@ END mixture_test;
 (* ---------------------------------------------------------------------
    First model of a mixture. *)
 MODEL mixture_test_1;
-	nsims IS_A integer_constant;
-	T[1..nsims] IS_A temperature;
-	p[1..nsims] IS_A pressure;
+	nsims       "number of simulations performed" IS_A integer_constant;
+	T[1..nsims] "mixture temperature"             IS_A temperature;
+	p[1..nsims] "mixture pressure"                IS_A pressure;
 
 	(* T IS_A temperature;
 	   p IS_A pressure; *)
-	mixt IS_A mixture_spec;
+	mixt "specifies mixture composition" IS_A mixture_spec;
 
 	mixt.npure :== 4;
 	mixt.components[1] :== 'ammonia';
@@ -266,7 +279,6 @@ MODEL mixture_test_1;
 	mixt.xs[4] :== 0.15;
 
 	nsims :== 2;
-	(* mix_test[1..nsims] IS_A mixture_test; *)
 
 	FOR i1 IN [1..nsims] CREATE
 		mix_test_here[i1] IS_A mixture_test(mixt, T[i1], p[i1]);
