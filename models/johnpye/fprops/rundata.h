@@ -106,31 +106,32 @@ For fluids without phase change (incompressible, ideal), we
 make use of Tstar or T_c as desired, but this data is stored here
 */
 
+/* we use a list-expanding #define idiom to collapse the definition of our memory alloc/free */
+#define TTSE_MATRICES(X,I) \
+	I(s) X I(dsdT_rho) X I(d2sdT2_rho) X I(dsdrho_T) X I(d2sdrho2_T) X I(d2sdTdrho) X \
+	I(p) X I(dpdT_rho) X I(d2pdT2_rho) X I(dpdrho_T) X I(d2pdrho2_T) X I(d2pdTdrho) X \
+	I(u) X I(dudT_rho) X I(d2udT2_rho) X I(dudrho_T) X I(d2udrho2_T) X I(d2udTdrho) X \
+	I(g) X I(dgdT_rho) X I(d2gdT2_rho) X I(dgdrho_T) X I(d2gdrho2_T) X I(d2gdTdrho) X \
+	I(h) X I(dhdT_rho) X I(d2hdT2_rho) X I(dhdrho_T) X I(d2hdrho2_T) X I(d2hdTdrho)
 
 /*structure for tables*/
-#define NTP 200
-#define NRHOP 200
-#define NSAT 500
-typedef double (*TtseMatrix) [NRHOP];
-typedef double * TtseLine;
+typedef double *TtseMatrix;
+typedef double *TtseLine;
 
 typedef struct ttse_struct{
-
     int doesdbexist;
     int usettse;
-
     double tmin,tmax,rhomin,rhomax;
 
-    TtseMatrix s, dsdt, d2sdt2, dsdrho, d2sdrho2, d2sdtdrho;
-    TtseMatrix p, dpdt, d2pdt2, dpdrho, d2pdrho2, d2pdtdrho;
-    TtseMatrix u, dudt, d2udt2, dudrho, d2udrho2, d2udtdrho;
-    TtseMatrix g, dgdt, d2gdt2, dgdrho, d2gdrho2, d2gdtdrho;
-    TtseMatrix h, dhdt, d2hdt2, dhdrho, d2hdrho2, d2hdtdrho;
+#define X
+#define I(VAR) TtseMatrix VAR;
+	TTSE_MATRICES(X,I)
+#undef X
+#undef I
 
     TtseLine satFRho,satFdRhodt,satFd2RhodT2;
     TtseLine satGRho,satGdRhodt,satGd2RhodT2;
 }Ttse;
-
 
 typedef struct FluidData_struct{
 	/* common data across all correlations */
@@ -162,9 +163,6 @@ typedef double PropEvalFn(double T,double rho,const FluidData *data, FpropsError
 /** @return psat */
 typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *data, FpropsError *err);
 
-
-
-
 /**
 	Structure containing all the necessary data and metadata for run-time
 	calculation of fluid properties.
@@ -186,12 +184,16 @@ typedef struct PureFluid_struct{
 	PropEvalFn *g_fn;
 	PropEvalFn *alphap_fn;
 	PropEvalFn *betap_fn;
-	PropEvalFn *dpdrho_T_fn, *d2pdrho2_T_fn, *dpdT_rho_fn, *d2pdT2_rho_fn, *d2pdTdrho_fn;// dpdrho_T_fn this derivative is required for saturation properties by Akasaka method
+	PropEvalFn *dpdrho_T_fn; // this derivative is required for saturation properties by Akasaka method
+	SatEvalFn *sat_fn; // function to return {psat,rhof,rhog}(T) for this pure fluid
+
+	/* the following functions are being used by TTSE to calculate tables, currently only implemented for Helmholtz EOS */
+	/* as these functions aren't expected to be provided in all cases, we would prefer to store them somewhere else */
+	PropEvalFn               *d2pdrho2_T_fn, *dpdT_rho_fn, *d2pdT2_rho_fn, *d2pdTdrho_fn;
 	PropEvalFn *dhdrho_T_fn, *d2hdrho2_T_fn, *dhdT_rho_fn, *d2hdT2_rho_fn, *d2hdTdrho_fn;
 	PropEvalFn *dsdrho_T_fn, *d2sdrho2_T_fn, *dsdT_rho_fn, *d2sdT2_rho_fn, *d2sdTdrho_fn;
 	PropEvalFn *dudrho_T_fn, *d2udrho2_T_fn, *dudT_rho_fn, *d2udT2_rho_fn, *d2udTdrho_fn;
 	PropEvalFn *dgdrho_T_fn, *d2gdrho2_T_fn, *dgdT_rho_fn, *d2gdT2_rho_fn, *d2gdTdrho_fn;
-	SatEvalFn *sat_fn; // function to return {psat,rhof,rhog}(T) for this pure fluid
 
 	const ViscosityData *visc; // TODO should it be here? or inside FluidData?? probably yes, but needs review.
 	const ThermalConductivityData *thcond; // TODO should it be here? probably yes, but needs review.

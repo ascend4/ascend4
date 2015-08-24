@@ -1,5 +1,3 @@
-
-
 #include "../fluids.h"
 #include "../fprops.h"
 #include "../solve_ph.h"
@@ -87,9 +85,6 @@ int main(void){
     MSG("%f  %f",avgprf,avgprg);
 
     exit(1);
-
-
-
 
 
 /*****************************************Two Phase Table Testing*****************************************/
