@@ -105,7 +105,7 @@ int fprops_corr_avail(const EosData *E, const char *corrtype){
 PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 	PureFluid *P = NULL;
 	FpropsError err = FPROPS_NO_ERROR;
-	MSG("Working with EosData name '%s', source '%s", E->name, E->source);
+	MSG("Working with EosData name '%s', source '%s'", E->name, E->source);
 	MSG("Chosen correlation: %d (requested %s)", fprops_corr_avail(E,corrtype),corrtype);
 	switch(fprops_corr_avail(E,corrtype)){
 	case FPROPS_HELMHOLTZ:
