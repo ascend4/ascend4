@@ -245,7 +245,7 @@ void helmholtz_destroy(PureFluid *P){
 	@return pressure in Pa
 */
 double helmholtz_p(double T, double rho, const FluidData *data, FpropsError *err){
-	if(data->UseTable) evaluate_ttse_p(T,rho,data->table);
+	if(data->UseTable) return evaluate_ttse_p(T,rho,data->table);
 	DEFINE_TD;
 
 	assert(HD->rho_star!=0);
@@ -283,7 +283,7 @@ double helmholtz_p(double T, double rho, const FluidData *data, FpropsError *err
 	@return internal energy in ???
 */
 double helmholtz_u(double T, double rho, const FluidData *data, FpropsError *err){
-	if(data->UseTable) evaluate_ttse_u(T,rho,data->table);
+	if(data->UseTable) return evaluate_ttse_u(T,rho,data->table);
 	DEFINE_TD;
 
 #ifdef TEST
@@ -312,7 +312,7 @@ double helmholtz_u(double T, double rho, const FluidData *data, FpropsError *err
 	@return enthalpy in J/kg
 */
 double helmholtz_h(double T, double rho, const FluidData *data, FpropsError *err){
-	if(data->UseTable) evaluate_ttse_h(T,rho,data->table);
+	if(data->UseTable) return evaluate_ttse_h(T,rho,data->table);
 	DEFINE_TD;
 
 //#ifdef TEST
@@ -337,7 +337,7 @@ double helmholtz_h(double T, double rho, const FluidData *data, FpropsError *err
 	@return entropy in J/kgK
 */
 double helmholtz_s(double T, double rho, const FluidData *data, FpropsError *err){
-	if(data->UseTable) evaluate_ttse_s(T,rho,data->table);
+	if(data->UseTable) return evaluate_ttse_s(T,rho,data->table);
 	DEFINE_TD;
 
 #ifdef ENTROPY_DEBUG
@@ -456,7 +456,7 @@ double helmholtz_w(double T, double rho, const FluidData *data, FpropsError *err
 	@return Gibbs energy, in J/kg.
 */
 double helmholtz_g(double T, double rho, const FluidData *data, FpropsError *err){
-	if(data->UseTable) evaluate_ttse_g(T,rho,data->table);
+	if(data->UseTable) return evaluate_ttse_g(T,rho,data->table);
 	DEFINE_TD;
 
 	double phir_d = helm_resid_del(tau,delta,HD);
@@ -1159,6 +1159,9 @@ double helmholtz_d2gdTdrho(double T, double rho, const FluidData *data, FpropsEr
 	@return 0 on success, non-zero on error (eg algorithm failed to converge, T out of range, etc.)
 */
 double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidData *data, FpropsError *err){
+
+    if(data->UseTable) return evaluate_ttse_sat(T,rhof_out,rhog_out,data,err);
+
 	if(T < data->T_t - 1e-8){
 		ERRMSG("Input temperature %f K is below triple-point temperature %f K",T,data->T_t);
 		return FPROPS_RANGE_ERROR;

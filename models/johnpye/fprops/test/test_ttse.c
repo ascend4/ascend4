@@ -37,7 +37,7 @@ int main(void){
 
     #ifndef PT
     #define PT P->data->table
-    PureFluid *P;
+    PureFluid *P,*Ph;
 	FpropsError err;
     const char *helmfluids[] = { "water"};
 	//const int n = sizeof(helmfluids)/sizeof(char *);
@@ -46,6 +46,7 @@ int main(void){
     MSG("Which Fluid? -->  %s",helmfluids[0]);
 
     P = (PureFluid *)fprops_fluid(helmfluids[0],"ttse",NULL);
+    Ph = (PureFluid *)fprops_fluid(helmfluids[0],"helmholtz",NULL);
 
 
     MSG("Triple Point Tt %f  & Crit Temp  %f",P->data->T_t,P->data->T_c);
@@ -56,59 +57,51 @@ int main(void){
 
 //Plot in Mathematica Saturation dome
     double avgprf=0,avgprg=0;
-    for(i=0;i<NSAT-1;i++)
+
+    int npoints =NSAT-1;
+
+    for(i=0;i<npoints;i++)
     {
 
         double Tt = P->data->T_t;
         double Tc = P->data->T_c;
         double dt2p = (Tc - Tt)/NSAT;
         double T = Tt + (i+0.5)*dt2p;
+       // MSG("%f",T);
         double psat, rhof,rhog;
-        fprops_sat_T(T,&psat,&rhof,&rhog,P,&err);
+        fprops_sat_T(T,&psat,&rhof,&rhog,Ph,&err);
         int j = (int)round(  ((T - Tt)/(Tc - Tt))*(NSAT)  );
         assert(j>=0 && j<NSAT);
         double delt = T - ( Tt + j*dt2p);
         double rhofT,rhogT;
-        psat=evaluate_ttse_sat(T,&rhofT,&rhogT,P,&err);
+        psat=evaluate_ttse_sat(T,&rhofT,&rhogT,P->data,&err);
 
       //  rhofT =   P->table->satFRho[j] + delt*P->table->satFdRhodt[j]+ 0.5*delt*delt*P->table->satFd2RhodT2[j];
       //  rhogT =   P->table->satGRho[j] + delt*P->table->satGdRhodt[j]+ 0.5*delt*delt*P->table->satGd2RhodT2[j];
 
         avgprf += fabs(100*(rhof-rhofT)/rhof);
         avgprg += fabs(100*(rhog-rhogT)/rhog);
-        MSG("%f  %f  %f  %f  %f  %f", rhof,rhofT,rhog,rhogT, 100*(rhof-rhofT)/rhof,100*(rhog-rhogT)/rhog );
-       // if(i!= SPOINTS)
-       //     printf("{%f, %f, %f},\n",T, rhof,rhog);
-       // else
-        //    printf("{%f, %f, %f}};\n",T, rhof,rhog);
+       // MSG("%f  %f  %f  %f  %f  %f", rhof,rhofT,rhog,rhogT, 100*(rhof-rhofT)/rhof,100*(rhog-rhogT)/rhog );
+
+  /*
+        For mathematica print out.
+
+        if(i==0)
+            printf("{{%f, %f, %f},\n",T, rhofT,rhogT);
+        else if(i==npoints-1)
+            printf("{%f, %f, %f}};\n",T, rhofT,rhogT);
+        else
+            printf("{%f, %f, %f},\n",T, rhofT,rhogT);
+  */
+
     }
-    avgprf /= NSAT;
-    avgprg /= NSAT;
-    MSG("%f  %f",avgprf,avgprg);
-
-    exit(1);
+    avgprf /= (npoints);
+    avgprg /= (npoints);
+    MSG("Average percent error in  rhof and rhog evaluations respectively --> %f  %f",avgprf,avgprg);
 
 
 
 
-
-/*****************************************Two Phase Table Testing*****************************************/
-/*
-    double Tt = P->data->T_t;
-    double Tc = P->data->T_c;
-    double t = Tc - 53.341233;
-    double psat, rhof,rhog;
-    fprops_sat_T(t,&psat,&rhof,&rhog,P,&err);
-    double dt = (Tc-Tt)/NSAT;
-    i = (int)round(((t - Tt)/(Tc - Tt)*(NSAT-1)));
-    double delt = t - ( Tt + i*dt);
-
-    double rhofT,rhogT;
-    rhofT =   P->table->satFRho[i] + delt*P->table->satFdRhodt[i];// + 0.5*delt*delt*P->table->satFd2RhodT2[i];
-    rhogT =   P->table->satGRho[i] + delt*P->table->satGdRhodt[i];// + 0.5*delt*delt*P->table->satGd2RhodT2[i];
-
-    MSG("SAT TEST ::: %f   %f",100*(rhof-rhofT)/rhof,100*(rhog-rhogT)/rhog);
-*/
 /*****************************************Single Phase Table Testing*****************************************/
     #define NPOINTS 100000
     double temp_s = 650;
@@ -131,11 +124,11 @@ int main(void){
         double T = temp_s + i*dT;
         //FluidState S = fprops_set_Trho(T,rho,P,&err);
         //pressH[i] = fprops_p(S,&err) ;
-        pressH[i] = P->p_fn(T, rho, P->data,&err) ;
-        enthalpyH[i] = P->h_fn(T, rho, P->data,&err) ;
-        entH[i] = P->s_fn(T, rho, P->data,&err) ;
-        intuH[i] = P->u_fn(T, rho, P->data,&err) ;
-        gibbsgH[i] = P->g_fn(T, rho, P->data,&err) ;
+        pressH[i] = Ph->p_fn(T, rho, Ph->data,&err) ;
+        enthalpyH[i] = Ph->h_fn(T, rho, Ph->data,&err) ;
+        entH[i] = Ph->s_fn(T, rho, Ph->data,&err) ;
+        intuH[i] = Ph->u_fn(T, rho, Ph->data,&err) ;
+        gibbsgH[i] = Ph->g_fn(T, rho, Ph->data,&err) ;
     }
 
     clock_t end = clock();

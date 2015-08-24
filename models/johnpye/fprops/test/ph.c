@@ -153,7 +153,7 @@ int main(void){
 	int nfluiderrors = 0;
 	while(*fi){
 		FpropsError err = FPROPS_NO_ERROR;
-		P = fprops_fluid(*fi,"helmholtz",NULL);
+		P = fprops_fluid(*fi,"ttse",NULL);
 		assert(P);
 		int testedpoints;
 		int nerr;

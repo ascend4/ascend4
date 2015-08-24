@@ -213,7 +213,7 @@ void build_tables(PureFluid *P){
         //PT->satGd2RhodT2[i] =  ddT_drhodT_p_constrho  +  ddrho_drhodT_p_constT * drhodT_p;
         PT->satGd2RhodT2[i] =  (-1.0/pow(dpdrho_T,3))*( d2pdrho2_T*dpdT_rho*dpdT_rho -2*dpdT_rho*dpdrho_T*d2pdrhodT + dpdrho_T*dpdrho_T*d2pdT2_rho );
 
-        MSG("%f  %f  %f ---  %f  %f  %f",PT->satFRho[i] , PT->satFdRhodt[i], PT->satFd2RhodT2[i],PT->satGRho[i] , PT->satGdRhodt[i], PT->satGd2RhodT2[i]) ;
+     //   MSG("%f  %f  %f ---  %f  %f  %f",PT->satFRho[i] , PT->satFdRhodt[i], PT->satFd2RhodT2[i],PT->satGRho[i] , PT->satGdRhodt[i], PT->satGd2RhodT2[i]) ;
     }
 
 
@@ -300,16 +300,17 @@ void build_tables(PureFluid *P){
 
 
 
-double evaluate_ttse_sat(double T, double *rhof_out, double * rhog_out, PureFluid *P, FpropsError *err){
+double evaluate_ttse_sat(double T, double *rhof_out, double * rhog_out, const FluidData *data, FpropsError *err){
 
     #ifndef PT
-    #define PT P->data->table
+    #define PT data->table
 
     int i,j;
-    double tmin = P->data->T_t;
-    double tmax = P->data->T_c;
+    double tmin = data->T_t;
+    double tmax = data->T_c;
+
     if(T < tmin-1e-8){
-    ERRMSG("Input Temperature %f K is below triple-point temperature %f K",T,P->data->T_t);
+    ERRMSG("Input Temperature %f K is below triple-point temperature %f K",T,data->T_t);
     return FPROPS_RANGE_ERROR;
     }
 
@@ -320,6 +321,9 @@ double evaluate_ttse_sat(double T, double *rhof_out, double * rhog_out, PureFlui
 
     double dt = (tmax-tmin)/NSAT;
     i = (int)round(((T - tmin)/(tmax - tmin)*(NSAT)));
+    //MSG("%d %f %f %f",i,T,tmax,tmin);
+    if(i<0)i=0;
+    if(i>=NSAT)i=NSAT-1;
     assert(i>=0 && i<NSAT);
     double delt = T - ( tmin + i*dt);
     *rhof_out =  PT->satFRho[i] + delt*PT->satFdRhodt[i] + 0.5*delt*delt*PT->satFd2RhodT2[i];
@@ -383,7 +387,7 @@ double evaluate_ttse_sat(double T, double *rhof_out, double * rhog_out, PureFlui
         double tmin = P->data->T_t;\
         double tmax = P->data->T_c;\
 		if(t >= tmin  && t< tmax) {\
-            evaluate_ttse_sat(t, &rho_f, &rho_g, P, &err);\
+            evaluate_ttse_sat(t, &rho_f, &rho_g, P->data, &err);\
             if(rho_g < rho && rho < rho_f){\
                     double x = rho_g*(rho_f/rho - 1)/(rho_f - rho_g);\
                     double Qf = P->VAR##_fn( t,rho_f,P->data,&err);\
@@ -477,7 +481,7 @@ void load_tables(PureFluid *P){
 void save_tables(PureFluid *P){
 
     int i;
-    MSG("Saving table %s",P->data->path);
+    MSG("Saving table @ %s",P->data->path);
     FILE * writetablefile = fopen(P->data->path,"wb");
 
 
