@@ -56,12 +56,12 @@ MODEL mixture_test_basic(
 		nphases, ph_frac[1], ph_frac[2], ph_frac[3] : OUTPUT;
 		mix : DATA
 	);
-	(* mix_density : mixture_rho(
+	mix_density : mixture_rho(
 		T, p : INPUT;
 		rho : OUTPUT;
 		mix : DATA
-	); *)
-	(* mix_energy : mixture_u(
+	);
+	mix_energy : mixture_u(
 		T, p : INPUT;
 		u : OUTPUT;
 		mix : DATA
@@ -80,7 +80,7 @@ MODEL mixture_test_basic(
 		T, p : INPUT;
 		s : OUTPUT;
 		mix : DATA
-		); *)
+	);
 
 	(* -----------------------------------------------------------------
 	   Find data for each phase: number of components in each phase, density, 
@@ -91,12 +91,12 @@ MODEL mixture_test_basic(
 			ncomps[i1] : OUTPUT;
 			mix : DATA
 		);
-		(* mix_phase_density[i1] : mixture_phase_rho(
+		mix_phase_density[i1] : mixture_phase_rho(
 			T, p, ph[i1] : INPUT;
 			rho_ph[i1] : OUTPUT;
 			mix : DATA
-		); *)
-		(* mix_phase_energy[i1] : mixture_phase_u(
+		);
+		mix_phase_energy[i1] : mixture_phase_u(
 			T, p, ph[i1] : INPUT;
 			u_ph[i1] : OUTPUT;
 			mix : DATA
@@ -115,7 +115,7 @@ MODEL mixture_test_basic(
 			T, p, ph[i1] : INPUT;
 			s_ph[i1] : OUTPUT;
 			mix : DATA
-		); *)
+		);
 	END FOR;
 
 METHODS
