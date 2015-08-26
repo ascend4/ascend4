@@ -143,7 +143,12 @@ MIX_HELP_DECL(state_T_ph, "Calculate mixture temperature from the pressure and e
 		return -5; \
 	} \
 	FpropsError err=FPROPS_NO_ERROR; \
-	MixtureSpec *MS = (MixtureSpec *)bbox->user_data;
+	MixtureSpec *MS = (MixtureSpec *)bbox->user_data; \
+	unsigned iii, iij; \
+	for(iii=0;iii<MS->pures;iii++){ \
+		ERROR_REPORTER_HERE(ASC_USER_NOTE, "The component number %u has mass fraction %g" \
+				, iii, MS->Xs[iii]); \
+	}
 
 /*
     Perform switch on the output of a function that seeks some property, 
@@ -201,8 +206,22 @@ MIX_HELP_DECL(state_T_ph, "Calculate mixture temperature from the pressure and e
 		, tol = MIX_XTOL; /* tolerance used when solving for component densities */ \
 	fl_result = mixture_flash(PS, MS, T, p, tol, &err); \
 	ROOTSOLVE_SWITCH(fl_result,"vapor/liquid phase fractions"); \
+	for(iij=0;iij<PS->phases;iij++){ \
+		ERROR_REPORTER_HERE(ASC_USER_NOTE, "AFTER FLASH: In phase number %u", iij); \
+		for(iii=0;iii<PS->PH[iij]->pures;iii++){ \
+			ERROR_REPORTER_HERE(ASC_USER_NOTE, "\tcomponent number %u has mass fraction %g" \
+					, iii, PS->PH[iij]->Xs[iii]); \
+		} \
+	} \
 	mx_result = mixture_rhos_sat(PS, T, p, tol, &err); \
-	ROOTSOLVE_SWITCH(mx_result,"density");
+	ROOTSOLVE_SWITCH(mx_result,"density"); \
+	for(iij=0;iij<PS->phases;iij++){ \
+		ERROR_REPORTER_HERE(ASC_USER_NOTE, "AFTER DENSITY: In phase number %u", iij); \
+		for(iii=0;iii<PS->PH[iij]->pures;iii++){ \
+			ERROR_REPORTER_HERE(ASC_USER_NOTE, "\tcomponent number %u has mass fraction %g" \
+					, iii, PS->PH[iij]->Xs[iii]); \
+		} \
+	}
 
 #define CALC_PH_FLASH \
 	PhaseSpec *PS = new_PhaseSpec(MS->pures, 3); \
@@ -215,9 +234,27 @@ MIX_HELP_DECL(state_T_ph, "Calculate mixture temperature from the pressure and e
 		, tol = MIX_XTOL; /* tolerance used when solving for component densities */ \
 	ph_result = mixture_T_ph(&T, MS, p, h, tol, &err); \
     ROOTSOLVE_SWITCH(ph_result, "system temperature"); \
+	for(iii=0;iii<MS->pures;iii++){ \
+		ERROR_REPORTER_HERE(ASC_USER_NOTE, "AFTER TEMP: The component number %u has mass fraction %g" \
+				, iii, MS->Xs[iii]); \
+	} \
     fl_result = mixture_flash(PS, MS, T, p, tol, &err); \
 	ROOTSOLVE_SWITCH(fl_result, "vapor/liquid phase fractions"); \
+	for(iij=0;iij<PS->phases;iij++){ \
+		ERROR_REPORTER_HERE(ASC_USER_NOTE, "AFTER FLASH: In phase number %u", iij); \
+		for(iii=0;iii<MS->pures;iii++){ \
+			ERROR_REPORTER_HERE(ASC_USER_NOTE, "\tcomponent number %u has mass fraction %g" \
+					, iii, PS->PH[iij]->Xs[iii]); \
+		} \
+	} \
 	mx_result = mixture_rhos_sat(PS, T, p, tol, &err); \
-	ROOTSOLVE_SWITCH(mx_result,"density");
+	ROOTSOLVE_SWITCH(mx_result,"density"); \
+	for(iij=0;iij<PS->phases;iij++){ \
+		ERROR_REPORTER_HERE(ASC_USER_NOTE, "AFTER DENSITY: In phase number %u", iij); \
+		for(iii=0;iii<PS->PH[iij]->pures;iii++){ \
+			ERROR_REPORTER_HERE(ASC_USER_NOTE, "\tcomponent number %u has mass fraction %g" \
+					, iii, PS->PH[iij]->Xs[iii]); \
+		} \
+	}
 
 #endif

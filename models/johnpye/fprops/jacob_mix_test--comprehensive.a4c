@@ -1,4 +1,3 @@
-(* Jacob Shealy, August 20-21 2015 *)
 (* ASCEND multi-component ideal-solution routine
 
    To perform the simulation, load the file into ASCEND and run 'setup'.
@@ -13,11 +12,13 @@
    Subsequent models define mixtures and model them under various conditions 
    using 'mixture_test'.
  *)
+(* Jacob Shealy, August 20-21 2015 *)
 
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "johnpye/fprops/mixture";
 REQUIRE "johnpye/fprops/mixtures.a4l";
+
 
 (* ---------------------------------------------------------------------
    Generic mixture testing parametric model *)
@@ -47,16 +48,21 @@ MODEL mixture_test(
 	rho_ph[1..3]                 "phase densities",
 	rho_comp[1..mix.npure][1..3] "component densities" IS_A mass_density;
 
-	(* Declare variables to hold first-law properties: internal energy, enthalpy, 
+	(* -----------------------------------------------------------------
+	   Declare variables to hold first-law properties: internal energy, enthalpy, 
 	   constant-pressure and constant-volume heat capacities *)
-	u, u_ph[1..3],
-	u_comp[1..mix.npure][1..3] IS_A specific_energy;
-	h, h_ph[1..3],
-	h_comp[1..mix.npure][1..3] IS_A specific_enthalpy;
-	cp, cp_ph[1..3],
-	cp_comp[1..mix.npure][1..3] IS_A specific_heat_capacity;
-	cv, cv_ph[1..3],
-	cv_comp[1..mix.npure][1..3] IS_A specific_heat_capacity;
+	u,  u_ph[1..3],  u_comp[1..mix.npure][1..3]  IS_A specific_energy;
+	(* u,  u_ph[1..3],  u_comp[1..mix.npure][1..3]  IS_A specific_secondary_energy; *)
+	h,  h_ph[1..3],  h_comp[1..mix.npure][1..3]  IS_A specific_enthalpy;
+	cp, cp_ph[1..3], cp_comp[1..mix.npure][1..3] IS_A specific_heat_capacity;
+	cv, cv_ph[1..3], cv_comp[1..mix.npure][1..3] IS_A specific_heat_capacity;
+
+	(* -----------------------------------------------------------------
+	   Declare variables to hold second-law properties: entropy, Gibbs energy, 
+	   and Helmholtz energy *)
+	s,  s_ph[1..3],  s_comp[1..mix.npure][1..3]  IS_A specific_entropy;
+	g,  g_ph[1..3],  g_comp[1..mix.npure][1..3]  IS_A specific_secondary_energy;
+	a,  a_ph[1..3],  a_comp[1..mix.npure][1..3]  IS_A specific_secondary_energy;
 
 	(* -----------------------------------------------------------------
 	   Find data for whole mixture: phases, phase fractions, density, and 
@@ -89,6 +95,21 @@ MODEL mixture_test(
 	mix_cv_heat_capacity : mixture_cv(
 		T, p : INPUT;
 		cv : OUTPUT;
+		mix : DATA
+	);
+	mix_entropy : mixture_s(
+		T, p : INPUT;
+		s : OUTPUT;
+		mix : DATA
+	);
+	mix_gibbs_energy : mixture_g(
+		T, p : INPUT;
+		g : OUTPUT;
+		mix : DATA
+	);
+	mix_helmholtz_energy : mixture_a(
+		T, p : INPUT;
+		a : OUTPUT;
 		mix : DATA
 	);
 
@@ -124,6 +145,21 @@ MODEL mixture_test(
 		mix_phase_cv_heat_capacity[i1] : mixture_phase_cv(
 			T, p, ph[i1] : INPUT;
 			cv_ph[i1] : OUTPUT;
+			mix : DATA
+		);
+		mix_phase_entropy[i1] : mixture_phase_s(
+			T, p, ph[i1] : INPUT;
+			s_ph[i1] : OUTPUT;
+			mix : DATA
+		);
+		mix_phase_gibbs_energy[i1] : mixture_phase_g(
+			T, p, ph[i1] : INPUT;
+			g_ph[i1] : OUTPUT;
+			mix : DATA
+		);
+		mix_phase_helmholtz_energy[i1] : mixture_phase_a(
+			T, p, ph[i1] : INPUT;
+			a_ph[i1] : OUTPUT;
 			mix : DATA
 		);
 	END FOR;
@@ -230,6 +266,57 @@ MODEL mixture_test(
 		mix_component_cv_heat_capacity3[i3] : mixture_comps_cv(
 			T, p, ph[3], comp_ind[i3][3] : INPUT;
 			cv_comp[i3][3] : OUTPUT;
+			mix : DATA
+		);
+
+		(* entropy *)
+		mix_component_entropy1[i3] : mixture_s(
+			T, p, ph[1], comp_ind[i3][1] : INPUT;
+			s_comp[i3][1] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_entropy2[i3] : mixture_s(
+			T, p, ph[2], comp_ind[i3][2] : INPUT;
+			s_comp[i3][2] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_entropy3[i3] : mixture_s(
+			T, p, ph[3], comp_ind[i3][3] : INPUT;
+			s_comp[i3][3] : OUTPUT;
+			mix : DATA
+		);
+
+		(* Gibbs energy *)
+		mix_component_gibbs_energy1[i3] : mixture_g(
+			T, p, ph[1], comp_ind[i3][1] : INPUT;
+			g_comp[i3][1] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_gibbs_energy2[i3] : mixture_g(
+			T, p, ph[2], comp_ind[i3][2] : INPUT;
+			g_comp[i3][2] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_gibbs_energy3[i3] : mixture_g(
+			T, p, ph[3], comp_ind[i3][3] : INPUT;
+			g_comp[i3][3] : OUTPUT;
+			mix : DATA
+		);
+
+		(* Helmholtz energy *)
+		mix_component_helmholtz_energy1[i3] : mixture_a(
+			T, p, ph[1], comp_ind[i3][1] : INPUT;
+			a_comp[i3][1] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_helmholtz_energy2[i3] : mixture_a(
+			T, p, ph[2], comp_ind[i3][2] : INPUT;
+			a_comp[i3][2] : OUTPUT;
+			mix : DATA
+		);
+		mix_component_helmholtz_energy3[i3] : mixture_a(
+			T, p, ph[3], comp_ind[i3][3] : INPUT;
+			a_comp[i3][3] : OUTPUT;
 			mix : DATA
 		);
 	END FOR;

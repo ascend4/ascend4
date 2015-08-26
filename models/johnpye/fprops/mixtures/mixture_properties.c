@@ -290,8 +290,8 @@ double mixture_rho(PhaseMixState *PM, double *rhos){
 			p_phases[i] = 0.0; \
 			for(j=0;j<PPURE;j++){ \
 				p_phases[i] += PXS[j] * fprops_##PROP((FluidState){PM->T,RHO[j],PPF[j]}, err); \
-				/* MSG("  The current value of '" #PROP "' in phase number %u is %g", i, p_phases[i]); */ \
-				/* MSG("  The mole fraction %u in phase number %u is %g", j, i, PXS[j]); */ \
+				MSG("  The current value of '" #PROP "' in phase number %u is %g", i, p_phases[i]); \
+				MSG("  The mole fraction %u in phase number %u is %g", j, i, PXS[j]); \
 				x_ph[i] += PXS[j]; \
 			} \
 			if(fabs(x_ph[i] - 1)>MIX_XTOL){ \

@@ -1,0 +1,136 @@
+(* ASCEND multi-component ideal-solution routine
+
+   To perform the simulation, load the file into ASCEND and run 'setup'.
+   
+   This file defines a model, 'mixture_test_basic', which allows simulations of 
+   mixtures to be constructed to calculate common properties for the mixture.  
+   Whole-mixture and phase-specific properties are calculated.  This model 
+   illustrates how a user can conveniently obtain properties using the 
+   ideal-solution external functions. 
+ *)
+(* Jacob Shealy, August 25 2015 *)
+
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/fprops/mixture";
+REQUIRE "johnpye/fprops/mixtures.a4l";
+
+
+(* ---------------------------------------------------------------------
+   Generic mixture testing parametric model *)
+MODEL mixture_test_basic(
+	(* -----------------------------------------------------------------
+	   Declare variables that define the mixture composition and state *)
+	mix "mixture composition" WILL_BE mixture_spec;
+	T    "mixture temperature" WILL_BE temperature;
+	p    "mixture pressure"    WILL_BE pressure;
+);
+
+	(* -----------------------------------------------------------------
+	   Declare variables to hold various mixture properties *)
+	ph[1..3]           "number of each phase",
+
+	nphases            "number of phases",
+	ncomps[1..3]       "number of components in each phase" IS_A phase_count;
+
+	ph_frac[1..3]    "mass fraction of each phase" IS_A mass_fraction;
+
+	(* -----------------------------------------------------------------
+	   Declare variables to hold overall and by-phase densities *)
+	rho          "whole-mixture density",
+	rho_ph[1..3] "phase densities"        IS_A mass_density;
+
+	(* -----------------------------------------------------------------
+	   Declare variables to hold common properties: internal energy,
+	   enthalpy, constant-pressure heat capacity, and entropy.  *)
+	(* u,  u_ph[1..3]  IS_A specific_energy;
+	h,  h_ph[1..3]  IS_A specific_enthalpy;
+	cp, cp_ph[1..3] IS_A specific_heat_capacity;
+	s,  s_ph[1..3]  IS_A specific_entropy; *)
+
+	(* -----------------------------------------------------------------
+	   Find data for whole mixture: phases, phase fractions, density, and 
+	   the common properties *)
+	mix_phases : mixture_count_phases(
+		T, p : INPUT;
+		nphases, ph_frac[1], ph_frac[2], ph_frac[3] : OUTPUT;
+		mix : DATA
+	);
+	(* mix_density : mixture_rho(
+		T, p : INPUT;
+		rho : OUTPUT;
+		mix : DATA
+	); *)
+	(* mix_energy : mixture_u(
+		T, p : INPUT;
+		u : OUTPUT;
+		mix : DATA
+	);
+	mix_enthalpy : mixture_h(
+		T, p : INPUT;
+		h : OUTPUT;
+		mix : DATA
+	);
+	mix_cp_heat_capacity : mixture_cp(
+		T, p : INPUT;
+		cp : OUTPUT;
+		mix : DATA
+	);
+	mix_entropy : mixture_s(
+		T, p : INPUT;
+		s : OUTPUT;
+		mix : DATA
+		); *)
+
+	(* -----------------------------------------------------------------
+	   Find data for each phase: number of components in each phase, density, 
+	   and first-law properties *)
+	FOR i1 IN [1..3] CREATE
+		mix_count_comps[i1] : mixture_count_components(
+			T, p, ph[i1] : INPUT;
+			ncomps[i1] : OUTPUT;
+			mix : DATA
+		);
+		(* mix_phase_density[i1] : mixture_phase_rho(
+			T, p, ph[i1] : INPUT;
+			rho_ph[i1] : OUTPUT;
+			mix : DATA
+		); *)
+		(* mix_phase_energy[i1] : mixture_phase_u(
+			T, p, ph[i1] : INPUT;
+			u_ph[i1] : OUTPUT;
+			mix : DATA
+		);
+		mix_phase_enthalpy[i1] : mixture_phase_h(
+			T, p, ph[i1] : INPUT;
+			h_ph[i1] : OUTPUT;
+			mix : DATA
+		);
+		mix_phase_cp_heat_capacity[i1] : mixture_phase_cp(
+			T, p, ph[i1] : INPUT;
+			cp_ph[i1] : OUTPUT;
+			mix : DATA
+		);
+		mix_phase_entropy[i1] : mixture_phase_s(
+			T, p, ph[i1] : INPUT;
+			s_ph[i1] : OUTPUT;
+			mix : DATA
+		); *)
+	END FOR;
+
+METHODS
+(* ---------------------------------------------------------------------
+   Fix the variables that are to be fixed *)
+METHOD specify;
+	FIX T;
+	FIX p;
+	FIX ph[1..3];
+END specify;
+(* ---------------------------------------------------------------------
+   Set values for the fixed variables *)
+METHOD values;
+	FOR j1 IN [1..3] DO
+		ph[j1] := j1;
+	END FOR;
+END values;
+END mixture_test_basic;

@@ -1,0 +1,203 @@
+(* ASCEND multi-component ideal-solution routine
+
+   To perform the simulation, load the file into ASCEND and run 'setup'.
+
+   This file tests the ideal-solution property functions for stability and 
+   accuracy.  Each model defines a mixture and models it under various conditions 
+   using 'mixture_test_basic'.
+ *)   
+(* Jacob Shealy, August 25 2015 *)
+
+(* REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/fprops/mixture";
+REQUIRE "johnpye/fprops/mixtures.a4l"; *)
+REQUIRE "johnpye/fprops/mixture_test_basic.a4c";
+
+(* ---------------------------------------------------------------------
+   A bare-bones but interesting aqueous mixture to test ideal-solution functions 
+   and how well mixtures split into supercritical, vapor, and liquid phases *)
+MODEL mixture_bare;
+	(* -----------------------------------------------------------------
+	   Declare the mixture composition, temperature, pressure, and a parameterized 
+	   model that performs the simulation. *)
+	T     "mixture temperature"                  IS_A temperature;
+	p     "mixture pressure"                     IS_A pressure;
+	mixt  "specification of mixture composition" IS_A mixture_spec;
+	mix_test_sim "simulation of the mixture"     IS_A mixture_test_basic(mixt, T, p);
+
+	(* -----------------------------------------------------------------
+	   Define the mixture composition *)
+	mixt.npure :== 3;
+	mixt.components[1] :== 'water';
+	mixt.components[2] :== 'ethanol';
+	mixt.components[3] :== 'carbondioxide';
+	mixt.eos :== 'pengrob';
+	mixt.xs[1] :== 0.83;
+	mixt.xs[2] :== 0.06;
+	mixt.xs[3] :== 0.11;
+
+METHODS
+(* ---------------------------------------------------------------------
+   Fix the variables that are to be fixed *)
+METHOD specify;
+	FIX T;
+	FIX p;
+	RUN mix_test_sim.specify;
+END specify;
+(* ---------------------------------------------------------------------
+   Set values for the fixed variables *)
+METHOD values;
+	T := 300 {K};
+	p := 1.0 {bar};
+	RUN mix_test_sim.values;
+END values;
+(* ---------------------------------------------------------------------
+   Set solver and other options *)
+METHOD options;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END options;
+(* ---------------------------------------------------------------------
+   Quick alias for all preceeding methods; readies the model for solving *)
+METHOD setup;
+	RUN specify;
+	RUN values;
+	RUN options;
+END setup;
+END mixture_bare;
+
+
+(* ---------------------------------------------------------------------
+   First mixture -- an eclectic one *)
+MODEL mixture_one;
+	(* -----------------------------------------------------------------
+	   Declare the mixture composition, and arrays to hold the temperature and 
+	   pressure. *)
+	nsims "number of simulations"               IS_A integer_constant;
+	T[1..nsims] "mixture temperatures"          IS_A temperature;
+	p[1..nsims] "mixture pressures"             IS_A pressure;
+	mixt "specification of mixture composition" IS_A mixture_spec;
+
+	(* -----------------------------------------------------------------
+	   Define the mixture composition *)
+	mixt.npure :== 4;
+	mixt.components[1] :== 'ammonia';
+	mixt.components[2] :== 'cyclohexane';
+	mixt.components[3] :== 'water';
+	mixt.components[4] :== 'toluene';
+	mixt.eos :== 'pengrob';
+	mixt.xs[1] :== 0.3;
+	mixt.xs[2] :== 0.25;
+	mixt.xs[3] :== 0.35;
+	mixt.xs[4] :== 0.10;
+
+	nsims :== 2;
+
+	FOR i1 IN [1..nsims] CREATE
+		mix_test_simulation[i1] IS_A mixture_test_basic(mixt, T[i1], p[i1]);
+	END FOR;
+
+METHODS
+(* ---------------------------------------------------------------------
+   Fix the variables that are to be fixed *)
+METHOD specify;
+	FIX T[1..nsims];
+	FIX p[1..nsims];
+	FOR i2 IN [1..nsims] DO
+		RUN mix_test_simulation[i2].specify;
+	END FOR;
+END specify;
+(* ---------------------------------------------------------------------
+   Set values for the fixed variables *)
+METHOD values;
+	T[1] := 300 {K};
+	p[1] := 1.0 {bar};
+
+	T[2] := 525 {K};
+	p[2] := 0.1 {bar};
+
+	FOR i3 IN [1..nsims] DO
+		RUN mix_test_simulation[i3].values;
+	END FOR;
+END values;
+(* ---------------------------------------------------------------------
+   Set solver and other options *)
+METHOD options;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END options;
+(* ---------------------------------------------------------------------
+   Quick alias for all preceeding methods; readies the model for solving *)
+METHOD setup;
+	RUN specify;
+	RUN values;
+	RUN options;
+END setup;
+END mixture_one;
+
+
+(* ---------------------------------------------------------------------
+   First mixture -- an eclectic one *)
+MODEL mixture_two;
+	(* -----------------------------------------------------------------
+	   Declare the mixture composition, and arrays to hold the temperature and 
+	   pressure. *)
+	nsims "number of simulations"               IS_A integer_constant;
+	T[1..nsims] "mixture temperatures"          IS_A temperature;
+	p[1..nsims] "mixture pressures"             IS_A pressure;
+	mixt "specification of mixture composition" IS_A mixture_spec;
+
+	(* -----------------------------------------------------------------
+	   Define the mixture composition *)
+	mixt.npure :== 3;
+	mixt.components[1] :== 'propane';
+	mixt.components[2] :== 'dimethylether';
+	mixt.components[3] :== 'benzene';
+	mixt.components[4] :== 'acetone';
+	mixt.eos :== 'pengrob';
+	mixt.xs[1] :== 0.35;
+	mixt.xs[2] :== 0.30;
+	mixt.xs[3] :== 0.25;
+	mixt.xs[4] :== 0.10;
+
+	nsims :== 1;
+
+	FOR i1 IN [1..nsims] CREATE
+		mix_test_simulation[i1] IS_A mixture_test_basic(mixt, T[i1], p[i1]);
+	END FOR;
+
+METHODS
+(* ---------------------------------------------------------------------
+   Fix the variables that are to be fixed *)
+METHOD specify;
+	FIX T[1..nsims];
+	FIX p[1..nsims];
+	FOR i2 IN [1..nsims] DO
+		RUN mix_test_simulation[i2].specify;
+	END FOR;
+END specify;
+(* ---------------------------------------------------------------------
+   Set values for the fixed variables *)
+METHOD values;
+	T[1] := 300 {K};
+	p[1] := 1 {bar};
+
+	FOR i3 IN [1..nsims] DO
+		RUN mix_test_simulation[i3].values;
+	END FOR;
+END values;
+(* ---------------------------------------------------------------------
+   Set solver and other options *)
+METHOD options;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END options;
+(* ---------------------------------------------------------------------
+   Quick alias for all preceeding methods; readies the model for solving *)
+METHOD setup;
+	RUN specify;
+	RUN values;
+	RUN options;
+END setup;
+END mixture_two;

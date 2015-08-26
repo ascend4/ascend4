@@ -239,6 +239,8 @@ int asc_mixture_prepare(struct BBoxInterp *bbox, struct Instance *data, struct g
 	for(i=0;i<npure;i++){
 		comps[i] = SCP(SYMC_INST(InstanceChild(compinst, i+1))->value);
 		xs[i] = RC_INST(InstanceChild(xinst, i+1))->value;
+		ERROR_REPORTER_HERE(ASC_USER_NOTE
+				, "Mass fraction number %u is %g", i, xs[i]);
 	}
 
 	/* Create mixture specification in a MixtureSpec struct */
