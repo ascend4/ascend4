@@ -78,7 +78,7 @@ double helmholtz_d2gdrho2_T(double T, double rho, const FluidData *data, FpropsE
 double helmholtz_d2gdTdrho(double T, double rho, const FluidData *data, FpropsError *err);
 
 
-//#define HELM_DEBUG
+#define HELM_DEBUG
 #define HELM_ERRORS
 //#define SAT_DEBUG
 
@@ -260,7 +260,6 @@ double helmholtz_p(double T, double rho, const FluidData *data, FpropsError *err
 	assert(!isnan(T));
 	assert(!isnan(rho));
 	assert(!isnan(HD_R));
-
 	//fprintf(stderr,"p calc: T = %f\n",T);
 	//fprintf(stderr,"p calc: tau = %f\n",tau);
 	//fprintf(stderr,"p calc: rho = %f\n",rho);
@@ -1162,6 +1161,7 @@ double helmholtz_d2gdTdrho(double T, double rho, const FluidData *data, FpropsEr
 	@return 0 on success, non-zero on error (eg algorithm failed to converge, T out of range, etc.)
 */
 double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidData *data, FpropsError *err){
+
 	if(T < data->T_t - 1e-8){
 		ERRMSG("Input temperature %f K is below triple-point temperature %f K",T,data->T_t);
 		return FPROPS_RANGE_ERROR;

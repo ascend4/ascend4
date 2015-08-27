@@ -58,7 +58,7 @@ in FPROPS. For more details see http://ascend4.org/User:Sidharth
 /* TODO refine the above to separate first-order and second-order derivs */
 
 /* forward decls */
-static void build_tables(PureFluid *P);
+static void build_tables(PureFluid *Ph,PureFluid *P);
 
 /*------------------------------------------------------------------------------
 	PREPARE DATA, INITIALISATION
@@ -67,6 +67,7 @@ static void build_tables(PureFluid *P);
 PureFluid * ttse_prepare(const EosData *E, const ReferenceState *ref){
 
     PureFluid *P;
+    PureFluid *Ph;
 
 
 #define TTD P->data->corr.ttse
@@ -75,7 +76,8 @@ PureFluid * ttse_prepare(const EosData *E, const ReferenceState *ref){
     if(E->type == FPROPS_HELMHOLTZ)
     {
        P = helmholtz_prepare(E, NULL);
-       P->data->corr.ttse = FPROPS_NEW(TtseData);
+       Ph = helmholtz_prepare(E, NULL);
+       P->data->corr.ttse = FPROPS_NEW(TtseData);// we overwrite the helmholtz corr with ttsedata
        helmholtz_ttse(& P->data->corr);
     }
     else
@@ -123,11 +125,13 @@ PureFluid * ttse_prepare(const EosData *E, const ReferenceState *ref){
 		save_tables(P);
 	}
 #else
-	build_tables(P);
+	build_tables(Ph,P);
+	helmholtz_destroy(Ph);
 #endif
 
 #define FN(VAR) P->VAR##_fn = &ttse_##VAR;
-	FN(p); FN(u); FN(h); FN(s); FN(g); FN(cp); FN(cv); FN(w);
+	FN(p); FN(u); FN(h); FN(s); FN(g);
+	FN(cp); FN(cv); FN(w);
 	FN(sat);
 	// the undefined ones will raise errors
 	FN(a); FN(alphap); FN(betap); FN(dpdrho_T);
@@ -176,51 +180,52 @@ void ttse_destroy(PureFluid *P){
 /**
     Actual building of tables is done here.
 */
-void build_tables(PureFluid *P){
+void build_tables(PureFluid *Ph,PureFluid *P){
 #define TTD P->data->corr.ttse
 #define TABLE P->data->corr.ttse->table
+#define HELMD Ph->data
 
 	int i,j;
 	FpropsError err = FPROPS_NO_ERROR;
 
-	double Tt = P->data->T_t;
-	double Tc = P->data->T_c;
+	double Tt = Ph->data->T_t;
+	double Tc = Ph->data->T_c;
 	double dT = (Tc - Tt)/(NSAT);
 
 	double  rho1,rho2;
-	P->sat_fn(Tc,&rho1,&rho2,P->data,&err);
+	P->sat_fn(Tc,&rho1,&rho2,HELMD,&err);
 	MSG("triple point and critical temperature and critical density-->  %f  %f  %f",Tt,Tc,rho1);
 
 	MSG("Building saturation tables...");
+
 	for(i=0; i<NSAT; ++i)    {
 
 		double T = Tt + i*dT;
 
 		double  rhof,rhog;
-		P->sat_fn(T,&rhof,&rhog,P->data,&err);
+		P->sat_fn(T,&rhof,&rhog,HELMD,&err);
 
 		// fluid saturation line rho plus 1st & 2nd derivatives of rho wrt T
-		double dpdT_rho  = TTD->dpdT_rho_fn(T,rhof,P->data,&err);
-		double dpdrho_T  = TTD->dpdrho_T_fn(T,rhof,P->data,&err);
+		double dpdT_rho  = TTD->dpdT_rho_fn(T,rhof,HELMD,&err);
+		double dpdrho_T  = TTD->dpdrho_T_fn(T,rhof,HELMD,&err);
 		double drhodT_p =  (-dpdT_rho )/(dpdrho_T);
 
-		double d2pdrho2_T = TTD->d2pdrho2_T_fn(T,rhof,P->data,&err);
-		double d2pdrhodT = TTD->d2pdTdrho_fn(T,rhof,P->data,&err);
-		double d2pdT2_rho = TTD->d2pdT2_rho_fn(T,rhof,P->data,&err);
-
+		double d2pdrho2_T = TTD->d2pdrho2_T_fn(T,rhof,HELMD,&err);
+		double d2pdrhodT = TTD->d2pdTdrho_fn(T,rhof,HELMD,&err);
+		double d2pdT2_rho = TTD->d2pdT2_rho_fn(T,rhof,HELMD,&err);
 		TABLE->satFRho[i] = rhof;
 		TABLE->satFdRhodt[i] = drhodT_p;
 		//PT->satFd2RhodT2[i] =  ddT_drhodT_p_constrho  +  ddrho_drhodT_p_constT * drhodT_p;
 		TABLE->satFd2RhodT2[i] =  (-1.0/pow(dpdrho_T,3))*(d2pdrho2_T*dpdT_rho*dpdT_rho -2*dpdT_rho*dpdrho_T*d2pdrhodT + dpdrho_T*dpdrho_T*d2pdT2_rho);
 
 		// vapour saturation line rho plus 1st & 2nd derivatives of rho wrt T
-		dpdT_rho  = TTD->dpdT_rho_fn(T,rhog,P->data,&err);
-		dpdrho_T  = TTD->dpdrho_T_fn(T,rhog,P->data,&err);
+		dpdT_rho  = TTD->dpdT_rho_fn(T,rhog,HELMD,&err);
+		dpdrho_T  = TTD->dpdrho_T_fn(T,rhog,HELMD,&err);
 		drhodT_p =  (-dpdT_rho )/(dpdrho_T);
 
-		d2pdrho2_T = TTD->d2pdrho2_T_fn(T,rhog,P->data,&err);
-		d2pdrhodT = TTD->d2pdTdrho_fn(T,rhog,P->data,&err);
-		d2pdT2_rho = TTD->d2pdT2_rho_fn(T,rhog,P->data,&err);
+		d2pdrho2_T = TTD->d2pdrho2_T_fn(T,rhog,HELMD,&err);
+		d2pdrhodT = TTD->d2pdTdrho_fn(T,rhog,HELMD,&err);
+		d2pdT2_rho = TTD->d2pdT2_rho_fn(T,rhog,HELMD,&err);
 
 		//   ddrho_drhodT_p_constT = ( dpdT_rho*d2pdrho2_T - dpdrho_T*d2pdrhodT ) / pow(dpdrho_T,2);
 		//   ddT_drhodT_p_constrho = ( dpdT_rho*d2pdrhodT - dpdrho_T*d2pdT2_rho ) / pow(dpdrho_T,2);
@@ -254,7 +259,7 @@ void build_tables(PureFluid *P){
 			double t  = Tmin+i*dT;
 			double rho  = rhomin+j*drho;
 #define X
-#define EVAL_SET(VAR) TTSE_SET(TABLE,VAR,i,j,TTD->VAR##_fn(t,rho,P->data,&err));
+#define EVAL_SET(VAR) TTSE_SET(TABLE,VAR,i,j,TTD->VAR##_fn(t,rho,HELMD,&err));
 		TTSE_MATRICES(X, EVAL_SET)
 #undef EVAL_SET
 #undef X
@@ -281,6 +286,7 @@ double ttse_sat(double T, double *rhof_out, double * rhog_out, const FluidData *
 	int i,j;
 	double Tmin = data->T_t;
 	double Tmax = data->T_c;
+
 	if(T < Tmin-1e-8){
 		ERRMSG("Input Temperature %f K is below triple-point temperature %f K",T,data->T_t);
 		return FPROPS_RANGE_ERROR;
@@ -292,12 +298,12 @@ double ttse_sat(double T, double *rhof_out, double * rhog_out, const FluidData *
 	}
 
 	double dT = (Tmax-Tmin)/NSAT;
-	i = (int)round(((T - Tmin)/(Tmax - Tmin)*(NSAT)));
+	i = (int)(((T - Tmin)/(Tmax - Tmin)*(NSAT)));
+
 	assert(i>=0 && i<NSAT);
 	double delt = T - ( Tmin + i*dT);
 	*rhof_out =  TABLE->satFRho[i] + delt*TABLE->satFdRhodt[i] + 0.5*delt*delt*TABLE->satFd2RhodT2[i];
 	*rhog_out =  TABLE->satGRho[i] + delt*TABLE->satGdRhodt[i] + 0.5*delt*delt*TABLE->satGd2RhodT2[i];
-
 	/* return Psat from the single phase table        */
 	Tmin = TTD->Tmin;
 	Tmax = TTD->Tmax;

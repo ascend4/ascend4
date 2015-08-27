@@ -95,7 +95,7 @@ int fprops_corr_avail(const EosData *E, const char *corrtype){
 	}else if(strcmp(corrtype,"ttse")==0){
 		switch(E->type){
 		case FPROPS_HELMHOLTZ:
-			return FPROPS_HELMHOLTZ;
+			return FPROPS_TTSE;
 		default:
 			return 0;
 		}

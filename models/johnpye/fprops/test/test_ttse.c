@@ -54,18 +54,17 @@ int main(void){
 	//Plot in Mathematica Saturation dome
 	double avgprf=0,avgprg=0;
 
-	int npoints =NSAT*4.7;
+	int npoints =NSAT*4;
 
 	for(i=0;i<npoints;i++){
 
 		double Tt = P->data->T_t;
 		double Tc = P->data->T_c;
-		double dt2p = (Tc - Tt)/NSAT;
-		double T = Tt + (i+0.5)*dt2p;
-		// MSG("%f",T);
+		double dt2p = (Tc - Tt)/npoints;
+		double T = Tt + (i)*dt2p;
 		double psat, rhof,rhog;
 		fprops_sat_T(T,&psat,&rhof,&rhog,Ph,&err);
-		int j = (int)round(  ((T - Tt)/(Tc - Tt))*(NSAT)  );
+		int j = (int)(  ((T - Tt)/(Tc - Tt))*(NSAT)  );
 		assert(j>=0 && j<NSAT);
 		//double delt = T - ( Tt + j*dt2p);
 		double rhofT,rhogT;
@@ -76,7 +75,7 @@ int main(void){
 
 		avgprf += fabs(100*(rhof-rhofT)/rhof);
 		avgprg += fabs(100*(rhog-rhogT)/rhog);
-		// MSG("%f  %f  %f  %f  %f  %f", rhof,rhofT,rhog,rhogT, 100*(rhof-rhofT)/rhof,100*(rhog-rhogT)/rhog );
+	//	 MSG("%f  %f  %f  %f  %f  %f", rhof,rhofT,rhog,rhogT, 100*(rhof-rhofT)/rhof,100*(rhog-rhogT)/rhog );
 
 #if 0
 		// For mathematica print out.
