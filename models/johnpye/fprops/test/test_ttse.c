@@ -54,14 +54,14 @@ int main(void){
 	//Plot in Mathematica Saturation dome
 	double avgprf=0,avgprg=0;
 
-	int npoints =NSAT*4;
+	int npoints =NSAT*40;
 
 	for(i=0;i<npoints;i++){
 
 		double Tt = P->data->T_t;
 		double Tc = P->data->T_c;
 		double dt2p = (Tc - Tt)/npoints;
-		double T = Tt + (i)*dt2p;
+		double T = Tt + (i+0.02)*dt2p;
 		double psat, rhof,rhog;
 		fprops_sat_T(T,&psat,&rhof,&rhog,Ph,&err);
 		int j = (int)(  ((T - Tt)/(Tc - Tt))*(NSAT)  );
