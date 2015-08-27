@@ -31,9 +31,6 @@
 #include "sat.h"
 #include "cp0.h"
 #include "refstate.h"
-#include "ttse.h"
-
-
 
 /* these are the 'raw' functions, they don't do phase equilibrium. */
 PropEvalFn helmholtz_p;
@@ -141,8 +138,6 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 
 	P->data = FPROPS_NEW(FluidData);
 	P->data->corr.helm = FPROPS_NEW(HelmholtzRunData);
-    P->data->UseTable = 0;
-    P->data->IsTableBuilt = 0;
 
 	/* metadata */
 	/* FIXME strings should be copied, not just referenced */
@@ -183,14 +178,9 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 #undef H
 
 	/* function pointers... more to come still? */
-#define FN(VAR) P->VAR##_fn = &helmholtz_##VAR
+#define FN(VAR) P->VAR##_fn = &helmholtz_##VAR;
 	FN(p); FN(u); FN(h); FN(s); FN(a); FN(g); FN(cp); FN(cv); FN(w);
 	FN(alphap); FN(betap); FN(dpdrho_T);
-				 FN(d2pdrho2_T);FN(dpdT_rho);FN(d2pdT2_rho);FN(d2pdTdrho);
-	FN(dhdrho_T);FN(d2hdrho2_T);FN(dhdT_rho);FN(d2hdT2_rho);FN(d2hdTdrho);
-	FN(dsdrho_T);FN(d2sdrho2_T);FN(dsdT_rho);FN(d2sdT2_rho);FN(d2sdTdrho);
-	FN(dudrho_T);FN(d2udrho2_T);FN(dudT_rho);FN(d2udT2_rho);FN(d2udTdrho);
-	FN(dgdrho_T);FN(d2gdrho2_T);FN(dgdT_rho);FN(d2gdT2_rho);FN(d2gdTdrho);
 	FN(sat);
 #undef FN
 
@@ -236,6 +226,24 @@ void helmholtz_destroy(PureFluid *P){
 	FPROPS_FREE(P);
 }
 
+
+/**
+    Supporting functions which calculate useful derivatives for TTSE
+    Here we will add future derivatives we might need
+    */
+
+void helmholtz_ttse(CorrelationUnion *corr){
+
+        #define FN(VAR) corr->ttse->VAR##_fn = &helmholtz_##VAR;
+        FN(p);FN(h);FN(s);FN(u);FN(g);
+        FN(dpdrho_T);FN(d2pdrho2_T);FN(dpdT_rho);FN(d2pdT2_rho);FN(d2pdTdrho);
+        FN(dhdrho_T);FN(d2hdrho2_T);FN(dhdT_rho);FN(d2hdT2_rho);FN(d2hdTdrho);
+        FN(dsdrho_T);FN(d2sdrho2_T);FN(dsdT_rho);FN(d2sdT2_rho);FN(d2sdTdrho);
+        FN(dudrho_T);FN(d2udrho2_T);FN(dudT_rho);FN(d2udT2_rho);FN(d2udTdrho);
+        FN(dgdrho_T);FN(d2gdrho2_T);FN(dgdT_rho);FN(d2gdT2_rho);FN(d2gdTdrho);
+        #undef FN
+
+    }
 /**
 	Function to calculate pressure from Helmholtz free energy EOS, given temperature
 	and mass density.
@@ -245,7 +253,6 @@ void helmholtz_destroy(PureFluid *P){
 	@return pressure in Pa
 */
 double helmholtz_p(double T, double rho, const FluidData *data, FpropsError *err){
-	if(data->UseTable) return evaluate_ttse_p(T,rho,data->table);
 	DEFINE_TD;
 
 	assert(HD->rho_star!=0);
@@ -283,7 +290,6 @@ double helmholtz_p(double T, double rho, const FluidData *data, FpropsError *err
 	@return internal energy in ???
 */
 double helmholtz_u(double T, double rho, const FluidData *data, FpropsError *err){
-	if(data->UseTable) return evaluate_ttse_u(T,rho,data->table);
 	DEFINE_TD;
 
 #ifdef TEST
@@ -312,7 +318,6 @@ double helmholtz_u(double T, double rho, const FluidData *data, FpropsError *err
 	@return enthalpy in J/kg
 */
 double helmholtz_h(double T, double rho, const FluidData *data, FpropsError *err){
-	if(data->UseTable) return evaluate_ttse_h(T,rho,data->table);
 	DEFINE_TD;
 
 //#ifdef TEST
@@ -337,7 +342,6 @@ double helmholtz_h(double T, double rho, const FluidData *data, FpropsError *err
 	@return entropy in J/kgK
 */
 double helmholtz_s(double T, double rho, const FluidData *data, FpropsError *err){
-	if(data->UseTable) return evaluate_ttse_s(T,rho,data->table);
 	DEFINE_TD;
 
 #ifdef ENTROPY_DEBUG
@@ -456,7 +460,6 @@ double helmholtz_w(double T, double rho, const FluidData *data, FpropsError *err
 	@return Gibbs energy, in J/kg.
 */
 double helmholtz_g(double T, double rho, const FluidData *data, FpropsError *err){
-	if(data->UseTable) return evaluate_ttse_g(T,rho,data->table);
 	DEFINE_TD;
 
 	double phir_d = helm_resid_del(tau,delta,HD);
@@ -1159,9 +1162,6 @@ double helmholtz_d2gdTdrho(double T, double rho, const FluidData *data, FpropsEr
 	@return 0 on success, non-zero on error (eg algorithm failed to converge, T out of range, etc.)
 */
 double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidData *data, FpropsError *err){
-
-    if(data->UseTable) return evaluate_ttse_sat(T,rhof_out,rhog_out,data,err);
-
 	if(T < data->T_t - 1e-8){
 		ERRMSG("Input temperature %f K is below triple-point temperature %f K",T,data->T_t);
 		return FPROPS_RANGE_ERROR;

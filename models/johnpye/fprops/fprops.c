@@ -43,9 +43,11 @@
 # include "color.h"
 # define MSG FPROPS_MSG
 # define ERRMSG FPROPS_ERRMSG
+# include <assert.h>
 #else
 # define MSG(ARGS...) ((void)0)
 # define ERRMSG(ARGS...) ((void)0)
+# define assert(ARGS...)
 #endif
 
 #include <stdio.h>
@@ -105,21 +107,20 @@ int fprops_corr_avail(const EosData *E, const char *corrtype){
 PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 	PureFluid *P = NULL;
 	FpropsError err = FPROPS_NO_ERROR;
-	MSG("Working with EosData name '%s', source '%s", E->name, E->source);
+	MSG("Working with EosData name '%s', source '%s'", E->name, E->source);
 	MSG("Chosen correlation: %d (requested %s)", fprops_corr_avail(E,corrtype),corrtype);
 	switch(fprops_corr_avail(E,corrtype)){
 	case FPROPS_HELMHOLTZ:
-		P = helmholtz_prepare(E,NULL);
-        if(0==strcmp(corrtype,"ttse")){
-           ttse_prepare(P);
-           P->data->UseTable=1;
-        }
+	    P = helmholtz_prepare(E,NULL);
 		break;
 	case FPROPS_PENGROB:
 		P = pengrob_prepare(E,NULL);
 		break;
 	case FPROPS_IDEAL:
 		P = ideal_prepare(E,NULL);
+		break;
+    case FPROPS_TTSE:  //We check inside the TTSE if the correct correlation needed to build the tables is helmholtz indeed (for now)
+		P = ttse_prepare(E,NULL);
 		break;
 	default:
 		ERRMSG("Invalid EOS data, unimplemented correlation type requested");
@@ -166,6 +167,7 @@ FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsE
 #define EVALFN(VAR) \
 	double fprops_##VAR(FluidState state, FpropsError *err){\
 		double p, rho_f, rho_g;\
+		assert(state.fluid->VAR##_fn != NULL);\
 		if(state.T >= state.fluid->data->T_t && state.T < state.fluid->data->T_c){\
 			fprops_sat_T(state.T, &p, &rho_f, &rho_g, state.fluid, err);\
 			if(*err){\
@@ -186,6 +188,7 @@ FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsE
 #define EVALFN_SATUNDEFINED(VAR) \
 	double fprops_##VAR(FluidState state, FpropsError *err){\
 		double p, rho_f, rho_g;\
+		assert(state.fluid->VAR##_fn != NULL);\
 		if(state.T >= state.fluid->data->T_t && state.T < state.fluid->data->T_c){\
 			fprops_sat_T(state.T, &p, &rho_f, &rho_g, state.fluid, err);\
 			if(*err){\
@@ -202,7 +205,7 @@ FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsE
 EVALFN(p); EVALFN(u); EVALFN(h); EVALFN(s); EVALFN(a); EVALFN(g);
 EVALFN_SATUNDEFINED(cp); EVALFN_SATUNDEFINED(cv);
 EVALFN_SATUNDEFINED(w);
-EVALFN(dpdrho_T); EVALFN(d2pdrho2_T);  EVALFN(dpdT_rho);  EVALFN(d2pdT2_rho); EVALFN(d2pdTdrho);
+EVALFN(dpdrho_T);// EVALFN(d2pdrho2_T);  EVALFN(dpdT_rho);  EVALFN(d2pdT2_rho); EVALFN(d2pdTdrho);
 EVALFN(alphap); EVALFN(betap);
 //EVALFN(dpdT_rho);
 //EVALFN(dpdrho_T); EVALFN(d2pdrho2_T); EVALFN(dhdT_rho); EVALFN(dhdrho_T);

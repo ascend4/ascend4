@@ -1,433 +1,405 @@
+/*	ASCEND modelling environment
+	Copyright (C) 2015 Sidharth, John Pye
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*//** @file
+Implementation for Tabulated Taylor Series Expansion (TTSE) property evaluation
+in FPROPS. For more details see http://ascend4.org/User:Sidharth
+*/
 
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-
 #include "rundata.h"
 #include "ttse.h"
+#include "helmholtz.h"
 
-
+#define NRHOP 200
+#define NTP 200
 
 #define TTSE_DEBUG //sid change
 #ifdef TTSE_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
 # define ERRMSG FPROPS_ERRMSG
+# include <assert.h>
 #else
 # define MSG(ARGS...) ((void)0)
 # define ERRMSG(ARGS...) ((void)0)
+# define assert(ARGS...)
 #endif
-
 
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/error.h>
 
-#define TAB_FOLDER  "tables"
 
-//#define FO
 #define SO
-inline TtseMatrix alloc_matrix(int tp, int rhop) {
+//#define TTSE_USE_FILE_CACHE
 
-    TtseMatrix matrix =  ASC_NEW_ARRAY (TtseMatrix, tp*rhop);  //tp rows and rhop columns
-/*
-    matrix[10][24] = 99;
-    printf("%f\n", *((double*)matrix+(tp*10)+24));
-    matrix[20][44] = -99;
-    printf("%f\n", *((double*)matrix+(tp*20)+44));
-    matrix[30][64] = 199;
-    printf("%f\n", *((double*)matrix+(tp*30)+64));
+/* TODO: at the moment, all our TTSE tables are fixed size, per #defs for NTP and NRHOP */
+#define TTSE_ALLOC(TP, RHOP) ASC_NEW_ARRAY(double,TP*RHOP);
+#define TTSE_FREE(MAT) ASC_FREE(MAT)
+#define TTSE_SET(TAB,NAME,TI,RHOI,VAL) TAB->NAME[TI*NRHOP + RHOI] = VAL
+#define TTSE_GET(TAB,NAME,TI,RHOI) TAB->NAME[TI*NRHOP + RHOI]
+
+/* NOTE, the #define list 'TTSE_MATRICES' list is defined in rundata.h. */
+/* TODO refine the above to separate first-order and second-order derivs */
+
+/* forward decls */
+static void build_tables(PureFluid *P);
+
+/*------------------------------------------------------------------------------
+	PREPARE DATA, INITIALISATION
 */
-    return matrix;
+
+PureFluid * ttse_prepare(const EosData *E, const ReferenceState *ref){
+
+    PureFluid *P;
+
+
+#define TTD P->data->corr.ttse
+#define TABLE P->data->corr.ttse->table
+
+    if(E->type == FPROPS_HELMHOLTZ)
+    {
+       P = helmholtz_prepare(E, NULL);
+       P->data->corr.ttse = FPROPS_NEW(TtseData);
+       helmholtz_ttse(& P->data->corr);
+    }
+    else
+    {
+
+		ERRMSG("TTSE not implemented for the current correlation selection");
+		return NULL;
+    }
+
+#ifdef TTSE_DEBUG
+	//FILE *F1 = fopen("ttse.txt","w");
+	//fprintf(F1,"%f   %f\n",t, P->p_fn( t, rho , P->data,&err) );
+#endif
+
+
+	/* common data across all correlation types */
+	MSG("Inside TTSE");
+	TABLE = FPROPS_NEW(Ttse);
+
+	/* allocate space for data tables */
+	TABLE->satFRho =  ASC_NEW_ARRAY ( double, NSAT);
+	TABLE->satFdRhodt =  ASC_NEW_ARRAY (double, NSAT);
+	TABLE->satFd2RhodT2 =  ASC_NEW_ARRAY (double, NSAT);
+	TABLE->satGRho =  ASC_NEW_ARRAY (double, NSAT);
+	TABLE->satGdRhodt =  ASC_NEW_ARRAY (double, NSAT);
+	TABLE->satGd2RhodT2 =  ASC_NEW_ARRAY (double, NSAT);
+
+#define X ;
+#define I(M) TABLE->M = TTSE_ALLOC(NTP,NRHOP)
+	TTSE_MATRICES(X,I);
+#undef X
+#undef I
+	//Pseudo values for water
+	/* FIXME TODO XXX Should be implemented elsewhere on per-fluid basis */
+	TTD->Tmin = 200;
+	TTD->Tmax = 4200;
+	TTD->rhomin = 0.0001;
+	TTD->rhomax = 2000;
+
+#ifdef TTSE_USE_FILE_CACHE
+	if(doesdbexist(P))//file exists in tables/
+		load_tables(P);
+	else{
+		build_tables(P);
+		save_tables(P);
+	}
+#else
+	build_tables(P);
+#endif
+
+#define FN(VAR) P->VAR##_fn = &ttse_##VAR;
+	FN(p); FN(u); FN(h); FN(s); FN(g); FN(cp); FN(cv); FN(w);
+	FN(sat);
+	// the undefined ones will raise errors
+	FN(a); FN(alphap); FN(betap); FN(dpdrho_T);
+#undef FN
+
+#define FN(VAR) TTD->VAR##_fn = NULL;
+    FN(p);FN(h);FN(s);FN(u);FN(g);
+    FN(dpdrho_T);FN(d2pdrho2_T);FN(dpdT_rho);FN(d2pdT2_rho);FN(d2pdTdrho);
+	FN(dhdrho_T);FN(d2hdrho2_T);FN(dhdT_rho);FN(d2hdT2_rho);FN(d2hdTdrho);
+	FN(dsdrho_T);FN(d2sdrho2_T);FN(dsdT_rho);FN(d2sdT2_rho);FN(d2sdTdrho);
+	FN(dudrho_T);FN(d2udrho2_T);FN(dudT_rho);FN(d2udT2_rho);FN(d2udTdrho);
+	FN(dgdrho_T);FN(d2gdrho2_T);FN(dgdT_rho);FN(d2gdT2_rho);FN(d2gdTdrho);
+#undef FN
+
+#ifdef TTSE_DEBUG
+	//fclose(F1);
+#endif
+
+#undef TABLE
+#undef TTD
+
+    return P;
 }
 
+void ttse_destroy(PureFluid *P){
+#define TABLE P->data->corr.ttse->table
+	ASC_FREE(TABLE->satFRho );
+	ASC_FREE(TABLE->satFdRhodt );
+	ASC_FREE(TABLE->satFd2RhodT2 );
+	ASC_FREE(TABLE->satGRho );
+	ASC_FREE(TABLE->satGdRhodt );
+	ASC_FREE(TABLE->satGd2RhodT2 );
 
-inline void remove_matrix(TtseMatrix mat , int tp){
-
-    ASC_FREE(mat);
+#define X ;
+#define I(M) TTSE_FREE(TABLE->M);TABLE->M = NULL;
+	TTSE_MATRICES(X,I)
+#undef X
+#undef I
+#undef TABLE
 }
 
+/*------------------------------------------------------------------------------
+  BUILD TABLES, LOAD AND SAVE FROM FILE
+*/
 
-void alloc_tables(Ttse * table)
-{
-
-    table->satFRho =  ASC_NEW_ARRAY ( double , NSAT);
-    table->satFdRhodt =  ASC_NEW_ARRAY (double, NSAT);
-    table->satFd2RhodT2 =  ASC_NEW_ARRAY (double, NSAT);
-    table->satGRho =  ASC_NEW_ARRAY (double, NSAT);
-    table->satGdRhodt =  ASC_NEW_ARRAY (double, NSAT);
-    table->satGd2RhodT2 =  ASC_NEW_ARRAY (double, NSAT);
-
-
-
-    table->s = alloc_matrix(NTP,NRHOP);
-    table->dsdt = alloc_matrix(NTP,NRHOP);
-    table->d2sdt2 = alloc_matrix(NTP,NRHOP);
-    table->dsdrho = alloc_matrix(NTP,NRHOP);
-    table->d2sdrho2 = alloc_matrix(NTP,NRHOP);
-    table->d2sdtdrho = alloc_matrix(NTP,NRHOP);
-
-
-    table->p = alloc_matrix(NTP,NRHOP);
-    table->dpdt = alloc_matrix(NTP,NRHOP);
-    table->d2pdt2 = alloc_matrix(NTP,NRHOP);
-    table->dpdrho = alloc_matrix(NTP,NRHOP);
-    table->d2pdrho2 = alloc_matrix(NTP,NRHOP);
-    table->d2pdtdrho = alloc_matrix(NTP,NRHOP);
-
-
-    table->u = alloc_matrix(NTP,NRHOP);
-    table->dudt = alloc_matrix(NTP,NRHOP);
-    table->d2udt2 = alloc_matrix(NTP,NRHOP);
-    table->dudrho = alloc_matrix(NTP,NRHOP);
-    table->d2udrho2 = alloc_matrix(NTP,NRHOP);
-    table->d2udtdrho = alloc_matrix(NTP,NRHOP);
-
-
-    table->g = alloc_matrix(NTP,NRHOP);
-    table->dgdt = alloc_matrix(NTP,NRHOP);
-    table->d2gdt2 = alloc_matrix(NTP,NRHOP);
-    table->dgdrho = alloc_matrix(NTP,NRHOP);
-    table->d2gdrho2 = alloc_matrix(NTP,NRHOP);
-    table->d2gdtdrho = alloc_matrix(NTP,NRHOP);
-
-
-
-    table->h = alloc_matrix(NTP,NRHOP);
-    table->dhdt = alloc_matrix(NTP,NRHOP);
-    table->d2hdt2 = alloc_matrix(NTP,NRHOP);
-    table->dhdrho = alloc_matrix(NTP,NRHOP);
-    table->d2hdrho2 = alloc_matrix(NTP,NRHOP);
-    table->d2hdtdrho = alloc_matrix(NTP,NRHOP);
-}
-
-
-void remove_tables(Ttse *table)
-{
-
-    ASC_FREE(table->satFRho );
-    ASC_FREE(table->satFdRhodt );
-    ASC_FREE(table->satFd2RhodT2 );
-
-    ASC_FREE(table->satGRho );
-    ASC_FREE(table->satGdRhodt );
-    ASC_FREE(table->satGd2RhodT2 );
-
-    remove_matrix(table->dsdt,NTP);
-    remove_matrix(table->d2sdt2,NTP);
-    remove_matrix(table->dsdrho,NTP);
-    remove_matrix(table->d2sdrho2,NTP);
-    remove_matrix(table->d2sdtdrho,NTP);
-
-    remove_matrix(table->dpdt,NTP);
-    remove_matrix(table->d2pdt2,NTP);
-    remove_matrix(table->dpdrho,NTP);
-    remove_matrix(table->d2pdrho2,NTP);
-    remove_matrix(table->d2pdtdrho,NTP);
-
-
-    remove_matrix(table->dudt,NTP);
-    remove_matrix(table->d2udt2,NTP);
-    remove_matrix(table->dudrho,NTP);
-    remove_matrix(table->d2udrho2,NTP);
-    remove_matrix(table->d2udtdrho,NTP);
-
-    remove_matrix(table->dgdt,NTP);
-    remove_matrix(table->d2gdt2,NTP);
-    remove_matrix(table->dgdrho,NTP);
-    remove_matrix(table->d2gdrho2,NTP);
-    remove_matrix(table->d2gdtdrho,NTP);
-
-    remove_matrix(table->dhdt,NTP);
-    remove_matrix(table->d2hdt2,NTP);
-    remove_matrix(table->dhdrho,NTP);
-    remove_matrix(table->d2hdrho2,NTP);
-    remove_matrix(table->d2hdtdrho,NTP);
-
-}
-
-/*
+/**
     Actual building of tables is done here.
 */
 void build_tables(PureFluid *P){
+#define TTD P->data->corr.ttse
+#define TABLE P->data->corr.ttse->table
 
-    #ifndef PT
-    #define PT P->data->table
+	int i,j;
+	FpropsError err = FPROPS_NO_ERROR;
 
-    int i,j;
-    FpropsError err = FPROPS_NO_ERROR;
+	double Tt = P->data->T_t;
+	double Tc = P->data->T_c;
+	double dT = (Tc - Tt)/(NSAT);
 
-    double Tt = P->data->T_t;
-    double Tc = P->data->T_c;
-    double dt = (Tc - Tt)/(NSAT);
+	double  rho1,rho2;
+	P->sat_fn(Tc,&rho1,&rho2,P->data,&err);
+	MSG("triple point and critical temperature and critical density-->  %f  %f  %f",Tt,Tc,rho1);
 
-    double  rho1,rho2;
-    P->sat_fn(Tc,&rho1,&rho2,P->data,&err);
-    MSG("triple point and critical temperature and critical density-->  %f  %f  %f",Tt,Tc,rho1);
+	MSG("Building saturation tables...");
+	for(i=0; i<NSAT; ++i)    {
 
-    for(i=0; i<NSAT; ++i)
-    {
+		double T = Tt + i*dT;
 
-        double T = Tt + i*dt;
+		double  rhof,rhog;
+		P->sat_fn(T,&rhof,&rhog,P->data,&err);
 
-        double  rhof,rhog;
-        P->sat_fn(T,&rhof,&rhog,P->data,&err);
+		// fluid saturation line rho plus 1st & 2nd derivatives of rho wrt T
+		double dpdT_rho  = TTD->dpdT_rho_fn(T,rhof,P->data,&err);
+		double dpdrho_T  = TTD->dpdrho_T_fn(T,rhof,P->data,&err);
+		double drhodT_p =  (-dpdT_rho )/(dpdrho_T);
 
+		double d2pdrho2_T = TTD->d2pdrho2_T_fn(T,rhof,P->data,&err);
+		double d2pdrhodT = TTD->d2pdTdrho_fn(T,rhof,P->data,&err);
+		double d2pdT2_rho = TTD->d2pdT2_rho_fn(T,rhof,P->data,&err);
 
-        //The fluid saturation line rho's and 1st & 2nd  derivatives of rho with respect to T
+		TABLE->satFRho[i] = rhof;
+		TABLE->satFdRhodt[i] = drhodT_p;
+		//PT->satFd2RhodT2[i] =  ddT_drhodT_p_constrho  +  ddrho_drhodT_p_constT * drhodT_p;
+		TABLE->satFd2RhodT2[i] =  (-1.0/pow(dpdrho_T,3))*(d2pdrho2_T*dpdT_rho*dpdT_rho -2*dpdT_rho*dpdrho_T*d2pdrhodT + dpdrho_T*dpdrho_T*d2pdT2_rho);
 
-        double dpdT_rho  = P->dpdT_rho_fn(T,rhof,P->data,&err);
-        double dpdrho_T  = P->dpdrho_T_fn(T,rhof,P->data,&err);
-        double drhodT_p =  (-dpdT_rho )/(dpdrho_T);
+		// vapour saturation line rho plus 1st & 2nd derivatives of rho wrt T
+		dpdT_rho  = TTD->dpdT_rho_fn(T,rhog,P->data,&err);
+		dpdrho_T  = TTD->dpdrho_T_fn(T,rhog,P->data,&err);
+		drhodT_p =  (-dpdT_rho )/(dpdrho_T);
 
+		d2pdrho2_T = TTD->d2pdrho2_T_fn(T,rhog,P->data,&err);
+		d2pdrhodT = TTD->d2pdTdrho_fn(T,rhog,P->data,&err);
+		d2pdT2_rho = TTD->d2pdT2_rho_fn(T,rhog,P->data,&err);
 
-        double d2pdrho2_T = P->d2pdrho2_T_fn(T,rhof,P->data,&err);
-        double d2pdrhodT = P->d2pdTdrho_fn(T,rhof,P->data,&err);
-        double d2pdT2_rho = P->d2pdT2_rho_fn(T,rhof,P->data,&err);
+		//   ddrho_drhodT_p_constT = ( dpdT_rho*d2pdrho2_T - dpdrho_T*d2pdrhodT ) / pow(dpdrho_T,2);
+		//   ddT_drhodT_p_constrho = ( dpdT_rho*d2pdrhodT - dpdrho_T*d2pdT2_rho ) / pow(dpdrho_T,2);
 
+		TABLE->satGRho[i] = rhog;
+		TABLE->satGdRhodt[i] = drhodT_p;
+		//PT->satGd2RhodT2[i] =  ddT_drhodT_p_constrho  +  ddrho_drhodT_p_constT * drhodT_p;
+		TABLE->satGd2RhodT2[i] =  (-1.0/pow(dpdrho_T,3))*( d2pdrho2_T*dpdT_rho*dpdT_rho -2*dpdT_rho*dpdrho_T*d2pdrhodT + dpdrho_T*dpdrho_T*d2pdT2_rho );
 
-        PT->satFRho[i] = rhof;
-        PT->satFdRhodt[i] = drhodT_p;
-        //PT->satFd2RhodT2[i] =  ddT_drhodT_p_constrho  +  ddrho_drhodT_p_constT * drhodT_p;
-        PT->satFd2RhodT2[i] =  (-1.0/pow(dpdrho_T,3))*( d2pdrho2_T*dpdT_rho*dpdT_rho -2*dpdT_rho*dpdrho_T*d2pdrhodT + dpdrho_T*dpdrho_T*d2pdT2_rho );
+		// MSG("%f  %f  %f ---  %f  %f  %f",PT->satFRho[i] , PT->satFdRhodt[i], PT->satFd2RhodT2[i],PT->satGRho[i] , PT->satGdRhodt[i], PT->satGd2RhodT2[i]) ;
+	}
 
+	double Tmin,Tmax,rhomin,rhomax;
+	Tmin = TTD->Tmin;
+	Tmax = TTD->Tmax;
+	rhomin = TTD->rhomin;
+	rhomax = TTD->rhomax;
+	dT = (Tmax-Tmin)/NTP;
+	double drho = (rhomax-rhomin)/NRHOP;
+	MSG("DT = %f K, Drho =  %f kg/m3",dT,drho);
 
-        //The Vapour saturation line rho's and 1st & 2nd derivatives of rho with respect to T
-
-        dpdT_rho  = P->dpdT_rho_fn(T,rhog,P->data,&err);
-        dpdrho_T  = P->dpdrho_T_fn(T,rhog,P->data,&err);
-        drhodT_p =  (-dpdT_rho )/(dpdrho_T);
-
-
-        d2pdrho2_T = P->d2pdrho2_T_fn(T,rhog,P->data,&err);
-        d2pdrhodT = P->d2pdTdrho_fn(T,rhog,P->data,&err);
-        d2pdT2_rho = P->d2pdT2_rho_fn(T,rhog,P->data,&err);
-
-     //   ddrho_drhodT_p_constT = ( dpdT_rho*d2pdrho2_T - dpdrho_T*d2pdrhodT ) / pow(dpdrho_T,2);
-     //   ddT_drhodT_p_constrho = ( dpdT_rho*d2pdrhodT - dpdrho_T*d2pdT2_rho ) / pow(dpdrho_T,2);
-
-
-
-        PT->satGRho[i] = rhog;
-        PT->satGdRhodt[i] = drhodT_p;
-        //PT->satGd2RhodT2[i] =  ddT_drhodT_p_constrho  +  ddrho_drhodT_p_constT * drhodT_p;
-        PT->satGd2RhodT2[i] =  (-1.0/pow(dpdrho_T,3))*( d2pdrho2_T*dpdT_rho*dpdT_rho -2*dpdT_rho*dpdrho_T*d2pdrhodT + dpdrho_T*dpdrho_T*d2pdT2_rho );
-
-     //   MSG("%f  %f  %f ---  %f  %f  %f",PT->satFRho[i] , PT->satFdRhodt[i], PT->satFd2RhodT2[i],PT->satGRho[i] , PT->satGdRhodt[i], PT->satGd2RhodT2[i]) ;
-    }
-
-
-    double tmin,tmax,rhomin,rhomax;
-
-
-
-
-    tmin = PT->tmin;
-    tmax = PT->tmax;
-    rhomin = PT->rhomin;
-    rhomax = PT->rhomax;
-
-    dt = (tmax-tmin)/NTP;
-    double drho = (rhomax-rhomin)/NRHOP;
-
-
-    MSG("DTemp is %f and DRho is  %f",dt,drho);
-    MSG("BUILDING TABLES");
-
-    clock_t start = clock();
-
-    for( i = 0; i < NTP; i++)
-    for( j = 0; j < NRHOP; j++){
-
-        double t  = tmin+i*dt;
-        double rho  = rhomin+j*drho;
-
-        PT->p[i][j] = P->p_fn( t, rho , P->data, &err);
-        PT->dpdt[i][j] = P->dpdT_rho_fn( t, rho , P->data, &err);
-        PT->dpdrho[i][j] = P->dpdrho_T_fn( t, rho , P->data, &err);
-#ifdef SO
-        PT->d2pdt2[i][j] = P->d2pdT2_rho_fn( t, rho , P->data, &err);
-        PT->d2pdrho2[i][j] = P->d2pdrho2_T_fn( t, rho , P->data, &err);
-        PT->d2pdtdrho[i][j] = P->d2pdTdrho_fn( t, rho , P->data, &err);
+	MSG("Building main TTSE tables...");
+	clock_t start = clock();
+	for( i = 0; i < NTP; i++){
+		for( j = 0; j < NRHOP; j++){
+#ifdef TTSE_DEBUG
+			if(0 == j + i*NRHOP % 300){
+				fprintf(stderr," %5.1f %%\r",100*(j+i*(float)(NRHOP))/(NRHOP*NTP));
+			}
 #endif
+			double t  = Tmin+i*dT;
+			double rho  = rhomin+j*drho;
+#define X
+#define EVAL_SET(VAR) TTSE_SET(TABLE,VAR,i,j,TTD->VAR##_fn(t,rho,P->data,&err));
+		TTSE_MATRICES(X, EVAL_SET)
+#undef EVAL_SET
+#undef X
+		}
+	}
 
-        PT->h[i][j] = P->h_fn( t, rho , P->data, &err);
-        PT->dhdt[i][j] = P->dhdT_rho_fn( t, rho , P->data, &err);
-        PT->dhdrho[i][j] = P->dhdrho_T_fn( t, rho , P->data, &err);
-#ifdef SO
-        PT->d2hdt2[i][j] = P->d2hdT2_rho_fn( t, rho , P->data, &err);
-        PT->d2hdrho2[i][j] = P->d2hdrho2_T_fn( t, rho , P->data, &err);
-        PT->d2hdtdrho[i][j] = P->d2hdTdrho_fn( t, rho , P->data, &err);
-#endif
-
-        PT->s[i][j] = P->s_fn( t, rho , P->data, &err);
-        PT->dsdt[i][j] = P->dsdT_rho_fn( t, rho , P->data, &err);
-        PT->dsdrho[i][j] = P->dsdrho_T_fn( t, rho , P->data, &err);
-#ifdef SO
-        PT->d2sdt2[i][j] = P->d2sdT2_rho_fn( t, rho , P->data, &err);
-        PT->d2sdrho2[i][j] = P->d2sdrho2_T_fn( t, rho , P->data, &err);
-        PT->d2sdtdrho[i][j] = P->d2sdTdrho_fn( t, rho , P->data, &err);
-#endif
-        PT->u[i][j] = P->u_fn( t, rho , P->data, &err);
-        PT->dudt[i][j] = P->dudT_rho_fn( t, rho , P->data, &err);
-        PT->dudrho[i][j] = P->dudrho_T_fn( t, rho , P->data, &err);
-#ifdef SO
-        PT->d2udt2[i][j] = P->d2udT2_rho_fn( t, rho , P->data, &err);
-        PT->d2udrho2[i][j] = P->d2udrho2_T_fn( t, rho , P->data, &err);
-        PT->d2udtdrho[i][j] = P->d2udTdrho_fn( t, rho , P->data, &err);
-#endif
-
-        PT->g[i][j] = P->g_fn( t, rho , P->data, &err);
-        PT->dgdt[i][j] = P->dgdT_rho_fn( t, rho , P->data, &err);
-        PT->dgdrho[i][j] = P->dgdrho_T_fn( t, rho , P->data, &err);
-#ifdef SO
-        PT->d2gdt2[i][j] = P->d2gdT2_rho_fn( t, rho , P->data, &err);
-        PT->d2gdrho2[i][j] = P->d2gdrho2_T_fn( t, rho , P->data, &err);
-        PT->d2gdtdrho[i][j] = P->d2gdTdrho_fn( t, rho , P->data, &err);
-#endif
-    }
-
-
-    clock_t end = clock();
-    double msec = (double)(end - start) / (CLOCKS_PER_SEC/1000);
-    MSG("Tables built in %f seconds", msec/1000);
-
-    P->data->IsTableBuilt=1;
-
-    #undef PT
-    #endif
-}
-
-
-
-double evaluate_ttse_sat(double T, double *rhof_out, double * rhog_out, const FluidData *data, FpropsError *err){
-
-    #ifndef PT
-    #define PT data->table
-
-    int i,j;
-    double tmin = data->T_t;
-    double tmax = data->T_c;
-
-    if(T < tmin-1e-8){
-    ERRMSG("Input Temperature %f K is below triple-point temperature %f K",T,data->T_t);
-    return FPROPS_RANGE_ERROR;
-    }
-
-    if(T > tmax+1e-8){
-    ERRMSG("Input Temperature is above critical point temperature");
-    *err = FPROPS_RANGE_ERROR;
-    }
-
-    double dt = (tmax-tmin)/NSAT;
-    i = (int)round(((T - tmin)/(tmax - tmin)*(NSAT)));
-    //MSG("%d %f %f %f",i,T,tmax,tmin);
-    if(i<0)i=0;
-    if(i>=NSAT)i=NSAT-1;
-    assert(i>=0 && i<NSAT);
-    double delt = T - ( tmin + i*dt);
-    *rhof_out =  PT->satFRho[i] + delt*PT->satFdRhodt[i] + 0.5*delt*delt*PT->satFd2RhodT2[i];
-    *rhog_out =  PT->satGRho[i] + delt*PT->satGdRhodt[i] + 0.5*delt*delt*PT->satGd2RhodT2[i];
-
-
-/* return Psat from the single phase table        */
-    tmin = PT->tmin;
-    tmax = PT->tmax;
-    double rhomin  = PT->rhomin;
-    double rhomax = PT->rhomax;
-
-
-
-    dt = (tmax-tmin)/NTP;
-    double drho = (rhomax-rhomin)/NRHOP;
-    i = (int)round(((T-tmin)/(tmax-tmin)*(NTP)));
-    j = (int)round(((*rhog_out-rhomin)/(rhomax-rhomin)*(NRHOP)));
-
-    assert(i>=0&&i<NTP);
-    assert(j>=0&&j<NRHOP);
-    delt = T - ( tmin + i*dt);
-    double delrho = *rhog_out - ( rhomin + j*drho);
-  //  MSG("%d  %d  %f  %f  %f  %f  %f  %f  %f",i,j,T,*rhof_out,*rhog_out,tmin,tmax,rhomin,rhomax);
-    double ttseP = PT->p[i][j]
-         + delt*PT->dpdt[i][j] + 0.5*delt*delt*PT->d2pdt2[i][j]
-         + delrho*PT->dpdrho[i][j] + 0.5*delrho*delrho*PT->d2pdrho2[i][j]
-         + delrho*delt*PT->d2pdtdrho[i][j];
-    return ttseP; // return P_sat
-
-    #undef PT
-    #endif
+	clock_t end = clock();
+	double msec = (double)(end - start) / (CLOCKS_PER_SEC/1000);
+	MSG("Tables built in %f seconds", msec/1000);
+	TTD->IsTableBuilt=1;
+#undef PT
+#undef TTD
+#undef TABLE
 
 }
 
-/*
-    Second Order Taylor series expansion
+/*------------------------------------------------------------------------------
+  TTSE EVALUATION ROUTINES
 */
-#ifdef SO
-#define EVALTTSEFN(VAR) \
-	double evaluate_ttse_##VAR( double t, double rho , Ttse* table){\
-        int i,j;\
-        double tmin = table->tmin;\
-        double tmax = table->tmax;\
-        double rhomin = table->rhomin;\
-        double rhomax = table->rhomax;\
-        double dt = (tmax-tmin)/NTP;\
-        double drho = (rhomax-rhomin)/NRHOP;\
-        i = (int)round(((t-tmin)/(tmax-tmin)*(NTP)));\
-        j = (int)round(((rho-rhomin)/(rhomax-rhomin)*(NRHOP)));\
-        double delt = t - ( tmin + i*dt);\
-        double delrho = rho - ( rhomin + j*drho);\
-        double ttse##VAR = table->VAR[i][j]\
-             + delt*table->d##VAR##dt[i][j] + 0.5*delt*delt*table->d2##VAR##dt2[i][j]\
-             + delrho*table->d##VAR##drho[i][j] + 0.5*delrho*delrho*table->d2##VAR##drho2[i][j]\
-             + delrho*delt*table->d2##VAR##dtdrho[i][j];\
-        return ttse##VAR;\
-        }
-#endif
+
+double ttse_sat(double T, double *rhof_out, double * rhog_out, const FluidData *data, FpropsError *err){
+#define TTD data->corr.ttse
+#define TABLE data->corr.ttse->table
+	int i,j;
+	double Tmin = data->T_t;
+	double Tmax = data->T_c;
+	if(T < Tmin-1e-8){
+		ERRMSG("Input Temperature %f K is below triple-point temperature %f K",T,data->T_t);
+		return FPROPS_RANGE_ERROR;
+	}
+
+	if(T > Tmax+1e-8){
+		ERRMSG("Input Temperature is above critical point temperature");
+		*err = FPROPS_RANGE_ERROR;
+	}
+
+	double dT = (Tmax-Tmin)/NSAT;
+	i = (int)round(((T - Tmin)/(Tmax - Tmin)*(NSAT)));
+	assert(i>=0 && i<NSAT);
+	double delt = T - ( Tmin + i*dT);
+	*rhof_out =  TABLE->satFRho[i] + delt*TABLE->satFdRhodt[i] + 0.5*delt*delt*TABLE->satFd2RhodT2[i];
+	*rhog_out =  TABLE->satGRho[i] + delt*TABLE->satGdRhodt[i] + 0.5*delt*delt*TABLE->satGd2RhodT2[i];
+
+	/* return Psat from the single phase table        */
+	Tmin = TTD->Tmin;
+	Tmax = TTD->Tmax;
+	double rhomin  = TTD->rhomin;
+	double rhomax = TTD->rhomax;
+
+	dT = (Tmax-Tmin)/NTP;
+	double drho = (rhomax-rhomin)/NRHOP;
+	i = (int)round(((T-Tmin)/(Tmax-Tmin)*(NTP)));
+	j = (int)round(((*rhog_out-rhomin)/(rhomax-rhomin)*(NRHOP)));
+
+	assert(i>=0&&i<NTP);
+	assert(j>=0&&j<NRHOP);
+	delt = T - ( Tmin + i*dT);
+	double delrho = *rhog_out - ( rhomin + j*drho);
+	//  MSG("%d  %d  %f  %f  %f  %f  %f  %f  %f",i,j,T,*rhof_out,*rhog_out,Tmin,Tmax,rhomin,rhomax);
+	double ttseP = TTSE_GET(TABLE,p,i,j)
+		 + delt*TTSE_GET(TABLE,dpdT_rho,i,j) + 0.5*delt*delt*TTSE_GET(TABLE,d2pdT2_rho,i,j)
+		 + delrho*TTSE_GET(TABLE,dpdrho_T,i,j) + 0.5*delrho*delrho*TTSE_GET(TABLE,d2pdrho2_T,i,j)
+		 + delrho*delt*TTSE_GET(TABLE,d2pdTdrho,i,j);
+	return ttseP; // return P_sat
+
+#undef PT
+#undef TTD
+#undef TABLE
+	}
+
+#ifdef SO /* second-order Taylor series expansion */
+# define EVALTTSEFN(VAR) \
+	double ttse_##VAR(double T, double rho, const FluidData *data, FpropsError *err){\
+		int i,j;\
+		assert(data->corr.ttse->IsTableBuilt);\
+		const TtseData *td = data->corr.ttse;\
+		const Ttse *table = data->corr.ttse->table;\
+		double Tmin = td->Tmin;\
+		double Tmax = td->Tmax;\
+		double rhomin = td->rhomin;\
+		double rhomax = td->rhomax;\
+		double dT = (Tmax-Tmin)/NTP;\
+		double drho = (rhomax-rhomin)/NRHOP;\
+		i = (int)round(((T-Tmin)/(Tmax-Tmin)*(NTP)));\
+		j = (int)round(((rho-rhomin)/(rhomax-rhomin)*(NRHOP)));\
+		double delt = T - ( Tmin + i*dT);\
+		double delrho = rho - ( rhomin + j*drho);\
+		double val = TTSE_GET(table,VAR,i,j)\
+			 + delt*TTSE_GET(table,d##VAR##dT_rho,i,j) + 0.5*delt*delt*TTSE_GET(table,d2##VAR##dT2_rho,i,j)\
+			 + delrho*TTSE_GET(table,d##VAR##drho_T,i,j) + 0.5*delrho*delrho*TTSE_GET(table,d2##VAR##drho2_T,i,j)\
+			 + delrho*delt*TTSE_GET(table,d2##VAR##dTdrho,i,j);\
+		return val;\
+		}
 /*  snippet for generic calls
-        double tmin = P->data->T_t;\
-        double tmax = P->data->T_c;\
-		if(t >= tmin  && t< tmax) {\
-            evaluate_ttse_sat(t, &rho_f, &rho_g, P->data, &err);\
-            if(rho_g < rho && rho < rho_f){\
-                    double x = rho_g*(rho_f/rho - 1)/(rho_f - rho_g);\
-                    double Qf = P->VAR##_fn( t,rho_f,P->data,&err);\
-                    double Qg = P->VAR##_fn( t,rho_g,P->data,&err);\
-                    return x*Qg + (1-x)*Qf;\
-                }\
-            }\*/
-/*
-    First Order Taylor series expansion
-*/
-#ifdef FO
-#define EVALTTSEFNFO(VAR) \
-	double evaluate_ttse_##VAR(PureFluid *P , double t, double rho){\
-            int i,j;\
-            double tmin = P->table->tmin; double tmax = P->table->tmax;\
-            double rhomin  = P->table->rhomin; double rhomax= P->table->rhomax;\
-            double dt = (tmax-tmin)/NTP;\
-            double drho = (rhomax-rhomin)/NRHOP;\
-            i = (int)round(((t-tmin)/(tmax-tmin)*(NTP-1)));\
-            j = (int)round(((rho-rhomin)/(rhomax-rhomin)*(NRHOP-1)));\
-            double delt = t - ( tmin + i*dt);\
-            double delrho = rho - ( rhomin + j*drho);\
-            double ttse##VAR = P->table->VAR[i][j]\
-                 + delt*P->table->d##VAR##dt[i][j] \
-                 + delrho*P->table->d##VAR##drho[i][j] ;\
-            return ttse##VAR;\
-        }
+		double Tmin = P->data->T_t;\
+		double Tmax = P->data->T_c;\
+		if(t >= Tmin  && t< Tmax) {\
+			ttse_sat(t, &rho_f, &rho_g, P, &err);\
+			if(rho_g < rho && rho < rho_f){\
+				double x = rho_g*(rho_f/rho - 1)/(rho_f - rho_g);\
+				double Qf = P->VAR##_fn( t,rho_f,P->data,&err);\
+				double Qg = P->VAR##_fn( t,rho_g,P->data,&err);\
+				return x*Qg + (1-x)*Qf;\
+			}\
+		}\*/
+#else /* first-order Taylor series expansion */
+# define EVALTTSEFNFO(VAR) \
+	double ttse_##VAR(PureFluid *P , double T, double rho){\
+			int i,j;\
+			double Tmin = P->table->Tmin; double Tmax = P->table->Tmax;\
+			double rhomin  = P->table->rhomin; double rhomax= P->table->rhomax;\
+			double dT = (Tmax-Tmin)/NTP;\
+			double drho = (rhomax-rhomin)/NRHOP;\
+			i = (int)round(((T-Tmin)/(Tmax-Tmin)*(NTP-1)));\
+			j = (int)round(((rho-rhomin)/(rhomax-rhomin)*(NRHOP-1)));\
+			double delt = T - ( Tmin + i*dT);\
+			double delrho = rho - ( rhomin + j*drho);\
+			double ttse##VAR = P->table->VAR[i][j]\
+				 + delt*P->table->d##VAR##dT[i][j] \
+				 + delrho*P->table->d##VAR##drho[i][j] ;\
+			return ttse##VAR;\
+		}
 #endif
-//Second order accurate evaluation
 
-#ifdef SO
+#define EVALFNUNDEF(VAR) \
+	double ttse_##VAR(double T, double rho, const FluidData *data, FpropsError *err){ \
+		ERRMSG("TTSE function for '" #VAR "' is not yet implemented"); \
+		*err = FPROPS_NOT_IMPLEMENTED; \
+		return -1e99; \
+	}
+
+#ifdef SO // second-order TTSE evaluation
 EVALTTSEFN(p);
 EVALTTSEFN(h);
 EVALTTSEFN(s);
-EVALTTSEFN(g);
 EVALTTSEFN(u);
-#endif
-
-//First order accurate evaluation
-#ifdef FO
+EVALTTSEFN(g);
+EVALFNUNDEF(a);
+EVALFNUNDEF(cp);
+EVALFNUNDEF(cv);
+EVALFNUNDEF(w);
+EVALFNUNDEF(dpdrho_T);
+EVALFNUNDEF(alphap);
+EVALFNUNDEF(betap);
+#else // first order TTSE evaluation
 EVALTTSEFNFO(p);
 EVALTTSEFNFO(h);
 EVALTTSEFNFO(s);
@@ -435,150 +407,90 @@ EVALTTSEFNFO(g);
 EVALTTSEFNFO(u);
 #endif
 
-
-
-
-/*
-    This will load the binary file from tables/ for the liquid of interest and the EOS and populate the matrices.
-    If the files are not present in tables/ then build_tables() should be used.
+/*------------------------------------------------------------------------------
+	FILE CACHING OF TTSE CALCULATED RESULTS... OPTIONAL COMPONENT
 */
 
-void load_tables(PureFluid *P){
+#ifdef TTSE_USE_FILE_CACHE
 
-    int i;
-    MSG("Table file exists @ %s",P->data->path);
-    FILE * readtablefile = fopen(P->data->path,"rb");
+/* FIXME this table folder needs to be an absolute location, writable, and
+should also work on c:\Windows\type\paths... more work required here */
+#define TAB_FOLDER  "tables"
 
+static void save_tables(PureFluid *P);
+static int doesdbexist(PureFluid *P);
+static void load_tables(PureFluid *P);
 
-    #define RD(VAR)\
-        fread( P->data->table->VAR, sizeof(double), NSAT, readtablefile );
-    RD(satFRho);    RD(satFdRhodt);    RD(satFd2RhodT2);
-    RD(satGRho);    RD(satGdRhodt);    RD(satGd2RhodT2);
-    #undef RD
+/**
+	This will load the binary file from tables/ for the liquid of interest and the EOS and populate the matrices.
+	If the files are not present in tables/ then build_tables() should be used.
 
-
-    #define RD(VAR)\
-    for(i=0;i<NTP;i++)\
-        fread( P->data->table->VAR[i] ,sizeof(double), NRHOP, readtablefile );
-    RD(s);  RD(dsdt); RD(d2sdt2); RD(dsdrho); RD(d2sdrho2); RD(d2sdtdrho);
-    RD(p);  RD(dpdt); RD(d2pdt2); RD(dpdrho); RD(d2pdrho2); RD(d2pdtdrho);
-    RD(u);  RD(dudt); RD(d2udt2); RD(dudrho); RD(d2udrho2); RD(d2udtdrho);
-    RD(g);  RD(dgdt); RD(d2gdt2); RD(dgdrho); RD(d2gdrho2); RD(d2gdtdrho);
-    RD(h);  RD(dhdt); RD(d2hdt2); RD(dhdrho); RD(d2hdrho2); RD(d2hdtdrho);
-    #undef RD
-
-
-
-    fclose(readtablefile);
-
-    P->data->IsTableBuilt=1;
-
-}
-
-/*
-    After building the tables once this should be called to save the files in binary inside tables/
+	FIXME need to standardise the location of the 'tables' folder...?
 */
-void save_tables(PureFluid *P){
+static void load_tables(PureFluid *P){
+	MSG("Table file exists @ %s",P->data->path);
+	FILE * readtablefile = fopen(P->data->path,"rb");
 
-    int i;
-    MSG("Saving table @ %s",P->data->path);
-    FILE * writetablefile = fopen(P->data->path,"wb");
+#define RD(VAR) fread( P->data->table->VAR, sizeof(double), NSAT, readtablefile );
+	RD(satFRho); RD(satFdRhodt); RD(satFd2RhodT2);
+	RD(satGRho); RD(satGdRhodt); RD(satGd2RhodT2);
+#undef RD
 
+#define X
+#define RD(VAR) fread(P->data->table->VAR, sizeof(double), NRHOP*NTP, readtablefile);
+	TTSE_MATRICES(X, RD)
+#undef RD
+#undef X
 
-    #define WR(VAR)\
-        fwrite( P->data->table->VAR, sizeof(double), NSAT, writetablefile );
-    WR(satFRho);     WR(satFdRhodt);    WR(satFd2RhodT2);
-    WR(satGRho);     WR(satGdRhodt);    WR(satGd2RhodT2);
-    #undef WR
-
-
-    #define WR(VAR)\
-    for(i=0;i<NTP;i++)\
-        fwrite( P->data->table->VAR[i] ,sizeof(double), NRHOP, writetablefile );
-    WR(s);  WR(dsdt); WR(d2sdt2); WR(dsdrho); WR(d2sdrho2); WR(d2sdtdrho);
-    WR(p);  WR(dpdt); WR(d2pdt2); WR(dpdrho); WR(d2pdrho2); WR(d2pdtdrho);
-    WR(u);  WR(dudt); WR(d2udt2); WR(dudrho); WR(d2udrho2); WR(d2udtdrho);
-    WR(g);  WR(dgdt); WR(d2gdt2); WR(dgdrho); WR(d2gdrho2); WR(d2gdtdrho);
-    WR(h);  WR(dhdt); WR(d2hdt2); WR(dhdrho); WR(d2hdrho2); WR(d2hdtdrho);
-    #undef WR
-
-
-    fclose(writetablefile);
+	fclose(readtablefile);
+	P->data->IsTableBuilt=1;
 }
 
+/**
+	After building the tables once this should be called to save the files in binary inside tables/
+*/
+static void save_tables(PureFluid *P){
+	MSG("Saving table %s",P->data->path);
+	FILE * writetablefile = fopen(P->data->path,"wb");
 
+#define WR(VAR) fwrite( P->data->table->VAR, sizeof(double), NSAT, writetablefile);
+	WR(satFRho); WR(satFdRhodt); WR(satFd2RhodT2);
+	WR(satGRho); WR(satGdRhodt); WR(satGd2RhodT2);
+#undef WR
 
-int doesdbexist(PureFluid *P)
-{
-    char  path[200]  = TAB_FOLDER;
-
-
-    strcat(path,"/helm_");
-    strcat(path, P->name );
-    strcat(path,"_TR.bin");
-
-    P->data->path = FPROPS_NEW_ARRAY( char,strlen(path)+1 );
-    strcpy(P->data->path, path);
-    P->data->path[strlen(path)]='\0';
-
-  //  MSG("Table file path --> <%s>",P->path);
-
-    FILE *test=fopen(P->data->path,"r");
-
-    if(test)
-    {
-        MSG("Saved Table Found");
-        fclose(test);
-        return 1;
-    }
-
-    MSG("NO Saved Table");
-    return 0;
+#define X
+#define WR(VAR) fwrite(P->data->table->VAR,sizeof(double), NRHOP*NTP, writetablefile);
+	TTSE_MATRICES(X, WR)
+#undef WR
+#undef X
+	fclose(writetablefile);
 }
 
-void ttse_prepare(PureFluid *P){
+static int doesdbexist(PureFluid *P){
+	char path[200]  = TAB_FOLDER;
 
-#ifdef TTSE_DEBUG
-	//FILE *F1 = fopen("ttse.txt","w");
-    //fprintf(F1,"%f   %f\n",t, P->p_fn( t, rho , P->data,&err) );
+	strcat(path,"/helm_");
+	strcat(path, P->name );
+	strcat(path,"_TR.bin");
+
+	P->data->path = FPROPS_NEW_ARRAY( char,strlen(path)+1 );
+	strcpy(P->data->path, path);
+	P->data->path[strlen(path)]='\0';
+
+	//  MSG("Table file path --> <%s>",P->path);
+
+	FILE *test=fopen(P->data->path,"r");
+
+	if(test){
+		MSG("Saved Table Found");
+		fclose(test);
+		return 1;
+	}
+
+	MSG("NO Saved Table");
+	return 0;
+}
+
 #endif
 
-
-    if(P->data->IsTableBuilt)
-        return;
-
-    MSG("Inside TTSE");
-
-	P->data->table = FPROPS_NEW(Ttse);
-    alloc_tables(P->data->table);
-
-//Pseudo values for water
-//Should be implemented elsewhere per fluid
-    P->data->table->tmin = 200;
-    P->data->table->tmax = 4200;
-    P->data->table->rhomin = 0.0001;
-    P->data->table->rhomax = 2000;
-
-
-
-    if(doesdbexist(P))//file exists in tables/
-        load_tables(P);
-    else
-    {
-        build_tables(P);
-        save_tables(P);
-    }
-
-//exit(1);
-#ifdef TTSE_DEBUG
-    //fclose(F1);
-#endif
-
-
-}
-
-
-void ttse_destroy(PureFluid *P){
-    remove_tables(P->data->table);
-}
 

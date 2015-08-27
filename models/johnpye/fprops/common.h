@@ -58,3 +58,11 @@ typedef enum FpropsError_enum{
 //#endif
 
 #endif
+
+typedef struct FluidData_struct FluidData;
+
+/* Definition of a fluid property function pointer */
+typedef double PropEvalFn(double T,double rho, const FluidData *data, FpropsError *err);
+
+/** @return psat */
+typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *data, FpropsError *err);

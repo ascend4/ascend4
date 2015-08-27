@@ -29,7 +29,7 @@
 	a HelmholtzData object would suffice for that.
 */
 PureFluid *helmholtz_prepare(const EosData *data, const ReferenceState *ref);
-
+void helmholtz_ttse(CorrelationUnion *corr);
 void helmholtz_destroy(PureFluid *data);
 
 #endif
