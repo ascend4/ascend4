@@ -13,7 +13,7 @@ try:
 	pygtk.require('2.0') 
 	import gtk
 	have_gtk = True
-except Exception,e:
+except Exception as e:
 
 	if sys.platform=="win32":
 		try:
@@ -28,7 +28,7 @@ system. Please try re-installing ASCEND to rectify the problem.""")
 		except:	
 			pass
 	else:
-		print "PyGTK COULD NOT BE LOADED (is it installed? do you have X-Windows running?) (%s)" % str(e)
+		print("PyGTK COULD NOT BE LOADED (is it installed? do you have X-Windows running?) (%s)" % str(e))
 		
 	sys.exit("FATAL ERROR: PyGTK not available, unable to start ASCEND.")
 
@@ -53,7 +53,7 @@ def load_matplotlib(throw=False,alert=False):
 		import pylab
 
 
-	except ImportError,e:
+	except ImportError as e:
 		print_status("","FAILED TO LOAD MATPLOTLIB")
 		if alert or throw:
 			_d = gtk.MessageDialog(None,gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
@@ -109,13 +109,13 @@ class LoadingWindow:
 				pass
 				#do nothing, don't know where splash file is yet
 		else:
-			print "DON'T HAVE GTK!"
+			print("DON'T HAVE GTK!")
 			sys.exit(1)
 	
 	def print_status(self,status,msg=None):
 		if self.is_loading:
 			if not sys.executable.endswith("pythonw.exe"):
-				print status
+				print(status)
 			self.label.set_text(status)
 			if msg is not None:
 				try:

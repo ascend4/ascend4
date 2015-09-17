@@ -44,7 +44,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 		try:
 			self.getIntegrator().solve()
 
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.browser.reporter.reportError("Integrator failed: %s" % e)
 
 			if self.browser.prefs.getBoolPref("Integrator","writeendmatrix",True):
@@ -58,7 +58,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 				try:
 					try: 
 						self.getIntegrator().writeMatrix(_fp,None)
-					except RuntimeError,e:
+					except RuntimeError as e:
 						self.browser.reporter.reportError(str(e))
 				finally:
 					_fp.close()
@@ -110,7 +110,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 
 			for _time,_vals in self.data:
 				_obs.do_add_row([_time]+[_v for _v in _vals])
-		except Exception,e:
+		except Exception as e:
 			sys.stderr.write("\n\n\nIntegratorReporter::closeOutput: error: %s: %s\n\n\n" % (e.__class__,str(e)))
 			return 1
 		return 0
@@ -118,7 +118,7 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 	def closeOutput1(self):
 		# output the results (to the console, for now)
 		for _t,_vals in self.data:
-			print _t,_vals
+			print(_t,_vals)
 
 		self.progress.set_fraction(1.0)
 		self.progress.set_text("Finished.")
@@ -137,18 +137,18 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 			if self.cancelrequested:
 				return 0	
 			return 1
-		except Exception,e:
-			print "\n\nERROR IN UPDATESTATUS!",str(e)
+		except Exception as e:
+			print("\n\nERROR IN UPDATESTATUS!",str(e))
 			return 0
 
 	def recordObservedValues(self):
 		# just add to our in-memory data structure for now...
 		try:
 			i = self.getIntegrator()
-			print str(i.getCurrentObservations())		
+			print(str(i.getCurrentObservations()))		
 			self.data.append((i.getCurrentTime(),i.getCurrentObservations()))
-		except Exception,e:
-			print "\n\nERROR IN RECORDOBSERVEDVALUES!",str(e)
+		except Exception as e:
+			print("\n\nERROR IN RECORDOBSERVEDVALUES!",str(e))
 			return 0
 		return 1
 
@@ -174,8 +174,8 @@ class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 			]
 			self.filep.write("#%s\t" % self.indepname)
 			self.filep.write("\t".join(names)+"\n")
-		except Exception,e:
-			print "ERROR %s" % str(e)
+		except Exception as e:
+			print("ERROR %s" % str(e))
 			return 0
 		return 1
 
@@ -191,8 +191,8 @@ class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 			t = I.getCurrentTime()
 			pct = 100.0 * I.getCurrentStep() / self.numsteps;
 			sys.stderr.write("%3.0f%% (%s = %6.3f)           \r" % (pct,self.indepname,t))
-		except Exception,e:
-			print "ERROR %s" % str(e)
+		except Exception as e:
+			print("ERROR %s" % str(e))
 			return 0
 		return 1
 
@@ -203,8 +203,8 @@ class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 			#print str(obs)
 			self.filep.write("%f\t" % I.getCurrentTime())
 			self.filep.write("\t".join([str(i) for i in obs])+"\n")
-		except Exception,e:
-			print "ERROR %s" % str(e)
+		except Exception as e:
+			print("ERROR %s" % str(e))
 			return 0
 		return 1
 
@@ -234,8 +234,8 @@ class IntegratorReporterPlot(ascpy.IntegratorReporterCxx):
 			self.bg = self.canvas.copy_from_bbox(self.ax.bbox)
 			gobject.idle_add(self.plotupdate)
 			pylab.show()
-		except Exception,e:
-			print "ERROR %s" % str(e)
+		except Exception as e:
+			print("ERROR %s" % str(e))
 			return 0
 		return 1
 
@@ -254,8 +254,8 @@ class IntegratorReporterPlot(ascpy.IntegratorReporterCxx):
 			self.line.set_data(self.x, self.y)
 			self.ax.draw_artist(self.line)
 			self.canvas.blit(self.ax.bbox)
-		except Exception,e:
-			print "ERROR %s" % str(e)
+		except Exception as e:
+			print("ERROR %s" % str(e))
 
 	def recordObservedValues(self):
 		try:
@@ -263,8 +263,8 @@ class IntegratorReporterPlot(ascpy.IntegratorReporterCxx):
 			obs = I.getCurrentObservations()
 			self.x.append(I.getCurrentTime())
 			self.y.append(obs[0])
-		except Exception,e:
-			print "ERROR %s" % str(e)
+		except Exception as e:
+			print("ERROR %s" % str(e))
 			return 0
 		return 1
 	

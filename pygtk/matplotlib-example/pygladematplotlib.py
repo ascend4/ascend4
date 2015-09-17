@@ -162,7 +162,7 @@ class appGui:
             self.fillTree(self)
              
         if page_number == 0:
-            print "clicked first tab"
+            print("clicked first tab")
          
     def clickTree(self, treeview, event):
         if event.button == 3:
@@ -180,9 +180,9 @@ class appGui:
                 if response == gtk.RESPONSE_OK:
                     close.destroy()
  
-                print x
-                print y
-                print pthinfo
+                print(x)
+                print(y)
+                print(pthinfo)
                 #self.popup.popup( None, None, None, event.button, time)
             return 1
          
@@ -257,7 +257,7 @@ class appGui:
                 self.canvas2.destroy()
                 break
             except:
-                print "nothing to destroy"
+                print("nothing to destroy")
                 break
              
         self.canvas2 = FigureCanvasGTK(self.figure) # a gtk.DrawingArea

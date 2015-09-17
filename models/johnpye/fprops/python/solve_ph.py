@@ -8,7 +8,7 @@ T = 220
 rho = 1
 
 sys.stderr.write("T = %f K, rho = %f m3/kg\n" % (T,rho))
-print "T = %f, rho = %f" % (T,rho)
+print("T = %f, rho = %f" % (T,rho))
 p = D.set_Trho(T,rho).p
 h = D.set_Trho(T,rho).h
 
@@ -20,13 +20,13 @@ state = D.set_ph(p,h);
 
 #print "res = %d" % res
 
-print "T = %f" % state.T
-print "rho = %f" % state.rho
+print("T = %f" % state.T)
+print("rho = %f" % state.rho)
 
 p_eval = state.p
 h_eval = state.h
-print "p(T,rho) = %f bar\t  (target: %f, err = %e)" % (p_eval/1e5, p/1e5, (p_eval - p))
-print "h(T,rho) = %f kJ/kg\t  (target: %f, err = %e)" % (h_eval/1e3, h/1e3, (h_eval - h))
+print("p(T,rho) = %f bar\t  (target: %f, err = %e)" % (p_eval/1e5, p/1e5, (p_eval - p)))
+print("h(T,rho) = %f kJ/kg\t  (target: %f, err = %e)" % (h_eval/1e3, h/1e3, (h_eval - h)))
 
 del D
 

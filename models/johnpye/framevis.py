@@ -131,7 +131,7 @@ try:
 
 			elif event.state & gtk.gdk.BUTTON3_MASK:
 				# PAN
-				print "PAN"
+				print("PAN")
 
 			self.beginx = event.x
 			self.beginy = event.y
@@ -167,7 +167,7 @@ try:
 			self.add(self.glarea)
 
 		def on_expose_event(self,*args):
-			print "EXPOSE EVENT"
+			print("EXPOSE EVENT")
 			self.scene.invalidate()
 
 		def run(self):
@@ -183,7 +183,7 @@ def framevis(self):
 
 	browser = extpy.getbrowser()
 	if not browser:
-		print "no 'browser'"
+		print("no 'browser'")
 		return 1
 
 	if not gtkgl_deps:

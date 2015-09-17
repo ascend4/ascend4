@@ -92,7 +92,7 @@ class StudyWin:
 		_arr = {self.lowerb: self.instance.getRealValue()
 			,self.upperb: self.instance.getUpperBound() # this upper bound is probably stoopid
 		}
-		for _k,_v in _arr.iteritems():
+		for _k,_v in _arr.items():
 			_t = str(_v / _conversion)+" "+_u
 			_k.set_text(_t)
 		
@@ -317,7 +317,7 @@ class StudyWin:
 		try:
 			i.checkEntry()
 			_value = i.getValue()
-		except InputError, e:
+		except InputError as e:
 			# FIXME does the following line actually clear out the entry box?
 			_value = None
 			_error = re.split('Input Error: ', str(e), 1)
@@ -377,7 +377,7 @@ class StudyWin:
 			if self.method:
 				try:
 					_b.sim.run(method)
-				except RuntimeError,e:
+				except RuntimeError as e:
 					_b.reporter.reportError(str(e))
 				
 			# set the value (do it inside the loop to avoid METHOD possibly unfixing)
@@ -394,7 +394,7 @@ class StudyWin:
 			try:
 				reporter.updateVarDetails(i)
 				_b.sim.solve(_b.solver, reporter)
-			except RuntimeError,e:
+			except RuntimeError as e:
 				_b.reporter.reportError(str(e))
 
 			i += 1

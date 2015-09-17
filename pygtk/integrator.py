@@ -27,7 +27,7 @@ class IntegratorWindow:
 		try:	 
 			self.integrator.findIndependentVar()
 			self.indepvar = self.integrator.getIndependentVariable()
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.browser.reporter.reportNote(str(e))
 			self.indepvar = None
 			return
@@ -53,7 +53,7 @@ class IntegratorWindow:
 		}
 
 		self.integratorentries={}
-		for _k in self.settings.keys():
+		for _k in list(self.settings.keys()):
 			_w = self.browser.builder.get_object(_k+"entry")
 			if not _w:
 				raise RuntimeError("Couldn't find entry for"+_k)
@@ -97,7 +97,7 @@ class IntegratorWindow:
 			self.engineselect.set_sensitive(False)
 
 		# get the current time value as the beginentry...
-		print "SEARCHING FOR TIME VAR..."
+		print("SEARCHING FOR TIME VAR...")
 		try:
 			_u = self.indepvar.getInstance().getType().getPreferredUnits()
 			if _u is None:
@@ -109,14 +109,14 @@ class IntegratorWindow:
 			_dur = self.prefs.getStringPref("Integrator","duration","100")
 			self.durationentry.set_text(_dur+" "+_u.getName().toString())
 			self.parse_entry(self.durationentry)
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.browser.reporter.reportNote(str(e))
 			self.beginentry.set_text("0")
 
 		self.nstepsentry.set_text("100")
 		
 		# set preferred timesteps etc
-		for _k,_v in self.settings.iteritems():
+		for _k,_v in self.settings.items():
 			if _k!="maxsteps":
 				_a = _u.getName().toString()
 				self.integratorentries[_k].set_text(self.prefs.getStringPref("Integrator",_k,str(_v[0]))+" "+_a)
@@ -141,27 +141,27 @@ class IntegratorWindow:
 
 	def on_engineselect_changed(self,widget,*args):
 		index = widget.get_active()
-		print "Setting engine to %d" % index
-		print "Engines are",self.engines
-		print "Selection is %s" % self.engines[index]
+		print("Setting engine to %d" % index)
+		print("Engines are",self.engines)
+		print("Selection is %s" % self.engines[index])
 		self.integrator.setEngine(self.engines[index])
 
 	def on_moreparametersbutton_clicked(self,*args):
-		print "ZO YOU WANT MORE PAHAMETERS EH!"
+		print("ZO YOU WANT MORE PAHAMETERS EH!")
 		try:
 			_name = self.integrator.getName()
-			print "NAME = %s" % _name
+			print("NAME = %s" % _name)
 			_params = self.integrator.getParameters()
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.browser.reporter.reportError(str(e))
 			return
-		print "CREATING SOLVERPARAMETERSWINDOW"
+		print("CREATING SOLVERPARAMETERSWINDOW")
 		_paramswin = SolverParametersWindow(self.browser,_params,_name)
-		print "RUNNING SOLVERPARAMETERSWINDOW"
+		print("RUNNING SOLVERPARAMETERSWINDOW")
 		if _paramswin.run() == gtk.RESPONSE_OK:
-			print "GOT OK RESPONSE"
+			print("GOT OK RESPONSE")
 			self.integrator.setParameters(_params)
-			print "PARAMETERS UPDATED"
+			print("PARAMETERS UPDATED")
 
 	def run(self):
 		if self.indepvar == None:
@@ -181,14 +181,14 @@ class IntegratorWindow:
 				else:
 					#self.browser.reporter.reportNote("CANCEL event received");
 					break
-			except IntegratorError,e:
+			except IntegratorError as e:
 				self.browser.reporter.reportError(str(e))
 				# continue
 
 		if _ok:
 			try:
 				self.integrator.analyse()
-			except RuntimeError,e:
+			except RuntimeError as e:
 				self.browser.reporter.reportError(str(e))
 				self.window.destroy()
 				if self.prefs.getBoolPref("Integrator","debuganalyse",True):
@@ -239,7 +239,7 @@ class IntegratorWindow:
 		try:
 			i.checkEntry()
 			_value = i.getValue()
-		except InputError, e:
+		except InputError as e:
 			_value = None
 			_error = re.split('Input Error: ', str(e), 1)
 			entry.set_property("secondary-icon-tooltip-text", _error[1])
@@ -258,7 +258,7 @@ class IntegratorWindow:
 			self.beginentry:[lambda x:float(x),"begin"]
 			, self.durationentry:[lambda x:float(x),"duration"]
 			, self.nstepsentry:[lambda x:int(x),"num"]
-		}.iteritems():
+		}.items():
 			x = RealAtomEntry(self.indepvar.getInstance(), _k.get_text())
 			x.checkEntry()
 			if _k == self.beginentry: 
@@ -278,7 +278,7 @@ class IntegratorWindow:
 		# set substep parameters (ie settings common to any integrator engine)
 		_failed=False
 		x={}
-		for _k,_v in self.settings.iteritems():
+		for _k,_v in self.settings.items():
 			try:
 				_f = self.integratorentries[_k];
 				# pass the substep setting to the integrator
@@ -290,7 +290,7 @@ class IntegratorWindow:
 				else:	
 					_v[1](_f.get_text())
 					self.color_entry(_f,"white")
-			except ValueError,e:
+			except ValueError as e:
 				if _k!="maxsteps":
 					self.taint_entry(_f,"#FFBBBB")
 				else:	
@@ -300,7 +300,7 @@ class IntegratorWindow:
 		if _failed:
 			raise IntegratorError("Invalid step parameter(s)");
 
-		for _k,_v in self.settings.iteritems():
+		for _k,_v in self.settings.items():
 			# store those inputs for next time
 			_f = self.integratorentries[_k]
 			if _k!="maxsteps":
@@ -319,5 +319,5 @@ class IntegratorWindow:
 		try:
 			self.prefs.setStringPref("Integrator","engine",self.engines[engine])
 			_res = self.integrator.setEngine(self.engines[engine])			
-		except IndexError,e:
+		except IndexError as e:
 			raise IntegratorError("Unable to set engine: %s" % e) 

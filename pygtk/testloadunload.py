@@ -10,17 +10,17 @@ import ascpy
 
 if os.getenv('ASCENDLIBRARY')==None:
 	path = '~/src/ascend/trunk/models'
-	print "Setting ASCEND path to",path
+	print("Setting ASCEND path to",path)
 	os.putenv('ASCENDLIBRARY',path)
 
 L = ascpy.Library();
 L.load(filepath);
 for M in L.getModules():
-	print "Looking at module '"+M.getName()+"'"
+	print("Looking at module '"+M.getName()+"'")
 	for t in L.getModuleTypes(M):
 		#print "Looking at type '"+str(t.getName())+"'"
 		for m in t.getMethods():
-			print "Looking at method '"+str(m.getName())+"'"
+			print("Looking at method '"+str(m.getName())+"'")
 			if m.getName()==TEST_METHOD_NAME:
 				jobslock.acquire()
 				heapq.heappush(jobs, (0, AscendTestModel( self.filepath,M.getName())) )

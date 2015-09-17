@@ -59,7 +59,7 @@ class SolverParametersWindow:
 	def on_paramsview_row_activated(self,treeview,path,view_column,*args,**kwargs):
 		# get back the object we just clicked
 
-		if not self.otank.has_key(path):
+		if path not in self.otank:
 			return
 		
 		_iter,_param = self.otank[path]
@@ -81,7 +81,7 @@ class SolverParametersWindow:
 			_pathinfo = self.paramsview.get_path_at_pos(_x, _y)
 			if _pathinfo != None:
 				_path, _col, _cellx, _celly = _pathinfo
-				if not self.otank.has_key(_path):
+				if _path not in self.otank:
 					return
 				_iter, _param = self.otank[_path]
 
@@ -122,11 +122,11 @@ class SolverParametersWindow:
 			self.paramstore.set_value(iter, 1, newvalue)
 			self.paramstore.set_value(iter, 4, CHANGED_COLOR)
 		else:
-			print "NOT CHANGED"
+			print("NOT CHANGED")
 	
 	def on_paramsview_cursor_changed(self, *args, **kwargs):
 		_path, _col = self.paramsview.get_cursor()
-		if not self.otank.has_key(_path):
+		if _path not in self.otank:
 			self.paramdescription.set_text("")
 			self.paramname.set_text("")
 			return
@@ -139,7 +139,7 @@ class SolverParametersWindow:
 		# get back the Instance object we just edited (having to use this seems like a bug)
 		path = tuple( map(int,path.split(":")) )
 
-		if not self.otank.has_key(path):
+		if path not in self.otank:
 			raise RuntimeError("cell_edited_callback: invalid path '%s'" % path)
 			return
 		
@@ -181,7 +181,7 @@ class SolverParametersWindow:
 			self.paramstore.set_value(_iter, 1, newvalue)
 			self.paramstore.set_value(_iter, 4, CHANGED_COLOR)			
 		else:
-			print "NO CHANGE"
+			print("NO CHANGE")
 
 	def create_row_data(self,p):
 		_row = [p.getLabel()];
@@ -215,13 +215,13 @@ class SolverParametersWindow:
 		
 		data = {}
 		for i in self.params:
-			if not data.has_key(i.getPage()):
+			if i.getPage() not in data:
 				data[i.getPage()] = {}
 			data[i.getPage()][i.getNumber()] = i;
 
 		_pagenum = 1;
 		for _page in sorted(data.keys()):
-			if len(data[_page].keys()):
+			if len(list(data[_page].keys())):
 				_pageiter = self.paramstore.append( None, ["Page "+str(_pagenum), "", "", False, "white", pango.WEIGHT_BOLD])
 				for _number in sorted(data[_page].keys()):
 					_param = data[_page][_number]

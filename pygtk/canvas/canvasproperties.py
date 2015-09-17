@@ -111,7 +111,7 @@ class CanvasProperties(object):
 		self.stream_store.set_value(iter,2,new_text.split(','))
 			
 	def save_method_buffer(self,textbuffer):
-		print textbuffer.get_modified()
+		print(textbuffer.get_modified())
 	
 	def run(self):
 		self.dialog.run()

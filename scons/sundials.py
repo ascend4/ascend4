@@ -38,8 +38,8 @@ def winpath(path):
 		#p1 = subprocess.Popen(["sh.exe","-c","echo hello"], stdout=subprocess.PIPE)
 		out = p1.communicate()[0].strip()
 		#print "NEW PATH IS '%s'" % out
-	except Exception,e:
-		print "FAILED: %s"%str(e)
+	except Exception as e:
+		print("FAILED: %s"%str(e))
 	finally:
 		#print "Deleting %s" % fn
 		os.unlink(fn)
@@ -54,10 +54,10 @@ def generate(env):
 			try:
 				# one day, we'll provide a SUNDIALS installer so that people don't have to 
 				# build their own SUNDIALS. In that case, look for the settings in the registry
-				import _winreg
-				x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
-				y= _winreg.OpenKey(x,r"SOFTWARE\SUNDIALS")
-				PATH,t = _winreg.QueryValueEx(y,"InstallPath")
+				import winreg
+				x=winreg.ConnectRegistry(None,winreg.HKEY_LOCAL_MACHINE)
+				y= winreg.OpenKey(x,r"SOFTWARE\SUNDIALS")
+				PATH,t = winreg.QueryValueEx(y,"InstallPath")
 				LIB = os.path.join(PATH,"lib")
 				BIN = os.path.join(PATH,"bin")
 				INCLUDE = os.path.join(PATH,"include")
@@ -97,19 +97,19 @@ def generate(env):
 
 			# tricky stuff to detect the necessary extra 'lapack' linkage if required
 			if os.path.exists("/etc/lsb-release"):
-				print "CHECKING SUNDIALS"
+				print("CHECKING SUNDIALS")
 				s = env.WhereIs('sundials-config')
 				if s == "/usr/bin/sundials-config":
-					print "STANDARD CONFIG"
+					print("STANDARD CONFIG")
 					# With Ubuntu 11.10 onwards, we need to explicitly add lapack (and blas?)
 					f = file("/etc/lsb-release")
 					v = {}
 					for l in f:
 						x = l.strip().split("=")
 						v[x[0]] = x[1]
-					print v
+					print(v)
 					if v['DISTRIB_ID']=="Ubuntu" and float(v['DISTRIB_RELEASE'])>=11.10:
-						print "ADDING LAPACK"
+						print("ADDING LAPACK")
 						env1['LIBS'].append("lapack")
 
 			env['SUNDIALS_CPPPATH'] = env1.get('CPPPATH')
@@ -117,12 +117,12 @@ def generate(env):
 			env['SUNDIALS_LIBS'] = env1.get('LIBS')
 			env['HAVE_SUNDIALS'] = True
 
-		print "SUNDIALS_LIBS =",env.get('SUNDIALS_LIBS')
-		print "SUNDIALS_LIBPATH =",env.get('SUNDIALS_LIBPATH')
-		print "SUNDIALS_CPPPATH =",env.get('SUNDIALS_CPPPATH')
+		print("SUNDIALS_LIBS =",env.get('SUNDIALS_LIBS'))
+		print("SUNDIALS_LIBPATH =",env.get('SUNDIALS_LIBPATH'))
+		print("SUNDIALS_CPPPATH =",env.get('SUNDIALS_CPPPATH'))
 
-	except Exception, e:
-		print "FAILED SUNDIALS DETECTION (%s):" % platform.system(),e.__class__,str(e)
+	except Exception as e:
+		print("FAILED SUNDIALS DETECTION (%s):" % platform.system(),e.__class__,str(e))
 		env['HAVE_SUNDIALS'] = False
 
 def find_sundials_config(env):

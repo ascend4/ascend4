@@ -168,7 +168,7 @@ class BlockType():
 			elif t[0:min(len(t),6)]=="param:":
 				self.params += [[n.getId(),self.type.findMember(n.getId()),str(t)]]
 
-		print "Reattached type '%s', with %d inputs, %d outputs" % (self.type.getName(), len(self.inputs), len(self.outputs))
+		print("Reattached type '%s', with %d inputs, %d outputs" % (self.type.getName(), len(self.inputs), len(self.outputs)))
 
 	def get_input_name(self, index):
 		return self.inputs[index].getText()

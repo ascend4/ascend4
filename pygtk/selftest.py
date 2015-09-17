@@ -52,7 +52,7 @@ class AscendScanDirectory:
 		self.path=path
 	
 	def run(self):
-		print "Scanning",self.path,"..."		
+		print("Scanning",self.path,"...")		
 		for f in os.listdir(self.path):
 			if f==".svn" or f=="CVS" or f=="westerberg":
 				continue
@@ -90,7 +90,7 @@ class AscendInspectFile:
 				s = mmap.mmap(f.fileno(),size,mmap.MAP_SHARED,mmap.PROT_READ)
 				
 				if METHOD_REGEXP.search(s):
-					print "Found 'METHOD "+TEST_METHOD_NAME+"' in",file
+					print("Found 'METHOD "+TEST_METHOD_NAME+"' in",file)
 					jobslock.acquire()
 					heapq.heappush(jobs, (5, AscendTestFile(self.filepath)) )
 					jobslock.release()
@@ -98,7 +98,7 @@ class AscendInspectFile:
 					pass #print "File",file," is not self-testing"
 				f.close()
 		except IOError:
-			print "IOError"
+			print("IOError")
 		inspectlock.release()
 
 
@@ -118,7 +118,7 @@ class AscendTestFile:
 		L.clear()
 		L.load(self.filepath)
 		for M in L.getModules():
-			print "Looking at module '"+M.getName()+"'"
+			print("Looking at module '"+M.getName()+"'")
 			for t in L.getModuleTypes(M):
 				#print "Looking at type '"+str(t.getName())+"'"
 				for m in t.getMethods():
@@ -154,12 +154,12 @@ class AscendTestModel:
 			s = t.getSimulation('testsim');
 			#s.check()
 			s.build();
-			print "LAUNCHING SOLVER...\n\n"
+			print("LAUNCHING SOLVER...\n\n")
 			r = ascpy.SolverReporter()
 			s.solve(ascpy.Solver('QRSlv'),r)
 			s.run(testmethod)
-		except RuntimeError, e:
-			print e
+		except RuntimeError as e:
+			print(e)
 
 		ascendlock.release()
 
@@ -187,7 +187,7 @@ class AscendModelLibraryTester:
 		else:
 			self.separator=":"
 
-		print 'Search path:',self.path
+		print('Search path:',self.path)
 		for p in self.path.split(self.separator):
 			j = AscendScanDirectory(p) 
 			jobslock.acquire()
@@ -240,7 +240,7 @@ class TestAscendModelLibrary(unittest.TestCase):
 	def testAllModelsInPath(self):
 		t = AscendModelLibraryTester();
 		t.run(5); # five threads
-		print 'Waiting for ASCEND Model Library Tester to complete...'
+		print('Waiting for ASCEND Model Library Tester to complete...')
 		t.runlock.acquire()
 
 if __name__=='__main__':

@@ -258,8 +258,8 @@ class GraphicalBlockItem(BlockItem):
 						raise RuntimeError("Unknown port type")
 					_ports.append(p)
 		except KeyError:
-			print "Error Reporter to be called as it is a user error"
-			print "Syntax error while defining ports or some ports-location are left to be added"
+			print("Error Reporter to be called as it is a user error")
+			print("Syntax error while defining ports or some ports-location are left to be added")
 		self._ports = _ports
 
 	def up(self):
@@ -351,8 +351,8 @@ class DefaultBlockItem(BlockItem):
 						raise RuntimeError("Unknown port type")
 					_ports.append(p)
 		except KeyError:
-			print "Error Reporter to be called as it is a user error"
-			print "Syntax error while defining ports or some ports-location are left to be added"
+			print("Error Reporter to be called as it is a user error")
+			print("Syntax error while defining ports or some ports-location are left to be added")
 		self._ports = _ports   
 
 	def draw(self, context):

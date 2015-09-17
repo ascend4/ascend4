@@ -20,6 +20,7 @@ import os
 import os.path
 import glob
 from fnmatch import fnmatch
+from functools import reduce
 
 def DoxyfileParse(file_contents):
    """
@@ -59,10 +60,10 @@ def DoxyfileParse(file_contents):
          key_token = False
       else:
          if token == "+=":
-            if not data.has_key(key):
+            if key not in data:
                data[key] = list()
          elif token == "=":
-            if key == "TAGFILES" and data.has_key(key):
+            if key == "TAGFILES" and key in data:
                append_data( data, key, False, "=" )
                new_data=False
             else:
@@ -79,7 +80,7 @@ def DoxyfileParse(file_contents):
          append_data( data, key, new_data, '\\' )
 
    # compress lists of len 1 into single strings
-   for (k, v) in data.items():
+   for (k, v) in list(data.items()):
       if len(v) == 0:
          data.pop(k)
 
@@ -166,7 +167,7 @@ def DoxySourceScan(node, env, path):
    append_additional_source("HTML_HEADER")
    append_additional_source("HTML_FOOTER")
 
-   sources = map( lambda path: env.File(path), sources )
+   sources = [env.File(path) for path in sources]
    return sources
 
 
@@ -194,7 +195,7 @@ def DoxyEmitter(source, target, env):
       out_dir = os.path.join(conf_dir, out_dir)
 
    # add our output locations
-   for (k, v) in output_formats.items():
+   for (k, v) in list(output_formats.items()):
       if data.get("GENERATE_" + k, v[0]) == "YES":
          targets.append(env.Dir( os.path.join(out_dir, data.get(k + "_OUTPUT", v[1]))) )
 

@@ -2,7 +2,7 @@
 import math
 
 if __name__ == '__main__':
-	print "ERROR: ASCEND Canvas should now be invoked using the file 'canvas.py' instead of 'blocklist.py'."
+	print("ERROR: ASCEND Canvas should now be invoked using the file 'canvas.py' instead of 'blocklist.py'.")
 	exit(1)
 
 import gtk
@@ -80,7 +80,7 @@ import gaphas.view
 import pickle as pickle
 import gaphas.picklers
 import obrowser
-import urllib, help
+import urllib.request, urllib.parse, urllib.error, help
 from preferences import Preferences
 
 def BlockToolChain():
@@ -412,8 +412,8 @@ class mainWindow(gtk.Window):
 		try:
 			pickle.dump(self.view.canvas,f)
 			self.status.push(0,"Canvasmodel saved...")
-		except Exception,e:
-			print "ERROR:",str(e)
+		except Exception as e:
+			print("ERROR:",str(e))
 			self.status.push(0,"Canvasmodel could not be saved : " + str(e))
 			b = obrowser.Browser("canvas",self.view.canvas)
 			d = gtk.Dialog("Error",self,gtk.DIALOG_DESTROY_WITH_PARENT,(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -432,12 +432,12 @@ class mainWindow(gtk.Window):
 		try:
 			self.view.canvas = pickle.load(f)
 			if self.view.canvas.model_library is not None:
-				print "Loading Library...."
+				print("Loading Library....")
 				self.loadlib(self, self.view.canvas.model_library,0)
 			self.view.canvas.reattach_ascend(self.ascwrap.library,self.ascwrap.annodb)
 			self.view.canvas.update_now()
 			self.status.push(0,"Canvasmodel sucessfully loaded...")
-		except Exception,e:
+		except Exception as e:
 			self.status.push(0,"Canvasmodel could not be loaded : " + str(e))
 			self.reporter.ReportError("Canvasmodel could not be loaded : " + str(e))
 			self.reporter.ReportNote(" Error occured while attempting to load the file")
@@ -570,7 +570,7 @@ class mainWindow(gtk.Window):
 
 	def load_presaved_canvas(self,widget):
 		#TODO: Separate
-		print self.view.canvas.saved_data
+		print(self.view.canvas.saved_data)
 		try:
 			if self.view.canvas.saved_data is not None:
 				model = str(self.view.canvas)
@@ -582,8 +582,8 @@ class mainWindow(gtk.Window):
 					if sim_inst.isAtom():
 						try:
 							sim_inst.setRealValue(self.view.canvas.saved_data[name])
-						except Exception,e:
-							print e
+						except Exception as e:
+							print(e)
 					elif sim_inst.isRelation():
 						pass
 					else:
@@ -626,8 +626,8 @@ class mainWindow(gtk.Window):
 
 		try:
 			self.M.build()
-		except RuntimeError,e:
-			print "Couldn't build system: %s" % str(e)
+		except RuntimeError as e:
+			print("Couldn't build system: %s" % str(e))
 			self.status.push(0,"Couldn't build system: %s" % str(e));
 			return
 		#try:
@@ -708,9 +708,9 @@ class mainWindow(gtk.Window):
 			self.reporter.reportError(" File %s successfully loaded." % filename)
 			self.status.push(0,"File %s Loaded." % filename)
 			self.view.canvas.filename = filename
-		except Exception,e:
+		except Exception as e:
 			self.reporter.reportError(" Error occured while attempting to load the file. File could not be loaded properly.")
-			print e
+			print(e)
 		finally:
 			f.close()
 
@@ -740,8 +740,8 @@ class mainWindow(gtk.Window):
 				self.status.push(0,"CanvasModel Saved.")
 				self.view.canvas.filestate = 1
 				self.view.canvas.filename = name
-			except Exception,e:
-				print "ERROR:",str(e)
+			except Exception as e:
+				print("ERROR:",str(e))
 				b = obrowser.Browser("canvas",self.view.canvas)
 				d = gtk.Dialog("Error",self,gtk.DIALOG_DESTROY_WITH_PARENT,(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
 				d.vbox.add(gtk.Label(str(e)))
@@ -786,8 +786,8 @@ class mainWindow(gtk.Window):
 					if sim_inst.getStatus() == 3:
 						self.errorvars.append(name)
 
-				except Exception,e:
-					print e
+				except Exception as e:
+					print(e)
 			elif sim_inst.isRelation():
 				pass
 			else:
@@ -799,10 +799,10 @@ class mainWindow(gtk.Window):
 		self.errorblocks = []
 		self.activevar = []
 		for i in sim.getChildren()[0].getChildren():
-			print i.getName()
+			print(i.getName())
 			checkifsolved(i, str(i.getName()))
 
-		print self.errorvars
+		print(self.errorvars)
 		for i in sim.getChildren()[0].getChildren():
 			for j in self.errorvars:
 				if str(i.getName()) in j:
@@ -812,7 +812,7 @@ class mainWindow(gtk.Window):
 						self.errortext += '\n'
 						self.errortext += str(i.getName()) #+' --> ' + ' couldnot be solved'
 						self.errorblocks.append(str(i.getName()))
-		print self.errorblocks
+		print(self.errorblocks)
 		self.fill_blocks()
 
 
@@ -835,7 +835,7 @@ class mainWindow(gtk.Window):
 						bi.color_b = 0
 						flag = 1
 
-		print "updating canvas"
+		print("updating canvas")
 		self.view.canvas.update_now()
 		if flag == 1:
 			self.view.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#F88'))

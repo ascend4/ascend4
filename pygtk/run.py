@@ -11,5 +11,5 @@ sim.build()
 b = gtkbrowser.Browser(sim)
 b.run()
 
-print "BACK AT TOP LEVEL"
+print("BACK AT TOP LEVEL")
 del(b)

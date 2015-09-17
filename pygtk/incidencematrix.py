@@ -40,7 +40,7 @@ class IncidenceMatrixWindow:
 		green = []
 		blue = []	
 		n = 4
-		for k,v in colors.iteritems():
+		for k,v in colors.items():
 			red.append((float(k)/n, v[0], v[0]))
 			green.append((float(k)/n, v[1], v[1]))
 			blue.append((float(k)/n, v[2], v[2]))
@@ -85,11 +85,11 @@ class IncidenceMatrixWindow:
 			except IndexError:
 				return "[out of range]"
 
-			print "row = %d, col = %d" % (_row,_col)
+			print("row = %d, col = %d" % (_row,_col))
 
 			self.lastrow = _row;
 			self.lastcol = _col; 
 			self.lastmsg = "rel '%s', var '%s': block %d" %(_rel,_var,_blk)
-			print self.lastmsg
+			print(self.lastmsg)
 			return self.lastmsg
 

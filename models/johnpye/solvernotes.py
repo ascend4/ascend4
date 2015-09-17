@@ -3,27 +3,27 @@ import extpy
 
 def solvernotes(self):
 	""" use the NOTES DB to set parameters applicable to the current active solver """
-	print "SETUP_SOLVER..."
+	print("SETUP_SOLVER...")
 	sim = ascpy.Registry().getSimulation('sim')
 
 	browser = extpy.getbrowser()
 	if browser:
 		reporter = browser.reporter
 	else:
-		print "Using console solver reporter"
+		print("Using console solver reporter")
 		reporter = ascpy.getReporter()
 
 	if browser:
-		print "Using browser.solver"
+		print("Using browser.solver")
 		solver = browser.solver
 	else:
-		print "Using hardwired default solver, QRSlv"
+		print("Using hardwired default solver, QRSlv")
 		solver = ascpy.Solver("QRSlv")
 	
 
 	db = ascpy.Library().getAnnotationDatabase()
 
-	print "GOT SIM..."
+	print("GOT SIM...")
 	
 	if not sim:
 		reporter.reportError("No simulation present yet")
@@ -45,17 +45,17 @@ def solvernotes(self):
 
 	notes = db.getNotes(self.getType(),ascpy.SymChar(solvername))
 
-	print "GETTING SOLVER PARAMS..."
+	print("GETTING SOLVER PARAMS...")
 
 	params = sim.getParameters()
 
-	print "DONE SOLVER PARAMS"
+	print("DONE SOLVER PARAMS")
 
-	print params
+	print(params)
 
 	paramnames = [p.getName() for p in params]
 
-	print "DONE PARAMS"
+	print("DONE PARAMS")
 
 	for i in range(0,len(notes)):
 		note = notes[i]

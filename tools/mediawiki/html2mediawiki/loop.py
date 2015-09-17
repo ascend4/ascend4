@@ -10,7 +10,7 @@ targetdir = os.path.expanduser("~/wikiscrape/wiki")
 wikiname = "ASCEND"
 
 if not os.path.exists(targetdir):
-	print "Target directory %s does not exist"%targetdir
+	print("Target directory %s does not exist"%targetdir)
 	sys.exit(1)
 
 res = {}

@@ -97,7 +97,7 @@ class ModelView:
 		try:
 			self.make( self.sim.getName(),self.sim.getModel() )
 			self.browser.enable_on_model_tree_build()
-		except Exception,e:
+		except Exception as e:
 			self.browser.reporter.reportError("Error building tree: %s" % e);
 		self.browser.maintabs.set_current_page(1);
 
@@ -185,7 +185,7 @@ class ModelView:
 		# get back the Instance object we just edited (having to use this seems like a bug)
 		path = tuple( map(int,path.split(":")) )
 
-		if not self.otank.has_key(path):
+		if path not in self.otank:
 			raise RuntimeError("cell_edited_callback: invalid path '%s'" % path)
 			return
 
@@ -201,7 +201,7 @@ class ModelView:
 				_e.checkEntry()
 				_e.setValue()
 				_e.exportPreferredUnits(self.browser.prefs)
-			except InputError, e:
+			except InputError as e:
 				self.browser.reporter.reportError(str(e))
 				return;
 
@@ -258,7 +258,7 @@ class ModelView:
 					_path = self.modelstore.get_path(_piter)
 					self.otank[_path]=(_name,child)
 					#self.browser.reporter.reportError("2 Added %s at path %s" % (_name,repr(_path)))
-				except Exception,e:
+				except Exception as e:
 					self.browser.reporter.reportError("%s: %s" % (_name,e))
 	
 	def make(self, name=None, value=None, path=None, depth=1):
@@ -301,7 +301,7 @@ class ModelView:
 				_contextmenu = True
 				_button = 3
 			elif _keyval == 'F2':
-				print "F2 pressed"
+				print("F2 pressed")
 				self.modelview.set_cursor(_path,self.tvcolumns[2],1)
 												
 				return
@@ -320,7 +320,7 @@ class ModelView:
 			# set the statusbar
 			nn = self.notes.getNotes(self.sim.getModel().getType(),ascpy.SymChar("inline"),_name)
 			for n in nn:
-				print "%s: (%s) %s" % (n.getId(),str(n.getLanguage()),n.getText())
+				print("%s: (%s) %s" % (n.getId(),str(n.getLanguage()),n.getText()))
 		
 			self.builder.get_object("free_variable").set_sensitive(False)
 			self.builder.get_object("fix_variable").set_sensitive(False)
@@ -351,7 +351,7 @@ class ModelView:
 		self.propsmenuitem.set_sensitive(False)					
 
 		if _instance.isReal():
-			print "CAN POP: real atom"
+			print("CAN POP: real atom")
 			_canpop = True
 			self.unitsmenuitem.set_sensitive(True)
 
@@ -373,7 +373,7 @@ class ModelView:
 			_menu = self.get_model_context_menu(_instance)
 			self.modelview.grab_focus()
 			self.modelview.set_cursor(_path,_col,0)
-			print "RUNNING POPUP MENU"
+			print("RUNNING POPUP MENU")
 			_menu.popup(None,None,None,_button,event.time)
 			return
 
@@ -389,7 +389,7 @@ class ModelView:
 		menu = gtk.Menu()
 		
 		if instance.isPlottable():
-			print "PLOTTABLE"
+			print("PLOTTABLE")
 			mi = gtk.ImageMenuItem("P_lot",True);
 			img = gtk.Image()
 			img.set_from_file(self.browser.options.assets_dir+'/plot.png')
@@ -423,10 +423,10 @@ class ModelView:
 		return menu
 
 	def run_activate(self,widget,instance,method):
-		print "RUNNING %s" % method.getName()
+		print("RUNNING %s" % method.getName())
 		try:
 			self.browser.sim.run(method,instance)
-		except Exception,e:
+		except Exception as e:
 			self.browser.reporter.reportError(str(e))
 		self.refreshtree()		
 
@@ -454,11 +454,11 @@ class ModelView:
 		else:
 			self.browser.reporter.reportNote("Instance %s about to be plotted..." % _instance.getName().toString())
 
-		print("Plotting instance '%s'..." % _instance.getName().toString())
+		print(("Plotting instance '%s'..." % _instance.getName().toString()))
 
 		_plot = _instance.getPlot()
 
-		print "Title: ", _plot.getTitle()
+		print("Title: ", _plot.getTitle())
 		_plot.show(True)
 
 		return 1
@@ -470,8 +470,8 @@ class ModelView:
 		_path,_col = self.modelview.get_cursor()
 		_instance = self.otank[_path][1]
 		if _instance.isRelation():
-			print "Relation '"+_instance.getName().toString()+"':", \
-				_instance.getRelationAsString(self.sim.getModel())
+			print("Relation '"+_instance.getName().toString()+"':", \
+				_instance.getRelationAsString(self.sim.getModel()))
 			_dia = RelPropsWin(self.browser,_instance);
 			_dia.run();
 		elif _instance.getType().isRefinedSolverVar():
@@ -484,7 +484,7 @@ class ModelView:
 		_path,_col = self.modelview.get_cursor()
 		_instance = self.otank[_path][1]
 		if _instance.getType().isRefinedSolverVar():
-			print "OBSERVING",_instance.getName().toString()
+			print("OBSERVING",_instance.getName().toString())
 			self.browser.observe(_instance)
 
 	def on_fix_variable_activate(self,*args):

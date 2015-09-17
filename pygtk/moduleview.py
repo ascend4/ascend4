@@ -18,7 +18,7 @@ try:
 		mgr.set_search_path(_op)
 	lang = mgr.get_language('ascend')
 	HAVE_SOURCEVIEW=1
-except ImportError,e:
+except ImportError as e:
 	MyBuffer = gtk.TextBuffer
 	MyView = gtk.TextView
 
@@ -114,7 +114,7 @@ class ModuleView:
 				self.moduleview.expand_row(path,False)
 			#self.browser.reporter.reportNote("Launching of external editor not yet implemented")
 		elif len(path)==2:
-			if self.modtank.has_key(path):
+			if path in self.modtank:
 				_type = self.modtank[path];
 				if not _type.isModel():
 					self.browser.reporter.reportError("Can't create simulation for type '%s': not a MODEL type" % str(_type.getName()))
@@ -224,7 +224,7 @@ class ViewModel:
 		
 		# TODO add status bar where this message can be reported?
 		if not HAVE_SOURCEVIEW or lang is None:
-			print "UNABLE TO LOCATE ASCEND LANGUAGE DESCRIPTION for gtksourceview"
+			print("UNABLE TO LOCATE ASCEND LANGUAGE DESCRIPTION for gtksourceview")
 
 		#Creating a ScrolledWindow for the textview widget
 		scroll = gtk.ScrolledWindow()

@@ -15,7 +15,7 @@ def listnotes(self):
 		ii = notes[i].getId()
 		tt = notes[i].getText()
 		s = "type = %s, method = %s, lang = %s, id = %s, text = %s" % (notes[i].getType(), mm, ll, ii, tt)
-		print "NOTES:",s
+		print("NOTES:",s)
 		browser.reporter.reportNote(s)
 
 # note: 'setup_solver' moved to 'solvernotes.py' (and renamed)

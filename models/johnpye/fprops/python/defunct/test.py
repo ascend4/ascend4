@@ -17,6 +17,6 @@ p_peng=fprops_p(T,rho,water_peng,error)
 p_hyd=fprops_p(T,rho,hydrogen,error)
 #etc...
 
-if p_helm : print "Helmholtz Pressure: ",p_helm
-if p_peng : print "PengRobinson Pressure: ",p_peng
-if p_hyd : print "Hydrogen Pressure: ",p_hyd
+if p_helm : print("Helmholtz Pressure: ",p_helm)
+if p_peng : print("PengRobinson Pressure: ",p_peng)
+if p_hyd : print("Hydrogen Pressure: ",p_hyd)

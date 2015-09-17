@@ -36,8 +36,8 @@ for F in [helm,pr]:
 				rrf.append(rf)	
 				rrg.append(rg)
 				pp.append(p)
-			except ValueError,E:
-				print "ERROR T=",T,":",str(e)
+			except ValueError as E:
+				print("ERROR T=",T,":",str(e))
 
 		pp = array(pp)
 		rrf = array(rrf)

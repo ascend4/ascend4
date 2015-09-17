@@ -26,10 +26,10 @@ def generate(env):
 	"""
 	try:
 		if platform.system()=="Windows":
-			import _winreg
-			x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
-			y= _winreg.OpenKey(x,HKLM_GRAPHVIZ)
-			PATH,t = _winreg.QueryValueEx(y,"InstallPath")
+			import winreg
+			x=winreg.ConnectRegistry(None,winreg.HKEY_LOCAL_MACHINE)
+			y= winreg.OpenKey(x,HKLM_GRAPHVIZ)
+			PATH,t = winreg.QueryValueEx(y,"InstallPath")
 			LIB = os.path.join(PATH,"lib")
 			BIN = os.path.join(PATH,"bin")
 			INCLUDE = os.path.join(PATH,"include","graphviz")
@@ -60,32 +60,32 @@ def generate(env):
 				env['GRAPHVIZ_LIBS'] = env1.get('LIBS')
 				env['HAVE_GRAPHVIZ'] = True
 	
-		print "GRAPHVIZ_LIBS =",env.get('GRAPHVIZ_LIBS')
-		print "GRAPHVIZ_LIBPATH =",env.get('GRAPHVIZ_LIBPATH')
-		print "GRAPHVIZ_CPPPATH =",env.get('GRAPHVIZ_CPPPATH')
+		print("GRAPHVIZ_LIBS =",env.get('GRAPHVIZ_LIBS'))
+		print("GRAPHVIZ_LIBPATH =",env.get('GRAPHVIZ_LIBPATH'))
+		print("GRAPHVIZ_CPPPATH =",env.get('GRAPHVIZ_CPPPATH'))
 
-	except Exception,e:
-		print "NO GRAPHVIZ (%s)" % str(e)
+	except Exception as e:
+		print("NO GRAPHVIZ (%s)" % str(e))
 		env['HAVE_GRAPHVIZ'] = False
 
 def exists(env):
 	"""
 	Make sure this tool exists.
 	"""
-	print "CHECKING FOR GRAPHVIZ"
+	print("CHECKING FOR GRAPHVIZ")
 	if platform.system()=="Windows":
 		try:
-			import _winreg
-			x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
-			y= _winreg.OpenKey(x,HKLM_GRAPHVIZ)
-			INCLUDE,t = _winreg.QueryValueEx(y,'InstallPath')
-			print "GRAPHVIZ EXISTS"
+			import winreg
+			x=winreg.ConnectRegistry(None,winreg.HKEY_LOCAL_MACHINE)
+			y= winreg.OpenKey(x,HKLM_GRAPHVIZ)
+			INCLUDE,t = winreg.QueryValueEx(y,'InstallPath')
+			print("GRAPHVIZ EXISTS")
 			return True
 		except:
-			print "GRAPHVIZ DOESN'T EXIST"
+			print("GRAPHVIZ DOESN'T EXIST")
 			return False
 	else:
-		print "NOT WINDOWS"
+		print("NOT WINDOWS")
 		if not subprocess.call('pkg-config libgvc libagraph --exists'):
 			return True
 		return False

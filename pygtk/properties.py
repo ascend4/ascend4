@@ -116,7 +116,7 @@ class VarPropsWin:
 			,self.upperentry: self.instance.getUpperBound()
 			,self.nominalentry: self.instance.getNominal()
 		}
-		for _k,_v in _arr.iteritems():	
+		for _k,_v in _arr.items():	
 			_t = str(_v / _conversion)+" "+_u
 			_k.set_text(_t)
 			self.parse_entry(_k)
@@ -134,7 +134,7 @@ class VarPropsWin:
 		self.statusmessage.set_text(self.browser.statusmessages[_status]);
 
 	def apply_changes(self):
-		print "APPLY"
+		print("APPLY")
 		# check the units of the entered values are acceptable
 		
 		_arr = {
@@ -144,14 +144,14 @@ class VarPropsWin:
 			,self.nominalentry: self.instance.setNominal
 		}
 		failed = False;
-		for _k,_v in _arr.iteritems():
+		for _k,_v in _arr.items():
 			i = RealAtomEntry(self.instance, _k.get_text())
 			try:
 				i.checkEntry()
 				self.taint_entry(_k,"white");
 				_v(i.getValue())
-			except InputError, e:
-				print "INPUT ERROR: ",str(e)
+			except InputError as e:
+				print("INPUT ERROR: ",str(e))
 				self.taint_entry(_k,"#FFBBBB");
 				failed = True;
 		
@@ -180,7 +180,7 @@ class VarPropsWin:
 		try:
 			i.checkEntry()
 			_value = i.getValue()
-		except InputError, e:
+		except InputError as e:
 			_value = None
 			_error = re.split('Input Error: ', str(e), 1)
 			entry.set_property("secondary-icon-tooltip-text", _error[1])

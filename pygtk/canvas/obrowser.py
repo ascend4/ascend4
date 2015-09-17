@@ -16,7 +16,7 @@ class Browser:
 
 	def make_instance( self, value, piter ):
 		if hasattr( value, "__dict__" ):
-			for _name, _value in value.__dict__.items():
+			for _name, _value in list(value.__dict__.items()):
 			    _piter = self.make_row( piter, "."+_name, _value )
 			    _path = self.treestore.get_path( _piter )
 			    self.otank[ _path ] = (_name, _value)
@@ -24,14 +24,14 @@ class Browser:
 	def make_mapping( self, value, piter ):
 		keys = []
 		if hasattr( value, "iteritems"):
-			for k,v in value.iteritems():
+			for k,v in value.items():
 				_name = "[%s]"%str(k)
 				_piter = self.make_row( piter, _name, v )
 				_path = self.treestore.get_path( _piter )
 				self.otank[ _path ] = (_name, v)
 			return
 		elif hasattr(value,'__getitem__') and hasattr(value,'__len__'):
-			keys = range(len(value))
+			keys = list(range(len(value)))
 		elif hasattr(value,"__iter__"):
 			# handle 'set' objects...
 			for v in value:

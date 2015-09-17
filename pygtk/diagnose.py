@@ -28,9 +28,9 @@ class DiagnoseWindow:
 		try:
 			_icon = gtk.Image()
 			_iconpath = browser.assets_dir+'diagnose'+config.ICON_EXTENSION
-			print "ICON PATH =",_iconpath
+			print("ICON PATH =",_iconpath)
 			_icon.set_from_file(_iconpath)
-			print "ICON = ",_icon
+			print("ICON = ",_icon)
 			self.window.set_icon(_icon)
 		except:
 			pass
@@ -81,16 +81,16 @@ class DiagnoseWindow:
 	def apply_prefs(self):
 		vc = self.browser.prefs.getBoolPref("Diagnose","varcollapsed",True)
 
-		print "VARCOLLAPSED =",vc
+		print("VARCOLLAPSED =",vc)
 		self.varcollapsed.set_active(vc)
 		self.relcollapsed.set_active(self.browser.prefs.getBoolPref("Diagnose","relcollapsed",True))
 
 	def prepare_data(self):
 		# convert incidence map to pylab numarray type:
-		print "PREPARING DATA to be loaded"
+		print("PREPARING DATA to be loaded")
 		self.im = self.browser.sim.getIncidenceMatrix()
 		self.data = self.im.getIncidenceData()
-		print "DATA LOADED"
+		print("DATA LOADED")
 
 		self.zoom=1;
 	
@@ -98,7 +98,7 @@ class DiagnoseWindow:
 		
 		try:
 			if self.im.getNumBlocks()==0:
-				print "NO BLOCKS!"
+				print("NO BLOCKS!")
 				self.image.set_from_stock(gtk.STOCK_DIALOG_ERROR
 					,gtk.ICON_SIZE_DIALOG
 				)
@@ -112,11 +112,11 @@ class DiagnoseWindow:
 				block = self.im.getNumBlocks() - 1
 				rl,cl,rh,ch = self.im.getBlockLocation(block)
 			else:				
-				print "BLOCK INDEX ERROR: block =",block
+				print("BLOCK INDEX ERROR: block =",block)
 				self.blockentry.set_text(str(self.block))
 				return
-		except RuntimeError,e:
-			print "ERROR GETTING BLOCK LOCATION:",str(e)
+		except RuntimeError as e:
+			print("ERROR GETTING BLOCK LOCATION:",str(e))
 			self.blockentry.set_text(str(self.block))
 			return
 
@@ -131,7 +131,7 @@ class DiagnoseWindow:
 		nr = int(rh-rl+1);
 		nc = int(ch-cl+1);
 
-		print "STARTING IMAGE CREATION"
+		print("STARTING IMAGE CREATION")
 		# refer http://pygtk.org/pygtk2tutorial/sec-DrawingMethods.html
 		c = chr(255)
 		b = nr*nc*3*[c]
@@ -176,14 +176,14 @@ class DiagnoseWindow:
 							dot = bluegreendot
 						else:
 							dot = blackdot
-					except ValueError, e:
+					except ValueError as e:
 						pass
 			#print "DOT: ",dot
 			b[pos], b[pos+1], b[pos+2] = dot
 
 		d = ''.join(b)
 
-		print "DONE IMAGE CREATION"
+		print("DONE IMAGE CREATION")
 	
 		self.pixbuf = gtk.gdk.pixbuf_new_from_data(d, gtk.gdk.COLORSPACE_RGB, False, 8 \
 				, nc, nr, rowstride);
@@ -193,7 +193,7 @@ class DiagnoseWindow:
 		self.zoom = -1 # to fit, up to max 16x
 		self.do_zoom()
 
-		print "DONE IMAGE TRANSFER TO SERVER"
+		print("DONE IMAGE TRANSFER TO SERVER")
 
 		self.fill_var_names()
 		self.fill_rel_names()
@@ -201,7 +201,7 @@ class DiagnoseWindow:
 	
 		self.fill_selection_info()
 
-		print "DONE FILL VALUES"
+		print("DONE FILL VALUES")
 
 	def fill_selection_info(self):
 		if self.var:
@@ -265,7 +265,7 @@ class DiagnoseWindow:
 		self.image.set_from_pixbuf(pb1)
 
 	def fill_block_status(self):
-		print "FILL BLOCK STATUS"
+		print("FILL BLOCK STATUS")
 		s = self.im.getBlockStatus(self.block)
 		ss = "Failed"
 		if s == ascpy.IM_CONVERGED:
@@ -280,7 +280,7 @@ class DiagnoseWindow:
 		
 
 	def fill_var_names(self):
-		print "FILL VAR NAMES"
+		print("FILL VAR NAMES")
 
 		names = [str(i) for i in self.im.getBlockVars(self.block)]
 
@@ -300,14 +300,14 @@ class DiagnoseWindow:
 			text = "\n".join(names)
 		self.varbuf.set_text(text)
 
-		print "DONE VAR NAMES"
+		print("DONE VAR NAMES")
 
 	def fill_rel_names(self):
-		print "REL NAMES"
+		print("REL NAMES")
 
 		rels = self.im.getBlockRels(self.block)
 
-		print "GOT RELS, NOW GETTING NAMES"
+		print("GOT RELS, NOW GETTING NAMES")
 
 		names = [str(i) for i in rels]
 
@@ -327,7 +327,7 @@ class DiagnoseWindow:
 			text = "\n".join(names)
 		self.relbuf.set_text(text)
 
-		print "DONE REL NAMES"
+		print("DONE REL NAMES")
 
 	def set_block(self, block):
 		self.fill_values(block)
@@ -389,7 +389,7 @@ class DiagnoseWindow:
 			,"Lower bound": self.var.getLowerBound()
 			,"Upper bound": self.var.getUpperBound()
 		}
-		for k,v in _rows.iteritems():
+		for k,v in _rows.items():
 			text += "\n  %s\t%s" % (k,value_human(v)+units)
 		
 		text += "\n\nIncident with %d relations:" % self.var.getNumIncidentRelations()
@@ -439,7 +439,7 @@ class DiagnoseWindow:
 				self.set_block(b)
 				return
 			b = b - 1
-		print "NO PRECEDING 'BIG' BLOCKS"
+		print("NO PRECEDING 'BIG' BLOCKS")
 		
 	def on_nextbigbutton_clicked(self,*args):
 		b = self.block + 1
@@ -450,11 +450,11 @@ class DiagnoseWindow:
 				self.set_block(b)
 				return
 			b = b + 1
-		print "NO FOLLOWING 'BIG' BLOCKS"
+		print("NO FOLLOWING 'BIG' BLOCKS")
 	
 	def on_blockentry_key_press_event(self,widget,event):
 		keyname = gtk.gdk.keyval_name(event.keyval)
-		print "KEY ",keyname
+		print("KEY ",keyname)
 		if keyname=="Return":
 			self.set_block( int(self.blockentry.get_text()) )
 
@@ -472,14 +472,14 @@ class DiagnoseWindow:
 
 	def on_zoomentry_key_press_event(self,widget,event):
 		keyname = gtk.gdk.keyval_name(event.keyval)
-		print "KEY ",keyname
+		print("KEY ",keyname)
 		if keyname=="Return":
 			t = self.zoomentry.get_text()
 			m = ZOOM_RE.match(t)
 			if not m:
 				self.zoomentry.set_text("%d %%" % int(self.zoom*100))
 			for mm in m:
-				print m
+				print(m)
 			self.set_zoom( int(self.zoomentry.get_text()) )
 
 	# clicking in incidence matrix to get updated information at RHS
@@ -507,8 +507,8 @@ def fold(data):
     '[1,4-6,10,15-18,22,25-28]'
     """
     folded = []
-    for k, g in groupby(enumerate(sorted(data)), lambda (i,x):i-x):
-        seq = map(itemgetter(1), g)
+    for k, g in groupby(enumerate(sorted(data)), lambda i_x:i_x[0]-i_x[1]):
+        seq = list(map(itemgetter(1), g))
         if len(seq) > 1:
             x = '%s-%s' % (seq[0], seq[-1])
         else:

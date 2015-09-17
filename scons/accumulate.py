@@ -44,7 +44,7 @@ def copypackaged(src,dest, symlinks=False):
 	code examples, documentation fragments, etc.
 	"""
 
-	print "Entering directory '%s'" % src
+	print("Entering directory '%s'" % src)
 
 	files = os.listdir(src)
 
@@ -58,12 +58,12 @@ def copypackaged(src,dest, symlinks=False):
 				continue
 			if l in files:
 				if os.path.isdir(os.path.join(src,l)):
-					print "Package file '%s' ignored (is a directory)" % l
+					print("Package file '%s' ignored (is a directory)" % l)
 					continue
-				print "Package '%s'" % l
+				print("Package '%s'" % l)
 				pfiles.append(l)
 			else:
-				print "Not found: '%s'" % l
+				print("Not found: '%s'" % l)
 
 	# copy any listed files in the current directory first		
 	if pfiles:
@@ -86,7 +86,7 @@ def copypackaged(src,dest, symlinks=False):
 			destDirPath = os.path.join(dest, srcBasename)
 			copypackaged(srcPath, destDirPath, symlinks)
 
-	print "Leaving directory '%s'" % src
+	print("Leaving directory '%s'" % src)
 
 	
 def my_copytree(src, dest, env, symlinks=False):
@@ -118,7 +118,7 @@ def my_copytree(src, dest, env, symlinks=False):
 		for item in files:
 			srcPath = os.path.join(src, item)
 			if os.path.isdir(srcPath):
-				print "DIR = %s" % srcPath
+				print("DIR = %s" % srcPath)
 				srcBasename = os.path.basename(srcPath)
 				destDirPath = os.path.join(dest, srcBasename)
 				if not os.path.exists(destDirPath):
@@ -129,11 +129,11 @@ def my_copytree(src, dest, env, symlinks=False):
 					, symlinks
 				)
 			elif os.path.islink(item) and symlinks:
-				print "LINK = %s" % srcPath
+				print("LINK = %s" % srcPath)
 				linkto = os.readlink(item)
 				os.symlink(linkto, dest)
 			else:
-				print "FILE = %s" % srcPath
+				print("FILE = %s" % srcPath)
 				shutil.copy2(srcPath, dest)		
 
 	# case 'cp -R src/ dest/' where dest/ already exists

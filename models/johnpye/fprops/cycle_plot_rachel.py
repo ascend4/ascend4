@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 import extpy, sys
 from solverreporter import *
-from __builtin__ import *
+from builtins import *
 
 import sys, os, os.path
 sys.path.append(os.path.expanduser("~/ascend/models/johnpye/fprops/python"))
@@ -104,8 +104,8 @@ def cycle_plot_brayton(self):
 	SS = [self.PU.outlet, self.BO.inlet] + boiler_curve + [self.TU.inlet, self.TU.outlet] + condenser_curve + [self.CO.outlet, self.PU.outlet]
 	plot_Ts(SS)
 
-	title(unicode(r"Brayton cycle with %s" % D.name))
-	ylabel(unicode(r"T / [°C]"))
+	title(str(r"Brayton cycle with %s" % D.name))
+	ylabel(str(r"T / [°C]"))
 	aa = axis(); axis([aa[0],aa[1],-100,600])
 	xlabel("s / [kJ/kg/K]")
 
@@ -145,8 +145,8 @@ def cycle_plot_rankine_regen2(self):
 	# line for the heat exchanger
 	plot_Ts(pconst(self.HE.inlet_heat, self.HE.outlet,100),'b-')
 
-	title(unicode(r"Regenerative Rankine cycle with %s" % D.name))
-	ylabel(unicode(r"T / [°C]"))
+	title(str(r"Regenerative Rankine cycle with %s" % D.name))
+	ylabel(str(r"T / [°C]"))
 	aa = axis(); axis([aa[0],aa[1],-100,600])
 	xlabel("s / [kJ/kg/K]")
 
@@ -185,8 +185,8 @@ def cycle_plot_rankine_regen1(self):
 	plot_Ts([self.HE.inlet_heat, self.HE.outlet],'b:')
 	plot_Ts([self.HE.outlet_heat, self.HE.inlet],'b:')
 
-	title(unicode(r"Regenerative Rankine cycle with %s" % D.name))
-	ylabel(unicode(r"T / [°C]"))
+	title(str(r"Regenerative Rankine cycle with %s" % D.name))
+	ylabel(str(r"T / [°C]"))
 	aa = axis(); axis([aa[0],aa[1],-100,600])
 	xlabel("s / [kJ/kg/K]")
 
@@ -218,8 +218,8 @@ def heater_closed_plot(self):
 		Href = (float(HE.inlet.h)*float(HE.inlet.mdot))\
 	)
 
-	title(unicode(r"Closed feedwater heater with %s" % D.name))
-	ylabel(unicode(r"T / [°C]"))
+	title(str(r"Closed feedwater heater with %s" % D.name))
+	ylabel(str(r"T / [°C]"))
 	xlabel("H / [MW]")
 
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
@@ -246,8 +246,8 @@ def cycle_plot_brayton_regen(self):
 	plot_Ts(SS,'go')
 	hold(1)
 
-	title(unicode(r"Regenerative Brayton cycle"))
-	ylabel(unicode(r"T / [°C]"))
+	title(str(r"Regenerative Brayton cycle"))
+	ylabel(str(r"T / [°C]"))
 	xlabel("s / [kJ/kg/K]")
 
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
@@ -276,7 +276,7 @@ def cycle_plot_brayton_reheat(self):
 	hold(1)
 
 	title("Reheat Brayton cycle")
-	ylabel(unicode(r"T / [°C]"))
+	ylabel(str(r"T / [°C]"))
 	xlabel("s / [kJ/kg/K]")
 
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
@@ -302,8 +302,8 @@ def cycle_plot_brayton_reheat_regen(self):
 	plot_Ts(SS)
 	hold(1)
 
-	title(unicode(r"Reheat Regenerative Brayton cycle"))
-	ylabel(unicode(r"T / [°C]"))
+	title(str(r"Reheat Regenerative Brayton cycle"))
+	ylabel(str(r"T / [°C]"))
 	xlabel("s / [kJ/kg/K]")
 
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
@@ -332,8 +332,8 @@ def air_stream_heat_exchanger_plot(self):
 		Href = (float(self.inlet_cold.h)*float(self.inlet_cold.mdot))\
 	)
 
-	title(unicode(r"Combined-cycle air-%s heat exchanger" % D.name))
-	ylabel(unicode(r"T / [°C]"))
+	title(str(r"Combined-cycle air-%s heat exchanger" % D.name))
+	ylabel(str(r"T / [°C]"))
 	xlabel("H / [MW]")
 
 	extpy.getbrowser().reporter.reportNote("Plotting completed")

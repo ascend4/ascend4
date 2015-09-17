@@ -57,11 +57,11 @@ for p in linspace(prange[0], prange[1],1000):
 		raise RuntimeError("Wrong number of roots")
 
 	if imag(Z[2]):
-		print "imaginary root found..."
+		print("imaginary root found...")
 		continue
 
 	if imag(Z[0]):
-		print "imaginary root found..."
+		print("imaginary root found...")
 		continue
 
 

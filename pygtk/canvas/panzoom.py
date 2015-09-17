@@ -58,7 +58,7 @@ class ZoomTool(Tool):
 				view._matrix.translate(+ox, +oy)
 
 				# Make sure everything's updated
-				map(view.update_matrix, view._canvas.get_all_items())
+				list(map(view.update_matrix, view._canvas.get_all_items()))
 				view.request_update(view._canvas.get_all_items())
 
 				self.lastdiff = dy;
@@ -79,7 +79,7 @@ class ZoomTool(Tool):
 			view._matrix.scale(factor, factor)
 			view._matrix.translate(+ox, +oy)
 			# Make sure everything's updated
-			map(view.update_matrix, view._canvas.get_all_items())
+			list(map(view.update_matrix, view._canvas.get_all_items()))
 			view.request_update(view._canvas.get_all_items())
 			context.ungrab()
 			return True
@@ -114,7 +114,7 @@ class PanTool(Tool):
             dy = self.y1 - self.y0
             view._matrix.translate(dx/view._matrix[0],dy/view._matrix[3])
             # Make sure everything's updated
-            map(view.update_matrix, view._canvas.get_all_items())
+            list(map(view.update_matrix, view._canvas.get_all_items()))
             view.request_update(view._canvas.get_all_items())
             self.x0 = self.x1
             self.y0 = self.y1

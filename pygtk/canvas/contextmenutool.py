@@ -192,7 +192,7 @@ class ContextMenuTool(Tool):
 		print window.ascwrap.streams
 	'''
 	def defaultvalues(self,widget,window,context,item):
-		print widget,window,context,item.blockinstance
+		print(widget,window,context,item.blockinstance)
 
 		model = str(self.view.canvas)
 		#print model

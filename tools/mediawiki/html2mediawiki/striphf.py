@@ -283,7 +283,7 @@ def html2wiki(html,wikiname):
 	title = s.title.string
 
 	if(title[-9:] != " - " + wikiname):
-		print "Incorrect title '%s'" % s.title.string
+		print("Incorrect title '%s'" % s.title.string)
 		sys.exit(1)
 
 	title = title[:-9]
@@ -329,6 +329,6 @@ if __name__=="__main__":
 	sys.stderr.write("Reading file %s...\n"%sys.argv[1])
 	f = open(sys.argv[1]).read()
 	wikiname = "ASCEND"
-	print html2wiki(f,wikiname)
+	print(html2wiki(f,wikiname))
 
 

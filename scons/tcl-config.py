@@ -16,15 +16,15 @@ def find_tclConfigsh(tclsh = None):
 	if sys.platform.startswith("win") and tclsh is not None:
 		# check for ActiveState Tcl in Windows registry
 		try:
-			import _winreg
-			x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
-			y= _winreg.OpenKey(x,r"SOFTWARE\ActiveState\ActiveTcl")
-			_regversion,t = _winreg.QueryValueEx(y,"CurrentVersion")
-			z= _winreg.OpenKey(x,r"SOFTWARE\ActiveState\ActiveTcl\%s" % str(_regversion))
-			_regpath,t = _winreg.QueryValueEx(z,None)
-			_winreg.CloseKey(y)
-			_winreg.CloseKey(z)
-			_winreg.CloseKey(x)
+			import winreg
+			x=winreg.ConnectRegistry(None,winreg.HKEY_LOCAL_MACHINE)
+			y= winreg.OpenKey(x,r"SOFTWARE\ActiveState\ActiveTcl")
+			_regversion,t = winreg.QueryValueEx(y,"CurrentVersion")
+			z= winreg.OpenKey(x,r"SOFTWARE\ActiveState\ActiveTcl\%s" % str(_regversion))
+			_regpath,t = winreg.QueryValueEx(z,None)
+			winreg.CloseKey(y)
+			winreg.CloseKey(z)
+			winreg.CloseKey(x)
 			# typically, c:\Tcl\lib\tclConfig.sh.
 			_regconfig = os.path.join(_regpath,os.path.join("lib","tclConfig.sh"))
 			if os.path.exists(_regconfig):
@@ -46,11 +46,11 @@ def find_tclConfigsh(tclsh = None):
 			p.communicate(input=tclshcheck)
 			res = p.returncode
 			assert res == 0
-		except Exception,e:
+		except Exception as e:
 			if tclsh != "tclsh":
-				print >> sys.stderr,"Unable to locate 'tclsh' in PATH. Suspect tcl/tk not installed, or PATH not correctly set. (%s)" % str(e)
+				print("Unable to locate 'tclsh' in PATH. Suspect tcl/tk not installed, or PATH not correctly set. (%s)" % str(e), file=sys.stderr)
 			else:
-				print >> sys.stderr,"The specifed tclsh, '%s' appears to be unrunnable. Check your Tcl/Tk installation and path."
+				print("The specifed tclsh, '%s' appears to be unrunnable. Check your Tcl/Tk installation and path.", file=sys.stderr)
 			sys.exit(1)
 
 		# use a 'tclsh' script to find location of tclConfig.sh
@@ -90,11 +90,11 @@ def find_tclConfigsh(tclsh = None):
 
 		# print tclconfigfile
 		if tclconfigfile is None:
-			print >> sys.stderr, "Unable to locate tclConfig.sh."
+			print("Unable to locate tclConfig.sh.", file=sys.stderr)
 			if platform.system()=="Linux":
-				print >> sys.stderr, "It is likely that you do not have tcl-devel or equivalent package installed on your system."
+				print("It is likely that you do not have tcl-devel or equivalent package installed on your system.", file=sys.stderr)
 			else:
-				print >> sys.stderr, "On non-Linux platforms, the free ActiveTcl distribution for activestate.com is recommended."
+				print("On non-Linux platforms, the free ActiveTcl distribution for activestate.com is recommended.", file=sys.stderr)
 			sys.exit(1)
 
 		return tclconfigfile
@@ -134,7 +134,7 @@ def get_tcl_options(tclconfigfile):
 		# print "MATCHING",s
 		if m:
 			# print "MATCH!"
-			if d.has_key(m.group(1)):
+			if m.group(1) in d:
 				return expand(s[:m.start()] + d[m.group(1)] + s[m.end():],d)
 			else:
 				raise RuntimeError("Missing variable '%s'" % m.group(1))
@@ -150,7 +150,7 @@ def get_tcl_options(tclconfigfile):
 
 		try:
 			d[k] = expand(v,d)
-		except RuntimeError, err:
+		except RuntimeError as err:
 			# print str(err),"probably unneeded"
 			pass
 
@@ -161,21 +161,21 @@ def get_tcl_options(tclconfigfile):
 import getopt, sys
 
 def usage(progname):
-	print "%s [--cflags] [--libs] [--var=TCL_VAR_NAME] [--vars]" % progname
-	print "Output configuration variables for the Tcl script interpreter."
-	print "Options:"
-	print "\t--cflags           Compiler flags for C code that uses Tcl"
-	print "\t--libs             Linker flags for code that uses Tcl"
-	print "\t--vars             List all variables defined in tclConfig.sh"
-	print "\t--var=VARNAME      Output the value of a specific variable"
-	print "\nSee http://ascendwiki.cheme.cmu.edu/Tcl-config for more info."
+	print("%s [--cflags] [--libs] [--var=TCL_VAR_NAME] [--vars]" % progname)
+	print("Output configuration variables for the Tcl script interpreter.")
+	print("Options:")
+	print("\t--cflags           Compiler flags for C code that uses Tcl")
+	print("\t--libs             Linker flags for code that uses Tcl")
+	print("\t--vars             List all variables defined in tclConfig.sh")
+	print("\t--var=VARNAME      Output the value of a specific variable")
+	print("\nSee http://ascendwiki.cheme.cmu.edu/Tcl-config for more info.")
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], "h",
 		["help", "cflags", "libs", "var=","vars","tclsh="]
 	)
-except getopt.GetoptError, err:
-    print str(err)
+except getopt.GetoptError as err:
+    print(str(err))
     usage(sys.argv[0])
     sys.exit(2)
 
@@ -192,17 +192,17 @@ for o, a in opts:
 		usage(sys.argv[0])
 		sys.exit()
 	elif o == "--cflags":
-		print d['TCL_INCLUDE_SPEC']
+		print(d['TCL_INCLUDE_SPEC'])
 	elif o == "--libs":
-		print d['TCL_LIB_SPEC']
+		print(d['TCL_LIB_SPEC'])
 	elif o == "--var":
-		if d.has_key(a):
-			print d[a]
+		if a in d:
+			print(d[a])
 		else:
 			raise RuntimeError("Unknown variable '%s'" % a)
 	elif o == "--vars":
 		for k in sorted(d.keys()):
-			print k
+			print(k)
 	elif o == "--tclsh":
 		pass
 	else:

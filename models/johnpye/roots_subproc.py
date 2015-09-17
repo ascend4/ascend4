@@ -6,7 +6,7 @@ from scipy import io
 from scipy import linalg
 
 if len(sys.argv)<6:
-	print "missing arguments"
+	print("missing arguments")
 	sys.exit(2)
 
 fff = {
@@ -17,7 +17,7 @@ fff = {
 	,"df/dx'": sys.argv[5]
 }
 
-print "COMPUTING..."
+print("COMPUTING...")
 
 gz = io.mmread(fff['dg/dz'])
 gx = io.mmread(fff['dg/dz'])
@@ -25,27 +25,27 @@ fz = io.mmread(fff['df/dz'])
 fx = io.mmread(fff['df/dx'])
 fxp =io.mmread(fff["df/dx'"])
 
-print "gz", gz.shape
-print "gx", gx.shape
-print "fz", fz.shape
-print "fx", fx.shape
-print "fxp", fxp.shape
+print("gz", gz.shape)
+print("gx", gx.shape)
+print("fz", fz.shape)
+print("fx", fx.shape)
+print("fxp", fxp.shape)
 
 if fxp.shape[0]==0:
-	print "fxp is empty (0 rows)"
+	print("fxp is empty (0 rows)")
 	sys.exit(1)
 
 if gz.shape[0]==0:
 	if gx.shape[0]==0:
 		sys.stderr.write("pure differential system\n")
 		if fz.shape[1]!=0:
-			print "pure differential system but with fz nonzero"
+			print("pure differential system but with fz nonzero")
 			sys.exit(2)
 		
 		invfxp = linalg.inv(fxp.todense())
 		D = - invfxp * fx
 	else:
-		print "gz is empty but gx is not!"
+		print("gz is empty but gx is not!")
 		sys.exit(1)
 
 else:
@@ -86,7 +86,7 @@ else:
 
 	dya_dyd = invgz * gx
 
-	print "gz^-1 gx",dya_dyd.shape
+	print("gz^-1 gx",dya_dyd.shape)
 
 	#pylab.spy2(dya_dyd.todense())
 	#pylab.title("${dy_a}/{dy_d}$")
@@ -94,7 +94,7 @@ else:
 
 	B = fz * invgz * gx
 
-	print "fz gz^1 gz",B.shape
+	print("fz gz^1 gz",B.shape)
 	#pylab.spy2(fad.todense())
 	#pylab.title("${df}/{dy_a} * {dy_a}/{dy_d}$")
 	#pylab.show()
@@ -107,10 +107,10 @@ e,v = linalg.eig(D.todense())
 
 #print e
 
-print "max re(e)",max(e.real)
-print "min re(e)",min(e.real)
-print "max im(e)",max(e.imag)
-print "min im(e)",min(e.imag)
+print("max re(e)",max(e.real))
+print("min re(e)",min(e.real))
+print("max im(e)",max(e.imag))
+print("min im(e)",min(e.imag))
 
 import pylab, sys
 sys.stderr.write("about to plot...")

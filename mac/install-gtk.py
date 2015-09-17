@@ -42,9 +42,9 @@ def reroute_deps(lib,gtksite,pysite,orig):
 	lib_is_gtk = (os.path.commonprefix([gtksite,orig]) == gtksite)
 	lib_is_py = (os.path.commonprefix([pysite,orig]) == pysite)
 	if lib_is_py:
-		print "LIB %s IS PY" % orig
+		print("LIB %s IS PY" % orig)
 	if lib_is_gtk:
-		print "LIB %s IS GTK" % orig
+		print("LIB %s IS GTK" % orig)
 
 	rpath_used = False
 	for d in deps:
@@ -59,7 +59,7 @@ def reroute_deps(lib,gtksite,pysite,orig):
 				# construct relative path from python lib to GTK libs
 				uplevels = 1
 				rel = orig[len(os.path.commonprefix([pysite,orig])):]
-				print "RELPATH = ",rel
+				print("RELPATH = ",rel)
 				dir1,tail = os.path.split(rel)
 				while dir1:
 					uplevels += 1
@@ -74,7 +74,7 @@ def reroute_deps(lib,gtksite,pysite,orig):
 				continue
 
 		cmd = ['/usr/bin/install_name_tool','-change',oldpath,newpath,lib]
-		print "RELINK %s: %s --> %s" % (lib,oldpath,newpath)
+		print("RELINK %s: %s --> %s" % (lib,oldpath,newpath))
 		#print " ".join(cmd)
 		P = subprocess.Popen(cmd,stdout=subprocess.PIPE)
 		P.communicate()
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 		,'/System/Library/Frameworks/Cocoa.framework'
 		,'/usr/lib'
 		,os.path.dirname(script)]
-	for name, m in M.modules.items():
+	for name, m in list(M.modules.items()):
 		if not m.__file__:
 			continue
 		ok = True
@@ -119,9 +119,9 @@ if __name__ == "__main__":
 			continue
 
 		imports.add(m)
-		print m
+		print(m)
 	
-	print "\n\nChecking otool deps"
+	print("\n\nChecking otool deps")
 
 	files = set()
 	pyfiles = set()
@@ -129,37 +129,37 @@ if __name__ == "__main__":
 		files.add(m.__file__)
 
 		if m.__file__[-3:] == ".so":
-			print "FILE:",m.__file__
+			print("FILE:",m.__file__)
 			files |= find_deps(m.__file__)
 
 		elif m.__file__[-3:] == ".py":
-			print "PY:",m.__file__
+			print("PY:",m.__file__)
 			pyfiles.add(m.__file__)
 	
-	print "\n\nOTOOL DEPS"
+	print("\n\nOTOOL DEPS")
 	for f in files:
 		if f[-3:] != ".py":
-			print f
+			print(f)
 
-	print "\nAdd pixbuf loaders to list..."
+	print("\nAdd pixbuf loaders to list...")
 	loaders = glob.glob(gtksite+"lib/gtk-2.0/*/loaders/libpixbufloader-*.so")
 	for l in loaders:
-		print l
+		print(l)
 		files.add(l)
 
-	print "\n\nFinding all GTK libs in the list"
+	print("\n\nFinding all GTK libs in the list")
 	gtkimports = set()
 	for f in files:
 		if os.path.commonprefix([gtksite,f]) == gtksite:
 			gtkimports.add(f)
-			print f
+			print(f)
 	
-	print "\n\nFinding all Python site-packages stuff in the list"
+	print("\n\nFinding all Python site-packages stuff in the list")
 	pyimports = set()
 	for f in files:
 		if os.path.commonprefix([pysite,f]) == pysite:
 			pyimports.add(f)
-			print f
+			print(f)
 
 	# define the paths into which we'll copy all the stuff
 	distpath = os.path.normpath(os.path.join(sys.path[0],"../dist"))
@@ -168,7 +168,7 @@ if __name__ == "__main__":
 	gtktarget = targetpath
 	gtklibtarget = os.path.join(gtktarget,"lib")
 
-	print "\n\nCopying all Python files into our bundle"
+	print("\n\nCopying all Python files into our bundle")
 	for f in pyfiles | pyimports:
 		if not os.path.commonprefix([f,pysite]) == pysite:
 			raise RuntimeError("Unknown python import '%s' in list" % f)
@@ -176,14 +176,14 @@ if __name__ == "__main__":
 		dir, f1 = os.path.split(r)
 		if not os.path.exists(os.path.join(pytarget,dir)):
 			os.makedirs(os.path.join(pytarget,dir))
-		print r
+		print(r)
 		dest = os.path.join(pytarget,r)
 		shutil.copy(f, dest)
 		if dest[-3:] == ".so":
-			print "  rerouting dependencies..."
+			print("  rerouting dependencies...")
 			reroute_deps(dest,gtksite,pysite,orig=f)
 	
-	print "\n\nCopy all GTK libs into our bundle"
+	print("\n\nCopy all GTK libs into our bundle")
 	if not os.path.exists(gtklibtarget):
 		os.makedirs(gtklibtarget)
 	for f in gtkimports:
@@ -192,29 +192,29 @@ if __name__ == "__main__":
 		r = f[len(gtksite):]
 		dir, f1 = os.path.split(r)
 		dest = os.path.join(gtklibtarget, f1)
-		print dest
+		print(dest)
 		shutil.copy(f, dest)
 		reroute_deps(dest,gtksite,pysite,orig=f)
 
-	print "\nCopying GTK related files"
+	print("\nCopying GTK related files")
 	reldirs = ["etc/gtk-2.0", "etc/pango", "etc/fonts"]
 	for d in reldirs:
-		print "%s --> %s" % (os.path.join(gtksite,d),os.path.join(gtktarget,d))
+		print("%s --> %s" % (os.path.join(gtksite,d),os.path.join(gtktarget,d)))
 		copy_tree(os.path.join(gtksite,d),os.path.join(gtktarget,d))
 	
-	print "\nFixing pixbuf loader paths"
+	print("\nFixing pixbuf loader paths")
 	loaderre = re.compile("%slib/gtk-2\\.0/[^/]+/loaders/" % re.escape(gtksite))
 	find_and_replace("%s/etc/gtk-2.0/gdk-pixbuf.loaders"%gtktarget,loaderre,"@loader_path/")
 
-	print "\nFixing absolute path sin GTK etc files"
+	print("\nFixing absolute path sin GTK etc files")
 	etcfiles = ["%s/etc/%s" % (gtktarget, f) for f in 
 		['gtk-2.0/gtk.immodules', 'pango/pango.modules'] #'pango/pangorc',
 	]
 	etcre = re.compile("%s"%re.escape(gtksite))
 	for e in etcfiles:
-		print e
+		print(e)
 
-	print "\nTODO: copy localisation files (not yet implemented)"
+	print("\nTODO: copy localisation files (not yet implemented)")
 	#SHARE=`echo $PREFIX/share/locale/*/LC_MESSAGES/gimp*`
 
 

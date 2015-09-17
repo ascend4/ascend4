@@ -1,5 +1,5 @@
 # -*- coding: utf-8  -*-              # REQUIRED
-import config, family, urllib         # REQUIRED
+import config, family, urllib.request, urllib.parse, urllib.error         # REQUIRED
 
 class Family(family.Family):          # REQUIRED
     def __init__(self):               # REQUIRED
@@ -19,15 +19,15 @@ class Family(family.Family):          # REQUIRED
         # There are two ways of entering namespace translations.
         # 1.  If you only need to change the translation of a particular
         #     namespace for one or two languages, use this format (example):
-        self.namespaces[2]['en'] = u'User'
-        self.namespaces[3]['en'] = u'User talk'
+        self.namespaces[2]['en'] = 'User'
+        self.namespaces[3]['en'] = 'User talk'
 
         # 2.  If you need to change the translation for many languages
         #     for the same namespace number, use this format (this is common
         #     for namespaces 4 and 5, because these are usually given a
         #     unique name for each wiki) (example):
         self.namespaces[4] = {
-            '_default': [u'ASCEND', self.namespaces[4]['_default']], # REQUIRED
+            '_default': ['ASCEND', self.namespaces[4]['_default']], # REQUIRED
             # ETC.
         }
 

@@ -24,7 +24,7 @@ def timestudy(self):
 		tt.append(tvalue);
 		tvalue += tincr
 
-	series = [unicode('G [W/m²]'), unicode('Gbn [W/m²]'), unicode('Gd [W/m²]'),'T [K]', 'v_wind [m/s]']
+	series = [str('G [W/m²]'), str('Gbn [W/m²]'), str('Gd [W/m²]'),'T [K]', 'v_wind [m/s]']
 	xdata = []
 	ydata = [[], [], [], [], []]
 
@@ -53,7 +53,7 @@ def timestudy(self):
 	subplot(311)
 	plot(xdata,ydata[0])
 	title("Weather data vs Time")
-	ylabel(unicode("Radiation / [W/m²]"))
+	ylabel(str("Radiation / [W/m²]"))
 	hold(1)
 	plot(xdata,ydata[1])
 	plot(xdata,ydata[2])

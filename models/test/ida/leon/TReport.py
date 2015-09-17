@@ -11,12 +11,12 @@ class TestReporter(ascpy.IntegratorReporterCxx) :
 		return 1
 
 	def closeOutput(self):
-		print "Caught close"
+		print("Caught close")
 		return 1
 
 	def updateStatus(self):
 		i = self.getIntegrator();
-		print i.getCurrentObservations()
+		print(i.getCurrentObservations())
 		return 1
 
 	def recordObservedValues(self):

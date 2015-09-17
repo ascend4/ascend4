@@ -11,7 +11,7 @@ def setsomevalue(self):
 	f = 0.005
 	self.f.setRealValue(f)
 	s = "Set f to %f (confirmed as: %f)" % (f, self.f.getRealValue())
-	print s
+	print(s)
 	browser.reporter.reportNote(s)
 
 def moodyplot(self):
@@ -47,7 +47,7 @@ def checksomevalue(self):
 	""" a silly listing testing routine """
 	self = ascpy.Registry().getInstance('context')
 	s = "Value of f = %f" % self.f.getRealValue()
-	print s
+	print(s)
 	browser.reporter.reportNote(s)
 			
 extpy.registermethod(moodyplot)

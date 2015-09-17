@@ -32,7 +32,7 @@ class BlockConnectTool(ConnectHandleTool):
 				self.toggle_highlight_ports(connectedport)
 				return True
 		except Exception as e:
-			print 'Connection Failed, Disconnect/Connect the last Connection again: /n',e
+			print('Connection Failed, Disconnect/Connect the last Connection again: /n',e)
 		finally:
 			return super(BlockConnectTool,self).on_button_press(event)
 
@@ -63,7 +63,7 @@ class BlockConnectTool(ConnectHandleTool):
 				self.ungrab_handle()
 				#print 'READY_CONNECTION_CHECK_PASSED_2'
 		except Exception as e:
-			print 'Connection Failed, Disconnect/Connect the last Connection again: /n',e
+			print('Connection Failed, Disconnect/Connect the last Connection again: /n',e)
 		finally:
 			self.toggle_highlight_ports()
 			return super(BlockConnectTool, self).on_button_release(event)

@@ -31,10 +31,10 @@ def generate(env):
 			except:
 				raise RuntimeError("PyWin32 is not installed. Install it first.")
 
-			import _winreg
-			x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
-			y= _winreg.OpenKey(x,r"SOFTWARE\ASCEND")
-			BIN,t = _winreg.QueryValueEx(y,'INSTALL_BIN')
+			import winreg
+			x=winreg.ConnectRegistry(None,winreg.HKEY_LOCAL_MACHINE)
+			y= winreg.OpenKey(x,r"SOFTWARE\ASCEND")
+			BIN,t = winreg.QueryValueEx(y,'INSTALL_BIN')
 			Path = os.path.join(BIN,"ascend-config")
 			if not os.path.exists(Path):
 				raise RuntimeError("Could not find 'ascend-config' in your PATH")
@@ -93,12 +93,12 @@ def generate(env):
 		#print "ASCEND_EXTLIB_PREFIX =",env.get('ASCEND_EXTLIB_PREFIX')
 		#print "ASCEND_MODELS =",env.get('ASCEND_MODELS')
 
-	except Exception,e:
-		print "Checking for ASCEND... not found! (%s)" % str(e)
+	except Exception as e:
+		print("Checking for ASCEND... not found! (%s)" % str(e))
 		env.Append(HAVE_ASCEND=False)
 		return False
 		
-	print "Checking for ASCEND... found (ASCEND_CPPPATH = %s)" % env.get('ASCEND_CPPPATH')
+	print("Checking for ASCEND... found (ASCEND_CPPPATH = %s)" % env.get('ASCEND_CPPPATH'))
 	return True
 	
 def exists(env):
@@ -107,10 +107,10 @@ def exists(env):
 	"""
 	if platform.system()=="Windows":
 		try:
-			import _winreg
-			x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
-			y= _winreg.OpenKey(x,r"SOFTWARE\ASCEND")
-			BIN,t = _winreg.QueryValueEx(y,'INSTALL_BIN')
+			import winreg
+			x=winreg.ConnectRegistry(None,winreg.HKEY_LOCAL_MACHINE)
+			y= winreg.OpenKey(x,r"SOFTWARE\ASCEND")
+			BIN,t = winreg.QueryValueEx(y,'INSTALL_BIN')
 			return True
 		except:
 			return False

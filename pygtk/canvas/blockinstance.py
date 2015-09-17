@@ -19,7 +19,7 @@ class BlockInstance:
 	def __init__(self,blocktype,name=None):
 		self.blocktype = blocktype;
 		n = str(blocktype.type.getName())
-		if not blocknameindex.has_key(n):
+		if n not in blocknameindex:
 			blocknameindex[n] = 0
 		blocknameindex[n] += 1
 		if name is None:
@@ -44,8 +44,8 @@ class BlockInstance:
 
 	def get_default_name(self):
 		n = str(self.blocktype.type.getName())
-		if not blocknameindex.has_key(n):
-			print "the key '%s' is not in blocknameindex" % n
+		if n not in blocknameindex:
+			print("the key '%s' is not in blocknameindex" % n)
 
 		return "%s%s" % (n, blocknameindex[n])
 

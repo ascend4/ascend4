@@ -2,7 +2,7 @@ from fprops import *
 
 for t in ["helmholtz","pengrob"]:
 
-	print "=======================\n",t
+	print("=======================\n",t)
 
 	F = fluid("carbondioxide",t)
 
@@ -12,19 +12,19 @@ for t in ["helmholtz","pengrob"]:
 
 	cp = S.cp
 
-	print "cp =",cp/1e3,"kJ/kgK"
+	print("cp =",cp/1e3,"kJ/kgK")
 
 	dhdT_p = S.deriv("hTp")
 
-	print "dhdT_p =", dhdT_p/1e3,"kJ/kgK\n"
+	print("dhdT_p =", dhdT_p/1e3,"kJ/kgK\n")
 
 	cv = S.cv
 
-	print "cv =",cv/1e3,"kJ/kgK"
+	print("cv =",cv/1e3,"kJ/kgK")
 
 	dudT_v = S.deriv("uTv")
 
-	print "dudT_v =", dudT_v/1e3,"kJ/kgK"
+	print("dudT_v =", dudT_v/1e3,"kJ/kgK")
 
 	u1 = S.u
 	T2 = T + 0.01
@@ -32,19 +32,19 @@ for t in ["helmholtz","pengrob"]:
 	u2 = S2.u
 	dudT_v_approx = (u2 - u1)/(S2.T - S.T)
 
-	print "cv = dudT_v(approx) =", dudT_v_approx/1e3,"kJ/kgK"
+	print("cv = dudT_v(approx) =", dudT_v_approx/1e3,"kJ/kgK")
 
-	print "R = ",F.R/1e3,"kJ/kgK"
+	print("R = ",F.R/1e3,"kJ/kgK")
 
 	alphap = S.alphap;
 
-	print "alphap =",alphap	
+	print("alphap =",alphap)	
 
-	print "betap(via deriv) =",-1/S.p * S.deriv('pvT')
+	print("betap(via deriv) =",-1/S.p * S.deriv('pvT'))
 
 	betap = S.betap;
 
-	print "betap =",betap
+	print("betap =",betap)
 
 	p1 = S.p
 	v2 = S.v * 0.9999
@@ -52,5 +52,5 @@ for t in ["helmholtz","pengrob"]:
 	p2 = S2.p
 	dpdv_T_approx = (S2.p - S.p)/(S2.v - S.v)
 	
-	print "betap(approx) =",-1/S.p * dpdv_T_approx
+	print("betap(approx) =",-1/S.p * dpdv_T_approx)
 

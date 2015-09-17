@@ -87,7 +87,7 @@ class TreeView:
 					_piter = self.make_row(piter,_name,child)
 					_path = self.treestore.get_path(_piter)
 					self.otank[_path]=(_name,child)
-				except Exception,e:
+				except Exception as e:
 					pass
 				
 	def make_children_from_presaved(self, value, piter ):
@@ -100,7 +100,7 @@ class TreeView:
 					_piter = self.make_row_from_presaved(piter,_name,child)
 					_path = self.treestore.get_path(_piter)
 					self.otank[_path]=(_name,child)
-				except Exception,e:
+				except Exception as e:
 					pass
 				
 	def make(self, name=None, value=None, path=None, depth=2):

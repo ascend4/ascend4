@@ -10,14 +10,14 @@ L.load('steam/dsgsat3.a4c')
 T = L.findType('dsgsat3')
 M = T.getSimulation('sim',False)
 M.run(T.getMethod('on_load'))
-print "STEADY-STATE SOLUTION..."
+print("STEADY-STATE SOLUTION...")
 M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 M.run(T.getMethod('configure_dynamic'))
 M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 
 M.run(T.getMethod('free_states'))
 # here is the peturbation...
-print "CREATING PETURBATION..."
+print("CREATING PETURBATION...")
 M.qdot_s.setRealValueWithUnits(6000,"W/m")
 # IDA has its own initial conditions solver, so no need to call QRSlv here
 I = ascpy.Integrator(M)
@@ -54,11 +54,11 @@ fz = io.mmread('fz.mm')
 fx = io.mmread('fx.mm')
 fxp = io.mmread('fxp.mm')
 
-print "gz", gz.shape
-print "gx", gx.shape
-print "fz", fz.shape
-print "fx", fx.shape
-print "fxp", fxp.shape
+print("gz", gz.shape)
+print("gx", gx.shape)
+print("fz", fz.shape)
+print("fx", fx.shape)
+print("fxp", fxp.shape)
 
 #import pylab
 
@@ -97,7 +97,7 @@ invfxp = linalg.inv(fxp.todense())
 
 dya_dyd = invgz * gx
 
-print "gz^-1 gx",dya_dyd.shape
+print("gz^-1 gx",dya_dyd.shape)
 
 #pylab.spy2(dya_dyd.todense())
 #pylab.title("${dy_a}/{dy_d}$")
@@ -105,7 +105,7 @@ print "gz^-1 gx",dya_dyd.shape
 
 B = fz * invgz * gx
 
-print "fz gz^1 gz",B.shape
+print("fz gz^1 gz",B.shape)
 #pylab.spy2(fad.todense())
 #pylab.title("${df}/{dy_a} * {dy_a}/{dy_d}$")
 #pylab.show()
@@ -118,11 +118,11 @@ e,v = linalg.eig(D.todense())
 
 #print e
 
-print "ROOT RANGE-----------"
-print "max re(e)",max(e.real)
-print "min re(e)",min(e.real)
-print "max im(e)",max(e.imag)
-print "min in(e)",min(e.imag)
+print("ROOT RANGE-----------")
+print("max re(e)",max(e.real))
+print("min re(e)",min(e.real))
+print("max im(e)",max(e.imag))
+print("min in(e)",min(e.imag))
 sys.stdout.flush()
 
 #I.solve()

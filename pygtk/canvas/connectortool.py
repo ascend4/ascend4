@@ -39,10 +39,11 @@ class ConnectorTool(BlockConnectTool):
 				self.grab_handle(self.line,h_drag)
 				return True
 		except Exception as e:
-			print 'Connection Failed, Disconnect/Connect the last Connection again: /n',e
+			print('Connection Failed, Disconnect/Connect the last Connection again: /n',e)
 			
-	def _create_line(self, (x, y)):
+	def _create_line(self, xxx_todo_changeme):
 		
+		(x, y) = xxx_todo_changeme
 		canvas = self.view.canvas
 		line = BlockLine()
 		segment = Segment(line, view=self.view)
