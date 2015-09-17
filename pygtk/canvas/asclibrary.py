@@ -5,8 +5,8 @@ DEFAULT_CANVAS_MODEL_LIBRARY_FOLDER = os.path.join('..','..','models','test','ca
 try:
 	import ascpy
 except ImportError as e:
-	print "Error: Could not load ASCEND Library. Please check the paths \
-	ASECNDLIBRARY and LD_LIBRARY_PATH\n",e
+	print("Error: Could not load ASCEND Library. Please check the paths \
+	ASECNDLIBRARY and LD_LIBRARY_PATH\n",e)
 
 from blocktype import BlockType
 from blockstream import BlockStream
@@ -51,7 +51,7 @@ class ascPy(object):
 					self.parse_types(t)
 					self.parse_streams(t)
 		except Exception as e:
-			print 'Error: ASCEND Blocks Could not be loaded \n',e
+			print('Error: ASCEND Blocks Could not be loaded \n',e)
 			exit()
 		
 		try:
@@ -60,7 +60,7 @@ class ascPy(object):
 				b = BlockType(t,self.annodb)
 				self.canvas_blocks +=[b]
 		except Exception as e:
-			print 'Error: Could not load blocktypes \n',e
+			print('Error: Could not load blocktypes \n',e)
 			exit()
 		try:
 			for stream in self.streamtypes:
@@ -68,7 +68,7 @@ class ascPy(object):
 				self.streams +=[s]
 				
 		except Exception as e:
-			print 'Error: Could not load streams \n',e
+			print('Error: Could not load streams \n',e)
 			exit()
 			
 		

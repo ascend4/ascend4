@@ -1,6 +1,6 @@
 
 missing = file('missing.txt').read().strip().split('\n')
-print "FIXING",len(missing),"SYMBOL DECLARATIONS"
+print("FIXING",len(missing),"SYMBOL DECLARATIONS")
 
 import re
 pattern = '^extern (.*)\\b('+"|".join(missing)+')\\b'
@@ -8,7 +8,7 @@ pattern = '^extern (.*)\\b('+"|".join(missing)+')\\b'
 patt = re.compile(pattern, re.M)
 
 
-print "PATTERN =",pattern
+print("PATTERN =",pattern)
 
 import glob
 import os.path
@@ -22,11 +22,11 @@ n=0
 for f in files:
 	s = file(f).read()
 	if patt.search(s):
-		print "MATCHED IN",f	
+		print("MATCHED IN",f)	
 		s = patt.sub('ASC_DLLSPEC(\\1) \\2',s)
 		n += 1
 		fp = open(f,'w')
 		fp.write(s)
 		fp.close()
 
-print "MATCHED",n,"FILES"
+print("MATCHED",n,"FILES")

@@ -48,7 +48,7 @@ class FileChooser:
 			_fa.append(repr(_f))
 		filter='\0'.join(_fa)+'\0'
 		customfilter='Other files (*.*)\0*.*\0'
-		print "FILTER:",repr(filter)
+		print("FILTER:",repr(filter))
 		
 		fname = "ERROR"
 		
@@ -62,21 +62,21 @@ class FileChooser:
 				CustomFilter=customfilter,
 				FilterIndex=1
 			)
-		except Exception, e:
+		except Exception as e:
 			if hasattr(e,'what'):
-				print e.what()
+				print(e.what())
 			raise RuntimeError("File select error!")
                 
 		return fname
 
 	def do_gtk(self):
-		print "LAUNCHING..."
+		print("LAUNCHING...")
 		self.add_filter("Other files",["*.*"])
 		self.chooser.run()
-		print "DONE..."
+		print("DONE...")
 		return self.chooser.get_filename()
 		
 
 f = FileChooser()
 f.add_filter("ASCEND files",["*.a4c","*.a4l"])
-print "SELECTED FILE",f.do()
+print("SELECTED FILE",f.do())

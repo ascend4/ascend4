@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-print "LOADING PICKLE"
+print("LOADING PICKLE")
 import pickle
 res = pickle.load(open("reslist.pickle"))
 
-print "STATUS CONTENT:"
+print("STATUS CONTENT:")
 
 for name in res:
 	filename,status = res[name]
 	if status == "SAVED":
-		print "SAVED:",name
+		print("SAVED:",name)
 
 for name in res:
 	filename,status = res[name]
 	if status != "SAVED":
-		print "%s: %s" % (status,name)
+		print("%s: %s" % (status,name))
 

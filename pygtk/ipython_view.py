@@ -17,12 +17,13 @@ import re
 import sys
 import os
 import pango
-from StringIO import StringIO
-import thread
+from io import StringIO
+import _thread
+from functools import reduce
 
 try:
 	import IPython
-except Exception,e:
+except Exception as e:
 	raise Exception("Error importing IPython (%s)" % str(e))
 
 class IterableIPShell:
@@ -121,7 +122,7 @@ class IterableIPShell:
     '''
     This function updates namespace with sys.modules
     '''
-    for k,v in sys.modules.items():
+    for k,v in list(sys.modules.items()):
       if not '.' in k:
         self.IP.user_ns.update({k:v})
 
@@ -274,11 +275,11 @@ class IterableIPShell:
     @type header: string
     '''
     stat = 0
-    if verbose or debug: print header+cmd
+    if verbose or debug: print(header+cmd)
     # flush stdout so we don't mangle python's buffering
     if not debug:
       input, output = os.popen4(cmd)
-      print output.read()
+      print(output.read())
       output.close()
       input.close()
 

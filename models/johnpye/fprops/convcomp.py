@@ -122,17 +122,17 @@ class CubicFluid:
 		for x in fields:
 			try:
 				setattr(self,x,o[x])
-			except KeyError,e:
+			except KeyError as e:
 				pass#print "%s: missing key '%s'"%(name,str(e))
-			except Exception,e:
+			except Exception as e:
 				pass#print str(e)
 		for x in fieldunits:
 			try:
 				setattr(self,x,ExpectedUnits(o[x],fieldunits[x]).val)
-			except KeyError,e:
+			except KeyError as e:
 				pass#print "%s: missing key '%s'"%(name,str(e))
-			except Exception,e:
-				print str(e)
+			except Exception as e:
+				print(str(e))
 		self.o = o
 	def whyfail(self):
 		for n in ['Tc','mw','Pc','omega','cpvapa','cpvapb','cpvapc','cpvapd']:
@@ -179,9 +179,9 @@ for d in data:
 	if not nn:
 		cf[d] = f
 	else:
-		print "Failing '%s' for missing '%s'" % (d,nn)
+		print("Failing '%s' for missing '%s'" % (d,nn))
 		nfail += 1
-print "Found %d good fluids (rejected %d others due to missing data)"%(len(cf),nfail)
+print("Found %d good fluids (rejected %d others due to missing data)"%(len(cf),nfail))
 
 #for d in cf:
 #	print d,cf[d].Tc,cf[d].mw,cf[d].Pc,cf[d].omega,cf[d].cpvapa,cf[d].cpvapb,cf[d].cpvapc,cf[d].cpvapd

@@ -52,7 +52,7 @@ try:
     fout.write('END on_load;\r\nEND allmodels;\r\n')    
     fout.close()
 except IOError:
-    print "Error Creating Super-Model file"
+    print("Error Creating Super-Model file")
     
 
     

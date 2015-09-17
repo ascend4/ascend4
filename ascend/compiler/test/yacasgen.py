@@ -19,7 +19,7 @@
 # and operating points which is later parsed by YACAS
 
 try:
-    print "Generating files for input to Yacas"
+    print("Generating files for input to Yacas")
     varsf = open('Vars.txt','r')
     yacasinf1st = open('YacasSymbolic1st.txt','r')
     yacasoutf1st = open('YacasFirstInp.txt','w')
@@ -49,5 +49,5 @@ try:
     yacasoutf2nd.close()
     yacasinf1st.close()
     yacasoutf1st.close()
-except IOError, e:
-    print "Error managing streams" ,e
+except IOError as e:
+    print("Error managing streams" ,e)

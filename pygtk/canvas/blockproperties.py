@@ -57,7 +57,7 @@ class BlockProperties(object):
 		sorted_ports = [[],[],[]]
 
 		#Sort the ports
-		for i,j in ports.iteritems():
+		for i,j in ports.items():
 			if j.type == blockinstance.PORT_IN:
 				sorted_ports[0].append(j.name)
 			elif j.type == blockinstance.PORT_OUT:
@@ -375,7 +375,7 @@ class displayModel(object):
 			model.set_value(iter,1,new_text)
 			#self.update_all_units(_entry._conv,_entry.getUnits(),param)
 
-		except InputError,e:
+		except InputError as e:
 			self.parent.reporter.reportError(str(e))
 			return
 
@@ -410,7 +410,7 @@ class paramListStore(object):
 	def __init__(self,params):
 		self.list_store = gtk.ListStore(gobject.TYPE_STRING,gobject.TYPE_STRING,gtk.gdk.Pixbuf,gobject.TYPE_PYOBJECT,gobject.TYPE_STRING, gobject.TYPE_INT,gobject.TYPE_STRING)
 		self.params = params
-		for name in self.params.keys():
+		for name in list(self.params.keys()):
 			pi=self.params[name]
 			if self.params[name].fix == True:
 				self.list_store.append([pi.name,pi.getValue(), _iconfixed, pi, _colorfixed, _weightfixed,pi.get_description()])

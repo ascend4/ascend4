@@ -6,14 +6,14 @@ import sys
 #P = fluid('ammonia','pengrob');
 P = fluid('carbondioxide','pengrob');
 
-print "SOLVING TRIPLE POINT..."
+print("SOLVING TRIPLE POINT...")
 
-print "Fluid: %s\nData source: %s" %(P.name, P.source)
+print("Fluid: %s\nData source: %s" %(P.name, P.source))
 
 try:
 	p_t, rhof_t, rhog_t = P.triple_point()
-except RuntimeError,e:
-	print "failed to solve triple point"
+except RuntimeError as e:
+	print("failed to solve triple point")
 	sys.exit(1)
 
 pmax = 100e6
@@ -51,12 +51,12 @@ for T in TT:
 			S = P.set_ph(p,h)
 			T1 = S.T
 			rho1 = S.rho
-		except ValueError,e:
-			print "ERROR %s at p = %f, h = %f (T = %.12e, rho = %.12e)" % (str(e),p, h,T,rho)
+		except ValueError as e:
+			print("ERROR %s at p = %f, h = %f (T = %.12e, rho = %.12e)" % (str(e),p, h,T,rho))
 			badT.append(T); badv.append(v)
 			continue	
 		if isnan(T1) or isnan(rho1):
-			print "ERROR at T1 = %f, rho1 = %f (T = %.12e, rho = %.12e)" % (T1, rho1,T,rho)
+			print("ERROR at T1 = %f, rho1 = %f (T = %.12e, rho = %.12e)" % (T1, rho1,T,rho))
 			badT.append(T); badv.append(v)
 		else:
 			goodT.append(T); goodv.append(v)
@@ -64,16 +64,16 @@ for T in TT:
 
 figure()
 
-print "i \tbad T    \tbad v"
+print("i \tbad T    \tbad v")
 for i in range(len(badT)):
-	print "%d\t%e\t%e" % (i,badT[i], badv[i])
+	print("%d\t%e\t%e" % (i,badT[i], badv[i]))
 
-print "TOTAL %d BAD POINTS" % (len(badT))
+print("TOTAL %d BAD POINTS" % (len(badT)))
 
-print "AXIS =",axis()
+print("AXIS =",axis())
 semilogx(badv, badT, 'rx')
 axis([vmin,vmax,Tmin,Tmax])
-print "AXIS =",axis()
+print("AXIS =",axis())
 hold(1)
 semilogx(goodv, goodT, 'g.')
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 ''' This is the main application for the Canvas modeller, it handles the ASCEND solver and the GUI'''
 
-from __future__ import with_statement
+
 import os, sys
 import gtk
 
@@ -26,10 +26,10 @@ sys.path.append("../../ascxx")
 
 if sys.platform.startswith("win"):
     # Fetchs gtk2 path from registry
-	import _winreg
+	import winreg
 	import msvcrt
 	try:
-		k = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "Software\\GTK\\2.0")
+		k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "Software\\GTK\\2.0")
 	except EnvironmentError:
 		# use TkInter to report the error :-)
 		from TkInter import *
@@ -39,7 +39,7 @@ if sys.platform.startswith("win"):
 		root.mainloop()
 		sys.exit(1)
 	else:
-		gtkdir = _winreg.QueryValueEx(k, "Path")
+		gtkdir = winreg.QueryValueEx(k, "Path")
         import os
         # we must make sure the gtk2 path is the first thing in the path
         # otherwise, we can get errors if the system finds other libs with
@@ -54,7 +54,7 @@ class Application(object):
 		self.ascwrap = ascPy()
 		self.window = mainWindow(self.ascwrap)
 		if options.library:
-			print options.library
+			print(options.library)
 			self.window.loadlib(lib_name=options.library)
 		else:
 			self.window.loadlib(lib_name=DEFAULT_LIBRARY)

@@ -32,7 +32,7 @@ if platform.system() != "Windows":
 	except:
 		# On platforms that unilaterally refuse to provide the 'dl' module
 		# we'll just set the value and see if it works.
-		print "Note: python 'dl' module not available on this system, guessing value of RTLD_* flags"
+		print("Note: python 'dl' module not available on this system, guessing value of RTLD_* flags")
 		_dlflags = 258
 
 	sys.setdlopenflags(_dlflags)
@@ -56,7 +56,7 @@ class AscendSelfTester(Ascend):
 		T = self.L.findType(modelname)
 		M = T.getSimulation('sim',1)
 		M.setSolver(ascpy.Solver(solvername))
-		for k,v in parameters.iteritems():
+		for k,v in parameters.items():
 			M.setParameter(k,v)
 		M.solve(ascpy.Solver(solvername),ascpy.SolverReporter())	
 		M.run(T.getMethod('self_test'))
@@ -73,8 +73,8 @@ class TestCompiler(Ascend):
 	def _runfail(self,filen,n,msg="failed"):
 		try:
 			self._run(filen,'fail%d' % n)
-		except Exception,e:
-			print "(EXPECTED) ERROR: %s" % e
+		except Exception as e:
+			print("(EXPECTED) ERROR: %s" % e)
 			return
 		self.fail(msg)
 
@@ -309,7 +309,7 @@ class TestCMSlv(AscendSelfTester):
 class TestMatrix(AscendSelfTester):
 	def testlog10(self):
 		M = self._run('testlog10')
-		print "FETCHING MATRIX................."
+		print("FETCHING MATRIX.................")
 		X = M.getMatrix()
 # this stuff crashes Windows because the FILE* structure used by Python is not the same
 # as used by MinGW...
@@ -336,7 +336,7 @@ class TestIntegrator(Ascend):
 		M.setSolver(ascpy.Solver('QRSlv'))
 		P = M.getParameters()
 		M.setParameter('feastol',1e-12)
-		print M.getChildren()
+		print(M.getChildren())
 		assert float(M.x) == 10.0
 		assert float(M.v) == 0.0
 		t_end = math.pi
@@ -352,12 +352,12 @@ class TestIntegrator(Ascend):
 		if(integratorname=='IDA'):
 			I.setParameter('autodiff',False)
 		for p in M.getParameters():
-			print p.getName(),"=",p.getValue()
+			print(p.getName(),"=",p.getValue())
 		I.analyse();
 		I.solve();
-		print "At end of simulation,"
-		print "x = %f" % M.x
-		print "v = %f" % M.v
+		print("At end of simulation,")
+		print("x = %f" % M.x)
+		print("v = %f" % M.v)
 		assert abs(float(M.x) + 10) < 1e-2
 		assert abs(float(M.v)) < 1e-2
 		assert I.getNumObservedVars() == 3
@@ -387,7 +387,7 @@ class TestIntegrator(Ascend):
 		I.setEngine('IDA')
 		P = I.getParameters()
 		for p in P:
-			print p.getName(),"=",p.getValue()
+			print(p.getName(),"=",p.getValue())
 		assert len(P)==12
 		assert P[0].isStr()
 		assert P[0].getName()=="linsolver"
@@ -447,9 +447,9 @@ class TestLSODE(Ascend):
 		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.v)/float(M.g), 2)
 		I.analyse()
 		I.solve()
-		print "At end of simulation,"
-		print "x = %f" % M.x
-		print "v = %f" % M.v
+		print("At end of simulation,")
+		print("x = %f" % M.x)
+		print("v = %f" % M.v)
 		M.run(T.getMethod('self_test'))
 
 	def testlotka(self):
@@ -461,7 +461,7 @@ class TestLSODE(Ascend):
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLinearTimesteps(ascpy.Units("s"), 0, 200, 5)
 		I.analyse()
-		print "Number of vars = %d" % I.getNumVars()
+		print("Number of vars = %d" % I.getNumVars())
 		assert I.getNumVars()==2
 		I.solve()
 		assert I.getNumObservedVars() == 3;
@@ -521,8 +521,8 @@ class TestBlackBox(AscendSelfTester):
 		try:
 			M = self.L.findType('fail1').getSimulation('sim',1)
 			self.fail("expected exception was not raised")
-		except RuntimeError,e:
-			print "Caught exception '%s', assumed ok" % e
+		except RuntimeError as e:
+			print("Caught exception '%s', assumed ok" % e)
 
 	def testfail2(self):
 		"""Incorrect data arg check -- tests bbox, not ascend"""
@@ -530,8 +530,8 @@ class TestBlackBox(AscendSelfTester):
 		try:
 			M = self.L.findType('fail2').getSimulation('sim',1)
 			self.fail("expected exception was not raised")
-		except RuntimeError,e:
-			print "Caught exception '%s', assumed ok (should mention errors during instantiation)" % e
+		except RuntimeError as e:
+			print("Caught exception '%s', assumed ok (should mention errors during instantiation)" % e)
 
 	def testpass1(self):
 		"""simple single bbox forward solve"""
@@ -712,17 +712,17 @@ class TestSteam(AscendSelfTester):
 		M = T.getSimulation('sim',False)
 		M.run(T.getMethod('on_load'))
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		print "p = %f bar" % M.p.to('bar');
-		print "T = %f C" % (M.T.to('K') - 273.15);
-		print "x = %f" % M.x;
+		print("p = %f bar" % M.p.to('bar'));
+		print("T = %f C" % (M.T.to('K') - 273.15));
+		print("x = %f" % M.x);
 		M.run(T.getMethod('self_test'))
 		M.run(T.getMethod('values2'))
 #		M.v.setRealValueWithUnits(1.0/450,"m^3/kg");
 #		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		print "p = %f bar" % M.p.to('bar');
-		print "T = %f C" % (M.T.to('K') - 273.15);
-		print "x = %f" % M.x;
+		print("p = %f bar" % M.p.to('bar'));
+		print("T = %f C" % (M.T.to('K') - 273.15));
+		print("x = %f" % M.x);
 		M.run(T.getMethod('self_test2'))
 		
 
@@ -758,10 +758,10 @@ class TestSteam(AscendSelfTester):
 		M = T.getSimulation('sim',False)
 		M.run(T.getMethod('on_load'))
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		print "----- setting qdot_s -----"
+		print("----- setting qdot_s -----")
 		M.qdot_s.setRealValueWithUnits(1000,"W/m")
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		print "----- setting qdot_s -----"
+		print("----- setting qdot_s -----")
 		M.qdot_s.setRealValueWithUnits(2000,"W/m")
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 
@@ -814,7 +814,7 @@ class TestSteam(AscendSelfTester):
 		M.qdot_s.setRealValueWithUnits(1000,"W/m")
 		self.assertAlmostEqual(M.qdot_s.to("W/m"),1000)
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
-		print "dTw/dt = %f" % M.dTw_dt[2]
+		print("dTw/dt = %f" % M.dTw_dt[2])
 		self.assertNotAlmostEqual(M.dTw_dt[2],0.0)
 		F=file('dsgsat.dot','w')
 		M.write(F,'dot')
@@ -826,7 +826,7 @@ class TestSteam(AscendSelfTester):
 		M.run(T.getMethod('free_states'))
 		# here is the peturbation...
 		qdot_s = float(M.qdot_s)
-		print "OLD QDOT_S = %f" % qdot_s
+		print("OLD QDOT_S = %f" % qdot_s)
 		M.qdot_s.setRealValueWithUnits(6000,"W/m")
 		# IDA has its own initial conditions solver, so no need to call QRSlv here
 		I = ascpy.Integrator(M)
@@ -857,7 +857,7 @@ try:
 	# external library will also be.
 	import freesteam
 	have_freesteam = True
-except ImportError,e:
+except ImportError as e:
 	have_freesteam = False
 
 if with_freesteam and have_freesteam:
@@ -888,18 +888,18 @@ if with_freesteam and have_freesteam:
 			I.setMinSubStep(0.01)
 			I.setInitialSubStep(1)
 			I.analyse()
-			print "Number of vars = %d" % I.getNumVars()
+			print("Number of vars = %d" % I.getNumVars())
 			assert I.getNumVars()==2
 			I.solve()
 			assert I.getNumObservedVars() == 3;
-			print "S[1].T = %f K" % M.S[1].T
-			print "S[2].T = %f K" % M.S[2].T
-			print "Q = %f W" % M.Q		
+			print("S[1].T = %f K" % M.S[1].T)
+			print("S[2].T = %f K" % M.S[2].T)
+			print("Q = %f W" % M.Q)		
 			self.assertAlmostEqual(float(M.S[1].T),506.77225109,4);
 			self.assertAlmostEqual(float(M.S[2].T),511.605173967,5);
 			self.assertAlmostEqual(float(M.Q),-48.32922877329,3);
 			self.assertAlmostEqual(float(M.t),3000);
-			print "Note that the above values have not been verified analytically"
+			print("Note that the above values have not been verified analytically")
 
 		def testcollapsingcan2(self):
 			""" solve the collapsing can model using IAPWS-IF97 steam props """
@@ -929,8 +929,8 @@ class TestIDA(Ascend):
 	def _runfail(self,filen,n,msg="failed"):
 		try:
 			self._run(filen,'fail%d' % n)
-		except Exception,e:
-			print "(EXPECTED) ERROR: %s" % e
+		except Exception as e:
+			print("(EXPECTED) ERROR: %s" % e)
 			return
 		self.fail(msg)
 
@@ -1084,7 +1084,7 @@ class TestIDA(Ascend):
 		I.setEngine('IDA')
 		try:
 			I.analyse()
-		except Exception,e:
+		except Exception as e:
 			return
 		self.fail("Index problem not detected")
 
@@ -1134,7 +1134,7 @@ class TestIDADENSE(Ascend):
 		assert abs(M.F - 21.36) < 0.1
 		
 	def testdenx(self):
-		print "-----------------------------====="
+		print("-----------------------------=====")
 		self.L.load('johnpye/idadenx.a4c')
 		M = self.L.findType('idadenx').getSimulation('sim')
 		M.setSolver(ascpy.Solver("QRSlv"))
@@ -1173,7 +1173,7 @@ class TestIDADENSE(Ascend):
 		I.analyse()
 		I.solve()
 		for i in range(8):
-			print "y[%d] = %.20g" % (i+1, M.y[i+1])
+			print("y[%d] = %.20g" % (i+1, M.y[i+1]))
 		M.run(T.getMethod('self_test'))
 
 	def testchemakzo(self):
@@ -1194,7 +1194,7 @@ class TestIDADENSE(Ascend):
 		I.analyse()
 		I.solve()
 		for i in range(6):
-			print "y[%d] = %.20g" % (i+1, M.y[i+1])
+			print("y[%d] = %.20g" % (i+1, M.y[i+1]))
 		M.run(T.getMethod('self_test'))
 
 	def testtransamp(self):
@@ -1215,7 +1215,7 @@ class TestIDADENSE(Ascend):
 		I.analyse()
 		I.solve()
 		for i in range(6):
-			print "y[%d] = %.20g" % (i+1, M.y[i+1])
+			print("y[%d] = %.20g" % (i+1, M.y[i+1]))
 		M.run(T.getMethod('self_test'))
 
 # MODEL FAILS ANALYSIS: we need to add support for non-incident differential vars
@@ -1305,7 +1305,7 @@ class TestIDASPGMR:#(Ascend):
 		I.setParameter('calcic','Y')
 		I.analyse()
 		I.setLogTimesteps(ascpy.Units("s"), 0.01, 10.24, 10);
-		print M.udot[1][3]
+		print(M.udot[1][3])
 		I.solve()
 		assert 0
 
@@ -1379,7 +1379,7 @@ class TestDOPRI5(Ascend):
 		I.setInitialSubStep(0);
 		I.analyse()
 		I.solve()
-		print "y[0] = %f" % float(M.y[0])
+		print("y[0] = %f" % float(M.y[0]))
 		assert abs(float(M.y[0]) - 0.994) < 1e-5
 		assert abs(float(M.y[1]) - 0.0) < 1e-5
 
@@ -1495,7 +1495,7 @@ class TestSlvReq(Ascend):
 		ascpy.SolverHooksManager_Instance().setHooks(H)
 		T = self.L.findType('test1')
 		M = T.getSimulation('sim',0)
-		print "\n\n\nRUNNING ON_LOAD EXPLICITLY NOW..."
+		print("\n\n\nRUNNING ON_LOAD EXPLICITLY NOW...")
 		M.run(T.getMethod('on_load'))
 
 	def test2(self):
@@ -1503,17 +1503,17 @@ class TestSlvReq(Ascend):
 		R = ascpy.SolverReporter()
 		class SolverHooksPython(ascpy.SolverHooks):
 			def __init__(self):
-				print "PYTHON SOLVER HOOKS"
+				print("PYTHON SOLVER HOOKS")
 				ascpy.SolverHooks.__init__(self,None)
 			def setSolver(self,solvername,sim):
 				sim.setSolver(ascpy.Solver(solvername))
-				print "PYTHON: SOLVER is now %s" % sim.getSolver().getName()	
+				print("PYTHON: SOLVER is now %s" % sim.getSolver().getName())	
 				return 0
 			def setOption(self,optionname,val,sim):
 				try:
 					PP = sim.getParameters()
-				except Exception,e:
-					print "PYTHON ERROR: ",str(e)
+				except Exception as e:
+					print("PYTHON ERROR: ",str(e))
 					return ascpy.SLVREQ_OPTIONS_UNAVAILABLE
 				try:
 					for P in PP:
@@ -1521,21 +1521,21 @@ class TestSlvReq(Ascend):
 							try:
 								P.setValueValue(val)
 								sim.setParameters(PP)
-								print "PYTHON: SET",optionname,"to",repr(val)
+								print("PYTHON: SET",optionname,"to",repr(val))
 								return 0
-							except Exception,e:
-								print "PYTHON ERROR: ",str(e)
+							except Exception as e:
+								print("PYTHON ERROR: ",str(e))
 								return ascpy.SLVREQ_WRONG_OPTION_VALUE_TYPE
 					return ascpy.SLVREQ_INVALID_OPTION_NAME
-				except Exception,e:
-					print "PYTHON ERROR: ",str(e)
+				except Exception as e:
+					print("PYTHON ERROR: ",str(e))
 					return ascpy.SLVREQ_INVALID_OPTION_NAME
 			def doSolve(self,inst,sim):
 				try:
-					print "PYTHON: SOLVING",sim.getName(),"WITH",sim.getSolver().getName()
+					print("PYTHON: SOLVING",sim.getName(),"WITH",sim.getSolver().getName())
 					sim.solve(sim.getSolver(),R)
-				except Exception,e:
-					print "PYTHON ERROR:",str(e)
+				except Exception as e:
+					print("PYTHON ERROR:",str(e))
 					return 3
 				return 0
 		H = SolverHooksPython()
@@ -1587,9 +1587,9 @@ class NotToBeTested:
 		I.setLinearTimesteps(ascpy.Units("s"), 0, 2*float(M.v)/float(M.g), 2)
 		I.analyse()
 		I.solve()
-		print "At end of simulation,"
-		print "x = %f" % M.x
-		print "v = %f" % M.v
+		print("At end of simulation,")
+		print("x = %f" % M.x)
+		print("v = %f" % M.v)
 		M.run(T.getMethod('self_test'))
 
 def patchpath(VAR,SEP,addvals):
@@ -1618,7 +1618,7 @@ if __name__=='__main__':
 		SEP = ":"
 
 	solverdir = os.path.abspath(os.path.join(sys.path[0],"solvers"))
-	solverdirs = [os.path.join(solverdir,s) for s in "qrslv","cmslv","lrslv","conopt","ida","lsode","ipopt","dopri5"]
+	solverdirs = [os.path.join(solverdir,s) for s in ("qrslv","cmslv","lrslv","conopt","ida","lsode","ipopt","dopri5")]
 
 	if not os.environ.get('ASCENDSOLVERS'):
 		os.environ['ASCENDSOLVERS'] = SEP.join(solverdirs)

@@ -7,7 +7,7 @@ import ascpy
 
 import gtkbrowser
 
-print "python: creating new library object\n";
+print("python: creating new library object\n");
 
 #----errror callback function-----
 def error_reporter(sev,filename,line,msg):
@@ -118,35 +118,35 @@ sim = t.getSimulation("i")
 
 sim.check()
 
-print "Simulation instance kind:", sim.getKindStr()
+print("Simulation instance kind:", sim.getKindStr())
 
 pv = t.getMethods()
 p_specify = 0
-print "Listing methods of",t.getName,":"
+print("Listing methods of",t.getName,":")
 for p in pv:
-	print " *", p.getName()
+	print(" *", p.getName())
 	if p.getName()=="specify":
 		p_specify = p
 
-print "Running '"+p_specify.getName()+"'"
-print p_specify
+print("Running '"+p_specify.getName()+"'")
+print(p_specify)
 sim.run(p_specify)
 
 sim.build()
 
 sim.check()
 
-print sim.getFixableVariables()
+print(sim.getFixableVariables())
 
 sim.solve()
 
 ch = sim.getModel().getChildren()
 
-print "Children of",sim.getName(),":"
-print ch
+print("Children of",sim.getName(),":")
+print(ch)
 
-print "Children of",ch[1].getName(),":"
-print ch[1].getChildren()
+print("Children of",ch[1].getName(),":")
+print(ch[1].getChildren())
 
 
 show(sim.getModel())
@@ -154,6 +154,6 @@ show(sim.getModel())
 b = gtkbrowser.Browser(sim)
 gtkbrowser.gtk.main()
 
-print "COMPLETED"
+print("COMPLETED")
 
 del l

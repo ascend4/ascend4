@@ -18,7 +18,7 @@ class RealAtomEntry:
 	def __init__(self,instance,newtext):
 		self.instance = instance;
 		self.newtext = newtext;
-		print "\nNewText = "+newtext+"\n"
+		print("\nNewText = "+newtext+"\n")
 		self.units = None; # the string value of the entered units
 		self.value = None;
 
@@ -38,8 +38,8 @@ class RealAtomEntry:
 		except RuntimeError:
 			raise InputError("Unable to split value and units")
 
-		print "val = ",_val
-		print "units = ",self.units
+		print("val = ",_val)
+		print("units = ",self.units)
 
 		# parse the units, throw an error if no good
 		try:
@@ -54,11 +54,11 @@ class RealAtomEntry:
 			if _u is None:
 				# no preferred units for this type, so assume default units
 				_u = _instdim.getDefaultUnits()
-			print "Assuming units '%s'" % _u.getName().toString()
+			print("Assuming units '%s'" % _u.getName().toString())
 		else:
 			try:
 				_u = ascpy.Units(self.units)
-				print "Parsed units '%s'" % self.units
+				print("Parsed units '%s'" % self.units)
 			except RuntimeError:
 				raise InputError("Unrecognisable units '%s'" % self.units)
 
@@ -78,7 +78,7 @@ class RealAtomEntry:
 		# self.reporter.reportNote("Converting: multiplying '%s %s' by factor %s to get SI units" % (_val, _units, _conv) )
 		self.value = _val
 
-		print "Setting '%s' to '%f'" % (self.instance.type.getName().toString(), self.value)
+		print("Setting '%s' to '%f'" % (self.instance.type.getName().toString(), self.value))
 
 	def setValue(self):
 		self.instance.value = self.value

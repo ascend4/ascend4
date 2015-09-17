@@ -23,7 +23,7 @@ def createfiles():
 	return fff
 
 def deletefiles(fff):
-	for f in fff.values():
+	for f in list(fff.values()):
 		os.unlink(f)
 
 def roots(self):
@@ -44,11 +44,11 @@ def roots(self):
 
 	fff = createfiles()
 
-	for k,v in fff.iteritems():
+	for k,v in fff.items():
 		F = file(v,'w')
 		I.writeMatrix(F,k)
 	
-	print "WROTE MATRICES TO FILE. NOW PROCESSING..."
+	print("WROTE MATRICES TO FILE. NOW PROCESSING...")
 
 	# we can't import scipy here due to a crash. so we must use a subprocess...
 
@@ -57,12 +57,12 @@ def roots(self):
 		P = subprocess.Popen(['python',script]+[fff[d] for d in derivs],stdout=subprocess.PIPE,close_fds=True)
 		ret = P.wait()
 		if ret:
-			print "GOT ERROR CODE FROM roots_subproc.py"
+			print("GOT ERROR CODE FROM roots_subproc.py")
 			browser.reporter.reportError(P.stdout.read())
 			deletefiles(fff)
 			return 1
 
-		print "OK"
+		print("OK")
 	else:
 		browser.reporter.reportError("Couldn't find script '%s'" % script)
 		deletefiles(fff)

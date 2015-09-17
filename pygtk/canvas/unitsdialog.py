@@ -67,7 +67,7 @@ class UnitsDialog:
 	def update_applybutton(self):
 		can_apply = False
 		#print "changed = ",self.changed
-		for k,v in self.changed.iteritems():
+		for k,v in self.changed.items():
 			T = self.browser.ascwrap.library.findType(k)
 			u = T.getPreferredUnits()
 			if u is None or str(T.getPreferredUnits().getName()) != v:
@@ -93,9 +93,9 @@ class UnitsDialog:
 			d = T.getDimensions()
 			up = T.getPreferredUnits()
 			if up is None:
-				print "no preferred units"
+				print("no preferred units")
 			else:
-				print "preferred units =",up.getName()
+				print("preferred units =",up.getName())
 		else:
 			up = None
 		for u in self.units:
@@ -132,7 +132,7 @@ class UnitsDialog:
 		while _res == gtk.RESPONSE_APPLY:
 			_res = self.window.run()
 			if _res == gtk.RESPONSE_APPLY or _res == gtk.RESPONSE_CLOSE:
-				for k,v in self.changed.iteritems():
+				for k,v in self.changed.items():
 					self.browser.prefs.setPreferredUnits(k,v)
 				self.changed = {}
 				typename = self.typecombo.get_active_text()

@@ -68,7 +68,7 @@ def create_window(canvas, title, zoom=1.0):
     def on_clicked(button):
         if view.focused_item:
             canvas.remove(view.focused_item)
-            print 'items:', canvas.get_all_items()
+            print('items:', canvas.get_all_items())
 
     b.connect('clicked', on_clicked)
     v.add(b)
@@ -92,7 +92,7 @@ def create_window(canvas, title, zoom=1.0):
     w.show_all()
     
     def handle_changed(view, item, what):
-        print what, 'changed: ', item
+        print(what, 'changed: ', item)
 
     view.connect('focus-changed', handle_changed, 'focus')
     view.connect('hover-changed', handle_changed, 'hover')

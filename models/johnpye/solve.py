@@ -1,11 +1,11 @@
 try:
 	from solverreporter import *
 	have_solverreporter = True
-except RuntimeError,e:
-	print "NOTE: RuntimeError when importing solverreporter: %s", e
+except RuntimeError as e:
+	print("NOTE: RuntimeError when importing solverreporter: %s", e)
 	have_solverreporter = False
-except Exception,e:
-	print "NOTE: unrecognised error when importing solverreporter: %s",e
+except Exception as e:
+	print("NOTE: unrecognised error when importing solverreporter: %s",e)
 	have_solverreporter = False
 
 import extpy
@@ -15,20 +15,20 @@ def solve(self):
 
 	assert self.__class__.__name__=="Instance"
 	assert self.isModel()
-	print "SELF IS A MODEL"
+	print("SELF IS A MODEL")
 
 	browser = extpy.getbrowser()
 	if browser:
-		print "Using browser.solver"
+		print("Using browser.solver")
 		solver = browser.solver
 	else:
-		print "Using hardwired default solver, QRSlv"
+		print("Using hardwired default solver, QRSlv")
 		solver = ascpy.Solver("QRSlv")
 	
 	if browser and have_solverreporter:
 		reporter = SimpleSolverReporter(browser)
 	else:
-		print "Using console solver reporter"
+		print("Using console solver reporter")
 		reporter = ascpy.SolverReporter()
 
 	# the 'sim' object is registered in simulation.cpp each time a method is to be run

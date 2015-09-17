@@ -8,7 +8,7 @@ hold(1)
 T_min = D.T_t
 
 if T_min == 0:
-	print "WARNING: no triple point specified, using 0.4*T_c"
+	print("WARNING: no triple point specified, using 0.4*T_c")
 	T_min = 0.4 * D.T_c
 
 TT = linspace(T_min, D.T_c, 1000)
@@ -29,8 +29,8 @@ failcount = 0
 for T in TT_src:
 	try:
 		p1, rf1, rg1 = D.sat_T(T)
-	except Exception,e:
-		print "error '%s' in %s saturation function T = %0.10e " % (str(e),D.name,T)
+	except Exception as e:
+		print("error '%s' in %s saturation function T = %0.10e " % (str(e),D.name,T))
 		failcount += 1
 		TT1.append(T)
 		continue
@@ -39,7 +39,7 @@ for T in TT_src:
 	psat2.append(p1)
 	TT2.append(T)
 
-print "failcount =",failcount
+print("failcount =",failcount)
 
 TT = array(TT)
 TT1 = array(TT1)

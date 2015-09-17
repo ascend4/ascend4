@@ -40,12 +40,12 @@ def generate(env):
 		env['IPOPT_LIBS'] = env1.get('LIBS')
 		env['HAVE_IPOPT'] = True
 
-		print "IPOPT_LIBS =",env.get('IPOPT_LIBS')
-		print "IPOPT_LIBPATH =",env.get('IPOPT_LIBPATH')
-		print "IPOPT_CPPPATH =",env.get('IPOPT_CPPPATH')
+		print("IPOPT_LIBS =",env.get('IPOPT_LIBS'))
+		print("IPOPT_LIBPATH =",env.get('IPOPT_LIBPATH'))
+		print("IPOPT_CPPPATH =",env.get('IPOPT_CPPPATH'))
 
-	except Exception, e:
-		print "FAILED IPOPT DETECTION:",e.__class__,str(e)
+	except Exception as e:
+		print("FAILED IPOPT DETECTION:",e.__class__,str(e))
 		env['HAVE_IPOPT'] = False
 
 def exists(env):

@@ -24,7 +24,7 @@ def create_widget(browser):
 		if not have_ipython:
 			raise Exception("IPython could not be load (is it installed?)")
 		V = ipython_view.IPythonView()
-	except Exception,e:
+	except Exception as e:
 		V = gtk.Label()
 		V.set_text("IPython error: %s" % str(e));
 		V.show()

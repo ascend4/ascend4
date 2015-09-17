@@ -74,7 +74,7 @@ class PopupSolverReporter(PythonSolverReporter):
 			self.lasttime = _time;
 			self.elapsed = _time - self.starttime
 			self.blocktime = _time - self.blockstart
-			print "UPDATING!"
+			print("UPDATING!")
 			self.fill_values(status)
 		while gtk.events_pending():
 			gtk.main_iteration()		
@@ -139,7 +139,7 @@ class PopupSolverReporter(PythonSolverReporter):
 			self.stopbutton.set_sensitive(False)
 			
 			self.guitime = self.guitime + (time.clock() - _time)
-			print "TIME SPENT UPDATING SOLVER: %0.2f s" % self.guitime
-		except Exception,e:
-			print "SOME PROBLEM: %s" % str(e)
+			print("TIME SPENT UPDATING SOLVER: %0.2f s" % self.guitime)
+		except Exception as e:
+			print("SOME PROBLEM: %s" % str(e))
 		

@@ -6,7 +6,7 @@ from fprops import *
 import numpy as np
 import sys
 
-print "FPROPS from",sys.modules['fprops'].__file__
+print("FPROPS from",sys.modules['fprops'].__file__)
 
 TYPE_HELM = 5
 
@@ -17,18 +17,18 @@ r = REF_TRHS(FH.T_c,FH.rho_c, 2000e3, 5e3)
 FP.set_ref(r)
 FH.set_ref(r)
 
-print "T_c =",FP.T_c,FH.T_c
-print "omega =",FP.omega,FH.omega
-print "rho_c =",FP.rho_c,FH.rho_c
-print "p_c =",FP.p_c,FH.p_c
+print("T_c =",FP.T_c,FH.T_c)
+print("omega =",FP.omega,FH.omega)
+print("rho_c =",FP.rho_c,FH.rho_c)
+print("p_c =",FP.p_c,FH.p_c)
 
-print "p(298,100) ",FP.p(298,100), FH.p(298,100)
+print("p(298,100) ",FP.p(298,100), FH.p(298,100))
 
 rmin = 10 * FP.rhof_T_rackett(273)
 rmax = 0.01 * FP.rhog_T_chouaieb(273)
 
-print "rho_min =",rmin
-print "rho_max =",rmax
+print("rho_min =",rmin)
+print("rho_max =",rmax)
 
 rr = logspace(np.log10(rmin),np.log10(rmax),200)
 

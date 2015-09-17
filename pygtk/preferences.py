@@ -1,6 +1,6 @@
 # Preferences module for ASCPY.
 
-import ConfigParser, os
+import configparser, os
 import re
 import platform
 
@@ -20,13 +20,13 @@ class Preferences:
 			else:
 				self.fname = os.path.expanduser("~/.ascend.ini");
 
-			print "PREFERENCES FILE =",self.fname
+			print("PREFERENCES FILE =",self.fname)
 				
 		self.n = self.n + 1;
 
 		if not hasattr(self,'ini'):
 			#print "READING/CREATING CONFIG"
-			self.ini = ConfigParser.SafeConfigParser();
+			self.ini = configparser.SafeConfigParser();
 			self.ini.read( [ self.fname ] );
 
 	def __del__(self):
@@ -39,9 +39,9 @@ class Preferences:
 	def getGeometrySizePosition(self,displayname,key):
 		try:
 			_g = self.ini.get("Geometry:"+str(displayname),key)
-		except ConfigParser.NoSectionError:
+		except configparser.NoSectionError:
 			return None
-		except ConfigParser.NoOptionError:
+		except configparser.NoOptionError:
 			return None
 		_p = re.compile('^\s*(\d+)[Xx](\d+)\+(-?\d+)\+(-?\d+)\s*$');
 
@@ -59,9 +59,9 @@ class Preferences:
 	def getGeometryValue(self,displayname,key):
 		try:
 			_g = self.ini.get("Geometry:"+str(displayname),key)
-		except ConfigParser.NoSectionError:
+		except configparser.NoSectionError:
 			return None
-		except ConfigParser.NoOptionError:
+		except configparser.NoOptionError:
 			return None
 		return int(_g)
 
@@ -73,9 +73,9 @@ class Preferences:
 	def getPreferredUnits(self,key):
 		try:
 			_u = self.ini.get("PreferredUnits",key);
-		except ConfigParser.NoSectionError:
+		except configparser.NoSectionError:
 			return None
-		except ConfigParser.NoOptionError:
+		except configparser.NoOptionError:
 			return None
 		return _u
 
@@ -88,9 +88,9 @@ class Preferences:
 	def getBoolPref(self,sect,key,default=None):
 		try:
 			_u = self.ini.get(sect,key)
-		except ConfigParser.NoSectionError:
+		except configparser.NoSectionError:
 			return default
-		except ConfigParser.NoOptionError:
+		except configparser.NoOptionError:
 			return default
 		if _u:
 			return True
@@ -108,18 +108,18 @@ class Preferences:
 	def getStringPref(self,sect,key,default=None):
 		try:
 			_u = self.ini.get(sect,key)
-		except ConfigParser.NoSectionError:
+		except configparser.NoSectionError:
 			return default
-		except ConfigParser.NoOptionError:
+		except configparser.NoOptionError:
 			return default
 		return _u;
 
 	def getRealPref(self,sect,key,default=None):
 		try:
 			_u = self.ini.get(sect,key)
-		except ConfigParser.NoSectionError:
+		except configparser.NoSectionError:
 			return default
-		except ConfigParser.NoOptionError:
+		except configparser.NoOptionError:
 			return default
 		return float(_u);		
 
@@ -133,27 +133,27 @@ class Preferences:
 # Test script:
 def main():
 	x = Preferences();
-	print x.getStringPref('Browser','auto_solve')
+	print(x.getStringPref('Browser','auto_solve'))
 	y = Preferences();
 
-	print "Units for length: ",x.getPreferredUnits("length");
-	print "Units for time: ",x.getPreferredUnits("time");
+	print("Units for length: ",x.getPreferredUnits("length"));
+	print("Units for time: ",x.getPreferredUnits("time"));
 
 	x.setPreferredUnits("length","m");
 	y.setPreferredUnits("time","hr");
-	print "Units for length: ",y.getPreferredUnits("length");
-	print "Units for time: ",y.getPreferredUnits("time");
+	print("Units for length: ",y.getPreferredUnits("length"));
+	print("Units for time: ",y.getPreferredUnits("time"));
 
-	print "About to delete x"
+	print("About to delete x")
 	del x;
-	print "Deleted x"
+	print("Deleted x")
 
 	y.setPreferredUnits("length","cm");
 
-	print "About to delete y"
+	print("About to delete y")
 	del y;
 
-	print "Deleted y"
+	print("Deleted y")
 
 if __name__ == "__main__":
     main()

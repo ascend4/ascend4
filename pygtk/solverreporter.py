@@ -93,7 +93,7 @@ class PopupSolverReporter(PythonSolverReporter):
 			_bl = self.sim.getActiveBlock()
 			_db = DiagnoseWindow(self.browser,_bl)
 			_db.run();
-		except RuntimeError, e:
+		except RuntimeError as e:
 			self.reporter.reportError(str(e))
 			return
 
@@ -152,12 +152,12 @@ class PopupSolverReporter(PythonSolverReporter):
 			_close_on_nonconverged = _p.getBoolPref("SolverReporter","close_on_nonconverged",False);
 			if status.isConverged() and _close_on_converged:
 				self.report_to_browser(status)
-				print "CLOSING ON CONVERGED"
+				print("CLOSING ON CONVERGED")
 				self.window.response(gtk.RESPONSE_CLOSE)
 				return
 			
 			if not status.isConverged() and _close_on_nonconverged:
-				print "CLOSING, NOT CONVERGED"
+				print("CLOSING, NOT CONVERGED")
 				self.report_to_browser(status)
 				if self.window:
 					self.window.response(gtk.RESPONSE_CLOSE)
@@ -185,9 +185,9 @@ class PopupSolverReporter(PythonSolverReporter):
 			self.report_to_browser(status)
 
 			self.guitime = self.guitime + (time.clock() - _time)
-			print "TIME SPENT UPDATING SOLVER: %0.2f s" % self.guitime
-		except Exception,e:
-			print "SOME PROBLEM: %s" % str(e)
+			print("TIME SPENT UPDATING SOLVER: %0.2f s" % self.guitime)
+		except Exception as e:
+			print("SOME PROBLEM: %s" % str(e))
 
 class SimpleSolverReporter(PythonSolverReporter):
 	def __init__(self,browser,message=None):

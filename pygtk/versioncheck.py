@@ -1,4 +1,4 @@
-import urllib2, ConfigParser, platform
+import urllib.request, urllib.error, urllib.parse, configparser, platform
 import socket
 
 class VersionCheck:
@@ -9,12 +9,12 @@ class VersionCheck:
 		self.info = None
 	def check(self):
 		socket.setdefaulttimeout(1)
-		auth_handler = urllib2.HTTPBasicAuthHandler()
-		opener = urllib2.build_opener(auth_handler)
-		urllib2.install_opener(opener)
-		fp = urllib2.urlopen(self.url)
+		auth_handler = urllib.request.HTTPBasicAuthHandler()
+		opener = urllib.request.build_opener(auth_handler)
+		urllib.request.install_opener(opener)
+		fp = urllib.request.urlopen(self.url)
 
-		cp = ConfigParser.SafeConfigParser() 
+		cp = configparser.SafeConfigParser() 
 		cp.readfp(fp,self.url)
 
 		opersys = platform.system()
@@ -43,7 +43,7 @@ class VersionCheck:
 if __name__=="__main__":
 	v = VersionCheck()
 	if v.check():
-		print v.latest
-		print "Info at %s" % v.info
+		print(v.latest)
+		print("Info at %s" % v.info)
 		if v.download:
-			print "Download from %s" % v.download
+			print("Download from %s" % v.download)

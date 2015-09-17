@@ -1,8 +1,8 @@
 from fprops import *
 from pylab import *
-import ConfigParser, os
+import configparser, os
 
-C = ConfigParser.ConfigParser()
+C = configparser.ConfigParser()
 C.readfp(open("pherr.ini"))
 f1 = C.get("main","fluid")
 t1 = C.get("main","type")
@@ -20,8 +20,8 @@ A = loadtxt(dataf)
 
 F = fluid(f1,t1,s1)
 
-print "FLUID %s" % F.name
-print A.size
+print("FLUID %s" % F.name)
+print(A.size)
 
 Tc = F.T_c;
 

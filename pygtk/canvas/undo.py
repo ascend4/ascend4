@@ -117,8 +117,8 @@ class Transaction(object):
         for action in self.actions:
             try:
                 action()
-            except Exception,e:
-                print 'Undo Error: ',e
+            except Exception as e:
+                print('Undo Error: ',e)
         
 class undoManager(object):
     '''
@@ -214,7 +214,7 @@ class undoManager(object):
         try:
             transaction.execute()
         except Exception as e:
-            print 'Undo Error: \n',e
+            print('Undo Error: \n',e)
         finally:
             self._redo_stack = redo_stack
             if self._undo_stack:

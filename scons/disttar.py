@@ -104,7 +104,7 @@ def disttar_suffix(env, sources):
 	"""tar archive suffix generator"""
 
 	env_dict = env.Dictionary()
-	if env_dict.has_key("DISTTAR_FORMAT") and env_dict["DISTTAR_FORMAT"] in ["gz", "bz2"]:
+	if "DISTTAR_FORMAT" in env_dict and env_dict["DISTTAR_FORMAT"] in ["gz", "bz2"]:
 		return ".tar." + env_dict["DISTTAR_FORMAT"]
 	else:
 		return ".tar"

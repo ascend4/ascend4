@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # This script will do the hard work of uploading the content to our wiki.
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import os.path
 import pickle
 
@@ -16,7 +16,7 @@ if 0:
 	pageend =   "\nPAGEENDslkfjsldkfjskldfjskljfsghwuewrweorswnmbrwewemwr\n"
 	titlestart = "TITLESTART>>>"
 	titleend =   "<<<TITLEEND\n"
-	print "WRITING PAGES TO BIG TEXT FILE"
+	print("WRITING PAGES TO BIG TEXT FILE")
 	f = open('bigpage.txt','w')
 	for name in res:
 		filename,status = res[name]
@@ -26,13 +26,13 @@ if 0:
 		f.write(pageend)
 	f.close()
 
-	print "PAGES WRITTEN"
+	print("PAGES WRITTEN")
 
 sys.path.append(os.path.expanduser("~/pywikipedia"))
 import pagefromfile
 import codecs
 
-print "UPLOADING TO WIKI"
+print("UPLOADING TO WIKI")
 
 errorfile = None
 # TODO: make config variables for these.
@@ -59,17 +59,17 @@ try:
 				bot.put(name,content)
 				errorfile = None
 				res[name] = (filename,"SAVED")
-			except Exception,e:
-				print "ERROR in uploading:",e
+			except Exception as e:
+				print("ERROR in uploading:",e)
 				if errorfile:
 					filename,status=res[errorfile]
 					res[errorfile]=(filename,"ERROR")
 
-except Exception,e:
-	print "ERROR:",str(e)
+except Exception as e:
+	print("ERROR:",str(e))
 except KeyboardInterrupt:
-	print "INTERRUPTED"
+	print("INTERRUPTED")
 
 pickle.dump(res,open("reslist.pickle","w"))
-print "STATUS FILE UPDATED"
+print("STATUS FILE UPDATED")
 

@@ -37,7 +37,7 @@ class ClickableTreeColumn(gtk.TreeViewColumn):
 		#button.clicked()
 		
 	def on_click(self,widget,*args):
-		print "RECEIVED EVENT"
+		print("RECEIVED EVENT")
 
 class ObserverColumn:
 	"""
@@ -132,7 +132,7 @@ class ObserverRow:
 		#print "TABLE COLS:",table.cols
 		#print "ROW VALUES:",self.values
 		_v = {}
-		for col in table.cols.values():
+		for col in list(table.cols.values()):
 			_v[col.index] = col.instance.getRealValue()
 		self.values = _v
 		#print "Made static, values:",self.values
@@ -140,14 +140,14 @@ class ObserverRow:
 	def get_values(self,table):
 		vv = {}
 		if not self.active:
-			for k,v in table.cols.iteritems():
+			for k,v in table.cols.items():
 				try:
 					vv[k]=(self.values[v.index]/v.units.getConversion())
 				except:
 					vv[k]=""
 			return vv
 		else:
-			for index, col in table.cols.iteritems():
+			for index, col in table.cols.items():
 				vv[index] = float(col.instance.getRealValue())/col.units.getConversion()
 			return vv
 
@@ -395,7 +395,7 @@ class ObserverTab:
 			_plot = _plotwin.run()
 			if _plot:
 				self.plot(x=_plotwin.xcol, y=_plotwin.ycol)
-		except Exception,e:
+		except Exception as e:
 			self.browser.reporter.reportError(str(e))
 
 	def do_add_row(self,values=None):
@@ -456,12 +456,12 @@ class ObserverTab:
 
 	def copy_to_clipboard(self,clip):
 		_s = []
-		_s.append('\t'.join([_v.title for _k,_v in self.cols.iteritems()]))
+		_s.append('\t'.join([_v.title for _k,_v in self.cols.items()]))
 		#_cf = [_v.units.getConversion() for _k,_v in self.cols.iteritems()]
-		print "COPYING %d ROWS" % len(self.rows)
+		print("COPYING %d ROWS" % len(self.rows))
 		#print "CONVERSIONS:",_cf
 		for _r in self.rows:
-			_s.append("\t".join(["%s" % _v for _k, _v in _r.get_values(self).iteritems()]))
+			_s.append("\t".join(["%s" % _v for _k, _v in _r.get_values(self).items()]))
 
 		clip.set_text('\n'.join(_s),-1) 
 
@@ -619,7 +619,7 @@ class ObserverTab:
 			_plot = _plotwin.run()
 			if _plot:
 				self.plot(x=_plotwin.xcol, y=_plotwin.ycol)
-		except Exception,e:
+		except Exception as e:
 			self.browser.reporter.reportError(str(e))
 		
 	def on_close_observer_clicked(self, *args):
@@ -644,7 +644,7 @@ class ObserverTab:
 			_un.run()
 	
 	def units_refresh(self, instance_type):
-		for _col in self.cols.values():
+		for _col in list(self.cols.values()):
 			_units = None
 			_units = instance_type.getPreferredUnits()
 			if _units is None:

@@ -16,7 +16,7 @@ def add_at_start(envvar,pathcomponents):
 	if not os.environ.get(envvar):
 		# env var is not yet set; simply set it to requested value
 		v = SEP.join(pathcomponents)
-		print "CREATED %s=%s" % (envvar,v)
+		print("CREATED %s=%s" % (envvar,v))
 		os.environ[envvar]=v
 		return 1
 
@@ -28,18 +28,18 @@ def add_at_start(envvar,pathcomponents):
 	for p in reversed(pathcomponents):
 		if p not in envvals:
 			envvals.insert(0,p)
-			print "INSERTED into %s: %s"%(envvar,p)
+			print("INSERTED into %s: %s"%(envvar,p))
 			changed = 1
 
 	# TODO if changes made, let's check for repeated path components and remove them (PyGTK All-in-one does this)	
 			
 	os.environ[envvar]=SEP.join(envvals)
 	if not changed:
-		print "VAR %s UNCHANGED" % envvar
+		print("VAR %s UNCHANGED" % envvar)
 	else:
-		print "VAR %s CHANGED" % envvar
-		print "OLD %s = %s" % (envvar,oldenv)
-		print "NEW %s = %s" % (envvar,os.environ[envvar])
+		print("VAR %s CHANGED" % envvar)
+		print("OLD %s = %s" % (envvar,oldenv))
+		print("NEW %s = %s" % (envvar,os.environ[envvar]))
 		
 	return changed
 		
@@ -84,26 +84,26 @@ if __name__=='__main__':
 		restart.append('PYTHONPATH')
 
 	if restart:
-		print "\nRestarting with..."
+		print("\nRestarting with...")
 		for v in restart:
-			print "   export %s=%s" % (v,os.environ[v])
+			print("   export %s=%s" % (v,os.environ[v]))
 		if os.environ.get('ASC_GDB'):
-			print "   via GDB..."
+			print("   via GDB...")
 			os.execvp("gdb",['--symbols=../@SHLIBPREFIX@ascend@SHLIBSUFFIX@','--args','@PYTHON@',script]+sys.argv[1:])
 		else:
-			print "PYTHON... ",script
+			print("PYTHON... ",script)
 			sys.stdout.flush() # needed for rxvt on Windows
 			os.execvp('@PYTHON@',[script,script]+sys.argv[1:])
 		# the above calls don't return so we can forget about line of enqiry
 
 
-	print "\nRunning with..."
+	print("\nRunning with...")
 	for v in [LD_LIBRARY_PATH,'ASCENDLIBRARY','ASCENDSOLVERS','PYTHONPATH','PATH']:
-		print "   %s = %s" % (v,os.environ[v])
+		print("   %s = %s" % (v,os.environ[v]))
 	
 	import ascpy
 	from gtkbrowser import *
 	assetspath = os.path.join(os.path.join(sourceroot,"pygtk"),"glade")
-	print "ASSETS PATH = %s" % assetspath
+	print("ASSETS PATH = %s" % assetspath)
 	B = Browser(assetspath=assetspath)
 	B.run()	

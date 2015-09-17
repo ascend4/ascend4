@@ -4,6 +4,7 @@ import re
 from blockitem import DefaultBlockItem, GraphicalBlockItem
 from blockline import BlockLine
 from blockstream import BlockStream
+from functools import reduce
 
 UNITS_RE = re.compile("([-+]?(\d+(\.\d*)?|\d*\.d+)([eE][-+]?\d+)?)\s*(.*)");
 
@@ -103,14 +104,14 @@ END canvasmodel;
 			if type(item)==DefaultBlockItem or type(item)==GraphicalBlockItem:
 				bi = item.blockinstance
 				replacement_fields['is_a']+=str(bi)
-				specify = filter(lambda param:bi.params[param].value != None,bi.params)
-				fix = filter(lambda param:bi.params[param].fix == True,bi.params)
-				specify = filter(lambda x:not (x in fix),specify)
-				specify = map(lambda param:'\t{0}.{1}:={2};\n'.
-				              format(bi.name,param,bi.params[param].value),specify)
-				fix = map(lambda param:'\tFIX {0}.{1};\n\t{0}.{1}:={2}{4}{3}{5};\n'.
+				specify = [param for param in bi.params if bi.params[param].value != None]
+				fix = [param for param in bi.params if bi.params[param].fix == True]
+				specify = [x for x in specify if not (x in fix)]
+				specify = ['\t{0}.{1}:={2};\n'.
+				              format(bi.name,param,bi.params[param].value) for param in specify]
+				fix = ['\tFIX {0}.{1};\n\t{0}.{1}:={2}{4}{3}{5};\n'.
 				          format(bi.name,param,bi.params[param].value,
-				                 bi.params[param].units,'{','}'),fix)
+				                 bi.params[param].units,'{','}') for param in fix]
 				try:
 					replacement_fields['parameter_code']+=\
 					                  reduce(lambda x,y:x+y,specify)
@@ -125,7 +126,7 @@ END canvasmodel;
 			if type(item)==BlockLine:
 				replacement_fields['are_the_same']+=str(item.lineinstance)
 
-		map(parse,items)
+		list(map(parse,items))
 		
 		replacement_fields['canvas_user_code'] = self.user_code
 		return string.format(**replacement_fields)

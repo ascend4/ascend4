@@ -143,8 +143,8 @@ class StudyReporter(PythonSolverReporter):
 				return
 			
 			if not status.isConverged():
-				print "NOT Converged for %s = %s" % (self.browser.sim.getInstanceName(self.instance), 
-				      self.instance.getRealValue())
+				print("NOT Converged for %s = %s" % (self.browser.sim.getInstanceName(self.instance), 
+				      self.instance.getRealValue()))
 				self.allconverged = False
 				self.report_to_browser(status)
 				for tabs in self.browser.observers:
@@ -178,6 +178,6 @@ class StudyReporter(PythonSolverReporter):
 			self.report_to_browser(status)
 
 			self.guitime = self.guitime + (time.clock() - _time)
-			print "TIME SPENT UPDATING SOLVER: %0.2f s" % self.guitime
-		except Exception,e:
-			print "SOME PROBLEM: %s" % str(e)
+			print("TIME SPENT UPDATING SOLVER: %0.2f s" % self.guitime)
+		except Exception as e:
+			print("SOME PROBLEM: %s" % str(e))

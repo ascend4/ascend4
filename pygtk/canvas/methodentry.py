@@ -44,7 +44,7 @@ class MethodEntry:
 			blockcanvas.ucflag = 1
 			#global usercode 
 			blockcanvas.usercode = self.text
-			print blockcanvas.usercode
+			print(blockcanvas.usercode)
 		
 if __name__=='__main__':
 	MethodEntry()

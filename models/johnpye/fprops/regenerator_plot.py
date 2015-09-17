@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 import extpy, sys
 from solverreporter import *
-from __builtin__ import *
+from builtins import *
 
 import sys, os, os.path
 sys.path.append(os.path.expanduser("~/ascend/models/johnpye/fprops/python"))
@@ -37,8 +37,8 @@ def regenerator_plot_fprops(self):
 		Href = (float(self.inlet.h)*float(self.inlet.mdot))\
 	)
 
-	title(unicode(r"%s-%s heat exchanger" % (FH.name, FC.name)))
-	ylabel(unicode(r"T / [°C]"))
+	title(str(r"%s-%s heat exchanger" % (FH.name, FC.name)))
+	ylabel(str(r"T / [°C]"))
 	xlabel("H / [MW]")
 
 	extpy.getbrowser().reporter.reportNote("Plotting completed")

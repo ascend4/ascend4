@@ -16,7 +16,7 @@ try:
 	import gtkexcepthook
 
 	import re
-	import urlparse
+	import urllib.parse
 	import optparse
 	import platform
 	import sys
@@ -66,25 +66,25 @@ try:
 
 	#loading.complete();
 
-except RuntimeError, e:
-	print "ASCEND had problems starting up. Please report the following"
-	print "error message on ASCEND bug tracker."
-	print "\n\nFull error message:",str(e)
-	print "\n\nPress ENTER to close this window."
+except RuntimeError as e:
+	print("ASCEND had problems starting up. Please report the following")
+	print("error message on ASCEND bug tracker.")
+	print("\n\nFull error message:",str(e))
+	print("\n\nPress ENTER to close this window.")
 	sys.stdout.flush()
 	sys.stdin.readline();
 	sys.exit();
 
-except ImportError, e:
-	print "\n\n------------------  ERROR  ---------------------"
-	print     "ASCEND had problems importing required Python modules."
-	print "\nPlease ensure you have all the runtime prerequisites installed."
-	print "Please then report a bug if you continue to have problems."
-	print "\nFull error message:",str(e)
+except ImportError as e:
+	print("\n\n------------------  ERROR  ---------------------")
+	print("ASCEND had problems importing required Python modules.")
+	print("\nPlease ensure you have all the runtime prerequisites installed.")
+	print("Please then report a bug if you continue to have problems.")
+	print("\nFull error message:",str(e))
 	if platform.system()=="Windows":
-		print "\nYou will also need to report the contents of any popup error"
-		print "messages from Windows if any were shown."
-	print "\n\nPress ENTER to close this window."
+		print("\nYou will also need to report the contents of any popup error")
+		print("messages from Windows if any were shown.")
+	print("\n\nPress ENTER to close this window.")
 	sys.stdout.flush()
 	sys.stdin.readline();
 	sys.exit();
@@ -170,7 +170,7 @@ class Browser:
 		if len(args)>=1:
 			if os.path.isfile(args[0])==False:
 				error = '\033[91mERROR : %s is not a file\033[0m'%args[0]
-				print error
+				print(error)
 				sys.exit()
 		
 		#print "OPTIONS_______________:",self.options
@@ -215,12 +215,12 @@ class Browser:
 				if platform.system()=="Windows":
 					# use the registry
 					try:
-						import _winreg
-						x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
-						y= _winreg.OpenKey(x,r"SOFTWARE\ASCEND")
-						_regpath,t = _winreg.QueryValueEx(y,"ASCENDLIBRARY")
-						_winreg.CloseKey(y)
-						_winreg.CloseKey(x)
+						import winreg
+						x=winreg.ConnectRegistry(None,winreg.HKEY_LOCAL_MACHINE)
+						y= winreg.OpenKey(x,r"SOFTWARE\ASCEND")
+						_regpath,t = winreg.QueryValueEx(y,"ASCENDLIBRARY")
+						winreg.CloseKey(y)
+						winreg.CloseKey(x)
 						_path = _regpath						
 						os.environ['ASCENDLIBRARY'] = _regpath
 						_pathsrc = "Windows registry"
@@ -245,13 +245,13 @@ class Browser:
 		# report absence of solvers if nec.
 
 		if not len(ascpy.getSolvers()):
-			print "NO SOLVERS LOADED!"
+			print("NO SOLVERS LOADED!")
 			self.reporter.reportError( "No solvers were loaded! ASCEND is probably not configured correctly." )
 
 		#--test option
 		if self.options.test:
-			print '================================================================================'
-			print 'IN TEST'
+			print('================================================================================')
+			print('IN TEST')
 			self.test()
 			return
 
@@ -330,7 +330,7 @@ class Browser:
 				raise RuntimeError("Image file '%s' could not be found" % _fixedimgpath)
 			_fixedpixbuf = gtk.gdk.pixbuf_new_from_file(_fixedimgpath)
 			self.fixedimg.set_from_pixbuf(_fixedpixbuf)
-		except Exception,e:
+		except Exception as e:
 			raise RuntimeError("Failed to load pixbuf '%s' (%s)" % (_fixedimgpath, str(e)))
 
 		self.inactiveimg = gtk.Image()
@@ -480,8 +480,8 @@ class Browser:
 				_iconpbuf = _icon.get_pixbuf()
 				self.window.set_icon(_iconpbuf)
 				self.icon = _iconpbuf
-			except Exception, e:
-				print "FAILED TO SET APPLICATION ICON PATH '%s': %s" % (_iconpath,str(e))
+			except Exception as e:
+				print("FAILED TO SET APPLICATION ICON PATH '%s': %s" % (_iconpath,str(e)))
 				self.reporter.reportError("FAILED to set application icon '%s': %s"
 					 % (_iconpath,str(e)) 
 				)
@@ -533,7 +533,7 @@ class Browser:
 		#--------
 		# Set up SolverHooks
 
-		print "PYTHON: SETTING UP SOLVER HOOKS"
+		print("PYTHON: SETTING UP SOLVER HOOKS")
 		self.solverhooks = SolverHooksPythonBrowser(self)
 		ascpy.SolverHooksManager_Instance().setHooks(self.solverhooks)
 
@@ -542,7 +542,7 @@ class Browser:
 		if(len(args)==1):
 			try:
 				self.do_open(args[0])
-			except RuntimeError,e:
+			except RuntimeError as e:
 				self.reporter.reportError(str(e))
 				return
 
@@ -551,7 +551,7 @@ class Browser:
 			_model = None
 			if self.options.model:
 				_model = self.options.model
-				print "MODEL: '%s'" % _model
+				print("MODEL: '%s'" % _model)
 			elif self.options.auto_sim:
 				_head, _tail = os.path.split(args[0])
 				if(_tail):
@@ -571,11 +571,11 @@ class Browser:
 							self.do_sim(_t)
 							if not self.options.model:
 								self.reporter.reportNote("Instantiated self-titled model '%s'" %_model)
-						except RuntimeError, e:
+						except RuntimeError as e:
 							self.reporter.reportError("Failed to create instance of '%s': %s" 
 								%(_model, str(e))
 							);
-				except RuntimeError, e:
+				except RuntimeError as e:
 					if self.options.model:
 						self.reporter.reportError("Unknown model type '%s': %s" 
 							%(_model, str(e))
@@ -612,8 +612,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			gtk.main()
 
 	def test(self):
-		print sys.argv[1]
-		print sys.argv[3]
+		print(sys.argv[1])
+		print(sys.argv[3])
 		if len(sys.argv)==4:
 			ascpy.test_model(str(sys.argv[1]),str(sys.argv[3]))
 		#Call the function at the SWIG API level that runs all the tests and pass to it, the *args
@@ -717,14 +717,14 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			# call the low-level 'load' command...
 			self.library.load(filename)
 			self.update_recent_files(filename)
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.statusbar.pop(_context)
 			raise
 
 		try:
 			self.statusbar.pop(_context)
-		except TypeError,e:
-			print "For some reason, a type error (context=%s,filename=%s): %s" % (_context,filename,e)
+		except TypeError as e:
+			print("For some reason, a type error (context=%s,filename=%s): %s" % (_context,filename,e))
 
 		# Load the current list of modules into self.modules
 		self.moduleview.refresh(self.library)
@@ -759,16 +759,16 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		try:
 			_v = self.prefs.getBoolPref("Compiler","use_relation_sharing",True)
 			ascpy.getCompiler().setUseRelationSharing(_v)
-			print "Relation sharing set to",_v
+			print("Relation sharing set to",_v)
 
 			_v = self.prefs.getBoolPref("Compiler","use_binary_compilation",False)
 			ascpy.getCompiler().setBinaryCompilation(_v)
-			print "Binary compilation set to",_v
+			print("Binary compilation set to",_v)
 
 			self.sim = type_object.getSimulation(str(type_object.getName())+"_sim",False)
 
 			#self.reporter.reportNote("SIMULATION ASSIGNED")
-		except RuntimeError, e:
+		except RuntimeError as e:
 			self.stop_waiting()
 			self.reporter.reportError(str(e))
 			return
@@ -791,7 +791,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		try:
 			#self.reporter.reportNote("SIMULATION CREATED, RUNNING DEFAULT METHOD NOW...")
 			self.sim.runDefaultMethod()
-		except RuntimeError, e:
+		except RuntimeError as e:
 			self.stop_waiting()
 			self.reporter.reportError(str(e))
 			return			
@@ -806,7 +806,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		else:
 			try:
 				self.sim.processVarStatus()
-			except RuntimeError,e:
+			except RuntimeError as e:
 				self.reporter.reportError(str(e))
 			self.modelview.refreshtree()
 
@@ -823,7 +823,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		try:
 			self.sim.build()
 			self.enable_on_sim_build()
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.reporter.reportError("Couldn't build system: %s" % str(e));
 			return 1
 		
@@ -846,7 +846,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		try:
 			self.sim.solve(self.solver,reporter)
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.reporter.reportError(str(e))	
 
 		self.stop_waiting()
@@ -859,13 +859,13 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		try:
 			self.sim.build()
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.reporter.reportError("Couldn't build system: %s",str(e))
 			return
 		integrator = ascpy.Integrator(self.sim)	
 		try:
 			integrator.findIndependentVar()
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.reporter.reportNote(str(e))
 
 		integwin = IntegratorWindow(self,self.sim)		
@@ -903,7 +903,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 						,"Relations involved in the structural singularity" : sing.rels
 						,"Variables involved in the structural singularity" : sing.vars
 					}
-					for k,v in msgs.iteritems():
+					for k,v in msgs.items():
 						text+="\n\n%s:" % k
 						if len(v):
 							_l = [j.getName() for j in v]
@@ -917,7 +917,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			else:
 				self.reporter.reportNote("System DoF check OK")
 
-		except RuntimeError, e:
+		except RuntimeError as e:
 			self.stop_waiting()
 			self.reporter.reportError(str(e))
 			return
@@ -929,7 +929,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		try:
 			self.sim.run(method)
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.reporter.reportError(str(e))
 		
 		self.sim.processVarStatus()
@@ -977,7 +977,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.reporter.reportNote("Plotting incidence matrix...")
 			_sp = IncidenceMatrixWindow(_im)
 			_sp.run()
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.reporter.reportError(str(e))
 
 	def on_units_click(self,*args):
@@ -991,7 +991,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.start_waiting("Creating incidence graph...")
 		try:
 			self.sim.write(fname,'dot') # create a PNG file in f
-		except Exception,e:
+		except Exception as e:
 			self.stop_waiting()
 			self.reporter.reportError("Failed to create incidence graph: %s" % str(e))
 			return
@@ -1009,7 +1009,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			_bl = self.sim.getActiveBlock()
 			_db = DiagnoseWindow(self,_bl)
 			_db.run();
-		except RuntimeError, e:
+		except RuntimeError as e:
 			self.reporter.reportError(str(e))
 			return
 
@@ -1017,7 +1017,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.create_observer()
 
 	def on_keep_observed_click(self,*args):
-		print "KEEPING..."
+		print("KEEPING...")
 		if self.currentobservertab is None:
 			self.reporter.reportError("No observers defined for this model!")
 			return
@@ -1059,7 +1059,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_epsilon = 1e-4;
 		try:
 			_vars = self.sim.getVariablesNearBounds(_epsilon)
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.reporter.reportError("Unable to show variables near bounds:\n%s"%str(e))
 			return
 		text = "Variables Near Bounds"
@@ -1077,7 +1077,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_bignum = self.prefs.getRealPref("Browser","far_from_nominals",10);
 		try:
 			_vars = self.sim.getVariablesFarFromNominals(_bignum)
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.reporter.reportError("Unable to show variables far from nominals:\n%s"%str(e))
 			return
 		text = "Variables Far from Nominals"
@@ -1190,7 +1190,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		response = dialog.run()
 		_filename = dialog.get_filename()
-		print "\nFILENAME SELECTED:",_filename
+		print("\nFILENAME SELECTED:",_filename)
 		
 		_path = dialog.get_current_folder()
 		if _path:
@@ -1203,7 +1203,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.library.clear()
 			try:
 				self.do_open( _filename)
-			except RuntimeError,e:
+			except RuntimeError as e:
 				self.reporter.reportError(str(e))
 
 	def on_reloadwarn_toggled(self,*args):
@@ -1231,7 +1231,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			if _type:
 				_t = self.library.findType(_type)
 				self.do_sim(_t)
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.reporter.reportError(str(e))
 
 	def props_activate(self,widget,*args):
@@ -1266,10 +1266,10 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			,name=self.solver.getName()
 		)
 		if _paramswin.run() == gtk.RESPONSE_OK:
-			print "PARAMS UPDATED"
+			print("PARAMS UPDATED")
 			self.sim.setParameters(_paramswin.params)
 		else:
-			print "PARAMS NOT UPDATED"
+			print("PARAMS NOT UPDATED")
 
 	def methodrun_click(self,*args):
 		_sel = self.methodsel.get_active_text()
@@ -1320,7 +1320,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_help.run()
 
 	def on_report_a_bug_click(self,*args):
-		import urllib
+		import urllib.request, urllib.parse, urllib.error
 		import platform
 		_plat = str(platform.system())
 		_version = config.VERSION
@@ -1346,7 +1346,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 					text += "Get more info at %s\n" % v.info
 				if v.download:
 					text += "Download from %s\n" % v.download
-		except Exception, e:
+		except Exception as e:
 			text += "\nUnable to check version\n"
 			text += str(e)
 
@@ -1356,7 +1356,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 	def on_show_fixable_variables_activate(self,*args):
 		try:
 			v = self.sim.getFixableVariables()
-		except Exception,e:
+		except Exception as e:
 			self.reporter.reportError("Unable to show fixable variables: %s"%str(e))
 			return
 		text = "Fixable Variables"
@@ -1373,7 +1373,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 	def on_show_fixed_vars_activate(self,*args):
 		try:
 			v = self.sim.getFixedVariables()
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.reporter.reportError("Unable to show fixed variables: %s"%str(e))
 			return
 		text = "%d fixed variables:" % len(v)
@@ -1390,7 +1390,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 	def on_show_freeable_variables_activate(self,*args):
 		try:
 			v = self.sim.getFreeableVariables()
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.reporter.reportError("Unable to show freeable variables: %s"%str(e))
 			return
 		text = "Freeable Variables"
@@ -1432,7 +1432,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				self.reporter.reportError("First select a MODEL instance");
 				return
 			v = D.getNotes(t)
-		except RuntimeError,e:
+		except RuntimeError as e:
 			self.reporter.reportError("Unable to show notes: %s"%str(e))
 			return
 		text = "Notes for '%s'" % t.getName()
@@ -1451,7 +1451,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def on_maintabs_switch_page(self,notebook,page,pagenum):
 		#print("Page switched to %d" % pagenum)
-		if (pagenum in self.tabs.keys()) and self.tabs[pagenum].alive:
+		if (pagenum in list(self.tabs.keys())) and self.tabs[pagenum].alive:
 			self.currentobservertab = pagenum
 			self.currentpage = pagenum
 		else:
@@ -1519,7 +1519,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		
 		_time_now = time.time()
 		_last_update = float(self.prefs.getStringPref("Browser","last_update_check","0"))
-		print "Time since last update check : %f days" %((_time_now-_last_update)/(3600*24))
+		print("Time since last update check : %f days" %((_time_now-_last_update)/(3600*24)))
 		
 		if ((_time_now-_last_update)/(3600*24)) < 7:
 			return
