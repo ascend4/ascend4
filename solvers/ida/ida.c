@@ -962,6 +962,53 @@ int ida_reinit_integrator(IntegratorSystem *integ, void *ida_mem,
 	return 0;
 }
 
+
+/* Initialise boundary condition states if appropriate. Reconfigure if necessary */
+int prepare_bnds(IntegratorSystem *integ, int *bnd_cond_states, int *bnd_not_set){
+	int all_bnds_set = 1;
+	int i;
+    IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
+	if(enginedata->nbnds){
+		CONSOLE_DEBUG("Initialising boundary states");
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR<4
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING, "Warning: boundary detection is"
+				"unreliable with SUNDIALS pre version 2.4.0. Please update if you"
+				"wish to use IDA for conditional integration");
+#endif
+		bnd_cond_states = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
+
+		/* identify if we're exactly *on* any boundaries currently */
+		for(i = 0; i < enginedata->nbnds; i++) {
+#ifdef IDA_BND_DEBUG
+			char *relname = bnd_make_name(integ->system,enginedata->bndlist[i]);
+#endif
+			bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
+			bnd_set_ida_first_cross(enginedata->bndlist[i],1);
+			if(bndman_real_eval(enginedata->bndlist[i]) == 0) {
+				/* if the residual for the boundary is zero (ie looks like we are *on* the boundary?) JP */
+#ifdef IDA_BND_DEBUG
+				CONSOLE_DEBUG("Boundary '%s': not set",relname);
+#endif
+				bnd_not_set[i] = 1;
+				all_bnds_set = 0;
+			}else{
+				bnd_not_set[i] = 0;
+			}
+#ifdef IDA_BND_DEBUG
+			CONSOLE_DEBUG("Boundary '%s' is %d",relname,bnd_cond_states[i]);
+			ASC_FREE(relname);
+#endif
+		}
+		CONSOLE_DEBUG("Setting up LRSlv...");
+		if(ida_setup_lrslv(integ,qrslv_ind,lrslv_ind)){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR, "Idaanalyse failed.");
+			return 1;
+		}
+
+	}
+	return all_bnds_set;
+}
+
 	/*-------------------------------------------------------------
 	 MAIN IDA SOLVER ROUTINE, see IDA manual, sec 5.4, p. 27 ff.
 	 */
@@ -1031,50 +1078,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	ida_prepare_integrator(integ, ida_mem, tout);
 
 
-
-
-	/* Initialise boundary condition states if appropriate. Reconfigure if necessary */
-	if(enginedata->nbnds){
-		CONSOLE_DEBUG("Initialising boundary states");
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR<4
-		ERROR_REPORTER_HERE(ASC_PROG_WARNING, "Warning: boundary detection is"
-				"unreliable with SUNDIALS pre version 2.4.0. Please update if you"
-				"wish to use IDA for conditional integration");
-#endif
-		bnd_cond_states = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
-
-		/* identify if we're exactly *on* any boundaries currently */
-		for(i = 0; i < enginedata->nbnds; i++) {
-#ifdef IDA_BND_DEBUG
-			relname = bnd_make_name(integ->system,enginedata->bndlist[i]);
-#endif
-			bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
-			bnd_set_ida_first_cross(enginedata->bndlist[i],1);
-			if(bndman_real_eval(enginedata->bndlist[i]) == 0) {
-				/* if the residual for the boundary is zero (ie looks like we are *on* the boundary?) JP */
-#ifdef IDA_BND_DEBUG
-				CONSOLE_DEBUG("Boundary '%s': not set",relname);
-#endif
-				bnd_not_set[i] = 1;
-				all_bnds_set = 0;
-			}else{
-				bnd_not_set[i] = 0;
-			}
-#ifdef IDA_BND_DEBUG
-			CONSOLE_DEBUG("Boundary '%s' is %d",relname,bnd_cond_states[i]);
-			ASC_FREE(relname);
-#endif
-		}
-		CONSOLE_DEBUG("Setting up LRSlv...");
-		if(ida_setup_lrslv(integ,qrslv_ind,lrslv_ind)){
-			ERROR_REPORTER_HERE(ASC_USER_ERROR, "Idaanalyse failed.");
-			return 1;
-		}
-
-	}
-
-
-
+	all_bnds_set = prepare_bnds(integ, bnd_cond_states, bnd_not_set);
 
 	tol = 0.0001*(samplelist_get(integ->samples, finish_index) 
 					- samplelist_get(integ->samples, start_index))
