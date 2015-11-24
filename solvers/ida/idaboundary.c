@@ -77,9 +77,9 @@ static void ida_write_values(IntegratorSystem *integ) {
 		CONSOLE_DEBUG("Value of %s is %d", dis_make_name(integ->system,dvl[c]),dis_value(dvl[c]));
 }
 
-int ida_setup_lrslv(IntegratorSystem *integ, int qrslv_ind, int lrslv_ind) {
+int ida_setup_lrslv(IntegratorSystem *integ) {
 	CONSOLE_DEBUG("Running logical solver...");
-	ida_log_solve(integ, lrslv_ind);
+	ida_log_solve(integ);
 	if(some_dis_vars_changed(integ->system)){
 		CONSOLE_DEBUG("Some discrete vars changed; reanalysing");
 		return ida_bnd_reanalyse_cont(integ);
@@ -225,13 +225,13 @@ void ida_bnd_update_IC(IntegratorSystem *integ, realtype t0, N_Vector y0, N_Vect
 
 }
 
-int ida_log_solve(IntegratorSystem *integ, int lrslv_ind) {
+int ida_log_solve(IntegratorSystem *integ) {
 	slv_parameters_t parameters;
 	int num_params;
 	char *pname;
 	slv_status_t status;
 	int i;
-	if (slv_select_solver(integ->system, lrslv_ind) == -1) {
+	if (slv_select_solver(integ->system, integrator_ida_enginedata(integ)->lrslv_ind) == -1) {
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error attempting to load LRSlv");
 	}
 #ifdef IDA_BND_DEBUG
@@ -274,8 +274,7 @@ int ida_log_solve(IntegratorSystem *integ, int lrslv_ind) {
  * @return 1 if the crossing causes a change in the system
  */
 
-int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
-		int *bnd_cond_states, int qrslv_ind, int lrslv_ind) {
+int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound, int *bnd_cond_states) {
 
 	IntegratorIdaData *enginedata;
 	slv_status_t status;
@@ -343,7 +342,7 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 						prevals[c] = dis_value(dvl[c]);
 				}
 				bnd_set_ida_value(bnd, !bnd_cond_states[i]);
-				if(!ida_log_solve(integ,lrslv_ind)){
+				if(!ida_log_solve(integ)){
 					CONSOLE_DEBUG("Error in logic solve in double-cross");
 					return -1;
 				}
@@ -361,7 +360,7 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 #endif
 		}
 	}
-	if(!ida_log_solve(integ,lrslv_ind)) return -1;
+	if(!ida_log_solve(integ)) return -1;
 
 	/* If there was a double crossing, because of ida_log_solve the previous values
 	of discrete variables may be equal to their current values, which would mean that
@@ -394,7 +393,7 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 		while(some_dis_vars_changed(integ->system) && events_triggered)  {
 			if(ida_bnd_reanalyse(integ)) {
 				/* select QRSlv solver, and solve the system */
-				if(slv_select_solver(integ->system, qrslv_ind) == -1) {
+				if(slv_select_solver(integ->system, enginedata->qrslv_ind) == -1) {
 					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error attempting to load QRSlv");
 				}
 #ifdef IDA_BND_DEBUG
@@ -454,8 +453,9 @@ int ida_cross_boundary(IntegratorSystem *integ, int *rootsfound,
 							bnd_set_ida_value(enginedata->bndlist[i],bnd_cond_states[i]);
 						}
 					}
+
 				}
-				if (!ida_log_solve(integ,lrslv_ind)) return -1;
+				if (!ida_log_solve(integ)) return -1;
 
 			}else events_triggered = 0;
 			if (ida_bnd_reanalyse_cont(integ)) return 2;

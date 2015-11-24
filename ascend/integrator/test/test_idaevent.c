@@ -436,8 +436,7 @@ static void test_solardynamics2(){
 	T(test2) \
 	T(successive) \
 	T(bball) \
-	T(solardynamics) \
-	T(solardynamics2)
+	T(solardynamics)
 
 REGISTER_TESTS_SIMPLE(integrator_idaevent, TESTS)
 

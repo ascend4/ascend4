@@ -883,9 +883,19 @@ int ida_prepare_integrator(IntegratorSystem *integ, void *ida_mem,
 		realtype tout1) {
 	realtype t0;
 	N_Vector y0, yp0;
+	IntegratorIdaData *enginedata;
+
+	/* Setup boundary list */
+	enginedata = integrator_ida_enginedata(integ);
+	enginedata->bndlist = slv_get_solvers_bnd_list(integ->system);
+	enginedata->nbnds = slv_get_num_solvers_bnds(integ->system);
+	enginedata->safeeval = SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_SAFEEVAL);
 
 	y0 	= ida_bnd_new_zero_NV(integ->n_y);
 	yp0 = ida_bnd_new_zero_NV(integ->n_y);
+
+	/* store reference to list of relations (in enginedata) */
+	ida_load_rellist(integ);
 
 #if 0
 	int i;
@@ -920,6 +930,10 @@ int ida_prepare_integrator(IntegratorSystem *integ, void *ida_mem,
 
 	/* specify ROOT-FINDING problem (if necessary) */
 	ida_root_init(integ, ida_mem);
+
+	/* Find the solvers */
+    enginedata->qrslv_ind = slv_lookup_client("QRSlv");
+    enginedata->lrslv_ind = slv_lookup_client("LRSlv");
 
 	/* Clean up */
 	N_VDestroy_Serial(y0);
@@ -962,53 +976,6 @@ int ida_reinit_integrator(IntegratorSystem *integ, void *ida_mem,
 	return 0;
 }
 
-
-/* Initialise boundary condition states if appropriate. Reconfigure if necessary */
-int prepare_bnds(IntegratorSystem *integ, int *bnd_cond_states, int *bnd_not_set){
-	int all_bnds_set = 1;
-	int i;
-    IntegratorIdaData *enginedata = integrator_ida_enginedata(integ);
-	if(enginedata->nbnds){
-		CONSOLE_DEBUG("Initialising boundary states");
-#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR<4
-		ERROR_REPORTER_HERE(ASC_PROG_WARNING, "Warning: boundary detection is"
-				"unreliable with SUNDIALS pre version 2.4.0. Please update if you"
-				"wish to use IDA for conditional integration");
-#endif
-		bnd_cond_states = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
-
-		/* identify if we're exactly *on* any boundaries currently */
-		for(i = 0; i < enginedata->nbnds; i++) {
-#ifdef IDA_BND_DEBUG
-			char *relname = bnd_make_name(integ->system,enginedata->bndlist[i]);
-#endif
-			bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
-			bnd_set_ida_first_cross(enginedata->bndlist[i],1);
-			if(bndman_real_eval(enginedata->bndlist[i]) == 0) {
-				/* if the residual for the boundary is zero (ie looks like we are *on* the boundary?) JP */
-#ifdef IDA_BND_DEBUG
-				CONSOLE_DEBUG("Boundary '%s': not set",relname);
-#endif
-				bnd_not_set[i] = 1;
-				all_bnds_set = 0;
-			}else{
-				bnd_not_set[i] = 0;
-			}
-#ifdef IDA_BND_DEBUG
-			CONSOLE_DEBUG("Boundary '%s' is %d",relname,bnd_cond_states[i]);
-			ASC_FREE(relname);
-#endif
-		}
-		CONSOLE_DEBUG("Setting up LRSlv...");
-		if(ida_setup_lrslv(integ,qrslv_ind,lrslv_ind)){
-			ERROR_REPORTER_HERE(ASC_USER_ERROR, "Idaanalyse failed.");
-			return 1;
-		}
-
-	}
-	return all_bnds_set;
-}
-
 	/*-------------------------------------------------------------
 	 MAIN IDA SOLVER ROUTINE, see IDA manual, sec 5.4, p. 27 ff.
 	 */
@@ -1041,7 +1008,6 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	int	need_to_reconfigure;	/** < Flag to indicate system rebuild after crossing */
 	int need_to_reinteg = 0;	/** < Flag for when crossings happen on or very close to timesteps */
 	int	skipping_output;		/** < Flag to skip output to reporter */
-    int qrslv_ind, lrslv_ind;
 
     int after_root = 0;
 
@@ -1049,16 +1015,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	char *relname;
 #endif
 
-	//CONSOLE_DEBUG("STARTING IDA...");
-	/* Setup boundary list */
 	enginedata = integrator_ida_enginedata(integ);
-	enginedata->bndlist = slv_get_solvers_bnd_list(integ->system);
-	enginedata->nbnds = slv_get_num_solvers_bnds(integ->system);
-	enginedata->safeeval = SLV_PARAM_BOOL(&(integ->params),IDA_PARAM_SAFEEVAL);
-	//CONSOLE_DEBUG("safeeval = %d",enginedata->safeeval);
-
-    qrslv_ind = slv_lookup_client("QRSlv");
-    lrslv_ind = slv_lookup_client("LRSlv");
 
 	bnd_not_set = ASC_NEW_ARRAY(int,enginedata->nbnds);
 
@@ -1066,19 +1023,57 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	integrator_ida_debug(integ, stderr);
 #endif
 
-	/* store reference to list of relations (in enginedata) */
-	ida_load_rellist(integ);
-
 	/* create IDA object */
 	ida_mem = IDACreate();
 
 	/* Setup parameter inputs and initial conditions for IDA. */
 	tout = samplelist_get(integ->samples, start_index + 1);
 	/* solve the initial conditions, allocate memory, other stuff... */
-	ida_prepare_integrator(integ, ida_mem, tout);
+	ida_prepare_integrator(integ, ida_mem, tout); 
 
 
-	all_bnds_set = prepare_bnds(integ, bnd_cond_states, bnd_not_set);
+	/* Initialise boundary condition states if appropriate. Reconfigure if necessary */
+	if(enginedata->nbnds){
+		CONSOLE_DEBUG("Initialising boundary states");
+#if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR<4
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING, "Warning: boundary detection is"
+				"unreliable with SUNDIALS pre version 2.4.0. Please update if you"
+				"wish to use IDA for conditional integration");
+#endif
+		bnd_cond_states = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
+
+		/* identify if we're exactly *on* any boundaries currently */
+		for(i = 0; i < enginedata->nbnds; i++) {
+#ifdef IDA_BND_DEBUG
+			relname = bnd_make_name(integ->system,enginedata->bndlist[i]);
+#endif
+			bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
+			bnd_set_ida_first_cross(enginedata->bndlist[i],1);
+			if(bndman_real_eval(enginedata->bndlist[i]) == 0) {
+				/* if the residual for the boundary is zero (ie looks like we are *on* the boundary?) JP */
+#ifdef IDA_BND_DEBUG
+				CONSOLE_DEBUG("Boundary '%s': not set",relname);
+#endif
+				bnd_not_set[i] = 1;
+				all_bnds_set = 0;
+			}else{
+				bnd_not_set[i] = 0;
+			}
+#ifdef IDA_BND_DEBUG
+			CONSOLE_DEBUG("Boundary '%s' is %d",relname,bnd_cond_states[i]);
+			ASC_FREE(relname);
+#endif
+		}
+		CONSOLE_DEBUG("Setting up LRSlv...");
+		if(ida_setup_lrslv(integ)){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR, "Idaanalyse failed.");
+			return 1;
+		}
+
+	}
+
+
+
 
 	tol = 0.0001*(samplelist_get(integ->samples, finish_index) 
 					- samplelist_get(integ->samples, start_index))
@@ -1111,7 +1106,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 		CONSOLE_DEBUG("Integrating from t0 = %f to t = %f", t0, tout);
 #endif
 
-		if(!after_root){
+		if(!after_root && enginedata->nbnds){
 			/* reset the root-crossing-direction flags */
 			for(i = 0; i < enginedata->nbnds; i++){
 				rootdir[i] = 0;
@@ -1124,8 +1119,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 				ASC_FREE(n);
 #endif
 			}
-			
-			if(enginedata->nbnds) IDASetRootDirection(ida_mem, rootdir);
+			IDASetRootDirection(ida_mem, rootdir);
 		}
 
 		/**
@@ -1171,7 +1165,7 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 				}
 				if(after_root){
 					CONSOLE_DEBUG("Running logic solver after root...");
-					ida_log_solve(integ, lrslv_ind);
+					ida_log_solve(integ);
 					after_root = 0;
 				}
 #ifdef ASC_SIGNAL_TRAPS
@@ -1181,116 +1175,114 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 			}
 			Asc_SignalHandlerPopDefault(SIGINT);
 #endif
-
-			if(enginedata->nbnds) {
-				if(flag == IDA_ROOT_RETURN){
+//---------------------------------------------------
+			if(enginedata->nbnds && flag == IDA_ROOT_RETURN) {
 #ifdef IDA_BND_DEBUG
-					CONSOLE_DEBUG("IDA reports root found!");
+				CONSOLE_DEBUG("IDA reports root found!");
 #endif
-					/* Store the root index */
-					rootsfound = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
+				/* Store the root index */
+				rootsfound = ASC_NEW_ARRAY_CLEAR(int,enginedata->nbnds);
 
-					if(IDA_SUCCESS != IDAGetRootInfo(ida_mem, rootsfound)) {
-						ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
-						return 14;
-					}
+				if(IDA_SUCCESS != IDAGetRootInfo(ida_mem, rootsfound)) {
+					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to fetch boundary-crossing info");
+					return 14;
+				}
 
 #ifdef IDA_BND_DEBUG
-					/* write out the boundaries that were crossed */
-					for(i = 0; i < enginedata->nbnds; i++) {
-						if(rootsfound[i]) {
-							relname = bnd_make_name(integ->system, enginedata->bndlist[i]);
-							CONSOLE_DEBUG("Boundary '%s' crossed at time x = %f, direction %s"
-								,relname,tret,(rootsfound>0?"UP":"DOWN")
-							);
-							ASC_FREE(relname);
-						}
+				/* write out the boundaries that were crossed */
+				for(i = 0; i < enginedata->nbnds; i++) {
+					if(rootsfound[i]) {
+						relname = bnd_make_name(integ->system, enginedata->bndlist[i]);
+						CONSOLE_DEBUG("Boundary '%s' crossed at time x = %f, direction %s"
+							,relname,tret,(rootsfound>0?"UP":"DOWN")
+						);
+						ASC_FREE(relname);
 					}
+				}
 #endif
 
 					
-					if(all_bnds_set == 0){
+				if(all_bnds_set == 0){
 #ifdef IDA_BND_DEBUG
-						CONSOLE_DEBUG("Unset bounds exist; evaluate them explicitly...");
+					CONSOLE_DEBUG("Unset bounds exist; evaluate them explicitly...");
 #endif
-						all_bnds_set = 1;
-						for(i = 0; i < enginedata->nbnds; i++){
-							if(bnd_not_set[i]){
-								if(!rootsfound[i]){
-									bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
+					all_bnds_set = 1;
+					for(i = 0; i < enginedata->nbnds; i++){
+						if(bnd_not_set[i]){
+							if(!rootsfound[i]){
+								bnd_cond_states[i] = bndman_calc_satisfied(enginedata->bndlist[i]);
 #ifdef IDA_BND_DEBUG
-									relname = bnd_make_name(integ->system, enginedata->bndlist[i]);
-									CONSOLE_DEBUG("Boundary '%s': bnd_cond_states[%d] = %d"
-										,relname,i,bnd_cond_states[i]
-									);
-									ASC_FREE(relname);
+								relname = bnd_make_name(integ->system, enginedata->bndlist[i]);
+								CONSOLE_DEBUG("Boundary '%s': bnd_cond_states[%d] = %d"
+									,relname,i,bnd_cond_states[i]
+								);
+								ASC_FREE(relname);
 #endif
-								}else all_bnds_set = 0;
-							}
+							}else all_bnds_set = 0;
 						}
 					}
+				}
 
-					if(!after_root){
+				if(!after_root){
 #ifdef IDA_BND_DEBUG
-						CONSOLE_DEBUG("Just 'after_root'...");
-						for(i=0;i<enginedata->nbnds;++i){
-							relname = bnd_make_name(integ->system, enginedata->bndlist[i]);
-							CONSOLE_DEBUG("Boundary '%s': bnd_cond_states[%d] = %d"
-								,relname,i,bnd_cond_states[i]
-							);
-							ASC_FREE(relname);
-						}
-#endif
-						need_to_reconfigure = ida_cross_boundary(integ, rootsfound,
-							bnd_cond_states, qrslv_ind, lrslv_ind);
+					CONSOLE_DEBUG("Just 'after_root'...");
+					for(i=0;i<enginedata->nbnds;++i){
+						relname = bnd_make_name(integ->system, enginedata->bndlist[i]);
+						CONSOLE_DEBUG("Boundary '%s': bnd_cond_states[%d] = %d"
+							,relname,i,bnd_cond_states[i]
+						);
+						ASC_FREE(relname);
 					}
-					if(need_to_reconfigure == 2) {
-						ERROR_REPORTER_HERE(ASC_USER_ERROR,"Analysis after the boundary failed.");
+#endif
+					need_to_reconfigure = ida_cross_boundary(integ, rootsfound,
+						bnd_cond_states);
+				}
+				if(need_to_reconfigure == 2) {
+					ERROR_REPORTER_HERE(ASC_USER_ERROR,"Analysis after the boundary failed.");
+					return 1;
+				}
+				if(need_to_reconfigure){
+					after_root = 1;
+					if (ida_bnd_update_relist(integ) != 0) {
+						/* system not square, failure */
 						return 1;
 					}
-					if(need_to_reconfigure){
-						after_root = 1;
-						if (ida_bnd_update_relist(integ) != 0) {
-							/* system not square, failure */
-							return 1;
-						}
 #ifdef IDA_BND_DEBUG
-						CONSOLE_DEBUG("Boundary(ies) crossed at x=%f: need to reinitialize solver",tret);
+					CONSOLE_DEBUG("Boundary(ies) crossed at x=%f: need to reinitialize solver",tret);
 #endif
-						/* so, now we need to restart the integration. we will assume that
-						 everything changes: number of variables, etc, etc, etc. */
+					/* so, now we need to restart the integration. we will assume that
+					 everything changes: number of variables, etc, etc, etc. */
 
-						/* Need to destroy and rebuild system */
-						/* IDAFree(ida_mem); */
-						/* ida_mem = IDACreate(); */
-						/* ida_reinit_integrator(integ, ida_mem, tout); */
-						/* n_y may have changed */
-						N_VDestroy_Serial(yret);
-						N_VDestroy_Serial(ypret);
+					/* Need to destroy and rebuild system */
+					/* IDAFree(ida_mem); */
+					/* ida_mem = IDACreate(); */
+					/* ida_reinit_integrator(integ, ida_mem, tout); */
+					/* n_y may have changed */
+					N_VDestroy_Serial(yret);
+					N_VDestroy_Serial(ypret);
 
-						yret = N_VNew_Serial(integ->n_y);
-						ypret = N_VNew_Serial(integ->n_y);
-					} /* need to reconfigure */
+					yret = N_VNew_Serial(integ->n_y);
+					ypret = N_VNew_Serial(integ->n_y);
+				} /* need to reconfigure */
 
 #if SUNDIALS_VERSION_MAJOR==2 && SUNDIALS_VERSION_MINOR>=4
-					/* set rootdir to -1*rootsfound to set IDA
-					 * to ignore double crossings */
-					for(i = 0; i < enginedata->nbnds; i++) {
-						rootdir[i] = -1*rootsfound[i];
+				/* set rootdir to -1*rootsfound to set IDA
+				 * to ignore double crossings */
+				for(i = 0; i < enginedata->nbnds; i++) {
+					rootdir[i] = -1*rootsfound[i];
 #ifdef IDA_BND_DEBUG
-						char *n = bnd_make_name(integ->system,enginedata->bndlist[i]);
-						CONSOLE_DEBUG("Set direction=%d for boundary '%s'",rootdir[i],n);
-						ASC_FREE(n);
+					char *n = bnd_make_name(integ->system,enginedata->bndlist[i]);
+					CONSOLE_DEBUG("Set direction=%d for boundary '%s'",rootdir[i],n);
+					ASC_FREE(n);
 #endif
-					}
-					IDASetRootDirection(ida_mem, rootdir);\
-					/*^^^ FIXME what about setting root direction for 'normal' roots? */
+				}
+				IDASetRootDirection(ida_mem, rootdir);\
+				/*^^^ FIXME what about setting root direction for 'normal' roots? */
 #endif
-					ASC_FREE(rootsfound);
-					ida_reinit_integrator(integ, ida_mem, tout);
-				} /* IDA_ROOT_RETURN */
+				ASC_FREE(rootsfound);
+				ida_reinit_integrator(integ, ida_mem, tout);
 
-			} /* nbnds */
+			} /* nbnds && IDA_ROOT_RETURN */
 
 			/* Are we sufficiently far from tout to continue
 			 * integrating on this timestep? */

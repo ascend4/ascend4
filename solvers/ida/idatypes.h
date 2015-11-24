@@ -62,6 +62,9 @@ typedef struct IntegratorIdaDataStruct{
 	IdaFlagNameFn *flagnamefn;
 	const char *flagfntype;
 
+	int qrslv_ind;
+	int lrslv_ind;
+
 } IntegratorIdaData;
 
 /**
