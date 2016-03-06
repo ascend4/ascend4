@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <math.h>
 
-//#define REF_DEBUG
+#define REF_DEBUG
 #ifdef REF_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
@@ -308,16 +308,15 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
 		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
 
+#ifdef REF_DEBUG
 		S2 = fprops_set_Trho(T,rho,P,&res);
 		h2 = fprops_h(S2,&res);
-#ifdef REFSTATE_DEBUG
 		g2 = fprops_g(S2,&res);
-#endif
 		p = fprops_p(S2,&res);
 		if(res)return 4000+res;
-
 		MSG("Resulting reference values: h = %f, g = %f, p = %f kPa",h2,g2,p);
 		MSG("...at T = %f K , rho = %f kg/m3",T, rho);
+#endif
 
 		MSG("Set TPHG reference state.");
 		return 0;

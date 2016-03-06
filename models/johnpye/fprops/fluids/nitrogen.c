@@ -26,6 +26,7 @@ by NIST in its program REFPROP 7.0.
 
 #include "../fprops.h"
 #include "../helmholtz.h"
+#include "../thcond.h"
 
 #define NITROGEN_M 28.01348
 #define NITROGEN_R (8.31451e3/NITROGEN_M)
@@ -321,7 +322,7 @@ fprintf(stderr,"mu(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,mu,MU__1); \
 	double k;
 #define THCOND_TEST(T__1,RHO__1,K__1,TOL__1) \
 	S = fprops_set_Trho(T__1, RHO__1, P, &err); \
-	k = fprops_k(S,&err); \
+	k = fprops_lam(S,&err); \
 	fprintf(stderr,"k(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,k,K__1); \
 	ASSERT(FPROPS_NO_ERROR==err); \
 	if(fabs(k - K__1)<TOL__1)kerr++;
