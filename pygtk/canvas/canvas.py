@@ -13,7 +13,7 @@ from gi.repository import Gtk
 
 os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))
 
-DEFAULT_LIBRARY = 'brayton_fprops_rachel.a4c'
+DEFAULT_LIBRARY = 'basic_electronics_model.a4c'
 
 #Remove this sometime
 DEFAULT_CANVAS_MODEL_LIBRARY = os.path.join('..','..','models','test','canvas')
