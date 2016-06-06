@@ -221,39 +221,54 @@ class mainWindow(Gtk.Window):
 		'''The Toolbar Definations start here'''
 
 		tb = Gtk.Toolbar()
+		tb.set_style(Gtk.ToolbarStyle.BOTH)
 		#Load Button
 		loadbutton = Gtk.ToolButton(Gtk.STOCK_OPEN)
+		loadbutton.set_label("Load")
 		loadbutton.connect("clicked",self.fileopen)
 		tb.insert(loadbutton,0)
 
 		#Save Button
 		savebutton = Gtk.ToolButton(Gtk.STOCK_SAVE)
+		savebutton.set_label("Save")
 		savebutton.connect("clicked",self.save_canvas)
 		tb.insert(savebutton,1)
+
+		# Undo Button
+		undob = Gtk.ToolButton(Gtk.STOCK_UNDO)
+		undob.set_label("Undo")
+		undob.connect("clicked", self.undo_canvas)
+		tb.insert(undob, 2)
+
+		# Redo Button
+		redob = Gtk.ToolButton(Gtk.STOCK_REDO)
+		redob.set_label("Redo")
+		redob.connect("clicked", self.redo_canvas)
+		tb.insert(redob, 3)
 
 		#Debug Button
 		debugbutton = Gtk.ToolButton(Gtk.STOCK_PROPERTIES)
 		debugbutton.set_label("Debug")
 		debugbutton.connect("clicked",self.debug_canvas)
-		tb.insert(debugbutton,2)
+		tb.insert(debugbutton,4)
 
 		#Preview Button
 		previewb = Gtk.ToolButton(Gtk.STOCK_PRINT_PREVIEW)
 		previewb.set_label("Preview")
 		previewb.connect("clicked",self.preview_canvas)
-		tb.insert(previewb,3)
+		tb.insert(previewb,5)
 
 		#Export Button
 		exportbutton = Gtk.ToolButton(Gtk.STOCK_CONVERT)
 		exportbutton.set_label("Export SVG")
 		exportbutton.connect("clicked",self.export_svg_as)
-		tb.insert(exportbutton,2)
+		tb.insert(exportbutton,6)
 
 		#Run Button
 		runb = Gtk.ToolButton(Gtk.STOCK_EXECUTE)
 		runb.set_label("Run")
 		runb.connect("clicked",self.run_canvas)
-		tb.insert(runb, 4)
+		tb.insert(runb,7)
 
 		##Custom Entry
 		#m_entry = Gtk.ToolButton(Gtk.STOCK_SAVE_AS)
