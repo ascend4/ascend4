@@ -1,0 +1,13 @@
+#!/bin/bash
+
+convert 1.png 1.pdf
+convert 2.png 2.pdf
+convert 3.png 3.pdf
+convert 4.png 4.pdf
+
+pdfunite 1.pdf 2.pdf 3.pdf 4.pdf results.pdf
+
+rm 1.png 2.png 3.png 4.png 
+rm 1.pdf 2.pdf 3.pdf 4.pdf
+
+
