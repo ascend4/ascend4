@@ -20,10 +20,15 @@ MODEL tee REFINES equipment;
 	inlet.V, outlet.V, side.V ARE_THE_SAME;
 END tee;
 
-MODEL join REFINES equipment;
+MODEL branch REFINES equipment;
 	NOTES
-		'block' SELF {Tee piece}
-		'icon' SELF {tee.svg}
+		'block' SELF {Branch}
+		'icon' SELF {branch.svg}
+		'graphic' SELF {0,0-6,5
+			0,10-6,5
+			6,5-10,5}
+		'port_in' SELF {inlet:0,0-side:0,10}
+		'port_out' SELF {outlet:10,5}
 	END NOTES;
 	side "in:" IS_A electron_stream;
 	inlet.I + side.I = outlet.I;
@@ -34,6 +39,10 @@ MODEL DC_Voltage_Source REFINES equipment;
 	NOTES
 		'block' SELF {DC Voltage Source}
 		'icon' SELF {dcvoltagesource.svg}
+		'graphic' SELF {0,5-4,5
+			4,3.5-4,6.5
+			6,0-6,10
+			6,5-10,5}
 	END NOTES;
 	Voltage "param: DC Voltage supplied by the DC Voltage Source" IS_A voltage;
 	inlet.V + Voltage = outlet.V;
@@ -44,6 +53,15 @@ MODEL resistor_basic REFINES equipment;
 	NOTES
 		'block' SELF {Basic Resistor}
 		'icon' SELF {resistor.svg}
+		'graphic' SELF {0,5-2,5
+			2,5-2.5,8
+			2.5,8-3.5,2
+			3.5,2-4.5,8
+			4.5,8-5.5,2
+			5.5,2-6.5,8
+			6.5,8-7.5,2
+			7.5,2-8,5
+			8,5-10,5}
 	END NOTES;
 	Resistance "param: Resistance of the resisitor" IS_A resistance;
 	inlet.I = outlet.I;
@@ -52,8 +70,13 @@ END resistor_basic;
 
 MODEL Ground_source;
 	NOTES
-		'block' SELF {Reservoir}
+		'block' SELF {Ground Source}
 		'icon' SELF {reservoir_in.png}
+		'graphic' SELF {5,0-5,5
+			0,5-10,5
+			2,7-8,7
+			4,9-6,9}
+		'port_out' SELF {outlet:5,0}
 	END NOTES;
 	outlet "out:" IS_A electron_stream;
 	outlet.V = 0 {volt};
@@ -61,8 +84,13 @@ END Ground_source;
 
 MODEL Ground_sink;
 	NOTES
-		'block' SELF {Reservoir}
+		'block' SELF {Ground Sink}
 		'icon' SELF {reservoir_in.png}
+		'graphic' SELF {5,0-5,5
+			0,5-10,5
+			2,7-8,7
+			4,9-6,9}
+		'port_in' SELF {inlet:5,0}
 	END NOTES;
 	inlet "in:" IS_A electron_stream;
 	inlet.V = 0 {volt};

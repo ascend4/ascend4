@@ -101,7 +101,7 @@ class mainWindow(Gtk.Window):
 
 	menu_xml = '''<ui>
 	<menubar name='MenuBar'>
-	  <menu action='File'>
+    <menu action='File'>
 		<menuitem action='New' />
 		<menuitem action='Open' />
 		<menuitem action='Save' />
@@ -460,10 +460,10 @@ class mainWindow(Gtk.Window):
 
 
 	def temp_canvas(self,widget):
-		pass
 		"""
 		  NOTE: 	re-implementation needed
 		  """
+		pass
 
 	def undo_canvas(self,widget):
 		"""

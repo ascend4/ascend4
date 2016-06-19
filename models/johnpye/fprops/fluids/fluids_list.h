@@ -30,6 +30,7 @@ fluid to FPROPS other than just running SCons and recompiling FPROPS again. */
 	F(nitrogen) X \
 	F(nitrousoxide) X \
 	F(nonane) X \
+	F(oxygen) X \
 	F(parahydrogen) X \
 	F(propane) X \
 	F(r116) X \

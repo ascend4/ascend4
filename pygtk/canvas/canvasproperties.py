@@ -4,6 +4,8 @@ Author: Grivan Thapar, July 2010
 '''
 import os
 
+import gi
+gi.require_version('GtkSource', '3.0')
 from gi.repository import Gtk
 from gi.repository import GObject
 from gi.repository import GtkSource
