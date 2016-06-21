@@ -1,0 +1,7 @@
+#!/bin/bash
+
+gcc main.c -o main -lm
+./main 
+tec360 -mesa generate.mcr 
+./unite
+

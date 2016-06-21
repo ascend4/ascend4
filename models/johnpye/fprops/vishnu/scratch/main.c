@@ -9,10 +9,10 @@
 
 #define MAXC 10
 
-#define PATH "incomp_liq_data/ZS55.dat"
+#define PATH "incomp_liq_data/Water.dat"
 
 #define ABORT \
-		printf("\nExiting Program!\n"); \ 
+		printf("\nExiting Program!\n"); \
 		exit(0);
 
 #define READ(Q)	\
@@ -36,7 +36,7 @@
 				strcpy(test_liq->Q.type,"exponential"); \
 			} \
 		} \
-		if(strcmp(test_liq->Q.type,"notdefined")) { \
+		if(!strcmp(test_liq->Q.type,"polynomial")||!strcmp(test_liq->Q.type,"exppolynomial")) { \
 			fseek(in,pos,SEEK_SET); \
 			fgets(word,BUF,in); \
 			double coefs[MAXC]; \
@@ -49,6 +49,31 @@
 				} \
 				else if(!strstr(word,"coeffs")&&strstr(word,"[")) { \
 					fgets(word,BUF,in); \
+					coefs[numc] = to_number(word); \
+					numc++; \
+					assert(numc<MAXC);  \
+				} \
+				fgets(word,BUF,in); \
+			} \
+			test_liq->Q.coeff = (double*)malloc(numc*sizeof(double)); \
+			test_liq->Q.numc = numc; \
+			while(numc) { \
+				numc--; \
+				test_liq->Q.coeff[numc] = coefs[numc]; \
+			} \
+		} \
+		else if(!strcmp(test_liq->Q.type,"exponential")) { \
+			fseek(in,pos,SEEK_SET); \
+			fgets(word,BUF,in); \
+			double coefs[MAXC]; \
+			int numc = 0; \
+			while(!strstr(word,"},")) { \
+				if(strstr(word,"NRMS")) { \
+					coefs[numc] = extracted_number(word); \
+					numc++; \
+					assert(numc==1); \
+				} \
+				else if(strstr(word,"e+")||strstr(word,"e-")) { \
 					coefs[numc] = to_number(word); \
 					numc++; \
 					assert(numc<MAXC);  \
@@ -99,7 +124,7 @@ double to_number(char w[BUF]) {
 	char *token;
    
 	/* get the first token */
-	token = strtok(w, " ");
+	token = strtok(w, " ,");
 
 	return (atof(token));
 
@@ -128,7 +153,7 @@ double eval_exppoly(coefficients c, double T, double x) {
 // eveluation function for exponential type coefficients
 double eval_expo(coefficients c, double T, double x) {
 
-	return exp(c.coeff[1]/(T+c.coeff[2])+c.coeff[3]);
+	return exp(c.coeff[1]/(T+c.coeff[2])-c.coeff[3]);
 
 }	
 
@@ -137,9 +162,9 @@ double eval_expo(coefficients c, double T, double x) {
 	double eval_ ## Q (fprops *fluid, double T, double x) { \
 		assert(T>0&&T>=fluid->T_min&&T<=fluid->T_max); \
 		assert(x>=fluid->x_min&&x<=fluid->x_max); \
-		if(!strcmp(fluid->Q.type,"polynomial")) return eval_poly(fluid->Q,T,x); \
-		else if(!strcmp(fluid->Q.type,"exppolynomial")) return eval_exppoly(fluid->Q,T,x); \
-		else if(!strcmp(fluid->Q.type,"exponential")) return eval_expo(fluid->Q,T,x); \
+		if(!strcmp(fluid->Q.type,"polynomial")) return eval_poly(fluid->Q,T-fluid->T_base,x-fluid->x_base); \
+		else if(!strcmp(fluid->Q.type,"exppolynomial")) return eval_exppoly(fluid->Q,T-fluid->T_base,x-fluid->x_base); \
+		else if(!strcmp(fluid->Q.type,"exponential")) return eval_expo(fluid->Q,T,0); \
 		else { \
 			printf("\nType not defined.\n"); \
 			ABORT \
