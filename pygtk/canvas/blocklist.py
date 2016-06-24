@@ -333,7 +333,7 @@ class mainWindow(Gtk.Window):
 		lower_vbox.pack_start(self.status, False, False, 0)
 		vpane.pack2(lower_vbox,False,False)
 
-		self.undo_manager = undo.undoManager(self)
+		self.undo_manager = undo.UndoManager(self)
 		self.undo_manager.start()
 
 		self.add(vpane)

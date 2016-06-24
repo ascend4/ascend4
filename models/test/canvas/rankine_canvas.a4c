@@ -13,8 +13,8 @@
 	
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*)(*
-
+*)
+(*
 	These definitions are mostly copied from John Pye's johnpe/rankine.a4c, annotated and 
 	extended to support Canvas Based Modelling of Rankine Cycle.
 
@@ -28,8 +28,9 @@
 
 REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
-
+(* something wrong with 'freesteam'
 IMPORT "freesteam";
+*)
 IMPORT "sensitivity/solve";
 
 MODEL steam_state;
@@ -45,6 +46,7 @@ MODEL steam_state;
 		p,h : INPUT;
 		T,v,s,x : OUTPUT
 	);
+
 METHODS
 	METHOD default;
 		p := 10{bar};
@@ -63,7 +65,9 @@ METHODS
 		RUN default_all;
 		FIX p, h;
 	END on_load;
+
 END steam_state;
+
 
 MODEL steam_node;
 	state IS_A steam_state;
@@ -94,6 +98,7 @@ MODEL steam_equipment;
 	inlet.mdot, outlet.mdot ARE_THE_SAME;
 	mdot ALIASES inlet.mdot;
 END steam_equipment;
+
 
 (*------------------------------------------------------------------------------
   PUMP COMPONENT
@@ -244,3 +249,5 @@ MODEL turbine_simple REFINES steam_equipment;
 	w_eq:w = inlet.h - outlet.h;
 
 END turbine_simple;
+
+

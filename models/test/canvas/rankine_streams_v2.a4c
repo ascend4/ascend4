@@ -25,10 +25,12 @@ REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 REQUIRE "stream_holdup.a4l";
 
-IMPORT "johnpye/fprops/helmholtz";
 IMPORT "sensitivity/solve";
+(* something wrong with import
+IMPORT "johnpye/fprops/helmholtz";
 IMPORT "johnpye/extpy/extpy";
 IMPORT "johnpye/fprops/cycle_plot";
+*)
 
 (*------------------------------------------------------------------------------
   BACKGROUND STUFF

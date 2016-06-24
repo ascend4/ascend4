@@ -5,7 +5,7 @@ Undo/Redo support for Canvas Based Graphical Modeller for ASCEND.
 Author: Grivan Thapar, June 2010
 
 Gaphas implements a basic functionality of storing all the changes in the Gaphas Classes and providing a mechanism of
-adding an 'observer' that observes these changes through a set of obsevrvers.
+adding an 'observer' that observes these changes through a set of observers.
 In addition to that it can emit callable signals which enable actual undoing.
 What remains is to classify changes as a transaction. This module does that work.
 Between every two user interactions a Transaction is saved.
@@ -35,7 +35,7 @@ def block_observed(func):
     list.
 
     On the function an ``__observer__`` property is set, which references to
-    the observer decorator. This is nessesary, since the event handlers expect
+    the observer decorator. This is necessary, since the event handlers expect
     the outer most function to be returned (that's what they see).
 
     Also note that the events are dispatched *before* the function is invoked.
@@ -145,7 +145,7 @@ class Transaction(object):
                 print 'Undo Error: ', e
 '''
 
-class undoManager(object):
+class UndoManager(object):
     '''
     Transaction manager, provides encapsulation for gaphas.state
     '''
@@ -157,9 +157,15 @@ class undoManager(object):
         self.block_observers = block_observers
         self._stack_depth = 20
 
+        self.undo_observers = block_observers
+
     def start(self):
         self.en_gaphas_state()
         self.block_observers.add(self._block_transaction_handler)
+        print self.block_observers
+
+    def undo_observe(self):
+        pass
 
     def reset(self):
         del self._undo_stack[:]
@@ -192,10 +198,11 @@ class undoManager(object):
     def begin_transaction(self,block_event=None):
         #print 'New Transaction Started \n'
         assert self._current_transaction == None
-        print block_event
+        #print block_event
         self._current_transaction = Transaction(block_event or None)
-        print self._current_transaction
-        print "type of current transaction", type(self._current_transaction)
+        print block_event
+        print Transaction(block_event)
+        #print "type of current transaction", type(self._current_transaction)
     def commit_transaction(self):
 
         assert self._current_transaction is not None
@@ -258,8 +265,8 @@ class undoManager(object):
         self.app.status.push(0,"Undid Previous Action")
         '''
         if self._current_transaction:
-            print "type of current_transaction",  type(self._current_transaction)
-            print "current_transaction = ", self._current_transaction
+            #print "type of current_transaction",  type(self._current_transaction)
+            #print "current_transaction = ", self._current_transaction
             self.commit_transaction()
 
         if len(self._undo_stack) == 0:
@@ -274,22 +281,24 @@ class undoManager(object):
 
         #print "1: undo_stack = ", self._undo_stack
         #print "2: redo_stack = ", self._redo_stack
-        self._undo_stack = []
+        #self._undo_stack = []
 
         try:
             #print transaction
             transaction.execute()
+            #print self.block_observers
         except Exception as e:
             print 'Undo Error: \n', e
         finally:
             self._redo_stack = redo_stack
             self._undo_stack = undo_stack
-            print "3: undo_stack = ", self._undo_stack
-            print "4: redo_stack = ", self._redo_stack
+            #print "3: undo_stack = ", self._undo_stack
+            #print "4: redo_stack = ", self._redo_stack
 
 
         while len(self._redo_stack) > self._stack_depth:
             del self._redo_stack[0]
+
 
         self.app.status.push(0, "Undid Previous Action")
 
@@ -302,24 +311,24 @@ class undoManager(object):
             return
 
         transaction = self._redo_stack.pop()
-        print "5: transaction = ", transaction
+        #print "5: transaction = ", transaction
 
         undo_stack = list(self._undo_stack)
         redo_stack = list(self._redo_stack)
         undo_stack.append(transaction)
-        self._redo_stack = []
+        #self._redo_stack = []
 
         try:
-            print transaction.actions
-            print type(transaction.actions)
-            #transaction.execute()
+            #print transaction.actions
+            #print type(transaction.actions)
+            transaction.execute()
         except Exception as e:
             print 'Redo Error: \n',e
         finally:
             self._undo_stack = undo_stack
             self._redo_stack = redo_stack
-            print "6: redo: undo_stack = ", self._undo_stack
-            print "7: redo: redo_stack = ", self._redo_stack
+            #print "6: redo: undo_stack = ", self._undo_stack
+            #print "7: redo: redo_stack = ", self._redo_stack
 
         while len(self._undo_stack) > self._stack_depth:
             del self._undo_stack[0]

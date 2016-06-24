@@ -156,6 +156,8 @@ MODEL Mixer;
     END values;
 END Mixer;
 
+
+
 MODEL Reactor;
     NOTES
 		'block' SELF {NH3 Reactor Unit}
@@ -190,6 +192,7 @@ MODEL Reactor;
         RUN output.values;
     END values;
 END Reactor;
+
 
 (*Copied and modified from simpleunits.a4c*)
 MODEL Compressor;
@@ -269,6 +272,8 @@ MODEL Flash;
 	
 END Flash;
   *)
+
+
 MODEL main;
   cd IS_A components_data([
     'nitrogen'
@@ -281,6 +286,8 @@ MODEL main;
   S3,S4,S5,S6,S7,S9,S10 IS_A stream(cd,pd,equil);
   S8 IS_A stream(cd,pd,equil);
   
+(* some error occurs here:
+
   mixer1 IS_A Mixer;
   compressor1 IS_A Compressor;
   compressor2 IS_A Compressor;
@@ -297,5 +304,6 @@ MODEL main;
   S8,flash1.output1 ARE_THE_SAME;
   S9,flash1.output2,compressor2.input ARE_THE_SAME;
   S10,compressor2.input,reactor1.input2 ARE_THE_SAME;
-  
+*)
 END main;
+

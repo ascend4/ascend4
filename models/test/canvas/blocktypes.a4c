@@ -118,6 +118,29 @@ MODEL heater REFINES join;
 	V "param:" IS_A volume;
 END heater;
 
+
+MODEL nozzle REFINES equipment;
+	NOTES
+		'block' SELF {Nozzle}
+		'icon' SELF {nozzle.svg}
+		'graphic' SELF {0,0-0,10
+			0,10-10,7
+			10,7-10,3
+			10,3-0,0}
+	END NOTES;
+END nozzle;
+
+MODEL diffuser REFINES equipment;
+	NOTES
+		'block' SELF {Diffuser}
+		'icon' SELF {diffuser.svg}
+		'graphic' SELF {0,3-0,7
+			0,7-10,10
+			10,10-10,0
+			10,0-0,3}
+	END NOTES;
+END nozzle;
+
 MODEL turbine;
 	NOTES
 		'block' SELF {Turbine}
@@ -127,6 +150,28 @@ MODEL turbine;
 	V "param: Volume of Turbine" IS_A volume;
 	eta "param: Efficiency of Turbine" IS_A factor;
 END turbine;
+
+
+MODEL condenser;
+	NOTES
+		'block' SELF {Condenser}
+		'icon' SELF {condenser.svg}
+		'graphic' SELF {0,5-2,5
+			2,3-2,7
+			8,3-8,7
+			2,7-8,7
+			2,3-8,3
+			2,5-3,6
+			3,6-4,4
+			4,4-5,6
+			5,6-6,4
+			6,4-7,6
+			7,6-8,5
+			8,5-10,5}
+	END NOTES;
+END condenser;
+
+
 
 MODEL Default REFINES equipment;
 	NOTES
@@ -187,7 +232,7 @@ END reservoir_single_test;*)
 
 MODEL reservoir_in_test;
 	NOTES
-		'block' SELF {Reservoir}
+		'block' SELF {Reservoir IN}
 		'icon' SELF {reservoir_in.png}
 		'graphic' SELF {0,0-0,10
 				0,0-3,0-3,3-10,3-10,6-3,6-3,10-0,10}
@@ -205,7 +250,7 @@ END reservoir_in_test;
 
 MODEL reservoir_out_test;
 	NOTES
-		'block' SELF {Reservoir}
+		'block' SELF {Reservoir OUT}
 		'icon' SELF {reservoir_out.png}
 		'graphic' SELF {0,0-0,10
 				0,0-3,0-3,3-10,3-10,6-3,6-3,10-0,10}
@@ -296,8 +341,8 @@ END pump_test;*)
 
 MODEL pump_minimal_test REFINES equipment;
 	NOTES
-		'block' SELF {Pump}
-		'icon' SELF {pump.svg}
+		'block' SELF {Pump minimal test}
+		'icon' SELF {pump_minimal_test.svg}
 		'graphic' SELF {0,5-5,0
 			0,5-5,10
 			5,0-10,5

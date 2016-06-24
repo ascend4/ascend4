@@ -32,6 +32,8 @@ MODEL mymodel6 REFINES mymodel5;
 	myvar7 IS_A mymodel1;
 END mymodel6;
 
+
+
 (*CASE 2: Test for Prammetric Models*)
 
 (*CASE 2A: Test for Type determination of parametrised Sub Model*)
@@ -45,6 +47,8 @@ MODEL myparametricmodel(
 	myvar2 IS_A monetary_unit;
 END myparametricmodel;
 
+
+
 MODEL myparametrictestmodel;
 	var1 IS_A integer_constant;
 	var2 IS_A symbol;
@@ -54,7 +58,10 @@ MODEL myparametrictestmodel;
 	testvar2 ALIASES mymodeltest.firstparameter;
 END myparametrictestmodel;
 
+(*something wrong in these 2 models:
+
 (*CASE 2B: Test for Type determination of arrays/unspecified declarations inside parametrised Model*)
+
 MODEL myotherparametricmodel(
 	firstparameter WILL_BE set OF integer_constant;
 	var1[firstparmeter] WILL_BE fraction;
@@ -63,7 +70,9 @@ MODEL myotherparametricmodel(
 METHODS
 
 END myotherparametricmodel;
-	
+
+
+
 MODEL myotherparametrictestmodel;
 	flow_set1 IS_A set OF integer_constant;
 	flow_set2 IS_A set OF integer_constant;
@@ -76,6 +85,9 @@ MODEL myotherparametrictestmodel;
 	flow2 IS_A myotherparametricmodel(flow_set2);
 		
 METHODS
+
 END myotherparametrictestmodel;
  
+*)
+
 	
