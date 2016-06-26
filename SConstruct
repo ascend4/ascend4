@@ -1563,29 +1563,36 @@ def CheckDLOpen(context):
 	context.env['LIBS'] = libsave
 	return is_ok
 
-def CheckWindowsPythonEnvironment(context):
-	context.Message("Checking for Windows Python environment...")
-	
+
+def DetectWindowsPythonEnvironment(sys_platform = sys.platform, path_separator = os.path.sep , os_name = os.name):
 	windows_python = 'undefined'
 
-	if sys.platform == 'win32':
-		if os.name == 'nt':
+	if sys_platform == 'win32':
+		if os_name == 'nt':
 			# native win32 Python
-			if os.path.sep == '\\':
+			if path_separator == '\\':
 				windows_python = 'native'
 			# mingw64 Python
-			elif os.path.sep == '/':
+			elif path_separator == '/':
 				windows_python = 'mingw64'
 			else:
 				pass
 
-	elif sys.platform == 'msys':
+	elif sys_platform == 'msys':
 		# msys2 Python
-		if os.name == 'posix' and os.path.sep == '/':
+		if os_name == 'posix' and path_separator == '/':
 			windows_python = 'msys2'
 
 	else:
 		pass
+
+	return windows_python
+
+
+def CheckWindowsPythonEnvironment(context):
+	context.Message("Checking for Windows Python environment...")
+	
+	windows_python = DetectWindowsPythonEnvironment()
 
 	context.env['WINDOWS_PYTHON'] = windows_python
 
