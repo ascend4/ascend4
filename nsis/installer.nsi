@@ -10,6 +10,9 @@ Name "ASCEND ${VERSION}"
 ;SetCompressor /FINAL zlib
 SetCompressor /SOLID lzma
 
+;Include Modern UI
+!include "MUI2.nsh"
+
 ;Create Unicode installer to display all languages
 Unicode true
 
