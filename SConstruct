@@ -1647,17 +1647,23 @@ def CheckPythonLib(context):
 		bootstrap_os_name = pythoncall(env,"import os; print os.name")
 
 		bootstrapped_python = DetectWindowsPythonEnvironment(sys_platform = bootstrap_sys_platform, path_separator = bootstrap_path_separator, os_name = bootstrap_os_name)
+		bootstrapped_prefix = os.path.abspath(pythoncall(env, "import sys; print sys.prefix").replace('\\', '/'))
 		
 		# make sure that the bootstrapped Python is not msys2
 		if os.path.normpath(context.env['PYTHON']) != sys.executable and bootstrapped_python != 'msys2':
 			print("The bootstrapped Python is running: ", bootstrapped_python)
 
 			python_cpppath = os.path.abspath(pythoncall(env, "import distutils.sysconfig as d; print d.get_python_inc()"))
-			python_libpath = os.path.abspath(pythoncall(env, "import distutils.sysconfig as d; print d.get_config_vars()['LIBDIR']"))
-			python_h = os.path.abspath(os.path.join(python_cpppath, "Python.h"))
-			python_so = pythoncall(env, "import distutils.sysconfig as d; print d.get_config_vars()['LDLIBRARY']")
+			python_h = os.path.normpath(os.path.abspath(os.path.join(python_cpppath, "Python.h")))
 			python_lib = "python%s" % pythoncall(env, "import distutils.sysconfig as d; print d.get_config_vars()['VERSION']")
 
+			if bootstrapped_python == 'native':
+				python_so = "python%s%s" % (pythoncall(env, "import distutils.sysconfig as d; print d.get_config_vars()['VERSION']"), context.env.get('SHLIBSUFFIX'))
+				python_libpath = [os.path.join(bootstrapped_prefix, "Libs")]
+			else:
+				python_libpath = [os.path.abspath(pythoncall(env, "import distutils.sysconfig as d; print d.get_config_vars()['LIBDIR']"))]
+				python_so = pythoncall(env, "import distutils.sysconfig as d; print d.get_config_vars()['LDLIBRARY']")
+				
 		else:
 			context.Result("PYTHON not specified (using msys2); Provide either native or mingw64 Python executable")
 
@@ -1684,7 +1690,24 @@ def CheckPythonLib(context):
 	# check that header and library files were found		
 	if not os.path.exists(python_h):
 		context.Result("'python.h' not found.")
-	if not os.path.exists(os.path.join(python_libpath, python_so)):
+
+	win32_system_path = os.path.abspath('C:/Windows/System32')
+	win64_system_path = os.path.abspath('C:/Windows/SysWOW64')
+
+	print("python libpath", python_libpath)
+	print("python so", python_so)
+	if os.path.exists(os.path.join(python_libpath[0], python_so)):
+		pass
+
+	# Python dll from official installer (32bit Windows)
+	elif os.path.exists(os.path.join(win32_system_path, python_so)):
+		python_libpath.append(win32_system_path)
+
+	# Python dll from official installer (64bit Windows)
+	elif os.path.exists(os.path.join(win64_system_path, python_so)):
+		python_libpath.append(win64_system_path)
+	
+	else:
 		context.Results("'%s' not found."%python_so)
 
 	context.env['PYTHON_LIBS']=[python_lib]
