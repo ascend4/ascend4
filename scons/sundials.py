@@ -75,7 +75,6 @@ def generate(env):
 					env1['LIBPATH'] = ['/mingw/lib', '/usr/lib']
 					env1['LIBS'] = ['sundials_ida', 'm']
 					print "RUNNING manual detection"
-					env1.ParseConfig(cmd)
 					env['SUNDIALS_CPPPATH'] = [munge(winpath(p)) for p in env1.get('CPPPATH')]
 					env['SUNDIALS_LIBPATH'] = [munge(winpath(p)) for p in env1.get('LIBPATH')]
 					env['SUNDIALS_LIBS'] = env1.get('LIBS')
@@ -93,7 +92,7 @@ def generate(env):
 					env['SUNDIALS_CPPPATH'] = [munge(winpath(p)) for p in env1.get('CPPPATH')]
 					env['SUNDIALS_LIBPATH'] = [munge(winpath(p)) for p in env1.get('LIBPATH')]
 					env['SUNDIALS_LIBS'] = env1.get('LIBS')
-			
+
 			env['HAVE_SUNDIALS'] = True		
 									
 		else:
