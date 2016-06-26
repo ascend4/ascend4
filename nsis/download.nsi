@@ -23,12 +23,12 @@ Var DAI_REMOVE
 		DetailPrint "URL: ${DAI_URL}"
 		StrCpy $DAI_TMPFILE "$TEMP\${DAI_FN}"
 
-		; Download files using the INETC plugin for NSIS, available from
-		; http://nsis.sourceforge.net/Inetc_plug-in
-		inetc::get /CAPTION "${DAI_FN}""${DAI_URL}" "$DAI_TMPFILE" /END
-		Pop $DAI_RET ; return value = exit code, "OK" means OK
+		; Download files using the NSISdl plugin.
+		NSISdl::download "${DAI_URL}" "$DAI_TMPFILE"
+
+		Pop $DAI_RET ; return value = exit code, "success" means download was successful
 			
-		${DoWhile} $DAI_RET != "OK"
+		${DoWhile} $DAI_RET != "success"
 			${If} $DAI_RET == "cancel"
 				StrCpy $DAI_MSG "cancelled"
 			${Else}
