@@ -65,7 +65,7 @@ def get_new_swig_flags(env):
 		
 	if env.get('LIBS') and 'msvcr71' in env['LIBS']:
 		flags += ['-DHAVE_MSVCR71']
-		
+	
 	return flags
 
 swig_env = python_env.Clone()
@@ -99,8 +99,8 @@ for swigf in Split("""
 
 	swigobjs.append(swigobj)
 
-swig_env.Append(LIBS = ['ascend']+env['PYTHON_LIB'])
-swig_env.Append(LIBPATH = ['#'] + env['PYTHON_LIBPATH'])
+swig_env.Append(LIBS = ['ascend']+env['PYTHON_LIBS'])
+swig_env.Append(LIBPATH = ['#'] + list(env['PYTHON_LIBPATH']))
 swig_env.Append(LINKFLAGS=env['PYTHON_LINKFLAGS'])
 	
 if env.get('WITH_DMALLOC'):
