@@ -6,6 +6,7 @@
 ; The name of the installer
 
 Name "ASCEND ${VERSION}"
+BrandingText "www.ascend4.org"
 
 ;SetCompressor /FINAL zlib
 SetCompressor /SOLID lzma
