@@ -33,7 +33,7 @@ def path_absolute(p):
 # platform specific name munging for '-L' and '-I' file paths...
 munge = lambda s: s
 
-if platform.system()=="Windows":
+if platform.system()=="Windows" and os.path.sep == '\\':
 	import _winreg
 	x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
 	y= _winreg.OpenKey(x,r"SOFTWARE\ASCEND")
