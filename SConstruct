@@ -1617,7 +1617,7 @@ def CheckPythonLib(context):
 		if sys.platform=="win32":
 			# 'native' win32 is a special case for library name and location
 			python_so = "python%s%s"%(v['VERSION'],context.env.get('SHLIBSUFFIX'))
-			python_libpath = [os.oath.join(sys.prefix,"Libs")]
+			python_libpath = [os.path.join(sys.prefix,"Libs")]
 		else:
 			python_so = v['INSTSONAME']
 			python_libpath = [v['LIBDIR']]
