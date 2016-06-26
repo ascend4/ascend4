@@ -1201,7 +1201,7 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False,testna
 			context.env.Append(LIBS=libname)
 
 	is_ok = context.TryLink(text,ext)
-	
+
 	#print "Link success? ",(is_ok != 0)
 
 	keep.restore(context)
@@ -1650,7 +1650,13 @@ def CheckPythonLib(context):
 		
 		# make sure that the bootstrapped Python is not msys2
 		if os.path.normpath(context.env['PYTHON']) != sys.executable and bootstrapped_python != 'msys2':
-			print("The bootstrapped Python is using: ", bootstrapped_python)
+			print("The bootstrapped Python is running: ", bootstrapped_python)
+
+			python_cpppath = os.path.abspath(pythoncall(env, "import distutils.sysconfig as d; print d.get_python_inc()"))
+			python_libpath = os.path.abspath(pythoncall(env, "import distutils.sysconfig as d; print d.get_config_vars()['LIBDIR']"))
+			python_h = os.path.abspath(os.path.join(python_cpppath, "Python.h"))
+			python_so = pythoncall(env, "import distutils.sysconfig as d; print d.get_config_vars()['LDLIBRARY']")
+			python_lib = "python%s" % pythoncall(env, "import distutils.sysconfig as d; print d.get_config_vars()['VERSION']")
 
 		else:
 			context.Result("PYTHON not specified (using msys2); Provide either native or mingw64 Python executable")
@@ -1678,13 +1684,19 @@ def CheckPythonLib(context):
 	# check that header and library files were found		
 	if not os.path.exists(python_h):
 		context.Result("'python.h' not found.")
-	if not os.path.exists(os.path.join(python_libpath[0],python_so)):
+	if not os.path.exists(os.path.join(python_libpath, python_so)):
 		context.Results("'%s' not found."%python_so)
 
 	context.env['PYTHON_LIBS']=[python_lib]
 	context.env['PYTHON_LIBPATH']=python_libpath
 	context.env['PYTHON_CPPPATH']=python_cpppath
 	context.env['PYTHON_LIBFLAGS']=[]
+	context.env['PYTHON_LINKFLAGS']=[]
+
+	print("LIBS: ", context.env['PYTHON_LIBS'])
+	print("LIBPATH: ", context.env['PYTHON_LIBPATH'])
+	print("CPPPATH: ", context.env['PYTHON_CPPPATH'])
+	print("LIBFLAGS: ", context.env['PYTHON_LIBFLAGS'])
 
 	# check that we can link against the python library
 	return CheckExtLib(context,python_lib,libpython_test_text,varprefix="PYTHON")
