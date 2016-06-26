@@ -1563,6 +1563,34 @@ def CheckDLOpen(context):
 	context.env['LIBS'] = libsave
 	return is_ok
 
+def CheckWindowsPythonEnvironment(context):
+	context.Message("Checking for Windows Python environment...")
+	
+	windows_python = 'undefined'
+
+	if sys.platform == 'win32':
+		if os.name == 'nt':
+			# native win32 Python
+			if os.path.sep == '\\':
+				windows_python = 'native'
+			# mingw64 Python
+			elif os.path.sep == '/':
+				windows_python = 'mingw64'
+			else:
+				pass
+
+	elif sys.platform == 'msys':
+		# msys2 Python
+		if os.name == 'posix' and os.path.sep == '/':
+			windows_python = 'msys2'
+
+	else:
+		pass
+
+	context.env['WINDOWS_PYTHON'] = windows_python
+
+	return windows_python
+
 #----------------
 # libpython test
 
@@ -2164,6 +2192,7 @@ conf = Configure(env
 		, 'CheckASan' : CheckASan
 		, 'CheckDLOpen' : CheckDLOpen
 		, 'CheckSwigVersion' : CheckSwigVersion
+		, 'CheckWindowsPythonEnvironment' : CheckWindowsPythonEnvironment
 		, 'CheckPythonLib' : CheckPythonLib
 		, 'CheckCUnit' : CheckCUnit
 		, 'CheckDMalloc' : CheckDMalloc
@@ -2401,6 +2430,9 @@ if with_tcltk:
 
 if env['STATIC_TCLTK']:
 	conf.CheckX11()
+
+# Detect Windows Python environment
+conf.CheckWindowsPythonEnvironment()
 
 # Python... obviously we're already running python, so we just need to
 # check that we can link to the python library OK:
