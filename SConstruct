@@ -1202,6 +1202,17 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False,testna
 
 	is_ok = context.TryLink(text,ext)
 
+	if varprefix == 'PYTHON':
+		prog = context.lastTarget
+		pname = str(prog)
+		output = SCons.Node.FS.default_fs.File(pname + '.out')
+		print("--------------> PYTHON CHECK EXT LIB")
+		print(str(output))
+		print("LIBS: ", context.env['PYTHON_LIBS'])
+		print("LIBPATH: ", context.env['PYTHON_LIBPATH'])
+		print("CPPPATH: ", context.env['PYTHON_CPPPATH'])
+		print("LIBFLAGS: ", context.env['PYTHON_LIBFLAGS'])
+
 	#print "Link success? ",(is_ok != 0)
 
 	keep.restore(context)
@@ -1663,7 +1674,7 @@ def CheckPythonLib(context):
 			else:
 				python_libpath = [os.path.abspath(pythoncall(env, "import distutils.sysconfig as d; print d.get_config_vars()['LIBDIR']"))]
 				python_so = pythoncall(env, "import distutils.sysconfig as d; print d.get_config_vars()['LDLIBRARY']")
-				
+
 		else:
 			context.Result("PYTHON not specified (using msys2); Provide either native or mingw64 Python executable")
 
