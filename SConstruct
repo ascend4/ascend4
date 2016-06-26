@@ -1633,7 +1633,10 @@ def pythoncall(env,expr1):
 def CheckPythonLib(context):
 	context.Message('Checking for libpython... ')
 
-	if 0 and context.env['PYTHON'] is not None:
+	if context.env['WINDOWS_PYTHON'] == 'msys2':
+		context.Result("PYTHON not specified (using msys2); Provide either native or mingw64 Python executable")
+
+	elif 0 and context.env['PYTHON'] is not None:
 		# get the parameters by running a specified python executable
 		context.Result("PYTHON specified; not yet implemented")
 	else:
