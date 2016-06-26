@@ -13,7 +13,7 @@ def find_tclConfigsh(tclsh = None):
 	"""
 	tclconfigfile = None
 
-	if sys.platform.startswith("win") and tclsh is not None:
+	if sys.platform.startswith("win"):# and tclsh is not None:
 		# check for ActiveState Tcl in Windows registry
 		try:
 			import _winreg
@@ -21,15 +21,16 @@ def find_tclConfigsh(tclsh = None):
 			y= _winreg.OpenKey(x,r"SOFTWARE\ActiveState\ActiveTcl")
 			_regversion,t = _winreg.QueryValueEx(y,"CurrentVersion")
 			z= _winreg.OpenKey(x,r"SOFTWARE\ActiveState\ActiveTcl\%s" % str(_regversion))
-			_regpath,t = _winreg.QueryValueEx(z,None)
+			_regpath = os.path.normpath(_winreg.QueryValueEx(z,None)[0])
 			_winreg.CloseKey(y)
 			_winreg.CloseKey(z)
 			_winreg.CloseKey(x)
 			# typically, c:\Tcl\lib\tclConfig.sh.
-			_regconfig = os.path.join(_regpath,os.path.join("lib","tclConfig.sh"))
+			_regconfig = os.path.join(_regpath,os.path.join("lib","tclConfig"))
 			if os.path.exists(_regconfig):
 				# if the file exists, good...
 				tclconfigfile = _regconfig
+				print(tclconfigfile)
 		except:
 			pass
 
