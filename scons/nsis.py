@@ -19,8 +19,6 @@ In addition, if you set NSISDEFINES to a dictionary, those variables will be pas
 to NSIS.
 """
 
-
-
 import SCons.Builder
 import SCons.Util
 import SCons.Scanner
@@ -164,6 +162,7 @@ def generate(env):
   """
   This function adds NSIS support to your environment.
   """
+
   env['BUILDERS']['Installer'] = SCons.Builder.Builder(generator=runNSIS,
                                  src_suffix='.nsi',
                                  emitter=nsis_emitter)
@@ -181,18 +180,19 @@ def find_nsis(env):
   if SCons.Util.can_read_reg:
     # If we can read the registry, get the NSIS command from it
     try:
-		# 131609 is KEY_READ | KEY_WOW64_32KEY since NSIS is 32-bit
-		k = SCons.Util.RegOpenKeyEx(SCons.Util.hkey_mod.HKEY_LOCAL_MACHINE,'SOFTWARE\\NSIS',0,131609)
-		val, tok = SCons.Util.RegQueryValueEx(k,None)
-		ret = val + os.path.sep + 'makensis.exe'
-		if os.path.exists(ret):
-			return '"' + ret + '"'
-		else:
-			return None
+  		# 131609 is KEY_READ | KEY_WOW64_32KEY since NSIS is 32-bit
+  		k = SCons.Util.RegOpenKeyEx(SCons.Util.hkey_mod.HKEY_LOCAL_MACHINE,'SOFTWARE\\NSIS',0,131609)
+  		val, tok = SCons.Util.RegQueryValueEx(k,None)
+  		ret = val + os.path.sep + 'makensis.exe'
+  		if os.path.exists(ret):
+  			return '"' + ret + '"'
+  		else:
+  			return None
     except:
       pass # Couldn't find the key, just act like we can't read the registry
   # Hope it's on the path
   return env.WhereIs('makensis.exe')
+  # Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Classes\NSIS.Script\shell\compile\command
 
 def exists(env):
   """
