@@ -42,6 +42,7 @@ default_install_solvers = "$INSTALL_LIB/ascend/solvers"
 default_install_assets = "$INSTALL_ASCDATA/glade/"
 default_install_ascdata = "$INSTALL_SHARE/ascend"
 default_install_include = "$INSTALL_PREFIX/include"
+default_python=sys.executable
 default_install_python = distutils.sysconfig.get_python_lib(plat_specific=1)
 default_install_python_ascend = "$INSTALL_PYTHON/ascend"
 default_tcl = '/usr'
@@ -504,6 +505,13 @@ vars.Add("FORTRAN"
 vars.Add("SHFORTRAN"
 	,"Fortran compiler for shared library object (should normally be same as FORTRAN)"
 	,"$FORTRAN"
+)
+
+#------- Python --------
+
+vars.Add('PYTHON'
+	,"Location of the Python executable to which ASCEND should be linked"
+	,default_python
 )
 
 #------- tcl/tk --------
@@ -1569,61 +1577,131 @@ int main(void){
 }
 """
 
+def pythoncall(env,expr1):
+	"""
+	Evaluate a Python string, using the version of Python specified
+	"""
+	import subprocess
+	import os
+	fn = "scons%d" % os.getpid()
+	while os.path.exists(fn):
+		fn = fn + "0"
+	try:
+		f = file(fn,"w")
+		f.write("#!python\nimport sys\nprint sys.argv[1]")
+		f.close()
+		p1 = subprocess.Popen(
+			["sh.exe","-c","%s -c \"%s\""%(env['PYTHON'],expr1,)]
+			,stdout=subprocess.PIPE
+		)
+		out = p1.communicate()[0].strip()
+	except Exception,e:
+		print "FAILED: %s"%str(e)
+	finally:
+		os.unlink(fn)
+	return out
+
+
 def CheckPythonLib(context):
 	context.Message('Checking for libpython... ')
 
-	if platform.system()=="Windows":
-		python_lib='python%d%d'
+	if 0 and context.env['PYTHON'] is not None:
+		# get the parameters by running a specified python executable
+		context.Result("PYTHON specified; not yet implemented")
 	else:
-		python_lib='python%d.%d'
-
-	try:
-		python_libs = [python_lib % (sys.version_info[0],sys.version_info[1])]
+		# get the parameter from this python that is powering SCons
 		python_cpppath = [distutils.sysconfig.get_python_inc()]
-		cfig = distutils.sysconfig.get_config_vars()	
-	except:
-		context.Result("not found")
-		return 0		
-	
-	lastLIBS = context.env.get('LIBS')
-	lastLIBPATH = context.env.get('LIBPATH')
-	lastCPPPATH = context.env.get('CPPPATH')
-	lastLINKFLAGS = context.env.get('LINKFLAGS')
+		python_h = os.path.join(python_cpppath[0],"python.h")
+		v = distutils.sysconfig.get_config_vars()
+		python_lib = "python%s"%v['VERSION']
+		if sys.platform=="win32":
+			# 'native' win32 is a special case for library name and location
+			python_so = "python%s%s"%(v['VERSION'],context.env.get('SHLIBSUFFIX'))
+			python_libpath = [os.oath.join(sys.prefix,"Libs")]
+		else:
+			python_so = v['INSTSONAME']
+			python_libpath = [v['LIBDIR']]
+			python_cpppath += [v['INCLUDEDIR']]
+			
+			# TODO restore settings for Darwin here... LIBPL and LIBS
 
-	python_libpath = []
-	python_linkflags = []
-	if platform.system()=="Windows":
-		python_libpath += [os.path.join(sys.prefix,"libs")]
-	elif platform.system()=="Darwin":
-		python_libpath += [cfig['LIBPL']]
-                python_linkflags += cfig['LIBS'].split(' ')
-	else:
-		# checked on Linux and SunOS
-		if cfig['LDLIBRARY']==cfig['LIBRARY']:
-			sys.stdout.write("(static)")
+	# check that header and library files were found		
+	if not os.path.exists(python_h):
+		context.Result("'python.h' not found.")
+	if not os.path.exists(os.path.join(python_libpath[0],python_so)):
+		context.Results("'%s' not found."%python_so)
+
+	context.env['PYTHON_LIBS']=[python_lib]
+	context.env['PYTHON_LIBPATH']=python_libpath
+	context.env['PYTHON_CPPPATH']=python_cpppath
+	context.env['PYTHON_LIBFLAGS']=[]
+
+	# check that we can link against the python library
+	return CheckExtLib(context,python_lib,libpython_test_text,varprefix="PYTHON")
+
+	if 0:
+		if sys.platform=="msys":
+			print "\nsys.executable",sys.executable
+			print "PYTHON =",env['PYTHON']
+			print "PYTHON sys.executable",pythoncall(env,"import sys;print sys.executable")
+			print "PYTHON get_python_inc()",pythoncall(env,"import distutils.sysconfig as d;print d.get_python_inc()")
+			print "PYTHON LIBDIR",pythoncall(env,"import distutils.sysconfig as d;print d.get_config_vars()['LIBDIR']")
+			print "PYTHON LDLIBRARY",pythoncall(env,"import distutils.sysconfig as d;print d.get_config_vars()['LDLIBRARY']")
+
+		python_lib='python%d.%d'
+		if sys.platform=="win32":
+			python_lib='python%d%d'
+		try:
+			python_libs = [python_lib % (sys.version_info[0],sys.version_info[1])]
+			python_cpppath = [distutils.sysconfig.get_python_inc()]
+			cfig = distutils.sysconfig.get_config_vars()	
+		except:
+			context.Result("not found")
+			return 0		
+	
+		lastLIBS = context.env.get('LIBS')
+		lastLIBPATH = context.env.get('LIBPATH')
+		lastCPPPATH = context.env.get('CPPPATH')
+		lastLINKFLAGS = context.env.get('LINKFLAGS')
+
+		python_libpath = []
+		python_linkflags = []
+		if sys.platform=="win32":
+			python_libpath += [os.path.join(sys.prefix,"libs")]
+		elif sys.platform=="msys2":
+			python_libpath += pythoncall(env,
+				"import distutils.sysconfig as d;print d.get_config_vars()['LIBDIR']")
+			print 
+		elif platform.system()=="Darwin":
 			python_libpath += [cfig['LIBPL']]
 			python_linkflags += cfig['LIBS'].split(' ')
+		else:
+			# checked on Linux and SunOS
+			if cfig['LDLIBRARY']==cfig['LIBRARY']:
+				sys.stdout.write("(static)")
+				python_libpath += [cfig['LIBPL']]
+				python_linkflags += cfig['LIBS'].split(' ')
 
-	context.env.AppendUnique(LIBS=python_libs)
-	context.env.AppendUnique(LIBPATH=python_libpath)
-	context.env.AppendUnique(CPPPATH=python_cpppath)
-	context.env.AppendUnique(LINKFLAGS=python_linkflags)
-	result = context.TryLink(libpython_test_text,".c");
+		context.env.AppendUnique(LIBS=python_libs)
+		context.env.AppendUnique(LIBPATH=python_libpath)
+		context.env.AppendUnique(CPPPATH=python_cpppath)
+		context.env.AppendUnique(LINKFLAGS=python_linkflags)
+		result = context.TryLink(libpython_test_text,".c");
 
-	context.Result(result)	
+		context.Result(result)	
 
-	if(result):
-		context.env['PYTHON_LIBPATH']=python_libpath
-		context.env['PYTHON_LIB']=python_libs
-		context.env['PYTHON_CPPPATH']=python_cpppath
-		context.env['PYTHON_LINKFLAGS']=python_linkflags
+		if(result):
+			context.env['PYTHON_LIBPATH']=python_libpath
+			context.env['PYTHON_LIB']=python_libs
+			context.env['PYTHON_CPPPATH']=python_cpppath
+			context.env['PYTHON_LINKFLAGS']=python_linkflags
 
-	context.env['LIBS'] = lastLIBS
-	context.env['LIBPATH'] = lastLIBPATH
-	context.env['CPPPATH'] = lastCPPPATH
-	context.env['LINKFLAGS'] = lastLINKFLAGS
+		context.env['LIBS'] = lastLIBS
+		context.env['LIBPATH'] = lastLIBPATH
+		context.env['CPPPATH'] = lastCPPPATH
+		context.env['LINKFLAGS'] = lastLINKFLAGS
 
-	return result
+		return result
 
 #----------------
 # IDA test

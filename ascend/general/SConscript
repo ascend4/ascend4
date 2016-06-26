@@ -19,7 +19,8 @@ for c in csrcs:
 
 if platform.system()!="Windows":
 	#required for clock_gettime()
-	libascend_env.AppendUnique(LIBS=['rt'])
+	#libascend_env.AppendUnique(LIBS=['rt'])
+	pass
 
 #--------------------
 # INSTALL
