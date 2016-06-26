@@ -201,7 +201,7 @@ class UnitsM;
 %rename(__str__) Dimensions::toString;
 
 %extend Dimensions{
-	%pythoncode {
+	%pythoncode %{
 		
 		def __str__(self):
 			return self.toString()
@@ -245,7 +245,7 @@ class UnitsM;
 
 			return Units(str)
 
-	}
+	%}
 }
 
 /*
@@ -308,7 +308,7 @@ public:
 		return self->getName().toString();
 	}
 
-	%pythoncode{
+	%pythoncode %{
 		def getPreferredUnits(self):
 			"""Return preferred units for an instance, which is done by lookup per atom type."""
 			if not self.isRefinedReal():
@@ -327,7 +327,7 @@ public:
 				return None
 
 			return _units;
-	}
+	%}
 }
 
 typedef enum{
@@ -429,7 +429,7 @@ public:
 		}
 	}
 		
-	%pythoncode {
+	%pythoncode %{
 		def getSetValue(self):
 			"""Return the value of a set, as a integer or string Python sequence."""
 			if self.isSetInt():
@@ -528,7 +528,7 @@ public:
 		def __radd__(self,other):
 			a,b = self.__coerce__(other)
 			return b + a
-	}
+	%}
 }
 
 /*
