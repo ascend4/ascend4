@@ -70,7 +70,7 @@ def generate(env):
 					raise RuntimeError("Unable to locate sundials-config in Windows PATH")
 					# if someone has installed sundials with ./configure --prefix=/MinGW using MSYS, then
 				# this should work, but we would like to make this a lot more robust!
-				cmd = ['sh.exe',sundialsconfig,'-mida','-ts','-lc']
+				cmd = ['sh.exe',sundials-config,'-mida','-ts','-lc']
 				env1 = env.Clone()
 				env1['CPPPATH'] = None
 				env1['LIBPATH'] = None
