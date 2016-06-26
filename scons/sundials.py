@@ -1,4 +1,4 @@
-import os, os.path, platform, subprocess
+import os, os.path, platform, subprocess, warnings
 from SCons.Script import *
 from SCons.Util import WhereIs
 munge = lambda s: s
@@ -67,22 +67,34 @@ def generate(env):
 			except WindowsError:
 				sundialsconfig = find_sundials_config(env)
 				if not sundialsconfig:
-					raise RuntimeError("Unable to locate sundials-config in Windows PATH")
-					# if someone has installed sundials with ./configure --prefix=/MinGW using MSYS, then
-				# this should work, but we would like to make this a lot more robust!
-				cmd = ['sh.exe',sundials-config,'-mida','-ts','-lc']
-				env1 = env.Clone()
-				env1['CPPPATH'] = None
-				env1['LIBPATH'] = None
-				env1['LIBS'] = None
-				#print "RUNNING sundials-config"
-				env1.ParseConfig(cmd)
-				env['SUNDIALS_CPPPATH'] = [munge(winpath(p)) for p in env1.get('CPPPATH')]
-				env['SUNDIALS_LIBPATH'] = [munge(winpath(p)) for p in env1.get('LIBPATH')]
-				env['SUNDIALS_LIBS'] = env1.get('LIBS')
-				env['HAVE_SUNDIALS'] = True		
+					warnings.warn("Unable to locate sundials-config in Windows PATH")
+					
+					# Try to setup sundials manually. Useful as sundials >= 2.6 removed sundials-config
+					env1 = env.Clone()
+					env1['CPPPATH'] = ['/mingw/include', '/usr/include']
+					env1['LIBPATH'] = ['/mingw/lib', '/usr/lib']
+					env1['LIBS'] = ['sundials_ida', 'm']
+					print "RUNNING manual detection"
+					env1.ParseConfig(cmd)
+					env['SUNDIALS_CPPPATH'] = [munge(winpath(p)) for p in env1.get('CPPPATH')]
+					env['SUNDIALS_LIBPATH'] = [munge(winpath(p)) for p in env1.get('LIBPATH')]
+					env['SUNDIALS_LIBS'] = env1.get('LIBS')
 
-			env['HAVE_SUNDIALS'] = True
+				else:
+					# if someone has installed sundials with ./configure --prefix=/MinGW using MSYS, then
+					# this should work, but we would like to make this a lot more robust!
+					cmd = ['sh.exe',sundials-config,'-mida','-ts','-lc']
+					env1 = env.Clone()
+					env1['CPPPATH'] = None
+					env1['LIBPATH'] = None
+					env1['LIBS'] = None
+					#print "RUNNING sundials-config"
+					env1.ParseConfig(cmd)
+					env['SUNDIALS_CPPPATH'] = [munge(winpath(p)) for p in env1.get('CPPPATH')]
+					env['SUNDIALS_LIBPATH'] = [munge(winpath(p)) for p in env1.get('LIBPATH')]
+					env['SUNDIALS_LIBS'] = env1.get('LIBS')
+			
+			env['HAVE_SUNDIALS'] = True		
 									
 		else:
 			sundialsconfig = env.WhereIs("sundials-config")
