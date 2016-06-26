@@ -1,4 +1,4 @@
-#!/usr/bin/python scons
+#!/usr/bin/env python scons
 Import('env')
 
 # Build directories that contain external libraries

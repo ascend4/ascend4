@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 from fprops import *
 
 #Load fluid, specify correlation and source or ommit second an third arguments

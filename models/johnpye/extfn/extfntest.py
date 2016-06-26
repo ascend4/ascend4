@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import platform
 if platform.system() != "Windows":
 	import sys, re, dl

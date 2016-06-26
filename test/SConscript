@@ -1,4 +1,4 @@
-#!/usr/bin/python invoke_using_scons
+#!/usr/bin/env python invoke_using_scons
 Import('test_env')
 import platform
 

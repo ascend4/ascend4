@@ -1,4 +1,4 @@
-#!/usr/bin/python invoke_with_scons
+#!/usr/bin/env python invoke_with_scons
 Import('env')
 import glob, os.path
 
