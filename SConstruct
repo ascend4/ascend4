@@ -1641,7 +1641,19 @@ def CheckPythonLib(context):
 	context.Message('Checking for libpython... ')
 
 	if context.env['WINDOWS_PYTHON'] == 'msys2':
-		context.Result("PYTHON not specified (using msys2); Provide either native or mingw64 Python executable")
+		# verify if there is a given PYTHON that can be bootstrapped
+		bootstrap_sys_platform = pythoncall(env,"import sys; print sys.platform")
+		bootstrap_path_separator = pythoncall(env,"import os; print os.path.sep")
+		bootstrap_os_name = pythoncall(env,"import os; print os.name")
+
+		bootstrapped_python = DetectWindowsPythonEnvironment(sys_platform = bootstrap_sys_platform, path_separator = bootstrap_path_separator, os_name = bootstrap_os_name)
+		
+		# make sure that the bootstrapped Python is not msys2
+		if os.path.normpath(context.env['PYTHON']) != sys.executable and bootstrapped_python != 'msys2':
+			print("The bootstrapped Python is using: ", bootstrapped_python)
+
+		else:
+			context.Result("PYTHON not specified (using msys2); Provide either native or mingw64 Python executable")
 
 	elif 0 and context.env['PYTHON'] is not None:
 		# get the parameters by running a specified python executable
