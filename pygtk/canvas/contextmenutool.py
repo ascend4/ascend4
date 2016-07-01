@@ -18,7 +18,6 @@ class ContextMenuTool(Tool):
 	"""
 	def __init__(self,view=None):
 		super(ContextMenuTool, self).__init__(view)
-
 	def on_button_press(self, event):
 		context = self.view.tool
 		if event.button.button != 3:
@@ -27,6 +26,7 @@ class ContextMenuTool(Tool):
 
 		self.menu = Gtk.Menu()
 		self.menu.connect("deactivate",self.deactivate,context)
+
 		'''
 		menublockstreams = Gtk.MenuItem("_Streams")
 		menublockstreams.connect("activate",self.setstream, window, context, context.view.hovered_item)
@@ -69,11 +69,6 @@ class ContextMenuTool(Tool):
 		menublockparams.connect("activate",self.blockproperties, window, context, context.view.hovered_item, 1)
 		self.menu.add(menublockparams)
 
-		menudefault = Gtk.MenuItem("_Set Default Values")
-		menudefault.set_use_underline(True)
-		menudefault.connect("activate",self.defaultvalues,window ,context,context.view.hovered_item)
-		self.menu.add(menudefault)
-
 		#menublockmethod = Gtk.MenuItem("_Custom Method(s)")
 		#menublockmethod.connect("activate",self.blockproperties, window, context, context.view.hovered_item, 2)
 		#menu.add(menublockmethod)
@@ -82,6 +77,12 @@ class ContextMenuTool(Tool):
 		menublockinstance.set_use_underline(True)
 		menublockinstance.connect("activate",self.blockproperties, window, context, context.view.hovered_item, 2)
 		self.menu.add(menublockinstance)
+
+		menudefault = Gtk.MenuItem("_Set Default Values")
+		menudefault.set_use_underline(True)
+		menudefault.connect("activate", self.defaultvalues, window, context, context.view.hovered_item)
+		self.menu.add(menudefault)
+
 		'''
 		menublockstreams = Gtk.MenuItem("_Streams")
 		menublockstreams.connect("activate",self.setstream, window, context, context.view.hovered_item)

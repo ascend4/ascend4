@@ -296,7 +296,7 @@
                         <property name="width_request">0</property>
                         <property name="height_request">0</property>
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Inpput/Output:</property>
+                        <property name="label" translatable="yes">Input/Output:</property>
                         <property name="use_underline">False</property>
                         <property name="use_markup">False</property>
                         <property name="justify">GTK_JUSTIFY_LEFT</property>

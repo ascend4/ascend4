@@ -62,7 +62,7 @@ from gaphas.tool import ItemTool, RubberbandTool, PanTool, ZoomTool
 from gaphas.painter import ItemPainter
 from blockconnecttool import BlockConnectTool
 from blockline import BlockLine
-from blockitem import DefaultBlockItem, GraphicalBlockItem
+from blockitem import DefaultBlockItem, GraphicalBlockItem, BlockItem
 from contextmenutool import ContextMenuTool
 from connectortool import ConnectorTool
 from blockcanvas import BlockCanvas
@@ -109,7 +109,7 @@ class mainWindow(Gtk.Window):
 		<separator />
 		<menuitem action='Export' />
 		<separator />
-		<menuitem action='Library' />
+		<menuitem action='LoadLibrary' />
 		<separator />
 		<menuitem action='Quit' />
 	  </menu>
@@ -118,6 +118,9 @@ class mainWindow(Gtk.Window):
 		<menuitem action='Redo' />
 		<separator />
 		<menuitem action='BlockProperties' />
+		<menuitem action='Rotate' />
+		<menuitem action='Flip' />
+		<separator />
 		<menuitem action='Delete' />
 	  </menu>
 	  <menu action='View'>
@@ -142,8 +145,7 @@ class mainWindow(Gtk.Window):
 
 	def __init__(self,library,options=None):
 		"""
-		  Initialise the application -- create all the widgets, and populate
-		  the icon palette.
+		  Initialise the application -- create all the widgets, and populate the icon palette.
 		  TODO: separate the icon palette into a separate method.
 		  """
 		self.ascwrap= library
@@ -163,7 +165,7 @@ class mainWindow(Gtk.Window):
 		self.iconerror = self.render_icon(Gtk.STOCK_DIALOG_ERROR,Gtk.IconSize.MENU)
 
 		self.set_title("ASCEND Canvas Modeller")
-		self.set_default_size(800,650)
+		self.set_default_size(800,800)
 		self.connect("destroy", Gtk.main_quit)
 
 		windowicon = Gtk.Image()
@@ -180,6 +182,8 @@ class mainWindow(Gtk.Window):
 
 		self.prefs = Preferences()
 
+		self.contextmenutool = ContextMenuTool()
+
 		actions = [('File', None, '_File')
 			,('Quit', Gtk.STOCK_QUIT, '_Quit', None,'Quit the Program', self.quit)
 			,('New', Gtk.STOCK_NEW,'_New',None,'Start a new Simulation', self.new)
@@ -187,11 +191,11 @@ class mainWindow(Gtk.Window):
 			,('Save', Gtk.STOCK_SAVE,'_Save',None,'Open a saved Canvas file', self.save_canvas)
 			,('SaveAs', Gtk.STOCK_SAVE_AS,'_Save As...',None,'Open a saved Canvas file', self.filesave)
 			,('Export', Gtk.STOCK_PRINT, '_Export SVG', None,'Quit the Program', self.export_svg_as)
-			,('Library', Gtk.STOCK_OPEN, '_Load Library...', '<Control>l','Load Library', self.load_library_dialog)
+			,('LoadLibrary', Gtk.STOCK_OPEN, '_Load Library...', '<Control>l','Load Library', self.load_library_dialog)
 			,('Edit', None, '_Edit')
 			,('Undo', Gtk.STOCK_UNDO, '_Undo', '<Control>z', 'Undo Previous Action', self.undo_canvas)
 			,('Redo',Gtk.STOCK_REDO, '_Redo', '<Control>y', 'Redo Previous Undo', self.redo_canvas)
-			,('BlockProperties',Gtk.STOCK_PROPERTIES, '_Block Properties', None, 'Edit Block Properties', self.bp)
+			,('BlockProperties',Gtk.STOCK_PROPERTIES, '_Block Properties', None, 'Edit Block Properties', self.bproperties)
 			,('Delete', Gtk.STOCK_DELETE, '_Delete', 'Delete', 'Delete Selected Item', self.delblock)
 			,('View', None, '_View')
 			,('Fullscreen', Gtk.STOCK_FULLSCREEN, '_Full Screen', 'F11', 'Toggle Full Screen', self.fullscrn)
@@ -200,12 +204,14 @@ class mainWindow(Gtk.Window):
 			#,('BestFit', Gtk.STOCK_ZOOM_FIT, '_Best Fit', None, 'Best Fit Canvas',self.zoom)
 			,('Tools', None, '_Tools')
 			,('Debug', None, '_Debug', None, 'View Instance Browser',self.debug_canvas)
-			,('Run', Gtk.STOCK_EXECUTE, '_Run', None, 'Solve Canvas', self.run_canvas)
+			,('Run', Gtk.STOCK_EXECUTE, '_Run', 'F5', 'Solve Canvas', self.run_canvas)
 			,('Preview', Gtk.STOCK_PRINT_PREVIEW, '_Preview', None, 'Preview Generated Code', self.preview_canvas)
 			,('Help', None, '_Help')
 			,('Development', Gtk.STOCK_INFO, '_Development', None, 'Check Development', self.on_get_help_online_click)
 			,('ReportBug', None, '_Report Bug', None, 'Report a Bug!', self.on_report_a_bug_click)
 			,('About', Gtk.STOCK_ABOUT, '_About', None, 'About Us', self.about)
+			,('Rotate',None, '_Rotate', '<Control>r', 'Rotate Clockwise', self.brotate)
+			,('Flip', None, '_Flip', '<Control>f', 'Flip', self.bflip)
 		]
 
 		actiongroup.add_actions(actions)
@@ -329,6 +335,7 @@ class mainWindow(Gtk.Window):
 		scrolledwindow.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
 		scrolledwindow.add(self.ET.errorview)
 		self.notebook.append_page(scrolledwindow, label)
+		self.notebook.set_size_request(700,100)
 		lower_vbox.pack_start(self.notebook,True, True, 0)
 		lower_vbox.pack_start(self.status, False, False, 0)
 		vpane.pack2(lower_vbox,False,False)
@@ -468,10 +475,8 @@ class mainWindow(Gtk.Window):
 	def undo_canvas(self,widget):
 		"""
 		  Undo
-
 		  """
 		self.undo_manager.undo()
-	#pass
 
 	def redo_canvas(self,widget):
 		"""
@@ -689,7 +694,8 @@ class mainWindow(Gtk.Window):
 		dum.destroy()
 
 	def fileopen(self, widget):
-		dialog = Gtk.FileChooserDialog("Open..",self,Gtk.FileChooserAction.OPEN, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+		dialog = Gtk.FileChooserDialog("Open..",self,Gtk.FileChooserAction.OPEN,
+									   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
 		dialog.set_default_response(Gtk.ResponseType.OK)
 		filter = Gtk.FileFilter()
 		filter.set_name("Canvas Files")
@@ -778,11 +784,39 @@ class mainWindow(Gtk.Window):
 		return
 
 
-	def bp(self, widget = None):
+	def bproperties(self, widget = None):
 		if self.view.focused_item:
 			blockproperties.BlockProperties(self, self.view.focused_item).run()
 		else:
 			m = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "No Block was selected! Please select a Block to view its properties.")
+			m.run()
+			m.destroy()
+
+#rotation with shortcut, not completed yet'''
+
+	def brotate(self, widget = None):
+		#b = BlockInstance(blocktype)
+		#self.blockitem = BlockItem(b)
+		if self.view.focused_item:
+			#	try:
+			self.contextmenutool.blockrotate_clock(self, self.view.focused_item, None)
+		else:
+			m = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.ERROR,
+								  Gtk.ButtonsType.CLOSE,
+								  "No Block was selected! Please select a Block to rotate")
+			m.run()
+			m.destroy()
+
+	def bflip(self, widget=None):
+		# b = BlockInstance(blocktype)
+		# self.blockitem = BlockItem(b)
+		if self.view.focused_item:
+			#	try:
+			self.contextmenutool.blockflip(self, self.view.focused_item, None)
+		else:
+			m = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.ERROR,
+								  Gtk.ButtonsType.CLOSE,
+								  "No Block was selected! Please select a Block to rotate")
 			m.run()
 			m.destroy()
 
@@ -858,7 +892,8 @@ class mainWindow(Gtk.Window):
 
 	def load_library_dialog(self,widget):
 		#TODO: separate
-		dialog = Gtk.FileChooserDialog('Load Library...',self, Gtk.FileChooserAction.OPEN,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+		dialog = Gtk.FileChooserDialog('Load Library...',self,Gtk.FileChooserAction.OPEN,
+									   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
 		dialog.set_default_response(Gtk.ResponseType.OK)
 		dialog.set_current_folder(os.path.join(self.ascwrap.defaultlibraryfolder))
 
@@ -868,10 +903,10 @@ class mainWindow(Gtk.Window):
 		filter.add_pattern("*.a4c")
 		dialog.add_filter(filter)
 
-		filter = Gtk.FileFilter()
-		filter.set_name("All files")
-		filter.add_pattern("*")
-		dialog.add_filter(filter)
+		#filter = Gtk.FileFilter()
+		#filter.set_name("All files")
+		#filter.add_pattern("*")
+		#dialog.add_filter(filter)
 
 		res = dialog.run()
 		if res == Gtk.ResponseType.OK:
@@ -881,7 +916,7 @@ class mainWindow(Gtk.Window):
 
 
 	def loadlib(self, widget = None, lib_name = None):
-	##TODO: Separate
+	#TODO: Separate
 	#if loadcondition == 1:
 	#if self.view.canvas.model_library == lib_name:
 	#m = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.WARNING, Gtk.ButtonsType.CLOSE, "The selected Library is already loaded. ")

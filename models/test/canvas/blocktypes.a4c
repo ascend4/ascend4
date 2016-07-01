@@ -116,6 +116,7 @@ MODEL heater REFINES join;
 			10,10-5,5}
 	END NOTES;
 	V "param:" IS_A volume;
+	inlet.mdot + side.mdot = outlet.mdot;
 END heater;
 
 
@@ -139,7 +140,7 @@ MODEL diffuser REFINES equipment;
 			10,10-10,0
 			10,0-0,3}
 	END NOTES;
-END nozzle;
+END diffuser;
 
 MODEL turbine;
 	NOTES

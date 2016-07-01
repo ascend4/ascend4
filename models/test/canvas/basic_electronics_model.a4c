@@ -8,12 +8,16 @@ END electron_stream;
 MODEL equipment;
 	inlet "in:" IS_A electron_stream;
 	outlet "out:" IS_A electron_stream;
+	(*inout "inout" IS_A electron_stream;*)
 END equipment;
 
 MODEL tee REFINES equipment;
 	NOTES
 		'block' SELF {Tee piece}
 		'icon' SELF {tee.svg}
+		'graphic' SELF {0,5-4,5
+			4,5-10,0
+			4,5-10,10}
 	END NOTES;
 	side "out:" IS_A electron_stream;
 	inlet.I = outlet.I + side.I;
@@ -33,7 +37,7 @@ MODEL branch REFINES equipment;
 	side "in:" IS_A electron_stream;
 	inlet.I + side.I = outlet.I;
 	inlet.V, outlet.V, side.V ARE_THE_SAME;
-END join;
+END branch;
 
 MODEL DC_Voltage_Source REFINES equipment;
 	NOTES

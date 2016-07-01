@@ -162,7 +162,7 @@ class UndoManager(object):
     def start(self):
         self.en_gaphas_state()
         self.block_observers.add(self._block_transaction_handler)
-        print self.block_observers
+        #print self.block_observers
 
     def undo_observe(self):
         pass
@@ -200,8 +200,8 @@ class UndoManager(object):
         assert self._current_transaction == None
         #print block_event
         self._current_transaction = Transaction(block_event or None)
-        print block_event
-        print Transaction(block_event)
+        #print block_event
+        #print Transaction(block_event)
         #print "type of current transaction", type(self._current_transaction)
     def commit_transaction(self):
 

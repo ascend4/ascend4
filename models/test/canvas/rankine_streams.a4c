@@ -27,9 +27,10 @@ REQUIRE "johnpye/thermo_types.a4c";
 IMPORT "sensitivity/solve";
 (* something wrong with import
 IMPORT "johnpye/fprops/helmholtz.c";
+*)
+
 IMPORT "johnpye/extpy/extpy";
 IMPORT "johnpye/fprops/cycle_plot";
-*)
 
 (*------------------------------------------------------------------------------
   BACKGROUND STUFF
