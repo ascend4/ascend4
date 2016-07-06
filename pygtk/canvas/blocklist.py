@@ -677,9 +677,9 @@ class mainWindow(Gtk.Window):
 		about = Gtk.AboutDialog()
 		about.set_program_name("ASCEND CANVAS")
 		about.set_version("0.9.6x alpha")
-		about.set_copyright("Carnegie Mellon University")
-		about.set_comments("Canvas - Based GUI Modeller for Energy Systems")
-		about.set_website("http://www.ascend.cheme.cmu.edu")
+		about.set_copyright("Copyright \xc2\xa9 Carnegie Mellon University")
+		about.set_comments("Canvas-Based GUI Modeller for Energy System")
+		about.set_website("http://ascend4.org/Main_Page")
 		windowicon = Gtk.Image()
 		windowicon.set_from_file(os.path.join("../glade/ascend.svg"))
 		about.set_icon(windowicon.get_pixbuf())
@@ -724,18 +724,19 @@ class mainWindow(Gtk.Window):
 			self.view.canvas.update_now()
 			self.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#FFF'))
 			self.load_presaved_canvas(None)
-			self.reporter.reportSuccess(" File %s successfully loaded." % filename)
+			self.reporter.reportSuccess("File %s successfully loaded." % filename)
 			self.status.push(0,"File %s Loaded." % filename)
 			self.view.canvas.filename = filename
 		except Exception,e:
-			self.reporter.reportError(" Error occured while attempting to load the file. File could not be loaded properly.")
+			self.reporter.reportError("Error occured while attempting to load the file: %s." % filename)
+			self.status.push(0, "Error occured when loading the file: %s." % filename)
 			print e
 		finally:
 			f.close()
 
 	def filesave(self, widget):
 		f = None
-		dialog = Gtk.FileChooserDialog("Save..", self, Gtk.FileChooserAction.SAVE, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
+		dialog = Gtk.FileChooserDialog("Save...", self, Gtk.FileChooserAction.SAVE, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
 		dialog.set_default_response(Gtk.ResponseType.OK)
 		if self.view.canvas.filestate == 0:
 			dialog.set_filename("untitled")
@@ -783,7 +784,6 @@ class mainWindow(Gtk.Window):
 			return Gtk.FILE_CHOOSER_CONFIRMATION_CONFIRM
 		return
 
-
 	def bproperties(self, widget = None):
 		if self.view.focused_item:
 			blockproperties.BlockProperties(self, self.view.focused_item).run()
@@ -791,8 +791,6 @@ class mainWindow(Gtk.Window):
 			m = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "No Block was selected! Please select a Block to view its properties.")
 			m.run()
 			m.destroy()
-
-#rotation with shortcut, not completed yet'''
 
 	def brotate(self, widget = None):
 		#b = BlockInstance(blocktype)
@@ -930,14 +928,21 @@ class mainWindow(Gtk.Window):
 	#return
 
 		#print lib_path
-		self.ascwrap.load_library(lib_name)
+		try:
+			self.ascwrap.load_library(lib_name)
 
-		self.view.canvas.model_library = lib_name
+			self.view.canvas.model_library = lib_name
 
-		self.scroll.remove(self.blockiconview)
-		self.blockiconview = BlockIconView(self.ascwrap.canvas_blocks, self)
-		self.scroll.add(self.blockiconview)
-		self.show_all()
+			self.scroll.remove(self.blockiconview)
+			self.blockiconview = BlockIconView(self.ascwrap.canvas_blocks, self)
+			self.scroll.add(self.blockiconview)
+			self.show_all()
+			self.reporter.reportSuccess("Library %s successfully loaded." % lib_name)
+			self.status.push(0, "Library %s Loaded." % lib_name)
+		except Exception, e:
+			self.reporter.reportError("Error occured while attempting to load the library: %s." % lib_name)
+			self.status.push(0, "Error occured when loading the library: %s." % lib_name)
+			print e
 
 	#self.status.push(0, " Library '%s' loaded :: Found %d block types." %(lib_name, (len(blocks))))
 
@@ -977,11 +982,11 @@ class mainWindow(Gtk.Window):
 		_help.run()
 
 	def on_get_help_online_click(self, widget):
-		_help = help.Help(url="http://ascendwiki.cheme.cmu.edu/Canvas_Development")
+		_help = help.Help(url="http://ascend4.org/Canvas_Development")
 		_help.run()
 
 	def on_report_a_bug_click(self, widget):
-		_help = help.Help(url="http://ascendbugs.cheme.cmu.edu/report/")
+		_help = help.Help(url="http://bugs.ascend4.org/my_view_page.php")
 		_help.run()
 
 	def quit(self,args):

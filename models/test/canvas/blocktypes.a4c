@@ -62,7 +62,7 @@ END equipment;
 MODEL pump REFINES equipment;
 	NOTES
 		'block' SELF {Pump}
-		'icon' SELF {pump.svg}
+		(*'icon' SELF {pump.svg}*)
 		'graphic' SELF {5,5,5,2,0
 					2.5,9.325-0,10-10,10-7.5,9.325}
 		'port_in' SELF {inlet:0,5}

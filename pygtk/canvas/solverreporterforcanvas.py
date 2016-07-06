@@ -99,43 +99,43 @@ class PopupSolverReporter(PythonSolverReporter):
 				self.progressbar.set_text("Converged")
 				self.browser.reporter.reportNote( "Solving successful : Canvasmodel Converged ! " )
 				self.browser.view.canvas.canvasmodelstate = 'Solved'
-				self.browser.status.push(0,"CanvasModel State :: %s" % self.browser.view.canvas.canvasmodelstate)
+				self.browser.status.push(0,"CanvasModel State : %s" % self.browser.view.canvas.canvasmodelstate)
 			elif status.hasExceededTimeLimit():
 				self.progressbar.set_text("Exceeded time limit")
 				self.browser.reporter.reportError(" Solving failed : Solver exceeded time limit ")
 				self.browser.reporter.reportNote( " Canvasmodel Diverged ! " )
 				self.browser.view.canvas.canvasmodelstate = 'Diverged'
-				self.browser.status.push(0,"CanvasModel State :: %s" % self.browser.view.canvas.canvasmodelstate)
+				self.browser.status.push(0,"CanvasModel State : %s" % self.browser.view.canvas.canvasmodelstate)
 			elif status.hasExceededIterationLimit():
 				self.progressbar.set_text("Exceeded iteration limit")
 				self.browser.reporter.reportError( " Solving failed : Solver exceeded iteration limit " )
 				self.browser.reporter.reportNote( " Canvasmodel Diverged ! " )
 				self.browser.view.canvas.canvasmodelstate = 'Diverged'
-				self.browser.status.push(0,"CanvasModel State :: %s" % self.browser.view.canvas.canvasmodelstate)
+				self.browser.status.push(0,"CanvasModel State : %s" % self.browser.view.canvas.canvasmodelstate)
 			elif status.isDiverged():
 				self.progressbar.set_text("Diverged")
 				self.browser.reporter.reportError("Solving failed : Canvasmodel Diverged ! ")
 				self.browser.reporter.reportNote( " Canvasmodel Diverged ! " )
 				self.browser.view.canvas.canvasmodelstate = 'Diverged'
-				self.browser.status.push(0,"CanvasModel State :: %s" % self.browser.view.canvas.canvasmodelstate)
+				self.browser.status.push(0,"CanvasModel State : %s" % self.browser.view.canvas.canvasmodelstate)
 			elif status.isOverDefined():
 				self.progressbar.set_text("Over-defined")
 				self.browser.reporter.reportError(" Solving failed : Canvasmodel over-defined ! ")
 				self.browser.reporter.reportNote( " Canvasmodel Diverged ! " )
 				self.browser.view.canvas.canvasmodelstate = 'Diverged'
-				self.browser.status.push(0,"CanvasModel State :: %s" % self.browser.view.canvas.canvasmodelstate)
+				self.browser.status.push(0,"CanvasModel State : %s" % self.browser.view.canvas.canvasmodelstate)
 			elif status.isUnderDefined():
 				self.progressbar.set_text("Under-defined")
 				self.browser.reporter.reportError(" Solving failed : Canvasmodel under-defined ! ")
 				self.browser.reporter.reportNote( " Canvasmodel Diverged ! " )
 				self.browser.view.canvas.canvasmodelstate = 'Diverged'
-				self.browser.status.push(0,"CanvasModel State :: %s" % self.browser.view.canvas.canvasmodelstate)
+				self.browser.status.push(0,"CanvasModel State : %s" % self.browser.view.canvas.canvasmodelstate)
 			elif status.hasResidualCalculationErrors():
 				self.progressbar.set_text("Residual Calculation Error")
 				self.browser.reporter.reportError(" Solving failed : Solver had residual calculation errors ")
 				self.browser.reporter.reportNote( " Canvasmodel Diverged ! " )
 				self.browser.view.canvas.canvasmodelstate = 'Diverged'
-				self.browser.status.push(0,"CanvasModel State :: %s" % self.browser.view.canvas.canvasmodelstate)
+				self.browser.status.push(0,"CanvasModel State : %s" % self.browser.view.canvas.canvasmodelstate)
 					
 			self.closebutton.set_sensitive(True)
 			self.stopbutton.set_sensitive(False)

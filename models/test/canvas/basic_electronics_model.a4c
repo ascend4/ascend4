@@ -16,8 +16,10 @@ MODEL tee REFINES equipment;
 		'block' SELF {Tee piece}
 		'icon' SELF {tee.svg}
 		'graphic' SELF {0,5-4,5
-			4,5-10,0
-			4,5-10,10}
+			4,5-10,1
+			4,5-10,9}
+		'port_in' SELF {inlet:0,5}
+		'port_out' SELF {outlet:10,1-side:10,9}
 	END NOTES;
 	side "out:" IS_A electron_stream;
 	inlet.I = outlet.I + side.I;
@@ -28,10 +30,10 @@ MODEL branch REFINES equipment;
 	NOTES
 		'block' SELF {Branch}
 		'icon' SELF {branch.svg}
-		'graphic' SELF {0,0-6,5
-			0,10-6,5
+		'graphic' SELF {0,1-6,5
+			0,9-6,5
 			6,5-10,5}
-		'port_in' SELF {inlet:0,0-side:0,10}
+		'port_in' SELF {inlet:0,1-side:0,9}
 		'port_out' SELF {outlet:10,5}
 	END NOTES;
 	side "in:" IS_A electron_stream;
@@ -69,13 +71,13 @@ MODEL resistor_basic REFINES equipment;
 	END NOTES;
 	Resistance "param: Resistance of the resisitor" IS_A resistance;
 	inlet.I = outlet.I;
-	outlet.V = (inlet.I * Resistance) + inlet.V;
+	outlet.V = inlet.V - (inlet.I * Resistance);
 END resistor_basic;
 
-MODEL Ground_source;
+MODEL Ground;
 	NOTES
-		'block' SELF {Ground Source}
-		'icon' SELF {reservoir_in.png}
+		'block' SELF {Ground}
+		'icon' SELF {ground.png}
 		'graphic' SELF {5,0-5,5
 			0,5-10,5
 			2,7-8,7
@@ -84,12 +86,12 @@ MODEL Ground_source;
 	END NOTES;
 	outlet "out:" IS_A electron_stream;
 	outlet.V = 0 {volt};
-END Ground_source;
+END Ground;
 
 MODEL Ground_sink;
 	NOTES
 		'block' SELF {Ground Sink}
-		'icon' SELF {reservoir_in.png}
+		'icon' SELF {ground_sink.png}
 		'graphic' SELF {5,0-5,5
 			0,5-10,5
 			2,7-8,7
