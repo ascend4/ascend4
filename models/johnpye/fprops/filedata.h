@@ -336,6 +336,25 @@ typedef struct MbwrData_struct{
 	double beta[32]; /**< constants in MBWR for the fluid in question */
 } MbwrData;
 
+/*____________________________INCOMPRESSIBLE_________________________________*/
+
+typedef struct IncompressibleModelCoeffMatrix{
+
+	char* type;
+	double** coeff;
+	int numc_r, numc_c;	// number of rows and columns in coefficient matrix respectively
+
+} CoeffMatrix;
+
+typedef struct IncompressibleData_struct{
+
+	CoeffMatrix T_freeze, conductivity, density, specific_heat, viscosity, saturation_pressure;
+	char* x_id;
+	char* description;
+	double T_base, T_max, T_min, T_minPsat, x_base, x_max, x_min; 
+
+} IncompressibleData;
+
 /*--------------------------VISCOSITY------------------------------*/
 
 typedef enum ViscosityType_enum{
@@ -467,6 +486,7 @@ typedef enum EosType_enum{
 	,FPROPS_SOAVE = 4
 	,FPROPS_HELMHOLTZ = 5
 	,FPROPS_MBWR = 6//etc.
+	,FPROPS_INCOMPRESSIBLE = 8//etc.
 } EosType;
 
 /** Union of all possible EOS data structures */
