@@ -78,9 +78,28 @@ typedef struct PengrobRunData_struct{
 	double kappa; /** parameter used in a(T) */
 } PengrobRunData;
 
+// Incompressible fluids run data
+typedef struct {
+
+	char* type;
+	double** coeff;
+	int numc_r, numc_c;	// number of rows and columns in coefficient matrix respectively
+
+} IncompressibleCoeff;
+
+typedef struct {
+
+	IncompressibleCoeff T_freeze, conductivity, density, specific_heat, viscosity, saturation_pressure;
+	char* x_id;
+	char* description;
+	double T_base, T_max, T_min, T_minPsat, x_base, x_max, x_min; 
+
+} IncompressibleRunData;
+
 typedef union CorrelationUnion_union{
 	HelmholtzRunData *helm;
 	PengrobRunData *pengrob;
+	IncompressibleRunData *incomp;
 	/* maybe more later */
 } CorrelationUnion;
 

@@ -494,6 +494,7 @@ typedef union EosUnion_union{
 	const HelmholtzData *helm;
 	const CubicData *cubic;
 	MbwrData *mbwr;
+	IncompressibleData *incomp;
 	/* maybe more later */
 } EosUnion;
 
