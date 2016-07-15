@@ -72,6 +72,32 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 	switch(E->type){
 	case FPROPS_INCOMPRESSIBLE:
 		MSG("Incompressible");
+#define IC E->data.incomp
+		D->T_base = IC->T_base;
+		D->T_max = IC->T_max;
+		D->T_min = IC->T_min;
+		D->x_base = IC->x_base;
+		D->x_max = IC->x_max;
+		D->x_min = IC->x_min;
+		D->T_minPsat = IC->T_minPsat;
+#define IC_PREP(Q) \
+	D->Q.numc_r = IC->Q.numc_r \
+	D->Q.numc_c = IC->Q.numc_c \
+	D->Q.coeff = (double**)malloc(D->Q.numc_r*sizeof(double*)); \
+	int i,j; \
+	for(i=0;i<D->Q.numc_r;i++) \
+		D->Q.coeff[i] = (double*)malloc(D->Q.numc_c*sizeof(double)); \
+	for(i=0;i<D->Q.numc_r;i++) \
+		for(j=0;j<D->Q.numc_c;j++) \
+			D->Q.coeff[i][j] = IC->Q.coeff[i][j]; 
+		IC_PREP(T_freeze)
+		IC_PREP(conductivity)
+		IC_PREP(density)
+		IC_PREP(specific_heat)
+		IC_PREP(viscosity)
+		IC_PREP(saturation_pressure)
+
+
 	break;
 	case FPROPS_HELMHOLTZ:
 		MSG("Helmholtz");
@@ -112,6 +138,12 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 	//MSG("Setting reference state...");
 	// set the reference point
 	switch(ref->type){
+	case FPROPS_INCOMPRESSIBLE:
+		MSG("No reference state required in current incompressible implementation.\n");
+		FPROPS_FREE(P->data);
+		FPROPS_FREE(P);
+		return NULL;
+		break;
 	case FPROPS_REF_PHI0:
 		MSG("Applying PHI0 reference data");
 		P->data->cp0->c = ref->data.phi0.c;
@@ -153,13 +185,13 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 			}
 			break;
 		default:
-			ERRMSG("Unsupported type of reference state (ref0) in ideal_prepare");
+			ERRMSG("Unsupported type of reference state (ref0) in incompressible_prepare");
 			FPROPS_FREE(P->data); FPROPS_FREE(P);
 			return NULL;
 		}
 		break;
 	default:
-		ERRMSG("Unsupported type of reference state requested in ideal_prepare.\n");
+		ERRMSG("Unsupported type of reference state requested in incompressible_prepare.\n");
 		FPROPS_FREE(P->data);
 		FPROPS_FREE(P);
 		return NULL;
