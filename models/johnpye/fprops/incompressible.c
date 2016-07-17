@@ -53,6 +53,36 @@
 # define ERRMSG(ARGS...) ((void)0)
 #endif
 
+// evaluation function for polynamial type coefficients
+double eval_poly(coefficients c, double T, double x) {
+
+	double res = 0.0;
+	int i,j;
+
+	for(i=0;i<c.numc_r;i++)
+		for(j=0;j<c.numc_c;j++)
+			res += pow(x,j)*c.coeff[i][j]*pow(T,i);
+
+	return res;
+
+}
+
+// evaluation function for exponential-polynomial type coefficients
+double eval_exppoly(coefficients c, double T, double x) {
+
+	return exp(eval_poly(c,T,x));
+
+}
+
+// evaluation function for exponential type coefficients
+double eval_expo(coefficients c, double T, double x) {
+
+	return exp(c.coeff[0][0]/(T+c.coeff[0][1])-c.coeff[0][2]);
+
+}	
+
+
+
 /*--------------------------------------------
   PREPARATION OF INCOMPRESSIBLE RUNDATA from FILEDATA
 */
@@ -80,7 +110,7 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 		D->x_max = IC->x_max;
 		D->x_min = IC->x_min;
 		D->T_minPsat = IC->T_minPsat;
-#define IC_PREP(Q) \
+#define INCOMP_PREP(Q) \
 	D->Q.numc_r = IC->Q.numc_r \
 	D->Q.numc_c = IC->Q.numc_c \
 	D->Q.coeff = (double**)malloc(D->Q.numc_r*sizeof(double*)); \
@@ -90,14 +120,14 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 	for(i=0;i<D->Q.numc_r;i++) \
 		for(j=0;j<D->Q.numc_c;j++) \
 			D->Q.coeff[i][j] = IC->Q.coeff[i][j]; 
-		IC_PREP(T_freeze)
-		IC_PREP(conductivity)
-		IC_PREP(density)
-		IC_PREP(specific_heat)
-		IC_PREP(viscosity)
-		IC_PREP(saturation_pressure)
-
-
+		INCOMP_PREP(T_freeze)
+		INCOMP_PREP(conductivity)
+		INCOMP_PREP(density)
+		INCOMP_PREP(specific_heat)
+		INCOMP_PREP(viscosity)
+		INCOMP_PREP(saturation_pressure)
+#undef IC
+#undef INCOMP_PREP(Q)
 	break;
 	case FPROPS_HELMHOLTZ:
 		MSG("Helmholtz");
@@ -127,13 +157,38 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 		FPROPS_FREE(P);
 		return NULL;
 	}
+#define IC data.incomp
+#define PROP_EVAL(Q) \
+	double eval_ ## Q (double T, double p, const FluidData *data, FpropsError *err) { \
+		assert(T>0&&T>=IC->T_min&&T<=IC->T_max); \
+		assert(x>=IC->x_min&&x<=IC->x_max); \
+		if(!strcmp(IC->Q.type,"polynomial")) return eval_poly(IC->Q,T-IC>T_base,x-IC->x_base); \
+		else if(!strcmp(IC->Q.type,"exppolynomial")) return eval_exppoly(IC->Q,T-IC->T_base,x-IC->x_base); \
+		else if(!strcmp(IC->Q.type,"exponential")) return eval_expo(IC->Q,T,x); \
+		else { \
+			printf("\nType not defined.\n"); \
+		} \
+	}
 
-	/* function pointers... more to come still? */
+// declaration and definition of property evaluation functions for conductivity, density, specific-heat and viscosity
+PROP_EVAL(conductivity)
+PROP_EVAL(density)
+PROP_EVAL(specific_heat)
+PROP_EVAL(viscosity)
+PROP_EVAL(saturation_pressure)
+
+#undef PROP_EVAL(Q)
+#undef IC
+
+/*
+	// function pointers... more to come still? 
 #define FN(VAR) P->VAR##_fn = &ideal_##VAR
 	FN(p); FN(u); FN(h); FN(s); FN(a); FN(g); FN(cp); FN(cv); FN(w);
 	FN(dpdrho_T);
 	FN(sat);
 #undef FN
+*/
+
 
 	//MSG("Setting reference state...");
 	// set the reference point
@@ -201,6 +256,7 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 	return P;
 }
 
+/*
 #define DEFINE_TAU double tau = data->Tstar / T
 #define DEFINE_TAUDELTA DEFINE_TAU; double delta = rho / data->rhostar
 
@@ -236,11 +292,11 @@ double ideal_g(double T, double rho, const FluidData *data, FpropsError *err){
 	return h - T * s;
 }
 
-/**
-	Note that this function is called by ALL fluid types via 'fprops_cp0' which
-	means that it needs to include the scaling temperature within the structure;
-	we can't just define Tstar as a constant for ideal fluids.
-*/
+
+//	Note that this function is called by ALL fluid types via 'fprops_cp0' which
+//	means that it needs to include the scaling temperature within the structure;
+//	we can't just define Tstar as a constant for ideal fluids.
+
 double ideal_cp(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_TAU;
 	double res = data->R * (1. - SQ(tau) * ideal_phi_tautau(tau,data->cp0));
@@ -267,5 +323,7 @@ double ideal_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData *d
 	*err = FPROPS_RANGE_ERROR;
 	return 0;
 }
+
+*/
 
 
