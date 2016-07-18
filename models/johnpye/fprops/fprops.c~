@@ -362,7 +362,7 @@ char *fprops_corr_type(EosType type){
 	case FPROPS_MBWR:
 		return "mbwr";
 	case FPROPS_INCOMPRESSIBLE:
-		return "incomp";
+		return "incomp"
 	}
 	return NULL;
 }

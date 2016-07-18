@@ -99,12 +99,12 @@ void fprops_fluid_destroy(PureFluid *P){
 		assert(FPROPS_CUBIC != P->type);
 		break;
 	case FPROPS_IDEAL:
-	case FPROPS_INCOMPRESSIBLE:	// add destroy function for incompressible tyoe
 	case FPROPS_REDKW:
 	case FPROPS_SOAVE:
 	case FPROPS_MBWR:
 		ERRMSG("Not implemented: fluid '%s' of type %d to be destroyed",P->name,P->type);
 		break;
+	case FPROPS_INCOMPRESSIBLE:	// add destroy function for incompressible tyoe
 	}
 }
 

@@ -184,7 +184,7 @@ typedef struct PureFluid_struct{
 	PropEvalFnIncomp *p_sat_fn_inc;
 /* end for incompressible fluids */
 	
-/* dummy (... or to be defined later?) function pointers added to compile succesfully */
+/* dummy (may be to be defined later?) function pointers added to compile succesfully */
 	PropEvalFn *rho_fn,*t_freeze_fn,*p_sat_fn;
 	PropEvalFnIncomp *p_fn_inc,*u_fn_inc,*h_fn_inc,*s_fn_inc,*a_fn_inc,*w_fn_inc,*g_fn_inc,*alphap_fn_inc,*betap_fn_inc,*dpdrho_T_fn_inc,*sat_fn_inc;
 

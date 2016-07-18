@@ -31,7 +31,7 @@ PropEvalFnIncomp incomp_eval_conductivity;
 PropEvalFnIncomp incomp_eval_density;
 PropEvalFnIncomp incomp_eval_specific_heat;
 PropEvalFnIncomp incomp_eval_viscosity;
-PropEvalFnIncomp incomp_eval_saturation_pressure;
+PropEvalFnIncomp incomp_eval_T_saturation_pressure;
 
 /*
 PropEvalFn incompressible_u;

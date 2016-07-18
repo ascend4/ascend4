@@ -235,9 +235,6 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 	return P;
 }
 
-#undef D
-#define D data->corr.incomp
-
 #define PROP_EVAL(Q) \
 	double incomp_eval_ ## Q (double T, double p, double x, const FluidData *data, FpropsError *err) { \
 		assert(T>0&&T>=D->T_min&&T<=D->T_max); \
@@ -252,11 +249,24 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 
 // declaration and definition of property evaluation functions for conductivity, density, specific-heat and viscosity
 PROP_EVAL(T_freeze)
-PROP_EVAL(conductivity)
+//PROP_EVAL(conductivity)
 PROP_EVAL(density)
 PROP_EVAL(specific_heat)
 PROP_EVAL(viscosity)
 PROP_EVAL(saturation_pressure)
+
+
+	double incomp_eval_conductivity (double T, double p, double x, const FluidData *data, FpropsError *err) { 
+		double P;
+		assert(T>0&&T>=D->T_min&&T<=D->T_max); 
+		assert(x>=D->x_min&&x<=D->x_max); 
+		if(!strcmp(D->Q.type,"polynomial")) return eval_poly(D->Q,T-D->T_base,x-D->x_base); 
+		else if(!strcmp(D->Q.type,"exppolynomial")) return eval_exppoly(D->Q,T-D->T_base,x-D->x_base); 
+		else if(!strcmp(D->Q.type,"exponential")) return eval_expo(D->Q,T,x); 
+		MSG("Invalid request"); 
+		*err = FPROPS_INVALID_REQUEST; 
+		return 0; 
+	}
 
 #undef PROP_EVAL
 #undef D
