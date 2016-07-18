@@ -15,7 +15,7 @@ class ErrorReporter():
 		#self.errorview.set_headers_visible(True)	
 		errstorecolstypes = [GdkPixbuf.Pixbuf,str,str,str,int]
 		self.errorstore = Gtk.TreeStore(*errstorecolstypes)
-		errtitles = ["","Location","Message"];
+		errtitles = ["","Location","Message"]
 		self.errorview.set_model(self.errorstore)
 		self.errcols = [ Gtk.TreeViewColumn() for _type in errstorecolstypes]
 

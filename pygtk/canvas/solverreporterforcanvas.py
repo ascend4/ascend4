@@ -67,13 +67,13 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.progressbar.set_fraction(_frac)
 
 	def report(self,status):
-		_time = time.clock();
+		_time = time.clock()
 		_sincelast = _time - self.lasttime
 		if status.getCurrentBlockNum() > self.blocknum:
 			self.blocknum = status.getCurrentBlockNum()
 			self.blockstart = _time
 		if self.lasttime==0 or status.isConverged():
-			self.lasttime = _time;
+			self.lasttime = _time
 			self.elapsed = _time - self.starttime
 			self.blocktime = _time - self.blockstart
 			print "UPDATING!"

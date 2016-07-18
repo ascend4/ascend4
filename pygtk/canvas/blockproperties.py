@@ -2,7 +2,9 @@
 
 import os
 
-from gi.repository import Gtk, Gdk, GObject, GdkPixbuf
+import gi
+gi.require_version('GtkSource', '3.0')
+from gi.repository import Gtk, Gdk, GObject, GdkPixbuf, GtkSource
 
 import blockinstance
 import modeltree
@@ -108,6 +110,23 @@ class BlockProperties(object):
 		self.stream.connect('changed',self.stream_changed)
 		'''
 		##End of General Tab##
+
+		##Equation Tab##
+		scrolledwindow = builder.get_object('equation_scroll')
+		self.sourceviewView = GtkSource.View()
+		self.sourceviewView.set_editable(False)
+		self.sourceviewView.set_auto_indent(True)
+		self.sourceviewBuff = GtkSource.Buffer()
+		#self.sourceviewBuff.set_language(self.sourceviewLang)
+		self.sourceviewBuff.set_highlight_syntax(True)
+		if self.parent is not None:
+			#self.sourceviewBuff.set_text(str(self.parent.view.canvas))
+			self.sourceviewBuff.set_text(str(self.parent))
+		self.sourceviewView.set_buffer(self.sourceviewBuff)
+		scrolledwindow.add(self.sourceviewView)
+		self.sourceviewView.show()
+
+		##End of Equation Tab##
 
 		##Parameters Tab##
 		#Hint: This uses the Gtk.TreeView and Gtk.ListStore

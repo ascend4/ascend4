@@ -8,7 +8,7 @@ END electron_stream;
 MODEL equipment;
 	inlet "in:" IS_A electron_stream;
 	outlet "out:" IS_A electron_stream;
-	(*inout "inout" IS_A electron_stream;*)
+	inout "inout" IS_A electron_stream;
 END equipment;
 
 MODEL tee REFINES equipment;
@@ -101,3 +101,33 @@ MODEL Ground_sink;
 	inlet "in:" IS_A electron_stream;
 	inlet.V = 0 {volt};
 END Ground_sink;
+
+MODEL Diode REFINES equipment;
+	bol IS_A boolean_var;
+	NOTES
+		'block' SELF {Diode}
+		'icon' SELF {Diode.png}
+		'graphic' SELF {0,5-4,5
+			4,3-4,7
+			4,7-6,5
+			4,3-6,5
+			6,5-10,5}
+	END NOTES;
+
+	CONDITIONAL
+		cond: inlet.V > outlet.V;
+	END CONDITIONAL;
+
+	bol == SATISFIED(cond,1e-08);
+	on: inlet.I = outlet.I;
+		inlet.V = outlet.V;
+	off: outlet.I = 0 {A};
+
+	WHEN (bol)
+		CASE TRUE:
+			USE on;
+		CASE FALSE:
+			USE off;
+	END WHEN;
+
+END Diode;

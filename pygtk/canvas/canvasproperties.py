@@ -42,7 +42,7 @@ class CanvasProperties(object):
 		self.sourceviewView.set_editable(False)
 		#self.sourceviewView.set_auto_indent(True)
 		self.sourceviewBuff = GtkSource.Buffer()
-		self.sourceviewBuff.set_language(self.sourceviewLang)
+		#self.sourceviewBuff.set_language(self.sourceviewLang)
 		self.sourceviewBuff.set_highlight_syntax(True)
 		if self.parent is not None:
 			self.sourceviewBuff.set_text(str(self.parent.view.canvas))

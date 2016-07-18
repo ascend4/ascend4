@@ -168,10 +168,10 @@ class ContextMenuTool(Tool):
 
 	@undo.block_observed
 	def delete(self,widget,item,view):
-		 view.canvas.remove(item)
+		view.canvas.remove(item)
 
 	def blockproperties(self, widget = None, window = None, context = None, item = None, tab = None):
-		 blockproperties.BlockProperties(window, item, tab = tab).run()
+		blockproperties.BlockProperties(window, item, tab = tab).run()
 
 	def blockrotate_clock(self, widget, item, window):
 		''' handler for rotating an item '''
@@ -198,17 +198,17 @@ class ContextMenuTool(Tool):
 		self.view.canvas.saved_data = {}
 
 		window.ascwrap.library.loadString(model,"canvasmodel")
-		t = window.ascwrap.library.findType(str(item.blockinstance.blocktype.type.getName()));
+		t = window.ascwrap.library.findType(str(item.blockinstance.blocktype.type.getName()))
 		try:
-			m =t.getMethod('default_self');
+			m =t.getMethod('default_self')
 		except:
 			return
-		i = t.getSimulation('sim',False);
+		i = t.getSimulation('sim',False)
 		i.build()
-		i.run(m);
-		fv = i.getFixedVariables();
+		i.run(m)
+		fv = i.getFixedVariables()
 		for i in fv:
 			for param in item.blockinstance.params:
 				if param == i.getName():
-					item.blockinstance.params[param].value = i.getValue();
+					item.blockinstance.params[param].value = i.getValue()
 					item.blockinstance.params[param].fix = True
