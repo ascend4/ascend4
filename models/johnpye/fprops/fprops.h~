@@ -45,7 +45,7 @@ typedef struct FluidState_struct{
 } FluidState;
 
 FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsError *err);
-FluidState fprops_set_Tpx(double T, double p, double x, const IncompFluid *fluid, FpropsError *err); // added for incompressible
+FluidState fprops_set_Tpx(double T, double p, double x, const PureFluid *fluid, FpropsError *err); // added for incompressible
 
 /* TODO we need to add a way to specify what fluid correlation is desired
 and also what reference state, as another option. */
@@ -93,6 +93,9 @@ double fprops_dudrho_T(const FluidState state, FpropsError *err);
 
 double fprops_mu(FluidState state, FpropsError *err); ///< Dynamic viscosity / [Pa*s]
 double fprops_lam(FluidState state, FpropsError *err); ///< Thermal conductivity / [W/m/K]
+
+//double fprops_psat(FluidState state, FpropsError *err); 
+//double fprops_Tfreeze(FluidState state, FpropsError *err); 
 
 /**
 	Convert file data E into a PureFluid object, doing any necessary pre-calculation

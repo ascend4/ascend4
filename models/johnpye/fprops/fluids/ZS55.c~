@@ -21,7 +21,7 @@
 
 #define MAXC 10
 
-#define PATH "incomp_liq_data/LiBr.dat"
+#define PATH "incomp_liq_data/ZS55.dat"
 
 #define ABORT \
 		printf("\nExiting Program!\n"); \
@@ -174,8 +174,8 @@ int main() {
 
 // parsing from input (json format) and loading data to new fluid data structures
 	FILE* in;
-	fprops* test_liq;
-	test_liq = (fprops*)malloc(sizeof(fprops));
+	IncompressibleData* test_liq;
+	test_liq = (IncompressibleData*)malloc(sizeof(IncompressibleData));
 
 	long int pos;
 
@@ -220,7 +220,7 @@ int main() {
 		, NULL
 		,100
 		,FPROPS_INCOMPRESSIBLE
-		,.data = {.incomp = &test_liq}
+		,.data = {.incomp = test_liq}
 	};
 
 // test
@@ -236,8 +236,8 @@ int main() {
 
 	fprintf(out,"VARIABLES = \"Temperature [C]\", \"Cp [W/m/K]\", \"Cv [W/m/K]\", \"Density [kg/m<sup>3</sup>]\", \"Heat Capacity [J/Kg/K]\", \"Viscosity [Pa s]\", \"Saturation Pressure [Pa]\"\n");
 	do {
-		FluidState S = fprops_set_Tpx(T,0.0,1.0,&fprops_err);
-		fprintf(out,"%e\t%e\t%e\t%e\t%e\t%e\t%e\n",T-273.0,fprops_cp(S,&fprops_err),fprops_cv(S,&fprops_err),fprops_rho(S,&fprops_err),fprops_cp(S,&fprops_err),fprops_cp(S,&fprops_err),fprops_cp(S,&fprops_err));
+		FluidState S = fprops_set_Tpx(T,0.0,1.0,P,&fprops_err);
+		fprintf(out,"%e\t%e\t%e\t%e\t%e\t%e\t%e\n",T-273.0,fprops_cp(S,&fprops_err),fprops_cv(S,&fprops_err),fprops_rho(S,&fprops_err),fprops_lam(S,&fprops_err),fprops_mu(S,&fprops_err),fprops_p_sat(S,&fprops_err));
 		T+=1;
 
 	} while(T<=D->T_max);

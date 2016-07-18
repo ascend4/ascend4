@@ -94,6 +94,11 @@ double fprops_dudrho_T(const FluidState state, FpropsError *err);
 double fprops_mu(FluidState state, FpropsError *err); ///< Dynamic viscosity / [Pa*s]
 double fprops_lam(FluidState state, FpropsError *err); ///< Thermal conductivity / [W/m/K]
 
+
+// needs to be undefined here?
+double fprops_psat(FluidState state, FpropsError *err); 
+double fprops_Tfreeze(FluidState state, FpropsError *err); 
+
 /**
 	Convert file data E into a PureFluid object, doing any necessary pre-calculation
 	along the way. The PureFluid should implement the named correlation type.

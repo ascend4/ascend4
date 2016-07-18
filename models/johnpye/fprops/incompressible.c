@@ -105,6 +105,7 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 	switch(E->type){
 	case FPROPS_INCOMPRESSIBLE:
 		MSG("Incompressible");
+		D = FPROPS_NEW(IncompressibleRunData);
 #define IC E->data.incomp
 		D->T_base = IC->T_base;
 		D->T_max = IC->T_max;
@@ -115,6 +116,7 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 		D->T_minPsat = IC->T_minPsat;
 		int i,j;
 #define INCOMP_PREP(Q) \
+	D->Q.type = IC->Q.type; \
 	D->Q.numc_r = IC->Q.numc_r; \
 	D->Q.numc_c = IC->Q.numc_c; \
 	D->Q.coeff = (double**)malloc(D->Q.numc_r*sizeof(double*)); \
@@ -165,7 +167,7 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 #define FN(VAR1,VAR2) P->VAR1##_fn_inc = &incomp_eval_##VAR2
 	FN(rho,density);  FN(cp,specific_heat); FN(cv,specific_heat); 
 	FN(lam,conductivity); FN(mu,viscosity); 
-	FN(t_freeze,T_freeze); FN(p_sat,saturation_pressure);
+	FN(T_freeze,T_freeze); FN(p_sat,saturation_pressure);
 #undef FN
 
 // FN(u); FN(h); FN(s); FN(a); FN(g); FN(w); FN(dpdrho_T); FN(sat);// to be added for incompressible
@@ -257,7 +259,7 @@ PROP_EVAL(density)
 PROP_EVAL(specific_heat)
 PROP_EVAL(viscosity)
 PROP_EVAL(saturation_pressure)
-
+		
 #undef PROP_EVAL
 #undef D
 

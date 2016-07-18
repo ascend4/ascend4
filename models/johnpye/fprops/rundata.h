@@ -180,12 +180,12 @@ typedef struct PureFluid_struct{
 	PropEvalFnIncomp *cv_fn_inc;
 	PropEvalFnIncomp *lam_fn_inc;
 	PropEvalFnIncomp *mu_fn_inc;
-	PropEvalFnIncomp *t_freeze_fn_inc;
+	PropEvalFnIncomp *T_freeze_fn_inc;
 	PropEvalFnIncomp *p_sat_fn_inc;
 /* end for incompressible fluids */
 	
 /* dummy (... or to be defined later?) function pointers added to compile succesfully */
-	PropEvalFn *rho_fn,*t_freeze_fn,*p_sat_fn;
+	PropEvalFn *rho_fn,*T_freeze_fn,*p_sat_fn;
 	PropEvalFnIncomp *p_fn_inc,*u_fn_inc,*h_fn_inc,*s_fn_inc,*a_fn_inc,*w_fn_inc,*g_fn_inc,*alphap_fn_inc,*betap_fn_inc,*dpdrho_T_fn_inc,*sat_fn_inc;
 
 	const ViscosityData *visc; // TODO should it be here? or inside FluidData?? probably yes, but needs review.

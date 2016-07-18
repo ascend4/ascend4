@@ -233,7 +233,7 @@ EVALFN_SATUNDEFINED(cp); EVALFN_SATUNDEFINED(cv);
 EVALFN_SATUNDEFINED(w);
 EVALFN(dpdrho_T);
 
-EVALFN_SATUNDEFINED(t_freeze); EVALFN_SATUNDEFINED(p_sat); // added for incompressible (check for correctness)
+EVALFN_SATUNDEFINED(T_freeze); EVALFN_SATUNDEFINED(p_sat); // added for incompressible (check for correctness)
 
 EVALFN(alphap); EVALFN(betap);
 // EVALFN(dpdT_rho);
