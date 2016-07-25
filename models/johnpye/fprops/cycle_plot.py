@@ -4,7 +4,10 @@ from solverreporter import *
 from __builtin__ import *
 
 import sys, os, os.path
-sys.path.append(os.path.expanduser("~/ascend/models/johnpye/fprops/python"))
+if 'ASCENDLIBRARY' in os.environ:
+	p1 = os.path.join(os.environ['ASCENDLIBRARY'],'johnpye/fprops/python')
+	print "ADDING PATH",p1
+	sys.path.append(p1)
 import fprops
 
 try:
