@@ -653,7 +653,12 @@ END merge;
 *)
 
 (*
-	simplest possible rankine cycle
+	Simplest possible Rankine cycle.
+
+	This is a 'base' model and doesn't specify the working fluid nor enough of
+	the process constraints to allow the model to be solved. For solvable
+	versions see the refinements that follow, eg rankine_water, rankine_ammonia,
+	etc. See also the more complex Rankine cycles such as rankine_reheat_common.
 *)
 MODEL rankine_common;
 
