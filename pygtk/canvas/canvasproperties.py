@@ -13,6 +13,7 @@ from gi.repository import GtkSource
 import modeltree
 
 
+
 class CanvasProperties(object):
 	'''
 	Pop-Up window for viewing and editing general Canvas properties
@@ -40,9 +41,9 @@ class CanvasProperties(object):
 		scrolledwindow = builder.get_object('scrolledwindow1')
 		self.sourceviewView = GtkSource.View()
 		self.sourceviewView.set_editable(False)
-		#self.sourceviewView.set_auto_indent(True)
+		self.sourceviewView.set_auto_indent(True)
 		self.sourceviewBuff = GtkSource.Buffer()
-		#self.sourceviewBuff.set_language(self.sourceviewLang)
+		self.sourceviewBuff.set_language(self.sourceviewLang)
 		self.sourceviewBuff.set_highlight_syntax(True)
 		if self.parent is not None:
 			self.sourceviewBuff.set_text(str(self.parent.view.canvas))

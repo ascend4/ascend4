@@ -84,6 +84,7 @@ MODEL canvasmodel;
     {canvas_user_code} 
 METHODS
 METHOD canvas_user_code;
+	{canvas_user_code}
 END canvas_user_code;
 METHOD parameter_code;
     {parameter_code} 

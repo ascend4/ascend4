@@ -32,6 +32,15 @@ class BlockProperties(object):
 	Hint: The Parameter data is stored in the ListStore i.e. M of MVC of TreeView
 	'''
 	def __init__(self, parent, item, tab= None):
+
+		##Get the ASCEND lang##
+		self.sourceviewLangman = GtkSource.LanguageManager.get_default()
+		op = self.sourceviewLangman.get_search_path()
+		if os.path.join('..', '..', 'tools', 'gtksourceview-2.0') not in op:
+			op.append(os.path.join('..', '..', 'tools', 'gtksourceview-2.0'))
+			self.sourceviewLangman.set_search_path(op)
+		self.sourceviewLang = self.sourceviewLangman.get_language('ascend')
+
 		#Get the XML
 		glade_file_path = os.path.join('..','glade','bp.glade')
 		builder = Gtk.Builder()
@@ -117,15 +126,14 @@ class BlockProperties(object):
 		self.sourceviewView.set_editable(False)
 		self.sourceviewView.set_auto_indent(True)
 		self.sourceviewBuff = GtkSource.Buffer()
-		#self.sourceviewBuff.set_language(self.sourceviewLang)
+		self.sourceviewBuff.set_language(self.sourceviewLang)
 		self.sourceviewBuff.set_highlight_syntax(True)
 		if self.parent is not None:
-			#self.sourceviewBuff.set_text(str(self.parent.view.canvas))
-			self.sourceviewBuff.set_text(str(self.parent))
+			self.sourceviewBuff.set_text(str(self.parent.view.canvas))
+			#self.sourceviewBuff.set_text(self.block_canvas.user_code)
 		self.sourceviewView.set_buffer(self.sourceviewBuff)
 		scrolledwindow.add(self.sourceviewView)
 		self.sourceviewView.show()
-
 		##End of Equation Tab##
 
 		##Parameters Tab##

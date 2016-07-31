@@ -166,7 +166,9 @@ class mainWindow(Gtk.Window):
 
 		self.set_title("ASCEND Canvas Modeller")
 		self.set_default_size(800,800)
+
 		self.connect("destroy", Gtk.main_quit)
+		#self.connect("destroy", self.quit_confirm)
 
 		windowicon = Gtk.Image()
 		windowicon.set_from_file(os.path.join('..','glade','ascend.svg'))
@@ -185,11 +187,11 @@ class mainWindow(Gtk.Window):
 		self.contextmenutool = ContextMenuTool()
 
 		actions = [('File', None, '_File')
-			,('Quit', Gtk.STOCK_QUIT, '_Quit', None,'Quit the Program', self.quit)
+			,('Quit', Gtk.STOCK_QUIT, '_Quit', None,'Quit the Program', self.quit_confirm)
 			,('New', Gtk.STOCK_NEW,'_New',None,'Start a new Simulation', self.new)
 			,('Open', Gtk.STOCK_OPEN,'_Open',None,'Open a saved Canvas file', self.fileopen)
-			,('Save', Gtk.STOCK_SAVE,'_Save',None,'Open a saved Canvas file', self.save_canvas)
-			,('SaveAs', Gtk.STOCK_SAVE_AS,'_Save As...',None,'Open a saved Canvas file', self.filesave)
+			,('Save', Gtk.STOCK_SAVE,'_Save',None,'Save a Canvas file', self.save_canvas)
+			,('SaveAs', Gtk.STOCK_SAVE_AS,'_Save As...',None,'Save a Canvas file as ...', self.filesave)
 			,('Export', Gtk.STOCK_PRINT, '_Export SVG', None,'Quit the Program', self.export_svg_as)
 			,('LoadLibrary', Gtk.STOCK_OPEN, '_Load Library...', '<Control>l','Load Library', self.load_library_dialog)
 			,('Edit', None, '_Edit')
@@ -782,8 +784,8 @@ class mainWindow(Gtk.Window):
 				return Gtk.FILE_CHOOSER_CONFIRMATION_SELECT_AGAIN
 		else:
 			return Gtk.FILE_CHOOSER_CONFIRMATION_CONFIRM
-		return
 
+	#Block properties
 	def bproperties(self, widget = None):
 		if self.view.focused_item:
 			blockproperties.BlockProperties(self, self.view.focused_item).run()
@@ -792,6 +794,7 @@ class mainWindow(Gtk.Window):
 			m.run()
 			m.destroy()
 
+	#Block rotate
 	def brotate(self, widget = None):
 		#b = BlockInstance(blocktype)
 		#self.blockitem = BlockItem(b)
@@ -805,6 +808,7 @@ class mainWindow(Gtk.Window):
 			m.run()
 			m.destroy()
 
+	# Block flip
 	def bflip(self, widget=None):
 		# b = BlockInstance(blocktype)
 		# self.blockitem = BlockItem(b)
@@ -890,6 +894,21 @@ class mainWindow(Gtk.Window):
 
 	def load_library_dialog(self,widget):
 		#TODO: separate
+
+		# Warning Dialog
+		if self.view.canvas.get_all_items():
+			m = Gtk.MessageDialog(self, Gtk.DialogFlags.MODAL, Gtk.MessageType.WARNING, Gtk.ButtonsType.OK_CANCEL,
+								  "Load New Library Will Clear Current Canvas, Continue?")
+			m.set_title('Warning!')
+			response = m.run()
+			m.destroy()
+			if response == Gtk.ResponseType.CANCEL:
+				return
+			else:
+				for item in self.view.canvas.get_all_items():
+					self.view.canvas.remove(item)
+				self.reporter.reportNote('Canvas cleared for new Model')
+
 		dialog = Gtk.FileChooserDialog('Load Library...',self,Gtk.FileChooserAction.OPEN,
 									   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
 		dialog.set_default_response(Gtk.ResponseType.OK)
@@ -926,8 +945,8 @@ class mainWindow(Gtk.Window):
 	#m.run()
 	#m.destroy()
 	#return
+	#print lib_path
 
-		#print lib_path
 		try:
 			self.ascwrap.load_library(lib_name)
 
@@ -937,14 +956,13 @@ class mainWindow(Gtk.Window):
 			self.blockiconview = BlockIconView(self.ascwrap.canvas_blocks, self)
 			self.scroll.add(self.blockiconview)
 			self.show_all()
-			self.reporter.reportSuccess("Library %s successfully loaded." % lib_name)
+			self.reporter.reportSuccess("Library %s successfully loaded: Found %d block types. " %(lib_name, (len(self.ascwrap.canvas_blocks))))
 			self.status.push(0, "Library %s Loaded." % lib_name)
 		except Exception, e:
 			self.reporter.reportError("Error occured while attempting to load the library: %s." % lib_name)
 			self.status.push(0, "Error occured when loading the library: %s." % lib_name)
 			print e
 
-	#self.status.push(0, " Library '%s' loaded :: Found %d block types." %(lib_name, (len(blocks))))
 
 	def get_libraries_from_folder(self,path=None):
 		'Returns a dictionary of library names with their paths'
@@ -989,6 +1007,18 @@ class mainWindow(Gtk.Window):
 		_help = help.Help(url="http://bugs.ascend4.org/my_view_page.php")
 		_help.run()
 
-	def quit(self,args):
-		del(self.prefs)
-		self.destroy()
+	def quit_confirm(self, widget):
+		# Warning Dialog
+		#TODO: check whether current canvas has been saved or not.
+		if self.view.canvas.get_all_items():
+			m = Gtk.MessageDialog(self, Gtk.DialogFlags.MODAL, Gtk.MessageType.WARNING, Gtk.ButtonsType.YES_NO,
+								  "Current Canvas is not Saved, Continue Exit?")
+			m.set_title('Warning!')
+			response = m.run()
+			m.destroy()
+			if response == Gtk.ResponseType.NO:
+				return
+			else:
+				del(self.prefs)
+				self.destroy()
+
