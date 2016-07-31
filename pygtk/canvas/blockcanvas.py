@@ -71,7 +71,7 @@ class BlockCanvas(Canvas):
 		"""
 
 		# FIXME it should be possible to perform this function at an
-		# application layer, without using routines from Gaphas...
+		# application layer, without using routines from Gaphas
 			
 		string = '''
 (* automatically generated model*)

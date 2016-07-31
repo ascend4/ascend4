@@ -169,6 +169,7 @@ class mainWindow(Gtk.Window):
 
 		self.connect("destroy", Gtk.main_quit)
 		#self.connect("destroy", self.quit_confirm)
+		#check this to define the function of close button on the main window
 
 		windowicon = Gtk.Image()
 		windowicon.set_from_file(os.path.join('..','glade','ascend.svg'))
@@ -1018,7 +1019,6 @@ class mainWindow(Gtk.Window):
 			m.destroy()
 			if response == Gtk.ResponseType.NO:
 				return
-			else:
-				del(self.prefs)
-				self.destroy()
+		del(self.prefs)
+		self.destroy()
 

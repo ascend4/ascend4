@@ -264,6 +264,7 @@ class UndoManager(object):
 
         self.app.status.push(0,"Undid Previous Action")
         '''
+        # redo have been implemented, but undo haven't yet
         if self._current_transaction:
             #print "type of current_transaction",  type(self._current_transaction)
             #print "current_transaction = ", self._current_transaction
@@ -276,12 +277,7 @@ class UndoManager(object):
         transaction = self._undo_stack.pop()
         undo_stack = list(self._undo_stack)
         redo_stack = list(self._redo_stack)
-        #if transaction != []:
         redo_stack.append(transaction)
-
-        #print "1: undo_stack = ", self._undo_stack
-        #print "2: redo_stack = ", self._redo_stack
-        #self._undo_stack = []
 
         try:
             #print transaction
@@ -292,20 +288,14 @@ class UndoManager(object):
         finally:
             self._redo_stack = redo_stack
             self._undo_stack = undo_stack
-            #print "3: undo_stack = ", self._undo_stack
-            #print "4: redo_stack = ", self._redo_stack
-
 
         while len(self._redo_stack) > self._stack_depth:
             del self._redo_stack[0]
 
-
         self.app.status.push(0, "Undid Previous Action")
 
     def redo(self):
-        #if self._current_transaction:
-        #    self.commit_transaction()
-
+        #TODO: redo haven't been fully implemented
         if len(self._redo_stack) == 0:
             self.app.status.push(0,"Redo Unavailable")
             return

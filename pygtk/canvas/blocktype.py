@@ -48,7 +48,7 @@ class BlockType():
 		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("icon"))
 		if nn:
 			n = nn[0].getText()
-			if os.path.exists(n):
+			if os.path.exists(os.path.join('.temp',n)):
 				self.iconfile = n
 
 		self.name = None
@@ -106,7 +106,7 @@ class BlockType():
 		for n in nn:
 			if n:
 				t = n.getText()
-				self.arrays.append([n.getText(),self.type.findMember(n.getText())])
+				self.arrays.append([t,self.type.findMember(t)])
 		#print self.arrays
 
 	def get_icon(self, width, height):
@@ -119,11 +119,13 @@ class BlockType():
 			f = "defaultblock.svg"
 		return GdkPixbuf.Pixbuf.new_from_file_at_size(str(f),width,height)
 
+
 	def create_icon(self,width,height):
 		properties = self.gr
 		if len(properties) == 0:
 			return None
-		fo = file("%s.svg"%self.name,'w')
+		#icon svg files are saved in .temp directory
+		fo = file(".temp/%s.svg"%self.name,'w')
 		## Prepare a destination surface -> out to an SVG file!
 		surface = cairo.SVGSurface (fo,width,height)
 		c = cairo.Context (surface)
