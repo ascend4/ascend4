@@ -1,10 +1,10 @@
 import gi
-
 gi.require_version('Gtk', '3.0')
 from gi.repository import GdkPixbuf
 import ascpy
 import os.path
 import cairo
+
 
 class BlockType():
 	"""
@@ -30,36 +30,36 @@ class BlockType():
 		# its type definition, for use in unpickling.
 		self.sourcefile = None
 
-		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("inline"))
+		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("inline"))
 
 		self.inputs = []
 		self.outputs = []
 		self.params = []
 		for n in nn:
 			t = n.getText()
-			if t[0:min(len(t),3)]=="in:":
-				self.inputs += [[n.getId(),self.type.findMember(n.getId()),str(t)]]
-			elif t[0:min(len(t),4)]=="out:":
-				self.outputs += [[n.getId(),self.type.findMember(n.getId()),str(t)]]
-			elif t[0:min(len(t),6)]=="param:":
-				self.params += [[n.getId(),self.type.findMember(n.getId()),str(t)]]
+			if t[0:min(len(t),3)] == "in:":
+				self.inputs += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
+			elif t[0:min(len(t),4)] == "out:":
+				self.outputs += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
+			elif t[0:min(len(t),6)] == "param:":
+				self.params += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
 
 		self.iconfile = None
-		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("icon"))
+		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("icon"))
 		if nn:
 			n = nn[0].getText()
-			if os.path.exists(os.path.join('.temp',n)):
+			#if os.path.exists(os.path.join('.temp',n)):
+			if os.path.exists(os.path.join('/~/.cache/ascend', n)):
 				self.iconfile = n
 
 		self.name = None
-		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("block"))
+		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("block"))
 		if nn:
 			self.name = nn[0].getText()
 
-
 		#fetching the graphic string from model file, string manipulating it and storing it in
 		#list of list
-		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("graphic"))
+		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("graphic"))
 		if nn:
 			t = nn[0].getText().split("\n")
 			for n in t:
@@ -76,7 +76,7 @@ class BlockType():
 
 		self.iconfile = self.create_icon(48,48)
 
-		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("port_in"))
+		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("port_in"))
 		if nn:
 			n = nn[0].getText().split(" ")
 			for m in n:
@@ -89,7 +89,7 @@ class BlockType():
 					xy.append(loc[1])
 					self.port_in[str(tpp[0])] = xy
 
-		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("port_out"))
+		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("port_out"))
 		if nn:
 			n = nn[0].getText().split(" ")
 			for m in n:
@@ -102,7 +102,7 @@ class BlockType():
 					xy.append(loc[1])
 					self.port_out[str(tpp[0])] = xy
 
-		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("array"))
+		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("array"))
 		for n in nn:
 			if n:
 				t = n.getText()
@@ -117,22 +117,25 @@ class BlockType():
 		f = self.iconfile
 		if self.iconfile is None:
 			f = "defaultblock.svg"
-		return GdkPixbuf.Pixbuf.new_from_file_at_size(str(f),width,height)
+		return GdkPixbuf.Pixbuf.new_from_file_at_size(str(f), width, height)
 
-
-	def create_icon(self,width,height):
+	def create_icon(self, width, height):
 		properties = self.gr
 		if len(properties) == 0:
 			return None
-		#icon svg files are saved in .temp directory
-		fo = file(".temp/%s.svg"%self.name,'w')
+		# icon svg files are saved in .temp directory
+		d = os.path.expanduser("~/.cache/ascend")
+		if not os.path.exists(d):
+			os.makedirs(d)
+		#fo = file(".temp/%s.svg"%self.name,'w')
+		fo = file(os.path.join(d,"%s.svg" % self.name), 'w')
 		## Prepare a destination surface -> out to an SVG file!
-		surface = cairo.SVGSurface (fo,width,height)
-		c = cairo.Context (surface)
+		surface = cairo.SVGSurface(fo, width, height)
+		c = cairo.Context(surface)
 		for m in properties:
-			c.move_to(float(m[0][0])*width*0.1,float(m[0][1])*height*0.1)
+			c.move_to(float(m[0][0])*width*0.1, float(m[0][1])*height*0.1)
 			for mm in m:
-				c.line_to(float(mm[0])*width*0.1,float(mm[1])*height*0.1)
+				c.line_to(float(mm[0])*width*0.1, float(mm[1])*height*0.1)
 		c.stroke()
 		surface.finish()
 		return fo.name
@@ -143,11 +146,11 @@ class BlockType():
 		state['notesdb'] = None
 		state['inputs'] = []
 		state['outputs'] = []
-		state['params'] =  []
+		state['params'] = []
 		#state['inputs'] = [[str(x) for x in self.inputs[i]] for i in range(len(self.inputs))]
 		#state['outputs'] = [[str(x) for x in self.outputs[i]] for i in range(len(self.outputs))]
 		#state['params'] =  [[str(x) for x in self.params[i]] for i in range(len(self.params))]
-		return(state)
+		return (state)
 
 	def __setstate__(self, state):
 		self.__dict__ = state
@@ -162,12 +165,12 @@ class BlockType():
 		self.params = []
 		for n in nn:
 			t = n.getText()
-			if t[0:min(len(t),3)]=="in:":
-				self.inputs += [[n.getId(),self.type.findMember(n.getId()),str(t)]]
-			elif t[0:min(len(t),4)]=="out:":
-				self.outputs += [[n.getId(),self.type.findMember(n.getId()),str(t)]]
-			elif t[0:min(len(t),6)]=="param:":
-				self.params += [[n.getId(),self.type.findMember(n.getId()),str(t)]]
+			if t[0:min(len(t),3)] == "in:":
+				self.inputs += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
+			elif t[0:min(len(t),4)] == "out:":
+				self.outputs += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
+			elif t[0:min(len(t),6)] == "param:":
+				self.params += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
 
 		print "Reattached type '%s', with %d inputs, %d outputs" % (self.type.getName(), len(self.inputs), len(self.outputs))
 

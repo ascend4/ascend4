@@ -4,6 +4,7 @@ PORT_IN = 0
 PORT_OUT = 1
 PORT_INOUT = 11
 
+
 class BlockInstance:
 	"""
 	Application-layer representation of an instance of a Block on the Canvas.
@@ -15,7 +16,7 @@ class BlockInstance:
 	# FIXME still need some way of setting *parameters* associated with a block.
 
 	def __init__(self,blocktype,name=None):
-		self.blocktype = blocktype;
+		self.blocktype = blocktype
 		n = str(blocktype.type.getName())
 		if not blocknameindex.has_key(n):
 			blocknameindex[n] = 0
@@ -48,9 +49,9 @@ class BlockInstance:
 		return "%s%s" % (n, blocknameindex[n])
 
 	def __str__(self):
-		return "\t%s IS_A %s;\n" % (self.name,self.blocktype.type.getName())
+		return "\t%s IS_A %s;\n" % (self.name, self.blocktype.type.getName())
 
-	def reattach_ascend(self,ascwrap,notesdb):
+	def reattach_ascend(self, ascwrap, notesdb):
 		if type(self.blocktype.type) == str:
 			self.blocktype.reattach_ascend(ascwrap, notesdb)
 
@@ -61,13 +62,13 @@ class BlockInstance:
 			self.params[param].type = ascwrap.findType(self.params[param].type)
 
 	def __getstate__(self):
-		#Return state values to pickle without  blockinstance.instance
+		# Return state values to pickle without  blockinstance.instance
 		state = self.__dict__.copy()
 		del state['instance']
 		return(state)
 
 	def __setstate__(self, state):
-		#Restore state values from pickle
+		# Restore state values from pickle
 		self.__dict__ = state
 
 
@@ -78,7 +79,7 @@ class PortInstance:
 	the variable represented by the Port, but no type information, as that is
 	currently difficult to extract from the ASCEND API.
 	"""
-	def __init__(self,blockinstance,name, type, io):
+	def __init__(self, blockinstance, name, type, io):
 		self.blockinstance = blockinstance
 		self.name = name
 		self.type = type
@@ -99,7 +100,7 @@ class ParamInstance:
 	we have no information about the type of the parameter (its units etc)
 	because that data is still difficult to extract from the ASCEND API.
 	"""
-	def __init__(self,blockinstance,name,type):
+	def __init__(self, blockinstance, name, type):
 		self.blockinstance = blockinstance
 		self.name = name
 		self.type = type
@@ -141,21 +142,20 @@ class ParamInstance:
 
 		temp = desc.split(":",2)[1].strip().split("=")
 
-
-		if(len(temp)==1):
+		if len(temp) == 1:
 			return None	 # for no value
 
 		temp2 = temp[1].split("[")
 
 		# for free state
 		# print len(temp2)
-		if(len(temp2)>1):
+		if len(temp2) > 1:
 			self.fix = False
 		else:
 			self.fix = True
 
 		#print self.fix
-		if(self.fix):
+		if self.fix:
 			return temp[1].strip().split("{")[0].strip() + temp[1].strip().split("{")[1].strip().split("}")[0].strip()# for fixed state
 		else:
 			return temp2[1].split("]")[0].strip()   # for free state
@@ -165,23 +165,22 @@ class ParamInstance:
 		This will return initial state of the parameter i.e. FIX or FREE
 		'''
 		self.get_initial_value()
-		if (self.fix):
+		if self.fix:
 			return True  # for fix
 		else:
-			return False	# for free
-
+			return False  # for free
 
 	def getValue(self):
 		if self.value:
 			return (str(self.value))
 		else:
-			return(' '+str(self.units))
+			return (' ' + str(self.units))
 
-	def setValue(self,conv,units):
+	def setValue(self, conv, units):
 		if self.value:
-			self.value=self.value*conv
-			self.units=units
-			return(str(self.value)+' '+str(self.units))
+			self.value = self.value * conv
+			self.units = units
+			return (str(self.value)+' '+str(self.units))
 		else:
 			self.units=units
 			return(' '+str(self.units))
@@ -189,13 +188,14 @@ class ParamInstance:
 	def __getstate__(self):
 		state = self.__dict__.copy()
 		state['type'] = str(self.type)
-		return(state)
+		return (state)
 
 	def __setstate__(self, state):
 		self.__dict__ = state
 
+
 class LineInstance:
-	def __init__(self,fromport=None,toport=None):
+	def __init__(self, fromport=None, toport=None):
 		self.fromport = fromport
 		self.toport = toport
 

@@ -15,17 +15,17 @@ os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))
 
 DEFAULT_LIBRARY = 'basic_electronics_model.a4c'
 
-#Remove this sometime
-DEFAULT_CANVAS_MODEL_LIBRARY = os.path.join('..','..','models','test','canvas')
+# Remove this sometime
+DEFAULT_CANVAS_MODEL_LIBRARY = os.path.join('..', '..', 'models', 'test', 'canvas')
 
 '''Set the required paths'''
 try:
 	os.environ['ASCENDLIBRARY']
 	os.environ['LD_LIBRARY_PATH']
 except KeyError:
-	os.environ['ASCENDLIBRARY'] = os.path.join('..','..','models')
-	os.environ['LD_LIBRARY_PATH'] = os.path.join('..','..')
-os.environ['ASCENDSOLVERS'] = os.path.join('..','..','solvers','qrslv')
+	os.environ['ASCENDLIBRARY'] = os.path.join('..', '..', 'models')
+	os.environ['LD_LIBRARY_PATH'] = os.path.join('..', '..')
+os.environ['ASCENDSOLVERS'] = os.path.join('..', '..', 'solvers', 'qrslv')
 
 sys.path.append("..")
 sys.path.append("../../ascxx")
@@ -34,17 +34,18 @@ if platform.system() == "Windows":
 	import _winreg as wreg
 
 	k = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, "SOFTWARE\ASCEND")
-	INSTALL_LIB,t = wreg.QueryValueEx(k,"INSTALL_LIB")
-	INSTALL_SOLVERS,t = wreg.QueryValueEx(k,"INSTALL_SOLVERS")
-	INSTALL_MODELS,t = wreg.QueryValueEx(k,"INSTALL_MODELS")
+	INSTALL_LIB, t = wreg.QueryValueEx(k, "INSTALL_LIB")
+	INSTALL_SOLVERS, t = wreg.QueryValueEx(k, "INSTALL_SOLVERS")
+	INSTALL_MODELS, t = wreg.QueryValueEx(k, "INSTALL_MODELS")
 	os.environ['PATH'] = os.environ['PATH'] + INSTALL_LIB
 	os.environ['ASCENDLIBRARY'] = INSTALL_MODELS
 	os.environ['ASCENDSOLVERS'] = INSTALL_SOLVERS
-	DEFAULT_CANVAS_MODEL_LIBRARY = os.path.join(INSTALL_MODELS,'test','canvas')
-	
+	DEFAULT_CANVAS_MODEL_LIBRARY = os.path.join(INSTALL_MODELS, 'test', 'canvas')
+
+
 class Application():
 	
-	def __init__(self,options):
+	def __init__(self, options):
 		from asclibrary import ascPy
 		from blocklist import mainWindow
 		self.ascwrap = ascPy()
@@ -64,8 +65,8 @@ class Application():
 if __name__ == '__main__':
 	from optparse import OptionParser
 	parser = OptionParser()
-	parser.add_option('-f','--file',dest='file')
-	parser.add_option('-l','--library',dest='library')
-	(options,args) = parser.parse_args()
+	parser.add_option('-f', '--file', dest='file')
+	parser.add_option('-l', '--library', dest='library')
+	(options, args) = parser.parse_args()
 	_Application = Application(options)
 	_Application.run()

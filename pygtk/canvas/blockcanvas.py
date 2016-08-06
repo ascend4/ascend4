@@ -29,9 +29,9 @@ class BlockCanvas(Canvas):
 		# request solving of external constraints associated with dirty items
 		request_resolve = self._solver.request_resolve
 		for item in items:
-			if hasattr(item,'ports'):
+			if hasattr(item, 'ports'):
 				for p in item._ports:
-					if hasattr(p,"point"):
+					if hasattr(p, "point"):
 						request_resolve(p.point.x)
 						request_resolve(p.point.y)
 
@@ -102,32 +102,32 @@ END canvasmodel;
 		items = self.get_all_items()
 	
 		def parse(item):
-			if type(item)==DefaultBlockItem or type(item)==GraphicalBlockItem:
+			if type(item) == DefaultBlockItem or type(item) == GraphicalBlockItem:
 				bi = item.blockinstance
-				replacement_fields['is_a']+=str(bi)
+				replacement_fields['is_a'] += str(bi)
 				specify = filter(lambda param:bi.params[param].value != None,bi.params)
 				fix = filter(lambda param:bi.params[param].fix == True,bi.params)
 				specify = filter(lambda x:not (x in fix),specify)
 				specify = map(lambda param:'\t{0}.{1}:={2};\n'.
-				              format(bi.name,param,bi.params[param].value),specify)
+							  format(bi.name,param,bi.params[param].value),specify)
 				fix = map(lambda param:'\tFIX {0}.{1};\n\t{0}.{1}:={2}{4}{3}{5};\n'.
-				          format(bi.name,param,bi.params[param].value,
-				                 bi.params[param].units,'{','}'),fix)
+						  format(bi.name,param,bi.params[param].value,
+								 bi.params[param].units,'{','}'),fix)
 				try:
-					replacement_fields['parameter_code']+=\
-					                  reduce(lambda x,y:x+y,specify)
+					replacement_fields['parameter_code'] += \
+					                  reduce(lambda x,y: x+y,specify)
 				except TypeError:
 					pass
 				try:
-					replacement_fields['parameter_code']+=\
+					replacement_fields['parameter_code'] += \
 					                  reduce(lambda x,y:x+y,fix)
 				except TypeError:
 					pass
 
-			if type(item)==BlockLine:
-				replacement_fields['are_the_same']+=str(item.lineinstance)
+			if type(item) == BlockLine:
+				replacement_fields['are_the_same'] += str(item.lineinstance)
 
-		map(parse,items)
+		map(parse, items)
 		
 		replacement_fields['canvas_user_code'] = self.user_code
 		return string.format(**replacement_fields)

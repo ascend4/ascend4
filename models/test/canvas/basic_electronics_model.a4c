@@ -1,8 +1,11 @@
 REQUIRE "atoms.a4l";
 
 MODEL electron_stream;
-	V IS_A voltage;
-	I IS_A current;
+	NOTES
+		"type" SELF {connector}
+	END NOTES;
+	V "connect: potential" IS_A voltage;
+	I "connect: flow" IS_A current;
 END electron_stream;
 
 MODEL equipment;

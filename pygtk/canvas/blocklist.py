@@ -11,6 +11,7 @@ import glob
 import cairo
 import ascpy
 
+
 class BlockIconView(Gtk.IconView):
 	"""
 	 IconView containing the palette of BlockTypes available for use in the
@@ -20,7 +21,7 @@ class BlockIconView(Gtk.IconView):
 	 It should be possible drag icons from the palette into the canvas, but
 	 that is not yet implemented.
 	 """
-	def __init__(self,blocks=None,app=None):
+	def __init__(self, blocks=None, app=None):
 		self.model = Gtk.ListStore(str, GdkPixbuf.Pixbuf)
 		self.app = app
 		self.otank = {}
@@ -46,13 +47,13 @@ class BlockIconView(Gtk.IconView):
 	def refresh_view():
 		pass
 
-	def selection_changed(self,iconview):
+	def selection_changed(self, iconview):
 		s = self.get_selected_items()
-		if len(s)==1:
+		if len(s) == 1:
 			b = self.otank[s[0].to_string()]
 			self.app.set_placement_tool(b)
 
-	def item_activated(self,iconview, path):
+	def item_activated(self, iconview, path):
 		self.app.set_placement_tool(self.otank[path])
 
 
@@ -62,7 +63,7 @@ from gaphas.tool import ItemTool, RubberbandTool, PanTool, ZoomTool
 from gaphas.painter import ItemPainter
 from blockconnecttool import BlockConnectTool
 from blockline import BlockLine
-from blockitem import DefaultBlockItem, GraphicalBlockItem, BlockItem
+from blockitem import DefaultBlockItem, GraphicalBlockItem
 from contextmenutool import ContextMenuTool
 from connectortool import ConnectorTool
 from blockcanvas import BlockCanvas
@@ -80,6 +81,7 @@ import obrowser
 import help
 from preferences import Preferences
 
+
 def BlockToolChain():
 	"""
 	 ToolChain for working with BlockCanvas, including several custom Tools.
@@ -87,10 +89,10 @@ def BlockToolChain():
 	chain = ToolChain()
 	chain.append(UndoMonitorTool())
 	chain.append(HoverTool())
-	chain.append(BlockConnectTool()) # for connect/disconnect of lines
-	chain.append(ConnectorTool()) # for creating new lines by drag from Port
-	chain.append(ContextMenuTool()) # right-click
-	#	chain.append(LineSegmentTool()) # for moving line 'elbows'
+	chain.append(BlockConnectTool())  # for connect/disconnect of lines
+	chain.append(ConnectorTool())  # for creating new lines by drag from Port
+	chain.append(ContextMenuTool())  # right-click
+	#chain.append(LineSegmentTool())  # for moving line 'elbows'
 	chain.append(ItemTool())
 	chain.append(PanTool())
 	chain.append(ZoomTool())
@@ -143,7 +145,7 @@ class mainWindow(Gtk.Window):
 	</ui>
 	'''
 
-	def __init__(self,library,options=None):
+	def __init__(self, library, options=None):
 		"""
 		  Initialise the application -- create all the widgets, and populate the icon palette.
 		  TODO: separate the icon palette into a separate method.
@@ -153,7 +155,7 @@ class mainWindow(Gtk.Window):
 		self.errorblocks = []
 		self.status = Gtk.Statusbar()
 		self.temp = []
-		self.act = 1 #to be used for storing canvas zoom in/out related data.
+		self.act = 1 # to be used for storing canvas zoom in/out related data.
 		# the Gaphas canvas
 		canvas = BlockCanvas()
 
@@ -165,14 +167,14 @@ class mainWindow(Gtk.Window):
 		self.iconerror = self.render_icon(Gtk.STOCK_DIALOG_ERROR,Gtk.IconSize.MENU)
 
 		self.set_title("ASCEND Canvas Modeller")
-		self.set_default_size(800,800)
+		self.set_default_size(800, 800)
 
-		self.connect("destroy", Gtk.main_quit)
-		#self.connect("destroy", self.quit_confirm)
-		#check this to define the function of close button on the main window
+		#self.connect("destroy", Gtk.main_quit)
+		self.connect("delete-event", self.quit_confirm)
+		# check this to define the function of close button on the main window
 
 		windowicon = Gtk.Image()
-		windowicon.set_from_file(os.path.join('..','glade','ascend.svg'))
+		windowicon.set_from_file(os.path.join('..', 'glade', 'ascend.svg'))
 		self.set_icon(windowicon.get_pixbuf())
 
 		vbox = Gtk.VBox()
@@ -219,29 +221,29 @@ class mainWindow(Gtk.Window):
 
 		actiongroup.add_actions(actions)
 
-		ui_manager.insert_action_group(actiongroup,0)
+		ui_manager.insert_action_group(actiongroup, 0)
 		ui_manager.add_ui_from_string(self.menu_xml)
 
-		#Creating Menu Bar
+		# Creating Menu Bar
 		menubar = ui_manager.get_widget('/MenuBar')
-		vbox.pack_start(menubar,False,False,0)
+		vbox.pack_start(menubar, False, False, 0)
 
-		#Creating Tool Bar
+		# Creating Tool Bar
 		'''The Toolbar Definations start here'''
 
 		tb = Gtk.Toolbar()
 		tb.set_style(Gtk.ToolbarStyle.BOTH)
-		#Load Button
+		# Load Button
 		loadbutton = Gtk.ToolButton(Gtk.STOCK_OPEN)
 		loadbutton.set_label("Load")
-		loadbutton.connect("clicked",self.fileopen)
-		tb.insert(loadbutton,0)
+		loadbutton.connect("clicked", self.fileopen)
+		tb.insert(loadbutton, 0)
 
-		#Save Button
+		# Save Button
 		savebutton = Gtk.ToolButton(Gtk.STOCK_SAVE)
 		savebutton.set_label("Save")
-		savebutton.connect("clicked",self.save_canvas)
-		tb.insert(savebutton,1)
+		savebutton.connect("clicked", self.save_canvas)
+		tb.insert(savebutton, 1)
 
 		# Undo Button
 		undob = Gtk.ToolButton(Gtk.STOCK_UNDO)
@@ -255,29 +257,29 @@ class mainWindow(Gtk.Window):
 		redob.connect("clicked", self.redo_canvas)
 		tb.insert(redob, 3)
 
-		#Debug Button
+		# Debug Button
 		debugbutton = Gtk.ToolButton(Gtk.STOCK_PROPERTIES)
 		debugbutton.set_label("Debug")
-		debugbutton.connect("clicked",self.debug_canvas)
-		tb.insert(debugbutton,4)
+		debugbutton.connect("clicked", self.debug_canvas)
+		tb.insert(debugbutton, 4)
 
-		#Preview Button
+		# Preview Button
 		previewb = Gtk.ToolButton(Gtk.STOCK_PRINT_PREVIEW)
 		previewb.set_label("Preview")
-		previewb.connect("clicked",self.preview_canvas)
-		tb.insert(previewb,5)
+		previewb.connect("clicked", self.preview_canvas)
+		tb.insert(previewb, 5)
 
-		#Export Button
+		# Export Button
 		exportbutton = Gtk.ToolButton(Gtk.STOCK_CONVERT)
 		exportbutton.set_label("Export SVG")
-		exportbutton.connect("clicked",self.export_svg_as)
-		tb.insert(exportbutton,6)
+		exportbutton.connect("clicked", self.export_svg_as)
+		tb.insert(exportbutton, 6)
 
-		#Run Button
+		# Run Button
 		runb = Gtk.ToolButton(Gtk.STOCK_EXECUTE)
 		runb.set_label("Run")
-		runb.connect("clicked",self.run_canvas)
-		tb.insert(runb,7)
+		runb.connect("clicked", self.run_canvas)
+		tb.insert(runb, 7)
 
 		##Custom Entry
 		#m_entry = Gtk.ToolButton(Gtk.STOCK_SAVE_AS)
@@ -285,7 +287,7 @@ class mainWindow(Gtk.Window):
 		#m_entry.connect("clicked",self.custommethod)
 		#tb.insert(m_entry,5)
 
-		vbox.pack_start(tb, False, False,0)
+		vbox.pack_start(tb, False, False, 0)
 
 		# hbox occupies top part of vbox, with icons on left & canvas on right.
 		paned = Gtk.HPaned()
@@ -316,9 +318,9 @@ class mainWindow(Gtk.Window):
 		self.scroll.set_border_width(2)
 		self.scroll.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
 
-		self.scroll.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
+		self.scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
-		self.blockiconview = BlockIconView(blocks=self.ascwrap.canvas_blocks,app=self)
+		self.blockiconview = BlockIconView(blocks=self.ascwrap.canvas_blocks, app=self)
 		self.scroll.set_size_request(250, 300)
 		self.scroll.add(self.blockiconview)
 		self.reporter = self.ascwrap.reporter
@@ -330,18 +332,18 @@ class mainWindow(Gtk.Window):
 		vpane.pack1(vbox, False, False)
 		lower_vbox = Gtk.VBox()
 
-		self.ET = errorreporter.ErrorReporter( self.reporter,self.iconok,self.iconinfo,self.iconwarning,self.iconerror)
+		self.ET = errorreporter.ErrorReporter(self.reporter, self.iconok, self.iconinfo, self.iconwarning, self.iconerror)
 		self.notebook = Gtk.Notebook()
 		self.notebook.set_tab_pos(Gtk.PositionType.TOP)
 		label = Gtk.Label(label='Error / Status Reporter Console')
 		scrolledwindow = Gtk.ScrolledWindow()
-		scrolledwindow.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
+		scrolledwindow.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 		scrolledwindow.add(self.ET.errorview)
 		self.notebook.append_page(scrolledwindow, label)
-		self.notebook.set_size_request(700,100)
-		lower_vbox.pack_start(self.notebook,True, True, 0)
+		self.notebook.set_size_request(700, 100)
+		lower_vbox.pack_start(self.notebook, True, True, 0)
 		lower_vbox.pack_start(self.status, False, False, 0)
-		vpane.pack2(lower_vbox,False,False)
+		vpane.pack2(lower_vbox, False, False)
 
 		self.undo_manager = undo.UndoManager(self)
 		self.undo_manager.start()
@@ -360,7 +362,7 @@ class mainWindow(Gtk.Window):
 		def my_block_factory():
 			def wrapper():
 				b = BlockInstance(blocktype)
-				if len(graphic)==0:
+				if len(graphic) == 0:
 					bi = DefaultBlockItem(b)
 				else:
 					bi = GraphicalBlockItem(b)
@@ -371,7 +373,7 @@ class mainWindow(Gtk.Window):
 		self.view.tool.grab(PlacementTool(self.view,my_block_factory(), HandleTool(), 2))
 		self.status.push(0,"Selected '%s'..." % blocktype.type.getName())
 
-	def set_connector_tool(self,foobar):
+	def set_connector_tool(self, foobar):
 		"""
 		  Prepare the canvas for drawing a connecting line (note that one can
 		  alternatively just drag from a port to another port).
@@ -379,18 +381,18 @@ class mainWindow(Gtk.Window):
 
 		def my_line_factory():
 			def wrapper():
-				l =  BlockLine()
+				l = BlockLine()
 				self.view.canvas.add(l)
 				return l
 			return wrapper
-		self.view.tool.grab(PlacementTool(self.view,my_line_factory(), HandleTool(), 1))
+		self.view.tool.grab(PlacementTool(self.view, my_line_factory(), HandleTool(), 1))
 
 	@undo.block_observed
-	def delblock(self, widget = None):
+	def delblock(self, widget=None):
 		'''Both individual and multiple selected items are deleted by the logic of following routine'''
 
 		if self.view.selected_items:
-			while(len(self.view.selected_items)!=0):
+			while len(self.view.selected_items) != 0:
 				self.view.canvas.remove(self.view._selected_items.pop())
 				self.status.push(0,"Item deleted.")
 				self.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#FFF'))
@@ -400,8 +402,6 @@ class mainWindow(Gtk.Window):
 			self.status.push(0,"Item deleted.")
 			self.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#FFF'))'''
 
-
-
 	@undo.block_observed
 	def new(self, widget):
 		for item in self.view.canvas.get_all_items():
@@ -410,17 +410,17 @@ class mainWindow(Gtk.Window):
 		self.view.canvas.filestate = 0
 		self.view.canvas.filename = None
 		self.view.canvas.canvasmodelstate = 'Unsolved'
-		self.status.push(0,"Canvasmodel state : %s"% self.view.canvas.canvasmodelstate)
+		self.status.push(0, "Canvasmodel state : %s" % self.view.canvas.canvasmodelstate)
 		self.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#FFF'))
 
-	def debug_canvas(self,widget):
+	def debug_canvas(self, widget):
 		"""
 		  Display an 'object browser' to allow inspection of the objects
 		  in the canvas.
-		  """
+		"""
 
-		b = obrowser.Browser("canvas",self.view.canvas, False)
-		self.status.push(0,"Canvasmodel state : %s"% self.view.canvas.canvasmodelstate)
+		b = obrowser.Browser("canvas", self.view.canvas, False)
+		self.status.push(0, "Canvasmodel state : %s" % self.view.canvas.canvasmodelstate)
 
 	def save_canvas(self,widget):
 		"""
@@ -430,15 +430,15 @@ class mainWindow(Gtk.Window):
 			self.filesave(widget)
 			return
 		else:
-			f = file(self.view.canvas.filename,"w")
+			f = file(self.view.canvas.filename, "w")
 		try:
-			pickle.dump(self.view.canvas,f)
-			self.status.push(0,"Canvasmodel saved...")
+			pickle.dump(self.view.canvas, f)
+			self.status.push(0, "Canvasmodel saved...")
 		except Exception,e:
 			print "ERROR:",str(e)
 			self.status.push(0,"Canvasmodel could not be saved : " + str(e))
-			b = obrowser.Browser("canvas",self.view.canvas)
-			d = Gtk.Dialog("Error",self,Gtk.DialogFlags.DESTROY_WITH_PARENT,(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+			b = obrowser.Browser("canvas", self.view.canvas)
+			d = Gtk.Dialog("Error", self, Gtk.DialogFlags.DESTROY_WITH_PARENT, (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
 			d.vbox.add(Gtk.Label(label=str(e)))
 			d.show_all()
 			d.run()
@@ -446,59 +446,57 @@ class mainWindow(Gtk.Window):
 		finally:
 			f.close()
 
-	def load_canvas(self,widget):
+	def load_canvas(self, widget):
 		"""
 		  Restore a saved canvas in 'pickle' format. Currently not in use as loading now handled by self.fileopen().
-		  """
-		f = file("./test.a4b","r")
+		"""
+		f = file("./test.a4b", "r")
 		try:
 			self.view.canvas = pickle.load(f)
 			if self.view.canvas.model_library is not None:
 				print "Loading Library...."
-				self.loadlib(self, self.view.canvas.model_library,0)
+				self.loadlib(self, self.view.canvas.model_library, 0)
 			self.view.canvas.reattach_ascend(self.ascwrap.library,self.ascwrap.annodb)
 			self.view.canvas.update_now()
-			self.status.push(0,"Canvasmodel sucessfully loaded...")
+			self.status.push(0, "Canvasmodel sucessfully loaded...")
 		except Exception,e:
-			self.status.push(0,"Canvasmodel could not be loaded : " + str(e))
+			self.status.push(0, "Canvasmodel could not be loaded : " + str(e))
 			self.reporter.ReportError("Canvasmodel could not be loaded : " + str(e))
 			self.reporter.ReportNote(" Error occured while attempting to load the file")
 		finally:
 			f.close()
 		self.load_presaved_canvas(None)
-		self.status.push(0,"Canvasmodel state : %s"% self.view.canvas.canvasmodelstate)
+		self.status.push(0, "Canvasmodel state : %s" % self.view.canvas.canvasmodelstate)
 
-
-	def temp_canvas(self,widget):
+	def temp_canvas(self, widget):
 		"""
 		  NOTE: 	re-implementation needed
-		  """
+		"""
 		pass
 
-	def undo_canvas(self,widget):
+	def undo_canvas(self, widget):
 		"""
 		  Undo
 		  """
 		self.undo_manager.undo()
 
-	def redo_canvas(self,widget):
+	def redo_canvas(self, widget):
 		"""
 		  NOTE: 	re-implementation needed
 
 		  """
 		self.undo_manager.redo()
-	#pass
 
-	def preview_canvas(self,widget):
+	def preview_canvas(self, widget):
 		"""
 		  Output an ASCEND representation of the canvas on the commandline.
 		  Under development.
 		  """
-		self.status.push(0,"Canvasmodel state : %s"% self.view.canvas.canvasmodelstate)
+		self.status.push(0, "Canvasmodel state : %s" % self.view.canvas.canvasmodelstate)
 		#info.Info(self.view.parent.parent.parent.parent.parent,str(self.view.canvas),"Canvas Preview").run()
 		canvasproperties.CanvasProperties(self).run()
 
-	def export_svg_as(self,widget):
+	def export_svg_as(self, widget):
 
 		f = None
 		dialog = Gtk.FileChooserDialog("Export Canvas As...", self,
@@ -534,7 +532,7 @@ class mainWindow(Gtk.Window):
 
 			fn = name
 			w, h = svgview.bounding_box.width, svgview.bounding_box.height
-			surface = cairo.SVGSurface(fn , w, h)
+			surface = cairo.SVGSurface(fn, w, h)
 			cr = cairo.Context(surface)
 			svgview.matrix.translate(-svgview.bounding_box.x, -svgview.bounding_box.y)
 			svgview.paint(cr)
@@ -542,11 +540,10 @@ class mainWindow(Gtk.Window):
 			surface.flush()
 			surface.finish()
 			self.reporter.reportNote(" File ' %s ' saved successfully." % name )
-			self.status.push(0,"Wrote SVG file '%s'." % fn)
+			self.status.push(0, "Wrote SVG file '%s'." % fn)
 		dialog.destroy()
 
-
-	def export_svg(self,widget):
+	def export_svg(self, widget):
 		svgview = View(self.view.canvas)
 		svgview.painter = ItemPainter()
 
@@ -568,7 +565,7 @@ class mainWindow(Gtk.Window):
 		surface.flush()
 		surface.finish()
 
-		self.status.push(0,"Wrote SVG file '%s'." % fn)
+		self.status.push(0, "Wrote SVG file '%s'." % fn)
 
 		#def run_presaved_canvas(self,widget):
 		##TODO: Separate
@@ -577,9 +574,9 @@ class mainWindow(Gtk.Window):
 		#self.ascwrap.library.loadString(model,"canvasmodel")
 
 		T = self.ascwrap.library.findType("canvasmodel")
-		M = T.getSimulation('canvassim',True)
+		M = T.getSimulation('canvassim', True)
 		M.setSolver(ascpy.Solver("QRSlv"))
-		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
+		M.solve(ascpy.Solver("QRSlv"), ascpy.SolverReporter())
 
 	#for item in self.view.canvas.get_all_items():
 	#if hasattr(item, 'blockinstance'):
@@ -588,28 +585,28 @@ class mainWindow(Gtk.Window):
 	#if str(bi.name) == str(i.getName()):
 	#bi.instance = i
 
-	def load_presaved_canvas(self,widget):
+	def load_presaved_canvas(self, widget):
 		#TODO: Separate
 		print self.view.canvas.saved_data
 		try:
 			if self.view.canvas.saved_data is not None:
 				model = str(self.view.canvas)
-				self.ascwrap.library.loadString(model,"canvasmodel")
+				self.ascwrap.library.loadString(model, "canvasmodel")
 				T = self.ascwrap.library.findType("canvasmodel")
-				M = T.getSimulation("canvassim",True)
+				M = T.getSimulation("canvassim", True)
 
 				def assignval(sim_inst, name):
 					if sim_inst.isAtom():
 						try:
 							sim_inst.setRealValue(self.view.canvas.saved_data[name])
-						except Exception,e:
+						except Exception, e:
 							print e
 					elif sim_inst.isRelation():
 						pass
 					else:
 						for i in sim_inst.getChildren():
-							k = name+"."+str(i.getName())
-							assignval(i,k)
+							k = name + "." + str(i.getName())
+							assignval(i, k)
 
 				for i in M.getChildren()[0].getChildren():
 					assignval(i, str(i.getName()))
@@ -620,11 +617,11 @@ class mainWindow(Gtk.Window):
 						for i in M.getChildren()[0].getChildren():
 							if str(bi.name) == str(i.getName()):
 								bi.instance = i
-				self.status.push(0,"Canvasmodel state : %s"% self.view.canvas.canvasmodelstate)
+				self.status.push(0, "Canvasmodel state : %s" % self.view.canvas.canvasmodelstate)
 		except AttributeError:
-			self.status.push(0,"Canvasmodel state : Unsolved")
+			self.status.push(0, "Canvasmodel state : Unsolved")
 
-	def run_canvas(self,widget):
+	def run_canvas(self, widget):
 		#TODO: Separate
 		"""
 		  Exports canvas to ASCEND solver and attempts to solve it. Also provides realtime feedback.
@@ -635,20 +632,20 @@ class mainWindow(Gtk.Window):
 		self.view.canvas.saved_model = model
 		self.view.canvas.saved_data = {}
 
-		self.ascwrap.library.loadString(model,"canvasmodel")
+		self.ascwrap.library.loadString(model, "canvasmodel")
 		T = self.ascwrap.library.findType("canvasmodel")
 
 
-		self.M = T.getSimulation("canvassim",True)
+		self.M = T.getSimulation("canvassim", True)
 		self.M.setSolver(ascpy.Solver("QRSlv"))
 		self.reporter = ascpy.getReporter()
-		reporter = PopupSolverReporter(self,self.M.getNumVars())
+		reporter = PopupSolverReporter(self, self.M.getNumVars())
 
 		try:
 			self.M.build()
-		except RuntimeError,e:
+		except RuntimeError, e:
 			print "Couldn't build system: %s" % str(e)
-			self.status.push(0,"Couldn't build system: %s" % str(e));
+			self.status.push(0, "Couldn't build system: %s" % str(e));
 			return
 		#try:
 		#met=T.getMethod('on_load')
@@ -657,10 +654,10 @@ class mainWindow(Gtk.Window):
 		#print "Couldn't run on_load method: %s"% str(e)
 		#return
 
-		self.status.push(0,"Solving with 'QRSlv'. Please Wait...")
+		self.status.push(0, "Solving with 'QRSlv'. Please Wait...")
 
 		try:
-			self.M.solve(ascpy.Solver("QRSlv"),reporter)
+			self.M.solve(ascpy.Solver("QRSlv"), reporter)
 			self.reporterrorblock(self.M)
 		except RuntimeError:
 			self.reporterrorblock(self.M)
@@ -672,7 +669,7 @@ class mainWindow(Gtk.Window):
 					if str(bi.name) == str(i.getName()):
 						bi.instance = i
 
-		#Storing solved variables into a dictionary which will be pickled
+		# Storing solved variables into a dictionary which will be pickled
 		for i in self.M.getallVariables():
 			self.view.canvas.saved_data[str(i.getName())] = i.getValue()
 
@@ -716,21 +713,21 @@ class mainWindow(Gtk.Window):
 			self.load_canvas_file(result)
 		dialog.destroy()
 
-	def load_canvas_file(self,filename):
+	def load_canvas_file(self, filename):
 		#TODO: Separate
-		f = file(filename,"r")
+		f = file(filename, "r")
 		try:
 			self.view.canvas = pickle.load(f)
 			if self.view.canvas.model_library is not None:
 				self.loadlib(self, self.view.canvas.model_library)
-			self.view.canvas.reattach_ascend(self.ascwrap.library,self.ascwrap.annodb)
+			self.view.canvas.reattach_ascend(self.ascwrap.library, self.ascwrap.annodb)
 			self.view.canvas.update_now()
 			self.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#FFF'))
 			self.load_presaved_canvas(None)
 			self.reporter.reportSuccess("File %s successfully loaded." % filename)
-			self.status.push(0,"File %s Loaded." % filename)
+			self.status.push(0, "File %s Loaded." % filename)
 			self.view.canvas.filename = filename
-		except Exception,e:
+		except Exception, e:
 			self.reporter.reportError("Error occured while attempting to load the file: %s." % filename)
 			self.status.push(0, "Error occured when loading the file: %s." % filename)
 			print e
@@ -758,15 +755,15 @@ class mainWindow(Gtk.Window):
 			if f == None and f != name:
 				f = open(name, 'w')
 			try:
-				pickle.dump(self.view.canvas,f)
-				self.reporter.reportNote(" File ' %s ' saved successfully." % name )
-				self.status.push(0,"CanvasModel Saved.")
+				pickle.dump(self.view.canvas, f)
+				self.reporter.reportNote(" File ' %s ' saved successfully." % name)
+				self.status.push(0, "CanvasModel Saved.")
 				self.view.canvas.filestate = 1
 				self.view.canvas.filename = name
-			except Exception,e:
-				print "ERROR:",str(e)
-				b = obrowser.Browser("canvas",self.view.canvas)
-				d = Gtk.Dialog("Error",self,Gtk.DialogFlags.DESTROY_WITH_PARENT,(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+			except Exception, e:
+				print "ERROR:", str(e)
+				b = obrowser.Browser("canvas", self.view.canvas)
+				d = Gtk.Dialog("Error", self, Gtk.DialogFlags.DESTROY_WITH_PARENT, (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
 				d.vbox.add(Gtk.Label(label=str(e)))
 				d.show_all()
 				d.run()
@@ -779,28 +776,28 @@ class mainWindow(Gtk.Window):
 
 		uri = widget.get_filename()
 		if is_uri_read_only(uri):
-			if user_wants_to_replace_read_only_file (uri):
+			if user_wants_to_replace_read_only_file(uri):
 				return Gtk.FILE_CHOOSER_CONFIRMATION_ACCEPT_FILENAME
 			else:
 				return Gtk.FILE_CHOOSER_CONFIRMATION_SELECT_AGAIN
 		else:
 			return Gtk.FILE_CHOOSER_CONFIRMATION_CONFIRM
 
-	#Block properties
-	def bproperties(self, widget = None):
+	# Block properties
+	def bproperties(self, widget=None):
 		if self.view.focused_item:
 			blockproperties.BlockProperties(self, self.view.focused_item).run()
 		else:
-			m = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "No Block was selected! Please select a Block to view its properties.")
+			m = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE,
+								  "No Block was selected! Please select a Block to view its properties.")
 			m.run()
 			m.destroy()
 
-	#Block rotate
-	def brotate(self, widget = None):
+	# Block rotate
+	def brotate(self, widget=None):
 		#b = BlockInstance(blocktype)
 		#self.blockitem = BlockItem(b)
 		if self.view.focused_item:
-			#	try:
 			self.contextmenutool.blockrotate_clock(self, self.view.focused_item, None)
 		else:
 			m = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.ERROR,
@@ -814,7 +811,6 @@ class mainWindow(Gtk.Window):
 		# b = BlockInstance(blocktype)
 		# self.blockitem = BlockItem(b)
 		if self.view.focused_item:
-			#	try:
 			self.contextmenutool.blockflip(self, self.view.focused_item, None)
 		else:
 			m = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.ERROR,
@@ -836,14 +832,14 @@ class mainWindow(Gtk.Window):
 					if sim_inst.getStatus() == 3:
 						self.errorvars.append(name)
 
-				except Exception,e:
+				except Exception, e:
 					print e
 			elif sim_inst.isRelation():
 				pass
 			else:
 				for i in sim_inst.getChildren():
-					k = name+"."+str(i.getName())
-					checkifsolved(i,k)
+					k = name + "." + str(i.getName())
+					checkifsolved(i, k)
 
 		self.errorvars = []
 		self.errorblocks = []
@@ -860,11 +856,10 @@ class mainWindow(Gtk.Window):
 						pass
 					else:
 						self.errortext += '\n'
-						self.errortext += str(i.getName()) #+' --> ' + ' couldnot be solved'
+						self.errortext += str(i.getName())  # +' --> ' + ' could not be solved'
 						self.errorblocks.append(str(i.getName()))
 		print self.errorblocks
 		self.fill_blocks()
-
 
 	def fill_blocks(self):
 		cr = self.view.canvas._obtain_cairo_context()
@@ -893,9 +888,8 @@ class mainWindow(Gtk.Window):
 		else:
 			self.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#AFA'))
 
-	def load_library_dialog(self,widget):
-		#TODO: separate
-
+	def load_library_dialog(self, widget):
+		# TODO: separate
 		# Warning Dialog
 		if self.view.canvas.get_all_items():
 			m = Gtk.MessageDialog(self, Gtk.DialogFlags.MODAL, Gtk.MessageType.WARNING, Gtk.ButtonsType.OK_CANCEL,
@@ -932,9 +926,8 @@ class mainWindow(Gtk.Window):
 			self.loadlib(lib_name = os.path.basename(result))
 		dialog.destroy()
 
-
-	def loadlib(self, widget = None, lib_name = None):
-	#TODO: Separate
+	def loadlib(self, widget=None, lib_name=None):
+	# TODO: Separate
 	#if loadcondition == 1:
 	#if self.view.canvas.model_library == lib_name:
 	#m = Gtk.MessageDialog(self, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.WARNING, Gtk.ButtonsType.CLOSE, "The selected Library is already loaded. ")
@@ -947,7 +940,6 @@ class mainWindow(Gtk.Window):
 	#m.destroy()
 	#return
 	#print lib_path
-
 		try:
 			self.ascwrap.load_library(lib_name)
 
@@ -964,28 +956,26 @@ class mainWindow(Gtk.Window):
 			self.status.push(0, "Error occured when loading the library: %s." % lib_name)
 			print e
 
-
-	def get_libraries_from_folder(self,path=None):
-		'Returns a dictionary of library names with their paths'
+	def get_libraries_from_folder(self, path=None):
+		'''Returns a dictionary of library names with their paths'''
 		if path == None:
 			return
 		libs = {}
-		locs = glob.glob(os.path.join(path,'*.a4c'))
+		locs = glob.glob(os.path.join(path, '*.a4c'))
 		for loc in locs:
 			name = loc.strip(path)
 			libs[name] = loc
 		return libs
 
 	def zoom(self, widget):
-		zoom = {'ZoomIn':1.2,'ZoomOut':0.8,'BestFit':1.0}
+		zoom = {'ZoomIn':1.2, 'ZoomOut':0.8, 'BestFit':1.0}
 		x = zoom[widget.get_name()]
-		self.act = self.act*x
+		self.act = self.act * x
 		self.view.zoom(x)
-
 
 	def fullscrn(self, widget):
 		try:
-			if  self.flag == 1:
+			if self.flag == 1:
 				self.unfullscreen()
 				self.flag = 0
 			else:
@@ -994,7 +984,6 @@ class mainWindow(Gtk.Window):
 		except:
 			self.fullscreen()
 			self.flag = 1
-
 
 	def on_contents_click(self, widget):
 		_help = help.Help(url="http://ascendwiki.cheme.cmu.edu/Canvas-based_modeller_for_ASCEND ")
@@ -1008,9 +997,9 @@ class mainWindow(Gtk.Window):
 		_help = help.Help(url="http://bugs.ascend4.org/my_view_page.php")
 		_help.run()
 
-	def quit_confirm(self, widget):
+	def quit_confirm(self, widget, event=None):
+		# TODO: check whether current canvas has been saved or not.
 		# Warning Dialog
-		#TODO: check whether current canvas has been saved or not.
 		if self.view.canvas.get_all_items():
 			m = Gtk.MessageDialog(self, Gtk.DialogFlags.MODAL, Gtk.MessageType.WARNING, Gtk.ButtonsType.YES_NO,
 								  "Current Canvas is not Saved, Continue Exit?")
@@ -1018,7 +1007,7 @@ class mainWindow(Gtk.Window):
 			response = m.run()
 			m.destroy()
 			if response == Gtk.ResponseType.NO:
-				return
-		del(self.prefs)
+				return True
+		del self.prefs
 		self.destroy()
 
