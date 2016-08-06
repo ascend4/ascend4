@@ -7,14 +7,14 @@ from gi.repository import Pango
 
 class UnitsDialog:
 
-	def __init__(self,browser,displaymodel,T=None):
+	def __init__(self, browser, displaymodel, T=None):
 		"""create units browser for a atom type T, or None"""
-		self.browser = browser;
+		self.browser = browser
 		self.displaymodel = displaymodel
 
 		# GUI config
-		glade_file_path = os.path.join('..','glade','ascend.glade')
-		_xml = Gtk.glade.XML(glade_file_path,"unitsdialog")
+		glade_file_path = os.path.join('..', 'glade', 'ascend.glade')
+		_xml = Gtk.glade.XML(glade_file_path, "unitsdialog")
 		self.window = _xml.get_widget("unitsdialog")
 		self.typecombo = _xml.get_widget("typecombo")
 		self.dimensionlabel = _xml.get_widget("dimensionlabel")
@@ -37,8 +37,8 @@ class UnitsDialog:
 		# set up columns in the units view:
 		_renderer0 = Gtk.CellRendererToggle()
 		_renderer0.set_radio(True)
-		_renderer0.connect("toggled",self.unitsview_row_toggled)
-		_col0 = Gtk.TreeViewColumn("",_renderer0,active=0)
+		_renderer0.connect("toggled", self.unitsview_row_toggled)
+		_col0 = Gtk.TreeViewColumn("", _renderer0, active=0)
 		self.unitsview.append_column(_col0)
 	
 		_renderer1 = Gtk.CellRendererText()	
@@ -56,15 +56,15 @@ class UnitsDialog:
 				self.typecombo.get_child().set_text(str(T.getName()))
 		self.update_typecombo()
 
-	def unitsview_row_toggled(self,widget,path,*args):
+	def unitsview_row_toggled(self, widget, path, *args):
 		i = self.unitsview.get_model().get_iter_from_string(path)
-		n = self.unitsview.get_model().get_value(i,1)
+		n = self.unitsview.get_model().get_value(i, 1)
 		j = self.unitsview.get_model().get_iter_first()
 		while j is not None:
-			self.unitsview.get_model().set_value(j,0,False)
+			self.unitsview.get_model().set_value(j, 0, False)
 			j = self.unitsview.get_model().iter_next(j)
-		self.unitsview.get_model().set_value(i,0,True)
-		self.changed[self.typecombo.get_active_text()]=n
+		self.unitsview.get_model().set_value(i, 0, True)
+		self.changed[self.typecombo.get_active_text()] = n
 		#self.displaymodel.model = 
 		#self.browser.reporter.reportNote("Units for '%s' set to '%s'" % (self.typecombo.get_active_text(),n))
 		self.update_applybutton()	
@@ -81,7 +81,7 @@ class UnitsDialog:
 				break
 		self.applybutton.set_sensitive(can_apply)
 
-	def update_typecombo(self,text = None):
+	def update_typecombo(self, text=None):
 		m = Gtk.ListStore(str)
 		for t in self.realtypes:
 			if not text or re.compile("^%s"%re.escape(text)).match(str(t.getName())):
@@ -92,33 +92,33 @@ class UnitsDialog:
 			self.typecombo.get_child().grab_focus()
 		self.typecombo.set_text_column(0)
 
-	def update_unitsview(self,T):
-		m = Gtk.ListStore(bool,str,str,int)
+	def update_unitsview(self, T):
+		m = Gtk.ListStore(bool, str, str, int)
 		if T is not None:
 			d = T.getDimensions()
 			up = T.getPreferredUnits()
 			if up is None:
 				print "no preferred units"
 			else:
-				print "preferred units =",up.getName()
+				print "preferred units =", up.getName()
 		else:
 			up = None
 		for u in self.units:
-			if T is None or u.getDimensions()==d:
+			if T is None or u.getDimensions() == d:
 				if up is None:
 					selected = False
 				else:
-					selected = (u==up)
+					selected = (u == up)
 				weight = Pango.Weight.NORMAL
 				if selected:
 					weight = Pango.Weight.BOLD
 				du = u.getDimensions().getDefaultUnits().getName()
 				if str(du) == "1":
 					du = ""
-				m.append([selected,u.getName(),"%g %s" %(u.getConversion(),du),weight])
+				m.append([selected, u.getName(), "%g %s" %(u.getConversion(), du), weight])
 		self.unitsview.set_model(m)
 
-	def on_typecombo_changed(self,widget,*args):
+	def on_typecombo_changed(self, widget, *args):
 		s = widget.get_active_text()
 		self.update_typecombo(s)
 		#self.browser.reporter.reportNote("value changed to '%s'" % s)
@@ -137,8 +137,8 @@ class UnitsDialog:
 		while _res == Gtk.ResponseType.APPLY:
 			_res = self.window.run()
 			if _res == Gtk.ResponseType.APPLY or _res == Gtk.ResponseType.CLOSE:
-				for k,v in self.changed.iteritems():
-					self.browser.prefs.setPreferredUnits(k,v)
+				for k, v in self.changed.iteritems():
+					self.browser.prefs.setPreferredUnits(k, v)
 				self.changed = {}
 				typename = self.typecombo.get_active_text()
 				if typename:

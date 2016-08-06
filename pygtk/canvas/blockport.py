@@ -9,8 +9,8 @@ class BlockPort(PointPort):
 	it belongs (this data is not stored in the Gaphas Port object)
 	"""
 
-	def __init__(self, blockinstance, portname,location, portlabel):
-		super(BlockPort,self).__init__(Position((float(location[0]),float(location[1]))))
+	def __init__(self, blockinstance, portname, location, portlabel):
+		super(BlockPort, self).__init__(Position((float(location[0]), float(location[1]))))
 		self.portinstance = blockinstance.ports[portname]
 		self.portname = portname
 		self.portlabel= portlabel

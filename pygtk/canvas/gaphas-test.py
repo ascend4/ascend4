@@ -9,6 +9,7 @@ from gaphas.tool import DefaultTool
 from blockcanvas import BlockCanvas
 from blockitem  import DefaultBlockItem
 
+
 def factory(view, cls):
     """
     Simple canvas item factory.
@@ -56,7 +57,6 @@ def create_window(canvas, title, zoom=1.0):
     b.connect('clicked', on_clicked)
     v.add(b)
 
-
     b = Gtk.Button('Delete focused')
 
     def on_clicked(button):
@@ -69,7 +69,7 @@ def create_window(canvas, title, zoom=1.0):
 
     # Add the actual View:
 
-    t = Gtk.Table(2,2)
+    t = Gtk.Table(2, 2)
     h.add(t)
 
     w.connect('destroy', Gtk.main_quit)
@@ -91,6 +91,7 @@ def create_window(canvas, title, zoom=1.0):
     view.connect('focus-changed', handle_changed, 'focus')
     view.connect('hover-changed', handle_changed, 'hover')
     view.connect('selection-changed', handle_changed, 'selection')
+
 
 def main():
     c=BlockCanvas()

@@ -8,40 +8,43 @@ import ascpy
 
 
 # RE for units matching
-UNITS_RE = re.compile("([-+]?(\d+(\.\d*)?|\d*\.d+)([eE][-+]?\d+)?)\s*(.*)");
+UNITS_RE = re.compile("([-+]?(\d+(\.\d*)?|\d*\.d+)([eE][-+]?\d+)?)\s*(.*)")
+
 
 class InputError(Exception):
-	def __init__(self,msg):
-		self.msg = msg;
+	def __init__(self, msg):
+		self.msg = msg
+
 	def __str__(self):
-		return "Input Error: %s" % self.msg;
+		return "Input Error: %s" % self.msg
+
 
 class RealAtomEntry:
-	def __init__(self,instance,newtext):
-		self.instance = instance;
-		self.newtext = newtext;
-		print "\nNewText = "+newtext+"\n"
-		self.units = None; # the string value of the entered units
-		self.value = None;
+	def __init__(self, instance, newtext):
+		self.instance = instance
+		self.newtext = newtext
+		print "\nNewText = " + newtext + "\n"
+		self.units = None  # the string value of the entered units
+		self.value = None
 
 	def checkEntry(self):
-		_instdim = self.instance.type.getDimensions();
+		_instdim = self.instance.type.getDimensions()
 		_insttype = self.instance.type
 
 		try:
 			# match a float with option text afterwards, optionally separated by whitespace
-			_match = re.match(UNITS_RE,self.newtext)
+			_match = re.match(UNITS_RE, self.newtext)
 			if not _match:
 				raise InputError("Not a valid value-and-optional-units")
 
 			_val = _match.group(1) # the numerical part of the input
 			self.units = _match.group(5) # the text entered for units
-			#_val, _units = re.split("[ \t]+",newtext,2);
+			# _val, _units = re.split("[ \t]+",newtext,2)
 		except RuntimeError:
 			raise InputError("Unable to split value and units")
 
-		print "val = ",_val
-		print "units = ",self.units
+		print "val = ", _val
+		print "units = ", self.units
 
 		# parse the units, throw an error if no good
 		try:
@@ -74,7 +77,7 @@ class RealAtomEntry:
 					_my_dims = "[dimensionless]"
 
 				raise InputError("Incompatible units '%s' (must fit with '%s')" 
-						% (self.units, _my_dims.getName().toString()) )
+						% (self.units, _my_dims.getName().toString()))
 	
 		self._conv = float(_u.getConversion())
 		# self.reporter.reportNote("Converting: multiplying '%s %s' by factor %s to get SI units" % (_val, _units, _conv) )
@@ -91,8 +94,8 @@ class RealAtomEntry:
 	def getUnits(self):
 		return str(self.units) or str(self.instance.type.getDimensions().getDefaultUnits().getName())
 
-	def exportPreferredUnits(self,prefs):
-		_typename = str( self.instance.type.getName() )
+	def exportPreferredUnits(self, prefs):
+		_typename = str(self.instance.type.getName())
 		_dim = self.instance.type.getDimensions()
 		if self.units.strip() != "" and not _dim.isDimensionless():
-			prefs.setPreferredUnits(_typename,self.units);
+			prefs.setPreferredUnits(_typename,self.units)

@@ -3,6 +3,7 @@
 from gi.repository import Gdk
 from gaphas.tool import ZoomTool, PanTool
 
+
 class ZoomTool(ZoomTool):
 
 	def __init__(self, view=None):
@@ -28,6 +29,7 @@ class ZoomTool(ZoomTool):
 PAN_MASK = Gdk.ModifierType.SHIFT_MASK | Gdk.ModifierType.MOD1_MASK | Gdk.ModifierType.CONTROL_MASK
 PAN_VALUE = 0
 
+
 class PanTool(PanTool):
 	def __init__(self, view=None):
 		super(PanTool, self).__init__(view)
@@ -39,12 +41,12 @@ class PanTool(PanTool):
 		view = self.view
 		direction = event.scroll.direction
 		if direction == Gdk.ScrollDirection.LEFT:
-			view._matrix.translate(self.speed/view._matrix[0], 0)
+			view._matrix.translate(self.speed / view._matrix[0], 0)
 		elif direction == Gdk.ScrollDirection.RIGHT:
-			view._matrix.translate(-self.speed/view._matrix[0], 0)
+			view._matrix.translate(-self.speed / view._matrix[0], 0)
 		elif direction == Gdk.ScrollDirection.UP:
-			view._matrix.translate(0, self.speed/view._matrix[3])
+			view._matrix.translate(0, self.speed / view._matrix[3])
 		elif direction == Gdk.ScrollDirection.DOWN:
-			view._matrix.translate(0, -self.speed/view._matrix[3])
+			view._matrix.translate(0, -self.speed / view._matrix[3])
 		view.request_update((), view._canvas.get_all_items())
 		return True

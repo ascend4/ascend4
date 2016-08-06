@@ -17,5 +17,5 @@ class BlockLine(Line):
 		self.lineinstance = LineInstance()
 	
 	def get_connected_ports(self):
-		ports = [self.lineinstance.fromport,self.lineinstance.toport]
+		ports = [self.lineinstance.fromport, self.lineinstance.toport]
 		return ports

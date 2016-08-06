@@ -11,15 +11,16 @@ BROWSER_SETTING_COLOR = "#4444AA"
 BROWSER_INCLUDED_COLOR = "black"
 BROWSER_UNINCLUDED_COLOR = "#888888"
 
+
 class TreeView:
 	def __init__(self, instance):
 		self.data = {}
-		columns = [str,str,str,str,int,bool,GdkPixbuf.Pixbuf]
+		columns = [str, str, str, str, int, bool, GdkPixbuf.Pixbuf]
 		self.treestore = Gtk.TreeStore(*columns)
 		self.treeview = Gtk.TreeView(self.treestore)
 		self.otank = {}	
-		titles = [" Name"," Type"," Value"];
-		self.tvcolumns = [ Gtk.TreeViewColumn() for _type in columns[:len(titles)] ]
+		titles = [" Name", " Type", " Value"]
+		self.tvcolumns = [Gtk.TreeViewColumn() for _type in columns[:len(titles)]]
 		i = 0
 		for tvcolumn in self.tvcolumns[:len(titles)]:
 			tvcolumn.set_title(titles[i])
@@ -31,9 +32,8 @@ class TreeView:
 			tvcolumn.add_attribute(renderer, 'weight', 4)
 			i += 1
 		self.make(instance.getName(), instance)
-				
-				
-	def get_tree_row_data(self,instance):
+
+	def get_tree_row_data(self, instance):
 		_value = str(instance.getValue())
 		_type = str(instance.getType())
 		_name = str(instance.getName())
@@ -49,10 +49,10 @@ class TreeView:
 			else:
 				_fgcolor = BROWSER_FREE_COLOR
 				_fontweight = Pango.Weight.BOLD
-				_status = instance.getStatus();
+				_status = instance.getStatus()
 				#_statusicon = self.browser.statusicons[_status]
 		elif instance.isRelation():
-			_status = instance.getStatus();
+			_status = instance.getStatus()
 			#_statusicon = self.browser.statusicons[_status]
 			if not instance.isIncluded():
 				_fgcolor = BROWSER_UNINCLUDED_COLOR
@@ -68,62 +68,62 @@ class TreeView:
 		self.data[str(instance.getName())] = [_name, _type, _value, _fgcolor, _fontweight, _editable, _statusicon]
 		return [_name, _type, _value, _fgcolor, _fontweight, _editable, _statusicon]
 		
-	def make_row( self, piter, name, value ):
-		assert(value)
+	def make_row(self, piter, name, value):
+		assert (value)
 		_piter = self.treestore.append( piter, self.get_tree_row_data(value) )
 		return _piter
 			
 	def make_row_from_presaved(self, piter, name, value):
-		assert(value)
+		assert (value)
 		_piter = self.treestore.append( piter,self.data[str(value.getName())])
 		return _piter
 	
 	def make_children(self, value, piter ):
-		assert(value)
+		assert (value)
 		if value.isCompound():
-			children=value.getChildren();
+			children = value.getChildren()
 			for child in children:
 				try:
-					_name = child.getName();
-					_piter = self.make_row(piter,_name,child)
+					_name = child.getName()
+					_piter = self.make_row(piter, _name, child)
 					_path = self.treestore.get_path(_piter)
-					self.otank[_path.to_string()]=(_name,child)
-				except Exception,e:
+					self.otank[_path.to_string()] = (_name, child)
+				except Exception, e:
 					pass
 				
 	def make_children_from_presaved(self, value, piter ):
-		assert(value)
+		assert (value)
 		if value.isCompound():
-			children=value.getChildren();
+			children = value.getChildren()
 			for child in children:
 				try:
-					_name = child.getName();
-					_piter = self.make_row_from_presaved(piter,_name,child)
+					_name = child.getName()
+					_piter = self.make_row_from_presaved(piter, _name, child)
 					_path = self.treestore.get_path(_piter)
-					self.otank[_path.to_string()]=(_name,child)
-				except Exception,e:
+					self.otank[_path.to_string()] = (_name, child)
+				except Exception, e:
 					pass
 				
 	def make(self, name=None, value=None, path=None, depth=2):
 		if path is None:
-		# make root node
-			piter = self.make_row( None, name, value )
-			path = self.treestore.get_path( piter )
-			self.otank[ path.to_string() ] = (name, value)
+			# make root node
+			piter = self.make_row(None, name, value)
+			path = self.treestore.get_path(piter)
+			self.otank[path.to_string()] = (name, value)
 		else:
-			name, value = self.otank[ path.to_string() ]
+			name, value = self.otank[path.to_string()]
 		
-		assert(value)
+		assert (value)
 		
-		piter = self.treestore.get_iter( path )
-		if not self.treestore.iter_has_child( piter ):
-			self.make_children(value,piter)
+		piter = self.treestore.get_iter(path)
+		if not self.treestore.iter_has_child(piter):
+			self.make_children(value, piter)
 
 		if depth:
-			for i in range( self.treestore.iter_n_children( piter ) ):
+			for i in range(self.treestore.iter_n_children(piter)):
 				tmp_path = path.copy()
 				tmp_path.append_index(i)
-				self.make( path = tmp_path, depth = depth - 1 )
+				self.make(path=tmp_path, depth=depth - 1)
 		else:
 			self.treeview.expand_row(Gtk.TreePath.new_first(), False)
 	

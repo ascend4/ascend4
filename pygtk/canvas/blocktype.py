@@ -21,9 +21,9 @@ class BlockType():
 		self.type = typedesc
 		self.notesdb = notesdb
 		self.arrays = []
-		self.gr = [] # this data structure is for Graphical Representation for custom icons
-		self.port_in = {} # this list is for location of input ports in custom icons
-		self.port_out = {} # this list is for location of output ports in custom icons
+		self.gr = []  # this data structure is for Graphical Representation for custom icons
+		self.port_in = {}  # this list is for location of input ports in custom icons
+		self.port_out = {}  # this list is for location of output ports in custom icons
 		self.arrays = []
 
 		# FIXME BlockType should know what .a4c file to load in order to access
@@ -37,11 +37,11 @@ class BlockType():
 		self.params = []
 		for n in nn:
 			t = n.getText()
-			if t[0:min(len(t),3)] == "in:":
+			if t[0:min(len(t), 3)] == "in:":
 				self.inputs += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
-			elif t[0:min(len(t),4)] == "out:":
+			elif t[0:min(len(t), 4)] == "out:":
 				self.outputs += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
-			elif t[0:min(len(t),6)] == "param:":
+			elif t[0:min(len(t), 6)] == "param:":
 				self.params += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
 
 		self.iconfile = None
@@ -57,8 +57,8 @@ class BlockType():
 		if nn:
 			self.name = nn[0].getText()
 
-		#fetching the graphic string from model file, string manipulating it and storing it in
-		#list of list
+		# fetching the graphic string from model file, string manipulating it and storing it in
+		# list of list
 		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("graphic"))
 		if nn:
 			t = nn[0].getText().split("\n")
@@ -74,7 +74,7 @@ class BlockType():
 					ll.append(pp)
 				self.gr.append(ll)
 
-		self.iconfile = self.create_icon(48,48)
+		self.iconfile = self.create_icon(48, 48)
 
 		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("port_in"))
 		if nn:

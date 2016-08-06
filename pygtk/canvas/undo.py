@@ -28,8 +28,9 @@ mutex = threading.Lock()
 
 block_observers = set()
 
+
 def block_observed(func):
-    #Almost copied from gaphas.state
+    # Almost copied from gaphas.state
     """
     Simple observer, dispatches events to functions registered in the observers
     list.
@@ -55,8 +56,9 @@ def block_observed(func):
     func.__observer__ = dec
     return dec
 
+
 def block_dispatch(event, queue):
-    #Copied from gaphas.state
+    # Copied from gaphas.state
     """
     Dispatch an event to a queue of event handlers.
     Event handlers should have signature: handler(event).
@@ -81,39 +83,41 @@ def block_dispatch(event, queue):
     for s in queue:
         s(event)
 
+
 class UndoMonitorTool(Tool):
     '''
     This tool captures all the mouse button press events, returns False
     '''
-    def __init__(self,view=None):
+    def __init__(self, view=None):
         super(UndoMonitorTool, self).__init__(view)
 
     @block_observed
-    def on_button_press(self,event):
+    def on_button_press(self, event):
         return False
 
     @block_observed
-    def on_button_release(self,event):
+    def on_button_release(self, event):
         return False
 
     @block_observed
-    def on_double_click(self,event):
+    def on_double_click(self, event):
         return False
 
     @block_observed
-    def on_triple_click(self,event):
+    def on_triple_click(self, event):
         return False
+
 
 class Transaction(object):
     '''
     An Action stack, consisting of Gaphas revert handlers
     '''
-    def __init__(self,event):
+    def __init__(self, event):
         self.event = event
         self.actions = []
         #print self.event
 
-    def add(self,action):
+    def add(self, action):
         self.actions.append(action)
 
     def can_execute(self):
@@ -129,8 +133,8 @@ class Transaction(object):
             try:
                 #print action
                 action()
-            except Exception,e:
-                print 'Undo Error: ',e
+            except Exception, e:
+                print 'Undo Error: ', e
 '''
     def anti_execute(self):
         # type: () -> object
@@ -145,11 +149,12 @@ class Transaction(object):
                 print 'Undo Error: ', e
 '''
 
+
 class UndoManager(object):
     '''
     Transaction manager, provides encapsulation for gaphas.state
     '''
-    def __init__(self,app):
+    def __init__(self, app):
         self._undo_stack = []
         self._redo_stack = []
         self._current_transaction = None
@@ -195,44 +200,29 @@ class UndoManager(object):
     def clear_redo_stack(self):
         del self._redo_stack[:]
 
-    def begin_transaction(self,block_event=None):
-        #print 'New Transaction Started \n'
+    def begin_transaction(self, block_event=None):
         assert self._current_transaction == None
-        #print block_event
         self._current_transaction = Transaction(block_event or None)
-        #print block_event
-        #print Transaction(block_event)
-        #print "type of current transaction", type(self._current_transaction)
+
     def commit_transaction(self):
 
         assert self._current_transaction is not None
 
         if self._current_transaction.can_execute():
-            #print 'Transaction Commited'
-            #print self._current_transaction
             self._undo_stack.append(self._current_transaction)
         else:
             pass
-            #print 'Transaction Purged'
-
         self._current_transaction = None
 
-    def _gaphas_event_handler(self,event):
+    def _gaphas_event_handler(self, event):
         try:
-            self._current_transaction.add(lambda: saveapply(*event));
-            #print "transaction: ", self._current_transaction
-            #print "type of lambda", type(lambda: saveapply(*event))
+            self._current_transaction.add(lambda: saveapply(*event))
         except Exception as e:
             pass
-            #print e
-            #print event[0]
 
-    def _block_transaction_handler(self,event):
-        #print 'New Transaction'
+    def _block_transaction_handler(self, event):
         if self._current_transaction:
-            #print "type of event = ", type(event)
             self.commit_transaction()
-        #print event
         self.begin_transaction(event)
 
     def undo(self):
@@ -264,10 +254,8 @@ class UndoManager(object):
 
         self.app.status.push(0,"Undid Previous Action")
         '''
-        # redo have been implemented, but undo haven't yet
+        # TODO: redo have been implemented, but undo haven't yet
         if self._current_transaction:
-            #print "type of current_transaction",  type(self._current_transaction)
-            #print "current_transaction = ", self._current_transaction
             self.commit_transaction()
 
         if len(self._undo_stack) == 0:
@@ -280,9 +268,7 @@ class UndoManager(object):
         redo_stack.append(transaction)
 
         try:
-            #print transaction
             transaction.execute()
-            #print self.block_observers
         except Exception as e:
             print 'Undo Error: \n', e
         finally:
@@ -295,33 +281,27 @@ class UndoManager(object):
         self.app.status.push(0, "Undid Previous Action")
 
     def redo(self):
-        #TODO: redo haven't been fully implemented
+        # TODO: redo haven't been fully implemented
         if len(self._redo_stack) == 0:
-            self.app.status.push(0,"Redo Unavailable")
+            self.app.status.push(0, "Redo Unavailable")
             return
 
         transaction = self._redo_stack.pop()
-        #print "5: transaction = ", transaction
 
         undo_stack = list(self._undo_stack)
         redo_stack = list(self._redo_stack)
         undo_stack.append(transaction)
-        #self._redo_stack = []
 
         try:
-            #print transaction.actions
-            #print type(transaction.actions)
             transaction.execute()
         except Exception as e:
-            print 'Redo Error: \n',e
+            print 'Redo Error: \n', e
         finally:
             self._undo_stack = undo_stack
             self._redo_stack = redo_stack
-            #print "6: redo: undo_stack = ", self._undo_stack
-            #print "7: redo: redo_stack = ", self._redo_stack
 
         while len(self._undo_stack) > self._stack_depth:
             del self._undo_stack[0]
 
-        self.app.status.push(0,"Redid Previous Action")
+        self.app.status.push(0, "Redid Previous Action")
         return

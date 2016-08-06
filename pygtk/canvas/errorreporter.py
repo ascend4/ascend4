@@ -1,9 +1,10 @@
 from gi.repository import Pango
 from gi.repository import Gtk, GdkPixbuf
-		
+
+
 class ErrorReporter():
 	
-	def __init__(self, ascpyreporter,iconok,iconinfo,iconwarning,iconerror):		
+	def __init__(self, ascpyreporter, iconok, iconinfo, iconwarning, iconerror):
 		self.iconok = iconok
 		self.iconinfo = iconinfo
 		self.iconwarning = iconwarning
@@ -13,11 +14,11 @@ class ErrorReporter():
 		self.errorview = Gtk.TreeView()
 		#print dir(self.errorview)
 		#self.errorview.set_headers_visible(True)	
-		errstorecolstypes = [GdkPixbuf.Pixbuf,str,str,str,int]
+		errstorecolstypes = [GdkPixbuf.Pixbuf, str, str, str, int]
 		self.errorstore = Gtk.TreeStore(*errstorecolstypes)
-		errtitles = ["","Location","Message"]
+		errtitles = ["", "Location", "Message"]
 		self.errorview.set_model(self.errorstore)
-		self.errcols = [ Gtk.TreeViewColumn() for _type in errstorecolstypes]
+		self.errcols = [Gtk.TreeViewColumn() for _type in errstorecolstypes]
 
 		i = 0
 		for tvcolumn in self.errcols[:len(errtitles)]:
@@ -38,13 +39,10 @@ class ErrorReporter():
 
 			i = i + 1
 
-
-		#--------------------
+		# --------------------
 		# set up the error reporter callback
 		self.reporter = ascpyreporter
 		self.reporter.setPythonErrorCallback(self.error_callback)		
-		
-		
 
 
 #   ----------------------------------
@@ -70,28 +68,28 @@ class ErrorReporter():
 			_fontweight = Pango.Weight.BOLD
 		
 		_fgcolor = "black"
-		if sev==8:
+		if sev == 8:
 			_fgcolor = "#888800"
-		elif sev==16:
+		elif sev == 16:
 			_fgcolor = "#884400"
-		elif sev==32 or sev==64:
+		elif sev == 32 or sev == 64:
 			_fgcolor = "#880000"
-		elif sev==0:
+		elif sev == 0:
 			_fgcolor = "#448844"
 		
 		if not filename and not line:
 			_fileline = ""
 		else:
-			if(len(filename) > 25):
-				filename = "..."+filename[-22:]
+			if len(filename) > 25:
+				filename = "..." + filename[-22:]
 			_fileline = filename + ":" + str(line)
 
-		_res = (_sevicon,_fileline,msg.rstrip(),_fgcolor,_fontweight)
+		_res = (_sevicon, _fileline, msg.rstrip(), _fgcolor, _fontweight)
 		return _res  
 
-	def error_callback(self,sev,filename,line,msg):
-		pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))
+	def error_callback(self, sev, filename, line, msg):
+		pos = self.errorstore.append(None, self.get_error_row_data(sev, filename, line, msg))
 		path = self.errorstore.get_path(pos)
 		col = self.errorview.get_column(3)
-		self.errorview.scroll_to_cell(path,col)		
-		return 0;
+		self.errorview.scroll_to_cell(path, col)
+		return 0

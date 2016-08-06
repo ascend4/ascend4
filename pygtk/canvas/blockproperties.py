@@ -13,18 +13,19 @@ from varentry_canvas import *
 
 SAVED_TAB = 0
 
-#Not a good place to do this, but makes implementation very easy.
-#TODO: Set up a central mechanism to handle icons, images, colors.
+# Not a good place to do this, but makes implementation very easy.
+# TODO: Set up a central mechanism to handle icons, images, colors.
 _iconfixed = Gtk.Image()
 _iconfree = Gtk.Image()
-_iconfixed.set_from_file(os.path.join('..','glade','locked.png'))
-_iconfree.set_from_file(os.path.join('..','glade','unlocked.png'))
+_iconfixed.set_from_file(os.path.join('..', 'glade', 'locked.png'))
+_iconfree.set_from_file(os.path.join('..', 'glade', 'unlocked.png'))
 _iconfixed = _iconfixed.get_pixbuf()
 _iconfree = _iconfree.get_pixbuf()
 _colorfixed = '#33CC00'
 _colorfree = '#000000'
 _weightfixed = 700
 _weightfree = 400
+
 
 class BlockProperties(object):
 	'''
@@ -41,7 +42,7 @@ class BlockProperties(object):
 			self.sourceviewLangman.set_search_path(op)
 		self.sourceviewLang = self.sourceviewLangman.get_language('ascend')
 
-		#Get the XML
+		# Get the XML
 		glade_file_path = os.path.join('..','glade','bp.glade')
 		builder = Gtk.Builder()
 		builder.add_from_file(glade_file_path)
@@ -55,23 +56,23 @@ class BlockProperties(object):
 		self.dialog.set_title('Properties of '+ str(self.block.name))
 
 		##General Tab##
-		#Set the 'Name:'
+		# Set the 'Name:'
 		self.block_name = builder.get_object('block_name')
 		self.block_name.set_text(self.block.name)
 		self.block_name.set_editable(True)
 
-		#Set the 'Type:'
+		# Set the 'Type:'
 		self.type_name = builder.get_object('type_name')
 		text = self.block.blocktype.type
 		self.type_name.set_text(str(text))
 		self.type_name.set_editable(False)
-		#Set the 'Ports:'
+		# Set the 'Ports:'
 		self.type_name = builder.get_object('port_name')
 		ports = self.block.ports
 		sorted_ports = [[],[],[]]
 
-		#Sort the ports
-		for i,j in ports.iteritems():
+		# Sort the ports
+		for i, j in ports.iteritems():
 			if j.type == blockinstance.PORT_IN:
 				sorted_ports[0].append(j.name)
 			elif j.type == blockinstance.PORT_OUT:
@@ -81,13 +82,13 @@ class BlockProperties(object):
 
 		self.general_entry = [builder.get_object('port_name_input'), builder.get_object('port_name_output'), builder.get_object('port_name_inputoutput')]
 
-		#Display the ports, set them not editable
+		# Display the ports, set them not editable
 		for i in range(len(self.general_entry)):
 			self.general_entry[i].set_editable(False)
 			for port in sorted_ports[i]:
 				self.general_entry[i].set_text(str(sorted_ports[i]))
 
-		#Stream
+		# Stream
 		#self.stream = xml.get_widget('comboboxentry1')
 		#self.stream_store = Gtk.ListStore(GObject.TYPE_STRING)
 
@@ -137,8 +138,7 @@ class BlockProperties(object):
 		##End of Equation Tab##
 
 		##Parameters Tab##
-		#Hint: This uses the Gtk.TreeView and Gtk.ListStore
-
+		# Hint: This uses the Gtk.TreeView and Gtk.ListStore
 		self.param_list_store = paramListStore(self.block.params)
 		self.param_tree_model = self.param_list_store.get_model()
 		self.param_tree_view = displayModel(self.parent)
@@ -197,36 +197,39 @@ class BlockProperties(object):
 		OK_button.grab_default()
 
 		##Context Menu##
-		self.treecontext = Gtk.Menu();
-		self.fixmenuitem = Gtk.ImageMenuItem("_Fix/ _Free");
-		self.unitsmenuitem = Gtk.ImageMenuItem("Select _Units");
-		self.fixmenuitem.show(); self.fixmenuitem.set_sensitive(False)
-		self.unitsmenuitem.show(); self.unitsmenuitem.set_sensitive(False)
+		self.treecontext = Gtk.Menu()
+		self.fixmenuitem = Gtk.ImageMenuItem("_Fix/ _Free")
+		self.unitsmenuitem = Gtk.ImageMenuItem("Select _Units")
+		self.fixmenuitem.show()
+		self.fixmenuitem.set_sensitive(False)
+		self.unitsmenuitem.show()
+		self.unitsmenuitem.set_sensitive(False)
 
 		self.treecontext.append(self.fixmenuitem)
-		_sep = Gtk.SeparatorMenuItem(); _sep.show()
-		self.treecontext.append(_sep);
+		_sep = Gtk.SeparatorMenuItem()
+		_sep.show()
+		self.treecontext.append(_sep)
 		self.treecontext.append(self.unitsmenuitem)
-		self.fixmenuitem.connect("activate",self.fixfree_toggle)
-		self.unitsmenuitem.connect("activate",self.units_activate)
+		self.fixmenuitem.connect("activate", self.fixfree_toggle)
+		self.unitsmenuitem.connect("activate", self.units_activate)
 
 		if not self.treecontext:
 			raise RuntimeError("Couldn't create browsercontext")
 		##End of Context Menu##
 
-	def save_changes(self,button,parent,block):
+	def save_changes(self, button, parent,block):
 		block.name = self.block_name.get_text()
 		parent.view.canvas.canvasmodelstate = 'Modified'
-		parent.status.push(0,"Modified Block Properties")
+		parent.status.push(0, "Modified Block Properties")
 		parent.view.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse('#FFF'))
 
-	def on_treeview_event(self,widget,event):
+	def on_treeview_event(self, widget, event):
 
 		self.unitsmenuitem.set_sensitive(False)
 		self.fixmenuitem.set_sensitive(False)
 		_contextmenu = False
 
-		if event.type==Gdk.EventType.BUTTON_PRESS:
+		if event.type == Gdk.EventType.BUTTON_PRESS:
 			_x = int(event.x)
 			_y = int(event.y)
 			_button = event.button
@@ -243,16 +246,16 @@ class BlockProperties(object):
 			self.treecontext.popup( None, None, None, _button, event.time)
 			return 1
 
-	def units_activate(self,widget):
-		model,iter = self.param_tree_view.view.get_selection().get_selected()
-		param = model.get_value(iter,3)
-		_udia = UnitsDialog(self.parent,self.param_tree_view,param.type)
+	def units_activate(self, widget):
+		model, iter = self.param_tree_view.view.get_selection().get_selected()
+		param = model.get_value(iter, 3)
+		_udia = UnitsDialog(self.parent, self.param_tree_view, param.type)
 		_udia.run()
 
-	def fixfree_toggle(self,widget):
-		model,iter = self.param_tree_view.view.get_selection().get_selected()
+	def fixfree_toggle(self, widget):
+		model, iter = self.param_tree_view.view.get_selection().get_selected()
 		path = self.param_tree_view.model.get_path(iter)
-		self.param_tree_view.toggle_callback(path=path,model=model)
+		self.param_tree_view.toggle_callback(path=path, model=model)
 	'''
 	def stream_changed(self,widget):
 		stream = widget.get_active_text()
@@ -264,22 +267,23 @@ class BlockProperties(object):
 		SAVED_TAB = self.notebook.get_current_page()
 		self.dialog.hide()
 
+
 class displayModel(object):
 	'''
 	Draws the Gtk.TreeView, used for the setting of parameters
 	'''
-	def __init__(self,parent):
+	def __init__(self, parent):
 		self.parent = parent
 
-	def draw_view(self,model,builder,units):
+	def draw_view(self, model, builder, units):
 		self.view = builder.get_object('param_tree')
 		self.view.set_model(model)
 		self.view.set_tooltip_column(6)
 		self.model = model
-		#Set the row renderers
+		# Set the row renderers
 		self.name_render = Gtk.CellRendererText()
-		self.name_render.set_property('foreground-set',True)
-		self.name_render.set_property('weight-set',True)
+		self.name_render.set_property('foreground-set', True)
+		self.name_render.set_property('weight-set', True)
 
 		#self.param_render = Gtk.CellRendererText()
 		#self.param_render.set_property('editable',True)
@@ -290,11 +294,11 @@ class displayModel(object):
 		self.icon_render = Gtk.CellRendererPixbuf()
 
 		self.toggle_render = Gtk.CellRendererToggle()
-		self.toggle_render.connect('toggled',self.toggle_callback,model)
-		self.toggle_render.set_property('indicator-size',0)
+		self.toggle_render.connect('toggled', self.toggle_callback, model)
+		self.toggle_render.set_property('indicator-size', 0)
 
 		self.units_render = Gtk.CellRendererText()
-		self.units_render.set_property('editable',True)
+		self.units_render.set_property('editable', True)
 		#self.units_render.set_property('model',self.umodel)
 		#self.units_render.set_property('text-column',0)
 		self.units_render.set_property('foreground-set',True)
@@ -303,18 +307,18 @@ class displayModel(object):
 		self.units=units
 		self._units = []
 		#self.units_render.connect('editing-started',self.populate_units,model,self.units)
-		self.units_render.connect('edited',self.set_units_callback,model)
+		self.units_render.connect('edited', self.set_units_callback, model)
 
 		self.description_render = Gtk.CellRendererText()
-		self.description_render.set_property('foreground-set',True)
-		self.description_render.set_property('weight-set',True)
+		self.description_render.set_property('foreground-set', True)
+		self.description_render.set_property('weight-set', True)
 
 		#Set the column views
-		self.name_column = Gtk.TreeViewColumn('Parameter',self.name_render,text=0,foreground =4, weight=5)
+		self.name_column = Gtk.TreeViewColumn('Parameter', self.name_render, text=0, foreground=4, weight=5)
 		#self.name_column.pack_start(self.toggle_render_name,False)
 		#self.name_column.set_attributes(self.param_render,text=1)
 
-		self.description_column = Gtk.TreeViewColumn('Description',self.description_render,text=6,foreground =4, weight=5)
+		self.description_column = Gtk.TreeViewColumn('Description', self.description_render, text=6, foreground=4, weight=5)
 
 		#self.param_column = Gtk.TreeViewColumn('Value')
 		#self.param_column.set_expand(False)
@@ -323,11 +327,11 @@ class displayModel(object):
 		#self.param_column.set_expand(False)
 
 		self.toggle_column = Gtk.TreeViewColumn('Status')
-		self.toggle_column.pack_start(self.icon_render,False)
-		self.toggle_column.pack_start(self.toggle_render,False)
+		self.toggle_column.pack_start(self.icon_render, False)
+		self.toggle_column.pack_start(self.toggle_render, False)
 		self.toggle_column.add_attribute(self.icon_render, "pixbuf", 2)
 
-		self.units_column = Gtk.TreeViewColumn('Value',self.units_render,text=1, foreground =4, weight=5)
+		self.units_column = Gtk.TreeViewColumn('Value',self.units_render, text=1, foreground =4, weight=5)
 
 		self.view.append_column(self.name_column)
 		self.view.append_column(self.toggle_column)
@@ -337,33 +341,33 @@ class displayModel(object):
 
 		return self.view
 
-	def toggle_callback(self,cellrendertoggle=None,path=None,model=None,fix=False):
+	def toggle_callback(self, cellrendertoggle=None, path=None, model=None, fix=False):
 		iter = model.get_iter(path)
-		param = model.get_value(iter,3)
+		param = model.get_value(iter, 3)
 
-		if fix == True:
+		if fix:
 			param.fix = True
 			if not param.value:
 				param.value = 0
-				model.set_value(iter,1,param.getValue())
-			model.set_value(iter,2,_iconfixed)
-			model.set_value(iter,4,_colorfixed)
-			model.set_value(iter,5,_weightfixed)
+				model.set_value(iter, 1, param.getValue())
+			model.set_value(iter, 2, _iconfixed)
+			model.set_value(iter, 4, _colorfixed)
+			model.set_value(iter, 5, _weightfixed)
 			return
 
 		if param.fix == 0:
 			param.fix = True
 			if not param.value:
 				param.value = None
-				model.set_value(iter,1,param.getValue())
-			model.set_value(iter,2,_iconfixed)
-			model.set_value(iter,4,_colorfixed)
-			model.set_value(iter,5,_weightfixed)
+				model.set_value(iter, 1, param.getValue())
+			model.set_value(iter, 2, _iconfixed)
+			model.set_value(iter, 4, _colorfixed)
+			model.set_value(iter, 5, _weightfixed)
 		else:
 			param.fix = False
-			model.set_value(iter,2,_iconfree)
-			model.set_value(iter,4,_colorfree)
-			model.set_value(iter,5,_weightfree)
+			model.set_value(iter, 2, _iconfree)
+			model.set_value(iter, 4, _colorfree)
+			model.set_value(iter, 5, _weightfree)
 
 	#def set_param_callback(self,cellrendertext,path,new_text,model):
 		#iter = model.get_iter(path)
@@ -375,37 +379,37 @@ class displayModel(object):
 		#if len(new_text) == 0:
 			#model.set_value(iter,3,_iconfree)
 
-	def set_units_callback(self,combo,path,new_text,model):
+	def set_units_callback(self, combo, path, new_text, model):
 		iter = model.get_iter(path)
-		param = model.get_value(iter,3)
+		param = model.get_value(iter, 3)
 		valid = False
 
 		if new_text == '':
 			param.units = str(param.type.getDimensions().getDefaultUnits().getName())
 			param.value = None
-			model.set_value(iter,1,new_text)
-			self.toggle_callback(path=path,model=model,fix=False)
+			model.set_value(iter, 1, new_text)
+			self.toggle_callback(path=path, model=model, fix=False)
 			return
 
-		_entry = RealAtomEntry(param,new_text)
+		_entry = RealAtomEntry(param, new_text)
 
 		try:
 			_entry.checkEntry()
 			_entry.setValue()
 			_entry.exportPreferredUnits(self.parent.prefs)
 			if param.type.getPreferredUnits():
-				new_text = _entry.getValue() +' ' + _entry.getUnits()
+				new_text = _entry.getValue() + ' ' + _entry.getUnits()
 				param.units = str(_entry.getUnits())
 			else:
-				new_text = str(_entry.getValue()) +' ' + str(param.type.getDimensions().getDefaultUnits().getName())
+				new_text = str(_entry.getValue()) + ' ' + str(param.type.getDimensions().getDefaultUnits().getName())
 				param.units = str(param.type.getDimensions().getDefaultUnits().getName())
 
-			self.toggle_callback(path=path,model=model,fix=True)
-			combo.set_property('text',new_text)
-			model.set_value(iter,1,new_text)
+			self.toggle_callback(path=path, model=model, fix=True)
+			combo.set_property('text', new_text)
+			model.set_value(iter, 1, new_text)
 			#self.update_all_units(_entry._conv,_entry.getUnits(),param)
 
-		except InputError,e:
+		except InputError, e:
 			self.parent.reporter.reportError(str(e))
 			return
 
@@ -437,15 +441,17 @@ class paramListStore(object):
 	Sixth Column:	Text Weight
 	Seventh Column:  Tootip Description
 	'''
-	def __init__(self,params):
-		self.list_store = Gtk.ListStore(GObject.TYPE_STRING,GObject.TYPE_STRING,GdkPixbuf.Pixbuf,GObject.TYPE_PYOBJECT,GObject.TYPE_STRING, GObject.TYPE_INT,GObject.TYPE_STRING)
+	def __init__(self, params):
+		self.list_store = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING, GdkPixbuf.Pixbuf,
+										GObject.TYPE_PYOBJECT, GObject.TYPE_STRING, GObject.TYPE_INT, GObject.TYPE_STRING)
 		self.params = params
 		for name in self.params.keys():
-			pi=self.params[name]
-			if self.params[name].fix == True:
-				self.list_store.append([pi.name,pi.getValue(), _iconfixed, pi, _colorfixed, _weightfixed,pi.get_description()])
+			pi = self.params[name]
+			if self.params[name].fix:
+				self.list_store.append([pi.name, pi.getValue(), _iconfixed, pi, _colorfixed, _weightfixed, pi.get_description()])
 			else:
-				self.list_store.append([pi.name,pi.getValue(), _iconfree, pi, _colorfree, _weightfree,pi.get_description()])
+				self.list_store.append([pi.name, pi.getValue(), _iconfree, pi, _colorfree, _weightfree, pi.get_description()])
+
 	def get_model(self):
 		if self.list_store:
 			return self.list_store
