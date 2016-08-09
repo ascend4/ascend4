@@ -1,0 +1,98 @@
+{
+  "T_freeze": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "Tbase": 0.000000e+00, 
+  "Tmax": 8.941500e+02, 
+  "Tmin": 4.941500e+02, 
+  "TminPsat": 0.000000e+00, 
+  "conductivity": {
+    "NRMS": 0.000000e+00, 
+    "coeffs": [
+      [
+        3.911015e-01
+      ], 
+      [
+        1.900000e-04
+      ]
+    ], 
+    "type": "polynomial"
+  }, 
+  "density": {
+    "NRMS": 0.000000e+00, 
+    "coeffs": [
+      [
+        2.263723e+03
+      ], 
+      [
+        -6.360000e-01
+      ]
+    ], 
+    "type": "polynomial"
+  }, 
+  "description": "60% NaNO3 + 40% KNO3", 
+  "mass2input": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "mole2input": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "name": "moltensalt", 
+  "reference": "SNL document SAND2001-2100 rev 0", 
+  "saturation_pressure": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "specific_heat": {
+    "NRMS": 0.000000e+00, 
+    "coeffs": [
+      [
+        2.557025e+03
+      ], 
+      [
+        1.995099e+00
+      ], 
+      [
+        4.743056e-03
+      ], 
+      [
+        1.001109e-10
+      ]
+    ], 
+    "type": "polynomial"
+  }, 
+  "viscosity": {
+    "NRMS": 2.316919e-08, 
+    "coeffs": [
+      [
+        -5.601012e+00
+      ], 
+      [
+        -2.583587e-02
+      ], 
+      [
+        2.521265e-04
+      ], 
+      [
+        -1.648687e-06
+      ]
+    ], 
+    "type": "exppolynomial"
+  }, 
+  "volume2input": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "xbase": 0.000000e+00, 
+  "xid": "pure", 
+  "xmax": 1.000000e+00, 
+  "xmin": 0.000000e+00
+}
