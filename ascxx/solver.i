@@ -21,9 +21,9 @@
 #include "matrix.h"
 %}
 
-%pythoncode{
+%pythoncode %{
 	import types
-}
+%}
 
 %typemap(in) FILE * {
 %#if defined(__MINGW32__) && !defined(HAVE_MSVCR71)
@@ -50,7 +50,7 @@
 	Instanc __getattr__(const char *name){
 		return self->getModel().getChild(SymChar(name));
 	}
-	%pythoncode{
+	%pythoncode %{
 		def setParameter(self,name,value):
 			""" set the value of a parameter for this integrator """
 			P = self.getParameters()
@@ -63,13 +63,13 @@
 				if p.getName()==name:
 					return p.getValue()
 			raise KeyError
-	}
+	%}
 }
 
 %include "matrix.h"
 
 // SOLVER PARAMETERS
-%pythoncode{
+%pythoncode %{
 	class SolverParameterIter:
 		def __init__(self, params):
 			self.params = params;
@@ -84,7 +84,7 @@
 			p = self.params.getParameter(self.index)
 			self.index = self.index +1
 			return p
-}
+%}
 
 class SolverParameters{
 public:
@@ -95,7 +95,7 @@ public:
 };
 
 %extend SolverParameters{
-	%pythoncode{
+	%pythoncode %{
 		def __iter__(self):
 			return SolverParameterIter(self)
 		def __getattr(self,index):
@@ -120,7 +120,7 @@ public:
 					p.setValue(value)
 					return
 			raise KeyError
-	}
+	%}
 }
 
 class SolverParameter{
@@ -165,7 +165,7 @@ public:
 };
 
 %extend SolverParameter{
-	%pythoncode{
+	%pythoncode %{
 		def __str__(self):
 			if self.isInt(): return "%s = %d" %(self.getName(),self.getIntValue())
 			if self.isBool(): return "%s = %s" %(self.getName(),self.getBoolValue())
@@ -192,17 +192,17 @@ public:
 				self.setStrValue(value)
 				return
 			raise TypeError
-	}
+	%}
 }
 
 %template(IncidencePointVector) std::vector<IncidencePoint>;
 %include "incidencematrix.h"
 
 %extend IncidencePoint{
-	%pythoncode{
+	%pythoncode %{
 		def __repr__(self):
 			return str([ self.row, self.col, int(self.type) ]);
-	}
+	%}
 }
 
 /* Variables and relations belong to solvers, so they're here: */
@@ -211,17 +211,17 @@ public:
 %include "disvar.h"
 
 %extend Variable {
-	%pythoncode{
+	%pythoncode %{
 		def __repr__(self):
 			return self.getName()
-	}
+	%}
 }
 
 %extend Disvar {
-	%pythoncode{
+	%pythoncode %{
 		def __repr__(self):
 			return self.getName()
-	}
+	%}
 }
 
 //%include "relation.h"
@@ -237,10 +237,10 @@ public:
 };
 
 %extend Relation {
-	%pythoncode{
+	%pythoncode %{
 		def __repr__(self):
 			return self.getName()
-	}
+	%}
 }
 
 %template(VariableVector) std::vector<Variable>;
@@ -298,7 +298,7 @@ public:
 /* findIndependentVar has changed to return void, throw exception */
 
 %extend Integrator{
-	%pythoncode{
+	%pythoncode %{
 		def setParameter(self,name,value):
 			""" set the value of a parameter for this integrator """
 			P = self.getParameters()
@@ -311,7 +311,7 @@ public:
 				if p.getName()==name:
 					return p.getValue()
 			raise KeyError
-	}
+	%}
 }
 
 %feature("director") IntegratorReporterCxx;

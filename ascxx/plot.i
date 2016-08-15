@@ -7,7 +7,7 @@ SWIG interface for plotting from ASCEND
 %include "plot.h"
 
 %extend Plot{
-	%pythoncode{
+	%pythoncode %{
 		def show(self,mainloop=True):
 			import loading
 			loading.load_matplotlib(throw=True)
@@ -55,6 +55,6 @@ SWIG interface for plotting from ASCEND
 			# if self.getXLow() and self.getXHigh():
 			#	matplotlib.gca().set_xlim([self.getXLow(), self.getXHigh()])
 			# */
-	}
+	%}
 }
 

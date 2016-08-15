@@ -63,17 +63,17 @@ extern "C"{
 }
 
 // Import the preferences module
-%pythoncode {
+%pythoncode %{
 	import preferences;
-}
+%}
 
-%pythoncode {
+%pythoncode %{
 	def der(state, indep):
 		return state.getDer(indep)
-}
+%}
 
 // Set-valued instance variable
-%pythoncode {
+%pythoncode %{
 	class SetIter:
 		def __init__(self,set):
 			self.set=set
@@ -83,7 +83,7 @@ extern "C"{
 				raise StopIteration
 			self.index = self.index + 1
 			return self.set[self.index]
-}
+%}
 
 template<class T>
 class ASCXX_Set{
@@ -94,20 +94,20 @@ public:
 	const unsigned long	length() const;
 };
 %extend ASCXX_Set<long>{
-	%pythoncode {
+	%pythoncode %{
 		def __getitem__(self, index):
 			return self.at(index)
 		def __iter__(self):
 			return SetIter(self)
-	}
+	%}
 }
 %extend ASCXX_Set<SymChar>{
-	%pythoncode {
+	%pythoncode %{
 		def __getitem__(self, index):
 			return self.at(index)
 		def __iter__(self):
 			return SetIter(self)
-	}
+	%}
 }
 
 
@@ -183,7 +183,7 @@ class UnitsM;
 %include "units.h"
 
 %extend UnitsM{
-	%pythoncode{
+	%pythoncode %{
 		def getConvertedValue(self,si_value):
 			"""Return an SI value converted to self's units of measurement."""
 			_v = si_value / self.getConversion()
@@ -195,7 +195,7 @@ class UnitsM;
 				return _s
 			else:
 				return _s + " " + _n;
-	}
+	%}
 }
 
 /*
@@ -207,7 +207,7 @@ class UnitsM;
 %rename(__str__) Dimensions::toString;
 
 %extend Dimensions{
-	%pythoncode {
+	%pythoncode %{
 		
 		def __str__(self):
 			return self.toString()
@@ -251,7 +251,7 @@ class UnitsM;
 
 			return Units(str)
 
-	}
+	%}
 }
 
 /*
@@ -314,7 +314,7 @@ public:
 		return self->getName().toString();
 	}
 
-	%pythoncode{
+	%pythoncode %{
 		def getPreferredUnits(self):
 			"""Return preferred units for an instance, which is done by lookup per atom type."""
 			if not self.isRefinedReal():
@@ -333,7 +333,7 @@ public:
 				return None
 
 			return _units;
-	}
+	%}
 }
 
 typedef enum{
@@ -447,7 +447,7 @@ public:
 		}
 	}
 		
-	%pythoncode {
+	%pythoncode %{
 		def getSetValue(self):
 			"""Return the value of a set, as a integer or string Python sequence."""
 			if self.isSetInt():
@@ -548,7 +548,7 @@ public:
 		def __radd__(self,other):
 			a,b = self.__coerce__(other)
 			return b + a
-	}
+	%}
 }
 
 /*
