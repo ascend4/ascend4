@@ -1,0 +1,5 @@
+true: package(containers)
+true: package(sequence)
+true: package(str)
+
+true: use_menhir
