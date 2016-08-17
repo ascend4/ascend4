@@ -1,0 +1,104 @@
+{
+  "T_freeze": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "Tbase": 2.731500e+02, 
+  "Tmax": 3.031500e+02, 
+  "Tmin": 2.181500e+02, 
+  "TminPsat": 3.031500e+02, 
+  "conductivity": {
+    "NRMS": null, 
+    "coeffs": [
+      [
+        4.257994e-01
+      ], 
+      [
+        9.379020e-04
+      ], 
+      [
+        2.287000e-06
+      ]
+    ], 
+    "type": "polynomial"
+  }, 
+  "density": {
+    "NRMS": null, 
+    "coeffs": [
+      [
+        1.249753e+03
+      ], 
+      [
+        -4.762961e-01
+      ], 
+      [
+        -1.171890e-03
+      ], 
+      [
+        1.988240e-05
+      ]
+    ], 
+    "type": "polynomial"
+  }, 
+  "description": "Aspen Temper -55, Potassium acetate/formate", 
+  "mass2input": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "mole2input": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "name": "AS55", 
+  "reference": "Aspen2001,Skovrup2013", 
+  "saturation_pressure": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "specific_heat": {
+    "NRMS": null, 
+    "coeffs": [
+      [
+        2.839850e+03
+      ], 
+      [
+        2.290000e+00
+      ], 
+      [
+        -2.486180e-02
+      ]
+    ], 
+    "type": "polynomial"
+  }, 
+  "viscosity": {
+    "NRMS": 2.815713e-03, 
+    "coeffs": [
+      [
+        -5.051867e+00
+      ], 
+      [
+        -3.862000e-02
+      ], 
+      [
+        2.112087e-04
+      ], 
+      [
+        -7.800164e-06
+      ]
+    ], 
+    "type": "exppolynomial"
+  }, 
+  "volume2input": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "xbase": 0.000000e+00, 
+  "xid": "pure", 
+  "xmax": 1.000000e+00, 
+  "xmin": 0.000000e+00
+}

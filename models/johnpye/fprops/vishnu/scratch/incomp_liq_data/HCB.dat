@@ -1,0 +1,89 @@
+{
+  "T_freeze": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "Tbase": 0.000000e+00, 
+  "Tmax": 3.731500e+02, 
+  "Tmin": 1.931500e+02, 
+  "TminPsat": 3.731500e+02, 
+  "conductivity": {
+    "NRMS": null, 
+    "coeffs": [
+      [
+        2.031860e-01
+      ], 
+      [
+        -2.386900e-04
+      ]
+    ], 
+    "type": "polynomial"
+  }, 
+  "density": {
+    "NRMS": null, 
+    "coeffs": [
+      [
+        1.071780e+03
+      ], 
+      [
+        -7.720240e-01
+      ]
+    ], 
+    "type": "polynomial"
+  }, 
+  "description": "Hydrocarbon blend - Dynalene MV", 
+  "mass2input": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "mole2input": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "name": "HCB", 
+  "reference": "Melinder2010", 
+  "saturation_pressure": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "specific_heat": {
+    "NRMS": null, 
+    "coeffs": [
+      [
+        7.613930e+02
+      ], 
+      [
+        3.529760e+00
+      ]
+    ], 
+    "type": "polynomial"
+  }, 
+  "viscosity": {
+    "NRMS": null, 
+    "coeffs": [
+      [
+        7.168190e+00
+      ], 
+      [
+        -8.632120e-02
+      ], 
+      [
+        1.306040e-04
+      ]
+    ], 
+    "type": "exppolynomial"
+  }, 
+  "volume2input": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "xbase": 0.000000e+00, 
+  "xid": "pure", 
+  "xmax": 1.000000e+00, 
+  "xmin": 0.000000e+00
+}
