@@ -1,0 +1,110 @@
+{
+  "T_freeze": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "Tbase": 2.906500e+02, 
+  "Tmax": 3.631500e+02, 
+  "Tmin": 2.181500e+02, 
+  "TminPsat": 3.631500e+02, 
+  "conductivity": {
+    "NRMS": 2.288109e-05, 
+    "coeffs": [
+      [
+        4.515986e-01
+      ], 
+      [
+        8.656319e-04
+      ], 
+      [
+        5.280352e-07
+      ], 
+      [
+        -1.144975e-12
+      ]
+    ], 
+    "type": "polynomial"
+  }, 
+  "density": {
+    "NRMS": 3.297977e-09, 
+    "coeffs": [
+      [
+        1.313147e+03
+      ], 
+      [
+        -6.044286e-01
+      ], 
+      [
+        -5.668595e-12
+      ], 
+      [
+        -3.964548e-15
+      ]
+    ], 
+    "type": "polynomial"
+  }, 
+  "description": "Zitrec S55, Potassium formate/Sodium propionate", 
+  "mass2input": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "mole2input": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "name": "ZS55", 
+  "reference": "Arteco2010,Skovrup2013", 
+  "saturation_pressure": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "specific_heat": {
+    "NRMS": 1.021918e-06, 
+    "coeffs": [
+      [
+        2.557025e+03
+      ], 
+      [
+        1.995099e+00
+      ], 
+      [
+        4.743056e-03
+      ], 
+      [
+        1.001109e-10
+      ]
+    ], 
+    "type": "polynomial"
+  }, 
+  "viscosity": {
+    "NRMS": 2.316919e-08, 
+    "coeffs": [
+      [
+        -5.601012e+00
+      ], 
+      [
+        -2.583587e-02
+      ], 
+      [
+        2.521265e-04
+      ], 
+      [
+        -1.648687e-06
+      ]
+    ], 
+    "type": "exppolynomial"
+  }, 
+  "volume2input": {
+    "NRMS": null, 
+    "coeffs": "null", 
+    "type": "notdefined"
+  }, 
+  "xbase": 0.000000e+00, 
+  "xid": "pure", 
+  "xmax": 1.000000e+00, 
+  "xmin": 0.000000e+00
+}
