@@ -73,9 +73,14 @@ int main(void){
 		double p = 1e5;
 		double rho = p / P[N2]->data->R / T;
 		double cp0 = ideal_cp(T, rho, P[N2]->data, &err);
-		double cph = fprops_cp((FluidState){T, rho, H_N2}, &err);
-		double cph0 = fprops_cp0((FluidState){T, rho, H_N2}, &err);
-		double cpp0 = fprops_cp((FluidState){T, rho, PR_N2}, &err);	
+		double cph = fprops_cp((FluidState){T, rho, 0.0, 0.0, H_N2}, &err);
+		double cph0 = fprops_cp0((FluidState){T, rho, 0.0, 0.0, H_N2}, &err);
+		double cpp0 = fprops_cp((FluidState){T, rho, 0.0, 0.0, PR_N2}, &err);	
+/*	// comment above three lines and uncomment below three lines if trying to modify FPROPS of incompressible mixtures
+		double cph = fprops_cp((FluidState){T, rho, 0.0, 0.0, H_N2}, &err);
+		double cph0 = fprops_cp0((FluidState){T, rho, 0.0, 0.0, H_N2}, &err);
+		double cpp0 = fprops_cp((FluidState){T, rho, 0.0, 0.0, PR_N2}, &err);
+*/
 		double cpr = rpp_cp_N2(T);
 		fprintf(stderr,"%f\t%f\t%f\t%f\t%f\t%f\t%f\n",T,cp0,cpb,cph,cph0,cpp0,cpr);
 	}

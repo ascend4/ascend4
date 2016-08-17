@@ -1,8 +1,8 @@
 // "Model of 60% NaNO3 + 40% KNO3 as specified in Sandia National Laboratories document SAND2001-2100 rev 0."
 
 
-#include "../../incompressible.h"
-#include "../../fprops.h"
+#include "../incompressible.h"
+#include "../fprops.h"
 
 /*
 #define AMMONIA_M 17.03026
@@ -21,7 +21,7 @@
 
 #define MAXC 10
 
-#define PATH "incomp_liq_data/moltensalt.dat"
+#define PATH "incomp_test/incomp_liq_data/moltensalt.dat"
 
 #define ABORT \
 		printf("\nExiting Program!\n"); \
@@ -214,8 +214,8 @@ int main() {
 
 	fclose(in);
 
-	const EosData eos_ZS55 = {
-		"ZS55"
+	const EosData eos_moltensalt = {
+		"moltensalt"
 		,"test"
 		, NULL
 		,100
@@ -224,21 +224,22 @@ int main() {
 	};
 
 // test
-	PureFluid *P = incompressible_prepare(&eos_ZS55, NULL);
+	PureFluid *P = incompressible_prepare(&eos_moltensalt, NULL);
 	FpropsError fprops_err = FPROPS_NO_ERROR;
 
 #define D P->data->corr.incomp	
 
 	double T = D->T_min;
+	double p = 1.0; // no pressure dependencies yet (may be required for enthalpy evaluation)
 
 	FILE *out;
 	out = fopen("test_res.dat","w");
 
-	fprintf(out,"VARIABLES = \"Temperature [C]\", \"Cp [W/m/K]\", \"Cv [W/m/K]\", \"Density [kg/m<sup>3</sup>]\", \"Heat Capacity [J/Kg/K]\", \"Viscosity [Pa s]\", \"Saturation Pressure [Pa]\"\n");
+	fprintf(out,"VARIABLES = \"Temperature [C]\", \"Cp [W/m/K]\", \"Cv [W/m/K]\", \"Density [kg/m<sup>3</sup>]\", \"Heat Capacity [J/Kg/K]\", \"Viscosity [Pa s]\", \"Internal Energy [SI]\", \"Entropy [SI]\"\n");
 	do {
-		FluidState S = fprops_set_Tpx(T,0.0,1.0,P,&fprops_err);
-		fprintf(out,"%e\t%e\t%e\t%e\t%e\t%e\t%e\n",T-273.0,fprops_cp(S,&fprops_err),fprops_cv(S,&fprops_err),
-		fprops_rho(S,&fprops_err),fprops_lam(S,&fprops_err),fprops_mu(S,&fprops_err),fprops_p_sat(S,&fprops_err));
+		FluidState S = fprops_set_Tp(T,p,P,&fprops_err);
+		fprintf(out,"%e\t%e\t%e\t%e\t%e\t%e\t%e\t%e\n",T-273.0,fprops_cp(S,&fprops_err),fprops_cv(S,&fprops_err),
+		fprops_rho(S,&fprops_err),fprops_lam(S,&fprops_err),fprops_mu(S,&fprops_err),fprops_u(S,&fprops_err),fprops_s(S,&fprops_err));
 		T+=1;
 
 	} while(T<=D->T_max);

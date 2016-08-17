@@ -157,6 +157,41 @@ PROP_EVAL(specific_heat)
 PROP_EVAL(viscosity)
 PROP_EVAL(saturation_pressure)
 
+// All incompressible fluids have an arbitrary reference state for enthalpy and entropy. During initialisation, the reference state is defined as a temperature of 20 °C and a pressure of 1 atm according to the U.S. National Institute of Standards and Technology.
+
+double eval_u(fprops *fluid, double T, double x) {
+	assert(!strcmp(fluid->specific_heat.type,"polynomial"));
+	double Tref = 293.15; // 20 °C
+// We dont know which if the three statements below are required... no validation data as of now
+	//T = T-fluid->T_base;
+	//Tref = Tref-fluid->T_base;
+	//x = x-fluid->x_base;
+	double u = 0.0;
+	int i,j;
+	for(i=0;i<fluid->specific_heat.numc_r;i++)
+		for(j=0;j<fluid->specific_heat.numc_c;j++)
+			u += pow(x,j)/(i+1.0)*fluid->specific_heat.coeff[i][j]*(pow(T,i+1)-pow(Tref,i+1));
+	return u;
+	
+}
+
+double eval_s(fprops *fluid, double T, double x) {
+	assert(!strcmp(fluid->specific_heat.type,"polynomial"));
+	double Tref = 293.15; // 20 °C
+// We dont know which if the three statements below are required... no validation data as of now
+	//T = T-fluid->T_base;
+	//Tref = Tref-fluid->T_base;
+	//x = x-fluid->x_base;
+	double s = 0.0;
+	int i,j;
+	double log_term = log(T/Tref);
+	for(i=0;i<fluid->specific_heat.numc_r-1;i++)
+		for(j=0;j<fluid->specific_heat.numc_c;j++)
+			s += pow(x,j)*(fluid->specific_heat.coeff[0][j]*log_term+1.0/(i+1.0)*fluid->specific_heat.coeff[i+1][j]*(pow(T,i+1)-pow(Tref,i+1)));
+	return s;
+	
+}
+
 int main() {
 
 // parsing from input (json format) and loading data to new fluid data structures
@@ -208,10 +243,10 @@ int main() {
 	FILE *out;
 	out = fopen("test_res.dat","w");
 
-	fprintf(out,"VARIABLES = \"Temperature [C]\", \"Conductivity [W/m/K]\", \"Density [kg/m<sup>3</sup>]\", \"Heat Capacity [J/Kg/K]\", \"Viscosity [Pa s]\", \"Saturation Pressure [Pa]\"\n");
+	fprintf(out,"VARIABLES = \"Temperature [C]\", \"Conductivity [W/m/K]\", \"Density [kg/m<sup>3</sup>]\", \"Heat Capacity [J/Kg/K]\", \"Viscosity [Pa s]\", \"Saturation Pressure [Pa]\", \"Internal Energy [SI]\", \"Entropy [SI]\"\n");
 	do {
 
-		fprintf(out,"%e\t%e\t%e\t%e\t%e\t%e\n",T-273.0,eval_conductivity(test_liq, T, 0.39),eval_density(test_liq, T, 0.39),eval_specific_heat(test_liq, T, 0.39),eval_viscosity(test_liq, T, 0.39),eval_saturation_pressure(test_liq, T, 0.39));
+		fprintf(out,"%e\t%e\t%e\t%e\t%e\t%e\t%e\t%e\n",T-273.15,eval_conductivity(test_liq, T, 0.39),eval_density(test_liq, T, 0.39),eval_specific_heat(test_liq, T, 0.39),eval_viscosity(test_liq, T, 0.39),eval_saturation_pressure(test_liq, T, 0.39),eval_u(test_liq, T, 0.39),eval_s(test_liq, T, 0.39));
 		T+=1;
 
 	} while(T<=test_liq->T_max);

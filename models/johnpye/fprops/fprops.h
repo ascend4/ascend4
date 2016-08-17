@@ -38,14 +38,15 @@
 */
 typedef struct FluidState_struct{
 	double T; ///< temperature / K
-	double rho; ///< density / kg/m3
-	double p; ///< Pressure / [Pa]
-	double x;
+	double rho; ///< density / kg/m3 Note: rho = p for incompressible case
+//	double p; ///< Pressure / [Pa]
+//	double x;
 	const PureFluid *fluid; ///< pointer to fluid description and associated functions
 } FluidState;
 
 FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsError *err);
-FluidState fprops_set_Tpx(double T, double p, double x, const PureFluid *fluid, FpropsError *err); // added for incompressible
+//FluidState fprops_set_Tpx(double T, double p, double x, const PureFluid *fluid, FpropsError *err); // added for incompressible
+FluidState fprops_set_Tp(double T, double p, const PureFluid *fluid, FpropsError *err);
 
 /* TODO we need to add a way to specify what fluid correlation is desired
 and also what reference state, as another option. */

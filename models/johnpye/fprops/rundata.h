@@ -142,13 +142,15 @@ typedef struct FluidData_struct{
 
 
 /* Definition of a fluid property function pointer */
+// Note: rho = p for incompressible fluids
 typedef double PropEvalFn(double T,double rho,const FluidData *data, FpropsError *err);
+
 
 /** @return psat */
 typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *data, FpropsError *err);
 
 /* Definition of incompressible fluid property function pointer (rho,cp,cv,lam,mu,t_freeze,p_sat) for pure fluid and mixtures*/
-typedef double PropEvalFnIncomp(double T,double p,double x,const FluidData *data, FpropsError *err);
+//typedef double PropEvalFnIncomp(double T,double p,double x,const FluidData *data, FpropsError *err);
 
 /**
 	Structure containing all the necessary data and metadata for run-time
@@ -160,6 +162,11 @@ typedef struct PureFluid_struct{
 	EosType type;
 	FluidData *data; // everything we need at runtime in the following functions should be in here
 	//Pointers to departure functions
+	PropEvalFn *rho_fn; // added for incompressible
+	PropEvalFn *T_freeze_fn; // added for incompressible
+	PropEvalFn *p_sat_fn; // added for incompressible
+	PropEvalFn *mu_fn; // added for incompressible
+	PropEvalFn *lam_fn; // added for incompressible
 	PropEvalFn *p_fn;
 	PropEvalFn *u_fn;
 	PropEvalFn *h_fn;
@@ -175,18 +182,18 @@ typedef struct PureFluid_struct{
 	SatEvalFn *sat_fn; // function to return {psat,rhof,rhog}(T) for this pure fluid
 
 /* start for incompressible fluids */
-	PropEvalFnIncomp *rho_fn_inc; 
-	PropEvalFnIncomp *cp_fn_inc;
-	PropEvalFnIncomp *cv_fn_inc;
-	PropEvalFnIncomp *lam_fn_inc;
-	PropEvalFnIncomp *mu_fn_inc;
-	PropEvalFnIncomp *T_freeze_fn_inc;
-	PropEvalFnIncomp *p_sat_fn_inc;
+//	PropEvalFnIncomp *rho_fn_inc; 
+//	PropEvalFnIncomp *cp_fn_inc;
+//	PropEvalFnIncomp *cv_fn_inc;
+//	PropEvalFnIncomp *lam_fn_inc;
+//	PropEvalFnIncomp *mu_fn_inc;
+//	PropEvalFnIncomp *T_freeze_fn_inc;
+//	PropEvalFnIncomp *p_sat_fn_inc;
 /* end for incompressible fluids */
 	
 /* dummy (... or to be defined later?) function pointers added to compile succesfully */
-	PropEvalFn *rho_fn,*T_freeze_fn,*p_sat_fn;
-	PropEvalFnIncomp *p_fn_inc,*u_fn_inc,*h_fn_inc,*s_fn_inc,*a_fn_inc,*w_fn_inc,*g_fn_inc,*alphap_fn_inc,*betap_fn_inc,*dpdrho_T_fn_inc,*sat_fn_inc;
+//	PropEvalFn *rho_fn,*T_freeze_fn,*p_sat_fn;
+//	PropEvalFnIncomp *p_fn_inc,*u_fn_inc,*h_fn_inc,*s_fn_inc,*a_fn_inc,*w_fn_inc,*g_fn_inc,*alphap_fn_inc,*betap_fn_inc,*dpdrho_T_fn_inc,*sat_fn_inc;
 
 	const ViscosityData *visc; // TODO should it be here? or inside FluidData?? probably yes, but needs review.
 	const ThermalConductivityData *thcond; // TODO should it be here? probably yes, but needs review.

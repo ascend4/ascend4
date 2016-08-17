@@ -164,13 +164,14 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 	}
 
 	// function pointers... more to come still? 
-#define FN(VAR1,VAR2) P->VAR1##_fn_inc = &incomp_eval_##VAR2
+#define FN(VAR1,VAR2) P->VAR1##_fn = &incomp_eval_##VAR2
 	FN(rho,density);  FN(cp,specific_heat); FN(cv,specific_heat); 
 	FN(lam,conductivity); FN(mu,viscosity); 
-	FN(t_freeze,T_freeze); FN(p_sat,saturation_pressure);
+	FN(T_freeze,T_freeze); FN(p_sat,saturation_pressure);
+	FN(internal_energy); FN(entropy);
 #undef FN
 
-// FN(u); FN(h); FN(s); FN(a); FN(g); FN(w); FN(dpdrho_T); FN(sat);// to be added for incompressible
+// FN(u); FN(s); FN(a); FN(g); FN(w); FN(dpdrho_T); FN(sat);// to be added for incompressible
 
 /*	//MSG("Setting reference state...");
 	// set the reference point
@@ -241,12 +242,11 @@ PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref){
 #define D data->corr.incomp
 
 #define PROP_EVAL(Q) \
-	double incomp_eval_ ## Q (double T, double p, double x, const FluidData *data, FpropsError *err) { \
+	double incomp_eval_ ## Q (double T, double p, const FluidData *data, FpropsError *err) { \
 		assert(T>0&&T>=D->T_min&&T<=D->T_max); \
-		assert(x>=D->x_min&&x<=D->x_max); \
-		if(!strcmp(D->Q.type,"polynomial")) return eval_poly(D->Q,T-D->T_base,x-D->x_base); \
-		else if(!strcmp(D->Q.type,"exppolynomial")) return eval_exppoly(D->Q,T-D->T_base,x-D->x_base); \
-		else if(!strcmp(D->Q.type,"exponential")) return eval_expo(D->Q,T,x); \
+		if(!strcmp(D->Q.type,"polynomial")) return eval_poly(D->Q,T-D->T_base,1.0); \
+		else if(!strcmp(D->Q.type,"exppolynomial")) return eval_exppoly(D->Q,T-D->T_base,1.0); \
+		else if(!strcmp(D->Q.type,"exponential")) return eval_expo(D->Q,T,1.0); \
 		MSG("Invalid request"); \
 		*err = FPROPS_INVALID_REQUEST; \
 		return 0; \
@@ -261,6 +261,44 @@ PROP_EVAL(viscosity)
 PROP_EVAL(saturation_pressure)
 		
 #undef PROP_EVAL
+
+// All incompressible fluids have an arbitrary reference state for enthalpy and entropy. During initialisation, the reference state is defined as a temperature of 20 °C and a pressure of 1 atm according to the U.S. National Institute of Standards and Technology.
+
+double incomp_eval_internal_energy(double T, double p, const FluidData *data, FpropsError *err) {
+	assert(T>0&&T>=D->T_min&&T<=D->T_max);
+	assert(!strcmp(D->specific_heat.type,"polynomial"));
+	double Tref = 293.15; // 20 °C
+// We dont know which if the three statements below are required... no validation data as of now
+	//T = T-fluid->T_base;
+	//Tref = Tref-fluid->T_base;
+	//x = x-fluid->x_base;
+	double u = 0.0;
+	int i,j;
+	for(i=0;i<D->specific_heat.numc_r;i++)
+		for(j=0;j<D->specific_heat.numc_c;j++)
+			u += pow(1.0,j)/(i+1.0)*D->specific_heat.coeff[i][j]*(pow(T,i+1)-pow(Tref,i+1));
+	return u;
+	
+}
+
+double incomp_eval_entropy(double T, double p, const FluidData *data, FpropsError *err) {
+	assert(T>0&&T>=D->T_min&&T<=D->T_max);
+	assert(!strcmp(D->specific_heat.type,"polynomial"));
+	double Tref = 293.15; // 20 °C
+// We dont know which if the three statements below are required... no validation data as of now
+	//T = T-fluid->T_base;
+	//Tref = Tref-fluid->T_base;
+	//x = x-fluid->x_base;
+	double s = 0.0;
+	int i,j;
+	double log_term = log(T/Tref);
+	for(i=0;i<D->specific_heat.numc_r-1;i++)
+		for(j=0;j<D->specific_heat.numc_c;j++)
+			s += pow(1.0,j)*(D->specific_heat.coeff[0][j]*log_term+1.0/(i+1.0)*D->specific_heat.coeff[i+1][j]*(pow(T,i+1)-pow(Tref,i+1)));
+	return s;
+	
+}
+
 #undef D
 
 /*

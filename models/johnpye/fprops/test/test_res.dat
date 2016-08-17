@@ -1,0 +1,1 @@
+VARIABLES = "Temperature [C]", "Cp [W/m/K]", "Cv [W/m/K]", "Density [kg/m<sup>3</sup>]", "Heat Capacity [J/Kg/K]", "Viscosity [Pa s]", "Internal Energy [SI]", "Entropy [SI]"

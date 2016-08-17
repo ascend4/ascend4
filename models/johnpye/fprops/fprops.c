@@ -155,13 +155,13 @@ PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 }
 
 FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsError *err){
-	FluidState state = {T,rho,-1.0,1.0,fluid};	
+	FluidState state = {T,rho,fluid};	
 	return state;
 }
 
-// added for incompressible (x = 1 for pure, otherwise mixture)
-FluidState fprops_set_Tpx(double T, double p, double x, const PureFluid *fluid, FpropsError *err){
-	FluidState state = {T,-1.0,p,x,fluid};
+// added for incompressible
+FluidState fprops_set_Tp(double T, double p, const PureFluid *fluid, FpropsError *err){
+	FluidState state = {T,p,fluid};
 	return state;
 }
 
@@ -178,10 +178,7 @@ FluidState fprops_set_Tpx(double T, double p, double x, const PureFluid *fluid, 
 #define EVALFN(VAR) \
 	double fprops_##VAR(FluidState state, FpropsError *err){\
 		double p, rho_f, rho_g;\
-		/* state.rho = -1.0 if fluid is incompressible */ \
-		if(state.rho<0.0) \
-			return state.fluid->VAR##_fn_inc(state.T,state.p,state.x,state.fluid->data,err);\
-		else if(state.T >= state.fluid->data->T_t && state.T < state.fluid->data->T_c){\
+		if(state.T >= state.fluid->data->T_t && state.T < state.fluid->data->T_c){\
 			fprops_sat_T(state.T, &p, &rho_f, &rho_g, state.fluid, err);\
 			if(*err){\
 				MSG("Got error %d from saturation calc in %s\n",*err,__func__);\
@@ -201,9 +198,6 @@ FluidState fprops_set_Tpx(double T, double p, double x, const PureFluid *fluid, 
 #define EVALFN_SATUNDEFINED(VAR) \
 	double fprops_##VAR(FluidState state, FpropsError *err){\
 		double p, rho_f, rho_g;\
-		/* state.rho = -1.0 if fluid is incompressible */ \
-		if(state.rho<0.0) \
-			return state.fluid->VAR##_fn_inc(state.T,state.p,state.x,state.fluid->data,err);\
 		if(state.T >= state.fluid->data->T_t && state.T < state.fluid->data->T_c){\
 			fprops_sat_T(state.T, &p, &rho_f, &rho_g, state.fluid, err);\
 			if(*err){\
@@ -253,8 +247,8 @@ double fprops_betap(FluidState state, FpropsError *err){
 
 /// TODO reimplement with function pointer?
 double fprops_mu(FluidState state, FpropsError *err){
-	if(state.rho<0.0) 
-		return state.fluid->mu_fn_inc(state.T,state.p,state.x,state.fluid->data,err);
+	if(state.fluid->type==FPROPS_INCOMPRESSIBLE) 
+		return state.fluid->mu_fn(state.T,state.rho,state.fluid->data,err); // note that rho = (acts as) p for incompressible cases
 	else if(NULL!=state.fluid->visc){
 		switch(state.fluid->visc->type){
 		case FPROPS_VISC_1:
@@ -269,8 +263,8 @@ double fprops_mu(FluidState state, FpropsError *err){
 
 /// TODO reimplement with function pointer?
 double fprops_lam(FluidState state, FpropsError *err){
-	if(state.rho<0.0) 
-		return state.fluid->lam_fn_inc(state.T,state.p,state.x,state.fluid->data,err);
+	if(state.fluid->type==FPROPS_INCOMPRESSIBLE) 
+		return state.fluid->lam_fn(state.T,state.rho,state.fluid->data,err); // note that rho = (acts as) p for incompressible cases
 	if(NULL!=state.fluid->thcond){
 		switch(state.fluid->thcond->type){
 		case FPROPS_THCOND_1:

@@ -26,12 +26,14 @@
 */
 PureFluid *incompressible_prepare(const EosData *E, const ReferenceState *ref);
 
-PropEvalFnIncomp incomp_eval_T_freeze;
-PropEvalFnIncomp incomp_eval_conductivity;
-PropEvalFnIncomp incomp_eval_density;
-PropEvalFnIncomp incomp_eval_specific_heat;
-PropEvalFnIncomp incomp_eval_viscosity;
-PropEvalFnIncomp incomp_eval_T_saturation_pressure;
+PropEvalFn incomp_eval_T_freeze;
+PropEvalFn incomp_eval_conductivity;
+PropEvalFn incomp_eval_density;
+PropEvalFn incomp_eval_specific_heat;
+PropEvalFn incomp_eval_viscosity;
+PropEvalFn incomp_internal_energy;
+PropEvalFn incomp_entropy;
+PropEvalFn incomp_eval_saturation_pressure;
 
 /*
 PropEvalFn incompressible_u;
