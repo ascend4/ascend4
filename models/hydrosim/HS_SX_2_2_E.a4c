@@ -142,6 +142,6 @@ METHOD on_load;
 	RUN values;
 END on_load;
 
-END test_flowsheet;
+END HS_SX_2_2_E;
 
 (***********************************************************)

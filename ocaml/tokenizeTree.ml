@@ -256,6 +256,15 @@ and do_statement = function
       ss ASSERT <+> do_expr expr
   | Stat_assign(assignment) ->
       do_assignment assignment
+  | Stat_blackbox(label, id, input_args, output_args, data_arg_opt) ->
+      do_label label <+>
+      ss (IDENTIFIER id) <+>
+      ss LPAREN <+>
+      do_input_args input_args <+>
+      ss SEMICOLON <+>
+      do_output_args output_args <+>
+      do_optional_data_arg data_arg_opt <+>
+      ss RPAREN
   | Stat_call(id,set_opt) ->
       (match set_opt with
       | None      -> sl [CALL; IDENTIFIER id]
@@ -296,6 +305,15 @@ and do_statement = function
       sl [END; FOR]
   | Stat_free(fnames) ->
       ss FREE <+> do_fnames fnames
+  | Stat_glassbox(label, id, fnames, n, scope_opt) ->
+      do_label label <+>
+      ss (IDENTIFIER id) <+>
+      ss LPAREN <+> 
+      do_fnames fnames <+>
+      ss SEMICOLON <+>
+      ss (INTEGER n) <+>
+      ss RPAREN <+>
+      do_optional_scope scope_opt
   | Stat_if(expr,stats) ->
       ss IF <+> do_expr expr <+> ss THEN <+>
       do_statements stats <+>
@@ -407,6 +425,9 @@ and do_for_direction = function
   | For_increasing -> ss INCREASING
   | For_decreasing -> ss DECREASING
 
+and do_input_args = function
+  | fnames -> do_fnames fnames <+> sl [COLON; INPUT]
+
 and do_jump = function
   | Jump_break    -> ss BREAK
   | Jump_continue -> ss CONTINUE
@@ -430,9 +451,17 @@ and do_switch_block = function
   | Switch_case(set,stats)  -> ss CASE <+> do_set set <+> ss COLON <+> do_statements stats
   | Switch_otherwise(stats) -> ss OTHERWISE           <+> ss COLON <+> do_statements stats
 
+and do_optional_data_arg = function
+  | None        -> empty
+  | Some(fname) -> ss SEMICOLON <+> do_fname fname <+> sl [COLON; DATA]
+
 and do_optional_of = function
   | None -> empty
   | Some(id) -> sl [OF; IDENTIFIER id]
+
+and do_optional_scope = function
+    | None        -> empty
+    | Some(fname) -> ss IN <+> do_fname fname
 
 and do_optional_set_values = function
   | None -> empty
@@ -441,6 +470,9 @@ and do_optional_set_values = function
 and do_optional_with_value = function
   | None -> empty
   | Some(expr) -> ss WITH_VALUE <+> do_expr expr
+
+and do_output_args = function
+  | fnames -> do_fnames fnames <+> sl [COLON; OUTPUT]
 
 and do_type_expr = function
   | TE_var(id)       -> ss (IDENTIFIER id)

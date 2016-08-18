@@ -41,7 +41,7 @@ METHODS
 		INDEPENDENT t;
 		INDEPENDENT t2;
 	END on_load;
-END twoderiv_wLINK;
+END twoderiv_wLINK_fail1;
 
 (* no independent variable declared *)
 MODEL twoderiv_wLINK_fail2;
@@ -61,7 +61,7 @@ METHODS
 		DER(dy_dt,y);
 		DER(dx_dt,x);
 	END on_load;
-END twoderiv_wLINK;
+END twoderiv_wLINK_fail2;
 
 
 

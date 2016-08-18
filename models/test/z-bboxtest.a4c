@@ -323,6 +323,7 @@ END pass10;
 (*  merged input/output solve *)
 MODEL pass11 REFINES pass1; 
 	y[1], x[1] ARE_THE_SAME; (* always self consistent in theory unless you think you fixed both to distinct values. *)
+METHODS
 METHOD specify;
 	RUN pass1::specify;
 	x[1].fixed := FALSE;

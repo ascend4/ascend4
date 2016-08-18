@@ -27,7 +27,7 @@ END values;
 
 METHOD bound_self;
 	t.lower_bound := 0 {s}; (* t > 0 *)
-END values;
+END bound_self;
 
 (* this method will be run on startup *)
 METHOD default_self;

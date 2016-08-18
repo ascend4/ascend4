@@ -11,12 +11,12 @@ mkdir -p ./parsed
 rm -rf ./lexed/* ./parsed/*
 
 ok=1
-for file in ../../models/ksenija/*.a4c; do
-  name="$(basename "$file")"
-  ../testTokens.byte lexer  < "$file" > "./lexed/$name"
-  ../testTokens.byte parser < "$file" > "./parsed/$name"
-  if ! diff "./lexed/$name" "./parsed/$name" > /dev/null; then
-    echo "Mismatch found in $name"
+for file in $(find ../../models -iname "*.a4c"); do
+  flatname=$(echo "$file" | sed -e 's#^\.\./\.\./models/##' -e 's#/#-#g')
+  ../testTokens.byte lexer  < "$file" > "./lexed/$flatname"
+  ../testTokens.byte parser < "$file" > "./parsed/$flatname"
+  if ! diff "./lexed/$flatname" "./parsed/$flatname" > /dev/null; then
+    echo "Mismatch found in $file"
     ok=0
   fi
 done

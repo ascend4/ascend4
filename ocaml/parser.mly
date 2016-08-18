@@ -31,17 +31,17 @@
 %token BEQ BNE BREAK
 %token CALL CARD CASE CHOICE CHECK CHILDREN CONDITIONAL CONSTANT
 %token CONTINUE CREATE
-%token (*DATA*) DECREASING DEFAULT DEFINITION DER DIMENSION DERIV DERIVATIVE
+%token DATA DECREASING DEFAULT DEFINITION DER DIMENSION DERIV DERIVATIVE
 %token DIMENSIONLESS DO
 %token ELSE END EVENT EXPECT EXTERNAL
 %token FALSE FALLTHRU FIX FOR FREE FROM
 %token GLOBAL
-%token IF  IGNORE IMPORT IN (*INPUT*) INCREASING (*INTERACTIVE*) INDEPENDENT
+%token IF  IGNORE IMPORT IN INPUT INCREASING (*INTERACTIVE*) INDEPENDENT
 %token INTERSECTION ISA IS ISREFINEDTO
 %token LIKE LINK
 %token MAXIMIZE MAXINTEGER MAXREAL METHODS METHOD MINIMIZE MODEL
 %token NOT NOTES
-%token OF OPTION OR OTHERWISE (*OUTPUT*)
+%token OF OPTION OR OTHERWISE OUTPUT
 %token PATCH PRE PREVIOUS PROD PROVIDE
 %token REFINES REPLACE REQUIRE RETURN RUN
 %token SATISFIED SELECT (*SIZE*) SOLVE SOLVER STOP SUCHTHAT SUM SWITCH
@@ -407,6 +407,7 @@ statement:
     | arethesame_statement       { $1 }
     | assert_statement           { $1 }
     | assignment_statement       { $1 }
+    | blackbox_statement         { $1 }
     | call_statement             { $1 }
     | conditional_statement      { $1 }
     | der_statement              { $1 }
@@ -418,6 +419,7 @@ statement:
     | flow_statement             { $1 }
     | for_statement              { $1 }
     | free_statement             { $1 }
+    | glassbox_statement         { $1 }
     | if_statement               { $1 }
     | independent_statement      { $1 }
     | is_statement               { $1 }
@@ -441,9 +443,6 @@ statement:
     | willbe_statement           { $1 }
     | willbethesame_statement    { $1 }
     | willnotbethesame_statement { $1 }
-    (* Not Implemented: *)
-    (*| blackbox_statement         { $1 }*)
-    (*| glassbox_statement         { $1 }*)
 
 aliases_statement: 
     | fnames ALIASES fname
@@ -463,6 +462,10 @@ assert_statement:
 
 assignment_statement: 
     | assignment { Stat_assign($1) }
+
+blackbox_statement: 
+    | label IDENTIFIER LPAREN input_args SEMICOLON output_args optional_data_arg RPAREN
+      { Stat_blackbox($1,$2,$4,$6,$7) }
 
 call_statement: 
     | CALL IDENTIFIER                   { Stat_call($2,None) }
@@ -503,6 +506,10 @@ for_statement:
 
 free_statement: 
     | FREE fnames { Stat_free($2) }
+
+glassbox_statement: 
+    | label IDENTIFIER LPAREN fnames SEMICOLON INTEGER RPAREN optional_scope
+    { Stat_glassbox ($1,$2,$4,$6,$8) }
 
 if_statement: 
     | IF expr THEN statements END IF                 { Stat_if($2,$4) }
@@ -595,7 +602,6 @@ assignment:
     | fname ASSIGN  expr { Assign_var($1,$3) }
     | fname CASSIGN expr { Assign_const($1,$3) }
 
-
 for_action: 
     | CHECK  { For_check }
     | CREATE { For_create }
@@ -605,6 +611,9 @@ for_action:
 for_direction:
     | INCREASING { For_increasing }
     | DECREASING { For_decreasing }
+
+input_args: 
+    | fnames COLON INPUT { $1 }
 
 jump:
     | BREAK                   { Jump_break    }
@@ -630,10 +639,17 @@ switch_block:
     | CASE set COLON statements  { Switch_case($2,$4) }
     | OTHERWISE COLON statements { Switch_otherwise($3) }
 
+optional_data_arg: 
+    | (**)                       { None }
+    | SEMICOLON fname COLON DATA { Some($2) }
 
 optional_of: 
     | (**)          { None }
     | OF IDENTIFIER { Some($2) }
+
+optional_scope: 
+    | (**)     { None }
+    | IN fname { Some($2) }
 
 optional_set_values: 
     | (**)                         { None }
@@ -642,6 +658,9 @@ optional_set_values:
 optional_with_value: 
     | (**)            { None }
     | WITH_VALUE expr { Some($2) }
+
+output_args: 
+    | fnames COLON OUTPUT {$1}
 
 type_expr: 
     | IDENTIFIER                   { TE_var($1) }
@@ -700,32 +719,6 @@ relop:
 logrelop: 
     | BEQ { Bin_beq }
     | BNE { Bin_bne }
-
-
-(* Not Implemented yet...
- * Unused tokens: DATA INPUT OUTPUT
-
-glassbox_statement: 
-    | label IDENTIFIER LPAREN fnames SEMICOLON INTEGER RPAREN optional_scope {()}
-
-blackbox_statement: 
-    | label IDENTIFIER LPAREN input_args SEMICOLON output_args data_args RPAREN {()}
-
-data_args: 
-    | (**)                 {()}
-    | SEMICOLON label DATA {()}
-
-input_args: 
-    | fnames COLON INPUT {()}
-
-output_args: 
-    | fnames COLON OUTPUT {()}
-
-optional_scope: 
-    | (**)     {()}
-    | IN fname {()}
-*)
-
 
 %%
 

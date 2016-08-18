@@ -104,6 +104,7 @@ and statement =
   | Stat_arethesame of fname list
   | Stat_assert of expr
   | Stat_assign of assignment
+  | Stat_blackbox of fname * identifier * fname list * fname list * fname option
   | Stat_call of identifier * set option
   | Stat_conditional of statement list
   | Stat_der of fname list
@@ -116,6 +117,7 @@ and statement =
   | Stat_for of identifier * expr * for_direction option * for_action * statement list
   | Stat_free of fname list
   | Stat_if of expr * statement list
+  | Stat_glassbox of fname * identifier * fname list * int * fname option
   | Stat_if_else of expr * statement list * statement list
   | Stat_independent of fname list
   | Stat_is of fname list * identifier * identifier option

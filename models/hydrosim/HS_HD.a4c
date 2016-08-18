@@ -97,7 +97,7 @@ METHOD on_load;
 	RUN values;
 END on_load;
 
-END L_z;
+END HS_HD;
 
 (***********************************************************)
 

@@ -12,4 +12,4 @@ METHODS
 		t.ode_type := -1;
 		(* do nothing *)
 	END on_load;
-END noderivs;
+END noderivsfail1;

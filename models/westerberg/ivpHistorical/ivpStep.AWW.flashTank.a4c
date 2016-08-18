@@ -34,7 +34,7 @@ MODEL dynamicFlash(
 	
 	(* component dynamic material balances *)
 	dm_totdt[i] = feed.y[i]*feed.flow
-	    - vapout.y[i].vapout.flow - liqout,y[i]*liqout.flow;
+	    - vapout.y[i].vapout.flow - liqout.y[i]*liqout.flow;
 
 	(* overall dynamic energy balance *)
 	dU_totdt = Qin + feed.H_flow - vapout.H_flow -liqout.H_flow;

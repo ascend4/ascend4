@@ -4,5 +4,5 @@ REQUIRE "atoms.a4l";
 MODEL harvard;
 	x IS_A area;
 	x = (1 {rod^2} + 5 {ft^2}) - (7 {yd^2} + 139 {in^2});
-END hardvard;
+END harvard;
 

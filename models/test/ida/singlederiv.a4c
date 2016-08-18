@@ -23,7 +23,7 @@ METHODS
 	METHOD on_load;
 		LINK('ode_type',dy_dt,y,t);
 	END on_load;
-END singlederiv;
+END singlederiv_LINK;
 
 (* bad ode_id present on 't' *)
 MODEL singlederivfail1;

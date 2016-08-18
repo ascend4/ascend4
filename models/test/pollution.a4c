@@ -118,7 +118,7 @@ METHODS
 			dy_dt[i].ode_id := i; dy_dt[i].ode_type := 2;
 		END FOR;
 		t.ode_type := -1;
-	END ode_ide;
+	END ode_init;
 
 	METHOD specify;
 		(* nothing needs to be fixed *)

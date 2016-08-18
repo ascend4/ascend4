@@ -52,6 +52,7 @@ initial = parse
   | "/"      { DIV }
   | "^"      { CIRCUMFLEX }
   | "|"      { PIPE }
+  | "'ignore'"  { IGNORE }
   (* Reserverd Words *)
   | idChar as name {
     match name with
@@ -75,7 +76,7 @@ initial = parse
     | "CONSTANT"      -> CONSTANT 
     | "CONTINUE"      -> CONTINUE 
     | "CREATE"        -> CREATE 
-    (*| "DATA"          -> DATA *)
+    | "DATA"          -> DATA
     | "DECREASING"    -> DECREASING 
     | "DEFAULT"       -> DEFAULT 
     | "DEFINITION"    -> DEFINITION 
@@ -98,12 +99,11 @@ initial = parse
     | "FROM"          -> FROM 
     | "GLOBAL"        -> GLOBAL 
     | "IF"            -> IF 
-    | "'ignore'"      -> IGNORE 
     | "IMPORT"        -> IMPORT 
     | "IN"            -> IN 
     | "INCREASING"    -> INCREASING 
     | "INDEPENDENT"   -> INDEPENDENT 
-    (*| "INPUT"         -> INPUT *)
+    | "INPUT"         -> INPUT
     | "INTERSECTION"  -> INTERSECTION 
     | "IS_A"          -> ISA 
     | "IS_REFINED_TO" -> ISREFINEDTO 
@@ -122,7 +122,7 @@ initial = parse
     | "OPTION"        -> OPTION 
     | "OR"            -> OR 
     | "OTHERWISE"     -> OTHERWISE 
-    (*| "OUTPUT"        -> OUTPUT *)
+    | "OUTPUT"        -> OUTPUT
     | "pre"           -> PRE 
     | "PREVIOUS"      -> PREVIOUS 
     | "PROD"          -> PROD 
@@ -193,7 +193,10 @@ comment nesting = parse
   | eof    { raise (Types.LexerError "Unfinished comment") } 
   | "(*"   { comment (nesting + 1) lexbuf }
   | "*)"   { if nesting == 1 then () else comment (nesting - 1) lexbuf }
-  | _      { comment nesting lexbuf }
+  | _      {
+    update_line_number lexbuf;
+    comment nesting lexbuf
+  }
 
 and
 symbol strbuf = parse
@@ -331,7 +334,7 @@ let string_of_token = function
   | CONSTANT         -> "CONSTANT"
   | CONTINUE         -> "CONTINUE"
   | CREATE           -> "CREATE"
-  (*|DATA              -> "DATA"*)
+  | DATA              -> "DATA"
   | DECREASING       -> "DECREASING"
   | DEFAULT          -> "DEFAULT"
   | DEFINITION       -> "DEFINITION"
@@ -359,7 +362,7 @@ let string_of_token = function
   | IN               -> "IN"
   | INCREASING       -> "INCREASING"
   | INDEPENDENT      -> "INDEPENDENT"
-  (*| INPUT -> "INPUT"*)
+  | INPUT            -> "INPUT"
   | INTERSECTION     -> "INTERSECTION"
   | IS               -> "IS"
   | ISA              -> "IS_A"
@@ -379,7 +382,7 @@ let string_of_token = function
   | OPTION           -> "OPTION"
   | OR               -> "OR"
   | OTHERWISE        -> "OTHERWISE"
-  (*| OUTPUT           -> "OUTPUT"*)
+  | OUTPUT           -> "OUTPUT"
   | PATCH            -> "PATCH"
   | PRE              -> "pre"
   | PREVIOUS         -> "PREVIOUS"
