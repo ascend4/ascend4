@@ -6,6 +6,7 @@
 
 all:
 	ocamlbuild -use-ocamlfind testTokens.byte
+	ocamlbuild -use-ocamlfind inferDerivatives.byte
 
 clean:
 	ocamlbuild -clean

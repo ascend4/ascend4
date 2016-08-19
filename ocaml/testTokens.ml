@@ -10,6 +10,7 @@
  *   ./testTokens.byte parser
  *)
 
+open Containers
 
 let exit_with_error s =
   Printf.fprintf stderr "%s\n" s;
