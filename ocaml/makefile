@@ -5,9 +5,9 @@
 .PHONY: all clean
 
 all:
-	ocamlbuild -use-ocamlfind testTokens.byte
-	ocamlbuild -use-ocamlfind inferDerivatives.byte
+	ocamlbuild -use-ocamlfind test_tokens.byte
+	ocamlbuild -use-ocamlfind infer_derivatives.byte
 
 clean:
 	ocamlbuild -clean
-	rm -rf tests/lexed tests/parsed
+	rm -rf tests/lexed tests/parsed tests/inferred-derivatives

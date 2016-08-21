@@ -13,11 +13,26 @@ rm -rf ./lexed/* ./parsed/*
 ok=1
 for file in $(find ../../models -iname "*.a4c"); do
   flatname=$(echo "$file" | sed -e 's#^\.\./\.\./models/##' -e 's#/#-#g')
-  ../testTokens.byte lexer  < "$file" > "./lexed/$flatname"
-  ../testTokens.byte parser < "$file" > "./parsed/$flatname"
+  
+  if ! ../test_tokens.byte lexer < "$file" > "./lexed/$flatname"; then
+    echo "Lexer error in file $file"
+    echo
+    ok=0
+    continue
+  fi
+
+  if ! ../test_tokens.byte parser < "$file" > "./parsed/$flatname"; then
+    echo "Parser error in file $file"
+    echo
+    ok=0
+    continue
+  fi
+  
   if ! diff "./lexed/$flatname" "./parsed/$flatname" > /dev/null; then
     echo "Mismatch found in $file"
+    echo
     ok=0
+    continue
   fi
 done
 

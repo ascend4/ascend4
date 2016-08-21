@@ -719,7 +719,3 @@ relop:
 logrelop: 
     | BEQ { Bin_beq }
     | BNE { Bin_bne }
-
-%%
-
-let foo = "Hello World"

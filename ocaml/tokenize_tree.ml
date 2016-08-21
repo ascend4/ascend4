@@ -1,6 +1,6 @@
 open Sequence
 open Types
-open Parser
+open Grammar
 
 let ss = Sequence.singleton
 let sd = Sequence.doubleton
@@ -540,3 +540,4 @@ and do_optional_bracedtext = function
   | Some(braced) -> ss (BRACEDTEXT braced)
 
 let tokenize_ast = do_program
+

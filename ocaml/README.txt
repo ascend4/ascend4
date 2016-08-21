@@ -2,17 +2,16 @@ What is this code?
 ==================
 
 In this folder we have an alternate parser for the ASCEND grammar, written in
-Ocaml. The motivation for this parser is that it should be simpler than the C
-one, since all it just builds a syntax tree without doing any additional
-processing and because Ocaml is better suited for playing around with trees
-than C is (algebraic data types and pattern matching help a lot).
+Ocaml. The motivation for this parser is to have a parser that just emits a
+syntax tree instead of parsing and compiling the model all in one go. The
+resulting parser should be simpler than the C one (since it only builds the
+syntax tree) and it will allow us to build syntax transformers for ASCEND
+(the C parser can't do this because it never generates a syntax tree).
 
 So far, the parser can parse a4c files and build an AST from them and we can
-convert this AST back to an a4c source (although an unreadable one because we
-don't try to pretty print it). The original plan was to also create some
-AST-to-AST transformations to experiment with new language feature without
-needing to hack in the C code for ASCEND but unfortunately, that didn't happen
-yet.
+convert this AST back to an a4c source (although not a very readable one because
+we don't try to pretty print it). There is also some infrastructure for writing
+AST-to-AST transformers. See infer_derivatives.ml for an example. 
 
 How to build
 ============

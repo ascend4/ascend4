@@ -1,4 +1,4 @@
-exception NotImpl of int
+exception NotImplemented of int
 
 exception LexerError of string
 exception SyntaxError of string

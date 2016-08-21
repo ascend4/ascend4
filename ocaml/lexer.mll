@@ -1,5 +1,5 @@
 {
-open Parser
+open Grammar
 open Types
 
 open Lexing
