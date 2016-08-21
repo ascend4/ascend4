@@ -1,5 +1,6 @@
 REQUIRE "atoms.a4l";
 
+(*
 MODEL electron_stream;
 	NOTES
 		"type" SELF {connector}
@@ -7,11 +8,17 @@ MODEL electron_stream;
 	V "connect: potential" IS_A voltage;
 	I "connect: flow" IS_A current;
 END electron_stream;
+*)
+
+MODEL electron_stream;
+	V IS_A voltage;
+	I IS_A current;
+END electron_stream;
 
 MODEL equipment;
 	inlet "in:" IS_A electron_stream;
 	outlet "out:" IS_A electron_stream;
-	inout "inout" IS_A electron_stream;
+	(*inout "inout" IS_A electron_stream;*)
 END equipment;
 
 MODEL tee REFINES equipment;
@@ -85,12 +92,13 @@ MODEL Ground;
 			0,5-10,5
 			2,7-8,7
 			4,9-6,9}
-		'port_out' SELF {outlet:5,0}
+		'port_inout' SELF {inout:5,0}
 	END NOTES;
-	outlet "out:" IS_A electron_stream;
-	outlet.V = 0 {volt};
+	inout "inout:" IS_A electron_stream;
+	inout.V = 0 {volt};
 END Ground;
 
+(*
 MODEL Ground_sink;
 	NOTES
 		'block' SELF {Ground Sink}
@@ -104,7 +112,9 @@ MODEL Ground_sink;
 	inlet "in:" IS_A electron_stream;
 	inlet.V = 0 {volt};
 END Ground_sink;
+*)
 
+(*
 MODEL Diode REFINES equipment;
 	bol IS_A boolean_var;
 	NOTES
@@ -134,3 +144,4 @@ MODEL Diode REFINES equipment;
 	END WHEN;
 
 END Diode;
+*)

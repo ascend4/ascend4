@@ -32,12 +32,14 @@ class BlockInstance:
 		self.ports = {}
 		#self.stream = ''
 		for n in self.blocktype.inputs:
-			self.ports[n[0]] = PortInstance(self,n[0], n[1], PORT_IN)
+			self.ports[n[0]] = PortInstance(self, n[0], n[1], PORT_IN)
 		for n in self.blocktype.outputs:
-			self.ports[n[0]] = PortInstance(self,n[0], n[1], PORT_OUT)
+			self.ports[n[0]] = PortInstance(self, n[0], n[1], PORT_OUT)
+		for n in self.blocktype.inouts:
+			self.ports[n[0]] = PortInstance(self, n[0], n[1], PORT_INOUT)
 		self.params = {}
 		for n in self.blocktype.params:
-			self.params[n[0]] = (ParamInstance(self,n[0],n[1]))
+			self.params[n[0]] = (ParamInstance(self, n[0], n[1]))
 
 		self.usercode = ""
 
@@ -108,9 +110,9 @@ class ParamInstance:
 		self.value = self.get_initial_value()
 		self.fix = self.set_initial_state()
 		if self.type.getPreferredUnits():
-			self.units=str(self.type.getPreferredUnits().getName())
+			self.units = str(self.type.getPreferredUnits().getName())
 		else:
-			self.units=str(self.type.getDimensions().getDefaultUnits().getName())
+			self.units = str(self.type.getDimensions().getDefaultUnits().getName())
 		if self.units == '1':
 			self.units = ''
 

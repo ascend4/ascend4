@@ -74,6 +74,7 @@ class BlockItem(ElementNoPorts):
 		super(BlockItem, self).__init__(width, height)
 		self.port_in = blockinstance.blocktype.port_in
 		self.port_out = blockinstance.blocktype.port_out
+		self.port_inout = blockinstance.blocktype.port_inout
 		self.h = self._handles
 		self.wide = self.h[SE].pos.x - self.h[NW].pos.x
 		self.height = self.h[SE].pos.y - self.h[NW].pos.y
@@ -87,15 +88,17 @@ class BlockItem(ElementNoPorts):
 		self.height = self.h[SE].pos.y - self.h[NW].pos.y
 		self.normx = self.wide * 0.1
 		self.normy = self.height * 0.1
-		if not (len(self.port_in) == 0 and len(self.port_out) == 0):
+		if not (len(self.port_in) == 0 and len(self.port_out) == 0 and len(self.port_inout) == 0):
 			for w in self._ports:
 				if w.get_portinstance().io == PORT_IN:
 					w.point._set_pos(Position(((float(self.port_in[w.portinstance.name][0]) * self.normx),
 											   (float(self.port_in[w.portinstance.name][1]) * self.normy))))
-				else:
+				elif w.get_portinstance().io == PORT_OUT:
 					w.point._set_pos(Position(((float(self.port_out[w.portinstance.name][0]) * self.normx),
 											   (float(self.port_out[w.portinstance.name][1]) * self.normy))))
-
+				else:
+					w.point._set_pos(Position(((float(self.port_inout[w.portinstance.name][0]) * self.normx),
+											   (float(self.port_inout[w.portinstance.name][1]) * self.normy))))
 	# Here combination of translate(x,y),rotate(angle),translate(-x,-y) is used to perform
 	# rotation and flip about centre(x,y)
 
@@ -163,11 +166,18 @@ class BlockItem(ElementNoPorts):
 			for w in self._ports:
 				if w.portinstance.io is PORT_IN:
 					if w.point.y / self.normy == 0:
-						text_align(c, w.point.x, w.point.y-10, str(w.get_portname()))
+						text_align(c, w.point.x, w.point.y - 10, str(w.get_portname()))
 					elif w.point.y / self.normy == 10:
-						text_align(c, w.point.x, w.point.y+10, str(w.get_portname()))
+						text_align(c, w.point.x, w.point.y + 10, str(w.get_portname()))
 					else:
-						text_align(c, w.point.x-3.5*len(str(w.get_portname())), w.point.y, str(w.get_portname()))
+						text_align(c, w.point.x - 3.5 * len(str(w.get_portname())), w.point.y, str(w.get_portname()))
+				elif w.portinstance.io is PORT_OUT:
+					if w.point.y / self.normy == 0:
+						text_align(c, w.point.x, w.point.y - 10, str(w.get_portname()))
+					elif w.point.y / self.normy == 10:
+						text_align(c, w.point.x, w.point.y + 10, str(w.get_portname()))
+					else:
+						text_align(c, w.point.x + 3.5 * len(str(w.get_portname())), w.point.y, str(w.get_portname()))
 				else:
 					if w.point.y / self.normy == 0:
 						text_align(c, w.point.x, w.point.y-10, str(w.get_portname()))
@@ -216,6 +226,7 @@ class GraphicalBlockItem(BlockItem):
 		self.graphical_properties = blockinstance.blocktype.gr
 		self.port_in = blockinstance.blocktype.port_in
 		self.port_out = blockinstance.blocktype.port_out
+		self.port_inout = blockinstance.blocktype.port_inout
 		self.h_nw = handles[NW]
 		self.h_ne = handles[NE]
 		self.h_sw = handles[SW]
@@ -226,17 +237,21 @@ class GraphicalBlockItem(BlockItem):
 		self.normy = self.height * 0.1  # normy is normalization factor for y-co-ordinate
 		ninputs = len(blockinstance.blocktype.inputs)
 		noutputs = len(blockinstance.blocktype.outputs)
-		ii, oi = (0, 0)  # input and output index counters
+		ninouts = len(blockinstance.blocktype.inouts)
+		ii, oi, ioi = (0, 0, 0)  # input and output and inout index counters
 		_ports = []
 		try:
-			if not (len(self.port_in) == 0 and len(self.port_out) == 0):
+			if not (len(self.port_in) == 0 and len(self.port_out) == 0 and len(self.port_inout) == 0):
 				for i in self.blockinstance.ports:
 					if self.blockinstance.ports[i].io is PORT_IN:
-						p = BlockPort(blockinstance, i, self.port_in[i],ii)
+						p = BlockPort(blockinstance, i, self.port_in[i], ii)
 						ii += 1
 					elif self.blockinstance.ports[i].io is PORT_OUT:
-						p = BlockPort(blockinstance, i, self.port_out[i],oi)
+						p = BlockPort(blockinstance, i, self.port_out[i], oi)
 						oi += 1
+					elif self.blockinstance.ports[i].io is PORT_INOUT:
+						p = BlockPort(blockinstance, i, self.port_inout[i], ioi)
+						ioi += 1
 					else:
 						raise RuntimeError("Unknown port type")
 					_ports.append(p)
@@ -252,6 +267,12 @@ class GraphicalBlockItem(BlockItem):
 						self._constraints.append(eq(p.point.x, self.h_ne.x))
 						self._constraints.append(bal(band=(self.h_ne.y, self.h_se.y), v=p.point.y, balance=(0.5 + oi) / noutputs))
 						oi += 1
+					elif self.blockinstance.ports[i].io is PORT_INOUT:
+						p = BlockPort(blockinstance, i, [0, 0], ioi)
+						# maybe some problem for inout, from h_ne etc. in next line
+						self._constraints.append(eq(p.point.x, self.h_ne.x))
+						self._constraints.append(bal(band=(self.h_ne.y, self.h_se.y), v=p.point.y, balance=(0.5 + ioi) / ninouts))
+						ioi += 1
 					else:
 						raise RuntimeError("Unknown port type")
 					_ports.append(p)
@@ -307,6 +328,7 @@ class DefaultBlockItem(BlockItem):
 		self.graphical_properties = blockinstance.blocktype.gr
 		self.port_in = blockinstance.blocktype.port_in
 		self.port_out = blockinstance.blocktype.port_out
+		self.port_inout = blockinstance.blocktype.port_inout
 		self.h_nw = handles[NW]
 		self.h_ne = handles[NE]
 		self.h_sw = handles[SW]
@@ -317,13 +339,14 @@ class DefaultBlockItem(BlockItem):
 		self.normy = self.height * 0.1
 		ninputs = len(blockinstance.blocktype.inputs)
 		noutputs = len(blockinstance.blocktype.outputs)
-		ii, oi = (0,0) # input and output index counters
+		ninouts = len(blockinstance.blocktype.inouts)
+		ii, oi, ioi = (0,0,0)  # input and output and inout index counters
 		_ports = []
 
 		try:
 			# check to ensure if there is no port_in and port_out string
 			# it will draw ports at default location in that case
-			if not (len(self.port_in) == 0 and len(self.port_out) == 0):
+			if not (len(self.port_in) == 0 and len(self.port_out) == 0 and len(self.port_inout) == 0):
 				for i in self.blockinstance.ports:
 					if self.blockinstance.ports[i].io is PORT_IN:
 						p = BlockPort(blockinstance, i, self.port_in[i], ii)
@@ -332,6 +355,9 @@ class DefaultBlockItem(BlockItem):
 					elif self.blockinstance.ports[i].io is PORT_OUT:
 						p = BlockPort(blockinstance, i, self.port_out[i], oi)
 						oi += 1
+					elif self.blockinstance.ports[i].io is PORT_INOUT:
+						p = BlockPort(blockinstance, i, self.port_inout[i], ioi)
+						ioi += 1
 					else:
 						raise RuntimeError("Unknown port type")
 					_ports.append(p)
@@ -347,6 +373,12 @@ class DefaultBlockItem(BlockItem):
 						self._constraints.append(eq(p.point.x, self.h_ne.x))
 						self._constraints.append(bal(band=(self.h_ne.y, self.h_se.y), v=p.point.y, balance=(0.5 + oi)/noutputs))
 						oi += 1
+					elif self.blockinstance.ports[i].io is PORT_INOUT:
+						p = BlockPort(blockinstance, i, [0, 0], ioi)
+						# maybe some problem for inout, from h_ne etc. in next line
+						self._constraints.append(eq(p.point.x, self.h_ne.x))
+						self._constraints.append(bal(band=(self.h_ne.y, self.h_se.y), v=p.point.y, balance=(0.5 + ioi) / ninouts))
+						ioi += 1
 					else:
 						raise RuntimeError("Unknown port type")
 					_ports.append(p)

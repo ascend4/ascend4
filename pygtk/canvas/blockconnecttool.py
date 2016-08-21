@@ -23,17 +23,17 @@ class BlockConnectTool(ConnectHandleTool):
 
 		self.h_finder = HandleFinder(None,self.view)
 		try:
-			handle = self.h_finder.get_handle_at_point((event.x,event.y))
-			if type(handle[0])==BlockLine and handle[1]:
+			handle = self.h_finder.get_handle_at_point((event.x, event.y))
+			if type(handle[0]) == BlockLine and handle[1]:
 				line = handle[0]
 				ports = line.get_connected_ports()
 				connectedport = ports[0] or ports[1]
 				self.toggle_highlight_ports(connectedport)
 				return True
 		except Exception as e:
-			print 'Connection Failed, Disconnect/Connect the last Connection again: /n',e
+			print 'Connection Failed, Disconnect/Connect the last Connection again: /n', e
 		finally:
-			return super(BlockConnectTool,self).on_button_press(event)
+			return super(BlockConnectTool, self).on_button_press(event)
 
 
 	def on_button_release(self,event):

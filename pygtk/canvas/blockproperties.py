@@ -53,7 +53,7 @@ class BlockProperties(object):
 
 		self.block = item.blockinstance
 
-		self.dialog.set_title('Properties of '+ str(self.block.name))
+		self.dialog.set_title('Properties of ' + str(self.block.name))
 
 		##General Tab##
 		# Set the 'Name:'
@@ -79,8 +79,8 @@ class BlockProperties(object):
 				sorted_ports[1].append(j.name)
 			elif j.type == blockinstance.PORT_INOUT:
 				sorted_ports[2].append(j.name)
-
-		self.general_entry = [builder.get_object('port_name_input'), builder.get_object('port_name_output'), builder.get_object('port_name_inputoutput')]
+		self.general_entry = [builder.get_object('port_name_input'), builder.get_object('port_name_output'),
+							  builder.get_object('port_name_inputoutput')]
 
 		# Display the ports, set them not editable
 		for i in range(len(self.general_entry)):
@@ -122,6 +122,7 @@ class BlockProperties(object):
 		##End of General Tab##
 
 		##Equation Tab##
+		# TODO: show the equation of blocks here.
 		scrolledwindow = builder.get_object('equation_scroll')
 		self.sourceviewView = GtkSource.View()
 		self.sourceviewView.set_editable(False)
@@ -130,6 +131,7 @@ class BlockProperties(object):
 		self.sourceviewBuff.set_language(self.sourceviewLang)
 		self.sourceviewBuff.set_highlight_syntax(True)
 		if self.parent is not None:
+			# replace this line to show the equation of blocks
 			self.sourceviewBuff.set_text(str(self.parent.view.canvas))
 			#self.sourceviewBuff.set_text(self.block_canvas.user_code)
 		self.sourceviewView.set_buffer(self.sourceviewBuff)
@@ -193,7 +195,7 @@ class BlockProperties(object):
 
 		##Attach callback to OK##
 		OK_button = builder.get_object('ok')
-		OK_button.connect('clicked',self.save_changes,self.parent,self.block)
+		OK_button.connect('clicked', self.save_changes, self.parent, self.block)
 		OK_button.grab_default()
 
 		##Context Menu##

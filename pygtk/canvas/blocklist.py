@@ -1009,5 +1009,7 @@ class mainWindow(Gtk.Window):
 			if response == Gtk.ResponseType.NO:
 				return True
 		del self.prefs
-		self.destroy()
+		Gtk.main_quit()
+		# self.destroy()
+
 

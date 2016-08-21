@@ -34,11 +34,11 @@ class ascPy(object):
 		self.reporter = ascpy.getReporter()
 		self.defaultlibraryfolder = DEFAULT_CANVAS_MODEL_LIBRARY_FOLDER
 	
-	def load_library(self,lib_name = None):
-		if lib_name == None:
+	def load_library(self,lib_name=None):
+		if lib_name is None:
 			return
 		
-		lib_path = os.path.join('test','canvas',lib_name)
+		lib_path = os.path.join('test', 'canvas', lib_name)
 		try:
 			self.library.clear()
 			self.library.load(lib_path)
@@ -66,14 +66,14 @@ class ascPy(object):
 		try:
 			del self.canvas_blocks[:]
 			for t in self.blocktypes:
-				b = BlockType(t,self.annodb)
-				self.canvas_blocks +=[b]
+				b = BlockType(t, self.annodb)
+				self.canvas_blocks += [b]
 		except Exception as e:
 			print 'Error: Could not load blocktypes \n',e
 			exit()
 		try:
 			for stream in self.streamtypes:
-				s = BlockStream(stream,self.annodb)
+				s = BlockStream(stream, self.annodb)
 				self.streams +=[s]
 				
 		except Exception as e:

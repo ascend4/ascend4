@@ -24,6 +24,7 @@ class BlockType():
 		self.gr = []  # this data structure is for Graphical Representation for custom icons
 		self.port_in = {}  # this list is for location of input ports in custom icons
 		self.port_out = {}  # this list is for location of output ports in custom icons
+		self.port_inout = {}  # this list is for location of inout ports in custom icons
 		self.arrays = []
 
 		# FIXME BlockType should know what .a4c file to load in order to access
@@ -34,6 +35,7 @@ class BlockType():
 
 		self.inputs = []
 		self.outputs = []
+		self.inouts = []
 		self.params = []
 		for n in nn:
 			t = n.getText()
@@ -41,6 +43,8 @@ class BlockType():
 				self.inputs += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
 			elif t[0:min(len(t), 4)] == "out:":
 				self.outputs += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
+			elif t[0:min(len(t), 6)] == "inout:":
+				self.inouts += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
 			elif t[0:min(len(t), 6)] == "param:":
 				self.params += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
 
@@ -48,7 +52,6 @@ class BlockType():
 		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("icon"))
 		if nn:
 			n = nn[0].getText()
-			#if os.path.exists(os.path.join('.temp',n)):
 			if os.path.exists(os.path.join('/~/.cache/ascend', n)):
 				self.iconfile = n
 
@@ -102,6 +105,19 @@ class BlockType():
 					xy.append(loc[1])
 					self.port_out[str(tpp[0])] = xy
 
+		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("port_inout"))
+		if nn:
+			n = nn[0].getText().split(" ")
+			for m in n:
+				tt = m.split("-")
+				for k in tt:
+					tpp = k.split(":")
+					loc = tpp[1].split(",")
+					xy = []
+					xy.append(loc[0])
+					xy.append(loc[1])
+					self.port_inout[str(tpp[0])] = xy
+
 		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("array"))
 		for n in nn:
 			if n:
@@ -123,13 +139,12 @@ class BlockType():
 		properties = self.gr
 		if len(properties) == 0:
 			return None
-		# icon svg files are saved in .temp directory
+		# icon svg files are saved in ~/.cache/ascend directory
 		d = os.path.expanduser("~/.cache/ascend")
 		if not os.path.exists(d):
 			os.makedirs(d)
-		#fo = file(".temp/%s.svg"%self.name,'w')
-		fo = file(os.path.join(d,"%s.svg" % self.name), 'w')
-		## Prepare a destination surface -> out to an SVG file!
+		fo = file(os.path.join(d, "%s.svg" % self.name), 'w')
+		# Prepare a destination surface -> out to an SVG file!
 		surface = cairo.SVGSurface(fo, width, height)
 		c = cairo.Context(surface)
 		for m in properties:
@@ -146,6 +161,7 @@ class BlockType():
 		state['notesdb'] = None
 		state['inputs'] = []
 		state['outputs'] = []
+		state['inouts'] = []
 		state['params'] = []
 		#state['inputs'] = [[str(x) for x in self.inputs[i]] for i in range(len(self.inputs))]
 		#state['outputs'] = [[str(x) for x in self.outputs[i]] for i in range(len(self.outputs))]
@@ -155,27 +171,33 @@ class BlockType():
 	def __setstate__(self, state):
 		self.__dict__ = state
 
-	def reattach_ascend(self,library, notesdb):
+	def reattach_ascend(self, library, notesdb):
 		self.type = library.findType(self.type)
 
-		nn = notesdb.getTypeRefinedNotesLang(self.type,ascpy.SymChar("inline"))
+		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("inline"))
 
 		self.inputs = []
 		self.outputs = []
+		self.inouts = []
 		self.params = []
 		for n in nn:
 			t = n.getText()
-			if t[0:min(len(t),3)] == "in:":
+			if t[0:min(len(t), 3)] == "in:":
 				self.inputs += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
-			elif t[0:min(len(t),4)] == "out:":
+			elif t[0:min(len(t), 4)] == "out:":
 				self.outputs += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
-			elif t[0:min(len(t),6)] == "param:":
+			elif t[0:min(len(t), 6)] == "inout:":
+				self.inouts += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
+			elif t[0:min(len(t), 6)] == "param:":
 				self.params += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
 
-		print "Reattached type '%s', with %d inputs, %d outputs" % (self.type.getName(), len(self.inputs), len(self.outputs))
+		print "Reattached type '%s', with %d inputs, %d outputs, %d inouts" % (self.type.getName(), len(self.inputs), len(self.outputs), len(self.inouts))
 
 	def get_input_name(self, index):
 		return self.inputs[index].getText()
 
 	def get_output_name(self, index):
 		return self.outputs[index].getText()
+
+	def get_inout_name(self, index):
+		return self.inouts[index].getText()
