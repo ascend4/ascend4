@@ -3,6 +3,8 @@ blocknameindex = {}
 PORT_IN = 0
 PORT_OUT = 1
 PORT_INOUT = 11
+CONNECTOR_POTENTIAL = 0
+CONNECTOR_FLOW = 1
 
 
 class BlockInstance:
@@ -40,6 +42,11 @@ class BlockInstance:
 		self.params = {}
 		for n in self.blocktype.params:
 			self.params[n[0]] = (ParamInstance(self, n[0], n[1]))
+		self.connectors = {}
+		for n in self.blocktype.potentials:
+			self.connectors[n[0]] = ConnectorInstance(self, n[0], n[1], CONNECTOR_POTENTIAL)
+		for n in self.blocktype.flows:
+			self.connectors[n[0]] = ConnectorInstance(self, n[0], n[1], CONNECTOR_FLOW)
 
 		self.usercode = ""
 
@@ -63,11 +70,14 @@ class BlockInstance:
 		for param in self.params:
 			self.params[param].type = ascwrap.findType(self.params[param].type)
 
+		for connector in self.connectors:
+			self.connectors[connector].type = ascwrap.findType(self.connectors[connector].type)
+
 	def __getstate__(self):
 		# Return state values to pickle without  blockinstance.instance
 		state = self.__dict__.copy()
 		del state['instance']
-		return(state)
+		return state
 
 	def __setstate__(self, state):
 		# Restore state values from pickle
@@ -90,7 +100,30 @@ class PortInstance:
 	def __getstate__(self):
 		state = self.__dict__.copy()
 		state['type'] = str(self.type)
-		return(state)
+		return state
+
+	def __setstate__(self, state):
+		self.__dict__ = state
+
+
+class ConnectorInstance:
+	"""
+	Application-layer representation of a Connector, which is either potential variable or flow variable
+	"""
+	def __init__(self, blockinstance, name, type, pf):
+		self.blockinstance = blockinstance
+		self.name = name
+		self.type = type
+		self.pf = pf  # potential/flow connector
+		'''
+		print 'connector.name is: ', self.name
+		print 'connector.type is: ', self.type
+		print 'connector.bi is: ', self.blockinstance
+		'''
+	def __getstate__(self):
+		state = self.__dict__.copy()
+		state['type'] = str(self.type)
+		return state
 
 	def __setstate__(self, state):
 		self.__dict__ = state
@@ -174,7 +207,7 @@ class ParamInstance:
 
 	def getValue(self):
 		if self.value:
-			return (str(self.value))
+			return str(self.value)
 		else:
 			return (' ' + str(self.units))
 
@@ -184,13 +217,13 @@ class ParamInstance:
 			self.units = units
 			return (str(self.value)+' '+str(self.units))
 		else:
-			self.units=units
-			return(' '+str(self.units))
+			self.units = units
+			return (' '+str(self.units))
 
 	def __getstate__(self):
 		state = self.__dict__.copy()
 		state['type'] = str(self.type)
-		return (state)
+		return state
 
 	def __setstate__(self, state):
 		self.__dict__ = state
@@ -208,6 +241,7 @@ class LineInstance:
 		if self.fromport and self.toport:
 			fromname = "%s.%s" % (self.fromport.blockinstance.name, self.fromport.name)
 			toname = "%s.%s" % (self.toport.blockinstance.name, self.toport.name)
+			print (fromname,toname)
 			return "\t%s, %s ARE_THE_SAME;\n" % (fromname, toname)
 		return ""
 

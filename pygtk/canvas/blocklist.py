@@ -14,13 +14,13 @@ import ascpy
 
 class BlockIconView(Gtk.IconView):
 	"""
-	 IconView containing the palette of BlockTypes available for use in the
-	 canvas. The list of blocks is supplied currently as an initialisation
-	 parameter, but it is intended that this would be dynamic in a final system.
+	IconView containing the palette of BlockTypes available for use in the
+	canvas. The list of blocks is supplied currently as an initialisation
+	parameter, but it is intended that this would be dynamic in a final system.
 
-	 It should be possible drag icons from the palette into the canvas, but
-	 that is not yet implemented.
-	 """
+	It should be possible drag icons from the palette into the canvas, but
+	that is not yet implemented.
+	"""
 	def __init__(self, blocks=None, app=None):
 		self.model = Gtk.ListStore(str, GdkPixbuf.Pixbuf)
 		self.app = app
@@ -84,8 +84,8 @@ from preferences import Preferences
 
 def BlockToolChain():
 	"""
-	 ToolChain for working with BlockCanvas, including several custom Tools.
-	 """
+	ToolChain for working with BlockCanvas, including several custom Tools.
+	"""
 	chain = ToolChain()
 	chain.append(UndoMonitorTool())
 	chain.append(HoverTool())
@@ -456,10 +456,10 @@ class mainWindow(Gtk.Window):
 			if self.view.canvas.model_library is not None:
 				print "Loading Library...."
 				self.loadlib(self, self.view.canvas.model_library, 0)
-			self.view.canvas.reattach_ascend(self.ascwrap.library,self.ascwrap.annodb)
+			self.view.canvas.reattach_ascend(self.ascwrap.library, self.ascwrap.annodb)
 			self.view.canvas.update_now()
 			self.status.push(0, "Canvasmodel sucessfully loaded...")
-		except Exception,e:
+		except Exception, e:
 			self.status.push(0, "Canvasmodel could not be loaded : " + str(e))
 			self.reporter.ReportError("Canvasmodel could not be loaded : " + str(e))
 			self.reporter.ReportNote(" Error occured while attempting to load the file")

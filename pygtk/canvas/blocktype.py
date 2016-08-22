@@ -6,13 +6,13 @@ import os.path
 import cairo
 
 
-class BlockType():
+class BlockType:
 	"""
 	All data associated with the MODEL type that is represented by a block.
 	This includes the actual ASCEND TypeDescription as well as the NOTES that
 	are found to represent the inputs and outputs for this block, as well as
 	some kind of graphical representation(s) for the block. In the canvas-
-	based GUI, there will need to be a Cairo-based represention, for drawing
+	based GUI, there will need to be a Cairo-based representation, for drawing
 	on the canvas, as well as some other form, for creating the icon in the
 	block palette.
 	"""
@@ -37,6 +37,8 @@ class BlockType():
 		self.outputs = []
 		self.inouts = []
 		self.params = []
+		self.potentials = []
+		self.flows = []
 		for n in nn:
 			t = n.getText()
 			if t[0:min(len(t), 3)] == "in:":
@@ -45,9 +47,21 @@ class BlockType():
 				self.outputs += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
 			elif t[0:min(len(t), 6)] == "inout:":
 				self.inouts += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
+			elif t[0:min(len(t), 10)] == "potential:":
+				self.potentials += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
+			elif t[0:min(len(t), 5)] == "flow:":
+				self.flows += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
 			elif t[0:min(len(t), 6)] == "param:":
 				self.params += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
-
+		'''
+		print 'input is: ', self.inputs
+		print 'output is: ', self.outputs
+		print 'inout is: ', self.inouts
+		print 'param is: ', self.params
+		print 'potential is: ', self.potentials
+		print 'flow is: ', self.flows
+		print ''
+		'''
 		self.iconfile = None
 		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("icon"))
 		if nn:
@@ -162,6 +176,8 @@ class BlockType():
 		state['inputs'] = []
 		state['outputs'] = []
 		state['inouts'] = []
+		state['potentials'] = []
+		state['flows'] = []
 		state['params'] = []
 		#state['inputs'] = [[str(x) for x in self.inputs[i]] for i in range(len(self.inputs))]
 		#state['outputs'] = [[str(x) for x in self.outputs[i]] for i in range(len(self.outputs))]
@@ -179,6 +195,8 @@ class BlockType():
 		self.inputs = []
 		self.outputs = []
 		self.inouts = []
+		self.potentials = []
+		self.flows = []
 		self.params = []
 		for n in nn:
 			t = n.getText()
@@ -188,10 +206,15 @@ class BlockType():
 				self.outputs += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
 			elif t[0:min(len(t), 6)] == "inout:":
 				self.inouts += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
+			elif t[0:min(len(t), 10)] == "potential:":
+				self.potentials += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
+			elif t[0:min(len(t), 5)] == "flow:":
+				self.flows += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
 			elif t[0:min(len(t), 6)] == "param:":
 				self.params += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
 
-		print "Reattached type '%s', with %d inputs, %d outputs, %d inouts" % (self.type.getName(), len(self.inputs), len(self.outputs), len(self.inouts))
+		print "Reattached type '%s', with %d inputs, %d outputs, %d inouts, %d potential connector, %d flow connector" % \
+			  (self.type.getName(), len(self.inputs), len(self.outputs), len(self.inouts), len(self.potentials), len(self.flows))
 
 	def get_input_name(self, index):
 		return self.inputs[index].getText()
@@ -201,3 +224,9 @@ class BlockType():
 
 	def get_inout_name(self, index):
 		return self.inouts[index].getText()
+
+	def get_potential_name(self, index):
+		return self.potentials[index].getText()
+
+	def get_flow_name(self, index):
+		return self.flows[index].getText()

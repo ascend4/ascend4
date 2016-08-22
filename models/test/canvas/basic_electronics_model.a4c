@@ -1,5 +1,10 @@
 REQUIRE "atoms.a4l";
-
+(*
+MODEL electron_stream;
+	V IS_A voltage;
+	I IS_A current;
+END electron_stream;
+*)
 (*
 MODEL electron_stream;
 	NOTES
@@ -10,14 +15,18 @@ MODEL electron_stream;
 END electron_stream;
 *)
 
+(*Mike's version: *)
+
 MODEL electron_stream;
-	V IS_A voltage;
-	I IS_A current;
+	V "potential:" IS_A voltage;
+	I "flow:" IS_A current;
 END electron_stream;
 
 MODEL equipment;
 	inlet "in:" IS_A electron_stream;
 	outlet "out:" IS_A electron_stream;
+	V "potential:" IS_A voltage;
+	I "flow:" IS_A current;
 	(*inout "inout" IS_A electron_stream;*)
 END equipment;
 
@@ -47,6 +56,7 @@ MODEL branch REFINES equipment;
 		'port_out' SELF {outlet:10,5}
 	END NOTES;
 	side "in:" IS_A electron_stream;
+	(*I "potential:" IS_A electron_stream;*)
 	inlet.I + side.I = outlet.I;
 	inlet.V, outlet.V, side.V ARE_THE_SAME;
 END branch;
