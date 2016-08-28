@@ -25,8 +25,6 @@ END electron_stream;
 MODEL equipment;
 	inlet "in:" IS_A electron_stream;
 	outlet "out:" IS_A electron_stream;
-	V "potential:" IS_A voltage;
-	I "flow:" IS_A current;
 	(*inout "inout" IS_A electron_stream;*)
 END equipment;
 

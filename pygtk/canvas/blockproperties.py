@@ -10,6 +10,7 @@ import blockinstance
 import modeltree
 from canvasunitsdialog import UnitsDialog
 from varentry_canvas import *
+import ascpy
 
 SAVED_TAB = 0
 
@@ -37,8 +38,8 @@ class BlockProperties(object):
 		##Get the ASCEND lang##
 		self.sourceviewLangman = GtkSource.LanguageManager.get_default()
 		op = self.sourceviewLangman.get_search_path()
-		if os.path.join('..', '..', 'tools', 'gtksourceview-2.0') not in op:
-			op.append(os.path.join('..', '..', 'tools', 'gtksourceview-2.0'))
+		if os.path.join('..', '..', 'tools', 'gtksourceview-3.0') not in op:
+			op.append(os.path.join('..', '..', 'tools', 'gtksourceview-3.0'))
 			self.sourceviewLangman.set_search_path(op)
 		self.sourceviewLang = self.sourceviewLangman.get_language('ascend')
 
@@ -63,8 +64,8 @@ class BlockProperties(object):
 
 		# Set the 'Type:'
 		self.type_name = builder.get_object('type_name')
-		text = self.block.blocktype.type
-		self.type_name.set_text(str(text))
+		self.type_name_str = str(self.block.blocktype.type)
+		self.type_name.set_text(self.type_name_str)
 		self.type_name.set_editable(False)
 		# Set the 'Ports:'
 		self.type_name = builder.get_object('port_name')
@@ -122,7 +123,7 @@ class BlockProperties(object):
 		##End of General Tab##
 
 		##Equation Tab##
-		# TODO: show the equation of blocks here.
+		# TODO: maybe some check & error report are needed here
 		scrolledwindow = builder.get_object('equation_scroll')
 		self.sourceviewView = GtkSource.View()
 		self.sourceviewView.set_editable(False)
@@ -130,10 +131,41 @@ class BlockProperties(object):
 		self.sourceviewBuff = GtkSource.Buffer()
 		self.sourceviewBuff.set_language(self.sourceviewLang)
 		self.sourceviewBuff.set_highlight_syntax(True)
-		if self.parent is not None:
-			# replace this line to show the equation of blocks
-			self.sourceviewBuff.set_text(str(self.parent.view.canvas))
-			#self.sourceviewBuff.set_text(self.block_canvas.user_code)
+		# modified from pygtk/moduleview.py
+		filename = ''
+		x = ascpy.Library()
+		for module in x.getModules():
+			for model in x.getModuleTypes(module):
+				if str(model) == self.type_name_str:
+					filename = module.getFilename()
+		displaytext = []
+		typelist = ['MODEL', 'DEFINITION', 'ATOM']
+		proceed = False
+		flagvariable = False
+		module = open(filename, "r")
+		if module:
+			lines = module.readlines()
+			for line in lines:
+				words = line.split()
+				for i in range(len(words)):
+					if words[i] in typelist:
+						if i != len(words) - 1:
+							if words[i + 1].split(';')[0] == self.type_name_str or words[i + 1].split('(')[
+								0] == self.type_name_str:
+								proceed = True
+					elif words[i] == 'END':
+						if words[i + 1].split(';')[0] == self.type_name_str or words[i + 1].split('(')[0] == self.type_name_str:
+							flagvariable = True
+							if proceed is True:
+								displaytext.append(line)
+								proceed = False
+							break
+					if proceed is True:
+						displaytext.append(line)
+						break
+				if flagvariable is True:
+					break
+			self.sourceviewBuff.set_text(str(''.join(displaytext)))
 		self.sourceviewView.set_buffer(self.sourceviewBuff)
 		scrolledwindow.add(self.sourceviewView)
 		self.sourceviewView.show()

@@ -53,7 +53,7 @@ class BlockType:
 				self.flows += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
 			elif t[0:min(len(t), 6)] == "param:":
 				self.params += [[n.getId(), self.type.findMember(n.getId()), str(t)]]
-		'''
+
 		print 'input is: ', self.inputs
 		print 'output is: ', self.outputs
 		print 'inout is: ', self.inouts
@@ -61,7 +61,7 @@ class BlockType:
 		print 'potential is: ', self.potentials
 		print 'flow is: ', self.flows
 		print ''
-		'''
+
 		self.iconfile = None
 		nn = notesdb.getTypeRefinedNotesLang(self.type, ascpy.SymChar("icon"))
 		if nn:

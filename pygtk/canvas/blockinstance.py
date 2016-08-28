@@ -241,7 +241,7 @@ class LineInstance:
 		if self.fromport and self.toport:
 			fromname = "%s.%s" % (self.fromport.blockinstance.name, self.fromport.name)
 			toname = "%s.%s" % (self.toport.blockinstance.name, self.toport.name)
-			print (fromname,toname)
+			print fromname,toname
 			return "\t%s, %s ARE_THE_SAME;\n" % (fromname, toname)
 		return ""
 
