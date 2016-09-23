@@ -1,0 +1,40 @@
+REQUIRE "johnpye/fprops/rankine_fprops.a4c";
+
+(* Simple model showing the calculation of the specific heat of vapourisation 
+using FPROPS.  This model doesn't converge very well for all temperatures in 
+the saturation region, because of the way that it attempts to iterate on the 
+state variables (v,T) in order to solve for specified values of (x,T). A better 
+solution would require us to implement the (x,T) property pair directly in 
+FPROPS, fairly straightforward but not yet been done. *)
+
+MODEL heat_of_vap;
+	S1, S2 IS_A stream_state;
+	S1.cd, S2.cd ARE_THE_SAME;
+	S1.T, S2.T ARE_THE_SAME;
+	T ALIASES S1.T;
+	cd ALIASES S1.cd;
+	(* set the fluid name and equation of state *)
+	cd.component :== 'water';
+	cd.type :== 'helmholtz';
+	h_g ALIASES S1.h;
+	h_f ALIASES S2.h;
+	h_fg IS_A specific_energy;
+	h_fg = h_g - h_f;
+METHODS
+METHOD on_load;
+	RUN S1.default;
+	RUN S2.default;
+	(* solving for saturation states works better with FPROPS functions in terms of (v,T) rather than (p,h) *)
+	RUN S1.enable_vT;
+	RUN S2.enable_vT;
+	(* set the steam qualities to 1 (h_g) and 0 (h_f) *)
+	FIX S1.x := 1;
+	FIX S2.x := 0;
+	(* but we still need to set a starting guess for specific volume in the saturation region *)
+	S1.v := 0.005 {m^3/kg};
+
+	(* set the temperature that we're interested in *)
+	FIX S1.T := 250 {K} + 273.15 {K};
+END on_load;
+END heat_of_vap;
+
