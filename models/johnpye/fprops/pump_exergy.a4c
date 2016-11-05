@@ -1,0 +1,70 @@
+(*
+A simple calculation of exergy destruction in a pump, tested with a
+quasi-incompressible fluid (liquid water).
+
+Effects due to kinetic energy/velocity changes are ignored. This is reasonable,
+since the pump inlet/outlet pipes can be whatever we chose.
+*)
+
+REQUIRE "johnpye/fprops/rankine_fprops.a4c";
+
+MODEL pump_exergy;
+	inlet IS_A stream_node;
+	outlet IS_A stream_node;
+
+	PU IS_A pump_simple;
+	mdot ALIASES PU.mdot;
+	inlet, PU.inlet ARE_THE_SAME;
+	outlet, PU.outlet ARE_THE_SAME;
+	cd ALIASES inlet.cd;
+
+	cd.component :== 'water';
+	cd.type :== 'helmholtz';
+
+	ref "exergy reference state" IS_A stream_state;
+	inlet.cd, ref.cd ARE_THE_SAME;	
+
+	(* expressions for inlet and outlet flow exergy. fluid velocity ignored. *)
+	X_f_in,X_f_out "flow exergy" IS_A energy_rate;
+	X_f_in_eq: X_f_in   = mdot * ( inlet.h  - ref.h - ref.T * (inlet.s  - ref.s) );
+	X_f_out_eq: X_f_out = mdot * ( outlet.h - ref.h - ref.T * (outlet.s - ref.s) );
+	
+	(* exergy balance. assumes adiabatic conditions, neglects KE and PE *)
+	X_d, X_d_2 "exergy destruction" IS_A energy_rate;
+	X_d = X_f_in - X_f_out - PU.Wdot;	
+
+	(* another formular for exergy destruction in a pump, obtained using some
+	algebra from the same equations used to calculate X_d; should agree	exactly
+	the other value. *)
+	X_d_2 = mdot * (-ref.T*(inlet.s - outlet.s) );
+
+	(* This equation uses assumptions of incompressible fluid and no temperature
+	rise across the pump. It is a fairly good approximation for the current
+	conditions. *)
+	Wdot_2 IS_A energy_rate;
+	Wdot_2 = mdot / PU.eta * inlet.v * (inlet.p - outlet.p);
+
+	(* It turns out the the exergy destruction is quite closely related to the
+	isentropic efficiency -- roughtly Xd = (1-eta)*Wdot, but not exactly. The
+	reason it is not exact appears to be because of ambient conditions. *)
+	F IS_A factor;
+	F = X_d / PU.Wdot;
+
+METHODS
+METHOD on_load;
+	RUN PU.default_self;
+	RUN ref.default_self;
+	FIX ref.T := 20 {K} + 273.15 {K};
+	FIX ref.p := 1 {bar};
+	
+	FIX PU.eta := 0.65;
+	FIX inlet.T := 30 {K} + 273.15 {K};
+	FIX inlet.p := 1 {bar};
+	FIX outlet.p := 5 {bar};
+	FIX mdot := 200 {kg/s};
+
+	ref.h := 200 {kJ/kg};
+	inlet.h := 200 {kJ/kg};
+END on_load;
+END pump_exergy;
+
