@@ -1,7 +1,5 @@
 import ascpy
 import time
-import gtk
-from diagnose import *
 
 class PythonSolverReporter(ascpy.SolverReporter):
 	def __init__(self,browser,message=None):
@@ -45,6 +43,9 @@ class PythonSolverReporter(ascpy.SolverReporter):
 
 class PopupSolverReporter(PythonSolverReporter):
 	def __init__(self,browser,sim):
+		import gtk
+		import diagnose
+
 		PythonSolverReporter.__init__(self,browser)
 
 
@@ -91,7 +92,7 @@ class PopupSolverReporter(PythonSolverReporter):
 	def on_diagnose_button_click(self,*args):
 		try:
 			_bl = self.sim.getActiveBlock()
-			_db = DiagnoseWindow(self.browser,_bl)
+			_db = diagnose.DiagnoseWindow(self.browser,_bl)
 			_db.run();
 		except RuntimeError, e:
 			self.reporter.reportError(str(e))
@@ -191,6 +192,7 @@ class PopupSolverReporter(PythonSolverReporter):
 
 class SimpleSolverReporter(PythonSolverReporter):
 	def __init__(self,browser,message=None):
+		import gtk
 		#print "CREATING SIMPLESOLVERREPORTER..."
 		PythonSolverReporter.__init__(self,browser,message)
 		self.lasttime = self.starttime

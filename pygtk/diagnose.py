@@ -1,4 +1,3 @@
-import gtk
 import ascpy
 from itertools import groupby
 from operator import itemgetter
@@ -16,6 +15,7 @@ AT_BOUND_TOL = 0.0001;
 
 class DiagnoseWindow:
 	def __init__(self,browser,block=0):
+		import gtk
 		self.browser=browser
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["diagnosewin"])
 		self.browser.builder.connect_signals(self)
