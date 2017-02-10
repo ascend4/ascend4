@@ -185,7 +185,9 @@ int Asc_SignalInit(void){
   initstack(SIGSEGV);
 
 #if defined(HAVE_C99FPE)
+# ifdef SIGNAL_DEBUG
   CONSOLE_DEBUG("Initialise FPE state to stack (%d)",f_fenv_stack_top);
+# endif
   fenv_push(f_fenv_stack,&f_fenv_stack_top,0);
 #endif
 

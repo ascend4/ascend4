@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define REF_DEBUG
+//#define REF_DEBUG
 #ifdef REF_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
