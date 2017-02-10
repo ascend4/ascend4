@@ -1,5 +1,10 @@
 import ascpy
 import time
+try:
+	import gtk
+	import diagnose
+except ImportError:
+	pass
 
 class PythonSolverReporter(ascpy.SolverReporter):
 	def __init__(self,browser,message=None):
@@ -43,9 +48,6 @@ class PythonSolverReporter(ascpy.SolverReporter):
 
 class PopupSolverReporter(PythonSolverReporter):
 	def __init__(self,browser,sim):
-		import gtk
-		import diagnose
-
 		PythonSolverReporter.__init__(self,browser)
 
 
@@ -192,7 +194,6 @@ class PopupSolverReporter(PythonSolverReporter):
 
 class SimpleSolverReporter(PythonSolverReporter):
 	def __init__(self,browser,message=None):
-		import gtk
 		#print "CREATING SIMPLESOLVERREPORTER..."
 		PythonSolverReporter.__init__(self,browser,message)
 		self.lasttime = self.starttime
