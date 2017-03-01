@@ -76,3 +76,32 @@ METHOD on_load;
 END on_load;
 END heatex_pinch_test;
 
+(* test case -- HEL from brayton_split model *)
+MODEL heatex_pinch_water2 REFINES heatex_pinch;
+	inlet.cd.component :== 'water';
+	inlet.cd.type :== 'helmholtz';
+	inlet_hot.cd.component :== 'water';
+	inlet_hot.cd.type :== 'helmholtz';
+	n :== 10;
+METHODS
+METHOD on_load;
+	RUN heatex_pinch::default_self;	
+	(* in this configuration, we iterate to calculate the heat transfer 
+	occuring for a particular pinch temperature *)
+	FIX inlet_hot.p := 80 {bar};
+	FIX inlet.p := 50 {bar};
+	FIX inlet_hot.T := 450 {K} + 273.15 {K};
+	FIX inlet.T := 100 {K} + 273.15 {K};
+	FIX mdot_hot := 1.1 {kg/s};
+	FIX mdot := 0.81 {kg/s};
+	FIX DT_pinch := 10 {K};
+
+	inlet_hot.h := 4000 {kJ/kg};
+	outlet_hot.h := 2500 {kJ/kg};
+	inlet.h := 300 {kJ/kg};
+	outlet.h := 2000 {kJ/kg};
+END on_load;
+END heatex_pinch_test;
+
+
+
