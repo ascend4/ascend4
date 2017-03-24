@@ -3,7 +3,8 @@ REQUIRE "atoms.a4l";
 (* 
 	This is the 'pollution' problem from the Test Set for IVP Solvers
 
-	http://pitagora.dm.uniba.it/~testset/problems/pollu.php
+	https://archimede.dm.uniba.it/~testset/problems/pollu.php
+	https://archimede.dm.uniba.it/~testset/testsetivpsolvers/
 
 	This IVP is a stiff system of 20 non-linear Ordinary Differential Equations.
 	It describes a chemical reaction part of the air pollution model developed 
