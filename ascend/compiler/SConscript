@@ -17,7 +17,7 @@ csrcs = Split("""
 	nameio.c notate.c notequery.c numlist.c parentchild.c
 	parpend.c pending.c plot.c proc.c procframe.c
 	procio.c prototype.c qlfdid.c refineinst.c rel_common.c relation.c
-	rel_blackbox.c 
+	rel_blackbox.c relerr.c
 	relation_io.c relation_util.c rootfind.c reverse_ad.c 
 	safe.c
 	select.c setinst_io.c setinstval.c setio.c

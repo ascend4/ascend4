@@ -48,20 +48,6 @@
 	@{
 */
 
-/** Logical relation errors. */
-enum logrelation_errors {
-  find_logerror,                /**< error finding an instance */
-  incorrect_logstructure,
-  incorrect_linst_type,         /**< contains a nonboolean instance type */
-  incorrect_real_linst_type,    /**< contains a real_inst type */
-  incorrect_boolean_linst_type, /**< contains a boolean instance type */
-  incorrect_integer_linst_type, /**< contains an integer variable instance type*/
-  incorrect_symbol_linst_type,  /**< contains a symbol instance type */
-  boolean_value_undefined,      /**< boolean constant doesn't have a value yet */
-  incorrect_num_largs,          /**< wrong number of arguments */
-  lokay                         /**< no error */
-};
-
 extern int g_simplify_logrelations;
 /**<
  *  Logical relation simplification mode variable.
@@ -122,8 +108,7 @@ extern struct logrelation *CreateLogRelStructure(enum Expr_enum t);
 extern struct logrelation *CreateLogicalRelation(struct Instance *reference,
                                                  struct Instance *lrelinst,
                                                  CONST struct Expr *ex,
-                                                 enum logrelation_errors *err,
-                                                 enum find_errors *ferr);
+                                                 rel_errorlist *err);
 /**<
  *  Create a logical relation from an expression, a reference instance and a
  *  relation instance.  This modifies the instance tree. The type of relinst

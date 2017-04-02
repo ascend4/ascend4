@@ -121,7 +121,7 @@ int error_reporter_tree_start(){
 #endif
 
 	if(TREE == NULL){
-		/* CONSOLE_DEBUG("CREATING ROOT"); */
+		//CONSOLE_DEBUG("CREATING ROOT");
 		/* we're creating the root */
 		tnew->parent = NULL;
 		TREE = tnew;
@@ -129,7 +129,7 @@ int error_reporter_tree_start(){
 		/* CONSOLE_DEBUG("TREECURRENT = %p",TREECURRENT); */
 	}else{
 		asc_assert(TREECURRENT != NULL);
-		/* CONSOLE_DEBUG("CREATING SUBTREE"); */
+		//CONSOLE_DEBUG("CREATING SUBTREE");
 		if(TREECURRENT->head == NULL){
 			/* if the current tree has no elements, add it as the head */
 			TREECURRENT->head = tnew;
@@ -155,7 +155,7 @@ int error_reporter_tree_end(){
 		return 1;
 	}
 	TREECURRENT = TREECURRENT->parent;
-	/* CONSOLE_DEBUG("SET TREECURRENT TO %p",TREECURRENT); */
+	//CONSOLE_DEBUG("SET TREECURRENT TO %p",TREECURRENT);
 	return 0;
 }
 

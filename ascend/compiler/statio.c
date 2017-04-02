@@ -720,8 +720,10 @@ void WriteStatementErrorMessage(
 			sev = ASC_PROG_ERR;
   }			
 
+	ASC_FPRINTF(ASCERR,"%s:%d: %s\n",filename,line,message);
+	error_reporter(sev,filename,line,"%s\n",message);
   error_reporter_start(sev,filename,line,NULL);
-  FPRINTF(ASCERR,"%s\n",message);
+  ASC_FPRINTF(ASCERR,"%s\n",message);
 
   if(stat!=NULL){
     /* write some more detail */
@@ -733,12 +735,12 @@ void WriteStatementErrorMessage(
       WriteForTable(ASCERR,GetEvaluationForTable());
     }
   }else{
-    ASC_FPRINTF(f,"NULL STATEMENT!");
+    ASC_FPRINTF(ASCERR,"NULL STATEMENT!");
   }
 
   error_reporter_end_flush();
-  CONSOLE_DEBUG("%s",message);
-  WriteStatementLocation(ASCERR,stat);
+  //CONSOLE_DEBUG("%s",message);
+  //WriteStatementLocation(ASCERR,stat);
 }
 
 void WriteStatementLocation(FILE *f, CONST struct Statement *stat){
@@ -758,7 +760,7 @@ void WriteStatementLocation(FILE *f, CONST struct Statement *stat){
 
 	/* write some more detail */
 	ASC_FPRINTF(f,"%s:%d",filename,line);
-	CONSOLE_DEBUG("%s:%d",filename,line);
+	//CONSOLE_DEBUG("%s:%d",filename,line);
 }
 
 

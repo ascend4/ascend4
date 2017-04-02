@@ -54,7 +54,7 @@
 #include "mathinst.h"
 #include "atomvalue.h"
 #include "instance_io.h"
-
+#include "relerr.h"
 
 /*
  * Some global and exported variables.  */
@@ -149,7 +149,7 @@ void InitLogRelInstantiator(void) {
               "ERROR: InitLogRelInstantiator unable to allocate pool.\n");
   }
   g_logterm_ptrs.buf = (struct logrel_term **)
-	ASC_NEW_ARRAY_CLEAR(union LogRelTermUnion *,TPBUF_LOGINITSIZE);
+        ASC_NEW_ARRAY_CLEAR(union LogRelTermUnion *,TPBUF_LOGINITSIZE);
   if (g_logterm_ptrs.buf == NULL) {
     Asc_Panic(2, "InitLogRelInstantiator",
               "ERROR: InitLogRelInstantiator unable to allocate memory.\n");
@@ -164,6 +164,7 @@ void InitLogRelInstantiator(void) {
   }
 }
 
+
 /* this function returns NULL when newcap is 0 or when
  * it is unable to allocate the space requested.
  */
@@ -174,7 +175,7 @@ static unsigned long *realloc_term_stack(unsigned long newcap){
       g_logterm_ptrs.termstack = NULL;
       g_logterm_ptrs.termstackcap = 0;
     }
-  } else { /* less than means currently ok */
+  }else{ /* less than means currently ok */
     if (newcap >= g_logterm_ptrs.termstackcap) {
       unsigned long *newbuf;
       newbuf = (unsigned long *)
@@ -183,7 +184,7 @@ static unsigned long *realloc_term_stack(unsigned long newcap){
         g_logterm_ptrs.termstack = newbuf;
         g_logterm_ptrs.termstackcap = newcap;
       } else {
- 	FPRINTF(ASCERR,"Insufficient memory in logical relation processor\n");
+        FPRINTF(ASCERR,"Insufficient memory in logical relation processor\n");
         return NULL;
       }
     }
@@ -206,8 +207,8 @@ void DestroyLogRelInstantiator(void) {
   g_logterm_pool = NULL;
 }
 
-void ReportLogRelInstantiator(FILE *f)
-{
+
+void ReportLogRelInstantiator(FILE *f){
   assert(g_logterm_pool!=NULL);
   FPRINTF(f,"LogRelInstantiator ");
   pool_print_store(f,g_logterm_pool,0);
@@ -215,17 +216,18 @@ void ReportLogRelInstantiator(FILE *f)
     (unsigned long)g_logterm_ptrs.cap);
 }
 
+
 /* The slower expansion process. */
 static void ExpandLogTermBuf(struct logrel_term *t) {
   struct logrel_term **newbuf;
   newbuf = (struct logrel_term **)ascrealloc(g_logterm_ptrs.buf,
       (sizeof(struct logrel_term *)*(g_logterm_ptrs.cap+TPBUF_LOGGROW)));
-  if (newbuf!=NULL) {
+  if(newbuf!=NULL) {
     g_logterm_ptrs.buf = newbuf;
     g_logterm_ptrs.cap += TPBUF_LOGGROW;
     g_logterm_ptrs.buf[g_logterm_ptrs.len] = t;
     g_logterm_ptrs.len++;
-  } else {
+  }else{
     FPRINTF(ASCERR,
           "ERROR: LogicalRelation Instantiator unable to allocate memory.\n");
    /* we have ignored the term pointer, but somebody else still has it: pool */
@@ -237,7 +239,7 @@ static void ExpandLogTermBuf(struct logrel_term *t) {
 static void AppendLogTermBuf(struct logrel_term *t) {
   if (g_logterm_ptrs.len < g_logterm_ptrs.cap) {
     g_logterm_ptrs.buf[g_logterm_ptrs.len++] = t;
-  } else {
+  }else{
     ExpandLogTermBuf(t);
   }
   return;
@@ -262,16 +264,15 @@ static struct logrel_term
  * and its length. You must free the array if you decide you
  * don't want it. We don't care how the structure is initialized.
  */
-static int ConvertLogTermBuf(struct logrel_side_temp *tmp)
-{
+static int ConvertLogTermBuf(struct logrel_side_temp *tmp){
   union LogRelTermUnion *arr = NULL;
   unsigned long len,c;
 
   realloc_term_stack(0);
   len = g_logterm_ptrs.len;
-  if (len < 1) return 0;
+  if(len < 1) return 0;
   arr = ASC_NEW_ARRAY(union LogRelTermUnion,len);
-  if (arr==NULL) {
+  if(arr==NULL) {
     FPRINTF(ASCERR,"Create Logical Relation: Insufficient memory :-(.\n");
     return 0;
   }
@@ -299,9 +300,9 @@ static struct logrel_term *CreateLogOpTerm(enum Expr_enum t)
   term = POOL_ALLOCLOGTERM;
   assert(term!=NULL);
   term->t = t;
-  if (t==e_not) {
+  if(t==e_not) {
     LOGU_TERM(term)->left = NULL;
-  } else {
+  }else{
     LOGB_TERM(term)->left = NULL;
     LOGB_TERM(term)->right = NULL;
   }
@@ -309,18 +310,16 @@ static struct logrel_term *CreateLogOpTerm(enum Expr_enum t)
 }
 
 /* create a term from the pool */
-static struct logrel_term *CreateBoolVarTerm(CONST struct Instance *i)
-{
+static struct logrel_term *CreateBoolVarTerm(CONST struct Instance *i){
   struct logrel_term *term;
   unsigned long pos;
-  if (0 != (pos = gl_search(g_logrelation_bvar_list,i,(CmpFunc)CmpP))){
+  if(0 != (pos = gl_search(g_logrelation_bvar_list,i,(CmpFunc)CmpP))){
     /* find boolean var if already on logical relations var list */
     term = POOL_ALLOCLOGTERM;
     assert(term!=NULL);
     term->t = e_var;
     LOGBV_TERM(term) -> varnum = pos;
-  }
-  else{
+  }else{
     /* or add it to the var list */
     gl_append_ptr(g_logrelation_bvar_list,(VOIDPTR)i);
     term = POOL_ALLOCLOGTERM;
@@ -368,8 +367,7 @@ static struct logrel_term *CreateSatisfiedTerm(CONST struct Name *n,
     LOGS_TERM(term) ->relnum = pos;
     LOGS_TERM(term) ->rtol = value;
     LOGS_TERM(term) ->dim = dimensions;
-  }
-  else{
+  }else{
     /* or add it to the satrel list */
     gl_append_ptr(g_logrelation_satrel_list,(VOIDPTR)inst);
     term = POOL_ALLOCLOGTERM;
@@ -420,7 +418,7 @@ struct logrelation *CreateLogRelStructure(enum Expr_enum t)
 static
 struct logrel_term *CreateLogTermFromInst(struct Instance *inst,
 					  struct Instance *lrel,
-					  enum logrelation_errors *err)
+					  rel_errorlist *err)
 {
   struct logrel_term *term;
   switch(InstanceKind(inst)){
@@ -429,34 +427,33 @@ struct logrel_term *CreateLogTermFromInst(struct Instance *inst,
     AddLogRel(inst,lrel);
     return term;
   case BOOLEAN_CONSTANT_INST:
-    if ( AtomAssigned(inst) ){
+    if(AtomAssigned(inst) ){
       term = CreateBooleanTerm(GetBooleanAtomValue(inst));
       return term;
-    }
-    else{
-      *err = boolean_value_undefined;
+    }else{
+      rel_errorlist_set_lrcode(err,boolean_value_undefined);
       return NULL;
     }
   case BOOLEAN_INST:
-    *err = incorrect_boolean_linst_type;
+    rel_errorlist_set_lrcode(err,incorrect_boolean_linst_type);
     return NULL;
   case INTEGER_CONSTANT_INST:
   case INTEGER_ATOM_INST:
   case INTEGER_INST:
-    *err = incorrect_integer_linst_type;
+    rel_errorlist_set_lrcode(err,incorrect_integer_linst_type);
     return NULL;
   case SYMBOL_ATOM_INST:
   case SYMBOL_CONSTANT_INST:
   case SYMBOL_INST:
-    *err = incorrect_symbol_linst_type;
+    rel_errorlist_set_lrcode(err,incorrect_symbol_linst_type);
     return NULL;
   case REAL_ATOM_INST:
   case REAL_CONSTANT_INST:
   case REAL_INST:
-    *err = incorrect_real_linst_type;
+    rel_errorlist_set_lrcode(err,incorrect_real_linst_type);
     return NULL;
   default:
-    *err = incorrect_linst_type;
+    rel_errorlist_set_lrcode(err,incorrect_linst_type);
     return NULL;
   }
 }
@@ -474,8 +471,7 @@ static int ConvertLogExpr(CONST struct Expr *start,
 			      CONST struct Expr *stop,
 			      struct Instance *ref,
 			      struct Instance *lrel,
-			      enum logrelation_errors *err,
-			      enum find_errors *ferr,
+			      rel_errorlist *err,
 			      struct logrel_side_temp *newside)
 {
   struct gl_list_t *instances;
@@ -500,44 +496,39 @@ static int ConvertLogExpr(CONST struct Expr *start,
       break;
     case e_var:
       if (GetEvaluationForTable()!= NULL &&
-	  (NULL != (str = SimpleNameIdPtr(ExprName(start)))) &&
-	  (NULL != (fvp=FindForVar(GetEvaluationForTable(),str)))){
-	if (GetForKind(fvp)==f_integer){
-	  term = CreateLogIntegerTerm(GetForInteger(fvp));
-	  AppendLogTermBuf(term);
-	}
-	else{
-	  *err = incorrect_linst_type;
-	  DestroyLogTermList();
-	  return 0;
-	}
-      }
-      else{
-	instances = FindInstances(ref,ExprName(start),ferr);
-	if (instances!=NULL){
-	  if (gl_length(instances)==1){
-	    inst = (struct Instance *)gl_fetch(instances,1);
-	    gl_destroy(instances);
-	    if ((term = CreateLogTermFromInst(inst,lrel,err))!=NULL){
-	      AppendLogTermBuf(term);
-	    }
-	    else{
-	      DestroyLogTermList();
-	      return 0;
-	    }
-	  }
-	  else{
-	    *err=incorrect_logstructure;
-	    gl_destroy(instances);
-	    DestroyLogTermList();
-	    return 0;
-	  }
-	}
-	else{
-	  *err = find_logerror;
-	  DestroyLogTermList();
-	  return 0;
-	}
+          (NULL != (str = SimpleNameIdPtr(ExprName(start)))) &&
+          (NULL != (fvp=FindForVar(GetEvaluationForTable(),str)))){
+        if (GetForKind(fvp)==f_integer){
+          term = CreateLogIntegerTerm(GetForInteger(fvp));
+          AppendLogTermBuf(term);
+        }else{
+          rel_errorlist_set_lrcode(err,incorrect_linst_type);
+          DestroyLogTermList();
+          return 0;
+        }
+      }else{
+        instances = FindInstances(ref,ExprName(start),err);
+        if (instances!=NULL){
+          if (gl_length(instances)==1){
+            inst = (struct Instance *)gl_fetch(instances,1);
+            gl_destroy(instances);
+            if ((term = CreateLogTermFromInst(inst,lrel,err))!=NULL){
+              AppendLogTermBuf(term);
+            }else{
+              DestroyLogTermList();
+              return 0;
+            }
+          }else{
+            rel_errorlist_set_lrcode(err,incorrect_logstructure);
+            gl_destroy(instances);
+            DestroyLogTermList();
+            return 0;
+          }
+        }else{
+          rel_errorlist_set_lrcode(err,find_logerror);
+          DestroyLogTermList();
+          return 0;
+        }
       }
       break;
     case e_boolean:
@@ -545,14 +536,13 @@ static int ConvertLogExpr(CONST struct Expr *start,
       AppendLogTermBuf(term);
       break;
     case e_satisfied:
-      instances = FindInstances(ref,SatisfiedExprName(start),ferr);
+      instances = FindInstances(ref,SatisfiedExprName(start),err);
       if (instances == NULL){
-	*err = find_logerror;
+        rel_errorlist_set_lrcode(err,find_logerror);
         gl_destroy(instances);
-	DestroyLogTermList();
+        DestroyLogTermList();
         return 0;
-      }
-      else{
+      }else{
         if (gl_length(instances)==1) {
           inst = (struct Instance *)gl_fetch(instances,1);
           gl_destroy(instances);
@@ -560,28 +550,27 @@ static int ConvertLogExpr(CONST struct Expr *start,
             case REL_INST:
               rel = GetInstanceRelation(inst,&type);
               if (!RelationIsCond(rel)){
-  	        *err = incorrect_linst_type;
-	        DestroyLogTermList();
+                rel_errorlist_set_lrcode(err,incorrect_linst_type);
+                DestroyLogTermList();
                 return 0;
               }
-    	      break;
+              break;
             case LREL_INST:
               logrel = GetInstanceLogRel(inst);
               if (!LogRelIsCond(logrel)){
-  	        *err = incorrect_linst_type;
-	        DestroyLogTermList();
+                rel_errorlist_set_lrcode(err,incorrect_linst_type);
+                DestroyLogTermList();
                 return 0;
               }
-    	      break;
+              break;
             default:
-	     *err = incorrect_linst_type;
-	     DestroyLogTermList();
+             rel_errorlist_set_lrcode(err,incorrect_linst_type);
+             DestroyLogTermList();
              return 0;
           }
-        }
-        else {
-	  gl_destroy(instances);
-  	  *err=incorrect_logstructure;
+        }else{
+          gl_destroy(instances);
+          rel_errorlist_set_lrcode(err,incorrect_logstructure);
           return 0;
         }
       }
@@ -593,7 +582,7 @@ static int ConvertLogExpr(CONST struct Expr *start,
       AppendLogTermBuf(term);
       break;
     default:
-      *err = incorrect_logstructure;
+      rel_errorlist_set_lrcode(err,incorrect_logstructure);
       DestroyLogTermList();
       return 0;
     }
@@ -740,19 +729,20 @@ struct logrel_term *Infix_MakeLogSide(struct gl_list_t *term_list)
 }
 #endif
 
+
 /*
  * *err = 0 if ok, 1 otherwise. Sets up infix pointers.
  */
-static struct logrel_term
-*InfixArr_MakeLogSide(CONST struct logrel_side_temp *tmp, int *err)
-{
+static struct logrel_term *InfixArr_MakeLogSide(
+	CONST struct logrel_side_temp *tmp, int *errflag
+){
   struct logrel_term *term = NULL;
   struct logrel_term *left;
   long len,count=0;
   struct gs_stack_t *stack;
   enum Expr_enum t;
 
-  *err = 0;
+  *errflag = 0;
   len = tmp->length;
   stack = gs_stack_create(len);
   while(count < len) {
@@ -788,17 +778,17 @@ static struct logrel_term
     /* ensure that the stack is empty */
     FPRINTF(ASCERR,"stacksize %ld\n",stack->size);
     DoBreakPoint();
-    *err = 1;
+    *errflag = 1;
   }
   gs_stack_destroy(stack,0);
   return term;
 }
 
-void DoInOrderLogRelVisit(struct logrel_term *term,
-		    struct logrelation *r,
-		    void (*func)(struct logrel_term *,
-				 struct logrelation *))
-{
+
+void DoInOrderLogRelVisit(struct logrel_term *term
+	,struct logrelation *r
+	,void (*func)(struct logrel_term *,struct logrelation *)
+){
   if (term) {
     switch(LogRelTermType(term)) {
     case e_boolean:
@@ -871,22 +861,20 @@ static void DestroyLogTermSide(struct logrel_side_temp *);
 void DestroyBVarList(struct gl_list_t *, struct Instance *);
 void DestroySatRelList(struct gl_list_t *, struct Instance *);
 
+
 struct logrelation *CreateLogicalRelation(struct Instance *reference,
-				          struct Instance *lrelinst,
-				          CONST struct Expr *ex,
-				          enum logrelation_errors *err,
-				          enum find_errors *ferr)
-{
+	struct Instance *lrelinst, CONST struct Expr *ex, rel_errorlist *err
+){
   struct logrelation *result;
   CONST struct Expr *rhs_ex,*last_ex;
   int lhs,rhs;
   enum Expr_enum type;
   struct logrel_side_temp leftside,rightside;
-  assert(reference&&lrelinst&&ex&&err&&ferr);
+  assert(reference && lrelinst && ex && err);
   g_logrelation_bvar_list = gl_create(20l);
   g_logrelation_satrel_list = gl_create(2l);
-  *err = lokay;
-  *ferr = correct_instance;
+  rel_errorlist_set_lrcode(err,lokay);
+  rel_errorlist_set_find_error(err, correct_instance);
   last_ex = FindLastExpr(ex);
   switch(ExprType(last_ex)){
   case e_boolean_eq:
@@ -894,35 +882,34 @@ struct logrelation *CreateLogicalRelation(struct Instance *reference,
     type = ExprType(last_ex);
     rhs_ex = FindLogRHS(ex);
     if (rhs_ex!=NULL){
-      lhs = ConvertLogExpr(ex,rhs_ex,reference,lrelinst,err,ferr,&leftside);
+      lhs = ConvertLogExpr(ex,rhs_ex,reference,lrelinst,err,&leftside);
       if(!lhs) {
         if (g_logrelation_bvar_list!=NULL) {
           DestroyBVarList(g_logrelation_bvar_list,lrelinst);
-	}
-	g_logrelation_bvar_list = NULL;
+        }
+        g_logrelation_bvar_list = NULL;
         if (g_logrelation_satrel_list!=NULL) {
           DestroySatRelList(g_logrelation_satrel_list,lrelinst);
-	}
-	g_logrelation_satrel_list = NULL;
-	return NULL;
+        }
+        g_logrelation_satrel_list = NULL;
+        return NULL;
       }
-      rhs = ConvertLogExpr(rhs_ex,last_ex,reference,lrelinst,err,
-                           ferr,&rightside);
+      rhs = ConvertLogExpr(rhs_ex,last_ex,reference,lrelinst,err,&rightside);
       if(!rhs) {
-	DestroyLogTermSide(&leftside);
+        DestroyLogTermSide(&leftside);
         if (g_logrelation_bvar_list!=NULL) {
           DestroyBVarList(g_logrelation_bvar_list,lrelinst);
-	}
-	g_logrelation_bvar_list = NULL;
+        }
+        g_logrelation_bvar_list = NULL;
         if (g_logrelation_satrel_list!=NULL) {
           DestroySatRelList(g_logrelation_satrel_list,lrelinst);
-	}
-	g_logrelation_satrel_list = NULL;
-	return NULL;
+        }
+        g_logrelation_satrel_list = NULL;
+        return NULL;
       }
     }
     else{
-      *err = incorrect_logstructure;
+      rel_errorlist_set_lrcode(err,incorrect_logstructure);
       FPRINTF(ASCERR,"Error finding logical relation operator.\n");
       if (g_logrelation_bvar_list!=NULL) {
          DestroyBVarList(g_logrelation_bvar_list,lrelinst);
@@ -936,7 +923,7 @@ struct logrelation *CreateLogicalRelation(struct Instance *reference,
     }
     break;
   default:
-    *err = incorrect_logstructure;
+    rel_errorlist_set_lrcode(err,incorrect_logstructure);
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Expression missing logical relation operator.");
     if (g_logrelation_bvar_list!=NULL) {
       DestroyBVarList(g_logrelation_bvar_list,lrelinst);
@@ -1085,9 +1072,9 @@ void ChangeLogVarTermSide(union LogRelTermUnion *side,
     switch (term->t){
     case e_var:
       if (LOGBV_TERM(term)->varnum == old)
-	LOGBV_TERM(term)->varnum = new;
+        LOGBV_TERM(term)->varnum = new;
       else
-	if (LOGBV_TERM(term)->varnum > old) LOGBV_TERM(term)->varnum--;
+        if (LOGBV_TERM(term)->varnum > old) LOGBV_TERM(term)->varnum--;
       break;
     default:
       break;
@@ -1109,9 +1096,9 @@ void ChangeLogSatTermSide(union LogRelTermUnion *side,
     switch (term->t){
       case e_satisfied:
         if (LOGS_TERM(term)->relnum == old)
-	  LOGS_TERM(term)->relnum = new;
+          LOGS_TERM(term)->relnum = new;
         else
-	  if (LOGS_TERM(term)->relnum > old) LOGS_TERM(term)->relnum--;
+          if (LOGS_TERM(term)->relnum > old) LOGS_TERM(term)->relnum--;
         break;
       default:
         break;
@@ -1157,7 +1144,7 @@ void ModifyLogRelPointers(struct gl_list_t *relorvar,
   if (new){
     if (0 != (pos = gl_search(relorvar,old,(CmpFunc)CmpP))) {
       if (0 != (other = gl_search(relorvar,new,(CmpFunc)CmpP))){
-	gl_store(relorvar,pos,(VOIDPTR)new);     /* case 3 */
+        gl_store(relorvar,pos,(VOIDPTR)new);     /* case 3 */
         if (new == NULL) {
           inst = old;
         }
@@ -1167,21 +1154,21 @@ void ModifyLogRelPointers(struct gl_list_t *relorvar,
         switch (inst->t) {
         case BOOLEAN_ATOM_INST:
           varflag = 1;
-  	  LogDeleteAndChange(relorvar,lrel,pos,other,varflag);
+            LogDeleteAndChange(relorvar,lrel,pos,other,varflag);
           break;
         case REL_INST:
         case LREL_INST:
           varflag = 0;
-  	  LogDeleteAndChange(relorvar,lrel,pos,other,varflag);
+            LogDeleteAndChange(relorvar,lrel,pos,other,varflag);
           break;
         default:
           Asc_Panic(2, NULL,
                     "Wrong instance type passed to ChangeLogRelPointers\n");
           break;
-	}
+        }
       }
       else
-	gl_store(relorvar,pos,(char *)new);	/* case 2 */
+        gl_store(relorvar,pos,(char *)new);	/* case 2 */
     }
     else{					/* case 1 */
       FPRINTF(ASCERR,"Warning ModifiyLogRelPointers not found.\n");
@@ -1221,27 +1208,27 @@ static int CheckExprBVar(CONST struct Instance *ref, CONST struct Name *name,
   symchar *str;
   struct Instance *inst;
   struct for_var_t *fvp;
-  enum find_errors err;
+  rel_errorlist *err = rel_errorlist_new();
   if(NULL != (str = SimpleNameIdPtr(name))){
     if (TempExists(str)) {
       if (ValueKind(TempValue(str))==integer_value) {
-	return 1;
+        return 1;
       } else {
-	return -1;
+        return -1;
       }
     }
     if (GetEvaluationForTable() != NULL &&
         (NULL != (fvp=FindForVar(GetEvaluationForTable(),str))) ) {
       if (GetForKind(fvp)==f_integer) {
-	return 1;
+        return 1;
       } else {
-	return -1;
+        return -1;
       }
     }
   }
-  instances = FindInstances(ref,name,&err); /* need noisy version of Find */
+  instances = FindInstances(ref,name,err); /* need noisy version of Find */
   if (instances == NULL){
-    switch(err){
+    switch(rel_errorlist_get_find_error(err)){
     case unmade_instance:
     case undefined_instance:
       return 0;
@@ -1255,14 +1242,14 @@ static int CheckExprBVar(CONST struct Instance *ref, CONST struct Name *name,
       gl_destroy(instances);
       switch(InstanceKind(inst)){
       case BOOLEAN_ATOM_INST:
-	return 1;
+        return 1;
       case DUMMY_INST:
-	return 1;
+        return 1;
       case BOOLEAN_CONSTANT_INST:
-	if (AtomAssigned(inst)) {
-	  return 1;
+        if (AtomAssigned(inst)) {
+          return 1;
         }
-	return 0;
+        return 0;
       default: return -1; /* bogus var type found */
       }
     }
@@ -1272,21 +1259,21 @@ static int CheckExprBVar(CONST struct Instance *ref, CONST struct Name *name,
       unsigned long c,len;
       len = gl_length(instances);
       for(c=1;c<=len;c++){
-	inst = (struct Instance *)gl_fetch(instances,1);
-	switch(InstanceKind(inst)){
-	case BOOLEAN_ATOM_INST:
-	  break;
+        inst = (struct Instance *)gl_fetch(instances,1);
+        switch(InstanceKind(inst)){
+        case BOOLEAN_ATOM_INST:
+          break;
         case DUMMY_INST:
-	  break;
-	case BOOLEAN_CONSTANT_INST:
-	  if (!AtomAssigned(inst)){
-	    gl_destroy(instances);
-	    return -1;
-	  }
-	default:
-	  gl_destroy(instances);
-	  return 0;
-	}
+          break;
+        case BOOLEAN_CONSTANT_INST:
+          if (!AtomAssigned(inst)){
+            gl_destroy(instances);
+            return -1;
+          }
+        default:
+          gl_destroy(instances);
+          return 0;
+        }
       }
       gl_destroy(instances);
       return 1;
@@ -1304,9 +1291,9 @@ static int CheckExprSatisfied(CONST struct Instance *ref,
 {
   struct gl_list_t *instances;
   struct Instance *inst;
-  enum find_errors err;
+  rel_errorlist *err = rel_errorlist_new();
 
-  instances = FindInstances(ref,name,&err);
+  instances = FindInstances(ref,name,err);
   if (instances == NULL){
     gl_destroy(instances);
     FPRINTF(ASCERR,
@@ -1319,11 +1306,11 @@ static int CheckExprSatisfied(CONST struct Instance *ref,
       gl_destroy(instances);
       switch(InstanceKind(inst)){
         case REL_INST:
-	  return 1;
+          return 1;
         case LREL_INST:
-	  return 1;
+          return 1;
         case DUMMY_INST:
-	  return 1;
+          return 1;
         default:
          FPRINTF(ASCERR,
                  "Incorrect instance name (No Log/Relation)"
@@ -1397,7 +1384,7 @@ int CheckLogRel(CONST struct Instance *reference, CONST struct Expr *ex)
   }
 }
 
-
+
 /*
  * We can now just do a memcopy and the infix pointers
  * all adjust by the difference between the token
@@ -1488,7 +1475,7 @@ struct gl_list_t *CopyLogRelInstList(struct Instance *dest_inst,
       inst = (struct Instance *)gl_fetch(instlist,c);
       pos = gl_search(newinstlist,inst,(CmpFunc)CmpP);
       if (pos) {
-	ASC_PANIC("Corrupted instance list in CopyLogRelation\n");
+        ASC_PANIC("Corrupted instance list in CopyLogRelation\n");
       }
       gl_append_ptr(newinstlist,(VOIDPTR)inst);
       AddLogRel(inst,dest_inst);

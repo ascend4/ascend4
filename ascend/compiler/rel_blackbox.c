@@ -52,8 +52,7 @@
 
 #define BBDEBUG 0 /* set 0 if not wanting spew */
 
-static int32 ArgsDifferent(double new, double old, double tol)
-{
+static int32 ArgsDifferent(double new, double old, double tol){
 	if (fabs(new - old) > fabs(tol)) {
 		return 1;
 	} else {
@@ -66,8 +65,7 @@ static int32 ArgsDifferent(double new, double old, double tol)
 */
 
 real64 *blackbox_dsolve(struct Instance *ri, struct Instance *v
-		, int *able
-		, int *nsolns
+		, int *able, int *nsolns
 ){
 #ifdef WITH_BLACKBOX_DSOLVE
 	enum Expr_enum reltype;
@@ -134,8 +132,9 @@ real64 *blackbox_dsolve(struct Instance *ri, struct Instance *v
 	is y-yhat. The gradient is I - dyhat/dx, where dyhat/dx
 	is the reduced jacobian of the blackbox.
 */
-int BlackBoxCalcResidGrad(struct Instance *i, double *res, double *gradient, struct relation *r)
-{
+int BlackBoxCalcResidGrad(struct Instance *i, double *res
+	, double *gradient, struct relation *r
+){
 	int residErr = 0;
 	int gradErr = 0;
 
@@ -143,6 +142,7 @@ int BlackBoxCalcResidGrad(struct Instance *i, double *res, double *gradient, str
 	gradErr = BlackBoxCalcGradient(i, gradient, r);
 	return (int)(fabs(residErr) + fabs(gradErr));
 }
+
 
 /*
 	Note:
@@ -155,8 +155,7 @@ int BlackBoxCalcResidGrad(struct Instance *i, double *res, double *gradient, str
 	is y-yhat. The gradient is I - dyhat/dx, where dyhat/dx
 	is the reduced jacobian of the blackbox.
 */
-int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
-{
+int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r){
 /* decls */
 	unsigned long *argToVar;
 	unsigned long c;
@@ -235,6 +234,7 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
 
 }
 
+
 /**
 	Calculate the gradient (slice of the overall jacobian) for the blackbox.
 
@@ -247,7 +247,6 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
 		# if changed, recompute gradient in bbox.
 		# compute gradient per varlist from bbox row.
 */
-
 int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
 	, int ninputs, int noutputs
 	, double *inputs, double *outputs, double *jac
@@ -448,6 +447,7 @@ static double blackbox_peturbation(double varvalue){
   return 1.0e-05;
 }
 
+
 /**
 	Blackbox derivatives estimated by finite difference (by evaluation at
 	peturbed value of each input in turn)
@@ -542,11 +542,10 @@ struct BlackBoxCache *CreateBlackBoxCache(
 	return b;
 }
 
-void InitBBox(struct Instance *context, struct BlackBoxCache *b)
-{
+void InitBBox(struct Instance *context, struct BlackBoxCache *b){
 	ExtBBoxInitFunc * init;
-	enum find_errors ferr = correct_instance;
-	unsigned long nbr, br, errpos;
+	rel_errorlist *err = rel_errorlist_new();
+	unsigned long nbr, br;
 	struct gl_list_t *tmp;
 
 	struct gl_list_t *arglist;
@@ -554,7 +553,7 @@ void InitBBox(struct Instance *context, struct BlackBoxCache *b)
 
 	/* fish up data from name. */
 	if (b->dataName != NULL) {
-		tmp = FindInstances(context,b->dataName,&ferr);
+		tmp = FindInstances(context,b->dataName,err);
 		assert(tmp != NULL);
 		assert(gl_length(tmp) == 1);
 		data = (struct Instance *)gl_fetch(tmp,1);
@@ -572,7 +571,7 @@ void InitBBox(struct Instance *context, struct BlackBoxCache *b)
 	arglist = gl_create(nbr);
 	for (br = 1; br <= nbr; br++) {
 		tmp = (struct gl_list_t *)gl_fetch(b->argListNames,br);
-		tmp = FindInstancesFromNames(context, tmp, &ferr, &errpos);
+		tmp = FindInstancesFromNames(context, tmp, err);
 		assert(tmp != NULL);
 		gl_append_ptr(arglist,tmp);
 	}
@@ -584,20 +583,20 @@ void InitBBox(struct Instance *context, struct BlackBoxCache *b)
   	b->interp.task = bb_none;
 }
 
-int32 BlackBoxCacheInputsLen(struct BlackBoxCache *b)
-{
+
+int32 BlackBoxCacheInputsLen(struct BlackBoxCache *b){
 	assert(b != NULL);
 	return b->inputsLen;
 }
 
-void AddRefBlackBoxCache(struct BlackBoxCache *b)
-{
+
+void AddRefBlackBoxCache(struct BlackBoxCache *b){
 	assert(b != NULL);
 	(b->refCount)++;
 }
 
-static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b)
-{
+
+static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b){
 	struct ExternalFunc *efunc;
 	ExtBBoxFinalFunc *final;
 	assert(b != NULL);
@@ -642,8 +641,8 @@ static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b)
 	ascfree(b);
 }
 
-void DeleteRefBlackBoxCache(struct relation *rel, struct BlackBoxCache **b)
-{
+
+void DeleteRefBlackBoxCache(struct relation *rel, struct BlackBoxCache **b){
 	struct BlackBoxCache * d = *b;
 	assert(b != NULL && *b != NULL);
 	if (d->refCount > 0) {
@@ -668,3 +667,4 @@ void DeleteRefBlackBoxCache(struct relation *rel, struct BlackBoxCache **b)
 		*b = NULL;
 	}
 }
+

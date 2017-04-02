@@ -23,8 +23,6 @@
 	Created: 07/07/2009
 */
 
-
-
 #include "link.h"
 #include <stdarg.h>
 #include <ascend/general/list.h>
@@ -43,8 +41,7 @@
 #include "vlist.h"
 #include "name.h"
 #include "instance_io.h"
-
-
+#include "relerr.h"
 
 /**< DS: beginning of LINK functions *******/
 /* implemented functions related to the LINK statements, probably they shouldn't be here*/
@@ -54,8 +51,9 @@
 	on list (else returned list will be NULL) and return the collected instances.
 	DS: it returns a non-flattened list of the instances
 */
-static struct gl_list_t *FindInstsNonFlat(
-	struct Instance *inst,CONST struct VariableList *list,enum find_errors *err
+static struct gl_list_t *FindInstsNonFlat(struct Instance *inst
+	,CONST struct VariableList *list
+	,rel_errorlist *err
 ){
   struct gl_list_t *result,*temp;
 
@@ -78,7 +76,7 @@ static struct gl_list_t *FindInstsNonFlat(
 	DS: it returns a flattened list of the instances
 */
 struct gl_list_t *FindInsts(
-	struct Instance *inst, const struct VariableList *list, enum find_errors *err
+	struct Instance *inst, const struct VariableList *list, rel_errorlist *err
 ){
   struct gl_list_t *result,*temp;
   unsigned c,len;
@@ -296,7 +294,7 @@ extern struct gl_list_t *getLinksReferencing (struct Instance *model
 	struct gl_list_t *link_instances,*result = gl_create(AVG_LINKS);
 	struct link_entry_t *link_entry;
 	struct Instance *inst;
-	enum find_errors err;
+	rel_errorlist *err = rel_errorlist_new();
 	int c1, c2, len_result, len_inst, containsInst;
 
 	if(recursive){
@@ -310,7 +308,7 @@ extern struct gl_list_t *getLinksReferencing (struct Instance *model
 	for(c1=1;c1<=len_result;c1++){
 		link_entry = (struct link_entry_t *)gl_fetch(result,c1);
 		if(link_entry->instances_cache == NULL ) {
-			link_instances = FindInsts(model,link_entry->u.vl,&err);
+			link_instances = FindInsts(model,link_entry->u.vl,err);
 		}else{
 			link_instances = link_entry->instances_cache;
 		}
@@ -533,12 +531,12 @@ const struct gl_list_t *getLinkInstances(struct Instance *inst
 	, struct link_entry_t *link_entry,int status
 ){
 	struct gl_list_t *result = gl_create(AVG_LINKS_INST);
-	enum find_errors err;
+	rel_errorlist *err = rel_errorlist_new();
 
-	result = FindInstsNonFlat(inst,link_entry->u.vl,&err);
+	result = FindInstsNonFlat(inst,link_entry->u.vl,err);
 
-	if (result==NULL) {
-		switch(err){
+	if(result==NULL) {
+		switch(rel_errorlist_get_find_error(err)){
 		case impossible_instance:
 			ERROR_REPORTER_HERE(ASC_USER_ERROR,"LINK entry contains imposible instance name");
 		default:
@@ -553,11 +551,11 @@ const struct gl_list_t *getLinkInstancesFlat(struct Instance *inst
 	, struct link_entry_t *link_entry,int status
 ){
 	struct gl_list_t *result = gl_create(AVG_LINKS_INST);
-	enum find_errors err;
+	rel_errorlist *err = rel_errorlist_new();
 	if(link_entry->instances_cache == NULL) {
-		result = FindInsts(inst,link_entry->u.vl,&err);
+		result = FindInsts(inst,link_entry->u.vl,err);
 		if (result==NULL) {
-			switch(err){
+			switch(rel_errorlist_get_find_error(err)){
 			case impossible_instance:
 				ERROR_REPORTER_HERE(ASC_USER_ERROR,"LINK entry contains impossible instance name");
 			default:
@@ -642,16 +640,16 @@ extern void clearLinkCache(struct Instance* model){
 extern void populateLinkCache(struct Instance* model){
 	struct gl_list_t *link_table;
 	struct link_entry_t *link_entry;
-	enum find_errors err;
+	rel_errorlist *err = rel_errorlist_new();
 	int c,len;
 
 	link_table = getLinkTableDeclarative(model);
 	len = gl_length(link_table);
 	for(c=1;c<=len;c++) {
 		link_entry = gl_fetch(link_table,c);
-		link_entry->instances_cache = FindInsts(model,link_entry->u.vl,&err);
+		link_entry->instances_cache = FindInsts(model,link_entry->u.vl,err);
 		if (link_entry->instances_cache==NULL) {
-			switch(err){
+			switch(rel_errorlist_get_find_error(err)){
 			case impossible_instance:
 				ERROR_REPORTER_HERE(ASC_USER_ERROR,"LINK statement contains an impossible instance name (populateLinkCache)");
 			default:
@@ -664,9 +662,9 @@ extern void populateLinkCache(struct Instance* model){
 	len = gl_length(link_table);
 	for(c=1;c<=len;c++) {
 		link_entry = gl_fetch(link_table,c);
-		link_entry->instances_cache = FindInsts(model,link_entry->u.vl,&err);
+		link_entry->instances_cache = FindInsts(model,link_entry->u.vl,err);
 		if (link_entry->instances_cache==NULL) {
-			switch(err){
+			switch(rel_errorlist_get_find_error(err)){
 			case impossible_instance:
 				ERROR_REPORTER_HERE(ASC_USER_ERROR,"LINK statement contains an impossible instance name (populateLinkCache)");
 			default:

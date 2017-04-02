@@ -34,7 +34,7 @@
 
 extern struct gl_list_t *FindInstancesPaths(CONST struct Instance *i,
                                        CONST struct Name *n,
-                                       enum find_errors *err);
+                                       rel_errorlist *err);
 /**<
  *  Return the list of Names expanded from n that have instances.
  *  Don't forget to destroy the names in the list before destroying list.
