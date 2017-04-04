@@ -544,7 +544,7 @@ struct BlackBoxCache *CreateBlackBoxCache(
 
 void InitBBox(struct Instance *context, struct BlackBoxCache *b){
 	ExtBBoxInitFunc * init;
-	rel_errorlist *err = rel_errorlist_new();
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 	unsigned long nbr, br;
 	struct gl_list_t *tmp;
 
@@ -553,7 +553,7 @@ void InitBBox(struct Instance *context, struct BlackBoxCache *b){
 
 	/* fish up data from name. */
 	if (b->dataName != NULL) {
-		tmp = FindInstances(context,b->dataName,err);
+		tmp = FindInstances(context,b->dataName,&err);
 		assert(tmp != NULL);
 		assert(gl_length(tmp) == 1);
 		data = (struct Instance *)gl_fetch(tmp,1);
@@ -571,7 +571,7 @@ void InitBBox(struct Instance *context, struct BlackBoxCache *b){
 	arglist = gl_create(nbr);
 	for (br = 1; br <= nbr; br++) {
 		tmp = (struct gl_list_t *)gl_fetch(b->argListNames,br);
-		tmp = FindInstancesFromNames(context, tmp, err);
+		tmp = FindInstancesFromNames(context,tmp,&err);
 		assert(tmp != NULL);
 		gl_append_ptr(arglist,tmp);
 	}

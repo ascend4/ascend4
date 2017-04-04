@@ -1201,43 +1201,42 @@ CheckLogExpr(CONST struct Instance *ref, CONST struct Expr *start,
 	   0  --> BAD (undefined/unassigned) try again later
 	  -1  --> incurably BAD
 \**********************************************************************/
-static int CheckExprBVar(CONST struct Instance *ref, CONST struct Name *name,
-			 int list)
-{
+static int CheckExprBVar(CONST struct Instance *ref
+	, CONST struct Name *name,int list
+){
   struct gl_list_t *instances;
   symchar *str;
   struct Instance *inst;
   struct for_var_t *fvp;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   if(NULL != (str = SimpleNameIdPtr(name))){
-    if (TempExists(str)) {
-      if (ValueKind(TempValue(str))==integer_value) {
+    if(TempExists(str)) {
+      if(ValueKind(TempValue(str))==integer_value) {
         return 1;
-      } else {
+      }else{
         return -1;
       }
     }
-    if (GetEvaluationForTable() != NULL &&
+    if(GetEvaluationForTable() != NULL &&
         (NULL != (fvp=FindForVar(GetEvaluationForTable(),str))) ) {
-      if (GetForKind(fvp)==f_integer) {
+      if(GetForKind(fvp)==f_integer) {
         return 1;
-      } else {
+      }else{
         return -1;
       }
     }
   }
-  instances = FindInstances(ref,name,err); /* need noisy version of Find */
-  if (instances == NULL){
-    switch(rel_errorlist_get_find_error(err)){
+  instances = FindInstances(ref,name,&err); /* need noisy version of Find */
+  if(instances == NULL){
+    switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
     case undefined_instance:
       return 0;
     default:
       return -1;
     }
-  }
-  else{
-    if (gl_length(instances)==1) {
+  }else{
+    if(gl_length(instances)==1) {
       inst = (struct Instance *)gl_fetch(instances,1);
       gl_destroy(instances);
       switch(InstanceKind(inst)){
@@ -1252,10 +1251,9 @@ static int CheckExprBVar(CONST struct Instance *ref, CONST struct Name *name,
         return 0;
       default: return -1; /* bogus var type found */
       }
-    }
-    else if (list){
-/* this part of the code is most peculiar, and semantics may not
-   match it. We need to find out what is the semantics of list. */
+    }else if(list){
+	/* this part of the code is most peculiar, and semantics may not
+	match it. We need to find out what is the semantics of list. */
       unsigned long c,len;
       len = gl_length(instances);
       for(c=1;c<=len;c++){
@@ -1277,8 +1275,7 @@ static int CheckExprBVar(CONST struct Instance *ref, CONST struct Name *name,
       }
       gl_destroy(instances);
       return 1;
-    }
-    else {
+    }else{
       gl_destroy(instances);
       return -1;
     }
@@ -1286,22 +1283,21 @@ static int CheckExprBVar(CONST struct Instance *ref, CONST struct Name *name,
 }
 
 
-static int CheckExprSatisfied(CONST struct Instance *ref,
-                              CONST struct Name *name)
-{
+static int CheckExprSatisfied(CONST struct Instance *ref
+	,CONST struct Name *name
+){
   struct gl_list_t *instances;
   struct Instance *inst;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 
-  instances = FindInstances(ref,name,err);
-  if (instances == NULL){
+  instances = FindInstances(ref,name,&err);
+  if(instances == NULL){
     gl_destroy(instances);
     FPRINTF(ASCERR,
     "Name of an unmade instance (Relation) in Satisfied Expr \n");
     return 0;
-  }
-  else{
-    if (gl_length(instances)==1) {
+  }else{
+    if(gl_length(instances)==1) {
       inst = (struct Instance *)gl_fetch(instances,1);
       gl_destroy(instances);
       switch(InstanceKind(inst)){
@@ -1317,8 +1313,7 @@ static int CheckExprSatisfied(CONST struct Instance *ref,
                  " inside a Satisfied Expr\n");
           return 0;
       }
-    }
-    else {
+    }else{
       gl_destroy(instances);
       FPRINTF(ASCERR,
       "Error in Satisfied Expr Name assigned to more than one instance\n");

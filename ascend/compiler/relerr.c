@@ -22,21 +22,6 @@
 #include "relerr.h"
 #include <ascend/general/ascMalloc.h>
 
-/* fill out the details of this struct now, only inside this code file */
-
-struct rel_errorlist_struct{
-	enum relation_errorsx errcode;
-	enum logrelation_errorsx lrcode;
-	enum find_errors ferr;
-	unsigned long ferrpos;
-/*	
-	struct gl_list *errs;
-	enum relation_errorsx lastcode;
-	enum find_errors ferr;
-	unsigned long ferrpos;
-*/
-};
-
 
 rel_errorlist *rel_errorlist_new(){
 	rel_errorlist *err = ASC_NEW_CLEAR(rel_errorlist);
@@ -48,7 +33,12 @@ rel_errorlist *rel_errorlist_new(){
 
 
 void rel_errorlist_destroy(rel_errorlist *err){
+	rel_errorlist_destroy_contents(err);
 	ASC_FREE(err);
+}
+
+void rel_errorlist_destroy_contents(rel_errorlist *err){
+	(void)0;
 }
 
 

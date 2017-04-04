@@ -146,7 +146,7 @@ struct value_t InstanceEvaluateName(CONST struct Name *nptr)
   struct Instance *inst;
   struct value_t result;
   unsigned long c,len;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct for_var_t *ptr;
   symchar *name;
 
@@ -172,10 +172,10 @@ struct value_t InstanceEvaluateName(CONST struct Name *nptr)
   /* didn't find or bomb, so must be in user vars */
   if (GetEvaluationContext()==NULL) return CreateErrorValue(incorrect_name);
   AssertMemory(GetEvaluationContext());
-  list = RealFindInstances(GetEvaluationContext(),nptr,err);
+  list = RealFindInstances(GetEvaluationContext(),nptr,&err);
   if (list==NULL){
-    assert(rel_errorlist_get_find_error(err)!=correct_instance);
-    switch(rel_errorlist_get_find_error(err)){
+    assert(rel_errorlist_get_find_error(&err)!=correct_instance);
+    switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
       return CreateErrorValue(name_unfound);
     case undefined_instance:
@@ -383,7 +383,7 @@ struct value_t InstanceEvaluateSatisfiedName(CONST struct Name *nptr,
 {
   struct gl_list_t *list;
   struct Instance *inst;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct for_var_t *ptr;
   symchar *name;
   CONST struct relation *rel;
@@ -412,10 +412,10 @@ struct value_t InstanceEvaluateSatisfiedName(CONST struct Name *nptr,
   }
   if (GetEvaluationContext()==NULL) return CreateErrorValue(incorrect_name);
   AssertMemory(GetEvaluationContext());
-  list = RealFindInstances(GetEvaluationContext(),nptr,err);
+  list = RealFindInstances(GetEvaluationContext(),nptr,&err);
   if (list==NULL){
-    assert(rel_errorlist_get_find_error(err)!=correct_instance);
-    switch(rel_errorlist_get_find_error(err)){
+    assert(rel_errorlist_get_find_error(&err)!=correct_instance);
+    switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
       return CreateErrorValue(name_unfound);
     case undefined_instance:

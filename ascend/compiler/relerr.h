@@ -17,6 +17,10 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file Error-reporting functions for the compiler
+The `rel_errorlist` type will allow us to feed back more information on the
+source of errors found in the compiler. Currently it is difficult/impossible
+to pass back the name of the variable which has causes a problem. This new
+structure should facilitate that -- JP 4 Apr 2017.
 */
 #ifndef ASC_RELERR_H
 # define ASC_RELERR_H
@@ -61,15 +65,45 @@ struct Instance;
 struct Statement;
 
 struct rel_errorlist_struct;
+
+/* details of the struct need to be here if we want to be able to allocate
+this object on the stack. the design principle will be that everything is
+on the stack unless an error occurs; in that case there will be stuff on the
+heap requiring some attention for cleanup. */
+struct rel_errorlist_struct{
+	enum relation_errorsx errcode;
+	enum logrelation_errorsx lrcode;
+	enum find_errors ferr;
+	unsigned long ferrpos;
+/*	// removed items -- more sophisticated error traces
+	struct gl_list *errs;
+	enum relation_errorsx lastcode;
+	enum find_errors ferr;
+	unsigned long ferrpos;
+*/
+};
 typedef struct rel_errorlist_struct rel_errorlist;
 
-rel_errorlist *rel_errorlist_new();
+/* we will try using the 'cleanup' attribute (GCC, clang) for automating the
+freeing of memory for rel_errorlist. In cases where compilers don't support
+something like this, we can simply not provide extended error reporting, 
+which was the previous behaviour. however, using this mechanism, we can now
+store extended error information which can be used to improve WSEM 
+(WriteStatementErrorMessage) considerably, we hope, without any risk of
+memory leaks. */
+#define REL_ERRORLIST rel_errorlist __attribute__((cleanup(rel_errorlist_destroy_contents)))
+
+#define REL_ERRORLIST_EMPTY {.errcode=okay, .lrcode=lokay, .ferr=correct_instance, .ferrpos=0}
+
+//rel_errorlist *rel_errorlist_new();
+void rel_errorlist_destroy_contents(rel_errorlist *err);
 void rel_errorlist_destroy(rel_errorlist *err);
 
 //int rel_errorlist_add(rel_errorlist *err,enum relation_errorsx errcode, struct Instance *errinst, struct Statement *errstmt);
 //int rel_errorlist_set_ok(rel_errorlist *err);
 
 int rel_errorlist_set_find_error(rel_errorlist *err, enum find_errors ferr);
+
 int rel_errorlist_get_find_error(rel_errorlist *err);
 int rel_errorlist_set_find_errpos(rel_errorlist *err,unsigned long errpos);
 //int rel_errorlist_get_lastcode(rel_errorlist *err);

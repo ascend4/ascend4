@@ -244,7 +244,7 @@ void ExecuteInitRun(struct procFrame *fm, struct Statement *stat)
 static void
 execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 	CONST struct VariableList *vars;
-	rel_errorlist *err = rel_errorlist_new();
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 	struct gl_list_t *temp;
 	unsigned i, len;
 	struct Instance *i1, *i2;
@@ -273,13 +273,13 @@ execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
 	vars = stat->v.fx.vars;
 	while(vars!=NULL){
 		name = NamePointer(vars);
-		temp = FindInstances(fm->i, name, err);
+		temp = FindInstances(fm->i, name, &err);
 
 		if(temp==NULL){
 			errstr = "Unknown error";
 			fm->ErrNo = Proc_bad_name;
 		}
-		switch(rel_errorlist_get_find_error(err)){
+		switch(rel_errorlist_get_find_error(&err)){
 			case unmade_instance: errstr = "unmade instance"; fm->ErrNo = Proc_instance_not_found; break;
 			case undefined_instance: errstr = "undefined instance"; fm->ErrNo = Proc_name_not_found; break;
 			case impossible_instance: errstr = "impossible instance"; fm->ErrNo = Proc_illegal_name_use; break;
@@ -524,7 +524,7 @@ static struct gl_list_t *ProcessExtMethodArgs(struct Instance *inst,
   struct gl_list_t *arglist;
   struct gl_list_t *branch;
   CONST struct Name *n;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   asc_intptr_t pos;
 
   ListMode=1;
@@ -532,9 +532,9 @@ static struct gl_list_t *ProcessExtMethodArgs(struct Instance *inst,
   pos = 1;
   while(vl!=NULL){
     n = NamePointer(vl);
-    rel_errorlist_set_find_error(err,correct_instance);
-    branch = FindInstances(inst,n,err);
-    if(branch == NULL || rel_errorlist_get_find_error(err) != correct_instance){
+    rel_errorlist_set_find_error(&err,correct_instance);
+    branch = FindInstances(inst,n,&err);
+    if(branch == NULL || rel_errorlist_get_find_error(&err) != correct_instance){
       /* check for SELF only if find fails, so SELF IS_A foo
        * overrides the normal self.
        */
@@ -548,7 +548,7 @@ static struct gl_list_t *ProcessExtMethodArgs(struct Instance *inst,
         gl_append_ptr(branch,(VOIDPTR)inst);
       }else{
         gl_append_ptr(errlist,(VOIDPTR)pos); /* error position */
-        gl_append_ptr(errlist,(VOIDPTR)rel_errorlist_get_find_error(err)); /* error code */
+        gl_append_ptr(errlist,(VOIDPTR)rel_errorlist_get_find_error(&err)); /* error code */
         if(branch == NULL){
           branch = gl_create(1L); /* create empty branch */
         }
@@ -1178,7 +1178,7 @@ static void AnalyzeSwitchCase(struct procFrame *fm
   int valvar;
   struct gl_list_t *instances;
   struct Instance *inst;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   symchar *str;
   struct for_var_t *fvp;
 
@@ -1191,9 +1191,9 @@ static void AnalyzeSwitchCase(struct procFrame *fm
     while (vl!=NULL){
       pos++;
       name = NamePointer(vl);
-      instances = FindInstances(fm->i,name,err);
+      instances = FindInstances(fm->i,name,&err);
       if(instances == NULL){
-        switch(rel_errorlist_get_find_error(err)){
+        switch(rel_errorlist_get_find_error(&err)){
         case unmade_instance:
           fm->ErrNo = Proc_instance_not_found;
           break;
@@ -1236,9 +1236,9 @@ static void AnalyzeSwitchCase(struct procFrame *fm
     pos++;
     name = NamePointer(vl);
     expr = GetSingleExpr(values);
-    instances = FindInstances(fm->i,name,err);
+    instances = FindInstances(fm->i,name,&err);
     if(instances == NULL){
-      switch (rel_errorlist_get_find_error(err)){
+      switch(rel_errorlist_get_find_error(&err)){
       case unmade_instance:
         fm->ErrNo = Proc_instance_not_found;
         break;
@@ -1564,9 +1564,9 @@ static void ExecuteInitAsgn(struct procFrame *fm, struct Statement *stat){
   unsigned c,len;
   enum FrameControl oldflow;
   struct value_t value;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 
-  instances = FindInstances(fm->i,DefaultStatVar(stat),err);
+  instances = FindInstances(fm->i,DefaultStatVar(stat),&err);
   if(instances != NULL){
     assert(GetEvaluationContext()==NULL);
     SetEvaluationContext(fm->i);
@@ -1605,11 +1605,11 @@ static void ExecuteInitAsgn(struct procFrame *fm, struct Statement *stat){
 /*DS : Implement Non-declarative LINK statement here*/
 static void ExecuteInitLnk(struct procFrame *fm, struct Statement *stat){
 	//printf("\nDS: ExecuteInitLnk called\n");
-	rel_errorlist *err = rel_errorlist_new();
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 	struct gl_list_t *instances;
 	symchar *key;
 
-	instances = FindInsts(fm->i,LINKStatVlist(stat),err);
+	instances = FindInsts(fm->i,LINKStatVlist(stat),&err);
 	key = LINKStatKey(stat);
 
 	CONSOLE_DEBUG("LINKStatVlist(stat) contains %lu",VariableListLength(LINKStatVlist(stat)));
@@ -1631,11 +1631,11 @@ static void ExecuteInitLnk(struct procFrame *fm, struct Statement *stat){
 
 /*DS : Implement UNLINK statement here (Non-declarative only) */
 static void ExecuteInitUnlnk(struct procFrame *fm, struct Statement *stat){
-	rel_errorlist *err = rel_errorlist_new();
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 	struct gl_list_t *instances;
 	symchar *key;
 
-	instances = FindInstances(fm->i,stat->v.lnk.vl->nptr,err);
+	instances = FindInstances(fm->i,stat->v.lnk.vl->nptr,&err);
 	key = LINKStatKey(stat);
 
 	if((instances != NULL) && (key != NULL)){
@@ -1853,7 +1853,7 @@ static void ExecuteInitProcedure(struct procFrame *fm
 static void RealInitialize(struct procFrame *fm, struct Name *name){
   struct Name *instname = NULL;
   struct Instance *ptr;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct InitProcedure *proc;
   struct gl_list_t *instances;
   unsigned long c,length;
@@ -1886,7 +1886,7 @@ static void RealInitialize(struct procFrame *fm, struct Name *name){
 #endif
 
   if(procname != NULL){
-    instances = FindInstances(fm->i,instname,err);
+    instances = FindInstances(fm->i,instname,&err);
     if(instances != NULL){
       length = gl_length(instances);
       stop = 0;
@@ -1943,7 +1943,7 @@ static void RealInitialize(struct procFrame *fm, struct Name *name){
           DestroyProcFrame(newfm);
         }else{
           fm->flow = FrameError;
-	  ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"PROCEDURE NOT FOUND (FindProcedure failed).");
+          ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"PROCEDURE NOT FOUND (FindProcedure failed).");
           fm->ErrNo = Proc_proc_not_found;
         }
       }

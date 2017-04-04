@@ -657,10 +657,10 @@ int FindExprType(CONST struct Expr *ex, struct Instance *parent,
 ){
   struct Instance *i;
   struct gl_list_t *ilist;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   switch(ExprType(ex)){
   case e_var:
-    ilist = FindInstances(parent,ExprName(ex),err);
+    ilist = FindInstances(parent,ExprName(ex),&err);
     if ((ilist!=NULL)&&(gl_length(ilist)>0)){
       i = (struct Instance *)gl_fetch(ilist,1);
       gl_destroy(ilist);
@@ -1319,7 +1319,7 @@ int ExecuteALIASES(struct Instance *inst, struct Statement *statement)
   struct gl_list_t *rhslist;
   struct Instance *rhsinst;
   CONST struct Name *name;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   int intset;
 
   asc_assert(StatementType(statement)==ALIASES);
@@ -1335,7 +1335,7 @@ int ExecuteALIASES(struct Instance *inst, struct Statement *statement)
     return 0;
   }
   name = AliasStatName(statement);
-  rhslist = FindInstances(inst,name,err);
+  rhslist = FindInstances(inst,name,&err);
   if (rhslist == NULL) {
     WriteUnexecutedMessage(ASCERR,statement,
       "Possibly undefined right hand side in ALIASES statement.");
@@ -1635,7 +1635,7 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
   struct Instance *rhsinst;
 #endif
   struct Instance *setinst;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   CONST struct TypeDescription *basedef;
   ChildListPtr icl;
   int intset;
@@ -1652,7 +1652,7 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
       "Possibly undefined instances/sets/ranges in ALIASES-IS_A statement.");
     return 0;
   }
-  rhsinstlist = FindInsts(inst,GetStatVarList(statement),err);
+  rhsinstlist = FindInsts(inst,GetStatVarList(statement),&err);
   if (rhsinstlist == NULL) {
     MissingInsts(inst,GetStatVarList(statement),0);
     WriteUnexecutedMessage(ASCERR,statement,
@@ -1694,7 +1694,7 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
   intset = ArrayStatIntSet(statement);
   MakeInstance(NamePointer(vlist),FindSetType(),intset,inst,statement,NULL);
   /* get instance  and assign. */
-  setinstl = FindInstances(inst,NamePointer(vlist),err);
+  setinstl = FindInstances(inst,NamePointer(vlist),&err);
   if (setinstl == NULL || gl_length(setinstl) != 1L) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to construct set. Bizarre error in ALIASES-IS_A.");
     if (setinstl!=NULL) {
@@ -2594,7 +2594,7 @@ int MakeParameterInst(struct Instance *parent,
   int tverr;	/* error return from checking array elt type, or value */
   int suberr;	/* error return from other routine */
   int intset;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   unsigned int pc;	     /* number of parameters the type requires */
 
   if (StatWrong(statement)) {
@@ -2664,9 +2664,9 @@ int MakeParameterInst(struct Instance *parent,
     case WILLBE:
       while (vl != NULL) {
         argset = GETARG(args,argn);
-        il = FindArgInsts(parent,argset,err);
+        il = FindArgInsts(parent,argset,&err);
         if (il == NULL) {
-          switch(rel_errorlist_get_find_error(err)) {
+          switch(rel_errorlist_get_find_error(&err)) {
           case unmade_instance:
           case undefined_instance: /* this case ought to be separable */
             MPIwum(argset,argn,statement,MPIUNMADE);
@@ -2812,9 +2812,9 @@ int MakeParameterInst(struct Instance *parent,
          * and copy. Note that what we copy may prove to be incompatible
          * later when we check the names of subscripts.
          */
-        il = FindArgInsts(parent,argset,err);
+        il = FindArgInsts(parent,argset,&err);
         if (il == NULL) {
-          switch(rel_errorlist_get_find_error(err)) {
+          switch(rel_errorlist_get_find_error(&err)) {
           case unmade_instance:
           case undefined_instance: /* this case ought to be separable */
             MPIwum(argset,argn,statement,MPIUNMADE);
@@ -2963,17 +2963,15 @@ int MakeParameterInst(struct Instance *parent,
   return MPIOK;
 }
 
-static
-int MPICheckWBTS(struct Instance *tmpinst, struct Statement *statement)
-{
+static int MPICheckWBTS(struct Instance *tmpinst, struct Statement *statement){
   struct gl_list_t *instances;
   unsigned long c,len;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct Instance *head = NULL;
 
-  instances = FindInsts(tmpinst,GetStatVarList(statement),err);
+  instances = FindInsts(tmpinst,GetStatVarList(statement),&err);
   if (instances==NULL) {
-    switch(rel_errorlist_get_find_error(err)){
+    switch(rel_errorlist_get_find_error(&err)){
     case impossible_instance:
       MissingInsts(tmpinst,GetStatVarList(statement),1);
       STATEMENT_ERROR(statement,
@@ -3027,11 +3025,11 @@ static
 int MPICheckWNBTS(struct Instance *tmpinst, struct Statement *statement)
 {
   struct gl_list_t *instances;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 
-  instances = FindInsts(tmpinst,GetStatVarList(statement),err);
+  instances = FindInsts(tmpinst,GetStatVarList(statement),&err);
   if (instances==NULL) {
-    switch(rel_errorlist_get_find_error(err)){
+    switch(rel_errorlist_get_find_error(&err)){
     case impossible_instance:
       MissingInsts(tmpinst,GetStatVarList(statement),1);
       STATEMENT_ERROR(statement,
@@ -3231,11 +3229,11 @@ struct Instance *GetNamedInstance(CONST struct Name *nptr,
 {
   struct Instance *i=NULL;
   struct gl_list_t *insts;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 
   asc_assert(nptr!=NULL);
   asc_assert(tmpinst!=NULL);
-  insts = FindInstances(tmpinst,nptr,err);
+  insts = FindInstances(tmpinst,nptr,&err);
   if (insts==NULL) {
     return NULL;
   }
@@ -4265,11 +4263,11 @@ void MissingInsts(struct Instance *inst,
                   int noisy)
 {
   struct gl_list_t *temp;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 
   if (g_iteration >= (MAXNUMBER-1) || noisy != 0) {
     while(list!=NULL){
-      temp = FindInstances(inst,NamePointer(list),err);
+      temp = FindInstances(inst,NamePointer(list),&err);
       if (temp==NULL){
         instantiation_name_error(ASC_USER_ERROR,NamePointer(list),
 			"Instance not found"
@@ -4391,7 +4389,7 @@ static
 int ExecuteIRT(struct Instance *work, struct Statement *statement)
 {
   struct TypeDescription *def, *more_refined;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct gl_list_t *instances; /* presently leaking ? */
   struct Instance *inst, *arginst;
   unsigned long c,len;
@@ -4401,7 +4399,7 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
 
   def = FindType(GetStatType(statement)); /* sort of redundant, but safe */
   if(def!=NULL) {
-    instances = FindInsts(work,GetStatVarList(statement),err);
+    instances = FindInsts(work,GetStatVarList(statement),&err);
     if(instances != NULL){
       if (ListContainsFundamental(instances)){
         STATEMENT_ERROR(statement,
@@ -4489,7 +4487,7 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
       gl_destroy(instances);
       return 1;
     }else{
-      switch(rel_errorlist_get_find_error(err)){
+      switch(rel_errorlist_get_find_error(&err)){
       case impossible_instance:
         STATEMENT_ERROR(statement,
           "IS_REFINED_TO statement contains an impossible instance name");
@@ -4554,15 +4552,14 @@ struct TypeDescription *MostRefined(struct gl_list_t *list)
   return mostrefined;
 }
 
-static
-int ExecuteATS(struct Instance *inst, struct Statement *statement)
-{
+
+static int ExecuteATS(struct Instance *inst, struct Statement *statement){
   struct gl_list_t *instances;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   unsigned long c,len;
   struct Instance *inst1,*inst2;
 
-  instances = FindInsts(inst,GetStatVarList(statement),err);
+  instances = FindInsts(inst,GetStatVarList(statement),&err);
   if (instances != NULL){
     if (ListContainsFundamental(instances)){
       STATEMENT_ERROR(statement,
@@ -4594,7 +4591,7 @@ int ExecuteATS(struct Instance *inst, struct Statement *statement)
     gl_destroy(instances);
     return 1;
   }else{
-    switch(rel_errorlist_get_find_error(err)){
+    switch(rel_errorlist_get_find_error(&err)){
     case impossible_instance:
       MissingInsts(inst,GetStatVarList(statement),1);
       STATEMENT_ERROR(statement, "ARE_THE_SAME contains impossible instance");
@@ -4608,18 +4605,17 @@ int ExecuteATS(struct Instance *inst, struct Statement *statement)
   }
 }
 
+
 /**
 	disallows parameterized objects from being added to cliques.
 */
-static
-int ExecuteAA(struct Instance *inst, struct Statement *statement)
-{
+static int ExecuteAA(struct Instance *inst, struct Statement *statement){
   struct gl_list_t *instances;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct TypeDescription *mostrefined = NULL;
   unsigned long c,len;
   struct Instance *inst1,*inst2;
-  instances = FindInsts(inst,GetStatVarList(statement),err);
+  instances = FindInsts(inst,GetStatVarList(statement),&err);
   if (instances != NULL){
     if (ListContainsFundamental(instances)){
       STATEMENT_ERROR(statement, "ARE_ALIKE statement affects a part of an atom");
@@ -4659,7 +4655,7 @@ int ExecuteAA(struct Instance *inst, struct Statement *statement)
     gl_destroy(instances);
     return 1;
   }else{
-    switch(rel_errorlist_get_find_error(err)){
+    switch(rel_errorlist_get_find_error(&err)){
     case impossible_instance:
       MissingInsts(inst,GetStatVarList(statement),1);
       STATEMENT_ERROR(statement, "ARE_ALIKE contains impossible instance");
@@ -4674,17 +4670,16 @@ int ExecuteAA(struct Instance *inst, struct Statement *statement)
 }
 
 
-static
-int ExecuteLNK(struct Instance *inst, struct Statement *statement){
+static int ExecuteLNK(struct Instance *inst, struct Statement *statement){
 	struct TypeDescription *def_inst;
-	rel_errorlist *err = rel_errorlist_new();
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 	struct gl_list_t *instances;
 	symchar *key;
 
 	asc_assert(StatementType(statement)==LNK);
 
 	def_inst = InstanceTypeDesc(inst);
-	instances = FindInsts(inst,LINKStatVlist(statement),err);
+	instances = FindInsts(inst,LINKStatVlist(statement),&err);
 	key = LINKStatKey(statement);
 
 	if((instances != NULL) && (key != NULL)){
@@ -4706,7 +4701,7 @@ int ExecuteLNK(struct Instance *inst, struct Statement *statement){
 		STATEMENT_ERROR(statement, "declarative LINK contains impossible key");
 		return 1;
 	}else{
-		switch(rel_errorlist_get_find_error(err)){
+		switch(rel_errorlist_get_find_error(&err)){
 		case impossible_instance:
 			MissingInsts(inst,LINKStatVlist(statement),1);
 			STATEMENT_ERROR(statement, "LINK contains impossible instance");
@@ -4776,7 +4771,7 @@ struct Instance *MakeRelationInstance(struct Name *name,
 */
 static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 	struct Name *name;
-	rel_errorlist *err = rel_errorlist_new();
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 	struct relation *reln;
 	struct Instance *child;
 	struct gl_list_t *instances;
@@ -4788,10 +4783,10 @@ static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 #endif
 
 	name = RelationStatName(statement);
-	instances = FindInstances(inst,name,err);
+	instances = FindInstances(inst,name,&err);
 	/* see if the relation is there already */
 	if(instances==NULL){
-		if(rel_errorlist_get_find_error(err) == unmade_instance){		/* make a reln head */
+		if(rel_errorlist_get_find_error(&err) == unmade_instance){		/* make a reln head */
 			child = MakeRelationInstance(name,FindRelationType(),
                                    inst,statement,e_token);
 			if(child==NULL){
@@ -4838,7 +4833,7 @@ static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 #if TIMECOMPILER
 		g_ExecuteREL_CreateTokenRelation_calls++;
 #endif
-		reln = CreateTokenRelation(inst,child,RelationStatExpr(statement),err);
+		reln = CreateTokenRelation(inst,child,RelationStatExpr(statement),&err);
 		if (reln != NULL){
 			SetInstanceRelation(child,reln,e_token);
 #ifdef DEBUG_RELS
@@ -4847,7 +4842,7 @@ static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 			return 1;
 		}else{
 			SetInstanceRelation(child,NULL,e_token);
-			switch(rel_errorlist_get_code(err)){
+			switch(rel_errorlist_get_code(&err)){
 			case incorrect_structure:
 				WSSM(ASCERR,statement, "Bad relation expression in ExecuteRel",3);
 				return 1;
@@ -4868,7 +4863,7 @@ static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 					"Incorrect real child of atom instance in relation",3);
 				return 1;
 			case find_error:
-				switch(rel_errorlist_get_find_error(err)){
+				switch(rel_errorlist_get_find_error(&err)){
 				case unmade_instance:
 				case undefined_instance:
 					//CONSOLE_DEBUG("INSTANCE %p",child);
@@ -4922,14 +4917,14 @@ static
 void MarkREL(struct Instance *inst, struct Statement *statement)
 {
   struct Name *name;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct relation *reln;
   struct Instance *rel;
   struct gl_list_t *instances;
   enum Expr_enum reltype;
 
   name = RelationStatName(statement);
-  instances = FindInstances(inst,name,err);
+  instances = FindInstances(inst,name,&err);
   if (instances==NULL){
     gl_destroy(instances);
     return;
@@ -4978,13 +4973,13 @@ static
 void MarkLOGREL(struct Instance *inst, struct Statement *statement)
 {
   struct Name *name;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct logrelation *lreln;
   struct Instance *lrel;
   struct gl_list_t *instances;
 
   name = LogicalRelStatName(statement);
-  instances = FindInstances(inst,name,err);
+  instances = FindInstances(inst,name,&err);
   if (instances==NULL){
     gl_destroy(instances);
     return;
@@ -5017,7 +5012,7 @@ static
 int ExecuteUnSelectedEQN(struct Instance *inst, struct Statement *statement)
 {
   struct Name *name;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct Instance *child;
   struct gl_list_t *instances;
 
@@ -5035,7 +5030,7 @@ int ExecuteUnSelectedEQN(struct Instance *inst, struct Statement *statement)
     ASC_PANIC("Incorrect argument passed to ExecuteUnSelectedEQN\n");
 	name = NULL;
   }
-  instances = FindInstances(inst,name,err);
+  instances = FindInstances(inst,name,&err);
   /* see if the relation is there already */
   if (instances==NULL) {
     MakeDummyInstance(name,FindDummyType(),inst,statement);
@@ -5103,17 +5098,17 @@ static
 int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
 {
   struct Name *name;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct logrelation *lreln;
   struct Instance *child;
   struct gl_list_t *instances;
 
   name = LogicalRelStatName(statement);
-  instances = FindInstances(inst,name,err);
+  instances = FindInstances(inst,name,&err);
   /* see if the logical relation is there already */
   if (instances==NULL){
     gl_destroy(instances);
-    if(rel_errorlist_get_find_error(err) == unmade_instance){
+    if(rel_errorlist_get_find_error(&err) == unmade_instance){
       child = MakeLogRelInstance(name,FindLogRelType(),inst,statement);
       if (child==NULL){
         WUEMPASS3(ASCERR,statement, "Unable to create expression structure");
@@ -5150,13 +5145,13 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
       return 1;
     }  */
     if(NULL!=(lreln = CreateLogicalRelation(
-		inst,child,LogicalRelStatExpr(statement),err)
+		inst,child,LogicalRelStatExpr(statement),&err)
 	)){
       SetInstanceLogRel(child,lreln);
       return 1;
     }else{
       SetInstanceLogRel(child,NULL);
-      switch(rel_errorlist_get_lrcode(err)){
+      switch(rel_errorlist_get_lrcode(&err)){
       case incorrect_logstructure:
         WUEMPASS3(ASCERR,statement,
                        "Bad logical relation expression in ExecuteLOGREL\n");
@@ -5182,7 +5177,7 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
                               "Incorrect real instance in logical relation");
         return 0;
       case find_logerror:
-        switch(rel_errorlist_get_find_error(err)){
+        switch(rel_errorlist_get_find_error(&err)){
         case unmade_instance:
         case undefined_instance:
           WUEMPASS3(ASCERR,statement,
@@ -5369,7 +5364,7 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   ExtBBoxInitFunc * init;
   char *context;
   struct Instance *data=NULL, *subject = NULL;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct gl_list_t *arglist=NULL;
   struct ExternalFunc *efunc = NULL;
   CONST char *funcname = NULL;
@@ -5387,11 +5382,11 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
 	the checks done before this statement was attempted.
   */
   if (ExternalStatDataBlackBox(statement) != NULL) {
-    data = CheckExtCallData(inst, statement, err, &dataName);
+    data = CheckExtCallData(inst, statement, &err, &dataName);
     /* should never be here, if checkext were being used properly somewhere. it isn't */
-    if (data==NULL && rel_errorlist_get_find_error(err) != correct_instance){
+    if (data==NULL && rel_errorlist_get_find_error(&err) != correct_instance){
       /* should never be here, if checkext were being used properly somewhere. it isn't */
-      switch(rel_errorlist_get_find_error(err)){
+      switch(rel_errorlist_get_find_error(&err)){
       case unmade_instance:
 		STATEMENT_ERROR(statement,"Statement contains unmade data instance");
         return 1;
@@ -5409,10 +5404,10 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   }
 
   /* expand the formal args into a list of lists of realatom args. */
-  arglist = GetExtCallArgs(inst, statement, err, &argListNames);
+  arglist = GetExtCallArgs(inst, statement, &err, &argListNames);
   if (arglist==NULL){
     /* should never be here, if checkext were being used properly somewhere. it isn't */
-    switch(rel_errorlist_get_find_error(err)){
+    switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
       STATEMENT_ERROR(statement,"Statement contains unmade argument instance\n");
       return 1;
@@ -5543,7 +5538,7 @@ int ExecuteBBOXElement(struct Instance *inst
 	, CONST char *context
 ){
   struct Name *name;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct gl_list_t *instances = NULL;
   struct Instance *child = NULL;
   struct relation *reln  = NULL;
@@ -5555,10 +5550,10 @@ int ExecuteBBOXElement(struct Instance *inst
 
   /* make or find the instance */
   name = ExternalStatNameRelation(statement);
-  instances = FindInstances(inst, name, err);
+  instances = FindInstances(inst, name, &err);
   /* see if the relation is there already. If it is, we're really hosed. */
   if(instances==NULL){
-    if(rel_errorlist_get_find_error(err) == unmade_instance){		/* make a reln head */
+    if(rel_errorlist_get_find_error(&err) == unmade_instance){		/* make a reln head */
       child = MakeRelationInstance(name,FindRelationType(),
                                    inst,statement,e_blackbox);
       if (child==NULL){
@@ -5733,7 +5728,7 @@ static int ExecuteGlassBoxEXT(struct Instance *inst
 	, struct Statement *statement
 ){
   struct Name *name;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct Instance *child;
   struct gl_list_t *instances;
   struct gl_list_t *varlist;
@@ -5756,9 +5751,9 @@ static int ExecuteGlassBoxEXT(struct Instance *inst
   }
 
   name = ExternalStatNameRelation(statement);
-  instances = FindInstances(inst,name,err);
+  instances = FindInstances(inst,name,&err);
   if(instances==NULL){
-    if(rel_errorlist_get_find_error(err) == unmade_instance){			/* glassbox reln */
+    if(rel_errorlist_get_find_error(&err) == unmade_instance){			/* glassbox reln */
       child = MakeRelationInstance(name,FindRelationType(),inst,statement,e_glassbox);
       if (child==NULL){
         STATEMENT_ERROR(statement, "Unable to create expression structure");
@@ -5785,9 +5780,9 @@ static int ExecuteGlassBoxEXT(struct Instance *inst
    * Ensure that the variable list is ready.
    */
   /* FIX FIX FIX -- give some more error diagnostics for err and ferr */
-  varlist = CheckGlassBoxArgs(inst,statement,err);
+  varlist = CheckGlassBoxArgs(inst,statement,&err);
   if (varlist==NULL){
-    switch(rel_errorlist_get_find_error(err)){
+    switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
       return 0;
     case undefined_instance:
@@ -5807,7 +5802,7 @@ static int ExecuteGlassBoxEXT(struct Instance *inst
    * Get the gbindex of the relation for mapping into the external
    * call. An gbindex < 0 is invalid.
    */
-  gbindex = CheckGlassBoxIndex(inst,statement,err);
+  gbindex = CheckGlassBoxIndex(inst,statement,&err);
   if (gbindex < 0) {
     instantiation_error(ASC_USER_ERROR,statement
 	    ,"Invalid index in external relation statement");
@@ -6126,7 +6121,7 @@ static int ExecuteCASGN(struct Instance *work, struct Statement *statement){
   struct Instance *inst;
   unsigned long c,len;
   struct value_t value;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   int previous_context;
   int rval;
 
@@ -6134,7 +6129,7 @@ static int ExecuteCASGN(struct Instance *work, struct Statement *statement){
 
   previous_context = GetDeclarativeContext();
   SetDeclarativeContext(0);
-  instances = FindInstances(work,AssignStatVar(statement),err);
+  instances = FindInstances(work,AssignStatVar(statement),&err);
   if (instances != NULL){
     asc_assert(GetEvaluationContext()==NULL);
     SetEvaluationContext(work);
@@ -6195,7 +6190,7 @@ static int ExecuteCASGN(struct Instance *work, struct Statement *statement){
       return 1;
     }
   }else{
-    switch(rel_errorlist_get_find_error(err)){
+    switch(rel_errorlist_get_find_error(&err)){
     case impossible_instance:
       STATEMENT_ERROR(statement, "Left hand side of assignment statement"
             " contains an impossible instance");
@@ -6277,7 +6272,7 @@ static int ArrayCheckNameList(struct Instance *inst
   CONST struct Name *n;
   struct gl_list_t *il;
   symchar *name;
-  rel_errorlist *err = rel_errorlist_new();;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 
   len = gl_length(nl);
   if (len==0) {
@@ -6292,7 +6287,7 @@ static int ArrayCheckNameList(struct Instance *inst
         continue;
       }
       /* else hunt up the instances */
-      il = FindInstances(inst,n,err);
+      il = FindInstances(inst,n,&err);
       if (il == NULL) {
         return 0;
       }
@@ -6463,7 +6458,7 @@ static int CheckALIASES(struct Instance *inst, struct Statement *stat){
   int cu;
   struct gl_list_t *rhslist;
   CONST struct Name *name;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 
   vlist = GetStatVarList(stat);
   while (vlist != NULL){
@@ -6478,7 +6473,7 @@ static int CheckALIASES(struct Instance *inst, struct Statement *stat){
    * Checking the existence of the rhs in the aliases statement
    */
   name = AliasStatName(stat);
-  rhslist = FindInstances(inst,name,err);
+  rhslist = FindInstances(inst,name,&err);
   if (rhslist == NULL) {
     WriteUnexecutedMessage(ASCERR,stat,
       "Possibly undefined right hand side in ALIASES statement.");
@@ -6607,13 +6602,13 @@ static int CheckISA(struct Instance *inst, struct Statement *stat){
 	returns 1 if TRUE, 0 if not.
 */
 static int CheckVarList(struct Instance *inst, struct Statement *statement){
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   int instances;
-  instances = VerifyInsts(inst,GetStatVarList(statement),err);
-  if (instances){
+  instances = VerifyInsts(inst,GetStatVarList(statement),&err);
+  if(instances){
     return 1;
   }else{
-    switch(rel_errorlist_get_find_error(err)){
+    switch(rel_errorlist_get_find_error(&err)){
     case impossible_instance: return 1;
     default: return 0;
     }
@@ -6646,8 +6641,8 @@ static int CheckLNK(struct Instance *inst, struct Statement *statement){
 static int CheckCASGN(struct Instance *inst, struct Statement *statement){
   struct gl_list_t *instances;
   struct value_t value;
-  rel_errorlist *err = rel_errorlist_new();
-  instances = FindInstances(inst,AssignStatVar(statement),err);
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  instances = FindInstances(inst,AssignStatVar(statement),&err);
   if (instances != NULL){
     gl_destroy(instances);
     asc_assert(GetEvaluationContext()==NULL);
@@ -6666,9 +6661,9 @@ static int CheckCASGN(struct Instance *inst, struct Statement *statement){
       }
     }
     DestroyValue(&value);
-    return 1;			/* everything is okay */
+    return 1; /* everything is okay */
   }else{
-    switch(rel_errorlist_get_find_error(err)){
+    switch(rel_errorlist_get_find_error(&err)){
     case impossible_instance: return 1;
     default:
       return 0;
@@ -6682,8 +6677,8 @@ int CheckASGN(struct Instance *inst, struct Statement *statement)
 {
   struct gl_list_t *instances;
   struct value_t value;
-  rel_errorlist *err = rel_errorlist_new();
-  instances = FindInstances(inst,DefaultStatVar(statement),err);
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  instances = FindInstances(inst,DefaultStatVar(statement),&err);
   if (instances != NULL){
     gl_destroy(instances);
     asc_assert(GetEvaluationContext()==NULL);
@@ -6705,7 +6700,7 @@ int CheckASGN(struct Instance *inst, struct Statement *statement)
     return 1;			/* everything is okay */
   }
   else{
-    switch(rel_errorlist_get_find_error(err)){
+    switch(rel_errorlist_get_find_error(&err)){
     case impossible_instance: return 1;
     default:
       return 0;
@@ -6723,8 +6718,8 @@ int CheckASGN(struct Instance *inst, struct Statement *statement)
 static int CheckRelName(struct Instance *work, struct Name *name){
   struct gl_list_t *instances;
   struct Instance *inst;
-  rel_errorlist *err = rel_errorlist_new();
-  instances = FindInstances(work,name,err);
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  instances = FindInstances(work,name,&err);
   if(instances==NULL){
     return 1;
   }else{
@@ -6787,8 +6782,8 @@ static int CheckEXT(struct Instance *inst, struct Statement *statement){
 static int CheckLogRelName(struct Instance *work, struct Name *name){
   struct gl_list_t *instances;
   struct Instance *inst;
-  rel_errorlist *err = rel_errorlist_new();
-  instances = FindInstances(work,name,err);
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  instances = FindInstances(work,name,&err);
   if (instances==NULL){
     return 1;
   }else{
@@ -6863,9 +6858,9 @@ static int CheckArrayRelMod(struct Instance *child){
 static int CheckRelModName(struct Instance *work, struct Name *name){
   struct gl_list_t *instances;
   struct Instance *inst, *child;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   unsigned long len,c;
-  instances = FindInstances(work,name,err);
+  instances = FindInstances(work,name,&err);
   if (instances==NULL){
     instantiation_name_error(ASC_USER_ERROR,name,
 		"Un-made Relation/Model instance inside a 'WHEN':"
@@ -7053,8 +7048,8 @@ static int Pass2CheckCOND(struct Instance *inst, struct Statement *statement){
 static int CheckWhenName(struct Instance *work, struct Name *name){
   struct gl_list_t *instances;
   struct Instance *inst;
-  rel_errorlist *err = rel_errorlist_new();
-  instances = FindInstances(work,name,err);
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  instances = FindInstances(work,name,&err);
   if (instances==NULL){
     return 1;
   }else{
@@ -7180,14 +7175,13 @@ static int CheckWhenVariableNode(struct Instance *ref
 ){
   struct gl_list_t *instances;
   struct Instance *inst;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   symchar *str;
   struct for_var_t *fvp;
   str = SimpleNameIdPtr(name);
-  if( str!=NULL &&
+  if(str!=NULL &&
       GetEvaluationForTable()!=NULL &&
       (fvp=FindForVar(GetEvaluationForTable(),str))!=NULL) {
-
     switch (GetForKind(fvp)) {
     case f_integer:
       *p1=0;
@@ -7201,11 +7195,10 @@ static int CheckWhenVariableNode(struct Instance *ref
       FPRINTF(ASCERR,"only symbol or integer allowed\n");
       return 0;
     }
-
   }
-  instances = FindInstances(ref,name,err);
+  instances = FindInstances(ref,name,&err);
   if (instances == NULL){
-    switch(rel_errorlist_get_find_error(err)){
+    switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
     case undefined_instance:
       FPRINTF(ASCERR,"Unmade instance in the list of %s\n",
@@ -7267,7 +7260,7 @@ static int CheckWhenVariableNode(struct Instance *ref
 		"variables of a WHEN statement");
         FPRINTF(ASCERR,"Only boolean, integer and symbols are allowed\n");
         WriteName(ASCERR,name);
-	return 0;
+        return 0;
       }
     }else{
       gl_destroy(instances);
@@ -7643,7 +7636,7 @@ int CheckSelectVariableNode(struct Instance *ref,
 {
   struct gl_list_t *instances;
   struct Instance *inst;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   symchar *str;
   struct for_var_t *fvp;
 
@@ -7664,9 +7657,9 @@ int CheckSelectVariableNode(struct Instance *ref,
     }
   }
 
-  instances = FindInstances(ref,name,err);
+  instances = FindInstances(ref,name,&err);
   if (instances == NULL){
-    switch(rel_errorlist_get_find_error(err)){
+    switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
     case undefined_instance: return 0;
     default:
@@ -8431,7 +8424,7 @@ struct gl_list_t *MakeWhenVarList(struct Instance *inst,
   struct Instance *var;
   struct gl_list_t *instances;
   struct gl_list_t *whenvars;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   unsigned long numvar;
 
   numvar = VariableListLength(vlist);
@@ -8439,7 +8432,7 @@ struct gl_list_t *MakeWhenVarList(struct Instance *inst,
 
   while(vlist != NULL){
     name = NamePointer(vlist);
-    instances = FindInstances(inst,name,err);
+    instances = FindInstances(inst,name,&err);
     if (instances == NULL){
       ASC_PANIC("Instance not found in MakeWhenVarList \n");
     }else{
@@ -8533,10 +8526,10 @@ void MakeWhenReference(struct Instance *ref,
 {
   struct Instance *inst,*arraychild;
   struct gl_list_t *instances;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   unsigned long len,c;
 
-  instances = FindInstances(ref,name,err);
+  instances = FindInstances(ref,name,&err);
   if (instances==NULL){
     gl_destroy(instances);
     WriteName(ASCERR,name);
@@ -8785,25 +8778,25 @@ struct Case *RealExecuteWhenStatements(struct Instance *inst,
   return cur_case;
 }
 
+
 /**
 	Call the Creation of a WHEN instance. This function is also in charge
 	of filling the gl_list of conditional variables and the gl_list of
 	CASEs contained in the WHEN instance
 */
-static
-void RealExecuteWHEN(struct Instance *inst, struct Statement *statement){
+static void RealExecuteWHEN(struct Instance *inst, struct Statement *statement){
   struct VariableList *vlist;
   struct WhenList *w1;
   struct Instance *child;
   struct Name *wname;
   struct Case *cur_case;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct gl_list_t *instances;
   struct gl_list_t *whenvars;
   struct gl_list_t *whencases;
 
   wname = WhenStatName(statement);
-  instances = FindInstances(inst,wname,err);
+  instances = FindInstances(inst,wname,&err);
   if (instances==NULL) {
     /* if (ferr == unmade_instance) { */
       child = MakeWhenInstance(inst,wname,statement);
@@ -8909,12 +8902,12 @@ int ExecuteUnSelectedWHEN(struct Instance *inst, struct Statement *statement)
   struct Instance *child;
   struct Name *wname;
   struct StatementList *sl;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct gl_list_t *instances;
   struct TypeDescription *def;
 
   wname = WhenStatName(statement);
-  instances = FindInstances(inst,wname,err);
+  instances = FindInstances(inst,wname,&err);
   if (instances==NULL) {
     def = FindDummyType();
     MakeDummyInstance(wname,def,inst,statement);
@@ -9159,7 +9152,7 @@ int AnalyzeSelectCase(struct Instance *ref, struct VariableList *vlist,
   int valvar;
   struct gl_list_t *instances;
   struct Instance *inst;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 
   asc_assert(s!= NULL);
   asc_assert(vlist != NULL);
@@ -9169,7 +9162,7 @@ int AnalyzeSelectCase(struct Instance *ref, struct VariableList *vlist,
   while (vl!=NULL) {
     name = NamePointer(vl);
     expr = GetSingleExpr(values);
-    instances = FindInstances(ref,name,err);
+    instances = FindInstances(ref,name,&err);
     asc_assert(gl_length(instances)==1);
     inst = (struct Instance *)gl_fetch(instances,1);
     gl_destroy(instances);
@@ -12060,8 +12053,8 @@ static void ExecuteDefault(struct Instance *i
   register unsigned long c,length;
   register struct Instance *ptr;
   struct value_t value;
-  rel_errorlist *err = rel_errorlist_new();
-  if(NULL != (lvals = FindInstances(i,DefaultStatVar(stat),err))){
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  if(NULL != (lvals = FindInstances(i,DefaultStatVar(stat),&err))){
     for(c=1,length=gl_length(lvals);c<=length;c++){
       ptr = (struct Instance *)gl_fetch(lvals,c);
       switch(InstanceKind(ptr)){
@@ -13197,7 +13190,7 @@ void UpdateInstance(struct Instance *root, /* the simulation root */
   struct gl_list_t *list, *instances = NULL;
   unsigned long len, c;
   struct Statement *stat;
-  rel_errorlist *err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct Instance *scope;
   struct Name *name;
 
@@ -13214,7 +13207,7 @@ void UpdateInstance(struct Instance *root, /* the simulation root */
       if (name==NULL) {
         scope = target;
       }else{
-        instances = FindInstances(target,name,err);
+        instances = FindInstances(target,name,&err);
         if (instances) {
           if (gl_length(instances)!=1) {
             FPRINTF(ASCERR,"More than 1 scope instance found !!\n");
