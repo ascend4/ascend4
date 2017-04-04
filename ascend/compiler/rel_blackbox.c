@@ -140,7 +140,7 @@ int BlackBoxCalcResidGrad(struct Instance *i, double *res
 
 	residErr = BlackBoxCalcResidual(i, res, r);
 	gradErr = BlackBoxCalcGradient(i, gradient, r);
-	return (int)(fabs(residErr) + fabs(gradErr));
+	return abs(residErr) + abs(gradErr);
 }
 
 

@@ -3858,8 +3858,7 @@ static int CheckExprVar(CONST struct Instance *ref, CONST struct Name *name,
   symchar *str;
   struct Instance *inst;
   CONST struct for_var_t *fvp;
-  rel_errorlist *err;
-  err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
 
   if(NULL != (str = SimpleNameIdPtr(name))){
     if (TempExists(str)) {
@@ -3878,9 +3877,9 @@ static int CheckExprVar(CONST struct Instance *ref, CONST struct Name *name,
       }
     }
   }
-  instances = FindInstances(ref,name,err); /* need noisy version of Find */
+  instances = FindInstances(ref,name,&err); /* need noisy version of Find */
   if (instances == NULL){
-    switch(rel_errorlist_get_find_error(err)){
+    switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
     case undefined_instance: return 0;
     default:
@@ -4242,19 +4241,18 @@ We may want to expand to include list of instances.
 int CheckExternal(CONST struct Instance *reference
 	, CONST struct VariableList *vl, CONST struct Name *n
 ){
-  rel_errorlist *err;
-  err = rel_errorlist_new();
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct gl_list_t *args;
   //struct Instance *data;
 
-  args = ProcessExtRelArgs(reference, vl, err);
+  args = ProcessExtRelArgs(reference,vl,&err);
   if(args == NULL){
     return 0;
   }
   DestroySpecialList(args);
   /* args ok. */
-  ProcessExtRelData(reference, n, err);
-  if(rel_errorlist_get_find_error(err) == correct_instance){
+  ProcessExtRelData(reference,n,&err);
+  if(rel_errorlist_get_find_error(&err) == correct_instance){
     return 1;
   }
   return 0;

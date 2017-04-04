@@ -5254,8 +5254,7 @@ struct gl_list_t *GetExtCallArgs(struct Instance *inst, struct Statement *stat
 ){
   CONST struct VariableList *vl;
   struct gl_list_t *result;
-  rel_errorlist *err2;
-  err2 = rel_errorlist_new();
+  REL_ERRORLIST err2 = REL_ERRORLIST_EMPTY;
 
   /* the two process calls could be merged if we change findpaths
      to return instance/name pairs rather than just names. it does
@@ -5268,10 +5267,9 @@ struct gl_list_t *GetExtCallArgs(struct Instance *inst, struct Statement *stat
   /* FIXME is it OK to set *names=NULL? memory leak? */
   *names = NULL;
   if (result != NULL) {
-    *names = ProcessExtRelArgNames(inst,vl,err2);
-    asc_assert(rel_errorlist_get_find_error(err) == rel_errorlist_get_find_error(err2));
+    *names = ProcessExtRelArgNames(inst,vl,&err2);
+    asc_assert(rel_errorlist_get_find_error(err) == rel_errorlist_get_find_error(&err2));
   }
-  rel_errorlist_destroy(err2);
   return result;
 }
 
@@ -5282,17 +5280,16 @@ struct Instance *CheckExtCallData(struct Instance *inst, struct Statement *stat,
   struct Name *n;
   struct Instance *result;
   /* we need a second error list here, since we need a separate check */
-  rel_errorlist *err2 = rel_errorlist_new();
+  REL_ERRORLIST err2 = REL_ERRORLIST_EMPTY;
 
   n = ExternalStatDataBlackBox(stat);
   result = ProcessExtRelData(inst, n, err);
 
   *name = NULL;
   if (result != NULL) {
-    *name = ProcessExtRelDataName(inst, n, err2);
-    asc_assert(rel_errorlist_get_find_error(err)==rel_errorlist_get_find_error(err2));
+    *name = ProcessExtRelDataName(inst, n, &err2);
+    asc_assert(rel_errorlist_get_find_error(err)==rel_errorlist_get_find_error(&err2));
   }
-  rel_errorlist_destroy(err2);
   return result;
 }
 
