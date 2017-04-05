@@ -63,6 +63,7 @@ enum logrelation_errorsx {
 
 struct Instance;
 struct Statement;
+struct Name;
 
 struct rel_errorlist_struct;
 
@@ -75,6 +76,9 @@ struct rel_errorlist_struct{
 	enum logrelation_errorsx lrcode;
 	enum find_errors ferr;
 	unsigned long ferrpos;
+	union {
+		struct Name *name; /* for find_errors */
+	} data;
 /*	// removed items -- more sophisticated error traces
 	struct gl_list *errs;
 	enum relation_errorsx lastcode;
@@ -104,6 +108,9 @@ void rel_errorlist_destroy(rel_errorlist *err);
 
 int rel_errorlist_set_find_error(rel_errorlist *err, enum find_errors ferr);
 
+/// Set a find_error and record the associated Name triggering the problem
+int rel_errorlist_set_find_error_name(rel_errorlist *err, enum find_errors ferr, struct Name *errname);
+
 int rel_errorlist_get_find_error(rel_errorlist *err);
 int rel_errorlist_set_find_errpos(rel_errorlist *err,unsigned long errpos);
 //int rel_errorlist_get_lastcode(rel_errorlist *err);
@@ -113,6 +120,9 @@ int rel_errorlist_get_lrcode(rel_errorlist *err);
 
 int rel_errorlist_set_code(rel_errorlist *err, enum relation_errorsx errcode);
 int rel_errorlist_get_code(rel_errorlist *err);
+
+int rel_errorlist_report_error(rel_errorlist *err,struct Statement *stat);
+
 
 #endif /* ASC_RELERR_H */
 

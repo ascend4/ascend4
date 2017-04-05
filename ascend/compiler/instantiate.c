@@ -4834,7 +4834,7 @@ static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 		g_ExecuteREL_CreateTokenRelation_calls++;
 #endif
 		reln = CreateTokenRelation(inst,child,RelationStatExpr(statement),&err);
-		if (reln != NULL){
+		if(reln != NULL){
 			SetInstanceRelation(child,reln,e_token);
 #ifdef DEBUG_RELS
 			STATEMENT_NOTE(statement, "Created relation.");
@@ -4842,55 +4842,7 @@ static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 			return 1;
 		}else{
 			SetInstanceRelation(child,NULL,e_token);
-			switch(rel_errorlist_get_code(&err)){
-			case incorrect_structure:
-				WSSM(ASCERR,statement, "Bad relation expression in ExecuteRel",3);
-				return 1;
-			case incorrect_inst_type:
-				WSSM(ASCERR,statement, "Incorrect instance types in relation",3);
-				return 1;
-			case incorrect_boolean_inst_type:
-				WSSM(ASCERR,statement, "Incorrect boolean instance in relation",3);
-				return 1;
-			case incorrect_integer_inst_type:
-				WSSM(ASCERR,statement, "Incorrect integer instance in relation",3);
-				return 1;
-			case incorrect_symbol_inst_type:
-				WSSM(ASCERR,statement, "Incorrect symbol instance in relation",3);
-				return 1;
-			case incorrect_real_inst_type:
-				WSSM(ASCERR,statement,
-					"Incorrect real child of atom instance in relation",3);
-				return 1;
-			case find_error:
-				switch(rel_errorlist_get_find_error(&err)){
-				case unmade_instance:
-				case undefined_instance:
-					//CONSOLE_DEBUG("INSTANCE %p",child);
-					//iname = WriteInstanceNameString(child,NULL);
-					//CONSOLE_DEBUG("Instance name '%s'",iname);
-					//ASC_FREE(iname);
-					WSSM(ASCERR,statement,"Unmade or Undefined instances in relation",3);
-					return 1;
-				case impossible_instance:
-					WSSM(ASCERR,statement,"Relation contains an impossible instance",3);
-					return 1;
-				case correct_instance:
-					ASC_PANIC("Incorrect error response.\n");/*NOTREACHED*/
-				default:
-					ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
-				}
-			case integer_value_undefined:
-			case real_value_wild:
-			case real_value_undefined:
-				WriteUnexecutedMessage(ASCERR,statement,
-					"Unassigned constants or wild dimensioned real constant in relation");
-				return 1;
-			case okay:
-				ASC_PANIC("Incorrect error response.\n");/*NOTREACHED*/
-			default:
-				ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
-			}
+			rel_errorlist_report_error(&err,statement);
 		}
 #ifdef DEBUG_RELS
 		STATEMENT_NOTE(statement, "   Failed relation -- unexpected scenario.");

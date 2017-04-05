@@ -174,8 +174,8 @@ static void test_shm(){
 	CONSOLE_DEBUG("Final x = %e",RealAtomValue(ix));
 	CONSOLE_DEBUG("Final v = %e",RealAtomValue(iv));
 
-	CU_TEST(fabs(RealAtomValue(ix) - 10 < 2e-3));
-	CU_TEST(fabs(RealAtomValue(iv) - 0 < 4e-4));
+	CU_TEST(fabs(RealAtomValue(ix) - 10) < 2e-3);
+	CU_TEST(fabs(RealAtomValue(iv) - 0) < 4e-4);
 
 	/* destroy all that stuff */
 	CU_ASSERT(siminst != NULL);

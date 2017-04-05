@@ -112,7 +112,7 @@ extern struct logrelation *CreateLogicalRelation(struct Instance *reference,
 /**<
  *  Create a logical relation from an expression, a reference instance and a
  *  relation instance.  This modifies the instance tree. The type of relinst
- *  will be set to e_bol_token.<br><br>
+ *  will be set to e_bol_token.
  *
  *  The relation will not be successfully created until all variables
  *  exist and sets and constants in it are well defined.

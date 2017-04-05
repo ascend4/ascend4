@@ -20,8 +20,10 @@
 */
 
 #include "relerr.h"
+#include "statio.h"
 #include <ascend/general/ascMalloc.h>
-
+#include <ascend/general/panic.h>
+#include <ascend/utilities/error.h>
 
 rel_errorlist *rel_errorlist_new(){
 	rel_errorlist *err = ASC_NEW_CLEAR(rel_errorlist);
@@ -45,9 +47,15 @@ void rel_errorlist_destroy_contents(rel_errorlist *err){
 int rel_errorlist_set_find_error(rel_errorlist *err, enum find_errors ferr){
 	assert(err!=NULL);
 	err->ferr = ferr;
+	err->data.name = NULL;
 	return 0;
 }
 
+int rel_errorlist_set_find_error_name(rel_errorlist *err, enum find_errors ferr, struct Name *errname){
+	assert(err!=NULL);
+	err->ferr = ferr;
+	err->data.name = errname;
+}
 
 int rel_errorlist_get_find_error(rel_errorlist *err){
 	assert(err!=NULL);
@@ -86,4 +94,66 @@ int rel_errorlist_get_code(rel_errorlist *err){
 	assert(err!=NULL);
 	return err->errcode;
 }
+
+int rel_errorlist_report_error(rel_errorlist *err,struct Statement *stat){
+	char *namestr;
+
+	switch(rel_errorlist_get_code(err)){
+
+	case incorrect_structure:
+		WSSM(ASCERR,stat, "Bad relation expression",3);
+		return 1;
+
+	case incorrect_inst_type:
+		WSSM(ASCERR,stat, "Incorrect instance types in relation",3);
+		return 1;
+
+	case incorrect_boolean_inst_type:
+		WSSM(ASCERR,stat, "Incorrect boolean instance in relation",3);
+		return 1;
+
+	case incorrect_integer_inst_type:
+		WSSM(ASCERR,stat, "Incorrect integer instance in relation",3);
+		return 1;
+
+	case incorrect_symbol_inst_type:
+		WSSM(ASCERR,stat, "Incorrect symbol instance in relation",3);
+		return 1;
+
+	case incorrect_real_inst_type:
+		WSSM(ASCERR,stat,
+			"Incorrect real child of atom instance in relation",3);
+		return 1;
+
+	case find_error:
+		switch(rel_errorlist_get_find_error(err)){
+		case unmade_instance:
+		case undefined_instance:
+			if(NULL != err->data.name){
+				namestr = WriteNameString(err->data.name);
+				WriteStatementError(3,stat,1,"Unmade or undefined instance '%s' in relation.",namestr);
+				ASC_FREE(namestr);
+			}else{
+				WriteStatementError(3,stat,1,"%s instance in relation (name not reported).",(rel_errorlist_get_find_error(err)==unmade_instance?"Unmade":"Undefined"));
+			}
+			return 1;
+		case impossible_instance:
+			WSSM(ASCERR,stat,"Relation contains an impossible instance",3);
+			return 1;
+		case correct_instance:
+			ASC_PANIC("Incorrect error response.\n");/*NOTREACHED*/
+		default:
+			ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
+		}
+	case integer_value_undefined:
+	case real_value_wild:
+	case real_value_undefined:
+		WriteStatementError(3,stat,1,"Unassigned constants or wild dimensioned real constant in relation");
+		return 1;
+	case okay:
+		ASC_PANIC("Incorrect 'okay' error response.\n");/*NOTREACHED*/
+	}
+	ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
+}
+
 

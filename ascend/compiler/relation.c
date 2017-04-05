@@ -3185,11 +3185,11 @@ void DestroyTermTree(struct relation_term *term)
 static void DestroyTermSide(struct relation_side_temp *);
 void DestroyVarList(struct gl_list_t *, struct Instance *);
 
-struct relation *CreateTokenRelation(struct Instance *reference,
-				     struct Instance *relinst,
-				     CONST struct Expr *ex,
-				     rel_errorlist *err)
-{
+
+struct relation *CreateTokenRelation(
+	struct Instance *reference, struct Instance *relinst
+	, CONST struct Expr *ex, rel_errorlist *err
+){
   struct relation *result;
   CONST struct Expr *rhs_ex,*last_ex;
   int lhs,rhs;

@@ -574,10 +574,9 @@ struct value_t InstanceEvaluateSatisfiedName(CONST struct Name *nptr,
 }
 
 
-static struct gl_list_t *FindArrayChildren(struct gl_list_t *list,
-                                    CONST struct set_t *sptr,
-                                    rel_errorlist *err)
-{
+static struct gl_list_t *FindArrayChildren(struct gl_list_t *list
+	, CONST struct set_t *sptr, rel_errorlist *err
+){
   struct gl_list_t *result;
   struct Instance *i,*child;
   struct InstanceName rec;
@@ -599,7 +598,7 @@ static struct gl_list_t *FindArrayChildren(struct gl_list_t *list,
             if ((pos = ChildSearch(i,&rec))==0){
               gl_destroy(result);
               desc = InstanceTypeDesc(i);
-              if ( GetArrayBaseIsRelation(desc) || GetArrayBaseIsLogRel(desc)){
+              if(GetArrayBaseIsRelation(desc) || GetArrayBaseIsLogRel(desc)){
                 rel_errorlist_set_find_error(err, unmade_instance);
               }else{
                 rel_errorlist_set_find_error(err, impossible_instance);
@@ -616,12 +615,12 @@ static struct gl_list_t *FindArrayChildren(struct gl_list_t *list,
               }
             }
           }
-        } else {
+        }else{
           gl_destroy(result);
           rel_errorlist_set_find_error(err,unmade_instance);
           return NULL;
         }
-      } else {
+      }else{
         gl_destroy(result);
         rel_errorlist_set_find_error(err,impossible_instance);
         return NULL;
@@ -644,27 +643,27 @@ static struct gl_list_t *FindArrayChildren(struct gl_list_t *list,
               desc = InstanceTypeDesc(i);
               if (GetArrayBaseIsRelation(desc) || GetArrayBaseIsLogRel(desc)) {
                 rel_errorlist_set_find_error(err,unmade_instance);
-              } else {
+              }else{
                 rel_errorlist_set_find_error(err,impossible_instance);
               }
               return NULL;
-            } else {
+            }else{
               child = InstanceChild(i,pos);
               if (child!=NULL){
                 gl_append_ptr(result,(VOIDPTR)child);
-              } else{
+              }else{
                 gl_destroy(result);
                 rel_errorlist_set_find_error(err,unmade_instance);
                 return NULL;
               }
             }
           }
-        } else {
+        }else{
           gl_destroy(result);
           rel_errorlist_set_find_error(err,unmade_instance);
           return NULL;
         }
-      } else {
+      }else{
         gl_destroy(result);
         rel_errorlist_set_find_error(err,impossible_instance);
         return NULL;
@@ -676,11 +675,10 @@ static struct gl_list_t *FindArrayChildren(struct gl_list_t *list,
   return NULL;
 }
 
-static
-struct gl_list_t *FindNextNameElement(CONST struct Name *n,
-                                              struct gl_list_t *list,
-                                      rel_errorlist *err)
-{
+
+static struct gl_list_t *FindNextNameElement(CONST struct Name *n
+	, struct gl_list_t *list, rel_errorlist *err
+){
   unsigned long pos,c,len;
   struct InstanceName rec;
   struct Instance *current,*child;
@@ -697,16 +695,16 @@ struct gl_list_t *FindNextNameElement(CONST struct Name *n,
     for(c=1; c<=len; c++){
       current = (struct Instance *)gl_fetch(list,c);
       pos = ChildSearch(current,&rec);
-      if (pos!=0){
+      if(pos!=0){
         child = InstanceChild(current,pos);
         if (child!=NULL){
           gl_append_ptr(result,(VOIDPTR)child);
-        } else{
+        }else{
           rel_errorlist_set_find_error(err,unmade_instance);
           gl_destroy(result);
           return NULL;
         }
-      } else{
+      }else{
         rel_errorlist_set_find_error(err,unmade_instance);
         /* it would seem this ought to be undefined_instance,
          * but maybe refinement causes insanity. -- in which case
@@ -718,7 +716,7 @@ struct gl_list_t *FindNextNameElement(CONST struct Name *n,
       }
     }
     return result;
-  } else {
+  }else{
     sptr = NameSetPtr(n);
     setvalue = EvaluateSet(sptr,InstanceEvaluateName);
     switch(ValueKind(setvalue)){
@@ -756,11 +754,10 @@ struct gl_list_t *FindNextNameElement(CONST struct Name *n,
   }
 }
 
-static
-struct gl_list_t *RealFindInstances(CONST struct Instance *i,
-                                    CONST struct Name *n,
-                                    rel_errorlist *err)
-{
+
+static struct gl_list_t *RealFindInstances(CONST struct Instance *i
+	, CONST struct Name *n, rel_errorlist *err
+){
   struct gl_list_t *result,*next;
   result = gl_create(NAMELISTSIZE);
   gl_append_ptr(result,(VOIDPTR)i);
@@ -782,7 +779,7 @@ struct gl_list_t *FindInstances(CONST struct Instance *i,
                                 rel_errorlist *err)
 {
   struct gl_list_t *result;
-  rel_errorlist_set_find_error(err,impossible_instance);
+  rel_errorlist_set_find_error_name(err,impossible_instance,n);
   if (i == NULL) return NULL;
   AssertMemory(i);
   assert(GetEvaluationContext()==NULL);
@@ -811,7 +808,7 @@ struct gl_list_t *FindInstancesFromNames(CONST struct Instance *i
     n = (struct Name *)gl_fetch(names,pos);
     if (n == NULL) {
       gl_destroy(result);
-      rel_errorlist_set_find_error(err,impossible_instance);
+      rel_errorlist_set_find_error_name(err,impossible_instance,n);
       rel_errorlist_set_find_errpos(err,pos);
       return NULL;
     }
@@ -824,7 +821,7 @@ struct gl_list_t *FindInstancesFromNames(CONST struct Instance *i
     if (gl_length(tmp) != 1) {
       gl_destroy(tmp);
       gl_destroy(result);
-      rel_errorlist_set_find_error(err,impossible_instance);
+      rel_errorlist_set_find_error_name(err,impossible_instance,n);
       rel_errorlist_set_find_errpos(err,pos);
       return NULL;
     }
