@@ -2420,7 +2420,7 @@ void ClearMPImem(
 }
 
 /**
-	 What is MPI? parallel computing stuff?? -- JP
+	 Error reporting for 'MakeParameterInstance'
 */
 static
 void mpierror(struct Set *argset,

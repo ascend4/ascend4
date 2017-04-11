@@ -21,6 +21,7 @@
 
 #include "relerr.h"
 #include "statio.h"
+#include "nameio.h"
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
 #include <ascend/utilities/error.h>
@@ -55,6 +56,7 @@ int rel_errorlist_set_find_error_name(rel_errorlist *err, enum find_errors ferr,
 	assert(err!=NULL);
 	err->ferr = ferr;
 	err->data.name = errname;
+	return 0;
 }
 
 int rel_errorlist_get_find_error(rel_errorlist *err){
@@ -97,6 +99,7 @@ int rel_errorlist_get_code(rel_errorlist *err){
 
 int rel_errorlist_report_error(rel_errorlist *err,struct Statement *stat){
 	char *namestr;
+	CONSOLE_DEBUG("Reporting error");
 
 	switch(rel_errorlist_get_code(err)){
 
@@ -131,10 +134,10 @@ int rel_errorlist_report_error(rel_errorlist *err,struct Statement *stat){
 		case undefined_instance:
 			if(NULL != err->data.name){
 				namestr = WriteNameString(err->data.name);
-				WriteStatementError(3,stat,1,"Unmade or undefined instance '%s' in relation.",namestr);
+				WriteStatementError(3,stat,0,"Unmade or undefined instance '%s' in relation.",namestr);
 				ASC_FREE(namestr);
 			}else{
-				WriteStatementError(3,stat,1,"%s instance in relation (name not reported).",(rel_errorlist_get_find_error(err)==unmade_instance?"Unmade":"Undefined"));
+				WriteStatementError(3,stat,0,"%s instance in relation (name not reported).",(rel_errorlist_get_find_error(err)==unmade_instance?"Unmade":"Undefined"));
 			}
 			return 1;
 		case impossible_instance:
@@ -154,6 +157,7 @@ int rel_errorlist_report_error(rel_errorlist *err,struct Statement *stat){
 		ASC_PANIC("Incorrect 'okay' error response.\n");/*NOTREACHED*/
 	}
 	ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
+	return -1;
 }
 
 

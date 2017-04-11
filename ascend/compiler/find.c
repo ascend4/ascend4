@@ -687,12 +687,14 @@ static struct gl_list_t *FindNextNameElement(CONST struct Name *n
   struct gl_list_t *result;
 
   rel_errorlist_set_find_error(err,correct_instance);
-  if (NameId(n)){
+  if(NameId(n)){
+    //CONSOLE_DEBUG("name '%s'",SCP(NameIdPtr(n)));
     result = gl_create(NAMELISTSIZE);
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,NameIdPtr(n));
     len = gl_length(list);
     for(c=1; c<=len; c++){
+      //CONSOLE_DEBUG("item %lu of %lu",c,len);
       current = (struct Instance *)gl_fetch(list,c);
       pos = ChildSearch(current,&rec);
       if(pos!=0){
@@ -705,6 +707,7 @@ static struct gl_list_t *FindNextNameElement(CONST struct Name *n
           return NULL;
         }
       }else{
+        CONSOLE_DEBUG("unmade instance %lu of %lu with name '%s'",c,len,SCP(NameIdPtr(n)));
         rel_errorlist_set_find_error(err,unmade_instance);
         /* it would seem this ought to be undefined_instance,
          * but maybe refinement causes insanity. -- in which case

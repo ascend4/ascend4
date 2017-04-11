@@ -2406,6 +2406,7 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
   struct value_t svalue,cvalue;
   int my_added=0;
   symchar *str;
+  char *tempstr;
   CONST struct for_var_t *fvp;	/* for var pointer */
   while (ptr!=stop){
     switch(ExprType(ptr)){
@@ -2422,6 +2423,7 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
       break;
     case e_var:
       str = SimpleNameIdPtr(ExprName(ptr));
+      //CONSOLE_DEBUG("name=%s",SCP(str));
       if(str&&TempExists(str)){
         cvalue = TempValue(str);
         switch(ValueKind(cvalue)){
@@ -2438,6 +2440,7 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
         }
       }else if(GetEvaluationForTable() != NULL && str !=NULL &&
                (fvp=FindForVar(GetEvaluationForTable(),str)) !=NULL ){
+        CONSOLE_DEBUG("for loop, var = %s",SCP(str));
         if(GetForKind(fvp)==f_integer){
           term = CreateIntegerTerm(GetForInteger(fvp));
           my_added++;
@@ -2450,6 +2453,11 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
          }
       }else{
         instances = FindInstances(ref,ExprName(ptr),err);
+        if(rel_errorlist_get_find_error(err)==unmade_instance){
+          tempstr = WriteNameString(ExprName(ptr));
+          CONSOLE_DEBUG("unmade instance! '%s'",tempstr);
+          ASC_FREE(tempstr);
+        }
         if(instances!=NULL){
           if(NextExpr(ptr)==stop){ /* possibly multiple instances */
             len = gl_length(instances);
@@ -2475,7 +2483,8 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
             }
             gl_destroy(instances);
           }else{			/* single instance */
-            if (gl_length(instances)==1){
+            CONSOLE_DEBUG("single instance");
+            if(gl_length(instances)==1){
               inst = (struct Instance *)gl_fetch(instances,1);
               gl_destroy(instances);
               if((term=CreateTermFromInst(inst,rel,err))!=NULL){
@@ -2484,6 +2493,7 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
               }else
                 return 1;
             }else{
+              CONSOLE_DEBUG("length!=1");
               gl_destroy(instances);
               rel_errorlist_set_code(err,incorrect_structure);
               FPRINTF(ASCERR,"incorrect_structure in ConvertSubExpr 1\n");
@@ -2830,6 +2840,7 @@ static int ConvertExpr(CONST struct Expr *start,
       AppendTermBuf(term);
       break;
     case e_var:
+	  // try to write the name of the var...
       if(GetEvaluationForTable() &&
           (NULL != (str = SimpleNameIdPtr(ExprName(start)))) &&
           (NULL != (fvp = FindForVar(GetEvaluationForTable(),str)))
@@ -3216,6 +3227,7 @@ struct relation *CreateTokenRelation(
           DestroyVarList(g_relation_var_list,relinst);
         }
         g_relation_var_list = NULL;
+		//CONSOLE_DEBUG("Null LHS!");
         return NULL;
       }
       rhs = ConvertExpr(rhs_ex,last_ex,reference,relinst,err,&rightside);
@@ -3225,6 +3237,7 @@ struct relation *CreateTokenRelation(
            DestroyVarList(g_relation_var_list,relinst);
         }
         g_relation_var_list = NULL;
+		//CONSOLE_DEBUG("Null RHS!");
         return NULL;
       }
     }else{
