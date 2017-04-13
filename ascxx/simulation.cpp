@@ -353,11 +353,29 @@ Simulation::run(const Method &method, Instanc &model){
 	successfully completes. Something's not being synchronised properly...
 */
 void
-Simulation::checkInstance(){
+Simulation::checkInstance(const int &level){
 	Instance *i1 = getModel().getInternalType();
-	CheckInstance(stderr, &*i1);
-	//cerr << "DONE CHECKING INSTANCE" << endl;
+	CheckInstanceLevel(stderr, &*i1, level);
 }
+
+void
+Simulation::checkTokens(){
+	Instance *i1 = getModel().getInternalType();
+	InstanceTokenStatistics(stderr, &*i1);
+}
+
+void
+Simulation::checkStructure(){
+	Instance *i1 = getModel().getInternalType();
+	CheckInstanceStructure(stderr, &*i1);
+}
+
+void 
+Simulation::checkStatistics(){
+	Instance *i1 = getModel().getInternalType();
+	InstanceStatistics(stderr, &*i1);
+}
+
 
 /**
 	@return 1 = underspecified, 2 = square, 3 = structurally singular, 4 = overspecified
@@ -1003,4 +1021,5 @@ Simulation::getSolverHooks() const{
 	MSG("Got SolverHooks at %p for Simulation at %p",this->solverhooks,this);
 	return this->solverhooks;
 }
+
 

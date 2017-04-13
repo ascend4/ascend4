@@ -2453,11 +2453,6 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
          }
       }else{
         instances = FindInstances(ref,ExprName(ptr),err);
-        if(rel_errorlist_get_find_error(err)==unmade_instance){
-          tempstr = WriteNameString(ExprName(ptr));
-          CONSOLE_DEBUG("unmade instance! '%s'",tempstr);
-          ASC_FREE(tempstr);
-        }
         if(instances!=NULL){
           if(NextExpr(ptr)==stop){ /* possibly multiple instances */
             len = gl_length(instances);
@@ -2501,6 +2496,16 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
             }
           }
         }else{
+          if(rel_errorlist_get_find_error(err)==unmade_instance){
+            tempstr = WriteNameString(ExprName(ptr));
+            rel_errorlist_set_name(err,ExprName(ptr));
+            //CONSOLE_DEBUG("unmade instance! '%s'",tempstr);
+            ASC_FREE(tempstr);
+            if(instances!=NULL){
+              CONSOLE_DEBUG("instances!=NULL !");
+            }
+          }
+          //CONSOLE_DEBUG("returning 'find_error'");
           rel_errorlist_set_code(err,find_error);
           return 1;
         }
@@ -2585,6 +2590,7 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
   }
   return 0;
 }
+
 
 static int CorrectSuchThat(CONST struct Expr *ex
 	, CONST struct Expr **depth_one, CONST struct Expr **node

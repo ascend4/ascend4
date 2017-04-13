@@ -182,7 +182,7 @@ void TypeLintNameMsg(FILE *f, CONST struct Name *n, char *m,int level)
 	default:
 		ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
   }
-  FPRINTF(f,"%s",m);
+  ASC_FPRINTF(f,"%s",m);
   WriteName(f,n);
   error_reporter_end_flush();
 }

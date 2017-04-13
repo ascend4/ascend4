@@ -1,6 +1,6 @@
 #include "compiler.h"
 
-/* #define COMPILER_DEBUG */
+#define COMPILER_DEBUG
 //#define BINTOKEN_DEBUG
 
 extern "C"{
@@ -63,6 +63,14 @@ Compiler::setBinaryCompilation(const bool &use_bintoken){
 	this->use_bintoken = use_bintoken;
 #ifdef BINTOKEN_DEBUG
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"usebintoken = %d",int(use_bintoken));
+#endif
+}
+
+void
+Compiler::setVerbosity(const int &verbosity){
+	g_compiler_warnings = verbosity;
+#ifdef COMPILER_DEBUG
+	CONSOLE_DEBUG("g_compiler_warnings = %d",g_compiler_warnings);
 #endif
 }
 

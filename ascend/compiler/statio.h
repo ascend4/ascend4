@@ -101,7 +101,7 @@ extern void WriteStatementList(FILE *f, CONST struct StatementList *sl, int i);
 */
 #define WSNM(FILEP,STMT,MSG) WriteStatementErrorMessage(FILEP,STMT,MSG,1,-1)
 
-#define STATEMENT_NOTE(STMT,MSG) WriteStatementErrorMessage(ASCERR,STMT,MSG,1,-1)
+#define STATEMENT_NOTE(STMT,MSG,...) WriteStatementError(ASC_PROG_NOTE,STMT,1,MSG, ##__VA_ARGS__ )
 
 /** Write a verbose error message using WriteStatementErrorMessage(). 
 	@see WriteStatementError

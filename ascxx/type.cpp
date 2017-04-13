@@ -146,32 +146,49 @@ Type::getSimulation(const SymChar &sym
 	/* notify the compiler of our bintoken options, if nec */
 	Compiler::instance()->sendBinaryCompilationOptions();
 
+#if 0
 	/* removing the following line causes a crash on Windows 7 */
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Starting tree...\n");
-#if 1
 	error_reporter_tree_start();
-#endif
 	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Started tree\n"); */
+#endif
 
 	Instance *i = SimsCreateInstance(getInternalType()->name, sym.getInternalType(), e_normal, NULL);
 	Simulation sim(i,sym);
 
+#if 0
 	bool has_error = FALSE;
-#if 1
 	if(error_reporter_tree_has_error()){
 		has_error = TRUE;
 	}
 
 	error_reporter_tree_end();
-#endif
-
 	if(has_error){
+
 		stringstream ss;
 		ss << "Error(s) during instantiation of type '" << getName() << "'";
 		throw runtime_error(ss.str());
-	}else{
+	}else
+#endif
 		ERROR_REPORTER_HERE(ASC_USER_NOTE,"Instantiated %s",SCP(getInternalType()->name));
-	}
+
+#if 1
+	CONSOLE_DEBUG("CHECKING INSTANCE...");
+	sim.checkInstance(5);
+	CONSOLE_DEBUG("...DONE CHECKING INSTANCE");
+#endif
+
+#if 0
+	CONSOLE_DEBUG("CHECKING TOKENS...");
+	sim.checkTokens();
+	CONSOLE_DEBUG("...DONE CHECKING TOKENS");
+#endif
+
+#if 0
+	CONSOLE_DEBUG("CHECKING STATISTICS...");
+	sim.checkStatistics();
+	CONSOLE_DEBUG("...DONE CHECKING STATISTICS");
+#endif
 
 	if(i==NULL){
 		throw runtime_error("Failed to create instance");

@@ -4779,7 +4779,7 @@ static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 	//char *iname;
 
 #ifdef DEBUG_RELS
-	CONSOLE_DEBUG("ENTERED ExecuteREL\n");
+	CONSOLE_DEBUG("ENTERED ExecuteREL");
 #endif
 
 	name = RelationStatName(statement);
@@ -4837,12 +4837,12 @@ static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 		if(reln != NULL){
 			SetInstanceRelation(child,reln,e_token);
 #ifdef DEBUG_RELS
-			STATEMENT_NOTE(statement, "Created relation.");
+			STATEMENT_NOTE(statement, "Created relation");
 #endif
 			return 1;
 		}else{
 			SetInstanceRelation(child,NULL,e_token);
-			rel_errorlist_report_error(&err,statement);
+            rel_errorlist_report_error(&err,statement);
 		}
 #ifdef DEBUG_RELS
 		STATEMENT_NOTE(statement, "   Failed relation -- unexpected scenario.");
@@ -12650,20 +12650,22 @@ struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
 
     /* add PENDING model */
     Pass1ProcessPendingInstances();
-    if (NumberPending()!=0) {
+    if(NumberPending()!=0) {
       *pcount = NumberPending();
       FPRINTF(ASCERR,
-        "There are %lu unexecuted Phase 1 statements in the instance.\n",
-        *pcount);
-        if (g_compiler_warnings < 2 && *pcount >10L) {
-          FPRINTF(ASCWAR,"More than 10 pending statements and warning %s",
-            "level too low to allow printing.\n");
+          "There are %lu unexecuted Phase 1 statements in the instance.\n"
+          ,*pcount
+      );
+        if(g_compiler_warnings < 2 && *pcount >10L) {
+          FPRINTF(ASCWAR,"More than 10 pending statements and warning %s"
+              ,"level too low to allow printing.\n"
+          );
         }else{
           FPRINTF(ASCWAR,"---- Pass 1 pending: -------------\n");
           if (g_compiler_warnings > 1) {
             CheckInstanceLevel(ASCWAR,result,1);
           }else{
-            FPRINTF(ASCWAR,"(Total object check suppressed.)\n");
+            FPRINTF(ASCWAR,"(Total object check suppressed: g_compiler_warnings = %d)\n",g_compiler_warnings);
           }
           FPRINTF(ASCWAR,"---- End pass 1 pending-----------\n");
         }
@@ -12809,7 +12811,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
 #if TIMECOMPILER
   phase6t = tm_cpu_time();
   CONSOLE_DEBUG("Phase 6 defaults = %0.6f s",(phase6t-phase5t));
-  if (pass1pendings || pass2pendings || pass3pendings || pass4pendings || pass5pendings) {
+  if(pass1pendings || pass2pendings || pass3pendings || pass4pendings || pass5pendings) {
     CONSOLE_DEBUG("Phase 1 models \t\t%0.6f s\n", (phase1t-start));
     CONSOLE_DEBUG("Phase 2 relations \t\t%0.6f s\n", (phase2t-phase1t));
     CONSOLE_DEBUG("Phase 3 logical \t\t%0.6f s\n", (phase3t-phase2t));

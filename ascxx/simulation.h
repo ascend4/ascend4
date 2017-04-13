@@ -89,10 +89,20 @@ public:
 	void runDefaultMethod();
 	void run(const Method &method);
 	void run(const Method &method, Instanc &model);
-	enum StructuralStatus checkDoF() const;
-	void checkInstance();
+
+
+	// checks on the instance tree
+	void checkInstance(const int &level=5);
+	void checkTokens();
+	void checkStructure();
+	void checkStatistics();
 
 	void build();
+
+	// checks of solver lists/structure
+	enum StructuralStatus checkDoF() const;
+	bool checkStructuralSingularity();
+	const SingularityInfo &getSingularityInfo() const;
 
 	void solve(Solver s, SolverReporter &reporter);
 
@@ -121,9 +131,7 @@ public:
 	const int getActiveBlock() const;
 
 	std::vector<Variable> getFreeableVariables();
-	bool checkStructuralSingularity();
-	const SingularityInfo &getSingularityInfo() const;
-
+	
 	void setSolverHooks(SolverHooks *H);
 	SolverHooks *getSolverHooks() const;
 };

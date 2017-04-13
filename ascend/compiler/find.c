@@ -150,11 +150,12 @@ struct value_t InstanceEvaluateName(CONST struct Name *nptr)
   struct for_var_t *ptr;
   symchar *name;
 
-  if (GetEvaluationForTable()!=NULL){
+  if(GetEvaluationForTable()!=NULL){
     /* check FOR vars list before user vars */
     AssertMemory(GetEvaluationForTable());
-    if ((name = SimpleNameIdPtr(nptr))!=NULL){
-      if ((ptr = FindForVar(GetEvaluationForTable(),name))!=NULL){
+    if((name = SimpleNameIdPtr(nptr))!=NULL){
+      //CONSOLE_DEBUG("FOR variable '%s'",SCP(name));
+      if((ptr = FindForVar(GetEvaluationForTable(),name))!=NULL){
         switch(GetForKind(ptr)){
         case f_integer:
           return CreateIntegerValue(GetForInteger(ptr),1);
@@ -163,7 +164,7 @@ struct value_t InstanceEvaluateName(CONST struct Name *nptr)
         case f_set:
           return CreateSetValue(CopySet(GetForSet(ptr)));
         default:
-          FPRINTF(ASCERR,"Untyped for variable.\n");
+          FPRINTF(ASCERR,"Untyped FOR variable.\n");
           return CreateErrorValue(undefined_value);
         }
       }
@@ -687,8 +688,8 @@ static struct gl_list_t *FindNextNameElement(CONST struct Name *n
   struct gl_list_t *result;
 
   rel_errorlist_set_find_error(err,correct_instance);
-  if(NameId(n)){
-    //CONSOLE_DEBUG("name '%s'",SCP(NameIdPtr(n)));
+  if(NameId(n)){// name element is an 'identity'
+    //CONSOLE_DEBUG("finding instance for name '%s'",SCP(NameIdPtr(n)));
     result = gl_create(NAMELISTSIZE);
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,NameIdPtr(n));
@@ -699,15 +700,16 @@ static struct gl_list_t *FindNextNameElement(CONST struct Name *n
       pos = ChildSearch(current,&rec);
       if(pos!=0){
         child = InstanceChild(current,pos);
-        if (child!=NULL){
+        if(child!=NULL){
           gl_append_ptr(result,(VOIDPTR)child);
         }else{
+          //CONSOLE_DEBUG("unmade instance (null child) %lu of %lu with pos=%lu, name '%s'",c,len,pos,SCP(NameIdPtr(n)));
           rel_errorlist_set_find_error(err,unmade_instance);
           gl_destroy(result);
           return NULL;
         }
       }else{
-        CONSOLE_DEBUG("unmade instance %lu of %lu with name '%s'",c,len,SCP(NameIdPtr(n)));
+        //CONSOLE_DEBUG("unmade instance %lu of %lu with name '%s'",c,len,SCP(NameIdPtr(n)));
         rel_errorlist_set_find_error(err,unmade_instance);
         /* it would seem this ought to be undefined_instance,
          * but maybe refinement causes insanity. -- in which case
@@ -720,6 +722,7 @@ static struct gl_list_t *FindNextNameElement(CONST struct Name *n
     }
     return result;
   }else{
+    //CONSOLE_DEBUG("name is a set");
     sptr = NameSetPtr(n);
     setvalue = EvaluateSet(sptr,InstanceEvaluateName);
     switch(ValueKind(setvalue)){
@@ -759,7 +762,7 @@ static struct gl_list_t *FindNextNameElement(CONST struct Name *n
 
 
 static struct gl_list_t *RealFindInstances(CONST struct Instance *i
-	, CONST struct Name *n, rel_errorlist *err
+	,CONST struct Name *n, rel_errorlist *err
 ){
   struct gl_list_t *result,*next;
   result = gl_create(NAMELISTSIZE);
@@ -767,31 +770,38 @@ static struct gl_list_t *RealFindInstances(CONST struct Instance *i
   while(n!=NULL){
     next = FindNextNameElement(n,result,err);
     gl_destroy(result);
-    if (next!=NULL){
+    if(next!=NULL){
       result = next;
       n = NextName(n);
-    } else {
+    }else{
+      // returning 'NULL' should always mean had a find_error
+      assert(rel_errorlist_get_find_error(err)!=correct_instance);
       return NULL;
     }
   }
   return result;
 }
 
-struct gl_list_t *FindInstances(CONST struct Instance *i,
-                                CONST struct Name *n,
-                                rel_errorlist *err)
-{
+
+struct gl_list_t *FindInstances(CONST struct Instance *i
+	,CONST struct Name *n,rel_errorlist *err
+){
   struct gl_list_t *result;
-  rel_errorlist_set_find_error_name(err,impossible_instance,n);
-  if (i == NULL) return NULL;
+  if(i == NULL){
+    rel_errorlist_set_find_error_name(err,impossible_instance,n);
+    return NULL;
+  }
   AssertMemory(i);
   assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(i);
   rel_errorlist_set_find_error(err,correct_instance);
+  
   result = RealFindInstances(i,n,err);
+
   SetEvaluationContext(NULL);
   return result;
 }
+
 
 struct gl_list_t *FindInstancesFromNames(CONST struct Instance *i
 	,CONST struct gl_list_t *names,rel_errorlist *err

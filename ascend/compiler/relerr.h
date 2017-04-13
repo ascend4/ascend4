@@ -71,13 +71,19 @@ struct rel_errorlist_struct;
 this object on the stack. the design principle will be that everything is
 on the stack unless an error occurs; in that case there will be stuff on the
 heap requiring some attention for cleanup. */
+/**
+	Consolidated error-reporting structure for compilation/instantiation of
+	the model. Previously spread across various simple enums, this approach lets
+	us pass back more information about the source of an error so that it can 
+	be more accurately reported to the user. -- JP 2017.
+*/
 struct rel_errorlist_struct{
 	enum relation_errorsx errcode;
 	enum logrelation_errorsx lrcode;
 	enum find_errors ferr;
 	unsigned long ferrpos;
 	union {
-		struct Name *name; /* for find_errors */
+		const struct Name *name; /* valid when...? for ferr==find_error */
 	} data;
 /*	// removed items -- more sophisticated error traces
 	struct gl_list *errs;
@@ -109,7 +115,9 @@ void rel_errorlist_destroy(rel_errorlist *err);
 int rel_errorlist_set_find_error(rel_errorlist *err, enum find_errors ferr);
 
 /// Set a find_error and record the associated Name triggering the problem
-int rel_errorlist_set_find_error_name(rel_errorlist *err, enum find_errors ferr, struct Name *errname);
+int rel_errorlist_set_find_error_name(rel_errorlist *err, enum find_errors ferr, const struct Name *errname);
+
+int rel_errorlist_set_name(rel_errorlist *err, const struct Name *errname);
 
 int rel_errorlist_get_find_error(rel_errorlist *err);
 int rel_errorlist_set_find_errpos(rel_errorlist *err,unsigned long errpos);

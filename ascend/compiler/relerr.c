@@ -52,9 +52,16 @@ int rel_errorlist_set_find_error(rel_errorlist *err, enum find_errors ferr){
 	return 0;
 }
 
-int rel_errorlist_set_find_error_name(rel_errorlist *err, enum find_errors ferr, struct Name *errname){
+int rel_errorlist_set_find_error_name(rel_errorlist *err, enum find_errors ferr, const struct Name *errname){
 	assert(err!=NULL);
 	err->ferr = ferr;
+	err->data.name = errname;
+	return 0;
+}
+
+int rel_errorlist_set_name(rel_errorlist *err, const struct Name *errname){
+	assert(err!=NULL);
+	assert(err->ferr != correct_instance);
 	err->data.name = errname;
 	return 0;
 }
@@ -99,7 +106,7 @@ int rel_errorlist_get_code(rel_errorlist *err){
 
 int rel_errorlist_report_error(rel_errorlist *err,struct Statement *stat){
 	char *namestr;
-	CONSOLE_DEBUG("Reporting error");
+	//CONSOLE_DEBUG("Reporting error");
 
 	switch(rel_errorlist_get_code(err)){
 
