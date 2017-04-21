@@ -141,14 +141,14 @@ int rel_errorlist_report_error(rel_errorlist *err,struct Statement *stat){
 		case undefined_instance:
 			if(NULL != err->data.name){
 				namestr = WriteNameString(err->data.name);
-				WriteStatementError(3,stat,0,"Unmade or undefined instance '%s' in relation.",namestr);
+				WriteStatementError(ASC_USER_ERROR,stat,0,"Unmade or undefined instance '%s' in relation.",namestr);
 				ASC_FREE(namestr);
 			}else{
-				WriteStatementError(3,stat,0,"%s instance in relation (name not reported).",(rel_errorlist_get_find_error(err)==unmade_instance?"Unmade":"Undefined"));
+				WriteStatementError(ASC_USER_ERROR,stat,0,"%s instance in relation (name not reported).",(rel_errorlist_get_find_error(err)==unmade_instance?"Unmade":"Undefined"));
 			}
 			return 1;
 		case impossible_instance:
-			WSSM(ASCERR,stat,"Relation contains an impossible instance",3);
+			WriteStatementError(ASC_USER_ERROR,stat,1,"Relation contains an impossible instance");
 			return 1;
 		case correct_instance:
 			ASC_PANIC("Incorrect error response.\n");/*NOTREACHED*/

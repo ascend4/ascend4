@@ -117,6 +117,7 @@ void FigureOutError(struct value_t value,
   case empty_choice:
   case empty_intersection:
   case temporary_variable_reused:
+    //CONSOLE_DEBUG("Error value: %d",(int)ErrorValue(value));
     rel_errorlist_set_find_error(err,impossible_instance);
     break;
   case undefined_value:
@@ -2505,7 +2506,7 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
               CONSOLE_DEBUG("instances!=NULL !");
             }
           }
-          //CONSOLE_DEBUG("returning 'find_error'");
+          //CONSOLE_DEBUG("returning 'find_error'");
           rel_errorlist_set_code(err,find_error);
           return 1;
         }
