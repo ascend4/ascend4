@@ -4594,7 +4594,7 @@ static int ExecuteATS(struct Instance *inst, struct Statement *statement){
     switch(rel_errorlist_get_find_error(&err)){
     case impossible_instance:
       MissingInsts(inst,GetStatVarList(statement),1);
-      STATEMENT_ERROR(statement, "ARE_THE_SAME contains impossible instance");
+      WriteStatementError(ASC_USER_ERROR,statement,1,"ARE_THE_SAME contains impossible instance");
       return 1;
     default:
       MissingInsts(inst,GetStatVarList(statement),0);

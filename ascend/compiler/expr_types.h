@@ -208,7 +208,7 @@ struct Name {
    * this name is a supported attribute id that should be
    * printed with a $ in front of it.
    * if NAMEBIT_CHAT 1,
-   * chain this is part of contains a supported attribute
+   * 'chain this': is part of contains a supported attribute
    * element. This is determinable at parse time and it costs no
    * more to store that fact here for all elements in the chain.
    * This makes it possible to test conditionals much earlier,
