@@ -103,7 +103,6 @@ typedef enum error_severity_enum{
 	but without the file/function/line number.
 */
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-# define ERROR_REPORTER_DEBUG(args...) error_reporter(ASC_PROG_NOTE, __FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_HERE(SEV,args...) error_reporter(SEV,__FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_NOLINE(SEV,args...) error_reporter(SEV, NULL, 0, NULL, ##args)
 # define CONSOLE_DEBUG(args...) ((void)(color_on(stderr,ASC_FG_BRIGHTBLUE) + \
@@ -118,7 +117,6 @@ typedef enum error_severity_enum{
 # define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__func__);
 
 #elif defined(HAVE_C99)
-# define ERROR_REPORTER_DEBUG(...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__func__,## __VA_ARGS__)
 # define ERROR_REPORTER_HERE(SEV,...) error_reporter(SEV,__FILE__,__LINE__,__func__, ## __VA_ARGS__)
 # define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, ## __VA_ARGS__)
 # define CONSOLE_DEBUG(...) (color_on(stderr,BRIGHTBLUE) + fprintf(stderr, "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
@@ -128,7 +126,6 @@ typedef enum error_severity_enum{
 
 #elif defined(_MSC_VER) && _MSC_VER >= 1400 /* Microsoft Visual C++ 2005 or newer */
 #  define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__FUNCTION__);
-#  define ERROR_REPORTER_DEBUG(...)     error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__FUNCTION__, __VA_ARGS__)
 #  define ERROR_REPORTER_HERE(SEV,...)  error_reporter(SEV,__FILE__,__LINE__,__FUNCTION__, __VA_ARGS__)
 #  define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, __VA_ARGS__)
 #  define CONSOLE_DEBUG(...)   (fprintf(stderr, "%s:%d (%s): ", __FILE__,__LINE__,__FUNCTION__) + \
@@ -136,7 +133,6 @@ typedef enum error_severity_enum{
                                 fprintf(stderr, "\n"))
 #else /* workaround for compilers without variadic macros: last resort */
 # define NO_VARIADIC_MACROS
-# define ERROR_REPORTER_DEBUG error_reporter_note_no_line
 # define ERROR_REPORTER_HERE error_reporter_here
 # define ERROR_REPORTER_NOLINE error_reporter_noline
 # define CONSOLE_DEBUG console_debug
@@ -148,9 +144,6 @@ ASC_DLLSPEC int console_debug(const char *fmt,...);
 #endif
 
 #define ERROR_REPORTER_START_NOLINE(SEV) error_reporter_start(SEV,NULL,0,NULL);
-
-#define ERROR_REPORTER_STAT(sev,stat,msg) \
-	error_reporter(sev,Asc_ModuleFileName(stat->mod),stat->linenum,NULL,msg)
 
 /** An alias for ASC_PROG_ERROR */
 #define ASC_PROG_ERR ASC_PROG_ERROR
@@ -170,6 +163,10 @@ typedef struct{
 	This structure provides a means for caching errors so that they can be
 	reported back later in the manner of 'stack traces'. Should be useful
 	for more detailed reporting from parser, external calls, etc.
+
+	FIXME Also, the structure allows us to watch for cases where errors were reported
+	at any point between start and end points. We can cache and then suppress or
+	output errors, or we can simply watch and note them if they have happened.
 
 	Usage will be
 
@@ -194,6 +191,9 @@ typedef struct{
 	If an 'error_reporter' is found *inside* an an 'error_reporter_tree_start'
 	and 'error_reporter_tree_end', the error message is kept and not output.
 
+	FIXME we need to allow errors to be output even inside a tree, if desired.
+	This choice should be a parameter of error_reporter_tree_start().
+
 	If the latest set of errors (those found inside the last start..end) are not
 	important, they can be discarded using error_reporter_tree_clear. This will
 	not clear the entire error tree, as there may be errors higher-up that we
@@ -204,16 +204,18 @@ typedef struct{
 */
 typedef struct ErrorReporterTree{
 	error_reporter_meta_t *err;
+	int iscaching;
 	struct ErrorReporterTree *head; /**< first on the list of child errors */
 	struct ErrorReporterTree *tail; /**< last on the list of child errors */
 	struct ErrorReporterTree *next; /**< next error in the present list */
 	struct ErrorReporterTree *parent; /**< parent error (or NULL) */
 } error_reporter_tree_t;
 
-ASC_DLLSPEC int error_reporter_tree_start();
+ASC_DLLSPEC int error_reporter_tree_start(int iscaching);
 ASC_DLLSPEC int error_reporter_tree_end();
 ASC_DLLSPEC void error_reporter_tree_clear();
 ASC_DLLSPEC int error_reporter_tree_has_error();
+ASC_DLLSPEC error_reporter_tree_t *error_reporter_get_tree_current() __attribute__((deprecated("for debugging only!")));
 
 /**
 	This is the drop-in replacement for Asc_FPrintf. Anythin you attempt

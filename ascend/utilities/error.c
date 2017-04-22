@@ -16,12 +16,54 @@
 static error_reporter_callback_t g_error_reporter_callback;
 
 /**
-	Global variable which holds cached error info for
-	later output
+	Global variable which enables caching of *individual* error messages,
+	as used with error_reporter_start() and error_reporter_end_flush().
+	This is not the same as the caching performed by error_reporter_tree_start()
+	which holds/records multiple error messages depending on the iscaching
+	setting.
 */
 static error_reporter_meta_t g_error_reporter_cache;
 
+/**
+	Default error reporter. This error reporter is used whenever the callback
+	pointer is NULL, but can be replaced with another callback (eg for GUI
+	reporting) using error_reporter_set_callback()
+*/
+int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
+	char *sevmsg="";
+	enum ConsoleColor color = 0;
+	char *endtxt="\n";
+	int res=0;
+	switch(sev){
+		case ASC_PROG_FATAL:    color=ASC_FG_BRIGHTRED; sevmsg = "PROGRAM FATAL ERROR: "; break;
+		case ASC_PROG_ERROR:    color=ASC_FG_RED; sevmsg = "PROGRAM ERROR: "; break;
+		case ASC_PROG_WARNING:  color=ASC_FG_BROWN;sevmsg = "PROGRAM WARNING: "; break;
+		case ASC_PROG_NOTE:     color=ASC_FG_BRIGHTGREEN; endtxt=""; break; /* default, keep unembellished for now */
+		case ASC_USER_ERROR:    color=ASC_FG_BRIGHTRED; sevmsg = "ERROR: "; break;
+		case ASC_USER_WARNING:  color=ASC_FG_BROWN; sevmsg = "WARNING: "; break;
+		case ASC_USER_NOTE:     sevmsg = "NOTE: "; break;
+		case ASC_USER_SUCCESS:  color=ASC_FG_BRIGHTGREEN; sevmsg = "SUCCESS: "; break;
+	}
+	color_on(ASCERR,color);
+	res = ASC_FPRINTF(ASCERR,"%s",sevmsg);
+	color_off(ASCERR);
+	if(filename!=NULL)res += ASC_FPRINTF(ASCERR,"%s:",filename);
+	if(line!=0)res += ASC_FPRINTF(ASCERR,"%d:",line);
+	if(funcname!=NULL)res += ASC_FPRINTF(ASCERR,"%s:",funcname);
+	if ((filename!=NULL) || (line!=0) || (funcname!=NULL))res += ASC_FPRINTF(ASCERR," ");
+	res += ASC_VFPRINTF(ASCERR,fmt,args);
+	res += ASC_FPRINTF(ASCERR,"%s",endtxt);
+	return res;
+}
+
+/*---------------------------------------------------------------------------
+  ERROR REPORTER TREE (BRANCHABLE ERROR STACK) FUNCTIONALITY
+*/
+
 #ifdef ERROR_REPORTER_TREE_ACTIVE
+
+static error_reporter_tree_t *g_error_reporter_tree_current = NULL;
+
 static error_reporter_meta_t *error_reporter_meta_new(){
 	error_reporter_meta_t *e;
 	e = ASC_NEW(error_reporter_meta_t);
@@ -33,129 +75,81 @@ static error_reporter_meta_t *error_reporter_meta_new(){
 	e->msg[0] = '\0';
 	return e;
 }
-#endif /* ERROR_REPORTER_TREE_ACTIVE */
 
-/**
-	Default error reporter. To use this error reporter, set
-	the callback pointer to NULL.
-*/
-int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
-	char *sevmsg="";
-	enum ConsoleColor color = 0;
-	char *endtxt="\n";
-	int res=0;
-	switch(sev){
-		case ASC_PROG_FATAL:    color=ASC_FG_BRIGHTRED; sevmsg = "PROGRAM FATAL ERROR: "; break;
-		case ASC_PROG_ERROR:
-		    color=ASC_FG_RED; sevmsg = "PROGRAM ERROR: ";
-			break;
-		case ASC_PROG_WARNING:  color=ASC_FG_BROWN;sevmsg = "PROGRAM WARNING: "; break;
-		case ASC_PROG_NOTE:     color=ASC_FG_BRIGHTGREEN; endtxt=""; break; /* default, keep unembellished for now */
-		case ASC_USER_ERROR:    color=ASC_FG_BRIGHTRED; sevmsg = "ERROR: "; break;
-		case ASC_USER_WARNING:  color=ASC_FG_BROWN; sevmsg = "WARNING: "; break;
-		case ASC_USER_NOTE:     sevmsg = "NOTE: "; break;
-		case ASC_USER_SUCCESS:  color=ASC_FG_BRIGHTGREEN; sevmsg = "SUCCESS: "; break;
-	}
-
-	color_on(ASCERR,color);
-	res = ASC_FPRINTF(ASCERR,"%s",sevmsg);
-	color_off(ASCERR);
-
-	if(filename!=NULL){
-		res += ASC_FPRINTF(ASCERR,"%s:",filename);
-	}
-	if(line!=0){
-		res += ASC_FPRINTF(ASCERR,"%d:",line);
-	}
-	if(funcname!=NULL){
-		res += ASC_FPRINTF(ASCERR,"%s:",funcname);
-	}
-	if ((filename!=NULL) || (line!=0) || (funcname!=NULL)){
-		res += ASC_FPRINTF(ASCERR," ");
-	}
-
-	res += ASC_VFPRINTF(ASCERR,fmt,args);
-	res += ASC_FPRINTF(ASCERR,"%s",endtxt);
-
-	return res;
-}
-
-/*---------------------------------------------------------------------------
-  ERROR REPORTER TREE (BRANCHABLE ERROR STACK) FUNCTIONALITY
-*/
-
-#ifdef ERROR_REPORTER_TREE_ACTIVE
-
-static error_reporter_tree_t *g_error_reporter_tree = NULL;
-static error_reporter_tree_t *g_error_reporter_tree_current = NULL;
-
-# define TREECURRENT g_error_reporter_tree_current
-# define TREE g_error_reporter_tree
+# define CURRENT g_error_reporter_tree_current
 
 static int error_reporter_tree_write(error_reporter_tree_t *t);
 static void error_reporter_tree_free(error_reporter_tree_t *t);
 
-static error_reporter_tree_t *error_reporter_tree_new(){
+/// deprecated function for testing purpose only
+error_reporter_tree_t *error_reporter_get_tree_current(){
+	return CURRENT;
+}
+
+static error_reporter_tree_t *error_reporter_tree_new(int iscaching){
 	error_reporter_tree_t *tnew = ASC_NEW(error_reporter_tree_t);
+	tnew->iscaching = iscaching;
 	tnew->next = NULL;
 	tnew->head = NULL;
 	tnew->tail = NULL;
 	tnew->err = NULL;
+	tnew->parent = NULL;
 	return tnew;
 }
 
-int error_reporter_tree_start(){
-	error_reporter_tree_t *tnew;
-	tnew = error_reporter_tree_new();
-
-#if 0
-	fprintf(stderr,"TREE = %p",TREE);
-	fprintf(stderr,"TREECURRENT = %p",TREECURRENT);
-
-	if(TREE != NULL && TREECURRENT == NULL){
-		CONSOLE_DEBUG("CALLED WITH NULL TREECURRENT BUT NON-NULL TREE");
-		error_reporter_tree_write(TREE);
-		error_reporter_tree_free(TREE);
-		TREE = NULL;
+static int error_reporter_tree_has_caching_parent(error_reporter_tree_t *t){
+	assert(t);
+	if(NULL == t->parent)return 0;
+	error_reporter_tree_t *t1 = t->parent;
+	int iscaching = 0;
+	while(t1){
+		iscaching = iscaching || t1->iscaching;
+		assert(t1->parent != t1);
+		t1 = t1->parent;
 	}
-#endif
+	return iscaching;
+}
 
-	if(TREE == NULL){
-		//CONSOLE_DEBUG("CREATING ROOT");
-		/* we're creating the root */
-		tnew->parent = NULL;
-		TREE = tnew;
-		TREECURRENT = tnew;
-		/* CONSOLE_DEBUG("TREECURRENT = %p",TREECURRENT); */
+int error_reporter_tree_start(int iscaching){
+	error_reporter_tree_t *tnew = error_reporter_tree_new(iscaching);
+	if(CURRENT == NULL){
+		CONSOLE_DEBUG("creating tree (caching=%d)",iscaching);
+		CURRENT = tnew;
 	}else{
-		asc_assert(TREECURRENT != NULL);
-		//CONSOLE_DEBUG("CREATING SUBTREE");
-		if(TREECURRENT->head == NULL){
+		CONSOLE_DEBUG("creating sub-tree (caching=%d)",iscaching);
+		if(CURRENT->head == NULL){
 			/* if the current tree has no elements, add it as the head */
-			TREECURRENT->head = tnew;
+			CURRENT->head = tnew;
 		}else{
 			/* link the new tree to the last in the child list */
-			TREECURRENT->tail->next = tnew;
+			CURRENT->tail->next = tnew;
 		}
 		/* update the tail of the list */
-		TREECURRENT->tail = tnew;
-
+		CURRENT->tail = tnew;
 		/* now switch the context to the sub-tree */
-		tnew->parent = TREECURRENT;
-		/* CONSOLE_DEBUG("SET TREECURRENT TO %p",TREECURRENT); */
-		TREECURRENT = tnew;
+		tnew->parent = CURRENT;
+		CURRENT = tnew;
 	}
 	return 0;
 }
 
 int error_reporter_tree_end(){
-	//CONSOLE_DEBUG("TREE END");
-	if(!TREECURRENT){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"'end' without TREECURRENT set");
-		return 1;
+	assert(CURRENT);
+	if(CURRENT->iscaching){
+		if(error_reporter_tree_has_caching_parent(CURRENT)){
+			CONSOLE_DEBUG("no output; caching parent");
+		}else{
+			CONSOLE_DEBUG("outputting now, no caching parent");
+			error_reporter_tree_write(CURRENT);
+		}
 	}
-	TREECURRENT = TREECURRENT->parent;
-	//CONSOLE_DEBUG("SET TREECURRENT TO %p",TREECURRENT);
+	if(CURRENT->parent){
+		CONSOLE_DEBUG("ending sub-tree");
+		CURRENT = CURRENT->parent;
+	}else{
+		CONSOLE_DEBUG("ending top tree");
+		CURRENT = NULL;
+	}
 	return 0;
 }
 
@@ -171,20 +165,19 @@ static void error_reporter_tree_free(error_reporter_tree_t *t){
 }
 
 void error_reporter_tree_clear(){
-	/* recursively free anything beneath the TREECURRENT node, return to the parent context */
-	error_reporter_tree_t *t;
-	if(!TREECURRENT){
+	/* recursively free anything beneath the CURRENT node, return to the parent context */
+	error_reporter_tree_t *t1;
+	if(!CURRENT){
 		/* CONSOLE_DEBUG("NOTHING TO CLEAR!"); */
 		return;
 	}
-	if(TREECURRENT->parent){
-		t = TREECURRENT->parent;
+	if(CURRENT->parent){
+		t1 = CURRENT->parent;
 	}else{
-		TREE = NULL;
-		t = NULL;
+		t1 = NULL;
 	}
-	error_reporter_tree_free(TREECURRENT);
-	TREECURRENT = t;
+	error_reporter_tree_free(CURRENT);
+	CURRENT = t1;
 }
 
 static int error_reporter_tree_match_sev(error_reporter_tree_t *t, unsigned match){
@@ -210,10 +203,10 @@ static int error_reporter_tree_match_sev(error_reporter_tree_t *t, unsigned matc
 */
 int error_reporter_tree_has_error(){
 	int res;
-	if(TREECURRENT){
-		res = error_reporter_tree_match_sev(TREECURRENT,ASC_ERR_ERR);
+	if(CURRENT){
+		res = error_reporter_tree_match_sev(CURRENT,ASC_ERR_ERR);
 		if(res){
-			/* CONSOLE_DEBUG("ERROR(S) FOUND IN TREECURRENT %p",TREECURRENT); */
+			/* CONSOLE_DEBUG("ERROR(S) FOUND IN CURRENT %p",CURRENT); */
 		}
 		return res;
 	}else{
@@ -224,20 +217,23 @@ int error_reporter_tree_has_error(){
 
 static int error_reporter_tree_write(error_reporter_tree_t *t){
 	int res = 0;
-
-	asc_assert(TREE==NULL); /* else recursive calls will occur */
-
+	assert(t != NULL);
 	if(t->err){
-		res += error_reporter(t->err->sev, t->err->filename, t->err->line, t->err->func, t->err->msg);
+		// an a simple node -- just an error
+		assert(t->head == NULL);
+		assert(t->tail == NULL);
+		error_reporter_callback_t cb = g_error_reporter_callback ?
+			g_error_reporter_callback : error_reporter_default_callback;
+		res += (*cb)(t->err->sev,t->err->filename,t->err->line,t->err->func,t->err->msg,NULL);
 	}else{
-		/* CONSOLE_DEBUG("TREE HAS NO TOP-LEVEL ERROR"); */
-	}
-
-	if(t->head){
-		res += error_reporter_tree_write(t->head);
-	}
-	if(t->next){
-		res += error_reporter_tree_write(t->next);
+		// a parent node -- traverse the sub-nodes
+		assert(t->head);
+		assert(t->tail);
+		error_reporter_tree_t *t1 = t->head;
+		while(t1){
+			res += error_reporter_tree_write(t1);
+			t1 = t1->next;
+		}
 	}
 	return res;
 }
@@ -250,7 +246,7 @@ int error_reporter_tree_start(){
 int error_reporter_tree_end(){return 0;}
 void error_reporter_tree_clear(){}
 int error_reporter_tree_has_error(){
-	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Attempt to check 'tree_has_error' when 'tree' turned off at compile time");
+	ERROR_REPORTER_HERE(ASC_PROG_FATAL,"Attempt to check 'tree_has_error' when 'tree' turned off at compile time");
 	return 0;
 }
 #endif /* ERROR_REPORTER_TREE_ACTIVE */
@@ -268,51 +264,42 @@ va_error_reporter(
     , const char *fmt
     , va_list args
 ){
-	int res;
+	int res = 0;
 
 #ifdef ERROR_REPORTER_TREE_ACTIVE
 	error_reporter_tree_t *t;
 	if(sev != ASC_PROG_FATAL){
-		if(TREECURRENT){
+		if(CURRENT){
 			/* add the error to the tree, don't output anything now */
-			t = error_reporter_tree_new();
+			t = error_reporter_tree_new(0);
 			t->err = error_reporter_meta_new();
 			res = vsnprintf(t->err->msg,ERROR_REPORTER_MAX_MSG,fmt,args);
 			t->err->filename = errfile;
 			t->err->func = errfunc;
 			t->err->line = errline;
 			t->err->sev = sev;
-			if(!TREECURRENT->head){
-				TREECURRENT->head = TREECURRENT->tail = t;
+			if(!CURRENT->head){
+				CURRENT->head = CURRENT->tail = t;
 			}else{
-				TREECURRENT->tail->next = t;
-				TREECURRENT->tail = t;
+				CURRENT->tail->next = t;
+				CURRENT->tail = t;
 			}
-			/* CONSOLE_DEBUG("Message (%d chars) added to tree",res); */
-			return res;
-		}else if(TREE){
-			/* flush the tree before outputting current message */
-			/* CONSOLE_DEBUG("WRITING OUT TREE CONTENTS"); */
-			t = TREE;
-			TREE = NULL;
-			error_reporter_tree_write(t);
-			//CONSOLE_DEBUG("DONE WRITING TREE");
-			TREECURRENT = t;
-			error_reporter_tree_clear();
-			/* CONSOLE_DEBUG("DONE FREEING TREE");
-			CONSOLE_DEBUG("TREE = %p",TREE);
-			CONSOLE_DEBUG("TREECURRENT = %p",TREECURRENT); */
+			CONSOLE_DEBUG("message '%s' added to tree",t->err->msg);
+
+			if(CURRENT->iscaching || error_reporter_tree_has_caching_parent(CURRENT)){
+				CONSOLE_DEBUG("caching; no output");
+				return res;
+			}
 		}
 	}
 #endif
 
-	if(g_error_reporter_callback==NULL){
-		/* fprintf(stderr,"CALLING VFPRINTF\n"); */
-		res = error_reporter_default_callback(sev,errfile,errline,errfunc,fmt,args);
-	}else{
-		/* fprintf(stderr,"CALLING G_ERROR_REPORTER_CALLBACK\n"); */
-		res = g_error_reporter_callback(sev,errfile,errline,errfunc,fmt,args);
-	}
+	CONSOLE_DEBUG("outputting message (format) '%s'",fmt);
+
+	error_reporter_callback_t cb = g_error_reporter_callback;
+	if(cb == NULL)cb = error_reporter_default_callback;
+
+	res += (*cb)(sev,errfile,errline,errfunc,fmt,args);
 
 	return res;
 }
@@ -385,9 +372,9 @@ fflush_error_reporter(FILE *file){
   CACHING of multiple-FPRINTF error messages
 */
 
-int
-error_reporter_start(const error_severity_t sev, const char *filename, const int line, const char *func){
-
+int error_reporter_start(const error_severity_t sev, const char *filename
+	, const int line, const char *func
+){
 	if(g_error_reporter_cache.iscaching){
 		error_reporter_end_flush();
 	}
@@ -401,8 +388,11 @@ error_reporter_start(const error_severity_t sev, const char *filename, const int
 	return 1;
 }
 
-int
-error_reporter_end_flush(){
+/**
+	This function will flush the output of a multi-line error message
+	(as written with multiple calls to FPRINTF(stderr,...))
+*/
+int error_reporter_end_flush(){
 	if(g_error_reporter_cache.iscaching){
 		error_reporter(
 			g_error_reporter_cache.sev
@@ -444,8 +434,7 @@ error_reporter(
 /*-------------------------
   SET the callback function
 */
-void
-error_reporter_set_callback(
+void error_reporter_set_callback(
 		const error_reporter_callback_t new_callback
 ){
 	g_error_reporter_callback = new_callback;
@@ -453,13 +442,13 @@ error_reporter_set_callback(
 
 /*-------------------------
   OPTIONAL code for systems not supporting variadic macros.
-  You know, your system probably does support variadic macros, it's just
-  a question of checking what your particular syntax is...
+  Your system probably does support variadic macros, it's just
+  a question of checking what your particular syntax is, and possibly
+  adding some stuff in error.h.
 */
 
 #ifdef NO_VARIADIC_MACROS
-/* Following are only required on compilers without variadic macros: */
-
+/** error reporter for compilers not supporting variadic macros */
 int error_reporter_note_no_line(const char *fmt,...){
 	int res;
 	va_list args;
@@ -471,10 +460,7 @@ int error_reporter_note_no_line(const char *fmt,...){
 	return res;
 }
 
-/**
-	Error reporter 'here' function for compilers not supporting
-	variadic macros.
-*/
+/** error reporter 'here' for compilers not supporting variadic macros */
 ASC_DLLSPEC int error_reporter_here(const error_severity_t sev, const char *fmt,...){
 	int res;
 	va_list args;
@@ -486,11 +472,7 @@ ASC_DLLSPEC int error_reporter_here(const error_severity_t sev, const char *fmt,
 	return res;
 }
 
-
-/**
-	Error reporter 'no line' function for compilers not supporting
-	variadic macros.
-*/
+/** error reporter for compilers not supporting variadic macros */
 int error_reporter_noline(const error_severity_t sev, const char *fmt,...){
 	int res;
 	va_list args;
@@ -502,6 +484,7 @@ int error_reporter_noline(const error_severity_t sev, const char *fmt,...){
 	return res;
 }
 
+/** console debugging for compilers not supporting variadic macros */
 int console_debug(const char *fmt,...){
 	int res;
 	va_list args;
@@ -512,5 +495,4 @@ int console_debug(const char *fmt,...){
 
 	return res;
 }
-
 #endif /* NO_VARIADIC_MACROS */

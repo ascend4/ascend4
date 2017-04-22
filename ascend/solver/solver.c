@@ -221,12 +221,12 @@ struct StaticSolverRegistration{
 */
 static const struct StaticSolverRegistration slv_reg[]={
 	{"qrslv"}
+	,{NULL}
+#if 0
 	,{"conopt"}
 	,{"lrslv"}
 	,{"cmslv"}
 	,{"ipopt"}
-	,{NULL}
-#if 0
 /* 	{0,"SLV",&slv0_register} */
 /*	,{0,"MINOS",&slv1_register} */
 /*	,{0,"CSLV",&slv4_register} */

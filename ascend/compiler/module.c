@@ -1003,7 +1003,7 @@ int ModuleSearchPath(CONST char *name,
 	/* attempt to open "name" directly */
 	if(0==ospath_stat(fp1,&sd.buf) && NULL!=(sd.f = ospath_fopen(fp1,"r")) ){
 
-		CONSOLE_DEBUG("File '%s' opened directly, without path search",name);
+		//CONSOLE_DEBUG("File '%s' opened directly, without path search",name);
 		sd.fp_found = fp1;
 
 	}else{

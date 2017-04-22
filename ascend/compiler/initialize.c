@@ -683,7 +683,7 @@ static void ExecuteInitExt(struct procFrame *fm, struct Statement *stat){
      */
   if(nok){
     fm->flow = FrameError; /* move write to procio */
-	CONSOLE_DEBUG("NOK");
+	//CONSOLE_DEBUG("NOK");
     ProcWriteExtError(fm,funcname,PE_evalerr,0);
   }else{
     fm->flow = FrameOK;

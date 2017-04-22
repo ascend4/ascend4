@@ -235,7 +235,8 @@ Simulation::run(const Method &method, Instanc &model){
 	Nam name = Nam(method.getSym());
 	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
 
-	error_reporter_tree_start();
+	error_reporter_tree_start(0);
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initalising model");
 
 	//CONSOLE_DEBUG("sys = %p",sys);
 	//CONSOLE_DEBUG("simroot = %p",simroot.getInternalType());

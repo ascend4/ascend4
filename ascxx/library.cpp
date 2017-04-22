@@ -114,8 +114,8 @@ Library::load(const char *filename){
 		std::cerr << "Note: Module " << Asc_ModuleName(m) << ": " << msg1 << std::endl;
 	}
 
-	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
-	error_reporter_tree_start();
+	//CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
+	error_reporter_tree_start(0);
 	status = zz_parse();
 	switch(status){
 		case 0: break;
@@ -136,9 +136,8 @@ Library::load(const char *filename){
 		throw runtime_error(ss.str());
 	}
 
-
-	struct gl_list_t *l = Asc_TypeByModule(m);
-	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l), filename);
+	//struct gl_list_t *l = Asc_TypeByModule(m);
+	//CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l), filename);
 }
 
 /**
@@ -167,7 +166,7 @@ Library::loadString(const char *str, const char *nameprefix){
 
 	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
 #ifdef LOADSTRING_ERROR_TREE
-	error_reporter_tree_start();
+	error_reporter_tree_start(0);
 #endif
 	status = zz_parse();
 	switch(status){

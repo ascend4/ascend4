@@ -569,7 +569,7 @@ struct Statement *CreateEXTERNGlassBox(
 			       struct Name *scope)
 {
   register struct Statement *result;
-  ERROR_REPORTER_DEBUG("Found glassbox equation statement '%s'\n",funcname);
+  CONSOLE_DEBUG("Found glassbox equation statement '%s'\n",funcname);
 
   result=create_statement_here(EXT);
   result->v.ext.mode = ek_glass;
@@ -1271,7 +1271,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case FLOW:
     return s->context;
   default:
-    ERROR_REPORTER_STAT(ASC_PROG_ERR,s,"GetStatContext called on incorrect statement type.");
+    WriteStatementError(ASC_PROG_ERR,s,0,"GetStatContext called on incorrect statement type.");
     return context_MODEL;
   }
 }
@@ -2718,10 +2718,10 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
   case COND:
   case FLOW:
   case WHILE:
-    ERROR_REPORTER_STAT(ASC_PROG_ERR,s1,"CompareISStatements called with incorrect statement");
+    WriteStatementError(ASC_PROG_ERR,s1,0,"CompareISStatements called with incorrect statement");
     return -1;
   default:
-    ERROR_REPORTER_STAT(ASC_PROG_ERR,s1,"CompareISStatements called with unknown statement");
+    WriteStatementError(ASC_PROG_ERR,s1,0,"CompareISStatements called with unknown statement");
     return 1;
   }
 }
