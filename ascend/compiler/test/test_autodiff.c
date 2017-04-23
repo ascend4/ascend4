@@ -243,16 +243,16 @@ static void test_autodiff(void){
 	root = GetSimulationRoot(sim);
 
 	/** Call on_load */
-	error_reporter_tree_start(0);
+	error_reporter_tree_t *tree1 = error_reporter_tree_start(0);
 
 	name = CreateIdName(AddSymbol("on_load"));
 	pe = Initialize(root,name,"sim1",ASCERR,0, NULL, NULL);
 	int haserror=0;
-	if(error_reporter_tree_has_error()){
+	if(error_reporter_tree_has_error(tree1)){
 		haserror=1;
 	}
 
-	error_reporter_tree_end();
+	error_reporter_tree_end(tree1);
 
 	if(pe == Proc_all_ok){
 		if(haserror){

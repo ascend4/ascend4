@@ -235,7 +235,7 @@ Simulation::run(const Method &method, Instanc &model){
 	Nam name = Nam(method.getSym());
 	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
 
-	error_reporter_tree_start(0);
+	error_reporter_tree_t *tree1 = error_reporter_tree_start(0);
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initalising model");
 
 	//CONSOLE_DEBUG("sys = %p",sys);
@@ -249,10 +249,10 @@ Simulation::run(const Method &method, Instanc &model){
 	);
 
 	int haserror=0;
-	if(error_reporter_tree_has_error()){
+	if(error_reporter_tree_has_error(tree1)){
 		haserror=1;
 	}
-	error_reporter_tree_end();
+	error_reporter_tree_end(tree1);
 
 	// clear out the 'sim' pointer (soon it will be invalid)
 	importhandler_setsharedpointer("sim",NULL);

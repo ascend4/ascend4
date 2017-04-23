@@ -146,23 +146,23 @@ Type::getSimulation(const SymChar &sym
 	/* notify the compiler of our bintoken options, if nec */
 	Compiler::instance()->sendBinaryCompilationOptions();
 
-#if 0
+#if 1
 	/* removing the following line causes a crash on Windows 7 */
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Starting tree...\n");
-	error_reporter_tree_start(0);
+	error_reporter_tree_t *tree1 = error_reporter_tree_start(0);
 	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Started tree\n"); */
 #endif
 
 	Instance *i = SimsCreateInstance(getInternalType()->name, sym.getInternalType(), e_normal, NULL);
 	Simulation sim(i,sym);
 
-#if 0
+#if 1
 	bool has_error = FALSE;
-	if(error_reporter_tree_has_error()){
+	if(error_reporter_tree_has_error(tree1)){
 		has_error = TRUE;
 	}
 
-	error_reporter_tree_end();
+	error_reporter_tree_end(tree1);
 	if(has_error){
 
 		stringstream ss;

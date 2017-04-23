@@ -9,6 +9,14 @@
 # include <ascend/general/panic.h>
 #endif
 
+#define ERROR_DEBUG
+#ifdef ERROR_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
+
 /**
 	Global variable which stores the pointer to the callback
 	function being used.
@@ -90,6 +98,7 @@ static error_reporter_tree_t *error_reporter_tree_new(int iscaching){
 	error_reporter_tree_t *tnew = ASC_NEW(error_reporter_tree_t);
 	tnew->iscaching = iscaching;
 	tnew->next = NULL;
+	tnew->prev = NULL;
 	tnew->head = NULL;
 	tnew->tail = NULL;
 	tnew->err = NULL;
@@ -110,19 +119,49 @@ static int error_reporter_tree_has_caching_parent(error_reporter_tree_t *t){
 	return iscaching;
 }
 
-int error_reporter_tree_start(int iscaching){
+static void error_reporter_tree_print1(error_reporter_tree_t *t,int level){
+	if(t->head){
+		assert(t->err == NULL);
+		MSG("%*s+%s",level,"",t==CURRENT?" (CURRENT)":"");
+		error_reporter_tree_print1(t->head,level+1);
+	}else{
+		assert(t->err);
+		MSG("%*s-%s:%d: %s",level,"",t->err->filename, t->err->line, t->err->msg);
+	}
+
+	if(t->next){
+		error_reporter_tree_print1(t->next,level);
+	}
+}
+
+static void error_reporter_tree_print(error_reporter_tree_t *t1){
+	if(!t1){
+		MSG("empty tree");
+	}else{
+		MSG("finding top of tree");
+		while(t1->parent){
+			t1 = t1->parent;
+		}
+		MSG("top of tree is %p",t1);
+		error_reporter_tree_print1(t1,0);
+	}
+}
+
+error_reporter_tree_t *error_reporter_tree_start(int iscaching){
 	error_reporter_tree_t *tnew = error_reporter_tree_new(iscaching);
 	if(CURRENT == NULL){
-		CONSOLE_DEBUG("creating tree (caching=%d)",iscaching);
+		MSG("creating tree (caching=%d)",iscaching);
 		CURRENT = tnew;
 	}else{
-		CONSOLE_DEBUG("creating sub-tree (caching=%d)",iscaching);
+		MSG("creating sub-tree (caching=%d)",iscaching);
 		if(CURRENT->head == NULL){
-			/* if the current tree has no elements, add it as the head */
+			MSG("adding at head");
 			CURRENT->head = tnew;
 		}else{
+			MSG("adding at tail");
 			/* link the new tree to the last in the child list */
 			CURRENT->tail->next = tnew;
+			tnew->prev = CURRENT->tail;
 		}
 		/* update the tail of the list */
 		CURRENT->tail = tnew;
@@ -130,70 +169,101 @@ int error_reporter_tree_start(int iscaching){
 		tnew->parent = CURRENT;
 		CURRENT = tnew;
 	}
-	return 0;
+	return CURRENT;
 }
 
-int error_reporter_tree_end(){
+int error_reporter_tree_end(error_reporter_tree_t *tree){
 	assert(CURRENT);
+	assert(tree==CURRENT);
 	if(CURRENT->iscaching){
 		if(error_reporter_tree_has_caching_parent(CURRENT)){
-			CONSOLE_DEBUG("no output; caching parent");
+			MSG("no output; caching parent");
 		}else{
-			CONSOLE_DEBUG("outputting now, no caching parent");
+			MSG("outputting now, no caching parent");
 			error_reporter_tree_write(CURRENT);
 		}
 	}
 	if(CURRENT->parent){
-		CONSOLE_DEBUG("ending sub-tree");
+		MSG("ending sub-tree, NOT freeing structures");
 		CURRENT = CURRENT->parent;
 	}else{
-		CONSOLE_DEBUG("ending top tree");
+		MSG("ending top tree, freeing structures");
+		error_reporter_tree_print(CURRENT);
+		error_reporter_tree_free(CURRENT);
 		CURRENT = NULL;
 	}
 	return 0;
 }
 
+/** recursive routine to deallocate error_reporter_tree_t structures. */
 static void error_reporter_tree_free(error_reporter_tree_t *t){
+	assert(t);
 	if(t->head){
+		assert(t->err == NULL);
+		MSG("freeing sub-nodes");
 		error_reporter_tree_free(t->head);
+		MSG("done freeing sub-nodes");
+	}
+	if(t->err){
+		MSG("freeing error node ('%s')",t->err->msg);
+		assert(t->head == NULL);
+		assert(t->tail == NULL);
+		ASC_FREE(t->err);
 	}
 	if(t->next){
+		MSG("freeing next node");
 		error_reporter_tree_free(t->next);
 	}
-	if(t->err)ASC_FREE(t->err);
 	ASC_FREE(t);
 }
 
-void error_reporter_tree_clear(){
-	/* recursively free anything beneath the CURRENT node, return to the parent context */
-	error_reporter_tree_t *t1;
-	if(!CURRENT){
-		/* CONSOLE_DEBUG("NOTHING TO CLEAR!"); */
-		return;
-	}
+/** clear all errors nested within the current tree -- they won't be visible
+to any parent trees after this; they never happened. Must be called INSTEAD OF 
+error_reporter_tree_end(). */
+void error_reporter_tree_end_clear(error_reporter_tree_t *tree){
+	assert(CURRENT);
+	assert(tree==CURRENT);
+	error_reporter_tree_t *t1 = NULL, *tp, *tn;
 	if(CURRENT->parent){
+		MSG("ending/clearing sub-tree");
 		t1 = CURRENT->parent;
+		tn = CURRENT->next;
+		tp = CURRENT->prev;
+		assert(tn==NULL); /* actually, we can't imagine a case where tn != NULL */
+		if(tn)tn->prev = tp;
+		if(tp)tp->next = tn;
+		if(t1->head == CURRENT){
+			if(tp)t1->head = tp;
+			else if(tn)t1->head = tn;
+			else t1->head = NULL;
+		}
+		if(t1->tail == CURRENT){
+			if(tn)t1->tail = tn;
+			else if(tp)t1->head = tp;
+			else t1->head = NULL;
+		}
 	}else{
-		t1 = NULL;
+		MSG("ending/clearing top tree");
 	}
 	error_reporter_tree_free(CURRENT);
 	CURRENT = t1;
 }
 
 static int error_reporter_tree_match_sev(error_reporter_tree_t *t, unsigned match){
+	assert(t);
 	if(t->err && (t->err->sev & match)){
-		/* CONSOLE_DEBUG("SEVERITY MATCH FOR t = %p",t); */
+		/* MSG("SEVERITY MATCH FOR t = %p",t); */
 		return 1;
 	}
 	if(t->next && error_reporter_tree_match_sev(t->next, match)){
-		/* CONSOLE_DEBUG("SEVERITY MATCH IN 'next' FOR t = %p",t); */
+		/* MSG("SEVERITY MATCH IN 'next' FOR t = %p",t); */
 		return 1;
 	}
 	if(t->head && error_reporter_tree_match_sev(t->head, match)){
-		/* CONSOLE_DEBUG("SEVERITTY MATCH IN 'head' FOR t = %p",t); */
+		/* MSG("SEVERITTY MATCH IN 'head' FOR t = %p",t); */
 		return 1;
 	}
-	/* CONSOLE_DEBUG("NO MATCH FOR t = %p",t); */
+	/* MSG("NO MATCH FOR t = %p",t); */
 	return 0;
 }
 
@@ -201,23 +271,21 @@ static int error_reporter_tree_match_sev(error_reporter_tree_t *t, unsigned matc
 	traverse the tree, looking for ASC_PROG_ERR, ASC_USER_ERROR, or ASC_PROG_FATAL
 	@return 1 if errors found
 */
-int error_reporter_tree_has_error(){
+int error_reporter_tree_has_error(error_reporter_tree_t *tree){
 	int res;
-	if(CURRENT){
-		res = error_reporter_tree_match_sev(CURRENT,ASC_ERR_ERR);
-		if(res){
-			/* CONSOLE_DEBUG("ERROR(S) FOUND IN CURRENT %p",CURRENT); */
-		}
-		return res;
-	}else{
-		CONSOLE_DEBUG("NO TREE FOUND");
-		return 0;
+	assert(CURRENT);
+	assert(tree==CURRENT);
+	res = error_reporter_tree_match_sev(CURRENT,ASC_ERR_ERR);
+	if(res){
+		MSG("ERROR(S) FOUND IN CURRENT %p",CURRENT);
 	}
+	return res;
 }
 
 static int error_reporter_tree_write(error_reporter_tree_t *t){
 	int res = 0;
 	assert(t != NULL);
+
 	if(t->err){
 		// an a simple node -- just an error
 		assert(t->head == NULL);
@@ -239,13 +307,20 @@ static int error_reporter_tree_write(error_reporter_tree_t *t){
 }
 
 #else /* ERROR_REPORTER_TREE_ACTIVE */
-int error_reporter_tree_start(){
+error_reporter_tree_t *error_reporter_tree_start(int iscaching){
+	(void)iscaching;
 	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Error reporter 'tree' turned off at compile time");
+	return NULL;
+}
+int error_reporter_tree_end(error_reporter_tree_t *tree){
+	assert(tree==NULL);
 	return 0;
 }
-int error_reporter_tree_end(){return 0;}
-void error_reporter_tree_clear(){}
-int error_reporter_tree_has_error(){
+void error_reporter_tree_end_clear(error_reporter_tree_t *tree){
+	assert(tree==NULL);	
+}
+int error_reporter_tree_has_error(error_reporter_tree_t *tree){
+	assert(tree==NULL);
 	ERROR_REPORTER_HERE(ASC_PROG_FATAL,"Attempt to check 'tree_has_error' when 'tree' turned off at compile time");
 	return 0;
 }
@@ -279,22 +354,26 @@ va_error_reporter(
 			t->err->line = errline;
 			t->err->sev = sev;
 			if(!CURRENT->head){
+				// current tree is empty
 				CURRENT->head = CURRENT->tail = t;
+				t->parent = CURRENT;
 			}else{
 				CURRENT->tail->next = t;
+				t->prev = CURRENT->tail;
 				CURRENT->tail = t;
+				t->parent = CURRENT;
 			}
-			CONSOLE_DEBUG("message '%s' added to tree",t->err->msg);
+			MSG("message '%s' added to tree",t->err->msg);
 
 			if(CURRENT->iscaching || error_reporter_tree_has_caching_parent(CURRENT)){
-				CONSOLE_DEBUG("caching; no output");
+				MSG("caching; no output");
 				return res;
 			}
 		}
 	}
 #endif
 
-	CONSOLE_DEBUG("outputting message (format) '%s'",fmt);
+	MSG("outputting message (format) '%s'",fmt);
 
 	error_reporter_callback_t cb = g_error_reporter_callback;
 	if(cb == NULL)cb = error_reporter_default_callback;
@@ -402,7 +481,7 @@ int error_reporter_end_flush(){
 			,g_error_reporter_cache.msg
 		);
 	}else{
-		/* CONSOLE_DEBUG("IGNORING REPEATED CALL TO error_reporter_end_flush()"); */
+		/* MSG("IGNORING REPEATED CALL TO error_reporter_end_flush()"); */
 	}
 	g_error_reporter_cache.iscaching = 0;
 
