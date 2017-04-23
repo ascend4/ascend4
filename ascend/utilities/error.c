@@ -9,7 +9,7 @@
 # include <ascend/general/panic.h>
 #endif
 
-#define ERROR_DEBUG
+//#define ERROR_DEBUG
 #ifdef ERROR_DEBUG
 # define MSG CONSOLE_DEBUG
 #else
@@ -122,11 +122,11 @@ static int error_reporter_tree_has_caching_parent(error_reporter_tree_t *t){
 static void error_reporter_tree_print1(error_reporter_tree_t *t,int level){
 	if(t->head){
 		assert(t->err == NULL);
-		MSG("%*s+%s",level,"",t==CURRENT?" (CURRENT)":"");
+		MSG("%*s+%p%s (head=%p,tail=%p)",2+2*level,"",t,t==CURRENT?" (CURRENT)":"",t->head,t->tail);
 		error_reporter_tree_print1(t->head,level+1);
 	}else{
 		assert(t->err);
-		MSG("%*s-%s:%d: %s",level,"",t->err->filename, t->err->line, t->err->msg);
+		MSG("%*s-%p %s:%d: %s (parent=%p,next=%p)",2+2*level,"",t,t->err->filename, t->err->line, t->err->msg,t->parent,t->next);
 	}
 
 	if(t->next){
@@ -198,6 +198,7 @@ int error_reporter_tree_end(error_reporter_tree_t *tree){
 /** recursive routine to deallocate error_reporter_tree_t structures. */
 static void error_reporter_tree_free(error_reporter_tree_t *t){
 	assert(t);
+	error_reporter_tree_t *n=NULL;
 	if(t->head){
 		assert(t->err == NULL);
 		MSG("freeing sub-nodes");
@@ -205,16 +206,20 @@ static void error_reporter_tree_free(error_reporter_tree_t *t){
 		MSG("done freeing sub-nodes");
 	}
 	if(t->err){
-		MSG("freeing error node ('%s')",t->err->msg);
+		MSG("freeing error metadata ('%s')",t->err->msg);
 		assert(t->head == NULL);
 		assert(t->tail == NULL);
 		ASC_FREE(t->err);
 	}
-	if(t->next){
-		MSG("freeing next node");
-		error_reporter_tree_free(t->next);
-	}
+	if(t->next)n = t->next;
+
+	MSG("freeing node %p%s",t,t==CURRENT?" (CURRENT)":"");
 	ASC_FREE(t);
+
+	if(n){
+		MSG("freeing next node %p",n);
+		error_reporter_tree_free(n);
+	}
 }
 
 /** clear all errors nested within the current tree -- they won't be visible
@@ -225,28 +230,40 @@ void error_reporter_tree_end_clear(error_reporter_tree_t *tree){
 	assert(tree==CURRENT);
 	error_reporter_tree_t *t1 = NULL, *tp, *tn;
 	if(CURRENT->parent){
-		MSG("ending/clearing sub-tree");
+		MSG("ending/clearing sub-tree %p",CURRENT);
+		error_reporter_tree_print(CURRENT);
 		t1 = CURRENT->parent;
 		tn = CURRENT->next;
 		tp = CURRENT->prev;
 		assert(tn==NULL); /* actually, we can't imagine a case where tn != NULL */
-		if(tn)tn->prev = tp;
-		if(tp)tp->next = tn;
+		if(tn){
+			MSG("%p->prev = %p",tn,tp);
+			tn->prev = tp;
+		}
+		if(tp){
+			MSG("%p->next = %p",tp,tn);
+			tp->next = tn;
+		}
 		if(t1->head == CURRENT){
+			MSG("fixing head");
 			if(tp)t1->head = tp;
 			else if(tn)t1->head = tn;
 			else t1->head = NULL;
 		}
 		if(t1->tail == CURRENT){
-			if(tn)t1->tail = tn;
-			else if(tp)t1->head = tp;
-			else t1->head = NULL;
+			MSG("fixing tail");
+			if(tp)t1->tail = tp;
+			else t1->tail = NULL;
 		}
+		MSG("after pruning");
+		error_reporter_tree_print(t1);
 	}else{
 		MSG("ending/clearing top tree");
 	}
 	error_reporter_tree_free(CURRENT);
 	CURRENT = t1;
+	MSG("completed tree_end_clear, new current:");
+	error_reporter_tree_print(CURRENT);
 }
 
 static int error_reporter_tree_match_sev(error_reporter_tree_t *t, unsigned match){
