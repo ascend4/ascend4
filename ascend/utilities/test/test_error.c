@@ -14,15 +14,12 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <stdio.h>
-#define ASC_BUILDING_INTERFACE
+#include <ascend/general/config.h>
 #include <ascend/general/platform.h>
-#ifdef __WIN32__
-#include <io.h>
-#endif
 #include <ascend/utilities/error.h>
-#include <ascend/general/ascMalloc.h>
+
 #include <test/common.h>
+#include "test/assertimpl.h"
 
 //#define TESTERROR_DEBUG
 #ifdef TESTERROR_DEBUG
@@ -100,6 +97,7 @@ static void test_error(void){
 	CU_TEST(sevs[2] == ASC_PROG_ERR);
 
 	CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
+	error_reporter_set_callback(NULL);
 }
 
 static void test_errortree1(void){
@@ -148,6 +146,7 @@ static void test_errortree2(void){
 	CU_TEST(TREECURRENT()==NULL);
 
 	CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
+	error_reporter_set_callback(NULL);
 }
 
 static void test_errortree3(void){
@@ -172,6 +171,7 @@ static void test_errortree3(void){
 	CU_TEST(currmessage == 3);
 
 	CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
+	error_reporter_set_callback(NULL);
 }
 
 static void test_errortree4(void){
@@ -214,6 +214,7 @@ static void test_errortree4(void){
 	CU_TEST(TREECURRENT()==NULL);
 
 	CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
+	error_reporter_set_callback(NULL);
 }
 
 static void test_errortree5(void){
@@ -256,6 +257,7 @@ static void test_errortree5(void){
 	CU_TEST(TREECURRENT()==NULL);
 
 	CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
+	error_reporter_set_callback(NULL);
 }
 
 static void test_errortree6(void){
@@ -300,6 +302,7 @@ static void test_errortree6(void){
 	CU_TEST(TREECURRENT()==NULL);
 
 	CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
+	error_reporter_set_callback(NULL);
 }
 
 static void test_errortree7(void){
@@ -346,6 +349,7 @@ static void test_errortree7(void){
 	CU_TEST(TREECURRENT()==NULL);
 
 	CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
+	error_reporter_set_callback(NULL);
 }
 
 /*===========================================================================*/

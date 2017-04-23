@@ -12,8 +12,10 @@
 //#define ERROR_DEBUG
 #ifdef ERROR_DEBUG
 # define MSG CONSOLE_DEBUG
+# define TREE_PRINT error_reporter_tree_print
 #else
 # define MSG(ARGS...) ((void)0)
+# define TREE_PRINT(ARGS...) ((void)0)
 #endif
 
 
@@ -119,6 +121,7 @@ static int error_reporter_tree_has_caching_parent(error_reporter_tree_t *t){
 	return iscaching;
 }
 
+#ifdef ERROR_DEBUG
 static void error_reporter_tree_print1(error_reporter_tree_t *t,int level){
 	if(t->head){
 		assert(t->err == NULL);
@@ -134,6 +137,7 @@ static void error_reporter_tree_print1(error_reporter_tree_t *t,int level){
 	}
 }
 
+
 static void error_reporter_tree_print(error_reporter_tree_t *t1){
 	if(!t1){
 		MSG("empty tree");
@@ -146,6 +150,7 @@ static void error_reporter_tree_print(error_reporter_tree_t *t1){
 		error_reporter_tree_print1(t1,0);
 	}
 }
+#endif
 
 error_reporter_tree_t *error_reporter_tree_start(int iscaching){
 	error_reporter_tree_t *tnew = error_reporter_tree_new(iscaching);
@@ -188,7 +193,7 @@ int error_reporter_tree_end(error_reporter_tree_t *tree){
 		CURRENT = CURRENT->parent;
 	}else{
 		MSG("ending top tree, freeing structures");
-		error_reporter_tree_print(CURRENT);
+		TREE_PRINT(CURRENT);
 		error_reporter_tree_free(CURRENT);
 		CURRENT = NULL;
 	}
@@ -231,7 +236,7 @@ void error_reporter_tree_end_clear(error_reporter_tree_t *tree){
 	error_reporter_tree_t *t1 = NULL, *tp, *tn;
 	if(CURRENT->parent){
 		MSG("ending/clearing sub-tree %p",CURRENT);
-		error_reporter_tree_print(CURRENT);
+		TREE_PRINT(CURRENT);
 		t1 = CURRENT->parent;
 		tn = CURRENT->next;
 		tp = CURRENT->prev;
@@ -256,14 +261,14 @@ void error_reporter_tree_end_clear(error_reporter_tree_t *tree){
 			else t1->tail = NULL;
 		}
 		MSG("after pruning");
-		error_reporter_tree_print(t1);
+		TREE_PRINT(t1);
 	}else{
 		MSG("ending/clearing top tree");
 	}
 	error_reporter_tree_free(CURRENT);
 	CURRENT = t1;
 	MSG("completed tree_end_clear, new current:");
-	error_reporter_tree_print(CURRENT);
+	TREE_PRINT(CURRENT);
 }
 
 static int error_reporter_tree_match_sev(error_reporter_tree_t *t, unsigned match){
@@ -386,6 +391,8 @@ va_error_reporter(
 				MSG("caching; no output");
 				return res;
 			}
+		}else{
+			MSG("no error tree");
 		}
 	}
 #endif

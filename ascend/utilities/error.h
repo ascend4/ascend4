@@ -53,6 +53,7 @@
 	default 'real' printf behaviour on this platform. (As
 	opposed to the sneaky stuff that FPRINTF does in this header)
 */
+#include <ascend/general/config.h>
 #include <ascend/general/platform.h>
 #include <ascend/utilities/ascPrint.h>
 
