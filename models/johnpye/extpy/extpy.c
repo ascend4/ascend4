@@ -82,7 +82,7 @@ extern ASC_EXPORT int extpy_register(){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to register import handler (error = %d)",result);
 	}
 
-	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Loaded EXPERIMENTAL 'extpy' import handler.");
+	ERROR_REPORTER_HERE(ASC_USER_WARNING,"'extpy' import handler is still EXPERIMENTAL.");
 
 	return result;
 }
