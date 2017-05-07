@@ -59,7 +59,13 @@ for t in tests:
 	F1 = 'mycov-%s-1.info' % (t,)
 	subprocess.check_call([LCOV,'-r',F,'*stdout*','-o',F1],stdout=DEVNULL)
 
-subprocess.check_call([GENHTML,'-b',F_BASELINE,'-p',PREFIX] + ['mycov-%s-1.info'%(t,) for t in tests] + ['-o','lcov-html'])
+subprocess.check_call([GENHTML
+		,'-b',F_BASELINE
+		,'-p',PREFIX
+		,'-o','lcov-html'
+		,'-t','ASCEND - CUnit test coverage'
+	] + ['mycov-%s-1.info'%(t,) for t in tests]
+)
 
 os.chdir(ORIG)
 
