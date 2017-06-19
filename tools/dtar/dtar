@@ -216,7 +216,7 @@ depsmissing = []
 depre = re.compile(r"^(\S+)(\s*\(\s*([<>=]+\s*\S+)\))?$") # \s*\(\s*({<<|<=|=|>=|>>})\s*([^\)]+)\)\s*\[([^\]])\]$
 import apt_pkg
 for d in dependencies:
-	mm = apt_pkg.ParseDepends(d)[0]
+	mm = apt_pkg.parse_depends(d)[0]
 	ok = 0
 	for m in mm:
 		try:
@@ -224,13 +224,13 @@ for d in dependencies:
 		except KeyError:
 			continue
 
-		if not i.isInstalled:
+		if not i.is_installed:
 			# if it's not installed, it's not OK
 			continue
 
 		if m[1] and m[2]:
 			# if version number is specified
-			cmp = apt_pkg.VersionCompare(c[m[0]].installed.version,m[1])
+			cmp = apt_pkg.version_compare(c[m[0]].installed.version,m[1])
 			if m[2]=="<<" and cmp<0:
 				ok = 1
 			elif m[2]=="<=" and cmp<=0:
