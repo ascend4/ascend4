@@ -28,6 +28,7 @@
 	T(hashpjw) \
 	T(list) \
 	T(listio) \
+	T(pairlist) \
 	T(mem) \
 	T(pool) \
 	T(pretty) \

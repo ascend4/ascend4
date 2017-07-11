@@ -187,7 +187,7 @@ ASC_DLLSPEC int relman_diff2_rev(struct rel_relation *rel,
 
 ASC_DLLSPEC int relman_hess(struct rel_relation *rel,
 							const var_filter_t *filter,
-							hessian_mtx *hess_matrix,
+							ltmatrix *hess_matrix,
 							int32 *count,
 							unsigned long max_dimension,
 							int32 safe);

@@ -16,6 +16,7 @@ tests = {
 	'general':[
 		'general_color','general_dstring','general_hashpjw'
 		,'general_list','general_listio','general_mem','general_pool'
+		,'general_pairlist'
 		,'general_pretty','general_stack','general_table','general_tm_time'
 		,'general_ospath','general_env','general_ltmatrix','general_ascMalloc'
 	],'utilities':[

@@ -691,6 +691,8 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 	return fp1;
 }
 
+#if 0
+// this function not yet in use
 struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned depth)
 {
 	int startslash;
@@ -753,6 +755,7 @@ struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned depth)
 	return ospath_new_noclean(temp);
 #endif
 }
+#endif
 
 char *ospath_getbasefilename(struct FilePath *fp){
 	char *temp;
@@ -869,6 +872,8 @@ int ospath_isroot(struct FilePath *fp)
 	return strcmp(fp->path, PATH_SEPARATOR_STR) ? 0 : 1;
 }
 
+#if 0
+// disused, so far
 unsigned ospath_depth(struct FilePath *fp){
 	unsigned length;
 	unsigned depth;
@@ -894,6 +899,7 @@ unsigned ospath_depth(struct FilePath *fp){
 
 	return depth;
 }
+#endif
 
 struct FilePath *ospath_root(struct FilePath *fp){
 #ifdef WINPATHS

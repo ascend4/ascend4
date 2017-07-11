@@ -1580,7 +1580,7 @@ static int AccumulateDeriv2ndSafe(Element *trace,double *deriv2nd,unsigned long 
 
 
 int RelationEvaluateHessianMtx(CONST struct relation *r,
-							   	hessian_mtx *hess_mtx,
+							   	ltmatrix *hess_mtx,
 		  						unsigned long dimension)
 {
 	Element* hess_tape;
@@ -1603,7 +1603,7 @@ int RelationEvaluateHessianMtx(CONST struct relation *r,
 			for which indices accumulation should occur in 
 			AccumulateDeriv2nd	
 		*/
-		row_pointer = Hessian_Mtx_get_row_pointer(hess_mtx,i);
+		row_pointer = ltmatrix_get_row_pointer(hess_mtx,i);
 		RelationEvaluateSecondDeriv(r,row_pointer,i,1,hess_tape); //FIXME works currently only for LT. Refer TODO above
 	}
 	
@@ -1619,7 +1619,7 @@ int RelationEvaluateHessianMtx(CONST struct relation *r,
 }
 
 int RelationEvaluateHessianMtxSafe(CONST struct relation *r,
-								   	hessian_mtx *hess_mtx,
+								   	ltmatrix *hess_mtx,
 		   							unsigned long dimension,
 	 								enum safe_err *serr)
 {
@@ -1645,7 +1645,7 @@ int RelationEvaluateHessianMtxSafe(CONST struct relation *r,
 			for which indices accumulation should occur in 
 			AccumulateDeriv2nd	
 		*/
-		row_pointer = Hessian_Mtx_get_row_pointer(hess_mtx,i);
+		row_pointer = ltmatrix_get_row_pointer(hess_mtx,i);
 		RelationEvaluateSecondDerivSafe(r,row_pointer,i,1,hess_tape,serr); //FIXME works currently only for LT. Refer TODO above
 	}
 	
