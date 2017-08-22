@@ -114,6 +114,9 @@ public:
 %template(SetString) ASCXX_Set<SymChar>;
 %template(DoubleVector) std::vector<double>;
 %template(IntVector) std::vector<int>;
+
+%ignore std::vector<Curve>::vector(size_type);
+%ignore std::vector<Curve>::resize;
 %template(CurveVector) std::vector<Curve>;
 %template(StringVector) std::vector<std::string>;
 %template(IntStringMap) std::map<int,std::string>;
