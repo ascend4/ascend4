@@ -148,7 +148,7 @@ Type::getSimulation(const SymChar &sym
 
 #if 1
 	/* removing the following line causes a crash on Windows 7 */
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Starting tree...\n");
+	//ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Starting tree...\n");
 	error_reporter_tree_t *tree1 = error_reporter_tree_start(0);
 	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Started tree\n"); */
 #endif
@@ -168,9 +168,9 @@ Type::getSimulation(const SymChar &sym
 		stringstream ss;
 		ss << "Error(s) during instantiation of type '" << getName() << "'";
 		throw runtime_error(ss.str());
-	}else{
+	}/*else{
 		ERROR_REPORTER_HERE(ASC_USER_NOTE,"Instantiated %s",SCP(getInternalType()->name));
-	}
+	}*/
 #endif
 
 #if 1
