@@ -61,9 +61,9 @@
 */
 
 /* see slv_stdcalls.h */
-int slv_make_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
-                               var_filter_t *vf,rel_filter_t *rf)
-{
+int slv_make_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx
+	,var_filter_t *vf,rel_filter_t *rf
+){
 #if MIMDEBUG
   FILE *fp;
 #endif
@@ -97,8 +97,9 @@ int slv_make_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
   return 0;
 }
 
+
 void slv_sort_rels_and_vars(slv_system_t sys
-		,int32 *rel_count, int32 *var_count
+	,int32 *rel_count, int32 *var_count
 ){
   struct rel_relation **rp, **rtmp, *rel;
   struct var_variable **vp, **vtmp, *var;
@@ -210,25 +211,25 @@ void slv_sort_rels_and_vars(slv_system_t sys
   return;
 }
 
+
 /*------------------------------------------------------------------------------
   QUERYING AND ENFORCING BOUNDS
 */
 
-int slv_ensure_bounds(slv_system_t sys,int32 lo,int32 hi, FILE *mif)
-{
+int slv_ensure_bounds(slv_system_t sys,int32 lo,int32 hi, FILE *mif){
   real64 val,low,high;
   int32 c,nchange=0;
   struct var_variable *var, **vp;
 
   vp = slv_get_solvers_var_list(sys);
-  if (vp==NULL) return -1;
-  for (c= lo; c <= hi; c++) {
+  if(vp==NULL) return -1;
+  for(c= lo; c <= hi; c++){
     var = vp[c];
     low = var_lower_bound(var);
     high = var_upper_bound(var);
     val = var_value(var);
-    if( low > high ) {
-      if (mif!=NULL) {
+    if(low > high) {
+      if(mif!=NULL) {
 		ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
         FPRINTF(ASCERR,"Bounds for variable '");
         var_write_name(sys,var,ASCERR);
@@ -243,22 +244,22 @@ int slv_ensure_bounds(slv_system_t sys,int32 lo,int32 hi, FILE *mif)
       nchange++;
     }
 
-    if( low > val ) {
-      if (mif!=NULL) {
-		ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
+    if(low > val){
+      if(mif!=NULL){
+		ERROR_REPORTER_START_NOLINE(ASC_USER_WARNING);
         FPRINTF(ASCERR,"Variable '");
         var_write_name(sys,var,ASCERR);
-        FPRINTF(ASCERR,"' was set below its lower bound. It will be moved to its lower bound.");
+        FPRINTF(ASCERR,"' was set below its lower bound. It will be moved from %e to its lower bound %e.",val,low);
 		error_reporter_end_flush();
       }
       var_set_value(var, low);
-    } else {
-      if( val > high ) {
-        if (mif!=NULL) {
+    }else{
+      if(val > high){
+        if(mif!=NULL){
           ERROR_REPORTER_START_NOLINE(ASC_USER_WARNING);
           FPRINTF(ASCERR,"Variable '");
           var_write_name(sys,var,ASCERR);
-          FPRINTF(ASCERR,"' was set above its upper bound. It will be moved to its upper bound.");
+          FPRINTF(ASCERR,"' was set above its upper bound. It will be moved from %e to its upper bound %e.",val,high);
 		  error_reporter_end_flush();
         }
         var_set_value(var, high);
@@ -269,12 +270,11 @@ int slv_ensure_bounds(slv_system_t sys,int32 lo,int32 hi, FILE *mif)
   return nchange;
 }
 
+
 /* return 0 on success (ie bounds are met) */
 int slv_check_bounds(const slv_system_t sys
-	, int32 lo,int32 hi
-	, const char *label
+	,int32 lo,int32 hi, const char *label
 ){
-
   real64 val,low,high;
   int32 c,len;
   struct var_variable *var, **vp;
@@ -327,6 +327,7 @@ int slv_check_bounds(const slv_system_t sys
   return err;
 }
 
+
 /*------------------------------------------------------------------------------
   OUTPUT ASSIGNMENT AND PARTITIONG IN LOGICAL RELATIONS
 */
@@ -339,9 +340,9 @@ int slv_check_bounds(const slv_system_t sys
  *                        slv_get_num_solvers_dvars(sys));
  * returns 0 if went ok.
  */
-int slv_make_log_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
-                                   dis_filter_t *dvf,logrel_filter_t *lrf)
-{
+int slv_make_log_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx
+	,dis_filter_t *dvf,logrel_filter_t *lrf
+){
 #if MLIMDEBUG
   FILE *fp;
 #endif
@@ -385,9 +386,9 @@ int slv_make_log_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
  * only these dvars should appear in the same org column range of
  * the mtx. This should not be called on blocks less than 3x3.
  */
-static int reindex_dvars_from_mtx(slv_system_t sys, int32 lo, int32 hi,
-                                  const mtx_matrix_t mtx)
-{
+static int reindex_dvars_from_mtx(slv_system_t sys, int32 lo, int32 hi
+	,const mtx_matrix_t mtx
+){
   struct dis_discrete **dvtmp, **dvp;
   int32 c,v,vlen;
 
@@ -413,7 +414,8 @@ static int reindex_dvars_from_mtx(slv_system_t sys, int32 lo, int32 hi,
   return 0;
 }
 
-/* returns 0 if successful, 1 if insufficient memory. Does not change
+
+/** returns 0 if successful, 1 if insufficient memory. Does not change
  * the data in mtx. Orders the solvers_logrel list of the system to
  * match the permutation on the given mtx. It is assumed that
  * the org rows of mtx == logrel list position. Only the
@@ -421,9 +423,9 @@ static int reindex_dvars_from_mtx(slv_system_t sys, int32 lo, int32 hi,
  * only these logrels should appear in the same org row range of
  * the input mtx. This should not be called on blocks less than 3x3.
  */
-static int reindex_logrels_from_mtx(slv_system_t sys, int32 lo, int32 hi,
-                                    const mtx_matrix_t mtx)
-{
+static int reindex_logrels_from_mtx(slv_system_t sys
+	,int32 lo, int32 hi,const mtx_matrix_t mtx
+){
   struct logrel_relation **lrtmp, **lrp;
   int32 c,v,rlen;
 

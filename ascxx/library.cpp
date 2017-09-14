@@ -40,10 +40,17 @@ extern "C"{
 #include "simulation.h"
 #include "solver.h"
 
+//#define ASCXX_LIBRARY_DEBUG
+#ifdef ASCXX_LIBRARY_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 Library::Library(const char *defaultpath){
 	static int have_init;
 	if(!have_init){
-		//cerr << "Initialising ASCEND library..." << endl;
+		MSG("Initialising ASCEND library...");
 
 #ifdef REIMPLEMENT_STREAMS
 		Asc_RedirectCompilerDefault(); // Ensure that error message reach stderr
@@ -71,9 +78,7 @@ Library::Library(const char *defaultpath){
 		//cerr << "Created LIBRARY" << endl;
 		//cerr << "Registering solvers..." << endl;
 		registerStandardSolvers();
-	}/*else{
-		CONSOLE_DEBUG("Reusing LIBRARY");
-	}*/
+	}
 	have_init=1;
 }
 
@@ -110,11 +115,13 @@ Library::load(const char *filename){
 
 	if(status<0 || status>0){
 		throw std::runtime_error(msg1);
+#ifdef ASCXX_LIBRARY_DEBUG
 	}else{
-		std::cerr << "Note: Module " << Asc_ModuleName(m) << ": " << msg1 << std::endl;
+		MSG(msg1,Asc_ModuleName(m));
+#endif
 	}
 
-	//CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
+	MSG("Beginning parse of %s",Asc_ModuleName(m));
 	error_reporter_tree_t *tree1 = error_reporter_tree_start(0);
 	status = zz_parse();
 	switch(status){
@@ -134,8 +141,10 @@ Library::load(const char *filename){
 		throw runtime_error(ss.str());
 	}
 
-	//struct gl_list_t *l = Asc_TypeByModule(m);
-	//CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l), filename);
+#ifdef ASCXX_LIBRARY_DEBUG
+	struct gl_list_t *l = Asc_TypeByModule(m);
+	MSG("%lu library entries loaded from %s",gl_length(l), filename);
+#endif
 }
 
 /**
@@ -162,7 +171,7 @@ Library::loadString(const char *str, const char *nameprefix){
 		std::cerr << "Note: Module " << Asc_ModuleName(m) << ": " << msg1 << std::endl;
 	}
 
-	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
+	MSG("Beginning parse of %s",Asc_ModuleName(m));
 #ifdef LOADSTRING_ERROR_TREE
 	error_reporter_tree_t *tree1 = error_reporter_tree_start(0);
 #endif
@@ -176,9 +185,9 @@ Library::loadString(const char *str, const char *nameprefix){
 #ifdef LOADSTRING_ERROR_TREE
 	status = error_reporter_tree_has_error(tree1);
 	if(!status){
-		CONSOLE_DEBUG("CLEARING TREE...");
+		MSG("CLEARING TREE...");
 		error_reporter_tree_end_clear(tree1);
-		CONSOLE_DEBUG("DONE CLEARING TREE...");
+		MSG("DONE CLEARING TREE...");
 	}else{
 		error_reporter_tree_end(tree1);
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Error(s) when loading '%s'",nameprefix);
@@ -189,7 +198,7 @@ Library::loadString(const char *str, const char *nameprefix){
 #endif
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
-	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l), nameprefix);
+	MSG("%lu library entries loaded from %s",gl_length(l), nameprefix);
 }
 
 const char *
@@ -239,7 +248,7 @@ Library::getModules(const int module_type){
 	vector<Module> v;
 	struct gl_list_t *l = Asc_ModuleList(module_type);
 	if(l==NULL){
-		CONSOLE_DEBUG("list is empty");
+		MSG("list is empty");
 		return v;
 	}
 	for(int i=0, end=gl_length(l); i<end; ++i){
@@ -320,7 +329,7 @@ Library::getModuleTypes(const Module &m){
 
 	for(int i=0,end=gl_length(l); i<end; ++i){
 		char *name = (char *)gl_fetch(l,i+1);
-		//CONSOLE_DEBUG("Found type %s",name);
+		MSG("Found type %s",name);
 		TypeDescription *t = FindType((const symchar *)name);
 		v.push_back(Type(t));
 	}
@@ -378,13 +387,13 @@ Library::clear(){
 	\*SetUniversalProcedureList(NULL);
 */
 
-	//CONSOLE_DEBUG("Displaying library modules and types...");
+	MSG("Displaying library modules and types...");
 	//listModules();
 
-	CONSOLE_DEBUG("Destroying simulations...");
+	MSG("Destroying simulations...");
 	Asc_DestroySimulations();
 
-	CONSOLE_DEBUG("Clearing library...");
+	MSG("Clearing library...");
 	DestroyNotesDatabase(LibraryNote());
 	SetUniversalProcedureList(NULL);
 	DestroyLibrary();

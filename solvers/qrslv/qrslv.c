@@ -2450,7 +2450,6 @@ static void move_to_next_block( qrslv_system_t sys){
 
   if(sys->s.block.current_block >= 0 ) {
 
-
     /* Record cost accounting info here. */
     ci=sys->s.block.current_block;
     sys->s.cost[ci].size	=	sys->s.block.current_size;
@@ -2523,9 +2522,8 @@ static void move_to_next_block( qrslv_system_t sys){
     }
     sys->s.calc_ok = sys->s.calc_ok && ok;
 
-    if(!(sys->p.ignore_bounds) ) {
-      slv_ensure_bounds(SERVER, sys->J.reg.col.low,
-                        sys->J.reg.col.high,MIF(sys));
+    if(!(sys->p.ignore_bounds)){
+      slv_ensure_bounds(SERVER,sys->J.reg.col.low,sys->J.reg.col.high,MIF(sys));
     }
 
     sys->residuals.accurate = FALSE;
