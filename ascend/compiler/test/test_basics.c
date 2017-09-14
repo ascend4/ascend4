@@ -487,6 +487,33 @@ static void test_type_info(void){
 }
 
 
+
+/*
+	Junk pointer in errors from parser "Rejected 'model2'"...
+*/
+static void test_badalias(void){
+	/*struct module_t *m;*/
+	int status;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/* load the file */
+#define TESTFILE "badalias"
+	/*m =*/ Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
+	CU_ASSERT(status == 0);
+
+	/* parse it */
+	CU_ASSERT(0 == zz_parse());
+
+	/* check that 'badalias' model was rejected */
+	CU_ASSERT(FindType(AddSymbol(TESTFILE))==NULL);
+
+	Asc_CompilerDestroy();
+#undef TESTFILE
+}
+
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -504,7 +531,8 @@ static void test_type_info(void){
 	T(stop) \
 	T(stoponfailedassert) \
 	T(badassign) \
-	T(type_info)
+	T(type_info) \
+	T(badalias)
 
 REGISTER_TESTS_SIMPLE(compiler_basics, TESTS)
 
