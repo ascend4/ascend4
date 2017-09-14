@@ -82,6 +82,14 @@
 #include <ascend/compiler/exprio.h>
 #endif /* for CommaExpr if working. */
 
+#define ASCPARSE_DEBUG
+#ifdef ASCPARSE_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
+
 int g_compiler_warnings = 1;		/* level of whine to allow */
 
 #include <ascend/compiler/redirectFile.h>
@@ -532,8 +540,8 @@ import:
 	    error_reporter_current_line(ASC_USER_ERROR
 	      ,"IMPORT of '%s' from '%s'."
 	      ,SCP($4), SCP($2)
-	    );
-      }
+            );
+          }
 	}
 	| IMPORT_TOK DQUOTE_TOK ';'
 	{
@@ -2880,8 +2888,8 @@ static void ErrMsg_CommaExpr(CONST char *what, struct Expr *eptr)
 #endif /* COMMAEXPR_NOTBUGGY. delete if can't fix */
 
 static void
-ErrMsg_NullDefPointer(CONST char *object)
-{
+ErrMsg_NullDefPointer(CONST char *object){
+  MSG("Rejecting '%s'",object);
   error_reporter_current_line(ASC_USER_ERROR,"Rejected '%s'", object);
 }
 
@@ -3016,6 +3024,7 @@ static void CollectNote(struct Note *n)
 	severity flags.
 */
 static void error_reporter_current_line(const error_severity_t sev, const char *fmt,...){
+	MSG("format = %s",fmt);
 	va_list args;
 	va_start(args,fmt);
 	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),NULL,fmt,args);

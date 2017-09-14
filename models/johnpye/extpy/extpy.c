@@ -179,6 +179,8 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 		}
 		MSG("errtypestring = \"%s\"",PyString_AsString(errtypestring));
 
+		MSG("errtypestring = \"%s\"",PyString_AsString(errtypestring));
+
 		errstring = NULL;
 		if(perrvalue != NULL
 			&& (errstring = PyObject_Str(perrvalue)) != NULL
@@ -188,7 +190,7 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 			error_reporter(ASC_PROG_ERR
 				,extpydata->name,0
 				,PyString_AsString(errtypestring)
-				,"%s",PyString_AsString(errstring)
+				,"Error in extpy call: %s",PyString_AsString(errstring)
 			);
 		}else{
 			error_reporter(ASC_PROG_ERR,extpydata->name,0,extpydata->name,"(unknown python error)");

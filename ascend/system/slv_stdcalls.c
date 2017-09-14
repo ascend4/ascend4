@@ -137,9 +137,11 @@ void slv_sort_rels_and_vars(slv_system_t sys
   vf.matchvalue = (VAR_INCIDENT | VAR_SVAR | VAR_ACTIVE);
 
   /* count rows and cols */
+#if 0
   nrow = slv_count_solvers_rels(sys,&rf);
   ncol = slv_count_solvers_vars(sys,&vf);
-
+  (void)ncol; (void)nrow;
+#endif
 
   /* Sort out unincluded and inactive rels to
    * the end of the temporary relation list.

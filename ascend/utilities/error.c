@@ -359,7 +359,7 @@ va_error_reporter(
     , const int errline
     , const char *errfunc
     , const char *fmt
-    , va_list args
+    , va_list *args
 ){
 	int res = 0;
 
@@ -370,7 +370,7 @@ va_error_reporter(
 			/* add the error to the tree, don't output anything now */
 			t = error_reporter_tree_new(0);
 			t->err = error_reporter_meta_new();
-			res = vsnprintf(t->err->msg,ERROR_REPORTER_MAX_MSG,fmt,args);
+			res = vsnprintf(t->err->msg,ERROR_REPORTER_MAX_MSG,fmt,*args);
 			t->err->filename = errfile;
 			t->err->func = errfunc;
 			t->err->line = errline;
@@ -411,7 +411,7 @@ va_error_reporter(
   DROP-IN replacements for stdio.h / ascPrint.h
 */
 
-int vfprintf_error_reporter(FILE *file, const char *fmt, va_list args){
+int vfprintf_error_reporter(FILE *file, const char *fmt, va_list *args){
 	char *msg;
 	int len;
 	int res;
@@ -419,7 +419,7 @@ int vfprintf_error_reporter(FILE *file, const char *fmt, va_list args){
 		if(g_error_reporter_cache.iscaching){
 			msg = g_error_reporter_cache.msg;
 			len = strlen(msg);
-			res = vsnprintf(msg+len,ERROR_REPORTER_MAX_MSG-len,fmt,args);
+			res = vsnprintf(msg+len,ERROR_REPORTER_MAX_MSG-len,fmt,*args);
 			if(len+res+1>=ERROR_REPORTER_MAX_MSG){
 				SNPRINTF(msg+ERROR_REPORTER_MAX_MSG-16,15,"... (truncated)");
 				ASC_FPRINTF(stderr,"TRUNCATED MESSAGE, FULL MESSAGE FOLLOWS:\n----------START----------\n");
@@ -428,10 +428,10 @@ int vfprintf_error_reporter(FILE *file, const char *fmt, va_list args){
 			}
 		}else{
 			/* Not caching: output all in one go as a ASC_PROG_NOTE */
-			res = va_error_reporter(ASC_PROG_NOTE,NULL,0,NULL,fmt,args);
+			res = va_error_reporter(ASC_PROG_NOTE,NULL,0,NULL,fmt,*args);
 		}
 	}else{
-		res = ASC_VFPRINTF(file,fmt,args);
+		res = ASC_VFPRINTF(file,fmt,*args);
 	}
 	return res;
 }
@@ -445,7 +445,7 @@ fprintf_error_reporter(FILE *file, const char *fmt, ...){
 	int res;
 
 	va_start(args,fmt);
-	res = vfprintf_error_reporter(file,fmt,args);
+	res = vfprintf_error_reporter(file,fmt,&args);
 	va_end(args);
 
 	return res;
@@ -528,7 +528,7 @@ error_reporter(
 	va_list args;
 
 	va_start(args,fmt);
-	res = va_error_reporter(sev,errfile,errline,errfunc,fmt,args);
+	res = va_error_reporter(sev,errfile,errline,errfunc,fmt,&args);
 	va_end(args);
 
 	return res;
@@ -557,7 +557,7 @@ int error_reporter_note_no_line(const char *fmt,...){
 	va_list args;
 
 	va_start(args,fmt);
-	res = va_error_reporter(ASC_PROG_NOTE,"unknown-file",0,NULL,fmt,args);
+	res = va_error_reporter(ASC_PROG_NOTE,"unknown-file",0,NULL,fmt,&args);
 	va_end(args);
 
 	return res;
@@ -569,7 +569,7 @@ ASC_DLLSPEC int error_reporter_here(const error_severity_t sev, const char *fmt,
 	va_list args;
 
 	va_start(args,fmt);
-	res = va_error_reporter(sev,"unknown-file",0,NULL,fmt,args);
+	res = va_error_reporter(sev,"unknown-file",0,NULL,fmt,&args);
 	va_end(args);
 
 	return res;
@@ -581,7 +581,7 @@ int error_reporter_noline(const error_severity_t sev, const char *fmt,...){
 	va_list args;
 
 	va_start(args,fmt);
-	res = va_error_reporter(sev,NULL,0,NULL,fmt,args);
+	res = va_error_reporter(sev,NULL,0,NULL,fmt,&args);
 	va_end(args);
 
 	return res;
