@@ -82,7 +82,7 @@
 #include <ascend/compiler/exprio.h>
 #endif /* for CommaExpr if working. */
 
-#define ASCPARSE_DEBUG
+//#define ASCPARSE_DEBUG
 #ifdef ASCPARSE_DEBUG
 # define MSG CONSOLE_DEBUG
 #else
@@ -95,6 +95,13 @@ int g_compiler_warnings = 1;		/* level of whine to allow */
 #include <ascend/compiler/redirectFile.h>
 #ifndef ASCERR
 # error "ASCERR not defined"
+#endif
+
+//#define ASCPARSE_DEBUG
+#ifdef ASCPARSE_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
 #endif
 
 extern int zz_error(char *);
@@ -2808,6 +2815,7 @@ int
 zz_error(char *s){
   g_untrapped_error++;
   if (Asc_CurrentModule() != NULL) {
+    MSG("message string '%s'",s);
     error_reporter_current_line(ASC_USER_ERROR,"%s",s);
   } else {
     error_reporter(ASC_USER_ERROR,NULL,0,NULL,"%s at end of input.",s);
@@ -2843,7 +2851,9 @@ Asc_ErrMsgTypeDefnEOF(void)
 static void ErrMsg_Generic(CONST char *string){
 	static int errcount=0;
 	if(errcount<30){ 
+		char *s1 = strdup(string);
 		/* the module may have be already closed, Asc_CurrentModule will be null */
+		MSG("generic message, '%s'",string);
 		error_reporter_current_line(ASC_USER_ERROR,"%s",string);
 
 		if (g_type_name != NULL) {
@@ -2859,6 +2869,7 @@ static void ErrMsg_Generic(CONST char *string){
 				,"Further reports of this error will be suppressed.\n"
 			);
 		}
+		ASC_FREE(s1);
 	}
 }
 
@@ -2890,6 +2901,7 @@ static void ErrMsg_CommaExpr(CONST char *what, struct Expr *eptr)
 static void
 ErrMsg_NullDefPointer(CONST char *object){
   MSG("Rejecting '%s'",object);
+  MSG("About to reject '%s'",object);
   error_reporter_current_line(ASC_USER_ERROR,"Rejected '%s'", object);
 }
 

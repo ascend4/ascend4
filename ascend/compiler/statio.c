@@ -53,6 +53,13 @@
 #include "instance_enum.h"
 #include "cmpfunc.h"
 
+//#define STATIO_DEBUG
+#ifdef STATIO_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 static int g_show_statement_detail = 1;
 /* global to control display detail. It's default value 1 means
  * print the expression with relations. On occasion this is burdensome
@@ -720,10 +727,11 @@ void WriteStatementErrorMessage(
 			sev = ASC_PROG_ERR;
   }			
 
-	ASC_FPRINTF(ASCERR,"%s:%d: %s\n",filename,line,message);
-	error_reporter(sev,filename,line,"%s\n",message);
+  //ASC_FPRINTF(ASCERR,"%s:%d: %s\n",filename,line,message);
+  MSG("reporting: %s:%d: %s",filename,line,message);
   error_reporter_start(sev,filename,line,NULL);
-  ASC_FPRINTF(ASCERR,"%s\n",message);
+  //error_reporter(sev,filename,line,NULL,message);
+  FPRINTF(ASCERR,"%s\n",message);
 
   if(stat!=NULL){
     /* write some more detail */
@@ -735,32 +743,32 @@ void WriteStatementErrorMessage(
       WriteForTable(ASCERR,GetEvaluationForTable());
     }
   }else{
-    ASC_FPRINTF(ASCERR,"NULL STATEMENT!");
+    FPRINTF(ASCERR,"NULL STATEMENT!");
   }
 
   error_reporter_end_flush();
-  //CONSOLE_DEBUG("%s",message);
+  //MSG("%s",message);
   //WriteStatementLocation(ASCERR,stat);
 }
 
 void WriteStatementLocation(FILE *f, CONST struct Statement *stat){
-	//CONSOLE_DEBUG("writing...");
+	MSG("writing...");
 	const char *filename=NULL;
 	int line=0;
 
 	if(stat==NULL){
-		//CONSOLE_DEBUG("STATEMENT POINTER IS NULL");
-		ASC_FPRINTF(f,"NULL STATEMENT!");
+		MSG("STATEMENT POINTER IS NULL");
+		FPRINTF(f,"NULL STATEMENT!");
 		return;
 	}
-	//CONSOLE_DEBUG("...");
+	MSG("...");
 
 	filename=Asc_ModuleBestName(StatementModule(stat));
 	line=StatementLineNum(stat);
 
 	/* write some more detail */
-	ASC_FPRINTF(f,"%s:%d",filename,line);
-	//CONSOLE_DEBUG("%s:%d",filename,line);
+	FPRINTF(f,"%s:%d",filename,line);
+	MSG("%s:%d",filename,line);
 }
 
 

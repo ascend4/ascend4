@@ -57,11 +57,19 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 	color_on(ASCERR,color);
 	res = ASC_FPRINTF(ASCERR,"%s",sevmsg);
 	color_off(ASCERR);
-	if(filename!=NULL)res += ASC_FPRINTF(ASCERR,"%s:",filename);
+	if(filename!=NULL){
+		//MSG("filename = '%s'",filename);
+		res += ASC_FPRINTF(ASCERR,"%s:",filename);
+	}
 	if(line!=0)res += ASC_FPRINTF(ASCERR,"%d:",line);
-	if(funcname!=NULL)res += ASC_FPRINTF(ASCERR,"%s:",funcname);
+	if(funcname!=NULL){
+		//MSG("funcname = '%s'",funcname);
+		res += ASC_FPRINTF(ASCERR,"%s:",funcname);
+	}else{
+		//MSG("funcname NULL");
+	}
 	if ((filename!=NULL) || (line!=0) || (funcname!=NULL))res += ASC_FPRINTF(ASCERR," ");
-	res += ASC_VFPRINTF(ASCERR,fmt,args);
+	res += ASC_VFPRINTF(ASCERR,fmt,*args);
 	res += ASC_FPRINTF(ASCERR,"%s",endtxt);
 	return res;
 }
@@ -362,15 +370,26 @@ va_error_reporter(
     , va_list *args
 ){
 	int res = 0;
+	va_list args2;
+
+	error_reporter_callback_t cb = g_error_reporter_callback;
+	if(cb == NULL){
+		//MSG("using default error reporter callback, errfunc = '%s'",errfunc);
+		cb = error_reporter_default_callback;
+	}
 
 #ifdef ERROR_REPORTER_TREE_ACTIVE
 	error_reporter_tree_t *t;
 	if(sev != ASC_PROG_FATAL){
 		if(CURRENT){
+			va_copy(args2,*args);
+
+			MSG("adding to tree");
 			/* add the error to the tree, don't output anything now */
 			t = error_reporter_tree_new(0);
 			t->err = error_reporter_meta_new();
-			res = vsnprintf(t->err->msg,ERROR_REPORTER_MAX_MSG,fmt,*args);
+			vsnprintf(t->err->msg,ERROR_REPORTER_MAX_MSG,fmt,*args);
+			MSG("t->err->msg = \"%s\"",t->err->msg);
 			t->err->filename = errfile;
 			t->err->func = errfunc;
 			t->err->line = errline;
@@ -386,25 +405,26 @@ va_error_reporter(
 				t->parent = CURRENT;
 			}
 			MSG("message '%s' added to tree",t->err->msg);
+			//MSG("message has errfunc '%s'",t->err->func);
 
 			if(CURRENT->iscaching || error_reporter_tree_has_caching_parent(CURRENT)){
 				MSG("caching; no output");
 				return res;
+			}else{
+				MSG("non-caching; outputting again directly");
+				res = (*cb)(sev,errfile,errline,errfunc,fmt,&args2);
+				MSG("res = %d",res);
+				return res;
 			}
 		}else{
-			MSG("no error tree");
+			MSG("no error tree; direct output");
+			return (*cb)(sev,errfile,errline,errfunc,fmt,args);
 		}
 	}
 #endif
 
-	MSG("outputting message (format) '%s'",fmt);
-
-	error_reporter_callback_t cb = g_error_reporter_callback;
-	if(cb == NULL)cb = error_reporter_default_callback;
-
-	res += (*cb)(sev,errfile,errline,errfunc,fmt,args);
-
-	return res;
+	MSG("fatal error message format = '%s'",fmt);
+	return (*cb)(sev,errfile,errline,errfunc,fmt,args);
 }
 
 /*----------------------------
@@ -419,18 +439,21 @@ int vfprintf_error_reporter(FILE *file, const char *fmt, va_list *args){
 		if(g_error_reporter_cache.iscaching){
 			msg = g_error_reporter_cache.msg;
 			len = strlen(msg);
+			MSG("Printing msg to string, fmt = \"%s\"",fmt);
 			res = vsnprintf(msg+len,ERROR_REPORTER_MAX_MSG-len,fmt,*args);
 			if(len+res+1>=ERROR_REPORTER_MAX_MSG){
 				SNPRINTF(msg+ERROR_REPORTER_MAX_MSG-16,15,"... (truncated)");
 				ASC_FPRINTF(stderr,"TRUNCATED MESSAGE, FULL MESSAGE FOLLOWS:\n----------START----------\n");
-				ASC_VFPRINTF(stderr,fmt,args);
+				ASC_VFPRINTF(stderr,fmt,*args);
 				ASC_FPRINTF(stderr,"\n-----------END----------\n");
 			}
 		}else{
+			MSG("Reporting msg directly, fmt = \"%s\"",fmt);
 			/* Not caching: output all in one go as a ASC_PROG_NOTE */
-			res = va_error_reporter(ASC_PROG_NOTE,NULL,0,NULL,fmt,*args);
+			res = va_error_reporter(ASC_PROG_NOTE,NULL,0,NULL,fmt,args);
 		}
 	}else{
+		MSG("Printing directly, fmt = \"%s\"",fmt);
 		res = ASC_VFPRINTF(file,fmt,*args);
 	}
 	return res;
@@ -479,6 +502,7 @@ int error_reporter_start(const error_severity_t sev, const char *filename
 	, const int line, const char *func
 ){
 	if(g_error_reporter_cache.iscaching){
+		MSG("call to error_reporter_start before expected error_reporter_end_flush");
 		error_reporter_end_flush();
 	}
 	g_error_reporter_cache.iscaching = 1;
