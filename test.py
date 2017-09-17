@@ -1564,6 +1564,33 @@ class TestSection(Ascend):
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
 		M.run(T.getMethod('self_test'))
 
+
+class TestErrorTree(AscendSelfTester):
+	"""
+	This test is looking at some a tricky bug arising from the use of error_reporter_tree through
+	C++ (Simulation::run). Error should be caught when the 'on_load' method is run.
+	"""
+	def setUp(self):
+		super(TestErrorTree,self).setUp();
+		self.reporter = ascpy.getReporter()
+		self.reporter.setPythonErrorCallback(self.error_callback)
+	
+	def tearDown(self):
+		super(TestErrorTree,self).tearDown();
+		self.reporter = ascpy.getReporter()
+		print "CLEARING CALLBACK"
+		self.reporter.clearPythonErrorCallback()
+
+	def error_callback(self,sev,filename,line,msg):
+		print "PYTHON ERROR CALLBACK: %s:%d: %s [sev=%d]" % (filename,line,msg,sev)
+		return 0
+
+	def test1(self):
+		self.L.load('test/compiler/stop.a4c')
+		T = self.L.findType('stop')
+		M = T.getSimulation('sim',True)
+
+
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
 	def nothing(self):

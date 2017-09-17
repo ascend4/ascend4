@@ -46,10 +46,12 @@ subprocess.check_call(SCONS_CALL,stdout=DEVNULL,stderr=DEVNULL)
 #baseline
 print "BASELINE"
 F_BASELINE = 'mycov-0.info'
-subprocess.check_call(LCOV_CD+['-i','-o',F_BASELINE],stdout=DEVNULL)
+mycall = LCOV_CD + ['-i','-o',F_BASELINE]
+#print "CALL:",mycall 
+subprocess.check_call(mycall,stdout=DEVNULL)
 
 myenv = os.environ.copy()
-myenv['ASCENDLIBRARY']='models:solvers/qrslv'
+myenv['ASCENDLIBRARY']='models:solvers/qrslv:solvers/ipopt:solvers/lrslv'
 myenv['LD_LIBRARY_PATH']='.'
 
 for t in tests:

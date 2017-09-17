@@ -9,7 +9,7 @@
 # include <ascend/general/panic.h>
 #endif
 
-//#define ERROR_DEBUG
+#define ERROR_DEBUG
 #ifdef ERROR_DEBUG
 # define MSG CONSOLE_DEBUG
 # define TREE_PRINT error_reporter_tree_print
@@ -136,7 +136,7 @@ static void error_reporter_tree_print1(error_reporter_tree_t *t,int level){
 		MSG("%*s+%p%s (head=%p,tail=%p)",2+2*level,"",t,t==CURRENT?" (CURRENT)":"",t->head,t->tail);
 		error_reporter_tree_print1(t->head,level+1);
 	}else{
-		assert(t->err);
+		assert(t->err != NULL);
 		MSG("%*s-%p %s:%d: %s (parent=%p,next=%p)",2+2*level,"",t,t->err->filename, t->err->line, t->err->msg,t->parent,t->next);
 	}
 
@@ -150,7 +150,7 @@ static void error_reporter_tree_print(error_reporter_tree_t *t1){
 	if(!t1){
 		MSG("empty tree");
 	}else{
-		MSG("finding top of tree");
+		MSG("finding top of tree, starting at %p",t1);
 		while(t1->parent){
 			t1 = t1->parent;
 		}
@@ -320,6 +320,7 @@ static int error_reporter_tree_write(error_reporter_tree_t *t){
 		// an a simple node -- just an error
 		assert(t->head == NULL);
 		assert(t->tail == NULL);
+		MSG("WRITING MSG FROM CACHE");
 		error_reporter_callback_t cb = g_error_reporter_callback ?
 			g_error_reporter_callback : error_reporter_default_callback;
 		res += (*cb)(t->err->sev,t->err->filename,t->err->line,t->err->func,t->err->msg,NULL);
@@ -439,8 +440,8 @@ int vfprintf_error_reporter(FILE *file, const char *fmt, va_list *args){
 		if(g_error_reporter_cache.iscaching){
 			msg = g_error_reporter_cache.msg;
 			len = strlen(msg);
-			MSG("Printing msg to string, fmt = \"%s\"",fmt);
 			res = vsnprintf(msg+len,ERROR_REPORTER_MAX_MSG-len,fmt,*args);
+			//MSG("Appended \"%s\" to message",msg+len);
 			if(len+res+1>=ERROR_REPORTER_MAX_MSG){
 				SNPRINTF(msg+ERROR_REPORTER_MAX_MSG-16,15,"... (truncated)");
 				ASC_FPRINTF(stderr,"TRUNCATED MESSAGE, FULL MESSAGE FOLLOWS:\n----------START----------\n");
