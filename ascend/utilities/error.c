@@ -9,7 +9,7 @@
 # include <ascend/general/panic.h>
 #endif
 
-#define ERROR_DEBUG
+//#define ERROR_DEBUG
 #ifdef ERROR_DEBUG
 # define MSG CONSOLE_DEBUG
 # define TREE_PRINT error_reporter_tree_print

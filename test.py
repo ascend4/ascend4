@@ -1574,6 +1574,8 @@ class TestErrorTree(AscendSelfTester):
 		super(TestErrorTree,self).setUp();
 		self.reporter = ascpy.getReporter()
 		self.reporter.setPythonErrorCallback(self.error_callback)
+
+		self.errors = []
 	
 	def tearDown(self):
 		super(TestErrorTree,self).tearDown();
@@ -1583,13 +1585,16 @@ class TestErrorTree(AscendSelfTester):
 
 	def error_callback(self,sev,filename,line,msg):
 		print "PYTHON ERROR CALLBACK: %s:%d: %s [sev=%d]" % (filename,line,msg,sev)
+		self.errors.append((filename,line,msg,sev))
 		return 0
 
 	def test1(self):
-		self.L.load('test/compiler/stop.a4c')
-		T = self.L.findType('stop')
-		M = T.getSimulation('sim',True)
-
+		self.L.load('test/compiler/badassign.a4c')
+		T = self.L.findType('badassign')
+		try:
+			M = T.getSimulation('sim',True)
+		except RuntimeError,e:
+			print self.errors
 
 # move code above down here if you want to temporarily avoid testing it
 class NotToBeTested:
