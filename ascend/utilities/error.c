@@ -96,6 +96,7 @@ static error_reporter_meta_t *error_reporter_meta_new(){
 
 # define CURRENT g_error_reporter_tree_current
 
+static void error_reporter_tree_print(error_reporter_tree_t *t1);
 static int error_reporter_tree_write(error_reporter_tree_t *t);
 static void error_reporter_tree_free(error_reporter_tree_t *t);
 
@@ -113,6 +114,7 @@ static error_reporter_tree_t *error_reporter_tree_new(int iscaching){
 	tnew->tail = NULL;
 	tnew->err = NULL;
 	tnew->parent = NULL;
+	TREE_PRINT(tnew);
 	return tnew;
 }
 
@@ -135,9 +137,11 @@ static void error_reporter_tree_print1(error_reporter_tree_t *t,int level){
 		assert(t->err == NULL);
 		MSG("%*s+%p%s (head=%p,tail=%p)",2+2*level,"",t,t==CURRENT?" (CURRENT)":"",t->head,t->tail);
 		error_reporter_tree_print1(t->head,level+1);
-	}else{
+	}else if(t->err){
 		assert(t->err != NULL);
 		MSG("%*s-%p %s:%d: %s (parent=%p,next=%p)",2+2*level,"",t,t->err->filename, t->err->line, t->err->msg,t->parent,t->next);
+	}else{
+		MSG("%*s-%p EMPTY NODE",2+2*level,"",t);
 	}
 
 	if(t->next){
@@ -148,7 +152,7 @@ static void error_reporter_tree_print1(error_reporter_tree_t *t,int level){
 
 static void error_reporter_tree_print(error_reporter_tree_t *t1){
 	if(!t1){
-		MSG("empty tree");
+		MSG("null tree");
 	}else{
 		MSG("finding top of tree, starting at %p",t1);
 		while(t1->parent){
