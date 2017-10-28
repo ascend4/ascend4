@@ -2875,10 +2875,10 @@ static void ErrMsg_Generic(CONST char *string){
 
 static void ErrMsg_CommaName(CONST char *what, struct Name *name)
 {
-  struct module_t *mod;
+  //struct module_t *mod;
 
   /* the module may have be already closed */
-  mod = Asc_CurrentModule();
+  /* mod = */ Asc_CurrentModule();
 
   ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
   FPRINTF(ASCERR, "Missing comma or operator before %s '",what);
@@ -3037,9 +3037,10 @@ static void CollectNote(struct Note *n)
 */
 static void error_reporter_current_line(const error_severity_t sev, const char *fmt,...){
 	MSG("format = %s",fmt);
-	va_list args;
+	va_list args, args2;
 	va_start(args,fmt);
-	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),NULL,fmt,args);
+	va_copy(args2,args);
+	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),NULL,fmt,&args2);
 	va_end(args);
 }
 

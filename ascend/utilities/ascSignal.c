@@ -65,8 +65,12 @@
 #include "ascSignal.h"
 #include <ascend/general/panic.h>
 
-/* #define SIGNAL_DEBUG */
-
+//#define SIGNAL_DEBUG
+#ifdef SIGNAL_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 /*------------------------------------------------------------------------------
   GLOBALS AND FOWARD DECS
 */
@@ -77,7 +81,7 @@ JMP_BUF g_seg_env;
 JMP_BUF g_int_env;
 
 #ifdef HAVE_C99FPE
-fenv_t g_fenv;
+fexcept_t g_fenv;
 #endif
 
 /* for future use */
@@ -151,13 +155,11 @@ static int fenv_push(fenv_t *stack,int *top, int excepts);
 int Asc_SignalInit(void){
   /* initialize SIGFPE stack */
 
-#ifdef SIGNAL_DEBUG
 # ifdef ASC_RESETNEEDED
-  CONSOLE_DEBUG("Initialising signal stack (with resets needed)");
+  MSG("Initialising signal stack (with resets needed)");
 # else
-  CONSOLE_DEBUG("Initialising signal stack (with resets not required)");
+  MSG("Initialising signal stack (with resets not required)");
 # endif
-#endif
 
   if(f_traps == NULL){
     f_traps = ASC_NEW(SignalStacks);
@@ -184,10 +186,8 @@ int Asc_SignalInit(void){
   initstack(SIGINT);
   initstack(SIGSEGV);
 
-#if defined(HAVE_C99FPE)
-# ifdef SIGNAL_DEBUG
-  CONSOLE_DEBUG("Initialise FPE state to stack (%d)",f_fenv_stack_top);
-# endif
+#ifdef HAVE_C99FPE
+  MSG("Initialise FPE state to stack (%d)",f_fenv_stack_top);
   fenv_push(f_fenv_stack,&f_fenv_stack_top,0);
 #endif
 
@@ -197,8 +197,12 @@ int Asc_SignalInit(void){
 /**
 	Clears and destroys the stacks of signal handlers.
 */
-void Asc_SignalDestroy(void)
-{
+void Asc_SignalDestroy(void){
+#ifdef HAVE_C99FPE
+  MSG("Restoring FPE state from stack (%d)",f_fenv_stack_top);
+  fenv_pop(f_fenv_stack,&f_fenv_stack_top);
+#endif
+
   ascfree(f_traps);
 #ifdef HAVE_C99FPE
   if(f_fenv_stack){
@@ -207,9 +211,7 @@ void Asc_SignalDestroy(void)
   }
 #endif
   f_traps = NULL;
-#ifdef SIGNAL_DEBUG
-  CONSOLE_DEBUG("Destroyed signal stack");
-#endif
+  MSG("Destroyed signal stack");
 }
 
 /**
@@ -227,9 +229,7 @@ void Asc_SignalRecover(int force){
 #ifndef ASC_RESETNEEDED
 	if(force){
 #endif
-# ifdef SIGNAL_DEBUG
-		CONSOLE_DEBUG("Resetting traps");
-# endif
+		MSG("Resetting traps");
 		reset_trap(SIGFPE);
 		reset_trap(SIGINT);
 		reset_trap(SIGSEGV);
@@ -258,11 +258,7 @@ int Asc_SignalHandlerPush_impl(int signum, SigHandlerFn *func, char *name
     return -2;
   }
 
-#ifdef SIGNAL_DEBUG
-  CONSOLE_DEBUG("Pushing handler %s for signal %s(%d)"
-    ,name,SIGNAME(signum),signum
-  );
-#endif
+  MSG("Pushing handler %s for signal %s(%d)",name,SIGNAME(signum),signum);
 
   err = push_trap(signum, func, name, file, line);
 
@@ -306,16 +302,12 @@ int Asc_SignalHandlerPop_impl(int signum, SigHandlerFn *tp, char *name
 	, char *file, int line
 ){
   int err;
-#ifdef SIGNAL_DEBUG
-  CONSOLE_DEBUG("(%s:%d) Popping signal stack for signal %s (%d) (expecting top to be %p '%s')",file,line,SIGNAME(signum),signum,tp,name);
-#endif
+  MSG("(%s:%d) Popping signal stack for signal %s (%d) (expecting top to be %p '%s')",file,line,SIGNAME(signum),signum,tp,name);
 
   err = pop_trap(signum, tp, name, file, line);
 
   if (err != 0 && tp != NULL) {
-#ifdef SIGNAL_DEBUG
-	CONSOLE_DEBUG("stack pop mismatch");
-#endif
+	MSG("stack pop mismatch");
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Asc_Signal (%d) stack pop mismatch.",signum);
     return err;
   }
@@ -349,29 +341,23 @@ int Asc_SignalHandlerPop_impl(int signum, SigHandlerFn *tp, char *name
 }
 
 void Asc_SignalTrap(int sigval){
-#ifdef SIGNAL_DEBUG
-  CONSOLE_DEBUG("Caught signal #%d",sigval);
-#endif
+  MSG("Caught signal #%d",sigval);
   switch(sigval) {
   case SIGFPE:
     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Floating point error caught");
-    CONSOLE_DEBUG("SIGFPE caught");
+    MSG("SIGFPE caught");
 #ifdef HAVE_C99FPE
     FPRESET;
 #endif
     LONGJMP(g_fpe_env,sigval);
   case SIGINT:
-	CONSOLE_DEBUG("SIGINT (Ctrl-C) caught");
+	MSG("SIGINT (Ctrl-C) caught");
     LONGJMP(g_int_env,sigval);
   case SIGSEGV:
-#ifdef SIGNAL_DEBUG
-    CONSOLE_DEBUG("SIGSEGV caught");
-#endif
+    MSG("SIGSEGV caught");
     LONGJMP(g_seg_env,sigval);
   default:
-#ifdef SIGNAL_DEBUG
-    CONSOLE_DEBUG("Unrecognised signal %d caught",sigval);
-#endif
+    MSG("Unrecognised signal %d caught",sigval);
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Installed on unexpected signal (sigval = %d). Returning (who knows where...)", sigval);
     return;
   }
@@ -486,9 +472,7 @@ static void initstack(int sig){
 	}
 	old = SIGNAL(sig, SIG_DFL);
 	if(old != SIG_ERR && old != SIG_DFL){
-#ifdef SIGNAL_DEBUG
-		CONSOLE_DEBUG("Initialising stack for signal %d to %p",sig,old);
-#endif
+		MSG("Initialising stack for signal %d to %p",sig,old);
 		stack[0].handler = old;
 #ifdef SIGNAL_DEBUG
 		if(old == SIG_DFL){
@@ -502,9 +486,7 @@ static void initstack(int sig){
 		*index = 0;
 		(void)SIGNAL(sig,old);
 	}else{
-#ifdef SIGNAL_DEBUG
-		CONSOLE_DEBUG("Initialising stack for signal %d as empty",sig);
-#endif
+		MSG("Initialising stack for signal %d as empty",sig);
 		*index = -1;
 	}
 }
@@ -529,21 +511,17 @@ static void reset_trap(int signum){
 			top = stack[*index];
 			if(top.handler != SIG_ERR && top.handler != SIG_DFL){
 				/* reset the signal, if it's not already set to what we want */
-#ifdef SIGNAL_DEBUG
-				CONSOLE_DEBUG("Resetting signal %s from %p to %p (%s)"
+				MSG("Resetting signal %s from %p to %p (%s)"
 					,SIGNAME(signum)
 					,oldfn,top.handler,top.name
 				);
-#endif
 				(void)SIGNAL(signum,top.handler);
 				return;
 			}
 		}
-#ifdef SIGNAL_DEBUG
-		CONSOLE_DEBUG("Resetting %s handler to SIG_DFL (stack empty or invalid)"
+		MSG("Resetting %s handler to SIG_DFL (stack empty or invalid)"
 			,SIGNAME(signum)
 		);
-#endif
 		(void)SIGNAL(signum,SIG_DFL);
 	}else{
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Signal handler not yet initialised! Setting %s handler to SIG_DFL.",SIGNAME(signum));
@@ -648,9 +626,7 @@ static int pop_trap(int signum, SigHandlerFn *func, char *name, char *file, int 
 	return 0 on success
 */
 static int fenv_push(fenv_t *stack, int *top, int excepts){
-#ifdef SIGNAL_DEBUG
-	CONSOLE_DEBUG("Pushing FENV flags %d",excepts);
-#endif
+	MSG("Pushing FENV flags %d",excepts);
 
 	if(*top > MAX_TRAP_DEPTH - 1){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"FPE stack is full");
@@ -670,7 +646,7 @@ static int fenv_push(fenv_t *stack, int *top, int excepts){
 		return 4;
 	}
 	fesetexceptflag(&g_fenv, excepts);
-	//CONSOLE_DEBUG("Enabled div-by-zero FPE exception (%d)",*top);
+	MSG("Enabled div-by-zero FPE exception (%d)",*top);
 	return 0;
 }
 
@@ -678,9 +654,7 @@ static int fenv_push(fenv_t *stack, int *top, int excepts){
 	Restore a saved FPU state. Return 0 on success.
 */
 static int fenv_pop(fenv_t *stack, int *top){
-#ifdef CONSOLE_DEBUG
-	CONSOLE_DEBUG("Popping FENV flags");
-#endif
+	MSG("Popping FENV flags");
 	if(*top < 0){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"FPE stack is empty");
 		return 1;
@@ -694,7 +668,7 @@ static int fenv_pop(fenv_t *stack, int *top){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"unable to set env");
 		return 3;
 	}
-	//CONSOLE_DEBUG("Restorted FPE state");
+	MSG("Restorted FPE state");
 	return 0;
 }
 

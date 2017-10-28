@@ -96,7 +96,10 @@ static error_reporter_meta_t *error_reporter_meta_new(){
 
 # define CURRENT g_error_reporter_tree_current
 
+#ifdef ERROR_DEBUG
 static void error_reporter_tree_print(error_reporter_tree_t *t1);
+#endif
+
 static int error_reporter_tree_write(error_reporter_tree_t *t);
 static void error_reporter_tree_free(error_reporter_tree_t *t);
 
@@ -148,7 +151,6 @@ static void error_reporter_tree_print1(error_reporter_tree_t *t,int level){
 		error_reporter_tree_print1(t->next,level);
 	}
 }
-
 
 static void error_reporter_tree_print(error_reporter_tree_t *t1){
 	if(!t1){
@@ -447,7 +449,7 @@ int vfprintf_error_reporter(FILE *file, const char *fmt, va_list *args){
 			res = vsnprintf(msg+len,ERROR_REPORTER_MAX_MSG-len,fmt,*args);
 			//MSG("Appended \"%s\" to message",msg+len);
 			if(len+res+1>=ERROR_REPORTER_MAX_MSG){
-				SNPRINTF(msg+ERROR_REPORTER_MAX_MSG-16,15,"... (truncated)");
+				SNPRINTF(msg+ERROR_REPORTER_MAX_MSG-16,16,"... (truncated)");
 				ASC_FPRINTF(stderr,"TRUNCATED MESSAGE, FULL MESSAGE FOLLOWS:\n----------START----------\n");
 				ASC_VFPRINTF(stderr,fmt,*args);
 				ASC_FPRINTF(stderr,"\n-----------END----------\n");
