@@ -689,10 +689,11 @@ void WriteStatementError(const error_severity_t sev
 		, const char *fmt
 		, ...
 ){
-	va_list args;
+	va_list args,args2;
 	error_reporter_start(sev,Asc_ModuleFileName(stat->mod),stat->linenum,SCP(StatementTypeString(stat)));
 	va_start(args,fmt);
-	vfprintf_error_reporter(ASCERR,fmt,args);
+	va_copy(args2,args);
+	vfprintf_error_reporter(ASCERR,fmt,&args2);
 	va_end(args);
 	if(outputstatement){
 		FPRINTF(ASCERR,"\n");

@@ -312,18 +312,19 @@ void instantiation_error(error_severity_t sev
 		, const struct Statement *stat, const char *fmt
 		, ...
 ){
-	va_list args;
+	va_list args,args2;
 	va_start(args,fmt);
+	va_copy(args2,args);
 	if(stat!= NULL){
 		va_error_reporter(sev
 			, Asc_ModuleBestName(StatementModule(stat))
 			, StatementLineNum(stat), NULL
-			, fmt, args
+			, fmt, &args2
 		);
 	}else{
 		va_error_reporter(sev
 			, NULL, 0, NULL
-			, fmt, args
+			, fmt, &args2
 		);
 	}
 	va_end(args);
