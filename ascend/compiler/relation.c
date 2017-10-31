@@ -2441,7 +2441,7 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
         }
       }else if(GetEvaluationForTable() != NULL && str !=NULL &&
                (fvp=FindForVar(GetEvaluationForTable(),str)) !=NULL ){
-        CONSOLE_DEBUG("for loop, var = %s",SCP(str));
+        //CONSOLE_DEBUG("for loop, var = %s",SCP(str));
         if(GetForKind(fvp)==f_integer){
           term = CreateIntegerTerm(GetForInteger(fvp));
           my_added++;
@@ -2479,7 +2479,7 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
             }
             gl_destroy(instances);
           }else{			/* single instance */
-            CONSOLE_DEBUG("single instance");
+            //CONSOLE_DEBUG("single instance");
             if(gl_length(instances)==1){
               inst = (struct Instance *)gl_fetch(instances,1);
               gl_destroy(instances);
@@ -2489,7 +2489,7 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
               }else
                 return 1;
             }else{
-              CONSOLE_DEBUG("length!=1");
+              //CONSOLE_DEBUG("length!=1");
               gl_destroy(instances);
               rel_errorlist_set_code(err,incorrect_structure);
               FPRINTF(ASCERR,"incorrect_structure in ConvertSubExpr 1\n");
@@ -2503,7 +2503,7 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
             //CONSOLE_DEBUG("unmade instance! '%s'",tempstr);
             ASC_FREE(tempstr);
             if(instances!=NULL){
-              CONSOLE_DEBUG("instances!=NULL !");
+              //CONSOLE_DEBUG("instances!=NULL !");
             }
           }
           //CONSOLE_DEBUG("returning 'find_error'");
