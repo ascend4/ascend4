@@ -188,7 +188,7 @@ long int g_compiler_counter = 1;
 	which changes the instance tree is called.
 */
 
-/* #define DEBUG_RELS */
+#define DEBUG_RELS
 /* undef DEBUG_RELS if you want less spew in pass 2 */
 #undef DEBUG_RELS
 
@@ -4777,144 +4777,143 @@ struct Instance *MakeRelationInstance(struct Name *name,
 	even in relations referencing relations, because they
 	should have been added to pendings in dependency order. (hah!)
 */
-static
-int ExecuteREL(struct Instance *inst, struct Statement *statement)
-{
-  struct Name *name;
-  enum relation_errors err;
-  enum find_errors ferr;
-  struct relation *reln;
-  struct Instance *child;
-  struct gl_list_t *instances;
-  enum Expr_enum reltype;
+static int ExecuteREL(struct Instance *inst, struct Statement *statement){
+	struct Name *name;
+	enum relation_errors err;
+	enum find_errors ferr;
+	struct relation *reln;
+	struct Instance *child;
+	struct gl_list_t *instances;
+	enum Expr_enum reltype;
+
+	char *iname;
 
 #ifdef DEBUG_RELS
-  CONSOLE_DEBUG("ENTERED ExecuteREL\n");
+	CONSOLE_DEBUG("ENTERED ExecuteREL\n");
 #endif
-  name = RelationStatName(statement);
-  instances = FindInstances(inst,name,&ferr);
-  /* see if the relation is there already */
-  if (instances==NULL){
-    if (ferr == unmade_instance){		/* make a reln head */
-      child = MakeRelationInstance(name,FindRelationType(),
+	name = RelationStatName(statement);
+	instances = FindInstances(inst,name,&ferr);
+	/* see if the relation is there already */
+	if (instances==NULL){
+		if (ferr == unmade_instance){		/* make a reln head */
+			child = MakeRelationInstance(name,FindRelationType(),
                                    inst,statement,e_token);
-      if (child==NULL){
-        STATEMENT_ERROR(statement, "Unable to create expression structure");
-       /* print a better message here if needed. maybe an if!makeindices moan*/
-        return 1;
-      }
-    }else{
-      /* undefined instances in the relation name, or out of memory */
-      WSSM(ASCERR,statement, "Unable to execute relation label",3);
-      return 1;
-    }
-  }else{
-    if(gl_length(instances)==1){
-      child = (struct Instance *)gl_fetch(instances,1);
-      asc_assert((InstanceKind(child)==REL_INST)||(InstanceKind(child)==DUMMY_INST));
-      gl_destroy(instances);
-      if (InstanceKind(child)==DUMMY_INST) {
+			if (child==NULL){
+				STATEMENT_ERROR(statement, "Unable to create expression structure");
+				/* print a better message here if needed. maybe an if!makeindices moan*/
+				return 1;
+			}
+		}else{
+			/* undefined instances in the relation name, or out of memory */
+			WSSM(ASCERR,statement, "Unable to execute relation label",3);
+			return 1;
+		}
+	}else{
+		if(gl_length(instances)==1){
+			child = (struct Instance *)gl_fetch(instances,1);
+			asc_assert((InstanceKind(child)==REL_INST)||(InstanceKind(child)==DUMMY_INST));
+			gl_destroy(instances);
+			if (InstanceKind(child)==DUMMY_INST) {
 #ifdef DEBUG_RELS
-        STATEMENT_ERROR(statement, "DUMMY_INST foundin compiling relation.");
+				STATEMENT_ERROR(statement, "DUMMY_INST foundin compiling relation.");
 #endif
-        return 1;
-      }
+				return 1;
+			}
 #ifdef DEBUG_RELS
-      STATEMENT_ERROR(statement, "REL_INST found in compiling relation.");
+			STATEMENT_ERROR(statement, "REL_INST found in compiling relation.");
 #endif
-    }else{
-      STATEMENT_ERROR(statement, "Expression name refers to more than one object");
-      gl_destroy(instances);	/* bizarre! */
-      return 1;
-    }
-  }
+		}else{
+			STATEMENT_ERROR(statement, "Expression name refers to more than one object");
+			gl_destroy(instances);	/* bizarre! */
+			return 1;
+		}
+	}
 
-  /*
-   * child now contains the pointer to the relation instance.
-   * We should perhaps double check that the reltype
-   * has not been set or has been set to e_undefined.
-   */
-  if (GetInstanceRelation(child,&reltype)==NULL) {
-    if ( (g_instantiate_relns & TOKRELS) ==0) {
+	/* child now contains the pointer to the relation instance.
+	We should perhaps double check that the reltype
+	has not been set or has been set to e_undefined. */
+	if(GetInstanceRelation(child,&reltype)==NULL){
+		if((g_instantiate_relns & TOKRELS) ==0){
 #ifdef DEBUG_RELS
-      STATEMENT_NOTE(statement, "TOKRELS 0 found in compiling relation.");
+			STATEMENT_NOTE(statement, "TOKRELS 0 found in compiling relation.");
 #endif
-      return 1;
-    }
+			return 1;
+		}
 #if TIMECOMPILER
-    g_ExecuteREL_CreateTokenRelation_calls++;
+		g_ExecuteREL_CreateTokenRelation_calls++;
 #endif
-    reln = CreateTokenRelation(inst,child,RelationStatExpr(statement),
-                               &err,&ferr);
-    if (reln != NULL){
-      SetInstanceRelation(child,reln,e_token);
+		reln = CreateTokenRelation(inst,child,RelationStatExpr(statement),
+				                   &err,&ferr);
+		if (reln != NULL){
+			SetInstanceRelation(child,reln,e_token);
 #ifdef DEBUG_RELS
-      STATEMENT_NOTE(statement, "Created relation.");
+			STATEMENT_NOTE(statement, "Created relation.");
 #endif
-      return 1;
-    }else{
-      SetInstanceRelation(child,NULL,e_token);
-      switch(err){
-      case incorrect_structure:
-        WSSM(ASCERR,statement, "Bad relation expression in ExecuteRel",3);
-        return 1;
-      case incorrect_inst_type:
-        WSSM(ASCERR,statement, "Incorrect instance types in relation",3);
-        return 1;
-      case incorrect_boolean_inst_type:
-        WSSM(ASCERR,statement, "Incorrect boolean instance in relation",3);
-        return 1;
-      case incorrect_integer_inst_type:
-        WSSM(ASCERR,statement, "Incorrect integer instance in relation",3);
-        return 1;
-      case incorrect_symbol_inst_type:
-        WSSM(ASCERR,statement, "Incorrect symbol instance in relation",3);
-        return 1;
-      case incorrect_real_inst_type:
-        WSSM(ASCERR,statement,
-                "Incorrect real child of atom instance in relation",3);
-        return 1;
-      case find_error:
-        switch(ferr){
-        case unmade_instance:
-        case undefined_instance:
-          WSSM(ASCERR,statement,
-                     "Unmade or Undefined instances in relation",3);
-          return 1;
-        case impossible_instance:
-          WSSM(ASCERR,statement,
-                     "Relation contains an impossible instance",3);
-          return 1;
-        case correct_instance:
-          ASC_PANIC("Incorrect error response.\n");/*NOTREACHED*/
-        default:
-          ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
-        }
-      case integer_value_undefined:
-      case real_value_wild:
-      case real_value_undefined:
-        WriteUnexecutedMessage(ASCERR,statement,
-         "Unassigned constants or wild dimensioned real constant in relation");
-          return 1;
-      case okay:
-        ASC_PANIC("Incorrect error response.\n");/*NOTREACHED*/
-      default:
-        ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
-
-      }
-    }
+			return 1;
+		}else{
+			SetInstanceRelation(child,NULL,e_token);
+			switch(err){
+			case incorrect_structure:
+				WSSM(ASCERR,statement, "Bad relation expression in ExecuteRel",3);
+				return 1;
+			case incorrect_inst_type:
+				WSSM(ASCERR,statement, "Incorrect instance types in relation",3);
+				return 1;
+			case incorrect_boolean_inst_type:
+				WSSM(ASCERR,statement, "Incorrect boolean instance in relation",3);
+				return 1;
+			case incorrect_integer_inst_type:
+				WSSM(ASCERR,statement, "Incorrect integer instance in relation",3);
+				return 1;
+			case incorrect_symbol_inst_type:
+				WSSM(ASCERR,statement, "Incorrect symbol instance in relation",3);
+				return 1;
+			case incorrect_real_inst_type:
+				WSSM(ASCERR,statement,
+					"Incorrect real child of atom instance in relation",3);
+				return 1;
+			case find_error:
+				switch(ferr){
+				case unmade_instance:
+				case undefined_instance:
+					//CONSOLE_DEBUG("INSTANCE %p",child);
+					//iname = WriteInstanceNameString(child,NULL);
+					//CONSOLE_DEBUG("Instance name '%s'",iname);
+					//ASC_FREE(iname);
+					WSSM(ASCERR,statement,"Unmade or Undefined instances in relation",3);
+					return 1;
+				case impossible_instance:
+					WSSM(ASCERR,statement,"Relation contains an impossible instance",3);
+					return 1;
+				case correct_instance:
+					ASC_PANIC("Incorrect error response.\n");/*NOTREACHED*/
+				default:
+					ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
+				}
+			case integer_value_undefined:
+			case real_value_wild:
+			case real_value_undefined:
+				WriteUnexecutedMessage(ASCERR,statement,
+					"Unassigned constants or wild dimensioned real constant in relation");
+				return 1;
+			case okay:
+				ASC_PANIC("Incorrect error response.\n");/*NOTREACHED*/
+			default:
+				ASC_PANIC("Unknown error response.\n");/*NOTREACHED*/
+			}
+		}
 #ifdef DEBUG_RELS
-    STATEMENT_NOTE(statement, "   Failed relation -- unexpected scenario.");
+		STATEMENT_NOTE(statement, "   Failed relation -- unexpected scenario.");
 #endif
-  }else{
-    /*  Do nothing, somebody already completed the relation.  */
+	}else{
+		/*  Do nothing, somebody already completed the relation.  */
 #ifdef DEBUG_RELS
-        STATEMENT_NOTE(statement, "Already compiled in compiling relation?!.");
+		STATEMENT_NOTE(statement, "Already compiled in compiling relation?!.");
 #endif
-    return 1;
-  }
+		return 1;
+	}
 #ifdef DEBUG_RELS
-  STATEMENT_NOTE(statement, "End of ExecuteREL. huh?");
+	STATEMENT_NOTE(statement, "End of ExecuteREL. huh?");
 #endif
 }
 
