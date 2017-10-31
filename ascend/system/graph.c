@@ -222,7 +222,7 @@ int system_write_graph(slv_system_t sys
 
 	/* we won't try to plot it if it's way too complex */
 
-	if(nodecount > 300 || edgecount > 300){
+	if(nodecount > 400 || edgecount > 400){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Graph is too complex, will not launch GraphViz (%d nodes, %d edges)", nodecount, edgecount);
 		return 1;
 	}
