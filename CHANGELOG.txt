@@ -1,3 +1,12 @@
+31 Oct 2017
+-----------
+
+Version 0.9.9 (in progress)
+ - Update to recent GCC/SCons/Linux
+ - Merge changes for GTK3
+ - Python3 support
+ - Improvements to canvas-based modeller
+
 30 Apr 2012
 -----------
 
