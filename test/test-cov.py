@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# This script runs LCOV to generate coverage testing results from the main CUnit test suites
+# implemented for ASCEND currently.
+
 LCOV="/usr/local/bin/lcov"
 GENHTML='/usr/local/bin/genhtml'
 SCONS_CALL=["scons","-j4","MALLOC_DEBUG=1","GCOV=1","CC=gcc","CXX=g++","test","ascend","models","solvers"]
