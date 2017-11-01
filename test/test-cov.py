@@ -25,19 +25,20 @@ tests = {
 	],'utilities':[
 		'utilities_ascEnvVar','utilities_ascPrint'
 		,'utilities_ascSignal','utilities_readln','utilities_set'
-		,'linear_qrrank','linear_mtx','utilities_error'
+		,'utilities_error'
 	],'linear':['linear_qrrank','linear_mtx']
 	,'compiler':[
 		'compiler_basics','compiler_expr','compiler_fixfree','compiler_fixassign'
 	],'packages':['packages_defaultall']
 	,'solver':[
-		'solver_slv_common','solver_slvreq','solver_ipopt','solver_qrslv'
-		,'solver_fprops','solver_lrslv'
+		'solver_slv_common','solver_slvreq','solver_qrslv'
+		,'solver_fprops','solver_lrslv' #'solver_ipopt',
 	],'integrator':['integrator_lsode']
 }
 	
 import subprocess
-LCOV_CD=[LCOV,'-c','-d',PREFIX,'--no-external']
+LCOV_STEM=[LCOV,'-d',PREFIX,'--no-external','--exclude','\<stdout\>']
+LCOV_CD=LCOV_STEM + ['-c']
 # clean
 print "CLEANING UP"
 subprocess.check_call(SCONS_CALL + ['-c'],stdout=DEVNULL)
@@ -46,19 +47,25 @@ subprocess.check_call(SCONS_CALL + ['-c'],stdout=DEVNULL)
 print "BUILD"
 subprocess.check_call(SCONS_CALL,stdout=DEVNULL,stderr=DEVNULL)
 
-#baseline
-print "BASELINE"
-F_BASELINE = 'mycov-0.info'
-mycall = LCOV_CD + ['-i','-o',F_BASELINE]
-#print "CALL:",mycall 
-subprocess.check_call(mycall,stdout=DEVNULL)
-
+if 0:
+	#baseline
+	print "BASELINE"
+	F_BASELINE = 'mycov-0.info'
+	mycall = LCOV_CD + ['-i','-o',F_BASELINE]
+	#print "CALL:",mycall 
+	subprocess.check_call(mycall,stdout=DEVNULL)
+else:
+	print "ZERO"
+	mycall = LCOV_STEM + ['-z']
+	subprocess.check_call(mycall,stdout=DEVNULL)	
+	
 myenv = os.environ.copy()
 myenv['ASCENDLIBRARY']='models:solvers/qrslv:solvers/ipopt:solvers/lrslv'
 myenv['LD_LIBRARY_PATH']='.'
 
 for t in tests:
 	print "TEST '%s'" % (t,)
+	print " ".join(tests[t])
 	subprocess.check_call(['test/test']+tests[t],env=myenv,stdout=DEVNULL,stderr=DEVNULL)
 	F = 'mycov-%s.info' % (t,)
 	subprocess.check_call(LCOV_CD + ['-o',F,'-t',t],stdout=DEVNULL)
@@ -66,7 +73,6 @@ for t in tests:
 	subprocess.check_call([LCOV,'-r',F,'*stdout*','-o',F1],stdout=DEVNULL)
 
 subprocess.check_call([GENHTML
-		,'-b',F_BASELINE
 		,'-p',PREFIX
 		,'-o','lcov-html'
 		,'-t','ASCEND - CUnit test coverage'
