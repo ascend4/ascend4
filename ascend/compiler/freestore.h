@@ -27,12 +27,15 @@
  */
 
 /** @file
- *  Implementation of Free Store Module.
- *
- *  Note: this file is specific to relation data structures and should
- *  not be used for anything else. In fact it shouldn't even be used
- *  for those because a much better tested module (pool.h) is
- *  available and in use everywhere else in the compiler.
+	Implementation of Free Store Module. 
+	FIXME: this module appears to be pretty poorly used in ASCEND
+	and could probably be replaced by something else like 'pool'.
+
+	Note: this file is specific to relation data structures and should
+	not be used for anything else. In fact it shouldn't even be used
+	for those because a much better tested module (pool.h) is
+	available and in use everywhere else in the compiler.
+
  *  <pre>
  *  When #including freestore.h, make sure these files are #included first:
  *        #include "utilities/ascConfig.h"
@@ -45,6 +48,8 @@
 #ifndef ASC_FREESTORE_H
 #define ASC_FREESTORE_H
 
+#include <ascend/general/platform.h>
+#include <ascend/general/stack.h>
 #include "relation_type.h"
 
 /**	@addtogroup compiler_rel Compiler Relations
@@ -64,10 +69,10 @@ struct FreeStore {
 
 extern long FreeStore_UnitsAllocated();
 /**< Retrieve the number of free store units allocated. */
-extern void FreeStore__Statistics(FILE *fp, struct FreeStore *store);
+ASC_DLLSPEC void FreeStore__Statistics(FILE *fp, struct FreeStore *store);
 /**< Print stats about the free store to fp. */
 
-extern void FreeStore__BlastMem(struct FreeStore *store);
+ASC_DLLSPEC void FreeStore__BlastMem(struct FreeStore *store);
 /**<
  *  This function deallocates *all* the memory associated with a free
  *  store. The free store should not be referenced after this call.
@@ -87,7 +92,7 @@ extern void FreeStore__BlastMem(struct FreeStore *store);
  *  variables as it does to pass the store pointer.
  */
 
-extern struct FreeStore *FreeStore_Create(int n_buffers, int buffer_length);
+ASC_DLLSPEC struct FreeStore *FreeStore_Create(int n_buffers, int buffer_length);
 /**< 
  *  Create a new free store with 1 buffer of size buffer length.
  *  The information within the buffer is *not* initialized in any way.
@@ -102,7 +107,7 @@ extern void FreeStore_ReInit(struct FreeStore *store);
  *  this call, as it is now a candidate to be allotted to someone else.
  */
 
-extern union RelationTermUnion *GetMem();
+ASC_DLLSPEC union RelationTermUnion *FreeStore_GetMem();
 /**< 
  *  This function returns a marked block to the caller. When not needed
  *  any more the user must use FreeMem(term).
@@ -114,10 +119,11 @@ extern union RelationTermUnion *GetMem();
  *  relation.
  */
 
-extern void FreeMem(union RelationTermUnion *term);
+ASC_DLLSPEC int FreeStore_FreeMem(union RelationTermUnion *term);
 /**< 
  *  This function returns a block of memory that was obtained from a
  *  freestore. The appropriate store must be set a priori.
+ * Return 1 in case of invalid call.
  */
 
 extern union RelationTermUnion
@@ -128,9 +134,9 @@ extern union RelationTermUnion
  *  freestore.
  */
 
-extern void FreeStore_SetFreeStore(struct FreeStore *store);
+ASC_DLLSPEC void FreeStore_SetFreeStore(struct FreeStore *store);
 /**<  Set the current working freestore. */
-extern struct FreeStore *FreeStore_GetFreeStore(void);
+ASC_DLLSPEC struct FreeStore *FreeStore_GetFreeStore(void);
 /**<  Retrieve the current working freestore. */
 
 /* @} */

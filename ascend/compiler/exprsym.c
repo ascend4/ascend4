@@ -45,7 +45,7 @@
 
 #ifndef NO_FREE_STORE
 /* free store alloc */
-#define TMALLOC (Term *)GetMem()
+#define TMALLOC (Term *)FreeStore_GetMem()
 /* independent allocation */
 #define UTMALLOC TERM_ALLOC
 #else
@@ -191,9 +191,8 @@ static Term *CopyDTerm(Term *term)
 }
 
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
-static void DestroyDTerm(Term *term)
-{
-  FreeMem(UNION_TERM(term));
+static void DestroyDTerm(Term *term) {
+  FreeStore_FreeMem(UNION_TERM(term));
 }
 #endif   /* THIS_IS_AN_UNUSED_FUNCTION */
 
