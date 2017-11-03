@@ -86,6 +86,8 @@ static void test_test1(void){
 	CU_ASSERT(RealAtomValue(inst)==2.0);
 	CU_ASSERT((inst = ChildByChar(GetSimulationRoot(sim),AddSymbol("y"))) && InstanceKind(inst)==REAL_ATOM_INST);
 	CU_ASSERT(RealAtomValue(inst)==1.0);
+
+	sim_destroy(sim);
 	Asc_CompilerDestroy();
 }
 
@@ -97,6 +99,8 @@ static void test_test2(void){
 	/* type for that model should have been ignored */
 	CU_ASSERT(FindType(AddSymbol("fix_and_assign2"))==NULL);
 	CU_ASSERT(sim==NULL);
+
+	sim_destroy(sim);
 	Asc_CompilerDestroy();
 }
 
