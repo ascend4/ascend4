@@ -70,6 +70,8 @@
 #ifndef ASC_MTX_USE_ONLY_H
 #define ASC_MTX_USE_ONLY_H
 
+#include <ascend/general/mem.h>
+
 /**	@addtogroup linear Linear
 	@{
 */

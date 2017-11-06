@@ -50,12 +50,12 @@ static void move_bwd(POINTER from, POINTER too, size_t nbytes)
       *(--too) = *(--from);
 }
 
-void mem_move_disjoint(POINTER from, POINTER too, size_t nbytes)
+void pool_move_disjoint(POINTER from, POINTER too, size_t nbytes)
 {
    ascbcopy((char *)from,(char *)too,nbytes);
 }
 
-void mem_move(POINTER from, POINTER too,size_t nbytes)
+void pool_move(POINTER from, POINTER too,size_t nbytes)
 {
    if( from < too )
       move_bwd(from,too,nbytes);
@@ -64,9 +64,9 @@ void mem_move(POINTER from, POINTER too,size_t nbytes)
 }
 
 /*  zeroes nbytes of memory pointed at by too. byte is ignored but
- *  there for interchangability with mem_repl_byte
+ *  there for interchangability with pool_repl_byte
  */
-void mem_zero_byte(POINTER too, unsigned byte, size_t nbytes)
+void pool_zero_byte(POINTER too, unsigned byte, size_t nbytes)
 {
   (void)byte;
   ascbzero((void *)too,(size_t)nbytes);
@@ -76,13 +76,13 @@ void mem_zero_byte(POINTER too, unsigned byte, size_t nbytes)
    */
 }
 
-void mem_repl_byte(POINTER too, unsigned byte, size_t nbytes)
+void pool_repl_byte(POINTER too, unsigned byte, size_t nbytes)
 {
    while( nbytes-- > 0 )
       *(too++) = (char)byte;
 }
 
-void mem_repl_word(POINTER too,unsigned word, size_t nwords)
+void pool_repl_word(POINTER too,unsigned word, size_t nwords)
 {
    unsigned *pw = (unsigned *)too;
    while( nwords-- > 0 )
@@ -92,49 +92,47 @@ void mem_repl_word(POINTER too,unsigned word, size_t nwords)
 #define mv_get(too,from,nbytes) move_fwd((POINTER)(from),(POINTER)(too),nbytes)
 #define mv_set(from,too,nbytes) move_fwd((POINTER)(from),(POINTER)(too),nbytes)
 
-/*********************** mem_store code. BAA 5/16/95 ***********************/
-
+/*********************** pool_store code. BAA 5/16/95 ***********************/
 /* according to K&R2 char <--> byte and size_t is a byte count.
    We are coding with those assumptions. (sizeof(char)==1) */
-
 #define OK 345676543
 #define DESTROYED 765434567
-#if MEM_DEBUG
+#if POOL_DEBUG
 /* ground LIGHTENING */
-#undef mem_LIGHTENING
-#define mem_LIGHTENING FALSE
+#undef pool_LIGHTENING
+#define pool_LIGHTENING FALSE
 #endif
 #define BYPASS_ASCMALLOC FALSE
-#if (mem_LIGHTENING || BYPASS_ASCMALLOC)
+#if (pool_LIGHTENING || BYPASS_ASCMALLOC)
 /* gonna bypass ascmalloc, eh? ;-) shaame on you! */
-#define AMEM_calloc(a,b) calloc(a,b)
-#define AMEM_malloc(a) malloc(a)
-#define AMEM_free(a) free(a)
-#define AMEM_realloc(a,b) realloc(a,b)
+#define PMEM_calloc(a,b) calloc(a,b)
+#define PMEM_malloc(a) malloc(a)
+#define PMEM_free(a) free(a)
+#define PMEM_realloc(a,b) realloc(a,b)
 #else
-#define AMEM_calloc(a,b) asccalloc(a,b)
-#define AMEM_malloc(a) ascmalloc(a)
-#define AMEM_free(a) ascfree(a)
-#define AMEM_realloc(a,b) ascrealloc(a,b)
+#define PMEM_calloc(a,b) asccalloc(a,b)
+#define PMEM_malloc(a) ascmalloc(a)
+#define PMEM_free(a) ascfree(a)
+#define PMEM_realloc(a,b) ascrealloc(a,b)
 #endif
 
 /*
-   Don't get caught taking the size of struct mem_element,
+   Don't get caught taking the size of struct pool_element,
    It is the head for anonymous elements of any size.
 */
-struct mem_element {
-  struct mem_element *nextelt;
+struct pool_element {
+	struct pool_element *nextelt;
 };
 
-struct mem_store_header {
+struct pool_store_header {
   int integrity;     /* sanity number. */
   /* actual data */
   int maxlen;        /* current length of pool, not necessarily w/bars full */
   char **pool;       /* array of pointers to bars */
-  struct mem_element *list; /* pointer to the most recently freed element */
+  struct pool_element *list; /* pointer to the most recently freed element */
 
   /* some interesting book keeping quantities */
-#if !mem_LIGHTENING
+#if !pool_LIGHTENING
   long active;		/* number of elements individually requested, ever */
   long retned;		/* number of elements individually returned, ever */
 #endif
@@ -150,7 +148,7 @@ struct mem_store_header {
   int curbar;        /* pool entry from which fresh elements may be had */
   int curelt;        /* number of the next element in the curbar to hand out */
   int onlist;        /* length of recycle list, in elements */
-#if !mem_LIGHTENING
+#if !pool_LIGHTENING
   int total;         /* total number of elements in this store */
   int highwater;     /* fresh elements turned loose from store */
   int inuse;         /* current elts user has outstanding */
@@ -162,55 +160,52 @@ struct mem_store_header {
  * authoritative list length.
  */
 
-#define AMEM_MINBARSIZE 5
-#define AMEM_MINPOOLSIZE 2
+#define PMEM_MINBARSIZE 5
+#define PMEM_MINPOOLSIZE 2
 #ifdef __alpha
-#define AMEM_MINPOOLGROW 512
+#define PMEM_MINPOOLGROW 512
 /* gotta love those fat pointers. grow by 4k min. */
 #else
-#define AMEM_MINPOOLGROW 1024
+#define PMEM_MINPOOLGROW 1024
 #endif
+
 
 /*
 Returns 2 if really bad, 1 if something fishy, 0 otherwise.
 */
-static int check_mem_store(const mem_store_t ms)
-{
-#if mem_LIGHTENING
+static int check_pool_store(const pool_store_t ps){
+#if pool_LIGHTENING
   return 0;
 #else
   int i;
 
-  if (ISNULL(ms)) {
-    FPRINTF(stderr,"check_mem_store (mem.c): NULL mem_store_t!\n");
+  if (ISNULL(ps)) {
+    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"check_pool_store (pool.c): NULL pool_store_t!");
     return 2;
   }
-  if (ms->integrity != OK) {
-    (ms->integrity == DESTROYED) ?
-      FPRINTF(stderr,
-        "check_mem_store (mem.c): mem_store_t recently destroyed!\n")
-    : FPRINTF(stderr,
-        "check_mem_store (mem.c): mem_store_t corrupted!\n");
+  if (ps->integrity != OK) {
+    (ps->integrity == DESTROYED) ?
+      (ERROR_REPORTER_HERE(ASC_PROG_NOTE,"check_pool_store (pool.c): pool_store_t recently destroyed!"))
+    : (ERROR_REPORTER_HERE(ASC_PROG_NOTE,"check_pool_store (pool.c): pool_store_t corrupted!"));
     return 2;
   }
-  if (ms->onlist && ISNULL(ms->list)) {
-    FPRINTF(stderr, "ERROR: check_mem_store (mem.c): NULL recycle list!\n");
+  if (ps->onlist && ISNULL(ps->list)) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL recycle list!");
     return 1;
   }
   /* more in than out? */
-  if (ms->retned > ms->active) {
-    FPRINTF(stderr, "ERROR: check_mem_store (mem.c): Imbalanced memory.\n");
+  if (ps->retned > ps->active) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Imbalanced memory.");
     return 1;
   }
-  if (ms->onlist + ms->inuse != ms->highwater) {
-    FPRINTF(stderr, "ERROR: check_mem_store (mem.c): Imbalanced elements.\n");
+  if (ps->onlist + ps->inuse != ps->highwater) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Imbalanced elements.");
     return 1;
   }
-  /* is pool allocated to ms->len? */
-  for (i=0; i < ms->len; i++) {
-    if (ISNULL(ms->pool[i])) {
-      FPRINTF(stderr, "ERROR: check_mem_store (mem.c): Hole found in pool!\n");
-      FPRINTF(stderr, "                                Bar %d is NULL.\n",i);
+  /* is pool allocated to ps->len? */
+  for (i=0; i < ps->len; i++) {
+    if (ISNULL(ps->pool[i])) {
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Hole found in pool! Bar %d is NULL.",i);
       return 2;
     }
   }
@@ -219,66 +214,66 @@ static int check_mem_store(const mem_store_t ms)
 #endif
 }
 
+
 /*
    This should not be called unless all current store is in use.
    Returns 0 if ok, 1 for all other insanities.
    If only partial expansion is possible, we will do it and
-   return 0. If change in ms->len is < the expected incremented value
+   return 0. If change in ps->len is < the expected incremented value
    on return, the user knows he should do some garbage removal.
    incr is provided for times when we know how much we want
    to expand by.
+
+   This should never be called on a totally empty pool.
 */
-static int expand_store(mem_store_t ms, int incr)
-{
+static int expand_store(pool_store_t ps, int incr){
   static int oldsize, newsize,punt,i;
   char **newpool = NULL;
-  if (check_mem_store(ms) >1) {
-    FPRINTF(stderr,"ERROR: (mem.c) expand_store received bad\n");
-    FPRINTF(stderr,"               mem_store_t. Expansion failed.\n");
+  if (check_pool_store(ps) >1) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"expand_store received bad pool_store_t. Expansion failed.");
     return 1;
   }
 
-#if !mem_LIGHTENING
+#if !pool_LIGHTENING
   /* do not expand elements or pool if all is not in use */
-  if (ms->inuse < ms->total) {
-    FPRINTF(stderr,"ERROR: (mem.c) expand_store called prematurely.\n");
-    FPRINTF(stderr,"               Expansion will be reported as failed.\n");
+  if (ps->inuse < ps->total) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"expand_store called prematurely. Expansion will be reported as failed.");
     return 1;
   }
 #endif
 
   /* make sure bar expansion is at least the minimum */
-  if (incr < ms->expand) incr = ms->expand;
-  oldsize = ms->len;
+  if (incr < ps->expand) incr = ps->expand;
+  oldsize = ps->len;
   newsize = oldsize+incr;
 
   /* expand pool capacity only if all of pool in use  */
-  if (newsize > ms->maxlen) {
-    i = ms->maxlen + MAX(ms->growpool,incr);
-    newpool = (char **)AMEM_realloc(ms->pool, i*sizeof(char *));
+  if (newsize > ps->maxlen) {
+    i = ps->maxlen + MAX(ps->growpool,incr);
+    newpool = (char **)PMEM_realloc(ps->pool, i*sizeof(char *));
     if (ISNULL(newpool)) {
-      FPRINTF(stderr,"ERROR: (mem.c) expand_store can't realloc pool.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"expand_store can't realloc pool.");
       return 1;
     }
     /* NULL the new pool */
-    for (punt = ms->maxlen; punt < i; punt++) {
+    for (punt = ps->maxlen; punt < i; punt++) {
       newpool[punt] = NULL;
     }
-    ms->maxlen = i;
-    ms->pool = newpool;
+    ps->maxlen = i;
+    ps->pool = newpool;
   }
   /* end of pool expansion */
 
   /* expand elements/bars */
-  ms->len = newsize; /* set expanded number of bars filled */
+  ps->len = newsize; /* set expanded number of bars filled */
   punt = -1;
   for (i = oldsize; i < newsize; i++) {
-#if MEM_DEBUG
-    ms->pool[i] = (char *)AMEM_calloc(ms->barsize,1);
+#if POOL_DEBUG
+    ps->pool[i] = (char *)PMEM_calloc(ps->barsize,1);
 #else
-    ms->pool[i] = (char *)AMEM_malloc(ms->barsize);
+    ps->pool[i] = (char *)PMEM_malloc(ps->barsize);
 #endif
-    if (ISNULL(ms->pool[i])) {
+    if (ISNULL(ps->pool[i])) {
       punt = i;
       /* we will return partially expanded if possible */
       break;
@@ -289,42 +284,40 @@ static int expand_store(mem_store_t ms, int incr)
     if (punt == oldsize) {
       /* unable to add elements at all. fail */
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
-      ms->len = oldsize;
+      ps->len = oldsize;
       return 1;
     } else {
       /* contract pool to the actual expansion size */
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory. Doing partial expansion.");
-      ms->len = punt;
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"expand_store: Insufficient memory. Doing partial expansion.");
+      ps->len = punt;
     }
   }
-#if !mem_LIGHTENING
-  ms->total = ms->len * ms->wid;
+#if !pool_LIGHTENING
+  ps->total = ps->len * ps->wid;
 #endif
   return 0;
 }
 
 
-#if !mem_LIGHTENING
-#if MEM_DEBUG
+#if !pool_LIGHTENING
+#if POOL_DEBUG
 /*
 Returns 1 if pointer is to an elt of the store, 0 otherwise.
 The case of pointer into store reserved space, but not an elt is checked.
 */
-static int from_store( mem_store_t ms, void *elt){
-  char *data;
-  char **pool;
-  int i;
-  int lim;
+static int from_store( pool_store_t ps, void *elt){
+  char *data, **pool;
+  int i,lim;
 
-  if (ISNULL(ms) || ISNULL(elt)) return 0;
-  lim = ms->len;
-  pool = ms->pool;
+  if (ISNULL(ps) || ISNULL(elt)) return 0;
+  lim = ps->len;
+  pool = ps->pool;
   data = (char *)elt;
   for (i=0; i<lim; i++) {
     /* did the char come from the current bar of chars? */
-    if (*pool <= data && data < *pool + ms->barsize) {
+    if (*pool <= data && data < *pool + ps->barsize) {
       /* if so, is it legal? */
-      if ( !((data - (*pool)) % ms->eltsize) ) {
+      if ( !((data - (*pool)) % ps->eltsize) ) {
         return 1;
       } else {
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Misaligned element pointer detected.");
@@ -339,42 +332,42 @@ static int from_store( mem_store_t ms, void *elt){
 #endif
 
 
-void mem_get_stats(struct mem_statistics *mss,  mem_store_t m){
-  if (ISNULL(mss)) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL struct mem_statistics pointer.");
+void pool_get_stats(struct pool_statistics *pss,  pool_store_t m){
+  if (ISNULL(pss)) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL struct pool_statistics.");
     return;
   }
-  if (check_mem_store(m)>1 ) {
-    ascbzero((void *)mss,(size_t)sizeof(struct mem_statistics));
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad mem_store_t given. Returning 0s.");
+  if (check_pool_store(m)>1 ) {
+    ascbzero((void *)pss,(int)sizeof(struct pool_statistics));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad pool_store_t given. Returning 0s.");
     return;
   }
-#if !mem_LIGHTENING
-  mss->m_eff =  (double)(m->inuse * m->eltsize_req)/(double)mem_sizeof_store(m);
-  mss->m_recycle =
-    ( (m->highwater > 0) ? (double)m->active/(double)m->highwater : 0.0 );
-  mss->elt_total = m->total;
-  mss->elt_taken = m->highwater;
-  mss->elt_inuse = m->inuse;
+#if !pool_LIGHTENING
+  pss->p_eff =  m->inuse*m->eltsize_req/(double)pool_sizeof_store(m);
+  pss->p_recycle =
+    ( (m->highwater > 0) ? m->active/(double)m->highwater : 0.0 );
+  pss->elt_total = m->total;
+  pss->elt_taken = m->highwater;
+  pss->elt_inuse = m->inuse;
 #else
-  mss->m_eff = 0.0;
-  mss->m_recycle = 0.0;
-  mss->elt_total = m->len*m->wid;
-  mss->elt_taken = m->curelt+m->curbar*m->wid;
-  mss->elt_inuse = 0;
+  pss->p_eff = 0.0;
+  pss->p_recycle = 0.0;
+  pss->elt_total = m->len*m->wid;
+  pss->elt_taken = m->curelt+m->curbar*m->wid;
+  pss->elt_inuse = 0;
 #endif
-  mss->elt_onlist = m->onlist;
-  mss->elt_size = (int)m->eltsize;
-  mss->str_len = m->len;
-  mss->str_wid = m->wid;
+  pss->elt_onlist = m->onlist;
+  pss->elt_size = m->eltsize;
+  pss->str_len = m->len;
+  pss->str_wid = m->wid;
 }
 
 
-mem_store_t mem_create_store(int length, int width,
-		size_t eltsize, int deltalen, int deltapool
+pool_store_t pool_create_store(int length, int width,
+	size_t eltsize, int deltalen, int deltapool
 ){
   int i, punt;
-  mem_store_t newms=NULL;
+  pool_store_t newps=NULL;
   size_t uelt;
 
   if (length < 1 || width < 1 || deltalen < 1 ) {
@@ -383,8 +376,8 @@ mem_store_t mem_create_store(int length, int width,
   }
 
   /* check minsizes */
-  if (length < AMEM_MINPOOLSIZE) length = AMEM_MINPOOLSIZE;
-  if (width < AMEM_MINBARSIZE) width = AMEM_MINBARSIZE;
+  if (length < PMEM_MINPOOLSIZE) length = PMEM_MINPOOLSIZE;
+  if (width < PMEM_MINBARSIZE) width = PMEM_MINBARSIZE;
   /* maybe the user gave us length = max he knows he needs, so we
      will not enforce a minimum maxlen on length at creation */
 
@@ -393,7 +386,7 @@ mem_store_t mem_create_store(int length, int width,
   if(eltsize % sizeof(void *)) {
     size_t ptrperelt;
     ptrperelt = eltsize/sizeof(void *) + 1;
-#if MEM_DEBUG
+#if POOL_DEBUG
 	CONSOLE_DEBUG("Elts of size %d padded to %d\n",(unsigned)eltsize,(unsigned)(eltsize = (unsigned)ptrperelt*sizeof(void *)));
 #else
     eltsize = ptrperelt*sizeof(void *);
@@ -403,49 +396,50 @@ mem_store_t mem_create_store(int length, int width,
   /* it could still be user data misalignable, of course, if pointer
      is not the most restrictive data type for the machine */
 
-  newms = (mem_store_t)AMEM_calloc(1,sizeof(struct mem_store_header));
-  if (ISNULL(newms)) {
+
+  newps = (pool_store_t)PMEM_calloc(1,sizeof(struct pool_store_header));
+  if (ISNULL(newps)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return NULL;
   }
   /* the following are all initially 0/NULL by calloc, and should be:
-  newms->list
-  newms->active
-  newms->retned
-  newms->curbar
-  newms->curelt
-  newms->highwater
-  newms->onlist
-  newms->inuse
-  newms->pool
+  newps->list
+  newps->active
+  newps->retned
+  newps->curbar
+  newps->curelt
+  newps->highwater
+  newps->onlist
+  newps->inuse
+  newps->pool
   */
-  newms->integrity = OK;
-  newms->len = length;
-  newms->maxlen = length;
-  newms->wid = width;
-  newms->expand = deltalen;
-  newms->eltsize = eltsize;
-  newms->barsize = eltsize * width;
-#if !mem_LIGHTENING
-  newms->total = length * width;
+  newps->integrity = OK;
+  newps->len = length;
+  newps->maxlen = length;
+  newps->wid = width;
+  newps->expand = deltalen;
+  newps->eltsize = eltsize;
+  newps->barsize = eltsize * width;
+#if !pool_LIGHTENING
+  newps->total = length * width;
 #endif
-  newms->growpool = MAX(AMEM_MINPOOLGROW,deltapool);
-  newms->eltsize_req = uelt;
+  newps->growpool = MAX(PMEM_MINPOOLGROW,deltapool);
+  newps->eltsize_req = uelt;
 
   /* get pool */
-  newms->pool = (char **)AMEM_calloc((size_t)length,sizeof(char *));
-  if (ISNULL(newms->pool)) {
+  newps->pool = (char **)PMEM_calloc(length,sizeof(char *));
+  if (ISNULL(newps->pool)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
-    newms->integrity = DESTROYED;
-    AMEM_free(newms);
+    newps->integrity = DESTROYED;
+    PMEM_free(newps);
     return NULL;
   }
 
   /* fill it */
   punt = -1;
   for (i=0; i < length; i++) {
-    newms->pool[i] = (char *)AMEM_malloc(newms->barsize);
-    if (ISNULL(newms->pool[i])) {
+    newps->pool[i] = (char *)PMEM_malloc(newps->barsize);
+    if (ISNULL(newps->pool[i])) {
       punt = i; /* we will stop cleanup deallocation at punt-1 */
       break;
     }
@@ -455,48 +449,48 @@ mem_store_t mem_create_store(int length, int width,
  if (punt != -1) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     for (i = 0; i < punt; i++) {
-      AMEM_free(newms->pool[i]);
+      PMEM_free(newps->pool[i]);
     }
-    newms->integrity = DESTROYED;
-    AMEM_free(newms->pool);
-    AMEM_free(newms);
+    newps->integrity = DESTROYED;
+    PMEM_free(newps->pool);
+    PMEM_free(newps);
     return NULL;
   }
-  return newms;
+  return newps;
 }
 
 
-void *mem_get_element(mem_store_t ms){
+void *pool_get_element(pool_store_t ps){
   /* no automatic variables please */
-  register struct mem_element *elt;
+  register struct pool_element *elt;
   /* in a test on the alpha, though, making elt static global slowed it */
 
-  if (ISNULL(ms)) {
+  if (ISNULL(ps)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL store.");
     return NULL;
   }
   /* recycling */
-  if (ms->onlist) {
-    elt = ms->list; /* get last element put into list */
-    ms->list = ms->list->nextelt; /* pop list */
+  if (ps->onlist) {
+    elt = ps->list; /* get last element put into list */
+    ps->list = ps->list->nextelt; /* pop list */
     /* preserves original null if list is empty */
-    ms->onlist--;
-#if !mem_LIGHTENING
-    ms->inuse++;
-    ms->active++;
+    ps->onlist--;
+#if !pool_LIGHTENING
+    ps->inuse++;
+    ps->active++;
 #endif
     return (void *)elt;
   }
 
   /* fresh element */
-  if (ms->curelt == ms->wid) {
+  if (ps->curelt == ps->wid) {
     /* bump up pool if bar all allocated */
-    ms->curelt = 0;
-    ms->curbar++;
+    ps->curelt = 0;
+    ps->curbar++;
   }
-  if (ms->curbar == ms->len) {
+  if (ps->curbar == ps->len) {
     /* attempt to expand pool if all allocated */
-    if ( expand_store(ms,1) ) {
+    if ( expand_store(ps,1) ) {
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
       return NULL;
     }
@@ -505,46 +499,50 @@ void *mem_get_element(mem_store_t ms){
 
   /* get the pointer to an element's worth of char from the pool */
   elt =
-    (struct mem_element *) &(ms->pool[ms->curbar][ms->curelt * ms->eltsize]);
-  ms->curelt++;
-#if !mem_LIGHTENING
-  ms->inuse++;
-  ms->highwater++;
-  ms->active++;
+    (struct pool_element *) &(ps->pool[ps->curbar][ps->curelt * ps->eltsize]);
+  ps->curelt++;
+#if !pool_LIGHTENING
+  ps->inuse++;
+  ps->highwater++;
+  ps->active++;
 #endif
   return (void *)elt;
 }
 
 
-void mem_get_element_list(mem_store_t ms, int nelts, void **ary){
-  ERROR_REPORTER_HERE(ASC_PROG_ERR,"mem_get_element_list NOT implemented");
-  if (ISNULL(ms) || ISNULL(ary)) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL array or mem_store_t");
+void pool_get_element_list(pool_store_t ps, int nelts, void **ary){
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"NOT implemented");
+  if (ISNULL(ps) || ISNULL(ary)) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL array or pool_store_t");
     return;
   }
   if (nelts <1) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with request for 0 elements.");
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Called with request for 0 elements.");
     return;
   }
   ary[0]=NULL;
 }
 
 
-void mem_free_element(mem_store_t ms, void *ptr){
-  register struct mem_element *elt;
+void pool_free_elementF(pool_store_t ps, void *ptr
+#if POOL_DEBUG
+	, CONST char *fn
+#endif
+){
+  register struct pool_element *elt;
 
   if (ISNULL(ptr)) return;
-  elt = (struct mem_element *)ptr;
+  elt = (struct pool_element *)ptr;
 
-#if !mem_LIGHTENING
-#if MEM_DEBUG
-  if (check_mem_store(ms)) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Fishy mem_store_t. Element not recycled.");
+#if !pool_LIGHTENING
+#if POOL_DEBUG
+  if (check_pool_store(ps)) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Fishy pool_store_t. Element not recycled. Filename='%s'",fn);
     return;
     /* at this point we have no way to get back at the abandoned element */
   }
-  /* check for belongs to this mem_store_t */
-  if (!from_store(ms,ptr)) {
+  /* check for belongs to this pool_store_t */
+  if (!from_store(ps,ptr)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Spurious element detected. Element ignored.");
     return;
   }
@@ -552,149 +550,163 @@ void mem_free_element(mem_store_t ms, void *ptr){
 #endif
 
   /* recycle him */
-  elt->nextelt = ms->list; /* push onto list */
+  elt->nextelt = ps->list; /* push onto list */
   /* first one in will pick up the null list starts as */
-  ms->list = elt;
+  ps->list = elt;
   /* ptr now on lifo stack in elt linked list form */
-  ms->onlist++;
+  ps->onlist++;
 
-#if !mem_LIGHTENING
-  ms->retned++;
-  ms->inuse--;
-  if (ms->inuse < 0) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"More elements freed than have been handed out. (%d)",abs(ms->inuse));
+#if !pool_LIGHTENING
+  ps->retned++;
+  ps->inuse--;
+  if (ps->inuse < 0) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"More elements freed than have been handed out. (%d)",abs(ps->inuse));
+#if POOL_DEBUG
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Filename='%s'",fn);
+#endif
   }
 #endif
   return;
 }
 
 
-void mem_clear_store(mem_store_t ms){
-  if ( check_mem_store(ms) > 1 ) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad mem_store_t given. Not cleared.");
+void pool_clear_storeF(pool_store_t ps
+#if POOL_DEBUG
+	, CONST char *fn
+#endif
+){
+  if ( check_pool_store(ps) > 1 ) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad pool_store_t given. Not cleared.");
+#if POOL_DEBUG
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Filename='%s'",fn);
+#endif
     return;
   }
-#if MEM_DEBUG
-  if (ms->inuse || ms->highwater - ms->onlist ) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"In use elements in given mem_store_t are cleared. Don't refer to them again.");
+#if POOL_DEBUG
+  if (ps->inuse || ps->highwater - ps->onlist ) {
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"In use elements in given pool_store_t are cleared. Don't refer to them again. Filename='%s'",fn);
   }
 #endif
-  ms->retned += ms->inuse;
-  if (ms->active - ms->retned ||
-      ms->onlist + ms->inuse - ms->highwater ||
-      ms->curelt + ms->curbar*ms->wid - ms->highwater) {
+#if !pool_LIGHTENING
+  ps->retned += ps->inuse;
+  if (ps->active - ps->retned ||
+      ps->onlist + ps->inuse - ps->highwater ||
+      ps->curelt + ps->curbar*ps->wid - ps->highwater) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Element imbalance detected.");
   }
-  ms->inuse = 0;
-  ms->curbar = 0;
-  ms->curelt = 0;
-  ms->highwater = 0;
-  ms->onlist = 0;
-  ms->list = NULL;
+#endif
+#if !pool_LIGHTENING
+  ps->inuse = 0;
+  ps->highwater = 0;
+#endif
+  ps->curbar = 0;
+  ps->curelt = 0;
+  ps->onlist = 0;
+  ps->list = NULL;
 }
 
 
-void mem_destroy_store(mem_store_t ms){
+void pool_destroy_store(pool_store_t ps){
   int i;
-#if MEM_DEBUG
-  if ( (i=check_mem_store(ms))==2 ) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad mem_store_t given. Not destroyed.");
+#if POOL_DEBUG
+  if ( (i=check_pool_store(ps))==2 ) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad pool_store_t given. Not destroyed.");
     return;
   }
   if ( i ) {
-    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Suspicious mem_store_t given. Destroyed anyway.");
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Suspicious pool_store_t given. Destroyed anyway.");
     return;
   }
-  if (ms->inuse || ms->highwater - ms->onlist ) {
-    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"In use elements in given mem_store_t are cleared. Don't refer to them again.");
+  if (ps->inuse || ps->highwater - ps->onlist ) {
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"In use elements in given pool_store_t are cleared. Don't refer to them again.");
   }
 #else
-  if (ISNULL(ms)  || ms->integrity != OK) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad mem_store_t given. Not destroyed.");
+  if (ISNULL(ps)  || ps->integrity != OK) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad pool_store_t given. Not destroyed.");
     return;
   }
 #endif
-  for (i=0; i < ms->len; i++) {
-    AMEM_free(ms->pool[i]);
+  for (i=0; i < ps->len; i++) {
+    PMEM_free(ps->pool[i]);
   }
-  AMEM_free(ms->pool);
-  ms->integrity = DESTROYED;
-  AMEM_free(ms);
+  PMEM_free(ps->pool);
+  ps->integrity = DESTROYED;
+  PMEM_free(ps);
   return;
 }
 
 
-void mem_print_store(FILE *fp, mem_store_t ms, unsigned detail){
-  if (ISNULL(fp) || ISNULL(ms)) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL FILE or mem_store_t");
+void pool_print_store(FILE *fp, pool_store_t ps, unsigned detail){
+  if (ISNULL(fp) || ISNULL(ps)) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL FILE or pool_store_t.");
     return;
   }
-  if (check_mem_store(ms)>1) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with bad mem_store_t");
+  if (check_pool_store(ps)>1) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with bad pool_store_t");
     return;
   }
-  FPRINTF(fp,"mem_store_t statistics:\n");
+  FPRINTF(fp,"pool_store_t statistics:\n");
   if (detail) {
     FPRINTF(fp,"INTERNAL (integrity OK if = %d):\n",OK);
-    FPRINTF(fp,"%-30s %-20ld\n","integrity", (long)ms->integrity);
-#if !mem_LIGHTENING
-    FPRINTF(fp,"%-30s %-20ld\n","active",ms->active);
-    FPRINTF(fp,"%-30s %-20ld\n","returned",ms->retned);
+    FPRINTF(fp,"%-30s %-20ld\n","integrity", (long)ps->integrity);
+#if !pool_LIGHTENING
+    FPRINTF(fp,"%-30s %-20ld\n","active",ps->active);
+    FPRINTF(fp,"%-30s %-20ld\n","returned",ps->retned);
 #endif
-    FPRINTF(fp,"%-30s %-20lu\n","eltsize",(unsigned long)ms->eltsize);
-    FPRINTF(fp,"%-30s %-20lu\n","barsize",(unsigned long)ms->barsize);
-    FPRINTF(fp,"%-30s %-20d\n","pool length",ms->len);
-    FPRINTF(fp,"%-30s %-20d\n","pool maxlength",ms->maxlen);
-    FPRINTF(fp,"%-30s %-20d\n","bar width",ms->wid);
-    FPRINTF(fp,"%-30s %-20d\n","pool extension",ms->growpool);
-    FPRINTF(fp,"%-30s %-20d\n","pool fill rate",ms->expand);
-    FPRINTF(fp,"%-30s %-20d\n","current bar",ms->curbar);
-    FPRINTF(fp,"%-30s %-20d\n","current elt",ms->curelt);
-#if !mem_LIGHTENING
-    FPRINTF(fp,"%-30s %-20d\n","total elts",ms->total);
-    FPRINTF(fp,"%-30s %-20d\n","highwater",ms->highwater);
+    FPRINTF(fp,"%-30s %-20lu\n","eltsize",(unsigned long)ps->eltsize);
+    FPRINTF(fp,"%-30s %-20lu\n","barsize",(unsigned long)ps->barsize);
+    FPRINTF(fp,"%-30s %-20d\n","pool length",ps->len);
+    FPRINTF(fp,"%-30s %-20d\n","pool maxlength",ps->maxlen);
+    FPRINTF(fp,"%-30s %-20d\n","bar width",ps->wid);
+    FPRINTF(fp,"%-30s %-20d\n","pool extension",ps->growpool);
+    FPRINTF(fp,"%-30s %-20d\n","pool fill rate",ps->expand);
+    FPRINTF(fp,"%-30s %-20d\n","current bar",ps->curbar);
+    FPRINTF(fp,"%-30s %-20d\n","current elt",ps->curelt);
+#if !pool_LIGHTENING
+    FPRINTF(fp,"%-30s %-20d\n","total elts",ps->total);
+    FPRINTF(fp,"%-30s %-20d\n","highwater",ps->highwater);
 #endif
-    FPRINTF(fp,"%-30s %-20d\n","elt on list",ms->onlist);
-#if !mem_LIGHTENING
-    FPRINTF(fp,"%-30s %-20d\n","elt in use",ms->inuse);
+    FPRINTF(fp,"%-30s %-20d\n","elt on list",ps->onlist);
+#if !pool_LIGHTENING
+    FPRINTF(fp,"%-30s %-20d\n","elt in use",ps->inuse);
 #endif
   }
   if (!detail || detail > 1) {
     FPRINTF(fp,"SUMMARY:\n");
-    FPRINTF(fp,"%-30s %-20d\n","Pointers in pool",ms->maxlen);
-    FPRINTF(fp,"%-30s %-20d\n","Pointers allocated",ms->len);
-#if !mem_LIGHTENING
-    FPRINTF(fp,"%-30s %-20d\n","Elements in pool",ms->total);
-    FPRINTF(fp,"%-30s %-20d\n","Elements in use",ms->inuse);
+    FPRINTF(fp,"%-30s %-20d\n","Pointers in pool",ps->maxlen);
+    FPRINTF(fp,"%-30s %-20d\n","Pointers allocated",ps->len);
+#if !pool_LIGHTENING
+    FPRINTF(fp,"%-30s %-20d\n","Elements in pool",ps->total);
+    FPRINTF(fp,"%-30s %-20d\n","Elements in use",ps->inuse);
 #endif
-    FPRINTF(fp,"%-30s %-20d\n","Elements waiting recycle",ms->onlist);
-#if !mem_LIGHTENING
-    FPRINTF(fp,"%-30s %-20d\n","Elements unused",ms->total - ms->highwater);
+    FPRINTF(fp,"%-30s %-20d\n","Elements waiting recycle",ps->onlist);
+#if !pool_LIGHTENING
+    FPRINTF(fp,"%-30s %-20d\n","Elements unused",ps->total - ps->highwater);
 #endif
-    FPRINTF(fp,"%-30s %-20d\n","Working deltapool",ms->growpool);
-    FPRINTF(fp,"%-30s %-20d\n","Working deltalen",ms->expand);
+    FPRINTF(fp,"%-30s %-20d\n","Working deltapool",ps->growpool);
+    FPRINTF(fp,"%-30s %-20d\n","Working deltalen",ps->expand);
     FPRINTF(fp,"%-30s %-20g\n","Element efficiency",
-      ms->eltsize_req/(double)ms->eltsize);
-#if !mem_LIGHTENING
+      ps->eltsize_req/(double)ps->eltsize);
+#if !pool_LIGHTENING
     FPRINTF(fp,"%-30s %-20g\n","Memory efficiency (w/recycle)",
-      ms->highwater*ms->eltsize_req/(double)mem_sizeof_store(ms));
+      ps->highwater*ps->eltsize_req/(double)pool_sizeof_store(ps));
     FPRINTF(fp,"%-30s %-20g\n","Memory efficiency (instant)",
-      ms->inuse*ms->eltsize_req/(double)mem_sizeof_store(ms));
+      ps->inuse*ps->eltsize_req/(double)pool_sizeof_store(ps));
     FPRINTF(fp,"%-30s %-20g\n","Recycle rate",
-       ((ms->highwater > 0) ? ms->active/(double)ms->highwater : 0) );
+       ((ps->highwater > 0) ? ps->active/(double)ps->highwater : 0) );
 #endif
   }
   FPRINTF(fp,"%-30s %-20lu\n","Total bytes in store",
-    (unsigned long)mem_sizeof_store(ms));
+    (unsigned long)pool_sizeof_store(ps));
 
   return;
 }
 
 
-size_t mem_sizeof_store(mem_store_t ms){
+size_t pool_sizeof_store(pool_store_t ps){
   register size_t siz;
-  if (check_mem_store(ms)>1) return (size_t)0;
-  siz = sizeof(struct mem_store_header);    /* header */
-  siz += ms->barsize * ms->len;             /* elt data */
-  return (siz += ms->maxlen*sizeof(char*)); /* pool vector */
+  if (check_pool_store(ps)>1) return (size_t)0;
+  siz = sizeof(struct pool_store_header);    /* header */
+  siz += ps->barsize * ps->len;             /* elt data */
+  return (siz += ps->maxlen*sizeof(char*)); /* pool vector */
 }
