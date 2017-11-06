@@ -31,21 +31,14 @@
 #ifndef MEMUSED
 # define MEMUSED(N) CU_TEST(ascmeminuse()==(N))
 #endif
-#ifndef LISTUSESPOOL
-# error "LISTUSESPOOL must be defined!"
-#endif
 
 static void setup(void){
-#if LISTUSESPOOL
 	gl_init_pool();
-#endif
 	gl_init();
 }
 
 static void teardown(void){
-#if LISTUSESPOOL
 	gl_destroy_pool();
-#endif
 }	
 
 static void test_createdestroy(void){

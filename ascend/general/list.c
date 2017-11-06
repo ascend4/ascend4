@@ -23,14 +23,33 @@
 
 #include <stdarg.h>
 #include "platform.h"
+#include <ascend/general/config.h>
+
 #include <ascend/utilities/error.h>
 #include "panic.h"
 #include "ascMalloc.h"
 #include "list.h"
-#if LISTUSESPOOL
-#include "pool.h"
-#endif
 #include "mathmacros.h"
+
+#ifndef ASC_NO_POOL
+#include "pool.h"
+# define LISTUSESPOOL TRUE
+#else
+# define LISTUSESPOOL FALSE
+#endif
+	
+/**<
+ *  Flag to select list management strategy.
+ *  LISTUSESPOOL == TRUE allows the list module to use pool.[ch] to
+ *  manage list memory overhead. Performance is enhanced this way.
+ *
+ *  LISTUSESPOOL == FALSE removes the pool dependency completely, at
+ *  a performance penalty.
+ *
+ *  The following 3 functions work for either value of LISTUSESPOOL
+ *  in some appropriate fashion: gl_init_pool(),  gl_destroy_pool(),
+ *  gl_report_pool().
+ */
 
 #define address(a,b) (((unsigned long)(a) + ((b)*sizeof(VOIDPTR))-sizeof(VOIDPTR)))
 

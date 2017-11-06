@@ -110,24 +110,6 @@ ASC_DLLSPEC void gl_init(void);
  *  there is no reason to do so.
  */
 
-#ifdef ASC_NO_POOL
-#define LISTUSESPOOL FALSE
-#else
-#define LISTUSESPOOL TRUE
-#endif
-/**<
- *  Flag to select list management strategy.
- *  LISTUSESPOOL == TRUE allows the list module to use pool.[ch] to
- *  manage list memory overhead. Performance is enhanced this way.
- *
- *  LISTUSESPOOL == FALSE removes the pool dependency completely, at
- *  a performance penalty.
- *
- *  The following 3 functions work for either value of LISTUSESPOOL
- *  in some appropriate fashion: gl_init_pool(),  gl_destroy_pool(),
- *  gl_report_pool().
- */
-
 ASC_DLLSPEC void gl_init_pool(void);
 /**<
  *  Sets up list overhead structure data management.

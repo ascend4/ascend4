@@ -120,6 +120,13 @@ typedef unsigned long long asc_intptr_t;
 /* #define ASC_WITH_DMALLOC @ASC_WITH_DMALLOC@ */
 #endif
 
+/*
+	This define disables the use of pool.h and forces the code
+	to default back to standard malloc-based routines (via
+	ascMalloc.h). Applies to exprs.c, name.c, relation_io.c, 
+	arrayinst.c, setinstval.c, list.c, and maybe elsewhere.
+*/
+// #define ASC_NO_POOL
 
 /*
 	Whether to generate color console output when requested eg
