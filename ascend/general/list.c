@@ -1025,9 +1025,12 @@ void gl_reverse(struct gl_list_t *list){
 
 
 void gl_reset(struct gl_list_t *list){
-  asc_assert(NULL != list);
-  list->flags = (unsigned int)(gsf_SORTED | gsf_EXPANDABLE);
-  list->length = 0;
+	asc_assert(NULL != list);
+	list->flags = (unsigned int)(gsf_SORTED | gsf_EXPANDABLE);
+	list->length = 0;
+#if !LISTUSESPOOL
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"gl_reset with ASC_NO_POOL could cause memory leak");
+#endif
 }
 
 
