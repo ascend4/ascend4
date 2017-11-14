@@ -313,6 +313,7 @@ ASC_DLLSPEC int32 relman_jacobian_count(struct rel_relation **rlist,
  *  *rhomax is the largest row count on return.
  */
 
+#if 0 && THIS_IS_A_DISUSED_FUNCTION
 ASC_DLLSPEC int32 relman_hessian_count(
 	struct rel_relation **rlist, int32 rlen
 	, var_filter_t *vfilter, rel_filter_t *rfilter
@@ -324,6 +325,7 @@ ASC_DLLSPEC int32 relman_hessian_count(
  *  are counted. rlen is the length of the relation list.
  *  *rhomax is the largest row count on return.
  */
+#endif
 
 ASC_DLLSPEC boolean relman_calc_satisfied_scaled(struct rel_relation *rel,
                                             real64 tolerance);

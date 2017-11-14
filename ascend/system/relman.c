@@ -46,7 +46,6 @@
 #include <ascend/compiler/relation.h>
 #include <ascend/compiler/relation_util.h>
 #include <ascend/compiler/relation_io.h>
-#include <ascend/compiler/exprsym.h>
 
 #include <ascend/general/ltmatrix.h>
 
@@ -862,6 +861,7 @@ int32 relman_jacobian_count(struct rel_relation **rlist, int32 rlen
 }
 
 
+#if 0
 static int AllVariables(struct Instance *i){
 	return TRUE;
 }
@@ -882,7 +882,7 @@ int32 relman_hessian_count(struct rel_relation **rlist, int32 rlen
 
 	return 0;
 }
-
+#endif
 
 int relman_diffs(struct rel_relation *rel
 		, const var_filter_t *filter
