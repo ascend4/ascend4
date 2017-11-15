@@ -30,12 +30,14 @@
 #include <ascend/general/config.h>
 
 static void test_bit(void){
-  struct BitList *bit1, *bit2;
+  struct BitList *bit1, *bit2, *bit3;
   unsigned long prior_meminuse = ascmeminuse();
 
 #ifndef MALLOC_DEBUG
   CU_FAIL("test_set() compiled without MALLOC_DEBUG - memory management not tested.");
 #endif
+
+  // CreateBList, SetBit, ClearBit, ReadBit, BLength, BitListEmpty, BitListBytes
 
   bit1 = CreateBList(10);
 
@@ -49,6 +51,8 @@ static void test_bit(void){
   CU_TEST(BLength(bit1)==10);
 
   DestroyBList(bit1);
+
+  // CreateFBList, ExpandBList
 
   bit1 = CreateFBList(100);
   CU_TEST(BLength(bit1)==100);
@@ -88,6 +92,8 @@ static void test_bit(void){
 
   DestroyBList(bit1);
 
+  // BitListEmpty, CompBList
+
   bit1 = CreateBList(10);
   CU_TEST(BitListEmpty(bit1));
   SetBit(bit1,9);
@@ -106,12 +112,16 @@ static void test_bit(void){
   CU_TEST(CompBList(bit1,bit2));
   DestroyBList(bit1);
 
+  // ExpandFBList
+
   bit1 = CreateFBList(5);
   bit1 = ExpandFBList(bit1,10);
   CU_TEST(CompBList(bit1,bit2));
 
   DestroyBList(bit1);
   DestroyBList(bit2);
+
+  // ExpandBList
 
   bit1 = CreateBList(10);
   SetBit(bit1,3);
@@ -134,6 +144,84 @@ static void test_bit(void){
   DestroyBList(bit1);
   DestroyBList(bit2);
   
+  // CondSetBit
+
+  bit1 = CreateBList(1000);
+  bit2 = CreateBList(1000);
+  CondSetBit(bit1,768,84);
+  SetBit(bit2,768);
+  CU_TEST(CompBList(bit1,bit2));
+  CondSetBit(bit1,21,5);
+  CU_TEST(!CompBList(bit1,bit2));
+  CondSetBit(bit1,21,0);
+  CU_TEST(CompBList(bit1,bit2));
+  
+  DestroyBList(bit1);
+  DestroyBList(bit2);
+
+  // IntersectBLists
+
+  bit1 = CreateBList(1000);
+  bit2 = CreateBList(1000);
+  SetBit(bit1,10);
+  SetBit(bit2,999);
+  SetBit(bit2,10);
+  SetBit(bit1,22);
+  IntersectBLists(bit1,bit2);
+  CU_TEST(ReadBit(bit1,10));
+  CU_TEST(!ReadBit(bit1,999));
+  CU_TEST(!ReadBit(bit1,22));
+  bit3 = CreateBList(1000);
+  SetBit(bit3,10);
+  CU_TEST(CompBList(bit1,bit3));
+  DestroyBList(bit1);
+  DestroyBList(bit2);
+  DestroyBList(bit3);
+
+  // UnionBLists
+
+  bit1 = CreateBList(1000);
+  bit2 = CreateBList(1000);
+  SetBit(bit1,19);
+  SetBit(bit2,888);
+  SetBit(bit2,19);
+  SetBit(bit1,105);
+  UnionBLists(bit1,bit2);
+  CU_TEST(ReadBit(bit1,19));
+  CU_TEST(ReadBit(bit1,888));
+  CU_TEST(ReadBit(bit1,105));
+  bit3 = CreateBList(1000);
+  SetBit(bit3,19);
+  SetBit(bit3,888);
+  SetBit(bit3,105);
+  CU_TEST(CompBList(bit1,bit3));
+  DestroyBList(bit1);
+  DestroyBList(bit2);
+  DestroyBList(bit3);
+
+  // FirstNonZeroBit
+
+  bit1 = CreateBList(256);
+  SetBit(bit1,255);
+  CU_TEST(FirstNonZeroBit(bit1)==255);
+  SetBit(bit1,254);
+  CU_TEST(FirstNonZeroBit(bit1)==254);
+  SetBit(bit1,8);
+  CU_TEST(FirstNonZeroBit(bit1)==8);
+  SetBit(bit1,7);
+  CU_TEST(FirstNonZeroBit(bit1)==7);
+  SetBit(bit1,0);
+  CU_TEST(FirstNonZeroBit(bit1)==0);
+  CU_TEST(!BitListEmpty(bit1));
+  bit2 = CreateBList(256);
+  CU_TEST(BitListEmpty(bit2));
+  CU_TEST(FirstNonZeroBit(bit2) > 256);
+  OverwriteBList(bit2,bit1);
+  CU_TEST(FirstNonZeroBit(bit1) > 256);
+  CU_TEST(BitListEmpty(bit1));
+  DestroyBList(bit1);
+  DestroyBList(bit2);
+
 
   CU_TEST(prior_meminuse == ascmeminuse());// back to original memory used
 }

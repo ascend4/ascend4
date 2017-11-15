@@ -53,89 +53,91 @@ struct BitList {
 
 ASC_DLLSPEC struct BitList *CreateBList(unsigned long len);
 /**<
- *  Create a bit list with len elements.  The elements are all initialized to 0.
- */
+	Create a bit list with len elements.  The elements are all initialized to 0.
+*/
 
 ASC_DLLSPEC struct BitList *CreateFBList(unsigned long len);
 /**<
- *  Create a bit list with len elements.  The elements are all initialized to 1.
- */
+	Create a bit list with len elements.  The elements are all initialized to 1.
+*/
 
 ASC_DLLSPEC struct BitList *ExpandBList(struct BitList *bl, unsigned long len);
 /**<
- *  The function will expand bl into a longer bitlist.  It copies all the
- *  previous values from the original bit list, and it initializes all
- *  the added entries to 0.  It returns the new bitlist and the old bitlist
- *  is not usable anymore.
- */
+	Expand bl into a longer bitlist. It copies all the previous values from
+	the original bit list, and it initializes all the added entries to 0. 
+	@return the new bitlist 
+	@note the old bitlist is not usable anymore.
+*/
 
 ASC_DLLSPEC struct BitList *ExpandFBList(struct BitList *bl, unsigned long len);
 /**<
- *  The function will expand bl into a longer bitlist.  It copies all the
- *  previous values from the original bit list, and it initializes all
- *  the added entries to 1.  It returns the new bitlist and the old bitlist
- *  is not usable anymore.
- */
+	The function will expand bl into a longer bitlist.  It copies all the
+	previous values from the original bit list, and it initializes all
+	the added entries to 1.
+	@return the new bitlist (the old bitlist is not usable anymore)
+*/
 
 ASC_DLLSPEC void DestroyBList(struct BitList *bl);
 /**<
- *  Deallocate the memory for bl.
- */
+	Deallocate the memory for bl.
+*/
 
 ASC_DLLSPEC struct BitList *CopyBList(CONST struct BitList *bl);
 /**<
- *  Make a copy of bl and return it.  The length of the copy equals that of bl,
- *  and all the elements of the copy have the same value as the corresponding
- *  elements in bl.
- */
+	Make a copy of bl and return it.  The length of the copy equals that of bl,
+	and all the elements of the copy have the same value as the corresponding
+	elements in bl.
+*/
 
-extern void OverwriteBList(CONST struct BitList *src, struct BitList *target);
+ASC_DLLSPEC void OverwriteBList(CONST struct BitList *src, struct BitList *target);
 /**<
- *  Copies the bit information from src into target.  Overwrites anything
- *  that is in target.
- *  src and target must be the same length or this function will not return.
- *  src and target must not be NULL.
- */
+	Copies the bit information from src into target.  Overwrites anything
+	that is in target.
+	src and target must be the same length or this function will not return.
+	src and target must not be NULL.
+*/
 
 ASC_DLLSPEC unsigned long BitListBytes(CONST struct BitList *bl);
 /**<
- *  Returns the number of bytes allocated to the bitlist (including
+	Returns the number of bytes allocated to the bitlist (including
 	both the data bits as well as the 'struct BitList' overhead).
- */
+*/
 
 ASC_DLLSPEC void SetBit(struct BitList *bl, unsigned long pos);
 /**<
- *  Set the pos'th bit of bl to 1.
- */
+	Set the pos'th bit of bl to 1. The value of 'pos' must be in the range
+	from 0 to bl->length.
+*/
 
 ASC_DLLSPEC void ClearBit(struct BitList *bl, unsigned long pos);
 /**<
- *  Set the pos'th bit of bl to 0.
- */
+	Set the pos'th bit of bl to 0. The value of 'pos' must be in the range
+	from 0 to bl->length.
+*/
 
-extern void CondSetBit(struct BitList *bl, unsigned long pos, int cond);
+ASC_DLLSPEC void CondSetBit(struct BitList *bl, unsigned long pos, int cond);
 /**<
- *  If cond is true, set the pos'th bit of bl to 1; otherwise, set it to 0.
- */
+	If cond is true, set the pos'th bit of bl to 1; otherwise, set it to 0.
+*/
 
 ASC_DLLSPEC int ReadBit(CONST struct BitList *bl, unsigned long pos);
 /**<
 	Return a true value if bit pos is 1, otherwise return FALSE.
+	The value of 'pos' must be in the range from 0 to bl->length.
 	@note: this 'true value' will not equal one; it will just be non-zero.
+*/
 
- */
-
-extern void IntersectBLists(struct BitList *bl1, CONST struct BitList *bl2);
+ASC_DLLSPEC void IntersectBLists(struct BitList *bl1, CONST struct BitList *bl2);
 /**<
- *  This routine returns the intersection of bl1 and bl2 which is stored in
- *  bl1.  bl2 is unchanged, unless of course bl1 and bl2 are the same.
- */
+	This routine returns the intersection of bl1 and bl2 which is stored in
+	bl1.  bl2 is unchanged, unless of course bl1 and bl2 are the same.
+*/
 
-extern void UnionBLists(struct BitList *bl1, CONST struct BitList *bl2);
+ASC_DLLSPEC void UnionBLists(struct BitList *bl1, CONST struct BitList *bl2);
 /**<
- *  This routine returns the union of bl1 and bl2 which is stored in bl1.
- *  bl2 is unchanged.
- */
+	This routine returns the union of bl1 and bl2 which is stored in bl1.
+	bl2 is unchanged.
+*/
 
 #ifdef NDEBUG
 /** Retrieve the bit list length. */
@@ -146,24 +148,24 @@ extern void UnionBLists(struct BitList *bl1, CONST struct BitList *bl2);
 #endif
 ASC_DLLSPEC unsigned long BLengthF(CONST struct BitList *bl);
 /**<
- *  Return the length of bl.
- */
+	Return the length of bl.
+*/
 
 ASC_DLLSPEC int BitListEmpty(CONST struct BitList *bl);
 /**<
- *  Return a true value if bl is empty; otherwise, it returns a false value.
- */
+	Return a true value if bl is empty; otherwise, it returns a false value.
+*/
 
 ASC_DLLSPEC int CompBList(struct BitList *b1, struct BitList *b2);
 /**<
- *  Return 1 if bl is equal to b2, return 0 otherwise
- */
+	Return 1 if bl is equal to b2, return 0 otherwise
+*/
 
-extern unsigned long FirstNonZeroBit(CONST struct BitList *bl);
+ASC_DLLSPEC unsigned long FirstNonZeroBit(CONST struct BitList *bl);
 /**<
- *  Return the first non-zero bit.  If it is unable to find a non-zero
- *  it will return a number greater than BLength(bl).
- */
+	Return the position of the first non-zero bit (where 0 is the first position)
+	If it is unable to find a non-zero it will return a number greater than BLength(bl).
+*/
 
 /* @} */
 

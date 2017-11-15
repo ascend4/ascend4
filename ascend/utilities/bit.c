@@ -182,7 +182,7 @@ void CondSetBit(struct BitList *bl, unsigned long int pos, int cond){
   ptr = (byte *)((asc_intptr_t)bl+sizeof(struct BitList)+(pos >> 3));
   AssertContainedIn(bl,ptr);
   bit = pos & 0x07;
-  if (cond)
+  if(cond)
     *ptr = *ptr | (byte)(1 << bit);
   else
     *ptr = *ptr & (byte)(~(1 << bit));
