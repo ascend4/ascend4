@@ -34,7 +34,8 @@
 	T(ascPrint) \
 	T(ascSignal) \
 	T(readln) \
-	T(set)
+	T(set) \
+	T(bit)
 
 #define PROTO_UTILS(NAME) PROTO(utilities,NAME)
 TESTS(PROTO_UTILS)

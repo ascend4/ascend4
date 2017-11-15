@@ -51,17 +51,17 @@ struct BitList {
   unsigned long length;
 };
 
-extern struct BitList *CreateBList(unsigned long len);
+ASC_DLLSPEC struct BitList *CreateBList(unsigned long len);
 /**<
  *  Create a bit list with len elements.  The elements are all initialized to 0.
  */
 
-extern struct BitList *CreateFBList(unsigned long len);
+ASC_DLLSPEC struct BitList *CreateFBList(unsigned long len);
 /**<
  *  Create a bit list with len elements.  The elements are all initialized to 1.
  */
 
-extern struct BitList *ExpandBList(struct BitList *bl, unsigned long len);
+ASC_DLLSPEC struct BitList *ExpandBList(struct BitList *bl, unsigned long len);
 /**<
  *  The function will expand bl into a longer bitlist.  It copies all the
  *  previous values from the original bit list, and it initializes all
@@ -77,7 +77,7 @@ extern struct BitList *ExpandFBList(struct BitList *bl, unsigned long len);
  *  is not usable anymore.
  */
 
-extern void DestroyBList(struct BitList *bl);
+ASC_DLLSPEC void DestroyBList(struct BitList *bl);
 /**<
  *  Deallocate the memory for bl.
  */
@@ -97,17 +97,18 @@ extern void OverwriteBList(CONST struct BitList *src, struct BitList *target);
  *  src and target must not be NULL.
  */
 
-extern unsigned long BitListBytes(CONST struct BitList *bl);
+ASC_DLLSPEC unsigned long BitListBytes(CONST struct BitList *bl);
 /**<
- *  Returns the number of bytes allocated to the bitlist.
+ *  Returns the number of bytes allocated to the bitlist (including
+	both the data bits as well as the 'struct BitList' overhead).
  */
 
-extern void SetBit(struct BitList *bl, unsigned long pos);
+ASC_DLLSPEC void SetBit(struct BitList *bl, unsigned long pos);
 /**<
  *  Set the pos'th bit of bl to 1.
  */
 
-extern void ClearBit(struct BitList *bl, unsigned long pos);
+ASC_DLLSPEC void ClearBit(struct BitList *bl, unsigned long pos);
 /**<
  *  Set the pos'th bit of bl to 0.
  */
@@ -141,7 +142,7 @@ extern void UnionBLists(struct BitList *bl1, CONST struct BitList *bl2);
 /** Retrieve the bit list length. */
 #define BLength(bl) BLengthF(bl)
 #endif
-extern unsigned long BLengthF(CONST struct BitList *bl);
+ASC_DLLSPEC unsigned long BLengthF(CONST struct BitList *bl);
 /**<
  *  Return the length of bl.
  */
