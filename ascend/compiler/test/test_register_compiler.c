@@ -25,8 +25,7 @@
 	T(bintok) \
 	T(fixfree) \
 	T(blackbox) \
-	T(fixassign) \
-	T(freestore)
+	T(fixassign)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)

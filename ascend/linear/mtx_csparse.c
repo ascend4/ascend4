@@ -1,7 +1,6 @@
 #include <math.h>
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
-#include <ascend/general/mem.h>
 #include "mtx.h"
 #ifdef ASC_WITH_MMIO
 # include <mmio.h>

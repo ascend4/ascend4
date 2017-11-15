@@ -28,21 +28,21 @@
 #include <ascend/general/list.h>
 #include <ascend/general/mathmacros.h>
 
+#include <ascend/general/listio.h>
+
 #include "test/common.h"
 #include "test/assertimpl.h"
 
 /* comparison function used in test_list(). */
-static
-int compare_addresses(CONST VOIDPTR p1, CONST VOIDPTR p2)
-{
-  return (int)((int*)p1 - (int*)p2);
+static int compare_addresses(CONST VOIDPTR p1, CONST VOIDPTR p2){
+  GLint d = ((VOIDPTR)p1 - (VOIDPTR)p2);
+  if(d==0)return 0;
+  return d>0 ? 1 : -1;
 }
 
 /* comparison function used in test_list(). */
-static
-int compare_addresses_reverse(CONST VOIDPTR p1, CONST VOIDPTR p2)
-{
-  return (int)((int*)p2 - (int*)p1);
+static int compare_addresses_reverse(CONST VOIDPTR p1, CONST VOIDPTR p2){
+  return -compare_addresses(p1,p2);
 }
 
 /* comparison function used in test_list(). */
@@ -66,7 +66,6 @@ static
 unsigned long find_ptr_pos(const struct gl_list_t *list, VOIDPTR ptr)
 {
   unsigned long i;
-
   assert(NULL != list);
   for(i=0 ; i<gl_length(list) ; ++i) {
     if (ptr == gl_fetch(list, (i+1)))
@@ -665,6 +664,7 @@ static void test_list(void)
   }
   gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
+
   /* test gl_sort(), gl_sorted(), gl_insert_sorted(), gl_set_sorted() */
 
   p_list1 = gl_create(0);               /* create a list having minimum capacity */
@@ -733,13 +733,13 @@ static void test_list(void)
   gl_insert_sorted(p_list1, pint_array[2], compare_addresses);
   CU_TEST(2 == gl_length(p_list1));
   CU_TEST(0 != gl_sorted(p_list1));
-  CU_TEST(gl_fetch(p_list1, 2) >= gl_fetch(p_list1, 1));
+  CU_TEST(gl_fetch(p_list1, 1) < gl_fetch(p_list1, 2));
 
   gl_insert_sorted(p_list1, NULL, compare_addresses);
   CU_TEST(3 == gl_length(p_list1));
   CU_TEST(0 != gl_sorted(p_list1));
-  CU_TEST(gl_fetch(p_list1, 3) >= gl_fetch(p_list1, 2));
-  CU_TEST(gl_fetch(p_list1, 2) >= gl_fetch(p_list1, 1));
+  CU_TEST(gl_fetch(p_list1, 1) < gl_fetch(p_list1, 2));
+  CU_TEST(gl_fetch(p_list1, 2) < gl_fetch(p_list1, 3));
 
   gl_reset(p_list1);                    /* clear list for next test */
 

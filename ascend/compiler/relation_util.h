@@ -665,6 +665,17 @@ ASC_DLLSPEC enum safe_err RelationCalcSecondDerivSafe(struct Instance *i, double
 	@return not significant yet
  */
 
+ASC_DLLSPEC int RelationCalcHessianMtx(struct Instance *i, ltmatrix *hess_mtx,unsigned long dimension);
+/**<
+	This function calculates the full, dense hessian matrix of the relation pointed to by instance pointer i
+	@param i is the relation whose Hessian matrix is calculated
+	@param hess_mtx is the pointer to the 2 dimensional Lower triangular array of the Hessian Matrix
+	@param dimension is the dimension of the hessian matrix
+	@return not significant yet
+
+	'Unsafe' Version
+ */
+
 ASC_DLLSPEC enum safe_err RelationCalcHessianMtxSafe(struct Instance *i, ltmatrix *hess_mtx,unsigned long dimension);
 /**<
 	This function calculates the full, dense hessian matrix of the relation pointed to by instance pointer i

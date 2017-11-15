@@ -63,6 +63,10 @@
 	              also stand alone) need to be able to link without the
 	              compiler goop.
 
+    Update Nov 2017: Previous near-duplicate mem_ routines (ascend/general/mem.[ch])
+	were removed and all calls replaced to calls to pool_ routines. The few extra
+	routines in the mem.[ch] files were merged into pool.[ch]. -- John Pye.
+
 	Detailed Description:
 
 	The following definitions provide a generic and reasonably efficient memory
@@ -122,7 +126,7 @@ typedef struct pool_store_header *pool_store_t;
 	Memory pool statistics data structure.
 	This is the reporting structure for a pool_store_header query.
  */
-struct pool_statistics {
+struct pool_statistics{
   double p_eff;       /**< bytes in use / bytes allocated */
   double p_recycle;   /**< avg reuses per element */
   int elt_total;      /**< current elements existing in store*/
@@ -133,6 +137,123 @@ struct pool_statistics {
   int str_len;        /**< length of active pool. */
   int str_wid;        /**< elements/pointer in pool. */
 };
+
+
+
+
+
+
+
+//----------------------------------------
+/* routines merged from mem.h */
+
+
+#define pool_address(ptr)      ((long)(ptr))
+#define pool_code_address(ptr) ((long)(ptr))
+
+#define pool_move_cast(from,too,nbytes) \
+   pool_move((POINTER)(from),(POINTER)(too),(size_t)(nbytes))
+/**<
+	Copies nbytes of data from memory location from to memory location too.
+	The memory regions can be overlapping.
+
+	@param from   Pointer to memory to copy from.
+	@param too    Pointer to memory to receive copy.
+	@param nbytes The number of bytes to copy (size_t).
+	@return No return value.
+	@see pool_move()
+*/
+
+ASC_DLLSPEC void pool_move(POINTER from, POINTER too, size_t nbytes);
+/**<
+	Implementation function for pool_move_cast().  Do not call this
+	function directly - use pool_move_cast() instead.
+*/
+
+#define pool_copy_cast(from,too,nbytes) \
+   pool_move_disjoint((POINTER)(from),(POINTER)(too),(size_t)(nbytes))
+/**<
+	Copies nbytes of data from memory location from to memory location too.
+	The memory regions can NOT be overlapping.
+
+	@param from   Pointer to memory to copy from.
+	@param too    Pointer to memory to receive copy.
+	@param nbytes The number of bytes to copy (size_t).
+	@return No return value.
+	@see pool_move_disjoint()
+*/
+
+ASC_DLLSPEC void pool_move_disjoint(POINTER from, POINTER too, size_t nbytes);
+/**<
+	Implementation function for pool_copy_cast().  Do not call this
+	function directly - use pool_copy_cast() instead.
+*/
+
+#define pool_repl_byte_cast(too,byte,nbytes) \
+   pool_repl_byte((POINTER)(too),(unsigned)(byte),(size_t)(nbytes))
+/**<
+	Replaces nbytes of data at memory location too with byte.
+
+	@param too    Pointer to start of block to be modified.
+	@param byte   The character to write (unsigned int).
+	@param nbytes The number of bytes to modify (size_t).
+	@return No return value.
+	@see pool_repl_byte()
+*/
+
+ASC_DLLSPEC void pool_repl_byte(POINTER too, unsigned byte, size_t nbytes);
+/**<
+	Implementation function for pool_repl_byte_cast().  Do not call this
+	function directly - use pool_repl_byte_cast() instead.
+*/
+
+#define pool_zero_byte_cast(too,byte,nbytes) \
+   pool_zero_byte((POINTER)(too),(unsigned)(byte),(size_t)(nbytes))
+/**<
+	Zeroes nbytes of data at memory location too.
+	byte is ignored - it is a placeholder for pool_repl_byte
+	substitutability.
+
+	@param too    Pointer to start of block to be modified.
+	@param byte   Ignored (unsigned).
+	@param nbytes The number of bytes to zero (size_t).
+	@return No return value.
+	@see pool_zero_byte()
+*/
+
+ASC_DLLSPEC void pool_zero_byte(POINTER too, unsigned byte, size_t nbytes);
+/**<
+	Implementation function for pool_zero_byte_cast().  Do not call this
+	function directly - use pool_zero_byte_cast() instead.
+*/
+
+#define pool_repl_word_cast(too,word,nwords) \
+   pool_repl_word((POINTER)(too),(unsigned)(word),(size_t)(nwords))
+/**<
+	Replaces nwords of data at memory location too with word.
+
+	@param too    Pointer to start of block to be modified.
+	@param word   The word to write (unsigned).
+	@param nbytes The number of bytes to modify (size_t).
+	@return No return value.
+	@see pool_repl_word()
+*/
+
+ASC_DLLSPEC void pool_repl_word(POINTER too, unsigned word, size_t nwords);
+/**<
+	Implementation function for pool_repl_word_cast().  Do not call this
+	function directly - use pool_repl_word_cast() instead.
+*/
+
+
+//----------------------------------------
+
+
+
+
+
+
+
 
 ASC_DLLSPEC void pool_get_stats(struct pool_statistics *p_stats,
                            pool_store_t ps);
@@ -249,10 +370,10 @@ extern void pool_get_element_list(pool_store_t ps,
 	      it from pool.h.
  */
 
-#define pool_DEBUG FALSE
+#define POOL_DEBUG FALSE
 /**<
 	Flag controlling extra checking of the pool management routines.
-	Setting pool_DEBUG to TRUE causes the pool_store routines to do
+	Setting POOL_DEBUG to TRUE causes the pool_store routines to do
 	some RATHER expensive checking. It should be set to FALSE.
  */
 #define pool_LIGHTENING FALSE
@@ -271,7 +392,7 @@ extern void pool_get_element_list(pool_store_t ps,
 	assumption that the user is perfect.
  */
 
-#if pool_DEBUG
+#if POOL_DEBUG
 #define pool_free_element(ps,eltpointer) pool_free_elementF((ps),(eltpointer),__FILE__)
 #else
 #define pool_free_element(ps,eltpointer) pool_free_elementF((ps),(eltpointer))
@@ -282,12 +403,12 @@ extern void pool_get_element_list(pool_store_t ps,
 	no qualms about returning it to you twice. We won't necessarily
 	return it to you twice, though.<br><br>
 
-	If pool_DEBUG is TRUE, eltpointer will be checked for belonging
+	If POOL_DEBUG is TRUE, eltpointer will be checked for belonging
 	to ps. If you call pool_free_element() with a pointer the ps does
 	not recognize, it will not be freed and a message will be
 	sent to ASCERR.<br><br>
 
-	If pool_DEBUG is FALSE, eltpointer will be assumed to belong
+	If POOL_DEBUG is FALSE, eltpointer will be assumed to belong
 	with the ps in question.  The implications of handing
 	pool_free_element() an element of the wrong size or from the
 	wrong ps (bearing in mind the LIFO reuse of elements) should be
@@ -305,7 +426,7 @@ extern void pool_get_element_list(pool_store_t ps,
  */
 
 ASC_DLLSPEC void pool_free_elementF(pool_store_t ps, void * eltpointer
-#if pool_DEBUG
+#if POOL_DEBUG
 ,CONST char *file
 #endif
 );
@@ -314,7 +435,7 @@ ASC_DLLSPEC void pool_free_elementF(pool_store_t ps, void * eltpointer
 	Do not call this function directly - use pool_free_element() instead.
  */
 
-#if pool_DEBUG
+#if POOL_DEBUG
 #define pool_clear_store(ps) pool_clear_storeF((ps),__FILE__)
 #else
 #define pool_clear_store(ps) pool_clear_storeF(ps)
@@ -325,7 +446,7 @@ ASC_DLLSPEC void pool_free_elementF(pool_store_t ps, void * eltpointer
 	been handed out.  If ps is NULL, an error message is printed
 	and the function returns.<br><br>
 
-	If pool_DEBUG is TRUE, it first verifies that all elements have
+	If POOL_DEBUG is TRUE, it first verifies that all elements have
 	been pool_freed first and whines if not.
 	Get and free calls will be balanced to see if spurious elements
 	have been handed in. (This is a heuristic check).
@@ -343,7 +464,7 @@ ASC_DLLSPEC void pool_free_elementF(pool_store_t ps, void * eltpointer
  */
 
 ASC_DLLSPEC void pool_clear_storeF(pool_store_t ps
-#if pool_DEBUG
+#if POOL_DEBUG
 , CONST char *file
 #endif
 );
@@ -355,9 +476,9 @@ ASC_DLLSPEC void pool_clear_storeF(pool_store_t ps
 ASC_DLLSPEC void pool_destroy_store(pool_store_t ps);
 /**<
 	Deallocates everything associated with the ps.
-	If pool_DEBUG is TRUE, it first verifies that all elements
+	If POOL_DEBUG is TRUE, it first verifies that all elements
 	have been pool_freed first and whines if not.
-	If pool_DEBUG is FALSE, just nukes everything unconditionally.
+	If POOL_DEBUG is FALSE, just nukes everything unconditionally.
 	If ps is NULL, an error message is printed and the function
 	returns.
 

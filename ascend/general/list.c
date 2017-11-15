@@ -192,8 +192,8 @@ static pool_store_t g_list_head_pool = NULL;
 #else
 
 /* we default back to malloc/free if LISTUSESPOOL == FALSE */
-#define POOL_ALLOCHEAD ((struct gl_list_t*)ascmalloc(sizeof(struct gl_list_t)))
-#define POOL_FREEHEAD(p) ascfree((char *)(p))
+#define POOL_ALLOCHEAD ASC_NEW(struct gl_list_t)
+#define POOL_FREEHEAD(p) ASC_FREE((char *)(p))
 
 #endif
 
@@ -314,7 +314,7 @@ void gl_free_and_destroy(struct gl_list_t *list){
 #endif
   for(c=0;c<GL_LENGTH(list);c++) {
     AssertContainedMemory(list->data[c],0);
-    ascfree(list->data[c]);
+    ASC_FREE(list->data[c]);
   }
 #ifndef NDEBUG
   ascbzero(list->data,sizeof(VOIDPTR)*list->capacity);
@@ -337,7 +337,7 @@ void gl_free_and_destroy(struct gl_list_t *list){
       ListsDestroyed[c]++;
     }
 #endif
-    ascfree(list->data);
+    ASC_FREE(list->data);
     list->data = NULL;
     list->capacity = list->length = 0;
     POOL_FREEHEAD(list);
@@ -374,7 +374,7 @@ void gl_destroy(struct gl_list_t *list){
 #ifndef NDEBUG
     if (list->capacity>0) list->data[0]=NULL;
 #endif
-    ascfree(list->data);
+    ASC_FREE(list->data);
     list->data = NULL;
     list->capacity = list->length = 0;
     POOL_FREEHEAD(list);
@@ -982,7 +982,7 @@ void gl_delete(struct gl_list_t *list, unsigned long int pos, int dispose){
     sorted = (int)(list->flags & gsf_SORTED);
     if (dispose) {
       ptr = gl_fetch(list,pos);
-      ascfree(ptr);
+      ASC_FREE(ptr);
     }
     length = GL_LENGTH(list);
 #ifdef NDEBUG
@@ -1007,27 +1007,30 @@ void gl_delete(struct gl_list_t *list, unsigned long int pos, int dispose){
 
 
 void gl_reverse(struct gl_list_t *list){
-  VOIDPTR *tmpdata;
-  unsigned long c,len;
+	VOIDPTR *tmpdata;
+	unsigned long c,len;
 
-  if (list==NULL || list->length <2L) return;
-  tmpdata = ASC_NEW_ARRAY(VOIDPTR,(list->capacity));
-  if (tmpdata==NULL) {
-    ASC_PANIC("gl_reverse out of memory. Bye!\n");
-  }
-  len = list->length;
-  for (c=0;c < len;c++) {
-    tmpdata[len - (c+1)] = list->data[c];
-  }
-  ascfree(list->data);
-  list->data = tmpdata;
+	if(list==NULL || list->length <2L) return;
+	tmpdata = ASC_NEW_ARRAY(VOIDPTR,(list->capacity));
+	if(tmpdata==NULL){
+		ASC_PANIC("gl_reverse out of memory. Bye!\n");
+	}
+	len = list->length;
+	for(c=0;c < len;c++){
+		tmpdata[len - (c+1)] = list->data[c];
+	}
+	ASC_FREE(list->data);
+	list->data = tmpdata;
 }
 
 
 void gl_reset(struct gl_list_t *list){
-  asc_assert(NULL != list);
-  list->flags = (unsigned int)(gsf_SORTED | gsf_EXPANDABLE);
-  list->length = 0;
+	asc_assert(NULL != list);
+	list->flags = (unsigned int)(gsf_SORTED | gsf_EXPANDABLE);
+	list->length = 0;
+#if !LISTUSESPOOL
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"gl_reset with ASC_NO_POOL could cause memory leak");	
+#endif
 }
 
 
@@ -1044,6 +1047,7 @@ struct gl_list_t *gl_copy(CONST struct gl_list_t *list){
   new->flags = list->flags;
   return new;
 }
+
 
 struct gl_list_t *gl_concat(CONST struct gl_list_t *list1
 	, CONST struct gl_list_t *list2
@@ -1064,6 +1068,7 @@ struct gl_list_t *gl_concat(CONST struct gl_list_t *list1
   }
   return new;
 }
+
 
 int gl_compare_ptrs(CONST struct gl_list_t *l1, CONST struct gl_list_t *l2){
   unsigned long len,c;
@@ -1155,7 +1160,7 @@ void gl_emptyrecycler(){
       list->data[0] = NULL;
 #endif
       --RecycledContents[i];
-      ascfree(list->data);
+      ASC_FREE(list->data);
 #ifndef NDEBUG
       list->data = NULL;
       list->capacity = list->length = 0;
