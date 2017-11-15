@@ -215,6 +215,7 @@ static void test_bit(void){
   CU_TEST(!BitListEmpty(bit1));
   bit2 = CreateBList(256);
   CU_TEST(BitListEmpty(bit2));
+  CU_TEST(!CompBList(bit1,bit2));
   CU_TEST(FirstNonZeroBit(bit2) > 256);
   OverwriteBList(bit2,bit1);
   CU_TEST(FirstNonZeroBit(bit1) > 256);
