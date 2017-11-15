@@ -69,7 +69,7 @@ ASC_DLLSPEC struct BitList *ExpandBList(struct BitList *bl, unsigned long len);
  *  is not usable anymore.
  */
 
-extern struct BitList *ExpandFBList(struct BitList *bl, unsigned long len);
+ASC_DLLSPEC struct BitList *ExpandFBList(struct BitList *bl, unsigned long len);
 /**<
  *  The function will expand bl into a longer bitlist.  It copies all the
  *  previous values from the original bit list, and it initializes all
@@ -82,7 +82,7 @@ ASC_DLLSPEC void DestroyBList(struct BitList *bl);
  *  Deallocate the memory for bl.
  */
 
-extern struct BitList *CopyBList(CONST struct BitList *bl);
+ASC_DLLSPEC struct BitList *CopyBList(CONST struct BitList *bl);
 /**<
  *  Make a copy of bl and return it.  The length of the copy equals that of bl,
  *  and all the elements of the copy have the same value as the corresponding
@@ -120,7 +120,9 @@ extern void CondSetBit(struct BitList *bl, unsigned long pos, int cond);
 
 ASC_DLLSPEC int ReadBit(CONST struct BitList *bl, unsigned long pos);
 /**<
- *  Return a true value if bit pos is 1, otherwise return FALSE.
+	Return a true value if bit pos is 1, otherwise return FALSE.
+	@note: this 'true value' will not equal one; it will just be non-zero.
+
  */
 
 extern void IntersectBLists(struct BitList *bl1, CONST struct BitList *bl2);
@@ -152,7 +154,7 @@ ASC_DLLSPEC int BitListEmpty(CONST struct BitList *bl);
  *  Return a true value if bl is empty; otherwise, it returns a false value.
  */
 
-extern int CompBList(struct BitList *b1, struct BitList *b2);
+ASC_DLLSPEC int CompBList(struct BitList *b1, struct BitList *b2);
 /**<
  *  Return 1 if bl is equal to b2, return 0 otherwise
  */

@@ -64,32 +64,76 @@ static void test_bit(void){
   SetBit(bit1,8);
   CU_TEST(ReadBit(bit1,8)==1);
 
-#if 0
-  // mysteriously failing!!
-  CU_TEST(ReadBit(bit1,9)==1);
+  CU_ASSERT(ReadBit(bit1,9));
   ClearBit(bit1,9);
-  CU_TEST(ReadBit(bit1,9)==0);
+  CU_ASSERT(!ReadBit(bit1,9));
   SetBit(bit1,9);
-  CU_TEST(ReadBit(bit1,9)==1);
+  CU_ASSERT(ReadBit(bit1,9));
 
-  CU_TEST(ReadBit(bit1,2)==1);
+  CU_ASSERT(ReadBit(bit1,2));
   ClearBit(bit1,2);
-  CU_TEST(ReadBit(bit1,2)==0);
+  CU_ASSERT(!ReadBit(bit1,2));
   SetBit(bit1,2);
-  CU_TEST(ReadBit(bit1,2)==1);
+  CU_ASSERT(ReadBit(bit1,2));
 
-  CU_TEST(ReadBit(bit1,7)==1);
+  CU_ASSERT(ReadBit(bit1,7));
   ClearBit(bit1,7);
-  CU_TEST(ReadBit(bit1,7)==0);
+  CU_ASSERT(!ReadBit(bit1,7));
   SetBit(bit1,7);
-  CU_TEST(ReadBit(bit1,7)==1);
-#endif
-  CU_TEST(BLength(bit1)==100);
-  bit2 = ExpandBList(bit1,150);
-  //CU_TEST(BLength(bit1)==100);
-  CU_TEST(BLength(bit2)==150);
+  CU_ASSERT(ReadBit(bit1,7));
 
+  CU_TEST(BLength(bit1)==100);
+  bit1 = ExpandBList(bit1,150);
+  CU_TEST(BLength(bit1)==150);
+
+  DestroyBList(bit1);
+
+  bit1 = CreateBList(10);
+  CU_TEST(BitListEmpty(bit1));
+  SetBit(bit1,9);
+  CU_TEST(!BitListEmpty(bit1));
+  ClearBit(bit1,9);
+  CU_TEST(BitListEmpty(bit1));
+  SetBit(bit1,0);
+  CU_TEST(!BitListEmpty(bit1));
+  ClearBit(bit1,0);
+  CU_TEST(BitListEmpty(bit1));
+  DestroyBList(bit1);
+
+  bit1 = CreateFBList(10);
+  bit2 = CreateFBList(10);
+  //SetBit(bit1,11); // naughty, past end of list, causes panic
+  CU_TEST(CompBList(bit1,bit2));
+  DestroyBList(bit1);
+
+  bit1 = CreateFBList(5);
+  bit1 = ExpandFBList(bit1,10);
+  CU_TEST(CompBList(bit1,bit2));
+
+  DestroyBList(bit1);
   DestroyBList(bit2);
+
+  bit1 = CreateBList(10);
+  SetBit(bit1,3);
+  SetBit(bit1,8);
+  bit2 = CopyBList(bit1);
+  CU_TEST(CompBList(bit1,bit2));
+  DestroyBList(bit2);
+  bit1 = ExpandBList(bit1,20);
+  SetBit(bit1,14);
+  CU_TEST(ReadBit(bit1,3));
+  CU_TEST(ReadBit(bit1,8));
+  CU_TEST(!ReadBit(bit1,2));
+  CU_TEST(!ReadBit(bit1,9));
+  bit2 = CreateBList(20);
+  SetBit(bit2,3);
+  SetBit(bit2,8);
+  SetBit(bit2,14);
+  CU_TEST(CompBList(bit1,bit2));
+
+  DestroyBList(bit1);
+  DestroyBList(bit2);
+  
 
   CU_TEST(prior_meminuse == ascmeminuse());// back to original memory used
 }

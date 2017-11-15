@@ -44,7 +44,7 @@ struct BitList *CreateBList(unsigned long int len){
   register char *ptr;
   num_bytes = len >> 3;		/* divide by 8 */
   if(len & 0x07)num_bytes++;
-  CONSOLE_DEBUG("num_bytes = %lu",num_bytes);
+  //CONSOLE_DEBUG("num_bytes = %lu",num_bytes);
   result = 
     (struct BitList *)ascmalloc((unsigned)(sizeof(struct BitList)+num_bytes));
   result->length = len;
@@ -155,6 +155,7 @@ unsigned long BitListBytes(CONST struct BitList *bl){
 void SetBit(struct BitList *bl, unsigned long int pos){
   register byte *ptr;
   register unsigned bit;
+  asc_assert(pos < bl->length);
   AssertContainedMemory(bl,sizeof(struct BitList));
   ptr = (byte *)((asc_intptr_t)bl+sizeof(struct BitList)+(pos >> 3));
   AssertContainedIn(bl,ptr);
@@ -195,6 +196,8 @@ int ReadBit(CONST struct BitList *bl, unsigned long int pos){
   ptr = (byte *)((asc_intptr_t)bl+sizeof(struct BitList)+(pos >> 3));
   AssertContainedIn(bl,ptr);
   bit = pos & 0x07;
+  //CONSOLE_DEBUG("--->reading pos = %lu (byte %lu, bit %u)",pos,(pos>>3),bit);
+  //CONSOLE_DEBUG("value = %d",(*ptr & (1<<bit)));
   return (*ptr & (1 << bit));
 }
 
