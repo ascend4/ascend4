@@ -1,0 +1,17 @@
+REQUIRE "atoms.a4l";
+
+MODEL model1;
+	A IS_A area;
+	L IS_A distance;
+	d IS_A distance;
+	d = A / L;
+END model1;
+
+MODEL badalias;
+	A IS_A area;
+	inner,outer IS_A model1;
+	A, inner.A, outer.A ARE_THE_SAME;
+	L_ext ALIASES outer.L;
+	L_int ALIASES invalidname.L;
+END badalias;
+

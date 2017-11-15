@@ -46,7 +46,6 @@
 #include <ascend/compiler/relation.h>
 #include <ascend/compiler/relation_util.h>
 #include <ascend/compiler/relation_io.h>
-#include <ascend/compiler/exprsym.h>
 
 #include <ascend/general/ltmatrix.h>
 
@@ -579,10 +578,10 @@ int relman_diff2_rev(struct rel_relation *rel, const var_filter_t *filter
 
 /* return 0 on success (derivatives, variables and count are output vars too) */
 int relman_hess(struct rel_relation *rel, const var_filter_t *filter
-		,hessian_mtx *hess_matrix,int32 *count,unsigned long max_dimension, int32 safe)
+		,ltmatrix *hess_matrix,int32 *count,unsigned long max_dimension, int32 safe)
 {
 	const struct var_variable **vlist=NULL;
-	hessian_mtx *matrix;
+	ltmatrix *matrix;
 	int32 len,i,j;
 	int status;
 
@@ -599,7 +598,7 @@ int relman_hess(struct rel_relation *rel, const var_filter_t *filter
 
 //	CONSOLE_DEBUG("IN FUNCTION relman_hess");
 
-	matrix = Hessian_Mtx_create(hess_matrix->access_type,len);	// As Hessians may be (rarely) unsymmetrical
+	matrix = ltmatrix_create(hess_matrix->access_type,len);	// As Hessians may be (rarely) unsymmetrical
 																	// type of Hessian matrix should be decided from
 																	// type of relation
 	asc_assert(matrix !=NULL);
@@ -615,7 +614,7 @@ int relman_hess(struct rel_relation *rel, const var_filter_t *filter
 			if(var_apply_filter(vlist[i],filter)){
 				for(j=0;j<=i;j++){
 					if (var_apply_filter(vlist[j],filter)) {
-						Hessian_Mtx_set_element(hess_matrix,i,j,Hessian_Mtx_get_element(matrix,i,j));
+						ltmatrix_set_element(hess_matrix,i,j,ltmatrix_get_element(matrix,i,j));
 						(*count)++;
 					}
 				}
@@ -630,7 +629,7 @@ int relman_hess(struct rel_relation *rel, const var_filter_t *filter
 				if(var_apply_filter(vlist[i],filter)){
 					for(j=0;j<=i;j++){
 						if (var_apply_filter(vlist[j],filter)) {
-							Hessian_Mtx_set_element(hess_matrix,i,j,Hessian_Mtx_get_element(matrix,i,j));
+							ltmatrix_set_element(hess_matrix,i,j,ltmatrix_get_element(matrix,i,j));
 							(*count)++;
 						}
 					}
@@ -639,7 +638,7 @@ int relman_hess(struct rel_relation *rel, const var_filter_t *filter
 		}
 	}
 
-	Hessian_Mtx_destroy(matrix);
+	ltmatrix_destroy(matrix);
 
 	return status;
 }
@@ -862,6 +861,7 @@ int32 relman_jacobian_count(struct rel_relation **rlist, int32 rlen
 }
 
 
+#if 0
 static int AllVariables(struct Instance *i){
 	return TRUE;
 }
@@ -882,7 +882,7 @@ int32 relman_hessian_count(struct rel_relation **rlist, int32 rlen
 
 	return 0;
 }
-
+#endif
 
 int relman_diffs(struct rel_relation *rel
 		, const var_filter_t *filter

@@ -144,16 +144,21 @@ void TypeLintErrorAuxillary(FILE *f, char *str, enum typelinterr err,
   }
 }
 
-void TypeLintError(FILE *f, CONST struct Statement *stat,enum typelinterr err)
-{
+void TypeLintError(FILE *f, CONST struct Statement *stat,enum typelinterr err){
   assert(f!=NULL);
   assert(stat!=NULL);
   if (g_DefinitionErrorMessages[err].level < g_parser_warnings) {
     /* no element of gDEM should have .level == 0 */
     return;
   }
-  WSSM(f,stat,g_DefinitionErrorMessages[err].str,
-              g_DefinitionErrorMessages[err].level);
+  error_severity_t sev;
+  switch(g_DefinitionErrorMessages[err].level){
+  case 1: sev = ASC_USER_NOTE; break;
+  case 2: sev = ASC_USER_WARNING; break;
+  case 3: sev = ASC_USER_ERROR; break;
+  case 4: sev = ASC_PROG_FATAL; break;
+  }
+  WriteStatementError(sev,stat,1,g_DefinitionErrorMessages[err].str);
 }
 
 void TypeLintName(FILE *f, CONST struct Name *n, char *m)

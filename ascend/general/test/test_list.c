@@ -28,21 +28,21 @@
 #include <ascend/general/list.h>
 #include <ascend/general/mathmacros.h>
 
+#include <ascend/general/listio.h>
+
 #include "test/common.h"
 #include "test/assertimpl.h"
 
 /* comparison function used in test_list(). */
-static
-int compare_addresses(CONST VOIDPTR p1, CONST VOIDPTR p2)
-{
-  return (int)((int*)p1 - (int*)p2);
+static int compare_addresses(CONST VOIDPTR p1, CONST VOIDPTR p2){
+  GLint d = ((VOIDPTR)p1 - (VOIDPTR)p2);
+  if(d==0)return 0;
+  return d>0 ? 1 : -1;
 }
 
 /* comparison function used in test_list(). */
-static
-int compare_addresses_reverse(CONST VOIDPTR p1, CONST VOIDPTR p2)
-{
-  return (int)((int*)p2 - (int*)p1);
+static int compare_addresses_reverse(CONST VOIDPTR p1, CONST VOIDPTR p2){
+  return -compare_addresses(p1,p2);
 }
 
 /* comparison function used in test_list(). */
@@ -66,7 +66,6 @@ static
 unsigned long find_ptr_pos(const struct gl_list_t *list, VOIDPTR ptr)
 {
   unsigned long i;
-
   assert(NULL != list);
   for(i=0 ; i<gl_length(list) ; ++i) {
     if (ptr == gl_fetch(list, (i+1)))
@@ -123,6 +122,10 @@ static void test_list(void)
   CU_FAIL("test_list() compiled without MALLOC_DEBUG - memory management not tested.");
 #endif
 
+#ifndef ASC_NO_POOL
+# define LISTUSESPOOL
+#endif
+
   /* set up pooling & recycling */
 #ifdef LISTUSESPOOL
   CU_TEST(FALSE == gl_pool_initialized());
@@ -130,12 +133,11 @@ static void test_list(void)
   CU_TEST(TRUE == gl_pool_initialized());
 #endif
 
-  if (FALSE == gl_pool_initialized()) {                 /* initialize list system if necessary */
+  if(FALSE == gl_pool_initialized()) {                 /* initialize list system if necessary */
     gl_init();
     gl_init_pool();
     i_initialized_lists = TRUE;
-  }
-  else {
+  }else{
     lists_were_active = TRUE;
   }
 
@@ -260,8 +262,7 @@ static void test_list(void)
   for (i=0 ; i<20 ; ++i) {               /* confirm that all data is now deallocated */
     if (i < 10) {
       CU_TEST(0 == AllocatedMemory((VOIDPTR)pint_array[i], sizeof(unsigned long)));
-    }
-    else {
+    }else{
       CU_TEST(2 == AllocatedMemory((VOIDPTR)pint_array[i], sizeof(unsigned long)));
     }
   }
@@ -576,6 +577,7 @@ static void test_list(void)
     p_used_lists[n_used_lists++] = p_list1;
   }
   gl_destroy(p_list1);                  /* clean up the lists, preserving data */
+
   if (n_used_lists < MAX_LISTS_TO_TRACK) {
     p_used_lists[n_used_lists++] = p_list2;
   }
@@ -585,7 +587,11 @@ static void test_list(void)
 
 #ifdef MALLOC_DEBUG
   for (i=0 ; i<(MIN(n_used_lists, MAX_LISTS_TO_TRACK)) ; ++i) {
+#ifdef LISTUSESPOOL
     CU_TEST(0 != AllocatedMemory((VOIDPTR)p_used_lists[i], capacity * sizeof(VOIDPTR)));
+#else
+    CU_TEST(0 == AllocatedMemory((VOIDPTR)p_used_lists[i], capacity * sizeof(VOIDPTR)));
+#endif
   }
 #endif
   gl_destroy_pool();
@@ -608,12 +614,12 @@ static void test_list(void)
   asc_assert_catch(TRUE);               /* prepare to test assertions */
 
   asc_assert_reset();
-  if (0 == setjmp(g_asc_test_env))
+  if(0 == setjmp(g_asc_test_env))
     (void)gl_length(NULL);              /* error if NULL list* */
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_reset();
-  if (0 == setjmp(g_asc_test_env))
+  if(0 == setjmp(g_asc_test_env))
     CU_TEST(0 == gl_safe_length(NULL)); /* no error if NULL list* for gl_safe_length() */
   CU_TEST(FALSE == asc_assert_failed());
 
@@ -657,6 +663,7 @@ static void test_list(void)
     p_used_lists[n_used_lists++] = p_list1;
   }
   gl_destroy(p_list1);                  /* clean up the list, preserving data */
+
 
   /* test gl_sort(), gl_sorted(), gl_insert_sorted(), gl_set_sorted() */
 
@@ -726,13 +733,13 @@ static void test_list(void)
   gl_insert_sorted(p_list1, pint_array[2], compare_addresses);
   CU_TEST(2 == gl_length(p_list1));
   CU_TEST(0 != gl_sorted(p_list1));
-  CU_TEST(gl_fetch(p_list1, 2) >= gl_fetch(p_list1, 1));
+  CU_TEST(gl_fetch(p_list1, 1) < gl_fetch(p_list1, 2));
 
   gl_insert_sorted(p_list1, NULL, compare_addresses);
   CU_TEST(3 == gl_length(p_list1));
   CU_TEST(0 != gl_sorted(p_list1));
-  CU_TEST(gl_fetch(p_list1, 3) >= gl_fetch(p_list1, 2));
-  CU_TEST(gl_fetch(p_list1, 2) >= gl_fetch(p_list1, 1));
+  CU_TEST(gl_fetch(p_list1, 1) < gl_fetch(p_list1, 2));
+  CU_TEST(gl_fetch(p_list1, 2) < gl_fetch(p_list1, 3));
 
   gl_reset(p_list1);                    /* clear list for next test */
 
@@ -1368,7 +1375,7 @@ static void test_list(void)
   asc_assert_catch(FALSE);              /* done testing assertions */
 #endif    /* !ASC_NO_ASSERTIONS */
 
-  p_list2= gl_copy(p_list1);            /* copying an empty list should be ok */
+  p_list2 = gl_copy(p_list1);            /* copying an empty list should be ok */
   CU_TEST(0 == gl_length(p_list2));
   if (n_used_lists < MAX_LISTS_TO_TRACK) {
     p_used_lists[n_used_lists++] = p_list2;
@@ -1377,7 +1384,7 @@ static void test_list(void)
 
   gl_append_ptr(p_list1, pint_array[5]);
 
-  p_list2= gl_copy(p_list1);            /* copying a list having 1 element should be ok */
+  p_list2 = gl_copy(p_list1);            /* copying a list having 1 element should be ok */
   CU_TEST(1 == gl_length(p_list2));
   CU_TEST(5 == *((unsigned long*)gl_fetch(p_list1, 1)));
   if (n_used_lists < MAX_LISTS_TO_TRACK) {
@@ -1650,6 +1657,8 @@ static void test_list(void)
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_catch(FALSE);              /* done testing assertions */
+#else
+  ERROR_REPORTER_HERE(ASC_PROG_WARN,"Assertions not tested");
 #endif    /* !ASC_NO_ASSERTIONS */
 
   gl_append_ptr(p_list1, pint_array[10]);

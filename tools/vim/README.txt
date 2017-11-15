@@ -19,6 +19,9 @@ UPDATE (Jul 2016): The correct location for syntax files in Ubuntu 16.04 is
 Also, the file 'vimrc-mingw.txt' works fine for Linux, too:
 cat vimrc-mingw.txt >> ~/.vimrc
 
+UPDATE (Sep 2017): On Ubuntu 17.04, the file 'ascend.vim' goes into
+/usr/share/vim/vim80/syntax/
+
 -- 
 John Pye
 Feb 2012

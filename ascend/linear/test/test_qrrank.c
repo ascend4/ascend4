@@ -60,8 +60,10 @@ static void test_qr1x1(void){
 	linsolqr_reorder(L, &G, linsolqr_rmethod(L));
 	linsolqr_factor(L,linsolqr_fmethod(L));
 	r = linsolqr_rank(L);
-
 	CU_ASSERT(r==1);
+
+	linsolqr_destroy(L);
+	mtx_destroy(M);	
 }
 
 /*
@@ -104,6 +106,9 @@ static void test_qr2x2(void){
 	r = linsolqr_rank(L);
 
 	CU_ASSERT(r==2);
+
+	linsolqr_destroy(L);
+	mtx_destroy(M);	
 }
 
 /*
@@ -151,6 +156,9 @@ static void test_qr3x3(void){
 	r = linsolqr_rank(L);
 
 	CU_ASSERT(r==3);
+
+	linsolqr_destroy(L);
+	mtx_destroy(M);
 }
 
 /*===========================================================================*/

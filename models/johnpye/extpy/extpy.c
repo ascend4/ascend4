@@ -36,7 +36,7 @@
 #include <ascend/compiler/importhandler.h>
 #include <ascend/compiler/extfunc.h>
 
-/* #define EXTPY_DEBUG */
+//#define EXTPY_DEBUG
 #ifdef EXTPY_DEBUG
 # define MSG CONSOLE_DEBUG
 #else
@@ -82,7 +82,7 @@ extern ASC_EXPORT int extpy_register(){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to register import handler (error = %d)",result);
 	}
 
-	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Loaded EXPERIMENTAL 'extpy' import handler.");
+	ERROR_REPORTER_HERE(ASC_USER_WARNING,"'extpy' import handler is still EXPERIMENTAL.");
 
 	return result;
 }
@@ -177,16 +177,20 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 		}else{
 			errtypestring = Py_BuildValue("");
 		}
+		MSG("errtypestring = \"%s\"",PyString_AsString(errtypestring));
+
+		MSG("errtypestring = \"%s\"",PyString_AsString(errtypestring));
 
 		errstring = NULL;
 		if(perrvalue != NULL
 			&& (errstring = PyObject_Str(perrvalue)) != NULL
 		    && PyString_Check(errstring)
 		){
+			MSG("errstring = \"%s\"",PyString_AsString(errstring));
 			error_reporter(ASC_PROG_ERR
 				,extpydata->name,0
 				,PyString_AsString(errtypestring)
-				,"%s",PyString_AsString(errstring)
+				,"Error in extpy call: %s",PyString_AsString(errstring)
 			);
 		}else{
 			error_reporter(ASC_PROG_ERR,extpydata->name,0,extpydata->name,"(unknown python error)");
@@ -290,7 +294,7 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 		return NULL;
 	}
 
-	MSG("Registered python method '%s'\n",cname);
+	MSG("Registered python method '%s'",cname);
 
 	/* nothing gets returned (but possibly an exception) */
 	return Py_BuildValue("");
@@ -395,7 +399,7 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 		return 1;
 	}
 
-	MSG("Imported python script '%s'\n",partialpath);
+	MSG("Imported python script '%s'",partialpath);
 
 	ASC_FREE(name);
 	return 0;

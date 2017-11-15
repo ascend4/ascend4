@@ -2678,7 +2678,7 @@ enum safe_err RelationCalcSecondDerivSafe(struct Instance *i, double *deriv2nd,u
 /**----------------------------Hessian Calculations Routines------------------------------- */
 
 /* return 0 on success, 1 on error */
-int RelationCalcHessianMtx(struct Instance *i, hessian_mtx *hess_mtx, unsigned long dimension){
+int RelationCalcHessianMtx(struct Instance *i, ltmatrix *hess_mtx, unsigned long dimension){
 	struct relation *r;
 	enum Expr_enum reltype;
 
@@ -2705,7 +2705,7 @@ int RelationCalcHessianMtx(struct Instance *i, hessian_mtx *hess_mtx, unsigned l
 	return 1;
 }
 
-enum safe_err RelationCalcHessianMtxSafe(struct Instance *i, hessian_mtx *hess_mtx,unsigned long dimension)
+enum safe_err RelationCalcHessianMtxSafe(struct Instance *i, ltmatrix *hess_mtx,unsigned long dimension)
 {
 	struct relation *r;
 	enum Expr_enum reltype;

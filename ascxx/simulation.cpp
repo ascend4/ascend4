@@ -235,7 +235,8 @@ Simulation::run(const Method &method, Instanc &model){
 	Nam name = Nam(method.getSym());
 	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
 
-	error_reporter_tree_start();
+	error_reporter_tree_t *tree1 = error_reporter_tree_start(0);
+	MSG("Initialising model");
 
 	//CONSOLE_DEBUG("sys = %p",sys);
 	//CONSOLE_DEBUG("simroot = %p",simroot.getInternalType());
@@ -248,10 +249,10 @@ Simulation::run(const Method &method, Instanc &model){
 	);
 
 	int haserror=0;
-	if(error_reporter_tree_has_error()){
+	if(error_reporter_tree_has_error(tree1)){
 		haserror=1;
 	}
-	error_reporter_tree_end();
+	error_reporter_tree_end(tree1);
 
 	// clear out the 'sim' pointer (soon it will be invalid)
 	importhandler_setsharedpointer("sim",NULL);
@@ -353,11 +354,29 @@ Simulation::run(const Method &method, Instanc &model){
 	successfully completes. Something's not being synchronised properly...
 */
 void
-Simulation::checkInstance(){
+Simulation::checkInstance(const int &level){
 	Instance *i1 = getModel().getInternalType();
-	CheckInstance(stderr, &*i1);
-	//cerr << "DONE CHECKING INSTANCE" << endl;
+	CheckInstanceLevel(stderr, &*i1, level);
 }
+
+void
+Simulation::checkTokens(){
+	Instance *i1 = getModel().getInternalType();
+	InstanceTokenStatistics(stderr, &*i1);
+}
+
+void
+Simulation::checkStructure(){
+	Instance *i1 = getModel().getInternalType();
+	CheckInstanceStructure(stderr, &*i1);
+}
+
+void 
+Simulation::checkStatistics(){
+	Instance *i1 = getModel().getInternalType();
+	InstanceStatistics(stderr, &*i1);
+}
+
 
 /**
 	@return 1 = underspecified, 2 = square, 3 = structurally singular, 4 = overspecified
@@ -1003,4 +1022,5 @@ Simulation::getSolverHooks() const{
 	MSG("Got SolverHooks at %p for Simulation at %p",this->solverhooks,this);
 	return this->solverhooks;
 }
+
 

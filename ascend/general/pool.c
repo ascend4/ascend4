@@ -1,15 +1,23 @@
 /*
- *  Ascend Pooled Memory Manager
+ *  Ascend Pooled Memory Manager / Memory module.
+ *  by Karl Westerberg, Ben Allan
+ *  Created: 6/90
  *  by Benjamin Andrew Allan
  *  Created: 2/96
  *  Version: $Revision: 1.1 $
  *  Version control file: $RCSfile: pool.c,v $
  *  Date last modified: $Date: 1997/07/18 11:37:01 $
  *  Last modified by: $Author: mthomas $
+ *  Version: $Revision: 1.7 $
+ *  Version control file: $RCSfile: mem.c,v $
+ *  Date last modified: $Date: 1998/01/10 18:00:06 $
+ *  Last modified by: $Author: ballan $
  *
  *  This file is part of the Ascend Language Interpreter.
  *
  *  Copyright (C) 1996 Benjamin Andrew Allan
+ *  Copyright (C) 1997 Carnegie Mellon University
+
  *
  *  The Ascend Language Interpreter is free software; you can redistribute
  *  it and/or modify it under the terms of the GNU General Public License as
@@ -25,38 +33,79 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-
 #include "platform.h"
 #include "ascMalloc.h"
 #include "pool.h"
+#include "mathmacros.h"
 
-#ifndef FALSE
-#define FALSE 0
-#define TRUE 1
-#endif
-#ifdef NULL
-/* ok, so the machine has a NULL defined. */
-#ifndef ISNULL
-/* and we've not got an ISNULL function */
-#define ISNULL(a) ((a) == NULL)
-#define NOTNULL(a) ((a) != NULL)
-#endif /* isnull */
-#endif /* null */
-/* get local max and min definitions */
-#ifdef PMN
-#undef PMN
-#undef PMX
-#endif
-#define PMN(a,b) ((a) < (b) ? (a) : (b))
-#define PMX(a,b) ((a) < (b) ? (b) : (a))
+static void move_fwd(POINTER from, POINTER too, size_t nbytes)
+/**
+ ***  Copies bytes from --> too in forward direction.
+ **/
+{
+   while( nbytes-- > 0 )
+      *(too++) = *(from++);
+}
+
+static void move_bwd(POINTER from, POINTER too, size_t nbytes)
+/**
+ ***  Copies bytes from --> too in backward direction.
+ **/
+{
+   from += nbytes;
+   too  += nbytes;
+   while( nbytes-- > 0 )
+      *(--too) = *(--from);
+}
+
+void pool_move_disjoint(POINTER from, POINTER too, size_t nbytes)
+{
+   ascbcopy((char *)from,(char *)too,nbytes);
+}
+
+void pool_move(POINTER from, POINTER too,size_t nbytes)
+{
+   if( from < too )
+      move_bwd(from,too,nbytes);
+   else
+      move_fwd(from,too,nbytes);
+}
+
+/*  zeroes nbytes of memory pointed at by too. byte is ignored but
+ *  there for interchangability with pool_repl_byte
+ */
+void pool_zero_byte(POINTER too, unsigned byte, size_t nbytes)
+{
+  (void)byte;
+  ascbzero((void *)too,(size_t)nbytes);
+  /*
+   *   while( nbytes-- > 0 )
+   *         *(too++) = 0;
+   */
+}
+
+void pool_repl_byte(POINTER too, unsigned byte, size_t nbytes)
+{
+   while( nbytes-- > 0 )
+      *(too++) = (char)byte;
+}
+
+void pool_repl_word(POINTER too,unsigned word, size_t nwords)
+{
+   unsigned *pw = (unsigned *)too;
+   while( nwords-- > 0 )
+      *(pw++) = word;
+}
+
+#define mv_get(too,from,nbytes) move_fwd((POINTER)(from),(POINTER)(too),nbytes)
+#define mv_set(from,too,nbytes) move_fwd((POINTER)(from),(POINTER)(too),nbytes)
 
 /*********************** pool_store code. BAA 5/16/95 ***********************/
 /* according to K&R2 char <--> byte and size_t is a byte count.
    We are coding with those assumptions. (sizeof(char)==1) */
 #define OK 345676543
 #define DESTROYED 765434567
-#if pool_DEBUG
+#if POOL_DEBUG
 /* ground LIGHTENING */
 #undef pool_LIGHTENING
 #define pool_LIGHTENING FALSE
@@ -80,7 +129,7 @@
    It is the head for anonymous elements of any size.
 */
 struct pool_element {
-  struct pool_element *nextelt;
+	struct pool_element *nextelt;
 };
 
 struct pool_store_header {
@@ -122,17 +171,17 @@ struct pool_store_header {
 #define PMEM_MINBARSIZE 5
 #define PMEM_MINPOOLSIZE 2
 #ifdef __alpha
-#define PMEM_MINPOOLGROW 128
+#define PMEM_MINPOOLGROW 512
 /* gotta love those fat pointers. grow by 4k min. */
 #else
-#define PMEM_MINPOOLGROW 256
+#define PMEM_MINPOOLGROW 1024
 #endif
+
 
 /*
 Returns 2 if really bad, 1 if something fishy, 0 otherwise.
 */
-static int check_pool_store(const pool_store_t ps)
-{
+static int check_pool_store(const pool_store_t ps){
 #if pool_LIGHTENING
   return 0;
 #else
@@ -173,6 +222,7 @@ static int check_pool_store(const pool_store_t ps)
 #endif
 }
 
+
 /*
    This should not be called unless all current store is in use.
    Returns 0 if ok, 1 for all other insanities.
@@ -184,8 +234,7 @@ static int check_pool_store(const pool_store_t ps)
 
    This should never be called on a totally empty pool.
 */
-static int expand_store(pool_store_t ps, int incr)
-{
+static int expand_store(pool_store_t ps, int incr){
   static int oldsize, newsize,punt,i;
   char **newpool = NULL;
   if (check_pool_store(ps) >1) {
@@ -208,7 +257,7 @@ static int expand_store(pool_store_t ps, int incr)
 
   /* expand pool capacity only if all of pool in use  */
   if (newsize > ps->maxlen) {
-    i = ps->maxlen + PMX(ps->growpool,incr);
+    i = ps->maxlen + MAX(ps->growpool,incr);
     newpool = (char **)PMEM_realloc(ps->pool, i*sizeof(char *));
     if (ISNULL(newpool)) {
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"expand_store can't realloc pool.");
@@ -227,7 +276,7 @@ static int expand_store(pool_store_t ps, int incr)
   ps->len = newsize; /* set expanded number of bars filled */
   punt = -1;
   for (i = oldsize; i < newsize; i++) {
-#if pool_DEBUG
+#if POOL_DEBUG
     ps->pool[i] = (char *)PMEM_calloc(ps->barsize,1);
 #else
     ps->pool[i] = (char *)PMEM_malloc(ps->barsize);
@@ -257,14 +306,14 @@ static int expand_store(pool_store_t ps, int incr)
   return 0;
 }
 
+
 #if !pool_LIGHTENING
-#if pool_DEBUG
+#if POOL_DEBUG
 /*
 Returns 1 if pointer is to an elt of the store, 0 otherwise.
 The case of pointer into store reserved space, but not an elt is checked.
 */
-static int from_store( pool_store_t ps, void *elt)
-{
+static int from_store( pool_store_t ps, void *elt){
   char *data, **pool;
   int i,lim;
 
@@ -290,8 +339,8 @@ static int from_store( pool_store_t ps, void *elt)
 #endif
 #endif
 
-void pool_get_stats(struct pool_statistics *pss,  pool_store_t m)
-{
+
+void pool_get_stats(struct pool_statistics *pss,  pool_store_t m){
   if (ISNULL(pss)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL struct pool_statistics.");
     return;
@@ -321,9 +370,10 @@ void pool_get_stats(struct pool_statistics *pss,  pool_store_t m)
   pss->str_wid = m->wid;
 }
 
+
 pool_store_t pool_create_store(int length, int width,
-                             size_t eltsize, int deltalen, int deltapool)
-{
+	size_t eltsize, int deltalen, int deltapool
+){
   int i, punt;
   pool_store_t newps=NULL;
   size_t uelt;
@@ -341,13 +391,11 @@ pool_store_t pool_create_store(int length, int width,
 
   uelt = eltsize;
   /* check for elt padding needed */
-  if (eltsize % sizeof(void *)) {
-    int ptrperelt;
+  if(eltsize % sizeof(void *)) {
+    size_t ptrperelt;
     ptrperelt = eltsize/sizeof(void *) + 1;
-#if pool_DEBUG
-	int oldsize = eltsize;
-	eltsize = ptrperelt*sizeof(void *);
-    CONSOLE_DEBUG("Elements were size %d; now padded to %d",oldsize,eltsize);
+#if POOL_DEBUG
+	CONSOLE_DEBUG("Elts of size %d padded to %d\n",(unsigned)eltsize,(unsigned)(eltsize = (unsigned)ptrperelt*sizeof(void *)));
 #else
     eltsize = ptrperelt*sizeof(void *);
 #endif
@@ -383,7 +431,7 @@ pool_store_t pool_create_store(int length, int width,
 #if !pool_LIGHTENING
   newps->total = length * width;
 #endif
-  newps->growpool = PMX(PMEM_MINPOOLGROW,deltapool);
+  newps->growpool = MAX(PMEM_MINPOOLGROW,deltapool);
   newps->eltsize_req = uelt;
 
   /* get pool */
@@ -419,8 +467,8 @@ pool_store_t pool_create_store(int length, int width,
   return newps;
 }
 
-void *pool_get_element(pool_store_t ps)
-{
+
+void *pool_get_element(pool_store_t ps){
   /* no automatic variables please */
   register struct pool_element *elt;
   /* in a test on the alpha, though, making elt static global slowed it */
@@ -469,8 +517,8 @@ void *pool_get_element(pool_store_t ps)
   return (void *)elt;
 }
 
-void pool_get_element_list(pool_store_t ps, int nelts, void **ary)
-{
+
+void pool_get_element_list(pool_store_t ps, int nelts, void **ary){
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"NOT implemented");
   if (ISNULL(ps) || ISNULL(ary)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL array or pool_store_t");
@@ -483,19 +531,19 @@ void pool_get_element_list(pool_store_t ps, int nelts, void **ary)
   ary[0]=NULL;
 }
 
+
 void pool_free_elementF(pool_store_t ps, void *ptr
-#if pool_DEBUG
-, CONST char *fn
+#if POOL_DEBUG
+	, CONST char *fn
 #endif
-)
-{
+){
   register struct pool_element *elt;
 
   if (ISNULL(ptr)) return;
   elt = (struct pool_element *)ptr;
 
 #if !pool_LIGHTENING
-#if pool_DEBUG
+#if POOL_DEBUG
   if (check_pool_store(ps)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Fishy pool_store_t. Element not recycled. Filename='%s'",fn);
     return;
@@ -503,7 +551,7 @@ void pool_free_elementF(pool_store_t ps, void *ptr
   }
   /* check for belongs to this pool_store_t */
   if (!from_store(ps,ptr)) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Spurious element detected. Element ignored. Filename='%s'",fn);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Spurious element detected. Element ignored.");
     return;
   }
 #endif
@@ -521,7 +569,7 @@ void pool_free_elementF(pool_store_t ps, void *ptr
   ps->inuse--;
   if (ps->inuse < 0) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"More elements freed than have been handed out. (%d)",abs(ps->inuse));
-#if pool_DEBUG
+#if POOL_DEBUG
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Filename='%s'",fn);
 #endif
   }
@@ -529,19 +577,20 @@ void pool_free_elementF(pool_store_t ps, void *ptr
   return;
 }
 
+
 void pool_clear_storeF(pool_store_t ps
-#if pool_DEBUG
-, CONST char *fn
+#if POOL_DEBUG
+	, CONST char *fn
 #endif
-) {
+){
   if ( check_pool_store(ps) > 1 ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad pool_store_t given. Not cleared.");
-#if pool_DEBUG
+#if POOL_DEBUG
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Filename='%s'",fn);
 #endif
     return;
   }
-#if pool_DEBUG
+#if POOL_DEBUG
   if (ps->inuse || ps->highwater - ps->onlist ) {
     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"In use elements in given pool_store_t are cleared. Don't refer to them again. Filename='%s'",fn);
   }
@@ -551,10 +600,7 @@ void pool_clear_storeF(pool_store_t ps
   if (ps->active - ps->retned ||
       ps->onlist + ps->inuse - ps->highwater ||
       ps->curelt + ps->curbar*ps->wid - ps->highwater) {
-    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Element imbalance detected.");
-#if pool_DEBUG
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Filename='%s'",fn);
-#endif
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Element imbalance detected.");
   }
 #endif
 #if !pool_LIGHTENING
@@ -567,10 +613,10 @@ void pool_clear_storeF(pool_store_t ps
   ps->list = NULL;
 }
 
-void pool_destroy_store(pool_store_t ps)
-{
+
+void pool_destroy_store(pool_store_t ps){
   int i;
-#if pool_DEBUG
+#if POOL_DEBUG
   if ( (i=check_pool_store(ps))==2 ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Bad pool_store_t given. Not destroyed.");
     return;
@@ -597,8 +643,8 @@ void pool_destroy_store(pool_store_t ps)
   return;
 }
 
-void pool_print_store(FILE *fp, pool_store_t ps, unsigned detail)
-{
+
+void pool_print_store(FILE *fp, pool_store_t ps, unsigned detail){
   if (ISNULL(fp) || ISNULL(ps)) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL FILE or pool_store_t.");
     return;
@@ -610,7 +656,7 @@ void pool_print_store(FILE *fp, pool_store_t ps, unsigned detail)
   FPRINTF(fp,"pool_store_t statistics:\n");
   if (detail) {
     FPRINTF(fp,"INTERNAL (integrity OK if = %d):\n",OK);
-    FPRINTF(fp,"%-30s %-20d\n","integrity",ps->integrity);
+    FPRINTF(fp,"%-30s %-20ld\n","integrity", (long)ps->integrity);
 #if !pool_LIGHTENING
     FPRINTF(fp,"%-30s %-20ld\n","active",ps->active);
     FPRINTF(fp,"%-30s %-20ld\n","returned",ps->retned);
@@ -664,8 +710,8 @@ void pool_print_store(FILE *fp, pool_store_t ps, unsigned detail)
   return;
 }
 
-size_t pool_sizeof_store(pool_store_t ps)
-{
+
+size_t pool_sizeof_store(pool_store_t ps){
   register size_t siz;
   if (check_pool_store(ps)>1) return (size_t)0;
   siz = sizeof(struct pool_store_header);    /* header */

@@ -69,8 +69,8 @@ def get_new_swig_flags(env):
 	return flags
 
 swig_env = python_env.Clone()
-if '-Wall' in swig_env.get('CCFLAGS'):
-	swig_env['CCFLAGS'] = swig_env['CCFLAGS'].remove('-Wall')
+#if '-Wall' in swig_env.get('CCFLAGS'):
+	#swig_env['CCFLAGS'] = swig_env['CCFLAGS'].remove('-Wall')
 
 if platform.system()=="Windows":
 	swig_env['SHLIBSUFFIX']='.pyd'

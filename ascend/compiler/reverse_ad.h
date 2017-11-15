@@ -194,7 +194,7 @@ ASC_DLLSPEC int RelationEvaluateSecondDerivSafe(CONST struct relation *r,
 	@return not significant yet 
 */
 ASC_DLLSPEC int RelationEvaluateHessianMtx(CONST struct relation *r,
-											hessian_mtx *hess_mtx,
+											ltmatrix *hess_mtx,
 		   									unsigned long dimension);
   											
   											
@@ -208,7 +208,7 @@ ASC_DLLSPEC int RelationEvaluateHessianMtx(CONST struct relation *r,
 	Safe Version
  */
 ASC_DLLSPEC int RelationEvaluateHessianMtxSafe(CONST struct relation *r,
-												hessian_mtx *hess_mtx,
+												ltmatrix *hess_mtx,
 												unsigned long dimension,
 												enum safe_err *serr);
 												

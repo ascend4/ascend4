@@ -37,30 +37,31 @@
 	@{
 */
 
-/**
+typedef char *(GetEnvFn)(const char *name);
+/**<
 	This is the type of env var function that you must send to 'env_subst'.
 	It doesn't have to actually consult the environment; it could do all
 	sorts of other stuff if you wanted.
 */
-typedef char *(GetEnvFn)(const char *name);
 
-/**
+typedef int (PutEnvFn)(const char *inputstring);
+/**<
 	This the type of a putenv function that can be used to set and environment
 	variable.
 */
-typedef int (PutEnvFn)(const char *inputstring);
 
-/**
+ASC_DLLSPEC int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr);
+/**<
 	Attempts to read from a getenv function, and if the value is found, write it
 	using a putenv function. You would use this to copy values from one
 	environment to another.
 
-	@return nonzero on error, -1 means that the value didn't exist in getenv,
-	otherwise the errors are those returned by putenv.
+	@return 0 on success, nonzero on error. -1 means that the value didn't exist
+	in getenv, otherwise the errors are those returned by putenv.
 */
-ASC_DLLSPEC int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr);
 
-/**
+ASC_DLLSPEC char *env_subst(const char *path,GetEnvFn *getenvptr);
+/**<
 	Perform variable substitution on a string in shell-like way.
 	This should replace any $VARNAME with the result of
 	(*getenvptr)(VARNAME).
@@ -71,7 +72,6 @@ ASC_DLLSPEC int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *put
 	from being swallowed up is allowed for, either. These can be added
 	later, 'as an exercise'.
 */
-ASC_DLLSPEC char *env_subst(const char *path,GetEnvFn *getenvptr);
 
 /* @} */
 

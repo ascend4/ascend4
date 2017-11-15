@@ -191,7 +191,9 @@ int main(int argc, char* argv[]){
 	}
 
 cleanup:
-	if(mode == CU_BRM_VERBOSE)ascshutdown("Testing completed.");/* shut down memory manager */
+	if(mode == CU_BRM_VERBOSE){
+		ascshutdown("Testing completed.");/* shut down memory manager */
+	}
 	CU_cleanup_registry();
 	return result;
 }

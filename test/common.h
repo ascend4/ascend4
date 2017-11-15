@@ -4,6 +4,8 @@
 #include "CUnit/CUnit.h"
 #include "test_globals.h"
 
+#define ASC_TESTING
+
 #define DEFINE_SUITE_SIMPLE(NAME) \
 	int res = 0; \
 	CU_pSuite s = CU_add_suite(#NAME,NULL,NULL); \

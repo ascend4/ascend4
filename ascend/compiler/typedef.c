@@ -598,23 +598,23 @@ DoNameF(CONST struct Name *nptr,
                  stat, /* statement of initial IS_A/ALIASES,relation */
                  STATBODY
                );
-    if (ok < 1) {
-      if (ok < 0) {
+    if(ok < 1) {
+      if(ok < 0) {
         ERROR_REPORTER_NOLINE(ASC_PROG_FATAL,"Insufficient memory during parse.");
         return DEF_ILLEGAL; /* well, having insufficient memory is illegal */
       }
-      if (noisy && ok == 0) {
-        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Same instance name \"%s\" used twice.",SCP(name));
+      if(noisy && ok == 0) {
         assert(g_lcl_pivot!=NULL);
-        if (g_lcl_pivot->e.statement != stat ) {
-          STATEMENT_ERROR(g_lcl_pivot->e.statement,"  First seen:");
-        } else {
-          FPRINTF(ASCERR,"\n");
+        if(g_lcl_pivot->e.statement != stat ) {
+          WriteStatementError(ASC_USER_ERROR,stat,1,"Name '%s' defined here, has been used before.",SCP(name));
+          WriteStatementError(ASC_USER_ERROR,g_lcl_pivot->e.statement,1,"Name '%s' was previously used here.",SCP(name));
+        }else{
+          WriteStatementError(ASC_USER_ERROR,stat,1,"Name '%s' has been used twice.",SCP(name));
         }
       }
       return DEF_NAME_DUPLICATE;
     }
-  } else {
+  }else{
     /* should never happen due to new upstream filters. */
     ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Bad name structure found in variable list.");
     return DEF_NAME_INCORRECT;

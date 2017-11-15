@@ -82,11 +82,26 @@
 #include <ascend/compiler/exprio.h>
 #endif /* for CommaExpr if working. */
 
+//#define ASCPARSE_DEBUG
+#ifdef ASCPARSE_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
+
 int g_compiler_warnings = 1;		/* level of whine to allow */
 
 #include <ascend/compiler/redirectFile.h>
 #ifndef ASCERR
 # error "ASCERR not defined"
+#endif
+
+//#define ASCPARSE_DEBUG
+#ifdef ASCPARSE_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
 #endif
 
 extern int zz_error(char *);
@@ -532,8 +547,8 @@ import:
 	    error_reporter_current_line(ASC_USER_ERROR
 	      ,"IMPORT of '%s' from '%s'."
 	      ,SCP($4), SCP($2)
-	    );
-      }
+            );
+          }
 	}
 	| IMPORT_TOK DQUOTE_TOK ';'
 	{
@@ -2800,6 +2815,7 @@ int
 zz_error(char *s){
   g_untrapped_error++;
   if (Asc_CurrentModule() != NULL) {
+    MSG("message string '%s'",s);
     error_reporter_current_line(ASC_USER_ERROR,"%s",s);
   } else {
     error_reporter(ASC_USER_ERROR,NULL,0,NULL,"%s at end of input.",s);
@@ -2835,7 +2851,9 @@ Asc_ErrMsgTypeDefnEOF(void)
 static void ErrMsg_Generic(CONST char *string){
 	static int errcount=0;
 	if(errcount<30){ 
+		char *s1 = strdup(string);
 		/* the module may have be already closed, Asc_CurrentModule will be null */
+		MSG("generic message, '%s'",string);
 		error_reporter_current_line(ASC_USER_ERROR,"%s",string);
 
 		if (g_type_name != NULL) {
@@ -2851,15 +2869,16 @@ static void ErrMsg_Generic(CONST char *string){
 				,"Further reports of this error will be suppressed.\n"
 			);
 		}
+		ASC_FREE(s1);
 	}
 }
 
 static void ErrMsg_CommaName(CONST char *what, struct Name *name)
 {
-  struct module_t *mod;
+  //struct module_t *mod;
 
   /* the module may have be already closed */
-  mod = Asc_CurrentModule();
+  /* mod = */ Asc_CurrentModule();
 
   ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
   FPRINTF(ASCERR, "Missing comma or operator before %s '",what);
@@ -2880,8 +2899,9 @@ static void ErrMsg_CommaExpr(CONST char *what, struct Expr *eptr)
 #endif /* COMMAEXPR_NOTBUGGY. delete if can't fix */
 
 static void
-ErrMsg_NullDefPointer(CONST char *object)
-{
+ErrMsg_NullDefPointer(CONST char *object){
+  MSG("Rejecting '%s'",object);
+  MSG("About to reject '%s'",object);
   error_reporter_current_line(ASC_USER_ERROR,"Rejected '%s'", object);
 }
 
@@ -3016,9 +3036,11 @@ static void CollectNote(struct Note *n)
 	severity flags.
 */
 static void error_reporter_current_line(const error_severity_t sev, const char *fmt,...){
-	va_list args;
+	MSG("format = %s",fmt);
+	va_list args, args2;
 	va_start(args,fmt);
-	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),NULL,fmt,args);
+	va_copy(args2,args);
+	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),NULL,fmt,&args2);
 	va_end(args);
 }
 

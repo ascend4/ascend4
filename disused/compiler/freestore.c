@@ -24,6 +24,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <limits.h> /* for INT_MAX */
+#include <ascend/utilities/config.h>
+#include <ascend/general/platform.h>
+
+#include "freestore.h"
+
 #include <stdarg.h>
 #include <ascend/general/platform.h>
 
@@ -71,18 +78,16 @@
 static struct FreeStore *g_free_store = NULL;
 static long g_units_alloc = 0L;
 
-struct FreeStore *FreeStore_Create(int n_buffers,int buffer_length)
-{
+struct FreeStore *FreeStore_Create(int n_buffers,int buffer_length){
   struct FreeStore *result;
   union RelationTermUnion **root;
   int i;
 
-  result = (struct FreeStore *)malloc(sizeof(struct FreeStore));
+  result = ASC_NEW(struct FreeStore);
   /*
    * Make and initialize the array of pointers to the buffers.
    */
-  root = (union RelationTermUnion **)
-    calloc(n_buffers,sizeof(union RelationTermUnion *));
+  root = ASC_NEW_ARRAY_CLEAR(union RelationTermUnion *,n_buffers);
 
   /*
    * Allocate all n_buffers of size buffer_length.
@@ -92,8 +97,7 @@ struct FreeStore *FreeStore_Create(int n_buffers,int buffer_length)
    * stack has to be reallocated.
    */
   for (i=0;i<n_buffers;i++) {
-    root[i] =  (union RelationTermUnion *)
-		malloc(buffer_length*sizeof(union RelationTermUnion));
+    root[i] = ASC_NEW_ARRAY(union RelationTermUnion,buffer_length);
   }
   result->returned = gs_stack_create(MAX(8,(long)0.3*buffer_length));
 
@@ -110,8 +114,7 @@ struct FreeStore *FreeStore_Create(int n_buffers,int buffer_length)
   return result;
 }
 
-void FreeStore_ReInit(struct FreeStore *store)
-{
+void FreeStore_ReInit(struct FreeStore *store){
   if (store && store->root) {
     gs_stack_destroy(store->returned,0); /* faster to destroy and rebuild */
     store->returned = gs_stack_create(MAX(8,(long)0.3*store->buffer_length));
@@ -122,8 +125,7 @@ void FreeStore_ReInit(struct FreeStore *store)
   }
 }
 
-static union RelationTermUnion *FreeStore__GetMem(struct FreeStore *store)
-{
+static union RelationTermUnion *FreeStore__GetMem(struct FreeStore *store){
   union RelationTermUnion *result;
   union RelationTermUnion *ptr;
   union RelationTermUnion **root;
@@ -168,9 +170,10 @@ static union RelationTermUnion *FreeStore__GetMem(struct FreeStore *store)
 }
 
 
-static union RelationTermUnion *FreeStore__FindMem(struct FreeStore *store,
-				union RelationTermUnion *term)
-{
+static union RelationTermUnion *FreeStore__FindMem(
+	struct FreeStore *store
+	,union RelationTermUnion *term
+){
   union RelationTermUnion **root, *start, *end;
   int i;
 
@@ -187,30 +190,26 @@ static union RelationTermUnion *FreeStore__FindMem(struct FreeStore *store,
   return NULL;	/* term not found within range */
 }
 
-static
-void FreeStore__FreeMem(struct FreeStore *store,
-			union RelationTermUnion *term)
-{
+static int FreeStore__FreeMem(struct FreeStore *store
+	,union RelationTermUnion *term
+){
   union RelationTermUnion *ptr;
 
   ptr = FreeStore__FindMem(store,term); /* check if we own the memory */
-  if (ptr!=NULL) {
-    gs_stack_push(store->returned,ptr);
-  }
-  else{
+  if(ptr==NULL){
     FPRINTF(stderr,"This is not one of our pointers;");
     FPRINTF(stderr,"free it yourself.\n");
+    return 1;
   }
+  gs_stack_push(store->returned,ptr);
+  return 0;
 }
 
-union RelationTermUnion *FreeStoreCheckMem(union RelationTermUnion *term)
-{
+union RelationTermUnion *FreeStoreCheckMem(union RelationTermUnion *term){
   return FreeStore__FindMem(FreeStore_GetFreeStore(),term);
 }
 
-void FreeStore__Statistics(FILE *fp,
-			   struct FreeStore *store)
-{
+void FreeStore__Statistics(FILE *fp, struct FreeStore *store){
   union RelationTermUnion *bufptr;
   int n_allocated=0;
   int n_maxused=0;
@@ -247,13 +246,11 @@ void FreeStore__Statistics(FILE *fp,
  * This is to be used as a high water counter
  * over many invocations of the free strore.
  */
-long FreeStore_UnitsAllocated()
-{
+long FreeStore_UnitsAllocated(){
   return g_units_alloc;
 }
 
-void FreeStore__BlastMem(struct FreeStore *store)
-{
+void FreeStore__BlastMem(struct FreeStore *store){
   int i,n_buffers;
   if (!store)
     return;
@@ -271,61 +268,20 @@ void FreeStore__BlastMem(struct FreeStore *store)
   g_units_alloc = 0;
 }
 
-void FreeStore_SetFreeStore(struct FreeStore *store)
-{
+void FreeStore_SetFreeStore(struct FreeStore *store){
   g_free_store = store;
 }
 
-struct FreeStore *FreeStore_GetFreeStore(void)
-{
+struct FreeStore *FreeStore_GetFreeStore(void){
   return g_free_store;
 }
 
-union RelationTermUnion *GetMem()
-{
+union RelationTermUnion *FreeStore_GetMem(){
   g_units_alloc++;
   return FreeStore__GetMem(g_free_store);
 }
 
-void FreeMem(union RelationTermUnion *term)
-{
-  FreeStore__FreeMem(g_free_store,term);
+int FreeStore_FreeMem(union RelationTermUnion *term){
+  return FreeStore__FreeMem(g_free_store,term);
 }
 
-#ifdef FREESTORE_TEST
-main (int argc, char **argv)
-{
-  union RelationTermUnion *term = NULL;
-  union RelationTermUnion **list = NULL;
-  int n_buffers = 1;
-  int buffer_length = 5;
-  int len = 10;
-  int i;
-
-  g_free_store = FreeStore_Create(n_buffers,buffer_length);
-
-  list = (union RelationTermUnion **)
-		calloc(len,sizeof(union RelationTermUnion *));
-  for (i=0;i<len;i++) {
-    term = GetMem();
-    if (term) {
-      V_TERM(term)->varnum = i;
-      term->t = e_var;
-      list[i] = term;
-    }
-  }
-  FreeMem(list[4]);
-  FreeMem(list[5]);
-  FreeMem(list[6]);
-
-  term = (union RelationTermUnion *)malloc(sizeof(union RelationTermUnion));
-  V_TERM(term)->varnum = 6;
-  FreeMem(term);
-  FreeStore__Statistics(stdout,g_free_store);
-  exit(0);
-}
-
-/*
- * acc -o freestore_test freestore.c ascmalloc.o stack.o list.o
- */
-#endif /* FREESTORE_TEST */

@@ -297,37 +297,37 @@ static void OpenLogFile(void)
   }
 }
 
-static void WriteMemoryStatus(FILE *f, CONST char *msg)
-{
-  CONST VOIDPTR minm;
-  CONST VOIDPTR maxm;
-  minm = MinMemory();
-  maxm = MaxMemory();
-  FPRINTF(f,"%s\n"
-            "Current memory usage(byte allocated): %lu\n"
-            "Current number of blocks: %d\n"
-            "Peak memory usage(bytes allocated): %lu\n"
-            "Lowest address: %lx\n"
-            "Highest address: %lx\n"
-            "Memory density: %g\n"
-            "Memory mean: %lx\n",
-            msg,
-            f_memory_allocated,
-            f_memory_length,
-            f_peak_memory_usage,
-            (asc_intptr_t)minm,
-            (asc_intptr_t)maxm,
-            ((double)f_memory_allocated/(double)
-            NONZERO((CONST char *)maxm - (CONST char *)minm)),
-            (asc_intptr_t)MemoryMean());
+static void WriteMemoryStatus(FILE *f, CONST char *msg){
+	CONST VOIDPTR minm;
+	CONST VOIDPTR maxm;
+	minm = MinMemory();
+	maxm = MaxMemory();
+	ASC_FPRINTF(f,"%s\n"
+		"Current memory usage(byte allocated): %lu\n"
+		"Current number of blocks: %d\n"
+		"Peak memory usage(bytes allocated): %lu\n"
+		"Lowest address: %lx\n"
+		"Highest address: %lx\n"
+		"Memory density: %g\n"
+		"Memory mean: %lx\n",
+		msg,
+		f_memory_allocated,
+		f_memory_length,
+		f_peak_memory_usage,
+		(asc_intptr_t)minm,
+		(asc_intptr_t)maxm,
+		((double)f_memory_allocated/(double)
+		NONZERO((CONST char *)maxm - (CONST char *)minm)),
+		(asc_intptr_t)MemoryMean()
+	);
 }
 
 static void WriteMemoryRecords(FILE *f, CONST char *msg)
 {
   int c;
-  FPRINTF(f,"%s\nAllocation record count:  %d\n", msg, f_memory_length);
+  ASC_FPRINTF(f,"%s\nAllocation record count:  %d\n", msg, f_memory_length);
   for (c=0 ; c<f_memory_length ; ++c) {
-    FPRINTF(f,"%5d %9x->%9x %9u\n",
+    ASC_FPRINTF(f,"%5d %p->%p %9zu\n",
               c,
               f_mem_rec[c].ptr,
               (CONST VOIDPTR)((CONST char *)f_mem_rec[c].ptr + f_mem_rec[c].size),
@@ -357,34 +357,34 @@ void ascstatus_detailf(CONST char *msg)
   WriteMemoryRecords(ASCINF, "\nDetail Report of Currently Allocated Blocks");
 }
 
-void ascshutdownf(CONST char *msg)
-{
+void ascshutdownf(CONST char *msg){
   OpenLogFile();
-  if (NULL != f_memory_log_file) {
+  if(NULL != f_memory_log_file) {
+    //CONSOLE_DEBUG("got a memory log file %p",f_memory_log_file);
     WriteMemoryStatus(f_memory_log_file,msg);
-    if (f_memory_length) {
+    if(f_memory_length){
       WriteMemoryRecords(f_memory_log_file, "\n!!! SHUTDOWN ALERT -- POINTERS STILL ALLOCATED !!!");
-      FPRINTF(f_memory_log_file, "!!! END OF SHUTDOWN MESSAGE !!!\n");
+      ASC_FPRINTF(f_memory_log_file, "!!! END OF SHUTDOWN MESSAGE !!!\n");
     } else {
-      FPRINTF(f_memory_log_file, "NO POINTERS STILL ALLOCATED :-)\n");
+      ASC_FPRINTF(f_memory_log_file, "NO POINTERS STILL ALLOCATED :-)\n");
     }
     fflush(f_memory_log_file);
 #ifdef __WIN32__
-    FPRINTF(ASCINF, "Memory log written to: %s\n", f_memlog_filename);
+    CONSOLE_DEBUG("Memory log written to: %s", f_memlog_filename);
     free(f_memlog_filename);    /* free(), NOT ascfree() */
     f_memlog_filename = NULL;
 #else
-    FPRINTF(ASCINF, "Memory log file written & closed.\n");
+    CONSOLE_DEBUG("Memory log file written & closed.");
 #endif
     fclose(f_memory_log_file);
     f_memory_log_file = NULL;
   }
   WriteMemoryStatus(ASCINF, msg);
-  if (f_memory_length) {
+  if(f_memory_length){
     WriteMemoryRecords(ASCINF, "\n!!! SHUTDOWN ALERT -- POINTERS STILL ALLOCATED !!!");
-    FPRINTF(ASCINF, "!!! END OF SHUTDOWN MESSAGE !!!\n");
+    ASC_FPRINTF(ASCINF, "!!! END OF SHUTDOWN MESSAGE !!!\n");
   } else {
-    FPRINTF(ASCINF, "NO POINTERS STILL ALLOCATED :-)\n");
+    ASC_FPRINTF(ASCINF, "NO POINTERS STILL ALLOCATED :-)\n");
   }
 }
 
@@ -392,9 +392,9 @@ static void WriteAllocation(CONST VOIDPTR adr, size_t size,
                             CONST char *file, int line)
 {
   if (NULL != f_memory_log_file) {
-    FPRINTF(f_memory_log_file,"%9lx->%9x %9u %31s%6d %s\n",
-                              (asc_intptr_t)adr,
-                              (asc_intptr_t)adr + size - 1,
+    ASC_FPRINTF(f_memory_log_file,"%p->%p %9zu %31s%6d %s\n",
+                              adr,
+                              adr + size - 1,
                               size,
                               "",
                               line,
@@ -402,10 +402,10 @@ static void WriteAllocation(CONST VOIDPTR adr, size_t size,
     fflush(f_memory_log_file);
   }
   else{
-    FPRINTF(ASCERR,"Unable to append to memory log file.\n");
-    FPRINTF(ASCERR,"%9lx->%9x %9u %31s%6d %s\n",
-                   (asc_intptr_t)adr,
-                   (asc_intptr_t)adr + size - 1,
+    ASC_FPRINTF(ASCERR,"Unable to append to memory log file.\n");
+    ASC_FPRINTF(ASCERR,"%p->%p %9zu %31s%6d %s\n",
+                   adr,
+                   adr + size - 1,
                    size,
                    "",
                    line,
@@ -418,23 +418,23 @@ static void WriteReAllocation(CONST VOIDPTR adr1, size_t size1,
                               CONST char *file, int line)
 {
   if (NULL != f_memory_log_file) {
-    FPRINTF(f_memory_log_file,"%9lx->%9x %9u %9lx->%9x %9u %6d %s\n",
-                              (asc_intptr_t)adr2,
-                              (asc_intptr_t)adr2 + size2 - 1,
+    ASC_FPRINTF(f_memory_log_file,"%p->%p %9zu %p->%p %9zu %6d %s\n",
+                              adr2,
+                              adr2 + size2 - 1,
                               size2,
-                              (asc_intptr_t)adr1,
-                              (asc_intptr_t)adr1 + size1 - 1,
+                              adr1,
+                              adr1 + size1 - 1,
                               size1, line, file);
     fflush(f_memory_log_file);
   }
   else{
-    FPRINTF(ASCERR,"Unable to append to memory log file.\n");
-    FPRINTF(ASCERR,"%9lx->%9x %9u %9lx->%9x %9u %6d %s\n",
-                   (asc_intptr_t)adr2,
-                   (asc_intptr_t)adr2 + size2 - 1,
+    ASC_FPRINTF(ASCERR,"Unable to append to memory log file.\n");
+    ASC_FPRINTF(ASCERR,"%p->%p %9zu %p->%p %9zu %6d %s\n",
+                   adr2,
+                   adr2 + size2 - 1,
                    size2,
-                   (asc_intptr_t)adr1,
-                   (asc_intptr_t)adr1 + size1 - 1,
+                   adr1,
+                   adr1 + size1 - 1,
                    size1, line, file);
   }
 }
@@ -443,17 +443,17 @@ static void WriteDeallocation(CONST VOIDPTR adr, size_t size,
                               CONST char *file, int line)
 {
   if (NULL != f_memory_log_file) {
-    FPRINTF(f_memory_log_file,"%31s%9x->%9x %9u %6d %s\n","",
-                              (asc_intptr_t)adr,
-                              (asc_intptr_t)adr + size - 1,
+    ASC_FPRINTF(f_memory_log_file,"%31s%p->%p %9zu %6d %s\n","",
+                              adr,
+                              adr + size - 1,
                               size, line, file);
     fflush(f_memory_log_file);
   }
   else{
-    FPRINTF(ASCERR,"Unable to append to memory log file.\n");
-    FPRINTF(ASCERR,"%31s%9x->%9x %9u %6d %s\n","",
-                   (asc_intptr_t)adr,
-                   (asc_intptr_t)adr + size - 1,
+    ASC_FPRINTF(ASCERR,"Unable to append to memory log file.\n");
+    ASC_FPRINTF(ASCERR,"%31s%p->%p %9zu %6d %s\n","",
+                   adr,
+                   adr + size - 1,
                    size, line, file);
   }
 }
@@ -673,7 +673,7 @@ VOIDPTR ascmallocf(size_t size, CONST char *file, int line)
     }
     AddAllocatedMemory(result,size,file,line);
   }else{
-	FPRINTF(ASCERR,"ASCMALLOC FAILED TO ALLOCATE MEMORY OF SIZE %d, result=%p\n",size,result);
+	ASC_FPRINTF(ASCERR,"ASCMALLOC FAILED TO ALLOCATE MEMORY OF SIZE %zu, result=%p\n",size,result);
   }
   return result;
 }

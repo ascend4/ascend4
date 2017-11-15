@@ -53,6 +53,7 @@
 	default 'real' printf behaviour on this platform. (As
 	opposed to the sneaky stuff that FPRINTF does in this header)
 */
+#include <ascend/general/config.h>
 #include <ascend/general/platform.h>
 #include <ascend/utilities/ascPrint.h>
 
@@ -103,7 +104,6 @@ typedef enum error_severity_enum{
 	but without the file/function/line number.
 */
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-# define ERROR_REPORTER_DEBUG(args...) error_reporter(ASC_PROG_NOTE, __FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_HERE(SEV,args...) error_reporter(SEV,__FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_NOLINE(SEV,args...) error_reporter(SEV, NULL, 0, NULL, ##args)
 # define CONSOLE_DEBUG(args...) ((void)(color_on(stderr,ASC_FG_BRIGHTBLUE) + \
@@ -118,7 +118,6 @@ typedef enum error_severity_enum{
 # define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__func__);
 
 #elif defined(HAVE_C99)
-# define ERROR_REPORTER_DEBUG(...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__func__,## __VA_ARGS__)
 # define ERROR_REPORTER_HERE(SEV,...) error_reporter(SEV,__FILE__,__LINE__,__func__, ## __VA_ARGS__)
 # define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, ## __VA_ARGS__)
 # define CONSOLE_DEBUG(...) (color_on(stderr,BRIGHTBLUE) + fprintf(stderr, "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
@@ -128,7 +127,6 @@ typedef enum error_severity_enum{
 
 #elif defined(_MSC_VER) && _MSC_VER >= 1400 /* Microsoft Visual C++ 2005 or newer */
 #  define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__FUNCTION__);
-#  define ERROR_REPORTER_DEBUG(...)     error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__FUNCTION__, __VA_ARGS__)
 #  define ERROR_REPORTER_HERE(SEV,...)  error_reporter(SEV,__FILE__,__LINE__,__FUNCTION__, __VA_ARGS__)
 #  define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, __VA_ARGS__)
 #  define CONSOLE_DEBUG(...)   (fprintf(stderr, "%s:%d (%s): ", __FILE__,__LINE__,__FUNCTION__) + \
@@ -136,7 +134,6 @@ typedef enum error_severity_enum{
                                 fprintf(stderr, "\n"))
 #else /* workaround for compilers without variadic macros: last resort */
 # define NO_VARIADIC_MACROS
-# define ERROR_REPORTER_DEBUG error_reporter_note_no_line
 # define ERROR_REPORTER_HERE error_reporter_here
 # define ERROR_REPORTER_NOLINE error_reporter_noline
 # define CONSOLE_DEBUG console_debug
@@ -148,9 +145,6 @@ ASC_DLLSPEC int console_debug(const char *fmt,...);
 #endif
 
 #define ERROR_REPORTER_START_NOLINE(SEV) error_reporter_start(SEV,NULL,0,NULL);
-
-#define ERROR_REPORTER_STAT(sev,stat,msg) \
-	error_reporter(sev,Asc_ModuleFileName(stat->mod),stat->linenum,NULL,msg)
 
 /** An alias for ASC_PROG_ERROR */
 #define ASC_PROG_ERR ASC_PROG_ERROR
@@ -167,53 +161,65 @@ typedef struct{
 } error_reporter_meta_t;
 
 /**
-	This structure provides a means for caching errors so that they can be
-	reported back later in the manner of 'stack traces'. Should be useful
-	for more detailed reporting from parser, external calls, etc.
+	This structure provides a means for observing when errors were reported in 
+	nested code, so that we can be sure that high-level routines can report
+	error status correctly. This is a bit of a hack because ASCEND doesn't
+	always report errors through return values in a straightforward way.
+	
+	This structure also provides the ability to suppress error_reporter output
+	(but not CONSOLE_DEBUG though -- at this stage), which can be useful when
+	running batch tasks etc. Potentially (with extra coding) allows just the 
+	first few of a long series of errors to be reported.
 
 	Usage will be
 
 		bool has_error = 0;
-		error_reporter_tree_start();
+		bool is_caching = 0;
+		error_reporter_tree_t *tree = error_reporter_tree_start(is_caching);
 		do_subordinate_tasks();
-		if(error_reporter_tree_has_error()){
-			has_error = 1;
-		}else{
-			has_error = 0
-		}
-		error_reporter_tree_end();
+		has_error = error_reporter_tree_has_error(tree);
 		if(has_error){
-			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"failed");
+			error_reporter_tree_end(tree);
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"task failed");
 		}else{
-			ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"success");
+			error_reporter_tree_end_clear(tree);
+			ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"task succeeded");
 		}
 
-	The next 'error_reporter' call after an outermost 'error_reporter_tree_end'
-	will cause the error tree to be output to the error reporting channel.
+	The error_reporter_tree_end() call will output any nested errors in the case
+	where it is a caching tree without any caching parent(s). If there are
+	parents, the errors will be kept for high-up scrutiny. If there are no
+	parents, the errors will the cleared away once they are output.
 
-	If an 'error_reporter' is found *inside* an an 'error_reporter_tree_start'
-	and 'error_reporter_tree_end', the error message is kept and not output.
+	The error_reporter_tree_end_clear() call will NOT output any nested errors
+	and will clear away any nested errors making them invisible to higher-up
+	nodes in the error tree. This allow errors which have occurred, eg in 
+	failed attempts to solve equations, to be suppressed in the case that
+	alternative actions are taken (eg re-solving with different parameters).
 
-	If the latest set of errors (those found inside the last start..end) are not
-	important, they can be discarded using error_reporter_tree_clear. This will
-	not clear the entire error tree, as there may be errors higher-up that we
-	don't want to discard.
+	Both of these commands, error_reporter_tree_end() and
+	error_reporter_tree_end_clear() close the current error tree and move the
+	current-tree-pointer up to the parent level if it exists.
 
-	After a call to error_reporter_tree_clear(), further errors can still be
-	added within the current TREECURRENT context.
+	If an 'error_reporter' call is found *inside* an an 'error_reporter_tree_start'
+	and 'error_reporter_tree_end', the error message is recorded in the
+	error_reporter_tree_t.
 */
 typedef struct ErrorReporterTree{
 	error_reporter_meta_t *err;
+	int iscaching;
 	struct ErrorReporterTree *head; /**< first on the list of child errors */
 	struct ErrorReporterTree *tail; /**< last on the list of child errors */
 	struct ErrorReporterTree *next; /**< next error in the present list */
+	struct ErrorReporterTree *prev; /**< prev error in the present list */
 	struct ErrorReporterTree *parent; /**< parent error (or NULL) */
 } error_reporter_tree_t;
 
-ASC_DLLSPEC int error_reporter_tree_start();
-ASC_DLLSPEC int error_reporter_tree_end();
-ASC_DLLSPEC void error_reporter_tree_clear();
-ASC_DLLSPEC int error_reporter_tree_has_error();
+ASC_DLLSPEC error_reporter_tree_t *error_reporter_tree_start(int iscaching);
+ASC_DLLSPEC int error_reporter_tree_end(error_reporter_tree_t *tree);
+ASC_DLLSPEC void error_reporter_tree_end_clear(error_reporter_tree_t *tree);
+ASC_DLLSPEC int error_reporter_tree_has_error(error_reporter_tree_t *tree);
+ASC_DLLSPEC ASC_DEPREC error_reporter_tree_t *error_reporter_get_tree_current();
 
 /**
 	This is the drop-in replacement for Asc_FPrintf. Anythin you attempt
@@ -225,7 +231,7 @@ ASC_DLLSPEC int fprintf_error_reporter(FILE *file, const char *fmt, ...);
 /**
 	For use when implementing higher-level error handling routines
 */
-ASC_DLLSPEC int vfprintf_error_reporter(FILE *file, const char *fmt, va_list args);
+ASC_DLLSPEC int vfprintf_error_reporter(FILE *file, const char *fmt, va_list *args);
 
 /**
 	If file!=stderr, this will do the usual thing. If file==stderr, it will output
@@ -260,7 +266,7 @@ ASC_DLLSPEC int error_reporter_end_flush();
   , const int line \
   , const char *funcname \
   , const char *fmt \
-  , va_list args
+  , va_list *args
 
 /*
 	In you have functions which pass-through callback parameters,

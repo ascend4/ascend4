@@ -69,6 +69,8 @@ static void asc_va_panic(const int status, const char *filename, const int line
 	int cancel = FALSE;          /* If non-zero, do not call exit().  Default is to exit() */
 	char msg[PANIC_MSG_MAXLEN];
 	size_t p;
+	va_list args2;
+	va_copy(args2,args);
 
 	/* Fail loudly if ASCERR isn't set to a file pointer -- can't use asc_assert here! */
 	assert(NULL != ASCERR);
@@ -76,7 +78,7 @@ static void asc_va_panic(const int status, const char *filename, const int line
 	p = SNPRINTF(msg,PANIC_MSG_MAXLEN-2,"%s:%d (%s): ",filename,line,function);
 
 	/* Add the variable args to the panic message using the format "format" */
-	vsnprintf(msg+p, PANIC_MSG_MAXLEN-p-2, fmt, args );
+	vsnprintf(msg+p, PANIC_MSG_MAXLEN-p-2, fmt, args);
 
 	p = strlen(msg);
 	msg[p++] = '\n';
@@ -102,7 +104,7 @@ static void asc_va_panic(const int status, const char *filename, const int line
 
 		/* Print the message to the default error reporter (ASCERR) */
 		fprintf(stderr,"\n\n");
-		va_error_reporter(ASC_PROG_FATAL,filename,line,function,fmt,args);
+		va_error_reporter(ASC_PROG_FATAL,filename,line,function,fmt,&args2);
 		fprintf(stderr,"\n");
 
 	}else{

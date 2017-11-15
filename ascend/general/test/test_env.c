@@ -41,11 +41,85 @@ static char *my_getenv(const char *name){
 	return NULL;
 }
 
+// simple 'env' implementation for the purpose of testing
+
+typedef struct MyEnvList_struct{
+	char *key;
+	char *val;
+	struct MyEnvList_struct *next;
+} MyEnvList;
+
+MyEnvList *myenv2 = NULL;
+
+static char *my2_getenv(const char *name){
+	MyEnvList *m = myenv2;
+	while(m!=NULL){
+		if(strcmp(m->key,name)==0 && m->val!=NULL)
+			return m->val;
+		m = m->next;
+	}
+	return NULL;
+}
+
+static int my2_putenv(const char *s){
+	char *eq = strchr(s,'=');
+	if(eq==NULL)return 1;
+	//M(s);
+	//M(eq);
+	char *k = ASC_NEW_ARRAY(char,(eq-s+1));
+	if(!k)return 2;
+	strncpy(k, s, eq-s);
+	k[eq-s]='\0';
+	char *v = ASC_NEW_ARRAY(char,(size_t)(strlen(s) - (eq-s)));
+	if(!v){
+		ASC_FREE(k);
+		return 3;
+	}
+	strncpy(v, eq+1, strlen(s) - (eq-s));
+	//M(k);
+	//M(v);
+	MyEnvList **m = &myenv2;
+	while(*m!=NULL){
+		if(strcmp((*m)->key,k)==0){
+			// replace existing value in list
+			ASC_FREE(k);
+			if((*m)->val!=NULL)ASC_FREE((*m)->val);
+			(*m)->val = v;
+			return 0;
+		}
+		m = &((*m)->next);
+	}
+	*m = ASC_NEW(MyEnvList);
+	// add to end of list
+	(*m)->key = k;
+	(*m)->val = v;
+	(*m)->next = NULL;
+	return 0;
+}
+
+void my2_envclean(void){
+	MyEnvList *m = myenv2;
+	while(m){
+		char *k = m->key; 
+		char *v = m->val;
+		MyEnvList *n = m->next; 
+		if(k)ASC_FREE(k);
+		if(v)ASC_FREE(v);
+		ASC_FREE(m);
+		m = n;
+	}
+	myenv2 = NULL;
+}
+
 void test_subst(void){
 	char s1[]="$MYHOME/bitmaps";
 	char *r;
 
 	M(s1);
+
+	r = env_subst(s1,NULL);
+	CU_TEST(strcmp(r,s1)==0);
+	ASC_FREE(r);
 
 	r = env_subst(s1,my_getenv);
 	M(r);
@@ -58,11 +132,43 @@ void test_subst(void){
 	/*assert(strcmp(r,"C:/msys/1.0/share/ascend/share")==0);*/
 }
 
+void test_putenv(void){
+	CU_TEST(my2_getenv("MYHOME")==NULL);
+	my2_putenv("MYHOME=aabbcc");
+	CU_TEST(my2_getenv("MYHOME")!=NULL);
+	if(my2_getenv("MYHOME")!=NULL){
+		CU_TEST(strcmp(my2_getenv("MYHOME"),"aabbcc")==0);
+	}
+	CU_TEST(my2_getenv("MYBIN")==NULL);
+	my2_putenv("MYBIN=/usr/local/bin");
+	my2_putenv("CMD=export NAME=VALUE");
+	CU_TEST(my2_getenv("MYHOME")!=NULL && strcmp(my2_getenv("MYHOME"),"aabbcc")==0);
+	CU_TEST(my2_getenv("MISSING")==NULL);
+	my2_putenv("MYHOME=ccc");
+	CU_TEST(my2_getenv("MYHOME")!=NULL && strcmp(my2_getenv("MYHOME"),"ccc")==0);
+	CU_TEST(my2_getenv("CMD")!=NULL && strcmp(my2_getenv("CMD"),"export NAME=VALUE")==0);
+
+	my2_envclean();
+}	
+
+void test_import(void){
+	char *h = my_getenv("MYHOME");
+	CU_TEST(h != NULL);
+	CU_TEST(0==env_import("MYHOME",my_getenv,my2_putenv));
+	CU_TEST(0!=env_import("MISSING",my_getenv,my2_putenv));
+
+	CU_TEST(my2_getenv("MYHOME")!=NULL && strcmp(my2_getenv("MYHOME"),h)==0);
+
+	my2_envclean();
+}
+
 /*===========================================================================*/
 /* Registration information */
 
 #define TESTS(T) \
 	T(subst) \
+	T(putenv) \
+	T(import)
 
 REGISTER_TESTS_SIMPLE(general_env, TESTS);
 

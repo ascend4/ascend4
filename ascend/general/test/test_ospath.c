@@ -23,7 +23,7 @@
 
 #include <test/common.h>
 
-FilePathTestFn ospath_searchpath_testexists;
+static FilePathTestFn ospath_searchpath_testexists;
 
 #define NDEBUG
 
@@ -59,7 +59,7 @@ FilePathTestFn ospath_searchpath_testexists;
 	the path \GTK\bin\johnpye\extfn, returns true. This is of
 	course a fairly useless test function, so it's just for testing.
 */
-int ospath_searchpath_testexists(struct FilePath *path,void *file){
+static int ospath_searchpath_testexists(struct FilePath *path,void *file){
 	struct FilePath *fp, *fp1, *fp2;
 	fp = (struct FilePath *)file;
 	D(fp);
@@ -132,6 +132,17 @@ static void test_cleanup(void){
 	M("Passed 'cleanup' test\n");
 
 	ospath_free(fp1); ospath_free(fp2);
+	MEMUSED(0);
+}
+	//------------------------
+
+static void test_newcopy(void){
+	struct FilePath *fp1, *fp2;
+	fp1 = ospath_new_from_posix("/usr/local/bin");
+	fp2 = ospath_new_copy(fp1);
+	CU_TEST(ospath_cmp(fp1,fp2)==0);
+	ospath_free(fp1);
+	ospath_free(fp2);
 	MEMUSED(0);
 }
 	//------------------------
@@ -368,6 +379,7 @@ static void test_searchpath(void){
 #endif
 
 	pp = ospath_searchpath_new(pathtext);
+	CU_TEST(ospath_searchpath_length(pp)==4);
 
 	for(p1=pp; *p1!=NULL; ++p1){
 		D(*p1);
@@ -635,14 +647,42 @@ static void test_getdir(void){
 	ospath_free(fp3);
 	MEMUSED(0);
 }
+	//-------------------------------
+
+/* 
+	return NULL for unfound env vars, else point to a string that must not be
+	modified by the caller, and may later be changed by a later call to getenv.
+*/
+static char *my_ospath_getenv(const char *name){
+	if(strcmp(name,"MYHOME")==0){
+		return "/home/john";
+	}else if(strcmp(name,"MYBIN")==0){
+		return "/usr/local/bin";
+	}
+	return NULL;
+}
+
+static void test_expandenv(void){
+	struct FilePath *fp1, *fp2;
+
+	CU_TEST(strcmp(my_ospath_getenv("MYHOME"),"/home/john")==0);
+	fp1 = ospath_new_expand_env("$MYHOME/myfile.ext",my_ospath_getenv);
+	fp2 = ospath_new("/home/john/myfile.ext");
+	CU_TEST(ospath_cmp(fp1,fp2)==0);
+
+	ospath_free(fp1);
+	ospath_free(fp2);
+	MEMUSED(0);
+}	
 
 /*===========================================================================*/
 /* Registration information */
 
 #define TESTS(T) \
 	T(getparent) \
-	T(cleanup) \
 	T(newfromposix) \
+	T(newcopy) \
+	T(cleanup) \
 	T(secondcleanup) \
 	T(append) \
 	T(appendupup) \
@@ -655,7 +695,8 @@ static void test_getdir(void){
 	T(basefilename) \
 	T(getfilestem) \
 	T(getbasefileext) \
-	T(getdir)
+	T(getdir) \
+	T(expandenv)
 
 REGISTER_TESTS_SIMPLE(general_ospath, TESTS);
 

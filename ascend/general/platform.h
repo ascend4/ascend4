@@ -135,6 +135,13 @@
 # error "NO ASC_DLLSPEC DEFINED"
 #endif
 
+/* deprecate functions which should only be exposed during testing */
+#if !defined(ASC_TESTING) && !defined(ASC_DEPREC)
+# define ASC_DEPREC __attribute__((deprecated("for testing only!")))
+#else
+# define ASC_DEPREC
+#endif
+
 /**
 	What kind of C compiler do we have?
 

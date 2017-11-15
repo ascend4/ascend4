@@ -202,6 +202,7 @@ unsigned int ospath_length(struct FilePath *fp);
 */
 ASC_DLLSPEC struct FilePath *ospath_getparent(struct FilePath *fp);
 
+#if 0
 /**
 	Return a new path object which is a parent path of the current path up to the specified depth.
 	If the specifed depth is >= to the current path's depth, then a copy of the current path object is returned.
@@ -212,6 +213,7 @@ ASC_DLLSPEC struct FilePath *ospath_getparent(struct FilePath *fp);
 		"/lev1/lev2/lev3/"
 */
 struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned nDepth);
+#endif
 
 /**
 	Return then name of the bottom most level path entry (includes any extension)
@@ -252,12 +254,14 @@ ASC_DLLSPEC struct FilePath *ospath_getabs(const struct FilePath *fp);
 */
 int ospath_isroot(struct FilePath *fp);
 
+#if 0
 /**
 	Return the current paths' depth
 	ie. "/usr/some directory with spaces in it/hello"
 	returns a depth value of 3
 */
 unsigned ospath_depth(struct FilePath *fp);
+#endif
 
 /**
 	Return the root path

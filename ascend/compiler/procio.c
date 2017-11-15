@@ -54,9 +54,9 @@ void WriteInitWarn(struct procFrame *fm, const char *str){
 
 void WriteInitErr(struct procFrame *fm, const char *str){
   //WriteStatementErrorMessage(fm->err, fm->stat, str,1,2);
-  WSEM(fm->err,fm->stat,str);
-  WriteStatementLocation(fm->err,fm->stat);
-  FFLUSH(fm->err);
+  WriteStatementError(ASC_USER_ERROR,fm->stat,1,str);
+  //WriteStatementLocation(fm->err,fm->stat);
+  //FFLUSH(fm->err);
 }
 
 void ProcWriteCaseError(struct procFrame *fm, int arm, int pos){

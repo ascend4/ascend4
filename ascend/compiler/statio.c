@@ -53,6 +53,13 @@
 #include "instance_enum.h"
 #include "cmpfunc.h"
 
+//#define STATIO_DEBUG
+#ifdef STATIO_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 static int g_show_statement_detail = 1;
 /* global to control display detail. It's default value 1 means
  * print the expression with relations. On occasion this is burdensome
@@ -682,10 +689,11 @@ void WriteStatementError(const error_severity_t sev
 		, const char *fmt
 		, ...
 ){
-	va_list args;
+	va_list args,args2;
 	error_reporter_start(sev,Asc_ModuleFileName(stat->mod),stat->linenum,SCP(StatementTypeString(stat)));
 	va_start(args,fmt);
-	vfprintf_error_reporter(ASCERR,fmt,args);
+	va_copy(args2,args);
+	vfprintf_error_reporter(ASCERR,fmt,&args2);
 	va_end(args);
 	if(outputstatement){
 		FPRINTF(ASCERR,"\n");
@@ -720,7 +728,10 @@ void WriteStatementErrorMessage(
 			sev = ASC_PROG_ERR;
   }			
 
+  //ASC_FPRINTF(ASCERR,"%s:%d: %s\n",filename,line,message);
+  MSG("reporting: %s:%d: %s",filename,line,message);
   error_reporter_start(sev,filename,line,NULL);
+  //error_reporter(sev,filename,line,NULL,message);
   FPRINTF(ASCERR,"%s\n",message);
 
   if(stat!=NULL){
@@ -733,32 +744,32 @@ void WriteStatementErrorMessage(
       WriteForTable(ASCERR,GetEvaluationForTable());
     }
   }else{
-    ASC_FPRINTF(f,"NULL STATEMENT!");
+    FPRINTF(ASCERR,"NULL STATEMENT!");
   }
 
   error_reporter_end_flush();
-  CONSOLE_DEBUG("%s",message);
-  WriteStatementLocation(ASCERR,stat);
+  //MSG("%s",message);
+  //WriteStatementLocation(ASCERR,stat);
 }
 
 void WriteStatementLocation(FILE *f, CONST struct Statement *stat){
-	//CONSOLE_DEBUG("writing...");
+	MSG("writing...");
 	const char *filename=NULL;
 	int line=0;
 
 	if(stat==NULL){
-		//CONSOLE_DEBUG("STATEMENT POINTER IS NULL");
-		ASC_FPRINTF(f,"NULL STATEMENT!");
+		MSG("STATEMENT POINTER IS NULL");
+		FPRINTF(f,"NULL STATEMENT!");
 		return;
 	}
-	//CONSOLE_DEBUG("...");
+	MSG("...");
 
 	filename=Asc_ModuleBestName(StatementModule(stat));
 	line=StatementLineNum(stat);
 
 	/* write some more detail */
-	ASC_FPRINTF(f,"%s:%d",filename,line);
-	CONSOLE_DEBUG("%s:%d",filename,line);
+	FPRINTF(f,"%s:%d",filename,line);
+	MSG("%s:%d",filename,line);
 }
 
 
