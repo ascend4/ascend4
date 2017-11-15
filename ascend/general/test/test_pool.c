@@ -27,8 +27,17 @@
 
 #include <test/common.h>
 
-static void test_pool(void)
-{
+#define STR_LEN 100
+
+
+static void test_pool(void){
+  char str1[STR_LEN];
+  char str2[STR_LEN];
+  char str3[STR_LEN];
+  int str1_bad;
+  int str2_bad;
+  unsigned word;
+
   pool_store_t ps;
   struct pool_statistics stats;
   int i;
@@ -47,6 +56,334 @@ static void test_pool(void)
 #ifndef MALLOC_DEBUG
   CU_FAIL("test_pool() compiled without MALLOC_DEBUG - memory management not tested.");
 #endif
+
+ /* test pool_move_cast() */
+
+  memset(str1, '\0', STR_LEN);
+  memset(str2, '*', STR_LEN);
+
+  str1_bad = FALSE;                                   /* test initial condition */
+  str2_bad = FALSE;
+  for (i=0 ; i<STR_LEN ; ++i) {
+    if (!str1_bad && (str1[i] != '\0')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+    if (!str2_bad && (str2[i] != '*')) {
+      SNPRINTF(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
+      CU_FAIL(str3);
+      str2_bad = TRUE;
+    }
+  }
+  if (!str1_bad && !str2_bad) CU_PASS("str1 and str2 check out.");
+
+  pool_move_cast(str2, str1, STR_LEN/2);               /* copy part of a memory block */
+
+  str1_bad = FALSE;
+  str2_bad = FALSE;
+  for (i=0 ; i<STR_LEN/2 ; ++i) {
+    if (!str1_bad && (str1[i] != '*')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '*' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  for (i=STR_LEN/2 ; i<STR_LEN-1 ; ++i) {
+    if (!str1_bad && (str1[i] != '\0')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  for (i=0 ; i<STR_LEN ; ++i) {
+    if (!str2_bad && (str2[i] != '*')) {
+      SNPRINTF(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
+      CU_FAIL(str3);
+      str2_bad = TRUE;
+    }
+  }
+  if (!str1_bad && !str2_bad) CU_PASS("str1 and str2 check out.");
+
+  memset(str1, '\0', STR_LEN);
+  memset(str2, '*', STR_LEN);
+
+  pool_move_cast(str2, str1, STR_LEN);                 /* copy all of a memory block */
+
+  str1_bad = FALSE;
+  str2_bad = FALSE;
+  for (i=0 ; i<STR_LEN ; ++i) {
+    if (!str1_bad && (str1[i] != '*')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '*' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+    if (!str2_bad && (str2[i] != '*')) {
+      SNPRINTF(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
+      CU_FAIL(str3);
+      str2_bad = TRUE;
+    }
+  }
+  if (!str1_bad && !str2_bad) CU_PASS("str1 and str2 check out.");
+
+  memset(str1, '~', 10);
+  memset(str1+10, '=', 10);
+  memset(str1+20, '|', 10);
+
+  pool_move_cast(str1, str1+10, 20);                   /* copy overlapping memory block */
+
+  str1_bad = FALSE;
+  for (i=0 ; i<20 ; ++i) {
+    if (!str1_bad && (str1[i] != '~')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '~' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  for (i=20 ; i<30 ; ++i) {
+    if (!str1_bad && (str1[i] != '=')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  if (!str1_bad) CU_PASS("str1 and str2 check out.");
+
+  memset(str1, '~', 10);
+  memset(str1+10, '=', 10);
+  memset(str1+20, '|', 10);
+
+  pool_move_cast(str1+10, str1, 20);                   /* copy overlapping memory block */
+
+  str1_bad = FALSE;
+  for (i=0 ; i<10 ; ++i) {
+    if (!str1_bad && (str1[i] != '=')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '~' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  for (i=10 ; i<30 ; ++i) {
+    if (!str1_bad && (str1[i] != '|')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  if (!str1_bad) CU_PASS("str1 and str2 check out.");
+
+  SNPRINTF(str1, STR_LEN-1, "This is yet another dumb string");
+  pool_move_cast(str1, str1, strlen(str1));            /* to == from */
+  CU_TEST(0 == strcmp(str1, "This is yet another dumb string"));
+
+  pool_move_cast(str2, str1, 0);                       /* n = 0 */
+  CU_TEST(0 == strcmp(str1, "This is yet another dumb string"));
+
+ /* test pool_copy_cast() */
+
+  memset(str1, '\0', STR_LEN);
+  memset(str2, '*', STR_LEN);
+
+  str1_bad = FALSE;                                   /* test initial condition */
+  str2_bad = FALSE;
+  for (i=0 ; i<STR_LEN ; ++i) {
+    if (!str1_bad && (str1[i] != '\0')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+    if (!str2_bad && (str2[i] != '*')) {
+      SNPRINTF(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
+      CU_FAIL(str3);
+      str2_bad = TRUE;
+    }
+  }
+  if (!str1_bad && !str2_bad) CU_PASS("str1 and str2 check out.");
+
+  pool_copy_cast(str2, str1, STR_LEN/2);               /* copy part of a memory block */
+
+  str1_bad = FALSE;
+  str2_bad = FALSE;
+  for (i=0 ; i<STR_LEN/2 ; ++i) {
+    if (!str1_bad && (str1[i] != '*')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '*' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  for (i=STR_LEN/2 ; i<STR_LEN-1 ; ++i) {
+    if (!str1_bad && (str1[i] != '\0')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  for (i=0 ; i<STR_LEN ; ++i) {
+    if (!str2_bad && (str2[i] != '*')) {
+      SNPRINTF(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
+      CU_FAIL(str3);
+      str2_bad = TRUE;
+    }
+  }
+  if (!str1_bad && !str2_bad) CU_PASS("str1 and str2 check out.");
+
+  memset(str1, '\0', STR_LEN);
+  memset(str2, '*', STR_LEN);
+
+  pool_copy_cast(str2, str1, STR_LEN);                 /* copy all of a memory block */
+
+  str1_bad = FALSE;
+  str2_bad = FALSE;
+  for (i=0 ; i<STR_LEN ; ++i) {
+    if (!str1_bad && (str1[i] != '*')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '*' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+    if (!str2_bad && (str2[i] != '*')) {
+      SNPRINTF(str3, STR_LEN-1, "str2[%d] != '*' in test_mem().", i);
+      CU_FAIL(str3);
+      str2_bad = TRUE;
+    }
+  }
+  if (!str1_bad && !str2_bad) CU_PASS("str1 and str2 check out.");
+
+  memset(str1, '~', 10);
+  memset(str1+10, '=', 10);
+  memset(str1+20, '|', 10);
+
+  SNPRINTF(str1, STR_LEN-1, "This is yet another dumb string");
+  pool_copy_cast(str1, str1, strlen(str1));            /* to == from */
+  CU_TEST(0 == strcmp(str1, "This is yet another dumb string"));
+
+  pool_copy_cast(str2, str1, 0);                       /* n = 0 */
+  CU_TEST(0 == strcmp(str1, "This is yet another dumb string"));
+
+  /* test pool_repl_byte_cast() */
+
+  memset(str1, '=', STR_LEN);
+
+  pool_repl_byte_cast(str1, '#', STR_LEN/2);           /* replace part of a memory block */
+
+  str1_bad = FALSE;
+  for (i=0 ; i<STR_LEN/2 ; ++i) {
+    if (!str1_bad && (str1[i] != '#')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  for (i=STR_LEN/2 ; i<STR_LEN-1 ; ++i) {
+    if (!str1_bad && (str1[i] != '=')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  if (!str1_bad) CU_PASS("str1 checks out after pool_repl_byte_cast().");
+
+  memset(str1, '+', STR_LEN);
+
+  pool_zero_byte_cast(str1, '=', 0);                   /* 0 bytes processed */
+
+  str1_bad = FALSE;
+  for (i=0 ; i<STR_LEN ; ++i) {
+    if (!str1_bad && (str1[i] != '+')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '+' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  if (!str1_bad) CU_PASS("str1 checks out after pool_zero_byte_cast().");
+
+  /* test pool_zero_byte_cast() */
+
+  memset(str1, '=', STR_LEN);
+
+  pool_zero_byte_cast(str1, '#', STR_LEN/2);           /* zero part of a memory block */
+
+  str1_bad = FALSE;
+  for (i=0 ; i<STR_LEN/2 ; ++i) {
+    if (!str1_bad && (str1[i] != '\0')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '\\0' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  for (i=STR_LEN/2 ; i<STR_LEN-1 ; ++i) {
+    if (!str1_bad && (str1[i] != '=')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  if (!str1_bad) CU_PASS("str1 checks out after pool_zero_byte_cast().");
+
+  memset(str1, '+', STR_LEN);
+
+  pool_zero_byte_cast(str1, '=', 0);                   /* 0 bytes processed */
+
+  str1_bad = FALSE;
+  for (i=0 ; i<STR_LEN ; ++i) {
+    if (!str1_bad && (str1[i] != '+')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '+' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  if (!str1_bad) CU_PASS("str1 checks out after pool_zero_byte_cast().");
+
+  /* test pool_repl_word_cast() */
+
+  word = 1234567890;
+
+  memset(str1, '=', STR_LEN);
+
+  pool_repl_word_cast(str1, word, 1);                  /* copy 1 word */
+
+  CU_TEST(*((unsigned *)str1) == word);
+
+  str1_bad = FALSE;
+  for (i=sizeof(unsigned) ; i<STR_LEN-1 ; ++i) {
+    if (!str1_bad && (str1[i] != '=')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '=' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  if (!str1_bad) CU_PASS("str1 checks out after pool_repl_word_cast().");
+
+  memset(str1, '~', STR_LEN);
+
+  pool_repl_word_cast(str1, word, 10);                  /* copy 5 words */
+
+  for (i=0 ; i<10 ; ++i) {
+    CU_TEST(*(((unsigned *)str1)+1) == word);
+  }
+
+  str1_bad = FALSE;
+  for (i=10*sizeof(unsigned) ; i<STR_LEN-1 ; ++i) {
+    if (!str1_bad && (str1[i] != '~')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '~' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  if (!str1_bad) CU_PASS("str1 checks out after pool_repl_word_cast().");
+
+  memset(str1, '?', STR_LEN);
+
+  pool_repl_word_cast(str1, word, 0);                  /* copy 0 words */
+
+  str1_bad = FALSE;
+  for (i=0 ; i<STR_LEN-1 ; ++i) {
+    if (!str1_bad && (str1[i] != '?')) {
+      SNPRINTF(str3, STR_LEN-1, "str1[%d] != '?' in test_mem().", i);
+      CU_FAIL(str3);
+      str1_bad = TRUE;
+    }
+  }
+  if (!str1_bad) CU_PASS("str1 checks out after pool_repl_word_cast().");
 
   /* test pool_create_store(), pool_destroy_store() */
 

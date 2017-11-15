@@ -29,7 +29,6 @@
 	T(list) \
 	T(listio) \
 	T(pairlist) \
-	T(mem) \
 	T(pool) \
 	T(pretty) \
 	T(stack) \
