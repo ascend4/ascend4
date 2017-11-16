@@ -110,7 +110,9 @@ ASC_DLLSPEC void gl_init(void);
  *  there is no reason to do so.
  */
 
-ASC_DLLSPEC void gl_init_pool(void);
+#define gl_init_pool() gl_init_poolF(__FILE__,__LINE__)
+
+ASC_DLLSPEC void gl_init_poolF(const char *file, unsigned line);
 /**<
  *  Sets up list overhead structure data management.
  *  This function should be called before anything can be built,
