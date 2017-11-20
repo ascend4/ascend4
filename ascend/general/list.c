@@ -199,15 +199,10 @@ static pool_store_t g_list_head_pool = NULL;
 
 
 /* This function is called at compiler startup time and destroy at shutdown. */
-void gl_init_poolF(const char *file, unsigned lineno){
-  static const char *file1;
-  static unsigned lineno1;
+void gl_init_pool(){
 #if LISTUSESPOOL
   if (g_list_head_pool != NULL) {
-    ASC_PANIC("ERROR: gl_init_pool called twice (first time: %s:%u).\n",file1,lineno1);
-  }else{
-    file1 = file;
-	lineno1 = lineno;
+    ASC_PANIC("ERROR: gl_init_pool called twice\n");
   }
   g_list_head_pool = pool_create_store(GLP_LEN, GLP_WID, GLP_ELT_SIZE,
     GLP_MORE_ELTS, GLP_MORE_BARS);

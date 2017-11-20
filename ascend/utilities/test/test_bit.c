@@ -201,11 +201,47 @@ static void test_bit(void){
 
   // FirstNonZeroBit
 
-  bit1 = CreateBList(256);
-  SetBit(bit1,255);
-  CU_TEST(FirstNonZeroBit(bit1)==255);
-  SetBit(bit1,254);
-  CU_TEST(FirstNonZeroBit(bit1)==254);
+  bit1 = CreateBList(19);
+  SetBit(bit1,0);
+  CU_TEST(FirstNonZeroBit(bit1)==0);
+  ClearBit(bit1,0);
+  SetBit(bit1,1);
+  CU_TEST(FirstNonZeroBit(bit1)==1);
+  ClearBit(bit1,1);
+  SetBit(bit1,2);
+  CU_TEST(FirstNonZeroBit(bit1)==2);
+  ClearBit(bit1,2);
+  SetBit(bit1,7);
+  CU_TEST(FirstNonZeroBit(bit1)==7);
+  ClearBit(bit1,7);
+  SetBit(bit1,8);
+  CU_TEST(FirstNonZeroBit(bit1)==8);
+  ClearBit(bit1,8);
+  SetBit(bit1,15);
+  CU_TEST(FirstNonZeroBit(bit1)==15);
+  ClearBit(bit1,15);
+  SetBit(bit1,16);
+  CU_TEST(FirstNonZeroBit(bit1)==16);
+  ClearBit(bit1,16);
+  SetBit(bit1,18);
+  CU_TEST(FirstNonZeroBit(bit1)==18);
+  SetBit(bit1,17);
+  CU_TEST(FirstNonZeroBit(bit1)==17);
+  SetBit(bit1,16);
+  CU_TEST(FirstNonZeroBit(bit1)==16);
+  SetBit(bit1,15);
+  CU_TEST(FirstNonZeroBit(bit1)==15);
+  SetBit(bit1,14);
+  CU_TEST(FirstNonZeroBit(bit1)==14);
+  SetBit(bit1,13);
+  CU_TEST(FirstNonZeroBit(bit1)==13);
+  DestroyBList(bit1);
+
+  bit1 = CreateBList(128);
+  SetBit(bit1,127);
+  CU_TEST(FirstNonZeroBit(bit1)==127);
+  SetBit(bit1,126);
+  CU_TEST(FirstNonZeroBit(bit1)==126);
   SetBit(bit1,8);
   CU_TEST(FirstNonZeroBit(bit1)==8);
   SetBit(bit1,7);
@@ -213,16 +249,15 @@ static void test_bit(void){
   SetBit(bit1,0);
   CU_TEST(FirstNonZeroBit(bit1)==0);
   CU_TEST(!BitListEmpty(bit1));
-  bit2 = CreateBList(256);
+  bit2 = CreateBList(128);
   CU_TEST(BitListEmpty(bit2));
   CU_TEST(!CompBList(bit1,bit2));
-  CU_TEST(FirstNonZeroBit(bit2) > 256);
+  CU_TEST(FirstNonZeroBit(bit2) >= 128);
   OverwriteBList(bit2,bit1);
-  CU_TEST(FirstNonZeroBit(bit1) > 256);
+  CU_TEST(FirstNonZeroBit(bit1) >= 128);
   CU_TEST(BitListEmpty(bit1));
   DestroyBList(bit1);
   DestroyBList(bit2);
-
 
   CU_TEST(prior_meminuse == ascmeminuse());// back to original memory used
 }

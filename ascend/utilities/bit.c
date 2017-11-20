@@ -168,6 +168,7 @@ void ClearBit(struct BitList *bl, unsigned long int pos){
   register byte *ptr;
   register unsigned bit;
   AssertContainedMemory(bl,sizeof(struct BitList));
+  asc_assert(pos < bl->length);
   ptr = (byte *)((asc_intptr_t)bl+sizeof(struct BitList)+(pos >> 3));
   AssertContainedIn(bl,ptr);
   bit = pos & 0x07;
@@ -179,6 +180,7 @@ void CondSetBit(struct BitList *bl, unsigned long int pos, int cond){
   register byte *ptr;
   register unsigned bit;
   AssertContainedMemory(bl,sizeof(struct BitList));
+  asc_assert(pos < bl->length);
   ptr = (byte *)((asc_intptr_t)bl+sizeof(struct BitList)+(pos >> 3));
   AssertContainedIn(bl,ptr);
   bit = pos & 0x07;
@@ -193,6 +195,7 @@ int ReadBit(CONST struct BitList *bl, unsigned long int pos){
   register byte *ptr;
   register unsigned bit;
   AssertContainedMemory(bl,sizeof(struct BitList));
+  asc_assert(pos < bl->length);
   ptr = (byte *)((asc_intptr_t)bl+sizeof(struct BitList)+(pos >> 3));
   AssertContainedIn(bl,ptr);
   bit = pos & 0x07;
@@ -275,37 +278,50 @@ int BitListEmpty(CONST struct BitList *bl){
 int CompBList(struct BitList *b1, struct BitList *b2){
   unsigned long c,len;
   len = BLength(b1);
-  for (c=1;c<=len;c++){
-    if (ReadBit(b1,c)!=ReadBit(b2,c)) {
+  /* note, corrected the iteration limits here! -- JP */
+  for(c=0;c<len;c++){
+    if(ReadBit(b1,c)!=ReadBit(b2,c)) {
     return 0;
     }
   }
   return 1;
 }
 
+#if 0
+/* for debugging FirstNonZeroBit */
+static void printbits(const struct BitList *bl){
+  unsigned long i;
+  ASC_FPRINTF(stderr,"bits: [");
+  for(i=0;i<bl->length;i++){
+    ASC_FPRINTF(stderr,"%c%s",ReadBit(bl,i)?'1':'.', (i+1)%8==0?"|":"" );
+  }
+  ASC_FPRINTF(stderr,"]\n");
+}
+#endif
 
 unsigned long FirstNonZeroBit(CONST struct BitList *bl){
-  register unsigned long num_bytes,c;
+  register unsigned long num_bytes,c,b;
   register unsigned char *ptr,ch;
+
+  //printbits(bl);
+
   num_bytes = bl->length >> 3;
   if (bl->length & 0x07) num_bytes++;
   AssertAllocatedMemory(bl,sizeof(struct BitList)+num_bytes);
-  ptr = (unsigned char *)((asc_intptr_t)bl+
-			  (unsigned long)sizeof(struct BitList));
+  ptr = (unsigned char *)bl+(unsigned long)sizeof(struct BitList);
+
   c = num_bytes;
-  while ((!(*ptr))&&(num_bytes)) {
-    AssertContainedIn(bl,ptr);
-    ptr++;
-    num_bytes--;
+
+  /* find the first non-zero byte */
+  for(c=0;c<num_bytes;c++,ptr++){
+	if(*ptr)break;
   }
-  if (num_bytes==0) return bl->length+1;
-  c -= num_bytes;
-  c <<= 3;			/* multiply by 8 */
+  if(c==num_bytes)return bl->length+1;
+  /* now get the bit position within that byte */
   ch = *ptr;
-  AssertContainedIn(bl,ptr);
-  while (!(ch & 1)) {
-    ch >>= 1;
-    c++;
+  c <<= 3; /* multiply by 8 */
+  for(b=0;b<8;b++){
+	if(ch & (1<<b))break;
   }
-  return c;
+  return c+b;
 }
