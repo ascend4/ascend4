@@ -7,7 +7,7 @@ export ASCENDSOLVERS=solvers/ipopt:solvers/qrslv:solvers/lrslv:solvers/dopri5:so
 
 # this list of tests requires MALLOC_DEBUG to run, and all tests pass, but some leak memory.
 
-test/test general_color general_dstring general_hashpjw general_list general_listio general_pairlist general_pool general_pretty general_stack general_table general_tm_time general_ospath general_env general_ltmatrix general_ascMalloc utilities_ascDynaLoad utilities_ascEnvVar utilities_ascPrint utilities_ascSignal utilities_error utilities_readln utilities_set utilities_bit solver_slv_common linear_mtx compiler_basics compiler_expr compiler_fixfree compiler_fixassign solver_slvreq integrator_lsode solver_fprops solver_lrslv compiler_bintok linear_qrrank solver_qrslv
+test/test compiler_fixassign solver_slvreq integrator_lsode solver_fprops solver_lrslv compiler_bintok linear_qrrank solver_qrslv
 
 # currently failing tests:
 # solver_conopt 
