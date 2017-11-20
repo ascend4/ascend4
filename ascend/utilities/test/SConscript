@@ -4,4 +4,6 @@ import glob
 test_env['TESTSRCS_UTILITIES'] = [test_env.File(i) for i in glob.glob("test_*.c")]
 
 test_env.SharedLibrary("testdynaload",["shlib_test.c"])
+test_env.SharedLibrary("testdynaload2",["shlib_test2.c"])
+test_env.SharedLibrary("testdynaload3",["shlib_test3.c"])
 

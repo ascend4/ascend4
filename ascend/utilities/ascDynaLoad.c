@@ -102,40 +102,38 @@ void *AscFindDLRecord(CONST char *path)
  * Finds and returns the handle to path, if one matches, and
  * deletes the record from the list.  Returns NULL if not found.
  */
-static
-void *AscDeleteRecord(CONST char *path)
-{
-  struct ascend_dlrecord *nextptr, *lastptr, *old;
-  void *dlreturn = NULL;
+static void *AscDeleteRecord(CONST char *path){
+	struct ascend_dlrecord *nextptr, *lastptr, *old;
+	void *dlreturn = NULL;
 
-  if ((g_ascend_dllist == NULL) || (NULL == path)) return NULL;
+	if ((g_ascend_dllist == NULL) || (NULL == path)) return NULL;
 
-  if (strcmp(path,g_ascend_dllist->path)==0) {
-    /* head case */
-    old = g_ascend_dllist;
-    g_ascend_dllist = old->next;
-    dlreturn = old->dlreturn;
-    ascfree(old->path);
-    ascfree(old);
-  } else {
-    lastptr = g_ascend_dllist;
-    nextptr = lastptr->next;
-    while (nextptr != NULL && strcmp(nextptr->path,path) != 0) {
-      lastptr = nextptr;
-      nextptr = nextptr->next;
-    }
-    /* so either nextptr is NULL and not in list, or nextptr is
-     * what we want to delete and lastptr is the link to it.
-     */
-    if (nextptr != NULL) {
-      old = nextptr;
-      lastptr->next = nextptr->next;
-      dlreturn = old->dlreturn;
-      ascfree(old->path);
-      ascfree(old);
-    }
-  }
-  return dlreturn;
+	if(strcmp(path,g_ascend_dllist->path)==0){
+		/* head case */
+		old = g_ascend_dllist;
+		g_ascend_dllist = old->next;
+		dlreturn = old->dlreturn;
+		ascfree(old->path);
+		ascfree(old);
+	}else{
+		lastptr = g_ascend_dllist;
+		nextptr = lastptr->next;
+		while(nextptr != NULL && strcmp(nextptr->path,path) != 0){
+			lastptr = nextptr;
+			nextptr = nextptr->next;
+		}
+		/* so either nextptr is NULL and not in list, or nextptr is
+		 * what we want to delete and lastptr is the link to it.
+		 */
+		if(nextptr != NULL){
+			old = nextptr;
+			lastptr->next = nextptr->next;
+			dlreturn = old->dlreturn;
+			ascfree(old->path);
+			ascfree(old);
+		}
+	}
+	return dlreturn;
 }
 
 /*

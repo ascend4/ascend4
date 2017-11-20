@@ -78,13 +78,13 @@ char *ascstrdupf(CONST char *s){
  *  Here's the debug version of ASC_STRDUP -
  *  all memory calls should be to the local debug versions.
  */
-char *ascstrdupf_dbg(CONST char *s){
+char *ascstrdupf_dbg(CONST char *s, const char *file, int line){
 	char *result;
 
 	if (NULL == s) {
 		return NULL;
 	}
-	result = (char *)ascmallocf(strlen(s) + 1, __FILE__, __LINE__);
+	result = (char *)ascmallocf(strlen(s) + 1, file, line);
 	if (NULL != result) {
 		strcpy(result, s);
 	}
