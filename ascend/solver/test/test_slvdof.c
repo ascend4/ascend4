@@ -93,23 +93,24 @@ static void test_dof(const char *fname,int xstatus, int xdof){
 #if 1
 	int32 *vil, *ril, *fil; // for slvdof_structsing
 	char *s;
+	int32 *i;
 	if(xstatus == 3 && status == 3){
 		CU_TEST(NULL != sys);
 		CU_TEST(0 == slvDOF_structsing(sys,mtx_FIRST,&vil,&ril,&fil));
 		if(vil){
-			for(int32 *i=vil; *i!=-1; ++i){
+			for(i=vil; *i!=-1; ++i){
 				s = var_make_name(sys,vl[*i]);
 				CONSOLE_DEBUG("variable involved: %s",s);
 				ASC_FREE(s);
 			}
 			ASC_FREE(vil);
-			for(int32 *i=ril; *i!=-1; ++i){
+			for(i=ril; *i!=-1; ++i){
 				s = rel_make_name(sys,rl[*i]);
 				CONSOLE_DEBUG("rel involved: %s",s);
 				ASC_FREE(s);
 			}
 			ASC_FREE(ril);
-			for(int32 *i=fil; *i!=-1; ++i){
+			for(i=fil; *i!=-1; ++i){
 				s = var_make_name(sys,vl[*i]);
 				CONSOLE_DEBUG("should free var: %s",s);
 				ASC_FREE(s);
@@ -119,7 +120,7 @@ static void test_dof(const char *fname,int xstatus, int xdof){
 
 	}else if (xstatus == 1 && status == 1){
 		CU_TEST(1 == slvDOF_eligible(sys, &vil));
-		for(int32 *i=vil; *i!=-1; ++i){
+		for(i=vil; *i!=-1; ++i){
 			s = var_make_name(sys,vl[*i]);
 			CONSOLE_DEBUG("try fixing var: %s",s);
 			ASC_FREE(s);
