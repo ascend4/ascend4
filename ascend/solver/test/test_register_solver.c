@@ -25,7 +25,8 @@
 	T(conopt) \
 	T(qrslv) \
 	T(fprops) \
-	T(lrslv)
+	T(lrslv) \
+	T(slvdof)
 
 #define PROTO_SOLVER(NAME) PROTO(solver,NAME)
 TESTS(PROTO_SOLVER)

@@ -285,9 +285,14 @@ int slvDOF_eligible(slv_system_t server, int32 **vil) {
   mtx_matrix_t mtx;
   int32 *va, *rowlist, *collist;
   unsigned char *rows=NULL, *cols=NULL;
-  int32 rmax,cmax,mmax,ccur,r,c,rt,ct,ft,rank,vsize;
+  int32 cmax,mmax,ccur,r,c,rt,ct,ft,rank;
+#if ELDEBUG
+  int32 vsize,rmax;
+#endif
   int i,newrows,newcols;
+#if 0 // disused
   struct rel_relation **rp;
+#endif
   struct var_variable **vp;
   var_filter_t vfilter;
   mtx_coord_t coord;
@@ -313,13 +318,17 @@ int slvDOF_eligible(slv_system_t server, int32 **vil) {
   }
 
   vp = sys->vlist;
+#if 0 // disused vars
   rp = sys->rlist;
+#endif
   rowlist = sys->rowlist;
   collist = sys->collist;
   rows = sys->rows;
   cols = sys->cols;
   /* nonsingular and not empty; no list */
+#if 0 // disused
   rmax = sys->rused;
+#endif
   rank = sys->rank;
   if (NULL == (mtx=sys->J.mtx)) return 0; /* there is no jacobian-- wierd */
   if (!mtx_check_matrix(mtx)) return 0; /* jacobian bad, very wierd */
@@ -407,9 +416,9 @@ int slvDOF_eligible(slv_system_t server, int32 **vil) {
   }
 #if ELDEBUG
   PRINTF("ct= %d, rt= %d\n",ct,rt);
+  vsize = ct;
 #endif
   va = *vil = ASC_NEW_ARRAY_CLEAR(int32,1+ct);
-  vsize = ct;
   va[ct]=(-1);
   ct=0;
 
@@ -456,7 +465,9 @@ int slvDOF_structsing(slv_system_t server, int32 rwhy, int32 **vover
   int32 rmax,cmax,mmax,rcur,r,c,rt,ct,ft,rank,var,varmax;
   int i,newrows,newcols;
   struct rel_relation **rp;
+#if 0 // disused
   struct var_variable **vp;
+#endif
   var_filter_t vfilter;
   mtx_coord_t coord;
   slvDOF_system_t sys;
@@ -479,7 +490,9 @@ int slvDOF_structsing(slv_system_t server, int32 rwhy, int32 **vover
   }
 
   *vfixed = *vover = *rcomb = NULL; /* zero return pointers ahead of time */
+#if 0 // disused
   vp = sys->vlist;
+#endif
   rp = sys->rlist;
   rowlist = sys->rowlist;
   collist = sys->collist;

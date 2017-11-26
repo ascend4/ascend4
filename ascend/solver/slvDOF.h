@@ -106,11 +106,11 @@ ASC_DLLSPEC int slvDOF_structsing(slv_system_t server
 ASC_DLLSPEC int32 slvDOF_status(slv_system_t server, int32 *status, int32 *dof);
 /**<
 	Return the structural status of the current system into 'status':
-	   - 1 : underspecified
-	   - 2 : square
-	   - 3 : structurally singular
-	   - 4 : overspecifed
-	   - 5 : error (with console output)
+	   . 1: underspecified
+	   . 2: square
+	   . 3: structurally singular
+	   . 4: overspecifed
+	   . 5: error (with console output)
 
 	If the system is underspecified, we will also get the number of the
 	degrees of freedom for the problem.

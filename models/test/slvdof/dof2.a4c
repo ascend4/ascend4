@@ -1,0 +1,11 @@
+REQUIRE "system.a4l";
+
+MODEL dof2;
+	x,y,z IS_A solver_var;
+	x = y + 1;
+	z = x;
+METHODS
+METHOD on_load;
+	FIX z;
+END on_load;
+END dof2;

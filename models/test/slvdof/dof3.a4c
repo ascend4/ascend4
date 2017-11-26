@@ -1,0 +1,13 @@
+REQUIRE "system.a4l";
+
+MODEL dof3;
+	x,y,z IS_A solver_var;
+	x = y + 1;
+	z = x;
+	x + y = 4;
+	y + z + x = 5;
+METHODS
+METHOD on_load;
+	(* nothing *)
+END on_load;
+END dof3;
