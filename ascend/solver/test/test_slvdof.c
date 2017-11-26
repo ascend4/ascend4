@@ -40,6 +40,7 @@
 #include <ascend/solver/solver.h>
 #include <ascend/solver/slvDOF.h>
 #include <ascend/system/slv_server.h>
+#include <ascend/system/var.h>
 
 #include <test/common.h>
 
@@ -87,17 +88,44 @@ static void test_dof(const char *fname,int xstatus, int xdof){
 	CU_TEST(status == xstatus); /* underspecified */
 	CU_TEST(dof == xdof); /* 2 equations, 3 unknowns -> 1 dof */
 
-#if 0
+	struct var_variable **vl = slv_get_solvers_var_list(sys);
+	struct rel_relation **rl = slv_get_solvers_rel_list(sys);
+#if 1
 	int32 *vil, *ril, *fil; // for slvdof_structsing
-
+	char *s;
 	if(xstatus == 3 && status == 3){
+		CU_TEST(NULL != sys);
 		CU_TEST(0 == slvDOF_structsing(sys,mtx_FIRST,&vil,&ril,&fil));
 		if(vil){
 			for(int32 *i=vil; *i!=-1; ++i){
-				CONSOLE_DEBUG("variable involved: #%d",*i);
+				s = var_make_name(sys,vl[*i]);
+				CONSOLE_DEBUG("variable involved: %s",s);
+				ASC_FREE(s);
 			}
-		}	
-	}
+			ASC_FREE(vil);
+			for(int32 *i=ril; *i!=-1; ++i){
+				s = rel_make_name(sys,rl[*i]);
+				CONSOLE_DEBUG("rel involved: %s",s);
+				ASC_FREE(s);
+			}
+			ASC_FREE(ril);
+			for(int32 *i=fil; *i!=-1; ++i){
+				s = var_make_name(sys,vl[*i]);
+				CONSOLE_DEBUG("should free var: %s",s);
+				ASC_FREE(s);
+			}
+			ASC_FREE(fil);
+		}
+
+	}else if (xstatus == 1 && status == 1){
+		CU_TEST(1 == slvDOF_eligible(sys, &vil));
+		for(int32 *i=vil; *i!=-1; ++i){
+			s = var_make_name(sys,vl[*i]);
+			CONSOLE_DEBUG("try fixing var: %s",s);
+			ASC_FREE(s);
+		}
+		ASC_FREE(vil);
+	}	
 #endif
 
 	/* all sorts of destruction */
