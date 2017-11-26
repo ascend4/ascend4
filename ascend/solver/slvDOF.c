@@ -684,6 +684,8 @@ int32 slvDOF_status(slv_system_t server, int32 *status, int32 *dof){
     return 0;
   }
 
+  CONSOLE_DEBUG("rank = %d, rused = %d, vused = %d", sys->rank, sys->rused, sys->vused);
+
   if(sys->rank < sys->rused){
     *status = 3;
     *dof = 0;

@@ -2,12 +2,11 @@ REQUIRE "system.a4l";
 
 MODEL dof4;
 	x,y,z IS_A solver_var;
-	x^2 + y^2 = 1;
-	x^2 + z^2 = 1;
-	y^2 + z^2 = 1;
+	y = x + 1;
+	z = y + 1;
+	x = z + 1;
+	x = 0;
 METHODS
 METHOD on_load;
-	FIX x;
-	FIX y;
 END on_load;
 END dof4;
