@@ -71,7 +71,7 @@ static void test_dof(const char *fname,int xstatus, int xdof){
 	CU_ASSERT_FATAL(siminst!=NULL);
 
 	/** initialise */
-    CONSOLE_DEBUG("RUNNING ON_LOAD");
+    //CONSOLE_DEBUG("RUNNING ON_LOAD");
 	struct Name *name = CreateIdName(AddSymbol("on_load"));
 	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
 	CU_ASSERT(pe==Proc_all_ok);
@@ -83,7 +83,7 @@ static void test_dof(const char *fname,int xstatus, int xdof){
 	/* assign the solver to the system */
 	int dof;
 	CU_TEST(1 == slvDOF_status(sys,&status,&dof));
-    CONSOLE_DEBUG("status = %d, dof = %d",status,dof);
+    //CONSOLE_DEBUG("status = %d, dof = %d",status,dof);
 	CU_TEST(status == xstatus); /* underspecified */
 	CU_TEST(dof == xdof); /* 2 equations, 3 unknowns -> 1 dof */
 
@@ -101,7 +101,7 @@ static void test_dof(const char *fname,int xstatus, int xdof){
 #endif
 
 	/* all sorts of destruction */
-	CONSOLE_DEBUG("DESTROYING NOW...");
+	//CONSOLE_DEBUG("DESTROYING NOW...");
 	CU_ASSERT(NULL != siminst)
 	if(sys)system_destroy(sys);
 
@@ -127,6 +127,15 @@ static void test_dof4(void){
 	test_dof("dof4",4,0);
 }
 
+static void test_dof5(void){
+	/* test a few NULL-checking cases */
+	CU_TEST(1 == slvDOF_structsing(NULL,0,NULL,NULL,NULL));
+	int x, y;
+	CU_TEST(0 == slvDOF_status(NULL,&x,&y));
+	int *z;
+	CU_TEST(0 == slvDOF_eligible(NULL,&z));
+}
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -134,7 +143,8 @@ static void test_dof4(void){
 	T(dof1) \
 	T(dof2) \
 	T(dof3) \
-	T(dof4)
+	T(dof4) \
+	T(dof5)
 
 REGISTER_TESTS_SIMPLE(solver_slvdof, TESTS)
 

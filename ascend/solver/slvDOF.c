@@ -683,10 +683,8 @@ int32 slvDOF_status(slv_system_t server, int32 *status, int32 *dof){
     slvDOF_destroy(sys);
     return 0;
   }
+  //CONSOLE_DEBUG("rank = %d, rused = %d, vused = %d", sys->rank, sys->rused, sys->vused);
 
-  CONSOLE_DEBUG("rank = %d, rused = %d, vused = %d", sys->rank, sys->rused, sys->vused);
-
-  
   if(sys->rused > sys->vused){
 	// overspecified, too many relations for the unknown variables
     *status = 4;
