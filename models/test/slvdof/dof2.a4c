@@ -1,5 +1,6 @@
 REQUIRE "system.a4l";
 
+(* square system: two equations, two free variables *)
 MODEL dof2;
 	x,y,z IS_A solver_var;
 	x = y + 1;

@@ -1,13 +1,16 @@
 REQUIRE "system.a4l";
 
+(* to create a structurally singular system, one way is to have one particular
+equation containing the unique occurence of two variables. this makes it
+impossible to find a full assignment of variables to equations for all
+variables. *)
 MODEL dof3;
-	x,y,z IS_A solver_var;
-	x = y + 1;
-	z = x;
-	x + y = 4;
-	y + z + x = 5;
+	w,x,y,z IS_A solver_var;
+	eq_1: w = 0;
+	eq_2: x + z = 0; (* one equation referring to x and z *)
+	eq_3: y = 0;
+	eq_4: w = 1;
 METHODS
 METHOD on_load;
-	(* nothing *)
 END on_load;
 END dof3;

@@ -87,6 +87,19 @@ static void test_dof(const char *fname,int xstatus, int xdof){
 	CU_TEST(status == xstatus); /* underspecified */
 	CU_TEST(dof == xdof); /* 2 equations, 3 unknowns -> 1 dof */
 
+#if 0
+	int32 *vil, *ril, *fil; // for slvdof_structsing
+
+	if(xstatus == 3 && status == 3){
+		CU_TEST(0 == slvDOF_structsing(sys,mtx_FIRST,&vil,&ril,&fil));
+		if(vil){
+			for(int32 *i=vil; *i!=-1; ++i){
+				CONSOLE_DEBUG("variable involved: #%d",*i);
+			}
+		}	
+	}
+#endif
+
 	/* all sorts of destruction */
 	CONSOLE_DEBUG("DESTROYING NOW...");
 	CU_ASSERT(NULL != siminst)
@@ -120,8 +133,8 @@ static void test_dof4(void){
 #define TESTS(T) \
 	T(dof1) \
 	T(dof2) \
-	T(dof3)
-//	T(dof4)
+	T(dof3) \
+	T(dof4)
 
 REGISTER_TESTS_SIMPLE(solver_slvdof, TESTS)
 

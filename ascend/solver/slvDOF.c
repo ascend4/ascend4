@@ -686,26 +686,31 @@ int32 slvDOF_status(slv_system_t server, int32 *status, int32 *dof){
 
   CONSOLE_DEBUG("rank = %d, rused = %d, vused = %d", sys->rank, sys->rused, sys->vused);
 
+  
+  if(sys->rused > sys->vused){
+	// overspecified, too many relations for the unknown variables
+    *status = 4;
+    slvDOF_destroy(sys);
+	return 1;
+  }// note: I believe this needs to be BEFORE the rank test, since always we have (rank < rused) in overspecified cases.
+
   if(sys->rank < sys->rused){
+	// the right number of vars and rels, but not structurally independent
     *status = 3;
     *dof = 0;
     slvDOF_destroy(sys);
     return 1;    
   }
 
-  if(sys->rused > sys->vused){
-    *status = 4;
-    slvDOF_destroy(sys);
-	return 1;
-  }
-
   if((sys->vused==sys->rused) && (sys->rank ==sys->rused)){
+	// square
     *status = 2;
     slvDOF_destroy(sys);
     return 1;
   }
 
   if(sys->vused > sys->rused){
+	// underspecified
     *status = 1;
     *dof = sys->vused - sys->rused;
     slvDOF_destroy(sys);
