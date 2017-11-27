@@ -48,7 +48,7 @@
 	and testing a model using QRSlv. Any error from loading, solving, testing
 	will result in the test failing.
 */
-static void dr_load_solve_test_qrslv(const char *librarypath, const char *modelfile, const char *modelname){
+static void dr_load_solve_test_qrslv(const char *librarypath, const char *modelfile, const char *modelname, int instantiatefail){
 	char env1[2*PATH_MAX];
 	int status;
 	int qrslv_index;
@@ -85,44 +85,55 @@ static void dr_load_solve_test_qrslv(const char *librarypath, const char *modelf
 	CU_ASSERT(FindType(AddSymbol(modelname))!=NULL);
 
 	/* instantiate it */
+	error_reporter_tree_t *tree = error_reporter_tree_start(0);
 	struct Instance *siminst = SimsCreateInstance(AddSymbol(modelname), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(siminst!=NULL);
+	int has_error = error_reporter_tree_has_error(tree);
+	error_reporter_tree_end(tree);	
+	CONSOLE_DEBUG("has_error = %d",has_error);
+	if(instantiatefail){
+		CU_TEST(has_error);
+	}else{
+		CU_TEST(!has_error);
+	}
+	if(!has_error){
+		CU_ASSERT_FATAL(siminst!=NULL);
 
-	/* call on_load method */
-	/* FIXME do we check that this method exists first? */
-	CONSOLE_DEBUG("RUNNING METHOD 'on_load'");
-	struct Name *name = CreateIdName(AddSymbol("on_load"));
-	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT(pe==Proc_all_ok);
+		/* call on_load method */
+		/* FIXME do we check that this method exists first? */
+		CONSOLE_DEBUG("RUNNING METHOD 'on_load'");
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
 
-	/* 'build' the 'system' -- the flattened system of equations */
-	slv_system_t sys = system_build(GetSimulationRoot(siminst));
-	CU_ASSERT_FATAL(sys != NULL);
+		/* 'build' the 'system' -- the flattened system of equations */
+		slv_system_t sys = system_build(GetSimulationRoot(siminst));
+		CU_ASSERT_FATAL(sys != NULL);
 
-	/* assign the solver to the system */
-	CU_ASSERT_FATAL(slv_select_solver(sys,qrslv_index));
-	CONSOLE_DEBUG("Assigned solver '%s'...",slv_solver_name(slv_get_selected_solver(sys)));
+		/* assign the solver to the system */
+		CU_ASSERT_FATAL(slv_select_solver(sys,qrslv_index));
+		CONSOLE_DEBUG("Assigned solver '%s'...",slv_solver_name(slv_get_selected_solver(sys)));
 
-	/* presolve, check it's ready, then solve */
-	CU_ASSERT_FATAL(0 == slv_presolve(sys));
-	slv_status_t status1;
-	slv_get_status(sys, &status1);
-	CU_ASSERT_FATAL(status1.ready_to_solve);
-	slv_solve(sys);
-	/* check that solver status was 'ok' */
-	slv_get_status(sys, &status1);
-	CU_ASSERT(status1.ok);
+		/* presolve, check it's ready, then solve */
+		CU_ASSERT_FATAL(0 == slv_presolve(sys));
+		slv_status_t status1;
+		slv_get_status(sys, &status1);
+		CU_ASSERT_FATAL(status1.ready_to_solve);
+		slv_solve(sys);
+		/* check that solver status was 'ok' */
+		slv_get_status(sys, &status1);
+		CU_ASSERT(status1.ok);
 
-	/* clean up the 'system' -- we don't need that any more */
-	CONSOLE_DEBUG("Destroying system...");
-	if(sys)system_destroy(sys);
-	system_free_reused_mem();
+		/* clean up the 'system' -- we don't need that any more */
+		CONSOLE_DEBUG("Destroying system...");
+		if(sys)system_destroy(sys);
+		system_free_reused_mem();
 
-	/* run 'self_test' method -- we can check there that the results are as expected */
-	CONSOLE_DEBUG("Running self-tests");
-	name = CreateIdName(AddSymbol("self_test"));
-	pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT(pe==Proc_all_ok);
+		/* run 'self_test' method -- we can check there that the results are as expected */
+		CONSOLE_DEBUG("Running self-tests");
+		name = CreateIdName(AddSymbol("self_test"));
+		pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
 
 	/* destroy the compiler data structures, hopefully all dynamically allocated memory */
 	CONSOLE_DEBUG("Destroying instance tree");
@@ -136,14 +147,14 @@ static void dr_load_solve_test_qrslv(const char *librarypath, const char *modelf
 	Convenience function to load a model file "name.a4c" and then test the
 	model called 'name' within that file, from the directory "models/test/qrslv".
 */
-static void test_dr(const char *filenamestem){
+static void test_dr(const char *filenamestem, int instantiatefail){
 	/* load the file */
 	char modelpath[PATH_MAX];
 	strcpy((char *)modelpath,"test/datareader/");
 	strncat(modelpath, filenamestem, PATH_MAX - strlen(modelpath));
 	strncat(modelpath, ".a4c", PATH_MAX - strlen(modelpath));
 	
-	dr_load_solve_test_qrslv("models",modelpath,filenamestem);
+	dr_load_solve_test_qrslv("models",modelpath,filenamestem,instantiatefail);
 }
 
 
@@ -209,11 +220,23 @@ static void test_allocfree(void){
 }
 
 static void test_csv(void){
-	test_dr("testcsv");
+	test_dr("testcsv",0);
 }
 
 static void test_interp(void){
-	test_dr("testinterp");
+	test_dr("testinterp",0);
+}
+
+static void test_nofilename(void){
+	test_dr("testnofilename",1);
+}
+
+static void test_noformat(void){
+	test_dr("testnoformat",1);
+}
+
+static void test_noparams(void){
+	test_dr("testnoparams",1);
 }
 
 
@@ -231,7 +254,10 @@ class TestCSV(Ascend):
 #define TESTS(T) \
 	T(allocfree) \
 	T(csv) \
-	T(interp)
+	T(interp) \
+	T(nofilename) \
+	T(noformat) \
+	T(noparams)
 
 REGISTER_TESTS_SIMPLE(solver_datareader, TESTS)
 
