@@ -2462,11 +2462,13 @@ void MPIwum(struct Set *argset,
     return;
     /* why are we here? */
   }
+  ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
   FPRINTF(ASCERR,"Parameter list waiting on sufficient type or value of:\n");
   if (argset !=NULL && argn >0) {
     FPRINTF(ASCERR,"  Argument %lu:",argn);
     WriteSetNode(ASCERR,argset);
   }
+  error_reporter_end_flush();
   WriteUnexecutedMessage(ASCERR,statement,g_mpi_message[arrloc]);
 }
 

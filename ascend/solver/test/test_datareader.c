@@ -146,9 +146,14 @@ static void test_dr(const char *filenamestem){
 	dr_load_solve_test_qrslv("models",modelpath,filenamestem);
 }
 
-static void test_dr1(void){
+static void test_csv(void){
 	test_dr("testcsv");
 }
+
+static void test_interp(void){
+	test_dr("testinterp");
+}
+
 
 /*
 class TestCSV(Ascend):
@@ -162,7 +167,8 @@ class TestCSV(Ascend):
 /* Registration information */
 
 #define TESTS(T) \
-	T(dr1)
+	T(csv) \
+	T(interp)
 
 REGISTER_TESTS_SIMPLE(solver_datareader, TESTS)
 

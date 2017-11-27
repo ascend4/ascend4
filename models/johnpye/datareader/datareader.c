@@ -40,7 +40,7 @@
 
 #include "dr.h"
 
-//#define DATAREADER_DEBUG
+#define DATAREADER_DEBUG
 #ifdef DATAREADER_DEBUG
 # define MSG CONSOLE_DEBUG
 #else
@@ -263,6 +263,7 @@ int asc_datareader_calc(struct BBoxInterp *slv_interp,
 	}
 
 #ifdef DATAREADER_DEBUG
+	int i;
 	for(i=0; i< ninputs; ++i){
 		MSG("inputs[%d] = %f", i, inputs[i]);
 	}
@@ -295,6 +296,19 @@ int asc_datareader_calc(struct BBoxInterp *slv_interp,
 }
 
 void asc_datareader_close(struct BBoxInterp *slv_interp){
-	CONSOLE_DEBUG("NOT IMPLEMENTED");
+	DataReader *d;
+	d = (DataReader *)slv_interp->user_data;
+	if(!d){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+			,"Attempted to close a null datareader"
+		);
+		return;
+	}
+#if 0
+	MSG("CLOSING DATAREADER");
+	datareader_free(d);
+#else
+	MSG("NOT IMPLEMENTED");
+#endif
 }
 

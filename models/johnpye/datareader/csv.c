@@ -98,7 +98,7 @@ int datareader_csv_eof(DataReader *d) {
     return 0;
 }
 int datareader_csv_data(DataReader *d) {
-    char str[9999];
+    char str[9999] = "";
     double *csv = ASC_NEW_ARRAY(double, d->nmaxoutputs+1);
     char *tok;
     int k = 0;
@@ -106,7 +106,7 @@ int datareader_csv_data(DataReader *d) {
     MSG("Reading row %d",d->i);
 #endif
 
-    if (fscanf (d->f, "%9998s",str) == 0) { //copy the csv line to str
+    if(fscanf(d->f,"%9998s",str) == 0) { //copy the csv line to str
         CONSOLE_DEBUG("No Data reading CSV file");
         return 1;
     }
@@ -122,7 +122,7 @@ int datareader_csv_data(DataReader *d) {
 
     ASC_FREE(str2); //done with the string copy, free that memory
 
-    if (k != d->nmaxoutputs+1) { //check if the number of colums vary in the data set
+    if(k != d->nmaxoutputs+1){ //check if the number of colums vary in the data set
         CONSOLE_DEBUG("Bad input data in data row %d, %d columns when expecting %d",d->i,k,d->nmaxoutputs+1);
         ASC_FREE(csv);
         return 1;
@@ -164,3 +164,9 @@ int datareader_csv_vals(DataReader *d, double *v) {
     }
     return 0;
 }
+
+int datareader_csv_free(DataReader *d){
+	ASC_FREE(d->data);
+	return 0;
+}
+

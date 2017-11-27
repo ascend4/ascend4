@@ -8,5 +8,6 @@ DataReaderHeaderFn datareader_csv_header;
 DataReaderEofFn datareader_csv_eof;
 DataReaderIndepFn datareader_csv_time;
 DataReaderValFn datareader_csv_vals;
+DataReaderFreeFn datareader_csv_free;
 
 #endif
