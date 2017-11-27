@@ -78,17 +78,17 @@ DataReader *datareader_new(const char *fn, int noutputs) {
     d->noutputs = noutputs; //maybe this is not the right place to put this!
 
     //create a data allocation for the parameter list
-    d->cols = (int *)ascmalloc(noutputs*sizeof(int));
-    d->interp_t = (interp_t *)ascmalloc(noutputs*sizeof(interp_t));
+    d->cols = ASC_NEW_ARRAY(int,noutputs);
+    d->interp_t = ASC_NEW_ARRAY(interp_t,noutputs);
     //initialise param lists with default values. In case user doesn't declare params
     for (i=0;i<noutputs;i++) {
         d->cols[i] = i+1;
         d->interp_t[i] = default_interp;
     }
-    d->a0 = (double *)ascmalloc(noutputs*sizeof(double));
-    d->a1 = (double *)ascmalloc(noutputs*sizeof(double));
-    d->a2 = (double *)ascmalloc(noutputs*sizeof(double));
-    d->a3 = (double *)ascmalloc(noutputs*sizeof(double));
+    d->a0 = ASC_NEW_ARRAY(double,noutputs);
+    d->a1 = ASC_NEW_ARRAY(double,noutputs);
+    d->a2 = ASC_NEW_ARRAY(double,noutputs);
+    d->a3 = ASC_NEW_ARRAY(double,noutputs);
 
     d->datafn = NULL;
     d->headerfn = NULL;
@@ -367,6 +367,7 @@ int datareader_init(DataReader *d){
     if((*d->headerfn)(d)){
         ERROR_REPORTER_HERE(ASC_PROG_ERR, "Error processing file header in '%s'", d->fn);
         fclose(d->f);
+		d->f = NULL;
         return 1;
     }
 
@@ -374,11 +375,13 @@ int datareader_init(DataReader *d){
         if((*d->datafn)(d)){
             ERROR_REPORTER_HERE(ASC_PROG_ERR, "Error reading file data in '%s'", d->fn);
             fclose(d->f);
+			d->f = NULL;
             return 1;
         }
     }
     MSG("Done retrieving data");
     fclose(d->f);
+	d->f = NULL;
     MSG("Closed file");
 
     d->i = 0; /* set current position to zero */
@@ -406,6 +409,13 @@ int datareader_free(DataReader *d){
         fclose(d->f);
         d->f = NULL;
     }
+	ASC_FREE(d->cols);
+	ASC_FREE(d->interp_t);
+	ASC_FREE(d->a0);
+	ASC_FREE(d->a1);
+	ASC_FREE(d->a2);
+	ASC_FREE(d->a3);
+
     ASC_FREE(d);
     return 0;
 }

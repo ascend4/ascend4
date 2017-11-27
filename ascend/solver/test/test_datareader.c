@@ -196,6 +196,8 @@ static void test_allocfree(void){
 	slv_system_t sys = system_build(GetSimulationRoot(siminst));
 	CU_ASSERT_FATAL(sys != NULL);
 
+	CONSOLE_DEBUG("Destroying system");
+
 	/* clean up the 'system' -- just want to show that we clean our memory */
 	if(sys)system_destroy(sys);
 	system_free_reused_mem();

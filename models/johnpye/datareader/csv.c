@@ -106,10 +106,19 @@ int datareader_csv_data(DataReader *d){
     MSG("Reading row %d",d->i);
 #endif
 
+	str[0] = '\0';
     if(fscanf(d->f,"%9998s",str) == 0){ //copy the csv line to str
-        CONSOLE_DEBUG("No Data reading CSV file");
+        CONSOLE_DEBUG("No data reading CSV file");
+		ASC_FREE(csv);
         return 1;
     }
+	if(0==strlen(str)){
+		MSG("empty line");
+		ASC_FREE(csv);
+		return 0;
+	}
+	CONSOLE_DEBUG("got line '%s'",str);
+
     char *str2 = ASC_NEW_ARRAY(char,strlen(str)+1);
     strcpy(str2,str);//create a copy of the string, strtok is not a nice function
 

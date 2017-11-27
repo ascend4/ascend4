@@ -304,7 +304,7 @@ void asc_datareader_close(struct BBoxInterp *slv_interp){
 		);
 		return;
 	}
-#if 0
+#if 1
 	MSG("CLOSING DATAREADER");
 	datareader_free(d);
 #else
