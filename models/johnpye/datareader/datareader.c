@@ -40,7 +40,7 @@
 
 #include "dr.h"
 
-#define DATAREADER_DEBUG
+//#define DATAREADER_DEBUG
 #ifdef DATAREADER_DEBUG
 # define MSG CONSOLE_DEBUG
 #else

@@ -36,7 +36,7 @@
 
 #include "csv.h"
 
-#define CSV_DEBUG
+//#define CSV_DEBUG
 #ifdef CSV_DEBUG
 # define MSG CONSOLE_DEBUG
 #else
@@ -98,7 +98,7 @@ int datareader_csv_eof(DataReader *d){
     return 0;
 }
 int datareader_csv_data(DataReader *d){
-    char str[9999] = "";
+    char str[9999];
     double *csv = ASC_NEW_ARRAY(double, d->nmaxoutputs+1);
     char *tok;
     int k = 0;
@@ -141,7 +141,7 @@ int datareader_csv_data(DataReader *d){
 }
 
 int datareader_csv_time(DataReader *d, double *t) {
-    /*  Warning:
+    /*  Warining:
 
     	There is no check in place to verify the user has specified
     	a csv file whose first column is time format or that such value
