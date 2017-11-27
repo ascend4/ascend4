@@ -26,7 +26,8 @@
 	T(qrslv) \
 	T(fprops) \
 	T(lrslv) \
-	T(slvdof)
+	T(slvdof) \
+	T(datareader)
 
 #define PROTO_SOLVER(NAME) PROTO(solver,NAME)
 TESTS(PROTO_SOLVER)
