@@ -146,6 +146,66 @@ static void test_dr(const char *filenamestem){
 	dr_load_solve_test_qrslv("models",modelpath,filenamestem);
 }
 
+
+
+static void test_allocfree(void){
+	int status;
+	int qrslv_index;
+
+	/* initialise the compiler from scratch */
+	Asc_CompilerInit(1);
+
+	/* set the needed environment variables so that models, solvers can be found */
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv"));
+
+	/* read back and display the ASCENDLIBRARY setting */
+	char *lib = Asc_GetEnv(ASC_ENV_LIBRARY);
+	CONSOLE_DEBUG("%s = %s\n",ASC_ENV_LIBRARY,lib);
+	ASC_FREE(lib);
+
+	/* load the QRSlv solver, presumably from the ASCENDSOLVERS path */
+	package_load("qrslv",NULL);
+	qrslv_index = slv_lookup_client("QRSlv");
+	CU_ASSERT_FATAL(qrslv_index != -1);
+
+	/* load the model file */
+	Asc_OpenModule("test/datareader/testcsv.a4c",&status);
+	CU_ASSERT(status == 0);
+	if(status){
+		Asc_CompilerDestroy();
+		CU_FAIL_FATAL(failed to load module);
+	}
+
+	/* parse it */
+	CU_ASSERT(0 == zz_parse());
+
+	/* find the model */
+	CU_ASSERT(FindType(AddSymbol("testcsv"))!=NULL);
+
+	/* instantiate it */
+	struct Instance *siminst = SimsCreateInstance(AddSymbol("testcsv"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst!=NULL);
+
+	/* call on_load method */
+	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+	CU_ASSERT(pe==Proc_all_ok);
+
+	/* 'build' the 'system' -- the flattened system of equations */
+	slv_system_t sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+
+	/* clean up the 'system' -- just want to show that we clean our memory */
+	if(sys)system_destroy(sys);
+	system_free_reused_mem();
+
+	/* destroy the compiler data structures, hopefully all dynamically allocated memory */
+	solver_destroy_engines();
+	sim_destroy(siminst);
+	Asc_CompilerDestroy();
+}
+
 static void test_csv(void){
 	test_dr("testcsv");
 }
@@ -167,6 +227,7 @@ class TestCSV(Ascend):
 /* Registration information */
 
 #define TESTS(T) \
+	T(allocfree) \
 	T(csv) \
 	T(interp)
 

@@ -396,7 +396,7 @@ int datareader_init(DataReader *d){
 */
 int datareader_free(DataReader *d){
 	if(d->freefn){
-		(*(d->freefn))(d);
+		(*d->freefn)(d);
 	}
     if(d->fp){
         ospath_free(d->fp);
