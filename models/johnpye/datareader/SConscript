@@ -15,7 +15,7 @@ srcs = Split("""
 """)
 
 dr_env.Append(LIBPATH=['#'])
-dr_env.Append(LIBS=['ascend'])
+dr_env.Append(LIBS=['ascend','z'])
 
 lib = dr_env.SharedLibrary("datareader",srcs
 	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']

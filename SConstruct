@@ -375,6 +375,13 @@ vars.Add(BoolVariable('WITH_CUNIT'
 	,True
 ))
 
+# zlib support
+vars.Add(BoolVariable('WITH_ZLIB'
+	,"Include features that make use of the zlib file compression library,"
+	+" if available. Set to zero if you want to explicitly disable this."
+	,True
+))
+
 # Build with MMIO matrix export support?
 vars.Add(BoolVariable('WITH_MMIO'
 	,"Include support for exporting matrices in Matrix Market format"
@@ -880,6 +887,9 @@ without_graphiviz_reason = "disabled by options/config.py"
 
 with_ufsparse = env.get('WITH_UFSPARSE')
 without_ufsparse_reason = "disabled by options/config.py"
+
+with_zlib = env.get('WITH_ZLIB')
+without_zlib_reason = "disabled by options/config.py"
 
 with_mmio = env.get('WITH_MMIO')
 without_mmio_reason = "disabled by options/config.py"
@@ -2401,6 +2411,15 @@ elif not conf.CheckIPOPT():
 	with_ipopt = False
 	without_ipopt_reason = "IPOPT not found"
 
+# ZLIB
+
+if not conf.CheckCHeader('zlib.h'):
+	with_zlib = False
+	without_zlib_reason = "zlib.h not found"
+elif not conf.CheckLib('z'):
+	with_zlib = False
+	without_zlib_reason = "library libz not found"
+
 # BLAS
 
 need_blas=False
@@ -2557,6 +2576,7 @@ for k,v in {
 		'ASC_WITH_DMALLOC':with_dmalloc
 		,'ASC_WITH_UFSPARSE':with_ufsparse
 		,'ASC_WITH_MMIO':with_mmio
+		,'ASC_WITH_ZLIB':with_zlib
 		,'ASC_SIGNAL_TRAPS':with_signals
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
 		,'HAVE_C99FPE':env.get('HAVE_C99FPE')

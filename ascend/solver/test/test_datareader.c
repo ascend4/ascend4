@@ -41,6 +41,8 @@
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_server.h>
 
+#include <ascend/general/config.h>
+
 #include <test/common.h>
 
 /**
@@ -71,6 +73,7 @@ static void dr_load_solve_test_qrslv(const char *librarypath, const char *modelf
 	CU_ASSERT_FATAL(qrslv_index != -1);
 
 	/* load the model file */
+	CONSOLE_DEBUG("Opening '%s'",modelfile);
 	Asc_OpenModule(modelfile,&status);
 	CU_ASSERT(status == 0);
 	if(status){
@@ -79,14 +82,17 @@ static void dr_load_solve_test_qrslv(const char *librarypath, const char *modelf
 	}
 
 	/* parse it */
+	CONSOLE_DEBUG("Parsing '%s'",modelfile);
 	CU_ASSERT(0 == zz_parse());
 
 	/* find the model */
 	CU_ASSERT(FindType(AddSymbol(modelname))!=NULL);
 
 	/* instantiate it */
+	CONSOLE_DEBUG("Instantiating '%s'",modelfile);
 	error_reporter_tree_t *tree = error_reporter_tree_start(0);
 	struct Instance *siminst = SimsCreateInstance(AddSymbol(modelname), AddSymbol("sim1"), e_normal, NULL);
+
 	int has_error = error_reporter_tree_has_error(tree);
 	error_reporter_tree_end(tree);	
 	CONSOLE_DEBUG("has_error = %d",has_error);
@@ -239,6 +245,13 @@ static void test_noparams(void){
 	test_dr("testnoparams",1);
 }
 
+static void test_energyplus(void){
+#ifdef ASC_WITH_ZLIB
+	test_dr("testenergyplus",0);
+#else
+	CU_FAIL("Unable to run 'testenergyplus', requires compilation with zlib");
+#endif
+}
 
 /*
 class TestCSV(Ascend):
@@ -257,7 +270,8 @@ class TestCSV(Ascend):
 	T(interp) \
 	T(nofilename) \
 	T(noformat) \
-	T(noparams)
+	T(noparams) \
+	T(energyplus)
 
 REGISTER_TESTS_SIMPLE(solver_datareader, TESTS)
 

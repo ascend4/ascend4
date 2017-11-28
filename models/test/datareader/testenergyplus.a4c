@@ -1,0 +1,43 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+IMPORT "johnpye/datareader/datareader";
+
+MODEL drconf;
+	filename IS_A symbol_constant;
+	format IS_A symbol_constant;
+	parameters IS_A symbol_constant;
+	format :== 'EE';
+	parameters :== '1,2,3,4,5,6,7';
+END drconf;
+
+MODEL energyplus;
+	eedata IS_A drconf;
+	t IS_A time;
+	T IS_A temperature;
+	p IS_A pressure;
+	rh "relative humidity" IS_A factor;
+	DNI IS_A power_per_area;
+	Gd IS_A power_per_area;
+	d_wind IS_A angle;
+	v_wind IS_A speed;	
+
+	filereader:datareader(
+		t : INPUT;
+		T,p,rh,DNI,Gd,d_wind,v_wind :OUTPUT;
+		eedata : DATA
+	);
+END energyplus;
+
+MODEL testenergyplus REFINES energyplus;
+	eedata.filename :== 'test/datareader/AUS_NSW.Moree.Aero.955270_RMY.epw.gz';
+METHODS
+METHOD on_load;
+	FIX t;
+	t := 0 {s};
+END on_load;
+METHOD self_test;
+	ASSERT(T - (24.1 {K}+ 273.15{K})) < 1e-5;
+END self_test;
+END testenergyplus;
+

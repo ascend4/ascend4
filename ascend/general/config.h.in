@@ -121,6 +121,17 @@ typedef unsigned long long asc_intptr_t;
 #endif
 
 /*
+	Whether to use the zlib library for reading compressed files.
+
+	SCons will uncomment the #define line if required.
+	Doing it this (hacky) way so as not to mess up autoconf.
+*/
+#ifndef ASC_WITH_ZLIB
+/* #define ASC_WITH_ZLIB @ASC_WITH_ZLIB@ */
+#endif
+
+
+/*
 	This define disables the use of pool.h and forces the code
 	to default back to standard malloc-based routines (via
 	ascMalloc.h). Applies to exprs.c, name.c, relation_io.c, 
