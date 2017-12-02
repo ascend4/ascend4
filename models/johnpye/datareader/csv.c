@@ -1,4 +1,6 @@
 /*	ASCEND modelling environment
+	Copyright (C) 2017 John Pye
+	Copyright (C) 2009 José Zapata
 	Copyright (C) 2006 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify

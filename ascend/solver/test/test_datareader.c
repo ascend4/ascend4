@@ -253,6 +253,15 @@ static void test_energyplus(void){
 #endif
 }
 
+static void test_tmy3(void){
+#ifdef ASC_WITH_ZLIB
+	test_dr("testtmy3",0);
+#else
+	CU_FAIL("Unable to run 'testtmy3', requires compilation with zlib");
+#endif
+}
+
+
 /*
 class TestCSV(Ascend):
 	def test1(self):
@@ -271,7 +280,8 @@ class TestCSV(Ascend):
 	T(nofilename) \
 	T(noformat) \
 	T(noparams) \
-	T(energyplus)
+	T(energyplus) \
+	T(tmy3)
 
 REGISTER_TESTS_SIMPLE(solver_datareader, TESTS)
 

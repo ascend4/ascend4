@@ -1,4 +1,5 @@
 /*	ASCEND modelling environment
+	Copyright (C) 2017 John Pye
 	Copyright (C) 2012 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
@@ -65,6 +66,11 @@
 #include "parse/parse.h"
 
 //#define TMY3_DEBUG 1
+#ifdef TMY3_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 /**
 	Data extracted from the E/E data file, doesn't have to included everything,
@@ -126,7 +132,14 @@ int parseLocation(parse *p, Tmy3Location *loc){
 int datareader_tmy3_header(DataReader *d){
 	Tmy3Location loc;
 	d->data = ASC_NEW(Tmy3Data);
+#ifdef ASC_WITH_ZLIB
+	MSG("Loading with zlib support");
+	DATA(d)->p = parseCreateGZFile(d->f);
+#else
+	ERROR_REPORTER_HERE(ASC_USER_NOTE,"TMY3 datareader compiled without zlib support, can't read .gz files");
 	DATA(d)->p = parseCreateFile(d->f);
+#endif
+
 	parse *p = DATA(d)->p;
 	char rubbish[2049];
 
@@ -206,7 +219,8 @@ int datareader_tmy3_data(DataReader *d){
 	X I(56_HViz) X C(57_HVizs) X C(58_HVize) \
 	X I(59_HViz) X C(60_HVizs) X C(61_HVize) \
 	X I(62_HViz) X C(63_HVizs) X C(64_HVize) \
-	X I(65_RainDepth) X I(66_RainDuration) X C(67_Rains) X C(68_Raine)
+	X I(65_RainDepth) X I(66_RainDuration) X C(67_Rains) X C(68_Raine) \
+	X I(69_PresWth) X C(70_PresWths) X C(81_PresWthe)
 
 #define CHARDECL(NAME) char tmy3_field_##NAME;
 #define NUMDECL(NAME) double tmy3_field_##NAME;
@@ -224,7 +238,8 @@ int datareader_tmy3_data(DataReader *d){
 #define ANDTHEN && parseThisString(p,",") &&
 
 // example row:
-// 01/25/1988,12:00,821,1411,530,1,13,580,1,9,192,1,13,565,1,13,593,1,9,219,1,13,442,1,21,10,A,7,4,A,7,13.3,A,7,-8.9,A,7,21,A,7,960,A,7,60,A,7,3.6,A,7,80500,A,7,77777,A,7,0.5,E,8,0.030,F,8,-9900.000,?,0,-9900,-9900,?,0
+// 01/25/1988,12:00,821,1411,530,1,13,580,1,9,192,1,13,565,1,13,593,1,9,219,1,13,442,1,21,10,A,7,4,A,7,13.3,A,7,-8.9,A,7,21,A,7,960,A,7,60 ,A,7,3.6,A,7,80500,A,7,77777,A,7,0.5,E,8,0.030,F,8,-9900.000,?,0,-9900,-9900,?,0
+// 01/21/1988,12:00,803,1413,595,1,9 ,874,1,9,98 ,1,13,627,1,9 ,868,1,9,132,1,13,222,1,18,3 ,A,7,2,A,7,10.0,A,7,-3.9,A,7,38,A,7,955,A,7,290,A,7,6.2,A,7,80500,B,7,77777,A,7,0.7,E,8,0.000,F,8,____0.00,_?,0,____0,1____,D,9,00,C,8
 
 	if(!(
 		(( /* parse the date and time first... */
@@ -280,11 +295,9 @@ int datareader_tmy3_time(DataReader *d, double *t){
 #define ROW DATA(d)->rows[d->i]
 
 int datareader_tmy3_vals(DataReader *d, double *v){
-#if TMY3_DEBUG
-	CONSOLE_DEBUG("At t=%f d, T = %lf, DNI = %f Wh/m2"
+	MSG("At t=%f d, T = %lf, DNI = %f Wh/m2"
 		,(ROW.t / 3600. / 24.),ROW.T, ROW.DNI
 	);
-#endif
 	v[0]=ROW.T;
 	v[1]=ROW.p;
 	v[2]=ROW.rh;
