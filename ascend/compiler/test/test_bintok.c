@@ -83,6 +83,9 @@ static void test_test1(){
 	strcpy(makecmd, "/usr/bin/make -f ");
 	strncat(makecmd, fp2str, PATH_MAX - strlen(makecmd));
 	strncat(makecmd, " ASCBT_SRC=" T_BTSRC " ASCBT_TARGET=" T_BTLIB, PATH_MAX - strlen(makecmd));
+	ASC_FREE(fp2str);
+	ospath_free(fp1);
+	ospath_free(fp2);
 
 	BinTokenSetOptions(
 		T_BTSRC, T_BTOBJ, T_BTLIB
@@ -90,13 +93,18 @@ static void test_test1(){
 		,"/bin/rm"
 		,1000/*maxrels*/,1/*verbose*/,0/*housekeep*/
 	);
-	ASC_FREE(fp2str);
-	ospath_free(fp1);
-	ospath_free(fp2);
 
 	/* instantiate it */
+	error_reporter_tree_t *T1 = error_reporter_tree_start(0);
+
 	struct Instance *siminst = SimsCreateInstance(AddSymbol(filenamestem), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(siminst!=NULL);
+
+	CU_TEST(!error_reporter_tree_has_error(T1));
+	error_reporter_tree_end(T1);
+
+	/* FIXME it seems that we should have a more specific way of finding 
+	out whether the bintoken compilation was successful or not... */
 
     CONSOLE_DEBUG("RUNNING ON_LOAD");
 

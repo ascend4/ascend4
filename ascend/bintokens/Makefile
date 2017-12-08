@@ -3,5 +3,5 @@ ASC_LIBDIR=$(HOME)/ascend/trunk
 CC=gcc
 
 all:
-	$(CC) -shared -I$(ASC_INCDIR) -o $(ASCBT_TARGET) $(ASCBT_SRC) -lascend -L$(ASC_LIBDIR)
+	$(CC) -shared -fPIC -I$(ASC_INCDIR) -o $(ASCBT_TARGET) $(ASCBT_SRC) -lascend -L$(ASC_LIBDIR)
 
