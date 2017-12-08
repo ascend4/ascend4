@@ -1,5 +1,3 @@
-ASC_INCDIR=$(HOME)/ascend/trunk
-ASC_LIBDIR=$(HOME)/ascend/trunk
 CC=gcc
 
 all:

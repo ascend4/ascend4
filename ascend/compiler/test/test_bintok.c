@@ -82,6 +82,7 @@ static void test_test1(){
 	char makecmd[2 * PATH_MAX];
 	strcpy(makecmd, "/usr/bin/make -f ");
 	strncat(makecmd, fp2str, PATH_MAX - strlen(makecmd));
+	strncat(makecmd, " ASC_INCDIR=. ASC_LIBDIR=.", PATH_MAX - strlen(makecmd));
 	strncat(makecmd, " ASCBT_SRC=" T_BTSRC " ASCBT_TARGET=" T_BTLIB, PATH_MAX - strlen(makecmd));
 	ASC_FREE(fp2str);
 	ospath_free(fp1);
