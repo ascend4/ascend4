@@ -38,7 +38,12 @@
 #include <ascend/general/ospath.h>
 #include <ascend/general/list.h>
 
-#define DL_DEBUG
+//#define DL_DEBUG
+#ifdef DL_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 typedef int (*ExternalLibraryRegister_fptr_t)(void);
 
@@ -252,7 +257,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
    *	If the named library does not exist, if it's not loadable or if
    *	it does not define the named install proc, report an error
    */
-  CONSOLE_DEBUG("dlopen of %s",path);
+  MSG("dlopen of %s",path);
   xlib = dlopen(path, RTLD_NOW|RTLD_LOCAL);
   if (xlib == NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s",(char *)dlerror());
@@ -379,14 +384,12 @@ int Asc_DynamicUnLoad(CONST char *path)
     ERROR_REPORTER_HERE(ASC_PROG_ERR, "Unable to remember or unload %s", path);
     return -3;
   }
-#ifdef DL_DEBUG
-  CONSOLE_DEBUG("Asc_DynamicUnLoad: forgetting & unloading %s", path);
-#endif
+  MSG("Asc_DynamicUnLoad: forgetting & unloading %s", path);
   /*
    *  dlclose() returns 0 on success, FreeLibrary() returns TRUE.
    *  A uniform convention is preferable, so trap and return 0 on success.
    */
-  CONSOLE_DEBUG("dlclose of %s",path);
+  MSG("dlclose of %s",path);
   retval = UNLOAD(DLL_CAST dlreturn);
   return (retval == UNLOAD_SUCCESS) ? 0 : retval;
 }
@@ -560,10 +563,10 @@ int test_librarysearch(struct FilePath *path, void *userdata){
 	if(fp==NULL){
 		char *tmp;
 		tmp = ospath_str(path);
-		CONSOLE_DEBUG("Unable to concatenate '%s'...",tmp);
+		MSG("Unable to concatenate '%s'...",tmp);
 		ospath_free_str(tmp);
 		tmp = ospath_str(ls->partialpath);
-		CONSOLE_DEBUG("... and '%s'...",tmp);
+		MSG("... and '%s'...",tmp);
 		ospath_free_str(tmp);
 		return 0;
 	}
@@ -630,7 +633,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, const char *envv){
 	if(0==ospath_stat(fp1,&buf) && NULL!=(f = ospath_fopen(fp1,"r")) ){
 		char *tmp;
 		tmp = ospath_str(fp1);
-		CONSOLE_DEBUG("Library '%s' opened directly, without path search",tmp);
+		MSG("Library '%s' opened directly, without path search",tmp);
 		ospath_free_str(tmp);
 		fp2 = ospath_getabs(fp1);
 		foundpath = ospath_str(fp2);
