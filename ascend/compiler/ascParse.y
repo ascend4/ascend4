@@ -1244,6 +1244,7 @@ statements:
 	{
 	  if ($2 != NULL) {
 	    gl_append_list($1,$2);
+            gl_destroy($2);
 	  }
 	  $$ = $1;
 	}
