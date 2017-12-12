@@ -198,7 +198,7 @@ int package_load(CONST char *partialpath, CONST char *initfunc){
 #endif
 
 	/* run the import handlers' importfn to do the actual loading, registration etc. */
-	result = (*(handler->importfn))(fp1,initfunc,partialpath);
+	result = importhandler_import(handler,fp1,initfunc,NULL,partialpath);
 	if(result){
 #ifdef PACKAGES_DEBUG
 		CONSOLE_DEBUG("Error %d when importing external library of type '%s'",result,handler->name);

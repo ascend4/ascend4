@@ -36,7 +36,12 @@
 /* #define SEARCH_DEBUG */
 /* #define FIND_DEBUG */
 /* #define IMPORTHANDLER_VERBOSE */
-/* #define IMPORT_DEBUG */
+#define IMPORT_DEBUG
+#ifdef IMPORT_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 /*
 	Maximum number of importhandlers possible in one session. Hard to imagine
@@ -48,7 +53,7 @@
 	List of import handlers currently in effect. @TODO this shouldn't be a global,
 	but unfortunately such globals are 'The ASCEND Way'.
 */
-struct ImportHandler **importhandler_library=NULL;
+struct ImportHandlerLibrary *importhandler_library=NULL;
 
 /**
 	Table of registered pointers for use in passing GUI data out to external scripts.
@@ -65,8 +70,8 @@ ASC_DLLSPEC int importhandler_add(struct ImportHandler *handler){
 		importhandler_createlibrary();
 	}
 	for(i=0; i< IMPORTHANDLER_MAX; ++i){
-		if(importhandler_library[i] == NULL)break;
-		if(importhandler_library[i]->name == handler->name){
+		if(importhandler_library->handlers[i] == NULL)break;
+		if(importhandler_library->handlers[i]->name == handler->name){
 			ERROR_REPORTER_HERE(ASC_USER_NOTE,"Handler already loaded");
 			return 0;
 		}
@@ -75,22 +80,62 @@ ASC_DLLSPEC int importhandler_add(struct ImportHandler *handler){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Too many import handlers register (IMPORTHANDLER_MAX=%d)",IMPORTHANDLER_MAX);
 		return 1;
 	}
-	importhandler_library[i] = handler;
+	importhandler_library->handlers[i] = handler;
 #ifdef IMPORTHANDLER_VERBOSE
 	ERROR_REPORTER_HERE(ASC_USER_NOTE,"New import hander '%s' added",handler->name);
 #endif
 	return 0;
 }
 
-/* Function to attempt import of an external script
-	@param partialname Name of the external script (without extension), relative to PATH.
-	@param defaultpath Default value of file search PATH. Is trumped by value of pathenvvar if present in environment.
-	@param pathenvvar Environment variable containing the user's preferred file search path value.
-	@return 0 on success
-*/
-int importhandler_attemptimport(const char *partialname,const char *defaultpath, const char *pathenvvar){
-	ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s not implemented",__FUNCTION__);
-	return 1;
+
+int importhandler_import(struct ImportHandler *handler, struct FilePath *fp
+	, const char *initfunc, const char *cleanupfunc, const char *partialpath
+){
+	int result;
+	struct ImportPackage *p;
+	result = (*(handler->importfn))(fp,initfunc,partialpath);
+	MSG("Imported '%s'",partialpath);
+
+	if(0==result){
+		p = ASC_NEW(struct ImportPackage);
+		p->fp = ospath_new_copy(fp);
+		p->partialpath = ASC_NEW_ARRAY_CLEAR(char,strlen(partialpath)+1);
+		strncpy(p->partialpath,partialpath,strlen(partialpath));
+		CONSOLE_DEBUG("partialpath='%s'",p->partialpath);
+		p->cleanupfunc = cleanupfunc;
+		p->handler = handler;
+		gl_append_ptr(importhandler_library->packages, p);
+		CONSOLE_DEBUG("recorded package '%s'",p->partialpath);
+		CONSOLE_DEBUG(" with handler '%s'",handler->name);
+		CONSOLE_DEBUG("there are now %lu packages",gl_length(importhandler_library->packages));
+	}
+	return result;
+}
+
+
+static int importhandler_unload(struct ImportPackage *p){
+	int err;
+	struct ImportHandler *h = p->handler;
+	if(NULL==p)return 2;
+	if(NULL==h)return 1;
+	if(h->unloadfn){
+		if(NULL!=p->partialpath && NULL!=h->name){
+			CONSOLE_DEBUG("Unloading '%s' using handler '%s'",p->partialpath,h->name);
+		}else if(NULL!=h->name){
+			CONSOLE_DEBUG("Unloading package using handler '%s'",h->name);
+		}else{
+			CONSOLE_DEBUG("Unloading package using handler");
+		}
+
+		err = (*(h->unloadfn))(p->fp,p->cleanupfunc);
+
+		ASC_FREE(p->partialpath);
+		ospath_free(p->fp);
+		ASC_FREE(p);
+		return err;
+	}
+	CONSOLE_DEBUG("No unloadfn for handler '%s' for package '%s'",h->name,p->partialpath);
+	return 0;
 }
 
 /*------------------------------------------------------------------------------
@@ -152,12 +197,13 @@ char *importhandler_extlib_filename(const char *partialname){
 	@return 0 on success
 */
 int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,const char *partialpath){
-
 	struct FilePath *fp1;
 	char *stem;
 	char *path;
 	char auto_initfunc[PATH_MAX];
 	int result;
+
+	MSG("Importing '%s'",partialpath);
 
 	fp1 = ospath_getabs(fp);
 	ospath_cleanup(fp1);
@@ -168,9 +214,7 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"File path is NULL");
 		return 1;
 	}
-#ifdef IMPORT_DEBUG
-	CONSOLE_DEBUG("Importing extlib with path '%s'",path);
-#endif
+	MSG("Importing extlib with path '%s'",path);
 
 	if(initfunc==NULL){
 		fp1 = ospath_new(partialpath);
@@ -197,7 +241,60 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 		}
 	}
 #endif
+	ASC_FREE(path);
+	return result;
+}
 
+
+int importhandler_extlib_unload(const struct FilePath *fp,const char *cleanupfunc){
+	struct FilePath *fp1;
+	char *path;
+	int result;
+
+	fp1 = ospath_getabs(fp);
+	ospath_cleanup(fp1);
+	path = ospath_str(fp1);
+	ospath_free(fp1);
+
+	if(path==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"File path is NULL");
+		return 1;
+	}
+	MSG("Unloading extlib with path '%s'",path);
+
+#if 0
+	DynamicF cleanupfn;
+	char *cleanupfunc1 = NULL;
+	char *stem;
+	char auto_initfunc[PATH_MAX];
+	if(cleanupfunc==NULL){
+		fp1 = ospath_new(partialpath);
+		stem = ospath_getbasefilename(fp1);
+		strncpy(auto_initfunc,stem,PATH_MAX);
+		ospath_free(fp1);
+		ASC_FREE(stem);
+
+		strncat(auto_initfunc,"_cleanup",PATH_MAX-strlen(auto_initfunc));
+		cleanupfunc1 = auto_initfunc;
+	}else{
+		cleanupfunc1 = cleanupfunc;
+	}
+
+	if(cleanupfunc1){
+		cleanupfn = Asc_DynamicFunction(path,cleanupfunc1);
+		if(cleanupfn){
+			
+    if (install == NULL) {
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"While attempting to run '%s' in '%s': %s",initFun, path, (char *)dlerror());
+      dlclose(xlib);
+      return 1;
+    }
+  }
+#else
+	CONSOLE_DEBUG("cleanupfunc not implemented");
+#endif
+
+	result = Asc_DynamicUnLoad(path);
 	ASC_FREE(path);
 	return result;
 }
@@ -214,9 +311,11 @@ int importhandler_createlibrary(){
 		/* ERROR_REPORTER_HERE(ASC_PROG_ERR,"Already created"); */
 		return 0;
 	};
-	importhandler_library=ASC_NEW_ARRAY(struct ImportHandler *,IMPORTHANDLER_MAX);
+	importhandler_library = ASC_NEW(struct ImportHandlerLibrary);
+	importhandler_library->packages=gl_create(10);
+	importhandler_library->handlers=ASC_NEW_ARRAY(struct ImportHandler *,IMPORTHANDLER_MAX);
 	for(i=0; i < IMPORTHANDLER_MAX; ++i){
-		importhandler_library[i] = NULL;
+		importhandler_library->handlers[i] = NULL;
 	}
 	/* CONSOLE_DEBUG("ImportHandler library created"); */
 
@@ -224,6 +323,7 @@ int importhandler_createlibrary(){
 	extlib_handler->name ="extlib";
 	extlib_handler->filenamefn = &importhandler_extlib_filename;
 	extlib_handler->importfn = &importhandler_extlib_import;
+	extlib_handler->unloadfn = &importhandler_extlib_unload;
 	extlib_handler->destroyfn = NULL;
 	if(importhandler_add(extlib_handler)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to create 'extlib' import handler");
@@ -244,11 +344,11 @@ int importhandler_destroy(struct ImportHandler *handler){
 
 struct ImportHandler *importhandler_lookup(const char *name){
 	int i;
-	for(i=0; i < IMPORTHANDLER_MAX && importhandler_library[i] != NULL; ++i){
-		if(importhandler_library[i]->name
-			&& 0==strcmp(name,importhandler_library[i]->name)
+	for(i=0; i < IMPORTHANDLER_MAX && importhandler_library->handlers[i] != NULL; ++i){
+		if(importhandler_library->handlers[i]->name
+			&& 0==strcmp(name,importhandler_library->handlers[i]->name)
 		){
-			return importhandler_library[i];
+			return importhandler_library->handlers[i];
 		}
 	}
 	return NULL;
@@ -256,43 +356,64 @@ struct ImportHandler *importhandler_lookup(const char *name){
 
 /** @return 0 on success */
 int importhandler_destroylibrary(){
-	int i;
+	unsigned long i;
 	int err = 0, thiserr;
-#ifdef IMPORT_DEBUG
-	CONSOLE_DEBUG("Destroying importhandler library...");
-#endif
+	struct ImportPackage *p;
+	MSG("Destroying importhandler library...");
+
 	///importhandler_printlibrary(stderr);
-	if(importhandler_library!=NULL){
-		for(i=IMPORTHANDLER_MAX - 1; i >= 0; --i){
-			if(importhandler_library[i]==NULL)continue;
-			thiserr = importhandler_destroy(importhandler_library[i]);
-			if(!thiserr){
-				importhandler_library[i] = NULL;
-#ifdef IMPORT_DEBUG
-				CONSOLE_DEBUG("Destroyed import handler");
-#endif
+	if(importhandler_library!=NULL && importhandler_library->handlers!=NULL){
+		/* first unload the packages that we loaded */
+		if(importhandler_library->packages!=NULL){
+			CONSOLE_DEBUG("Unloading %lu packages",gl_length(importhandler_library->packages));
+			for(i=gl_length(importhandler_library->packages); i>0; i--){
+				CONSOLE_DEBUG("i = %lu",i);
+				p = (struct ImportPackage *)gl_fetch(importhandler_library->packages, i);
+				thiserr = importhandler_unload(p);
+				if(thiserr){
+					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error unloading '%s'",p->partialpath);
+				}
+				err = err | thiserr;
 			}
-			err = err | thiserr;
+			if(!err){
+				gl_destroy(importhandler_library->packages);
+			}
 		}
 		if(!err){
-			ASC_FREE(importhandler_library);
-			importhandler_library = NULL;
+			/* now unload the handlers */
+			for(i=0; i<IMPORTHANDLER_MAX; i++){
+				//MSG("i = %lu",i);
+				if(NULL!=importhandler_library->handlers[i]){
+					MSG("Unloading handler #%lu, '%s'",i,importhandler_library->handlers[i]->name);
+					thiserr = importhandler_destroy(importhandler_library->handlers[i]);
+					if(!thiserr){
+						importhandler_library->handlers[i] = NULL;
+						MSG("Destroyed import handler");
+					}
+					err = err | thiserr;
+				}
+			}
+			if(!err){
+				ASC_FREE(importhandler_library->handlers);
+				importhandler_library->handlers = NULL;
+				ASC_FREE(importhandler_library);
+			}
 		}
 	}
-	if(err)ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Failed to destroy importhandler library");
+	if(err)ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Unable to destroy importhandler library");
 	return err;
 }
 
 /** @return 0 on success */
 int importhandler_printlibrary(FILE *fp){
 	int i;
-	if(importhandler_library==NULL){
+	if(importhandler_library==NULL || importhandler_library->handlers==NULL){
 		fprintf(fp,"# importhandler_printlibrary: empty\n");
 		return 0;
 	}else{
 		fprintf(fp,"# importhandler_printlibrary: start\n");
-		for(i=0; i < IMPORTHANDLER_MAX && importhandler_library[i] != NULL; ++i){
-			fprintf(fp,"%s\n",importhandler_library[i]->name);
+		for(i=0; i < IMPORTHANDLER_MAX && importhandler_library->handlers[i] != NULL; ++i){
+			fprintf(fp,"%s\n",importhandler_library->handlers[i]->name);
 		}
 		fprintf(fp,"# importhandler_printlibrary: end\n");
 		return 0;
@@ -355,10 +476,11 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 #endif
 
 	asc_assert(importhandler_library!=NULL);
+	asc_assert(importhandler_library->handlers!=NULL);
 
-	for(i=0; i<IMPORTHANDLER_MAX && importhandler_library[i]!=NULL; ++i){
+	for(i=0; i<IMPORTHANDLER_MAX && importhandler_library->handlers[i]!=NULL; ++i){
 
-		filename = (*(importhandler_library[i]->filenamefn))(searchdata->partialname); /* eg 'myext' -> 'libmyext.so' */
+		filename = (*(importhandler_library->handlers[i]->filenamefn))(searchdata->partialname); /* eg 'myext' -> 'libmyext.so' */
 		if(filename==NULL){
 #ifdef SEARCH_DEBUG
 			CONSOLE_DEBUG("Unable to create filename from partialname '%s'",searchdata->partialname);
@@ -405,7 +527,7 @@ int importhandler_search_test(struct FilePath *path, void *userdata){
 		if(0==ospath_stat(fp2,&buf) && NULL!=(f = ospath_fopen(fp2,"r"))){
 			fclose(f);
 			searchdata->foundpath = fp2;
-			searchdata->handler = importhandler_library[i];
+			searchdata->handler = importhandler_library->handlers[i];
 			return 1; /* success */
 		}
 
@@ -460,9 +582,9 @@ struct FilePath *importhandler_findinpath(const char *partialname
 	CONSOLE_DEBUG("SEARCHING RELATIVE TO CURRENT DIRECTORY");
 #endif
 
-	for(i=0; i<IMPORTHANDLER_MAX && importhandler_library[i]!=NULL; ++i){
+	for(i=0; i<IMPORTHANDLER_MAX && importhandler_library->handlers[i]!=NULL; ++i){
 
-		filename = (*(importhandler_library[i]->filenamefn))(searchdata.partialname); /* eg 'myext' -> 'libmyext.so' */
+		filename = (*(importhandler_library->handlers[i]->filenamefn))(searchdata.partialname); /* eg 'myext' -> 'libmyext.so' */
 		if(filename==NULL){
 #ifdef FIND_DEBUG
 			CONSOLE_DEBUG("Unable to create filename from partialname '%s'",searchdata.partialname);
@@ -512,7 +634,7 @@ struct FilePath *importhandler_findinpath(const char *partialname
 			fclose(f);
 			ASC_FREE(searchdata.partialname);
 			ospath_free(searchdata.relativedir);
-			*handler = importhandler_library[i];
+			*handler = importhandler_library->handlers[i];
 			return fp1;
 		}
 #ifdef FIND_DEBUG

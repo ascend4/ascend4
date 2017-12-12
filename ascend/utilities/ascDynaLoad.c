@@ -38,7 +38,7 @@
 #include <ascend/general/ospath.h>
 #include <ascend/general/list.h>
 
-// #define DL_DEBUG
+#define DL_DEBUG
 
 typedef int (*ExternalLibraryRegister_fptr_t)(void);
 

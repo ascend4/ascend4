@@ -221,7 +221,9 @@ void BinTokenDeleteReference(int btable)
   if (g_bt_data.tables[btable].refcount == 0) {
     /* unload the library if possible here */
 #if HAVE_DL_UNLOAD
-    /*ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"UNLOADING %s",g_bt_data.tables[btable].name);*/
+# ifdef BINTOKEN_VERBOSE
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"UNLOADING %s",g_bt_data.tables[btable].name);
+#endif
     Asc_DynamicUnLoad(g_bt_data.tables[btable].name);
 #else
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Dynamic Unloading not available in this build");

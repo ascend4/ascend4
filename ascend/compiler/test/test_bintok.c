@@ -47,7 +47,7 @@
 */
 static void test_test1(){
 
-	struct module_t *m;
+	/* struct module_t *m; */
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
@@ -61,7 +61,7 @@ static void test_test1(){
 	strncat(path, ".a4c", PATH_MAX - strlen(path));
 	{
 		int status;
-		m = Asc_OpenModule(path,&status);
+		Asc_OpenModule(path,&status);
 		CU_ASSERT(status == 0);
 	}
 

@@ -27,6 +27,7 @@
 
 #include <ascend/general/platform.h>
 #include <ascend/general/ospath.h>
+#include <ascend/general/list.h>
 
 /**	@addtogroup compiler_file Compiler File Handling
 	@{
@@ -64,11 +65,23 @@ typedef char *ImportHandlerCreateFilenameFn(const char *partialname);
 typedef int ImportHandlerImportFn(const struct FilePath *fp,const char *initfunc, const char *partialpath);
 
 /**
+	This is the 'unload' function that will unload external code
+	when no longer required.
+
+	The function should return 0 on success.
+*/
+typedef int ImportHandlerUnloadFn(const struct FilePath *fp,const char *cleanupfunc);
+
+/**
 	This function can be used to unload an import handler, and should
 	deallocate any memory that was used or unload any shared libraries that
 	were loaded in order to provide this import handler's functionality.
 	@param handler pointer to the un-destroyed handler. Pointer will be invalid on return.
 	@return 0 on success.
+
+	@note destroying (unloading) an import handler is not the same as unloading
+	whatever the thing was that was imported (ie a specific 'package'). This
+	latter case is handled by `unloadfn`.
 */
 typedef int ImportHandlerDestroyFn(struct ImportHandler *handler);
 
@@ -76,26 +89,39 @@ struct ImportHandler{
 	const char *name; /**< name of this import handler, eg 'extpy' */
 	ImportHandlerCreateFilenameFn *filenamefn; /**< function which converts a partial filename into a correct filename, eg by adding a suffix */
 	ImportHandlerImportFn *importfn; /**< function which loads an external script module once it has been located */
+	ImportHandlerUnloadFn *unloadfn; /**< (optional) function with unloads an external script/module as part of memory clean-up (returns zero on success) */
 	ImportHandlerDestroyFn *destroyfn; /**< function that can unload and destroy this import handler */
+};
+
+struct ImportPackage{
+	struct FilePath *fp;
+	char *partialpath;
+	const char *cleanupfunc;
+	struct ImportHandler *handler;
 };
 
 /**
 	List of import handlers currently in effect. @TODO this shouldn't be a global,
-	but unfortunately such globals are 'The ASCEND Way'.
+	but unfortunately such globals are 'The ASCEND Way' for now.
 */
-extern struct ImportHandler **ImportHandlerLibrary;
+struct ImportHandlerLibrary{
+	struct ImportHandler **handlers;
+	struct gl_list_t *packages;
+};
 
 /*------------------------------------------------------------------------------
   FUNCTION TO PERFORM AN IMPORT
 */
 
-/** Function to attempt import of an external script
+/** Import an 'import package' using a specified handler, and record it in the import library if successful.
 	@param partialname Name of the external script (without extension), relative to PATH.
 	@param defaultpath Default value of file search PATH. Is trumped by value of pathenvvar if present in environment.
 	@param pathenvvar Environment variable containing the user's preferred file search path value.
 	@return 0 on success
 */
-int importhandler_attemptimport(const char *partialname,const char *defaultpath, const char *pathenvvar);
+int importhandler_import(struct ImportHandler *handler, struct FilePath *fp
+	, const char *initfunc, const char *cleanupfunc, const char *partialpath
+);
 
 /*------------------------------------------------------------------------------
   FUNCTIONS TO AND AND REMOVE import handlers
