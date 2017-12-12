@@ -68,28 +68,9 @@
 }
 
 {
-   DLOPEN-1
+   Ignore dlopen bug https://is.gd/wNlXbY
    Memcheck:Leak
-   fun:malloc
-   fun:_dl_lookup_symbol_x
-   fun:_dl_relocate_object
-   fun:dl_open_worker
-   fun:_dl_catch_error
-   fun:dlopen_doit
-   fun:_dl_catch_error
-   obj:*
+   ...
+   fun:_dlerror_run
+   ...
 }
-
-{
-   DLOPEN-2
-   Memcheck:Leak
-   fun:malloc
-   fun:local_strdup
-   fun:_dl_map_object
-   fun:dl_open_worker
-   fun:_dl_catch_error
-   fun:dlopen_doit
-   fun:_dl_catch_error
-   obj:*
-}
-

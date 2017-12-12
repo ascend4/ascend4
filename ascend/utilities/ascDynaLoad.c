@@ -237,8 +237,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
 #  error "MACH unsupported"
 # endif /* mach */
 
-int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
-{
+int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
   void *xlib;
   ExternalLibraryRegister_fptr_t install = NULL;
 
@@ -253,6 +252,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
    *	If the named library does not exist, if it's not loadable or if
    *	it does not define the named install proc, report an error
    */
+  CONSOLE_DEBUG("dlopen of %s",path);
   xlib = dlopen(path, RTLD_NOW|RTLD_LOCAL);
   if (xlib == NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s",(char *)dlerror());
@@ -386,6 +386,7 @@ int Asc_DynamicUnLoad(CONST char *path)
    *  dlclose() returns 0 on success, FreeLibrary() returns TRUE.
    *  A uniform convention is preferable, so trap and return 0 on success.
    */
+  CONSOLE_DEBUG("dlclose of %s",path);
   retval = UNLOAD(DLL_CAST dlreturn);
   return (retval == UNLOAD_SUCCESS) ? 0 : retval;
 }
