@@ -11,7 +11,7 @@ test/test solver_slvreq integrator_lsode solver_fprops solver_lrslv linear_qrran
 
 # currently failing tests:
 # solver_conopt 
-# compiler_autodiff compiler_blackbox system_link 
+# compiler_autodiff system_link 
 # integrator_ida
 # solver_ipopt
 

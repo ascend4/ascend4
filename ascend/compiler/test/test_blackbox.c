@@ -40,7 +40,7 @@
 #include <test/common.h>
 #include <test/assertimpl.h>
 
-static struct Instance *load_model(const char *name){
+static struct Instance *load_model(const char *name,int should_have_error){
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 
@@ -54,40 +54,49 @@ static struct Instance *load_model(const char *name){
 	CU_ASSERT(openmodulestatus == 0);
 
 	/* parse it */
+
+	error_reporter_tree_t *tree = error_reporter_tree_start(0);
+
 	CU_ASSERT(zz_parse() == 0);
 
 	CONSOLE_DEBUG("Parse completed");
 
 	/* instantiate it */
 	struct Instance *sim = SimsCreateInstance(AddSymbol(name), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT(sim!=NULL);
-	CU_ASSERT(NumberPendingInstances(sim)==0);
-
+	if(error_reporter_tree_has_error(tree)){
+		if(!should_have_error){
+			CU_FAIL("Unexpected failure in SimsCreateInstance");
+		}
+	}else{
+		if(should_have_error){
+			CU_FAIL("No error found although expected in SimsCreateInstance");
+		}
+	}
+	error_reporter_tree_end(tree);
 	return sim;
 }
 
 static void test_parsefail1(void){
-	struct Instance *sim = load_model("parsefail1");
-	CU_ASSERT(sim==NULL);
+	struct Instance *sim = load_model("parsefail1",1);
 	if(sim)sim_destroy(sim);
 	Asc_CompilerDestroy();
 }
 
 static void test_parsefail2(void){
-	struct Instance *sim = load_model("parsefail2");
-	CU_ASSERT(sim==NULL);
+	struct Instance *sim = load_model("parsefail2",1);
+	if(sim)sim_destroy(sim);
 	Asc_CompilerDestroy();
 }
 
 static void test_parsefail3(void){
-	struct Instance *sim = load_model("parsefail3");
-	CU_ASSERT(sim==NULL);
+	struct Instance *sim = load_model("parsefail3",1);
+	if(sim)sim_destroy(sim);
 	Asc_CompilerDestroy();
 }
 
 static void test_parsefail4(void){
-	struct Instance *sim = load_model("parsefail4");
-	CU_ASSERT(sim==NULL);
+	struct Instance *sim = load_model("parsefail4",1);
+	if(sim)sim_destroy(sim);
 	Asc_CompilerDestroy();
 }
 
