@@ -120,8 +120,7 @@ char *asc_memcpy(char *to, char *from, size_t size){
  *  The "non-debug" version of ascreallocPURE -
  *  all memory calls should be to the system versions.
  */
-char *ascreallocPUREF(char *ptr, size_t oldbytes, size_t newbytes)
-{
+char *ascreallocPUREF(char *ptr, size_t oldbytes, size_t newbytes){
   /* shrink */
   if (newbytes > 0  && newbytes <= oldbytes) return ptr;
   /* release */
@@ -144,7 +143,7 @@ char *ascreallocPUREF(char *ptr, size_t oldbytes, size_t newbytes)
       trg = (unsigned long *)ret;
       len = oldbytes/sizeof(long);
       for (c=0;c < len;c++) trg[c]=src[c]; /* copy data as longs */
-    } else {
+    }else{
       memcpy(ret,ptr,oldbytes);
     }
     free(ptr);
@@ -156,31 +155,30 @@ char *ascreallocPUREF(char *ptr, size_t oldbytes, size_t newbytes)
  *  Here's the debug version of ascreallocPURE -
  *  all memory calls should be to the local debug versions.
  */
-char *ascreallocPUREF_dbg(char *ptr, size_t oldbytes, size_t newbytes)
-{
+char *ascreallocPUREF_dbg(char *ptr, size_t oldbytes, size_t newbytes){
   /* shrink */
-  if (newbytes > 0  && newbytes <= oldbytes) return ptr;
+  if(newbytes > 0  && newbytes <= oldbytes) return ptr;
   /* release */
-  if (!newbytes) {
+  if(!newbytes){
     ascfreef(ptr, __FILE__, __LINE__);
     return NULL;
   }
   /* create */
-  if (!oldbytes) {
+  if(!oldbytes){
     if (ptr!=NULL) ascfreef(ptr, __FILE__, __LINE__); /* some OS allocate 0 bytes, god help us */
     return (char *)ascmallocf(newbytes, __FILE__, __LINE__);
   }else{
     /* expand */
     char *ret;
     ret = ascmallocf(newbytes, __FILE__, __LINE__);
-    if (ret==NULL) return NULL;
-    if (oldbytes%sizeof(long) == 0 && ((asc_intptr_t)ptr)%sizeof(long) == 0) {
+    if(ret==NULL) return NULL;
+    if(oldbytes%sizeof(long) == 0 && ((asc_intptr_t)ptr)%sizeof(long) == 0) {
       register unsigned long c,len, *src, *trg;
       src = (unsigned long *)ptr;
       trg = (unsigned long *)ret;
       len = oldbytes/sizeof(long);
       for (c=0;c < len;c++) trg[c]=src[c]; /* copy data as longs */
-    } else {
+    }else{
       memcpy(ret,ptr,oldbytes);
     }
     ascfreef(ptr, __FILE__, __LINE__);
@@ -202,13 +200,11 @@ static unsigned long f_memory_allocated = 0L;
 static unsigned long f_peak_memory_usage = 0L;
 static struct memory_rec f_mem_rec[MAXPOINTERS];
 
-unsigned long ascmeminusef(void)
-{
+unsigned long ascmeminusef(void){
   return f_memory_allocated;
 }
 
-static CONST VOIDPTR MinMemory(void)
-{
+static CONST VOIDPTR MinMemory(void){
   int c;
   CONST VOIDPTR minm=(VOIDPTR)ULONG_MAX;
   for(c=0;c<f_memory_length;c++)
@@ -216,8 +212,7 @@ static CONST VOIDPTR MinMemory(void)
   return minm;
 }
 
-static CONST VOIDPTR MaxMemory(void)
-{
+static CONST VOIDPTR MaxMemory(void){
   int c;
   CONST VOIDPTR maxm=0;
   for(c=0;c<f_memory_length;c++)
@@ -229,8 +224,7 @@ static CONST VOIDPTR MaxMemory(void)
 
 #define NONZERO(x) ((0 != (x)) ? (x) : 1)
 
-static CONST VOIDPTR MemoryMean(void)
-{
+static CONST VOIDPTR MemoryMean(void){
   int c;
   size_t size;
   double sum=0.0, bytes=0.0;
@@ -254,8 +248,7 @@ static CONST VOIDPTR MemoryMean(void)
  *  created and header info written the first time it is called, or
  *  after ascshutdown() has been called.
  */
-static void OpenLogFile(void)
-{
+static void OpenLogFile(void){
   time_t t;
   int handle;
 
@@ -322,8 +315,8 @@ static void WriteMemoryStatus(FILE *f, CONST char *msg){
 	);
 }
 
-static void WriteMemoryRecords(FILE *f, CONST char *msg)
-{
+
+static void WriteMemoryRecords(FILE *f, CONST char *msg){
   int c;
   ASC_FPRINTF(f,"%s\nAllocation record count:  %d\n", msg, f_memory_length);
   for (c=0 ; c<f_memory_length ; ++c) {
@@ -335,8 +328,8 @@ static void WriteMemoryRecords(FILE *f, CONST char *msg)
   }
 }
 
-void ascstatusf(CONST char *msg)
-{
+
+void ascstatusf(CONST char *msg){
   OpenLogFile();
   if (NULL != f_memory_log_file) {
     WriteMemoryStatus(f_memory_log_file, msg);
@@ -345,8 +338,8 @@ void ascstatusf(CONST char *msg)
   WriteMemoryStatus(ASCINF, msg);
 }
 
-void ascstatus_detailf(CONST char *msg)
-{
+
+void ascstatus_detailf(CONST char *msg){
   OpenLogFile();
   if (NULL != f_memory_log_file) {
     WriteMemoryStatus(f_memory_log_file, msg);
@@ -365,7 +358,7 @@ void ascshutdownf(CONST char *msg){
     if(f_memory_length){
       WriteMemoryRecords(f_memory_log_file, "\n!!! SHUTDOWN ALERT -- POINTERS STILL ALLOCATED !!!");
       ASC_FPRINTF(f_memory_log_file, "!!! END OF SHUTDOWN MESSAGE !!!\n");
-    } else {
+    }else{
       ASC_FPRINTF(f_memory_log_file, "NO POINTERS STILL ALLOCATED :-)\n");
     }
     fflush(f_memory_log_file);
@@ -383,15 +376,15 @@ void ascshutdownf(CONST char *msg){
   if(f_memory_length){
     WriteMemoryRecords(ASCINF, "\n!!! SHUTDOWN ALERT -- POINTERS STILL ALLOCATED !!!");
     ASC_FPRINTF(ASCINF, "!!! END OF SHUTDOWN MESSAGE !!!\n");
-  } else {
+  }else{
     ASC_FPRINTF(ASCINF, "NO POINTERS STILL ALLOCATED :-)\n");
   }
 }
 
 static void WriteAllocation(CONST VOIDPTR adr, size_t size,
-                            CONST char *file, int line)
-{
-  if (NULL != f_memory_log_file) {
+                            CONST char *file, int line
+){
+  if(NULL != f_memory_log_file){
     ASC_FPRINTF(f_memory_log_file,"%p->%p %9zu %31s%6d %s\n",
                               adr,
                               adr + size - 1,
@@ -400,8 +393,7 @@ static void WriteAllocation(CONST VOIDPTR adr, size_t size,
                               line,
                               file);
     fflush(f_memory_log_file);
-  }
-  else{
+  }else{
     ASC_FPRINTF(ASCERR,"Unable to append to memory log file.\n");
     ASC_FPRINTF(ASCERR,"%p->%p %9zu %31s%6d %s\n",
                    adr,
@@ -415,9 +407,9 @@ static void WriteAllocation(CONST VOIDPTR adr, size_t size,
 
 static void WriteReAllocation(CONST VOIDPTR adr1, size_t size1,
                               CONST VOIDPTR adr2, size_t size2,
-                              CONST char *file, int line)
-{
-  if (NULL != f_memory_log_file) {
+                              CONST char *file, int line
+){
+  if(NULL != f_memory_log_file) {
     ASC_FPRINTF(f_memory_log_file,"%p->%p %9zu %p->%p %9zu %6d %s\n",
                               adr2,
                               adr2 + size2 - 1,
@@ -426,8 +418,7 @@ static void WriteReAllocation(CONST VOIDPTR adr1, size_t size1,
                               adr1 + size1 - 1,
                               size1, line, file);
     fflush(f_memory_log_file);
-  }
-  else{
+  }else{
     ASC_FPRINTF(ASCERR,"Unable to append to memory log file.\n");
     ASC_FPRINTF(ASCERR,"%p->%p %9zu %p->%p %9zu %6d %s\n",
                    adr2,
@@ -440,8 +431,8 @@ static void WriteReAllocation(CONST VOIDPTR adr1, size_t size1,
 }
 
 static void WriteDeallocation(CONST VOIDPTR adr, size_t size,
-                              CONST char *file, int line)
-{
+                              CONST char *file, int line
+){
   if (NULL != f_memory_log_file) {
     ASC_FPRINTF(f_memory_log_file,"%31s%p->%p %9zu %6d %s\n","",
                               adr,
@@ -458,12 +449,10 @@ static void WriteDeallocation(CONST VOIDPTR adr, size_t size,
   }
 }
 
-static void WriteError(CONST char *msg, CONST char *file, int line)
-{
-  FPRINTF(ASCERR,"%s\nCalled from file: %s on line %d.\n", msg, file, line);
+static void WriteError(CONST char *msg, CONST char *file, int line){
+  error_reporter(ASC_PROG_ERR,file,line,NULL,"%s",msg);
   if (NULL != f_memory_log_file) {
-    FPRINTF(f_memory_log_file,"%s\nCalled from file: %s on line %d.\n",
-                              msg, file, line);
+    FPRINTF(f_memory_log_file,"%s:%d: %s\n", file, line, msg);
     fflush(f_memory_log_file);
   }
 }
@@ -479,8 +468,7 @@ static void WriteError(CONST char *msg, CONST char *file, int line)
  *  This routine assumes that the memory record array is sorted
  *  by pointer address ascending.
  */
-static int SearchForMemory(CONST VOIDPTR ptr)
-{
+static int SearchForMemory(CONST VOIDPTR ptr){
   int c, lower, upper;
   lower = 0;
   upper = f_memory_length-1;
@@ -499,8 +487,8 @@ static int SearchForMemory(CONST VOIDPTR ptr)
   return lower;
 }
 
-int AllocatedMemoryF(CONST VOIDPTR ptr, size_t size)
-{
+
+int AllocatedMemoryF(CONST VOIDPTR ptr, size_t size){
   int pos;
 
   if (NULL == ptr)                    /* NULL ptr - by definition not allocated */
@@ -512,22 +500,18 @@ int AllocatedMemoryF(CONST VOIDPTR ptr, size_t size)
     return 0;
 
   /* if a matching pointer was found... */
-  if (( pos < f_memory_length ) &&
+  if(( pos < f_memory_length ) &&
       ( f_mem_rec[pos].ptr == ptr )) {
     if ( f_mem_rec[pos].size == size )
       return 2;                       /* the block matches an allocated block */
     if ( f_mem_rec[pos].size > size )
       return 1;                       /* the block is contained in an allocated block */
     return -1;                        /* the block spans multiple allocated blocks */
-  }
-
-  /* if ptr block extends into the block above... */
-  else if (( pos < f_memory_length ) &&
+  }else if (( pos < f_memory_length ) &&
            ((CONST VOIDPTR)((CONST char *)ptr + size - 1) >= f_mem_rec[pos].ptr)) {
+    /* if ptr block extends into the block above... */
     return -1;                        /* the block extends into the block above */
-  }
-
-  else if (pos > 0) {
+  }else if (pos > 0) {
     if (ptr > ((CONST VOIDPTR)((CONST char *)f_mem_rec[pos-1].ptr + f_mem_rec[pos-1].size - 1)))
       return 0;                       /* ptr not contained within the found block */
 
@@ -542,21 +526,20 @@ int AllocatedMemoryF(CONST VOIDPTR ptr, size_t size)
 }
 
 static void AddAllocatedMemory(CONST VOIDPTR ptr, size_t size,
-                               CONST char *file, int line)
-{
+                               CONST char *file, int line
+){
   int pos,c;
   pos = SearchForMemory(ptr);
-  if (( pos < 0 ) ||
+  if(( pos < 0 ) ||
       ( pos == f_memory_length) ||
       ( f_mem_rec[pos].ptr != ptr )) {
-    if ( pos < 0 ) pos = 0;
-    if ( (f_memory_length + 1) < MAXPOINTERS ) {
-      if ( pos == f_memory_length ) {
+    if( pos < 0 ) pos = 0;
+    if( (f_memory_length + 1) < MAXPOINTERS ) {
+      if( pos == f_memory_length ) {
         f_memory_length++;
         f_mem_rec[pos].ptr = ptr;
         f_mem_rec[pos].size = size;
-      }
-      else {
+      }else{
         /* make room for the new addition */
         for(c=f_memory_length ; c>pos ; c--){
           f_mem_rec[c] = f_mem_rec[c-1];
@@ -565,8 +548,7 @@ static void AddAllocatedMemory(CONST VOIDPTR ptr, size_t size,
         f_mem_rec[pos].ptr = ptr;
         f_mem_rec[pos].size = size;
       }
-    }
-    else {
+    }else{
       FPRINTF(ASCERR, "Pointer list filled up.  Error messages may be unreliable.\n");
     }
   }
@@ -574,11 +556,11 @@ static void AddAllocatedMemory(CONST VOIDPTR ptr, size_t size,
 }
 
 static void DeallocateMemory(CONST VOIDPTR ptr, size_t size,
-                             CONST char *file, int line)
-{
+                             CONST char *file, int line
+){
   int pos,c;
   pos = SearchForMemory(ptr);
-  if (( pos >= 0 ) &&
+  if(( pos >= 0 ) &&
       ( pos < f_memory_length ) &&
       ( f_mem_rec[pos].ptr == ptr )) {
     /* a matching pointer was found */
@@ -593,12 +575,12 @@ static void DeallocateMemory(CONST VOIDPTR ptr, size_t size,
 
 static void ReallocateMemory(CONST VOIDPTR ptr1, size_t size1,
                              CONST VOIDPTR ptr2, size_t size2,
-                             CONST char *file, int line)
-{
+                             CONST char *file, int line
+){
   int pos,c;
   /* handle the deallocation first */
   pos = SearchForMemory(ptr1);
-  if (( pos >= 0 ) &&
+  if(( pos >= 0 ) &&
       ( pos < f_memory_length ) &&
       ( f_mem_rec[pos].ptr == ptr1 )) {
     /* a matching pointer was found */
@@ -620,8 +602,7 @@ static void ReallocateMemory(CONST VOIDPTR ptr1, size_t size1,
         f_memory_length++;
         f_mem_rec[pos].ptr = ptr2;
         f_mem_rec[pos].size = size2;
-      }
-      else {
+      }else{
         /* make room for the new addition */
         for(c=f_memory_length ; c>pos ; c--){
           f_mem_rec[c] = f_mem_rec[c-1];
@@ -630,8 +611,7 @@ static void ReallocateMemory(CONST VOIDPTR ptr1, size_t size1,
         f_mem_rec[pos].ptr = ptr2;
         f_mem_rec[pos].size = size2;
       }
-    }
-    else {
+    }else{
       FPRINTF(ASCERR, "Pointer list filled up.  Error messages may be unreliable.\n");
     }
   }
@@ -639,8 +619,8 @@ static void ReallocateMemory(CONST VOIDPTR ptr1, size_t size1,
 }
 
 VOIDPTR asccallocf(size_t nelem, size_t elsize,
-                   CONST char *file, int line)
-{
+                   CONST char *file, int line
+){
   VOIDPTR result;
   OpenLogFile();
   result = calloc(nelem,elsize);
@@ -658,8 +638,7 @@ VOIDPTR asccallocf(size_t nelem, size_t elsize,
   return result;
 }
 
-VOIDPTR ascmallocf(size_t size, CONST char *file, int line)
-{
+VOIDPTR ascmallocf(size_t size, CONST char *file, int line){
   VOIDPTR result;
   OpenLogFile();
   result = malloc(size);
@@ -678,8 +657,7 @@ VOIDPTR ascmallocf(size_t size, CONST char *file, int line)
   return result;
 }
 
-static size_t FindMemorySize(CONST VOIDPTR ptr, int * CONST found)
-{
+static size_t FindMemorySize(CONST VOIDPTR ptr, int * CONST found){
   int pos;
   pos = SearchForMemory(ptr);
   if (( pos >= 0 ) &&
@@ -691,8 +669,7 @@ static size_t FindMemorySize(CONST VOIDPTR ptr, int * CONST found)
   return 0;
 }
 
-VOIDPTR ascreallocf(VOIDPTR ptr, size_t size, CONST char *file, int line)
-{
+VOIDPTR ascreallocf(VOIDPTR ptr, size_t size, CONST char *file, int line){
   size_t old_size;
   int found;
   VOIDPTR result;
@@ -703,12 +680,11 @@ VOIDPTR ascreallocf(VOIDPTR ptr, size_t size, CONST char *file, int line)
       FPRINTF(ASCERR,"realloc'ing a piece of an allocated block.\n");
     }
     result = realloc(ptr,size);
-  }
-  else{
+  }else{
     old_size = 0;
     if (ptr == NULL) {
       result = malloc(size);
-    } else {
+    }else{
       WriteError("ascreallocf called on a deallocated piece of memory.",
                  file, line);
       result = realloc(ptr,size);
@@ -721,6 +697,7 @@ VOIDPTR ascreallocf(VOIDPTR ptr, size_t size, CONST char *file, int line)
     f_memory_allocated += (size-old_size);
   else
     f_memory_allocated -= (old_size-size);
+
   if (f_memory_allocated > f_peak_memory_usage)
     f_peak_memory_usage = f_memory_allocated;
   return result;
@@ -739,11 +716,9 @@ void ascfreef(VOIDPTR ptr, CONST char *file, int line)
     size = FindMemorySize(ptr,&found);
     if (!found){		/* indicates a problem */
       WriteError("Deallocating a piece of an allocated block.", file, line);
-    }
-    else
+    }else
       memset((char *)ptr, 0, size);	/* clear the memory */
-  }
-  else {
+  }else{
     WriteError("ascfreef called on a deallocated piece of memory.", file, line);
     size = 0;
   }
@@ -753,24 +728,22 @@ void ascfreef(VOIDPTR ptr, CONST char *file, int line)
 }
 
 VOIDPTR ascbcopyf(CONST VOIDPTR src, VOIDPTR dest, size_t length,
-               CONST char *file, int line)
-{
+               CONST char *file, int line
+){
   UNUSED_PARAMETER(file);
   UNUSED_PARAMETER(line);
   OpenLogFile();
   return memcpy(dest, src, length);
 }
 
-VOIDPTR ascbzerof(VOIDPTR dest, size_t length, CONST char *file, int line)
-{
+VOIDPTR ascbzerof(VOIDPTR dest, size_t length, CONST char *file, int line){
   UNUSED_PARAMETER(file);
   UNUSED_PARAMETER(line);
   OpenLogFile();
   return memset((char *)dest, 0, length);
 }
 
-int InMemoryBlockF(CONST VOIDPTR ptr1, CONST VOIDPTR ptr2)
-{
+int InMemoryBlockF(CONST VOIDPTR ptr1, CONST VOIDPTR ptr2){
   int pos;
   pos = SearchForMemory(ptr1);
   if (( pos >= 0 ) &&

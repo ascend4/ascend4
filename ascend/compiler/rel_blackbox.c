@@ -424,8 +424,7 @@ void CopyBlackBoxDataByReference(struct relation *src
 	dest->externalData = b;
 }
 
-void DestroyBlackBoxData(struct relation *rel, struct BlackBoxData *b)
-{
+void DestroyBlackBoxData(struct relation *rel, struct BlackBoxData *b){
 #if BBDEBUG
 	FPRINTF(ASCERR,"DestroyBlackBoxData(%p): destroying bbd %p BBD#%d\n",rel,b,b->count);
 #endif

@@ -225,12 +225,17 @@ static void test_fprops_model(const char *modelname){
 
 	/* assume that this clever model will have already solved and self-tested itself */
 
+	CONSOLE_DEBUG("Destroying system...");
+	if(S.sys)system_destroy(S.sys);
+	system_free_reused_mem();
+
 	CONSOLE_DEBUG("Destroy solver engines");
 	solver_destroy_engines();
 
 	/* destroy all that stuff */
 	CONSOLE_DEBUG("Destroying instance tree");
 	CU_ASSERT(S.siminst != NULL);
+	sim_destroy(S.siminst);
 
 	Asc_CompilerDestroy();
 }

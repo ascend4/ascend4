@@ -3376,8 +3376,7 @@ void DestroyVarList(struct gl_list_t *l, struct Instance *relinst){
   gl_destroy(l);
 }
 
-void DestroyRelation(struct relation *rel, struct Instance *relinst)
-{
+void DestroyRelation(struct relation *rel, struct Instance *relinst){
   struct BlackBoxData *bbd;
   if (rel==NULL) return;
   assert(RelationRefCount(rel));
@@ -3414,7 +3413,7 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
       }
       break;
     case e_blackbox:
-      //CONSOLE_DEBUG("Destroy black rel");
+      CONSOLE_DEBUG("Destroy black rel");
       if (RBBOX(rel).inputArgs) {
         ascfree((void *)(RBBOX(rel).inputArgs));
         RBBOX(rel).inputArgs = NULL;
