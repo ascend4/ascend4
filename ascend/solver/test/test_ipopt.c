@@ -84,7 +84,11 @@ static void test_ipopt(const char *filenamestem){
 	/* assign solver */
 	const char *solvername = "IPOPT";
 	int index = slv_lookup_client(solvername);
-	CU_ASSERT_FATAL(index != -1);
+	if(index == -1){
+		sim_destroy(siminst);
+		Asc_CompilerDestroy();
+		CU_FAIL_FATAL("Unable to look up IPOPT solver");
+	}
 
 	slv_system_t sys = system_build(GetSimulationRoot(siminst));
 	CU_ASSERT_FATAL(sys != NULL);

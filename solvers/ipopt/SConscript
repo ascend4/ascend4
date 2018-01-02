@@ -17,10 +17,19 @@ if env.get('WITH_IPOPT'):
 		solver_env.Append(
 			CFLAGS=["-static"]
 		)
+	
+	ll = env.get('IPOPT_LIBPATH')
+	ll1 = []
+	for l in ll:
+		if "/usr/lib/gcc" not in l:
+			ll1.append(l)
+
+	solver_env.Append(
+		LIBS = ['ascend'] + solver_env.get('IPOPT_LIBS')
+		,LIBPATH = ['#'] + ll1
+	)
 
 	lib = solver_env.SharedLibrary("ipopt",["asc_ipopt.c"]
-		,LIBS = ['ascend'] + solver_env.get('IPOPT_LIBS')
-		,LIBPATH = ['#'] + [solver_env.get('IPOPT_LIBPATH')]
 		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 		,SHLIBPREFIX = env['EXTLIB_PREFIX']
 	)
