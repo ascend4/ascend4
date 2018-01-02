@@ -54,14 +54,14 @@ ASC_DLLSPEC SolverRegisterFn conopt_register;
 /*
   Output in user defined CONOPT subroutines
 */
-#define CONDBG 0
-#define NONBASIC_DEBUG FALSE
-
-#if CONDBG
-# define CONOPT_CONSOLE_DEBUG(...) CONSOLE_DEBUG(__VA_ARGS__)
+//#define ASC_CONOPT_DEBUG
+#ifdef ASC_CONOPT_DEBUG
+# define MSG(...) CONSOLE_DEBUG(__VA_ARGS__)
 #else
-# define CONOPT_CONSOLE_DEBUG(...) (void)0
+# define MSG(...) (void)0
 #endif
+
+#define NONBASIC_DEBUG FALSE
 
 /*
   makes lots of extra spew
@@ -241,7 +241,7 @@ static int check_system(conopt_system_t sys){
 	Output a hyphenated line.
 */
 static void debug_delimiter(){
-  CONSOLE_DEBUG("------------------------------------------------");
+  MSG("------------------------------------------------");
 }
 
 #if DEBUG
@@ -253,13 +253,13 @@ static void debug_out_vector(conopt_system_t sys
 		,struct vec_vector *vec
 ){
   int32 ndx;
-  CONSOLE_DEBUG("Norm = %g, Accurate = %s, Vector range = %d to %d\n",
+  MSG("Norm = %g, Accurate = %s, Vector range = %d to %d\n",
     calc_sqrt_D0(vec->norm2), vec->accurate?"TRUE":"FALSE",
     vec->rng->low,vec->rng->high
   );
-  CONSOLE_DEBUG("Vector --> ");
+  MSG("Vector --> ");
   for( ndx=vec->rng->low ; ndx<=vec->rng->high ; ++ndx )
-    CONSOLE_DEBUG("%g ", vec->vec[ndx]);
+    MSG("%g ", vec->vec[ndx]);
 }
 
 /**
@@ -269,12 +269,12 @@ static void debug_out_var_values(conopt_system_t sys){
   int32 col;
   struct var_variable *var;
 
-  CONSOLE_DEBUG("Var values -->");
+  MSG("Var values -->");
   for( col = sys->J.reg.col.low; col <= sys->J.reg.col.high ; col++ ) {
     var = sys->vlist[mtx_col_to_org(sys->J.mtx,col)];
     print_var_name(ASCERR,sys,var); /** @TODO fix this */
-    CONSOLE_DEBUG("I	Lb	Value	Ub	Scale	Col	INom");
-    CONSOLE_DEBUG("%d\t%.4g\t%.4g\t%.4g\t%.4g\t%d\t%.4g",
+    MSG("I	Lb	Value	Ub	Scale	Col	INom");
+    MSG("%d\t%.4g\t%.4g\t%.4g\t%.4g\t%d\t%.4g",
       var_sindex(var),var_lower_bound(var),var_value(var),
       var_upper_bound(var),var_nominal(var),
       col,sys->nominals.vec[col]
@@ -288,11 +288,11 @@ static void debug_out_var_values(conopt_system_t sys){
 static void debug_out_rel_residuals(conopt_system_t sys){
   int32 row;
 
-  CONSOLE_DEBUG("Rel residuals -->");
+  MSG("Rel residuals -->");
   for( row = sys->J.reg.row.low; row <= sys->J.reg.row.high ; row++ ) {
     struct rel_relation *rel;
     rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
-    CONSOLE_DEBUG("  %g : ",rel_residual(rel));
+    MSG("  %g : ",rel_residual(rel));
     print_rel_name(ASCERR,sys,rel); /** @TODO fix this */
   }
 }
@@ -308,7 +308,7 @@ static void debug_out_jacobian(conopt_system_t sys){
 
   nz.row = sys->J.reg.row.low;
   for( ; nz.row <= sys->J.reg.row.high; ++(nz.row) ){
-    CONSOLE_DEBUG("Row %d (rel %d)\n"
+    MSG("Row %d (rel %d)\n"
 	  , nz.row, mtx_row_to_org(sys->J.mtx,nz.row)
     );
     nz.col = mtx_FIRST;
@@ -317,7 +317,7 @@ static void debug_out_jacobian(conopt_system_t sys){
 	  value = mtx_next_in_row(sys->J.mtx,&nz,&(sys->J.reg.col))
       , nz.col != mtx_LAST
 	){
-      CONSOLE_DEBUG("Col %d (var %d) has value %g\n", nz.col,
+      MSG("Col %d (var %d) has value %g\n", nz.col,
         mtx_col_to_org(sys->J.mtx,nz.col), value);
     }
   }
@@ -514,7 +514,7 @@ static boolean calc_residuals( conopt_system_t sys){
   square_norm( &(sys->residuals) );
   sys->s.block.residual = calc_sqrt_D0(sys->residuals.norm2);
   if(!calc_ok){
-    CONOPT_CONSOLE_DEBUG("ERROR IN EVALUATION");
+    MSG("ERROR IN EVALUATION");
   }
   return(calc_ok);
 }
@@ -686,7 +686,7 @@ static void jacobian_scaled(conopt_system_t sys){
   sys->J.accurate = TRUE;
   sys->J.singular = FALSE;  /* yet to be determined */
 #if DEBUG
-  CONSOLE_DEBUG("Jacobian:");
+  MSG("Jacobian:");
   debug_out_jacobian(sys);
 #endif /* DEBUG */
 }
@@ -708,7 +708,7 @@ static void scale_variables( conopt_system_t sys)
   square_norm( &(sys->variables) );
   sys->variables.accurate = TRUE;
 #if DEBUG
-  CONSOLE_DEBUG("Variables:");
+  MSG("Variables:");
   debug_out_vector(sys,&(sys->variables));
 #endif /* DEBUG */
 }
@@ -731,7 +731,7 @@ static void scale_residuals( conopt_system_t sys)
   square_norm( &(sys->residuals) );
   sys->residuals.accurate = TRUE;
 #if DEBUG
-  CONSOLE_DEBUG("Residuals:");
+  MSG("Residuals:");
   debug_out_vector(sys,&(sys->residuals));
 #endif  /* DEBUG */
 }
@@ -1053,11 +1053,11 @@ static void conopt_initialize( conopt_system_t sys){
       debug_delimiter();
     }
     if(sys->p.output.less_important && LIFDS) {
-      CONSOLE_DEBUG("%-40s ---> %d in [%d..%d]"
+      MSG("%-40s ---> %d in [%d..%d]"
         , "Current block number", sys->s.block.current_block
         , 0, sys->s.block.number_of-1
       );
-      CONSOLE_DEBUG("%-40s ---> %d", "Current block size"
+      MSG("%-40s ---> %d", "Current block size"
         , sys->s.block.current_size
       );
     }
@@ -1065,7 +1065,7 @@ static void conopt_initialize( conopt_system_t sys){
          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Objective calculation errors detected.");
     }
     if(sys->p.output.less_important && sys->obj) {
-      CONSOLE_DEBUG("%-40s ---> %g", "Objective", sys->objective);
+      MSG("%-40s ---> %g", "Objective", sys->objective);
     }
     sys->s.calc_ok = sys->s.calc_ok && ok;
 
@@ -1084,7 +1084,7 @@ static void conopt_initialize( conopt_system_t sys){
         (sys->s.block.current_size >1 ||
         LIFDS)
     ){
-      CONSOLE_DEBUG("%-40s ---> %g", "Residual norm (unscaled)",sys->s.block.residual);
+      MSG("%-40s ---> %g", "Residual norm (unscaled)",sys->s.block.residual);
     }
     sys->s.calc_ok = sys->s.calc_ok && ok;
 
@@ -1112,8 +1112,8 @@ static void iteration_begins( conopt_system_t sys){
    ++(sys->s.block.iteration);
    ++(sys->s.iteration);
    if(sys->p.output.less_important && LIFDS) {
-     CONSOLE_DEBUG("%-40s ---> %d","Iteration", sys->s.block.iteration);
-     CONSOLE_DEBUG("%-40s ---> %d","Total iteration", sys->s.iteration);
+     MSG("%-40s ---> %d","Iteration", sys->s.block.iteration);
+     MSG("%-40s ---> %d","Total iteration", sys->s.iteration);
    }
 }
 
@@ -1129,8 +1129,8 @@ static void iteration_ends( conopt_system_t sys){
    sys->s.block.cpu_elapsed += cpu_elapsed;
    sys->s.cpu_elapsed += cpu_elapsed;
    if(sys->p.output.less_important && LIFDS) {
-     CONSOLE_DEBUG("%-40s ---> %g","Elapsed time", sys->s.block.cpu_elapsed);
-     CONSOLE_DEBUG("%-40s ---> %g","Total elapsed time", sys->s.cpu_elapsed);
+     MSG("%-40s ---> %g","Elapsed time", sys->s.block.cpu_elapsed);
+     MSG("%-40s ---> %g","Total elapsed time", sys->s.cpu_elapsed);
    }
 }
 
@@ -1889,7 +1889,7 @@ static int COI_CALL conopt_readmatrix(
 
     lower[col-offset] = low > -CONOPT_BOUNDLIMIT ? low : -CONOPT_BOUNDLIMIT;
     upper[col-offset] = up < CONOPT_BOUNDLIMIT ? up : CONOPT_BOUNDLIMIT;
-	/* CONSOLE_DEBUG("BOUNDS for var %d: [%g,%g]",col-offset,lower[col-offset],upper[col-offset]); */
+	/* MSG("BOUNDS for var %d: [%g,%g]",col-offset,lower[col-offset],upper[col-offset]); */
     curr[col-offset] = sys->variables.vec[col]; /* already scaled */
     vsta[col-offset] = !var_nonbasic(var);
   }
@@ -1936,7 +1936,7 @@ static int COI_CALL conopt_readmatrix(
     var = sys->vlist[col];
 #if CONDBG
     if (!var_apply_filter(var,&vfilter) ) {
-      CONSOLE_DEBUG("var doesn't pass filter");
+      MSG("var doesn't pass filter");
     }
 #endif /* CONDBG */
     len = var_n_incidences(var);
@@ -1951,12 +1951,12 @@ static int COI_CALL conopt_readmatrix(
 		nlflag[count] = 1;               /* fix this later */
 		if(rlist[c] == sys->obj) {
 #if CONDBG
-		  CONSOLE_DEBUG("found objective in unexpected location");
+		  MSG("found objective in unexpected location");
 #endif /* CONDBG */
 		}
         if (fabs(value[count]) > RTMAXJ) {
 #if CONDBG
-		  CONSOLE_DEBUG("Large Jacobian value being set to RTMAXJ");
+		  MSG("Large Jacobian value being set to RTMAXJ");
 #endif /* CONDBG */
 		  if (value[count] > 0) {
 			value[count] = RTMAXJ-1;
@@ -1985,11 +1985,11 @@ static int COI_CALL conopt_readmatrix(
       }
     }
     if (count_old != count) {
-	  /* CONSOLE_DEBUG("COLSTA[%d] = %d",col-offset,count_old); */
+	  /* MSG("COLSTA[%d] = %d",col-offset,count_old); */
       colsta[col - offset] = count_old;
     }
   }
-  /* CONSOLE_DEBUG("COLSTA[%d] = %d",*n,*nz + 1); */
+  /* MSG("COLSTA[%d] = %d",*n,*nz + 1); */
   colsta[*n] = *nz;
   if (sys->obj != NULL) {
     ascfree(variables);
@@ -2155,11 +2155,11 @@ static int COI_CALL conopt_fdeval(
   /* stop gcc whining about unused parameter */
   (void)jcnm;  (void)n;   (void)nj;
 
-  CONOPT_CONSOLE_DEBUG("EVALUATION STARTING (row=%d, n=%d, nj=%d)",*rowno,*n,*nj);
+  MSG("EVALUATION STARTING (row=%d, n=%d, nj=%d)",*rowno,*n,*nj);
 
   sys = (conopt_system_t)usrmem;
   if (*newpt == 1) {
-	/* CONSOLE_DEBUG("NEW POINT"); */
+	/* MSG("NEW POINT"); */
 	/* a new point */
     for (offset = col = sys->J.reg.col.low;
 	 col <= sys->J.reg.col.high; col++) {
@@ -2174,10 +2174,10 @@ static int COI_CALL conopt_fdeval(
 	(with future versions of CONOPT)
   */
   if (*mode == 1 || *mode == 3) {
-	CONOPT_CONSOLE_DEBUG("FUNCTION VALUES");
+	MSG("FUNCTION VALUES");
     offset =  sys->J.reg.row.low;
     row = *rowno + offset;
-	CONOPT_CONSOLE_DEBUG("ROWNO = %d, OFFSET = %d: ROW = ROW = %d",*rowno, offset, row);
+	MSG("ROWNO = %d, OFFSET = %d: ROW = ROW = %d",*rowno, offset, row);
     if ((*rowno == sys->con.m - 1) && (sys->obj != NULL)){
       if(calc_objective(sys)){
 		*g = sys->objective;
@@ -2190,13 +2190,13 @@ static int COI_CALL conopt_fdeval(
 	  *g = relman_eval(rel,&calc_ok,SAFE_CALC)
 	  * sys->weights.vec[row];
 	  if (!calc_ok) {
-        CONOPT_CONSOLE_DEBUG("EVALUATION ERROR IN RELMAN_EVAL");
+        MSG("EVALUATION ERROR IN RELMAN_EVAL");
 		(*errcnt)++;
 	  }
     }
   }
   if (*mode == 2 || *mode == 3) {
-	CONOPT_CONSOLE_DEBUG("JACOBIAN VALUES");
+	MSG("JACOBIAN VALUES");
     len = sys->con.maxrow;
     variables = ASC_NEW_ARRAY(int32,len);
     derivatives = ASC_NEW_ARRAY(real64,len);
@@ -2212,14 +2212,14 @@ static int COI_CALL conopt_fdeval(
 		   &(len),SAFE_CALC);
       for (c = 0; c < len; c++) {
 		jac[variables[c]] = derivatives[c] *  sys->nominals.vec[variables[c]];
-		CONOPT_CONSOLE_DEBUG("Jacobian for row %d, var %d = %f",*rowno,variables[c],jac[variables[c]]);
+		MSG("Jacobian for row %d, var %d = %f",*rowno,variables[c],jac[variables[c]]);
       }
       if(status){
-		CONOPT_CONSOLE_DEBUG("ERROR IN JACOBIAN EVALUATION (OBJECTIVE) (%d)",status);
+		MSG("ERROR IN JACOBIAN EVALUATION (OBJECTIVE) (%d)",status);
 		(*errcnt)++;
       }
     }else{
-      CONOPT_CONSOLE_DEBUG("NOT LAST ROW");
+      MSG("NOT LAST ROW");
       rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
 	  asc_assert(rel!=NULL);
       status = relman_diff2(rel,&vfilter,derivatives,variables,
@@ -2227,16 +2227,16 @@ static int COI_CALL conopt_fdeval(
       for (c = 0; c < len; c++) {
 		jac[variables[c]] = derivatives[c]
 		  * sys->weights.vec[row] *  sys->nominals.vec[variables[c]];
-		CONOPT_CONSOLE_DEBUG("Jacobian for row %d, var %d = %f",mtx_row_to_org(sys->J.mtx,row),variables[c],jac[variables[c]]);
+		MSG("Jacobian for row %d, var %d = %f",mtx_row_to_org(sys->J.mtx,row),variables[c],jac[variables[c]]);
       }
       if(status){
-		CONOPT_CONSOLE_DEBUG("ERROR IN JACOBIAN EVALUATION (%d)",status);
+		MSG("ERROR IN JACOBIAN EVALUATION (%d)",status);
 		(*errcnt)++;
       }
     }
     for (c = 0; c < len; c++) {
       if(fabs(jac[variables[c]]) > RTMAXJ) {
-		CONOPT_CONSOLE_DEBUG("large jac element");
+		MSG("large jac element");
         if (jac[variables[c]] < 0) {
           jac[variables[c]] = -RTMAXJ+1;
 		} else {
@@ -2306,9 +2306,11 @@ static int COI_CALL conopt_solution(
   struct var_variable *var;
   conopt_system_t sys;
 
-  struct var_variable **vp;
+  //struct var_variable **vp;
+#ifdef ASC_CONOPT_DEBUG
   char *varname;
   const char *varstat;
+#endif
 
   /*
    * stop gcc whining about unused parameter
@@ -2320,28 +2322,31 @@ static int COI_CALL conopt_solution(
   offset = sys->J.reg.col.low;
 
   /* the values returned... */
-  vp=slv_get_solvers_var_list(SERVER);
+  slv_get_solvers_var_list(SERVER);
   for(c = 0; c < *n; ++c){
 	col = c + offset;
     var = sys->vlist[mtx_col_to_org(sys->J.mtx,col)];
 	nominal = sys->nominals.vec[col];
     value = xval[c]*nominal;
-    varname = var_make_name(SERVER,var);
     /* pass the value back to ASCEND */
 	var_set_value(var,value);
-    /* pass the variable status (basic, nonbasic) back to ASCEND */
+#ifdef ASC_CONOPT_DEBUG
+    varname = var_make_name(SERVER,var);
 	switch(xbas[c]){
 		case 0: varstat = "at lower bound"; break;
 		case 1: varstat = "at upper bound"; break;
-		case 2: varstat = "basic"; var_set_nonbasic(var,FALSE); break;
+		case 2: varstat = "basic"; break;
 		case 3: varstat = "super-basic"; break;
     }
-    if(xbas[c] != 2){
+	MSG("%d: %s = %f (%s)",c,varname,value,varstat);
+	ASC_FREE(varname);
+#endif
+    /* pass the variable status (basic, nonbasic) back to ASCEND */
+    if(xbas[c] == 2){
+	  var_set_nonbasic(var,FALSE);
+	}else{
 	  var_set_nonbasic(var,TRUE);
 	}
-
-	CONOPT_CONSOLE_DEBUG("%d: %s = %f (%s)",c,varname,value,varstat);
-	ASC_FREE(varname);
   }
 
   /* should pull out additional info here */
@@ -2441,7 +2446,7 @@ static int COI_CALL conopt_option(
 		/* real-valued (R*) parameter */
 		name = strncpy(name, sys->p.parms[sys->con.opt_count].interface_label,6);
 		*rval = sys->p.parms[sys->con.opt_count].info.r.value;
-        CONOPT_CONSOLE_DEBUG("Set real option '%s' to %f"
+        MSG("Set real option '%s' to %f"
 			,sys->p.parms[sys->con.opt_count].interface_label,*rval
 		);
 		sys->con.opt_count++;
@@ -2450,7 +2455,7 @@ static int COI_CALL conopt_option(
 		/* boolean-balued (LS*) parameter */
         name = strncpy(name,sys->p.parms[sys->con.opt_count].interface_label,6);
 		*logical = sys->p.parms[sys->con.opt_count].info.b.value;
-        CONOPT_CONSOLE_DEBUG("Set bool option '%s' to %s"
+        MSG("Set bool option '%s' to %s"
 			,sys->p.parms[sys->con.opt_count].interface_label,((*logical)?"TRUE":"FALSE")
 		);
 		sys->con.opt_count++;
@@ -2459,7 +2464,7 @@ static int COI_CALL conopt_option(
 		/* integer-valued (L*) parameter */
 		name = strncpy(name,sys->p.parms[sys->con.opt_count].interface_label,6);
 		*ival = sys->p.parms[sys->con.opt_count].info.i.value;
-        CONOPT_CONSOLE_DEBUG("Set int option '%s' to %d"
+        MSG("Set int option '%s' to %d"
 			,sys->p.parms[sys->con.opt_count].interface_label,*ival
 		);
 		sys->con.opt_count++;
@@ -2522,8 +2527,7 @@ int COI_CALL conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 	dlopening of the CONOPT DLL/SO, rather than dynamic linking, since CONOPT
 	will not always be available.
 */
-static void slv_conopt_iterate(conopt_system_t sys)
-{
+static void slv_conopt_iterate(conopt_system_t sys){
   int retcode;
   /*
 	We pass the pointer to sys as 'usrmem'.
@@ -2536,9 +2540,10 @@ static void slv_conopt_iterate(conopt_system_t sys)
 
   sys->con.kept = 1;
 
+  MSG("Calling COI_Solve");
   retcode = COI_Solve(sys->con.cntvect);
 
-  CONOPT_CONSOLE_DEBUG("CONOPT COI_Solve return code %d",retcode);
+  MSG("CONOPT COI_Solve return code %d",retcode); (void)retcode;
 
   /* conopt_start(&(sys->con.kept), usrmem, &(sys->con.lwork),
 	 sys->con.work, &(sys->con.maxusd), &(sys->con.curusd)); */
@@ -2589,7 +2594,7 @@ static int conopt_presolve(slv_system_t server, SlvClientToken asys){
   conopt_system_t sys;
   int *cntvect, temp;
 
-  CONOPT_CONSOLE_DEBUG("PRESOLVE");
+  MSG("PRESOLVE");
 
   sys = CONOPT(asys);
   iteration_begins(sys);
@@ -2616,7 +2621,7 @@ static int conopt_presolve(slv_system_t server, SlvClientToken asys){
          && sys->obj == sys->old_obj
     ){
       matrix_creation_needed = 0;
-      CONOPT_CONSOLE_DEBUG("YOU JUST AVOIDED MATRIX DESTRUCTION/CREATION");
+      MSG("YOU JUST AVOIDED MATRIX DESTRUCTION/CREATION");
     }
   }
 
@@ -2645,16 +2650,16 @@ static int conopt_presolve(slv_system_t server, SlvClientToken asys){
     sys->old_obj = sys->obj;
 
     slv_sort_rels_and_vars(server,&(sys->con.m),&(sys->con.n));
-    CONOPT_CONSOLE_DEBUG("FOUND %d CONSTRAINTS AND %d VARS",sys->con.m,sys->con.n);
+    MSG("FOUND %d CONSTRAINTS AND %d VARS",sys->con.m,sys->con.n);
     if (sys->obj != NULL) {
-      CONOPT_CONSOLE_DEBUG("ADDING OBJECT AS A ROW");
+      MSG("ADDING OBJECT AS A ROW");
       sys->con.m++; /* treat objective as a row */
     }
 
 	cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
 	COIDEF_Ini(cntvect);
 	sys->con.cntvect = cntvect;
-	CONOPT_CONSOLE_DEBUG("NUMBER OF CONSTRAINTS = %d",sys->con.m);
+	MSG("NUMBER OF CONSTRAINTS = %d",sys->con.m);
 	COIDEF_NumVar(cntvect, &(sys->con.n));
 	COIDEF_NumCon(cntvect, &(sys->con.m));
 	sys->con.nz = num_jacobian_nonzeros(sys, &(sys->con.maxrow));
@@ -2669,7 +2674,7 @@ static int conopt_presolve(slv_system_t server, SlvClientToken asys){
     if(sys->obj!=NULL){
 		sys->con.optdir = relman_obj_direction(sys->obj);
 		sys->con.objcon = sys->con.m - 1; /* objective will be last row */
-		CONOPT_CONSOLE_DEBUG("SETTING OBJECTIVE CONSTRAINT TO BE %d",sys->con.objcon);
+		MSG("SETTING OBJECTIVE CONSTRAINT TO BE %d",sys->con.objcon);
 	}else{
 		sys->con.optdir = 0;
 		sys->con.objcon = 0;
@@ -2809,11 +2814,11 @@ static int conopt_resolve(slv_system_t server, SlvClientToken asys){
 */
 static int conopt_iterate(slv_system_t server, SlvClientToken asys){
   conopt_system_t sys;
-  FILE              *mif;
-  FILE              *lif;
+  //FILE              *mif;
+  //FILE              *lif;
   sys = CONOPT(asys);
-  mif = MIF(sys);
-  lif = LIF(sys);
+  //mif = MIF(sys);
+  //lif = LIF(sys);
   if (server == NULL || sys==NULL) return -1;
   if (check_system(CONOPT(sys))) return -2;
   if( !sys->s.ready_to_solve ) {
@@ -2859,6 +2864,7 @@ static int conopt_solve(slv_system_t server, SlvClientToken asys){
   conopt_system_t sys;
   int err = 0;
   sys = CONOPT(asys);
+  MSG("Solving...");
   if (server == NULL || sys==NULL) return -1;
   if (check_system(sys)) return -2;
   while( sys->s.ready_to_solve )err = err | conopt_iterate(server,sys);

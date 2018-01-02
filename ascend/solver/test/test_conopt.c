@@ -142,26 +142,23 @@ static void test_conopt(const char *filenamestem){
 /*===========================================================================*/
 /* Registration information */
 
-#define TESTS1(T,X) \
+#define TESTS1(T) \
 	T(test11) \
-	X T(test12) \
-	X T(test13) \
-	X T(test14)
+	T(test12) \
+	T(test13) \
+	T(test14) \
+	T(conopttest)
 
 /* define the tests: each test loads the model, solves with CONOPT, then runs the
 self_test method. */
 #define T(N) static void test_##N(void){\
 		test_conopt(#N);\
 	}
-#define X
-TESTS1(T,X)
+TESTS1(T)
 #undef T
-#undef X
 
-#define X
 #define TESTS(T) \
-	TESTS1(T,X)
+	TESTS1(T)
 
 REGISTER_TESTS_SIMPLE(solver_conopt, TESTS)
-#undef X
 
