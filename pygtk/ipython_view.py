@@ -16,6 +16,8 @@ is available at U{http://www.opensource.org/licenses/bsd-license.php}
 #
 # This version obtained from the NS-3 project at nsnam.org,
 # http://code.nsnam.org/ns-3-dev/file/35b461a12b26/src/visualizer/visualizer/ipython_view.py
+# also patched as per
+# https://bugzilla.gnome.org/show_bug.cgi?id=776301#c4
 
 import gtk, gobject
 import re
