@@ -144,7 +144,8 @@ class IterableIPShell:
     self.complete_sep =  re.compile('[\s\{\}\[\]\(\)]')
     self.updateNamespace({'exit':lambda:None})
     self.updateNamespace({'quit':lambda:None})
-    self.IP.readline_startup_hook(self.IP.pre_readline)
+    if parse_version(IPython.release.version) < parse_version("5.0.0"):
+      self.IP.readline_startup_hook(self.IP.pre_readline)
     # Workaround for updating namespace with sys.modules
     #
     self.__update_namespace()
@@ -220,13 +221,16 @@ class IterableIPShell:
     # Backwards compatibility with ipyton-0.11
     #
     ver = IPython.__version__
-    if '0.11' in ver:
+    if ver[0:4] == '0.11':
         prompt = self.IP.hooks.generate_prompt(is_continuation)
-    else:
+    elif parse_version(IPython.release.version) < parse_version("5.0.0"):
         if is_continuation:
             prompt = self.IP.prompt_manager.render('in2')
         else:
             prompt = self.IP.prompt_manager.render('in')
+    else:
+        # TODO: update to IPython 5.x and later
+        prompt = "In [%d]: " % self.IP.execution_count
 
     return prompt
 
