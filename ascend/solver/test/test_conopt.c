@@ -61,7 +61,7 @@ static void test_conopt(const char *filenamestem){
 	CONSOLE_DEBUG("%s = %s\n",ASC_ENV_LIBRARY,lib);
 	ASC_FREE(lib);
 
-	/* load the QRSlv solver, presumably from the ASCENDSOLVERS path */
+	/* load the CONOPT solver, presumably from the ASCENDSOLVERS path */
 	package_load("conopt",NULL);
 	solver_index = slv_lookup_client("CONOPT");
 	if(solver_index==-1){

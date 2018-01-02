@@ -1,7 +1,5 @@
 REQUIRE "atoms.a4l";
-
 IMPORT "conopt";
-
 (*  ASCEND modelling environment
 	Copyright (C) 1998, 2006  Carnegie Mellon University
 
@@ -19,7 +17,6 @@ IMPORT "conopt";
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *)
 
-
 MODEL test13;
 	NOTES
 	  'author' SELF {Mahesh Narayanamurthi}
@@ -27,7 +24,7 @@ MODEL test13;
              Adapted from : Hock-Schittkowsky test suite
              Problem Number: 61
              Solution: x* = [5.3267,-2.1189,3.2104] ; f(x*) = -143.6461
-	     Url: http://www.math.uni-bayreuth.de/~kschittkowski/tp_coll1.htm
+	     Url: http://www.ai7.uni-bayreuth.de/tp_coll1.htm
 	    }
 	  'creation date' SELF {July, 2009}
 	END NOTES;
