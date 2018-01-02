@@ -122,7 +122,15 @@ static void test_shm(){
 
 	IntegratorSystem *integ = integrator_new(sys,siminst);
 
-	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"IDA"));
+	int res = integrator_set_engine(integ,"IDA");
+	if(0!=res){
+		system_destroy(sys);
+		solver_destroy_engines();
+		integrator_free_engines();
+		sim_destroy(siminst);
+		Asc_CompilerDestroy();
+		CU_FAIL_FATAL("integrator_set_engine(integ,\"IDA\") failed");
+	}
 	CONSOLE_DEBUG("Assigned integrator '%s'...",integ->internals->name);
 
 	slv_parameters_t p;
@@ -187,7 +195,7 @@ static void test_shm(){
 }
 
 /*
-	Test solving a simple IPOPT model
+	Test solving a simple IDA model
 */
 static void test_boundary(){
 	Asc_CompilerInit(1);
@@ -236,7 +244,15 @@ static void test_boundary(){
 
 	IntegratorSystem *integ = integrator_new(sys,GetSimulationRoot(siminst));
 
-	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"IDA"));
+	int res = integrator_set_engine(integ,"IDA");
+	if(0!=res){
+		system_destroy(sys);
+		solver_destroy_engines();
+		integrator_free_engines();
+		sim_destroy(siminst);
+		Asc_CompilerDestroy();
+		CU_FAIL_FATAL("integrator_set_engine(integ,\"IDA\") failed");
+	}
 	CONSOLE_DEBUG("Assigned integrator '%s'...",integ->internals->name);
 
 	slv_parameters_t p;
@@ -338,7 +354,15 @@ static void test_integ1(){
 
 	IntegratorSystem *integ = integrator_new(sys,GetSimulationRoot(siminst));
 
-	CU_ASSERT_FATAL(0 == integrator_set_engine(integ,"IDA"));
+	int res = integrator_set_engine(integ,"IDA");
+	if(0!=res){
+		system_destroy(sys);
+		solver_destroy_engines();
+		integrator_free_engines();
+		sim_destroy(siminst);
+		Asc_CompilerDestroy();
+		CU_FAIL_FATAL("integrator_set_engine(integ,\"IDA\") failed");
+	}
 
 	slv_parameters_t p;
 	CU_ASSERT(0 == integrator_params_get(integ,&p));

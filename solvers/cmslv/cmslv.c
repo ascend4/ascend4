@@ -5649,6 +5649,7 @@ static const SlvFunctionsT slv9_internals = {
 };
 
 int cmslv_register(void){
+	CONSOLE_DEBUG("Registering CMSlv");
 	if(!solver_engine_named("CONOPT")){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"CONOPT must be registered before CMSlv");
 		return 1;

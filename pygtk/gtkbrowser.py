@@ -425,20 +425,7 @@ class Browser:
 		#-------
 		# Solver engine list
 
-		_slvlist = ascpy.getSolvers()
-		self.solver_engine_menu = gtk.Menu()
-		self.solver_engine_menu.show()
-		self.solver_engine.set_submenu(self.solver_engine_menu)
-		self.solver_engine_menu_dict = {}
-		_fmi = None
-		for _s in _slvlist:
-			_mi = gtk.RadioMenuItem(_fmi,_s.getName(),False)
-			if _fmi==None:
-				_fmi = _mi
-			_mi.show()
-			_mi.connect('toggled',self.on_select_solver_toggled,_s.getName())
-			self.solver_engine_menu.append(_mi)
-			self.solver_engine_menu_dict[_s.getName()]=_mi	
+		self.update_solver_list()
 		
 		#-------
 		# Recent file list
@@ -622,6 +609,22 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 #   ------------------
 #   SOLVER LIST
+
+	def update_solver_list(self):
+		self.solver_engine_menu = gtk.Menu()
+		self.solver_engine_menu.show()
+		self.solver_engine.set_submenu(self.solver_engine_menu)
+		self.solver_engine_menu_dict = {}
+		_slvlist = ascpy.getSolvers()
+		_fmi = None
+		for _s in _slvlist:
+			_mi = gtk.RadioMenuItem(_fmi,_s.getName(),False)
+			if _fmi==None:
+				_fmi = _mi
+			_mi.show()
+			_mi.connect('toggled',self.on_select_solver_toggled,_s.getName())
+			self.solver_engine_menu.append(_mi)
+			self.solver_engine_menu_dict[_s.getName()]=_mi			
 
 	def set_solver(self,solvername):
 		""" this sets the active solver in the GUI, which is the default applied to newly instantiated models """

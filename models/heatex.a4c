@@ -16,6 +16,9 @@
 *)
 REQUIRE "atoms.a4l";
 PROVIDE "heatex.a4c";
+IMPORT "conopt";
+IMPORT "lrslv";
+IMPORT "cmslv";
 (*
 	The following the conditional model is discussed in the PhD thesis of
 	Vicente Rico-Ramirez,
