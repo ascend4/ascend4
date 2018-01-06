@@ -119,7 +119,7 @@ int asc_conopt_load(){
 	envvar  = ASC_CONOPT_ENVVAR;
 
 	/* need to import this variable into the ascend 'environment' */
-	if(-1!=env_import(ASC_CONOPT_ENVVAR,getenv,Asc_PutEnv)){
+	if(-1!=env_import(ASC_CONOPT_ENVVAR,getenv,Asc_PutEnv,0)){
 		MSG("Searching in path '%s' (from env var '%s')",getenv(envvar),envvar);
 	}/*else{
 		MSG("Default conopt search path: %s", ASC_CONOPT_DLPATH);

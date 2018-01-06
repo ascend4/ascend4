@@ -42,7 +42,7 @@ typedef int (PutEnvFn)(const char *inputstring);
 	variable.
 */
 
-ASC_DLLSPEC int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr);
+ASC_DLLSPEC int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr,int free_after_getenv);
 /**<
 	Attempts to read from a getenv function, and if the value is found, write it
 	using a putenv function. You would use this to copy values from one
@@ -51,11 +51,14 @@ ASC_DLLSPEC int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *put
 	For the reason why we use this function, see explanations in 
 	<ascend/utilities/ascEnvVar.h>.
 
+	@param free_after_getenv should be 1 if values returned from *getenvptr
+	require to be freed using ASC_FREE
+
 	@return 0 on success, nonzero on error. -1 means that the value didn't exist
 	in getenv, otherwise the errors are those returned by putenv.
 */
 
-ASC_DLLSPEC int env_import_default(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr,const char *defaultvalue);
+ASC_DLLSPEC int env_import_default(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr,const char *defaultvalue,int free_after_getenv);
 /**<
 	Attempts to read from an environment variable from a getenv function; if value
 	is found, saves it using the putenv function. If no value is found, use the
@@ -68,7 +71,7 @@ ASC_DLLSPEC int env_import_default(const char *varname,GetEnvFn *getenvptr,PutEn
 */
 
 
-ASC_DLLSPEC char *env_subst(const char *path,GetEnvFn *getenvptr);
+ASC_DLLSPEC char *env_subst(const char *path,GetEnvFn *getenvptr,int free_after_getenv);
 /**<
 	Perform variable substitution on a string in shell-like way.
 	This should replace any $VARNAME with the result of

@@ -26,7 +26,11 @@
 	some simple test routines...
 */
 
+#ifdef VERBOSE
 # define M(MSG) fprintf(stderr,"%s:%d: (%s) %s\n",__FILE__,__LINE__,__FUNCTION__,MSG);fflush(stderr)
+#else
+# define M(...) ((void)0)
+#endif
 
 /* 
 	return NULL for unfound env vars, else point to a string that must not be
@@ -56,6 +60,21 @@ static char *my2_getenv(const char *name){
 	while(m!=NULL){
 		if(strcmp(m->key,name)==0 && m->val!=NULL)
 			return m->val;
+		m = m->next;
+	}
+	return NULL;
+}
+
+// this getenv returns a string copy, just like Asc_GetEnv does
+static char *my2_getenv2(const char *name){
+	MyEnvList *m = myenv2;
+	char *s;
+	while(m!=NULL){
+		if(strcmp(m->key,name)==0 && m->val!=NULL){
+			s = ASC_NEW_ARRAY(char,strlen(m->val));
+			strcpy(s,m->val);
+			return s;
+		}
 		m = m->next;
 	}
 	return NULL;
@@ -117,52 +136,65 @@ void test_subst(void){
 
 	M(s1);
 
-	r = env_subst(s1,NULL);
+	r = env_subst(s1,NULL,0);
+	CU_TEST(strcmp(r,s1)==0);
+	ASC_FREE(r);
+	r = env_subst(s1,NULL,1);
 	CU_TEST(strcmp(r,s1)==0);
 	ASC_FREE(r);
 
-	r = env_subst(s1,my_getenv);
-	M(r);
+	r = env_subst(s1,my_getenv,0); M(r);
 	CU_TEST(strcmp(r,"/home/john/bitmaps")==0);
 	ASC_FREE(r);
 
-	r = env_subst("$MYHOME",my_getenv);
-	M(r);
+	r = env_subst("$MYHOME",my_getenv,0); M(r);
 	CU_TEST(0==strcmp(r,"/home/john"));
 	ASC_FREE(r);
 
-	r = env_subst("$MYHOME.",my_getenv);
-	M(r);
+	r = env_subst("$MYHOME.",my_getenv,0); M(r);
 	CU_TEST(0==strcmp(r,"/home/john."));
 	ASC_FREE(r);
 
-	r = env_subst("$MISSING",my_getenv);
-	M(r);
+	r = env_subst("$MISSING",my_getenv,0); M(r);
 	CU_TEST(0==strcmp(r,""));
 	ASC_FREE(r);
 
-	r = env_subst("$MISSING#",my_getenv);
-	M(r);
+	r = env_subst("$MISSING#",my_getenv,0); M(r);
 	CU_TEST(0==strcmp(r,"#"));
 	ASC_FREE(r);
 
-	r = env_subst("$MISSING:$MYHOME",my_getenv);
-	M(r);
+	r = env_subst("$MISSING:$MYHOME",my_getenv,0); M(r);
 	CU_TEST(0==strcmp(r,":/home/john"));
 	ASC_FREE(r);
 
-	env_import("MYHOME",my_getenv,my2_putenv);
+	env_import("MYHOME",my_getenv,my2_putenv,0);
 	my2_putenv("MYEXE=$MYHOME/myexe");
-	r = env_subst("$MYEXE --version",my2_getenv);
-	M(r);
+	r = env_subst("$MYEXE --version",my2_getenv,0); M(r);
 	CU_TEST(0==strcmp(r,"/home/john/myexe --version"));
 	ASC_FREE(r);
 	my2_envclean();
 
 	/* test where nested substitution is null */
 	my2_putenv("MYEXE=$MYHOME/myexe"); // MYHOME not set
-	r = env_subst("$MYEXE --version",my2_getenv);
-	M(r);
+	r = env_subst("$MYEXE --version",my2_getenv,0); M(r);
+	CU_TEST(0==strcmp(r,"/myexe --version"));
+	ASC_FREE(r);
+	my2_envclean();
+}
+
+void test_subst2(void){
+	char *r;
+
+	env_import("MYHOME",my_getenv,my2_putenv,0);
+	my2_putenv("MYEXE=$MYHOME/myexe");
+	r = env_subst("$MYEXE --version",my2_getenv2,1); M(r);
+	CU_TEST(0==strcmp(r,"/home/john/myexe --version"));
+	ASC_FREE(r);
+	my2_envclean();
+
+	/* test where nested substitution is null */
+	my2_putenv("MYEXE=$MYHOME/myexe"); // MYHOME not set
+	r = env_subst("$MYEXE --version",my2_getenv2,1); M(r);
 	CU_TEST(0==strcmp(r,"/myexe --version"));
 	ASC_FREE(r);
 	my2_envclean();
@@ -190,8 +222,8 @@ void test_putenv(void){
 void test_import(void){
 	char *h = my_getenv("MYHOME");
 	CU_TEST(h != NULL);
-	CU_TEST(0==env_import("MYHOME",my_getenv,my2_putenv));
-	CU_TEST(0!=env_import("MISSING",my_getenv,my2_putenv));
+	CU_TEST(0==env_import("MYHOME",my_getenv,my2_putenv,0));
+	CU_TEST(0!=env_import("MISSING",my_getenv,my2_putenv,0));
 
 	CU_TEST(my2_getenv("MYHOME")!=NULL && strcmp(my2_getenv("MYHOME"),h)==0);
 
@@ -206,8 +238,8 @@ void test_import_default(void){
 
 	/* test env_import_default */
 
-	CU_TEST(0==env_import_default("MYHOME",my_getenv,my2_putenv,"UNUSEDSTRING"));
-	CU_TEST(0==env_import_default("MISSING",my_getenv,my2_putenv,"DEFAULTVAL"));
+	CU_TEST(0==env_import_default("MYHOME",my_getenv,my2_putenv,"UNUSEDSTRING",0));
+	CU_TEST(0==env_import_default("MISSING",my_getenv,my2_putenv,"DEFAULTVAL",0));
 
 	CU_TEST(my2_getenv("MYHOME")!=NULL && 0==strcmp(my2_getenv("MYHOME"),h1));
 	CU_TEST(my2_getenv("MISSING")!=NULL)
@@ -217,8 +249,8 @@ void test_import_default(void){
 	CU_TEST(0==my2_putenv("MYHOME=SOMETHING"));
 	CU_TEST(my2_getenv("MYHOME")!=NULL && 0==strcmp(my2_getenv("MYHOME"),"SOMETHING"));
 
-	CU_TEST(0==env_import_default("MYHOME",my_getenv,my2_putenv,"ALSOUNUSED"));
-	CU_TEST(0==env_import_default("MISSING2",my_getenv,my2_putenv,"SECONDDEFAULT"));
+	CU_TEST(0==env_import_default("MYHOME",my_getenv,my2_putenv,"ALSOUNUSED",0));
+	CU_TEST(0==env_import_default("MISSING2",my_getenv,my2_putenv,"SECONDDEFAULT",0));
 
 	CU_TEST(my2_getenv("MYHOME")!=NULL && 0==strcmp(my2_getenv("MYHOME"),h1));
 	CU_TEST(my2_getenv("MISSING2")!=NULL)
@@ -231,6 +263,7 @@ void test_import_default(void){
 
 #define TESTS(T) \
 	T(subst) \
+	T(subst2) \
 	T(putenv) \
 	T(import) \
 	T(import_default)

@@ -666,7 +666,7 @@ static void test_expandenv(void){
 	struct FilePath *fp1, *fp2;
 
 	CU_TEST(strcmp(my_ospath_getenv("MYHOME"),"/home/john")==0);
-	fp1 = ospath_new_expand_env("$MYHOME/myfile.ext",my_ospath_getenv);
+	fp1 = ospath_new_expand_env("$MYHOME/myfile.ext",my_ospath_getenv,0);
 	fp2 = ospath_new("/home/john/myfile.ext");
 	CU_TEST(ospath_cmp(fp1,fp2)==0);
 

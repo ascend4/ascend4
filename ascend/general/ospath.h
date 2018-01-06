@@ -116,7 +116,9 @@ ASC_DLLSPEC struct FilePath *ospath_new_from_posix(const char *posixpath);
 	Path with *VERY SIMPLE* environment variable expansion.
 	You must specify what 'getenv' function should be used.
 */
-ASC_DLLSPEC struct FilePath *ospath_new_expand_env(const char *path, GetEnvFn *getenvptr);
+ASC_DLLSPEC struct FilePath *ospath_new_expand_env(const char *path
+	, GetEnvFn *getenvptr, int free_after_getenv
+);
 
 /**
 	This function cleans up the path string used to construct the FilePath object:

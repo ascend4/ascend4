@@ -211,10 +211,10 @@ struct FilePath *ospath_new_noclean(const char *path){
 	return fp;
 }
 
-struct FilePath *ospath_new_expand_env(const char *path, GetEnvFn *getenvptr){
+struct FilePath *ospath_new_expand_env(const char *path, GetEnvFn *getenvptr, int free_after_getenv){
 	struct FilePath *fp;
 
-	char *pathnew = env_subst(path,getenvptr);
+	char *pathnew = env_subst(path,getenvptr,free_after_getenv);
 	fp = ospath_new(pathnew);
 	ASC_FREE(pathnew);
 

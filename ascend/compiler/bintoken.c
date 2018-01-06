@@ -42,6 +42,8 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
 #include <ascend/general/pretty.h>
+#include <ascend/general/ospath.h>
+#include <ascend/utilities/ascEnvVar.h>
 
 #include "functype.h"
 #include "expr_types.h"
@@ -60,6 +62,12 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #include <ascend/bintokens/btprolog.h>
 
 //#define BINTOKEN_VERBOSE
+#ifdef BINTOKEN_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 
 #define CLINE(a) FPRINTF(fp,"%s\n",(a))
 
@@ -130,6 +138,28 @@ int bt_string_replace(CONST char *new, char **ptr){
   }
   return 0;
 }
+#if 0
+int BinTokenSetOptionsDefault(){
+#ifdef WIN32
+# error "Not implemented"
+#else
+  char srcn[PATH_MAX];
+  char objn[PATH_MAX];
+  char libn[PATH_MAX];
+  snprintf(srcn,PATH_MAX,"/tmp/ascend-btsrc-%d.c",getpid());
+  snprintf(objn,PATH_MAX,"/tmp/ascend-btsrc-%d.o",getpid());
+  snprintf(libn,PATH_MAX,"/tmp/ascend-btsrc-%d.so",getpid());
+  char buildcmd[PATH_MAX];
+  env_import_default(ASC_ENV_BTINCLUDE,getenv,Asc_PutEnv,ASC_DEFAULT_BTINCLUDE,0);
+  char *incdir = Asc_GetEnv(ASC_ENV_BTINCLUDE);
+#if 0  
+  
+  snprintf(incdir,PATH_MAX,
+  snprintf(buidcmd,PATH_MAX,"/usr/bin/make"
+#endif
+#endif
+}
+#endif
 
 /*
  * Set the configurations for building code.
@@ -156,9 +186,7 @@ int BinTokenSetOptions(CONST char *srcname,
   g_bt_data.maxrels = maxrels;
   g_bt_data.verbose = verbose;
   g_bt_data.housekeep = housekeep;
-#ifdef BINTOKEN_VERBOSE
-  CONSOLE_DEBUG("make command = %s",buildcommand);
-#endif
+  MSG("make command = %s",buildcommand);
   return err;
 }
 
@@ -233,7 +261,7 @@ void BinTokenDeleteReference(int btable)
     g_bt_data.tables[btable].tu = NULL;
     g_bt_data.tables[btable].type = BT_error;
   }else{
-    CONSOLE_DEBUG("Deleting one reference...");
+    MSG("Deleting one reference...");
   }
 }
 
@@ -679,9 +707,7 @@ enum bintoken_error BinTokenCompileC(char *buildcommand)
     CONSOLE_DEBUG("...returned status %d",status);
     return BTE_build;
   }
-#ifdef BINTOKEN_VERBOSE
-  CONSOLE_DEBUG("Build command returned OK, status=%d",status);
-#endif
+  MSG("Build command returned OK, status=%d",status);
   return BTE_ok;
 }
 
@@ -787,9 +813,7 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
   char *unlinkcommand = g_bt_data.unlinkcommand;
   int verbose = g_bt_data.verbose;
 
-#ifdef BINTOKEN_VERBOSE
-  CONSOLE_DEBUG("...");
-#endif
+  MSG("...");
 
   if (g_bt_data.maxrels == 0) {
 #ifdef BINTOKEN_VERBOSE

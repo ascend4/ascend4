@@ -30,14 +30,6 @@
 #endif
 #define X(V) MSG("%s=%s",#V,V)
 
-#define VERBOSE
-
-#if defined(TEST) || defined(VERBOSE)
-/* hard wiring NDEBUG here is a misuse of NDEBUG and causes errors/warning
-on the compile line. renamed to NOISY.*/
-# define NOISY 1
-#endif
-
 #include <assert.h>
 
 #if !defined(ASC_FREE) || !defined(ASC_NEW) || !defined(ASC_NEW_ARRAY)
@@ -49,9 +41,44 @@ on the compile line. renamed to NOISY.*/
 
 #define ENV_MAX_VAR_NAME 64 /* arbitrarily*/
 
-char *env_subst_level(const char *src,GetEnvFn *getenvptr, int level);
+int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr
+		,int free_after_getenv
+){
+	char *val = (*getenvptr)(varname);
+	char *envcmd;
+	int res;
+	int len;
+	if(val!=NULL){
+		len = strlen(varname) + 1 + strlen(val) + 1;
+		envcmd = ASC_NEW_ARRAY(char,len);
+		snprintf(envcmd,len,"%s=%s",varname,val);
+		res = (*putenvptr)(envcmd);
+		ASC_FREE(envcmd);
+		if(free_after_getenv)ASC_FREE(val);
+		return res;
+	}
+	return -1;
+}
 
-char *env_subst(const char *src,GetEnvFn *getenvptr){
+
+int env_import_default(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr,const char *defaultvalue, int free_after_getenv){
+	char *gotval = (*getenvptr)(varname);
+	char *envcmd;
+	int res;
+	int len;
+	const char *val = gotval;
+	if(gotval==NULL)val = defaultvalue;
+	len = strlen(varname) + 1 + strlen(val) + 1;
+	envcmd = ASC_NEW_ARRAY(char,len);
+	snprintf(envcmd,len,"%s=%s",varname,val);
+	res = (*putenvptr)(envcmd);
+	ASC_FREE(envcmd);
+	if(NULL!=gotval && free_after_getenv)ASC_FREE(gotval);
+	return res;
+}
+
+
+char *env_subst(const char *src,GetEnvFn *getenvptr,int free_after_getenv){
 	char *res;
 
 	MSG("src=%s",src);
@@ -65,55 +92,12 @@ char *env_subst(const char *src,GetEnvFn *getenvptr){
 		return res;
 	}
 
-	res = env_subst_level(src,getenvptr, 0);
-	MSG("res=%s",res);
-	return res;
-}
-
-int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr){
-	const char *val = (*getenvptr)(varname);
-	char *envcmd;
-	int res;
-	int len;
-	if(val!=NULL){
-		len = strlen(varname) + 1 + strlen(val) + 1;
-		envcmd = ASC_NEW_ARRAY(char,len);
-		snprintf(envcmd,len,"%s=%s",varname,val);
-		res = (*putenvptr)(envcmd);
-		ASC_FREE(envcmd);
-		return res;
-	}
-	return -1;
-}
-
-
-int env_import_default(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr,const char *defaultvalue){
-	const char *val = (*getenvptr)(varname);
-	char *envcmd;
-	int res;
-	int len;
-	if(val==NULL){
-		val=defaultvalue;
-	}
-	len = strlen(varname) + 1 + strlen(val) + 1;
-	envcmd = ASC_NEW_ARRAY(char,len);
-	snprintf(envcmd,len,"%s=%s",varname,val);
-	res = (*putenvptr)(envcmd);
-	ASC_FREE(envcmd);
-	return res;
-}
-
-
-char *env_subst_level(const char *src,GetEnvFn *getenvptr, int level){
 	char *dest, *dest1;
 	char *msg;
 	char *p, *q, *i, *j, *val;
 	char varname[ENV_MAX_VAR_NAME+1];
 	int len, vallen, newlen;
-	(void)level;
 	len = strlen(src);
-
-	MSG("LEVEL = %d",level);
 
 	dest = ASC_NEW_ARRAY(char, strlen(src)+1);
 	strcpy(dest,src);
@@ -121,14 +105,11 @@ char *env_subst_level(const char *src,GetEnvFn *getenvptr, int level){
 	X(dest);
 	MSG("len=%d",len);
 
-	/* scan backwards for $ */
+	/* scan backwards from end, looking for '$' */
 	for(p=dest+len-1; p>=dest; --p){
-		//C(*p);
-
 		if(*p=='$'){
-			MSG("dest=%s",dest);
-			MSG("     %*s",(int)(p-dest+1),"^");
-			MSG("FOUND DOLLAR SIGN");
+			MSG("found '$': dest=%s",dest);
+			MSG("                %*s",(int)(p-dest+1),"^");
 			++p;
 			/* FIXME: note this is i = j = varname in C; p is ignored. */
 			for(i=p, j=varname; i<dest+len && j<varname+ENV_MAX_VAR_NAME; ++i,++j){
@@ -241,8 +222,8 @@ char *env_subst_level(const char *src,GetEnvFn *getenvptr, int level){
 				p = i+1;
 				MSG("*p='%c'",*p);
 
+				if(free_after_getenv)ASC_FREE(val);
 			}
-
 		}
 	}
 	MSG("DONE");

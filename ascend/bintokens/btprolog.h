@@ -56,6 +56,7 @@
 # include <ascend/compiler/instance_enum.h>
 #else
 # define IS_BINTOKEN_COMPILE
+/* FIXME shouldn't we be eliminating these #includes...? */
 # include <ascend/general/platform.h>
 # include <ascend/compiler/instance_enum.h>
 #endif
