@@ -60,6 +60,16 @@ ASC_DLLSPEC int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *put
 	in getenv, otherwise the errors are those returned by putenv.
 */
 
+ASC_DLLSPEC int env_import_default(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr,const char *defaultvalue);
+/**<
+	Attempts to read from an environment variable from a getenv function; if value
+	is found, saves it using the putenv function. If no value is found, use the
+	defaultvalue with the putenv function.
+
+	@return 0 on success, nonzero on error. Errors are those returned by putenv.
+*/
+
+
 ASC_DLLSPEC char *env_subst(const char *path,GetEnvFn *getenvptr);
 /**<
 	Perform variable substitution on a string in shell-like way.

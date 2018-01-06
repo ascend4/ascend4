@@ -162,13 +162,42 @@ void test_import(void){
 	my2_envclean();
 }
 
+void test_import_default(void){
+	char *h1 = my_getenv("MYHOME");
+	CU_TEST(h1 != NULL);
+	char *h2 = my_getenv("MISSING");
+	CU_TEST(h2 == NULL);
+
+	/* test env_import_default */
+
+	CU_TEST(0==env_import_default("MYHOME",my_getenv,my2_putenv,"UNUSEDSTRING"));
+	CU_TEST(0==env_import_default("MISSING",my_getenv,my2_putenv,"DEFAULTVAL"));
+
+	CU_TEST(my2_getenv("MYHOME")!=NULL && 0==strcmp(my2_getenv("MYHOME"),h1));
+	CU_TEST(my2_getenv("MISSING")!=NULL)
+	CU_TEST(0==strcmp(my2_getenv("MISSING"),"DEFAULTVAL"));
+
+	/* env_import_default, overwriting values in the my2 env */
+	CU_TEST(0==my2_putenv("MYHOME=SOMETHING"));
+	CU_TEST(my2_getenv("MYHOME")!=NULL && 0==strcmp(my2_getenv("MYHOME"),"SOMETHING"));
+
+	CU_TEST(0==env_import_default("MYHOME",my_getenv,my2_putenv,"ALSOUNUSED"));
+	CU_TEST(0==env_import_default("MISSING2",my_getenv,my2_putenv,"SECONDDEFAULT"));
+
+	CU_TEST(my2_getenv("MYHOME")!=NULL && 0==strcmp(my2_getenv("MYHOME"),h1));
+	CU_TEST(my2_getenv("MISSING2")!=NULL)
+	CU_TEST(0==strcmp(my2_getenv("MISSING2"),"SECONDDEFAULT"));
+
+	my2_envclean();
+}
 /*===========================================================================*/
 /* Registration information */
 
 #define TESTS(T) \
 	T(subst) \
 	T(putenv) \
-	T(import)
+	T(import) \
+	T(import_default)
 
 REGISTER_TESTS_SIMPLE(general_env, TESTS);
 

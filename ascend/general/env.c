@@ -76,18 +76,38 @@ char *env_subst(const char *path,GetEnvFn *getenvptr){
 }
 
 int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr){
-	char *val = (*getenvptr)(varname);
+	const char *val = (*getenvptr)(varname);
 	char *envcmd;
 	int res;
+	int len;
 	if(val!=NULL){
-		envcmd = ASC_NEW_ARRAY(char,strlen(varname) + 1 + strlen(val) + 1);
-		sprintf(envcmd,"%s=%s",varname,val);
+		len = strlen(varname) + 1 + strlen(val) + 1;
+		envcmd = ASC_NEW_ARRAY(char,len);
+		snprintf(envcmd,len,"%s=%s",varname,val);
 		res = (*putenvptr)(envcmd);
 		ASC_FREE(envcmd);
 		return res;
 	}
 	return -1;
 }
+
+
+int env_import_default(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr,const char *defaultvalue){
+	const char *val = (*getenvptr)(varname);
+	char *envcmd;
+	int res;
+	int len;
+	if(val==NULL){
+		val=defaultvalue;
+	}
+	len = strlen(varname) + 1 + strlen(val) + 1;
+	envcmd = ASC_NEW_ARRAY(char,len);
+	snprintf(envcmd,len,"%s=%s",varname,val);
+	res = (*putenvptr)(envcmd);
+	ASC_FREE(envcmd);
+	return res;
+}
+
 
 char *env_subst_level(const char *path,GetEnvFn *getenvptr, int level){
 	char *dest, *dest1;
