@@ -40,15 +40,9 @@
 #ifndef OSPATH_H
 #define OSPATH_H
 
-#ifdef TEST
-# define ASC_DLLSPEC T T
-# include "env.h"
-#else
-# include <ascend/utilities/config.h>
-# include "platform.h"
-# include "ascMalloc.h"
-# include "env.h"
-#endif
+#include "platform.h"
+#include "env.h"
+#include "ascMalloc.h"
 
 #if defined(__WIN32__) && !defined(__MINGW32__)
 # include <direct.h>

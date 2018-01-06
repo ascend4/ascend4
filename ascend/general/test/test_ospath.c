@@ -74,11 +74,11 @@ static int ospath_searchpath_testexists(struct FilePath *path,void *file){
 
 	char *t=ospath_str(fp1);
 	MC(ASC_FG_BRIGHT,t);
-	FREE(t);
+	ASC_FREE(t);
 
 	t=ospath_str(fp2);
 	MC(ASC_FG_BRIGHTRED,t);
-	FREE(t);
+	ASC_FREE(t);
 
 	if(ospath_cmp(fp1,fp2)==0){
 		MC(ASC_FG_GREEN,"MATCH");
@@ -469,7 +469,7 @@ static void test_basefilename(void){
 	M("Passed getbasefilename test\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("extfntest.a4c");
 	D(fp1);
@@ -479,7 +479,7 @@ static void test_basefilename(void){
 	M("Passed getbasefilename test 2\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("/here/is/my/path.dir/");
 	D(fp1);
@@ -489,7 +489,7 @@ static void test_basefilename(void){
 	M("Passed getbasefilename test 3\n");
 
 	ospath_free(fp1);
-	if(s1)FREE(s1);
+	if(s1)ASC_FREE(s1);
 
 #ifdef WINPATHS
 	fp1 = ospath_new("c:extfntest.a4c");
@@ -500,7 +500,7 @@ static void test_basefilename(void){
 	M("Passed getbasefilename test WINPATHS\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 #endif
 	MEMUSED(0);
 }
@@ -519,7 +519,7 @@ static void test_getfilestem(void){
 	M("Passed getfilestem test\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("/usr/share/data/ascend/models/johnpye/extfn/extfntest");
 	D(fp1);
@@ -529,7 +529,7 @@ static void test_getfilestem(void){
 	M("Passed getfilestem test 2\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("/usr/share/data/ascend/.ascend.ini");
 	D(fp1);
@@ -539,7 +539,7 @@ static void test_getfilestem(void){
 	M("Passed getfilestem test 3\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("~/.vimrc");
 	D(fp1);
@@ -549,7 +549,7 @@ static void test_getfilestem(void){
 	M("Passed getfilestem test 3\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("~/src/ascend-0.9.5-1.jdpipe.src.rpm");
 	D(fp1);
@@ -559,7 +559,7 @@ static void test_getfilestem(void){
 	M("Passed getfilestem test 4\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("~/dir1/dir2/");
 	D(fp1);
@@ -569,7 +569,7 @@ static void test_getfilestem(void){
 	M("Passed getfilestem test 5\n");
 
 	ospath_free(fp1);
-	if(s1)FREE(s1);
+	if(s1)ASC_FREE(s1);
 	MEMUSED(0);
 }
 	//-------------------------------
@@ -587,7 +587,7 @@ static void test_getbasefileext(void){
 	M("Passed getbasefileext test\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("~/.vimrc");
 	D(fp1);
@@ -597,7 +597,7 @@ static void test_getbasefileext(void){
 	M("Passed getbasefileext test 2\n");
 
 	ospath_free(fp1);
-	if(s1)FREE(s1);
+	if(s1)ASC_FREE(s1);
 
 	fp1 = ospath_new("./ascend4");
 	D(fp1);
@@ -607,7 +607,7 @@ static void test_getbasefileext(void){
 	M("Passed getbasefileext test 3\n");
 
 	ospath_free(fp1);
-	if(s1)FREE(s1);
+	if(s1)ASC_FREE(s1);
 	MEMUSED(0);
 }
 	//-------------------------------

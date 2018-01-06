@@ -23,15 +23,7 @@
 #ifndef ASC_ENV_H
 #define ASC_ENV_H
 
-#ifdef TEST
-# define ASC_DLLSPEC T T
-#else
-# include <ascend/utilities/config.h>
-# include "platform.h"
-# include "ascMalloc.h"
-# define FREE ascfree
-# define MALLOC ascmalloc
-#endif
+#include "platform.h"
 
 /**	@addtogroup general_env General Environment Variables
 	@{
@@ -56,6 +48,9 @@ ASC_DLLSPEC int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *put
 	using a putenv function. You would use this to copy values from one
 	environment to another.
 
+	For the reason why we use this function, see explanations in 
+	<ascend/utilities/ascEnvVar.h>.
+
 	@return 0 on success, nonzero on error. -1 means that the value didn't exist
 	in getenv, otherwise the errors are those returned by putenv.
 */
@@ -65,6 +60,9 @@ ASC_DLLSPEC int env_import_default(const char *varname,GetEnvFn *getenvptr,PutEn
 	Attempts to read from an environment variable from a getenv function; if value
 	is found, saves it using the putenv function. If no value is found, use the
 	defaultvalue with the putenv function.
+
+	For the reason why we use this function, see explanations in 
+	<ascend/utilities/ascEnvVar.h>.
 
 	@return 0 on success, nonzero on error. Errors are those returned by putenv.
 */

@@ -38,6 +38,8 @@
 #include <ascend/general/ospath.h>
 #include <ascend/general/list.h>
 
+#include <ascend/utilities/config.h>
+
 //#define DL_DEBUG
 #ifdef DL_DEBUG
 # define MSG CONSOLE_DEBUG

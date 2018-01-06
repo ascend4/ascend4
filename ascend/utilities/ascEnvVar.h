@@ -224,19 +224,21 @@ ASC_DLLSPEC const char **Asc_GetPathList(const char *envvar, int *argcPtr);
 
 ASC_DLLSPEC char*Asc_GetEnv(const char *envvar);
 /**<
- *  Retrieve the value(s) of ASCEND environment variable envvar
- *  as a delimited string.  The elements of envvar are assembled
- *  into a single string delimited by ':' or ';' depending on
- *  platform.  The returned pointer will be NULL if an error occurs,
- *  including envvar being NULL or empty, or Asc_InitEnvironment()
- *  not having been called.  The caller is responsible for freeing
- *  the returned pointer.
- *
- *  @param envvar  Name of the ASCEND environment variable to query.
- *  @return Pointer to a string containing the value(s) of envvar
- *          delimited by ':' or ';' depending on platform, or NULL
- *          on error.  The caller is responsible for freeing it.
- */
+	Retrieve the value(s) of ASCEND environment variable envvar
+	as a delimited string.  The elements of envvar are assembled
+	into a single string delimited by ':' or ';' depending on
+	platform.  The returned pointer will be NULL if an error occurs,
+	including envvar being NULL or empty, or Asc_InitEnvironment()
+	not having been called.  The caller is responsible for freeing
+	the returned pointer.
+	@NOTE that regular Linux 'getenv' requires the user NOT to free
+	the returned string!! beware!
+
+	@param envvar  Name of the ASCEND environment variable to query.
+	@return Pointer to a string containing the value(s) of envvar
+		    delimited by ':' or ';' depending on platform, or NULL
+		    on error.  The caller is responsible for freeing it.
+*/
 
 ASC_DLLSPEC const char **Asc_EnvNames(int *argc);
 /**<

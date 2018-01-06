@@ -123,13 +123,49 @@ void test_subst(void){
 
 	r = env_subst(s1,my_getenv);
 	M(r);
-
 	CU_TEST(strcmp(r,"/home/john/bitmaps")==0);
 	ASC_FREE(r);
 
-	/* TODO add lots more tests in here... */
+	r = env_subst("$MYHOME",my_getenv);
+	M(r);
+	CU_TEST(0==strcmp(r,"/home/john"));
+	ASC_FREE(r);
 
-	/*assert(strcmp(r,"C:/msys/1.0/share/ascend/share")==0);*/
+	r = env_subst("$MYHOME.",my_getenv);
+	M(r);
+	CU_TEST(0==strcmp(r,"/home/john."));
+	ASC_FREE(r);
+
+	r = env_subst("$MISSING",my_getenv);
+	M(r);
+	CU_TEST(0==strcmp(r,""));
+	ASC_FREE(r);
+
+	r = env_subst("$MISSING#",my_getenv);
+	M(r);
+	CU_TEST(0==strcmp(r,"#"));
+	ASC_FREE(r);
+
+	r = env_subst("$MISSING:$MYHOME",my_getenv);
+	M(r);
+	CU_TEST(0==strcmp(r,":/home/john"));
+	ASC_FREE(r);
+
+	env_import("MYHOME",my_getenv,my2_putenv);
+	my2_putenv("MYEXE=$MYHOME/myexe");
+	r = env_subst("$MYEXE --version",my2_getenv);
+	M(r);
+	CU_TEST(0==strcmp(r,"/home/john/myexe --version"));
+	ASC_FREE(r);
+	my2_envclean();
+
+	/* test where nested substitution is null */
+	my2_putenv("MYEXE=$MYHOME/myexe"); // MYHOME not set
+	r = env_subst("$MYEXE --version",my2_getenv);
+	M(r);
+	CU_TEST(0==strcmp(r,"/myexe --version"));
+	ASC_FREE(r);
+	my2_envclean();
 }
 
 void test_putenv(void){
