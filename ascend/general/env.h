@@ -77,6 +77,16 @@ ASC_DLLSPEC char *env_subst(const char *path,GetEnvFn *getenvptr,int free_after_
 	This should replace any $VARNAME with the result of
 	(*getenvptr)(VARNAME).
 
+	Varnames are allowed to follow the form [A-Z_][A-Z0-9_]*
+
+	Note that substitution is a bit recursive, eg $$VARNAME will subsitute 
+ 	first $VARNAME with whatever it contans (eg 'MYVAR') and then after that
+	evaluate $MYVAR.
+
+	Note that the only way you can return a '$' (at present) is by having it
+	followed by	something other than [A-Z_], eg in '$.' or '$$' or '$ ' or
+	to have it at the end of a string, eg '$$$' or 'A$'.
+
 	At present there will be no allowance for lowercase env var names
 	only uppercase and underscores. No escaping of dollar signs is
 	allowed for yet, and not ${BRACKETING}TO_STOP adjacent characters

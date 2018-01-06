@@ -28,7 +28,14 @@
 #else
 # define MSG(ARGS...) ((void)0)
 #endif
-#define X(V) MSG("%s=%s",#V,V)
+
+#ifdef EXTRA_VERBOSE
+# define MSG1 MSG
+#else
+# define MSG1(ARGS...) ((void)0)
+#endif
+
+#define X(V) MSG1("%s=%s",#V,V)
 
 #include <assert.h>
 
@@ -99,11 +106,10 @@ char *env_subst(const char *src,GetEnvFn *getenvptr,int free_after_getenv){
 	int len, vallen, newlen;
 	len = strlen(src);
 
-	dest = ASC_NEW_ARRAY(char, strlen(src)+1);
-	strcpy(dest,src);
+	dest = ASC_STRDUP(src);
 
 	X(dest);
-	MSG("len=%d",len);
+	MSG1("len=%d",len);
 
 	/* scan backwards from end, looking for '$' */
 	for(p=dest+len-1; p>=dest; --p){
@@ -115,19 +121,25 @@ char *env_subst(const char *src,GetEnvFn *getenvptr,int free_after_getenv){
 			for(i=p, j=varname; i<dest+len && j<varname+ENV_MAX_VAR_NAME; ++i,++j){
 				/*C(*i);*/
 				if(!(
-					(*i >= 'A' && *i < 'Z')
+					(*i >= 'A' && *i <= 'Z')
+					|| (*i >= '0' && *i <= '9')
 					|| (*i == '_')
 				)){
 					MSG("non-varname char '%c' found",*i);
 					break;
 				}
+				if(i==p && (*i >= '0' && *i <= '9')){
+					MSG("invalid first charafter for varname '%c'",*i);
+					break;
+				}
+
 				/*M("ADDING TO VARNAME");*/
 				*j=*i;
 			}
 			/*M("COMPLETED VARNAME");*/
 			*j='\0';
 			if(j==varname+ENV_MAX_VAR_NAME){
-				MSG("varname '%s' too long",varname);
+				MSG("varname '%s' too long, returning error string",varname);
 				ASC_FREE(dest);
 				msg = "__VAR_NAME_TOO_LONG__";
 				dest = ASC_NEW_ARRAY(char, strlen(msg)+1);
@@ -135,98 +147,105 @@ char *env_subst(const char *src,GetEnvFn *getenvptr,int free_after_getenv){
 				return dest;
 			}
 			X(varname);
-			val = (*getenvptr)(varname);
-			if(val==NULL){
-				/* varname was null, just remove the varname from dest */
-				MSG("remove empty varname ${%s}",varname);
-				MSG("varname=%s",varname);
-				MSG("strlen(varname)=%lu",strlen(varname));
-				X(p);
-				q = --p;
-				X(q);
-				X(i);
-				for(j=i; j<i+strlen(i); ++j, ++q){
-					*q=*j;
-					X(p);
-					X(q);
-				}
-				*q='\0';
-				X(p);
+			if(0==strlen(varname)){
+				// dollar sign followed by nonvarname character or \0
+				MSG("just a dollar sign");
+				MSG1("p = \"%s\"",p);
+				p--;
 			}else{
-				MSG("substitute $%s with '%s'",varname,val);
-				vallen=strlen(val);
-				X(val);
-				MSG("strlen(val)=%lu",strlen(val));
-				X(dest);
-				MSG("strlen(dest)=%lu",strlen(dest));
-				X(varname);
-				MSG("strlen(varname)=%lu",strlen(varname));
-				--p;
-				MSG("i-p=%ld",i-p);
-				MSG("*i=%c",*i);
-				MSG("*p=%c",*p);
-
-				if(vallen > (i-p)){
-					MSG("copy from duplicate");
-					newlen = strlen(dest)+vallen-(i-p);
-
-					dest1 = ASC_NEW_ARRAY(char, newlen+1);
-					strcpy(dest1,dest);
-
-					p = dest1 + (p - dest);
-
+				val = (*getenvptr)(varname);
+				if(val==NULL){
+					/* varname was null, just remove the varname from dest */
+					MSG("remove empty varname ${%s}",varname);
+					MSG("varname=%s",varname);
+					MSG("strlen(varname)=%lu",strlen(varname));
 					X(p);
+					q = --p;
+					X(q);
 					X(i);
-					X(dest1);
-
-					for(j=p, q=val; *q!='\0'; ++q, ++j){
-						MSG("*q='%c'",*q);
-						*j=*q;
+					for(j=i; j<i+strlen(i); ++j, ++q){
+						*q=*j;
+						X(p);
+						X(q);
 					}
+					*q='\0';
 					X(p);
-
-					X(dest);
-					for(q=i;*q!='\0'; ++q, ++j){
-						MSG("*q='%c'",*q);
-						*j=*q;
-					}
-
-					*j='\0';
-
-					i = dest1 + (i - dest);
-
-					/* throw away the old copy */
-					ASC_FREE(dest);
-					dest = dest1;
 				}else{
-					MSG("copy in place");
+					MSG("substitute $%s with '%s'",varname,val);
+					vallen=strlen(val);
+					X(val);
+					MSG1("strlen(val)=%lu",strlen(val));
+					X(dest);
+					MSG1("strlen(dest)=%lu",strlen(dest));
+					X(varname);
+					MSG1("strlen(varname)=%lu",strlen(varname));
+					--p;
+					MSG1("i-p=%ld",i-p);
+					MSG1("*i=%c",*i);
+					MSG1("*p=%c",*p);
 
-					for(j=p, q=val; *q!='\0'; ++q, ++j){
-						*j=*q;
+					if(vallen > (i-p)){
+						MSG("copy from duplicate");
+						newlen = strlen(dest)+vallen-(i-p);
+
+						dest1 = ASC_NEW_ARRAY(char, newlen+1);
+						strcpy(dest1,dest);
+
+						p = dest1 + (p - dest);
+
+						X(p);
+						X(i);
+						X(dest1);
+
+						for(j=p, q=val; *q!='\0'; ++q, ++j){
+							MSG1("*q='%c'",*q);
+							*j=*q;
+						}
+						X(p);
+
+						X(dest);
+						for(q=i;*q!='\0'; ++q, ++j){
+							MSG1("*q='%c'",*q);
+							*j=*q;
+						}
+
+						*j='\0';
+
+						i = dest1 + (i - dest);
+
+						/* throw away the old copy */
+						ASC_FREE(dest);
+						dest = dest1;
+					}else{
+						MSG("copy in place");
+
+						for(j=p, q=val; *q!='\0'; ++q, ++j){
+							*j=*q;
+						}
+
+						X(p);
+						X(i);
+						MSG1("*j='%c'",*j);
+
+						for(q=i;*q!='\0'; ++q, ++j){
+							*j=*q;
+							MSG1("*q='%c'",*q);
+						}
+						*j='\0';
 					}
 
-					X(p);
-					X(i);
-					MSG("*j='%c'",*j);
+					MSG("dest=\"%s\"",dest);
 
-					for(q=i;*q!='\0'; ++q, ++j){
-						*j=*q;
-						MSG("*q='%c'",*q);
-					}
-					*j='\0';
+					/* move to the the end of the just-inserted chars */
+					p = i+1;
+					MSG1("*p='%c'",*p);
+
+					if(free_after_getenv)ASC_FREE(val);
 				}
-
-				MSG("dest=\"%s\"",dest);
-
-				/* move to the the end of the just-inserted chars */
-				p = i+1;
-				MSG("*p='%c'",*p);
-
-				if(free_after_getenv)ASC_FREE(val);
 			}
 		}
 	}
-	MSG("DONE");
+	MSG("DONE, dest=\"%s\"",dest); 
 	return dest;
 }
 

@@ -68,12 +68,9 @@ static char *my2_getenv(const char *name){
 // this getenv returns a string copy, just like Asc_GetEnv does
 static char *my2_getenv2(const char *name){
 	MyEnvList *m = myenv2;
-	char *s;
 	while(m!=NULL){
 		if(strcmp(m->key,name)==0 && m->val!=NULL){
-			s = ASC_NEW_ARRAY(char,strlen(m->val));
-			strcpy(s,m->val);
-			return s;
+			return ASC_STRDUP(m->val);
 		}
 		m = m->next;
 	}
@@ -180,6 +177,48 @@ void test_subst(void){
 	CU_TEST(0==strcmp(r,"/myexe --version"));
 	ASC_FREE(r);
 	my2_envclean();
+
+	// when var name is too long
+
+	r = env_subst(
+"$A123456789012345678901234567890123456789012345678901234567890123456789!!!"
+		,my_getenv,0
+	); M(r);
+	CU_TEST(0==strcmp(r,"__VAR_NAME_TOO_LONG__"));
+	ASC_FREE(r);
+
+	// trouble with dollar signs
+
+	r = env_subst("$MYHOME$MYHOME$MISSING$MYHOME",my_getenv,0); M(r);
+	CU_TEST(0==strcmp(r,"/home/john/home/john/home/john"));
+	ASC_FREE(r);
+
+	r = env_subst("$",my_getenv,0); M(r);
+	CU_TEST(0==strcmp(r,"$"));
+	ASC_FREE(r);
+
+	r = env_subst("$$$",my_getenv,0); M(r);
+	CU_TEST(0==strcmp(r,"$$$"));
+	ASC_FREE(r);
+
+	r = env_subst("$_$_$.$.$ $",my_getenv,0); M(r);
+	CU_TEST(0==strcmp(r,"$.$.$ $"));
+	ASC_FREE(r);
+
+	r = env_subst("$$MISSINGMYHOME",my_getenv,0); M(r);
+	CU_TEST(0==strcmp(r,"$"));
+	ASC_FREE(r);
+
+	r = env_subst("$MYHOME$MISSING",my_getenv,0); M(r);
+	CU_TEST(0==strcmp(r,"/home/john"));
+	ASC_FREE(r);
+
+	my2_putenv("MYHOME=/home/john");
+	my2_putenv("MYVAR=MYHOME");
+	r = env_subst("$$MYVAR",my2_getenv,0); M(r);
+	CU_TEST(0==strcmp(r,"/home/john"));
+	ASC_FREE(r);
+	my2_envclean();
 }
 
 void test_subst2(void){
@@ -198,6 +237,14 @@ void test_subst2(void){
 	CU_TEST(0==strcmp(r,"/myexe --version"));
 	ASC_FREE(r);
 	my2_envclean();
+
+	// too long
+	r = env_subst(
+"$A123456789012345678901234567890123456789012345678901234567890123456789!!!"
+		,my2_getenv2,0
+	); M(r);
+	CU_TEST(0==strcmp(r,"__VAR_NAME_TOO_LONG__"));
+	ASC_FREE(r);
 }
 
 void test_putenv(void){
