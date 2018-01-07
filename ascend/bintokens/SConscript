@@ -1,0 +1,17 @@
+#!/usr/bin/python invoke_using_scons
+Import('libascend_env')
+
+#--------------------
+# INSTALL
+
+if libascend_env.get('CAN_INSTALL'):
+	installdir = Dir(libascend_env.subst("$INSTALL_ROOT$INSTALL_INCLUDE/ascend/bintokens"))
+
+	headers = ['btprolog.h']
+	libascend_env.InstallHeader(installdir,headers)
+
+objs = []
+
+Return('objs')
+# vim: set syntax=python:
+
