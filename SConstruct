@@ -42,7 +42,7 @@ default_install_solvers = "$INSTALL_LIB/ascend/solvers"
 default_install_assets = "$INSTALL_ASCDATA/glade/"
 default_install_ascdata = "$INSTALL_SHARE/ascend"
 default_install_include = "$INSTALL_PREFIX/include"
-default_install_python = distutils.sysconfig.get_python_lib(plat_specific=1)
+default_install_python = distutils.sysconfig.get_python_lib(prefix="$INSTALL_PREFIX",plat_specific=1)
 default_install_python_ascend = "$INSTALL_PYTHON/ascend"
 default_tcl = '/usr'
 default_tcl_libpath = "$TCL/lib"
@@ -355,6 +355,21 @@ vars.Add('DEFAULT_ASCENDSOLVERS'
 	,"Set the default value of ASCENDSOLVERS -- the location where"
 		+" ASCEND will look for solver shared-library files"
 	,"$INSTALL_SOLVERS"
+)
+
+# What should the default ASCENDBTINC path be?
+vars.Add('DEFAULT_ASCENDBTINC'
+	,"Set the default value of ASCENDBTINC -- the location where"
+		+" ASCEND will look for bintoken files for fast compilation of"
+		+" equations."
+	,"$INSTALL_INCLUDE"
+)
+
+vars.Add('DEFAULT_ASCENDBTLIB'
+	,"Set the default value of ASCENDBTLIB -- the location where"
+		+" ASCEND will look for bintoken files for fast compilation of"
+		+" equations."
+	,"$INSTALL_LIB"
 )
 
 # Where is SWIG?
@@ -2554,6 +2569,8 @@ subst_dict = {
 	, '@ASCENDTK_DEFAULT@': c_escape(os.path.abspath(env.subst(env['INSTALL_TK'])))
 	, '@ASCENDLIBRARY_DEFAULT@': c_escape(os.path.abspath(env.subst(env['DEFAULT_ASCENDLIBRARY'])))
 	, '@ASCENDSOLVERS_DEFAULT@': c_escape(os.path.abspath(env.subst(env['DEFAULT_ASCENDSOLVERS'])))
+	, '@DEFAULT_ASCENDBTINC@': c_escape(os.path.abspath(env.subst(env['DEFAULT_ASCENDBTINC'])))
+	, '@DEFAULT_ASCENDBTLIB@': c_escape(os.path.abspath(env.subst(env['DEFAULT_ASCENDBTLIB'])))
 	, '@ASC_DIST_REL_BIN@' : default_dist_rel_bin
 	, '@ASC_TK_REL_DIST@' : default_tk_rel_dist
 	, '@ASC_LIBRARY_REL_DIST@' : default_library_rel_dist
@@ -2714,7 +2731,7 @@ else:
 
 libascend_env = env.Clone()
 
-dirs = ['general','utilities','compiler','system','solver','integrator','packages','linear']
+dirs = ['general','utilities','compiler','system','solver','integrator','packages','linear','bintokens']
 
 srcs = []
 for d in dirs:

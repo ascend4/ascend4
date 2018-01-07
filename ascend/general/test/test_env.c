@@ -285,21 +285,21 @@ void test_import_default(void){
 
 	/* test env_import_default */
 
-	CU_TEST(0==env_import_default("MYHOME",my_getenv,my2_putenv,"UNUSEDSTRING",0));
-	CU_TEST(0==env_import_default("MISSING",my_getenv,my2_putenv,"DEFAULTVAL",0));
+	CU_TEST(0==env_import_default("MYHOME",my_getenv,my2_getenv,my2_putenv,"UNUSEDSTRING",0,0));
+	CU_TEST(0==env_import_default("MISSING",my_getenv,my2_getenv,my2_putenv,"DEFAULTVAL",0,0));
 
 	CU_TEST(my2_getenv("MYHOME")!=NULL && 0==strcmp(my2_getenv("MYHOME"),h1));
 	CU_TEST(my2_getenv("MISSING")!=NULL)
 	CU_TEST(0==strcmp(my2_getenv("MISSING"),"DEFAULTVAL"));
 
-	/* env_import_default, overwriting values in the my2 env */
+	/* env_import_default, NOT overwriting values in the my2 env */
 	CU_TEST(0==my2_putenv("MYHOME=SOMETHING"));
 	CU_TEST(my2_getenv("MYHOME")!=NULL && 0==strcmp(my2_getenv("MYHOME"),"SOMETHING"));
 
-	CU_TEST(0==env_import_default("MYHOME",my_getenv,my2_putenv,"ALSOUNUSED",0));
-	CU_TEST(0==env_import_default("MISSING2",my_getenv,my2_putenv,"SECONDDEFAULT",0));
+	CU_TEST(0==env_import_default("MYHOME",my_getenv,my2_getenv,my2_putenv,"ALSOUNUSED",0,0));
+	CU_TEST(my2_getenv("MYHOME")!=NULL && 0==strcmp(my2_getenv("MYHOME"),"SOMETHING"));
 
-	CU_TEST(my2_getenv("MYHOME")!=NULL && 0==strcmp(my2_getenv("MYHOME"),h1));
+	CU_TEST(0==env_import_default("MISSING2",my_getenv,my2_getenv,my2_putenv,"SECONDDEFAULT",0,0));
 	CU_TEST(my2_getenv("MISSING2")!=NULL)
 	CU_TEST(0==strcmp(my2_getenv("MISSING2"),"SECONDDEFAULT"));
 

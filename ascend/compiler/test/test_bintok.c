@@ -52,6 +52,8 @@ static void test_test1(){
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
+	Asc_PutEnv(ASC_ENV_BTINC "=.");
+	Asc_PutEnv(ASC_ENV_BTLIB "=.");
 
 	/* load the file */
 	char path[PATH_MAX];
@@ -76,6 +78,9 @@ static void test_test1(){
 #define T_BTOBJ T_DIR "/btsrc.o"
 #define T_BTLIB T_DIR "/btsrc.so"
 
+	CU_TEST(0==BinTokenSetOptionsDefault());
+#if 0
+
 	struct FilePath *fp1 = ospath_new("ascend/bintokens/Makefile");
 	struct FilePath *fp2 = ospath_getabs(fp1);
 	char *fp2str = ospath_str(fp2);
@@ -94,6 +99,7 @@ static void test_test1(){
 		,"/bin/rm"
 		,1000/*maxrels*/,1/*verbose*/,0/*housekeep*/
 	);
+#endif
 
 	/* instantiate it */
 	error_reporter_tree_t *T1 = error_reporter_tree_start(0);

@@ -278,7 +278,7 @@ ASC_DLLSPEC void ospath_append(struct FilePath *fp, struct FilePath *fp1);
 ASC_DLLSPEC FILE *ospath_fopen(struct FilePath *fp, const char *mode);
 
 /**
-	Stat function. Simply a wrappen around the 'stat' call.
+	Stat function. Simply a wrapper around the 'stat' call.
 	The exception is that if the FilePath is not 'valid', -1 is returned
 	and no call to 'stat' is made.
 

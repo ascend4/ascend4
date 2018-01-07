@@ -59,9 +59,10 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #include "mathinst.h"
 /* last */
 
+/* why do we include btprolog here? */
 #include <ascend/bintokens/btprolog.h>
 
-//#define BINTOKEN_VERBOSE
+//#define BINTOKEN_DEBUG
 #ifdef BINTOKEN_DEBUG
 # define MSG CONSOLE_DEBUG
 #else
@@ -138,25 +139,59 @@ int bt_string_replace(CONST char *new, char **ptr){
   }
   return 0;
 }
-#if 0
+#if 1
 int BinTokenSetOptionsDefault(){
 #ifdef WIN32
 # error "Not implemented"
 #else
   char srcn[PATH_MAX];
-  char objn[PATH_MAX];
   char libn[PATH_MAX];
   snprintf(srcn,PATH_MAX,"/tmp/ascend-btsrc-%d.c",getpid());
-  snprintf(objn,PATH_MAX,"/tmp/ascend-btsrc-%d.o",getpid());
   snprintf(libn,PATH_MAX,"/tmp/ascend-btsrc-%d.so",getpid());
-  char buildcmd[PATH_MAX];
-  env_import_default(ASC_ENV_BTINCLUDE,getenv,Asc_PutEnv,ASC_DEFAULT_BTINCLUDE,0);
-  char *incdir = Asc_GetEnv(ASC_ENV_BTINCLUDE);
-#if 0  
-  
-  snprintf(incdir,PATH_MAX,
-  snprintf(buidcmd,PATH_MAX,"/usr/bin/make"
+
+#define BINTOK_NOMAKEFILE
+  /* this approach calls GCC directly */
+#ifdef BINTOK_NOMAKEFILE
+  env_import_default(ASC_ENV_BTINC,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTINC,0,1);
+  env_import_default(ASC_ENV_BTLIB,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTLIB,0,1);
+
+  char buildtmpl[PATH_MAX];
+  snprintf(buildtmpl,PATH_MAX
+    ,"gcc -shared -fPIC -I$" ASC_ENV_BTINC " -o%s %s -L$" ASC_ENV_BTLIB " -lascend"
+    ,libn,srcn
+  );
+
+  char *s1 = Asc_GetEnv(ASC_ENV_BTLIB);
+  MSG("%s=%s",ASC_ENV_BTLIB,s1);
+  ASC_FREE(s1);
+#else
+  /* this approach uses 'make' call instead. Turned off for now (incomplete implementation)*/
+
+  /* Env var $ASCENDBTINCLUDE gives the location of the Makefile we use
+  which will default to eg /usr/include/ascend/bintokens for normal 
+  post-install execution, but can be overridden eg when testing. */
+  env_import_default(ASC_ENV_BTINC,getenv,Asc_PutEnv,ASC_DEFAULT_BTINC,0);
+
+  struct FilePath *fp1 = ospath_new_expand_env("$"ASC_ENV_BTINC"/Makefile",Asc_GetEnv,1);
+  ospath_stat_t st; 
+  char *s;
+  if(ospath_stat(fp1,&st)){
+    s = ospath_str(fp1);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"makefile '%s' does not exist",s);
+    ASC_FREE(s);
+  }
+  ASC_FREE(fp1);
+  char buildtmpl[PATH_MAX];
+  snprintf(buildtmpl,PATH_MAX
+    ,"make -f $" ASC_ENV_BTINC "/Makefile ASCBT_TARGET=\"%s\" ASCBT_SRC=\"%s\""
+    ,libn,srcn
+  );
 #endif
+  char *buildcmd = env_subst(buildtmpl,Asc_GetEnv,1);
+  char rmcmd[] = "/bin/rm";
+  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,rmcmd,1000,0,1);
+  ASC_FREE(buildcmd);
+  return res;
 #endif
 }
 #endif
@@ -238,21 +273,32 @@ void BinTokenClearTables(void)
  */
 void BinTokenDeleteReference(int btable)
 {
-  if (btable < 0 || btable > g_bt_data.nextid ||
-      g_bt_data.tables[btable].type == BT_error) {
-    return;
-    /* relation references a loadfailure library or already deleted
-     * or corrupted memory has made its way here.
-     */
+  if(btable < 0 || btable > g_bt_data.nextid 
+    || g_bt_data.tables[btable].type == BT_error
+  ){
+    return; /* relation references a loadfailure library or already deleted
+    or corrupted memory has made its way here.*/
   }
   g_bt_data.tables[btable].refcount--;
-  if (g_bt_data.tables[btable].refcount == 0) {
+  if(g_bt_data.tables[btable].refcount == 0){
     /* unload the library if possible here */
 #if HAVE_DL_UNLOAD
-# ifdef BINTOKEN_VERBOSE
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"UNLOADING %s",g_bt_data.tables[btable].name);
-#endif
+    MSG("Unloading btable=%d: %s",btable,g_bt_data.tables[btable].name);
     Asc_DynamicUnLoad(g_bt_data.tables[btable].name);
+
+    if(g_bt_data.housekeep){
+      if(g_bt_data.libname && strlen(g_bt_data.libname)){
+          char *cbuf;
+          cbuf = ASC_NEW_ARRAY(char,strlen(g_bt_data.unlinkcommand)+1+strlen(g_bt_data.libname)+1);
+          assert(cbuf!=NULL);
+          sprintf(cbuf,"%s %s",g_bt_data.unlinkcommand,g_bt_data.libname);
+          MSG("Deleting bintok shared library: %s",cbuf);
+          system(cbuf); /* we don't care if the delete fails */
+          ASC_FREE(cbuf);
+      }
+    }
+
+
 #else
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Dynamic Unloading not available in this build");
 #endif /* havedlunload */
@@ -499,7 +545,7 @@ enum bintoken_error WriteResidualCode(FILE *fp, struct Instance *i,
   } else {
     CLINE("  ;");
   }
-#ifdef BINTOKEN_VERBOSE
+#ifdef BINTOKEN_DEBUG
   FPRINTF(fp,"  fprintf(stderr,\"%%s:%%d: residual for '%%s' is %%f.\\n\", __FILE__, __LINE__, \"");
   WriteAnyInstanceName(fp,i);
   FPRINTF(fp,"\", *residual);\n");
@@ -816,13 +862,13 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
   MSG("...");
 
   if (g_bt_data.maxrels == 0) {
-#ifdef BINTOKEN_VERBOSE
+#ifdef BINTOKEN_DEBUG
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"BinTokensCreate disabled (maxrels=0)\n");
 #endif
     return;
   }
   if (srcname == NULL || buildcommand == NULL || unlinkcommand == NULL) {
-#ifdef BINTOKEN_VERBOSE
+#ifdef BINTOKEN_DEBUG
     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"BinaryTokensCreate called with no options set: ignoring");
 #endif
     return;
@@ -863,11 +909,13 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
         system(cbuf); /* we don't care if the delete fails */
         ASC_FREE(cbuf);
         /* trash obj */
-        cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(objname)+1);
-        assert(cbuf!=NULL);
-        sprintf(cbuf,"%s %s",unlinkcommand,objname);
-        system(cbuf); /* we don't care if the delete fails */
-        ASC_FREE(cbuf);
+        if(objname && strlen(objname)){
+          cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(objname)+1);
+          assert(cbuf!=NULL);
+          sprintf(cbuf,"%s %s",unlinkcommand,objname);
+          system(cbuf); /* we don't care if the delete fails */
+          ASC_FREE(cbuf);
+        }
       }
 
       status = BinTokenLoadC(rellist,libname,g_bt_data.regname);

@@ -81,6 +81,14 @@ ASC_DLLSPEC int BinTokenSetOptions(
 	,int verbose, int housekeep
 );
 
+ASC_DLLSPEC int BinTokenSetOptionsDefault();
+/**<
+	This function sets bintoken parameters in an automated way that
+	should hopefully work on most standard systems. This approach
+	makes use of two env vars to help locate the btprolog.h and libascend.so
+	files during linking.
+*/
+
 /**
  * Frees global data allocated during loading.
  * Do not call any previously loaded functions after this is

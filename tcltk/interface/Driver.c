@@ -551,17 +551,17 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	AscSaveOrgEnv(interp, progname);
 
 	/* import these into the environment */
-	err = env_import(ASC_ENV_DIST,getenv,PUTENV);
+	err = env_import(ASC_ENV_DIST,getenv,PUTENV,0);
 #ifdef ASCTK_DEBUG
 	if(err)CONSOLE_DEBUG("No %s var imported (error %d)",ASC_ENV_DIST,err);
 #endif
-	env_import(ASC_ENV_TK,getenv,PUTENV);
-	env_import(ASC_ENV_BITMAPS,getenv,PUTENV);
-	env_import(ASC_ENV_LIBRARY,getenv,PUTENV);
-	env_import(ASC_ENV_SOLVERS,getenv,PUTENV);
+	env_import(ASC_ENV_TK,getenv,PUTENV,0);
+	env_import(ASC_ENV_BITMAPS,getenv,PUTENV,0);
+	env_import(ASC_ENV_LIBRARY,getenv,PUTENV,0);
+	env_import(ASC_ENV_SOLVERS,getenv,PUTENV,0);
 
 	/* used for colour console output */
-	env_import("TERM",getenv,PUTENV);
+	env_import("TERM",getenv,PUTENV,0);
 
 #ifdef ASCTK_DEBUG
 	CONSOLE_DEBUG("IMPORTING VARS");
@@ -629,7 +629,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		/* no env var ASCENDTK... create value from compile-time info */
 		guessedtk=1;
 #if ASC_ABSOLUTE_PATHS
-		tkfp = ospath_new_expand_env(ASCENDTK_DEFAULT, &GETENV);
+		tkfp = ospath_new_expand_env(ASCENDTK_DEFAULT, &GETENV,1);
 #else
 		fp = ospath_new(ASC_TK_REL_DIST);
 		distfp = ospath_new(distdir);
@@ -642,7 +642,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		OSPATH_PUTENV(ASC_ENV_TK,tkfp);
 	}else{
 		/* expand env vars in ASCENDTK */
-		tkfp = ospath_new_expand_env(tkdir, &GETENV);
+		tkfp = ospath_new_expand_env(tkdir, &GETENV,1);
 		tkdir = ospath_str(tkfp);
 		OSPATH_PUTENV(ASC_ENV_TK,tkfp);
 	}
@@ -650,7 +650,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	if(bitmapsdir == NULL){
 	    /* CONSOLE_DEBUG("NO " ASC_ENV_BITMAPS " VAR DEFINED"); */
 		/* Create a path $ASCENDTK/bitmaps */
-		bitmapsfp = ospath_new_expand_env("$ASCENDTK/bitmaps", &GETENV);
+		bitmapsfp = ospath_new_expand_env("$ASCENDTK/bitmaps", &GETENV,1);
 		OSPATH_PUTENV(ASC_ENV_BITMAPS,bitmapsfp);
 		bitmapsdir = ospath_str(bitmapsfp);
 		ospath_free(bitmapsfp);
@@ -666,7 +666,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 #if ASC_ABSOLUTE_PATHS
 		libraryfp = ospath_new(ASCENDLIBRARY_DEFAULT);
 #else
-		libraryfp = ospath_new_expand_env("$ASCENDDIST/" ASC_LIBRARY_REL_DIST, &GETENV);
+		libraryfp = ospath_new_expand_env("$ASCENDDIST/" ASC_LIBRARY_REL_DIST, &GETENV,1);
 #endif
 		/* CONSOLE_DEBUG("CREATED LIBRARY VAL"); */
 		OSPATH_PUTENV(ASC_ENV_LIBRARY,libraryfp);
@@ -678,7 +678,7 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 #if ASC_ABSOLUTE_PATHS
 		solversfp = ospath_new(ASCENDSOLVERS_DEFAULT);
 #else
-		solversfp = ospath_new_expand_env("$ASCENDDIST/" ASC_SOLVERS_REL_DIST, &GETENV);
+		solversfp = ospath_new_expand_env("$ASCENDDIST/" ASC_SOLVERS_REL_DIST, &GETENV,1);
 #endif
 		/* CONSOLE_DEBUG("CREATED SOLVERS VAL"); */
 		OSPATH_PUTENV(ASC_ENV_SOLVERS,solversfp);

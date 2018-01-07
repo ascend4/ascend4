@@ -58,8 +58,36 @@ ASC_DLLSPEC int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *put
 	in getenv, otherwise the errors are those returned by putenv.
 */
 
-ASC_DLLSPEC int env_import_default(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr,const char *defaultvalue,int free_after_getenv);
+ASC_DLLSPEC int env_import_default(const char *varname
+		,GetEnvFn *getenvptr0
+		,GetEnvFn *getenvptr1, PutEnvFn *putenvptr1
+		,const char *defaultvalue
+		, int free_after_getenv0, int free_after_getenv1
+);
 /**<
+	This messy function is a result of ascEnvVar.h maintaining a separate
+	'inner' environment distinct from the system's environment. FIXME a whole
+	lot of streamlining is possible here, for example if Asc_GetEnv had the
+	same API as standard getenv, then we wouln't have to check whether or not
+	we have to free the returned string (etc, etc)!!!
+
+	Import an environment variable from an 'outer' environment to our 'inner'
+	environment, but don't replace a value if one is already here.
+
+	@param getenvptr0: This is a pointer to the getenv function for the 'outer'
+	environment.
+
+	@param getenvptr1: Pointer to the getenv function in the 'inner'
+	environment. If provided, this function will first call *getenvptr1 to make 
+	sure variable `varname` isn't set locally. If it is set, no further action 
+	is taken. If `getenvptr1` is NULL, no check is run, and the local value will be 
+	overwritten if it previously existed.
+
+	@param putenvptr1: Pointer to the putenv function 
+
+	@param defaultvalue: If no for var `varname` is found in the 'inner' OR
+	'outer' environment, this default value is used.
+
 	Attempts to read from an environment variable from a getenv function; if value
 	is found, saves it using the putenv function. If no value is found, use the
 	defaultvalue with the putenv function.

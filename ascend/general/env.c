@@ -67,23 +67,30 @@ int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr
 	return -1;
 }
 
-
-int env_import_default(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr,const char *defaultvalue, int free_after_getenv){
-	char *gotval = (*getenvptr)(varname);
+int env_import_default(const char *varname,GetEnvFn *getenvptr0
+		,GetEnvFn *getenvptr1, PutEnvFn *putenvptr1
+		,const char *defaultvalue, int free_after_getenv0, int free_after_getenv1
+){
+	char *gotval1 = (*getenvptr1)(varname);
+	if(NULL!=gotval1){
+		// value already exists, no import required
+		if(free_after_getenv1)ASC_FREE(gotval1);
+		return 0;
+	}
+	char *gotval0 = (*getenvptr0)(varname);
 	char *envcmd;
 	int res;
 	int len;
-	const char *val = gotval;
-	if(gotval==NULL)val = defaultvalue;
+	const char *val = gotval0;
+	if(gotval0==NULL)val = defaultvalue;
 	len = strlen(varname) + 1 + strlen(val) + 1;
 	envcmd = ASC_NEW_ARRAY(char,len);
 	snprintf(envcmd,len,"%s=%s",varname,val);
-	res = (*putenvptr)(envcmd);
+	res = (*putenvptr1)(envcmd);
 	ASC_FREE(envcmd);
-	if(NULL!=gotval && free_after_getenv)ASC_FREE(gotval);
+	if(NULL!=gotval0 && free_after_getenv0)ASC_FREE(gotval0);
 	return res;
 }
-
 
 char *env_subst(const char *src,GetEnvFn *getenvptr,int free_after_getenv){
 	char *res;

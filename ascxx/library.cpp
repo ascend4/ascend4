@@ -56,8 +56,8 @@ Library::Library(const char *defaultpath){
 		Asc_RedirectCompilerDefault(); // Ensure that error message reach stderr
 #endif
 		Asc_CompilerInit(1);
-		env_import_default(ASC_ENV_LIBRARY,getenv,Asc_PutEnv,DEFAULT_ASCENDLIBRARY);
-		env_import(ASC_ENV_SOLVERS,getenv,Asc_PutEnv);
+		env_import_default(ASC_ENV_LIBRARY,getenv,Asc_GetEnv,Asc_PutEnv,DEFAULT_ASCENDLIBRARY,0,1);
+		env_import(ASC_ENV_SOLVERS,getenv,Asc_PutEnv,0);
 		Asc_ImportPathList(ASC_ENV_LIBRARY);
 		registerStandardSolvers();
 	}
