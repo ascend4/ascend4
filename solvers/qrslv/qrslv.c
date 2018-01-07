@@ -3369,8 +3369,7 @@ static void structural_analysis(slv_system_t server, qrslv_system_t sys){
     slv_block_unify(server);
   }
 
-  //CONSOLE_DEBUG("In QRSlv, got vused = %d...",sys->vused);
-  if(slv_check_bounds(SERVER,sys->vused,-1,"fixed ")){
+  if(slv_check_bounds(SERVER,0,-1,"fixed ")){
     sys->s.inconsistent = 1;
   }
 
