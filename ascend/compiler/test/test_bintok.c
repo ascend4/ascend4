@@ -37,6 +37,7 @@
 
 #include <ascend/system/system.h>
 #include <ascend/system/slv_client.h>
+#include <ascend/system/slv_param.h>
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_server.h>
 
@@ -90,6 +91,12 @@ static void test_bintok(char *filenamestem,int usebintok){
 
 	/* solve */
 	CU_ASSERT_FATAL(slv_select_solver(sys,slv_lookup_client("QRSlv")));
+	slv_parameters_t p;
+	slv_get_parameters(sys,&p);
+	CU_ASSERT_FATAL(0==slv_param_char_choose(&p,"bppivoting","SPK1/RANKI"));
+		/* we have to use this factor_method, since there seems to be a little memory leak with the default one! */
+	slv_set_parameters(sys,&p);
+
 	CU_ASSERT_FATAL(0 == slv_presolve(sys));
 	slv_status_t status;
 	slv_get_status(sys, &status);
