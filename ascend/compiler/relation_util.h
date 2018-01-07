@@ -468,6 +468,12 @@ int RelationCalcResidualBinary(CONST struct relation *rel, double *res);
  * This function may raise SIGFPE it calls external code.
  */
 
+int RelationCalcGradientBinary(CONST struct relation *r, double *resid,double *gradient);
+/**<
+	Calculate gradients for a bintoken relation.
+	@return 0 on success, non-zero if errors occur, eg if bintoken turned off.
+*/
+
 enum safe_err
 RelationCalcResidualPostfixSafe(struct Instance *i, double *res);
 /**<

@@ -127,7 +127,7 @@ real64 relman_linear_coef(struct rel_relation *rel, struct var_variable *var
 #endif
 
 
-#if KILL
+#if 0 && KILL
 void relman_decide_incidence( struct rel_relation *rel){
   struct var_variable **list;
   int c;
@@ -748,7 +748,7 @@ int relman_diff_grad(struct rel_relation *rel
   return !status;  /* flip the status flag */
 }
 
-
+#if 0 && THIS_IS_A_DISUSED_FUNCTION
 int32 relman_diff_harwell(struct rel_relation **rlist
 		, var_filter_t *vfilter, rel_filter_t *rfilter
 		, int32 rlen, int32 bias, int32 mORs
@@ -831,6 +831,7 @@ int32 relman_diff_harwell(struct rel_relation **rlist
   }
   return errcnt;
 }
+#endif
 
 int32 relman_jacobian_count(struct rel_relation **rlist, int32 rlen
 		, var_filter_t *vfilter
@@ -892,7 +893,7 @@ int relman_diffs(struct rel_relation *rel
   real64 *gradient;
   int32 len,c;
   mtx_coord_t coord;
-  int status;
+  int status,map;
 
   assert(rel!=NULL && filter!=NULL && mtx != NULL);
   len = rel_n_incidences(rel);
@@ -902,10 +903,28 @@ int relman_diffs(struct rel_relation *rel
 
   gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
   assert(gradient !=NULL);
-  if( safe ) {
-    status =(int32)RelationCalcResidGradSafe(rel_instance(rel),resid,gradient);
-    safe_error_to_stderr( (enum safe_err *)&status );
-    /* always map when using safe functions */
+
+  map=status=1;
+	if(rel->type == e_rel_token){
+#ifdef DIFF_DEBUG
+		CONSOLE_DEBUG("gradients for bintoken relation");
+#endif
+    status = RelationCalcGradientBinary(
+        GetInstanceRelationOnly(IPTR(rel->instance)),resid,gradient
+    );
+  }
+  if(status){ // either a non-token rel, or else failed bintoken
+    if(safe){
+      status =(int32)RelationCalcResidGradSafe(rel_instance(rel),resid,gradient);
+      safe_error_to_stderr( (enum safe_err *)&status );
+      // always maps
+    }else{
+      status=RelationCalcResidGrad(rel_instance(rel),resid,gradient);
+      if(status)map = 0; // for unsafe eval, only map if no error
+    }
+  }
+  if(map){
+    // successful calculation, map results if safe made
     for (c=0; c < len; c++) {
       if (var_apply_filter(vlist[c],filter)) {
         coord.col = var_sindex(vlist[c]);
@@ -914,24 +933,10 @@ int relman_diffs(struct rel_relation *rel
       }
     }
   }
-  else {
-    if((status=RelationCalcResidGrad(rel_instance(rel),resid,gradient)) == 0) {
-      /* successful */
-      for (c=0; c < len; c++) {
-        if (var_apply_filter(vlist[c],filter)) {
-          coord.col = var_sindex(vlist[c]);
-          assert(coord.col >= 0 && coord.col < mtx_order(mtx));
-          mtx_fill_org_value(mtx,&coord,gradient[c]);
-        }
-      }
-    }
-  }
-  /* flip the status flag */
-  return !status;
+  return status;
 }
 
-
-#if REIMPLEMENT /* this needs to be reimplemented in the compiler */
+#if 0 & REIMPLEMENT /* this needs to be reimplemented in the compiler */
 real64 relman_diffs_orig( struct rel_relation *rel, var_filter_t *filter
 		,mtx_matrix_t mtx
 ){
@@ -1146,17 +1151,20 @@ char *relman_make_vstring_postfix(slv_system_t sys,
 ){
    char  *sbeg;
 
-   if (style) {
+   if(style){
      sbeg = WriteRelationPostfixString(rel_instance(rel),slv_instance(sys));
    }else{
-#if REIMPLEMENT
+#if 0 && REIMPLEMENT
      left = exprman_make_xstring_postfix(rel,sys,rel_lhs(rel));
      right = exprman_make_xstring_postfix(rel,sys,rel_rhs(rel));
 #else
      sbeg = ASC_NEW_ARRAY(char,60);
-     if (sbeg==NULL) return sbeg;
+     if(sbeg==NULL) return sbeg;
      sprintf(sbeg,"relman_make_xstring_postfix not reimplemented.");
 #endif
    }
    return(sbeg);
 }
+
+/* vim: set ts=2 et: */
+

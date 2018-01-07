@@ -78,6 +78,12 @@ if __name__=='__main__':
 	if add_at_start(LD_LIBRARY_PATH,libdirs):
 		restart.append(LD_LIBRARY_PATH)
 
+	# for bintoken compilation
+	if add_at_start('ASCENDBTINC',[os.path.join(sourceroot)]):
+		restart.append('ASCENDBTINC')
+	if add_at_start('ASCENDBTLIB',[os.path.join(sourceroot)]):
+		restart.append('ASCENDBTLIB')
+
 	# ensure our pygtk dir is in the PYTHONPATH
 	pypath = [os.path.join(sourceroot,"ascxx")]
 	if add_at_start('PYTHONPATH',pypath):
