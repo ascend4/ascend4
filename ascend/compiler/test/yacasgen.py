@@ -19,35 +19,37 @@
 # and operating points which is later parsed by YACAS
 
 try:
-    print "Generating files for input to Yacas"
-    varsf = open('Vars.txt','r')
-    yacasinf1st = open('YacasSymbolic1st.txt','r')
-    yacasoutf1st = open('YacasFirstInp.txt','w')
-    yacasinf2nd = open('YacasSymbolic2nd.txt','r')
-    yacasoutf2nd = open('YacasSecondInp.txt','w')
+	print "Generating files for input to Yacas"
+	varsf = open('Vars.txt','r')
+	yacasprepf1st = open('yacas-prep-1st.txt','r')
+	yacasoutf1st = open('yacas-input-1st.txt','w')
+	yacasprepf2nd = open('yacas-prep-2nd.txt','r')
+	yacasoutf2nd = open('yacas-input-2nd.txt','w')
 
-    i=0
-    for line in varsf:
-        if line.strip().startswith('@ Relation'):
-            j = (i)*(i)
-            yacasoutf2nd.write('ToStdout() [Echo("' + line.strip() + '");];\n')
-            while j>0:
-                yacasoutf2nd.write('ToStdout() [Echo(N(' + yacasinf2nd.readline().strip() + ',17));];\n')
-                j = j-1
+	i=0 # counter for number of variables in each relation
+	for line in varsf:
+		if line.strip().startswith('@ Relation'):
+			print "i=%d: %s"%(i,line.strip())	
+			j = (i)*(i) # i^2-- there will be this many second derivatives
+			yacasoutf2nd.write('ToStdout() [Echo("' + line.strip() + '");];\n')
+			while j>0:
+				yacasoutf2nd.write(yacasprepf2nd.readline().strip() + '\n')
+				j = j-1
 
-            yacasoutf1st.write('ToStdout() [Echo("' + line.strip() + '");];\n')
-            while i>0:
-                yacasoutf1st.write('ToStdout() [Echo(N(' + yacasinf1st.readline().strip() + ',17));];\n')
-                i = i-1
-
-        else:
-	    i = i+1
-            yacasoutf2nd.write(line.strip()+';\n')
-            yacasoutf1st.write(line.strip()+';\n')
-    varsf.close()
-    yacasinf2nd.close()
-    yacasoutf2nd.close()
-    yacasinf1st.close()
-    yacasoutf1st.close()
+			yacasoutf1st.write('ToStdout() [Echo("' + line.strip() + '");];\n')
+			while i>0:
+				yacasoutf1st.write(yacasprepf1st.readline().strip() + '\n')
+				i = i-1
+			# back to i=0 again
+		else:
+			# Vars.txt contains a variable value declaration
+			i = i+1 # increase the number of variables
+			yacasoutf2nd.write(line.strip()+';\n')
+			yacasoutf1st.write(line.strip()+';\n')
+	varsf.close()
+	yacasprepf2nd.close()
+	yacasoutf2nd.close()
+	yacasprepf1st.close()
+	yacasoutf1st.close()
 except IOError, e:
     print "Error managing streams" ,e

@@ -1,0 +1,5 @@
+@ Relation: dummy1
+Error in file yacas-input-2nd.txt
+yacas-input-2nd.txt(4) : Expecting a ) closing bracket for sub-expression, but got ; instead
+
+Quitting...
