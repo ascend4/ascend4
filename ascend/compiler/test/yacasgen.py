@@ -26,6 +26,10 @@ try:
 	yacasprepf2nd = open('yacas-prep-2nd.txt','r')
 	yacasoutf2nd = open('yacas-input-2nd.txt','w')
 
+#ToStdout() [Echo(N( Eval(D(%s) %s),17))]
+
+# ToStdout() [Echo(N( Eval(D(%s) D(%s) %s),17))];
+
 	i=0 # counter for number of variables in each relation
 	for line in varsf:
 		if line.strip().startswith('@ Relation'):
@@ -33,12 +37,12 @@ try:
 			j = (i)*(i) # i^2-- there will be this many second derivatives
 			yacasoutf2nd.write('ToStdout() [Echo("' + line.strip() + '");];\n')
 			while j>0:
-				yacasoutf2nd.write(yacasprepf2nd.readline().strip() + '\n')
+				yacasoutf2nd.write("ToStdout() [Echo({N(Eval(%s),17)});];\n"%(yacasprepf2nd.readline().strip(),))
 				j = j-1
 
 			yacasoutf1st.write('ToStdout() [Echo("' + line.strip() + '");];\n')
 			while i>0:
-				yacasoutf1st.write(yacasprepf1st.readline().strip() + '\n')
+				yacasoutf1st.write("ToStdout() [Echo({N(Eval(%s),17)});];\n"%(yacasprepf1st.readline().strip(),))
 				i = i-1
 			# back to i=0 again
 		else:

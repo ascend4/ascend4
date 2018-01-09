@@ -34,7 +34,7 @@ ASC_YACAS_GEN=1 test/test compiler_autodiff \
 && pushd ascend/compiler/test \
 && python yacasgen.py \
 && yacas yacas-input-1st.txt > yacas-output-1st.txt \
-&& yacas yacas-input-2nd.txt > yacas-output-2nd.txt \
+&& yacas 		yacas-input-2nd.txt > yacas-output-2nd.txt \
 && popd && test/test compiler_autodiff
 */
 #include <string.h>
@@ -119,10 +119,8 @@ struct DiffTestData
 	int numrels;
 };
 
-
-
 #define INITDTD(d, log, varfile, FirstDer, SecondDer, use_yacas, YacasInFirst, YacasInSecond ,instroot, inputname) \
-do { \
+if(1){\
 	d.outfile = log; \
 	d.varfile = varfile; \
 	d.FirstDer = FirstDer;\
@@ -137,26 +135,24 @@ do { \
 	d.d1errors_yacas= 0; \
 	d.d2errors_yacas= 0; \
 	d.numrels = 0;\
-} while (0)
+}
 
-#define LOG(d, ...) do { \
-	if ( d != NULL && d-> outfile != NULL) { \
-		fprintf(d->outfile,  __VA_ARGS__); \
-	} \
-	} while ( 0 )
+#define LOG(d, ...)\
+	if(d != NULL && d->outfile != NULL){ \
+		fprintf(d->outfile,__VA_ARGS__); \
+	}
 
 /** Temporary Declarations */
 static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr);
 
-
 static void test_autodiff(void){
 #define OUTENV "../ascend/compiler/test/LOG.html"
-#define VARFILE "../ascend/compiler/test/Vars.txt"
+#define VARFILE "../ascend/compiler/test/varnames.txt"
 
-#define SAFEDER_1ST "../ascend/compiler/test/Safes1st.txt"
-#define SAFEDER_2ND "../ascend/compiler/test/Safes2nd.txt"
-#define NONSAFEDER_1ST "../ascend/compiler/test/Nonsafes1st.txt"
-#define NONSAFEDER_2ND "../ascend/compiler/test/Nonsafes2nd.txt"
+#define SAFEDER_1ST "../ascend/compiler/test/derivs-safe-1st.txt"
+#define SAFEDER_2ND "../ascend/compiler/test/derivs-safe-2nd.txt"
+#define NONSAFEDER_1ST "../ascend/compiler/test/derivs-nonsafe-1st.txt"
+#define NONSAFEDER_2ND "../ascend/compiler/test/derivs-nonsafe-2nd.txt"
 
 #define YACAS_PREP_1ST "../ascend/compiler/test/yacas-prep-1st.txt"
 #define YACAS_PREP_2ND "../ascend/compiler/test/yacas-prep-2nd.txt"
@@ -232,7 +228,7 @@ static void test_autodiff(void){
 	OPENTESTFILE(OUTENV,outfile,"w");
 
 	/** @TODO Open the following streams only if Environment Variable is set */
-	if(getenv(USE_YACAS_ENV) != NULL ){
+	if(getenv(USE_YACAS_ENV) && atol(getenv(USE_YACAS_ENV))){
 		MSG("Generating YACAS input files for verification of ASCEND's values");
 		OPENTESTFILE(VARFILE,varfile,"w");
 		OPENTESTFILE(YACAS_PREP_2ND,SecondDer.yacas,"w");
@@ -334,14 +330,8 @@ static void test_autodiff(void){
 }
 
 
-/**
-		Files into which information is extracted
-		outfile - comment
-		safeder - all safe 2nd derivative values
-		nonsafeder - all non-safe 2nd derivative values
-		outfile - End of a Relation
-		yacas  - O/P to YACAS
-
+/*------------------------------------------------------------------------------
+	Routine to conduct derivative tests on a single relation
 */
 static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 	double err,residual_rev,residual_fwd;
@@ -368,28 +358,26 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 	MSG("Relation %d: '%s'",data->numrels,rname);
 	data->numrels++;
 
+	/* get the relation, check type */
 	r = (struct relation *)GetInstanceRelation(inst, &reltype);
-
 	if(r == NULL){
 		LOG(data, "<font color='orange'><b>! skipping instance with null struct relation:</b></font> %s</br>\n", rname);
 		RETURN;
 	}
-
 	if(reltype != e_token){
 		LOG(data, "<font color='orange'><b>! skipping non-token relation</b></font> %s</br>\n", rname);
 		RETURN;
 	}
-
 	LOG(data, "</br><font color='green'><b> Evaluating token relation </b></font> <b> %s </b> </br>\n", rname);
 
+	/* convert relation to YACAS code string */
 	infix_rel = WriteRelationString(inst, data->root
 			, (WRSNameFunc)RelationVarXName, NULL, relio_yacas, NULL
 	);
-
-	LOG(data,"</br></br><b>Relation:  %s  </br>\n",infix_rel); // Do I need to escape this??
-
 	num_var = NumberVariables(r); // FIXME or should we use rel_n_incidences
 
+	/* write out the values of each variable; log rel + var vals */
+	LOG(data,"</br></br><b>Relation:  %s  </br>\n",infix_rel); // Do I need to escape this??
 	for(i=0; i<num_var; i++) {
 		varname = RelationVarXName(r,i+1,&myrd);
 		if (varname!=NULL){
@@ -398,7 +386,6 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 			LOG(data,"%21.17g</br>\n",RealAtomValue(var_inst));
 		}
 	}
-
 	LOG(data,"</b>\n");
 
 	gradients_rev = ASC_NEW_ARRAY(double,num_var); // or rel_n_incidences
@@ -408,7 +395,7 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 	deriv_2nd = ASC_NEW_ARRAY(double,num_var); // or rel_n_incidences
 	CU_TEST_FATAL(NULL!=deriv_2nd);
 
-	/** @todo log the infix form of the relation and associated variables values */ /*FIXME*/
+	/* write out data files for use by yacas */
 	if(data->use_yacas){
 		if(data->FirstDer.yacas!=NULL && data->SecondDer.yacas!=NULL && data->varfile!=NULL){
 			/** Print Variables Values First */
@@ -429,7 +416,7 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 
 					// Generating Output for First Derivative Yacas Input file
 					fprintf(data->FirstDer.yacas
-						,"ToStdout() [Echo({N(Eval(D(%s) %s),17)});];\n"
+						,"D(%s) (%s)\n"
 						,buf,infix_rel
 					);
 
@@ -437,7 +424,7 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 					for (j=0;j<num_var;j++){
 						varname = RelationVarXName(r,j+1,&myrd);
 						fprintf(data->SecondDer.yacas
-							,"ToStdout() [Echo(N(Eval({D(%s) D(%s) %s}),17);];\n"
+							,"D(%s) D(%s) (%s)\n"
 							,buf,varname,infix_rel
 						);
 					}
@@ -497,7 +484,7 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 					err = gradients_rev[i];
 				}
 				err = fabs(err);
-				LOG(data,"<tr><td>Column</td><td>ASCEND(NONSAFE,REV)</td><td>YACAS</td><td>Percentage Mismatch</td></tr>\n");
+				LOG(data,"<tr><td>Column</td><td>ASCEND(nonsafe,rev)</td><td>YACAS</td><td>Percentage Mismatch</td></tr>\n");
 				CU_TEST(err < RAD_TOL);
 				if (err > RAD_TOL) {
 					MSG("dR/dx%lu_yacas = %g",i,yacas_first_der);
@@ -517,7 +504,7 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 			err = gradients_rev[i];  // These are totally different quantities should I make err as 1?
 		}
 		err = fabs(err);
-		LOG(data,"<tr><td>Column</td><td>ASCEND(NONSAFE,REV)</td><td>ASCEND(NONSAFE,FWD)</td><td>Percentage Mismatch</td></tr>\n");
+		LOG(data,"<tr><td>Column</td><td>ASCEND(nonsafe,rev)</td><td>ASCEND(nonsafe,fwd)</td><td>Percentage Mismatch</td></tr>\n");
 		//CU_ASSERT(err <= RAD_TOL);
 		if(err > RAD_TOL){
 			MSG("Failed tolerance in first deriv #%lu",i);
@@ -540,12 +527,16 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 		fgets(s,PATH_MAX,data->second_yacas);
 		char s2[PATH_MAX];
 		snprintf(s2,PATH_MAX,"@ Relation: %s\n",rname);
-		CU_TEST(0==strcmp(s,s2));
+		if(0!=strcmp(s,s2)){
+			MSG("line: <%s>",s);
+			MSG("expected: <%s>",s2);
+			CU_FAIL_FATAL("wrong relation read from second-derivs yacas file");
+		}
 	}
 
 	LOG(data,"</br> <b> Table of Values for Second Derivatives </b> </br>\n");
 	LOG(data,"\n<table BORDER>\n");
-	LOG(data,"<tr><td>Row</td><td>Column</td><td>ASCEND (NON-SAFE)</td><td>Yacas</td><td>Percentage Mismatch</td></tr>\n");
+	LOG(data,"<tr><td>Row</td><td>Column</td><td>ASCEND (nonsafe)</td><td>YACAS</td><td>Percentage Mismatch</td></tr>\n");
 	for(i=0; i<num_var; i++){
 		RelationCalcSecondDeriv(inst,deriv_2nd,i);
 		if(data->use_yacas && data->SecondDer.nonsafeder!=NULL){
@@ -560,18 +551,16 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 				if(!feof(data->second_yacas)){
 					fscanf(data->second_yacas,"%g\n",&yacas_second_der);
 
-					MSG("d2R/dx%ludx%lu_yacas = %g",i,j,yacas_second_der);
-					MSG("d2R/dx%ludx%lu_rev = %g",i,j,deriv_2nd[j]);
-
-
 					if(yacas_second_der!=0.0){
 						err = ((double)yacas_second_der - deriv_2nd[j]) / (double)yacas_second_der; /* todo err scaling */
 					}else{
 						err = deriv_2nd[j];
 					}
 					err = fabs(err);
-					CU_ASSERT(err <= RAD_TOL);
 					if(err > RAD_TOL) {
+						MSG("d2R/dx%ludx%lu_yacas = %g",i,j,yacas_second_der);
+						MSG("d2R/dx%ludx%lu_rev = %g",i,j,deriv_2nd[j]);
+						CU_FAIL(err <= RAD_TOL);
 						data->d2errors_yacas ++;
 						LOG(data,"<tr bgcolor='yellow'><td><font color='red'>%lu</font></td><td><font color='red'>%lu</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%.4g</font></td></tr>\n", i,j,deriv_2nd[j],yacas_second_der,err*100);
 					}

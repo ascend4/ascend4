@@ -1,5 +1,81 @@
 @ Relation: dummy1
-Error in file yacas-input-2nd.txt
-yacas-input-2nd.txt(4) : Expecting a ) closing bracket for sub-expression, but got ; instead
-
+0 
+0 
+0 
+0 
+@ Relation: dummy10
+-0.64711867137502782e-1 
+@ Relation: dummy11
+-0.11111111111111111 
+0 
+0 
+1. 
+@ Relation: dummy12
+-0.11111111111111111 
+@ Relation: dummy13
+0 
+0 
+0 
+6. 
+@ Relation: dummy14
+-0.99915166368177962 
+0 
+0 
+0.10473287879263937 
+@ Relation: dummy15
+-0.9375e-1 
+0 
+0 
+0.3125e-1 
+@ Relation: dummy16
+-0.29613232112104285e-1 
+0 
+0 
+-1.56652723372408861 
+@ Relation: dummy17
+54.20417274052478134 
+0 
+0 
+-0.61497813411078717e-1 
+@ Relation: dummy18
+0.3125e-1 
+0 
+0 
+0.3125e-1 
+@ Relation: dummy19
+0 
+@ Relation: dummy2
+0 
+0 
+0 
+0 
+@ Relation: dummy20
+0 
+0 
+0 
+0.74074074074074074e-1 
+@ Relation: dummy21
+0.6421856876378079 
+@ Relation: dummy3
+0 
+@ Relation: dummy4
+0 
+@ Relation: dummy5
+-0.25 
+@ Relation: dummy6
+0.75 
+@ Relation: dummy7
+-0.3125e-1 
+0 
+0 
+-0.3125e-1 
+@ Relation: dummy9
+0.28460498941515414 
+0 
+0 
+0.31622776601683792e-1 
+@ Relation: yacas_pow_bug
+0.58578643762690495 
+@ Relation: yacas_pow_bug_test
+0.35355339059327376 
 Quitting...
