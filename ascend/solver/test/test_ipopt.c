@@ -83,6 +83,7 @@ static void test_ipopt(const char *filenamestem){
 
 	/* assign solver */
 	const char *solvername = "IPOPT";
+	package_load("ipopt",NULL);
 	int index = slv_lookup_client(solvername);
 	if(index == -1){
 		sim_destroy(siminst);
