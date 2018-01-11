@@ -30,12 +30,17 @@
 
 	To update the YACAS output files, use the following commands: 
 
-ASC_YACAS_GEN=1 test/test compiler_autodiff \
-&& pushd ascend/compiler/test \
+pushd ~/ascend/trunk \
+&& scons -j4 test ascend models solvers \
+&& LD_LIBRARY_PATH=. ASC_YACAS_GEN=1 test/test compiler_autodiff \
+&& cd ascend/compiler/test \
 && python yacasgen.py \
-&& yacas yacas-input-1st.txt > yacas-output-1st.txt \
-&& yacas 		yacas-input-2nd.txt > yacas-output-2nd.txt \
-&& popd && test/test compiler_autodiff
+&& dirn=`pwd` \
+&& cd /usr/share/yacas \
+&& yacas $dirn/yacas-input-1st.txt > $dirn/yacas-output-1st.txt \
+&& yacas $dirn/yacas-input-2nd.txt > $dirn/yacas-output-2nd.txt \
+&& cd $dirn/../../.. && LD_LIBRARY_PATH=. test/test compiler_autodiff;
+popd
 */
 #include <string.h>
 #include <stdlib.h>
@@ -402,9 +407,9 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 			for(i=0; i<num_var; i++) {
 				varname = RelationVarXName(r,i+1,&myrd);
 				if (varname!=NULL){
-					fprintf(data->varfile,"%s:=",varname);
+					fprintf(data->varfile,"%s==",varname);
 					var_inst = RelationVariable(r,i+1);
-					fprintf(data->varfile,"%21.17g\n",RealAtomValue(var_inst));
+					fprintf(data->varfile,"%-21.17g\n",RealAtomValue(var_inst));
 				}
 			}
 			fprintf(data->varfile,"@ Relation: %s\n",rname);

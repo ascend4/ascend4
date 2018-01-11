@@ -9,7 +9,7 @@
 @ Relation: dummy12
 0.33333333333333333 
 @ Relation: dummy13
-1 
+1. 
 -3. 
 @ Relation: dummy14
 0.97087378640776699 
