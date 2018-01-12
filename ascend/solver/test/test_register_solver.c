@@ -28,7 +28,8 @@
 	T(lrslv) \
 	T(slvdof) \
 	T(datareader) \
-	T(sunpos)
+	T(sunpos) \
+	T(cmslv)
 
 #define PROTO_SOLVER(NAME) PROTO(solver,NAME)
 TESTS(PROTO_SOLVER)
