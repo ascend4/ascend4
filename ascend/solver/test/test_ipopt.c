@@ -32,6 +32,7 @@
 #include <ascend/compiler/safe.h>
 #include <ascend/compiler/qlfdid.h>
 #include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/packages.h>
 
 #include <ascend/compiler/slvreq.h>
 

@@ -51,7 +51,7 @@
 0.31622776601683793 
 0.9486832980505138 
 @ Relation: yacas_pow_bug
-1.41421356237309505 
+1 
 @ Relation: yacas_pow_bug_test
 0.70710678118654752 
 Quitting...

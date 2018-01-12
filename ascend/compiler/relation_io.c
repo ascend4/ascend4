@@ -675,7 +675,7 @@ void WriteSide(FILE *f,
       case 1:
 	lhs = LeftHandSide(r,pos,side);
 	term = RelationTerm(r,lhs,side);
-	if (NeedParen(t,RelationTermType(term),0)) {
+	if (NeedParen(t,RelationTermType(term),0)){
 	  PUTC('(',f);
         }
 	PushRelation(pos,2,lhs);
@@ -836,7 +836,29 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
       break;
     case e_power:
     case e_ipower:
-      if (lang == relio_C) {
+#if 0
+      if(lang == relio_yacas){
+        switch(first){
+        case 1:
+          Asc_DStringAppend(dsPtr,"((",2);
+          PushRelation(pos,2,NOLHS);
+          lhs = LeftHandSide(r,pos,side);
+          PushRelation(lhs,1,NOLHS);
+          break;
+        case 2:
+          Asc_DStringAppend(dsPtr,")^",2);
+          PushRelation(pos,0,NOLHS);
+          PushRelation(pos-1,1,NOLHS);
+          break;
+        case 0:
+          Asc_DStringAppend(dsPtr,")",1);
+          break;
+        default: /* first */
+          ASC_PANIC("Don't know this type of stack first");
+        }
+      }else
+#endif
+      if(lang == relio_C){
         /* we assume the args to pow Always need () around them
          * to keep , from confusing anything, so lhs not used.
          */
@@ -851,7 +873,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
           PushRelation(pos,2,NOLHS);
           lhs = LeftHandSide(r,pos,side);
           PushRelation(lhs,1,NOLHS);
-	  break;
+          break;
         case 2:
           /* seeing this binary token the second time */
           if (t==e_power) {
@@ -886,7 +908,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
         /* seeing this binary token the first time */
         lhs = LeftHandSide(r,pos,side);
         term = RelationTerm(r,lhs,side);
-        if (NeedParen(t,RelationTermType(term),0)) {
+        if (NeedParen(t,RelationTermType(term),0)||lang==relio_yacas) {
           Asc_DStringAppend(dsPtr,"(",1);
         }
         PushRelation(pos,2,lhs);
@@ -895,7 +917,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
       case 2:
         /* seeing this binary token the second time */
         term = RelationTerm(r,oldlhs,side);
-        if (NeedParen(t,RelationTermType(term),0)) {
+        if (NeedParen(t,RelationTermType(term),0)||lang==relio_yacas) {
           Asc_DStringAppend(dsPtr,")",1);
         }
         Asc_DStringAppend(dsPtr," ",1);
