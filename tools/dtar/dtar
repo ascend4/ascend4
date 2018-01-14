@@ -145,6 +145,7 @@ for m in M:
 # search for debian/* files inside the meta tarball
 tmeta = None
 if fmeta:
+	print "Opening '%s'" % fmetafull
 	tmeta = tarfile.open(fmetafull)
 	Mmeta = tmeta.getmembers()
 	for m in Mmeta:
@@ -284,7 +285,18 @@ try:
 	os.chdir(os.path.join(maindir,head))
 	if os.path.exists("debian/patches"):
 		print "PATCH DIR FOUND"
-		patches = glob.glob("debian/patches/*.patch")
+		if os.path.exists("debian/patches/series"):
+			print "'series' file found"
+			with open("debian/patches/series") as file:
+				patches = []
+				for s in file.readlines():
+					s1 = s.strip()
+					if s1:
+						patches.append(os.path.join("debian/patches",s1))
+			os.unlink("debian/patches/series")
+		else: 
+			print "globbing for patches"
+			patches = glob.glob("debian/patches/*.patch")
 		for p in patches:
 			print "PATCH %s" % p
 			pf = open(p,"r")
@@ -313,6 +325,11 @@ try:
 		unzip = ["bzip2","-d"]
 		exe = "/bin/bzip2"
 		ext = "bz2"
+	elif f[-7:] == ".tar.xz" or f[-4:] == ".txz":
+		print "Original tarball is in xz format"
+		unzip = ["xz","-d"]
+		exe = "/usr/bin/xz"
+		ext = "xz"
 
 	if not unzip:
 		raise RuntimeError("Unrecognised input format for '%s'" % f)
