@@ -24,7 +24,7 @@
 */
 
 #include "../helmholtz.h"
-#ifdef CUNIT_TEST
+#ifndef CUNIT_TEST
 
 //#define CARBONDIOXIDE_R 188.9241
 #define GAS_C 8314.510

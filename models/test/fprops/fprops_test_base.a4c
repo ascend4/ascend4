@@ -133,9 +133,12 @@ METHOD on_load;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 	SOLVE;
+	RUN self_test;
+END on_load;
+METHOD self_test;
 	ASSERT abs(T - 220.03 {K}) < 0.005 {K};
 	ASSERT abs(v - 1/(1166 {kg/m^3})) < 1/(0.5 {kg/m^3});
-END on_load;
+END self_test;
 END stream_state_test_co2;
 
 
@@ -151,9 +154,12 @@ METHOD on_load;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 	SOLVE;
+	RUN self_test;
+END on_load;
+METHOD self_test;
 	ASSERT abs(T - 313.45 {K}) < 0.005 {K};
 	ASSERT abs(v - 1/(874.84 {kg/m^3})) < 1/(0.005 {kg/m^3});
-END on_load;
+END self_test;
 END stream_state_test_toluene;
 
 
