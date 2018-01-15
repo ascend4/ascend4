@@ -153,7 +153,11 @@ void test_fluid_oxygen(void){
 	ASSERT_TOL_VAL(ideal_cp(120,6.43209699241E-1,P->data,&err),9.09800101279e2,1e-9);
 	ASSERT_TOL_VAL(ideal_cp(270,2.85140864243e-1,P->data,&err),9.1439308538e2,1e-9);
 
+#ifdef REALLY_TEST
 	helm_run_test_cases(P, ntd, td, 'C');
+#else
+	(void)ntd; (void)td;
+#endif
 }
 
 #endif

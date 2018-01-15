@@ -68,7 +68,7 @@ int helm_check_d2pdrho2_T(const PureFluid *d, unsigned ntd, const TestData *td);
 */
 int helm_check_p_c(const HelmholtzData *d);
 
-//#define TEST_VERBOSE
+#define TEST_VERBOSE
 
 #ifdef TEST_VERBOSE
 # define TEST_SUCCESS(FN,PARAM1,PARAM2,PARAM3,VAL) \
@@ -95,7 +95,7 @@ int helm_check_p_c(const HelmholtzData *d);
 		fprintf(stderr,", %s(T=%f,rho=%f) = %8.2e with %.6f%% err.\n"\
 		,PROP,STATE.T,STATE.rho,VAL,relerrpc\
 	)
-# define TEST_MSG(MSG,ARGS...) fprintf(stderr,MSG "\n",__VA_ARGS)
+# define TEST_MSG(MSG,...) fprintf(stderr,MSG "\n",##__VA_ARGS__)
 #else
 # define TEST_SUCCESS(...)
 # define TEST_SUCCESS_PROP(...)
@@ -152,7 +152,7 @@ int helm_check_p_c(const HelmholtzData *d);
 		}else{\
 			TEST_SUCCESS_PROP(#PROP,STATE,VAL);\
 		}\
-		CU_TEST_FATAL(fabs(x_err)<=fabs(TOL));\
+		CU_TEST(fabs(x_err)<=fabs(TOL));\
 	}
 
 /* a simple macro to actually do the testing */
