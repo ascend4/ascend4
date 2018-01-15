@@ -9,6 +9,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define CARBONMONOXIDE_M 28.0101 /* kg/kmol */
 #define CARBONMONOXIDE_R (8314.472/CARBONMONOXIDE_M) /* J/kg/K */
@@ -80,26 +81,12 @@ EosData eos_carbonmonoxide = {
 	,.data = {.helm = &helmholtz_data_carbonmonoxide}
 };
 
-
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py carbonmonoxide
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	PureFluid *P = helmholtz_prepare(&eos_carbonmonoxide,NULL);
-    return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+# include <math.h>
+# include <assert.h>
+# include <stdio.h>
+extern const EosData eos_carbonmonoxide;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation. 
@@ -130,5 +117,10 @@ const TestData td[] = {
 };
 
 const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+int test_fluid_carbonmonoxide(void){
+	PureFluid *P = helmholtz_prepare(&eos_carbonmonoxide,NULL);
+    return helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

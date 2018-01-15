@@ -1,6 +1,8 @@
 #ifndef FPROPS_TEST_H
 #define FPROPS_TEST_H
 
+#include <CUnit/CUnit.h>
+
 #include "rundata.h"
 #include "color.h"
 //#include "sat.h"
@@ -66,7 +68,7 @@ int helm_check_d2pdrho2_T(const PureFluid *d, unsigned ntd, const TestData *td);
 */
 int helm_check_p_c(const HelmholtzData *d);
 
-#define TEST_VERBOSE
+//#define TEST_VERBOSE
 
 #ifdef TEST_VERBOSE
 # define TEST_SUCCESS(FN,PARAM1,PARAM2,PARAM3,VAL) \
@@ -75,8 +77,16 @@ int helm_check_p_c(const HelmholtzData *d);
 		fprintf(stderr,"OK");\
 		color_off(stderr);\
 		fprintf(stderr,", %s(%f,%f,%s) = %8.2e with %.6f%% err.\n"\
-		,FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc\
-	)
+		,FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc)
+
+# define TEST_SUCCESS2(CALC,RVAL,RELERR) \
+		fprintf(stderr,"    ");\
+		color_on(stderr,ASC_FG_GREEN);\
+		fprintf(stderr,"OK");\
+		color_off(stderr);\
+		fprintf(stderr,", %s = %8.2e with %0.6f%% err.\n"\
+			,#CALC,RVAL,RELERR*100);
+
 # define TEST_SUCCESS_PROP(PROP,STATE,VAL) \
 		fprintf(stderr,"    ");\
 		color_on(stderr,ASC_FG_GREEN);\
@@ -85,9 +95,12 @@ int helm_check_p_c(const HelmholtzData *d);
 		fprintf(stderr,", %s(T=%f,rho=%f) = %8.2e with %.6f%% err.\n"\
 		,PROP,STATE.T,STATE.rho,VAL,relerrpc\
 	)
+# define TEST_MSG(MSG,ARGS...) fprintf(stderr,MSG "\n",__VA_ARGS)
 #else
-# define TEST_SUCCESS
-# define TEST_SUCCESS_PROP
+# define TEST_SUCCESS(...)
+# define TEST_SUCCESS_PROP(...)
+# define TEST_MSG(MSG,ARGS...)
+# define TEST_SUCCESS2(...)
 #endif
 
 #define ASSERT(FACT) {\
@@ -96,8 +109,8 @@ int helm_check_p_c(const HelmholtzData *d);
 			fprintf(stderr,"ERROR");\
 			color_off(stderr);\
 			fprintf(stderr," %s:%d: failed assertion '%s'\n",__FILE__,__LINE__,#FACT);\
-			exit(1);\
 		}\
+		CU_TEST_FATAL(FACT)\
 	}
 /* a simple macro to actually do the testing */
 #define ASSERT_TOL(FN,PARAM1,PARAM2,PARAM3,PARAM4,VAL,TOL) {\
@@ -115,10 +128,10 @@ int helm_check_p_c(const HelmholtzData *d);
 				, __FILE__,__LINE__, #FN,PARAM1,PARAM2,#PARAM3, cval, VAL,cval-(VAL)\
 				,relerrpc,relerrpc/100\
 			);\
-			exit(1);\
 		}else{\
 			TEST_SUCCESS(#FN,PARAM1,PARAM2,PARAM3,VAL);\
 		}\
+		CU_TEST_FATAL(fabs(x_err)<=fabs(TOL));\
 	}
 
 #define ASSERT_PROP(PROP,STATE,ERR1,VAL,TOL){\
@@ -136,10 +149,10 @@ int helm_check_p_c(const HelmholtzData *d);
 				, __FILE__,__LINE__, #PROP,STATE.T,STATE.rho, cval, VAL,x_err\
 				,relerrpc,relerrpc/100\
 			);\
-			exit(1);\
 		}else{\
 			TEST_SUCCESS_PROP(#PROP,STATE,VAL);\
 		}\
+		CU_TEST_FATAL(fabs(x_err)<=fabs(TOL));\
 	}
 
 /* a simple macro to actually do the testing */
@@ -158,10 +171,10 @@ int helm_check_p_c(const HelmholtzData *d);
 				, __FILE__,__LINE__, #FN,PARAM1,PARAM2,#PARAM3, cval, VAL,cval-(VAL)\
 				,relerrpc,relerrpc/100\
 			);\
-			exit(1);\
 		}else{\
 			TEST_SUCCESS(#FN,PARAM1,PARAM2,PARAM3,VAL);\
 		}\
+		CU_TEST_FATAL(fabs(x_err)<=fabs(TOL));\
 	}
 
 /* even simpler testing of an assertion */
@@ -180,16 +193,11 @@ int helm_check_p_c(const HelmholtzData *d);
 				" should be %.5e, error is %.10e (%.2f%%, %1e)!\n"\
 				,__FILE__,__LINE__,#CALC,cval,rval,cval-rval,relerr*100,relerr\
 			);\
-			exit(1);\
 		}else{\
-			fprintf(stderr,"    ");\
-			color_on(stderr,ASC_FG_GREEN);\
-			fprintf(stderr,"OK");\
-			color_off(stderr);\
-			fprintf(stderr,", %s = %8.2e with %0.6f%% err.\n"\
-				,#CALC,rval,relerr*100\
-			);\
+			TEST_SUCCESS2(CALC,rval,relerr);\
 		}\
+		CU_TEST_FATAL(fabs(x_err)<=fabs(TOL));\
 	}
+
 
 #endif

@@ -9,6 +9,7 @@ J. Phys. Chem. Ref. Data, 35(2):929-1019, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define BUTANE_M 58.12220 /* kg/kmol */
 #define BUTANE_R (8314.472/BUTANE_M) /* J/kg/K */
@@ -96,32 +97,19 @@ const EosData eos_butane = {
 };
 
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py butane
-*/
-
-#ifdef TEST
+#else
+extern const EosData eos_butane;
 
 #include "../test.h"
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
 
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_butane, NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
-
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.00E+2, 1.00000000001E-1, 6.99347206157E+2, -6.45505493226E+2, -6.45362502736E+2, -2.53956986499E+0, 1.44891316097E+0, 2.01339462067E+0, 1.2307884332E+0, -2.05778971103E+2}
@@ -153,6 +141,11 @@ const TestData td[] = {
     , {3.00E+2, 1.E+1, 1.66431978463E+2, 4.5581919583E+2, 5.1590380272E+2, 6.42488771429E-1, 2.76058623857E+0, 3.43469859329E+0, 2.8226554162E+0, 8.75767564854E+1}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_butane(){
+	PureFluid *P = helmholtz_prepare(&eos_butane, NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

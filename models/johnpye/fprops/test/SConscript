@@ -1,13 +1,36 @@
 
 Import('fprops_env')
 
-srcs = fprops_env.Glob("[a-z]*.c")
+testsrcs = ['ideal.c','ph.c','sat1.c','sat.c','visc.c']
 
 #print "srcs =",srcs
 
-for s in srcs:
-	fprops_env.Program([s] + fprops_env['shobjs']
-		,LIBS = ["m"]
-		,LIBPATH = "#"
-	)
+#for s in testsrcs:
+#	fprops_env.Program([s] + fprops_env['shobjs']
+#		,LIBS = ["m"]
+#		,LIBPATH = "#"
+#	)
 
+#	for f in fprops_env['fluids']:
+tobjs = []
+for f in [File('../fluids/acetone.c')
+		,File('../fluids/ammonia.c')
+		,File('../fluids/butane.c')
+		,File('../fluids/butene.c')
+		,File('../fluids/carbondioxide.c')
+		,File('../fluids/carbonmonoxide.c')
+		,File('../fluids/carbonylsulfide.c')
+	]:
+	tobjs += [fprops_env.SharedObject(f
+		,CPPDEFINES=['-DTEST','-DCUNIT_TEST']
+		,OBJPREFIX='#/test/cutest-fluid-'
+	)]
+tobjs += [
+	fprops_env.SharedObject('cutest.c',OBJPREFIX='#/test/cutest-')
+	, fprops_env.SharedObject('../test.c')
+]
+
+	
+fprops_env.Program('cutest', fprops_env['shobjs'] + tobjs
+	,LIBS = ['m','cunit'] 
+)
