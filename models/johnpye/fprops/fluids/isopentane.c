@@ -9,6 +9,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define ISOPENTANE_M 72.14878 /* kg/kmol */
 #define ISOPENTANE_R (8314.472/ISOPENTANE_M) /* J/kg/K */
@@ -68,7 +69,7 @@ static HelmholtzData helmholtz_data_isopentane = {
     // no more terms
 };
 
-EosData eos_isopentane = {
+const EosData eos_isopentane = {
 	"isopentane"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -78,32 +79,15 @@ EosData eos_isopentane = {
 	,.data = {.helm = &helmholtz_data_isopentane}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py isopentane
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_isopentane, NULL);
-    return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_isopentane;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.50E+2, 9.99999999999E-2, 7.78550312815E+2, -3.43072768579E+2, -3.42944324729E+2, -1.68639820825E+0, 1.2109664353E+0, 1.73318559763E+0, 7.9315042852E-1, -1.35392829234E+2}
@@ -139,6 +123,11 @@ const TestData td[] = {
     , {2.00E+2, 1.00E+2, 6.02059803664E+2, 3.64682773449E+2, 5.30779229966E+2, 9.49592326534E-1, 2.45006104425E+0, 2.82111672668E+0, 2.43189064067E+0, -8.46168358503E+1}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_isopentane(void){
+	PureFluid *P = helmholtz_prepare(&eos_isopentane, NULL);
+    helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

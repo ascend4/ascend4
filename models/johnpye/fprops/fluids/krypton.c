@@ -9,6 +9,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define KRYPTON_M 83.798 /* kg/kmol */
 #define KRYPTON_R (8314.472/KRYPTON_M) /* J/kg/K */
@@ -59,7 +60,7 @@ static const HelmholtzData helmholtz_data_krypton = {
     }
 };
 
-EosData eos_krypton = {
+const EosData eos_krypton = {
 	"krypton"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -69,32 +70,15 @@ EosData eos_krypton = {
 	,.data = {.helm = &helmholtz_data_krypton}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py krypton
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_krypton,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_krypton;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation. 
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.50E+2, 1.E-1, 8.43306771336E+0, 9.6144022849E+1, 1.08002103846E+2, 9.0316475661E-1, 1.58469027933E-1, 2.70934234337E-1, 2.48051027471E-1, -1.50807169274E+1}
@@ -122,6 +106,11 @@ const TestData td[] = {
     , {1.00E+2, 1.00E+2, 1.70005787414E+3, 7.73104857916E+1, 1.36132012706E+2, 4.03379996159E-1, 1.89306232224E-1, 3.87775344597E-1, 2.48051027471E-1, -7.32107597752E+1}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_krypton(void){
+	PureFluid *P = helmholtz_prepare(&eos_krypton,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

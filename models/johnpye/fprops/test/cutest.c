@@ -23,6 +23,8 @@
 
 #include <CUnit/Basic.h>
 
+#include "../fluids/fluids_list.h"
+
 #ifdef __WIN32__
 # include <windows.h>
 #endif
@@ -35,33 +37,27 @@
 	} \
 
 #define ADD_TEST_SIMPLE(NAME) \
-	res = res || (NULL == CU_add_test(s, #NAME, test_##NAME));
+	res = res || (NULL == CU_add_test(s, "fluid_" #NAME, test_fluid_##NAME));
 
-#define TESTS1(T) \
-	T(fluid_acetone)\
-	T(fluid_ammonia)\
-	T(fluid_butane)\
-	T(fluid_butene)\
-	T(fluid_carbondioxide)\
-	T(fluid_carbonmonoxide)\
-	T(fluid_carbonylsulfide)
+#define X
+#define TESTS(T) FLUIDS(T,X)
 
 #define SUITE_DONE \
 	if(res)return CUE_NOTEST; \
 	return CUE_SUCCESS;
 
-#define REGISTER_TESTS_SIMPLE(SUITE,TESTS) \
+#define REGISTER_TESTS_SIMPLE(SUITE,FLUIDS) \
 	CU_ErrorCode test_register_##SUITE(void){ \
 		DEFINE_SUITE_SIMPLE(SUITE); \
-		TESTS(ADD_TEST_SIMPLE) \
+		FLUIDS(ADD_TEST_SIMPLE,X) \
 		SUITE_DONE; \
 	}
 
 #define PROTO(NAME) \
-	extern void test_##NAME(void);
-TESTS1(PROTO);
+	extern void test_fluid_##NAME(void);
+FLUIDS(PROTO,X);
 
-REGISTER_TESTS_SIMPLE(fprops,TESTS1);	
+REGISTER_TESTS_SIMPLE(fprops,FLUIDS);	
 
 int list_suites(){
 	struct CU_TestRegistry *reg = CU_get_registry();

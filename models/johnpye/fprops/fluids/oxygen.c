@@ -8,6 +8,7 @@ substances and its application to oxygen", Fluid Phase Equilibria 19(3) 175-200.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define OXYGEN_M 31.9988  /* kg/kmol */
 #define OXYGEN_R (8314.34/OXYGEN_M) /* J/kg/K */
@@ -91,7 +92,7 @@ static HelmholtzData helmholtz_data_oxygen = {
     }
 };
 
-EosData eos_oxygen = {
+const EosData eos_oxygen = {
 	"oxygen"
 	,"R. Schmidt, W. Wagner, 1985. 'A new form of the equation of state for pure "
 	 "substances and its application to oxygen', Fluid Phase Equilibria 19(3) "
@@ -102,39 +103,15 @@ EosData eos_oxygen = {
 	,.data = {.helm = &helmholtz_data_oxygen}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py oxygen
-*/
-
-#ifdef TEST
-
+#else
 #include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	FpropsError err = FPROPS_NO_ERROR;
-	double maxerr=0;
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_oxygen, NULL);
-
-	ASSERT_TOL_VAL(ideal_cp(60,1.2820239582e3,P->data,&err),9.10133773207e2,1e-9);
-	ASSERT_TOL_VAL(ideal_cp(120,6.43209699241E-1,P->data,&err),9.09800101279e2,1e-9);
-	ASSERT_TOL_VAL(ideal_cp(270,2.85140864243e-1,P->data,&err),9.1439308538e2,1e-9);
-
-    return helm_run_test_cases(P, ntd, td, 'C');
-}
+extern const EosData eos_oxygen;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
 	{-210, 0.02, 1.26802754557e3, -1.78916609977e2, -1.78900837449e2, 2.34276499745e0, 1.05931898199e0, 1.67618075825e0, 9.10091734584e-1, -3.26862219566e2}
@@ -164,6 +141,19 @@ const TestData td[] = {
 	,{990, 80, 2.04758509530e2, 9.24563667414e2, 1.31526782024e3, 6.11988309848e0, 8.64812705761e-1, 1.15136338113e0, 1.12155095535e0, -6.80576666843e3}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_oxygen(void){
+	FpropsError err = FPROPS_NO_ERROR;
+	double maxerr=0;
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_oxygen, NULL);
+
+	ASSERT_TOL_VAL(ideal_cp(60,1.2820239582e3,P->data,&err),9.10133773207e2,1e-9);
+	ASSERT_TOL_VAL(ideal_cp(120,6.43209699241E-1,P->data,&err),9.09800101279e2,1e-9);
+	ASSERT_TOL_VAL(ideal_cp(270,2.85140864243e-1,P->data,&err),9.1439308538e2,1e-9);
+
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

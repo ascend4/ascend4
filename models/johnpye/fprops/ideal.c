@@ -43,7 +43,7 @@
 
 //static void ideal_set_reference_std(FluidData *D, const ReferenceStateStd *R);
 
-#define IDEAL_DEBUG
+//#define IDEAL_DEBUG
 #ifdef IDEAL_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG

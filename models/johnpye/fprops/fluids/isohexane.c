@@ -9,12 +9,11 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define ISOHEXANE_M 86.17536 /* kg/kmol */
 #define ISOHEXANE_R (8314.472/ISOHEXANE_M) /* J/kg/K */
 #define ISOHEXANE_TC 497.7 /* K */
-
-
 
 static const IdealData ideal_data_isohexane = {
 	IDEAL_CP0,{.cp0={
@@ -70,7 +69,7 @@ static const HelmholtzData helmholtz_data_isohexane = {
 	// no more terms
 };
 
-EosData eos_isohexane = {
+const EosData eos_isohexane = {
 	"isohexane"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -80,32 +79,15 @@ EosData eos_isohexane = {
 	,.data = {.helm = &helmholtz_data_isohexane}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py isohexane
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_isohexane,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_isohexane;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation. 
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.50E+2, 1.E-1, 8.04078152185E+2, -4.16936211954E+2, -4.16811845934E+2, -1.92124969583E+0, 1.25528022922E+0, 1.76835474572E+0, 8.38896874323E-1, -1.80334311913E+2}
@@ -145,6 +127,11 @@ const TestData td[] = {
     , {2.50E+2, 1.00E+2, 6.07086865902E+2, 4.37185269944E+2, 6.01906343018E+2, 1.02757093115E+0, 2.66486029457E+0, 2.99671019961E+0, 2.63978157498E+0, -1.00388462688E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_isohexane(void){
+	PureFluid *P = helmholtz_prepare(&eos_isohexane,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

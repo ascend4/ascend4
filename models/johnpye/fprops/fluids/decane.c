@@ -11,6 +11,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define DECANE_M 142.28168 /* kg/kmol */
 #define DECANE_R (8314.472/DECANE_M) /* J/kg/K */
@@ -70,7 +71,7 @@ static const HelmholtzData helmholtz_data_decane = {
     // no other terms
 };
 
-EosData eos_decane = {
+const EosData eos_decane = {
 	"decane"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -80,32 +81,15 @@ EosData eos_decane = {
 	,.data = {.helm = &helmholtz_data_decane}
 };
 
-
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py decane
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	PureFluid *P = helmholtz_prepare(&eos_decane,NULL);
-    return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_decane;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {0.E+0, 9.99999999996E-2, 7.45973454683E+2, -4.2578052228E+2, -4.25646469253E+2, -1.19114858816E+0, 1.6781645376E+0, 2.10398398924E+0, 1.52928460778E+0, -1.00418285425E+2}
@@ -145,6 +129,11 @@ const TestData td[] = {
     , {4.00E+2, 1.00E+2, 6.18670919551E+2, 6.18555389255E+2, 7.80192209154E+2, 1.1060852784E+0, 3.11732261704E+0, 3.36140073752E+0, 3.06594598377E+0, -1.26005915903E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_decane(void){
+	PureFluid *P = helmholtz_prepare(&eos_decane,NULL);
+    helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

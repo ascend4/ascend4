@@ -9,6 +9,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define SULFURDIOXIDE_M 64.0638 /* kg/kmol */
 #define SULFURDIOXIDE_R (8314.472/SULFURDIOXIDE_M) /* J/kg/K */
@@ -63,7 +64,7 @@ static const HelmholtzData helmholtz_data_sulfurdioxide = {
     }
 };
 
-EosData eos_sulfurdioxide = {
+const EosData eos_sulfurdioxide = {
 	"sulfurdioxide"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -73,32 +74,15 @@ EosData eos_sulfurdioxide = {
 	,.data = {.helm = &helmholtz_data_sulfurdioxide}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py sulfurdioxide
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_sulfurdioxide,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_sulfurdioxide;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-5.0E+1, 1.E-1, 1.55976065755E+3, -5.44936162697E+1, -5.44295038692E+1, -2.24359876616E-1, 8.55052702696E-1, 1.36306167245E+0, 5.80497065192E-1, -4.42770980286E+0}
@@ -124,6 +108,11 @@ const TestData td[] = {
     , {2.50E+2, 1.0E+1, 1.9283594603E+2, 4.51362091591E+2, 5.03219643079E+2, 1.25777526092E+0, 6.92953803241E-1, 1.15725863274E+0, 7.36411097179E-1, -2.0664303616E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_sulfurdioxide(void){
+	PureFluid *P = helmholtz_prepare(&eos_sulfurdioxide,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

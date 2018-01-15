@@ -10,6 +10,7 @@ Fluid Phase Equilibria, 228-229C:173-187, 2005.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define TRANSBUTENE_M 56.10632 /* kg/kmol */
 #define TRANSBUTENE_R (8314.472/TRANSBUTENE_M) /* J/kg/K */
@@ -68,7 +69,7 @@ static const HelmholtzData helmholtz_data_transbutene = {
     }
 };
 
-EosData eos_transbutene = {
+const EosData eos_transbutene = {
 	"transbutene"
 	,"E W Lemmon and E C Ihmels, 2005. 'Thermodynamic Properties of "
 	"the Butenes.  Part II. Short Fundamental Equations of State', "
@@ -79,32 +80,15 @@ EosData eos_transbutene = {
 	,.data = {.helm = &helmholtz_data_transbutene}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py transbutene
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_transbutene,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_transbutene;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.00E+2, 1.E-1, 7.31716558346E+2, -2.08834478282E+2, -2.08697813341E+2, -9.45178269903E-1, 1.35256256477E+0, 1.95401581474E+0, 1.16402634564E+0, -4.51768608481E+1}
@@ -133,6 +117,11 @@ const TestData td[] = {
     , {2.50E+2, 1.0E+1, 2.20664346937E+2, 6.90384234899E+2, 7.35701931839E+2, 1.80026212645E+0, 2.33931439592E+0, 3.51191198615E+0, 2.36073150695E+0, -2.51422896555E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_transbutene(void){
+	PureFluid *P = helmholtz_prepare(&eos_transbutene,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

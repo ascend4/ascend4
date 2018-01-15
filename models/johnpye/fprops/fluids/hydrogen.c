@@ -25,6 +25,7 @@
 
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define HYDROGEN_M 2.01594
 #define HYDROGEN_R (8314.472/HYDROGEN_M)
@@ -93,7 +94,7 @@ static HelmholtzData helmholtz_data_hydrogen = {
 	}
 };
 
-EosData eos_hydrogen = {
+const EosData eos_hydrogen = {
 	"hydrogen"
 	,"Jacob Leachman thesis, via email from Steve Penoncello, 2008"
 	,NULL
@@ -102,32 +103,14 @@ EosData eos_hydrogen = {
 	,.data = {.helm = &helmholtz_data_hydrogen}
 };
 
-
-/*
-	Test suite. These tests attempt to validate the current code using
-	a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-	./test.py hydrogen
-*/
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_hydrogen,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_hydrogen;
 
 /*
 	A small set of data points calculated using REFPROP 8.0, for validation
 */
-const TestData td[] = {
+static const TestData td[] = {
 	/* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
 	/* (C), (MPa), (kg/m³), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
 	{-2.50E+2, 1.E-1, 1.12119687314E+0, 3.92130160933E+2, 4.81320563079E+2, 2.35808248576E+1, 6.29359688434E+0, 1.13471316035E+1, 1.03109124142E+1, -1.53765934519E+2}
@@ -197,7 +180,12 @@ const TestData td[] = {
 	, {5.00E+2, 1.00E+2, 2.51690712101E+1, 7.70147310913E+3, 1.16746034311E+4, 3.88161423725E+1, 1.08303663675E+1, 1.4796167121E+1, 1.4680327543E+1, -2.23092273662E+4}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_hydrogen(void){
+	PureFluid *P = helmholtz_prepare(&eos_hydrogen,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif
 

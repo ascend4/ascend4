@@ -11,12 +11,11 @@ J. Phys. Chem. Ref. Data, 20(6):1061-1151, 1991.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define METHANE_M 16.0428 /* kg/kmol */
 #define METHANE_R 518.2705 /* J/kg/K */
 #define METHANE_TC 190.564 /* K */
-
-
 
 static const IdealData ideal_data_methane = {
 	IDEAL_CP0
@@ -106,7 +105,7 @@ static HelmholtzData helmholtz_data_methane = {
     , 0
 };
 
-EosData eos_methane = {
+const EosData eos_methane = {
 	"methane"
 	,"U Setzmann and W Wagner, 1991. 'A New Equation of State and Tables "
 	"of Thermodynamic Properties for Methane Covering the Range from the "
@@ -118,33 +117,15 @@ EosData eos_methane = {
 	,.data = {.helm = &helmholtz_data_methane}
 };
 
-
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py methane
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_methane, NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_methane;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
 	{-1.80E+2, 1.E-1, 4.4825326337E+2, -6.36195233809E+1, -6.33964352114E+1, -6.2043265267E-1, 2.15238924363E+0, 3.37617580547E+0, 2.0741142516E+0, -5.82622178463E+0}
@@ -195,6 +176,12 @@ const TestData td[] = {
 	, {3.20E+2, 1.00E+2, 2.16159562384E+2, 1.2304790058E+3, 1.69310022365E+3, 4.7056532676E+0, 2.82703230566E+0, 3.61935590506E+0, 3.24685115895E+0, -1.56067922988E+3}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_methane(void){
+	PureFluid *P = helmholtz_prepare(&eos_methane, NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
+
 
 #endif

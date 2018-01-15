@@ -9,6 +9,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define R41_M 34.03292 /* kg/kmol */
 #define R41_R (8314.472/R41_M) /* J/kg/K */
@@ -65,7 +66,7 @@ static const HelmholtzData helmholtz_data_r41 = {
 	}
 };
 
-EosData eos_r41 = {
+const EosData eos_r41 = {
 	"r41"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -75,32 +76,15 @@ EosData eos_r41 = {
 	,.data = {.helm = &helmholtz_data_r41}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py r41
-*/
-
-#ifdef TEST
-
+#else
 #include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_r41,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+extern const EosData eos_r41;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation. 
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.00E+2, 1.E-1, 9.24980088556E+2, -1.99303694221E+1, -1.98222589869E+1, 1.6029011057E-2, 1.30940733353E+0, 2.06326405214E+0, 9.88184909757E-1, -2.27057926867E+1}
@@ -122,7 +106,11 @@ const TestData td[] = {
     , {1.00E+2, 1.0E+1, 1.89482571675E+2, 5.09688928852E+2, 5.62464231149E+2, 2.06413152473E+0, 1.29603321023E+0, 3.07868085845E+0, 1.24109000437E+0, -2.60541749599E+2}
     , {1.50E+2, 1.0E+1, 1.27395304477E+2, 6.0355537795E+2, 6.82051206671E+2, 2.36616436094E+0, 1.25413475871E+0, 2.03231400813E+0, 1.34651126469E+0, -3.9768707138E+2}
 };
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+void test_fluid_r41(void){
+	PureFluid *P = helmholtz_prepare(&eos_r41,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

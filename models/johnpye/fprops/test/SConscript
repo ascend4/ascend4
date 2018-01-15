@@ -11,16 +11,8 @@ testsrcs = ['ideal.c','ph.c','sat1.c','sat.c','visc.c']
 #		,LIBPATH = "#"
 #	)
 
-#	for f in fprops_env['fluids']:
 tobjs = []
-for f in [File('../fluids/acetone.c')
-		,File('../fluids/ammonia.c')
-		,File('../fluids/butane.c')
-		,File('../fluids/butene.c')
-		,File('../fluids/carbondioxide.c')
-		,File('../fluids/carbonmonoxide.c')
-		,File('../fluids/carbonylsulfide.c')
-	]:
+for f in fprops_env['fluids']:
 	tobjs += [fprops_env.SharedObject(f
 		,CPPDEFINES=['-DTEST','-DCUNIT_TEST']
 		,OBJPREFIX='#/test/cutest-fluid-'

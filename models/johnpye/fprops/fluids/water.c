@@ -15,7 +15,8 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../filedata.h"
+#include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define WATER_R 461.51805 /* J/kg·K */
 #define WATER_TC 647.096 /* K */
@@ -142,7 +143,7 @@ static HelmholtzData helmholtz_data_water = {
 	}
 };
 
-EosData eos_water = {
+const EosData eos_water = {
 	"water"
 	,"IAPWS-95"
 	,"http://www.iapws.org"
@@ -151,176 +152,15 @@ EosData eos_water = {
 	,.data = {.helm = &helmholtz_data_water}
 };
 
-#ifdef TEST
+#else
 # include "../test.h"
-# include "../sat.h"
-# include "../helmholtz.h"
-
-/*
-	Test suite. These tests attempt to validate the current code using
-	a few sample figures output by REFPROP 7.0.
-
-	To run the test, compile and run as follows:
-
-	./test.py water
-*/
-# include <math.h>
-# include <stdlib.h>
-# include <stdio.h>
-
-# include "../fprops.h"
-# include "../rundata.h"
-# include "../cp0.h"
-# include "../ideal.h"
-# include "../helmholtz_impl.h"
+extern const EosData eos_water;
 
 typedef struct{double T, rho, p, cv, w, s;} TestDataIAPWS95;
-const TestDataIAPWS95 td[]; const unsigned ntd;
-
-const TestDataSat tds[]; const unsigned ntds;
-
-const TestData td1[]; const unsigned ntd1;
-
-int main(void){
-	double rho, T;
-	test_init();
-
-	double maxerr = 0;
-	unsigned i;
-
-	/* LOW-LEVEL TEST DATA PROVIDED IN IAPWS95 */
-
-	fprintf(stderr,"\nIAPWS95 TABLE 6 TESTS\n");
-	T = 500.; /* K */
-	rho = 838.025; /* kg/m³ */
-	PureFluid *PI = ideal_prepare(&eos_water,NULL);
-	double tau = PI->data->T_c / T;
-	double delta = rho / PI->data->rho_c;
-	//fprintf(stderr,"tau = %f, delta = %f\n",tau,delta);
-
-	ASSERT_TOL_3(ideal_phi, tau, delta, PI->data->cp0, 0.204797733E1, 1e-8);
-	ASSERT_TOL_3(ideal_phi_tau, tau, delta, PI->data->cp0, 0.904611106E1, 1e-8);
-#define IDEAL_PHI_TAUTAU_2(A,B,C) ideal_phi_tautau(A,C)
-	ASSERT_TOL_3(IDEAL_PHI_TAUTAU_2, tau, delta, PI->data->cp0, -0.193249185E1, 1e-8);
-	/* FIXME: still need to implement helm_ideal_del, helm_ideal_deldel, helm_ideal_deltau */
-
-
-	PureFluid *P = helmholtz_prepare(&eos_water,NULL);
-	FpropsError error=FPROPS_NO_ERROR;
-
-	ASSERT(NULL != P->data);
-	ASSERT(NULL != P->data->cp0);
-	ASSERT(NULL != P->data->corr.helm);
-
-#define D (P->data->corr.helm)
-	ASSERT_TOL_3(helm_resid, tau, delta, D, -0.342693206E1, 1e-8);
-	ASSERT_TOL_3(helm_resid_del, tau, delta, D, -0.364366650, 1e-8);
-	ASSERT_TOL_3(helm_resid_deldel, tau, delta, D, 0.856063701, 1e-8);
-	ASSERT_TOL_3(helm_resid_tau, tau, delta, D, -0.581403435E1, 1e-8);
-	ASSERT_TOL_3(helm_resid_tautau, tau, delta, D, -0.223440737E1, 1e-8);
-	ASSERT_TOL_3(helm_resid_deltau, tau, delta, D, -0.112176915e1, 1e-8);
-#undef D
-
-#if 0
-	fprintf(stderr,"\nADDITIONAL LOW-LEVEL TESTS NEAR CRITICAL POINT\n");
-
-	T = 647.; /* K */
-	rho = 358.; /* kg/m³ */
-	tau = P->data->T_star / T;
-	delta = rho / P->data->rho_star;
-
-	/* this test value calculated from pressure using REFPROP 8 */
-	ASSERT_TOL(helmholtz_a, T, rho, P, -8.286875181e5, 1e-4);
-	ASSERT_TOL(helm_resid_del, tau, delta, P, -7.14012024e-1, 1e-8);
-	ASSERT_TOL(helmholtz_s, T, rho, P, 4.320923066e3, 5e-8);
-	ASSERT_TOL(helmholtz_cv, T, rho, P, 6.183157277e3, 5e-7);
-	ASSERT_TOL(helmholtz_p, T, rho, P, 2.203847557e7, 7e-4);
-	ASSERT_TOL(helmholtz_cp, T, rho, P, 3.531798573e6, 1e-8);
-	ASSERT_TOL(helmholtz_w, T, rho, P, 2.52140783e2, 1e-8);
-#endif
-
-	fprintf(stderr,"\nIAPWS95 TABLE 7 (SINGLE-PHASE) TESTS\n");
-	for(i=0; i<ntd; ++i){
-		double T = td[i].T;
-		double rho = td[i].rho;
-		double p = td[i].p * 1e6; /* Pa */
-		double cv = td[i].cv * 1e3; /* J/kgK */
-		double w = td[i].w; /* m/s */
-		double s = td[i].s * 1e3; /* J/kgK */
-		FluidState S = {T,rho,P};
-		//fprintf(stderr,"T = %f, rho = %f, p = %f, w = %f, wcalc = %f\n",T,rho,p,w, helmholtz_w(T,rho,P));
-		ASSERT_PROP(s, S , &error, s, s*1e-8);
-		ASSERT_PROP(p, S, &error, p, p*1e-8);
-		ASSERT_PROP(cv, S, &error, cv, cv*1e-8);
-		ASSERT_PROP(w, S, &error, w, w*2e-5);
-	}
-
-	fprintf(stderr,"\nIAPWS95 TABLE 8 (SATURATION) TESTS (%d items)\n",ntds);
-	for(i=0; i<ntds; ++i){
-		double T = tds[i].T;
-		double p = tds[i].p * 1e6; /* Pa */
-		double rho_f = tds[i].rhof;
-		double rho_g = tds[i].rhog;
-		double h_f = tds[i].hf * 1e3;
-		double h_g = tds[i].hg * 1e3;
-		double s_f = tds[i].sf * 1e3;
-		double s_g = tds[i].sg * 1e3;
-		fprintf(stderr,"T = %f, p = %f bar, rho_f = %f, rho_g = %f\n",T,p/1e5,rho_f, rho_g);
-		double rho_f_eval, rho_g_eval, p_eval;
-
-		fprops_sat_T(T, &p_eval, &rho_f_eval, &rho_g_eval, P, &error);
-		ASSERT(error == 0);
-
-		ASSERT_TOL_VAL(p_eval, p, 2e-2);
-		ASSERT_TOL_VAL(rho_f_eval, rho_f, 1e-6);
-		ASSERT_TOL_VAL(rho_g_eval, rho_g, 1e-6);
-
-		double s_f_eval = fprops_s((FluidState){T,rho_f,P},&error);
-		ASSERT_TOL_VAL(s_f_eval, s_f, 4e-6);
-		double s_g_eval = fprops_s((FluidState){T,rho_g,P},&error);
-		ASSERT_TOL_VAL(s_g_eval, s_g, 2e-5);
-
-		double h_f_eval = fprops_h((FluidState){T,rho_f,P},&error);
-		ASSERT_TOL_VAL(h_f_eval, h_f, 1e-3);
-		double h_g_eval = fprops_h((FluidState){T,rho_g,P},&error);
-		ASSERT_TOL_VAL(h_g_eval, h_g, 3e-3);
-#undef SATTOL
-	}
-
-#if 0   //TODO: This is commented out. Delete?
-	fprintf(stderr,"\nPROBLEMATIC SATURATION VALUES\n");
-	{
-		double T = 3.7631475862e+02;
-		T = 3.8920910345e+02;
-		double p, rho_f, rho_g;
-		int res = fprops_sat_T(T, &p, &rho_f, &rho_g, P);
-		if(res){
-			fprintf(stderr,"ERROR = %d\n",res);
-		}else{
-			fprintf(stderr,"OK :-)\n");
-		}
-		fprintf(stderr,"p_sat(T = %f) = %f bar, rho_f = %f, rho_g = %f\n", T, p/1e5, rho_f, rho_g);
-	}
-#endif
-
-# if 1
-	helm_run_test_cases(P, ntd1, td1, 'K');
-# endif
-
-	//helm_check_dpdrho_T(P, ntd1, td1);
-
-# if 1
-	//helm_check_d2pdrho2_T(P,ntd1, td1);
-
-	fprintf(stderr,"Tests completed OK (maximum error = %0.8f%%)\n",maxerr);
-# endif
-
-	exit(0);
-}
 
 /* HIGHER-LEVEL TEST-DATA PROVIDED IN IAPWS95 */
 
-const TestDataIAPWS95 td[] = {
+static const TestDataIAPWS95 td[] = {
 	{300, 0.9965560e3, 0.992418352e-1, 0.413018112e1, 0.150151914e4, 0.393062643}
 	,{300, 0.1005308e4, 0.200022515e2,  0.406798347e1, 0.153492501e4, 0.387405401}
 	,{300, 0.1188202e4, 0.700004704e3,  0.346135580e1, 0.244357992e4, 0.132609616}
@@ -333,19 +173,17 @@ const TestDataIAPWS95 td[] = {
 	,{900, 0.5261500e2, 0.200000690e2,  0.193510526e1, 0.698445674e3, 0.659070225e1}
 	,{900, 0.8707690e3, 0.700000006e3,  0.266422350e1, 0.201933608e4, 0.417223802e1}
 };
+static const unsigned ntd = sizeof(td)/sizeof(TestDataIAPWS95);
 
-const unsigned ntd = sizeof(td)/sizeof(TestDataIAPWS95);
-
-const TestDataSat tds[] = {
+static const TestDataSat tds[] = {
 	/* T, p (MPa), rho_f, rho_g, h_f (kJ/kg), h_g (kJ/kg), s_f (kJ/kgK), s_g (kJ/kgK) */
 	{450, 0.932203564, 0.890341250e3, 0.481200360e1, 0.749161585e3, 0.277441078e4, 0.210865845e1, 0.660921221e1}
 	,{275, 0.698451167e-3, 0.999887406e3, 0.550664919e-2, 0.775972202e1, 0.250428995e4, 0.283094670e-1, 0.910660121e1}
 	,{625, 0.169082693e2, 0.567090385e3, 0.118290280e3, 0.168626976e4, 0.255071625e4, 0.380194683e1, 0.518506121e1}
 };
+static const unsigned ntds = sizeof(tds)/sizeof(TestDataSat);
 
-const unsigned ntds = sizeof(tds)/sizeof(TestDataSat);
-
-const TestData td1[] = {
+static const TestData td1[] = {
 /* {Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz}
 , {(K), (MPa), (kg/m³), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg)} */
   {3.189563289E+2, 1.000000001E-2, 9.898332754E+2, 1.917958417E+2, 1.918059444E+2, 6.491956046E-1, 4.046584194E+0, 4.180521426E+0, 1.870066063E+0, -1.526920512E+1}
@@ -440,8 +278,154 @@ const TestData td1[] = {
 , {1.02315E+3, 1.00E+2, 2.529966112E+2, 3.13520167E+3, 3.530463881E+3, 5.864193269E+0, 2.27341142E+0, 3.829832992E+0, 2.307098991E+0, -2.864747673E+3}
 , {1.07315E+3, 1.E+2, 2.306404366E+2, 3.281691849E+3, 3.715267165E+3, 6.04058851E+0, 2.239640928E+0, 3.576379581E+0, 2.342340346E+0, -3.20076571E+3}
 };
+static const unsigned ntd1 = sizeof(td1)/sizeof(TestData);
 
-const unsigned ntd1 = sizeof(td1)/sizeof(TestData);
+# include <math.h>
+# include <stdlib.h>
+# include <stdio.h>
+
+# include "../fprops.h"
+# include "../rundata.h"
+# include "../cp0.h"
+# include "../ideal.h"
+# include "../helmholtz_impl.h"
+# include "../sat.h"
+# include "../helmholtz.h"
+
+void test_fluid_water(void){
+	double rho, T;
+	test_init();
+
+	double maxerr = 0;
+	unsigned i;
+
+	/* LOW-LEVEL TEST DATA PROVIDED IN IAPWS95 */
+
+	TEST_MSG("IAPWS95 TABLE 6 TESTS");
+	T = 500.; /* K */
+	rho = 838.025; /* kg/m³ */
+	PureFluid *PI = ideal_prepare(&eos_water,NULL);
+	double tau = PI->data->T_c / T;
+	double delta = rho / PI->data->rho_c;
+	//fprintf(stderr,"tau = %f, delta = %f\n",tau,delta);
+
+	ASSERT_TOL_3(ideal_phi, tau, delta, PI->data->cp0, 0.204797733E1, 1e-8);
+	ASSERT_TOL_3(ideal_phi_tau, tau, delta, PI->data->cp0, 0.904611106E1, 1e-8);
+#define IDEAL_PHI_TAUTAU_2(A,B,C) ideal_phi_tautau(A,C)
+	ASSERT_TOL_3(IDEAL_PHI_TAUTAU_2, tau, delta, PI->data->cp0, -0.193249185E1, 1e-8);
+	/* FIXME: still need to implement helm_ideal_del, helm_ideal_deldel, helm_ideal_deltau */
+
+
+	PureFluid *P = helmholtz_prepare(&eos_water,NULL);
+	FpropsError error=FPROPS_NO_ERROR;
+
+	ASSERT(NULL != P->data);
+	ASSERT(NULL != P->data->cp0);
+	ASSERT(NULL != P->data->corr.helm);
+
+#define D (P->data->corr.helm)
+	ASSERT_TOL_3(helm_resid, tau, delta, D, -0.342693206E1, 1e-8);
+	ASSERT_TOL_3(helm_resid_del, tau, delta, D, -0.364366650, 1e-8);
+	ASSERT_TOL_3(helm_resid_deldel, tau, delta, D, 0.856063701, 1e-8);
+	ASSERT_TOL_3(helm_resid_tau, tau, delta, D, -0.581403435E1, 1e-8);
+	ASSERT_TOL_3(helm_resid_tautau, tau, delta, D, -0.223440737E1, 1e-8);
+	ASSERT_TOL_3(helm_resid_deltau, tau, delta, D, -0.112176915e1, 1e-8);
+#undef D
+
+#if 0
+	fprintf(stderr,"\nADDITIONAL LOW-LEVEL TESTS NEAR CRITICAL POINT\n");
+
+	T = 647.; /* K */
+	rho = 358.; /* kg/m³ */
+	tau = P->data->T_star / T;
+	delta = rho / P->data->rho_star;
+
+	/* this test value calculated from pressure using REFPROP 8 */
+	ASSERT_TOL(helmholtz_a, T, rho, P, -8.286875181e5, 1e-4);
+	ASSERT_TOL(helm_resid_del, tau, delta, P, -7.14012024e-1, 1e-8);
+	ASSERT_TOL(helmholtz_s, T, rho, P, 4.320923066e3, 5e-8);
+	ASSERT_TOL(helmholtz_cv, T, rho, P, 6.183157277e3, 5e-7);
+	ASSERT_TOL(helmholtz_p, T, rho, P, 2.203847557e7, 7e-4);
+	ASSERT_TOL(helmholtz_cp, T, rho, P, 3.531798573e6, 1e-8);
+	ASSERT_TOL(helmholtz_w, T, rho, P, 2.52140783e2, 1e-8);
+#endif
+
+	TEST_MSG("IAPWS95 TABLE 7 (SINGLE-PHASE) TESTS");
+	for(i=0; i<ntd; ++i){
+		double T = td[i].T;
+		double rho = td[i].rho;
+		double p = td[i].p * 1e6; /* Pa */
+		double cv = td[i].cv * 1e3; /* J/kgK */
+		double w = td[i].w; /* m/s */
+		double s = td[i].s * 1e3; /* J/kgK */
+		FluidState S = {T,rho,P};
+		//fprintf(stderr,"T = %f, rho = %f, p = %f, w = %f, wcalc = %f\n",T,rho,p,w, helmholtz_w(T,rho,P));
+		ASSERT_PROP(s, S , &error, s, s*1e-8);
+		ASSERT_PROP(p, S, &error, p, p*1e-8);
+		ASSERT_PROP(cv, S, &error, cv, cv*1e-8);
+		ASSERT_PROP(w, S, &error, w, w*2e-5);
+	}
+
+	TEST_MSG("IAPWS95 TABLE 8 (SATURATION) TESTS (%d items)",ntds);
+	for(i=0; i<ntds; ++i){
+		double T = tds[i].T;
+		double p = tds[i].p * 1e6; /* Pa */
+		double rho_f = tds[i].rhof;
+		double rho_g = tds[i].rhog;
+		double h_f = tds[i].hf * 1e3;
+		double h_g = tds[i].hg * 1e3;
+		double s_f = tds[i].sf * 1e3;
+		double s_g = tds[i].sg * 1e3;
+		TEST_MSG("T = %f, p = %f bar, rho_f = %f, rho_g = %f",T,p/1e5,rho_f, rho_g);
+		double rho_f_eval, rho_g_eval, p_eval;
+
+		fprops_sat_T(T, &p_eval, &rho_f_eval, &rho_g_eval, P, &error);
+		ASSERT(error == 0);
+
+		ASSERT_TOL_VAL(p_eval, p, 2e-2);
+		ASSERT_TOL_VAL(rho_f_eval, rho_f, 1e-6);
+		ASSERT_TOL_VAL(rho_g_eval, rho_g, 1e-6);
+
+		double s_f_eval = fprops_s((FluidState){T,rho_f,P},&error);
+		ASSERT_TOL_VAL(s_f_eval, s_f, 4e-6);
+		double s_g_eval = fprops_s((FluidState){T,rho_g,P},&error);
+		ASSERT_TOL_VAL(s_g_eval, s_g, 2e-5);
+
+		double h_f_eval = fprops_h((FluidState){T,rho_f,P},&error);
+		ASSERT_TOL_VAL(h_f_eval, h_f, 1e-3);
+		double h_g_eval = fprops_h((FluidState){T,rho_g,P},&error);
+		ASSERT_TOL_VAL(h_g_eval, h_g, 3e-3);
+#undef SATTOL
+	}
+
+#if 0   //TODO: This is commented out. Delete?
+	fprintf(stderr,"\nPROBLEMATIC SATURATION VALUES\n");
+	{
+		double T = 3.7631475862e+02;
+		T = 3.8920910345e+02;
+		double p, rho_f, rho_g;
+		int res = fprops_sat_T(T, &p, &rho_f, &rho_g, P);
+		if(res){
+			fprintf(stderr,"ERROR = %d\n",res);
+		}else{
+			fprintf(stderr,"OK :-)\n");
+		}
+		fprintf(stderr,"p_sat(T = %f) = %f bar, rho_f = %f, rho_g = %f\n", T, p/1e5, rho_f, rho_g);
+	}
+#endif
+
+# if 1
+	helm_run_test_cases(P, ntd1, td1, 'K');
+# endif
+
+	//helm_check_dpdrho_T(P, ntd1, td1);
+
+# if 1
+	//helm_check_d2pdrho2_T(P,ntd1, td1);
+
+	TEST_MSG("Tests completed OK (maximum error = %0.8f%%)",maxerr);
+# endif
+}
 
 #endif
 

@@ -71,7 +71,7 @@ static const HelmholtzData helmholtz_data_carbonmonoxide = {
     , 0
 };
 
-EosData eos_carbonmonoxide = {
+const EosData eos_carbonmonoxide = {
 	"carbonmonoxide"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."

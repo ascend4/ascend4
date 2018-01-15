@@ -9,12 +9,11 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define NITROUSOXIDE_M 44.0128 /* kg/kmol */
 #define NITROUSOXIDE_R (8314.472/NITROUSOXIDE_M) /* J/kg/K */
 #define NITROUSOXIDE_TC 309.52 /* K */
-
-
 
 static const IdealData ideal_data_nitrousoxide = {
 	IDEAL_CP0,{.cp0={
@@ -68,7 +67,7 @@ static const HelmholtzData helmholtz_data_nitrousoxide = {
 	}
 };
 
-EosData eos_nitrousoxide = {
+const EosData eos_nitrousoxide = {
 	"nitrousoxide"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -78,32 +77,15 @@ EosData eos_nitrousoxide = {
 	,.data = {.helm = &helmholtz_data_nitrousoxide}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py nitrousoxide
-*/
-
-#ifdef TEST
-
+#else
 #include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_nitrousoxide,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+extern const EosData eos_nitrousoxide;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation. 
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-5.0E+1, 1.E-1, 2.40448110259E+0, 3.6350913306E+2, 4.05098147793E+2, 2.18059407864E+0, 6.09832573957E-1, 8.10075603955E-1, 7.91214139249E-1, -1.23090435588E+2}
@@ -131,6 +113,12 @@ const TestData td[] = {
     , {2.50E+2, 1.0E+1, 1.07771948588E+2, 5.63724057822E+2, 6.56512581469E+2, 2.05132902086E+0, 8.93299840772E-1, 1.19516104689E+0, 1.05703057273E+0, -5.09428719438E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+
+void test_fluid_nitrousoxide(void){
+	PureFluid *P = helmholtz_prepare(&eos_nitrousoxide,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

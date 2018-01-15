@@ -45,7 +45,6 @@
 	reference state used by REFPROP, for the purpose of testing.
 */
 
-
 static const IdealData ideal_data_carbondioxide = {
 	IDEAL_PHI0
 	, {.phi0 = {

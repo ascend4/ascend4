@@ -18,6 +18,7 @@ that article. -- jpye
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define TOLUENE_M 92.13842 /* kg/kmol */
 #define TOLUENE_R (8314.472/TOLUENE_M) /* J/kg/K */
@@ -79,7 +80,7 @@ static HelmholtzData helmholtz_data_toluene = {
     , 0
 };
 
-EosData eos_toluene = {
+const EosData eos_toluene = {
 	"toluene"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	"20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -89,35 +90,16 @@ EosData eos_toluene = {
 	,.data = {.helm = &helmholtz_data_toluene}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py toluene
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include "../refstate.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	PureFluid *P = helmholtz_prepare(&eos_toluene, NULL);
-	// refprop test test is evaluated with NBP refstate.
-	ReferenceState R = {FPROPS_REF_NBP};
-	fprops_set_reference_state(P, &R);
-    return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+# include "../refstate.h"
+extern const EosData eos_toluene;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation. 
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-5.0E+1, 1.E-1, 9.31743793959E+2, -2.7796368849E+2, -2.77856362849E+2, -9.25814804729E-1, 1.07384880219E+0, 1.50887939453E+0, 8.38890037116E-1, -7.13681148149E+1}
@@ -161,6 +143,14 @@ const TestData td[] = {
     , {4.00E+2, 1.00E+2, 7.00691111197E+2, 5.98745791333E+2, 7.41462030203E+2, 1.15790567127E+0, 2.31192175921E+0, 2.61507812375E+0, 2.30221176489E+0, -1.80698411281E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_toluene(void){
+	PureFluid *P = helmholtz_prepare(&eos_toluene, NULL);
+	// refprop test test is evaluated with NBP refstate.
+	ReferenceState R = {FPROPS_REF_NBP};
+	fprops_set_reference_state(P, &R);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif
