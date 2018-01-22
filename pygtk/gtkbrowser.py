@@ -1150,7 +1150,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				filename = "..."+filename[-22:]
 			_fileline = filename + ":" + str(line)
 
-		print "Creating error row data with MSG = '%s'"%(msg.rstrip())
+		#print "Creating error row data with MSG = '%s'"%(msg.rstrip())
 
 		_res = (_sevicon,_fileline,msg.rstrip(),_fgcolor,_fontweight)
 		#print _res
@@ -1160,7 +1160,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		#print "SEV =",sev
 		#print "FILENAME =",filename
 		#print "LINE =",line
-		print "PYTHON error_callback: MSG =",msg
+		#print "PYTHON error_callback: MSG =",msg
 		pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))
 		path = self.errorstore.get_path(pos)
 		col = self.errorview.get_column(3)
