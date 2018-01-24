@@ -48,7 +48,13 @@
 #include "name.h" /* for copy/destroy name */
 
 #define WITH_BLACKBOX_DSOLVE
+
 /* #define BLACKBOX_DEBUG */
+#ifdef BLACKBOX_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 #define BBDEBUG 0 /* set 0 if not wanting spew */
 
@@ -84,9 +90,7 @@ real64 *blackbox_dsolve(struct Instance *ri, struct Instance *v
 	arg = RelationVariable(r,lhsvar);
 
 	if(arg != v){
-# ifdef BLACKBOX_DEBUG
-		CONSOLE_DEBUG("Direct solve not possible, wrong variable requested");
-# endif
+		MSG("Direct solve not possible, wrong variable requested");
 		*able = 0;
 		*nsolns = 0;
 		return NULL;
@@ -103,9 +107,7 @@ real64 *blackbox_dsolve(struct Instance *ri, struct Instance *v
 
 	solns = ASC_NEW_ARRAY(double,1);
 	solns[0] = RealAtomValue(v) - resid;
-# ifdef BLACKBOX_DEBUG
-	CONSOLE_DEBUG("Got solution %f for blackbox output", solns[0]);
-# endif
+	MSG("Got solution %f for blackbox output", solns[0]);
 	*able = 1;
 	*nsolns = 1;
 	return solns;
@@ -462,8 +464,10 @@ int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
   double *tmp_outputs;
   double *ptr;
   double old_x,deltax,value;
+  enum Request_type old_task = interp->task;
 
-  /* CONSOLE_DEBUG("NUMERICAL DERIVATIVE..."); */
+  MSG("NUMERICAL DERIVATIVE...");
+  interp->task = bb_func_eval;
 
   tmp_outputs = ASC_NEW_ARRAY_CLEAR(double,noutputs);
 
@@ -472,12 +476,12 @@ int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
     old_x = inputs[c];
 	deltax = blackbox_peturbation(old_x);
     inputs[c] = old_x + deltax;
-	/* CONSOLE_DEBUG("PETURBATED VALUE of input[%ld] = %f",c,inputs[c]); */
+	MSG("PETURBATED VALUE of input[%ld] = %f",c,inputs[c]);
 
 	/* call routine. note that the 'jac' parameter is just along for the ride */
     nok = (*resfn)(interp, ninputs, noutputs, inputs, tmp_outputs, jac);
     if(nok){
-	    CONSOLE_DEBUG("External evaluation error (%d)",nok);
+	    MSG("External evaluation error (%d) for peturbed value %ld",nok,c);
 		break;
 	}
 
@@ -495,10 +499,10 @@ int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
   }
   ASC_FREE(tmp_outputs);
   if(nok){
-    CONSOLE_DEBUG("External evaluation error");
+    MSG("External evaluation error");
   }
+  interp->task = old_task;
   return nok;
-
 }
 
 /*------------------------------------------------------------------------------
