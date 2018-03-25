@@ -148,11 +148,9 @@ static void test_test1(void){
 	h = DivF(f,g);
 	CU_TEST(2==Numerator(h));
 	CU_TEST(3==Denominator(h));	
-	
 
+	// still to test: negate, cmpF
 }
-
-
 
 /*===========================================================================*/
 /* Registration information */
