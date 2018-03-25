@@ -165,7 +165,7 @@ extern CONST dim_type *PowDimension(long mult, CONST dim_type *d, int b);
  *  If !b, result may point to noninteger dim. Dim will be in global list.
  */
 
-extern void SetWild(dim_type *dim);
+ASC_DLLSPEC void SetWild(dim_type *dim);
 /**<
  *  Set the wild flag of dimensions dim.
  */
@@ -175,12 +175,12 @@ ASC_DLLSPEC int IsWild(CONST dim_type *d);
  *  Return a true value if d is wild, and otherwise return a false value.
  */
 
-extern int OddDimension(CONST dim_type *d);
+ASC_DLLSPEC int OddDimension(CONST dim_type *d);
 /**<
  *  Return a true value if d has an odd, wild, or non-integer dimension.
  */
 
-extern int NonCubicDimension(CONST dim_type *d);
+ASC_DLLSPEC int NonCubicDimension(CONST dim_type *d);
 /**<
  *  Return a true value if d has an noncubic, wild, or non-integer dimension.
  */

@@ -36,13 +36,98 @@ static void test_test1(void){
 	gl_destroy_pool();
 }
 
+#define FRAC_IS_ZERO(F) (0==Numerator(F) && 1==Denominator(F))
+#define FRAC_IS_ZERO(F) (0==Numerator(F) && 1==Denominator(F))
+
+static void test_test2(void){
+
+	dim_type D;
+
+	// ClearDimensions
+
+	ClearDimensions(&D);
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(D,D_MASS)));
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(D,D_QUANTITY)));
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(D,D_LENGTH)));
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(D,D_TIME)));
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(D,D_TEMPERATURE)));
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(D,D_CURRENCY)));
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(D,D_ELECTRIC_CURRENT)));
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(D,D_LUMINOUS_INTENSITY)));
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(D,D_PLANE_ANGLE)));
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(D,D_SOLID_ANGLE)));
+	CU_TEST(!IsWild(&D));
+
+	// IsWild
+
+	SetWild(&D);
+	CU_TEST(IsWild(&D));
+
+	ClearDimensions(&D);
+	CU_TEST(0==IsWild(&D));
+
+	CU_TEST(1==IsWild(NULL));
+
+	// SetDimFraction, IsOddDimension
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_TIME,CreateFraction(2,1));
+	SetDimFraction(D,D_LENGTH,CreateFraction(4,1));
+	CU_TEST(0==OddDimension(&D))
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_TIME,CreateFraction(1,1));
+	CU_TEST(1==OddDimension(&D))
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_TIME,CreateFraction(1,2));
+	CU_TEST(1==OddDimension(&D))
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_TIME,CreateFraction(3,1));
+	CU_TEST(1==OddDimension(&D))
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_TIME,CreateFraction(3,1));
+	SetDimFraction(D,D_LENGTH,CreateFraction(4,1));
+	CU_TEST(1==OddDimension(&D))
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_TIME,CreateFraction(-2,1));
+	SetDimFraction(D,D_LENGTH,CreateFraction(1,2));
+	CU_TEST(1==OddDimension(&D))
+
+	// NonCubicDimension
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_TIME,CreateFraction(3,1));
+	SetDimFraction(D,D_LENGTH,CreateFraction(6,1));
+	CU_TEST(0==NonCubicDimension(&D))
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_TIME,CreateFraction(1,1));
+	CU_TEST(1==NonCubicDimension(&D))
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_SOLID_ANGLE,CreateFraction(4,1));
+	CU_TEST(1==NonCubicDimension(&D))
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_SOLID_ANGLE,CreateFraction(3,1));
+	SetWild(&D);
+	CU_TEST(1==NonCubicDimension(&D))
+
+
+}
+
 /*===========================================================================*/
 /* Registration information */
 
 /* the list of tests */
 
 #define TESTS(T) \
-	T(test1)
+	T(test1) \
+	T(test2)
 
 REGISTER_TESTS_SIMPLE(compiler_dimen, TESTS)
 
