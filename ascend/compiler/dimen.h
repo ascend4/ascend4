@@ -228,7 +228,7 @@ ASC_DLLSPEC dim_type AddDimensions(CONST dim_type *d1, CONST dim_type *d2);
  *  table instead, use SumDimensions.
  */
 
-extern CONST dim_type *SumDimensions(CONST dim_type *d1, CONST dim_type *d2, int check);
+ASC_DLLSPEC CONST dim_type *SumDimensions(CONST dim_type *d1, CONST dim_type *d2, int check);
 /**<
  *  Add 2 dimensions with checking.
  *  Wild+anything equals wild.

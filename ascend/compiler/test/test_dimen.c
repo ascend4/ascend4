@@ -45,7 +45,7 @@ static void test_test1(void){
 static void test_test2(void){
 	// these tests are done without using the global list
 
-	dim_type D,E;
+	dim_type D,E,F;
 
 	// ClearDimensions
 
@@ -163,6 +163,39 @@ static void test_test2(void){
 	SetDimFraction(E,D_LENGTH,CreateFraction(1,1));
 	CU_TEST(-1==CmpDimen(&D,&E));
 
+	// AddDimensions
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(3,1));
+	SetDimFraction(D,D_MASS,CreateFraction(7,1));
+	ClearDimensions(&E);
+	SetDimFraction(E,D_LENGTH,CreateFraction(11,1));
+	SetDimFraction(E,D_TEMPERATURE,CreateFraction(5,1));
+	F = AddDimensions(&D,&E);
+	CU_TEST(FRAC_EQUALS(GetDimFraction(F,D_LENGTH),14,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(F,D_MASS),7,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(F,D_TEMPERATURE),5,1));
+
+	SetWild(&E);
+	F = AddDimensions(&D,&E);
+	CU_TEST(1==IsWild(&F));
+
+	// SubDimensions
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(3,1));
+	SetDimFraction(D,D_MASS,CreateFraction(7,1));
+	ClearDimensions(&E);
+	SetDimFraction(E,D_LENGTH,CreateFraction(11,1));
+	SetDimFraction(E,D_TEMPERATURE,CreateFraction(5,1));
+	F = SubDimensions(&D,&E);
+	CU_TEST(FRAC_EQUALS(GetDimFraction(F,D_LENGTH),-8,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(F,D_MASS),7,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(F,D_TEMPERATURE),-5,1));
+
+	SetWild(&E);
+	F = AddDimensions(&D,&E);
+	CU_TEST(1==IsWild(&F));
 }
 
 static void test_test3(void){
@@ -294,8 +327,37 @@ static void test_test3(void){
 	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_LENGTH),1,1));
 	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_TEMPERATURE),2,1));
 
+	// SumDimensions
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(3,1));
+	SetDimFraction(D,D_MASS,CreateFraction(7,1));
+	ClearDimensions(&E);
+	SetDimFraction(E,D_LENGTH,CreateFraction(11,1));
+	SetDimFraction(E,D_TEMPERATURE,CreateFraction(5,1));
+	P = SumDimensions(&D,&E,1);
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_LENGTH),14,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_MASS),7,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_TEMPERATURE),5,1));
+
+	// DimName
+
+	CU_TEST(0==strcmp(DimName(D_MASS),"M"));
+	CU_TEST(0==strcmp(DimName(D_QUANTITY),"Q"));
+	CU_TEST(0==strcmp(DimName(D_LENGTH),"L"));
+	CU_TEST(0==strcmp(DimName(D_TIME),"T"));
+	CU_TEST(0==strcmp(DimName(D_TEMPERATURE),"TMP"));
+	CU_TEST(0==strcmp(DimName(D_CURRENCY),"C"));
+	CU_TEST(0==strcmp(DimName(D_ELECTRIC_CURRENT),"E"));
+	CU_TEST(0==strcmp(DimName(D_LUMINOUS_INTENSITY),"LUM"));
+	CU_TEST(0==strcmp(DimName(D_PLANE_ANGLE),"P"));
+	CU_TEST(0==strcmp(DimName(D_SOLID_ANGLE),"S"));
+	CU_TEST(NULL==DimName(-1));
+	CU_TEST(NULL==DimName(NUM_DIMENS));
+
 	DestroyDimenList();
 	gl_destroy_pool();
+
 }
 
 
