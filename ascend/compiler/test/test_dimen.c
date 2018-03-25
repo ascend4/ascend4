@@ -27,6 +27,8 @@
 
 #include <test/common.h>
 
+#include<unistd.h>
+
 static void test_test1(void){
 	// test setup and destruction of the global list
 
@@ -378,6 +380,43 @@ static void test_test3(void){
 }
 
 
+static void test_test4(void){
+	gl_init_pool();
+	gl_init();
+	InitDimenList();
+
+#define LEN 1024
+	char fn[LEN], s[LEN];
+
+	strncpy(fn,"/tmp/ascend-test-XXXXXX",1023);
+	int fd = mkstemp(fn);
+	FILE *F = fdopen(fd,"w+");
+
+	dim_type D;
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(3,1));
+	SetDimFraction(D,D_MASS,CreateFraction(7,1));
+
+	fprintf(F,"{");
+	PrintDimen(F,&D);
+	fprintf(F,"}");
+
+	rewind(F);
+
+	errno=0;
+
+	memset(s,'\0',LEN);
+	CU_TEST(fread(s,1,LEN,F));
+	CU_TEST(0==strncmp(s,"{7/1M 3/1L }",LEN));
+
+	fclose(F);
+	unlink(fn);
+
+	DestroyDimenList();
+	gl_destroy_pool();
+}
+
 
 
 /*===========================================================================*/
@@ -388,7 +427,9 @@ static void test_test3(void){
 #define TESTS(T) \
 	T(test1) \
 	T(test2) \
-	T(test3)
+	T(test3) \
+	T(test4)
+
 
 REGISTER_TESTS_SIMPLE(compiler_dimen, TESTS)
 
