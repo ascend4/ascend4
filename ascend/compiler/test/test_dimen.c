@@ -13,31 +13,36 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*//**
+	@file
+	Unit test functions for compiler.
 */
+#include <ascend/compiler/dimen.h>
 
+#include <ascend/general/env.h>
+#include <ascend/general/list.h>
 #include <ascend/general/platform.h>
-#include "test_register_compiler.h"
+#include <ascend/utilities/ascEnvVar.h>
+#include <ascend/utilities/error.h>
+
+#include <test/common.h>
+
+static void test_test1(void){
+	gl_init_pool();
+	gl_init();
+	InitDimenList();
+
+	DestroyDimenList();
+	gl_destroy_pool();
+}
+
+/*===========================================================================*/
+/* Registration information */
+
+/* the list of tests */
 
 #define TESTS(T) \
-	T(basics) \
-	T(autodiff) \
-	T(expr) \
-	T(bintok) \
-	T(fixfree) \
-	T(blackbox) \
-	T(fixassign) \
-	T(dimen) \
-	T(fractions)
+	T(test1)
 
+REGISTER_TESTS_SIMPLE(compiler_dimen, TESTS)
 
-#define PROTO_TEST(NAME) PROTO(compiler,NAME)
-TESTS(PROTO_TEST)
-#undef PROTO_TEST
-
-#define REGISTER_TEST(NAME) \
-	result = TESTREGISTER(compiler,NAME); \
-	if(CUE_SUCCESS!=result){ \
-		return result; \
-	}
-
-REGISTER_SUITE(compiler,TESTS)

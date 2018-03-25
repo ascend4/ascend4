@@ -68,7 +68,7 @@ int helm_check_d2pdrho2_T(const PureFluid *d, unsigned ntd, const TestData *td);
 */
 int helm_check_p_c(const HelmholtzData *d);
 
-#define TEST_VERBOSE
+//#define TEST_VERBOSE
 
 #ifdef TEST_VERBOSE
 # define TEST_SUCCESS(FN,PARAM1,PARAM2,PARAM3,VAL) \

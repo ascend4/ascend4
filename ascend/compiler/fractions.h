@@ -68,22 +68,22 @@ extern struct fraction Simplify(struct fraction f);
  *  Return the denominator of f as a FRACPART.
  */
 
-extern struct fraction AddF(struct fraction f1, struct fraction f2);
+ASC_DLLSPEC struct fraction AddF(struct fraction f1, struct fraction f2);
 /**<
  *  Return f1+f2 simplified.
  */
 
-extern struct fraction SubF(struct fraction f1, struct fraction f2);
+ASC_DLLSPEC struct fraction SubF(struct fraction f1, struct fraction f2);
 /**<
  *  Return f1-f2 simplified.
  */
 
-extern struct fraction MultF(struct fraction f1, struct fraction f2);
+ASC_DLLSPEC struct fraction MultF(struct fraction f1, struct fraction f2);
 /**<
  *  Return f1*f2 simplified.
  */
 
-extern struct fraction DivF(struct fraction f1, struct fraction f2);
+ASC_DLLSPEC struct fraction DivF(struct fraction f1, struct fraction f2);
 /**<
  *  Return f1/f2 simplified.
  */

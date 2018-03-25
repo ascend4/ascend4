@@ -69,13 +69,13 @@ ASC_DLLSPEC struct gl_list_t *g_dimen_list;
  *  overhead.
  */
 
-extern void InitDimenList(void);
+ASC_DLLSPEC void InitDimenList(void);
 /**<
  *  Initialize the dimension list.
  *  Must be called once and only once before any other dimension calls.
  */
 
-extern void DestroyDimenList(void);
+ASC_DLLSPEC void DestroyDimenList(void);
 /**<
  *  This can be called to deallocate all of the allocated dimensions.
  */

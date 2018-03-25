@@ -40,7 +40,7 @@ else:
 	print "WARNING: no ascend-config in path, won't build ASCEND wrapper"
 	env['WITH_ASCEND'] = 0
 
-env.Append(
+env.AppendUnique(
 	CFLAGS=['-g','-Wall']
 )
 
