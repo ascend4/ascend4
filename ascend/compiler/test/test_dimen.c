@@ -397,18 +397,32 @@ static void test_test4(void){
 	ClearDimensions(&D);
 	SetDimFraction(D,D_LENGTH,CreateFraction(3,1));
 	SetDimFraction(D,D_MASS,CreateFraction(7,1));
-
-	fprintf(F,"{");
-	PrintDimen(F,&D);
-	fprintf(F,"}");
-
+	fprintf(F,"{"); PrintDimen(F,&D); fprintf(F,"}"); fputc('\0',F);
 	rewind(F);
-
 	errno=0;
-
 	memset(s,'\0',LEN);
 	CU_TEST(fread(s,1,LEN,F));
 	CU_TEST(0==strncmp(s,"{7/1M 3/1L }",LEN));
+
+	rewind(F);
+	ClearDimensions(&D);
+	SetWild(&D);
+	fprintf(F,"{"); PrintDimen(F,&D); fprintf(F,"}"); fputc('\0',F);
+	rewind(F);
+	errno=0;
+	memset(s,'\0',LEN);
+	CU_TEST(fread(s,1,LEN,F));
+	CU_TEST(0==strncmp(s,"{wild}",LEN));
+
+	rewind(F);
+	ClearDimensions(&D);
+	fprintf(F,"{"); PrintDimen(F,&D); fprintf(F,"}"); fputc('\0',F);
+	rewind(F);
+	errno=0;
+	memset(s,'\0',LEN);
+	CU_TEST(fread(s,1,LEN,F));
+	CU_TEST(0==strncmp(s,"{dimensionless}",LEN));
+
 
 	fclose(F);
 	unlink(fn);
