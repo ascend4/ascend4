@@ -28,6 +28,8 @@
 #include <test/common.h>
 
 static void test_test1(void){
+	// test setup and destruction of the global list
+
 	gl_init_pool();
 	gl_init();
 	InitDimenList();
@@ -38,10 +40,12 @@ static void test_test1(void){
 
 #define FRAC_IS_ZERO(F) (0==Numerator(F) && 1==Denominator(F))
 #define FRAC_IS_ZERO(F) (0==Numerator(F) && 1==Denominator(F))
+#define FRAC_EQUALS(F,A,B) ((A)==Numerator(F) && (B)==Denominator(F))
 
 static void test_test2(void){
+	// these tests are done without using the global list
 
-	dim_type D;
+	dim_type D,E;
 
 	// ClearDimensions
 
@@ -117,8 +121,185 @@ static void test_test2(void){
 	SetWild(&D);
 	CU_TEST(1==NonCubicDimension(&D))
 
+	// CmpDimen
+	ClearDimensions(&D);
+	ClearDimensions(&E);
+	SetDimFraction(D,D_LENGTH,CreateFraction(1,1));
+	SetDimFraction(E,D_LENGTH,CreateFraction(1,1));
+	CU_TEST(0==CmpDimen(&D,&E));
+	SetWild(&D);
+	CU_TEST(-1==CmpDimen(&D,&E));
+	SetWild(&E);
+	CU_TEST(0==CmpDimen(&D,&E));
+	ClearDimensions(&D);
+	ClearDimensions(&E);
+	SetDimFraction(D,D_LENGTH,CreateFraction(1,1));
+	SetDimFraction(E,D_LENGTH,CreateFraction(1,1));
+	CU_TEST(0==CmpDimen(&D,&E));
+	SetWild(&E);
+	CU_TEST(1==CmpDimen(&D,&E));
+
+	ClearDimensions(&D);
+	ClearDimensions(&E);
+	SetDimFraction(D,D_MASS,CreateFraction(1,1));
+	CU_TEST(1==CmpDimen(&D,&E));
+
+	ClearDimensions(&D);
+	ClearDimensions(&E);
+	SetDimFraction(D,D_MASS,CreateFraction(1,1));
+	SetDimFraction(E,D_MASS,CreateFraction(1,1));
+	CU_TEST(0==CmpDimen(&D,&E));
+
+	ClearDimensions(&D);
+	ClearDimensions(&E);
+	SetDimFraction(E,D_MASS,CreateFraction(1,1));
+	SetDimFraction(D,D_LENGTH,CreateFraction(1,1));
+	CU_TEST(-1==CmpDimen(&D,&E));
+
+	ClearDimensions(&D);
+	ClearDimensions(&E);
+	SetDimFraction(D,D_MASS,CreateFraction(1,1));
+	SetDimFraction(E,D_MASS,CreateFraction(1,1));
+	SetDimFraction(E,D_LENGTH,CreateFraction(1,1));
+	CU_TEST(-1==CmpDimen(&D,&E));
 
 }
+
+static void test_test3(void){
+	// test global list and operations on dimensions
+	gl_init_pool();
+	gl_init();
+	InitDimenList();
+	int L0 = gl_length(g_dimen_list);
+
+	CU_TEST(L0==gl_length(g_dimen_list));
+	dim_type D,E;
+	const dim_type *P;
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(1,1));
+	CU_TEST(!IsWild(&D));
+	
+	P = FindOrAddDimen(&D);
+	CU_TEST(NULL!=P);
+	CU_TEST(NULL!=CheckDimensionsMatch(P,&D));
+	CU_TEST(!IsWild(P));
+	CU_TEST(L0+1==gl_length(g_dimen_list));
+
+	// SquareDimension
+	P = SquareDimension(NULL,1);
+	CU_TEST(NULL==P);
+
+	ClearDimensions(&D);
+	SetWild(&D);
+	P = SquareDimension(&D,1);
+	CU_TEST(1==IsWild(P));
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(1,2));
+	P = SquareDimension(&D,1);
+	CU_TEST(NULL==P); // fractional dimension
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(1,1));
+	SetDimFraction(D,D_TEMPERATURE,CreateFraction(2,1));
+	P = SquareDimension(&D,1);
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(*P,D_MASS)));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_LENGTH),2,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_TEMPERATURE),4,1));
+
+	// CubeDimension
+
+	P = CubeDimension(NULL,1);
+	CU_TEST(NULL==P);
+
+	ClearDimensions(&D);
+	SetWild(&D);
+	P = CubeDimension(&D,1);
+	CU_TEST(1==IsWild(P));
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(1,2));
+	P = CubeDimension(&D,1);
+	CU_TEST(NULL==P); // fractional dimension
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(1,2));
+	P = CubeDimension(&D,0);
+	CU_TEST(NULL!=P); // fractional dimension
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(1,1));
+	SetDimFraction(D,D_TEMPERATURE,CreateFraction(2,1));
+	P = CubeDimension(&D,1);
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(*P,D_MASS)));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_LENGTH),3,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_TEMPERATURE),6,1));
+
+	// PowDimension
+
+	P = PowDimension(1,NULL,1);
+	CU_TEST(NULL==P);
+
+	ClearDimensions(&D);
+	SetWild(&D);
+	P = PowDimension(2,&D,1);
+	CU_TEST(1==IsWild(P));
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(1,2));
+	P = PowDimension(2,&D,1);
+	CU_TEST(NULL==P); // fractional dimension
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(1,2));
+	P = PowDimension(2,&D,0);
+	CU_TEST(NULL!=P); // fractional dimension
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_LENGTH),1,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_MASS),0,1));
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(1,1));
+	SetDimFraction(D,D_TEMPERATURE,CreateFraction(2,1));
+	P = PowDimension(5,&D,1);
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(*P,D_MASS)));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_LENGTH),5,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_TEMPERATURE),10,1));
+
+	// ThirdDimension
+
+	P = ThirdDimension(NULL,1);
+	CU_TEST(NULL==P);
+
+	ClearDimensions(&D);
+	SetWild(&D);
+	P = ThirdDimension(&D,1);
+	CU_TEST(1==IsWild(P));
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(4,1));
+	P = ThirdDimension(&D,1);
+	CU_TEST(NULL==P); // non-cube dimension
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(4,5));
+	P = ThirdDimension(&D,0);
+	CU_TEST(NULL!=P); // fractional dimension
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_LENGTH),4,15));
+
+	ClearDimensions(&D);
+	SetDimFraction(D,D_LENGTH,CreateFraction(3,1));
+	SetDimFraction(D,D_TEMPERATURE,CreateFraction(6,1));
+	P = ThirdDimension(&D,1);
+	CU_TEST(FRAC_IS_ZERO(GetDimFraction(*P,D_MASS)));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_LENGTH),1,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(*P,D_TEMPERATURE),2,1));
+
+	DestroyDimenList();
+	gl_destroy_pool();
+}
+
+
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -127,7 +308,8 @@ static void test_test2(void){
 
 #define TESTS(T) \
 	T(test1) \
-	T(test2)
+	T(test2) \
+	T(test3)
 
 REGISTER_TESTS_SIMPLE(compiler_dimen, TESTS)
 
