@@ -268,6 +268,11 @@ ASC_DLLSPEC void ParseDim(dim_type *dim, CONST char *c);
  *  Initialize dim appropriately according to the string c.  If c doesn't
  *  match any of the dimension strings, dim will be dimensionless and
  *  an error message will be printed.
+ *
+ *  Note that this function only matches simple single-dimensional strings,
+ *  equal to just one of the strings below, no dimensional expressions are
+ *  matched.
+ *  
  *  <pre>
  *         String  Dimension Index
  *         "M"     D_MASS

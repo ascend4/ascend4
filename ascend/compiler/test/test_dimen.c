@@ -196,6 +196,23 @@ static void test_test2(void){
 	SetWild(&E);
 	F = AddDimensions(&D,&E);
 	CU_TEST(1==IsWild(&F));
+
+	// ParseDim
+	ClearDimensions(&D);
+
+	ParseDim(&D,"TMP");
+	CU_TEST(FRAC_EQUALS(GetDimFraction(D,D_LENGTH),0,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(D,D_MASS),0,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(D,D_TEMPERATURE),1,1));
+	ParseDim(&D,"L");
+	CU_TEST(FRAC_EQUALS(GetDimFraction(D,D_LENGTH),1,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(D,D_MASS),0,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(D,D_TEMPERATURE),0,1));
+	ParseDim(&D,"M");
+	CU_TEST(FRAC_EQUALS(GetDimFraction(D,D_LENGTH),0,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(D,D_MASS),1,1));
+	CU_TEST(FRAC_EQUALS(GetDimFraction(D,D_TEMPERATURE),0,1));
+
 }
 
 static void test_test3(void){
