@@ -99,7 +99,7 @@ ASC_DLLSPEC struct Units *g_units_hash_table[];
  *  The hash table for unit structs.
  */
 
-extern void InitUnitsTable(void);
+ASC_DLLSPEC void InitUnitsTable(void);
 /**<
 	This routine initializes some internal variables, so that all the
 	other units functions may be called.  It must be called once and
@@ -107,12 +107,12 @@ extern void InitUnitsTable(void);
 	Must be called after dimensions table initiatialization.
 */
 
-extern void DestroyUnitsTable(void);
+ASC_DLLSPEC void DestroyUnitsTable(void);
 /**<
 	This routine can be called to deallocate all of the units in the table.
 */
 
-extern struct UnitDefinition *CreateUnitDef(symchar *new_name,
+ASC_DLLSPEC struct UnitDefinition *CreateUnitDef(symchar *new_name,
                                             CONST char *unitsexpr,
                                             CONST char *filename,
                                             int linenum);
@@ -125,18 +125,18 @@ extern struct UnitDefinition *CreateUnitDef(symchar *new_name,
  *  @param linenum   Line number.
  */
 
-extern void DestroyUnitDef(struct UnitDefinition *udp);
+ASC_DLLSPEC void DestroyUnitDef(struct UnitDefinition *udp);
 /**<
  * Destroys udp and its unitsexpr.
  */
 
-extern void ProcessUnitDef(struct UnitDefinition *udp);
+ASC_DLLSPEC void ProcessUnitDef(struct UnitDefinition *udp);
 /**<
  * Attempts to add the info in udp to the units table.
  * messages to ascerr if not possible.
  */
 
-ASC_DLLSPEC CONST struct Units*LookupUnits(CONST char *c);
+ASC_DLLSPEC CONST struct Units *LookupUnits(CONST char *c);
 /**<
  *  Check the units library for units with a description string which
  *  matches c.  If it is found, this function will return a non-NULL pointer;
@@ -197,7 +197,7 @@ ASC_DLLSPEC CONST struct Units*FindOrDefineUnits(CONST char *c,
  *  </pre>
  */
 
-ASC_DLLSPEC char**UnitsExplainError(CONST char *unitsexpr, int code, int pos);
+ASC_DLLSPEC char **UnitsExplainError(CONST char *unitsexpr, int code, int pos);
 /**<
  *  Returns an array of strings which may be helpful in
  *  explaining the error.

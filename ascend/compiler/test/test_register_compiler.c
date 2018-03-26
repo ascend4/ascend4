@@ -27,7 +27,8 @@
 	T(blackbox) \
 	T(fixassign) \
 	T(dimen) \
-	T(fractions)
+	T(fractions) \
+	T(units)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)
