@@ -82,7 +82,7 @@ popd
 #include <test/assertimpl.h>
 #include <test/test_globals.h>
 
-#define AUTODIFF_DEBUG
+//#define AUTODIFF_DEBUG
 #ifdef AUTODIFF_DEBUG
 # define MSG CONSOLE_DEBUG
 #else
