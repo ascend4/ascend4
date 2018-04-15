@@ -134,6 +134,68 @@ static void test_test2(void){
 	CU_TEST(3==errcode);
 	CU_TEST(NULL==u);
 
+	u = FindOrDefineUnits("N", &pos, &errcode);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
+
+	u = FindOrDefineUnits("N^2", &pos, &errcode);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
+
+	u = FindOrDefineUnits("N^-2", &pos, &errcode);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
+
+	u = FindOrDefineUnits("N/m", &pos, &errcode);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
+
+	u = FindOrDefineUnits("/m", &pos, &errcode);
+	CU_TEST(8==errcode);
+	CU_TEST(NULL==u);
+
+	u = FindOrDefineUnits("N/m/kg", &pos, &errcode);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
+
+	u = FindOrDefineUnits("N/m*kg", &pos, &errcode);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
+
+	u = FindOrDefineUnits("N/m*kg/", &pos, &errcode);
+	CU_TEST(7==errcode);
+	CU_TEST(NULL==u);
+
+	u = FindOrDefineUnits("N^1/2", &pos, &errcode);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
+
+	char *s1 = UnitsStringSI(u);
+	CONSOLE_DEBUG("string = %s",s1);
+	ASC_FREE(s1);
+
+#if 0
+	u = FindOrDefineUnits("kg^0.3", &pos, &errcode);
+	CONSOLE_DEBUG("error code = %d, pos = %lu",errcode,pos);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
+
+	u = FindOrDefineUnits("N^(3/10)", &pos, &errcode);
+	CONSOLE_DEBUG("error code = %d, pos = %lu",errcode,pos);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
+
+	u = FindOrDefineUnits("N/(m)", &pos, &errcode);
+	CONSOLE_DEBUG("error code = %d, pos = %lu",errcode,pos);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
+
+	u = FindOrDefineUnits("N/(m*K)", &pos, &errcode);
+	CONSOLE_DEBUG("error code = %d",errcode);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
+#endif
+
 	u = FindOrDefineUnits("3.5*m", &pos, &errcode);
 	CU_TEST(0==errcode);
 	CU_TEST(NULL!=u);
@@ -141,6 +203,10 @@ static void test_test2(void){
 	u = FindOrDefineUnits("3.5*m*", &pos, &errcode);
 	CU_TEST(7==errcode);
 	CU_TEST(NULL==u);
+
+	u = FindOrDefineUnits(".678e-2*m", &pos, &errcode);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
 
 	u = FindOrDefineUnits("XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
 XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
