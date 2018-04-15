@@ -76,7 +76,7 @@ static void test_test2(void){
 
 	// CreateUnitDef
 
-	struct UnitDefinition *ud, *ud1;
+	struct UnitDefinition *ud;
 	ud = CreateUnitDef(AddSymbol("N"),"kg*m/s^2","somefile.a4c",15);
 	CU_TEST(NULL!=ud);
 	CU_TEST(NULL==CreateUnitDef(NULL,"kg*m/s^2","somefile.a4c",15));
@@ -112,6 +112,63 @@ static void test_test2(void){
 	ProcessUnitDef(ud);
 	DestroyUnitDef(ud);
 	CU_TEST(nc0==get_num_units_defined()); // nothing added
+
+	// parser checks...
+
+	unsigned long pos = 359;
+	int errcode = 229;
+	u = FindOrDefineUnits("m", &pos, &errcode);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
+	CU_TEST(0==pos);
+
+	u = FindOrDefineUnits("NNN/mmm", &pos, &errcode);
+	CU_TEST(1==errcode);
+	CU_TEST(NULL==u);
+
+	u = FindOrDefineUnits("N/(m", &pos, &errcode);
+	CU_TEST(2==errcode);
+	CU_TEST(NULL==u);
+
+	u = FindOrDefineUnits("N-m", &pos, &errcode);
+	CU_TEST(3==errcode);
+	CU_TEST(NULL==u);
+
+	u = FindOrDefineUnits("3.5*m", &pos, &errcode);
+	CU_TEST(0==errcode);
+	CU_TEST(NULL!=u);
+
+	u = FindOrDefineUnits("3.5*m*", &pos, &errcode);
+	CU_TEST(7==errcode);
+	CU_TEST(NULL==u);
+
+	u = FindOrDefineUnits("XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+ZaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa"
+		,&pos, &errcode);
+	//CONSOLE_DEBUG("error code = %d",errcode);
+	CU_TEST(5==errcode);
+	CU_TEST(NULL==u);
+
+	u = FindOrDefineUnits("3.6N", &pos, &errcode);
+	//CONSOLE_DEBUG("error code = %d",errcode);
+	CU_TEST(6==errcode);
+	CU_TEST(NULL==u);
+
+#if 0 
+	u = FindOrDefineUnits("3.5e9e0*m", &pos, &errcode);
+	CONSOLE_DEBUG("error code = %d",errcode);
+	CU_TEST(4==errcode);
+	CU_TEST(NULL==u);
+#endif
 
 	DestroyUnitsTable();
 	DestroyStringSpace();
