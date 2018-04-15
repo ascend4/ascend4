@@ -28,6 +28,15 @@
 
 #include <test/common.h>
 
+static unsigned long get_num_units_defined(void){
+  unsigned long c, nc = 0;
+  struct Units *p;
+  for(c=0;c<UNITS_HASH_SIZE;c++) {
+    for(p = g_units_hash_table[c];p!=NULL;p=p->next)nc++;
+  }
+  return nc;
+}
+
 static void test_test1(void){
 	// test setup and destruction of the global list
 
@@ -37,7 +46,72 @@ static void test_test1(void){
 	InitSymbolTable();
 	InitUnitsTable();
 
+	// 10 dimensions plus wild plus dimensionless
+	CU_TEST(12==get_num_units_defined());
 	DumpUnits(stderr);
+
+	DestroyUnitsTable();
+	DestroyStringSpace();
+	DestroySymbolTable();
+	DestroyDimenList();
+	gl_destroy_pool();
+}
+
+static void test_test2(void){
+	// test setup and destruction of the global list
+
+	gl_init_pool();
+	gl_init();
+	InitDimenList();
+	InitSymbolTable();
+	InitUnitsTable();
+
+	// LookupUnits
+
+	const struct Units *u = LookupUnits("kg");
+	CU_TEST(NULL!=u);
+
+	u = LookupUnits("MPa");
+	CU_TEST(NULL==u);
+
+	// CreateUnitDef
+
+	struct UnitDefinition *ud, *ud1;
+	ud = CreateUnitDef(AddSymbol("N"),"kg*m/s^2","somefile.a4c",15);
+	CU_TEST(NULL!=ud);
+	CU_TEST(NULL==CreateUnitDef(NULL,"kg*m/s^2","somefile.a4c",15));
+	CU_TEST(NULL==CreateUnitDef(AddSymbol("N"),NULL,"somefile.a4c",15));
+	CU_TEST(NULL==CreateUnitDef(AddSymbol("N"),"kg*m/s^2",NULL,15));
+	DestroyUnitDef(ud);
+
+	// ProcessUnitDef
+
+	ud = CreateUnitDef(AddSymbol("N"),"kg*m/s^2","somefile.a4c",16);
+	ProcessUnitDef(ud);
+	DestroyUnitDef(ud);
+
+	u = LookupUnits("N");
+	CU_TEST(NULL!=u);
+
+	// CheckNewUnits (via ProcessUnitDef)
+
+	ud = CreateUnitDef(AddSymbol("NN"),"kg*MMM/s^2","somefile.a4c",17);
+	ProcessUnitDef(ud);
+	DestroyUnitDef(ud);
+	u = LookupUnits("NN");
+	CU_TEST(NULL==u);
+
+	unsigned long nc0 = get_num_units_defined();
+	ud = CreateUnitDef(AddSymbol("m"),"s/kg","somefile.a4c",18);
+	ProcessUnitDef(ud);
+	DestroyUnitDef(ud);
+	CU_TEST(nc0==get_num_units_defined()); // nothing added
+
+	nc0 = get_num_units_defined();
+	ud = CreateUnitDef(AddSymbol("m"),"s-kg","somefile.a4c",18);
+	ProcessUnitDef(ud);
+	DestroyUnitDef(ud);
+	CU_TEST(nc0==get_num_units_defined()); // nothing added
 
 	DestroyUnitsTable();
 	DestroyStringSpace();
@@ -52,7 +126,9 @@ static void test_test1(void){
 /* the list of tests */
 
 #define TESTS(T) \
-	T(test1)
+	T(test1) \
+	T(test2)
+
 
 REGISTER_TESTS_SIMPLE(compiler_units, TESTS)
 

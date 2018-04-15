@@ -162,7 +162,7 @@ extern CONST struct Units *DefineUnits(symchar *c, double conv, CONST dim_type *
  *       know where to fix it. BAA 6-94
  */
 
-ASC_DLLSPEC CONST struct Units*FindOrDefineUnits(CONST char *c,
+ASC_DLLSPEC CONST struct Units *FindOrDefineUnits(CONST char *c,
                                              unsigned long * CONST pos,
                                              int * CONST error_code);
 /**<
@@ -199,15 +199,20 @@ ASC_DLLSPEC CONST struct Units*FindOrDefineUnits(CONST char *c,
 
 ASC_DLLSPEC char **UnitsExplainError(CONST char *unitsexpr, int code, int pos);
 /**<
- *  Returns an array of strings which may be helpful in
- *  explaining the error.
- *  - errv[0] is a message.
- *  - errv[1] is the unitsexpr.
- *  - errv[2] is a pointer to the error -------^ line.
- *            aligned with unitsexpr given.
- *  The user should never change or free errv or its content,
- *  nor should the user keep the pointers.
- */
+	Returns an array of strings which may be helpful in
+	explaining the error.
+		- errv[0] is a message.
+		- errv[1] is the unitsexpr.
+		- errv[2] is a pointer to the error -------^ line.
+			      aligned with unitsexpr given.
+	The user should never change or free errv or its content,
+	nor should the user keep the pointers.
+
+	UPDATE (JP 2018): you can call UnitsExplainError(NULL,-1,0) to clear
+	memory allocated by this function, but you shouldn't free it yourself
+	because this function is storing the pointer in a global variable which
+	it later tries to access internally.
+*/
 
 #define UnitsDescription(u) ((u)->description)
 /**<

@@ -66,18 +66,16 @@ struct Units *g_units_hash_table[UNITS_HASH_SIZE];
 unsigned long g_units_size = 0;
 unsigned long g_units_collisions = 0;
 
-static
-struct ParseReturn CheckNewUnits(CONST char *, unsigned long int *CONST,
-                                 int *CONST);
+static struct ParseReturn CheckNewUnits(CONST char *	
+	, unsigned long int *CONST, int *CONST
+);
 
-static
-struct ParseReturn ParseString(CONST char *c,
-			       unsigned long int *CONST pos,
-			       int *CONST error_code);
+static struct ParseReturn ParseString(CONST char *c
+	, unsigned long int *CONST pos, int *CONST error_code
+);
 
-static
-void CopyToGlobal(register CONST char *c)
-{
+
+static void CopyToGlobal(register CONST char *c){
   register char *p;
   register unsigned length;
   length = strlen(c);
@@ -97,9 +95,8 @@ void CopyToGlobal(register CONST char *c)
   *p = '\0';
 }
 
-static
-void DefineFundamentalUnit(CONST char *dimname, char *unitname)
-{
+
+static void DefineFundamentalUnit(CONST char *dimname, char *unitname){
   CONST struct Units *uptr;
   dim_type dim, *dimp;
 
@@ -113,9 +110,8 @@ void DefineFundamentalUnit(CONST char *dimname, char *unitname)
   }
 }
 
-static
-void DefineFundamentalUnits(void)
-{
+
+static void DefineFundamentalUnits(void){
   DefineFundamentalUnit("M",UNIT_BASE_MASS);
   DefineFundamentalUnit("Q",UNIT_BASE_QUANTITY);
   DefineFundamentalUnit("T", UNIT_BASE_TIME);
@@ -129,11 +125,10 @@ void DefineFundamentalUnits(void)
 }
 
 /* internal translate table of some utility */
-static
-char *g_unit_base_name[NUM_DIMENS];
+static char *g_unit_base_name[NUM_DIMENS];
 
-void InitUnitsTable(void)
-{
+
+void InitUnitsTable(void){
   register unsigned long c;
   //register CONST struct Units *result;
 
@@ -156,8 +151,8 @@ void InitUnitsTable(void)
   g_unit_base_name[D_SOLID_ANGLE] = UNIT_BASE_SOLID_ANGLE;
 }
 
-void DestroyUnitsTable(void)
-{
+
+void DestroyUnitsTable(void){
   register unsigned long c;
   struct Units *ptr,*next;
   for(c=0;c<UNITS_HASH_SIZE;g_units_hash_table[c++]=NULL){
@@ -208,8 +203,8 @@ struct UnitDefinition *CreateUnitDef(symchar *lhs, CONST char *rhs,
   return ud;
 }
 
-void DestroyUnitDef(struct UnitDefinition *ud)
-{
+
+void DestroyUnitDef(struct UnitDefinition *ud){
   if (ud==NULL) {
     return;
   }
@@ -219,8 +214,8 @@ void DestroyUnitDef(struct UnitDefinition *ud)
   ascfree((char *)ud);
 }
 
-void ProcessUnitDef(struct UnitDefinition *ud)
-{
+
+void ProcessUnitDef(struct UnitDefinition *ud){
   CONST struct Units *result;
   struct ParseReturn pr;
   unsigned long pos;
@@ -233,33 +228,35 @@ void ProcessUnitDef(struct UnitDefinition *ud)
   pr = CheckNewUnits(ud->unitsexpr,&pos,&code);
   if (code!=0) {
     errv = UnitsExplainError(ud->unitsexpr,code,pos);
-    FPRINTF(ASCERR,"ERROR: %s.\n", errv[0]);
+    FPRINTF(ASCERR,"ERROR checking: %s.\n", errv[0]);
     FPRINTF(ASCERR,"  %s =\n",SCP(ud->new_name));
     FPRINTF(ASCERR,"  {%s};\n",errv[1]);
     FPRINTF(ASCERR,"  -%s\n",errv[2]);
     FPRINTF(ASCERR,"  %s:%d\n\n",ud->filename,ud->linenum);
+	errv = UnitsExplainError(NULL,-1,0);
     return;
   }
   result = DefineUnits(ud->new_name,pr.conv,FindOrAddDimen(&pr.dim));
   if (result == NULL) {
     errv = UnitsExplainError(ud->unitsexpr,11,0);
-    FPRINTF(ASCERR,"ERROR: %s.\n", errv[0]);
+    FPRINTF(ASCERR,"ERROR defining units: %s.\n", errv[0]);
     FPRINTF(ASCERR,"  %s =\n",SCP(ud->new_name));
     FPRINTF(ASCERR,"  {%s};\n",errv[1]);
     FPRINTF(ASCERR,"  -%s\n",errv[2]);
     FPRINTF(ASCERR,"  %s:%d\n\n",ud->filename,ud->linenum);
+	errv = UnitsExplainError(NULL,-1,0);
     return;
   }
 }
 
 /*
  * it is not appropriate to replace this with a pointer hashing
- * ufnction since the string hashed may not be a symchar.
+ * function since the string hashed may not be a symchar.
  */
 #define UnitsHashFunction(s) hashpjw(s,UNITS_HASH_SIZE)
 
-CONST struct Units *LookupUnits(CONST char *c)
-{
+
+CONST struct Units *LookupUnits(CONST char *c){
   register struct Units *result;
   register int str_cmp=1;
   if ((result=g_units_hash_table[UnitsHashFunction(c)])!=NULL) {
@@ -271,42 +268,42 @@ CONST struct Units *LookupUnits(CONST char *c)
   return NULL;
 }
 
-static
-struct Units *CheckUnitsMatch(struct Units *p,
-			      double conv,
-			      CONST dim_type *dim)
-{
-  if ((conv!=UnitsConvFactor(p))||(!SameDimen(dim,UnitsDimensions(p)))) {
+
+static struct Units *CheckUnitsMatch(struct Units *p
+	, double conv, CONST dim_type *dim
+){
+  if((conv!=UnitsConvFactor(p))||(!SameDimen(dim,UnitsDimensions(p)))) {
     return NULL;
-  } else {
+  }else{
     return p;
   }
 }
 
-CONST struct Units *DefineUnits(symchar *c, double conv,
-                                CONST dim_type *dim)
-{
+
+CONST struct Units *DefineUnits(symchar *c
+	, double conv, CONST dim_type *dim
+){
   register unsigned long bucket;
   register struct Units *result,*tmp;
   register int str_cmp;
   assert(AscFindSymbol(c)!=NULL);
   bucket=UnitsHashFunction(SCP(c));
-  if (g_units_hash_table[bucket]!=NULL) {
+  if(g_units_hash_table[bucket]!=NULL){
     result=g_units_hash_table[bucket];
     str_cmp = CmpSymchar(c,UnitsDescription(result));
-    if (str_cmp==0) {
+    if(str_cmp==0){
       return CheckUnitsMatch(result,conv,dim);
-    } else if (str_cmp<0) {
+    }else if (str_cmp<0){
       /* insert before list head */
       g_units_hash_table[bucket]=
-	(struct Units *)ascmalloc(sizeof(struct Units));
+        (struct Units *)ascmalloc(sizeof(struct Units));
       g_units_hash_table[bucket]->next = result;
       result = g_units_hash_table[bucket];
-    } else {
-      while ((result->next!=NULL)&&
+    }else{
+      while((result->next!=NULL)&&
 	     ((str_cmp=CmpSymchar(c,UnitsDescription(result->next)))>0))
-	result = result->next;
-      if (str_cmp==0) return CheckUnitsMatch(result->next,conv,dim);
+        result = result->next;
+      if(str_cmp==0) return CheckUnitsMatch(result->next,conv,dim);
       tmp = result->next;
       result->next = (struct Units *)ascmalloc(sizeof(struct Units));
       result = result->next;
@@ -317,8 +314,8 @@ CONST struct Units *DefineUnits(symchar *c, double conv,
     result->description = c;
     result->conversion_factor = conv;
     result->dim = dim;
-  }
-  else { /* empty bucket */
+  }else{
+    /* empty bucket */
     g_units_size++;
     result = g_units_hash_table[bucket] =
       (struct Units *)ascmalloc(sizeof(struct Units));
@@ -330,15 +327,13 @@ CONST struct Units *DefineUnits(symchar *c, double conv,
   return result;
 }
 
-static
-void SkipStrBlanks(CONST char *c, unsigned long int *CONST pos)
-{
+
+static void SkipStrBlanks(CONST char *c, unsigned long int *CONST pos){
   while(isspace(c[*pos])) (*pos)++;
 }
 
-static
-int AddChar(register char ch, register unsigned int pos)
-{
+
+static int AddChar(register char ch, register unsigned int pos){
   if (pos < MAXTOKENLENGTH) {
     g_units_id_space[pos]=ch;
     return 1;
@@ -347,10 +342,10 @@ int AddChar(register char ch, register unsigned int pos)
   return 0;
 }
 
-static
-enum units_scanner_tokens GetUnitsToken(CONST char *c,
-					unsigned long int *CONST pos)
-{
+
+static enum units_scanner_tokens GetUnitsToken(CONST char *c
+	, unsigned long int *CONST pos
+){
   register unsigned cc;
   SkipStrBlanks(c,pos);
   if (isalpha(c[*pos])) {
@@ -850,6 +845,7 @@ char **UnitsExplainError(CONST char *ustr, int code, int pos)
   if (ERRV[2] != g_units_errors[UEECALL] &&
       ERRV[2] != g_units_errors[UEEMEM] &&
       ERRV[2] != NULL) {
+	/* clean up the memory allocated to the line indicator on the last call */
     ascfree(ERRV[2]);
     ERRV[2] = NULL;
   }
