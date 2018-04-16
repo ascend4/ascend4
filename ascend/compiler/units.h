@@ -229,7 +229,7 @@ ASC_DLLSPEC char **UnitsExplainError(CONST char *unitsexpr, int code, int pos);
  *  Returns the dimensions of the units structure.
  */
 
-ASC_DLLSPEC char *UnitsStringSI(struct Units *up);
+ASC_DLLSPEC char *UnitsStringSI(CONST struct Units *up);
 /**<
  *  Returns the SI form of the units for the dimensionality of up.
  *  Wild = *, Dimensionless = "", NULL up --> NULL return.

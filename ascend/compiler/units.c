@@ -742,7 +742,7 @@ CONST struct Units *FindOrDefineUnits(CONST char *c,
   return result;
 }
 
-char *UnitsStringSI(struct Units *p)
+char *UnitsStringSI(const struct Units *p)
 {
   Asc_DString ds, *dsPtr;
   char expo[20];
@@ -849,6 +849,7 @@ char **UnitsExplainError(CONST char *ustr, int code, int pos)
     ascfree(ERRV[2]);
     ERRV[2] = NULL;
   }
+
   if (code<0 || code>UEELAST || ustr==NULL) {
     ERRV[0] = g_units_errors[UEECALL];
     ERRV[1] = g_units_errors[UEECALL];

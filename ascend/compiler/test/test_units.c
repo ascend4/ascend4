@@ -122,63 +122,59 @@ static void test_test2(void){
 	CU_TEST(NULL!=u);
 	CU_TEST(0==pos);
 
-	u = FindOrDefineUnits("NNN/mmm", &pos, &errcode);
-	CU_TEST(1==errcode);
-	CU_TEST(NULL==u);
+#define EXPECT_ERROR(USTR,ERRCODE) \
+	u = FindOrDefineUnits(USTR,&pos,&errcode);\
+	if(errcode && errcode!=ERRCODE){\
+		CONSOLE_DEBUG("Expected error code %d, got %d",ERRCODE,errcode);\
+		char **e1 = UnitsExplainError(USTR,pos,errcode);\
+		CONSOLE_DEBUG("error: %s",e1[1]);\
+		CONSOLE_DEBUG("-------%s  %s",e1[2],e1[0]);\
+	}\
+	CU_TEST(ERRCODE==errcode);\
+	if(ERRCODE)CU_TEST(NULL==u) else CU_TEST(NULL!=u);
 
-	u = FindOrDefineUnits("N/(m", &pos, &errcode);
-	CU_TEST(2==errcode);
-	CU_TEST(NULL==u);
+	EXPECT_ERROR("NNN/mmm",1);
 
-	u = FindOrDefineUnits("N-m", &pos, &errcode);
-	CU_TEST(3==errcode);
-	CU_TEST(NULL==u);
+	EXPECT_ERROR("N",0);
+	EXPECT_ERROR("N^2",0);
+	EXPECT_ERROR("N^-2",0);
+	EXPECT_ERROR("N/m",0);
+	EXPECT_ERROR("N/m/kg",0);
+	EXPECT_ERROR("N/m*kg",0);
 
-	u = FindOrDefineUnits("N", &pos, &errcode);
-	CU_TEST(0==errcode);
-	CU_TEST(NULL!=u);
+	EXPECT_ERROR("N/(m",2);
+	EXPECT_ERROR("N-m",3);
+	EXPECT_ERROR("/m",8);
+	EXPECT_ERROR("N/m*kg/",7);
 
-	u = FindOrDefineUnits("N^2", &pos, &errcode);
-	CU_TEST(0==errcode);
-	CU_TEST(NULL!=u);
-
-	u = FindOrDefineUnits("N^-2", &pos, &errcode);
-	CU_TEST(0==errcode);
-	CU_TEST(NULL!=u);
-
-	u = FindOrDefineUnits("N/m", &pos, &errcode);
-	CU_TEST(0==errcode);
-	CU_TEST(NULL!=u);
-
-	u = FindOrDefineUnits("/m", &pos, &errcode);
-	CU_TEST(8==errcode);
-	CU_TEST(NULL==u);
-
-	u = FindOrDefineUnits("N/m/kg", &pos, &errcode);
-	CU_TEST(0==errcode);
-	CU_TEST(NULL!=u);
-
-	u = FindOrDefineUnits("N/m*kg", &pos, &errcode);
-	CU_TEST(0==errcode);
-	CU_TEST(NULL!=u);
-
-	u = FindOrDefineUnits("N/m*kg/", &pos, &errcode);
-	CU_TEST(7==errcode);
-	CU_TEST(NULL==u);
-
-	u = FindOrDefineUnits("N^1/2", &pos, &errcode);
-	CU_TEST(0==errcode);
-	CU_TEST(NULL!=u);
-
+	EXPECT_ERROR("N^1/2",0);
 	char *s1 = UnitsStringSI(u);
 	CONSOLE_DEBUG("string = %s",s1);
 	ASC_FREE(s1);
 
+	EXPECT_ERROR("3.5*m",0);
+	EXPECT_ERROR("3.5*m*",7);
+
+	EXPECT_ERROR(".678e-2*m",0);
+
+	EXPECT_ERROR("XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
+ZaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa"
+		,5);
+
+	EXPECT_ERROR("3.6N",6);
+
 #if 0
-	u = FindOrDefineUnits("kg^0.3", &pos, &errcode);
-	CONSOLE_DEBUG("error code = %d, pos = %lu",errcode,pos);
-	CU_TEST(0==errcode);
-	CU_TEST(NULL!=u);
+	EXPECT_ERROR("N/m)",9);
+	EXPECT_ERROR("kg^0.3",0)
 
 	u = FindOrDefineUnits("N^(3/10)", &pos, &errcode);
 	CONSOLE_DEBUG("error code = %d, pos = %lu",errcode,pos);
@@ -195,39 +191,6 @@ static void test_test2(void){
 	CU_TEST(0==errcode);
 	CU_TEST(NULL!=u);
 #endif
-
-	u = FindOrDefineUnits("3.5*m", &pos, &errcode);
-	CU_TEST(0==errcode);
-	CU_TEST(NULL!=u);
-
-	u = FindOrDefineUnits("3.5*m*", &pos, &errcode);
-	CU_TEST(7==errcode);
-	CU_TEST(NULL==u);
-
-	u = FindOrDefineUnits(".678e-2*m", &pos, &errcode);
-	CU_TEST(0==errcode);
-	CU_TEST(NULL!=u);
-
-	u = FindOrDefineUnits("XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-ZaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa"
-		,&pos, &errcode);
-	//CONSOLE_DEBUG("error code = %d",errcode);
-	CU_TEST(5==errcode);
-	CU_TEST(NULL==u);
-
-	u = FindOrDefineUnits("3.6N", &pos, &errcode);
-	//CONSOLE_DEBUG("error code = %d",errcode);
-	CU_TEST(6==errcode);
-	CU_TEST(NULL==u);
 
 #if 0 
 	u = FindOrDefineUnits("3.5e9e0*m", &pos, &errcode);
