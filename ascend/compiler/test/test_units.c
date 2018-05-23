@@ -57,6 +57,19 @@ static void test_test1(void){
 	gl_destroy_pool();
 }
 
+
+#define EXPECT_ERROR(USTR,ERRCODE) \
+	u = FindOrDefineUnits(USTR,&pos,&errcode);\
+	if(errcode && errcode!=ERRCODE){\
+		CONSOLE_DEBUG("Expected error code %d, got %d",ERRCODE,errcode);\
+		char **e1 = UnitsExplainError(USTR,pos,errcode);\
+		CONSOLE_DEBUG("error: %s",e1[1]);\
+		CONSOLE_DEBUG("------ %s  %s",e1[2],e1[0]);\
+	}\
+	CU_TEST(ERRCODE==errcode);\
+	if(ERRCODE)CU_TEST(NULL==u) else CU_TEST(NULL!=u);
+
+
 static void test_test2(void){
 	// test setup and destruction of the global list
 
@@ -122,17 +135,6 @@ static void test_test2(void){
 	CU_TEST(NULL!=u);
 	CU_TEST(0==pos);
 
-#define EXPECT_ERROR(USTR,ERRCODE) \
-	u = FindOrDefineUnits(USTR,&pos,&errcode);\
-	if(errcode && errcode!=ERRCODE){\
-		CONSOLE_DEBUG("Expected error code %d, got %d",ERRCODE,errcode);\
-		char **e1 = UnitsExplainError(USTR,pos,errcode);\
-		CONSOLE_DEBUG("error: %s",e1[1]);\
-		CONSOLE_DEBUG("-------%s  %s",e1[2],e1[0]);\
-	}\
-	CU_TEST(ERRCODE==errcode);\
-	if(ERRCODE)CU_TEST(NULL==u) else CU_TEST(NULL!=u);
-
 	EXPECT_ERROR("NNN/mmm",1);
 
 	EXPECT_ERROR("N",0);
@@ -149,7 +151,7 @@ static void test_test2(void){
 
 	EXPECT_ERROR("N^1/2",0);
 	char *s1 = UnitsStringSI(u);
-	CONSOLE_DEBUG("string = %s",s1);
+	//CONSOLE_DEBUG("string = %s",s1);
 	ASC_FREE(s1);
 
 	EXPECT_ERROR("3.5*m",0);
@@ -172,7 +174,37 @@ ZaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa
 
 	EXPECT_ERROR("3.6N",6);
 
-	//EXPECT_ERROR("N^(2/1)",0);
+	EXPECT_ERROR("3.1415926a",6);
+
+	EXPECT_ERROR("2.8e+12",0);
+	EXPECT_ERROR("2.8e+1x",6);
+	EXPECT_ERROR("2.8e+x",4);
+	EXPECT_ERROR("2.8e+e",4);
+	EXPECT_ERROR("2.8e-1",0);
+	EXPECT_ERROR("2.8e-11",0);
+	EXPECT_ERROR("2.8ex",4);
+	EXPECT_ERROR("2.8x",6);
+	EXPECT_ERROR("2.x",6);
+	EXPECT_ERROR("2.",0);
+	EXPECT_ERROR("2",0);
+
+	DestroyUnitsTable();
+	DestroyStringSpace();
+	DestroySymbolTable();
+	DestroyDimenList();
+	gl_destroy_pool();
+}
+
+static void test_test3(void){
+	gl_init_pool();
+	gl_init();
+	InitDimenList();
+	InitSymbolTable();
+	InitUnitsTable();
+
+	const struct Units *u;
+	unsigned long pos = 359;
+	int errcode = 229;
 
 #if 0
 	EXPECT_ERROR("N/m)",9);
@@ -208,6 +240,7 @@ ZaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa
 	gl_destroy_pool();
 }
 
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -215,7 +248,8 @@ ZaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa
 
 #define TESTS(T) \
 	T(test1) \
-	T(test2)
+	T(test2) \
+	T(test3)
 
 
 REGISTER_TESTS_SIMPLE(compiler_units, TESTS)
