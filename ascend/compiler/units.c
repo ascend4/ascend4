@@ -348,86 +348,63 @@ static enum units_scanner_tokens GetUnitsToken(CONST char *c
 ){
   register unsigned cc;
   SkipStrBlanks(c,pos);
-  if (isalpha(c[*pos])) {
-    cc = 0;
-    do {
-      if (AddChar(c[*pos],cc++)) (*pos)++;
-      else return units_oversized;
-    } while(isalpha(c[*pos])||(isdigit(c[*pos]))||(c[*pos]=='_'));
-    g_units_id_space[cc]='\0';
-    return units_id;
-  }
-  else if (isdigit(c[*pos])) { /* real or integer */
-    cc = 0;
-    do {
-      if (AddChar(c[*pos],cc++)) (*pos)++;
-      else return units_oversized;
-    } while (isdigit(c[*pos]));
-    if (c[*pos] == '.') {
-      if (AddChar(c[*pos],cc++)) (*pos)++;
-      else return units_oversized;
-      while (isdigit(c[*pos])) {
-	if (AddChar(c[*pos],cc++)) (*pos)++;
+
+#define ADD_CHAR_S \
+	if(AddChar(c[*pos],cc++)) (*pos)++; \
 	else return units_oversized;
+#define ADD_CHAR_WHILE(COND) \
+	do{ ADD_CHAR_S; } while(COND);
+#define COMPLETE(TYPE) \
+    g_units_id_space[cc]='\0'; \
+    return TYPE;
+
+  if(isalpha(c[*pos])){ /* an identifier, starting with an alpha char */
+    cc = 0;
+    ADD_CHAR_WHILE(isalpha(c[*pos])||(isdigit(c[*pos]))||(c[*pos]=='_'));
+    COMPLETE(units_id);
+  }
+  else if(isdigit(c[*pos])){ /* a real or integer value */
+    cc = 0;
+    ADD_CHAR_WHILE(isdigit(c[*pos]));
+    if(c[*pos] == '.'){
+      ADD_CHAR_S;
+      while (isdigit(c[*pos])){
+        ADD_CHAR_S;
       }
     }
-    if ((c[*pos] == 'e')||(c[*pos] == 'E')) {
-      if (AddChar(c[*pos],cc++)) (*pos)++;
-      else return units_oversized;
-      if ((c[*pos] == '+')||(c[*pos] == '-')) {
-	if (AddChar(c[*pos],cc++)) (*pos)++;
-	else return units_oversized;
+    if((c[*pos] == 'e')||(c[*pos] == 'E')){
+      ADD_CHAR_S;
+      if((c[*pos] == '+')||(c[*pos] == '-')){
+        ADD_CHAR_S;
       }
-      if (isdigit(c[*pos])) {
-	do {
-	  if (AddChar(c[*pos],cc++)) (*pos)++;
-	  else return units_oversized;
-	} while (isdigit(c[*pos]));
-      }
-      else {
-	g_units_id_space[cc]='\0';
-	return units_real_err;
+      if(isdigit(c[*pos])){
+        ADD_CHAR_WHILE(isdigit(c[*pos]));
+      }else{
+        COMPLETE(units_real_err);
       }
     }
-    g_units_id_space[cc]='\0';
-    return units_real;
-  }
-  else
-    switch(c[*pos]) {
+	COMPLETE(units_real);
+  }else switch(c[*pos]){
     case '.': /* real */
       cc = 0;
-      if (AddChar(c[*pos],cc++)) (*pos)++;
-      else return units_oversized;
-      if (isdigit(c[*pos])) {
-	do {
-	  if (AddChar(c[*pos],cc++)) (*pos)++;
-	  else return units_oversized;
-	} while (isdigit(c[*pos]));
+      ADD_CHAR_S;
+      if(isdigit(c[*pos])) {
+        ADD_CHAR_WHILE(isdigit(c[*pos]));
+      }else{
+		COMPLETE(units_real_err);
       }
-      else {
-	g_units_id_space[cc]='\0';
-	return units_real_err;
+      if((c[*pos] == 'e')||(c[*pos] == 'E')) {
+        ADD_CHAR_S;
+        if((c[*pos] == '+')||(c[*pos] == '-')) {
+          ADD_CHAR_S;
+        }
+        if(isdigit(c[*pos])){
+          ADD_CHAR_WHILE(isdigit(c[*pos]));
+        }else{
+		  COMPLETE(units_real_err);
+        }
       }
-      if ((c[*pos] == 'e')||(c[*pos] == 'E')) {
-	if (AddChar(c[*pos] ,cc++)) (*pos)++;
-	else return units_oversized;
-	if ((c[*pos] == '+')||(c[*pos] == '-')) {
-	  if (AddChar(c[*pos],cc++)) (*pos)++;
-	  else return units_oversized;
-	}
-	if (isdigit(c[*pos])) {
-	  do {
-	    if (AddChar(c[*pos],cc++)) (*pos)++;
-	    else return units_oversized;
-	  } while (isdigit(c[*pos]));
-	}
-	else {
-	  g_units_id_space[cc]='\0';
-	  return units_real_err;
-	}
-      }
-      g_units_id_space[cc]='\0';
-      return units_real;
+      COMPLETE(units_real);
     case '^':
       (*pos)++;
       return units_power;
@@ -448,6 +425,9 @@ static enum units_scanner_tokens GetUnitsToken(CONST char *c
     default:
       return units_err;
     }
+#undef ADD_CHAR_S
+#undef ADD_CHAR_WHILE
+#undef COMPLETE
 }
 
 static
@@ -547,7 +527,7 @@ struct ParseReturn ParseTerm(CONST char *c,
   ClearDimensions(&(result.dim));
   SkipStrBlanks(c,pos);
   oldpos = *pos;
-  switch(GetUnitsToken(c,pos)) {
+  switch(GetUnitsToken(c,pos)){
   case units_id:
     lookup = LookupUnits(g_units_id_space);
     if (lookup!=NULL) {
@@ -565,13 +545,13 @@ struct ParseReturn ParseTerm(CONST char *c,
     break;
   case units_open:
     result = ParseString(c,pos,error_code);
-    if (*error_code == 0) {
-      if (GetUnitsToken(c,pos)!=units_close) {/* unbalanced parenthesis */
-	*error_code = 2;
-	*pos = oldpos;
-	return result;
+    if(*error_code == 0){
+      if(GetUnitsToken(c,pos)!=units_close) {/* unbalanced parenthesis */
+        *error_code = 2;
+        *pos = oldpos;
+        return result;
       }
-    } else {
+    }else{
       return result;
     }
     break;
@@ -658,13 +638,13 @@ struct ParseReturn ParseString(CONST char *c,
     case units_times:
       result2 = ParseTerm(c,pos,error_code);
       if (*error_code==0) {
-	result1 = MultiplyPR(&result1,&result2);
+        result1 = MultiplyPR(&result1,&result2);
       }
       break;
     case units_divide:
       result2 = ParseTerm(c,pos,error_code);
       if (*error_code==0) {
-	result1 = DividePR(&result1,&result2);
+        result1 = DividePR(&result1,&result2);
       }
       break;
     case units_close:
@@ -818,11 +798,8 @@ char *g_unit_explain_error_strings[3] = {NULL,NULL,NULL};
 
 char **UnitsExplainError(CONST char *ustr, int code, int pos)
 {
-#define UEESIZE 14
-#define UEELAST (UEESIZE-3) /* last real message */
-#define UEECALL (UEESIZE-2)
-#define UEEMEM (UEESIZE-1)
-  static char *g_units_errors[UEESIZE] = {
+//#define UEESIZE 14
+  static char *g_units_errors[] = {
     "unit ok",
     "undefined unit in expression",
     "unbalanced ( or () in denominator",
@@ -839,6 +816,11 @@ char **UnitsExplainError(CONST char *ustr, int code, int pos)
     "error in call to UnitsExplainError",
     "malloc fail in UnitsExplainError"
   };
+#define UEESIZE sizeof(g_units_errors)/sizeof(char *)
+#define UEELAST (UEESIZE-3) /* last real message */
+#define UEECALL (UEESIZE-2)
+#define UEEMEM (UEESIZE-1)
+
   int c,len;
   char *line;
 

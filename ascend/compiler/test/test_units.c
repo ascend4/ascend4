@@ -172,6 +172,8 @@ ZaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa
 
 	EXPECT_ERROR("3.6N",6);
 
+	//EXPECT_ERROR("N^(2/1)",0);
+
 #if 0
 	EXPECT_ERROR("N/m)",9);
 	EXPECT_ERROR("kg^0.3",0)
