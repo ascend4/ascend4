@@ -202,6 +202,15 @@ ZaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa
 
 	EXPECT_ERROR(")234",9);
 
+	EXPECT_ERROR("2^2",0);
+	EXPECT_ERROR("2.5e-5^2",0);
+	EXPECT_ERROR("2^-1",0);
+	EXPECT_ERROR("2^+1",0);
+	EXPECT_ERROR("$",3);
+
+	EXPECT_ERROR("N^2/m^2",0);
+	EXPECT_ERROR("N ^ 2 / m ^ 2",0);
+
 	DestroyUnitsTable();
 	DestroyStringSpace();
 	DestroySymbolTable();
@@ -221,20 +230,27 @@ static void test_test3(void){
 	int errcode = 229;
 
 #if 0
-	EXPECT_ERROR("N/m)",9);
+	EXPECT_ERROR("kg/m",0);
+
+	EXPECT_ERROR("m/kg)))",9);
+
 	EXPECT_ERROR("kg^0.3",0)
 
-	u = FindOrDefineUnits("N^(3/10)", &pos, &errcode);
+	EXPECT_ERROR("2^(5)",0);
+
+	EXPECT_ERROR("(kg/m)^2",2);
+
+	u = FindOrDefineUnits("kg^(3/10)", &pos, &errcode);
 	CONSOLE_DEBUG("error code = %d, pos = %lu",errcode,pos);
 	CU_TEST(0==errcode);
 	CU_TEST(NULL!=u);
 
-	u = FindOrDefineUnits("N/(m)", &pos, &errcode);
+	u = FindOrDefineUnits("kg/(m)", &pos, &errcode);
 	CONSOLE_DEBUG("error code = %d, pos = %lu",errcode,pos);
 	CU_TEST(0==errcode);
 	CU_TEST(NULL!=u);
 
-	u = FindOrDefineUnits("N/(m*K)", &pos, &errcode);
+	u = FindOrDefineUnits("kg/(m*K)", &pos, &errcode);
 	CONSOLE_DEBUG("error code = %d",errcode);
 	CU_TEST(0==errcode);
 	CU_TEST(NULL!=u);
