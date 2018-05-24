@@ -200,6 +200,8 @@ ZaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa
 	EXPECT_ERROR(".23e-",4);
 	EXPECT_ERROR(".23e-x",4);
 
+	EXPECT_ERROR(")234",9);
+
 	DestroyUnitsTable();
 	DestroyStringSpace();
 	DestroySymbolTable();
