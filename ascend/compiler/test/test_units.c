@@ -187,6 +187,17 @@ ZaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa
 	EXPECT_ERROR("2.x",6);
 	EXPECT_ERROR("2.",0);
 	EXPECT_ERROR("2",0);
+	EXPECT_ERROR(".234",0);
+	EXPECT_ERROR(".23x",6);
+	EXPECT_ERROR(".23e",4);
+	EXPECT_ERROR(".23e1",0);
+	EXPECT_ERROR(".23e12",0);
+	EXPECT_ERROR(".23e+",4);
+	EXPECT_ERROR(".23e+5",0);
+	EXPECT_ERROR(".23e+5x",6);
+	EXPECT_ERROR(".23e-5x",6);
+	EXPECT_ERROR(".23e-",4);
+	EXPECT_ERROR(".23e-x",4);
 
 	DestroyUnitsTable();
 	DestroyStringSpace();
