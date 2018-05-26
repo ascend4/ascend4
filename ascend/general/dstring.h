@@ -27,14 +27,12 @@
  *  These routines are modifications of TCL code by John Osterhout at
  *  Berkeley, as allowed by the TCL distribution license.  See dstring.c
  *  for the details. There are minor differences internally.
- *  <pre>
- *  Requires:
- *        #include "utilities/ascConfig.h"
- *  </pre>
  */
 
 #ifndef ASC_DSTRING_H
 #define ASC_DSTRING_H
+
+#include <ascend/general/platform.h>
 
 /**	@addtogroup general_dstr General Dynamic String
 	@{

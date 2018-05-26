@@ -17,13 +17,6 @@
 *//**
 	@file
 	Expression Module
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "fractions.h"
-	#include "compiler.h"
-	#include "dimen.h"
-	#include "expr_types.h"
 *//*
 	by Tom Epperly
 	Last in CVS: $Revision: 1.11 $ $Date: 1998/02/05 16:36:00 $ $Author: ballan $
@@ -57,7 +50,7 @@ extern void InitVarExpr(struct Expr *e, CONST struct Name *n);
  *  that you want to be able to destroy later (or forget later)
  *  without destroying the contents -- in this case name.
  *  How you create and destroy e is your business. using stack space
- *  is suggested.<br><br>
+ *  is suggested.
  *
  *  The problem with creating a varexpr with a name you want to keep
  *  after the node dies is that the name is destroyed when the node is.

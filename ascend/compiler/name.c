@@ -254,10 +254,10 @@ int NameIdF(CONST struct Name *n)
   return ((n->bits & NAMEBIT_IDTY) != 0);
 }
 
-int NameAutoF(CONST struct Name *n)
-{
+int NameAutoF(CONST struct Name *n){
   assert(n!=NULL);
-  return ((n->bits &( NAMEBIT_IDTY | NAMEBIT_AUTO)) != 0);
+  /* fixed this to correctly match the documented behaviour */
+  return (((n)->bits & (NAMEBIT_AUTO|NAMEBIT_IDTY)) == (NAMEBIT_AUTO|NAMEBIT_IDTY) ? NAMEBIT_AUTO : 0);
 }
 
 symchar *NameIdPtrF(CONST struct Name *n)

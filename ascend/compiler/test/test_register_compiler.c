@@ -28,7 +28,8 @@
 	T(fixassign) \
 	T(dimen) \
 	T(fractions) \
-	T(units)
+	T(units) \
+	T(name)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)
