@@ -69,12 +69,12 @@ extern struct Name *CreateSetName(struct Set *s);
 	Create a name node of type set with the set s associated with it.
 */
 
-extern struct Name *CreateEnumElementName(symchar *s);
+ASC_DLLSPEC struct Name *CreateEnumElementName(symchar *s);
 /**<
 	Create a name node of type set with the subscript s associated with it.
 */
 
-extern struct Name *CreateIntegerElementName(long i);
+ASC_DLLSPEC struct Name *CreateIntegerElementName(long i);
 /**<
 	Create a name node of type set with the subscript i associated with it.
 */
@@ -230,11 +230,13 @@ ASC_DLLSPEC void DestroyName(struct Name *n);
 	Handles NULL input gracefully.
 */
 
+#if 0 /* DISUSED */
 extern void DestroyNamePtr(struct Name *n);
 /**<
 	Deallocate this name node, and don't change the next node.
 	Handles NULL input gracefully.
  */
+#endif
 
 extern struct Name *JoinNames(struct Name *n1, struct Name *n2);
 /**<

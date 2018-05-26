@@ -443,12 +443,12 @@ extern int CompareExprs(CONST struct Expr *e1, CONST struct Expr *e2);
  *  The NULL Expr > all Expr.
  */
 
-extern void exprs_init_pool(void);
+ASC_DLLSPEC void exprs_init_pool(void);
 /**< 
  * Starts memory recycle. do not call twice before stopping recycle.
  */
 
-extern void exprs_destroy_pool(void);
+ASC_DLLSPEC void exprs_destroy_pool(void);
 /**< 
  * Stops memory recycle. do not call while ANY Expr are outstanding.
  */

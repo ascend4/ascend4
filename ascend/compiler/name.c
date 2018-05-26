@@ -330,6 +330,7 @@ void DestroyName(register struct Name *n)
   }
 }
 
+#if 0 /* DISUSED */
 void DestroyNamePtr(struct Name *n)
 {
   if (n!=NULL) {
@@ -342,6 +343,7 @@ void DestroyNamePtr(struct Name *n)
     IDNFREE((char *)n);
   }
 }
+#endif
 
 struct Name *JoinNames(struct Name *n1, struct Name *n2)
 {

@@ -237,12 +237,12 @@ extern char *CreateStrFromSet(CONST struct Set *set);
  *  Returns a copy of the string representation of the given set.
  */
 
-extern void sets_init_pool(void);
+ASC_DLLSPEC void sets_init_pool(void);
 /**<
  *  Starts memory recycle. Do not call twice before stopping recycle.
  */
 
-extern void sets_destroy_pool(void);
+ASC_DLLSPEC void sets_destroy_pool(void);
 /**< 
  *  Stops memory recycle. Do not call while ANY Expr are outstanding.
  */

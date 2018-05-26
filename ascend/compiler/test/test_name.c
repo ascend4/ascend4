@@ -18,6 +18,8 @@
 	Unit test functions for compiler.
 */
 #include <ascend/compiler/name.h>
+#include <ascend/compiler/sets.h>
+#include <ascend/compiler/exprs.h>
 #include <ascend/compiler/nameio.h>
 #include <ascend/compiler/symtab.h>
 #include <ascend/utilities/error.h>
@@ -36,6 +38,8 @@ static void test_test1(void){
 	gl_init();
 	gl_init_pool();
 	name_init_pool();
+    exprs_init_pool();
+	sets_init_pool();
 	InitSymbolTable();
 
 	struct Name *n = CreateIdName(AddSymbol("var1"));
@@ -65,11 +69,27 @@ static void test_test1(void){
 	CU_TEST(0==strcmp(s,"var1.var2"));
 	ASC_FREE(s);
 
+	struct Name *n5 = CreateIntegerElementName(37);
+	struct Name *n6 = CopyAppendNameNode(n,n5);
+	CU_TEST(0==NameCompound(n6));
+	s = WriteNameString(n6);
+	CU_TEST(0==strcmp(s,"var1[37]"));
+	ASC_FREE(s);
+
+	struct Name *n7 = CreateEnumElementName(AddSymbol("helmholtz"));
+	struct Name *n8 = CopyAppendNameNode(n,n7);
+	CU_TEST(0==NameCompound(n8));
+	s = WriteNameString(n8);
+	CU_TEST(0==strcmp(s,"var1['helmholtz']"));
+	ASC_FREE(s);
+
 	//name_report_pool();
 
 	DestroySymbolTable();
-    DestroyStringSpace();
+	DestroyStringSpace();
 	name_destroy_pool();
+	exprs_destroy_pool();
+	sets_destroy_pool();
 	gl_destroy_pool();
 }
 
