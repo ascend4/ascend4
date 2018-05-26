@@ -22,7 +22,9 @@ if test_env.has_key('CUNIT_CPPPATH'):
 if test_env.has_key('CUNIT_LIBPATH'):
 	test_env.Append(LIBPATH=test_env['CUNIT_LIBPATH'])
 
-testprog = test_env.Program('test',srcs)
+testprog = test_env.Program('test',srcs
+	, LINKFLAGS=['-Wl,-rpath,\'$$ORIGIN/..\'']
+)
 
 test_env.Depends(testprog,['#/ascend','#/solvers','#/models'])
 
