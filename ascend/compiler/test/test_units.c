@@ -28,6 +28,13 @@
 
 #include <test/common.h>
 
+//#define TEST_UNITS_DEBUG
+#ifdef TEST_UNITS_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 static unsigned long get_num_units_defined(void){
   unsigned long c, nc = 0;
   struct Units *p;
@@ -60,6 +67,7 @@ static void test_test1(void){
 
 #define EXPECT_ERROR(USTR,ERRCODE) \
 	u = FindOrDefineUnits(USTR,&pos,&errcode);\
+    MSG("Expecting error %d, got error %d, with string '%s'",ERRCODE,errcode,USTR);\
 	if(errcode && errcode!=ERRCODE){\
 		CONSOLE_DEBUG("Expected error code %d, got %d",ERRCODE,errcode);\
 		char **e1 = UnitsExplainError(USTR,errcode,pos);\
@@ -211,6 +219,30 @@ ZaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa
 	EXPECT_ERROR("N^2/m^2",0);
 	EXPECT_ERROR("N ^ 2 / m ^ 2",0);
 
+	EXPECT_ERROR("kg^0.3",6)
+
+	EXPECT_ERROR("kg/m",0);
+	EXPECT_ERROR("m/kg",0);
+	EXPECT_ERROR("(m/kg",2);
+
+	EXPECT_ERROR("(m/kg)",0);
+	EXPECT_ERROR("s/(m/kg)",0);
+
+	EXPECT_ERROR("kg/(m)",0);
+	EXPECT_ERROR("kg/(m*K)",0);
+
+	EXPECT_ERROR("3.5e9*m",0);
+
+	EXPECT_ERROR("3.5e9e0",6);
+
+	EXPECT_ERROR("m/kg)",9);
+
+	EXPECT_ERROR("kg/(s/m))",9);
+
+	EXPECT_ERROR("kg/(s/m",2);
+
+	EXPECT_ERROR("(kg/m)^2",0);
+
 	DestroyUnitsTable();
 	DestroyStringSpace();
 	DestroySymbolTable();
@@ -229,24 +261,14 @@ static void test_test3(void){
 	unsigned long pos = 359;
 	int errcode = 229;
 
-	EXPECT_ERROR("kg/m",0);
-	EXPECT_ERROR("m/kg",0);
-	EXPECT_ERROR("(m/kg",2);
-	EXPECT_ERROR("m/kg)",9);
-
-	EXPECT_ERROR("(m/kg)",0);
-	EXPECT_ERROR("s/(m/kg)",0);
-
-	EXPECT_ERROR("kg^0.3",6)
 	EXPECT_ERROR("2^(5)",0);
-	EXPECT_ERROR("(kg/m)^2",2);
 	EXPECT_ERROR("kg^(3/10)",0);
-	EXPECT_ERROR("kg/(m)",0);
-	EXPECT_ERROR("kg/(m*K)",0);
+	EXPECT_ERROR("kg^(-3/10)",12);
+	EXPECT_ERROR("kg^(-3/-10)",0);
+	EXPECT_ERROR("kg^(3/-10)",12);
 
-	EXPECT_ERROR("3.5e9*m",0);
+	EXPECT_ERROR("kg^(3/10/5)",10);
 
-	EXPECT_ERROR("3.5e9e0",6);
 
 	DestroyUnitsTable();
 	DestroyStringSpace();

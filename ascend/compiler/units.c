@@ -79,6 +79,7 @@ static struct ParseReturn CheckNewUnits(CONST char *
 
 static struct ParseReturn ParseString(CONST char *c
 	, unsigned long int *CONST pos, int *CONST error_code
+    , int push_close
 );
 
 
@@ -442,14 +443,14 @@ static enum units_scanner_tokens GetUnitsToken(CONST char *c
 static
 double AdjustConv(double d, struct fraction f, int *CONST error_code){
   f = Simplify(f);
-  if (Numerator(f)<0) {
-    if (Denominator(f)!=1) {
-      *error_code = 10;
+  if(Numerator(f)<0){
+    if (Denominator(f)!=1){
+      MSG("Negative fractional exponent!");
+      *error_code = 12;
       return 0.0;
     }
     return 1.0/pow(d,-(double)Numerator(f));
-  }
-  else
+  }else
     return pow(d,(double)Numerator(f)/(double)Denominator(f));
 }
 
@@ -486,34 +487,50 @@ struct fraction ParseFraction(CONST char *c,
   register FRACPART num,denom;
   SkipStrBlanks(c,pos);
   if(c[*pos]=='('){
+    MSG("Got '('");
     (*pos)++;
+    MSG("Parsing denominator '%s'",c+*pos);
     num = ParseInt(c,pos,error_code);
-    if(*error_code != 0) {
+    //MSG("After ParseInt, parsing '%s'",c+*pos);
+    if(*error_code == 0){
+      MSG("Numerator '%hd', now parsing '%s'",num,c+*pos);
       SkipStrBlanks(c,pos);
       if(c[*pos] == '/') {
         (*pos)++;
+        MSG("Got '/', now parsing '%s'",c+*pos);
         denom = ParseInt(c,pos,error_code);
-        if(*error_code != 0) {
+        if(*error_code == 0){
+          MSG("Got denominator '%hd', now parsing '%s'",denom,c+*pos);
           SkipStrBlanks(c,pos);
           if(c[*pos] == ')') {
             (*pos)++;
+            MSG("Got ')', returning fraction %hd/%hd",num,denom);
             return CreateFraction(num,denom);
           }else{ /* unclosed parenthesis */
-            *error_code = 12;
+            MSG("Unclosed paren");
+            *error_code = 10;
             return CreateFraction(1,1);
           }
         }
-      }else if(c[*pos] == ')'){ /* okay */
-        (*pos)++;
-        return CreateFraction(num,1);
-      }else{ /* error unclosed parenthesis */
-        *error_code = 12;
-        return CreateFraction(1,1);
+        MSG("Failed parsing denominator");
+      }else{
+        MSG("Failed parsing '/'");
+        if(c[*pos] == ')'){ /* okay */
+          (*pos)++;
+          MSG("OK, found ')', returning fraction %hd/1",num);
+          return CreateFraction(num,1);
+        }else{ /* error unclosed parenthesis */
+          MSG("No good, no closing parenthesis");
+          *error_code = 10;
+          return CreateFraction(1,1);
+        }
       }
     }
+    MSG("Didn't parse an integer! error code = %d",*error_code);
   }else if(isdigit(c[*pos])||(c[*pos]=='+')||(c[*pos]=='-')){
     return CreateFraction(ParseInt(c,pos,error_code),1);
   }
+  MSG("ParseFraction didn't like what it found");
   *error_code = 10;
   return CreateFraction(1,1);
 }
@@ -553,7 +570,7 @@ struct ParseReturn ParseTerm(CONST char *c,
     break;
   case units_open:
     MSG("units_open, parse '%s'",c+*pos);
-    result = ParseString(c,pos,error_code);
+    result = ParseString(c,pos,error_code,1);
     MSG("units_open, got back with '%s'", c+*pos);
     if(*error_code == 0){
       if(GetUnitsToken(c,pos)!=units_close) {/* unbalanced parenthesis */
@@ -620,8 +637,8 @@ struct ParseReturn MultiplyPR(CONST struct ParseReturn *r1,
 
 
 static
-struct ParseReturn DividePR(CONST struct ParseReturn *r1,
-			    CONST struct ParseReturn *r2)
+struct ParseReturn DividePR(CONST struct ParseReturn *r1
+    ,CONST struct ParseReturn *r2)
 {
   struct ParseReturn result;
   result.conv = r1->conv/r2->conv;
@@ -630,14 +647,17 @@ struct ParseReturn DividePR(CONST struct ParseReturn *r1,
 }
 
 
+/**
+  push_close: if a final closing parenthesis is found, don't swallow it
+*/
 static
-struct ParseReturn ParseString(CONST char *c,
-			       unsigned long int *CONST pos,
-			       int *CONST error_code)
-{
+struct ParseReturn ParseString(CONST char *c
+    ,unsigned long int *CONST pos, int *CONST error_code
+    ,int push_close
+){
   struct ParseReturn result1,result2;
   unsigned long oldpos;
-  MSG("Parsing string '%s",c+*pos);
+  MSG("Parsing string '%s'",c+*pos);
   result1 = ParseTerm(c,pos,error_code);
   while(*error_code == 0){
     SkipStrBlanks(c,pos);	
@@ -666,10 +686,16 @@ struct ParseReturn ParseString(CONST char *c,
         result1 = DividePR(&result1,&result2);
       }
       break;
-    case units_close:
+    case units_close: /* closing parenthesis */
       MSG("Found ')' pos %lu",*pos);
-       
-	  (*pos)--;
+	  if(push_close){
+        (*pos)--; /* put the closing bracket back */
+        return result1;
+      }else{
+        /* we weren't expecting to see a closing parenthesis */
+        *error_code = 9;
+        return result1;
+      }
     case units_end: /* natural closings */
       return result1;
     case units_err:
@@ -694,8 +720,8 @@ struct ParseReturn ParseString(CONST char *c,
  * are incompatible, returns error.
  */
 static
-struct ParseReturn CheckNewUnits(CONST char *c,
-		unsigned long int *CONST pos, int *CONST error_code
+struct ParseReturn CheckNewUnits(CONST char *c
+    ,unsigned long int *CONST pos, int *CONST error_code
 ){
   struct ParseReturn preturn;
   register CONST struct Units *result;
@@ -713,7 +739,7 @@ struct ParseReturn CheckNewUnits(CONST char *c,
     return preturn;
   }
   /* it couldn't find a match, so the string must be parsed */
-  preturn = ParseString(c,pos,error_code);
+  preturn = ParseString(c,pos,error_code, 0);
   return preturn;
 }
 
@@ -735,7 +761,7 @@ CONST struct Units *FindOrDefineUnits(CONST char *c,
     return result;
   }
   /* it couldn't find a match, so the string must be parsed */
-  preturn = ParseString(c,pos,error_code);
+  preturn = ParseString(c,pos,error_code, 0);
   if (*error_code == 0) {
     result = DefineUnits(AddSymbol(g_units_str),
 			 preturn.conv,
@@ -822,24 +848,21 @@ char *g_unit_explain_error_strings[3] = {NULL,NULL,NULL};
 
 char **UnitsExplainError(CONST char *ustr, int code, int pos){
   static char *g_units_errors[] = {
-    /*0*/"unit ok",
-    "undefined unit in expression",
-    "unbalanced ( or () in denominator",
-    "illegal character",
-    "illegal real value",
-    /*5*/"unit name too long",
-    "operator ( * or / ) missing",
-    "term missing after *,/, or (",
-    "term missing before * or /",
-    "too many )",
-    /*10*/"illegal fractional exponent",
-    "redefinition of unit",
-	"unbalanced ( or ) in ParseFraction"
-	/*UEELAST*/
-    /* these two should be last */
-    /*UEECALL*/"error in call to UnitsExplainError",
-    /*UEEMEM*/"malloc fail in UnitsExplainError"
-	/*UEESIZE*/
+    /*0*/"unit ok"
+    ,"undefined unit in expression"
+    ,"unbalanced ( or () in denominator"
+    ,"illegal character"
+    ,"illegal real value"
+    ,/*5*/"unit name too long"
+    ,"operator ( * or / ) missing"
+    ,"term missing after *,/, or ("
+    ,"term missing before * or /"
+    ,"too many )"
+    ,/*10*/"illegal fractional exponent"
+    ,"redefinition of unit"
+    ,"illegal negative fractional exponent" /*UEELAST*/
+    ,/*UEECALL*/"error in call to UnitsExplainError" /* keep these two last */
+    ,/*UEEMEM*/"malloc fail in UnitsExplainError"
   };
 #define UEESIZE (sizeof(g_units_errors)/sizeof(char *))
 #define UEELAST (UEESIZE-3) /* last real message */
