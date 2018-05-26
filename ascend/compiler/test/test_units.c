@@ -267,7 +267,9 @@ static void test_test3(void){
 	EXPECT_ERROR("kg^(-3/-10)",0);
 	EXPECT_ERROR("kg^(3/-10)",12);
 
-	EXPECT_ERROR("kg^(3/10/5)",10);
+	EXPECT_ERROR("kg^(3/10/5)",13);
+	EXPECT_ERROR("kg^(3/10",13);
+	EXPECT_ERROR("kg^(3",13);
 
 
 	DestroyUnitsTable();

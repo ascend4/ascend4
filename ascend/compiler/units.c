@@ -508,7 +508,7 @@ struct fraction ParseFraction(CONST char *c,
             return CreateFraction(num,denom);
           }else{ /* unclosed parenthesis */
             MSG("Unclosed paren");
-            *error_code = 10;
+            *error_code = 13;
             return CreateFraction(1,1);
           }
         }
@@ -521,7 +521,7 @@ struct fraction ParseFraction(CONST char *c,
           return CreateFraction(num,1);
         }else{ /* error unclosed parenthesis */
           MSG("No good, no closing parenthesis");
-          *error_code = 10;
+          *error_code = 13;
           return CreateFraction(1,1);
         }
       }
@@ -860,7 +860,8 @@ char **UnitsExplainError(CONST char *ustr, int code, int pos){
     ,"too many )"
     ,/*10*/"illegal fractional exponent"
     ,"redefinition of unit"
-    ,"illegal negative fractional exponent" /*UEELAST*/
+    ,"illegal negative fractional exponent"
+    ,"closing ) missing" /*UEELAST*/
     ,/*UEECALL*/"error in call to UnitsExplainError" /* keep these two last */
     ,/*UEEMEM*/"malloc fail in UnitsExplainError"
   };
