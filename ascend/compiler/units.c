@@ -36,6 +36,13 @@
 #include "dimen_io.h"
 #include "units.h"
 
+//#define UNITS_DEBUG
+#ifdef UNITS_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 enum units_scanner_tokens {
   units_id,
   units_real,
@@ -453,16 +460,16 @@ FRACPART ParseInt(CONST char *c,
 ){
   register unsigned count=0;
   SkipStrBlanks(c,pos);
-  if ((c[*pos]=='-')||(c[*pos]=='+'))
+  if((c[*pos]=='-')||(c[*pos]=='+'))
     g_units_id_space[count++]=c[(*pos)++];
-  if (!isdigit(c[*pos])) {
+  if(!isdigit(c[*pos])){
     *error_code = 10;
     return 1;
   }
-  while (isdigit(c[*pos])) {
-    if (count < MAXTOKENLENGTH)
+  while(isdigit(c[*pos])){
+    if(count < MAXTOKENLENGTH){
       g_units_id_space[count++]=c[(*pos)++];
-    else {
+    }else{
       *error_code = 10;
       return 1;
     }
@@ -478,30 +485,30 @@ struct fraction ParseFraction(CONST char *c,
 ){
   register FRACPART num,denom;
   SkipStrBlanks(c,pos);
-  if(c[*pos]=='(') {
+  if(c[*pos]=='('){
     (*pos)++;
     num = ParseInt(c,pos,error_code);
     if(*error_code != 0) {
       SkipStrBlanks(c,pos);
       if(c[*pos] == '/') {
-		(*pos)++;
-		denom = ParseInt(c,pos,error_code);
-		if(*error_code != 0) {
-		  SkipStrBlanks(c,pos);
-		  if(c[*pos] == ')') {
-			(*pos)++;
-			return CreateFraction(num,denom);
-		  }else{ /* unclosed parenthesis */
-			*error_code = 2;
-			return CreateFraction(1,1);
-		  }
-		}
+        (*pos)++;
+        denom = ParseInt(c,pos,error_code);
+        if(*error_code != 0) {
+          SkipStrBlanks(c,pos);
+          if(c[*pos] == ')') {
+            (*pos)++;
+            return CreateFraction(num,denom);
+          }else{ /* unclosed parenthesis */
+            *error_code = 12;
+            return CreateFraction(1,1);
+          }
+        }
       }else if(c[*pos] == ')'){ /* okay */
-		(*pos)++;
-		return CreateFraction(num,1);
+        (*pos)++;
+        return CreateFraction(num,1);
       }else{ /* error unclosed parenthesis */
-		*error_code = 2;
-		return CreateFraction(1,1);
+        *error_code = 12;
+        return CreateFraction(1,1);
       }
     }
   }else if(isdigit(c[*pos])||(c[*pos]=='+')||(c[*pos]=='-')){
@@ -523,10 +530,13 @@ struct ParseReturn ParseTerm(CONST char *c,
   unsigned long oldpos;
   result.conv = 1.0;
   ClearDimensions(&(result.dim));
+  MSG("Parsing term '%s'",c+*pos);
   SkipStrBlanks(c,pos);
+  //MSG("After skipping blanks, pos %lu (char '%c')",*pos,c[*pos]);
   oldpos = *pos;
   switch(GetUnitsToken(c,pos)){
   case units_id:
+    MSG("Found identifier '%s' at pos %lu",g_units_id_space,*pos);
     lookup = LookupUnits(g_units_id_space);
     if(lookup!=NULL) {
       CopyDimensions(UnitsDimensions(lookup),&result.dim);
@@ -538,10 +548,13 @@ struct ParseReturn ParseTerm(CONST char *c,
     }
     break;
   case units_real:
+    MSG("Found real '%s' at pos %lu",g_units_id_space,*pos);
     result.conv = atof(g_units_id_space);
     break;
   case units_open:
+    MSG("units_open, parse '%s'",c+*pos);
     result = ParseString(c,pos,error_code);
+    MSG("units_open, got back with '%s'", c+*pos);
     if(*error_code == 0){
       if(GetUnitsToken(c,pos)!=units_close) {/* unbalanced parenthesis */
         *error_code = 2;
@@ -569,10 +582,12 @@ struct ParseReturn ParseTerm(CONST char *c,
   case units_divide:
   case units_power:
   case units_times:
+    MSG("Found divide/times/power at pos %lu (error)",*pos);
     *pos = oldpos;
     *error_code = 8;
     return result;
   case units_close:
+    MSG("Found closing paren at pos %lu (error)",*pos);
     *pos = oldpos;
     *error_code = 9;
     return result;
@@ -622,9 +637,10 @@ struct ParseReturn ParseString(CONST char *c,
 {
   struct ParseReturn result1,result2;
   unsigned long oldpos;
+  MSG("Parsing string '%s",c+*pos);
   result1 = ParseTerm(c,pos,error_code);
   while(*error_code == 0){
-    SkipStrBlanks(c,pos);
+    SkipStrBlanks(c,pos);	
     oldpos = *pos;
     switch(GetUnitsToken(c,pos)){
     case units_oversized:
@@ -632,22 +648,28 @@ struct ParseReturn ParseString(CONST char *c,
     case units_real_err:
     case units_real:
     case units_open:
+	  MSG("Found id, real or open at pos %lu (error)",*pos);
       *pos = oldpos;
       *error_code = 6;
       return result1;
     case units_times:
+	  MSG("Found '*' pos %lu",*pos);
       result2 = ParseTerm(c,pos,error_code);
       if(*error_code==0){
         result1 = MultiplyPR(&result1,&result2);
       }
       break;
     case units_divide:
+	  MSG("Found '/' pos %lu",*pos);
       result2 = ParseTerm(c,pos,error_code);
       if(*error_code==0){
         result1 = DividePR(&result1,&result2);
       }
       break;
     case units_close:
+      MSG("Found ')' pos %lu",*pos);
+       
+	  (*pos)--;
     case units_end: /* natural closings */
       return result1;
     case units_err:
@@ -797,74 +819,78 @@ static
 char *g_unit_explain_error_strings[3] = {NULL,NULL,NULL};
 #define ERRV g_unit_explain_error_strings
 
-char **UnitsExplainError(CONST char *ustr, int code, int pos)
-{
-//#define UEESIZE 14
+
+char **UnitsExplainError(CONST char *ustr, int code, int pos){
   static char *g_units_errors[] = {
-    "unit ok",
+    /*0*/"unit ok",
     "undefined unit in expression",
     "unbalanced ( or () in denominator",
     "illegal character",
     "illegal real value",
-    "unit name too long",
+    /*5*/"unit name too long",
     "operator ( * or / ) missing",
     "term missing after *,/, or (",
     "term missing before * or /",
     "too many )",
-    "illegal fractional exponent",
+    /*10*/"illegal fractional exponent",
     "redefinition of unit",
+	"unbalanced ( or ) in ParseFraction"
+	/*UEELAST*/
     /* these two should be last */
-    "error in call to UnitsExplainError",
-    "malloc fail in UnitsExplainError"
+    /*UEECALL*/"error in call to UnitsExplainError",
+    /*UEEMEM*/"malloc fail in UnitsExplainError"
+	/*UEESIZE*/
   };
-#define UEESIZE sizeof(g_units_errors)/sizeof(char *)
+#define UEESIZE (sizeof(g_units_errors)/sizeof(char *))
 #define UEELAST (UEESIZE-3) /* last real message */
 #define UEECALL (UEESIZE-2)
 #define UEEMEM (UEESIZE-1)
-
   int c,len;
   char *line;
 
-  if (ERRV[2] != g_units_errors[UEECALL] &&
+  if(ERRV[2] != g_units_errors[UEECALL] &&
       ERRV[2] != g_units_errors[UEEMEM] &&
-      ERRV[2] != NULL) {
+      ERRV[2] != NULL
+  ){
 	/* clean up the memory allocated to the line indicator on the last call */
     ascfree(ERRV[2]);
     ERRV[2] = NULL;
   }
 
-  if (code<0 || code>UEELAST || ustr==NULL) {
+  if(code<0 || code>UEELAST || ustr==NULL){
     ERRV[0] = g_units_errors[UEECALL];
     ERRV[1] = g_units_errors[UEECALL];
     ERRV[2] = g_units_errors[UEECALL];
     return ERRV;
   }
   len = strlen(ustr);
-  if (pos<0 || pos>=len ) {
+  if(pos<0 || pos>=len){
     ERRV[0] = g_units_errors[UEECALL];
     ERRV[1] = g_units_errors[UEECALL];
     ERRV[2] = g_units_errors[UEECALL];
     return ERRV;
   }
   line = ASC_NEW_ARRAY_CLEAR(char,len+2);
-  if (line==NULL) {
+  if(line==NULL){
     ERRV[0] = g_units_errors[UEEMEM];
     ERRV[1] = g_units_errors[UEEMEM];
     ERRV[2] = g_units_errors[UEEMEM];
     return ERRV;
   }
+  //MSG("error %d = '%s'",code,g_units_errors[code]);
   ERRV[0] = g_units_errors[code];
   ERRV[1] = (char *)ustr;
   ERRV[2] = line;
   c = 0;
-  while ( c < pos) {
+  while(c < pos){
     line[c] = '-';
     c++;
   }
   line[c] = '^';
   c++;
   line[c] = '\0';
+
   return ERRV;
 }
 
-
+/* vim: set noai ts=4 sw=2 et: */

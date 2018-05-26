@@ -62,9 +62,9 @@ static void test_test1(void){
 	u = FindOrDefineUnits(USTR,&pos,&errcode);\
 	if(errcode && errcode!=ERRCODE){\
 		CONSOLE_DEBUG("Expected error code %d, got %d",ERRCODE,errcode);\
-		char **e1 = UnitsExplainError(USTR,pos,errcode);\
+		char **e1 = UnitsExplainError(USTR,errcode,pos);\
 		CONSOLE_DEBUG("error: %s",e1[1]);\
-		CONSOLE_DEBUG("------ %s  %s",e1[2],e1[0]);\
+		CONSOLE_DEBUG("-------%s  %s",e1[2],e1[0]);\
 	}\
 	CU_TEST(ERRCODE==errcode);\
 	if(ERRCODE)CU_TEST(NULL==u) else CU_TEST(NULL!=u);
@@ -229,39 +229,24 @@ static void test_test3(void){
 	unsigned long pos = 359;
 	int errcode = 229;
 
-#if 0
 	EXPECT_ERROR("kg/m",0);
+	EXPECT_ERROR("m/kg",0);
+	EXPECT_ERROR("(m/kg",2);
+	EXPECT_ERROR("m/kg)",9);
 
-	EXPECT_ERROR("m/kg)))",9);
+	EXPECT_ERROR("(m/kg)",0);
+	EXPECT_ERROR("s/(m/kg)",0);
 
-	EXPECT_ERROR("kg^0.3",0)
-
+	EXPECT_ERROR("kg^0.3",6)
 	EXPECT_ERROR("2^(5)",0);
-
 	EXPECT_ERROR("(kg/m)^2",2);
+	EXPECT_ERROR("kg^(3/10)",0);
+	EXPECT_ERROR("kg/(m)",0);
+	EXPECT_ERROR("kg/(m*K)",0);
 
-	u = FindOrDefineUnits("kg^(3/10)", &pos, &errcode);
-	CONSOLE_DEBUG("error code = %d, pos = %lu",errcode,pos);
-	CU_TEST(0==errcode);
-	CU_TEST(NULL!=u);
+	EXPECT_ERROR("3.5e9*m",0);
 
-	u = FindOrDefineUnits("kg/(m)", &pos, &errcode);
-	CONSOLE_DEBUG("error code = %d, pos = %lu",errcode,pos);
-	CU_TEST(0==errcode);
-	CU_TEST(NULL!=u);
-
-	u = FindOrDefineUnits("kg/(m*K)", &pos, &errcode);
-	CONSOLE_DEBUG("error code = %d",errcode);
-	CU_TEST(0==errcode);
-	CU_TEST(NULL!=u);
-#endif
-
-#if 0 
-	u = FindOrDefineUnits("3.5e9e0*m", &pos, &errcode);
-	CONSOLE_DEBUG("error code = %d",errcode);
-	CU_TEST(4==errcode);
-	CU_TEST(NULL==u);
-#endif
+	EXPECT_ERROR("3.5e9e0",6);
 
 	DestroyUnitsTable();
 	DestroyStringSpace();
