@@ -397,6 +397,7 @@ int NameCompound(CONST struct Name *n)
   return (dotseen || idseen>1);
 }
 
+#if 0 /* DISUSED */
 int NamesEqual(CONST struct Name *n1, CONST struct Name *n2)
 {
   if (n1==n2) return 1;
@@ -412,6 +413,7 @@ int NamesEqual(CONST struct Name *n1, CONST struct Name *n2)
   }
   return ((n1==NULL)&&(n2==NULL));
 }
+#endif
 
 /*
  * nameids  > subscripts.

@@ -204,10 +204,12 @@ extern struct Set *ReverseSetList(struct Set *s);
  *  Reverse the order of the set list.
  */
 
+#if 0 /* DISUSED */
 extern int SetStructuresEqual(CONST struct Set *s1, CONST struct Set *s2);
 /**< 
  *  Return TRUE if and only if, s1 and s2 are structurally equivalent.
  */
+#endif
 
 extern int CompareSetStructures(CONST struct Set *s1, CONST struct Set *s2);
 /**< 

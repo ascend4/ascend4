@@ -425,10 +425,12 @@ ASC_DLLSPEC struct Expr *JoinExprLists(struct Expr *e1, struct Expr *e2);
  *  is NULL in which case it returns e2.
  */
 
+#if 0 /* DISUSED */
 extern int ExprsEqual(CONST struct Expr *e1, CONST struct Expr *e2);
 /**< 
  *  Return TRUE if and only if e1 and e2 are structurally equivalent.
  */
+#endif
 
 extern int CompareExprs(CONST struct Expr *e1, CONST struct Expr *e2);
 /**< 

@@ -274,10 +274,12 @@ ASC_DLLSPEC int NameCompound(CONST struct Name *n);
 	So basically, if the name is printed with a '.' this will return 1.
 */
 
+#if 0 /* DISUSED */
 extern int NamesEqual(CONST struct Name *n1, CONST struct Name *n2);
 /**<
 	Return TRUE if and only if n1 and n2 are structurally equivalent.
 */
+#endif
 
 extern int CompareNames(CONST struct Name *n1, CONST struct Name *n2);
 /**<

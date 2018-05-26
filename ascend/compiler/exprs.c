@@ -584,6 +584,7 @@ CONST struct Set *ExprBuiltinSetF(CONST struct Expr *e)
   return e->v.s;
 }
 
+#if 0 /* DISUSED */
 int ExprsEqual(CONST struct Expr *e1, CONST struct Expr *e2)
 {
   if (e1==e2) return 1;
@@ -621,6 +622,7 @@ int ExprsEqual(CONST struct Expr *e1, CONST struct Expr *e2)
   }
   return ((e1==NULL)&&(e2==NULL));
 }
+#endif
 
 int CompareExprs(CONST struct Expr *e1, CONST struct Expr *e2)
 {
