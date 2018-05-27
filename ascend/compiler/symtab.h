@@ -106,7 +106,7 @@ ASC_DLLSPEC symchar*AscFindSymbol(symchar *s);
  * is in the table.
  */
 
-extern void PrintTab(int noisy);
+ASC_DLLSPEC void PrintTab(int noisy);
 /**<
  *  Print a report on stdout about the string hash table.
  *  if (noisy) prints lots of goop.

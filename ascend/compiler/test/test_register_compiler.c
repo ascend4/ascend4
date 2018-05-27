@@ -29,7 +29,8 @@
 	T(dimen) \
 	T(fractions) \
 	T(units) \
-	T(name)
+	T(name) \
+	T(symtab)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)
