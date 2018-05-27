@@ -19,6 +19,7 @@
 */
 #include <ascend/compiler/symtab.h>
 #include <ascend/utilities/error.h>
+#include <ascend/general/ascMalloc.h>
 #include <test/common.h>
 
 //#define TEST_SYM_DEBUG
@@ -41,22 +42,23 @@ static void test_test1(void){
 
 	CU_TEST(0==strcmp(SCP(s),"hello"));
 
-	char *c = "XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-XaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-YaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa\
-ZaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaaAaaaabaaaa";
-
+	char *c = ASC_NEW_ARRAY(char,3000);
+	int i;
+	for(i=0;i<3000;i++){
+		if(i%10==0){
+			c[i]='A' + (i/10)%26;
+		}else{
+			c[i]='0' + i%10;
+		}
+	}
+	c[2999]='\0';
+	MSG("c = '%s'",c);
+	
 	symchar *s2 = AddSymbol(c);
 	CU_TEST(NULL!=AscFindSymbol(s2));
+	CU_TEST(0==strcmp(AscFindSymbol(s2),c));
 
-	PrintTab(0);
+	PrintTab(1);
 
 	DestroySymbolTable();
 	DestroyStringSpace();
