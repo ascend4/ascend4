@@ -30,7 +30,8 @@
 	T(fractions) \
 	T(units) \
 	T(name) \
-	T(symtab)
+	T(symtab) \
+	T(qlfdid)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)
