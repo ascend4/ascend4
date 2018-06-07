@@ -150,6 +150,7 @@ static void test_string1(void){
 	CU_ASSERT(0 == Asc_QlfdidSearch3("a['left']", 1));
 	CU_ASSERT(0 == Asc_QlfdidSearch3("a['right']", 1));
 	CU_ASSERT(1 == Asc_QlfdidSearch3("a['up']", 1));
+	CU_ASSERT(1 == Asc_QlfdidSearch3("a['down.and.right']", 1));
 
 #if 0
 	/* you can't currently search for ['left'] relative to 'SIM1.a', not
