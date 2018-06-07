@@ -442,9 +442,11 @@ struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative){
       }
       break;
     case '[':
+      MSG("open '['");
       if(*(str-1) != ']'){
         *ptr = '\0';
         if(g_search_inst){
+          MSG("checking for child '%s'",temp);
           SetInstanceNameType(name,StrName);
           SetInstanceNameStrPtr(name,AddSymbol(temp));
           ndx=CheckChildExist(name);
@@ -452,6 +454,7 @@ struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative){
             return NULL;
           }
         }else{
+          MSG("checking for root '%s'",temp);
           g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
           if (!g_search_inst) {
             return NULL;
@@ -504,12 +507,14 @@ struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative){
   MSG("handling last part '%s'",temp);
 
   struct InstanceName name1;
-  if (g_search_inst) {
+  if(g_search_inst){
     SetInstanceNameType(name1,StrName);
     SetInstanceNameStrPtr(name1,AddSymbol(temp));
     CheckChildExist(name1);            /* sets g_search_inst regardless */
+    MSG("%s final part '%s'",g_search_inst?"Found":"Did not find", temp);
   }else{
     g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
+    MSG("%s simulation root '%s'",g_search_inst?"Found":"Did not find", temp);
   }
 
   return g_search_inst; /* which may be NULL */

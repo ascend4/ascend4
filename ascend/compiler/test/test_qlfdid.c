@@ -151,6 +151,15 @@ static void test_string1(void){
 	CU_ASSERT(0 == Asc_QlfdidSearch3("a['right']", 1));
 	CU_ASSERT(1 == Asc_QlfdidSearch3("a['up']", 1));
 
+#if 0
+	/* you can't currently search for ['left'] relative to 'SIM1.a', not
+	implemented */
+	CU_ASSERT(0 == Asc_QlfdidSearch3("a", 1));
+	g_relative_inst = g_search_inst;
+	CU_ASSERT(0 == Asc_QlfdidSearch3("['left']", 1));
+	CU_ASSERT(1 == Asc_QlfdidSearch3("[0]", 1));
+	CU_ASSERT(1 == Asc_QlfdidSearch3("['up']", 1));
+#endif
 
 	// we don't need to destroy our simulation if we added it to the list
 	//MSG("Destroying sim");
