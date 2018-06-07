@@ -61,6 +61,7 @@ static void test_string1(void){
 			x IS_A real;\n\
 			rel1: x - 1 = 0;\n\
 			y[1..5] IS_A real;\n\
+			a['left','right'] IS_A boolean;\n\
 		END test1;";
 
 	Asc_CompilerInit(1);
@@ -131,6 +132,10 @@ static void test_string1(void){
 	g_relative_inst = NULL;
 	CU_ASSERT(1 == Asc_QlfdidSearch3("rel1.message", 0));
 
+	g_relative_inst = NULL;
+	CU_ASSERT(0 == Asc_QlfdidSearch3("SIM1", 0));
+	CU_ASSERT(1 == Asc_QlfdidSearch3("SIM2", 0));
+
 	g_relative_inst = root;
 	CU_ASSERT(0 == Asc_QlfdidSearch3("x", 1));
 	CU_ASSERT(0 == Asc_QlfdidSearch3("y", 1));
@@ -142,6 +147,9 @@ static void test_string1(void){
 	CU_ASSERT(1 == Asc_QlfdidSearch3("y[6]", 1));
 	CU_ASSERT(1 == Asc_QlfdidSearch3("x[1]", 1));
 
+	CU_ASSERT(0 == Asc_QlfdidSearch3("a['left']", 1));
+	CU_ASSERT(0 == Asc_QlfdidSearch3("a['right']", 1));
+	CU_ASSERT(1 == Asc_QlfdidSearch3("a['up']", 1));
 
 
 	// we don't need to destroy our simulation if we added it to the list
