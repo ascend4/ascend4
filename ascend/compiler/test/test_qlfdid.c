@@ -49,20 +49,21 @@
 # define MSG(ARGS...) ((void)0)
 #endif
 
+static const char *model = "\n\
+	DEFINITION relation\
+	    included IS_A boolean;\
+	    message	IS_A symbol;\
+	    included := TRUE;\
+	    message := 'none';\
+	END relation;\
+	MODEL test1;\n\
+		x IS_A real;\n\
+		rel1: x - 1 = 0;\n\
+		y[1..5] IS_A real;\n\
+		a['left','right'] IS_A boolean;\n\
+	END test1;";
+
 static void test_string1(void){
-	const char *model = "\n\
-		DEFINITION relation\
-		    included IS_A boolean;\
-		    message	IS_A symbol;\
-		    included := TRUE;\
-		    message := 'none';\
-		END relation;\
-		MODEL test1;\n\
-			x IS_A real;\n\
-			rel1: x - 1 = 0;\n\
-			y[1..5] IS_A real;\n\
-			a['left','right'] IS_A boolean;\n\
-		END test1;";
 
 	Asc_CompilerInit(1);
 	CU_ASSERT(FindType(AddSymbol("boolean"))!=NULL);
@@ -152,6 +153,30 @@ static void test_string1(void){
 	CU_ASSERT(1 == Asc_QlfdidSearch3("a['up']", 1));
 	CU_ASSERT(1 == Asc_QlfdidSearch3("a['down.and.right']", 1));
 
+
+	g_relative_inst = NULL;
+	char temp[MAXIMUM_ID_LENGTH];
+	struct gl_list_t *l1;
+
+	CU_ASSERT(NULL != (l1 = Asc_BrowQlfdidSearch("SIM1.rel1",temp)));
+	if(l1)Asc_SearchListDestroy(l1);
+	CU_ASSERT(NULL == (l1 = Asc_BrowQlfdidSearch("SIM1.rel2",temp)));
+	if(l1)Asc_SearchListDestroy(l1);
+	CU_ASSERT(NULL != (l1 = Asc_BrowQlfdidSearch("SIM1.x",temp)));
+	if(l1)Asc_SearchListDestroy(l1);
+	CU_ASSERT(NULL != (l1 = Asc_BrowQlfdidSearch("SIM1.y",temp)));
+	if(l1)Asc_SearchListDestroy(l1);
+	CU_ASSERT(NULL != (l1 = Asc_BrowQlfdidSearch("SIM1.y[5]",temp)));
+	if(l1)Asc_SearchListDestroy(l1);
+	CU_ASSERT(NULL == (l1 = Asc_BrowQlfdidSearch("SIM1.y[6]",temp)));
+	if(l1)Asc_SearchListDestroy(l1);
+	CU_ASSERT(NULL == (l1 = Asc_BrowQlfdidSearch("SIM1.a['a.b.c']",temp)));
+	if(l1)Asc_SearchListDestroy(l1);
+	CU_ASSERT(NULL != (l1 = Asc_BrowQlfdidSearch("SIM1.a['left']",temp)));
+	if(l1)Asc_SearchListDestroy(l1);
+	CU_ASSERT(NULL == (l1 = Asc_BrowQlfdidSearch("SIM1.a['left'].d",temp)));
+	if(l1)Asc_SearchListDestroy(l1);
+
 #if 0
 	/* you can't currently search for ['left'] relative to 'SIM1.a', not
 	implemented */
@@ -169,6 +194,21 @@ static void test_string1(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_string2(void){
+
+	char *s = Asc_MakeInitString(20);
+	CU_ASSERT(NULL != s);
+	CU_ASSERT
+(strlen(s)==0);
+	ASC_FREE(s);
+
+	s = Asc_MakeInitString(-1);
+	CU_ASSERT(NULL != s);
+	CU_ASSERT(strlen(s)==0);
+	ASC_FREE(s);
+
+}
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -176,6 +216,7 @@ static void test_string1(void){
 /* the list of tests */
 
 #define TESTS(T) \
-	T(string1)
+	T(string1) \
+	T(string2)
 
 REGISTER_TESTS_SIMPLE(compiler_qlfdid, TESTS)
