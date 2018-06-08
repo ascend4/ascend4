@@ -205,8 +205,14 @@ static void test_string2(void){
 	s = Asc_MakeInitString(-1);
 	CU_ASSERT(NULL != s);
 	CU_ASSERT(strlen(s)==0);
-	ASC_FREE(s);
 
+	strcpy(s,"hello");
+
+	CU_ASSERT(0==strcmp(s,"hello"));
+	Asc_ReInitString(s);
+	CU_ASSERT(0==strcmp(s,""));
+
+	ASC_FREE(s);
 }
 
 

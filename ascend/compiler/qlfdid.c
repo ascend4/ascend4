@@ -63,7 +63,10 @@
 struct Instance *g_search_inst = NULL;
 struct Instance *g_relative_inst = NULL;
 
-
+/*
+	FIXME remove this silly little function. Just ASC_NEW_ARRAY_CLEAR?
+	It's fairly widely used in the Tcl/Tk GUI... could move it to there?
+*/
 char *Asc_MakeInitString(int len){
   char *result;
   int defaultlen = 40;
@@ -78,7 +81,10 @@ char *Asc_MakeInitString(int len){
   return result;
 }
 
-
+/*
+	FIXME remove this silly little function. Just inline it?
+	It's fairly widely used in the Tcl/Tk GUI... could move it to there?
+*/
 void Asc_ReInitString(char *str){
   if ((str)&&(strlen(str))) {
     strcpy(str,"");
