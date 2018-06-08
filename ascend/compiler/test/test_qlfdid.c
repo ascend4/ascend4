@@ -176,6 +176,8 @@ static void test_string1(void){
 	if(l1)Asc_SearchListDestroy(l1);
 	CU_ASSERT(NULL == (l1 = Asc_BrowQlfdidSearch("SIM1.a['left'].d",temp)));
 	if(l1)Asc_SearchListDestroy(l1);
+	CU_ASSERT(NULL == (l1 = Asc_BrowQlfdidSearch("SIM1['left'].d",temp)));
+	if(l1)Asc_SearchListDestroy(l1);
 
 #if 0
 	/* you can't currently search for ['left'] relative to 'SIM1.a', not
