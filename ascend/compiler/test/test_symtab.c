@@ -60,6 +60,7 @@ static void test_test1(void){
 
 	PrintTab(1);
 
+	ASC_FREE(c);
 	DestroySymbolTable();
 	DestroyStringSpace();
 }

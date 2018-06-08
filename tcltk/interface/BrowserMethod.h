@@ -78,6 +78,7 @@ extern int Asc_BrowRunAssignmentCmd(ClientData cdata, Tcl_Interp *interp,
  *  of units.
  */
 
+#if 0
 extern int Asc_BrowRunAssignQlfdidCmd2(ClientData cdata, Tcl_Interp *interp,
                                        int argc, CONST84 char *argv[]);
 /**<
@@ -86,6 +87,7 @@ extern int Asc_BrowRunAssignQlfdidCmd2(ClientData cdata, Tcl_Interp *interp,
  *  See the notes for Asc_BrowRunAssignment. The same applies only this
  *  function requires a qulaified id. An errors will return a TCL_ERROR;
  */
+#endif
 
 extern int Asc_BrowRunAssignQlfdidCmd3(ClientData cdata, Tcl_Interp *interp,
                                        int argc, CONST84 char *argv[]);

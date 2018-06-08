@@ -379,7 +379,7 @@ proc STUDY {args} {
         set oldval [inst atomvalue search]
         foreach tuple [lrange [lindex $args $counter] 1 end] {
           if {[ catch {
-                 qassgn2 $i [lindex $tuple 0] [lindex $tuple 1]
+                 qassgn3 $i [lindex $tuple 0] [lindex $tuple 1]
                 } errmsg
               ]} {
             puts stderr "Unable to assign value $tuple to $i because:"
@@ -389,7 +389,7 @@ proc STUDY {args} {
             incr check
           }
         }
-        catch {qassgn2 $i [lindex $oldval 0] [lindex $oldval 1]}
+        catch {qassgn3 $i [lindex $oldval 0] [lindex $oldval 1]}
         if {$check == 0} {
           puts stderr "No case values specified for parameter $i"
           Study_syntax
@@ -567,7 +567,7 @@ proc Study_cases_recursion {oblistid rootinst solver currentpar \
   if {$lastpar <= $currentpar} {
     foreach tuple [lrange [lindex $pardata $lastpar] 1 end] { 
       set counter 0
-      qassgn2 $i [lindex $tuple 0] [lindex $tuple 1]
+      qassgn3 $i [lindex $tuple 0] [lindex $tuple 1]
       set ascStudyVect(par_$lastpar) $tuple ;# for messages
       WRITE_VIRTUAL $rootinst $ascStudyVect(lastsolution) 
       incr ascStudyVect(tried)
@@ -598,7 +598,7 @@ proc Study_cases_recursion {oblistid rootinst solver currentpar \
     set nextpar $currentpar
     incr nextpar
     foreach tuple [lrange [lindex $pardata $currentpar] 1 end] { 
-      qassgn2 $i [lindex $tuple 0] [lindex $tuple 1]
+      qassgn3 $i [lindex $tuple 0] [lindex $tuple 1]
       set ascStudyVect(par_$currentpar) $tuple ;# for messages
       Study_cases_recursion $oblistid $rootinst $solver $nextpar \
                             $lastpar $pardata $handler
@@ -630,7 +630,7 @@ proc SOLVE {args} {
   set ascSolvStatVect(converged) 1
   set ascSolvStatVect(menubreak) 0
 }
-proc qassgn2 {args} {
+proc qassgn3 {args} {
   puts "assign $args"
 }
 proc Solve_do_Solve {args} {

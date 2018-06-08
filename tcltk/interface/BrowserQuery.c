@@ -1654,7 +1654,7 @@ int Asc_BrowWriteValues(ClientData cdata, Tcl_Interp *interp,
   case 's':
     i = g_search_inst; break;
   case 'q':				/* argv[4] ignored in other cases */
-    nok = Asc_QlfdidSearch2(QUIET(argv[4]));
+    nok = Asc_QlfdidSearch3(QUIET(argv[4]),0);
     if (nok) {
       i = NULL;
     } else {

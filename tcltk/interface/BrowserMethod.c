@@ -289,6 +289,7 @@ int BrowDoAssignment(Tcl_Interp *interp,struct Instance *i,
   return TCL_OK;
 }
 
+#if 0 // DISUSED
 /*
  * This function should probably go away. !!.
  * We will at the next iteration.
@@ -324,7 +325,7 @@ int Asc_BrowRunAssignQlfdidCmd2(ClientData cdata, Tcl_Interp *interp,
   nok = BrowDoAssignment(interp,i,QUIET(value_str),QUIET(unit_str));
   return nok;	/* whatever code returned by BrowDoAssignment */
 }
-
+#endif
 
 int Asc_BrowRunAssignQlfdidCmd3(ClientData cdata, Tcl_Interp *interp,
                             int argc, CONST84 char *argv[])

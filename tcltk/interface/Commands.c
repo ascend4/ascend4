@@ -356,6 +356,7 @@ void Asc_CreateCommands(Tcl_Interp *interp)
     /* the stuff above should be replaced with header macros. */
   );
 
+#if 0
   ASCADDCOM(interp,"qassgn2", Asc_BrowRunAssignQlfdidCmd2,
     "miscellaneous",
     NULL,
@@ -363,11 +364,12 @@ void Asc_CreateCommands(Tcl_Interp *interp)
     NULL
     /* the stuff above should be replaced with header macros. */
   );
+#endif
 
   ASCADDCOM(interp,"qassgn3", Asc_BrowRunAssignQlfdidCmd3,
     "miscellaneous",
     NULL,
-    NULL,
+    "qassgn3    -- assigns a value to a qlfdid atomic instance",
     NULL
     /* the stuff above should be replaced with header macros. */
   );

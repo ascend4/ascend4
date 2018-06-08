@@ -209,19 +209,6 @@ int CheckChildExist(struct InstanceName name){
 }
 
 
-static void HandleLastPart(char *temp){
-  struct InstanceName name;
-  if (g_search_inst) {
-    SetInstanceNameType(name,StrName);
-    SetInstanceNameStrPtr(name,AddSymbol(temp));
-    CheckChildExist(name);            /* sets g_search_inst regardless */
-    return;
-  } else {
-    g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
-  }
-}
-
-
 struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp){
   register char *ptr, *org;
   struct InstanceName name;
@@ -340,7 +327,18 @@ struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp){
   if(*temp == '\0'){
     return search_list;
   }
-  HandleLastPart(temp);
+
+  // handle last part
+  struct InstanceName name1;
+  MSG("handling last part '%s'",temp);
+  if(g_search_inst){
+    SetInstanceNameType(name1,StrName);
+    SetInstanceNameStrPtr(name1,AddSymbol(temp));
+    CheckChildExist(name1);            /* sets g_search_inst regardless */
+  }else{
+    g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
+  }
+
   if(g_search_inst){
     se = Asc_SearchEntryCreate(temp,g_search_inst);
     gl_append_ptr(search_list,se);
@@ -351,7 +349,7 @@ struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp){
   }
 }
 
-
+#if 0 /* DISUSED */
 int Asc_QlfdidSearch2(char *str){
   char temp[MAXIMUM_ID_LENGTH];
   struct gl_list_t *search_list;
@@ -364,6 +362,7 @@ int Asc_QlfdidSearch2(char *str){
     return 0;
   }
 }
+#endif
 
 /*
  *********************************************************************
@@ -504,8 +503,9 @@ struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative){
   if (*temp == '\0') {
     return g_search_inst;
   }
-  MSG("handling last part '%s'",temp);
 
+  // handle last part
+  MSG("handling last part '%s'",temp);
   struct InstanceName name1;
   if(g_search_inst){
     SetInstanceNameType(name1,StrName);
