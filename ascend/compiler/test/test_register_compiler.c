@@ -31,7 +31,8 @@
 	T(units) \
 	T(name) \
 	T(symtab) \
-	T(qlfdid)
+	T(qlfdid) \
+	T(func)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)

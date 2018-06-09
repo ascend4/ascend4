@@ -19,8 +19,6 @@
 
 	@TODO Complete documentation of func.h.
 
-	Revision notes: If CHRIS_FUNC defined, auxillary quantities to func structure.
-
 	@TODO 2/96 baa Probably somebody should properly set these evaluation
 	defined below based on math.h when possible.
 *//*
@@ -77,7 +75,7 @@ extern double erf(double);
 #endif
 
 
-extern CONST struct Func *LookupFunc(CONST char *name);
+ASC_DLLSPEC CONST struct Func *LookupFunc(CONST char *name);
 /**<
  *  Lookup the function with the given name.  If no match is found, it
  *  returns NULL.  name is the ASCEND name, not C name.
@@ -111,7 +109,6 @@ extern CONST struct Func *LookupFunc(CONST char *name);
  *
  *         "hold"          returns the current value of x.
  *  </pre>
- *  The last 10 are not fully supported for chris.[ch]
  *  All functions return principal (postive) values if there is a choice.
  *  None of them perform range checking. ln(-1) -> float error.
  */
@@ -294,7 +291,7 @@ ASC_DLLSPEC CONST char *FuncName(CONST struct Func *f);
  *  Not a symchar.
  */
 
-extern CONST char *FuncCName(CONST struct Func *f);
+ASC_DLLSPEC CONST char *FuncCName(CONST struct Func *f);
 /**<
  *  Return the C language name of the function, if any.
  */
@@ -305,12 +302,12 @@ ASC_DLLSPEC CONST char *FuncYName(CONST struct Func *f);
  *  Not a symchar.
  */
 
-extern CONST char *FuncDeriv1CName(CONST struct Func *f);
+ASC_DLLSPEC CONST char *FuncDeriv1CName(CONST struct Func *f);
 /**<
  *  Return the C language name of the function first derivative, if any.
  */
 
-extern CONST char *FuncDeriv2CName(CONST struct Func *f);
+ASC_DLLSPEC CONST char *FuncDeriv2CName(CONST struct Func *f);
 /**<
  *  Return the C language name of the function second derivative, if any.
  */
@@ -320,7 +317,7 @@ ASC_DLLSPEC enum Func_enum FuncId(CONST struct Func *f);
  *  Return the identification of the function.
  */
 
-extern CONST dim_type *FuncDimens(CONST struct Func *f);
+ASC_DLLSPEC CONST dim_type *FuncDimens(CONST struct Func *f);
 /**<
  *  Return the dimensionality required for the arg of the function.
  *  sin, cos, tan -> P.
@@ -330,7 +327,7 @@ extern CONST dim_type *FuncDimens(CONST struct Func *f);
  *  sqr ->wilddimension (sqr, abs, cube anything you like.)
  */
 
-extern double FuncEval(CONST struct Func *f, double u);
+ASC_DLLSPEC double FuncEval(CONST struct Func *f, double u);
 /**<
  *  Return f(u).
  */
@@ -342,7 +339,7 @@ extern double FuncEvalSafe(CONST struct Func *f,
  *  Return f(u) (safe version).
  */
 
-extern double FuncDeriv(CONST struct Func *f, double u);
+ASC_DLLSPEC double FuncDeriv(CONST struct Func *f, double u);
 /**<
  *  Return df/du evaluated at u.
  */
@@ -354,7 +351,7 @@ extern double FuncDerivSafe(CONST struct Func *f,
  *  Return df/du evaluated at u (safe version).
  */
 
-extern double FuncDeriv2(CONST struct Func *f, double u);
+ASC_DLLSPEC double FuncDeriv2(CONST struct Func *f, double u);
 /**<
  *  Return the second derivative (d^2f/du^2) evaluated at u.
  */
@@ -365,67 +362,6 @@ extern double FuncDeriv2Safe(CONST struct Func *f,
 /**<
  *  Return the second derivative (d^2f/du^2) evaluated at u (safe version).
  */
-
-#ifdef CHRIS_FUNC
-
-extern struct Interval FuncRange(CONST struct Func *f, struct Interval i);
-/**<
- *  Return a bound on the range of the function over the given interval.
- */
-
-extern void FuncSlope(CONST struct Func *f,
-                      unsigned long nvar,
-                      struct Interval *center,
-                      struct Interval *range,
-                      struct Interval *slope);
-/**<
- *  Perform the interval slope calculation.
- */
-
-extern struct Interval FuncIDeriv(CONST struct Func *f, struct Interval i);
-/**<
- *  ...
- */
-
-extern double ArgMin(CONST struct Func *f, double lower, double upper);
-/**<
- *  Return the arg min of the function over the range.
- */
-
-extern double ArgMax(CONST struct Func *f, double lower, double upper);
-/**<
- *  Return the arg max of the function over the range.
- */
-
-extern double ConvexEnv(CONST struct Func *f, double x,
-                        double lower, double upper);
-/**<
- *  Return the value of the convex envelope of the function at the value
- *  x which ranges from lower to upper.
- */
-
-extern double ConvexEnvDeriv(CONST struct Func *f, double x,
-                             double lower, double upper);
-/**<
- *  Return the derivative of the convex envelope of the function at the
- *  value x which ranges from lower to upper.
- */
-
-extern double ConcaveEnv(CONST struct Func *f, double x,
-                         double lower, double upper);
-/**<
- *  Return the value of the concave envelope of the function at the value
- *  x which ranges from lower to upper.
- */
-
-extern double ConcaveEnvDeriv(CONST struct Func *f, double x,
-                              double lower, double upper);
-/**<
- *  Return the derivative of the concave envelope of the function at the
- *  value x which ranges from lower to upper.
- */
-
-#endif /* CHRIS_FUNC */
 
 /* @} */
 

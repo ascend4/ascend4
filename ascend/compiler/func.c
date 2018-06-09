@@ -41,127 +41,111 @@
 #define NULL 0L
 #endif
 
+//#define FUNC_DEBUG
+#ifdef FUNC_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 double g_lnm_epsilon = 1.0e-8;
 
 
 #if defined(__WIN32__) || defined(_WIN32) || defined(WIN32)
-double cbrt(register double d)
-{
+double cbrt(register double d){
   return pow(d,(double)0.3333333333333333333333);
 }
 #endif
 
-int ascnintF(register double d)
-{
+int ascnintF(register double d){
   return ((d)>=0.0 ? (int)floor((d) + 0.5) : -(int)floor(0.5 - (d)));
 }
 
 
-double dln(register double d)
-{
+double dln(register double d){
   return 1.0/d;
 }
 
-double dln2(register double d)
-{
+double dln2(register double d){
   return -1.0/(d*d);
 }
 
-
-double lnm(register double d)
-{
+double lnm(register double d){
   return (d>g_lnm_epsilon?log(d):d/g_lnm_epsilon + (log(g_lnm_epsilon) -1));
 
 }
 
-double dlnm(register double d)
-{
+double dlnm(register double d){
   return ( d>g_lnm_epsilon ? (double)1.0/d : 1/g_lnm_epsilon);
 }
 
-double dlnm2(register double d)
-{
+double dlnm2(register double d){
   return (d>g_lnm_epsilon ? (double)-1.0/(d*d) : (double)0.0);
 }
 
-double dlog10(register double d)
-{
+double dlog10(register double d){
   return M_LOG10E/d;
 }
 
-double dlog102(register double d)
-{
+double dlog102(register double d){
   return -M_LOG10E/(d*d);
 }
 
-double dcos(register double d)
-{
+double dcos(register double d){
   return -sin(d);
 }
 
-double dcos2(register double d)
-{
+double dcos2(register double d){
   return -cos(d);
 }
 
-double dtan(register double d)
-{
+double dtan(register double d){
   register double t;
   t=cos(d);
   return 1.0/(t*t);
 }
 
-double dtan2(register double d)
-{
+double dtan2(register double d){
   register double t;
   t=cos(d);
   return ldexp(tan(d)/(t*t),1);
 }
 
-double sqr(register double d)
-{
+double sqr(register double d){
   return d*d;
 }
 
-double dsqr(register double d)
-{
+double dsqr(register double d){
   return ldexp(d,1);
 }
 
-double dsqr2(register double d)
-{
+double dsqr2(register double d){
   (void)d;  /*  stop gcc whine about unused parameter */
   return 2.0;
 }
 
-double hold(double d)
-{
+double hold(double d){
   return d;
 }
 
-double dsqrt(register double d)
-{
+double dsqrt(register double d){
   return 1.0/(ldexp(sqrt(d),1));
 }
 
-double dsqrt2(register double d)
-{
+double dsqrt2(register double d){
   return -1.0/ldexp(sqrt(d)*d,2);
 }
 
-double dfabs(register double d)
-{
+double dfabs(register double d){
   return ((d > 0.0) ? 1.0 : ((d<0.0 ) ? -1 : 0));
 }
 
-double dfabs2(register double d)
-{
+double dfabs2(register double d){
   (void)d;  /*  stop gcc whine about unused parameter */
   return 0.0;
 }
 
-double dhold(double d)
-{
+double dhold(double d){
   (void)d;  /*  stop gcc whine about unused parameter */
   return 0;
 }
@@ -227,40 +211,33 @@ double asc_d2ipow(double d, int i) {
 }
 
 
-double cube(register double d)
-{
+double cube(register double d){
   return d*d*d;
 }
-double dcube(register double d)
-{
+double dcube(register double d){
   return 3.0*d*d;
 }
-double dcube2(register double d)
-{
+double dcube2(register double d){
   return 6.0*d;
 }
 
-double dcbrt(register double d)
-{
+double dcbrt(register double d){
   register double c;
   c=cbrt(d);
   return (double)0.3333333333333333/(c*c);
 }
 
-double dcbrt2(register double d)
-{
+double dcbrt2(register double d){
   register double c;
   c=cbrt(d);
   return (double)-0.2222222222222222/pow(c,5.0);
 }
 
-double dasin(register double d)
-{
+double dasin(register double d){
   return 1.0/sqrt(1.0-d*d);
 }
 
-double dasin2(register double d)
-{
+double dasin2(register double d){
   register double c;
   c=1.0-d*d;
   return d/(c*sqrt(c));
@@ -271,26 +248,22 @@ double dacos(register double d)
   return -1.0/sqrt(1-d*d);
 }
 
-double dacos2(register double d)
-{
+double dacos2(register double d){
   register double c;
   c=1.0-d*d;
   return -d/(c*sqrt(c));
 }
 
-double datan(register double d)
-{
+double datan(register double d){
   return 1.0/(1.0+d*d);
 }
 
-double datan2(register double d)
-{
+double datan2(register double d){
   return -2*d/sqr(1+d*d);
 }
 
 #ifdef HAVE_ERF
-double derf(register double d)
-{
+double derf(register double d){
   return ldexp(exp(-(d*d))/sqrt(M_PI),1);
 }
 
@@ -300,57 +273,48 @@ double derf2(register double d)
 }
 #endif /* HAVE_ERF */
 
-double dtanh(register double d)
-{
+double dtanh(register double d){
   register double c;
   c = cosh(d);
   c = 1/(c*c);
   return c;
 }
 
-double dtanh2(register double d)
-{
+double dtanh2(register double d){
   register double c;
   c = cosh(d);
   return -ldexp(tanh(d),1)/(c*c);
 }
 
-double arcsinh(register double d)
-{
+double arcsinh(register double d){
   return log(d+sqrt(d*d+1.0));
 }
 
-double darcsinh(register double d)
-{
+double darcsinh(register double d){
   return 1.0/sqrt(d*d+1.0);
 }
 
-double darcsinh2(register double d)
-{
+double darcsinh2(register double d){
   register double c;
   c=d*d+1.0;
   return -d/sqrt(c*c*c);
 }
 
-double arccosh(register double d)
-{
+double arccosh(register double d){
   return log(d+sqrt(d*d-1.0));
 }
 
-double darccosh(register double d)
-{
+double darccosh(register double d){
   return 1.0/sqrt(d*d-1.0);
 }
 
-double darccosh2(register double d)
-{
+double darccosh2(register double d){
   register double c;
   c=d*d-1.0;
   return -d/sqrt(c*c*c);
 }
 
-double arctanh(register double d)
-{
+double arctanh(register double d){
   return  ldexp( log((d+1.0)/(1.0-d)) ,-1);
 /* an alternative, more expensive but perhaps less exception prone
 *  coding of arctanh is:
@@ -361,239 +325,16 @@ double arctanh(register double d)
 */
 }
 
-double darctanh(register double d)
-{
+double darctanh(register double d){
   return  1.0/(1-d*d);
 }
 
-double darctanh2(register double d)
-{
+double darctanh2(register double d){
   register double c;
   c=1.0-d*d;
   return ldexp( d/(c*c) ,1);
 }
 
-#ifdef CHRIS_FUNC
-void ExpSlope(unsigned long int nvar,
-	      struct Interval *center, struct Interval *range,
-	      struct Interval *slope)
-{
-  *center = ExpInterval(*center);
-  *range = ExpInterval(*range);
-  while (nvar--){
-    *slope = MulIntervals(*range,*slope);
-    slope++;
-  }
-}
-
-void LnSlope(unsigned long int nvar,
-	     struct Interval *center, struct Interval *range,
-	     struct Interval *slope)
-{
-  while(nvar--){
-    *slope = DivIntervals(*slope,*range);
-    slope++;
-  }
-  *center = LnInterval(*center);
-  *range = LnInterval(*range);
-}
-
-void LogSlope(unsigned long int nvar,
-	      struct Interval *center, struct Interval *range,
-	      struct Interval *slope)
-{
-  struct Interval temp;
-  temp = MulIntervals(CreateThin(M_LN10),*range);
-  while(nvar--){
-    *slope = DivIntervals(*slope,temp);
-    slope++;
-  }
-  *center = LogInterval(*center);
-  *range = LogInterval(*range);
-}
-
-void SqrSlope(unsigned long int nvar,
-	      struct Interval *center, struct Interval *range,
-	      struct Interval *slope)
-{
-  struct Interval temp;
-  temp = AddIntervals(*center,*range);
-  while(nvar--){
-    *slope = MulIntervals(temp,*slope);
-    slope++;
-  }
-  *center = SqrInterval(*center);
-  *range = SqrInterval(*range);
-}
-
-void SqrtSlope(unsigned long int nvar,
-	       struct Interval *center, struct Interval *range,
-	       struct Interval *slope)
-{
-  struct Interval temp;
-  *center = SqrtInterval(*center);
-  *range = SqrtInterval(*range);
-  temp = AddIntervals(*center,*range);
-  while(nvar--){
-    *slope = DivIntervals(*slope,temp);
-    slope++;
-  }
-}
-
-#ifdef HAVE_ERF
-void ErfSlope(unsigned long int nvar,
-	      struct Interval *center, struct Interval *range,
-	      struct Interval *slope)
-{
-  struct Interval temp;
-  temp =
-    DivIntervals(MulIntervals(CreateThinInteger(2l),
-			      ExpInterval(NegInterval(SqrInterval(*range)))),
-		 SqrtInterval(CreateThin(M_PI)));
-  while(nvar--){
-    *slope =
-      MulIntervals(temp,*slope);
-    slope++;
-  }
-  *center = ErfInterval(*center);
-  *range = ErfInterval(*range);
-}
-
-struct Interval ErfDeriv(struct Interval i)
-{
-  return
-    DivIntervals(MulIntervals(CreateThinInteger(2l),
-			      ExpInterval(NegInterval(SqrInterval(i)))),
-		 SqrtInterval(CreateThin(M_PI)));
-}
-#endif /* HAVE_ERF */
-
-struct Interval LnDeriv(struct Interval i)
-{
-  return DivIntervals(CreateThinInteger(1L),i);
-}
-
-struct Interval LogDeriv(struct Interval i)
-{
-  return DivIntervals(CreateThin(M_LOG10E),i);
-}
-
-struct Interval SqrDeriv(struct Interval i)
-{
-  return MulIntervals(CreateThinInteger(2L),i);
-}
-
-struct Interval SqrtDeriv(struct Interval i)
-{
-  return DivIntervals(CreateThinInteger(1L),
-		      MulIntervals(CreateThinInteger(2L),
-				   SqrtInterval(i)));
-}
-
-double MinOfRange(double lower, double upper)
-{
-  return lower;
-}
-
-double MaxOfRange(double lower, double upper)
-{
-  return upper;
-}
-
-double ArgMinSqr(double lower, double upper)
-{
-  if (upper < 0.0) return upper;
-  if (lower > 0.0) return lower;
-  return 0.0;
-}
-
-double ArgMaxSqr(double lower, double upper)
-{
-  return (ABS(lower)>ABS(upper))?lower:upper;
-}
-
-double ConvexOfSqr(double x, double lower, double upper,
-		   double (*value) (/* ??? */))
-{
-  return x*x;
-}
-
-double ConvexDOfSqr(double x, double lower, double upper,
-		    double (*value) (/* ??? */))
-{
-  return 2*x;
-}
-
-double ConcaveOfSqr(double x, double lower, double upper,
-		    double (*value) (/* ??? */))
-{
-  return (lower+upper)*x-lower*upper;
-}
-
-double ConcaveDOfSqr(double x, double lower, double upper,
-		     double (*value) (/* ??? */))
-{
-  return lower+upper;
-}
-
-double ConvexOfExp(double x, double lower, double upper,
-		   double (*value) (/* ??? */))
-{
-  return exp(x);
-}
-
-double ConcaveOfLn(double x, double lower, double upper,
-		   double (*value) (/* ??? */))
-{
-  return log(x);
-}
-
-double ConcaveDOfLn(double x, double lower, double upper,
-		    double (*value) (/* ??? */))
-{
-  return 1.0/x;
-}
-
-double ConcaveOfLog(double x, double lower, double upper,
-		    double (*value) (/* ??? */))
-{
-  return log10(x);
-}
-
-double ConcaveDOfLog(double x, double lower, double upper,
-		     double (*value) (/* ??? */))
-{
-  return M_LOG10E/x;
-}
-
-double ConcaveOfSqrt(double x, double lower, double upper,
-		     double (*value) (/* ??? */))
-{
-  return sqrt(x);
-}
-
-double ConcaveDOfSqrt(double x, double lower, double upper,
-		      double (*value) (/* ??? */))
-{
-  return 0.5/sqrt(x);
-}
-
-double Interpolate(double x, double lower, double upper,
-		   double (*value) (/* ??? */))
-{
-  register double vl,vu;
-  vl = (*value)(lower);
-  vu = (*value)(upper);
-  return ((vu-vl)*x+upper*vl-lower*vu)/(upper-lower);
-}
-
-double InterpolateD(double x, double lower, double upper,
-		    double (*value) (/* ??? */))
-{
-  return ((*value)(upper)-(*value)(lower))/(upper-lower);
-}
-
-#endif
 
 struct Func g_exp_f = {
   "exp",
@@ -608,17 +349,6 @@ struct Func g_exp_f = {
   safe_exp_D0,
   safe_exp_D1,
   safe_exp_D2,
-#ifdef CHRIS_FUNC
-  ExpInterval,
-  ExpSlope,
-  ExpInterval,
-  MinOfRange,
-  MaxOfRange,
-  ConvexOfExp,
-  ConvexOfExp,
-  Interpolate,
-  InterpolateD
-#endif
 };
 
 struct Func g_ln_f = {
@@ -634,17 +364,6 @@ struct Func g_ln_f = {
   safe_ln_D0,
   safe_ln_D1,
   safe_ln_D2,
-#ifdef CHRIS_FUNC
-  LnInterval,
-  LnSlope,
-  LnDeriv,
-  MinOfRange,
-  MaxOfRange,
-  Interpolate,
-  InterpolateD,
-  ConcaveOfLn,
-  ConcaveDOfLn
-#endif
 };
 
 struct Func g_lnm_f = {
@@ -660,17 +379,6 @@ struct Func g_lnm_f = {
   safe_lnm_D0,
   safe_lnm_D1,
   safe_lnm_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_log10_f = {
@@ -686,17 +394,6 @@ struct Func g_log10_f = {
   safe_log10_D0,
   safe_log10_D1,
   safe_log10_D2,
-#ifdef CHRIS_FUNC
-  Log10Interval,
-  Log10Slope,
-  Log10Deriv,
-  MinOfRange,
-  MaxOfRange,
-  Interpolate,
-  InterpolateD,
-  ConcaveOfLog10,
-  ConcaveDOfLog10
-#endif
 };
 
 struct Func g_sin_f = {
@@ -712,17 +409,6 @@ struct Func g_sin_f = {
   safe_sin_D0,
   safe_sin_D1,
   safe_sin_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_cos_f = {
@@ -738,17 +424,6 @@ struct Func g_cos_f = {
   safe_cos_D0,
   safe_cos_D1,
   safe_cos_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_tan_f = {
@@ -764,17 +439,6 @@ struct Func g_tan_f = {
   safe_tan_D0,
   safe_tan_D1,
   safe_tan_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_sqr_f = {
@@ -790,17 +454,6 @@ struct Func g_sqr_f = {
   safe_sqr_D0,
   safe_sqr_D1,
   safe_sqr_D2,
-#ifdef CHRIS_FUNC
-  SqrInterval,
-  SqrSlope,
-  SqrDeriv,
-  ArgMinSqr,
-  ArgMaxSqr,
-  ConvexOfSqr,
-  ConvexDOfSqr,
-  ConcaveOfSqr,
-  ConcaveDOfSqr
-#endif
 };
 
 struct Func g_sqrt_f = {
@@ -816,17 +469,6 @@ struct Func g_sqrt_f = {
   safe_sqrt_D0,
   safe_sqrt_D1,
   safe_sqrt_D2,
-#ifdef CHRIS_FUNC
-  SqrtInterval,
-  SqrtSlope,
-  SqrtDeriv,
-  MinOfRange,
-  MaxOfRange,
-  Interpolate,
-  InterpolateD,
-  ConcaveOfSqrt,
-  ConcaveDOfSqrt
-#endif
 };
 
 struct Func g_abs_f = {
@@ -842,17 +484,6 @@ struct Func g_abs_f = {
   safe_fabs_D0,
   safe_fabs_D1,
   safe_fabs_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_hold_f = {
@@ -868,17 +499,6 @@ struct Func g_hold_f = {
   safe_hold_D0,
   safe_hold_D1,
   safe_hold_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_arcsin_f = {
@@ -894,17 +514,6 @@ struct Func g_arcsin_f = {
   safe_arcsin_D0,
   safe_arcsin_D1,
   safe_arcsin_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_arccos_f = {
@@ -920,17 +529,6 @@ struct Func g_arccos_f = {
   safe_arccos_D0,
   safe_arccos_D1,
   safe_arccos_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_arctan_f = {
@@ -946,17 +544,6 @@ struct Func g_arctan_f = {
   safe_arctan_D0,
   safe_arctan_D1,
   safe_arctan_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 #ifdef HAVE_ERF
@@ -973,11 +560,6 @@ struct Func g_erf_f = {
   safe_erf_D0,
   safe_erf_D1,
   safe_erf_D2,
-#ifdef CHRIS_FUNC
-  ErfInterval,
-  ErfSlope,
-  ErfDeriv
-#endif
 };
 #endif /* HAVE_ERF */
 
@@ -994,17 +576,6 @@ struct Func g_sinh_f = {
   safe_sinh_D0,
   safe_sinh_D1,
   safe_sinh_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_cosh_f = {
@@ -1020,17 +591,6 @@ struct Func g_cosh_f = {
   safe_cosh_D0,
   safe_cosh_D1,
   safe_cosh_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_tanh_f = {
@@ -1046,17 +606,6 @@ struct Func g_tanh_f = {
   safe_tanh_D0,
   safe_tanh_D1,
   safe_tanh_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_arcsinh_f = {
@@ -1072,17 +621,6 @@ struct Func g_arcsinh_f = {
   safe_arcsinh_D0,
   safe_arcsinh_D1,
   safe_arcsinh_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_arccosh_f = {
@@ -1098,17 +636,6 @@ struct Func g_arccosh_f = {
   safe_arccosh_D0,
   safe_arccosh_D1,
   safe_arccosh_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_arctanh_f = {
@@ -1124,17 +651,6 @@ struct Func g_arctanh_f = {
   safe_arctanh_D0,
   safe_arctanh_D1,
   safe_arctanh_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_cube_f = {
@@ -1150,17 +666,6 @@ struct Func g_cube_f = {
   safe_cube,
   safe_cube_D1,
   safe_cube_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 struct Func g_cbrt_f = {
@@ -1176,17 +681,6 @@ struct Func g_cbrt_f = {
   safe_cbrt_D0,
   safe_cbrt_D1,
   safe_cbrt_D2,
-#ifdef CHRIS_FUNC
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-#endif
 };
 
 
@@ -1219,8 +713,7 @@ struct Func *g_func_list[]={
   NULL	/* must be last */
 };
 
-CONST struct Func *LookupFunc(CONST char *name)
-{
+CONST struct Func *LookupFunc(CONST char *name){
   unsigned f=0;
   while(g_func_list[f]!=NULL){
     if(strcmp(g_func_list[f]->name,name)==0)
@@ -1230,8 +723,7 @@ CONST struct Func *LookupFunc(CONST char *name)
   return NULL;
 }
 
-CONST struct Func *LookupFuncById(enum Func_enum id)
-{
+CONST struct Func *LookupFuncById(enum Func_enum id){
   unsigned f=0;
   while(g_func_list[f]!=NULL){
     if (g_func_list[f]->id==id)
@@ -1241,8 +733,7 @@ CONST struct Func *LookupFuncById(enum Func_enum id)
   return NULL;
 }
 
-CONST char *FuncName(CONST struct Func *f)
-{
+CONST char *FuncName(CONST struct Func *f){
   return f->name;
 }
 
@@ -1251,28 +742,23 @@ CONST char *FuncCName(CONST struct Func *f)
   return f->cname;
 }
 
-CONST char *FuncYName(CONST struct Func *f)
-{
+CONST char *FuncYName(CONST struct Func *f){
 	return f->yname;
 }
 
-CONST char *FuncDeriv1CName(CONST struct Func *f)
-{
+CONST char *FuncDeriv1CName(CONST struct Func *f){
   return f->deriv1cname;
 }
 
-CONST char *FuncDeriv2CName(CONST struct Func *f)
-{
+CONST char *FuncDeriv2CName(CONST struct Func *f){
   return f->deriv2cname;
 }
 
-enum Func_enum FuncId(CONST struct Func *f)
-{
+enum Func_enum FuncId(CONST struct Func *f){
   return f->id;
 }
 
-CONST dim_type *FuncDimens(CONST struct Func *f)
-{
+CONST dim_type *FuncDimens(CONST struct Func *f){
   if (!f) return Dimensionless();
   switch (FuncId(f)) {
     case F_LOG10:
@@ -1291,6 +777,7 @@ CONST dim_type *FuncDimens(CONST struct Func *f)
     case F_ARCSINH:
     case F_ARCCOSH:
     case F_ARCTANH:
+      MSG("Func '%s' is dimensionless");
       return Dimensionless();
     case F_SQR:
     case F_SQRT:
@@ -1307,87 +794,27 @@ CONST dim_type *FuncDimens(CONST struct Func *f)
   }
 }
 
-double FuncEval(CONST struct Func *f, double d)
-{
+double FuncEval(CONST struct Func *f, double d){
   return (*(f->value))(d);
 }
 
-double FuncEvalSafe(CONST struct Func *f, double d,enum safe_err *not_safe)
-{
+double FuncEvalSafe(CONST struct Func *f, double d,enum safe_err *not_safe){
   return (*(f->safevalue))(d,not_safe);
 }
 
-double FuncDeriv(CONST struct Func *f, double d)
-{
+double FuncDeriv(CONST struct Func *f, double d){
   return (*(f->deriv))(d);
 }
 
-double FuncDerivSafe(CONST struct Func *f, double d,enum safe_err *not_safe)
-{
+double FuncDerivSafe(CONST struct Func *f, double d,enum safe_err *not_safe){
   return (*(f->safederiv))(d,not_safe);
 }
 
-double FuncDeriv2(CONST struct Func *f, double d)
-{
+double FuncDeriv2(CONST struct Func *f, double d){
   return (*(f->deriv2))(d);
 }
 
-double FuncDeriv2Safe(CONST struct Func *f, double d,enum safe_err *not_safe)
-{
+double FuncDeriv2Safe(CONST struct Func *f, double d,enum safe_err *not_safe){
   return (*(f->safederiv2))(d,not_safe);
 }
 
-#ifdef CHRIS_FUNC
-struct Interval FuncRange(CONST struct Func *f, struct Interval u)
-{
-  return (*(f->ivalue))(u);
-}
-
-void FuncSlope(CONST struct Func *f, unsigned long int nvar,
-	       struct Interval *center, struct Interval *range,
-	       struct Interval *slope)
-{
-  (*(f->slope))(nvar,center,range,slope);
-}
-
-struct Interval FuncIDeriv(CONST struct Func *f, struct Interval i)
-{
-  return (*(f->ideriv))(i);
-}
-
-double ArgMin(CONST struct Func *f, double lower, double upper)
-{
-  return (*(f->tmin))(lower,upper);
-}
-
-double ArgMax(CONST struct Func *f, double lower, double upper)
-{
-  return (*(f->tmax))(lower,upper);
-}
-
-double ConvexEnv(CONST struct Func *f, double x, double lower, double upper)
-{
-  assert((x>=lower)&&(x<=upper));
-  return (*(f->e))(x,lower,upper,f->value);
-}
-
-double ConvexEnvDeriv(CONST struct Func *f, double x,
-		      double lower, double upper)
-{
-  assert((x>=lower)&&(x<=upper));
-  return (*(f->ed))(x,lower,upper,f->value);
-}
-
-double ConcaveEnv(CONST struct Func *f, double x, double lower, double upper)
-{
-  assert((x>=lower)&&(x<=upper));
-  return (*(f->E))(x,lower,upper,f->value);
-}
-
-double ConcaveEnvDeriv(CONST struct Func *f, double x,
-		       double lower, double upper)
-{
-  assert((x>=lower)&&(x<=upper));
-  return (*(f->Ed))(x,lower,upper,f->value);
-}
-#endif
