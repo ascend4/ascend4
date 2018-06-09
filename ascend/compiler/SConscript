@@ -63,12 +63,13 @@ objs = [parsersource[0],scannersource,packages]
 
 # SLOPPY sources. This is a painful hack that should be fixed using 'config.h' style solution.
 
-sloppy_csrcs = ['rounded.c','interval.c']
-
-sloppy_env = libascend_env.Clone()
-sloppy_env.Append(CPPDEFINES=['SLOPPY']);
-for s in sloppy_csrcs:
-	objs += sloppy_env.SharedObject(s)	
+#sloppy_csrcs = ['rounded.c','interval.c']
+#sloppy_csrcs = ['rounded.c']
+#
+#sloppy_env = libascend_env.Clone()
+#sloppy_env.Append(CPPDEFINES=['SLOPPY']);
+#for s in sloppy_csrcs:
+#	objs += sloppy_env.SharedObject(s)	
 
 #libascend_env.Depends(scanner,[parsersource[1]])
 
