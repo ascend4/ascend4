@@ -100,15 +100,15 @@ double dcos2(register double d){
 }
 
 double dtan(register double d){
-  register double t;
-  t=cos(d);
-  return 1.0/(t*t);
+  register double c;
+  c=cos(d);
+  return 1.0/(c*c);
 }
 
 double dtan2(register double d){
-  register double t;
-  t=cos(d);
-  return ldexp(tan(d)/(t*t),1);
+  register double c;
+  c=cos(d);
+  return ldexp(tan(d)/(c*c),1);
 }
 
 double sqr(register double d){

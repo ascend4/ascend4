@@ -37,7 +37,7 @@ static void test_test1(void){
 	const struct Func *f = LookupFunc("lnxxxx");
 	CU_ASSERT(NULL == f);
 	
-#define EPS 1e-14
+#define EPS 1e-13
 
 	f = LookupFunc("ln");
 	CU_ASSERT(NULL != f);	
@@ -116,6 +116,36 @@ static void test_test1(void){
 	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,-M_PI/2),+1,EPS);
 	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,M_PI),0,EPS);
 	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,M_PI/4),1/sqrt(2),EPS);
+
+	f = LookupFunc("tan");
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,0),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,M_PI/4),1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,M_PI),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,-M_PI),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,3./4*M_PI),-1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,-3./4*M_PI),1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,-1./4*M_PI),-1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,M_PI/4),2,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,3*M_PI/4),2,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,-3*M_PI/4),2,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,M_PI/4),4,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,3*M_PI/4.),-4,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,-3*M_PI/4.),4,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,0),0,EPS);
+
+	f = LookupFunc("cube");
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,0),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,1),1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,4),64,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,4),48,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,4),24,EPS);
+
+	f = LookupFunc("cbrt");
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,0),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,1),1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,64),4,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,64),1./48,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,64),-1./48./96.,EPS);
 
 	f = LookupFunc("sin");
 	CU_ASSERT(NULL != f);
