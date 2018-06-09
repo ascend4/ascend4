@@ -37,7 +37,7 @@ static void test_test1(void){
 	const struct Func *f = LookupFunc("lnxxxx");
 	CU_ASSERT(NULL == f);
 	
-#define EPS 1e-20
+#define EPS 1e-14
 
 	f = LookupFunc("ln");
 	CU_ASSERT(NULL != f);	
@@ -46,6 +46,9 @@ static void test_test1(void){
 	CU_ASSERT(FuncEval(f,exp(1))==1);
 	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,exp(1)),1/exp(1),EPS);
 	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,exp(1)),-1/exp(1)/exp(1),EPS);
+	CU_ASSERT(FuncEval(f,exp(2))==2);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,exp(2)),1/exp(2),EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,5),-1./25.,EPS);
 	CU_ASSERT(0==strcmp(FuncName(f),"ln"));
 	CU_ASSERT(0==strcmp(FuncCName(f),"log"));
 	CU_ASSERT(0==strcmp(FuncDeriv1CName(f),"dln"));
@@ -53,6 +56,29 @@ static void test_test1(void){
 	CU_ASSERT_FATAL(NULL!=FuncDimens(f));
 	CU_ASSERT(0==CmpDimen(FuncDimens(f),Dimensionless()));
 	CU_ASSERT(F_LN==FuncId(f));
+
+	f = LookupFunc("abs");
+	CU_ASSERT(NULL != f);	
+	CU_ASSERT(FuncEval(f,1.5)==1.5);
+	CU_ASSERT(FuncEval(f,-1.5)==1.5);
+	CU_ASSERT(FuncEval(f,0)==0);
+	CU_ASSERT(FuncDeriv(f,1.5)==1);
+	CU_ASSERT(FuncDeriv(f,-1.5)==-1);
+	CU_ASSERT(FuncDeriv2(f,1.5)==0);
+	CU_ASSERT(FuncDeriv2(f,-1.5)==0);
+	CU_ASSERT(0==CmpDimen(FuncDimens(f),WildDimension()));
+	CU_ASSERT(F_ABS==FuncId(f));
+
+	f = LookupFunc("sqrt");
+	CU_ASSERT(NULL != f);	
+	CU_ASSERT(FuncEval(f,15*15)==15);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,2),1.41421356237309504880168872,EPS);
+	CU_ASSERT(FuncEval(f,1)==1);
+	CU_ASSERT(FuncEval(f,0)==0);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,2),1./2./1.41421356237309504880168872,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,2),-1.41421356237309504880168872/16.,EPS);
+	CU_ASSERT(0==CmpDimen(FuncDimens(f),WildDimension()));
+	CU_ASSERT(F_SQRT==FuncId(f));
 
 	f = LookupFunc("sin");
 	CU_ASSERT(NULL != f);
