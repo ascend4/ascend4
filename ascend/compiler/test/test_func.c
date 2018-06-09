@@ -80,6 +80,43 @@ static void test_test1(void){
 	CU_ASSERT(0==CmpDimen(FuncDimens(f),WildDimension()));
 	CU_ASSERT(F_SQRT==FuncId(f));
 
+	f = LookupFunc("sqrt");
+	CU_ASSERT(NULL != f);	
+	CU_ASSERT(FuncEval(f,15*15)==15);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,2),1.41421356237309504880168872,EPS);
+	CU_ASSERT(FuncEval(f,1)==1);
+	CU_ASSERT(FuncEval(f,0)==0);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,2),1./2./1.41421356237309504880168872,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,2),-1.41421356237309504880168872/16.,EPS);
+	CU_ASSERT(0==CmpDimen(FuncDimens(f),WildDimension()));
+	CU_ASSERT(F_SQRT==FuncId(f));
+
+	f = LookupFunc("log10");
+	CU_ASSERT(NULL != f);	
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,1000.),3.,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,1e6),6.,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,100),1./100./log(10),EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,1/log(10)),-log(10),EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,1),-1/log(10),EPS);
+
+	f = LookupFunc("sin");
+	CU_ASSERT(NULL != f);	
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,0),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,2*M_PI),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,M_PI/2),1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,M_PI),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,-M_PI),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,3./2*M_PI),-1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,-1./2*M_PI),-1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,0),1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,M_PI/2),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,M_PI),-1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,-M_PI/2),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,M_PI/2),-1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,-M_PI/2),+1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,M_PI),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,M_PI/4),1/sqrt(2),EPS);
+
 	f = LookupFunc("sin");
 	CU_ASSERT(NULL != f);
 
