@@ -333,6 +333,17 @@ static void test_test1(void){
 	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,37),0,EPS);
 	CU_ASSERT(0==CmpDimen(FuncDimens(f),WildDimension()));
 
+	// ipow
+
+	CU_ASSERT_DOUBLE_EQUAL(asc_ipow(2.,10),1024.,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(asc_ipow(2.,8),256.,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(asc_ipow(2.,7),128.,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(asc_ipow(2.,9),512.,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(asc_ipow(2.,16),65536.,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(asc_ipow(1.5,22),7481.8276426792145,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(asc_d1ipow(2,10),10*512.,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(asc_d2ipow(2,10),10*9*256.,EPS);
+
 	DestroyDimenList();
 	gl_destroy_pool();
 }
