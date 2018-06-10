@@ -191,6 +191,24 @@ static void test_test1(void){
 	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,-1/sqrt(2)),2,EPS);
 	CU_ASSERT(0==CmpDimen(FuncDimens(f),Dimensionless()));
 
+	f = LookupFunc("arctan");
+	CU_ASSERT(NULL != f);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,0),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,1),M_PI/4,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,-1),-M_PI/4,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,-1),-M_PI/4,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,100),1.56079666010823,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,-100),-1.56079666010823,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,0),1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,1),0.5,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,-1),0.5,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,100),1/10001.,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,0),0,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,1),-0.5,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,-1),0.5,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,100),-200./100020001.,EPS);
+	CU_ASSERT(0==CmpDimen(FuncDimens(f),Dimensionless()));
+	
 
 	/* TODO test undefined values, exceptions/FPEs */
 

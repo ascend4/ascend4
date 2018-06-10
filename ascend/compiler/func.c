@@ -182,7 +182,7 @@ double asc_ipow(register double d, int i) {
 /*
  * Note that the following derivative functions do not
  * set calc_ok to FALSE in the event of errors.  This
- * checking is done in the solver so we are baisicaly
+ * checking is done in the solver so we are basically
  * double checking now -> this should be fixed
  */
 
