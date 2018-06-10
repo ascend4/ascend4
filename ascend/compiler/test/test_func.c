@@ -57,6 +57,19 @@ static void test_test1(void){
 	CU_ASSERT(0==CmpDimen(FuncDimens(f),Dimensionless()));
 	CU_ASSERT(F_LN==FuncId(f));
 
+	f = LookupFunc("lnm");
+	CU_ASSERT(NULL != f);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,exp(1)),1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,exp(2)),2,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,exp(20)),20,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncEval(f,1e-10),1/100. + (log(1e-8) - 1) ,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,1),1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,10),1./10,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv(f,1e-10),1/1e-8,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,1),-1,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,5),-1/25.,EPS);
+	CU_ASSERT_DOUBLE_EQUAL(FuncDeriv2(f,1e-10),0,EPS);
+
 	f = LookupFunc("abs");
 	CU_ASSERT(NULL != f);	
 	CU_ASSERT(FuncEval(f,1.5)==1.5);
