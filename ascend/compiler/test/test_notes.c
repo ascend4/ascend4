@@ -87,7 +87,11 @@ static const char *model_test2 = "\n\
 		rel1: x - 1 = 0;\n\
 		y[1..5] IS_A real;\n\
 		a['left','right'] IS_A boolean;\n\
-	END test1;";
+	END test1;\n\
+	MODEL test2;\n\
+		x \"yoohoo\" IS_A real;\n\
+		x^2 - 4 = 0;\n\
+	END test2;\n";
 
 static void test_test2(void){
 
@@ -111,13 +115,13 @@ static void test_test2(void){
 	struct gl_list_t *l = Asc_TypeByModule(m);
 	struct gl_list_t *l2;
 	MSG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
-	CU_ASSERT(gl_length(l)==2);
+	CU_ASSERT(gl_length(l)==3);
 	gl_destroy(l);
 
 	CU_ASSERT(FindType(AddSymbol("test1"))!=NULL);
 
 	l = GetNotes(LibraryNote(),NOTESWILD,NOTESWILD,NOTESWILD,NOTESWILD,nd_wild);
-	CU_ASSERT(gl_length(l)==3);
+	CU_ASSERT(gl_length(l)==4);
 	int i;
 	for(i=1;i<=gl_length(l);++i){
 		struct Note *N = gl_fetch(l,i);
@@ -143,6 +147,15 @@ static void test_test2(void){
 	CU_ASSERT(14==GetNoteLineNum(gl_fetch(l,1)));
 	CU_ASSERT(NULL==GetNoteMethod(gl_fetch(l,1)));
 	CU_ASSERT(AddSymbol("test1")==GetNoteType(gl_fetch(l,1)));
+	gl_destroy(l);
+
+	DestroyNotesOnType(LibraryNote(),AddSymbol("test1"));
+	l = GetNotes(LibraryNote(),NOTESWILD,NOTESWILD,NOTESWILD,NOTESWILD,nd_wild);
+	CU_ASSERT(gl_length(l)==1);
+	gl_destroy(l);
+	DestroyNotesOnType(LibraryNote(),AddSymbol("test2"));
+	l = GetNotes(LibraryNote(),NOTESWILD,NOTESWILD,NOTESWILD,NOTESWILD,nd_wild);
+	CU_ASSERT(gl_length(l)==0);
 	gl_destroy(l);
 
 	Asc_CompilerDestroy();

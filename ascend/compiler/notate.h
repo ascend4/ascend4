@@ -145,7 +145,7 @@ ASC_DLLSPEC void DestroyNotesDatabase(symchar *dbid);
  * Clear any notes associated with the type named out of
  * database. Useful if replacing a type.
  */
-extern void DestroyNotesOnType(symchar *dbid, symchar *type_name);
+ASC_DLLSPEC void DestroyNotesOnType(symchar *dbid, symchar *type_name);
 
 /**
  * Returns a list of notes matching the keys specified.
