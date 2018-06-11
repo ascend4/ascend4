@@ -129,8 +129,9 @@ extern void DestroyNoteTmpList(struct NoteTmp *head);
 ASC_DLLSPEC int InitNotesDatabase(symchar *dbid);
 
 /**
- * Returns a gl_list containing symchar * of names (dbid)
- * of databases currently in existence.
+	Returns a gl_list containing symchar * of names (dbid)
+	of databases currently in existence. The caller owns the list and should
+	destroy it when no longer needed.
  */
 ASC_DLLSPEC struct gl_list_t *ListNotesDatabases(void);
 
