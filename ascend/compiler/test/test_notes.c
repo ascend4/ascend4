@@ -71,12 +71,12 @@ static void test_test1(void){
 }
 
 static const char *model_test2 = "\n\
-	DEFINITION relation\
-	    included IS_A boolean;\
-	    message	IS_A symbol;\
-	    included := TRUE;\
-	    message := 'none';\
-	END relation;\
+	DEFINITION relation\n\
+	    included IS_A boolean;\n\
+	    message	IS_A symbol;\n\
+	    included := TRUE;\n\
+	    message := 'none';\n\
+	END relation;\n\
 	MODEL test1;\n\
 		NOTES\n\
 			'author' SELF {notesauthor}\n\
@@ -97,7 +97,7 @@ static void test_test2(void){
 	struct module_t *m;
 	int status;
 
-	m = Asc_OpenStringModule(model_test2, &status, ""/* name prefix*/);
+	m = Asc_OpenStringModule(model_test2, &status, "mystr"/* name prefix*/);
 
 	MSG("Asc_OpenStringModule returns status=%d",status);
 	CU_ASSERT(status==0); /* if successfully created */
@@ -109,6 +109,7 @@ static void test_test2(void){
 	CU_ASSERT(status==0);
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
+	struct gl_list_t *l2;
 	MSG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
 	CU_ASSERT(gl_length(l)==2);
 	gl_destroy(l);
@@ -116,12 +117,32 @@ static void test_test2(void){
 	CU_ASSERT(FindType(AddSymbol("test1"))!=NULL);
 
 	l = GetNotes(LibraryNote(),NOTESWILD,NOTESWILD,NOTESWILD,NOTESWILD,nd_wild);
-	CU_ASSERT(gl_length(l)>=3);
+	CU_ASSERT(gl_length(l)==3);
 	int i;
 	for(i=1;i<=gl_length(l);++i){
 		struct Note *N = gl_fetch(l,i);
-		MSG("%d: id='%s', type='%s'",i,SCP(GetNoteId(N)),SCP(GetNoteType(N)));
+		l2 = GetExactNote(LibraryNote(),N);
+		CU_ASSERT_FATAL(l2 != NULL);
+		CU_ASSERT(gl_length(l2)==1);
+		CU_ASSERT(gl_fetch(l2,1)==N);
+		gl_destroy(l2);
+		MSG("%s:%d (#%d) id='%s', type='%s', lang='%s', meth='%s': text='%s'"
+			,GetNoteFilename(N),GetNoteLineNum(N),i,SCP(GetNoteId(N))
+			,SCP(GetNoteType(N)),SCP(GetNoteLanguage(N)),SCP(GetNoteMethod(N))
+			,BCS(GetNoteText(N))
+		);
 	}
+	gl_destroy(l);
+
+	// GetNotes(dbid,typename,language,id,NULL,nd_empty);
+	l = GetNotes(LibraryNote(),AddSymbol("test1"),AddSymbol("inline"),AddSymbol("x"),NOTESWILD,nd_wild);
+	CU_ASSERT(gl_length(l)==1);
+	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l,1))),"hello"));
+	CU_ASSERT(AddSymbol("inline")==GetNoteLanguage(gl_fetch(l,1)));
+	CU_ASSERT(0==strcmp("mystr_global_1<0>",GetNoteFilename(gl_fetch(l,1))));
+	CU_ASSERT(14==GetNoteLineNum(gl_fetch(l,1)));
+	CU_ASSERT(NULL==GetNoteMethod(gl_fetch(l,1)));
+	CU_ASSERT(AddSymbol("test1")==GetNoteType(gl_fetch(l,1)));
 	gl_destroy(l);
 
 	Asc_CompilerDestroy();

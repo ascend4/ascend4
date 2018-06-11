@@ -239,7 +239,7 @@ ASC_DLLSPEC CONST char *GetNoteFilename(struct Note *n);
 /** Return line number of note. possibly -1. */
 ASC_DLLSPEC int GetNoteLineNum(struct Note *n);
 
-/** Return the text string of a note.  It is ours. */
+/** Return the text string of a note. It is ours; caller shouldn't free it */
 ASC_DLLSPEC struct bracechar *GetNoteText(struct Note *n);
 
 /** Return the enum NoteData. */
