@@ -198,6 +198,8 @@ void Asc_DestroyModules(DestroyFunc f){
     gl_destroy( g_module_list );
     g_module_list = NULL;
   }
+  // JP: reset string module counter, to avoid persistent state in tests
+  g_string_modules_processed = 0;
 }
 
 
