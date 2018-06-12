@@ -42,7 +42,7 @@
 #include <test/common.h>
 #include <test/assertimpl.h>
 
-#define NOTES_DEBUG
+//#define NOTES_DEBUG
 #ifdef NOTES_DEBUG
 # define MSG CONSOLE_DEBUG
 #else
@@ -81,7 +81,8 @@ static const char *model_test2 = "\n\
 		NOTES\n\
 			'author' SELF {notesauthor}\n\
 			'description' y {variable called 'y'}\n\
-			'description' a['left'] {the left one}\n\
+			'description' x {variable called 'x'}\n\
+			'description' a['left'] {the left one} (*this note won't parse*)\n\
 		END NOTES;\n\
 		x \"hello\" IS_A real;\n\
 		rel1: x - 1 = 0;\n\
@@ -121,7 +122,7 @@ static void test_test2(void){
 	CU_ASSERT(FindType(AddSymbol("test1"))!=NULL);
 
 	l = GetNotes(LibraryNote(),NOTESWILD,NOTESWILD,NOTESWILD,NOTESWILD,nd_wild);
-	CU_ASSERT(gl_length(l)==4);
+	CU_ASSERT(gl_length(l)==5);
 	int i;
 	for(i=1;i<=gl_length(l);++i){
 		struct Note *N = gl_fetch(l,i);
@@ -138,16 +139,58 @@ static void test_test2(void){
 	}
 	gl_destroy(l);
 
-	// GetNotes(dbid,typename,language,id,NULL,nd_empty);
+	// GetNotes(dbid,typename,language,id,method,notedata);
 	l = GetNotes(LibraryNote(),AddSymbol("test1"),AddSymbol("inline"),AddSymbol("x"),NOTESWILD,nd_wild);
 	CU_ASSERT(gl_length(l)==1);
 	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l,1))),"hello"));
 	CU_ASSERT(AddSymbol("inline")==GetNoteLanguage(gl_fetch(l,1)));
 	CU_ASSERT(0==strcmp("mystr_global_1<0>",GetNoteFilename(gl_fetch(l,1))));
-	CU_ASSERT(14==GetNoteLineNum(gl_fetch(l,1)));
+	CU_ASSERT(15==GetNoteLineNum(gl_fetch(l,1)));
 	CU_ASSERT(NULL==GetNoteMethod(gl_fetch(l,1)));
 	CU_ASSERT(AddSymbol("test1")==GetNoteType(gl_fetch(l,1)));
 	gl_destroy(l);
+
+	// HoldNoteData, HeldNotes, ReleaseNoteData
+	void *h1, *h2;
+	// clear all held notes
+	ReleaseNoteData(LibraryNote(),(void*)0x1);
+	// TODO attempt to store a bogus list
+	l2 = gl_create(10);
+	char *xx = "nothing";
+	gl_append_ptr(l2,xx);
+	h1 = HoldNoteData(LibraryNote(),l2);
+	CU_ASSERT(h1 == NULL);
+	gl_destroy(l2);
+	// store some real notes
+	l = GetNotes(LibraryNote(),NOTESWILD,AddSymbol("inline"),NOTESWILD,NOTESWILD,nd_wild);
+	CU_ASSERT(gl_length(l)==2);
+	h1 = HoldNoteData(LibraryNote(),l);
+	CU_ASSERT(h1 != NULL);
+	// retreive stored notes, check they are as expected
+	l2 = HeldNotes(LibraryNote(),h1);
+	CU_ASSERT(l2 != NULL);
+	CU_ASSERT(l == l2);
+	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l2,1))),"yoohoo"));
+	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l2,2))),"hello"));
+	CU_ASSERT(2==gl_length(l2));
+	ReleaseNoteData(LibraryNote(),h1);
+	//gl_destroy(l);
+
+	// release all held lists (shouldn't be any others there anyway
+	ReleaseNoteData(LibraryNote(),(void *)0x1);
+
+	l = GetNotes(LibraryNote(),NOTESWILD,AddSymbol("author"),NOTESWILD,NOTESWILD,nd_wild);
+	CU_ASSERT(gl_length(l)==1);
+	h1 = HoldNoteData(LibraryNote(),l);
+	CU_ASSERT(h1 !=NULL);
+
+	l2 = GetNotes(LibraryNote(),NOTESWILD,AddSymbol("description"),NOTESWILD,NOTESWILD,nd_wild);
+	CU_ASSERT(gl_length(l2)==2);
+	h2 = HoldNoteData(LibraryNote(),l2);
+	CU_ASSERT(h2 !=NULL);
+
+	// release all held lists (shouldn't be any others there anyway
+	ReleaseNoteData(LibraryNote(),(void *)0x1);
 
 	DestroyNotesOnType(LibraryNote(),AddSymbol("test1"));
 	l = GetNotes(LibraryNote(),NOTESWILD,NOTESWILD,NOTESWILD,NOTESWILD,nd_wild);
