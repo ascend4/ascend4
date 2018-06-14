@@ -149,6 +149,19 @@ static void test_test2(void){
 	CU_ASSERT(AddSymbol("test1")==GetNoteType(gl_fetch(l,1)));
 	gl_destroy(l);
 
+	// GetNotesAllLanguages
+	l = GetNotesAllLanguages(LibraryNote());
+#ifdef NOTES_DEBUG
+	for(int i=1;i<=gl_length(l);++i){
+		MSG("language %d: '%s'",i,SCP(gl_fetch(l,i)));
+	}
+#endif
+	CU_ASSERT(gl_length(l)==3);
+	CU_ASSERT(AddSymbol("inline")==gl_fetch(l,1));
+	CU_ASSERT(AddSymbol("author")==gl_fetch(l,2));
+	CU_ASSERT(AddSymbol("description")==gl_fetch(l,3));
+	gl_destroy(l);
+
 	// HoldNoteData, HeldNotes, ReleaseNoteData
 	void *h1, *h2;
 	// clear all held notes
