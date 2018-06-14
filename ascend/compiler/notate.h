@@ -347,14 +347,14 @@ ASC_DLLSPEC struct gl_list_t *GetMatchingNotes(symchar *dbid,
  * else it should return a pointer to be used in processing strings.
  * Tcl_RegExpCompile is an example of this function class.
  */
-typedef void *(*NEInitFunc)(void *, /* NEdata */
+typedef void *(NEInitFunc)(void *, /* NEdata */
                             char *  /* pattern */);
 
 /**
  * An NECompareFunc returns -1 for error, 0 for no match, 1 for match.
  * Tcl_RegExpExec is an example of this function class.
  */
-typedef int (*NECompareFunc)(void *, /* NEdata */
+typedef int (NECompareFunc)(void *, /* NEdata */
                              void *, /* return from NEInitFunc */
                              char *, /* substring to test for match */
                              char *  /* beginning of string containing
@@ -363,12 +363,15 @@ typedef int (*NECompareFunc)(void *, /* NEdata */
                             );
 
 /**
- * This is a wrapper to keep things independent of anyone in particular's
- * regular expression package.
+	This is a wrapper to keep things independent of anyone in particular's
+	regular expression package.
+	
+	FIXME this wrapper needs a way to destroy the returned value from
+	NEInitFunc, not currently supplied; implies memory leak.
  */
 ASC_DLLSPEC struct NoteEngine *NotesCreateEngine(void *NEdata,
-                                   NEInitFunc NEInit,
-                                   NECompareFunc NECompare);
+                                   NEInitFunc *NEInit,
+                                   NECompareFunc *NECompare);
 
 /**
  * Destroys a previously returned engine.

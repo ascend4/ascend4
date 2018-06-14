@@ -42,6 +42,10 @@
 #include <test/common.h>
 #include <test/assertimpl.h>
 
+#ifdef ASC_WITH_PCRE
+# include <pcre.h>
+#endif
+
 //#define NOTES_DEBUG
 #ifdef NOTES_DEBUG
 # define MSG CONSOLE_DEBUG
@@ -204,11 +208,122 @@ static void test_test2(void){
 	Asc_CompilerDestroy();
 }
 
+/*-----------------------------
+  PATTERN-MATCHING SEARCHES IN NOTES USING PCRE
+*/
+
+#ifdef ASC_WITH_PCRE
+
+typedef struct{
+	pcre *re;
+	pcre_extra *extra;
+	int options;
+#define OVECSIZE 10
+	int ovec[OVECSIZE];
+	int ovecsize;
+} MyPCREData;
+
+static NEInitFunc my_pcre_init;
+
+static void *my_pcre_init(void *data, char *pattern){
+	const char *errmsgptr = NULL;
+	int erroffset;
+
+	MyPCREData *mydata = (MyPCREData *)data;
+	mydata->options = 0;
+	mydata->ovecsize = OVECSIZE;	
+
+	/* TODO use pcre_fullinfo to determine how much spec to allocated to ovec */
+	
+	pcre *code = pcre_compile(pattern, mydata->options, &errmsgptr, &erroffset, NULL);
+	if(code == NULL){
+		MSG("input: %s",pattern);
+		MSG("       %*c^",erroffset,'-');
+		MSG("REGEX ERROR: %s",errmsgptr);
+		/* we don't need to free the errmsgptr */
+		return NULL;
+	}
+	errmsgptr = NULL;
+	mydata->extra = pcre_study(code, mydata->options, &errmsgptr);
+	if(errmsgptr){
+		MSG("PCRE_EXTRA ERROR: %s",errmsgptr);
+	}
+	return code;
+}
+
+static NECompareFunc my_pcre_exec;
+
+static int my_pcre_exec(void *data, void *pcre, char *subject, char *start){
+	int l = strlen(subject);
+	int p = start - subject;
+	MyPCREData *mydata = (MyPCREData *)data;
+	if(p < 0){
+		MSG("Start is before subject");
+		return NULL;
+	}
+	if(p >= l){
+		MSG("Start is after subject");
+		return NULL;
+	}
+	int res = pcre_exec(pcre, mydata->extra, subject, l, p, mydata->options, mydata->ovec, mydata->ovecsize);
+	if(res == PCRE_ERROR_NOMATCH)return 0;
+	if(res < 0){
+		MSG("Error %d returned",res);
+		return -1;
+	}
+	// otherwise, something was matched.
+	return 1;
+}
+
+#endif
+
+static void test_re(void){
+#ifdef ASC_WITH_PCRE
+	Asc_CompilerInit(1);
+	struct module_t *m;
+	int status;
+	m = Asc_OpenStringModule(model_test2, &status, "mystr"/* name prefix*/);
+	CU_ASSERT(status==0); /* if successfully created */
+	status = zz_parse();
+	CU_ASSERT(status==0);
+	struct gl_list_t *l = Asc_TypeByModule(m);
+	CU_ASSERT(gl_length(l)==3);
+	gl_destroy(l);
+
+	MyPCREData mydata;
+
+	struct NoteEngine *engine = NotesCreateEngine(&mydata, &my_pcre_init, &my_pcre_exec);
+
+	l = GetMatchingNotes(LibraryNote(), "\\Balle\\B", NULL, engine);
+
+	CU_ASSERT(gl_length(l) == 2);
+#ifdef NOTES_DEBUG
+	for(int i=1;i<=gl_length(l);++i){
+		struct Note *N = gl_fetch(l,i);
+		MSG("%s:%d (#%d) id='%s', type='%s', lang='%s', meth='%s': text='%s'"
+			,GetNoteFilename(N),GetNoteLineNum(N),i,SCP(GetNoteId(N))
+			,SCP(GetNoteType(N)),SCP(GetNoteLanguage(N)),SCP(GetNoteMethod(N))
+			,BCS(GetNoteText(N))
+		);
+	}
+#endif
+	gl_destroy(l);
+
+	NotesDestroyEngine(engine);
+
+	Asc_CompilerDestroy();
+#else
+	CU_FAIL("PCRE support not available at compilation time");
+#endif
+}
+
+
 /*===========================================================================*/
 /* Registration information */
 
 #define TESTS(T) \
 	T(test1) \
-	T(test2)
+	T(test2) \
+	T(re)
 
 REGISTER_TESTS_SIMPLE(compiler_notes, TESTS)

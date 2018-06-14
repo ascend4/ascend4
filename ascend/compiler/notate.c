@@ -956,8 +956,8 @@ void DestroyNote(struct Note *n){
 struct NoteEngine {
   int enginekey;
   void *reinterp;
-  NEInitFunc recompile;
-  NECompareFunc reexec;
+  NEInitFunc *recompile;
+  NECompareFunc *reexec;
 };
 #define ENGINEMAGIC 345987607
 
@@ -975,8 +975,8 @@ struct gl_list_t *GetMatchingNotes(symchar *dbid, char *pattern,void *token,
 
   if (pattern == (char *)NULL || strlen(pattern) == 0 ||
       engine == (struct NoteEngine *)NULL ||
-      engine->recompile == (NEInitFunc)NULL ||
-      engine->reexec == (NECompareFunc)NULL) {
+      engine->recompile == (NEInitFunc *)NULL ||
+      engine->reexec == (NECompareFunc *)NULL) {
     return NULL;
   }
   oldlist = HeldNotes(dbid,token);
@@ -1031,12 +1031,12 @@ struct gl_list_t *GetMatchingNotes(symchar *dbid, char *pattern,void *token,
 }
 
 struct NoteEngine *NotesCreateEngine(void *ned,
-                                     NEInitFunc neif,
-                                     NECompareFunc necf
+                                     NEInitFunc *neif,
+                                     NECompareFunc *necf
 ){
   struct NoteEngine *ne;
   ne = ASC_NEW(struct NoteEngine);
-  if (neif == (NEInitFunc)NULL || necf == (NECompareFunc)NULL) {
+  if (neif == (NEInitFunc *)NULL || necf == (NECompareFunc *)NULL) {
     return (struct NoteEngine *)NULL;
   }
   if (ne == (struct NoteEngine *)NULL) {

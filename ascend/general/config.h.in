@@ -130,6 +130,16 @@ typedef unsigned long long asc_intptr_t;
 /* #define ASC_WITH_ZLIB @ASC_WITH_ZLIB@ */
 #endif
 
+/*
+	Whether we have PCRE available for matching regular expressions
+
+	SCons will uncomment the #define line if required.
+	Doing it this (hacky) way so as not to mess up autoconf.
+*/
+#ifndef ASC_WITH_PCRE
+/* #define ASC_WITH_PCRE @ASC_WITH_PCRE@ */
+#endif
+
 
 /*
 	This define disables the use of pool.h and forces the code

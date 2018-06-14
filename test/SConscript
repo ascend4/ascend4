@@ -9,12 +9,20 @@ srcs = ['test.c','test_ascend_base.c','redirectStdStreams.c','printutil.c','asse
 for dir in test_env['TESTDIRS']:
 	srcs += test_env['TESTSRCS_'+dir.upper()]
 
-
 test_env.Append(
 	LIBS = ['ascend','cunit']
 	, LIBPATH = ['#']
 	, CPPDEFINES = ['-DASC_SHARED']
 )
+
+print "in test: WITH_PCRE = ",test_env.get('WITH_PCRE')
+
+if test_env.get('WITH_PCRE'):
+	test_env.AppendUnique(
+		CPPPATH=test_env.get('PCRE_CPPPATH')
+		,LIBS=test_env['PCRE_LIBS']
+		,LIBPATH=test_env.get('PCRE_LIBPATH')
+	)
 
 if test_env.has_key('CUNIT_CPPPATH'):
 	test_env.Append(CPPPATH=test_env['CUNIT_CPPPATH'])
