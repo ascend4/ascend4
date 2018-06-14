@@ -15,8 +15,6 @@ test_env.Append(
 	, CPPDEFINES = ['-DASC_SHARED']
 )
 
-print "in test: WITH_PCRE = ",test_env.get('WITH_PCRE')
-
 if test_env.get('WITH_PCRE'):
 	test_env.AppendUnique(
 		CPPPATH=test_env.get('PCRE_CPPPATH')

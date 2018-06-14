@@ -55,7 +55,7 @@
 
 
 
-static void test_test1(void){
+static void test_init(void){
 	CU_ASSERT(0 == Asc_CompilerInit(0));
 	CU_ASSERT(LibraryNote()==AddSymbol("Loaded Libraries"));
 	//CU_ASSERT(GlobalNote()==AddSymbol("All Known Files"));
@@ -96,7 +96,11 @@ static const char *model_test2 = "\n\
 	MODEL test2;\n\
 		x \"yoohoo\" IS_A real;\n\
 		x^2 - 4 = 0;\n\
-	END test2;\n";
+	END test2;\n\
+	MODEL test3;\n\
+		x \"wahwah\" IS_A real;\n\
+		x^2 - 9 = 0;\n\
+	END test3;\n";
 
 static void test_test2(void){
 
@@ -117,16 +121,16 @@ static void test_test2(void){
 	MSG("zz_parse returns status=%d",status);
 	CU_ASSERT(status==0);
 
-	struct gl_list_t *l = Asc_TypeByModule(m);
-	struct gl_list_t *l2;
+	struct gl_list_t *l, *l2;
+	l = Asc_TypeByModule(m);
 	MSG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
-	CU_ASSERT(gl_length(l)==3);
+	CU_ASSERT(gl_length(l)==4);
 	gl_destroy(l);
 
 	CU_ASSERT(FindType(AddSymbol("test1"))!=NULL);
 
 	l = GetNotes(LibraryNote(),NOTESWILD,NOTESWILD,NOTESWILD,NOTESWILD,nd_wild);
-	CU_ASSERT(gl_length(l)==5);
+	CU_ASSERT(gl_length(l)==6);
 	int i;
 	for(i=1;i<=gl_length(l);++i){
 		struct Note *N = gl_fetch(l,i);
@@ -167,16 +171,17 @@ static void test_test2(void){
 	gl_destroy(l2);
 	// store some real notes
 	l = GetNotes(LibraryNote(),NOTESWILD,AddSymbol("inline"),NOTESWILD,NOTESWILD,nd_wild);
-	CU_ASSERT(gl_length(l)==2);
+	CU_ASSERT(gl_length(l)==3);
 	h1 = HoldNoteData(LibraryNote(),l);
 	CU_ASSERT(h1 != NULL);
 	// retreive stored notes, check they are as expected
 	l2 = HeldNotes(LibraryNote(),h1);
 	CU_ASSERT(l2 != NULL);
 	CU_ASSERT(l == l2);
-	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l2,1))),"yoohoo"));
-	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l2,2))),"hello"));
-	CU_ASSERT(2==gl_length(l2));
+	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l2,1))),"wahwah"));
+	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l2,2))),"yoohoo"));
+	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l2,3))),"hello"));
+	CU_ASSERT(3==gl_length(l2));
 	ReleaseNoteData(LibraryNote(),h1);
 	//gl_destroy(l);
 
@@ -198,11 +203,51 @@ static void test_test2(void){
 
 	DestroyNotesOnType(LibraryNote(),AddSymbol("test1"));
 	l = GetNotes(LibraryNote(),NOTESWILD,NOTESWILD,NOTESWILD,NOTESWILD,nd_wild);
-	CU_ASSERT(gl_length(l)==1);
+	CU_ASSERT(gl_length(l)==2);
 	gl_destroy(l);
 	DestroyNotesOnType(LibraryNote(),AddSymbol("test2"));
 	l = GetNotes(LibraryNote(),NOTESWILD,NOTESWILD,NOTESWILD,NOTESWILD,nd_wild);
-	CU_ASSERT(gl_length(l)==0);
+	CU_ASSERT(gl_length(l)==1);
+	gl_destroy(l);
+
+	Asc_CompilerDestroy();
+}
+
+
+static void test_getnoteslist(void){
+	Asc_CompilerInit(1);
+	int status;
+	(void)Asc_OpenStringModule(model_test2, &status, "mystr"/* name prefix*/);
+	CU_ASSERT(status==0); /* if successfully created */
+	status = zz_parse();
+	CU_ASSERT(status==0);
+
+	struct gl_list_t *l, *l2, *l3;
+
+	l2 = gl_create(2);
+	gl_append_ptr(l2,(void *)AddSymbol("test1"));
+	gl_append_ptr(l2,(void *)AddSymbol("test3"));
+	l3 = gl_create(1);
+	gl_append_ptr(l3,(void *)AddSymbol("x"));
+	// GetNotes(dbid,typename,language,id,method,notedata);
+	l = GetNotesList(LibraryNote(),l2,NOTESWILDLIST,l3,NOTESWILDLIST,NOTESWILDLIST);
+	MSG("got %ld notes",gl_length(l));
+	CU_ASSERT(gl_length(l)==3);
+	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l,1))),"wahwah"));
+	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l,2))),"hello"));
+	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l,3))),"variable called 'x'"));
+#ifdef NOTES_DEBUG
+	for(int i=1;i<=gl_length(l);++i){
+		struct Note *N = gl_fetch(l,i);
+		MSG("%s:%d (#%d) id='%s', type='%s', lang='%s', meth='%s': text='%s'"
+			,GetNoteFilename(N),GetNoteLineNum(N),i,SCP(GetNoteId(N))
+			,SCP(GetNoteType(N)),SCP(GetNoteLanguage(N)),SCP(GetNoteMethod(N))
+			,BCS(GetNoteText(N))
+		);
+	}
+#endif
+	gl_destroy(l2);
+	gl_destroy(l3);
 	gl_destroy(l);
 
 	Asc_CompilerDestroy();
@@ -259,11 +304,11 @@ static int my_pcre_exec(void *data, void *pcre, char *subject, char *start){
 	MyPCREData *mydata = (MyPCREData *)data;
 	if(p < 0){
 		MSG("Start is before subject");
-		return NULL;
+		return -1;
 	}
 	if(p >= l){
 		MSG("Start is after subject");
-		return NULL;
+		return -1;
 	}
 	int res = pcre_exec(pcre, mydata->extra, subject, l, p, mydata->options, mydata->ovec, mydata->ovecsize);
 	if(res == PCRE_ERROR_NOMATCH)return 0;
@@ -287,7 +332,7 @@ static void test_re(void){
 	status = zz_parse();
 	CU_ASSERT(status==0);
 	struct gl_list_t *l = Asc_TypeByModule(m);
-	CU_ASSERT(gl_length(l)==3);
+	CU_ASSERT(gl_length(l)==4);
 	gl_destroy(l);
 
 	MyPCREData mydata;
@@ -322,8 +367,9 @@ static void test_re(void){
 /* Registration information */
 
 #define TESTS(T) \
-	T(test1) \
+	T(init) \
 	T(test2) \
+	T(getnoteslist) \
 	T(re)
 
 REGISTER_TESTS_SIMPLE(compiler_notes, TESTS)

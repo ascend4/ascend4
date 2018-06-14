@@ -305,12 +305,6 @@ vars.Add(BoolVariable('WITH_PYTHON'
 	, True
 ))
 
-# You can turn off use of PCRE for note searching
-vars.Add(BoolVariable('WITH_PCRE'
-	,"Set to False if you don't want to enable searching of notes with PCRE1"
-	, True
-))
-
 # Which solvers will we allow?
 vars.Add(ListVariable('WITH_SOLVERS'
 	,"List of the solvers you want to build. The default is the minimum that"	
@@ -517,6 +511,11 @@ if platform.system()=="Windows":
 		)
 
 #-------pcre--------
+
+vars.Add(BoolVariable('WITH_PCRE'
+	,"Set to False if you don't want to enable searching of notes with PCRE1"
+	, True
+))
 
 vars.Add(PackageVariable("PCRE_PREFIX"
 	,"Prefix for your PCRE install (PCRE ./configure --prefix)"
