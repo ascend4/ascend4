@@ -65,6 +65,10 @@ default_libpath="$DEFAULT_PREFIX/lib"
 default_cpppath="$DEFAULT_PREFIX/include"
 default_f2c_lib="gfortran"
 default_swig="swig"
+default_pcre_prefix="$DEFAULT_PREFIX"
+default_pcre_libs=['pcre']
+default_pcre_libpath="$PCRE_PREFIX/lib"
+default_pcre_cpppath="$PCRE_PREFIX/include"
 
 icon_extension = '.png'
 
@@ -301,6 +305,12 @@ vars.Add(BoolVariable('WITH_PYTHON'
 	, True
 ))
 
+# You can turn off use of PCRE for note searching
+vars.Add(BoolVariable('WITH_PCRE'
+	,"Set to False if you don't want to enable searching of notes with PCRE1"
+	, True
+))
+
 # Which solvers will we allow?
 vars.Add(ListVariable('WITH_SOLVERS'
 	,"List of the solvers you want to build. The default is the minimum that"	
@@ -472,7 +482,7 @@ vars.Add('CONOPT_ENVVAR'
 if platform.system()=="Windows":
 	vars.Add(PackageVariable("IPOPT_PREFIX"
 		,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
-		,default_conopt_prefix
+		,default_conopt_prefix # <-- FIXME is that right??
 	))
 
 	vars.Add("IPOPT_LIBS"
@@ -505,6 +515,27 @@ if platform.system()=="Windows":
 			,"Exact path of IPOPT DLL (%d) to be included in the installer (Windows only)"%(i+1)
 			,default_ipopt_dll[i]
 		)
+
+#-------pcre--------
+
+vars.Add(PackageVariable("PCRE_PREFIX"
+	,"Prefix for your PCRE install (PCRE ./configure --prefix)"
+	,default_pcre_prefix
+))
+
+vars.Add("PCRE_LIBS"
+	,"Library linked to for PCRE"
+	,default_pcre_libs
+)
+
+vars.Add("PCRE_LIBPATH"
+	,"Where is your IPOPT library installed"
+)
+
+vars.Add('PCRE_CPPPATH'
+	,"Where is your IPOPT coin/IpStdCInterface.h (do not include the 'coin' in the path)"
+	,"$PCRE_PREFIX/include"
+)
 
 #-------- f2c ------
 
@@ -947,6 +978,9 @@ without_conopt_reason = notselected
 
 with_ipopt = 'IPOPT' in env['WITH_SOLVERS']
 without_ipopt_reason = notselected
+
+with_pcre = env.get('WITH_PCRE')
+without_pcre_reason = "disabled by options/config.py"
 
 with_makemps = 'MAKEMPS' in env['WITH_SOLVERS']
 without_makemps_reason = notselected
@@ -2092,6 +2126,22 @@ def CheckErf(context):
 	context.Result(is_ok)
 
 #----------------
+# PCRE1 check
+
+pcre_test_text = """
+#include <pcre.h>
+int main(){
+	pcre *re;
+	const char *errstr;
+	int erroffset;
+	re = pcre_compile("^([a-z]+)[0-9])$",0,&errstr,&erroffset,NULL);
+}
+"""
+
+def CheckPCRE(context):
+	return CheckExtLib(context,libname='pcre',text=pcre_test_text)
+
+#----------------
 # GCC Version sniffing
 
 # TODO FIXME
@@ -2140,6 +2190,7 @@ conf = Configure(env
 		, 'CheckSIGINT' : CheckSIGINT
 		, 'CheckSigReset' : CheckSigReset
 		, 'CheckErf' : CheckErf
+		, 'CheckPCRE' : CheckPCRE
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -2495,6 +2546,13 @@ if with_doc_build:
 		with_doc_build = False
 		without_doc_build_reason="unable to locate LyX"
 
+# PCRE
+
+if with_pcre:
+	if not conf.CheckPCRE():
+		with_pcre = False
+		without_pcre_reason = "PCRE not found"
+
 # TODO: -D_HPUX_SOURCE is needed
 
 # TODO: detect if dynamic libraries are possible or not
@@ -2594,6 +2652,7 @@ for k,v in {
 		,'ASC_WITH_UFSPARSE':with_ufsparse
 		,'ASC_WITH_MMIO':with_mmio
 		,'ASC_WITH_ZLIB':with_zlib
+		,'ASC_WITH_PCRE':with_pcre
 		,'ASC_SIGNAL_TRAPS':with_signals
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
 		,'HAVE_C99FPE':env.get('HAVE_C99FPE')
@@ -2757,6 +2816,12 @@ if with_mmio:
 	srcs += env.SConscript(['mmio/SConscript'],'env')
 else:
 	print "Skipping... MMIO export won't be built:", without_mmio_reason
+
+#if with_pcre:
+#	env.Append(WITH_PCRE=1)
+#else:
+#	print "Skipping... PCRE searching of NOTES:",without_pcre_reason
+
 #-------------
 # LIBASCEND -- all 'core' functionality
 
