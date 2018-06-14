@@ -985,6 +985,7 @@ struct gl_list_t *GetMatchingNotes(symchar *dbid, char *pattern,void *token,
   void *regexp;
   char *string;
   CHECKDB(NULL);
+  (void)db;
 
   if (pattern == (char *)NULL || strlen(pattern) == 0 ||
       engine == (struct NoteEngine *)NULL ||

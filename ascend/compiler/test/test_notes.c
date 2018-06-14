@@ -29,15 +29,6 @@
 #include <ascend/compiler/symtab.h>
 #include <ascend/compiler/parser.h>
 #include <ascend/compiler/library.h>
-#if 0
-#include <ascend/compiler/module.h>
-#include <ascend/compiler/simlist.h>
-#include <ascend/compiler/instquery.h>
-#include <ascend/compiler/parentchild.h>
-#include <ascend/compiler/atomvalue.h>
-#include <ascend/compiler/childio.h>
-#include <ascend/compiler/initialize.h>
-#endif
 
 #include <test/common.h>
 #include <test/assertimpl.h>
@@ -52,7 +43,6 @@
 #else
 # define MSG(ARGS...) ((void)0)
 #endif
-
 
 
 static void test_init(void){
@@ -151,6 +141,7 @@ static void test_test2(void){
 	l = GetNotes(LibraryNote(),AddSymbol("test1"),AddSymbol("inline"),AddSymbol("x"),NOTESWILD,nd_wild);
 	CU_ASSERT(gl_length(l)==1);
 	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l,1))),"hello"));
+	CU_ASSERT(0==strcmp(SCP(GetNoteId(gl_fetch(l,1))),"x"));
 	CU_ASSERT(AddSymbol("inline")==GetNoteLanguage(gl_fetch(l,1)));
 	CU_ASSERT(0==strcmp("mystr_global_1<0>",GetNoteFilename(gl_fetch(l,1))));
 	CU_ASSERT(15==GetNoteLineNum(gl_fetch(l,1)));
@@ -221,8 +212,9 @@ static void test_getnoteslist(void){
 	CU_ASSERT(status==0); /* if successfully created */
 	status = zz_parse();
 	CU_ASSERT(status==0);
-
 	struct gl_list_t *l, *l2, *l3;
+
+	// inDataListOrNull
 
 	l2 = gl_create(2);
 	gl_append_ptr(l2,(void *)AddSymbol("test1"));
@@ -246,6 +238,24 @@ static void test_getnoteslist(void){
 		);
 	}
 #endif
+	gl_destroy(l2);
+	gl_destroy(l3);
+	gl_destroy(l);
+
+	// inDataListOrWild
+
+	l2 = gl_create(2);
+	gl_append_ptr(l2,(void*)AddSymbol("x"));
+	l3 = gl_create(2);
+	gl_append_ptr(l3,(void*)nd_empty);
+	l = GetNotesList(LibraryNote(),NOTESWILDLIST,NOTESWILDLIST,l2,NOTESWILDLIST,l3);
+	MSG("got %ld notes",gl_length(l));
+	CU_ASSERT(gl_length(l)==4);
+	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l,1))),"wahwah"));
+	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l,2))),"yoohoo"));
+	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l,3))),"hello"));
+	CU_ASSERT(0==strcmp(BCS(GetNoteText(gl_fetch(l,4))),"variable called 'x'"));
+
 	gl_destroy(l2);
 	gl_destroy(l3);
 	gl_destroy(l);
