@@ -395,7 +395,7 @@ static void CollectNote(struct Note *);
 %type <id_ptr> optional_of optional_method type_identifier call_identifier
 %type <dquote_ptr> optional_notes
 %type <braced_ptr> optional_bracedtext
-%type <nptr> data_args fname name optional_scope
+%type <nptr> data_args fname name /* optional_scope */
 %type <eptr> relation expr relop logrelop optional_with_value
 %type <sptr> set setexprlist optional_set_values
 %type <lptr> fvarlist input_args output_args varlist
@@ -1739,10 +1739,8 @@ glassbox_statement:
 	  $$ = CreateEXTERNGlassBox($1,SCP($3),vl,nptr,$9);
 	}
     ;
-*/
-
 optional_scope:
-    /* empty */
+    // empty
 	{
 	  $$ = NULL;
 	}
@@ -1751,6 +1749,7 @@ optional_scope:
 	  $$ = $2;
 	}
     ;
+*/
 
 for_statement:
     FOR_TOK IDENTIFIER_TOK IN_TOK expr optional_direction forexprend 
