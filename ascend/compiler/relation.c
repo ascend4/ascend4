@@ -673,9 +673,11 @@ static int ArgsForToken(enum Expr_enum t) {
   switch (t) {
   case e_nop:
   case e_undefined:
-  case e_glassbox:
   case e_blackbox:
+#if 0
+  case e_glassbox:
   case e_opcode:
+#endif
   case e_token:
   case e_zero:
   case e_real:
@@ -3394,6 +3396,7 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst){
         BinTokenDeleteReference(RTOKEN(rel).btable);
       }
       break;
+#if 0
     case e_opcode:
       //CONSOLE_DEBUG("Destroy opcode rel");
       if (ROPCODE(rel).lhs) {
@@ -3412,6 +3415,7 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst){
         ascfree((char *)(RGBOX(rel).args));
       }
       break;
+#endif
     case e_blackbox:
       CONSOLE_DEBUG("Destroy black rel");
       if (RBBOX(rel).inputArgs) {
@@ -4545,10 +4549,12 @@ struct relation *CopyAnonRelationByReference(CONST struct Instance *src_inst,
     CopyBlackBoxDataByReference(src,result,bboxtable_p);
     RelationRefCount(src)++;
     break;
+#if 0
   case e_opcode:
   case e_glassbox:	/* Double  check  -- what about the args ?? */
     ASC_PANIC("ERROR: CopyAnonRelationByReference on opcode/glassbox.\n");
     break;
+#endif
   default: /*NOTREACHED we hope*/
     break;
   }
@@ -4578,8 +4584,10 @@ struct relation *CopyRelationByReference(CONST struct Instance *src_inst,
   result->vars = CopyRelationVarList(dest_inst,copylist);
   switch (type) {
   case e_token:		/* only need increment the reference count */
+#if 0
   case e_opcode:
   case e_glassbox:	/* Double  check  -- what about the args ?? */
+#endif
   case e_blackbox:	/* Double  check  -- what about the args ?? */
     RelationRefCount(src)++;
     break;
@@ -4606,6 +4614,7 @@ struct relation *CopyRelationToModify(CONST struct Instance *src_inst,
   case e_token:
     result = CopyTokenRelation(src_inst,dest_inst,copylist);
     return result;
+#if 0
   case e_opcode:
     ASC_PANIC("Opcode relation copying not yet supported\n");
 
@@ -4615,6 +4624,7 @@ struct relation *CopyRelationToModify(CONST struct Instance *src_inst,
 				    copylist, RGBOX(src).index,
 				    RelRelop(src));
     return result;
+#endif
   case e_blackbox:
     ASC_PANIC("Blackbox relation copying not yet supported\n");
 

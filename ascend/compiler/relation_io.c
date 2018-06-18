@@ -1374,9 +1374,11 @@ void WriteRelation(FILE *f, CONST struct Instance *relinst,
   case e_blackbox:
     WriteBlackBoxRelation(f,reln,ref);
     return;
+#if 0
   case e_glassbox:
     WriteGlassBoxRelation(f,reln,ref);
     return;
+#endif
   default:
     FPRINTF(ASCERR,"Unknown relation type in WriteRelation\n");
     return;
@@ -1415,9 +1417,11 @@ char *WriteRelationString(CONST struct Instance *relinst,
   case e_blackbox:
     WriteBlackBoxRelationDS(dsPtr,reln,ref);
     break;
+#if 0
   case e_glassbox:
     WriteGlassBoxRelationDS(dsPtr,reln,ref);
     break;
+#endif
   default:
     FPRINTF(ASCERR,"Unknown relation type in WriteRelationString\n");
     if (lenptr != NULL) {
@@ -1773,13 +1777,17 @@ void SaveReln2GlassBox(FILE *fp, CONST struct Instance *relinst,
 
   type = GetInstanceRelationType(relinst);
   switch (type) {
-  case e_token:		/* token -> glassbox */
+#if 0
   case e_opcode:	/* opcode -> glassbox */
+#endif
+  case e_token:		/* token -> glassbox */
     SaveReln2GlassBox(fp,relinst,prefix,index_);
     break;
+#if 0
   case e_glassbox:
     SaveGlassBoxRelation(fp,relinst);	/* we will use the existing prefix */
     break;
+#endif
   default:
     FPRINTF(ASCERR,"Relation type not supported in SaveGlassBox\n");
     break;
@@ -1796,9 +1804,11 @@ int ConversionIsValid(enum Expr_enum old, enum Expr_enum new)
     if (new!=e_blackbox)
       return 1;		/* we can handle all but blackboxes */
     return 0;
+#if 0
   case e_opcode:	/* not fully supported yet */
     return 0;
   case e_glassbox:
+#endif
   case e_blackbox:
     return 0;
   default:

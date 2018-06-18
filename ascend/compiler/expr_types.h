@@ -63,9 +63,9 @@ enum Expr_enum {
 
   /**< relation implementation kinds */
   e_undefined	= 1, /**< relation type undefined */
-  e_glassbox	= 2, /**< glassbox relation type */
+  e_glassboxxxx	= 2, /**< glassbox relation type */
   e_blackbox	= 3, /**< blackbox relation type */
-  e_opcode	= 4,   /**< unimplemented opcode relation type. not seen */
+  e_opcodexxx	= 4,   /**< unimplemented opcode relation type. not seen */
   e_token	= 5,     /**< token array infix/postfix relation type */
 
   e_zero	= 6,     /**< symbolic processing <==> quiet wild real 0.0 */
@@ -146,7 +146,7 @@ enum Expr_enum {
 #define TOK_UNARY_HIGH    e_func
 #define TOK_REAL_REL_LOW  e_zero
 #define TOK_REAL_REL_HIGH e_ipower
-#define TOK_REL_TYPE_LOW  e_glassbox
+#define TOK_REL_TYPE_LOW  e_blackbox
 #define TOK_REL_TYPE_HIGH e_token
 
 struct ExprReal {

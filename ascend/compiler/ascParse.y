@@ -404,7 +404,7 @@ static void CollectNote(struct Note *);
 %type <statptr> is_statement isrefinedto_statement arealike_statement link_statement unlink_statement der_statement independent_statement
 %type <statptr> arethesame_statement willbethesame_statement
 %type <statptr> willnotbethesame_statement assignment_statement
-%type <statptr> relation_statement glassbox_statement blackbox_statement
+%type <statptr> relation_statement /* glassbox_statement */ blackbox_statement
 %type <statptr> call_statement units_statement
 %type <statptr> external_statement for_statement run_statement if_statement assert_statement fix_statement free_statement
 %type <statptr> when_statement use_statement select_statement
@@ -1271,7 +1271,7 @@ statement:
     | willnotbethesame_statement
     | assignment_statement
     | relation_statement
-    | glassbox_statement
+    /* | glassbox_statement */ 
     | blackbox_statement
     | call_statement
     | external_statement
@@ -1721,13 +1721,12 @@ data_args:
 	}
     ;
 
+/*
 glassbox_statement:
     fname ':' IDENTIFIER_TOK '(' fvarlist ';' INTEGER_TOK ')' optional_scope
 	{
-	  /*
-	   * This is the glassbox declarative external relation.
-	   * This now allows a scope for placement of the relations
-	   */
+	  // This is the glassbox declarative external relation.
+	  // This now allows a scope for placement of the relations
 	  struct VariableList *vl = $5;
 	  struct Name *nptr;
 	  char tmp[32]; 
@@ -1736,10 +1735,11 @@ glassbox_statement:
 	  sprintf(tmp,"%ld",$7);
 	  str = AddSymbol(tmp);
 	  nptr = CreateIdName(str);
-	/* $$ = CreateEXTERN(1,$1,SCP($3),vl,nptr,$9); */
+	// $$ = CreateEXTERN(1,$1,SCP($3),vl,nptr,$9);
 	  $$ = CreateEXTERNGlassBox($1,SCP($3),vl,nptr,$9);
 	}
     ;
+*/
 
 optional_scope:
     /* empty */

@@ -694,9 +694,11 @@ int CompareExprs(CONST struct Expr *e1, CONST struct Expr *e2)
 
     case e_nop:		/* fallthru */
     case e_undefined:		/* fallthru */
-    case e_glassbox:		/* fallthru */
     case e_blackbox:		/* fallthru */
+#if 0
+    case e_glassbox:		/* fallthru */
     case e_opcode:		/* fallthru */
+#endif
     case e_token:		/* fallthru */
     case e_zero:		/* fallthru */
     case e_uminus:		/* fallthru */

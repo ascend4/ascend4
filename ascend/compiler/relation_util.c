@@ -498,9 +498,11 @@ int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens)
     CopyDimensions(RelationDim(rel),dimens);
     return 2;
   }
-  if (reltype == e_glassbox || reltype == e_opcode) {
+#if 0
+  if (reltype == e_glassbox /* || reltype == e_opcode */) {
     return 0;
   }
+#endif
   if (reltype == e_blackbox) {
     lhs = BlackBoxGetOutputVar(rel);
     lhsdim = RealAtomDims(lhs);
@@ -2031,6 +2033,7 @@ double CalcRelationNominal(struct Instance *i){
       return( RealAtomValue(c) );
     }
   }
+#if 0
   if (reltype == e_glassbox){
     p = BlackBoxGetOutputVar(glob_rel);
     nomname = AddSymbol("nominal");
@@ -2046,6 +2049,7 @@ double CalcRelationNominal(struct Instance *i){
   if (reltype == e_opcode){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
   }
+#endif
   glob_rel = NULL;
   return (double)1;
 }
@@ -2177,6 +2181,7 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
         safe_error_to_stderr(&status);
       }
       break;
+#if 0
     case e_glassbox:
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"'e_glassbox' relation not supported");
       status = safe_problem;
@@ -2185,6 +2190,7 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"'e_opcode' relation not supported");
       status = safe_problem;
       break;
+#endif
     default:
       if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
         status = safe_problem;
@@ -2238,8 +2244,10 @@ RelationCalcResidualPostfix(struct Instance *i, double *res){
 	case e_blackbox:
 	  return BlackBoxCalcResidual(i, res, r);
 
+#if 0
 	case e_glassbox:
 	case e_opcode:
+#endif
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode/glassbox not supported");
 	  return 1;
 
@@ -2472,6 +2480,7 @@ enum safe_err RelationCalcResidGradSafe(struct Instance *i
     return not_safe;
   }
   if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
+#if 0
     if (reltype == e_glassbox){
 	    //CONSOLE_DEBUG("Relation Type: e_glassbox");
 	    ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
@@ -2480,6 +2489,7 @@ enum safe_err RelationCalcResidGradSafe(struct Instance *i
      	//CONSOLE_DEBUG("Relation Type: e_opcode");
     	ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
     }
+#endif
     //CONSOLE_DEBUG("Relation Type: other");
     not_safe = safe_problem;
     return not_safe;
@@ -2586,6 +2596,7 @@ enum safe_err RelationCalcResidGradRevSafe(struct Instance *i
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Black Box Relation not implemented");
 	}
 	if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
+#if 0
 		if (reltype == e_glassbox){
 			CONSOLE_DEBUG("Relation Type: e_glassbox");
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
@@ -2594,6 +2605,7 @@ enum safe_err RelationCalcResidGradRevSafe(struct Instance *i
 			CONSOLE_DEBUG("Relation Type: e_opcode");
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
 		}
+#endif
 		CONSOLE_DEBUG("Relation Type: other");
 		not_safe = safe_problem;
 		return not_safe;
@@ -2675,12 +2687,13 @@ enum safe_err RelationCalcSecondDerivSafe(struct Instance *i
 	if (reltype == e_blackbox){
 		/*if (BlackBoxCalcResidGrad(i, residual, gradient, r) ) {
 		not_safe = safe_problem;
-	}
+    }
 		CONSOLE_DEBUG("Relation Type: e_blackbox");
 		return not_safe;*/
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Black Box Relation not implemented");
 	}
 	if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
+#if 0
 		if (reltype == e_glassbox){
 			CONSOLE_DEBUG("Relation Type: e_glassbox");
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
@@ -2689,6 +2702,7 @@ enum safe_err RelationCalcSecondDerivSafe(struct Instance *i
 			CONSOLE_DEBUG("Relation Type: e_opcode");
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
 		}
+#endif
 		CONSOLE_DEBUG("Relation Type: other");
 		not_safe = safe_problem;
 		return not_safe;
@@ -2774,6 +2788,7 @@ enum safe_err RelationCalcHessianMtxSafe(struct Instance *i, ltmatrix *hess_mtx,
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Black Box Relation not implemented");
 	}
 	if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
+#if 0
 		if (reltype == e_glassbox){
 			CONSOLE_DEBUG("Relation Type: e_glassbox");
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
@@ -2782,6 +2797,7 @@ enum safe_err RelationCalcHessianMtxSafe(struct Instance *i, ltmatrix *hess_mtx,
 			CONSOLE_DEBUG("Relation Type: e_opcode");
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
 		}
+#endif
 		CONSOLE_DEBUG("Relation Type: other");
 		not_safe = safe_problem;
 		return not_safe;

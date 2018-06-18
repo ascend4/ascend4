@@ -26,6 +26,7 @@
 
 #include <ascend/compiler/ascCompiler.h>
 #include <ascend/compiler/notate.h>
+#include <ascend/compiler/notequery.h>
 #include <ascend/compiler/symtab.h>
 #include <ascend/compiler/parser.h>
 #include <ascend/compiler/library.h>
@@ -385,6 +386,35 @@ static void test_re(void){
 #endif
 }
 
+#if 0
+/*-------------
+  notequery.c
+*/
+
+static void test_query(void){
+
+	struct module_t *m;
+	int status;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/canvas/blocktypes.a4c",&status);
+	CU_ASSERT(status==0);
+	status = zz_parse();
+	CU_ASSERT(status==0);
+
+	struct gl_list_t *l = Asc_TypeByModule(m);
+
+	/* there are only 8 things declared in system.a4l: */
+	CU_ASSERT(gl_length(l)==4)
+
+	/* but system.a4l also includes basemodel.a4l, which includes... */
+	CU_ASSERT(FindType(AddSymbol("cmumodel"))!=NULL);
+
+	Asc_CompilerDestroy();
+}	
+#endif
 
 /*===========================================================================*/
 /* Registration information */
@@ -393,6 +423,7 @@ static void test_re(void){
 	T(init) \
 	T(test2) \
 	T(getnoteslist) \
-	T(re)
+	T(re) /* \
+	T(query) */
 
 REGISTER_TESTS_SIMPLE(compiler_notes, TESTS)

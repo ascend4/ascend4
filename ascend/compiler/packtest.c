@@ -198,6 +198,7 @@ int CallBlackBox(struct Instance *inst,
     return 0;
 }
 
+#if 0
 /**
 	When glassbox are registered, they must register a pointer
 	to their function jump table. In other words, they must
@@ -249,6 +250,7 @@ int CallGlassBox(struct Instance *relinst, CONST struct relation *rel)
   ascfree((char *)f);
   return result;
 }
+#endif
 
 /**
 	No idea what this does. It's referenced in 'interface.c' only, so it
@@ -275,8 +277,10 @@ int CallExternalProcs(struct Instance *inst)
   switch (reltype) {
   case e_blackbox:
     return CallBlackBox(inst,rel);
+#if 0
   case e_glassbox:
     return CallGlassBox(inst,rel);
+#endif
   default:
     FPRINTF(ASCERR,"Invalid relation type in CallExternalProc\n");
     return 1;

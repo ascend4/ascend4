@@ -25,7 +25,7 @@
 
 	It seems that we shouldn't be accessing this structure at solve-time: the
 	ExtRelCache object contains a lot of pre-processed stuff that makes
-	evaluating black box functions easier (probably glass box too?) -- JP
+	evaluating black box functions easier -- JP
 
 	@TODO Complete documentation of compiler/extcall.h.
 

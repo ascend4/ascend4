@@ -5585,6 +5585,8 @@ int ExecuteBBOXElement(struct Instance *inst
 	is a hybrid between TRUE ascend relations and blackbox relations.
 */
 
+#if 0
+
 static struct gl_list_t *CheckGlassBoxArgs(struct Instance *inst
 	,struct Statement *stat,rel_errorlist *err
 ){
@@ -5676,7 +5678,6 @@ static int CheckGlassBoxIndex(struct Instance *inst
     return -1;				/* the relation_error types. !! */
   }
 }
-
 
 static int ExecuteGlassBoxEXT(struct Instance *inst
 	, struct Statement *statement
@@ -5786,6 +5787,7 @@ static int ExecuteGlassBoxEXT(struct Instance *inst
   if (varlist) gl_destroy(varlist);
   return 1;
 }
+#endif
 
 
 static int ExecuteEXT(struct Instance *inst, struct Statement *statement){
@@ -5798,8 +5800,10 @@ static int ExecuteEXT(struct Instance *inst, struct Statement *statement){
     instantiation_error(ASC_USER_ERROR,statement
 			,"Invalid external statement in declarative section. \n");
     return 1;
+#if 0
   case ek_glass:
     return ExecuteGlassBoxEXT(inst,statement);
+#endif
   case ek_black:
     return ExecuteBlackBoxEXT(inst,statement);
   default:

@@ -234,6 +234,7 @@ int DefaultExtBBoxFuncDeriv2FD(
   GLASS BOX STUFF
 */
 
+#if 0
 int CreateUserFunctionGlassBox(CONST char *name,
   	       ExtEvalFunc *init,
   	       ExtEvalFunc **value,
@@ -319,6 +320,7 @@ ExtEvalFunc **GetDeriv2JumpTable(struct ExternalFunc *efunc)
   asc_assert(efunc->etype == efunc_GlassBox);
   return efunc->u.glass.deriv2;
 }
+#endif
 
 /*------------------------------------------------------------------------------
   EXTERNAL METHOD STUFF

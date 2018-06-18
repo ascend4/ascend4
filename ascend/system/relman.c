@@ -170,7 +170,7 @@ void relman_get_incidence(struct rel_relation *rel, var_filter_t *filter
 static double dsolve_scratch = 0.0;		/* some workspace */
 #define DSOLVE_TOLERANCE 1.0e-08                /* no longer needed */
 
-static
+#if 0 && defined(THIS_IS_AN_UNUSED_FUNCTION)static
 real64 *relman_glassbox_dsolve(struct rel_relation *rel
 		, struct var_variable *solvefor
 		, int *able
@@ -249,9 +249,9 @@ real64 *relman_glassbox_dsolve(struct rel_relation *rel
     return NULL;
   }
 }
+#endif
 
-
-#ifdef THIS_IS_AN_UNUSED_FUNCTION
+#if 0 && defined(THIS_IS_AN_UNUSED_FUNCTION)
 static
 real64 relman_glassbox_eval(struct rel_relation *rel){
   int n,m,mode,result;
@@ -450,7 +450,7 @@ real64 relman_scale(struct rel_relation *rel){
 }
 
 
-#if REIMPLEMENT /* compiler */
+#if 0 && defined(REIMPLEMENT) /* compiler */
 real64 relman_diff(struct rel_relation *rel, struct var_variable *var,
                    int safe
 ){
