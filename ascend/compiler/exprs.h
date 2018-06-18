@@ -73,12 +73,12 @@ extern struct Expr *CreateFuncExpr(CONST struct Func *f);
  *  Create a function node.
  */
 
-extern struct Expr *CreateIntExpr(long i);
+ASC_DLLSPEC struct Expr *CreateIntExpr(long i);
 /**< 
  *  Create an integer node.
  */
 
-extern struct Expr *CreateRealExpr(double r, CONST dim_type *dims);
+ASC_DLLSPEC struct Expr *CreateRealExpr(double r, CONST dim_type *dims);
 /**< 
  *  Create a real node with value r and dimensions "dims".
  */
