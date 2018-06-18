@@ -192,6 +192,7 @@ struct TokenRelation {
   unsigned btable, bindex;  /**< indices to table and entry of machine code */
 };
 
+#if 0
 /** Unimplemented OpCodes */
 struct OpCodeRelation {
   enum Expr_enum relop;   /**< type of constraint */
@@ -210,6 +211,7 @@ struct GlassBoxRelation {
   int nargs;
   int index;              /**< the *external* index of this relation */
 };
+#endif
 
 struct BlackBoxRelation { /* reminder: this is potentially shared by many instances, but NOT by instances within a single bbox call expanded to a relation array. The data common to the array, but not shareable is kept in externalData. */
   enum Expr_enum relop;     /**< type of constraint. */
@@ -226,8 +228,10 @@ struct BlackBoxRelation { /* reminder: this is potentially shared by many instan
 union RelationUnion {
   struct SharedRelation s;
   struct TokenRelation token;
+#if 0
   struct OpCodeRelation opcode;
   struct GlassBoxRelation gbox;
+#endif
   struct BlackBoxRelation bbox;
 };
 

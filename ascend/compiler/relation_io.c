@@ -1172,7 +1172,7 @@ void Infix_WriteRelation(FILE *f,
   }
 }
 
-
+#if 0 && defined(DISUSED)
 /*
  * KAA.
  * Just a dumb little note about writing out variable lists --
@@ -1256,6 +1256,7 @@ static void WriteGlassBoxRelationDS(Asc_DString *dsPtr,
   }
   WriteOpDS(dsPtr,RelationRelop(r),relio_ascend);
 }
+#endif
 
 /**
 	Output a blackbox relation to the specified file pointer.
@@ -1697,6 +1698,7 @@ void SaveTokenRelation(FILE *fp, CONST struct Instance *relinst)
   gl_destroy(constants);
 }
 
+#if 0 && defined(DISUSED)
 /*
  *********************************************************************
  * SaveGlassBoxRelation
@@ -1729,9 +1731,10 @@ void SaveGlassBoxRelation(FILE *fp, CONST struct Instance *relinst)
   SaveRelationVariables(fp,reln);
   FPRINTF(fp,"}\n\n");					/* the trailer */
 }
+#endif
 
 
-#ifdef  THIS_IS_AN_UNUSED_FUNCTION
+#if 0 && defined(THIS_IS_AN_UNUSED_FUNCTION)
 /*
  * This function should be good enough to save token relations
  * and opcode relations to glassbox format. Blackbox relations
@@ -1761,7 +1764,7 @@ void Save__Reln2GlassBox(FILE *fp, CONST struct Instance *relinst,
 }
 #endif  /* THIS_IS_AN_UNUSED_FUNCTION */
 
-
+#if 0 && defined(THIS_IS_AN_UNUSED_FUNCTION)
 /*
  *********************************************************************
  * SaveReln2GlassBox
@@ -1793,6 +1796,8 @@ void SaveReln2GlassBox(FILE *fp, CONST struct Instance *relinst,
     break;
   }
 }
+#endif
+
 
 int ConversionIsValid(enum Expr_enum old, enum Expr_enum new)
 {

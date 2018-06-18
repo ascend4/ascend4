@@ -54,6 +54,13 @@ ASC_DLLSPEC SolverRegisterFn cmslv_register;
 
 #include <ascend/solver/conopt_dl.h>
 
+//#define CMSLV_DEBUG
+#ifdef CMSLV_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 /*
  * definitions to enable/disable the output of partial results in
  * the solution of a problem
@@ -2597,7 +2604,7 @@ int COI_CALL slv9_conopt_readmatrix(
   /* fetch the configured bound from solver parameters */
   limit = ASC_INFINITY;
 
-  /* CONSOLE_DEBUG("Got limit value of %g",limit); */
+  /* MSG("Got limit value of %g",limit); */
 
   /*
    * Variables: Current Value, lower value and upper value. Note that for
@@ -2620,14 +2627,14 @@ int COI_CALL slv9_conopt_readmatrix(
 	      lower[count] = -uplow;
       }else{
           lower[count] = -0.5*limit;
-          /* CONSOLE_DEBUG("Reducing lower bound limit for var %d to %e",count,lower[count]); */
+          /* MSG("Reducing lower bound limit for var %d to %e",count,lower[count]); */
       }
 
       if(uplow < limit){
           upper[count] = uplow;
       }else{
           upper[count] = 0.5*limit;
-          /* CONSOLE_DEBUG("Reducing upper bound limit for var %d to %e",count,upper[count]); */
+          /* MSG("Reducing upper bound limit for var %d to %e",count,upper[count]); */
       }
 
       curr[count] = 0.5 * nominal;
@@ -2641,7 +2648,7 @@ int COI_CALL slv9_conopt_readmatrix(
       curr[c] =  1.0;
   }
 
-  /*CONSOLE_DEBUG("ALL BOUNDS:");
+  /*MSG("ALL BOUNDS:");
   for(c=0;c<(*n);++c){
     fprintf(stderr,"%d: lower = %g, upper = %g\n",c,lower[c],upper[c]);
   }*/
@@ -4324,10 +4331,10 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
   sys->con.base = 0; /* C calling convention */
   sys->con.optdir = -1; /* minimisation */
 
-  CONSOLE_DEBUG("%d vars, %d rows",sys->con.n,sys->con.m);
-  CONSOLE_DEBUG("objective constraint: %d",sys->con.objcon);
-  CONSOLE_DEBUG("nonzeros: %d",sys->con.nz);
-  CONSOLE_DEBUG("nonlinear nonzeros: %d",sys->con.nlnz);
+  MSG("%d vars, %d rows",sys->con.n,sys->con.m);
+  MSG("objective constraint: %d",sys->con.objcon);
+  MSG("nonzeros: %d",sys->con.nz);
+  MSG("nonlinear nonzeros: %d",sys->con.nlnz);
 
   /* Perform optimisation using CONOPT */
   slv_conopt_iterate(sys);
@@ -4865,8 +4872,8 @@ int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 		FPRINTF(ASCERR,"Solver %s not available\n",OPTSOLVER_OPTION);
 		return 1;
 	}
-	CONSOLE_DEBUG("CONOPT found with name '%s'",S->name);
-	CONSOLE_DEBUG("CONOPT found with number '%d'",S->number);
+	MSG("CONOPT found with name '%s'",S->name);
+	MSG("CONOPT found with number '%d'",S->number);
 	num_opt_reg = S->number;
 
 	/* this is us! */
@@ -4881,22 +4888,22 @@ int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 		Create solver tokens
 	*/
 
-	CONSOLE_DEBUG("SETTING UP SUB-SOLVERS");
+	MSG("SETTING UP SUB-SOLVERS");
 
-	CONSOLE_DEBUG("SETTING UP CMSLV");
+	MSG("SETTING UP CMSLV");
 	solver_index[CONDITIONAL_SOLVER] = num_cond_reg;
 
-	CONSOLE_DEBUG("SETTING UP LRSLV");
+	MSG("SETTING UP LRSLV");
 	newsolver = slv_switch_solver(server,num_log_reg);
 	token[LOGICAL_SOLVER] = slv_get_client_token(server);
 	solver_index[LOGICAL_SOLVER] = slv_get_selected_solver(server);
 
-	CONSOLE_DEBUG("SETTING UP QRSLV");
+	MSG("SETTING UP QRSLV");
 	newsolver = slv_switch_solver(server,num_nl_reg);
 	token[NONLINEAR_SOLVER] = slv_get_client_token(server);
 	solver_index[NONLINEAR_SOLVER] = slv_get_selected_solver(server);
 
-	CONSOLE_DEBUG("SETTING UP CONOPT (%d)",num_opt_reg);
+	MSG("SETTING UP CONOPT (%d)",num_opt_reg);
 	newsolver = slv_switch_solver(server,num_opt_reg);
 	token[OPTIMIZATION_SOLVER] = slv_get_client_token(server);
 	solver_index[OPTIMIZATION_SOLVER] = slv_get_selected_solver(server);
@@ -4910,7 +4917,7 @@ int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 		conditional models, this option should be disabled while using
 		the conditional solver CMSlv
 	*/
-	CONSOLE_DEBUG("setting QRSlv.partition");
+	MSG("setting QRSlv.partition");
 	param = "partition";
 	u.b = 0;
 	set_param_in_solver(server,NONLINEAR_SOLVER,bool_parm,param,&u);
@@ -4926,7 +4933,7 @@ int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 		so that CONOPT is able to determine optimality if we are
 		already at the solution.
 	*/
-	CONSOLE_DEBUG("setting CONOPT.iterationlimit");
+	MSG("setting CONOPT.iterationlimit");
 	param = "iterationlimit";
 	u.i = 20;
 	set_param_in_solver(server,OPTIMIZATION_SOLVER,int_parm,param,&u);
@@ -4938,7 +4945,7 @@ int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 		nonlinear solver; what we care about here is in the number
 		of iterations controlled by CMSlv.
 	*/
-	CONSOLE_DEBUG("setting QRSlv.iterationlimit");
+	MSG("setting QRSlv.iterationlimit");
 	param = "iterationlimit";
 	u.i = 150;
 	set_param_in_solver(server,NONLINEAR_SOLVER,int_parm,param,&u);
@@ -5198,7 +5205,7 @@ int slv9_presolve(slv_system_t server, SlvClientToken asys){
   struct rel_relation **rp;
   int32 cap, ind;
 
-  CONSOLE_DEBUG("...");
+  MSG("...");
 
   sys = SLV9(asys);
   iteration_begins(sys);
@@ -5477,7 +5484,7 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
         reset_cost(sys->s.cost,sys->s.costsize);
 #if TEST_CONSISTENCY
         ID_and_storage_subregion_information(server,asys);
-        CONSOLE_DEBUG("New region, iteration = %d\n",sys->s.block.iteration);
+        MSG("New region, iteration = %d\n",sys->s.block.iteration);
 #endif /* TEST_CONSISTENCY  */
       }
       slv_get_status(server,&status);
@@ -5649,7 +5656,7 @@ static const SlvFunctionsT slv9_internals = {
 };
 
 int cmslv_register(void){
-	CONSOLE_DEBUG("Registering CMSlv");
+	MSG("Registering CMSlv");
 	if(!solver_engine_named("CONOPT")){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"CONOPT must be registered before CMSlv");
 		return 1;

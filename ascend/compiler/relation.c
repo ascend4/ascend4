@@ -2197,7 +2197,7 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
   return result;
 }
 
-
+#if 0 && defined(DISUSED)
 struct relation *CreateGlassBoxRelation(struct Instance *relinst,
 					struct ExternalFunc *efunc,
 					struct gl_list_t *varlist,
@@ -2249,6 +2249,7 @@ struct relation *CreateGlassBoxRelation(struct Instance *relinst,
   result->vars = newlist;
   return result;
 }
+#endif
 
 /*------------------------------------------------------------------------------
   TOKENRELATION PROCESSING AND GENERAL EXPR-TO-RELATION CHECK ROUTINES
@@ -3320,6 +3321,7 @@ struct relation *CreateTokenRelation(
 
 /** @todo what is an opcode? */
 
+#if 0 && defined(DISUSED)
 struct relation *CreateOpCodeRelation(struct Instance *reference,
                                       struct Instance *relinst,
                                       CONST struct Expr *ex,
@@ -3342,6 +3344,7 @@ struct relation *CreateOpCodeRelation(struct Instance *reference,
 
   return result;
 }
+#endif
 
 /*------------------------------------------------------------------------------
 	OBJECT DESTRUCTION
@@ -3676,6 +3679,7 @@ void ModifyTokenRelationPointers(struct Instance *relinst
   }
 }
 
+#if 0 && defined(DISUSED)
 void ModifyGlassBoxRelPointers(struct Instance *relinst,
 			       struct relation *rel,
 			       CONST struct Instance *old,
@@ -3705,6 +3709,7 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
     if (0 != (pos = gl_search(rel->vars,old,(CmpFunc)CmpP)))
       gl_store(rel->vars,pos,(VOIDPTR)new);
 }
+#endif
 
 #if 0 /* unused static function, was part of the blackbox stuff, but disused now, apparently -- JP */
 /* After the instance list has been updated, we must recollect

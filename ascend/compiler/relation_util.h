@@ -289,10 +289,12 @@ extern int ArgsForRealToken(enum Expr_enum ex);
 	@TODO this stuff is not complete
 */
 
+#if 0
 #define OpCode_Lhs(r)       ((int *)(ROPCODE(r).lhs))
 #define OpCode_Rhs(r)       ((int *)(ROPCODE(r).rhs))
 #define OpCodeNumberArgs(r) (ROPCODE(r).nargs)
 #define OpCodeConstants(r)  ((double *)(ROPCODE(r).constants))
+#endif
 
 /*------------------------------------------------------------------------
 	BLACK BOX RELATION PROCESSING
@@ -321,6 +323,7 @@ extern struct ExternalFunc *RelationBlackBoxExtFunc(CONST struct relation *rel);
 	GLASS BOX STUFF
 */
 
+#if 0
 /*
 	These will be called a lot so that they will all be made
 	macros. Double check that the same is true for the
@@ -331,6 +334,7 @@ extern int GlassBoxRelIndex(CONST struct relation *rel);
 extern int *GlassBoxArgs(CONST struct relation *rel);
 
 #define GlassBoxNumberArgs(r) (RGBOX(r).nargs)
+#endif
 
 /*-----------------------------------------------------------------------------
 	GENERAL STUFF FOR RELATIONS

@@ -298,7 +298,7 @@ void BinTokenDeleteReference(int btable)
           assert(cbuf!=NULL);
           sprintf(cbuf,"%s %s",g_bt_data.unlinkcommand,g_bt_data.libname);
           MSG("Deleting bintok shared library: %s",cbuf);
-          system(cbuf); /* we don't care if the delete fails */
+          (void)system(cbuf); /* we don't care if the delete fails */
           ASC_FREE(cbuf);
       }
     }
@@ -935,14 +935,14 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
         cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(srcname)+1);
         assert(cbuf!=NULL);
         sprintf(cbuf,"%s %s",unlinkcommand,srcname);
-        system(cbuf); /* we don't care if the delete fails */
+        (void)system(cbuf); /* we don't care if the delete fails */
         ASC_FREE(cbuf);
         /* trash obj */
         if(objname && strlen(objname)){
           cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(objname)+1);
           assert(cbuf!=NULL);
           sprintf(cbuf,"%s %s",unlinkcommand,objname);
-          system(cbuf); /* we don't care if the delete fails */
+          (void)system(cbuf); /* we don't care if the delete fails */
           ASC_FREE(cbuf);
         }
       }

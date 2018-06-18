@@ -1783,6 +1783,7 @@ struct ExternalFunc *RelationBlackBoxExtFunc(CONST struct relation *rel)
   For picking apart a GlassBox relation.
 */
 
+#if 0 && defined(DISUSED)
 struct ExternalFunc *RelationGlassBoxExtFunc(CONST struct relation *rel){
   assert(rel!=NULL);
   return RGBOX(rel).efunc;
@@ -1797,7 +1798,7 @@ int *GlassBoxArgs(CONST struct relation *rel){
   assert(rel!=NULL);
   return RGBOX(rel).args;
 }
-
+#endif
 
 /*------------------------------------------------------------------------------
   GENERAL RELATION QUERIES
