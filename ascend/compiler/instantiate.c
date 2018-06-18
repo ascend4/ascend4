@@ -5068,7 +5068,7 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
     if(rel_errorlist_get_find_error(&err) == unmade_instance){
       child = MakeLogRelInstance(name,FindLogRelType(),inst,statement);
       if (child==NULL){
-        WUEMPASS3(ASCERR,statement, "Unable to create expression structure");
+        WUEMPASS3(ASCERR,statement, "Unable to create logical expression structure");
         /* print a better message here if needed */
         return 1;
       }
@@ -5511,7 +5511,7 @@ int ExecuteBBOXElement(struct Instance *inst
       child = MakeRelationInstance(name,FindRelationType(),
                                    inst,statement,e_blackbox);
       if (child==NULL){
-        STATEMENT_ERROR(statement, "Unable to create expression structure");
+        STATEMENT_ERROR(statement, "Unable to create external black-box expression structure (unmade instance)");
        /* print a better message here if needed. maybe an if!makeindices moan*/
         return 1;
       }
@@ -5711,7 +5711,7 @@ static int ExecuteGlassBoxEXT(struct Instance *inst
     if(rel_errorlist_get_find_error(&err) == unmade_instance){			/* glassbox reln */
       child = MakeRelationInstance(name,FindRelationType(),inst,statement,e_glassbox);
       if (child==NULL){
-        STATEMENT_ERROR(statement, "Unable to create expression structure");
+        STATEMENT_ERROR(statement, "Unable to create glass box expression structure");
         return 1;
       }
     }else{
@@ -13135,6 +13135,7 @@ unsigned int GetInstantiationRelnFlags(void)
   return g_instantiate_relns;
 }
 
+#if 0 && defined(DISUSED)
 /**
 	This is the version of instantiate to deal with with 'patched'
 	types. Here name is the name of the patch that is to be
@@ -13188,7 +13189,6 @@ void UpdateInstance(struct Instance *root, /* the simulation root */
     }
   }
 }
-
 
 /**
 	this function instantiates a thing of type name
@@ -13246,4 +13246,6 @@ struct Instance *InstantiatePatch(symchar *patch,
   SetInstantiationRelnFlags(oldflags);
   return result;
 }
+#endif
+
 

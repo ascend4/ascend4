@@ -562,6 +562,7 @@ struct Statement *CreateLOGREL(struct Name *n, struct Expr *logrel)
   return result;
 }
 
+#if 0 && defined(DISUSED)
 struct Statement *CreateEXTERNGlassBox(
 			       struct Name *n, CONST char *funcname,
 			       struct VariableList *vl,
@@ -580,6 +581,7 @@ struct Statement *CreateEXTERNGlassBox(
   result->v.ext.u.glass.scope = scope; /* NULL is valid */
   return result;
 }
+#endif
 
 struct Statement *CreateEXTERNBlackBox(
 			       struct Name *n, CONST char *funcname,
@@ -936,6 +938,7 @@ void DestroyStatement(struct Statement *s)
           DestroyVariableList(s->v.ext.u.method.vl);
           s->v.ext.u.method.vl = NULL;
           break;
+#if 0
         case ek_glass:
           DestroyName(s->v.ext.u.glass.nptr);
           s->v.ext.u.glass.nptr = NULL;
@@ -946,6 +949,7 @@ void DestroyStatement(struct Statement *s)
           if (s->v.ext.u.glass.scope) DestroyName(s->v.ext.u.glass.scope);
           s->v.ext.u.glass.scope = NULL;
           break;
+#endif
         case ek_black:
           DestroyName(s->v.ext.u.black.nptr);
           s->v.ext.u.black.nptr = NULL;
@@ -1133,12 +1137,14 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.ext.mode = s->v.ext.mode;
     result->v.ext.extcall = s->v.ext.extcall;
     switch (s->v.ext.mode) {
+#if 0
     case ek_glass:
       result->v.ext.u.glass.nptr = CopyName(s->v.ext.u.glass.nptr);
       result->v.ext.u.glass.vl = CopyVariableList(s->v.ext.u.glass.vl);
       result->v.ext.u.glass.data = CopyName(s->v.ext.u.glass.data);
       result->v.ext.u.glass.scope = CopyName(s->v.ext.u.glass.scope);
       break;
+#endif
     case ek_black:
       result->v.ext.u.black.nptr = CopyName(s->v.ext.u.black.nptr);
       result->v.ext.u.black.vl = CopyVariableList(s->v.ext.u.black.vl);
@@ -1770,7 +1776,7 @@ struct Name *ExternalStatNameRelationF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->t==EXT);
-  assert(s->v.ext.mode == ek_glass || s->v.ext.mode == ek_black);
+  assert(/* s->v.ext.mode == ek_glass ||*/ s->v.ext.mode == ek_black);
   return(s->v.ext.u.relation.nptr);
 }
 
@@ -1782,6 +1788,7 @@ struct Name *ExternalStatDataBlackBoxF(CONST struct Statement *s)
   return(s->v.ext.u.black.data);
 }
 
+#if 0
 struct Name *ExternalStatDataGlassBoxF(CONST struct Statement *s)
 {
   assert(s!=NULL);
@@ -1797,12 +1804,13 @@ struct Name *ExternalStatScopeGlassBoxF(CONST struct Statement *s)
   assert(s->v.ext.mode == ek_glass);
   return(s->v.ext.u.glass.scope);
 }
+#endif
 
 CONST struct VariableList *ExternalStatVlistRelationF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->t==EXT);
-  assert(s->v.ext.mode == ek_black || s->v.ext.mode == ek_glass);
+  assert(s->v.ext.mode == ek_black /* || s->v.ext.mode == ek_glass */);
   return(s->v.ext.u.relation.vl);
 }
 
@@ -2537,12 +2545,13 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     if (ExternalStatMode(s1) != ExternalStatMode(s2)) {
       return (ExternalStatMode(s1) > ExternalStatMode(s2)) ? 1 : -1;
     }
-    if (ExternalStatMode(s1) == ek_glass || ExternalStatMode(s1) == ek_black) {
+    if(/* ExternalStatMode(s1) == ek_glass || */ ExternalStatMode(s1) == ek_black) {
       ctmp = CompareNames(ExternalStatNameRelation(s1),ExternalStatNameRelation(s2));
       if (ctmp != 0) {
         return ctmp;
       }
     }
+#if 0
     if (ExternalStatMode(s1) == ek_glass) {
       ctmp = CompareNames(ExternalStatScope(s1),ExternalStatScope(s2));
       if (ctmp != 0) {
@@ -2555,6 +2564,7 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
         return ctmp;
       }
     }
+#endif
     if (ExternalStatMode(s1) == ek_black) {
       ctmp = CompareNames(ExternalStatDataBlackBox(s1),ExternalStatDataBlackBox(s2));
       if (ctmp != 0) {
@@ -2564,7 +2574,9 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     switch (ExternalStatMode(s1)) {
     case ek_method:
       return CompareVariableLists(ExternalStatVlistMethod(s1),ExternalStatVlistMethod(s2));
+#if 0
     case ek_glass:
+#endif
     case ek_black:
       return CompareVariableLists(ExternalStatVlistRelation(s1),ExternalStatVlistRelation(s2));
     default:

@@ -85,8 +85,10 @@ enum FlowControl {
 
 enum ExternalKind {
   ek_method = 0, /**< method call */
-  ek_glass = 1, /**< glass box relations */
   ek_black = 2 /**< black box relations */
+#if 0
+  ek_glass = 1, /**< glass box relations */
+#endif
 };
 
 /** Statement types. */
@@ -309,11 +311,13 @@ struct StateExternalMethod {
 	struct VariableList *vl; /**< list of arguments */
 };
 
+#if 1
 /** Black or glass box equation model. */ 
 struct StateExternalRelation {
   struct Name *nptr;        /**< name of the statement */
   struct VariableList *vl;  /**< list of arguments */
 };
+#endif
 
 /** Black box equation model. Top must match StateExternalRelation. */
 struct StateExternalBlackBox {
@@ -330,7 +334,8 @@ with a loop index name BBOX_RESERVED_INDEX
 */
 #define BBOX_RESERVED_INDEX "?BBOX_OUTPUT"
 #define BBOX_RESERVED_INDEX_LEN 12
-  
+
+#if 0  
 /** Glassbox equation model. Top must match StateExternalRelation. */ 
 struct StateExternalGlassBox {
   struct Name *nptr;        /**< name of the statement */
@@ -338,7 +343,7 @@ struct StateExternalGlassBox {
   struct Name *data;        /**< additional user data */
   struct Name *scope;       /**< scope to add the external relations for glassboxes */
 };
-  
+#endif
 
 /** used for external statements */
 struct StateExternal {
@@ -346,7 +351,9 @@ struct StateExternal {
   CONST char *extcall;      /**< name of the function */
   union {
     struct StateExternalRelation relation; /* which is either glass or black */
+#if 0
     struct StateExternalGlassBox glass;
+#endif
     struct StateExternalBlackBox black;
     struct StateExternalMethod method;
   } u;

@@ -271,7 +271,9 @@ int SuppressNullInstance(CONST struct TypeDescription *d)
   case dummy_type:
   case model_type:
     return (SUP(ISA) || SUP(ALIASES));
+#if 0
   case patch_type:
+#endif
   case array_type:
     return 0;
   }

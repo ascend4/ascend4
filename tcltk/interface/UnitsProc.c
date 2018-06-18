@@ -690,12 +690,14 @@ dim_type *Unit_FindRelDim(CONST struct Instance *i)
       /* should come off lhs var of blackbox */
     }
     return (dim_type *)WildDimension();
+#if 0
   case e_glassbox:
   case e_opcode:
     if (g_check_dimensions_noisy) {
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Dimensionality checking not supported for these relns");
     }
     return (dim_type *)WildDimension();
+#endif
   case e_token:
     break;
   default:

@@ -166,9 +166,11 @@ struct Instance *SimsCreateInstance(symchar *type,
     result = Instantiate(type,name,0,defmethod);
     SetInstantiationRelnFlags(oldflags);
     break;
+#if 0
   case e_patch:
     result = InstantiatePatch(type,name,0);
     break;
+#endif
   default:
     FPRINTF(stderr,"Warning: doing standard compilation\n");
     result = Instantiate(type,name,0,defmethod);

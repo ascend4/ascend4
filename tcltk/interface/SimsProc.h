@@ -117,6 +117,7 @@ extern int Asc_SimsSaveInstanceCmd(ClientData cdata, Tcl_Interp *interp,
  *  Registered as : __sims_saveinst qlfdid file
  */
 
+#if 0 && defined(DISUSED)
 extern int Asc_SimsUpdateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
                                      int argc, CONST84 char *argv[]);
 /**<
@@ -127,6 +128,7 @@ extern int Asc_SimsUpdateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
  *
  *  Registered as : __sims_update qlfdid <file,type>;
  */
+#endif
 
 extern int Asc_SimsDestroySimulationCmd(ClientData cdata, Tcl_Interp *interp,
                                         int argc, CONST84 char *argv[]);

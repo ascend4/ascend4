@@ -361,7 +361,7 @@ static void CollectNote(struct Note *);
 %token MAXIMIZE_TOK MAXINTEGER_TOK MAXREAL_TOK METHODS_TOK METHOD_TOK MINIMIZE_TOK MODEL_TOK
 %token NOT_TOK NOTES_TOK
 %token OF_TOK OPTION_TOK OR_TOK OTHERWISE_TOK OUTPUT_TOK
-%token PATCH_TOK PROD_TOK PROVIDE_TOK
+%token /* PATCH_TOK */ PROD_TOK PROVIDE_TOK
 %token REFINES_TOK REPLACE_TOK REQUIRE_TOK RETURN_TOK RUN_TOK
 %token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK
 %token THEN_TOK TRUE_TOK
@@ -452,7 +452,7 @@ definition:
     | atom_def
     | model_def
     | definition_def
-    | patch_def
+/*    | patch_def */
     | units_def
     | global_def
     | error
@@ -1003,14 +1003,14 @@ optional_parameter_reduction:
 	}
     ;
 
+/*
 patch_def:
     patch_head fstatements methods end ';'
 	{
 	  struct TypeDescription *def_ptr;
 	  if (($4 != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
-	    /* all identifier_t are from symbol table, so ptr match
-	     * is sufficient for equality.
-	     */
+	    // all identifier_t are from symbol table, so ptr match
+	    // is sufficient for equality.
 	    WarnMsg_MismatchEnd("PATCH", SCP(g_type_name),
 	                        $4, SCP(g_type_name));
 	  }
@@ -1025,10 +1025,9 @@ patch_def:
 	  if (def_ptr != NULL) {
 	    AddType(def_ptr);
 	  } else {
-	    /* CreatePatchTypeDef is responsible for freeing (if needed)
-	     * all args sent to it so we don't have to here.
-	     * in particular $2 $3
-	     */
+	    // CreatePatchTypeDef is responsible for freeing (if needed)
+	    // all args sent to it so we don't have to here.
+	    // in particular $2 $3
 	    ErrMsg_NullDefPointer(SCP(g_type_name));
 	  }
 	  g_type_name = g_refines_name = g_proc_name = NULL;
@@ -1038,15 +1037,14 @@ patch_def:
 patch_head:
     PATCH_TOK IDENTIFIER_TOK FOR_TOK IDENTIFIER_TOK ';'
 	{
-	  /*
-	   * A patch definition looks just like a model def.
-	   * with the original name <=> refine name.
-	   */
+	  // A patch definition looks just like a model def.
+	  // with the original name <=> refine name.
 	  g_type_name = $2;
 	  g_refines_name = $4;
 	  g_header_linenum = LineNum();
 	}
     ;
+*/
 
 universal:
     /* empty */
@@ -2975,8 +2973,10 @@ TokenAsString(unsigned long token)
     return "MODEL";
   case NOTES_TOK:
     return "NOTES";
+#if 0
   case PATCH_TOK:
     return "PATCH";
+#endif
   case SELECT_TOK:
     return "SELECT";
   case SWITCH_TOK:

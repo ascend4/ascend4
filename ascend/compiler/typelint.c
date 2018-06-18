@@ -310,7 +310,7 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
     switch(StatementType(s)) {
     case ISA:
       d = FindType(GetStatType(s));
-      if (GetBaseType(d)== model_type || GetBaseType(d) == patch_type) {
+      if (GetBaseType(d)== model_type /* || GetBaseType(d) == patch_type */ ) {
         /* check arg list length. can't do types until after. */
         if (GetModelParameterCount(d) != SetLength(GetStatTypeArgs(s))) {
           if (TLINT_ERROR) {
@@ -406,7 +406,7 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
       break;
     case IRT:
       d = FindType(GetStatType(s));
-      if (GetBaseType(d)== model_type || GetBaseType(d) == patch_type) {
+      if (GetBaseType(d)== model_type /* || GetBaseType(d) == patch_type */) {
         /* check arg list length. can't do types until after. */
         if (GetModelParameterCount(d) != SetLength(GetStatTypeArgs(s))) {
           if (TLINT_ERROR) {
@@ -592,8 +592,10 @@ enum typelinterr TypeLintIllegalParamStats(FILE * fp,
         rval = DEF_ILLEGAL_PARAM;
         TypeLintError(fp,s,rval);
         break;
-      case model_type:
+#if 0
       case patch_type:
+#endif
+      case model_type:
         /* check arg list length. can't do types until after. */
         if ( SetLength(GetStatTypeArgs(s)) != 0L) {
           if (TLINT_ERROR) {

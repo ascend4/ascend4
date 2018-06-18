@@ -226,6 +226,7 @@ void WriteDefinition(FILE *f, struct TypeDescription *desc)
   case dummy_type:
     FPRINTF(f," %s (* no properties *)\n",BASE_UNSELECTED);
     break;
+#if 0
   case patch_type:
     FPRINTF(f,"PATCH %s FOR %s;\n",
 	    SCP(GetName(desc)),SCP(GetName(GetPatchOriginal(desc))));
@@ -234,6 +235,7 @@ void WriteDefinition(FILE *f, struct TypeDescription *desc)
     WriteProcedureList(f,GetInitializationList(desc));
     FPRINTF(f,"END %s;\n\n",SCP(GetName(desc)));
     break;
+#endif
   case real_type:
   case boolean_type:
   case integer_type:
@@ -419,8 +421,10 @@ void WriteDiffDefinition(FILE *f, struct TypeDescription *desc)
   case array_type:
   case dummy_type:
     break;
+#if 0
   case patch_type:
     break;
+#endif
   case real_constant_type:
   case boolean_constant_type:
   case integer_constant_type:
@@ -441,7 +445,7 @@ void WriteDiffDefinition(FILE *f, struct TypeDescription *desc)
 /*
  * array of symbol table entries we need.
  */
-static symchar *g_symbols[17];
+static symchar *g_symbols[16];
 #define G_BASE_SYMBOL_NAME 	g_symbols[0]
 #define G_BASE_REAL_NAME	g_symbols[1]
 #define G_BASE_INTEGER_NAME	g_symbols[2]
@@ -458,7 +462,9 @@ static symchar *g_symbols[17];
 #define G_BASE_EXT_NAME 	g_symbols[13]
 #define G_BASE_MODEL_NAME 	g_symbols[14]
 #define G_BASE_ARRAY_NAME 	g_symbols[15]
+#if 0
 #define G_BASE_PATCH_NAME 	g_symbols[16]
+#endif
 
 symchar *GetBaseTypeName(enum type_kind bt)
 {
@@ -493,8 +499,10 @@ symchar *GetBaseTypeName(enum type_kind bt)
     return G_BASE_MODEL_NAME;
   case array_type:
     return G_BASE_ARRAY_NAME;
+#if 0
   case patch_type:
     return G_BASE_PATCH_NAME;
+#endif
   default:
     return G_BASE_EXT_NAME; /* not a type we recognize */
   }
@@ -519,8 +527,9 @@ void InitBaseTypeNames(void)
   G_BASE_EXT_NAME 	= AddSymbol(BASE_EXT_NAME);
   G_BASE_MODEL_NAME	= AddSymbol("MODEL");
   G_BASE_ARRAY_NAME	= AddSymbol("ARRAY");
+#if 0
   G_BASE_PATCH_NAME	= AddSymbol("PATCH");
-
+#endif
   BaseType(NULL);
   /* FPRINTF(ASCERR,"...INIT BASE TYPE NAMES\n"); */
 }

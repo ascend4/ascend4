@@ -159,8 +159,7 @@ void relman_get_incidence(struct rel_relation *rel, var_filter_t *filter
   }
 }
 
-
-#ifdef RELOCATE_GB_NEEDED
+#if 0 && defined(RELOCATE_GB_NEEDED)
 /*
  *********************************************************************
  * Code to deal with glassbox relations processing.
@@ -170,7 +169,6 @@ void relman_get_incidence(struct rel_relation *rel, var_filter_t *filter
 static double dsolve_scratch = 0.0;		/* some workspace */
 #define DSOLVE_TOLERANCE 1.0e-08                /* no longer needed */
 
-#if 0 && defined(THIS_IS_AN_UNUSED_FUNCTION)static
 real64 *relman_glassbox_dsolve(struct rel_relation *rel
 		, struct var_variable *solvefor
 		, int *able
@@ -249,9 +247,8 @@ real64 *relman_glassbox_dsolve(struct rel_relation *rel
     return NULL;
   }
 }
-#endif
 
-#if 0 && defined(THIS_IS_AN_UNUSED_FUNCTION)
+
 static
 real64 relman_glassbox_eval(struct rel_relation *rel){
   int n,m,mode,result;
@@ -291,11 +288,7 @@ real64 relman_glassbox_eval(struct rel_relation *rel){
   ascfree((char *)f);
   return value;
 }
-#endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
-
-#define BROKENKIRK 0
-#if BROKENKIRK
 /* fills filter passing gradient elements to matrix */
 /* this needs to be buried on the compiler side. */
 void relman_map_grad2mtx( struct rel_relation *rel, var_filter_t *filter,
@@ -364,12 +357,7 @@ real64 relman_glassbox_diffs( struct rel_relation *rel,
   ascfree((char *)f);
   return value;
 }
-
-#else
-#define relman_glassbox_diffs(rel,filter,mtx) abort()
 #endif
-
-#endif /* RELOCATE_GB_NEEDED */
 
 
 real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){

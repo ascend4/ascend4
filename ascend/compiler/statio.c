@@ -454,6 +454,7 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
         WriteVariableList(f,ExternalStatVlistMethod(s));
         FPRINTF(f,")\n");
         break;
+#if 0
       case ek_glass:		/* Glassbox Declarative */
         if (ExternalStatNameRelation(s)!=NULL) {
           WriteName(f,ExternalStatNameRelation(s));
@@ -469,6 +470,7 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
         }
         FPRINTF(f,")\n");
         break;
+#endif
       case ek_black:		/* Blackbox Declarative */
         if (ExternalStatNameRelation(s)!=NULL) {
           WriteName(f,ExternalStatNameRelation(s));
