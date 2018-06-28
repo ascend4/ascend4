@@ -8,12 +8,12 @@ substances and its application to oxygen", Fluid Phase Equilibria 19(3) 175-200.
 */
 
 #include "../helmholtz.h"
-#ifndef CUNIT_TEST
-
 #define OXYGEN_M 31.9988  /* kg/kmol */
 #define OXYGEN_R (8314.34/OXYGEN_M) /* J/kg/K */
 #define OXYGEN_TC 154.581 /* K */
 #define OXYGEN_RHOC (13.63*OXYGEN_M) /* kg/m3 */
+
+#ifndef CUNIT_TEST
 
 /* we use Roland Span's re-fit cp0 curve as per REFPROP 8.0, no publication cited */
 static const IdealData ideal_data_oxygen = {
@@ -153,9 +153,18 @@ void test_fluid_oxygen(void){
 	ASSERT_TOL_VAL(ideal_cp(120,6.43209699241E-1,P->data,&err),9.09800101279e2,1e-9);
 	ASSERT_TOL_VAL(ideal_cp(270,2.85140864243e-1,P->data,&err),9.1439308538e2,1e-9);
 
+	double p0 = 1.01325e5;
+	double T0 = 298.15;
+	double rho0 = p0/(OXYGEN_R*T0);
+
+	//ASSERT_TOL_VAL(ideal_h(T0,rho0,P->data,&err),0,1e-9);
+	//ASSERT_TOL_VAL(ideal_s(T0,rho0,P->data,&err),0,1e-9);
+
+//#define REALLY_TEST
 #ifdef REALLY_TEST
 	helm_run_test_cases(P, ntd, td, 'C');
 #else
+	fprintf(stderr,"NOTE: OXYGEN TESTS SKPPED\n");
 	(void)ntd; (void)td;
 #endif
 }
