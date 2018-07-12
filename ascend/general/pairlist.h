@@ -86,7 +86,7 @@ ASC_DLLSPEC unsigned long pairlist_append(struct pairlist_t * pl, void *key, voi
 
 ASC_DLLSPEC unsigned long pairlist_append_unique(struct pairlist_t * pl, void *key, void * value);
 /**<
- *  Add a pair to the list. Uniqueness of key guaranteed. If duplicate,
+ *  Add a pair to the list. Uniqueness of key guaranteed. If key is a duplicate,
  *  value is ignored. Complexity O(n).
  *  @return the key index.
  */

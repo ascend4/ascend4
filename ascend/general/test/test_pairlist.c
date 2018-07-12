@@ -59,6 +59,7 @@ static void test_setappend(void){
 	int l = pairlist_length(pl1);
 	CU_TEST(l==3);
 	CU_TEST(3==pairlist_append_unique(pl1,"C","value4"));
+	CU_TEST(4==pairlist_append_unique(pl1,"F","value7"));
 	void *old;
 	old = pairlist_set(pl1,"C","value5");
 	CU_TEST(strcmp(old,"value3")==0);
@@ -74,7 +75,43 @@ static void test_setappend(void){
 	teardown();
 	MEMUSED(0);
 }
+	
 	//------------------------
+
+static void test_clear(void){
+	setup();
+	struct pairlist_t *pl1 = pairlist_create(10);
+	pairlist_append(pl1,"A","value1");
+	pairlist_append(pl1,"B","value2");
+	pairlist_append(pl1,"C","value3");
+	CU_TEST(3==pairlist_length(pl1));
+	pairlist_clear(pl1);
+	CU_TEST(0==pairlist_length(pl1));
+	pairlist_destroy(pl1);
+	teardown();
+}
+
+	//------------------------
+
+static void test_vad(void){
+	setup();
+	struct pairlist_t *pl1 = pairlist_create(10);
+	pairlist_append(pl1,"A","value1");
+	pairlist_append(pl1,"B","value2");
+	pairlist_append(pl1,"C","value3");
+	CU_TEST(3==pairlist_length(pl1));
+
+	struct gl_list_t *vl = pairlist_values_and_destroy(pl1);
+
+	CU_TEST(3==gl_length(vl));
+	CU_TEST(0==strcmp((char *)gl_fetch(vl,1),"value1"));
+	CU_TEST(0==strcmp((char *)gl_fetch(vl,2),"value2"));
+	CU_TEST(0==strcmp((char *)gl_fetch(vl,3),"value3"));
+	gl_destroy(vl);
+
+	teardown();
+}
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -82,7 +119,9 @@ static void test_setappend(void){
 
 #define TESTS(T) \
 	T(createdestroy) \
-	T(setappend)
+	T(setappend) \
+	T(clear) \
+	T(vad)
 
 REGISTER_TESTS_SIMPLE(general_pairlist, TESTS);
 
