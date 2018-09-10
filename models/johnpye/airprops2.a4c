@@ -34,7 +34,8 @@ MODEL air_fluid REFINES thermophysical_fluid_base;
 	T_star :== 132.5 {K}; (* Kadoya et al, 10.1063/1.555744 *)
 	rho_star IS_A mass_density_constant;
 	rho_star :== 314.3 {kg/m^3}; (* Kadoya et al, 10.1063/1.555744 *)
-	(* coefficients of zero-pressure ideal gas equation *)
+
+	(* coefficients of zero-pressure ideal gas equation: Cengel 7e, Table A-2 (molar heat capacity) *)
 	n IS_A integer_constant;
 	n :== 4;
 	c[0..n-1] IS_A real_constant;
@@ -50,7 +51,10 @@ MODEL air_fluid REFINES thermophysical_fluid_base;
 	h_cor IS_A specific_enthalpy;
 	s_cor IS_A specific_entropy;
 
+	(* enthalpy is the integral of cp(T)*dT over a temperature range, with h_cor being the offset for a reference condition *)
 	h_eq: (h - h_cor) * M = 1{kJ/kmol} * SUM[c[i]/(i+1) * (T/1{K})^(i+1) | i IN [0..n-1]];
+
+	(* entropy is the integral of (cp(T)/T)*dT over a temperature range, with s_cor being the offset *)
 	s_eq: (s - s_cor) * M = 1{kJ/kmol/K} * c[0]*ln(T/1{K}) - R*ln(p/1{Pa}) + SUM[c[i]/i * (T/1{K})^i | i IN [1..n-1]];
 
 	(* viscosity from Lo et al, 1966, doi:10.1021/je60031a020, with ideal gas EOS for dpdT_v *)
