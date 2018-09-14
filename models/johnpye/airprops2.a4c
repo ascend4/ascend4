@@ -55,7 +55,7 @@ MODEL air_fluid REFINES thermophysical_fluid_base;
 	h_eq: (h - h_cor) * M = 1{kJ/kmol} * SUM[c[i]/(i+1) * (T/1{K})^(i+1) | i IN [0..n-1]];
 
 	(* entropy is the integral of (cp(T)/T)*dT over a temperature range, with s_cor being the offset *)
-	s_eq: (s - s_cor) * M = 1{kJ/kmol/K} * c[0]*ln(T/1{K}) - R*ln(p/1{Pa}) + SUM[c[i]/i * (T/1{K})^i | i IN [1..n-1]];
+	s_eq: (s - s_cor) * M = 1{kJ/kmol/K} * c[0]*ln(T/1{K}) - R*M*ln(p/1{Pa}) + SUM[c[i]/i * (T/1{K})^i | i IN [1..n-1]];
 
 	(* viscosity from Lo et al, 1966, doi:10.1021/je60031a020, with ideal gas EOS for dpdT_v *)
 	mustar IS_A viscosity;
@@ -97,22 +97,29 @@ METHODS
 		h.lower_bound := -1e5 {kJ/kg};
 		s.lower_bound := -1e5 {kJ/kg/K};
 		u.lower_bound := -1e5 {kJ/kg};
+		T.upper_bound := 2000 {K};
+		T.lower_bound := 20 {K};
+		(* h.upper_bound := 2046.04 {kJ/kg}; *)
+		(* h.lower_bound := 0 {kJ/kg}; -- maybe necessary?? *)
 	END bound_self;
 	METHOD default;
 		RUN bound_self;
+		(* FIXME make same reference conditions for both h and s *)
 		FIX h_cor := 4.68596651709 {kJ/kg}; (* gives h=300.19 kJ/kg at T=300 K *)
-		FIX s_cor := -3.85964833492 {kJ/kg/K}; (* gives s=1.70203 at T=300 K, p=1 Pa *)
-		h := 10 {kJ/kg};
+		FIX s_cor := 4.61372432101  {kJ/kg/K}; (* gives s=6.8484 at T=293.15 K, p=1 bar *)
+		h := 200 {kJ/kg};
 	END default;
 	METHOD on_load;
 		RUN ClearAll;
 		RUN default;
-		FIX T := 650{K};
-		FIX p := 1 {Pa};
+		FIX T := 560 {K};
+		FIX p := 20 {bar};
+
 	END on_load;
 	METHOD self_test;
-		ASSERT abs(h - 659.84 {kJ/kg}) < 2.1 {kJ/kg};
-		ASSERT abs(s - 2.49364 {kJ/kg/K}) < 0.01 {kJ/kg/K};
+		(* these values check against Cengel, table A-17 *)
+		ASSERT abs(h - 565.17 {kJ/kg}) < 2.1 {kJ/kg};
+		ASSERT abs((s - 6.8484 {kJ/kg/K}) - (2.33685 {kJ/kg/K} - 1.68 {kJ/kg/K} - R*ln(20./1.))) < 0.01 {kJ/kg/K};
 	END self_test;
 END air_fluid;
  
