@@ -23,31 +23,39 @@ vars.Add(
 	,["-Wall"]
 )
 
+vars.Add('WITH_ASCEND',"Attempt to include ASCEND support",1)
+
 env = Environment(
 	toolpath=['scons']
 	,tools = [deft ,'substinfile','swig']
-	,ENV={"TERM":os.environ.get('TERM'), "PATH":os.environ.get('PATH')}
+	,ENV={"TERM":os.environ.get('TERM'), "PATH":os.environ.get('PATH'), "LD_LIBRARY_PATH":os.environ.get("LD_LIBRARY_PATH")}
 	,HOST_PREFIX=os.environ.get('HOST_PREFIX')
 )
 
 Help(vars.GenerateHelpText(env))
 vars.Update(env)
 
-if WhereIs('ascend-config'):
-	env.ParseConfig(['ascend-config','--libs','--cppflags'])
-	env['WITH_ASCEND'] = 1
+if env['WITH_ASCEND']:
+	if WhereIs('ascend-config'):
+		env.ParseConfig(['ascend-config','--libs','--cppflags'])
+		env['WITH_ASCEND'] = 1
+	else:
+		print "WARNING: no ascend-config in path, won't build ASCEND wrapper"
+		env['WITH_ASCEND'] = 0
 else:
-	print "WARNING: no ascend-config in path, won't build ASCEND wrapper"
-	env['WITH_ASCEND'] = 0
+	print "NOTE: ASCEND support will not be included"
 
 env.AppendUnique(
 	CFLAGS=['-g','-Wall']
 )
 
+print "CPPPATH =",env['CPPPATH']
+
 env['EXTLIB_SUFFIX'] = "_ascend" + env.subst("$SHLIBSUFFIX")
 env['EXTLIB_PREFIX'] = env.subst("$SHLIBPREFIX")
 env['extfns'] = []
 env['WITH_PYTHON'] = 1
+env['HAVE_CUNIT'] = 0
 
 env.SConscript("SConscript",["env"])
 

@@ -1,28 +1,36 @@
 Import('fprops_env')
+test_env = fprops_env.Clone()
 
 testsrcs = ['ideal.c','ph.c','sat1.c','sat.c','visc.c']
 
 #print "srcs =",srcs
 
 #for s in testsrcs:
-#	fprops_env.Program([s] + fprops_env['shobjs']
+#	test_env.Program([s] + test_env['shobjs']
 #		,LIBS = ["m"]
 #		,LIBPATH = "#"
 #	)
 
-if fprops_env['HAVE_CUNIT']:
+#print "CUNIT_CPPPATH =",test_env.get("CUNIT_CPPPATH")
+
+if test_env['HAVE_CUNIT']:
+	test_env.AppendUnique(
+		CPPPATH=test_env.get('CUNIT_CPPPATH',[])
+		,LIBPATH=test_env.get('CUNIT_LIBPATH',[])
+	)
+
 	tobjs = []
-	for f in fprops_env['fluids']:
-		tobjs += [fprops_env.SharedObject(f
+	for f in test_env['fluids']:
+		tobjs += [test_env.SharedObject(f
 			,CPPDEFINES=['-DTEST','-DCUNIT_TEST']
 			,OBJPREFIX='#/test/cutest-fluid-'
 		)]
 
 	tobjs += [
-		fprops_env.SharedObject('cutest.c',OBJPREFIX='#/test/cutest-')
-		, fprops_env.SharedObject('../test.c')
+		test_env.SharedObject('cutest.c',OBJPREFIX='#/test/cutest-')
+		, test_env.SharedObject('../test.c')
 	]
 	
-	fprops_env.Program('cutest', fprops_env['shobjs'] + tobjs
+	test_env.Program('cutest', test_env['shobjs'] + tobjs
 		,LIBS = ['m','cunit'] 
 	)
