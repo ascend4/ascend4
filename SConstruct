@@ -2420,6 +2420,9 @@ if with_cunit:
 	if not conf.CheckCUnit():
 		without_cunit_reason = 'CUnit not found'
 		with_cunit = False
+		env['HAVE_CUNIT'] = False
+	else:
+		env['HAVE_CUNIT'] = True	
 		#print "CUNIT NOT FOUND, LIBS=",conf.env.get('LIBS')
 
 # DMALLOC
@@ -2870,7 +2873,7 @@ test_env.Append(
 	CPPPATH="#"
 )
 
-if with_cunit:
+if with_cunit and env['HAVE_CUNIT']:
 	testdirs = ['general','solver','utilities','linear','compiler','system','packages','integrator']
 	testsrcs = []
 	for testdir in testdirs:
@@ -2880,11 +2883,10 @@ if with_cunit:
 	test_env['TESTDIRS'] = testdirs
 
 	#print "TESTSRCS =",testsrcs
-		
+	
 	test_env.SConscript(['test/SConscript'],'test_env')
 
-	env.Alias('test',[env.Dir('test')])
-	
+	env.Alias('test',[env.Dir('test')])	
 else:
 	print "Skipping... CUnit tests aren't being built:",without_cunit_reason
 
