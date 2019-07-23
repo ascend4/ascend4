@@ -1,5 +1,11 @@
 env = Environment()
 
+vars = Variables()
+
+vars.Add(BoolVariable('TEST',"Build test executable",0))
+
+vars.Update(env)
+
 env.Append(
 	CPPPATH=["..","#"]
 	,LIBPATH=["..","/usr/lib/x86_64-linux-gnu/omc/"]
@@ -9,7 +15,7 @@ env.Append(
 
 # FIXME we should link to a 'vanilla' FPROPS shared libary, not fprops_ascend, which is intended for linking from ASCEND
 
-if 1:
+if not env['TEST']:
 	env.SharedLibrary("fprops_mo",['fprops_mo.c']
 		,LINKFLAGS=['-fPIC']
 		,LIBS=['fprops','m']

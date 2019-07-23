@@ -1,5 +1,4 @@
 import DyMat
-from pylab import *
 import sys
 import glob
 
@@ -15,19 +14,29 @@ else:
 
 D = DyMat.DyMatFile(fn)
 
+plots_made = 0
 for B in D.blocks():
 	print "block %d" % (B,)
 	print D.names(B)
 	t, tname, tdesc = D.abscissa(2)
 	print "indep",tname
-	subplots(len(D.names(B)),1)
-	for i,n in enumerate(D.names(B)):
-		subplot(len(D.names(B)),1,i+1)
-		plot(t,D[n],label=n)
-		legend()
+	print "size",D.size(B)
+	if D.size(B) <= 2:
+		for i,n in enumerate(D.names(B)):
+			print "  %s =" % (n), D[n]
+	else:
+		from pylab import *
+		subplots(len(D.names(B)),1)
+		for i,n in enumerate(D.names(B)):
+			subplot(len(D.names(B)),1,i+1)
+			plot(t,D[n],label=n)
+			legend()
+			plots_made = 1
 
-xlabel(tname)
-show()
+if plots_made:
+	xlabel(tname)
+	show()
+
 #print "Loaded file '%s'" % fn
 #print D.names()
 
