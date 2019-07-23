@@ -23,7 +23,7 @@ vars.Add(
 	,["-Wall"]
 )
 
-vars.Add('WITH_ASCEND',"Attempt to include ASCEND support",1)
+vars.Add(BoolVariable('WITH_ASCEND',"Attempt to include ASCEND support",1))
 
 env = Environment(
 	toolpath=['scons']
@@ -49,7 +49,7 @@ env.AppendUnique(
 	CFLAGS=['-g','-Wall']
 )
 
-print "CPPPATH =",env['CPPPATH']
+print "CPPPATH =",env.get('CPPPATH')
 
 env['EXTLIB_SUFFIX'] = "_ascend" + env.subst("$SHLIBSUFFIX")
 env['EXTLIB_PREFIX'] = env.subst("$SHLIBPREFIX")

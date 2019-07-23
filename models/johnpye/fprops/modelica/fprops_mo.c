@@ -2,7 +2,11 @@
 #include <sat.h>
 #include <fluids.h>
 
-#include <omc/c/ModelicaUtilities.h>
+#ifdef USE_MODELICA_ERROR
+# include <omc/c/ModelicaUtilities.h>
+#else
+# include <stdio.h>
+#endif
 
 // probably we can find a way to pass the fluid name as a parameter...?
 double Tsat_p_Na(double p);
@@ -17,8 +21,11 @@ double Tsat_p_Na(double p){
 	fprops_sat_p(p, &T_sat, &rho_f, &rho_g, D, &err);
 	if(err){
 		// fprops_destroy(...)
+#ifdef USE_MODELICA_ERROR		
 		ModelicaError(fprops_error(err)); // does not return
-		//ModelicaError("something happened"); // does not return
+#else
+		fprintf(stderr,"ERROR: %s",fprops_error(err));
+#endif
 	}
 
 	return T_sat;
