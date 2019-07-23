@@ -1,0 +1,22 @@
+env = Environment()
+
+env.Append(
+	CPPPATH=["..","#"]
+	,LIBPATH=["..","/usr/lib/x86_64-linux-gnu/omc/"]
+)
+
+#env.SharedLibrary("fprops_mo",['fprops_mo.c','../sat.c','../fluids.c','../helmholtz.c','../fluids/carbondioxide.c'])
+
+# FIXME we should link to a 'vanilla' FPROPS shared libary, not fprops_ascend, which is intended for linking from ASCEND
+
+if 0:
+	env.SharedLibrary("fprops_mo",['fprops_mo.c']
+		,LIBS=['fprops_ascend','m','SimulationRuntimeFMI','pthread']
+	)
+else:
+	env.Program("fprops_mo",['fprops_mo.c']
+		,CPPDEFINES=['TEST']
+		,LIBS=['fprops_ascend','m','SimulationRuntimeFMI','pthread']
+	)
+
+# ,'../sat.c','../fluids.c','../helmholtz.c','../fluids/carbondioxide.c','../color.c','../ideal.c','../fprops.c','../zeroin.c','../pengrob.c']
