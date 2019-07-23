@@ -9,8 +9,9 @@ env.Append(
 
 # FIXME we should link to a 'vanilla' FPROPS shared libary, not fprops_ascend, which is intended for linking from ASCEND
 
-if 0:
+if 1:
 	env.SharedLibrary("fprops_mo",['fprops_mo.c']
+		,LINKFLAGS=['-fPIC']
 		,LIBS=['fprops_ascend','m','SimulationRuntimeFMI','pthread']
 	)
 else:
