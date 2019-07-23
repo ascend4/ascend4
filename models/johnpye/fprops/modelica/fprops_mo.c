@@ -3,6 +3,7 @@
 #include <fluids.h>
 #include <solve_ph.h>
 
+//#define USE_MODELICA_ERROR
 #ifdef USE_MODELICA_ERROR
 # include <omc/c/ModelicaUtilities.h>
 #else

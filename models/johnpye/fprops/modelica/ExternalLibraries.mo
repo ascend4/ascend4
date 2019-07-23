@@ -17,25 +17,20 @@ model ExternalLibraries
       annotation(Library="libfprops_mo.so", LibraryDirectory="modelica://ExternalLibraries");
   end T_ph_Na;
 
-  parameter SI.SpecificEnthalpy h_in = 500e3;
+  // heating up of a mass of fluid
+
+  parameter SI.HeatFlowRate Qdot = 10e6;
   parameter SI.Temperature T_in = 200 + 273.15;
-  parameter SI.HeatFlowRate Qdot = 10;
-  parameter SI.MassFlowRate mdot = 1;
   parameter SI.Pressure p = 1e5;
+  parameter SI.Mass m = 1000.;
 
-  SI.SpecificEnthalpy h_out;
-  SI.Energy E(start=0.); // fixme need to check isobaric internal energy/enthalpy
-  SI.Mass m(start=1000.,fixed=true);
+  SI.Energy E; // fixme need to check isobaric internal energy/enthalpy
   SI.Temperature T(start=100+273.15, fixed=true);
-  SI.SpecificEnthalpy h;
-
-initial equation
-  T_in = T_ph_Na(p,h_in);
+  SI.SpecificEnthalpy h(start=500e3);
 
 equation
-  der(m) = mdot;
-  der(E) = mdot*h_in;
-  h = E / m;
+  der(E) = Qdot;
+  h * m = E;
   T = T_ph_Na(p,h);  
 end ExternalLibraries;
 
