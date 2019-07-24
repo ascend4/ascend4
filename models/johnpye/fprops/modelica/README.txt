@@ -6,6 +6,10 @@ OpenModelica. So far it is just proof of concept showing how FPROPS property
 calculations can be called from Modelica; it is by no means a comprehensive
 wrapper for fully-fledged simulation work.
 
+It is assumped that you have OpenModelica already installed. Our process for 
+that is given here: 
+https://github.com/SolarTherm/SolarTherm/wiki/Building-SolarTherm
+
 To run the example,
 
 svn co http://svn.ascend4.org/trunk/models/johnpye/fprops
@@ -57,6 +61,13 @@ https://fprops.org/
   properties of pure fluids using accurate Helmholtz correlations as well as
   less accurate correlations such as Peng-Robinson. It has wrappers to allow
   its use with Python and the modelling language ASCEND (https://ascend4.org/)
+
+DyMat
+https://bitbucket.org/jraedler/dymat/src/master/
+https://bitbucket.org/jraedler/dymat/src/master/doc/DyMat-Guide.pdf
+* This is a Python tool used by 'simpleplot.py' to extract results from the
+  *_res.mat files produced by 'omc', the OpenModelica compiler and resulting
+  model executables.
 
 -- 
 John Pye
