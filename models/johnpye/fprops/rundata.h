@@ -29,6 +29,8 @@ Data declarations as provided in input files are given in filedata.h
 /* TODO remove this dependency eventually (some helmholtz data objects are not yet being copied into new structures*/
 #include "filedata.h"
 
+typedef struct PureFluid_struct PureFluid;
+
 /** Power terms for phi0 (including polynomial) */
 typedef struct Cp0RunPowTerm_struct{
 	double a;
@@ -78,13 +80,18 @@ typedef struct PengrobRunData_struct{
 	double kappa; /** parameter used in a(T) */
 } PengrobRunData;
 
+typedef struct IncompRunData_struct{
+	DensityData rho;
+} IncompRunData;
+
 typedef union CorrelationUnion_union{
 	HelmholtzRunData *helm;
 	PengrobRunData *pengrob;
+	IncompRunData *incomp;
 	/* maybe more later */
 } CorrelationUnion;
 
-/** All runtime 'core' data for all possible correlations, with exception of 
+/** All runtime 'core' data for all possible correlations, with exception of
 correlation-type-ID, function pointers and metadata (URLs, publications etc)
 
 TODO FluidData (or PureFluid?) could/should be extended to include the following
@@ -94,15 +101,15 @@ frequently-calculated items:
 	- accurate saturation curve data (interpolation/spline/something like that)
 	- solutions of iterative solver results, eg (p,h) pairs.
 
-This data would be held at this level unless it is correlation-specific in 
+This data would be held at this level unless it is correlation-specific in
 nature, in which case it would belong in lower-level rundata structures.
 
 For fluids without phase change (incompressible, ideal), we
 	- set T_c to zero,
 	- use a value of 1 K for Tstar
 	- provide a _sat SatEvalFn that always returns an error.
-...but maybe there's a better way. It's up to the particular PropEvalFn to 
-make use of Tstar or T_c as desired, but this data is stored here 
+...but maybe there's a better way. It's up to the particular PropEvalFn to
+make use of Tstar or T_c as desired, but this data is stored here
 */
 typedef struct FluidData_struct{
 	/* common data across all correlations */
@@ -122,11 +129,65 @@ typedef struct FluidData_struct{
 } FluidData;
 
 
+
+/**
+	State object for FPROPS. This struct allows user-friendly API in a similar
+	way to in freesteam, but supports different fluid types and correlations,
+	and might be extensible to support fluid mixtures.
+
+	TODO if we've got a saturated state then we almost certainly have calculated
+	rhof, rhog, p. They're expensive, so we should save them in this state
+	struct, too, or else find some other way to cache them.
+
+	TODO perhaps eventually we can different different correlations using
+	different independent variables, in which case this state could be modified/
+	expanded/improved.
+*/
+
+#if 0
+typedef enum FluidStateType_enum{
+	FPROPS_STATE_TRHO /* helholtz, pengrob, ideal... compressible fluids */
+	,FPROPS_STATE_TP /* needed for incompressible fluids */
+} FluidStateType;
+#endif
+
+typedef struct FluidStateTrho_struct{
+	double T;
+	double rho;
+}FluidStateTrho;
+
+typedef struct FluidStateTp_struct{
+	double T;
+	double p;
+}FluidStateTp;
+
+/** Union of all possible EOS data structures */
+typedef union FluidStateUnion_union{
+	FluidStateTrho Trho;
+	FluidStateTp Tp; // applicable to incompressible mixtures
+	/* maybe eventually this will also be able to contain mixture states...? */
+	/* NOTE that this union doesn't know which data it is storing; the form of data depends on the type of FluidData. */
+} FluidStateUnion;
+
+typedef struct FluidState2_struct{
+	FluidStateUnion vals;
+	const PureFluid *fluid; ///< pointer to fluid description and associated functions
+} FluidState2;
+
 /* Definition of a fluid property function pointer */
-typedef double PropEvalFn(double T,double rho,const FluidData *data, FpropsError *err);
+typedef double PropEvalFn2(FluidStateUnion vals,const FluidData *data, FpropsError *err);
+
+typedef double PropEvalFn(double T, double rho, const FluidData *data, FpropsError *err);
+
+
 
 /** @return psat */
 typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *data, FpropsError *err);
+
+typedef enum PhaseBehaviour_enum{
+	FPROPS_SINGLEPHASE
+	,FPROPS_VLE
+} PhaseBehaviour;
 
 /**
 	Structure containing all the necessary data and metadata for run-time
@@ -137,24 +198,25 @@ typedef struct PureFluid_struct{
 	const char *source;
 	EosType type;
 	FluidData *data; // everything we need at runtime in the following functions should be in here
-	//Pointers to departure functions
-	PropEvalFn *p_fn;
-	PropEvalFn *u_fn;
-	PropEvalFn *h_fn;
-	PropEvalFn *s_fn;
-	PropEvalFn *a_fn;
-	PropEvalFn *cv_fn;
-	PropEvalFn *cp_fn;
-	PropEvalFn *w_fn;
-	PropEvalFn *g_fn;
-	PropEvalFn *alphap_fn;
-	PropEvalFn *betap_fn;
-	PropEvalFn *dpdrho_T_fn; // this derivative is required for saturation properties by Akasaka method
-	SatEvalFn *sat_fn; // function to return {psat,rhof,rhog}(T) for this pure fluid
+	//Pointers to evaluation functions, which are specific for the EoSType selected.
+	PropEvalFn2 *T_fn; // should be used externally in preference to reading the FluidState2
+	PropEvalFn2 *rho_fn; // should be used externally in preference to reading the FluidState2
+	PropEvalFn2 *p_fn;
+	PropEvalFn2 *u_fn;
+	PropEvalFn2 *h_fn;
+	PropEvalFn2 *s_fn;
+	PropEvalFn2 *a_fn;
+	PropEvalFn2 *cv_fn;
+	PropEvalFn2 *cp_fn;
+	PropEvalFn2 *w_fn;
+	PropEvalFn2 *g_fn;
+	PropEvalFn2 *alphap_fn;
+	PropEvalFn2 *betap_fn;
+	PropEvalFn2 *dpdrho_T_fn; // this derivative is required for saturation properties by Akasaka method
+	SatEvalFn *sat_fn; // function to return {psat,rhof,rhog}(T) for this pure fluid;
 
 	const ViscosityData *visc; // TODO should it be here? or inside FluidData?? probably yes, but needs review.
 	const ThermalConductivityData *thcond; // TODO should it be here? probably yes, but needs review.
 } PureFluid;
 
 #endif
-

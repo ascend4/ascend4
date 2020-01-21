@@ -79,16 +79,26 @@ int fprops_region_ph(double p, double h, const PureFluid *fluid, FpropsError *er
 
 	if(p >= p_c)return FPROPS_NON;
 
+	switch(fluid->type){
+	case FPROPS_HELMHOLTZ:
+	case FPROPS_PENGROB:
+		break; // all good, proceed
+	default:
+		ERRMSG("Unsupported fluid (with p < p_c)");
+		*err = FPROPS_NOT_IMPLEMENTED;
+		return FPROPS_ERROR;
+	}
+
 	fprops_sat_p(p, &Tsat, &rhof, &rhog, fluid, err);
 	if(*err){
 		*err = FPROPS_SAT_CVGC_ERROR;
 		return FPROPS_ERROR;
 	}
 
-	double hf = fluid->h_fn(Tsat, rhof, fluid->data, err);
+	double hf = fluid->h_fn((FluidStateUnion){.Trho={Tsat, rhof}}, fluid->data, err);
 	if(h <= hf)return FPROPS_NON;
 
-	double hg = fluid->h_fn(Tsat,rhog, fluid->data, err);
+	double hg = fluid->h_fn((FluidStateUnion){.Trho={Tsat,rhog}}, fluid->data, err);
 	if(h >= hg)return FPROPS_NON;
 
 	return FPROPS_SAT;
@@ -115,6 +125,16 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 	double rhof_t;
 	double p_c = fluid->data->p_c;
 
+	switch(fluid->type){
+	case FPROPS_HELMHOLTZ:
+	case FPROPS_PENGROB:
+		break; // all good, proceed
+	default:
+		ERRMSG("Unsupported fluid");
+		*err = FPROPS_NOT_IMPLEMENTED;
+		return;
+	}
+
 	MSG("Solving for p=%f bar, h=%f kJ/kgK (EOS type %d, '%s')",p/1e5,h/1e3,fluid->type,fluid->name);
 
 #ifdef FPE_DEBUG
@@ -134,8 +154,8 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 				*err = FPROPS_SAT_CVGC_ERROR;
 				return;
 			}
-			hf = fluid->h_fn(Tsat, rhof, fluid->data, err);
-			hg = fluid->h_fn(Tsat, rhog, fluid->data, err);
+			hf = fluid->h_fn((FluidStateUnion){.Trho={Tsat, rhof}}, fluid->data, err);
+			hg = fluid->h_fn((FluidStateUnion){.Trho={Tsat, rhog}}, fluid->data, err);
 			MSG("at p = %f bar, T_sat = %f, rhof = %f, hf = %f kJ/kg, hg = %f",p/1e5,Tsat,rhof, hf/1e3,hg/1e3);
 
 			if(hf <= h && h <= hg){
@@ -164,7 +184,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 			/* FIXME: still some problems here at very high pressures */
 			if(!use_guess){
 				/* FIXME we should cache/precalculate hc, store in rundata. */
-				double hc = fluid->h_fn(fluid->data->T_c, fluid->data->rho_c, fluid->data, err);
+				double hc = fluid->h_fn((FluidStateUnion){.Trho={fluid->data->T_c, fluid->data->rho_c}}, fluid->data, err);
 				assert(!isnan(hc));
 				MSG("hc = %f kJ/kgK",hc/1e3);
 				if(h < 0.8*hc){ /* FIXME should make use of h_ref here in some way? Otherwise arbitrary... */
@@ -174,7 +194,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 					MSG("Unable to solve saturation at p = %f",p);
 					*T = Tsat1;
 					*rho = rhof1;
-#else					
+#else
 					MSG("h < 0.9 hc... using saturation Tsat(hf) for starting guess");
 					double Tsat1, psat1, rhof1, rhog1;
 					fprops_sat_hf(h, &Tsat1, &psat1, &rhof1, &rhog1, fluid, err);
@@ -227,11 +247,11 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 		MSG("STARTING ITERATION");
 		MSG("rhof_t = %f",rhof_t);
 		while(i++ < 200){
-			double p1 = fluid->p_fn(T1,rho1, fluid->data, err);
+			double p1 = fluid->p_fn((FluidStateUnion){.Trho={T1,rho1}}, fluid->data, err);
 			if(*err){
 				MSG("Got an error ('%s') in p_fn calculation",fprops_error(*err));
-			} 
-			double h1 = fluid->h_fn(T1,rho1, fluid->data, err);
+			}
+			double h1 = fluid->h_fn((FluidStateUnion){.Trho={T1,rho1}}, fluid->data, err);
 			assert(!isnan(h1));
 
 			if(i >= 2){
@@ -243,7 +263,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 					delta_T *= 0.5;
 					rho1 = rho1 + delta_rho;
 					T1 = T1 + delta_T;
-					p1 = fluid->p_fn(T1,rho1,fluid->data, err);
+					p1 = fluid->p_fn((FluidStateUnion){.Trho={T1,rho1}},fluid->data, err);
 					MSG("Set smaller step as p < 0. T1 = %f, rho1 = %f --> p1 = %f",T1, rho1, p1);
 					nred--;
 				}
@@ -373,4 +393,3 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 	return res;
 #endif
 }
-

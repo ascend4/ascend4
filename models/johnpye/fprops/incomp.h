@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2014 John Pye
+	Copyright (C) 2008-2013 John Pye
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -14,19 +14,18 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef FPROPS_INCOMP_H
+#define FPROPS_INCOMP_H
+
 #include "rundata.h"
-#include "fprops.h"
 
-void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError *err);
+/**
+	Prepare a PureFluid object for evaluation of incompressible liquid/solid properties,
+	from an appropriate EosData input, using the specified ReferenceState for
+	enthalpy and entropy scales.
+*/
+PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref);
 
-double thcond1_lam0(FluidState2 state, FpropsError *err);
-/**< zero-density component of thermal conductivity [W/m/K] */
+void incomp_destroy(PureFluid *data);
 
-double thcond1_lamr(FluidState2 state, FpropsError *err);
-/**< residual component of thermal conductivity [W/m/K] */
-
-double thcond1_lamc(FluidState2 state, FpropsError *err);
-/**< critical enhancement component of thermal conductivity [W/m/K] */
-
-double thcond1_lam(FluidState2 state, FpropsError *err);
-/**< thermal conductivity [W/m/K] */
+#endif // FPROPS_INCOMP_H

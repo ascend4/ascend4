@@ -23,26 +23,22 @@
 
 #include "rundata.h"
 
-/**
-	State object for FPROPS. This struct allows user-friendly API in a similar
-	way to in freesteam, but supports different fluid types and correlations,
-	and might be extensible to support fluid mixtures.
-
-	TODO if we've got a saturated state then we almost certainly have calculated
-	rhof, rhog, p. They're expensive, so we should save them in this state
-	struct, too, or else find some other way to cache them.
-
-	TODO perhaps eventually we can different different correlations using
-	different independent variables, in which case this state could be modified/
-	expanded/improved.
-*/
 typedef struct FluidState_struct{
-	double T; ///< temperature / K
-	double rho; ///< density / kg/m3
+	double T;
+	double rho;
 	const PureFluid *fluid; ///< pointer to fluid description and associated functions
 } FluidState;
 
-FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsError *err);
+FluidState2 fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsError *err);
+
+/**< Use this function if you want to set the state of a fluid that uses (T,rho) for
+its internal state, such as Helmholtz, Ideal, Pengrob.
+*/
+
+FluidState2 fprops_set_Tp(double T, double p, const PureFluid *fluid, FpropsError *err);
+/**< Use this function if you want to set the state of a fluid that uses (T,p) for
+	its internal state, such as Helmholtz, Ideal, Pengrob.
+*/
 
 /* TODO we need to add a way to specify what fluid correlation is desired
 and also what reference state, as another option. */
@@ -52,43 +48,45 @@ and also what reference state, as another option. */
 /*The following take the fluid data and use the function pointers
   to call the correct function (e.g. fprops_p -> helmholtz_p)*/
 
-double fprops_p(FluidState state, FpropsError *err); ///< Pressure / [Pa]
-double fprops_u(FluidState state, FpropsError *err); ///< Specific internal energy / [J/kg]
-double fprops_h(FluidState state, FpropsError *err); ///< Specific enthalpy / [J/kg]
-double fprops_s(FluidState state, FpropsError *err); ///< Specific entropy / [J/kg/K]
-double fprops_a(FluidState state, FpropsError *err); ///< Specific helmholtz energy / [J/kg]
-double fprops_cv(FluidState state, FpropsError *err);///< Specific isochoric heat capacity / [J/kg/K]
-double fprops_cp(FluidState state, FpropsError *err);///< Specific isobaric heat capacity / [J/kg/K]
-double fprops_w(FluidState state, FpropsError *err); ///< Speed of sound / [m/s]
-double fprops_g(FluidState state, FpropsError *err); ///< Specific Gibbs energy / [J/kg]
+double fprops_T(FluidState2 state, FpropsError *err);   ///< Temperature / [K]
+double fprops_rho(FluidState2 state, FpropsError *err); ///< Density / [kg/m3]
+double fprops_p(FluidState2 state, FpropsError *err);   ///< Pressure / [Pa]
+double fprops_u(FluidState2 state, FpropsError *err);   ///< Specific internal energy / [J/kg]
+double fprops_h(FluidState2 state, FpropsError *err);   ///< Specific enthalpy / [J/kg]
+double fprops_s(FluidState2 state, FpropsError *err);   ///< Specific entropy / [J/kg/K]
+double fprops_a(FluidState2 state, FpropsError *err);   ///< Specific helmholtz energy / [J/kg]
+double fprops_cv(FluidState2 state, FpropsError *err);  ///< Specific isochoric heat capacity / [J/kg/K]
+double fprops_cp(FluidState2 state, FpropsError *err);  ///< Specific isobaric heat capacity / [J/kg/K]
+double fprops_w(FluidState2 state, FpropsError *err);   ///< Speed of sound / [m/s]
+double fprops_g(FluidState2 state, FpropsError *err);   ///< Specific Gibbs energy / [J/kg]
 
-double fprops_alphap(FluidState state, FpropsError *err);
-double fprops_betap(FluidState state, FpropsError *err);
+double fprops_alphap(FluidState2 state, FpropsError *err);
+double fprops_betap(FluidState2 state, FpropsError *err);
 
-double fprops_cp0(FluidState state, FpropsError *err); ///< Specific isobaric heat capacity at zero pressure / [J/kg/K] (ideal gas limit)
+double fprops_cp0(FluidState2 state, FpropsError *err); ///< Specific isobaric heat capacity at zero pressure / [J/kg/K] (ideal gas limit)
 
 /**	\brief Partial derivative of pressure wrt temperature at density constant.
 	\f$\left(\frac{\partial p}{\partial T}\right)_{\rho}\f$
 */
-double fprops_dpdT_rho(FluidState state, FpropsError *err); 
+double fprops_dpdT_rho(FluidState2 state, FpropsError *err);
 
 /// return the fluid quality; 0 if subcooled, 1 if superheated, error if both T>T_c and p>p_c
-double fprops_x(FluidState state, FpropsError *err);
+double fprops_x(FluidState2 state, FpropsError *err);
 
 #if 1
-double fprops_dpdrho_T(const FluidState state, FpropsError *err);
-double fprops_d2pdrho2_T(const FluidState state, FpropsError *err);
+double fprops_dpdrho_T(const FluidState2 state, FpropsError *err);
+double fprops_d2pdrho2_T(const FluidState2 state, FpropsError *err);
 
-double fprops_dhdT_rho(const FluidState state, FpropsError *err);
-double fprops_dhdrho_T(const FluidState state, FpropsError *err);
+double fprops_dhdT_rho(const FluidState2 state, FpropsError *err);
+double fprops_dhdrho_T(const FluidState2 state, FpropsError *err);
 
-double fprops_dudT_rho(const FluidState state, FpropsError *err);
-double fprops_dudrho_T(const FluidState state, FpropsError *err);
+double fprops_dudT_rho(const FluidState2 state, FpropsError *err);
+double fprops_dudrho_T(const FluidState2 state, FpropsError *err);
 #endif
 
 
-double fprops_mu(FluidState state, FpropsError *err); ///< Dynamic viscosity / [Pa*s]
-double fprops_lam(FluidState state, FpropsError *err); ///< Thermal conductivity / [W/m/K]
+double fprops_mu(FluidState2 state, FpropsError *err); ///< Dynamic viscosity / [Pa*s]
+double fprops_lam(FluidState2 state, FpropsError *err); ///< Thermal conductivity / [W/m/K]
 
 /**
 	Convert file data E into a PureFluid object, doing any necessary pre-calculation

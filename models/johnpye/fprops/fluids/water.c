@@ -65,8 +65,8 @@ static HelmholtzData helmholtz_data_water = {
 	, .ref = {
 		FPROPS_REF_PHI0
 		, .data = {.phi0 = {
-			.m = /* n_2 = */ 6.6832105275932 
-			, .c = /* n_1 = */ -8.3204464837497 
+			.m = /* n_2 = */ 6.6832105275932
+			, .c = /* n_1 = */ -8.3204464837497
 		}}
 	}
 #endif
@@ -310,9 +310,8 @@ void test_fluid_water(void){
 	//fprintf(stderr,"tau = %f, delta = %f\n",tau,delta);
 
 	ASSERT_TOL_3(ideal_phi, tau, delta, PI->data->cp0, 0.204797733E1, 1e-8);
-	ASSERT_TOL_3(ideal_phi_tau, tau, delta, PI->data->cp0, 0.904611106E1, 1e-8);
-#define IDEAL_PHI_TAUTAU_2(A,B,C) ideal_phi_tautau(A,C)
-	ASSERT_TOL_3(IDEAL_PHI_TAUTAU_2, tau, delta, PI->data->cp0, -0.193249185E1, 1e-8);
+	ASSERT_TOL_2(ideal_phi_tau, tau, PI->data->cp0, 0.904611106E1, 1e-8);
+	ASSERT_TOL_2(ideal_phi_tautau, tau, PI->data->cp0, -0.193249185E1, 1e-8);
 	/* FIXME: still need to implement helm_ideal_del, helm_ideal_deldel, helm_ideal_deltau */
 
 
@@ -358,7 +357,7 @@ void test_fluid_water(void){
 		double cv = td[i].cv * 1e3; /* J/kgK */
 		double w = td[i].w; /* m/s */
 		double s = td[i].s * 1e3; /* J/kgK */
-		FluidState S = {T,rho,P};
+		FluidState2 S = {.vals={.Trho={T,rho}},.fluid=P};
 		//fprintf(stderr,"T = %f, rho = %f, p = %f, w = %f, wcalc = %f\n",T,rho,p,w, helmholtz_w(T,rho,P));
 		ASSERT_PROP(s, S , &error, s, s*1e-8);
 		ASSERT_PROP(p, S, &error, p, p*1e-8);
@@ -386,14 +385,14 @@ void test_fluid_water(void){
 		ASSERT_TOL_VAL(rho_f_eval, rho_f, 1e-6);
 		ASSERT_TOL_VAL(rho_g_eval, rho_g, 1e-6);
 
-		double s_f_eval = fprops_s((FluidState){T,rho_f,P},&error);
+		double s_f_eval = fprops_s((FluidState2){.vals={.Trho={T,rho_f}},.fluid=P},&error);
 		ASSERT_TOL_VAL(s_f_eval, s_f, 4e-6);
-		double s_g_eval = fprops_s((FluidState){T,rho_g,P},&error);
+		double s_g_eval = fprops_s((FluidState2){.vals={.Trho={T,rho_g}},.fluid=P},&error);
 		ASSERT_TOL_VAL(s_g_eval, s_g, 2e-5);
 
-		double h_f_eval = fprops_h((FluidState){T,rho_f,P},&error);
+		double h_f_eval = fprops_h((FluidState2){.vals={.Trho={T,rho_f}},.fluid=P},&error);
 		ASSERT_TOL_VAL(h_f_eval, h_f, 1e-3);
-		double h_g_eval = fprops_h((FluidState){T,rho_g,P},&error);
+		double h_g_eval = fprops_h((FluidState2){.vals={.Trho={T,rho_g}},.fluid=P},&error);
 		ASSERT_TOL_VAL(h_g_eval, h_g, 3e-3);
 #undef SATTOL
 	}
@@ -428,4 +427,3 @@ void test_fluid_water(void){
 }
 
 #endif
-

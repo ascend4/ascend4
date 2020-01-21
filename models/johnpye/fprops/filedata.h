@@ -48,7 +48,7 @@ typedef struct CriticalData_struct{
 	provide a data structure here that allows a few different options.
 
 	For chemical reactions, we need to use a reference state defined by the
-	enthalpy of formation and absolute entropy at defined conditions. Many 
+	enthalpy of formation and absolute entropy at defined conditions. Many
 	sources seem to specify ~ambient pressure and ~25 degC, but RPP specifes
 	298.2 K and 'ideal gas', which I take to mean zero pressure. I am not sure
 	that case is correctly handled by FPROPS_REF_TPHG -- still working on that.
@@ -97,9 +97,9 @@ typedef struct ReferenceStateTPHG_struct{
 	double T0, p0, h0, g0;
 } ReferenceStateTPHG;
 
-/* TODO add a reference state as defined by coefficients A_6, A_7 of the 
+/* TODO add a reference state as defined by coefficients A_6, A_7 of the
 NASA SP-273 polynomials (the constant terms in the H0(T) and S0(T) polynomials),
-this would open the way to a fairly easy support for the NASA fluid database, 
+this would open the way to a fairly easy support for the NASA fluid database,
 although note that it's only giving ideal gas EOS data */
 
 typedef struct ReferenceState_struct{
@@ -218,6 +218,34 @@ typedef struct IdealFluid_struct{
 	const IdealData data;
 	// reference state information
 } IdealFluid;
+
+/*-----------------INCOMPRESSIBLE LIQUID/SOLID---------------------*/
+
+typedef struct DensityTerm_struct{
+    double c; /* coefficient */
+    double n; /* power */
+} DensityTerm;
+
+typedef enum DensityTermType_enum{
+    FPROPS_DENS_T /* power series in terms of c*[T/T*]^n */
+    ,FPROPS_DENS_1MT /* power series in terms of c*[1 - T/T*]^n */
+} DensityTermType;
+
+typedef struct DensityData_struct{
+    double Tstar; /* normalising temperature (T/T*) */
+    double rhostar; /* normalising density rho/rho* = ... */
+    DensityTermType type;
+    unsigned np;
+    const DensityTerm *pt; /* power series */
+} DensityData;
+
+typedef struct IncompressibleData_struct{
+    double M;
+    //double R;
+    Cp0Data cp0;
+    DensityData rho;
+    ReferenceState ref;
+} IncompressibleData;
 
 /*-------------------------HELMHOLTZ-------------------------------*/
 
@@ -461,6 +489,7 @@ typedef struct ThermalConductivityData_struct{
 typedef enum EosType_enum{
 	/* note, enum should not allow value of zero, as that return value is needed for errors in fprops_corr_avail */
 	FPROPS_IDEAL = 7 /**< we need to be able to flag IDEAL at runtime! */
+    ,FPROPS_INCOMP = 8 /**< incompressible fluid */
 	,FPROPS_CUBIC = 1 /**< should only exist in source data, not in PureFluid object */
 	,FPROPS_PENGROB = 2
 	,FPROPS_REDKW = 3
@@ -473,6 +502,7 @@ typedef enum EosType_enum{
 typedef union EosUnion_union{
 	const HelmholtzData *helm;
 	const CubicData *cubic;
+    const IncompressibleData *incomp;
 	MbwrData *mbwr;
 	/* maybe more later */
 } EosUnion;

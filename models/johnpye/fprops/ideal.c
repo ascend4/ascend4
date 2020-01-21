@@ -153,14 +153,14 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 				//MSG("T0 = %f, rho0 = %f",T0,rho0);
 				//MSG("btw, p = %f", D->R * T0 *rho0); // is OK
 				res = FPROPS_NO_ERROR;
-				double h1 = ideal_h(T0, rho0, P->data, &res);
-				double s1 = ideal_s(T0, rho0, P->data, &res);
+				double h1 = ideal_h((FluidStateUnion){.Trho={T0, rho0}}, P->data, &res);
+				double s1 = ideal_s((FluidStateUnion){.Trho={T0, rho0}}, P->data, &res);
 				if(res)ERRMSG("error %d",res);
 				//MSG("h1 = %f",h1);
 				P->data->cp0->c = -(s0 - s1)/D->R;
 				P->data->cp0->m = (h0 - h1)/D->R/P->data->Tstar;
 
-				h0 = ideal_h(T0,rho0, P->data, &res);
+				h0 = ideal_h((FluidStateUnion){.Trho={T0,rho0}}, P->data, &res);
 				if(res)ERRMSG("error %d",res);
 				//MSG("new h0(T0,rho0) = %f", h0);
 				//double g0 = ideal_g(T0,rho0, P->data, &res);
@@ -186,37 +186,43 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 	return P;
 }
 
-#define DEFINE_TAU double tau = data->Tstar / T
-#define DEFINE_TAUDELTA DEFINE_TAU; double delta = rho / data->rhostar
+#define DEFINE_T double T = vals.Trho.T
+#define DEFINE_RHO double rho = vals.Trho.rho
+#define DEFINE_TAU DEFINE_T; double tau = data->Tstar / T
+#define DEFINE_TAUDELTA DEFINE_TAU; DEFINE_RHO; double delta = rho / data->rhostar
 
-double ideal_p(double T, double rho, const FluidData *data, FpropsError *err){
+double ideal_p(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_T; DEFINE_RHO;
 	return data->R * T * rho;
 }
 
-double ideal_h(double T, double rho, const FluidData *data, FpropsError *err){
+double ideal_h(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TAUDELTA;
-	return data->R * T * (1 + tau * ideal_phi_tau(tau,delta,data->cp0));
+	return data->R * T * (1 + tau * ideal_phi_tau(tau,data->cp0));
 }
 
-double ideal_s(double T, double rho, const FluidData *data, FpropsError *err){
+double ideal_s(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TAUDELTA;
 	//double pht = ideal_phi_tau(tau,delta,data->cp0);
 	//double ph = ideal_phi(tau,delta,data->cp0);
-	return data->R * (tau * ideal_phi_tau(tau,delta,data->cp0) - ideal_phi(tau,delta,data->cp0));
+	return data->R * (tau * ideal_phi_tau(tau,data->cp0) - ideal_phi(tau,delta,data->cp0));
 }
 
-double ideal_u(double T, double rho, const FluidData *data, FpropsError *err){
-	return ideal_h(T,rho,data,err) - data->R * T;
+double ideal_u(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_T;
+	return ideal_h(vals,data,err) - data->R * T;
 }
 
-double ideal_a(double T, double rho, const FluidData *data, FpropsError *err){
-	return ideal_h(T,rho,data,err) - T * (data->R + ideal_s(T,rho,data,err));
+double ideal_a(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_T;
+	return ideal_h(vals,data,err) - T * (data->R + ideal_s(vals,data,err));
 }
 
-double ideal_g(double T, double rho, const FluidData *data, FpropsError *err){
+double ideal_g(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	//MSG("g(T=%f,rho=%f)...",T,rho);
-	double h = ideal_h(T,rho,data,err);
-	double s = ideal_s(T,rho,data,err);
+	DEFINE_T;
+	double h = ideal_h(vals,data,err);
+	double s = ideal_s(vals,data,err);
 	//MSG("h = %f, T = %f, s = %f, h-T*s = %f",h,T,s,h-T*s);
 	return h - T * s;
 }
@@ -226,24 +232,25 @@ double ideal_g(double T, double rho, const FluidData *data, FpropsError *err){
 	means that it needs to include the scaling temperature within the structure;
 	we can't just define Tstar as a constant for ideal fluids.
 */
-double ideal_cp(double T, double rho, const FluidData *data, FpropsError *err){
+double ideal_cp(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TAU;
 	double res = data->R * (1. - SQ(tau) * ideal_phi_tautau(tau,data->cp0));
 	return res;
 }
 
-double ideal_cv(double T, double rho, const FluidData *data, FpropsError *err){
+double ideal_cv(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TAU;
 	return - data->R * SQ(tau) * ideal_phi_tautau(tau,data->cp0);
 }
 
-double ideal_w(double T, double rho, const FluidData *data, FpropsError *err){
+double ideal_w(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TAU;
 	double w2onRT = 1. - 1. / (SQ(tau) * ideal_phi_tautau(tau,data->cp0));
 	return sqrt(data->R * T * w2onRT);
 }
 
-double ideal_dpdrho_T(double T, double rho, const FluidData *data, FpropsError *err){
+double ideal_dpdrho_T(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_T;
 	return data->R * T;
 }
 
@@ -252,5 +259,3 @@ double ideal_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData *d
 	*err = FPROPS_RANGE_ERROR;
 	return 0;
 }
-
-

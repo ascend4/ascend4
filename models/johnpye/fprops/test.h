@@ -79,6 +79,14 @@ int helm_check_p_c(const HelmholtzData *d);
 		fprintf(stderr,", %s(%f,%f,%s) = %8.2e with %.6f%% err.\n"\
 		,FN,PARAM1,PARAM2,#PARAM3,VAL,relerrpc)
 
+# define TEST_SUCCESS2A(FN,PARAM1,PARAM2,VAL) \
+		fprintf(stderr,"    ");\
+		color_on(stderr,ASC_FG_GREEN);\
+		fprintf(stderr,"OK");\
+		color_off(stderr);\
+		fprintf(stderr,", %s(%f,%s) = %8.2e with %.6f%% err.\n"\
+		,FN,PARAM1,#PARAM2,VAL,relerrpc)
+
 # define TEST_SUCCESS2(CALC,RVAL,RELERR) \
 		fprintf(stderr,"    ");\
 		color_on(stderr,ASC_FG_GREEN);\
@@ -101,6 +109,7 @@ int helm_check_p_c(const HelmholtzData *d);
 # define TEST_SUCCESS_PROP(...)
 # define TEST_MSG(MSG,ARGS...)
 # define TEST_SUCCESS2(...)
+# define TEST_SUCCESS2A(...)
 #endif
 
 #define ASSERT(FACT) {\
@@ -113,8 +122,8 @@ int helm_check_p_c(const HelmholtzData *d);
 		CU_TEST_FATAL(FACT)\
 	}
 /* a simple macro to actually do the testing */
-#define ASSERT_TOL(FN,PARAM1,PARAM2,PARAM3,PARAM4,VAL,TOL) {\
-		double cval; cval = FN(PARAM1,PARAM2,PARAM3,PARAM4);\
+#define ASSERT_TOL_TRHO(FN,PARAM1,PARAM2,PARAM3,PARAM4,VAL,TOL) {\
+		double cval; cval = FN((FluidStateUnion){.Trho={PARAM1,PARAM2}},PARAM3,PARAM4);\
 		double x_err = cval - (double)(VAL);\
 		double relerrpc = (cval-(VAL))/(VAL)*100;\
 		if(fabs(relerrpc)>maxerr)maxerr=fabs(relerrpc);\
@@ -134,6 +143,43 @@ int helm_check_p_c(const HelmholtzData *d);
 		CU_TEST_FATAL(fabs(x_err)<=fabs(TOL));\
 	}
 
+#define STATENAME1(STATE) \
+	((STATE.fluid->type == FPROPS_HELMHOLTZ\
+		||STATE.fluid->type == FPROPS_PENGROB\
+		||STATE.fluid->type == FPROPS_IDEAL\
+		||STATE.fluid->type == FPROPS_INCOMP\
+	) ? "T" : "???")
+
+#define STATENAME2(STATE) \
+	((STATE.fluid->type == FPROPS_HELMHOLTZ \
+		||STATE.fluid->type == FPROPS_PENGROB \
+		||STATE.fluid->type == FPROPS_IDEAL \
+	) ? "rho" \
+	: ((STATE.fluid->type == FPROPS_INCOMP) ? "p" : "???")) \
+
+#define STATEVAL1(STATE) \
+	((STATE.fluid->type == FPROPS_HELMHOLTZ\
+		||STATE.fluid->type == FPROPS_PENGROB\
+		||STATE.fluid->type == FPROPS_IDEAL\
+	) ? STATE.vals.Trho.T\
+	: (\
+		(STATE.fluid->type == FPROPS_INCOMP)\
+		? STATE.vals.Tp.T\
+		: -1\
+	))
+
+#define STATEVAL2(STATE) \
+	((STATE.fluid->type == FPROPS_HELMHOLTZ\
+		||STATE.fluid->type == FPROPS_PENGROB\
+		||STATE.fluid->type == FPROPS_IDEAL\
+	) ? STATE.vals.Trho.rho\
+	: (\
+		(STATE.fluid->type == FPROPS_INCOMP)\
+		? STATE.vals.Tp.p\
+		: -1\
+	))
+
+
 #define ASSERT_PROP(PROP,STATE,ERR1,VAL,TOL){\
 		double cval = fprops_##PROP(STATE,ERR1);\
 		double x_err = cval - (double)VAL;\
@@ -144,9 +190,9 @@ int helm_check_p_c(const HelmholtzData *d);
 			color_on(stderr,ASC_FG_BRIGHTRED);\
 			fprintf(stderr,"ERROR");\
 			color_off(stderr);\
-			fprintf(stderr," %s:%d: value of '%s(T=%f,rho=%f)' = %.5e,"\
+			fprintf(stderr," %s:%d: value of '%s(%s=%f,%s=%f)' = %.5e,"\
 				" should be %.5e, error is %.10e (%.2f%%, %1e)!\n"\
-				, __FILE__,__LINE__, #PROP,STATE.T,STATE.rho, cval, VAL,x_err\
+				, __FILE__,__LINE__, #PROP,STATENAME1(STATE),STATEVAL1(STATE),STATENAME2(STATE),STATEVAL2(STATE), cval, VAL,x_err\
 				,relerrpc,relerrpc/100\
 			);\
 		}else{\
@@ -173,6 +219,28 @@ int helm_check_p_c(const HelmholtzData *d);
 			);\
 		}else{\
 			TEST_SUCCESS(#FN,PARAM1,PARAM2,PARAM3,VAL);\
+		}\
+		CU_TEST_FATAL(fabs(x_err)<=fabs(TOL));\
+	}
+
+/* a simple macro to actually do the testing */
+#define ASSERT_TOL_2(FN,PARAM1,PARAM2,VAL,TOL) {\
+		double cval; cval = FN(PARAM1,PARAM2);\
+		double x_err = cval - (double)(VAL);\
+		double relerrpc = (cval-(VAL))/(VAL)*100;\
+		if(fabs(relerrpc)>maxerr)maxerr=fabs(relerrpc);\
+		if(fabs(x_err)>fabs(TOL)){\
+			fprintf(stderr,"    ");\
+			color_on(stderr,ASC_FG_BRIGHTRED);\
+			fprintf(stderr,"ERROR");\
+			color_off(stderr);\
+			fprintf(stderr," %s:%d: value of '%s(%f,%s)' = %.5e,"\
+				" should be %.5e, error is %.10e (%.2f%%, %1e)!\n"\
+				, __FILE__,__LINE__, #FN,PARAM1,#PARAM2, cval, VAL,cval-(VAL)\
+				,relerrpc,relerrpc/100\
+			);\
+		}else{\
+			TEST_SUCCESS2A(#FN,PARAM1,PARAM2,VAL);\
 		}\
 		CU_TEST_FATAL(fabs(x_err)<=fabs(TOL));\
 	}

@@ -92,7 +92,7 @@ int fprops_num_fluids();
 
 %nodefaultctor;
 
-typedef struct{} FluidState;
+typedef struct{} FluidState2;
 typedef struct{} PureFluid;
 
 /* FIXME what should we do with ctors and dtors...? */
@@ -167,7 +167,7 @@ typedef struct{} PureFluid;
 	double psat_T_acentric(double T){
 		return fprops_psat_T_acentric(T, $self->data);
 	}
-	
+
 	double psat_T_xiang(double T){
 		return fprops_psat_T_xiang(T, $self->data);
 	}
@@ -266,7 +266,7 @@ int PureFluid_type_get(PureFluid *fluid){
 static __thread FpropsError _fprops_fluidstate_err = 0;
 %}
 
-/* TODO be more sophisticated about the types of error returned to Python 
+/* TODO be more sophisticated about the types of error returned to Python
 eg ValueError for FPROPS_VALUE_UNDEFINED, perhaps, or some FPROPS-specific
 exception types? */
 %exception{
@@ -288,7 +288,7 @@ exception types? */
 		    SWIG_exception(SWIG_ValueError,fprops_error(*$1));
 		}
 	}
-	
+
 	double deriv(char *spec, FpropsError *err){
 		return fprops_deriv(*$self, spec, err);
 	}
@@ -325,4 +325,3 @@ FNS(GETTER,SPACE)
 #undef SPACE
 
 %}
-

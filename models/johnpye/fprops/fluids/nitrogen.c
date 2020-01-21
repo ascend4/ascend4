@@ -308,7 +308,7 @@ void test_fluid_nitrogen(void){
 	for(i=0; i<n;++i){
 		cp0 = td[i].cp0*1e3;
 #define CP0_TEMP(T,RHO,DATA, ERROR) ideal_cp(T,RHO,DATA, ERROR)
-	 	ASSERT_TOL(CP0_TEMP, td[i].T+273.15, 0., P->data, &err, cp0, cp0*1e-6);
+	 	ASSERT_TOL_TRHO(CP0_TEMP, td[i].T+273.15, 0., P->data, &err, cp0, cp0*1e-6);
 #undef CP0_TEMP
 	}
 
@@ -318,7 +318,7 @@ void test_fluid_nitrogen(void){
 	//fprops_set_reference_state(P, &ref);
 
 	rho = 11 * D->M; T = 270.;
-	FluidState S = fprops_set_Trho(T,rho, P, &err);
+	FluidState2 S = fprops_set_Trho(T,rho, P, &err);
 	ASSERT(!err);
 	p = fprops_p(S, &err);
 	TEST_MSG("p = %f", p);
@@ -426,4 +426,3 @@ void test_fluid_nitrogen(void){
 }
 
 #endif
-

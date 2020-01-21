@@ -99,6 +99,7 @@ void fprops_fluid_destroy(PureFluid *P){
 		assert(FPROPS_CUBIC != P->type);
 		break;
 	case FPROPS_IDEAL:
+	case FPROPS_INCOMP:
 	case FPROPS_REDKW:
 	case FPROPS_SOAVE:
 	case FPROPS_MBWR:
@@ -106,4 +107,3 @@ void fprops_fluid_destroy(PureFluid *P){
 		break;
 	}
 }
-

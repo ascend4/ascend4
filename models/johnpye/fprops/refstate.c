@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <math.h>
 
-//#define REF_DEBUG
+#define REF_DEBUG
 #ifdef REF_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
@@ -29,11 +29,15 @@ typedef struct{
 } RefStateTPData;
 
 int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
+	if(!P){ERRMSG("P is NULL"); return 1;}
+	if(!P->data){ERRMSG("P->data is NULL"); return 1;}
+	if(!P->data->cp0){ERRMSG("P->data->cp0 is NULL"); return 1;}
+
 	FpropsError res = 0;
 	P->data->cp0->c = 0;
 	P->data->cp0->m = 0;
 	int err;
-	FluidState S1, S2;
+	FluidState2 S1, S2;
 	double T, p, rho, rho_f, rho_g, h1, h2, s1, s2, resid;
 #ifdef REF_DEBUG
 	double u, g2;
@@ -51,8 +55,12 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TPHS0:
-		/* FIXME we seem to have errors here, as tested
-		with fluids/oxygen.c */
+		/* FIXME we seem to have errors here, as tested with fluids/oxygen.c */
+		if(P->type == FPROPS_INCOMP){
+			ERRMSG("Not implemented: FPROPS_REF_TPHS0 with incompressible fluid");
+			return 1;
+		}
+
 		T = ref->data.tphs.T0;
 		p = ref->data.tphs.p0;
 		h1 = ref->data.tphs.h0;
@@ -64,8 +72,10 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 
 		P->data->cp0->m = 0;
 		P->data->cp0->c = 0;
-		h2 = ideal_h(T,rho0,P->data,&res);
-		s2 = ideal_s(T,rho0,P->data,&res);
+
+
+		h2 = ideal_h((FluidStateUnion){.Trho={T,rho0}},P->data,&res);
+		s2 = ideal_s((FluidStateUnion){.Trho={T,rho0}},P->data,&res);
 		MSG("h2 = %f",h2);
 
 		P->data->cp0->m = -h1 / P->data->R / P->data->T_c;
@@ -84,13 +94,17 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		MSG("m = %f",P->data->cp0->m);
 		MSG("c = %f",P->data->cp0->c);
 		if(1){
-			MSG("ideal_h(p0,T0) = %g",ideal_h(T,rho0,P->data,&res));
-			MSG("ideal_s(p0,T0) = %g",ideal_s(T,rho0,P->data,&res));
+			MSG("ideal_h(p0,T0) = %g",ideal_h((FluidStateUnion){.Trho={T,rho0}},P->data,&res));
+			MSG("ideal_s(p0,T0) = %g",ideal_s((FluidStateUnion){.Trho={T,rho0}},P->data,&res));
 		}
 		MSG("Set TPHS0 reference state.");
 		return 0;
 
 	case FPROPS_REF_IIR:
+		if(P->type == FPROPS_INCOMP){
+			ERRMSG("Not implemented: FPROPS_REF_IIR with incompressible fluid");
+			return 1;
+		}
 		MSG("Setting IIR reference state.");
 		/* need to calculate the saturated liquid state at 0 deg C */
 		T = 273.15 + 0;
@@ -133,6 +147,10 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_NBP:
+		if(P->type == FPROPS_INCOMP || P->type == FPROPS_IDEAL){
+			ERRMSG("Not implemented: FPROPS_REF_NBP with this fluid type");
+			return 1;
+		}
 		/* normal boiling point, need to solve for the temperature first! */
 		p = 101.325e3;
 		if(p > P->data->p_c){
@@ -160,6 +178,11 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TRHS:
+		if(P->type == FPROPS_INCOMP || P->type == FPROPS_IDEAL){
+			ERRMSG("Not implemented: FPROPS_REF_TRHS with this fluid type");
+			return 1;
+		}
+
 		T = ref->data.trhs.T0;
 		rho = ref->data.trhs.rho0;
 		S1 = fprops_set_Trho(T,rho,P,&res);
@@ -178,6 +201,11 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TPUS:
+		if(P->type == FPROPS_INCOMP){
+			ERRMSG("Not implemented: FPROPS_REF_TPUS with incompressible fluid.");
+			return 1;
+		}
+
 		/* need to solve for T,p first... */
 		T = ref->data.tpus.T0;
 		p = ref->data.tpus.p0;
@@ -224,32 +252,49 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		/* need to solve for T,p first... */
 		T = ref->data.tphs.T0;
 		p = ref->data.tphs.p0;
-		{
-			/* let's try zeroin... */
-			RefStateTPData D = {P, T, p};
-			MSG("Upper bound rho = %f",5*P->data->rho_c);
-			err = zeroin_solve(&refstate_perr_Trho, &D, 1e-10, 5*P->data->rho_c, 1e-5, &rho, &resid);
-			if(err){
-				fprintf(stderr,"Unable to set T,p for reference state (T = %f K, p = %f kPa)\n",T,p/1e3);
-				return 1000 + err;
-			}
-			MSG("Solved rho = %f for T = %f, p = %f",rho,T,p);
-			MSG("Check: p(T,rho) = %f", fprops_p(fprops_set_Trho(T,rho,P,&res),&res));
-		}
-
-		S1 = fprops_set_Trho(T,rho,P,&res);
-		h1 = fprops_h(S1,&res);
-		if(res)return 2000+res;
-		s1 = fprops_s(S1,&res);
-		if(res)return 3000+res;
-
 		h2 = ref->data.tphs.h0;
 		s2 = ref->data.tphs.s0;
 
-		P->data->cp0->c = -(s2 - s1)/P->data->R;
-		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+		switch(P->type){
+		case FPROPS_INCOMP:
+			S1 = fprops_set_Tp(T,p,P,&res);
+			h1 = fprops_h(S1,&res);
+			if(res){ERRMSG("Unable to calculate h(T0,p0)");return 1800+res;}
+			s1 = fprops_s(S1,&res);
+			if(res){ERRMSG("Unable to calculate s(T0,p0)");return 1900+res;}
 
-		S2 = fprops_set_Trho(T,rho,P,&res);
+			P->data->cp0->c = -(s2 - s1)/P->data->R;
+			P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+
+			S2 = fprops_set_Tp(T,p,P,&res);
+			break;
+		case FPROPS_PENGROB:
+		case FPROPS_HELMHOLTZ:
+			{
+				/* let's try zeroin... */
+				RefStateTPData D = {P, T, p};
+				MSG("Upper bound rho = %f",5*P->data->rho_c);
+				err = zeroin_solve(&refstate_perr_Trho, &D, 1e-10, 5*P->data->rho_c, 1e-5, &rho, &resid);
+				if(err){
+					fprintf(stderr,"Unable to set T,p for reference state (T = %f K, p = %f kPa)\n",T,p/1e3);
+					return 1000 + err;
+				}
+				MSG("Solved rho = %f for T = %f, p = %f",rho,T,p);
+				MSG("Check: p(T,rho) = %f", fprops_p(fprops_set_Trho(T,rho,P,&res),&res));
+			}
+
+			S1 = fprops_set_Trho(T,rho,P,&res);
+			h1 = fprops_h(S1,&res);
+			if(res)return 2000+res;
+			s1 = fprops_s(S1,&res);
+			if(res)return 3000+res;
+
+			S2 = fprops_set_Trho(T,rho,P,&res);
+			break;
+		default:
+			ERRMSG("Not implemented: FPROPS_REF_TPHS with this fluid type.");
+			return 1;
+		}
 		h2 = fprops_h(S2,&res);
 		s2 = fprops_s(S2,&res);
 		p = fprops_p(S2,&res);
@@ -262,6 +307,10 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TPF:
+		if(P->type == FPROPS_INCOMP || P->type == FPROPS_IDEAL){
+			ERRMSG("Not implemented: FPROPS_REF_TPF is not permitted with this fluid type.");
+			return 1;
+		}
 		T = P->data->T_t;
 		fprops_triple_point(&p,&rho_f,&rho_g,P, &res);
 		if(res)return 1000+res;
@@ -279,6 +328,10 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TPFU:
+		if(P->type == FPROPS_INCOMP || P->type == FPROPS_IDEAL){
+			ERRMSG("Not implemented: FPROPS_REF_TPFU with this fluid type.");
+			return 1;
+		}
 		T = P->data->T_t;
 		fprops_triple_point(&p,&rho_f,&rho_g,P, &res);
 		if(res)return 1000+res;
@@ -369,4 +422,3 @@ double refstate_perr_Trho(double rho, void *user_data){
 	return p - D->p;
 #undef D
 }
-

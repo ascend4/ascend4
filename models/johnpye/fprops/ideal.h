@@ -26,21 +26,20 @@
 */
 PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref);
 
-PropEvalFn ideal_p;
-PropEvalFn ideal_u;
-PropEvalFn ideal_h;
-PropEvalFn ideal_s;
-PropEvalFn ideal_a;
-PropEvalFn ideal_g;
-PropEvalFn ideal_cp;
-PropEvalFn ideal_cv;
-PropEvalFn ideal_w;
-PropEvalFn ideal_alphap;
-PropEvalFn ideal_betap;
-PropEvalFn ideal_dpdrho_T;
+PropEvalFn2 ideal_p;
+PropEvalFn2 ideal_u;
+PropEvalFn2 ideal_h;
+PropEvalFn2 ideal_s;
+PropEvalFn2 ideal_a;
+PropEvalFn2 ideal_g;
+PropEvalFn2 ideal_cp;
+PropEvalFn2 ideal_cv;
+PropEvalFn2 ideal_w;
+PropEvalFn2 ideal_alphap;
+PropEvalFn2 ideal_betap;
+PropEvalFn2 ideal_dpdrho_T;
 SatEvalFn ideal_sat;
 
 #define HELM_IDEAL_DELTAU(TAU, DELTA, DATA, ERROR) (0)
 
 #endif
-

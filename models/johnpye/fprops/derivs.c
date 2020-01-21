@@ -16,12 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *//** @file
 FPROPS derivatives modules. Calculates thermodynamic property derivatives
-using the method given in IAPWS, 2008, Revised Advisory Note No. 3 
+using the method given in IAPWS, 2008, Revised Advisory Note No. 3
 Thermodynamic Derivatives from IAPWS Formulation, http://www.iapws.org.
 
 TODO we still need to figure out how this works in general for simpler non-
 Helmholtz correlations such as pengrob and potentially others. It seems
-plausible that this will 'just work' if each of those correlations provides 
+plausible that this will 'just work' if each of those correlations provides
 functions for p, cv, v, s, alphap and betap as functions of FluidState (T,rho).
 But we need to check that, and find out if there's an easier or more efficient
 approach as well.
@@ -44,7 +44,7 @@ approach as well.
 #endif
 
 struct SatStateData_struct{
-	FluidState state;
+	FluidState2 state;
 	double psat;
 	double rhof;
 	double rhog;
@@ -86,7 +86,7 @@ struct SatStateData_struct{
 */
 
 /**
-	Calculates the derivative 
+	Calculates the derivative
 
 	 ⎰ ∂z ⎱
 	 ⎱ ∂x ⎰y
@@ -101,7 +101,7 @@ struct SatStateData_struct{
 
 	@return the numerical value of the derivative (∂z/∂x)y.
 */
-double fprops_deriv(FluidState state, char *vars, FpropsError *err){
+double fprops_deriv(FluidState2 state, char *vars, FpropsError *err){
 	SatStateData ssd;
 	ssd.state = state;
 	int i, sat = 0;
@@ -121,16 +121,17 @@ double fprops_deriv(FluidState state, char *vars, FpropsError *err){
 	}
 
 #define D fluid->data
-	if(state.T < state.fluid->data->T_c
-		&& state.T > state.fluid->data->T_t
+
+	if(state.vals.Trho.T < state.fluid->data->T_c
+		&& state.vals.Trho.T > state.fluid->data->T_t
 	){
-		fprops_sat_T(state.T, &ssd.psat, &ssd.rhof, &ssd.rhog, state.fluid, err);
+		fprops_sat_T(state.vals.Trho.T, &ssd.psat, &ssd.rhof, &ssd.rhog, state.fluid, err);
 		if(*err){
 			ERRMSG("Failed to calculate saturation props");
 			*err = FPROPS_SAT_CVGC_ERROR;
 			return 0;
 		}
-		if(state.rho < ssd.rhof && state.rho > ssd.rhog){
+		if(state.vals.Trho.rho < ssd.rhof && state.vals.Trho.rho > ssd.rhog){
 			/* we're in the saturation region */
 			sat = 1;
 		}
@@ -144,12 +145,12 @@ double fprops_deriv(FluidState state, char *vars, FpropsError *err){
 
 #define TVSAT(X) fprops_sat_dZdT_v(X,&ssd,err)
 #define VTSAT(X) fprops_sat_dZdv_T(X,&ssd,err)
-#define TVNON(X) fprops_non_dZdT_v(X,state.T,state.rho,state.fluid,err)
-#define VTNON(X) fprops_non_dZdv_T(X,state.T,state.rho,state.fluid,err)
+#define TVNON(X) fprops_non_dZdT_v(X,state.vals.Trho.T,state.vals.Trho.rho,state.fluid,err)
+#define VTNON(X) fprops_non_dZdv_T(X,state.vals.Trho.T,state.vals.Trho.rho,state.fluid,err)
 #define z vars[0]
 #define x vars[1]
 #define y vars[2]
-	
+
 	if(!sat){
 		/* non-saturated */
 		ZTV = TVNON(z); ZVT = VTNON(z);
@@ -159,9 +160,9 @@ double fprops_deriv(FluidState state, char *vars, FpropsError *err){
 		/* saturated. first use Clapeyron equation for (∂p/∂T)v */
 		double hf, hg;
 		/* TODO add checks for error state */
-		hf = fprops_h(fprops_set_Trho(state.T, ssd.rhof, state.fluid, err),err);
-		hg = fprops_h(fprops_set_Trho(state.T, ssd.rhog, state.fluid, err),err);
-		ssd.dpdT_sat = (hg - hf) / state.T / (1./ssd.rhog - 1./ssd.rhof);
+		hf = fprops_h(fprops_set_Trho(state.vals.Trho.T, ssd.rhof, state.fluid, err),err);
+		hg = fprops_h(fprops_set_Trho(state.vals.Trho.T, ssd.rhog, state.fluid, err),err);
+		ssd.dpdT_sat = (hg - hf) / state.vals.Trho.T / (1./ssd.rhog - 1./ssd.rhof);
 
 		fprintf(stderr,"Saturation region derivatives not yet implemented.\n");
 		*err = FPROPS_NOT_IMPLEMENTED;
@@ -192,17 +193,17 @@ double fprops_deriv(FluidState state, char *vars, FpropsError *err){
 */
 
 /*
-	FIXME: the following macros avoid calculating unneeded results eg within VT3 
-	but at the level of freesteam_deriv, there is wasted effort, because eg 'p' 
+	FIXME: the following macros avoid calculating unneeded results eg within VT3
+	but at the level of freesteam_deriv, there is wasted effort, because eg 'p'
 	will be calculated several times in different calls to VT3.
 */
 
-#define p (fluid->p_fn(T,rho,fluid->data,err))
-#define cv (fluid->cv_fn(T,rho,fluid->data,err))
+#define p (fluid->p_fn((FluidStateUnion){.Trho={T,rho}},fluid->data,err))
+#define cv (fluid->cv_fn((FluidStateUnion){.Trho={T,rho}},fluid->data,err))
 #define v (1./rho)
-#define s (fluid->s_fn(T,rho,fluid->data,err))
-#define alphap (fluid->alphap_fn(T,rho,fluid->data,err))
-#define betap (fluid->betap_fn(T,rho,fluid->data,err))
+#define s (fluid->s_fn((FluidStateUnion){.Trho={T,rho}},fluid->data,err))
+#define alphap (fluid->alphap_fn((FluidStateUnion){.Trho={T,rho}},fluid->data,err))
+#define betap (fluid->betap_fn((FluidStateUnion){.Trho={T,rho}},fluid->data,err))
 
 double fprops_non_dZdv_T(FPROPS_CHAR z, double T, double rho, const PureFluid *fluid, FpropsError *err){
 	MSG("Calculating (d%c/dv)_T in non-saturated region",z);
@@ -299,8 +300,8 @@ double fprops_sat_dZdT_v(FPROPS_CHAR z, const SatStateData *ssd, FpropsError *er
 	double dvgdT = -1./SQ(ssd->rhog) * drhogdT;
 	assert(!isnan(dvgdT));
 
-#define TVNON(X,RHO) fprops_non_dZdT_v(X,ssd->state.T,RHO,ssd->state.fluid,err)
-#define VTNON(X,RHO) fprops_non_dZdv_T(X,ssd->state.T,RHO,ssd->state.fluid,err)
+#define TVNON(X,RHO) fprops_non_dZdT_v(X,ssd->state.vals.Trho.T,RHO,ssd->state.fluid,err)
+#define VTNON(X,RHO) fprops_non_dZdv_T(X,ssd->state.vals.Trho.T,RHO,ssd->state.fluid,err)
 	dzfdT = VTNON(z,ssd->rhof)*dvfdT + TVNON(z,ssd->rhof);
 	dzgdT = VTNON(z,ssd->rhog)*dvgdT + TVNON(z,ssd->rhog);
 
@@ -309,7 +310,7 @@ double fprops_sat_dZdT_v(FPROPS_CHAR z, const SatStateData *ssd, FpropsError *er
 
 	/* FIXME: this is not the correct solution, this is for x const, not rho const. */
 
-	double x = (1./ssd->state.rho - 1./ssd->rhof) / (1./ssd->rhog - 1./ssd->rhof);
+	double x = (1./ssd->state.vals.Trho.rho - 1./ssd->rhof) / (1./ssd->rhog - 1./ssd->rhof);
 	res = dzfdT*(1-x) + dzgdT*x;
 	//fprintf(stderr,"(∂%c/∂T)x = %g\n",z,res);
 	return res;
@@ -337,8 +338,8 @@ double fprops_sat_dZdv_T(FPROPS_CHAR z, const SatStateData *ssd, FpropsError *er
 	}
 	double zf, zg;
 #define ZFG(Z,P,T) \
-	zf = ssd->state.fluid->Z##_fn(ssd->state.T,ssd->rhof,ssd->state.fluid->data,err);\
-	zg = ssd->state.fluid->Z##_fn(ssd->state.T,ssd->rhog,ssd->state.fluid->data,err)
+	zf = ssd->state.fluid->Z##_fn((FluidStateUnion){.Trho={ssd->state.vals.Trho.T,ssd->rhof}},ssd->state.fluid->data,err);\
+	zg = ssd->state.fluid->Z##_fn((FluidStateUnion){.Trho={ssd->state.vals.Trho.T,ssd->rhog}},ssd->state.fluid->data,err)
 	switch(z){
 		case 'v': zf = 1./ssd->rhof; zg = 1./ssd->rhog; break;
 		case 'u': ZFG(u,p,T); break;
@@ -371,6 +372,3 @@ double fprops_drhogdT(const SatStateData *ssd, FpropsError *err){
 	double dpdrho = -1./SQ(ssd->rhog) * VTNON('p',ssd->rhog);
 	return (ssd->dpdT_sat - dpdT)/dpdrho;
 }
-
-
-

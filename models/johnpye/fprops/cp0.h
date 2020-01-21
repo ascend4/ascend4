@@ -21,12 +21,16 @@
 
 /* FIXME rename this to phi0_prepare, along with the filename */
 /**
-	Prepare the runtime data required for calculation of the ideal component of 
-	the reduced Helmholtz function, \f$\phi = \frac{a}{R T}\f$ and its 
+	Prepare the runtime data required for calculation of the ideal component of
+	the reduced Helmholtz function, \f$\phi = \frac{a}{R T}\f$ and its
 	derivatives \f$\phi_\tau\f$ and \f$\phi_{\tau\tau}\f$. Note that even
 	though this is called 'cp0_prepare', it is unable on its own to calculate
-	\f$c_p^o\f$ because the values of Tstar (needed for \f$\tau = \frac{T^{*}}{T}\f$) and R are stored at higher-level in 
+	\f$c_p^o\f$ because the values of Tstar (needed for \f$\tau = \frac{T^{*}}{T}\f$) and R are stored at higher-level in
 	the FluidData object.
+
+    TODO note if 'R' is really 'cp0star', or is it really (must be) a gas constant.
+    We also want to use cp0_prepare, ideal_phi_tau and maybe others for the calculation
+    of incompressible h,u s? and maybe others...
 */
 Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar);
 
@@ -40,19 +44,18 @@ void cp0_destroy(Phi0RunData *cp0);
 double ideal_phi(double tau, double delta, const Phi0RunData *data);
 
 /**
-	Ideal-gas component of the reduced Helmholtz function: first partial derivative wrt reduced temperature 
+	Ideal-gas component of the reduced Helmholtz function: first partial derivative wrt reduced temperature
 	\f$\phi_\tau = \left(\frac{\partial \phi}{\partial \tau}\right)_\delta = \frac{1}{R T} \frac{\partial T}{\partial \tau} \frac{\partial a}{\partial T} \f$
 */
-double ideal_phi_tau(double tau, double delta, const Phi0RunData *data);
+double ideal_phi_tau(double tau, const Phi0RunData *data);
 
 /**
 	Ideal-gas component of the reduced Helmholtz function: second partial derivative wrt reduced temperature
 	\f$\phi_{\tau\tau}
 		 = \left(\frac{\partial^2 \phi}{\partial \tau^2}\right)_\delta
-		 = \frac{1}{R T} \left(\frac{d T}{d \tau}\right)^2 \frac{\partial^2 a}{\partial T^2} 
+		 = \frac{1}{R T} \left(\frac{d T}{d \tau}\right)^2 \frac{\partial^2 a}{\partial T^2}
 	\f$
 */
 double ideal_phi_tautau(double tau, const Phi0RunData *data);
 
 #endif
-

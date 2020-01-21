@@ -1,9 +1,9 @@
-/* 
+/*
 This file created by John Pye 2014
 
 LITERATURE REFERENCE
 http://dx.doi.org/10.1016/0378-3812(85)87016-3
-R. Schmidt, W. Wagner, 1985. "A new form of the equation of state for pure 
+R. Schmidt, W. Wagner, 1985. "A new form of the equation of state for pure
 substances and its application to oxygen", Fluid Phase Equilibria 19(3) 175-200.
 */
 
@@ -149,9 +149,9 @@ void test_fluid_oxygen(void){
 	test_init();
 	PureFluid *P = helmholtz_prepare(&eos_oxygen, NULL);
 
-	ASSERT_TOL_VAL(ideal_cp(60,1.2820239582e3,P->data,&err),9.10133773207e2,1e-9);
-	ASSERT_TOL_VAL(ideal_cp(120,6.43209699241E-1,P->data,&err),9.09800101279e2,1e-9);
-	ASSERT_TOL_VAL(ideal_cp(270,2.85140864243e-1,P->data,&err),9.1439308538e2,1e-9);
+	ASSERT_TOL_VAL(ideal_cp((FluidStateUnion){.Trho={60,1.2820239582e3}},P->data,&err),9.10133773207e2,1e-9);
+	ASSERT_TOL_VAL(ideal_cp((FluidStateUnion){.Trho={120,6.43209699241E-1}},P->data,&err),9.09800101279e2,1e-9);
+	ASSERT_TOL_VAL(ideal_cp((FluidStateUnion){.Trho={270,2.85140864243e-1}},P->data,&err),9.1439308538e2,1e-9);
 
 	double p0 = 1.01325e5;
 	double T0 = 298.15;
