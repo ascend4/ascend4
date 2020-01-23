@@ -352,7 +352,7 @@ void test_fluid_nitrogen(void){
 #define VISC_TEST(T__1,RHO__1,MU__1,TOL__1) \
 	S = fprops_set_Trho(T__1, RHO__1*P->visc->data.v1.M, P, &err); \
 	mu = fprops_mu(S,&err); \
-	TEST_MSG("mu(T=%f, rho=%f) = %e (target: %e)",S.T,S.rho,mu,MU__1); \
+	TEST_MSG("mu(%s=%f, %s=%f) = %e (target: %e)",STATENAME1(S),STATEVAL1(S),STATENAME2(S),STATEVAL2(S),mu,MU__1); \
 	ASSERT(FPROPS_NO_ERROR==err); \
 	ASSERT(fabs(mu - MU__1)<TOL__1);
 
@@ -374,7 +374,7 @@ void test_fluid_nitrogen(void){
 #define THCOND_TEST(T__1,RHO__1,K__1,TOL__1) \
 	S = fprops_set_Trho(T__1, RHO__1, P, &err); \
 	k = fprops_lam(S,&err); \
-	TEST_MSG("k(T=%f, rho=%f) = %e (target: %e)",S.T,S.rho,k,K__1); \
+	TEST_MSG("k(%s=%f, %s=%f) = %e (target: %e)",STATENAME1(S),STATEVAL1(S),STATENAME2(S),STATEVAL2(S),k,K__1); \
 	ASSERT(FPROPS_NO_ERROR==err); \
 	if(fabs(k - K__1)<TOL__1)kerr++;
 

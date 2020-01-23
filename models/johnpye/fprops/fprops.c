@@ -143,7 +143,11 @@ PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 			ERRMSG("Invalid viscosity data for '%s",P->name);
 			/* visc_prepare should return NULL if there was an error, so result is
 			same as when there is no viscosity data at all */
+		}else{
+			MSG("Thermal conductivity data initialised");
 		}
+	}else{
+		MSG("No thermal conductivity data provided");
 	}
 	return P;
 }

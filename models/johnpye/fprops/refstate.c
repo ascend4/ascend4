@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define REF_DEBUG
+//#define REF_DEBUG
 #ifdef REF_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
@@ -405,6 +405,16 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 #endif
 
 		MSG("Set TPHG reference state.");
+		return 0;
+
+	case FPROPS_REF_UNDEFINED:
+		if(P->type != FPROPS_INCOMP){
+			ERRMSG("Not implemented: FPROPS_REF_UNDEFINED with this fluid type.");
+			return 1;
+		}
+		MSG("No reference state set for incompressible fluid");
+		P->data->cp0->c = -(s2 - s1)/P->data->R;
+		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
 		return 0;
 
 	default:

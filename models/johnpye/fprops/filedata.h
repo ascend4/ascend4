@@ -59,8 +59,8 @@ typedef enum{
 	,FPROPS_REF_PHI0 = 1 /**< phi0 reference point means that 'c' and 'm' in the phi0 expression are provided */
 	,FPROPS_REF_IIR = 2  /**< International Institute of Refrigeration reference state: h=200 kJ/kg, s = 1 kJ/kg/K at saturated liquid, 0 deg C */
 	,FPROPS_REF_NBP = 3  /**< Set h and s to zero for the saturated liquid at normal atmospheric pressure (101.325 kPa) */
-	,FPROPS_REF_TRHS = 4 /**< Reference state specified by T0, p0, h0 and s0 */
-	,FPROPS_REF_TPUS = 5 /**< Reference state specified by T0, p0, h0 and s0 */
+	,FPROPS_REF_TRHS = 4 /**< Reference state specified by T0, rho0, h0 and s0 */
+	,FPROPS_REF_TPUS = 5 /**< Reference state specified by T0, p0, u0 and s0 */
 	,FPROPS_REF_TPHS = 6 /**< Reference state specified by T0, p0, h0 and s0 */
 	,FPROPS_REF_TPF = 7  /**< Reference state of h=0 and s=0 for liquid at the triple point */
 	,FPROPS_REF_TPFU = 8 /**< Reference state of u=0 and s=0 for liquid at the triple point */
@@ -426,6 +426,7 @@ typedef struct ViscosityData_struct{
 typedef enum ThCondType_enum{
 	FPROPS_THCOND_NONE = 0
 	,FPROPS_THCOND_1 = 1 /**< first thermal conductivity model, as per Vesovic et al 1990 (for CO2) and Lemmon and Jacobsen 2004 (for N2,O2,Ar,air). */
+	,FPROPS_THCOND_POLY = 2
 } ThCondType;
 
 /**
@@ -472,12 +473,24 @@ typedef struct ThermalConductivityData1_struct{
 	ThCondCritEnhOlchowyData *crit;
 } ThermalConductivityData1;
 
+typedef struct ThCondPolyTerm_struct{
+	double c;
+	unsigned n;
+}ThCondPolyTerm;
+
+typedef struct ThCondPoly_struct{
+	unsigned np;
+	const ThCondPolyTerm *pt;
+	double Tstar;
+	double kstar;
+}ThCondPoly;
 
 typedef struct ThermalConductivityData_struct{
 	const char *source;
 	ThCondType type;
 	union{
 		ThermalConductivityData1 k1;
+		ThCondPoly poly;
 	} data;
 } ThermalConductivityData;
 

@@ -26,8 +26,11 @@
 #include "incomp.h"
 #include "cp0.h"
 #include "refstate.h"
+#include "rundata.h"
 
 /* these are the 'raw' functions, they don't do phase equilibrium. */
+PropEvalFn2 incomp_rho;
+PropEvalFn2 incomp_T;
 PropEvalFn2 incomp_p;
 PropEvalFn2 incomp_u;
 PropEvalFn2 incomp_h;
@@ -76,7 +79,10 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 #define D P->data
 #define I E->data.incomp
 
+	MSG("E->data.incomp = %p",I);
+
 	/* metadata */
+	MSG("E->name = %s",E->name);
 	P->name = E->name;
 	P->source = E->source;
 	P->type = FPROPS_INCOMP;
@@ -117,14 +123,14 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 	IncompRunData *R = FPROPS_NEW(IncompRunData);
 	D->corr.incomp = R;
 
-	MSG("I->rho = %p",&(I->rho));
-	MSG("I->rho.Tstar = %f",I->rho.Tstar);
-	MSG("I->rho.np = %u",I->rho.np);
+	//MSG("P->data->corr.incomp = %p",P->data->corr.incomp);
+	//MSG("I->rho = %p",&(I->rho));
+	//MSG("I->rho.Tstar = %f",I->rho.Tstar);
+	//MSG("I->rho.np = %u",I->rho.np);
 
 	R->rho = I->rho;
 
-	MSG("D->corr.incomp->rho.np = %u",D->corr.incomp->rho.np);
-
+	//MSG("D->corr.incomp->rho.np = %u",D->corr.incomp->rho.np);
 
 	/* function pointers... more to come still? */
 #define FN(VAR) P->VAR##_fn = &incomp_##VAR
@@ -146,6 +152,9 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 	}
 
 #undef D
+	//MSG("Returning P, with P->name = %s",P->name);
+	//MSG("P->data->corr.incomp = %p",P->data->corr.incomp);
+
 	return P;
 }
 
@@ -167,22 +176,34 @@ double incomp_T(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 }
 
 double incomp_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err){
-	//ASSERT(data->type == FPROPS_INCOMP);
-	double sum = 0;
+	//assert(data->type == FPROPS_INCOMP);
+	//MSG("...");
 #define D data->corr.incomp
-	const double np = D->rho.np;
+	//MSG("D = %p",D);
+	const unsigned np = D->rho.np;
+	double sum;
 	double Tred;
+	//MSG("type = %d", D->rho.type);
+	//MSG("T* = %f",D->rho.Tstar);
 
 	switch(D->rho.type){
 	case FPROPS_DENS_T: // series in terms of T/Tstar
 		Tred = vals.Tp.T / D->rho.Tstar;
+		//MSG("Tred = T/T* = %f",Tred);
 		break;
 	case FPROPS_DENS_1MT: // series in terms of [1 - T/Tstar]
 		Tred = 1 - vals.Tp.T / D->rho.Tstar;
+		//MSG("Tred = 1 - T/T* = %f",Tred);
+		break;
+	default:
+		*err = FPROPS_NOT_IMPLEMENTED;
+		return -1;
 	}
 
+	sum=0;
 	for(int i=0; i<np; ++i){
 		sum += D->rho.pt[i].c * pow(Tred, D->rho.pt[i].n);
+		//MSG("i = %u, c = %f, n = %f --> sum = %f", i, D->rho.pt[i].c, D->rho.pt[i].n,sum);
 	}
 	return D->rho.rhostar * sum;
 #undef D
@@ -192,6 +213,9 @@ double incomp_h(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TAU;
 	MSG("Calculating h(T = %f, p = %f), T* = %f, tau = %f",vals.Tp.T, vals.Tp.p, data->Tstar, tau);
 	// FIXME get rid of nonsensical 'R' in FluidData for FPROPS_INCOMP case!
+
+	// TODO replace attempted re-use of cp0 routines with specialised code for FPROPS_INCOMP?
+	// issue: 'phi' is an ideal gas helmholtz EOS, so entropy based off t
 	return data->R * T * (1 + tau * ideal_phi_tau(tau,data->cp0));
 }
 

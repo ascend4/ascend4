@@ -31,7 +31,7 @@
 
 #define SQ(X) ((X)*(X))
 
-#define CP0_DEBUG
+//#define CP0_DEBUG
 #ifdef CP0_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG

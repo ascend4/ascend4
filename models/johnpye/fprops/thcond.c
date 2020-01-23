@@ -50,6 +50,11 @@ void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError 
 		P->thcond = K;
 		MSG("P.thcond.type = %d",P->thcond->type);
 		return;
+	case FPROPS_THCOND_POLY:
+		MSG("Series with %u polynomial terms",K->data.poly.np);
+		P->thcond = K;
+		MSG("P.thcond.type = %d",P->thcond->type);
+		return;
 	case FPROPS_THCOND_NONE:
 		*err = FPROPS_NOT_IMPLEMENTED;
 		return;
@@ -193,6 +198,11 @@ double thcond1_chitilde(FluidState2 state, FpropsError *err){
 	}
 	double rho = fprops_rho(state,err);
 	if(*err){
+		ERRMSG("Failed to evaluate density");
+		return NAN;
+	}
+	double T = fprops_T(state,err);
+	if(*err){
 		ERRMSG("Failed to evaluate temperature");
 		return NAN;
 	}
@@ -223,7 +233,7 @@ double thcond1_lamc(FluidState2 state, FpropsError *err){
 	}
 	double rho = fprops_rho(state,err);
 	if(*err){
-		ERRMSG("Failed to evaluate temperature");
+		ERRMSG("Failed to evaluate density");
 		return NAN;
 	}
 	//const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
@@ -258,7 +268,7 @@ double thcond1_lamc(FluidState2 state, FpropsError *err){
 	FluidState2 state_r = state;
 	assert(state.fluid->type == FPROPS_HELMHOLTZ);
 	state_r.vals.Trho.T = T_ref;
-	MSG("state_r: T=%f, rho=%f",state_r.T, state_r.rho);
+	MSG("state_r: T=%f, rho=%f",state_r.vals.Trho.T, state_r.vals.Trho.rho);
 	//MSG("chitilde(state) = %e", thcond1_chitilde(state,err));
 	//MSG("chitilde(state_r) = %e", thcond1_chitilde(state_r,err));
 	//MSG("chitilde(state_r)*T_ref/T = %e", thcond1_chitilde(state_r,err)*T_ref/state.T);
@@ -297,26 +307,41 @@ double thcond1_lamc(FluidState2 state, FpropsError *err){
 	return lamc;
 }
 
+/*------------------- POLYNOMIAL THERMAL CONDUCTIVITY WRT TEMPERATURE-------------------*/
+
+double thcond1_lam_poly(double T, const ThCondPoly *poly){
+	unsigned i;
+	double sum = 0;
+	double Tred = T / poly->Tstar;
+	//MSG("T = %f, Tstar = %f, Tred = %f",T, poly->Tstar, Tred);
+	for(i=0; i<poly->np; ++i){
+		sum += poly->pt[i].c * pow(Tred, poly->pt[i].n);
+		//MSG("c = %f, n = %d, sum = %f", poly->pt[i].c, poly->pt[i].n, sum);
+	}
+	return poly->kstar * sum;
+}
+
 /*----------------------------------OVERALL RESULT----------------------------*/
 
 double thcond1_lam(FluidState2 state, FpropsError *err){
-	// if we are here, we should be able to assume that state, should be able to remove following test (convert to assert)
-	if(state.fluid->thcond->type != FPROPS_THCOND_1){
+	if(NULL == state.fluid->thcond){
+		MSG("thcond data is NULL");
+		*err = FPROPS_INVALID_REQUEST;
+		return -1;
+	}
+
+	switch(state.fluid->thcond->type){
+
+	case FPROPS_THCOND_1:
+		return thcond1_lam0(state,err) + thcond1_lamr(state,err) + thcond1_lamc(state,err);
+
+	case FPROPS_THCOND_POLY:
+		//MSG("thcond1_lab_poly");
+		return thcond1_lam_poly(fprops_T(state,err),&(state.fluid->thcond->data.poly));
+
+	default:
 		ERRMSG("Thermal conductivity calculation not yet supported for this fluid");
 		*err = FPROPS_INVALID_REQUEST;
 		return NAN;
 	}
-
-	//const ThermalConductivityData1 *k1 = &(state.fluid->thcond->data.k1);
-
-	// value for the conductivity at the zero-density limit
-	double lam0 = thcond1_lam0(state,err);
-
-	double lamr = thcond1_lamr(state,err);
-
-	// FIXME need to check if k1->crit is used, etc etc
-	double lamc = thcond1_lamc(state,err);
-	MSG("lamc = %e",lamc);
-
-	return lam0 + lamr + lamc;
 }

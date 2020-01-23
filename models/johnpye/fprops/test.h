@@ -70,6 +70,42 @@ int helm_check_p_c(const HelmholtzData *d);
 
 //#define TEST_VERBOSE
 
+#define STATENAME1(STATE) \
+	((STATE.fluid->type == FPROPS_HELMHOLTZ\
+		||STATE.fluid->type == FPROPS_PENGROB\
+		||STATE.fluid->type == FPROPS_IDEAL\
+		||STATE.fluid->type == FPROPS_INCOMP\
+	) ? "T" : "???")
+
+#define STATENAME2(STATE) \
+	((STATE.fluid->type == FPROPS_HELMHOLTZ \
+		||STATE.fluid->type == FPROPS_PENGROB \
+		||STATE.fluid->type == FPROPS_IDEAL \
+	) ? "rho" \
+	: ((STATE.fluid->type == FPROPS_INCOMP) ? "p" : "???")) \
+
+#define STATEVAL1(STATE) \
+	((STATE.fluid->type == FPROPS_HELMHOLTZ\
+		||STATE.fluid->type == FPROPS_PENGROB\
+		||STATE.fluid->type == FPROPS_IDEAL\
+	) ? STATE.vals.Trho.T\
+	: (\
+		(STATE.fluid->type == FPROPS_INCOMP)\
+		? STATE.vals.Tp.T\
+		: -1\
+	))
+
+#define STATEVAL2(STATE) \
+	((STATE.fluid->type == FPROPS_HELMHOLTZ\
+		||STATE.fluid->type == FPROPS_PENGROB\
+		||STATE.fluid->type == FPROPS_IDEAL\
+	) ? STATE.vals.Trho.rho\
+	: (\
+		(STATE.fluid->type == FPROPS_INCOMP)\
+		? STATE.vals.Tp.p\
+		: -1\
+	))
+
 #ifdef TEST_VERBOSE
 # define TEST_SUCCESS(FN,PARAM1,PARAM2,PARAM3,VAL) \
 		fprintf(stderr,"    ");\
@@ -100,8 +136,8 @@ int helm_check_p_c(const HelmholtzData *d);
 		color_on(stderr,ASC_FG_GREEN);\
 		fprintf(stderr,"OK");\
 		color_off(stderr);\
-		fprintf(stderr,", %s(T=%f,rho=%f) = %8.2e with %.6f%% err.\n"\
-		,PROP,STATE.T,STATE.rho,VAL,relerrpc\
+		fprintf(stderr,", %s(%s=%f,%s=%f) = %8.2e with %.6f%% err.\n"\
+		,PROP,STATENAME1(STATE),STATEVAL1(STATE),STATENAME2(STATE),STATEVAL2(STATE),VAL,relerrpc\
 	)
 # define TEST_MSG(MSG,...) fprintf(stderr,MSG "\n",##__VA_ARGS__)
 #else
@@ -142,42 +178,6 @@ int helm_check_p_c(const HelmholtzData *d);
 		}\
 		CU_TEST_FATAL(fabs(x_err)<=fabs(TOL));\
 	}
-
-#define STATENAME1(STATE) \
-	((STATE.fluid->type == FPROPS_HELMHOLTZ\
-		||STATE.fluid->type == FPROPS_PENGROB\
-		||STATE.fluid->type == FPROPS_IDEAL\
-		||STATE.fluid->type == FPROPS_INCOMP\
-	) ? "T" : "???")
-
-#define STATENAME2(STATE) \
-	((STATE.fluid->type == FPROPS_HELMHOLTZ \
-		||STATE.fluid->type == FPROPS_PENGROB \
-		||STATE.fluid->type == FPROPS_IDEAL \
-	) ? "rho" \
-	: ((STATE.fluid->type == FPROPS_INCOMP) ? "p" : "???")) \
-
-#define STATEVAL1(STATE) \
-	((STATE.fluid->type == FPROPS_HELMHOLTZ\
-		||STATE.fluid->type == FPROPS_PENGROB\
-		||STATE.fluid->type == FPROPS_IDEAL\
-	) ? STATE.vals.Trho.T\
-	: (\
-		(STATE.fluid->type == FPROPS_INCOMP)\
-		? STATE.vals.Tp.T\
-		: -1\
-	))
-
-#define STATEVAL2(STATE) \
-	((STATE.fluid->type == FPROPS_HELMHOLTZ\
-		||STATE.fluid->type == FPROPS_PENGROB\
-		||STATE.fluid->type == FPROPS_IDEAL\
-	) ? STATE.vals.Trho.rho\
-	: (\
-		(STATE.fluid->type == FPROPS_INCOMP)\
-		? STATE.vals.Tp.p\
-		: -1\
-	))
 
 
 #define ASSERT_PROP(PROP,STATE,ERR1,VAL,TOL){\
