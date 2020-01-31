@@ -121,7 +121,8 @@ typedef struct Cp0PowTerm_struct{
 	double t;
 } Cp0PowTerm;
 
-/** Exponential terms for cp0 */
+/** Exponential terms, aka Planck-Einstein terms, for cp0.
+    See http://ascend4.org/FPROPS#Ideal_part */
 typedef struct Cp0ExpTerm_struct{
 	double b;
 	double beta;
@@ -139,8 +140,8 @@ be used seamlessly to eg for ideal_phi_tautau etc.
 */
 typedef struct 	Cp0Data_struct{
 	/* TODO: consider: do we need cp0 and Tstar here? */
-	double cp0star; /* reducing parameter used for cp0, usually equals R */
-    double Tstar; /* reducing parameter for T, usually equals Tc */
+	double cp0star; /* reducing parameter used for cp0, typically cp0star = R */
+    double Tstar; /* reducing parameter for T, so Tred = T/Tstar; usually Tstar = Tc */
 
 	unsigned np; /* number of power terms */
 	const Cp0PowTerm *pt; /* power term data, may be NULL if np == 0 */

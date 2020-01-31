@@ -107,12 +107,6 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 	D->rho_c = NAN;
 	D->omega = NAN;
 
-	IdealData *J = FPROPS_NEW(IdealData);
-	J->data.cp0 = I->cp0;
-	J->type = IDEAL_CP0;
-	D->cp0 = cp0_prepare(J, D->R, I->cp0.Tstar);
-	FPROPS_FREE(J);
-
 	if(NULL == &(I->rho)){
 		ERRMSG("Density null in the provided filedata");
 		cp0_destroy(D->cp0);
@@ -122,6 +116,19 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 
 	IncompRunData *R = FPROPS_NEW(IncompRunData);
 	D->corr.incomp = R;
+
+	/* FIXME use a different approach for cp0 */
+#if 0
+	IdealData *J = FPROPS_NEW(IdealData);
+	J->data.cp0 = I->cp0;
+	J->type = IDEAL_CP0;
+	D->cp0 = cp0_prepare(J, D->R, I->cp0.Tstar);
+	FPROPS_FREE(J);
+#else
+	MSG("filedata for cp0 = %p (np = %u)",&(I->cp0),I->cp0.np);
+	D->corr.incomp->cp0 = &(I->cp0);
+	MSG("rundata np = %u",D->corr.incomp->cp0->np);
+#endif
 
 	//MSG("P->data->corr.incomp = %p",P->data->corr.incomp);
 	//MSG("I->rho = %p",&(I->rho));
@@ -152,7 +159,7 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 	}
 
 #undef D
-	//MSG("Returning P, with P->name = %s",P->name);
+	MSG("Returning P, with P->name = %s",P->name);
 	//MSG("P->data->corr.incomp = %p",P->data->corr.incomp);
 
 	return P;
@@ -215,8 +222,13 @@ double incomp_h(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	// FIXME get rid of nonsensical 'R' in FluidData for FPROPS_INCOMP case!
 
 	// TODO replace attempted re-use of cp0 routines with specialised code for FPROPS_INCOMP?
-	// issue: 'phi' is an ideal gas helmholtz EOS, so entropy based off t
-	return data->R * T * (1 + tau * ideal_phi_tau(tau,data->cp0));
+	// issue: 'phi' is an ideal gas helmholtz EOS, so entropy based off this depends on a value for 'R'
+	// which is not defined for incompressible fluids.
+
+
+
+	double h = data->R * T * (1 + tau * ideal_phi_tau(tau,data->cp0));
+	MSG("   h = %f",h);
 }
 
 double incomp_s(FluidStateUnion vals, const FluidData *data, FpropsError *err){
@@ -244,7 +256,8 @@ double incomp_g(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 }
 
 double incomp_cp(FluidStateUnion vals, const FluidData *data, FpropsError *err){
-	ERRMSG("Not implemented");
+	MSG("cp0_eval at T = %f, cp0 = %p",vals.Trho.T, data->corr.incomp->cp0);
+	return cp0_eval(vals.Trho.T, data->corr.incomp->cp0);
 	*err = FPROPS_NOT_IMPLEMENTED;
 	return 0;
 }

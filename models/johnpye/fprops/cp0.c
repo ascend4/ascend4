@@ -167,6 +167,33 @@ void cp0_destroy(Phi0RunData *N){
 	FPROPS_FREE(N);
 }
 
+/*--------------------------------------------
+  DIRECT CALCULATION FROM CP0DATA STRUCTURES (for use in incomp.c)
+*/
+
+double cp0_eval(double T, const Cp0Data *data){
+	const Cp0PowTerm *pt; /* power term data, may be NULL if np == 0 */
+	const Cp0ExpTerm *et; /* exponential term data, maybe NULL if ne == 0 */
+	unsigned i;
+	double sum = 0;
+	double term;
+	double Tred = T / data->Tstar;
+
+	pt = &(data->pt[0]);
+	for(i = 0; i<data->np; ++i, ++pt){
+		term = pt->c * pow(Tred, pt->t);
+		sum += term;
+	}
+	et = &(data->et[0]);
+	for(i = 0; i<data->ne; ++i, ++et){
+		MSG("Warning: evaluation of exponential term not yet tested");
+		double x = et->beta / Tred;
+		term = et->b * SQ(x) * exp(-x) / SQ(1 - exp(-x));
+		sum += term;
+	}
+	return sum;
+}
+
 /*---------------------------------------------
   IDEAL COMPONENT RELATIONS
 */

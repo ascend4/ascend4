@@ -34,6 +34,14 @@
 */
 Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar);
 
+/**
+    Direct evaluation of cp0(T) from Cp0Data correlation data. This function is applicable
+    for incompressible fluids which don't make use of ideal helmholtz function (phi).
+
+    FIXME TODO perhaps we should reformulate cp0 to exclude the 'phi' functions (they belong in
+    ideal.c, not here, perhaps.
+*/
+double cp0_eval(double T, const Cp0Data *data);
 
 void cp0_destroy(Phi0RunData *cp0);
 
@@ -57,5 +65,8 @@ double ideal_phi_tau(double tau, const Phi0RunData *data);
 	\f$
 */
 double ideal_phi_tautau(double tau, const Phi0RunData *data);
+
+
+double cp0_eval(double T, const Cp0Data *data);
 
 #endif

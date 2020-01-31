@@ -28,4 +28,9 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref);
 
 void incomp_destroy(PureFluid *data);
 
+# ifdef CUNIT_TEST
+double incomp_h(FluidStateUnion vals, const FluidData *data, FpropsError *err);
+double incomp_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err);
+# endif
+
 #endif // FPROPS_INCOMP_H

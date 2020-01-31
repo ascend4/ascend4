@@ -82,6 +82,7 @@ typedef struct PengrobRunData_struct{
 
 typedef struct IncompRunData_struct{
 	DensityData rho;
+	const Cp0Data *cp0;
 } IncompRunData;
 
 typedef union CorrelationUnion_union{
