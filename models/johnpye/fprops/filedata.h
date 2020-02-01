@@ -372,6 +372,7 @@ typedef struct MbwrData_struct{
 typedef enum ViscosityType_enum{
 	FPROPS_VISC_NONE = 0
 	,FPROPS_VISC_1 = 1 /**< first viscosity model, as per Lemmon and Jacobsen 2004, "Viscosity and Thermal Conductivity Equations for Nitrogen, Oxygen, Argon, and Air" */
+    ,FPROPS_VISC_EPT = 2 /**< viscosity as mu = exp(powerseries(T)), terms c*T^t */
 } ViscosityType;
 
 typedef enum ViscCollisionIntegType_enum{
@@ -416,11 +417,35 @@ typedef struct ViscosityData1_struct{
 	const ViscData1Term *t;
 } ViscosityData1;
 
+/**
+    Structure for viscosity terms of the for c*T^t
+*/
+typedef struct ViscPowTerm_struct{
+    double c;
+    double t;
+} ViscPowTerm;
+
+/**
+    Structure to store Exponentiated Power series in T, of the form
+    ln(mu/mu_star) = sum(c_i * T^t_i) + b*ln(T)
+    and
+    mu/mu_star = sum(c_i * T^t_i)
+*/
+typedef struct ViscDataEpt_struct{
+    double mu_star;
+    unsigned np;
+    ViscPowTerm *pt; ///< viscosity terms c*T^t
+    unsigned b; ///< viscosity term b*ln(T)
+    char is_ln; ///< if true, ln(mu) = [...]; if false, mu = [...].
+} ViscDataEpt;
+
+
 typedef struct ViscosityData_struct{
 	const char *source;
 	ViscosityType type;
 	union{
 		ViscosityData1 v1;
+        ViscDataEpt ept;
 	} data;
 } ViscosityData;
 

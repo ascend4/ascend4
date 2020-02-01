@@ -78,6 +78,21 @@ static const ThermalConductivityData thcond_data_sodium = {
 	}}
 };
 
+static const ViscosityData visc_data_sodium = {
+	.source = SODIUM_SOURCE " " SODIUM_SOURCEURL
+	,.type = FPROPS_VISC_EPT
+	,.data = {.ept=(ViscDataEpt){
+		.mu_star = 1
+		,.np = 2
+		,.pt = (const ViscPowTerm[]){
+			{-6.4406, 0}
+			,{556.835, -1}
+		}
+		,.b = -0.3958
+		,.is_ln = 1
+	}}
+};
+
 const EosData eos_sodium = {
 	"sodium"
 	,SODIUM_SOURCE
