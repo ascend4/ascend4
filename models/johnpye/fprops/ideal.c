@@ -124,6 +124,7 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 	FN(p); FN(u); FN(h); FN(s); FN(a); FN(g); FN(cp); FN(cv); FN(w);
 	FN(dpdrho_T);
 	FN(sat);
+	P->setref_fn = refstate_set_for_phi0;
 #undef FN
 
 	//MSG("Setting reference state...");

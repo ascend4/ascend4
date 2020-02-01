@@ -41,7 +41,9 @@ Phi0RunData *cp0_prepare(const IdealData *I, double R, double Tstar);
     FIXME TODO perhaps we should reformulate cp0 to exclude the 'phi' functions (they belong in
     ideal.c, not here, perhaps.
 */
-double cp0_eval(double T, const Cp0Data *data);
+double cp0_cp(double T, const Cp0Data *data);
+double cp0_h(double T, const Cp0Data *data, double const_h);
+double cp0_s(double T, const Cp0Data *data, double const_s);
 
 void cp0_destroy(Phi0RunData *cp0);
 

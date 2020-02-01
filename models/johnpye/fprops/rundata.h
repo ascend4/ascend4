@@ -32,13 +32,13 @@ Data declarations as provided in input files are given in filedata.h
 typedef struct PureFluid_struct PureFluid;
 
 /** Power terms for phi0 (including polynomial) */
-typedef struct Cp0RunPowTerm_struct{
+typedef struct Phi0RunPowTerm_struct{
 	double a;
 	double p;
 } Phi0RunPowTerm;
 
 /** Planck-Einstein aka 'exponential' terms for phi0 */
-typedef struct Cp0RunExpTerm_struct{
+typedef struct Phi0RunExpTerm_struct{
 	double n;
 	double gamma;
 } Phi0RunExpTerm;
@@ -83,6 +83,8 @@ typedef struct PengrobRunData_struct{
 typedef struct IncompRunData_struct{
 	DensityData rho;
 	const Cp0Data *cp0;
+	double const_h;
+	double const_s;
 } IncompRunData;
 
 typedef union CorrelationUnion_union{
@@ -178,12 +180,12 @@ typedef struct FluidState2_struct{
 /* Definition of a fluid property function pointer */
 typedef double PropEvalFn2(FluidStateUnion vals,const FluidData *data, FpropsError *err);
 
-typedef double PropEvalFn(double T, double rho, const FluidData *data, FpropsError *err);
-
-
+//typedef double PropEvalFn(double T, double rho, const FluidData *data, FpropsError *err);
 
 /** @return psat */
 typedef double SatEvalFn(double T,double *rhof, double *rhog, const FluidData *data, FpropsError *err);
+
+typedef int SetRefStateFn(PureFluid *data, const ReferenceState *ref);
 
 typedef enum PhaseBehaviour_enum{
 	FPROPS_SINGLEPHASE
@@ -215,6 +217,7 @@ typedef struct PureFluid_struct{
 	PropEvalFn2 *betap_fn;
 	PropEvalFn2 *dpdrho_T_fn; // this derivative is required for saturation properties by Akasaka method
 	SatEvalFn *sat_fn; // function to return {psat,rhof,rhog}(T) for this pure fluid;
+	SetRefStateFn *setref_fn; // function to set reference state for this pure fluid
 
 	const ViscosityData *visc; // TODO should it be here? or inside FluidData?? probably yes, but needs review.
 	const ThermalConductivityData *thcond; // TODO should it be here? probably yes, but needs review.

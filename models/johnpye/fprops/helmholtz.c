@@ -169,6 +169,7 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	FN(alphap); FN(betap); FN(dpdrho_T);
 	FN(sat);
 #undef FN
+	P->setref_fn = refstate_set_for_phi0;
 
 	FpropsError err = 0;
 

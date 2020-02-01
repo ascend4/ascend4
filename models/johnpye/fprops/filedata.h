@@ -147,6 +147,8 @@ typedef struct 	Cp0Data_struct{
 	const Cp0PowTerm *pt; /* power term data, may be NULL if np == 0 */
 	unsigned ne; /* number of 'exponential' terms */
 	const Cp0ExpTerm *et; /* exponential term data, maybe NULL if ne == 0 */
+    double c;
+    double m;
 } Cp0Data;
 
 

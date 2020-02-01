@@ -27,6 +27,7 @@
 #include "fprops.h"
 #include "sat.h"
 #include "ideal_impl.h"
+#include "refstate.h"
 #include "cp0.h"
 #include "zeroin.h"
 #include <math.h>
@@ -203,6 +204,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 	FN(p); FN(u); FN(h); FN(s); FN(a); FN(g); FN(cp); FN(cv); FN(w);
 	FN(dpdrho_T); FN(alphap); FN(betap);
 	FN(sat);
+	P->setref_fn = refstate_set_for_phi0;
 #undef FN
 #undef I
 #undef D

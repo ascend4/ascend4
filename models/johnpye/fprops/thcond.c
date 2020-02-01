@@ -41,6 +41,7 @@
 
 void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError *err){
 	MSG("Preparing thermal conductivity: currently we are just reusing the FileData pointer; no changes");
+	ASSERT(P!=NULL);
 	ASSERT(K!=NULL);
 	MSG("K.type: %d",K->type);
 	MSG("K.source: %s",K->source);

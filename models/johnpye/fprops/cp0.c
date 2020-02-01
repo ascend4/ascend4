@@ -171,7 +171,7 @@ void cp0_destroy(Phi0RunData *N){
   DIRECT CALCULATION FROM CP0DATA STRUCTURES (for use in incomp.c)
 */
 
-double cp0_eval(double T, const Cp0Data *data){
+double cp0_cp(double T, const Cp0Data *data){
 	const Cp0PowTerm *pt; /* power term data, may be NULL if np == 0 */
 	const Cp0ExpTerm *et; /* exponential term data, maybe NULL if ne == 0 */
 	unsigned i;
@@ -192,6 +192,88 @@ double cp0_eval(double T, const Cp0Data *data){
 		sum += term;
 	}
 	return sum;
+}
+
+/*
+  Calculate enthalpy as integral(cp(T)*dT), using https://live.sympy.org/:
+  #--
+  c,t,T,Tred,Tstar = symbols('c t T T_red T^*')
+  expr = c*Tred**t
+  integrate( expr.subs(Tred, T/Tstar), T).subs(T,Tstar*Tred)
+  #--
+  b,x,beta,T = symbols('b x beta t')
+  expr = b*x**2*exp(-x)/(1-exp(-x))**2
+  integrate( expr.subs(x,beta/T), T).subs(T,beta/x)
+*/
+double cp0_h(double T, const Cp0Data *data, double const_h){
+	/* evaluate enthalpy from cp0 equation, plus 'c' and 'm' offsets. */
+
+	const Cp0PowTerm *pt; /* power term data, may be NULL if np == 0 */
+	const Cp0ExpTerm *et; /* exponential term data, maybe NULL if ne == 0 */
+	unsigned i;
+	double sum = 0;
+	double term;
+	double Tred = T / data->Tstar;
+
+	pt = &(data->pt[0]);
+	for(i = 0; i<data->np; ++i, ++pt){
+		if(pt->t == -1){
+			// (note, it's not in terms of Tred)
+			term = data->Tstar * pt->c * log(T);
+		}else{
+			term = data->Tstar * pt->c * pow(Tred, pt->t + 1) / (pt->t + 1);
+		}
+		sum += term;
+		MSG("i=%u: c = %f, t = %f; term = %f, sum = %f",i, pt->c,pt->t,term,sum);
+	}
+	et = &(data->et[0]);
+	for(i = 0; i<data->ne; ++i, ++et){
+		MSG("Warning: evaluation of exponential term not yet tested");
+		double x = et->beta / Tred;
+		term = et->b * et->beta / (1 - exp(-x));
+		sum += term;
+	}
+	return sum * data->cp0star + const_h;
+}
+
+/*
+	Entropy as integral(cp(T)*dT/T), using https://live.sympy.org/:
+	c,t,T,Tred,Tstar = symbols('c t T T_red T^*');
+	expr = c*Tred**t;
+	integrate( expr.subs(Tred, T/Tstar)/T, T).subs(T,Tstar*Tred)
+	#--
+	b,x,beta,T = symbols('b x beta T')
+	expr = b*x**2*exp(-x)/(1-exp(-x))**2
+	integrate( expr.subs(x,beta/T)/T, T).subs(T,beta/x)
+*/
+double cp0_s(double T, const Cp0Data *data, double const_s){
+	const Cp0PowTerm *pt; /* power term data, may be NULL if np == 0 */
+	const Cp0ExpTerm *et; /* exponential term data, maybe NULL if ne == 0 */
+	unsigned i;
+	double sum = 0;
+	double term;
+	double Tred = T / data->Tstar;
+
+	pt = &(data->pt[0]);
+	for(i = 0; i<data->np; ++i, ++pt){
+		if(pt->t == 0){
+			term = pt->c * log(T);
+		}else{
+			term = pt->c * pow(Tred, pt->t) / pt->t;
+		}
+		sum += term;
+		MSG("i=%u: c = %f, t = %f; term = %f, sum = %f",i, pt->c,pt->t,term,sum);
+	}
+	et = &(data->et[0]);
+	for(i = 0; i<data->ne; ++i, ++et){
+		MSG("Warning: evaluation of exponential term not yet tested");
+		double x = et->beta / Tred;
+		double E = exp(-x) - 1;
+		term = - et->b * (x/E + x + log(E));
+		sum += term;
+	}
+
+	return sum * data->cp0star + const_s;
 }
 
 /*---------------------------------------------

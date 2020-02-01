@@ -59,7 +59,7 @@ SatEvalFn incomp_sat;
 
 //static void incomp_set_reference_std(FluidData *D, const ReferenceStateStd *R);
 
-#define INCOMP_DEBUG
+//#define INCOMP_DEBUG
 #ifdef INCOMP_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
@@ -145,16 +145,21 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 	FN(dpdrho_T);
 	FN(sat);
 #undef FN
+	P->setref_fn = &refstate_set_for_incomp;
 
 	MSG("Setting reference state...");
 	// fix up the reference point now...
 	if(ref == NULL){
+		MSG("Using default if available");
 		// use the provided ReferenceState, or the default one otherwise.
 		ref = &(I->ref);
+		if(ref){
+			MSG("Default reference type %d found",I->ref.type);
+		}
 	}
 	int res = fprops_set_reference_state(P,ref);
 	if(res){
-		ERRMSG("Unable to apply reference state (type %d, err %d)",ref->type,res);
+		ERRMSG("Error applying reference state (type %d, err %d)",ref->type,res);
 		return NULL;
 	}
 
@@ -217,24 +222,14 @@ double incomp_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err)
 }
 
 double incomp_h(FluidStateUnion vals, const FluidData *data, FpropsError *err){
-	DEFINE_TAU;
-	MSG("Calculating h(T = %f, p = %f), T* = %f, tau = %f",vals.Tp.T, vals.Tp.p, data->Tstar, tau);
-	// FIXME get rid of nonsensical 'R' in FluidData for FPROPS_INCOMP case!
-
-	// TODO replace attempted re-use of cp0 routines with specialised code for FPROPS_INCOMP?
-	// issue: 'phi' is an ideal gas helmholtz EOS, so entropy based off this depends on a value for 'R'
-	// which is not defined for incompressible fluids.
-
-
-
-	double h = data->R * T * (1 + tau * ideal_phi_tau(tau,data->cp0));
-	MSG("   h = %f",h);
+	//MSG("Calculating h(T = %f, p = %f), T* = %f",vals.Tp.T, vals.Tp.p, data->Tstar);
+	return cp0_h(vals.Tp.T, data->corr.incomp->cp0, data->corr.incomp->const_h);
+	// TODO ReferenceState and cp0 implementation need more work for the incompressible case.
 }
 
 double incomp_s(FluidStateUnion vals, const FluidData *data, FpropsError *err){
-	ERRMSG("Not implemented");
-	*err = FPROPS_NOT_IMPLEMENTED;
-	return 0;
+	MSG("Calculating s(T = %f, p = %f), T* = %f",vals.Tp.T, vals.Tp.p, data->Tstar);
+	return cp0_s(vals.Tp.T, data->corr.incomp->cp0, data->corr.incomp->const_s);
 }
 
 double incomp_u(FluidStateUnion vals, const FluidData *data, FpropsError *err){
@@ -257,7 +252,7 @@ double incomp_g(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 
 double incomp_cp(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	MSG("cp0_eval at T = %f, cp0 = %p",vals.Trho.T, data->corr.incomp->cp0);
-	return cp0_eval(vals.Trho.T, data->corr.incomp->cp0);
+	return cp0_cp(vals.Trho.T, data->corr.incomp->cp0);
 	*err = FPROPS_NOT_IMPLEMENTED;
 	return 0;
 }

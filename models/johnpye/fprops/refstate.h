@@ -9,4 +9,7 @@
 */
 int fprops_set_reference_state(PureFluid *data, const ReferenceState *ref);
 
+int refstate_set_for_incomp(PureFluid *data, const ReferenceState *ref);
+int refstate_set_for_phi0(PureFluid *data, const ReferenceState *ref);
+
 #endif

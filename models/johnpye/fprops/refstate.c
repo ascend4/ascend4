@@ -18,7 +18,14 @@
 
 #if 1
 #include "ideal.h"
+#include "incomp.h"
 #endif
+
+
+int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
+	if(!P){ERRMSG("P is NULL"); return 1;}
+	return P->setref_fn(P,ref);
+}
 
 static ZeroInSubjectFunction refstate_perr_Trho;
 
@@ -28,11 +35,22 @@ typedef struct{
 	double p;
 } RefStateTPData;
 
-int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
+int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 	if(!P){ERRMSG("P is NULL"); return 1;}
 	if(!P->data){ERRMSG("P->data is NULL"); return 1;}
-	if(!P->data->cp0){ERRMSG("P->data->cp0 is NULL"); return 1;}
 
+	if(ref->type == FPROPS_REF_REF0){
+		MSG("Using the default reference state specified for this fluid");
+		ref = &(P->data->ref0);
+	}
+
+	if(P->type == FPROPS_INCOMP){
+		ERRMSG("This function cannot be used for incompressible fluids");
+		return 1;
+	}
+
+
+	if(!P->data->cp0){ERRMSG("P->data->cp0 is NULL"); return 1;}
 	FpropsError res = 0;
 	P->data->cp0->c = 0;
 	P->data->cp0->m = 0;
@@ -43,9 +61,7 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 	double u, g2;
 #endif
 
-	if(ref->type == FPROPS_REF_REF0){
-		ref = &(P->data->ref0);
-	}
+	MSG("Reference state type=%d",ref->type);
 
 	switch(ref->type){
 	case FPROPS_REF_PHI0:
@@ -56,10 +72,6 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 
 	case FPROPS_REF_TPHS0:
 		/* FIXME we seem to have errors here, as tested with fluids/oxygen.c */
-		if(P->type == FPROPS_INCOMP){
-			ERRMSG("Not implemented: FPROPS_REF_TPHS0 with incompressible fluid");
-			return 1;
-		}
 
 		T = ref->data.tphs.T0;
 		p = ref->data.tphs.p0;
@@ -101,10 +113,6 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_IIR:
-		if(P->type == FPROPS_INCOMP){
-			ERRMSG("Not implemented: FPROPS_REF_IIR with incompressible fluid");
-			return 1;
-		}
 		MSG("Setting IIR reference state.");
 		/* need to calculate the saturated liquid state at 0 deg C */
 		T = 273.15 + 0;
@@ -147,7 +155,7 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_NBP:
-		if(P->type == FPROPS_INCOMP || P->type == FPROPS_IDEAL){
+		if(P->type == FPROPS_IDEAL){
 			ERRMSG("Not implemented: FPROPS_REF_NBP with this fluid type");
 			return 1;
 		}
@@ -178,7 +186,7 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TRHS:
-		if(P->type == FPROPS_INCOMP || P->type == FPROPS_IDEAL){
+		if(P->type == FPROPS_IDEAL){
 			ERRMSG("Not implemented: FPROPS_REF_TRHS with this fluid type");
 			return 1;
 		}
@@ -201,11 +209,6 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TPUS:
-		if(P->type == FPROPS_INCOMP){
-			ERRMSG("Not implemented: FPROPS_REF_TPUS with incompressible fluid.");
-			return 1;
-		}
-
 		/* need to solve for T,p first... */
 		T = ref->data.tpus.T0;
 		p = ref->data.tpus.p0;
@@ -256,6 +259,7 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		s2 = ref->data.tphs.s0;
 
 		switch(P->type){
+#if 0
 		case FPROPS_INCOMP:
 			S1 = fprops_set_Tp(T,p,P,&res);
 			h1 = fprops_h(S1,&res);
@@ -268,6 +272,7 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 
 			S2 = fprops_set_Tp(T,p,P,&res);
 			break;
+#endif
 		case FPROPS_PENGROB:
 		case FPROPS_HELMHOLTZ:
 			{
@@ -307,7 +312,7 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TPF:
-		if(P->type == FPROPS_INCOMP || P->type == FPROPS_IDEAL){
+		if(P->type == FPROPS_IDEAL){
 			ERRMSG("Not implemented: FPROPS_REF_TPF is not permitted with this fluid type.");
 			return 1;
 		}
@@ -328,7 +333,7 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TPFU:
-		if(P->type == FPROPS_INCOMP || P->type == FPROPS_IDEAL){
+		if(P->type == FPROPS_IDEAL){
 			ERRMSG("Not implemented: FPROPS_REF_TPFU with this fluid type.");
 			return 1;
 		}
@@ -408,14 +413,8 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_UNDEFINED:
-		if(P->type != FPROPS_INCOMP){
-			ERRMSG("Not implemented: FPROPS_REF_UNDEFINED with this fluid type.");
-			return 1;
-		}
-		MSG("No reference state set for incompressible fluid");
-		P->data->cp0->c = -(s2 - s1)/P->data->R;
-		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
-		return 0;
+		ERRMSG("Not implemented: FPROPS_REF_UNDEFINED with this fluid type.");
+		return 1;
 
 	default:
 		fprintf(stderr,"%s: Unhandled case (type %d)\n",__func__,ref->type);
@@ -431,4 +430,53 @@ double refstate_perr_Trho(double rho, void *user_data){
 	if(err)return -1;
 	return p - D->p;
 #undef D
+}
+
+/*--------------------------------------------------------------------------------------*/
+
+int refstate_set_for_incomp(PureFluid *P, const ReferenceState *ref){
+	if(!P){ERRMSG("P is NULL"); return 1;}
+	if(!P->data){ERRMSG("P->data is NULL"); return 1;}
+
+	if(ref->type == FPROPS_REF_REF0){
+		MSG("Using the default reference state specified for this fluid");
+		ref = &(P->data->ref0);
+	}
+
+	if(P->type != FPROPS_INCOMP){
+		ERRMSG("This function is only for compressible fluids");
+		return 1;
+	}
+
+	if(!P->data->corr.incomp->cp0){ERRMSG("cp0 data is NULL"); return 1;}
+	FpropsError err = 0;
+	P->data->corr.incomp->const_h = 0;
+	P->data->corr.incomp->const_s = 0;
+
+	double h, s, h0, s0, T0, p0;
+
+	switch(ref->type){
+	case FPROPS_REF_TPHS:
+		T0 = ref->data.tphs.T0;
+		p0 = ref->data.tphs.p0;
+		FluidStateUnion S0 = {.Tp={T0,p0}};
+		h = incomp_h(S0, P->data, &err);
+		s = incomp_s(S0, P->data, &err);
+		MSG("h(S0) = %f", h);
+		MSG("s(S0) = %f", s);
+		P->data->corr.incomp->const_s = ref->data.tphs.s0 - s;
+		P->data->corr.incomp->const_h = ref->data.tphs.h0 - h;
+		h0 = incomp_h(S0, P->data, &err);
+			s0 = incomp_s(S0, P->data, &err);
+		MSG("h0(S0) = %f", h0);
+		MSG("s0(S0) = %f", s0);
+		if(fabs(h0 - ref->data.tphs.h0) > 1e-9){ERRMSG("Failed to set h0"); return 1;}
+		if(fabs(s0 - ref->data.tphs.s0) > 1e-9){ERRMSG("Failed to set s0"); return 1;}
+		if(err){ERRMSG("Failed to calculate h or s for incompressible reference state"); return 1;}
+		MSG("Success");
+		return 0;
+	default:
+		ERRMSG("Not implemented");
+		return 1;
+	}
 }

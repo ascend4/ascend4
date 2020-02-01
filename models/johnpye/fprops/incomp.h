@@ -28,8 +28,11 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref);
 
 void incomp_destroy(PureFluid *data);
 
-# ifdef CUNIT_TEST
+// these functions should be private, but are currently used in refstate.c and in testing.
 double incomp_h(FluidStateUnion vals, const FluidData *data, FpropsError *err);
+double incomp_s(FluidStateUnion vals, const FluidData *data, FpropsError *err);
+
+# ifdef CUNIT_TEST
 double incomp_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err);
 # endif
 
