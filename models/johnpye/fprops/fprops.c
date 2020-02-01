@@ -265,6 +265,10 @@ EVALFN_SATUNDEFINED(cp); EVALFN_SATUNDEFINED(cv);
 EVALFN_SATUNDEFINED(w);
 EVALFN(dpdrho_T);
 
+double fprops_v(FluidState2 state, FpropsError *err){
+	return 1/fprops_rho(state,err);
+}
+
 EVALFN(alphap); EVALFN(betap);
 // EVALFN(dpdT_rho);
 //EVALFN(dpdrho_T); EVALFN(d2pdrho2_T); EVALFN(dhdT_rho); EVALFN(dhdrho_T);
@@ -359,16 +363,22 @@ double fprops_mu(FluidState2 state, FpropsError *err){
 
 /// TODO reimplement with function pointer?
 double fprops_lam(FluidState2 state, FpropsError *err){
-	if(NULL!=state.fluid->thcond){
-		switch(state.fluid->thcond->type){
-		case FPROPS_THCOND_1:
-			return thcond1_lam(state,err);
-		default:
-			break;
-		}
+	if(NULL == state.fluid->thcond){
+		MSG("thcond data is NULL");
+		*err = FPROPS_NOT_IMPLEMENTED;
+		return NAN;
 	}
-	*err = FPROPS_NOT_IMPLEMENTED;
-	return NAN;
+
+	switch(state.fluid->thcond->type){
+	case FPROPS_THCOND_1:
+		return thcond1_lam(state,err);
+	case FPROPS_THCOND_POLY:
+		return thcond1_lam_poly(fprops_T(state,err),&(state.fluid->thcond->data.poly),err);
+	default:
+		ERRMSG("Thermal conductivity calculation not yet supported for this fluid");
+		*err = FPROPS_INVALID_REQUEST;
+		return NAN;
+	}
 }
 
 

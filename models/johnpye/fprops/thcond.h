@@ -19,6 +19,7 @@
 
 void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError *err);
 
+#ifdef CUNIT_TEST
 double thcond1_lam0(FluidState2 state, FpropsError *err);
 /**< zero-density component of thermal conductivity [W/m/K] */
 
@@ -27,6 +28,9 @@ double thcond1_lamr(FluidState2 state, FpropsError *err);
 
 double thcond1_lamc(FluidState2 state, FpropsError *err);
 /**< critical enhancement component of thermal conductivity [W/m/K] */
+#endif
 
 double thcond1_lam(FluidState2 state, FpropsError *err);
 /**< thermal conductivity [W/m/K] */
+
+double thcond1_lam_poly(double T, const ThCondPoly *poly, FpropsError *err);

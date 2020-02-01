@@ -103,25 +103,27 @@ extern const EosData eos_sodium;
 /* Some test data from Fink & Liebowitz */
 
 typedef struct TestDataTrho_struct{
-	double T, rho, lam, h;
+	double T, rho, lam, h, s;
 } TestDataTrho;
 
 /*
-A small set of data points calculated using REFPROP 8.0, for validation.
+Data points for T, rho, k, h are from Fink & Liebowitz.
+Values of 's' were calculated with models/johnpye/liquidsodium.a4c.
 */
 
 static const TestDataTrho td[] = {
     /* Temperature, Density, Conductivity, Enthalpy */
     /* (K), (kg/m3), (W/m/K), J/kg */
-    {400.,   919., 87.22, 247e3  }
-	,{600.,  874., 73.70, 514e3  }
-	,{800.,  828., 62.90, 769e3  }
-	,{1000., 781., 54.24, 1020e3 }
-	,{1200., 732., 47.16, 1273e3 }
-	,{1400., 680., 41.08, 1534e3 }
-	,{1800., 568., 29.68, 2113e3 }
+    {400.,   919., 87.22, 247e3,  0.53326716242e3 }
+	,{600.,  874., 73.70, 514e3,  1.07537491829e3 }
+	,{800.,  828., 62.90, 769e3,  1.44336831041e3 }
+	,{1000., 781., 54.24, 1020e3, 1.72313707816e3 }
+	,{1200., 732., 47.16, 1273e3, 1.95341568058e3 }
+	,{1400., 680., 41.08, 1534e3, 2.15497925873e3 }
+	,{1800., 568., 29.68, 2113e3, 2.51730964576e3 }
 	//,{2503.7,219., 0.05,  4294e3 } // enthalpy will not agree at >2000K
 };
+
 static const unsigned ntd = sizeof(td)/sizeof(TestDataTrho);
 
 void test_fluid_sodium(void){
@@ -161,7 +163,7 @@ void test_fluid_sodium(void){
 		double T = td[i].T;
 		FluidState2 S = fprops_set_Tp(T,p,P,&err);
 		//TEST_MSG("T = %f",T);
-		double lam = thcond1_lam(S,&err);
+		double lam = thcond1_lam_poly(S.vals.Tp.T,&(S.fluid->thcond->data.poly),&err);
 		ASSERT_TOL_VAL(lam,td[i].lam,0.008);
 	}
 
@@ -173,6 +175,27 @@ void test_fluid_sodium(void){
 		double h = incomp_h(S.vals,S.fluid->data,&err);
 		ASSERT_TOL_VAL(h,td[i].h,0.5e3);
 	}
+
+	// check the high-level interface through 'fprops_T' etc.
+	FluidState2 S = fprops_set_Tp(400.,1e5,P,&err);
+	ASSERT_PROP(T,S,&err,400.,1e-20);
+	ASSERT_PROP(p,S,&err,1e5,1e-20);
+	ASSERT_PROP(h,S,&err,247e3,0.5e3);
+	ASSERT_PROP(rho,S,&err,919.,0.5);
+	ASSERT_PROP(lam,S,&err,87.22,0.005);
+	ASSERT_PROP(v,S,&err,1/919.,0.03e-2);
+
+	ReferenceState ref1 = {FPROPS_REF_TPHS,{.tphs={273.15,1e5,0,0}}};
+	fprops_set_reference_state(P,  &ref1);
+	for(int i=0; i<ntd; ++i){
+		double p = 1;
+		double T = td[i].T;
+		FluidState2 S = fprops_set_Tp(T,p,P,&err);
+		//TEST_MSG("T = %f",T);
+		double s = incomp_s(S.vals,S.fluid->data,&err);
+		ASSERT_TOL_VAL(s,td[i].s,1e-5);
+	}
+
 }
 
 #endif

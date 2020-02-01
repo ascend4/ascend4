@@ -50,6 +50,7 @@ and also what reference state, as another option. */
 
 double fprops_T(FluidState2 state, FpropsError *err);   ///< Temperature / [K]
 double fprops_rho(FluidState2 state, FpropsError *err); ///< Density / [kg/m3]
+double fprops_v(FluidState2 state, FpropsError *err); ///< Density / [kg/m3]
 double fprops_p(FluidState2 state, FpropsError *err);   ///< Pressure / [Pa]
 double fprops_u(FluidState2 state, FpropsError *err);   ///< Specific internal energy / [J/kg]
 double fprops_h(FluidState2 state, FpropsError *err);   ///< Specific enthalpy / [J/kg]

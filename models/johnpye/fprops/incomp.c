@@ -142,6 +142,7 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 	/* function pointers... more to come still? */
 #define FN(VAR) P->VAR##_fn = &incomp_##VAR
 	FN(p); FN(u); FN(h); FN(s); FN(a); FN(g); FN(cp); FN(cv); FN(w);
+	FN(rho);
 	FN(dpdrho_T);
 	FN(sat);
 #undef FN
@@ -233,9 +234,7 @@ double incomp_s(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 }
 
 double incomp_u(FluidStateUnion vals, const FluidData *data, FpropsError *err){
-	ERRMSG("Not implemented");
-	*err = FPROPS_NOT_IMPLEMENTED;
-	return 0;
+	return incomp_h(vals, data,err) - vals.Tp.p / incomp_rho(vals,data,err);
 }
 
 double incomp_a(FluidStateUnion vals, const FluidData *data, FpropsError *err){
@@ -253,8 +252,6 @@ double incomp_g(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 double incomp_cp(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	MSG("cp0_eval at T = %f, cp0 = %p",vals.Trho.T, data->corr.incomp->cp0);
 	return cp0_cp(vals.Trho.T, data->corr.incomp->cp0);
-	*err = FPROPS_NOT_IMPLEMENTED;
-	return 0;
 }
 
 double incomp_cv(FluidStateUnion vals, const FluidData *data, FpropsError *err){

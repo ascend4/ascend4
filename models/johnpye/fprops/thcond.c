@@ -308,9 +308,14 @@ double thcond1_lamc(FluidState2 state, FpropsError *err){
 	return lamc;
 }
 
+double thcond1_lam(FluidState2 state, FpropsError *err){
+	return thcond1_lam0(state,err) + thcond1_lamr(state,err) + thcond1_lamc(state,err);
+}
+
 /*------------------- POLYNOMIAL THERMAL CONDUCTIVITY WRT TEMPERATURE-------------------*/
 
-double thcond1_lam_poly(double T, const ThCondPoly *poly){
+double thcond1_lam_poly(double T, const ThCondPoly *poly, FpropsError *err){
+	if(poly == NULL){*err = FPROPS_INVALID_REQUEST; return NAN;}
 	unsigned i;
 	double sum = 0;
 	double Tred = T / poly->Tstar;
@@ -323,26 +328,3 @@ double thcond1_lam_poly(double T, const ThCondPoly *poly){
 }
 
 /*----------------------------------OVERALL RESULT----------------------------*/
-
-double thcond1_lam(FluidState2 state, FpropsError *err){
-	if(NULL == state.fluid->thcond){
-		MSG("thcond data is NULL");
-		*err = FPROPS_INVALID_REQUEST;
-		return -1;
-	}
-
-	switch(state.fluid->thcond->type){
-
-	case FPROPS_THCOND_1:
-		return thcond1_lam0(state,err) + thcond1_lamr(state,err) + thcond1_lamc(state,err);
-
-	case FPROPS_THCOND_POLY:
-		//MSG("thcond1_lab_poly");
-		return thcond1_lam_poly(fprops_T(state,err),&(state.fluid->thcond->data.poly));
-
-	default:
-		ERRMSG("Thermal conductivity calculation not yet supported for this fluid");
-		*err = FPROPS_INVALID_REQUEST;
-		return NAN;
-	}
-}
