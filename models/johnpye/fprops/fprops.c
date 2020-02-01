@@ -353,6 +353,8 @@ double fprops_mu(FluidState2 state, FpropsError *err){
 		switch(state.fluid->visc->type){
 		case FPROPS_VISC_1:
 			return visc1_mu(state,err);
+		case FPROPS_VISC_EPT:
+			return visc2_mu(fprops_T(state,err),&(state.fluid->visc->data.ept),err);
 		default:
 			break;
 		}

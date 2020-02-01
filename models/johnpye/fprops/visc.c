@@ -119,3 +119,21 @@ double visc1_mu(FluidState2 state, FpropsError *err){
 	MSG("mustar = %e",v1->mu_star);
 	return mu0 + (v1->mu_star * mur);
 }
+
+/*----------------------SECOND CORRELATION---------------------------*/
+
+double visc2_mu(double T, ViscDataEpt *data, FpropsError *err){
+	ViscPowTerm *pt = &(data->pt[0]);
+	double term, sum = 0;
+	unsigned i;
+	for(i = 0; i < data->np; ++i, ++pt){
+		term = pt->c * pow(T, pt->t);
+		sum += term;
+	}
+	sum += data->b * log(T);
+	if(data->is_ln){
+		return data->mu_star * exp(sum);
+	}else{
+		return data->mu_star * sum;
+	}
+}
