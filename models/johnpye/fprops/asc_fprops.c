@@ -656,7 +656,7 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 	}
 
 	double rho;
-	FluidState2 S = fprops_solve_ph(p,h, 0, FLUID, &err);
+	FluidState2 S = fprops_solve_ph(p,h, FLUID, &err);
 	rho = fprops_rho(S,&err);
 	T = fprops_T(S,&err);
 	if(err){

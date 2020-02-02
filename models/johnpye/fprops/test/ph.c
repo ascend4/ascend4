@@ -116,7 +116,7 @@ void test_ph_array(const PureFluid *P, int nT, int nv, double Trmin, double Trma
 			if(*err){ERRMSG("Couldn't calculate h");return;}
 
 			//double T1, rho1;
-			FluidState2 S1 = fprops_solve_ph(p,h,0,P,err);
+			FluidState2 S1 = fprops_solve_ph(p,h,P,err);
 			double T1 = fprops_T(S1,err);
 			double rho1 = fprops_rho(S1,err);
 			(*testedpoints)++;
@@ -193,7 +193,7 @@ int main(void){
 	h = fprops_h(S,&err); \
 	assert(!err); \
 	/*MSG("solving ph");*/\
-	fprops_solve_ph(p,h,&T,&rho,0,P,&err); \
+	fprops_solve_ph(p,h,&T,&rho,P,&err); \
 	assert(!err); \
 	MSG("T err: %f",(T-T0));\
 	MSG("rho err: %f",(rho-rho0));\

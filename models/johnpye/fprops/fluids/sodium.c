@@ -113,6 +113,7 @@ const EosData eos_sodium = {
 # include "../incomp.h"
 # include "../rundata.h"
 # include "../thcond.h"
+# include "../solve_ph.h"
 
 extern const EosData eos_sodium;
 
@@ -225,6 +226,19 @@ void test_fluid_sodium(void){
 		//TEST_MSG("T = %f",T);
 		double mu = fprops_mu(S,&err);
 		ASSERT_TOL_VAL(mu,td[i].mu,0.005e-4);
+	}
+
+	// check solve_ph...
+	double p = 1e5; // works equally with 5e5,10e5... shouldn't have any effect.
+	for(int i=0; i<ntd; ++i){
+		double T = td[i].T;
+		FluidState2 S = fprops_set_Tp(T,p,P,&err);
+		double h = fprops_h(S,&err);
+		if(err)TEST_MSG("failed to evaluate 'h': %s",fprops_error(err));
+		FluidState2 S1 = fprops_solve_ph(p,h,P,&err);
+		if(err)TEST_MSG("failed to solve (p,h): %s",fprops_error(err));
+		double T1 = fprops_T(S1,&err);
+		ASSERT_TOL_VAL(T1,T,1e-12);
 	}
 
 }
