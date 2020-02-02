@@ -276,11 +276,11 @@ int fprops_p_calc(struct BBoxInterp *bbox,
 
 	/* first input is temperature, second is density */
 	if(bbox->task == bb_func_eval){
-		FluidState S = fprops_set_Trho(inputs[0],inputs[1], FLUID, &err);
+		FluidState2 S = fprops_set_Trho(inputs[0],inputs[1], FLUID, &err);
 		outputs[0] = fprops_p(S, &err);
 	}else{
 		//ERROR_REPORTER_HERE(ASC_USER_NOTE,"JACOBIAN CALCULATION FOR P!\n");
-		FluidState S = fprops_set_Trho(inputs[0],inputs[1], FLUID, &err);
+		FluidState2 S = fprops_set_Trho(inputs[0],inputs[1], FLUID, &err);
 		jacobian[0*1+0] = fprops_dpdT_rho(S, &err);
 		jacobian[0*1+1] = fprops_dpdrho_T(S, &err);
 	}
@@ -301,7 +301,7 @@ int fprops_u_calc(struct BBoxInterp *bbox,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	if(bbox->task == bb_func_eval){
@@ -327,7 +327,7 @@ int fprops_s_calc(struct BBoxInterp *bbox,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_s(S, &err);
@@ -348,7 +348,7 @@ int fprops_h_calc(struct BBoxInterp *bbox,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	if(bbox->task == bb_func_eval){
@@ -375,7 +375,7 @@ int fprops_a_calc(struct BBoxInterp *bbox,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_a(S, &err);
@@ -396,7 +396,7 @@ int fprops_g_calc(struct BBoxInterp *bbox,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_g(S, &err);
@@ -417,7 +417,7 @@ int fprops_cp_calc(struct BBoxInterp *bbox,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_cp(S, &err);
@@ -438,7 +438,7 @@ int fprops_cv_calc(struct BBoxInterp *bbox,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_cv(S, &err);
@@ -459,7 +459,7 @@ int fprops_w_calc(struct BBoxInterp *bbox,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_w(S, &err);
@@ -479,7 +479,7 @@ int fprops_mu_calc(struct BBoxInterp *bbox,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_mu(S, &err);
@@ -499,7 +499,7 @@ int fprops_lam_calc(struct BBoxInterp *bbox,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_lam(S, &err);
@@ -532,10 +532,10 @@ int fprops_phsx_vT_calc(struct BBoxInterp *bbox,
 			double vf = 1./rho_f;
 			double vg = 1./rho_g;
 			double x = (inputs[0] - vf)  /(vg - vf);
-			FluidState Sf = fprops_set_Trho(T, rho_f, FLUID, &err);
+			FluidState2 Sf = fprops_set_Trho(T, rho_f, FLUID, &err);
 			double sf = fprops_s(Sf, &err);
 			double hf = fprops_h(Sf, &err);
-			FluidState Sg = fprops_set_Trho(T, rho_g, FLUID, &err);
+			FluidState2 Sg = fprops_set_Trho(T, rho_g, FLUID, &err);
 			double sg = fprops_s(Sg, &err);
 			double hg = fprops_h(Sg, &err);
 			outputs[0] = p_sat;
@@ -548,7 +548,7 @@ int fprops_phsx_vT_calc(struct BBoxInterp *bbox,
 	}
 
 	/* non-saturated */
-	FluidState S = fprops_set_Trho(T, rho, FLUID, &err);
+	FluidState2 S = fprops_set_Trho(T, rho, FLUID, &err);
 	outputs[0] = fprops_p(S, &err);
 	outputs[1] = fprops_h(S, &err);
 	outputs[2] = fprops_s(S, &err);
@@ -587,7 +587,7 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve triple point for %s.",FLUID->name);
 		return 5;
 	}
-	FluidState Sft = fprops_set_Trho(TTRIP(FLUID),rhoft,FLUID,&err);
+	FluidState2 Sft = fprops_set_Trho(TTRIP(FLUID),rhoft,FLUID,&err);
 	hft = fprops_h(Sft, &err);
 	if(h < hft){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR
@@ -596,37 +596,40 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 		);
 		return 6;
 	}
-	
+
 	if(p < pt){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR
 			,"Input pressure %f bar is below triple point pressure %f bar"
 			,p/1e5,pt/1e5
 		);
+		double sft = fprops_s(Sft, &err);
 		outputs[0] = TTRIP(FLUID);
 		outputs[1] = 1./ rhoft;
-		outputs[2] = FLUID->s_fn(TTRIP(FLUID), rhoft, FLUID->data, &err);
+		outputs[2] = sft;
 		outputs[3] = 0;
 		return 7;
 	}
 
 	if(p < PCRIT(FLUID)){
 		double T_sat, rho_f, rho_g;
-		
+
 		fprops_sat_p(p, &T_sat, &rho_f, &rho_g, FLUID, &err);
 		if(err){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR
 				, "Failed to solve saturation state of %s for p = %f bar < pc (= %f bar)"
 				, FLUID->name, p/1e5,PCRIT(FLUID)/1e5
 			);
+			FluidState2 Sx = fprops_set_Trho(TTRIP(FLUID), rhoft, FLUID, &err);
+			double sx = fprops_s(Sx,&err);
 			outputs[0] = TTRIP(FLUID);
 			outputs[1] = 1./rhoft;
-			outputs[2] = FLUID->s_fn(TTRIP(FLUID), rhoft, FLUID->data, &err);
+			outputs[2] = sx;
 			outputs[3] = 0;
 			return 8;
 		}
-		
-		FluidState Sf = fprops_set_Trho(T_sat,rho_f,FLUID,&err);
-		FluidState Sg = fprops_set_Trho(T_sat,rho_g,FLUID,&err);
+
+		FluidState2 Sf = fprops_set_Trho(T_sat,rho_f,FLUID,&err);
+		FluidState2 Sg = fprops_set_Trho(T_sat,rho_g,FLUID,&err);
 		double hf = fprops_h(Sf, &err);
 		double hg = fprops_h(Sg, &err);
 
@@ -653,14 +656,16 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 	}
 
 	double rho;
-	fprops_solve_ph(p,h, &T, &rho, 0, FLUID, &err);
+	FluidState2 S = fprops_solve_ph(p,h, 0, FLUID, &err);
+	rho = fprops_rho(S,&err);
+	T = fprops_T(S,&err);
 	if(err){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for (p,h): %s",fprops_error(err));
 		return 9;
 	}
 	/* non-saturated */
 	v = 1./rho;
-	FluidState S = fprops_set_Trho(T,rho,FLUID,&err);
+	//FluidState2 S = fprops_set_Trho(T,rho,FLUID,&err);
 	s = fprops_s(S, &err);
 	x = (v > 1./RHOCRIT(FLUID)) ? 1 : 0;
 	last = FLUID;
@@ -673,6 +678,3 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 #endif
 	return 0;
 }
-
-
-

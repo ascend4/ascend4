@@ -30,7 +30,7 @@ if test_env['HAVE_CUNIT']:
 		test_env.SharedObject('cutest.c',OBJPREFIX='#/test/cutest-')
 		, test_env.SharedObject('../test.c')
 	]
-	
+
 	test_env.Program('cutest', test_env['shobjs'] + tobjs
-		,LIBS = ['m','cunit'] 
+		,LIBS = ['m','cunit']
 	)

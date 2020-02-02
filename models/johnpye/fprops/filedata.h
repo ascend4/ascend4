@@ -435,7 +435,7 @@ typedef struct ViscDataEpt_struct{
     double mu_star;
     unsigned np;
     ViscPowTerm *pt; ///< viscosity terms c*T^t
-    unsigned b; ///< viscosity term b*ln(T)
+    double b; ///< viscosity term b*ln(T)
     char is_ln; ///< if true, ln(mu) = [...]; if false, mu = [...].
 } ViscDataEpt;
 

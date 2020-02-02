@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 int fprops_region_ph(double p, double h, const PureFluid *fluid, FpropsError *err);
 
-void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
+FluidState2 fprops_solve_ph(double p, double h, int use_guess
 	, const PureFluid *fluid, FpropsError *err
 );
 

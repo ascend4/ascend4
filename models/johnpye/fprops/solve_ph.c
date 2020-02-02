@@ -115,9 +115,10 @@ void fprops_fpe(int sig){
 }
 #endif
 
-void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
+FluidState2 fprops_solve_ph(double p, double h, int use_guess
 		, const PureFluid *fluid, FpropsError *err
 ){
+	double T = 0, rho = 0;
 	double Tsat, rhof, rhog, hf, hg;
 	double T1, rho1;
 	int subcrit_pressure = 0;
@@ -130,9 +131,9 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 	case FPROPS_PENGROB:
 		break; // all good, proceed
 	default:
-		ERRMSG("Unsupported fluid");
+		ERRMSG("Unsupported fluid type");
 		*err = FPROPS_NOT_IMPLEMENTED;
-		return;
+		return (FluidState2){.vals={.Trho={NAN,NAN}},.fluid=fluid};;
 	}
 
 	MSG("Solving for p=%f bar, h=%f kJ/kgK (EOS type %d, '%s')",p/1e5,h/1e3,fluid->type,fluid->name);
@@ -150,9 +151,9 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 			MSG("Calculate saturation Tsat(p < p_c) with p = %f",p);
 			fprops_sat_p(p, &Tsat, &rhof, &rhog, fluid, err);
 			if(*err){
-				ERRMSG("Unable to solve saturation state");
+				ERRMSG("Unable to solve saturation state (fluid '%s')",fluid->name);
 				*err = FPROPS_SAT_CVGC_ERROR;
-				return;
+				return (FluidState2){.vals={.Trho={NAN,NAN}},.fluid=fluid};;
 			}
 			hf = fluid->h_fn((FluidStateUnion){.Trho={Tsat, rhof}}, fluid->data, err);
 			hg = fluid->h_fn((FluidStateUnion){.Trho={Tsat, rhog}}, fluid->data, err);
@@ -162,22 +163,22 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 				MSG("SATURATION REGION");
 				/* saturation region... easy */
 				double x = (h - hf)/(hg - hf);
-				*rho = 1./(x/rhog + (1.-x)/rhof);
-				*T = Tsat;
-				return;
+				rho = 1./(x/rhog + (1.-x)/rhof);
+				T = Tsat;
+				return (FluidState2){.vals={.Trho={T,rho}},.fluid=fluid};
 			}
 
 			subcrit_pressure = 1;
 			if(h < hf){
 				liquid_iteration = 1;
 				if(!use_guess){
-					*T = Tsat;
-					*rho = rhof;
+					T = Tsat;
+					rho = rhof;
 					MSG("h < hf; LIQUID GUESS: T = %f, rho = %f",*T, *rho);
 				}
 			}else if(!use_guess){
-				*T = 1.1 * Tsat;
-				*rho = rhog * 0.5;
+				T = 1.1 * Tsat;
+				rho = rhog * 0.5;
 				MSG("GAS GUESS: T = %f, rho = %f",*T, *rho);
 			}
 		}else{ /* p >= p_c */
@@ -209,12 +210,12 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 						fprops_sat_T(Tsat1, &psat1, &rhof1, &rhog1, fluid, err);
 						if(*err)MSG("Unable to solve rhof(Tt)");
 					}
-					*T = Tsat1;
-					*rho = rhof1;
+					T = Tsat1;
+					rho = rhof1;
 #endif
 				}else{
-					*T = fluid->data->T_c * 1.01;
-					*rho = fluid->data->rho_c * 1.05;
+					T = fluid->data->T_c * 1.01;
+					rho = fluid->data->rho_c * 1.05;
 				}
 				MSG("SUPERCRITICAL GUESS: T = %f, rho = %f", *T, *rho);
 			}
@@ -224,8 +225,8 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 		//*rho = 976.82687191126922;
 		//*T = 344.80371310850518;
 
-		T1 = *T;
-		rho1 = *rho;
+		T1 = T;
+		rho1 = rho;
 		assert(!isnan(T1));
 		assert(!isnan(rho1));
 
@@ -235,7 +236,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 			if(*err){
 				ERRMSG("Unable to solve triple point liquid density.");
 				*err = FPROPS_SAT_CVGC_ERROR;
-				return;
+				return (FluidState2){.vals={.Trho={T,rho}},.fluid=fluid};;
 			}
 		}
 
@@ -247,11 +248,16 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 		MSG("STARTING ITERATION");
 		MSG("rhof_t = %f",rhof_t);
 		while(i++ < 200){
-			double p1 = fluid->p_fn((FluidStateUnion){.Trho={T1,rho1}}, fluid->data, err);
+			FluidState2 S1 = fprops_set_Trho(T1,rho1,fluid,err);
+			double p1 = fprops_p(S1,err);
+			//double p1 = fluid->p_fn((FluidStateUnion){.Trho={T1,rho1}}, fluid->data, err);
 			if(*err){
-				MSG("Got an error ('%s') in p_fn calculation",fprops_error(*err));
+				MSG("Got an error ('%s') in fprops_p calculation",fprops_error(*err));
 			}
-			double h1 = fluid->h_fn((FluidStateUnion){.Trho={T1,rho1}}, fluid->data, err);
+			double h1 = fprops_h(S1,err);
+			if(*err){
+				MSG("Got an error ('%s') in fprops_h calculation",fprops_error(*err));
+			}
 			assert(!isnan(h1));
 
 			if(i >= 2){
@@ -263,7 +269,8 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 					delta_T *= 0.5;
 					rho1 = rho1 + delta_rho;
 					T1 = T1 + delta_T;
-					p1 = fluid->p_fn((FluidStateUnion){.Trho={T1,rho1}},fluid->data, err);
+					S1 = fprops_set_Trho(T1,rho1,fluid,err);
+					p1 = fprops_p(S1,err);
 					MSG("Set smaller step as p < 0. T1 = %f, rho1 = %f --> p1 = %f",T1, rho1, p1);
 					nred--;
 				}
@@ -282,9 +289,7 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 
 			if(fabs(p1 - p) < 1e-4 && fabs(h1 - h) < 1e-8){
 				MSG("Converged to T = %f, rho = %f, in homebaked Newton solver", T1, rho1);
-				*T = T1;
-				*rho = rho1;
-				return;
+				return (FluidState2){.vals={.Trho={T1,rho1}},.fluid=fluid};
 			}
 			/* calculate step, we're solving log(p1) in this code... */
 			double f = log(p1) - log(p);
@@ -381,11 +386,9 @@ void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
 	}
 #endif
 
-	*T = T1;
-	*rho = rho1;
 	ERRMSG("Iteration failed for '%s' with p = %.12e, h = %.12e",fluid->name, p,h);
 	*err = FPROPS_NUMERIC_ERROR;
-	return;
+	return (FluidState2){.vals={.Trho={T1,rho1}},.fluid=fluid};
 
 #if 0
 	int res = fprops_nonsolver('p','h',p,h,T,rho,fluid);

@@ -101,10 +101,11 @@ const EosData eos_sodium = {
 	,FPROPS_INCOMP
 	,.data = {.incomp = &incomp_data_sodium}
 	,.thcond = &thcond_data_sodium
+	,.visc  = &visc_data_sodium
 };
 
 #else
-#define TEST_VERBOSE
+//#define TEST_VERBOSE
 
 # include "../test.h"
 # include "../refstate.h"
@@ -118,7 +119,7 @@ extern const EosData eos_sodium;
 /* Some test data from Fink & Liebowitz */
 
 typedef struct TestDataTrho_struct{
-	double T, rho, lam, h, s;
+	double T, rho, lam, h, s, mu;
 } TestDataTrho;
 
 /*
@@ -127,15 +128,15 @@ Values of 's' were calculated with models/johnpye/liquidsodium.a4c.
 */
 
 static const TestDataTrho td[] = {
-    /* Temperature, Density, Conductivity, Enthalpy */
-    /* (K), (kg/m3), (W/m/K), J/kg */
-    {400.,   919., 87.22, 247e3,  0.53326716242e3 }
-	,{600.,  874., 73.70, 514e3,  1.07537491829e3 }
-	,{800.,  828., 62.90, 769e3,  1.44336831041e3 }
-	,{1000., 781., 54.24, 1020e3, 1.72313707816e3 }
-	,{1200., 732., 47.16, 1273e3, 1.95341568058e3 }
-	,{1400., 680., 41.08, 1534e3, 2.15497925873e3 }
-	,{1800., 568., 29.68, 2113e3, 2.51730964576e3 }
+    /* Temperature, Density, Conductivity, Enthalpy, Entropy, Viscosity */
+    /* (K),         (kg/m3), (W/m/K),      J/kg,     J/kgK    Pa.s */
+    {400.,   919., 87.22, 247e3,  0.53326716242e3, 5.99e-4 }
+	,{600.,  874., 73.70, 514e3,  1.07537491829e3, 3.21e-4 }
+	,{800.,  828., 62.90, 769e3,  1.44336831041e3, 2.27e-4 }
+	,{1000., 781., 54.24, 1020e3, 1.72313707816e3, 1.81e-4 }
+	,{1200., 732., 47.16, 1273e3, 1.95341568058e3, 1.53e-4 }
+	,{1400., 680., 41.08, 1534e3, 2.15497925873e3, 1.35e-4 }
+	,{1800., 568., 29.68, 2113e3, 2.51730964576e3, 1.12e-4 }
 	//,{2503.7,219., 0.05,  4294e3 } // enthalpy will not agree at >2000K
 };
 
@@ -143,15 +144,19 @@ static const unsigned ntd = sizeof(td)/sizeof(TestDataTrho);
 
 void test_fluid_sodium(void){
 	double maxerr = 0;
+	FpropsError err;
 
-	PureFluid *P = incomp_prepare(&eos_sodium,NULL);
+	PureFluid *P = fprops_prepare(&eos_sodium,NULL);
+#if 0
 	ASSERT(NULL != P);
 
-	FpropsError err;
 	thcond_prepare(P, eos_sodium.thcond, &err);
 	if(err){
 		TEST_MSG("Failed to prepare thermal conductivity");
 	}
+
+	visc_prepare(
+#endif
 
 	// refprop test test is evaluated with NBP refstate.
 	ASSERT(NULL != P->thcond);
@@ -200,6 +205,7 @@ void test_fluid_sodium(void){
 	ASSERT_PROP(lam,S,&err,87.22,0.005);
 	ASSERT_PROP(v,S,&err,1/919.,0.03e-2);
 
+	// check entropy (versus data from our own ASCEND model, only)
 	ReferenceState ref1 = {FPROPS_REF_TPHS,{.tphs={273.15,1e5,0,0}}};
 	fprops_set_reference_state(P,  &ref1);
 	for(int i=0; i<ntd; ++i){
@@ -209,6 +215,16 @@ void test_fluid_sodium(void){
 		//TEST_MSG("T = %f",T);
 		double s = incomp_s(S.vals,S.fluid->data,&err);
 		ASSERT_TOL_VAL(s,td[i].s,1e-5);
+	}
+
+	// check viscosity
+	for(int i=0; i<ntd; ++i){
+		double p = 1;
+		double T = td[i].T;
+		FluidState2 S = fprops_set_Tp(T,p,P,&err);
+		//TEST_MSG("T = %f",T);
+		double mu = fprops_mu(S,&err);
+		ASSERT_TOL_VAL(mu,td[i].mu,0.005e-4);
 	}
 
 }

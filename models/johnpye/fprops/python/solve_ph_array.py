@@ -3,8 +3,13 @@ from pylab import *
 import sys
 
 #P = fluid('water','helmholtz');
+#P = fluid('water','pengrob');
 #P = fluid('ammonia','pengrob');
+#P = fluid('ethanol','helmholtz');
 P = fluid('carbondioxide','pengrob');
+
+nT = 100
+nv = 100
 
 print "SOLVING TRIPLE POINT..."
 
@@ -26,8 +31,8 @@ if Tmin == 0:
 Tmax = 2 * P.T_c
 vmin = 1./rhof_t
 vmax = 2./rhog_t
-TT = linspace(Tmin, Tmax, 100);
-vv = logspace(log10(vmin),log10(vmax), 100);
+TT = linspace(Tmin, Tmax, nT);
+vv = logspace(log10(vmin),log10(vmax), nv);
 
 goodT = []
 goodv = []
@@ -54,7 +59,7 @@ for T in TT:
 		except ValueError,e:
 			print "ERROR %s at p = %f, h = %f (T = %.12e, rho = %.12e)" % (str(e),p, h,T,rho)
 			badT.append(T); badv.append(v)
-			continue	
+			continue
 		if isnan(T1) or isnan(rho1):
 			print "ERROR at T1 = %f, rho1 = %f (T = %.12e, rho = %.12e)" % (T1, rho1,T,rho)
 			badT.append(T); badv.append(v)
@@ -63,19 +68,13 @@ for T in TT:
 			#print "   +++ GOOD RESULT T1 = %f, rho1 = %f" % (T1, rho1)
 
 figure()
+hold(1)
 
-print "i \tbad T    \tbad v"
+print "\ni \tbad T    \tbad v"
 for i in range(len(badT)):
 	print "%d\t%e\t%e" % (i,badT[i], badv[i])
 
 print "TOTAL %d BAD POINTS" % (len(badT))
-
-print "AXIS =",axis()
-semilogx(badv, badT, 'rx')
-axis([vmin,vmax,Tmin,Tmax])
-print "AXIS =",axis()
-hold(1)
-semilogx(goodv, goodT, 'g.')
 
 # plot saturation curves
 TTs = linspace(P.T_t, P.T_c, 300)
@@ -90,7 +89,7 @@ for T in TTs:
 		S = P.set_Tx(T,1)
 		rhog = S.rho
 	except:
-		continue;	
+		continue;
 	TT1.append(T)
 	vf1.append(1./rhof)
 	vg1.append(1./rhog)
@@ -98,11 +97,17 @@ for T in TTs:
 semilogx(vf1,TT1,"b-")
 semilogx(vg1,TT1,"b-")
 axis([vmin,vmax,Tmin,Tmax])
+
+print "AXIS =",axis()
+semilogx(badv, badT, 'rx')
+print "AXIS =",axis()
+semilogx(goodv, goodT, 'g.')
+
+
+
 title("convergence of (p,h) solver for %s" % P.name)
 xlabel("specific volume")
 ylabel("temperature")
 
 show()
 ion()
-
-

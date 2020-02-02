@@ -17,14 +17,14 @@ double T_ph_Na(double p,double h);
 double Tsat_p_Na(double p){
 	FpropsError err = FPROPS_NO_ERROR;
 	ReferenceState R = {FPROPS_REF_IIR};
-	
+
 	const PureFluid *D = fprops_fluid("carbondioxide","helmholtz",NULL);
 
 	double T_sat, rho_f, rho_g;
 	fprops_sat_p(p, &T_sat, &rho_f, &rho_g, D, &err);
 	if(err){
 		// fprops_destroy(...)
-#ifdef USE_MODELICA_ERROR		
+#ifdef USE_MODELICA_ERROR
 		ModelicaError(fprops_error(err)); // does not return
 #else
 		fprintf(stderr,"ERROR: %s",fprops_error(err));
@@ -37,15 +37,15 @@ double Tsat_p_Na(double p){
 double T_ph_Na(double p, double h){
 	FpropsError err = FPROPS_NO_ERROR;
 	ReferenceState R = {FPROPS_REF_IIR};
-	
+
 	const PureFluid *D = fprops_fluid("carbondioxide","helmholtz",NULL);
 
-	double T, rho;
-	fprops_solve_ph(p,h, &T, &rho, 0, D, &err);
-
+	FluidState2 S = fprops_solve_ph(p, h0, D, &err);
+	T = fprops_T(S,&err);
+	rho = fprops_rho(S,&err);
 	if(err){
 		// fprops_destroy(...)
-#ifdef USE_MODELICA_ERROR		
+#ifdef USE_MODELICA_ERROR
 		ModelicaError(fprops_error(err)); // does not return
 #else
 		fprintf(stderr,"ERROR: %s",fprops_error(err));
@@ -69,4 +69,3 @@ int main(void){
 	return 0;
 }
 #endif
-

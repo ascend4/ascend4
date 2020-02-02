@@ -124,15 +124,12 @@ typedef struct{} PureFluid;
 	}
 
 	FluidState2 set_Trho(double T, double rho, FpropsError *err){
-		FluidState2 state;
-		state = fprops_set_Trho(T,rho,$self,err);
+		FluidState2 state = fprops_set_Trho(T,rho,$self,err);
 		return state;
 	}
 
 	FluidState2 set_ph(double p, double h, FpropsError *err){
-		FluidState2 state;
-		fprops_solve_ph(p, h, &(state.T), &(state.rho), 0, $self, err);
-		state.fluid = $self;
+		FluidState2 state = fprops_solve_ph(p, h, 0, $self, err);
 		return state;
 	}
 
@@ -141,10 +138,9 @@ typedef struct{} PureFluid;
 	}
 
 	FluidState2 set_Tx(double T, double x, FpropsError *err){
-		FluidState2 state;
-		fprops_solve_Tx(T, x, &(state.rho), $self, err);
-		state.T = T;
-		state.fluid = $self;
+		FluidState2 state = fprops_solve_Tx(T, x, $self, err);
+		//state.T = T;
+		//state.fluid = $self;
 		return state;
 	}
 
@@ -153,9 +149,7 @@ typedef struct{} PureFluid;
 	}
 
 	FluidState2 set_px(double p, double x, FpropsError *err){
-		FluidState2 state;
-		fprops_solve_px(p, x, &(state.T), &(state.rho), $self, err);
-		state.fluid = $self;
+		FluidState2 state = fprops_solve_px(p, x, $self, err);
 		return state;
 	}
 

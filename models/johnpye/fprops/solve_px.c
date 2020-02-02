@@ -78,47 +78,46 @@ int fprops_region_px(double p, double x, const PureFluid *fluid, FpropsError *er
 	cheaper by implementing alternative saturation calculations, since
 	calculations in terms of p, eg (p,h) are desirable for energy system sims.
 */
-void fprops_solve_px(double p, double x, double *T, double *rho, const PureFluid *fluid, FpropsError *err){
+FluidState2 fprops_solve_px(double p, double x, const PureFluid *fluid, FpropsError *err){
 	double T_sat, rho_f, rho_g;
 	double p_t, rhof_t, rhog_t;
+	FluidState2 S = {.vals={.Trho={NAN,NAN}},.fluid=fluid};
 	if(*err){
 		ERRMSG("ERROR FLAG ALREADY SET");
 	}
 	fprops_triple_point(&p_t, &rhof_t, &rhog_t, fluid, err);
 	if(*err){
 		ERRMSG("Unable to solve triple point");
-		return;
+		return S;
 	}
 
-	assert(rho != NULL);
+	//assert(rho != NULL);
 	assert(fluid != NULL);
 	assert(err != NULL);
-	
+
 	if(p > fluid->data->p_c){
 		ERRMSG("Pressure (%f) exceeds critical pressure (%f)",p, fluid->data->p_c);
 		*err = FPROPS_RANGE_ERROR;
-		return;
+		return S;
 	}
 	if(x < 0 || x > 1){
 		ERRMSG("Quality x should be in range [0,1]");
 		*err = FPROPS_RANGE_ERROR;
-		return;
+		return S;
 	}
 	if(p < p_t){
 		ERRMSG("Pressure is below triple point");
 		*err = FPROPS_RANGE_ERROR;
-		return;
+		return S;
 	}
 
 	fprops_sat_p(p, &T_sat, &rho_f, &rho_g, fluid, err);
 	if(*err){
 		ERRMSG("Unable to solve saturation state at p = %f (p_c = %f)", p, fluid->data->p_c);
 		*err = FPROPS_SAT_CVGC_ERROR;
-		return;
+		return S;
 	}
 
 	double v = (1./rho_f) * (1 - x) + (1./rho_g) * x;
-	*T = T_sat;
-	*rho = 1./ v;
+	return (FluidState2){.vals={.Trho={T_sat,1./v}},.fluid=fluid};
 }
-

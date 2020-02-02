@@ -63,6 +63,8 @@ int fprops_corr_avail(const EosData *E, const char *corrtype){
 			return E->type;
 		case FPROPS_CUBIC:
 			return FPROPS_PENGROB;
+		case FPROPS_INCOMP:
+			return FPROPS_INCOMP;
 		default:
 			return 0;
 		}
