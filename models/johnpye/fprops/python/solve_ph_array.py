@@ -7,9 +7,14 @@ import sys
 #P = fluid('ammonia','pengrob');
 #P = fluid('ethanol','helmholtz');
 P = fluid('carbondioxide','pengrob');
+#P = fluid('sodium');
+
 
 nT = 100
 nv = 100
+
+if not P.can_sat():
+	raise RuntimeError("This script is only for condensing fluids");
 
 print "SOLVING TRIPLE POINT..."
 
@@ -31,6 +36,7 @@ if Tmin == 0:
 Tmax = 2 * P.T_c
 vmin = 1./rhof_t
 vmax = 2./rhog_t
+
 TT = linspace(Tmin, Tmax, nT);
 vv = logspace(log10(vmin),log10(vmax), nv);
 

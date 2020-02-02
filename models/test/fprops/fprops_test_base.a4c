@@ -163,6 +163,27 @@ END self_test;
 END stream_state_test_toluene;
 
 
+MODEL stream_state_test_sodium_ph REFINES stream_state;
+	cd.component :== 'sodium';
+	cd.type :== 'incomp';
+METHODS
+METHOD on_load;
+	RUN default_all;
+	FIX h := 1020 {kJ/kg};
+	FIX p := 5 {bar};
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE;
+	RUN self_test;
+END on_load;
+METHOD self_test;
+	ASSERT abs(T - 1000. {K}) < 0.5 {K};
+	ASSERT abs(1/v - 781. {kg/m^3}) < 0.5 {kg/m^3};
+END self_test;
+END stream_state_test_sodium_ph;
+
+
+
 (* a simple connector that includes calculation of steam properties *)
 MODEL stream_node;
 	state IS_A stream_state;
@@ -865,6 +886,7 @@ END rankine_reheat_common;
 *)
 MODEL rankine_reheat_water REFINES rankine_reheat_common;
 	BO1.cd.component :== 'water';
+	BO1.cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -902,4 +924,67 @@ METHOD default_self;
 	TU2.inlet.h := 3000 {kJ/kg}; (* guess *)
 END default_self;
 END rankine_reheat_water;
+
+MODEL sodium_test;
+		
+	cd IS_A fluid;
+	cd.component :== 'sodium';
+	cd.type :== 'incomp';
+
+	v IS_A specific_volume;
+	T IS_A temperature;
+	p IS_A pressure;
+	h IS_A specific_enthalpy;
+	s IS_A specific_entropy;
+	x IS_A fraction;
+	rho IS_A mass_density;
+
+	calc_ph: fprops_Tvsx_ph(
+		p, h : INPUT;
+		T, v, s, x : OUTPUT;
+		cd : DATA
+	);
+(*	calc_vT: fprops_phsx_vT(
+		v, T : INPUT;
+		p, h, s, x : OUTPUT;
+		cd : DATA
+	);
+*)
+
+	rho = 1/v;
+
+	mu IS_A viscosity;
+	lam IS_A thermal_conductivity;
+
+	calc_mu: fprops_mu_Tp(
+		T, p: INPUT;
+		mu: OUTPUT;
+		cd : DATA
+	);
+
+	calc_lam: fprops_lam_Tp(
+		T, p: INPUT;
+		lam: OUTPUT;
+		cd : DATA
+	);
+METHODS
+METHOD on_load;
+	h := 1000 {kJ/kg};
+	(*FIX h := 1534 {kJ/kg};*)
+	FIX T := 1400 {K};
+	FIX p := 6 {bar};
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE;
+END on_load;
+METHOD self_test;
+	ASSERT abs(T - 1400. {K}) < 0.5 {K};
+	ASSERT abs(h - 1534. {kJ/kg}) < 0.5 {kJ/kg};
+	ASSERT abs(rho - 680. {kg/m^3}) <  0.5 {kg/m^3};
+	ASSERT abs(lam - 41.08 {W/m/K}) < 0.01 {W/m/K};
+	ASSERT abs(mu - 1.35e-4 {Pa*s}) < 0.005e-4 {Pa*s};
+END self_test;
+END sodium_test;
+
+
 

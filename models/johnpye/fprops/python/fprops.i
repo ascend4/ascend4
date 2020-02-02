@@ -129,7 +129,7 @@ typedef struct{} PureFluid;
 	}
 
 	FluidState2 set_ph(double p, double h, FpropsError *err){
-		FluidState2 state = fprops_solve_ph(p, h, 0, $self, err);
+		FluidState2 state = fprops_solve_ph(p, h, $self, err);
 		return state;
 	}
 
@@ -180,6 +180,19 @@ typedef struct{} PureFluid;
 		double p;
 		fprops_triple_point(&p,rho_f,rho_g,$self, err);
 		return p;
+	}
+
+	int can_sat(){
+		// FIXME this should be implemented elsewhere...
+		switch($self->type){
+		case FPROPS_PENGROB:
+		case FPROPS_HELMHOLTZ:
+			return 1;
+		case FPROPS_IDEAL:
+		case FPROPS_INCOMP:
+		default:
+			return 0;
+		}
 	}
 
 	double sat_T(double T, double *rho_f, double *rho_g, FpropsError *err){
