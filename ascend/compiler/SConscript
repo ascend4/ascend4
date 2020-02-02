@@ -11,7 +11,6 @@ csrcs = Split("""
 	extfunc.c extinst.c find.c forvars.c fractions.c
 	func.c findpath.c
 	importhandler.c initialize.c instance_io.c
-	interval.c
 	instantiate.c instmacro.c instquery.c
 	library.c link.c linkinst.c logrel_io.c logrel_util.c
 	logrelation.c mathinst.c mergeinst.c module.c name.c
