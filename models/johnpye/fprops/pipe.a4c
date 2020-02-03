@@ -35,7 +35,7 @@ MODEL pipe_adiabatic REFINES stream_equipment;
 	Vel_sonic_out "speed of sound at fluid outlet" IS_A speed;
 	rho_out IS_A mass_density;
 	rho_out = 1 / outlet.v;
-	calc_w: fprops_w(
+	calc_w: fprops_w_Trho(
 		outlet.T, rho_out : INPUT;
 		Vel_sonic_out : OUTPUT;
 		outlet.cd : DATA

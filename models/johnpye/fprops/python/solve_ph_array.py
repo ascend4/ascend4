@@ -2,11 +2,11 @@ from fprops import *
 from pylab import *
 import sys
 
-#P = fluid('water','helmholtz');
+P = fluid('water','helmholtz');
 #P = fluid('water','pengrob');
 #P = fluid('ammonia','pengrob');
 #P = fluid('ethanol','helmholtz');
-P = fluid('carbondioxide','pengrob');
+#P = fluid('carbondioxide','pengrob');
 #P = fluid('sodium');
 
 

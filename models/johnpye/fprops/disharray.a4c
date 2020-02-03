@@ -11,19 +11,19 @@ END default_self;
 END throttle;
 
 (*
-	Model of a linear array of solar concentrators (dishes) with pressure drop
-	and heat loss in the connection lines, and fixed heat input in each dish,
-	but no assumed pressure drop (boiler_simple model).
+	Model of a linear array of CSP solar concentrators (eg dishes) with pressure
+	drop and heat loss in the connection lines, and fixed heat input in each
+	collector, but no assumed pressure drop (boiler_simple model).
 
 	     PC1     PC2     ...    PCn     (cold-side pipe connections)
 	>>-o------+-------+-------+-------\
 	          |       |       |       |
-	      DI1 |   DI2 |   ... |   DIn |   (dishes)
+	      DI1 |   DI2 |   ... |   DIn |   (dishes/collectors)
 	<<-o------+-------+-------+-------/
 	     PH1     PH2     ...    PHn     (hot-size pipe connections)
 
 *)
-MODEL disharray;
+MODEL csparray;
 	n IS_A integer_constant;
 	n :== 4;
 
@@ -47,7 +47,11 @@ MODEL disharray;
 	DI[n].outlet, PH[n].inlet ARE_THE_SAME;
 
 	(* easy first try: all pipes same size, thickness, length, roughness *)
-	D, t, L, eps IS_A distance;
+	D "pipe diameter" IS_A distance;
+	t "pipe wall thickness" IS_A distance;
+	L "length of pipe between collectors" IS_A distance;
+	eps "pipe roughness" IS_A distance;
+
 	D, PC[1..n].D, PH[1..n].D ARE_THE_SAME;
 	t, PC[1..n].t, PH[1..n].t ARE_THE_SAME;
 	L, PC[1..n].L, PH[1..n].L ARE_THE_SAME;
@@ -61,8 +65,8 @@ MODEL disharray;
 	T_amb IS_A temperature;
 	T_amb, PC[1..n].T_amb, PH[1..n].T_amb ARE_THE_SAME;
 
-	Qdot_onedish IS_A energy_rate;
-	Qdot_onedish, DI[1..n].Qdot ARE_THE_SAME;
+	Qdot_onecoll IS_A energy_rate;
+	Qdot_onecoll, DI[1..n].Qdot ARE_THE_SAME;
 	DI[1..n].eta ARE_THE_SAME; eta_DI ALIASES DI[1].eta;
 
 	Qdot_loss_tot IS_A energy_rate;
@@ -75,8 +79,6 @@ MODEL disharray;
 	DI[1..n].mdot ARE_THE_SAME;
 
 	cd ALIASES inlet.cd;
-	cd.component :== 'water';
-	cd.type :== 'helmholtz';
 METHODS
 METHOD default_self;
 	FOR i IN [1..n-1] DO
@@ -90,13 +92,19 @@ METHOD default_self;
 		RUN PH[i].default_self;
 	END FOR;
 END default_self;
+END csparray;
+
+MODEL disharray REFINES csparray;
+	cd.component :== 'water';
+	cd.type :== 'helmholtz';
+METHODS
 METHOD on_load;
 	RUN default_self;
 	FOR i IN [1..n-1] DO
 		(*RUN TE[i].disable_cons_mass;*)
 		(*FIX TE[i].phi := 0.5;*)
 	END FOR;
-	FIX Qdot_onedish := 400 {kW};
+	FIX Qdot_onecoll := 400 {kW};
 	FIX eta_DI := 1;
 	FIX D := 25 {mm};
 	FIX L := 40 {m};
@@ -113,4 +121,38 @@ METHOD on_load;
 	PC[1..n].inlet.h := 400 {kJ/kg};
 END on_load;
 END disharray;
+
+
+MODEL towerarray REFINES csparray;
+	cd.component :== 'sodium';
+	cd.type :== 'incomp';
+METHODS
+METHOD on_load;
+	RUN default_self;
+	FOR i IN [1..n-1] DO
+		(*RUN TE[i].disable_cons_mass;*)
+		(*FIX TE[i].phi := 0.5;*)
+	END FOR;
+	FIX Qdot_onecoll := 5 {MW};
+	FIX eta_DI := 1;
+	FIX D := 50 {mm};
+	FIX L := 200 {m};
+	FIX t := 4 {mm};
+	FIX eps := 0.015 {mm};
+	FIX emiss := 0.5;
+	FIX mu := 0.024 {cP};
+	FIX h := 10 {W/m^2/K};
+	FIX inlet.p := 50 {bar};
+	FIX inlet.T := 100 {K} +  273.15 {K};
+	FIX DI[1].mdot := 0.1 {kg/s}; (* same for all dishes *)
+	FIX T_amb := 300 {K};
+	(* initial guesses to help the solver *)
+	PC[1..n].inlet.h := 400 {kJ/kg};
+END on_load;
+END towerarray;
+
+
+
+
+
 
