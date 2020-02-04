@@ -191,7 +191,7 @@ double cp0_cp(double T, const Cp0Data *data){
 		term = et->b * SQ(x) * exp(-x) / SQ(1 - exp(-x));
 		sum += term;
 	}
-	return sum;
+	return sum * data->cp0star;
 }
 
 /*
