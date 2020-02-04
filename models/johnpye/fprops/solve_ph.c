@@ -424,8 +424,8 @@ static double herr_T(double T, void *user_data){
 	IterationData *data = (IterationData *)user_data;
 	FluidState2 S = fprops_set_Tp(T, data->p, data->fluid,data->err);
 	MSG("state S: p = %f, T = %f",fprops_p(S,data->err),fprops_T(S,data->err));
-	double h = fprops_h(S,data->err);
-	MSG("At T = %f, got h = %f (target %f)", T, h, data->h);
+	double h = data->fluid->h_fn(S.vals,data->fluid->data,data->err);
+	MSG("At T = %f, got h = %f (target %f, h_const = %f)", T, h, data->h, data->fluid->data->corr.incomp->const_h);
 	return h - data->h;
 }
 
@@ -434,12 +434,13 @@ static FluidState2 fprops_solve_ph_incomp(double p, double h, const PureFluid *f
 	IterationData data = {h, p, fluid, err};
 	double T;
 	double herr;
-	MSG("Solving for h = %f by varying T at p = %f",h,p);
+	MSG("Solving for (h = %f, p %f) by varying T",h,p);
 	if(zeroin_solve(&herr_T, &data, 200, 2000., 1e-12, &T, &herr)){
 		ERRMSG("Failed to convert (p=%f bar,h=%f kJ/kg) for incompressible fluid '%s'",p/1e5,h/1e3,fluid->name);
 		*err = FPROPS_NUMERIC_ERROR;
 		return STATE_NAN(fluid);
 	}
+	MSG("Solved: T = %f", T);
 	return STATE_TP(fluid,T,p);
 
 }

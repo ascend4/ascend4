@@ -79,6 +79,9 @@ MODEL csparray;
 	DI[1..n].mdot ARE_THE_SAME;
 
 	cd ALIASES inlet.cd;
+
+	p_in ALIASES PC[1].inlet.p;
+	p_out ALIASES PH[1].outlet.p;
 METHODS
 METHOD default_self;
 	FOR i IN [1..n-1] DO
@@ -126,8 +129,6 @@ END disharray;
 MODEL towerarray REFINES csparray;
 	cd.component :== 'sodium';
 	cd.type :== 'incomp';
-	p_in ALIASES PC[1].inlet.p;
-	p_out ALIASES PH[1].outlet.p;
 METHODS
 METHOD on_load;
 	RUN default_self;

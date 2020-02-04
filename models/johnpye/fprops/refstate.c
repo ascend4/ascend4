@@ -24,6 +24,7 @@
 
 int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 	if(!P){ERRMSG("P is NULL"); return 1;}
+	if(!P->setref_fn){ERRMSG("P->setref_fn is NULL"); return 1;}
 	return P->setref_fn(P,ref);
 }
 
@@ -39,7 +40,7 @@ int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
 	if(!P){ERRMSG("P is NULL"); return 1;}
 	if(!P->data){ERRMSG("P->data is NULL"); return 1;}
 
-	if(ref->type == FPROPS_REF_REF0){
+	if(ref == NULL || ref->type == FPROPS_REF_REF0){
 		MSG("Using the default reference state specified for this fluid");
 		ref = &(P->data->ref0);
 	}
@@ -438,8 +439,8 @@ int refstate_set_for_incomp(PureFluid *P, const ReferenceState *ref){
 	if(!P){ERRMSG("P is NULL"); return 1;}
 	if(!P->data){ERRMSG("P->data is NULL"); return 1;}
 
-	if(ref->type == FPROPS_REF_REF0){
-		MSG("Using the default reference state specified for this fluid");
+	if(ref == NULL || ref->type == FPROPS_REF_REF0){
+		MSG("Using the default reference state specified for this fluid (type %d)",P->data->ref0.type);
 		ref = &(P->data->ref0);
 	}
 
@@ -473,7 +474,7 @@ int refstate_set_for_incomp(PureFluid *P, const ReferenceState *ref){
 		if(fabs(h0 - ref->data.tphs.h0) > 1e-9){ERRMSG("Failed to set h0"); return 1;}
 		if(fabs(s0 - ref->data.tphs.s0) > 1e-9){ERRMSG("Failed to set s0"); return 1;}
 		if(err){ERRMSG("Failed to calculate h or s for incompressible reference state"); return 1;}
-		MSG("Success");
+		MSG("Success; h_const = %f", P->data->corr.incomp->const_h);
 		return 0;
 	default:
 		ERRMSG("Not implemented");

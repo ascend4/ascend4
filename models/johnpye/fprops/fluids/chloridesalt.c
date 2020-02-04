@@ -83,7 +83,7 @@ static const ViscosityData visc_data_chloridesalt = {
 };
 
 const EosData eos_chloridesalt = {
-	"sodium"
+	"chloridesalt"
 	,CLSALT_SOURCE
 	,CLSALT_SOURCEURL
 	,100

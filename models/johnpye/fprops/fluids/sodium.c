@@ -129,15 +129,15 @@ Values of 's' were calculated with models/johnpye/liquidsodium.a4c.
 */
 
 static const TestDataTrho td[] = {
-    /* Temperature, Density, Conductivity, Enthalpy, Entropy, Viscosity */
-    /* (K),         (kg/m3), (W/m/K),      J/kg,     J/kgK    Pa.s */
-    {400.,   919., 87.22, 247e3,  0.53326716242e3, 5.99e-4 }
-	,{600.,  874., 73.70, 514e3,  1.07537491829e3, 3.21e-4 }
-	,{800.,  828., 62.90, 769e3,  1.44336831041e3, 2.27e-4 }
-	,{1000., 781., 54.24, 1020e3, 1.72313707816e3, 1.81e-4 }
-	,{1200., 732., 47.16, 1273e3, 1.95341568058e3, 1.53e-4 }
-	,{1400., 680., 41.08, 1534e3, 2.15497925873e3, 1.35e-4 }
-	,{1800., 568., 29.68, 2113e3, 2.51730964576e3, 1.12e-4 }
+    /* T,    rho,    lam,   h,      s,                mu */
+    /* [K],  kg/m3,  W/m/K, J/kg,   J/kgK             Pa.s */
+    {400.,   919.,   87.22, 247e3,  0.53326716242e3, 5.99e-4 }
+	,{600.,  874.,   73.70, 514e3,  1.07537491829e3, 3.21e-4 }
+	,{800.,  828.,   62.90, 769e3,  1.44336831041e3, 2.27e-4 }
+	,{1000., 781.,   54.24, 1020e3, 1.72313707816e3, 1.81e-4 }
+	,{1200., 732.,   47.16, 1273e3, 1.95341568058e3, 1.53e-4 }
+	,{1400., 680.,   41.08, 1534e3, 2.15497925873e3, 1.35e-4 }
+	,{1800., 568.,   29.68, 2113e3, 2.51730964576e3, 1.12e-4 }
 	//,{2503.7,219., 0.05,  4294e3 } // enthalpy will not agree at >2000K
 };
 
@@ -218,6 +218,9 @@ void test_fluid_sodium(void){
 		ASSERT_TOL_VAL(s,td[i].s,1e-5);
 	}
 
+	// revert to standard reference state!
+	ASSERT(0 == fprops_set_reference_state(P, NULL));
+
 	// check viscosity
 	for(int i=0; i<ntd; ++i){
 		double p = 1;
@@ -228,12 +231,26 @@ void test_fluid_sodium(void){
 		ASSERT_TOL_VAL(mu,td[i].mu,0.005e-4);
 	}
 
-	// check solve_ph...
-	double p = 1e5; // works equally with 5e5,10e5... shouldn't have any effect.
+	// check solve_ph correctness
+	TEST_MSG("\n\nTESTING SOLVE_PH CORRECTNESS");
+	double p = 15e5; // works equally with 5e5,10e5... shouldn't have any effect.
+	for(int i=0; i<ntd; ++i){
+		TEST_MSG("For h = %f kJ/kg, expect T = %f",td[i].h/1e3,td[i].T);
+		FluidState2 S1 = fprops_solve_ph(p,td[i].h,P,&err);
+		if(err)TEST_MSG("failed to solve (p,h): %s",fprops_error(err));
+		double T = fprops_T(S1,&err);
+		ASSERT_TOL_VAL(T,td[i].T,0.5);
+	}
+	
+	
+	// check solve_ph reversibility
+	p = 15e5; // works equally with 5e5,10e5... shouldn't have any effect.
 	for(int i=0; i<ntd; ++i){
 		double T = td[i].T;
+		TEST_MSG("At (T = %f K, p = %f bar), expect h=%f kJ/kg",T,p/1e5,td[i].h/1e3);
 		FluidState2 S = fprops_set_Tp(T,p,P,&err);
 		double h = fprops_h(S,&err);
+		TEST_MSG("Got h = %f kJ/kg (state: T=%f, p=%f/1e5)",h/1e3,S.vals.Tp.T,S.vals.Tp.p/1e5);
 		if(err)TEST_MSG("failed to evaluate 'h': %s",fprops_error(err));
 		FluidState2 S1 = fprops_solve_ph(p,h,P,&err);
 		if(err)TEST_MSG("failed to solve (p,h): %s",fprops_error(err));

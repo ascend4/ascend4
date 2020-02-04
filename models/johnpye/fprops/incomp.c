@@ -149,14 +149,14 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 	P->setref_fn = &refstate_set_for_incomp;
 
 	MSG("Setting reference state...");
+	// store the standard reference state, even if we're not using it now
+	P->data->ref0 = I->ref; // this must exist; it's not a pointer.
 	// fix up the reference point now...
 	if(ref == NULL){
-		MSG("Using default if available");
+		MSG("Using standard reference state");
 		// use the provided ReferenceState, or the default one otherwise.
-		ref = &(I->ref);
-		if(ref){
-			MSG("Default reference type %d found",I->ref.type);
-		}
+		ref = &(P->data->ref0);
+		MSG("Standard reference type %d found",I->ref.type);
 	}
 	int res = fprops_set_reference_state(P,ref);
 	if(res){
@@ -223,8 +223,10 @@ double incomp_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err)
 }
 
 double incomp_h(FluidStateUnion vals, const FluidData *data, FpropsError *err){
-	//MSG("Calculating h(T = %f, p = %f), T* = %f",vals.Tp.T, vals.Tp.p, data->Tstar);
-	return cp0_h(vals.Tp.T, data->corr.incomp->cp0, data->corr.incomp->const_h);
+	MSG("Calculating h(T = %f, p = %f), T* = %f",vals.Tp.T, vals.Tp.p, data->Tstar);
+	double h = cp0_h(vals.Tp.T, data->corr.incomp->cp0, data->corr.incomp->const_h);
+	MSG("Got value h = %f kJ/kg (T = %f K, p = %f bar)",h/1e3,vals.Tp.T,vals.Tp.p/1e5);
+	return h;
 	// TODO ReferenceState and cp0 implementation need more work for the incompressible case.
 }
 

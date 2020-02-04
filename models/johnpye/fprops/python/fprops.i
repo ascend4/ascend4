@@ -13,6 +13,7 @@
 #include "../solve_ph.h"
 #include "../solve_Tx.h"
 #include "../solve_px.h"
+#include "../solve_pT.h"
 #include "../refstate.h"
 #include "../filedata.h"
 #include "../derivs.h"
@@ -132,6 +133,12 @@ typedef struct{} PureFluid;
 		FluidState2 state = fprops_solve_ph(p, h, $self, err);
 		return state;
 	}
+
+	FluidState2 set_pT(double p, double T, FpropsError *err){
+		FluidState2 state = fprops_solve_pT(p, T, $self, err);
+		return state;
+	}
+
 
 	int region_ph(double p, double h, FpropsError *err){
 		return fprops_region_ph(p, h, $self,err);

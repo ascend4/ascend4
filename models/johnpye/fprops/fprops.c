@@ -221,8 +221,10 @@ and if not, just redirect immediately to the EOS evaluation function. */
 					return x*Qg + (1-x)*Qf;\
 				}\
 			}\
+			break;\
 		case FPROPS_INCOMP:\
 		case FPROPS_IDEAL:\
+			MSG("Evaluating %s at T=%f K, p = %f bar",#VAR,state.vals.Tp.T,state.vals.Tp.p/1e5);\
 			/* no phase change modelled for these fluids */\
 			break;\
 		default:\
@@ -251,6 +253,7 @@ and if not, just redirect immediately to the EOS evaluation function. */
 					}\
 				}\
 			}\
+			break;\
 		case FPROPS_INCOMP:\
 		case FPROPS_IDEAL:\
 			/* no phase change modelled for these fluids */\
