@@ -249,6 +249,7 @@ static void test_fprops_model(const char *modelname){
 	X T(stream_state_test_co2) \
 	X T(stream_state_test_toluene) \
 	X T(stream_state_test_sodium_ph) \
+	X T(stream_state_test_sodium_pT) \
 	X T(pump_simple_test) \
 	X T(sodium_test)
 

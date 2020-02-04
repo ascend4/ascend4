@@ -233,6 +233,7 @@ double cp0_h(double T, const Cp0Data *data, double const_h){
 		term = et->b * et->beta / (1 - exp(-x));
 		sum += term;
 	}
+	MSG("mult cp0star = %f, add const_h = %f, sum = %f",data->cp0star, const_h, sum*data->cp0star+const_h);
 	return sum * data->cp0star + const_h;
 }
 

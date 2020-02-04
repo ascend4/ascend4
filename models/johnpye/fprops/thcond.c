@@ -319,10 +319,10 @@ double thcond1_lam_poly(double T, const ThCondPoly *poly, FpropsError *err){
 	unsigned i;
 	double sum = 0;
 	double Tred = T / poly->Tstar;
-	//MSG("T = %f, Tstar = %f, Tred = %f",T, poly->Tstar, Tred);
+	MSG("T = %f, Tstar = %f, Tred = %f",T, poly->Tstar, Tred);
 	for(i=0; i<poly->np; ++i){
 		sum += poly->pt[i].c * pow(Tred, poly->pt[i].n);
-		//MSG("c = %f, n = %d, sum = %f", poly->pt[i].c, poly->pt[i].n, sum);
+		MSG("c = %f, n = %d, sum = %f", poly->pt[i].c, poly->pt[i].n, sum);
 	}
 	return poly->kstar * sum;
 }

@@ -74,6 +74,29 @@ END on_load;
 END pipe_adiabatic_test;
 
 
+MODEL pipe_adiabatic_test_sodium REFINES pipe_adiabatic;
+	cd.component :== 'sodium';
+	cd.type :== 'incomp';
+METHODS
+METHOD on_load;
+	RUN pipe_adiabatic::default_self;
+	FIX D := 10 {mm};
+	FIX L := 5 {m};
+	FIX mdot := 0.1 {kg/s};
+	FIX inlet.p := 35 {bar};
+	FIX inlet.T := 370 {K} + 273.15 {K};
+
+	FIX mu := 0.024 {cP};
+	FIX eps := 0.09 {mm};
+
+	(* initial guesses *)
+	f_D := 0.0001;
+	inlet.h := 514. {kJ/kg};
+	outlet.h := 1146. {kJ/kg};
+END on_load;
+END pipe_adiabatic_test;
+
+
 MODEL pipe_heat_loss REFINES pipe_adiabatic;
 	D_o IS_A distance;
 	t IS_A distance;

@@ -49,16 +49,16 @@ static const IncompressibleData incomp_data_chloridesalt = {
 			,{ -0.406000, 1. }
 		}
 	}
-	,.ref={FPROPS_REF_TPHS,.data={.tphs={400.,101.325e3,18989.2875,0}}}
+	,.ref={FPROPS_REF_TPHS,.data={.tphs={400+273.15,101.325e3,18989.2875,0}}}
 };
 
 static const ThermalConductivityData thcond_data_chloridesalt = {
 	.source = CLSALT_SOURCE " " CLSALT_SOURCEURL
 	,.type = FPROPS_THCOND_POLY
 	,.data = {.poly=(ThCondPoly){
-		.np = 1
+		.np = 2
 		,.pt = (const ThCondPolyTerm[]){
-			{0.5355150, 0}
+			{5.355150e-1, 0}
 			,{-1e-4, 1}
 		}
 		,.Tstar = 1
@@ -95,7 +95,7 @@ const EosData eos_chloridesalt = {
 
 #else
 
-#define TEST_VERBOSE
+//#define TEST_VERBOSE
 
 # include "../test.h"
 # include "../refstate.h"
@@ -139,19 +139,19 @@ void test_fluid_chloridesalt(void){
 	ASSERT(NULL != P->thcond);
 
 	double p = 1e5;
-#define TEST_PROP(PROP) \
+#define TEST_PROP(PROP,TOL) \
 	for(int i=0; i<ntd; ++i){ \
 		double T = td[i].T; \
 		FluidState2 S = fprops_set_Tp(T,p,P,&err); \
 		double PROP = fprops_##PROP(S,&err);\
-		ASSERT_TOL_VAL(PROP,td[i].PROP,0.5);\
+		ASSERT_TOL_VAL(PROP,td[i].PROP,TOL);\
 	}
 
-	TEST_PROP(rho);
-	TEST_PROP(cp);
-	TEST_PROP(h);
-	TEST_PROP(lam);
-	TEST_PROP(mu);
+	TEST_PROP(rho,0.05);
+	TEST_PROP(cp,0.0000005e3);
+	TEST_PROP(h,0.003);
+	TEST_PROP(lam,0.00005);
+	TEST_PROP(mu,0.005e-3);
 
 #if 0
 	for(int i=0; i<ntd; ++i){

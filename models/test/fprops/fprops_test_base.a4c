@@ -183,6 +183,25 @@ END self_test;
 END stream_state_test_sodium_ph;
 
 
+MODEL stream_state_test_sodium_pT REFINES stream_state;
+	cd.component :== 'sodium';
+	cd.type :== 'incomp';
+METHODS
+METHOD on_load;
+	RUN default_all;
+	FIX T := 900 {K};
+	FIX p := 5 {bar};
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	SOLVE;
+	RUN self_test;
+END on_load;
+METHOD self_test;
+	ASSERT abs(h - 895. {kJ/kg}) < 0.5 {kJ/kg};
+	ASSERT abs(1/v - 805. {kg/m^3}) < 0.5 {kg/m^3};
+END self_test;
+END stream_state_test_sodium_pT;
+
 
 (* a simple connector that includes calculation of steam properties *)
 MODEL stream_node;

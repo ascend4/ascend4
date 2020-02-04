@@ -17,8 +17,6 @@
 	Wrapper for FPROPS to allow access from ASCEND.
 */
 
-//#define ASC_FPROPS_DEBUG
-
 /* include the external function API from libascend... */
 #include <ascend/compiler/extfunc.h>
 
@@ -54,6 +52,15 @@ better later on, hopefully. */
 # error "Where is ASC_EXPORT?"
 #endif
 
+#define ASCFPROPS_DEBUG
+#ifdef ASCFPROPS_DEBUG
+# define MSG(MSG,ARGS...) ERROR_REPORTER_HERE(ASC_PROG_NOTE,MSG "\n",ARGS);
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
+#define ERRMSG(MSG,ARGS...) ERROR_REPORTER_HERE(ASC_USER_ERROR,MSG,##ARGS);
+#define ERRMSGP(MSG,ARGS...) ERROR_REPORTER_HERE(ASC_PROG_ERR,MSG,##ARGS);
 
 /*------------------------------------------------------------------------------
   FORWARD DECLARATIONS
@@ -183,7 +190,7 @@ ASC_EXPORT int fprops_register(){
 #undef CALCFN
 
 	if(result){
-		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"CreateUserFunction result = %d\n",result);
+		MSG("CreateUserFunction result = %d.",result);
 	}
 	return result;
 }
@@ -206,18 +213,16 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 	/* get the component name */
 	compinst = ChildByChar(data,COMPONENT_SYM);
 	if(!compinst){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR
-			,"Couldn't locate 'component' in DATA, please check usage of FPROPS."
-		);
+		ERRMSG("Couldn't locate 'component' in DATA, please check usage of FPROPS.")
 		return 1;
 	}
 	if(InstanceKind(compinst)!=SYMBOL_CONSTANT_INST){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"DATA member 'component' must be a symbol_constant");
+		ERRMSG("DATA member 'component' must be a symbol_constant");
 		return 1;
 	}
 	comp = SCP(SYMC_INST(compinst)->value);
 	if(comp==NULL || strlen(comp)==0){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'component' is NULL or empty");
+		ERRMSG("'component' is NULL or empty");
 		return 1;
 	}
 
@@ -225,7 +230,7 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 	typeinst = ChildByChar(data,TYPE_SYM);
 	if(typeinst){
 		if(InstanceKind(typeinst)!=SYMBOL_CONSTANT_INST){
-			ERROR_REPORTER_HERE(ASC_USER_ERROR,"DATA member 'type' must be a symbol_constant");
+			ERRMSG("DATA member 'type' must be a symbol_constant");
 			return 1;
 		}
 		type = SCP(SYMC_INST(typeinst)->value);
@@ -237,7 +242,7 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 	srcinst = ChildByChar(data,SOURCE_SYM);
 	if(srcinst){
 		if(InstanceKind(srcinst)!=SYMBOL_CONSTANT_INST){
-			ERROR_REPORTER_HERE(ASC_USER_ERROR,"DATA member 'source' must be a symbol_constant");
+			ERRMSG("DATA member 'source' must be a symbol_constant");
 			return 1;
 		}
 		src = SCP(SYMC_INST(srcinst)->value);
@@ -247,18 +252,16 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 
 	bbox->user_data = (void *)fprops_fluid(comp,type,src);
 	if(bbox->user_data == NULL){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Component name/type was not recognised. Check the source-code for for the supported species.");
+		ERRMSG("Unsupported component requested (name='%s',type='%s'). Check source-code for supported species.",comp,type);
 		return 1;
 	}
 
-#ifdef ASC_FPROPS_DEBUG
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Prepared component '%s'%s%s%s OK.\n"
+	MSG("Prepared component '%s'%s%s%s OK."
 		,comp
 		,type?" type '":""
 		,type?type:""
 		,type?"'":""
 	);
-#endif
 	return 0;
 }
 
@@ -301,7 +304,7 @@ int fprops_p_Trho_calc(struct BBoxInterp *bbox,
 		FluidState2 S = fprops_set_Trho(inputs[0],inputs[1], FLUID, &err);
 		outputs[0] = fprops_p(S, &err);
 	}else{
-		//ERROR_REPORTER_HERE(ASC_USER_NOTE,"JACOBIAN CALCULATION FOR P!\n");
+		//MSG("JACOBIAN CALCULATION FOR P!\n");
 		FluidState2 S = fprops_set_Trho(inputs[0],inputs[1], FLUID, &err);
 		jacobian[0*1+0] = fprops_dpdT_rho(S, &err);
 		jacobian[0*1+1] = fprops_dpdrho_T(S, &err);
@@ -376,7 +379,7 @@ int fprops_h_Trho_calc(struct BBoxInterp *bbox,
 	if(bbox->task == bb_func_eval){
 		outputs[0] = fprops_h(S, &err);
 	}else{
-		//ERROR_REPORTER_HERE(ASC_USER_NOTE,"JACOBIAN CALCULATION FOR P!\n");
+		//MSG("JACOBIAN CALCULATION FOR P!\n");
 		jacobian[0*1+0] = fprops_dhdT_rho(S, &err);
 		jacobian[0*1+1] = fprops_dhdrho_T(S, &err);
 	}
@@ -670,21 +673,19 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 			double hft, pt, rhoft,rhogt;
 			fprops_triple_point(&pt,&rhoft,&rhogt,FLUID,&err);
 			if(err){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve triple point for %s.",FLUID->name);
+				ERRMSGP("Failed to solve triple point for %s.",FLUID->name);
 				return 5;
 			}
 			hft = FLUID->h_fn(FSU_TRHO(TTRIP(FLUID),rhoft),FLUID->data,&err);
 			if(h < hft){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR
-					,"Input enthalpy %f kJ/kg is below triple point liquid enthalpy %f kJ/kg"
+				ERRMSGP("Input enthalpy %f kJ/kg is below triple point liquid enthalpy %f kJ/kg"
 					,h/1e3,hft/1e3
 				);
 				return 6;
 			}
 
 			if(p < pt){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR
-					,"Input pressure %f bar is below triple point pressure %f bar"
+				ERRMSGP("Input pressure %f bar is below triple point pressure %f bar"
 					,p/1e5,pt/1e5
 				);
 				outputs[0] = TTRIP(FLUID);
@@ -699,8 +700,7 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 
 				fprops_sat_p(p, &T_sat, &rho_f, &rho_g, FLUID, &err);
 				if(err){
-					ERROR_REPORTER_HERE(ASC_PROG_ERR
-						, "Failed to solve saturation state of %s for p = %f bar < pc (= %f bar)"
+					ERRMSGP("Failed to solve saturation state of %s for p = %f bar < pc (= %f bar)"
 						, FLUID->name, p/1e5,PCRIT(FLUID)/1e5
 					);
 					outputs[0] = TTRIP(FLUID);
@@ -728,9 +728,8 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 					outputs[1] = v;
 					outputs[2] = s;
 					outputs[3] = x;
-#ifdef ASC_FPROPS_DEBUG
-					ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Saturated state, p=%f bar, h = %f kJ/kg",p/1e5,h/1e3);
-#endif
+
+					MSG("Saturated state, p=%f bar, h = %f kJ/kg.",p/1e5,h/1e3);
 					return 0;
 				}
 			}
@@ -739,7 +738,7 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 			double rho = S.vals.Trho.rho;
 			T = S.vals.Trho.T;
 			if(err){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for (p,h): %s",fprops_error(err));
+				ERRMSGP("Failed to solve for (p,h): %s",fprops_error(err));
 				return 9;
 			}
 			/* non-saturated */
@@ -751,13 +750,13 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 			outputs[1] = v;
 			outputs[2] = s;
 			outputs[3] = x;
-#ifdef ASC_FPROPS_DEBUG
-			ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Non-saturated state, p = %f bar, h = %f kJ/kg",p/1e5,h/1e3);
-#endif
+
+			MSG("Non-saturated state, p = %f bar, h = %f kJ/kg.",p/1e5,h/1e3);
 			return 0;
 		}
 	case FPROPS_INCOMP:
 		{
+			MSG("Solving for p=%f bar, h=%f kJ/kg.",p/1e5, h/1e3);
 			FluidState2 S;
 			S = fprops_solve_ph(p,h,FLUID,&err);
 			double rho = fprops_rho(S,&err);
@@ -766,7 +765,7 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 			v = 1./rho;
 			x = 0;
 			if(err){
-				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve (p,h): %s (fluid '%s')",fprops_error(err),FLUID->name);
+				ERRMSGP("Failed to solve (p,h): %s (fluid '%s')",fprops_error(err),FLUID->name);
 				return 9;
 			}
 			last = FLUID;
@@ -777,7 +776,7 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 			return 0;
 		}
 	default:
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid fluid type (type %u)",FLUID->type);
+		ERRMSGP("Invalid fluid type (type %u)",FLUID->type);
 		return 10;
 	}
 }

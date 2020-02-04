@@ -202,11 +202,11 @@ double incomp_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err)
 	switch(D->rho.type){
 	case FPROPS_DENS_T: // series in terms of T/Tstar
 		Tred = vals.Tp.T / D->rho.Tstar;
-		//MSG("Tred = T/T* = %f",Tred);
+		MSG("Tred = T/T* = %f",Tred);
 		break;
 	case FPROPS_DENS_1MT: // series in terms of [1 - T/Tstar]
 		Tred = 1 - vals.Tp.T / D->rho.Tstar;
-		//MSG("Tred = 1 - T/T* = %f",Tred);
+		MSG("Tred = 1 - T/T* = %f",Tred);
 		break;
 	default:
 		*err = FPROPS_NOT_IMPLEMENTED;
@@ -216,7 +216,7 @@ double incomp_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err)
 	sum=0;
 	for(int i=0; i<np; ++i){
 		sum += D->rho.pt[i].c * pow(Tred, D->rho.pt[i].n);
-		//MSG("i = %u, c = %f, n = %f --> sum = %f", i, D->rho.pt[i].c, D->rho.pt[i].n,sum);
+		MSG("i = %u, c = %f, n = %f --> sum = %f", i, D->rho.pt[i].c, D->rho.pt[i].n,sum);
 	}
 	return D->rho.rhostar * sum;
 #undef D

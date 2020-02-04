@@ -126,6 +126,8 @@ END disharray;
 MODEL towerarray REFINES csparray;
 	cd.component :== 'sodium';
 	cd.type :== 'incomp';
+	p_in ALIASES PC[1].inlet.p;
+	p_out ALIASES PH[1].outlet.p;
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -135,7 +137,7 @@ METHOD on_load;
 	END FOR;
 	FIX Qdot_onecoll := 5 {MW};
 	FIX eta_DI := 1;
-	FIX D := 50 {mm};
+	FIX D := 150 {mm};
 	FIX L := 200 {m};
 	FIX t := 4 {mm};
 	FIX eps := 0.015 {mm};
@@ -143,8 +145,8 @@ METHOD on_load;
 	FIX mu := 0.024 {cP};
 	FIX h := 10 {W/m^2/K};
 	FIX inlet.p := 50 {bar};
-	FIX inlet.T := 100 {K} +  273.15 {K};
-	FIX DI[1].mdot := 0.1 {kg/s}; (* same for all dishes *)
+	FIX inlet.T := 500 {K} +  273.15 {K};
+	FIX DI[1].mdot := 20 {kg/s}; (* same for all dishes *)
 	FIX T_amb := 300 {K};
 	(* initial guesses to help the solver *)
 	PC[1..n].inlet.h := 400 {kJ/kg};

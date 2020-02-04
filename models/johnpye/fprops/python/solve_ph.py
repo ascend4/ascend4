@@ -2,6 +2,14 @@ from fprops import *
 from pylab import *
 import sys
 
+"""
+	This script aims to show that we can solve forwards (T,rho) to (p,h)
+	and backwards from (p,h) to (T,rho) again, and get the same values back.
+
+	Only works with fluids that allow set_Trho, which excludes incompressible
+	fluids, for which T and rho are not independent.
+"""
+
 D = fluid('carbondioxide','pengrob');
 
 T = 220
