@@ -84,6 +84,7 @@ ExtBBoxFunc fprops_Tvsx_ph_calc;
 #define TTRIP(FLUID) (FLUID->data->T_t)
 #define RHOCRIT(FLUID) (FLUID->data->rho_c)
 #define PCRIT(FLUID) (FLUID->data->p_c)
+#define FSU_TRHO(T,RHO) (FluidStateUnion){.Trho={T,RHO}}
 
 /*------------------------------------------------------------------------------
   GLOBALS
@@ -595,6 +596,13 @@ int fprops_phsx_vT_calc(struct BBoxInterp *bbox,
 ){
 	CALCPREPARE(2,4);
 
+	/*
+		TODO unclear why we don't put this code into the main fprops.c routines...?
+	 	there is an attempt here to minimise calls to the slow function fprops_sat_T,
+		by making direct calls to s_fn and h_fn. FIXME A better solution would be to move 
+		all of this code into solve_ph.c or similar.
+	*/
+
 	double rho = 1./inputs[0];
 	double T = inputs[1];
 	double p_sat, rho_f, rho_g;
@@ -607,12 +615,10 @@ int fprops_phsx_vT_calc(struct BBoxInterp *bbox,
 			double vf = 1./rho_f;
 			double vg = 1./rho_g;
 			double x = (inputs[0] - vf)  /(vg - vf);
-			FluidState2 Sf = fprops_set_Trho(T, rho_f, FLUID, &err);
-			double sf = fprops_s(Sf, &err);
-			double hf = fprops_h(Sf, &err);
-			FluidState2 Sg = fprops_set_Trho(T, rho_g, FLUID, &err);
-			double sg = fprops_s(Sg, &err);
-			double hg = fprops_h(Sg, &err);
+			double sf = FLUID->s_fn(FSU_TRHO(T,rho_f), FLUID->data, &err);
+			double hf = FLUID->h_fn(FSU_TRHO(T,rho_f), FLUID->data, &err);
+			double sg = FLUID->s_fn(FSU_TRHO(T,rho_g), FLUID->data, &err);
+			double hg = FLUID->h_fn(FSU_TRHO(T,rho_g), FLUID->data, &err);
 			outputs[0] = p_sat;
 			outputs[1] = hf + x * (hg-hf);
 			outputs[2] = sf + x * (sg-sf);
@@ -623,10 +629,9 @@ int fprops_phsx_vT_calc(struct BBoxInterp *bbox,
 	}
 
 	/* non-saturated */
-	FluidState2 S = fprops_set_Trho(T, rho, FLUID, &err);
-	outputs[0] = fprops_p(S, &err);
-	outputs[1] = fprops_h(S, &err);
-	outputs[2] = fprops_s(S, &err);
+	outputs[0] = FLUID->p_fn(FSU_TRHO(T,rho), FLUID->data, &err);
+	outputs[1] = FLUID->h_fn(FSU_TRHO(T,rho), FLUID->data, &err);
+	outputs[2] = FLUID->s_fn(FSU_TRHO(T,rho), FLUID->data, &err);
 	outputs[3] = rho < RHOCRIT(FLUID) ? 1 : 0;
 	return 0;
 }
@@ -644,7 +649,6 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 	CALCPREPARE(2,4);
 
 	static const PureFluid *last = NULL;
-	FluidState2 S;
 	static double p,h,T,v,s,x;
 	if(last == FLUID && p == inputs[0] && h == inputs[1]){
 		outputs[0] = T;
@@ -661,15 +665,15 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 	case FPROPS_HELMHOLTZ:
 	case FPROPS_PENGROB:
 		{
-			// the code below is designed to ...? help converge solutions with strange initial guesses?
+			// the code below aims to avoid calls to fprops_sat_T, which are slow.
+
 			double hft, pt, rhoft,rhogt;
 			fprops_triple_point(&pt,&rhoft,&rhogt,FLUID,&err);
 			if(err){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve triple point for %s.",FLUID->name);
 				return 5;
 			}
-			FluidState2 Sft = fprops_set_Trho(TTRIP(FLUID),rhoft,FLUID,&err);
-			hft = fprops_h(Sft, &err);
+			hft = FLUID->h_fn(FSU_TRHO(TTRIP(FLUID),rhoft),FLUID->data,&err);
 			if(h < hft){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR
 					,"Input enthalpy %f kJ/kg is below triple point liquid enthalpy %f kJ/kg"
@@ -683,10 +687,9 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 					,"Input pressure %f bar is below triple point pressure %f bar"
 					,p/1e5,pt/1e5
 				);
-				double sft = fprops_s(Sft, &err);
 				outputs[0] = TTRIP(FLUID);
 				outputs[1] = 1./ rhoft;
-				outputs[2] = sft;
+				outputs[2] = FLUID->s_fn(FSU_TRHO(TTRIP(FLUID),rhoft),FLUID->data, &err);
 				outputs[3] = 0;
 				return 7;
 			}
@@ -700,26 +703,22 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 						, "Failed to solve saturation state of %s for p = %f bar < pc (= %f bar)"
 						, FLUID->name, p/1e5,PCRIT(FLUID)/1e5
 					);
-					FluidState2 Sx = fprops_set_Trho(TTRIP(FLUID), rhoft, FLUID, &err);
-					double sx = fprops_s(Sx,&err);
 					outputs[0] = TTRIP(FLUID);
 					outputs[1] = 1./rhoft;
-					outputs[2] = sx;
+					outputs[2] = FLUID->s_fn(FSU_TRHO(TTRIP(FLUID), rhoft), FLUID->data, &err);
 					outputs[3] = 0;
 					return 8;
 				}
 
-				FluidState2 Sf = fprops_set_Trho(T_sat,rho_f,FLUID,&err);
-				FluidState2 Sg = fprops_set_Trho(T_sat,rho_g,FLUID,&err);
-				double hf = fprops_h(Sf, &err);
-				double hg = fprops_h(Sg, &err);
+				double hf = FLUID->h_fn(FSU_TRHO(T_sat, rho_f),FLUID->data,&err);
+				double hg = FLUID->h_fn(FSU_TRHO(T_sat, rho_g),FLUID->data,&err);
 
 				if(hf < h && h < hg){
 					/* saturated */
 					double vf = 1./rho_f;
 					double vg = 1./rho_g;
-					double sf = fprops_s(Sf, &err);
-					double sg = fprops_s(Sg, &err);
+					double sf = FLUID->s_fn(FSU_TRHO(T_sat, rho_f),FLUID->data,&err);
+					double sg = FLUID->s_fn(FSU_TRHO(T_sat, rho_g),FLUID->data,&err);
 					T = T_sat;
 					x = (h - hf)  /(hg - hf);
 					v = vf + x * (vg-vf);
@@ -736,18 +735,16 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 				}
 			}
 
-			double rho;
-			S = fprops_solve_ph(p,h, FLUID, &err);
-			rho = fprops_rho(S,&err);
-			T = fprops_T(S,&err);
+			FluidState2 S = fprops_solve_ph(p,h, FLUID, &err); // prev code was use_guess=0
+			double rho = S.vals.Trho.rho;
+			T = S.vals.Trho.T;
 			if(err){
 				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for (p,h): %s",fprops_error(err));
 				return 9;
 			}
 			/* non-saturated */
 			v = 1./rho;
-			//FluidState2 S = fprops_set_Trho(T,rho,FLUID,&err);
-			s = fprops_s(S, &err);
+			s = FLUID->s_fn(S.vals, FLUID->data, &err); // straight to EOS, no sat test req.
 			x = (v > 1./RHOCRIT(FLUID)) ? 1 : 0;
 			last = FLUID;
 			outputs[0] = T;
@@ -760,23 +757,25 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 			return 0;
 		}
 	case FPROPS_INCOMP:
-		S = fprops_solve_ph(p,h,FLUID,&err);
-		double rho = fprops_rho(S,&err);
-		T = fprops_T(S,&err);
-		s = fprops_s(S,&err);
-		v = 1./rho;
-		x = 0;
-		if(err){
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve (p,h): %s (fluid '%s')",fprops_error(err),FLUID->name);
-			return 9;
+		{
+			FluidState2 S;
+			S = fprops_solve_ph(p,h,FLUID,&err);
+			double rho = fprops_rho(S,&err);
+			T = fprops_T(S,&err);
+			s = fprops_s(S,&err);
+			v = 1./rho;
+			x = 0;
+			if(err){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve (p,h): %s (fluid '%s')",fprops_error(err),FLUID->name);
+				return 9;
+			}
+			last = FLUID;
+			outputs[0] = T;
+			outputs[1] = v;
+			outputs[2] = s;
+			outputs[3] = x;
+			return 0;
 		}
-		last = FLUID;
-		outputs[0] = T;
-		outputs[1] = v;
-		outputs[2] = s;
-		outputs[3] = x;
-		return 0;
-
 	default:
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid fluid type (type %u)",FLUID->type);
 		return 10;

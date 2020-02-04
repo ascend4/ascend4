@@ -74,6 +74,8 @@ int fegetexcept(void);
 # define ERRMSG(ARGS...) ((void)0)
 #endif
 
+#define FSU_TRHO(T,RHO) (FluidStateUnion){.Trho={T, RHO}}
+
 int fprops_region_ph(double p, double h, const PureFluid *fluid, FpropsError *err){
     double Tsat, rhof, rhog;
 	double p_c = fluid->data->p_c;
@@ -99,10 +101,10 @@ int fprops_region_ph(double p, double h, const PureFluid *fluid, FpropsError *er
 		return FPROPS_ERROR;
 	}
 
-	double hf = fluid->h_fn((FluidStateUnion){.Trho={Tsat, rhof}}, fluid->data, err);
+	double hf = fluid->h_fn(FSU_TRHO(Tsat,rhof), fluid->data, err);
 	if(h <= hf)return FPROPS_NON;
 
-	double hg = fluid->h_fn((FluidStateUnion){.Trho={Tsat,rhog}}, fluid->data, err);
+	double hg = fluid->h_fn(FSU_TRHO(Tsat,rhog), fluid->data, err);
 	if(h >= hg)return FPROPS_NON;
 
 	return FPROPS_SAT;
@@ -211,7 +213,7 @@ static FluidState2 fprops_solve_ph_Trho(double p, double h, const PureFluid *flu
 				*T = Tsat1;
 				*rho = rhof1;
 #else
-				MSG("h < 0.9 hc... using saturation Tsat(hf) for starting guess");
+				MSG("h < 0.8 hc... using saturation Tsat(hf) for starting guess");
 				double Tsat1, psat1, rhof1, rhog1;
 				fprops_sat_hf(h, &Tsat1, &psat1, &rhof1, &rhog1, fluid, err);
 				if(*err){
@@ -262,13 +264,13 @@ static FluidState2 fprops_solve_ph_Trho(double p, double h, const PureFluid *flu
 		MSG("STARTING ITERATION");
 		MSG("rhof_t = %f",rhof_t);
 		while(i++ < 200){
-			FluidState2 S1 = fprops_set_Trho(T1,rho1,fluid,err);
-			double p1 = fprops_p(S1,err);
-			//double p1 = fluid->p_fn((FluidStateUnion){.Trho={T1,rho1}}, fluid->data, err);
+			//FluidState2 S1 = fprops_set_Trho(T1,rho1,fluid,err);
+			//double p1 = fprops_p(S1,err);
+			double p1 = fluid->p_fn(FSU_TRHO(T1,rho1), fluid->data, err);
 			if(*err){
-				MSG("Got an error ('%s') in fprops_p calculation",fprops_error(*err));
+				MSG("Got an error ('%s') in p calculation",fprops_error(*err));
 			}
-			double h1 = fprops_h(S1,err);
+			double h1 = fluid->h_fn(FSU_TRHO(T1,rho1), fluid->data, err);
 			if(*err){
 				MSG("Got an error ('%s') in fprops_h calculation",fprops_error(*err));
 			}
@@ -283,8 +285,8 @@ static FluidState2 fprops_solve_ph_Trho(double p, double h, const PureFluid *flu
 					delta_T *= 0.5;
 					rho1 = rho1 + delta_rho;
 					T1 = T1 + delta_T;
-					S1 = fprops_set_Trho(T1,rho1,fluid,err);
-					p1 = fprops_p(S1,err);
+					//S1 = fprops_set_Trho(T1,rho1,fluid,err);
+					p1 = fluid->p_fn(FSU_TRHO(T1,rho1), fluid->data, err);
 					MSG("Set smaller step as p < 0. T1 = %f, rho1 = %f --> p1 = %f",T1, rho1, p1);
 					nred--;
 				}
