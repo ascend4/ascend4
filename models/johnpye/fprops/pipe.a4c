@@ -5,6 +5,51 @@ REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 	(ie, fprops_lam and fprops_mu)
 *)
 
+MODEL viscosity_eq;
+	mu IS_A viscosity;
+	T IS_A temperature;
+	p IS_A pressure;
+	cd IS_A fluid;
+
+	calc_mu: fprops_mu_Tp(
+		T, p : INPUT;
+		mu : OUTPUT;
+		cd : DATA
+	);
+METHODS
+METHOD default;
+	RUN disable;
+	FIX mu := 0.024 {cP};
+END default;
+METHOD default_self;
+	RUN default;
+END default_self;
+METHOD enable;
+	calc_mu[1].included := TRUE;
+	FREE mu;
+END enable;
+METHOD disable;
+	calc_mu[1].included := FALSE;
+	FIX mu;
+END disable;	
+END viscosity_eq;
+
+
+MODEL viscosity_eq_test REFINES viscosity_eq;
+	cd.component :== 'sodium';
+	cd.type :== 'incomp';
+METHODS
+METHOD on_load;
+	RUN viscosity_eq::default_self;
+	FIX T := 1000 {K};
+	FIX p := 15 {bar};
+END on_load;
+METHOD self_test;
+	ASSERT abs(mu - 1.81e-4 {Pa*s})< 0.005e-4 {Pa*s};
+END self_test;
+END viscosity_eq_test;
+
+
 MODEL pipe_adiabatic REFINES stream_equipment;
 	D "inside diameter" IS_A distance;
 	A "flow cross-sectional area" IS_A area;
@@ -28,6 +73,12 @@ MODEL pipe_adiabatic REFINES stream_equipment;
 	(* momentum equation *)
 	mom_eqn: (inlet.p - outlet.p) = (0.5 * Vel_in^2 / inlet.v) * f_D * (L/D);
 
+	calc_mu IS_A viscosity_eq;
+	calc_mu.cd, cd ARE_THE_SAME;
+	calc_mu.T, inlet.T ARE_THE_SAME;
+	calc_mu.p, inlet.p ARE_THE_SAME;
+	mu, calc_mu.mu ARE_THE_SAME;
+
 	ke_in, ke_out IS_A specific_energy;
 	ke_in = 0.5 * Vel_in^2;
 	ke_out = 0.5 * Vel_out^2;
@@ -47,6 +98,7 @@ MODEL pipe_adiabatic REFINES stream_equipment;
 METHODS
 METHOD default_self;
 	RUN stream_equipment::default_self;
+	RUN calc_mu.disable;
 END default_self;	
 END pipe_adiabatic;
 
@@ -80,13 +132,13 @@ MODEL pipe_adiabatic_test_sodium REFINES pipe_adiabatic;
 METHODS
 METHOD on_load;
 	RUN pipe_adiabatic::default_self;
+	RUN calc_mu.enable;
 	FIX D := 10 {mm};
 	FIX L := 5 {m};
 	FIX mdot := 0.1 {kg/s};
 	FIX inlet.p := 35 {bar};
 	FIX inlet.T := 370 {K} + 273.15 {K};
 
-	FIX mu := 0.024 {cP};
 	FIX eps := 0.09 {mm};
 
 	(* initial guesses *)
@@ -94,7 +146,7 @@ METHOD on_load;
 	inlet.h := 514. {kJ/kg};
 	outlet.h := 1146. {kJ/kg};
 END on_load;
-END pipe_adiabatic_test;
+END pipe_adiabatic_test_sodium;
 
 
 MODEL pipe_heat_loss REFINES pipe_adiabatic;

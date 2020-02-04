@@ -52,7 +52,7 @@ better later on, hopefully. */
 # error "Where is ASC_EXPORT?"
 #endif
 
-#define ASCFPROPS_DEBUG
+//#define ASCFPROPS_DEBUG
 #ifdef ASCFPROPS_DEBUG
 # define MSG(MSG,ARGS...) ERROR_REPORTER_HERE(ASC_PROG_NOTE,MSG "\n",ARGS);
 #else
@@ -256,11 +256,7 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 		return 1;
 	}
 
-	MSG("Prepared component '%s'%s%s%s OK."
-		,comp
-		,type?" type '":""
-		,type?type:""
-		,type?"'":""
+	MSG("Prepared component '%s'%s%s%s OK.",comp, type?" type '":"", type?type:"" ,type?"'":""
 	);
 	return 0;
 }
