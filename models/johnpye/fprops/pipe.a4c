@@ -319,6 +319,7 @@ MODEL pipe_heat_loss_insul REFINES pipe_adiabatic;
 	t ALIASES solid_pipe.t;
 	D_ext ALIASES solid_insul.d_o;
 	t_insul ALIASES solid_insul.t;
+	A_ext ALIASES solid_insul.outer.A;
 
 	k_insul IS_A thermal_conductivity;
 	k_pipe IS_A thermal_conductivity;
@@ -368,7 +369,10 @@ MODEL pipe_heat_loss_insul REFINES pipe_adiabatic;
 	Q_rad IS_A energy_rate;
 	Q_rad = 1{SIGMA_C}*emiss*(T_ext^4 - T_amb^4);
 	Q_conv IS_A energy_rate;
-	Q_conv = h_ext * 1{PI} * D_ext * (T_ext - T_amb);
+	Q_conv = h_ext * A_ext * (T_ext - T_amb);
+
+	R_ext IS_A thermal_resistance;
+	Q * R_ext = T_ext - T_amb;
 
 	Q = Q_conv + Q_rad;
 

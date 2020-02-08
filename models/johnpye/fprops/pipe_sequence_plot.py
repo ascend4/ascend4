@@ -55,23 +55,23 @@ def pipe_sequence_plot(self):
 	for i in range(n):
 		x[i+1] = x[i] + L[i]
 	
-	plot(x,p,'bo-');
-	ylabel(unicode(r"p / [bar]"))
-	subplot(312)
-	plot(x,T,'ro-');
-	plot(x[1:],T_ext,'go-')
-	ylabel(unicode(r"T / [K]"))
+	pl.plot(x,p,'bo-');
+	pl.ylabel(unicode(r"p / [bar]"))
+	pl.subplot(312)
+	pl.plot(x,T,'ro-');
+	pl.plot(x[1:],T_ext,'go-')
+	pl.ylabel(unicode(r"T / [K]"))
 
-	subplot(313)
-	plot(x[1:],Q,'ro-')
-	ylabel(unicode(r"Q / [W]"))
+	pl.subplot(313)
+	pl.plot(x[1:],Q,'ro-')
+	pl.ylabel(unicode(r"Q / [W]"))
 
-	title(unicode(r"Pipe heat loss and pressure drop (fluid %s)" % D.name))
-	xlabel("x / [m]")
+	pl.title(unicode(r"Pipe heat loss and pressure drop (fluid %s)" % D.name))
+	pl.xlabel("x / [m]")
 
 	extpy.getbrowser().reporter.reportNote("Plotting completed")
-	ion()
-	show()
+	pl.ion()
+	pl.show()
 
 extpy.registermethod(pipe_sequence_plot)
 
