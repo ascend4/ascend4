@@ -203,51 +203,70 @@ END on_load;
 END pipe_heat_loss_test;
 
 
-MODEL pipe_sequence_test;
-	P1, P2 IS_A pipe_heat_loss;
-	P1.outlet, P2.inlet ARE_THE_SAME;
-	cd ALIASES P1.cd;
+MODEL pipe_sequence REFINES stream_equipment;
+	L_tot IS_A distance;
+	n IS_A integer_constant;
+
+	P[1..n] IS_A pipe_heat_loss;
+	FOR i IN [1..n-1] CREATE
+		P[i].outlet, P[i+1].inlet ARE_THE_SAME;
+	END FOR;
+	inlet, P[1].inlet ARE_THE_SAME;
+	outlet, P[n].outlet ARE_THE_SAME;
+
+	P[1..n].eps ARE_THE_SAME;
+	P[1..n].emiss ARE_THE_SAME;
+	emiss ALIASES P[1].emiss;
+	P[1..n].h ARE_THE_SAME;
+	P[1..n].T_amb ARE_THE_SAME;
+	h ALIASES P[1].h;
+	T_amb ALIASES P[1].T_amb;
+METHODS
+METHOD default_self;
+	FOR i IN [1..n] DO
+		RUN P[i].default_self;
+	END FOR;
+END default_self;
+METHOD enable_calc_mu;
+	FOR i IN [1..n] DO
+		RUN P[i].calc_mu.enable;
+	END FOR;
+END enable_calc_mu;
+END pipe_sequence;
+
+MODEL pipe_sequence_test REFINES pipe_sequence;
+	n :== 5;
+
 	cd.component :== 'sodium';	
 	cd.type :== 'incomp';
-
-	P1.eps, P2.eps ARE_THE_SAME;
-	P1.emiss, P2.emiss ARE_THE_SAME;
-	emiss ALIASES P1.emiss;
-	P1.h, P2.h ARE_THE_SAME;
-	P1.T_amb, P2.T_amb ARE_THE_SAME;
-	h ALIASES P1.h;
-	T_amb ALIASES P1.T_amb;
 METHODS
 METHOD on_load;
-	RUN P1.default_self;
-	RUN P2.default_self;
-	FIX P1.eps := 0.09 {mm};
-	FIX P1.D := 10 {mm};
-	FIX P2.D := 16 {mm};
-	FIX P1.t := 2 {mm};
-	FIX P2.t := 2 {mm};
+	RUN default_self;
+	FIX L_tot := 50 {m};
+	FIX P[1].eps := 0.09 {mm};
+	FIX P[1].D := 150 {mm};
+	FIX P[2..n].D := 100 {mm};
+	FIX P[1].t := 2 {mm};
+	FIX P[2..n].t := 2 {mm};
 	FIX h := 20 {W/m^2/K};
 	FIX emiss := 0.8;
 	FIX T_amb := 20 {K} + 273.15 {K};
-	FIX P1.L := 5 {m};
-	FIX P2.L := 25 {m};
-	FIX P1.inlet.p := 35 {bar};
-	FIX P1.inlet.T := 370 {K} + 273.15 {K};
-	FIX P1.mdot := 0.1 {kg/s};
-
-	FIX P1.mu := 0.024 {cP};
-	FIX P2.mu := 0.020 {cP};
+	FIX P[1].L := 5 {m};
+	FIX P[2..n].L := (L_tot - P[1].L) / (n - 1);
+	FIX P[1].inlet.p := 35 {bar};
+	FIX P[1].inlet.T := 500 {K} + 273.15 {K};
+	FIX P[1].mdot := 60 {kg/s};
 
 	IF cd.component == 'sodium' THEN
-		P1.inlet.h := 400 {kJ/kg};
+		P[1].inlet.h := 400 {kJ/kg};
+		RUN enable_calc_mu;
 	ELSE
-		P1.inlet.h := 4000 {kJ/kg};
+		P[1].inlet.h := 4000 {kJ/kg};
+		FIX P[1..n].mu := 0.024 {cP};
 	END IF;
-	P1.outlet.h := 4000 {kJ/kg};
+	P[1].outlet.h := 4000 {kJ/kg};
+	RUN enable_calc_mu;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
 END on_load;
-METHOD enable_calc_mu;
-	RUN P1.calc_mu.enable;
-	RUN P2.calc_mu.enable;
-END enable_calc_mu;
-
 END pipe_sequence_test;
