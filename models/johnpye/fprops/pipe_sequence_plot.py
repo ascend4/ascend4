@@ -26,7 +26,7 @@ def pipe_sequence_plot(self):
 	import numpy as np
 
 	pl.ioff()
-	pl.subplot(211)
+	pl.subplot(311)
 	pl.hold(1)
 
 	extpy.getbrowser().reporter.reportNote("Gathering values...")
@@ -37,10 +37,14 @@ def pipe_sequence_plot(self):
 	p = np.zeros((n+1))
 	T = np.zeros((n+1))
 	L = np.zeros((n))
+	Q = np.zeros((n))
+	T_ext = np.zeros((n))
 	for i in range(n):
 		p[i] = float(self.P[i+1].inlet.p) / 1e5
 		T[i] = float(self.P[i+1].inlet.T)
 		L[i] = float(self.P[i+1].L)
+		Q[i] = float(self.P[i+1].Q)
+		T_ext[i] = float(self.P[i+1].T_ext)
 	p[n] = float(self.P[n].outlet.p) / 1e5;
 	T[n] = float(self.P[i+1].outlet.T)
 
@@ -53,9 +57,14 @@ def pipe_sequence_plot(self):
 	
 	plot(x,p,'bo-');
 	ylabel(unicode(r"p / [bar]"))
-	subplot(212)
+	subplot(312)
 	plot(x,T,'ro-');
+	plot(x[1:],T_ext,'go-')
 	ylabel(unicode(r"T / [K]"))
+
+	subplot(313)
+	plot(x[1:],Q,'ro-')
+	ylabel(unicode(r"Q / [W]"))
 
 	title(unicode(r"Pipe heat loss and pressure drop (fluid %s)" % D.name))
 	xlabel("x / [m]")

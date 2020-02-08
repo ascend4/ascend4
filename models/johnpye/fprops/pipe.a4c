@@ -321,7 +321,7 @@ MODEL pipe_heat_loss_insul REFINES pipe_adiabatic;
 
 	(* energy equation, ignoring potential energy *)
 	(* note that the pipe_adiabatic::en_eqn must be de-included in METHODS *)
-	en_eqn_Q: Q/mdot + inlet.h + 0.5*Vel_in^2 = outlet.h + 0.5*Vel_out^2;
+	en_eqn_Q: inlet.h + 0.5*Vel_in^2 = Q/mdot + outlet.h + 0.5*Vel_out^2;
 METHODS
 METHOD default_self;
 	RUN pipe_adiabatic::default_self;
@@ -431,7 +431,7 @@ METHOD enable_calc_mu;
 END enable_calc_mu;
 END pipe_sequence;
 
-MODEL pipe_sequence_test REFINES pipe_sequence;
+MODEL pipe_sequence_test_sodium REFINES pipe_sequence;
 	n :== 30;
 
 	cd.component :== 'sodium';
@@ -442,10 +442,10 @@ METHOD plot;
 END plot;
 METHOD on_load;
 	RUN default_self;
-	FIX L := 50 {m};
+	FIX L := 500 {m};
 	FIX t_insul := 100 {mm};
 	FIX t_pipe := 3 {mm};
-	FIX D := 100 {mm};
+	FIX D := 300 {mm};
 
 	FIX eps := 0.09 {mm};
 	FIX h_ext := 20 {W/m^2/K};
@@ -472,4 +472,48 @@ METHOD on_load;
 	OPTION convopt 'RELNOM_SCALE';
 END on_load;
 END pipe_sequence_test;
+
+
+MODEL pipe_sequence_test_water REFINES pipe_sequence;
+	n :== 1;
+
+	cd.component :== 'water';
+	cd.type :== 'helmholtz';
+METHODS
+METHOD plot;
+	EXTERNAL pipe_sequence_plot(SELF);
+END plot;
+METHOD on_load;
+	RUN default_self;
+	FIX L := 50 {m};
+	FIX t_insul := 100 {mm};
+	FIX t_pipe := 3 {mm};
+	FIX D := 100 {mm};
+
+	FIX eps := 0.09 {mm};
+	FIX h_ext := 20 {W/m^2/K};
+	FIX emiss := 0.8;
+	FIX k_insul := 0.08 {W/m/K}; (* 'microporous insulation board', https://is.gd/5j9Gkw *)
+	FIX k_pipe := 22.4 {W/m/K}; (* Haynes 230 @ 700°C: https://is.gd/F0RICh *)
+
+	FIX T_amb := 20 {K} + 273.15 {K};
+
+	FIX inlet.p := 35 {bar};
+	FIX inlet.T := 500 {K} + 273.15 {K};
+	FIX mdot := 1 {kg/s};
+
+	IF cd.component == 'sodium' THEN
+		P[1].inlet.h := 400 {kJ/kg};
+		RUN enable_calc_mu;
+	ELSE
+		P[1].inlet.h := 4000 {kJ/kg};
+		FIX P[1..n].mu := 0.024 {cP};
+	END IF;
+	
+	RUN enable_calc_mu;
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END on_load;
+END pipe_sequence_test;
+
 
