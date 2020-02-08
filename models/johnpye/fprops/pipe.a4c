@@ -82,6 +82,37 @@ END self_test;
 END thcond_eq_test;
 
 
+MODEL specheat_eq;
+	cp IS_A specific_heat_capacity;
+	T IS_A temperature;
+	cd IS_A fluid;
+
+	calc_cp: fprops_cp_T_incomp(
+		T : INPUT;
+		cp : OUTPUT;
+		cd : DATA
+	);
+METHODS
+METHOD default; END default;
+METHOD default_self; RUN default; END default_self;
+END specheat_eq;
+
+MODEL specheat_eq_test REFINES specheat_eq;
+	cd.component :== 'sodium';
+	cd.type :== 'incomp';
+METHODS
+METHOD on_load;
+	RUN specheat_eq::default_self;
+	FIX T := 1100 {K};
+END on_load;
+METHOD self_test;
+	ASSERT abs(cp - 1.261 {kJ/kg/K})< 0.001 {kJ/kg/K};
+END self_test;
+END specheat_eq_test;
+
+
+
+
 MODEL pipe_adiabatic REFINES flow_equipment;
 	solid IS_A solid_cylinder;
 	solid.end, inlet.shape, outlet.shape ARE_THE_SAME;
@@ -268,14 +299,15 @@ METHOD on_load;
 	OPTION convopt 'RELNOM_SCALE';
 END on_load;
 END pipe_heat_loss_test_incomp;
+	
 
 
 MODEL pipe_heat_loss_insul REFINES pipe_adiabatic;
-	NOTES 'description' SELF {This is a model of a bare pipe with external
-	radiative and convective heat loss. It is a bit crappy, since it doesn't
-	handle the tube-wall temperature difference, which will usually be
-	important. It also doesn't (currently) calculate the internal convection
-	coefficient, which will vary with temperature, in particular.}
+	NOTES 'description' SELF {This is a model of an insulated pipe, with
+	internal convection, pipe wall conduction, insulation conduction
+	considered, and external convection (with a fixed convection coefficient)
+	as well as external radiative heat loss (with a fixed emissivity). The
+	effect of internal convection can be turned off to improve speed.}
 	END NOTES;
 
 	solid_pipe IS_A solid_tube;
@@ -302,12 +334,33 @@ MODEL pipe_heat_loss_insul REFINES pipe_adiabatic;
 	R_pipe IS_A thermal_resistance;
 	R_pipe = ln(D_o / D) / 2{PI} / k_pipe / L;
 
+	Nu, Pe, Pr IS_A factor;
+
+	corr_intconv IS_A symbol_constant;
+	R_intconv IS_A thermal_resistance;
+	SELECT(corr_intconv)
+	CASE 'skupinski':
+		Pe = Re * Pr;
+		calc_k IS_A thcond_eq;
+		calc_cp IS_A specheat_eq;
+		k ALIASES calc_k.k;
+		cp ALIASES calc_cp.cp;
+		calc_k.T, calc_cp.T, T_flow ARE_THE_SAME;
+		calc_k.cd, calc_cp.cd, cd ARE_THE_SAME;
+
+		(*corr_intconv IS_A symbol_constant;*)
+		Nu = 4.82 + 0.0185 * (Re*Pr)^0.827;
+		Pr = cp * mu / k;
+
+		R_intconv = D / (k * Nu * A_int);
+ 	OTHERWISE:
+		R_intconv = 0;
+	END SELECT;
+
 	T_flow IS_A temperature;
 	T_flow = (inlet.T + outlet.T) / 2;
 
-	(* ignoring the internal convection boundary layer *)
-
-	Q * (R_insul + R_pipe) = T_flow - T_ext;
+	Q * (R_intconv + R_insul + R_pipe) = T_flow - T_ext;
 
 	T_amb IS_A temperature;
 	emiss "pipe external emissivity" IS_A fraction;
@@ -337,6 +390,7 @@ END pipe_heat_loss_insul;
 MODEL pipe_heat_loss_insul_test REFINES pipe_heat_loss_insul;
 	cd.component :== 'sodium';
 	cd.type :== 'incomp';
+	corr_intconv :== 'skupinski';
 METHODS
 METHOD on_load;
 	RUN pipe_heat_loss_insul::default_self;
@@ -391,9 +445,10 @@ MODEL pipe_sequence REFINES flow_equipment;
 	P[1..n].solid ARE_THE_SAME;
 	P[1..n].solid_insul ARE_THE_SAME;
 	P[1..n].solid_pipe ARE_THE_SAME;
+	P[1..n].corr_intconv ARE_THE_SAME;
 	P[1].solid_insul.end, solid_insul.end ARE_THE_SAME;
 	P[1].solid_pipe.end, solid_pipe.end ARE_THE_SAME;
-
+	corr_intconv ALIASES P[1].corr_intconv;
 
 	P[1..n].k_pipe ARE_THE_SAME;
 	P[1..n].k_insul ARE_THE_SAME;
@@ -436,6 +491,7 @@ MODEL pipe_sequence_test_sodium REFINES pipe_sequence;
 
 	cd.component :== 'sodium';
 	cd.type :== 'incomp';
+	corr_intconv :== 'none';
 METHODS
 METHOD plot;
 	EXTERNAL pipe_sequence_plot(SELF);
@@ -471,7 +527,7 @@ METHOD on_load;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 END on_load;
-END pipe_sequence_test;
+END pipe_sequence_test_sodium;
 
 
 MODEL pipe_sequence_test_water REFINES pipe_sequence;
@@ -514,6 +570,6 @@ METHOD on_load;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 END on_load;
-END pipe_sequence_test;
+END pipe_sequence_test_water;
 
 
