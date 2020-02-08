@@ -95,6 +95,18 @@ METHOD default_self;
 		RUN PH[i].default_self;
 	END FOR;
 END default_self;
+METHOD enable_calc_mu;
+	FOR i IN [1..n] DO
+		RUN PC[i].calc_mu.enable;
+		RUN PH[i].calc_mu.enable;
+	END FOR;
+END enable_calc_mu;	
+METHOD disable_calc_mu;
+	FOR i IN [1..n] DO
+		RUN PC[i].calc_mu.disable;
+		RUN PH[i].calc_mu.disable;
+	END FOR;
+END disable_calc_mu;	
 END csparray;
 
 MODEL disharray REFINES csparray;
@@ -125,6 +137,9 @@ METHOD on_load;
 END on_load;
 END disharray;
 
+(* FIXME there is some problem with the 'enable_calc_mu'... doesn't work with
+more complex networks. Could it be the soft dependence mu(p,T) on p, which
+perhaps should be removed? *)
 
 MODEL towerarray REFINES csparray;
 	cd.component :== 'sodium';
@@ -153,9 +168,6 @@ METHOD on_load;
 	PC[1..n].inlet.h := 400 {kJ/kg};
 END on_load;
 END towerarray;
-
-
-
 
 
 

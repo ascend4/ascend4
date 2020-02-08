@@ -8,18 +8,21 @@ REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 MODEL viscosity_eq;
 	mu IS_A viscosity;
 	T IS_A temperature;
-	p IS_A pressure;
 	cd IS_A fluid;
 
-	calc_mu: fprops_mu_Tp(
-		T, p : INPUT;
+	calc_mu: fprops_mu_T_incomp(
+		T : INPUT;
 		mu : OUTPUT;
 		cd : DATA
 	);
 METHODS
 METHOD default;
-	RUN disable;
-	FIX mu := 0.024 {cP};
+	IF cd.component == 'sodium' THEN
+		RUN enable;
+	ELSE
+		RUN disable;
+		FIX mu := 0.024 {cP}; (* you should set your own value for this *)
+	END IF;
 END default;
 METHOD default_self;
 	RUN default;
@@ -42,7 +45,6 @@ METHODS
 METHOD on_load;
 	RUN viscosity_eq::default_self;
 	FIX T := 1000 {K};
-	FIX p := 15 {bar};
 END on_load;
 METHOD self_test;
 	ASSERT abs(mu - 1.81e-4 {Pa*s})< 0.005e-4 {Pa*s};
@@ -76,7 +78,6 @@ MODEL pipe_adiabatic REFINES stream_equipment;
 	calc_mu IS_A viscosity_eq;
 	calc_mu.cd, cd ARE_THE_SAME;
 	calc_mu.T, inlet.T ARE_THE_SAME;
-	calc_mu.p, inlet.p ARE_THE_SAME;
 	mu, calc_mu.mu ARE_THE_SAME;
 
 	ke_in, ke_out IS_A specific_energy;
@@ -98,7 +99,8 @@ MODEL pipe_adiabatic REFINES stream_equipment;
 METHODS
 METHOD default_self;
 	RUN stream_equipment::default_self;
-	RUN calc_mu.disable;
+	Re.nominal := 100e5;
+	RUN calc_mu.default_self;
 END default_self;	
 END pipe_adiabatic;
 
@@ -168,6 +170,7 @@ METHOD default_self;
 	RUN pipe_adiabatic::default_self;
 	en_eqn.included := FALSE;
 	en_eqn_Q.included := TRUE;
+	RUN calc_mu.disable;
 END default_self;	
 END pipe_heat_loss;
 
@@ -204,8 +207,8 @@ MODEL pipe_sequence_test;
 	P1, P2 IS_A pipe_heat_loss;
 	P1.outlet, P2.inlet ARE_THE_SAME;
 	cd ALIASES P1.cd;
-	cd.component :== 'water';	
-	cd.type :== 'helmholtz';
+	cd.component :== 'sodium';	
+	cd.type :== 'incomp';
 
 	P1.eps, P2.eps ARE_THE_SAME;
 	P1.emiss, P2.emiss ARE_THE_SAME;
@@ -235,8 +238,16 @@ METHOD on_load;
 	FIX P1.mu := 0.024 {cP};
 	FIX P2.mu := 0.020 {cP};
 
-	P1.inlet.h := 4000 {kJ/kg};
+	IF cd.component == 'sodium' THEN
+		P1.inlet.h := 400 {kJ/kg};
+	ELSE
+		P1.inlet.h := 4000 {kJ/kg};
+	END IF;
 	P1.outlet.h := 4000 {kJ/kg};
-
 END on_load;
+METHOD enable_calc_mu;
+	RUN P1.calc_mu.enable;
+	RUN P2.calc_mu.enable;
+END enable_calc_mu;
+
 END pipe_sequence_test;

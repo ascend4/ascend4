@@ -59,6 +59,11 @@ MODEL stream_state;
 		T, v, s, x : OUTPUT;
 		cd : DATA
 	);
+	calc_h_incomp: fprops_Tvsx_h_incomp(
+		h : INPUT;
+		T, v, s, x : OUTPUT;
+		cd : DATA
+	);
 METHODS
 METHOD default;
 	p := 10{bar};
@@ -78,7 +83,11 @@ METHOD default;
 	s := 4 {kJ/kg/K};
 	x := 0.8;
 
-	RUN enable_ph;
+	IF cd.type == 'incomp' THEN
+		RUN enable_h_incomp; (* for incompressible fluids *)
+	ELSE
+		RUN enable_ph; (* default form for compressible fluids *)
+	END IF;
 END default;
 METHOD default_self;
 	RUN default;
@@ -87,14 +96,23 @@ METHOD enable_vT;
 	FOR i IN [1..4] DO
 		calc_ph[i].included := FALSE;
 		calc_vT[i].included := TRUE;
+		calc_h_incomp[i].included := FALSE;
 	END FOR;
 END enable_vT;
 METHOD enable_ph;
 	FOR i IN [1..4] DO
 		calc_ph[i].included := TRUE;
 		calc_vT[i].included := FALSE;
+		calc_h_incomp[i].included := FALSE;
 	END FOR;
 END enable_ph;
+METHOD enable_h_incomp;
+	FOR i IN [1..4] DO
+		calc_ph[i].included := FALSE;
+		calc_vT[i].included := FALSE;
+		calc_h_incomp[i].included := TRUE;
+	END FOR;
+END enable_h_incomp;
 METHOD solve;
 	EXTERNAL do_solve(SELF);
 END solve;
@@ -163,7 +181,7 @@ END self_test;
 END stream_state_test_toluene;
 
 
-MODEL stream_state_test_sodium_ph REFINES stream_state;
+MODEL stream_state_test_sodium_h REFINES stream_state;
 	cd.component :== 'sodium';
 	cd.type :== 'incomp';
 METHODS
@@ -180,7 +198,7 @@ METHOD self_test;
 	ASSERT abs(T - 1000. {K}) < 0.5 {K};
 	ASSERT abs(1/v - 781. {kg/m^3}) < 0.5 {kg/m^3};
 END self_test;
-END stream_state_test_sodium_ph;
+END stream_state_test_sodium_h;
 
 
 MODEL stream_state_test_sodium_pT REFINES stream_state;

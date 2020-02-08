@@ -54,7 +54,7 @@ better later on, hopefully. */
 
 //#define ASCFPROPS_DEBUG
 #ifdef ASCFPROPS_DEBUG
-# define MSG(MSG,ARGS...) ERROR_REPORTER_HERE(ASC_PROG_NOTE,MSG "\n",ARGS);
+# define MSG(MSG,ARGS...) ERROR_REPORTER_HERE(ASC_PROG_NOTE,MSG "\n",##ARGS);
 #else
 # define MSG(ARGS...) ((void)0)
 #endif
@@ -82,10 +82,15 @@ ExtBBoxFunc fprops_rho_Tp_calc;
 ExtBBoxFunc fprops_cp_Tp_calc;
 ExtBBoxFunc fprops_h_Tp_calc;
 ExtBBoxFunc fprops_s_Tp_calc;
-ExtBBoxFunc fprops_mu_Tp_calc;
+ExtBBoxFunc fprops_mu_T_incomp_calc;
 ExtBBoxFunc fprops_lam_Tp_calc;
 ExtBBoxFunc fprops_phsx_vT_calc;
 ExtBBoxFunc fprops_Tvsx_ph_calc;
+ExtBBoxFunc fprops_Tvsx_h_incomp_calc;
+
+/* FIXME need incompressible fluid functions that depend only on T or h, to 
+	avoid unpivoted external relations...
+*/
 
 #define TCRIT(FLUID) (FLUID->data->T_c)
 #define TTRIP(FLUID) (FLUID->data->T_t)
@@ -119,13 +124,13 @@ static const char *fprops_rho_Tp_help = "rho(T,p) esp. for incompressible substa
 static const char *fprops_cp_Tp_help = "h(T,p) esp. for incompressible substances";
 static const char *fprops_h_Tp_help = "h(T,p) esp. for incompressible substances";
 static const char *fprops_s_Tp_help = "s(T,p) esp. for incompressible substances";
-static const char *fprops_mu_Tp_help = "mu(T,p) (dynamic viscosity) esp. for incompressible substances";
+static const char *fprops_mu_T_incomp_help = "mu(T,p) (dynamic viscosity) esp. for incompressible substances";
 static const char *fprops_lam_Tp_help = "lam(T,p) (thermal conductivity) esp. for incompressible substances";
 
 static const char *fprops_phsx_vT_help = "Calculate p, h, s, x from specific volume and temperature, using FPROPS";
 
 static const char *fprops_Tvsx_ph_help = "Calculate T, v, s, x from pressure and enthalpy, using FPROPS";
-
+static const char *fprops_Tvsx_h_incomp_help = "Calculate T, v, s, x for incompressible fluid from enthalpy, using FPROPS";
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION
 */
@@ -181,11 +186,12 @@ ASC_EXPORT int fprops_register(){
 	CALCFN(fprops_cp_Tp,2,1);
 	CALCFN(fprops_h_Tp,2,1);
 	CALCFN(fprops_s_Tp,2,1);
-	CALCFN(fprops_mu_Tp,2,1);
+	CALCFN(fprops_mu_T_incomp,1,1);
 	CALCFN(fprops_lam_Tp,2,1);
 
 	CALCFN(fprops_phsx_vT,2,4);
 	CALCFN(fprops_Tvsx_ph,2,4);
+	CALCFN(fprops_Tvsx_h_incomp,2,4);
 
 #undef CALCFN
 
@@ -265,10 +271,13 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
   EVALULATION ROUTINES
 */
 
+static const char *ninputs_msg = "Incorrect call: %u inputs received, but expected %u";
+static const char *noutputs_msg = "Incorrect call: %u outputs received, but expected %u";
+
 #define CALCPREPARE(NIN,NOUT) \
 	/* a few checks about the input requirements */ \
-	if(ninputs != NIN)return -1; \
-	if(noutputs != NOUT)return -2; \
+	if(ninputs != NIN){ERRMSG(ninputs_msg,ninputs,NIN);return -1;} \
+	if(noutputs != NOUT){ERRMSG(noutputs_msg,noutputs,NOUT)return -2;} \
 	if(inputs==NULL)return -3; \
 	if(outputs==NULL)return -4; \
 	if(bbox==NULL)return -5; \
@@ -540,6 +549,17 @@ int fprops_lam_Trho_calc(struct BBoxInterp *bbox,
 	}\
 	return 0;
 
+#define	CALC_T_BODY(fn) \
+	CALCPREPARE(1,1); /* the pressure value is completely arbitrary, set to 999 */\
+	FluidState2 S = fprops_set_Tp(inputs[0],999,FLUID,&err);\
+	outputs[0] = fprops_##fn(S,&err);\
+	if(err){\
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve %s(T,rho) for '%s' (err '%s'."\
+			,#fn,FLUID->name,fprops_error(err));\
+		return 1;\
+	}\
+	return 0;
+
 int fprops_rho_Tp_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
@@ -568,12 +588,12 @@ int fprops_s_Tp_calc(struct BBoxInterp *bbox,
 ){
 	CALC_TP_BODY(s);
 }
-int fprops_mu_Tp_calc(struct BBoxInterp *bbox,
+int fprops_mu_T_incomp_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
-	CALC_TP_BODY(mu);
+	CALC_T_BODY(mu);
 }
 int fprops_lam_Tp_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
@@ -760,6 +780,7 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 			s = fprops_s(S,&err);
 			v = 1./rho;
 			x = 0;
+			MSG("Got T = %f, rho = %f, s = %f",T,rho,s);
 			if(err){
 				ERRMSGP("Failed to solve (p,h): %s (fluid '%s')",fprops_error(err),FLUID->name);
 				return 9;
@@ -776,3 +797,77 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 		return 10;
 	}
 }
+
+
+
+
+/**
+	Evaluation function for 'fprops_Tvsx_h_incomp'
+	@return 0 on success
+*/
+int fprops_Tvsx_h_incomp_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE(1,4);
+
+	static const PureFluid *last = NULL;
+	double p = 1e5; // arbitrary!
+	static double h,T,v,s,x;
+	if(last == FLUID && h == inputs[1]){
+		outputs[0] = T;
+		outputs[1] = v;
+		outputs[2] = s;
+		outputs[3] = x;
+		return 0;
+	}
+
+	h = inputs[0];
+
+	MSG("hello!");
+
+	switch(FLUID->type){
+	case FPROPS_INCOMP:
+		{
+			MSG("Solving for p=%f bar, h=%f kJ/kg.",p/1e5, h/1e3);
+			FluidState2 S;
+			S = fprops_solve_ph(p,h,FLUID,&err);
+			double rho = fprops_rho(S,&err);
+			T = fprops_T(S,&err);
+			s = fprops_s(S,&err);
+			v = 1./rho;
+			x = 0;
+			if(err){
+				ERRMSGP("Failed to solve (p,h): %s (fluid '%s')",fprops_error(err),FLUID->name);
+				return 9;
+			}
+			last = FLUID;
+			outputs[0] = T;
+			outputs[1] = v;
+			outputs[2] = s;
+			outputs[3] = x;
+			MSG("...returning T = %f",T);
+			return 0;
+		}
+	default:
+		ERRMSGP("Invalid fluid type (type %u)",FLUID->type);
+		return 10;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

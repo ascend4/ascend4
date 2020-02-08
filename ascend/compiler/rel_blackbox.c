@@ -224,7 +224,7 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r){
 				common->inputs,
 				common->outputs,
 				common->jacobian);
-		if(nok)CONSOLE_DEBUG("blackbox residual function returned error %d",nok);
+		if(nok)CONSOLE_DEBUG("Error '%d' returned by external relation '%s' eval.",nok,ExternalFuncName(efunc));
 		common->residCount++;
 	}
 	value = common->outputs[outputIndex];
@@ -322,6 +322,7 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 				, common->inputsLen, common->outputsLen
 				, common->inputsJac, common->outputs, common->jacobian
 			);
+			if(nok)CONSOLE_DEBUG("Error '%d' returned for external relation gradient for '%s'.",nok,ExternalFuncName(efunc));		
 		}else{
 			if(!warnfdiff){
 				ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Using finite-difference "
@@ -335,6 +336,7 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 				, common->inputsLen, common->outputsLen
 				, common->inputsJac, common->outputs, common->jacobian
 			);
+			if(nok)CONSOLE_DEBUG("Error '%d' returned for finite difference gradient for '%s'.",nok,ExternalFuncName(efunc));		
 		}
 		common->gradCount++;
 	}
