@@ -1,4 +1,5 @@
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
+IMPORT "johnpye/fprops/pipe_sequence_plot";
 
 (*
 	TODO FIXME this model still doesn't include thermophysical property calculation
@@ -235,11 +236,14 @@ END enable_calc_mu;
 END pipe_sequence;
 
 MODEL pipe_sequence_test REFINES pipe_sequence;
-	n :== 5;
+	n :== 25;
 
 	cd.component :== 'sodium';	
 	cd.type :== 'incomp';
 METHODS
+METHOD plot;
+	EXTERNAL pipe_sequence_plot(SELF);
+END plot;
 METHOD on_load;
 	RUN default_self;
 	FIX L_tot := 50 {m};
