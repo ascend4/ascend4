@@ -86,8 +86,10 @@ METHOD default;
 	x := 0.8;
 
 	IF cd.type == 'incomp' THEN
+		h := 400 {kJ/kg}; (* seems like a good initial value eg for sodium *)
 		RUN enable_h_incomp; (* for incompressible fluids *)
 	ELSE
+		h := 4000 {kJ/kg}; (* works well as initial guess eg for water *)
 		RUN enable_ph; (* default form for compressible fluids *)
 	END IF;
 END default;

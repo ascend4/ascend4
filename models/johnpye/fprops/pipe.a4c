@@ -1,6 +1,20 @@
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
+REQUIRE "johnpye/shapes.a4c";
+
 IMPORT "johnpye/fprops/pipe_sequence_plot";
 
+MODEL flow_node REFINES stream_node;
+	(* a stream that includes information about its crosssectional shape *)
+	shape IS_A shape_generic;
+	A ALIASES shape.A;
+END flow_node;
+
+MODEL flow_equipment REFINES stream_equipment;
+	(* a SISO component that knows about the shape of its ports *)
+	outlet IS_REFINED_TO flow_node;
+	inlet IS_REFINED_TO flow_node;
+END flow_equipment;
+	
 (*
 	TODO FIXME this model still doesn't include thermophysical property calculation
 	(ie, fprops_lam and fprops_mu)
@@ -39,28 +53,47 @@ END disable;
 END viscosity_eq;
 
 
-MODEL viscosity_eq_test REFINES viscosity_eq;
+MODEL thcond_eq;
+	k IS_A thermal_conductivity;
+	T IS_A temperature;
+	cd IS_A fluid;
+
+	calc_k: fprops_lam_T_incomp(
+		T : INPUT;
+		k : OUTPUT;
+		cd : DATA
+	);
+METHODS
+METHOD default; END default;
+METHOD default_self; RUN default; END default_self;
+END thcond_eq;
+
+MODEL thcond_eq_test REFINES thcond_eq;
 	cd.component :== 'sodium';
 	cd.type :== 'incomp';
 METHODS
 METHOD on_load;
-	RUN viscosity_eq::default_self;
+	RUN thcond_eq::default_self;
 	FIX T := 1000 {K};
 END on_load;
 METHOD self_test;
-	ASSERT abs(mu - 1.81e-4 {Pa*s})< 0.005e-4 {Pa*s};
+	ASSERT abs(k - 54.24 {W/m/K})< 0.005 {W/m/K};
 END self_test;
-END viscosity_eq_test;
+END thcond_eq_test;
 
 
-MODEL pipe_adiabatic REFINES stream_equipment;
-	D "inside diameter" IS_A distance;
-	A "flow cross-sectional area" IS_A area;
-	L "pipe length" IS_A distance;
+MODEL pipe_adiabatic REFINES flow_equipment;
+	solid IS_A solid_cylinder;
+	solid.end, inlet.shape, outlet.shape ARE_THE_SAME;
+	D ALIASES solid.d;
+	L ALIASES solid.L;
+	A "cross-sectional area" IS_A area;
+	A, inlet.A ARE_THE_SAME;	
+	A_int ALIASES solid.side.A;	
+
 	eps "pipe roughness" IS_A distance;
 
 	(* energy equation, ignoring potential energy *)
-	A = 0.25{PI}*D^2;
 	Vel_in, Vel_out IS_A speed;
 	Vel_in * A = mdot * inlet.v;
 	Vel_out * A = mdot * outlet.v;
@@ -128,7 +161,6 @@ METHOD on_load;
 END on_load;
 END pipe_adiabatic_test;
 
-
 MODEL pipe_adiabatic_test_sodium REFINES pipe_adiabatic;
 	cd.component :== 'sodium';
 	cd.type :== 'incomp';
@@ -153,15 +185,22 @@ END pipe_adiabatic_test_sodium;
 
 
 MODEL pipe_heat_loss REFINES pipe_adiabatic;
+	NOTES 'description' SELF {This is a model of a bare pipe with external
+	radiative and convective heat loss. It is a bit crappy, since it doesn't
+	handle the tube-wall temperature difference, which will usually be
+	important. It also doesn't (currently) calculate the internal convection
+	coefficient, which will vary with temperature, in particular.}
+	END NOTES;
+
 	D_o IS_A distance;
 	t IS_A distance;
 	D_o = D + 2*t;
 	
 	T_amb IS_A temperature;
-	h "pipe external convection coeff" IS_A heat_transfer_coefficient;
+	U "pipe overall heat transfer coeff" IS_A heat_transfer_coefficient;
 	emiss "pipe external emissivity" IS_A fraction;
 	Q IS_A energy_rate;
-	Q = - h * L*1{PI}*D_o * (inlet.T - T_amb) - 1{SIGMA_C}*emiss*(inlet.T^4 - T_amb^4);
+	Q = - U * L*1{PI}*D_o * (inlet.T - T_amb) - 1{SIGMA_C}*emiss*(inlet.T^4 - T_amb^4);
 
 	(* energy equation, ignoring potential energy *)
 	(* note that the pipe_adiabatic::en_eqn must be de-included in METHODS *)
@@ -193,35 +232,192 @@ METHOD on_load;
 	FIX eps := 0.09 {mm};
 	FIX emiss := 0.8;
 
-	FIX h := 20 {W/m^2/K};
+	FIX U := 20 {W/m^2/K};
 	FIX T_amb := 20 {K} + 273.15{K};
 
 	(* initial guesses *)
 	f_D := 0.0001;
-	inlet.h := 4000 {kJ/kg};
-	outlet.h := 4000 {kJ/kg};
+
 END on_load;
 END pipe_heat_loss_test;
 
+MODEL pipe_heat_loss_test_incomp REFINES pipe_heat_loss;
+	cd.component :== 'sodium';
+	cd.type :== 'incomp';
+METHODS
+METHOD on_load;
+	RUN pipe_heat_loss::default_self;
+	FIX D := 10 {mm};
+	FIX t := 1 {mm};
+	FIX L := 5 {m};
+	FIX mdot := 0.1 {kg/s};
+	FIX inlet.p := 35 {bar};
+	FIX inlet.T := 370 {K} + 273.15 {K};
 
-MODEL pipe_sequence REFINES stream_equipment;
-	L_tot IS_A distance;
+	FIX mu := 0.024 {cP};
+	FIX eps := 0.09 {mm};
+	FIX emiss := 0.8;
+
+	FIX U := 20 {W/m^2/K};
+	FIX T_amb := 20 {K} + 273.15{K};
+
+	(* initial guesses *)
+	f_D := 0.0001;
+	
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END on_load;
+END pipe_heat_loss_test_incomp;
+
+
+MODEL pipe_heat_loss_insul REFINES pipe_adiabatic;
+	NOTES 'description' SELF {This is a model of a bare pipe with external
+	radiative and convective heat loss. It is a bit crappy, since it doesn't
+	handle the tube-wall temperature difference, which will usually be
+	important. It also doesn't (currently) calculate the internal convection
+	coefficient, which will vary with temperature, in particular.}
+	END NOTES;
+
+	solid_pipe IS_A solid_tube;
+	solid_insul IS_A solid_tube;
+	solid.side, solid_pipe.inner ARE_THE_SAME;
+	solid_pipe.outer, solid_insul.inner ARE_THE_SAME;
+	
+	D_o ALIASES solid_pipe.d_o;
+	t ALIASES solid_pipe.t;
+	D_ext ALIASES solid_insul.d_o;
+	t_insul ALIASES solid_insul.t;
+
+	k_insul IS_A thermal_conductivity;
+	k_pipe IS_A thermal_conductivity;
+	h_ext IS_A heat_transfer_coefficient;
+
+	T_ext IS_A temperature;
+	T_ext_C IS_A delta_temperature;
+	T_ext_C = T_ext - 273.15 {K};
+
+	R_insul IS_A thermal_resistance;
+	R_insul = ln(D_ext / D_o) / 2{PI} / k_insul / L;
+
+	R_pipe IS_A thermal_resistance;
+	R_pipe = ln(D_o / D) / 2{PI} / k_pipe / L;
+
+	T_flow IS_A temperature;
+	T_flow = (inlet.T + outlet.T) / 2;
+
+	(* ignoring the internal convection boundary layer *)
+
+	Q * (R_insul + R_pipe) = T_flow - T_ext;
+
+	T_amb IS_A temperature;
+	emiss "pipe external emissivity" IS_A fraction;
+	Q IS_A energy_rate;
+	Q_rad IS_A energy_rate;
+	Q_rad = 1{SIGMA_C}*emiss*(T_ext^4 - T_amb^4);
+	Q_conv IS_A energy_rate;
+	Q_conv = h_ext * 1{PI} * D_ext * (T_ext - T_amb);
+
+	Q = Q_conv + Q_rad;
+
+	(* energy equation, ignoring potential energy *)
+	(* note that the pipe_adiabatic::en_eqn must be de-included in METHODS *)
+	en_eqn_Q: Q/mdot + inlet.h + 0.5*Vel_in^2 = outlet.h + 0.5*Vel_out^2;
+METHODS
+METHOD default_self;
+	RUN pipe_adiabatic::default_self;
+	en_eqn.included := FALSE;
+	en_eqn_Q.included := TRUE;
+	t.lower_bound := 0 {m};
+	t_insul.lower_bound := 0 {m};
+	D.lower_bound := 0 {m};
+	RUN calc_mu.disable;
+END default_self;	
+END pipe_heat_loss_insul;
+
+MODEL pipe_heat_loss_insul_test REFINES pipe_heat_loss_insul;
+	cd.component :== 'sodium';
+	cd.type :== 'incomp';
+METHODS
+METHOD on_load;
+	RUN pipe_heat_loss_insul::default_self;
+
+	FIX mdot := 50 {kg/s};
+	FIX inlet.p := 10 {bar};
+	FIX inlet.T := 720 {K} + 273.15 {K};
+
+	FIX T_amb := 20 {K} + 273.15{K};
+
+	FIX D := 100 {mm};
+	FIX t := 3 {mm};
+	(*FIX t_insul := 500 {mm};*)
+	FIX T_ext := 50 {K} + 273.15 {K};
+	FIX L := 100 {m};
+
+	FIX h_ext := 10 {W/m^2/K};
+	(* FIX k_insul := 0.2 {W/m/K}; (* rough number for rockwool at high temperature *)*)
+	FIX k_insul := 0.08 {W/m/K}; (* 'microporous insulation board', https://is.gd/5j9Gkw *)
+	FIX k_pipe := 22.4 {W/m/K}; (* Haynes 230 @ 700°C: https://is.gd/F0RICh *)
+	FIX eps := 0.09 {mm};
+	FIX emiss := 0.8;
+
+	(* initial guesses *)
+	f_D := 0.0001;
+	
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+END on_load;
+END pipe_heat_loss_insul_test;
+
+
+MODEL pipe_sequence REFINES flow_equipment;
+	solid IS_A solid_cylinder;
+	solid_pipe IS_A solid_tube;
+	solid_insul IS_A solid_tube;
+	solid_pipe.outer, solid_insul.inner ARE_THE_SAME;
+	solid.side, solid_pipe.inner ARE_THE_SAME;
+	L ALIASES solid.L;
+	D ALIASES solid.d;
+	t_insul ALIASES solid_insul.t;
+	t_pipe ALIASES solid_pipe.t;
+	
 	n IS_A integer_constant;
-
-	P[1..n] IS_A pipe_heat_loss;
+	P[1..n] IS_A pipe_heat_loss_insul;
 	FOR i IN [1..n-1] CREATE
 		P[i].outlet, P[i+1].inlet ARE_THE_SAME;
 	END FOR;
 	inlet, P[1].inlet ARE_THE_SAME;
 	outlet, P[n].outlet ARE_THE_SAME;
 
+	P[1..n].solid ARE_THE_SAME;
+	P[1..n].solid_insul ARE_THE_SAME;
+	P[1..n].solid_pipe ARE_THE_SAME;
+	P[1].solid_insul.end, solid_insul.end ARE_THE_SAME;
+	P[1].solid_pipe.end, solid_pipe.end ARE_THE_SAME;
+
+
+	P[1..n].k_pipe ARE_THE_SAME;
+	P[1..n].k_insul ARE_THE_SAME;
+	P[1..n].h_ext ARE_THE_SAME;
+	k_pipe ALIASES P[1].k_pipe;
+	k_insul ALIASES P[1].k_insul;	
+	h_ext ALIASES P[1].h_ext;
+	L = n * P[1].L;
+
+
 	P[1..n].eps ARE_THE_SAME;
 	P[1..n].emiss ARE_THE_SAME;
 	emiss ALIASES P[1].emiss;
-	P[1..n].h ARE_THE_SAME;
+	eps ALIASES P[1].eps;
+
+	P[1..n].D_o ARE_THE_SAME;
+	P[1..n].D_ext ARE_THE_SAME;
+
 	P[1..n].T_amb ARE_THE_SAME;
-	h ALIASES P[1].h;
 	T_amb ALIASES P[1].T_amb;
+
+	Q IS_A energy_rate;
+	Q = SUM[P[i].Q | i IN [1..n]];
+
 METHODS
 METHOD default_self;
 	FOR i IN [1..n] DO
@@ -236,9 +432,9 @@ END enable_calc_mu;
 END pipe_sequence;
 
 MODEL pipe_sequence_test REFINES pipe_sequence;
-	n :== 25;
+	n :== 30;
 
-	cd.component :== 'sodium';	
+	cd.component :== 'sodium';
 	cd.type :== 'incomp';
 METHODS
 METHOD plot;
@@ -246,20 +442,22 @@ METHOD plot;
 END plot;
 METHOD on_load;
 	RUN default_self;
-	FIX L_tot := 50 {m};
-	FIX P[1].eps := 0.09 {mm};
-	FIX P[1].D := 150 {mm};
-	FIX P[2..n].D := 100 {mm};
-	FIX P[1].t := 2 {mm};
-	FIX P[2..n].t := 2 {mm};
-	FIX h := 20 {W/m^2/K};
+	FIX L := 50 {m};
+	FIX t_insul := 100 {mm};
+	FIX t_pipe := 3 {mm};
+	FIX D := 100 {mm};
+
+	FIX eps := 0.09 {mm};
+	FIX h_ext := 20 {W/m^2/K};
 	FIX emiss := 0.8;
+	FIX k_insul := 0.08 {W/m/K}; (* 'microporous insulation board', https://is.gd/5j9Gkw *)
+	FIX k_pipe := 22.4 {W/m/K}; (* Haynes 230 @ 700°C: https://is.gd/F0RICh *)
+
 	FIX T_amb := 20 {K} + 273.15 {K};
-	FIX P[1].L := 5 {m};
-	FIX P[2..n].L := (L_tot - P[1].L) / (n - 1);
-	FIX P[1].inlet.p := 35 {bar};
-	FIX P[1].inlet.T := 500 {K} + 273.15 {K};
-	FIX P[1].mdot := 60 {kg/s};
+
+	FIX inlet.p := 35 {bar};
+	FIX inlet.T := 500 {K} + 273.15 {K};
+	FIX mdot := 60 {kg/s};
 
 	IF cd.component == 'sodium' THEN
 		P[1].inlet.h := 400 {kJ/kg};
@@ -268,9 +466,10 @@ METHOD on_load;
 		P[1].inlet.h := 4000 {kJ/kg};
 		FIX P[1..n].mu := 0.024 {cP};
 	END IF;
-	P[1].outlet.h := 4000 {kJ/kg};
+	
 	RUN enable_calc_mu;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 END on_load;
 END pipe_sequence_test;
+

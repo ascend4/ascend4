@@ -1,0 +1,78 @@
+REQUIRE "atoms.a4l";
+
+(* --- SHAPES --- *)
+
+(*
+	Base model for flow cross-section shapes. By putting this stuff
+	in a model, it enables us to ARE_THE_SAME all of the Area vs diameter
+	calculations in pipe nodes connected in series -- and potentially
+	we can generalise to square and other shaped flow sections in future.
+*)
+MODEL shape_generic;
+	A IS_A area;
+	name IS_A symbol_constant;
+END shape_generic;
+
+MODEL shape_circle REFINES shape_generic;
+	name :== 'circle';
+	d "internal diameter" IS_A distance;
+	A_circ_eq: A = 0.25{PI} * d^2;
+END shape_circle;
+
+MODEL shape_square REFINES shape_generic;
+	name :== 'square';
+	L "side length" IS_A distance;
+	A_eq: A = L^2;
+END shape_square;
+
+MODEL shape_rectangle REFINES shape_generic;
+	name :== 'rectangle';
+	W "width", H "height" IS_A distance;
+	A_eq: A = W*H;
+END shape_rectangle;
+
+MODEL shape_annulus REFINES shape_generic;
+	name :== 'annulus';
+	d_i "inner diameter" IS_A distance;
+	d_o "outer diameter" IS_A distance;
+	t "radial thickness" IS_A distance;
+	A_eq: A = 0.25{PI} * (d_o^2 - d_i^2);
+	do_eq: d_o = d_i + 2*t;
+END shape_annulus;
+
+MODEL shape_cylinder REFINES shape_generic;
+	name :== 'cylinder';
+	d "diameter" IS_A distance;
+	L "length" IS_A distance;
+	A_eq: A = 1{PI} * d * L;
+END shape_cylinder;
+
+MODEL solid_generic;
+	V IS_A volume;
+	name IS_A symbol_constant;
+END solid_generic;
+
+MODEL solid_cylinder REFINES solid_generic;
+	name :== 'cylinder';
+	side IS_A shape_cylinder;
+	end IS_A shape_circle;
+	end.d, side.d ARE_THE_SAME;
+	d ALIASES end.d;
+	L ALIASES side.L;
+	V_eq: V = 0.25{PI} * d^2 * L;
+END solid_cylinder;
+
+MODEL solid_tube REFINES solid_generic;
+	name :== 'tube';
+	inner IS_A shape_cylinder;
+	outer IS_A shape_cylinder;
+	end IS_A shape_annulus;
+	end.d_i, inner.d ARE_THE_SAME;
+	end.d_o, outer.d ARE_THE_SAME;
+	inner.L,outer.L ARE_THE_SAME;
+	d_i ALIASES inner.d;
+	d_o ALIASES outer.d;
+	t ALIASES end.t;
+	L ALIASES inner.L;
+	V = 0.25{PI} * (d_o^2 - d_i^2) * L;
+END solid_tube;

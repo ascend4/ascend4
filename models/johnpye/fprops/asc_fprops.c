@@ -83,7 +83,7 @@ ExtBBoxFunc fprops_cp_Tp_calc;
 ExtBBoxFunc fprops_h_Tp_calc;
 ExtBBoxFunc fprops_s_Tp_calc;
 ExtBBoxFunc fprops_mu_T_incomp_calc;
-ExtBBoxFunc fprops_lam_Tp_calc;
+ExtBBoxFunc fprops_lam_T_incomp_calc;
 ExtBBoxFunc fprops_phsx_vT_calc;
 ExtBBoxFunc fprops_Tvsx_ph_calc;
 ExtBBoxFunc fprops_Tvsx_h_incomp_calc;
@@ -125,7 +125,7 @@ static const char *fprops_cp_Tp_help = "h(T,p) esp. for incompressible substance
 static const char *fprops_h_Tp_help = "h(T,p) esp. for incompressible substances";
 static const char *fprops_s_Tp_help = "s(T,p) esp. for incompressible substances";
 static const char *fprops_mu_T_incomp_help = "mu(T,p) (dynamic viscosity) esp. for incompressible substances";
-static const char *fprops_lam_Tp_help = "lam(T,p) (thermal conductivity) esp. for incompressible substances";
+static const char *fprops_lam_T_incomp_help = "lam(T) (thermal conductivity) esp. for incompressible substances";
 
 static const char *fprops_phsx_vT_help = "Calculate p, h, s, x from specific volume and temperature, using FPROPS";
 
@@ -187,7 +187,7 @@ ASC_EXPORT int fprops_register(){
 	CALCFN(fprops_h_Tp,2,1);
 	CALCFN(fprops_s_Tp,2,1);
 	CALCFN(fprops_mu_T_incomp,1,1);
-	CALCFN(fprops_lam_Tp,2,1);
+	CALCFN(fprops_lam_T_incomp,1,1);
 
 	CALCFN(fprops_phsx_vT,2,4);
 	CALCFN(fprops_Tvsx_ph,2,4);
@@ -595,12 +595,12 @@ int fprops_mu_T_incomp_calc(struct BBoxInterp *bbox,
 ){
 	CALC_T_BODY(mu);
 }
-int fprops_lam_Tp_calc(struct BBoxInterp *bbox,
+int fprops_lam_T_incomp_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
-	CALC_TP_BODY(lam);
+	CALC_T_BODY(lam);
 }
 
 
