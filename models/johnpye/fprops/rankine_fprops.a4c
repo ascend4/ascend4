@@ -285,14 +285,33 @@ MODEL pump_simple_test REFINES pump_simple;
 METHODS
 METHOD on_load;
 	RUN default_self;
-	FIX inlet.p; inlet.p := 5 {bar};
-	FIX inlet.h; inlet.h := 400 {kJ/kg};
-	FIX outlet.p; outlet.p := 100 {bar};
-	FIX eta; eta := 0.65;
-	FIX mdot; mdot := 900 {t/d};
+	FIX inlet.p := 5 {bar};
+	FIX inlet.h := 400 {kJ/kg};
+	FIX outlet.p := 100 {bar};
+	FIX eta := 0.65;
+	FIX mdot := 900 {t/d};
 
 	inlet.v := 0.97 {L/kg};	
 	inlet.T := 300 {K};
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
+	OPTION iterationlimit 200;
+END on_load;
+END pump_simple_test;
+
+
+MODEL pump_simple_test_sodium REFINES pump_simple;
+	cd.component :== 'sodium';
+	cd.type :== 'incomp';
+METHODS
+METHOD on_load;
+	RUN default_self;
+	FIX inlet.p := 3 {bar};
+	FIX inlet.T := 500 {K} + 273.15{K};
+	FIX outlet.p; outlet.p := 5 {bar};
+	FIX eta; eta := 0.65;
+	FIX mdot; mdot := 20 {kg/s};
 
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
