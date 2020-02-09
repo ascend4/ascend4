@@ -70,8 +70,17 @@ MODEL csparray;
 	Qdot_onecoll, DI[1..n].Qdot ARE_THE_SAME;
 	DI[1..n].eta ARE_THE_SAME; eta_DI ALIASES DI[1].eta;
 
+	Qdot_coll_tot IS_A energy_rate;
+	Qdot_coll_tot = SUM[DI[i].Qdot | i IN [1..n]];
+
 	Qdot_loss_tot IS_A energy_rate;
 	Qdot_loss_tot = SUM[PC[i].Q + PH[i].Q|i IN [1..n]];
+
+	Qdot_net IS_A energy_rate;
+	Qdot_net = outlet.mdot*outlet.h - inlet.mdot*inlet.h;
+
+	eta_th_array IS_A fraction;
+	eta_th_array = Qdot_net / Qdot_coll_tot;
 	
 	inlet ALIASES PC[1].inlet;
 	outlet ALIASES PH[1].outlet;
