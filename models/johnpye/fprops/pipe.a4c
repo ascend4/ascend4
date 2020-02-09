@@ -244,8 +244,8 @@ MODEL pipe_heat_loss REFINES pipe_adiabatic;
 	END NOTES;
 
 	D_o IS_A distance;
-	t IS_A distance;
-	D_o = D + 2*t;
+	t_pipe IS_A distance;
+	D_o = D + 2*t_pipe;
 	
 	T_amb IS_A temperature;
 	U "pipe overall heat transfer coeff" IS_A heat_transfer_coefficient;
@@ -273,7 +273,7 @@ METHODS
 METHOD on_load;
 	RUN pipe_heat_loss::default_self;
 	FIX D := 10 {mm};
-	FIX t := 1 {mm};
+	FIX t_pipe := 1 {mm};
 	FIX L := 5 {m};
 	FIX mdot := 0.1 {kg/s};
 	FIX inlet.p := 35 {bar};
@@ -299,7 +299,7 @@ METHODS
 METHOD on_load;
 	RUN pipe_heat_loss::default_self;
 	FIX D := 10 {mm};
-	FIX t := 1 {mm};
+	FIX t_pipe := 1 {mm};
 	FIX L := 5 {m};
 	FIX mdot := 0.1 {kg/s};
 	FIX inlet.p := 35 {bar};
@@ -338,7 +338,7 @@ MODEL pipe_heat_loss_insul REFINES pipe_adiabatic;
 	solid_pipe.outer, solid_insul.inner ARE_THE_SAME;
 	
 	D_o ALIASES solid_pipe.d_o;
-	t ALIASES solid_pipe.t;
+	t_pipe ALIASES solid_pipe.t;
 	D_ext ALIASES solid_insul.d_o;
 	t_insul ALIASES solid_insul.t;
 	A_ext ALIASES solid_insul.outer.A;
@@ -400,7 +400,7 @@ METHOD default_self;
 	RUN pipe_adiabatic::default_self;
 	en_eqn.included := FALSE;
 	en_eqn_Q.included := TRUE;
-	t.lower_bound := 0 {m};
+	t_pipe.lower_bound := 0 {m};
 	t_insul.lower_bound := 0 {m};
 	D.lower_bound := 0 {m};
 	RUN calc_mu.disable;
@@ -410,7 +410,7 @@ END pipe_heat_loss_insul;
 MODEL pipe_heat_loss_insul_test REFINES pipe_heat_loss_insul;
 	cd.component :== 'sodium';
 	cd.type :== 'incomp';
-	corr_intconv :== 'skupinski';
+	config.corr_intconv :== 'skupinski';
 METHODS
 METHOD on_load;
 	RUN pipe_heat_loss_insul::default_self;
@@ -422,7 +422,7 @@ METHOD on_load;
 	FIX T_amb := 20 {K} + 273.15{K};
 
 	FIX D := 100 {mm};
-	FIX t := 3 {mm};
+	FIX t_pipe := 3 {mm};
 	(*FIX t_insul := 500 {mm};*)
 	FIX T_ext := 50 {K} + 273.15 {K};
 	FIX L := 100 {m};

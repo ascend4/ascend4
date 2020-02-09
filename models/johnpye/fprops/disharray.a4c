@@ -27,12 +27,20 @@ MODEL csparray;
 	n IS_A integer_constant;
 	n :== 4;
 
-	PC[1..n] IS_A pipe_heat_loss;
-	PH[1..n] IS_A pipe_heat_loss;
+	PC[1..n] IS_A pipe_heat_loss_insul;
+	PH[1..n] IS_A pipe_heat_loss_insul;
 	TE[1..n-1] IS_A tee;
 	JO[1..n-1] IS_A merge;
 	TH[1..n-1] IS_A throttle;
 	DI[1..n] IS_A boiler_simple;
+
+	PC[1..n].config, PH[1..n].config ARE_THE_SAME;
+	corr_intconv ALIASES PC[1].config.corr_intconv;
+	k_pipe ALIASES PC[1].config.k_pipe;
+	k_insul ALIASES PC[1].config.k_insul;	
+	h_ext ALIASES PC[1].config.h_ext;
+	emiss ALIASES PC[1].config.emiss;
+	eps ALIASES PC[1].config.eps;
 
 	FOR i IN [1..n-1] CREATE
 		PC[i].outlet, TE[i].inlet ARE_THE_SAME;
@@ -46,22 +54,15 @@ MODEL csparray;
 	PC[n].outlet, DI[n].inlet ARE_THE_SAME;
 	DI[n].outlet, PH[n].inlet ARE_THE_SAME;
 
-	(* easy first try: all pipes same size, thickness, length, roughness *)
-	D "pipe diameter" IS_A distance;
-	t "pipe wall thickness" IS_A distance;
-	L "length of pipe between collectors" IS_A distance;
-	eps "pipe roughness" IS_A distance;
-
-	D, PC[1..n].D, PH[1..n].D ARE_THE_SAME;
-	t, PC[1..n].t, PH[1..n].t ARE_THE_SAME;
-	L, PC[1..n].L, PH[1..n].L ARE_THE_SAME;
-	eps, PC[1..n].eps, PH[1..n].eps ARE_THE_SAME;
-	emiss IS_A fraction;
-	emiss, PC[1..n].emiss, PH[1..n].emiss ARE_THE_SAME;
-	mu IS_A viscosity;
-	mu, PC[1..n].mu, PH[1..n].mu ARE_THE_SAME;
-	h IS_A heat_transfer_coefficient;
-	h, PC[1..n].h, PH[1..n].h ARE_THE_SAME;	
+	(* all pipe legs are identical in geometry *)
+	PC[1..n].solid, PH[1..n].solid ARE_THE_SAME;
+	PC[1..n].solid_pipe, PH[1..n].solid_pipe ARE_THE_SAME;
+	PC[1..n].solid_insul, PH[1..n].solid_insul ARE_THE_SAME;
+	D ALIASES PC[1].D;
+	t_pipe ALIASES PC[1].t_pipe;
+	t_insul ALIASES PC[1].t_insul;
+	L ALIASES PC[1].L;
+	
 	T_amb IS_A temperature;
 	T_amb, PC[1..n].T_amb, PH[1..n].T_amb ARE_THE_SAME;
 
@@ -112,6 +113,7 @@ END csparray;
 MODEL disharray REFINES csparray;
 	cd.component :== 'water';
 	cd.type :== 'helmholtz';
+	corr_intconv :== 'none';
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -123,7 +125,8 @@ METHOD on_load;
 	FIX eta_DI := 1;
 	FIX D := 25 {mm};
 	FIX L := 40 {m};
-	FIX t := 4 {mm};
+	FIX t_pipe := 4 {mm};
+	FIX t_insul := 100 {mm};
 	FIX eps := 0.015 {mm};
 	FIX emiss := 0.5;
 	FIX mu := 0.024 {cP};
@@ -144,6 +147,7 @@ perhaps should be removed? *)
 MODEL towerarray REFINES csparray;
 	cd.component :== 'sodium';
 	cd.type :== 'incomp';
+	corr_intconv :== 'none'; (* pipe R_th due to int conv is negl for sodium *)
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -155,17 +159,24 @@ METHOD on_load;
 	FIX eta_DI := 1;
 	FIX D := 150 {mm};
 	FIX L := 200 {m};
-	FIX t := 4 {mm};
-	FIX eps := 0.015 {mm};
-	FIX emiss := 0.5;
-	FIX mu := 0.024 {cP};
-	FIX h := 10 {W/m^2/K};
+	FIX t_pipe := 4 {mm};
+	FIX t_insul := 100 {mm};
+
+	FIX eps := 0.09 {mm};
+	FIX h_ext := 20 {W/m^2/K};
+	FIX emiss := 0.8;
+	FIX k_insul := 0.08 {W/m/K}; (* 'microporous insulation board', https://is.gd/5j9Gkw *)
+	FIX k_pipe := 22.4 {W/m/K}; (* Haynes 230 @ 700°C: https://is.gd/F0RICh *)
+
 	FIX inlet.p := 50 {bar};
 	FIX inlet.T := 500 {K} +  273.15 {K};
 	FIX DI[1].mdot := 20 {kg/s}; (* same for all dishes *)
 	FIX T_amb := 300 {K};
 	(* initial guesses to help the solver *)
 	PC[1..n].inlet.h := 400 {kJ/kg};
+
+	SOLVER QRSlv;
+	OPTION convopt 'RELNOM_SCALE';
 END on_load;
 END towerarray;
 
