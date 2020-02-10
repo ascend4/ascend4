@@ -21,6 +21,7 @@ try:
 	import platform
 	import sys
 	import os
+	import subprocess
 
 	if platform.system() != "Windows":
 		try:
@@ -390,7 +391,7 @@ class Browser:
 		# set up the error view
 
 		self.errorview = self.builder.get_object("errorview")
-		errstorecolstypes = [gtk.gdk.Pixbuf,str,str,str,int]
+		errstorecolstypes = [gtk.gdk.Pixbuf,str,str,str,int,str,int] # icon, fileline, msg, color, weight, filename, line
 		self.errorstore = gtk.TreeStore(*errstorecolstypes)
 		errtitles = ["","Location","Message"];
 		self.errorview.set_model(self.errorstore)
@@ -415,6 +416,7 @@ class Browser:
 
 			i = i + 1
 
+		self.errorview.connect('button-press-event',self.on_errorview_button)
 
 		#--------------------
 		# set up the error reporter callback
@@ -1146,26 +1148,40 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		if not filename and not line:
 			_fileline = ""
 		else:
-			if(len(filename) > 25):
-				filename = "..."+filename[-22:]
-			_fileline = filename + ":" + str(line)
+			_filename = filename
+			if len(filename) > 25:
+				_filename = "..."+filename[-22:]
+			_fileline = _filename + ":" + str(line)
 
 		#print "Creating error row data with MSG = '%s'"%(msg.rstrip())
 
-		_res = (_sevicon,_fileline,msg.rstrip(),_fgcolor,_fontweight)
+		_res = (_sevicon,_fileline,msg.rstrip(),_fgcolor,_fontweight,filename,line)
 		#print _res
 		return _res  
 
 	def error_callback(self,sev,filename,line,msg):
 		#print "SEV =",sev
-		#print "FILENAME =",filename
-		#print "LINE =",line
+		print "FILENAME =",filename
+		print "LINE =",line
 		#print "PYTHON error_callback: MSG =",msg
 		pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))
 		path = self.errorstore.get_path(pos)
 		col = self.errorview.get_column(3)
 		self.errorview.scroll_to_cell(path,col)
 		return 0;
+
+	def on_errorview_button(self, widget, event):
+		if event.type == gtk.gdk._2BUTTON_PRESS:
+			model,iter = widget.get_selection().get_selected()
+			if not iter:
+				return True
+			filename = model.get_value(iter,5)
+			line = model.get_value(iter,6)
+			print "\nEDITING %s +%d" %(filename,line)
+			# TODO add more checks to ensure the editor is available, etc.
+			editor = self.prefs.getStringPref("Browser","edtior","pluma")
+			subprocess.Popen([editor,filename,'+%d'%(line,)])
+			
 
 #   --------------------------------
 #   BUTTON METHODS
