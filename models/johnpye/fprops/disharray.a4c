@@ -43,16 +43,34 @@ MODEL csparray;
 	emiss ALIASES PC[1].config.emiss;
 	eps ALIASES PC[1].config.eps;
 
+	(* total materials *)
 	m_pipe, m_insul IS_A mass;
 	rho_pipe, rho_insul IS_A mass_density;
-	C_pipe, C_insul, C_tot IS_A monetary_unit;
-	c_pipe, c_insul IS_A cost_per_mass;
-	F_pipe, F_insul IS_A factor;
+	L_pipe_tot IS_A distance;
 	m_pipe = rho_pipe * SUM[PC[i].solid_pipe.V + PH[i].solid_pipe.V | i IN [1..n]];
 	m_insul = rho_insul * SUM[PC[i].solid_insul.V + PH[i].solid_insul.V | i IN [1..n]];
+	L_pipe_tot = SUM[PC[i].L + PH[i].L | i IN [1..n]];
+
+	(* costs *)
+	C_pipe, C_insul, C_inst_pipe, C_inst_insul, C_tot IS_A monetary_unit;
+	c_pipe, c_insul IS_A cost_per_mass;
+	F_pipe, F_insul IS_A factor;
 	C_pipe = c_pipe * F_pipe * m_pipe;
 	C_insul = c_insul * F_insul * m_insul;
-	C_tot = C_pipe + C_insul;
+
+	c_inst_pipe_0, c_inst_insul_0 IS_A cost_per_length;
+	c_inst_pipe_0, c_inst_insul_1 IS_A cost_per_area;
+
+	C_inst_pipe = SUM[PC[i].L * (c_inst_pipe_1*PC[i].D_o + c_inst_pipe_0) 
+				    + PH[i].L * (c_inst_pipe_1*PH[i].D_o + c_inst_pipe_0) | i IN [1..n]];
+
+	C_inst_insul = SUM[PC[i].L * (c_inst_insul_1*PC[i].D_o + c_inst_insul_0) 
+				     + PH[i].L * (c_inst_insul_1*PH[i].D_o + c_inst_insul_0) | i IN [1..n]];
+
+	C_supp = c_supp_0 * SUM[PC[i].L + PH[i].L | i IN [1..n]]
+
+	C_tot = C_pipe + C_insul + C_inst_pipe + C_inst_insul + C_supp;
+
 	
 	(* wire up the network... *)
 	FOR i IN [1..n-1] CREATE
@@ -271,8 +289,15 @@ METHOD on_load;
 END on_load;
 END lcoe_eq;
 
+
+UNITS
+(* currency conversions as of 10 Feb 2020 *)
+AUD = {1.49*USD};
+EUR = {1.10*USD};
+END UNITS;
+
 MODEL towerarray2 REFINES csparray_graded;
-	n :== 5;
+	n :== 8;
 	cd.component :== 'sodium';
 	cd.type :== 'incomp';
 	corr_intconv :== 'none'; (* pipe R_th due to int conv is negl for sodium *)
@@ -307,24 +332,46 @@ METHOD on_load;
 
 	FIX Qdot_onecoll := 10 {MW};
 	FIX eta_DI := 1;
-	FIX Vel := 2.5 {m/s};
-	FIX L := 200 {m};
-	FIX t_pipe := 4 {mm};
+	FIX Vel := 15 {ft/s}; (* NAK Hbk v3 p6: 4-16" size, 15 *)
+	FIX L := 290 {m}; (* 290 m E-W separation; 240 m N-S separation *)
+	FIX t_pipe := 4 {mm}; (* FIXME implement equation here *)
 	FIX t_insul := 100 {mm};
 
 	FIX eps := 0.09 {mm};
-	FIX h_ext := 20 {W/m^2/K};
+	FIX h_ext := 10 {W/m^2/K};
 	FIX emiss := 0.8;
-	FIX k_insul := 0.08 {W/m/K}; (* 'microporous insulation board', https://is.gd/5j9Gkw *)
+	FIX k_insul := 0.05 {W/m/K}; (* 'microporous insulation board' @ 700°C, https://is.gd/5j9Gkw *)
 	FIX k_pipe := 22.4 {W/m/K}; (* Haynes 230 @ 700°C: https://is.gd/F0RICh *)
 	FIX rho_pipe := 9 {g/cm^3}; (* Haynes 230 @ 700°C: https://is.gd/F0RICh *)
-	FIX rho_insul := 300 {g/m^3}; (* 'microporous insulation board', https://is.gd/5j9Gkw *)
-	FIX F_pipe := 2.5;
-	FIX F_insul := 20;
-	FIX c_pipe := 84 {USD/kg};
-	FIX c_insul := 0.8 {USD/kg};
+	FIX rho_insul := 380 {g/m^3}; (* 'microporous insulation board', approx value from Felix *)
+	(*FIX F_pipe := 2.5;
+	FIX F_insul := 20;*)
+	FIX c_pipe := 8 {USD/kg} (* 316 stainless steel assumed *);
+	FIX c_insul := 10000 {USD/kg}; (* old quote from brandname product...or maybe 250 USD/kg if alibaba.com *)
 
-	FIX inlet.p := 50 {bar};
+	FIX c_inst_pipe_0 = 22 {AUD/m};
+	FIX c_inst_pipe_1 = 0.3734 {AUD/m/mm};
+	FIX c_inst_insul_0 = 29 {AUD/m};
+	FIX c_inst_insul_1 = 0.6257 {AUD/m/mm};
+	FIX c_inst_supp_0 = 100 {USD/m}; (* this one's in yankee dollars *)
+
+	(*
+	installation cost for pipe, per length installed
+	0.3734 AUD/m/mm * d_o_pipe + 22 AUD/m
+
+	installation cost for insulation, per length installed
+	0.6257 AUD/m/mm * d_o_pipe + 29 AUD/m
+
+	anchors and supports 
+		- supports with 2.5 m spacing, 175 AUD/support, plus
+		- 400 AUD/anchor, one per every second support.
+	totals to 100 USD/m.
+
+	insulation cost
+	10000 USD/m^3 (or maybe 250....?)
+	*)
+
+	FIX inlet.p := 5 {bar};
 	FIX inlet.T := 500 {K} +  273.15 {K};
 	FIX mdot_onecoll := 40 {kg/s}; (* same for all dishes *)
 	FIX T_amb := 300 {K};
