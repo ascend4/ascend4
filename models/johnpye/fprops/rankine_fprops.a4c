@@ -301,7 +301,21 @@ END on_load;
 END pump_simple_test;
 
 
-MODEL pump_simple_test_sodium REFINES pump_simple;
+(*
+	Pump with incompressible working fluid. Note that as for pump_simple,
+	this model yields a negative value of Wdot according to the 'steam engine
+	sign convention'.
+*)
+MODEL pump_incomp REFINES pump_simple;
+	eta_eq_incomp: eta * w = inlet.v * (inlet.p - outlet.p);
+METHODS
+METHOD default_self;
+	RUN pump_simple::default_self;
+	eta_eq.included := FALSE;
+END default_self;
+END pump_incomp;
+
+MODEL pump_incomp_test REFINES pump_incomp;
 	cd.component :== 'sodium';
 	cd.type :== 'incomp';
 METHODS
@@ -317,7 +331,7 @@ METHOD on_load;
 	OPTION convopt 'RELNOM_SCALE';
 	OPTION iterationlimit 200;
 END on_load;
-END pump_simple_test;
+END pump_incomp_test;
 
 (*------------------------------------------------------------------------------
   TURBINE COMPONENT

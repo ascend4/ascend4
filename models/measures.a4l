@@ -342,6 +342,9 @@ aWW= {1*EW}; (* <geekjoke>we could say Art has a lot of power</geekjoke> *)
 
 Wh = {W*h};
 kWh = {kW*h};
+MWh = {MW*h};
+GWh = {GW*h};
+TWh = {TW*h};
 
 hp= {7.456998e+2*W};
 

@@ -241,7 +241,7 @@ METHOD on_load;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 END on_load;
-END towerarray;
+END towerarray1;
 
 
 MODEL lcoe_eq;
@@ -279,22 +279,31 @@ MODEL towerarray2 REFINES csparray_graded;
 
 	eta_PB IS_A fraction;
 
-	PU IS_A pump_simple;
+	PU IS_A pump_incomp;
 	PU.outlet, inlet ARE_THE_SAME;
 	PU.inlet.p, outlet.p ARE_THE_SAME;
 
-	(* LCOE based on design-point operation and capacity factor 
+	(* LCOE based on design-point operation and capacity factor *)
 	lcoe IS_A lcoe_eq;
 	lcoe.C = C_tot;
-	lcoe.Wdot = Qdot_net * eta_PB - Wdot_pump;
-*)
-
+	lcoe.Wdot = Qdot_net * eta_PB + PU.Wdot;
+	LCOE ALIASES lcoe.L;
 METHODS
+METHOD default_self;
+	RUN csparray_graded::default_self;
+	RUN PU.default_self;
+	PU.w.nominal := 1 {kJ/kg};
+END default_self;
 METHOD on_load;
 	RUN default_self;
 	
+	(* related to the LCOE *)
 	FIX eta_PB := 0.5;
-	FIX PU.eta := 0.8;
+	FIX PU.eta := 0.65;
+	FIX lcoe.r := 0.07;
+	FIX lcoe.O := 0 {MUSD};
+	FIX lcoe.CF := 0.6;
+	FIX lcoe.n := 30;
 
 	FIX Qdot_onecoll := 10 {MW};
 	FIX eta_DI := 1;
@@ -326,7 +335,7 @@ METHOD on_load;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
 END on_load;
-END towerarray;
+END towerarray2;
 
 
 
