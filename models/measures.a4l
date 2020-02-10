@@ -192,13 +192,8 @@ credits= {USD};
 (* the following two are historic and should not be used in future *)
 USdollar = {USD};
 US = {USD};
-MUSD = {1e6*USD};
 
-(* currencies according to yahoo.com, as at 11 Sep 2006 *)
-AUD = {0.752400*USD};
-GBP = {1.865000*USD};
-EUR = {1.266499*USD};
-JPY = {0.00856091*USD};
+MUSD = {1e6*USD};
 
 (*  reciprocal time (frequency) *)
 
@@ -497,6 +492,13 @@ VALVE_COEFF_US = {2.3837e-5*m*m};
 (* time variant conversions *)
 
 MINIMUMWAGE = {5.15*USD/h}; (* Dec 2005, see http://www.dol.gov/ *)
+
+(* currencies according to yahoo.com, as at 11 Sep 2006 *)
+(*AUD = {0.67*USD};
+GBP = {1.865000*USD};
+EUR = {1.266499*USD};
+JPY = {0.00856091*USD};*)
+
 (*
 * conversions we'd like to see , but probably won't
 * milliHelen = {beauty/ship};
