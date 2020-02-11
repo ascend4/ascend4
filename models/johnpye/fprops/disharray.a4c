@@ -1,17 +1,6 @@
 REQUIRE "johnpye/fprops/rankine_fprops.a4c";
 REQUIRE "johnpye/fprops/pipe.a4c";
 
-MODEL throttle REFINES stream_equipment;
-	inlet.h, outlet.h ARE_THE_SAME;
-	dp IS_A delta_pressure;
-	dp = outlet.p - inlet.p;
-METHODS
-METHOD default_self;
-	RUN inlet.default_self;
-	RUN outlet.default_self;
-END default_self;
-END throttle;
-
 (*
 	Model of a linear array of CSP solar concentrators (eg dishes) with pressure
 	drop and heat loss in the connection lines, and fixed heat input in each
@@ -216,8 +205,15 @@ END disharray;
 more complex networks. Could it be the soft dependence mu(p,T) on p, which
 perhaps should be removed? *)
 
+UNITS
+(* currency conversions as of 10 Feb 2020 *)
+AUD = {USD/1.49};
+EUR = {1.10*USD};
+END UNITS;
+
+
 MODEL towerarray1 REFINES csparray_uniform;
-	n :== 10;
+	n :== 8;
 	cd.component :== 'sodium';
 	cd.type :== 'incomp';
 	corr_intconv :== 'none'; (* pipe R_th due to int conv is negl for sodium *)
@@ -230,10 +226,10 @@ METHOD on_load;
 	END FOR;
 	FIX Qdot_onecoll := 10 {MW};
 	FIX eta_DI := 1;
-	FIX D_pipe := 300 {mm};
-	FIX L := 200 {m};
+	FIX D_pipe := 450 {mm};
+	FIX L := 290 {m};
 	FIX t_pipe := 4 {mm};
-	FIX t_insul := 100 {mm};
+	FIX t_insul := 200 {mm};
 
 	FIX eps := 0.09 {mm};
 	FIX h_ext := 20 {W/m^2/K};
@@ -242,10 +238,13 @@ METHOD on_load;
 	FIX k_pipe := 22.4 {W/m/K}; (* Haynes 230 @ 700°C: https://is.gd/F0RICh *)
 	FIX rho_pipe := 9 {g/cm^3}; (* Haynes 230 @ 700°C: https://is.gd/F0RICh *)
 	FIX rho_insul := 300 {g/m^3}; (* 'microporous insulation board', https://is.gd/5j9Gkw *)
-	FIX F_pipe := 2.5;
-	FIX F_insul := 20;
-	FIX c_pipe := 84 {USD/kg};
-	FIX c_insul := 0.8 {USD/kg};
+	FIX c_pipe := 8 {USD/kg} (* 316 stainless steel assumed *);
+	FIX c_insul := 10000 {USD/kg}; (* old quote from brandname product...or maybe 250 USD/kg if alibaba.com *)
+	FIX c_inst_pipe_0 := 22 {AUD/m};
+	FIX c_inst_pipe_1 := 0.3734 {AUD/m/mm};
+	FIX c_inst_insul_0 := 29 {AUD/m};
+	FIX c_inst_insul_1 := 0.6257 {AUD/m/mm};
+	FIX c_supp_0 := 100 {USD/m}; (* this one's in yankee dollars *)
 
 	FIX inlet.p := 50 {bar};
 	FIX inlet.T := 500 {K} +  273.15 {K};
@@ -288,12 +287,6 @@ METHOD on_load;
 END on_load;
 END lcoe_eq;
 
-
-UNITS
-(* currency conversions as of 10 Feb 2020 *)
-AUD = {USD/1.49};
-EUR = {1.10*USD};
-END UNITS;
 
 MODEL towerarray2 REFINES csparray_graded;
 	n :== 8;
@@ -343,11 +336,9 @@ METHOD on_load;
 	FIX k_pipe := 22.4 {W/m/K}; (* Haynes 230 @ 700°C: https://is.gd/F0RICh *)
 	FIX rho_pipe := 9 {g/cm^3}; (* Haynes 230 @ 700°C: https://is.gd/F0RICh *)
 	FIX rho_insul := 380 {g/m^3}; (* 'microporous insulation board', approx value from Felix *)
-	(*FIX F_pipe := 2.5;
-	FIX F_insul := 20;*)
+
 	FIX c_pipe := 8 {USD/kg} (* 316 stainless steel assumed *);
 	FIX c_insul := 10000 {USD/kg}; (* old quote from brandname product...or maybe 250 USD/kg if alibaba.com *)
-
 	FIX c_inst_pipe_0 := 22 {AUD/m};
 	FIX c_inst_pipe_1 := 0.3734 {AUD/m/mm};
 	FIX c_inst_insul_0 := 29 {AUD/m};

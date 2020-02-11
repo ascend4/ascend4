@@ -644,10 +644,13 @@ END heater_closed_test;
   TEE PIECE
 *)
 
+MODEL tee_generic;
+END tee_generic;
+
 (*
 	it's not a car :-)
 *)
-MODEL tee;
+MODEL tee REFINES tee_generic;
 	NOTES
 		'block' SELF {Tee piece: branching of flow}
 		'graphic' SELF {0,5-10,3.33-10,6.66-0,5}
@@ -683,14 +686,57 @@ METHOD default_self;
 END default_self;	
 END tee;	
 
+
+MODEL tee_n(n IS_A integer_constant;) REFINES tee_generic;
+	inlet "in:" IS_A stream_node;
+	outlet[0..n-1] "out:" IS_A stream_node;
+
+	inlet.cd, outlet[0..n-1].cd ARE_THE_SAME;
+	cd ALIASES inlet.cd;
+
+	inlet.p, outlet[0..n-1].p ARE_THE_SAME;
+	inlet.h, outlet[0..n-1].h ARE_THE_SAME;
+
+	(* cons. mass *)
+	cons_mass: inlet.mdot = SUM[outlet[i].mdot | i IN [0..n-1]];
+METHODS
+METHOD disable_cons_mass;
+	cons_mass.included := FALSE;
+END disable_cons_mass;
+METHOD enable_cons_mass;
+	cons_mass.included := TRUE;
+END enable_cons_mass;
+METHOD default_self;
+	RUN inlet.default_self;
+	FOR i IN [0..n-1] DO
+		RUN outlet[i].default_self;
+	END FOR;
+END default_self;	
+END tee_n;
+
+MODEL tee_trivial REFINES tee_generic;
+	inlet IS_A stream_node;
+	outlet[0] IS_A stream_node;
+	inlet, outlet[0] ARE_THE_SAME;
+	cd ALIASES inlet.cd;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet[0].default_self;
+END default_self;
+END merge_trivial;
+
 (*------------------------------------------------------------------------------
   MERGE PIECE
 *)
 
+MODEL merge_generic;
+END merge_generic;
+
 (*
 	Joining two streams
 *)
-MODEL merge;
+MODEL merge REFINES merge_generic;
 	NOTES
 		'block' SELF {Model of a joining of two flow streams}
 	END NOTES;
@@ -720,6 +766,40 @@ METHOD default_self;
 	RUN inlet_branch.default_self;
 END default_self;
 END merge;	
+
+
+MODEL merge_n(n IS_A integer_constant;) REFINES merge_generic;
+	inlet[0..n-1] "in:" IS_A stream_node;
+	outlet "out:" IS_A stream_node;
+
+	inlet[0..n-1].cd, outlet.cd ARE_THE_SAME;
+	cd ALIASES outlet.cd;
+
+	inlet[0..n-1].p, outlet.p ARE_THE_SAME;
+	cons_mass: outlet.mdot = SUM[inlet[i].mdot | i IN [0..n-1]];
+	
+	(* cons. energy*)
+	cons_energy: outlet.mdot*outlet.h = SUM[inlet[i].mdot*inlet[i].h | i IN [0..n-1]];
+METHODS
+METHOD default_self;
+	FOR i IN [0..n-1] DO
+		RUN inlet[i].default_self;
+	END FOR;
+	RUN outlet.default_self;
+END default_self;
+END merge_n;
+
+MODEL merge_trivial REFINES merge_generic;
+	inlet[0] IS_A stream_node;
+	outlet IS_A stream_node;
+	inlet[0], outlet ARE_THE_SAME;
+	cd ALIASES outlet.cd;
+METHODS
+METHOD default_self;
+	RUN inlet[0].default_self;
+	RUN outlet.default_self;
+END default_self;
+END merge_trivial;
 
 (*------------------------------------------------------------------------------
   OVERALL CYCLE
@@ -1074,4 +1154,28 @@ METHOD default_self;
 	TU2.inlet.h := 3000 {kJ/kg}; (* guess *)
 END default_self;
 END rankine_reheat_water;
+
+
+MODEL throttle REFINES stream_equipment;
+	inlet.h, outlet.h ARE_THE_SAME;
+	dp IS_A delta_pressure;
+	eq_dp: dp = outlet.p - inlet.p;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+	RUN outlet.default_self;
+END default_self;
+END throttle;
+
+MODEL throttle_trivial REFINES throttle;
+	inlet, outlet ARE_THE_SAME;
+METHODS
+METHOD default_self;
+	RUN inlet.default_self;
+END default_self;
+END throttle_trivial;
+
+
+
+
 
