@@ -52,14 +52,13 @@ MODEL csparray;
 	L_pipe_tot = SUM[PC[i].L + PH[i].L | i IN [1..n]];
 
 	(* costs *)
-	C_pipe, C_insul, C_inst_pipe, C_inst_insul, C_tot IS_A monetary_unit;
+	C_pipe, C_insul, C_inst_pipe, C_inst_insul, C_supp, C_tot IS_A monetary_unit;
 	c_pipe, c_insul IS_A cost_per_mass;
-	F_pipe, F_insul IS_A factor;
-	C_pipe = c_pipe * F_pipe * m_pipe;
-	C_insul = c_insul * F_insul * m_insul;
+	C_pipe = c_pipe * m_pipe;
+	C_insul = c_insul * m_insul;
 
-	c_inst_pipe_0, c_inst_insul_0 IS_A cost_per_length;
-	c_inst_pipe_0, c_inst_insul_1 IS_A cost_per_area;
+	c_inst_pipe_0, c_inst_insul_0, c_supp_0 IS_A cost_per_length;
+	c_inst_pipe_1, c_inst_insul_1 IS_A cost_per_area;
 
 	C_inst_pipe = SUM[PC[i].L * (c_inst_pipe_1*PC[i].D_o + c_inst_pipe_0) 
 				    + PH[i].L * (c_inst_pipe_1*PH[i].D_o + c_inst_pipe_0) | i IN [1..n]];
@@ -67,7 +66,7 @@ MODEL csparray;
 	C_inst_insul = SUM[PC[i].L * (c_inst_insul_1*PC[i].D_o + c_inst_insul_0) 
 				     + PH[i].L * (c_inst_insul_1*PH[i].D_o + c_inst_insul_0) | i IN [1..n]];
 
-	C_supp = c_supp_0 * SUM[PC[i].L + PH[i].L | i IN [1..n]]
+	C_supp = c_supp_0 * SUM[PC[i].L + PH[i].L | i IN [1..n]];
 
 	C_tot = C_pipe + C_insul + C_inst_pipe + C_inst_insul + C_supp;
 
@@ -292,7 +291,7 @@ END lcoe_eq;
 
 UNITS
 (* currency conversions as of 10 Feb 2020 *)
-AUD = {1.49*USD};
+AUD = {USD/1.49};
 EUR = {1.10*USD};
 END UNITS;
 
@@ -335,7 +334,7 @@ METHOD on_load;
 	FIX Vel := 15 {ft/s}; (* NAK Hbk v3 p6: 4-16" size, 15 *)
 	FIX L := 290 {m}; (* 290 m E-W separation; 240 m N-S separation *)
 	FIX t_pipe := 4 {mm}; (* FIXME implement equation here *)
-	FIX t_insul := 100 {mm};
+	FIX t_insul := 200 {mm};
 
 	FIX eps := 0.09 {mm};
 	FIX h_ext := 10 {W/m^2/K};
@@ -349,11 +348,11 @@ METHOD on_load;
 	FIX c_pipe := 8 {USD/kg} (* 316 stainless steel assumed *);
 	FIX c_insul := 10000 {USD/kg}; (* old quote from brandname product...or maybe 250 USD/kg if alibaba.com *)
 
-	FIX c_inst_pipe_0 = 22 {AUD/m};
-	FIX c_inst_pipe_1 = 0.3734 {AUD/m/mm};
-	FIX c_inst_insul_0 = 29 {AUD/m};
-	FIX c_inst_insul_1 = 0.6257 {AUD/m/mm};
-	FIX c_inst_supp_0 = 100 {USD/m}; (* this one's in yankee dollars *)
+	FIX c_inst_pipe_0 := 22 {AUD/m};
+	FIX c_inst_pipe_1 := 0.3734 {AUD/m/mm};
+	FIX c_inst_insul_0 := 29 {AUD/m};
+	FIX c_inst_insul_1 := 0.6257 {AUD/m/mm};
+	FIX c_supp_0 := 100 {USD/m}; (* this one's in yankee dollars *)
 
 	(*
 	installation cost for pipe, per length installed
@@ -371,7 +370,7 @@ METHOD on_load;
 	10000 USD/m^3 (or maybe 250....?)
 	*)
 
-	FIX inlet.p := 5 {bar};
+	FIX inlet.p := 50 {bar};
 	FIX inlet.T := 500 {K} +  273.15 {K};
 	FIX mdot_onecoll := 40 {kg/s}; (* same for all dishes *)
 	FIX T_amb := 300 {K};
