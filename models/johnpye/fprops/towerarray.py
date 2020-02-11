@@ -63,15 +63,29 @@ class Link:
 		
 
 # create the nodes (collector fields)
-nx = 1
-ny = 4
-xsep = 290.
-ysep = 240.
-iy_across = ny/2
-iy_across=0 #####
-ix_mid = nx/2
-#ix_mid = 0 #####
-#ix_mid = 4
+if 0:
+	nx = 1
+	ny = 4
+	xsep = 290.
+	ysep = 240.
+	iy_across = ny/2
+	iy_across=0 #####
+	ix_mid = nx/2
+	#ix_mid = 0 #####
+	Qdot_onecoll = 10 # MW
+	mdot_onecoll = 40 # kg/s
+else:
+	nx = 5
+	ny = 1
+	xsep = 290.
+	ysep = 240.
+	iy_across = ny/2
+	iy_across=0 #####
+	ix_mid = nx/2
+	ix_mid = 0 #####
+	#ix_mid = 4 #####
+	Qdot_onecoll = 70 # MW
+	mdot_onecoll = 40*7
 ix = np.arange(0,nx) 
 x = ix*xsep;
 iy = np.arange(0,ny)
@@ -360,7 +374,7 @@ METHOD on_load;
 
 	RUN set_pipe_lengths;
 
-	FIX Qdot_onecoll := 10 {MW};
+	FIX Qdot_onecoll := %f {MW}; (* value substituted in script! *)
 	FIX eta_DI := 1;
 
 	FIX Vel := 15 {ft/s}; (* NAK Hbk v3 p6: 4-16" size, 15 *)
@@ -402,7 +416,7 @@ METHOD on_load;
 
 	FIX inlet.p := 50 {bar};
 	FIX inlet.T := 520 {K} +  273.15 {K};
-	FIX mdot_onecoll := 40 {kg/s}; (* same for all dishes *)
+	FIX mdot_onecoll := %f {kg/s}; (* same for all dishes *)
 	FIX T_amb := 300 {K};
 
 	(* initial guesses to help the solver *)
@@ -420,7 +434,7 @@ METHOD correct_dp_and_Tout;
 	FIX T_out := 740 {K} + 273.15{K};
 END correct_dp_and_Tout;
 END towerarray3;
-""");
+""" % (Qdot_onecoll,mdot_onecoll));
 
 f.close()
 
