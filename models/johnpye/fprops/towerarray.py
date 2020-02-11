@@ -63,12 +63,12 @@ class Link:
 		
 
 # create the nodes (collector fields)
-nx = 1
-ny = 2
+nx = 3
+ny = 1
 xsep = 290.
 ysep = 240.
 iy_across = ny/2
-ix_mid = nx/2
+ix_mid = 0 #ix_mid = nx/2
 ix = np.arange(0,nx) 
 x = ix*xsep;
 iy = np.arange(0,ny)
@@ -204,7 +204,7 @@ for i,n in enumerate(arr):
 	f.write("\tDI[{i}].outlet, TH[{i}].inlet ARE_THE_SAME;\n".format(i=i));
 	f.write("\tTH[{i}].outlet, JO[{i}].inlet[0] ARE_THE_SAME;\n".format(i=i));
 
-	if len(arr[n].links_to) == 1:
+	if len(arr[n].links_from) == 0:
 		f.write("\tTH[{i}] IS_REFINED_TO throttle_trivial;\n".format(i=i));
 
 	for j,lt in enumerate(arr[n].links_from):
