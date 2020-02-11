@@ -63,12 +63,15 @@ class Link:
 		
 
 # create the nodes (collector fields)
-nx = 3
-ny = 1
+nx = 1
+ny = 4
 xsep = 290.
 ysep = 240.
 iy_across = ny/2
-ix_mid = 0 #ix_mid = nx/2
+iy_across=0 #####
+ix_mid = nx/2
+#ix_mid = 0 #####
+#ix_mid = 4
 ix = np.arange(0,nx) 
 x = ix*xsep;
 iy = np.arange(0,ny)
@@ -283,8 +286,14 @@ MODEL towerarray3 REFINES layout;
 	Vel ALIASES PC[0].Vel_out;
 
 	PC[0..n_PH-1].t_insul, PH[0..n_PH-1].t_insul ARE_THE_SAME;
-	PC[0..n_PH-1].t_pipe, PH[0..n_PH-1].t_pipe ARE_THE_SAME;
-	t_pipe ALIASES PC[0].t_pipe;
+
+	FOR i IN [0..n_PH-1] CREATE
+		(* curve fit to Sch10S pipe sizes *)
+		PC[i].t_pipe = 1{mm} * (PC[i].D/1{mm})^0.3 / 1.222;
+		PH[i].t_pipe = 1{mm} * (PH[i].D/1{mm})^0.3 / 1.222;
+	END FOR;
+	(*PC[0..n_PH-1].t_pipe, PH[0..n_PH-1].t_pipe ARE_THE_SAME;
+	t_pipe ALIASES PC[0].t_pipe;*)
 	t_insul ALIASES PC[0].t_insul;
 
 
@@ -296,7 +305,6 @@ MODEL towerarray3 REFINES layout;
 	m_insul = rho_insul * SUM[PC[i].solid_insul.V + PH[i].solid_insul.V | i IN [0..n_PH-1]];
 	L_pipe_tot = SUM[PC[i].L + PH[i].L | i IN [0..n_PH-1]];
 
-(*
 	(* costs *)
 	C_pipe, C_insul, C_inst_pipe, C_inst_insul, C_supp, C_tot IS_A monetary_unit;
 	c_pipe, c_insul IS_A cost_per_mass;
@@ -315,7 +323,7 @@ MODEL towerarray3 REFINES layout;
 	C_supp = c_supp_0 * SUM[PC[i].L + PH[i].L | i IN [0..n_PH-1]];
 
 	C_tot = C_pipe + C_insul + C_inst_pipe + C_inst_insul + C_supp;
-*)
+
 	T_amb IS_A temperature;
 	T_amb, PC[0..n_PH-1].T_amb, PH[0..n_PH-1].T_amb ARE_THE_SAME;
 
@@ -354,9 +362,11 @@ METHOD on_load;
 
 	FIX Qdot_onecoll := 10 {MW};
 	FIX eta_DI := 1;
+
 	FIX Vel := 15 {ft/s}; (* NAK Hbk v3 p6: 4-16" size, 15 *)
-	FIX t_pipe := 4 {mm}; (* FIXME implement equation here *)
-	FIX t_insul := 200 {mm};
+
+	(*FIX t_pipe := 4 {mm}; (* FIXME implement equation here *)*)
+	FIX t_insul := 100 {mm};
 
 	FIX eps := 0.09 {mm};
 	FIX h_ext := 10 {W/m^2/K};
@@ -366,7 +376,6 @@ METHOD on_load;
 	FIX rho_pipe := 9 {g/cm^3}; (* Haynes 230 @ 700°C: https://is.gd/F0RICh *)
 	FIX rho_insul := 380 {g/m^3}; (* 'microporous insulation board', approx value from Felix *)
 
-(*
 	FIX c_pipe := 8 {USD/kg} (* 316 stainless steel assumed *);
 	FIX c_insul := 10000 {USD/kg}; (* old quote from brandname product...or maybe 250 USD/kg if alibaba.com *)
 	FIX c_inst_pipe_0 := 22 {AUD/m};
@@ -374,7 +383,7 @@ METHOD on_load;
 	FIX c_inst_insul_0 := 29 {AUD/m};
 	FIX c_inst_insul_1 := 0.6257 {AUD/m/mm};
 	FIX c_supp_0 := 100 {USD/m}; (* this one's in yankee dollars *)
-*)
+
 	(*
 	installation cost for pipe, per length installed
 	0.3734 AUD/m/mm * d_o_pipe + 22 AUD/m
@@ -392,7 +401,7 @@ METHOD on_load;
 	*)
 
 	FIX inlet.p := 50 {bar};
-	FIX inlet.T := 500 {K} +  273.15 {K};
+	FIX inlet.T := 520 {K} +  273.15 {K};
 	FIX mdot_onecoll := 40 {kg/s}; (* same for all dishes *)
 	FIX T_amb := 300 {K};
 
@@ -401,9 +410,15 @@ METHOD on_load;
 
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';	
-
-
 END on_load;
+
+METHOD correct_dp_and_Tout;
+	FREE Vel;
+	FIX p_in := 5 {bar};
+	FIX p_out := 3 {bar};
+	FREE mdot_onecoll;
+	FIX T_out := 740 {K} + 273.15{K};
+END correct_dp_and_Tout;
 END towerarray3;
 """);
 
@@ -413,7 +428,7 @@ pl.axes().set_aspect('equal', 'datalim')
 pl.plot(X,Y,'bo')
 pl.axis([x.min() - xsep/2, x.max() + xsep/2, y.min() - ysep/2, y.max() + ysep/2])
 for lab in arr:
-	pl.annotate("%s\n%d"%(lab,rarr[lab]),(arr[lab].x,arr[lab].y))
+	pl.annotate("%s\n%d"%(lab,rarr[lab]),(arr[lab].x,arr[lab].y),ha='right')
 
 for l in links:
 	print "link",l

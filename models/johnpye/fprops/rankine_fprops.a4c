@@ -775,7 +775,11 @@ MODEL merge_n(n IS_A integer_constant;) REFINES merge_generic;
 	inlet[0..n-1].cd, outlet.cd ARE_THE_SAME;
 	cd ALIASES outlet.cd;
 
+	(*FOR i IN [0..n-1] CREATE
+		p_eq_inlet[i]: inlet[i].p = outlet.p;
+	END FOR;*)
 	inlet[0..n-1].p, outlet.p ARE_THE_SAME;
+
 	cons_mass: outlet.mdot = SUM[inlet[i].mdot | i IN [0..n-1]];
 	
 	(* cons. energy*)
