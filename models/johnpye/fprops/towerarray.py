@@ -33,7 +33,7 @@ class Link:
 		self.id = id
 	def __repr__(self):
 		return "<Link %d: %s--%s>" % (self.id,repr(self.lab1),repr(self.lab2))
-	def plot(self,arr):
+	def plot(self,arr,xsep,ysep):
 		#print [arr[self.lab1].x,arr[self.lab2].x],[arr[self.lab1].y,arr[self.lab1].y]
 		x = arr[self.lab1].x
 		y = arr[self.lab1].y
@@ -60,71 +60,59 @@ class Link:
 		dy = arr[self.lab2].y - arr[self.lab1].y
 		l = math.sqrt(dx**2+dy**2)
 		return l
-		
 
-# create the nodes (collector fields)
-if 0:
-	nx = 1
-	ny = 4
+def create_field_model(nx,ny,Qdot_onecoll_MW=10.,mdot_onecoll=None
+		,ix_pb=None,iy_pb=None,suffix=None,f=None):
 	xsep = 290.
 	ysep = 240.
-	iy_across = ny/2
-	iy_across=0 #####
-	ix_mid = nx/2
-	#ix_mid = 0 #####
-	Qdot_onecoll = 10 # MW
-	mdot_onecoll = 40 # kg/s
-else:
-	nx = 5
-	ny = 1
-	xsep = 290.
-	ysep = 240.
-	iy_across = ny/2
-	iy_across=0 #####
-	ix_mid = nx/2
-	ix_mid = 0 #####
-	#ix_mid = 4 #####
-	Qdot_onecoll = 70 # MW
-	mdot_onecoll = 40*7
-ix = np.arange(0,nx) 
-x = ix*xsep;
-iy = np.arange(0,ny)
-y = iy*ysep;
-IX,IY = np.meshgrid(ix,iy)
-X,Y = np.meshgrid(x,y)
-lab = zip(IX.ravel(),IY.ravel())
-loc = zip(X.ravel(),Y.ravel())
 
-arr = {}
-for i,l in enumerate(lab):
-	print "node label",l
-	arr[l] = Node(x=loc[i][0],y=loc[i][1],lab=l)
+	if f is None:
+		import sys
+		f = sys.stdout
+	if ix_pb is None:
+		ix_pb = int(nx)/2
+	if iy_pb is None:
+		iy_pb = int(ny)/2
+	if mdot_onecoll is None:
+		mdot_onecoll = 40 * (Qdot_onecoll_MW / 10)
+	if suffix is None:
+		suffix = "_%dx%d_%fMW"%(nx,ny,Qdot_onecoll_MW)
+	
+	ix = np.arange(0,nx) 
+	x = ix*xsep;
+	iy = np.arange(0,ny)
+	y = iy*ysep;
+	IX,IY = np.meshgrid(ix,iy)
+	X,Y = np.meshgrid(x,y)
+	lab = zip(IX.ravel(),IY.ravel())
+	loc = zip(X.ravel(),Y.ravel())
 
-print "arr =",arr
+	arr = {}
+	for i,l in enumerate(lab):
+		print "node label",l
+		arr[l] = Node(x=loc[i][0],y=loc[i][1],lab=l)
 
-centre = arr[(ix_mid,iy_across)]
+	print "arr =",arr
 
-# create the link network...
-links = []
-id = 0
-for ix1 in ix:
-	print "col",ix1
-	for iy1 in np.arange(ny-1):
-		l = Link((ix1,iy1),(ix1,iy1+1),id); id += 1
-		print "row",iy1,"to",iy1+1,":",l
-		links.append(l)
-	if ix1 != 0:
-		print ix1
-		links.append(Link((ix1-1,iy_across),(ix1,iy_across),id)); id += 1
+	centre = arr[(ix_pb,iy_pb)]
 
-print links
+	# create the link network...
+	links = []
+	id = 0
+	for ix1 in ix:
+		print "col",ix1
+		for iy1 in np.arange(ny-1):
+			l = Link((ix1,iy1),(ix1,iy1+1),id); id += 1
+			print "row",iy1,"to",iy1+1,":",l
+			links.append(l)
+		if ix1 != 0:
+			print ix1
+			links.append(Link((ix1-1,iy_pb),(ix1,iy_pb),id)); id += 1
 
+	print links
 
-f = open("layout.a4c","w")
-f.write("""
-REQUIRE "johnpye/fprops/pipe.a4c";
-
-MODEL layout;
+	f.write("""
+MODEL layout{suffix};
 	n_DI IS_A integer_constant;
 	n_DI :== {n};
 	n_PH IS_A integer_constant;
@@ -146,105 +134,105 @@ MODEL layout;
 	emiss ALIASES PC[0].config.emiss;
 	eps ALIASES PC[0].config.eps;
 
-	corr_intconv :== 'none';
-""".format(
-	n=len(arr)
-	,nl=len(links)
-))
-
-# reverse mappings
-
-rarr = {}
-rlinks = {}
-for i,lab in enumerate(arr.keys()):
-	rarr[lab] = i
-for i,l in enumerate(links):
-	rlinks[l] = i
-
-# create the ASCEND code...
-
-if 0:
-	f.write("\tNOTES\n");
-	# output the positions of each collector (in comments)
-	for i,lab in enumerate(arr.keys()):
-		print i
-		f.write("\t\t'location' DI[{i}].inlet {{{x},{x}}};\n".format(
-		i=i
-		,x=arr[lab].x
-		,y=arr[lab].y
+	corr_intconv :== 'none';\n\n""".format(
+		n=len(arr)
+		,nl=len(links)
+		,suffix=suffix
 	))
-	f.write("\tEND NOTES;\n\n");
 
-for i,l in enumerate(links):
-	A = l.node_from(arr)
-	B = l.node_to(arr)
-	print "link",l,": A_dist = %f, B_dist = %f" % (A.distance_from(centre), B.distance_from(centre))
-	if A.distance_from(centre) > B.distance_from(centre):
-		l.reverse()
-		B.links_from.append(l)
-		A.links_to.append(l)
-		print "link reverse",l
-	else:
-		A.links_from.append(l)
-		B.links_to.append(l)
+	# reverse mappings
 
-for i,n in enumerate(arr):
-	assert len(arr[n].links_to) <= 1
-#		print "NOTE: Too many links_to node %s: %s"%(n,arr[n].links_to)
+	rarr = {}
+	rlinks = {}
+	for i,lab in enumerate(arr.keys()):
+		rarr[lab] = i
+	for i,l in enumerate(links):
+		rlinks[l] = i
 
-	f.write("\t(* links at node {i} {lab} *)\n".format(i=i,lab=n))
+	# create the ASCEND code...
 
-	if len(arr[n].links_from) == 0:
-		f.write("\tTE[{i}] IS_REFINED_TO tee_trivial;\n\tJO[{i}] IS_REFINED_TO merge_trivial;\n".format(i=i))
-	else:
-		f.write("\tTE[{i}] IS_REFINED_TO tee_n({nout});\n\tJO[{i}] IS_REFINED_TO merge_n({nout});\n".format(
+	if 0:
+		f.write("\tNOTES\n");
+		# output the positions of each collector (in comments)
+		for i,lab in enumerate(arr.keys()):
+			print i
+			f.write("\t\t'location' DI[{i}].inlet {{{x},{x}}};\n".format(
 			i=i
-			,lab = n
-			,nin = len(arr[n].links_to)
-			,nout = len(arr[n].links_from)+1
+			,x=arr[lab].x
+			,y=arr[lab].y
 		))
+		f.write("\tEND NOTES;\n\n");
 
-	for j,lt in enumerate(arr[n].links_to):
-		f.write("\tTE[{i}].inlet, PC[{li}].outlet ARE_THE_SAME;\n".format(
-			i=i
-			,li=rlinks[lt]
-		))
+	for i,l in enumerate(links):
+		A = l.node_from(arr)
+		B = l.node_to(arr)
+		print "link",l,": A_dist = %f, B_dist = %f" % (A.distance_from(centre), B.distance_from(centre))
+		if A.distance_from(centre) > B.distance_from(centre):
+			l.reverse()
+			B.links_from.append(l)
+			A.links_to.append(l)
+			print "link reverse",l
+		else:
+			A.links_from.append(l)
+			B.links_to.append(l)
 
-	f.write("\tTE[{i}].outlet[0], DI[{i}].inlet ARE_THE_SAME;\n".format(i=i))
-	for j,lt in enumerate(arr[n].links_from):
-		f.write("\tTE[{i}].outlet[{j}], PC[{li}].inlet ARE_THE_SAME;\n".format(
-			i=i
-			,j=j+1
-			,li=rlinks[lt]
-		))
+	for i,n in enumerate(arr):
+		assert len(arr[n].links_to) <= 1
+	#		print "NOTE: Too many links_to node %s: %s"%(n,arr[n].links_to)
 
-	f.write("\tDI[{i}].outlet, TH[{i}].inlet ARE_THE_SAME;\n".format(i=i));
-	f.write("\tTH[{i}].outlet, JO[{i}].inlet[0] ARE_THE_SAME;\n".format(i=i));
+		f.write("\t(* links at node {i} {lab} *)\n".format(i=i,lab=n))
 
-	if len(arr[n].links_from) == 0:
-		f.write("\tTH[{i}] IS_REFINED_TO throttle_trivial;\n".format(i=i));
+		if len(arr[n].links_from) == 0:
+			f.write("\tTE[{i}] IS_REFINED_TO tee_trivial;\n\tJO[{i}] IS_REFINED_TO merge_trivial;\n".format(i=i))
+		else:
+			f.write("\tTE[{i}] IS_REFINED_TO tee_n({nout});\n\tJO[{i}] IS_REFINED_TO merge_n({nout});\n".format(
+				i=i
+				,lab = n
+				,nin = len(arr[n].links_to)
+				,nout = len(arr[n].links_from)+1
+			))
 
-	for j,lt in enumerate(arr[n].links_from):
-		f.write("\tJO[{i}].inlet[{j}], PH[{li}].outlet ARE_THE_SAME;\n".format(
-			i=i
-			,j=j+1
-			,li=rlinks[lt]
-		))
+		for j,lt in enumerate(arr[n].links_to):
+			f.write("\tTE[{i}].inlet, PC[{li}].outlet ARE_THE_SAME;\n".format(
+				i=i
+				,li=rlinks[lt]
+			))
 
-	for j,lt in enumerate(arr[n].links_to):
-		f.write("\tJO[{i}].outlet, PH[{li}].inlet ARE_THE_SAME;\n".format(
-			i=i
-			,li=rlinks[lt]
-		))
+		f.write("\tTE[{i}].outlet[0], DI[{i}].inlet ARE_THE_SAME;\n".format(i=i))
+		for j,lt in enumerate(arr[n].links_from):
+			f.write("\tTE[{i}].outlet[{j}], PC[{li}].inlet ARE_THE_SAME;\n".format(
+				i=i
+				,j=j+1
+				,li=rlinks[lt]
+			))
+
+		f.write("\tDI[{i}].outlet, TH[{i}].inlet ARE_THE_SAME;\n".format(i=i));
+		f.write("\tTH[{i}].outlet, JO[{i}].inlet[0] ARE_THE_SAME;\n".format(i=i));
+
+		if len(arr[n].links_from) == 0:
+			f.write("\tTH[{i}] IS_REFINED_TO throttle_trivial;\n".format(i=i));
+
+		for j,lt in enumerate(arr[n].links_from):
+			f.write("\tJO[{i}].inlet[{j}], PH[{li}].outlet ARE_THE_SAME;\n".format(
+				i=i
+				,j=j+1
+				,li=rlinks[lt]
+			))
+
+		for j,lt in enumerate(arr[n].links_to):
+			f.write("\tJO[{i}].outlet, PH[{li}].inlet ARE_THE_SAME;\n".format(
+				i=i
+				,li=rlinks[lt]
+			))
 
 
 
-import sys
-print "centre.lab",centre.lab
-print "rarr[centre.lab]",rarr[centre.lab]
+	import sys
+	print "centre.lab",centre.lab
+	print "rarr[centre.lab]",rarr[centre.lab]
 
 
-f.write("""
+	f.write("""
 	inlet, outlet IS_A stream_node;
 	inlet, TE[{i}].inlet ARE_THE_SAME;
 	outlet, JO[{i}].outlet ARE_THE_SAME;
@@ -254,21 +242,21 @@ f.write("""
 	cd.type :== 'incomp';
 
 METHODS
-""".format(
-	i=rarr[centre.lab]
-))
-
-f.write("METHOD set_pipe_lengths;\n");
-for i,l in enumerate(links):
-	f.write("""\tFIX PH[{i}].L := {L} {{m}};
-	FIX PC[{i}].L := {L} {{m}};\n""".format(
-		i=i
-		,L = l.length(arr)
+	""".format(
+		i=rarr[centre.lab]
 	))
-f.write("END set_pipe_lengths;\n");
+
+	f.write("METHOD set_pipe_lengths;\n");
+	for i,l in enumerate(links):
+		f.write("""\tFIX PH[{i}].L := {L} {{m}};
+		FIX PC[{i}].L := {L} {{m}};\n""".format(
+			i=i
+			,L = l.length(arr)
+		))
+	f.write("END set_pipe_lengths;\n");
 
 
-f.write("""
+	f.write("""
 METHOD default_self;
 	FOR i IN [0..n_DI-1] DO
 		RUN TE[i].default_self;
@@ -281,21 +269,26 @@ METHOD default_self;
 		RUN PC[i].default_self;
 	END FOR;
 END default_self;
-END layout;
-""".format(
-	i=rarr[centre.lab]
-))
+END layout{suffix};
+	""".format(
+		i=rarr[centre.lab]
+		,suffix=suffix
+	))
 
-f.write("""
+	# note, we don't use str.format() here because lots of units with curly {}:
+	f.write("""
 UNITS
 (* currency conversions as of 10 Feb 2020 *)
 AUD = {USD/1.49};
 EUR = {1.10*USD};
 END UNITS;
+	""");
 
+	f.write("""
+MODEL towerarray{suffix} REFINES layout{suffix};
+	""".format(suffix=suffix))
 
-MODEL towerarray3 REFINES layout;
-
+	f.write("""
 	PC[0..n_PH-1].Vel_out, PH[0..n_PH-1].Vel_out ARE_THE_SAME;
 	Vel ALIASES PC[0].Vel_out;
 
@@ -329,10 +322,10 @@ MODEL towerarray3 REFINES layout;
 	c_inst_pipe_1, c_inst_insul_1 IS_A cost_per_area;
 
 	C_inst_pipe = SUM[PC[i].L * (c_inst_pipe_1*PC[i].D_o + c_inst_pipe_0) 
-				    + PH[i].L * (c_inst_pipe_1*PH[i].D_o + c_inst_pipe_0) | i IN [0..n_PH-1]];
+					+ PH[i].L * (c_inst_pipe_1*PH[i].D_o + c_inst_pipe_0) | i IN [0..n_PH-1]];
 
 	C_inst_insul = SUM[PC[i].L * (c_inst_insul_1*PC[i].D_o + c_inst_insul_0) 
-				     + PH[i].L * (c_inst_insul_1*PH[i].D_o + c_inst_insul_0) | i IN [0..n_PH-1]];
+					 + PH[i].L * (c_inst_insul_1*PH[i].D_o + c_inst_insul_0) | i IN [0..n_PH-1]];
 
 	C_supp = c_supp_0 * SUM[PC[i].L + PH[i].L | i IN [0..n_PH-1]];
 
@@ -356,7 +349,7 @@ MODEL towerarray3 REFINES layout;
 
 	eta_th_array IS_A fraction;
 	eta_th_array = Qdot_net / Qdot_coll_tot;
-	
+
 	(* try: same mass flow for each dish *)
 	DI[0..n_DI-1].mdot ARE_THE_SAME;
 	mdot_onecoll IS_A mass_rate;
@@ -425,7 +418,6 @@ METHOD on_load;
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';	
 END on_load;
-
 METHOD correct_dp_and_Tout;
 	FREE Vel;
 	FIX p_in := 5 {bar};
@@ -433,21 +425,34 @@ METHOD correct_dp_and_Tout;
 	FREE mdot_onecoll;
 	FIX T_out := 740 {K} + 273.15{K};
 END correct_dp_and_Tout;
-END towerarray3;
-""" % (Qdot_onecoll,mdot_onecoll));
+	""" % (Qdot_onecoll_MW,mdot_onecoll));
 
-f.close()
+	f.write("END towerarray{suffix};\n".format(suffix=suffix));
 
-pl.axes().set_aspect('equal', 'datalim')	
-pl.plot(X,Y,'bo')
-pl.axis([x.min() - xsep/2, x.max() + xsep/2, y.min() - ysep/2, y.max() + ysep/2])
-for lab in arr:
-	pl.annotate("%s\n%d"%(lab,rarr[lab]),(arr[lab].x,arr[lab].y),ha='right')
+	pl.figure()
+	pl.axes().set_aspect('equal', 'datalim')	
+	pl.plot(X,Y,'bo')
+	pl.axis([x.min() - xsep/2, x.max() + xsep/2, y.min() - ysep/2, y.max() + ysep/2])
+	for lab in arr:
+		pl.annotate("%s\n%d"%(lab,rarr[lab]),(arr[lab].x,arr[lab].y),ha='right')
 
-for l in links:
-	print "link",l
-	l.plot(arr)
+	for l in links:
+		print "link",l
+		l.plot(arr,xsep,ysep)
 
-pl.show()
+if __name__=='__main__':
+
+	f = open("layout.a4c","w")
+	f.write("""
+REQUIRE "johnpye/fprops/pipe.a4c";
+	""");
+
+	create_field_model(1,4,iy_pb=0,suffix="_chain1",f=f)
+
+	create_field_model(5,1,ix_pb=0,Qdot_onecoll_MW=70,suffix="_chain2",f=f)
+
+	f.close()
+
+	pl.show()
 
 
