@@ -1112,6 +1112,9 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_dialog = InfoDialog(self,self.window,text,title)
 		_dialog.run()
 
+	def show_info(self,text,title):
+		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog.run()
 
 #   ----------------------------------
 #   ERROR PANEL
@@ -1161,9 +1164,9 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def error_callback(self,sev,filename,line,msg):
 		#print "SEV =",sev
-		print "FILENAME =",filename
-		print "LINE =",line
-		#print "PYTHON error_callback: MSG =",msg
+		print "PYTHON error_callback: MSG =",msg
+		#print "FILENAME =",filename
+		#print "LINE =",line
 		pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))
 		path = self.errorstore.get_path(pos)
 		col = self.errorview.get_column(3)
