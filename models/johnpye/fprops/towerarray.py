@@ -305,21 +305,27 @@ MODEL towerarray{suffix} REFINES layout{suffix};
 
 
 	(* total materials *)
-	m_pipe, m_insul IS_A mass;
+	m_pipe, m_insul, m_sodium IS_A mass;
+	V_insul IS_A volume;
 	rho_pipe, rho_insul IS_A mass_density;
 	L_pipe_tot IS_A distance;
 	m_pipe = rho_pipe * SUM[PC[i].solid_pipe.V + PH[i].solid_pipe.V | i IN [0..n_PH-1]];
-	m_insul = rho_insul * SUM[PC[i].solid_insul.V + PH[i].solid_insul.V | i IN [0..n_PH-1]];
+	V_insul = SUM[PC[i].solid_insul.V + PH[i].solid_insul.V | i IN [0..n_PH-1]];
 	L_pipe_tot = SUM[PC[i].L + PH[i].L | i IN [0..n_PH-1]];
+	m_sodium = SUM[PC[i].solid.V / PC[i].inlet.v + PH[i].solid.V / PH[i].inlet.v | i IN [0..n_PH-1]];
+	m_insul = rho_insul * V_insul;
 
 	(* costs *)
-	C_pipe, C_insul, C_inst_pipe, C_inst_insul, C_supp, C_tot IS_A monetary_unit;
-	c_pipe, c_insul IS_A cost_per_mass;
+	C_pipe, C_insul, C_inst_pipe, C_inst_insul, C_supp, C_sodium, C_tot IS_A monetary_unit;
+	c_pipe IS_A cost_per_mass;
+	c_insul IS_A cost_per_volume;
 	C_pipe = c_pipe * m_pipe;
-	C_insul = c_insul * m_insul;
+	C_insul = c_insul * V_insul;
+	C_sodium = c_sodium * m_sodium;	
 
 	c_inst_pipe_0, c_inst_insul_0, c_supp_0 IS_A cost_per_length;
 	c_inst_pipe_1, c_inst_insul_1 IS_A cost_per_area;
+	c_sodium IS_A cost_per_mass;
 
 	C_inst_pipe = SUM[PC[i].L * (c_inst_pipe_1*PC[i].D_o + c_inst_pipe_0) 
 					+ PH[i].L * (c_inst_pipe_1*PH[i].D_o + c_inst_pipe_0) | i IN [0..n_PH-1]];
@@ -381,15 +387,17 @@ METHOD on_load;
 	FIX k_insul := 0.05 {W/m/K}; (* 'microporous insulation board' @ 700°C, https://is.gd/5j9Gkw *)
 	FIX k_pipe := 22.4 {W/m/K}; (* Haynes 230 @ 700°C: https://is.gd/F0RICh *)
 	FIX rho_pipe := 9 {g/cm^3}; (* Haynes 230 @ 700°C: https://is.gd/F0RICh *)
-	FIX rho_insul := 380 {g/m^3}; (* 'microporous insulation board', approx value from Felix *)
+	FIX rho_insul := 380 {kg/m^3}; (* 'microporous insulation board', approx value from Felix *)
 
 	FIX c_pipe := 8 {USD/kg} (* 316 stainless steel assumed *);
-	FIX c_insul := 10000 {USD/kg}; (* old quote from brandname product...or maybe 250 USD/kg if alibaba.com *)
+
+	FIX c_insul := 10000 {USD/m^3}; (* old quote from brandname product...or maybe 250 USD/kg if alibaba.com *)
 	FIX c_inst_pipe_0 := 22 {AUD/m};
 	FIX c_inst_pipe_1 := 0.3734 {AUD/m/mm};
 	FIX c_inst_insul_0 := 29 {AUD/m};
 	FIX c_inst_insul_1 := 0.6257 {AUD/m/mm};
 	FIX c_supp_0 := 100 {USD/m}; (* this one's in yankee dollars *)
+	FIX c_sodium := 3000 {USD/t}; (* based on a quick look at alibaba https://is.gd/pPKCYt *)
 
 	(*
 	installation cost for pipe, per length installed
@@ -425,6 +433,9 @@ METHOD correct_dp_and_Tout;
 	FREE mdot_onecoll;
 	FIX T_out := 740 {K} + 273.15{K};
 END correct_dp_and_Tout;
+METHOD show_temperatures;
+	EXTERNAL disharray_temperature_list(SELF);
+END show_temperatures;
 	""" % (Qdot_onecoll_MW,mdot_onecoll));
 
 	f.write("END towerarray{suffix};\n".format(suffix=suffix));
