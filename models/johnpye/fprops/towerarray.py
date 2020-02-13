@@ -366,6 +366,8 @@ MODEL towerarray{suffix} REFINES layout{suffix};
 
 	p_in ALIASES inlet.p;
 	p_out ALIASES outlet.p;
+	dp IS_A delta_pressure;
+	dp = p_in - p_out;
 
 METHODS
 METHOD on_load;
