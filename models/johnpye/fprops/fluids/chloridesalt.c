@@ -25,7 +25,6 @@
 #ifndef CUNIT_TEST
 
 #define CLSALT_M NAN /* UNKNOWN kg/kmol */
-#define CLSALT_TC 2503.7 /* K */
 
 static const IncompressibleData incomp_data_chloridesalt = {
 	.M = CLSALT_M
