@@ -3,6 +3,7 @@ Import('env')
 subdirs = [
 	'extfn','datareader','brent', 'fprops', 'grena', 'nrel'
 	,'planck'
+	,'tgamma'
 ]
  
 for d in subdirs:

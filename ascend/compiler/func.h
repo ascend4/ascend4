@@ -41,9 +41,7 @@
 #include "compiler.h"
 #include "dimen.h"
 
-/*
- *  the following should be ifdefed to deal with math.h values
- */
+/* TODO the following should be #ifdefed to deal with math.h values...? */
 #define F_ERF_COEF    1.1283791670955130      /**< = 2 / sqrt(PI) */
 #define F_LOG10_COEF  0.4342944819032518      /**< = log10(e) = 1/ln(10) */
 #define F_PI          3.1415926535897932385E0
@@ -57,114 +55,113 @@
 #ifdef __STDC__
 # if __STDC__
 /**
- * stdc==1 --> erf, cbrt not defined in headers. user should link
- * against a library that does provide them. ASCEND is research
- * code: we aren't going to waste time reimplementing these basic
- * functions.
- */
+	stdc==1 --> erf, cbrt not defined in headers. user should link
+	against a library that does provide them. ASCEND is research
+	code: we aren't going to waste time reimplementing these basic
+	functions.
+*/
 ASC_DLLSPEC double cbrt(double);
 #  ifdef HAVE_ERF
 extern double erf(double);
 #  endif /* HAVE_ERF */
 # endif /* __STDC__ == 1*/
 /**<
- * in the case where __STDC__ is defined but == 0, system headers
- * should provide cbrt, erf.
- */
+	In the case where __STDC__ is defined but == 0, system headers
+	should provide cbrt, erf.
+*/
 #endif /* stdc defined */
 #endif
 
 
 ASC_DLLSPEC CONST struct Func *LookupFunc(CONST char *name);
 /**<
- *  Lookup the function with the given name.  If no match is found, it
- *  returns NULL.  name is the ASCEND name, not C name.
- *  <pre>
- *  Currently defined:
- *         "exp"           e^x
- *         "ln"            natural logarithm of x
- *         "log10"           logarithm of x base 10
- *         "sin"           sine of x
- *         "cos"           cosine of x
- *         "tan"           tangent of x
- *         "sqr"           x*x
- *         "sqrt"          the square root of x
- *         "arcsin"        the inverse sine of x
- *         "arccos"        the inverse cosine of x
- *         "arctan"        the inverse tangent of x
- *
- *         "erf"           the error function
- *         "lnm"           modified natural log:
- *                         x>epsilon? ln(x): x/epsilon +ln(epsilon) -1
- *         "sinh"          hyperbolic sine
- *         "cosh"          hyperbolic cosine
- *         "tanh"          hyperbolic tangent
- *         "arcsinh"       inv hyperbolic sine
- *         "arccosh"       inv hyperbolic cosine
- *         "arctanh"       inv hyperbolic tangent
- *
- *         "cube"          the cube of x
- *         "cbrt"          the cube root of x
- *         "abs"           absolute value of x
- *
- *         "hold"          returns the current value of x.
- *  </pre>
- *  All functions return principal (postive) values if there is a choice.
- *  None of them perform range checking. ln(-1) -> float error.
- */
+	Lookup the function with the given name.  If no match is found, it
+	returns NULL.  name is the ASCEND name, not C name.
+	<pre>
+	Currently defined:
+	       "exp"           e^x
+	       "ln"            natural logarithm of x
+	       "log10"           logarithm of x base 10
+	       "sin"           sine of x
+	       "cos"           cosine of x
+	       "tan"           tangent of x
+	       "sqr"           x*x
+	       "sqrt"          the square root of x
+	       "arcsin"        the inverse sine of x
+	       "arccos"        the inverse cosine of x
+	       "arctan"        the inverse tangent of x
+
+	       "erf"           the error function
+	       "lnm"           modified natural log:
+	                       x>epsilon? ln(x): x/epsilon +ln(epsilon) -1
+	       "sinh"          hyperbolic sine
+	       "cosh"          hyperbolic cosine
+	       "tanh"          hyperbolic tangent
+	       "arcsinh"       inv hyperbolic sine
+	       "arccosh"       inv hyperbolic cosine
+	       "arctanh"       inv hyperbolic tangent
+
+	       "cube"          the cube of x
+	       "cbrt"          the cube root of x
+	       "abs"           absolute value of x
+
+	       "hold"          returns the current value of x.
+	</pre>
+	All functions return principal (postive) values if there is a choice.
+	None of them perform range checking. ln(-1) -> float error.
+*/
 
 extern CONST struct Func *LookupFuncById(enum Func_enum id);
 /**<
- *  Lookups a function by its enumerated type rather than by a string as
- *  in the above function.
- */
+	Lookups a function by its enumerated type rather than by a string as
+	in the above function.
+*/
 
 extern double FuncGetLnmEpsilon(void);
 /**<
- *  Return the current epsilon for the modified log function lnm.
- */
+	Return the current epsilon for the modified log function lnm.
+*/
 #define FuncGetLnmEpsilon() (g_lnm_epsilon)
 
 
 extern void FuncSetLnmEpsilon(double e);
 /**<
- *  Change the current epsilon for the modified log function lnm.
- *  epsilon > 0.0.
- */
+	Change the current epsilon for the modified log function lnm.
+	epsilon > 0.0.
+*/
 ASC_DLLSPEC double g_lnm_epsilon;
 #define FuncSetLnmEpsilon(e) \
    (e>(double)0.0 ? g_lnm_epsilon=e : FPRINTF(ASCERR,"bad lnm eps"))
 
 
 /**<
- *  declare cbrt() and erf() since some vendors put
- *  these functions in odd headers
- */
+	declare cbrt() and erf() since some vendors put
+	these functions in odd headers
+*/
 ASC_DLLSPEC double cbrt(double);
 #ifdef HAVE_ERF
 extern double erf(double);
 #endif /* HAVE_ERF */
 
-
 #ifdef NDEBUG
 # define ascnint(d) (((int) (d)>=0.0 ? floor((d) + 0.5) : -floor(0.5 - (d))))
 /**<
- *  Converts a double to the nearest integer (release version).
- *  @param d double, the real number to convert.
- *  @return The nearest integer as an int.
- */
+	Converts a double to the nearest integer (release version).
+	@param d double, the real number to convert.
+	@return The nearest integer as an int.
+*/
 #else
 # define ascnint(a) ascnintF(a)
 /**<
- *  Converts a double to the nearest integer (debug version).
- *  @param d double, the real number to convert.
- *  @return The nearest integer as an int.
- */
+	Converts a double to the nearest integer (debug version).
+	@param d double, the real number to convert.
+	@return The nearest integer as an int.
+*/
 ASC_DLLSPEC int ascnintF(double);
 /**<
- *  Implementation function for debug version of ascnint().
- *  Do not call this function directly - use ascnint() instead.
- */
+	Implementation function for debug version of ascnint().
+	Do not call this function directly - use ascnint() instead.
+*/
 #endif
 
 
@@ -176,26 +173,25 @@ ASC_DLLSPEC double lnm(double x);
 ASC_DLLSPEC double dlnm(double x);
 ASC_DLLSPEC double dlnm2(double x);
 /**<
- *  Modified natural log function and derivatives.
- *  <pre>
- *
- *                   ( ln(x)                       if x.ge.epsilon
- *         lnm(x)=   (
- *                   ( x/epsilon + ln(epsilon) - 1      otherwise
- *
- *
- *                                  ( 1/x          if x.ge.epsilon
- *         d( lnm(x) )/dx       =   (
- *                                  ( 1/epsilon    otherwise
- *
- *
- *                                  ( -1/x^2       if x.ge.epsilon
- *         d^2( lnm(x) )/dx^2   =   (
- *                                  ( 0            otherwise
- *
- *  epsilon determined by FuncGet/SetLnmEpsilon.
- *  </pre>
- */
+	Modified natural log function and derivatives.
+	<pre>
+
+	                 ( ln(x)                       if x.ge.epsilon
+	       lnm(x)=   (
+	                 ( x/epsilon + ln(epsilon) - 1      otherwise
+
+
+	                                ( 1/x          if x.ge.epsilon
+	       d( lnm(x) )/dx       =   (
+	                                ( 1/epsilon    otherwise
+
+	                                ( -1/x^2       if x.ge.epsilon
+	       d^2( lnm(x) )/dx^2   =   (
+	                                ( 0            otherwise
+
+	epsilon determined by FuncGet/SetLnmEpsilon.
+	</pre>
+*/
 
 ASC_DLLSPEC double dtanh(double x);
 ASC_DLLSPEC double dtanh2(double x);
@@ -209,8 +205,8 @@ ASC_DLLSPEC double darccosh2(double x);
 ASC_DLLSPEC double darctanh(double x);
 ASC_DLLSPEC double darctanh2(double x);
 /**<
- *  Zero, first and second partials of (inverse) hyperbolic functions.
- */
+	Zero, first and second partials of (inverse) hyperbolic functions.
+*/
 
 ASC_DLLSPEC double sqr(double x);
 ASC_DLLSPEC double dsqr(double x);
@@ -219,34 +215,34 @@ ASC_DLLSPEC double cube(double x);
 ASC_DLLSPEC double dcube(double x);
 ASC_DLLSPEC double dcube2(double x);
 /**<
- *  Zero, first and second partials of x for sqr, cube.
- */
+	Zero, first and second partials of x for sqr, cube.
+*/
 
 ASC_DLLSPEC double asc_ipow(double a, int n);
 ASC_DLLSPEC double asc_d1ipow(double a, int n);
 ASC_DLLSPEC double asc_d2ipow(double a, int n);
 /**<
- *  Integer power function, a^n, and its first and second derivatives.
- *  d = asc_ipow(a,n);
- *  d1 = asc_d1ipow(a,n);
- *  d2 = asc_d2ipow(a,n);
- *
- *  Special cases ipow:
- *  a^0 = 1, 0^n = 0, 0^0=1 -- the last is mathematically undefined,
- *  so this function should not be called with 0.0,0.
- *
- *  Special cases d1ipow,d2ipow:
- */
+	Integer power function, a^n, and its first and second derivatives.
+	d = asc_ipow(a,n);
+	d1 = asc_d1ipow(a,n);
+	d2 = asc_d2ipow(a,n);
+
+	Special cases ipow:
+	a^0 = 1, 0^n = 0, 0^0=1 -- the last is mathematically undefined,
+	so this function should not be called with 0.0,0.
+
+	Special cases d1ipow,d2ipow:
+*/
 
 ASC_DLLSPEC double hold(double x);
 /**<
- *  Returns the value it is passed.
- *  The primary purpose is as an operator so we can write
- *  equations of the form x = hold(x) which act essentially
- *  as a fixed flag when a solver is partitioning.
- *  If x is fixed, the equation is singular.
- *  hold(x) is a constant value, so its derivatives are 0.
- */
+	Returns the value it is passed.
+	The primary purpose is as an operator so we can write
+	equations of the form x = hold(x) which act essentially
+	as a fixed flag when a solver is partitioning.
+	If x is fixed, the equation is singular.
+	hold(x) is a constant value, so its derivatives are 0.
+*/
 
 ASC_DLLSPEC double dsqrt(double x);
 ASC_DLLSPEC double dsqrt2(double x);
@@ -257,11 +253,11 @@ ASC_DLLSPEC double dfabs2(double x);
 ASC_DLLSPEC double dhold(double x);
 #define dhold2 dhold
 /**<
- *  first and second partials of sqrt cbrt fabs hold
- *  dfabs is undefined at 0. We take the standard kluge: d(abs(x=0))/dx=0
- *  dfabs2(x) = 0. It might be thought of as infinite at x=0, but not here.
- *  dhold, dhold2 = 0 for all x.
- */
+	First and second partials of sqrt cbrt fabs hold
+	dfabs is undefined at 0. We take the standard kluge: d(abs(x=0))/dx=0
+	dfabs2(x) = 0. It might be thought of as infinite at x=0, but not here.
+	dhold, dhold2 = 0 for all x.
+*/
 
 ASC_DLLSPEC double dasin(double x);
 ASC_DLLSPEC double dasin2(double x);
@@ -274,94 +270,86 @@ ASC_DLLSPEC double dtan2(double x);
 ASC_DLLSPEC double datan(double x);
 ASC_DLLSPEC double datan2(double x);
 /**<
- *  First and second partials of the cosine, tangent, arctangent functions
- */
+	First and second partials of the cosine, tangent, arctangent functions
+*/
 
 #ifdef HAVE_ERF
 ASC_DLLSPEC double derf(double x);
 ASC_DLLSPEC double derf2(double x);
 #endif /* HAVE_ERF */
 /**<
- *  First and second derivatives of erf()
- */
+	First and second derivatives of erf()
+*/
 
 ASC_DLLSPEC CONST char *FuncName(CONST struct Func *f);
 /**<
- *  Return the ASCEND language name of the function.
- *  Not a symchar.
- */
+	Return the ASCEND language name of the function. Not a symchar.
+*/
 
 ASC_DLLSPEC CONST char *FuncCName(CONST struct Func *f);
 /**<
- *  Return the C language name of the function, if any.
- */
+	Return the C language name of the function, if any.
+*/
 
 ASC_DLLSPEC CONST char *FuncYName(CONST struct Func *f);
 /**<
- *  Return the Yacas language name of the function.
- *  Not a symchar.
- */
+	Return the Yacas language name of the function. Not a symchar.
+*/
 
 ASC_DLLSPEC CONST char *FuncDeriv1CName(CONST struct Func *f);
 /**<
- *  Return the C language name of the function first derivative, if any.
- */
+	Return the C language name of the function first derivative, if any.
+*/
 
 ASC_DLLSPEC CONST char *FuncDeriv2CName(CONST struct Func *f);
 /**<
- *  Return the C language name of the function second derivative, if any.
- */
+	Return the C language name of the function second derivative, if any.
+*/
 
 ASC_DLLSPEC enum Func_enum FuncId(CONST struct Func *f);
 /**<
- *  Return the identification of the function.
- */
+	Return the identification of the function.
+*/
 
 ASC_DLLSPEC CONST dim_type *FuncDimens(CONST struct Func *f);
 /**<
- *  Return the dimensionality required for the arg of the function.
- *  sin, cos, tan -> P.
- *  arc(sin,cos,tan),exp,ln,log,lnm,erf ->dimensionless.
- *  sqrt->wilddimension (user must check for even poweredness of arg)
- *  as this may be the case for an infinite # of different dims.
- *  sqr ->wilddimension (sqr, abs, cube anything you like.)
- */
+	Return the dimensionality required for the arg of the function.
+	sin, cos, tan -> P.
+	arc(sin,cos,tan),exp,ln,log,lnm,erf ->dimensionless.
+	sqrt->wilddimension (user must check for even poweredness of arg)
+	as this may be the case for an infinite # of different dims.
+	sqr ->wilddimension (sqr, abs, cube anything you like.)
+*/
 
 ASC_DLLSPEC double FuncEval(CONST struct Func *f, double u);
 /**<
- *  Return f(u).
- */
+	Return f(u).
+*/
 
-extern double FuncEvalSafe(CONST struct Func *f,
-                           double u,
-                           enum safe_err *not_safe);
+extern double FuncEvalSafe(CONST struct Func *f, double u, enum safe_err *not_safe);
 /**<
- *  Return f(u) (safe version).
- */
+	Return f(u) (safe version).
+*/
 
 ASC_DLLSPEC double FuncDeriv(CONST struct Func *f, double u);
 /**<
- *  Return df/du evaluated at u.
- */
+	Return df/du evaluated at u.
+*/
 
-extern double FuncDerivSafe(CONST struct Func *f,
-                            double u,
-                            enum safe_err *not_safe);
+extern double FuncDerivSafe(CONST struct Func *f, double u, enum safe_err *not_safe);
 /**<
- *  Return df/du evaluated at u (safe version).
- */
+	Return df/du evaluated at u (safe version).
+*/
 
 ASC_DLLSPEC double FuncDeriv2(CONST struct Func *f, double u);
 /**<
- *  Return the second derivative (d^2f/du^2) evaluated at u.
- */
+	Return the second derivative (d^2f/du^2) evaluated at u.
+*/
 
-extern double FuncDeriv2Safe(CONST struct Func *f,
-                             double u,
-                             enum safe_err *not_safe);
+extern double FuncDeriv2Safe(CONST struct Func *f, double u, enum safe_err *not_safe);
 /**<
- *  Return the second derivative (d^2f/du^2) evaluated at u (safe version).
- */
+	Return the second derivative (d^2f/du^2) evaluated at u (safe version).
+*/
 
 /* @} */
 

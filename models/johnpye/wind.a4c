@@ -1,0 +1,156 @@
+(* ASCEND model of wind system in the Pilbara *)
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "johnpye/tgamma/tgamma";
+
+MODEL windturbine;
+	CF "capacity factor" IS_A factor;
+	Edd_ann "annual energy output per swept area" IS_A energy_per_area;
+	Edddot_cap "installed capacity per swept area" IS_A power_per_area;
+	t_ann IS_A time;
+
+	Edddot_cap = Edd_ann / CF / t_ann;
+METHODS
+METHOD default;
+	FIX t_ann := 1 {yr};
+END default;
+METHOD on_load;
+	RUN default;
+	FIX CF := 0.40;
+END on_load;
+END windturbine;
+
+MODEL windfarm;
+	NOTES 'description' SELF {
+		Wind farm -- many turbines. Each turbine is assumed, at minimum, to
+		know its capacity per swept area (as a ratio), and its annual output per
+		swept area (also as a ratio).
+	} END NOTES;
+	E_ann "annual production" IS_A energy;
+	Edot_cap "installed capacity" IS_A energy_rate;
+
+	TU IS_A windturbine;
+	CF ALIASES TU.CF;
+	A "total swept area" IS_A area;
+	sep_cross "cross-wind separation (diameters)" IS_A factor;
+	sep_down "down-wind sepearation (diameters)" IS_A factor;
+	A_land "total land area" IS_A area;
+
+	A_land = (sep_cross * sep_down)/(0.25{PI}) * A;
+
+	E_ann = TU.Edd_ann * A;
+	Edot_cap = TU.Edddot_cap * A;
+METHODS
+METHOD default;
+	RUN TU.default;
+	A_land.nominal := 1000 {km^2};
+	FIX sep_cross := 5;
+	FIX sep_down := 10;
+END default;
+END windfarm;
+
+MODEL windturbine_beck1 REFINES windturbine;
+	rho "air density" IS_A mass_density;
+	v_av "average wind speed" IS_A speed;
+	eta "turbine average efficiency" IS_A factor;
+	
+	Edddot_avg IS_A power_per_area;
+	Edddot_avg = eta * 0.5 * rho * v_av^3;
+	Edd_ann = Edddot_avg * t_ann;
+METHODS
+METHOD on_load;
+	RUN windturbine::default;
+	FIX eta := 0.50;
+	FIX CF := 0.4;
+	FIX rho := 1.3 {kg/m^3};
+	FIX v_av := 8 {m/s};
+END on_load;
+END windturbine_beck1;
+
+MODEL windfarm_beck1 REFINES windfarm;
+	TU IS_REFINED_TO windturbine_beck1;
+METHODS
+METHOD on_load;
+	RUN TU.on_load;
+	RUN default;
+	FIX E_ann := 3018 {TWh};
+END on_load;
+END windfarm_beck1;
+
+MODEL windturbine_weibull REFINES windturbine;
+	k IS_A factor;
+	C IS_A speed;
+
+	v_c, v_r, v_f IS_A speed;
+
+	v IS_A speed;
+	Edot IS_A energy_rate;
+	P_n IS_A factor;
+	P_n = (v^k - v_c^k)/(v_r^k - v_c^k);
+	
+	Edot = Edot_cap * (0.5+0.5*abs(v-v_c+1e-5)/(v-v_c+1e-5))*P_n; (* works everywhere except v=v_c! *)
+
+	(* 'general' model of Chang et al http://dx.doi.org/10.1016/j.energy.2014.05.091 *)
+	CF = (exp(-(v_c/C)^k) - (exp(-(v_r/C)^k))) / ((v_r/C)^k - (v_c/C)^k) - exp(-(v_f/C)^k);
+
+	(* mean speed (using gamma function, external relation *)
+	x1p1ok IS_A factor;
+	x1p1ok = 1 + 1/k;
+	gamma IS_A factor;
+	tgamma_rel: tgamma(x1p1ok : INPUT; gamma : OUTPUT);
+
+	v_av IS_A speed;
+	v_av = C * gamma;
+
+	d "rotor diameter" IS_A distance;
+	A "swept area" IS_A area;
+
+	A = 1{PI}/4 * d^2;
+	
+	rho "air density" IS_A mass_density;
+	eta "turbine efficiency aka C_p" IS_A factor; 
+	
+	Edddot_cap = eta * 1./2 * rho * v_r^3;
+
+	Edot_cap IS_A energy_rate;
+	Edot_cap = Edddot_cap * A;
+METHODS
+METHOD on_load;
+	RUN windturbine::default;
+	FIX k := 2.0;
+	FIX C := 7 {m/s};
+	FIX v := 8 {m/s};
+	FIX d := 126 {m};
+	FIX rho := 1.2 {kg/m^3};
+	RUN class_II;
+END on_load;
+METHOD class_III;
+	FIX v_c := 4 {m/s};
+	FIX v_r := 10 {m/s};
+	FIX v_f := 20 {m/s};
+	FIX eta := 0.5;
+END class_III;
+METHOD class_II;
+	FIX v_c := 4 {m/s};
+	FIX v_r := 11 {m/s};
+	FIX v_f := 22.5 {m/s};
+	FIX eta := 0.5;
+END class_II;
+METHOD class_I;
+	FIX v_c := 4 {m/s};
+	FIX v_r := 12 {m/s};
+	FIX v_f := 25 {m/s};
+	FIX eta := 0.5;
+END class_I;
+END windturbine_weibull;
+
+MODEL windfarm_weibull REFINES windfarm;
+	TU IS_REFINED_TO windturbine_weibull;
+METHODS
+METHOD on_load;
+	RUN TU.on_load;
+	RUN default;
+	FIX E_ann := 3018 {TWh};
+END on_load;
+END windfarm_weibull;
+
+

@@ -1,0 +1,18 @@
+Import('env')
+tgamma_env = env.Clone()
+
+srcs = Split("""
+	asc_tgamma.c
+""")
+
+tgamma_env.Append(LIBPATH=['#'])
+tgamma_env.Append(LIBS=['ascend'])
+
+lib = tgamma_env.SharedLibrary("tgamma",srcs
+	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+	,SHLIBPREFIX = env['EXTLIB_PREFIX']
+)
+
+env['extfns'] += [lib]
+
+# vim: set syntax=python:
