@@ -54,7 +54,7 @@ static const IncompressibleData incomp_data_chloridesalt = {
 static const ThermalConductivityData thcond_data_chloridesalt = {
 	.source = CLSALT_SOURCE " " CLSALT_SOURCEURL
 	,.type = FPROPS_THCOND_POLY
-	,.data = {.poly=(ThCondPoly){
+	,.data = {.poly={
 		.np = 2
 		,.pt = (const ThCondPolyTerm[]){
 			{5.355150e-1, 0}
@@ -68,7 +68,7 @@ static const ThermalConductivityData thcond_data_chloridesalt = {
 static const ViscosityData visc_data_chloridesalt = {
 	.source = CLSALT_SOURCE " " CLSALT_SOURCEURL
 	,.type = FPROPS_VISC_EPT
-	,.data = {.ept=(ViscDataEpt){
+	,.data = {.ept={
 		.mu_star = 1
 		,.np = 3
 		,.pt = (const ViscPowTerm[]){

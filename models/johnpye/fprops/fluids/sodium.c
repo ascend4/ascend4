@@ -65,7 +65,7 @@ static const IncompressibleData incomp_data_sodium = {
 static const ThermalConductivityData thcond_data_sodium = {
 	.source = SODIUM_SOURCE " " SODIUM_SOURCEURL
 	,.type = FPROPS_THCOND_POLY
-	,.data = {.poly=(ThCondPoly){
+	,.data = {.poly={
 		.np = 4
 		,.pt = (const ThCondPolyTerm[]){
 			{124.67, 0}
@@ -81,7 +81,7 @@ static const ThermalConductivityData thcond_data_sodium = {
 static const ViscosityData visc_data_sodium = {
 	.source = SODIUM_SOURCE " " SODIUM_SOURCEURL
 	,.type = FPROPS_VISC_EPT
-	,.data = {.ept=(ViscDataEpt){
+	,.data = {.ept={
 		.mu_star = 1
 		,.np = 2
 		,.pt = (const ViscPowTerm[]){
