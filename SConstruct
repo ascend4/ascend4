@@ -1149,7 +1149,7 @@ def CheckSwigVersion(context):
 		):
 		msg = "ok"
 		res = True
-	elif maj == 2 or maj==3:
+	elif maj == 2 or maj==3 or maj==4:
 		msg = "ok"
 		res = True
 
