@@ -1270,9 +1270,12 @@ ROOT:
 %%
 """
 
+print("YACC =",env['YACC'])
+
 def CheckYacc(context):
 	context.Message("Checking for Yacc ('%s')... " % context.env.get('YACC'))
-	is_ok = context.TryCompile(yacc_test_text,".y")
+	#is_ok = context.TryCompile(yacc_test_text,".y")
+	is_ok = context.TryAction('$YACC < $SOURCE > $TARGET',yacc_test_text,".y")
 	context.Result(is_ok)
 	return is_ok
 
@@ -1303,7 +1306,8 @@ main(){
 
 def CheckLex(context):
 	context.Message("Checking for Lex ('%s')... " % context.env.get('LEX'))
-	is_ok = context.TryCompile(lex_test_text,".l")
+	#is_ok = context.TryCompile(lex_test_text,".l")
+	is_ok = context.TryAction('$LEX < $SOURCE > $TARGET',lex_test_text,".l")
 	context.Result(is_ok)
 	return is_ok
 
@@ -2129,7 +2133,7 @@ def sconsversioncheck():
 	import SCons
 	v = SCons.__version__.split(".")
 	if v[0] != '0':
-		if v[0] == '1' or v[0] == '2' or v[0] == '3':
+		if v[0] == '1' or v[0] == '2' or v[0] == '3' or v[0] == '4':
 			return 1;
 		return 0
 	if int(v[1]) >= 97:
@@ -2288,10 +2292,12 @@ if conf.CheckSigReset() is False:
 
 # YACC
 
-if conf.CheckYacc():
+#if conf.CheckYacc():
+if env['YACC']:
 	conf.env['HAVE_YACC']=True
 
-if conf.CheckLex():
+#if conf.CheckLex():
+if env['LEX']:
 	conf.env['HAVE_LEX']=True
 
 if conf.CheckLexDestroy():

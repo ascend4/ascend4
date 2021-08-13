@@ -16,10 +16,10 @@ test_env.Append(
 	, CPPDEFINES = ['-DASC_SHARED']
 )
 
-if test_env.has_key('CUNIT_CPPPATH'):
+if 'CUNIT_CPPPATH' in test_env:
 	test_env.Append(CPPPATH=test_env['CUNIT_CPPPATH'])
 
-if test_env.has_key('CUNIT_LIBPATH'):
+if 'CUNIT_LIBPATH' in test_env:
 	test_env.Append(LIBPATH=test_env['CUNIT_LIBPATH'])
 
 testprog = test_env.Program('test',srcs)
