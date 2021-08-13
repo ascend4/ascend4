@@ -54,9 +54,9 @@ class AscendSelfTester(Ascend):
 			filename = 'johnpye/%s.a4c' % modelname
 		self.L.load(filename)
 		T = self.L.findType(modelname)
-		M = T.getSimulation('sim',1)
+		M = T.getSimulation('sim',True)
 		M.setSolver(ascpy.Solver(solvername))
-		for k,v in parameters.items():
+		for k,v in list(parameters.items()):
 			M.setParameter(k,v)
 		M.solve(ascpy.Solver(solvername),ascpy.SolverReporter())	
 		M.run(T.getMethod('self_test'))
@@ -102,7 +102,7 @@ class TestCompiler(Ascend):
 	def defaultmethodstest(self,modelname):
 		self.L.load("test/defaultmethods.a4c")
 		T = self.L.findType(modelname)
-		M = T.getSimulation('sim',1)
+		M = T.getSimulation('sim',True)
 		M.run(T.getMethod('on_load'))
 		M.run(T.getMethod('self_test'))
 		return M
@@ -178,10 +178,7 @@ class TestSystem(AscendSelfTester):
 		M = self._run('testlog10')
 		M.run(self.L.findType('testlog10').getMethod('on_load'))
 		if platform.system!="Windows":
-			f = file('temp.png','wb')
-			# currently M.write is failing...JP 20120511.
-			M.write(f,"dot")
-			f.close()
+			M.write('temp.png',"dot")
 		else:
 			self.fail("not implemented on windows")
 
@@ -233,7 +230,7 @@ class TestSolver(AscendSelfTester):
 	def testrelinclude(self):
 		self.L.load('test/relinclude.a4c')
 		T = self.L.findType('relinclude')
-		M = T.getSimulation('sim',1)
+		M = T.getSimulation('sim',True)
 		M.eq1.setIncluded(True)
 		M.eq2.setIncluded(False)
 		M.eq3.setIncluded(False)
@@ -257,7 +254,7 @@ class TestBinTokens(AscendSelfTester):
 		ascpy.getCompiler().setBinaryCompilation(True)
 		self.L.load('johnpye/testlog10.a4c')
 		T = self.L.findType('testlog10')
-		M = T.getSimulation('sim',1)
+		M = T.getSimulation('sim',True)
 		M.build()
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 
@@ -332,7 +329,7 @@ class TestIntegrator(Ascend):
 	# this routine is reused by both testIDA and testLSODE
 	def _testIntegrator(self,integratorname):
 		self.L.load('johnpye/shm.a4c')
-		M = self.L.findType('shm').getSimulation('sim',1)
+		M = self.L.findType('shm').getSimulation('sim',True)
 		M.setSolver(ascpy.Solver('QRSlv'))
 		P = M.getParameters()
 		M.setParameter('feastol',1e-12)
@@ -364,7 +361,7 @@ class TestIntegrator(Ascend):
 
 	def testInvalidIntegrator(self):
 		self.L.load('johnpye/shm.a4c') 
-		M = self.L.findType('shm').getSimulation('sim',1)
+		M = self.L.findType('shm').getSimulation('sim',True)
 		M.setSolver(ascpy.Solver('QRSlv'))
 		I = ascpy.Integrator(M)
 		try:
@@ -381,7 +378,7 @@ class TestIntegrator(Ascend):
 
 	def testparameters(self):
 		self.L.load('johnpye/shm.a4c')
-		M = self.L.findType('shm').getSimulation('sim',1)
+		M = self.L.findType('shm').getSimulation('sim',True)
 		M.build()
 		I = ascpy.Integrator(M)
 		I.setEngine('IDA')
@@ -414,7 +411,7 @@ class TestLSODE(Ascend):
 	def testzill(self):
 		self.L.load('johnpye/zill.a4c')
 		T = self.L.findType('zill')
-		M = T.getSimulation('sim',1)
+		M = T.getSimulation('sim',True)
 		M.setSolver(ascpy.Solver('QRSlv'))
 		I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
@@ -471,9 +468,8 @@ class TestLSODE(Ascend):
 	def testwritegraph(self):
 		self.L.load('johnpye/lotka.a4c')
 		M = self.L.findType('lotka').getSimulation('sim',1)
-		F = file('lotka.png','w')
 		M.build()
-		M.write(F,"dot")
+		M.write('lotka.png',"dot")
 
 
 #-------------------------------------------------------------------------------
@@ -771,7 +767,7 @@ class TestSteam(AscendSelfTester):
 		#M.qdot_s.setRealValueWithUnits(1000,"W/m")
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		#M.setParameter('
-	 	I = ascpy.Integrator(M)
+		I = ascpy.Integrator(M)
 		I.setEngine('LSODE')
 		I.setReporter(ascpy.IntegratorReporterConsole(I))
 		I.setLinearTimesteps(ascpy.Units("s"), 0, 3600, 10)
@@ -1673,7 +1669,7 @@ if __name__=='__main__':
 		sys.stderr.write("  export ASCENDLIBRARY=%s\n" % os.environ.get('ASCENDLIBRARY'))
 		sys.stderr.write("  export ASCENDSOLVERS=%s\n" % os.environ.get('ASCENDSOLVERS'))
 		sys.stderr.flush()
-		os.execvp("python",[script] + sys.argv)
+		os.execvp(sys.executable,[script] + sys.argv)
 		exit(1)
 	else:
 		sys.stderr.write("Got...\n")
