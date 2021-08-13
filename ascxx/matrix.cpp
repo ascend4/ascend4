@@ -31,9 +31,11 @@ Matrix::Matrix(mtx_matrix_t M) : M(M){
 	Return 0 on success, 1 on error
 */
 int
-Matrix::write(FILE *fp, const string &format) const{
+Matrix::write(char *fname, const string &format) const{
 
 	CONSOLE_DEBUG("HERE IN MATRIX::WRITE");
+	
+	FILE *fp = fopen(fname,"w");
 
 	CONSOLE_DEBUG("Writing matrix in format '%s'",format.c_str());
 
@@ -51,6 +53,8 @@ Matrix::write(FILE *fp, const string &format) const{
 	}else{
 		throw runtime_error("Unrecognised export format requested");
 	}
+	
+	fclose(fp);
 
 	return 0;
 }

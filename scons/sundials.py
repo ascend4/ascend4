@@ -126,25 +126,25 @@ def generate(env):
 		env['HAVE_SUNDIALS'] = False
 
 def find_sundials_config(env):
-  """
-  Try and figure out if sundials-config is installed on this machine, and if so, where.
-  """
-  if SCons.Util.can_read_reg:
-    # If we can read the registry, get the NSIS command from it
-    try:
-		# 0x20019 is KEY_READ, 
-		k = SCons.Util.RegOpenKeyEx(SCons.Util.hkey_mod.HKEY_LOCAL_MACHINE,'SOFTWARE\\SUNDIALS',0,0x20019)
-		val, tok = SCons.Util.RegQueryValueEx(k,None)
-		ret = val + os.path.sep + 'makensis.exe'
-		if os.path.exists(ret):
-			return '"' + ret + '"'
-		else:
-			return None
-    except:
-		pass # Couldn't find the key, just act like we can't read the registry
-  # Hope it's on the path, but note that we have to be careful with PATHEXT since sundials-config doesn't have an 
-  # an executable-signifying suffix (seems like a weakness with env.WhereIs in SCons??
-  return WhereIs('sundials-config',path=os.environ['PATH'],pathext="")	
+	"""
+	Try and figure out if sundials-config is installed on this machine, and if so, where.
+	"""
+	if SCons.Util.can_read_reg:
+	# If we can read the registry, get the NSIS command from it
+		try:
+			# 0x20019 is KEY_READ, 
+			k = SCons.Util.RegOpenKeyEx(SCons.Util.hkey_mod.HKEY_LOCAL_MACHINE,'SOFTWARE\\SUNDIALS',0,0x20019)
+			val, tok = SCons.Util.RegQueryValueEx(k,None)
+			ret = val + os.path.sep + 'makensis.exe'
+			if os.path.exists(ret):
+				return '"' + ret + '"'
+			else:
+				return None
+		except:
+			pass # Couldn't find the key, just act like we can't read the registry
+	# Hope it's on the path, but note that we have to be careful with PATHEXT since sundials-config doesn't have an 
+	# an executable-signifying suffix (seems like a weakness with env.WhereIs in SCons??
+	return WhereIs('sundials-config',path=os.environ['PATH'],pathext="")	
 
 def exists(env):
 	if find_sundials_config(env) != None:

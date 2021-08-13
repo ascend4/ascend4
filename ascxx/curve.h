@@ -12,8 +12,8 @@ class Curve : public Instanc{
 private:
 	friend class Plot;
 	explicit Curve(const Instanc &);	
-	Curve();
 public:
+	Curve(); // hack -- this was previously private. not sure what this breaks.
 	Curve(const Curve &);
 	std::vector<double> x;
 	std::vector<double> y;

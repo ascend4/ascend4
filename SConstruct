@@ -10,7 +10,7 @@ version = "0.9.10"
 soname_major_int = "1"
 soname_minor = ".0"
 
-import sys, os, commands, platform, distutils.sysconfig, os.path, re, types
+import sys, os, subprocess, platform, distutils.sysconfig, os.path, re, types
 import subprocess
 
 # version number for python, useful on Windows
@@ -193,14 +193,14 @@ else: # LINUX, unix we hope
 		default_tktable_lib = "Tktable2.9"
 
 	if os.path.exists("/etc/lsb-release"):
-		_f = file("/etc/lsb-release")
+		_f = open("/etc/lsb-release")
 		_r = re.compile("([A-Z][^=]*)=(.*)")
 		LSB = {}
 		for l in _f:
 			_m = _r.match(l.strip())
 			LSB[_m.group(1)] = _m.group(2)
-                print LSB
-		if LSB.has_key('DISTRIB_ID') and LSB['DISTRIB_ID'] == "Ubuntu":
+		print(LSB)
+		if 'DISTRIB_ID' in LSB and LSB['DISTRIB_ID'] == "Ubuntu":
 			if float(LSB['DISTRIB_RELEASE']) >= 9.04:
 				default_tcl_lib = "tcl8.5"
 				default_tk_lib = "tk8.5"
@@ -216,7 +216,7 @@ else: # LINUX, unix we hope
 	if os.path.exists("/etc/redhat-release"):
 		default_tcl_cpppath = "/usr/include"
 		default_tcl_lib = "tcl"
-		if sys.maxint > 2**32:
+		if sys.maxsize > 2**32:
 			default_tcl_libpath = "/usr/lib64"
 		else:
 			default_tcl_libpath = "/usr/lib"
@@ -238,7 +238,7 @@ else: # LINUX, unix we hope
 	need_libm = True
 	if not os.path.isdir(default_tcl):
 		default_tcl = '/usr'
-	python_exe = distutils.sysconfig.EXEC_PREFIX+"/bin/python"
+	python_exe = sys.executable
 	default_with_scrollkeeper=False
 	pathsep = ":"
 
@@ -805,7 +805,7 @@ if platform.system()=="Windows":
 		tools += ['mingw']
 		envadditional['IS_MINGW']=True
 	else:
-		print "Assuming VC++ build environment (Note: MinGW is preferred)"
+		print("Assuming VC++ build environment (Note: MinGW is preferred)")
 		envenv = {
 			'PATH':os.environ['PATH']
 			,'INCLUDE':os.environ['INCLUDE']
@@ -837,7 +837,7 @@ vars.Update(env)
 
 for l in ['SUNDIALS','IPOPT']:
 	var = "%s_LIBS" % l
-	if env.get(var) and not isinstance(env[var],types.ListType):
+	if env.get(var) and not isinstance(env[var],list):
 		env[var] = env[var].split(",")
 
 if 'LSOD' in env['WITH_SOLVERS']:
@@ -852,9 +852,9 @@ Help(vars.GenerateHelpText(env))
 if env['ENV'].get('HOST_PREFIX'):
 	triplet = re.compile("^[a-z0-9_]+-[a-z0-9_]+-[a-z0-9]+$")
 	if not triplet.match(env['ENV']['HOST_PREFIX']):
-		print "NOTE: invalid host triplet from environment variable HOST_PREFIX has been ignored"
+		print("NOTE: invalid host triplet from environment variable HOST_PREFIX has been ignored")
 	else:
-		print "NOTE: using HOST_PREFIX=%s from environment to override HOST_PREFIX SCons variable" % env['ENV']['HOST_PREFIX']
+		print("NOTE: using HOST_PREFIX=%s from environment to override HOST_PREFIX SCons variable" % env['ENV']['HOST_PREFIX'])
 		env['HOST_PREFIX'] = env['ENV']['HOST_PREFIX']+"-"
 
 with_tcltk = env.get('WITH_TCLTK')
@@ -1057,7 +1057,7 @@ def get_swig_version(env):
 	if not WhereIs(env['SWIG']):
 		raise RuntimeError("'%s' not found in PATH"%env.subst("$SWIG"))
 	cmd = [env['SWIG'],'-version']
-	p = subprocess.Popen(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	p = subprocess.Popen(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
 	output, err = p.communicate()
 	
 	restr = r"\s*SWIG\s+Version\s+(?P<maj>[0-9]+)\.(?P<min>[0-9]+)\.(?P<pat>[0-9]+)\b"
@@ -1077,7 +1077,7 @@ def CheckSwigVersion(context):
 	try:
 		context.Message("Checking version of SWIG... ")
 		maj,min,pat = get_swig_version(context.env)
-	except Exception,e:
+	except Exception as e:
 		context.Result("Failed (%s)" % str(e))
 		return False;
 	
@@ -1091,7 +1091,7 @@ def CheckSwigVersion(context):
 		):
 		msg = "ok"
 		res = True
-	elif maj == 2 or maj==3:
+	elif maj >= 2:
 		msg = "ok"
 		res = True
 
@@ -1128,7 +1128,7 @@ class KeepContext:
 			#print "Keeping env %s = %s" % (k,context.env.get(k))
 			self.keep[k]=context.env.get(k)
 		
-		if context.env.has_key(varprefix+'_CPPPATH'):
+		if varprefix+'_CPPPATH' in context.env:
 			context.env.AppendUnique(CPPPATH=[env[varprefix+'_CPPPATH']])
 			#print "Adding '"+str(env[varprefix+'_CPPPATH'])+"' to cpp path"
 
@@ -1139,14 +1139,14 @@ class KeepContext:
 				LINKFLAGS=[staticlib]
 			)
 		else:
-			if context.env.has_key(varprefix+'_LIBPATH'):
+			if varprefix+'_LIBPATH' in context.env:
 				context.env.Append(LIBPATH=[env[varprefix+'_LIBPATH']])
 				#print "Adding '"+str(env[varprefix+'_LIBPATH'])+"' to lib path"
 
-			if context.env.has_key(varprefix+'_LIB'):
+			if varprefix+'_LIB' in context.env:
 				context.env.Append(LIBS=[env[varprefix+'_LIB']])
 				#print "Adding '"+str(env[varprefix+'_LIB'])+"' to libs"	
-			elif context.env.has_key(varprefix+'_LIBS'):
+			elif varprefix+'_LIBS' in context.env:
 				context.env.AppendUnique(LIBS=env[varprefix+'_LIBS'])
 
 	def restore(self,context):
@@ -1155,7 +1155,7 @@ class KeepContext:
 		#print "..."
 		for k in self.keep:
 			if self.keep[k]==None:
-				if context.env.has_key(k):
+				if k in context.env:
 					#print "Clearing "+str(k)
 					del context.env[k];
 			else:
@@ -1184,7 +1184,7 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False,testna
 	#print "LIBS is currently:",context.env.get('LIBS')
 	keep = KeepContext(context,varprefix,static)
 
-	if not context.env.has_key(varprefix+'_LIB') and not context.env.has_key(varprefix+'_LIBS'):
+	if varprefix+'_LIB' not in context.env and varprefix+'_LIBS' not in context.env:
 		# if varprefix_LIB were in env, KeepContext would 
 		# have appended it already
 		if isinstance(libname,str):
@@ -1242,7 +1242,7 @@ int main(void){
 
 def CheckGccVisibility(context):
 	context.Message("Checking for GCC 'visibility' capability... ")
-	if not context.env.has_key('WITH_GCCVISIBILITY') or not env['WITH_GCCVISIBILITY']:
+	if 'WITH_GCCVISIBILITY' not in context.env or not env['WITH_GCCVISIBILITY']:
 		context.Result("disabled")
 		return 0
 	is_ok = context.TryCompile(gccvisibility_test_text,".c")
@@ -1596,7 +1596,7 @@ def CheckPythonLib(context):
 		python_libpath += [os.path.join(sys.prefix,"libs")]
 	elif platform.system()=="Darwin":
 		python_libpath += [cfig['LIBPL']]
-                python_linkflags += cfig['LIBS'].split(' ')
+		python_linkflags += cfig['LIBS'].split(' ')
 	else:
 		# checked on Linux and SunOS
 		if cfig['LDLIBRARY']==cfig['LIBRARY']:
@@ -2129,7 +2129,7 @@ def sconsversioncheck():
 	import SCons
 	v = SCons.__version__.split(".")
 	if v[0] != '0':
-		if v[0] == '1' or v[0] == '2':
+		if v[0] == '1' or v[0] == '2' or v[0] == '3':
 			return 1;
 		return 0
 	if int(v[1]) >= 97:
@@ -2142,23 +2142,23 @@ def sconsversioncheck():
 	return 0
 
 if not sconsversioncheck():
-	print "Scons version is not OK. Please try version 0.96.92 or 0.96.93,"
-	print "or consult the developers in the case of newer versions. Modify"
-	print "the function 'sconsversioncheck' in the file SConstruct if you"
-	print "want to *force* SCons to continue."
+	print("Scons version is not OK. Please try version 0.96.92 or 0.96.93,")
+	print("or consult the developers in the case of newer versions. Modify")
+	print("the function 'sconsversioncheck' in the file SConstruct if you")
+	print("want to *force* SCons to continue.")
 	Exit(1)
 
 # check C compiler
 
 if conf.CheckCC() is False:
-	print "Failed to build simple test file with your C compiler."
-	print "Check your compiler is installed and running correctly."
+	print("Failed to build simple test file with your C compiler.")
+	print("Check your compiler is installed and running correctly.")
 	Exit(1)
 
 if conf.CheckCXX() is False:
-	print "Failed to build simple test file with your C++ compiler."
-	print "Check your compiler is installed and running correctly."
-	print "You can set your C++ compiler using the CXX scons option."
+	print("Failed to build simple test file with your C++ compiler.")
+	print("Check your compiler is installed and running correctly.")
+	print("You can set your C++ compiler using the CXX scons option.")
 	Exit(1)
 
 if conf.CheckASan() is False:
@@ -2169,12 +2169,12 @@ else:
 # stdio -- just to check that compiler is behaving
 
 if conf.CheckHeader('stdio.h') is False:
-	print "CPPPATH =",env.get('CPPPATH')
-	print "Did not find 'stdio.h'! Check your compiler configuration."
-	print ""
-	print "You environment is printed here:"
-	for k,v in os.environ.iteritems():
-		print "%-30s%s" % ("%s :" % k, v)
+	print("CPPPATH =",env.get('CPPPATH'))
+	print("Did not find 'stdio.h'! Check your compiler configuration.")
+	print("")
+	print("You environment is printed here:")
+	for k,v in os.environ.items():
+		print("%-30s%s" % ("%s :" % k, v))
 	Exit(1)
 
 # sizes of vars used in libascend eg in gl_list etc.
@@ -2189,21 +2189,24 @@ _sizes = {
 	,"ULONGLONG" : "unsigned long long"
 }
 
-for _var,_type in _sizes.iteritems():
+for _var,_type in _sizes.items():
 	_size = conf.CheckTypeSize(_type)
 	if not _size:
-		print "Couldn't determine 'sizeof(%s)'" % _type
+		print("Couldn't determine 'sizeof(%s)'" % _type)
 		Exit(1)
-	conf.env["SIZEOF_%s" % _var] = str(_size)
+	print("SIZEOF_%s is %d"%(_var,_size))
+	conf.env["SIZEOF_%s" % (_var,)] = str(_size)
+
+print("SIZEOF_VOID_P = %s"%(conf.env['SIZEOF_VOID_P']))
 
 # check for some string functions
 
 if conf.CheckFunc('sprintf') is False:
-	print "Didn't find sprintf";
+	print("Didn't find sprintf");
 	Exit(1)
 
 if conf.CheckErf() is False:
-	print "Didn't find erf";
+	print("Didn't find erf");
 	Exit(1)
 else:
 	conf.env['HAVE_ERF'] = True
@@ -2230,14 +2233,14 @@ conf.env['HAVE_IEEE']=True
 
 if need_libm and (conf.CheckMath() is False):
 	conf.env['HAVE_IEEE']=False
-	print 'Did not find math library, exiting!'
+	print('Did not find math library, exiting!')
 	Exit(1)
 
 # Malloc
 
 if conf.CheckMalloc() is False:
 	conf.env['HAVE_MALLOC']=False
-	print "Did not find functioning 'malloc', exiting!"
+	print("Did not find functioning 'malloc', exiting!")
 	Exit(1)
 
 # dlopen/LoadLibrary
@@ -2250,7 +2253,7 @@ if conf.CheckMalloc() is False:
 # Where is 'isnan'?
 
 if conf.CheckFunc('isnan') is False and conf.CheckFunc('_isnan') is False:
-	print "Didn't find isnan"
+	print("Didn't find isnan")
 #	Exit(1)
 
 # GCC visibility
@@ -2280,7 +2283,7 @@ else:
 # Checking for signal reset requirement
 
 if conf.CheckSigReset() is False:
-	print "Unable to determine if signal reset is required"
+	print("Unable to determine if signal reset is required")
 	Exit(1)
 
 # YACC
@@ -2430,11 +2433,11 @@ else:
 # we'll assume now (2012) that we always have gfortran available on our system.
 
 if need_fortran and conf.CheckFortran() is False:
-	print "Failed to build simple test file with your Fortran compiler."
-	print "Check your compiler is installed and running correctly."
-	print "You can set your Fortran compiler using the FORTRAN scons option."
-	print "The fortran compiler is REQUIRED to build:",", ".join(need_fortran_reasons)
-	print "Perhaps try examining the value of your WITH_SOLVERS option (remove LSODE, etc)."
+	print("Failed to build simple test file with your Fortran compiler.")
+	print("Check your compiler is installed and running correctly.")
+	print("You can set your Fortran compiler using the FORTRAN scons option.")
+	print("The fortran compiler is REQUIRED to build:",", ".join(need_fortran_reasons))
+	print("Perhaps try examining the value of your WITH_SOLVERS option (remove LSODE, etc).")
 	Exit(1)
 
 #else:
@@ -2465,19 +2468,20 @@ if with_doc_build:
 
 # TODO: detect if dynamic libraries are possible or not
 
-if platform.system()=="Windows" and env.has_key('MSVS'):
+if platform.system()=="Windows" and 'MSVS' in env:
 	_found_windows_h = conf.CheckHeader('Windows.h')
 
 	if not _found_windows_h:
-		print "Could not locate 'Windows.h' in CPPPATH. Check your configuration."
+		print("Could not locate 'Windows.h' in CPPPATH. Check your configuration.")
 		Exit(1)
 
 	if with_python and conf.CheckHeader(['basetsd.h','BaseTsd.h']) is False:
 		with_python = 0;
 		without_python_reason = "Header file 'basetsd.h' not found. Install the MS Platform SDK."
 
+print("1. SIZEOF_VOID_P = %s"%(conf.env['SIZEOF_VOID_P']))
 conf.Finish()
-
+print("2. SIZEOF_VOID_P = %s"%(env['SIZEOF_VOID_P']))
 #print "-=-=-=-=-=-=-=-=- LIBS =",env.get('LIBS')
 
 #---------------------------------------
@@ -2488,6 +2492,8 @@ if release=="0.":
 	release="0"
 
 #print "SUBSTITUTED CONOPT_LIBPATH:",c_escape(env.subst("$CONOPT_LIBPATH"))
+
+print("SIZEOF_VOID_P = %s"%(env['SIZEOF_VOID_P']))
 
 subst_dict = {
 	'@DEFAULT_ASCENDLIBRARY@':env['DEFAULT_ASCENDLIBRARY']
@@ -2548,6 +2554,8 @@ subst_dict = {
 	, '@SIZEOF_ULONGLONG@' : env['SIZEOF_ULONGLONG']
 }
 
+
+
 if env.get('WITH_DOC'):
 	#print "WITH_DOC:",env['WITH_DOC']
 	subst_dict['@HELP_ROOT@']=env['HELP_ROOT']
@@ -2567,7 +2575,7 @@ for k,v in {
 		,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY')
 		,'HAVE_SNPRINTF':env.get('HAVE_SNPRINTF')
 		,'HAVE__SNPRINTF':env.get('HAVE__SNPRINTF')
-		}.iteritems():
+		}.items():
 		
 	if v: subst_dict["/\\* #\\s*define %s @%s@ \\*/" % (k,k)]='# define %s 1 ' % k
 
@@ -2578,7 +2586,7 @@ if with_python:
 if with_latex2html:
 	env['WITH_LATEX2HTML']=1
 
-if env.has_key('HAVE_GCCVISIBILITY'):
+if 'HAVE_GCCVISIBILITY' in env:
 	subst_dict['@HAVE_GCCVISIBILITY@'] = "1"
 
 env.Append(SUBST_DICT=subst_dict)
@@ -2624,11 +2632,11 @@ def InstallPermAs(env, dest, filen, perm):
 SConsEnvironment.InstallPerm = InstallPerm 	 
   	 
 # define wrappers 	 
-SConsEnvironment.InstallProgram = lambda env, dest, files: InstallPerm(env, dest, files, 0755) 	 
-SConsEnvironment.InstallHeader = lambda env, dest, files: InstallPerm(env, dest, files, 0644)
-SConsEnvironment.InstallShared = lambda env, dest, files: InstallPerm(env, dest, files, 0644)
-SConsEnvironment.InstallSharedAs = lambda env, dest, files: InstallPermAs(env, dest, files, 0644)
-SConsEnvironment.InstallLibraryAs = lambda env, dest, files: InstallPermAs(env, dest, files, 0644)
+SConsEnvironment.InstallProgram = lambda env, dest, files: InstallPerm(env, dest, files, 0o755) 	 
+SConsEnvironment.InstallHeader = lambda env, dest, files: InstallPerm(env, dest, files, 0o644)
+SConsEnvironment.InstallShared = lambda env, dest, files: InstallPerm(env, dest, files, 0o644)
+SConsEnvironment.InstallSharedAs = lambda env, dest, files: InstallPermAs(env, dest, files, 0o644)
+SConsEnvironment.InstallLibraryAs = lambda env, dest, files: InstallPermAs(env, dest, files, 0o644)
 
 #------------------------------------------------------
 # BUILD...
@@ -2678,7 +2686,7 @@ if with_graphviz and env.get('GRAPHVIZ_RPATH'):
 if with_tcltk:
 	env.SConscript(['tcltk/SConscript'],'env')
 else:
-	print "Skipping... Tcl/Tk bindings aren't being built:",without_tcltk_reason
+	print("Skipping... Tcl/Tk bindings aren't being built:",without_tcltk_reason)
 
 #-------------
 # PYTHON INTERFACE
@@ -2687,7 +2695,7 @@ if with_python:
 	env.SConscript(['ascxx/SConscript'],'env')
 	env.SConscript(['pygtk/SConscript'],'env')
 else:
-	print "Skipping... Python bindings aren't being built:",without_python_reason
+	print("Skipping... Python bindings aren't being built:",without_python_reason)
 
 #------------
 # BASE/GENERIC SUBDIRECTORIES
@@ -2708,18 +2716,18 @@ if with_local_blas:
 	env['blasobjs'] = env.SConscript(['blas/SConscript'],'env')
 else:
 	env['blasobjs'] = []
-	print "Skipping... BLAS won't be built:", without_local_blas_reason
+	print("Skipping... BLAS won't be built:", without_local_blas_reason)
 
 if not with_ida:
-	print "Skipping... IDA won't be built:", without_ida_reason
+	print("Skipping... IDA won't be built:", without_ida_reason)
 
 if not with_dopri5:
-	print "Skipping... DOPRI5 won't be built:", without_dopri5_reason
+	print("Skipping... DOPRI5 won't be built:", without_dopri5_reason)
 
 if with_mmio:
 	srcs += env.SConscript(['mmio/SConscript'],'env')
 else:
-	print "Skipping... MMIO export won't be built:", without_mmio_reason
+	print("Skipping... MMIO export won't be built:", without_mmio_reason)
 #-------------
 # LIBASCEND -- all 'core' functionality
 
@@ -2785,7 +2793,7 @@ if with_cunit:
 	env.Alias('test',[env.Dir('test')])
 	
 else:
-	print "Skipping... CUnit tests aren't being built:",without_cunit_reason
+	print("Skipping... CUnit tests aren't being built:",without_cunit_reason)
 
 #-------------
 # EXTERNAL SOLVERS
@@ -2801,7 +2809,7 @@ env.SConscript(['solvers/SConscript'],'env')
 modeldirs = env.SConscript(['models/SConscript'],'env')
 
 if not with_extfns:
-	print "Skipping... External modules aren't being built:",without_extfns_reason
+	print("Skipping... External modules aren't being built:",without_extfns_reason)
 
 for _f in env['extfns']:
 	env.Depends(_f,'libascend')
@@ -2929,7 +2937,7 @@ if with_installer:
 	env.Depends(installer,["nsis/detect.nsi","nsis/dependencies.nsi","nsis/download.nsi"])
 	env.Alias('installer',installer)
 else:
-	print "Skipping... Windows installer isn't being built:",without_installer_reason
+	print("Skipping... Windows installer isn't being built:",without_installer_reason)
 
 #------------------------------------------------------
 # CREATE the SPEC file for generation of RPM packages
@@ -3007,7 +3015,7 @@ if with_doc_build:
 	#user's manual
 	env.SConscript('doc/SConscript',['env'])
 else:
-	print "Skipping... Documentation isn't being built:",without_doc_build_reason
+	print("Skipping... Documentation isn't being built:",without_doc_build_reason)
 
 #------------------------------------------------------
 # RPM BUILD
@@ -3032,6 +3040,6 @@ if with_doc_build:
 
 env.Default(default_targets)
 
-print "Building targets:"," ".join([str(i) for i in BUILD_TARGETS])
+print("Building targets:"," ".join([str(i) for i in BUILD_TARGETS]))
 
 # vim: set syntax=python:

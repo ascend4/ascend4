@@ -71,9 +71,9 @@ Reporter::reportErrorPython(ERROR_REPORTER_CALLBACK_ARGS){
 	pyresult = PyEval_CallObject(pyfunc,pyarglist);     // Call Python
 	Py_DECREF(pyarglist);                           // Trash arglist
 
-   	int res = 0;
+	int res = 0;
 	if (pyresult) {                                 // If no errors, return int
-    	long long_res = PyInt_AsLong(pyresult);
+		long long_res = PyLong_AsLong(pyresult);
 		res = int(long_res);
 	}
 

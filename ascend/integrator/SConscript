@@ -26,7 +26,7 @@ if libascend_env.get('CAN_INSTALL'):
 	headers = glob.glob("*.h")
 	libascend_env.InstallHeader(installdir,headers)
 
-print "OBJS =",objs
+print("OBJS =",objs)
 Return('objs')
 
 # vim: set syntax=python:

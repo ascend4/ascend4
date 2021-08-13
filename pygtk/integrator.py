@@ -211,13 +211,13 @@ class IntegratorWindow:
 		self.window.destroy()
 		return None # can't solve
 
-        def color_entry(self,entry,color):
-                # colour an input box if it doesn't have acceptable contents
-                # error messages would be reported by the 'errors panel' in the main win
-                entry.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
-                entry.modify_bg(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
-                entry.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
-                entry.modify_base(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
+		def color_entry(self,entry,color):
+			# colour an input box if it doesn't have acceptable contents
+			# error messages would be reported by the 'errors panel' in the main win
+			entry.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
+			entry.modify_bg(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
+			entry.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
+			entry.modify_base(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
 
 	def taint_entry(self,entry,color):
 		# colour an input box if it doesn't have acceptable contents

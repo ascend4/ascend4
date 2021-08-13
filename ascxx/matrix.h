@@ -45,7 +45,7 @@ public:
 
 	Matrix(mtx_matrix_t M);
 
-	int write(FILE *fp, const std::string &format) const;
+	int write(char *fname, const std::string &format) const;
 	std::vector<unsigned> size() const;
 };
 
