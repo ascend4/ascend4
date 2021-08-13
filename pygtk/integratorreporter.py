@@ -25,7 +25,7 @@ INTEGRATOR_NUM = 0
 class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 	def __init__(self,browser,integrator):
 		self.browser=browser
-	 	ascpy.IntegratorReporterCxx.__init__(self,integrator)
+		ascpy.IntegratorReporterCxx.__init__(self,integrator)
 		
 		# GUI elements
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["integratorstatusdialog"])
@@ -157,7 +157,7 @@ class IntegratorReporterFile(ascpy.IntegratorReporterCxx):
 		self.filep=filep
 		self.numsteps=0
 		self.indepname="t"
-	 	ascpy.IntegratorReporterCxx.__init__(self,integrator)
+		ascpy.IntegratorReporterCxx.__init__(self,integrator)
 		
 		
 	def run(self):
@@ -213,7 +213,7 @@ class IntegratorReporterPlot(ascpy.IntegratorReporterCxx):
 	def __init__(self,integrator):
 		self.numsteps=0
 		self.indepname="t"
-	 	ascpy.IntegratorReporterCxx.__init__(self,integrator)		
+		ascpy.IntegratorReporterCxx.__init__(self,integrator)		
 		
 	def run(self):
 		import loading

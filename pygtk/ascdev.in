@@ -44,6 +44,8 @@ def add_at_start(envvar,pathcomponents):
 	return changed
 		
 if __name__=='__main__':
+	print("PYTHON = @PYTHON@")
+	
 	sourceroot="@SOURCE_ROOT@"
 	script=os.path.join(sys.argv[0])
 

@@ -16,9 +16,9 @@ SWIG interface for plotting from ASCEND
 			pylab.ioff()
 			pylab.figure()
 			pylab.title(self.getTitle())
-			print "XLabel:",self.getXLabel()
+			#print("XLabel:",self.getXLabel())
 			pylab.xlabel(self.getXLabel())
-			print "YLabel:",self.getYLabel()
+			#print("YLabel:",self.getYLabel())
 			pylab.ylabel(self.getYLabel())
 			_l = []
 			_have_legends = False
@@ -43,7 +43,7 @@ SWIG interface for plotting from ASCEND
 			if _have_legends:
 				pylab.legend(_l,self.getLegendPosition())
 
-			print "Mainloop:",mainloop
+			#print("Mainloop:",mainloop)
 			pylab.ion()
 			if platform.system()=="Windows":
 				pylab.show()

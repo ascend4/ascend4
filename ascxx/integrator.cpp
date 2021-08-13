@@ -156,17 +156,24 @@ Integrator::solve(){
 }
 
 void
-Integrator::writeMatrix(FILE *fp,const char *type) const{
+Integrator::writeMatrix(char *fname,const char *type) const{
+	FILE *fp = fopen(fname,"w");
 	if(integrator_write_matrix(this->blsys, fp, type)){
+		fclose(fp);
 		throw runtime_error("Failed to write matrix");
 	}
+	fclose(fp);
 }
 
 void
-Integrator::writeDebug(FILE *fp) const{
+Integrator::writeDebug(char *fname) const{
+	FILE *fp = fopen(fname,"w");
+	if(!fp)throw runtime_error("Failed to open file for writing");
 	if(integrator_debug(this->blsys, fp)){
+		fclose(fp);
 		throw runtime_error("Failed to write debug output");
 	}
+	fclose(fp);
 }
 
 void

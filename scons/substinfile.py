@@ -23,7 +23,7 @@ def generate(env):
         """
         try:
             f = open(sourcefile, 'rb')
-            contents = f.read()
+            contents = f.read().decode('utf-8')
             f.close()
         except:
             raise SCons.Errors.UserError("Can't read source file %s"%sourcefile)
@@ -31,10 +31,10 @@ def generate(env):
             contents = re.sub(k, v, contents)
         try:
             f = open(targetfile, 'wb')
-            f.write(contents)
+            f.write(contents.encode('utf-8'))
             f.close()
-        except:
-            raise SCons.Errors.UserError("Can't write target file %s"%targetfile)
+        except Exception as e:
+            raise SCons.Errors.UserError("Can't write target file %s: %s"%(targetfile,str(e)))
         return 0 # success
 
     def subst_in_file(target, source, env):

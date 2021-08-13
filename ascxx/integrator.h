@@ -75,8 +75,8 @@ public:
 	void solve();
 
 	/** write out a named matrix associated with the integrator, if possible. type can be NULL for the default matrix. */
-	void writeMatrix(FILE *fp,const char *type) const;
-	void writeDebug(FILE *fp) const;
+	void writeMatrix(char *fname, const char *type) const;
+	void writeDebug(char *fname) const;
 
 	double getCurrentTime();
 	long getCurrentStep();
