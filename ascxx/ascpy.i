@@ -261,7 +261,7 @@ str = ur'\u00b7'.join(numparts)
 //----------------------------
 
 %typemap(in) const SymChar& {
-	$1 = new SymChar(PyString_AsString($input));
+	$1 = new SymChar(PyUnicode_AsUTF8($input));
 }
 
 %include "library.h"
