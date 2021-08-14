@@ -1,6 +1,7 @@
 # General-purpose popup window for reporting graphical stuff
 
-import gtk, pango
+from gi.repository import Gtk, GdkPixbuf
+from gi.repository import Pango
 import ascpy
 from varentry import *
 import os,shutil
@@ -26,13 +27,13 @@ class ImageWindow:
 			self.parent = parent
 			self.window.set_transient_for(self.parent)
 		
-		self.pixbuf = gtk.gdk.pixbuf_new_from_file(imagefilename)
+		self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagefilename)
 		self.w_orig = self.pixbuf.get_width()
 		self.h_orig = self.pixbuf.get_height()
 
-		self.scrollwin = gtk.ScrolledWindow()
-		self.scrollwin.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
-		self.imageview = gtk.Image()
+		self.scrollwin = Gtk.ScrolledWindow()
+		self.scrollwin.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
+		self.imageview = Gtk.Image()
 		
 		self.scrollwin.add_with_viewport(self.imageview)
 		self.imageview.show()
@@ -50,20 +51,20 @@ class ImageWindow:
 
 	def on_save_clicked(self,*args):
 		self.browser.reporter.reportNote("SAVE %s" % self.imagefilename) 
-		chooser = gtk.FileChooserDialog(title="Save Incidence Graph (PNG)",action=gtk.FILE_CHOOSER_ACTION_SAVE,
-			buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_SAVE,gtk.RESPONSE_OK))
+		chooser = Gtk.FileChooserDialog(title="Save Incidence Graph (PNG)",action=Gtk.FileChooserAction.SAVE,
+			buttons=(Gtk.STOCK_CANCEL,Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE,Gtk.ResponseType.OK))
 		chooser.set_current_name("incidence.png")
 		
 		response = chooser.run()
-		if response==gtk.RESPONSE_OK:
+		if response==Gtk.ResponseType.OK:
 			if os.path.exists(chooser.get_filename()):
-				label = gtk.Label("File Already Exists, Overwrite?")
-				dialog = gtk.Dialog("Error",None, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                    gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-				dialog.vbox.pack_start(label)
+				label = Gtk.Label("File Already Exists, Overwrite?")
+				dialog = Gtk.Dialog("Error",None, Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                    Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+				dialog.vbox.pack_start(label, True, True, 0)
 				label.show()
 				response = dialog.run()
-				if response == gtk.RESPONSE_ACCEPT:
+				if response == Gtk.ResponseType.ACCEPT:
 					shutil.copy(self.imagefilename,chooser.get_filename())
 					dialog.destroy()
 					self.browser.reporter.reportWarning("FILE SAVED: '%s'" % chooser.get_filename())
@@ -118,7 +119,7 @@ class ImageWindow:
 		if ratio==1:		
 			self.imageview.set_from_pixbuf(self.pixbuf)
 		else:
-			pixbufnew = self.pixbuf.scale_simple(w,h,gtk.gdk.INTERP_BILINEAR)
+			pixbufnew = self.pixbuf.scale_simple(w,h,GdkPixbuf.InterpType.BILINEAR)
 			self.imageview.set_from_pixbuf(pixbufnew)
 
 		self.zoom_current = ratio

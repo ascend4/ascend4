@@ -13,9 +13,11 @@ from gettext import gettext as _
 from smtplib import SMTP
 #import os
 
-import pygtk
-pygtk.require ('2.0')
-import gtk, pango
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import Pango
 
 #def analyse (exctyp, value, tb):
 #	trace = StringIO()
@@ -96,10 +98,10 @@ def _info (exctyp, value, tb):
 		sys.exit(1)
 
 	trace = None
-	dialog = gtk.MessageDialog (parent=None, flags=0, type=gtk.MESSAGE_WARNING, buttons=gtk.BUTTONS_NONE)
+	dialog = Gtk.MessageDialog (parent=None, flags=0, type=Gtk.MessageType.WARNING, buttons=Gtk.ButtonsType.NONE)
 	dialog.set_title (_("Bug Detected"))
-	if gtk.check_version (2, 4, 0) is not None:
-		dialog.set_has_separator (False)
+#if Gtk.check_version (2, 4, 0) is not None:
+#		dialog.set_has_separator (False)
 
 	primary = _("<big><b>A programming error has been detected during the execution of this program.</b></big>")
 	secondary = _("It probably isn't fatal, but should be reported to the developers nonetheless.")
@@ -122,8 +124,8 @@ def _info (exctyp, value, tb):
 		# could ask for an email address instead...
 		pass
 	dialog.add_button (_("Details..."), 2)
-	dialog.add_button (gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
-	dialog.add_button (gtk.STOCK_QUIT, 1)
+	dialog.add_button (Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
+	dialog.add_button (Gtk.STOCK_QUIT, 1)
 	dialog.add_button (_("Report Bug"),3)
 
 	while True:
@@ -134,11 +136,11 @@ def _info (exctyp, value, tb):
 
 			# TODO: prettyprint, deal with problems in sending feedback, &tc
 			handle = webbrowser.get()
-			print(dir(handle))
+			print((dir(handle)))
 			handle.open("http://bugs.ascend4.org/bug_report_page.php")
 			if trace == None:
 				trace = analyse (exctyp, value, tb)
-			print(trace.getvalue())
+			print((trace.getvalue()))
 			
 
 #			try:
@@ -159,17 +161,17 @@ def _info (exctyp, value, tb):
 				trace = analyse (exctyp, value, tb)
 
 			# Show details...
-			details = gtk.Dialog (_("Bug Details"), dialog,
-			  gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-			  (gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE, ))
-			details.set_property ("has-separator", False)
+			details = Gtk.Dialog (_("Bug Details"), dialog,
+			  Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+			  (Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE, ))
+#details.set_property ("has-separator", False)
 
-			textview = gtk.TextView(); textview.show()
+			textview = Gtk.TextView(); textview.show()
 			textview.set_editable (False)
-			textview.modify_font (pango.FontDescription ("Monospace"))
+			textview.modify_font (Pango.FontDescription ("Monospace"))
 
-			sw = gtk.ScrolledWindow(); sw.show()
-			sw.set_policy (gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+			sw = Gtk.ScrolledWindow(); sw.show()
+			sw.set_policy (Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 			sw.add (textview)
 			details.vbox.add (sw)
 			textbuffer = textview.get_buffer()
@@ -177,9 +179,10 @@ def _info (exctyp, value, tb):
 #			envtext = "\n".join(["%s = %s" % (k,os.environ[k]) for k in sorted(os.environ.keys())])
 #			textbuffer.set_text (trace.getvalue() + "\n\n\nENVIRONMENT\n\n" +  envtext)
 			textbuffer.set_text (trace.getvalue())
-
-			monitor = gtk.gdk.screen_get_default ().get_monitor_at_window (dialog.window)
-			area = gtk.gdk.screen_get_default ().get_monitor_geometry (monitor)
+            
+			screen = dialog.get_screen()
+			monitor = screen.get_monitor_at_window (screen.get_active_window())
+			area = screen.get_monitor_geometry (monitor)
 			try:
 				w = area.width // 1.6
 				h = area.height // 1.6
@@ -187,13 +190,14 @@ def _info (exctyp, value, tb):
 				# python < 2.2
 				w = area.width / 1.6
 				h = area.height / 1.6
+			sw.set_size_request(int(w),int(h/2))
 			details.set_default_size (int (w), int (h))
 
 			details.run()
 			details.destroy()
 
-		elif resp == 1 and gtk.main_level() > 0:
-			gtk.main_quit()
+		elif resp == 1 and Gtk.main_level() > 0:
+			Gtk.main_quit()
 			break
 		else:
 			break
@@ -218,4 +222,3 @@ if __name__ == '__main__':
 		pass
 
 	raise Exception (x.z.y + w)
-

@@ -1,7 +1,7 @@
-import pygtk
-pygtk.require('2.0')
-import gtk
-import pango
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+from gi.repository import Pango
 import os.path
 
 CHANGED_COLOR = "#FFFF88"
@@ -33,24 +33,25 @@ class SolverParametersWindow:
 		
 		self.paramsview = self.browser.builder.get_object("paramsview1")	
 		self.otank = {}
-		self.paramstore = gtk.TreeStore(str,str,str,bool,str,int)
+		self.paramstore = Gtk.TreeStore(str,str,str,bool,str,int)
 		self.paramsview.set_model(self.paramstore)
 
 		# name column
-		_renderer0 = gtk.CellRendererText()
-		_col0 = gtk.TreeViewColumn("Name", _renderer0, text=0, background=4, weight=5)
+		_renderer0 = Gtk.CellRendererText()
+		_col0 = Gtk.TreeViewColumn("Name", _renderer0, text=0, background=4, weight=5)
 		self.paramsview.append_column(_col0)
 
 		# value column: 'editable' set by column 3 of the model data.
-		_renderer1 = gtk.CellRendererText()	
+		_renderer1 = Gtk.CellRendererText()	
 		_renderer1.connect('edited',self.on_paramsview_edited)
-		_col1 = gtk.TreeViewColumn("Value", _renderer1, text=1, editable=3, background=4)
+		_col1 = Gtk.TreeViewColumn("Value", _renderer1, text=1, editable=3, background=4)
 		self.paramsview.append_column(_col1)
 
 		# range column
-		_renderer2 = gtk.CellRendererText()
-		_col2 = gtk.TreeViewColumn("Range", _renderer2, text=2, background=4)
+		_renderer2 = Gtk.CellRendererText()
+		_col2 = Gtk.TreeViewColumn("Range", _renderer2, text=2, background=4)
 		self.paramsview.append_column(_col2)
+
 
 		self.populate()
 
@@ -59,10 +60,10 @@ class SolverParametersWindow:
 	def on_paramsview_row_activated(self,treeview,path,view_column,*args,**kwargs):
 		# get back the object we just clicked
 
-		if path not in self.otank:
+		if path.to_string() not in self.otank:
 			return
 		
-		_iter,_param = self.otank[path]
+		_iter,_param = self.otank[path.to_string()]
 
 		if _param.isBool():
 			newvalue = not _param.getBoolValue()
@@ -81,30 +82,31 @@ class SolverParametersWindow:
 			_pathinfo = self.paramsview.get_path_at_pos(_x, _y)
 			if _pathinfo != None:
 				_path, _col, _cellx, _celly = _pathinfo
-				if _path not in self.otank:
+				if _path.to_string() not in self.otank:
 					return
-				_iter, _param = self.otank[_path]
+				_iter, _param = self.otank[_path.to_string()]
 
 				# update the description field
-				self.paramdescription.set_text(_param.getDescription())
-				self.paramname.set_text(_param.getName())
+				self.paramdescription.set_text(str(_param.getDescription()))
+				self.paramname.set_text(str(_param.getName()))
+
 
 				if _param.isStr():
-					_menu = gtk.Menu();
-					_head = gtk.ImageMenuItem("Options",True)
+					_menu = Gtk.Menu();
+					_head = Gtk.ImageMenuItem("Options")
 					_head.show()
 					_head.set_sensitive(False)
-					_img = gtk.Image()
+					_img = Gtk.Image()
 					_img.set_from_file(os.path.join(self.assets_dir,'folder-open.png'))
 
 					_head.set_image(_img)
 					_menu.append(_head)
-					_sep = gtk.SeparatorMenuItem(); _sep.show()
+					_sep = Gtk.SeparatorMenuItem(); _sep.show()
 					_menu.append(_sep);
 
 					_item = None;
 					for i in _param.getStrOptions():
-						_item = gtk.RadioMenuItem(group=_item, label=i);
+						_item = Gtk.RadioMenuItem(label=i);
 						if i == _param.getStrValue():
 							_item.set_active(True)
 						else:
@@ -114,7 +116,7 @@ class SolverParametersWindow:
 						_menu.append(_item)
 									
 					_menu.show()
-					_menu.popup(None, None, None, event.button, _time)
+					_menu.popup(None, None,lambda _menu,data: (event.get_root_coords()[0],event.get_root_coords()[1], True), None,event.button, _time)
 
 	def on_menu_activate(self, menuitem, param, iter, newvalue):
 		if param.getStrValue() != newvalue:
@@ -126,18 +128,19 @@ class SolverParametersWindow:
 	
 	def on_paramsview_cursor_changed(self, *args, **kwargs):
 		_path, _col = self.paramsview.get_cursor()
-		if _path not in self.otank:
-			self.paramdescription.set_text("")
-			self.paramname.set_text("")
-			return
-		_iter, _param = self.otank[_path]
-		self.paramdescription.set_text(_param.getDescription())	
-		self.paramname.set_text(_param.getName())
+		if _path:
+		    if _path.to_string() not in self.otank:
+			    self.paramdescription.set_text("")
+			    self.paramname.set_text("")
+			    return
+		    _iter, _param = self.otank[_path.to_string()]
+		    self.paramdescription.set_text(_param.getDescription())	
+		    self.paramname.set_text(_param.getName())
 		#self.paramsview.set_cursor(_path,self.paramsview.get_column(1));		
 
 	def on_paramsview_edited(self, renderer, path, newtext, **kwargs):
 		# get back the Instance object we just edited (having to use this seems like a bug)
-		path = tuple( map(int,path.split(":")) )
+#path = tuple( map(int,path.split(":")) )
 
 		if path not in self.otank:
 			raise RuntimeError("cell_edited_callback: invalid path '%s'" % path)
@@ -178,7 +181,7 @@ class SolverParametersWindow:
 				_changed = True
 
 		if _changed:
-			self.paramstore.set_value(_iter, 1, newvalue)
+			self.paramstore.set_value(_iter, 1, str(newvalue))
 			self.paramstore.set_value(_iter, 4, CHANGED_COLOR)			
 		else:
 			print("NO CHANGE")
@@ -207,7 +210,7 @@ class SolverParametersWindow:
 		else:
 			raise RuntimeError("invalid type")
 
-		_row.extend(["white",pango.WEIGHT_NORMAL])
+		_row.extend(["white",Pango.Weight.NORMAL])
 		return _row;
 		
 	def populate(self):
@@ -222,20 +225,20 @@ class SolverParametersWindow:
 		_pagenum = 1;
 		for _page in sorted(data.keys()):
 			if len(list(data[_page].keys())):
-				_pageiter = self.paramstore.append( None, ["Page "+str(_pagenum), "", "", False, "white", pango.WEIGHT_BOLD])
+				_pageiter = self.paramstore.append( None, ["Page "+str(_pagenum), "", "", False, "white", Pango.Weight.BOLD])
 				for _number in sorted(data[_page].keys()):
 					_param = data[_page][_number]
 					_piter = self.paramstore.append( _pageiter, self.create_row_data(_param) )
 					_path = self.paramstore.get_path(_piter)
-					self.otank[ _path ] = (_piter, _param)
+					self.otank[ _path.to_string() ] = (_piter, _param)
 				_pagenum = _pagenum + 1
 
 	def doErrorDialog(self,msg=None):
-		_dialog = gtk.Dialog("Out of bounds", parent=self.window, flags=gtk.DIALOG_MODAL, buttons=(gtk.STOCK_OK, gtk.RESPONSE_OK) )	
+		_dialog = Gtk.Dialog("Out of bounds", parent=self.window, flags=Gtk.DialogFlags.MODAL, buttons=(Gtk.STOCK_OK, Gtk.ResponseType.OK) )	
 		if msg:
-			_label = gtk.Label(msg)
+			_label = Gtk.Label(label=msg)
 		else:
-			_label = gtk.Label("Please enter a value that is within the\ndisplayed upper and lower bounds")
+			_label = Gtk.Label(label="Please enter a value that is within the\ndisplayed upper and lower bounds")
 
 		_dialog.vbox.pack_start(_label, True, True, 0)
 		_label.show()
@@ -246,3 +249,4 @@ class SolverParametersWindow:
 		_res = self.window.run()
 		self.window.destroy()
 		return _res
+

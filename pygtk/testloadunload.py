@@ -26,5 +26,5 @@ for M in L.getModules():
 				heapq.heappush(jobs, (0, AscendTestModel( self.filepath,M.getName())) )
 				jobslock.release()
 del(L)
-ascendlock.release()		
+ascendlock.release()
 

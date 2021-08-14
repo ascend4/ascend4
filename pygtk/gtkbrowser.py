@@ -1,3 +1,5 @@
+import sys
+
 try:
 	import loading
 	#loading.print_status("Loading PSYCO")
@@ -10,17 +12,17 @@ try:
 
 	loading.print_status("Loading python standard libraries")
 
-	import pygtk 
-	pygtk.require('2.0') 
-	import gtk
-	import gtkexcepthook
+	import gi 
+	gi.require_version('Gtk', '3.0') 
+	from gi.repository import Gtk, GdkPixbuf, Gdk, GLib
 
 	import re
 	import urllib.parse
 	import optparse
 	import platform
 	import sys
-	import os
+	import time
+	import threading
 
 	if platform.system() != "Windows":
 		try:
@@ -35,12 +37,15 @@ try:
 		# ascend library are made available to libraries dlopened within ASCEND:
 		sys.setdlopenflags(_dlflags)
 
+
+
 	loading.print_status("Loading LIBASCEND/ascpy")
 	import ascpy
+	import os.path
 
-	loading.print_status("Loading PyGTK, pango")
+	loading.print_status("Loading PyGI, pango")
 
-	import pango
+	from gi.repository import Pango
 
 	loading.load_matplotlib()
 
@@ -69,7 +74,7 @@ try:
 except RuntimeError as e:
 	print("ASCEND had problems starting up. Please report the following")
 	print("error message on ASCEND bug tracker.")
-	print("\n\nFull error message:",str(e))
+	print(("\n\nFull error message:",str(e)))
 	print("\n\nPress ENTER to close this window.")
 	sys.stdout.flush()
 	sys.stdin.readline();
@@ -80,10 +85,10 @@ except ImportError as e:
 	print("ASCEND had problems importing required Python modules.")
 	print("\nPlease ensure you have all the runtime prerequisites installed.")
 	print("Please then report a bug if you continue to have problems.")
-	print("\nFull error message:",str(e))
-	if platform.system()=="Windows":
-		print("\nYou will also need to report the contents of any popup error")
-		print("messages from Windows if any were shown.")
+	print(("\nFull error message:",str(e)))
+#if platform.system()=="Windows":
+#		print "\nYou will also need to report the contents of any popup error"
+#		print "messages from Windows if any were shown."
 	print("\n\nPress ENTER to close this window.")
 	sys.stdout.flush()
 	sys.stdin.readline();
@@ -116,11 +121,8 @@ class Browser:
 	def __init__(self,librarypath=None,assetspath=None):
 
 		if assetspath==None:
-			if platform.system()=="Windows":
-				assetspath=os.path.normpath(os.path.join(os.path.dirname(__file__),"..","glade")) 
-			else:
-				assetspath=config.PYGTK_ASSETS
-
+			assetspath=config.PYGTK_ASSETS
+		
 		#--------
 		# load the file referenced in the command line, if any
 
@@ -240,20 +242,6 @@ class Browser:
 		self.library = ascpy.Library(str(_path))
 
 		self.sim = None
-	
-		#--------
-		# report absence of solvers if nec.
-
-		if not len(ascpy.getSolvers()):
-			print("NO SOLVERS LOADED!")
-			self.reporter.reportError( "No solvers were loaded! ASCEND is probably not configured correctly." )
-
-		#--test option
-		if self.options.test:
-			print('================================================================================')
-			print('IN TEST')
-			self.test()
-			return
 
 		#-------------------
 		# Set up the window and main widget actions
@@ -261,7 +249,7 @@ class Browser:
 
 		loading.print_status("Setting up windows") #,"GLADE_FILE = %s" % self.glade_file)
 
-		builder = gtk.Builder()
+		builder = Gtk.Builder()
 		#builder.add_from_file(self.glade_file)
 		builder.add_objects_from_file(self.glade_file,["integ_icon","browserwin","list_of_td"])
 		self.builder=builder
@@ -321,25 +309,25 @@ class Browser:
 		#-------
 		# Status icons
 
-		self.fixedimg = gtk.Image()
+		self.fixedimg = Gtk.Image()
 		_fixedimgpath = os.path.join(self.options.assets_dir,'locked.png')
 
 		# this stuff catches some strange environment-variable related problems on Mac OSX.
 		try:
 			if not os.path.exists(_fixedimgpath):
 				raise RuntimeError("Image file '%s' could not be found" % _fixedimgpath)
-			_fixedpixbuf = gtk.gdk.pixbuf_new_from_file(_fixedimgpath)
+			_fixedpixbuf = GdkPixbuf.Pixbuf.new_from_file(_fixedimgpath)
 			self.fixedimg.set_from_pixbuf(_fixedpixbuf)
 		except Exception as e:
 			raise RuntimeError("Failed to load pixbuf '%s' (%s)" % (_fixedimgpath, str(e)))
 
-		self.inactiveimg = gtk.Image()
+		self.inactiveimg = Gtk.Image()
 		self.inactiveimg.set_from_file(os.path.join(self.options.assets_dir,'unattached.png'))
 
 		self.iconstatusunknown = None
 		self.iconfixed = self.fixedimg.get_pixbuf()
-		self.iconsolved = self.window.render_icon(gtk.STOCK_YES,gtk.ICON_SIZE_MENU)
-		self.iconactive = self.window.render_icon(gtk.STOCK_NO,gtk.ICON_SIZE_MENU)
+		self.iconsolved = self.window.render_icon(Gtk.STOCK_YES,Gtk.IconSize.MENU)
+		self.iconactive = self.window.render_icon(Gtk.STOCK_NO,Gtk.IconSize.MENU)
 		self.iconinactive = self.inactiveimg.get_pixbuf()
 		self.iconunsolved = None
 
@@ -365,23 +353,20 @@ class Browser:
 		#-------------------
 		# waitwin
 
-		self.waitwin = gtk.gdk.Window(self.window.window,
-			gtk.gdk.screen_width(),
-			gtk.gdk.screen_height(),
-			gtk.gdk.WINDOW_CHILD,
-			0,
-			gtk.gdk.INPUT_ONLY)
+		_gdkw = self.window.get_screen().get_active_window()
+		self.waitwin = _gdkw
 
-		_cursor = gtk.gdk.Cursor(gtk.gdk.WATCH)
-		self.waitwin.set_cursor(_cursor)
+		if self.waitwin:
+			_cursor = Gdk.Cursor.new(Gdk.CursorType.WATCH)
+			self.waitwin.set_cursor(_cursor)
 
 		#-------------------
 		# pixbufs to be used in the error listing
 
-		self.iconok = self.window.render_icon(gtk.STOCK_YES,gtk.ICON_SIZE_MENU)
-		self.iconinfo = self.window.render_icon(gtk.STOCK_DIALOG_INFO,gtk.ICON_SIZE_MENU)
-		self.iconwarning = self.window.render_icon(gtk.STOCK_DIALOG_WARNING,gtk.ICON_SIZE_MENU)
-		self.iconerror = self.window.render_icon(gtk.STOCK_DIALOG_ERROR,gtk.ICON_SIZE_MENU)
+		self.iconok = self.window.render_icon(Gtk.STOCK_YES,Gtk.IconSize.MENU)
+		self.iconinfo = self.window.render_icon(Gtk.STOCK_DIALOG_INFO,Gtk.IconSize.MENU)
+		self.iconwarning = self.window.render_icon(Gtk.STOCK_DIALOG_WARNING,Gtk.IconSize.MENU)
+		self.iconerror = self.window.render_icon(Gtk.STOCK_DIALOG_ERROR,Gtk.IconSize.MENU)
 
 		#--------------------
 		# pixbufs for solver_var status
@@ -390,11 +375,11 @@ class Browser:
 		# set up the error view
 
 		self.errorview = self.builder.get_object("errorview")
-		errstorecolstypes = [gtk.gdk.Pixbuf,str,str,str,int]
-		self.errorstore = gtk.TreeStore(*errstorecolstypes)
+		errstorecolstypes = [GdkPixbuf.Pixbuf,str,str,str,int]
+		self.errorstore = Gtk.TreeStore(*errstorecolstypes)
 		errtitles = ["","Location","Message"];
 		self.errorview.set_model(self.errorstore)
-		self.errcols = [ gtk.TreeViewColumn() for _type in errstorecolstypes]
+		self.errcols = [ Gtk.TreeViewColumn() for _type in errstorecolstypes]
 
 		i = 0
 		for tvcolumn in self.errcols[:len(errtitles)]:
@@ -402,14 +387,14 @@ class Browser:
 			self.errorview.append_column(tvcolumn)			
 
 			if i>0:
-				_renderer = gtk.CellRendererText()
+				_renderer = Gtk.CellRendererText()
 				tvcolumn.pack_start(_renderer, True)				
 				tvcolumn.add_attribute(_renderer, 'text', i)
 				if(i==2):
 					tvcolumn.add_attribute(_renderer, 'foreground', 3)
 					tvcolumn.add_attribute(_renderer, 'weight', 4)
 			else:
-				_renderer1 = gtk.CellRendererPixbuf()
+				_renderer1 = Gtk.CellRendererPixbuf()
 				tvcolumn.pack_start(_renderer1, False)				
 				tvcolumn.add_attribute(_renderer1, 'pixbuf', int(0))
 
@@ -422,28 +407,43 @@ class Browser:
 		self.reporter.setPythonErrorCallback(self.error_callback)
 
 
+		#--------
+		# report absence of solvers if nec.
+
+		if not len(ascpy.getSolvers()):
+			print("NO SOLVERS LOADED!")
+			self.reporter.reportError( "No solvers were loaded! ASCEND is probably not configured correctly." )
+
+		#--test option
+		if self.options.test:
+			print('================================================================================')
+			print('IN TEST')
+			self.test()
+			return
+
+
 		#-------
 		# Solver engine list
 
 		_slvlist = ascpy.getSolvers()
-		self.solver_engine_menu = gtk.Menu()
+		self.solver_engine_menu = Gtk.Menu()
 		self.solver_engine_menu.show()
 		self.solver_engine.set_submenu(self.solver_engine_menu)
 		self.solver_engine_menu_dict = {}
 		_fmi = None
 		for _s in _slvlist:
-			_mi = gtk.RadioMenuItem(_fmi,_s.getName(),False)
-			if _fmi==None:
+			_mi = Gtk.RadioMenuItem(label=_s.getName(), group=_fmi)
+			if _fmi is None:
 				_fmi = _mi
 			_mi.show()
 			_mi.connect('toggled',self.on_select_solver_toggled,_s.getName())
 			self.solver_engine_menu.append(_mi)
 			self.solver_engine_menu_dict[_s.getName()]=_mi	
-		
+
 		#-------
 		# Recent file list
 
-		self.recent_file_list = gtk.Menu()
+		self.recent_file_list = Gtk.Menu()
 		self.recent_file_list.show()
 		self.recent_files.set_submenu(self.recent_file_list)
 		
@@ -455,17 +455,18 @@ class Browser:
 		if _cur_num >= 0:
 			for _i in range(_cur_num):
 				_fname = self.prefs.getStringPref("recentfiles","file%s"%(_cur_num -_i - 1),"no recent files")
-				_mi = gtk.MenuItem(_fname,False)
+				_mi = Gtk.MenuItem(_fname)#Edit
 				_mi.show()
 				_mi.connect("activate",self.on_recent_file_select)
 				self.recent_file_list.append(_mi)
 		else:
-			self.recent_file_list.set_state(gtk.STATE_INSENSITIVE)
+			self.recent_file_list.set_state(Gtk.StateType.INSENSITIVE)
 
 		_pref_solver = self.prefs.getStringPref("Solver","engine","QRSlv")
 		_mi = self.solver_engine_menu_dict.get(_pref_solver)
 		if _mi:
-			_mi.set_active(1)
+			_mi.set_active(True)
+		self.set_solver(_pref_solver)
 
 		#--------
 		# Assign an icon to the main window
@@ -474,14 +475,14 @@ class Browser:
 		if config.ICON_EXTENSION:
 			_iconpath = ""
 			try:
-				_icon = gtk.Image()
+				_icon = Gtk.Image()
 				_iconpath = os.path.join(self.assets_dir,'ascend'+config.ICON_EXTENSION)
 				_icon.set_from_file(_iconpath)
 				_iconpbuf = _icon.get_pixbuf()
 				self.window.set_icon(_iconpbuf)
 				self.icon = _iconpbuf
 			except Exception as e:
-				print("FAILED TO SET APPLICATION ICON PATH '%s': %s" % (_iconpath,str(e)))
+				print(("FAILED TO SET APPLICATION ICON PATH '%s': %s" % (_iconpath,str(e))))
 				self.reporter.reportError("FAILED to set application icon '%s': %s"
 					 % (_iconpath,str(e)) 
 				)
@@ -490,21 +491,20 @@ class Browser:
 		# set up the module view
 
 		self.modtank = {}
-		self.moduleview = ModuleView(self, self.builder, self.library)
-	
+		self.moduleview = ModuleView(self,self.builder,self.library)
+
 		#--------------------
 		# set up the methods combobox
 
-		self.methodstore = gtk.ListStore(str)
+		self.methodstore = Gtk.ListStore(str)
 		self.methodsel.set_model(self.methodstore)
-		_methodrenderer = gtk.CellRendererText()
+		_methodrenderer = Gtk.CellRendererText()
 		self.methodsel.pack_start(_methodrenderer, True)
-		self.methodsel.add_attribute(_methodrenderer, 'text',0)
+#self.methodsel.add_attribute(_methodrenderer, 'text',0)
 
 		#--------
 		# set up the instance browser view
-
-		self.modelview = ModelView(self, self.builder)
+		self.modelview = ModelView(self,self.builder)
 
 		#--------
 		# set up the tabs
@@ -537,6 +537,7 @@ class Browser:
 		self.solverhooks = SolverHooksPythonBrowser(self)
 		ascpy.SolverHooksManager_Instance().setHooks(self.solverhooks)
 
+		self.solve_interrupt = False
 		#--------
 		# options
 		if(len(args)==1):
@@ -551,7 +552,7 @@ class Browser:
 			_model = None
 			if self.options.model:
 				_model = self.options.model
-				print("MODEL: '%s'" % _model)
+				print(("MODEL: '%s'" % _model))
 			elif self.options.auto_sim:
 				_head, _tail = os.path.split(args[0])
 				if(_tail):
@@ -609,11 +610,13 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 				first_run_time = float(self.prefs.getStringPref('Browser','first_run'))
 				if ((time_now-first_run_time)/(3600*24)) >= 7:
 					self.auto_update_check()
-			gtk.main()
+
+			GObject.threads_init()
+			Gtk.main()
 
 	def test(self):
-		print(sys.argv[1])
-		print(sys.argv[3])
+		print((sys.argv[1]))
+		print((sys.argv[3]))
 		if len(sys.argv)==4:
 			ascpy.test_model(str(sys.argv[1]),str(sys.argv[3]))
 		#Call the function at the SWIG API level that runs all the tests and pass to it, the *args
@@ -650,7 +653,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def on_recent_file_select(self,widget):
 		if widget:
-			#	_msg = gtk.MessageDialog(buttons=gtk.BUTTONS_OK,message_format=filename,flags=gtk.DIALOG_MODAL)
+			#	_msg = Gtk.MessageDialog(buttons=Gtk.ButtonsType.OK,message_format=filename,flags=Gtk.DialogFlags.MODAL)
 			#	_msg.run()
 			self.do_open(widget.get_label())
 
@@ -702,6 +705,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		self.errorstore.clear()
 		self.modelview.clear()
+		self.moduleview.clear()
 		self.currentobservertab = None
 		for _obs in self.observers:
 			if _obs.alive == False:
@@ -724,7 +728,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		try:
 			self.statusbar.pop(_context)
 		except TypeError as e:
-			print("For some reason, a type error (context=%s,filename=%s): %s" % (_context,filename,e))
+			print(("For some reason, a type error (context=%s,filename=%s): %s" % (_context,filename,e)))
 
 		# Load the current list of modules into self.modules
 		self.moduleview.refresh(self.library)
@@ -741,8 +745,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		if self.waitwin:
 			self.waitwin.show()
 
-		while gtk.events_pending():
-			gtk.main_iteration()
+		while Gtk.events_pending():
+			Gtk.main_iteration()
 		
 	def stop_waiting(self):
 		if self.waitwin:
@@ -759,11 +763,11 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		try:
 			_v = self.prefs.getBoolPref("Compiler","use_relation_sharing",True)
 			ascpy.getCompiler().setUseRelationSharing(_v)
-			print("Relation sharing set to",_v)
+			print(("Relation sharing set to",_v))
 
 			_v = self.prefs.getBoolPref("Compiler","use_binary_compilation",False)
 			ascpy.getCompiler().setBinaryCompilation(_v)
-			print("Binary compilation set to",_v)
+			print(("Binary compilation set to",_v))
 
 			self.sim = type_object.getSimulation(str(type_object.getName())+"_sim",False)
 
@@ -824,11 +828,37 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.sim.build()
 			self.enable_on_sim_build()
 		except RuntimeError as e:
-			self.reporter.reportError("Couldn't build system: %s" % str(e));
+			self.reporter.reportError("Couldn't build system: %s" % str(e))
 			return 1
 		
-		return 0;
-	
+		return 0
+
+	def do_solve_update(self, reporter, status):
+		self.solve_interrupt = reporter.report(status)
+		return False
+
+	def do_solve_finish(self, reporter, status):
+		reporter.finalise(status)
+		self.modelview.refreshtree()
+		return False
+
+	def do_solve_thread(self, reporter):
+		try:
+			self.sim.presolve(self.solver)
+			status = self.sim.getStatus()
+			while status.isReadyToSolve() and not self.solve_interrupt:
+				res = self.sim.iterate()
+				status.getSimulationStatus(self.sim)
+				GObject.idle_add(self.do_solve_update, reporter, status)
+				# 'make' some time for gui update
+				time.sleep(0.001)
+				if res != 0:
+					break
+			GObject.idle_add(self.do_solve_finish, reporter, status)
+			self.sim.postsolve(status)
+		except RuntimeError as err:
+			self.reporter.reportError(str(err))
+
 	def do_solve(self):
 		if self.no_built_system():
 			return
@@ -837,21 +867,15 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.reporter.reportError("No solver assigned!")
 			return
 
-		self.start_waiting("Solving with %s..." % self.solver.getName())
-
 		if self.prefs.getBoolPref("SolverReporter","show_popup",True):
 			reporter = PopupSolverReporter(self,self.sim)
 		else:
 			reporter = SimpleSolverReporter(self)
 
-		try:
-			self.sim.solve(self.solver,reporter)
-		except RuntimeError as e:
-			self.reporter.reportError(str(e))	
-
-		self.stop_waiting()
-		
-		self.modelview.refreshtree()
+		self.solve_interrupt = False
+		thread = threading.Thread(target=self.do_solve_thread, args=(reporter,))
+		thread.daemon = True
+		thread.start()
 
 	def do_integrate(self):
 		if self.no_built_system():
@@ -872,9 +896,6 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_integratorreporter = integwin.run()
 		if _integratorreporter!=None:
 			_integratorreporter.run()
-			self.sim.processVarStatus()
-			self.modelview.refreshtree()
-		
 
 	def do_check(self):
 		if self.no_built_system():
@@ -903,7 +924,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 						,"Relations involved in the structural singularity" : sing.rels
 						,"Variables involved in the structural singularity" : sing.vars
 					}
-					for k,v in msgs.items():
+					for k,v in list(msgs.items()):
 						text+="\n\n%s:" % k
 						if len(v):
 							_l = [j.getName() for j in v]
@@ -960,7 +981,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.reporter.clearPythonErrorCallback()
 
 		loading.print_status("Closing down GTK")
-		gtk.main_quit()
+		Gtk.main_quit()
 
 		loading.print_status("Clearing library")			
 		self.library.clear()
@@ -987,7 +1008,11 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def on_tools_incidencegraph_click(self,*args):
 		self.reporter.reportNote("Preparing incidence graph...")
-		fname = os.tempnam()
+		import tempfile
+		f,fname = tempfile.mkstemp(suffix=".png")
+		f = file(fname,'wb')
+		self.reporter.reportNote("temp file name = %s" % fname)
+		self.reporter.reportNote("file = %s" % f)
 		self.start_waiting("Creating incidence graph...")
 		try:
 			self.sim.write(fname,'dot') # create a PNG file in f
@@ -995,10 +1020,10 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.stop_waiting()
 			self.reporter.reportError("Failed to create incidence graph: %s" % str(e))
 			return
+		f.close()
 		self.stop_waiting()
 		_ig = ImageWindow(self, self.window, fname, title="Incidence Graph", delete=True)
 		_ig.run()
-		self.reporter.reportNote("Deleted temporary file")
 
 	def on_tools_repaint_tree_activate(self,*args):
 		self.reporter.reportNote("Repainting model view...")
@@ -1025,7 +1050,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def on_copy_observer_matrix_click(self,*args):
 		if self.clip == None:
-			self.clip = gtk.Clipboard()
+			self.clip = Gtk.Clipboard()
 
 		if len(self.observers) <= 0:
 			self.reporter.reportError("No observer defined!")
@@ -1126,9 +1151,9 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		except KeyError:
 			_sevicon = self.iconerror
 
-		_fontweight = pango.WEIGHT_NORMAL
+		_fontweight = Pango.Weight.NORMAL
 		if sev==32 or sev==64:
-			_fontweight = pango.WEIGHT_BOLD
+			_fontweight = Pango.Weight.BOLD
 		
 		_fgcolor = "black"
 		if sev==8:
@@ -1167,30 +1192,30 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def open_click(self,*args):
 		#loading.print_status("CURRENT FILEOPENPATH is",self.fileopenpath)
-		dialog = gtk.FileChooserDialog("Open ASCEND model...",
+		dialog = Gtk.FileChooserDialog("Open ASCEND model...",
 			self.window,
-			gtk.FILE_CHOOSER_ACTION_OPEN,
-			(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK)
+			Gtk.FileChooserAction.OPEN,
+			(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
 		)
 		dialog.set_current_folder(self.fileopenpath)
-		dialog.set_default_response(gtk.RESPONSE_OK)
+		dialog.set_default_response(Gtk.ResponseType.OK)
 		dialog.set_transient_for(self.window)
 		dialog.set_modal(True)
 
-		filter = gtk.FileFilter()
+		filter = Gtk.FileFilter()
 		filter.set_name("*.a4c, *.a4l")
 		filter.add_pattern("*.[Aa]4[Cc]")
 		filter.add_pattern("*.[Aa]4[Ll]")
 		dialog.add_filter(filter)
 
-		filter = gtk.FileFilter()
+		filter = Gtk.FileFilter()
 		filter.set_name("All files")
 		filter.add_pattern("*")
 		dialog.add_filter(filter)
 
 		response = dialog.run()
 		_filename = dialog.get_filename()
-		print("\nFILENAME SELECTED:",_filename)
+		print(("\nFILENAME SELECTED:",_filename))
 		
 		_path = dialog.get_current_folder()
 		if _path:
@@ -1198,7 +1223,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		
 		dialog.hide()
 
-		if response == gtk.RESPONSE_OK:
+		if response == Gtk.ResponseType.OK:
 			self.reporter.reportNote("File %s selected." % dialog.get_filename() )
 			self.library.clear()
 			try:
@@ -1265,7 +1290,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			,params=_params
 			,name=self.solver.getName()
 		)
-		if _paramswin.run() == gtk.RESPONSE_OK:
+		if _paramswin.run() == Gtk.ResponseType.OK:
 			print("PARAMS UPDATED")
 			self.sim.setParameters(_paramswin.params)
 		else:
@@ -1310,7 +1335,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		self.builder.add_objects_from_file(self.glade_file,["aboutdialog"])
 		_about = self.builder.get_object("aboutdialog")
-		_about.set_transient_for(self.window);
+		_about.set_transient_for(self.window)
 		_about.set_version(config.VERSION)
 		_about.run()
 		_about.destroy()
@@ -1470,7 +1495,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		
 		self.builder.add_objects_from_file(self.glade_file,["observervbox","observercontext"])
 		
-		_label = gtk.Label();
+		_label = Gtk.Label();
 		_tab = self.maintabs.append_page(self.builder.get_object("observervbox"),_label);
 		_obs = ObserverTab(name=name, browser=self, tab=_tab)
 		_label.set_text(_obs.name)
@@ -1492,13 +1517,13 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		#return self.exit_popup()
 
 	def exit_popup(self):
-		dialog = gtk.MessageDialog(self.window, gtk.DIALOG_MODAL, gtk.MESSAGE_INFO,
-				gtk.BUTTONS_YES_NO, "Are you sure you want to Quit?")
+		dialog = Gtk.MessageDialog(self.window, Gtk.DialogFlags.MODAL, Gtk.MessageType.INFO,
+				Gtk.ButtonsType.YES_NO, "Are you sure you want to Quit?")
 		dialog.set_title("Exit popup")
 		#dialog.set_default_size(600,300)
 		response = dialog.run()
 		dialog.destroy()
-		if response == gtk.RESPONSE_YES:
+		if response == Gtk.ResponseType.YES:
 			self.do_quit()
 			return False
 		else:
@@ -1519,7 +1544,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		
 		_time_now = time.time()
 		_last_update = float(self.prefs.getStringPref("Browser","last_update_check","0"))
-		print("Time since last update check : %f days" %((_time_now-_last_update)/(3600*24)))
+		print(("Time since last update check : %f days" %((_time_now-_last_update)/(3600*24))))
 		
 		if ((_time_now-_last_update)/(3600*24)) < 7:
 			return
@@ -1538,17 +1563,18 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		
 	def disable_menu(self):
 		list=["free_variable","fix_variable","sparsity","propsmenuitem","copy_observer_matrix",
-                      "incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
-                      "show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1",
-                      "repaint_tree","checkbutton","solvebutton","integratebutton","methodrunbutton",
-                      "check1","solve1","integrate1","units","add_observer","keep_observed","preferences","notes_view"]
+				"incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
+				"show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1",
+				"repaint_tree","checkbutton","solvebutton","integratebutton","methodrunbutton",
+				"check1","solve1","integrate1","units","add_observer","keep_observed","preferences","notes_view"]
 		for button in list:
 			self.builder.get_object(button).set_sensitive(False)
 			
 	def disable_on_leave_sim_tab(self):
 		list =["free_variable","fix_variable","propsmenuitem","units"]
 		for button in list:
-			self.builder.get_object(button).set_sensitive(False)
+			if self.builder.get_object(button)!=None:
+				self.builder.get_object(button).set_sensitive(False)
 			
 	def enable_on_enter_sim_tab(self):
 		list =["free_variable","fix_variable","propsmenuitem","units"]
@@ -1558,7 +1584,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			_path, _col = self.modelview.modelview.get_cursor()
 			_instance = None
 			if _path:
-				_name,_instance = self.modelview.otank[_path]
+				_name,_instance = self.modelview.otank[_path.to_string()]
 			if _instance is None:
 				return
 			if _instance.isReal():
@@ -1574,22 +1600,26 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		
 	def enable_on_sim_build(self):
 		list=["sparsity","incidencegraph","diagnose_blocks","show_fixed_vars","show_freeable_vars",
-                      "show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1","notes_view"]
+				"show_fixable_variables","show_variables_near_bounds","show_vars_far_from_nominals1","notes_view"]
 		for button in list:
-			self.builder.get_object(button).set_sensitive(True)
+			if self.builder.get_object(button) != None:
+			   self.builder.get_object(button).set_sensitive(True)
 	def disable_on_first_run(self):
 		list=["reloadbutton","reload","show_external_functions","notes_view"]
 		for button in list:
-			self.builder.get_object(button).set_sensitive(False)
+			if self.builder.get_object(button) != None:
+			   self.builder.get_object(button).set_sensitive(True)
 	def enable_on_file_open(self):
 		list=["reloadbutton","reload","show_external_functions"]
 		for button in list:
-			self.builder.get_object(button).set_sensitive(True)
+			if self.builder.get_object(button) != None:
+			   self.builder.get_object(button).set_sensitive(True)
 	def enable_on_model_tree_build(self):
 		list=["repaint_tree","checkbutton","solvebutton","integratebutton","methodrunbutton",
-                      "check1","solve1","integrate1","units","add_observer","preferences","notes_view"]
+				"check1","solve1","integrate1","units","add_observer","preferences","notes_view"]
 		for button in list:
-			self.builder.get_object(button).set_sensitive(True)
+			if self.builder.get_object(button) != None:
+			   self.builder.get_object(button).set_sensitive(True)
 if __name__ == "__main__":
 	b = Browser();
 	b.run()
@@ -1605,13 +1635,13 @@ class ReloadDialog:
 		browser.builder.connect_signals(self)
 	
 	def on_reloaddialog_close(self,*args):
-		self.alertwin.response(gtk.RESPONSE_CLOSE)
+		self.alertwin.response(Gtk.ResponseType.CLOSE)
 		
 	def run(self):
 		_continue = True
 		while _continue:
 			_res = self.alertwin.run()
-			if _res == gtk.RESPONSE_YES:
+			if _res == Gtk.ResponseType.YES:
 				self.alertwin.destroy()
 				return True
 			else:
@@ -1642,10 +1672,9 @@ class AutoUpdateDialog:
 		_continue = True
 		while _continue:
 			_res = self.win.run()
-			if _res == gtk.RESPONSE_YES:
+			if _res == Gtk.ResponseType.YES:
 				self.win.destroy()
 				return True
-			elif _res == gtk.RESPONSE_NO or _res == gtk.RESPONSE_DELETE_EVENT or _res == gtk.RESPONSE_CLOSE:
+			elif _res == Gtk.ResponseType.NO or _res == Gtk.ResponseType.DELETE_EVENT or _res == Gtk.ResponseType.CLOSE:
 				self.win.destroy()
 				return False
-

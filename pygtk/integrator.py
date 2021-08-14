@@ -1,13 +1,10 @@
+import tempfile
+
 import ascpy
-import time
-import gtk
-import time
-from varentry import *
-from preferences import *
 from integratorreporter import *
 from solverparameters import *
 from infodialog import *
-import tempfile
+
 
 class IntegratorError(RuntimeError):
 	def __init__(self,msg):
@@ -44,6 +41,8 @@ class IntegratorWindow:
 		self.durationentry = self.browser.builder.get_object("durationentry")
 		self.nstepsentry = self.browser.builder.get_object("nstepsentry")
 		self.timedistributionselect = self.browser.builder.get_object("timedistributionselect")
+		self.liveplotcheck = self.browser.builder.get_object("liveplotcheck")
+		self.okbutton = self.browser.builder.get_object("integratorok")
 		self.settings = {
 			# input field: [pref name, default value, export-to-integrator function]
 			"initialstep": [1,lambda x:self.integrator.setInitialSubStep(float(x))]
@@ -52,6 +51,7 @@ class IntegratorWindow:
 			,"maxsteps":[100,lambda x:self.integrator.setMaxSubSteps(int(x))]
 		}
 
+		self.liveplot = False
 		self.integratorentries={}
 		for _k in list(self.settings.keys()):
 			_w = self.browser.builder.get_object(_k+"entry")
@@ -70,12 +70,14 @@ class IntegratorWindow:
 			pass
 
 	def fill_values(self):
-		_enginestore = gtk.ListStore(str)
+		_enginestore = Gtk.ListStore(str)
 		self.engineselect.set_model(_enginestore)
-		_cell = gtk.CellRendererText()
+		_cell = Gtk.CellRendererText()
 		self.engineselect.pack_start(_cell, True)
 		self.engineselect.add_attribute(_cell, 'text', 0)
-		
+
+		self.liveplot = self.prefs.getBoolPref("Integrator", "liveplot", False)
+		self.liveplotcheck.set_active(self.liveplot)
 		_engpref = self.prefs.getStringPref("Integrator","engine","LSODE")
 		_engindex = 0
 		_i = 0
@@ -127,15 +129,15 @@ class IntegratorWindow:
 
 	def on_integratorcancel_clicked(self,*args):
 		self.browser.reporter.reportNote("CANCELLING");
-		self.window.response(gtk.RESPONSE_CANCEL)
+		self.window.response(Gtk.ResponseType.CANCEL)
 
 	def on_entry_key_press_event(self,widget,event):
-		keyname = gtk.gdk.keyval_name(event.keyval)
+		keyname = Gdk.keyval_name(event.keyval)
 		if keyname=="Return":
-			self.window.response(gtk.RESPONSE_OK)
+			self.window.response(Gtk.ResponseType.OK)
 			return True
 		elif keyname=="Escape":
-			self.window.response(gtk.RESPONSE_CANCEL)
+			self.window.response(Gtk.ResponseType.CANCEL)
 			return True;
 		return False;
 
@@ -158,7 +160,7 @@ class IntegratorWindow:
 		print("CREATING SOLVERPARAMETERSWINDOW")
 		_paramswin = SolverParametersWindow(self.browser,_params,_name)
 		print("RUNNING SOLVERPARAMETERSWINDOW")
-		if _paramswin.run() == gtk.RESPONSE_OK:
+		if _paramswin.run() == Gtk.ResponseType.OK:
 			print("GOT OK RESPONSE")
 			self.integrator.setParameters(_params)
 			print("PARAMETERS UPDATED")
@@ -174,7 +176,7 @@ class IntegratorWindow:
 		while True:
 			try:
 				_res = self.window.run()
-				if _res == gtk.RESPONSE_OK:
+				if _res == Gtk.ResponseType.OK:
 					self.check_inputs()
 					_ok=True
 					break
@@ -201,9 +203,20 @@ class IntegratorWindow:
 					_dialog = InfoDialog(self.browser,self.browser.window,text,title,tabs=(70,200,300,400,500))
 					_dialog.run()					
 
-				return None							
+				return None
 			# if we're all ok, create the reporter window and close this one
-			_integratorreporter = IntegratorReporterPython(self.browser,self.integrator)
+			if self.liveplot:
+				start = float(self.beginentry.get_text().split(" ")[0])
+				stop = float(self.durationentry.get_text().split(" ")[0]) + start
+				try:
+					loading.load_matplotlib(True)
+					_integratorreporter = IntegratorReporterPlot(self.browser, self.integrator, start, stop)
+				except RuntimeError as e:
+					self.browser.reporter.reportError(str(e))
+					_integratorreporter = IntegratorReporterPython(self.browser, self.integrator)
+			else:
+				_integratorreporter = IntegratorReporterPython(self.browser, self.integrator)
+
 			self.integrator.setReporter(_integratorreporter)
 			self.window.destroy()
 			return _integratorreporter # means proceed to solve
@@ -211,21 +224,21 @@ class IntegratorWindow:
 		self.window.destroy()
 		return None # can't solve
 
-		def color_entry(self,entry,color):
-			# colour an input box if it doesn't have acceptable contents
-			# error messages would be reported by the 'errors panel' in the main win
-			entry.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
-			entry.modify_bg(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
-			entry.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
-			entry.modify_base(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
+	def color_entry(self,entry,color):
+		# colour an input box if it doesn't have acceptable contents
+		# error messages would be reported by the 'errors panel' in the main win
+		entry.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse(color))
+		entry.modify_bg(Gtk.StateType.ACTIVE, Gdk.color_parse(color))
+		entry.modify_base(Gtk.StateType.NORMAL, Gdk.color_parse(color))
+		entry.modify_base(Gtk.StateType.ACTIVE, Gdk.color_parse(color))
 
 	def taint_entry(self,entry,color):
 		# colour an input box if it doesn't have acceptable contents
 		# error messages would be reported by the 'errors panel' in the main win
-		entry.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
-		entry.modify_bg(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
-		entry.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
-		entry.modify_base(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
+		entry.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse(color))
+		entry.modify_bg(Gtk.StateType.ACTIVE, Gdk.color_parse(color))
+		entry.modify_base(Gtk.StateType.NORMAL, Gdk.color_parse(color))
+		entry.modify_base(Gtk.StateType.ACTIVE, Gdk.color_parse(color))
 		if color == "#FFBBBB":
 			entry.set_property("secondary-icon-stock", 'gtk-dialog-error')
 		elif color == "white":
@@ -233,6 +246,7 @@ class IntegratorWindow:
 			entry.set_property("secondary-icon-tooltip-text", "")
 
 	def parse_entry(self, entry):
+		self.okbutton.set_sensitive(True)
 		# A simple function to get the real value from the entered text
 		# and taint the entry box accordingly
 		i = RealAtomEntry(self.indepvar.getInstance(), entry.get_text())
@@ -240,6 +254,7 @@ class IntegratorWindow:
 			i.checkEntry()
 			_value = i.getValue()
 		except InputError as e:
+			self.okbutton.set_sensitive(False)
 			_value = None
 			_error = re.split('Input Error: ', str(e), 1)
 			entry.set_property("secondary-icon-tooltip-text", _error[1])
@@ -272,9 +287,10 @@ class IntegratorWindow:
 		self.integrator.setLinearTimesteps(ascpy.Units(units), _val["begin"], (_val["begin"]+_val["duration"]), _val["num"]);
 		self.begin=_val["begin"]
 		self.duration=_val["duration"]
+		self.liveplot = self.liveplotcheck.get_active()
 
 		self.prefs.setStringPref("Integrator","duration",str(self.duration))
-		
+		self.prefs.setBoolPref("Integrator", "liveplot", self.liveplot)
 		# set substep parameters (ie settings common to any integrator engine)
 		_failed=False
 		x={}
@@ -321,3 +337,4 @@ class IntegratorWindow:
 			_res = self.integrator.setEngine(self.engines[engine])			
 		except IndexError as e:
 			raise IntegratorError("Unable to set engine: %s" % e) 
+

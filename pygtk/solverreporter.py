@@ -1,6 +1,6 @@
 import ascpy
 import time
-import gtk
+from gi.repository import Gtk
 from diagnose import *
 
 class PythonSolverReporter(ascpy.SolverReporter):
@@ -10,7 +10,7 @@ class PythonSolverReporter(ascpy.SolverReporter):
 		self.reporter = self.browser.reporter
 		if self.reporter==None:
 			raise RuntimeError("Can't find reporter")
-		self.starttime = time.clock()
+		self.starttime = time.perf_counter()
 		self.statusbarcontext = self.browser.statusbar.get_context_id("pythonsolverreporter")
 		if message:
 			self.browser.statusbar.push(self.statusbarcontext,"Solving (%s)..." % message)
@@ -46,7 +46,6 @@ class PythonSolverReporter(ascpy.SolverReporter):
 class PopupSolverReporter(PythonSolverReporter):
 	def __init__(self,browser,sim):
 		PythonSolverReporter.__init__(self,browser)
-
 
 		self.browser.builder.add_objects_from_file(self.browser.glade_file, ["solverstatusdialog"])
 		self.window = self.browser.builder.get_object("solverstatusdialog")
@@ -85,14 +84,11 @@ class PopupSolverReporter(PythonSolverReporter):
 
 		self.nv = self.sim.getNumVars()
 
-		while gtk.events_pending():
-			gtk.main_iteration()
-
 	def on_diagnose_button_click(self,*args):
 		try:
 			_bl = self.sim.getActiveBlock()
 			_db = DiagnoseWindow(self.browser,_bl)
-			_db.run();
+			_db.run()
 		except RuntimeError as e:
 			self.reporter.reportError(str(e))
 			return
@@ -119,7 +115,7 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.progressbar.set_fraction(_frac)
 
 	def report(self,status):
-		_time = time.clock();
+		_time = time.perf_counter();
 		_sincelast = _time - self.lasttime
 		if status.getCurrentBlockNum() > self.blocknum:
 			self.blocknum = status.getCurrentBlockNum()
@@ -129,23 +125,18 @@ class PopupSolverReporter(PythonSolverReporter):
 			self.lasttime = _time;
 			self.elapsed = _time - self.starttime
 			self.blocktime = _time - self.blockstart
-			#print "UPDATING!"
 			self.fill_values(status)
 
-		while gtk.events_pending():
-			gtk.main_iteration()		
+		self.guitime = self.guitime + (time.perf_counter() - _time)
 
-		self.guitime = self.guitime + (time.clock() - _time)
-
-		if status.isConverged() or status.isDiverged() or status.isInterrupted():
-			return 1
 		if self.guiinterrupt:
-			return 2
-		return 0
+			return True
+
+		return False
 
 	def finalise(self,status):
 		try:
-			_time = time.clock()
+			_time = time.perf_counter()
 
 			_p = self.browser.prefs;
 			_close_on_converged = _p.getBoolPref("SolverReporter","close_on_converged",True);
@@ -153,14 +144,14 @@ class PopupSolverReporter(PythonSolverReporter):
 			if status.isConverged() and _close_on_converged:
 				self.report_to_browser(status)
 				print("CLOSING ON CONVERGED")
-				self.window.response(gtk.RESPONSE_CLOSE)
+				self.window.response(Gtk.ResponseType.CLOSE)
 				return
 			
 			if not status.isConverged() and _close_on_nonconverged:
 				print("CLOSING, NOT CONVERGED")
 				self.report_to_browser(status)
 				if self.window:
-					self.window.response(gtk.RESPONSE_CLOSE)
+					self.window.response(Gtk.ResponseType.CLOSE)
 				return
 
 			self.fill_values(status)
@@ -184,7 +175,7 @@ class PopupSolverReporter(PythonSolverReporter):
 
 			self.report_to_browser(status)
 
-			self.guitime = self.guitime + (time.clock() - _time)
+			self.guitime = self.guitime + (time.perf_counter() - _time)
 			print("TIME SPENT UPDATING SOLVER: %0.2f s" % self.guitime)
 		except Exception as e:
 			print("SOME PROBLEM: %s" % str(e))
@@ -196,15 +187,13 @@ class SimpleSolverReporter(PythonSolverReporter):
 		self.lasttime = self.starttime
 
 	def report(self,status):
-		_time = time.clock()
+		_time = time.perf_counter()
 		if _time - self.lasttime > self.updateinterval:
 			self.lasttime = _time
 			_msg = "Solved %d vars in %d iterations" % (status.getNumConverged(),status.getIterationNum())
 			self.browser.statusbar.push(self.statusbarcontext, _msg )
 
-		while gtk.events_pending():
-			gtk.main_iteration()
-		return 0
+		return False
 
 	def finalise(self,status):
 		self.report_to_browser(status)

@@ -4,8 +4,8 @@ argv=['-gthread','-pi1','In <\\#>:','-pi2','   .\\D.:','-po','Out<\\#>:','-nocon
 banner = "\n\n>>> ASCEND PYTHON CONSOLE: type 'help(ascpy)' for info, ctrl-D to resume ASCEND"
 exitmsg = '>>> CONSOLE EXIT'
 
-import gtk
-import pango
+from gi.repository import Gtk
+from gi.repository import Pango
 
 import platform
 if platform.system()=="Windows":
@@ -19,23 +19,41 @@ try:
 except:
 	have_ipython = 0
 
+
+# Displays a confimation dialog box to quit pygtk main_window
+# This method is mapped to quit() and exit() calls in the ipython console.
+def close_window_on_confirm(browser):
+	dialog = Gtk.MessageDialog(browser.window, Gtk.DialogFlags.MODAL,
+	                           Gtk.MessageType.INFO, Gtk.ButtonsType.YES_NO,"Are you sure you want to quit ASCEND?")
+
+	dialog.set_title("Quit")
+	response = dialog.run()
+	dialog.destroy()
+	if response == Gtk.ResponseType.YES:
+		browser.do_quit()
+		return False
+	else:
+		return True
+
 def create_widget(browser):
 	try:
 		if not have_ipython:
 			raise Exception("IPython could not be load (is it installed?)")
 		V = ipython_view.IPythonView()
 	except Exception as e:
-		V = gtk.Label()
+		V = Gtk.Label()
 		V.set_text("IPython error: %s" % str(e));
 		V.show()
 		browser.consolescroll.add(V)
 		browser.consoletext = V
 		return
 
-	V.modify_font(pango.FontDescription(FONT))
-	V.set_wrap_mode(gtk.WRAP_CHAR)
+	V.modify_font(Pango.FontDescription(FONT))
+	V.set_wrap_mode(Gtk.WrapMode.CHAR)
 	V.show()
 	browser.consolescroll.add(V)
 	browser.consoletext = V
 	V.updateNamespace({'browser': browser})
-		
+	V.updateNamespace({'exit':lambda:close_window_on_confirm(browser)})
+	V.updateNamespace({'quit':lambda:close_window_on_confirm(browser)})
+

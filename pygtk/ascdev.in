@@ -1,7 +1,7 @@
 #!@PYTHON@
 # to debug this program using 'gdb', invoke 'ASC_GDB=1 ascdev'.
 
-import os.path, sys, platform;
+import os.path, sys, platform, subprocess
 
 def add_at_start(envvar,pathcomponents):
 	"""
@@ -95,9 +95,10 @@ if __name__=='__main__':
 		else:
 			print("PYTHON... ",script)
 			sys.stdout.flush() # needed for rxvt on Windows
+			#ret = subprocess.call(['@PYTHON@',script]+sys.argv[1:])
+			#sys.exit(ret)
 			os.execvp('@PYTHON@',[script,script]+sys.argv[1:])
 		# the above calls don't return so we can forget about line of enqiry
-
 
 	print("\nRunning with...")
 	for v in [LD_LIBRARY_PATH,'ASCENDLIBRARY','ASCENDSOLVERS','PYTHONPATH','PATH']:

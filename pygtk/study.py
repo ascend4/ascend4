@@ -1,10 +1,12 @@
-import gtk
-import pango
-import ascpy
+import threading
+from math import log, exp
 
+from gi.repository import Gdk
+from gi.repository import GObject
+
+from celsiusunits import CelsiusUnits
 from varentry import *
 from studyreporter import *
-from math import log, exp
 
 STEP_NUMBER = 0
 STEP_INCREM = 1
@@ -32,11 +34,11 @@ class StudyWin:
 		self.method = None
 	
 		# TODO add an integer index to the ListStore as well, to avoid string conversion
-		self.step_menu_model = gtk.ListStore(int,str)
+		self.step_menu_model = Gtk.ListStore(int,str)
 		self.step_menu_model.append([STEP_NUMBER,'No. of steps'])
 		self.step_menu_model.append([STEP_INCREM,'Step size'])
 		self.step_menu_model.append([STEP_RATIO, 'Step ratio'])
-		renderer = gtk.CellRendererText()
+		renderer = Gtk.CellRendererText()
 		self.step_menu.set_model(self.step_menu_model)
 		self.step_menu.pack_start(renderer, True)
 		self.step_menu.add_attribute(renderer, 'text',1)
@@ -47,14 +49,16 @@ class StudyWin:
 		_continue_on_fail = _p.getBoolPref("StudyReporter", "continue_on_fail", True)
 		self.checkbutton.set_active(_continue_on_fail)
 
-		# set up the distributions combobox		
-		_cell = gtk.CellRendererText()
-		self.dist.pack_start(_cell, True)
-		self.dist.add_attribute(_cell, 'text', 0)
-		
+		# set up the distributions combobox
+		dist_model = Gtk.ListStore(str)
+		dist_model.append([DIST_LINEAR])
+		dist_model.append([DIST_LOG])
+		self.dist.set_model(dist_model)
+		self.dist.set_active(0)
+
 		# set up the methods combobox
 		_methodstore = self.browser.methodstore
-		_methodrenderer = gtk.CellRendererText()
+		_methodrenderer = Gtk.CellRendererText()
 		self.methodrun.set_model(_methodstore)
 		self.methodrun.pack_start(_methodrenderer, True)
 		self.methodrun.add_attribute(_methodrenderer, 'text',0)
@@ -92,12 +96,18 @@ class StudyWin:
 		_arr = {self.lowerb: self.instance.getRealValue()
 			,self.upperb: self.instance.getUpperBound() # this upper bound is probably stoopid
 		}
+
 		for _k,_v in _arr.items():
 			_t = str(_v / _conversion)+" "+_u
+			##### CELSIUS TEMPERATURE WORKAROUND
+			_t = CelsiusUnits.convert_show(self.instance, str(_v), True, default=_t)
+			##### CELSIUS TEMPERATURE WORKAROUND
 			_k.set_text(_t)
 		
 		self.browser.builder.connect_signals(self)
 		self.lowerb.select_region(0, -1)
+		self.solve_interrupt = False
+		self.data = {}
 	
 	def get_step_type(self):
 		_s = self.step_menu.get_active_iter()
@@ -114,7 +124,7 @@ class StudyWin:
 	def run(self):
 		while 1:
 			_res = self.studywin.run();
-			if _res == gtk.RESPONSE_OK:
+			if _res == Gtk.ResponseType.OK:
 				if self.validate_inputs():
 					# store inputs for later recall
 					_p = self.browser.prefs
@@ -128,26 +138,28 @@ class StudyWin:
 				else:
 					self.browser.reporter.reportError("Please review input errors in Study dialog.")
 					continue
-			elif _res==gtk.RESPONSE_CANCEL:
+			elif _res==Gtk.ResponseType.CANCEL:
 				# cancel... exit Study
 				break
 		self.studywin.destroy()
 		
 	def on_studywin_close(self,*args):
-		self.studywin.response(gtk.RESPONSE_CANCEL)
+		self.studywin.response(Gtk.ResponseType.CANCEL)
 
 	def on_key_press_event(self,widget,event):
-		keyname = gtk.gdk.keyval_name(event.keyval)
+		keyname = Gdk.keyval_name(event.keyval)
 		if keyname=="Return":
-			self.studywin.response(gtk.RESPONSE_OK)
+			self.studywin.response(Gtk.ResponseType.OK)
 			return True
 		elif keyname=="Escape":
-			self.studywin.response(gtk.RESPONSE_CANCEL)
+			self.studywin.response(Gtk.ResponseType.CANCEL)
 			return True;
 		return False;
 		
 	def on_methodrun_changed(self, *args):
-		_sel = self.methodrun.get_active_text()
+		index = self.methodrun.get_active()
+		piter = self.methodrun.get_model().get_iter(Gtk.TreePath.new_from_string(str(index)))
+		_sel = self.methodrun.get_model().get_value(piter, 0)
 		if _sel:
 			_methods = self.browser.sim.getType().getMethods()
 			for _m in _methods:
@@ -203,8 +215,6 @@ class StudyWin:
 			if self.get_step_type() == STEP_INCREM:
 				self.set_step_type(STEP_RATIO)
 				flag = 1
-			self.step_menu.remove_text(1)
-			self.step_menu.insert_text(1,"Step ratio")
 			if flag == 1:
 				self.step_menu.set_active(1)
 			if _start == 0 or _end == 0:
@@ -221,7 +231,7 @@ class StudyWin:
 				self.taint_entry(self.lowerb,msg=_msg)
 				self.taint_entry(self.upperb,msg=_msg)
 				return 0
-			self.check_dist.set_from_stock('gtk-yes', gtk.ICON_SIZE_BUTTON)
+			self.check_dist.set_from_stock('gtk-yes', Gtk.IconSize.BUTTON)
 			self.check_dist.set_tooltip_text("")
 			return 1
 
@@ -284,16 +294,18 @@ class StudyWin:
 		color = "white"
 		if not good:
 			color = "#FFBBBB"
-		for s in [gtk.STATE_NORMAL, gtk.STATE_ACTIVE]:
-			entry.modify_bg(s, gtk.gdk.color_parse(color))
-			entry.modify_base(s, gtk.gdk.color_parse(color))
+		for s in [Gtk.StateType.NORMAL, Gtk.StateType.ACTIVE]:
+			entry.modify_bg(s, Gdk.color_parse(color))
+			entry.modify_base(s, Gdk.color_parse(color))
 		# FIXME don't apply logic to hard-wired colour codes
 		if not good:
 			entry.set_property("secondary-icon-stock", 'gtk-dialog-error')
 		else:
 			entry.set_property("secondary-icon-stock", 'gtk-yes')
-			entry.set_property("secondary-icon-tooltip-text", "")
-		entry.set_property("secondary-icon-tooltip-text", msg)
+
+		# causes gtk-critical errors
+			# entry.set_property("secondary-icon-tooltip-text", "")
+		# entry.set_property("secondary-icon-tooltip-text", msg)
 
 	def taint_dist(self, good=0, msg=None):
 		"""
@@ -304,15 +316,20 @@ class StudyWin:
 			_icon = 'gtk-yes'
 		else:
 			_icon = 'gtk-dialog-error'		
-		self.check_dist.set_from_stock(_icon, gtk.ICON_SIZE_BUTTON)
-		self.check_dist.set_tooltip_text(msg)
+		self.check_dist.set_from_stock(_icon, Gtk.IconSize.BUTTON)
+		if msg!=None:
+		    self.check_dist.set_tooltip_text(msg)
 
 	def parse_entry(self, entry):
 		"""
 		Parse an input box and enforce dimensional agreement with self.instance.
 		"""
+		newtext = entry.get_text()
+		##### CELSIUS TEMPERATURE WORKAROUND
+		newtext = CelsiusUnits.convert_edit(self.instance, newtext, False)
+		##### CELSIUS TEMPERATURE WORKAROUND
 		# FIXME Add missing units if they have not been entered.
-		i = RealAtomEntry(self.instance, entry.get_text())
+		i = RealAtomEntry(self.instance, newtext)
 		_msg = None
 		try:
 			i.checkEntry()
@@ -369,44 +386,82 @@ class StudyWin:
 		self.studywin.destroy()
 		reporter = StudyReporter(_b, _b.sim.getNumVars(), self.instance, _nsteps, self)
 
-		# FIXME move following code to the StudyReporter class?
+		self.data = {}
+		for tab in self.browser.observers:
+			if tab.alive:
+				self.data[tab.name] = []
+		self.solve_interrupt = False
+		thread = threading.Thread(target=self.solve_thread, args=(_b, reporter, _start, _step, _nsteps, _dist))
+		thread.daemon = True
+		thread.start()
+
+	def solve_thread(self, browser, reporter, start, step, nsteps, dist):
 		i = 0
-		_val = _start
-		while i<=_nsteps and reporter.guiinterrupt == False:
+		while i <= nsteps and not self.solve_interrupt:
 			# run a method, if requested
 			if self.method:
 				try:
-					_b.sim.run(method)
+					browser.sim.run(self.method)
 				except RuntimeError as e:
-					_b.reporter.reportError(str(e))
-				
+					browser.reporter.reportError(str(e))
+
+			# any issue with accumulation of rounding errors here?
+			if dist == DIST_LOG:
+				_val = exp(log(start) + i * step)
+			else:
+				_val = start + i * step
+
 			# set the value (do it inside the loop to avoid METHOD possibly unfixing)
 			if self.instance.getType().isRefinedSolverVar():
 				# for solver vars, set the 'fixed' flag as well
-				## FIXME this function seems to somehow be repeatedly parsing units: avoid doing that every step.
 				self.instance.setFixedValue(_val)
 			else:
 				# what other kind of variable is it possible to study, if not a solver_var? integer? not suppported?
 				self.instance.setRealValue(_val)
-			
-			#solve
-			# FIXME where is the continue_on_fail thing?
+
+			GObject.idle_add(self.solve_update, reporter, i)
 			try:
-				reporter.updateVarDetails(i)
-				_b.sim.solve(_b.solver, reporter)
-			except RuntimeError as e:
-				_b.reporter.reportError(str(e))
+				browser.sim.presolve(browser.solver)
+				status = browser.sim.getStatus()
+				while status.isReadyToSolve() and not self.solve_interrupt:
+					res = browser.sim.iterate()
+					status.getSimulationStatus(browser.sim)
+					GObject.idle_add(self.solve_update_step, reporter, status)
+					# 'make' some time for gui update
+					time.sleep(0.001)
+					if res != 0:
+						break
+				self.save_data()
+				GObject.idle_add(self.solve_finish_step, reporter, status)
+				browser.sim.postsolve(status)
+			except RuntimeError as err:
+				browser.reporter.reportError(str(err))
 
 			i += 1
-			# any issue with accumulation of rounding errors here?
-			if _dist==DIST_LOG:
-				_val = exp(log(_start)+i*_step)
-			else:
-				_val = _start + i*_step
 
-		if reporter.continue_on_fail == True:
-			reporter.updateVarDetails(i)
-		
-		_b.stop_waiting()
-		_b.modelview.refreshtree()
-		
+		GObject.idle_add(self.solve_update, reporter, i)
+		GObject.idle_add(self.solve_finish, browser, reporter)
+
+	def save_data(self):
+		for tab in self.browser.observers:
+			if tab.alive:
+				v = tab.get_values()
+				self.data[tab.name].append(v)
+
+	def solve_update(self, reporter, i):
+		reporter.updateVarDetails(i)
+		return False
+
+	def solve_update_step(self, reporter, status):
+		self.solve_interrupt = reporter.report(status)
+		return False
+
+	def solve_finish_step(self, reporter, status):
+		reporter.finalise(status)
+		return False
+
+	def solve_finish(self, browser, reporter):
+		reporter.report_observed(self.data)
+		browser.stop_waiting()
+		browser.modelview.refreshtree()
+		return False

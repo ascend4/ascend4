@@ -1,6 +1,6 @@
 import ascpy
 import time
-import gtk
+from gi.repository import Gtk
 from solverreporter import PythonSolverReporter
 
 class StudyReporter(PythonSolverReporter):
@@ -53,8 +53,6 @@ class StudyReporter(PythonSolverReporter):
 		self.nsteps = nsteps
 		self.pointsdone = 0
 		self.allconverged = True
-		while gtk.events_pending():
-			gtk.main_iteration()
 
 	def on_stopbutton_activate(self,*args):
 		self.guiinterrupt = True
@@ -113,17 +111,20 @@ class StudyReporter(PythonSolverReporter):
 			#print "UPDATING!"
 			self.fill_values(status)
 
-		while gtk.events_pending():
-			gtk.main_iteration()
-
 		self.guitime = self.guitime + (time.clock() - _time)
 
-		if status.isConverged() or status.isDiverged() or status.isInterrupted():
-			return 1
 		if self.guiinterrupt:
-			return 2
-		return 0
-	
+			return True
+
+		return False
+
+	def report_observed(self, data):
+		#add row in the observer tabs
+		for tabs in self.browser.observers:
+			if tabs.alive:
+				for v in data[tabs.name]:
+					tabs.do_add_row(v)
+
 	def finalise(self,status):
 		try:
 			_time = time.clock()
@@ -134,12 +135,8 @@ class StudyReporter(PythonSolverReporter):
 			if status.isConverged():
 				self.report_to_browser(status)
 				# print "Converged for %s = %s" % (self.browser.sim.getInstanceName(self.instance), self.instance.getRealValue())
-				#add row in the observer tabs
-				for tabs in self.browser.observers:
-					if tabs.alive:
-						tabs.do_add_row()
 				if self.pointsdone == (self.nsteps):
-					self.window.response(gtk.RESPONSE_CLOSE)
+					self.window.response(Gtk.ResponseType.CLOSE)
 				return
 			
 			if not status.isConverged():
@@ -147,9 +144,6 @@ class StudyReporter(PythonSolverReporter):
 				      self.instance.getRealValue()))
 				self.allconverged = False
 				self.report_to_browser(status)
-				for tabs in self.browser.observers:
-					if tabs.alive:
-						tabs.do_add_row()
 				if self.continue_on_fail is True:
 					if self.pointsdone == self.nsteps:
 						self.closebutton.set_sensitive(True)
