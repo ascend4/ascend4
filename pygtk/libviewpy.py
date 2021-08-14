@@ -1,6 +1,6 @@
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 
 class Browser:
 	def make_row( self, piter, name, value ):
@@ -17,7 +17,7 @@ class Browser:
 			for _name, _value in list(value.__dict__.items()):
 				_piter = self.make_row( piter, "."+_name, _value )
 				_path = self.treestore.get_path( _piter )
-				self.otank[ _path ] = (_name, _value)
+				self.otank[ _path.to_string() ] = (_name, _value)
 
 	def make_children(self, value, piter ):
 		children = []
@@ -27,7 +27,7 @@ class Browser:
 			_name = child.name;
 			_piter = self.make_row(piter,_name,child)
 			_path = self.treestore.get_path(_piter)
-			self.otank[_path]=(_name,child)
+			self.otank[_path.to_string()]=(_name,child)
 
 	def make_mapping( self, value, piter ):
 		keys = []
@@ -39,16 +39,16 @@ class Browser:
 			_name = "[%s]"%str(key)
 			_piter = self.make_row( piter, _name, value[key] )
 			_path = self.treestore.get_path( _piter )
-			self.otank[ _path ] = (_name, value[key])
+			self.otank[ _path.to_string() ] = (_name, value[key])
 
 	def make(self, name=None, value=None, path=None, depth=1):
 		if path is None:
 			# make root node
 			piter = self.make_row( None, name, value )
 			path = self.treestore.get_path( piter )
-			self.otank[ path ] = (name, value)
+			self.otank[ path.to_string() ] = (name, value)
 		else:
-			name, value = self.otank[ path ]
+			name, value = self.otank[ path.to_string() ]
 
 		piter = self.treestore.get_iter( path )
 		if not self.treestore.iter_has_child( piter ):
@@ -58,37 +58,38 @@ class Browser:
 
 		if depth:
 			for i in range( self.treestore.iter_n_children( piter ) ):
-				self.make( path = path+(i,), depth = depth - 1 )
+				path.append_index(i)
+				self.make( path=path, depth = depth - 1 )
 
 	def row_expanded( self, treeview, piter, path ):
 		self.make( path = path )
 
 	def delete_event(self, widget, event, data=None):
-		gtk.main_quit()
-		return gtk.FALSE
+		Gtk.main_quit()
+		return False
 
 	def __init__(self, name, value):
-		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		self.window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
 		self.window.set_title("Browser")
 		self.window.set_size_request(512, 320)
 		self.window.connect("delete_event", self.delete_event)
 
 		# we will store the name, the type name, and the repr 
 		columns = [str,str,str]
-		self.treestore = gtk.TreeStore(*columns)
+		self.treestore = Gtk.TreeStore(*columns)
 
 		# the otank tells us what object we put at each node in the tree
 		self.otank = {} # map path -> (name,value)
 		self.make( name, value )
 
-		self.treeview = gtk.TreeView(self.treestore)
+		self.treeview = Gtk.TreeView(self.treestore)
 		self.treeview.connect("row-expanded", self.row_expanded )
 
-		self.tvcolumns = [ gtk.TreeViewColumn() for _type in columns ]
+		self.tvcolumns = [ Gtk.TreeViewColumn() for _type in columns ]
 		i = 0
 		for tvcolumn in self.tvcolumns:
 			self.treeview.append_column(tvcolumn)
-			cell = gtk.CellRendererText()
+			cell = Gtk.CellRendererText()
 			tvcolumn.pack_start(cell, True)
 			tvcolumn.add_attribute(cell, 'text', i)
 			i = i + 1
@@ -98,7 +99,7 @@ class Browser:
 
 def dump( name, value ):
 	browser = Browser( name, value )
-	gtk.main()
+	Gtk.main()
 
 def test():
 	class Thing:

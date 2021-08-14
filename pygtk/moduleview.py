@@ -1,26 +1,8 @@
-import gtk
-import pango
+from gi.repository import Gtk, GtkSource, GObject
+from gi.repository import Pango
 import ascpy
+#import gtksourceview2 as gtksourceview
 import os
-
-HAVE_SOURCEVIEW=0
-try:
-	from gtksourceview2 import Buffer as MyBuffer, View as MyView, language_manager_get_default
-	# Ensure that the ascend.lang settings are accessible for gtksourceview
-
-	# TODO move this to ascdev / ascend scripts, it shouldn't be here as
-	# it contains assumptions about the filesystem layout.
-
-	mgr = language_manager_get_default()
-	_op = mgr.get_search_path()
-	if os.path.join('..','tools','gtksourceview-2.0') not in _op:
-		_op.append(os.path.join('..','tools','gtksourceview-2.0'))
-		mgr.set_search_path(_op)
-	lang = mgr.get_language('ascend')
-	HAVE_SOURCEVIEW=1
-except ImportError as e:
-	MyBuffer = gtk.TextBuffer
-	MyView = gtk.TextView
 
 class ModuleView:
 	def __init__(self,browser,builder, library):
@@ -32,15 +14,15 @@ class ModuleView:
 		self.moduleview = builder.get_object('moduleview')
 
 		modulestorecoltypes = [str, str, int] # bool=can-be-instantiated
-		self.modulestore = gtk.TreeStore(*modulestorecoltypes)
+		self.modulestore = Gtk.TreeStore(*modulestorecoltypes)
 		moduleviewtitles = ["Module name", "Filename"]
 		self.moduleview.set_model(self.modulestore)
-		self.modcols = [ gtk.TreeViewColumn() for _type in modulestorecoltypes]
+		self.modcols = [ Gtk.TreeViewColumn() for _type in modulestorecoltypes]
 		i = 0
 		for modcol in self.modcols[:len(moduleviewtitles)]:
 			modcol.set_title(moduleviewtitles[i])
 			self.moduleview.append_column(modcol)
-			_renderer = gtk.CellRendererText()
+			_renderer = Gtk.CellRendererText()
 			modcol.pack_start(_renderer, True)
 			modcol.add_attribute(_renderer, 'text', i)
 			modcol.add_attribute(_renderer,'weight',2)
@@ -55,7 +37,7 @@ class ModuleView:
 		self.viewmenuitem.connect("activate",self.view_activate)
 		self.modelname = None
 		self.modulename = None
-		self.moduleview.get_selection().set_mode(gtk.SELECTION_SINGLE)
+		self.moduleview.get_selection().set_mode(Gtk.SelectionMode.SINGLE)
 
 	def refresh(self, library):
 		"""Repopulate the 'modules' tab with the current (new) contents of the 'library'."""
@@ -78,22 +60,22 @@ class ModuleView:
 			_n = str( m.getName() )
 			_f = str( m.getFilename() )
 			#print "ADDING ROW name %s, file = %s" % (_n, _f)
-			_r = self.modulestore.append(None,  [ _n, _f, pango.WEIGHT_NORMAL ])
+			_r = self.modulestore.append(None,  [ _n, _f, Pango.Weight.NORMAL ])
 
 			if firstpath is None:
 					firstpath = self.modulestore.get_path(_r)
 
 			for t in library.getModuleTypes(m):
-				_n = t.getName()
+				_n = str(t.getName())
 				if t.isModel() and not t.hasParameters():
-					_w = pango.WEIGHT_BOLD
+					_w = Pango.Weight.BOLD
 				else:
-					_w = pango.WEIGHT_NORMAL
+					_w = Pango.Weight.NORMAL
 				
 				#print "ADDING TYPE %s" % _n
 				_piter = self.modulestore.append(_r , [ _n, "", _w ])
 				_path = self.modulestore.get_path(_piter)
-				self.modtank[_path]=t
+				self.modtank[_path.to_string()]=t
 	
 		# open up the top-level module (ie the one we just openened)
 		if firstpath is not None:
@@ -107,15 +89,15 @@ class ModuleView:
 		something we might allow in the future."""
 
 		modules = self.library.getModules()
-		if len(path)==1:
+		if len(path.to_string())==1:
 			if self.moduleview.row_expanded(path):
 				self.moduleview.collapse_row(path)
 			else:
 				self.moduleview.expand_row(path,False)
 			#self.browser.reporter.reportNote("Launching of external editor not yet implemented")
-		elif len(path)==2:
-			if path in self.modtank:
-				_type = self.modtank[path];
+		elif len(path.to_string())>=3:
+			if path.to_string() in self.modtank:
+				_type = self.modtank[path.to_string()];
 				if not _type.isModel():
 					self.browser.reporter.reportError("Can't create simulation for type '%s': not a MODEL type" % str(_type.getName()))
 					return
@@ -141,14 +123,14 @@ class ModuleView:
 		if event.button == 3:	
 			x = widget.get_selection()
 			y = x.get_selected()
-			if len(y[0].get_path(y[1]))==1:
+			if len(y[0].get_path(y[1]).to_string())==1:
 				self.modulename=y[0].get_value(y[1],0)
 				self.modelname=None
-			elif len(y[0].get_path(y[1]))==2:	
+			elif len(y[0].get_path(y[1]).to_string())==3:	
 				self.modelname = y[0].get_value(y[1],0)
 				self.modulename = None
 			self.viewmenuitem.set_sensitive(True)
-			self.modulemenu.popup(None,None,None,3,event.time)
+			self.modulemenu.popup(None,None,None,None,3,event.time)
 		
 	def view_activate(self,widget,*args):
 		filename=''
@@ -197,50 +179,61 @@ class ModuleView:
 						break
 				ViewModel(text=''.join(displaytext),title="Model '%s'" % (self.modelname))
 
+	def clear(self):
+		self.modulestore.clear()
+
 class ViewModel:
 	"""
 	A window to display the content of an ASCEND model in syntax-highlighted text
-	NOTE: syntax highlighting as implemented here requires the gtksourceview-2.0
-	syntax file to be installed in /usr/share/gtksourceview-2.0/language-specs,
+	NOTE: syntax highlighting as implemented here requires the gtksourceview-3.0
+	syntax file to be installed in /usr/share/gtksourceview-3.0/language-specs,
 	which requires install-time configuration.
 	"""
 	#TODO Enable Model Editing (REALLY? That would be complicated -- JP)
 
 	def __init__(self, filename=None, text=None, title="View"):
 		# Defining the main window
-		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
 		window.set_resizable(True)  
 		window.connect("destroy", self.close_window, window)
 		window.set_title(title)
 		window.set_border_width(0)
-		window.set_position(gtk.WIN_POS_CENTER)
+		window.set_position(Gtk.WindowPosition.CENTER)
 		window.set_size_request(600,400)
 
 		#Creating a vertical box
-		box = gtk.VBox(False, 10)
+		box = Gtk.VBox(False, 10)
 		box.set_border_width(10)
 		window.add(box)
 		box.show()
 		
+		#Get the ASCEND language
+		GObject.type_register(GtkSource.View)
+		mgr = GtkSource.LanguageManager.get_default()
+		op = mgr.get_search_path()
+		if os.path.join('..','tools','gtksourceview-3.0') not in op:
+			op.append(os.path.join('..','tools','gtksourceview-3.0'))
+			mgr.set_search_path(op)
+		lang = mgr.get_language('ascend')
+
 		# TODO add status bar where this message can be reported?
-		if not HAVE_SOURCEVIEW or lang is None:
+		if lang is None:
 			print("UNABLE TO LOCATE ASCEND LANGUAGE DESCRIPTION for gtksourceview")
 
 		#Creating a ScrolledWindow for the textview widget
-		scroll = gtk.ScrolledWindow()
-		scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-		view = MyView()
+		scroll = Gtk.ScrolledWindow()
+		scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		view = GtkSource.View()
 		view.set_editable(False)
-		buff = MyBuffer()
-		if HAVE_SOURCEVIEW:
-			buff.set_language(lang)
-			buff.set_highlight_syntax(True)
+		buff = GtkSource.Buffer()
+		buff.set_language(lang)
+		buff.set_highlight_syntax(True)
 		view.set_buffer(buff)
 		scroll.add(view)
 
 		scroll.show()
 		view.show()
-		box.pack_start(scroll)
+		box.pack_start(scroll, True, True, 0)
 
 		if filename is not None:
 			#Get the content of the file
@@ -260,4 +253,3 @@ class ViewModel:
 
 	def close_window(self, widget, *data):
 		data[0].hide()
-

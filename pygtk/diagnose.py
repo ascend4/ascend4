@@ -1,9 +1,10 @@
-import gtk
-import ascpy
+import array
 from itertools import groupby
 from operator import itemgetter
 import math
-import re
+
+import cairo
+from gi.repository import GdkPixbuf, Gdk
 
 import config
 from infodialog import *
@@ -12,7 +13,7 @@ from preferences import *
 ZOOM_RE = re.compile(r"([0-9]+)\s*%?")
 MAX_ZOOM_SIZE = float(2000) # float
 MAX_ZOOM_RATIO = float(16) # float
-AT_BOUND_TOL = 0.0001;
+AT_BOUND_TOL = 0.0001
 
 class DiagnoseWindow:
 	def __init__(self,browser,block=0):
@@ -26,12 +27,12 @@ class DiagnoseWindow:
 		self.prefs = Preferences()
 
 		try:
-			_icon = gtk.Image()
-			_iconpath = browser.assets_dir+'diagnose'+config.ICON_EXTENSION
-			print("ICON PATH =",_iconpath)
+			_icon = Gtk.Image()
+			_iconpath = os.path.join(browser.assets_dir, 'diagnose' + config.ICON_EXTENSION)
+			print(("ICON PATH =",_iconpath))
 			_icon.set_from_file(_iconpath)
-			print("ICON = ",_icon)
-			self.window.set_icon(_icon)
+			print(("ICON = ",_icon))
+			self.window.set_icon(_icon.get_pixbuf())
 		except:
 			pass
 		
@@ -56,7 +57,7 @@ class DiagnoseWindow:
 			self.preferred_units_check.set_active(False)
 
 		self.varview = self.browser.builder.get_object("varview")
-		self.varbuf = gtk.TextBuffer()
+		self.varbuf = Gtk.TextBuffer()
 		self.varview.set_buffer(self.varbuf)
 		self.varcollapsed = self.browser.builder.get_object("varcollapsed")
 		self.relview = self.browser.builder.get_object("relview")	
@@ -65,7 +66,7 @@ class DiagnoseWindow:
 		self.rellabels = self.browser.builder.get_object("rellabels")
 		self.relrels = self.browser.builder.get_object("relrels")
 		self.relresids = self.browser.builder.get_object("relresids")
-		self.relbuf = gtk.TextBuffer()
+		self.relbuf = Gtk.TextBuffer()
 		self.relview.set_buffer(self.relbuf)
 		self.im = None
 		self.block = 0
@@ -81,7 +82,7 @@ class DiagnoseWindow:
 	def apply_prefs(self):
 		vc = self.browser.prefs.getBoolPref("Diagnose","varcollapsed",True)
 
-		print("VARCOLLAPSED =",vc)
+		print(("VARCOLLAPSED =",vc))
 		self.varcollapsed.set_active(vc)
 		self.relcollapsed.set_active(self.browser.prefs.getBoolPref("Diagnose","relcollapsed",True))
 
@@ -99,8 +100,8 @@ class DiagnoseWindow:
 		try:
 			if self.im.getNumBlocks()==0:
 				print("NO BLOCKS!")
-				self.image.set_from_stock(gtk.STOCK_DIALOG_ERROR
-					,gtk.ICON_SIZE_DIALOG
+				self.image.set_from_stock(Gtk.STOCK_DIALOG_ERROR
+					,Gtk.IconSize.DIALOG
 				)
 				self.browser.reporter.reportError(
 					"Can't 'Diagnose blocks' until solver has been used."
@@ -112,11 +113,11 @@ class DiagnoseWindow:
 				block = self.im.getNumBlocks() - 1
 				rl,cl,rh,ch = self.im.getBlockLocation(block)
 			else:				
-				print("BLOCK INDEX ERROR: block =",block)
+				print(("BLOCK INDEX ERROR: block =",block))
 				self.blockentry.set_text(str(self.block))
 				return
 		except RuntimeError as e:
-			print("ERROR GETTING BLOCK LOCATION:",str(e))
+			print(("ERROR GETTING BLOCK LOCATION:",str(e)))
 			self.blockentry.set_text(str(self.block))
 			return
 
@@ -132,10 +133,10 @@ class DiagnoseWindow:
 		nc = int(ch-cl+1);
 
 		print("STARTING IMAGE CREATION")
-		# refer http://pygtk.org/pygtk2tutorial/sec-DrawingMethods.html
+		# refer http://pyGtk.org/pygtk2tutorial/sec-DrawingMethods.html
 		c = chr(255)
-		b = nr*nc*3*[c]
-		rowstride = 3 * nc
+		b = nr * nc * 4 * [c]
+		rowstride = 4 * nc
 		
 		blackdot = [chr(0)]*3;
 		reddot = [chr(255), chr(0), chr(0)]
@@ -150,11 +151,11 @@ class DiagnoseWindow:
 		for i in self.data:
 			if i.row < rl or i.row > rh or i.col < cl or i.col > ch:
 				continue
-			r = i.row - rl;
-			c = i.col - cl;
-			pos = rowstride*r + 3*c
-			dot = blackdot;
-			var = self.im.getVariable(i.col);
+			r = i.row - rl
+			c = i.col - cl
+			pos = rowstride * r + 4 * c
+			dot = blackdot
+			var = self.im.getVariable(i.col)
 			if abs( (var.getValue()-var.getUpperBound())/ var.getNominal() )  < AT_BOUND_TOL:
 				dot = reddot
 			elif abs( var.getValue() - var.getLowerBound() ) / var.getNominal() < AT_BOUND_TOL:
@@ -178,15 +179,14 @@ class DiagnoseWindow:
 							dot = blackdot
 					except ValueError as e:
 						pass
-			#print "DOT: ",dot
-			b[pos], b[pos+1], b[pos+2] = dot
+			b[pos + 2], b[pos + 1], b[pos] = dot
 
 		d = ''.join(b)
 
 		print("DONE IMAGE CREATION")
-	
-		self.pixbuf = gtk.gdk.pixbuf_new_from_data(d, gtk.gdk.COLORSPACE_RGB, False, 8 \
-				, nc, nr, rowstride);
+		buff = array.array('c', d)
+		surface = cairo.ImageSurface.create_for_data(buff, cairo.FORMAT_ARGB32, nc, nr)
+		self.pixbuf = Gdk.pixbuf_get_from_surface(surface, 0, 0, surface.get_width(), surface.get_height())
 
 		self.nr = nr
 		self.nc = nc
@@ -198,7 +198,7 @@ class DiagnoseWindow:
 		self.fill_var_names()
 		self.fill_rel_names()
 		self.fill_block_status()
-	
+
 		self.fill_selection_info()
 
 		print("DONE FILL VALUES")
@@ -233,7 +233,7 @@ class DiagnoseWindow:
 
 	def do_zoom(self):
 		if self.zoom == -1:
-			w, h = self.imagescroll.size_request()
+			w, h = self.imagescroll.get_size_request()
 			#print "SCALE TO FIX, w=%d, h=%d" % (w,h)
 			if self.nc/self.nr > w/h:
 				# a 'wide' image	
@@ -252,16 +252,16 @@ class DiagnoseWindow:
 			self.zoom = MAX_ZOOM_SIZE / max(self.nc,self.nr)
 
 		#self.browser.reporter.reportNote("Diagnose window: matrix zoom = %f" % self.zoom)
-		w = int(self.zoom * self.nc);
-		h = int(self.zoom * self.nr);
+		w = int(self.zoom * self.nc)
+		h = int(self.zoom * self.nr)
 			
 		self.zoomentry.set_text("%d %%" % (int(self.zoom*100)) )
 
 		if self.zoom < 2:
-			pb1 = self.pixbuf.scale_simple(w,h,gtk.gdk.INTERP_BILINEAR)
+			pb1 = self.pixbuf.scale_simple(w,h,GdkPixbuf.InterpType.BILINEAR)
 		else:
-			pb1 = self.pixbuf.scale_simple(w,h,gtk.gdk.INTERP_NEAREST)
-		
+			pb1 = self.pixbuf.scale_simple(w,h,GdkPixbuf.InterpType.NEAREST)
+
 		self.image.set_from_pixbuf(pb1)
 
 	def fill_block_status(self):
@@ -349,7 +349,7 @@ class DiagnoseWindow:
 	# GUI EVENT HOOKS-----------------------------------------------------------
 
 	def on_diagnosewin_close(self,*args):
-		self.window.response(gtk.RESPONSE_CLOSE);
+		self.window.response(Gtk.ResponseType.CLOSE);
 
 	def on_preferred_units_toggle(self,widget):
 		_v = widget.get_active()
@@ -389,7 +389,7 @@ class DiagnoseWindow:
 			,"Lower bound": self.var.getLowerBound()
 			,"Upper bound": self.var.getUpperBound()
 		}
-		for k,v in _rows.items():
+		for k,v in list(_rows.items()):
 			text += "\n  %s\t%s" % (k,value_human(v)+units)
 		
 		text += "\n\nIncident with %d relations:" % self.var.getNumIncidentRelations()
@@ -453,8 +453,8 @@ class DiagnoseWindow:
 		print("NO FOLLOWING 'BIG' BLOCKS")
 	
 	def on_blockentry_key_press_event(self,widget,event):
-		keyname = gtk.gdk.keyval_name(event.keyval)
-		print("KEY ",keyname)
+		keyname = Gdk.keyval_name(event.keyval)
+		print(("KEY ",keyname))
 		if keyname=="Return":
 			self.set_block( int(self.blockentry.get_text()) )
 
@@ -471,8 +471,8 @@ class DiagnoseWindow:
 		self.set_zoom(z)		
 
 	def on_zoomentry_key_press_event(self,widget,event):
-		keyname = gtk.gdk.keyval_name(event.keyval)
-		print("KEY ",keyname)
+		keyname = Gdk.keyval_name(event.keyval)
+		print(("KEY ",keyname))
 		if keyname=="Return":
 			t = self.zoomentry.get_text()
 			m = ZOOM_RE.match(t)
@@ -545,4 +545,3 @@ def get(indexed, item):
         item, idx = item[:-1].split('[')
         indexed.setdefault(item, []).append(int(idx))
     return item
-

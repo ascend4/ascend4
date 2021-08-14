@@ -1,7 +1,5 @@
-import pygtk
-pygtk.require('2.0')
-import gtk
-import pango
+import gi
+gi.require_version('Gtk', '3.0')
 import os.path
 
 from study import *
@@ -18,13 +16,15 @@ OBSERVER_DEAD_COLOR = "#ababab"
 
 OBSERVER_NUM=0
 
-class ClickableTreeColumn(gtk.TreeViewColumn):
+class ClickableTreeColumn(Gtk.TreeViewColumn):
 	def __init__(self, title="", *args, **kwargs):
 		super(ClickableTreeColumn, self).__init__(None, *args, **kwargs)
-		self.label = gtk.Label("%s" % title)
+		self.label = Gtk.Label(label="%s" % title)
 		self.label.show()
 		self.set_widget(self.label)
 		self.title = title
+		if title != "":
+			self.set_resizable(True)
 		#self.set_sort_column_id(0)
 		#self.set_clickable(True)
 
@@ -32,7 +32,7 @@ class ClickableTreeColumn(gtk.TreeViewColumn):
 		""" Connect the defined 'on_click' method. Note: must be called after
 		this object (ClickableTreeColumn) has been added to the TreeView,
 		eg mytreeview.append_column(col). """
-		button = self.label.get_ancestor(gtk.Button)
+		button = self.label.get_ancestor(Gtk.Button)
 		h = button.connect("clicked",self.on_click)
 		#button.clicked()
 		
@@ -59,21 +59,31 @@ class ObserverColumn:
 			units = instance.getType().getPreferredUnits()
 		if units is None:
 			units = instance.getType().getDimensions().getDefaultUnits()
-		
+
 		uname = str(units.getName())
+
+		self.units = units
+		self.uname = uname
+
+		##### CELSIUS TEMPERATURE WORKAROUND
+		self.instance = instance
+		if instance.getType().isRefinedReal() and str(instance.getType().getDimensions()) == 'TMP':
+			units = Preferences().getPreferredUnitsOrigin(str(instance.getType().getName()))
+			if units == CelsiusUnits.get_celsius_sign():
+				uname = CelsiusUnits.get_celsius_sign()
+		##### CELSIUS TEMPERATURE WORKAROUND
+
 		if len(uname) or uname.find("/")!=-1:
 			uname = "["+uname+"]"
 
 		if uname == "":
 			_title = "%s" % (name)
 		else:
-			_title = "%s / %s" % (name, uname) 
+			_title = "%s / %s" % (name, uname)
 
 		self.title = _title
-		self.units = units
-		self.uname = uname
 		self.name = name
-	
+
 	def __repr__(self):
 		return "ObserverColumn(name="+self.name+")"
 
@@ -107,10 +117,14 @@ class ObserverColumn:
 				cell.set_property('editable', False)
 			else:
 				cell.set_property('background', None)
-		except IndexError:
+
+			##### CELSIUS TEMPERATURE WORKAROUND
+			_dataval = CelsiusUnits.convert_show(self.instance, str(_dataval), False)
+			##### CELSIUS TEMPERATURE WORKAROUND
+		except Exception as e:
 			_dataval = ""
 
-		cell.set_property('text', _dataval)
+		cell.set_property('text', str(_dataval))
 
 class ObserverRow:
 	"""
@@ -127,14 +141,17 @@ class ObserverRow:
 		self.dead = False
 		self.error_msg = None
 
-	def make_static(self,table):
+	def make_static(self, table, values=None):
 		self.active = False
 		#print "TABLE COLS:",table.cols
 		#print "ROW VALUES:",self.values
-		_v = {}
-		for col in list(table.cols.values()):
-			_v[col.index] = col.instance.getRealValue()
-		self.values = _v
+		if values is None:
+			_v = {}
+			for col in list(table.cols.values()):
+				_v[col.index] = col.instance.getRealValue()
+			self.values = _v
+		else:
+			self.values = values
 		#print "Made static, values:",self.values
 
 	def get_values(self,table):
@@ -173,20 +190,20 @@ class ObserverTab:
 		if self.alive:
 			self.browser.reporter.reportNote("New observer is 'alive'")
 
-		self.keptimg =  gtk.Image()
-		self.activeimg = gtk.Image()
-		self.errorimg = gtk.Image()
+		self.keptimg =  Gtk.Image()
+		self.activeimg = Gtk.Image()
+		self.errorimg = Gtk.Image()
 		self.activeimg.set_from_file(os.path.join(browser.options.assets_dir,"active.png"))
 		self.errorimg.set_from_file(os.path.join(browser.options.assets_dir,"solveerror.png"))
 		# create PixBuf objects from these?
 		self.rows = []
-		_store = gtk.TreeStore(object)
+		_store = Gtk.TreeStore(object)
 		self.cols = {}
 		self.tvcols = {}
 		self.renderers = {}
 
 		# create the 'active' pixbuf column
-		_renderer = gtk.CellRendererPixbuf()
+		_renderer = Gtk.CellRendererPixbuf()
 		_col = ClickableTreeColumn("")
 		_col.pack_start(_renderer,False)
 		_col.set_cell_data_func(_renderer, self.activepixbufvalue)
@@ -215,9 +232,9 @@ class ObserverTab:
 		self.browser.reporter.reportNote("Created observer '%s'" % self.name)
 		
 		_sel = self.view.get_selection()
-		_sel.set_mode(gtk.SELECTION_MULTIPLE)
+		_sel.set_mode(Gtk.SelectionMode.MULTIPLE)
 
-	def activepixbufvalue(self,column,cell,model,iter):
+	def activepixbufvalue(self,column,cell,model,iter, dummy):
 		_rowobject = model.get_value(iter,0)
 		if _rowobject.active:
 			cell.set_property('pixbuf',self.activeimg.get_pixbuf())
@@ -225,6 +242,12 @@ class ObserverTab:
 			cell.set_property('pixbuf',self.errorimg.get_pixbuf())
 		else:
 			cell.set_property('pixbuf',self.keptimg.get_pixbuf())
+
+	def get_values(self):
+		_v = []
+		for col in list(self.cols.values()):
+			_v.append(col.instance.getRealValue())
+		return _v
 
 	def on_add_clicked(self,*args):
 		self.do_add_row()
@@ -242,9 +265,8 @@ class ObserverTab:
 
 	def plot(self,x=None,y=None):
 		"""create a plot from two/more columns in the ObserverTable"""
-		import platform
 		import matplotlib
-		matplotlib.use('GTKAgg')
+		matplotlib.use('module://backend_gtk3',False)
 		import pylab
 		pylab.ioff()
 
@@ -256,6 +278,17 @@ class ObserverTab:
 				x=self.cols[0]
 			if y is None:
 				y=[self.cols[1]]
+
+		##### CELSIUS TEMPERATURE WORKAROUND
+		size = len(CelsiusUnits.get_celsius_sign())
+		xtit = x.title.find(CelsiusUnits.get_celsius_sign())
+		if xtit != -1:
+			x.title = x.title[:xtit] + "K" + x.title[xtit + size:]
+		for yy in y:
+			ytit = yy.title.find(CelsiusUnits.get_celsius_sign())
+			if ytit != -1:
+				yy.title = yy.title[:ytit] + "K" + yy.title[ytit + size:]
+		##### CELSIUS TEMPERATURE WORKAROUND
 
 		# if column indices are provided instead of columns, convert them
 		if x.__class__ is int and x>=0 and x<len(self.cols):
@@ -388,6 +421,12 @@ class ObserverTab:
 		pylab.show()
 		
 	def on_plot_clicked(self,*args):
+
+# Disabled plotting for now.
+#_d = Gtk.MessageDialog(None,Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,Gtk.MessageType.ERROR,Gtk.ButtonsType.CLOSE,"Plotting functions are not available unless you have 'matplotlib' installed.\n\nSee http://matplotlib.sf.net/\n\nFailed to load matplotlib" )
+#		_d.run()
+#		_d.destroy()
+#		return
 		try:
 			if len(self.cols)<2:
 				raise Exception("Not enough columns to plot (need 2+)")
@@ -404,8 +443,8 @@ class ObserverTab:
 			_row = ObserverRow()
 			self.rows.append(_row)
 			if self.activeiter is not None:
-				_oldrow = _store.get_value(self.activeiter,0)
-				_oldrow.make_static(self)
+				_oldrow = _store.get_value(self.activeiter, 0)
+				_oldrow.make_static(self, values)
 			self.activeiter = _store.append(None,[_row])
 			_path = _store.get_path(self.activeiter)
 			_oldpath,_oldcol = self.view.get_cursor()
@@ -418,6 +457,9 @@ class ObserverTab:
 			
 	def on_view_cell_edited(self, renderer, path, newtext, col):
 		# we can assume it's always the self.activeiter that is edited...
+		##### CELSIUS TEMPERATURE WORKAROUND
+		newtext = CelsiusUnits.convert_edit(col.instance, newtext, False)
+		##### CELSIUS TEMPERATURE WORKAROUND
 		if col.instance.isFixed():
 			val = float(newtext) * col.units.getConversion()
 			col.instance.setRealValue( val )
@@ -443,7 +485,7 @@ class ObserverTab:
 		self.colindex = self.colindex + 1
 
 		# create a new column
-		_renderer = gtk.CellRendererText()
+		_renderer = Gtk.CellRendererText()
 		_renderer.connect('edited',self.on_view_cell_edited, _col)
 		_tvcol = ClickableTreeColumn(_col.title)
 		_tvcol.pack_start(_renderer,False)
@@ -506,8 +548,8 @@ class ObserverTab:
 		
 		_sel = self.view.get_selection()
 		_model, _rowlist = _sel.get_selected_rows()
-		if event.type==gtk.gdk.KEY_PRESS:
-			_keyval = gtk.gdk.keyval_name(event.keyval)
+		if event.type==Gdk.EventType.KEY_PRESS:
+			_keyval = Gdk.keyval_name(event.keyval)
 			_path, _col = self.view.get_cursor()
 			if _path is not None:
 				if _keyval=='Menu':
@@ -517,7 +559,7 @@ class ObserverTab:
 				elif _keyval=='Delete' or _keyval=='BackSpace':
 					_delete_row = True
 				
-		elif event.type==gtk.gdk.BUTTON_PRESS:
+		elif event.type==Gdk.EventType.BUTTON_PRESS:
 			_x = int(event.x)
 			_y = int(event.y)
 			_button = event.button
@@ -529,7 +571,7 @@ class ObserverTab:
 					_contextmenu = True
 
 		if not (_contextmenu or _delete_row):
-			#print "NOT DOING ANYTHING ABOUT %s" % gtk.gdk.keyval_name(event.keyval)
+			#print "NOT DOING ANYTHING ABOUT %s" % Gdk.keyval_name(event.keyval)
 			return 
 		
 		if len(_rowlist)>1:
@@ -567,7 +609,7 @@ class ObserverTab:
 				return 0
 			if self.current_instance.isFixed() == False:
 				self.studycolumnmenuitem.set_sensitive(False)
-			self.treecontext.popup( None, None, None, _button, event.time)
+			self.treecontext.popup(None, None,lambda _menu,data: (event.get_root_coords()[0],event.get_root_coords()[1], True), None,_button, event.time)
 		return 1
 		
 	def on_study_column_activate(self, *args):
@@ -611,6 +653,11 @@ class ObserverTab:
 		
 	def on_plotmenuitem_activate(self, *args):
 		# To preselect the column as y axis
+		# Disabled plotting for now.
+		_d = Gtk.MessageDialog(None,Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,Gtk.MessageType.ERROR,Gtk.ButtonsType.CLOSE,"Plotting functions are not available unless you have 'matplotlib' installed.\n\nSee http://matplotlib.sf.net/\n\nFailed to load matplotlib" )
+		_d.run()
+		_d.destroy()
+		return
 		try:
 			if len(self.cols)<2:
 				raise Exception("Not enough columns to plot (need 2+)")
@@ -664,6 +711,12 @@ class ObserverTab:
 					name = self.browser.sim.getInstanceName(_col.instance)
 
 				_uname = str(_units.getName())
+				##### CELSIUS TEMPERATURE WORKAROUND
+				if _col.instance.getType().isRefinedReal() and str(_col.instance.getType().getDimensions()) == 'TMP':
+					units = Preferences().getPreferredUnitsOrigin(str(_col.instance.getType().getName()))
+					if units == CelsiusUnits.get_celsius_sign():
+						_uname = CelsiusUnits.get_celsius_sign()
+				##### CELSIUS TEMPERATURE WORKAROUND
 				if len(_uname) or _uname.find("/")!=-1:
 					_uname = "["+_uname+"]"
 
@@ -710,13 +763,13 @@ class CloseDialog:
 		browser.builder.connect_signals(self)
 		
 	def on_closeobserverdialog_close(self,*args):
-		self.alertwin.response(gtk.RESPONSE_CLOSE)
+		self.alertwin.response(Gtk.ResponseType.CLOSE)
 	
 	def run(self):
 		_continue = True
 		while _continue:
 			_res = self.alertwin.run()
-			if _res == gtk.RESPONSE_YES:
+			if _res == Gtk.ResponseType.YES:
 				self.alertwin.destroy()
 				return True
 			else:
@@ -731,28 +784,29 @@ class PlotDialog:
 		self.browser = browser
 		self.browser.builder.add_objects_from_file(browser.glade_file, ["plotdialog"])
 		self.plotwin = self.browser.builder.get_object("plotdialog")
+		self.plotwin.set_transient_for(browser.window)
 		self.plotbutton = self.browser.builder.get_object("plotbutton")
 		self.xview = self.browser.builder.get_object("treeview1")
 		self.yview = self.browser.builder.get_object("treeview2")
-		self.yview.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+		self.yview.get_selection().set_mode(Gtk.SelectionMode.MULTIPLE)
 		self.ignorepoints = self.browser.builder.get_object("ignorepoints")
 		
 		_p = self.browser.prefs
 		_ignore = _p.getBoolPref("PlotDialog", "ignore_error_points", True)
 		self.ignorepoints.set_active(_ignore)
 		
-		_xstore = gtk.TreeStore(object)
+		_xstore = Gtk.TreeStore(object)
 		self.xview.set_model(_xstore)
-		_xrenderer = gtk.CellRendererText()
-		_xtvcol = gtk.TreeViewColumn("X axis")
+		_xrenderer = Gtk.CellRendererText()
+		_xtvcol = Gtk.TreeViewColumn("X axis")
 		_xtvcol.pack_start(_xrenderer,False)
 		_xtvcol.set_cell_data_func(_xrenderer, self.varlist)
 		self.xview.append_column(_xtvcol)
 		
-		_ystore = gtk.TreeStore(object)
+		_ystore = Gtk.TreeStore(object)
 		self.yview.set_model(_ystore)
-		_yrenderer = gtk.CellRendererText()
-		_ytvcol = gtk.TreeViewColumn("Y axis")
+		_yrenderer = Gtk.CellRendererText()
+		_ytvcol = Gtk.TreeViewColumn("Y axis")
 		_ytvcol.pack_start(_yrenderer,False)
 		_ytvcol.set_cell_data_func(_yrenderer, self.varlist)
 		self.yview.append_column(_ytvcol)
@@ -780,9 +834,9 @@ class PlotDialog:
 		self.browser.builder.connect_signals(self)
 		
 	def on_plotdialog_close(self,*args):
-		self.plotwin.response(gtk.RESPONSE_CANCEL)
+		self.plotwin.response(Gtk.ResponseType.CANCEL)
 		
-	def varlist(self,column,cell,model,iter):
+	def varlist(self,column,cell,model,iter, dummy):
 		_value = model.get_value(iter,0)
 		cell.set_property('text', _value.title)
 	
@@ -791,16 +845,16 @@ class PlotDialog:
 		_path = None
 		_col = None
 		self.plotbutton.set_sensitive(False)
-		if event.type==gtk.gdk.KEY_RELEASE:
-			_keyval = gtk.gdk.keyval_name(event.keyval)
+		if event.type==Gdk.EventType.KEY_RELEASE:
+			_keyval = Gdk.keyval_name(event.keyval)
 			if _keyval == "Escape":
-				self.plotwin.response(gtk.RESPONSE_CANCEL)
+				self.plotwin.response(Gtk.ResponseType.CANCEL)
 				return
 			_path, _tvcol = widget.get_cursor()
 			if _path is None:
 				return
 		
-		elif event.type==gtk.gdk.BUTTON_RELEASE:
+		elif event.type==Gdk.EventType.BUTTON_RELEASE:
 			_x = int(event.x)
 			_y = int(event.y)
 			_button = event.button
@@ -879,7 +933,7 @@ class PlotDialog:
 		_continue = True
 		while _continue:
 			_res = self.plotwin.run()
-			if _res == gtk.RESPONSE_YES:
+			if _res == Gtk.ResponseType.YES:
 				_p = self.browser.prefs
 				_p.setBoolPref("PlotDialog", "ignore_error_points", self.ignorepoints.get_active())
 				self.plotwin.destroy()

@@ -5,7 +5,7 @@ import config
 
 class Help:
 	def __init__(self,helproot=None,url=None):
-		print("HELPROOT =",config.HELPROOT)
+		print(("HELPROOT =",config.HELPROOT))
 		self.goonline=False
 
 		if url is not None:
@@ -42,7 +42,7 @@ class Help:
 			_p = os.path.join(self.helproot)
 			_u = "file://"+_p
 		
-		print("OPENING WEB PAGE: %s..." % _u)
+		print(("OPENING WEB PAGE: %s..." % _u))
 		_b.open(_u,autoraise=1);
 		print("BACK FROM WEB CALL")
 

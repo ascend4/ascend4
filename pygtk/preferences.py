@@ -70,9 +70,17 @@ class Preferences:
 			self.ini.add_section("Geometry:"+str(displayname))
 		self.ini.set("Geometry:"+str(displayname),key,str(value))		
 
-	def getPreferredUnits(self,key):
+	def getPreferredUnits(self, key):
+		_u = self.getPreferredUnitsOrigin(key)
+		##### CELSIUS TEMPERATURE WORKAROUND
+		if _u == "degC":
+			_u = "K"
+		##### CELSIUS TEMPERATURE WORKAROUND
+		return _u
+
+	def getPreferredUnitsOrigin(self, key):
 		try:
-			_u = self.ini.get("PreferredUnits",key);
+			_u = self.ini.get("PreferredUnits", key)
 		except configparser.NoSectionError:
 			return None
 		except configparser.NoOptionError:
