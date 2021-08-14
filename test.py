@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #	ASCEND modelling environment
 #	Copyright (C) 2006, 2007 Carnegie Mellon University
 #
@@ -515,7 +515,7 @@ class TestBlackBox(AscendSelfTester):
 		"""Mismatched arg counts check-- tests bbox, not ascend."""
 		self.L.load('test/blackbox/fail1.a4c')
 		try:
-			M = self.L.findType('fail1').getSimulation('sim',1)
+			M = self.L.findType('fail1').getSimulation('sim',True)
 			self.fail("expected exception was not raised")
 		except RuntimeError as e:
 			print("Caught exception '%s', assumed ok" % e)
@@ -524,7 +524,7 @@ class TestBlackBox(AscendSelfTester):
 		"""Incorrect data arg check -- tests bbox, not ascend"""
 		self.L.load('test/blackbox/fail2.a4c')
 		try:
-			M = self.L.findType('fail2').getSimulation('sim',1)
+			M = self.L.findType('fail2').getSimulation('sim',True)
 			self.fail("expected exception was not raised")
 		except RuntimeError as e:
 			print("Caught exception '%s', assumed ok (should mention errors during instantiation)" % e)
@@ -646,7 +646,7 @@ class TestSensitivity(AscendSelfTester):
 	def test1(self):
 		self.L.load('sensitivity_test.a4c')
 		T = self.L.findType('sensitivity_test')
-		M = T.getSimulation('sim',0)
+		M = T.getSimulation('sim',False)
 		M.run(T.getMethod('on_load'))
 		M.solve(ascpy.Solver('QRSlv'),ascpy.SolverReporter())
 		M.run(T.getMethod('analyse'))
@@ -669,13 +669,13 @@ class TestExtPy(AscendSelfTester):
 	def test1(self):
 		self.L.load('johnpye/extpy/extpytest.a4c')
 		T = self.L.findType('extpytest')
-		M = T.getSimulation('sim',1)
+		M = T.getSimulation('sim',True)
 		M.run(T.getMethod('self_test'))
 		
 	def test2(self):
 		self.L.load('johnpye/extpy/extpytest.a4c')
 		T = self.L.findType('extpytest')
-		M = T.getSimulation('sim')
+		M = T.getSimulation('sim',False)
 		M.run(T.getMethod('pythonthing'))
 		M.run(T.getMethod('pythonthing'))
 		M.run(T.getMethod('pythonthing'))
