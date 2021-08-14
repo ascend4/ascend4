@@ -2486,7 +2486,7 @@ if platform.system()=="Windows" and 'MSVS' in env:
 		without_python_reason = "Header file 'basetsd.h' not found. Install the MS Platform SDK."
 
 print("1. SIZEOF_VOID_P = %s"%(conf.env['SIZEOF_VOID_P']))
-conf.Finish()
+env = conf.Finish()
 print("2. SIZEOF_VOID_P = %s"%(env['SIZEOF_VOID_P']))
 #print "-=-=-=-=-=-=-=-=- LIBS =",env.get('LIBS')
 
