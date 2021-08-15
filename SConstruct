@@ -2558,6 +2558,7 @@ subst_dict = {
 	, '@SIZEOF_UINT@' : env['SIZEOF_UINT']
 	, '@SIZEOF_ULONG@' : env['SIZEOF_ULONG']
 	, '@SIZEOF_ULONGLONG@' : env['SIZEOF_ULONGLONG']
+	, '@WITH_SOLVERS@' : ",".join(env.get('WITH_SOLVERS'))
 }
 
 
@@ -2832,6 +2833,12 @@ env.Alias('pyfprops',env.get('pyfprops'))
 ascendconfig = env.SubstInFile('ascend-config.in')
 
 #------------------------------------------------------
+# CREATE a4 CONVENIENCE SCRIPT
+
+a4cmd = env.SubstInFile('a4.in')
+env.AddPostAction(a4cmd, 'chmod 755 $TARGET')
+
+#------------------------------------------------------
 # INSTALLATION
 
 if env.get('CAN_INSTALL'):
@@ -3032,7 +3039,7 @@ else:
 #------------------------------------------------------
 # DEFAULT TARGETS
 
-default_targets =['libascend','solvers']
+default_targets =['libascend','solvers',a4cmd]
 if with_tcltk:
 	default_targets.append('tcltk')
 if with_python:

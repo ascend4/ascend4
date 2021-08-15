@@ -20,13 +20,13 @@ class Preferences:
 			else:
 				self.fname = os.path.expanduser("~/.ascend.ini");
 
-			print("PREFERENCES FILE =",self.fname)
+			#print("PREFERENCES FILE =",self.fname)
 				
 		self.n = self.n + 1;
 
 		if not hasattr(self,'ini'):
 			#print "READING/CREATING CONFIG"
-			self.ini = configparser.SafeConfigParser();
+			self.ini = configparser.ConfigParser();
 			self.ini.read( [ self.fname ] );
 
 	def __del__(self):
