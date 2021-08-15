@@ -27,8 +27,8 @@ import atexit
 import platform
 if platform.system() != "Windows":
 	try:
-		import dl
-		_dlflags = dl.RTLD_GLOBAL|dl.RTLD_NOW
+		import os
+		_dlflags = os.RTLD_GLOBAL|os.RTLD_NOW
 	except:
 		# On platforms that unilaterally refuse to provide the 'dl' module
 		# we'll just set the value and see if it works.
@@ -1603,81 +1603,15 @@ def patchpath(VAR,SEP,addvals):
 	return restart	
 	
 if __name__=='__main__':
-	# a whole bag of tricks to make sure we get the necessary dirs in our ascend, python and ld path vars
-	restart = 0
-
+	SEP = os.pathsep
 	if platform.system()=="Windows":
 		LD_LIBRARY_PATH="PATH"
-		SEP = ";"
 	else:
 		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
-		SEP = ":"
 
-	solverdir = os.path.abspath(os.path.join(sys.path[0],"solvers"))
-	solverdirs = [os.path.join(solverdir,s) for s in ("qrslv","cmslv","lrslv","conopt","ida","lsode","ipopt","dopri5")]
-
-	if not os.environ.get('ASCENDSOLVERS'):
-		os.environ['ASCENDSOLVERS'] = SEP.join(solverdirs)
-		restart = 1
-	else:
-		if patchpath('ASCENDSOLVERS',SEP,solverdirs):
-			restart = 1
-	
-	freesteamdir = os.path.expanduser("~/freesteam/ascend")
-	modeldirs = [os.path.abspath(os.path.join(sys.path[0],"models")),os.path.abspath(freesteamdir)]
-	
-	if not os.environ.get('ASCENDLIBRARY'):
-		os.environ['ASCENDLIBRARY'] = SEP.join(modeldirs)
-		restart = 1
-	else:
-		if patchpath('ASCENDLIBRARY',SEP,modeldirs):
-			restart = 1
-
-	libdirs = ["ascxx","."]
-	libdirs = [os.path.normpath(os.path.join(sys.path[0],l)) for l in libdirs]
-	if not os.environ.get(LD_LIBRARY_PATH):
-		os.environ[LD_LIBRARY_PATH]=SEP.join(libdirs)
-		restart = 1
-	else:
-		envlibdirs = [os.path.normpath(i) for i in os.environ[LD_LIBRARY_PATH].split(SEP)]
-		for l in libdirs:
-			if l in envlibdirs[len(libdirs):]:
-				envlibdirs.remove(l)
-				restart = 1
-		for l in libdirs:
-			if l not in envlibdirs:
-				envlibdirs.insert(0,l)
-				restart = 1		
-		os.environ[LD_LIBRARY_PATH] = SEP.join(envlibdirs)
-
-	pypath = [os.path.normpath(os.path.join(sys.path[0],i)) for i in ['ascxx','pygtk']]
-	if not os.environ.get('PYTHONPATH'):
-		os.environ['PYTHONPATH']= SEP.join(pypath)
-	else:
-		envpypath = os.environ['PYTHONPATH'].split(SEP)
-		for pypath1 in pypath:
-			if pypath1 not in envpypath:
-				envpypath.insert(0,pypath1)
-				os.environ['PYTHONPATH']=SEP.join(envpypath)
-				restart = 1
-
-	if restart and platform.system()!="Windows":
-		script = os.path.join(sys.path[0],"test.py")					
-		sys.stderr.write("Restarting with...\n")
-		sys.stderr.write("  export LD_LIBRARY_PATH=%s\n" % os.environ.get(LD_LIBRARY_PATH))
-		sys.stderr.write("  export PYTHONPATH=%s\n" % os.environ.get('PYTHONPATH'))
-		sys.stderr.write("  export ASCENDLIBRARY=%s\n" % os.environ.get('ASCENDLIBRARY'))
-		sys.stderr.write("  export ASCENDSOLVERS=%s\n" % os.environ.get('ASCENDSOLVERS'))
-		sys.stderr.flush()
-		os.execvp(sys.executable,[script] + sys.argv)
-		exit(1)
-	else:
-		sys.stderr.write("Got...\n")
-		sys.stderr.write("  LD_LIBRARY_PATH=%s\n" % os.environ.get(LD_LIBRARY_PATH))
-		sys.stderr.write("  PYTHONPATH=%s\n" % os.environ.get('PYTHONPATH'))
-		sys.stderr.write("  ASCENDLIBRARY=%s\n" % os.environ.get('ASCENDLIBRARY'))
-		sys.stderr.write("  ASCENDSOLVERS=%s\n" % os.environ.get('ASCENDSOLVERS'))
-		sys.stderr.flush()
+	for v in ['ASCENDLIBRARY',LD_LIBRARY_PATH,'ASCENDSOLVERS','PYTHONPATH']:
+		if not os.environ.get(v):
+			raise RuntimeError("Missing expected environment variable '%s'"%(v,))
 
 	import ascpy
 

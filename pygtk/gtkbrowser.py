@@ -604,9 +604,9 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			loading.print_status("ASCEND is now running")
 			loading.complete()
 			if self.prefs.getStringPref('Browser','first_run') == None:
-				self.prefs.setStringPref('Browser','first_run',time.time())
+				self.prefs.setStringPref('Browser','first_run',time.perf_counter())
 			else:
-				time_now = time.time()
+				time_now = time.perf_counter()
 				first_run_time = float(self.prefs.getStringPref('Browser','first_run'))
 				if ((time_now-first_run_time)/(3600*24)) >= 7:
 					self.auto_update_check()
@@ -1359,7 +1359,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		v = VersionCheck()
 		title = "Check for updates"
 		text = "Your version is %s\n" % config.VERSION
-		self.prefs.setStringPref("Browser","last_update_check","%s" %time.time())
+		self.prefs.setStringPref("Browser","last_update_check","%s" %time.perf_counter())
 			
 		try:
 			v.check()
@@ -1542,7 +1542,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		if _no_auto_check is True:
 			return
 		
-		_time_now = time.time()
+		_time_now = time.perf_counter()
 		_last_update = float(self.prefs.getStringPref("Browser","last_update_check","0"))
 		print(("Time since last update check : %f days" %((_time_now-_last_update)/(3600*24))))
 		

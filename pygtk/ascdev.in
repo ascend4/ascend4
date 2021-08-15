@@ -2,111 +2,33 @@
 # to debug this program using 'gdb', invoke 'ASC_GDB=1 ascdev'.
 
 import os.path, sys, platform, subprocess
-
-def add_at_start(envvar,pathcomponents):
-	"""
-	Add path components at start of envvar, but only if they're not already in the path somewhere.
-	@return 1 if changes made, 0 otherwise
-	@TODO what about Windows path munging?
-	"""
-
-	# convert pathcomponents to absolute paths
-	pathcomponents = [os.path.abspath(i) for i in pathcomponents]
-
-	if not os.environ.get(envvar):
-		# env var is not yet set; simply set it to requested value
-		v = SEP.join(pathcomponents)
-		print("CREATED %s=%s" % (envvar,v))
-		os.environ[envvar]=v
-		return 1
-
-	changed = 0
-	# convert what's in there to absolute paths for comparison
-	envvals = [os.path.abspath(i) for i in os.environ[envvar].split(SEP)]
-	oldenv = os.environ[envvar]
-	found = []
-	for p in reversed(pathcomponents):
-		if p not in envvals:
-			envvals.insert(0,p)
-			print("INSERTED into %s: %s"%(envvar,p))
-			changed = 1
-
-	# TODO if changes made, let's check for repeated path components and remove them (PyGTK All-in-one does this)	
-			
-	os.environ[envvar]=SEP.join(envvals)
-	if not changed:
-		print("VAR %s UNCHANGED" % envvar)
-	else:
-		print("VAR %s CHANGED" % envvar)
-		print("OLD %s = %s" % (envvar,oldenv))
-		print("NEW %s = %s" % (envvar,os.environ[envvar]))
-		
-	return changed
 		
 if __name__=='__main__':
 	print("PYTHON = @PYTHON@")
 	
 	sourceroot="@SOURCE_ROOT@"
 	script=os.path.join(sys.argv[0])
-
+	
+	SEP = os.pathsep
 	if platform.system()=="Windows":
 		LD_LIBRARY_PATH="PATH"
-		SEP = ";"
 	elif platform.system()=="Darwin":
 		LD_LIBRARY_PATH="DYLD_LIBRARY_PATH"
-		SEP = ":"
 	else:
 		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
-		SEP = ":"
 
-	restart = []
+	ev = ['ASCENDLIBRARY','ASCENDSOLVERS','PYTHONPATH',LD_LIBRARY_PATH,'PATH']
+	for v in ev:
+		if not os.environ.get(v):
+			raise RuntimeError("Missing required environment variable '%s'"%(v,))
 
-	# for Mac, add our local PyGTK libraries at start of Python path:
-	#if platform.system()=="Darwin":
-	#	sys.path.insert(0,'dist/gtk.bundle/python')
-
-	# ensure that we have our 'models' dir in the ASCENDLIBRARY path
-	modeldirs = [os.path.join(sourceroot,"models")]
-	if add_at_start('ASCENDLIBRARY',modeldirs):
-		restart.append('ASCENDLIBRARY')
-
-	solverdir = os.path.join(sourceroot,"solvers")
-	solverdirs = [os.path.join(solverdir,d.lower()) for d in "@WITH_SOLVERS@".split(",")]
-	if add_at_start('ASCENDSOLVERS',solverdirs):
-		restart.append('ASCENDSOLVERS')
-
-	# ensure that we have our shared libraries in the LD_LIBRARY_PATH
-	libdirs = [sourceroot,os.path.join(sourceroot,"pygtk")]
-	if add_at_start(LD_LIBRARY_PATH,libdirs):
-		restart.append(LD_LIBRARY_PATH)
-
-	# ensure our pygtk dir is in the PYTHONPATH
-	pypath = [os.path.join(sourceroot,"ascxx")]
-	if add_at_start('PYTHONPATH',pypath):
-		restart.append('PYTHONPATH')
-
-	if restart:
-		print("\nRestarting with...")
-		for v in restart:
-			print("   export %s=%s" % (v,os.environ[v]))
-		if os.environ.get('ASC_GDB'):
-			print("   via GDB...")
-			os.execvp("gdb",['--symbols=../@SHLIBPREFIX@ascend@SHLIBSUFFIX@','--args','@PYTHON@',script]+sys.argv[1:])
-		else:
-			print("PYTHON... ",script)
-			sys.stdout.flush() # needed for rxvt on Windows
-			#ret = subprocess.call(['@PYTHON@',script]+sys.argv[1:])
-			#sys.exit(ret)
-			os.execvp('@PYTHON@',[script,script]+sys.argv[1:])
-		# the above calls don't return so we can forget about line of enqiry
-
-	print("\nRunning with...")
-	for v in [LD_LIBRARY_PATH,'ASCENDLIBRARY','ASCENDSOLVERS','PYTHONPATH','PATH']:
-		print("   %s = %s" % (v,os.environ[v]))
+	#print("\nRunning with...")
+	#for v in [LD_LIBRARY_PATH,'ASCENDLIBRARY','ASCENDSOLVERS','PYTHONPATH','PATH']:
+	#	print("   %s = %s" % (v,os.environ[v]))
 	
 	import ascpy
 	from gtkbrowser import *
 	assetspath = os.path.join(os.path.join(sourceroot,"pygtk"),"glade")
-	print("ASSETS PATH = %s" % assetspath)
+	#print("ASSETS PATH = %s" % assetspath)
 	B = Browser(assetspath=assetspath)
 	B.run()	

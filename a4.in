@@ -1,0 +1,158 @@
+#!@PYTHON@
+import os, argparse, pathlib, sys, platform
+
+DEBUG=0
+def MSG(*args):
+	if DEBUG:
+		print(*args)
+	else:
+		pass
+
+def add_at_start(envvar,pathcomponents):
+	"""
+	Add path components at start of envvar, but only if they're not already in the path somewhere.
+	@return 1 if changes made, 0 otherwise
+	@TODO what about Windows path munging?
+	"""
+
+	# convert pathcomponents to absolute paths
+	pathcomponents = [i.resolve() for i in pathcomponents]
+
+	if not os.environ.get(envvar):
+		# env var is not yet set; simply set it to requested value
+		v = SEP.join([str(p) for p in pathcomponents])
+		MSG("CREATED %s=%s" % (envvar,v))
+		os.environ[envvar]=v
+		return 1
+
+	changed = 0
+	# convert what's in there to absolute paths for comparison
+	envvals = [pathlib.Path(i).resolve() for i in os.environ[envvar].split(SEP)]
+	oldenv = os.environ[envvar]
+	found = []
+	for p in reversed(pathcomponents):
+		if p not in envvals:
+			envvals.insert(0,p)
+			MSG("INSERTED into %s: %s"%(envvar,p))
+			changed = 1
+
+	# TODO if changes made, let's check for repeated path components and remove them (PyGTK All-in-one does this)	
+			
+	os.environ[envvar]=SEP.join([str(i) for i in envvals])
+	if not changed:
+		MSG("VAR %s UNCHANGED" % envvar)
+	else:
+		MSG("VAR %s CHANGED" % envvar)
+		MSG("OLD %s = %s" % (envvar,oldenv))
+		MSG("NEW %s = %s" % (envvar,os.environ[envvar]))
+		
+	return changed
+
+if __name__ == "__main__":
+
+	p = argparse.ArgumentParser(description='ASCEND launcher')
+	p.add_argument('--debug',action='store_true',help='Show launcher debug output')
+	g = p.add_mutually_exclusive_group()
+	g.add_argument('--gdb',action='store_true',help='Run action via GDB')
+	g.add_argument('--valgrind',action='store_true',help='Run action via Valgrind')
+
+	s = p.add_subparsers(help='sub-command help')
+	
+	p_open = s.add_parser('open',help = 'Open file in ASCEND GUI')
+	p_open.set_defaults(action='open')
+	p_open.add_argument('file',type=pathlib.Path)
+	
+	p_gui = s.add_parser('gui',help = 'Simply open the ASCEND GUI')
+	p_gui.set_defaults(action='gui')
+
+	p_run = s.add_parser('run',help = 'Run model and solve without GUI')
+	p_run.set_defaults(action='run')
+	p_run.add_argument('file',type=pathlib.Path,help='ASCEND model file to be opened')
+
+	p_run = s.add_parser('script',help = 'Run a Python or other script within ASCEND development environment')
+	p_run.set_defaults(action='script')
+	p_run.add_argument('file',type=pathlib.Path,help='Script file to be run')
+	p_run.add_argument('rest',nargs=argparse.REMAINDER,help='Additional arguments to be passed to the script')
+	
+	p_sh = s.add_parser('shell',help = 'Create a sub-shell in which ASCEND environment variables are set.')
+	p_sh.set_defaults(action='shell')
+	p_sh.add_argument('--shell',default='bash',help='Shell to run')
+	p_sh.add_argument('--label',action='store_false',default=True,help="Suppress adding 'a4>' text at start of prompt")
+	p_sh.add_argument('rest',nargs=argparse.REMAINDER,help='Extra arguments to send to shell')
+
+	args = p.parse_args()
+	
+	if args.debug:DEBUG=1
+
+	import subprocess, os
+	sourceroot=pathlib.Path("@SOURCE_ROOT@")
+	script=os.path.join(sys.argv[0])
+	SEP = os.pathsep
+	
+	if platform.system()=="Windows":
+		LD_LIBRARY_PATH="PATH"
+	elif platform.system()=="Darwin":
+		LD_LIBRARY_PATH="DYLD_LIBRARY_PATH"
+	else:
+		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
+
+	restart = []
+
+	# for Mac, add our local PyGTK libraries at start of Python path:
+	#if platform.system()=="Darwin":
+	#	sys.path.insert(0,'dist/gtk.bundle/python')
+
+	# ensure that we have our 'models' dir in the ASCENDLIBRARY path
+	modeldirs = [sourceroot / 'models']
+	if add_at_start('ASCENDLIBRARY',modeldirs):
+		restart.append('ASCENDLIBRARY')
+
+	solverdir = sourceroot / 'solvers'
+	solverdirs = [solverdir / d.lower() for d in "@WITH_SOLVERS@".split(",")]
+	if add_at_start('ASCENDSOLVERS',solverdirs):
+		restart.append('ASCENDSOLVERS')
+
+	# ensure that we have our shared libraries in the LD_LIBRARY_PATH
+	libdirs = [sourceroot,sourceroot / 'pygtk', pathlib.Path.home() / '.local/lib']
+	if add_at_start(LD_LIBRARY_PATH,libdirs):
+		restart.append(LD_LIBRARY_PATH)
+
+	# ensure our pygtk dir is in the PYTHONPATH
+	pypath = [sourceroot / 'ascxx', sourceroot / 'pygtk']
+	if add_at_start('PYTHONPATH',pypath):
+		restart.append('PYTHONPATH')
+
+	MSG("ARGS",args)
+		
+	precmd = []
+	if args.gdb:
+		precmd = ['gdb','--args']
+	elif args.valgrind:
+		precmd = 'valgrind --suppressions=tools/valgrind/suppressions --tool=memcheck --leak-check=full --show-reachable=yes'.split(' ')
+	
+	cmd = precmd
+	if not hasattr(args,'action') or args.action == 'gui':
+		MSG("launching GUI...")
+		cmd += ['@PYTHON@',sourceroot/'pygtk'/'ascdev']
+	elif args.action == 'open':
+		cmd += ['@PYTHON@',sourceroot/'pygtk'/'ascdev', args.file]
+	elif args.action == 'script':
+		cmd += [args.file.resolve()]+args.rest
+	elif args.action == 'shell' :
+		shargs = []
+		if os.environ.get('ASCEND_SHELL'):
+			raise RuntimeError("You are already inside an ASCEND shell")
+		if args.label:
+			assert(args.shell=='bash')
+			os.environ['PS1'] = r'a4> \[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+			shargs += ['--norc']
+		os.environ['ASCEND_SHELL'] = '1'
+		cmd += [args.shell] + shargs + args.rest
+	else:
+		print("unrecognised command")
+		sys.exit(1);
+		
+	MSG("CMD =",cmd)
+	proc = subprocess.run(cmd)
+
+# vim: et=4:sw=4:noet:syntax=python
