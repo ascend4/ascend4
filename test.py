@@ -1480,7 +1480,7 @@ class TestIPOPT(Ascend):
 class TestCSV(Ascend):
 	def test1(self):
 		self.L.load('johnpye/datareader/testcsv.a4c')
-		M = self.L.findType('testcsv').getSimulation('sim')
+		M = self.L.findType('testcsv').getSimulation('sim',True)
 		M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
 
 
@@ -1490,7 +1490,7 @@ class TestSlvReq(Ascend):
 		H = ascpy.SolverHooks(ascpy.SolverReporter())
 		ascpy.SolverHooksManager_Instance().setHooks(H)
 		T = self.L.findType('test1')
-		M = T.getSimulation('sim',0)
+		M = T.getSimulation('sim',False)
 		print("\n\n\nRUNNING ON_LOAD EXPLICITLY NOW...")
 		M.run(T.getMethod('on_load'))
 
@@ -1537,7 +1537,7 @@ class TestSlvReq(Ascend):
 		H = SolverHooksPython()
 		ascpy.SolverHooksManager_Instance().setHooks(H)
 		T = self.L.findType('test1')
-		M = T.getSimulation('sim',1)
+		M = T.getSimulation('sim',True)
 
 # test some stuff for beam calculations
 class TestSection(Ascend):

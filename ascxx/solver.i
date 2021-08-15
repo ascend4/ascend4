@@ -30,11 +30,11 @@
 	PyErr_SetString(PyExc_TypeError,"File passing from python to ASCEND not yet implemented on Windows");
 	return NULL;
 %#else
-    if (!PyFile_Check($input)) {
-        PyErr_SetString(PyExc_TypeError, "Need a file!");
-        return NULL;
-    }
-    $1 = PyFile_AsFile($input);
+	if (!PyFile_Check($input)) {
+		PyErr_SetString(PyExc_TypeError, "Need a file!");
+		return NULL;
+	}
+	$1 = PyFile_AsFile($input);
 %#endif
 }
 
@@ -70,7 +70,8 @@
 
 // SOLVER PARAMETERS
 %pythoncode{
-	class SolverParameterIter:
+	from builtins import object
+	class SolverParameterIter(object):
 		def __init__(self, params):
 			self.params = params;
 			self.index = 0;
@@ -78,7 +79,7 @@
 		def __iter__(self):
 			return self
 
-		def next(self):
+		def __next__(self):
 			if self.index >= len(self.params):
 				raise StopIteration
 			p = self.params.getParameter(self.index)
@@ -305,6 +306,7 @@ public:
 	}
 }
 
+
 %feature("director") IntegratorReporterCxx;
 %ignore ascxx_integratorreporter_init;
 %ignore ascxx_integratorreporter_write;
@@ -320,4 +322,4 @@ public:
 %apply SWIGTYPE *DISOWN {SolverHooks *hooks};
 %include "solverhooks.h"
 
-
+// vim: ts=4:sw=4:noet=0

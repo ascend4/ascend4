@@ -1,5 +1,5 @@
-ASC_INCDIR=$(HOME)/ascend/trunk
-ASC_LIBDIR=$(HOME)/ascend/trunk
+ASC_INCDIR=$(HOME)/ascend/python3
+ASC_LIBDIR=$(HOME)/ascend/python3
 CC=gcc
 
 all:
