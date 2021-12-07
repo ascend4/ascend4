@@ -92,8 +92,9 @@ Library::load(const char *filename){
 
 	const char *msg = getLoadErrorMessage(status);
 
-	char msg1[100];
-	sprintf(msg1,msg,filename);
+#define MSGLEN 4096
+	char msg1[MSGLEN];
+	snprintf(msg1,MSGLEN,msg,filename);
 
 	if(status<0 || status>0){
 		throw std::runtime_error(msg1);
