@@ -113,6 +113,11 @@ PureFluid *fprops_prepare(const EosData *E,const char *corrtype){
 		ERRMSG("Invalid EOS data, unimplemented correlation type requested");
 		return NULL;
 	}
+	if(!P){
+		ERRMSG("Unable to prepare fluid data with type '%s'",corrtype);
+		return NULL;
+	}
+
 	/* next: add preparation of viscosity, thermal conductivity, surface tension, ... */
 
 	MSG("Preparing viscosity data...");
@@ -298,7 +303,7 @@ char *fprops_error(FpropsError err){
 	}
 }
 
-char *fprops_corr_type(EosType type){
+const char *fprops_corr_type(EosType type){
 	switch(type){
 	case FPROPS_IDEAL:
 		return "ideal";
@@ -314,6 +319,24 @@ char *fprops_corr_type(EosType type){
 		return "helmholtz";
 	case FPROPS_MBWR:
 		return "mbwr";
+	}
+	return NULL;
+}
+
+const char *fprops_refstate_type(ReferenceStateType type){
+	switch(type){ // refer to filedata.h
+	case FPROPS_REF_UNDEFINED: return "undefined";
+	case FPROPS_REF_PHI0:      return "PHI0";
+	case FPROPS_REF_IIR:       return "IIR";
+	case FPROPS_REF_NBP:       return "NBP";
+	case FPROPS_REF_TRHS:      return "TRHS";
+	case FPROPS_REF_TPUS:      return "TPUS";
+	case FPROPS_REF_TPHS:      return "TPHS";
+	case FPROPS_REF_TPF:       return "TPF";
+	case FPROPS_REF_TPFU:      return "TPFU";
+	case FPROPS_REF_TPHG:      return "TPHG";
+	case FPROPS_REF_TPHS0:     return "TPHS0";
+	case FPROPS_REF_REF0:      return "REF0";
 	}
 	return NULL;
 }

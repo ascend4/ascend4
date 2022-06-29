@@ -458,6 +458,7 @@ typedef struct ThermalConductivityData_struct{
 /*------------------------DATA WRAPPER-----------------------------*/
 
 /** EOS correlation types */
+
 typedef enum EosType_enum{
 	/* note, enum should not allow value of zero, as that return value is needed for errors in fprops_corr_avail */
 	FPROPS_IDEAL = 7 /**< we need to be able to flag IDEAL at runtime! */

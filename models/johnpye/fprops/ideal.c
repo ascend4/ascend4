@@ -43,7 +43,7 @@
 
 //static void ideal_set_reference_std(FluidData *D, const ReferenceStateStd *R);
 
-#define IDEAL_DEBUG
+//#define IDEAL_DEBUG
 #ifdef IDEAL_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
@@ -135,7 +135,7 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 		P->data->cp0->m = ref->data.phi0.m;
 		break;
 	case FPROPS_REF_REF0:
-		//MSG("Applying ref0 reference state");
+		MSG("Applying ref0 reference state");
 		switch(P->data->ref0.type){
 		case FPROPS_REF_TPHG:
 			{
@@ -176,13 +176,14 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 		}
 		break;
 	default:
-		ERRMSG("Unsupported type of reference state requested in ideal_prepare.\n");
+		ERRMSG("Unsupported type of reference state (%d) requested in ideal_prepare.\n",ref->type);
 		FPROPS_FREE(P->data);
 		FPROPS_FREE(P);
 		return NULL;
 	}
 #undef D
 
+	assert(P);
 	return P;
 }
 
