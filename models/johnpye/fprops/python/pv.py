@@ -14,7 +14,6 @@ for F in [helm,pr]:
 	TT = logspace(log10(F.T_t + 0.0001), log10(1.2 * F.T_c), 20)
 
 	figure()
-	hold(1)
 
 	if 1:
 		for T in TT:
@@ -46,7 +45,7 @@ for F in [helm,pr]:
 		MYPLOT(1/rrf,pp/1e5,'b-')
 		MYPLOT(1/rrg,pp/1e5,'r-')
 
-	title("%s (%s)" % (F.name, F.type))
+	title("%s (%s)" % (F.name, F.typename))
 	xlabel("$v$")
 	ylabel("$p$ / [bar]")
 	axis([1/1000,1/10.,0,100])

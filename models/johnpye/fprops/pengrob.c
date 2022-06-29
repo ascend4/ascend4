@@ -53,7 +53,7 @@ SatEvalFn pengrob_sat;
 
 static double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err);
 
-#define PR_DEBUG
+//#define PR_DEBUG
 #define PR_ERRORS
 
 #ifdef PR_DEBUG

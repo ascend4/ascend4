@@ -25,7 +25,7 @@ vars.Add(
 
 env = Environment(
 	toolpath=['scons']
-	,tools = [deft ,'substinfile','swig']
+	,tools = [deft,'swig']
 	,ENV={"TERM":os.environ.get('TERM'), "PATH":os.environ.get('PATH')}
 	,HOST_PREFIX=os.environ.get('HOST_PREFIX')
 )
@@ -37,7 +37,7 @@ if WhereIs('ascend-config'):
 	env.ParseConfig(['ascend-config','--libs','--cppflags'])
 	env['WITH_ASCEND'] = 1
 else:
-	print "WARNING: no ascend-config in path, won't build ASCEND wrapper"
+	print("WARNING: no ascend-config in path, won't build ASCEND wrapper")
 	env['WITH_ASCEND'] = 0
 
 env.Append(

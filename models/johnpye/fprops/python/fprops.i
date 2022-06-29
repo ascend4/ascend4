@@ -65,14 +65,24 @@ const ReferenceState *REF_TPUS(double T0, double p0, double u0, double s0);
 const ReferenceState *REF_TPHS(double T0, double p0, double h0, double s0);
 const ReferenceState *REF_PHI0(double c, double m);
 
+%extend ReferenceState{
+	const char *typename;
+}
+
+%{
+const char *ReferenceState_typename_get(const ReferenceState *ref){
+	return fprops_refstate_type(ref->type);
+}
+%}
+
 /* ----------------- ACCESSING FLUID SPECIFICATIONS -----------------*/
 
 // load and initialise a PureFluid
 %rename(fluid) fprops_fluid;
 %exception {
 	$action
-	if(!result){
-		PyErr_SetString(PyExc_RuntimeError,"Invalid fluid requested");
+	if(NULL==result){
+		PyErr_SetString(PyExc_RuntimeError,"Invalid fluid requested (turn on debugging flags for reasons why)");
 		return NULL;
 	}
 }
@@ -216,6 +226,7 @@ typedef struct{} PureFluid;
 	%immutable;
 	char *name;
 	int type;
+	const char *typename;
 	char *source;
 }
 
@@ -257,8 +268,12 @@ const char *PureFluid_source_get(const PureFluid *fluid){
 int PureFluid_type_get(PureFluid *fluid){
 	return fluid->type;
 }
-%}
 
+// FIXME get enumerations working more 'natively' in Python to avoid needing these string functions.
+const char *PureFluid_typename_get(PureFluid *fluid){
+	return fprops_corr_type(fluid->type);
+}
+%}
 
 /*----------------------- FLUID STATE OBJECT ------------------*/
 
@@ -312,6 +327,10 @@ double FluidState_v_get(FluidState *state){
 	return 1. / state->rho;
 }
 
+/* 
+	these macro tricks implement fprops_p, fprops_h, fprops_T etc as attributes,
+	eg F.set_ph(1e5,2e3).T to calculate temperature from Python
+*/
 #define FNS(G,X) G(x) X G(p) X G(u) X G(h) X G(s) X G(a) X G(cv) \
 	X G(cp) X G(w) X G(g) X G(alphap) X G(betap) X G(cp0) X G(dpdT_rho) \
 	X G(mu) X G(lam)
