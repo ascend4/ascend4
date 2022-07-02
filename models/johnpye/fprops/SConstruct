@@ -20,7 +20,7 @@ vars.Add(
 vars.Add(
 	'CFLAGS'
 	,'C compiler flags'
-	,["-Wall"]
+	,["-Wall",'-std=c99']
 )
 
 env = Environment(
@@ -43,6 +43,11 @@ else:
 env.Append(
 	CFLAGS=['-g','-Wall']
 )
+
+conf = env.Configure()
+if conf.CheckFunc('cpow','#include <complex.h>'):
+	conf.env.Append(CPPDEFINES=['HAVE_CPOW'])
+env = conf.Finish()
 
 env['EXTLIB_SUFFIX'] = "_ascend" + env.subst("$SHLIBSUFFIX")
 env['EXTLIB_PREFIX'] = env.subst("$SHLIBPREFIX")

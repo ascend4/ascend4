@@ -53,7 +53,7 @@ SatEvalFn pengrob_sat;
 
 static double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err);
 
-//#define PR_DEBUG
+#define PR_DEBUG
 #define PR_ERRORS
 
 #ifdef PR_DEBUG
@@ -537,7 +537,7 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 	MSG("Initial guess: p = %f from acentric factor",p);
 
 	int i = 0;
-	double Zg, Z1, Zf, vg, vf;
+	double vg, vf;
 	double oldfratio = 1e9;
 
 #ifdef PR_DEBUG
@@ -556,8 +556,12 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 		B = PD->b * p / (data->R*T);
 		
 		// use GSL function to return real roots of polynomial: Peng & Robinson eq 5
-		Zf = 0; Z1 = 0; Zg = 0;
-		if(3 == cubicroots(-(1.-B), A-3.*SQ(B)-2.*B, -(A*B-SQ(B)*(1.+B)), &Zf,&Z1,&Zg)){
+		double Zsol[3] = {0,0,0};
+#define Zf Zsol[0]
+#define Z1 Zsol[1]
+#define Zg Zsol[2]		
+		
+		if(3 == cubicroots(-(1.-B), A-3.*SQ(B)-2.*B, -(A*B-SQ(B)*(1.+B)), Zsol)){
 			assert(Zf < Z1);
 			assert(Z1 < Zg);
 				
@@ -632,6 +636,10 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 #endif
 	return 0;
 }
+#undef Zf
+#undef Z1
+#undef Zg
+
 
 /*
 	FIXME can we generalise this to work with other *cubic* EOS as well?
@@ -699,5 +707,67 @@ static double resid_dpdrho_T(double rho, void *user_data){
 #define D ((MidpointSolveData *)user_data)
     return pengrob_dpdrho_T(D->T,rho,D->data,D->err);
 #undef D
+}
+
+
+void pengrob_solve_pT(double p,double T, double *rho
+	,FluidData *data, FpropsError *err
+){
+	assert(rho);
+	assert(!*err);
+	
+	// solve the cubic EOS at defined p,T...
+
+	// copied from pengrob_sat above (some refactoring needed?)
+	
+	// Peng & Robinson eq 17
+	double sqrtalpha = 1. + PD->kappa * (1. - sqrt(T / PD_TCRIT));
+	// Peng & Robinson eq 12
+	double a = PD->aTc * SQ(sqrtalpha);
+	// Peng & Robinson eq 6
+	double A = a * p / SQ(data->R*T);
+	double B = PD->b * p / (data->R*T);
+	
+	// solve cubic polynomial Peng & Robinson eq 5
+	double Z[3];
+#define Zf Z[0]
+#define Z1 Z[1]
+#define Zg Z[2]
+
+	int nroots = cubicroots(-(1.-B), A-3.*SQ(B)-2.*B, -(A*B-SQ(B)*(1.+B)), Z);
+	assert(Zf < Z1);
+	assert(Z1 < Zg);
+	double rhof = p / (Zf*data->R*T);
+	MSG("rhof = %f",rhof);
+	if(1 == nroots){
+		MSG("single root");
+		if(rhof < 0){
+			ERRMSG("Invalid solution %lf for density at p = %lf Pa, T = %lf K",rhof,p,T);
+			*err = FPROPS_RANGE_ERROR;
+			return;
+		}
+		*rho = rhof;
+		return;
+	}
+	if(3 == nroots){
+		MSG("three roots");
+		// is this right... return the more stable phase for this (p,T)?
+		double rhog = p / (Zg*data->R*T);
+		MSG("rhog = %f",rhog);
+		
+		assert(!*err);
+		double gf = pengrob_g(T,rhof,data,err); if(*err)return;
+		double gg = pengrob_g(T,rhog,data,err); if(*err)return;
+		MSG("gf = %f, gg = %f",gf,gg);
+		
+		if(gf <= gg){
+			MSG("gf is lower");
+			*rho = rhof;
+		}else{
+			MSG("gg is lower");
+			*rho = rhog;
+		}
+		return;
+	}
 }
 

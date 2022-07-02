@@ -3,7 +3,6 @@ from fprops import *
 D = fluid("isohexane")
 
 from pylab import *
-hold(1)
 
 T_min = D.T_t
 
@@ -64,12 +63,11 @@ ylabel("Temperature / K");
 #axis([0,1000,0,100e6])
 
 figure()
-hold(1)
 
 plot(TT,psat/1e5,label="Xiang")
-plot(TT,psata/1e5,label="Acentric")
+plot(TT,psata/1e5,'-x',label="Acentric")
 #plot(TT1,psat1/1e5,'rx',label="Maxwell (error)")
-plot(TT2,psat2/1e5,'g.',label="FPROPS (OK)")
+plot(TT2,psat2/1e5,'g+',label="FPROPS (OK)")
 legend(loc=2)
 xlabel("Temperature / K");
 ylabel(r"$p_\mathrm{sat}(T)$ / [bar]");

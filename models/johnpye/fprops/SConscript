@@ -57,6 +57,12 @@ if env['WITH_PYTHON']:
 		env.InstallShared(dir,env['pyfprops'])
 		env.InstallShared(dir,"python/fprops.py")
 
+prog_env = fprops_env.Clone()
+prog_env.Append(LIBS=['m'])
+prog_env.Program("mix",['mix.c']+fprops_env['shobjs'])
+
+prog_env.Program("test_cubicroots",['cubicroots.c'] + fprops_env['shobjs'],CPPDEFINES=['-DTEST'])
+
  #vim: set syntax=python:
 
 fprops_env.SConscript("test/SConscript",['fprops_env'])
