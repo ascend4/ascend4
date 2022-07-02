@@ -53,7 +53,7 @@ int cubicroots(double a, double b, double c, double x[3]){
 	double Q = -(a3)*(SQ(a3) - b/2) - c/2;
 	MSG("P = %f, Q = %f",P,Q);
 	
-	if(P == 0 && Q==0){ // TODO apply some precision here?
+	if(P == 0 && Q==0){
 		x[0] = x[1] = x[2] = -a3;
 		MSG("Triple real root x = %f",x[0]);
 		return 3;
@@ -75,7 +75,7 @@ int cubicroots(double a, double b, double c, double x[3]){
 		}
 	}
 	
-	double D = SQ(P) - CUBE(P);
+	double D = SQ(Q) - CUBE(P);
 	MSG("D = %f",D);
 	
 	if(D == 0){
@@ -97,12 +97,12 @@ int cubicroots(double a, double b, double c, double x[3]){
 		MSG("D > 0");
 		if(P>0){
 			MSG("P > 0");
-			x[0] = -a3 + csol(&cosh,&acosh,1,0,P,Q);
+			x[0] = -a3 + csol(&cosh,&acosh,sgn(Q),0,P,Q);
 			MSG("One real roots, x0 = %f (D>0,P>0)",x[0]);		
 			return 1;
 		}else{
 			MSG("P < 0");
-			x[0] = -a3 + csol(&sinh,&asinh,sgn(Q),0,P,Q);
+			x[0] = -a3 + csol(&sinh,&asinh,1,0,P,Q);
 			MSG("One real roots, x0 = %f (D>0,P<0)",x[0]);
 			return 1;
 		}
@@ -294,6 +294,9 @@ int main(void){
 	RTEST(-3,3,-1,     3, 1, 1, 1);
 	RTEST(6,12,8,      3, -2, -2, -2);
 	RTEST(-12,48,-64,  3, 4, 4, 4);
+	RTEST(-12,48,-64,  3, 4, 4, 4);
+	RTEST(-3e6,3e12,-1e18, 3, 1e6,1e6,1e6);
+	//RTEST(-3e9,3e18,-1e24, 3, 1e6,1e6,1e6); // fails due to machine precision... but maybe we can normalise?
 
 	// cases with P=0
 	RTEST(-12,48,-66,  1, 4+pow(2.,1./3),0, 0);
@@ -311,6 +314,7 @@ int main(void){
 	MSG("====== D < 0 CASES"); // cos
 	RTEST(1,-10,8,        3, -4, 1, 2);
 	RTEST(0,-6,-4,     3, -2, 1-sqrt(3.),1+sqrt(3.));
+	RTEST(-19,+118,-240, 3, 5, 6, 8);
 	RTEST(51,-4300,60000, 3, -100, 24, 25);
 	RTEST(-1001,-1000000,+1001000000, 3, -1000,1000,1001);
 	// RTEST(-1e6-1,-1e12,+1000001e12, 3,1e6,1e6+1,-1e6); // fails due to numerical precision
@@ -319,8 +323,8 @@ int main(void){
 	MSG("====== D > 0 CASES");
 	RTEST(-1,4,-4,     1, 1, 0,0); // P < 0: sinh
 	RTEST(1,4,4,     1, -1, 0,0); // P < 0: sinh
-	RTEST(-19,+118,-240, 3, 5, 6, 8); // P > 0: cosh
-	
+	RTEST(0,-6,-9,    1, 3,0,0);
+	RTEST(0,-6,+9,    1, -3,0,0);
 	
 	
 	return 0;
