@@ -278,7 +278,7 @@ int main(void){
 	ASSERT(V != NULL);
 	d->visc = V;
 
-	// test data gives densities in mol/dm³
+	// test data gives densities in mol/dmÂ³
 #define VISC_TEST(T__1,RHO__1,MU__1,TOL__1) \
 	S = fprops_set_Trho(T__1, RHO__1, d, &err); \
 	mu = fprops_mu(S,&err); \
@@ -441,7 +441,7 @@ int main(void){
 */
 const TestData td[] = {
 /*, {Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz}
-, {(K), (MPa), (kg/m³), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg)}*/
+, {(K), (MPa), (kg/mÂ³), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg)}*/
 {2.66E+2, 1.E-2, 1.991337854E-1, 4.298608404E+2, 4.80078336E+2, 3.081890365E+0, 6.208933259E-1, 8.104414236E-1, 8.094088439E-1, -3.899219966E+2}
 , {3.16E+2, 1.E-2, 1.675727826E-1, 4.622510848E+2, 5.219266469E+2, 3.225924974E+0, 6.734607926E-1, 8.62745442E-1, 8.621948769E-1, -5.571412072E+2}
 , {3.66E+2, 1.E-2, 1.446570587E-1, 4.971403497E+2, 5.662693649E+2, 3.356110837E+0, 7.209482393E-1, 9.10105514E-1, 9.097699996E-1, -7.311962166E+2}

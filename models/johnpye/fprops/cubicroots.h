@@ -24,5 +24,5 @@
 	@param x1 second real root (middle one), iff three exist
 	@param x2 third real root (highest), iff three exist
 */
-int  cubicroots(double a, double b, double c, double *x0, double *x1, double *x2);
+int  cubicroots(double a, double b, double c, double x[3]);
 

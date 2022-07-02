@@ -21,6 +21,17 @@
 
 PureFluid *pengrob_prepare(const EosData *data, const ReferenceState *ref);
 
-void pengrob_destroy(PureFluid *data);
+void pengrob_destroy(PureFluid *P);
+
+/**
+	Solve pengrob cubic EOS for pressure and temperature. Maybe we will
+	generalise this at some point.
+	
+	Returns `rho`, or sets `err` if unable to solve.
+	FIXME document if use_guess used?
+*/
+void pengrob_solve_pT(double p,double T, double *rho
+	,FluidData *data, FpropsError *err
+);
 
 #endif //PENGROB_H

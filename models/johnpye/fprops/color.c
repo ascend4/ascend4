@@ -53,7 +53,7 @@ static int color_test(){
 		}
 # else
 		if(term!=NULL){
-			if(strcmp(term,"xterm")==0){
+			if(strncmp(term,"xterm",5)==0){ //check only 5 chars, also catching xterm-256color
 				/* MSYS (rxvt), putty, xterm. */
 				use_xterm_color=1;
 			}else{
