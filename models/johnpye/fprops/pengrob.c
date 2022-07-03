@@ -735,8 +735,6 @@ void pengrob_solve_pT(double p,double T, double *rho
 #define Zg Z[2]
 
 	int nroots = cubicroots(-(1.-B), A-3.*SQ(B)-2.*B, -(A*B-SQ(B)*(1.+B)), Z);
-	assert(Zf < Z1);
-	assert(Z1 < Zg);
 	double rhof = p / (Zf*data->R*T);
 	MSG("rhof = %f",rhof);
 	if(1 == nroots){
@@ -751,6 +749,8 @@ void pengrob_solve_pT(double p,double T, double *rho
 	}
 	if(3 == nroots){
 		MSG("three roots");
+		assert(Zf < Z1);
+		assert(Z1 < Zg);
 		// is this right... return the more stable phase for this (p,T)?
 		double rhog = p / (Zg*data->R*T);
 		MSG("rhog = %f",rhog);
