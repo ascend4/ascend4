@@ -54,54 +54,36 @@
 //#define CUBICROOTS_LOW_PRECISION
 #ifdef CUBICROOTS_EXTRA_PRECISION
 # define DOUBLE long double
-# define COS cosl
-# define ACOS acosl
-# define COSH coshl
-# define ACOSH acoshl
-# define SINH sinhl
-# define ASINH asinhl
-# define FABS fabsl
-# define SQRT sqrtl
-# define POW powl
+# define FJOIN(FN) FN##l
 # define PDBL "%0.16Le"
-# define FSUFF "l"
 # define TESTTOL 1e-14
 # define TOLD 1e-12L
 
 #else
 # ifdef CUBICROOTS_LOW_PRECISION
 #  define DOUBLE float
-#  define COS cosf
-#  define ACOS acosf
-#  define COSH coshf
-#  define ACOSH acoshf
-#  define SINH sinhf
-#  define ASINH asinhf
-#  define FABS fabsf
-#  define SQRT sqrtf
-#  define POW powf
+#  define FJOIN(FN) FN##f
 #  define PDBL "%0.9e"
-#  define FSUFF "f"
 #  define TESTTOL 3e-4
 #  define TOLD 1e-6L
 # else
    // standard ('double') precision
 #  define DOUBLE double
-#  define COS cos
-#  define ACOS acos
-#  define COSH cosh
-#  define ACOSH acosh
-#  define SINH sinh
-#  define ASINH asinh
-#  define FABS fabs
-#  define SQRT sqrt
-#  define POW pow
+#  define FJOIN(FN) FN
 #  define PDBL "%g"
-#  define FSUFF ""
 #  define TESTTOL 1e-13
 #  define TOLD 1e-9
 # endif
 #endif
+#define COS FJOIN(cos)
+#define ACOS FJOIN(acos)
+#define COSH FJOIN(cosh)
+#define ACOSH FJOIN(acosh)
+#define SINH FJOIN(sinh)
+#define ASINH FJOIN(asinh)
+#define FABS FJOIN(fabs)
+#define SQRT FJOIN(sqrt)
+#define POW FJOIN(pow)
 
 # define TOLQ TOLD
 # define TOLP TOLD
@@ -120,7 +102,7 @@ typedef DOUBLE TrigFunction(DOUBLE);
 static DOUBLE ysol(TrigFunction *trig,TrigFunction *invtrig,int S, int k, DOUBLE P, DOUBLE Q){
 	DOUBLE absP = FABS(P);
 	DOUBLE sqrtabsP = SQRT(absP);
-	MSG("trig = %s%s",trig==&COS ? "cos" : (trig==&SINH ? "sinh" : (trig==&COSH ? "cosh" : "???")),FSUFF);
+	MSG("trig = %s",trig==&COS ? "cos" : (trig==&SINH ? "sinh" : (trig==&COSH ? "cosh" : "???")));
 	MSG("k = %d, S = %d", k, S);
 	MSG("|P| = " PDBL " , √|P| = " PDBL,absP,sqrtabsP);
 	MSG("Q*S/√|P|³ = " PDBL,Q*S/absP/sqrtabsP);
@@ -142,7 +124,7 @@ int cubicroots(double a, double b, double c, double x[3]){
 	DOUBLE Q = -(a3)*(SQ(a3) - (DOUBLE)b/2) - (DOUBLE)c/2;
 	
 	MSG("P = " PDBL ", Q = " PDBL,P,Q);
-	MSG("Depressed cubic: x³ %+g x %+g = 0",-3*P,-2*Q);
+	MSG("Depressed cubic: x³ + " PDBL " x + " PDBL " = 0",-3*P,-2*Q);
 	// large coefficients; scale before and after solving
 	// FIXME what to do about small coefficients? is that a problem?
 	
