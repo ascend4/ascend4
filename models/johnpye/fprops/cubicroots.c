@@ -268,6 +268,7 @@ int main(void){
 	int nr;
 	
 	// cases of triple real roots
+	MSG("====== P = Q = 0 CASES");
 	RTEST(3,3,1,       3, -1, -1, -1);
 	RTEST(-3,3,-1,     3, 1, 1, 1);
 	RTEST(6,12,8,      3, -2, -2, -2);
@@ -277,11 +278,12 @@ int main(void){
 	//RTEST(-3e9,3e18,-1e24, 3, 1e6,1e6,1e6); // fails due to machine precision... but maybe we can normalise?
 
 	// cases with P=0
+	MSG("====== P = 0 CASES");
 	RTEST(-12,48,-66,  1, 4+pow(2.,1./3),0, 0);
 	RTEST(-9,27,-29,   1, 3+pow(2.,1./3),0,0);
 
 	// cases with Q=0
-	MSG("====== P = 0 CASES");
+	MSG("====== Q = 0 CASES");
 	RTEST(0,-3,0,      3, -sqrt(3), 0, +sqrt(3));
 	RTEST(6,6,-4,      3, -2-sqrt(6), -2, -2+sqrt(6));
 	RTEST(6,6,-4,      3, -2-sqrt(6), -2, -2+sqrt(6));
