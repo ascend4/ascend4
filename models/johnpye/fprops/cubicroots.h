@@ -24,5 +24,5 @@
 	Note that x[1] and x[2] will only be written to if 3 real roots are found.
 	For details of the method, see https://ascend4.org/Solving_cubic_polynomials
 */
-int  cubicroots(double a, double b, double c, double x[3]);
+int cubicroots(double a, double b, double c, double x[3]);
 
