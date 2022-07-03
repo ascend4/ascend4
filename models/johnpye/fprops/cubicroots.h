@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2007, 2009 Brian Gough
+ * Copyright (C) 2022 John Pye
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
 /**
 	Calculate roots of a cubic, based on a function from GSL.
 	x³ + ax² + bx + c = 0 
-	@return the number of real roots (1 or 3)
-	@param x0 first real root (smallest)
-	@param x1 second real root (middle one), iff three exist
-	@param x2 third real root (highest), iff three exist
+	@return the number of real roots (can be 1 or 3).
+	@param x[3] array of up to three roots, smallest to largest
+	Note that x[1] and x[2] will only be written to if 3 real roots are found.
+	For details of the method, see https://ascend4.org/Solving_cubic_polynomials
 */
 int  cubicroots(double a, double b, double c, double x[3]);
 
