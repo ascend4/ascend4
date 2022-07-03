@@ -19,7 +19,7 @@
 #include "common.h"
 
 // uncomment the following if you want output from 'MSG' and 'ERRMSG' calls
-#define CUBICROOTS_DEBUG
+//#define CUBICROOTS_DEBUG
 #ifdef CUBICROOTS_DEBUG
 # include "color.h"
 # define MSG FPROPS_MSG
@@ -39,37 +39,72 @@
 #error "No M_PI"
 #endif
 
-#define TOLD 1e-12L
-#define TOLQ TOLD
-#define TOLP TOLD
-#define MAXQ 1e4L
+# define MAXP 1000
+# define MAXQP 1000
 
-#define CUBICROOTS_EXTRA_PRECISION
+/*
+	select double (default), long double ('extra') or float ('low') precision
+	using the #defines below. Note that the test suite will apply a different 
+	TESTTOL depending on which machine precision you choose.
+	
+	Note that the internal precision does not change the function signature; 
+	it always expects and returns `double` values.
+*/
+//#define CUBICROOTS_EXTRA_PRECISION
+//#define CUBICROOTS_LOW_PRECISION
 #ifdef CUBICROOTS_EXTRA_PRECISION
-#define DOUBLE long double
-#define COS cosl
-#define ACOS acosl
-#define COSH coshl
-#define ACOSH acoshl
-#define SINH sinhl
-#define ASINH asinhl
-#define FABS fabsl
-#define SQRT sqrtl
-#define POW powl
-#define PDBL "%0.16Le"
+# define DOUBLE long double
+# define COS cosl
+# define ACOS acosl
+# define COSH coshl
+# define ACOSH acoshl
+# define SINH sinhl
+# define ASINH asinhl
+# define FABS fabsl
+# define SQRT sqrtl
+# define POW powl
+# define PDBL "%0.16Le"
+# define FSUFF "l"
+# define TESTTOL 1e-14
+# define TOLD 1e-12L
+
 #else
-#define DOUBLE double
-#define COS cos
-#define ACOS acos
-#define COSH cosh
-#define ACOSH acosh
-#define SINH sinh
-#define ASINH asinh
-#define FABS fabs
-#define SQRT sqrt
-#define POW pow
-#define PDBL "%g"
+# ifdef CUBICROOTS_LOW_PRECISION
+#  define DOUBLE float
+#  define COS cosf
+#  define ACOS acosf
+#  define COSH coshf
+#  define ACOSH acoshf
+#  define SINH sinhf
+#  define ASINH asinhf
+#  define FABS fabsf
+#  define SQRT sqrtf
+#  define POW powf
+#  define PDBL "%0.9e"
+#  define FSUFF "f"
+#  define TESTTOL 3e-4
+#  define TOLD 1e-6L
+# else
+   // standard ('double') precision
+#  define DOUBLE double
+#  define COS cos
+#  define ACOS acos
+#  define COSH cosh
+#  define ACOSH acosh
+#  define SINH sinh
+#  define ASINH asinh
+#  define FABS fabs
+#  define SQRT sqrt
+#  define POW pow
+#  define PDBL "%g"
+#  define FSUFF ""
+#  define TESTTOL 1e-13
+#  define TOLD 1e-9
+# endif
 #endif
+
+# define TOLQ TOLD
+# define TOLP TOLD
 
 #ifndef TEST
 
@@ -85,7 +120,7 @@ typedef DOUBLE TrigFunction(DOUBLE);
 static DOUBLE ysol(TrigFunction *trig,TrigFunction *invtrig,int S, int k, DOUBLE P, DOUBLE Q){
 	DOUBLE absP = FABS(P);
 	DOUBLE sqrtabsP = SQRT(absP);
-	MSG("trig = %s",trig==&COS ? "cos" : (trig==&SINH ? "sinh" : (trig==&COSH ? "cosh" : "???")));
+	MSG("trig = %s%s",trig==&COS ? "cos" : (trig==&SINH ? "sinh" : (trig==&COSH ? "cosh" : "???")),FSUFF);
 	MSG("k = %d, S = %d", k, S);
 	MSG("|P| = " PDBL " , √|P| = " PDBL,absP,sqrtabsP);
 	MSG("Q*S/√|P|³ = " PDBL,Q*S/absP/sqrtabsP);
@@ -100,18 +135,30 @@ static DOUBLE ysol(TrigFunction *trig,TrigFunction *invtrig,int S, int k, DOUBLE
 }
 
 int cubicroots(double a, double b, double c, double x[3]){
-	MSG("Solving x³ + ax² + bx + c = 0, with a = %f, b = %f, c = %f",a,b,c);
+	MSG("Solving x³ + ax² + bx + c = 0, with a = %g, b = %g, c = %g",a,b,c);
 
 	DOUBLE a3 = a/3;
 	DOUBLE P = SQ(a3) - b/3;
 	DOUBLE Q = -(a3)*(SQ(a3) - (DOUBLE)b/2) - (DOUBLE)c/2;
-	MSG("P = " PDBL ", Q = " PDBL,P,Q);
 	
+	MSG("P = " PDBL ", Q = " PDBL,P,Q);
+	MSG("Depressed cubic: x³ %+g x %+g = 0",-3*P,-2*Q);
 	// large coefficients; scale before and after solving
 	// FIXME what to do about small coefficients? is that a problem?
-	if(FABS(Q) > MAXQ){
-		double F = SQRT(FABS(P));
-		MSG("Reducing unknown variable x by factor F = %g",F);
+	
+	double F = 1.;
+	if(FABS(P) > 1e-9){
+		DOUBLE absQoverP = FABS(Q/P);
+		if(absQoverP > MAXQP){
+			F = POW(absQoverP,1./2);
+			MSG("Reducing unknown variable x by factor F = %g = |Q/P|",F);
+		}
+	}
+	if(FABS(P) > MAXP){
+		F = SQRT(FABS(P));
+		MSG("Reducing unknown variable x by factor F = %g = √|P|",F);
+	}
+	if(F != 1.){
 		double w[3];
 		double a1 = a/F, b1 = b/SQ(F),c1 = c/CUBE(F);
 		a1 = a/F;
@@ -120,13 +167,14 @@ int cubicroots(double a, double b, double c, double x[3]){
 			x[i] = w[i] * F;
 		}
 		if(nr==1){
-			MSG("Reinflated value of x is x₀ = %g",x[0]);
+			MSG("Reinflated value of x is x₀ = %.14e",x[0]);
 		}else{
-			MSG("Reinflated values of x are x₀ = %g, x₁ = %g, x₂ = %g, ",x[0],x[1],x[2]);
+			MSG("Reinflated values of x are x₀ = %.14e, x₁ = %.14e, x₂ = %.14e, ",x[0],x[1],x[2]);
 		}
 		return nr;
 	}
-	
+
+
 	if(FABS(P) < TOLP && FABS(Q) < TOLQ){
 		x[0] = x[1] = x[2] = (double)-a3;																
 		MSG("Triple real root x = %f (P==0, Q==0)",x[0]);
@@ -140,11 +188,11 @@ int cubicroots(double a, double b, double c, double x[3]){
 			x[0] = (double)(-a3 - SQRT(3*P));
 			x[1] = (double)(-a3);
 			x[2] = (double)(-a3 + SQRT(3*P));
-			MSG("Three real roots, x₀ = %f, x1 = %f, x2 = %f (Q==0, P>0)",x[0],x[1],x[2]);
+			MSG("Three real roots, x₀ = %.14e, x1 = %.14e, x2 = %.14e (Q==0, P>0)",x[0],x[1],x[2]);
 			return 3;
 		}else{
 			x[0] = (double)(-a3);
-			MSG("One real root x₀ = %f (Q==0, P<0)",x[0]);
+			MSG("One real root x₀ = %.14e (Q==0, P<0)",x[0]);
 			return 1;
 		}
 	}
@@ -182,19 +230,19 @@ int cubicroots(double a, double b, double c, double x[3]){
 		if(x[2]<x[1])SWAP(x[1],x[2]);
 		if(x[1]<x[0])SWAP(x[0],x[1]);
 		
-		MSG("Three real roots%s, x₀ = %g, x₁ = %g, x₂ = %g (D<0)",fabs(D)<1e-12?" (including a double root)":"",x[0],x[1],x[2]);
+		MSG("Three real roots%s, x₀ = %.14e, x₁ = %.14e, x₂ = %.14e (D<0)",fabs(D)<1e-12?" (including a double root)":"",x[0],x[1],x[2]);
 		return 3;
 	}else{
 		MSG("D > 0");
 		if(P>0){
 			MSG("P > 0");
 			x[0] = (double)(-a3 + ysol(&COSH,&ACOSH,SGN(Q),0,P,Q));
-			MSG("One real roots, x₀ = %g (D>0, P>0, %s)",x[0],(Q>0)?"Q>0":"Q<0");		
+			MSG("One real roots, x₀ = %.14e (D>0, P>0, %s)",x[0],(Q>0)?"Q>0":"Q<0");		
 			return 1;
 		}else{
 			MSG("P < 0");
 			x[0] = (double)(-a3 + ysol(&SINH,&ASINH,1,0,P,Q));
-			MSG("One real roots, x₀ = %g (D>0, P<0)",x[0]);
+			MSG("One real roots, x₀ = %.14e (D>0, P<0)",x[0]);
 			return 1;
 		}
 	}
@@ -204,10 +252,14 @@ int cubicroots(double a, double b, double c, double x[3]){
 
 #include <assert.h>
 
-#define MYTOL 1e-14
+#ifndef TESTTOL
+# error TESTTOL
+#endif
+
 #define CTOL(X,V,TOL) \
-	if(fabs(V)<1)assert(fabs((X)-(V))<TOL); \
-	else assert(fabs((X)-(V))/fabs(V)<TOL)
+	/*fprintf(stderr,"checking %.14e against %.14e\n",X,(double)V);*/ \
+	if(fabs(V)<1)assert(fabs((X)-(double)(V))<TOL); \
+	else assert(fabs((X)-(double)(V))/fabs((double)V)<TOL)
 
 #define RTEST(A,B,C,NR,X0,X1,X2) \
 	a = (A); b = (B); c = (C); \
@@ -215,15 +267,15 @@ int cubicroots(double a, double b, double c, double x[3]){
 	assert(NR==1||NR==3); \
 	nr = cubicroots(a,b,c,x);\
 	if(NR==3){\
-		MSG("Expecting 3 roots: x₀ = %g, x₁ = %g, x₂ = %g",(double)X0,(double)X1,(double)X2); \
+		MSG("Expecting 3 roots (tol = %g): x₀ = %.14e, x₁ = %.14e, x₂ = %.14e",TESTTOL,(double)X0,(double)X1,(double)X2); \
 	}else{\
-		MSG("Expecting 1 root: x₀ = %g",(double)X0); \
+		MSG("Expecting 1 root (tol = %g): x₀ = %.14e",TESTTOL, (double)X0); \
 	}\
 	assert(nr==(NR)); \
-	CTOL(x[0],X0,MYTOL);\
+	CTOL(x[0],X0,TESTTOL);\
 	if(NR==3){ \
-		CTOL(x[1],X1,MYTOL);\
-		CTOL(x[2],X2,MYTOL);\
+		CTOL(x[1],X1,TESTTOL);\
+		CTOL(x[2],X2,TESTTOL);\
 	}\
 	MSG("OK");
 
