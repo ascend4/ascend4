@@ -73,7 +73,7 @@ int main(void){
 	// scan values of p for fixed T, varying v -- for CO₂
 	
 	double vmin = 0.0008;
-	double vmax = 0.14;
+	double vmax = 0.5;
 	unsigned n = 30;
 	for(unsigned i=0;i<n;++i){
 		double v=exp(log(vmin)+i*(log(vmax)-log(vmin))/(n-1));
@@ -93,6 +93,7 @@ int main(void){
 	double p1c = pengrob_p(T1,rho1,CO2->data,&err);
 	assert(!err);
 	MSG("p1c = %f kPa",p1c/1e3);
+	assert(fabs(p1 - p1c)<1e-8);
 	
 	MSG("solve rho = %f",rho1);
 	double G1 = pengrob_g(T1,rho1,CO2->data,&err);
@@ -103,6 +104,9 @@ int main(void){
 	MSG("rho2 = %f",rho2);
 	double G2 = pengrob_g(T1,rho2,C7H8->data,&err);
 	MSG("G2 = %f",G2);
+	
+	// now we need an expressions for the mixing enthalpy ΔHmix and ΔSmix
+	// so we can plot G(yB)
 	
 
 	return 0;

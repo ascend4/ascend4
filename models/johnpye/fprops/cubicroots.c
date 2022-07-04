@@ -313,6 +313,15 @@ int main(void){
 	RTEST(-10,32,-32,  3, 2,4,4); // this case gives tol>1e-8, worst case
 	RTEST(1e3,-5e6,+3e9,  3, -3e3,1e3,1e3);
 	RTEST(-1e3,-1e6,+1e9,  3, -1e3,1e3,1e3);
+	
+	// cases that are tested in GSL
+	MSG("======== GSL CASES");
+	RTEST(0,0,-27,    1, 3, 0,0);
+	RTEST(-51,867,-4913,    3, 17, 17, 17);
+	RTEST(-57,1071,-6647,   3, 17,17,23);
+	RTEST(-143,5087,-50065, 3, 17,31,95);
+	RTEST(-109, 803,50065,  3,-17,31,95);
+	
 
 	return 0;
 }
