@@ -53,7 +53,7 @@ SatEvalFn pengrob_sat;
 
 static double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err);
 
-#define PR_DEBUG
+//#define PR_DEBUG
 #define PR_ERRORS
 
 #ifdef PR_DEBUG
@@ -72,7 +72,11 @@ static double MidpointPressureCubic(double T, const FluidData *data, FpropsError
 #endif
 
 PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
-	MSG("Preparing PR fluid...");
+	if(!E){
+		ERRMSG("EosData was NULL");
+		return NULL;
+	}
+	MSG("Preparing PR fluid '%s'...",E->name);
 	PureFluid *P = FPROPS_NEW(PureFluid);
 	P->data = FPROPS_NEW(FluidData);
 
@@ -86,10 +90,12 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 	/* common data across all correlation types */
 	switch(E->type){
 	case FPROPS_HELMHOLTZ:
+		MSG("EOS data is Helmholtz");
 #define I E->data.helm
 		D->M = I->M;
 		D->R = I->R;
 		D->T_t = I->T_t;
+		D->T_min = 0;
 		D->T_c = I->T_c;
 		D->rho_c = I->rho_c;
 		D->omega = I->omega;
@@ -137,13 +143,17 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		break;
 #undef I
 	case FPROPS_CUBIC:
-#define I E->data.cubic
+		MSG("EOS data is cubic");	
+#define I E->data.cubic // in other words, the input data
 		D->M = I->M;
 		D->R = R_UNIVERSAL / I->M;
 		D->T_t = I->T_t;
 		D->T_c = I->T_c;
 		D->p_c = I->p_c;
-#if 1
+		D->T_min = I->T_min;
+
+#if 0
+		// use Zc to calculate rho_c, then give a warning if the data's value of rho_c looks strange, where provided.
 		double Zc = 0.307;
 		D->rho_c = D->p_c / (Zc * D->R * D->T_c); 
 		if(I->rho_c != -1){
@@ -154,6 +164,8 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 			}
 		}
 #else
+#if 1
+		// use provided rho_c whenever provided, otherwise calculated from Zc
 		double Zc = 0.307;
 		/* use rho_c from FileData unless missing */
 		if(I->rho_c == -1){
@@ -163,7 +175,19 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 			/* ensure p_c is consistent with value of rho_c */
 			D->p_c = D->rho_c * (Zc * D->R * D->T_c); 
 		}
+#else
+		// use provided rho_c to report Zc
+		if(I->rho_c == -1){
+			double Zc = 0.307;
+			D->rho_c = D->p_c / (Zc * D->R * D->T_c); ;
+			MSG("rho_c missing, using value of rho_c = %g, by assuming Zc = %g",D->rho_c,Zc);
+		}else{
+			double Zc = D->p_c / (D->rho_c * D->R * D->T_c);
+			MSG("Zc = %g",Zc);
+		}
 #endif
+#endif
+
 		D->omega = I->omega;
 
 		D->Tstar = I->T_c;
@@ -521,6 +545,8 @@ double pengrob_betap(double T, double rho, const FluidData *data, FpropsError *e
 */
 double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData *data, FpropsError *err){
 	/* rewritten, using GSOC code from Sean Muratet as a starting point -- thanks Sean! */
+	MSG("rho_c = %g",data->rho_c);
+	assert(data->rho_c != 0);
 
 	if(fabs(T - data->T_c) < 1e-3){
 		MSG("Saturation conditions requested at critical temperature");
@@ -534,6 +560,7 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 	double sqrt2 = sqrt(2);
 
 	double p = fprops_psat_T_acentric(T, data);
+	//double p = data->p_c / 2;
 	MSG("Initial guess: p = %f from acentric factor",p);
 
 	int i = 0;
@@ -545,7 +572,7 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 #endif
 
 	// FIXME test upper iteration limit required
-	while(++i < 200){
+	while(++i < 20){
 		MSG("iter %d: p = %f, rhof = %f, rhog = %f", i, p, 1/vf, 1/vg);
 		// Peng & Robinson eq 17
 		double sqrtalpha = 1. + PD->kappa * (1. - sqrt(T / PD_TCRIT));
@@ -555,27 +582,31 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
         A = a * p / SQ(data->R*T);
 		B = PD->b * p / (data->R*T);
 		
-		// use GSL function to return real roots of polynomial: Peng & Robinson eq 5
+		// calculate real roots of polynomial: Peng & Robinson eq 5
 		double Zsol[3] = {0,0,0};
 #define Zf Zsol[0]
 #define Z1 Zsol[1]
 #define Zg Zsol[2]		
 		
 		if(3 == cubicroots(-(1.-B), A-3.*SQ(B)-2.*B, -(A*B-SQ(B)*(1.+B)), Zsol)){
-			assert(Zf < Z1);
-			assert(Z1 < Zg);
-				
-			//MSG("    roots: Z = %f, %f, %f", Zf, Z1, Zg);
+			//assert(Zf < Z1);
+			//assert(Z1 < Zg);
+			MSG("    roots: Z = %f, %f, %f", Zf, Z1, Zg);
+			//assert(!isnan(Zsol[0]));
 			//MSG("    Zf = %f, Zg = %f", Zf, Zg);
 			// three real roots in this case
 			vg = Zg*data->R*T / p;
 			vf = Zf*data->R*T / p;
+#if 1
 			if(vf < 0 || vg < 0){
 				// FIXME find out what does this mean; how does it happen?
 				MSG("Got a density root less than 0");
+
 				*err = FPROPS_SAT_CVGC_ERROR;
 				return 0;
 			}
+#endif
+
 			//MSG("    vf = %f, vg = %f",vf,vg);
 			//MSG("    VMf = %f, VMg = %f",vf*data->M,vg*data->M);
 
@@ -671,6 +702,8 @@ double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err){
 	double rhomin = 0.9 * data->rho_c;
 	double rhomax = data->rho_c;
 	double rho, resid;
+	MSG("rho_c = %g",data->rho_c);
+	assert(data->rho_c != 0);
 
 	if(T > data->T_c){
 		ERRMSG("Invalid temperature T > T_c");
@@ -691,6 +724,7 @@ double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err){
 	rhomin = data->rho_c;
 	rhomax = 1.1 * data->rho_c;
 	if(rhomax + 1e-2 > 1./(data->corr.pengrob->b)) rhomax = 1./(data->corr.pengrob->b) - 1e-3;
+	MSG("rhomin = %g, rhomax = %g",rhomin,rhomax);
 
 	res = zeroin_solve(&resid_dpdrho_T, &msd, rhomin, rhomax, 1e-9, &rho, &resid);
 	if(res){
@@ -698,6 +732,7 @@ double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err){
 		*err = FPROPS_NUMERIC_ERROR;
 		return data->p_c;
 	}
+	MSG("Solved rho = %g (resid = %g)",rho,resid);
 
 	double p2 = pengrob_p(T,rho, data, err);
 	return 0.5*(p1 + p2);

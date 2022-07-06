@@ -7,8 +7,12 @@
 /**
 	Look up the named fluid and return its internal data structure, or
 	NULL if not found.
+	
+	TODO need to decide if we want this to be immutable or not. There is the 
+	issue of (pure) fluid data that could (potentially) be calculated and cached
+	as it is used.
 */
-const PureFluid *fprops_fluid(const char *name, const char *corrtype, const char *source);
+PureFluid *fprops_fluid(const char *name, const char *corrtype, const char *source);
 
 void fprops_fluid_destroy(PureFluid *fluid);
 
@@ -24,7 +28,7 @@ int fprops_num_fluids();
 	@param i fluid index number [0,fprops_num_fluids()-1]
 	@return NULL if i is out of bounds.
 */
-const PureFluid *fprops_get_fluid(int i);
+PureFluid *fprops_get_fluid(int i);
 
 #endif
 
