@@ -72,7 +72,7 @@
 #  define FJOIN(FN) FN
 #  define PDBL "%g"
 #  define TESTTOL 1e-13
-#  define TOLD 1e-9
+#  define TOLD 1e-10 // needed to reduce this for calc of toluene at 5 bar, 260 K
 # endif
 #endif
 #define COS FJOIN(cos)

@@ -35,6 +35,18 @@
 	TODO perhaps eventually we can different different correlations using
 	different independent variables, in which case this state could be modified/
 	expanded/improved.
+	
+	TODO the variables T,rho uniquely define the phase; there should be no 
+	need to check saturation before proceeding to evaluate properties. More 
+	generally, for fluid mixtures, we would need to know the mole fractions
+	of each component in each phase, and we would need to store that in the
+	state object. What we do need here, though, is a flag that tells us when
+	we're already in a saturation region, because the process for evaluating
+	the properties is different then. This comes to the question of how we
+	handle mixtures, starting with two-phase mixtures of a single component, but
+	then moving to multi-component multi-phase mixtures. There is a lot of 
+	generalisation required for this, and the current API is not fit for
+	purpose.
 */
 typedef struct FluidState_struct{
 	double T; ///< temperature / K
