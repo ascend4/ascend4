@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "solve_pT.h"
+#include "sat.h"
 #include "fprops.h"
 #include "pengrob.h"
 
@@ -83,7 +84,7 @@ int fprops_region_pT(double p, double T, const PureFluid *fluid, FpropsError *er
 	return FPROPS_NON;
 }
 
-void fprops_solve_pT(double p, double T, double *rho, int use_guess
+void fprops_solve_pT(double p, double T, double *rho
 		, const PureFluid *fluid, FpropsError *err
 ){
 	if(fluid->type == FPROPS_PENGROB){

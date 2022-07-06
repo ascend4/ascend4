@@ -156,6 +156,14 @@ FluidState fprops_set_Trho(double T, double rho, const PureFluid *fluid, FpropsE
 	Also sublimation curve needs to be added.
 */
 
+/*
+	TODO, having set the fluid state, shouldn't we normally already have 
+	information about the phase we're in, and not have to check saturation
+	at every evaluation?? Seems very inefficient.
+	
+	See comments against FluidState in fprops.h.
+*/
+
 #define EVALFN(VAR) \
 	double fprops_##VAR(FluidState state, FpropsError *err){\
 		double p, rho_f, rho_g;\
