@@ -17,16 +17,21 @@
  */
 #include "cubicroots.h"
 #include "common.h"
+# include "color.h"
 
 // uncomment the following if you want output from 'MSG' and 'ERRMSG' calls
 //#define CUBICROOTS_DEBUG
-#ifdef CUBICROOTS_DEBUG
-# include "color.h"
-# define MSG FPROPS_MSG
+#define CUBICROOTS_ERRORS
+
+#ifdef CUBICROOTS_ERRORS
 # define ERRMSG FPROPS_ERRMSG
 #else
-# define MSG(ARGS...) ((void)0)
 # define ERRMSG(ARGS...) ((void)0)
+#endif
+#ifdef CUBICROOTS_DEBUG
+# define MSG FPROPS_MSG
+#else
+# define MSG(ARGS...) ((void)0)
 #endif
 
 #include <math.h>
@@ -70,7 +75,7 @@
    // standard ('double') precision
 #  define DOUBLE double
 #  define FJOIN(FN) FN
-#  define PDBL "%g"
+#  define PDBL "%0.14e"
 #  define TESTTOL 1e-13
 #  define TOLD 1e-10 // needed to reduce this for calc of toluene at 5 bar, 260 K
 # endif
@@ -106,12 +111,17 @@ static DOUBLE ysol(TrigFunction *trig,TrigFunction *invtrig,int S, int k, DOUBLE
 	MSG("k = %d, S = %d", k, S);
 	MSG("|P| = " PDBL " , √|P| = " PDBL,absP,sqrtabsP);
 	MSG("Q*S/√|P|³ = " PDBL,Q*S/absP/sqrtabsP);
+	DOUBLE invtrigarg = Q*S/absP/sqrtabsP;
 	if(trig==&COSH){
-		if(Q*S/absP/sqrtabsP < 1){
-			ERRMSG("invalid P,Q");
+		if(invtrigarg < 1){
+			ERRMSG("invalid P,Q (cosh⁻¹ of <1)");
+		}
+	}else if(trig==&COS){
+		if(invtrigarg > 1){
+			ERRMSG("invalid P,Q (cos⁻¹ of >1), arg = " PDBL,invtrigarg);
 		}
 	}
-	DOUBLE res = 2*S*sqrtabsP*(*trig)((*invtrig)(Q*S/absP/sqrtabsP)/3 + 2./3*M_PI*k);
+	DOUBLE res = 2*S*sqrtabsP*(*trig)((*invtrig)(invtrigarg)/3 + 2./3*M_PI*k);
 	MSG("res = " PDBL,res);
 	return res;
 }
@@ -189,7 +199,8 @@ int cubicroots(double a, double b, double c, double x[3]){
 			}else{
 				MSG("D ≈ 0 (D = " PDBL ")", D);
 				
-				Q = SGN(Q)*P*SQRT(P);
+				P = SGN(Q)*POW(FABS(Q),1./3);
+				//Q = SGN(Q)*P*SQRT(P);
 			}
 			x[0] = (double)(-a3 + ysol(&COS,&ACOS,1,0,P,Q));
 			x[1] = (double)(-a3 + ysol(&COS,&ACOS,1,1,P,Q));

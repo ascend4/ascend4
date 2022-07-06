@@ -312,11 +312,22 @@ typedef struct HelmholtzData_struct{
 	All cubic EOS use the same critical point properties and acentric
 	factor in their equation form. So we can use this structure for
 	PR, RK, etc EOSs. Hopefully.
+	
+	TODO add normal boiling point to this data. The data exists in RPP4,
+	so we have a license for it (see fluids/_rpp.c), and we can use it to
+	improve the initial guesses for the cubic saturation curves, via fitting the 
+	Antoine equation.
+	
+	TODO add normal freezing point. This can be used to predict the triple
+	point temperature, which would help with bounds checking and error handling.
 */
 typedef struct CubicData_struct{
 	double M;                ///< molar mass (kg/kmol)
 	double T_c, p_c, rho_c;  // critical point properties
+	double T_f;              ///< freezing point at 1 atm (K)
+	//double T_b;              ///< boiling point at 1 atm (K)
 	double T_t;              ///< triple-point temperature (K)
+	double T_min;            ///< minimum temperature for vapour pressure calculation (K)
 	double omega;            ///< acentric Factor
 	const ReferenceState ref; ///< default reference state, e.g. to reproduce original published data
 	const ReferenceState ref0; ///< formation state, for calculation of enthalpy of formation and absolute entropy

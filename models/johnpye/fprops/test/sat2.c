@@ -30,6 +30,9 @@ int main(void){
 	FpropsError err;
 	FluidState S;
 
+//#define TESTHELM
+//#define TESTRPP
+
 #define FNAME(F) #F
 #define COMMA ,
 	const char *helmfluids[] = { FLUIDS(FNAME,COMMA) COMMA RPPFLUIDS(FNAME,COMMA) };
@@ -65,8 +68,8 @@ int main(void){
 	const int n = sizeof(helmfluids)/sizeof(char *);
 	int i,j;
 	int nerrfluids = 0;
-	const char *errfluids[n];
-	MSG("Testing convergence of saturation curves for all helmholtz fluids...");
+	const char *errfluids[n];	
+	MSG("Testing convergence of saturation curves for all fluids...");
 	for(i=0; i<n; ++i){
 		int nerr = 0;
 		P = fprops_fluid(helmfluids[i],corrtypes[corrfluids[i]],srcfluids[i]);
@@ -78,23 +81,32 @@ int main(void){
 			color_off(stdout);
 		}else{
 			double Tt = P->data->T_t;
+			if(P->data->T_min > Tt){
+				Tt= P->data->T_min;
+			}
+			
 			double Tc = P->data->T_c;
 			if(Tt == 0){
-				color_on(stdout,ASC_FG_YELLOW);
-				fprintf(stdout,"%s",corrinitial[corrfluids[i]]);
-				color_off(stdout);
 				Tt = 273.15 - 20;
 				if(Tt > Tc){
 					Tt = 0.4 * Tc;
+					color_on(stdout,ASC_FG_GREEN);
+					fprintf(stdout,"%s",corrinitial[corrfluids[i]]);
+					color_off(stdout);
+				}else{
+					color_on(stdout,ASC_FG_YELLOW);
+					fprintf(stdout,"%s",corrinitial[corrfluids[i]]);
+					color_off(stdout);
 				}
 			}else{
 				color_on(stdout,ASC_FG_BRIGHTGREEN);
 				fprintf(stdout,"%s",corrinitial[corrfluids[i]]);
 				color_off(stdout);
 			}
-			double nT = 500;
+			double nT = 120;
 			double rT = 1/Tt;
 			double drT = (1/Tc - 1/Tt) / nT;
+			fprintf(stdout,"%6.1f",Tt);
 			for(j=0; j<nT; ++j){
 				double T = 1/rT;
 				double psat,rhof,rhog;
@@ -111,6 +123,7 @@ int main(void){
 				}
 				rT += drT;
 			}
+			fprintf(stdout,"%6.1f",Tc);
 		}
 		fprintf(stdout,":%s\n",helmfluids[i]);
 		if(nerr)errfluids[nerrfluids++] = helmfluids[i];
@@ -118,16 +131,20 @@ int main(void){
 	}
 
 	if(nerrfluids){
-		MSG("There were %d fluids with saturation curve errors:",nerrfluids);
+		MSG("There were %d fluids with saturation curve errors.",nerrfluids);
+#if 0
 		for(i=0; i<nerrfluids; ++i){
 			fprintf(stderr,"  %s",errfluids[i]);
 		}
+#endif
 	}
+#if 0
 	if(nloggederrors){
 		fprintf(stderr,"\n");
 		MSG("First %d of the %d errors logged:",MAXNLOGGEDERRORS,nloggederrors);
 		fprintf(stderr,"%s",errorlog);
 	}
+#endif
 
 	if(nerrfluids)return nerrfluids;
 
