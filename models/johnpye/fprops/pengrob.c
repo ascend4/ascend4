@@ -571,8 +571,13 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 	FILE *F1 = fopen("pf.txt","w");
 #endif
 
-	// FIXME test upper iteration limit required
-	while(++i < 20){
+	/*
+		The upper limit on iterations here needs to be ~70, and seems to be
+		due to slow convergence for number of fluids like CO2 and ethanol near
+		the critical point. Probably a better algorithm can be found -- see
+		notes above.
+	*/
+	while(++i < 100 /* see above */){
 		MSG("iter %d: p = %f, rhof = %f, rhog = %f", i, p, 1/vf, 1/vg);
 		// Peng & Robinson eq 17
 		double sqrtalpha = 1. + PD->kappa * (1. - sqrt(T / PD_TCRIT));
