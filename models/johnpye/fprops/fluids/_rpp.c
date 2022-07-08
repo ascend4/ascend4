@@ -379,7 +379,7 @@ static const CubicData cubic_data_1_3_dimethylcyclohexane_cis = {
 	,.T_c = 591.0
 	,.p_c = (29.6 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 284
 	,.omega = 0.224
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-184900 / 112.216), (29850 / 112.216)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -675,7 +675,7 @@ static const CubicData cubic_data_2_methylhexane = {
 	,.T_c = 530.4
 	,.p_c = (27.3 * 1e5)
 	,.rho_c = (1000 * 100.295 / 421.0)
-	,.T_t = 0
+	,.T_min = 235
 	,.omega = 0.329
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (195100 / 100.295), (3220 / 100.295)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -749,7 +749,7 @@ static const CubicData cubic_data_ethylcyclohexane = {
 	,.T_c = 609.0
 	,.p_c = (30.0 * 1e5)
 	,.rho_c = (1000 * 112.216 / 450.0)
-	,.T_t = 0
+	,.T_min = 293
 	,.omega = 0.243
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-171900 / 112.216), (39270 / 112.216)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -860,7 +860,7 @@ static const CubicData cubic_data_1_1_dimethylcyclopentane = {
 	,.T_c = 547.0
 	,.p_c = (34.4 * 1e5)
 	,.rho_c = (1000 * 98.189 / 360.0)
-	,.T_t = 0
+	,.T_min = 289
 	,.omega = 0.273
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-138400 / 98.189), (39060 / 98.189)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -971,7 +971,7 @@ static const CubicData cubic_data_2_methyl_3_ethylpentane = {
 	,.T_c = 567.1
 	,.p_c = (27.0 * 1e5)
 	,.rho_c = (1000 * 114.232 / 433.0)
-	,.T_t = 0
+	,.T_t = 250
 	,.omega = 0.330
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-211300 / 114.232), (21270 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1563,7 +1563,7 @@ static const CubicData cubic_data_1_4_dimethylcyclohexane_trans = {
 	,.T_c = 587.7
 	,.p_c = (29.7 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_t = 320
 	,.omega = 0.242
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-184700 / 112.216), (31740 / 112.216)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -2377,7 +2377,7 @@ static const CubicData cubic_data_2_2_3_trimethylbutane = {
 	,.T_c = 531.2
 	,.p_c = (29.5 * 1e5)
 	,.rho_c = (1000 * 100.205 / 398.0)
-	,.T_t = 0
+	,.T_min = 250
 	,.omega = 0.250
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-205000 / 100.205), (4270 / 100.205)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -2488,7 +2488,7 @@ static const CubicData cubic_data_methyl_phenyl_ketone = {
 	,.T_c = 714.0
 	,.p_c = (40.6 * 1e5)
 	,.rho_c = (1000 * 120.151 / 376.0)
-	,.T_t = 0
+	,.T_min = 298
 	,.omega = 0.420
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-86900 / 120.151), (1840 / 120.151)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -2821,7 +2821,7 @@ static const CubicData cubic_data_n_heptane = {
 	,.T_c = 540.3
 	,.p_c = (27.4 * 1e5)
 	,.rho_c = (1000 * 100.205 / 432)
-	,.T_t = 0
+	,.T_min = 240
 	,.omega = 0.349
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.879e+5 / 100.205), (8.000e+3 / 100.205)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -2969,7 +2969,7 @@ static const CubicData cubic_data_2_5_dimethylhexane = {
 	,.T_c = 550.1
 	,.p_c = (24.9 * 1e5)
 	,.rho_c = (1000 * 114.232 / 482.0)
-	,.T_t = 0
+	,.T_min = 245
 	,.omega = 0.356
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-222800 / 114.232), (10470 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -3043,7 +3043,7 @@ static const CubicData cubic_data_2_octene_trans = {
 	,.T_c = 580.0
 	,.p_c = (27.7 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 289
 	,.omega = 0.350
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-94580 / 112.216), (92740 / 112.216)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -4190,7 +4190,7 @@ static const CubicData cubic_data_1_2_dimethylcyclopentane_trans = {
 	,.T_c = 553.2
 	,.p_c = (34.4 * 1e5)
 	,.rho_c = (1000 * 98.189 / 362.0)
-	,.T_t = 0
+	,.T_min = 299
 	,.omega = 0.269
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-136800 / 98.189), (38390 / 98.189)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5152,7 +5152,7 @@ static const CubicData cubic_data_2_2_3_trimethylhexane = {
 	,.T_c = 588.0
 	,.p_c = (24.9 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 297
 	,.omega = 0.332
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-241400 / 128.259), (24530 / 128.259)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5226,7 +5226,7 @@ static const CubicData cubic_data_n_octane = {
 	,.T_c = 568.8
 	,.p_c = (24.9 * 1e5)
 	,.rho_c = (1000 * 114.232 / 492.0)
-	,.T_t = 0
+	,.T_min = 260
 	,.omega = 0.398
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.086e5 / 114.232), (1.640e4 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5522,7 +5522,7 @@ static const CubicData cubic_data_1_heptene = {
 	,.T_c = 537.3
 	,.p_c = (28.3 * 1e5)
 	,.rho_c = (1000 * 98.189 / 440.0)
-	,.T_t = 0
+	,.T_min = 295
 	,.omega = 0.358
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-62340 / 98.189), (95880 / 98.189)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5966,7 +5966,7 @@ static const CubicData cubic_data_m_toluidine = {
 	,.T_c = 709.0
 	,.p_c = (41.5 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 395
 	,.omega = 0.410
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -6595,7 +6595,7 @@ static const CubicData cubic_data_2_3_dimethylhexane = {
 	,.T_c = 563.5
 	,.p_c = (26.3 * 1e5)
 	,.rho_c = (1000 * 114.232 / 468.0)
-	,.T_t = 0
+	,.T_min = 250
 	,.omega = 0.346
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-214100 / 114.232), (17710 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -6743,7 +6743,7 @@ static const CubicData cubic_data_2_4_dimethylhexane = {
 	,.T_c = 553.5
 	,.p_c = (25.6 * 1e5)
 	,.rho_c = (1000 * 114.232 / 472.0)
-	,.T_t = 0
+	,.T_min = 245
 	,.omega = 0.343
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-219600 / 114.232), (11720 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -6928,7 +6928,7 @@ static const CubicData cubic_data_methyl_benzoate = {
 	,.T_c = 692.0
 	,.p_c = (36.4 * 1e5)
 	,.rho_c = (1000 * 136.151 / 396.0)
-	,.T_t = 0
+	,.T_min = 350
 	,.omega = 0.430
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-254000 / 136.151), NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -7150,7 +7150,7 @@ static const CubicData cubic_data_1_2_dimethylcyclohexane_cis = {
 	,.T_c = 606.0
 	,.p_c = (29.6 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 322
 	,.omega = 0.236
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-172300 / 112.216), (41240 / 112.216)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -7298,7 +7298,7 @@ static const CubicData cubic_data_4_methylheptane = {
 	,.T_c = 561.7
 	,.p_c = (25.4 * 1e5)
 	,.rho_c = (1000 * 114.232 / 476.0)
-	,.T_t = 0
+	,.T_t = 250
 	,.omega = 0.371
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-212200 / 114.232), (16750 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -7372,7 +7372,7 @@ static const CubicData cubic_data_p_xylene = {
 	,.T_c = 616.2
 	,.p_c = (35.1 * 1e5)
 	,.rho_c = (1000 * 106.168 / 379.0)
-	,.T_t = 0
+	,.T_min = 331
 	,.omega = 0.321
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (17960 / 106.168), (121200 / 106.168)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -7557,7 +7557,7 @@ static const CubicData cubic_data_1_2_dimethylcyclopentane_cis = {
 	,.T_c = 564.8
 	,.p_c = (34.4 * 1e5)
 	,.rho_c = (1000 * 98.189 / 368.0)
-	,.T_t = 0
+	,.T_min = 299
 	,.omega = 0.269
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (129600 / 98.189), (45760 / 98.189)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -8334,7 +8334,7 @@ static const CubicData cubic_data_3_ethylhexane = {
 	,.T_c = 565.5
 	,.p_c = (26.1 * 1e5)
 	,.rho_c = (1000 * 114.232 / 455.0)
-	,.T_t = 0
+	,.T_min = 250
 	,.omega = 0.361
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-211000 / 114.232), (16940 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -8482,7 +8482,7 @@ static const CubicData cubic_data_n_propylcyclopentane = {
 	,.T_c = 603.0
 	,.p_c = (30.0 * 1e5)
 	,.rho_c = (1000 * 112.216 / 425.0)
-	,.T_t = 0
+	,.T_min = 325
 	,.omega = 0.335
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-148200 / 112.216), (52630 / 112.216)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -8556,7 +8556,7 @@ static const CubicData cubic_data_1_heptanol = {
 	,.T_c = 633.0
 	,.p_c = (30.4 * 1e5)
 	,.rho_c = (1000 * 116.204 / 435.0)
-	,.T_t = 0
+	,.T_min = 333
 	,.omega = 0.560
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-332000 / 116.204), (-121000 / 116.204)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -8963,7 +8963,7 @@ static const CubicData cubic_data_2_2_4_trimethylpentane = {
 	,.T_c = 544.0
 	,.p_c = (25.7 * 1e5)
 	,.rho_c = (1000 * 114.232 / 468.0)
-	,.T_t = 0
+	,.T_min = 265
 	,.omega = 0.303
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-224300 / 114.232), (13690 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -9000,7 +9000,7 @@ static const CubicData cubic_data_m_xylene = {
 	,.T_c = 617.1
 	,.p_c = (35.4 * 1e5)
 	,.rho_c = (1000 * 106.168 / 376.0)
-	,.T_t = 0
+	,.T_min = 332
 	,.omega = 0.325
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (17250 / 106.168), (118900 / 106.168)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -9666,7 +9666,7 @@ static const CubicData cubic_data_1_4_dimethylcyclohexane_cis = {
 	,.T_c = 598.0
 	,.p_c = (29.7 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 320
 	,.omega = 0.234
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-176800 / 112.216), (37970 / 112.216)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -10184,7 +10184,7 @@ static const CubicData cubic_data_ethylcyclopentane = {
 	,.T_c = 569.5
 	,.p_c = (34.0 * 1e5)
 	,.rho_c = (1000 * 98.189 / 375.0)
-	,.T_t = 0
+	,.T_min = 302
 	,.omega = 0.271
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-127200 / 98.189), (44590 / 98.189)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -10221,7 +10221,7 @@ static const CubicData cubic_data_methylcyclohexane = {
 	,.T_c = 572.2
 	,.p_c = (34.7 * 1e5)
 	,.rho_c = (1000 * 98.189 / 368.0)
-	,.T_t = 0
+	,.T_min = 299
 	,.omega = 0.236
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-154900 / 98.189), (27300 / 98.189)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -10406,7 +10406,7 @@ static const CubicData cubic_data_3_4_dimethylhexane = {
 	,.T_c = 568.9
 	,.p_c = (26.9 * 1e5)
 	,.rho_c = (1000 * 114.232 / 466.0)
-	,.T_t = 0
+	,.T_min = 250
 	,.omega = 0.338
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-213100 / 114.232), (17330 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -11294,7 +11294,7 @@ static const CubicData cubic_data_1_1_dimethylcyclohexane = {
 	,.T_c = 591.0
 	,.p_c = (29.6 * 1e5)
 	,.rho_c = (1000 * 112.216 / 416.0)
-	,.T_t = 0
+	,.T_min = 314
 	,.omega = 0.238
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-181100 / 112.216), (35250 / 112.216)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -11442,7 +11442,7 @@ static const CubicData cubic_data_2_2_dimethylhexane = {
 	,.T_c = 549.9
 	,.p_c = (25.3 * 1e5)
 	,.rho_c = (1000 * 114.232 / 478.0)
-	,.T_t = 0
+	,.T_min = 245
 	,.omega = 0.338
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-224900 / 114.232), (10720 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -11738,7 +11738,7 @@ static const CubicData cubic_data_3_methyl_3_ethylpentane = {
 	,.T_c = 576.6
 	,.p_c = (28.1 * 1e5)
 	,.rho_c = (1000 * 114.232 / 455.0)
-	,.T_t = 0
+	,.T_min = 250
 	,.omega = 0.303
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-215100 / 114.232), (19930 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -12182,7 +12182,7 @@ static const CubicData cubic_data_2_2_3_trimethylpentane = {
 	,.T_c = 563.5
 	,.p_c = (27.3 * 1e5)
 	,.rho_c = (1000 * 114.232 / 436.0)
-	,.T_t = 0
+	,.T_t = 245
 	,.omega = 0.297
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-220300 / 114.232), (17120 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -12330,7 +12330,7 @@ static const CubicData cubic_data_1_octene = {
 	,.T_c = 566.7
 	,.p_c = (26.2 * 1e5)
 	,.rho_c = (1000 * 112.216 / 464.0)
-	,.T_t = 0
+	,.T_min = 320
 	,.omega = 0.386
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-82980 / 112.216), (104300 / 112.216)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -12774,7 +12774,7 @@ static const CubicData cubic_data_2_3_4_trimethylpentane = {
 	,.T_c = 566.4
 	,.p_c = (27.3 * 1e5)
 	,.rho_c = (1000 * 114.232 / 461.0)
-	,.T_t = 0
+	,.T_min = 245
 	,.omega = 0.315
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-217600 / 114.232), (18920 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -12959,7 +12959,7 @@ static const CubicData cubic_data_3_3_dimethylhexane = {
 	,.T_c = 562.0
 	,.p_c = (26.5 * 1e5)
 	,.rho_c = (1000 * 114.232 / 443.0)
-	,.T_t = 0
+	,.T_min = 245
 	,.omega = 0.320
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-220300 / 114.232), (13270 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -13292,7 +13292,7 @@ static const CubicData cubic_data_styrene = {
 	,.T_c = 647
 	,.p_c = (39.9 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 303
 	,.omega = 0.257
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (1.475e+5 / 104.152), (2.139e+5 / 104.152)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -13329,7 +13329,7 @@ static const CubicData cubic_data_2_3_3_trimethylpentane = {
 	,.T_c = 573.6
 	,.p_c = (28.2 * 1e5)
 	,.rho_c = (1000 * 114.232 / 455.0)
-	,.T_t = 0
+	,.T_min = 245
 	,.omega = 0.290
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.17E+05 / 114.232), (1.89E+04 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -13403,7 +13403,7 @@ static const CubicData cubic_data_2_methylheptane = {
 	,.T_c = 559.6
 	,.p_c = (24.8 * 1e5)
 	,.rho_c = (1000 * 114.232 / 488.0)
-	,.T_t = 0
+	,.T_min = 250
 	,.omega = 0.378
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-215600 / 114.232), (12770 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -13625,7 +13625,7 @@ static const CubicData cubic_data_o_xylene = {
 	,.T_c = 630.3
 	,.p_c = (37.3 * 1e5)
 	,.rho_c = (1000 * 106.168 / 369.0)
-	,.T_t = 0
+	,.T_min = 337
 	,.omega = 0.310
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (19000 / 106.168), (122200 / 106.168)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -13810,7 +13810,7 @@ static const CubicData cubic_data_cycloheptane = {
 	,.T_c = 604.2
 	,.p_c = (38.1 * 1e5)
 	,.rho_c = (1000 * 98.189 / 353.0)
-	,.T_t = 0
+	,.T_min = 330
 	,.omega = 0.237
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-119400 / 98.189), (63050 / 98.189)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -14143,7 +14143,7 @@ static const CubicData cubic_data_3_methylheptane = {
 	,.T_c = 563.7
 	,.p_c = (25.5 * 1e5)
 	,.rho_c = (1000 * 114.232 / 464.0)
-	,.T_t = 0
+	,.T_min = 255
 	,.omega = 0.370
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-212800 / 114.232), (13730 / 114.232)}}}
 	,.ref = {FPROPS_REF_IIR}

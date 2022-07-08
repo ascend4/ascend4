@@ -132,10 +132,11 @@ int main(void){
 
 	if(nerrfluids){
 		MSG("There were %d fluids with saturation curve errors.",nerrfluids);
-#if 0
+#if 1
 		for(i=0; i<nerrfluids; ++i){
 			fprintf(stderr,"  %s",errfluids[i]);
 		}
+		fprintf(stderr,"\n");
 #endif
 	}
 #if 0
