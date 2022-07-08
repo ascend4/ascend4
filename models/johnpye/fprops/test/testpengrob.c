@@ -88,5 +88,18 @@ int main(void){
 	
 	MSG("PASSED");
 	
+	// test case of mercury near critical point
+	MSG("\n\nTesting case of mercury:");
+	
+	fluid = fprops_fluid("mercury","pengrob",NULL);
+	T = 400.;
+	MSG("T = %g (T_crit = %g)",T,fluid->data->T_c);
+	
+	fprops_sat_T(T,&p1,&rhof, &rhog, fluid, &err); assert(err == 0);
+	
+	MSG("Saturation: p = %g bar, rho_f = %f kg/m³, rho_g = %f kg/m³",p1/1e5,rhof,rhog);
+	
+	MSG("PASSED");	
+	
 }
 

@@ -110,6 +110,7 @@ typedef struct FluidData_struct{
 	double M;     /**< molar mass, kg/kmol */
 	double T_t;   /**< triple-point temperature */
 	double T_min; /**< minimium temperature, Tmin in RPP4 */
+	double T_f;   /**< normal freezing temperature (1 atm), Tfp in RPP4 */
 	double T_c;   /**< critical temperature */
 	double p_c;   /**< critical pressure */
 	double rho_c; /**< critical density */

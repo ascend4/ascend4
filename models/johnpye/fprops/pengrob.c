@@ -151,6 +151,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		D->T_c = I->T_c;
 		D->p_c = I->p_c;
 		D->T_min = I->T_min;
+		D->T_f = I->T_f;
 
 #if 0
 		// use Zc to calculate rho_c, then give a warning if the data's value of rho_c looks strange, where provided.
