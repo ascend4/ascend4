@@ -63,7 +63,7 @@
 #include "../filedata.h"
 
 
-static const IdealData ideal_data_chloropentafluoroetane = {
+static const IdealData ideal_data_chloropentafluoroethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
 		.cp0star = 1
@@ -78,7 +78,7 @@ static const IdealData ideal_data_chloropentafluoroetane = {
 	}}
 };
 
-static const CubicData cubic_data_chloropentafluoroetane = {
+static const CubicData cubic_data_chloropentafluoroethane = {
 	.M = 154.467
 	,.T_c = 353.2
 	,.p_c = (32.3 * 1e5)
@@ -87,16 +87,16 @@ static const CubicData cubic_data_chloropentafluoroetane = {
 	,.omega = 0.279
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_chloropentafluoroetane
+	,.ideal = &ideal_data_chloropentafluoroethane
 };
 
-const EosData eos_rpp_chloropentafluoroetane = {
-	"chloropentafluoroetane"
+const EosData eos_rpp_chloropentafluoroethane = {
+	"chloropentafluoroethane"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_chloropentafluoroetane}
+	,.data = {.cubic=&cubic_data_chloropentafluoroethane}
 };
 
 
@@ -712,7 +712,7 @@ static const CubicData cubic_data_butyronitrile = {
 	,.T_c = 582.2
 	,.p_c = (37.9 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 320
 	,.omega = 0.373
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (34100 / 69.107), (108700 / 69.107)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -897,7 +897,7 @@ static const CubicData cubic_data_methane = {
 	,.T_c = 190.4
 	,.p_c = (46.0 * 1e5)
 	,.rho_c = (1000 * 16.043 / 99.0)
-	,.T_t = 0
+	,.T_min = 91
 	,.omega = 0.011
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-7.490e+4 / 16.043), (-5.087e+4 / 16.043)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -934,7 +934,7 @@ static const CubicData cubic_data_4_methylpyridine = {
 	,.T_c = 646.0
 	,.p_c = (44.6 * 1e5)
 	,.rho_c = (1000 * 93.129 / 311.0)
-	,.T_t = 0
+	,.T_min = 311
 	,.omega = 0.301
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (102300 / 93.129), NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1045,7 +1045,7 @@ static const CubicData cubic_data_nitric_oxide = {
 	,.T_c = 180.0
 	,.p_c = (64.8 * 1e5)
 	,.rho_c = (1000 * 30.006 / 57.7)
-	,.T_t = 0
+	,.T_min = 115
 	,.omega = 0.588
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (90430 / 30.006), (86750 / 30.006)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1082,7 +1082,7 @@ static const CubicData cubic_data_ethyl_butyrate = {
 	,.T_c = 569.0
 	,.p_c = (29.6 * 1e5)
 	,.rho_c = (1000 * 116.160 / 421.0)
-	,.T_t = 0
+	,.T_min = 290
 	,.omega = 0.461
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1156,7 +1156,7 @@ static const CubicData cubic_data_2_3_dimethyl_2_butene = {
 	,.T_c = 524.0
 	,.p_c = (33.6 * 1e5)
 	,.rho_c = (1000 * 84.162 / 351.0)
-	,.T_t = 0
+	,.T_min = 302
 	,.omega = 0.239
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-69840 / 84.162), (75910 / 84.162)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1230,7 +1230,7 @@ static const CubicData cubic_data_methyl_ethyl_ketone = {
 	,.T_c = 536.8
 	,.p_c = (42.1 * 1e5)
 	,.rho_c = (1000 * 72.107 / 267.0)
-	,.T_t = 0
+	,.T_min = 255
 	,.omega = 0.320
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-238500 / 72.107), (-146200 / 72.107)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1267,7 +1267,7 @@ static const CubicData cubic_data_dichlorodifluoromethane = {
 	,.T_c = 385.0
 	,.p_c = (41.4 * 1e5)
 	,.rho_c = (1000 * 120.914 / 216.7)
-	,.T_t = 0
+	,.T_t = 170
 	,.omega = 0.204
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-481500 / 120.914), (-442500 / 120.914)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1378,7 +1378,7 @@ static const CubicData cubic_data_bromine = {
 	,.T_c = 588.0
 	,.p_c = (103.0 * 1e5)
 	,.rho_c = (1000 * 159.808 / 127.2)
-	,.T_t = 0
+	,.T_min = 259
 	,.omega = 0.108
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (30930 / 159.808), (3136 / 159.808)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1452,7 +1452,7 @@ static const CubicData cubic_data_dichloromonofluoromethane = {
 	,.T_c = 451.6
 	,.p_c = (51.8 * 1e5)
 	,.rho_c = (1000 * 102.923 / 196.4)
-	,.T_t = 0
+	,.T_min = 250
 	,.omega = 0.210
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-298900 / 102.923), (-268400 / 102.923)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1489,7 +1489,7 @@ static const CubicData cubic_data_1_chloro_1_1_difluoroethane = {
 	,.T_c = 409.6
 	,.p_c = (43.3 * 1e5)
 	,.rho_c = (1000 * 100.496 / 231.0)
-	,.T_t = 0
+	,.T_min = 143
 	,.omega = 0.251
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1497,7 +1497,7 @@ static const CubicData cubic_data_1_chloro_1_1_difluoroethane = {
 };
 
 const EosData eos_rpp_1_chloro_1_1_difluoroethane = {
-	"1_chloro_1_1_difluoroethane"
+	"1_chloro_1_1_difluoroethane" // C2H3ClF2
 	,"RPP"
 	,""
 	,40
@@ -1637,7 +1637,7 @@ static const CubicData cubic_data_ethane = {
 	,.T_c = 305.4
 	,.p_c = (48.8 * 1e5)
 	,.rho_c = (1000 * 30.070 / 148.3)
-	,.T_t = 0
+	,.T_min = 133
 	,.omega = 0.099
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-8.474e+4 / 30.070), (-3.295e+4 / 30.070)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1674,7 +1674,7 @@ static const CubicData cubic_data_1_butene = {
 	,.T_c = 419.6
 	,.p_c = (40.2 * 1e5)
 	,.rho_c = (1000 * 56.108 / 240.0)
-	,.T_t = 0
+	,.T_min = 170
 	,.omega = 0.191
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-126 / 56.108), (71340 / 56.108)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1748,7 +1748,7 @@ static const CubicData cubic_data_dipropyl_ether = {
 	,.T_c = 530.6
 	,.p_c = (30.3 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 288
 	,.omega = 0.369
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-293100 / 102.177), (-105600 / 102.177)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1896,7 +1896,7 @@ static const CubicData cubic_data_1_1_dichloroethane = {
 	,.T_c = 523.0
 	,.p_c = (50.7 * 1e5)
 	,.rho_c = (1000 * 98.960 / 236.0)
-	,.T_t = 0
+	,.T_min = 280
 	,.omega = 0.240
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-130000 / 98.960), (-73140 / 98.960)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1933,7 +1933,7 @@ static const CubicData cubic_data_2_butene_cis = {
 	,.T_c = 435.6
 	,.p_c = (42.0 * 1e5)
 	,.rho_c = (1000 * 56.108 / 234.0)
-	,.T_t = 0
+	,.T_min = 203
 	,.omega = 0.202
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-6990 / 56.108), (65900 / 56.108)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -2081,7 +2081,7 @@ static const CubicData cubic_data_n_butanol = {
 	,.T_c = 563.1
 	,.p_c = (44.2 * 1e5)
 	,.rho_c = (1000 * 74.123 / 274.0)
-	,.T_t = 0
+	,.T_min = 275
 	,.omega = 0.593
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.749e+5 / 74.123), (-1.509e+5 / 74.123)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -2118,7 +2118,7 @@ static const CubicData cubic_data_2_butyne = {
 	,.T_c = 488.7
 	,.p_c = (50.8 * 1e5)
 	,.rho_c = (1000 * 54.092 / 221.0)
-	,.T_t = 0
+	,.T_min = 240
 	,.omega = 0.124
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (146400 / 54.092), (185600 / 54.092)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -2155,7 +2155,7 @@ static const CubicData cubic_data_titanium_tetrachloride = {
 	,.T_c = 638.0
 	,.p_c = (46.6 * 1e5)
 	,.rho_c = (1000 * 189.712 / 339.2)
-	,.T_t = 0
+	,.T_f = 243
 	,.omega = 0.268
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-763700 / 189.712), (-727200 / 189.712)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -2192,7 +2192,7 @@ static const CubicData cubic_data_nitromethane = {
 	,.T_c = 588.0
 	,.p_c = (63.1 * 1e5)
 	,.rho_c = (1000 * 61.041 / 173.2)
-	,.T_t = 0
+	,.T_min = 328
 	,.omega = 0.310
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-74780 / 61.041), (-6950 / 61.041)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -2303,7 +2303,7 @@ static const CubicData cubic_data_carbon_tetrafluoride = {
 	,.T_c = 227.6
 	,.p_c = (37.4 * 1e5)
 	,.rho_c = (1000 * 88.005 / 139.6)
-	,.T_t = 0
+	,.T_min = 93
 	,.omega = 0.177
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-933700 / 88.005), (-889000 / 88.005)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -2394,7 +2394,7 @@ const EosData eos_rpp_2_2_3_trimethylbutane = {
 };
 
 
-static const IdealData ideal_data_i_butanol = {
+static const IdealData ideal_data_isobutanol = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
 		.cp0star = 1
@@ -2409,25 +2409,25 @@ static const IdealData ideal_data_i_butanol = {
 	}}
 };
 
-static const CubicData cubic_data_i_butanol = {
+static const CubicData cubic_data_isobutanol = {
 	.M = 74.123
 	,.T_c = 547.8
 	,.p_c = (43.0 * 1e5)
 	,.rho_c = (1000 * 74.123 / 273)
-	,.T_t = 0
+	,.T_min = 293
 	,.omega = 0.592
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.834e+5 / 74.123), (-1.674e+5 / 74.123)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_i_butanol
+	,.ideal = &ideal_data_isobutanol
 };
 
-const EosData eos_rpp_i_butanol = {
-	"i_butanol"
+const EosData eos_rpp_isobutanol = {
+	"isobutanol" // i_butanol
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_i_butanol}
+	,.data = {.cubic=&cubic_data_isobutanol}
 };
 
 
@@ -2579,7 +2579,7 @@ const EosData eos_rpp_1_4_pentadiene = {
 };
 
 
-static const IdealData ideal_data_n_dodecane = {
+static const IdealData ideal_data_dodecane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
 		.cp0star = 1
@@ -2594,25 +2594,25 @@ static const IdealData ideal_data_n_dodecane = {
 	}}
 };
 
-static const CubicData cubic_data_n_dodecane = {
+static const CubicData cubic_data_dodecane = {
 	.M = 170.340
 	,.T_c = 658.2
 	,.p_c = (18.2 * 1e5)
 	,.rho_c = (1000 * 170.340 / 713.0)
-	,.T_t = 0
+	,.T_min = 360
 	,.omega = 0.575
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-291100 / 170.340), (50070 / 170.340)}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_n_dodecane
+	,.ideal = &ideal_data_dodecane
 };
 
-const EosData eos_rpp_n_dodecane = {
-	"n_dodecane"
+const EosData eos_rpp_dodecane = {
+	"dodecane"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_n_dodecane}
+	,.data = {.cubic=&cubic_data_dodecane}
 };
 
 
@@ -2784,7 +2784,7 @@ static const CubicData cubic_data_n_butyraldehyde = {
 	,.T_c = 545.4
 	,.p_c = (53.8 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 304
 	,.omega = 0.352
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-205200 / 72.107), (-114800 / 72.107)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -3191,7 +3191,7 @@ static const CubicData cubic_data_methanol = {
 	,.T_c = 512.6
 	,.p_c = (80.9 * 1e5)
 	,.rho_c = (1000 * 32.042 / 118.0)
-	,.T_t = 0
+	,.T_min = 288
 	,.omega = 0.556
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.0133e+5 / 32.042), (-1.626e+5 / 32.042)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -3228,7 +3228,7 @@ static const CubicData cubic_data_methyl_propionate = {
 	,.T_c = 530.6
 	,.p_c = (40.0 * 1e5)
 	,.rho_c = (1000 * 88.107 / 282.0)
-	,.T_t = 0
+	,.T_min = 294
 	,.omega = 0.350
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -3302,7 +3302,7 @@ static const CubicData cubic_data_sulfur_trioxide = {
 	,.T_c = 491.0
 	,.p_c = (82.1 * 1e5)
 	,.rho_c = (1000 * 80.058 / 127.3)
-	,.T_t = 0
+	,.T_min = 300
 	,.omega = 0.481
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-396000 / 80.058), (-371700 / 80.058)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -3339,7 +3339,7 @@ static const CubicData cubic_data_tert_butanol = {
 	,.T_c = 506.2
 	,.p_c = (39.7 * 1e5)
 	,.rho_c = (1000 * 74.123 / 275.0)
-	,.T_t = 0
+	,.T_min = 293
 	,.omega = 0.612
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-312800 / 74.123), (-177800 / 74.123)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -3376,7 +3376,7 @@ static const CubicData cubic_data_hydrogen_fluoride = {
 	,.T_c = 461.0
 	,.p_c = (64.8 * 1e5)
 	,.rho_c = (1000 * 20.006 / 69.2)
-	,.T_t = 0
+	,.T_min = 273
 	,.omega = 0.329
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-271300 / 20.006), (-273400 / 20.006)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -3413,7 +3413,7 @@ static const CubicData cubic_data_carbonyl_sulfide = {
 	,.T_c = 378.8
 	,.p_c = (63.5 * 1e5)
 	,.rho_c = (1000 * 60.070 / 136.3)
-	,.T_t = 0
+	,.T_min = 162
 	,.omega = 0.105
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-138500 / 60.070), (-165800 / 60.070)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -3598,7 +3598,7 @@ static const CubicData cubic_data_1_3_butadiene = {
 	,.T_c = 425.0
 	,.p_c = (43.3 * 1e5)
 	,.rho_c = (1000 * 54.092 / 221.0)
-	,.T_t = 0
+	,.T_min = 197
 	,.omega = 0.195
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (110200 / 54.092), (150800 / 54.092)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -3635,7 +3635,7 @@ static const CubicData cubic_data_cyclohexanol = {
 	,.T_c = 625.0
 	,.p_c = (37.5 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 367
 	,.omega = 0.528
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-294800 / 100.160), (-118000 / 100.160)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -3783,7 +3783,7 @@ static const CubicData cubic_data_1_hexanol = {
 	,.T_c = 611.0
 	,.p_c = (40.5 * 1e5)
 	,.rho_c = (1000 * 102.177 / 381.0)
-	,.T_t = 0
+	,.T_min = 308
 	,.omega = 0.560
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-317800 / 102.177), (-135700 / 102.177)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -3931,7 +3931,7 @@ static const CubicData cubic_data_hydrogen_chloride = {
 	,.T_c = 324.7
 	,.p_c = (83.1 * 1e5)
 	,.rho_c = (1000 * 36.461 / 80.9)
-	,.T_t = 0
+	,.T_min = 180
 	,.omega = 0.133
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-92360 / 36.461), (-95330 / 36.461)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -4079,7 +4079,7 @@ static const CubicData cubic_data_nitrogen = {
 	,.T_c = 126.2
 	,.p_c = (33.9 * 1e5)
 	,.rho_c = (1000 * 28.013 / 89.8)
-	,.T_t = 0
+	,.T_min = 63
 	,.omega = 0.039
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0.00 / 28.013), (0.00 / 28.013)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -4227,7 +4227,7 @@ static const CubicData cubic_data_1_4_dioxane = {
 	,.T_c = 587.0
 	,.p_c = (52.1 * 1e5)
 	,.rho_c = (1000 * 88.107 / 238.0)
-	,.T_t = 0
+	,.T_min = 275
 	,.omega = 0.281
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-315300 / 88.107), (-180900 / 88.107)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -4338,7 +4338,7 @@ static const CubicData cubic_data_diethyl_ether = {
 	,.T_c = 466.7
 	,.p_c = (36.4 * 1e5)
 	,.rho_c = (1000 * 74.123 / 280.0)
-	,.T_t = 0
+	,.T_min = 250
 	,.omega = 0.281
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-252400 / 74.123), (-122400 / 74.123)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -4486,7 +4486,7 @@ static const CubicData cubic_data_methyl_propyl_ether = {
 	,.T_c = 476.3
 	,.p_c = (38.0 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 258
 	,.omega = 0.271
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-237900 / 74.123), (-110000 / 74.123)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -4560,7 +4560,7 @@ static const CubicData cubic_data_isobutyl_acetate = {
 	,.T_c = 564.0
 	,.p_c = (30.2 * 1e5)
 	,.rho_c = (1000 * 116.160 / 414.0)
-	,.T_t = 0
+	,.T_min = 290
 	,.omega = 0.455
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-495500 / 116.160), NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -4708,7 +4708,7 @@ static const CubicData cubic_data_methyl_fluoride = {
 	,.T_c = 315.0
 	,.p_c = (56.0 * 1e5)
 	,.rho_c = (1000 * 34.033 / 113.2)
-	,.T_t = 0
+	,.T_min = 135
 	,.omega = 0.187
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-234000 / 34.033), (-210100 / 34.033)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -4745,7 +4745,7 @@ static const CubicData cubic_data_isobutyric_acid = {
 	,.T_c = 609.0
 	,.p_c = (40.5 * 1e5)
 	,.rho_c = (1000 * 88.107 / 292.0)
-	,.T_t = 0
+	,.T_min = 320
 	,.omega = 0.623
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-484200 / 88.107), NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -4782,7 +4782,7 @@ static const CubicData cubic_data_1_hexene = {
 	,.T_c = 504.0
 	,.p_c = (31.7 * 1e5)
 	,.rho_c = (1000 * 84.163 / 350.0)
-	,.T_t = 0
+	,.T_min = 289
 	,.omega = 0.285
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-41700 / 84.163), (87500 / 84.163)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5004,7 +5004,7 @@ static const CubicData cubic_data_1_1_difluoroethane = {
 	,.T_c = 386.7
 	,.p_c = (45.0 * 1e5)
 	,.rho_c = (1000 * 66.051 / 181.0)
-	,.T_t = 0
+	,.T_min = 157
 	,.omega = 0.256
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-494000 / 66.051), (-436500 / 66.051)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5300,7 +5300,7 @@ static const CubicData cubic_data_acrylic_acid = {
 	,.T_c = 615.0
 	,.p_c = (56.7 * 1e5)
 	,.rho_c = (1000 * 72.064 / 210.0)
-	,.T_t = 0
+	,.T_min = 315
 	,.omega = 0.560
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-336500 / 72.064), (-286300 / 72.064)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5337,7 +5337,7 @@ static const CubicData cubic_data_sulfur_dioxide = {
 	,.T_c = 430.8
 	,.p_c = (78.8 * 1e5)
 	,.rho_c = (1000 * 64.063 / 122.2)
-	,.T_t = 0
+	,.T_min = 235
 	,.omega = 0.256
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-297100 / 64.063), (-300400 / 64.063)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5374,7 +5374,7 @@ static const CubicData cubic_data_chlorine = {
 	,.T_c = 416.9
 	,.p_c = (79.8 * 1e5)
 	,.rho_c = (1000 * 70.906 / 123.8)
-	,.T_t = 0
+	,.T_min = 206
 	,.omega = 0.090
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 70.906), (0 / 70.906)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5485,7 +5485,7 @@ static const CubicData cubic_data_1_1_difluoroethene = {
 	,.T_c = 302.9
 	,.p_c = (44.6 * 1e5)
 	,.rho_c = (1000 * 64.035 / 154.1)
-	,.T_t = 0
+	,.T_min = 130
 	,.omega = 0.140
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-345400 / 64.035), (-321700 / 64.035)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5707,7 +5707,7 @@ static const CubicData cubic_data_fluoroform = {
 	,.T_c = 299.3
 	,.p_c = (48.6 * 1e5)
 	,.rho_c = (1000 * 70.013 / 132.7)
-	,.T_t = 0
+	,.T_min = 125
 	,.omega = 0.260
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-697500 / 70.013), (-662800 / 70.013)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5744,7 +5744,7 @@ static const CubicData cubic_data_allyl_cyanide = {
 	,.T_c = 585.0
 	,.p_c = (39.5 * 1e5)
 	,.rho_c = (1000 * 67.091 / 265.0)
-	,.T_t = 0
+	,.T_min = 400
 	,.omega = 0.390
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5992,8 +5992,8 @@ static const IdealData ideal_data_1_2_dibromoethane = {
 		,.pt = (const Cp0PowTerm[]){
 			{25.00, 0}
 			,{0.2517, 1}
-			,{-1.83E-04, 2}
-			,{5.65E-08, 3}
+			,{-1.833E-04, 2}
+			,{5.646E-08, 3}
 		}
 	}}
 };
@@ -6003,7 +6003,8 @@ static const CubicData cubic_data_1_2_dibromoethane = {
 	,.T_c = 646.0
 	,.p_c = (53.5 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 290
+	,.T_f = 283.3
 	,.omega = 0.795
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-38940 / 187.862), (-10600 / 187.862)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -6040,7 +6041,7 @@ static const CubicData cubic_data_methyl_acrylate = {
 	,.T_c = 536.0
 	,.p_c = (43.0 * 1e5)
 	,.rho_c = (1000 * 86.091 / 265.0)
-	,.T_t = 0
+	,.T_min = 260
 	,.omega = 0.350
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -6151,7 +6152,7 @@ static const CubicData cubic_data_deuterium_oxide = {
 	,.T_c = 644.0
 	,.p_c = (216.6 * 1e5)
 	,.rho_c = (1000 * 20.031 / 56.6)
-	,.T_t = 0
+	,.T_f = 277
 	,.omega = 0.351
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-249400 / 20.031), (-234800 / 20.031)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -6225,7 +6226,7 @@ static const CubicData cubic_data_tetrahydrofuran = {
 	,.T_c = 540.1
 	,.p_c = (51.9 * 1e5)
 	,.rho_c = (1000 * 72.107 / 224.0)
-	,.T_t = 0
+	,.T_min = 270
 	,.omega = 0.217
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-184300 / 72.107), NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -6299,7 +6300,7 @@ static const CubicData cubic_data_formaldehyde = {
 	,.T_c = 408.0
 	,.p_c = (65.9 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 184
 	,.omega = 0.253
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-116000 / 30.026), (-110000 / 30.026)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -6336,7 +6337,7 @@ static const CubicData cubic_data_1_pentanol = {
 	,.T_c = 588.2
 	,.p_c = (39.1 * 1e5)
 	,.rho_c = (1000 * 88.150 / 326.0)
-	,.T_t = 0
+	,.T_min = 290
 	,.omega = 0.579
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-298900 / 88.150), (-146100 / 88.150)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -6447,7 +6448,7 @@ static const CubicData cubic_data_hydrogen_equilib = {
 	,.T_c = 33.0
 	,.p_c = (12.9 * 1e5)
 	,.rho_c = (1000 * 2.016 / 64.3)
-	,.T_t = 0
+	,.T_min = 14
 	,.omega = -0.216
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 2.016), (0 / 2.016)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -6484,7 +6485,7 @@ static const CubicData cubic_data_n_hexane = {
 	,.T_c = 507.5
 	,.p_c = (30.1 * 1e5)
 	,.rho_c = (1000 * 86.178 / 370)
-	,.T_t = 0
+	,.T_min = 220
 	,.omega = 0.299
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.673e+5 / 86.178), (-1.670e+2 / 86.178)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -6646,43 +6647,6 @@ const EosData eos_rpp_acetylene = {
 	,40
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_acetylene}
-};
-
-
-static const IdealData ideal_data_chloro_benzene = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-33.89, 0}
-			,{0.5631, 1}
-			,{-4.522e-04, 2}
-			,{1.426e-07, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_chloro_benzene = {
-	.M = 112.559
-	,.T_c = 632.4
-	,.p_c = (45.2 * 1e5)
-	,.rho_c = (1000 * 112.559 / 308.0)
-	,.T_t = 0
-	,.omega = 0.249
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (5.187e04 / 112.559), (9.923e04 / 112.559)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_chloro_benzene
-};
-
-const EosData eos_rpp_chloro_benzene = {
-	"chloro_benzene"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_chloro_benzene}
 };
 
 
@@ -6973,7 +6937,7 @@ static const CubicData cubic_data_trans_difluorodiazine = {
 };
 
 const EosData eos_rpp_trans_difluorodiazine = {
-	"trans_difluorodiazine"
+	"trans_difluorodiazine" // F2N2, trans-dinitrogen difluoride
 	,"RPP"
 	,""
 	,40
@@ -7261,7 +7225,7 @@ static const CubicData cubic_data_hydrogen_cyanide = {
 	,.T_c = 456.7
 	,.p_c = (53.9 * 1e5)
 	,.rho_c = (1000 * 27.026 / 138.8)
-	,.T_t = 0
+	,.T_min = 280
 	,.omega = 0.388
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (130600 / 27.026), (120200 / 27.026)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -7335,7 +7299,7 @@ static const CubicData cubic_data_morpholine = {
 	,.T_c = 618.0
 	,.p_c = (54.7 * 1e5)
 	,.rho_c = (1000 * 87.122 / 253.0)
-	,.T_t = 0
+	,.T_min = 300
 	,.omega = 0.370
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -7500,43 +7464,6 @@ const EosData eos_rpp_isopropyl_amine = {
 };
 
 
-static const IdealData ideal_data_dodecane = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-9.328, 0}
-			,{1.149, 1}
-			,{-6.347e-4, 2}
-			,{1.359e-7, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_dodecane = {
-	.M = 170.34
-	,.T_c = 658.2
-	,.p_c = (18.2 * 1e5)
-	,.rho_c = (1000 * 170.34 / 713.0)
-	,.T_min = 360
-	,.omega = 0.575
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.911e5 / 170.34), (5.007e4 / 170.34)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_dodecane
-};
-
-const EosData eos_rpp_dodecane = {
-	"dodecane"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_dodecane}
-};
-
-
 static const IdealData ideal_data_1_2_dimethylcyclopentane_cis = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
@@ -7631,7 +7558,7 @@ static const CubicData cubic_data_silicon_tetrafluoride = {
 	,.T_c = 259.0
 	,.p_c = (37.2 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 238
 	,.omega = 0.753
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1616000 / 104.090), (-1574000 / 104.090)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -7668,7 +7595,7 @@ static const CubicData cubic_data_1_2_butadiene = {
 	,.T_c = 443.7
 	,.p_c = (44.9 * 1e5)
 	,.rho_c = (1000 * 54.092 / 219.0)
-	,.T_t = 0
+	,.T_min = 245
 	,.omega = 0.255
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (162300 / 54.092), (198600 / 54.092)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -7742,7 +7669,7 @@ static const CubicData cubic_data_3_3_dimethyl_1_butene = {
 	,.T_c = 490.0
 	,.p_c = (32.5 * 1e5)
 	,.rho_c = (1000 * 84.162 / 340.0)
-	,.T_t = 0
+	,.T_min = 264
 	,.omega = 0.121
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-61550 / 84.162), (98220 / 84.162)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -7779,7 +7706,7 @@ static const CubicData cubic_data_cyclobutane = {
 	,.T_c = 460.0
 	,.p_c = (49.9 * 1e5)
 	,.rho_c = (1000 * 56.108 / 210.0)
-	,.T_t = 0
+	,.T_min = 213
 	,.omega = 0.181
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (26670 / 56.108), (110100 / 56.108)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -7853,7 +7780,7 @@ static const CubicData cubic_data_carbon_monoxide = {
 	,.T_c = 132.9
 	,.p_c = (35.0 * 1e5)
 	,.rho_c = (1000 * 28.010 / 93.2)
-	,.T_t = 0
+	,.T_min = 71
 	,.omega = 0.066
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-110600 / 28.010), (-137400 / 28.010)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -7890,7 +7817,7 @@ static const CubicData cubic_data_boron_trifluoride = {
 	,.T_c = 260.8
 	,.p_c = (49.9 * 1e5)
 	,.rho_c = (1000 * 67.805 / 114.7)
-	,.T_t = 0
+	,.T_min = 160
 	,.omega = 0.393
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1136000 / 67.805), (-1120000 / 67.805)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -8038,7 +7965,7 @@ static const CubicData cubic_data_phosgene = {
 	,.T_c = 455.0
 	,.p_c = (56.7 * 1e5)
 	,.rho_c = (1000 * 98.916 / 190.1)
-	,.T_t = 0
+	,.T_min = 216
 	,.omega = 0.205
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-221100 / 98.916), (-206900 / 98.916)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -8092,43 +8019,6 @@ const EosData eos_rpp_trichloroethene = {
 };
 
 
-static const IdealData ideal_data_isobutaol = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{-7.71, 0}
-			,{0.4689, 1}
-			,{-2.88E-04, 2}
-			,{7.23E-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_isobutaol = {
-	.M = 74.123
-	,.T_c = 547.8
-	,.p_c = (43.0 * 1e5)
-	,.rho_c = (1000 * 74.123 / 273.0)
-	,.T_t = 0
-	,.omega = 0.592
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-283400 / 74.123), (-167400 / 74.123)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_isobutaol
-};
-
-const EosData eos_rpp_isobutaol = {
-	"isobutaol"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_isobutaol}
-};
-
-
 static const IdealData ideal_data_cyclopropane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
@@ -8166,7 +8056,7 @@ const EosData eos_rpp_cyclopropane = {
 };
 
 
-static const IdealData ideal_data_1_1_dichlorotetrafluoroetane = {
+static const IdealData ideal_data_1_1_dichlorotetrafluoroethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
 		.cp0star = 1
@@ -8181,7 +8071,7 @@ static const IdealData ideal_data_1_1_dichlorotetrafluoroetane = {
 	}}
 };
 
-static const CubicData cubic_data_1_1_dichlorotetrafluoroetane = {
+static const CubicData cubic_data_1_1_dichlorotetrafluoroethane = {
 	.M = 170.922
 	,.T_c = 418.6
 	,.p_c = (33.0 * 1e5)
@@ -8190,16 +8080,16 @@ static const CubicData cubic_data_1_1_dichlorotetrafluoroetane = {
 	,.omega = 0.263
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_1_dichlorotetrafluoroetane
+	,.ideal = &ideal_data_1_1_dichlorotetrafluoroethane
 };
 
-const EosData eos_rpp_1_1_dichlorotetrafluoroetane = {
-	"1_1_dichlorotetrafluoroetane"
+const EosData eos_rpp_1_1_dichlorotetrafluoroethane = {
+	"1_1_dichlorotetrafluoroethane"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_1_dichlorotetrafluoroetane}
+	,.data = {.cubic=&cubic_data_1_1_dichlorotetrafluoroethane}
 };
 
 
@@ -8223,7 +8113,7 @@ static const CubicData cubic_data_n_propanol = {
 	,.T_c = 536.7
 	,.p_c = (51.7 * 1e5)
 	,.rho_c = (1000 * 60.096 / 218.5)
-	,.T_t = 0
+	,.T_min = 260
 	,.omega = 0.623
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.566e+5 / 60.096), (-1.619e+5 / 60.096)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -8231,7 +8121,7 @@ static const CubicData cubic_data_n_propanol = {
 };
 
 const EosData eos_rpp_n_propanol = {
-	"n_propanol"
+	"n_propanol" // propanol propan-1-ol
 	,"RPP"
 	,""
 	,40
@@ -8260,7 +8150,7 @@ static const CubicData cubic_data_ethyl_acetate = {
 	,.T_c = 523.2
 	,.p_c = (38.3 * 1e5)
 	,.rho_c = (1000 * 88.107 / 286.0)
-	,.T_t = 0
+	,.T_min = 289
 	,.omega = 0.362
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-443200 / 88.107), (-327600 / 88.107)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -8408,7 +8298,7 @@ static const CubicData cubic_data_nitrogen_trifluoride = {
 	,.T_c = 234.0
 	,.p_c = (45.3 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 130
 	,.omega = 0.135
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-131600 / 71.002), (-90100 / 71.002)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -8519,7 +8409,7 @@ static const CubicData cubic_data_n_butyl_acetate = {
 	,.T_c = 579.0
 	,.p_c = (31.4 * 1e5)
 	,.rho_c = (1000 * 116.160 / 400.0)
-	,.T_t = 0
+	,.T_min = 333
 	,.omega = 0.417
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-486800 / 116.160), NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -8527,7 +8417,7 @@ static const CubicData cubic_data_n_butyl_acetate = {
 };
 
 const EosData eos_rpp_n_butyl_acetate = {
-	"n_butyl_acetate"
+	"n_butyl_acetate" // C6H12O2
 	,"RPP"
 	,""
 	,40
@@ -8593,7 +8483,7 @@ static const CubicData cubic_data_boron_trichloride = {
 	,.T_c = 455.0
 	,.p_c = (38.7 * 1e5)
 	,.rho_c = (1000 * 117.191 / 239.5)
-	,.T_t = 0
+	,.T_min = 230
 	,.omega = 0.140
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-403200 / 117.191), (-388200 / 117.191)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -8630,7 +8520,7 @@ static const CubicData cubic_data_hydrogen_iodide = {
 	,.T_c = 424.0
 	,.p_c = (83.1 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 235
 	,.omega = 0.049
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (26380 / 127.912), (1591 / 127.912)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -8852,7 +8742,7 @@ static const CubicData cubic_data_isobutyraldehyde = {
 	,.T_c = 513.0
 	,.p_c = (41.5 * 1e5)
 	,.rho_c = (1000 * 72.107 / 274.0)
-	,.T_t = 0
+	,.T_min = 286
 	,.omega = 0.350
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-215900 / 72.107), (-121400 / 72.107)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -8926,7 +8816,7 @@ static const CubicData cubic_data_acetic_anhydride = {
 	,.T_c = 569.0
 	,.p_c = (46.8 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 336
 	,.omega = 0.908
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-576100 / 102.089), (-477000 / 102.089)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -9074,7 +8964,7 @@ static const CubicData cubic_data_triethylamine = {
 	,.T_c = 535.0
 	,.p_c = (30.3 * 1e5)
 	,.rho_c = (1000 * 101.193 / 389.0)
-	,.T_t = 0
+	,.T_min = 323
 	,.omega = 0.320
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-99650 / 101.193), (110400 / 101.193)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -9111,7 +9001,7 @@ static const CubicData cubic_data_acetic_acid = {
 	,.T_c = 592.7
 	,.p_c = (57.9 * 1e5)
 	,.rho_c = (1000 * 60.052 / 171.0)
-	,.T_t = 0
+	,.T_min = 304
 	,.omega = 0.447
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-435100 / 60.052), (-376900 / 60.052)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -9296,7 +9186,7 @@ static const CubicData cubic_data_dipropylamine = {
 	,.T_c = 555.8
 	,.p_c = (29.9 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 275
 	,.omega = 0.471
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -9444,7 +9334,7 @@ static const CubicData cubic_data_1_2_3_trichloropropane = {
 	,.T_c = 651.0
 	,.p_c = (39.5 * 1e5)
 	,.rho_c = (1000 * 147.432 / 348.0)
-	,.T_t = 0
+	,.T_min = 315
 	,.omega = 0.310
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-185900 / 147.432), (-97850 / 147.432)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -9452,7 +9342,7 @@ static const CubicData cubic_data_1_2_3_trichloropropane = {
 };
 
 const EosData eos_rpp_1_2_3_trichloropropane = {
-	"1_2_3_trichloropropane"
+	"1_2_3_trichloropropane" // C3H5Cl3
 	,"RPP"
 	,""
 	,40
@@ -9518,7 +9408,7 @@ static const CubicData cubic_data_nitrogen_dioxide = {
 	,.T_c = 431.0
 	,.p_c = (101.0 * 1e5)
 	,.rho_c = (1000 * 46.006 / 167.8)
-	,.T_t = 0
+	,.T_min = 270
 	,.omega = 0.834
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (33870 / 46.006), (52000 / 46.006)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -9555,7 +9445,7 @@ static const CubicData cubic_data_methyl_isobutyl_ketone = {
 	,.T_c = 571.0
 	,.p_c = (32.7 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 295
 	,.omega = 0.385
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-284000 / 100.160), NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -9629,7 +9519,7 @@ static const CubicData cubic_data_propionic_acid = {
 	,.T_c = 612.0
 	,.p_c = (54.0 * 1e5)
 	,.rho_c = (1000 * 74.080 / 222.0)
-	,.T_t = 0
+	,.T_min = 345
 	,.omega = 0.520
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-455400 / 74.080), (-369600 / 74.080)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -9637,7 +9527,7 @@ static const CubicData cubic_data_propionic_acid = {
 };
 
 const EosData eos_rpp_propionic_acid = {
-	"propionic_acid"
+	"propionic_acid" // propanoic acid
 	,"RPP"
 	,""
 	,40
@@ -9851,7 +9741,7 @@ static const CubicData cubic_data_dichloromethane = {
 	,.T_c = 510.0
 	,.p_c = (63.0 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 233
 	,.omega = 0.199
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-38900 / 84.933), (-68910 / 84.933)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -9888,7 +9778,7 @@ static const CubicData cubic_data_carbon_disulfide = {
 	,.T_c = 552.0
 	,.p_c = (79.0 * 1e5)
 	,.rho_c = (1000 * 76.131 / 160.0)
-	,.T_t = 0
+	,.T_min = 217
 	,.omega = 0.109
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (117100 / 76.131), (66950 / 76.131)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -10110,7 +10000,7 @@ static const CubicData cubic_data_methyl_mercaptan = {
 	,.T_c = 470.0
 	,.p_c = (72.3 * 1e5)
 	,.rho_c = (1000 * 48.107 / 144.8)
-	,.T_t = 0
+	,.T_min = 222
 	,.omega = 0.153
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-22990 / 48.107), (-9923 / 48.107)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -10258,7 +10148,7 @@ static const CubicData cubic_data_deuterium_equilibrium = {
 	,.T_c = 38.2
 	,.p_c = (16.5 * 1e5)
 	,.rho_c = (1000 * 4.032 / 60.3)
-	,.T_t = 0
+	,.T_min = 19
 	,.omega = -0.137
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 4.032), (0 / 4.032)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -10423,43 +10313,6 @@ const EosData eos_rpp_3_4_dimethylhexane = {
 };
 
 
-static const IdealData ideal_data_pentanol_1 = {
-	IDEAL_CP0
-	,.data = {.cp0 = {
-		.cp0star = 1
-		,.Tstar = 1
-		,.np = 4
-		,.pt = (const Cp0PowTerm[]){
-			{3.869, 0}
-			,{0.5045, 1}
-			,{-2.639e-04, 2}
-			,{5.120e-08, 3}
-		}
-	}}
-};
-
-static const CubicData cubic_data_pentanol_1 = {
-	.M = 88.150
-	,.T_c = 588.2
-	,.p_c = (39.1 * 1e5)
-	,.rho_c = (1000 * 88.150 / 326.0)
-	,.T_t = 0
-	,.omega = 0.579
-	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.989e05 / 88.150), (-1.461e05 / 88.150)}}}
-	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_pentanol_1
-};
-
-const EosData eos_rpp_pentanol_1 = {
-	"pentanol_1"
-	,"RPP"
-	,""
-	,40
-	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_pentanol_1}
-};
-
-
 static const IdealData ideal_data_tert_butyl_chloride = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
@@ -10554,7 +10407,7 @@ static const CubicData cubic_data_diisopropyl_ether = {
 	,.T_c = 500.3
 	,.p_c = (28.8 * 1e5)
 	,.rho_c = (1000 * 102.177 / 386.0)
-	,.T_t = 0
+	,.T_min = 297
 	,.omega = 0.331
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-319000 / 102.177), (-122000 / 102.177)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -10665,7 +10518,7 @@ static const CubicData cubic_data_ethylene = {
 	,.T_c = 282.4
 	,.p_c = (50.4 * 1e5)
 	,.rho_c = (1000 * 28.054 / 130.4)
-	,.T_t = 0
+	,.T_min = 105
 	,.omega = 0.089
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (5.234e+4 / 28.054), (6.816e+4 / 28.054)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -10887,7 +10740,7 @@ static const CubicData cubic_data_ethylbenzene = {
 	,.T_c = 617.2
 	,.p_c = (36.0 * 1e5)
 	,.rho_c = (1000 * 106.168 / 374)
-	,.T_t = 0
+	,.T_min = 330
 	,.omega = 0.302
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (2.981e4 / 106.168), (1.307e5 / 106.168)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -10895,7 +10748,7 @@ static const CubicData cubic_data_ethylbenzene = {
 };
 
 const EosData eos_rpp_ethylbenzene = {
-	"ethylbenzene"
+	"ethylbenzene" // C8H10
 	,"RPP"
 	,""
 	,40
@@ -11035,7 +10888,7 @@ static const CubicData cubic_data_chloroform = {
 	,.T_c = 536.4
 	,.p_c = (53.7 * 1e5)
 	,.rho_c = (1000 * 119.378 / 238.9)
-	,.T_t = 0
+	,.T_min = 215
 	,.omega = 0.218
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.013e+5 / 119.378), (-6.858e+4 / 119.378)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -11183,7 +11036,7 @@ static const CubicData cubic_data_hydrogen_sulfide = {
 	,.T_c = 373.2
 	,.p_c = (89.4 * 1e5)
 	,.rho_c = (1000 * 34.080 / 98.6)
-	,.T_t = 0
+	,.T_min = 205
 	,.omega = 0.097
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-20180 / 34.080), (-33080 / 34.080)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -11479,7 +11332,7 @@ static const CubicData cubic_data_chlorobenzene = {
 	,.T_c = 632.4
 	,.p_c = (45.2 * 1e5)
 	,.rho_c = (1000 * 112.559 / 308.0)
-	,.T_t = 0
+	,.T_min = 335
 	,.omega = 0.249
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (51870 / 112.559), (99230 / 112.559)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -11553,7 +11406,7 @@ static const CubicData cubic_data_ethyl_butyl_ether = {
 	,.T_c = 531.0
 	,.p_c = (30.4 * 1e5)
 	,.rho_c = (1000 * 102.177 / 390.0)
-	,.T_t = 0
+	,.T_min = 311
 	,.omega = 0.400
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -11627,7 +11480,7 @@ static const CubicData cubic_data_vinyl_acetate = {
 	,.T_c = 525.0
 	,.p_c = (43.5 * 1e5)
 	,.rho_c = (1000 * 86.091 / 265.0)
-	,.T_t = 0
+	,.T_min = 295
 	,.omega = 0.340
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-316000 / 86.091), NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -11849,7 +11702,7 @@ static const CubicData cubic_data_toluene = {
 	,.T_c = 591.8
 	,.p_c = (41.0 * 1e5)
 	,.rho_c = (1000 * 92.141 / 316)
-	,.T_t = 0
+	,.T_min = 309
 	,.omega = 0.263
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (5.003e+4 / 92.141), (1.221e+5 / 92.141)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -11886,7 +11739,7 @@ static const CubicData cubic_data_oxygen = {
 	,.T_c = 154.6
 	,.p_c = (50.4 * 1e5)
 	,.rho_c = (1000 * 31.999 / 73.4)
-	,.T_t = 0
+	,.T_min = 54
 	,.omega = 0.025
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0.00 / 31.999), (0.00 / 31.999)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -11923,7 +11776,6 @@ static const CubicData cubic_data_hydrogen_deuteride = {
 	,.T_c = 36.0
 	,.p_c = (14.8 * 1e5)
 	,.rho_c = (1000 * 3.023 / 62.7)
-	,.T_t = 0
 	,.omega = -0.179
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (322 / 3.023), (-1465 / 3.023)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -12145,7 +11997,7 @@ static const CubicData cubic_data_hydrazine = {
 	,.T_c = 653.0
 	,.p_c = (147.0 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 350
 	,.omega = 0.316
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (95250 / 32.045), (158600 / 32.045)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -12367,7 +12219,7 @@ static const CubicData cubic_data_n_butyric_acid = {
 	,.T_c = 628.0
 	,.p_c = (52.7 * 1e5)
 	,.rho_c = (1000 * 88.107 / 290.0)
-	,.T_t = 0
+	,.T_min = 364
 	,.omega = 0.683
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-476200 / 88.107), NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -12589,7 +12441,7 @@ static const CubicData cubic_data_difluoromethane = {
 	,.T_c = 351.6
 	,.p_c = (58.3 * 1e5)
 	,.rho_c = (1000 * 52.023 / 120.8)
-	,.T_t = 0
+	,.T_min = 184
 	,.omega = 0.271
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-450900 / 52.023), (-422900 / 52.023)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -12663,7 +12515,7 @@ static const CubicData cubic_data_aluminum_trichloride = {
 	,.T_c = 620.0
 	,.p_c = (26.3 * 1e5)
 	,.rho_c = (1000 * 133.341 / 259.0)
-	,.T_t = 0
+	,.T_f = 467
 	,.omega = 0.660
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-584900 / 133.341), (-570400 / 133.341)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -12885,7 +12737,7 @@ static const CubicData cubic_data_methyl_amine = {
 	,.T_c = 430.0
 	,.p_c = (74.3 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 200
 	,.omega = 0.292
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-23030 / 31.058), (32280 / 31.058)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -13013,7 +12865,7 @@ const EosData eos_rpp_1_methyl_2_ethylbenzene = {
 };
 
 
-static const IdealData ideal_data_1_2_2_trichlorotrifluoroetane = {
+static const IdealData ideal_data_1_2_2_trichlorotrifluoroethane = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
 		.cp0star = 1
@@ -13028,7 +12880,7 @@ static const IdealData ideal_data_1_2_2_trichlorotrifluoroetane = {
 	}}
 };
 
-static const CubicData cubic_data_1_2_2_trichlorotrifluoroetane = {
+static const CubicData cubic_data_1_2_2_trichlorotrifluoroethane = {
 	.M = 187.380
 	,.T_c = 487.3
 	,.p_c = (34.1 * 1e5)
@@ -13037,16 +12889,16 @@ static const CubicData cubic_data_1_2_2_trichlorotrifluoroetane = {
 	,.omega = 0.256
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-745700 / 187.380), NAN}}}
 	,.ref = {FPROPS_REF_IIR}
-	,.ideal = &ideal_data_1_2_2_trichlorotrifluoroetane
+	,.ideal = &ideal_data_1_2_2_trichlorotrifluoroethane
 };
 
-const EosData eos_rpp_1_2_2_trichlorotrifluoroetane = {
-	"1_2_2_trichlorotrifluoroetane"
+const EosData eos_rpp_1_2_2_trichlorotrifluoroethane = {
+	"1_2_2_trichlorotrifluoroethane"
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
-	,.data = {.cubic=&cubic_data_1_2_2_trichlorotrifluoroetane}
+	,.data = {.cubic=&cubic_data_1_2_2_trichlorotrifluoroethane}
 };
 
 
@@ -13144,7 +12996,7 @@ static const CubicData cubic_data_fluorine = {
 	,.T_c = 144.3
 	,.p_c = (52.2 * 1e5)
 	,.rho_c = (1000 * 37.997 / 66.3)
-	,.T_t = 0
+	,.T_min = 64
 	,.omega = 0.054
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 37.997), (0 / 37.997)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -13440,7 +13292,7 @@ static const CubicData cubic_data_carbon_dioxide = {
 	,.T_c = 304.1
 	,.p_c = (73.8 * 1e5)
 	,.rho_c = (1000 * 44.010 / 93.9)
-	,.T_t = 0
+	,.T_min = 217
 	,.omega = 0.239
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-3.938e+5 / 44.010), (-3.946e+5 / 44.010)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -13662,7 +13514,7 @@ static const CubicData cubic_data_helium_4 = {
 	,.T_c = 5.2
 	,.p_c = (2.3 * 1e5)
 	,.rho_c = (1000 * 4.003 / 57.4)
-	,.T_t = 0
+	,.T_min = 2
 	,.omega = -0.365
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -13773,7 +13625,7 @@ static const CubicData cubic_data_iodobenzene = {
 	,.T_c = 721.0
 	,.p_c = (45.2 * 1e5)
 	,.rho_c = (1000 * 204.011 / 351.0)
-	,.T_t = 0
+	,.T_min = 380
 	,.omega = 0.249
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (162700 / 204.011), (187900 / 204.011)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -13847,7 +13699,7 @@ static const CubicData cubic_data_vinyl_ethyl_ether = {
 	,.T_c = 475.0
 	,.p_c = (40.7 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 256
 	,.omega = 0.268
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-140300 / 72.107), (475 / 72.107)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -13884,7 +13736,7 @@ static const CubicData cubic_data_ethylenediamine = {
 	,.T_c = 593.0
 	,.p_c = (62.8 * 1e5)
 	,.rho_c = (1000 * 60.099 / 206.0)
-	,.T_t = 0
+	,.T_min = 285
 	,.omega = 0.510
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -13958,7 +13810,7 @@ static const CubicData cubic_data_cyclopentanone = {
 	,.T_c = 634.6
 	,.p_c = (51.1 * 1e5)
 	,.rho_c = (1000 * 84.118 / 268.0)
-	,.T_t = 0
+	,.T_min = 273
 	,.omega = 0.350
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-192800 / 84.118), NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -14032,7 +13884,7 @@ static const CubicData cubic_data_chlorotrifluoromethane = {
 	,.T_c = 302.0
 	,.p_c = (38.7 * 1e5)
 	,.rho_c = (1000 * 104.459 / 180.4)
-	,.T_t = 0
+	,.T_min = 233
 	,.omega = 0.198
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-695000 / 104.459), (-654400 / 104.459)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -14106,7 +13958,7 @@ static const CubicData cubic_data_hydrogen_bromide = {
 	,.T_c = 363.2
 	,.p_c = (85.5 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 200
 	,.omega = 0.088
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-36260 / 80.912), (-53300 / 80.912)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -14234,6 +14086,7 @@ const EosData eos_rpp_n_heptylcyclopentane = {
 };
 
 
+#if 0
 static const IdealData ideal_data_diethylbenzene = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
@@ -14262,14 +14115,14 @@ static const CubicData cubic_data_diethylbenzene = {
 };
 
 const EosData eos_rpp_diethylbenzene = {
-	"diethylbenzene"
+	"diethylbenzene" // C10H14
 	,"RPP"
 	,""
 	,40
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_diethylbenzene}
 };
-
+#endif
 
 static const IdealData ideal_data_2_methylpyridine = {
 	IDEAL_CP0
@@ -14291,7 +14144,7 @@ static const CubicData cubic_data_2_methylpyridine = {
 	,.T_c = 621.0
 	,.p_c = (46.0 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 352
 	,.omega = 0.299
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (99020 / 93.129), (177200 / 93.129)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -14299,7 +14152,7 @@ static const CubicData cubic_data_2_methylpyridine = {
 };
 
 const EosData eos_rpp_2_methylpyridine = {
-	"2_methylpyridine"
+	"2_methylpyridine" // C6H7N
 	,"RPP"
 	,""
 	,40
@@ -14328,7 +14181,7 @@ static const CubicData cubic_data_methyl_chloride = {
 	,.T_c = 416.3
 	,.p_c = (67.0 * 1e5)
 	,.rho_c = (1000 * 50.488 / 138.9)
-	,.T_t = 0
+	,.T_min = 175
 	,.omega = 0.153
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-86370 / 50.488), (-62930 / 50.488)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -14476,7 +14329,7 @@ static const CubicData cubic_data_phenol = {
 	,.T_c = 694.2
 	,.p_c = (61.3 * 1e5)
 	,.rho_c = (1000 * 94.113 / 229.0)
-	,.T_t = 0
+	,.T_min = 380
 	,.omega = 0.438
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-96420 / 94.113), (-32900 / 94.113)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -14484,7 +14337,7 @@ static const CubicData cubic_data_phenol = {
 };
 
 const EosData eos_rpp_phenol = {
-	"phenol"
+	"phenol" // C6H6O
 	,"RPP"
 	,""
 	,40
@@ -14550,7 +14403,7 @@ static const CubicData cubic_data_benzaldehyde = {
 	,.T_c = 694.8
 	,.p_c = (45.4 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 300
 	,.omega = 0.316
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-36800 / 106.124), (22400 / 106.124)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -14735,7 +14588,7 @@ static const CubicData cubic_data_o_dichlorobenzene = {
 	,.T_c = 729.0
 	,.p_c = (41.0 * 1e5)
 	,.rho_c = (1000 * 147.004 / 360.0)
-	,.T_t = 0
+	,.T_min = 403
 	,.omega = 0.272
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (30000 / 147.004), (82730 / 147.004)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -14743,7 +14596,7 @@ static const CubicData cubic_data_o_dichlorobenzene = {
 };
 
 const EosData eos_rpp_o_dichlorobenzene = {
-	"o_dichlorobenzene"
+	"o_dichlorobenzene" // C6H4Cl2
 	,"RPP"
 	,""
 	,40
@@ -14772,7 +14625,7 @@ static const CubicData cubic_data_nitrous_oxide = {
 	,.T_c = 309.6
 	,.p_c = (72.4 * 1e5)
 	,.rho_c = (1000 * 44.013 / 97.4)
-	,.T_t = 0
+	,.T_min = 190
 	,.omega = 0.165
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (81600 / 44.013), (10370 / 44.013)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -14957,7 +14810,7 @@ static const CubicData cubic_data_1_butyne = {
 	,.T_c = 463.7
 	,.p_c = (47.1 * 1e5)
 	,.rho_c = (1000 * 54.092 / 220.0)
-	,.T_t = 0
+	,.T_min = 194
 	,.omega = 0.050
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (165300 / 54.092), (202200 / 54.092)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -14994,7 +14847,7 @@ static const CubicData cubic_data_isobutylene = {
 	,.T_c = 417.9
 	,.p_c = (40.0 * 1e5)
 	,.rho_c = (1000 * 56.108 / 239.0)
-	,.T_t = 0
+	,.T_min = 170
 	,.omega = 0.194
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-16910 / 56.108), (58110 / 56.108)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -15031,7 +14884,7 @@ static const CubicData cubic_data_xenon = {
 	,.T_c = 289.7
 	,.p_c = (58.4 * 1e5)
 	,.rho_c = (1000 * 131.300 / 118.4)
-	,.T_t = 0
+	,.T_min = 170
 	,.omega = 0.008
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 131.300), (0 / 131.300)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -15068,7 +14921,7 @@ static const CubicData cubic_data_2_butene_trans = {
 	,.T_c = 428.6
 	,.p_c = (39.9 * 1e5)
 	,.rho_c = (1000 * 56.108 / 238.0)
-	,.T_t = 0
+	,.T_min = 240
 	,.omega = 0.205
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-11180 / 56.108), (63010 / 56.108)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -15083,4 +14936,39 @@ const EosData eos_rpp_2_butene_trans = {
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_2_butene_trans}
 };
+
+static const IdealData ideal_data_argon = {
+	IDEAL_CP0
+	,.data = {.cp0 = {
+		.cp0star = 1
+		,.Tstar = 1
+		,.np = 1
+		,.pt = (const Cp0PowTerm[]){
+			{2.080e1, 0}
+		}
+	}}
+};
+
+static const CubicData cubic_data_argon = {
+	.M = 39.948
+	,.T_c = 150.8
+	,.p_c = (48.7 * 1e5)
+	,.rho_c = (1000 * 39.948 / 74.9)
+	,.T_min = 84
+	,.omega = 0.001
+	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (0 / 39.948), (0 / 39.948)}}}
+	,.ref = {FPROPS_REF_IIR}
+	,.ideal = &ideal_data_argon
+};
+
+const EosData eos_rpp_argon = {
+	"argon"
+	,"RPP"
+	,""
+	,40
+	,FPROPS_CUBIC
+	,.data = {.cubic=&cubic_data_argon}
+};
+
+
 

@@ -81,11 +81,15 @@ int main(void){
 			color_off(stdout);
 		}else{
 			double Tt = P->data->T_t;
-			if(P->data->T_min > Tt){
+			double Tc = P->data->T_c;
+			if(P->data->T_min > Tt){ // or if Tt is zero
 				Tt= P->data->T_min;
 			}
+			if(Tt == 0 && P->data->T_f != 0){
+				Tt = 0.9 * P->data->T_f + 0.1 * Tc ;
+				// use the freezing point as a proxy for the triple point
+			}
 			
-			double Tc = P->data->T_c;
 			if(Tt == 0){
 				Tt = 273.15 - 20;
 				if(Tt > Tc){
@@ -106,7 +110,11 @@ int main(void){
 			double nT = 150;
 			double rT = 1/Tt;
 			double drT = (1/Tc - 1/Tt) / nT;
+			if(P->data->T_t == 0 && P->data->T_min == 0){
+				color_on(stdout,ASC_FG_BRIGHTRED);
+			}
 			fprintf(stdout,"%6.1f",Tt);
+			color_off(stdout);
 			for(j=0; j<nT; ++j){
 				double T = 1/rT;
 				double psat,rhof,rhog;
@@ -125,7 +133,8 @@ int main(void){
 			}
 			fprintf(stdout,"%6.1f",Tc);
 		}
-		fprintf(stdout,":%s\n",helmfluids[i]);
+		fprintf(stdout,":%s",helmfluids[i]);
+		fprintf(stdout,"\n");
 		if(nerr)errfluids[nerrfluids++] = helmfluids[i];
 		fprops_fluid_destroy(P); P = NULL;
 	}
