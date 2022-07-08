@@ -268,7 +268,7 @@ static const CubicData cubic_data_n_octylcyclopentane = {
 	,.T_c = 694.0
 	,.p_c = (17.9 * 1e5)
 	,.rho_c = -1
-	,.T_min = 400
+	,.T_min = 385
 	,.omega = 0.564
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-250900 / 182.351), (95120 / 182.351)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -1119,7 +1119,7 @@ static const CubicData cubic_data_diphenyl_ether = {
 	,.T_c = 766.0
 	,.p_c = (31.4 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 477
 	,.omega = 0.440
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (49990 / 170.211), NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -2044,7 +2044,7 @@ static const CubicData cubic_data_1_tetradecene = {
 	,.T_c = 689.0
 	,.p_c = (15.6 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 380
 	,.omega = 0.644
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-206700 / 196.378), (154900 / 196.378)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -3265,7 +3265,7 @@ static const CubicData cubic_data_n_decylcyclohexane = {
 	,.T_c = 750.0
 	,.p_c = (13.5 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 463
 	,.omega = 0.583
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -4116,7 +4116,7 @@ static const CubicData cubic_data_1_cyclopentyltetradecane = {
 	,.T_c = 772.0
 	,.p_c = (11.2 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 465
 	,.omega = 0.789
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-374600 / 266.513), (145600 / 266.513)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -4153,7 +4153,7 @@ static const CubicData cubic_data_n_tridecylcylopentane = {
 	,.T_c = 761.0
 	,.p_c = (12.0 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 453
 	,.omega = 0.755
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-354000 / 252.486), (137100 / 252.486)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -4264,7 +4264,7 @@ static const CubicData cubic_data_n_tridecane = {
 	,.T_c = 676.0
 	,.p_c = (17.2 * 1e5)
 	,.rho_c = (1000 * 184.367 / 780.0)
-	,.T_t = 0
+	,.T_min = 380
 	,.omega = 0.619
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-311700 / 184.367), (58490 / 184.367)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -4930,7 +4930,7 @@ static const CubicData cubic_data_diphenyl = {
 	,.T_c = 789.0
 	,.p_c = (38.5 * 1e5)
 	,.rho_c = (1000 * 154.212 / 502.0)
-	,.T_t = 0
+	,.T_min = 342
 	,.omega = 0.372
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (1.822e+5 / 154.212), (2.803e+5 / 154.212)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5115,7 +5115,7 @@ static const CubicData cubic_data_n_undecane = {
 	,.T_c = 638.8
 	,.p_c = (19.7 * 1e5)
 	,.rho_c = (1000 * 156.313 / 660.0)
-	,.T_t = 0
+	,.T_min = 350
 	,.omega = 0.535
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-270500 / 156.313), (41620 / 156.313)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5411,7 +5411,7 @@ static const CubicData cubic_data_n_hexylcylopentane = {
 	,.T_c = 660.1
 	,.p_c = (21.3 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 351
 	,.omega = 0.476
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-209600 / 154.297), (78250 / 154.297)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -5559,7 +5559,7 @@ static const CubicData cubic_data_n_tetradecane = {
 	,.T_c = 693.0
 	,.p_c = (14.4 * 1e5)
 	,.rho_c = (1000 * 198.934 / 830.0)
-	,.T_t = 0
+	,.T_min = 380
 	,.omega = 0.581
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-332300 / 198.934), (66860 / 198.934)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -6410,7 +6410,7 @@ static const CubicData cubic_data_1_dodecene = {
 	,.T_c = 657.0
 	,.p_c = (18.5 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 360
 	,.omega = 0.558
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-165500 / 168.324), (138000 / 168.324)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -7520,7 +7520,7 @@ static const CubicData cubic_data_dodecane = {
 	,.T_c = 658.2
 	,.p_c = (18.2 * 1e5)
 	,.rho_c = (1000 * 170.34 / 713.0)
-	,.T_t = 0
+	,.T_min = 360
 	,.omega = 0.575
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-2.911e5 / 170.34), (5.007e4 / 170.34)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -11812,7 +11812,7 @@ static const CubicData cubic_data_n_nonylcyclopentane = {
 	,.T_c = 710.5
 	,.p_c = (16.5 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 400
 	,.omega = 0.610
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-271500 / 196.378), (103500 / 196.378)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -12293,7 +12293,7 @@ static const CubicData cubic_data_1_undecene = {
 	,.T_c = 637.0
 	,.p_c = (19.9 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 350
 	,.omega = 0.518
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-1.45E-05 / 154.297), (129500 / 154.297)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -12478,7 +12478,7 @@ static const CubicData cubic_data_dihexylether = {
 	,.T_c = 657.0
 	,.p_c = (18.2 * 1e5)
 	,.rho_c = (1000 * 186.339 / 720.0)
-	,.T_t = 0
+	,.T_min = 373
 	,.omega = 0.700
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, NAN, NAN}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -12515,7 +12515,7 @@ static const CubicData cubic_data_1_pentadecene = {
 	,.T_c = 704.0
 	,.p_c = (14.5 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 400
 	,.omega = 0.682
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-227400 / 210.405), (163200 / 210.405)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -13218,7 +13218,7 @@ static const CubicData cubic_data_1_tridecene = {
 	,.T_c = 674.0
 	,.p_c = (17.0 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 370
 	,.omega = 0.598
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-186100 / 182.351), (146400 / 182.351)}}}
 	,.ref = {FPROPS_REF_IIR}
@@ -14217,7 +14217,7 @@ static const CubicData cubic_data_n_heptylcyclopentane = {
 	,.T_c = 679.0
 	,.p_c = (19.4 * 1e5)
 	,.rho_c = -1
-	,.T_t = 0
+	,.T_min = 368
 	,.omega = 0.515
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-230300 / 168.324), (86670 / 168.324)}}}
 	,.ref = {FPROPS_REF_IIR}
