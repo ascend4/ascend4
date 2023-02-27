@@ -37,6 +37,8 @@ extern "C"{
 #include <ascend/compiler/relation_util.h>
 #include <ascend/compiler/logrel_util.h>
 #include <ascend/compiler/mathinst.h>
+#include <ascend/compiler/when_io.h>
+#include <ascend/compiler/logrel_io.h>
 }
 
 #include <iostream>
@@ -516,6 +518,28 @@ Instanc::getValueAsString() const{
 		ss << "undefined";
 	}
 	return ss.str();
+}
+
+const string
+Instanc::getWhenAsString(const Instanc &relative_to) const {
+	if(isWhen()) {
+		stringstream ss;
+		ss << WriteWhenString(i, relative_to.getInternalType());
+		return ss.str();
+	}
+
+	throw runtime_error("Instanc::getWhenAsString: Instance is not a when");
+}
+
+const string
+Instanc::getLogrelAsString(const Instanc &relative_to) const {
+	if (isLogicalRelation()) {
+		stringstream ss;
+		ss << WriteLogRelToString(i, relative_to.getInternalType());
+		return ss.str();
+	}
+
+	throw runtime_error("Instanc::getLogrelAsString: Instance is not a logical relation");
 }
 
 const bool

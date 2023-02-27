@@ -2747,7 +2747,7 @@ static const CubicData cubic_data_aluminum_tribromide = {
 	,.T_c = 763.0
 	,.p_c = (28.9 * 1e5)
 	,.rho_c = (1000 * 266.694 / 310.0)
-	,.T_t = 0
+	,.T_f = 370.7
 	,.omega = 0.399
 	,.ref0 = {FPROPS_REF_TPHG,{.tphg={298.2, 101325, (-423300 / 266.694), (-452200 / 266.694)}}}
 	,.ref = {FPROPS_REF_IIR}

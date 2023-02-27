@@ -1,4 +1,4 @@
-import tempfile
+import tempfile, pathlib
 
 import ascpy
 from integratorreporter import *
@@ -194,14 +194,15 @@ class IntegratorWindow:
 				self.browser.reporter.reportError(str(e))
 				self.window.destroy()
 				if self.prefs.getBoolPref("Integrator","debuganalyse",True):
-					fp = tempfile.TemporaryFile()
-					self.integrator.writeDebug(fp)
-					fp.seek(0)
-					text = fp.read()
-					fp.close()
+					text = ""
+					with tempfile.TemporaryDirectory() as tmpdirname:
+						fn = pathlib.Path(tmpdirname) / "debug"
+						self.integrator.writeDebug(fn)
+						with open(fn) as fp:
+							text = fp.read()
 					title = "Integrator Analysis Failed"
 					_dialog = InfoDialog(self.browser,self.browser.window,text,title,tabs=(70,200,300,400,500))
-					_dialog.run()					
+					_dialog.run()	
 
 				return None
 			# if we're all ok, create the reporter window and close this one

@@ -111,7 +111,7 @@
 
 #ifndef ASC_SIGNAL_TRAPS
 
-/* if our wizzband PITA signal handing isn't turned on, at least allow
+/* if our whizzbang PITA signal handing isn't turned on, at least allow
 	use of feenableexcept(FE_EXCEPT_ALL) here and there.
 */
 # ifndef ASC_SIGNAL_TRAPS

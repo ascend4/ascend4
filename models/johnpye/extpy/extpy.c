@@ -36,7 +36,7 @@
 #include <ascend/compiler/importhandler.h>
 #include <ascend/compiler/extfunc.h>
 
-/* #define EXTPY_DEBUG */
+#define EXTPY_DEBUG
 #ifdef EXTPY_DEBUG
 # define MSG CONSOLE_DEBUG
 #else
@@ -161,7 +161,8 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 
 	PyErr_Clear();
 	result = PyEval_CallObject(extpydata->fn, arglist);
-
+	(void)result; // we don't use the result.
+	
 	if(PyErr_Occurred()){
 		MSG("Error occured in PyEval_CallObject");
 
@@ -171,7 +172,7 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 		errtypestring = NULL;
 		if(perrtype != NULL
 			&& (errtypestring = PyObject_Str(perrtype)) != NULL
-		    && PyString_Check(errtypestring)
+		    && PyUnicode_Check(errtypestring)
 		){
 			// nothing
 		}else{
@@ -181,12 +182,12 @@ int extpy_invokemethod(struct Instance *context, struct gl_list_t *args, void *u
 		errstring = NULL;
 		if(perrvalue != NULL
 			&& (errstring = PyObject_Str(perrvalue)) != NULL
-		    && PyString_Check(errstring)
+		    && PyUnicode_Check(errstring)
 		){
 			error_reporter(ASC_PROG_ERR
 				,extpydata->name,0
-				,PyString_AsString(errtypestring)
-				,"%s",PyString_AsString(errstring)
+				,PyUnicode_AsUTF8(errtypestring)
+				,"%s",PyUnicode_AsUTF8(errstring)
 			);
 		}else{
 			error_reporter(ASC_PROG_ERR,extpydata->name,0,extpydata->name,"(unknown python error)");
@@ -255,20 +256,20 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 
 	/* MSG("FOUND FN=%p",fn); */
 
-	name = PyObject_GetAttr(fn,PyString_FromString("__name__"));
+	name = PyObject_GetAttr(fn,PyUnicode_FromString("__name__"));
 	if(name==NULL){
 		MSG("No __name__ attribute");
 		PyErr_SetString(PyExc_TypeError,"No __name__ attribute");
 		return NULL;
 	}
-	cname = PyString_AsString(name);
+	cname = PyUnicode_AsUTF8(name);
 
 	/* MSG("REGISTERED METHOD '%s' HAS %d ARGS",cname,nargs); */
 
-	docstring = PyObject_GetAttr(fn,PyString_FromString("func_doc"));
+	docstring = PyObject_GetAttr(fn,PyUnicode_FromString("func_doc"));
 	cdocstring = "(no help)";
 	if(name!=NULL){
-		cdocstring = PyString_AsString(docstring);
+		cdocstring = PyUnicode_AsUTF8(docstring);
 		//MSG("DOCSTRING: %s",cdocstring);
 	}
 
@@ -302,9 +303,21 @@ static PyMethodDef extpymethods[] = {
 	,{NULL,NULL,0,NULL}
 };
 
-PyMODINIT_FUNC initextpy(void){
-    PyObject *obj;
-	obj = Py_InitModule3("extpy", extpymethods,"Module for accessing shared ASCEND pointers from python");
+static PyModuleDef extpymodule = {
+	PyModuleDef_HEAD_INIT
+	,"extpy"
+	,"Module for accessing shared ASCEND pointers from python"
+	,-1
+	,extpymethods
+};
+
+PyMODINIT_FUNC
+PyInit_extpy(void){
+	MSG("Actually creating the module...");
+	PyObject *mod = PyModule_Create(&extpymodule);
+	if(!mod) MSG("Some error creating the module...");
+	else MSG("Module created OK");
+	return mod;
 }
 
 /*------------------------------------------------------------------------------
@@ -330,7 +343,7 @@ char *extpy_filename(const char *partialname){
 	name = ASC_NEW_ARRAY_CLEAR(char,len+4);
 	strcpy(name,partialname);
 	strcat(name,".py");
-	MSG("New filename is '%s'",name);
+	//MSG("New filename is '%s'",name);
 	return name;
 }
 
@@ -343,7 +356,6 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	char *name;
 	name = ospath_str(fp);
 	FILE *f;
-	PyObject *pyfile;
 	int iserr;
 
 	MSG("Importing Python script %s",name);
@@ -363,30 +375,67 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 		return 1;
 	}
 
-	initextpy();
 
-	if(PyRun_SimpleString("import ascpy")){
-		MSG("Failed importing 'ascpy'");
-		return 1;
+	PyObject *mod = PyInit_extpy();
+	if(0 != PyState_AddModule(mod, &extpymodule)){
+		MSG("Unable to add module");
+	}else{
+		MSG("Module added");
 	}
 
-	pyfile = PyFile_FromString(name,"r");
-	if(pyfile==NULL){
+	if(-1 == PyImport_AppendInittab("extpy",&PyInit_extpy)){
+		MSG("Unable to extend table of built-in modules");
+	}else{
+		MSG("Added to table of built-in modules");
+	}
+
+	PyObject *mod1 = PyState_FindModule(&extpymodule);
+	if(mod1 == NULL){
+		MSG("Unable to FindModule");
+	}else{
+		MSG("Module found");
+	}
+	
+	//PyImport_Import(PyUnicode_FromString("extpy"));
+#if 0
+	MSG("About to create module extpy...");
+	PyObject *mod = PyModule_Create(&extpymodule);
+	if(mod == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to create 'extpy' module");
+		ASC_FREE(name);
+		return 1;
+	}
+	MSG("Created module '%s'",PyModule_GetName(mod));
+#endif
+
+	MSG("Importing 'extpy'");
+	PyObject *pimp = PyImport_ImportModule("extpy");
+	if(!pimp){
+		PyErr_Print();
+		MSG("Failed importing 'extpy'");
+	}else{
+		MSG("Imported extpy OK!");
+	}
+
+	MSG("Importing 'ascpy'");
+	if(PyRun_SimpleString("import ascpy")){
+		MSG("Failed importing 'ascpy'");
+		ASC_FREE(name);
+		return 1;
+	}else{
+		MSG("Imported 'ascpy' OK!");
+	}
+
+	MSG("Reading script '%s'",name);
+	f = fopen(name,"r");
+	if(f==NULL){
 		MSG("Failed opening script");
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to open '%s' (%s)",partialpath,name);
 		ASC_FREE(name);
 		return 1;
 	}
 
-	f = PyFile_AsFile(pyfile);
-	if(f==NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to cast PyObject to FILE*");
-		ASC_FREE(name);
-		return 1;
-	}
-
 	PyErr_Clear();
-
 	iserr = PyRun_AnyFileEx(f,name,1);
 
 	if(iserr){

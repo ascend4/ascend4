@@ -74,15 +74,20 @@ if __name__ == "__main__":
 	p_run.add_argument('file',type=pathlib.Path,help='Script file to be run')
 	p_run.add_argument('rest',nargs=argparse.REMAINDER,help='Additional arguments to be passed to the script')
 	
-	p_sh = s.add_parser('shell',help = 'Create a sub-shell in which ASCEND environment variables are set.')
-	p_sh.set_defaults(action='shell')
+	p_sh = s.add_parser('env',help = 'Create a sub-shell in which ASCEND environment variables are set.')
+	p_sh.set_defaults(action='env')
 	p_sh.add_argument('--shell',default='bash',help='Shell to run')
 	p_sh.add_argument('--label',action='store_false',default=True,help="Suppress adding 'a4>' text at start of prompt")
 	p_sh.add_argument('rest',nargs=argparse.REMAINDER,help='Extra arguments to send to shell')
 
+	p_sh = s.add_parser('q',help = 'Quick shortcut test -- test a4.in source for details.')
+	p_sh.set_defaults(action='q')
+
 	args = p.parse_args()
-	
-	if args.debug:DEBUG=1
+
+	if args.debug:
+		DEBUG=1
+		MSG("Debugging output turned on!")
 
 	import subprocess, os
 	sourceroot=pathlib.Path("@SOURCE_ROOT@")
@@ -136,9 +141,11 @@ if __name__ == "__main__":
 		cmd += ['@PYTHON@',sourceroot/'pygtk'/'ascdev']
 	elif args.action == 'open':
 		cmd += ['@PYTHON@',sourceroot/'pygtk'/'ascdev', args.file]
+	elif args.action == 'q':
+		cmd += ['@PYTHON@',sourceroot/'pygtk'/'ascdev', 'models/johnpye/testlog10.a4c']
 	elif args.action == 'script':
 		cmd += [args.file.resolve()]+args.rest
-	elif args.action == 'shell' :
+	elif args.action == 'env' :
 		shargs = []
 		if os.environ.get('ASCEND_SHELL'):
 			raise RuntimeError("You are already inside an ASCEND shell")

@@ -870,6 +870,50 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	}
 }
 
+void
+Simulation::presolve(Solver s) {
+	setSolver(s);
+
+	int res = slv_presolve(sys);
+
+	if(res!=0){
+		throw runtime_error("Error in slv_presolve");
+	}
+}
+
+const int
+Simulation::iterate() {
+	int res = slv_iterate(sys);
+	return res;
+}
+
+void
+Simulation::postsolve(SolverStatus status) {
+	status.getSimulationStatus(*this);
+	activeblock = status.getCurrentBlockNum();
+
+	// communicate solver variable status back to the instance tree
+	processVarStatus();
+
+	if(!status.isOK()){
+		if(status.isDiverged()) throw runtime_error("Solution diverged");
+		if(status.isInconsistent()) throw runtime_error("System is inconsistent");
+		if(status.hasExceededIterationLimit()) throw runtime_error("Solver exceeded iteration limit");
+		if(status.hasExceededTimeLimit()) throw runtime_error("Solver exceeded time limit");
+		if(status.isOverDefined()) throw runtime_error("Solver system is over-defined");
+		if(status.isUnderDefined()) throw runtime_error("Solver system is under-defined");
+		throw runtime_error("Error in solver (status.isOK()==FALSE but can't see why)");
+	}
+}
+
+SolverStatus
+Simulation::getStatus() {
+	SolverStatus status;
+	status.getSimulationStatus(*this);
+	return status;
+}
+
+
 //------------------------------------------------------------------------------
 // POST-SOLVE DIAGNOSTICS
 
