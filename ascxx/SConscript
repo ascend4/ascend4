@@ -118,7 +118,7 @@ swiglib = swig_env.SharedLibrary("ascpy",objs + swigobjs
 #---------------------------------------------
 # CONFIG & runtime shell script for posix
 
-configh = env.SubstInFile(source='config.h.in')
+configh = env.Substfile(source='config.h.in')
 
 #---------------------------------------------
 # LITTLE WEE TEST PROGRAM for debuggin the c++ wrapper

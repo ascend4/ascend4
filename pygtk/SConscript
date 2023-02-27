@@ -6,16 +6,16 @@ import platform
 #---------------------------------------------
 # CONFIG & runtime shell script for posix
 
-configpy = env.SubstInFile(source='config.py.in')
+configpy = env.Substfile(source='config.py.in')
 
-ascendcmd = env.SubstInFile(source='ascend.in')
+ascendcmd = env.Substfile(source='ascend.in')
 env.AddPostAction(ascendcmd, 'chmod 755 $TARGET')
 
 if platform.system() != "Windows" or env.has_key('IS_MINGW'):
 	envdev = env.Clone()
 	# add 'WITH_SOLVERS' to the SUBST_DICT used by ascdev...
 	envdev['SUBST_DICT']['@WITH_SOLVERS@'] = ",".join(env.get('WITH_SOLVERS'))
-	ascdevcmd = envdev.SubstInFile(source='ascdev.in')
+	ascdevcmd = envdev.Substfile(source='ascdev.in')
 	env.AddPostAction(ascdevcmd, 'chmod 755 $TARGET')
 
 #---------------------------------------------

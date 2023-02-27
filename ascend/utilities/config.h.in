@@ -35,17 +35,13 @@
 	Concerns over strange behaviour in mixed-language environments such as
 	Python and/or Tcl make avoiding use of traps often quite a good idea.
 */
-#ifndef ASC_SIGNAL_TRAPS
-/* #define ASC_SIGNAL_TRAPS @ASC_SIGNAL_TRAPS@ */
-#endif
+@ASC_SIGNAL_TRAPS@
 
 /**
 	If signal handlers (<signal.h>) on this platform need to be reset after
 	each 'catch', the ASC_RESETNEEDED macro should be set true.
 */
-#ifndef ASC_RESETNEEDED
-/* #define ASC_RESETNEEDED @ASC_RESETNEEDED@ */
-#endif
+@ASC_RESETNEEDED@
 
 /**
 	Prefix for 'external libraries' loaded using the 'extlib' importhandler
