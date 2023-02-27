@@ -11,7 +11,8 @@ csrcs = Split("""
 	ospath.c env.c pairlist.c ltmatrix.c
 """)
 
-configh = libascend_env.SubstInFile(source='config.h.in')
+#print("SUBST_DICT =",libascend_env['SUBST_DICT'])
+configh = libascend_env.Substfile(source='config.h.in')
 
 objs =[]
 for c in csrcs:

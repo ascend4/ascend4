@@ -56,37 +56,27 @@ typedef unsigned long long asc_intptr_t;
 	If we have C99 FPE (floating point error) routines available on this
 	platform/compiler.
 */
-#ifndef HAVE_C99FPE
-/* #define HAVE_C99FPE @HAVE_C99FPE@ */
-#endif
+@HAVE_C99FPE@
 
 /**
 	If we have IEEE math library include 'isnan' etc.
 */
-#ifndef HAVE_IEEE
-/* #define HAVE_IEEE @HAVE_IEEE@ */
-#endif
+@HAVE_IEEE@
 
 /**
 	If we have IEEE math library include 'isnan' etc.
 */
-#ifndef HAVE_ERF
-/* #define HAVE_ERF @HAVE_ERF@ */
-#endif
+@HAVE_ERF@
 
 /**
 	If we have snprintf function
 */
-#ifndef HAVE_SNPRINTF
-/* #define HAVE_SNPRINTF @HAVE_SNPRINTF@ */
-#endif
+@HAVE_SNPRINTF@
 
 /**
 	If we have _snprintf function
 */
-#ifndef HAVE__SNPRINTF
-/* #define HAVE__SNPRINTF @HAVE__SNPRINTF@ */
-#endif
+@HAVE__SNPRINTF@
 
 #ifdef HAVE_SNPRINTF
 # define SNPRINTF snprintf
@@ -105,9 +95,7 @@ typedef unsigned long long asc_intptr_t;
 	SCons will uncomment the #define line if required.
 	Doing it this (hacky) way so as not to mess up autoconf.
 */
-#ifndef MALLOC_DEBUG
-/* #define MALLOC_DEBUG @MALLOC_DEBUG@ */
-#endif
+@MALLOC_DEBUG@
 
 /*
 	Whether the dmalloc library was detected. Should permit much reduced
@@ -116,10 +104,7 @@ typedef unsigned long long asc_intptr_t;
 	SCons will uncomment the #define line if required.
 	Doing it this (hacky) way so as not to mess up autoconf.
 */
-#ifndef ASC_WITH_DMALLOC
-/* #define ASC_WITH_DMALLOC @ASC_WITH_DMALLOC@ */
-#endif
-
+@ASC_WITH_DMALLOC@
 
 /*
 	Whether to generate color console output when requested eg
@@ -131,8 +116,6 @@ typedef unsigned long long asc_intptr_t;
 	SCons will uncomment the #define line if required.
 	Doing it this (hacky) way so as not to mess up autoconf.
 */
-#ifndef ASC_XTERM_COLORS
-/* #define ASC_XTERM_COLORS @ASC_XTERM_COLORS@ */
-#endif
+@ASC_XTERM_COLORS@
 
 #endif
