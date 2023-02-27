@@ -52,14 +52,10 @@ class IntegratorReporterPython(ascpy.IntegratorReporterCxx):
 				_deffn = "/tmp/ascintegratormatrix.mtx"
 			_fn = self.browser.prefs.getStringPref("Integrator", "matrixfilepath", _deffn)
 			self.browser.reporter.reportNote("Writing matrix to file '%s'" % _fn)
-			_fp = file(_fn,"w")
 			try:
-				try:
-					self.getIntegrator().writeMatrix(_fp, None)
-				except RuntimeError as e:
-					self.browser.reporter.reportError(str(e))
-			finally:
-				_fp.close()
+				self.getIntegrator().writeMatrix(_fn, None)
+			except RuntimeError as e:
+				self.browser.reporter.reportError(str(e))
 
 	def finish(self):
 		self.window.destroy()

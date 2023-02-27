@@ -91,9 +91,13 @@ class IterableIPShell:
     os.environ['TERM'] = 'dumb'
     excepthook = sys.excepthook 
 
-    from IPython.config.loader import Config
+    if parse_version(IPython.release.version) >= parse_version('4.0.0'):
+        from traitlets.config.loader import Config
+    else:
+        from IPython.config.loader import Config
     cfg = Config()
     cfg.InteractiveShell.colors = "Linux"
+    cfg.Completer.use_jedi = False
 
     # InteractiveShell's __init__ overwrites io.stdout,io.stderr with
     # sys.stdout, sys.stderr, this makes sure they are right
@@ -125,10 +129,18 @@ class IterableIPShell:
     self.complete_sep =  re.compile('[\s\{\}\[\]\(\)]')
     self.updateNamespace({'exit':lambda:None})
     self.updateNamespace({'quit':lambda:None})
-    self.IP.readline_startup_hook(self.IP.pre_readline)
+    if parse_version(IPython.release.version) < parse_version("5.0.0"):
+      self.IP.readline_startup_hook(self.IP.pre_readline)
     # Workaround for updating namespace with sys.modules
     #
     self.__update_namespace()
+
+    # Avoid using input splitter when not really needed.
+    # Perhaps it could work even before 5.8.0
+    # But it definitely does not work any more with >= 7.0.0
+    self.no_input_splitter = parse_version(IPython.release.version) >= parse_version('5.8.0')
+    self.lines = []
+    self.indent_spaces = ''
 
   def __update_namespace(self):
     '''
@@ -167,18 +179,26 @@ class IterableIPShell:
       line = self.IP.raw_input(self.prompt)
     except KeyboardInterrupt:
       self.IP.write('\nKeyboardInterrupt\n')
-      self.IP.input_splitter.reset()
+      if self.no_input_splitter:
+        self.lines = []
+      else:
+        self.IP.input_splitter.reset()
     except:
       self.IP.showtraceback()
     else:
-      self.IP.input_splitter.push(line)
-      self.iter_more = self.IP.input_splitter.push_accepts_more()
+      if self.no_input_splitter:
+        self.lines.append(line)
+        (status, self.indent_spaces) = self.IP.check_complete('\n'.join(self.lines))
+        self.iter_more = status == 'incomplete'
+      else:
+        self.IP.input_splitter.push(line)
+        self.iter_more = self.IP.input_splitter.push_accepts_more()
       self.prompt = self.generatePrompt(self.iter_more)
-      if (self.IP.SyntaxTB.last_syntax_error and
-          self.IP.autoedit_syntax):
-          self.IP.edit_syntax_error()
       if not self.iter_more:
-          if parse_version(IPython.release.version) >= parse_version("2.0.0-dev"):
+          if self.no_input_splitter:
+            source_raw = '\n'.join(self.lines)
+            self.lines = []
+          elif parse_version(IPython.release.version) >= parse_version("2.0.0-dev"):
             source_raw = self.IP.input_splitter.raw_reset()
           else:
             source_raw = self.IP.input_splitter.source_raw_reset()[1]
@@ -208,13 +228,16 @@ class IterableIPShell:
     # Backwards compatibility with ipyton-0.11
     #
     ver = IPython.__version__
-    if '0.11' in ver:
+    if ver[0:4] == '0.11':
         prompt = self.IP.hooks.generate_prompt(is_continuation)
-    else:
+    elif parse_version(IPython.release.version) < parse_version("5.0.0"):
         if is_continuation:
             prompt = self.IP.prompt_manager.render('in2')
         else:
             prompt = self.IP.prompt_manager.render('in')
+    else:
+        # TODO: update to IPython 5.x and later
+        prompt = "In [%d]: " % self.IP.execution_count
 
     return prompt
 
@@ -299,7 +322,7 @@ class IterableIPShell:
             return str1[:i]
         return str1
       if possibilities[1]:
-        common_prefix = reduce(_commonPrefix, possibilities[1]) or line[-1]
+        common_prefix = reduce(_commonPrefix, possibilities[1]) or split_line[-1]
         completed = line[:-len(split_line[-1])]+common_prefix
       else:
         completed = line
@@ -322,11 +345,11 @@ class IterableIPShell:
     @type header: string
     '''
     stat = 0
-    if verbose or debug: print((header+cmd))
+    if verbose or debug: print(header+cmd)
     # flush stdout so we don't mangle python's buffering
     if not debug:
       input, output = os.popen4(cmd)
-      print((output.read()))
+      print(output.read())
       output.close()
       input.close()
 
@@ -360,7 +383,20 @@ class ConsoleView(gtk.TextView):
     Initialize console view.
     '''
     gtk.TextView.__init__(self)
-    self.modify_font(Pango.FontDescription('Mono'))
+    pango_ctx = self.get_pango_context()
+    chosen = None
+    for f in pango_ctx.list_families():
+        name = f.get_name()
+        # These are known to show e.g U+FFFC
+        if name in [ "Courier New", "Courier Mono" ]:
+            chosen = name
+            break
+        if name in [ "Liberation Sans" ]:
+            chosen = name
+            # But prefer a monospace one if possible
+    if chosen == None:
+        chosen = "Mono"
+    self.modify_font(Pango.FontDescription(chosen))
     self.set_cursor_visible(True)
     self.text_buffer = self.get_buffer()
     self.mark = self.text_buffer.create_mark('scroll_mark', 
@@ -477,7 +513,10 @@ class ConsoleView(gtk.TextView):
     self.text_buffer.place_cursor(self.text_buffer.get_end_iter())
 
     if self.IP.rl_do_indent:
-      indentation = self.IP.input_splitter.indent_spaces * ' '
+      if self.no_input_splitter:
+        indentation = self.indent_spaces
+      else:
+        indentation = self.IP.input_splitter.indent_spaces * ' '
       self.text_buffer.insert_at_cursor(indentation)
 
   def onKeyPress(self, widget, event):
@@ -512,6 +551,15 @@ class ConsoleView(gtk.TextView):
     elif event.keyval == gdk.KEY_Left:
       insert_iter.backward_cursor_position()
       if not insert_iter.editable(True):
+        return True
+    elif event.state & gdk.ModifierType.CONTROL_MASK and event.keyval in [ord('L'), ord('l')]:
+        # clear previous output on Ctrl+L, but remember current input line + cursor position
+        cursor_offset = self.text_buffer.get_property('cursor-position')
+        cursor_pos_in_line = cursor_offset - start_iter.get_offset() + len(self.prompt)
+        current_input = self.text_buffer.get_text(start_iter, self.text_buffer.get_end_iter(), False)
+        self.text_buffer.set_text(self.prompt + current_input)
+        self.text_buffer.move_mark(self.line_start, self.text_buffer.get_iter_at_offset(len(self.prompt)))
+        self.text_buffer.place_cursor(self.text_buffer.get_iter_at_offset(cursor_pos_in_line))
         return True
     elif not event.string:
       pass
@@ -619,3 +667,12 @@ class IPythonView(ConsoleView, IterableIPShell):
     self.showReturned(rv)
     self.cout.truncate(0)
     self.cout.seek(0)
+ 
+if __name__ == "__main__":
+  window = gtk.Window()
+  window.set_default_size(640, 320)
+  window.connect('delete-event', lambda x, y: gtk.main_quit())
+  window.add(IPythonView())
+  window.show_all()
+  gtk.main()
+ 

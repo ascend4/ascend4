@@ -35,6 +35,15 @@
 #endif
 #include "panic.h"
 #include "ascMalloc.h"
+#include "color.h"
+
+# define MSG(...) color_on(stderr,ASC_FG_CYAN);fprintf(stderr,__VA_ARGS__);color_off(stderr);
+#ifdef MALLOC_DEBUG
+# define MSG1(FP,...) if((FP)==stderr){MSG(__VA_ARGS__);}else{FPRINTF(FP,__VA_ARGS__);}
+#else
+# define MSG1 FPRINTF
+#endif
+
 
 /*
  *  The "non-debug" version of ascstrdupf -
@@ -284,9 +293,9 @@ static void OpenLogFile(void)
 #endif  /* __WIN32__ */
 
     t = time((time_t *)NULL);
-    FPRINTF(f_memory_log_file,"Ascend memory log file opened %s",
+    MSG1(f_memory_log_file,"Ascend memory log file opened %s",
                             asctime(localtime(&t)));
-    FPRINTF(f_memory_log_file,"%16s %13s %16s %13s %6s %s",
+    MSG1(f_memory_log_file,"%16s %13s %16s %13s %6s %s",
                             "Alloc Range",
                             "Size",
                             "Dealloc Range",
@@ -303,7 +312,7 @@ static void WriteMemoryStatus(FILE *f, CONST char *msg)
   CONST VOIDPTR maxm;
   minm = MinMemory();
   maxm = MaxMemory();
-  FPRINTF(f,"%s\n"
+  MSG1(f,"%s\n"
             "Current memory usage(byte allocated): %lu\n"
             "Current number of blocks: %d\n"
             "Peak memory usage(bytes allocated): %lu\n"
@@ -325,9 +334,9 @@ static void WriteMemoryStatus(FILE *f, CONST char *msg)
 static void WriteMemoryRecords(FILE *f, CONST char *msg)
 {
   int c;
-  FPRINTF(f,"%s\nAllocation record count:  %d\n", msg, f_memory_length);
+  MSG1(f,"%s\nAllocation record count:  %d\n", msg, f_memory_length);
   for (c=0 ; c<f_memory_length ; ++c) {
-    FPRINTF(f,"%5d %9x->%9x %9u\n",
+    MSG1(f,"%5d %9p->%9p %9zu\n",
               c,
               f_mem_rec[c].ptr,
               (CONST VOIDPTR)((CONST char *)f_mem_rec[c].ptr + f_mem_rec[c].size),
@@ -364,17 +373,17 @@ void ascshutdownf(CONST char *msg)
     WriteMemoryStatus(f_memory_log_file,msg);
     if (f_memory_length) {
       WriteMemoryRecords(f_memory_log_file, "\n!!! SHUTDOWN ALERT -- POINTERS STILL ALLOCATED !!!");
-      FPRINTF(f_memory_log_file, "!!! END OF SHUTDOWN MESSAGE !!!\n");
+      MSG1(f_memory_log_file, "!!! END OF SHUTDOWN MESSAGE !!!\n");
     } else {
-      FPRINTF(f_memory_log_file, "NO POINTERS STILL ALLOCATED :-)\n");
+      MSG1(f_memory_log_file, "NO POINTERS STILL ALLOCATED :-)\n");
     }
     fflush(f_memory_log_file);
 #ifdef __WIN32__
-    FPRINTF(ASCINF, "Memory log written to: %s\n", f_memlog_filename);
+    MSG1(ASCINF, "Memory log written to: %s\n", f_memlog_filename);
     free(f_memlog_filename);    /* free(), NOT ascfree() */
     f_memlog_filename = NULL;
 #else
-    FPRINTF(ASCINF, "Memory log file written & closed.\n");
+    MSG1(ASCINF, "Memory log file written & closed.\n");
 #endif
     fclose(f_memory_log_file);
     f_memory_log_file = NULL;
@@ -382,9 +391,9 @@ void ascshutdownf(CONST char *msg)
   WriteMemoryStatus(ASCINF, msg);
   if (f_memory_length) {
     WriteMemoryRecords(ASCINF, "\n!!! SHUTDOWN ALERT -- POINTERS STILL ALLOCATED !!!");
-    FPRINTF(ASCINF, "!!! END OF SHUTDOWN MESSAGE !!!\n");
+    MSG1(ASCINF, "!!! END OF SHUTDOWN MESSAGE !!!\n");
   } else {
-    FPRINTF(ASCINF, "NO POINTERS STILL ALLOCATED :-)\n");
+    MSG1(ASCINF, "NO POINTERS STILL ALLOCATED :-)\n");
   }
 }
 
@@ -392,7 +401,7 @@ static void WriteAllocation(CONST VOIDPTR adr, size_t size,
                             CONST char *file, int line)
 {
   if (NULL != f_memory_log_file) {
-    FPRINTF(f_memory_log_file,"%9lx->%9x %9u %31s%6d %s\n",
+    MSG1(f_memory_log_file,"%9lx->%9lx %9zu %31s%6d %s\n",
                               (asc_intptr_t)adr,
                               (asc_intptr_t)adr + size - 1,
                               size,
@@ -402,8 +411,8 @@ static void WriteAllocation(CONST VOIDPTR adr, size_t size,
     fflush(f_memory_log_file);
   }
   else{
-    FPRINTF(ASCERR,"Unable to append to memory log file.\n");
-    FPRINTF(ASCERR,"%9lx->%9x %9u %31s%6d %s\n",
+    MSG1(ASCERR,"Unable to append to memory log file.\n");
+    MSG1(ASCERR,"%9lx->%9lx %9zu %31s%6d %s\n",
                    (asc_intptr_t)adr,
                    (asc_intptr_t)adr + size - 1,
                    size,
@@ -418,7 +427,7 @@ static void WriteReAllocation(CONST VOIDPTR adr1, size_t size1,
                               CONST char *file, int line)
 {
   if (NULL != f_memory_log_file) {
-    FPRINTF(f_memory_log_file,"%9lx->%9x %9u %9lx->%9x %9u %6d %s\n",
+    MSG1(f_memory_log_file,"%9lx->%9lx %9zu %9lx->%9lx %9zu %6d %s\n",
                               (asc_intptr_t)adr2,
                               (asc_intptr_t)adr2 + size2 - 1,
                               size2,
@@ -428,8 +437,8 @@ static void WriteReAllocation(CONST VOIDPTR adr1, size_t size1,
     fflush(f_memory_log_file);
   }
   else{
-    FPRINTF(ASCERR,"Unable to append to memory log file.\n");
-    FPRINTF(ASCERR,"%9lx->%9x %9u %9lx->%9x %9u %6d %s\n",
+    MSG1(ASCERR,"Unable to append to memory log file.\n");
+    MSG1(ASCERR,"%lx->%lx %9zu %9lx->%lx %9zu %6d %s\n",
                    (asc_intptr_t)adr2,
                    (asc_intptr_t)adr2 + size2 - 1,
                    size2,
@@ -443,15 +452,15 @@ static void WriteDeallocation(CONST VOIDPTR adr, size_t size,
                               CONST char *file, int line)
 {
   if (NULL != f_memory_log_file) {
-    FPRINTF(f_memory_log_file,"%31s%9x->%9x %9u %6d %s\n","",
+    MSG1(f_memory_log_file,"%31s%9lx->%9lx %9zu %6d %s\n","",
                               (asc_intptr_t)adr,
                               (asc_intptr_t)adr + size - 1,
                               size, line, file);
     fflush(f_memory_log_file);
   }
   else{
-    FPRINTF(ASCERR,"Unable to append to memory log file.\n");
-    FPRINTF(ASCERR,"%31s%9x->%9x %9u %6d %s\n","",
+    MSG1(ASCERR,"Unable to append to memory log file.\n");
+    MSG1(ASCERR,"%31s%9lx->%9lx %9zu %6d %s\n","",
                    (asc_intptr_t)adr,
                    (asc_intptr_t)adr + size - 1,
                    size, line, file);
@@ -460,9 +469,9 @@ static void WriteDeallocation(CONST VOIDPTR adr, size_t size,
 
 static void WriteError(CONST char *msg, CONST char *file, int line)
 {
-  FPRINTF(ASCERR,"%s\nCalled from file: %s on line %d.\n", msg, file, line);
+  MSG1(ASCERR,"%s\nCalled from file: %s on line %d.\n", msg, file, line);
   if (NULL != f_memory_log_file) {
-    FPRINTF(f_memory_log_file,"%s\nCalled from file: %s on line %d.\n",
+    MSG1(f_memory_log_file,"%s\nCalled from file: %s on line %d.\n",
                               msg, file, line);
     fflush(f_memory_log_file);
   }
@@ -567,7 +576,7 @@ static void AddAllocatedMemory(CONST VOIDPTR ptr, size_t size,
       }
     }
     else {
-      FPRINTF(ASCERR, "Pointer list filled up.  Error messages may be unreliable.\n");
+      MSG1(ASCERR, "Pointer list filled up.  Error messages may be unreliable.\n");
     }
   }
   WriteAllocation(ptr,size,file,line);
@@ -632,7 +641,7 @@ static void ReallocateMemory(CONST VOIDPTR ptr1, size_t size1,
       }
     }
     else {
-      FPRINTF(ASCERR, "Pointer list filled up.  Error messages may be unreliable.\n");
+      MSG1(ASCERR, "Pointer list filled up.  Error messages may be unreliable.\n");
     }
   }
   WriteReAllocation(ptr1,size1,ptr2,size2,file,line);
@@ -673,7 +682,7 @@ VOIDPTR ascmallocf(size_t size, CONST char *file, int line)
     }
     AddAllocatedMemory(result,size,file,line);
   }else{
-	FPRINTF(ASCERR,"ASCMALLOC FAILED TO ALLOCATE MEMORY OF SIZE %d, result=%p\n",size,result);
+	MSG1(ASCERR,"ASCMALLOC FAILED TO ALLOCATE MEMORY OF SIZE %zu, result=%p\n",size,result);
   }
   return result;
 }
@@ -700,7 +709,7 @@ VOIDPTR ascreallocf(VOIDPTR ptr, size_t size, CONST char *file, int line)
   if (AllocatedMemory(ptr,0)){
     old_size = FindMemorySize(ptr,&found);
     if (!found){
-      FPRINTF(ASCERR,"realloc'ing a piece of an allocated block.\n");
+      MSG1(ASCERR,"realloc'ing a piece of an allocated block.\n");
     }
     result = realloc(ptr,size);
   }

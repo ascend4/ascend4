@@ -470,7 +470,7 @@ class Browser:
 
 		#--------
 		# Assign an icon to the main window
-
+		
 		self.icon = None
 		if config.ICON_EXTENSION:
 			_iconpath = ""
@@ -576,12 +576,14 @@ class Browser:
 							self.reporter.reportError("Failed to create instance of '%s': %s" 
 								%(_model, str(e))
 							);
+
 				except RuntimeError as e:
 					if self.options.model:
 						self.reporter.reportError("Unknown model type '%s': %s" 
 							%(_model, str(e))
 						);		
 
+		#sys.exit(1)
 	
 		#--------
 		# IPython console, if available
@@ -757,6 +759,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.sim = None;
 		# TODO: clear out old simulation first!
 
+		
 		#print "DO_SIM(%s)" % str(type_object.getName())		
 		self.start_waiting("Compiling...")
 
@@ -770,12 +773,13 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			print(("Binary compilation set to",_v))
 
 			self.sim = type_object.getSimulation(str(type_object.getName())+"_sim",False)
-
+			
 			#self.reporter.reportNote("SIMULATION ASSIGNED")
 		except RuntimeError as e:
 			self.stop_waiting()
 			self.reporter.reportError(str(e))
 			return
+
 
 		self.stop_waiting()
 
@@ -792,6 +796,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		# run the 'on_load' method
 		self.start_waiting("Running default method...")
+
+
 		try:
 			#self.reporter.reportNote("SIMULATION CREATED, RUNNING DEFAULT METHOD NOW...")
 			self.sim.runDefaultMethod()
@@ -867,7 +873,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.reporter.reportError("No solver assigned!")
 			return
 
-		if self.prefs.getBoolPref("SolverReporter","show_popup",True):
+		if self.prefs.getBoolPref("SolverReporter","show_popup",False):
 			reporter = PopupSolverReporter(self,self.sim)
 		else:
 			reporter = SimpleSolverReporter(self)

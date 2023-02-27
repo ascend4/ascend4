@@ -113,6 +113,7 @@ public:
 %template(SetInt) ASCXX_Set<long>;
 %template(SetString) ASCXX_Set<SymChar>;
 %template(DoubleVector) std::vector<double>;
+%template(VectorDoubleVector) std::vector<std::vector<double> >;
 %template(IntVector) std::vector<int>;
 %template(CurveVector) std::vector<Curve>;
 %template(StringVector) std::vector<std::string>;
@@ -378,7 +379,8 @@ public:
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
 	const std::string getValueAsString() const; ///< Use carefully: rounding will occur for doubles!
-
+	const std::string getWhenAsString(const Instanc &relative_to) const;
+	const std::string getLogrelAsString(const Instanc &relative_to) const;
 	const std::string getRelationAsString(const Instanc &relative_to) const;
 	const double getResidual() const;
 	const bool getLogicalResidual() const;
