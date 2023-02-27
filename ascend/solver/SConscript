@@ -26,7 +26,7 @@ solver_env['SUBST_DICT'] = {
 	,'@ASC_CONOPT_DLPATH@': '"%s"' % c_escape(libascend_env.subst("$CONOPT_DLPATH"))
 }
 
-solverconfig = solver_env.SubstInFile('conoptconfig.h.in')
+solverconfig = solver_env.Substfile('conoptconfig.h.in')
 
 if 'CONOPT' in libascend_env['WITH_SOLVERS']:
 	conopt_env = solver_env.Clone()

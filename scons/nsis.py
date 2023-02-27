@@ -174,25 +174,25 @@ def generate(env):
   env['NSIS'] = find_nsis(env)
 
 def find_nsis(env):
-  """
-  Try and figure out if NSIS is installed on this machine, and if so,
-  where.
-  """
-  if SCons.Util.can_read_reg:
-    # If we can read the registry, get the NSIS command from it
-    try:
-		# 131609 is KEY_READ | KEY_WOW64_32KEY since NSIS is 32-bit
-		k = SCons.Util.RegOpenKeyEx(SCons.Util.hkey_mod.HKEY_LOCAL_MACHINE,'SOFTWARE\\NSIS',0,131609)
-		val, tok = SCons.Util.RegQueryValueEx(k,None)
-		ret = val + os.path.sep + 'makensis.exe'
-		if os.path.exists(ret):
-			return '"' + ret + '"'
-		else:
-			return None
-    except:
-      pass # Couldn't find the key, just act like we can't read the registry
-  # Hope it's on the path
-  return env.WhereIs('makensis.exe')
+	"""
+	Try and figure out if NSIS is installed on this machine, and if so,
+	where.
+	"""
+	if SCons.Util.can_read_reg:
+		# If we can read the registry, get the NSIS command from it
+		try:
+			# 131609 is KEY_READ | KEY_WOW64_32KEY since NSIS is 32-bit
+			k = SCons.Util.RegOpenKeyEx(SCons.Util.hkey_mod.HKEY_LOCAL_MACHINE,'SOFTWARE\\NSIS',0,131609)
+			val, tok = SCons.Util.RegQueryValueEx(k,None)
+			ret = val + os.path.sep + 'makensis.exe'
+			if os.path.exists(ret):
+				return '"' + ret + '"'
+			else:
+				return None
+		except:
+		  pass # Couldn't find the key, just act like we can't read the registry
+	# Hope it's on the path
+	return env.WhereIs('makensis.exe')
 
 def exists(env):
   """
@@ -201,3 +201,5 @@ def exists(env):
   if find_nsis(env) != None:
     return 1
   return 0
+
+# vim:set ts=2 sw=2 noexpandtab:

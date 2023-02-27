@@ -794,26 +794,26 @@ def c_escape(str):
 envadditional={}
 
 tools = [
-	'lex', 'yacc', 'fortran', 'swig', 'substinfile'
+	'lex', 'yacc', 'fortran', 'swig', 'textfile'#, 'substinfile'
 	,'disttar', 'tar', 'graphviz','sundials', 'dvi', 'pdflatex'
 ]
 if platform.system()=="Windows":
 	tools += ['nsis']
 	
-	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
-		envenv = os.environ
-		tools += ['mingw']
-		envadditional['IS_MINGW']=True
-	else:
-		print("Assuming VC++ build environment (Note: MinGW is preferred)")
-		envenv = {
-			'PATH':os.environ['PATH']
-			,'INCLUDE':os.environ['INCLUDE']
-			,'LIB':os.environ['LIB']
-			,'MSVS_IGNORE_IDE_PATHS':1
-		}
-		tools += ['default']
-		envadditional['CPPDEFINES']=['_CRT_SECURE_NO_DEPRECATE']
+#	if os.environ.get('OSTYPE')=='msys' or os.environ.get('MSYSTEM'):
+	envenv = os.environ
+	tools += ['mingw']
+	envadditional['IS_MINGW']=True
+#	else:
+#		print("Assuming VC++ build environment (Note: MinGW is preferred)")
+#		envenv = {
+#			'PATH':os.environ['PATH']
+#			,'INCLUDE':os.environ['INCLUDE']
+#			,'LIB':os.environ['LIB']
+#			,'MSVS_IGNORE_IDE_PATHS':1
+#		}
+#		tools += ['default']
+#		envadditional['CPPDEFINES']=['_CRT_SECURE_NO_DEPRECATE']
 else:
 	envenv = os.environ
 	tools += ['default','doxygen','ipopt']
@@ -2584,7 +2584,11 @@ for k,v in {
 		,'HAVE__SNPRINTF':env.get('HAVE__SNPRINTF')
 		}.items():
 		
-	if v: subst_dict["/\\* #\\s*define %s @%s@ \\*/" % (k,k)]='# define %s 1 ' % k
+#	if v: subst_dict["/\\* #\\s*define %s @%s@ \\*/" % (k,k)]='# define %s 1 ' % k
+	if v:
+		subst_dict['@%s@' %(k,)] = "#define %s 1" %(k,)
+	else:
+		subst_dict['@%s@' %(k,)] = "// %s is not set." %(k,)
 
 if with_python:
 	subst_dict['@ASCXX_USE_PYTHON@']="1"
@@ -2830,12 +2834,12 @@ env.Alias('pyfprops',env.get('pyfprops'))
 #------------------------------------------------------
 # CREATE ASCEND-CONFIG scriptlet
 
-ascendconfig = env.SubstInFile('ascend-config.in')
+ascendconfig = env.Substfile('ascend-config.in')
 
 #------------------------------------------------------
 # CREATE a4 CONVENIENCE SCRIPT
 
-a4cmd = env.SubstInFile('a4.in')
+a4cmd = env.Substfile('a4.in')
 env.AddPostAction(a4cmd, 'chmod 755 $TARGET')
 
 #------------------------------------------------------
@@ -2956,13 +2960,13 @@ else:
 # CREATE the SPEC file for generation of RPM packages
 
 if platform.system()=="Linux":
-	env.SubstInFile('ascend.spec.in')
+	env.Substfile('ascend.spec.in')
 
 #------------------------------------------------------
 # CREATE OMF FILE FOR USE WITH SCROLLKEEPER
 
 #if with_scrollkeeper:
-#	#env.SubstInFile('#/pygtk/gnome/ascend.omf.in')
+#	#env.Substile('#/pygtk/gnome/ascend.omf.in')
 #	#env.InstallShared(env['INSTALL_ROOT']+env['OMFDIR'],"#/pygtk/gnome/ascend.omf")
 
 #------------------------------------------------------

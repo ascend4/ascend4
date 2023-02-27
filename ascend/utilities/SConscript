@@ -8,7 +8,7 @@ csrcs = Split("""
 	error.c readln.c set.c
 """)
 
-configh = libascend_env.SubstInFile(source='config.h.in')
+configh = libascend_env.Substfile(source='config.h.in')
 
 objs = []
 for c in csrcs:
