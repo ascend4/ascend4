@@ -1598,6 +1598,7 @@ def CheckPythonLib(context):
 	python_linkflags = []
 	if platform.system()=="Windows":
 		python_libpath += [os.path.join(sys.prefix,"libs")]
+		print("Python libpath =",python_libpath)
 	elif platform.system()=="Darwin":
 		python_libpath += [cfig['LIBPL']]
 		python_linkflags += cfig['LIBS'].split(' ')
@@ -2198,10 +2199,10 @@ for _var,_type in _sizes.items():
 	if not _size:
 		print("Couldn't determine 'sizeof(%s)'" % _type)
 		Exit(1)
-	print("SIZEOF_%s is %d"%(_var,_size))
+	#print("SIZEOF_%s is %d"%(_var,_size))
 	conf.env["SIZEOF_%s" % (_var,)] = str(_size)
 
-print("SIZEOF_VOID_P = %s"%(conf.env['SIZEOF_VOID_P']))
+#print("SIZEOF_VOID_P = %s"%(conf.env['SIZEOF_VOID_P']))
 
 # check for some string functions
 
