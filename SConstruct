@@ -1,4 +1,4 @@
-#!/usr/bin/python invoke_using_scons
+#!/usr/bin/env python3 -m SCons
 # This is a build script for use with SCons. Use it to compile ASCEND on 
 # Linux, Windows. It should also give some success on Mac, although this is
 # much less tested.

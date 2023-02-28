@@ -2,7 +2,7 @@ Import("env")
 
 env.SConscript("interface/SConscript",['env'])
 
-print "ASC4DEV"
-asc4devcmd = env.SubstInFile('asc4dev.in')
+print("ASC4DEV")
+asc4devcmd = env.Substfile('asc4dev.in')
 env.AddPostAction(asc4devcmd, 'chmod 755 $TARGET')
 
