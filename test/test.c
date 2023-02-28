@@ -78,6 +78,8 @@ int list_tests(const char *suitename0){
 	return CUE_NO_SUITENAME;
 }
 
+char ASC_TEST_PATH[PATH_MAX];
+
 /**
 	Main routine, handles command line options
 */

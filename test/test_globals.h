@@ -30,6 +30,6 @@
 #include <ascend/general/ospath.h>
 
 /* GLOBAL Variable to the Test Directory maintained by test/test.c */
-char ASC_TEST_PATH[PATH_MAX];
+extern char ASC_TEST_PATH[PATH_MAX];
 
 #endif
