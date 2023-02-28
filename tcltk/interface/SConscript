@@ -32,7 +32,7 @@ tcl_env.AppendUnique(LIBS=['ascend'])
 tcl_env.AppendUnique(LIBPATH=['#'])
 
 if tcl_env.get('STATIC_TCLTK'):
-	print "STATIC TCL/TK PROGRAM LINKAGE"
+	print("STATIC TCL/TK PROGRAM LINKAGE")
 	srcs += ['$TCL_LIB','$TK_LIB','$TKTABLE_LIB']
 	tcl_env.AppendUnique(LIBS=[tcl_env['X11_LIB']])
 	tcl_env.AppendUnique(LIBPATH=[tcl_env['X11_LIBPATH']])
@@ -42,13 +42,13 @@ if tcl_env.get('STATIC_TCLTK'):
 
 	tcl_env.Program("ascend4",["main.c"] + srcs)
 else:
-	print "DYNAMIC TCL/TK PROGRAM LINKAGE"
+	print("DYNAMIC TCL/TK PROGRAM LINKAGE")
 	tcl_env.Append(LIBS=tcl_env['TCL_LIB'])
 	tcl_env.Append(LIBS=tcl_env['TK_LIB'])
 
-	if tcl_env.has_key('TCL_LIBPATH'):
+	if 'TCL_LIBPATH' in tcl_env:
 		tcl_env.AppendUnique(LIBPATH=[tcl_env['TCL_LIBPATH']])
-	if tcl_env.has_key('TK_LIBPATH'):
+	if 'TK_LIBPATH' in tcl_env:
 		tcl_env.AppendUnique(LIBPATH=[tcl_env['TK_LIBPATH']])
 
 	ascendtcllib = tcl_env.SharedLibrary('ascendtcl',srcs + [typelexsource] )
