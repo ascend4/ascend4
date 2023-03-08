@@ -11,7 +11,7 @@ configpy = env.Substfile(source='config.py.in')
 ascendcmd = env.Substfile(source='ascend.in')
 env.AddPostAction(ascendcmd, 'chmod 755 $TARGET')
 
-if platform.system() != "Windows" or env.has_key('IS_MINGW'):
+if platform.system() != "Windows" or 'IS_MINGW' in env:
 	envdev = env.Clone()
 	# add 'WITH_SOLVERS' to the SUBST_DICT used by ascdev...
 	envdev['SUBST_DICT']['@WITH_SOLVERS@'] = ",".join(env.get('WITH_SOLVERS'))
@@ -47,5 +47,4 @@ if env.get('CAN_INSTALL'):
 	gladefiles = glob.glob("glade/*")
 	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA/glade")),gladefiles)
 	
-# vim: set syntax=python:
-
+# vim: ts=4:sw=4:noet:syntax=python
