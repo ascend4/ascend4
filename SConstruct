@@ -301,6 +301,19 @@ vars.Add(BoolVariable('WITH_PYTHON'
 	, True
 ))
 
+vars.Add(
+	'PYTHON'
+	,"Python executable"
+	,sys.executable
+)
+
+vars.Add(
+	'PYTHON_PKG'
+	,"Python package name in pkg-config"
+	,"python-%d.%d" % (sys.version_info[0],sys.version_info[1])
+)
+
+
 # Which solvers will we allow?
 vars.Add(ListVariable('WITH_SOLVERS'
 	,"List of the solvers you want to build. The default is the minimum that"	
@@ -860,9 +873,6 @@ if env['ENV'].get('HOST_PREFIX'):
 with_tcltk = env.get('WITH_TCLTK')
 without_tcltk_reason = "disabled by options/config.py"
 
-with_python = env.get('WITH_PYTHON')
-without_python_reason = "disabled by options/config.py"
-
 with_cunit = env.get('WITH_CUNIT')
 without_cunit_reason = "not requested"
 
@@ -1047,56 +1057,6 @@ def CheckASan(context):
 	else:
 		context.env['CCFLAGS'] = ccf	
 	return is_ok
-
-#----------------
-# SWIG
-
-import os,re
-
-def get_swig_version(env):
-	if not WhereIs(env['SWIG']):
-		raise RuntimeError("'%s' not found in PATH"%env.subst("$SWIG"))
-	cmd = [env['SWIG'],'-version']
-	p = subprocess.Popen(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
-	output, err = p.communicate()
-	
-	restr = r"\s*SWIG\s+Version\s+(?P<maj>[0-9]+)\.(?P<min>[0-9]+)\.(?P<pat>[0-9]+)\b"
-	expr = re.compile(restr,re.MULTILINE|re.IGNORECASE);
-	m = expr.match(output);
-	if not m:
-		raise RuntimeError("Failed match on output '%s'"  % output)
-	maj = int(m.group('maj'))
-	min = int(m.group('min'))
-	pat = int(m.group('pat'))
-
-	return (maj,min,pat)
-	
-
-def CheckSwigVersion(context):
-	
-	try:
-		context.Message("Checking version of SWIG... ")
-		maj,min,pat = get_swig_version(context.env)
-	except Exception as e:
-		context.Result("Failed (%s)" % str(e))
-		return False;
-	
-	context.env['SWIGVERSION']=tuple([maj,min,pat])
-	
-	msg = "too old"
-	res = False
-	if maj == 1 and (
-			min > 3
-			or (min == 3 and pat >= 24)
-		):
-		msg = "ok"
-		res = True
-	elif maj >= 2:
-		msg = "ok"
-		res = True
-
-	context.Result("%s, %d.%d.%d" % (msg, maj,min,pat))
-	return res;
 
 #----------------
 # Scrollkeeper (Linux documentation system)
@@ -1560,77 +1520,6 @@ def CheckDLOpen(context):
 	return is_ok
 
 #----------------
-# libpython test
-
-libpython_test_text = """
-#include <Python.h>
-PyObject *get10(void){
-	PyObject *p = Py_BuildValue("i", 10);
-	return p;
-}
-int main(void){
-	return 0;
-}
-"""
-
-def CheckPythonLib(context):
-	context.Message('Checking for libpython... ')
-
-	if platform.system()=="Windows":
-		python_lib='python%d%d'
-	else:
-		python_lib='python%d.%d'
-
-	try:
-		python_libs = [python_lib % (sys.version_info[0],sys.version_info[1])]
-		python_cpppath = [distutils.sysconfig.get_python_inc()]
-		cfig = distutils.sysconfig.get_config_vars()	
-	except:
-		context.Result("not found")
-		return 0		
-	
-	lastLIBS = context.env.get('LIBS')
-	lastLIBPATH = context.env.get('LIBPATH')
-	lastCPPPATH = context.env.get('CPPPATH')
-	lastLINKFLAGS = context.env.get('LINKFLAGS')
-
-	python_libpath = []
-	python_linkflags = []
-	if platform.system()=="Windows":
-		python_libpath += [os.path.join(sys.prefix,"libs")]
-		print("Python libpath =",python_libpath)
-	elif platform.system()=="Darwin":
-		python_libpath += [cfig['LIBPL']]
-		python_linkflags += cfig['LIBS'].split(' ')
-	else:
-		# checked on Linux and SunOS
-		if cfig['LDLIBRARY']==cfig['LIBRARY']:
-			sys.stdout.write("(static)")
-			python_libpath += [cfig['LIBPL']]
-			python_linkflags += cfig['LIBS'].split(' ')
-
-	context.env.AppendUnique(LIBS=python_libs)
-	context.env.AppendUnique(LIBPATH=python_libpath)
-	context.env.AppendUnique(CPPPATH=python_cpppath)
-	context.env.AppendUnique(LINKFLAGS=python_linkflags)
-	result = context.TryLink(libpython_test_text,".c");
-
-	context.Result(result)	
-
-	if(result):
-		context.env['PYTHON_LIBPATH']=python_libpath
-		context.env['PYTHON_LIB']=python_libs
-		context.env['PYTHON_CPPPATH']=python_cpppath
-		context.env['PYTHON_LINKFLAGS']=python_linkflags
-
-	context.env['LIBS'] = lastLIBS
-	context.env['LIBPATH'] = lastLIBPATH
-	context.env['CPPPATH'] = lastCPPPATH
-	context.env['LINKFLAGS'] = lastLINKFLAGS
-
-	return result
-
-#----------------
 # IDA test
 
 sundials_version_major_required = 2
@@ -2090,8 +1979,8 @@ conf = Configure(env
 		, 'CheckMalloc' : CheckMalloc
 		, 'CheckASan' : CheckASan
 		, 'CheckDLOpen' : CheckDLOpen
-		, 'CheckSwigVersion' : CheckSwigVersion
-		, 'CheckPythonLib' : CheckPythonLib
+#		, 'CheckSwigVersion' : CheckSwigVersion
+#		, 'CheckPythonLib' : CheckPythonLib
 		, 'CheckCUnit' : CheckCUnit
 		, 'CheckDMalloc' : CheckDMalloc
 		, 'CheckLyx' : CheckLyx
@@ -2334,21 +2223,6 @@ if with_tcltk:
 if env['STATIC_TCLTK']:
 	conf.CheckX11()
 
-# Python... obviously we're already running python, so we just need to
-# check that we can link to the python library OK:
-
-if not conf.CheckPythonLib():
-	without_python_reason = 'libpython2.x not found or not linkable'
-	with_python = False
-	env['WITH_PYTHON']=False
-
-# SWIG version
-
-if with_python and conf.CheckSwigVersion() is False:
-	without_python_reason = 'SWIG >= 1.3.24 is required'
-	with_python = False
-	env['WITH_PYTHON']=False
-
 # CUnit
 
 if with_cunit:
@@ -2486,9 +2360,9 @@ if platform.system()=="Windows" and 'MSVS' in env:
 		with_python = 0;
 		without_python_reason = "Header file 'basetsd.h' not found. Install the MS Platform SDK."
 
-print("1. SIZEOF_VOID_P = %s"%(conf.env['SIZEOF_VOID_P']))
+#print("1. SIZEOF_VOID_P = %s"%(conf.env['SIZEOF_VOID_P']))
 env = conf.Finish()
-print("2. SIZEOF_VOID_P = %s"%(env['SIZEOF_VOID_P']))
+#print("2. SIZEOF_VOID_P = %s"%(env['SIZEOF_VOID_P']))
 #print "-=-=-=-=-=-=-=-=- LIBS =",env.get('LIBS')
 
 #---------------------------------------
@@ -2560,6 +2434,7 @@ subst_dict = {
 	, '@SIZEOF_ULONG@' : env['SIZEOF_ULONG']
 	, '@SIZEOF_ULONGLONG@' : env['SIZEOF_ULONGLONG']
 	, '@WITH_SOLVERS@' : ",".join(env.get('WITH_SOLVERS'))
+	, '@ASCXX_USE_PYTHON@' : "1" if env['WITH_PYTHON'] else "0"
 }
 
 
@@ -2591,10 +2466,6 @@ for k,v in {
 	else:
 		subst_dict['@%s@' %(k,)] = "// %s is not set." %(k,)
 
-if with_python:
-	subst_dict['@ASCXX_USE_PYTHON@']="1"
-	env['WITH_PYTHON']=1;
-
 if with_latex2html:
 	env['WITH_LATEX2HTML']=1
 
@@ -2607,20 +2478,6 @@ env.Append(SUBST_DICT=subst_dict)
 #	print "%-50s%s" % ("'%s'"%k,v)
 
 # REMOVED: long command-line support on Win2k
-
-#------------------------------------------------------
-# RECIPE: SWIG scanner
-
-import SCons.Script
-
-SWIGScanner = SCons.Scanner.ClassicCPP(
-	"SWIGScan"
-	, ".i"
-	, "CPPPATH"
-	, '^[ \t]*[%,#][ \t]*(?:include|import)[ \t]*(<|")([^>"]+)(>|")'
-)
-
-env.Append(SCANNERS=[SWIGScanner])
 
 #------------------------------------------------------
 # Recipe for 'CHMOD' ACTION 	 
@@ -2693,21 +2550,24 @@ if with_graphviz and env.get('GRAPHVIZ_RPATH'):
 	env.Append(RPATH=env['GRAPHVIZ_RPATH'])
 
 #-------------
+# PYTHON INTERFACE
+
+if env.get('WITH_PYTHON'):	
+	subst_dict['@ASCXX_USE_PYTHON@']="1"
+	env['WITH_PYTHON']=1;
+
+	env.SConscript(['ascxx/SConscript'],'env')
+	env.SConscript(['pygtk/SConscript'],'env')
+else:
+	print("Skipping... Python bindings aren't being built:",without_python_reason)
+
+#-------------
 # TCL/TK GUI
 
 if with_tcltk:
 	env.SConscript(['tcltk/SConscript'],'env')
 else:
 	print("Skipping... Tcl/Tk bindings aren't being built:",without_tcltk_reason)
-
-#-------------
-# PYTHON INTERFACE
-
-if with_python:
-	env.SConscript(['ascxx/SConscript'],'env')
-	env.SConscript(['pygtk/SConscript'],'env')
-else:
-	print("Skipping... Python bindings aren't being built:",without_python_reason)
 
 #------------
 # BASE/GENERIC SUBDIRECTORIES
@@ -3047,10 +2907,10 @@ else:
 default_targets =['libascend','solvers',a4cmd]
 if with_tcltk:
 	default_targets.append('tcltk')
-if with_python:
+if 'WITH_PYTHON' in env:
 	default_targets.append('ascxx')
-	default_targets.append('pygtk')
-	default_targets.append('pyfprops')
+#	default_targets.append('pygtk')
+#	default_targets.append('pyfprops')
 if with_extfns:
 	default_targets.append('extfns')
 if with_doc_build:
@@ -3060,4 +2920,4 @@ env.Default(default_targets)
 
 print("Building targets:"," ".join([str(i) for i in BUILD_TARGETS]))
 
-# vim: set syntax=python:
+# vim: ts=4:sw=4:noet:syntax=python

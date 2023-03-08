@@ -255,3 +255,5 @@ class ViewModel:
 
 	def close_window(self, widget, *data):
 		data[0].hide()
+		
+# vim: ts=4:sw=4:noet
