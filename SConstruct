@@ -313,6 +313,11 @@ vars.Add(
 	,"python-%d.%d" % (sys.version_info[0],sys.version_info[1])
 )
 
+vars.Add(
+	'PYTHON_PKG_EMBED'
+	,"Python package name in pkg-config for embedded python"
+	,"${PYTHON_PKG}-embed"
+)
 
 # Which solvers will we allow?
 vars.Add(ListVariable('WITH_SOLVERS'
@@ -2909,8 +2914,8 @@ if with_tcltk:
 	default_targets.append('tcltk')
 if 'WITH_PYTHON' in env:
 	default_targets.append('ascxx')
-#	default_targets.append('pygtk')
-#	default_targets.append('pyfprops')
+	default_targets.append('pygtk')
+	default_targets.append('pyfprops')
 if with_extfns:
 	default_targets.append('extfns')
 if with_doc_build:

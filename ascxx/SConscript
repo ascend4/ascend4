@@ -26,6 +26,7 @@ srcs = Split("""
 envp = env.Clone()
 
 # get compile/link settings for libpython, Python.h
+print("PYTHON_PKG =",envp['PYTHON_PKG'])
 envp.ParseConfig('pkg-config $PYTHON_PKG --cflags --libs')
 
 configh = envp.Substfile(source='config.h.in')
@@ -38,8 +39,11 @@ for s in srcs:
 # LITTLE WEE TEST PROGRAMS for debuggin the c++ wrapper
 # currently out of order because of need for a separate builddir due to ASCXX_WITH_PYTHON flag taking different 
 
-envx = envp.Clone()
+envx = env.Clone()
+envx.ParseConfig('pkg-config $PYTHON_PKG_EMBED --cflags --libs')
+print("envx LIBS =",envx['LIBS'])
 envx.Append(LIBS=['ascend'],LIBPATH=['#'])
+print("envx LIBS =",envx['LIBS'])
 ipopttest = envx.Program('testipopt',['testipopt.cpp'] + objs)
 conopttest = envx.Program('testconopt',['testconopt.cpp'] + objs)
 slvreqtest = envx.Program('testslvreq',['testslvreq.cpp'] + objs)
