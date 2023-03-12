@@ -3,9 +3,9 @@ name: ASCEND4 ubuntu
 on:
   workflow_dispatch:
   push:
-    branches: [ python3] # NOT YET: master, $default-branch 
+    branches: [ $default-branch ]
   pull_request:
-    branches: [ python3 ] # as above
+    branches: [ $default-branch ]
 
 jobs:
   build:
@@ -34,7 +34,7 @@ jobs:
 
     - name: Build ASCEND
       run: |
-        scons -j4 CUNIT_PREFIX=$HOME/.local MALLOC_DEBUG=1 ascend models solvers ascxx pygtk test
+        scons CUNIT_PREFIX=$HOME/.local MALLOC_DEBUG=1 ascend models solvers ascxx pygtk test
 
     - name: Test ASCEND
       run: |    

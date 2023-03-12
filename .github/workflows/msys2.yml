@@ -1,0 +1,73 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: ASCEND4 MSYS2
+
+on:
+  workflow_dispatch:
+    branches: [ $default-branch]
+  push:
+    branches: [ $default-branch]
+  pull_request:
+    branches:  [ $default-branch]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    strategy:
+      matrix:
+        include:
+#          - { sys: mingw64, env: x86_64 }
+#          - { sys: mingw32, env: i686 }
+          - { sys: ucrt64,  env: ucrt-x86_64 }
+#          - { sys: clang64, env: clang-x86_64 }
+
+    steps:
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{matrix.sys}}
+        update: true
+        install: >-
+          git swig
+          mingw-w64-${{matrix.env}}-toolchain
+          mingw-w64-x86_64-gsl
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-gtk2
+          mingw-w64-x86_64-binutils
+          mingw-w64-x86_64-pkg-config
+          mingw-w64-x86_64-python
+          mingw-w64-x86_64-python-pip
+          mingw-w64-x86_64-python-wheel
+          mingw-w64-x86_64-python-matplotlib
+
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install scons
+        
+    - name: Build and install CUnit
+      run: |
+        svn co https://svn.code.sf.net/p/cunit/code/branches/mingw64 cunit
+        cd cunit
+        ./bootstrap
+        ./configure --prefix=$HOME/.local
+        make -j8
+        make install
+
+    - uses: actions/checkout@v2
+
+    - name: Build ASCEND
+      run: |
+        mkdir -p ~/.local
+        scons MALLOC_DEBUG=1 CUNIT_PREFIX=$HOME/.local ascend solvers models test
+
+    - name: Test ASCEND
+      run: |
+        test/test_expectpass_mallocdebug
+
+# vim: ts=2:sw=2:et
+
