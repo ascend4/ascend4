@@ -35,15 +35,15 @@ jobs:
         install: >-
           git swig
           mingw-w64-${{matrix.env}}-toolchain
-          mingw-w64-x86_64-gsl
-          mingw-w64-x86_64-gcc
-          mingw-w64-x86_64-gtk2
-          mingw-w64-x86_64-binutils
-          mingw-w64-x86_64-pkg-config
-          mingw-w64-x86_64-python
-          mingw-w64-x86_64-python-pip
-          mingw-w64-x86_64-python-wheel
-          mingw-w64-x86_64-python-matplotlib
+          mingw-w64-${{matrix.env}}-gsl
+          mingw-w64-${{matrix.env}}-gcc
+          mingw-w64-${{matrix.env}}-gtk2
+          mingw-w64-${{matrix.env}}-binutils
+          mingw-w64-${{matrix.env}}-pkg-config
+          mingw-w64-${{matrix.env}}-python
+          mingw-w64-${{matrix.env}}-python-pip
+          mingw-w64-${{matrix.env}}-python-wheel
+          mingw-w64-${{matrix.env}}-python-matplotlib
 
     - name: Install Python dependencies
       run: |
