@@ -5,11 +5,10 @@ name: ASCEND4 MSYS2
 
 on:
   workflow_dispatch:
-    branches: [ $default-branch]
   push:
-    branches: [ $default-branch]
+    branches: [ $default-branch ]
   pull_request:
-    branches:  [ $default-branch]
+    branches: [ $default-branch ]
 
 jobs:
   build:
@@ -33,7 +32,7 @@ jobs:
         msystem: ${{matrix.sys}}
         update: true
         install: >-
-          git swig
+          git swig subversion
           mingw-w64-${{matrix.env}}-toolchain
           mingw-w64-${{matrix.env}}-gsl
           mingw-w64-${{matrix.env}}-gcc
