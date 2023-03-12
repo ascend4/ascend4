@@ -576,7 +576,7 @@ END heater_closed_test;
 *)
 MODEL tee;
 	NOTES
-		'block' SELF {Tee piece: branching of flow}
+		'block' SELF {canvas-tee-piece}
 		'graphic' SELF {0,5-10,3.33-10,6.66-0,5}
 		'port_out' SELF {outlet:10,3.33-outlet_branch:10,6.66}
 	END NOTES;
