@@ -32,7 +32,7 @@ jobs:
         msystem: ${{matrix.sys}}
         update: true
         install: >-
-          git swig subversion
+          git swig subversion make
           mingw-w64-${{matrix.env}}-toolchain
           mingw-w64-${{matrix.env}}-gsl
           mingw-w64-${{matrix.env}}-gcc
