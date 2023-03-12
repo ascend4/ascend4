@@ -52,7 +52,6 @@ jobs:
       run: |
         svn co https://svn.code.sf.net/p/cunit/code/branches/mingw64 cunit
         cd cunit
-        ./bootstrap
         ./configure --prefix=$HOME/.local
         make -j8
         make install
