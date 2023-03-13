@@ -32,7 +32,7 @@ jobs:
         msystem: ${{matrix.sys}}
         update: true
         install: >-
-          git swig subversion make
+          git swig subversion make flex bison
           mingw-w64-${{matrix.env}}-toolchain
           mingw-w64-${{matrix.env}}-gsl
           mingw-w64-${{matrix.env}}-gcc
