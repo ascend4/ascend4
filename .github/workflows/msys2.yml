@@ -61,7 +61,7 @@ jobs:
     - name: Build ASCEND
       run: |
         mkdir -p ~/.local
-        scons MALLOC_DEBUG=1 CUNIT_PREFIX=$HOME/.local ascend solvers models test
+        MSYSTEM= scons MALLOC_DEBUG=1 CUNIT_PREFIX=$HOME/.local ascend solvers models test
 
     - name: Test ASCEND
       run: |

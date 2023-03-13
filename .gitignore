@@ -3,6 +3,11 @@
 *.so
 *.so.*
 *.pyc
+*.pyd
+*.dll
+*.a
+*.def
+*.exe
 .scon*
 a4
 ascend/compiler/ascParse.c
