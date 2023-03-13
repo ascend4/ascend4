@@ -2785,6 +2785,9 @@ if not env.get('NSIS'):
 	with_installer = False
 	without_installer_reason = "NSIS not found"
 
+with_installer = False
+without_installer_reason = "Disabled temporarily in SConstruct"
+
 if with_installer:
 	pyarch = ""
 	instarch = "win32"
