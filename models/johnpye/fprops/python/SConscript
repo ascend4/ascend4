@@ -2,40 +2,42 @@ Import('fprops_env')
 import os
 
 pyenv = fprops_env.Clone()
+pyenv.ParseConfig('pkg-config $PYTHON_PKG --cflags --libs')
 
-pyenv['LIBS'] = []
-pyenv['SHLIBSUFFIX'] = '.so'
-pyenv['SHLIBPREFIX'] = '_'
+if 0:
+	pyenv['LIBS'] = []
+	pyenv['SHLIBSUFFIX'] = '.so'
+	pyenv['SHLIBPREFIX'] = '_'
 
-import distutils.sysconfig, sys, platform
+	import distutils.sysconfig, sys, platform
 
-if platform.system()=="Windows":
-	python_lib='python%d%d'
-	pyenv['SHLIBSUFFIX']='.pyd'
-else:
-	python_lib='python%d.%d'
-
-if not fprops_env.get('PYTHON_LIBPATH'):
-	cfig = distutils.sysconfig.get_config_vars()
-	python_libpath = []
-	python_linkflags = []
 	if platform.system()=="Windows":
-		python_libpath += [os.path.join(sys.prefix,"libs")]
-	elif platform.system()=="Darwin":
-		python_libpath += [cfig['LIBPL']]
-		python_linkflags += cfig['LIBS'].split(' ')
+		python_lib='python%d%d'
+		pyenv['SHLIBSUFFIX']='.pyd'
 	else:
-		# checked on Linux and SunOS
-		if cfig['LDLIBRARY']==cfig['LIBRARY']:
-			sys.stdout.write("(static)")
+		python_lib='python%d.%d'
+
+	if not fprops_env.get('PYTHON_LIBPATH'):
+		cfig = distutils.sysconfig.get_config_vars()
+		python_libpath = []
+		python_linkflags = []
+		if platform.system()=="Windows":
+			python_libpath += [os.path.join(sys.prefix,"libs")]
+		elif platform.system()=="Darwin":
 			python_libpath += [cfig['LIBPL']]
 			python_linkflags += cfig['LIBS'].split(' ')
-	fprops_env['PYTHON_LIBPATH'] = python_libpath
+		else:
+			# checked on Linux and SunOS
+			if cfig['LDLIBRARY']==cfig['LIBRARY']:
+				sys.stdout.write("(static)")
+				python_libpath += [cfig['LIBPL']]
+				python_linkflags += cfig['LIBS'].split(' ')
+		fprops_env['PYTHON_LIBPATH'] = python_libpath
 
 lib = pyenv.SharedLibrary('fprops',['fprops.i'] + fprops_env['shobjs']
-	,LIBPATH=['..'] + fprops_env['PYTHON_LIBPATH']
-	,CPPPATH=['#',distutils.sysconfig.get_python_inc()]
-	,LIBS=["m",python_lib % (sys.version_info[0],sys.version_info[1])]
+#	,LIBPATH=['..']
+#	,CPPPATH=['#']
+#	,LIBS=["m"]
 	,SWIGFLAGS=['-python']
 )
 

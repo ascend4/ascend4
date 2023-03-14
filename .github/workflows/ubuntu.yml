@@ -1,0 +1,43 @@
+name: ASCEND4 ubuntu
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04]
+ 
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install automake autoconf libtool build-essential gfortran flex bison scons swig doxygen tcl8.6 tcl8.6-dev tk8.6 tk8.6-dev tk-table graphviz libgraphviz-dev python3-dev libgtk-3-dev python-gi python-numpy liblapack-dev libblas-dev libsundials-dev coinor-libipopt-dev  libmumps-seq-dev libpcre3-dev
+
+    - name: Build and install CUnit
+      run: |
+        svn co https://svn.code.sf.net/p/cunit/code/branches/mingw64 cunit
+        cd cunit
+        ./bootstrap
+        ./configure --prefix=$HOME/.local --enable-examples --enable-debug
+        make -j8
+        make install
+
+    - name: Build ASCEND
+      run: |
+        scons CUNIT_PREFIX=$HOME/.local MALLOC_DEBUG=1 ascend models solvers ascxx pygtk test
+
+    - name: Test ASCEND
+      run: |    
+        test/test_expectpass_mallocdebug
+
+# vim: ts=2:sw=2:et

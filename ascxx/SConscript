@@ -164,7 +164,7 @@ if envs.get('WITH_DMALLOC'):
 
 if envs.get('WITH_GRAPHVIZ'):
 	envs.Append(LIBS = env['GRAPHVIZ_LIBS'])
-	swig_env.AppendUnique(LIBPATH = [env.get('GRAPHVIZ_LIBPATH')])
+	envs.AppendUnique(LIBPATH = [env.get('GRAPHVIZ_LIBPATH')])
 
 swiglib = envs.SharedLibrary("ascpy",objs + swigobjs
 	, SHLIBPREFIX = '_'
