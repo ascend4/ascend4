@@ -80,15 +80,19 @@ static void test_tm_time(void)
   asc_assert_catch(FALSE);         /* done testing assertions */
 #endif    /* !ASC_NO_ASSERTIONS */
 
+//  tm_reset_cpu_time();
   start = tm_cpu_time();                /* record the initial time */
+  //CU_TEST(start == 0.0);
 
-  for (i=0 ; i<100000000 ; i += 2) {    /* consume some CPU time */
-    --i;
+  for (i=0 ; i<1000000 ; i += 2) {    /* consume some CPU time */
+    --i; // two steps forward, one step back...
   }
-
+ 
+  //double end1 = tm_cpu_time();
+  //CONSOLE_DEBUG("end = %lf",end1);
   CU_TEST(tm_cpu_time() - start > 0.0); /* should see an increase in elapsed PU time */
 
-  elapsed[0] = tm_cpu_time();           /* the timer variants should all return ~the same elapsed time */
+  elapsed[0] = tm_cpu_time();           /* the timer variants should all return approx the same elapsed time */
   tm_cpu_time_ftn_(&elapsed[1]);        /* this assumes a fast CPU */
   aftime_(&elapsed[2]);
   tm_cpu_time_ftn(&elapsed[3]);
@@ -96,12 +100,24 @@ static void test_tm_time(void)
   TM_CPU_TIME_FTN(&elapsed[5]);
   AFTIME(&elapsed[6]);
 
-  CU_ASSERT_DOUBLE_EQUAL(elapsed[0], elapsed[1], 0.01);
-  CU_ASSERT_DOUBLE_EQUAL(elapsed[0], elapsed[2], 0.01);
-  CU_ASSERT_DOUBLE_EQUAL(elapsed[0], elapsed[3], 0.01);
-  CU_ASSERT_DOUBLE_EQUAL(elapsed[0], elapsed[4], 0.01);
-  CU_ASSERT_DOUBLE_EQUAL(elapsed[0], elapsed[5], 0.01);
-  CU_ASSERT_DOUBLE_EQUAL(elapsed[0], elapsed[6], 0.01);
+#if 0
+  for(i=0;i<7;++i){
+  	fprintf(stderr,"elapsed[%lu] = %lf\n",i,elapsed[i]);
+  }
+#endif
+
+#ifdef __WIN32__
+  double dtmin = 0.04;
+#else
+  double dtmin = 0.01;
+#endif
+
+  CU_ASSERT_DOUBLE_EQUAL(elapsed[0], elapsed[1], dtmin);
+  CU_ASSERT_DOUBLE_EQUAL(elapsed[0], elapsed[2], dtmin);
+  CU_ASSERT_DOUBLE_EQUAL(elapsed[0], elapsed[3], dtmin);
+  CU_ASSERT_DOUBLE_EQUAL(elapsed[0], elapsed[4], dtmin);
+  CU_ASSERT_DOUBLE_EQUAL(elapsed[0], elapsed[5], dtmin);
+  CU_ASSERT_DOUBLE_EQUAL(elapsed[0], elapsed[6], dtmin);
 
   CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
 }

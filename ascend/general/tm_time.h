@@ -73,7 +73,7 @@ ASC_DLLSPEC double tm_cpu_time(void);
  *  @return The elapsed CPU time since the 1st call to a timing function.
  */
 
-extern double tm_reset_cpu_time(void);
+ASC_DLLSPEC double tm_reset_cpu_time(void);
 /**<
  *  Resets the start time.  Use with caution if there are
  *  multiple callers depending on a constant start time stamp.

@@ -28,6 +28,8 @@
 # include "Windows.h"
 #endif
 
+#include <stdio.h>
+
 static boolean f_first = TRUE;
 
 double tm_cpu_time(void){
@@ -42,20 +44,26 @@ double tm_cpu_time(void){
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
 	return (now.tv_sec - ref.tv_sec) + 1e-9*(now.tv_nsec - ref.tv_nsec);
 #else /* WIN32 */
-	LARGE_INTEGER n1, f;
-	LARGE_INTEGER n2;
+	static LARGE_INTEGER ref, f;
+	LARGE_INTEGER now;
 	if(f_first){
 		QueryPerformanceFrequency(&f);
-		QueryPerformanceCounter(&n1);
+		//fprintf(stderr,"\nQueryPerformanceFrequency returns: %lld clocks/s\n",f.QuadPart);
+		QueryPerformanceCounter(&ref);
+		//fprintf(stderr,"ref = %lld, f = %lld\n",ref.QuadPart,f.QuadPart);
+		f_first = FALSE;
 		return 0;
 	}
-	QueryPerformanceCounter(&n2);
-	return((n2.QuadPart - n1.QuadPart)/f.QuadPart);
+	QueryPerformanceCounter(&now);
+	//fprintf(stderr,"we got now=%lld, ref=%lld, f = %lld\n",now.QuadPart,ref.QuadPart,f.QuadPart);
+	double dt = ((double)(now.QuadPart - ref.QuadPart)/f.QuadPart);
+	//fprintf(stderr,"dt = %lf\n",dt);
+	return dt;
 #endif
 }
 
-double tm_reset_cpu_time(void)
-{
+double tm_reset_cpu_time(void){
+  //fprintf(stderr,"RESET CLOCK\n");
   f_first = TRUE;
   return tm_cpu_time();
 }
