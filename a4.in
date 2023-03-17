@@ -162,4 +162,4 @@ if __name__ == "__main__":
 	MSG("CMD =",cmd)
 	proc = subprocess.run(cmd)
 
-# vim: et=4:sw=4:noet:syntax=python
+# vim:syntax=python:ts=4:sw=4:noet
