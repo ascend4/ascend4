@@ -37,8 +37,6 @@
 #include "ascMalloc.h"
 #include "color.h"
 
-//#define FPPTR "%9p"
-
 # define MSG(...) color_on(stderr,ASC_FG_CYAN);fprintf(stderr,__VA_ARGS__);color_off(stderr);
 #ifdef MALLOC_DEBUG
 # define MSG1(FP,...) if((FP)==stderr){MSG(__VA_ARGS__);}else{FPRINTF(FP,__VA_ARGS__);}
@@ -403,7 +401,7 @@ static void WriteAllocation(CONST VOIDPTR adr, size_t size,
                             CONST char *file, int line)
 {
   if (NULL != f_memory_log_file) {
-    MSG1(f_memory_log_file,FPPTR "->%9p %9zu %31s%6d %s\n",
+    MSG1(f_memory_log_file,"%9p->%9p %9zu %31s%6d %s\n",
                               (void *)adr,
                               (void *)adr + size - 1,
                               size,
@@ -414,7 +412,7 @@ static void WriteAllocation(CONST VOIDPTR adr, size_t size,
   }
   else{
     MSG1(ASCERR,"Unable to append to memory log file.\n");
-    MSG1(ASCERR,FPPTR "->%9p %9zu %31s%6d %s\n",
+    MSG1(ASCERR,"%9p->%9p %9zu %31s%6d %s\n",
                    (void *)adr,
                    (void *)adr + size - 1,
                    size,
@@ -429,7 +427,7 @@ static void WriteReAllocation(CONST VOIDPTR adr1, size_t size1,
                               CONST char *file, int line)
 {
   if (NULL != f_memory_log_file) {
-    MSG1(f_memory_log_file,FPPTR "->%9p %9zu %9p->%9p %9zu %6d %s\n",
+    MSG1(f_memory_log_file,"%9p->%9p %9zu %9p->%9p %9zu %6d %s\n",
                               (void *)adr2,
                               (void *)adr2 + size2 - 1,
                               size2,
@@ -440,7 +438,7 @@ static void WriteReAllocation(CONST VOIDPTR adr1, size_t size1,
   }
   else{
     MSG1(ASCERR,"Unable to append to memory log file.\n");
-    MSG1(ASCERR, FPPTR "->%9p %9zu %9p->%9p %9zu %6d %s\n",
+    MSG1(ASCERR, "%9p->%9p %9zu %9p->%9p %9zu %6d %s\n",
                    adr2,
                    adr2 + size2 - 1,
                    size2,
