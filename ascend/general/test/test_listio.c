@@ -214,6 +214,27 @@ static void test_str(void){
 
   gl_destroy(list1);
   
+  // TEST WITH NULLS
+  
+  list1 = gl_create(0);
+  gl_append_ptr(list1, "one");
+  gl_append_ptr(list1, "two");
+  gl_append_ptr(list1, NULL);
+  gl_append_ptr(list1, "three");
+  gl_append_ptr(list1, NULL);
+
+  fprintf(stderr,"list =");
+  gl_write_list_str(stderr, list1, &gl_write_list_item_str);
+  fprintf(stderr,"\n");
+
+  rewind(tmp);
+  gl_write_list_str(tmp, list1, &gl_write_list_item_str);
+  rewind(tmp);
+  fgets(buffer,4096,tmp);
+  CU_ASSERT(0==strcmp(buffer,"(one,two,(NULL),three,(NULL))"));
+
+  gl_destroy(list1);
+    
   // CLEAN UP
 
   if(tmp)fclose(tmp);
