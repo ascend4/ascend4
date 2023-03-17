@@ -35,14 +35,20 @@
 static
 int compare_addresses(CONST VOIDPTR p1, CONST VOIDPTR p2)
 {
-  return (int)((int*)p1 - (int*)p2);
+  long long int val = ((long long int)p1 - (long long int)p2);
+  if(val > 0)return 1;
+  if(val < 0)return -1;
+  return 0;
 }
 
 /* comparison function used in test_list(). */
 static
 int compare_addresses_reverse(CONST VOIDPTR p1, CONST VOIDPTR p2)
 {
-  return (int)((int*)p2 - (int*)p1);
+  long long int val = ((long long int)p2 - (long long int)p1);
+  if(val > 0)return 1;
+  if(val < 0)return -1;
+  return 0;
 }
 
 /* comparison function used in test_list(). */
