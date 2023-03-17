@@ -53,3 +53,27 @@ void gl_write_list(FILE *fp, struct gl_list_t *l)
   }
 }
 
+
+int gl_write_list_item_str(FILE *fp, void *item){
+	if(item == NULL){
+		fprintf(fp,"(NULL)");
+		return -1;
+	}
+	return fprintf(fp,"%s",(const char *)item);
+}
+
+
+ASC_DLLSPEC void gl_write_list_str(FILE *fp, struct gl_list_t *l, WriteItemFn *write_item){
+	unsigned long c, len;
+	len = gl_length(l);
+	fputs("(",fp);
+	for(c=1; c<= len; ++c){
+		if(c>1)fputs(",",fp);
+		(*write_item)(fp,gl_fetch(l,c));
+	}
+	fputs(")",fp);
+}
+/* @} */
+
+
+

@@ -52,6 +52,39 @@
  */
 ASC_DLLSPEC void gl_write_list(FILE *fp, struct gl_list_t *l);
 
+
+/**
+	Output a list item. Casts the item to the type required for the list
+	in question (it's the user's job to get that right). Then outputs the item.
+	@param fp File stream to output to.
+	@param item Pointer to the particular item.
+	@return As for fprintf: positive on success, equal to the number of chars 
+	output. Negative if an error occurred.
+*/
+typedef int WriteItemFn(FILE *fp, void *item);
+
+
+/**
+	Output an char* list-item. If the pointer is null, "(NULL)" is printed,
+	and an error code of -1 is returned. Otherwise the integer is printed.
+*/
+ASC_DLLSPEC int gl_write_list_item_str(FILE *fp, void *item);
+
+
+/**
+	Write a compact text representation of a list, eg as
+	
+	  (item1, item2, item3)
+	  
+	using a specified function to format each item.
+	
+	each item.
+	@param fp File stream for output
+	@param l The list to output (non-NULL)
+	@param write_item A function of type WriteItemFn that will convert each list item to a string and write it.
+*/
+ASC_DLLSPEC void gl_write_list_str(FILE *fp, struct gl_list_t *l, WriteItemFn *write_item);
+
 /* @} */
 
 #endif  /* __listio_h_seen__ */

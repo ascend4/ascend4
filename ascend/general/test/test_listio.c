@@ -40,8 +40,8 @@
  *  test routine does not do more than check boundary conditions
  *  and make sure something is written to a specified file stream.
  */
-static void test_listio(void)
-{
+static void test_listio(void){
+
   struct gl_list_t *p_list1;
   unsigned long *pint_array[20];
   unsigned long i;
@@ -144,12 +144,95 @@ static void test_listio(void)
   CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
 }
 
+/*
+  This test plays with gl_write_list_str:
+*/
+static void test_str(void){
+  struct gl_list_t *list1;
+
+  // PREPARE 
+  int i_initialized_lists = FALSE;
+  unsigned long prior_meminuse;
+  prior_meminuse = ascmeminuse();       /* save meminuse() at start of test function */
+
+  FILE *tmp = tmpfile();
+  if(tmp == NULL){
+    CU_FAIL("failed to open tmpfile");
+  }
+
+  /* set up pooling & recycling */
+  if (FALSE == gl_pool_initialized()) {
+    gl_init();
+    gl_init_pool();
+    i_initialized_lists = TRUE;
+  }
+
+  // TEST 1, 2, 3
+  
+  char buffer[4096];
+  
+  fputs("hello world",tmp);
+  rewind(tmp);
+  fgets(buffer,4096,tmp);
+  CU_ASSERT(0==strcmp(buffer,"hello world"));
+  rewind(tmp);
+  
+  list1 = gl_create(0);
+  gl_append_ptr(list1, "one");
+  gl_append_ptr(list1, "two");
+  gl_append_ptr(list1, "three");
+
+  //fprintf(stderr,"list =");
+  //gl_write_list_str(stderr, list1, &gl_write_list_item_str);
+  //fprintf(stderr,"\n");
+
+  gl_write_list_str(tmp, list1, &gl_write_list_item_str);
+  rewind(tmp);
+  fgets(buffer,4096,tmp);
+  CU_ASSERT(0==strcmp(buffer,"(one,two,three)"));
+
+  // TEST SORTED LIST
+  
+  gl_destroy(list1);
+  list1 = gl_create(0);
+  
+  gl_insert_sorted(list1,"person",(CmpFunc)strcmp);
+  gl_insert_sorted(list1,"woman",(CmpFunc)strcmp);
+  gl_insert_sorted(list1,"man",(CmpFunc)strcmp);
+  gl_insert_sorted(list1,"camera",(CmpFunc)strcmp);
+  gl_insert_sorted(list1,"TV",(CmpFunc)strcmp);
+
+  //fprintf(stderr,"list =");
+  //gl_write_list_str(stderr, list1, &gl_write_list_item_str);
+  //fprintf(stderr,"\n");
+  
+  rewind(tmp);
+  gl_write_list_str(tmp, list1, &gl_write_list_item_str);
+  rewind(tmp);
+  fgets(buffer,4096,tmp);
+  CU_ASSERT(0==strcmp(buffer,"(TV,camera,man,person,woman)"));
+
+  gl_destroy(list1);
+  
+  // CLEAN UP
+
+  if(tmp)fclose(tmp);
+
+  if (TRUE == i_initialized_lists) {
+    gl_destroy_pool();
+  }
+
+  CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
+}
+
+
 /*===========================================================================*/
 /* Registration information */
 
 #define TESTS(T) \
-	T(listio)
+  T(listio) \
+  T(str)
 
 REGISTER_TESTS_SIMPLE(general_listio, TESTS)
 
-
+// vim:syntax=python:ts=2:sw=2:et
