@@ -223,9 +223,9 @@ static void test_str(void){
   gl_append_ptr(list1, "three");
   gl_append_ptr(list1, NULL);
 
-  fprintf(stderr,"list =");
-  gl_write_list_str(stderr, list1, &gl_write_list_item_str);
-  fprintf(stderr,"\n");
+  //fprintf(stderr,"list =");
+  //gl_write_list_str(stderr, list1, &gl_write_list_item_str);
+  //fprintf(stderr,"\n");
 
   rewind(tmp);
   gl_write_list_str(tmp, list1, &gl_write_list_item_str);
