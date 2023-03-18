@@ -7,6 +7,7 @@ def MSG(*args):
 		print(*args)
 	else:
 		pass
+PYTHON=pathlib.Path(r'@PYTHON@')
 
 def add_at_start(envvar,pathcomponents):
 	"""
@@ -138,11 +139,11 @@ if __name__ == "__main__":
 	cmd = precmd
 	if not hasattr(args,'action') or args.action == 'gui':
 		MSG("launching GUI...")
-		cmd += ['@PYTHON@',sourceroot/'pygtk'/'ascdev']
+		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev']
 	elif args.action == 'open':
-		cmd += ['@PYTHON@',sourceroot/'pygtk'/'ascdev', args.file]
+		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev', args.file]
 	elif args.action == 'q':
-		cmd += ['@PYTHON@',sourceroot/'pygtk'/'ascdev', 'models/johnpye/testlog10.a4c']
+		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev', 'models/johnpye/testlog10.a4c']
 	elif args.action == 'script':
 		cmd += [args.file.resolve()]+args.rest
 	elif args.action == 'env' :
