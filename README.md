@@ -4,6 +4,6 @@
 
 ASCEND is a free open-source software program for solving small to very large mathematical models. ASCEND can solve systems of non-linear equations, linear and nonlinear optimisation problems, and dynamic systems expressed in the form of differential/algebraic equations.
 
-Please see website [ascend4.org](https://ascend4.org/Main_Page) for more information. There is an [ASCEND Overview](https://ascend4.org/ASCEND_overview) with more information about [ASCEND capabilities](https://ascend4.org/ASCEND_capabilities). Alternatively, you can look at some [screenshots](https://ascend4.org/PyGTK_Screenshots) or some [example problems](https://ascend4.org/Worked_examples) solved using ASCEND. 
+Please see website [ascend4.org](https://ascend4.org/Main_Page) for more information. There is an [ASCEND Overview](https://ascend4.org/ASCEND_overview) with more information about [ASCEND capabilities](https://ascend4.org/ASCEND_capabilities). Alternatively, you can look at some [screenshots](https://ascend4.org/PyGTK_Screenshots) or some [example problems](https://ascend4.org/Worked_examples) solved using ASCEND. Then look at the [User Documentation](https://ascend4.org/Category:Documentation) and [Developer's Manual](https://ascend4.org/Developer%27s_Manual).
 
 We are in the process of migrating our code to Github, and updating our [MediaWiki site](https://ascend4.org/Main_Page).
