@@ -3,7 +3,7 @@
 #
 # you could get fancy and produce a root locus using this technique...
 
-import ascpy
+import ascpy, sys
 
 L = ascpy.Library()
 L.load('steam/dsgsat3.a4c')

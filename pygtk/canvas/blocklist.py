@@ -42,7 +42,7 @@ class BlockIconView(gtk.IconView):
 		self.connect("item-activated", self.item_activated)
 		self.connect("selection-changed", self.selection_changed)
 
-	def refresh_view():
+	def refresh_view(self):
 		pass
 
 	def selection_changed(self,iconview):

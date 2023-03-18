@@ -27,7 +27,7 @@ class ElementNoPorts(Element):
 	min_height = solvable(strength=REQUIRED, varname='_min_height')
 
 	def __init__(self, width=10, height=10):
-		super(Element, self).__init__()
+		super(ElementNoPorts, self).__init__()
 		self._handles = [ h(strength=VERY_STRONG) for h in [Handle]*4 ]
 
 		handles = self._handles

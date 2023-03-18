@@ -316,7 +316,7 @@ int main(void){
 		,{1150,80.2145018812e-3}
 	};
 	const unsigned ntdk0 = sizeof(tdk0)/sizeof(TestThCond0Data);
-	fprintf(stderr,"%d points...\n",ntdk0);
+	fprintf(stderr,"%u points...\n",ntdk0);
 	for(i=0; i<ntdk0; ++i){
 		//fprintf(stderr,"i=%d: T = %f, k = %f\n", i, tdk0[i].T, tdk0[i].k);
 		S = fprops_set_Trho(tdk0[i].T, 1, d, &err);
