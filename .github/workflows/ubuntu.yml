@@ -44,6 +44,7 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         gcov: true
+        flags: ubuntu, cunit
 
 
 # vim: ts=2:sw=2:et
