@@ -61,11 +61,11 @@ jobs:
     - name: Build ASCEND
       run: |
         mkdir -p ~/.local
-        MSYSTEM= scons MALLOC_DEBUG=1 CUNIT_PREFIX=$HOME/.local ascend solvers models test
+        MSYSTEM= scons GCOV=1 MALLOC_DEBUG=1 CUNIT_PREFIX=$HOME/.local ascend solvers models test
 
     - name: Test ASCEND
       run: |
-        test/test_expectpass_mallocdebug
+        ./a4 script `which bash` test/test_expectpass_mallocdebug
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3

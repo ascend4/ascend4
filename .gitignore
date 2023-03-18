@@ -35,4 +35,8 @@ pygtk/ascend
 pygtk/config.py
 test/test
 test_readln.txt
+**/*.gcno
+**/*.gcda
+models/johnpye/fprops/mix
+models/johnpye/fprops/test_cubicroots
 
