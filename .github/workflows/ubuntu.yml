@@ -36,9 +36,14 @@ jobs:
       run: |
         scons GCOV=1 CUNIT_PREFIX=$HOME/.local MALLOC_DEBUG=1 ascend models solvers ascxx pygtk test a4
 
-    - name: Test ASCEND
-      run: |    
+    - name: ASCEND CUnit tests
+      run: |
         ./a4 script test/test_expectpass_mallocdebug
+
+    - name: ASCEND C++/Python wrapper tests
+      run: |    
+        ./a4 script ascxx/testslvreq
+        ./a4 script ascxx/testipopt
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3

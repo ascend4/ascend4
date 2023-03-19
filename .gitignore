@@ -39,4 +39,4 @@ test_readln.txt
 **/*.gcda
 models/johnpye/fprops/mix
 models/johnpye/fprops/test_cubicroots
-
+cscope.*

@@ -67,7 +67,7 @@ SolverHooks::setSolver(const char *solvername, Simulation *S){
 		Solver solver(solvername);
 		S->build();
 		S->setSolver(solver);
-	}catch(std::runtime_error *E){
+	}catch(std::runtime_error &E){
 		return SLVREQ_UNKNOWN_SOLVER;
 	}
 	CONSOLE_DEBUG("Solver set to '%s'",solvername);
@@ -84,10 +84,10 @@ SolverHooks::setOption(const char *optionname, Value val, Simulation *S){
 		SolverParameter p = pp.getParameter(optionname);
 		try{
 			p.setValueValue(val);
-		}catch(std::runtime_error E){
+		}catch(std::runtime_error &E){
 			return SLVREQ_WRONG_OPTION_VALUE_TYPE;
 		}
-	}catch(std::runtime_error E){
+	}catch(std::runtime_error &E){
 		return SLVREQ_INVALID_OPTION_NAME;
 	}
 	return 0;
@@ -107,7 +107,7 @@ SolverHooks::doSolve(Instance *i, Simulation *S){
 			CONSOLE_DEBUG("Using SolverReporter at %p",getSolverReporter());
 			S->solve(S->getSolver(), *getSolverReporter());
 		}
-	}catch(std::runtime_error E){
+	}catch(std::runtime_error &E){
 		return SLVREQ_SOLVE_FAIL;
 	}
 
