@@ -1,5 +1,5 @@
 Import('env')
-import platform
+import platform, subprocess,shutil, pathlib
 
 # build the ASCEND IPOPT solver. we will do any configuration testing here now,
 # also, only if the solver is requested.
@@ -22,26 +22,38 @@ int main(){
 
 def CheckIPOPT(context):
 	context.Message( 'Checking for IPOPT... ' )
-	#print("CPPPATH =",context.env['CPPPATH'])
-	#print("LIBS =",context.env['LIBS'])
-	#print("LIBPATH =",context.env['LIBPATH'])
+
+	# check that it exists according to pkgconfig
+	try:
+		cmd =[shutil.which("pkg-config"),"--exists","ipopt"]
+		subprocess.run(cmd,stdout=subprocess.PIPE,check=True)
+	except:
+		context.Result("no (pkg-config --exists)")
+		return False
+				
+	# get the settings from pkg-config
+	context.env.ParseConfig('pkg-config ipopt --cflags --libs')
+
+	# test that we can link against it
 	is_ok = context.TryLink(ipopt_test_text,".c")
 	context.env.Append(CPPDEFINES='ASC_WITH_IPOPT')
-	context.Result(is_ok)	
+	if is_ok:
+		context.Result(is_ok)
+	else:
+		context.Result("no (failed to link)")
 	return is_ok
 
 if env.get('WITH_IPOPT'):
 	solver_env = env.Clone()
-	if env.get('IPOPT_PREFIX'):
-		solver_env.AppendENVPath('PKG_CONFIG_PATH',"$IPOPT_PREFIX/lib/pkgconfig")
-	solver_env.ParseConfig('pkg-config ipopt --cflags --libs')
-
+	if env['IPOPT_PREFIX'] not in ['/usr']:
+		solver_env.AppendENVPath('PKG_CONFIG_PATH',env.subst("$IPOPT_PREFIX/lib/pkgconfig"))
+	
 	conf = solver_env.Configure(custom_tests={'CheckIPOPT':CheckIPOPT})
 	if not conf.CheckIPOPT():
-		env['WITH_IPOPT'] = False	
-	else:
-		solver_env = conf.Finish()
+		env['WITH_IPOPT'] = False
+	solver_env = conf.Finish()
 	
+	if env['WITH_IPOPT']:
 		if platform.system()=="Windows":
 			solver_env.Append(
 				CFLAGS=["-static"]
@@ -61,5 +73,7 @@ if env.get('WITH_IPOPT'):
 		if env.get('CAN_INSTALL'):
 			dir = Dir(env.subst("$INSTALL_ROOT$INSTALL_SOLVERS"))
 			env.InstallShared(dir,lib)
+	else:
+		print("Skipping... IPOPT solver won't be build, IPOPT not found.")
 
 # vim:syntax=python:sw=4:ts=4:noet

@@ -10,7 +10,7 @@ version = "0.9.10"
 soname_major_int = "1"
 soname_minor = ".0"
 
-import sys, os, subprocess, platform, distutils.sysconfig, os.path, re, types
+import sys, os, subprocess, platform, distutils.sysconfig, os.path, re, types, pathlib
 import subprocess
 
 # version number for python, useful on Windows
@@ -465,11 +465,11 @@ vars.Add('CONOPT_ENVVAR'
 
 #------- IPOPT -------
 
-if platform.system()=="Windows":
-	vars.Add(PackageVariable("IPOPT_PREFIX"
-		,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
-		,default_conopt_prefix
-	))
+vars.Add(PackageVariable("IPOPT_PREFIX"
+	,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
+	,pathlib.Path(os.environ['HOME'])/'.local'
+))
+
 #
 #	vars.Add("IPOPT_LIBS"
 #		,"Library linked to for IPOPT"
