@@ -1,6 +1,6 @@
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ascend4/ascend4/ubuntu.yml?label=Ubuntu%20build)
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ascend4/ascend4/msys2.yml?label=MSYS2%20build)
-![Codecov](https://img.shields.io/codecov/c/github/ascend4/ascend4?label=CUnit%20test%20coverage)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ascend4/ascend4/ubuntu.yml?label=Ubuntu%20build)](https://github.com/ascend4/ascend4/actions/workflows/msys2.yml)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ascend4/ascend4/msys2.yml?label=MSYS2%20build)](https://github.com/ascend4/ascend4/actions/workflows/msys2.yml)
+[![Codecov](https://img.shields.io/codecov/c/github/ascend4/ascend4?label=CUnit%20test%20coverage)](https://app.codecov.io/gh/ascend4/ascend4)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/4d3d0850360a4809abdaaabc0ea76ca2)](https://app.codacy.com/gh/ascend4/ascend4/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 ASCEND is a free open-source software program for solving small to very large mathematical models. ASCEND can solve systems of non-linear equations, linear and nonlinear optimisation problems, and dynamic systems expressed in the form of differential/algebraic equations.
