@@ -22,27 +22,24 @@ int main(){
 
 def CheckIPOPT(context):
 	context.Message( 'Checking for IPOPT... ' )
-	print("CPPPATH =",context.env['CPPPATH'])
-	print("LIBS =",context.env['LIBS'])
-	print("LIBPATH =",context.env['LIBPATH'])
+	#print("CPPPATH =",context.env['CPPPATH'])
+	#print("LIBS =",context.env['LIBS'])
+	#print("LIBPATH =",context.env['LIBPATH'])
 	is_ok = context.TryLink(ipopt_test_text,".c")
+	context.env.Append(CPPDEFINES='ASC_WITH_IPOPT')
 	context.Result(is_ok)	
 	return is_ok
 
 if env.get('WITH_IPOPT'):
 	solver_env = env.Clone()
-	solver_env.AppendENVPath('PKG_CONFIG_PATH',"$IPOPT_PREFIX/lib/pkgconfig")
-	solver_env.ParseConfig('pkg-config Ipopt --cflags --libs')
+	if env.get('IPOPT_PREFIX'):
+		solver_env.AppendENVPath('PKG_CONFIG_PATH',"$IPOPT_PREFIX/lib/pkgconfig")
+	solver_env.ParseConfig('pkg-config ipopt --cflags --libs')
 
 	conf = solver_env.Configure(custom_tests={'CheckIPOPT':CheckIPOPT})
 	if not conf.CheckIPOPT():
 		env['WITH_IPOPT'] = False	
 	else:
-		solver_env.Append(
-			CPPDEFINES=[
-				'ASC_WITH_IPOPT'
-			]
-		)
 		solver_env = conf.Finish()
 	
 		if platform.system()=="Windows":
