@@ -2214,24 +2214,27 @@ struct relation *CreateGlassBoxRelation(struct Instance *relinst,
    * in this relation instance. At the same time set up
    * the args list indexing.
    */
-  if (len) {
+  if(len){
     tmp = args = ASC_NEW_ARRAY_CLEAR(int,len+1);
     newlist = gl_create(len);
 
-    for (c=1;c<=len;c++) {
+    for(c=1;c<=len;c++){
       var = (struct Instance *)gl_fetch(varlist,c);
       pos = gl_search(newlist,var,(CmpFunc)CmpP);
-      if (pos) {
-	FPRINTF(ASCERR,"Incidence for external relation will be inaccurate\n");
-	*tmp++ = (int)pos;
-      }
-      else{
-	gl_append_ptr(newlist,(VOIDPTR)var);
-	*tmp++ = (int)gl_length(newlist);
-	AddRelation(var,relinst);
+      if(pos){
+        FPRINTF(ASCERR,"Incidence for external relation will be inaccurate\n");
+        *tmp++ = (int)pos;
+      }else{
+        gl_append_ptr(newlist,(VOIDPTR)var);
+        *tmp++ = (int)gl_length(newlist);
+        AddRelation(var,relinst);
       }
     }
+  }else{
+    FPRINTF(ASCERR,"Zero-length list in CreateGlassBoxRelation\n");
+    return NULL;
   }
+
   *tmp = 0;	/* terminate */
 
   /*
@@ -4673,3 +4676,5 @@ void RelationSetBinTokens(struct Instance *i,int btable, int bindex)
   RTOKEN(rel).btable = btable;
   RTOKEN(rel).bindex = bindex;
 }
+
+/* vim:ts=8:et:sw=2 */

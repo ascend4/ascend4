@@ -111,6 +111,7 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 	PureFluid *P = FPROPS_NEW(PureFluid);
 
 	if(E->type != FPROPS_HELMHOLTZ){
+		FPROPS_FREE(P);
 		ERRMSG("invalid EOS data, wrong type");
 		return NULL;
 	}

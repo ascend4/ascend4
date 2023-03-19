@@ -102,8 +102,8 @@ struct SatStateData_struct{
 	@return the numerical value of the derivative (∂z/∂x)y.
 */
 double fprops_deriv(FluidState state, char *vars, FpropsError *err){
-	SatStateData ssd;
-	ssd.state = state;
+	SatStateData ssd = {state,0,0,0,0};
+	//ssd.state = state;
 	int i, sat = 0;
 
 	if(!vars || strlen(vars)!=3){

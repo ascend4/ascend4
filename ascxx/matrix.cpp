@@ -32,14 +32,12 @@ Matrix::Matrix(mtx_matrix_t M) : M(M){
 */
 int
 Matrix::write(char *fname, const string &format) const{
-
 	CONSOLE_DEBUG("HERE IN MATRIX::WRITE");
-	
-	FILE *fp = fopen(fname,"w");
-
 	CONSOLE_DEBUG("Writing matrix in format '%s'",format.c_str());
 
 	if(M==NULL)throw runtime_error("Matrix is NULL");
+
+	FILE *fp = fopen(fname,"w");
 	if(fp==NULL)throw runtime_error("File is NULL");
 
 	if(format=="matlab"){
@@ -51,6 +49,7 @@ Matrix::write(char *fname, const string &format) const{
     }else if(format=="debug"){
 		mtx__debug_output(fp, M);
 	}else{
+		fclose(fp);
 		throw runtime_error("Unrecognised export format requested");
 	}
 	
