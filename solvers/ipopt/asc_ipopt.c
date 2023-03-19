@@ -51,7 +51,7 @@
 
 #include <ascend/general/ltmatrix.h>
 
-#include <coin/IpStdCInterface.h>
+#include <IpStdCInterface.h>
 
 ASC_DLLSPEC SolverRegisterFn ipopt_register;
 
@@ -1501,3 +1501,5 @@ static const SlvFunctionsT ipopt_internals = {
 int ipopt_register(void){
 	return solver_register(&ipopt_internals);
 }
+
+// vim:ts=4:sw=4:noet

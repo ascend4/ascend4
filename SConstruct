@@ -48,14 +48,14 @@ default_tcl = '/usr'
 default_tcl_libpath = "$TCL/lib"
 default_tcl_cpppath = "$TCL/include"
 default_conopt_envvar="CONOPT_PATH"
-default_with_graphviz = True
+default_with_graphviz = False
 default_tcl_lib = "tcl8.5"
 default_tk_lib = "tk8.5"
 default_tktable_lib = "Tktable2.9"
 default_ida_prefix="$DEFAULT_PREFIX"
-default_ipopt_libpath = "$IPOPT_PREFIX/lib"
-default_ipopt_dll = ["$DEFAULT_PREFIX/bin/%s.dll"%i for i in ["libgfortran$MINGW64SUFF-3", "libstdc++$MINGW64SUFF-6","libquadmath$MINGW64SUFF-0","libgcc_s$MINGW64EXCPT$MINGW64SUFF-1"]]+[None] # should be five here
-default_ipopt_libs = ["$F2C_LIB","blas","lapack","pthread","ipopt"]
+#default_ipopt_libpath = "$IPOPT_PREFIX/lib"
+#default_ipopt_dll = ["$DEFAULT_PREFIX/bin/%s.dll"%i for i in ["libgfortran$MINGW64SUFF-3", "libstdc++$MINGW64SUFF-6","libquadmath$MINGW64SUFF-0","libgcc_s$MINGW64EXCPT$MINGW64SUFF-1"]]+[None] # should be five here
+#default_ipopt_libs = ["$F2C_LIB","blas","lapack","pthread","ipopt"]
 default_conopt_prefix="$DEFAULT_PREFIX"
 default_conopt_libpath="$CONOPT_PREFIX"
 default_conopt_cpppath="$CONOPT_PREFIX"
@@ -104,7 +104,7 @@ if platform.system()=="Windows":
 	default_ida_prefix = "$DEFAULT_PREFIX"
 	
 	# IPOPT. we now prefer to build our own version.
-	default_ipopt_libs = ["ipopt",'stdc++','coinmumps','coinmetis','coinlapack','coinblas','gfortran','pthread']
+#	default_ipopt_libs = ["ipopt",'stdc++','coinmumps','coinmetis','coinlapack','coinblas','gfortran','pthread']
 
 	# where to look for CONOPT when compiling
 	default_conopt_prefix = "c:\\Program Files\\CONOPT"
@@ -470,37 +470,37 @@ if platform.system()=="Windows":
 		,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
 		,default_conopt_prefix
 	))
+#
+#	vars.Add("IPOPT_LIBS"
+#		,"Library linked to for IPOPT"
+#		,default_ipopt_libs
+#	)
+#
+#	vars.Add("IPOPT_LIBPATH"
+#		,"Where is your IPOPT library installed"
+#		,default_ipopt_libpath
+#	)
+#
+#	vars.Add('IPOPT_CPPPATH'
+#		,"Where is your IPOPT coin/IpStdCInterface.h (do not include the 'coin' in the path)"
+#		,"$IPOPT_PREFIX/include"
+#	)
 
-	vars.Add("IPOPT_LIBS"
-		,"Library linked to for IPOPT"
-		,default_ipopt_libs
-	)
+#	vars.Add('MINGW64SUFF'
+#		,"Suffix for 64-bit GCC-related DLLs for bundling with the installer"
+#		,mingw64suff
+#	)
 
-	vars.Add("IPOPT_LIBPATH"
-		,"Where is your IPOPT library installed"
-		,default_ipopt_libpath
-	)
+#	vars.Add('MINGW64EXCPT'
+#		,"Suffix to specify exception style for GCC-related DLLs to be bundled with the installer"
+#		,mingw64excpt
+#	)
 
-	vars.Add('IPOPT_CPPPATH'
-		,"Where is your IPOPT coin/IpStdCInterface.h (do not include the 'coin' in the path)"
-		,"$IPOPT_PREFIX/include"
-	)
-
-	vars.Add('MINGW64SUFF'
-		,"Suffix for 64-bit GCC-related DLLs for bundling with the installer"
-		,mingw64suff
-	)
-
-	vars.Add('MINGW64EXCPT'
-		,"Suffix to specify exception style for GCC-related DLLs to be bundled with the installer"
-		,mingw64excpt
-	)
-
-	for i in range(5):
-		vars.Add('IPOPT_DLL%d'%(i+1)
-			,"Exact path of IPOPT DLL (%d) to be included in the installer (Windows only)"%(i+1)
-			,default_ipopt_dll[i]
-		)
+#	for i in range(5):
+#		vars.Add('IPOPT_DLL%d'%(i+1)
+#			,"Exact path of IPOPT DLL (%d) to be included in the installer (Windows only)"%(i+1)
+#			,default_ipopt_dll[i]
+#		)
 
 #-------- f2c ------
 
@@ -813,7 +813,7 @@ envadditional={}
 
 tools = [
 	'lex', 'yacc', 'fortran', 'swig', 'textfile'#, 'substinfile'
-	,'disttar', 'tar', 'graphviz','sundials', 'dvi', 'pdflatex'
+	,'disttar', 'tar', 'sundials', 'dvi', 'pdflatex' #'graphviz',
 ]
 if platform.system()=="Windows":
 	tools += ['nsis']
@@ -890,8 +890,8 @@ without_scrollkeeper_reason = "disabled by options/config.py"
 with_dmalloc = env.get('WITH_DMALLOC')
 without_dmalloc_reason = "disabled by options/config.py"
 
-with_graphviz = env.get('WITH_GRAPHVIZ')
-without_graphiviz_reason = "disabled by options/config.py"
+#with_graphviz = env.get('WITH_GRAPHVIZ')
+#without_graphiviz_reason = "disabled by options/config.py"
 
 with_ufsparse = env.get('WITH_UFSPARSE')
 without_ufsparse_reason = "disabled by options/config.py"
@@ -935,8 +935,8 @@ without_radau5_reason = notselected
 with_conopt = 'CONOPT' in env['WITH_SOLVERS']
 without_conopt_reason = notselected
 
-with_ipopt = 'IPOPT' in env['WITH_SOLVERS']
-without_ipopt_reason = notselected
+#with_ipopt = 'IPOPT' in env['WITH_SOLVERS']
+#without_ipopt_reason = notselected
 
 with_makemps = 'MAKEMPS' in env['WITH_SOLVERS']
 without_makemps_reason = notselected
@@ -1656,31 +1656,7 @@ def CheckCONOPT(context):
 #----------------
 # IPOPT test
 
-ipopt_test_text = """
-#if !defined(_WIN32)
-# define FNAME_LCASE_DECOR
-#endif
 
-#include <coin/IpStdCInterface.h>
-int main(){
-	Number n;
-	IpoptProblem nlp = 0;
-	n = 1;
-	FreeIpoptProblem(nlp); // probably a crash if you run this
-	return 0;
-}
-"""
-
-def CheckIPOPT(context):
-	context.Message( 'Checking for IPOPT... ' )
-
-	keep = KeepContext(context,"IPOPT")
-	is_ok = context.TryLink(ipopt_test_text,".c")
-	context.Result(is_ok)
-
-	keep.restore(context)
-	
-	return is_ok
 
 #----------------
 # Tcl test
@@ -2008,7 +1984,7 @@ conf = Configure(env
 		, 'CheckIDA' : CheckIDA
 		, 'CheckSUNDIALS' : CheckSUNDIALS
 		, 'CheckCONOPT' : CheckCONOPT
-		, 'CheckIPOPT' : CheckIPOPT
+#		, 'CheckIPOPT' : CheckIPOPT
 		, 'CheckScrollkeeperConfig' : CheckScrollkeeperConfig
 		, 'CheckFPE' : CheckFPE
 		, 'CheckSIGINT' : CheckSIGINT
@@ -2245,13 +2221,13 @@ if with_dmalloc:
 
 # GRAPHVIZ
 
-if with_graphviz:
-	if not conf.CheckGraphVizCgraph():
-		if not conf.CheckGraphVizAgraph():
-			without_graphviz_reason = 'graphviz not found (cgraph nor agraph)'
-			with_graphviz = False
-			env['WITH_GRAPHVIZ'] = False
-	env['HAVE_GRAPHVIZ_BOOLEAN'] = conf.CheckGraphVizBoolean()		
+#if with_graphviz:
+#	if not conf.CheckGraphVizCgraph():
+#		if not conf.CheckGraphVizAgraph():
+#			without_graphviz_reason = 'graphviz not found (cgraph nor agraph)'
+#			with_graphviz = False
+#			env['WITH_GRAPHVIZ'] = False
+#	env['HAVE_GRAPHVIZ_BOOLEAN'] = conf.CheckGraphVizBoolean()		
 
 # UFSPARSE
 
@@ -2284,11 +2260,11 @@ elif conf.CheckCONOPT() is False:
 
 # IPOPT
 
-if not with_ipopt:
-	without_ipopt_reason = "Not selected (see config option WITH_SOLVERS)"
-elif not conf.CheckIPOPT():
-	with_ipopt = False
-	without_ipopt_reason = "IPOPT not found"
+#if not with_ipopt:
+#	without_ipopt_reason = "Not selected (see config option WITH_SOLVERS)"
+#elif not conf.CheckIPOPT():
+#	with_ipopt = False
+#	without_ipopt_reason = "IPOPT not found"
 
 # BLAS
 
@@ -2299,8 +2275,8 @@ if with_lsode:
 	need_fortran_reasons.append("LSODE")
 	need_blas=True
 
-if with_ipopt:
-	need_blas=True
+#if with_ipopt:
+#	need_blas=True
 
 if need_blas:
 	if conf.CheckLib('blas'):
@@ -2539,7 +2515,7 @@ if with_ida:
 if with_conopt:
 	env.Append(WITH_CONOPT=1)
 
-if with_ipopt:
+if 'IPOPT' in env['WITH_SOLVERS']:
 	env.Append(WITH_IPOPT=1)
 
 if with_dopri5:
@@ -2551,8 +2527,8 @@ if with_radau5:
 if with_makemps:
 	env.Append(WITH_MAKEMPS=1)
 
-if with_graphviz and env.get('GRAPHVIZ_RPATH'):
-	env.Append(RPATH=env['GRAPHVIZ_RPATH'])
+#if with_graphviz and env.get('GRAPHVIZ_RPATH'):
+#	env.Append(RPATH=env['GRAPHVIZ_RPATH'])
 
 #-------------
 # PYTHON INTERFACE
