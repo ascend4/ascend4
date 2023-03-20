@@ -48,7 +48,11 @@ static void test_boundaries(){
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models" OSPATH_DIV "solvers/lrslv");
-	CU_TEST_FATAL(0 == package_load("lrslv",NULL));
+	if(package_load("lrslv",NULL)){
+		Asc_CompilerDestroy();
+		CU_FAIL("Unable to load solver 'lrslv'");
+		return;
+	}
 
 	/* load the file */
 	char path[PATH_MAX] = "test/ida/boundaries.a4c";
