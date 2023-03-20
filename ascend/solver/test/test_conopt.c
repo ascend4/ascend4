@@ -82,7 +82,11 @@ static void test_conopt(const char *filenamestem){
 	/* assign solver */
 	const char *solvername = "CONOPT";
 	int index = slv_lookup_client(solvername);
-	CU_ASSERT_FATAL(index != -1);
+	if(-1 == index){
+		Asc_CompilerDestroy();
+		CU_FAIL("unable to look up solver 'CONOPT'");
+		return;
+	}
 
 	slv_system_t sys = system_build(GetSimulationRoot(siminst));
 	CU_ASSERT_FATAL(sys != NULL);
