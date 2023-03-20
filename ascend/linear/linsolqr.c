@@ -620,6 +620,16 @@ real64 linsolqr_smallest_pivot(linsolqr_system_t sys){
 	It is assumed that oldcap < newcap.  vec is destroyed or
 	returned as appropriate.
 	If !NDEBUG, the vector expanded is also set to 0.
+	
+	FIXME there were clear errors in this code suggesting that
+	it has not been used, at least with NDEBUG undefined.
+	For now, changing to zero the returned ('vec') in case that
+	newcap <  oldcap, to avoid null pointer dereference, and 
+	consistent with 'also set to 0' above.
+	
+	FIXME: note that the allocated size is not reduced in the 
+	case where newcap < oldcap. It just zeroes the (shorter part)
+	and returns it.
 */
 static real64 *raise_capacity(real64 *vec,
                                     int32 oldcap,
@@ -629,23 +639,22 @@ static real64 *raise_capacity(real64 *vec,
 #ifndef NDEBUG
   int i;
 #endif
-  if (newcap < oldcap) {
+  if(newcap < oldcap){
 #ifndef NDEBUG
-    for (i = 0; i < newcap; i++) {
-      newvec[i] = 0.0;
+    for (i = 0; i < newcap; i++){
+      vec[i] = 0.0;
     }
 #endif
     return vec;
   }
-  if (NOTNULL(vec)) {
+  if(NOTNULL(vec)){
     /* don't call realloc on null with newcap 0 or it frees */
     newvec=(real64 *)ascrealloc(vec,(newcap * sizeof(real64)));
-  } else {
-    newvec=(newcap > 0 ?
-      ASC_NEW_ARRAY(real64,newcap ) : NULL);
+  }else{
+    newvec=(newcap > 0 ? ASC_NEW_ARRAY(real64,newcap ) : NULL);
   }
 #ifndef NDEBUG
-  for (i = 0; i < newcap; i++) {
+  for(i = 0; i < newcap; i++){
     newvec[i] = 0.0;
   }
 #endif
