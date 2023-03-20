@@ -313,10 +313,14 @@ vars.Add(
 	,"python-%d.%d" % (sys.version_info[0],sys.version_info[1])
 )
 
+default_python_pkg_embed = "$PYTHON_PKG"
+if sys.version_info[0] == 3 and sys.version_info[1] >= 8:
+	default_python_pkg_embed = "${PYTHON_PKG}-embed"
+
 vars.Add(
 	'PYTHON_PKG_EMBED'
 	,"Python package name in pkg-config for embedded python"
-	,"${PYTHON_PKG}-embed"
+	,default_python_pkg_embed
 )
 
 # Which solvers will we allow?

@@ -44,8 +44,7 @@
 #include <test/common.h>
 
 static void test_boundaries(){
-
-	struct module_t *m;
+	//struct module_t *m;
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models" OSPATH_DIV "solvers/lrslv");
@@ -55,7 +54,7 @@ static void test_boundaries(){
 	char path[PATH_MAX] = "test/ida/boundaries.a4c";
 	{
 		int status;
-		m = Asc_OpenModule(path,&status);
+		/* (DISUSED) m = */(void)Asc_OpenModule(path,&status);
 		CU_ASSERT(status == 0);
 	}
 
@@ -120,13 +119,15 @@ static void test_boundaries(){
 	pe = Initialize(GetSimulationRoot(sim),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
 	CU_ASSERT(pe==Proc_all_ok);
 
+	/* all sorts of destruction */
 	CONSOLE_DEBUG("Destroying system...");
 	if(sys)system_destroy(sys);
 	system_free_reused_mem();
 	CU_ASSERT(sim != NULL);
-	solver_destroy_engines();
 	sim_destroy(sim);
+	solver_destroy_engines();
 	Asc_CompilerDestroy();
+	CONSOLE_DEBUG("all gone!");
 }
 
 /*===========================================================================*/
