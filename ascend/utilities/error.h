@@ -21,13 +21,13 @@
 	of errors with severity and source file name and line numbers.
 
 	Usage:
-		error_reporter_start(<error-severity>,<filepath>,<linenumber>);
+		error_reporter_start(<error-severity>,<filepath>,<linenum>,<func>);
 		FPRINTF(ASCERR,"half of ");
 		FPRINTF(ASCERR,"your message");
 		error_reporter_end_flush();
 
 	or:
-		error_reporter_start(<error-severity>,<filepath>,<linenumber>
+		error_reporter(<error-severity>,<filepath>,<linenumber>
 				,"format string %s %d etc",<printf-args>,...");
 
 	The first form allows you to use multiple FPRINTF statements to

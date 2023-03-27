@@ -21,6 +21,13 @@
 #include <test/common.h>
 #include "test/assertimpl.h"
 
+//#define TEST_ERROR_DEBUG
+#ifdef TEST_ERROR_DEBUG
+# define TEST_ERROR_FPRINTF fprintf
+#else
+# define TEST_ERROR_FPRINTF(...) 
+#endif
+
 FILE *my_error_fp = NULL;
 
 //static error_reporter_callback_t my_error_reporter;
@@ -78,17 +85,17 @@ static void test_error(void){
 #define CHECKIT(STR)\
 	rewind(tmp); \
 	fgets(output,4096,tmp); \
-	/*fprintf(stderr,"\nOUTPUT: %s",output);*/\
+	TEST_ERROR_FPRINTF(stderr,"\nOUTPUT: %s",output);\
 	sprintf(gold,STR,myfile,myline); \
-	/*fprintf(stderr,"GOLD  : %s",gold);*/\
+	TEST_ERROR_FPRINTF(stderr,"GOLD  : %s",gold);\
 	CU_ASSERT(0==strcmp(output,gold));\
 	rewind(tmp);
 #define CHECKIT1(STR)\
 	rewind(tmp); \
 	fgets(output,4096,tmp); \
-	/*fprintf(stderr,"\nOUTPUT: %s",output);*/\
+	TEST_ERROR_FPRINTF(stderr,"\nOUTPUT: %s",output);\
 	sprintf(gold,STR); \
-	/*fprintf(stderr,"GOLD  : %s",gold);*/\
+	TEST_ERROR_FPRINTF(stderr,"GOLD  : %s",gold);\
 	CU_ASSERT(0==strcmp(output,gold));\
 	rewind(tmp);
 	
@@ -134,10 +141,36 @@ static void test_error(void){
 	myline=0;ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"something else"); // no extra arg
 	CHECKIT1("(ERRO)()(){something else}\n");
 	
-	// TODO: test multi-line errors (error_reporter_start, etc)
-	
-	// TODO: test error reporter 'tree'
-	
+	// test multi-line errors (error_reporter_start, etc)
+	myfile="somefile.txt";myline=4;
+	error_reporter_start(ASC_USER_WARNING,myfile,myline,"func1");
+	FPRINTF(ASCERR,"half of ");
+	FPRINTF(ASCERR,"my warning");
+	error_reporter_end_flush();
+	CHECKIT1("(WARN)(somefile.txt:4)(func1){half of my warning}\n");
+
+#if 0	
+	// test error reporter 'tree'
+	error_reporter_tree_start();
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter(ASC_PROG_ERROR,"here.txt",456,"nofunc","message2");
+	CU_ASSERT(1 == error_reporter_tree_has_error());
+	error_reporter_tree_clear();
+	error_reporter_tree_end();
+	ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"failed");
+	CHECKIT1("(ERRO)()(){failed}\n");	
+
+	//error_reporter(ASC_USER_ERROR,"here.txt",234,"nofunc","message1");
+	//CU_ASSERT(0 == error_reporter_tree_has_error());
+	//error_reporter(ASC_PROG_ERROR,"here.txt",456,"nofunc","message2");
+	//CU_ASSERT(1 == error_reporter_tree_has_error());
+	///error_reporter(ASC_USER_ERROR,"here.txt",123,"nofunc","message3");
+	//CU_ASSERT(1 == error_reporter_tree_has_error());
+	//error_reporter_tree_end();
+	//ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"failed");
+	//CHECKIT1("(ERRO)()(){failled}\n");	
+#endif
+
 	CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
 }
 
