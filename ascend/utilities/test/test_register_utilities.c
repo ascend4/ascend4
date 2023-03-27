@@ -30,6 +30,7 @@
 	T(ascDynaLoad) \
 	T(ascEnvVar) \
 	/*T(ascPanic)*/ \
+	T(error) \
 	T(ascPrint) \
 	T(ascSignal) \
 	T(readln) \

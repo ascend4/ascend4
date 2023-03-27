@@ -34,11 +34,19 @@ extern "C"{
 #include <ascend/utilities/error.h>
 #include <ascend/general/env.h>
 #include <ascend/compiler/importhandler.h>
+#include <ascend/general/color.h>
 }
 
 #include "library.h"
 #include "simulation.h"
 #include "solver.h"
+
+//#define ASCXX_LIBRARY_DEBUG
+#ifdef ASCXX_LIBRARY_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...)
+#endif
 
 Library::Library(const char *defaultpath){
 	static int have_init;
@@ -72,7 +80,7 @@ Library::Library(const char *defaultpath){
 		//cerr << "Registering solvers..." << endl;
 		registerStandardSolvers();
 	}/*else{
-		CONSOLE_DEBUG("Reusing LIBRARY");
+		MSG("Reusing LIBRARY");
 	}*/
 	have_init=1;
 }
@@ -114,7 +122,7 @@ Library::load(const char *filename){
 		std::cerr << "Note: Module " << Asc_ModuleName(m) << ": " << msg1 << std::endl;
 	}
 
-	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
+	MSG("Beginning parse of %s",Asc_ModuleName(m));
 	error_reporter_tree_start();
 	status = zz_parse();
 	switch(status){
@@ -126,9 +134,9 @@ Library::load(const char *filename){
 	status = error_reporter_tree_has_error();
 	error_reporter_tree_end();
 	if(!status){
-		//CONSOLE_DEBUG("CLEARING TREE...");
+		//MSG("CLEARING TREE...");
 		error_reporter_tree_clear();
-		//CONSOLE_DEBUG("DONE CLEARING TREE...");
+		//MSG("DONE CLEARING TREE...");
 	}else{
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Error(s) when loading '%s'",filename);
 		stringstream ss;
@@ -138,7 +146,7 @@ Library::load(const char *filename){
 
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
-	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l), filename);
+	MSG("%lu library entries loaded from %s",gl_length(l), filename);
 }
 
 /**
@@ -165,7 +173,7 @@ Library::loadString(const char *str, const char *nameprefix){
 		std::cerr << "Note: Module " << Asc_ModuleName(m) << ": " << msg1 << std::endl;
 	}
 
-	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
+	MSG("Beginning parse of %s",Asc_ModuleName(m));
 #ifdef LOADSTRING_ERROR_TREE
 	error_reporter_tree_start();
 #endif
@@ -180,9 +188,9 @@ Library::loadString(const char *str, const char *nameprefix){
 	status = error_reporter_tree_has_error();
 	error_reporter_tree_end();
 	if(!status){
-		CONSOLE_DEBUG("CLEARING TREE...");
+		MSG("CLEARING TREE...");
 		error_reporter_tree_clear();
-		CONSOLE_DEBUG("DONE CLEARING TREE...");
+		MSG("DONE CLEARING TREE...");
 	}else{
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Error(s) when loading '%s'",nameprefix);
 		stringstream ss;
@@ -192,7 +200,7 @@ Library::loadString(const char *str, const char *nameprefix){
 #endif
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
-	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l), nameprefix);
+	MSG("%lu library entries loaded from %s",gl_length(l), nameprefix);
 }
 
 const char *
@@ -242,7 +250,7 @@ Library::getModules(const int module_type){
 	vector<Module> v;
 	struct gl_list_t *l = Asc_ModuleList(module_type);
 	if(l==NULL){
-		CONSOLE_DEBUG("list is empty");
+		MSG("list is empty");
 		return v;
 	}
 	for(int i=0, end=gl_length(l); i<end; ++i){
@@ -323,7 +331,7 @@ Library::getModuleTypes(const Module &m){
 
 	for(int i=0,end=gl_length(l); i<end; ++i){
 		char *name = (char *)gl_fetch(l,i+1);
-		//CONSOLE_DEBUG("Found type %s",name);
+		//MSG("Found type %s",name);
 		TypeDescription *t = FindType((const symchar *)name);
 		v.push_back(Type(t));
 	}
@@ -381,13 +389,13 @@ Library::clear(){
 	\*SetUniversalProcedureList(NULL);
 */
 
-	//CONSOLE_DEBUG("Displaying library modules and types...");
+	//MSG("Displaying library modules and types...");
 	//listModules();
 
-	CONSOLE_DEBUG("Destroying simulations...");
+	MSG("Destroying simulations...");
 	Asc_DestroySimulations();
 
-	CONSOLE_DEBUG("Clearing library...");
+	MSG("Clearing library...");
 	DestroyNotesDatabase(LibraryNote());
 	SetUniversalProcedureList(NULL);
 	DestroyLibrary();
@@ -400,6 +408,7 @@ Library::clear(){
 	DefineFundamentalTypes();
 	InitNotesDatabase(LibraryNote());
 	ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"LIBRARY CLEARED!");
+	//MSG("LIBRARY CLEARED!");
 }
 
 AnnotationDatabase

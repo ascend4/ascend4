@@ -21,6 +21,7 @@
 
 import unittest
 import os, sys
+from pathlib import Path
 import math
 import atexit
 
@@ -179,6 +180,7 @@ class TestSystem(AscendSelfTester):
 		M.run(self.L.findType('testlog10').getMethod('on_load'))
 		if platform.system!="Windows":
 			M.write('temp.png',"dot")
+			assert Path('temp.png').exists()
 		else:
 			self.fail("not implemented on windows")
 

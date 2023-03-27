@@ -3453,7 +3453,7 @@ enum typelinterr VerifyArithmeticNames(symchar *name,
     rtype = FindRHSType(n,lclgl,&rval,&subsopen,&origin);
     if (rtype==NULL) {
       iostring = ASC_NEW_ARRAY(char,200);
-      sprintf(iostring,"In model '%s', undefined variable named ",SCP(name));
+      sprintf(iostring,"In model '%s', undefined variable: ",SCP(name));
       /* TypeLintErrorAuxillary(ASCERR,iostring,DEF_MISC_WARNING,TRUE); */
       TLNM(ASCERR,n,iostring,2);
       ascfree(iostring);

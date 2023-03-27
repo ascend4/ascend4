@@ -331,7 +331,7 @@ int vfprintf_error_reporter(FILE *file, const char *fmt, va_list args){
 			len = strlen(msg);
 			res = vsnprintf(msg+len,ERROR_REPORTER_MAX_MSG-len,fmt,args);
 			if(len+res+1>=ERROR_REPORTER_MAX_MSG){
-				SNPRINTF(msg+ERROR_REPORTER_MAX_MSG-16,15,"... (truncated)");
+				SNPRINTF(msg+ERROR_REPORTER_MAX_MSG-16+1,16,"... (truncated)");
 				ASC_FPRINTF(stderr,"TRUNCATED MESSAGE, FULL MESSAGE FOLLOWS:\n----------START----------\n");
 				ASC_VFPRINTF(stderr,fmt,args);
 				ASC_FPRINTF(stderr,"\n-----------END----------\n");

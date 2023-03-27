@@ -58,8 +58,10 @@ void Asc_DestroySimulations(void){
     gl_destroy(g_simulation_list);      /* sim_destroy takes care of the
                                          * memory -- see SimsProc.c */
     g_simulation_list = NULL;
+#ifdef SIMLIST_DEBUG
   }else{
   	CONSOLE_DEBUG("g_simulation_list is null");
+#endif
   }
 }
 

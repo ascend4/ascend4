@@ -1,13 +1,14 @@
 #!@PYTHON@
 # to debug this program using 'gdb', invoke 'ASC_GDB=1 ascdev'.
 
-import os.path, sys, platform, subprocess
+import os, sys, platform, subprocess
+from pathlib import Path
 		
 if __name__=='__main__':
 	print("PYTHON = @PYTHON@")
 	
-	sourceroot="@SOURCE_ROOT@"
-	script=os.path.join(sys.argv[0])
+	sourceroot=Path("@SOURCE_ROOT@")
+	script=Path(sys.argv[0])
 	
 	SEP = os.pathsep
 	if platform.system()=="Windows":
@@ -28,7 +29,7 @@ if __name__=='__main__':
 	
 	import ascpy
 	from gtkbrowser import *
-	assetspath = os.path.join(os.path.join(sourceroot,"pygtk"),"glade")
+	assetspath = sourceroot/"pygtk"/"glade"
 	#print("ASSETS PATH = %s" % assetspath)
 	B = Browser(assetspath=assetspath)
 	B.run()	

@@ -275,6 +275,8 @@ ASC_DLLSPEC int error_reporter_end_flush();
 	error reporting functions. The final argument is a va_list.
 	You should use 'vsnprintf' of 'vfprintf' to output your
 	message to the desired file or string, see <stdio.h> for these.
+	
+	Function returns the number of characters written as error messages.
 */
 typedef int (*error_reporter_callback_t)(
 	ERROR_REPORTER_CALLBACK_ARGS
