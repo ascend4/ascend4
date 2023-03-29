@@ -43,6 +43,7 @@ if 'HAVE_YACC' in scanparse_env:
 		libascend_env.Command('ascParse_no_yacc.c',parsersource[0],Copy('$TARGET','$SOURCE'))
 		libascend_env.Command('ascParse_no_yacc.h',parsersource[1],Copy('$TARGET', '$SOURCE'))
 else:
+	print("Note: using cached copy of ascParse.c, since yacc/bison not found.")
 	parserheader = libascend_env.Command('ascParse.h', 'ascParse_no_yacc.h',Copy('$TARGET', '$SOURCE'))
 	parsercode = libascend_env.Command('ascParse.c','ascParse_no_yacc.c',Copy('$TARGET','$SOURCE'))
 	parsersource = [parsercode,parserheader]
@@ -54,7 +55,9 @@ if 'HAVE_LEX' in scanparse_env:
 	if libascend_env.get('UPDATE_NO_YACC_LEX'):
 		libascend_env.Command('scanner_no_lex.c',scannersource,Copy('$TARGET','$SOURCE'))
 else:
+	print("Note: using cached copy of scanner.c, since lex/flex not found.")
 	scannersource = libascend_env.Command('scanner.c','scanner_no_lex.c',Copy('$TARGET', '$SOURCE'))
+	libascend_env.Depends(scannersource,parsersource)
 
 packages_env = libascend_env.Clone()
 packages = packages_env.SharedObject('packages.c')
@@ -86,5 +89,5 @@ if libascend_env.get('CAN_INSTALL'):
 
 Return('objs')
 
-# vim: set syntax=python:
+# vim: noet:ts=4:sw=4:syntax=python
 

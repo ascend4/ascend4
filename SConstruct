@@ -2275,6 +2275,7 @@ elif conf.CheckCONOPT() is False:
 need_blas=False
 
 if with_lsode:
+	print("WITH LSODE")
 	need_fortran = True
 	need_fortran_reasons.append("LSODE")
 	need_blas=True
@@ -2298,7 +2299,7 @@ else:
 
 # we'll assume now (2012) that we always have gfortran available on our system.
 
-if need_fortran and conf.CheckFortran() is False:
+if need_fortran and not conf.CheckFortran():
 	print("Failed to build simple test file with your Fortran compiler.")
 	print("Check your compiler is installed and running correctly.")
 	print("You can set your Fortran compiler using the FORTRAN scons option.")

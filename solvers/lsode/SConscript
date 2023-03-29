@@ -26,6 +26,7 @@ if 'LSODE' in env.get('WITH_SOLVERS'):
 		LIBS=['ascend']
 		,LIBPATH=['#']
 		,SHLINKFLAGS=['-fPIC']
+		,LINKFLAGS=['-fPIC']
 	)
 
 	fflags = env['SHFORTRANFLAGS']
