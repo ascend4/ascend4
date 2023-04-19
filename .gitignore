@@ -40,3 +40,6 @@ test_readln.txt
 models/johnpye/fprops/mix
 models/johnpye/fprops/test_cubicroots
 cscope.*
+tcltk/interface/ascend4
+tcltk/interface/typelex.c
+tcltk/asc4dev
