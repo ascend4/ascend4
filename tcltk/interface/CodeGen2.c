@@ -729,7 +729,7 @@ void CodeGen_WriteGamsFile(slv_system_t sys,
   FILE *fp2;
   char *filename2 = NULL;
 
-  filename2 = (char *)ascmalloc((strlen(file_prefix)+6)*sizeof(char));
+  filename2 = ASC_NEW_ARRAY(char, strlen(file_prefix)+6);
   sprintf(filename2,"%s.names",file_prefix);
   fp2 = fopen(filename2,"w");
 
@@ -930,22 +930,24 @@ static FILE *SetUpMainFilePtr(char *filename,
                               struct CGFormat *format)
 {
   FILE *fp;
+  char *filename1 = ASC_NEW_ARRAY(char,strlen(filename)+20);
   switch(format->main_format) {
   case CG_gams:
-    sprintf(filename,"%s.gms",filename);
+    sprintf(filename1,"%s.gms",filename);
     break;
   case CG_ascend:
-    sprintf(filename,"%s.patch",filename);
+    sprintf(filename1,"%s.patch",filename);
     break;
   case CG_math:
-    sprintf(filename,"%s.m",filename);
+    sprintf(filename1,"%s.m",filename);
     break;
   case CG_linear:
-    sprintf(filename,"%s.xsys",filename);
+    sprintf(filename1,"%s.xsys",filename);
     break;
   }
 
-  fp = fopen(filename,"w");
+  fp = fopen(filename1,"w");
+  ASC_FREE(filename1);
   return fp;
 }
 /* The following code provides another entry point
@@ -967,7 +969,7 @@ int Asc_CodeGenGamsCmd(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-  filename = (char *)ascmalloc((strlen(argv[1])+8)*sizeof(char));
+  filename = ASC_NEW_ARRAY(char,strlen(argv[1])+8);
   strcpy(filename,argv[1]);
   result = CodeGen_CheckSystem(interp,sys);
   if (result) {
@@ -1032,7 +1034,7 @@ int Asc_CodeGenGeneralCmd(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-  filename = (char *)ascmalloc((strlen(argv[1])+16)*sizeof(char));
+  filename = ASC_NEW_ARRAY(char,strlen(argv[1])+16);
   strcpy(filename,argv[1]);
   result = CodeGen_CheckSystem(interp,sys);
   if (result) {
@@ -1172,7 +1174,7 @@ struct Table *MakeTypeTable(struct Instance *inst,
     if (tdata) {
       continue;
     } else {
-      tdata = (struct TypeData *)ascmalloc(sizeof(struct TypeData));
+      tdata = ASC_NEW(struct TypeData);
       tdata->written = 0;
       tdata->type = typename;
       AddTableData(table,(void *)tdata,typename);
@@ -1213,7 +1215,7 @@ int Asc_CodeGenTypesCmd(ClientData cdata, Tcl_Interp *interp,
   }
 
   format = ASCEND_Format;
-  filename = (char *)ascmalloc((strlen(argv[1])+8)*sizeof(char));
+  filename = ASC_NEW_ARRAY(char,strlen(argv[1])+8)*sizeof(char));
   filename = strcpy(filename,argv[1]);
   fp = SetUpMainFilePtr(filename,&format);
 
@@ -1387,7 +1389,7 @@ int Asc_CodeGenWriteCmd(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-  filename = (char *)ascmalloc((strlen(argv[1])+8)*sizeof(char));
+  filename = ASC_NEW_ARRAY(char,strlen(argv[1])+8);
   strcpy(filename,argv[1]);
   result = CodeGen_CheckSystem(interp,sys);
   if (result) {
@@ -1455,7 +1457,7 @@ int Asc_CodeGenReadCmd(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-  filename = (char *)ascmalloc((strlen(argv[1])+8)*sizeof(char));
+  filename = ASC_NEW_ARRAY(char,strlen(argv[1])+8);
   strcpy(filename,argv[1]);
   result = CodeGen_CheckSystem(interp,sys);
   if (result) {
@@ -1507,4 +1509,4 @@ int Asc_CodeGenReadCmd(ClientData cdata, Tcl_Interp *interp,
   }
   return ((result!=0) ? TCL_ERROR : TCL_OK);
 }
-
+/* vim:sw=4:tw=8:et */

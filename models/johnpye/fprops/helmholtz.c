@@ -175,6 +175,7 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 		ERRMSG("Failed to calculate critical pressure.");
 		FPROPS_FREE(P->data);
 		FPROPS_FREE(P->data->corr.helm);
+		FPROPS_FREE(P);
 		return NULL;
 	}
 	if(P->data->p_c <= 0){
