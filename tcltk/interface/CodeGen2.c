@@ -34,6 +34,7 @@
  *                         Copyright (C) 1995 Kirk Andre Abbott, CMU.
  */
 #include <math.h>
+#include <string.h>
 #include <tcl.h>
 #include <tk.h>
 #include "config.h"
@@ -729,7 +730,7 @@ void CodeGen_WriteGamsFile(slv_system_t sys,
   FILE *fp2;
   char *filename2 = NULL;
 
-  filename2 = ASC_NEW_ARRAY(char, strlen(file_prefix)+6);
+  filename2 = ASC_NEW_ARRAY(char, strlen_s(file_prefix,1024)+6);
   sprintf(filename2,"%s.names",file_prefix);
   fp2 = fopen(filename2,"w");
 
@@ -930,7 +931,7 @@ static FILE *SetUpMainFilePtr(char *filename,
                               struct CGFormat *format)
 {
   FILE *fp;
-  char *filename1 = ASC_NEW_ARRAY(char,strlen(filename)+20);
+  char *filename1 = ASC_NEW_ARRAY(char,strlen_s(filename,1024)+20);
   switch(format->main_format) {
   case CG_gams:
     sprintf(filename1,"%s.gms",filename);
@@ -969,7 +970,7 @@ int Asc_CodeGenGamsCmd(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-  filename = ASC_NEW_ARRAY(char,strlen(argv[1])+8);
+  filename = ASC_NEW_ARRAY(char,strlen_s(argv[1],1024)+8);
   strcpy(filename,argv[1]);
   result = CodeGen_CheckSystem(interp,sys);
   if (result) {
@@ -1034,7 +1035,7 @@ int Asc_CodeGenGeneralCmd(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-  filename = ASC_NEW_ARRAY(char,strlen(argv[1])+16);
+  filename = ASC_NEW_ARRAY(char,strlen_s(argv[1],1024)+16);
   strcpy(filename,argv[1]);
   result = CodeGen_CheckSystem(interp,sys);
   if (result) {
@@ -1215,7 +1216,7 @@ int Asc_CodeGenTypesCmd(ClientData cdata, Tcl_Interp *interp,
   }
 
   format = ASCEND_Format;
-  filename = ASC_NEW_ARRAY(char,strlen(argv[1])+8)*sizeof(char));
+  filename = ASC_NEW_ARRAY(char,strlen_s(argv[1],1024)+8)*sizeof(char));
   filename = strcpy(filename,argv[1]);
   fp = SetUpMainFilePtr(filename,&format);
 
@@ -1389,7 +1390,7 @@ int Asc_CodeGenWriteCmd(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-  filename = ASC_NEW_ARRAY(char,strlen(argv[1])+8);
+  filename = ASC_NEW_ARRAY(char,strlen_s(argv[1],1024)+8);
   strcpy(filename,argv[1]);
   result = CodeGen_CheckSystem(interp,sys);
   if (result) {
@@ -1457,7 +1458,7 @@ int Asc_CodeGenReadCmd(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-  filename = ASC_NEW_ARRAY(char,strlen(argv[1])+8);
+  filename = ASC_NEW_ARRAY(char,strlen_s(argv[1],1024)+8);
   strcpy(filename,argv[1]);
   result = CodeGen_CheckSystem(interp,sys);
   if (result) {
