@@ -569,7 +569,7 @@ struct Statement *CreateEXTERNGlassBox(
 			       struct Name *scope)
 {
   register struct Statement *result;
-  ERROR_REPORTER_DEBUG("Found glassbox equation statement '%s'\n",funcname);
+  ERROR_REPORTER_NOTE("Found glassbox equation statement '%s'\n",funcname);
 
   result=create_statement_here(EXT);
   result->v.ext.mode = ek_glass;

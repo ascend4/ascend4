@@ -2904,6 +2904,8 @@ if with_extfns:
 	default_targets.append('extfns')
 if with_doc_build:
 	default_targets.append('doc')
+if with_cunit:
+	default_targets.append('test')
 
 env.Default(default_targets)
 

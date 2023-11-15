@@ -28,6 +28,7 @@
 #include "panic.h"
 #include "ascMalloc.h"
 #include <ascend/general/mathmacros.h>
+#include <stdio.h>
 
 /**	@addtogroup general_ltmatrix General Lightweight Matrix
 	@{
@@ -168,7 +169,7 @@ ASC_DLLSPEC double* Hessian_Mtx_get_row_pointer(hessian_mtx* matrix, unsigned lo
 
 ASC_DLLSPEC unsigned long Hessian_Mtx_get_row_length(hessian_mtx* matrix, unsigned long row);
 
-ASC_DLLSPEC void Hessian_Mtx_debug_print(hessian_mtx* matrix);
+ASC_DLLSPEC void Hessian_Mtx_debug_print(FILE *fp, hessian_mtx* matrix);
 
 ASC_DLLSPEC int Hessian_Mtx_test_validity(hessian_mtx *matrix);
 

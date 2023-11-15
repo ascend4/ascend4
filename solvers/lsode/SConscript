@@ -29,7 +29,7 @@ if 'LSODE' in env.get('WITH_SOLVERS'):
 		,LINKFLAGS=['-fPIC']
 	)
 
-	fflags = env['SHFORTRANFLAGS']
+	fflags = env['SHFORTRANFLAGS'] + ['-fPIC']
 	fflags.append('-w') 
 	# print "SHFORTRAN flags for lsode;"
 	# for k in fflags:

@@ -21,6 +21,8 @@
 
 #include "test/common.h"
 
+#define LTMATRIX_DEBUG
+
 static void Hessian_Mtx_fill_pattern(hessian_mtx* matrix, int pattern);
 static int Hessian_Mtx_check_pattern(hessian_mtx* matrix, int pattern);
 
@@ -40,13 +42,19 @@ static void test_ltmatrix(void){
 	CU_ASSERT(matrix_upper->h!=NULL);
 	/** Read Operations */
 	/** Done with Range checks in the Access Method. */
-	Hessian_Mtx_debug_print(matrix_upper); /** Success Prints Matrix of 5x5 with all elements 0.0 */
+#ifdef LTMATRIX_DEBUG
+	Hessian_Mtx_debug_print(stderr,matrix_upper); /** Success Prints Matrix of 5x5 with all elements 0.0 */
+#endif
 	/** Update Operations */
 	Hessian_Mtx_init(matrix_upper,array);
 	CU_ASSERT(Hessian_Mtx_compare_array(matrix_upper,array)==1);
-	Hessian_Mtx_debug_print(matrix_upper);
+#ifdef LTMATRIX_DEBUG
+	Hessian_Mtx_debug_print(stderr,matrix_upper);
+#endif
 	Hessian_Mtx_clear(matrix_upper);
-	Hessian_Mtx_debug_print(matrix_upper);	
+#ifdef LTMATRIX_DEBUG
+	Hessian_Mtx_debug_print(stderr,matrix_upper);	
+#endif
 
 	/** Lower Matrix Operations */
 	/** Create Operations */
@@ -57,13 +65,19 @@ static void test_ltmatrix(void){
 	CU_ASSERT(matrix_lower->h!=NULL);
 	/** Read Operations */
 	/** Done with Range checks in the Access Method. */
-	Hessian_Mtx_debug_print(matrix_lower); /** Success Prints Matrix of 5x5 with all elements 0.0 */
+#ifdef LTMATRIX_DEBUG
+	Hessian_Mtx_debug_print(stderr,matrix_lower); /** Success Prints Matrix of 5x5 with all elements 0.0 */
+#endif
 	/** Update Operations */
 	Hessian_Mtx_init(matrix_lower,array);
 	CU_ASSERT(Hessian_Mtx_compare_array(matrix_lower,array)==1);
-	Hessian_Mtx_debug_print(matrix_lower);
+#ifdef LTMATRIX_DEBUG
+	Hessian_Mtx_debug_print(stderr,matrix_lower);
+#endif
 	Hessian_Mtx_clear(matrix_lower);
-	Hessian_Mtx_debug_print(matrix_lower);
+#ifdef LTMATRIX_DEBUG
+	Hessian_Mtx_debug_print(stderr,matrix_lower);
+#endif
 
 	/** Full Matrix Operations */
 	/** Create Operations */
@@ -74,8 +88,9 @@ static void test_ltmatrix(void){
 	CU_ASSERT(matrix_full->h!=NULL);
 	/** Read Operations */
 	/** Done with Range checks in the Access Method. */
-	Hessian_Mtx_debug_print(matrix_full); /** Success Prints Matrix of 5x5 with all elements 0.0 */
-	
+#ifdef LTMATRIX_DEBUG
+	Hessian_Mtx_debug_print(stderr,matrix_full); /** Success Prints Matrix of 5x5 with all elements 0.0 */
+#endif	
 
 	/** Pattern all the Hessian Matrices */
 	Hessian_Mtx_fill_pattern(matrix_upper,0);
@@ -89,10 +104,11 @@ static void test_ltmatrix(void){
 
 	/** Print for one last time the Matrices */
 
-	Hessian_Mtx_debug_print(matrix_lower); 
-	Hessian_Mtx_debug_print(matrix_upper); 
-	Hessian_Mtx_debug_print(matrix_full); 
-
+#ifdef LTMATRIX_DEBUG
+	Hessian_Mtx_debug_print(stderr,matrix_lower); 
+	Hessian_Mtx_debug_print(stderr,matrix_upper); 
+	Hessian_Mtx_debug_print(stderr,matrix_full); 
+#endif
 
 	/** Delete Operations */
 	Hessian_Mtx_destroy(matrix_upper);

@@ -204,15 +204,15 @@ int Hessian_Mtx_init(hessian_mtx* matrix,double* new_vals){
 	@param matrix is the matrix whose content is to be printed
 	FIXME Do I need to make this static?
 */
-void Hessian_Mtx_debug_print(hessian_mtx* matrix){
+void Hessian_Mtx_debug_print(FILE *fp, hessian_mtx* matrix){
 	Hessian_Mtx_test_validity(matrix);
 	unsigned long i, j;
-	printf("\n");
+	fprintf(fp,"\n");
 	for (i=0; i<matrix->dimension ; i++){
 		for (j=0; j<matrix->dimension; j++){
-			printf("%10.4g\t",Hessian_Mtx_get_element(matrix,i,j));
+			fprintf(fp,"%10.4g\t",Hessian_Mtx_get_element(matrix,i,j));
 		}
-		printf("\n");
+		fprintf(fp,"\n");
 	}
 }
 

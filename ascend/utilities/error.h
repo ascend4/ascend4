@@ -103,7 +103,7 @@ typedef enum error_severity_enum{
 	but without the file/function/line number.
 */
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-# define ERROR_REPORTER_DEBUG(args...) error_reporter(ASC_PROG_NOTE, __FILE__, __LINE__, __func__, ##args)
+# define ERROR_REPORTER_NOTE(args...) error_reporter(ASC_PROG_NOTE, __FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_HERE(SEV,args...) error_reporter(SEV,__FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_NOLINE(SEV,args...) error_reporter(SEV, NULL, 0, NULL, ##args)
 # define CONSOLE_DEBUG(args...) ((void)(color_on(stderr,ASC_FG_BRIGHTBLUE) + \
@@ -118,7 +118,7 @@ typedef enum error_severity_enum{
 # define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__func__);
 
 #elif defined(HAVE_C99)
-# define ERROR_REPORTER_DEBUG(...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__func__,## __VA_ARGS__)
+# define ERROR_REPORTER_NOTE(...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__func__,## __VA_ARGS__)
 # define ERROR_REPORTER_HERE(SEV,...) error_reporter(SEV,__FILE__,__LINE__,__func__, ## __VA_ARGS__)
 # define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, ## __VA_ARGS__)
 # define CONSOLE_DEBUG(...) (color_on(stderr,BRIGHTBLUE) + fprintf(stderr, "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
@@ -128,7 +128,7 @@ typedef enum error_severity_enum{
 
 #elif defined(_MSC_VER) && _MSC_VER >= 1400 /* Microsoft Visual C++ 2005 or newer */
 #  define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__FUNCTION__);
-#  define ERROR_REPORTER_DEBUG(...)     error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__FUNCTION__, __VA_ARGS__)
+#  define ERROR_REPORTER_NOTE(...)     error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__FUNCTION__, __VA_ARGS__)
 #  define ERROR_REPORTER_HERE(SEV,...)  error_reporter(SEV,__FILE__,__LINE__,__FUNCTION__, __VA_ARGS__)
 #  define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, __VA_ARGS__)
 #  define CONSOLE_DEBUG(...)   (fprintf(stderr, "%s:%d (%s): ", __FILE__,__LINE__,__FUNCTION__) + \
@@ -136,7 +136,7 @@ typedef enum error_severity_enum{
                                 fprintf(stderr, "\n"))
 #else /* workaround for compilers without variadic macros: last resort */
 # define NO_VARIADIC_MACROS
-# define ERROR_REPORTER_DEBUG error_reporter_note_no_line
+# define ERROR_REPORTER_NOTE error_reporter_note_no_line
 # define ERROR_REPORTER_HERE error_reporter_here
 # define ERROR_REPORTER_NOLINE error_reporter_noline
 # define CONSOLE_DEBUG console_debug
@@ -157,6 +157,10 @@ ASC_DLLSPEC int console_debug(const char *fmt,...);
 
 #define ERROR_REPORTER_MAX_MSG 4096 /* no particular reason */
 
+/**
+	Structure for storing/buffering a reported error. This is for use in the
+	error_reporter_tree_* functions further below.
+*/	
 typedef struct{
 	unsigned char iscaching; /** set to true for fprintf_error_reporter to do its work */
 	error_severity_t sev;
@@ -167,9 +171,62 @@ typedef struct{
 } error_reporter_meta_t;
 
 /**
-	This structure provides a means for caching errors so that they can be
-	reported back later in the manner of 'stack traces'. Should be useful
-	for more detailed reporting from parser, external calls, etc.
+	We would like to be able to test whether or not errors have occurred during
+	the execution of any ASCEND operation, whether during a solver operation or
+	during a METHOD call, or during an external call eg to Python code. We would
+	also like to be able to suppress errors for cases where alternative actions
+	have been provided (eg solving again with different starting values).
+	
+	Things we want to be able to do with this are:
+		(1) buffer errors instead of immediately outputting them
+		(2) test buffered errors against certain criteria
+		(3) output buffered errors (and remove them from the buffer)
+		(4) discard buffered errors without output
+		(5) have buffers within buffer, where inner buffer can be discarded
+			while the outer buffer is otherwise unaffected.
+	
+	Not supported, but potentially desirable: selective buffering (only
+	buffering errors of certain types), and combined buffering and output (to
+	allow testing for errors, without affecting the output seen by the user)
+	
+	Some use cases:
+	  - While writing test cases, we need to know if METHODs or external
+		relations have thrown any errors.
+	  - When automating ASCEND for large calculations, we would like to suppress
+		more of the output, but still to be able to get that information back
+		when something 'really bad' happens.
+	  - In more sophisticated model initialisation (via METHODS, or specialised
+		solvers), we might like to make calls to the solver, fail, try again
+		with different initial conditions or with different solver settings. We
+		may wish to suppress reported errors for the failed attempts, and
+		output just one summarised error instead.
+	
+	The use cases that we aim to support, then are:
+		(1) 
+		(1) being about to buffer errors then either output them later or
+			discard them.
+		(2) capture errors while also outputting them, then 
+
+	TODO
+	Another thing that we considered we like to be able to do is to provide 
+	'stack traces'. This requires that we can specify different operating 
+	contexts and report them in our 'tree'. When an error message is 
+	being output, this context could be reported to the user, to support 
+	improved error checking. This is closely related to the buffering above, 
+	with the exception that 'context' messages are not to be output, except
+	with an error.
+	
+	However, note that this 'stack trace' idea overlaps somewhat with the
+	method interpreter debugger stack frame information implemented in
+	<ascend/compiler/procframe.h>. Reusing that structure will perhaps be
+	difficult, though, some of the 'frames' we'd consider here would be:
+	  - solver iteration
+	  - METHOD call
+	  - external methods in METHODs, eg implemented in Python
+	  - external relations called by the solver
+	
+	An alternative would be extend to the procframe stuff to support this case.
+
 
 	Usage will be
 
@@ -178,29 +235,51 @@ typedef struct{
 		do_subordinate_tasks();
 		if(error_reporter_tree_has_error()){
 			has_error = 1;
+			error_reporter_tree_end(); // outputs errors
 		}else{
 			has_error = 0
+			error_reporter_tree_clear();
 		}
-		error_reporter_tree_end();
 		if(has_error){
-			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"failed");
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"overall thing failed");
 		}else{
-			ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"success");
+			ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"overall thing succeeded");
 		}
 
-	The next 'error_reporter' call after an outermost 'error_reporter_tree_end'
-	will cause the error tree to be output to the error reporting channel.
+	After the call to to `error_reporter_tree_start`, any subsequent calls to
+	`error_reporter` (or `FPRINTF` etc.) will buffer (and NOT output any
+	messages that are reported. What eventually happens with the buffered 
+	messages after that` depends. If `error_reporter_tree_end` is called,
+	the errors are output as normal, in the order originally reported. If
+	`error_reporter_tree_clear`, then they are discarded. Either way, the
+	memory assocated with the buffered errors is freed. Eventually, the final
+	level of nested `error_reporter_tree_start` is closed, there will be no
+	associated memory allocated.
+	
+	Note the following case:
 
-	If an 'error_reporter' is found *inside* an an 'error_reporter_tree_start'
-	and 'error_reporter_tree_end', the error message is kept and not output.
-
-	If the latest set of errors (those found inside the last start..end) are not
-	important, they can be discarded using error_reporter_tree_clear. This will
-	not clear the entire error tree, as there may be errors higher-up that we
-	don't want to discard.
-
-	After a call to error_reporter_tree_clear(), further errors can still be
-	added within the current TREECURRENT context.
+	error_reporter_tree_start();
+	do_tasks();
+	if(something){
+		error_reporter_tree_start();
+		do_secondary_tasks();
+		if(something2){
+			error_reporter_tree_end();
+		}else{
+			error_reporter_tree_clear();
+		}
+		error_reporter_tree_end(); // ***
+	}
+	if(error_reporter_tree_has_error()){
+		error_reporter_tree_end();
+	}else{
+		error_reporter_tree_clear();
+	}
+	
+	This is a case of nested `error_reporter_tree_start()`. The line indicated ***
+	should not cause output of the buffered errors, because we are still within
+	a parent tree, and the later `error_reporter_tree_has_error()` call may need
+	to detect errors buffered during `do_secondary_tasks()`.
 */
 typedef struct ErrorReporterTree{
 	error_reporter_meta_t *err;
@@ -210,10 +289,34 @@ typedef struct ErrorReporterTree{
 	struct ErrorReporterTree *parent; /**< parent error (or NULL) */
 } error_reporter_tree_t;
 
+
+/** initialise a new sub-tree
+	If there is no tree existing, TREE=TREECURRENT=a new node.
+	If a tree is preexisting, TREECURRENT->head will be set to the new node.
+	(Note that sub-trees are considered to arise BEFORE immediate node content)
+	@return 0 on success.
+*/
 ASC_DLLSPEC int error_reporter_tree_start();
+
+/** end the current sub-tree
+	Leave the tree structures in place, move back up to the parent node.
+	If there is no parent node write the tree and remove it.
+*/
 ASC_DLLSPEC int error_reporter_tree_end();
+
+/** clear the current sub-tree
+	This destroys all of the messages contained within; they can't be output later.
+*/
 ASC_DLLSPEC void error_reporter_tree_clear();
+
+/**
+	traverse the tree, looking for ASC_PROG_ERR, ASC_USER_ERROR, or ASC_PROG_FATAL
+	@return 1 if errors found
+*/
 ASC_DLLSPEC int error_reporter_tree_has_error();
+
+/** write a text representation of the tree for debugging */
+ASC_DLLSPEC void error_reporter_tree_dump(FILE *file);
 
 /**
 	This is the drop-in replacement for Asc_FPrintf. Anythin you attempt
