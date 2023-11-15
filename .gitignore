@@ -13,6 +13,7 @@ a4
 ascend/compiler/ascParse.c
 ascend/compiler/ascParse.h
 ascend/compiler/scanner.c
+ascend/compiler/test/LOG.html
 ascend/general/config.h
 ascend/solver/conoptconfig.h
 ascend/utilities/config.h

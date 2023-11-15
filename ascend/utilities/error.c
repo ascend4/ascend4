@@ -230,6 +230,13 @@ void error_reporter_tree_clear(){
 	MSG("TREECURRENT = %p",TREECURRENT);
 }
 
+
+void error_reporter_tree_destroy_all(){
+	TREECURRENT = TREE;
+	if(TREE)error_reporter_tree_clear();
+}
+
+
 /**
 	For this function, we need to look at messages 'inside' TREECURRENT.
 */

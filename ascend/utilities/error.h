@@ -310,6 +310,13 @@ ASC_DLLSPEC int error_reporter_tree_end();
 ASC_DLLSPEC void error_reporter_tree_clear();
 
 /**
+	delete the entire tree, free all tree and buffered messages. only intended
+	for use is full compiler cleanup, viz. Asc_CompilerDestroy()
+	if TREE is NULL, nothing gets done.
+*/
+ASC_DLLSPEC void error_reporter_tree_destroy_all();
+
+/**
 	traverse the tree, looking for ASC_PROG_ERR, ASC_USER_ERROR, or ASC_PROG_FATAL
 	@return 1 if errors found
 */

@@ -267,7 +267,7 @@ void Asc_CompilerDestroy(void)
   gl_destroy_pool();                   /* empty the reused list head pool */
   ClearRecycleStack();                 /* empty the reused stack list  */
   Asc_DestroyScannerInputBuffer();	/* empty lexer */
-  error_reporter_tree_clear();
+  error_reporter_tree_destroy_all();
   //error_reporter_end_flush();
   statio_clear_stattypenames();
 
