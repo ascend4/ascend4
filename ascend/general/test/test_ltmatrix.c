@@ -21,7 +21,7 @@
 
 #include "test/common.h"
 
-#define LTMATRIX_DEBUG
+//#define LTMATRIX_DEBUG
 
 static void Hessian_Mtx_fill_pattern(hessian_mtx* matrix, int pattern);
 static int Hessian_Mtx_check_pattern(hessian_mtx* matrix, int pattern);
