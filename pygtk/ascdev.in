@@ -3,7 +3,7 @@
 
 import os, sys, platform, subprocess
 from pathlib import Path
-		
+
 if __name__=='__main__':
 	print("PYTHON = @PYTHON@")
 	

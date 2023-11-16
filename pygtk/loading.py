@@ -43,7 +43,7 @@ def load_matplotlib(throw=False,alert=False):
 	try:
 		import matplotlib
         # Added a new backend backend_gtk3. File bundle exists in PYTHONPATH
-		matplotlib.use('module://backend_gtk3')
+		matplotlib.use('GTK3Cairo')
 		try:
 			print_status("Trying python numpy")
 			import numpy

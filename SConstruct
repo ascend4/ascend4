@@ -817,7 +817,7 @@ envadditional={}
 
 tools = [
 	'lex', 'yacc', 'fortran', 'swig', 'textfile'#, 'substinfile'
-	,'disttar', 'tar', 'sundials', 'dvi', 'pdflatex' #'graphviz',
+	,'disttar', 'tar', 'sundials', 'dvi', 'pdflatex', 'graphviz'
 ]
 if platform.system()=="Windows":
 	tools += ['nsis']
@@ -894,8 +894,8 @@ without_scrollkeeper_reason = "disabled by options/config.py"
 with_dmalloc = env.get('WITH_DMALLOC')
 without_dmalloc_reason = "disabled by options/config.py"
 
-#with_graphviz = env.get('WITH_GRAPHVIZ')
-#without_graphiviz_reason = "disabled by options/config.py"
+with_graphviz = env.get('WITH_GRAPHVIZ')
+without_graphiviz_reason = "disabled by options/config.py"
 
 with_ufsparse = env.get('WITH_UFSPARSE')
 without_ufsparse_reason = "disabled by options/config.py"
@@ -2225,13 +2225,13 @@ if with_dmalloc:
 
 # GRAPHVIZ
 
-#if with_graphviz:
-#	if not conf.CheckGraphVizCgraph():
-#		if not conf.CheckGraphVizAgraph():
-#			without_graphviz_reason = 'graphviz not found (cgraph nor agraph)'
-#			with_graphviz = False
-#			env['WITH_GRAPHVIZ'] = False
-#	env['HAVE_GRAPHVIZ_BOOLEAN'] = conf.CheckGraphVizBoolean()		
+if with_graphviz:
+	if not conf.CheckGraphVizCgraph():
+		if not conf.CheckGraphVizAgraph():
+			without_graphviz_reason = 'graphviz not found (cgraph nor agraph)'
+			with_graphviz = False
+			env['WITH_GRAPHVIZ'] = False
+	env['HAVE_GRAPHVIZ_BOOLEAN'] = conf.CheckGraphVizBoolean()		
 
 # UFSPARSE
 

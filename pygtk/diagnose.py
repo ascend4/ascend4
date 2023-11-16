@@ -1,4 +1,4 @@
-import array
+import array as arr
 from itertools import groupby
 from operator import itemgetter
 import math
@@ -184,7 +184,7 @@ class DiagnoseWindow:
 		d = ''.join(b)
 
 		print("DONE IMAGE CREATION")
-		buff = array.array('c', d)
+		buff = arr.array('u',d)
 		surface = cairo.ImageSurface.create_for_data(buff, cairo.FORMAT_ARGB32, nc, nr)
 		self.pixbuf = Gdk.pixbuf_get_from_surface(surface, 0, 0, surface.get_width(), surface.get_height())
 

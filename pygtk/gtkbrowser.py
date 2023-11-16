@@ -758,7 +758,6 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 	def do_sim(self, type_object):
 		self.sim = None;
 		# TODO: clear out old simulation first!
-
 		
 		#print "DO_SIM(%s)" % str(type_object.getName())		
 		self.start_waiting("Compiling...")
@@ -1016,7 +1015,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.reporter.reportNote("Preparing incidence graph...")
 		import tempfile
 		f,fname = tempfile.mkstemp(suffix=".png")
-		f = file(fname,'wb')
+		f = open(fname,'wb')
 		self.reporter.reportNote("temp file name = %s" % fname)
 		self.reporter.reportNote("file = %s" % f)
 		self.start_waiting("Creating incidence graph...")
