@@ -62,6 +62,7 @@ if __name__ == "__main__":
 	p_open = s.add_parser('open',help = 'Open file in ASCEND GUI')
 	p_open.set_defaults(action='open')
 	p_open.add_argument('file',type=pathlib.Path)
+	p_open.add_argument('--model','-m', help="Name of MODEL to instantiate");
 	
 	p_gui = s.add_parser('gui',help = 'Simply open the ASCEND GUI')
 	p_gui.set_defaults(action='gui')
@@ -147,6 +148,8 @@ if __name__ == "__main__":
 		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev']
 	elif args.action == 'open':
 		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev', args.file]
+		if args.model:
+			cmd += ['-m',args.model]
 	elif args.action == 'q':
 		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev', 'models/johnpye/testlog10.a4c']
 	elif args.action == 'script':

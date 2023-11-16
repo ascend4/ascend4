@@ -135,7 +135,7 @@ int error_reporter_tree_start(){
 		MSG("new node");
 		// tree already exists, add to tail of TREECURRENT
 		if(TREECURRENT == NULL){
-			ERRMSG("unexpected NULL TREECURRENT");
+			ERRMSG("unexpected NULL TREECURRENT with TREE non-null");
 			return 2;
 		}
 		error_reporter_tree_t *t = error_reporter_tree_new();
@@ -175,7 +175,7 @@ int error_reporter_tree_end(){
 static void error_reporter_tree_free(error_reporter_tree_t *t){
 	MSG("tree free %p",t);
 	if(!t){
-		ERRMSG("NULL tree");
+		MSG("NULL tree");
 		return;
 	}
 	if(t->err){
@@ -204,7 +204,7 @@ void error_reporter_tree_clear(){
 	error_reporter_tree_dump(stderr);
 #endif
 	if(!TREE){
-		ERRMSG("null TREE");
+		MSG("null TREE");
 		return;
 	}
 	if(!TREECURRENT){
@@ -294,7 +294,7 @@ static int error_reporter_tree_write(error_reporter_tree_t *t){
 			node = node->next;
 		}
 	}else{
-		ERRMSG("invalid node");
+		MSG("invalid node");
 	}
 	return res;
 }

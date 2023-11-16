@@ -744,8 +744,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.waitcontext = self.statusbar.get_context_id("waiting")
 		self.statusbar.push(self.waitcontext,message)
 
-		if self.waitwin:
-			self.waitwin.show()
+		#if self.waitwin:
+		#	self.waitwin.show()
 
 		while Gtk.events_pending():
 			Gtk.main_iteration()
@@ -753,7 +753,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 	def stop_waiting(self):
 		if self.waitwin:
 			self.statusbar.pop(self.waitcontext)
-			self.waitwin.hide()
+			#self.waitwin.hide()
 		
 	def do_sim(self, type_object):
 		self.sim = None;
