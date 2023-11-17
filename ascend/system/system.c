@@ -88,10 +88,12 @@ slv_system_t system_build(SlvBackendToken inst){
 
 #if DOTIME
   comptime = tm_cpu_time() - comptime;
-  if(comptime >= 1e-3){
+  if(comptime >= 2){
     CONSOLE_DEBUG("System built (time %5.3f s)",comptime);
+  }else if(comptime > 10e-3){
+    CONSOLE_DEBUG("System built (time %5.3f ms)",comptime*1e3);
   }else{
-    CONSOLE_DEBUG("System built (time <1ms = %0.6f)",comptime);
+    CONSOLE_DEBUG("System built (time %0.0f us)",comptime*1e6);
   }
 #endif
   return(sys);

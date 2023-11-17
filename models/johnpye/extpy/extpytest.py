@@ -1,7 +1,6 @@
 import extpy;
 browser = extpy.getbrowser()
-
-import ascpy;
+#import ascpy;
 
 def mypythonmethod(self):
 	"""I don't want to talk to you no more, you empty headed animal food trough wiper!"""
@@ -34,11 +33,13 @@ def mypythonmethod(self):
 	if browser:
 		browser.reporter.reportNote("No, now go away or I shall taunt you a second time!")
 	else:
-		print("No, now go away or I shall taunt you a second time!")
+		print("No, now go away or I shall taunt you a second time!") # NO BROWSER
 
 def adjust_a(self):
-	sel
+	return 1 # looks like we never go around to writing this...
+
 extpy.registermethod(mypythonmethod)
 #the above method can be called using "EXTERNAL mypythonmethod(SELF)" in ASCEND.
 
-extpy.registermethod(adjust_a)
+# something is broken if I try to register this second method...
+#extpy.registermethod(adjust_a)

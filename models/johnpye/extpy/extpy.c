@@ -241,57 +241,66 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 	PyObject *fn, *name, *docstring;
 	const char *cname, *cdocstring;
 	int res;
-	int nargs = 1;
 	struct ExtPyData *extpydata;
 
-	PyArg_ParseTuple(args,"O:registermethod", &fn);
-	if(!PyCallable_Check(fn)){
+	// Parse arguments
+	if (!PyArg_ParseTuple(args,"O:registermethod", &fn)) {
+		return NULL;
+	}
+	if (!PyCallable_Check(fn)) {
 		PyErr_SetString(PyExc_TypeError,"parameter must be callable");
 		return NULL;
 	}
 
-	/* MSG("FOUND FN=%p",fn); */
-
-	name = PyObject_GetAttr(fn,PyUnicode_FromString("__name__"));
-	if(name==NULL){
-		MSG("No __name__ attribute");
+	// Retrieve __name__ attribute
+	name = PyObject_GetAttrString(fn, "__name__");
+	if (name == NULL) {
 		PyErr_SetString(PyExc_TypeError,"No __name__ attribute");
 		return NULL;
 	}
 	cname = PyUnicode_AsUTF8(name);
-
-	/* MSG("REGISTERED METHOD '%s' HAS %d ARGS",cname,nargs); */
-
-	docstring = PyObject_GetAttr(fn,PyUnicode_FromString("func_doc"));
-	cdocstring = "(no help)";
-	if(name!=NULL){
-		cdocstring = PyUnicode_AsUTF8(docstring);
-		//MSG("DOCSTRING: %s",cdocstring);
-	}
-
-	extpydata = ASC_NEW(struct ExtPyData);
-	extpydata->name = ASC_NEW_ARRAY(char,strlen(cname)+1);
-	extpydata->fn = fn;
-	strcpy(extpydata->name, cname);
-
-	res = CreateUserFunctionMethod(cname,&extpy_invokemethod,nargs,cdocstring,(void *)extpydata,&extpy_destroy);
-	Py_INCREF(fn);
-
-	/* MSG("EXTPY 'fn' IS AT %p",fn); */
-
-	/* MSG("EXTPY INVOKER IS AT %p",extpy_invokemethod); */
-
-	if(res){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem registering external script method (%d)",res);
-		PyErr_SetString(PyExc_Exception,"unable to register script method");
+	if (cname == NULL) {
+		Py_DECREF(name);
 		return NULL;
 	}
 
-	MSG("Registered python method '%s'\n",cname);
+	// Retrieve __doc__ attribute (func_doc is deprecated)
+	docstring = PyObject_GetAttrString(fn, "__doc__");
+	cdocstring = (docstring != NULL) ? PyUnicode_AsUTF8(docstring) : "(no help)";
+	if (cdocstring == NULL) {
+		Py_DECREF(name);
+		if (docstring) Py_DECREF(docstring);
+		return NULL;
+	}
 
-	/* nothing gets returned (but possibly an exception) */
+	// Create and populate ExtPyData structure
+	extpydata = ASC_NEW(struct ExtPyData);
+	extpydata->name = ASC_NEW_ARRAY(char, strlen(cname) + 1);
+	extpydata->fn = fn;
+	strcpy(extpydata->name, cname);
+
+	// Register user function
+	const int nargs = 1;
+	res = CreateUserFunctionMethod(cname, &extpy_invokemethod,nargs,cdocstring,(void *)extpydata,&extpy_destroy);
+	Py_INCREF(fn);
+
+	if (res) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem registering external script method (%d)",res);
+		PyErr_SetString(PyExc_Exception,"unable to register script method");
+		Py_DECREF(name);
+		if (docstring) Py_DECREF(docstring);
+		return NULL;
+	}
+
+	MSG("Registered python method '%s'\n", cname);
+
+	// Cleanup
+	Py_DECREF(name);
+	if (docstring) Py_DECREF(docstring);
+
 	return Py_BuildValue("");
 }
+
 
 static PyMethodDef extpymethods[] = {
 	{"getbrowser", extpy_getbrowser, METH_NOARGS,"Retrieve browser pointer"}
@@ -373,36 +382,29 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 
 
 	PyObject *mod = PyInit_extpy();
-	if(0 != PyState_AddModule(mod, &extpymodule)){
-		MSG("Unable to add module");
+	if (mod == NULL) {
+		PyErr_Print();
+		MSG("Failed to create 'extpy' module");
+		return 1;
 	}else{
-		MSG("Module added");
-	}
-
-	if(-1 == PyImport_AppendInittab("extpy",&PyInit_extpy)){
-		MSG("Unable to extend table of built-in modules");
-	}else{
-		MSG("Added to table of built-in modules");
-	}
-
-	PyObject *mod1 = PyState_FindModule(&extpymodule);
-	if(mod1 == NULL){
-		MSG("Unable to FindModule");
-	}else{
-		MSG("Module found");
+		MSG("Module created");
 	}
 	
-	//PyImport_Import(PyUnicode_FromString("extpy"));
-#if 0
-	MSG("About to create module extpy...");
-	PyObject *mod = PyModule_Create(&extpymodule);
-	if(mod == NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to create 'extpy' module");
-		ASC_FREE(name);
+	// Retrieve the modules dictionary
+	PyObject *modulesDict = PyImport_GetModuleDict();
+
+	// Add your module to the modules dictionary
+	if (PyDict_SetItemString(modulesDict, "extpy", mod) < 0) {
+		PyErr_Print();
+		MSG("Failed to add 'extpy' to the modules dictionary");
+		Py_DECREF(mod);
 		return 1;
 	}
-	MSG("Created module '%s'",PyModule_GetName(mod));
-#endif
+
+	// Decrease reference count of the module
+	Py_DECREF(mod);
+
+	MSG("Module 'extpy' added to Python's modules dictionary");
 
 	MSG("Importing 'extpy'");
 	PyObject *pimp = PyImport_ImportModule("extpy");

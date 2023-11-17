@@ -41,7 +41,12 @@
 #include "library.h"
 #include <ascend/general/ospath.h>
 
-/* #define SEARCH_DEBUG */
+#ifdef MODULE_DEBUG
+# define MSG CONSOLE_DEBUG
+# define SEARCH_DEBUG
+#else
+# define MSG(...) 
+#endif
 
 struct module_t {
   symchar *name;                /* module's name, including extension
@@ -1002,8 +1007,7 @@ int ModuleSearchPath(CONST char *name,
 
 	/* attempt to open "name" directly */
 	if(0==ospath_stat(fp1,&sd.buf) && NULL!=(sd.f = ospath_fopen(fp1,"r")) ){
-
-		CONSOLE_DEBUG("File '%s' opened directly, without path search",name);
+		MSG("File '%s' opened directly, without path search",name);
 		sd.fp_found = fp1;
 
 	}else{

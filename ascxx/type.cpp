@@ -147,23 +147,19 @@ Type::getSimulation(const SymChar &sym
 	Compiler::instance()->sendBinaryCompilationOptions();
 
 	/* removing the following line causes a crash on Windows 7 */
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Starting tree...\n");
-#if 1
+	//ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Starting tree...\n");
+	// ...that was naughty, wasn't it. But the error_reporter_tree functions are rewritten, most probably the cause.
 	error_reporter_tree_start();
-#endif
-	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Started tree\n"); */
 
 	Instance *i = SimsCreateInstance(getInternalType()->name, sym.getInternalType(), e_normal, NULL);
 	Simulation sim(i,sym);
 
 	bool has_error = FALSE;
-#if 1
 	if(error_reporter_tree_has_error()){
 		has_error = TRUE;
 	}
 
 	error_reporter_tree_end();
-#endif
 
 	if(has_error){
 		stringstream ss;
