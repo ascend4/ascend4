@@ -74,7 +74,7 @@ class LoadingWindow:
 
 	def set_assets_dir(self, d):
 		self.assetsdir = d
-		self.splashfile = os.path.join(self.assetsdir,'ascend-loading.png')
+		self.splashfile = os.path.join(self.assetsdir,'ascend-loaxxxding.png')
 
 	def create_window(self):
 		if have_gtk:

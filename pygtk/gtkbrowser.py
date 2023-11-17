@@ -2,14 +2,6 @@ import sys
 
 try:
 	import loading
-	#loading.print_status("Loading PSYCO")
-	#try:
-	#	import psyco
-	#	psyco.full()
-	#	print "Running with PSYCO optimisation..."
-	#except ImportError:
-	#	pass
-
 	loading.print_status("Loading python standard libraries")
 
 	import gi 
@@ -23,21 +15,6 @@ try:
 	import sys
 	import time
 	import threading
-
-	if platform.system() != "Windows":
-		try:
-			import dl
-			_dlflags = dl.RTLD_GLOBAL|dl.RTLD_NOW
-		except:
-			# On platforms that unilaterally refuse to provide the 'dl' module
-			# we'll just set the value and see if it works.
-			loading.print_status("Setting dlopen flags","Python 'dl' module not available on this system")
-			_dlflags = 258
-		# This sets the flags for dlopen used by python so that the symbols in the
-		# ascend library are made available to libraries dlopened within ASCEND:
-		sys.setdlopenflags(_dlflags)
-
-
 
 	loading.print_status("Loading LIBASCEND/ascpy")
 	import ascpy
@@ -353,12 +330,7 @@ class Browser:
 		#-------------------
 		# waitwin
 
-		_gdkw = self.window.get_screen().get_active_window()
-		self.waitwin = _gdkw
-
-		if self.waitwin:
-			_cursor = Gdk.Cursor.new(Gdk.CursorType.WATCH)
-			self.waitwin.set_cursor(_cursor)
+		self.is_waiting = False
 
 		#-------------------
 		# pixbufs to be used in the error listing
@@ -744,17 +716,20 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.waitcontext = self.statusbar.get_context_id("waiting")
 		self.statusbar.push(self.waitcontext,message)
 
-		#if self.waitwin:
-		#	self.waitwin.show()
-
+		self.window.set_sensitive(False)
+		_cursor = Gdk.Cursor.new_for_display(Gdk.Display.get_default(). Gdk.CursorType.WATCH)
+		self.window.get_window().set_cursor(_cursor)
+		self.is_waiting = True
 		while Gtk.events_pending():
 			Gtk.main_iteration()
 		
 	def stop_waiting(self):
-		if self.waitwin:
+		if self.is_waiting:
 			self.statusbar.pop(self.waitcontext)
-			#self.waitwin.hide()
-		
+			self.window.get_window().set_cursor(None)
+			self.window.set_sensitive(True)
+			self.is_waiting = False
+
 	def do_sim(self, type_object):
 		self.sim = None;
 		# TODO: clear out old simulation first!
@@ -1015,7 +990,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.reporter.reportNote("Preparing incidence graph...")
 		import tempfile
 		f,fname = tempfile.mkstemp(suffix=".png")
-		f = open(fname,'wb')
+		f = open	(fname,'wb')
 		self.reporter.reportNote("temp file name = %s" % fname)
 		self.reporter.reportNote("file = %s" % f)
 		self.start_waiting("Creating incidence graph...")

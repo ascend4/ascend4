@@ -1,30 +1,27 @@
 Import('env')
+
+print("PYTHON_PKG_EMBED =",env['PYTHON_PKG_EMBED'])
+
 extfn_env = env.Clone()
 
-if 0:
-	if extfn_env.get('WITH_PYTHON'):
-		extfn_env.Append(CPPDEFINES=['-DWITH_PYTHON'])
+srcs = Split("""
+	extpy.c
+""")
 
-	srcs = Split("""
-		extpy.c
-	""")
+# get compile/link settings for libpython, Python.h
+extfn_env.ParseConfig('pkg-config $PYTHON_PKG_EMBED --cflags --libs')
+extfn_env.Append(LIBS=['ascend'],LIBPATH=['#'])
 
-	extfn_env.AppendUnique(
-		LIBPATH=['#',env.get('PYTHON_LIBPATH')]	
-		,LIBS=['ascend',env.get('PYTHON_LIB')]
-		,CPPPATH=[env.get('PYTHON_CPPPATH')]
-	)
+lib = extfn_env.SharedLibrary("extpy",srcs
+	,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
+	,SHLIBPREFIX = env['EXTLIB_PREFIX']
+)
 
-	lib = extfn_env.SharedLibrary("extpy",srcs
-		,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
-		,SHLIBPREFIX = env['EXTLIB_PREFIX']
-	)
+# To run the test, type
+#     ascdev johnpye/extpy/extpytest.py
 
-	# To run the test, type
-	#     ascdev johnpye/extpy/extpytest.py
-
-	# Return the targs
-	env['extfns'] += [lib]
+# Return the targs
+env['extfns'] += [lib]
 
 # vim: set syntax=python:
 

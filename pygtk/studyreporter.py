@@ -46,7 +46,7 @@ class StudyReporter(PythonSolverReporter):
 		self.blocknum = 0;
 		self.guiinterrupt = False;
 		self.guitime = 0;
-		self.studybegintime = time.clock()
+		self.studybegintime = time.perf_counter()
 		self.totalelapsed = 0
 		self.nv = numvars
 		self.instance = instance
@@ -93,11 +93,11 @@ class StudyReporter(PythonSolverReporter):
 		self.totalprogressbar.set_fraction(_frac2)
 		self.points.set_text("%d out of %d solved" % (self.pointsdone, self.nsteps+1))
 		
-		self.starttime = time.clock()
+		self.starttime = time.perf_counter()
 		self.blocknum = 0
 		
 	def report(self,status):
-		_time = time.clock();
+		_time = time.perf_counter();
 		_sincelast = _time - self.lasttime
 		if status.getCurrentBlockNum() > self.blocknum:
 			self.blocknum = status.getCurrentBlockNum()
@@ -111,7 +111,7 @@ class StudyReporter(PythonSolverReporter):
 			#print "UPDATING!"
 			self.fill_values(status)
 
-		self.guitime = self.guitime + (time.clock() - _time)
+		self.guitime = self.guitime + (time.perf_counter() - _time)
 
 		if self.guiinterrupt:
 			return True
@@ -127,7 +127,7 @@ class StudyReporter(PythonSolverReporter):
 
 	def finalise(self,status):
 		try:
-			_time = time.clock()
+			_time = time.perf_counter()
 			_sincelast = _time - self.lasttime
 			if _sincelast > self.updateinterval:
 				self.fill_values(status)
@@ -171,7 +171,7 @@ class StudyReporter(PythonSolverReporter):
 
 			self.report_to_browser(status)
 
-			self.guitime = self.guitime + (time.clock() - _time)
+			self.guitime = self.guitime + (time.perf_counter() - _time)
 			print("TIME SPENT UPDATING SOLVER: %0.2f s" % self.guitime)
 		except Exception as e:
 			print("SOME PROBLEM: %s" % str(e))

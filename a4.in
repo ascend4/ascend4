@@ -67,14 +67,15 @@ if __name__ == "__main__":
 	p_gui = s.add_parser('gui',help = 'Simply open the ASCEND GUI')
 	p_gui.set_defaults(action='gui')
 
-	p_run = s.add_parser('run',help = 'Run model and solve without GUI')
+	p_run = s.add_parser('run',help = 'Run model and solve (without GUI)')
 	p_run.set_defaults(action='run')
 	p_run.add_argument('file',type=pathlib.Path,help='ASCEND model file to be opened')
+	p_run.add_argument('--model','-m', help="Name of MODEL to instantiate (defaults to filename without extension)");
 
-	p_run = s.add_parser('script',help = 'Run a Python or other script within ASCEND development environment')
-	p_run.set_defaults(action='script')
-	p_run.add_argument('file',type=pathlib.Path,help='Script file to be run')
-	p_run.add_argument('rest',nargs=argparse.REMAINDER,help='Additional arguments to be passed to the script')
+	p_scr = s.add_parser('script',help = 'Run a Python or other script within ASCEND development environment')
+	p_scr.set_defaults(action='script')
+	p_scr.add_argument('file',type=pathlib.Path,help='Script file to be run')
+	p_scr.add_argument('rest',nargs=argparse.REMAINDER,help='Additional arguments to be passed to the script')
 	
 	p_sh = s.add_parser('env',help = 'Create a sub-shell in which ASCEND environment variables are set.')
 	p_sh.set_defaults(action='env')
@@ -150,8 +151,16 @@ if __name__ == "__main__":
 		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev', args.file]
 		if args.model:
 			cmd += ['-m',args.model]
+	elif args.action == 'run':
+		# note that we cannot avoid invoking a subprocess here, because
+		# we cannot update LD_LIBRARY_PATH for the running process, which means
+		# that ascpy cannot successfully load libascend.so.
+		cmd += [PYTHON,sourceroot/'ascxx'/'runmodel.py',args.file]
+		if args.model:
+			cmd.append(args.model)
 	elif args.action == 'q':
-		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev', 'models/johnpye/testlog10.a4c']
+		# for the convenience of the developer -- hack this for your temporary needs
+		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev', sourceroot/'models'/'johnpye'/'extpy'/'extpytest.a4c']
 	elif args.action == 'script':
 		cmd += [args.file.resolve()]+args.rest
 	elif args.action == 'env' :

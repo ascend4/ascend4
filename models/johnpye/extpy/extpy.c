@@ -20,10 +20,6 @@
 	by John Pye, Oct 2006
 */
 
-#ifndef WITH_PYTHON
-# error "Can't build 'extpy' without WITH_PYTHON set"
-#else
-
 #include <Python.h>
 
 #include <stdio.h>
@@ -364,7 +360,7 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 		MSG("Python was already initialised");
 	}else{
 		MSG("INITIALISING PYTHON");
-		Py_Initialize();
+		Py_InitializeEx(0); // no new signal handlers... for now
 		MSG("COMPLETED ATTEMPT TO INITIALISE PYTHON");
 	}
 
@@ -419,6 +415,7 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 
 	MSG("Importing 'ascpy'");
 	if(PyRun_SimpleString("import ascpy")){
+		PyErr_Print();
 		MSG("Failed importing 'ascpy'");
 		ASC_FREE(name);
 		return 1;
@@ -434,13 +431,36 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 		ASC_FREE(name);
 		return 1;
 	}
-
 	PyErr_Clear();
+
+	MSG("Running script '%s'",name);
 	iserr = PyRun_AnyFileEx(f,name,1);
 
 	if(iserr){
-		/* according to the manual, there is no way of determining anything more about the error. */
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"An error occurring in importing the script '%s'",name);
+		MSG("Failed running script");
+		PyObject *ptype, *pvalue, *ptraceback;
+		PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+		PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
+
+		// Convert the error value to a string, if it's not already
+		PyObject* str_exc_value = PyObject_Str(pvalue);
+		if (str_exc_value != NULL) {
+			// Convert Python string to C string
+			const char* error_msg = PyUnicode_AsUTF8(str_exc_value);
+			if (error_msg != NULL) {
+				// Output or log the error message using your preferred method
+				ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to run '%s' (%s):\n%s", partialpath, name, error_msg);
+			}
+			Py_DECREF(str_exc_value);
+		}else{
+			ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to run '%s' (%s).", partialpath, name);
+		}
+
+		// Remember to decref the objects you have fetched
+		Py_XDECREF(ptype);
+		Py_XDECREF(pvalue);
+		Py_XDECREF(ptraceback);	
+		ASC_FREE(name);
 		return 1;
 	}
 
@@ -450,5 +470,4 @@ int extpy_import(const struct FilePath *fp, const char *initfunc, const char *pa
 	return 0;
 }
 
-#endif /* WITH_PYTHON */
 
