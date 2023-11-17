@@ -67,7 +67,7 @@ if __name__ == "__main__":
 	p_gui = s.add_parser('gui',help = 'Simply open the ASCEND GUI')
 	p_gui.set_defaults(action='gui')
 
-	p_run = s.add_parser('run',help = 'Run model and solve (without GUI)')
+	p_run = s.add_parser('run',help = 'Run model and solve (without GUI, via QRSlv solver)')
 	p_run.set_defaults(action='run')
 	p_run.add_argument('file',type=pathlib.Path,help='ASCEND model file to be opened')
 	p_run.add_argument('--model','-m', help="Name of MODEL to instantiate (defaults to filename without extension)");

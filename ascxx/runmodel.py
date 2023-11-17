@@ -13,6 +13,8 @@ def run_ascend_model(filen,model=None):
 	# TODO: we could also extend the user interface to support setting of solver parameters etc.
 	# TODO: we could also implement setting of model parameters and/or parameter sweeps.
 	# TODO: we could also implement running 'self_test' methods after the model has solved.
+	# TODO: examine how SlvReq can be used to allow the model file to select its own solver.
+	# TODO: what about integrator models?
 	
 if __name__=="__main__":
 	print("sys.argv =",sys.argv)
