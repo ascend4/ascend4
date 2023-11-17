@@ -717,7 +717,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.statusbar.push(self.waitcontext,message)
 
 		self.window.set_sensitive(False)
-		_cursor = Gdk.Cursor.new_for_display(Gdk.Display.get_default(). Gdk.CursorType.WATCH)
+		_cursor = Gdk.Cursor.new_for_display(Gdk.Display.get_default(), Gdk.CursorType.WATCH)
 		self.window.get_window().set_cursor(_cursor)
 		self.is_waiting = True
 		while Gtk.events_pending():
