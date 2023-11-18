@@ -14,6 +14,7 @@
 #include "solver.h"
 #include "incidencematrix.h"
 #include "solverparameter.h"
+#include "value.h"
 #include "solverparameters.h"
 #include "solverreporter.h"
 #include "solverhooks.h"
@@ -123,6 +124,16 @@ public:
 			raise KeyError
 	}
 }
+
+%include "value.h"
+#if 0
+%extend Value{
+	%pythoncode{
+		def __repr__(self):
+			return "(some value)"
+	}
+}
+#endif
 
 class SolverParameter{
 public:

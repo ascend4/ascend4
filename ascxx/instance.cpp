@@ -434,7 +434,7 @@ Instanc::getSymbolValue() const{
 		return SymChar("ERROR");
 	}
 	if(!isDefined()){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Symbol value '%s' is not defined",getName().toString());
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Symbol '%s' has not had its value defined",getName().toString());
 		return SymChar("UNDEFINED");
 	}
 		

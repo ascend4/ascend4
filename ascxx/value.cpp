@@ -16,3 +16,17 @@ Value::~Value(){
 	// nothing to do
 }
 
+ValueType Value::getType(){
+	switch(this->v->t){
+	case real_value:
+		return VALUE_REAL;
+	case integer_value:
+		return VALUE_INT;
+	case symbol_value:
+		return VALUE_CHAR;
+	case boolean_value:
+		return VALUE_BOOL;
+	default:
+		return VALUE_UNIMPLEMENTED;
+	};
+}
