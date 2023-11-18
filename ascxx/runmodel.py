@@ -1,4 +1,4 @@
-import ascpy, pathlib, sys, argparse, re
+import pathlib, sys, argparse, re
 
 def run_ascend_model(filen,model=None,printvars=None,test=True):
 	"""
