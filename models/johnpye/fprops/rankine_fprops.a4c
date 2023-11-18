@@ -397,6 +397,7 @@ END condenser_simple;
 
 MODEL condenser_simple_test REFINES condenser_simple;
 	cd.component :== 'water';
+	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -451,6 +452,7 @@ END heater_open;
 
 MODEL heater_open_test REFINES heater_open;
 	cd.component :== 'water';
+	cd.type :== 'helmholtz';
 METHODS
 METHOD on_load;
 	RUN default_self;
@@ -545,21 +547,21 @@ END heater_closed;
 
 MODEL heater_closed_test REFINES heater_closed;
 	cd.component :== 'water';
+	cd.type :== 'helmholtz';
 	cd_heat.component :== 'water';
+	cd_heat.type :== 'helmholtz';
 METHODS
 METHOD on_load;
-	FIX inlet.p, inlet.h, inlet.mdot;
-	inlet.p := 40 {bar};
-	inlet.h := 634 {kJ/kg};
-	inlet.mdot := 700 {t/d};
+	Qdot := 10 {MW};
+	FIX inlet.p := 40 {bar};
+	FIX inlet.h := 634 {kJ/kg};
+	FIX inlet.mdot := 700 {t/d};
 
-	FIX inlet_heat.p, inlet_heat.h, inlet_heat.mdot;
-	inlet_heat.p := 50 {bar};
-	inlet_heat.h := 2960 {kJ/kg};
-	inlet_heat.mdot := 500 {t/d};	
+	FIX inlet_heat.p := 50 {bar};
+	FIX inlet_heat.h := 2960 {kJ/kg};
+	FIX inlet_heat.mdot := 500 {t/d};
 
-	FIX outlet.h;
-	outlet.h := 900 {kJ/kg};
+	FIX outlet.h := 900 {kJ/kg};
 
 	SOLVER QRSlv;
 	OPTION convopt 'RELNOM_SCALE';
@@ -730,6 +732,12 @@ END set_x_limit;
 (*
 	second test case: numbers from Example 2.1, K Weston, 'Energy Conversion',
 	1992, http://www.personal.utulsa.edu/~kenneth-weston/
+	
+	As per Fig 2.2:
+	state 1: boiler outlet, turbine inlet
+	state 2: turbine outlet, condenser inlet
+	state 3: condenser outlet, pump inlet
+	state 4: pump outlet, turbine inlet.
 *)
 METHOD specify;
 	RUN ClearAll;
@@ -744,7 +752,7 @@ METHOD specify;
 END specify;
 METHOD values;
 	PU.outlet.p := 2000 {psi};
-	BO.outlet.T := 1460 {R}; BO.outlet.h := 3400 {kJ/kg};
+	BO.outlet.T := 1460 {R};
 	PU.inlet.p := 1 {psi};
 	CO.outlet.x := 1e-6; (*PU.inlet.h := 69.73 {btu/lbm};*)
 	TU.eta := 1.0;
@@ -773,8 +781,8 @@ METHOD self_test;
 END self_test;
 METHOD default_self;
 	RUN rankine_common::default_self;
-	BO.outlet.h := 3000 {kJ/kg}; (* guess *)
-	TU.outlet.h := 3000 {kJ/kg}; (* guess *)
+	BO.outlet.h := 3400 {kJ/kg};
+	TU.outlet.h := 2000 {kJ/kg}; (* guess *)
 	CO.outlet.h := 300 {kJ/kg};
 	CO.outlet.p := 10 {kPa};
 END default_self;

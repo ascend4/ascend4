@@ -96,7 +96,7 @@ def cycle_plot_rankine(self):
 	loading.load_matplotlib(throw=True)
 	ioff()
 	figure()
-	hold(1)
+	#hold(1)
 	D = fprops.fluid(str(self.cd.component.getSymbolValue()))
 	sat_curve(D)
 
@@ -156,7 +156,7 @@ def cycle_plot_rankine_regen2(self):
 	loading.load_matplotlib(throw=True)
 	ioff()
 	figure()
-	hold(1)
+	#hold(1)
 	D = fprops.fluid(str(self.cd.component.getSymbolValue()))
 	sat_curve(D)
 
@@ -199,7 +199,7 @@ def cycle_plot_rankine_regen1(self):
 	loading.load_matplotlib(throw=True)
 	ioff()
 	figure()
-	hold(1)
+	#hold(1)
 	D = fprops.fluid(str(self.cd.component.getSymbolValue()))
 	sat_curve(D)
 
@@ -240,7 +240,7 @@ def heater_closed_plot(self):
 	loading.load_matplotlib(throw=True)
 	ioff()
 	figure()
-	hold(1)
+	#hold(1)
 	D = fprops.fluid(str(self.cd.component.getSymbolValue()))
 	HE = self.HE
 
@@ -278,7 +278,7 @@ def cycle_plot_ccgt(self):
 	SS = [self.GC.inlet, self.GC.outlet, self.GT.inlet, self.GT.outlet, self.HE.inlet, self.HE.outlet, self.GC.inlet]
 	plot_Ts(SS,'g-')
 	plot_Ts(SS,'go')
-	hold(1)
+	#hold(1)
 	
 	sat_curve(D)
 
@@ -331,7 +331,7 @@ def cycle_plot_brayton_regen(self):
 	SS4 = [self.RE.outlet, self.RE.inlet_hot]
 	plot_Ts(SS4,'g--')
 
-	hold(1)
+	#hold(1)
 
 	title(str(r"Regenerative Brayton cycle"))
 	ylabel(str(r"T / [°C]"))
@@ -349,7 +349,7 @@ def cycle_plot_brayton_reheat_regen_intercool(self):
 	loading.load_matplotlib(throw=True)
 	ioff()
 	figure()		
-	hold(1)
+	#hold(1)
 	D = fprops.fluid(str(self.cd.component.getSymbolValue()),str(self.cd.type.getSymbolValue()))
 	sat_curve(D)
 	
@@ -405,7 +405,7 @@ def cycle_plot_brayton_split(self):
 	loading.load_matplotlib(throw=True)
 	ioff()
 	figure()		
-	hold(1)
+	#hold(1)
 	D = fprops.fluid(str(self.cd.component.getSymbolValue()),str(self.cd.type.getSymbolValue()))
 	sat_curve(D)
 	
@@ -464,7 +464,7 @@ def air_stream_heat_exchanger_plot(self):
 	loading.load_matplotlib(throw=True)
 	ioff()
 	figure()
-	hold(1)
+	#hold(1)
 	D = fprops.fluid(str(self.cd_cold.component.getSymbolValue()))
 
 	n = self.n.getIntValue()
