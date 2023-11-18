@@ -260,7 +260,7 @@ struct value_t DefEvaluateName(struct Name *nptr)
   name = SimpleNameIdPtr(nptr);
   if (name == NULL) return CreateErrorValue(name_unfound);
   if ((pos = ChildPos(g_def_child_list_ptr,name))==0){
-    FPRINTF(ASCERR,"Undefine child used in atom definition.\n");
+    FPRINTF(ASCERR,"Undefined child used in atom definition.\n");
     return CreateErrorValue(name_unfound);
   }
   if (!ReadBit(g_def_child_bit_list,pos-1)){

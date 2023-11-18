@@ -1166,3 +1166,4 @@ struct gl_list_t *EvaluateSetNamesNeededShallow(CONST struct Set *sptr,
   }
   return GNN;
 }
+/* vim:ts=8:et:sw=2 */

@@ -49,6 +49,13 @@
 #include <ascend/general/panic.h>
 #include <ascend/utilities/ascDynaLoad.h>
 
+//#define ASC_GRAPH_DEBUG
+#ifdef ASC_GRAPH_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...) 
+#endif
+
 int system_write_graph(slv_system_t sys
 	, FILE *fp
 	, const char *format
@@ -132,26 +139,26 @@ int system_write_graph(slv_system_t sys
 	*(void **) (&aged) = Asc_DynamicFunction(ASC_CGRAPH_LIBNAME,"agedge");
 
 	if(!gvConte || !gvLayo || !gvRend || !agop || !agatt | !agno | !ags || !aged){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Unable to access find required "
-			"functions in Graphviz dynamically-loaded library/ies Do you have the "
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Unable to access required "
+			"functions in the Graphviz dynamically-loaded library/ies. Do you have the "
 			"correct version installed?"
 		);
 		return 1;
 	}
 
-	CONSOLE_DEBUG("Dynamically loaded GraphViz OK");
+	MSG("Dynamically loaded GraphViz OK");
 
 	/* create the graph and its style details */
 	gvc = (*gvConte)();
 #ifdef WITH_CGRAPH
 	g = (*agop)("g",Agdirected,NULL);
-	(*agatt)(g,AGNODE,"shape","ellipse");
+	(*agatt)(g,AGNODE,"shape","box");
 	(*agatt)(g,AGNODE,"label","");
 	(*agatt)(g,AGNODE,"color","");
 	(*agatt)(g,AGNODE,"style","");
 #else
 	g = (*agop)("g",AGDIGRAPH);
-	(*agatt)(g,"shape","ellipse");
+	(*agatt)(g,"shape","box");
 	(*agatt)(g,"label","");
 	(*agatt)(g,"color","");
 	(*agatt)(g,"style","");
@@ -166,7 +173,7 @@ int system_write_graph(slv_system_t sys
 		(*ags)(n,"label",relname);
 		if(rel_satisfied(id.rlist[i])){
 			(*ags)(n,"style","filled");
-			(*ags)(n,"color","blue");
+			(*ags)(n,"color","cornflowerblue");
 		}
 		ASC_FREE(relname);
 		nodecount++;
@@ -182,12 +189,12 @@ int system_write_graph(slv_system_t sys
 		(*ags)(n,"label",varname);
 		(*ags)(n, "shape", "box");
 		if(var_fixed(id.vlist[j])){
-			CONSOLE_DEBUG("VAR '%s' IS FIXED",varname);
+			MSG("VAR '%s' IS FIXED",varname);
 			(*ags)(n,"style","filled");
 			(*ags)(n,"color","green");
 		}
 		if(!var_active(id.vlist[j])){
-			CONSOLE_DEBUG("VAR '%s' IS FIXED",varname);
+			MSG("VAR '%s' IS FIXED",varname);
 			(*ags)(n,"style","filled");
 			(*ags)(n,"color","gray");
 		}
@@ -202,7 +209,7 @@ int system_write_graph(slv_system_t sys
 		sprintf(reltemp,"r%d",rel_sindex(id.rlist[i]));
 		char *relname;
 		relname = rel_make_name(sys,id.rlist[i]);
-		CONSOLE_DEBUG("rel = '%s'",relname);
+		MSG("rel = '%s'",relname);
 		ASC_FREE(relname);
 		for(j=0; j < niv; ++j){
 			const struct var_variable *v;
@@ -234,7 +241,7 @@ int system_write_graph(slv_system_t sys
 
 	Asc_DynamicUnLoad(ASC_GV_LIBNAME);
 
-	CONSOLE_DEBUG("Completed graph output");
+	MSG("Completed graph output");
 	return 0;
 
 #else

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.18.3 -->
+<!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.2"/>
   <object class="GtkAboutDialog" id="aboutdialog">
@@ -326,6 +326,9 @@ Conversion to LyX and other formats:
 </property>
     <property name="translator_credits" translatable="yes" comments="TRANSLATORS: Replace this string with your names, one name per line.">translator-credits</property>
     <property name="logo">ascend.svg</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox7">
         <property name="can_focus">False</property>
@@ -434,6 +437,9 @@ about this again</property>
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Out of bounds</property>
     <property name="type_hint">dialog</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox1">
         <property name="visible">True</property>
@@ -471,12 +477,12 @@ about this again</property>
           <object class="GtkLabel" id="msg">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="xalign">0</property>
             <property name="xpad">8</property>
             <property name="ypad">8</property>
             <property name="label" translatable="yes">Please enter a value that lies within the
 upper and lower bounds displayed.</property>
             <property name="use_markup">True</property>
+            <property name="xalign">0</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -557,8 +563,8 @@ upper and lower bounds displayed.</property>
     </action-widgets>
   </object>
   <object class="GtkDialog" id="diagnosewin">
+    <property name="width_request">820</property>
     <property name="height_request">0</property>
-	<property name="width_request">820</property>
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Block Diagnosis</property>
@@ -566,6 +572,9 @@ upper and lower bounds displayed.</property>
     <property name="destroy_with_parent">True</property>
     <property name="type_hint">dialog</property>
     <signal name="close" handler="on_diagnosewin_close" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox6">
         <property name="visible">True</property>
@@ -678,8 +687,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label38">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Block #</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -751,8 +760,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label44">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Zoom</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -869,8 +878,8 @@ upper and lower bounds displayed.</property>
                               <object class="GtkLabel" id="blockstatustext">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="xalign">0</property>
                                 <property name="ypad">4</property>
+                                <property name="xalign">0</property>
                               </object>
                             </child>
                           </object>
@@ -919,9 +928,9 @@ upper and lower bounds displayed.</property>
                                   <object class="GtkLabel" id="label46">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="xalign">0</property>
                                     <property name="label" translatable="yes">&lt;u&gt;v&lt;/u&gt;ar</property>
                                     <property name="use_markup">True</property>
+                                    <property name="xalign">0</property>
                                   </object>
                                   <packing>
                                     <property name="x_options"/>
@@ -932,9 +941,9 @@ upper and lower bounds displayed.</property>
                                   <object class="GtkLabel" id="label47">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="xalign">0</property>
                                     <property name="label" translatable="yes">&lt;u&gt;r&lt;/u&gt;el</property>
                                     <property name="use_markup">True</property>
+                                    <property name="xalign">0</property>
                                   </object>
                                   <packing>
                                     <property name="top_attach">1</property>
@@ -1720,6 +1729,9 @@ upper and lower bounds displayed.</property>
     <property name="icon">ascend.png</property>
     <property name="type_hint">dialog</property>
     <property name="gravity">center</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="vbox">
         <property name="visible">True</property>
@@ -1799,6 +1811,9 @@ upper and lower bounds displayed.</property>
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <property name="window_position">center</property>
     <signal name="remove" handler="on_imagewindow_remove" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child>
       <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
@@ -1907,6 +1922,9 @@ upper and lower bounds displayed.</property>
     <property name="icon">ascend.png</property>
     <property name="type_hint">dialog</property>
     <signal name="close" handler="on_infodialog_close" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox12">
         <property name="visible">True</property>
@@ -1981,6 +1999,9 @@ upper and lower bounds displayed.</property>
     <property name="title" translatable="yes">ASCEND PyGTK</property>
     <property name="default_width">600</property>
     <property name="default_height">800</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child>
       <object class="GtkVBox" id="vbox5">
         <property name="visible">True</property>
@@ -2676,6 +2697,7 @@ upper and lower bounds displayed.</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="toolbar_style">both</property>
+            <property name="show_arrow">False</property>
             <child>
               <object class="GtkToolButton" id="openbutton">
                 <property name="use_action_appearance">False</property>
@@ -2685,7 +2707,7 @@ upper and lower bounds displayed.</property>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">True</property>
+                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -2699,7 +2721,7 @@ upper and lower bounds displayed.</property>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">True</property>
+                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -2723,7 +2745,7 @@ upper and lower bounds displayed.</property>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">True</property>
+                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -2737,7 +2759,7 @@ upper and lower bounds displayed.</property>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">True</property>
+                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -2751,7 +2773,7 @@ upper and lower bounds displayed.</property>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">True</property>
+                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -2776,7 +2798,7 @@ upper and lower bounds displayed.</property>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">True</property>
+                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -3064,6 +3086,9 @@ upper and lower bounds displayed.</property>
     <property name="window_position">center-on-parent</property>
     <property name="icon">integrator.png</property>
     <property name="type_hint">dialog</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox11">
         <property name="visible">True</property>
@@ -3122,10 +3147,10 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="integratorlabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="xpad">10</property>
                 <property name="ypad">10</property>
                 <property name="label" translatable="yes">Solving with xxxx</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -3193,6 +3218,9 @@ upper and lower bounds displayed.</property>
     <property name="window_position">center</property>
     <property name="icon">integrator.png</property>
     <property name="type_hint">dialog</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox10">
         <property name="visible">True</property>
@@ -3300,8 +3328,8 @@ upper and lower bounds displayed.</property>
                         <property name="width_request">80</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="xalign">0</property>
                         <property name="label" translatable="yes">Engine</property>
+                        <property name="xalign">0</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -3344,9 +3372,9 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label76">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Start</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="x_options">GTK_FILL</property>
@@ -3357,9 +3385,9 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label77">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Duration</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">1</property>
@@ -3372,9 +3400,9 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label78">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Number of steps</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">2</property>
@@ -3387,9 +3415,9 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label79">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Distribution</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">3</property>
@@ -3476,8 +3504,8 @@ upper and lower bounds displayed.</property>
                       <object class="GtkLabel" id="label75">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="yalign">0</property>
                         <property name="label" translatable="yes">Timesteps</property>
+                        <property name="yalign">0</property>
                       </object>
                     </child>
                   </object>
@@ -3502,9 +3530,9 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label81">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Initial substep</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="x_options">GTK_FILL</property>
@@ -3515,9 +3543,9 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label82">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Minimum substep</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">1</property>
@@ -3530,9 +3558,9 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label83">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Maximum substep</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">2</property>
@@ -3545,9 +3573,9 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label84">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Max total steps</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">3</property>
@@ -3659,9 +3687,9 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="liveplotlabel">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Live plotting</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">4</property>
@@ -3736,6 +3764,9 @@ upper and lower bounds displayed.</property>
     <property name="title" translatable="yes">window1</property>
     <property name="default_width">600</property>
     <property name="default_height">400</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child>
       <object class="GtkVBox" id="observervbox">
         <property name="visible">True</property>
@@ -3945,6 +3976,9 @@ upper and lower bounds displayed.</property>
     <property name="default_height">500</property>
     <property name="icon">properties.png</property>
     <property name="type_hint">dialog</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox9">
         <property name="visible">True</property>
@@ -4098,11 +4132,11 @@ upper and lower bounds displayed.</property>
                             <property name="width_request">550</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="xpad">10</property>
                             <property name="ypad">10</property>
                             <property name="label" translatable="yes">To edit a parameter, select the row you want then click the 'value' column.</property>
                             <property name="wrap">True</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -4189,6 +4223,9 @@ upper and lower bounds displayed.</property>
     <property name="default_height">600</property>
     <property name="icon_name">gtk-properties</property>
     <signal name="destroy" handler="on_paramswin_destroy" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child>
       <object class="GtkVBox" id="vbox6">
         <property name="visible">True</property>
@@ -4288,10 +4325,10 @@ upper and lower bounds displayed.</property>
                   <object class="GtkLabel" id="paramdescription">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="xalign">0</property>
                     <property name="xpad">10</property>
                     <property name="ypad">10</property>
                     <property name="label" translatable="yes">To edit a paramer, select the row you want then click the 'value' column.</property>
+                    <property name="xalign">0</property>
                   </object>
                 </child>
               </object>
@@ -4369,6 +4406,9 @@ upper and lower bounds displayed.</property>
     <property name="window_position">center-on-parent</property>
     <property name="type_hint">dialog</property>
     <signal name="close" handler="on_plotdialog_close" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox18">
         <property name="visible">True</property>
@@ -4569,6 +4609,9 @@ upper and lower bounds displayed.</property>
     <property name="title" translatable="yes">Relation</property>
     <property name="icon">properties.png</property>
     <property name="type_hint">dialog</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox5">
         <property name="visible">True</property>
@@ -4613,8 +4656,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label30">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Name	</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="x_options">GTK_FILL</property>
@@ -4625,8 +4668,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="relname">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">relname</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -4639,8 +4682,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label32">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Residual</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">2</property>
@@ -4672,9 +4715,9 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label33">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Relation	</property>
                 <property name="xalign">0</property>
                 <property name="yalign">0</property>
-                <property name="label" translatable="yes">Relation	</property>
               </object>
               <packing>
                 <property name="top_attach">3</property>
@@ -4818,8 +4861,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label109">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Status</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">1</property>
@@ -4854,6 +4897,9 @@ upper and lower bounds displayed.</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="skip_pager_hint">True</property>
     <signal name="response" handler="on_solverstatusdialog_response" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox8">
         <property name="visible">True</property>
@@ -4931,8 +4977,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label51">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Variables  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="x_options">GTK_FILL</property>
@@ -4943,8 +4989,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label52">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Blocks  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">1</property>
@@ -4957,8 +5003,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label53">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Iterations  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">3</property>
@@ -4971,8 +5017,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="numvarsentry">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Starting...</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -5014,8 +5060,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label61">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Elapsed time  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">2</property>
@@ -5079,8 +5125,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label57">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Variables  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="x_options">GTK_FILL</property>
@@ -5091,8 +5137,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label58">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Iterations  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">1</property>
@@ -5105,8 +5151,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label59">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">RMS Residual  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">2</property>
@@ -5119,8 +5165,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label60">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Elapsed time  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">3</property>
@@ -5228,9 +5274,9 @@ upper and lower bounds displayed.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="has_focus">True</property>
+                <property name="focus_on_click">False</property>
                 <property name="can_default">True</property>
                 <property name="receives_default">True</property>
-                <property name="focus_on_click">False</property>
                 <signal name="clicked" handler="on_diagnose_button_click" swapped="no"/>
                 <accelerator key="F9" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
               </object>
@@ -5267,6 +5313,9 @@ upper and lower bounds displayed.</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="skip_pager_hint">True</property>
     <signal name="response" handler="on_studystatusdialog_response" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox17">
         <property name="visible">True</property>
@@ -5342,8 +5391,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label1201">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Variable </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="x_options">GTK_FILL</property>
@@ -5354,8 +5403,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label1202">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Current Value</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">1</property>
@@ -5368,8 +5417,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label1203">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Points Done</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">2</property>
@@ -5382,8 +5431,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label1204">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Elapsed time  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">3</property>
@@ -5490,8 +5539,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label62">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Variables  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="x_options">GTK_FILL</property>
@@ -5502,8 +5551,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label63">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Blocks  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">1</property>
@@ -5516,8 +5565,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label64">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Iterations  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">3</property>
@@ -5530,8 +5579,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="numvarsentry1">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Starting...</property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -5573,8 +5622,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label65">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Elapsed time  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">2</property>
@@ -5638,8 +5687,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label67">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Variables  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="x_options">GTK_FILL</property>
@@ -5650,8 +5699,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label68">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Iterations  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">1</property>
@@ -5664,8 +5713,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label54">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">RMS Residual  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">2</property>
@@ -5678,8 +5727,8 @@ upper and lower bounds displayed.</property>
                           <object class="GtkLabel" id="label55">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
                             <property name="label" translatable="yes">Elapsed time  </property>
+                            <property name="xalign">0</property>
                           </object>
                           <packing>
                             <property name="top_attach">3</property>
@@ -5814,6 +5863,9 @@ upper and lower bounds displayed.</property>
     <signal name="close" handler="on_studywin_close" swapped="no"/>
     <signal name="delete-event" handler="on_studywin_close" swapped="no"/>
     <signal name="key-press-event" handler="on_key_press_event" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox13">
         <property name="visible">True</property>
@@ -5875,16 +5927,16 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="varnamelabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Variable</property>
+                <property name="xalign">0</property>
               </object>
             </child>
             <child>
               <object class="GtkLabel" id="lboundlabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Lower Bound</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">1</property>
@@ -5895,8 +5947,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="uboundlabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Upper Bound</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">2</property>
@@ -5907,8 +5959,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="distlabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Distribution</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">4</property>
@@ -5919,8 +5971,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="methodnamelabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Method to run</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">5</property>
@@ -6039,8 +6091,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="contfaillabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Continue on fail</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">6</property>
@@ -6113,6 +6165,9 @@ upper and lower bounds displayed.</property>
     <property name="title" translatable="yes">Choose preferred units of measurement</property>
     <property name="window_position">center-on-parent</property>
     <property name="type_hint">dialog</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox14">
         <property name="visible">True</property>
@@ -6199,8 +6254,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label1">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Atom type:</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="y_options"/>
@@ -6210,9 +6265,9 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label2">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="ypad">5</property>
                 <property name="label" translatable="yes">Dimension:</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">1</property>
@@ -6224,9 +6279,9 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="dimensionlabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="ypad">5</property>
                 <property name="ellipsize">end</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -6240,10 +6295,10 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label4">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
-                <property name="yalign">0</property>
                 <property name="label" translatable="yes">Preferred units:</property>
                 <property name="width_chars">1</property>
+                <property name="xalign">0</property>
+                <property name="yalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">2</property>
@@ -6299,6 +6354,9 @@ upper and lower bounds displayed.</property>
     <property name="skip_taskbar_hint">True</property>
     <signal name="close" handler="on_varpropswin_close" swapped="no"/>
     <signal name="delete-event" handler="on_varpropswin_close" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox4">
         <property name="visible">True</property>
@@ -6377,8 +6435,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label22">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Value</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">4</property>
@@ -6391,8 +6449,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label24">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Lower bound</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">5</property>
@@ -6405,8 +6463,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label25">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Upper bound</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">6</property>
@@ -6419,8 +6477,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label26">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Solving...	</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">9</property>
@@ -6437,9 +6495,9 @@ upper and lower bounds displayed.</property>
                   <object class="GtkLabel" id="varname">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="xalign">0</property>
                     <property name="ypad">4</property>
                     <property name="label" translatable="yes">variable.name[245].here.value</property>
+                    <property name="xalign">0</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -6632,8 +6690,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label28">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Scaling base</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">7</property>
@@ -6697,10 +6755,10 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label23">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
-                <property name="yalign">0</property>
                 <property name="ypad">10</property>
                 <property name="label" translatable="yes">Name	</property>
+                <property name="xalign">0</property>
+                <property name="yalign">0</property>
               </object>
               <packing>
                 <property name="x_options">GTK_FILL</property>
@@ -6765,8 +6823,8 @@ upper and lower bounds displayed.</property>
               <object class="GtkLabel" id="label29">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="label" translatable="yes">Status</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="top_attach">2</property>
