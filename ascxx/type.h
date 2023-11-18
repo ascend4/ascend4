@@ -36,7 +36,7 @@ public:
 	Simulation getSimulation(const SymChar &name, const bool rundefaultmethod);
 	//Simulation getSimulation(const SymChar &name="sim", const bool &rundefaultmethod=true);
 	const Dimensions getDimensions() const;
-	std::vector<Method> getMethods() const;
+	std::vector<Method> getMethods() const; ///< FIXME this does not report 'built in' methods like reset, ClearAll
 	Method getMethod(const SymChar &name) const; ///< exception if not found
 	const bool isRefinedSolverVar() const; ///< is this type a refinement of solver_var?
 	const bool isRefinedAtom() const;

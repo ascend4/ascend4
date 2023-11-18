@@ -41,8 +41,16 @@
 #include "analyze.h"
 #include "slv_common.h"
 
+//#define ASC_SYSTEM_DEBUG
+#ifdef ASC_SYSTEM_DEBUG
+# define DOTIME 1
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(...) 
+# define DOTIME 0
+#endif
+
 #define IPTR(i) ((struct Instance *) (i))
-#define DOTIME 1
 
 slv_system_t system_build(SlvBackendToken inst){
   slv_system_t sys;
@@ -89,11 +97,11 @@ slv_system_t system_build(SlvBackendToken inst){
 #if DOTIME
   comptime = tm_cpu_time() - comptime;
   if(comptime >= 2){
-    CONSOLE_DEBUG("System built (time %5.3f s)",comptime);
+    MSG("System built (time %5.3f s)",comptime);
   }else if(comptime > 10e-3){
-    CONSOLE_DEBUG("System built (time %5.3f ms)",comptime*1e3);
+    MSG("System built (time %5.3f ms)",comptime*1e3);
   }else{
-    CONSOLE_DEBUG("System built (time %0.0f us)",comptime*1e6);
+    MSG("System built (time %0.0f us)",comptime*1e6);
   }
 #endif
   return(sys);

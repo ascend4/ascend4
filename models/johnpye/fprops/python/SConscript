@@ -1,13 +1,16 @@
 Import('fprops_env')
 import os
 
+print("PY FPROPS")
+# get compile/link settings for libpython, Python.h
 pyenv = fprops_env.Clone()
 pyenv.ParseConfig('pkg-config $PYTHON_PKG --cflags --libs')
+pyenv['SHLIBSUFFIX'] = '.so'
+pyenv['SHLIBPREFIX'] = '_'
 
 if 0:
 	pyenv['LIBS'] = []
-	pyenv['SHLIBSUFFIX'] = '.so'
-	pyenv['SHLIBPREFIX'] = '_'
+
 
 	import distutils.sysconfig, sys, platform
 
@@ -40,6 +43,8 @@ lib = pyenv.SharedLibrary('fprops',['fprops.i'] + fprops_env['shobjs']
 #	,LIBS=["m"]
 	,SWIGFLAGS=['-python']
 )
+
+print(lib)
 
 pyenv.Depends(lib,"fprops_wrap.c")
 #pyenv.Depends(lib,fprops_env['libfprops'])

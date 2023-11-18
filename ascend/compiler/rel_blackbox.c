@@ -47,6 +47,8 @@
 #include "packages.h" /* for init slv interp */
 #include "name.h" /* for copy/destroy name */
 
+//#define WARNEXPT // warn user that blackbox evaluation is experimental
+
 #define WITH_BLACKBOX_DSOLVE
 /* #define BLACKBOX_DEBUG */
 
@@ -171,12 +173,14 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
 	double inputTolerance;
 	int updateNeeded;
 	int nok = 0;
-  	static int warnexpt;
 
+#ifdef WARNEXPT
+	static int warnexpt;
 	if(!warnexpt){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox evaluation is experimental (%s)",__FUNCTION__);
 		warnexpt = 1;
 	}
+#endif
 
 	(void)i;
 	efunc = RelationBlackBoxExtFunc(r);
@@ -272,12 +276,14 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 	int updateNeeded, offset;
 	unsigned int k;
 	int nok = 0;
-    static int warnexpt, warnfdiff;
 
+#ifdef WARNEXPT
+    static int warnexpt, warnfdiff;
 	if(!warnexpt){
 		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox gradient is experimental (%s)",__FUNCTION__);
 		warnexpt = 1;
 	}
+#endif
 
  	/* prepare */
 	(void)i;
@@ -322,6 +328,7 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 				, common->inputsJac, common->outputs, common->jacobian
 			);
 		}else{
+#ifdef WARNEXPT
 			if(!warnfdiff){
 				ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Using finite-difference "
 					" to compute derivatives for one or more black boxes in"
@@ -329,6 +336,7 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 				);
 				warnfdiff = 1;
 			}
+#endif
 
 			nok = blackbox_fdiff(GetValueFunc(efunc), &(common->interp)
 				, common->inputsLen, common->outputsLen

@@ -71,6 +71,8 @@ if __name__ == "__main__":
 	p_run.set_defaults(action='run')
 	p_run.add_argument('file',type=pathlib.Path,help='ASCEND model file to be opened')
 	p_run.add_argument('--model','-m', help="Name of MODEL to instantiate (defaults to filename without extension)");
+	p_run.add_argument('-p', '--print', dest='printvars', action='extend', nargs='+', help='Variables to print (can be used multiple times). Implies --no-test.')
+	p_run.add_argument('--no-test','-n', help="Suppress running of 'self_test' method after solving");
 
 	p_scr = s.add_parser('script',help = 'Run a Python or other script within ASCEND development environment')
 	p_scr.set_defaults(action='script')
@@ -129,6 +131,8 @@ if __name__ == "__main__":
 
 	# ensure our pygtk dir is in the PYTHONPATH
 	pypath = [sourceroot / 'ascxx', sourceroot / 'pygtk']
+	# also FPROPS
+	pypath += [sourceroot / 'models' / 'johnpye' / 'fprops' / 'python']
 	if add_at_start('PYTHONPATH',pypath):
 		restart.append('PYTHONPATH')
 
@@ -157,7 +161,12 @@ if __name__ == "__main__":
 		# that ascpy cannot successfully load libascend.so.
 		cmd += [PYTHON,sourceroot/'ascxx'/'runmodel.py',args.file]
 		if args.model:
-			cmd.append(args.model)
+			cmd += ["--model",args.model]
+		if args.printvars:
+			cmd += ["--print"] + args.printvars
+		if args.no_test:
+			cmd += ["--no-test"]
+		#print(f"CMD = {cmd}")
 	elif args.action == 'q':
 		# for the convenience of the developer -- hack this for your temporary needs
 		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev', sourceroot/'models'/'johnpye'/'extpy'/'extpytest.a4c']

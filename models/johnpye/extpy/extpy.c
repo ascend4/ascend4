@@ -32,7 +32,9 @@
 #include <ascend/compiler/importhandler.h>
 #include <ascend/compiler/extfunc.h>
 
-#define EXTPY_DEBUG
+//#define WARNEXPT
+
+//#define EXTPY_DEBUG
 #ifdef EXTPY_DEBUG
 # define MSG CONSOLE_DEBUG
 #else
@@ -78,7 +80,9 @@ extern ASC_EXPORT int extpy_register(){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to register import handler (error = %d)",result);
 	}
 
+#ifdef WARNEXPT
 	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Loaded EXPERIMENTAL 'extpy' import handler.");
+#endif
 
 	return result;
 }

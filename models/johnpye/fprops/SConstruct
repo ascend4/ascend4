@@ -4,7 +4,7 @@
 # ASCEND installed on your system.
 
 import os, platform, sys
-
+    
 deft = "default"
 if platform.system()=="Windows":
 	deft = "mingw"
@@ -17,10 +17,18 @@ vars.Add(
 	,"${HOST_PREFIX}gcc"
 )
 
-vars.Add(
-	'CFLAGS'
+vars.Add('CFLAGS'
 	,'C compiler flags'
 	,["-Wall",'-std=c99']
+)
+
+major = sys.version_info[0]
+minor = sys.version_info[1]
+default_pc_name = f'python-{major}.{minor}'
+vars.Add(
+	'PYTHON_PKG'
+	,"Name of the pkg-config package for building Python extensions"
+	,default_pc_name
 )
 
 env = Environment(

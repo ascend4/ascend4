@@ -50,6 +50,7 @@ if fprops_env.get('BUILDING_ASCEND') or fprops_env.get('WITH_ASCEND'):
 	env['extfns'] += [lib1,lib2]
 
 if env['WITH_PYTHON']:
+	print("BUILDING PYTHON FPROPS BINDING")
 	fprops_env.SConscript('python/SConscript',['fprops_env'])
 	env['pyfprops'] = fprops_env['pyfprops']
 
