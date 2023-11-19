@@ -1,5 +1,5 @@
 import threading
-
+import loading
 from gi.repository import GObject
 
 from solverreporter import *
@@ -7,7 +7,7 @@ from solverreporter import *
 
 class SolverHooksPython(ascpy.SolverHooks):
 	def __init__(self):
-		print("PYTHON SOLVER HOOKS")
+		loading.print_status("","Loaded python solver hooks")
 		ascpy.SolverHooks.__init__(self,None)
 	def setSolver(self,solvername,sim):
 		sim.setSolver(ascpy.Solver(solvername))

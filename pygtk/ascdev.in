@@ -5,7 +5,7 @@ import os, sys, platform, subprocess
 from pathlib import Path
 
 if __name__=='__main__':
-	print("PYTHON = @PYTHON@")
+	#print("PYTHON = @PYTHON@")
 	
 	sourceroot=Path("@SOURCE_ROOT@")
 	script=Path(sys.argv[0])
@@ -28,8 +28,9 @@ if __name__=='__main__':
 	#	print("   %s = %s" % (v,os.environ[v]))
 	
 	import ascpy
-	from gtkbrowser import *
+	import loading
 	assetspath = sourceroot/"pygtk"/"glade"
+	from gtkbrowser import *
 	#print("ASSETS PATH = %s" % assetspath)
 	B = Browser(assetspath=assetspath)
 	B.run()	

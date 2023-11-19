@@ -34,6 +34,7 @@ options.cache
 pygtk/ascdev
 pygtk/ascend
 pygtk/config.py
+pygtk/glade/*~
 test/test
 test_readln.txt
 **/*.gcno

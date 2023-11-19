@@ -481,6 +481,15 @@ class ModelView:
 				print("F2 pressed")
 				self.modelview.set_cursor(_path, self.tvcolumns[2], 1)
 				return True
+			elif event.keyval == Gdk.KEY_f and (event.state & Gdk.ModifierType.CONTROL_MASK):
+				#print("Ctrl+F pressed - perform your action here")
+				self.fix_activate(widget)
+				return True  # Prevents further handling (i.e., blocks the default search behavior)
+			elif event.keyval == Gdk.KEY_r and (event.state & Gdk.ModifierType.CONTROL_MASK):
+				#print("Ctrl+R pressed - perform your action here")
+				self.free_activate(widget)
+				return True
+		
 		elif event.type == Gdk.EventType.BUTTON_PRESS:
 			_x = int(event.x)
 			_y = int(event.y)
@@ -632,6 +641,7 @@ class ModelView:
 		self.refreshtree()		
 
 	def fix_activate(self,widget):
+		self.browser.reporter.reportNote("Fixing variable")
 		_model, _pathlist = self.modelview.get_selection().get_selected_rows()
 		for _path in _pathlist:
 			piter = self.modelview.get_model().get_iter(_path)
@@ -642,6 +652,7 @@ class ModelView:
 		return 1
 
 	def free_activate(self,widget):
+		self.browser.reporter.reportNote("Freeing variable")
 		_model, _pathlist = self.modelview.get_selection().get_selected_rows()
 		for _path in _pathlist:
 			piter = self.modelview.get_model().get_iter(_path)

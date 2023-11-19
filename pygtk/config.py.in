@@ -1,6 +1,6 @@
-# This file will be processed by autoconf and output as config.py.
+# This file will be processed by SCons and output as config.py.
 # If the file you are looking at now is named 'config.py' then be
-# aware that YOUR CHANGES WILL BE LOST if you run './configure'.
+# aware that YOUR CHANGES WILL BE LOST when you recompile ASCEND.
 
 HELPROOT = "@HELP_ROOT@"
 WEBHELPROOT = "@WEBHELPROOT@"

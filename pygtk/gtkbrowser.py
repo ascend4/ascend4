@@ -1,5 +1,3 @@
-import sys
-
 try:
 	import loading
 	loading.print_status("Loading python standard libraries")
@@ -7,7 +5,6 @@ try:
 	import gi 
 	gi.require_version('Gtk', '3.0') 
 	from gi.repository import Gtk, GdkPixbuf, Gdk, GLib
-
 	import re
 	import urllib.parse
 	import optparse
@@ -95,15 +92,13 @@ class Browser:
 #   ---------------------------------
 #   SETUP
 
-	def __init__(self,librarypath=None,assetspath=None):
-
-		if assetspath==None:
-			assetspath=config.PYGTK_ASSETS
+	def __init__(self,librarypath=None,assetspath=config.PYGTK_ASSETS):
 		
 		#--------
 		# load the file referenced in the command line, if any
 
-		loading.print_status("Parsing options","CONFIG = %s"%config.VERSION)
+		loading.print_status("Parsing options",f"Starting ASCEND version {config.VERSION}")
+		import optparse, platform
 
 		#print "Command-line options:",sys.argv
 		
@@ -115,7 +110,7 @@ class Browser:
 		if platform.system() == "Darwin":
 			parser.add_option("-p", "--silly-mac-thing"
 				,action="store", type="string", dest="process_number"
-				,help="Launch Services for Mac passes in a -psn-NNNNN argument that we need to swallow.")		
+				,help="Launch Services for Mac passes in a -psn-NNNNN argument that we need to swallow.")
 
 		parser.add_option("-m", "--model"
 			,action="store", type="string", dest="model"
@@ -230,7 +225,7 @@ class Browser:
 		#builder.add_from_file(self.glade_file)
 		builder.add_objects_from_file(self.glade_file,["integ_icon","browserwin","list_of_td"])
 		self.builder=builder
-		self.window=self.builder.get_object ("browserwin")
+		self.window=self.builder.get_object("browserwin")
 
 		self.disable_menu()
 		self.disable_on_first_run()
@@ -505,11 +500,15 @@ class Browser:
 		#--------
 		# Set up SolverHooks
 
-		print("PYTHON: SETTING UP SOLVER HOOKS")
+		#	print("PYTHON: SETTING UP SOLVER HOOKS")
 		self.solverhooks = SolverHooksPythonBrowser(self)
 		ascpy.SolverHooksManager_Instance().setHooks(self.solverhooks)
 
 		self.solve_interrupt = False
+		
+		# complete the loading *before* we open our model file. is that wise?
+		loading.complete()
+		
 		#--------
 		# options
 		if(len(args)==1):
@@ -575,8 +574,6 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 	def run(self):
 		if not self.options.test:
 			#self.window.show()
-			loading.print_status("ASCEND is now running")
-			loading.complete()
 			if self.prefs.getStringPref('Browser','first_run') == None:
 				self.prefs.setStringPref('Browser','first_run',time.perf_counter())
 			else:
@@ -711,7 +708,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.maintabs.set_current_page(0);
 	
 	# See http://www.daa.com.au/pipermail/pygtk/2005-October/011303.html
-	# for details on how the 'wait cursor' is done.
+	# for details on how the 'wait cursor' is done. (OUTDATED)
 	def start_waiting(self, message):
 		self.waitcontext = self.statusbar.get_context_id("waiting")
 		self.statusbar.push(self.waitcontext,message)
@@ -734,17 +731,18 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.sim = None;
 		# TODO: clear out old simulation first!
 		
+		loading.complete()
 		#print "DO_SIM(%s)" % str(type_object.getName())		
 		self.start_waiting("Compiling...")
 
 		try:
 			_v = self.prefs.getBoolPref("Compiler","use_relation_sharing",True)
 			ascpy.getCompiler().setUseRelationSharing(_v)
-			print(("Relation sharing set to",_v))
+			#self.reporter.reportNote(f"Relation sharing set to {_v}")
 
 			_v = self.prefs.getBoolPref("Compiler","use_binary_compilation",False)
 			ascpy.getCompiler().setBinaryCompilation(_v)
-			print(("Binary compilation set to",_v))
+			#self.reporter.reportNote(f"Binary compilation set to {_v}")
 
 			self.sim = type_object.getSimulation(str(type_object.getName())+"_sim",False)
 			
@@ -1658,3 +1656,4 @@ class AutoUpdateDialog:
 			elif _res == Gtk.ResponseType.NO or _res == Gtk.ResponseType.DELETE_EVENT or _res == Gtk.ResponseType.CLOSE:
 				self.win.destroy()
 				return False
+

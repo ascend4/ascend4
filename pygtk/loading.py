@@ -1,12 +1,11 @@
-import sys
-import config
-import os.path
+import sys, os
+import pathlib
 
 global have_gtk
 have_gtk = False
 
 if not sys.executable.endswith("pythonw.exe"):
-	print("PYTHON PATH =",sys.path)
+	pass #print("PYTHON PATH =",sys.path)
 
 try:
 	import gi 
@@ -14,7 +13,6 @@ try:
 	from gi.repository import Gtk
 	have_gtk = True
 except Exception as e:
-
 	if sys.platform=="win32":
 		try:
 			from ctypes import c_int, WINFUNCTYPE, windll
@@ -47,7 +45,7 @@ def load_matplotlib(throw=False,alert=False):
 		try:
 			print_status("Trying python numpy")
 			import numpy
-			print_status("","Using python module numpy")
+			print_status("")
 		except ImportError:
 			print_status("","FAILED to load Python module 'numpy'")
 		import pylab
@@ -62,96 +60,58 @@ def load_matplotlib(throw=False,alert=False):
 			_d.run()
 			_d.destroy()
 			while Gtk.events_pending():
-				Gtk.main_iteration_do(False)		
+				Gtk.main_iteration_do(False)
 		if throw:
 			raise RuntimeError("Failed to load plotting library 'matplotlib'. (%s)" % str(e))
 
-
-class LoadingWindow:
+class LoadingWindow(Gtk.Window):
 	def __init__(self):
 		self.is_loading = False
-		self.set_assets_dir(config.PYGTK_ASSETS)
-
-	def set_assets_dir(self, d):
-		self.assetsdir = d
-		self.splashfile = os.path.join(self.assetsdir,'ascend-loaxxxding.png')
-
-	def create_window(self):
-		if have_gtk:
-			if os.path.exists(self.splashfile):
-				_w = Gtk.Window(Gtk.WindowType.TOPLEVEL)
-				_w.set_decorated(False)
-				_w.set_position(Gtk.WindowPosition.CENTER)
-				_a = Gtk.Alignment.new(0.5,0.5,0,0)
-				_a.set_padding(4,4,4,4)
-				_w.add(_a)
-				_a.show()
-				_v = Gtk.VBox()
-				_a.add(_v)
-				_v.show()
-				_i = Gtk.Image()
-				self.image = _i
-				_i.set_pixel_size(3)
-				_i.set_from_file(self.splashfile)
-				_v.add(_i)
-				_i.show()
-				_l = Gtk.Label(label="Loading ASCEND...")
-				_l.set_justify(Gtk.Justification.CENTER)
-				_v.add(_l)
-				_l.show()
-				_w.show()
-				self.window = _w
-				self.label = _l
-				self.is_loading = True
-				while Gtk.events_pending():
-					Gtk.main_iteration()
-			else:
-				pass
-				#do nothing, don't know where splash file is yet
-		else:
-			print("DON'T HAVE GTK!")
-			sys.exit(1)
+		Gtk.Window.__init__(self, title="Splash Screen")
+		self.set_decorated(False)
+		self.set_default_size(300, 200)
+		self.set_position(Gtk.WindowPosition.CENTER)
+		_a = Gtk.Alignment.new(0.5,0.5,0,0)
+		_a.set_padding(4,4,4,4)
+		self.add(_a)
+		_v = Gtk.VBox()
+		_a.add(_v)
+		# FIXME check if this path calculation always works or not...
+		splash = pathlib.Path(__file__).parent.parent/"pygtk"/"glade"/"ascend-loading.png"
+		image = Gtk.Image.new_from_file(str(splash))
+		_v.add(image)
+		self.label = Gtk.Label(label="Loading ASCEND...")
+		self.label.set_justify(Gtk.Justification.CENTER)
+		_v.add(self.label)
+		self.show_all()
+		self.is_loading = True
 	
 	def print_status(self,status,msg=None):
 		if self.is_loading:
-			if not sys.executable.endswith("pythonw.exe"):
-				print(status)
 			self.label.set_text(status)
-			if msg is not None:
-				try:
-					sys.stderr.write(msg+"\n")
-				except IOError:
-					pass
-				_messages.append(msg)
 			while Gtk.events_pending():
 				Gtk.main_iteration()
-		else:
-			try:
-				sys.stderr.write("\r                                                 \r")
-				if msg!=None:
-					sys.stderr.write(msg+"\n")
-					_messages.append(msg)
-				sys.stderr.write(status+"...\r")
-				sys.stderr.flush()
-			except IOError:
-				pass
+		try:
+			sys.stderr.write(f"\rCLR:                                                 \r")
+			if msg:
+				sys.stderr.write(f"MSG: {msg}\n")
+				_messages.append(msg)
+			sys.stderr.write(f"\rSTA: {status}\r")
+			sys.stderr.flush()
+		except IOError:
+			pass
 
 	def complete(self):
 		if self.is_loading:
-			self.window.destroy()
+			self.destroy()
 		self.is_loading = False
-
-global w
 
 def print_status(status,msg=None):
 	w.print_status(status,msg)
 
 def complete():
-	w.complete()
+	w.destroy()
 
-def create_window(assetsdir=config.PYGTK_ASSETS):
-	w.set_assets_dir(assetsdir)
-	w.create_window()
-
+global w
 w = LoadingWindow()
-create_window()
+
