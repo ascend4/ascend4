@@ -65,8 +65,8 @@ static HelmholtzData helmholtz_data_water = {
 	, .ref = {
 		FPROPS_REF_PHI0
 		, .data = {.phi0 = {
-			.m = /* n_2 = */ 6.6832105275932 
-			, .c = /* n_1 = */ -8.3204464837497 
+			.m = /* n_2 = */ 6.6832105275932
+			, .c = /* n_1 = */ -8.3204464837497
 		}}
 	}
 #endif
@@ -279,6 +279,7 @@ static const TestData td1[] = {
 , {1.07315E+3, 1.E+2, 2.306404366E+2, 3.281691849E+3, 3.715267165E+3, 6.04058851E+0, 2.239640928E+0, 3.576379581E+0, 2.342340346E+0, -3.20076571E+3}
 };
 static const unsigned ntd1 = sizeof(td1)/sizeof(TestData);
+
 # include <math.h>
 # include <stdlib.h>
 # include <stdio.h>
@@ -423,8 +424,6 @@ void test_fluid_water(void){
 
 	TEST_MSG("Tests completed OK (maximum error = %0.8f%%)",maxerr);
 # endif
-
 }
 
 #endif
-

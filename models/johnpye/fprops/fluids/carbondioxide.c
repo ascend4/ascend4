@@ -45,7 +45,6 @@
 	reference state used by REFPROP, for the purpose of testing.
 */
 
-
 static const IdealData ideal_data_carbondioxide = {
 	IDEAL_PHI0
 	, {.phi0 = {
@@ -221,11 +220,11 @@ const EosData eos_carbondioxide = {
 #else
 # include "../fprops.h"
 # include "../refstate.h"
-#include "../test.h"
-#include "../sat.h"
-#include "../refstate.h"
-#include "../visc.h"
-#include "../thcond.h"
+# include "../test.h"
+# include "../sat.h"
+# include "../refstate.h"
+# include "../visc.h"
+# include "../thcond.h"
 # include <assert.h>
 # include <stdlib.h>
 # include <stdio.h>
@@ -554,5 +553,6 @@ void test_fluid_carbondioxide(){
 
 	helm_run_saturation_tests(d, nsd,tds, 'K');
 }
+
 
 #endif

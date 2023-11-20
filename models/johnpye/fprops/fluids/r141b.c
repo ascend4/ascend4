@@ -9,6 +9,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define R141B_M 116.94962 /* kg/kmol */
 #define R141B_R (8314.472/R141B_M) /* J/kg/K */
@@ -66,7 +67,7 @@ static const HelmholtzData helmholtz_data_r141b = {
 	}
 };
 
-EosData eos_r141b = {
+const EosData eos_r141b = {
 	"r141b"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -76,32 +77,15 @@ EosData eos_r141b = {
 	,.data = {.helm = &helmholtz_data_r141b}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py r141b
-*/
-
-#ifdef TEST
-
+#else
 #include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_r141b,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+extern const EosData eos_r141b;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation. 
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.00E+2, 9.99999999998E-2, 1.46248534033E+3, 8.87904306508E+1, 8.88588074046E+1, 4.92715595865E-1, 8.02029221607E-1, 1.15209126069E+0, 5.438352246E-1, 3.47672522675E+0}
@@ -132,6 +116,11 @@ const TestData td[] = {
     , {2.00E+2, 1.00E+2, 1.17080149547E+3, 3.96143587298E+2, 4.8155516252E+2, 1.5450949142E+0, 9.8527652757E-1, 1.21947882268E+0, 9.70844810863E-1, -3.34918071353E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_r141b(void){
+	PureFluid *P = helmholtz_prepare(&eos_r141b,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

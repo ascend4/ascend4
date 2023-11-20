@@ -16,6 +16,8 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 #define ACETONE_R (8314.472/ACETONE_M) /* J/kg/K */
 #define ACETONE_TC 508.1 /* K */
 
+#ifndef CUNIT_TEST
+
 static const IdealData ideal_data_acetone = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
@@ -65,12 +67,12 @@ static HelmholtzData helmholtz_data_acetone = {
 		, {-0.018166,	12.5,	2.0,	3.0}
 	}
 	, .ng = 0 /* gaussian terms */
-	, .gt = 0
+		, .gt = 0
 	, .nc = 0 /* critical terms */
 	, .ct = 0
 };
 
-EosData eos_acetone = {
+const EosData eos_acetone = {
 	"acetone"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -80,6 +82,9 @@ EosData eos_acetone = {
 	,.data = {.helm = &helmholtz_data_acetone}
 };
 
+#else
+extern const EosData eos_acetone;
+#endif
 
 /*
     Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
@@ -88,25 +93,31 @@ EosData eos_acetone = {
 */
 
 #ifdef TEST
-
 #include "../test.h"
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
 
-const TestData td[]; const unsigned ntd;
+static const TestData td[]; static const unsigned ntd;
 
+#ifdef CUNIT_TEST
+void test_fluid_acetone(){
+	PureFluid *P = helmholtz_prepare(&eos_acetone,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
+#else
 int main(void){
 	test_init();
 	PureFluid *P = helmholtz_prepare(&eos_acetone,NULL);
 	return helm_run_test_cases(P, ntd, td, 'C');
 }
+#endif
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-5.0E+1, 1.E-1, 8.65466736579E+2, 9.75139609024E+1, 9.76295054933E+1, 5.85862036597E-1, 1.45785160795E+0, 2.01807638339E+0, 1.09315360536E+0, -3.32211525641E+1}
@@ -139,6 +150,6 @@ const TestData td[] = {
     , {2.50E+2, 1.00E+2, 6.9532778944E+2, 6.99144201019E+2, 8.42961263301E+2, 2.31087543559E+0, 2.02189036779E+0, 2.47265535866E+0, 1.9241082419E+0, -5.09790283112E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
 
 #endif

@@ -8,6 +8,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define PROPANE_M 44.09562 /* kg/kmol */
 #define PROPANE_R (8314.472/PROPANE_M) /* J/kg/K */
@@ -71,7 +72,7 @@ static HelmholtzData helmholtz_data_propane = {
 	}
 };
 
-EosData eos_propane = {
+const EosData eos_propane = {
 	"propane"
 	,"Eric W. Lemmon* and Mark O. McLinden, 2009. 'Thermodynamic "
 	"Properties of Propane. III. A Reference Equation of State for "
@@ -83,27 +84,9 @@ EosData eos_propane = {
 	,.data = {.helm = &helmholtz_data_propane}
 };
 
-
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py propane
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_propane,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_propane;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
@@ -122,7 +105,7 @@ K mol ·dm-3 MPa J · mol-1 ·K-1 J · mol-1 ·K-1 m· s-1
 369.9 5.0 4.2519399 117.71621 753625.00 130.89800
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
 	{-1.80E+2, 9.99999999989E-2, 7.25234992826E+2, -1.82029081025E+2, -1.81891194683E+2, -1.23222155438E+0, 1.34655250718E+0, 1.92263935734E+0, 9.09347446848E-1, -6.72476432337E+1}
@@ -164,6 +147,12 @@ const TestData td[] = {
 	, {3.20E+2, 1.0E+1, 1.00931937568E+2, 1.14185987054E+3, 1.24093653786E+3, 3.42549098293E+0, 2.73358079138E+0, 3.17277260493E+0, 2.8866576145E+0, -8.89970105983E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_propane(void){
+	PureFluid *P = helmholtz_prepare(&eos_propane,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
+
 
 #endif

@@ -1,20 +1,20 @@
-/* 
+/*
 This file created by John Pye 2014
 
 LITERATURE REFERENCE
 http://dx.doi.org/10.1016/0378-3812(85)87016-3
-R. Schmidt, W. Wagner, 1985. "A new form of the equation of state for pure 
+R. Schmidt, W. Wagner, 1985. "A new form of the equation of state for pure
 substances and its application to oxygen", Fluid Phase Equilibria 19(3) 175-200.
 */
 
 #include "../helmholtz.h"
-
 #define OXYGEN_M 31.9988  /* kg/kmol */
 #define OXYGEN_R (8314.34/OXYGEN_M) /* J/kg/K */
 #define OXYGEN_TC 154.581 /* K */
 #define OXYGEN_RHOC (13.63*OXYGEN_M) /* kg/m3 */
 
 #ifndef CUNIT_TEST
+
 /* we use Roland Span's re-fit cp0 curve as per REFPROP 8.0, no publication cited */
 static const IdealData ideal_data_oxygen = {
 	IDEAL_CP0
@@ -104,7 +104,6 @@ const EosData eos_oxygen = {
 };
 
 #else
-
 #include "../test.h"
 extern const EosData eos_oxygen;
 

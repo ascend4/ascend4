@@ -10,6 +10,7 @@ Fluid Phase Equilibria, 228-229C:173-187, 2005.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define ISOBUTENE_M 56.10632 /* kg/kmol */
 #define ISOBUTENE_R (8314.472/ISOBUTENE_M) /* J/kg/K */
@@ -68,7 +69,7 @@ static const HelmholtzData helmholtz_data_isobutene = {
     }
 };
 
-EosData eos_isobutene = {
+const EosData eos_isobutene = {
 	"isobutene"
 	,"E W Lemmon and E C Ihmels, 2005. 'Thermodynamic Properties of "
 	"the Butenes.  Part II. Short Fundamental Equations of State', "
@@ -79,32 +80,15 @@ EosData eos_isobutene = {
 	,.data = {.helm = &helmholtz_data_isobutene}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py isobutene
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_isobutene,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_isobutene;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.00E+2, 1.E-1, 7.25006738206E+2, -1.92564011325E+2, -1.92426081572E+2, -8.85421400145E-1, 1.34981843291E+0, 1.952998831E+0, 1.10917787075E+0, -3.92532958896E+1}
@@ -133,6 +117,12 @@ const TestData td[] = {
     , {2.50E+2, 1.0E+1, 2.05993310981E+2, 7.12878332012E+2, 7.61423597644E+2, 1.88867670301E+0, 2.36524301881E+0, 3.36225939283E+0, 2.40389356385E+0, -2.75182885168E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_isobutene(void){
+	PureFluid *P = helmholtz_prepare(&eos_isobutene,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif
+

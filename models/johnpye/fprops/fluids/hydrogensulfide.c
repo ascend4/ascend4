@@ -9,6 +9,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define HYDROGENSULFIDE_M 34.08088 /* kg/kmol */
 #define HYDROGENSULFIDE_R (8314.472/HYDROGENSULFIDE_M) /* J/kg/K */
@@ -67,7 +68,7 @@ static const HelmholtzData helmholtz_data_hydrogensulfide = {
     // no other terms
 };
 
-EosData eos_hydrogensulfide = {
+const EosData eos_hydrogensulfide = {
 	"hydrogensulfide"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -77,31 +78,15 @@ EosData eos_hydrogensulfide = {
 	,.data = {.helm = &helmholtz_data_hydrogensulfide}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py hydrogensulfide
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	PureFluid *P = helmholtz_prepare(&eos_hydrogensulfide, NULL);
-    return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_hydrogensulfide;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-5.0E+1, 1.E-1, 1.87324735654E+0, 5.0365704935E+2, 5.57040282296E+2, 2.61897019638E+0, 7.56888201186E-1, 1.02391203839E+0, 9.82262585663E-1, -8.07661499732E+1}
@@ -149,6 +134,11 @@ const TestData td[] = {
     , {4.50E+2, 1.00E+2, 4.7025356507E+2, 7.3896963943E+2, 9.51620871506E+2, 1.98815015503E+0, 1.06722286549E+0, 1.62757429391E+0, 1.21074968682E+0, -6.98761145181E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_hydrogensulfide(void){
+	PureFluid *P = helmholtz_prepare(&eos_hydrogensulfide, NULL);
+    helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

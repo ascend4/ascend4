@@ -9,6 +9,7 @@ in press, Fluid Phase Equilibria, 2007.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define DIMETHYLETHER_M 46.06844 /* kg/kmol */
 #define DIMETHYLETHER_R (8314.472/DIMETHYLETHER_M) /* J/kg/K */
@@ -65,7 +66,7 @@ static const HelmholtzData helmholtz_data_dimethylether = {
     }
 };
 
-EosData eos_dimethylether = {
+const EosData eos_dimethylether = {
 	"dimethylether"
 	,"E C Ihmels and E W Lemmon, 2007. 'Experimental Densities, "
 	"Vapor Pressures, and Critical Point, and a Fundamental Equation "
@@ -76,32 +77,14 @@ EosData eos_dimethylether = {
 	,.data = {.helm = &helmholtz_data_dimethylether}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py dimethylether
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_dimethylether,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
-
+#else
+# include "../test.h"
+extern const EosData eos_dimethylether;
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.00E+2, 1.E-1, 8.31894601956E+2, -1.63160366855E+2, -1.63040159319E+2, -7.81028795904E-1, 1.52247244099E+0, 2.13569275474E+0, 1.11201315613E+0, -2.7925230844E+1}
@@ -130,6 +113,11 @@ const TestData td[] = {
     , {2.50E+2, 1.0E+1, 1.42778943912E+2, 7.59719653545E+2, 8.29757992014E+2, 2.12732436647E+0, 2.01059544652E+0, 2.72807974819E+0, 2.09032875234E+0, -3.53190088777E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_dimethylether(void){
+	PureFluid *P = helmholtz_prepare(&eos_dimethylether,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

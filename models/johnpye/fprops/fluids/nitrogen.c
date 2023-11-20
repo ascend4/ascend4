@@ -32,8 +32,6 @@ by NIST in its program REFPROP 7.0.
 #define NITROGEN_TC 126.192
 #define NITROGEN_RHOC (11.1839 * NITROGEN_M)
 
-
-
 static const IdealData ideal_data_nitrogen = {
 	IDEAL_CP0
 	,.data = {.cp0 = {
@@ -214,6 +212,7 @@ extern const EosData eos_nitrogen;
 # include "../ideal_impl.h"
 # include "../visc.h"
 # include "../thcond.h"
+
 
 static const TestData td[] = {
 /*{T/C,   , p/MPa  , rho/(kg/m3)   , u/(kJ/kg)     , h/(kJ/kg)     , s/(kJ/kgK)    , cv/(kJ/kgK)   , cp(kJ/kgK)    , cp0/(kJ/kgK)    a/(kJ/kg)}*/
@@ -427,4 +426,3 @@ void test_fluid_nitrogen(void){
 }
 
 #endif
-

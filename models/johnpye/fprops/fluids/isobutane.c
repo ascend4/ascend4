@@ -9,6 +9,7 @@ J. Phys. Chem. Ref. Data, 35(2):929-1019, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define ISOBUTANE_M 58.1222  /* kg/kmol */
 #define ISOBUTANE_R (8314.472/ISOBUTANE_M) /* J/kg/K */
@@ -84,7 +85,7 @@ static const HelmholtzData helmholtz_data_isobutane = {
     }
 };
 
-EosData eos_isobutane = {
+const EosData eos_isobutane = {
 	"isobutane"
 	,"D Buecker and W Wagner, 2006. 'Reference Equations of State for the "
 	"Thermodynamic Properties of Fluid Phase n-Butane and Isobutane,' "
@@ -95,32 +96,15 @@ EosData eos_isobutane = {
 	,.data = {.helm = &helmholtz_data_isobutane}
 };
 
+#else
+# include "../test.h"
+extern const EosData eos_isobutane;
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py isobutane
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_isobutane,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.50E+2, 1.00000000001E-1, 7.31483347373E+2, -6.98014973578E+2, -6.97878265066E+2, -3.06334010257E+0, 1.19409447992E+0, 1.71867182316E+0, 9.2286450497E-1, -3.20764639946E+2}
@@ -155,6 +139,11 @@ const TestData td[] = {
     , {3.00E+2, 1.0E+1, 1.57800972116E+2, 4.67536512451E+2, 5.30907478206E+2, 6.62248629989E-1, 2.7663954814E+0, 3.33243610867E+0, 2.83953655438E+0, 8.79687101728E+1}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_isobutane(void){
+	PureFluid *P = helmholtz_prepare(&eos_isobutane,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

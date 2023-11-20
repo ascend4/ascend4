@@ -9,6 +9,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define R245FA_M 134.04794 /* kg/kmol */
 #define R245FA_R (8314.472/R245FA_M) /* J/kg/K */
@@ -66,7 +67,7 @@ static const HelmholtzData helmholtz_data_r245fa = {
 	}
 };
 
-EosData eos_r245fa = {
+const EosData eos_r245fa = {
 	"r245fa"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -76,32 +77,15 @@ EosData eos_r245fa = {
 	,.data = {.helm = &helmholtz_data_r245fa}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py r245fa
-*/
-
-#ifdef TEST
-
+#else
 #include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_r245fa,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+extern const EosData eos_r245fa;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation. 
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.00E+2, 1.E-1, 1.642867743E+3, 7.82286778951E+1, 7.82895470675E+1, 4.46318816458E-1, 8.14432395963E-1, 1.20057626482E+0, 6.1474853183E-1, 9.4857482538E-1}
@@ -128,6 +112,11 @@ const TestData td[] = {
     , {1.50E+2, 1.E+2, 1.33216116604E+3, 3.61130787193E+2, 4.36196779619E+2, 1.47270560797E+0, 1.11876041481E+0, 1.36584629601E+0, 1.07532276937E+0, -2.62044590818E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_r245fa(void){
+	PureFluid *P = helmholtz_prepare(&eos_r245fa,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

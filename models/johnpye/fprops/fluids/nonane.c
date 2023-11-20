@@ -9,6 +9,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define NONANE_M 128.2551 /* kg/kmol */
 #define NONANE_R (8314.472/NONANE_M) /* J/kg/K */
@@ -67,7 +68,7 @@ static const HelmholtzData helmholtz_data_nonane = {
 	}
 };
 
-EosData eos_nonane = {
+const EosData eos_nonane = {
 	"nonane"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -77,32 +78,15 @@ EosData eos_nonane = {
 	,.data = {.helm = &helmholtz_data_nonane}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py nonane
-*/
-
-#ifdef TEST
-
+#else
 #include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_nonane,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+extern const EosData eos_nonane;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation. 
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-5.0E+1, 9.99999999998E-2, 7.73459252319E+2, -4.66257916677E+2, -4.66128627384E+2, -1.46419151423E+0, 1.54771236611E+0, 1.98927937837E+0, 1.33680179376E+0, -1.39523580277E+2}
@@ -136,6 +120,12 @@ const TestData td[] = {
     , {3.00E+2, 1.00E+2, 6.44451540905E+2, 3.64969930285E+2, 5.20140635377E+2, 7.25623796337E-1, 2.83051592085E+0, 3.10693491264E+0, 2.76789164801E+0, -5.09213485857E+1}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+
+void test_fluid_nonane(void){
+	PureFluid *P = helmholtz_prepare(&eos_nonane,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

@@ -8,8 +8,8 @@ and reliable ideal-gas properties", Fluid Phase Equilibria 221, pp 103-111.
 http://dx.doi.org/10.1016/j.fluid.2004.03.004
 */
 
-#include "../fprops.h"
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define R134A_M 102.031 /* kg/kmol */
 #define R134A_R (8314.472/R134A_M) /* J/kg/K */
@@ -81,7 +81,7 @@ static HelmholtzData helmholtz_data_r134a = {
 	, 0
 };
 
-EosData eos_r134a = {
+const EosData eos_r134a = {
 	"r134a"
 	,"I Made Astina, Haruki Sato, 2004 , 'A fundamental equation of state for "
 	"1,1,1,2-tetrafluoroethane with an intermolecular potential energy "
@@ -93,36 +93,15 @@ EosData eos_r134a = {
 	,.data = {.helm = &helmholtz_data_r134a}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py r134a
-*/
-
-#ifdef TEST
-
+#else
 #include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	PureFluid *P = helmholtz_prepare(&eos_r134a, NULL);
-	ASSERT(P);
-	FpropsError err;
-	//fprintf(stderr,"p_c = %f MPa\n",fprops_p(P->data->T_c,P->data->rho_c,P,&err)/1e6);
-	//ASSERT(err==0);
-	return helm_run_test_cases(P, ntd, td, 'C');
-	return err;
-}
+extern const EosData eos_r134a;
 
 /*
 A small set of data points calculated using REFPROP 7.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
 	/* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
 	/* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
 	{-90.0000000000, 0.0999999999990, 1553.86627377, 87.7500835043, 87.8144391067, 0.504220084848, 0.790874066100, 1.19066501244, 0.616609541678, -4.59782503553}
@@ -154,6 +133,14 @@ const TestData td[] = {
 	, {160.000000000, 70.0000000000, 1161.44150845, 374.390395707, 434.660327073, 1.50938606234, 1.08468174133, 1.37538505346, 1.04798462133, -279.400177197}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_r134a(void){
+	PureFluid *P = helmholtz_prepare(&eos_r134a, NULL);
+	ASSERT(NULL!=P);
+	//fprintf(stderr,"p_c = %f MPa\n",fprops_p(P->data->T_c,P->data->rho_c,P,&err)/1e6);
+	//ASSERT(err==0);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

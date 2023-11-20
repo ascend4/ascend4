@@ -19,6 +19,7 @@ Sifner & Klomfar, J. Phys. Chem. Ref. Data 23, 63 (1994); doi:10.1063/1.555956
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define XENON_M 131.293 /* kg/kmol */
 #define XENON_R (8314.472/XENON_M) /* J/kg/K */
@@ -67,7 +68,7 @@ static HelmholtzData helmholtz_data_xenon = {
     }
 };
 
-EosData eos_xenon = {
+const EosData eos_xenon = {
 	"xenon"
 	,"Lemmon, E.W. and Span, R., 2006. 'Short Fundamental Equations of "
 	"State for 20 Industrial Fluids', J. Chem. Eng. Data, 51:785-850."
@@ -83,26 +84,15 @@ EosData eos_xenon = {
     ./test.py xenon
 */
 
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_xenon, NULL);
-    return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_xenon;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.00E+2, 1.E-1, 9.36848917969E+0, 8.6327702303E+1, 9.70017819845E+1, 5.8831349063E-1, 1.00512841587E-1, 1.71403887144E-1, 1.58319026909E-1, -1.55387785997E+1}
@@ -142,6 +132,11 @@ const TestData td[] = {
     , {3.00E+2, 1.00E+2, 1.86839405494E+3, 8.04690099729E+1, 1.33990910097E+2, 2.92344194281E-1, 1.17203426749E-1, 2.40141558603E-1, 1.58319026909E-1, -8.70880649793E+1}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_xenon(void){
+	PureFluid *P = helmholtz_prepare(&eos_xenon, NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

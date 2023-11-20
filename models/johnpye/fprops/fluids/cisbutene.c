@@ -10,6 +10,7 @@ Fluid Phase Equilibria, 228-229C:173-187, 2005.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define CISBUTENE_M 56.10632 /* kg/kmol */
 #define CISBUTENE_R (8314.472/CISBUTENE_M) /* J/kg/K */
@@ -33,7 +34,7 @@ static const IdealData ideal_data_cisbutene = {
 	}}
 };
 
-static HelmholtzData helmholtz_data_cisbutene = {
+static const HelmholtzData helmholtz_data_cisbutene = {
 	/* R */ CISBUTENE_R /* J/kg/K */
     , /* M */ CISBUTENE_M /* kg/kmol */
     , /* rho_star */ 4.244*CISBUTENE_M /* kg/m3(= rho_c for this model) */
@@ -68,7 +69,7 @@ static HelmholtzData helmholtz_data_cisbutene = {
     }
 };
 
-EosData eos_cisbutene = {
+const EosData eos_cisbutene = {
 	"cisbutene"
 	,"E W Lemmon and E C Ihmels, 2005. 'Thermodynamic Properties of "
 	"the Butenes.  Part II. Short Fundamental Equations of State', "
@@ -79,32 +80,18 @@ EosData eos_cisbutene = {
 	,.data = {.helm = &helmholtz_data_cisbutene}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py cisbutene
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_cisbutene,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+# include <math.h>
+# include <assert.h>
+# include <stdio.h>
+extern const EosData eos_cisbutene;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.00E+2, 1.E-1, 7.49664974641E+2, -2.11134549398E+2, -2.11001156478E+2, -9.51669395303E-1, 1.34014606723E+0, 1.97918922459E+0, 1.04771089317E+0, -4.63529936008E+1}
@@ -133,6 +120,11 @@ const TestData td[] = {
     , {2.50E+2, 1.0E+1, 2.29405568221E+2, 6.66779540836E+2, 7.1037046183E+2, 1.72770427198E+0, 2.27015011797E+0, 3.54912795031E+0, 2.28416299806E+0, -2.37068949052E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_cisbutene(){
+	PureFluid *P = helmholtz_prepare(&eos_cisbutene,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

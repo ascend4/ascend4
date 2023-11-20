@@ -9,6 +9,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define R116_M 138.01182 /* kg/kmol */
 #define R116_R (8314.472/R116_M) /* J/kg/K */
@@ -66,7 +67,7 @@ static const HelmholtzData helmholtz_data_r116 = {
 	}
 };
 
-EosData eos_r116 = {
+const EosData eos_r116 = {
 	"r116"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -76,32 +77,15 @@ EosData eos_r116 = {
 	,.data = {.helm = &helmholtz_data_r116}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py r116
-*/
-
-#ifdef TEST
-
+#else
 #include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_r116,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+extern const EosData eos_r116;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation. 
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.00E+2, 1.E-1, 1.69815106958E+3, 9.44460681275E+1, 9.45049557034E+1, 5.31444232038E-1, 6.02245872415E-1, 8.9277375427E-1, 5.43355290597E-1, 2.42649935017E+0}
@@ -122,6 +106,11 @@ const TestData td[] = {
     , {1.50E+2, 1.E+1, 4.76012326025E+2, 3.58664837639E+2, 3.79672697002E+2, 1.49622854239E+0, 9.07063969374E-1, 1.14960834603E+0, 9.36351975155E-1, -2.74464270075E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_r116(void){
+	PureFluid *P = helmholtz_prepare(&eos_r116,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

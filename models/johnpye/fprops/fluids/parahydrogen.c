@@ -9,6 +9,7 @@ International Journal of Thermophysics, 2007.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define PARAHYDROGEN_M 2.01594 /* kg/kmol */
 #define PARAHYDROGEN_R (8314.472/PARAHYDROGEN_M) /* J/kg/K */
@@ -78,7 +79,7 @@ static HelmholtzData helmholtz_data_parahydrogen = {
     }
 };
 
-EosData eos_parahydrogen = {
+const EosData eos_parahydrogen = {
 	"parahydrogen"
 	,"J W Leachman, R T Jacobsen and E W Lemmon, 2007. 'Fundamental Equations "
 	"of State for Parahydrogen, Normal Hydrogen, and Orthohydrogen', "
@@ -89,34 +90,15 @@ EosData eos_parahydrogen = {
 	,.data = {.helm = &helmholtz_data_parahydrogen}
 };
 
-
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py parahydrogen
-*/
-
-#ifdef TEST
-
+#else
 #include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_parahydrogen,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
-
+extern const EosData eos_parahydrogen;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-2.50E+2, 1.E-1, 1.12056230331E+0, 3.90438827674E+2, 4.79679737978E+2, 2.36064810622E+1, 6.26894232836E+0, 1.12860865842E+1, 1.03109156198E+1, -1.56051208917E+2}
@@ -149,6 +131,11 @@ const TestData td[] = {
     , {-1.90E+2, 1.00E+2, 8.78229441642E+1, 4.37278674361E+2, 1.57593328167E+3, 7.2270552277E+0, 9.33486986561E+0, 1.28177755434E+1, 1.1959771372E+1, -1.63650967822E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_parahydrogen(void){
+	PureFluid *P = helmholtz_prepare(&eos_parahydrogen,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

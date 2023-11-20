@@ -9,6 +9,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define CARBONYLSULFIDE_M 60.0751 /* kg/kmol */
 #define CARBONYLSULFIDE_R (8314.472/CARBONYLSULFIDE_M) /* J/kg/K */
@@ -67,7 +68,7 @@ static const HelmholtzData helmholtz_data_carbonylsulfide = {
     // no other terms
 };
 
-EosData eos_carbonylsulfide = {
+const EosData eos_carbonylsulfide = {
 	"carbonylsulfide"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -77,33 +78,18 @@ EosData eos_carbonylsulfide = {
 	,.data = {.helm = &helmholtz_data_carbonylsulfide}
 };
 
-
-
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py carbonylsulfide
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	PureFluid *P = helmholtz_prepare(&eos_carbonylsulfide, NULL);
-    return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+# include <math.h>
+# include <assert.h>
+# include <stdio.h>
+extern const EosData eos_carbonylsulfide;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.00E+2, 9.99999999999E-2, 1.27622789263E+3, -5.8290521228E+1, -5.82121653163E+1, -2.95390152407E-1, 7.43168548616E-1, 1.16891418867E+0, 5.59004634633E-1, -7.14371633876E+0}
@@ -139,6 +125,11 @@ const TestData td[] = {
     , {3.50E+2, 1.0E+1, 1.26589854641E+2, 5.04156960606E+2, 5.83152232608E+2, 1.48020744501E+0, 7.41309099387E-1, 9.83608558638E-1, 8.60627009051E-1, -4.18234308752E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_carbonylsulfide(void){
+	PureFluid *P = helmholtz_prepare(&eos_carbonylsulfide, NULL);
+    helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

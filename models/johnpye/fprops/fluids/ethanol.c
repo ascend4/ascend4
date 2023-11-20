@@ -11,6 +11,7 @@ http://webbook.nist.gov/cgi/cbook.cgi?ID=C64175&Units=SI&Mask=4#Thermo-Phase
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define ETHANOL_M 46.06844 /* kg/kmol */
 #define ETHANOL_R (8314.472/ETHANOL_M) /* J/kg/K */
@@ -79,7 +80,7 @@ static const HelmholtzData helmholtz_data_ethanol = {
     }
 };
 
-EosData eos_ethanol = {
+const EosData eos_ethanol = {
 	"ethanol"
 	,"H E Dillon and S G Penoncello, 2004. 'A Fundamental Equation for "
 	"Calculation of the Thermodynamic Properties of Ethanol', Int. J. "
@@ -90,32 +91,15 @@ EosData eos_ethanol = {
 	,.data = {.helm = &helmholtz_data_ethanol}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py ethanol
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_ethanol,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_ethanol;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
 	{-2.0E+1, 9.99999999996E-2, 8.22593570889E+2, 1.56784130211E+2, 1.56905696928E+2, 8.35800290706E-1, 1.69412559546E+0, 2.05871916841E+0, 1.46744709062E+0, -5.47987133811E+1}
@@ -156,6 +140,13 @@ const TestData td[] = {
 	, {3.30E+2, 1.E+2, 6.23911315961E+2, 1.20569216389E+3, 1.36597135332E+3, 3.40680509995E+0, 2.72418093594E+0, 3.59146901408E+0, 2.44158323879E+0, -8.49122332145E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_ethanol(void){
+	PureFluid *P = helmholtz_prepare(&eos_ethanol,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
+
+
 
 #endif

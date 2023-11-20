@@ -9,6 +9,7 @@ J. Chem. Eng. Data, 51:785-850, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define NEOPENTANE_M 72.14878 /* kg/kmol */
 #define NEOPENTANE_R (8314.472/NEOPENTANE_M) /* J/kg/K */
@@ -68,7 +69,7 @@ static const HelmholtzData helmholtz_data_neopentane = {
 	// no more terms
 };
 
-EosData eos_neopentane = {
+const EosData eos_neopentane = {
 	"neopentane"
 	,"Lemmon, E.W. and Span, R., Short Fundamental Equations of State for "
 	" 20 Industrial Fluids, J. Chem. Eng. Data, 51:785-850, 2006."
@@ -78,32 +79,15 @@ EosData eos_neopentane = {
 	,.data = {.helm = &helmholtz_data_neopentane}
 };
 
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py neopentane
-*/
-
-#ifdef TEST
-
+#else
 #include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_neopentane,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+extern const EosData eos_neopentane;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation. 
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {0.E+0, 1.E-1, 6.1112484306E+2, -2.10036299949E+1, -2.08399973081E+1, -7.498458314E-2, 1.61109921434E+0, 2.16595869764E+0, 1.54407341408E+0, -5.2159111017E-1}
@@ -129,6 +113,12 @@ const TestData td[] = {
     , {2.50E+2, 1.00E+2, 5.61596136654E+2, 5.43572384884E+2, 7.2163628788E+2, 1.37564762115E+0, 2.67312915663E+0, 3.01253111597E+0, 2.6812193798E+0, -1.76097668121E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+
+void test_fluid_neopentane(void){
+	PureFluid *P = helmholtz_prepare(&eos_neopentane,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif

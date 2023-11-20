@@ -9,6 +9,7 @@ J. Phys. Chem. Ref. Data, 35(1):205-266, 2006.
 */
 
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define ETHANE_M 30.06904 /* kg/kmol */
 #define ETHANE_R (8314.472/ETHANE_M) /* J/kg/K */
@@ -104,7 +105,7 @@ static const HelmholtzData helmholtz_data_ethane = {
     }
 };
 
-EosData eos_ethane = {
+const EosData eos_ethane = {
 	"ethane"
 	,"D Buecker and W Wagner, 2006. 'A Reference Equation of State for the "
 	"Thermodynamic Properties of Ethane for Temperatures from the Melting "
@@ -116,34 +117,15 @@ EosData eos_ethane = {
 	,.data = {.helm = &helmholtz_data_ethane}
 };
 
-
-/*
-    Test suite. These tests attempt to validate the current code using a few sample figures output by REFPROP 8.0. To compile and run the test:
-
-    ./test.py ethane
-*/
-
-#ifdef TEST
-
-#include "../test.h"
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-
-const TestData td[]; const unsigned ntd;
-
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_ethane,NULL);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
+#else
+# include "../test.h"
+extern const EosData eos_ethane;
 
 /*
 A small set of data points calculated using REFPROP 8.0, for validation.
 */
 
-const TestData td[] = {
+static const TestData td[] = {
     /* Temperature, Pressure, Density, Int. Energy, Enthalpy, Entropy, Cv, Cp, Cp0, Helmholtz */
     /* (C), (MPa), (kg/m3), (kJ/kg), (kJ/kg), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg-K), (kJ/kg) */
     {-1.50E+2, 1.E-1, 6.15508091549E+2, -8.14074352115E+2, -8.13911884714E+2, -4.35084835408E+0, 1.47272462242E+0, 2.28315877551E+0, 1.23340615685E+0, -2.7826737731E+2}
@@ -189,6 +171,11 @@ const TestData td[] = {
     , {3.00E+2, 1.00E+2, 3.67514428978E+2, 2.39088673647E+2, 5.11186833923E+2, -7.13670499407E-1, 2.71042944184E+0, 3.32113362064E+0, 2.8694618797E+0, 6.48128920382E+2}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_ethane(void){
+	PureFluid *P = helmholtz_prepare(&eos_ethane,NULL);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif
