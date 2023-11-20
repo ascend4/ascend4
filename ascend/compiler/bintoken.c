@@ -146,7 +146,7 @@ int bt_string_replace(CONST char *new, char **ptr){
 int BinTokenSetOptionsDefault(){
 #ifdef WIN32
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented for Windows");
-  return 1
+  return 1;
 //# error "Not implemented"
 #else
   char srcn[PATH_MAX];
