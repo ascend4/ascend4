@@ -3040,7 +3040,7 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
 	va_list args, args2;
 	va_start(args,fmt);
 	va_copy(args2,args);
-	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),NULL,fmt,&args2);
+	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),NULL,fmt,args2);
 	va_end(args);
 }
 

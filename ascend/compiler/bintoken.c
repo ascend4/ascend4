@@ -1,4 +1,4 @@
-  /*  ASCEND modelling environment
+/*  ASCEND modelling environment
 	Copyright (C) 2006-2011 Carnegie Mellon University
 	Copyright (C) 1998 Carnegie Mellon University
 
@@ -73,6 +73,8 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #define C_WIDTH 70
 #define CLINE(a) FPRINTF(fp,"%s\n",(a))
 
+#define CMDMAX (3*PATH_MAX)
+
 enum bintoken_error {
   BTE_ok,
   BTE_badrel,
@@ -143,7 +145,9 @@ int bt_string_replace(CONST char *new, char **ptr){
 #if 1
 int BinTokenSetOptionsDefault(){
 #ifdef WIN32
-# error "Not implemented"
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented for Windows");
+  return 1
+//# error "Not implemented"
 #else
   char srcn[PATH_MAX];
   char libn[PATH_MAX];
@@ -156,8 +160,8 @@ int BinTokenSetOptionsDefault(){
   env_import_default(ASC_ENV_BTINC,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTINC,0,1);
   env_import_default(ASC_ENV_BTLIB,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTLIB,0,1);
 
-  char buildtmpl[PATH_MAX];
-  snprintf(buildtmpl,PATH_MAX
+  char buildtmpl[CMDMAX];
+  snprintf(buildtmpl,CMDMAX
     ,"gcc -shared -fPIC -I$" ASC_ENV_BTINC " -o%s %s -L$" ASC_ENV_BTLIB " -lascend"
     ,libn,srcn
   );
@@ -182,8 +186,8 @@ int BinTokenSetOptionsDefault(){
     ASC_FREE(s);
   }
   ASC_FREE(fp1);
-  char buildtmpl[PATH_MAX];
-  snprintf(buildtmpl,PATH_MAX
+  char buildtmpl[CMDMAX];
+  snprintf(buildtmpl,CMDMAX
     ,"make -f $" ASC_ENV_BTINC "/Makefile ASCBT_TARGET=\"%s\" ASCBT_SRC=\"%s\""
     ,libn,srcn
   );
@@ -288,7 +292,7 @@ void BinTokenDeleteReference(int btable)
   if(g_bt_data.tables[btable].refcount == 0){
     /* unload the library if possible here */
 #if HAVE_DL_UNLOAD
-    CONSOLE_DEBUG("Unloading btable=%d: %s",btable,g_bt_data.tables[btable].name);
+    MSG("Unloading btable=%d: %s",btable,g_bt_data.tables[btable].name);
     Asc_DynamicUnLoad(g_bt_data.tables[btable].name);
 
     if(g_bt_data.housekeep){
@@ -298,7 +302,10 @@ void BinTokenDeleteReference(int btable)
           assert(cbuf!=NULL);
           sprintf(cbuf,"%s %s",g_bt_data.unlinkcommand,g_bt_data.libname);
           MSG("Deleting bintok shared library: %s",cbuf);
-          (void)system(cbuf); /* we don't care if the delete fails */
+          int rc = system(cbuf); /* we don't care if the delete fails */
+	  if(rc){
+            MSG("delete failed: %d",rc);
+	  }
           ASC_FREE(cbuf);
       }
     }
@@ -935,14 +942,20 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
         cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(srcname)+1);
         assert(cbuf!=NULL);
         sprintf(cbuf,"%s %s",unlinkcommand,srcname);
-        (void)system(cbuf); /* we don't care if the delete fails */
+        int rc = system(cbuf); /* we don't care if the delete fails */
+	if(rc){
+          MSG("delete failed: %d",rc);
+	}
         ASC_FREE(cbuf);
         /* trash obj */
         if(objname && strlen(objname)){
           cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(objname)+1);
           assert(cbuf!=NULL);
           sprintf(cbuf,"%s %s",unlinkcommand,objname);
-          (void)system(cbuf); /* we don't care if the delete fails */
+          int rc = system(cbuf); /* we don't care if the delete fails */
+  	  if(rc){
+           MSG("delete failed: %d",rc);
+	  }
           ASC_FREE(cbuf);
         }
       }
