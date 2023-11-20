@@ -42,6 +42,13 @@
 #include "cmpfunc.h"
 #include "notate.h"
 
+//#define NOTES_DEBUG
+#ifdef NOTES_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 /**
 	This data structure holds a NOTE in memory, including a reference to the
 	database it belongs to. @see About 'NOTES' in ASCEND
@@ -568,7 +575,7 @@ struct gl_list_t *GetNotesList(symchar *dbid,
                                struct gl_list_t *nds
 ){
   struct gl_list_t *result;
-  struct Note *n;
+  struct Note *N;
   CHECKDB(NULL);
 
   /* unimplemented optimized searches */
@@ -583,20 +590,26 @@ struct gl_list_t *GetNotesList(symchar *dbid,
   /* do something here */
 
   /* do the damned expensive thing here until the above get done */
-  n= db->all;
+  N = db->all;
   result = gl_create(40);
   if (result == NULL) {
     return NULL;
   }
-  while (n != NULL) {
-    if (inDataListOrNull((void *)(n->typename),types) &&
-        inDataListOrNull((void *)(n->id),ids) &&
-        inDataListOrNull((void *)(n->lang),langs) &&
-        inDataListOrNull((void *)(n->method),methods) &&
-        inDataListOrWild((void *)(n->kind),nds)) {
-      gl_append_ptr(result,n);
+  while (N != NULL) {
+	MSG("%s:%d id='%s', type='%s', lang='%s', meth='%s': text='%s'"
+		,GetNoteFilename(N),GetNoteLineNum(N),SCP(GetNoteId(N))
+		,SCP(GetNoteType(N)),SCP(GetNoteLanguage(N)),SCP(GetNoteMethod(N))
+		,BCS(GetNoteText(N))
+	);
+    if (inDataListOrNull((void *)(N->typename),types) &&
+        inDataListOrNull((void *)(N->id),ids) &&
+        inDataListOrNull((void *)(N->lang),langs) &&
+        inDataListOrNull((void *)(N->method),methods) &&
+        inDataListOrWild((void *)(N->kind),nds)) {
+      MSG("adding note to list");
+      gl_append_ptr(result,N);
     }
-    n = n->next;
+    N = N->next;
   }
   return result;
 }
@@ -956,8 +969,8 @@ void DestroyNote(struct Note *n){
 struct NoteEngine {
   int enginekey;
   void *reinterp;
-  NEInitFunc recompile;
-  NECompareFunc reexec;
+  NEInitFunc *recompile;
+  NECompareFunc *reexec;
 };
 #define ENGINEMAGIC 345987607
 
@@ -972,11 +985,12 @@ struct gl_list_t *GetMatchingNotes(symchar *dbid, char *pattern,void *token,
   void *regexp;
   char *string;
   CHECKDB(NULL);
+  (void)db;
 
   if (pattern == (char *)NULL || strlen(pattern) == 0 ||
       engine == (struct NoteEngine *)NULL ||
-      engine->recompile == (NEInitFunc)NULL ||
-      engine->reexec == (NECompareFunc)NULL) {
+      engine->recompile == (NEInitFunc *)NULL ||
+      engine->reexec == (NECompareFunc *)NULL) {
     return NULL;
   }
   oldlist = HeldNotes(dbid,token);
@@ -1031,12 +1045,12 @@ struct gl_list_t *GetMatchingNotes(symchar *dbid, char *pattern,void *token,
 }
 
 struct NoteEngine *NotesCreateEngine(void *ned,
-                                     NEInitFunc neif,
-                                     NECompareFunc necf
+                                     NEInitFunc *neif,
+                                     NECompareFunc *necf
 ){
   struct NoteEngine *ne;
   ne = ASC_NEW(struct NoteEngine);
-  if (neif == (NEInitFunc)NULL || necf == (NECompareFunc)NULL) {
+  if (neif == (NEInitFunc *)NULL || necf == (NECompareFunc *)NULL) {
     return (struct NoteEngine *)NULL;
   }
   if (ne == (struct NoteEngine *)NULL) {

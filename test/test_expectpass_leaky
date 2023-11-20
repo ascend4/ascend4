@@ -1,0 +1,19 @@
+#!/bin/bash
+cd $(dirname "$0")
+cd ..
+export LD_LIBRARY_PATH=.
+export ASCENDLIBRARY=models
+export ASCENDSOLVERS=solvers/ipopt:solvers/qrslv:solvers/lrslv:solvers/dopri5:solvers/ida:solvers/radau5:solvers/ipslv:solvers/cmslv:solvers/conopt
+
+# this list of tests requires MALLOC_DEBUG to run, and all tests pass, but some leak memory.
+
+test/test solver_slvreq integrator_lsode solver_fprops linear_qrrank solver_qrslv solver_datareader compiler_blackbox solver_sunpos solver_conopt.conopttest solver_cmslv
+
+# currently failing tests:
+# solver_conopt 
+# compiler_autodiff system_link 
+# integrator_ida
+# solver_ipopt
+
+# OK, but leaky:
+# solver_lrslv compiler_bintok linear_qrrank solver_fprops integrator_lsode solver_slvreq

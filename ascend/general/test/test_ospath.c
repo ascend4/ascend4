@@ -23,7 +23,7 @@
 
 #include <test/common.h>
 
-FilePathTestFn ospath_searchpath_testexists;
+static FilePathTestFn ospath_searchpath_testexists;
 
 #define NDEBUG
 
@@ -59,7 +59,7 @@ FilePathTestFn ospath_searchpath_testexists;
 	the path \GTK\bin\johnpye\extfn, returns true. This is of
 	course a fairly useless test function, so it's just for testing.
 */
-int ospath_searchpath_testexists(struct FilePath *path,void *file){
+static int ospath_searchpath_testexists(struct FilePath *path,void *file){
 	struct FilePath *fp, *fp1, *fp2;
 	fp = (struct FilePath *)file;
 	D(fp);
@@ -74,11 +74,11 @@ int ospath_searchpath_testexists(struct FilePath *path,void *file){
 
 	char *t=ospath_str(fp1);
 	MC(ASC_FG_BRIGHT,t);
-	FREE(t);
+	ASC_FREE(t);
 
 	t=ospath_str(fp2);
 	MC(ASC_FG_BRIGHTRED,t);
-	FREE(t);
+	ASC_FREE(t);
 
 	if(ospath_cmp(fp1,fp2)==0){
 		MC(ASC_FG_GREEN,"MATCH");
@@ -132,6 +132,17 @@ static void test_cleanup(void){
 	M("Passed 'cleanup' test\n");
 
 	ospath_free(fp1); ospath_free(fp2);
+	MEMUSED(0);
+}
+	//------------------------
+
+static void test_newcopy(void){
+	struct FilePath *fp1, *fp2;
+	fp1 = ospath_new_from_posix("/usr/local/bin");
+	fp2 = ospath_new_copy(fp1);
+	CU_TEST(ospath_cmp(fp1,fp2)==0);
+	ospath_free(fp1);
+	ospath_free(fp2);
 	MEMUSED(0);
 }
 	//------------------------
@@ -368,6 +379,7 @@ static void test_searchpath(void){
 #endif
 
 	pp = ospath_searchpath_new(pathtext);
+	CU_TEST(ospath_searchpath_length(pp)==4);
 
 	for(p1=pp; *p1!=NULL; ++p1){
 		D(*p1);
@@ -457,7 +469,7 @@ static void test_basefilename(void){
 	M("Passed getbasefilename test\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("extfntest.a4c");
 	D(fp1);
@@ -467,7 +479,7 @@ static void test_basefilename(void){
 	M("Passed getbasefilename test 2\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("/here/is/my/path.dir/");
 	D(fp1);
@@ -477,7 +489,7 @@ static void test_basefilename(void){
 	M("Passed getbasefilename test 3\n");
 
 	ospath_free(fp1);
-	if(s1)FREE(s1);
+	if(s1)ASC_FREE(s1);
 
 #ifdef WINPATHS
 	fp1 = ospath_new("c:extfntest.a4c");
@@ -488,7 +500,7 @@ static void test_basefilename(void){
 	M("Passed getbasefilename test WINPATHS\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 #endif
 	MEMUSED(0);
 }
@@ -507,7 +519,7 @@ static void test_getfilestem(void){
 	M("Passed getfilestem test\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("/usr/share/data/ascend/models/johnpye/extfn/extfntest");
 	D(fp1);
@@ -517,7 +529,7 @@ static void test_getfilestem(void){
 	M("Passed getfilestem test 2\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("/usr/share/data/ascend/.ascend.ini");
 	D(fp1);
@@ -527,7 +539,7 @@ static void test_getfilestem(void){
 	M("Passed getfilestem test 3\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("~/.vimrc");
 	D(fp1);
@@ -537,7 +549,7 @@ static void test_getfilestem(void){
 	M("Passed getfilestem test 3\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("~/src/ascend-0.9.5-1.jdpipe.src.rpm");
 	D(fp1);
@@ -547,7 +559,7 @@ static void test_getfilestem(void){
 	M("Passed getfilestem test 4\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("~/dir1/dir2/");
 	D(fp1);
@@ -557,7 +569,7 @@ static void test_getfilestem(void){
 	M("Passed getfilestem test 5\n");
 
 	ospath_free(fp1);
-	if(s1)FREE(s1);
+	if(s1)ASC_FREE(s1);
 	MEMUSED(0);
 }
 	//-------------------------------
@@ -575,7 +587,7 @@ static void test_getbasefileext(void){
 	M("Passed getbasefileext test\n");
 
 	ospath_free(fp1);
-	FREE(s1);
+	ASC_FREE(s1);
 
 	fp1 = ospath_new("~/.vimrc");
 	D(fp1);
@@ -585,7 +597,7 @@ static void test_getbasefileext(void){
 	M("Passed getbasefileext test 2\n");
 
 	ospath_free(fp1);
-	if(s1)FREE(s1);
+	if(s1)ASC_FREE(s1);
 
 	fp1 = ospath_new("./ascend4");
 	D(fp1);
@@ -595,7 +607,7 @@ static void test_getbasefileext(void){
 	M("Passed getbasefileext test 3\n");
 
 	ospath_free(fp1);
-	if(s1)FREE(s1);
+	if(s1)ASC_FREE(s1);
 	MEMUSED(0);
 }
 	//-------------------------------
@@ -635,14 +647,42 @@ static void test_getdir(void){
 	ospath_free(fp3);
 	MEMUSED(0);
 }
+	//-------------------------------
+
+/* 
+	return NULL for unfound env vars, else point to a string that must not be
+	modified by the caller, and may later be changed by a later call to getenv.
+*/
+static char *my_ospath_getenv(const char *name){
+	if(strcmp(name,"MYHOME")==0){
+		return "/home/john";
+	}else if(strcmp(name,"MYBIN")==0){
+		return "/usr/local/bin";
+	}
+	return NULL;
+}
+
+static void test_expandenv(void){
+	struct FilePath *fp1, *fp2;
+
+	CU_TEST(strcmp(my_ospath_getenv("MYHOME"),"/home/john")==0);
+	fp1 = ospath_new_expand_env("$MYHOME/myfile.ext",my_ospath_getenv,0);
+	fp2 = ospath_new("/home/john/myfile.ext");
+	CU_TEST(ospath_cmp(fp1,fp2)==0);
+
+	ospath_free(fp1);
+	ospath_free(fp2);
+	MEMUSED(0);
+}	
 
 /*===========================================================================*/
 /* Registration information */
 
 #define TESTS(T) \
 	T(getparent) \
-	T(cleanup) \
 	T(newfromposix) \
+	T(newcopy) \
+	T(cleanup) \
 	T(secondcleanup) \
 	T(append) \
 	T(appendupup) \
@@ -655,7 +695,8 @@ static void test_getdir(void){
 	T(basefilename) \
 	T(getfilestem) \
 	T(getbasefileext) \
-	T(getdir)
+	T(getdir) \
+	T(expandenv)
 
 REGISTER_TESTS_SIMPLE(general_ospath, TESTS);
 

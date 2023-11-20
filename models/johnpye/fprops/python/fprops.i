@@ -82,8 +82,8 @@ const char *ReferenceState_typename_get(const ReferenceState *ref){
 %rename(fluid) fprops_fluid;
 %exception {
 	$action
-	if(NULL==result){
-		PyErr_SetString(PyExc_RuntimeError,"Invalid fluid requested (turn on debugging flags for reasons why)");
+	if(!result){
+		PyErr_SetString(PyExc_RuntimeError,"Invalid fluid requested");
 		return NULL;
 	}
 }
@@ -103,7 +103,7 @@ int fprops_num_fluids();
 
 %nodefaultctor;
 
-typedef struct{} FluidState;
+typedef struct{} FluidState2;
 typedef struct{} PureFluid;
 
 /* FIXME what should we do with ctors and dtors...? */
@@ -134,16 +134,17 @@ typedef struct{} PureFluid;
 		if(res)*err = FPROPS_NUMERIC_ERROR;
 	}
 
-	FluidState set_Trho(double T, double rho, FpropsError *err){
-		FluidState state;
-		state = fprops_set_Trho(T,rho,$self,err);
+	FluidState2 set_Trho(double T, double rho, FpropsError *err){
+		FluidState2 state = fprops_set_Trho(T,rho,$self,err);
 		return state;
 	}
 
-	FluidState set_ph(double p, double h, FpropsError *err){
-		FluidState state;
-		fprops_solve_ph(p, h, &(state.T), &(state.rho), 0, $self, err);
-		state.fluid = $self;
+	FluidState2 set_ph(double p, double h, FpropsError *err){
+		FluidState2 state = fprops_solve_ph(p, h, $self, err);
+		return state;
+	}
+	FluidState2 set_pT(double p, double T, FpropsError *err){
+		FluidState2 state = fprops_solve_pT(p, T, $self, err);
 		return state;
 	}
 
@@ -151,11 +152,10 @@ typedef struct{} PureFluid;
 		return fprops_region_ph(p, h, $self,err);
 	}
 
-	FluidState set_Tx(double T, double x, FpropsError *err){
-		FluidState state;
-		fprops_solve_Tx(T, x, &(state.rho), $self, err);
-		state.T = T;
-		state.fluid = $self;
+	FluidState2 set_Tx(double T, double x, FpropsError *err){
+		FluidState2 state = fprops_solve_Tx(T, x, $self, err);
+		//state.T = T;
+		//state.fluid = $self;
 		return state;
 	}
 
@@ -163,18 +163,8 @@ typedef struct{} PureFluid;
 		return fprops_region_Tx(T, x, $self,err);
 	}
 
-	FluidState set_px(double p, double x, FpropsError *err){
-		FluidState state;
-		fprops_solve_px(p, x, &(state.T), &(state.rho), $self, err);
-		state.fluid = $self;
-		return state;
-	}
-	
-	FluidState set_pT(double p, double T, FpropsError *err){
-		FluidState state;
-		fprops_solve_pT(p, T, &(state.rho), $self, err);
-		state.T = T;
-		state.fluid = $self;
+	FluidState2 set_px(double p, double x, FpropsError *err){
+		FluidState2 state = fprops_solve_px(p, x, $self, err);
 		return state;
 	}
 
@@ -205,6 +195,19 @@ typedef struct{} PureFluid;
 		double p;
 		fprops_triple_point(&p,rho_f,rho_g,$self, err);
 		return p;
+	}
+
+	int can_sat(){
+		// FIXME this should be implemented elsewhere...
+		switch($self->type){
+		case FPROPS_PENGROB:
+		case FPROPS_HELMHOLTZ:
+			return 1;
+		case FPROPS_IDEAL:
+		case FPROPS_INCOMP:
+		default:
+			return 0;
+		}
 	}
 
 	double sat_T(double T, double *rho_f, double *rho_g, FpropsError *err){
@@ -302,7 +305,7 @@ exception types? */
 	}
 }
 
-%extend FluidState{
+%extend FluidState2{
 	// use a local _fprops___err variable to catch and raise errors from FPROPS
 	%typemap(in,numinputs=0) FpropsError *err (FpropsError _fprops___err = 0) {
 		$1 = &_fprops___err;
@@ -323,28 +326,11 @@ exception types? */
 }
 
 %{
-// implementation of getter functions
-double FluidState_T_get(FluidState *state){
-	return state->T;
-}
-
-double FluidState_rho_get(FluidState *state){
-	return state->rho;
-}
-
-double FluidState_v_get(FluidState *state){
-	return 1. / state->rho;
-}
-
-/* 
-	these macro tricks implement fprops_p, fprops_h, fprops_T etc as attributes,
-	eg F.set_ph(1e5,2e3).T to calculate temperature from Python
-*/
-#define FNS(G,X) G(x) X G(p) X G(u) X G(h) X G(s) X G(a) X G(cv) \
+#define FNS(G,X) G(T) X G(rho) X G(v) X G(x) X G(p) X G(u) X G(h) X G(s) X G(a) X G(cv) \
 	X G(cp) X G(w) X G(g) X G(alphap) X G(betap) X G(cp0) X G(dpdT_rho) \
 	X G(mu) X G(lam)
 #define GETTER(N) \
-	double FluidState_##N##_get(FluidState *state){\
+	double FluidState2_##N##_get(FluidState2 *state){\
 		return fprops_##N(*state,&_fprops_fluidstate_err);\
 	}
 #define SPACE

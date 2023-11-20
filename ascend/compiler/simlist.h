@@ -64,7 +64,9 @@ ASC_DLLSPEC void sim_destroy(struct Instance *inst);
 enum CreateInst_format {
   e_normal = 0,     /**< Normal compilation (default). */
   e_no_relations,   /**< Compile with no relations. */
+#if 0
   e_patch           /**< Compile a patch. */
+#endif
 };
 
 ASC_DLLSPEC struct Instance *SimsCreateInstance(

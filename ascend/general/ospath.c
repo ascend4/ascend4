@@ -130,9 +130,11 @@ struct FilePath{
 
 #include <string.h>
 
-#if !defined(MALLOC) && !defined(FREE)
-# define MALLOC malloc
-# define FREE free
+#if !defined(ASC_NEW) || !defined (ASC_NEW_ARRAY) || !defined(ASC_FREE)
+# error "where is ASC_NEW etc??"
+# define ASC_FREE free
+# define ASC_NEW(T) malloc(sizeof(T))
+# define ASC_NEW_ARRAY(T,N) malloc((N)*sizeof(T))
 #endif
 
 #define E(MSG) fprintf(stderr,"%s:%d: (%s) ERROR: %s\n",__FILE__,__LINE__,__FUNCTION__,MSG)
@@ -194,7 +196,7 @@ struct FilePath *ospath_new(const char *path){
 
 /** Create but with no 'cleanup', and no fixing of / vs \. */
 struct FilePath *ospath_new_noclean(const char *path){
-	struct FilePath *fp = (struct FilePath *)MALLOC(sizeof(struct FilePath));
+	struct FilePath *fp = ASC_NEW(struct FilePath);
 	P(fp);
 	X(path);
 	STRNCPY(fp->path,path,PATH_MAX);
@@ -209,18 +211,18 @@ struct FilePath *ospath_new_noclean(const char *path){
 	return fp;
 }
 
-struct FilePath *ospath_new_expand_env(const char *path, GetEnvFn *getenvptr){
+struct FilePath *ospath_new_expand_env(const char *path, GetEnvFn *getenvptr, int free_after_getenv){
 	struct FilePath *fp;
 
-	char *pathnew = env_subst(path,getenvptr);
+	char *pathnew = env_subst(path,getenvptr,free_after_getenv);
 	fp = ospath_new(pathnew);
-	FREE(pathnew);
+	ASC_FREE(pathnew);
 
 	return fp;
 }
 
 struct FilePath *ospath_new_copy(const struct FilePath *fp){
-	struct FilePath *fp1 = (struct FilePath *)MALLOC(sizeof(struct FilePath));
+	struct FilePath *fp1 = ASC_NEW(struct FilePath);
 	ospath_copy(fp1,fp);
 	return fp1;
 }
@@ -263,13 +265,13 @@ struct FilePath *ospath_new_from_posix(const char *posixpath){
 void ospath_free(struct FilePath *fp){
 	if(fp!=NULL){
 		P(fp);
-		FREE(fp);
+		ASC_FREE(fp);
 	}
 	fp=NULL;
 }
 
 void ospath_free_str(char *str){
-	FREE(str);
+	ASC_FREE(str);
 }
 
 
@@ -356,7 +358,7 @@ int ospath_chdir(struct FilePath *fp){
 	char *s = ospath_str(fp);
 	X(s);
 	int res = CHDIR(s);
-	FREE(s);
+	ASC_FREE(s);
 	return res;
 }
 
@@ -552,11 +554,11 @@ int ospath_isvalid(const struct FilePath *fp){
 char *ospath_str(const struct FilePath *fp){
 	char *s;
 #ifdef WINPATHS
-	s = (char *)MALLOC(sizeof(char)*(strlen(fp->drive)+strlen(fp->path) +1) );
+	s = ASC_NEW_ARRAY(char, strlen(fp->drive)+strlen(fp->path) +1);
 	STRCPY(s,fp->drive);
 	STRCAT(s,fp->path);
 #else
-	s = MALLOC(sizeof(char)*(strlen(fp->path)+1));
+	s = ASC_NEW_ARRAY(char, strlen(fp->path)+1);
 	STRCPY(s,fp->path);
 #endif
 	return s;
@@ -691,6 +693,8 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 	return fp1;
 }
 
+#if 0
+// this function not yet in use
 struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned depth)
 {
 	int startslash;
@@ -753,6 +757,7 @@ struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned depth)
 	return ospath_new_noclean(temp);
 #endif
 }
+#endif
 
 char *ospath_getbasefilename(struct FilePath *fp){
 	char *temp;
@@ -780,14 +785,14 @@ char *ospath_getbasefilename(struct FilePath *fp){
 	/* extract filename given position of find / and return it.*/
 	if(pos != NULL){
 		unsigned length1 = length - ((pos - fp->path));
-		temp = (char *)MALLOC(sizeof(char)*(length1+1));
+		temp = ASC_NEW_ARRAY(char, length1+1);
 
 		V(length1);
 		STRNCPY(temp, pos + 1, length1);
 		*(temp + length1)='\0';
 		return temp;
 	}else{
-		temp = (char *)MALLOC(sizeof(char)*(length+1));
+		temp = ASC_NEW_ARRAY(char, length+1);
 		STRNCPY(temp, fp->path, length);
 		*(temp+length)='\0';
 		return temp;
@@ -847,13 +852,13 @@ char *ospath_getfileext(struct FilePath *fp){
 	if(pos != NULL && pos!=temp){
 		/* extract extension.*/
 		len1 = temp + strlen(temp) - pos + 1;
-		temp2 = (char *)MALLOC(sizeof(char)*len1);
+		temp2 = ASC_NEW_ARRAY(char,len1);
 		STRNCPY(temp2, pos, len1);
 	}else{
 		/* no extension*/
 		temp2 = NULL;
 	}
-	FREE(temp);
+	ASC_FREE(temp);
 	return temp2;
 }
 
@@ -869,6 +874,8 @@ int ospath_isroot(struct FilePath *fp)
 	return strcmp(fp->path, PATH_SEPARATOR_STR) ? 0 : 1;
 }
 
+#if 0
+// disused, so far
 unsigned ospath_depth(struct FilePath *fp){
 	unsigned length;
 	unsigned depth;
@@ -894,6 +901,7 @@ unsigned ospath_depth(struct FilePath *fp){
 
 	return depth;
 }
+#endif
 
 struct FilePath *ospath_root(struct FilePath *fp){
 #ifdef WINPATHS
@@ -904,12 +912,12 @@ struct FilePath *ospath_root(struct FilePath *fp){
 	struct FilePath *r;
 
 	if(strlen(fp->drive)){
-		temp = (char *)MALLOC(sizeof(char)*strlen(fp->drive)+1);
+		temp = ASC_NEW_ARRAY(char, strlen(fp->drive)+1);
 		STRCPY(temp,fp->drive);
 		STRCAT(temp,PATH_SEPARATOR_STR);
 		X(temp);
 		r = ospath_new(temp);
-		FREE(temp);
+		ASC_FREE(temp);
 	}else{
 		r = ospath_new(fp->path);
 	}
@@ -1065,7 +1073,7 @@ struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath
 	X(fp2->drive);
 #endif
 
-	fp = (struct FilePath *)MALLOC(sizeof(struct FilePath));
+	fp = ASC_NEW(struct FilePath);
 
 	if(!ospath_isvalid(fp1)){
 		if(ospath_isvalid(fp2)){
@@ -1197,9 +1205,9 @@ void ospath_append(struct FilePath *fp, struct FilePath *fp1){
 	X(fp->path);
 
 #if 0
-	FREE(temp[0]);
+	ASC_FREE(temp[0]);
 	M("Freed temp[0]");
-	FREE(temp[1]);
+	ASC_FREE(temp[1]);
 	M("Freed temp[1]");
 #endif
 
@@ -1291,7 +1299,7 @@ struct FilePath **ospath_searchpath_new(const char *path){
 	p=STRTOK(path1,PATH_LISTSEP_STR,nexttok);
 	X(p);
 	for(; p!= NULL; p=STRTOK(NULL,PATH_LISTSEP_STR,nexttok)){
-		c = (char *)MALLOC(sizeof(char)*(strlen(p)+1));
+		c = ASC_NEW_ARRAY(char,strlen(p)+1);
 		/* XXX FIXME what if one path component is longer than PATH_MAX?*/
 		X(p);
 		STRCPY(c,p);
@@ -1309,7 +1317,7 @@ struct FilePath **ospath_searchpath_new(const char *path){
 	V(n);
 
 
-	pp = (struct FilePath **)MALLOC(sizeof(struct FilePath*)*(n+1));
+	pp = ASC_NEW_ARRAY(struct FilePath*, n+1);
 	for(i=0; i<n; ++i){
 #if 0
 		V(i);
@@ -1319,7 +1327,7 @@ struct FilePath **ospath_searchpath_new(const char *path){
 #if 0
 		D(pp[i]);
 #endif
-		FREE(list[i]);
+		ASC_FREE(list[i]);
 	}
 	pp[n] = NULL;
 
@@ -1338,7 +1346,7 @@ void ospath_searchpath_free(struct FilePath **searchpath){
 	for(p=searchpath; *p!=NULL; ++p){
 		ospath_free(*p);
 	}
-	FREE(searchpath);
+	ASC_FREE(searchpath);
 }
 
 int ospath_searchpath_length(struct FilePath **searchpath){

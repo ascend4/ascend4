@@ -356,6 +356,7 @@ void Asc_CreateCommands(Tcl_Interp *interp)
     /* the stuff above should be replaced with header macros. */
   );
 
+#if 0
   ASCADDCOM(interp,"qassgn2", Asc_BrowRunAssignQlfdidCmd2,
     "miscellaneous",
     NULL,
@@ -363,11 +364,12 @@ void Asc_CreateCommands(Tcl_Interp *interp)
     NULL
     /* the stuff above should be replaced with header macros. */
   );
+#endif
 
   ASCADDCOM(interp,"qassgn3", Asc_BrowRunAssignQlfdidCmd3,
     "miscellaneous",
     NULL,
-    NULL,
+    "qassgn3    -- assigns a value to a qlfdid atomic instance",
     NULL
     /* the stuff above should be replaced with header macros. */
   );
@@ -672,13 +674,15 @@ void Asc_CreateCommands(Tcl_Interp *interp)
     /* the stuff above should be replaced with header macros. */
   );
 
-  ASCADDCOM(interp,"__sims_update",Asc_SimsUpdateInstanceCmd,
+#if 0
+   ASCADDCOM(interp,"__sims_update",Asc_SimsUpdateInstanceCmd,
     "broken",
     NULL,
     NULL,
     NULL
     /* the stuff above should be replaced with header macros. */
   );
+#endif
 
   ASCADDCOM(interp,"sim_destroy",Asc_SimsDestroySimulationCmd,
     "simulations",
@@ -1969,7 +1973,7 @@ void Asc_CreateCommands(Tcl_Interp *interp)
                     (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
 #endif
   /* some experimental stuff */
-#if REIMPLEMENT
+#if 0 && defined(DISUSED)
   Tcl_CreateCommand(interp,"__codegen_types",Asc_CodeGenTypesCmd,
                     (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
 #endif

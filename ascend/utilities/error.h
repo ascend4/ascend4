@@ -53,6 +53,8 @@
 	default 'real' printf behaviour on this platform. (As
 	opposed to the sneaky stuff that FPRINTF does in this header)
 */
+#include <ascend/general/config.h>
+#include <ascend/general/color.h>
 #include <ascend/general/platform.h>
 #include <ascend/utilities/ascPrint.h>
 
@@ -148,7 +150,6 @@ ASC_DLLSPEC int console_debug(const char *fmt,...);
 #endif
 
 #define ERROR_REPORTER_START_NOLINE(SEV) error_reporter_start(SEV,NULL,0,NULL);
-
 #define ERROR_REPORTER_STAT(sev,stat,msg) \
 	error_reporter(sev,Asc_ModuleFileName(stat->mod),stat->linenum,NULL,msg)
 
@@ -227,7 +228,6 @@ typedef struct{
 	
 	An alternative would be extend to the procframe stuff to support this case.
 
-
 	Usage will be
 
 		bool has_error = 0;
@@ -255,7 +255,7 @@ typedef struct{
 	memory assocated with the buffered errors is freed. Eventually, the final
 	level of nested `error_reporter_tree_start` is closed, there will be no
 	associated memory allocated.
-	
+
 	Note the following case:
 
 	error_reporter_tree_start();
@@ -275,7 +275,7 @@ typedef struct{
 	}else{
 		error_reporter_tree_clear();
 	}
-	
+
 	This is a case of nested `error_reporter_tree_start()`. The line indicated ***
 	should not cause output of the buffered errors, because we are still within
 	a parent tree, and the later `error_reporter_tree_has_error()` call may need
@@ -283,12 +283,13 @@ typedef struct{
 */
 typedef struct ErrorReporterTree{
 	error_reporter_meta_t *err;
+	int iscaching;
 	struct ErrorReporterTree *head; /**< first on the list of child errors */
 	struct ErrorReporterTree *tail; /**< last on the list of child errors */
 	struct ErrorReporterTree *next; /**< next error in the present list */
+	struct ErrorReporterTree *prev; /**< prev error in the present list */
 	struct ErrorReporterTree *parent; /**< parent error (or NULL) */
 } error_reporter_tree_t;
-
 
 /** initialise a new sub-tree
 	If there is no tree existing, TREE=TREECURRENT=a new node.

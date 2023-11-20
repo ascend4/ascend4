@@ -50,14 +50,24 @@
 #endif
 #define QLFDIDMALLOC ASC_NEW(struct SearchEntry);
 
+//#define QLFDID_DEBUG
+#ifdef QLFDID_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 
 /* used for searching */
 
 struct Instance *g_search_inst = NULL;
 struct Instance *g_relative_inst = NULL;
 
-char *Asc_MakeInitString(int len)
-{
+/*
+	FIXME remove this silly little function. Just ASC_NEW_ARRAY_CLEAR?
+	It's fairly widely used in the Tcl/Tk GUI... could move it to there?
+*/
+char *Asc_MakeInitString(int len){
   char *result;
   int defaultlen = 40;
   if (len<=0) {
@@ -71,19 +81,22 @@ char *Asc_MakeInitString(int len)
   return result;
 }
 
-void Asc_ReInitString(char *str)
-{
+/*
+	FIXME remove this silly little function. Just inline it?
+	It's fairly widely used in the Tcl/Tk GUI... could move it to there?
+*/
+void Asc_ReInitString(char *str){
   if ((str)&&(strlen(str))) {
     strcpy(str,"");
   }
 }
 
+
 /*
- * Create a search entry node with a simple name
- * such as : a.
- */
-struct SearchEntry *Asc_SearchEntryCreate(char *name,struct Instance *i)
-{
+	Create a search entry node with a simple name
+	such as : a.
+*/
+struct SearchEntry *Asc_SearchEntryCreate(char *name,struct Instance *i){
   struct SearchEntry *result;
   result = QLFDIDMALLOC;
   assert(result!=NULL);
@@ -93,14 +106,14 @@ struct SearchEntry *Asc_SearchEntryCreate(char *name,struct Instance *i)
   return result;
 }
 
+
 /*
- * Create a search entry node with a name that
- * is formatted like a integer array. such as:
- * [14].
- */
+	Create a search entry node with a name that
+	is formatted like a integer array. such as:
+	[14].
+*/
 static
-struct SearchEntry *SearchEntryCreateIntArray(char *name,struct Instance *i)
-{
+struct SearchEntry *SearchEntryCreateIntArray(char *name,struct Instance *i){
   struct SearchEntry *result;
   result = QLFDIDMALLOC;
   assert(result!=NULL);
@@ -110,14 +123,14 @@ struct SearchEntry *SearchEntryCreateIntArray(char *name,struct Instance *i)
   return result;
 }
 
+
 /*
- * Create a search entry node with a name that
- * is formatted like a string array. such as:
- * ['benzene.flow'].
- */
-static
-struct SearchEntry *SearchEntryCreateStrArray(char *name,struct Instance *i)
-{
+	Create a search entry node with a name that
+	is formatted like a string array. such as:
+	['benzene.flow'].
+*/
+static 
+struct SearchEntry *SearchEntryCreateStrArray(char *name,struct Instance *i){
   struct SearchEntry *result;
   result = QLFDIDMALLOC;
   assert(result!=NULL);
@@ -127,20 +140,20 @@ struct SearchEntry *SearchEntryCreateStrArray(char *name,struct Instance *i)
   return result;
 }
 
-struct Instance *Asc_SearchEntryInstance(struct SearchEntry *se)
-{
+
+struct Instance *Asc_SearchEntryInstance(struct SearchEntry *se){
   assert(se!=NULL);
   return (se->i);
 }
 
-char *Asc_SearchEntryName(struct SearchEntry *se)
-{
+
+char *Asc_SearchEntryName(struct SearchEntry *se){
   assert(se!=NULL);
   return (se->name);
 }
 
-void Asc_SearchEntryDestroy(struct SearchEntry *se)
-{
+
+void Asc_SearchEntryDestroy(struct SearchEntry *se){
   if (!se) {
     return;
   }
@@ -150,8 +163,8 @@ void Asc_SearchEntryDestroy(struct SearchEntry *se)
   ascfree(se);
 }
 
-void Asc_SearchListDestroy(struct gl_list_t *search_list)
-{
+
+void Asc_SearchListDestroy(struct gl_list_t *search_list){
   struct SearchEntry *se;
   unsigned long len,c;
   if (!search_list) {
@@ -165,9 +178,9 @@ void Asc_SearchListDestroy(struct gl_list_t *search_list)
   gl_destroy(search_list);
 }
 
+
 static
-int CheckChildExist(struct InstanceName name)
-{
+int CheckChildExist(struct InstanceName name){
   unsigned long ndx,nch;
   symchar  *tablename; /* hacky, but centralized slop avoidance */
   /* remember that a struct passed by value can be overwritten safely. */
@@ -201,21 +214,8 @@ int CheckChildExist(struct InstanceName name)
   }
 }
 
-static void HandleLastPart(char *temp)
-{
-  struct InstanceName name;
-  if (g_search_inst) {
-    SetInstanceNameType(name,StrName);
-    SetInstanceNameStrPtr(name,AddSymbol(temp));
-    CheckChildExist(name);            /* sets g_search_inst regardless */
-    return;
-  } else {
-    g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
-  }
-}
 
-struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp)
-{
+struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp){
   register char *ptr, *org;
   struct InstanceName name;
   struct gl_list_t *search_list = NULL;
@@ -235,7 +235,7 @@ struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp)
     switch(*str) {
     case '.':
       if (*(str-1) != ']') {
-        if (open_quote) {	/* to deal b['funny.name']  */
+        if(open_quote) {	    /* to deal b['funny.name']  */
           *(ptr++) = *(str++);	/*              ---^---	    */
           break;
         }
@@ -262,25 +262,25 @@ struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp)
       break;
     case '\'':
       str++;
-      if (open_quote) {
+      if(open_quote){
         open_quote--;
-      } else {
+      }else{
         open_quote++;
       }
       break;
     case '[':
-      if (*(str-1) != ']') {
+      if (*(str-1) != ']'){
         *ptr = '\0';
-        if (g_search_inst) {
+        if(g_search_inst){
           SetInstanceNameType(name,StrName);
           SetInstanceNameStrPtr(name,AddSymbol(temp));
           if(0 == (ndx=CheckChildExist(name))) {
             Asc_SearchListDestroy(search_list);
             return NULL;
           }
-        } else {
+        }else{
           g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
-          if (!g_search_inst) {
+          if (!g_search_inst){
             Asc_SearchListDestroy(search_list);
             return NULL;
           }
@@ -330,33 +330,45 @@ struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp)
     }
   }
   *ptr = '\0';
-  if (*temp == '\0') {
+  if(*temp == '\0'){
     return search_list;
   }
-  HandleLastPart(temp);
-  if (g_search_inst) {
+
+  // handle last part
+  struct InstanceName name1;
+  MSG("handling last part '%s'",temp);
+  if(g_search_inst){
+    SetInstanceNameType(name1,StrName);
+    SetInstanceNameStrPtr(name1,AddSymbol(temp));
+    CheckChildExist(name1);            /* sets g_search_inst regardless */
+  }else{
+    g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
+  }
+
+  if(g_search_inst){
     se = Asc_SearchEntryCreate(temp,g_search_inst);
     gl_append_ptr(search_list,se);
     return search_list;
-  } else {
+  }else{
     Asc_SearchListDestroy(search_list);
     return NULL;
   }
 }
 
-int Asc_QlfdidSearch2(char *str)
-{
+#if 0 /* DISUSED */
+int Asc_QlfdidSearch2(char *str){
   char temp[MAXIMUM_ID_LENGTH];
   struct gl_list_t *search_list;
 
   search_list = Asc_BrowQlfdidSearch(str,temp);
-  if ((g_search_inst==NULL) || (search_list==NULL)) {
+  if((g_search_inst==NULL) || (search_list==NULL)){
     return 1;
-  } else {
+  }else{
     Asc_SearchListDestroy(search_list);
     return 0;
   }
 }
+#endif
 
 /*
  *********************************************************************
@@ -366,29 +378,22 @@ int Asc_QlfdidSearch2(char *str)
  *********************************************************************
  */
 
-static
-void HandleLastPart3(char *temp)
-{
-  struct InstanceName name;
-  if (g_search_inst) {
-    SetInstanceNameType(name,StrName);
-    SetInstanceNameStrPtr(name,AddSymbol(temp));
-    CheckChildExist(name);            /* sets g_search_inst regardless */
-    return;
-  } else {
-    g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
-  }
-}
+/*
+	Note that this function is ONLY called from Asc_QlfdidSearch3, and 
+	`temp` is a second (*writeable*) copy of `str`.
 
+	FIXME merge this code into Asc_QlfdidSearch3, no need for a separate func??
+*/
 static
-struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative)
-{
+struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative){
   register char *ptr;
   struct InstanceName name;
   int ndx = 0;
   int open_bracket = 0;
   int open_quote = 0;
   CONST char *org;
+
+  MSG("Starting search for '%s'",str);
 
   if (relative == 1) {
     g_search_inst = g_relative_inst; /* could be NULL */
@@ -400,27 +405,32 @@ struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative)
   }
   org = str;
   ptr = temp;
-  while(*str != '\0') {
+  while(*str != '\0'){
+    //MSG("Searching '%s'",str);
     switch(*str) {
     case '.':
-      if (*(str-1) != ']') {
-        if (open_quote) {	/* to deal b['funny.name']  */
-          *(ptr++) = *(str++);	/*              ---^---	    */
+      if(*(str-1) != ']'){
+        if(open_quote) { 	    /* to handle b['funny.name']  */
+          *(ptr++) = *(str++);  /*           ---^---	    */
           break;
         }
         *ptr = '\0';
-        if (g_search_inst) {
+        if(g_search_inst){
           SetInstanceNameType(name,StrName);
           SetInstanceNameStrPtr(name,AddSymbol(temp));
           ndx=CheckChildExist(name);
           if(ndx==0) {
+            MSG("identifier '%s' not found",temp);
             return NULL;
           }
-        } else {
+          MSG("found identifier '%s'",temp);
+        }else{
           g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
-          if (!g_search_inst) {
+          if(!g_search_inst){
+            MSG("couldn't find simulation root '%s'",temp);
             return NULL;
           }
+          MSG("found simulation root '%s' at %p",temp,g_search_inst);
         }
       }
       str++;
@@ -428,23 +438,28 @@ struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative)
       break;
     case '\'':
       str++;
-      if (open_quote) {
+      if(open_quote){
+        MSG("closed quote");
         open_quote--;
-      } else {
+      }else{
+        MSG("opened quote");
         open_quote++;
       }
       break;
     case '[':
-      if (*(str-1) != ']') {
+      MSG("open '['");
+      if(*(str-1) != ']'){
         *ptr = '\0';
-        if (g_search_inst) {
+        if(g_search_inst){
+          MSG("checking for child '%s'",temp);
           SetInstanceNameType(name,StrName);
           SetInstanceNameStrPtr(name,AddSymbol(temp));
           ndx=CheckChildExist(name);
           if(ndx==0) {
             return NULL;
           }
-        } else {
+        }else{
+          MSG("checking for root '%s'",temp);
           g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
           if (!g_search_inst) {
             return NULL;
@@ -459,8 +474,9 @@ struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative)
       open_bracket--;
       *ptr = '\0';
       str++;
-      switch(InstanceKind(g_search_inst)) {
+      switch(InstanceKind(g_search_inst)){
       case ARRAY_INT_INST:
+        MSG("looking for array integer instance '%s'",temp);
         SetInstanceNameType(name,IntArrayIndex);
         SetInstanceNameIntIndex(name,atol(temp));
         ndx=CheckChildExist(name);
@@ -470,6 +486,7 @@ struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative)
         ptr = temp;
         break;
       case ARRAY_ENUM_INST:
+        MSG("looking for array enum instance '%s'",temp);
         SetInstanceNameType(name,StrArrayIndex);
         SetInstanceNameStrIndex(name,AddSymbol(temp));
         ndx=CheckChildExist(name);
@@ -492,12 +509,25 @@ struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative)
   if (*temp == '\0') {
     return g_search_inst;
   }
-  HandleLastPart3(temp);
+
+  // handle last part
+  MSG("handling last part '%s'",temp);
+  struct InstanceName name1;
+  if(g_search_inst){
+    SetInstanceNameType(name1,StrName);
+    SetInstanceNameStrPtr(name1,AddSymbol(temp));
+    CheckChildExist(name1);            /* sets g_search_inst regardless */
+    MSG("%s final part '%s'",g_search_inst?"Found":"Did not find", temp);
+  }else{
+    g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
+    MSG("%s simulation root '%s'",g_search_inst?"Found":"Did not find", temp);
+  }
+
   return g_search_inst; /* which may be NULL */
 }
 
-int Asc_QlfdidSearch3(CONST char *str, int relative)
-{
+
+int Asc_QlfdidSearch3(CONST char *str, int relative){
   char *temp;
   struct Instance *found;
 

@@ -52,24 +52,11 @@
 #ifndef ASC_RELATION_H
 #define ASC_RELATION_H
 
+#include "relerr.h"
+
 /**	@addtogroup compiler_rel Compiler Relations
 	@{
 */
-
-enum relation_errors {
-  find_error,                   /**< indicates an error finding an instance */
-  incorrect_structure,
-  incorrect_inst_type,          /**< contains a nonscalar instance type */
-  incorrect_real_inst_type,     /**< contains a real_inst type */
-  incorrect_boolean_inst_type,  /**< contains a boolean instance type */
-  incorrect_integer_inst_type,  /**< contains an integer variable instance type*/
-  incorrect_symbol_inst_type,   /**< contains a symbol instance type */
-  integer_value_undefined,      /**< integer constant doesn't have a value yet */
-  real_value_undefined,         /**< real constant doesn't have a value yet */
-  real_value_wild,              /**< real constant doesn't have a dim yet */
-  incorrect_num_args,           /**< wrong number of arguements */
-  okay
-};
 
 extern int g_ExternalNodeStamps;
 /**< 
@@ -258,43 +245,43 @@ extern int CheckExternal(CONST struct Instance *reference,
 
 extern struct gl_list_t *ProcessExtRelArgs(CONST struct Instance *inst,
                               CONST struct VariableList *vl,
-                              enum find_errors *ferr);
+                              rel_errorlist *err);
 /**<
 return the list of lists arguments, if they all exist, or NULL
 if something is missing.
 Result is the callers to destroy with DestroySpecialList.
 @param inst parent model of the external relation.
 @param vl argument list of names.
-@param ferr find result code, if anyone cares.
+@param err find result code, if anyone cares.
 */
 
-struct gl_list_t *ProcessExtRelArgNames(CONST struct Instance *inst, CONST struct VariableList *vl, enum find_errors *ferr);
+struct gl_list_t *ProcessExtRelArgNames(CONST struct Instance *inst, CONST struct VariableList *vl, rel_errorlist *err);
 /**<
 return the list of lists argument names, if they all exist, or NULL
 if something is missing.
 Result is the callers to destroy with DeepDestroySpecialList(l,DestroyName).
 @param inst parent model of the external relation.
 @param vl argument list of names.
-@param ferr find result code, if anyone cares.
+@param err find result code, if anyone cares.
 */
 
-extern struct Instance *ProcessExtRelData(CONST struct Instance *inst, CONST struct Name *n, enum find_errors *ferr);
+extern struct Instance *ProcessExtRelData(CONST struct Instance *inst, CONST struct Name *n, rel_errorlist *err);
 /**<
-Check the value of ferr for correct_instance or otherwise.
+Check the value of err for correct_instance or otherwise.
 @return the DATA instance if it exists (may be NULL if not specified).
 @param inst parent model of the external relation.
 @param n data instance name.
-@param ferr find result code, if anyone cares.
+@param err find result code, if anyone cares.
 
 */
 
-extern struct Name *ProcessExtRelDataName(CONST struct Instance *inst, CONST struct Name *n, enum find_errors *ferr);
+extern struct Name *ProcessExtRelDataName(CONST struct Instance *inst, CONST struct Name *n, rel_errorlist *err);
 /**<
-Check the value of ferr for correct_instance or otherwise.
+Check the value of err for correct_instance or otherwise.
 @return the name for DATA instance if it data exists (may be NULL if not specified).
 @param inst parent model of the external relation.
 @param n data instance name, possibly in indexed rather than exact form.
-@param ferr find result code, if anyone cares.
+@param err find result code, if anyone cares.
 
 */
 
@@ -321,8 +308,7 @@ extern struct relation
 *CreateTokenRelation(struct Instance *reference,
                      struct Instance *relinst,
                      CONST struct Expr *ex,
-                     enum relation_errors *err,
-                     enum find_errors *ferr);
+                     rel_errorlist *err);
 /**<
  *  Create a relation from an expression, a reference instance and a relation
  *  instance.  This modifies the instance tree. The type of relinst will
@@ -335,15 +321,14 @@ extern struct relation
  *  @param relinst   The relation instance where this relation will be placed.
  *  @param ex        The expression to be converted..
  *  @param err       Location to store relation error code.
- *  @param ferr      Location to store find error code.
+ *  @param err      Location to store find error code.
  */
 
 extern struct relation
 *CreateOpCodeRelation(struct Instance *reference,
                       struct Instance *relinst,
                       CONST struct Expr *ex,
-                      enum relation_errors *err,
-                      enum find_errors *ferr);
+                      rel_errorlist *err);
 /**<
  *  NOT IMPLEMENTED.
  *
@@ -524,3 +509,5 @@ extern void RelationSetBinTokens(struct Instance *c,
 /* @} */
 
 #endif /* ASC_RELATION_H */
+
+/* vim: noet sw=4 ts=4 */

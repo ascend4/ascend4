@@ -16,219 +16,243 @@
 */
 
 #include "env.h"
-
+#include <ascend/utilities/error.h>
+#include <ascend/general/ascMalloc.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-#if !defined(TEST) && !defined(VERBOSE)
-/* hard wiring NDEBUG here is a misuse of NDEBUG and causes errors/warning
-on the compile line. renamed to NOISY.*/
-# define NOISY 1
+//#define ENV_DEBUG
+#ifdef ENV_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
 #endif
 
-#ifndef NOISY
-# include <assert.h>
-# define M(MSG) fprintf(stderr,"%s:%d: (%s) %s\n",__FILE__,__LINE__,__FUNCTION__,MSG);fflush(stderr)
-# define MC(CLR,MSG) fprintf(stderr,"\033[%sm%s:%d: (%s) %s\033[0m\n",CLR,__FILE__,__LINE__,__FUNCTION__,MSG)
-# define MM(MSG) MC("34",MSG)
-# define X(VAR) fprintf(stderr,"%s:%d: (%s) %s=%s\n",__FILE__,__LINE__,__FUNCTION__,#VAR,VAR)
-# define XC(CLR,VAR) fprintf(stderr,"\033[%sm%s:%d: (%s) %s=%s\033[0m\n",CLR,__FILE__,__LINE__,__FUNCTION__,#VAR,VAR)
-# define C(VAR) fprintf(stderr,"%s:%d: (%s) %s=%c\n",__FILE__,__LINE__,__FUNCTION__,#VAR,VAR)
-# define V(VAR) fprintf(stderr,"%s:%d: (%s) %s=%d\n",__FILE__,__LINE__,__FUNCTION__,#VAR,(VAR))
-# define D(VAR) fprintf(stderr,"%s:%d: (%s) %s=",__FILE__,__LINE__,__FUNCTION__,#VAR);ospath_debug(VAR)
-# define DD(VAR) fprintf(stderr,"%c[34;1m%s:%d: (%s)%c[0m %s=",27,__FILE__,__LINE__,__FUNCTION__,27,#VAR);ospath_debug(VAR)
-#else /*  NOISY*/ 
-# include <assert.h>
-# define M(MSG) ((void)0)
-# define MC(CLR,MSG) ((void)0)
-# define X(VAR) ((void)0)
-# define XC(CLR,VAR) ((void)0)
-# define C(VAR) ((void)0)
-# define V(VAR) ((void)0)
-# define D(VAR) ((void)0)
-# define DD(VAR) ((void)0)
-# define MM(VAR) ((void)0)
-#endif /* NOISY*/ 
+#ifdef EXTRA_VERBOSE
+# define MSG1 MSG
+#else
+# define MSG1(ARGS...) ((void)0)
+#endif
 
-#if !defined(FREE) && !defined(MALLOC)
-# define FREE free
-# define MALLOC malloc
+#define X(V) MSG1("%s=%s",#V,V)
+
+#include <assert.h>
+
+#if !defined(ASC_FREE) || !defined(ASC_NEW) || !defined(ASC_NEW_ARRAY)
+# error "We should have ASC_FREE,ASC_NEW,ASC_NEW_ARRAY here...?"
+# define ASC_FREE free
+# define ASC_NEW(T) malloc(sizeof(T))
+# define ASC_NEW_ARRAY(T,N) malloc((N)*sizeof(T))
 #endif
 
 #define ENV_MAX_VAR_NAME 64 /* arbitrarily*/
 
-char *env_subst_level(const char *path,GetEnvFn *getenvptr, int level);
-
-char *env_subst(const char *path,GetEnvFn *getenvptr){
-	char *dest;
-
-	X(path);
-
-	/* no substitution required */
-	if(getenvptr==NULL){
-		dest = MALLOC(sizeof(char) * (strlen(path) + 1));
-		strcpy(dest,path);
-		return dest;
-	}
-
-	return env_subst_level(path,getenvptr, 0);
-}
-
-
-int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr){
+int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr
+		,int free_after_getenv
+){
 	char *val = (*getenvptr)(varname);
 	char *envcmd;
+	int res;
+	int len;
 	if(val!=NULL){
-		envcmd = MALLOC(sizeof(char) * (strlen(varname) + 1 + strlen(val) + 1));
-		sprintf(envcmd,"%s=%s",varname,val);
-		return (*putenvptr)(envcmd);
+		len = strlen(varname) + 1 + strlen(val) + 1;
+		envcmd = ASC_NEW_ARRAY(char,len);
+		snprintf(envcmd,len,"%s=%s",varname,val);
+		res = (*putenvptr)(envcmd);
+		ASC_FREE(envcmd);
+		if(free_after_getenv)ASC_FREE(val);
+		return res;
 	}
 	return -1;
 }
 
-char *env_subst_level(const char *path,GetEnvFn *getenvptr, int level){
+int env_import_default(const char *varname,GetEnvFn *getenvptr0
+		,GetEnvFn *getenvptr1, PutEnvFn *putenvptr1
+		,const char *defaultvalue, int free_after_getenv0, int free_after_getenv1
+){
+	char *gotval1 = (*getenvptr1)(varname);
+	if(NULL!=gotval1){
+		// value already exists, no import required
+		if(free_after_getenv1)ASC_FREE(gotval1);
+		return 0;
+	}
+	char *gotval0 = (*getenvptr0)(varname);
+	char *envcmd;
+	int res;
+	int len;
+	const char *val = gotval0;
+	if(gotval0==NULL)val = defaultvalue;
+	len = strlen(varname) + 1 + strlen(val) + 1;
+	envcmd = ASC_NEW_ARRAY(char,len);
+	snprintf(envcmd,len,"%s=%s",varname,val);
+	res = (*putenvptr1)(envcmd);
+	ASC_FREE(envcmd);
+	if(NULL!=gotval0 && free_after_getenv0)ASC_FREE(gotval0);
+	return res;
+}
+
+char *env_subst(const char *src,GetEnvFn *getenvptr,int free_after_getenv){
+	char *res;
+
+	MSG("src=%s",src);
+
+	/* no substitution required */
+	if(getenvptr==NULL){
+		MSG("NO SUBST");
+		res = ASC_NEW_ARRAY(char, strlen(src) + 1);
+		strcpy(res,src);
+		MSG("res=%s",res);
+		return res;
+	}
+
 	char *dest, *dest1;
 	char *msg;
 	char *p, *q, *i, *j, *val;
 	char varname[ENV_MAX_VAR_NAME+1];
 	int len, vallen, newlen;
-	int copy_in_place;
-	/*size_t L;*/
-	(void)level;
-	len = strlen(path);
+	len = strlen(src);
 
-	dest = MALLOC(sizeof(char)*(strlen(path)+1));
-	strcpy(dest,path);
+	dest = ASC_STRDUP(src);
 
 	X(dest);
-	V(len);
+	MSG1("len=%d",len);
 
-	/* scan backwards for $ */
+	/* scan backwards from end, looking for '$' */
 	for(p=dest+len-1; p>=dest; --p){
-		C(*p);
-
 		if(*p=='$'){
-			M("FOUND DOLLAR SIGN");
+			MSG("found '$': dest=%s",dest);
+			MSG("                %*s",(int)(p-dest+1),"^");
 			++p;
 			/* FIXME: note this is i = j = varname in C; p is ignored. */
 			for(i=p, j=varname; i<dest+len && j<varname+ENV_MAX_VAR_NAME; ++i,++j){
 				/*C(*i);*/
 				if(!(
-					(*i >= 'A' && *i < 'Z')
+					(*i >= 'A' && *i <= 'Z')
+					|| (*i >= '0' && *i <= '9')
 					|| (*i == '_')
 				)){
-					M("NON-VARNAME CHAR FOUND");
+					MSG("non-varname char '%c' found",*i);
 					break;
 				}
+				if(i==p && (*i >= '0' && *i <= '9')){
+					MSG("invalid first charafter for varname '%c'",*i);
+					break;
+				}
+
 				/*M("ADDING TO VARNAME");*/
 				*j=*i;
 			}
 			/*M("COMPLETED VARNAME");*/
 			*j='\0';
-			X(varname);
-
 			if(j==varname+ENV_MAX_VAR_NAME){
-				FREE(dest);
+				MSG("varname '%s' too long, returning error string",varname);
+				ASC_FREE(dest);
 				msg = "__VAR_NAME_TOO_LONG__";
-				dest = MALLOC(sizeof(char)*(strlen(msg)+1));
+				dest = ASC_NEW_ARRAY(char, strlen(msg)+1);
 				strcpy(dest,msg);
 				return dest;
 			}
-			M("FOUND VAR NAME");
 			X(varname);
-			val = (*getenvptr)(varname);
-			if(val==NULL){
-				/*replace with null*/
-				q = --p;
-				for(j=i; j<dest+strlen(varname); ++j, ++q){
-					*q=*j;
-					M(p);
-				}
-				*q='\0';
-				M(p);
+			if(0==strlen(varname)){
+				// dollar sign followed by nonvarname character or \0
+				MSG("just a dollar sign");
+				MSG1("p = \"%s\"",p);
+				p--;
 			}else{
-				vallen=strlen(val);
-				X(val);
-				V(strlen(val));
-				X(dest);
-				V(strlen(dest));
-				X(varname);
-				V(strlen(varname));
-				--p;
-				V((i-p));
-				C(*i);
-				C(*p);
-
-				if(vallen > (i-p)){
-					copy_in_place = 0;
-				}else{
-					copy_in_place = 1;
-				}
-
-				if(copy_in_place){
-					M("COPY_IN_PLACE");
-
-					for(j=p, q=val; *q!='\0'; ++q, ++j){
-						*j=*q;
-					}
-
+				val = (*getenvptr)(varname);
+				if(val==NULL){
+					/* varname was null, just remove the varname from dest */
+					MSG("remove empty varname ${%s}",varname);
+					MSG("varname=%s",varname);
+					MSG("strlen(varname)=%lu",strlen(varname));
 					X(p);
+					q = --p;
+					X(q);
 					X(i);
-					C(*j);
-
-					for(q=i;*q!='\0'; ++q, ++j){
-						*j=*q;
-						C(*q);
+					for(j=i; j<i+strlen(i); ++j, ++q){
+						*q=*j;
+						X(p);
+						X(q);
 					}
-					*j='\0';
-
+					*q='\0';
+					X(p);
 				}else{
-					MC("1","COPY FROM DUPLICATE");
-					newlen = strlen(dest)+vallen-(i-p);
-
-					dest1 = MALLOC(sizeof(char)*(newlen+1));
-					strcpy(dest1,dest);
-
-					p = dest1 + (p - dest);
-
-					X(p);
-					X(i);
-					X(dest1);
-
-					for(j=p, q=val; *q!='\0'; ++q, ++j){
-						C(*q);
-						*j=*q;
-					}
-					X(p);
-
+					MSG("substitute $%s with '%s'",varname,val);
+					vallen=strlen(val);
+					X(val);
+					MSG1("strlen(val)=%lu",strlen(val));
 					X(dest);
-					for(q=i;*q!='\0'; ++q, ++j){
-						C(*q);
-						*j=*q;
+					MSG1("strlen(dest)=%lu",strlen(dest));
+					X(varname);
+					MSG1("strlen(varname)=%lu",strlen(varname));
+					--p;
+					MSG1("i-p=%ld",i-p);
+					MSG1("*i=%c",*i);
+					MSG1("*p=%c",*p);
+
+					if(vallen > (i-p)){
+						MSG("copy from duplicate");
+						newlen = strlen(dest)+vallen-(i-p);
+
+						dest1 = ASC_NEW_ARRAY(char, newlen+1);
+						strcpy(dest1,dest);
+
+						p = dest1 + (p - dest);
+
+						X(p);
+						X(i);
+						X(dest1);
+
+						for(j=p, q=val; *q!='\0'; ++q, ++j){
+							MSG1("*q='%c'",*q);
+							*j=*q;
+						}
+						X(p);
+
+						X(dest);
+						for(q=i;*q!='\0'; ++q, ++j){
+							MSG1("*q='%c'",*q);
+							*j=*q;
+						}
+
+						*j='\0';
+
+						i = dest1 + (i - dest);
+
+						/* throw away the old copy */
+						ASC_FREE(dest);
+						dest = dest1;
+					}else{
+						MSG("copy in place");
+
+						for(j=p, q=val; *q!='\0'; ++q, ++j){
+							*j=*q;
+						}
+
+						X(p);
+						X(i);
+						MSG1("*j='%c'",*j);
+
+						for(q=i;*q!='\0'; ++q, ++j){
+							*j=*q;
+							MSG1("*q='%c'",*q);
+						}
+						*j='\0';
 					}
 
-					*j='\0';
+					MSG("dest=\"%s\"",dest);
 
-					i = dest1 + (i - dest);
+					/* move to the the end of the just-inserted chars */
+					p = i+1;
+					MSG1("*p='%c'",*p);
 
-					/* throw away the old copy */
-					FREE(dest);
-					dest = dest1;
-
+					if(free_after_getenv)ASC_FREE(val);
 				}
-
-				XC("34;1",dest);
-
-				/* move to the the end of the just-inserted chars */
-				p = i+1;
-				C(*p);
-
 			}
-
 		}
 	}
-	M("DONE");
+	MSG("DONE, dest=\"%s\"",dest); 
 	return dest;
 }
 

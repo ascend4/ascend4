@@ -56,42 +56,49 @@ double visc1_ci1(const ViscCI1Data *ci1, double Tstar){
 }
 
 // TODO implement this for thcond calc...
-double visc1_mu0(FluidState state, FpropsError *err){
+double visc1_mu0(FluidState2 state, FpropsError *err){
 	if(state.fluid->visc->type != FPROPS_VISC_1){
 		*err = FPROPS_INVALID_REQUEST;
 		return NAN;
 	}
+	double T = fprops_T(state,err);
+	if(*err)return NAN;
 	const ViscosityData1 *v1 = &(state.fluid->visc->data.v1);
 	double Omega;
 	switch(v1->ci.type){
 		case FPROPS_CI_1:
-			Omega = visc1_ci1(&(v1->ci.data.ci1),state.T / v1->eps_over_k);
+			Omega = visc1_ci1(&(v1->ci.data.ci1),T / v1->eps_over_k);
 			break;
 		default:
 			*err = FPROPS_INVALID_REQUEST;
 			return NAN;
 	}
 	MSG("M = %f, sigma = %f, Omega = %f, eps/k = %f",v1->M, v1->sigma, Omega,v1->eps_over_k);
-	double mu0 = v1->mu_star * 0.0266958 * sqrt(v1->M * state.T) / SQ(v1->sigma) / Omega;
+	double mu0 = v1->mu_star * 0.0266958 * sqrt(v1->M * T) / SQ(v1->sigma) / Omega;
 	MSG("mu0 = %e",mu0);
 	return mu0;
 }
 		
-double visc1_mu(FluidState state, FpropsError *err){
+double visc1_mu(FluidState2 state, FpropsError *err){
 	if(state.fluid->visc->type != FPROPS_VISC_1){
 		*err = FPROPS_INVALID_REQUEST;
 		return NAN;
 	}
 
-	MSG("T = %e, rho = %e", state.T, state.rho);
+	double T = fprops_T(state, err);
+	if(*err)return NAN;
+	double rho = fprops_rho(state, err);
+	if(*err)return NAN;
+
+	MSG("T = %e, rho = %e", T, rho);
 	MSG("  (--> p = %e MPa)",fprops_p(state,err)/1e6);
 	const ViscosityData1 *v1 = &(state.fluid->visc->data.v1);
 	double mu0 = visc1_mu0(state,err);
 	double mur = 0;
 	MSG("T_star = %f",v1->T_star);
 	MSG("rho_star = %f",v1->rho_star);
-	double tau = v1->T_star / state.T;
-	double del = state.rho / v1->rho_star;
+	double tau = v1->T_star / T;
+	double del = rho / v1->rho_star;
 	MSG("tau = %e, del = %e", tau, del);
 	int i;
 	for(i=0; i<v1->nt; ++i){
@@ -111,4 +118,23 @@ double visc1_mu(FluidState state, FpropsError *err){
 	return mu0 + (v1->mu_star * mur);
 }
 
+/*----------------------SECOND CORRELATION---------------------------*/
 
+double visc2_mu(double T, const ViscDataEpt *data, FpropsError *err){
+	ViscPowTerm *pt = &(data->pt[0]);
+	double term, sum = 0;
+	unsigned i;
+	for(i = 0; i < data->np; ++i, ++pt){
+		term = pt->c * pow(T, pt->t);
+		sum += term;
+		MSG("i=%u: c = %f, t = %f, term = %f -> sum = %f",i,pt->c, pt->t, term, sum);
+	}
+	sum += data->b * log(T);
+	MSG("b = %f, sum = %f", data->b, sum);
+	if(data->is_ln){
+		MSG("returning mu* exp(sum)");
+		return data->mu_star * exp(sum);
+	}else{
+		return data->mu_star * sum;
+	}
+}

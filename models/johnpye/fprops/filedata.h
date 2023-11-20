@@ -59,8 +59,8 @@ typedef enum{
 	,FPROPS_REF_PHI0 = 1 /**< phi0 reference point means that 'c' and 'm' in the phi0 expression are provided */
 	,FPROPS_REF_IIR = 2  /**< International Institute of Refrigeration reference state: h=200 kJ/kg, s = 1 kJ/kg/K at saturated liquid, 0 deg C */
 	,FPROPS_REF_NBP = 3  /**< Set h and s to zero for the saturated liquid at normal atmospheric pressure (101.325 kPa) */
-	,FPROPS_REF_TRHS = 4 /**< Reference state specified by T0, p0, h0 and s0 */
-	,FPROPS_REF_TPUS = 5 /**< Reference state specified by T0, p0, h0 and s0 */
+	,FPROPS_REF_TRHS = 4 /**< Reference state specified by T0, rho0, h0 and s0 */
+	,FPROPS_REF_TPUS = 5 /**< Reference state specified by T0, p0, u0 and s0 */
 	,FPROPS_REF_TPHS = 6 /**< Reference state specified by T0, p0, h0 and s0 */
 	,FPROPS_REF_TPF = 7  /**< Reference state of h=0 and s=0 for liquid at the triple point */
 	,FPROPS_REF_TPFU = 8 /**< Reference state of u=0 and s=0 for liquid at the triple point */
@@ -121,7 +121,8 @@ typedef struct Cp0PowTerm_struct{
 	double t;
 } Cp0PowTerm;
 
-/** Exponential terms for cp0 */
+/** Exponential terms, aka Planck-Einstein terms, for cp0.
+    See http://ascend4.org/FPROPS#Ideal_part */
 typedef struct Cp0ExpTerm_struct{
 	double b;
 	double beta;
@@ -139,13 +140,15 @@ be used seamlessly to eg for ideal_phi_tautau etc.
 */
 typedef struct 	Cp0Data_struct{
 	/* TODO: consider: do we need cp0 and Tstar here? */
-	double cp0star; /* reducing parameter used for cp0, usually equals R */
-    double Tstar; /* reducing parameter for T, usually equals Tc */
+	double cp0star; /* reducing parameter used for cp0, typically cp0star = R */
+    double Tstar; /* reducing parameter for T, so Tred = T/Tstar; usually Tstar = Tc */
 
 	unsigned np; /* number of power terms */
 	const Cp0PowTerm *pt; /* power term data, may be NULL if np == 0 */
 	unsigned ne; /* number of 'exponential' terms */
 	const Cp0ExpTerm *et; /* exponential term data, maybe NULL if ne == 0 */
+    double c;
+    double m;
 } Cp0Data;
 
 
@@ -219,6 +222,33 @@ typedef struct IdealFluid_struct{
 	// reference state information
 } IdealFluid;
 
+/*-----------------INCOMPRESSIBLE LIQUID/SOLID---------------------*/
+
+typedef struct DensityTerm_struct{
+    double c; /* coefficient */
+    double n; /* power */
+} DensityTerm;
+
+typedef enum DensityTermType_enum{
+    FPROPS_DENS_T /* power series in terms of c*[T/T*]^n */
+    ,FPROPS_DENS_1MT /* power series in terms of c*[1 - T/T*]^n */
+} DensityTermType;
+
+typedef struct DensityData_struct{
+    double Tstar; /* normalising temperature (T/T*) */
+    double rhostar; /* normalising density rho/rho* = ... */
+    DensityTermType type;
+    unsigned np;
+    const DensityTerm *pt; /* power series */
+} DensityData;
+
+typedef struct IncompressibleData_struct{
+    double M;
+    //double R;
+    Cp0Data cp0;
+    DensityData rho;
+    ReferenceState ref;
+} IncompressibleData;
 /*-------------------------HELMHOLTZ-------------------------------*/
 
 /**
@@ -352,6 +382,7 @@ typedef struct MbwrData_struct{
 typedef enum ViscosityType_enum{
 	FPROPS_VISC_NONE = 0
 	,FPROPS_VISC_1 = 1 /**< first viscosity model, as per Lemmon and Jacobsen 2004, "Viscosity and Thermal Conductivity Equations for Nitrogen, Oxygen, Argon, and Air" */
+    ,FPROPS_VISC_EPT = 2 /**< viscosity as mu = exp(powerseries(T)), terms c*T^t */
 } ViscosityType;
 
 typedef enum ViscCollisionIntegType_enum{
@@ -396,11 +427,33 @@ typedef struct ViscosityData1_struct{
 	const ViscData1Term *t;
 } ViscosityData1;
 
+/**
+    Structure for viscosity terms of the for c*T^t
+*/
+typedef struct ViscPowTerm_struct{
+    double c;
+    double t;
+} ViscPowTerm;
+
+/**
+    Structure to store Exponentiated Power series in T, of the form
+    ln(mu/mu_star) = sum(c_i * T^t_i) + b*ln(T)
+    and
+    mu/mu_star = sum(c_i * T^t_i)
+*/
+typedef struct ViscDataEpt_struct{
+    double mu_star;
+    unsigned np;
+    const ViscPowTerm *pt; ///< viscosity terms c*T^t
+    double b; ///< viscosity term b*ln(T)
+    char is_ln; ///< if true, ln(mu) = [...]; if false, mu = [...].
+} ViscDataEpt;
 typedef struct ViscosityData_struct{
 	const char *source;
 	ViscosityType type;
 	union{
 		ViscosityData1 v1;
+        ViscDataEpt ept;
 	} data;
 } ViscosityData;
 
@@ -409,6 +462,7 @@ typedef struct ViscosityData_struct{
 typedef enum ThCondType_enum{
 	FPROPS_THCOND_NONE = 0
 	,FPROPS_THCOND_1 = 1 /**< first thermal conductivity model, as per Vesovic et al 1990 (for CO2) and Lemmon and Jacobsen 2004 (for N2,O2,Ar,air). */
+	,FPROPS_THCOND_POLY = 2
 } ThCondType;
 
 /**
@@ -455,12 +509,24 @@ typedef struct ThermalConductivityData1_struct{
 	ThCondCritEnhOlchowyData *crit;
 } ThermalConductivityData1;
 
+typedef struct ThCondPolyTerm_struct{
+	double c;
+	unsigned n;
+}ThCondPolyTerm;
+
+typedef struct ThCondPoly_struct{
+	unsigned np;
+	const ThCondPolyTerm *pt;
+	double Tstar;
+	double kstar;
+}ThCondPoly;
 
 typedef struct ThermalConductivityData_struct{
 	const char *source;
 	ThCondType type;
 	union{
 		ThermalConductivityData1 k1;
+		ThCondPoly poly;
 	} data;
 } ThermalConductivityData;
 
@@ -473,6 +539,7 @@ typedef struct ThermalConductivityData_struct{
 typedef enum EosType_enum{
 	/* note, enum should not allow value of zero, as that return value is needed for errors in fprops_corr_avail */
 	FPROPS_IDEAL = 7 /**< we need to be able to flag IDEAL at runtime! */
+    ,FPROPS_INCOMP = 8 /**< incompressible fluid */
 	,FPROPS_CUBIC = 1 /**< should only exist in source data, not in PureFluid object */
 	,FPROPS_PENGROB = 2
 	,FPROPS_REDKW = 3
@@ -485,6 +552,7 @@ typedef enum EosType_enum{
 typedef union EosUnion_union{
 	const HelmholtzData *helm;
 	const CubicData *cubic;
+    const IncompressibleData *incomp;
 	MbwrData *mbwr;
 	/* maybe more later */
 } EosUnion;

@@ -24,7 +24,6 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
 
-/* #define DESTROY_DEBUG */
 
 void slv_set_char_parameter(char **cp, CONST char *newvalue)
 {
@@ -35,6 +34,8 @@ void slv_set_char_parameter(char **cp, CONST char *newvalue)
     *cp = ASC_STRDUP(newvalue);
   }
 }
+
+/* #define DESTROY_DEBUG */
 
 void slv_destroy_parms(slv_parameters_t *p) {
   int32 i, j;
@@ -94,6 +95,32 @@ void slv_destroy_parms(slv_parameters_t *p) {
 
 	See example stuff in ida.c
 */
+
+int slv_param_lookup(slv_parameters_t *p, const char *name){
+	int i;
+	for(i=0;i<p->num_parms;++i){
+		if(0==strcmp(p->parms[i].name, name)){
+			return i;
+		}
+	};
+	return -1;
+}
+
+int slv_param_char_choose(slv_parameters_t *p, const char *name, const char *choice){
+	int i = slv_param_lookup(p,name);
+	if(i==-1){
+		return -1;
+	}
+	int j, n = p->parms[i].info.c.high;
+	for(j=0; j<n; ++j){
+	    if(0==strcmp(p->parms[i].info.c.argv[j],choice)){
+			slv_set_char_parameter(&(p->parms[i].info.c.value),choice);
+			return 0;
+		}
+	}
+	return 1;
+}
+
 
 static void slv_define_param_meta(struct slv_parameter *p1, const SlvParameterInitMeta *meta, const int index){
 	/* copy the codename, guiname and description */

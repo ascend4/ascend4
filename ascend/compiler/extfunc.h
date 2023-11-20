@@ -87,7 +87,9 @@ typedef int ExtEvalFunc(int *mode, int *m, int *n,
 enum ExternalFuncType {
   efunc_ERR = 0, /**< err value (Traps old mode errors too) */
   efunc_BlackBox = 10, /**< remainder of struct is blackbox */
+#if 0
   efunc_GlassBox = 20, /**< remainder of struct is glassbox */
+#endif
   efunc_Method = 30 /**< remainder of struct is method */
 };
 
@@ -289,7 +291,9 @@ struct ExternalFunc {
   unsigned long n_inputs; /**< expected # of formal inputs. */
   unsigned long n_outputs; /**< expected # of formal outputs. */
   union {
+#if 0
 	struct GlassBoxExternalFunc glass;
+#endif
 	struct BlackBoxExternalFunc black;
 	struct MethodExternalFunc method;
   } u;
@@ -569,6 +573,7 @@ ASC_DLLSPEC void DefaultExtBBoxFinalFunc(struct BBoxInterp *interp);
   GLASS BOX STUFF
 */
 
+#if 0
 ASC_DLLSPEC int CreateUserFunctionGlassBox(CONST char *name,
 		ExtEvalFunc *init,
 		ExtEvalFunc **value,
@@ -610,6 +615,7 @@ extern ExtEvalFunc **GetDerivJumpTable(struct ExternalFunc *efunc);
 extern ExtEvalFunc **GetDeriv2JumpTable(struct ExternalFunc *efunc);
 /** Fetch black initialization function. */
 extern ExtEvalFunc *GetGlassBoxFinal(struct ExternalFunc *efunc);
+#endif
 
 /* @} */
 

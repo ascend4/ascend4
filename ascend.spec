@@ -9,11 +9,11 @@
 
 Name:		ascend
 Summary:	ASCEND modelling environment
-Version:	0.9.9
+Version:	0.9.10
 Release:	0%{?dist}
 License:	GPLv2+
 URL:		http://ascend4.org/
-Source:		http://ascend4.org/ascend-0.9.9.tar.bz2
+Source:		http://ascend4.org/ascend-0.9.10.tar.bz2
 
 #------ build dependencies -------
 BuildRequires: scons >= 0.96.92

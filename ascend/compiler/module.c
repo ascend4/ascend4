@@ -197,6 +197,8 @@ void Asc_DestroyModules(DestroyFunc f){
     gl_destroy( g_module_list );
     g_module_list = NULL;
   }
+  // JP: reset string module counter, to avoid persistent state in tests
+  g_string_modules_processed = 0;
 }
 
 
@@ -427,13 +429,11 @@ struct module_t *FindModuleFile(CONST char *name,
    */
   dup = SearchForModule(new_module);
 
-#if SEARCH_DEBUG
   if(dup){
-    CONSOLE_DEBUG("Duplicate module named '%s' was found"
+    MSG("Duplicate module named '%s' was found"
       ,SCP(new_module->base_name)
     );
   }
-#endif
 
   /*
 	If we were called from RequireModule, return if a module
@@ -458,16 +458,16 @@ struct module_t *FindModuleFile(CONST char *name,
     DeleteModule( new_module );
     *status = -4;
     return NULL;
-  }/* else{
-	CONSOLE_DEBUG("FOUND MODULE FILE, result=%d\n",result);
-  }*/
+  }else{
+	MSG("FOUND MODULE FILE, result=%d",result);
+  }
 
   /*
 	If we couldn't find the module or a fopen error occurred, print
 	a message and exit the function
   */
   if( result == -1 ) {
-    CONSOLE_DEBUG("ModuleSearchPath returned -1, name=%s",name);
+    MSG("ModuleSearchPath returned -1, name=%s",name);
     WriteWhyNotFound(name, error);
     DeleteModule(new_module);
     *status = -2;
@@ -716,7 +716,7 @@ struct module_t *CreateStringModule(CONST char *name,
    *  a message and exit the function
    */
   if( result == -1 ) {
-    CONSOLE_DEBUG("ModuleSearchPath returned -1, name=%s, filename=%s",name,filename);
+    MSG("ModuleSearchPath returned -1, name=%s, filename=%s",name,filename);
     WriteWhyNotFound(filename, error );
     DeleteModule(new_module);
     *status = -2;
@@ -909,7 +909,7 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 
 	fp1 = ospath_concat(path,sd->fp);
 	if(fp1==NULL){
-		CONSOLE_DEBUG("Couldn't concatenate path");
+		MSG("Couldn't concatenate path");
 		return 0;
 	}
 
@@ -921,7 +921,7 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 
 	if(ospath_stat(fp1,&sd->buf)){
 		sd->error = errno;
-		/* CONSOLE_DEBUG("Stat failed");*/
+		MSG("Stat failed");
 		ospath_free(fp1);
 		return 0;
 	}
@@ -992,7 +992,7 @@ int ModuleSearchPath(CONST char *name,
 	asc_assert( m != NULL );
 	asc_assert( error != NULL );
 
-	/* CONSOLE_DEBUG("Launching ModuleSearchPath with '%s'",name); */
+	MSG("Launching ModuleSearchPath with '%s'",name);
 
 	fp1 = ospath_new_noclean(name);
 	if(fp1==NULL){
@@ -1002,7 +1002,7 @@ int ModuleSearchPath(CONST char *name,
 	}
 
 	tmp = ospath_str(fp1);
-	/* CONSOLE_DEBUG("Searching for '%s'",tmp); */
+	MSG("Searching for '%s'",tmp);
 	ospath_free_str(tmp);
 
 	/* attempt to open "name" directly */
@@ -1011,9 +1011,7 @@ int ModuleSearchPath(CONST char *name,
 		sd.fp_found = fp1;
 
 	}else{
-
- 		/* CONSOLE_DEBUG("ENV var name is '%s'",ASC_ENV_LIBRARY); */
-
+ 		MSG("ENV var name is '%s'",ASC_ENV_LIBRARY);
 		tmp = Asc_GetEnv(ASC_ENV_LIBRARY);
 		if(tmp==NULL){
 			ERROR_REPORTER_HERE(ASC_PROG_ERROR,"No paths to search (is env var '%s' set?)",ASC_ENV_LIBRARY);
@@ -1045,14 +1043,14 @@ int ModuleSearchPath(CONST char *name,
 
 		if(fp2==NULL){
 			*error = sd.error;
-			CONSOLE_DEBUG("File '%s' not found in search path (%d)",name,sd.error);
+			MSG("File '%s' not found in search path (%d)",name,sd.error);
 			ospath_searchpath_free(sp1);
 			return -1;
 		}
 
 		tmp = ospath_str(fp2);
 		asc_assert(tmp!=NULL);
-		/* CONSOLE_DEBUG("Found file in '%s' in search path",tmp); */
+		MSG("Found file in '%s' in search path",tmp);
 		ospath_searchpath_free(sp1);
 		ospath_free_str(tmp);
 	}
@@ -1099,6 +1097,8 @@ void WriteWhyNotFound(CONST char *filename, int error)
 	);
     break;
   case ENOENT:
+	MSG("file not found '%s'",filename);
+	MSG("string pointer to filename is %p",filename);
     ERROR_REPORTER_HERE(ASC_USER_ERROR
 		,"File '%s' doesn't exist.",filename
 	);
@@ -1276,7 +1276,7 @@ struct module_t *NewModule(CONST char *name){
   newmodule->open_count = 0;
   newmodule->version = ULONG_MAX;
 
-  /* CONSOLE_DEBUG("New path: %s",name); */
+  MSG("New path: %s",name);
   fp1 = ospath_new(name);
   tmp = ospath_getbasefilename(fp1);
   if(tmp!=NULL && strlen(tmp)!=0){
@@ -1285,7 +1285,7 @@ struct module_t *NewModule(CONST char *name){
   ospath_free_str(tmp); /* we can free tmp, since 'AddSymbol' takes a copy */
   ospath_free(fp1);
 
-  /* CONSOLE_DEBUG("Module base-name: %s",newmodule->base_name); */
+  MSG("Module base-name: %s",newmodule->base_name);
   return newmodule;
 }
 

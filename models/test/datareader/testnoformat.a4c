@@ -1,0 +1,40 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+IMPORT "johnpye/datareader/datareader";
+
+MODEL drconf;
+	filename IS_A symbol_constant;
+	format IS_A symbol_constant;
+	parameters IS_A symbol_constant;
+	parameters :== '1,2,3,4,5,10,11'; (* NOTE: col numbers start at zero *)
+END drconf;
+
+MODEL testnoformat;
+	t IS_A time;
+	col1,col2,col3,col4,col5 IS_A solver_var;
+	col10,col11 IS_A solver_var;
+	total, average IS_A solver_var;
+
+	csvdata IS_A drconf;
+	csvdata.filename :== 'test/datareader/myfile.csv';
+
+	filereader:datareader(
+		t : INPUT;
+		col1,col2,col3,col4,col5,col10,col11 :OUTPUT;
+		csvdata : DATA
+	);
+
+	totalexp: total = col1 + col2 + col3 + col4 +col5 + col10 + col11;
+	averageexp: average = total/7;
+	
+METHODS
+METHOD on_load;
+	FIX t := 1 {s};
+END on_load;
+METHOD self_test;
+	ASSERT abs(col10 - 11) < 1e-8;
+	ASSERT abs(col11 - 12) < 1e-8;
+	ASSERT abs(col1 - 200.14) < 1e-8;
+END self_test;
+END testnoformat;

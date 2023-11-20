@@ -50,12 +50,17 @@
 //#define WARNEXPT // warn user that blackbox evaluation is experimental
 
 #define WITH_BLACKBOX_DSOLVE
+
 /* #define BLACKBOX_DEBUG */
+#ifdef BLACKBOX_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 #define BBDEBUG 0 /* set 0 if not wanting spew */
 
-static int32 ArgsDifferent(double new, double old, double tol)
-{
+static int32 ArgsDifferent(double new, double old, double tol){
 	if (fabs(new - old) > fabs(tol)) {
 		return 1;
 	} else {
@@ -68,8 +73,7 @@ static int32 ArgsDifferent(double new, double old, double tol)
 */
 
 real64 *blackbox_dsolve(struct Instance *ri, struct Instance *v
-		, int *able
-		, int *nsolns
+		, int *able, int *nsolns
 ){
 #ifdef WITH_BLACKBOX_DSOLVE
 	enum Expr_enum reltype;
@@ -88,9 +92,7 @@ real64 *blackbox_dsolve(struct Instance *ri, struct Instance *v
 	arg = RelationVariable(r,lhsvar);
 
 	if(arg != v){
-# ifdef BLACKBOX_DEBUG
-		CONSOLE_DEBUG("Direct solve not possible, wrong variable requested");
-# endif
+		MSG("Direct solve not possible, wrong variable requested");
 		*able = 0;
 		*nsolns = 0;
 		return NULL;
@@ -107,9 +109,7 @@ real64 *blackbox_dsolve(struct Instance *ri, struct Instance *v
 
 	solns = ASC_NEW_ARRAY(double,1);
 	solns[0] = RealAtomValue(v) - resid;
-# ifdef BLACKBOX_DEBUG
-	CONSOLE_DEBUG("Got solution %f for blackbox output", solns[0]);
-# endif
+	MSG("Got solution %f for blackbox output", solns[0]);
 	*able = 1;
 	*nsolns = 1;
 	return solns;
@@ -136,15 +136,17 @@ real64 *blackbox_dsolve(struct Instance *ri, struct Instance *v
 	is y-yhat. The gradient is I - dyhat/dx, where dyhat/dx
 	is the reduced jacobian of the blackbox.
 */
-int BlackBoxCalcResidGrad(struct Instance *i, double *res, double *gradient, struct relation *r)
-{
+int BlackBoxCalcResidGrad(struct Instance *i, double *res
+	, double *gradient, struct relation *r
+){
 	int residErr = 0;
 	int gradErr = 0;
 
 	residErr = BlackBoxCalcResidual(i, res, r);
 	gradErr = BlackBoxCalcGradient(i, gradient, r);
-	return (int)(fabs(residErr) + fabs(gradErr));
+	return abs(residErr) + abs(gradErr);
 }
+
 
 /*
 	Note:
@@ -157,8 +159,7 @@ int BlackBoxCalcResidGrad(struct Instance *i, double *res, double *gradient, str
 	is y-yhat. The gradient is I - dyhat/dx, where dyhat/dx
 	is the reduced jacobian of the blackbox.
 */
-int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
-{
+int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r){
 /* decls */
 	unsigned long *argToVar;
 	unsigned long c;
@@ -227,7 +228,7 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
 				common->inputs,
 				common->outputs,
 				common->jacobian);
-		if(nok)CONSOLE_DEBUG("blackbox residual function returned error %d",nok);
+		if(nok)CONSOLE_DEBUG("Error '%d' returned by external relation '%s' eval.",nok,ExternalFuncName(efunc));
 		common->residCount++;
 	}
 	value = common->outputs[outputIndex];
@@ -238,6 +239,7 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
 	return nok;
 
 }
+
 
 /**
 	Calculate the gradient (slice of the overall jacobian) for the blackbox.
@@ -251,7 +253,6 @@ int BlackBoxCalcResidual(struct Instance *i, double *res, struct relation *r)
 		# if changed, recompute gradient in bbox.
 		# compute gradient per varlist from bbox row.
 */
-
 int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
 	, int ninputs, int noutputs
 	, double *inputs, double *outputs, double *jac
@@ -327,6 +328,7 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 				, common->inputsLen, common->outputsLen
 				, common->inputsJac, common->outputs, common->jacobian
 			);
+			if(nok)CONSOLE_DEBUG("Error '%d' returned for external relation gradient for '%s'.",nok,ExternalFuncName(efunc));		
 		}else{
 #ifdef WARNEXPT
 			if(!warnfdiff){
@@ -342,6 +344,7 @@ int BlackBoxCalcGradient(struct Instance *i, double *gradient
 				, common->inputsLen, common->outputsLen
 				, common->inputsJac, common->outputs, common->jacobian
 			);
+			if(nok)CONSOLE_DEBUG("Error '%d' returned for finite difference gradient for '%s'.",nok,ExternalFuncName(efunc));		
 		}
 		common->gradCount++;
 	}
@@ -433,8 +436,7 @@ void CopyBlackBoxDataByReference(struct relation *src
 	dest->externalData = b;
 }
 
-void DestroyBlackBoxData(struct relation *rel, struct BlackBoxData *b)
-{
+void DestroyBlackBoxData(struct relation *rel, struct BlackBoxData *b){
 #if BBDEBUG
 	FPRINTF(ASCERR,"DestroyBlackBoxData(%p): destroying bbd %p BBD#%d\n",rel,b,b->count);
 #endif
@@ -456,6 +458,7 @@ static double blackbox_peturbation(double varvalue){
   return 1.0e-05;
 }
 
+
 /**
 	Blackbox derivatives estimated by finite difference (by evaluation at
 	peturbed value of each input in turn)
@@ -471,8 +474,10 @@ int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
   double *tmp_outputs;
   double *ptr;
   double old_x,deltax,value;
+  enum Request_type old_task = interp->task;
 
-  /* CONSOLE_DEBUG("NUMERICAL DERIVATIVE..."); */
+  MSG("NUMERICAL DERIVATIVE...");
+  interp->task = bb_func_eval;
 
   tmp_outputs = ASC_NEW_ARRAY_CLEAR(double,noutputs);
 
@@ -481,12 +486,12 @@ int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
     old_x = inputs[c];
 	deltax = blackbox_peturbation(old_x);
     inputs[c] = old_x + deltax;
-	/* CONSOLE_DEBUG("PETURBATED VALUE of input[%ld] = %f",c,inputs[c]); */
+	MSG("PETURBATED VALUE of input[%ld] = %f",c,inputs[c]);
 
 	/* call routine. note that the 'jac' parameter is just along for the ride */
     nok = (*resfn)(interp, ninputs, noutputs, inputs, tmp_outputs, jac);
     if(nok){
-	    CONSOLE_DEBUG("External evaluation error (%d)",nok);
+	    MSG("External evaluation error (%d) for peturbed value %ld",nok,c);
 		break;
 	}
 
@@ -504,10 +509,10 @@ int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
   }
   ASC_FREE(tmp_outputs);
   if(nok){
-    CONSOLE_DEBUG("External evaluation error");
+    MSG("External evaluation error");
   }
+  interp->task = old_task;
   return nok;
-
 }
 
 /*------------------------------------------------------------------------------
@@ -550,11 +555,10 @@ struct BlackBoxCache *CreateBlackBoxCache(
 	return b;
 }
 
-void InitBBox(struct Instance *context, struct BlackBoxCache *b)
-{
+void InitBBox(struct Instance *context, struct BlackBoxCache *b){
 	ExtBBoxInitFunc * init;
-	enum find_errors ferr = correct_instance;
-	unsigned long nbr, br, errpos;
+	REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+	unsigned long nbr, br;
 	struct gl_list_t *tmp;
 
 	struct gl_list_t *arglist;
@@ -562,7 +566,7 @@ void InitBBox(struct Instance *context, struct BlackBoxCache *b)
 
 	/* fish up data from name. */
 	if (b->dataName != NULL) {
-		tmp = FindInstances(context,b->dataName,&ferr);
+		tmp = FindInstances(context,b->dataName,&err);
 		assert(tmp != NULL);
 		assert(gl_length(tmp) == 1);
 		data = (struct Instance *)gl_fetch(tmp,1);
@@ -580,7 +584,7 @@ void InitBBox(struct Instance *context, struct BlackBoxCache *b)
 	arglist = gl_create(nbr);
 	for (br = 1; br <= nbr; br++) {
 		tmp = (struct gl_list_t *)gl_fetch(b->argListNames,br);
-		tmp = FindInstancesFromNames(context, tmp, &ferr, &errpos);
+		tmp = FindInstancesFromNames(context,tmp,&err);
 		assert(tmp != NULL);
 		gl_append_ptr(arglist,tmp);
 	}
@@ -592,20 +596,20 @@ void InitBBox(struct Instance *context, struct BlackBoxCache *b)
   	b->interp.task = bb_none;
 }
 
-int32 BlackBoxCacheInputsLen(struct BlackBoxCache *b)
-{
+
+int32 BlackBoxCacheInputsLen(struct BlackBoxCache *b){
 	assert(b != NULL);
 	return b->inputsLen;
 }
 
-void AddRefBlackBoxCache(struct BlackBoxCache *b)
-{
+
+void AddRefBlackBoxCache(struct BlackBoxCache *b){
 	assert(b != NULL);
 	(b->refCount)++;
 }
 
-static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b)
-{
+
+static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b){
 	struct ExternalFunc *efunc;
 	ExtBBoxFinalFunc *final;
 	assert(b != NULL);
@@ -650,8 +654,8 @@ static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b)
 	ascfree(b);
 }
 
-void DeleteRefBlackBoxCache(struct relation *rel, struct BlackBoxCache **b)
-{
+
+void DeleteRefBlackBoxCache(struct relation *rel, struct BlackBoxCache **b){
 	struct BlackBoxCache * d = *b;
 	assert(b != NULL && *b != NULL);
 	if (d->refCount > 0) {
@@ -676,3 +680,4 @@ void DeleteRefBlackBoxCache(struct relation *rel, struct BlackBoxCache **b)
 		*b = NULL;
 	}
 }
+

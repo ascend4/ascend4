@@ -146,6 +146,7 @@ min = {60*s};
 h = {3600*s};
 d = {86400*s};
 yr = {365.25*d};
+a = {yr};
 mon = {yr/12};
 wk = {7*d};
 ms = {s/1000};
@@ -193,11 +194,7 @@ credits= {USD};
 USdollar = {USD};
 US = {USD};
 
-(* currencies according to yahoo.com, as at 11 Sep 2006 *)
-AUD = {0.752400*USD};
-GBP = {1.865000*USD};
-EUR = {1.266499*USD};
-JPY = {0.00856091*USD};
+MUSD = {1e6*USD};
 
 (*  reciprocal time (frequency) *)
 
@@ -341,6 +338,9 @@ aWW= {1*EW}; (* <geekjoke>we could say Art has a lot of power</geekjoke> *)
 
 Wh = {W*h};
 kWh = {kW*h};
+MWh = {MW*h};
+GWh = {GW*h};
+TWh = {TW*h};
 
 hp= {7.456998e+2*W};
 
@@ -493,6 +493,13 @@ VALVE_COEFF_US = {2.3837e-5*m*m};
 (* time variant conversions *)
 
 MINIMUMWAGE = {5.15*USD/h}; (* Dec 2005, see http://www.dol.gov/ *)
+
+(* currencies according to yahoo.com, as at 11 Sep 2006 *)
+(*AUD = {0.67*USD};
+GBP = {1.865000*USD};
+EUR = {1.266499*USD};
+JPY = {0.00856091*USD};*)
+
 (*
 * conversions we'd like to see , but probably won't
 * milliHelen = {beauty/ship};

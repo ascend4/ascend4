@@ -190,6 +190,7 @@ extern struct TypeDescription
  *  @return A pointer to the new TypeDescription structure.
  */
 
+#if 0 && defined(DISUSED)
 extern struct TypeDescription
 *CreatePatchTypeDef(symchar *patch,
                     symchar *original,
@@ -213,6 +214,7 @@ extern struct TypeDescription
  *  @param err        If !=0 abandon input.
  *  @return A pointer to the new TypeDescription structure.
  */
+#endif
 
 ASC_DLLSPEC void DefineFundamentalTypes(void);
 /**<

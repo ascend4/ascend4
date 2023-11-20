@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "rundata.h"
 
 int fprops_region_Tx(double T, double x, const PureFluid *fluid, FpropsError *err);
-void fprops_solve_Tx(double T, double x, double *rho, const PureFluid *fluid, FpropsError *err);
+FluidState2 fprops_solve_Tx(double T, double x, const PureFluid *fluid, FpropsError *err);
 
 #endif
 

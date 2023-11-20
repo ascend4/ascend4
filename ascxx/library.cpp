@@ -47,41 +47,20 @@ extern "C"{
 #else
 # define MSG(...)
 #endif
-
 Library::Library(const char *defaultpath){
 	static int have_init;
 	if(!have_init){
-		//cerr << "Initialising ASCEND library..." << endl;
+		MSG("Initialising ASCEND library...");
 
 #ifdef REIMPLEMENT_STREAMS
 		Asc_RedirectCompilerDefault(); // Ensure that error message reach stderr
 #endif
-
 		Asc_CompilerInit(1);
-		env_import(ASC_ENV_LIBRARY,getenv,Asc_PutEnv);
-		env_import(ASC_ENV_SOLVERS,getenv,Asc_PutEnv);
-
-		char *x = Asc_GetEnv(ASC_ENV_LIBRARY);
-		if(x==NULL || strcmp(x,"")==0){
-			if(defaultpath==NULL){
-				ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Using default "
-					ASC_ENV_LIBRARY " = '" DEFAULT_ASCENDLIBRARY "'"
-				);
-				defaultpath = DEFAULT_ASCENDLIBRARY;
-			}
-
-			string s = string(ASC_ENV_LIBRARY "=") + defaultpath;
-			//ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Setting %s",s.c_str());;
-			Asc_PutEnv(s.c_str());
-		}
+		env_import_default(ASC_ENV_LIBRARY,getenv,Asc_GetEnv,Asc_PutEnv,DEFAULT_ASCENDLIBRARY,0,1);
+		env_import(ASC_ENV_SOLVERS,getenv,Asc_PutEnv,0);
 		Asc_ImportPathList(ASC_ENV_LIBRARY);
-		//cerr << PATHENVIRONMENTVAR << " = " << x << endl;
-		//cerr << "Created LIBRARY" << endl;
-		//cerr << "Registering solvers..." << endl;
 		registerStandardSolvers();
-	}/*else{
-		MSG("Reusing LIBRARY");
-	}*/
+	}
 	have_init=1;
 }
 
@@ -113,13 +92,14 @@ Library::load(const char *filename){
 
 	const char *msg = getLoadErrorMessage(status);
 
-	char msg1[100];
-	sprintf(msg1,msg,filename);
+#define MSGLEN 4096
+	char msg1[MSGLEN];
+	snprintf(msg1,MSGLEN,msg,filename);
 
 	if(status<0 || status>0){
 		throw std::runtime_error(msg1);
 	}else{
-		std::cerr << "Note: Module " << Asc_ModuleName(m) << ": " << msg1 << std::endl;
+		MSG(msg1,Asc_ModuleName(m));
 	}
 
 	MSG("Beginning parse of %s",Asc_ModuleName(m));
@@ -132,21 +112,21 @@ Library::load(const char *filename){
 		default: ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Invalid return from zz_parse"); break;
 	}
 	status = error_reporter_tree_has_error();
-	error_reporter_tree_end();
 	if(!status){
-		//MSG("CLEARING TREE...");
 		error_reporter_tree_clear();
-		//MSG("DONE CLEARING TREE...");
 	}else{
+		// write those errors
+		error_reporter_tree_end();
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Error(s) when loading '%s'",filename);
 		stringstream ss;
 		ss << "Errors found in '" << filename <<  "'";
 		throw runtime_error(ss.str());
 	}
 
-
+#ifdef ASCXX_LIBRARY_DEBUG
 	struct gl_list_t *l = Asc_TypeByModule(m);
 	MSG("%lu library entries loaded from %s",gl_length(l), filename);
+#endif
 }
 
 /**
@@ -186,12 +166,12 @@ Library::loadString(const char *str, const char *nameprefix){
 	}
 #ifdef LOADSTRING_ERROR_TREE
 	status = error_reporter_tree_has_error();
-	error_reporter_tree_end();
 	if(!status){
 		MSG("CLEARING TREE...");
 		error_reporter_tree_clear();
 		MSG("DONE CLEARING TREE...");
 	}else{
+		error_reporter_tree_end();
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Error(s) when loading '%s'",nameprefix);
 		stringstream ss;
 		ss << "Errors found in '" << nameprefix <<  "'";
@@ -331,7 +311,7 @@ Library::getModuleTypes(const Module &m){
 
 	for(int i=0,end=gl_length(l); i<end; ++i){
 		char *name = (char *)gl_fetch(l,i+1);
-		//MSG("Found type %s",name);
+		MSG("Found type %s",name);
 		TypeDescription *t = FindType((const symchar *)name);
 		v.push_back(Type(t));
 	}

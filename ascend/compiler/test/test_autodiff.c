@@ -20,6 +20,27 @@
 	Created by: Mahesh Narayanamurthi
 	Revised by: Ben Allan - Rev.1
 				Mahesh Narayanamurthi - Rev. 2
+
+	TODO Note that this test case plays a DOUBLE ROLE of both preparing
+	the test files (yacas-output-*.txt) and then reading them and comparing
+	values with those returned by the computer algebra system YACAS. If you 
+	want to change and of the model files being tested here, you will also
+	need to update the yacas output files against which the derivatives will
+	be compared.
+
+	To update the YACAS output files, use the following commands: 
+
+pushd ~/ascend/trunk \
+&& scons -j4 test ascend models solvers \
+&& LD_LIBRARY_PATH=. ASC_YACAS_GEN=1 test/test compiler_autodiff \
+&& cd ascend/compiler/test \
+&& python yacasgen.py \
+&& dirn=`pwd` \
+&& cd /usr/share/yacas \
+&& yacas $dirn/yacas-input-1st.txt > $dirn/yacas-output-1st.txt \
+&& yacas $dirn/yacas-input-2nd.txt > $dirn/yacas-output-2nd.txt \
+&& cd $dirn/../../.. && LD_LIBRARY_PATH=. test/test compiler_autodiff;
+popd
 */
 #include <string.h>
 #include <stdlib.h>
@@ -61,7 +82,15 @@
 #include <test/assertimpl.h>
 #include <test/test_globals.h>
 
-#define RAD_TOL 1e-05
+//#define AUTODIFF_DEBUG
+#ifdef AUTODIFF_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
+#define TOL 1e-5
+#define VERY_CLOSE(a,b) (fabs(a-b)<=MAX(TOL,MAX(fabs(a*TOL),fabs(b*TOL))))
 
 extern char ASC_TEST_PATH[PATH_MAX];
 
@@ -93,12 +122,11 @@ struct DiffTestData
 	int d1errors;
 	int d1errors_yacas;
 	int d2errors_yacas;
+	int numrels;
 };
 
-
-
 #define INITDTD(d, log, varfile, FirstDer, SecondDer, use_yacas, YacasInFirst, YacasInSecond ,instroot, inputname) \
-do { \
+if(1){\
 	d.outfile = log; \
 	d.varfile = varfile; \
 	d.FirstDer = FirstDer;\
@@ -112,34 +140,38 @@ do { \
 	d.d1errors= 0; \
 	d.d1errors_yacas= 0; \
 	d.d2errors_yacas= 0; \
-} while (0)
+	d.numrels = 0;\
+}
 
-#define LOG(d, ...) do { \
-	if ( d != NULL && d-> outfile != NULL) { \
-		fprintf(d->outfile,  __VA_ARGS__); \
-	} \
-	} while ( 0 )
+#define LOG(d, ...)\
+	if(d != NULL && d->outfile != NULL){ \
+		fprintf(d->outfile,__VA_ARGS__); \
+	}
 
 /** Temporary Declarations */
 static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr);
 
-
 static void test_autodiff(void){
 #define OUTENV "../ascend/compiler/test/LOG.html"
-#define VARFILE "../ascend/compiler/test/Vars.txt"
+#define VARFILE "../ascend/compiler/test/varnames.txt"
 
-#define SAFEDER_2ND "../ascend/compiler/test/Safes2nd.txt"
-#define NONSAFEDER_2ND "../ascend/compiler/test/Nonsafes2nd.txt"
-#define YACAS_2ND "../ascend/compiler/test/Yacas2nd.txt"
+#define SAFEDER_1ST "../ascend/compiler/test/derivs-safe-1st.txt"
+#define SAFEDER_2ND "../ascend/compiler/test/derivs-safe-2nd.txt"
+#define NONSAFEDER_1ST "../ascend/compiler/test/derivs-nonsafe-1st.txt"
+#define NONSAFEDER_2ND "../ascend/compiler/test/derivs-nonsafe-2nd.txt"
 
-#define SAFEDER_1ST "../ascend/compiler/test/Safes1st.txt"
-#define NONSAFEDER_1ST "../ascend/compiler/test/Nonsafes1st.txt"
-#define YACAS_1ST "../ascend/compiler/test/Yacas1st.txt"
+#define YACAS_PREP_1ST "../ascend/compiler/test/yacas-prep-1st.txt"
+#define YACAS_PREP_2ND "../ascend/compiler/test/yacas-prep-2nd.txt"
+#define YACAS_OUT_1ST "../ascend/compiler/test/yacas-output-1st.txt"
+#define YACAS_OUT_2ND "../ascend/compiler/test/yacas-output-2nd.txt"
 
-#define YACAS_IN_1ST "../ascend/compiler/test/FirstDeriv.txt"
-#define YACAS_IN_2ND "../ascend/compiler/test/SecondDeriv.txt"
-
-#define CASEFILE "test/reverse_ad/allmodels.a4c"
+#if 0
+# define CASEFILE "test/reverse_ad/allmodels.a4c"
+# define TYPENAME "allmodels"
+#else
+# define CASEFILE "test/ipopt/dummy.a4c"
+# define TYPENAME "dummy"
+#endif
 
 #define USE_YACAS_ENV "ASC_YACAS_GEN"
 
@@ -154,26 +186,11 @@ static void test_autodiff(void){
 
 	struct DiffTestData data;
 
-	struct FilePath* out_osp;
-	struct FilePath* varfile_osp;
+	FILE *outfile = NULL;
+	FILE *varfile = NULL;
 
-	struct FilePath* safe_osp_2nd;
-	struct FilePath* yacas_osp_2nd;
-	struct FilePath* nonsafe_osp_2nd;
-
-	struct FilePath* safe_osp_1st;
-	struct FilePath* yacas_osp_1st;
-	struct FilePath* nonsafe_osp_1st;
-
-	struct FilePath* first_yacas_osp;
-	struct FilePath* second_yacas_osp;
-
-
-	FILE * outfile = NULL;
-	FILE * varfile = NULL;
-
-	FILE * first_yacas = NULL;
-	FILE * second_yacas = NULL;
+	FILE *first_yacas = NULL;
+	FILE *second_yacas = NULL;
 
 	struct FileList FirstDer;
 	struct FileList SecondDer;
@@ -181,12 +198,18 @@ static void test_autodiff(void){
 	FirstDer.yacas = FirstDer.safeder = FirstDer.nonsafeder = NULL;
 	SecondDer.yacas = SecondDer.safeder = SecondDer.nonsafeder = NULL;
 
+	char env1[2*PATH_MAX];
 	Asc_CompilerInit(1);
+	/* set the needed environment variables so that models, solvers can be found */
+	snprintf(env1,2*PATH_MAX,ASC_ENV_LIBRARY "=%s","models");
+	CU_TEST(0 == Asc_PutEnv(env1));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/ipopt"));
+
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 
 
 	// FIXME Use the environment variables here
-	CONSOLE_DEBUG("ASC_TEST_PATH = '%s'",ASC_TEST_PATH);
+	MSG("ASC_TEST_PATH = '%s'",ASC_TEST_PATH);
 
 	struct FilePath *rootfp;
 	{
@@ -195,45 +218,50 @@ static void test_autodiff(void){
 		ospath_free(tmp);
 	}
 
-#define OPENTESTFILE(FNAME,OSP,VAR,MODE) {\
+#define OPENTESTFILE(FNAME,VAR,MODE) {\
 		struct FilePath *tmp = ospath_new_noclean(FNAME);\
-		OSP = ospath_concat(rootfp,tmp);\
-		ospath_cleanup(OSP);\
-		VAR = ospath_fopen(OSP,"w");\
+		struct FilePath *fp2 = ospath_concat(rootfp,tmp);\
+		ospath_cleanup(fp2);\
+		VAR = ospath_fopen(fp2,MODE);\
+		char *s=ospath_str(fp2);\
 		CU_ASSERT_PTR_NOT_NULL_FATAL(VAR);\
+		MSG("Opened test file '%s'",s);\
+		ASC_FREE(s);\
 		ospath_free(tmp);\
+		ospath_free(fp2);\
 	}
 
-	OPENTESTFILE(OUTENV,out_osp,outfile,"w");
+	OPENTESTFILE(OUTENV,outfile,"w");
 
 	/** @TODO Open the following streams only if Environment Variable is set */
-	if(getenv(USE_YACAS_ENV) != NULL ){
-		OPENTESTFILE(VARFILE,varfile_osp,varfile,"w");
-		OPENTESTFILE(YACAS_2ND,yacas_osp_2nd,SecondDer.yacas,"w");
-		OPENTESTFILE(SAFEDER_2ND,safe_osp_2nd,SecondDer.safeder,"w");
-		OPENTESTFILE(NONSAFEDER_2ND,nonsafe_osp_2nd,SecondDer.nonsafeder,"w");
-		OPENTESTFILE(YACAS_1ST,yacas_osp_1st,FirstDer.yacas,"w");
-		OPENTESTFILE(SAFEDER_1ST,safe_osp_1st,FirstDer.safeder,"w");
-		OPENTESTFILE(NONSAFEDER_1ST,nonsafe_osp_1st,FirstDer.nonsafeder,"w");
+	if(getenv(USE_YACAS_ENV) && atol(getenv(USE_YACAS_ENV))){
+		MSG("Generating YACAS input files for verification of ASCEND's values");
+		OPENTESTFILE(VARFILE,varfile,"w");
+		OPENTESTFILE(YACAS_PREP_2ND,SecondDer.yacas,"w");
+		OPENTESTFILE(SAFEDER_2ND,SecondDer.safeder,"w");
+		OPENTESTFILE(NONSAFEDER_2ND,SecondDer.nonsafeder,"w");
+		OPENTESTFILE(YACAS_PREP_1ST,FirstDer.yacas,"w");
+		OPENTESTFILE(SAFEDER_1ST,FirstDer.safeder,"w");
+		OPENTESTFILE(NONSAFEDER_1ST,FirstDer.nonsafeder,"w");
 		use_yacas=1;
 	}else{
-		CONSOLE_DEBUG("Using precalculated derviatvies from YACAS.");
-		OPENTESTFILE(YACAS_IN_1ST,first_yacas_osp,first_yacas,"r");
-		OPENTESTFILE(YACAS_IN_2ND,second_yacas_osp,second_yacas,"r");
+		MSG("Testing against pre-calculated derivatives from YACAS.");
+		OPENTESTFILE(YACAS_OUT_1ST,first_yacas,"r");
+		OPENTESTFILE(YACAS_OUT_2ND,second_yacas,"r");
 	}
 
 	ospath_free(rootfp);
 
 	/* load the file */
 	Asc_OpenModule(CASEFILE,&status);
-	CU_ASSERT(status == 0);
+	CU_ASSERT_FATAL(status == 0);
 
 	/* parse it */
-	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(0 == zz_parse());
 
 	/* find the model */
-	symchar * type = AddSymbol("allmodels");
-	CU_ASSERT(FindType(type)!=NULL);
+	symchar * type = AddSymbol(TYPENAME);
+	CU_ASSERT_FATAL(FindType(type)!=NULL);
 
 	/* instantiate it */
 	struct Instance *sim = SimsCreateInstance(type, AddSymbol("sim1"), e_normal, NULL);
@@ -243,37 +271,24 @@ static void test_autodiff(void){
 	root = GetSimulationRoot(sim);
 
 	/** Call on_load */
-	error_reporter_tree_start();
+	error_reporter_tree_t *tree1 = error_reporter_tree_start(0);
 
 	name = CreateIdName(AddSymbol("on_load"));
 	pe = Initialize(root,name,"sim1",ASCERR,0, NULL, NULL);
-	int haserror=0;
-	if(error_reporter_tree_has_error()){
-		haserror=1;
-	}
+	CU_TEST_FATAL(0==error_reporter_tree_has_error(tree1));
+	error_reporter_tree_end(tree1);
 
-	error_reporter_tree_end();
-
-	if(pe == Proc_all_ok){
-		if(haserror){
-			ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Method 'on_load' returned all_ok status but has error(s).");
-		}else{
-			ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"Method 'on_load' returned 'all_ok' and output no errors.\n");
-		}
-		CONSOLE_DEBUG("Method 'on_load' : COMPLETED OK");
-	}else{
-		ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Method 'on_load' returned the following error: %d",pe);
-	}
+	CU_TEST_FATAL(pe == Proc_all_ok);
 
 	/* check for vars and rels */
 
 	INITDTD(data, outfile, varfile, FirstDer, SecondDer,use_yacas, first_yacas, second_yacas, root, CASEFILE);
 	if(data.outfile!=NULL){
-		fprintf(data.outfile,"<html><head><title>LOG File of Test-Suite for Automatic Differentiation</title></head><body style='font-size: 9pt;font-family: serif;'>\n");
-		fprintf(data.outfile,"<center><h3>LOG File of Test-Suite for Automatic Differentiation</h3></center></br></br>\n");
-		fprintf(data.outfile,"<center><h4><u>Legend</u></h4><b>RAD_TOL		=		%21.17g</br>\n",RAD_TOL);
+		fprintf(data.outfile,"<html><head><title>LOG: Testing of Reverse Automatic Differentiation in ASCEND</title></head><body style='font-size: 9pt;font-family: serif;'>\n");
+		fprintf(data.outfile,"<h2>LOG File of Test-Suite for Automatic Differentiation</h2>\n");
+		fprintf(data.outfile,"<h3><u>Legend</u></h3><b>tolerance		=		%21.17g</br>\n",TOL);
 		fprintf(data.outfile,"Difference(a,b)		=		a - b</br>\n");
-		fprintf(data.outfile,"Error(a,b)		=		(a - b)/a </br>\n");
+		fprintf(data.outfile,"Error(a,b)		=		(a - b)/max(a,b) </br>\n");
 		fprintf(data.outfile,"<font color='gold'>gold</font>		=	Residual Error </br>\n");
 		fprintf(data.outfile,"<font color='indigo'>indigo</font>=		Gradient Error </br>\n");
 		fprintf(data.outfile,"<font color='purple'>purple</font>=		Gradient Mismatch </br>\n");
@@ -285,145 +300,123 @@ static void test_autodiff(void){
 	Asc_CompilerDestroy();
 
 	if(data.outfile!=NULL){
-		fprintf(data.outfile,"</br><center><u><h4>SUMMARY:</h4></u></br>\n");
-		fprintf(data.outfile,"<b>No. of Residual Errors</b> =<b> %d </b></br>\n",data.d0errors);
-		fprintf(data.outfile,"<b>No. of First RAD Errors</b> =<b> %d </b></br>\n",data.d1errors);
-		fprintf(data.outfile,"<b>No. of Total Errors</b> =<b> %d</b></br></br>\n",data.d0errors+data.d1errors);
-		fprintf(data.outfile,"<b>No. of First YACAS Mismatches</b> =<b> %d</b></br>\n",data.d1errors_yacas);
-		fprintf(data.outfile,"<b>No. of Second YACAS Mismatches</b> =<b> %d</b></br>\n",data.d2errors_yacas);
-		fprintf(data.outfile,"<b>No. of Total Mismatches</b> =<b> %d</b></center></br>\n</body>\n</html>"
+		fprintf(data.outfile,"<h2>Summary</h2>\n");
+		fprintf(data.outfile,"<p>No. of relations tests = %d<br>\n",data.numrels);
+		fprintf(data.outfile,"<p>No. of Residual Errors = %d <br>\n",data.d0errors);
+		fprintf(data.outfile,"No. of First RAD Errors = %d <br>\n",data.d1errors);
+		fprintf(data.outfile,"No. of Total Errors = %d<</p>>\n",data.d0errors+data.d1errors);
+		fprintf(data.outfile,"<p>No. of First YACAS Mismatches = %d<br>\n",data.d1errors_yacas);
+		fprintf(data.outfile,"No. of Second YACAS Mismatches = %d<br>\n",data.d2errors_yacas);
+		fprintf(data.outfile,"No. of Total Mismatches = %d</p></body></html>"
 			,data.d1errors_yacas + data.d2errors_yacas
 		);
 	}
+	MSG("TOTAL OF %d RELATIONS TESTED:",data.numrels);
+	MSG("  Residual errors: %d",data.d0errors);
+	MSG("  First deriv errors: %d",data.d1errors);
+	MSG("  First YACAS mismatches: %d",data.d1errors_yacas);
+	MSG("  Second YACAS mismatches: %d",data.d2errors_yacas);
 
-#define OSPCLEAN(OSPNAME,FNAME) if(OSPNAME!=NULL){ospath_free(OSPNAME);if(FNAME!=NULL){fclose(FNAME);data.FNAME = NULL;}}
-
-	OSPCLEAN(out_osp,outfile);
-
-	if (use_yacas){
-		OSPCLEAN(varfile_osp,varfile);
-		OSPCLEAN(yacas_osp_2nd,SecondDer.yacas);
-		OSPCLEAN(safe_osp_2nd,SecondDer.safeder);
-		OSPCLEAN(nonsafe_osp_2nd,SecondDer.nonsafeder);
-		OSPCLEAN(yacas_osp_1st,FirstDer.yacas);
-		OSPCLEAN(safe_osp_1st,FirstDer.safeder);
-		OSPCLEAN(nonsafe_osp_1st,FirstDer.nonsafeder);
+#define OSPCLEAN(FPTR) if(FPTR!=NULL){fclose(FPTR);data.FPTR = NULL;}
+	OSPCLEAN(outfile);
+	if(use_yacas){
+		OSPCLEAN(varfile);
+		OSPCLEAN(SecondDer.yacas);
+		OSPCLEAN(SecondDer.safeder);
+		OSPCLEAN(SecondDer.nonsafeder);
+		OSPCLEAN(FirstDer.yacas);
+		OSPCLEAN(FirstDer.safeder);
+		OSPCLEAN(FirstDer.nonsafeder);
 	}else{
-		OSPCLEAN(first_yacas_osp,first_yacas);
-		OSPCLEAN(second_yacas_osp,second_yacas);
+		OSPCLEAN(first_yacas);
+		OSPCLEAN(second_yacas);
 	}
 
 	CU_ASSERT( 0 == (data.d0errors + data.d1errors) );
-	CONSOLE_DEBUG("For non-fatal errors refer ascend/compiler/test/LOG.html");
+	MSG("For non-fatal errors refer ascend/compiler/test/LOG.html");
 }
 
 
-/**
-		Files into which information is extracted
-		outfile - comment
-		safeder - all safe 2nd derivative values
-		nonsafeder - all non-safe 2nd derivative values
-		outfile - End of a Relation
-		yacas  - O/P to YACAS
-
+/*------------------------------------------------------------------------------
+	Routine to conduct derivative tests on a single relation
 */
 static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
-#define RETURN if (rname != NULL) { ASC_FREE(rname); } return
-	double residual_rev,residual_fwd;
+	double err,residual_rev,residual_fwd;
 	double *gradients_rev,*gradients_fwd,*deriv_2nd;
-
 	float yacas_first_der = 0.0;  /* compiler complains type mismatch when using */
 	float yacas_second_der = 0.0; /*double to read using fscanf(File*,"%21.17g"...) */
-
-
-	double err;
-
-
-	unsigned long num_var;
-	unsigned long i,j;
-
+	unsigned long num_var,i,j;
 	enum Expr_enum reltype;
-
 	struct relation *r;
-
 	int32 status;
-
-	char *rname = NULL;
-	char *infix_rel = NULL;
-	char *varname;
+	char *rname = NULL, *infix_rel = NULL, *varname;
 	char buf[20];
-
     struct RXNameData myrd = {"x",NULL,""};
 	struct DiffTestData *data = (struct DiffTestData*) ptr;
 	struct Instance *var_inst;
+	const char *style;
+#define RETURN if(rname != NULL)ASC_FREE(rname); return
 
-	if (inst==NULL || InstanceKind(inst)!=REL_INST){
-		return;
-	}
+	if(inst==NULL || InstanceKind(inst)!=REL_INST)return;
+
 	if (data != NULL && data->outfile != NULL) {
 		rname = WriteInstanceNameString(inst, data->root);
 	}
 
-	CONSOLE_DEBUG("<<<<<<<<<<<<<<<<< The relation that follows: %s >>>>>>>>>>>>>>>>>>>>",rname);
+	data->numrels++;
 
+	/* get the relation, check type */
 	r = (struct relation *)GetInstanceRelation(inst, &reltype);
-
-	if (r == NULL) {
+	if(r == NULL){
 		LOG(data, "<font color='orange'><b>! skipping instance with null struct relation:</b></font> %s</br>\n", rname);
 		RETURN;
 	}
-
-	if (reltype != e_token) {
+	if(reltype != e_token){
 		LOG(data, "<font color='orange'><b>! skipping non-token relation</b></font> %s</br>\n", rname);
 		RETURN;
 	}
-
 	LOG(data, "</br><font color='green'><b> Evaluating token relation </b></font> <b> %s </b> </br>\n", rname);
 
-	infix_rel = WriteRelationString(inst,
-									data->root,
-									(WRSNameFunc)RelationVarXName,
-									NULL,
-									relio_yacas,
-									NULL);
-
-	LOG(data,"</br></br><b>Relation:  %s  </br>\n",infix_rel); // Do I need to escape this??
-
+	/* convert relation to YACAS code string */
+	infix_rel = WriteRelationString(inst, data->root
+			, (WRSNameFunc)RelationVarXName, NULL, relio_yacas, NULL
+	);
 	num_var = NumberVariables(r); // FIXME or should we use rel_n_incidences
 
+	/* write out the values of each variable; log rel + var vals */
+	MSG("Relation %d: '%s' = %s",data->numrels,rname,infix_rel);
+	LOG(data,"</br></br><b>Relation:  %s  </br>\n",infix_rel); // Do I need to escape this??
 	for(i=0; i<num_var; i++) {
 		varname = RelationVarXName(r,i+1,&myrd);
 		if (varname!=NULL){
 			LOG(data,"%s:=",varname);
 			var_inst = RelationVariable(r,i+1);
 			LOG(data,"%21.17g</br>\n",RealAtomValue(var_inst));
+			MSG("%s = %g",varname,RealAtomValue(var_inst));
 		}
 	}
-
 	LOG(data,"</b>\n");
 
 	gradients_rev = ASC_NEW_ARRAY(double,num_var); // or rel_n_incidences
-	CU_ASSERT_PTR_NOT_NULL_FATAL(gradients_rev);
-
+	CU_TEST_FATAL(NULL!=gradients_rev);
 	gradients_fwd = ASC_NEW_ARRAY(double,num_var); // or rel_n_incidences
-	CU_ASSERT_PTR_NOT_NULL_FATAL(gradients_fwd);
-
+	CU_TEST_FATAL(NULL!=gradients_fwd);
 	deriv_2nd = ASC_NEW_ARRAY(double,num_var); // or rel_n_incidences
-	CU_ASSERT_PTR_NOT_NULL_FATAL(deriv_2nd);
+	CU_TEST_FATAL(NULL!=deriv_2nd);
 
-	/** @todo log the infix form of the relation and associated variables values */ /*FIXME*/
+	/* write out data files for use by yacas */
 	if(data->use_yacas){
 		if(data->FirstDer.yacas!=NULL && data->SecondDer.yacas!=NULL && data->varfile!=NULL){
 			/** Print Variables Values First */
 			for(i=0; i<num_var; i++) {
 				varname = RelationVarXName(r,i+1,&myrd);
 				if (varname!=NULL){
-					fprintf(data->varfile,"%s:=",varname);
+					fprintf(data->varfile,"%s==",varname);
 					var_inst = RelationVariable(r,i+1);
-					fprintf(data->varfile,"%21.17g\n",RealAtomValue(var_inst));
+					fprintf(data->varfile,"%-21.17g\n",RealAtomValue(var_inst));
 				}
 			}
-			fprintf(data->varfile,"@ Relation: %s follows\n",rname);
+			fprintf(data->varfile,"@ Relation: %s\n",rname);
 
 			if (infix_rel!=NULL){
 				for(i=0; i<num_var;i++){
@@ -431,16 +424,18 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 					strncpy(buf,varname,20);
 
 					// Generating Output for First Derivative Yacas Input file
-					fprintf(data->FirstDer.yacas,"ToStdout() [Echo({D(%s) ",buf);
-					fprintf(data->FirstDer.yacas,"%s});];\n",infix_rel);
-
+					fprintf(data->FirstDer.yacas
+						,"D(%s) (%s)\n"
+						,buf,infix_rel
+					);
 
 					// Generating Output for Second Derivative Yacas Input file
 					for (j=0;j<num_var;j++){
 						varname = RelationVarXName(r,j+1,&myrd);
-						fprintf(data->SecondDer.yacas,"ToStdout() [Echo({D(%s) ",buf);
-						fprintf(data->SecondDer.yacas,"D(%s) ",varname);
-						fprintf(data->SecondDer.yacas,"%s});];\n",infix_rel);
+						fprintf(data->SecondDer.yacas
+							,"D(%s) D(%s) (%s)\n"
+							,buf,varname,infix_rel
+						);
 					}
 				}
 			}
@@ -449,91 +444,107 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 			}
 		}
 	}
-	/** Testing non-safe routines */
-
 	ASC_FREE(infix_rel);
 
-	/* we need to sigfpe trap this code or use the safe versions. */
+	/*--- non-safe evaluation routines ---*/
+
+	/* TODO we need to sigfpe trap this code or use the safe versions. */
+
 	RelationCalcResidGradRev(inst,&residual_rev,gradients_rev);
 	RelationCalcResidGrad(inst,&residual_fwd,gradients_fwd);
 
-	LOG(data,"</br> <b> Table of Values for Residuals </b> </br>\n");
+	LOG(data,"<h4>Table of Values for Residuals</h4>\n");
 	LOG(data,"\n<table BORDER>\n");
-	LOG(data,"<tr><td>ASCEND(NONSAFE,REV)</td><td>ASCEND(NONSAFE,FWD)</td><td>Error</td></tr>\n");
-	CU_ASSERT(fabs(residual_rev - residual_fwd) <= RAD_TOL);
-	if ( fabs(residual_rev - residual_fwd) > RAD_TOL) {
+	LOG(data,"<tr><td>ASCEND(NONSAFE,REV)</td><td>ASCEND(NONSAFE,FWD)</td><td>Abs. Error</td></tr>\n");
+
+	if(!VERY_CLOSE(residual_rev,residual_fwd)){
+		MSG("residuals: rev=%g, fwd=%g",residual_rev, residual_fwd);
+		CU_FAIL("forward and revert residuals didn't match");
 		data->d0errors ++;
-		LOG(data,"<tr bgcolor='yellow'><td><font color='red'>%21.17g</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%.4g</font></td></tr>\n", residual_rev,residual_fwd, fabs(residual_rev - residual_fwd));
+		style = "background-color:yellow; font-color:red";
+	}else{
+		style = "";
 	}
-	else{
-		LOG(data,"<tr><td>%21.17g</td><td>%21.17g</td><td>%.4g</td></tr>\n",residual_rev,residual_fwd,0.0);
-	}
+	LOG(data,"<tr style=\"%s\"><td>%21.17g</td><td>%21.17g</td><td>%.4g</td></tr>\n"
+			,style, residual_rev,residual_fwd, fabs(residual_rev - residual_fwd)
+	);
 	LOG(data,"</table>\n");
 
+	if(data->first_yacas!=NULL){
+		char s[PATH_MAX+1];
+		if(NULL==fgets(s,PATH_MAX,data->first_yacas)){
+			MSG("line: %s",s);
+			CU_FAIL_FATAL("Expected line from " YACAS_OUT_1ST);
+		}else{
+			if(0!=strncmp(s,"@ Relation: ",10)){
+				MSG("line (yacas-1st): %s",s);
+				CU_FAIL_FATAL("Expected '@Relation:' from " YACAS_OUT_1ST);
+			}
+		}
+	}
 
-
-	LOG(data,"</br> <b> Table of Values for First Derivatives </b> </br>\n");
+	LOG(data,"<h4>Table of Values for First Derivatives</h4>\n");
 	LOG(data,"\n<table BORDER>\n");
-	for(i=0; i<num_var; i++) {
-
+	for(i=0; i<num_var; i++){
 		if(data->use_yacas && data->FirstDer.nonsafeder!=NULL){
 			/* Recording Reverse AD Non-Safe Derivatives to file */
 			fprintf(data->FirstDer.nonsafeder,"%21.17g\n",gradients_rev[i]);
-		}
-		else if(data->first_yacas!=NULL){
+
+		}else if(data->first_yacas!=NULL){
 			/* Benchmarking Non-Safe Gradient Errors against Yacas */
 			if(!feof(data->first_yacas)){
 				fscanf(data->first_yacas,"%g\n",&yacas_first_der);
-
-				if(yacas_first_der!=0.0){
-					err = fabs((double)yacas_first_der - gradients_rev[i]) / (double)yacas_first_der;
-				}else{
-					err = gradients_rev[i];
-				}
-				err = fabs(err);
-				LOG(data,"<tr><td>Column</td><td>ASCEND(NONSAFE,REV)</td><td>YACAS</td><td>Percentage Mismatch</td></tr>\n");
-				CU_ASSERT(err <= RAD_TOL);
-				if (err > RAD_TOL) {
-					CONSOLE_DEBUG("error = %e, tolerance = %e",err,RAD_TOL);
+				if(!VERY_CLOSE(yacas_first_der,gradients_rev[i])){
+					MSG("dR/dx%lu_yacas = %g",i,yacas_first_der);
+					MSG("dR/dx%lu_rev = %g",i,gradients_rev[i]);
+					MSG("abs. error = %g",fabs(yacas_first_der - gradients_rev[i]));
+					CU_FAIL("first derivative mismatch (yacas versus reverse autodiff)");
 					data->d1errors_yacas ++;
-					LOG(data,"<tr bgcolor='yellow'><td><font color='red'>%lu</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%.4g</font></td></tr>\n", i,gradients_rev[i],yacas_first_der, err*100);
+					style = "background-color:yellow; font-color:red";
+				}else{
+					style = "";
 				}
-				else{
-					LOG(data,"<tr><td>%lu</td><td>%21.17g</td><td>%21.17g</td><td>%.4g</td></tr>\n", i,gradients_rev[i],yacas_first_der,0.0);
-				}
+				LOG(data,"<tr><td>Column</td><td>ASCEND(nonsafe,rev)</td><td>YACAS</td><td>Abs. Error</td></tr>\n");
+				LOG(data,"<tr style=\"%s\"><td>%lu</td><td>%21.17g</td><td>%21.17g</td><td>%.4g</td></tr>\n"
+					,style, i,gradients_rev[i],yacas_first_der, fabs(yacas_first_der - gradients_rev[i])
+				);
 			}
 		}
 
-		if (gradients_fwd[i] != 0.0) {
-			err = (gradients_fwd[i] - gradients_rev[i]) / gradients_fwd[i];
-		} else {
-			err = gradients_rev[i];  // These are totally different quantities should I make err as 1?
-		}
-		err = fabs(err);
-		LOG(data,"<tr><td>Column</td><td>ASCEND(NONSAFE,REV)</td><td>ASCEND(NONSAFE,FWD)</td><td>Percentage Mismatch</td></tr>\n");
-		//CU_ASSERT(err <= RAD_TOL);
-		if (err > RAD_TOL) {
-			CONSOLE_DEBUG("Failed tolerance in first deriv #%lu",i);
-			CU_FAIL("Error exceeded tolerance");
+		if(!VERY_CLOSE(gradients_fwd[i],gradients_rev[i])){
+			MSG("first derivs: fwd=%g, rev=%g, abs. error = %g",gradients_fwd[i],gradients_rev[i],fabs(gradients_fwd[i]-gradients_rev[i]));
+			CU_FAIL("first derivs fwd vs rev not in agreement");
 			data->d1errors ++;
-			LOG(data,"<tr bgcolor='yellow'><td><font color='red'>%lu</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%.4g</font></td></tr>\n", i,gradients_rev[i],gradients_fwd[i], err*100);
+			style = "background-color:yellow; font-color:red";
+		}else{
+			style = "";
 		}
-		else {
-			LOG(data,"<tr><td>%lu</td><td>%21.17g</td><td>%21.17g</td><td>%21.17g</td></tr>\n", i,gradients_rev[i],gradients_fwd[i],0.0);
-		}
+		LOG(data,"<tr><td>Column</td><td>ASCEND(nonsafe,rev)</td><td>ASCEND(nonsafe,fwd)</td><td>Abs. Error</td></tr>\n");
+		LOG(data,"<tr style=\"%s\"><td>%lu</td><td>%21.17g</td><td>%21.17g</td><td>%.4g</td></tr>\n"
+			, style, i,gradients_rev[i],gradients_fwd[i], fabs(gradients_fwd[i]-gradients_rev[i]));
 	}
 	LOG(data,"</table>\n");
 
 	/*Non Safe Second Derivative Calculations*/
 	if(data->use_yacas && data->SecondDer.nonsafeder!=NULL){
-		fprintf(data->SecondDer.nonsafeder,"@ Relation: %s Follows\n",rname);
+		fprintf(data->SecondDer.nonsafeder,"@ Relation: %s\n",rname);
 	}
 
-
+	if(data->second_yacas!=NULL){
+		char s[PATH_MAX+1];
+		fgets(s,PATH_MAX,data->second_yacas);
+		char s2[PATH_MAX];
+		snprintf(s2,PATH_MAX,"@ Relation: %s\n",rname);
+		if(0!=strcmp(s,s2)){
+			MSG("line: <%s>",s);
+			MSG("expected: <%s>",s2);
+			CU_FAIL_FATAL("wrong relation read from second-derivs yacas file");
+		}
+	}
 
 	LOG(data,"</br> <b> Table of Values for Second Derivatives </b> </br>\n");
 	LOG(data,"\n<table BORDER>\n");
-	LOG(data,"<tr><td>Row</td><td>Column</td><td>ASCEND (NON-SAFE)</td><td>Yacas</td><td>Percentage Mismatch</td></tr>\n");
+	LOG(data,"<tr><td>Row</td><td>Column</td><td>ASCEND (nonsafe)</td><td>YACAS</td><td>Abs. Error</td></tr>\n");
 	for(i=0; i<num_var; i++){
 		RelationCalcSecondDeriv(inst,deriv_2nd,i);
 		if(data->use_yacas && data->SecondDer.nonsafeder!=NULL){
@@ -547,21 +558,18 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 			for(j=0; j<num_var; j++){
 				if(!feof(data->second_yacas)){
 					fscanf(data->second_yacas,"%g\n",&yacas_second_der);
-
-					if(yacas_second_der!=0.0){
-						err = ((double)yacas_second_der - deriv_2nd[j]) / (double)yacas_second_der; /* todo err scaling */
-					}else{
-						err = deriv_2nd[j];
-					}
-					err = fabs(err);
-					CU_ASSERT(err <= RAD_TOL);
-					if(err > RAD_TOL) {
+					if(!VERY_CLOSE(yacas_second_der, deriv_2nd[j])){
+	 					MSG("d2R/dx%ludx%lu_yacas = %g",i,j,yacas_second_der);
+						MSG("d2R/dx%ludx%lu_rev = %g",i,j,deriv_2nd[j]);
+						CU_FAIL("second derivative yacas vs reverse AD");
 						data->d2errors_yacas ++;
-						LOG(data,"<tr bgcolor='yellow'><td><font color='red'>%lu</font></td><td><font color='red'>%lu</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%.4g</font></td></tr>\n", i,j,deriv_2nd[j],yacas_second_der,err*100);
+						style = "background-color:yellow; font-color:red";
+					}else{
+						style = "";
 					}
-					else{
-						LOG(data,"<tr><td>%lu</td><td>%lu</td><td>%21.17g</td><td>%21.17g</td><td>%21.17g</td></tr>\n", i,j,deriv_2nd[j],yacas_second_der,0.0);
-					}
+					LOG(data,"<tr style=\"%s\"><td>%lu</td><td>%lu</td><td>%21.17g</td><td>%21.17g</td><td>%.4g</td></tr>\n"
+						,style, i,j,deriv_2nd[j],yacas_second_der,fabs(yacas_second_der-deriv_2nd[j])
+					);
 				}
 			}
 		}
@@ -569,63 +577,33 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 
 	LOG(data,"</table>\n");
 
-	/** Testing safe routines */
+	/** Testing safe evaluation routines */
 
 	status = (int32) RelationCalcResidGradRevSafe(inst,&residual_rev,gradients_rev);
 	safe_error_to_stderr( (enum safe_err *)&status );
-
 	status = RelationCalcResidGradSafe(inst,&residual_fwd,gradients_fwd);
 	safe_error_to_stderr( (enum safe_err *)&status );
-
-
-
-	LOG(data,"</br> <b> Table of Values for Residuals </b> </br>\n");
-	LOG(data,"\n<table BORDER>\n");
-	LOG(data,"<tr><td>ASCEND(SAFE,REV)</td><td>ASCEND(SAFE,FWD)</td><td>Error</td></tr>\n");
-	CU_ASSERT(fabs(residual_rev - residual_fwd) <= RAD_TOL);
-	if ( fabs(residual_rev - residual_fwd) > RAD_TOL) {
+	
+	if(!VERY_CLOSE(residual_rev,residual_fwd)){
+		CU_FAIL("Safe residuals: rev and fwd do not agree");
 		data->d0errors ++;
-		LOG(data,"<tr bgcolor='yellow'><td><font color='red'>%21.17g</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%.4g</font></td></tr>\n", residual_rev,residual_fwd, fabs(residual_rev - residual_fwd));
 	}
-	else{
-		LOG(data,"<tr><td>%21.17g</td><td>%21.17g</td><td>%.4g</td></tr>\n", residual_rev,residual_fwd,0.0);
-	}
-	LOG(data,"</table>\n");
 
-
-
-	LOG(data,"</br> <b> Table of Values for First Derivatives </b> </br>\n");
-	LOG(data,"\n<table BORDER>\n");
-	LOG(data,"<tr><td>Column</td><td>ASCEND(SAFE,REV)</td><td>ASCEND(SAFE,FWD)</td><td>Percentage Mismatch</td></tr>\n");
 	for(i=0;i<num_var;i++) {
-
 		if(data->use_yacas && data->FirstDer.safeder!=NULL){
 			/* Recording Reverse AD Safe Derivatives to file */
 			fprintf(data->FirstDer.safeder,"%21.17g\n",gradients_rev[i]);
 		}
-
-
-		if (gradients_fwd[i] != 0.0) {
-			err = ( gradients_fwd[i] - gradients_rev[i] ) / gradients_fwd[i];
-		} else {
-			err = gradients_rev[i];
-		}
-		err = fabs(err);
-		CU_ASSERT(err <= RAD_TOL);
-		if (err > RAD_TOL) {
+		if(!VERY_CLOSE(gradients_fwd[i],gradients_rev[i])){
+			MSG("safe gradients: fwd=%.17g, rev=%.17g",gradients_fwd[i],gradients_rev[i]);
+			CU_FAIL("safe first dervis: fwd and rev do not agree");
 			data->d1errors ++;
-			LOG(data,"<tr bgcolor='yellow'><td><font color='red'>%lu</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%21.17g</font></td><td><font color='red'>%.4g</font></td></tr>\n", i,gradients_rev[i],gradients_fwd[i], err*100);
-		}
-		else{
-			LOG(data,"<tr><td>%lu</td><td>%21.17g</td><td>%21.17g</td><td>%21.17g</td></tr>\n", i,gradients_rev[i],gradients_fwd[i],0.0);
 		}
 	}
-	LOG(data,"</table>\n");
-
 
 	/*Safe Second Derivative Calculations*/
 	if(data->use_yacas && data->SecondDer.safeder!=NULL){
-		fprintf(data->SecondDer.safeder,"@ Relation: %s Follows\n",rname);
+		fprintf(data->SecondDer.safeder,"@ Relation: %s\n",rname);
 	}
 	for(i=0; i<num_var; i++){
 		status = (int32) RelationCalcSecondDerivSafe(inst,deriv_2nd,i);
@@ -640,44 +618,15 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 	}
 
 	/** End of Relation */
-	LOG(data,"</br><b>@ End of Relation </b>%p{%s}</br><hr></hr>",r,rname);
-
+	LOG(data,"</br><b>@ End of Relation </b>%p{%s}</br><hr/>",r,rname);
 
 	/** Freeing used memeory */
-	if(gradients_rev) {
-		ASC_FREE(gradients_rev);
-	}
-
-	if(gradients_fwd) {
-		ASC_FREE(gradients_fwd);
-	}
-
-	if(deriv_2nd) {
-		ASC_FREE(deriv_2nd);
-	}
-
-
+	if(gradients_rev)ASC_FREE(gradients_rev);
+	if(gradients_fwd)ASC_FREE(gradients_fwd);
+	if(deriv_2nd)ASC_FREE(deriv_2nd);
 	RETURN;
-
 #undef RETURN
-
 }
-#undef OUTENV
-#undef VARFILE
-#undef CASEFILE
-
-#undef SAFEDER_2ND
-#undef NONSAFEDER_2ND
-#undef YACAS_2ND
-
-#undef SAFEDER_1ST
-#undef NONSAFEDER_1ST
-#undef YACAS_1ST
-
-#undef YACAS_IN_1ST
-#undef YACAS_IN_2ND
-
-
 /*===========================================================================*/
 /* Registration information */
 

@@ -1552,13 +1552,19 @@ void SaveRelations(FILE *fp, struct gl_list_t *list)
     case e_token:
       SaveTokenRelation(fp,relinst);
       break;
+#if 0
     case e_opcode:
+#endif
     case e_blackbox:
       FPRINTF(ASCERR,"Saving blackbox relations not supported\n");
       break;
+#if 0
     case e_glassbox:
-    default:
       SaveGlassBoxRelation(fp,relinst);
+      break;
+#endif
+    default:
+      FPRINTF(ASCERR,"Unsupported relation type\n");
       break;
     }
   }

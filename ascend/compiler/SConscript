@@ -7,9 +7,9 @@ csrcs = Split("""
 	case.c check.c child.c childdef.c childio.c childinfo.c cmpfunc.c
 	commands.c copyinst.c createinst.c defaultpaths.c destroyinst.c
 	dimen.c dimen_io.c dump.c
-	evaluate.c exprio.c exprs.c exprsym.c extcall.c
+	evaluate.c exprio.c exprs.c extcall.c
 	extfunc.c extinst.c find.c forvars.c fractions.c
-	freestore.c func.c findpath.c
+	func.c findpath.c
 	importhandler.c initialize.c instance_io.c
 	instantiate.c instmacro.c instquery.c
 	library.c link.c linkinst.c logrel_io.c logrel_util.c
@@ -17,7 +17,7 @@ csrcs = Split("""
 	nameio.c notate.c notequery.c numlist.c parentchild.c
 	parpend.c pending.c plot.c proc.c procframe.c
 	procio.c prototype.c qlfdid.c refineinst.c rel_common.c relation.c
-	rel_blackbox.c 
+	rel_blackbox.c relerr.c
 	relation_io.c relation_util.c rootfind.c reverse_ad.c 
 	safe.c
 	select.c setinst_io.c setinstval.c setio.c
@@ -66,12 +66,13 @@ objs = [parsersource[0],scannersource,packages]
 
 # SLOPPY sources. This is a painful hack that should be fixed using 'config.h' style solution.
 
-sloppy_csrcs = ['rounded.c','interval.c']
-
-sloppy_env = libascend_env.Clone()
-sloppy_env.Append(CPPDEFINES=['SLOPPY']);
-for s in sloppy_csrcs:
-	objs += sloppy_env.SharedObject(s)	
+#sloppy_csrcs = ['rounded.c','interval.c']
+#sloppy_csrcs = ['rounded.c']
+#
+#sloppy_env = libascend_env.Clone()
+#sloppy_env.Append(CPPDEFINES=['SLOPPY']);
+#for s in sloppy_csrcs:
+#	objs += sloppy_env.SharedObject(s)	
 
 #libascend_env.Depends(scanner,[parsersource[1]])
 

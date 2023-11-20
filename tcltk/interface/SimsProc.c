@@ -247,6 +247,7 @@ int Asc_SimsResumeInstantiateCmd(ClientData cdata, Tcl_Interp *interp,
   }
 }
 
+#if 0 && defined(DISUSED)
 int Asc_SimsUpdateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
                           int argc, CONST84 char *argv[])
 {
@@ -292,6 +293,7 @@ int Asc_SimsUpdateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
 
   return TCL_OK;
 }
+#endif
 
 
 int Asc_SimsCopyInstanceCmd(ClientData cdata, Tcl_Interp *interp,

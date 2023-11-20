@@ -342,7 +342,7 @@ class Browser:
 		# set up the error view
 
 		self.errorview = self.builder.get_object("errorview")
-		errstorecolstypes = [GdkPixbuf.Pixbuf,str,str,str,int]
+		errstorecolstypes = [GdkPixbuf.Pixbuf,str,str,str,int,str,int] # icon, fileline, msg, color, weight, filename, line
 		self.errorstore = Gtk.TreeStore(*errstorecolstypes)
 		errtitles = ["","Location","Message"];
 		self.errorview.set_model(self.errorstore)
@@ -367,6 +367,7 @@ class Browser:
 
 			i = i + 1
 
+		self.errorview.connect('button-press-event',self.on_errorview_button)
 
 		#--------------------
 		# set up the error reporter callback
@@ -392,21 +393,8 @@ class Browser:
 		#-------
 		# Solver engine list
 
-		_slvlist = ascpy.getSolvers()
-		self.solver_engine_menu = Gtk.Menu()
-		self.solver_engine_menu.show()
-		self.solver_engine.set_submenu(self.solver_engine_menu)
-		self.solver_engine_menu_dict = {}
-		_fmi = None
-		for _s in _slvlist:
-			_mi = Gtk.RadioMenuItem(label=_s.getName(), group=_fmi)
-			if _fmi is None:
-				_fmi = _mi
-			_mi.show()
-			_mi.connect('toggled',self.on_select_solver_toggled,_s.getName())
-			self.solver_engine_menu.append(_mi)
-			self.solver_engine_menu_dict[_s.getName()]=_mi	
-
+		self.update_solver_list()
+		
 		#-------
 		# Recent file list
 
@@ -596,6 +584,22 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 #   ------------------
 #   SOLVER LIST
+
+	def update_solver_list(self):
+		self.solver_engine_menu = Gtk.Menu()
+		self.solver_engine_menu.show()
+		self.solver_engine.set_submenu(self.solver_engine_menu)
+		self.solver_engine_menu_dict = {}
+		_slvlist = ascpy.getSolvers()
+		_fmi = None
+		for _s in _slvlist:
+			_mi = Gtk.RadioMenuItem(_fmi,_s.getName(),False)
+			if _fmi==None:
+				_fmi = _mi
+			_mi.show()
+			_mi.connect('toggled',self.on_select_solver_toggled,_s.getName())
+			self.solver_engine_menu.append(_mi)
+			self.solver_engine_menu_dict[_s.getName()]=_mi			
 
 	def set_solver(self,solvername):
 		""" this sets the active solver in the GUI, which is the default applied to newly instantiated models """
@@ -874,6 +878,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_integratorreporter = integwin.run()
 		if _integratorreporter!=None:
 			_integratorreporter.run()
+			self.sim.processVarStatus()
+			self.modelview.refreshtree()
 
 	def do_check(self):
 		if self.no_built_system():
@@ -1002,6 +1008,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.stop_waiting()
 		_ig = ImageWindow(self, self.window, fname, title="Incidence Graph", delete=True)
 		_ig.run()
+		self.reporter.reportNote("Deleted temporary file")
 
 	def on_tools_repaint_tree_activate(self,*args):
 		self.reporter.reportNote("Repainting model view...")
@@ -1110,6 +1117,9 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		_dialog = InfoDialog(self,self.window,text,title)
 		_dialog.run()
 
+	def show_info(self,text,title):
+		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog.run()
 
 #   ----------------------------------
 #   ERROR PANEL
@@ -1146,24 +1156,40 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		if not filename and not line:
 			_fileline = ""
 		else:
-			if(len(filename) > 25):
-				filename = "..."+filename[-22:]
-			_fileline = filename + ":" + str(line)
+			_filename = filename
+			if len(filename) > 25:
+				_filename = "..."+filename[-22:]
+			_fileline = _filename + ":" + str(line)
 
-		_res = (_sevicon,_fileline,msg.rstrip(),_fgcolor,_fontweight)
+		#print "Creating error row data with MSG = '%s'"%(msg.rstrip())
+
+		_res = (_sevicon,_fileline,msg.rstrip(),_fgcolor,_fontweight,filename,line)
 		#print _res
 		return _res  
 
 	def error_callback(self,sev,filename,line,msg):
 		#print "SEV =",sev
+		#print "PYTHON error_callback: MSG =",msg
 		#print "FILENAME =",filename
 		#print "LINE =",line
-		#print "MSG =",msg
 		pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))
 		path = self.errorstore.get_path(pos)
 		col = self.errorview.get_column(3)
-		self.errorview.scroll_to_cell(path,col)		
+		self.errorview.scroll_to_cell(path,col)
 		return 0;
+
+	def on_errorview_button(self, widget, event):
+		if event.type == Gtk.Gdk._2BUTTON_PRESS:
+			model,iter = widget.get_selection().get_selected()
+			if not iter:
+				return True
+			filename = model.get_value(iter,5)
+			line = model.get_value(iter,6)
+			print("\nEDITING %s +%d" %(filename,line))
+			# TODO add more checks to ensure the editor is available, etc.
+			editor = self.prefs.getStringPref("Browser","editor","pluma")
+			subprocess.Popen([editor,filename,'+%d'%(line,)])
+			
 
 #   --------------------------------
 #   BUTTON METHODS

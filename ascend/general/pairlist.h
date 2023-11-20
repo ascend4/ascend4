@@ -22,20 +22,16 @@
 	The following definitions provide a quick-and-dirty pointer lookup by
 	pointer key. The lookup is order N. The table does not treat NULL keys
 	or values specially. elements of the pairlist are numbered [1..length].
-
-	Requires:
-	#include <stdio.h>
-	#include "utilities/ascConfig.h"
-	#include "compiler.h"
 *//*
-	by Benjamin Andrew Allan
-	Created: 10/2006
-
+	by Benjamin Andrew Allan, 10/2006
 	Dates:        10/2006 - original version
 */
 
 #ifndef ASC_PAIRLIST_H
 #define ASC_PAIRLIST_H
+#include <ascend/utilities/config.h>
+#include "platform.h"
+#include <stdio.h>
 
 /**	@addtogroup general_pairlist General Pointer-pair Manager
 	@{
@@ -90,7 +86,7 @@ ASC_DLLSPEC unsigned long pairlist_append(struct pairlist_t * pl, void *key, voi
 
 ASC_DLLSPEC unsigned long pairlist_append_unique(struct pairlist_t * pl, void *key, void * value);
 /**<
- *  Add a pair to the list. Uniqueness of key guaranteed. If duplicate,
+ *  Add a pair to the list. Uniqueness of key guaranteed. If key is a duplicate,
  *  value is ignored. Complexity O(n).
  *  @return the key index.
  */

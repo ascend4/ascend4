@@ -14,16 +14,18 @@ fprops_env.SConscript("fluids/SConscript",['fprops_env'])
 fprops_env.Depends("fluids.c","fluids/fluids_list.h")
 
 coresrcs = ['fprops.c', 'color.c', 'refstate.c', 'ideal.c', 'helmholtz.c', 'pengrob.c'
-	, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c', 'solve_pT.c'
+	, 'sat.c', 'derivs.c', 'solve_ph.c', 'solve_Tx.c', 'solve_px.c'
+	, 'solve_pT.c'
 	, 'fluids.c','cp0.c'
-	, 'zeroin.c','cubicroots.c', 'visc.c', 'thcond.c'
+	, 'zeroin.c','cubicroots.c', 'visc.c', 'thcond.c', 'incomp.c'
 ]
 
 srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
 
 fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
 
-#fprops_env['libfprops'] = fprops_env.SharedLibrary("fprops",fprops_env['shobjs'])
+# this is (or is supposed to be) a shared library without ASCEND dependencies
+fprops_env['libfprops'] = fprops_env.SharedLibrary("fprops",fprops_env['shobjs'])
 
 if fprops_env.get('BUILDING_ASCEND') or fprops_env.get('WITH_ASCEND'):
 	asc_env = fprops_env.Clone()

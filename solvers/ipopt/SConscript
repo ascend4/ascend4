@@ -65,6 +65,7 @@ if env.get('WITH_IPOPT'):
 			,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 			,SHLIBPREFIX = env['EXTLIB_PREFIX']
 		)
+	
 
 		env.Depends(lib,env['libascend'])
 

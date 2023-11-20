@@ -82,11 +82,26 @@
 #include <ascend/compiler/exprio.h>
 #endif /* for CommaExpr if working. */
 
+//#define ASCPARSE_DEBUG
+#ifdef ASCPARSE_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
+
 int g_compiler_warnings = 1;		/* level of whine to allow */
 
 #include <ascend/compiler/redirectFile.h>
 #ifndef ASCERR
 # error "ASCERR not defined"
+#endif
+
+//#define ASCPARSE_DEBUG
+#ifdef ASCPARSE_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
 #endif
 
 extern int zz_error(char *);
@@ -346,7 +361,7 @@ static void CollectNote(struct Note *);
 %token MAXIMIZE_TOK MAXINTEGER_TOK MAXREAL_TOK METHODS_TOK METHOD_TOK MINIMIZE_TOK MODEL_TOK
 %token NOT_TOK NOTES_TOK
 %token OF_TOK OPTION_TOK OR_TOK OTHERWISE_TOK OUTPUT_TOK
-%token PATCH_TOK PROD_TOK PROVIDE_TOK
+%token /* PATCH_TOK */ PROD_TOK PROVIDE_TOK
 %token REFINES_TOK REPLACE_TOK REQUIRE_TOK RETURN_TOK RUN_TOK
 %token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK
 %token THEN_TOK TRUE_TOK
@@ -380,7 +395,7 @@ static void CollectNote(struct Note *);
 %type <id_ptr> optional_of optional_method type_identifier call_identifier
 %type <dquote_ptr> optional_notes
 %type <braced_ptr> optional_bracedtext
-%type <nptr> data_args fname name optional_scope
+%type <nptr> data_args fname name /* optional_scope */
 %type <eptr> relation expr relop logrelop optional_with_value
 %type <sptr> set setexprlist optional_set_values
 %type <lptr> fvarlist input_args output_args varlist
@@ -389,7 +404,7 @@ static void CollectNote(struct Note *);
 %type <statptr> is_statement isrefinedto_statement arealike_statement link_statement unlink_statement der_statement independent_statement
 %type <statptr> arethesame_statement willbethesame_statement
 %type <statptr> willnotbethesame_statement assignment_statement
-%type <statptr> relation_statement glassbox_statement blackbox_statement
+%type <statptr> relation_statement /* glassbox_statement */ blackbox_statement
 %type <statptr> call_statement units_statement
 %type <statptr> external_statement for_statement run_statement if_statement assert_statement fix_statement free_statement
 %type <statptr> when_statement use_statement select_statement
@@ -437,7 +452,7 @@ definition:
     | atom_def
     | model_def
     | definition_def
-    | patch_def
+/*    | patch_def */
     | units_def
     | global_def
     | error
@@ -532,8 +547,8 @@ import:
 	    error_reporter_current_line(ASC_USER_ERROR
 	      ,"IMPORT of '%s' from '%s'."
 	      ,SCP($4), SCP($2)
-	    );
-      }
+            );
+          }
 	}
 	| IMPORT_TOK DQUOTE_TOK ';'
 	{
@@ -988,14 +1003,14 @@ optional_parameter_reduction:
 	}
     ;
 
+/*
 patch_def:
     patch_head fstatements methods end ';'
 	{
 	  struct TypeDescription *def_ptr;
 	  if (($4 != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
-	    /* all identifier_t are from symbol table, so ptr match
-	     * is sufficient for equality.
-	     */
+	    // all identifier_t are from symbol table, so ptr match
+	    // is sufficient for equality.
 	    WarnMsg_MismatchEnd("PATCH", SCP(g_type_name),
 	                        $4, SCP(g_type_name));
 	  }
@@ -1010,10 +1025,9 @@ patch_def:
 	  if (def_ptr != NULL) {
 	    AddType(def_ptr);
 	  } else {
-	    /* CreatePatchTypeDef is responsible for freeing (if needed)
-	     * all args sent to it so we don't have to here.
-	     * in particular $2 $3
-	     */
+	    // CreatePatchTypeDef is responsible for freeing (if needed)
+	    // all args sent to it so we don't have to here.
+	    // in particular $2 $3
 	    ErrMsg_NullDefPointer(SCP(g_type_name));
 	  }
 	  g_type_name = g_refines_name = g_proc_name = NULL;
@@ -1023,15 +1037,14 @@ patch_def:
 patch_head:
     PATCH_TOK IDENTIFIER_TOK FOR_TOK IDENTIFIER_TOK ';'
 	{
-	  /*
-	   * A patch definition looks just like a model def.
-	   * with the original name <=> refine name.
-	   */
+	  // A patch definition looks just like a model def.
+	  // with the original name <=> refine name.
 	  g_type_name = $2;
 	  g_refines_name = $4;
 	  g_header_linenum = LineNum();
 	}
     ;
+*/
 
 universal:
     /* empty */
@@ -1229,6 +1242,7 @@ statements:
 	{
 	  if ($2 != NULL) {
 	    gl_append_list($1,$2);
+            gl_destroy($2);
 	  }
 	  $$ = $1;
 	}
@@ -1255,7 +1269,7 @@ statement:
     | willnotbethesame_statement
     | assignment_statement
     | relation_statement
-    | glassbox_statement
+    /* | glassbox_statement */ 
     | blackbox_statement
     | call_statement
     | external_statement
@@ -1705,13 +1719,12 @@ data_args:
 	}
     ;
 
+/*
 glassbox_statement:
     fname ':' IDENTIFIER_TOK '(' fvarlist ';' INTEGER_TOK ')' optional_scope
 	{
-	  /*
-	   * This is the glassbox declarative external relation.
-	   * This now allows a scope for placement of the relations
-	   */
+	  // This is the glassbox declarative external relation.
+	  // This now allows a scope for placement of the relations
 	  struct VariableList *vl = $5;
 	  struct Name *nptr;
 	  char tmp[32]; 
@@ -1720,13 +1733,12 @@ glassbox_statement:
 	  sprintf(tmp,"%ld",$7);
 	  str = AddSymbol(tmp);
 	  nptr = CreateIdName(str);
-	/* $$ = CreateEXTERN(1,$1,SCP($3),vl,nptr,$9); */
+	// $$ = CreateEXTERN(1,$1,SCP($3),vl,nptr,$9);
 	  $$ = CreateEXTERNGlassBox($1,SCP($3),vl,nptr,$9);
 	}
     ;
-
 optional_scope:
-    /* empty */
+    // empty
 	{
 	  $$ = NULL;
 	}
@@ -1735,6 +1747,7 @@ optional_scope:
 	  $$ = $2;
 	}
     ;
+*/
 
 for_statement:
     FOR_TOK IDENTIFIER_TOK IN_TOK expr optional_direction forexprend 
@@ -2800,6 +2813,7 @@ int
 zz_error(char *s){
   g_untrapped_error++;
   if (Asc_CurrentModule() != NULL) {
+    MSG("message string '%s'",s);
     error_reporter_current_line(ASC_USER_ERROR,"%s",s);
   } else {
     error_reporter(ASC_USER_ERROR,NULL,0,NULL,"%s at end of input.",s);
@@ -2835,7 +2849,9 @@ Asc_ErrMsgTypeDefnEOF(void)
 static void ErrMsg_Generic(CONST char *string){
 	static int errcount=0;
 	if(errcount<30){ 
+		char *s1 = strdup(string);
 		/* the module may have be already closed, Asc_CurrentModule will be null */
+		MSG("generic message, '%s'",string);
 		error_reporter_current_line(ASC_USER_ERROR,"%s",string);
 
 		if (g_type_name != NULL) {
@@ -2851,15 +2867,16 @@ static void ErrMsg_Generic(CONST char *string){
 				,"Further reports of this error will be suppressed.\n"
 			);
 		}
+		ASC_FREE(s1);
 	}
 }
 
 static void ErrMsg_CommaName(CONST char *what, struct Name *name)
 {
-  struct module_t *mod;
+  //struct module_t *mod;
 
   /* the module may have be already closed */
-  mod = Asc_CurrentModule();
+  /* mod = */ Asc_CurrentModule();
 
   ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
   FPRINTF(ASCERR, "Missing comma or operator before %s '",what);
@@ -2880,8 +2897,9 @@ static void ErrMsg_CommaExpr(CONST char *what, struct Expr *eptr)
 #endif /* COMMAEXPR_NOTBUGGY. delete if can't fix */
 
 static void
-ErrMsg_NullDefPointer(CONST char *object)
-{
+ErrMsg_NullDefPointer(CONST char *object){
+  MSG("Rejecting '%s'",object);
+  MSG("About to reject '%s'",object);
   error_reporter_current_line(ASC_USER_ERROR,"Rejected '%s'", object);
 }
 
@@ -2955,8 +2973,10 @@ TokenAsString(unsigned long token)
     return "MODEL";
   case NOTES_TOK:
     return "NOTES";
+#if 0
   case PATCH_TOK:
     return "PATCH";
+#endif
   case SELECT_TOK:
     return "SELECT";
   case SWITCH_TOK:
@@ -3016,9 +3036,11 @@ static void CollectNote(struct Note *n)
 	severity flags.
 */
 static void error_reporter_current_line(const error_severity_t sev, const char *fmt,...){
-	va_list args;
+	MSG("format = %s",fmt);
+	va_list args, args2;
 	va_start(args,fmt);
-	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),NULL,fmt,args);
+	va_copy(args2,args);
+	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),NULL,fmt,&args2);
 	va_end(args);
 }
 

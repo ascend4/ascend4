@@ -46,6 +46,8 @@ public:
 	void setUseRelationSharing(const bool&);
 
 	void setBinaryCompilation(const bool&);
+
+	void setVerbosity(const int&);
 };
 
 /** Compiler access function for use with Python */

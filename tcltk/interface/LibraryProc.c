@@ -909,8 +909,8 @@ int LibrMatchNotes(Tcl_Interp *interp, char *pattern,
     }
   }
   ne = NotesCreateEngine(interp,
-                         (NEInitFunc)Tcl_RegExpCompile,
-                         (NECompareFunc)Tcl_RegExpExec);
+                         (NEInitFunc *)&Tcl_RegExpCompile,
+                         (NECompareFunc *)&Tcl_RegExpExec);
   if (ne == NULL) {
     Tcl_AppendResult(interp,"NOTES match unable to set up regexp engine",
                      (char *)NULL);

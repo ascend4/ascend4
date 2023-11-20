@@ -288,6 +288,7 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
 	error_reporter_end_flush();
   }
   /* destroy_array(slist); do not do this */
+  //ASC_FREE(slist);
   return( nsolns >= 0 ? 1 : -1 );
 }
 

@@ -76,37 +76,39 @@ int fprops_region_Tx(double T, double x, const PureFluid *fluid, FpropsError *er
 	because one of the inputs is already one of the outputs. But we write this
 	function to provide a uniform API for users.
 */
-void fprops_solve_Tx(double T, double x, double *rho, const PureFluid *fluid, FpropsError *err){
+FluidState2 fprops_solve_Tx(double T, double x, const PureFluid *fluid, FpropsError *err){
 	double p_sat, rho_f, rho_g;
+	double rho;
+	FluidState2 S = {.vals={.Trho={NAN,NAN}},.fluid=fluid};
 
-	assert(rho != NULL);
 	assert(fluid != NULL);
 	assert(err != NULL);
 	
 	if(T > fluid->data->T_c){
 		ERRMSG("Temperature (%f) exceeds critical temperature (%f)",T, fluid->data->T_c);
 		*err = FPROPS_RANGE_ERROR;
-		return;
+		return S;
 	}
 	if(x < 0 || x > 1){
 		ERRMSG("Quality x should be in range [0,1]");
 		*err = FPROPS_RANGE_ERROR;
-		return;
+		return S;
 	}
 	if(T < fluid->data->T_t){
 		ERRMSG("Temperature is below triple point");
 		*err = FPROPS_RANGE_ERROR;
-		return;
+		return S;
 	}
 
 	fprops_sat_T(T, &p_sat, &rho_f, &rho_g, fluid, err);
 	if(*err){
 		ERRMSG("Unable to solve saturation state at T = %f (T_c = %f) for '%s'", T,fluid->data->T_c,fluid->name);
 		*err = FPROPS_SAT_CVGC_ERROR;
-		return;
+		return S;
 	}
 
 	double v = (1./rho_f) * (1 - x) + (1./rho_g) * x;
-	*rho = 1./ v;
+	rho = 1./ v;
+	return (FluidState2){.vals={.Trho={T,rho}},.fluid=fluid};
 }
 

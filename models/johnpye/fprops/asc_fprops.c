@@ -17,8 +17,6 @@
 	Wrapper for FPROPS to allow access from ASCEND.
 */
 
-//#define ASC_FPROPS_DEBUG
-
 /* include the external function API from libascend... */
 #include <ascend/compiler/extfunc.h>
 
@@ -54,30 +52,52 @@ better later on, hopefully. */
 # error "Where is ASC_EXPORT?"
 #endif
 
+//#define ASCFPROPS_DEBUG
+#ifdef ASCFPROPS_DEBUG
+# define MSG(MSG,ARGS...) ERROR_REPORTER_HERE(ASC_PROG_NOTE,MSG "\n",##ARGS);
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
+#define ERRMSG(MSG,ARGS...) ERROR_REPORTER_HERE(ASC_USER_ERROR,MSG,##ARGS);
+#define ERRMSGP(MSG,ARGS...) ERROR_REPORTER_HERE(ASC_PROG_ERR,MSG,##ARGS);
 
 /*------------------------------------------------------------------------------
   FORWARD DECLARATIONS
 */
 
 ExtBBoxInitFunc asc_fprops_prepare;
-ExtBBoxFunc fprops_p_calc;
-ExtBBoxFunc fprops_u_calc;
-ExtBBoxFunc fprops_s_calc;
-ExtBBoxFunc fprops_h_calc;
-ExtBBoxFunc fprops_a_calc;
-ExtBBoxFunc fprops_g_calc;
-ExtBBoxFunc fprops_cp_calc;
-ExtBBoxFunc fprops_cv_calc;
-ExtBBoxFunc fprops_w_calc;
-ExtBBoxFunc fprops_mu_calc;
-ExtBBoxFunc fprops_lam_calc;
+ExtBBoxFunc fprops_p_Trho_calc;
+ExtBBoxFunc fprops_u_Trho_calc;
+ExtBBoxFunc fprops_s_Trho_calc;
+ExtBBoxFunc fprops_a_Trho_calc;
+ExtBBoxFunc fprops_h_Trho_calc;
+ExtBBoxFunc fprops_g_Trho_calc;
+ExtBBoxFunc fprops_cp_Trho_calc;
+ExtBBoxFunc fprops_cv_Trho_calc;
+ExtBBoxFunc fprops_w_Trho_calc;
+ExtBBoxFunc fprops_mu_Trho_calc;
+ExtBBoxFunc fprops_lam_Trho_calc;
+ExtBBoxFunc fprops_rho_Tp_calc;
+ExtBBoxFunc fprops_cp_Tp_calc;
+ExtBBoxFunc fprops_h_Tp_calc;
+ExtBBoxFunc fprops_s_Tp_calc;
+ExtBBoxFunc fprops_mu_T_incomp_calc;
+ExtBBoxFunc fprops_lam_T_incomp_calc;
+ExtBBoxFunc fprops_cp_T_incomp_calc;
 ExtBBoxFunc fprops_phsx_vT_calc;
 ExtBBoxFunc fprops_Tvsx_ph_calc;
+ExtBBoxFunc fprops_Tvsx_h_incomp_calc;
+
+/* FIXME need incompressible fluid functions that depend only on T or h, to 
+	avoid unpivoted external relations...
+*/
 
 #define TCRIT(FLUID) (FLUID->data->T_c)
 #define TTRIP(FLUID) (FLUID->data->T_t)
 #define RHOCRIT(FLUID) (FLUID->data->rho_c)
 #define PCRIT(FLUID) (FLUID->data->p_c)
+#define FSU_TRHO(T,RHO) (FluidStateUnion){.Trho={T,RHO}}
 
 /*------------------------------------------------------------------------------
   GLOBALS
@@ -89,22 +109,30 @@ static symchar *fprops_symbols[3];
 #define TYPE_SYM fprops_symbols[1]
 #define SOURCE_SYM fprops_symbols[2]
 
-static const char *fprops_p_help = "Calculate pressure from temperature and density, using FPROPS";
-static const char *fprops_u_help = "Calculate specific internal energy from temperature and density, using FPROPS";
-static const char *fprops_s_help = "Calculate specific entropy from temperature and density, using FPROPS";
-static const char *fprops_h_help = "Calculate specific enthalpy from temperature and density, using FPROPS";
-static const char *fprops_a_help = "Calculate specific Helmholtz energy from temperature and density, using FPROPS";
-static const char *fprops_g_help = "Calculate specific Gibbs energy from temperature and density, using FPROPS";
-static const char *fprops_cp_help = "Calculate isobaric specific heat from temperature and density, using FPROPS";
-static const char *fprops_cv_help = "Calculate isochoric specific heat from temperature and density, using FPROPS";
-static const char *fprops_w_help = "Calculate speed of sound from temperature and density, using FPROPS";
-static const char *fprops_mu_help = "Calculate viscosity from temperature and density, using FPROPS";
-static const char *fprops_lam_help = "Calculate thermal conductivity sound from temperature and density, using FPROPS";
+static const char *fprops_p_Trho_help = "Calculate pressure from temperature and density, using FPROPS";
+static const char *fprops_u_Trho_help = "Calculate specific internal energy from temperature and density, using FPROPS";
+static const char *fprops_s_Trho_help = "Calculate specific entropy from temperature and density, using FPROPS";
+static const char *fprops_h_Trho_help = "Calculate specific enthalpy from temperature and density, using FPROPS";
+static const char *fprops_a_Trho_help = "Calculate specific Helmholtz energy from temperature and density, using FPROPS";
+static const char *fprops_g_Trho_help = "Calculate specific Gibbs energy from temperature and density, using FPROPS";
+static const char *fprops_cp_Trho_help = "Calculate isobaric specific heat from temperature and density, using FPROPS";
+static const char *fprops_cv_Trho_help = "Calculate isochoric specific heat from temperature and density, using FPROPS";
+static const char *fprops_w_Trho_help = "Calculate speed of sound from temperature and density, using FPROPS";
+static const char *fprops_mu_Trho_help = "Calculate viscosity from temperature and density, using FPROPS";
+static const char *fprops_lam_Trho_help = "Calculate thermal conductivity sound from temperature and density, using FPROPS";
 
-static const char *fprops_phsx_vT_help = "Calculate p, h, s, x from temperature and density, using FPROPS/Helmholtz eqn";
+static const char *fprops_rho_Tp_help = "rho(T,p) esp. for incompressible substances";
+static const char *fprops_cp_Tp_help = "h(T,p) esp. for incompressible substances";
+static const char *fprops_h_Tp_help = "h(T,p) esp. for incompressible substances";
+static const char *fprops_s_Tp_help = "s(T,p) esp. for incompressible substances";
+static const char *fprops_mu_T_incomp_help = "mu(T,p) (dynamic viscosity) esp. for incompressible substances";
+static const char *fprops_lam_T_incomp_help = "lam(T) (thermal conductivity) esp. for incompressible substances";
+static const char *fprops_cp_T_incomp_help = "cp(T) (specific heat capacity) esp. for incompressible substances";
 
-static const char *fprops_Tvsx_ph_help = "Calculate T, v, s, x from pressure and enthalpy, using FPROPS/Helmholtz eqn";
+static const char *fprops_phsx_vT_help = "Calculate p, h, s, x from specific volume and temperature, using FPROPS";
 
+static const char *fprops_Tvsx_ph_help = "Calculate T, v, s, x from pressure and enthalpy, using FPROPS";
+static const char *fprops_Tvsx_h_incomp_help = "Calculate T, v, s, x for incompressible fluid from enthalpy, using FPROPS";
 /*------------------------------------------------------------------------------
   REGISTRATION FUNCTION
 */
@@ -144,24 +172,33 @@ ASC_EXPORT int fprops_register(){
 		, 0.0 \
 	) /* returns 0 on success */
 
-	CALCFNDERIV(fprops_p,2,1);
-	CALCFN(fprops_u,2,1);
-	CALCFN(fprops_s,2,1);
-	CALCFN(fprops_h,2,1);
-	CALCFN(fprops_a,2,1);
-	CALCFN(fprops_g,2,1);
-	CALCFN(fprops_cp,2,1);
-	CALCFN(fprops_cv,2,1);
-	CALCFN(fprops_w,2,1);
-	CALCFN(fprops_mu,2,1);
-	CALCFN(fprops_lam,2,1);
+	CALCFNDERIV(fprops_p_Trho,2,1);
+	CALCFN(fprops_u_Trho,2,1);
+	CALCFN(fprops_s_Trho,2,1);
+	CALCFN(fprops_h_Trho,2,1);
+	CALCFN(fprops_a_Trho,2,1);
+	CALCFN(fprops_g_Trho,2,1);
+	CALCFN(fprops_cp_Trho,2,1);
+	CALCFN(fprops_cv_Trho,2,1);
+	CALCFN(fprops_w_Trho,2,1);
+	CALCFN(fprops_mu_Trho,2,1);
+	CALCFN(fprops_lam_Trho,2,1);
+
+	CALCFN(fprops_rho_Tp,2,1);
+	CALCFN(fprops_cp_Tp,2,1);
+	CALCFN(fprops_h_Tp,2,1);
+	CALCFN(fprops_s_Tp,2,1);
+	CALCFN(fprops_mu_T_incomp,1,1);
+	CALCFN(fprops_lam_T_incomp,1,1);
+	CALCFN(fprops_cp_T_incomp,1,1);
 	CALCFN(fprops_phsx_vT,2,4);
 	CALCFN(fprops_Tvsx_ph,2,4);
+	CALCFN(fprops_Tvsx_h_incomp,2,4);
 
 #undef CALCFN
 
 	if(result){
-		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"CreateUserFunction result = %d\n",result);
+		MSG("CreateUserFunction result = %d.",result);
 	}
 	return result;
 }
@@ -184,18 +221,16 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 	/* get the component name */
 	compinst = ChildByChar(data,COMPONENT_SYM);
 	if(!compinst){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR
-			,"Couldn't locate 'component' in DATA, please check usage of FPROPS."
-		);
+		ERRMSG("Couldn't locate 'component' in DATA, please check usage of FPROPS.")
 		return 1;
 	}
 	if(InstanceKind(compinst)!=SYMBOL_CONSTANT_INST){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"DATA member 'component' must be a symbol_constant");
+		ERRMSG("DATA member 'component' must be a symbol_constant");
 		return 1;
 	}
 	comp = SCP(SYMC_INST(compinst)->value);
 	if(comp==NULL || strlen(comp)==0){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'component' is NULL or empty");
+		ERRMSG("'component' is NULL or empty");
 		return 1;
 	}
 
@@ -203,7 +238,7 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 	typeinst = ChildByChar(data,TYPE_SYM);
 	if(typeinst){
 		if(InstanceKind(typeinst)!=SYMBOL_CONSTANT_INST){
-			ERROR_REPORTER_HERE(ASC_USER_ERROR,"DATA member 'type' must be a symbol_constant");
+			ERRMSG("DATA member 'type' must be a symbol_constant");
 			return 1;
 		}
 		type = SCP(SYMC_INST(typeinst)->value);
@@ -215,7 +250,7 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 	srcinst = ChildByChar(data,SOURCE_SYM);
 	if(srcinst){
 		if(InstanceKind(srcinst)!=SYMBOL_CONSTANT_INST){
-			ERROR_REPORTER_HERE(ASC_USER_ERROR,"DATA member 'source' must be a symbol_constant");
+			ERRMSG("DATA member 'source' must be a symbol_constant");
 			return 1;
 		}
 		src = SCP(SYMC_INST(srcinst)->value);
@@ -225,18 +260,12 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 
 	bbox->user_data = (void *)fprops_fluid(comp,type,src);
 	if(bbox->user_data == NULL){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Component name/type was not recognised. Check the source-code for for the supported species.");
+		ERRMSG("Unsupported component requested (name='%s',type='%s'). Check source-code for supported species.",comp,type);
 		return 1;
 	}
 
-#ifdef ASC_FPROPS_DEBUG
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Prepared component '%s'%s%s%s OK.\n"
-		,comp
-		,type?" type '":""
-		,type?type:""
-		,type?"'":""
+	MSG("Prepared component '%s'%s%s%s OK.",comp, type?" type '":"", type?type:"" ,type?"'":""
 	);
-#endif
 	return 0;
 }
 
@@ -244,10 +273,12 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
   EVALULATION ROUTINES
 */
 
+static const char *ninputs_msg = "Incorrect call: %u inputs received, but expected %u";
+static const char *noutputs_msg = "Incorrect call: %u outputs received, but expected %u";
 #define CALCPREPARE(NIN,NOUT) \
 	/* a few checks about the input requirements */ \
-	if(ninputs != NIN)return -1; \
-	if(noutputs != NOUT)return -2; \
+	if(ninputs != NIN){ERRMSG(ninputs_msg,ninputs,NIN);return -1;} \
+	if(noutputs != NOUT){ERRMSG(noutputs_msg,noutputs,NOUT)return -2;} \
 	if(inputs==NULL)return -3; \
 	if(outputs==NULL)return -4; \
 	if(bbox==NULL)return -5; \
@@ -267,7 +298,7 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 		df[i]/dx[j] -> jacobian[i*ninputs+j].
 	@return 0 on success
 */
-int fprops_p_calc(struct BBoxInterp *bbox,
+int fprops_p_Trho_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
@@ -276,11 +307,11 @@ int fprops_p_calc(struct BBoxInterp *bbox,
 
 	/* first input is temperature, second is density */
 	if(bbox->task == bb_func_eval){
-		FluidState S = fprops_set_Trho(inputs[0],inputs[1], FLUID, &err);
+		FluidState2 S = fprops_set_Trho(inputs[0],inputs[1], FLUID, &err);
 		outputs[0] = fprops_p(S, &err);
 	}else{
-		//ERROR_REPORTER_HERE(ASC_USER_NOTE,"JACOBIAN CALCULATION FOR P!\n");
-		FluidState S = fprops_set_Trho(inputs[0],inputs[1], FLUID, &err);
+		//MSG("JACOBIAN CALCULATION FOR P!\n");
+		FluidState2 S = fprops_set_Trho(inputs[0],inputs[1], FLUID, &err);
 		jacobian[0*1+0] = fprops_dpdT_rho(S, &err);
 		jacobian[0*1+1] = fprops_dpdrho_T(S, &err);
 	}
@@ -295,13 +326,13 @@ int fprops_p_calc(struct BBoxInterp *bbox,
 	@param jacobian ignored
 	@return 0 on success
 */
-int fprops_u_calc(struct BBoxInterp *bbox,
+int fprops_u_Trho_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	if(bbox->task == bb_func_eval){
@@ -321,13 +352,13 @@ int fprops_u_calc(struct BBoxInterp *bbox,
 	@param jacobian ignored
 	@return 0 on success
 */
-int fprops_s_calc(struct BBoxInterp *bbox,
+int fprops_s_Trho_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_s(S, &err);
@@ -342,19 +373,19 @@ int fprops_s_calc(struct BBoxInterp *bbox,
 	@param jacobian ignored
 	@return 0 on success
 */
-int fprops_h_calc(struct BBoxInterp *bbox,
+int fprops_h_Trho_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	if(bbox->task == bb_func_eval){
 		outputs[0] = fprops_h(S, &err);
 	}else{
-		//ERROR_REPORTER_HERE(ASC_USER_NOTE,"JACOBIAN CALCULATION FOR P!\n");
+		//MSG("JACOBIAN CALCULATION FOR P!\n");
 		jacobian[0*1+0] = fprops_dhdT_rho(S, &err);
 		jacobian[0*1+1] = fprops_dhdrho_T(S, &err);
 	}
@@ -369,13 +400,13 @@ int fprops_h_calc(struct BBoxInterp *bbox,
 	@param jacobian ignored
 	@return 0 on success
 */
-int fprops_a_calc(struct BBoxInterp *bbox,
+int fprops_a_Trho_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_a(S, &err);
@@ -390,13 +421,13 @@ int fprops_a_calc(struct BBoxInterp *bbox,
 	@param jacobian ignored
 	@return 0 on success
 */
-int fprops_g_calc(struct BBoxInterp *bbox,
+int fprops_g_Trho_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_g(S, &err);
@@ -411,13 +442,13 @@ int fprops_g_calc(struct BBoxInterp *bbox,
 	@param jacobian ignored
 	@return 0 on success
 */
-int fprops_cp_calc(struct BBoxInterp *bbox,
+int fprops_cp_Trho_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_cp(S, &err);
@@ -432,13 +463,13 @@ int fprops_cp_calc(struct BBoxInterp *bbox,
 	@param jacobian ignored
 	@return 0 on success
 */
-int fprops_cv_calc(struct BBoxInterp *bbox,
+int fprops_cv_Trho_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_cv(S, &err);
@@ -453,13 +484,13 @@ int fprops_cv_calc(struct BBoxInterp *bbox,
 	@param jacobian ignored
 	@return 0 on success
 */
-int fprops_w_calc(struct BBoxInterp *bbox,
+int fprops_w_Trho_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_w(S, &err);
@@ -473,13 +504,13 @@ int fprops_w_calc(struct BBoxInterp *bbox,
 	@param jacobian ignored
 	@return 0 on success
 */
-int fprops_mu_calc(struct BBoxInterp *bbox,
+int fprops_mu_Trho_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_mu(S, &err);
@@ -493,19 +524,92 @@ int fprops_mu_calc(struct BBoxInterp *bbox,
 	@param jacobian ignored
 	@return 0 on success
 */
-int fprops_lam_calc(struct BBoxInterp *bbox,
+int fprops_lam_Trho_calc(struct BBoxInterp *bbox,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
 	CALCPREPARE(2,1);
-	FluidState S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
+	FluidState2 S = fprops_set_Trho(inputs[0], inputs[1], FLUID, &err);
 
 	/* first input is temperature, second is density */
 	outputs[0] = fprops_lam(S, &err);
 
 	/* no need to worry about error states etc. */
 	return 0;
+}
+
+#define	CALC_TP_BODY(fn) \
+	CALCPREPARE(2,1);\
+	FluidState2 S = fprops_set_Tp(inputs[0],inputs[1],FLUID,&err);\
+	outputs[0] = fprops_##fn(S,&err);\
+	if(err){\
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve %s(T,rho) for '%s' (err '%s'."\
+			,#fn,FLUID->name,fprops_error(err));\
+		return 1;\
+	}\
+	return 0;
+
+#define	CALC_T_BODY(fn) \
+	CALCPREPARE(1,1); /* the pressure value is completely arbitrary, set to 999 */\
+	FluidState2 S = fprops_set_Tp(inputs[0],999,FLUID,&err);\
+	outputs[0] = fprops_##fn(S,&err);\
+	if(err){\
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve %s(T,rho) for '%s' (err '%s'."\
+			,#fn,FLUID->name,fprops_error(err));\
+		return 1;\
+	}\
+	return 0;
+
+int fprops_rho_Tp_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALC_TP_BODY(lam);
+}
+int fprops_cp_Tp_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALC_TP_BODY(cp);
+}
+int fprops_h_Tp_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALC_TP_BODY(h);
+}
+int fprops_s_Tp_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALC_TP_BODY(s);
+}
+int fprops_mu_T_incomp_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALC_T_BODY(mu);
+}
+int fprops_lam_T_incomp_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALC_T_BODY(lam);
+}
+
+int fprops_cp_T_incomp_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALC_T_BODY(cp);
 }
 
 
@@ -520,6 +624,12 @@ int fprops_phsx_vT_calc(struct BBoxInterp *bbox,
 ){
 	CALCPREPARE(2,4);
 
+	/*
+		TODO unclear why we don't put this code into the main fprops.c routines...?
+	 	there is an attempt here to minimise calls to the slow function fprops_sat_T,
+		by making direct calls to s_fn and h_fn. FIXME A better solution would be to move 
+		all of this code into solve_ph.c or similar.
+	*/
 	double rho = 1./inputs[0];
 	double T = inputs[1];
 	double p_sat, rho_f, rho_g;
@@ -532,12 +642,10 @@ int fprops_phsx_vT_calc(struct BBoxInterp *bbox,
 			double vf = 1./rho_f;
 			double vg = 1./rho_g;
 			double x = (inputs[0] - vf)  /(vg - vf);
-			FluidState Sf = fprops_set_Trho(T, rho_f, FLUID, &err);
-			double sf = fprops_s(Sf, &err);
-			double hf = fprops_h(Sf, &err);
-			FluidState Sg = fprops_set_Trho(T, rho_g, FLUID, &err);
-			double sg = fprops_s(Sg, &err);
-			double hg = fprops_h(Sg, &err);
+			double sf = FLUID->s_fn(FSU_TRHO(T,rho_f), FLUID->data, &err);
+			double hf = FLUID->h_fn(FSU_TRHO(T,rho_f), FLUID->data, &err);
+			double sg = FLUID->s_fn(FSU_TRHO(T,rho_g), FLUID->data, &err);
+			double hg = FLUID->h_fn(FSU_TRHO(T,rho_g), FLUID->data, &err);
 			outputs[0] = p_sat;
 			outputs[1] = hf + x * (hg-hf);
 			outputs[2] = sf + x * (sg-sf);
@@ -548,10 +656,9 @@ int fprops_phsx_vT_calc(struct BBoxInterp *bbox,
 	}
 
 	/* non-saturated */
-	FluidState S = fprops_set_Trho(T, rho, FLUID, &err);
-	outputs[0] = fprops_p(S, &err);
-	outputs[1] = fprops_h(S, &err);
-	outputs[2] = fprops_s(S, &err);
+	outputs[0] = FLUID->p_fn(FSU_TRHO(T,rho), FLUID->data, &err);
+	outputs[1] = FLUID->h_fn(FSU_TRHO(T,rho), FLUID->data, &err);
+	outputs[2] = FLUID->s_fn(FSU_TRHO(T,rho), FLUID->data, &err);
 	outputs[3] = rho < RHOCRIT(FLUID) ? 1 : 0;
 	return 0;
 }
@@ -580,31 +687,33 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 
 	p = inputs[0];
 	h = inputs[1];
+	switch(FLUID->type){
+	case FPROPS_HELMHOLTZ:
+	case FPROPS_PENGROB:
+		{
+			// the code below aims to avoid calls to fprops_sat_T, which are slow.
 
 	double hft, pt, rhoft,rhogt;
 	fprops_triple_point(&pt,&rhoft,&rhogt,FLUID,&err);
 	if(err){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve triple point for %s.",FLUID->name);
+				ERRMSGP("Failed to solve triple point for %s.",FLUID->name);
 		return 5;
 	}
-	FluidState Sft = fprops_set_Trho(TTRIP(FLUID),rhoft,FLUID,&err);
-	hft = fprops_h(Sft, &err);
+			hft = FLUID->h_fn(FSU_TRHO(TTRIP(FLUID),rhoft),FLUID->data,&err);
 	if(h < hft){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR
-			,"Input enthalpy %f kJ/kg is below triple point liquid enthalpy %f kJ/kg"
+				ERRMSGP("Input enthalpy %f kJ/kg is below triple point liquid enthalpy %f kJ/kg"
 			,h/1e3,hft/1e3
 		);
 		return 6;
 	}
 	
 	if(p < pt){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR
-			,"Input pressure %f bar is below triple point pressure %f bar"
+				ERRMSGP("Input pressure %f bar is below triple point pressure %f bar"
 			,p/1e5,pt/1e5
 		);
 		outputs[0] = TTRIP(FLUID);
 		outputs[1] = 1./ rhoft;
-		outputs[2] = FLUID->s_fn(TTRIP(FLUID), rhoft, FLUID->data, &err);
+				outputs[2] = FLUID->s_fn(FSU_TRHO(TTRIP(FLUID),rhoft),FLUID->data, &err);
 		outputs[3] = 0;
 		return 7;
 	}
@@ -614,28 +723,25 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 		
 		fprops_sat_p(p, &T_sat, &rho_f, &rho_g, FLUID, &err);
 		if(err){
-			ERROR_REPORTER_HERE(ASC_PROG_ERR
-				, "Failed to solve saturation state of %s for p = %f bar < pc (= %f bar)"
+					ERRMSGP("Failed to solve saturation state of %s for p = %f bar < pc (= %f bar)"
 				, FLUID->name, p/1e5,PCRIT(FLUID)/1e5
 			);
 			outputs[0] = TTRIP(FLUID);
 			outputs[1] = 1./rhoft;
-			outputs[2] = FLUID->s_fn(TTRIP(FLUID), rhoft, FLUID->data, &err);
+					outputs[2] = FLUID->s_fn(FSU_TRHO(TTRIP(FLUID), rhoft), FLUID->data, &err);
 			outputs[3] = 0;
 			return 8;
 		}
 		
-		FluidState Sf = fprops_set_Trho(T_sat,rho_f,FLUID,&err);
-		FluidState Sg = fprops_set_Trho(T_sat,rho_g,FLUID,&err);
-		double hf = fprops_h(Sf, &err);
-		double hg = fprops_h(Sg, &err);
+				double hf = FLUID->h_fn(FSU_TRHO(T_sat, rho_f),FLUID->data,&err);
+				double hg = FLUID->h_fn(FSU_TRHO(T_sat, rho_g),FLUID->data,&err);
 
 		if(hf < h && h < hg){
 			/* saturated */
 			double vf = 1./rho_f;
 			double vg = 1./rho_g;
-			double sf = fprops_s(Sf, &err);
-			double sg = fprops_s(Sg, &err);
+					double sf = FLUID->s_fn(FSU_TRHO(T_sat, rho_f),FLUID->data,&err);
+					double sg = FLUID->s_fn(FSU_TRHO(T_sat, rho_g),FLUID->data,&err);
 			T = T_sat;
 			x = (h - hf)  /(hg - hf);
 			v = vf + x * (vg-vf);
@@ -645,33 +751,114 @@ int fprops_Tvsx_ph_calc(struct BBoxInterp *bbox,
 			outputs[1] = v;
 			outputs[2] = s;
 			outputs[3] = x;
-#ifdef ASC_FPROPS_DEBUG
-			ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Saturated state, p=%f bar, h = %f kJ/kg",p/1e5,h/1e3);
-#endif
+					MSG("Saturated state, p=%f bar, h = %f kJ/kg.",p/1e5,h/1e3);
 			return 0;
 		}
 	}
 
-	double rho;
-	fprops_solve_ph(p,h, &T, &rho, 0, FLUID, &err);
+			FluidState2 S = fprops_solve_ph(p,h, FLUID, &err); // prev code was use_guess=0
+			double rho = S.vals.Trho.rho;
+			T = S.vals.Trho.T;
 	if(err){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to solve for (p,h): %s",fprops_error(err));
+				ERRMSGP("Failed to solve for (p,h): %s",fprops_error(err));
 		return 9;
 	}
 	/* non-saturated */
 	v = 1./rho;
-	FluidState S = fprops_set_Trho(T,rho,FLUID,&err);
-	s = fprops_s(S, &err);
+			s = FLUID->s_fn(S.vals, FLUID->data, &err); // straight to EOS, no sat test req.
 	x = (v > 1./RHOCRIT(FLUID)) ? 1 : 0;
 	last = FLUID;
 	outputs[0] = T;
 	outputs[1] = v;
 	outputs[2] = s;
 	outputs[3] = x;
-#ifdef ASC_FPROPS_DEBUG
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Non-saturated state, p = %f bar, h = %f kJ/kg",p/1e5,h/1e3);
-#endif
+			MSG("Non-saturated state, p = %f bar, h = %f kJ/kg.",p/1e5,h/1e3);
 	return 0;
+}
+	case FPROPS_INCOMP:
+		{
+			MSG("Solving for p=%f bar, h=%f kJ/kg.",p/1e5, h/1e3);
+			FluidState2 S;
+			S = fprops_solve_ph(p,h,FLUID,&err);
+			double rho = fprops_rho(S,&err);
+			T = fprops_T(S,&err);
+			s = fprops_s(S,&err);
+			v = 1./rho;
+			x = 0;
+			MSG("Got T = %f, rho = %f, s = %f",T,rho,s);
+			if(err){
+				ERRMSGP("Failed to solve (p,h): %s (fluid '%s')",fprops_error(err),FLUID->name);
+				return 9;
+			}
+			last = FLUID;
+			outputs[0] = T;
+			outputs[1] = v;
+			outputs[2] = s;
+			outputs[3] = x;
+			return 0;
+		}
+	default:
+		ERRMSGP("Invalid fluid type (type %u)",FLUID->type);
+		return 10;
+	}
+}
+
+
+
+
+/**
+	Evaluation function for 'fprops_Tvsx_h_incomp'
+	@return 0 on success
+*/
+int fprops_Tvsx_h_incomp_calc(struct BBoxInterp *bbox,
+		int ninputs, int noutputs,
+		double *inputs, double *outputs,
+		double *jacobian
+){
+	CALCPREPARE(1,4);
+
+	static const PureFluid *last = NULL;
+	double p = 1e5; // arbitrary!
+	static double h,T,v,s,x;
+	if(last == FLUID && h == inputs[1]){
+		outputs[0] = T;
+		outputs[1] = v;
+		outputs[2] = s;
+		outputs[3] = x;
+		return 0;
+	}
+
+	h = inputs[0];
+
+	MSG("hello!");
+
+	switch(FLUID->type){
+	case FPROPS_INCOMP:
+		{
+			MSG("Solving for p=%f bar, h=%f kJ/kg.",p/1e5, h/1e3);
+			FluidState2 S;
+			S = fprops_solve_ph(p,h,FLUID,&err);
+			double rho = fprops_rho(S,&err);
+			T = fprops_T(S,&err);
+			s = fprops_s(S,&err);
+			v = 1./rho;
+			x = 0;
+			if(err){
+				ERRMSGP("Failed to solve (p,h): %s (fluid '%s')",fprops_error(err),FLUID->name);
+				return 9;
+			}
+			last = FLUID;
+			outputs[0] = T;
+			outputs[1] = v;
+			outputs[2] = s;
+			outputs[3] = x;
+			MSG("...returning T = %f",T);
+			return 0;
+		}
+	default:
+		ERRMSGP("Invalid fluid type (type %u)",FLUID->type);
+		return 10;
+	}
 }
 
 

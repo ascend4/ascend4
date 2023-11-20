@@ -32,58 +32,58 @@ int helm_run_test_cases(const PureFluid *P, unsigned ntd, const TestData *td, in
 	unsigned i;
 	const unsigned n = ntd;
 
-	fprintf(stderr,"Running through %d test points...\n",n);
+	TEST_MSG("Running through %d test points...",n);
 
 	//PureFluid *P = ideal_prepare(eos,NULL);
 	/* Checking CP0 values */
 
 #define CP0_TEMP(T,RHO,DATA, ERROR) ideal_cp(T,RHO,DATA, ERROR)
-	fprintf(stderr,"CP0 TESTS\n");
+	TEST_MSG("CP0 TESTS");
 	for(i=0; i<n;++i){
 		cp0 = td[i].cp0*1e3;
-	 	ASSERT_TOL(CP0_TEMP, td[i].T+T_adj, td[i].rho, P->data, &fprops_err, cp0, cp0*1e-6);
+	 	ASSERT_TOL_TRHO(CP0_TEMP, td[i].T+T_adj, td[i].rho, P->data, &fprops_err, cp0, cp0*1e-6);
 	}
 #undef CP0_TEMP
 
 	/* Checking pressure values (proves phir_delta) */
-	fprintf(stderr,"PRESSURE TESTS\n");
+	TEST_MSG("PRESSURE TESTS");
 	for(i=0; i<n;++i){
 		T = td[i].T+T_adj;
 		rho = td[i].rho;
-		FluidState S1 = fprops_set_Trho(T,rho,P,&fprops_err);
+		FluidState2 S1 = fprops_set_Trho(T,rho,P,&fprops_err);
 		p = td[i].p*1e6;
 	 	ASSERT_PROP(p, S1, &fprops_err, p, p*1e-3);
 	}
 
 	/* checking enthalpy values */
-	fprintf(stderr,"ENTHALPY TESTS\n");
+	TEST_MSG("ENTHALPY TESTS");
 	//se = 0, sse = 0;
 	for(i=0; i<n;++i){
 		T = td[i].T+T_adj;
 		rho = td[i].rho;
-		FluidState S1 = fprops_set_Trho(T,rho,P,&fprops_err);
+		FluidState2 S1 = fprops_set_Trho(T,rho,P,&fprops_err);
 		h = td[i].h*1e3;
 	 	ASSERT_PROP(h, S1, &fprops_err, h, 1e-4*h);
 	}
 
 	/* Checking internal energy values (proves phi0_tau, phir_tau) */
-	fprintf(stderr,"INTERNAL ENERGY TESTS\n");
+	TEST_MSG("INTERNAL ENERGY TESTS");
 	for(i=0; i<n;++i){
 		T = td[i].T+T_adj;
 		rho = td[i].rho;
-		FluidState S1 = fprops_set_Trho(T,rho,P,&fprops_err);
+		FluidState2 S1 = fprops_set_Trho(T,rho,P,&fprops_err);
 		u = td[i].u*1e3;
 		ASSERT_PROP(u, S1, &fprops_err, u, 1e3*u);
 	}
 
 	/* Checking entropy values */
 
-	fprintf(stderr,"ENTROPY TESTS\n");
+	TEST_MSG("ENTROPY TESTS");
 	//se = 0, sse = 0;
 	for(i=0; i<n;++i){
 		T = td[i].T+T_adj;
 		rho = td[i].rho;
-		FluidState S1 = fprops_set_Trho(T,rho,P,&fprops_err);
+		FluidState2 S1 = fprops_set_Trho(T,rho,P,&fprops_err);
 		s = td[i].s*1e3;
 	 	ASSERT_PROP(s, S1, &fprops_err, s, 1e-4*s);
 	}
@@ -91,11 +91,11 @@ int helm_run_test_cases(const PureFluid *P, unsigned ntd, const TestData *td, in
 
 	/* Checking helmholtz energy values */
 
-	fprintf(stderr,"HELMHOLTZ ENERGY TESTS\n");
+	TEST_MSG("HELMHOLTZ ENERGY TESTS");
 	for(i=0; i<n;++i){
 		T = td[i].T+T_adj;
 		rho = td[i].rho;
-		FluidState S1 = fprops_set_Trho(T,rho,P,&fprops_err);
+		FluidState2 S1 = fprops_set_Trho(T,rho,P,&fprops_err);
 		a = td[i].a*1e3;
 		//fprintf(stderr,"%.20e\t%.20e\t%.20e\n",T,rho,(a - fprops_a(T,rho,fluid)));
 	 	ASSERT_PROP(a, S1, &fprops_err, a, a*1e-3);
@@ -103,39 +103,39 @@ int helm_run_test_cases(const PureFluid *P, unsigned ntd, const TestData *td, in
 
 	/* TRIPLE POINT PROPERTY CALCULATION */		
 	
-	fprintf(stderr,"\nTRIPLE POINT PROPERTIES\n\n");
-	assert(P->data->T_t != 0);
-	fprintf(stderr,"T_t = %f K\n", P->data->T_t);
+	TEST_MSG("TRIPLE POINT PROPERTIES");
+	ASSERT(P->data->T_t != 0);
+	TEST_MSG("T_t = %f K", P->data->T_t);
 	double pt,rhoft,rhogt;
 	fprops_triple_point(&pt, &rhoft, &rhogt, P, &fprops_err);
-	assert(fprops_err == FPROPS_NO_ERROR);
-	fprintf(stderr,"p_t = %.12e Pa\n", pt);
-	fprintf(stderr,"rhof_t = %.12e kg/m^3\n", rhoft);
-	fprintf(stderr,"rhog_t = %.12e kg/m^3\n\n", rhogt);
+	ASSERT(fprops_err == FPROPS_NO_ERROR);
+	TEST_MSG("p_t = %.12e Pa", pt);
+	TEST_MSG("rhof_t = %.12e kg/m^3", rhoft);
+	TEST_MSG("rhog_t = %.12e kg/m^3\n", rhogt);
 
 	/* Check convergence along saturation curve */
 
-	fprintf(stderr,"SATURATION CURVE CONVERGENCE TEST\n");
+	TEST_MSG("SATURATION CURVE CONVERGENCE TEST");
 	if(P->data->T_t != 0){	
 		double n1 = 200;
 		/* space point linearly in 1/T, cf Sandler 5e fig 7.7-1. */
 		double rT = 1./P->data->T_t;
 		double drT = (1./P->data->T_c - 1./P->data->T_t) / (n1 - 1);
-		fprintf(stderr,"\t%10s\t%10s\t%10s\t%10s\n","T","psat", "rhof", "rhog");
+		TEST_MSG("\t%10s\t%10s\t%10s\t%10s","T","psat", "rhof", "rhog");
 		for(i = 0; i < n1; i++){
 			T = 1/rT;
 			double psat1, rhof1, rhog1;
 			fprops_sat_T(T, &psat1, &rhof1, &rhog1, P, &fprops_err);
-			assert(fprops_err == FPROPS_NO_ERROR);
-			fprintf(stderr,"\t%10.3f\t%10.3f\t%10.5f\t%10.5f\n",T,psat1, rhof1, rhog1);
+			ASSERT(fprops_err == FPROPS_NO_ERROR);
+			TEST_MSG("\t%10.3f\t%10.3f\t%10.5f\t%10.5f",T,psat1, rhof1, rhog1);
 			rT += drT;
 		}
 	}else{
-		fprintf(stderr,"NOT POSSIBLE due to missing T_t\n");
+		TEST_MSG("NOT POSSIBLE due to missing T_t");
 	}
-	fprintf(stderr,"\n");
+	TEST_MSG("");
 
-	fprintf(stderr,"Tests completed OK (maximum error = %0.5f%%)\n",maxerr);
+	TEST_MSG("Tests completed OK (maximum error = %0.5f%%)",maxerr);
 	return 0;
 }
 
@@ -153,7 +153,7 @@ int helm_check_u(const PureFluid *fluid, unsigned ntd, const TestData *td){
 		T = td[i].T+273.15;
 		rho = td[i].rho;
 		u = td[i].u*1e3;
-		FluidState S1 = fprops_set_Trho(T,rho,fluid,&fprops_err);
+		FluidState2 S1 = fprops_set_Trho(T,rho,fluid,&fprops_err);
 		err = u - fprops_u(S1,&fprops_err);
 		se += err;
 		sse += err*err;
@@ -178,7 +178,7 @@ int helm_check_s(const PureFluid *fluid, unsigned ntd, const TestData *td){
 		T = td[i].T + 273.15;
 		rho = td[i].rho;
 		s = td[i].s*1e3;
-		FluidState S1 = fprops_set_Trho(T,rho,fluid,&fprops_err);
+		FluidState2 S1 = fprops_set_Trho(T,rho,fluid,&fprops_err);
 		err = s - fprops_s(S1,&fprops_err);
 		se += err;
 		sse += err*err;
@@ -421,7 +421,7 @@ int helm_check_dudrho_T(const PureFluid *fluid, unsigned ntd, const TestData *td
 int helm_calc_offsets(double Tref, double rhoref, double href, double sref, const PureFluid *fluid){
     //TODO: Use this enum:
     FpropsError fprops_err=FPROPS_NO_ERROR;
-	FluidState S1 = fprops_set_Trho(Tref,rhoref,fluid,&fprops_err);
+	FluidState2 S1 = fprops_set_Trho(Tref,rhoref,fluid,&fprops_err);
 	double h = fprops_h(S1,&fprops_err);
 	double s = fprops_s(S1,&fprops_err);
 
@@ -455,15 +455,15 @@ int helm_run_saturation_tests(const PureFluid *fluid, unsigned nsd, const TestDa
 	unsigned i;
 	const unsigned n = nsd;
 
-	fprintf(stderr,"\nSATURATION TESTS\n\n");
+	TEST_MSG("SATURATION TESTS");
 
-	fprintf(stderr,"Running through %d saturation-region points...\n",n);
+	TEST_MSG("Running through %d saturation-region points...",n);
 	double tol = 1e5;
 	for(i=0; i<n;++i){
 		T = td[i].T+T_adj;
         //TODO: res unused. Delete?
 		fprops_sat_T(T, &p, &rhof, &rhog, fluid, &fprops_err);
-		assert(FPROPS_NO_ERROR == fprops_err);
+		ASSERT(FPROPS_NO_ERROR == fprops_err);
 		double p_tab = td[i].p*1e6;
 		ASSERT_TOL_VAL(p,p_tab,p_tab*tol);
 		double rhof_tab = td[i].rhof;
@@ -471,8 +471,8 @@ int helm_run_saturation_tests(const PureFluid *fluid, unsigned nsd, const TestDa
 		double rhog_tab = td[i].rhog;
 		ASSERT_TOL_VAL(rhog,rhog_tab,rhog_tab*tol);
 		hf = td[i].hf*1e3;
-		FluidState Sf = fprops_set_Trho(T,rhof,fluid,&fprops_err);
-		FluidState Sg = fprops_set_Trho(T,rhog,fluid,&fprops_err);
+		FluidState2 Sf = fprops_set_Trho(T,rhof,fluid,&fprops_err);
+		FluidState2 Sg = fprops_set_Trho(T,rhog,fluid,&fprops_err);
 	 	ASSERT_PROP(h,Sf, &fprops_err, hf, hf*tol);
 		hg = td[i].hg*1e3;
 	 	ASSERT_PROP(h,Sg, &fprops_err, hg, hg*tol);
@@ -482,7 +482,7 @@ int helm_run_saturation_tests(const PureFluid *fluid, unsigned nsd, const TestDa
 	 	ASSERT_PROP(s,Sg, &fprops_err, sg, sg*tol);
 	}
 
-	fprintf(stderr,"Tests completed OK (maximum error = %0.5f%%)\n",maxerr);
+	TEST_MSG("Tests completed OK (maximum error = %0.5f%%)",maxerr);
 	return 0;
 }
 

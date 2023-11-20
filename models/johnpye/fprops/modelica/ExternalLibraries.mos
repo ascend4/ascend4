@@ -1,0 +1,3 @@
+loadModel(Modelica);
+loadFile("ExternalLibraries.mo");
+simulate(ExternalLibraries,startTime=0,stopTime=1000);

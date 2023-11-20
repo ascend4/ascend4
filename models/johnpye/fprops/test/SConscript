@@ -1,13 +1,36 @@
-
 Import('fprops_env')
+test_env = fprops_env.Clone()
 
-srcs = fprops_env.Glob("[a-z]*.c")
+testsrcs = ['ideal.c','ph.c','sat1.c','sat.c','visc.c']
 
 #print "srcs =",srcs
 
-for s in srcs:
-	fprops_env.Program([s] + fprops_env['shobjs']
-		,LIBS = ["m"]
-		,LIBPATH = "#"
+#for s in testsrcs:
+#	test_env.Program([s] + test_env['shobjs']
+#		,LIBS = ["m"]
+#		,LIBPATH = "#"
+#	)
+
+#print "CUNIT_CPPPATH =",test_env.get("CUNIT_CPPPATH")
+
+if test_env['HAVE_CUNIT']:
+	test_env.AppendUnique(
+		CPPPATH=test_env.get('CUNIT_CPPPATH',[])
+		,LIBPATH=test_env.get('CUNIT_LIBPATH',[])
 	)
 
+	tobjs = []
+	for f in test_env['fluids']:
+		tobjs += [test_env.SharedObject(f
+			,CPPDEFINES=['-DTEST','-DCUNIT_TEST']
+			,OBJPREFIX='#/test/cutest-fluid-'
+		)]
+
+	tobjs += [
+		test_env.SharedObject('cutest.c',OBJPREFIX='#/test/cutest-')
+		, test_env.SharedObject('../test.c')
+	]
+
+	test_env.Program('cutest', test_env['shobjs'] + tobjs
+		,LIBS = ['m','cunit']
+	)

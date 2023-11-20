@@ -40,11 +40,6 @@
 #include <ascend/general/list.h>
 #include "functype.h"
 
-/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- * Please see usage notes at top of Expr_enum before modifying it.
- * In particular, if you mess with it, make sure the defines still work.
- */
-#define NUM_EXPR_ENUMS 44
 /**
  * Expression token types. Note that several have
  * multiple uses. Where more than 1 use is listed, only the first
@@ -63,31 +58,29 @@ enum Expr_enum {
 
   /**< relation implementation kinds */
   e_undefined	= 1, /**< relation type undefined */
-  e_glassbox	= 2, /**< glassbox relation type */
-  e_blackbox	= 3, /**< blackbox relation type */
-  e_opcode	= 4,   /**< unimplemented opcode relation type. not seen */
-  e_token	= 5,     /**< token array infix/postfix relation type */
+  e_blackbox	= 2, /**< blackbox relation type */
+  e_token	= 3,     /**< token array infix/postfix relation type */
 
-  e_zero	= 6,     /**< symbolic processing <==> quiet wild real 0.0 */
-  e_real	= 7,     /**< real constant invariant across for loops */
-  e_int		= 8,     /**< integer constant invariant across for loops */
+  e_zero	= 4,     /**< symbolic processing <==> quiet wild real 0.0 */
+  e_real	= 5,     /**< real constant invariant across for loops */
+  e_int		= 6,     /**< integer constant invariant across for loops */
 /* two types only to be seen in fully compiled token relations, and not
   yet seen at all. These are the types for RelationRealConst terms and
   RelationIntegerConst terms.
   e_realconst  = 7a,
   e_intconst  = 8a,
 */
-  e_var		= 9,     /**< real variable */
+  e_var		= 7,     /**< real variable */
 
-  e_uminus	= 10,  /**< unary minus */
-  e_func	= 11,    /**< unary real function */
+  e_uminus	= 8,  /**< unary minus */
+  e_func	= 9,    /**< unary real function */
 
-  e_plus	= 12,    /**< addition, set union */
-  e_minus	= 13,    /**< subtraction, set difference */
-  e_times	= 14,    /**< multiplication, set intersection */
-  e_divide	= 15,  /**< division */
-  e_power	= 16,    /**< a^x */
-  e_ipower	= 17,  /**< a^n */
+  e_plus	= 10,    /**< addition, set union */
+  e_minus	= 11,    /**< subtraction, set difference */
+  e_times	= 12,    /**< multiplication, set intersection */
+  e_divide	= 13,  /**< division */
+  e_power	= 14,    /**< a^x */
+  e_ipower	= 15,  /**< a^n */
   /* Don't mess with the ordering of the above items */
 
   /* Boolean Relations  */
@@ -134,6 +127,13 @@ enum Expr_enum {
   e_qstring       /**< a quoted string */
 };
 
+
+/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * Please see usage notes at top of Expr_enum before modifying it.
+ * In particular, if you mess with it, make sure the defines still work.
+ */
+#define NUM_EXPR_ENUMS ((int)(e_qstring + 1))
+
 #define TOK_SCALAR_LOW    e_zero
 #define TOK_SCALAR_HIGH   e_var
 #define TOK_CONSTANT_LOW  e_zero
@@ -146,7 +146,7 @@ enum Expr_enum {
 #define TOK_UNARY_HIGH    e_func
 #define TOK_REAL_REL_LOW  e_zero
 #define TOK_REAL_REL_HIGH e_ipower
-#define TOK_REL_TYPE_LOW  e_glassbox
+#define TOK_REL_TYPE_LOW  e_blackbox
 #define TOK_REL_TYPE_HIGH e_token
 
 struct ExprReal {
@@ -208,7 +208,7 @@ struct Name {
    * this name is a supported attribute id that should be
    * printed with a $ in front of it.
    * if NAMEBIT_CHAT 1,
-   * chain this is part of contains a supported attribute
+   * 'chain this': is part of contains a supported attribute
    * element. This is determinable at parse time and it costs no
    * more to store that fact here for all elements in the chain.
    * This makes it possible to test conditionals much earlier,

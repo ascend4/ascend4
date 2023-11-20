@@ -132,65 +132,63 @@ if with_python:
     if '-Wall' in envs.get('CCFLAGS'):
         envs['CCFLAGS'] = envs['CCFLAGS'].remove('-Wall')
 
-    if platform.system()=="Windows":
-        envs['SHLIBSUFFIX']='.pyd'
-        if env.get('LIBS') and 'msvcr71' in env['LIBS']:
-            envs.Append(CPPDEFINES=['HAVE_MSVCR71'])
-        envs.Append(LINKFLAGS="-static-libgcc ")
-        #TDM-GCC does *not* require or support the following:
-        #swig_env.Append(LINKFLAGS="-static-libstdc++")
+if platform.system()=="Windows":
+	envs['SHLIBSUFFIX']='.pyd'
+	if env.get('LIBS') and 'msvcr71' in env['LIBS']:
+		envs.Append(CPPDEFINES=['HAVE_MSVCR71'])
+	envs.Append(LINKFLAGS="-static-libgcc ")
+	#TDM-GCC does *not* require or support the following:
+	#swig_env.Append(LINKFLAGS="-static-libstdc++")
 
-    elif platform.system()=="Darwin":
-        envs['SHLIBSUFFIX']='.so'
+elif platform.system()=="Darwin":
+	envs['SHLIBSUFFIX']='.so'
 
-    swigobjs = []
+swigobjs = []
 
-    for swigf in Split("""
-        ascpy.i
-    """):
-        swigobj = envs.SharedObject(swigf
-            , SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
-        )
-        #swig_env.SideEffect(['ascpy.py','ascpy_wrap.h'],'ascpy$SWIGCXXFILESUFFIX')
-        envs.Depends('ascpy$SWIGCXXFILESUFFIX',['ascpy.i','solver.i','plot.i'])
-        envs.Clean('ascpy_wrap$SWIGCXXFILESUFFIX',swigobj)
-        envs.Clean('ascpy.py','ascpy$SWIGCXXFILESUFFIX')
-        envs.Clean('ascpy_wrap.h','ascpy$SWIGCXXFILESUFFIX')
+for swigf in Split("""
+	ascpy.i
+"""):
+	swigobj = envs.SharedObject(swigf
+		, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
+	)
+	#swig_env.SideEffect(['ascpy.py','ascpy_wrap.h'],'ascpy$SWIGCXXFILESUFFIX')
+	envs.Depends('ascpy$SWIGCXXFILESUFFIX',['ascpy.i','solver.i','plot.i'])
+	envs.Clean('ascpy_wrap$SWIGCXXFILESUFFIX',swigobj)
+	envs.Clean('ascpy.py','ascpy$SWIGCXXFILESUFFIX')
+	envs.Clean('ascpy_wrap.h','ascpy$SWIGCXXFILESUFFIX')
 
-        swigobjs.append(swigobj)
-        
-    if envs.get('WITH_DMALLOC'):
-        envs.Append(LIBS = ['dmalloc'])
-        envs.AppendUnique(LIBPATH = [env.get('DMALLOC_LIBPATH')])
+	swigobjs.append(swigobj)
 
-    if envs.get('WITH_GRAPHVIZ'):
-        envs.Append(LIBS = env['GRAPHVIZ_LIBS'])
-        envs.AppendUnique(LIBPATH = [env.get('GRAPHVIZ_LIBPATH')])
+	if envs.get('WITH_DMALLOC'):
+		envs.Append(LIBS = ['dmalloc'])
+		envs.AppendUnique(LIBPATH = [env.get('DMALLOC_LIBPATH')])
 
-    swiglib = envs.SharedLibrary("ascpy",objs + swigobjs
-        , SHLIBPREFIX = '_'
-    )
-else:
-	print("Skipping... Python support:", without_python_reason)
-        
-            
-if 0:
+	if envs.get('WITH_GRAPHVIZ'):
+		envs.Append(LIBS = env['GRAPHVIZ_LIBS'])
+		envs.AppendUnique(LIBPATH = [env.get('GRAPHVIZ_LIBPATH')])
+
+	swiglib = envs.SharedLibrary("ascpy",objs + swigobjs
+		, SHLIBPREFIX = '_'
+	)
+
+
+#if 0:
 	#if platform.system()=='Windows' and env.get('MSVS'):
 	#	envp.Append(CCFLAGS=['/EHsc']) # for exceptions (as suggested by a MSVC error msg, dunno if it's right or not -- JP)
 	#swig_has_gccvisibility = True
-	#
+#
 	#if env.get('HAVE_GCC'):
 		#python_env.Append(CPPFLAGS=['-O3'])
 	#	if swig_has_gccvisibility and 'HAVE_GCCVISIBILITY' in env:
 	#		python_env.Append(CCFLAGS=['-fvisibility=hidden']);
 
-	#---------------------------------------------
-	# INSTALLATION
+#---------------------------------------------
+# INSTALLATION
 
-	# python compile bytecode
+# python compile bytecode
 
-	if env.get('CAN_INSTALL'):
-		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_PYTHON_ASCEND")),swiglib)
-		env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_PYTHON_ASCEND")),'ascpy.py')
+if env.get('CAN_INSTALL'):
+	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_PYTHON_ASCEND")),swiglib)
+	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_PYTHON_ASCEND")),'ascpy.py')
 
 # vim:ts=4:sw=4:syntax=python:noet

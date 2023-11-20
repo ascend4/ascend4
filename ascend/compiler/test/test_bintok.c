@@ -37,6 +37,7 @@
 
 #include <ascend/system/system.h>
 #include <ascend/system/slv_client.h>
+#include <ascend/system/slv_param.h>
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_server.h>
 
@@ -45,25 +46,21 @@
 /*
 	Test solving a simple model with 'bintoken' support
 */
-static void test_test1(){
-
-	struct module_t *m;
-
+static void test_bintok(char *filenamestem,int usebintok){
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
+	Asc_PutEnv(ASC_ENV_BTINC "=.");
+	Asc_PutEnv(ASC_ENV_BTLIB "=.");
 
-	/* load the file */
+	/* load and parse */
 	char path[PATH_MAX];
-#define filenamestem "test1"
 	strcpy((char *)path,"test/bintok/");
 	strncat(path, filenamestem, PATH_MAX - strlen(path));
 	strncat(path, ".a4c", PATH_MAX - strlen(path));
-	{
-		int status;
-		m = Asc_OpenModule(path,&status);
-		CU_ASSERT(status == 0);
-	}
+	int ostatus;
+	Asc_OpenModule(path,&ostatus); 
+	CU_ASSERT(ostatus == 0);
 
 	/* parse it */
 	CU_ASSERT(0 == zz_parse());
@@ -71,36 +68,19 @@ static void test_test1(){
 	/* find the model */
 	CU_ASSERT(FindType(AddSymbol(filenamestem))!=NULL);
 
-#define T_DIR "/tmp"
-#define T_BTSRC T_DIR "/btsrc.c"
-#define T_BTOBJ T_DIR "/btsrc.o"
-#define T_BTLIB T_DIR "/btsrc.so"
-
-	struct FilePath *fp1 = ospath_new("ascend/bintokens/Makefile");
-	struct FilePath *fp2 = ospath_getabs(fp1);
-	char *fp2str = ospath_str(fp2);
-	char makecmd[2 * PATH_MAX];
-	strcpy(makecmd, "/usr/bin/make -f ");
-	strncat(makecmd, fp2str, PATH_MAX - strlen(makecmd));
-	strncat(makecmd, " ASCBT_SRC=" T_BTSRC " ASCBT_TARGET=" T_BTLIB, PATH_MAX - strlen(makecmd));
-
-	BinTokenSetOptions(
-		T_BTSRC, T_BTOBJ, T_BTLIB
-		,makecmd
-		,"/bin/rm"
-		,1000/*maxrels*/,1/*verbose*/,0/*housekeep*/
-	);
-	ASC_FREE(fp2str);
-	ospath_free(fp1);
-	ospath_free(fp2);
-
 	/* instantiate it */
+	if(usebintok){
+		CU_TEST(0==BinTokenSetOptionsDefault());
+	}else{
+		CU_TEST(0==BinTokenClearOptions());
+	}
+	error_reporter_tree_t *T1 = error_reporter_tree_start(0);
 	struct Instance *siminst = SimsCreateInstance(AddSymbol(filenamestem), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(siminst!=NULL);
+	CU_TEST(!error_reporter_tree_has_error(T1));
+	error_reporter_tree_end(T1);
 
-    CONSOLE_DEBUG("RUNNING ON_LOAD");
-
-	/** Call on_load */
+	/* initialise */
 #define ONLOAD "on_load"
 	struct Name *name = CreateIdName(AddSymbol(ONLOAD));
 	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,ONLOAD, ASCERR, WP_STOPONERR, NULL, NULL);
@@ -109,44 +89,53 @@ static void test_test1(){
 	slv_system_t sys = system_build(GetSimulationRoot(siminst));
 	CU_ASSERT_FATAL(sys != NULL);
 
-	/* assign solver */
-	const char *solvername = "QRSlv";
-	int index = slv_lookup_client(solvername);
-	CU_ASSERT_FATAL(index != -1);
-
-	CU_ASSERT_FATAL(slv_select_solver(sys,index));
-	CONSOLE_DEBUG("Assigned solver '%s'...",solvername);
+	/* solve */
+	CU_ASSERT_FATAL(slv_select_solver(sys,slv_lookup_client("QRSlv")));
+	slv_parameters_t p;
+	slv_get_parameters(sys,&p);
+	CU_ASSERT_FATAL(0==slv_param_char_choose(&p,"bppivoting","SPK1/RANKI"));
+		/* we have to use this factor_method, since there seems to be a little memory leak with the default one! */
+	slv_set_parameters(sys,&p);
 
 	CU_ASSERT_FATAL(0 == slv_presolve(sys));
-
 	slv_status_t status;
 	slv_get_status(sys, &status);
 	CU_ASSERT_FATAL(status.ready_to_solve);
-
 	slv_solve(sys);
-
 	slv_get_status(sys, &status);
 	CU_ASSERT(status.ok);
-
-	CONSOLE_DEBUG("Destroying system...");
 	if(sys)system_destroy(sys);
 	system_free_reused_mem();
 
 	/* run 'self_test' method */
-	CONSOLE_DEBUG("Running self-tests");
 #define SELFTEST "self_test"
 	name = CreateIdName(AddSymbol(SELFTEST));
 	pe = Initialize(GetSimulationRoot(siminst),name,SELFTEST, ASCERR, WP_STOPONERR, NULL, NULL);
 	CU_ASSERT(pe==Proc_all_ok);
 
-	/* destroy all that stuff */
-	CONSOLE_DEBUG("Destroying instance tree");
+	/* cleanup */
 	CU_ASSERT(siminst != NULL);
-
 	solver_destroy_engines();
 	sim_destroy(siminst);
 	Asc_CompilerDestroy();
 }
+
+static void test_test1(){
+	test_bintok("test1",1);
+}
+
+static void test_nobintok(){
+	test_bintok("test1",0);
+}
+
+static void test_gradient(){
+	test_bintok("gradient",1);
+}
+
+static void test_gradient_nobintok(){
+	test_bintok("gradient",0);
+}
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -154,7 +143,10 @@ static void test_test1(){
 /* the list of tests */
 
 #define TESTS(T) \
-	T(test1)
+	T(test1) \
+	T(nobintok) \
+	T(gradient) \
+	T(gradient_nobintok)
 
 REGISTER_TESTS_SIMPLE(compiler_bintok, TESTS)
 

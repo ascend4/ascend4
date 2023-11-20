@@ -295,6 +295,7 @@
 					<keyword>energy_scale</keyword>
 					<keyword>energy</keyword>
 					<keyword>energy_per_volume</keyword>
+					<keyword>energy_per_area</keyword>
 					<keyword>energy_rate_scale</keyword>
 					<keyword>energy_rate</keyword>
 					<keyword>power_per_length</keyword>

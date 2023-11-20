@@ -24,8 +24,8 @@ This is the nitrogren property correlation recommended
 by NIST in its program REFPROP 7.0.
 */
 
-#include "../fprops.h"
 #include "../helmholtz.h"
+#ifndef CUNIT_TEST
 
 #define NITROGEN_M 28.01348
 #define NITROGEN_R (8.31451e3/NITROGEN_M)
@@ -130,7 +130,7 @@ static const HelmholtzData helmholtz_data_nitrogen = {
 	}
 };
 
-const ViscosityData visc_nitrogen = {
+static const ViscosityData visc_nitrogen = {
 	.source="E W Lemmon and R T Jacobsen, 2004. 'Viscosity and Thermal Conductivity Equations for Nitrogen, Oxygen, Argon, and Air', Int J Thermophys 25(1), pp. 21-69."
 	,.type=FPROPS_VISC_1
 	,.data={.v1={
@@ -164,7 +164,7 @@ const ViscosityData visc_nitrogen = {
 	}}
 };
 
-const ThermalConductivityData thcond_nitrogen = {
+static const ThermalConductivityData thcond_nitrogen = {
 	.source = "Lemmon and Jacobsen, 2003. Int J Thermophys 25(1)."
 	,.type=FPROPS_THCOND_1
 	,.data={.k1={
@@ -196,7 +196,7 @@ const ThermalConductivityData thcond_nitrogen = {
 };
 
 
-EosData eos_nitrogen = {
+const EosData eos_nitrogen = {
 	"nitrogen"
 	,"Span, Lemmon, Jacobsen & Wagner, A Reference Quality Equation of State "
 	"for Nitrogen, Int J Thermophysics, Vol 18, No 4, 1998."
@@ -208,174 +208,14 @@ EosData eos_nitrogen = {
 	,.thcond = &thcond_nitrogen
 };
 
+#else
+# include "../test.h"
+extern const EosData eos_nitrogen;
+# include "../ideal_impl.h"
+# include "../visc.h"
+# include "../thcond.h"
 
-/*
-	Test suite. These tests attempt to validate the current code using
-	a few sample figures output by REFPROP 7.0.
-
-	To run the test, compile and run as follows:
-
-	gcc ideal.c helmholtz.c nitrogen.c -DTEST -o nitrogen -lm && ./nitrogen
-*/
-#ifdef TEST
-
-#include "../ideal_impl.h"
-#include "../visc.h"
-#include "../thcond.h"
-#include "../test.h"
-#include <math.h>
-#include <stdio.h>
-#include <assert.h>
-#include <stdlib.h>
-
-const TestData td[]; const unsigned ntd;
-
-int main(void){
-	test_init();
-	PureFluid *P = helmholtz_prepare(&eos_nitrogen,NULL);
-	//PureFluid *PI = ideal_prepare(&eos_nitrogen,NULL);
-	ASSERT(P);
-
-	FpropsError err=FPROPS_NO_ERROR;
-#define D P->data
-	double rho, T, p, u, h, a, s, cp0, w, mu;
-
-	double maxerr = 0;
-
-	unsigned i;
-	const unsigned n = ntd;
-
-	//cp0 = fprops_cp(273.15,0,PI,&err);
-	//fprintf(stderr,"cp0(2731.5) = %f\n",cp0);
-
-	fprintf(stderr,"CP0 TESTS\n");
-	for(i=0; i<n;++i){
-		cp0 = td[i].cp0*1e3;
-#define CP0_TEMP(T,RHO,DATA, ERROR) ideal_cp(T,RHO,DATA, ERROR)
-	 	ASSERT_TOL(CP0_TEMP, td[i].T+273.15, 0., P->data, &err, cp0, cp0*1e-6);
-#undef CP0_TEMP
-	}
-
-	fprintf(stderr,"\nTesting sample values from the Span paper...\n");
-
-	//ReferenceState ref = {FPROPS_REF_IIR};
-	//fprops_set_reference_state(P, &ref);
-
-	rho = 11 * D->M; T = 270.;
-	FluidState S = fprops_set_Trho(T,rho, P, &err);
-	ASSERT(!err);
-	p = fprops_p(S, &err);
-	fprintf(stderr,"p = %f\n", p);
-	ASSERT(fabs(p - 27.0621e6) < 0.00005e6);
-	h = fprops_h(S, &err);
-	fprintf(stderr,"h = %f (should = %f)\n", h, 6517.95*1e3/D->M);
-	//ASSERT(fabs(h - 6517.95 *1e3/ D->M) < 5e-3*1e3 / D->M);
-	w = fprops_w(S, &err);
-	fprintf(stderr,"w = %f\n", w);
-	ASSERT(fabs(w - 459.222) < 0.0005);
-	fprintf(stderr,"OK 1\n");
-
-	rho = 11.2 * D->M; T = 126.2;
-	S = fprops_set_Trho(T,rho, P, &err);
-	p = fprops_p(S, &err);
-	fprintf(stderr,"p = %f\n", p);
-	ASSERT(fabs(p - 3.39712e6) < 50e3);
-	h = fprops_h(S, &err);
-	fprintf(stderr,"h = %f (should be = %f)\n", h,816.780*1e3/D->M);
-	//ASSERT(fabs(h - 816.780*1e3/D->M) < 5e-4*1e3/D->M);
-	w = fprops_w(S, &err);
-	fprintf(stderr,"w = %f\n", w);
-	ASSERT(fabs(w - 135.571) < 0.0005);
-	fprintf(stderr,"OK 2\n");
-
-	fprintf(stderr,"Testing viscosity values from Int J Thermophys 25(1) Jan 2004... ");
-	const ViscosityData *V = visc_prepare(&eos_nitrogen, P, &err);
-	ASSERT(FPROPS_NO_ERROR==err);
-	ASSERT(V != NULL);
-	P->visc = V;
-
-	// test data gives densities in mol/dm³
-#define VISC_TEST(T__1,RHO__1,MU__1,TOL__1) \
-	S = fprops_set_Trho(T__1, RHO__1*P->visc->data.v1.M, P, &err); \
-	mu = fprops_mu(S,&err); \
-fprintf(stderr,"mu(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,mu,MU__1); \
-	ASSERT(FPROPS_NO_ERROR==err); \
-	ASSERT(fabs(mu - MU__1)<TOL__1);
-
-	VISC_TEST(100,0,6.90349e-6, 0.000005e-6);
-	VISC_TEST(300,0,17.8771e-6, 0.00005e-6);
-	VISC_TEST(100,25,79.7418e-6, 0.00005e-6);
-	VISC_TEST(200,10,21.0810e-6, 0.00005e-6);
-	VISC_TEST(300,5,20.7430e-6, 0.00005e-6);
-	VISC_TEST(126.195,11.18,18.2978e-6, 0.00005e-6);
-
-	fprintf(stderr,"done\n");
-
-	//--------------------------------------------------------------------------
-	fprintf(stderr,"Testing thermal conductivity values from REFPROP 8.0\n");
-	thcond_prepare(P, &thcond_nitrogen, &err);
-	ASSERT(FPROPS_NO_ERROR==err);
-	ASSERT(V != NULL);
-
-	int kerr = 0;
-	double k;
-#define THCOND_TEST(T__1,RHO__1,K__1,TOL__1) \
-	S = fprops_set_Trho(T__1, RHO__1, P, &err); \
-	k = fprops_k(S,&err); \
-	fprintf(stderr,"k(T=%f, rho=%f) = %e (target: %e)\n",S.T,S.rho,k,K__1); \
-	ASSERT(FPROPS_NO_ERROR==err); \
-	if(fabs(k - K__1)<TOL__1)kerr++;
-
-	THCOND_TEST(100,0,          9.2775e-3, 0.00005e-3);
-	THCOND_TEST(300,0,          25.936e-3, 0.0005e-3);
-	THCOND_TEST(100,25,         10.309e-3, 0.0005e-3);
-	THCOND_TEST(200,10,         18.545e-3, 0.0005e-3);
-	THCOND_TEST(300,5,          26.085e-3, 0.0005e-3);
-	THCOND_TEST(126.195,11.180, 12.132e-3, 0.0005e-3);
-
-	ASSERT(kerr==0);
-
-	//--------------------------------------------------------------------------
-	fprintf(stderr,"CONSISTENCY TESTS (of test data): u, T, s, a... ");
-	for(i=0; i<n; ++i){
-		u = td[i].u*1e3;
-		T = td[i].T+273.15;
-		s = td[i].s*1e3;
-		a = td[i].a*1e3;
-		//fprintf(stderr,"u - T s = %f, a = %f\n", u-T*s, a);
-		double resid = (u - T*s) - a;
-		assert(fabs(resid) < fabs(a)*1e-6);
-	}
-	fprintf(stderr,"done\n");
-
-	fprintf(stderr,"CONSISTENCY TESTS (of test data): p, rho, h, u... ");
-	for(i=0; i<n; ++i){
-		h = td[i].h*1e3;
-		p = td[i].p*1e6;
-		rho = td[i].rho;
-		u = td[i].u*1e3;
-		//fprintf(stderr,"h - p/rho - T s = %f, a = %f\n", h - p/rho-T*s, a);
-		double resid = (u + p/rho) - h;
-		assert(fabs(resid) < fabs(h)*1e-6);
-	}
-	fprintf(stderr,"done\n");
-
-#if 0
-	//return helm_check_dpdrho_T(D, ntd, td);
-	//return helm_check_dhdT_rho(D, ntd, td);
-	//return helm_check_dhdrho_T(d, ntd, td);
-
-	helm_check_dhdT_rho(D, ntd, td);
-	helm_check_dhdrho_T(D, ntd, td);
-	helm_check_dudT_rho(D, ntd, td);
-	helm_check_dudrho_T(D, ntd, td);
-#endif
-
-	fprintf(stderr,"Running through %d test points...\n",n);
-	return helm_run_test_cases(P, ntd, td, 'C');
-}
-
-const TestData td[] = {
+static const TestData td[] = {
 /*{T/C,   , p/MPa  , rho/(kg/m3)   , u/(kJ/kg)     , h/(kJ/kg)     , s/(kJ/kgK)    , cv/(kJ/kgK)   , cp(kJ/kgK)    , cp0/(kJ/kgK)    a/(kJ/kg)}*/
 /*
 	samples point from Span et al, as calculated by REFPROP 7.0
@@ -445,7 +285,146 @@ const TestData td[] = {
 	, {4.00E+2, 1.00E+2, 3.335102049E+2, 4.662506686E+2, 7.660915686E+2, 5.597138445E+0, 8.375827178E-1, 1.19816815E+0, 1.091436533E+0, -3.301463075E+3}
 };
 
-const unsigned ntd = sizeof(td)/sizeof(TestData);
+static const unsigned ntd = sizeof(td)/sizeof(TestData);
+
+void test_fluid_nitrogen(void){
+	test_init();
+	PureFluid *P = helmholtz_prepare(&eos_nitrogen,NULL);
+	//PureFluid *PI = ideal_prepare(&eos_nitrogen,NULL);
+	ASSERT(NULL!=P);
+
+	FpropsError err=FPROPS_NO_ERROR;
+#define D P->data
+	double rho, T, p, u, h, a, s, cp0, w, mu;
+
+	double maxerr = 0;
+
+	unsigned i;
+	const unsigned n = ntd;
+
+	//cp0 = fprops_cp(273.15,0,PI,&err);
+	//fprintf(stderr,"cp0(2731.5) = %f\n",cp0);
+
+	TEST_MSG("CP0 TESTS");
+	for(i=0; i<n;++i){
+		cp0 = td[i].cp0*1e3;
+#define CP0_TEMP(T,RHO,DATA, ERROR) ideal_cp(T,RHO,DATA, ERROR)
+	 	ASSERT_TOL_TRHO(CP0_TEMP, td[i].T+273.15, 0., P->data, &err, cp0, cp0*1e-6);
+#undef CP0_TEMP
+	}
+
+	TEST_MSG("Testing sample values from the Span paper...");
+
+	//ReferenceState ref = {FPROPS_REF_IIR};
+	//fprops_set_reference_state(P, &ref);
+
+	rho = 11 * D->M; T = 270.;
+	FluidState2 S = fprops_set_Trho(T,rho, P, &err);
+	ASSERT(!err);
+	p = fprops_p(S, &err);
+	TEST_MSG("p = %f", p);
+	ASSERT(fabs(p - 27.0621e6) < 0.00005e6);
+	h = fprops_h(S, &err);
+	TEST_MSG("h = %f (should = %f)", h, 6517.95*1e3/D->M);
+	//ASSERT(fabs(h - 6517.95 *1e3/ D->M) < 5e-3*1e3 / D->M);
+	w = fprops_w(S, &err);
+	TEST_MSG("w = %f", w);
+	ASSERT(fabs(w - 459.222) < 0.0005);
+
+	rho = 11.2 * D->M; T = 126.2;
+	S = fprops_set_Trho(T,rho, P, &err);
+	p = fprops_p(S, &err);
+	TEST_MSG("p = %f\n", p);
+	ASSERT(fabs(p - 3.39712e6) < 50e3);
+	h = fprops_h(S, &err);
+	TEST_MSG("h = %f (should be = %f)", h,816.780*1e3/D->M);
+	//ASSERT(fabs(h - 816.780*1e3/D->M) < 5e-4*1e3/D->M);
+	w = fprops_w(S, &err);
+	TEST_MSG("w = %f", w);
+	ASSERT(fabs(w - 135.571) < 0.0005);
+
+	TEST_MSG("Testing viscosity values from Int J Thermophys 25(1) Jan 2004... ");
+	const ViscosityData *V = visc_prepare(&eos_nitrogen, P, &err);
+	ASSERT(FPROPS_NO_ERROR==err);
+	ASSERT(V != NULL);
+	P->visc = V;
+
+	// test data gives densities in mol/dm³
+#define VISC_TEST(T__1,RHO__1,MU__1,TOL__1) \
+	S = fprops_set_Trho(T__1, RHO__1*P->visc->data.v1.M, P, &err); \
+	mu = fprops_mu(S,&err); \
+	TEST_MSG("mu(%s=%f, %s=%f) = %e (target: %e)",STATENAME1(S),STATEVAL1(S),STATENAME2(S),STATEVAL2(S),mu,MU__1); \
+	ASSERT(FPROPS_NO_ERROR==err); \
+	ASSERT(fabs(mu - MU__1)<TOL__1);
+
+	VISC_TEST(100,0,6.90349e-6, 0.000005e-6);
+	VISC_TEST(300,0,17.8771e-6, 0.00005e-6);
+	VISC_TEST(100,25,79.7418e-6, 0.00005e-6);
+	VISC_TEST(200,10,21.0810e-6, 0.00005e-6);
+	VISC_TEST(300,5,20.7430e-6, 0.00005e-6);
+	VISC_TEST(126.195,11.18,18.2978e-6, 0.00005e-6);
+
+	//--------------------------------------------------------------------------
+	TEST_MSG("Testing thermal conductivity values from REFPROP 8.0");
+	thcond_prepare(P, eos_nitrogen.thcond, &err);
+	ASSERT(FPROPS_NO_ERROR==err);
+	ASSERT(V != NULL);
+
+	int kerr = 0;
+	double k;
+#define THCOND_TEST(T__1,RHO__1,K__1,TOL__1) \
+	S = fprops_set_Trho(T__1, RHO__1, P, &err); \
+	k = fprops_lam(S,&err); \
+	TEST_MSG("k(%s=%f, %s=%f) = %e (target: %e)",STATENAME1(S),STATEVAL1(S),STATENAME2(S),STATEVAL2(S),k,K__1); \
+	ASSERT(FPROPS_NO_ERROR==err); \
+	if(fabs(k - K__1)<TOL__1)kerr++;
+
+	THCOND_TEST(100,0,          9.2775e-3, 0.00005e-3);
+	THCOND_TEST(300,0,          25.936e-3, 0.0005e-3);
+	THCOND_TEST(100,25,         10.309e-3, 0.0005e-3);
+	THCOND_TEST(200,10,         18.545e-3, 0.0005e-3);
+	THCOND_TEST(300,5,          26.085e-3, 0.0005e-3);
+	THCOND_TEST(126.195,11.180, 12.132e-3, 0.0005e-3);
+
+	ASSERT(kerr==0);
+
+	//--------------------------------------------------------------------------
+	TEST_MSG("CONSISTENCY TESTS (of test data): u, T, s, a... ");
+	for(i=0; i<n; ++i){
+		u = td[i].u*1e3;
+		T = td[i].T+273.15;
+		s = td[i].s*1e3;
+		a = td[i].a*1e3;
+		//fprintf(stderr,"u - T s = %f, a = %f\n", u-T*s, a);
+		double resid = (u - T*s) - a;
+		ASSERT(fabs(resid) < fabs(a)*1e-6);
+	}
+
+	TEST_MSG("CONSISTENCY TESTS (of test data): p, rho, h, u...");
+	for(i=0; i<n; ++i){
+		h = td[i].h*1e3;
+		p = td[i].p*1e6;
+		rho = td[i].rho;
+		u = td[i].u*1e3;
+		//fprintf(stderr,"h - p/rho - T s = %f, a = %f\n", h - p/rho-T*s, a);
+		double resid = (u + p/rho) - h;
+		ASSERT(fabs(resid) < fabs(h)*1e-6);
+	}
+
+#if 0
+	//return helm_check_dpdrho_T(D, ntd, td);
+	//return helm_check_dhdT_rho(D, ntd, td);
+	//return helm_check_dhdrho_T(d, ntd, td);
+
+	helm_check_dhdT_rho(D, ntd, td);
+	helm_check_dhdrho_T(D, ntd, td);
+	helm_check_dudT_rho(D, ntd, td);
+	helm_check_dudrho_T(D, ntd, td);
+#endif
+
+	TEST_MSG("Running through %d test points...",n);
+	helm_run_test_cases(P, ntd, td, 'C');
+}
 
 #endif
 

@@ -13,7 +13,7 @@ if not os.path.exists(src):
 	print("No file named '%s.c' found in '%s' directory" % (name,dirn))
 	exit(1)
 
-CC = "gcc"
+CC = "gcc -fdiagnostics-color=always"
 if os.environ.get('HOST_PREFIX'):
 	CC = "%s-%s" % (os.environ['HOST_PREFIX'],"gcc")
 
@@ -22,7 +22,8 @@ if os.environ.get('GCOV'):
 	CFLAGS += " -fprofile-arcs -ftest-coverage"
 
 
-srcs = "color.c refstate.c ideal.c cp0.c helmholtz.c pengrob.c sat.c fprops.c zeroin.c test.c cubicroots.c visc.c thcond.c"
+srcs = "color.c refstate.c ideal.c cp0.c helmholtz.c pengrob.c incomp.c sat.c fprops.c zeroin.c test.c cubicroots.c visc.c thcond.c"
+#srcs = "color.c refstate.c ideal.c cp0.c incomp.c fprops.c test.c"
 
 ldflags = '-lm'
 

@@ -41,9 +41,11 @@
 */
 
 enum bintoken_kind {
-  BT_error,
-  BT_C,
-  BT_F77 /**< ansi f77, unimplemented */
+  BT_error
+  ,BT_C
+#ifdef BINTOKEN_WITH_F77
+  ,BT_F77 /**< ansi f77, unimplemented */
+#endif
 };
 
 /**
@@ -57,7 +59,7 @@ enum bintoken_kind {
 	was built.
 
 	@param srcname        path to file where source code should be written
-	@param objname        path to object file, if necessary
+	@param objname        path to object file, if necessary (optional)
 	@param libname        path to shared library, for AscDynaLoad
 	@param buildcommand   command for compiling the shared library file ('make' 
 	                      plus arguments, typically)
@@ -69,10 +71,8 @@ enum bintoken_kind {
 	                      code.
 	@param housekeep      if given, will cause limited OS housekeeping 
 	                      of unneeded files; specifically srcname, objname will 
-	                      be deleted after a successful link.
-
-	TODO perhaps the 'housekeep' stuff can be automated inside the build 
-	command?
+	                      be deleted after a successful link (if objname
+	                      is not NULL).
  */
 ASC_DLLSPEC int BinTokenSetOptions(
 	CONST char *srcname, CONST char *objname, CONST char *libname
@@ -80,6 +80,19 @@ ASC_DLLSPEC int BinTokenSetOptions(
 	,unsigned long maxreln
 	,int verbose, int housekeep
 );
+
+#define BinTokenClearOptions() BinTokenSetOptions(NULL,NULL,NULL,NULL,NULL,0,0,0)
+/**<
+	Shortcut macro for disabling bintokens in the compiler.
+*/
+
+ASC_DLLSPEC int BinTokenSetOptionsDefault();
+/**<
+	This function sets bintoken parameters in an automated way that
+	should hopefully work on most standard systems. This approach
+	makes use of two env vars to help locate the btprolog.h and libascend.so
+	files during linking.
+*/
 
 /**
  * Frees global data allocated during loading.

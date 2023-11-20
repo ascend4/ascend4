@@ -46,7 +46,6 @@
 #include <ascend/compiler/relation.h>
 #include <ascend/compiler/relation_util.h>
 #include <ascend/compiler/relation_io.h>
-#include <ascend/compiler/exprsym.h>
 
 #include <ascend/general/ltmatrix.h>
 
@@ -128,7 +127,7 @@ real64 relman_linear_coef(struct rel_relation *rel, struct var_variable *var
 #endif
 
 
-#if KILL
+#if 0 && KILL
 void relman_decide_incidence( struct rel_relation *rel){
   struct var_variable **list;
   int c;
@@ -160,8 +159,7 @@ void relman_get_incidence(struct rel_relation *rel, var_filter_t *filter
   }
 }
 
-
-#ifdef RELOCATE_GB_NEEDED
+#if 0 && defined(RELOCATE_GB_NEEDED)
 /*
  *********************************************************************
  * Code to deal with glassbox relations processing.
@@ -171,7 +169,6 @@ void relman_get_incidence(struct rel_relation *rel, var_filter_t *filter
 static double dsolve_scratch = 0.0;		/* some workspace */
 #define DSOLVE_TOLERANCE 1.0e-08                /* no longer needed */
 
-static
 real64 *relman_glassbox_dsolve(struct rel_relation *rel
 		, struct var_variable *solvefor
 		, int *able
@@ -252,7 +249,6 @@ real64 *relman_glassbox_dsolve(struct rel_relation *rel
 }
 
 
-#ifdef THIS_IS_AN_UNUSED_FUNCTION
 static
 real64 relman_glassbox_eval(struct rel_relation *rel){
   int n,m,mode,result;
@@ -292,11 +288,7 @@ real64 relman_glassbox_eval(struct rel_relation *rel){
   ascfree((char *)f);
   return value;
 }
-#endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
-
-#define BROKENKIRK 0
-#if BROKENKIRK
 /* fills filter passing gradient elements to matrix */
 /* this needs to be buried on the compiler side. */
 void relman_map_grad2mtx( struct rel_relation *rel, var_filter_t *filter,
@@ -365,12 +357,7 @@ real64 relman_glassbox_diffs( struct rel_relation *rel,
   ascfree((char *)f);
   return value;
 }
-
-#else
-#define relman_glassbox_diffs(rel,filter,mtx) abort()
 #endif
-
-#endif /* RELOCATE_GB_NEEDED */
 
 
 real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){
@@ -451,7 +438,7 @@ real64 relman_scale(struct rel_relation *rel){
 }
 
 
-#if REIMPLEMENT /* compiler */
+#if 0 && defined(REIMPLEMENT) /* compiler */
 real64 relman_diff(struct rel_relation *rel, struct var_variable *var,
                    int safe
 ){
@@ -579,10 +566,10 @@ int relman_diff2_rev(struct rel_relation *rel, const var_filter_t *filter
 
 /* return 0 on success (derivatives, variables and count are output vars too) */
 int relman_hess(struct rel_relation *rel, const var_filter_t *filter
-		,hessian_mtx *hess_matrix,int32 *count,unsigned long max_dimension, int32 safe)
+		,ltmatrix *hess_matrix,int32 *count,unsigned long max_dimension, int32 safe)
 {
 	const struct var_variable **vlist=NULL;
-	hessian_mtx *matrix;
+	ltmatrix *matrix;
 	int32 len,i,j;
 	int status;
 
@@ -599,7 +586,7 @@ int relman_hess(struct rel_relation *rel, const var_filter_t *filter
 
 //	CONSOLE_DEBUG("IN FUNCTION relman_hess");
 
-	matrix = Hessian_Mtx_create(hess_matrix->access_type,len);	// As Hessians may be (rarely) unsymmetrical
+	matrix = ltmatrix_create(hess_matrix->access_type,len);	// As Hessians may be (rarely) unsymmetrical
 																	// type of Hessian matrix should be decided from
 																	// type of relation
 	asc_assert(matrix !=NULL);
@@ -615,7 +602,7 @@ int relman_hess(struct rel_relation *rel, const var_filter_t *filter
 			if(var_apply_filter(vlist[i],filter)){
 				for(j=0;j<=i;j++){
 					if (var_apply_filter(vlist[j],filter)) {
-						Hessian_Mtx_set_element(hess_matrix,i,j,Hessian_Mtx_get_element(matrix,i,j));
+						ltmatrix_set_element(hess_matrix,i,j,ltmatrix_get_element(matrix,i,j));
 						(*count)++;
 					}
 				}
@@ -630,7 +617,7 @@ int relman_hess(struct rel_relation *rel, const var_filter_t *filter
 				if(var_apply_filter(vlist[i],filter)){
 					for(j=0;j<=i;j++){
 						if (var_apply_filter(vlist[j],filter)) {
-							Hessian_Mtx_set_element(hess_matrix,i,j,Hessian_Mtx_get_element(matrix,i,j));
+							ltmatrix_set_element(hess_matrix,i,j,ltmatrix_get_element(matrix,i,j));
 							(*count)++;
 						}
 					}
@@ -639,7 +626,7 @@ int relman_hess(struct rel_relation *rel, const var_filter_t *filter
 		}
 	}
 
-	Hessian_Mtx_destroy(matrix);
+	ltmatrix_destroy(matrix);
 
 	return status;
 }
@@ -749,7 +736,7 @@ int relman_diff_grad(struct rel_relation *rel
   return !status;  /* flip the status flag */
 }
 
-
+#if 0 && THIS_IS_A_DISUSED_FUNCTION
 int32 relman_diff_harwell(struct rel_relation **rlist
 		, var_filter_t *vfilter, rel_filter_t *rfilter
 		, int32 rlen, int32 bias, int32 mORs
@@ -832,6 +819,7 @@ int32 relman_diff_harwell(struct rel_relation **rlist
   }
   return errcnt;
 }
+#endif
 
 int32 relman_jacobian_count(struct rel_relation **rlist, int32 rlen
 		, var_filter_t *vfilter
@@ -862,6 +850,7 @@ int32 relman_jacobian_count(struct rel_relation **rlist, int32 rlen
 }
 
 
+#if 0
 static int AllVariables(struct Instance *i){
 	return TRUE;
 }
@@ -882,7 +871,7 @@ int32 relman_hessian_count(struct rel_relation **rlist, int32 rlen
 
 	return 0;
 }
-
+#endif
 
 int relman_diffs(struct rel_relation *rel
 		, const var_filter_t *filter
@@ -892,7 +881,7 @@ int relman_diffs(struct rel_relation *rel
   real64 *gradient;
   int32 len,c;
   mtx_coord_t coord;
-  int status;
+  int status,map;
 
   assert(rel!=NULL && filter!=NULL && mtx != NULL);
   len = rel_n_incidences(rel);
@@ -902,10 +891,28 @@ int relman_diffs(struct rel_relation *rel
 
   gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
   assert(gradient !=NULL);
-  if( safe ) {
-    status =(int32)RelationCalcResidGradSafe(rel_instance(rel),resid,gradient);
-    safe_error_to_stderr( (enum safe_err *)&status );
-    /* always map when using safe functions */
+
+  map=status=1;
+	if(rel->type == e_rel_token){
+#ifdef DIFF_DEBUG
+		CONSOLE_DEBUG("gradients for bintoken relation");
+#endif
+    status = RelationCalcGradientBinary(
+        GetInstanceRelationOnly(IPTR(rel->instance)),resid,gradient
+    );
+  }
+  if(status){ // either a non-token rel, or else failed bintoken
+    if(safe){
+      status =(int32)RelationCalcResidGradSafe(rel_instance(rel),resid,gradient);
+      safe_error_to_stderr( (enum safe_err *)&status );
+      // always maps
+    }else{
+      status=RelationCalcResidGrad(rel_instance(rel),resid,gradient);
+      if(status)map = 0; // for unsafe eval, only map if no error
+    }
+  }
+  if(map){
+    // successful calculation, map results if safe made
     for (c=0; c < len; c++) {
       if (var_apply_filter(vlist[c],filter)) {
         coord.col = var_sindex(vlist[c]);
@@ -914,24 +921,10 @@ int relman_diffs(struct rel_relation *rel
       }
     }
   }
-  else {
-    if((status=RelationCalcResidGrad(rel_instance(rel),resid,gradient)) == 0) {
-      /* successful */
-      for (c=0; c < len; c++) {
-        if (var_apply_filter(vlist[c],filter)) {
-          coord.col = var_sindex(vlist[c]);
-          assert(coord.col >= 0 && coord.col < mtx_order(mtx));
-          mtx_fill_org_value(mtx,&coord,gradient[c]);
-        }
-      }
-    }
-  }
-  /* flip the status flag */
-  return !status;
+  return status;
 }
 
-
-#if REIMPLEMENT /* this needs to be reimplemented in the compiler */
+#if 0 & REIMPLEMENT /* this needs to be reimplemented in the compiler */
 real64 relman_diffs_orig( struct rel_relation *rel, var_filter_t *filter
 		,mtx_matrix_t mtx
 ){
@@ -1146,17 +1139,20 @@ char *relman_make_vstring_postfix(slv_system_t sys,
 ){
    char  *sbeg;
 
-   if (style) {
+   if(style){
      sbeg = WriteRelationPostfixString(rel_instance(rel),slv_instance(sys));
    }else{
-#if REIMPLEMENT
+#if 0 && REIMPLEMENT
      left = exprman_make_xstring_postfix(rel,sys,rel_lhs(rel));
      right = exprman_make_xstring_postfix(rel,sys,rel_rhs(rel));
 #else
      sbeg = ASC_NEW_ARRAY(char,60);
-     if (sbeg==NULL) return sbeg;
+     if(sbeg==NULL) return sbeg;
      sprintf(sbeg,"relman_make_xstring_postfix not reimplemented.");
 #endif
    }
    return(sbeg);
 }
+
+/* vim: set ts=2 et: */
+

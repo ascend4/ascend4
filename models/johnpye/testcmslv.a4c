@@ -1,3 +1,6 @@
+IMPORT "lrslv";
+IMPORT "conopt";
+IMPORT "cmslv";
 REQUIRE "atoms.a4l";
 
 (*

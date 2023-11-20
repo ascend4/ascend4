@@ -160,14 +160,32 @@ Type::getSimulation(const SymChar &sym
 	}
 
 	error_reporter_tree_end();
-
 	if(has_error){
+
 		stringstream ss;
 		ss << "Error(s) during instantiation of type '" << getName() << "'";
 		throw runtime_error(ss.str());
 	}else{
 		ERROR_REPORTER_HERE(ASC_USER_NOTE,"Instantiated %s",SCP(getInternalType()->name));
 	}
+
+#if 1
+	//CONSOLE_DEBUG("CHECKING INSTANCE...");
+	sim.checkInstance(5);
+	//CONSOLE_DEBUG("...DONE CHECKING INSTANCE");
+#endif
+
+#if 0
+	CONSOLE_DEBUG("CHECKING TOKENS...");
+	sim.checkTokens();
+	CONSOLE_DEBUG("...DONE CHECKING TOKENS");
+#endif
+
+#if 0
+	CONSOLE_DEBUG("CHECKING STATISTICS...");
+	sim.checkStatistics();
+	CONSOLE_DEBUG("...DONE CHECKING STATISTICS");
+#endif
 
 	if(i==NULL){
 		throw runtime_error("Failed to create instance");

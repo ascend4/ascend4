@@ -584,6 +584,7 @@ CONST struct Set *ExprBuiltinSetF(CONST struct Expr *e)
   return e->v.s;
 }
 
+#if 0 /* DISUSED */
 int ExprsEqual(CONST struct Expr *e1, CONST struct Expr *e2)
 {
   if (e1==e2) return 1;
@@ -621,6 +622,7 @@ int ExprsEqual(CONST struct Expr *e1, CONST struct Expr *e2)
   }
   return ((e1==NULL)&&(e2==NULL));
 }
+#endif
 
 int CompareExprs(CONST struct Expr *e1, CONST struct Expr *e2)
 {
@@ -692,9 +694,11 @@ int CompareExprs(CONST struct Expr *e1, CONST struct Expr *e2)
 
     case e_nop:		/* fallthru */
     case e_undefined:		/* fallthru */
-    case e_glassbox:		/* fallthru */
     case e_blackbox:		/* fallthru */
+#if 0
+    case e_glassbox:		/* fallthru */
     case e_opcode:		/* fallthru */
+#endif
     case e_token:		/* fallthru */
     case e_zero:		/* fallthru */
     case e_uminus:		/* fallthru */

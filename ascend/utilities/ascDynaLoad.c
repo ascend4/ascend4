@@ -38,7 +38,14 @@
 #include <ascend/general/ospath.h>
 #include <ascend/general/list.h>
 
-// #define DL_DEBUG
+#include <ascend/utilities/config.h>
+
+//#define DL_DEBUG
+#ifdef DL_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 typedef int (*ExternalLibraryRegister_fptr_t)(void);
 
@@ -102,40 +109,38 @@ void *AscFindDLRecord(CONST char *path)
  * Finds and returns the handle to path, if one matches, and
  * deletes the record from the list.  Returns NULL if not found.
  */
-static
-void *AscDeleteRecord(CONST char *path)
-{
-  struct ascend_dlrecord *nextptr, *lastptr, *old;
-  void *dlreturn = NULL;
+static void *AscDeleteRecord(CONST char *path){
+	struct ascend_dlrecord *nextptr, *lastptr, *old;
+	void *dlreturn = NULL;
 
-  if ((g_ascend_dllist == NULL) || (NULL == path)) return NULL;
+	if ((g_ascend_dllist == NULL) || (NULL == path)) return NULL;
 
-  if (strcmp(path,g_ascend_dllist->path)==0) {
-    /* head case */
-    old = g_ascend_dllist;
-    g_ascend_dllist = old->next;
-    dlreturn = old->dlreturn;
-    ascfree(old->path);
-    ascfree(old);
-  } else {
-    lastptr = g_ascend_dllist;
-    nextptr = lastptr->next;
-    while (nextptr != NULL && strcmp(nextptr->path,path) != 0) {
-      lastptr = nextptr;
-      nextptr = nextptr->next;
-    }
-    /* so either nextptr is NULL and not in list, or nextptr is
-     * what we want to delete and lastptr is the link to it.
-     */
-    if (nextptr != NULL) {
-      old = nextptr;
-      lastptr->next = nextptr->next;
-      dlreturn = old->dlreturn;
-      ascfree(old->path);
-      ascfree(old);
-    }
-  }
-  return dlreturn;
+	if(strcmp(path,g_ascend_dllist->path)==0){
+		/* head case */
+		old = g_ascend_dllist;
+		g_ascend_dllist = old->next;
+		dlreturn = old->dlreturn;
+		ascfree(old->path);
+		ascfree(old);
+	}else{
+		lastptr = g_ascend_dllist;
+		nextptr = lastptr->next;
+		while(nextptr != NULL && strcmp(nextptr->path,path) != 0){
+			lastptr = nextptr;
+			nextptr = nextptr->next;
+		}
+		/* so either nextptr is NULL and not in list, or nextptr is
+		 * what we want to delete and lastptr is the link to it.
+		 */
+		if(nextptr != NULL){
+			old = nextptr;
+			lastptr->next = nextptr->next;
+			dlreturn = old->dlreturn;
+			ascfree(old->path);
+			ascfree(old);
+		}
+	}
+	return dlreturn;
 }
 
 /*
@@ -239,8 +244,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
 #  error "MACH unsupported"
 # endif /* mach */
 
-int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
-{
+int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
   void *xlib;
   ExternalLibraryRegister_fptr_t install = NULL;
 
@@ -255,6 +259,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
    *	If the named library does not exist, if it's not loadable or if
    *	it does not define the named install proc, report an error
    */
+  MSG("dlopen of %s",path);
   xlib = dlopen(path, RTLD_NOW|RTLD_LOCAL);
   if (xlib == NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s",(char *)dlerror());
@@ -381,13 +386,12 @@ int Asc_DynamicUnLoad(CONST char *path)
     ERROR_REPORTER_HERE(ASC_PROG_ERR, "Unable to remember or unload %s", path);
     return -3;
   }
-#ifdef DL_DEBUG
-  CONSOLE_DEBUG("Asc_DynamicUnLoad: forgetting & unloading %s", path);
-#endif
+  MSG("Asc_DynamicUnLoad: forgetting & unloading %s", path);
   /*
    *  dlclose() returns 0 on success, FreeLibrary() returns TRUE.
    *  A uniform convention is preferable, so trap and return 0 on success.
    */
+  MSG("dlclose of %s",path);
   retval = UNLOAD(DLL_CAST dlreturn);
   return (retval == UNLOAD_SUCCESS) ? 0 : retval;
 }
@@ -561,10 +565,10 @@ int test_librarysearch(struct FilePath *path, void *userdata){
 	if(fp==NULL){
 		char *tmp;
 		tmp = ospath_str(path);
-		CONSOLE_DEBUG("Unable to concatenate '%s'...",tmp);
+		MSG("Unable to concatenate '%s'...",tmp);
 		ospath_free_str(tmp);
 		tmp = ospath_str(ls->partialpath);
-		CONSOLE_DEBUG("... and '%s'...",tmp);
+		MSG("... and '%s'...",tmp);
 		ospath_free_str(tmp);
 		return 0;
 	}
@@ -631,7 +635,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, const char *envv){
 	if(0==ospath_stat(fp1,&buf) && NULL!=(f = ospath_fopen(fp1,"r")) ){
 		char *tmp;
 		tmp = ospath_str(fp1);
-		CONSOLE_DEBUG("Library '%s' opened directly, without path search",tmp);
+		MSG("Library '%s' opened directly, without path search",tmp);
 		ospath_free_str(tmp);
 		fp2 = ospath_getabs(fp1);
 		foundpath = ospath_str(fp2);

@@ -16,6 +16,17 @@
 # define ERRMSG(ARGS...) ((void)0)
 #endif
 
+#if 1
+#include "ideal.h"
+#include "incomp.h"
+#endif
+
+
+int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
+	if(!P){ERRMSG("P is NULL"); return 1;}
+	if(!P->setref_fn){ERRMSG("P->setref_fn is NULL"); return 1;}
+	return P->setref_fn(P,ref);
+}
 static ZeroInSubjectFunction refstate_perr_Trho;
 
 typedef struct{
@@ -24,20 +35,33 @@ typedef struct{
 	double p;
 } RefStateTPData;
 
-int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
+int refstate_set_for_phi0(PureFluid *P, const ReferenceState *ref){
+	if(!P){ERRMSG("P is NULL"); return 1;}
+	if(!P->data){ERRMSG("P->data is NULL"); return 1;}
+
+	if(ref == NULL || ref->type == FPROPS_REF_REF0){
+		MSG("Using the default reference state specified for this fluid");
+		ref = &(P->data->ref0);
+	}
+
+	if(P->type == FPROPS_INCOMP){
+		ERRMSG("This function cannot be used for incompressible fluids");
+		return 1;
+	}
+
+
+	if(!P->data->cp0){ERRMSG("P->data->cp0 is NULL"); return 1;}
 	FpropsError res = 0;
 	P->data->cp0->c = 0;
 	P->data->cp0->m = 0;
 	int err;
-	FluidState S1, S2;
+	FluidState2 S1, S2;
 	double T, p, rho, rho_f, rho_g, h1, h2, s1, s2, resid;
 #ifdef REF_DEBUG
 	double u, g2;
 #endif
 
-	if(ref->type == FPROPS_REF_REF0){
-		ref = &(P->data->ref0);
-	}
+	MSG("Reference state type=%d",ref->type);
 
 	switch(ref->type){
 	case FPROPS_REF_PHI0:
@@ -47,13 +71,43 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TPHS0:
+		/* FIXME we seem to have errors here, as tested with fluids/oxygen.c */
 		T = ref->data.tphs.T0;
 		p = ref->data.tphs.p0;
 		h1 = ref->data.tphs.h0;
 		s1 = ref->data.tphs.s0;
-		/* rho at this state = p/R*T by ideal gas equation */
-		P->data->cp0->m = h1/P->data->R/P->data->T_c;
+		MSG("state: p=%f, T=%f",p,T);
+		MSG("R = %f",P->data->R);
+		/* at this state, rho0 = p/R*T -- by ideal gas equation. */
+		double rho0 = p / P->data->R / T;
+
+		P->data->cp0->m = 0;
+		P->data->cp0->c = 0;
+
+
+		h2 = ideal_h((FluidStateUnion){.Trho={T,rho0}},P->data,&res);
+		s2 = ideal_s((FluidStateUnion){.Trho={T,rho0}},P->data,&res);
+		MSG("h2 = %f",h2);
+
+		P->data->cp0->m = -h1 / P->data->R / P->data->T_c;
+
+#if 1
+		P->data->cp0->m = -h1 / P->data->R / P->data->T_c;
 		P->data->cp0->c = -s1/P->data->R - 1. - log(p/(P->data->rhostar*P->data->R*T)) + log(P->data->Tstar/T);
+#else
+		h2 = ideal_h(T,rho0,P->data,&res);
+		if(res)return 9000+res;
+		s2 = ideal_s(T,rho0,P->data,&res);
+		if(res)return 10000+res;
+		P->data->cp0->c = (s2 - s1)/P->data->R;
+		P->data->cp0->m = -(h2 - h1) / P->data->R / P->data->T_c;
+#endif
+		MSG("m = %f",P->data->cp0->m);
+		MSG("c = %f",P->data->cp0->c);
+		if(1){
+			MSG("ideal_h(p0,T0) = %g",ideal_h((FluidStateUnion){.Trho={T,rho0}},P->data,&res));
+			MSG("ideal_s(p0,T0) = %g",ideal_s((FluidStateUnion){.Trho={T,rho0}},P->data,&res));
+		}
 		MSG("Set TPHS0 reference state.");
 		return 0;
 
@@ -100,6 +154,10 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_NBP:
+		if(P->type == FPROPS_IDEAL){
+			ERRMSG("Not implemented: FPROPS_REF_NBP with this fluid type");
+			return 1;
+		}
 		/* normal boiling point, need to solve for the temperature first! */
 		p = 101.325e3;
 		if(p > P->data->p_c){
@@ -127,6 +185,10 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TRHS:
+		if(P->type == FPROPS_IDEAL){
+			ERRMSG("Not implemented: FPROPS_REF_TRHS with this fluid type");
+			return 1;
+		}
 		T = ref->data.trhs.T0;
 		rho = ref->data.trhs.rho0;
 		S1 = fprops_set_Trho(T,rho,P,&res);
@@ -191,6 +253,26 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		/* need to solve for T,p first... */
 		T = ref->data.tphs.T0;
 		p = ref->data.tphs.p0;
+		h2 = ref->data.tphs.h0;
+		s2 = ref->data.tphs.s0;
+
+		switch(P->type){
+#if 0
+		case FPROPS_INCOMP:
+			S1 = fprops_set_Tp(T,p,P,&res);
+			h1 = fprops_h(S1,&res);
+			if(res){ERRMSG("Unable to calculate h(T0,p0)");return 1800+res;}
+			s1 = fprops_s(S1,&res);
+			if(res){ERRMSG("Unable to calculate s(T0,p0)");return 1900+res;}
+
+			P->data->cp0->c = -(s2 - s1)/P->data->R;
+			P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
+
+			S2 = fprops_set_Tp(T,p,P,&res);
+			break;
+#endif
+		case FPROPS_PENGROB:
+		case FPROPS_HELMHOLTZ:
 		{
 			/* let's try zeroin... */
 			RefStateTPData D = {P, T, p};
@@ -210,13 +292,12 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		s1 = fprops_s(S1,&res);
 		if(res)return 3000+res;
 
-		h2 = ref->data.tphs.h0;
-		s2 = ref->data.tphs.s0;
-
-		P->data->cp0->c = -(s2 - s1)/P->data->R;
-		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
-
 		S2 = fprops_set_Trho(T,rho,P,&res);
+			break;
+		default:
+			ERRMSG("Not implemented: FPROPS_REF_TPHS with this fluid type.");
+			return 1;
+		}
 		h2 = fprops_h(S2,&res);
 		s2 = fprops_s(S2,&res);
 		p = fprops_p(S2,&res);
@@ -229,6 +310,10 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TPF:
+		if(P->type == FPROPS_IDEAL){
+			ERRMSG("Not implemented: FPROPS_REF_TPF is not permitted with this fluid type.");
+			return 1;
+		}
 		T = P->data->T_t;
 		fprops_triple_point(&p,&rho_f,&rho_g,P, &res);
 		if(res)return 1000+res;
@@ -246,6 +331,10 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		return 0;
 
 	case FPROPS_REF_TPFU:
+		if(P->type == FPROPS_IDEAL){
+			ERRMSG("Not implemented: FPROPS_REF_TPFU with this fluid type.");
+			return 1;
+		}
 		T = P->data->T_t;
 		fprops_triple_point(&p,&rho_f,&rho_g,P, &res);
 		if(res)return 1000+res;
@@ -308,20 +397,23 @@ int fprops_set_reference_state(PureFluid *P, const ReferenceState *ref){
 		P->data->cp0->c = -(s2 - s1)/P->data->R;
 		P->data->cp0->m = (h2 - h1)/P->data->R/P->data->T_c;
 
+#ifdef REF_DEBUG
 		S2 = fprops_set_Trho(T,rho,P,&res);
 		h2 = fprops_h(S2,&res);
-#ifdef REFSTATE_DEBUG
 		g2 = fprops_g(S2,&res);
-#endif
 		p = fprops_p(S2,&res);
 		if(res)return 4000+res;
 
 		MSG("Resulting reference values: h = %f, g = %f, p = %f kPa",h2,g2,p);
 		MSG("...at T = %f K , rho = %f kg/m3",T, rho);
+#endif
 
 		MSG("Set TPHG reference state.");
 		return 0;
 
+	case FPROPS_REF_UNDEFINED:
+		ERRMSG("Not implemented: FPROPS_REF_UNDEFINED with this fluid type.");
+		return 1;
 	default:
 		fprintf(stderr,"%s: Unhandled case (type %d)\n",__func__,ref->type);
 		return -1;
@@ -338,4 +430,51 @@ double refstate_perr_Trho(double rho, void *user_data){
 #undef D
 }
 
+/*--------------------------------------------------------------------------------------*/
 
+int refstate_set_for_incomp(PureFluid *P, const ReferenceState *ref){
+	if(!P){ERRMSG("P is NULL"); return 1;}
+	if(!P->data){ERRMSG("P->data is NULL"); return 1;}
+
+	if(ref == NULL || ref->type == FPROPS_REF_REF0){
+		MSG("Using the default reference state specified for this fluid (type %d)",P->data->ref0.type);
+		ref = &(P->data->ref0);
+	}
+
+	if(P->type != FPROPS_INCOMP){
+		ERRMSG("This function is only for compressible fluids");
+		return 1;
+	}
+
+	if(!P->data->corr.incomp->cp0){ERRMSG("cp0 data is NULL"); return 1;}
+	FpropsError err = 0;
+	P->data->corr.incomp->const_h = 0;
+	P->data->corr.incomp->const_s = 0;
+
+	double h, s, h0, s0, T0, p0;
+
+	switch(ref->type){
+	case FPROPS_REF_TPHS:
+		T0 = ref->data.tphs.T0;
+		p0 = ref->data.tphs.p0;
+		FluidStateUnion S0 = {.Tp={T0,p0}};
+		h = incomp_h(S0, P->data, &err);
+		s = incomp_s(S0, P->data, &err);
+		MSG("h(S0) = %f", h);
+		MSG("s(S0) = %f", s);
+		P->data->corr.incomp->const_s = ref->data.tphs.s0 - s;
+		P->data->corr.incomp->const_h = ref->data.tphs.h0 - h;
+		h0 = incomp_h(S0, P->data, &err);
+			s0 = incomp_s(S0, P->data, &err);
+		MSG("h0(S0) = %f", h0);
+		MSG("s0(S0) = %f", s0);
+		if(fabs(h0 - ref->data.tphs.h0) > 1e-9){ERRMSG("Failed to set h0"); return 1;}
+		if(fabs(s0 - ref->data.tphs.s0) > 1e-9){ERRMSG("Failed to set s0"); return 1;}
+		if(err){ERRMSG("Failed to calculate h or s for incompressible reference state"); return 1;}
+		MSG("Success; h_const = %f", P->data->corr.incomp->const_h);
+		return 0;
+	default:
+		ERRMSG("Not implemented");
+		return 1;
+	}
+}

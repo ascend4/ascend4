@@ -83,9 +83,11 @@ void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
     case e_token:
       ModifyTokenRelationPointers(rel,RELN_INST(rel)->ptr,old,new);
       return;
+#if 0
     case e_glassbox:
       ModifyGlassBoxRelPointers(rel,RELN_INST(rel)->ptr,old,new);
       return;
+#endif
     case e_blackbox:
       ModifyBlackBoxRelPointers(rel,RELN_INST(rel)->ptr,old,new);
       return;

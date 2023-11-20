@@ -86,7 +86,9 @@ static symchar *g_symbols[14];
 #define G__REL_NAME 	g_symbols[10]
 #define G__LOGREL_NAME 	g_symbols[11]
 #define G__UNSELECTED 	g_symbols[12]
-#define G__EXT_NAME 	g_symbols[13]
+#if 0
+# define G__EXT_NAME 	g_symbols[13]
+#endif
 
 struct LibraryStructure {
   struct LibraryStructure *next;
@@ -116,7 +118,9 @@ void InitializeLibrary(void)
   G__LOGREL_NAME 	= GetBaseTypeName(logrel_type);
   G__UNSELECTED	= GetBaseTypeName(dummy_type);
   /* odd cases */
+#if 0
   G__EXT_NAME 	= GetBaseTypeName(model_type & patch_type);
+#endif
 }
 
 struct TypeDescription *FindRelationType(void){
@@ -178,6 +182,7 @@ struct TypeDescription *FindExternalType(void){
   return g_externalmodel_type;
 }
 
+
 struct TypeDescription *FindType(symchar *name){
   struct LibraryStructure *ptr;
 
@@ -215,7 +220,9 @@ void DestroyLibrary(void){
     }
   }
   DestroyTypedefRecycle();
+#if 0
   g_externalmodel_type = NULL;
+#endif
   g_relation_type = NULL;
   g_logrel_type = NULL;
   g_dummy_type = NULL;
@@ -351,11 +358,13 @@ int AddType(struct TypeDescription *desc){
       /* and we will assume this pointer will replace any current set def */
       /* in the one case where it does not replace, we will have to reset it */
     }
+#if 0
     if (GetName(desc) == G__EXT_NAME) {
       g_externalmodel_type = desc;
       /* and we will assume this pointer will replace any current extdef */
       /* in the one case where it does not replace, we will have to reset it */
     }
+#endif
   }
   bucket = LIBHASHINDEX(SCP(GetName(desc)));
   ptr = LibraryHashTable[bucket];
@@ -394,9 +403,11 @@ int AddType(struct TypeDescription *desc){
               if (GetName(desc) == G__SET_NAME) {
                 g_set_type = ptr->type;
               }
+#if 0
               if (GetName(desc) == G__EXT_NAME) {
                 g_externalmodel_type = ptr->type;
               }
+#endif
             }
 	    /* keep the old copy. */
 	    DeleteNewTypeDesc(desc);

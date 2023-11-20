@@ -22,9 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 int fprops_region_ph(double p, double h, const PureFluid *fluid, FpropsError *err);
 
-void fprops_solve_ph(double p, double h, double *T, double *rho, int use_guess
-	, const PureFluid *fluid, FpropsError *err
-);
+/**
+	Function to solve fluid state for given (p,h). Check the performance of this function
+	for your fluid of interest using the script python/solve_ph_array.py.
+	NOTE: a previous version of this function had a 'use_guess' flag, which had not
+	been fully implemented.
+*/
+FluidState2 fprops_solve_ph(double p, double h, const PureFluid *fluid, FpropsError *err);
 
 #if 0
 /* functions for reporting steps back to python */

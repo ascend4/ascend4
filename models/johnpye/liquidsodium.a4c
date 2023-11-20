@@ -23,7 +23,7 @@ s_ref = s.subs(T,273.15)
 MODEL liquidsodium_fluid REFINES thermophysical_fluid_base;
 	(* as given by Fink and Liebowitz *)
 	T_c IS_A temperature_constant;
-	T_c :== 2305.7{K};			
+	T_c :== 2503.7{K};			
 	rho_c IS_A mass_density_constant;
 
 	rho_c :== 219.{kg/m^3};

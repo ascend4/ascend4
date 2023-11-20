@@ -93,7 +93,7 @@ static struct {
 
 static
 int CheckInstanceType(FILE *f, CONST struct Instance *i,
-		      CONST struct Instance *parent)
+                      CONST struct Instance *parent)
 {
   switch(InstanceKind(i)) {
   case MODEL_INST:
@@ -122,7 +122,7 @@ int CheckInstanceType(FILE *f, CONST struct Instance *i,
   case DUMMY_INST:
     return 0;
   default:
-	ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Instance is not of a valid type in CheckInstanceType");
+        ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Instance is not of a valid type in CheckInstanceType");
     FPRINTF(f,"A child of ");
     WriteInstanceName(f,parent,NULL);
     FPRINTF(f," is an incorrect data type. Please report this bug!");
@@ -156,27 +156,27 @@ void CheckUnassignedConstants(FILE *f, CONST struct Instance *i)
     if (child != NULL){
       switch(InstanceKind(child)){
       case REAL_CONSTANT_INST:
-	if (IsWild(RealAtomDims(child)) || !AtomAssigned(child)) {
+        if (IsWild(RealAtomDims(child)) || !AtomAssigned(child)) {
           AppendUnique(g_cons.rlist,child);
         }
-	break;
+        break;
       case INTEGER_CONSTANT_INST:
-	if (!AtomAssigned(child)) {
+        if (!AtomAssigned(child)) {
           AppendUnique(g_cons.ilist,child);
         }
         break;
       case BOOLEAN_CONSTANT_INST:
-	if (!AtomAssigned(child)) {
+        if (!AtomAssigned(child)) {
           AppendUnique(g_cons.blist,child);
         }
         break;
       case SYMBOL_CONSTANT_INST:
-	if (!AtomAssigned(child)) {
+        if (!AtomAssigned(child)) {
           AppendUnique(g_cons.slist,child);
         }
         break;
       default:
-	break;
+        break;
       }
     }
   }
@@ -195,15 +195,15 @@ void CheckIncompleteArray(FILE *f, CONST struct Instance *i)
       switch(InstanceKind(child)){
       case ARRAY_INT_INST:
       case ARRAY_ENUM_INST:
-	desc = InstanceTypeDesc(child);
-	if ((!GetArrayBaseIsRelation(desc)) &&
-	    (!RectangleArrayExpanded(child)) &&
+        desc = InstanceTypeDesc(child);
+        if ((!GetArrayBaseIsRelation(desc)) &&
+            (!RectangleArrayExpanded(child)) &&
             (!GetArrayBaseIsLogRel(desc)) ) {
-	  WriteInstanceName(f,child,NULL);
+          WriteInstanceName(f,child,NULL);
           FPRINTF(f,"[UNDEFINED]\n");
         }
       default:
-	break;
+        break;
       }
     }
   }
@@ -221,7 +221,7 @@ void CheckCompleteness(FILE *f, CONST struct Instance *i,int pass)
   if (pass) {
     blist = InstanceBitList(i);
     if (blist!=NULL && !BitListEmpty(blist)){
-	  ERROR_REPORTER_START_NOLINE(ASC_PROG_WARNING);
+          ERROR_REPORTER_START_NOLINE(ASC_PROG_WARNING);
       WriteInstanceName(f,i,NULL);
       FPRINTF(f," has the following unexecuted statements.\n");
       desc = InstanceTypeDesc(i);
@@ -235,11 +235,11 @@ void CheckCompleteness(FILE *f, CONST struct Instance *i,int pass)
           WSEMSPARSE(f,stat,"Unable to execute",g_suppressions);
         }
       }
-	  error_reporter_end_flush();
+          error_reporter_end_flush();
     }
   }
   if (IncompleteArray(i)) {
-	ERROR_REPORTER_START_NOLINE(ASC_PROG_WARNING);
+        ERROR_REPORTER_START_NOLINE(ASC_PROG_WARNING);
     WriteInstanceName(f,i,NULL);
     FPRINTF(f," has the following incomplete arrays.\n");
     error_reporter_end_flush();
@@ -271,7 +271,9 @@ int SuppressNullInstance(CONST struct TypeDescription *d)
   case dummy_type:
   case model_type:
     return (SUP(ISA) || SUP(ALIASES));
+#if 0
   case patch_type:
+#endif
   case array_type:
     return 0;
   }
@@ -280,7 +282,7 @@ int SuppressNullInstance(CONST struct TypeDescription *d)
 
 static
 void RecursiveCheckInstance(FILE *f, CONST struct Instance *i,
-			    CONST struct Instance *parent,CONST int pass)
+                            CONST struct Instance *parent,CONST int pass)
 {
   CONST struct Instance *ptr;
   struct TypeDescription *desc;
@@ -348,7 +350,7 @@ void RecursiveCheckInstance(FILE *f, CONST struct Instance *i,
       RecursiveCheckInstance(f,ptr,i,pass);
     } else {
       if(!SuppressNullInstance(ChildRefines(i,c))) {
-		ERROR_REPORTER_START_NOLINE(ASC_USER_WARNING);
+                ERROR_REPORTER_START_NOLINE(ASC_USER_WARNING);
         FPRINTF(f,"Instance '");
         WriteInstanceName(f,i,NULL);
         FPRINTF(f,"' is missing part '");
@@ -367,7 +369,7 @@ void RecursiveCheckInstance(FILE *f, CONST struct Instance *i,
           FPRINTF(f,"<BAD NAME>");
           break;
         }
-		error_reporter_end_flush();
+                error_reporter_end_flush();
       }
     }
   }
@@ -396,7 +398,7 @@ static FILE *g_diagf;
 /**< global pointer so gliterate will have a file to print to in WriteConsLists */
 
 static void Diagnose(struct Instance *i){
-	if(InstanceKind(i)== REAL_CONSTANT_INST){
+        if(InstanceKind(i)== REAL_CONSTANT_INST){
 		if(IsWild(RealAtomDims(i))) {
 		  FPRINTF(g_diagf,"Undimensioned ");
 		}
@@ -469,21 +471,21 @@ Global for counting number of each type present in the instance
 tree.
 \*********************************************************************/
 static struct gl_list_t *g_type_count_list=NULL;
-				/* a list of struct TypeCount */
+                                /* a list of struct TypeCount */
 
 /*********************************************************************\
 Globals for counting instances
 \*********************************************************************/
 static unsigned long g_num_complex_instances=0;
-	/* number of models and  atoms(excluding children of atoms) */
+        /* number of models and  atoms(excluding children of atoms) */
 static unsigned long g_num_model_instances=0;
-	/* number of models */
+        /* number of models */
 static unsigned long g_model_bytes=0;
-	/* number of model bytes */
+        /* number of model bytes */
 static unsigned long g_num_atom_instances=0;
-	/* number of atoms (nonfundamental) */
+        /* number of atoms (nonfundamental) */
 static unsigned long g_atom_bytes=0;
-	/* number of atom bytes */
+        /* number of atom bytes */
 static unsigned long g_tree_bytes=0;
 /* number of nonshared instance tree bytes,
    (ignore struct relation*, set_t*, dim_type *, char *)*/
@@ -492,31 +494,31 @@ static unsigned long g_num_constant_bool=0;
 static unsigned long g_num_constant_int=0;
 static unsigned long g_num_constant_sym=0;
 static unsigned long g_num_constant_all=0;
-				/* number of constants of various types */
+                                /* number of constants of various types */
 static unsigned long g_num_atom_children=0;
-				/* number of children of atoms or relations */
+                                /* number of children of atoms or relations */
 static unsigned long g_num_relation_instances=0;
-				/* number of relations */
+                                /* number of relations */
 static struct gl_list_t *g_relation_guts = NULL;
-				/* list of token relation guts */
+                                /* list of token relation guts */
 static unsigned long g_num_array_instances=0;
-				/* number of array instances */
+                                /* number of array instances */
 static unsigned long g_num_unsel_instances=0;
-				/* number of unselected instances */
+                                /* number of unselected instances */
 /*********************************************************************\
 The total number of instances should be equal to:
-	g_num_complex_instances + g_num_atom_children +
-	g_num_relation_instances + g_num_array_instances +
-	g_num_constant_all
+        g_num_complex_instances + g_num_atom_children +
+        g_num_relation_instances + g_num_array_instances +
+        g_num_constant_all
 \*********************************************************************/
 
 /*********************************************************************\
 Globals for counting number of parents
-	All of the following are counted for models, atoms(excluding
-	children of atoms), and arrays.  Relations and children of atoms
-	aren't counted because they can realistically only have one
-	parent.
-	Parents of constants aren't counted yet. need more vars.
+        All of the following are counted for models, atoms(excluding
+        children of atoms), and arrays.  Relations and children of atoms
+        aren't counted because they can realistically only have one
+        parent.
+        Parents of constants aren't counted yet. need more vars.
 \*********************************************************************/
 static unsigned g_minimum_parents=0;
 static unsigned g_maximum_parents=0;
@@ -527,9 +529,9 @@ static unsigned g_total_parents=0;
 
 /*********************************************************************\
 Globals for counting numbers of children
-	The following are counted for models, atoms(excluding children
-	of atoms), arrays, and relations.  These globals are used to
-	report the minimum, maximum, and average number of children.
+        The following are counted for models, atoms(excluding children
+        of atoms), arrays, and relations.  These globals are used to
+        report the minimum, maximum, and average number of children.
 \*********************************************************************/
 static unsigned g_minimum_children=0;
 static unsigned g_maximum_children=0;
@@ -575,11 +577,11 @@ long g_token_counts[NUM_EXPR_ENUMS];
 /* this sorts by inst_t with a secondary alpha sort */
 static
 int CompareTypeCounts(CONST struct TypeCount *one,
-		      CONST struct TypeCount *two)
+                      CONST struct TypeCount *two)
 {
   if (one == two) return 0;
-  if (!one) return 1;		/* NULLs float to top */
-  if (!two) return -1;		/* NULLs float to top */
+  if (!one) return 1;                /* NULLs float to top */
+  if (!two) return -1;                /* NULLs float to top */
 
   if (one->basetype==two->basetype) {
     return strcmp(one->name,two->name);
@@ -656,7 +658,7 @@ static void IncrementTypeCount(CONST struct Instance *i)
     /* increment the current count by one */
     ptr = (struct TypeCount *)gl_fetch(g_type_count_list,tindex);
     ptr->count++;
-  } else{				/* add a new type count to the list */
+  } else{                                /* add a new type count to the list */
     ptr = ASC_NEW(struct TypeCount);
     ptr->name = rec.name;
     ptr->count = 1;
@@ -666,7 +668,7 @@ static void IncrementTypeCount(CONST struct Instance *i)
 }
 
 static int InClique(CONST struct Instance *test,
-		    CONST struct Instance *clique)
+                    CONST struct Instance *clique)
 /* return true iff test is in clique */
 {
   CONST struct Instance *ptr;
@@ -953,7 +955,7 @@ void InstanceTokenStatistics(FILE *f, CONST struct Instance *i)
   for (j=0; j < NUM_EXPR_ENUMS; j++) g_token_counts[j] = 0;
   g_num_relation_instances = g_relation_terms = g_total_reals_in_rels = 0;
   SilentVisitInstanceTree((struct Instance *)i,
-		    (void (*)(struct Instance *))AccTokenStatistics,1,0);
+                    (void (*)(struct Instance *))AccTokenStatistics,1,0);
   FPRINTF(f,"Token relation statistics\n===================\n");
   FPRINTF(f,"Total number of relation instances:    %lu\n",
     g_num_relation_instances);
@@ -961,7 +963,7 @@ void InstanceTokenStatistics(FILE *f, CONST struct Instance *i)
     gl_length(g_relation_guts));
   FPRINTF(f,"Total number of relation terms:    %lu\n", g_relation_terms);
   FPRINTF(f,"Total number of reals in relation: %lu\n",
-	  g_total_reals_in_rels);
+          g_total_reals_in_rels);
   FPRINTF(f,"Number\t\tType of term:\n");
   g_relation_terms = 0;
   for (j=0; j < NUM_EXPR_ENUMS; j++) {
@@ -989,34 +991,34 @@ void InstanceStatistics(FILE *f, CONST struct Instance *i)
   g_num_complex_instances = g_num_atom_children =
     g_num_relation_instances = g_num_array_instances =
       g_num_unsel_instances = g_maximum_parents = g_total_parents =
-	g_maximum_children = g_total_children = g_total_variables =
-	  g_maximum_relations = g_total_relations = g_total_array_children =
-	    g_relation_terms = g_total_reals_in_rels =
-	      g_num_constant_sym = g_num_constant_real =
-	        g_num_constant_bool = g_num_constant_int =
-		 g_num_constant_all = g_num_model_instances =
-		   g_num_atom_instances = g_model_bytes = g_atom_bytes =
-		     g_tree_bytes = g_extra_parents = g_extra_parents_sum =
+        g_maximum_children = g_total_children = g_total_variables =
+          g_maximum_relations = g_total_relations = g_total_array_children =
+            g_relation_terms = g_total_reals_in_rels =
+              g_num_constant_sym = g_num_constant_real =
+                g_num_constant_bool = g_num_constant_int =
+                 g_num_constant_all = g_num_model_instances =
+                   g_num_atom_instances = g_model_bytes = g_atom_bytes =
+                     g_tree_bytes = g_extra_parents = g_extra_parents_sum =
                        g_extra_paths =
-	      0;
+              0;
   g_minimum_parents = g_minimum_children = g_minimum_relations = UINT_MAX;
 
   VisitInstanceTree((struct Instance *)i,
-		    (void (*)(struct Instance *))AccStatistics,1,1);
+                    (void (*)(struct Instance *))AccStatistics,1,1);
   SilentVisitInstanceTree((struct Instance *)i,
                           (void (*)(struct Instance *))AccBytes,0,0);
 
   FPRINTF(f,"General Instance Tree Numbers\n=============================\n");
   FPRINTF(f,"Number of models and complex atoms: %lu\n",
-	  g_num_complex_instances);
+          g_num_complex_instances);
   FPRINTF(f,"Number of models: %lu (%lu bytes)\n",
-	  g_num_model_instances,g_model_bytes);
+          g_num_model_instances,g_model_bytes);
   FPRINTF(f,"Number of atoms: %lu (%lu bytes)\n",
-	  g_num_atom_instances,g_atom_bytes);
+          g_num_atom_instances,g_atom_bytes);
   FPRINTF(f,"Number of atom children instances: %lu\n",
-	  g_num_atom_children);
+          g_num_atom_children);
   FPRINTF(f,"Number of constant instances: %lu\n",
-	  g_num_constant_all);
+          g_num_constant_all);
   if (FindRelationType() !=NULL) {
     length = GetByteSize(FindRelationType());
   } else {
@@ -1029,9 +1031,9 @@ void InstanceStatistics(FILE *f, CONST struct Instance *i)
   FPRINTF(f,"Number of unselected instances: %lu\n",
     g_num_unsel_instances);
   FPRINTF(f,"TOTAL INSTANCES: %lu\n",
-	  g_num_complex_instances + g_num_atom_children +
-	  g_num_relation_instances + g_num_relation_instances +
-	  g_num_array_instances + g_num_constant_all);
+          g_num_complex_instances + g_num_atom_children +
+          g_num_relation_instances + g_num_relation_instances +
+          g_num_array_instances + g_num_constant_all);
   FPRINTF(f,"TOTAL BYTES (neglecting shared internals): %lu\n", g_tree_bytes);
 
   FPRINTF(f,"Instance number by type\n=======================\n");
@@ -1048,8 +1050,8 @@ void InstanceStatistics(FILE *f, CONST struct Instance *i)
   FPRINTF(f,"Minimum number of parents: %u\n",g_minimum_parents);
   FPRINTF(f,"Maximum number of parents: %u\n",g_maximum_parents);
   FPRINTF(f,"Average number of parents: %g\n",
-	  (double)g_total_parents/
-	  (double)NONZERO(g_num_complex_instances + g_num_array_instances));
+          (double)g_total_parents/
+          (double)NONZERO(g_num_complex_instances + g_num_array_instances));
   FPRINTF(f,"Instances with nP > 1: %u\n",g_extra_parents);
   FPRINTF(f,"Total extra parents: %u\n",g_extra_parents_sum);
 #if EXTRAPATHS
@@ -1060,9 +1062,9 @@ void InstanceStatistics(FILE *f, CONST struct Instance *i)
   FPRINTF(f,"Minimum number of children: %u\n",g_minimum_children);
   FPRINTF(f,"Maximum number of children: %u\n",g_maximum_children);
   FPRINTF(f,"Average number of children: %g\n",
-	  (double)g_total_children/
-	  (double)NONZERO(g_num_complex_instances + g_num_array_instances +
-			  g_num_relation_instances));
+          (double)g_total_children/
+          (double)NONZERO(g_num_complex_instances + g_num_array_instances +
+                          g_num_relation_instances));
 
   FPRINTF(f,"Clique statistics\n=================\n");
   FPRINTF(f,"Number of cliques: %lu\n",gl_length(g_clique_list));
@@ -1073,11 +1075,11 @@ void InstanceStatistics(FILE *f, CONST struct Instance *i)
   FPRINTF(f,"Variable statistics\n===================\n");
   FPRINTF(f,"Number of complex reals: %u\n",g_total_variables);
   FPRINTF(f,"Minimum number of relations per real: %u\n",
-	  g_minimum_relations);
+          g_minimum_relations);
   FPRINTF(f,"Maximum number of relations per real: %u\n",
-	  g_maximum_relations);
+          g_maximum_relations);
   FPRINTF(f,"Average number of relations per real: %g\n",
-	  (double)g_total_relations/(double)NONZERO(g_total_variables));
+          (double)g_total_relations/(double)NONZERO(g_total_variables));
 
   FPRINTF(f,"Constant statistics\n===================\n");
   FPRINTF(f,"Number of constant reals:\t %lu\n",g_num_constant_real);
@@ -1088,12 +1090,12 @@ void InstanceStatistics(FILE *f, CONST struct Instance *i)
   FPRINTF(f,"Relation statistics\n===================\n");
   FPRINTF(f,"Total number of relation terms:    %lu\n", g_relation_terms);
   FPRINTF(f,"Total number of reals in relation: %lu\n",
-	  g_total_reals_in_rels);
+          g_total_reals_in_rels);
 
   FPRINTF(f,"Array statistics\n================\n");
   FPRINTF(f,"Average children per array node: %g\n",
-	  (double)g_total_array_children /
-	  (double)NONZERO(g_num_array_instances));
+          (double)g_total_array_children /
+          (double)NONZERO(g_num_array_instances));
 
   gl_destroy(g_clique_list);
   gl_free_and_destroy(g_type_count_list);

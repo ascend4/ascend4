@@ -40,12 +40,8 @@
 	mapping undefined_instance <--> undefined_value which is just plain wrong
 	in most cases.
 */
-enum find_errors {
-  unmade_instance,      /**< Found an unmade instance (NULL child). */
-  undefined_instance,   /**< Instance in an expression is unknown child. */
-  impossible_instance,  /**< Name cannot possibily exist(real error),often sets. */
-  correct_instance      /**< Return value when everything went okay. */
-};
+struct rel_errorlist_struct;
+typedef struct rel_errorlist_struct rel_errorlist;
 
 /* mmm, nasty global variables... */
 
@@ -190,8 +186,8 @@ extern struct value_t InstanceEvaluateSatisfiedName(
 */
 
 extern struct gl_list_t *FindInstances(
-		CONST struct Instance *i,
-		CONST struct Name *n, enum find_errors *err
+	CONST struct Instance *i,
+	CONST struct Name *n, rel_errorlist *err
 );
 /**<
 	Return the list of instances specified by n.  If this returns NULL,
@@ -200,9 +196,8 @@ extern struct gl_list_t *FindInstances(
 
 
 extern struct gl_list_t *FindInstancesFromNames(
-		CONST struct Instance *i,
-        CONST struct gl_list_t *names,
-        enum find_errors *err, unsigned long *errpos
+	CONST struct Instance *i, CONST struct gl_list_t *names,
+	rel_errorlist *err
 );
 /**<
 	Return the list of instances specified by names.  If this returns NULL,

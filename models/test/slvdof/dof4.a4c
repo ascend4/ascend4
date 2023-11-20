@@ -1,0 +1,14 @@
+REQUIRE "system.a4l";
+
+(* overspecified: four equations, only 3 free variables *)
+MODEL dof4;
+	w,x,y,z IS_A solver_var;
+	eq_1: x + y = 0;
+	eq_2: y + z = 0;
+	eq_3: z + w = 0;
+	eq_4: x + 2*w = 0;
+METHODS
+METHOD on_load;
+	FIX x;
+END on_load;
+END dof4;

@@ -2,7 +2,10 @@
 " Language: ASCEND Language files (.a4l/.a4c)
 " Maintainer: Edgar Simo <bobbens@gmail.com>
 " Last Change: 30 Mar 2010 by Wojciech Mandziuk <wojciech.mandziuk@gmail.com>
+" Last Change: 22 Nov 2017 by John Pye <john.pye@anu.edu.au>
 " Remark: Syntax highlighting for the ASCEND Language.
+"
+" See 'README.txt' file in the same folder as this for installation details.
 "
 " How to use this:
 " * Put ascend.vim (this file) under ~/.vim/syntax (or similar directory for
@@ -17,10 +20,9 @@ if exists("b:current_syntax")
    finish
 endif
 
-
 " Regex matching
 syn case match
-syn region a4lComment start="(\*" end="\*)"
+syn region a4lComment start="(\*" end="\*)" contains=a4lComment
 syn region a4lString start="\"" end="\""
 syn region a4lUnits start="{" end="}"
 syn match a4lChar "'.'"

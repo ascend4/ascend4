@@ -790,7 +790,9 @@ static int WritePower(FILE *f, Term *term,
 
   count = nchars;
   switch(format->main_format) {
+#if 0
   case CG_ascend:
+#endif
   case CG_linear:
     if (parens = NeedParen(t,RelationTermType(left),0)) {
       PUTC('(',f);
@@ -855,10 +857,12 @@ static int WriteName(FILE *f, Term *term,
   int count = 0;
 
   switch(format->names) {
+#if 0
   case CG_ascend:
     cur_var = RelationVariable(r,TermVarNumber(term));
     WriteInstanceName(f,cur_var,NULL);
     return 20;		/* need to hack this to get the correct count */
+#endif
   case CG_gams:
   case CG_math:
     /*
@@ -931,7 +935,9 @@ void CodeGen_BreakLines(FILE *f, struct CGFormat *format)
   case CG_math:
     FPRINTF(f," \\\n  ");
     return;
+#if 0
   case CG_ascend:
+#endif
   case CG_linear:
   case CG_gams:
   default:
@@ -1079,7 +1085,9 @@ int CodeGen_WriteBuiltInFuncs(FILE *f, Term *term,
     count = CodeGen_WriteSide(f,TermFuncLeft(term),r,format,count) + 1;
     PUTC(')',f);
     break;
+#if 0
   case CG_ascend:
+#endif
   case CG_c:
   case CG_linear:
   default:

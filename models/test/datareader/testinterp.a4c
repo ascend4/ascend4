@@ -1,0 +1,94 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+IMPORT "johnpye/datareader/datareader";
+
+MODEL datareader_config;
+	filename IS_A symbol_constant;
+	format IS_A symbol_constant;
+	parameters IS_A symbol_constant;
+END datareader_config;
+
+MODEL base;
+END base;
+
+(*
+	FIXME this approach allows us to lookup multiple data points from a
+	single CSV file, however there is a separate data structure in memory
+	for each loaded file. TODO Need to find ways to re-use loaded data 
+	tables shared between different datareader extrel instances.
+*)
+MODEL csvlookup(
+	t WILL_BE solver_var;
+) REFINES base;
+	cub,lin,def IS_A solver_var;
+
+	conf IS_A datareader_config;
+	conf.format :== 'CSV';
+	conf.parameters :== '1:cubic,2:linear,3';
+	conf.filename :== 'test/datareader/myfile2.csv';
+
+	dr: datareader(
+		t : INPUT;
+		cub,lin,def :OUTPUT;
+		conf : DATA
+	);
+END csvlookup;
+
+MODEL testinterp;
+	n IS_A integer_constant;
+	n :== 13;
+	t[0..n-1] IS_A solver_var;
+	props[0..n-1] IS_A base;
+	FOR i IN [0..n-1] CREATE
+		props[i] IS_REFINED_TO csvlookup(t[i]);
+	END FOR;
+METHODS
+METHOD on_load;
+	FIX t[0..n-1];
+	t[0] := 0;
+	t[1] := 0.5;
+	t[2] := 1;
+	t[3] := 1.5;
+	t[4] := 2;
+	t[5] := 2.5;
+	t[6] := 3;
+	t[7] := 0.25;
+	t[8] := 0.001;
+	t[9] := 0.0001;
+	t[10]:= 2.9;
+	t[11]:= 2.999;
+	t[12]:= 1.1;
+END on_load;
+METHOD self_test;
+	(* check linear interpolation against expected values *)
+	ASSERT abs(props[0].lin - 1) < 1e-9;
+	ASSERT abs(props[1].lin - 1.5) < 1e-9;
+	ASSERT abs(props[2].lin - 2) < 1e-9;
+	ASSERT abs(props[3].lin - 2) < 1e-9;
+	ASSERT abs(props[4].lin - 2) < 1e-9;
+	ASSERT abs(props[5].lin - 1.5) < 1e-9;
+	ASSERT abs(props[6].lin - 1) < 1e-9;
+	ASSERT abs(props[7].lin - 1.25) < 1e-9;
+	ASSERT abs(props[8].lin - 1.001) < 1e-9;
+	ASSERT abs(props[9].lin - 1.0001) < 1e-9;
+	ASSERT abs(props[10].lin - 1.1) < 1e-9;
+	ASSERT abs(props[11].lin - 1.001) < 1e-9;
+	ASSERT abs(props[12].lin - 2) < 1e-9;
+	(* check constrained cubic interpolation *)
+	ASSERT abs(props[0].cub - 1) < 1e-9;
+	ASSERT abs(props[2].cub - 2) < 1e-9;
+	ASSERT abs(props[3].cub - 2) < 1e-9;
+	ASSERT abs(props[4].cub - 2) < 1e-9;
+	ASSERT abs(props[12].cub - 2) < 1e-9;
+	ASSERT abs(props[6].cub - 1) < 1e-9;
+	(* FIXME there is a problem with props[10].cub and props[11].cub *)
+	(* check that 'default' interpolation equals cubic interpolation *)
+	(* 
+	FOR i IN [0..n-1] DO
+		ASSERT abs(props[i].cub - props[i].def) < 1e-12;
+	END FOR;
+	*)
+END self_test;
+END testinterp;
+

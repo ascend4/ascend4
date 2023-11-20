@@ -171,7 +171,7 @@ ASC_DLLSPEC char *ascstrdupf(CONST char *str);
 #else /* ASC_WITH_DMALLOC */
 
 #ifdef MALLOC_DEBUG
-#  define ascstrdup(str) ascstrdupf_dbg(str)
+#  define ascstrdup(str) ascstrdupf_dbg(str,__FILE__,__LINE__)
 #else
 #  define ascstrdup(str) ascstrdupf(str)
 #endif
@@ -187,7 +187,7 @@ ASC_DLLSPEC char *ascstrdupf(CONST char *str);
  *  @return A new copy of str as a char *, or NULL if an error occurs.
  */
 
-ASC_DLLSPEC char *ascstrdupf_dbg(CONST char *str);
+ASC_DLLSPEC char *ascstrdupf_dbg(CONST char *str, const char *file, int line);
 /**<
  *  Implementation function for ascstrdup() if MALLOC_DEBUG
  *  is defined.  Do not call this function directly - define

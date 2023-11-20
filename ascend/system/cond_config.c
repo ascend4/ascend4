@@ -284,7 +284,9 @@ void analyze_when(struct w_when *when){
 	  ASC_FREE(whenname);
 #endif
       case_match = analyze_case(cur_case,dvars);
+#ifdef WHEN_DEBUG
       if(case_match)CONSOLE_DEBUG("FOUND MATCHING CASE");
+#endif
     }else{
       /* The case is 'OTHERWISE', set it active */
       asc_assert(case_match==0);

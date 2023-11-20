@@ -379,7 +379,7 @@ void fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_o
 		return;
 	}
 	double tol = 1e-6;
-	h2 = P->h_fn(T2,rhof,P->data, err);
+	h2 = P->h_fn((FluidStateUnion){.Trho={T2,rhof}},P->data, err);
 	if(*err){
 		ERRMSG("Unable to calculate h(T=%f K,rhof=%f kg/m3",T2,rhof);
 	}
@@ -399,7 +399,7 @@ void fprops_sat_hf(double hf, double *Tsat_out, double *psat_out, double *rhof_o
 			ERRMSG("Failed to solve psat(T = %.12e) for %s",T1,P->name);
 			return;
 		}
-		h1 = P->h_fn(T1,rhof, P->data, err);
+		h1 = P->h_fn((FluidStateUnion){.Trho={T1,rhof}}, P->data, err);
 		if(*err){
 			ERRMSG("Unable to calculate h");
 			return;

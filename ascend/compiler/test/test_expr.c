@@ -40,6 +40,13 @@
 
 #include <test/common.h>
 
+#define EXPR_DEBUG
+#ifdef EXPR_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 static void test_create(void){
 
 	CU_ASSERT(0 == Asc_CompilerInit(0));
@@ -52,9 +59,10 @@ static void test_create(void){
 	struct Expr *AandB = JoinExprLists(B,JoinExprLists(A,CreateOpExpr(e_and)));
 	struct Expr *C_or_AandB = JoinExprLists(AandB,JoinExprLists(C,CreateOpExpr(e_or)));
 
-	CONSOLE_DEBUG("write expr, in postfix form: ");
-	WriteExpr(ASCERR,C_or_AandB);
-	FPRINTF(ASCERR,"\n\n");
+	(void)C_or_AandB;
+	//CONSOLE_DEBUG("write expr, in postfix form: ");
+	//WriteExpr(ASCERR,C_or_AandB);
+	//FPRINTF(ASCERR,"\n\n");
 
 	Asc_CompilerDestroy();
 }
@@ -64,7 +72,6 @@ static void test_create(void){
 	Testing for Franc Ivankovic's CNF conversion code, ongoing, Jan 2010 -- JP.
 */
 static void test_boolrel(void){
-	struct module_t *m;
 	int status;
 
 	Asc_CompilerInit(0); /* no simplification of expressions for this test */
@@ -72,7 +79,7 @@ static void test_boolrel(void){
 
 	/* load the file */
 #define TESTFILE "boolrel"
-	m = Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
+	(void)Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
 	CU_ASSERT(status == 0);
 
 	/* parse it */
@@ -110,6 +117,54 @@ static void test_boolrel(void){
 }
 
 
+static void test_write(void){
+
+	CU_ASSERT(0 == Asc_CompilerInit(0));
+
+#define DECLVAR(NAME) struct Expr *NAME = CreateVarExpr(CreateIdName(AddSymbol(#NAME)));
+	DECLVAR(A);
+	DECLVAR(B);
+	DECLVAR(C);
+
+#define LEN 1024
+	char fn[LEN], s[LEN];
+
+	CU_ASSERT(errno == 0);
+	FILE *F = tmpfile();
+	CU_ASSERT_EQUAL(errno, 0);
+
+	// trivial boolean expression
+
+	struct Expr *AandB = JoinExprLists(B,JoinExprLists(A,CreateOpExpr(e_and)));
+	struct Expr *C_or_AandB = JoinExprLists(AandB,JoinExprLists(C,CreateOpExpr(e_or)));
+
+	WriteExpr(F,C_or_AandB);
+	rewind(F);
+	errno=0;
+	memset(s,'\0',LEN);
+	CU_TEST(fread(s,1,LEN,F));
+	CU_TEST(0==strncmp(s,"B A AND C OR",LEN));
+	rewind(F);
+
+	struct Expr *Ap357t35 = JoinExprLists(
+		JoinExprLists(A,CreateOpExpr(e_plus))
+		,JoinExprLists(JoinExprLists(CreateIntExpr(357),CreateOpExpr(e_times))
+		,CreateRealExpr(3.5,Dimensionless()))
+	);
+
+	MSG("EXPR:");
+	WriteExpr(ASCERR,Ap357t35);
+
+	fclose(F);
+	Asc_CompilerDestroy();
+}
+
+
+
+
+
+
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -117,7 +172,8 @@ static void test_boolrel(void){
 
 #define TESTS(T) \
 	T(create) \
-	T(boolrel)
+	T(boolrel) \
+	T(write)	
 
 REGISTER_TESTS_SIMPLE(compiler_expr, TESTS)
 

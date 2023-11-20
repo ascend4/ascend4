@@ -105,11 +105,10 @@ unsigned long ExprLength(register CONST struct Expr *start,
 
 static
 void FigureOutError(struct value_t value,
-		    enum relation_errors *err,
-		    enum find_errors *ferr)
-{
+		    rel_errorlist *err){
   assert(ValueKind(value)==error_value);
-  *err = find_error;
+  rel_errorlist_set_code(err,find_error);
+  //rel_errorlist_add(err,find_error,NULL,NULL);
   switch(ErrorValue(value)){
   case type_conflict:
   case dimension_conflict:
@@ -118,13 +117,14 @@ void FigureOutError(struct value_t value,
   case empty_choice:
   case empty_intersection:
   case temporary_variable_reused:
-    *ferr = impossible_instance;
+    //CONSOLE_DEBUG("Error value: %d",(int)ErrorValue(value));
+    rel_errorlist_set_find_error(err,impossible_instance);
     break;
   case undefined_value:
-    *ferr = undefined_instance;
+    rel_errorlist_set_find_error(err,undefined_instance);
     break;
   case name_unfound:
-    *ferr = unmade_instance;
+    rel_errorlist_set_find_error(err,unmade_instance);
     break;
   default:
     ASC_PANIC("Unknown error type in FigureOutError.\n");
@@ -673,9 +673,11 @@ static int ArgsForToken(enum Expr_enum t) {
   switch (t) {
   case e_nop:
   case e_undefined:
-  case e_glassbox:
   case e_blackbox:
+#if 0
+  case e_glassbox:
   case e_opcode:
+#endif
   case e_token:
   case e_zero:
   case e_real:
@@ -2195,7 +2197,7 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
   return result;
 }
 
-
+#if 0 && defined(DISUSED)
 struct relation *CreateGlassBoxRelation(struct Instance *relinst,
 					struct ExternalFunc *efunc,
 					struct gl_list_t *varlist,
@@ -2250,14 +2252,13 @@ struct relation *CreateGlassBoxRelation(struct Instance *relinst,
   result->vars = newlist;
   return result;
 }
+#endif
 
 /*------------------------------------------------------------------------------
   TOKENRELATION PROCESSING AND GENERAL EXPR-TO-RELATION CHECK ROUTINES
 */
 
-static
-struct value_t CheckIntegerCoercion(struct value_t v)
-{
+static struct value_t CheckIntegerCoercion(struct value_t v){
   if ((ValueKind(v)==real_value) && (RealValue(v)==0.0) &&
       IsWild(RealValueDimensions(v)) ){
     DestroyValue(&v);
@@ -2266,15 +2267,11 @@ struct value_t CheckIntegerCoercion(struct value_t v)
   else return v;
 }
 
-static
-int ProcessListRange(CONST struct Instance *ref,
-		     CONST struct Expr *low,
-		     CONST struct Expr *up,
-		     int *added,
-		     int i,
-		     enum relation_errors *err,
-		     enum find_errors *ferr)
-{
+
+static int ProcessListRange(CONST struct Instance *ref
+	, CONST struct Expr *low, CONST struct Expr *up, int *added
+	, int i, rel_errorlist *err
+){
   struct value_t lower,upper;
   struct relation_term *term;
   long lv,uv;
@@ -2285,45 +2282,43 @@ int ProcessListRange(CONST struct Instance *ref,
   SetEvaluationContext(NULL);
   lower = CheckIntegerCoercion(lower);
   upper = CheckIntegerCoercion(upper);
-  if ((ValueKind(lower)==integer_value)&&(ValueKind(upper)==integer_value)){
+  if((ValueKind(lower)==integer_value)&&(ValueKind(upper)==integer_value)){
     lv = IntegerValue(lower);
     uv = IntegerValue(upper);
     while(lv<=uv){
       term = CreateIntegerTerm(lv);
       AppendTermBuf(term);
       if ((*added)++) {
-	switch(i){
-	case SUM:
-	  term = CreateOpTerm(e_plus);
-	  break;
-	case PROD:
-	  term = CreateOpTerm(e_times);
-	  break;
-	}
-	AppendTermBuf(term);
+        switch(i){
+        case SUM:
+          term = CreateOpTerm(e_plus);
+          break;
+        case PROD:
+          term = CreateOpTerm(e_times);
+          break;
+        }
+        AppendTermBuf(term);
       }
       lv++;
     }
     return 0;
-  }
-  else{
-    if(ValueKind(lower)==error_value) {
-      FigureOutError(lower,err,ferr);
+  }else{
+    if(ValueKind(lower)==error_value){
+      FigureOutError(lower,err);
       return 1;
     }
     if(ValueKind(upper)==error_value){
-      FigureOutError(upper,err,ferr);
+      FigureOutError(upper,err);
       return 1;
     }
-    *err = incorrect_structure;
+    rel_errorlist_set_code(err,incorrect_structure);
     FPRINTF(ASCERR,"incorrect_structure in ProcessListRange\n");
     return 1;
   }
 }
 
 static
-CONST struct Expr *ExprContainsSuchThat(register CONST struct Expr *ex)
-{
+CONST struct Expr *ExprContainsSuchThat(register CONST struct Expr *ex){
   while(ex!=NULL){
     if (ExprType(ex)==e_st) return ex;
     ex = NextExpr(ex);
@@ -2342,7 +2337,7 @@ CONST struct Expr *ExprContainsSuchThat(register CONST struct Expr *ex)
 static
 struct relation_term *CreateTermFromInst(struct Instance *inst,
 					 struct Instance *rel,
-					 enum relation_errors *err)
+					 rel_errorlist *err)
 {
   struct relation_term *term;
   switch(InstanceKind(inst)){
@@ -2357,9 +2352,9 @@ struct relation_term *CreateTermFromInst(struct Instance *inst,
     }
     else{
       if ( IsWild(RealAtomDims(inst)) && AtomAssigned(inst) ) {
-	*err = real_value_wild;
+        rel_errorlist_set_code(err,real_value_wild);
       } else {
-	*err = real_value_undefined;
+        rel_errorlist_set_code(err,real_value_undefined);
       }
       return NULL;
     }
@@ -2369,28 +2364,28 @@ struct relation_term *CreateTermFromInst(struct Instance *inst,
       return term;
     }
     else{
-      *err = integer_value_undefined;
+      rel_errorlist_set_code(err,integer_value_undefined);
       return NULL;
     }
   case REAL_INST:
-    *err = incorrect_real_inst_type;
+    rel_errorlist_set_code(err,incorrect_real_inst_type);
     return NULL;
   case INTEGER_ATOM_INST:
   case INTEGER_INST:
-    *err = incorrect_integer_inst_type;
+    rel_errorlist_set_code(err,incorrect_integer_inst_type);
     return NULL;
   case SYMBOL_ATOM_INST:
   case SYMBOL_CONSTANT_INST:
   case SYMBOL_INST:
-    *err = incorrect_symbol_inst_type;
+    rel_errorlist_set_code(err,incorrect_symbol_inst_type);
     return NULL;
   case BOOLEAN_ATOM_INST:
   case BOOLEAN_CONSTANT_INST:
   case BOOLEAN_INST:
-    *err = incorrect_boolean_inst_type;
+    rel_errorlist_set_code(err,incorrect_boolean_inst_type);
     return NULL;
   default:
-    *err = incorrect_inst_type;
+    rel_errorlist_set_code(err,incorrect_inst_type);
     return NULL;
   }
 }
@@ -2400,24 +2395,17 @@ static int AppendList( CONST struct Instance *,
 		 struct Instance *,
 		 CONST struct Set *,
 		 int ,
-		 enum relation_errors *,
-		 enum find_errors *);
+		 rel_errorlist *);
 
 /**
 	@todo document this
 
 	Convert a part of an expression into part of a relation (in postfix)?
 */
-static
-int ConvertSubExpr(CONST struct Expr *ptr,
-		   CONST struct Expr *stop,
-		   CONST struct Instance *ref,
-		   struct Instance *rel,
-		   int *added,
-		   int i,
-		   enum relation_errors *err,
-		   enum find_errors *ferr)
-{
+static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
+	, CONST struct Instance *ref, struct Instance *rel, int *added, int i
+	, rel_errorlist *err
+){
   struct relation_term *term = NULL;
   struct gl_list_t *instances;
   unsigned c,len;
@@ -2425,6 +2413,7 @@ int ConvertSubExpr(CONST struct Expr *ptr,
   struct value_t svalue,cvalue;
   int my_added=0;
   symchar *str;
+  char *tempstr;
   CONST struct for_var_t *fvp;	/* for var pointer */
   while (ptr!=stop){
     switch(ExprType(ptr)){
@@ -2441,7 +2430,8 @@ int ConvertSubExpr(CONST struct Expr *ptr,
       break;
     case e_var:
       str = SimpleNameIdPtr(ExprName(ptr));
-      if (str&&TempExists(str)){
+      //CONSOLE_DEBUG("name=%s",SCP(str));
+      if(str&&TempExists(str)){
         cvalue = TempValue(str);
         switch(ValueKind(cvalue)){
         case integer_value:
@@ -2451,34 +2441,33 @@ int ConvertSubExpr(CONST struct Expr *ptr,
           break;
         default:
           FPRINTF(ASCERR,"Non-integer temporary variable used in expression.\n");
-          *err = incorrect_inst_type;
+          rel_errorlist_set_code(err,incorrect_inst_type);
           term = NULL;
           return 1;
         }
-      }else if (GetEvaluationForTable() != NULL && str !=NULL &&
-	       (fvp=FindForVar(GetEvaluationForTable(),str)) !=NULL ){
-        if (GetForKind(fvp)==f_integer){
+      }else if(GetEvaluationForTable() != NULL && str !=NULL &&
+               (fvp=FindForVar(GetEvaluationForTable(),str)) !=NULL ){
+        //CONSOLE_DEBUG("for loop, var = %s",SCP(str));
+        if(GetForKind(fvp)==f_integer){
           term = CreateIntegerTerm(GetForInteger(fvp));
           my_added++;
           AppendTermBuf(term);
-        }
-        else{
+        }else{
           FPRINTF(ASCERR,
-		  "Non-integer FOR variable used in expression.\n");
-          *err = incorrect_inst_type;
+                  "Non-integer FOR variable used in expression.\n");
+          rel_errorlist_set_code(err,incorrect_inst_type);
           return 1;
          }
-      }
-      else{
-        instances = FindInstances(ref,ExprName(ptr),ferr);
-        if (instances!=NULL){
-          if (NextExpr(ptr)==stop){ /* possibly multiple instances */
+      }else{
+        instances = FindInstances(ref,ExprName(ptr),err);
+        if(instances!=NULL){
+          if(NextExpr(ptr)==stop){ /* possibly multiple instances */
             len = gl_length(instances);
             for(c=1;c<=len;c++){
               inst = (struct Instance *)gl_fetch(instances,c);
-              if ((term=CreateTermFromInst(inst,rel,err))!=NULL){
+              if((term=CreateTermFromInst(inst,rel,err))!=NULL){
                 AppendTermBuf(term);
-                if (my_added++){
+                if(my_added++){
                   switch(i){
                   case SUM:
                     term = CreateOpTerm(e_plus);
@@ -2489,34 +2478,42 @@ int ConvertSubExpr(CONST struct Expr *ptr,
                   }
                   AppendTermBuf(term);
                 }
-              }
-              else{
+              }else{
                 gl_destroy(instances);
                 return 1;
               }
             }
             gl_destroy(instances);
-          }
-          else{			/* single instance */
-            if (gl_length(instances)==1){
+          }else{			/* single instance */
+            //CONSOLE_DEBUG("single instance");
+            if(gl_length(instances)==1){
               inst = (struct Instance *)gl_fetch(instances,1);
               gl_destroy(instances);
-              if ((term=CreateTermFromInst(inst,rel,err))!=NULL){
+              if((term=CreateTermFromInst(inst,rel,err))!=NULL){
                 my_added++;
                 AppendTermBuf(term);
-              }
-              else
+              }else
                 return 1;
-              }
-              else{
+            }else{
+              //CONSOLE_DEBUG("length!=1");
               gl_destroy(instances);
-              *err = incorrect_structure;
+              rel_errorlist_set_code(err,incorrect_structure);
               FPRINTF(ASCERR,"incorrect_structure in ConvertSubExpr 1\n");
               return 1;
             }
           }
-        } else{
-          *err = find_error;
+        }else{
+          if(rel_errorlist_get_find_error(err)==unmade_instance){
+            tempstr = WriteNameString(ExprName(ptr));
+            rel_errorlist_set_name(err,ExprName(ptr));
+            //CONSOLE_DEBUG("unmade instance! '%s'",tempstr);
+            ASC_FREE(tempstr);
+            if(instances!=NULL){
+              //CONSOLE_DEBUG("instances!=NULL !");
+            }
+          }
+          //CONSOLE_DEBUG("returning 'find_error'");
+          rel_errorlist_set_code(err,find_error);
           return 1;
         }
       }
@@ -2551,26 +2548,26 @@ int ConvertSubExpr(CONST struct Expr *ptr,
         AppendTermBuf(term);
         break;
       case error_value:
-        FigureOutError(cvalue,err,ferr);
+        FigureOutError(cvalue,err);
         DestroyValue(&cvalue);
         return 1;
       default:
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid case reached!");
         DestroyValue(&cvalue);
-        *err = incorrect_structure;
+        rel_errorlist_set_code(err,incorrect_structure);
         return 1;
       }
       DestroyValue(&cvalue);
       break;
     case e_sum:
       my_added++;
-      if (AppendList(ref,rel,ExprBuiltinSet(ptr),SUM,err,ferr))
-	return 1;
+      if(AppendList(ref,rel,ExprBuiltinSet(ptr),SUM,err))
+        return 1;
       break;
     case e_prod:
       my_added++;
-      if (AppendList(ref,rel,ExprBuiltinSet(ptr),PROD,err,ferr))
-	return 1;
+      if(AppendList(ref,rel,ExprBuiltinSet(ptr),PROD,err))
+        return 1;
       break;
     case e_func:
       term = CreateFuncTerm(ExprFunc(ptr));
@@ -2578,15 +2575,15 @@ int ConvertSubExpr(CONST struct Expr *ptr,
       AppendTermBuf(term);
       break;
     default:
-      *err = incorrect_structure;
+      rel_errorlist_set_code(err,incorrect_structure);
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"incorrect_structure in ConvertSubExpr 2!");
       return 1;
 
     }
     ptr = NextExpr(ptr);
   }
-  if (my_added) {
-    if ((*added)++){
+  if(my_added) {
+    if((*added)++){
       switch(i){
       case SUM:
         term = CreateOpTerm(e_plus);
@@ -2601,11 +2598,10 @@ int ConvertSubExpr(CONST struct Expr *ptr,
   return 0;
 }
 
-static
-int CorrectSuchThat(CONST struct Expr *ex,
-		    CONST struct Expr **depth_one,
-		    CONST struct Expr **node)
-{
+
+static int CorrectSuchThat(CONST struct Expr *ex
+	, CONST struct Expr **depth_one, CONST struct Expr **node
+){
   unsigned depth=0;
   CONST struct Expr *previous=NULL;
   while(ex!=NULL){
@@ -2670,14 +2666,11 @@ int CorrectSuchThat(CONST struct Expr *ex,
   return 0;
 }
 
+
 /** if problem, returns 1. if ok, returns 0 */
-static
-int DoNameAndSet(CONST struct Expr *ex,
-		 CONST struct Expr *stop,
-		 CONST struct Instance *ref,
-		 symchar **name,
-		 struct value_t *value)
-{
+static int DoNameAndSet(CONST struct Expr *ex, CONST struct Expr *stop
+	, CONST struct Instance *ref, symchar **name, struct value_t *value
+){
   if (ExprType(ex)==e_var){
     if ((*name = SimpleNameIdPtr(ExprName(ex)))!=NULL){
       assert(GetEvaluationContext()==NULL);
@@ -2687,21 +2680,14 @@ int DoNameAndSet(CONST struct Expr *ex,
       if (ValueKind(*value)==set_value) return 0;
       DestroyValue(value);
       return 1;
-    }
-    else return 1;
-  }
-  else return 1;
+    }else return 1;
+  }else return 1;
 }
 
-static
-int ConvertSuchThat(CONST struct Expr *ex,
-		    CONST struct Instance *ref,
-		    struct Instance *rel,
-		    int *added,
-		    int i,
-		    enum relation_errors *err,
-		    enum find_errors *ferr)
-{
+
+static int ConvertSuchThat(CONST struct Expr *ex, CONST struct Instance *ref
+	, struct Instance *rel, int *added, int i, rel_errorlist *err
+){
   symchar *tmp_name;
   unsigned long c,len;
   int my_added=0;
@@ -2711,15 +2697,15 @@ int ConvertSuchThat(CONST struct Expr *ex,
   CONST struct Expr *depth_one,*node;
   if (CorrectSuchThat(ex,&depth_one,&node)){
     if (DoNameAndSet(NextExpr(depth_one),node,ref,&tmp_name,&iteration_set)){
-      *err = incorrect_structure;
-	  ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
+      rel_errorlist_set_code(err,incorrect_structure);
+      ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
       FPRINTF(ASCERR,"incorrect_structure in ConvertSuchThat 1\n");
       if (depth_one!=NULL && NextExpr(depth_one)!=NULL) {
         FPRINTF(ASCERR,"such that expression (RPN):\n\t");
         WriteExpr(ASCERR,NextExpr(depth_one));
         FPRINTF(ASCERR,"\n");
       }
-	  error_reporter_end_flush();
+      error_reporter_end_flush();
       return 1;
     }
     node = NextExpr(depth_one);
@@ -2731,28 +2717,28 @@ int ConvertSuchThat(CONST struct Expr *ex,
     case integer_set:
     case string_set:
       if (TempExists(tmp_name)){
-	FPRINTF(ASCERR,"Reused temporary variable %s.\n",SCP(tmp_name));
-	DestroyValue(&iteration_set);
-	*err = incorrect_structure;
-	return 1;
+        FPRINTF(ASCERR,"Reused temporary variable %s.\n",SCP(tmp_name));
+        DestroyValue(&iteration_set);
+        rel_errorlist_set_code(err,incorrect_structure);
+        return 1;
       }
       AddTemp(tmp_name);
       len = Cardinality(sptr);
       for(c=1;c<=len;c++) {
-	if (SetKind(sptr)==string_set)
-	  tmp_value = CreateSymbolValue(FetchStrMember(sptr,c),1);
-	else
-	  tmp_value = CreateIntegerValue(FetchIntMember(sptr,c),1);
-	SetTemp(tmp_name,tmp_value);
-	if (ConvertSubExpr(ex,node,ref,rel,&my_added,i,err,ferr)){
-	  RemoveTemp(tmp_name);
-	  DestroyValue(&tmp_value);
-	  DestroyValue(&iteration_set);
-	  return 1;
-	}
-	DestroyValue(&tmp_value);
+        if (SetKind(sptr)==string_set)
+          tmp_value = CreateSymbolValue(FetchStrMember(sptr,c),1);
+        else
+          tmp_value = CreateIntegerValue(FetchIntMember(sptr,c),1);
+        SetTemp(tmp_name,tmp_value);
+        if (ConvertSubExpr(ex,node,ref,rel,&my_added,i,err)){
+          RemoveTemp(tmp_name);
+          DestroyValue(&tmp_value);
+          DestroyValue(&iteration_set);
+          return 1;
+        }
+        DestroyValue(&tmp_value);
       }
-      if (my_added){
+      if(my_added){
         my_added++;
         if ((*added)++){
           switch(i){
@@ -2771,9 +2757,8 @@ int ConvertSuchThat(CONST struct Expr *ex,
       return 0;
     }
     /*NOTREACHED*/
-  }
-  else{
-    *err = incorrect_structure;
+  }else{
+    rel_errorlist_set_code(err,incorrect_structure);
     FPRINTF(ASCERR,"incorrect_structure in ConvertSuchThat 2\n");
     return 1;
   }
@@ -2781,45 +2766,36 @@ int ConvertSuchThat(CONST struct Expr *ex,
   return 1;
 }
 
-static
-int ProcessListExpr(CONST struct Instance *ref,
-		    struct Instance *rel,
-		    CONST struct Expr *ex,
-		    int *added,
-		    int i,
-		    enum relation_errors *err,
-		    enum find_errors *ferr)
-{
-  if (ExprContainsSuchThat(ex)!=NULL){
-    return ConvertSuchThat(ex,ref,rel,added,i,err,ferr);
-  } else {
-    return ConvertSubExpr(ex,NULL,ref,rel,added,i,err,ferr);
-  }
+static int ProcessListExpr(CONST struct Instance *ref, struct Instance *rel
+	, CONST struct Expr *ex, int *added, int i, rel_errorlist *err
+){
+	if(ExprContainsSuchThat(ex)!=NULL){
+		return ConvertSuchThat(ex,ref,rel,added,i,err);
+	}else{
+		return ConvertSubExpr(ex,NULL,ref,rel,added,i,err);
+	}
 }
 
-static int AppendList(CONST struct Instance *ref,
-	       struct Instance *rel,
-	       CONST struct Set *set,
-	       int i,
-	       enum relation_errors *err,
-	       enum find_errors *ferr)
-{
-  int added_one=0;		/* becomes true when a term is added */
+
+static int AppendList(CONST struct Instance *ref, struct Instance *rel
+	, CONST struct Set *set, int i, rel_errorlist *err
+){
+  int added_one=0; /* becomes true when a term is added */
   struct relation_term *term = NULL;
-  while (set!=NULL){
-    if (SetType(set)){		/* range of values */
-      if (ProcessListRange(ref,GetLowerExpr(set),
-			   GetUpperExpr(set),&added_one,i,err,ferr))
-	return 1;
-    }
-    else{			/* single expr */
-      if (ProcessListExpr(ref,rel,GetSingleExpr(set),&added_one,
-			  i,err,ferr))
-	return 1;
+  while(set!=NULL){
+    if(SetType(set)){ /* range of values */
+      if(ProcessListRange(ref,GetLowerExpr(set),GetUpperExpr(set)
+		,&added_one,i,err
+	  )){
+        return 1;
+      }
+    }else{ /* single expr */
+      if(ProcessListExpr(ref,rel,GetSingleExpr(set),&added_one,i,err))
+        return 1;
     }
     set = NextSet(set);
   }
-  if(!added_one){	/* case of the empty set */
+  if(!added_one){ /* case of the empty set */
     switch(i){
     case SUM:
       term = CreateZeroTerm();
@@ -2848,13 +2824,12 @@ static int AppendList(CONST struct Instance *ref,
 	@return 1 if ok, 0 if not.
  */
 static int ConvertExpr(CONST struct Expr *start,
-			      CONST struct Expr *stop,
-			      struct Instance *ref,
-			      struct Instance *rel,
-			      enum relation_errors *err,
-			      enum find_errors *ferr,
-				struct relation_side_temp *newside)
-{
+	CONST struct Expr *stop,
+	struct Instance *ref,
+	struct Instance *rel,
+	rel_errorlist *err,
+	struct relation_side_temp *newside
+){
   struct gl_list_t *instances;
   struct relation_term *term;
   struct Instance *inst;
@@ -2862,7 +2837,7 @@ static int ConvertExpr(CONST struct Expr *start,
   symchar *str;
   CONST struct for_var_t *fvp;
   struct value_t svalue,cvalue;
-  if (newside==NULL) {
+  if(newside==NULL){
     ASC_PANIC("newside == NULL");
   }
   while(start!=stop){
@@ -2878,21 +2853,22 @@ static int ConvertExpr(CONST struct Expr *start,
       AppendTermBuf(term);
       break;
     case e_var:
-      if (GetEvaluationForTable() &&
+	  // try to write the name of the var...
+      if(GetEvaluationForTable() &&
           (NULL != (str = SimpleNameIdPtr(ExprName(start)))) &&
           (NULL != (fvp = FindForVar(GetEvaluationForTable(),str)))
       ){
-        if (GetForKind(fvp)==f_integer){
+        if(GetForKind(fvp)==f_integer){
           term = CreateIntegerTerm(GetForInteger(fvp));
           AppendTermBuf(term);
-        } else{
-          *err = incorrect_inst_type;
+        }else{
+          rel_errorlist_set_code(err,incorrect_inst_type);
           DestroyTermList();
           return 0;
         }
       }else{
-        instances = FindInstances(ref,ExprName(start),ferr);
-        if (instances!=NULL){
+        instances = FindInstances(ref,ExprName(start),err);
+        if(instances!=NULL){
           if (gl_length(instances)==1){
             inst = (struct Instance *)gl_fetch(instances,1);
             gl_destroy(instances);
@@ -2903,16 +2879,16 @@ static int ConvertExpr(CONST struct Expr *start,
               DestroyTermList();
               return 0;
             }
-          } else{
-            *err=incorrect_structure;
+          }else{
+            rel_errorlist_set_code(err,incorrect_structure);
             ERROR_REPORTER_HERE(ASC_PROG_ERR,"incorrect structure (1)");
             gl_destroy(instances);
             DestroyTermList();
             return 0;
           }
         }else{
-          *err = find_error;
-          if (*ferr == impossible_instance) {
+          rel_errorlist_set_code(err,find_error);
+          if(rel_errorlist_get_find_error(err) == impossible_instance){
 			ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
             FPRINTF(ASCERR,"Impossible name or subscript in '");
             WriteName(ASCERR,ExprName(start));
@@ -2951,26 +2927,26 @@ static int ConvertExpr(CONST struct Expr *start,
         break;
       case error_value:
         DestroyTermList();
-        FigureOutError(cvalue,err,ferr);
+        FigureOutError(cvalue,err);
         DestroyValue(&cvalue);
         return 0;
       default:
         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid ValueKind for cvalue (please notify developers)");
         DestroyValue(&cvalue);
         DestroyTermList();
-        *err = incorrect_structure;
+        rel_errorlist_set_code(err,incorrect_structure);
         return 0;
       }
       DestroyValue(&cvalue);
       break;
     case e_sum:
-      if (AppendList(ref,rel,ExprBuiltinSet(start),SUM,err,ferr)){
+      if(AppendList(ref,rel,ExprBuiltinSet(start),SUM,err)){
         DestroyTermList();
         return 0;
       }
       break;
     case e_prod:
-      if (AppendList(ref,rel,ExprBuiltinSet(start),PROD,err,ferr)){
+      if(AppendList(ref,rel,ExprBuiltinSet(start),PROD,err)){
         DestroyTermList();
         return 0;
       }
@@ -2980,7 +2956,7 @@ static int ConvertExpr(CONST struct Expr *start,
       AppendTermBuf(term);
       break;
     default:
-      *err = incorrect_structure;
+      rel_errorlist_set_code(err,incorrect_structure);
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"incorrect structure (2)");
       DestroyTermList();
       return 0;
@@ -3085,7 +3061,7 @@ CONST struct Expr *FindRHS(CONST struct Expr *ex)
 	*err = 0 if ok, 1 otherwise. Sets up infix pointers.
 */
 static struct relation_term
-*InfixArr_MakeSide(CONST struct relation_side_temp *tmp, int *err)
+*InfixArr_MakeSide(CONST struct relation_side_temp *tmp, int *errflag)
 {
   struct relation_term *term = NULL;
   struct relation_term *left;
@@ -3093,7 +3069,7 @@ static struct relation_term
   struct gs_stack_t *stack;
   enum Expr_enum t;
 
-  *err = 0;
+  *errflag = 0;
   len = tmp->length;
   stack = gs_stack_create(len);
   while(count < len) {
@@ -3137,7 +3113,7 @@ static struct relation_term
     /* ensure that the stack is empty */
     FPRINTF(ASCERR,"stacksize %ld\n",stack->size);
     FPRINTF(ASCERR,"Something screwy with Infix_MakeSide\n");
-    *err = 1;
+    *errflag = 1;
   }
   gs_stack_destroy(stack,0);
   return term;
@@ -3233,21 +3209,20 @@ void DestroyTermTree(struct relation_term *term)
 static void DestroyTermSide(struct relation_side_temp *);
 void DestroyVarList(struct gl_list_t *, struct Instance *);
 
-struct relation *CreateTokenRelation(struct Instance *reference,
-				     struct Instance *relinst,
-				     CONST struct Expr *ex,
-				     enum relation_errors *err,
-				     enum find_errors *ferr)
-{
+
+struct relation *CreateTokenRelation(
+	struct Instance *reference, struct Instance *relinst
+	, CONST struct Expr *ex, rel_errorlist *err
+){
   struct relation *result;
   CONST struct Expr *rhs_ex,*last_ex;
   int lhs,rhs;
   enum Expr_enum relop;
   struct relation_side_temp leftside,rightside;
-  assert(reference&&relinst&&ex&&err&&ferr);
+  assert(reference && relinst && ex && err);
   g_relation_var_list = gl_create(20l);
-  *err = okay;
-  *ferr = correct_instance;
+  rel_errorlist_set_code(err,okay);
+  rel_errorlist_set_find_error(err, correct_instance);
   last_ex = FindLastExpr(ex);
   switch(ExprType(last_ex)){
   case e_equal:
@@ -3259,26 +3234,27 @@ struct relation *CreateTokenRelation(struct Instance *reference,
     relop = ExprType(last_ex);
     rhs_ex = FindRHS(ex);
     if (rhs_ex!=NULL){
-      lhs = ConvertExpr(ex,rhs_ex,reference,relinst,err,ferr,&leftside);
+      lhs = ConvertExpr(ex,rhs_ex,reference,relinst,err,&leftside);
       if(!lhs) {
         if (g_relation_var_list!=NULL) {
-           DestroyVarList(g_relation_var_list,relinst);
-	}
-	g_relation_var_list = NULL;
-	return NULL;
+          DestroyVarList(g_relation_var_list,relinst);
+        }
+        g_relation_var_list = NULL;
+		//CONSOLE_DEBUG("Null LHS!");
+        return NULL;
       }
-      rhs = ConvertExpr(rhs_ex,last_ex,reference,relinst,err,ferr,&rightside);
+      rhs = ConvertExpr(rhs_ex,last_ex,reference,relinst,err,&rightside);
       if(!rhs) {
-	DestroyTermSide(&leftside);
+        DestroyTermSide(&leftside);
         if (g_relation_var_list!=NULL) {
            DestroyVarList(g_relation_var_list,relinst);
-	}
-	g_relation_var_list = NULL;
-	return NULL;
+        }
+        g_relation_var_list = NULL;
+		//CONSOLE_DEBUG("Null RHS!");
+        return NULL;
       }
-    }
-    else{
-      *err = incorrect_structure;
+    }else{
+      rel_errorlist_set_code(err,incorrect_structure);
       FPRINTF(ASCERR,"Error finding relational operator.\n");
       if (g_relation_var_list!=NULL) {
            DestroyVarList(g_relation_var_list,relinst);
@@ -3291,7 +3267,7 @@ struct relation *CreateTokenRelation(struct Instance *reference,
   case e_minimize:
     relop = ExprType(last_ex);
     rhs = 0;
-    lhs=ConvertExpr(ex,last_ex,reference,relinst,err,ferr,&leftside);
+    lhs=ConvertExpr(ex,last_ex,reference,relinst,err,&leftside);
     if (!lhs) {
       if (g_relation_var_list!=NULL) {
          DestroyVarList(g_relation_var_list,relinst);
@@ -3301,7 +3277,7 @@ struct relation *CreateTokenRelation(struct Instance *reference,
     }
     break;
   default:
-    *err = incorrect_structure;
+    rel_errorlist_set_code(err,incorrect_structure);
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Error expression missing relational operator.");
     if (g_relation_var_list!=NULL) {
        DestroyVarList(g_relation_var_list,relinst);
@@ -3348,11 +3324,11 @@ struct relation *CreateTokenRelation(struct Instance *reference,
 
 /** @todo what is an opcode? */
 
+#if 0 && defined(DISUSED)
 struct relation *CreateOpCodeRelation(struct Instance *reference,
                                       struct Instance *relinst,
                                       CONST struct Expr *ex,
-                                      enum relation_errors *err,
-                                      enum find_errors *ferr)
+                                      rel_errorlist *err)
 {
   struct relation *result;
 
@@ -3360,7 +3336,6 @@ struct relation *CreateOpCodeRelation(struct Instance *reference,
   (void)relinst;    /*  stop gcc whine about unused parameter  */
   (void)ex;         /*  stop gcc whine about unused parameter  */
   (void)err;        /*  stop gcc whine about unused parameter  */
-  (void)ferr;       /*  stop gcc whine about unused parameter  */
 
   result = CreateRelationStructure(e_equal,crs_NEWUNION); /* needs a passed in relop */
   RelationRefCount(result) = 1;
@@ -3372,6 +3347,7 @@ struct relation *CreateOpCodeRelation(struct Instance *reference,
 
   return result;
 }
+#endif
 
 /*------------------------------------------------------------------------------
 	OBJECT DESTRUCTION
@@ -3408,8 +3384,7 @@ void DestroyVarList(struct gl_list_t *l, struct Instance *relinst){
   gl_destroy(l);
 }
 
-void DestroyRelation(struct relation *rel, struct Instance *relinst)
-{
+void DestroyRelation(struct relation *rel, struct Instance *relinst){
   struct BlackBoxData *bbd;
   if (rel==NULL) return;
   assert(RelationRefCount(rel));
@@ -3427,6 +3402,7 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
         BinTokenDeleteReference(RTOKEN(rel).btable);
       }
       break;
+#if 0
     case e_opcode:
       //CONSOLE_DEBUG("Destroy opcode rel");
       if (ROPCODE(rel).lhs) {
@@ -3445,8 +3421,9 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
         ascfree((char *)(RGBOX(rel).args));
       }
       break;
+#endif
     case e_blackbox:
-      //CONSOLE_DEBUG("Destroy black rel");
+      CONSOLE_DEBUG("Destroy black rel");
       if (RBBOX(rel).inputArgs) {
         ascfree((void *)(RBBOX(rel).inputArgs));
         RBBOX(rel).inputArgs = NULL;
@@ -3705,6 +3682,7 @@ void ModifyTokenRelationPointers(struct Instance *relinst
   }
 }
 
+#if 0 && defined(DISUSED)
 void ModifyGlassBoxRelPointers(struct Instance *relinst,
 			       struct relation *rel,
 			       CONST struct Instance *old,
@@ -3720,10 +3698,10 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
   if (new){
     if (0 != (pos = gl_search(rel->vars,old,(CmpFunc)CmpP))) {
       if (0 != (other = gl_search(rel->vars,new,(CmpFunc)CmpP))){
-	gl_store(rel->vars,pos,(VOIDPTR)new);
-	FPRINTF(ASCERR,"Incidence for relation is inaccurate\n");
+        gl_store(rel->vars,pos,(VOIDPTR)new);
+        FPRINTF(ASCERR,"Incidence for relation is inaccurate\n");
       } else {
-	gl_store(rel->vars,pos,(char *)new);	/* case 2 */
+        gl_store(rel->vars,pos,(char *)new);        /* case 2 */
       }
     } else {					/* case 1 */
       FPRINTF(ASCERR,"Warning ModifyRelationPointers not found.\n");
@@ -3734,6 +3712,7 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
     if (0 != (pos = gl_search(rel->vars,old,(CmpFunc)CmpP)))
       gl_store(rel->vars,pos,(VOIDPTR)new);
 }
+#endif
 
 #if 0 /* unused static function, was part of the blackbox stuff, but disused now, apparently -- JP */
 /* After the instance list has been updated, we must recollect
@@ -3910,27 +3889,28 @@ static int CheckExprVar(CONST struct Instance *ref, CONST struct Name *name,
   symchar *str;
   struct Instance *inst;
   CONST struct for_var_t *fvp;
-  enum find_errors err;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+
   if(NULL != (str = SimpleNameIdPtr(name))){
     if (TempExists(str)) {
       if (ValueKind(TempValue(str))==integer_value) {
-	return -1;
+        return -1;
       } else {
-	return 1;
+        return 1;
       }
     }
     if (GetEvaluationForTable() != NULL &&
         (NULL != (fvp=FindForVar(GetEvaluationForTable(),str)))) {
       if (GetForKind(fvp)==f_integer) {
-	return -1;
+        return -1;
       } else {
-	return 1;
+        return 1;
       }
     }
   }
   instances = FindInstances(ref,name,&err); /* need noisy version of Find */
   if (instances == NULL){
-    switch(err){
+    switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
     case undefined_instance: return 0;
     default:
@@ -3943,16 +3923,16 @@ static int CheckExprVar(CONST struct Instance *ref, CONST struct Name *name,
       gl_destroy(instances);
       switch(InstanceKind(inst)){
       case REAL_ATOM_INST:
-	return -1;
+        return -1;
       case REAL_CONSTANT_INST:
-	if (IsWild(RealAtomDims(inst))) {
-	  return 0;
-	} /* else fall through to check assignment */
+        if (IsWild(RealAtomDims(inst))) {
+          return 0;
+        } /* else fall through to check assignment */
       case INTEGER_CONSTANT_INST:
-	if (AtomAssigned(inst)) {
-	  return -1;
+        if (AtomAssigned(inst)) {
+          return -1;
         }
-	return 0;
+        return 0;
       default: return 1; /* bogus var type found */
       }
     }
@@ -3962,24 +3942,24 @@ static int CheckExprVar(CONST struct Instance *ref, CONST struct Name *name,
       unsigned long c,len;
       len = gl_length(instances);
       for(c=1;c<=len;c++){
-	inst = (struct Instance *)gl_fetch(instances,1);
-	switch(InstanceKind(inst)){
-	case REAL_ATOM_INST:
-	  break;
-	case REAL_CONSTANT_INST:
-	  if (IsWild(RealAtomDims(inst))) {
-	    gl_destroy(instances);
-	    return 0;
-	  } /* else fall through to check assignment */
-	case INTEGER_CONSTANT_INST:
-	  if (!AtomAssigned(inst)){
-	    gl_destroy(instances);
-	    return 1;
-	  }
-	default:
-	  gl_destroy(instances);
-	  return 0;
-	}
+        inst = (struct Instance *)gl_fetch(instances,1);
+        switch(InstanceKind(inst)){
+        case REAL_ATOM_INST:
+          break;
+        case REAL_CONSTANT_INST:
+          if (IsWild(RealAtomDims(inst))) {
+            gl_destroy(instances);
+            return 0;
+          } /* else fall through to check assignment */
+        case INTEGER_CONSTANT_INST:
+          if (!AtomAssigned(inst)){
+            gl_destroy(instances);
+            return 1;
+          }
+        default:
+          gl_destroy(instances);
+          return 0;
+        }
       }
       gl_destroy(instances);
       return -1;
@@ -4060,30 +4040,30 @@ static int CheckSuchThat(CONST struct Instance *ref, CONST struct Expr *ex)
       sptr = SetValue(iteration_set);
       switch(SetKind(sptr)){
       case empty_set:
-	DestroyValue(&iteration_set);
-	return 1;
+        DestroyValue(&iteration_set);
+        return 1;
       case integer_set:
       case string_set:
-	if (!TempExists(tmp_name)){
-	  AddTemp(tmp_name);
-	  len = Cardinality(sptr);
-	  for(c=1;c<=len;c++){
-	    if (SetKind(sptr)==string_set)
-	      tmp_value = CreateSymbolValue(FetchStrMember(sptr,c),1);
-	    else
-	      tmp_value = CreateIntegerValue(FetchIntMember(sptr,c),1);
-	    SetTemp(tmp_name,tmp_value);
-	    if (!CheckExpr(ref,ex,node,0)){
-	      RemoveTemp(tmp_name);
-	      DestroyValue(&tmp_value);
-	      DestroyValue(&iteration_set);
-	      return 0;
-	    }
-	    DestroyValue(&tmp_value);
-	  }
-	  RemoveTemp(tmp_name);
-	  DestroyValue(&iteration_set);
-	}
+        if (!TempExists(tmp_name)){
+          AddTemp(tmp_name);
+          len = Cardinality(sptr);
+          for(c=1;c<=len;c++){
+            if (SetKind(sptr)==string_set)
+              tmp_value = CreateSymbolValue(FetchStrMember(sptr,c),1);
+            else
+              tmp_value = CreateIntegerValue(FetchIntMember(sptr,c),1);
+            SetTemp(tmp_name,tmp_value);
+            if (!CheckExpr(ref,ex,node,0)){
+              RemoveTemp(tmp_name);
+              DestroyValue(&tmp_value);
+              DestroyValue(&iteration_set);
+              return 0;
+            }
+            DestroyValue(&tmp_value);
+          }
+          RemoveTemp(tmp_name);
+          DestroyValue(&iteration_set);
+        }
       }
       return 1;
     }
@@ -4169,16 +4149,16 @@ static int CheckExpr(CONST struct Instance *ref,
   return 1;
 }
 
-struct gl_list_t *ProcessExtRelArgNames(CONST struct Instance *inst, CONST struct VariableList *vl, enum find_errors *ferr)
-{
+struct gl_list_t *ProcessExtRelArgNames(CONST struct Instance *inst
+	, CONST struct VariableList *vl, rel_errorlist *err){
   struct gl_list_t *arglist;
   struct gl_list_t *branch;
 
   ListMode=1;
   arglist = gl_create(10L);
   while(vl!=NULL){
-    branch = FindInstancesPaths(inst,NamePointer(vl),ferr);
-    if (branch==NULL || *ferr != correct_instance){
+    branch = FindInstancesPaths(inst,NamePointer(vl),err);
+    if (branch==NULL || rel_errorlist_get_find_error(err) != correct_instance){
       DeepDestroySpecialList(arglist,(DestroyFunc)DestroyName);
       ListMode=0;
       return NULL;
@@ -4190,16 +4170,16 @@ struct gl_list_t *ProcessExtRelArgNames(CONST struct Instance *inst, CONST struc
   return arglist;
 }
 
-struct gl_list_t *ProcessExtRelArgs(CONST struct Instance *inst, CONST struct VariableList *vl, enum find_errors *ferr)
-{
+struct gl_list_t *ProcessExtRelArgs(CONST struct Instance *inst
+	, CONST struct VariableList *vl, rel_errorlist *err){
   struct gl_list_t *arglist;
   struct gl_list_t *branch;
 
   ListMode=1;
   arglist = gl_create(10L);
   while(vl!=NULL){
-    branch = FindInstances(inst,NamePointer(vl),ferr);
-    if (branch==NULL || *ferr != correct_instance){
+    branch = FindInstances(inst,NamePointer(vl),err);
+    if (branch==NULL || rel_errorlist_get_find_error(err) != correct_instance){
       DestroySpecialList(arglist);
       ListMode=0;
       return NULL;
@@ -4211,16 +4191,16 @@ struct gl_list_t *ProcessExtRelArgs(CONST struct Instance *inst, CONST struct Va
   return arglist;
 }
 
-struct Instance *ProcessExtRelData(CONST struct Instance *inst, CONST struct Name *n, enum find_errors *ferr)
-{
+struct Instance *ProcessExtRelData(CONST struct Instance *inst
+	, CONST struct Name *n, rel_errorlist *err){
   struct Instance *result;
   struct gl_list_t *instances;
   if (n) {
-    instances = FindInstances(inst,n,ferr);
+    instances = FindInstances(inst,n,err);
     if (instances) { /* only 1 data instance is allowed */
       if (gl_length(instances) > 1) {
         gl_destroy(instances);
-        *ferr = impossible_instance;
+        rel_errorlist_set_find_error(err,impossible_instance);
         return NULL;
       } else { /* all ok */
         result = (struct Instance *)gl_fetch(instances,1L);
@@ -4232,34 +4212,34 @@ struct Instance *ProcessExtRelData(CONST struct Instance *inst, CONST struct Nam
 We probably need to tighten it up to exclude relation-types.
 We may want to expand to include list of instances.
         if (InstanceKind(result)!=MODEL_INST) {
-          *ferr = impossible_instance;
+          rel_errorlist_set_find_error(err,impossible_instance);
           return NULL;
         }
 */
-        *ferr = correct_instance;
+        rel_errorlist_set_find_error(err,correct_instance);
         return result;
       }
     } else { /* instance not found -- check ferr */
       return NULL;
     }
   } else { /* No data was given so return NULL */
-    *ferr = correct_instance;
+    rel_errorlist_set_find_error(err,correct_instance);
     return NULL;
   }
 
 }
 
-struct Name *ProcessExtRelDataName(CONST struct Instance *inst, CONST struct Name *n, enum find_errors *ferr)
-{
+struct Name *ProcessExtRelDataName(CONST struct Instance *inst
+	, CONST struct Name *n, rel_errorlist *err){
   struct Name *result;
   struct gl_list_t *names;
   if (n) {
-    names = FindInstancesPaths(inst,n,ferr);
+    names = FindInstancesPaths(inst,n,err);
     if (names) { /* only 1 data instance is allowed */
       if (gl_length(names) > 1) {
         gl_iterate(names,(DestroyFunc)DestroyName);
         gl_destroy(names);
-        *ferr = impossible_instance;
+        rel_errorlist_set_find_error(err,impossible_instance);
         return NULL;
       } else { /* all ok */
         result = (struct Name *)gl_fetch(names,1L);
@@ -4271,49 +4251,50 @@ struct Name *ProcessExtRelDataName(CONST struct Instance *inst, CONST struct Nam
 We probably need to tighten it up to exclude relation-types.
 We may want to expand to include list of instances.
         if (InstanceKind(result)!=MODEL_INST) {
-          *ferr = impossible_instance;
+          rel_errorlist_set_find_error(err,impossible_instance);
           return NULL;
         }
 */
-        *ferr = correct_instance;
+        rel_errorlist_set_find_error(err,correct_instance);
         return result;
       }
     } else { /* instance not found -- check ferr */
       return NULL;
     }
   } else { /* No data was given so return NULL */
-    *ferr = correct_instance;
+    rel_errorlist_set_find_error(err,correct_instance);
     return NULL;
   }
 
 }
 
 /* see if all the args and optional DATA exist.  0 if bad 1 if ok. */
-int CheckExternal(CONST struct Instance *reference, CONST struct VariableList *vl, CONST struct Name *n)
-{
-  enum find_errors ferr;
+int CheckExternal(CONST struct Instance *reference
+	, CONST struct VariableList *vl, CONST struct Name *n
+){
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct gl_list_t *args;
   //struct Instance *data;
 
-  args = ProcessExtRelArgs(reference, vl, &ferr);
-  if (args == NULL) {
+  args = ProcessExtRelArgs(reference,vl,&err);
+  if(args == NULL){
     return 0;
   }
   DestroySpecialList(args);
   /* args ok. */
-  ProcessExtRelData(reference, n, &ferr);
-  if (ferr == correct_instance) {
+  ProcessExtRelData(reference,n,&err);
+  if(rel_errorlist_get_find_error(&err) == correct_instance){
     return 1;
   }
   return 0;
 }
 
+
 /** see header.
 	@return 1 if relation expression is fully instantiable ie all vars exist,
 	and, if need be, properly initialized.
 */
-int CheckRelation(CONST struct Instance *reference, CONST struct Expr *ex)
-{
+int CheckRelation(CONST struct Instance *reference, CONST struct Expr *ex){
   CONST struct Expr *last_ex,*rhs_ex;
   last_ex = FindLastExpr(ex);
   switch(ExprType(last_ex)){
@@ -4336,6 +4317,7 @@ int CheckRelation(CONST struct Instance *reference, CONST struct Expr *ex)
   }
 }
 
+
 /**
 	We can now just do a memcopy and the infix pointers
 	all adjust by the difference between the token
@@ -4348,9 +4330,9 @@ int CheckRelation(CONST struct Instance *reference, CONST struct Expr *ex)
 	You do not need to remake the infix pointers after
 	calling this function.
 */
-static union RelationTermUnion
-*CopyRelationSide(union RelationTermUnion *old, unsigned long len)
-{
+static union RelationTermUnion *CopyRelationSide(
+	union RelationTermUnion *old, unsigned long len
+){
   struct relation_term *term;
   union RelationTermUnion *arr;
   unsigned long c;
@@ -4473,7 +4455,7 @@ struct gl_list_t *CopyRelationVarList(struct Instance *dest_inst,
       /* garbage in, garbage out */
       pos = gl_search(newvarlist,var,(CmpFunc)CmpP);
       if (pos) {
-	ASC_PANIC("Corrupted variable list in CopyTokenRelation\n");
+        ASC_PANIC("Corrupted variable list in CopyTokenRelation\n");
       }
 #endif
       gl_append_ptr(newvarlist,(VOIDPTR)var);
@@ -4575,10 +4557,12 @@ struct relation *CopyAnonRelationByReference(CONST struct Instance *src_inst,
     CopyBlackBoxDataByReference(src,result,bboxtable_p);
     RelationRefCount(src)++;
     break;
+#if 0
   case e_opcode:
   case e_glassbox:	/* Double  check  -- what about the args ?? */
     ASC_PANIC("ERROR: CopyAnonRelationByReference on opcode/glassbox.\n");
     break;
+#endif
   default: /*NOTREACHED we hope*/
     break;
   }
@@ -4608,8 +4592,10 @@ struct relation *CopyRelationByReference(CONST struct Instance *src_inst,
   result->vars = CopyRelationVarList(dest_inst,copylist);
   switch (type) {
   case e_token:		/* only need increment the reference count */
+#if 0
   case e_opcode:
   case e_glassbox:	/* Double  check  -- what about the args ?? */
+#endif
   case e_blackbox:	/* Double  check  -- what about the args ?? */
     RelationRefCount(src)++;
     break;
@@ -4636,6 +4622,7 @@ struct relation *CopyRelationToModify(CONST struct Instance *src_inst,
   case e_token:
     result = CopyTokenRelation(src_inst,dest_inst,copylist);
     return result;
+#if 0
   case e_opcode:
     ASC_PANIC("Opcode relation copying not yet supported\n");
 
@@ -4645,6 +4632,7 @@ struct relation *CopyRelationToModify(CONST struct Instance *src_inst,
 				    copylist, RGBOX(src).index,
 				    RelRelop(src));
     return result;
+#endif
   case e_blackbox:
     ASC_PANIC("Blackbox relation copying not yet supported\n");
 

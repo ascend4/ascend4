@@ -144,7 +144,7 @@ extern struct Instance *CreateRelationInstance(struct TypeDescription *type,
 /**<
 	Create a relation instance who type is described by "type".  The instance
 	will use the memory pointed to by type, so don't modify it or free it.
-	reltype is one of e_glassbox, e_blackbox, e_opcode, e_tokens and must
+	reltype is one of e_blackbox, e_token and must
 	be provided.
 */
 

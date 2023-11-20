@@ -1,5 +1,5 @@
 /*	FPROPS fluid property calculation library
-	Copyright (C) 2008-2011 John Pye
+	Copyright (C) 2008-2023 John Pye
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -35,28 +35,30 @@
 
 
 /* these are the 'raw' functions, they don't do phase equilibrium. */
-PropEvalFn helmholtz_p;
-PropEvalFn helmholtz_u;
-PropEvalFn helmholtz_h;
-PropEvalFn helmholtz_s;
-PropEvalFn helmholtz_a;
-PropEvalFn helmholtz_g;
-PropEvalFn helmholtz_cp;
-PropEvalFn helmholtz_cv;
-PropEvalFn helmholtz_w;
-PropEvalFn helmholtz_dpdrho_T;
-PropEvalFn helmholtz_alphap;
-PropEvalFn helmholtz_betap;
+PropEvalFn2 helmholtz_T;
+PropEvalFn2 helmholtz_rho;
+PropEvalFn2 helmholtz_p;
+PropEvalFn2 helmholtz_u;
+PropEvalFn2 helmholtz_h;
+PropEvalFn2 helmholtz_s;
+PropEvalFn2 helmholtz_a;
+PropEvalFn2 helmholtz_g;
+PropEvalFn2 helmholtz_cp;
+PropEvalFn2 helmholtz_cv;
+PropEvalFn2 helmholtz_w;
+PropEvalFn2 helmholtz_dpdrho_T;
+PropEvalFn2 helmholtz_alphap;
+PropEvalFn2 helmholtz_betap;
 SatEvalFn helmholtz_sat;
 
-double helmholtz_dpdT_rho(double T, double rho, const FluidData *data, FpropsError *err);
-double helmholtz_d2pdrho2_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_dpdT_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err);
+double helmholtz_d2pdrho2_T(FluidStateUnion vals, const FluidData *data, FpropsError *err);
 
-double helmholtz_dhdT_rho(double T, double rho, const FluidData *data, FpropsError *err);
-double helmholtz_dhdrho_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_dhdT_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err);
+double helmholtz_dhdrho_T(FluidStateUnion vals, const FluidData *data, FpropsError *err);
 
-double helmholtz_dudT_rho(double T, double rho, const FluidData *data, FpropsError *err);
-double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsError *err);
+double helmholtz_dudT_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err);
+double helmholtz_dudrho_T(FluidStateUnion vals, const FluidData *data, FpropsError *err);
 
 
 //#define HELM_DEBUG
@@ -103,6 +105,8 @@ double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsErr
 
 /* calculate tau and delta using a macro -- is used in most functions */
 #define DEFINE_TD \
+	double T = vals.Trho.T; \
+	double rho = vals.Trho.rho; \
 	double tau = data->corr.helm->T_star / T; \
 	double delta = rho / data->corr.helm->rho_star
 
@@ -161,16 +165,18 @@ PureFluid *helmholtz_prepare(const EosData *E, const ReferenceState *ref){
 
 	/* function pointers... more to come still? */
 #define FN(VAR) P->VAR##_fn = &helmholtz_##VAR
+	FN(T); FN(rho);
 	FN(p); FN(u); FN(h); FN(s); FN(a); FN(g); FN(cp); FN(cv); FN(w);
 	FN(alphap); FN(betap); FN(dpdrho_T);
 	FN(sat);
 #undef FN
+	P->setref_fn = refstate_set_for_phi0;
 
 	FpropsError err = 0;
 
 	/* calculate critical pressure (doesn't require h0, s0) */
 	MSG("Calculating critical pressure at T_c = %f K, rho_c = %f kg/m3",P->data->T_c, P->data->rho_c);
-	P->data->p_c = helmholtz_p(P->data->T_c, P->data->rho_c, P->data, &err);
+	P->data->p_c = helmholtz_p((FluidStateUnion){.Trho={P->data->T_c, P->data->rho_c}}, P->data, &err);
 	if(err){
 		ERRMSG("Failed to calculate critical pressure.");
 		FPROPS_FREE(P->data);
@@ -210,14 +216,38 @@ void helmholtz_destroy(PureFluid *P){
 }
 
 /**
+	Function to extract temperature from the fluid state object; no calculation
+	required in this case.
+
+	@param vals Fluid state, which is (T,rho) in the case of Helmholtz EOS.
+	@param data Pointer to fluid property data
+	@return Temperature in kelvin (K).
+*/
+double helmholtz_T(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	return vals.Trho.T;
+}
+
+/**
+	Function to extract density from the fluid state object; no calculatin required
+	in this case.
+
+	@param vals Fluid state, which is (T,rho) in the case of Helmholtz EOS.
+	@param data Pointer to fluid property data
+	@return Temperature in kelvin (K).
+*/
+double helmholtz_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	return vals.Trho.rho;
+}
+
+/**
 	Function to calculate pressure from Helmholtz free energy EOS, given temperature
 	and mass density.
 
-	@param T temperature in K
-	@param rho mass density in kg/m³
+	@param vals Fluid state, which is (T,rho) in the case of Helmholtz EOS.
+	@param data Pointer to fluid property data
 	@return pressure in Pa
 */
-double helmholtz_p(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_p(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	assert(HD->rho_star!=0);
@@ -254,7 +284,7 @@ double helmholtz_p(double T, double rho, const FluidData *data, FpropsError *err
 	@param rho mass density in kg/m³
 	@return internal energy in ???
 */
-double helmholtz_u(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_u(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 #ifdef TEST
@@ -271,7 +301,7 @@ double helmholtz_u(double T, double rho, const FluidData *data, FpropsError *err
 	fprintf(stderr,"R T = %f\n",HD_R * HD->T_star);
 #endif
 
-	return HD_R * HD->T_star * (ideal_phi_tau(tau,delta,HD_CP0) + helm_resid_tau(tau,delta,HD));
+	return HD_R * HD->T_star * (ideal_phi_tau(tau,HD_CP0) + helm_resid_tau(tau,delta,HD));
 }
 
 /**
@@ -282,7 +312,7 @@ double helmholtz_u(double T, double rho, const FluidData *data, FpropsError *err
 	@param rho mass density in kg/m³
 	@return enthalpy in J/kg
 */
-double helmholtz_h(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_h(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 //#ifdef TEST
@@ -292,7 +322,7 @@ double helmholtz_h(double T, double rho, const FluidData *data, FpropsError *err
 	assert(!isnan(delta));
 	assert(!isnan(HD_R));
 //#endif
-	double h = HD_R * T * (1 + tau * (ideal_phi_tau(tau,delta,HD_CP0) + helm_resid_tau(tau,delta,HD)) \
+	double h = HD_R * T * (1 + tau * (ideal_phi_tau(tau,HD_CP0) + helm_resid_tau(tau,delta,HD)) \
 		+ delta*helm_resid_del(tau,delta,HD));
 	assert(!isnan(h));
 	return h;
@@ -306,7 +336,7 @@ double helmholtz_h(double T, double rho, const FluidData *data, FpropsError *err
 	@param rho mass density in kg/m³
 	@return entropy in J/kgK
 */
-double helmholtz_s(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_s(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 #ifdef ENTROPY_DEBUG
@@ -316,13 +346,13 @@ double helmholtz_s(double T, double rho, const FluidData *data, FpropsError *err
 	assert(!isnan(delta));
 	assert(!isnan(HD_R));
 
-	fprintf(stderr,"ideal_phi_tau = %f\n",ideal_phi_tau(tau,delta,HD_CP0));
+	fprintf(stderr,"ideal_phi_tau = %f\n",ideal_phi_tau(tau,HD_CP0));
 	fprintf(stderr,"helm_resid_tau = %f\n",helm_resid_tau(tau,delta,HD));
 	fprintf(stderr,"ideal_phi = %f\n",ideal_phi(tau,delta,HD_CP0));
 	fprintf(stderr,"helm_resid = %f\n",helm_resid(tau,delta,HD));
 #endif
 	return HD_R * (
-		tau * (ideal_phi_tau(tau,delta,HD_CP0) + helm_resid_tau(tau,delta,HD))
+		tau * (ideal_phi_tau(tau,HD_CP0) + helm_resid_tau(tau,delta,HD))
 		- (ideal_phi(tau,delta,HD_CP0) + helm_resid(tau,delta,HD))
 	);
 }
@@ -335,7 +365,7 @@ double helmholtz_s(double T, double rho, const FluidData *data, FpropsError *err
 	@param rho mass density in kg/m³
 	@return Helmholtz energy 'a', in J/kg
 */
-double helmholtz_a(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_a(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 #ifdef TEST
@@ -362,7 +392,7 @@ double helmholtz_a(double T, double rho, const FluidData *data, FpropsError *err
 	@param rho mass density in kg/m³
 	@return Isochoric specific heat capacity in J/kg/K.
 */
-double helmholtz_cv(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_cv(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	return - HD_R * SQ(tau) * (ideal_phi_tautau(tau,HD_CP0) + helm_resid_tautau(tau,delta,HD));
@@ -376,7 +406,7 @@ double helmholtz_cv(double T, double rho, const FluidData *data, FpropsError *er
 	@param rho mass density in kg/m³
 	@return Isobaric specific heat capacity in J/kg/K.
 */
-double helmholtz_cp(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_cp(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	double phir_d = helm_resid_del(tau,delta,HD);
@@ -400,7 +430,7 @@ double helmholtz_cp(double T, double rho, const FluidData *data, FpropsError *er
 	@param rho mass density in kg/m³
 	@return Speed of sound in m/s.
 */
-double helmholtz_w(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_w(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	double phir_d = helm_resid_del(tau,delta,HD);
@@ -424,7 +454,7 @@ double helmholtz_w(double T, double rho, const FluidData *data, FpropsError *err
 	@param rho mass density in kg/m³
 	@return Gibbs energy, in J/kg.
 */
-double helmholtz_g(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_g(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	double phir_d = helm_resid_del(tau,delta,HD);
@@ -438,7 +468,7 @@ double helmholtz_g(double T, double rho, const FluidData *data, FpropsError *err
 	alpha_p function from IAPWS Advisory Note 3, used in calculation of
 	partial property derivatives.
 */
-double helmholtz_alphap(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_alphap(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 	double phir_d = helm_resid_del(tau,delta,HD);
 	double phir_dt = helm_resid_deltau(tau,delta,HD);
@@ -449,7 +479,7 @@ double helmholtz_alphap(double T, double rho, const FluidData *data, FpropsError
 	beta_p function from IAPWS Advisory Note 3 , used in calculation of partial
 	property derivatives.
 */
-double helmholtz_betap(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_betap(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 	double phir_d = helm_resid_del(tau,delta,HD);
 	double phir_dd = helm_resid_deldel(tau,delta,HD);
@@ -463,7 +493,7 @@ double helmholtz_betap(double T, double rho, const FluidData *data, FpropsError 
 /**
 	Calculate partial derivative of p with respect to T, with rho constant
 */
-double helmholtz_dpdT_rho(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_dpdT_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	double phir_del = helm_resid_del(tau,delta,HD);
@@ -490,7 +520,7 @@ double helmholtz_dpdT_rho(double T, double rho, const FluidData *data, FpropsErr
 /**
 	Calculate partial derivative of p with respect to rho, with T constant
 */
-double helmholtz_dpdrho_T(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_dpdrho_T(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 	//MSG("...");
 	double phir_del = helm_resid_del(tau,delta,HD);
@@ -503,7 +533,7 @@ double helmholtz_dpdrho_T(double T, double rho, const FluidData *data, FpropsErr
 }
 
 
-double helmholtz_d2pdrho2_T(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_d2pdrho2_T(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	double phir_del = helm_resid_del(tau,delta,HD);
@@ -521,7 +551,7 @@ double helmholtz_d2pdrho2_T(double T, double rho, const FluidData *data, FpropsE
 /**
 	Calculate partial derivative of h with respect to T, with rho constant
 */
-double helmholtz_dhdT_rho(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_dhdT_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	double phir_del = helm_resid_del(tau,delta,HD);
@@ -538,7 +568,7 @@ double helmholtz_dhdT_rho(double T, double rho, const FluidData *data, FpropsErr
 /**
 	Calculate partial derivative of h with respect to rho, with T constant
 */
-double helmholtz_dhdrho_T(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_dhdrho_T(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	double phir_del = helm_resid_del(tau,delta,HD);
@@ -552,7 +582,7 @@ double helmholtz_dhdrho_T(double T, double rho, const FluidData *data, FpropsErr
 /**
 	Calculate partial derivative of u with respect to T, with rho constant
 */
-double helmholtz_dudT_rho(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_dudT_rho(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	double phir_tautau = helm_resid_tautau(tau,delta,HD);
@@ -565,7 +595,7 @@ double helmholtz_dudT_rho(double T, double rho, const FluidData *data, FpropsErr
 /**
 	Calculate partial derivative of u with respect to rho, with T constant
 */
-double helmholtz_dudrho_T(double T, double rho, const FluidData *data, FpropsError *err){
+double helmholtz_dudrho_T(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
 
 	double phir_deltau = helm_resid_deltau(tau,delta,HD);
@@ -627,12 +657,12 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 		MSG("iter %d: T = %f, rhof = %f, rhog = %f",i,T, rhof, rhog);
 #endif
 
-		double pf = helmholtz_p(T,rhof,data,err);
-		double pg = helmholtz_p(T,rhog,data,err);
-		double gf = helmholtz_a(T,rhof,data,err) + pf/rhof;
-		double gg = helmholtz_a(T,rhog,data,err) + pg/rhog;
-		double dpdrf = helmholtz_dpdrho_T(T,rhof,data,err);
-		double dpdrg = helmholtz_dpdrho_T(T,rhog,data,err);
+		double pf = helmholtz_p((FluidStateUnion){.Trho={T,rhof}},data,err);
+		double pg = helmholtz_p((FluidStateUnion){.Trho={T,rhog}},data,err);
+		double gf = helmholtz_a((FluidStateUnion){.Trho={T,rhof}},data,err) + pf/rhof;
+		double gg = helmholtz_a((FluidStateUnion){.Trho={T,rhog}},data,err) + pg/rhog;
+		double dpdrf = helmholtz_dpdrho_T((FluidStateUnion){.Trho={T,rhof}},data,err);
+		double dpdrg = helmholtz_dpdrho_T((FluidStateUnion){.Trho={T,rhog}},data,err);
 
 		// jacobian for [F;G](rhof, rhog) --- derivatives wrt rhof and rhog
 		double F = (pf - pg)/pc;
@@ -642,7 +672,7 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 			//fprintf(stderr,"%s: CONVERGED\n",__func__);
 			*rhof_out = rhof;
 			*rhog_out = rhog;
-			return helmholtz_p(T, *rhog_out, data, err);
+			return helmholtz_p((FluidStateUnion){.Trho={T, *rhog_out}}, data, err);
 			/* SUCCESS */
 		}
 
@@ -674,7 +704,7 @@ double helmholtz_sat(double T, double *rhof_out, double * rhog_out, const FluidD
 	*rhog_out = rhog;
 	*err = FPROPS_SAT_CVGC_ERROR;
 	ERRMSG("Not converged: with T = %e (rhof=%f, rhog=%f).",T,*rhof_out,*rhog_out);
-	return helmholtz_p(T, rhog, data, err);
+	return helmholtz_p((FluidStateUnion){.Trho={T, rhog}}, data, err);
 }
 
 

@@ -39,6 +39,13 @@
 # include <ascend/general/ascMalloc.h>
 # include <ascend/utilities/ascDynaLoad.h>
 
+//#define ASC_CONOPT_DEBUG
+#ifdef ASC_CONOPT_DEBUG
+# define MSG(...) CONSOLE_DEBUG(__VA_ARGS__)
+#else
+# define MSG(...) (void)0
+#endif
+
 /*------------------------------------------------------------------------------
   DLOPENING CONOPT SUPPORT FUNCTIONS
 */
@@ -90,7 +97,7 @@ CONOPT_FNS(FN_PTR_EXEC,SPACE)
 # undef FN_PTR_EXEC
 
 /**
-	This funciton will load the DLL and resolve all the required symbols
+	This function will load the DLL and resolve all the required symbols
 */
 int asc_conopt_load(){
 # ifdef ASC_LINKED_CONOPT
@@ -107,15 +114,15 @@ int asc_conopt_load(){
 		return 0; /* already loaded */
 	}
 
-	/* CONSOLE_DEBUG("LOADING CONOPT..."); */
+	/* MSG("LOADING CONOPT..."); */
 
 	envvar  = ASC_CONOPT_ENVVAR;
 
 	/* need to import this variable into the ascend 'environment' */
-	if(-1!=env_import(ASC_CONOPT_ENVVAR,getenv,Asc_PutEnv)){
-		CONSOLE_DEBUG("Searching in path '%s' (from env var '%s')",getenv(envvar),envvar);
+	if(-1!=env_import(ASC_CONOPT_ENVVAR,getenv,Asc_PutEnv,0)){
+		MSG("Searching in path '%s' (from env var '%s')",getenv(envvar),envvar);
 	}/*else{
-		CONSOLE_DEBUG("Default conopt search path: %s", ASC_CONOPT_DLPATH);
+		MSG("Default conopt search path: %s", ASC_CONOPT_DLPATH);
 	}*/
 
 	/** @TODO replace with a direct call to ospath and/or importhandler? */
@@ -169,7 +176,7 @@ int asc_conopt_load(){
 	ASC_FREE(libpath);
 
 	if(status!=0){
-		return 1; /* faile to result all symbols */
+		return 1; /* failed to resolve all symbols */
 	}
 
     loaded = 1;
@@ -179,12 +186,14 @@ int asc_conopt_load(){
 #endif
 
 /*-----------------------------------------------------------------------------
-   std.c
+   std.c (modified from the version provided with CONOPT)
 
    This file has some 'standard' implementations for the mandatory
    callback routines Message, ErrMsg, Status, and Solution.
    The routines use global file pointers, so they are only intended
    as examples that can be used for further refinements.
+
+	FIXME this code could probably be moved to asc_conopt.c?
 */
 
 #define MAXLINE 133  /* maximum line length plus an extra character
@@ -193,10 +202,10 @@ int asc_conopt_load(){
 int COI_CALL asc_conopt_progress( int* LEN_INT, int* INT
 		, int* LEN_RL, double* RL, double* X, double* USRMEM
 ){
-	/*(void)CONSOLE_DEBUG("Iteration %d, phase %d: %d infeasible, %d non-optimal; objective = %e"
+	MSG("Iteration %d, phase %d: %d infeasible, %d non-optimal; objective = %e"
 		, INT[0], INT[1], INT[2], INT[3], RL[1]
-	);*/
-	/* NEED TO IMPLEMENT SOME KIND OF CALLBACK TO THE SOLVERREPORTER */
+	);
+	/* FIXME: NEED TO IMPLEMENT SOME KIND OF CALLBACK TO THE SOLVERREPORTER */
 	return 0;
 }
 
@@ -214,7 +223,7 @@ int COI_CALL asc_conopt_message( int* SMSG, int* DMSG, int* NMSG, int* LLEN
       j = LLEN[i];
       for( l= 0; l<j; l++ ) line[l] = MSGV[k+l];
       line[j] = '\0';
-      CONSOLE_DEBUG("%s", line);
+      MSG("%s", line);
       k += MSGLEN;
    }
 /*   k = 0;
@@ -240,7 +249,7 @@ int COI_CALL asc_conopt_message( int* SMSG, int* DMSG, int* NMSG, int* LLEN
 int COI_CALL asc_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 		, double* USRMEM, char* MSG, int LENMSG
 ){
-/* Standard ErrMsg routine. Write to Documentation and Status file*/
+   /* Standard ErrMsg routine. Write to Documentation and Status file*/
    int j,l;
    char line[MAXLINE];
    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
@@ -261,12 +270,12 @@ int COI_CALL asc_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 int COI_CALL asc_conopt_status(int* MODSTA, int* SOLSTA
 		, int* ITER, double* OBJVAL, double* USRMEM
 ){
-/* Standard Status routine. Write to all files */
-	CONSOLE_DEBUG("CONOPT has finished Optimizing");
-	CONSOLE_DEBUG("Model status    = %8d", *MODSTA);
-	CONSOLE_DEBUG("Solver status   = %8d", *SOLSTA);
-	CONSOLE_DEBUG("Iteration count = %8d", *ITER);
-	CONSOLE_DEBUG("Objective value = %10f", *OBJVAL);
+	/* Standard Status routine. Write to all files */
+	MSG("CONOPT has finished Optimizing");
+	MSG("Model status    = %8d", *MODSTA);
+	MSG("Solver status   = %8d", *SOLSTA);
+	MSG("Iteration count = %8d", *ITER);
+	MSG("Objective value = %10f", *OBJVAL);
 
 	const char *modsta;
 	error_severity_t t = ASC_USER_SUCCESS;
@@ -300,7 +309,7 @@ int COI_CALL asc_conopt_status(int* MODSTA, int* SOLSTA
 		default: t = ASC_PROG_ERR; solsta = "UNKNOWN SOLSTA";
 	}
 
-	CONSOLE_DEBUG("CONOPT %s (%d): %s (%d)", solsta, *SOLSTA, modsta, *MODSTA);
+	MSG("CONOPT %s (%d): %s (%d)", solsta, *SOLSTA, modsta, *MODSTA);
 	ERROR_REPORTER_NOLINE(t,"CONOPT %s: %s", solsta, modsta);
 
 	return 0;
@@ -310,7 +319,7 @@ int COI_CALL asc_conopt_solution( double* XVAL, double* XMAR, int* XBAS
 		, int* XSTA, double* YVAL, double* YMAR, int* YBAS, int* YSTA
 		, int* N, int* M, double* USRMEM
 ){
-/* Standard Solution routine */
+   /* Standard Solution routine */
    int i;
    char *status[4] = {"Lower","Upper","Basic","Super"};
    FILE *fd = stderr;

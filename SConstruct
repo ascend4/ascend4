@@ -42,7 +42,7 @@ default_install_solvers = "$INSTALL_LIB/ascend/solvers"
 default_install_assets = "$INSTALL_ASCDATA/glade/"
 default_install_ascdata = "$INSTALL_SHARE/ascend"
 default_install_include = "$INSTALL_PREFIX/include"
-default_install_python = distutils.sysconfig.get_python_lib(plat_specific=1)
+default_install_python = distutils.sysconfig.get_python_lib(prefix="$INSTALL_PREFIX",plat_specific=1)
 default_install_python_ascend = "$INSTALL_PYTHON/ascend"
 default_tcl = '/usr'
 default_tcl_libpath = "$TCL/lib"
@@ -65,6 +65,10 @@ default_libpath="$DEFAULT_PREFIX/lib"
 default_cpppath="$DEFAULT_PREFIX/include"
 default_f2c_lib="gfortran"
 default_swig="swig"
+default_pcre_prefix="$DEFAULT_PREFIX"
+default_pcre_libs=['pcre']
+default_pcre_libpath="$PCRE_PREFIX/lib"
+default_pcre_cpppath="$PCRE_PREFIX/include"
 
 icon_extension = '.png'
 
@@ -273,6 +277,11 @@ vars.Add('CXX'
 	,"${HOST_PREFIX}g++"
 )
 
+vars.Add('ADDCCFLAGS'
+	,'Any additional CC flags to be added, eg -Werror'
+	,""
+)
+
 vars.Add(BoolVariable('GCOV'
 	, 'Whether to enable coverage testing in object code'
 	, False
@@ -379,6 +388,21 @@ vars.Add('DEFAULT_ASCENDSOLVERS'
 	,"$INSTALL_SOLVERS"
 )
 
+# What should the default ASCENDBTINC path be?
+vars.Add('DEFAULT_ASCENDBTINC'
+	,"Set the default value of ASCENDBTINC -- the location where"
+		+" ASCEND will look for bintoken files for fast compilation of"
+		+" equations."
+	,"$INSTALL_INCLUDE"
+)
+
+vars.Add('DEFAULT_ASCENDBTLIB'
+	,"Set the default value of ASCENDBTLIB -- the location where"
+		+" ASCEND will look for bintoken files for fast compilation of"
+		+" equations."
+	,"$INSTALL_LIB"
+)
+
 # Where is SWIG?
 vars.Add('SWIG'
 	,"SWIG location, probably only required for MinGW and MSVC users."
@@ -394,6 +418,13 @@ vars.Add(BoolVariable('WITH_CUNIT'
         +" target, which just might make things marginally faster. Probably"
 		+" you can just ignore this option though. SCons will sniff for Cunit"
 		+" but build the tests only if you specify the 'test' target."
+	,True
+))
+
+# zlib support
+vars.Add(BoolVariable('WITH_ZLIB'
+	,"Include features that make use of the zlib file compression library,"
+	+" if available. Set to zero if you want to explicitly disable this."
 	,True
 ))
 
@@ -471,7 +502,7 @@ vars.Add('CONOPT_ENVVAR'
 
 vars.Add(PackageVariable("IPOPT_PREFIX"
 	,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
-	,pathlib.Path(os.environ['HOME'])/'.local'
+,pathlib.Path(os.environ['HOME'])/'.local'
 ))
 
 #
@@ -505,6 +536,32 @@ vars.Add(PackageVariable("IPOPT_PREFIX"
 #			,"Exact path of IPOPT DLL (%d) to be included in the installer (Windows only)"%(i+1)
 #			,default_ipopt_dll[i]
 #		)
+
+#-------pcre--------
+
+vars.Add(BoolVariable('WITH_PCRE'
+	,"Set to False if you don't want to enable searching of notes with PCRE1"
+	, True
+))
+
+vars.Add(PackageVariable("PCRE_PREFIX"
+	,"Prefix for your PCRE install (PCRE ./configure --prefix)"
+	,default_pcre_prefix
+))
+
+vars.Add("PCRE_LIBS"
+	,"Library linked to for PCRE"
+	,default_pcre_libs
+)
+
+vars.Add("PCRE_LIBPATH"
+	,"Where is your IPOPT library installed"
+)
+
+vars.Add('PCRE_CPPPATH'
+	,"Where is your IPOPT coin/IpStdCInterface.h (do not include the 'coin' in the path)"
+	,"$PCRE_PREFIX/include"
+)
 
 #-------- f2c ------
 
@@ -900,6 +957,9 @@ without_graphiviz_reason = "disabled by options/config.py"
 with_ufsparse = env.get('WITH_UFSPARSE')
 without_ufsparse_reason = "disabled by options/config.py"
 
+with_zlib = env.get('WITH_ZLIB')
+without_zlib_reason = "disabled by options/config.py"
+
 with_mmio = env.get('WITH_MMIO')
 without_mmio_reason = "disabled by options/config.py"
 
@@ -941,6 +1001,9 @@ without_conopt_reason = notselected
 
 #with_ipopt = 'IPOPT' in env['WITH_SOLVERS']
 #without_ipopt_reason = notselected
+
+with_pcre = env.get('WITH_PCRE')
+without_pcre_reason = "disabled by options/config.py"
 
 with_makemps = 'MAKEMPS' in env['WITH_SOLVERS']
 without_makemps_reason = notselected
@@ -1946,6 +2009,22 @@ def CheckErf(context):
 	context.Result(is_ok)
 
 #----------------
+# PCRE1 check
+
+pcre_test_text = """
+#include <pcre.h>
+int main(){
+	pcre *re;
+	const char *errstr;
+	int erroffset;
+	re = pcre_compile("^([a-z]+)[0-9])$",0,&errstr,&erroffset,NULL);
+}
+"""
+
+def CheckPCRE(context):
+	return CheckExtLib(context,libname='pcre',text=pcre_test_text)
+
+#----------------
 # GCC Version sniffing
 
 # TODO FIXME
@@ -1994,6 +2073,7 @@ conf = Configure(env
 		, 'CheckSIGINT' : CheckSIGINT
 		, 'CheckSigReset' : CheckSigReset
 		, 'CheckErf' : CheckErf
+		, 'CheckPCRE' : CheckPCRE
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -2143,7 +2223,7 @@ if conf.CheckGcc():
 		conf.env['HAVE_GCCVISIBILITY']=True;
 		conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
 		conf.env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
-	conf.env.Append(CCFLAGS=['-Wall'])
+	conf.env.Append(CCFLAGS=['-Wall','-O2'])
 
 # Catching SIGINT
 
@@ -2210,10 +2290,13 @@ if env['STATIC_TCLTK']:
 
 # CUnit
 
+conf.env['HAVE_CUNIT'] = False
 if with_cunit:
 	if not conf.CheckCUnit():
 		without_cunit_reason = 'CUnit not found'
 		with_cunit = False
+	else:
+		conf.env['HAVE_CUNIT'] = True	
 		#print "CUNIT NOT FOUND, LIBS=",conf.env.get('LIBS')
 
 # DMALLOC
@@ -2269,6 +2352,15 @@ elif conf.CheckCONOPT() is False:
 #elif not conf.CheckIPOPT():
 #	with_ipopt = False
 #	without_ipopt_reason = "IPOPT not found"
+
+# ZLIB
+
+if not conf.CheckCHeader('zlib.h'):
+	with_zlib = False
+	without_zlib_reason = "zlib.h not found"
+elif not conf.CheckLib('z'):
+	with_zlib = False
+	without_zlib_reason = "library libz not found"
 
 # BLAS
 
@@ -2330,6 +2422,13 @@ if with_doc_build:
 	if not conf.CheckLyx():
 		with_doc_build = False
 		without_doc_build_reason="unable to locate LyX"
+
+# PCRE
+
+if with_pcre:
+	if not conf.CheckPCRE():
+		with_pcre = False
+		without_pcre_reason = "PCRE not found"
 
 # TODO: -D_HPUX_SOURCE is needed
 
@@ -2408,6 +2507,8 @@ subst_dict = {
 	, '@ASCENDTK_DEFAULT@': c_escape(os.path.abspath(env.subst(env['INSTALL_TK'])))
 	, '@ASCENDLIBRARY_DEFAULT@': c_escape(os.path.abspath(env.subst(env['DEFAULT_ASCENDLIBRARY'])))
 	, '@ASCENDSOLVERS_DEFAULT@': c_escape(os.path.abspath(env.subst(env['DEFAULT_ASCENDSOLVERS'])))
+	, '@DEFAULT_ASCENDBTINC@': c_escape(os.path.abspath(env.subst(env['DEFAULT_ASCENDBTINC'])))
+	, '@DEFAULT_ASCENDBTLIB@': c_escape(os.path.abspath(env.subst(env['DEFAULT_ASCENDBTLIB'])))
 	, '@ASC_DIST_REL_BIN@' : default_dist_rel_bin
 	, '@ASC_TK_REL_DIST@' : default_tk_rel_dist
 	, '@ASC_LIBRARY_REL_DIST@' : default_library_rel_dist
@@ -2434,6 +2535,8 @@ for k,v in {
 		'ASC_WITH_DMALLOC':with_dmalloc
 		,'ASC_WITH_UFSPARSE':with_ufsparse
 		,'ASC_WITH_MMIO':with_mmio
+		,'ASC_WITH_ZLIB':with_zlib
+		,'ASC_WITH_PCRE':with_pcre
 		,'ASC_SIGNAL_TRAPS':with_signals
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
 		,'HAVE_C99FPE':env.get('HAVE_C99FPE')
@@ -2505,6 +2608,9 @@ if env['DEBUG']:
 		,LINKFLAGS=['-g']
 	)
 
+if env['ADDCCFLAGS']:
+	env.Append(CCFLAGS=env['ADDCCFLAGS'])
+
 if env['GCOV']:
 	env.Append(
 		CPPFLAGS=['-g','-fprofile-arcs','-ftest-coverage']
@@ -2544,8 +2650,6 @@ if env.get('WITH_PYTHON'):
 
 	env.SConscript(['ascxx/SConscript'],'env')
 	env.SConscript(['pygtk/SConscript'],'env')
-else:
-	print("Skipping... Python bindings aren't being built:",without_python_reason)
 
 #-------------
 # TCL/TK GUI
@@ -2560,7 +2664,7 @@ else:
 
 libascend_env = env.Clone()
 
-dirs = ['general','utilities','compiler','system','solver','integrator','packages','linear']
+dirs = ['general','utilities','compiler','system','solver','integrator','packages','linear','bintokens']
 
 srcs = []
 for d in dirs:
@@ -2586,6 +2690,11 @@ if with_mmio:
 	srcs += env.SConscript(['mmio/SConscript'],'env')
 else:
 	print("Skipping... MMIO export won't be built:", without_mmio_reason)
+
+#if with_pcre:
+#	env.Append(WITH_PCRE=1)
+#else:
+#	print "Skipping... PCRE searching of NOTES:",without_pcre_reason
 #-------------
 # LIBASCEND -- all 'core' functionality
 
@@ -2645,11 +2754,10 @@ if with_cunit:
 	test_env['TESTDIRS'] = testdirs
 
 	#print "TESTSRCS =",testsrcs
-		
+	
 	test_env.SConscript(['test/SConscript'],'test_env')
 
-	env.Alias('test',[env.Dir('test')])
-	
+	env.Alias('test',[env.Dir('test')])	
 else:
 	print("Skipping... CUnit tests aren't being built:",without_cunit_reason)
 
@@ -2664,6 +2772,7 @@ env.SConscript(['solvers/SConscript'],'env')
 #-------------
 # EXTERNAL FUNCTIONS
 
+print(f"env['HAVE_CUNIT'] = {env['HAVE_CUNIT']}")
 modeldirs = env.SConscript(['models/SConscript'],'env')
 
 if not with_extfns:

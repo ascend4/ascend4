@@ -32,6 +32,7 @@
 #include <ascend/compiler/safe.h>
 #include <ascend/compiler/qlfdid.h>
 #include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/packages.h>
 
 #include <ascend/compiler/slvreq.h>
 
@@ -46,10 +47,28 @@
 	Test solving a simple CONOPT model
 */
 static void test_conopt(const char *filenamestem){
+	char env1[2*PATH_MAX];
+	int solver_index;
 
 	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/conopt");
+
+	/* set the needed environment variables so that models, solvers can be found */
+	snprintf(env1,2*PATH_MAX,ASC_ENV_LIBRARY "=%s","models");
+	CU_TEST(0 == Asc_PutEnv(env1));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/conopt" OSPATH_DIV "solvers/qrslv" OSPATH_DIV "solver/cmslv"));
+	/* read back and display the ASCENDLIBRARY setting */
+	char *lib = Asc_GetEnv(ASC_ENV_LIBRARY);
+	CONSOLE_DEBUG("%s = %s\n",ASC_ENV_LIBRARY,lib);
+	ASC_FREE(lib);
+
+	/* load the CONOPT solver, presumably from the ASCENDSOLVERS path */
+	package_load("conopt",NULL);
+	solver_index = slv_lookup_client("CONOPT");
+	if(solver_index==-1){
+		/* cleanup compiler if we're about to fail */
+		Asc_CompilerDestroy();
+	}
+	CU_ASSERT_FATAL(solver_index != -1);
 
 	/* load the file */
 	char path[PATH_MAX];
@@ -127,26 +146,23 @@ static void test_conopt(const char *filenamestem){
 /*===========================================================================*/
 /* Registration information */
 
-#define TESTS1(T,X) \
+#define TESTS1(T) \
 	T(test11) \
-	X T(test12) \
-	X T(test13) \
-	X T(test14)
+	T(test12) \
+	T(test13) \
+	T(test14) \
+	T(conopttest)
 
 /* define the tests: each test loads the model, solves with CONOPT, then runs the
 self_test method. */
 #define T(N) static void test_##N(void){\
 		test_conopt(#N);\
 	}
-#define X
-TESTS1(T,X)
+TESTS1(T)
 #undef T
-#undef X
 
-#define X
 #define TESTS(T) \
-	TESTS1(T,X)
+	TESTS1(T)
 
 REGISTER_TESTS_SIMPLE(solver_conopt, TESTS)
-#undef X
 

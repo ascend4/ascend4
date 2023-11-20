@@ -19,7 +19,8 @@
 
 const ViscosityData *visc_prepare(const EosData *E, const PureFluid *P, FpropsError *err);
 
-double visc1_mu0(FluidState state, FpropsError *err);
-double visc1_mu(FluidState state, FpropsError *err);
+double visc1_mu0(FluidState2 state, FpropsError *err);
+double visc1_mu(FluidState2 state, FpropsError *err);
 
 
+double visc2_mu(double T, const ViscDataEpt *data, FpropsError *err);

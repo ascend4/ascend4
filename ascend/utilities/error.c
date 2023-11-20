@@ -17,7 +17,6 @@
 # define MSG(...) 
 # define ERRMSG CONSOLE_DEBUG
 #endif
-
 /**
 	Global variable which stores the pointer to the callback
 	function being used.
@@ -43,7 +42,6 @@ static error_reporter_meta_t *error_reporter_meta_new(){
 	return e;
 }
 #endif /* ERROR_REPORTER_TREE_ACTIVE */
-
 /**
 	Default error reporter. To use this error reporter, set
 	the callback pointer to NULL.
@@ -55,9 +53,7 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 	int res=0;
 	switch(sev){
 		case ASC_PROG_FATAL:    color=ASC_FG_BRIGHTRED; sevmsg = "PROGRAM FATAL ERROR: "; break;
-		case ASC_PROG_ERROR:
-		    color=ASC_FG_RED; sevmsg = "PROGRAM ERROR: ";
-			break;
+		case ASC_PROG_ERROR:    color=ASC_FG_RED; sevmsg = "PROGRAM ERROR: "; break;
 		case ASC_PROG_WARNING:  color=ASC_FG_BROWN;sevmsg = "PROGRAM WARNING: "; break;
 		case ASC_PROG_NOTE:     color=ASC_FG_BRIGHTGREEN; endtxt=""; break; /* default, keep unembellished for now */
 		case ASC_USER_ERROR:    color=ASC_FG_BRIGHTRED; sevmsg = "ERROR: "; break;
@@ -65,19 +61,21 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 		case ASC_USER_NOTE:     sevmsg = "NOTE: "; break;
 		case ASC_USER_SUCCESS:  color=ASC_FG_BRIGHTGREEN; sevmsg = "SUCCESS: "; break;
 	}
-
 	color_on(ASCERR,color);
 	res = ASC_FPRINTF(ASCERR,"%s",sevmsg);
 	color_off(ASCERR);
-
 	if(filename!=NULL){
+		//MSG("filename = '%s'",filename);
 		res += ASC_FPRINTF(ASCERR,"%s:",filename);
 	}
 	if(line!=0){
 		res += ASC_FPRINTF(ASCERR,"%d:",line);
 	}
 	if(funcname!=NULL){
+		//MSG("funcname = '%s'",funcname);
 		res += ASC_FPRINTF(ASCERR,"%s:",funcname);
+	}else{
+		//MSG("funcname NULL");
 	}
 	if ((filename!=NULL) || (line!=0) || (funcname!=NULL)){
 		res += ASC_FPRINTF(ASCERR," ");
@@ -85,7 +83,6 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 
 	res += ASC_VFPRINTF(ASCERR,fmt,args);
 	res += ASC_FPRINTF(ASCERR,"%s",endtxt);
-
 	return res;
 }
 
@@ -113,6 +110,7 @@ static error_reporter_tree_t *error_reporter_tree_new(){
 	error_reporter_tree_t *tnew = ASC_NEW(error_reporter_tree_t);
 	tnew->parent = NULL;
 	tnew->next = NULL;
+	tnew->prev = NULL;
 	tnew->head = NULL;
 	tnew->tail = NULL;
 	tnew->err = NULL;
@@ -127,7 +125,7 @@ int error_reporter_tree_start(){
 		if(TREECURRENT!=NULL){
 			ERRMSG("called with non-null TREECURRENT but null TREE!");
 			return 1;
-		}
+	}
 		MSG("whole new tree");
 		TREE = error_reporter_tree_new();
 		TREECURRENT = TREE;
@@ -189,7 +187,7 @@ static void error_reporter_tree_free(error_reporter_tree_t *t){
 			error_reporter_tree_t *next = node->next;
 			error_reporter_tree_free(node);
 			node = next;
-		}
+	}
 	}else{
 		MSG("node at %p contains neither err nor head",t);
 	}
@@ -216,7 +214,7 @@ void error_reporter_tree_clear(){
 		// there is a parent tree. disconnect TREECURRENT from it:
 		if(newcurrent->head == TREECURRENT){
 			newcurrent->head = NULL;
-		}
+	}
 		if(newcurrent->tail == TREECURRENT){
 			newcurrent->tail = NULL;
 		}
@@ -261,7 +259,6 @@ static int error_reporter_tree_match_sev(error_reporter_tree_t *t, unsigned matc
 	return 0;
 }
 
-
 int error_reporter_tree_has_error(){
 	int res;
 	if(TREECURRENT){
@@ -274,6 +271,7 @@ int error_reporter_tree_has_error(){
 		MSG("NO TREE FOUND");
 		return 0;
 	}
+	return res;
 }
 
 static int error_reporter_tree_write(error_reporter_tree_t *t){
@@ -374,8 +372,8 @@ va_error_reporter(
 				TREECURRENT->tail = t;
 			}
 			/* CONSOLE_DEBUG("Message (%d chars) added to tree",res); */
-			return res;
-		}
+				return res;
+			}
 #if 0
 		// this should never happen
 		else if(TREE){
@@ -476,8 +474,8 @@ fflush_error_reporter(FILE *file){
 
 int
 error_reporter_start(const error_severity_t sev, const char *filename, const int line, const char *func){
-
 	if(g_error_reporter_cache.iscaching){
+		MSG("call to error_reporter_start before expected error_reporter_end_flush");
 		error_reporter_end_flush();
 	}
 	g_error_reporter_cache.iscaching = 1;
@@ -533,8 +531,7 @@ error_reporter(
 /*-------------------------
   SET the callback function
 */
-void
-error_reporter_set_callback(
+void error_reporter_set_callback(
 		const error_reporter_callback_t new_callback
 ){
 	g_error_reporter_callback = new_callback;
@@ -548,7 +545,6 @@ error_reporter_set_callback(
 
 #ifdef NO_VARIADIC_MACROS
 /* Following are only required on compilers without variadic macros: */
-
 int error_reporter_note_no_line(const char *fmt,...){
 	int res;
 	va_list args;
@@ -575,7 +571,6 @@ ASC_DLLSPEC int error_reporter_here(const error_severity_t sev, const char *fmt,
 	return res;
 }
 
-
 /**
 	Error reporter 'no line' function for compilers not supporting
 	variadic macros.
@@ -591,6 +586,7 @@ int error_reporter_noline(const error_severity_t sev, const char *fmt,...){
 	return res;
 }
 
+/** console debugging for compilers not supporting variadic macros */
 int console_debug(const char *fmt,...){
 	int res;
 	va_list args;
@@ -601,5 +597,4 @@ int console_debug(const char *fmt,...){
 
 	return res;
 }
-
 #endif /* NO_VARIADIC_MACROS */

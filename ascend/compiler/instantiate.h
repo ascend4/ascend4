@@ -207,6 +207,7 @@ ASC_DLLSPEC void NewReInstantiate(struct Instance *i);
  *  assignments(assignments to reals and booleans).
  */
 
+#if 0 && defined(DISUSED)
 ASC_DLLSPEC void UpdateInstance(struct Instance *root,
                            struct Instance *target,
                            CONST struct StatementList *slist);
@@ -217,7 +218,9 @@ ASC_DLLSPEC void UpdateInstance(struct Instance *root,
  *  This is the start of some experimental encapsulation/parameterization
  *  schemes.
  */
+#endif
 
+#if 0 && defined(DISUSED)
 extern struct Instance *InstantiatePatch(symchar *patch,
                                          symchar *name, int intset);
 /**<
@@ -227,6 +230,7 @@ extern struct Instance *InstantiatePatch(symchar *patch,
  *  UpdateInstance to do the real work. The applicability of the patch is
  *  hence determined by what that function supports.
  */
+#endif
 
 extern void ConfigureInstFromArgs(struct Instance *inst,
                                   CONST struct Instance *arginst);

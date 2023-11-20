@@ -8,9 +8,15 @@
 #include "error.h"
 #include "CharactersInDouble.h"
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <unistd.h>
+#include <zlib.h>
+
+#include <ascend/utilities/error.h>
 
 /* macros */
 
@@ -74,13 +80,21 @@ static cbool parseStandardUnGetCharFunction( parse *p, char c )
   return true;
 }
 
-static void parseFileDisposeFunction( parse *p )
-{
+static void parseFileDisposeFunction( parse *p ){
   free( p->buf );
   free( p->judge );
   fclose( p->file );
   free( p );
 }
+
+#ifdef ASC_WITH_ZLIB
+static void parseGZFileDisposeFunction(parse *p){
+  free(p->buf);
+  free(p->judge);
+  gzclose(p->gzfile);
+  free(p);
+}
+#endif
 
 static cbool parseFileGetCharFunction( parse *p, char *c )
 {
@@ -94,6 +108,16 @@ static cbool parseFileGetCharFunction( parse *p, char *c )
   
   return ( *c != EOF );
 }
+
+#ifdef ASC_WITH_ZLIB
+static cbool parseGZFileGetCharFunction( parse *p, char *c ){
+  if(p->bufptr) *c = p->buf[--p->bufptr];
+  else *c = gzgetc(p->gzfile);
+  if(*c == '\n')p->line++;
+  return ( *c != EOF );
+}
+#endif
+
 
 static cbool parseStringGetCharFunction( parse *p, char *c )
 {
@@ -110,8 +134,7 @@ static cbool parseStringGetCharFunction( parse *p, char *c )
   return true;
 }
 
-parse *parseCreateFile( FILE *file )
-{
+parse *parseCreateFile(FILE *file){
   parse *p     = NEW( parse );
 
   p->file      = file;
@@ -127,6 +150,30 @@ parse *parseCreateFile( FILE *file )
   
   return p;
 }
+
+#ifdef ASC_WITH_ZLIB
+parse *parseCreateGZFile( FILE *file ){
+  parse *p     = NEW( parse );
+  int fd = dup(fileno(file));
+  p->gzfile = gzdopen(fd,"rb");
+  if(!p->gzfile){
+	close(fd);
+	free(p);
+	return NULL;
+  }
+  p->buf = array( char, BUFSIZE );
+  p->bufptr    = 0;
+  p->judge     = array( category, 256 );
+  parseInitJudgement( p->judge );
+  p->line      = 1;
+  
+  p->getChar   = parseGZFileGetCharFunction;
+  p->unGetChar = parseStandardUnGetCharFunction;
+  p->dispose   = parseGZFileDisposeFunction;
+  
+  return p;
+}
+#endif
 
 parse *parseCreateFileName( const char *name )
 {
@@ -191,15 +238,15 @@ cbool parseError( parse *p, char *s )
   char rest[300];
   int i;
   
-  for ( i = 0
-      ; parseAChar( p, rest+i ) && rest[i] != '\n' && i < 50
+  for(i = 0
+      ; parseAChar( p, rest+i ) && rest[i] != '\n' && rest[i]>32 && i < 50
       ; i++
-      );
+  );
   
   rest[i]   = '\n';
   rest[i+1] = '\0';
   
-  errorReportExt( ("parse error, line %d: %s\n... %s", p->line, s, rest) );
+  error_reporter(ASC_USER_ERROR,NULL,p->line,NULL,"parse error, line %d: %s\n... %s", p->line, s, rest);
   return true;
 }
 
@@ -567,7 +614,7 @@ cbool parseStrExcept(parse *p, const char *except, char *str, int maxl){
 			parseUnParseChar(p,*(--c));
 		}
 		//fprintf(stderr,"FAIL\n",*c);
-		return fail;
+		return 0; // fail
 	}
 	//fprintf(stderr,"GOT SOME? i=%d\n",i);
 	return (i>0);

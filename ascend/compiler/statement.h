@@ -284,7 +284,7 @@ extern struct Statement *CreateLOGREL(struct Name *n,
  *  The statement's line number is set to the current line number.
  */
 
-
+#if 0
 extern struct Statement *CreateEXTERNGlassBox(
 				      struct Name *n,
                                       CONST char *funcname,
@@ -300,6 +300,7 @@ extern struct Statement *CreateEXTERNGlassBox(
 	@param data Data arguments, only used in black/glass box functions, else set NULL.
 	@param scope scope at which external relations are to be embedded.
 */
+#endif
 
 extern struct Statement *CreateEXTERNBlackBox(
                                       struct Name *n,
@@ -1310,11 +1311,12 @@ extern struct Name *ExternalStatDataGlassBoxF(CONST struct Statement *s);
  *  function directly - use ExternalStatDataGlassBox() instead.
  */
 
-#ifdef NDEBUG
-#define ExternalStatScope(s) ((s)->v.ext.u.glass.scope)
-#else
-#define ExternalStatScope(s) ExternalStatScopeGlassBoxF(s)
-#endif
+#if 0
+# ifdef NDEBUG
+#  define ExternalStatScope(s) ((s)->v.ext.u.glass.scope)
+# else
+#  define ExternalStatScope(s) ExternalStatScopeGlassBoxF(s)
+# endif
 /**<
  *  Return the external statement's name of its scope. This may be NULL.
  *  If it is NULL, then the external relation (at this time assumed to be
@@ -1329,6 +1331,7 @@ extern struct Name *ExternalStatScopeGlassBoxF(CONST struct Statement *s);
  *  Implementation function for ExternalStatScope().  Do not call this
  *  function directly - use ExternalStatScope() instead.
  */
+#endif
 
 #ifdef NDEBUG
 #define ExternalStatVlistMethod(s) ((s)->v.ext.u.method.vl)

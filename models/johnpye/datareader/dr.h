@@ -39,7 +39,7 @@ DataReader *datareader_new(const char *fn, int noutputs);
 int datareader_init(DataReader *d);
 int datareader_set_parameters(DataReader *d, const char *parameters);
 int datareader_set_format(DataReader *d, const char *format);
-int datareader_delete(DataReader *d);
+int datareader_free(DataReader *d);
 
 int datareader_num_inputs(const DataReader *d);
 int datareader_num_outputs(const DataReader *d);
@@ -93,6 +93,11 @@ typedef int (DataReaderCalcGradFn)(DataReader *d);
 */
 typedef int (DataReaderGradFn)(DataReader *d, double *gradients);
 
+/**
+	A function that frees the data-format-specific parts of the
+	current datareader.
+*/
+typedef int (DataReaderFreeFn)(DataReader *d);
 
 /*------------------------------------------------------------------------------
   DATA STRUCTURES
@@ -157,6 +162,7 @@ struct DataReader_struct{
 	DataReaderEofFn *eoffn;
 	DataReaderIndepFn *indepfn;
 	DataReaderValFn *valfn;
+	DataReaderFreeFn *freefn;
 };
 
 #endif

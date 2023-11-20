@@ -832,7 +832,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 
 	struct var_variable **incidence_list;
 
-	hessian_mtx *hess_matrix;
+	ltmatrix *hess_matrix;
 
 	unsigned long i;
 
@@ -881,7 +881,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 		asc_assert(lambda!=NULL);
 
 		/** Array of LT matrix */
-		hess_matrix = Hessian_Mtx_create(Lower,n);
+		hess_matrix = ltmatrix_create(LTMATRIX_LOWER,n);
 
 		//CONSOLE_DEBUG("Order of Hessian MATRIX [%d x %d]",n,n);
 
@@ -893,7 +893,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 
 		for (row = 0; row < n; row++) {
 			for (col = 0; col <= row; col++) {
-				values[idx] = Hessian_Mtx_get_element(hess_matrix,row,col) * (obj_factor);
+				values[idx] = ltmatrix_get_element(hess_matrix,row,col) * (obj_factor);
 				idx++;
 			}
 		}
@@ -905,7 +905,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 
 		for(i=0; i<m; i++){
 			/** @TODO Initialize the Hess Matrix Elements to zero */
-			Hessian_Mtx_clear(hess_matrix);
+			ltmatrix_clear(hess_matrix);
 
 			incidence_list = (struct var_variable**) rel_incidence_list(sys->rlist[i]);
 			if(incidence_list!=NULL){
@@ -916,7 +916,7 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 
 				for (row = 0; row < n; row++) {
 					for (col = 0; col <= row; col++) {
-						values[idx] +=  Hessian_Mtx_get_element(hess_matrix,row,col) * (lambda[i]);
+						values[idx] +=  ltmatrix_get_element(hess_matrix,row,col) * (lambda[i]);
 						idx++;
 					}
 				}
@@ -925,14 +925,14 @@ Bool ipopt_eval_h(Index n, Number* x, Bool new_x
 			}
 			else{
 				ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Unused Relation???");
-				Hessian_Mtx_destroy(hess_matrix);
+				ltmatrix_destroy(hess_matrix);
 				return FALSE; //I'm not sure about the action to take.
 			}
 		}
 
 		//CONSOLE_DEBUG("Hessian Matrix evaluation successful");
 
-		Hessian_Mtx_destroy(hess_matrix);
+		ltmatrix_destroy(hess_matrix);
 
 		/* evaluate the Hessian matrix */
 		//CONSOLE_DEBUG("Evaluation of Hessian matrix Completed");

@@ -821,7 +821,7 @@ struct TypeDescription
   return result;
 }
 
-
+#if 0 && defined(DISUSED)
 struct TypeDescription
 *CreatePatchTypeDesc(symchar *name, 	   	   /* name of the type*/
 		     struct TypeDescription *rdesc,/* type that it patches*/
@@ -849,6 +849,7 @@ struct TypeDescription
   result->universal = 0;
   return result;
 }
+#endif
 
 
 struct TypeDescription *MoreRefined(CONST struct TypeDescription *desc1,
@@ -1292,8 +1293,10 @@ void DeleteTypeDesc(struct TypeDescription *d){
       }
 */
       break;
+#if 0
     case patch_type:
       break;
+#endif
     case when_type:
       break;
     case dummy_type:
@@ -1544,8 +1547,10 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
  *    }
  */
     break;
+#if 0
   case patch_type:
     return 0; /* patches are not to be checked in detail */
+#endif
   case when_type:
   case dummy_type:
     return 0; /* not to be checked. and should never be sent. */

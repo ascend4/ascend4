@@ -225,12 +225,17 @@ static void test_fprops_model(const char *modelname){
 
 	/* assume that this clever model will have already solved and self-tested itself */
 
+	CONSOLE_DEBUG("Destroying system...");
+	if(S.sys)system_destroy(S.sys);
+	system_free_reused_mem();
+
 	CONSOLE_DEBUG("Destroy solver engines");
 	solver_destroy_engines();
 
 	/* destroy all that stuff */
 	CONSOLE_DEBUG("Destroying instance tree");
 	CU_ASSERT(S.siminst != NULL);
+	sim_destroy(S.siminst);
 
 	Asc_CompilerDestroy();
 }
@@ -243,7 +248,10 @@ static void test_fprops_model(const char *modelname){
 	T(stream_state_test) \
 	X T(stream_state_test_co2) \
 	X T(stream_state_test_toluene) \
-	X T(pump_simple_test)
+	X T(stream_state_test_sodium_h) \
+	X T(stream_state_test_sodium_pT) \
+	X T(pump_simple_test) \
+	X T(sodium_test)
 
 /* need a little function for each model we're testing... */
 #define T(N) static void test_##N(void){\

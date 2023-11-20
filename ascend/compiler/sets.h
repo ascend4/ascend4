@@ -204,10 +204,12 @@ extern struct Set *ReverseSetList(struct Set *s);
  *  Reverse the order of the set list.
  */
 
+#if 0 /* DISUSED */
 extern int SetStructuresEqual(CONST struct Set *s1, CONST struct Set *s2);
 /**< 
  *  Return TRUE if and only if, s1 and s2 are structurally equivalent.
  */
+#endif
 
 extern int CompareSetStructures(CONST struct Set *s1, CONST struct Set *s2);
 /**< 
@@ -235,12 +237,12 @@ extern char *CreateStrFromSet(CONST struct Set *set);
  *  Returns a copy of the string representation of the given set.
  */
 
-extern void sets_init_pool(void);
+ASC_DLLSPEC void sets_init_pool(void);
 /**<
  *  Starts memory recycle. Do not call twice before stopping recycle.
  */
 
-extern void sets_destroy_pool(void);
+ASC_DLLSPEC void sets_destroy_pool(void);
 /**< 
  *  Stops memory recycle. Do not call while ANY Expr are outstanding.
  */

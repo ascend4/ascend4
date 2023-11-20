@@ -40,15 +40,9 @@
 #ifndef OSPATH_H
 #define OSPATH_H
 
-#ifdef TEST
-# define ASC_DLLSPEC T T
-# include "env.h"
-#else
-# include <ascend/utilities/config.h>
-# include "platform.h"
-# include "ascMalloc.h"
-# include "env.h"
-#endif
+#include "platform.h"
+#include "env.h"
+#include "ascMalloc.h"
 
 #if defined(__WIN32__) && !defined(__MINGW32__)
 # include <direct.h>
@@ -122,7 +116,9 @@ ASC_DLLSPEC struct FilePath *ospath_new_from_posix(const char *posixpath);
 	Path with *VERY SIMPLE* environment variable expansion.
 	You must specify what 'getenv' function should be used.
 */
-ASC_DLLSPEC struct FilePath *ospath_new_expand_env(const char *path, GetEnvFn *getenvptr);
+ASC_DLLSPEC struct FilePath *ospath_new_expand_env(const char *path
+	, GetEnvFn *getenvptr, int free_after_getenv
+);
 
 /**
 	This function cleans up the path string used to construct the FilePath object:
@@ -202,6 +198,7 @@ unsigned int ospath_length(struct FilePath *fp);
 */
 ASC_DLLSPEC struct FilePath *ospath_getparent(struct FilePath *fp);
 
+#if 0
 /**
 	Return a new path object which is a parent path of the current path up to the specified depth.
 	If the specifed depth is >= to the current path's depth, then a copy of the current path object is returned.
@@ -212,6 +209,7 @@ ASC_DLLSPEC struct FilePath *ospath_getparent(struct FilePath *fp);
 		"/lev1/lev2/lev3/"
 */
 struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned nDepth);
+#endif
 
 /**
 	Return then name of the bottom most level path entry (includes any extension)
@@ -252,12 +250,14 @@ ASC_DLLSPEC struct FilePath *ospath_getabs(const struct FilePath *fp);
 */
 int ospath_isroot(struct FilePath *fp);
 
+#if 0
 /**
 	Return the current paths' depth
 	ie. "/usr/some directory with spaces in it/hello"
 	returns a depth value of 3
 */
 unsigned ospath_depth(struct FilePath *fp);
+#endif
 
 /**
 	Return the root path
@@ -278,7 +278,7 @@ ASC_DLLSPEC void ospath_append(struct FilePath *fp, struct FilePath *fp1);
 ASC_DLLSPEC FILE *ospath_fopen(struct FilePath *fp, const char *mode);
 
 /**
-	Stat function. Simply a wrappen around the 'stat' call.
+	Stat function. Simply a wrapper around the 'stat' call.
 	The exception is that if the FilePath is not 'valid', -1 is returned
 	and no call to 'stat' is made.
 

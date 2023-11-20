@@ -1,3 +1,15 @@
+31 Oct 2017
+-----------
+
+Version 0.9.9 (in progress)
+ - New data structures to improve compiler error reporting ('relerrorlist')
+ - Eliminated redundant 'mem.c' and 'freestore.c' code, switch to 'pool' instead.
+ - Several disused codes moved to 'disused' folder (may recover later)
+ - Update to recent GCC/SCons/Linux
+ - TODO: Merge changes for GTK3
+ - TODO: Merge Python3 support
+ - TODO: Merge Improvements to canvas-based modeller
+
 30 Apr 2012
 -----------
 

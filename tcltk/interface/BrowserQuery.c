@@ -721,7 +721,7 @@ int BrowWriteInstSet(char *ftorv, CONST struct set_t *s)
     len = Cardinality(s);
     for(c=1;c<=len;c++) {
       if (SetKind(s)==integer_set) {
-        sprintf(mark, (c<len) ? "%u," : "%u",FetchIntMember(s,c));
+        sprintf(mark, (c<len) ? "%lu," : "%lu",FetchIntMember(s,c));
       } else {
         sprintf(mark, (c<len) ? "'%s'," : "'%s'", SCP(FetchStrMember(s,c)));
       }
@@ -1654,7 +1654,7 @@ int Asc_BrowWriteValues(ClientData cdata, Tcl_Interp *interp,
   case 's':
     i = g_search_inst; break;
   case 'q':				/* argv[4] ignored in other cases */
-    nok = Asc_QlfdidSearch2(QUIET(argv[4]));
+    nok = Asc_QlfdidSearch3(QUIET(argv[4]),0);
     if (nok) {
       i = NULL;
     } else {

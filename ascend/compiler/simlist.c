@@ -39,7 +39,14 @@
 
 #include <ascend/general/list.h>
 #include <ascend/general/tm_time.h>
- 
+
+//#define SIMLIST_DEBUG
+#ifdef SIMLIST_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif 
+
 struct gl_list_t *g_simulation_list = NULL;
 
 void sim_destroy(struct Instance *sim){
@@ -58,10 +65,8 @@ void Asc_DestroySimulations(void){
     gl_destroy(g_simulation_list);      /* sim_destroy takes care of the
                                          * memory -- see SimsProc.c */
     g_simulation_list = NULL;
-#ifdef SIMLIST_DEBUG
   }else{
-  	CONSOLE_DEBUG("g_simulation_list is null");
-#endif
+  	MSG("g_simulation_list is null");
   }
 }
 
@@ -161,9 +166,11 @@ struct Instance *SimsCreateInstance(symchar *type,
     result = Instantiate(type,name,0,defmethod);
     SetInstantiationRelnFlags(oldflags);
     break;
+#if 0
   case e_patch:
     result = InstantiatePatch(type,name,0);
     break;
+#endif
   default:
     FPRINTF(stderr,"Warning: doing standard compilation\n");
     result = Instantiate(type,name,0,defmethod);

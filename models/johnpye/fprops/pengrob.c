@@ -27,6 +27,7 @@
 #include "fprops.h"
 #include "sat.h"
 #include "ideal_impl.h"
+#include "refstate.h"
 #include "cp0.h"
 #include "zeroin.h"
 #include <math.h>
@@ -36,18 +37,18 @@
 #include "helmholtz.h" // for helmholtz_prepare
 
 /* these are the 'raw' functions, they don't do phase equilibrium. */
-PropEvalFn pengrob_p;
-PropEvalFn pengrob_u;
-PropEvalFn pengrob_h;
-PropEvalFn pengrob_s;
-PropEvalFn pengrob_a;
-PropEvalFn pengrob_g;
-PropEvalFn pengrob_cp;
-PropEvalFn pengrob_cv;
-PropEvalFn pengrob_w;
-PropEvalFn pengrob_dpdrho_T;
-PropEvalFn pengrob_alphap;
-PropEvalFn pengrob_betap;
+PropEvalFn2 pengrob_p;
+PropEvalFn2 pengrob_u;
+PropEvalFn2 pengrob_h;
+PropEvalFn2 pengrob_s;
+PropEvalFn2 pengrob_a;
+PropEvalFn2 pengrob_g;
+PropEvalFn2 pengrob_cp;
+PropEvalFn2 pengrob_cv;
+PropEvalFn2 pengrob_w;
+PropEvalFn2 pengrob_dpdrho_T;
+PropEvalFn2 pengrob_alphap;
+PropEvalFn2 pengrob_betap;
 SatEvalFn pengrob_sat;
 //SatEvalFn pengrob_sat_akasaka;
 
@@ -129,7 +130,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 				ERRMSG("Failed to create Helmholtz runtime data");
 				return NULL;
 			}
-			D->p_c = PH->p_fn(D->T_c, D->rho_c, PH->data, &herr);
+			D->p_c = PH->p_fn((FluidStateUnion){.Trho={D->T_c, D->rho_c}}, PH->data, &herr);
 			MSG("Calculated p_c = %f from Helmholtz data",D->p_c);
 			if(herr){
 				ERRMSG("Failed to calculate critical pressure (%s)",fprops_error(herr));
@@ -153,7 +154,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 		D->T_min = I->T_min;
 		D->T_f = I->T_f;
 
-#if 0
+#if 1
 		// use Zc to calculate rho_c, then give a warning if the data's value of rho_c looks strange, where provided.
 		double Zc = 0.307;
 		D->rho_c = D->p_c / (Zc * D->R * D->T_c); 
@@ -165,7 +166,6 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 			}
 		}
 #else
-#if 1
 		// use provided rho_c whenever provided, otherwise calculated from Zc
 		double Zc = 0.307;
 		/* use rho_c from FileData unless missing */
@@ -176,17 +176,6 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 			/* ensure p_c is consistent with value of rho_c */
 			D->p_c = D->rho_c * (Zc * D->R * D->T_c); 
 		}
-#else
-		// use provided rho_c to report Zc
-		if(I->rho_c == -1){
-			double Zc = 0.307;
-			D->rho_c = D->p_c / (Zc * D->R * D->T_c); ;
-			MSG("rho_c missing, using value of rho_c = %g, by assuming Zc = %g",D->rho_c,Zc);
-		}else{
-			double Zc = D->p_c / (D->rho_c * D->R * D->T_c);
-			MSG("Zc = %g",Zc);
-		}
-#endif
 #endif
 
 		D->omega = I->omega;
@@ -228,6 +217,7 @@ PureFluid *pengrob_prepare(const EosData *E, const ReferenceState *ref){
 	FN(p); FN(u); FN(h); FN(s); FN(a); FN(g); FN(cp); FN(cv); FN(w);
 	FN(dpdrho_T); FN(alphap); FN(betap);
 	FN(sat);
+	P->setref_fn = refstate_set_for_phi0;
 #undef FN
 #undef I
 #undef D
@@ -253,6 +243,8 @@ void pengrob_destroy(PureFluid *P){
 #define PD_M data->M
 #define SQRT2 1.4142135623730951
 
+#define DEFINE_TD \
+	double T = vals.Trho.T; double rho = vals.Trho.rho;
 #define DEFINE_SQRTALPHA \
 	double sqrtalpha = 1 + PD->kappa * (1 - sqrt(T / PD_TCRIT));
 #define DEFINE_A \
@@ -281,7 +273,8 @@ void pengrob_destroy(PureFluid *P){
 #define DEFINE_DPDT_RHO \
 	double dpdT_rho = data->R/(v - PD->b) - dadT/(v*(v + PD->b) + PD->b*(v - PD->b))
 
-double pengrob_p(double T, double rho, const FluidData *data, FpropsError *err){
+double pengrob_p(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
 	DEFINE_SQRTALPHA;
 	DEFINE_A;
 	DEFINE_V;
@@ -298,7 +291,8 @@ double pengrob_p(double T, double rho, const FluidData *data, FpropsError *err){
 }
 
 
-double pengrob_h(double T, double rho, const FluidData *data, FpropsError *err){
+double pengrob_h(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
 	DEFINE_SQRTALPHA;
 	DEFINE_A;
 	DEFINE_V;
@@ -307,8 +301,8 @@ double pengrob_h(double T, double rho, const FluidData *data, FpropsError *err){
 		*err = FPROPS_RANGE_ERROR;
 		return 0;
 	}
-	double h0 = ideal_h(T,rho,data,err);
-	double p = pengrob_p(T, rho, data, err);
+	double h0 = ideal_h((FluidStateUnion){.Trho={T,rho}},data,err);
+	double p = pengrob_p((FluidStateUnion){.Trho={T, rho}}, data, err);
 	double Z = p * v / (data->R * T);
 	double B = p * PD->b / (data->R * T);
 	DEFINE_DADT;
@@ -317,7 +311,8 @@ double pengrob_h(double T, double rho, const FluidData *data, FpropsError *err){
 }
 
 
-double pengrob_s(double T, double rho, const FluidData *data, FpropsError *err){
+double pengrob_s(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
 	DEFINE_SQRTALPHA;
 	DEFINE_V;
 	double b = PD->b;
@@ -326,8 +321,8 @@ double pengrob_s(double T, double rho, const FluidData *data, FpropsError *err){
 		*err = FPROPS_RANGE_ERROR;
 		return 0;
 	}
-	double s0 = ideal_s(T,rho,data,err);
-	double p = pengrob_p(T, rho, data, err);
+	double s0 = ideal_s((FluidStateUnion){.Trho={T,rho}},data,err);
+	double p = pengrob_p((FluidStateUnion){.Trho={T, rho}}, data, err);
     double Z = p * v / (data->R * T);
     double B = p * b / (data->R * T);
 	DEFINE_DADT;
@@ -338,11 +333,12 @@ double pengrob_s(double T, double rho, const FluidData *data, FpropsError *err){
 }
 
 
-double pengrob_a(double T, double rho, const FluidData *data, FpropsError *err){
+double pengrob_a(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
 	// FIXME maybe we can improve this with more direct maths
-	double h = pengrob_h(T,rho,data,err);
-	double s = pengrob_s(T,rho,data,err); // duplicated calculation of p!
-	double p = pengrob_p(T,rho,data,err); // duplicated calculation of p!
+	double h = pengrob_h((FluidStateUnion){.Trho={T,rho}},data,err);
+	double s = pengrob_s((FluidStateUnion){.Trho={T,rho}},data,err); // duplicated calculation of p!
+	double p = pengrob_p((FluidStateUnion){.Trho={T,rho}},data,err); // duplicated calculation of p!
 	MSG("h = %f, p = %f, s = %f, rho = %f, T = %f",h,p,s,rho,T);
 	return (h - p/rho) - T * s;
 //	previous code from Richard, probably fine but need to check
@@ -353,13 +349,15 @@ double pengrob_a(double T, double rho, const FluidData *data, FpropsError *err){
 }
 
 
-double pengrob_u(double T, double rho, const FluidData *data, FpropsError *err){
+double pengrob_u(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
 	// FIXME work out a cleaner approach to this...
-	double p = pengrob_p(T, rho, data, err);
-	return pengrob_h(T,rho,data,err) - p/rho; // duplicated calculation of p!
+	double p = pengrob_p((FluidStateUnion){.Trho={T, rho}}, data, err);
+	return pengrob_h((FluidStateUnion){.Trho={T,rho}},data,err) - p/rho; // duplicated calculation of p!
 }
 
-double pengrob_g(double T, double rho, const FluidData *data, FpropsError *err){
+double pengrob_g(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
 	if(rho > 1./PD->b){
 		MSG("Density exceeds limit value 1/b = %f",1./PD->b);
 		*err = FPROPS_RANGE_ERROR;
@@ -375,7 +373,7 @@ double pengrob_g(double T, double rho, const FluidData *data, FpropsError *err){
 	DEFINE_SQRTALPHA;
 	DEFINE_A;
 	DEFINE_V;
-	double p = pengrob_p(T, rho, data, err);
+	double p = pengrob_p((FluidStateUnion){.Trho={T, rho}}, data, err);
 	double Z = p*v/(data->R * T);
 	double B = p*PD->b/(data->R * T);
 	double A = p * a / SQ(data->R * T);
@@ -399,13 +397,14 @@ double pengrob_g(double T, double rho, const FluidData *data, FpropsError *err){
 	subst(b*Z(T)/B(T),v,%);
 	ratsimp(%);
 */
-double pengrob_cv(double T, double rho, const FluidData *data, FpropsError *err){
+double pengrob_cv(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
 	DEFINE_V;
 	DEFINE_D2ADT2;
-	double cv0 = ideal_cv(T, rho, data, err);
+	double cv0 = ideal_cv((FluidStateUnion){.Trho={T, rho}}, data, err);
 	MSG("cv0 = %f",cv0);
 #define DEFINE_CVR \
-	double p = pengrob_p(T, rho, data, err); \
+	double p = pengrob_p((FluidStateUnion){.Trho={T, rho}}, data, err); \
     double Z = p * v / (data->R * T); \
 	double B = p * PD->b / (data->R * T); \
     double cvr1 = T * d2adt2/ (PD->b * 2*SQRT2); \
@@ -429,15 +428,16 @@ double pengrob_cv(double T, double rho, const FluidData *data, FpropsError *err)
 
 	TODO this function needs to be checked.
 */
-double pengrob_cp(double T, double rho, const FluidData *data, FpropsError *err){
+double pengrob_cp(FluidStateUnion vals, const FluidData *data, FpropsError *err){
     //these calculations are broken apart intentionally to help provide clarity as the calculations are tedious
+	DEFINE_TD;
     DEFINE_SQRTALPHA;
 	DEFINE_A;
 	DEFINE_V;
 	DEFINE_DADT;
 	DEFINE_D2ADT2;
 	DEFINE_CVR;
-    double cp0 = ideal_cp(T, rho, data, err);
+    double cp0 = ideal_cp((FluidStateUnion){.Trho={T, rho}}, data, err);
 	DEFINE_DPDT_RHO;
 
 #define DEFINE_CPR \
@@ -465,23 +465,25 @@ double pengrob_cp(double T, double rho, const FluidData *data, FpropsError *err)
 
 	TODO this function needs to be checked.
 */
-double pengrob_w(double T, double rho, const FluidData *data, FpropsError *err){
+double pengrob_w(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
     DEFINE_SQRTALPHA;
 	DEFINE_V;
 	DEFINE_DADT;
 	DEFINE_D2ADT2;
 	DEFINE_A;
 	DEFINE_DPDT_RHO;
-	double cv0 = ideal_cv(T, rho, data, err);
+	double cv0 = ideal_cv((FluidStateUnion){.Trho={T, rho}}, data, err);
 	double cp0 = cv0 + data->R;
 	DEFINE_CVR;
 	DEFINE_CPR;
 	double k = (cp0 + cpr) / (cv0 + cvr);
-	double dpdv_T = - SQ(rho) * pengrob_dpdrho_T(T,rho,data,err);
+	double dpdv_T = - SQ(rho) * pengrob_dpdrho_T((FluidStateUnion){.Trho={T,rho}},data,err);
 	return v * sqrt(-k * dpdv_T);
 }
 
-double pengrob_dpdrho_T(double T, double rho, const FluidData *data, FpropsError *err){
+double pengrob_dpdrho_T(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
 	DEFINE_SQRTALPHA;
 	DEFINE_A;
 	DEFINE_V;
@@ -501,11 +503,12 @@ double pengrob_dpdrho_T(double T, double rho, const FluidData *data, FpropsError
 
 	TODO the function is not yet checked/tested.
 */
-double pengrob_alphap(double T, double rho, const FluidData *data, FpropsError *err){
+double pengrob_alphap(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
 	DEFINE_SQRTALPHA;
 	DEFINE_V;
 	DEFINE_DADT;
-	double p = pengrob_p(T, rho, data, err);
+	double p = pengrob_p((FluidStateUnion){.Trho={T, rho}}, data, err);
 	DEFINE_DPDT_RHO;
 	return 1/p * dpdT_rho;
 }
@@ -518,9 +521,10 @@ double pengrob_alphap(double T, double rho, const FluidData *data, FpropsError *
 	Maxima code:
 	p(T,v) := R*T/(v-b) - a(T)/(v*(v+b)+b*(v-b))	 
 */
-double pengrob_betap(double T, double rho, const FluidData *data, FpropsError *err){
-	double p = pengrob_p(T, rho, data, err);
-	return -1/p * SQ(rho) * pengrob_dpdrho_T(T,rho,data,err);
+double pengrob_betap(FluidStateUnion vals, const FluidData *data, FpropsError *err){
+	DEFINE_TD;
+	double p = pengrob_p((FluidStateUnion){.Trho={T, rho}}, data, err);
+	return -1/p * SQ(rho) * pengrob_dpdrho_T((FluidStateUnion){.Trho={T,rho}},data,err);
 }
 
 /**
@@ -572,13 +576,8 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 	FILE *F1 = fopen("pf.txt","w");
 #endif
 
-	/*
-		The upper limit on iterations here needs to be ~70, and seems to be
-		due to slow convergence for number of fluids like CO2 and ethanol near
-		the critical point. Probably a better algorithm can be found -- see
-		notes above.
-	*/
-	while(++i < 100 /* see above */){
+	// FIXME test upper iteration limit required
+	while(++i < 200){
 		MSG("iter %d: p = %f, rhof = %f, rhog = %f", i, p, 1/vf, 1/vg);
 		// Peng & Robinson eq 17
 		double sqrtalpha = 1. + PD->kappa * (1. - sqrt(T / PD_TCRIT));
@@ -632,7 +631,7 @@ double pengrob_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData 
 			if(fabs(fratio - 1) < 1e-7){
 				*rhof_ret = 1 / vf;
 				*rhog_ret = 1 / vg;
-				p = pengrob_p(T, *rhog_ret, data, err);
+				p = pengrob_p((FluidStateUnion){.Trho={T, *rhog_ret}}, data, err);
 				MSG("Solved for T = %f: p = %f, rhof = %f, rhog = %f", T, p, *rhof_ret, *rhog_ret);
 #ifdef PR_DEBUG
 				fclose(F1);
@@ -724,7 +723,7 @@ double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err){
 		*err = FPROPS_NUMERIC_ERROR;
 		return data->p_c;
 	}
-	double p1 = pengrob_p(T,rho, data, err);
+	double p1 = pengrob_p((FluidStateUnion){.Trho={T,rho}}, data, err);
 
 	// look for the other stationary point in density range less than rho_c
 	rhomin = data->rho_c;
@@ -740,13 +739,13 @@ double MidpointPressureCubic(double T, const FluidData *data, FpropsError *err){
 	}
 	MSG("Solved rho = %g (resid = %g)",rho,resid);
 
-	double p2 = pengrob_p(T,rho, data, err);
+	double p2 = pengrob_p((FluidStateUnion){.Trho={T,rho}}, data, err);
 	return 0.5*(p1 + p2);
 }
 
 static double resid_dpdrho_T(double rho, void *user_data){
 #define D ((MidpointSolveData *)user_data)
-    return pengrob_dpdrho_T(D->T,rho,D->data,D->err);
+    return pengrob_dpdrho_T((FluidStateUnion){.Trho={D->T,rho}},D->data,D->err);
 #undef D
 }
 
@@ -797,8 +796,9 @@ void pengrob_solve_pT(double p,double T, double *rho
 		MSG("rhog = %f",rhog);
 		
 		assert(!*err);
-		double gf = pengrob_g(T,rhof,data,err); if(*err)return;
-		double gg = pengrob_g(T,rhog,data,err); if(*err)return;
+		
+		double gf = pengrob_g((FluidStateUnion){.Trho={T,rhof}},data,err); if(*err)return;
+		double gg = pengrob_g((FluidStateUnion){.Trho={T,rhog}},data,err); if(*err)return;
 		MSG("gf = %f, gg = %f",gf,gg);
 		
 		if(gf <= gg){

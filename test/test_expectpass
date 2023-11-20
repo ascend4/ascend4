@@ -26,7 +26,7 @@ test/test general_color general_dstring general_listio general_pretty general_tm
 # TESTS REQUIRING MALLOC_DEBUG:
 # general_hashpjw 
 # general_list
-# general_mem general_pool
+# general_pool
 # general_stack general_table 
 # general_ascMalloc
 # utilities_set 

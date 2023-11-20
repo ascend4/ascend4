@@ -17,13 +17,6 @@
 *//**
 	@file
 	Expression Module
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "fractions.h"
-	#include "compiler.h"
-	#include "dimen.h"
-	#include "expr_types.h"
 *//*
 	by Tom Epperly
 	Last in CVS: $Revision: 1.11 $ $Date: 1998/02/05 16:36:00 $ $Author: ballan $
@@ -57,7 +50,7 @@ extern void InitVarExpr(struct Expr *e, CONST struct Name *n);
  *  that you want to be able to destroy later (or forget later)
  *  without destroying the contents -- in this case name.
  *  How you create and destroy e is your business. using stack space
- *  is suggested.<br><br>
+ *  is suggested.
  *
  *  The problem with creating a varexpr with a name you want to keep
  *  after the node dies is that the name is destroyed when the node is.
@@ -80,12 +73,12 @@ extern struct Expr *CreateFuncExpr(CONST struct Func *f);
  *  Create a function node.
  */
 
-extern struct Expr *CreateIntExpr(long i);
+ASC_DLLSPEC struct Expr *CreateIntExpr(long i);
 /**< 
  *  Create an integer node.
  */
 
-extern struct Expr *CreateRealExpr(double r, CONST dim_type *dims);
+ASC_DLLSPEC struct Expr *CreateRealExpr(double r, CONST dim_type *dims);
 /**< 
  *  Create a real node with value r and dimensions "dims".
  */
@@ -432,10 +425,12 @@ ASC_DLLSPEC struct Expr *JoinExprLists(struct Expr *e1, struct Expr *e2);
  *  is NULL in which case it returns e2.
  */
 
+#if 0 /* DISUSED */
 extern int ExprsEqual(CONST struct Expr *e1, CONST struct Expr *e2);
 /**< 
  *  Return TRUE if and only if e1 and e2 are structurally equivalent.
  */
+#endif
 
 extern int CompareExprs(CONST struct Expr *e1, CONST struct Expr *e2);
 /**< 
@@ -448,12 +443,12 @@ extern int CompareExprs(CONST struct Expr *e1, CONST struct Expr *e2);
  *  The NULL Expr > all Expr.
  */
 
-extern void exprs_init_pool(void);
+ASC_DLLSPEC void exprs_init_pool(void);
 /**< 
  * Starts memory recycle. do not call twice before stopping recycle.
  */
 
-extern void exprs_destroy_pool(void);
+ASC_DLLSPEC void exprs_destroy_pool(void);
 /**< 
  * Stops memory recycle. do not call while ANY Expr are outstanding.
  */

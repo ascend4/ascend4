@@ -38,21 +38,24 @@
 
 #define MAXIMUM_STRING_LENGTH (2*MAXTOKENLENGTH)
 
-extern void DestroyStringSpace(void);
+ASC_DLLSPEC void DestroyStringSpace(void);
 /**<
  *  This deallocates all the memory associated with the string space.
  */
 
 ASC_DLLSPEC void InitSymbolTable(void);
 /**<
- *  This procedure performs all the necessary initialization for the symbol
- *  table manager.  It should be called once and only once, and it must
- *  be called before any of the other symbol table routines have been
- *  called.
- *  Assumptions:
- *  Pre: none
- *  Post: the symbol table is initialized
- */
+	This procedure performs all the necessary initialization for the symbol
+	table manager.  It should be called once and only once, and it must
+	be called before any of the other symbol table routines have been
+	called.
+	Assumptions:
+	Pre: none
+	Post: the symbol table is initialized
+
+    Note: you need to DestroySymbolTable as well as DestroyStringSpace if you
+	want to clean up everything from this file.
+*/
 
 ASC_DLLSPEC symchar*AddSymbol(CONST char *c);
 /**<
@@ -103,7 +106,7 @@ ASC_DLLSPEC symchar*AscFindSymbol(symchar *s);
  * is in the table.
  */
 
-extern void PrintTab(int noisy);
+ASC_DLLSPEC void PrintTab(int noisy);
 /**<
  *  Print a report on stdout about the string hash table.
  *  if (noisy) prints lots of goop.

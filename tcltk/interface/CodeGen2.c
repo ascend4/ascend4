@@ -57,9 +57,12 @@
 #undef CG_OFFSET
 #define CG_OFFSET 0
 
+#if 0
 struct CGFormat ASCEND_Format = {
   CG_ascend,CG_squarebracket,CG_hat_power,CG_ascend,CG_ascend
 };
+#endif
+
 struct CGFormat GAMS_Format = {
   CG_gams,CG_round,CG_dstar_power,CG_gams,CG_gams,
 };
@@ -316,7 +319,7 @@ static void CodeGen2_WriteRelDecls(FILE *fp, char *file_prefix,
   FPRINTF(fp,"END %s_plus_relations;\n\n", file_prefix);
 }
 
-
+#if 0 && defined(DISUSED)
 /*
  **********************************************************************
  * Patches
@@ -432,6 +435,7 @@ void CodeGen2_WritePatch(FILE *fp, char *file_prefix,
   PUTC('\n',fp);
   FPRINTF(fp,"END %s_patch;\n\n", file_prefix);
 }
+#endif
 
 
 
@@ -504,7 +508,7 @@ static void CodeGen2_WriteInits(FILE *fp, char *file_prefix,
  * interface_ptr back to the previous owner.
  */
 
-
+#if 0 && defined(DISUSED)
 void Asc_CodeGenWriteAscendFile(slv_system_t sys,
                              FILE *fp, char *file_prefix,
                              int gradients,
@@ -558,7 +562,7 @@ void Asc_CodeGenWriteAscendFile(slv_system_t sys,
   }
   Asc_CodeGenShutDown();
 }
-
+#endif
 
 
 /*
@@ -936,9 +940,11 @@ static FILE *SetUpMainFilePtr(char *filename,
   case CG_gams:
     sprintf(filename1,"%s.gms",filename);
     break;
+#if 0
   case CG_ascend:
     sprintf(filename1,"%s.patch",filename);
     break;
+#endif
   case CG_math:
     sprintf(filename1,"%s.m",filename);
     break;
@@ -1056,8 +1062,10 @@ int Asc_CodeGenGeneralCmd(ClientData cdata, Tcl_Interp *interp,
     format = Math_Format;
   } else if (strncmp(argv[3],"gams",4)==0) {
     format = GAMS_Format;
+#if 0
   } else if (strncmp(argv[3],"ascend",4)==0) {
     format = ASCEND_Format;
+#endif
   } else {
     format = Math_Format;
   }
@@ -1087,9 +1095,11 @@ int Asc_CodeGenGeneralCmd(ClientData cdata, Tcl_Interp *interp,
   case CG_math:
     CodeGen_WriteMathFile(sys,fp,argv[1],do_gradients);
     break;
+#if 0
   case CG_ascend:
     Asc_CodeGenWriteAscendFile(sys,fp,argv[1],do_gradients,argv[4]);
     break;
+#endif
   case CG_gams:
     CodeGen_WriteGamsFile(sys,fp,argv[1],do_gradients);
     break;
@@ -1198,6 +1208,7 @@ static void PrintTypes(void *dataptr, void *fileptr)
   }
 }
 
+#if 0 && defined(DISUSED)
 int Asc_CodeGenTypesCmd(ClientData cdata, Tcl_Interp *interp,
                          int argc, CONST84 char *argv[])
 {
@@ -1241,6 +1252,7 @@ int Asc_CodeGenTypesCmd(ClientData cdata, Tcl_Interp *interp,
   }
   return result;
 }
+#endif
 
 /*
  * The above is some temporary stuff which must

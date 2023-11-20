@@ -293,7 +293,7 @@ ASC_DLLSPEC int slv_param_char(struct slv_parameters_structure *p, const int ind
 	to slv_define_parm().  parm_u should be one of { val, lo, hi },
 	which correspond to local parm_arg variables that should be used
 	in client functions calling slv_define_parm().
- *
+
 	@param parm_u The parm_arg to modify, one of {val, lo, hi}.
 	@param val    int, the new value for the parm_arg.
 	@return Returns parm_u.
@@ -305,7 +305,7 @@ ASC_DLLSPEC int slv_param_char(struct slv_parameters_structure *p, const int ind
 	to slv_define_parm().  parm_u should be one of { val, lo, hi },
 	which correspond to local parm_arg variables that should be used
 	in client functions calling slv_define_parm().
- *
+
 	@param parm_u The parm_arg to modify, one of {val, lo, hi}.
 	@param val    boolean, the new value for the parm_arg.
 	@return Returns parm_u.
@@ -317,7 +317,7 @@ ASC_DLLSPEC int slv_param_char(struct slv_parameters_structure *p, const int ind
 	to slv_define_parm().  parm_u should be one of { val, lo, hi },
 	which correspond to local parm_arg variables that should be used
 	in client functions calling slv_define_parm().
- *
+
 	@param parm_u The parm_arg to modify, one of {val, lo, hi}.
 	@param val    double, the new value for the parm_arg.
 	@return Returns parm_u.
@@ -329,7 +329,7 @@ ASC_DLLSPEC int slv_param_char(struct slv_parameters_structure *p, const int ind
 	to slv_define_parm().  parm_u should be one of { val, lo, hi },
 	which correspond to local parm_arg variables that should be used
 	in client functions calling slv_define_parm().
- *
+
 	@param parm_u The parm_arg to modify, one of {val, lo, hi}.
 	@param val    char *, the new value for the parm_arg.
 	@return Returns parm_u.
@@ -342,7 +342,7 @@ ASC_DLLSPEC int slv_param_char(struct slv_parameters_structure *p, const int ind
 	calls to slv_define_parm().  parm_u should be one of { val, lo, hi },
 	which correspond to local parm_arg variables that should be used
 	in client functions calling slv_define_parm().
- *
+
 	@param parm_u The parm_arg to modify, one of {val, lo, hi}.
 	@param val    char **, the new value for the parm_arg.
 	@return Returns parm_u.
@@ -538,6 +538,18 @@ typedef struct slv_parameters_structure {
 
 } slv_parameters_t;
 
+ASC_DLLSPEC int slv_param_lookup(slv_parameters_t *p, const char *name);
+/**
+	Lookup a parameter by name and return its index.
+	@return the parameter index, or -1 if not found.
+*/
+
+ASC_DLLSPEC int slv_param_char_choose(slv_parameters_t *p, const char *name, const char *choice);
+/**
+	Look up a char parameter by name, and use the specified choice value.
+	@return 0 if the parameter name is value and the choice is in the list; return -1 
+	if the name is not found, or return 1 if the choice is not found.
+*/
 
 /* slv_destroy_parms() is defined in slv.c */
 ASC_DLLSPEC void slv_destroy_parms(slv_parameters_t *p);
@@ -603,6 +615,8 @@ ASC_DLLSPEC void slv_set_char_parameter(char **cptr, CONST char *newvalue);
 	free the 'newvalue' string, if that needs ot be done.
 
 	Example:   slv_set_char_parameter(&(p.parms[i].info.c.value),argv[j]);
+
+	see also slv_param_char_choose(p,"myparam","myvalue");
 
 	@param cptr     Pointer to the char array to set.
 	@param newvalue New value for *cptr.

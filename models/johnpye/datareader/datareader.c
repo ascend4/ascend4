@@ -1,4 +1,5 @@
 /*	ASCEND modelling environment
+	Copyright (C) 2017 John Pye
 	Copyright (C) 2006 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
@@ -81,7 +82,7 @@ ASC_EXPORT int datareader_register(){
 
 	int result = 0;
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising data reader...\n");
+	//ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising data reader...\n");
 
 	MSG("EVALUATION FUNCTION AT %p",asc_datareader_calc);
 
@@ -113,7 +114,7 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 	struct Instance *fninst, *fmtinst, *parinst;
 	const char *fn, *fmt, *par;
 	DataReader *d;
-	char *partok = NULL; //token parser string for initialising datareader
+	//char *partok = NULL; //token parser string for initialising datareader
 	int noutputs; //number of outputs as per the arg file
 
 	dr_symbols[0] = AddSymbol("filename");
@@ -195,8 +196,8 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
     	might affect this address, potentially causing a seg fault.
 
     */
-	const char *par2[strlen(par)]; //allocate enough space for a copy of par
-	strcpy(par2,par); //take a copy of par an
+	char *par2 = ASC_NEW_ARRAY(char,strlen(par)+1);
+	strncpy(par2,par,strlen(par)+1);
 
 	/*datareader only! in rigour nouputs has to be derived by more
 	  explicit methods, such as parsing or argument passing*/
@@ -217,17 +218,17 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
 		return 1;
 	}
 	//asign user defined parameters
-	if(par2!=NULL){
-		if(datareader_set_parameters(d,par2)){
+	if(datareader_set_parameters(d,par2)){
 		CONSOLE_DEBUG("failed to set parameters");
+		ASC_FREE(par2);
 		return 1;
-		}
 	}
 
 	MSG("Created data reader at %p...",d);
 	/*assign the succesfully created datareader object to the
 	BlackBox Cache of the relation */
 	slv_interp->user_data = (void *)d; //BROKEN AT THE MOMENT
+	ASC_FREE(par2);
 	return 0;
 }
 
@@ -263,6 +264,7 @@ int asc_datareader_calc(struct BBoxInterp *slv_interp,
 	}
 
 #ifdef DATAREADER_DEBUG
+	int i;
 	for(i=0; i< ninputs; ++i){
 		MSG("inputs[%d] = %f", i, inputs[i]);
 	}
@@ -295,6 +297,19 @@ int asc_datareader_calc(struct BBoxInterp *slv_interp,
 }
 
 void asc_datareader_close(struct BBoxInterp *slv_interp){
-	CONSOLE_DEBUG("NOT IMPLEMENTED");
+	DataReader *d;
+	d = (DataReader *)slv_interp->user_data;
+	if(!d){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+			,"Attempted to close a null datareader"
+		);
+		return;
+	}
+#if 1
+	MSG("CLOSING DATAREADER");
+	datareader_free(d);
+#else
+	MSG("NOT IMPLEMENTED");
+#endif
 }
 

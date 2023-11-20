@@ -44,12 +44,16 @@ CONST char *ExprEnumName(CONST enum Expr_enum t)
     return "e_nop";
   case e_undefined:
     return "e_undefined";
+#if 0
   case e_glassbox:
     return "e_glassbox";
+#endif
   case e_blackbox:
     return "e_blackbox";
+#if 0
   case e_opcode:
     return "e_opcode";
+#endif
   case e_token:
     return "e_token";
   case e_zero:

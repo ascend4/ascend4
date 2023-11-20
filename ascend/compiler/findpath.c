@@ -1,21 +1,22 @@
-/*
- *
- *  This file is part of the Ascend Language Interpreter.
- *  See top of findpath.h
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*//** @file
+ *  Ascend Instance Tree Name Search Routines.
+*/
 
 #include <stdarg.h>
 #include <math.h>
@@ -54,24 +55,21 @@
 #include "logical_relation.h"
 #include "logrelation.h"
 #include "logrel_util.h"
-
+#include "relerr.h"
 
 #define NAMELISTSIZE 20L
 #define DEFTOLERANCE 1e-08
 
-typedef struct IAndName
-{
+typedef struct IAndName{
 	CONST struct Instance *i;
 	struct Name *n;
 } PAN;
 
 /** store a name and the instance that carries it, with
     reference to a context which is not defined here. Thus
-    n may be null if i == context.
+    'n' may be null if i == context.
 */
-static
-PAN *CreatePAN(CONST struct Instance *i, struct Name *n)
-{
+static PAN *CreatePAN(CONST struct Instance *i, struct Name *n){
 	PAN *result = (PAN *)ascmalloc(sizeof(PAN));
 	result->i = i;
 	result->n = n;
@@ -79,8 +77,7 @@ PAN *CreatePAN(CONST struct Instance *i, struct Name *n)
 }
 
 static
-void DestroyPAN(PAN *p)
-{
+void DestroyPAN(PAN *p){
 	p->i = NULL;
 	p->n = NULL;
 	ascfree(p);
@@ -88,8 +85,7 @@ void DestroyPAN(PAN *p)
 
 /* by usage in this file, all n in PAN are allocated for exclusive use. */
 static
-void DestroyPANAndName(PAN *p)
-{
+void DestroyPANAndName(PAN *p){
 	p->i = NULL;
 	DestroyName(p->n);
 	p->n = NULL;
@@ -97,17 +93,15 @@ void DestroyPANAndName(PAN *p)
 }
 
 static
-void DestroyPANList(struct gl_list_t **gl)
-{
+void DestroyPANList(struct gl_list_t **gl){
 	gl_iterate(*gl,(IterateFunc)DestroyPANAndName);
 	gl_destroy(*gl);
 	*gl = NULL;
 }
 
 static struct gl_list_t *FindArrayChildrenPath(struct gl_list_t *list,
-				    CONST struct set_t *sptr,
-				    enum find_errors *errval)
-{
+		CONST struct set_t *sptr, rel_errorlist *err
+){
   struct gl_list_t *result;
   CONST struct Instance *i,*child;
   struct InstanceName rec;
@@ -125,47 +119,47 @@ static struct gl_list_t *FindArrayChildrenPath(struct gl_list_t *list,
     len2 = Cardinality(sptr);
     len1 = gl_length(list);
     result = gl_create(len1*len2);
-    for (c1=1; c1<=len1; c1++){
+    for(c1=1; c1<=len1; c1++){
       p = (PAN *)gl_fetch(list,c1);
       i = p->i;
-      if (InstanceKind(i)==ARRAY_ENUM_INST){
-	if (NextToExpand(i)!=1){
-	  for (c2=1; c2<=len2; c2++){
+      if(InstanceKind(i)==ARRAY_ENUM_INST){
+        if(NextToExpand(i)!=1){
+          for (c2=1; c2<=len2; c2++){
             senum = FetchStrMember(sptr,c2);
-	    SetInstanceNameStrIndex(rec,senum);
-	    if ((pos = ChildSearch(i,&rec))==0){
-	      DestroyPANList(&result);
-	      desc = InstanceTypeDesc(i);
-	      if ( GetArrayBaseIsRelation(desc) || GetArrayBaseIsLogRel(desc)){
-		*errval = unmade_instance;
-	      } else {
-		*errval = impossible_instance;
+            SetInstanceNameStrIndex(rec,senum);
+            if((pos = ChildSearch(i,&rec))==0){
+              DestroyPANList(&result);
+              desc = InstanceTypeDesc(i);
+              if(GetArrayBaseIsRelation(desc) || GetArrayBaseIsLogRel(desc)){
+                rel_errorlist_set_find_error(err,unmade_instance);
+              }else{
+                rel_errorlist_set_find_error(err,impossible_instance);
               }
-	      return NULL;
-	    } else {
+              return NULL;
+            }else{
               child = InstanceChild(i,pos);
-	      if (child!=NULL){
+              if(child!=NULL){
                 n = CreateEnumElementName(senum);
                 n2 = CopyAppendNameNode(p->n, n);
                 DestroyName(n);
                 p2 = CreatePAN(child, n2);
-		gl_append_ptr(result,(VOIDPTR)p2);
-	      } else {
-		DestroyPANList(&result);
-		*errval = unmade_instance;
-		return NULL;
-	      }
-	    }
-	  }
-	} else {
-	  DestroyPANList(&result);
-	  *errval = unmade_instance;
-	  return NULL;
-	}
-      } else {
-	DestroyPANList(&result);
-	*errval = impossible_instance;
-	return NULL;
+                gl_append_ptr(result,(VOIDPTR)p2);
+              }else{
+                DestroyPANList(&result);
+                rel_errorlist_set_find_error(err,unmade_instance);
+                return NULL;
+              }
+            }
+          }
+        }else{
+          DestroyPANList(&result);
+          rel_errorlist_set_find_error(err,unmade_instance);
+          return NULL;
+        }
+      }else{
+        DestroyPANList(&result);
+        rel_errorlist_set_find_error(err,impossible_instance);
+        return NULL;
       }
     }
     return result;
@@ -177,44 +171,44 @@ static struct gl_list_t *FindArrayChildrenPath(struct gl_list_t *list,
     for (c1=1; c1<=len1; c1++){
       p = (PAN *)gl_fetch(list,c1);
       i = p->i;
-      if (InstanceKind(i)==ARRAY_INT_INST){
-	if (NextToExpand(i)!=1){
-	  for (c2=1; c2<=len2; c2++){
+      if(InstanceKind(i)==ARRAY_INT_INST){
+        if(NextToExpand(i)!=1){
+          for (c2=1; c2<=len2; c2++){
             sint = FetchIntMember(sptr,c2);
-	    SetInstanceNameIntIndex(rec,sint);
-	    if ((pos = ChildSearch(i,&rec))==0){
-	      DestroyPANList(&result);
-	      desc = InstanceTypeDesc(i);
-	      if (GetArrayBaseIsRelation(desc) || GetArrayBaseIsLogRel(desc)) {
-		*errval = unmade_instance;
-	      } else {
-		*errval = impossible_instance;
+            SetInstanceNameIntIndex(rec,sint);
+            if((pos = ChildSearch(i,&rec))==0){
+              DestroyPANList(&result);
+              desc = InstanceTypeDesc(i);
+              if(GetArrayBaseIsRelation(desc) || GetArrayBaseIsLogRel(desc)) {
+                rel_errorlist_set_find_error(err,unmade_instance);
+              }else{
+                rel_errorlist_set_find_error(err,impossible_instance);
               }
-	      return NULL;
-	    } else {
-	      child = InstanceChild(i,pos);
-	      if (child!=NULL){
+              return NULL;
+            }else{
+              child = InstanceChild(i,pos);
+              if(child!=NULL){
                 n = CreateIntegerElementName(sint);
                 n2 = CopyAppendNameNode(p->n, n);
                 DestroyName(n);
                 p2 = CreatePAN(child, n2);
-		gl_append_ptr(result,(VOIDPTR)p2);
-	      } else{
-		DestroyPANList(&result);
-		*errval = unmade_instance;
-		return NULL;
-	      }
-	    }
-	  }
-	} else {
-	  DestroyPANList(&result);
-	  *errval = unmade_instance;
-	  return NULL;
-	}
-      } else {
-	DestroyPANList(&result);
-	*errval = impossible_instance;
-	return NULL;
+                gl_append_ptr(result,(VOIDPTR)p2);
+              } else{
+                DestroyPANList(&result);
+                rel_errorlist_set_find_error(err,unmade_instance);
+                return NULL;
+              }
+            }
+          }
+        }else{
+          DestroyPANList(&result);
+          rel_errorlist_set_find_error(err,unmade_instance);
+          return NULL;
+        }
+      }else{
+        DestroyPANList(&result);
+        rel_errorlist_set_find_error(err,impossible_instance);
+        return NULL;
       }
     }
     return result;
@@ -225,9 +219,8 @@ static struct gl_list_t *FindArrayChildrenPath(struct gl_list_t *list,
 
 static
 struct gl_list_t *FindNextNameElementPath(CONST struct Name *n,
-				      struct gl_list_t *list,
-				      enum find_errors *errval)
-{
+		struct gl_list_t *list, rel_errorlist *err
+){
   unsigned long pos,c,len;
   struct InstanceName rec;
   CONST struct Instance *current,*child;
@@ -237,8 +230,8 @@ struct gl_list_t *FindNextNameElementPath(CONST struct Name *n,
   PAN *p, *p2;
   struct Name *n2;
 
-  *errval = correct_instance;
-  if (NameId(n)){
+  rel_errorlist_set_find_error(err,correct_instance);
+  if(NameId(n)){
     result = gl_create(NAMELISTSIZE);
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,NameIdPtr(n));
@@ -247,30 +240,30 @@ struct gl_list_t *FindNextNameElementPath(CONST struct Name *n,
       p = (PAN *)gl_fetch(list,c);
       current = p->i;
       pos = ChildSearch(current,&rec);
-      if (pos!=0){
-	child = InstanceChild(current,pos);
-	if (child!=NULL){
+      if(pos!=0){
+        child = InstanceChild(current,pos);
+        if(child!=NULL){
           n2 = CopyAppendNameNode(p->n, n);
           p2 = CreatePAN(child, n2);
-	  gl_append_ptr(result,(VOIDPTR)p2);
-	} else{
-	  *errval = unmade_instance;
-	  DestroyPANList(&result);
-	  return NULL;
-	}
+          gl_append_ptr(result,(VOIDPTR)p2);
+        } else{
+          rel_errorlist_set_find_error(err,unmade_instance);
+          DestroyPANList(&result);
+          return NULL;
+        }
       } else{
-	*errval = unmade_instance;
+        rel_errorlist_set_find_error(err,unmade_instance);
         /* it would seem this ought to be undefined_instance,
          * but maybe refinement causes insanity. -- in which case
          * it should be a caller policy to wait, rather than our
          * job to anticipate policy and short circuit things here.
          */
-	DestroyPANList(&result);
-	return NULL;
+        DestroyPANList(&result);
+        return NULL;
       }
     }
     return result;
-  } else {
+  }else{
     sptr = NameSetPtr(n);
     setvalue = EvaluateSet(sptr,InstanceEvaluateName);
     switch(ValueKind(setvalue)){
@@ -278,26 +271,26 @@ struct gl_list_t *FindNextNameElementPath(CONST struct Name *n,
     case symbol_value:
     case list_value:
       oldvalue = setvalue;
-      if (ListMode) {
-	setvalue = CreateOrderedSetFromList(oldvalue);
-      } else {
-	setvalue = CreateSetFromList(oldvalue);
+      if(ListMode){
+        setvalue = CreateOrderedSetFromList(oldvalue);
+      }else{
+        setvalue = CreateSetFromList(oldvalue);
       }
       DestroyValue(&oldvalue);
       /* intended to fall through to next case */
     case set_value:
-      result = FindArrayChildrenPath(list,SetValue(setvalue),errval);
+      result = FindArrayChildrenPath(list,SetValue(setvalue),err);
       DestroyValue(&setvalue);
       return result;
     case error_value:
       switch(ErrorValue(setvalue)){
       case illegal_set_use:
-	*errval = impossible_instance;
-	break;
+        rel_errorlist_set_find_error(err,impossible_instance);
+        break;
       default:
-	*errval = undefined_instance;
-	break;
-	/* more needs to be added here */
+        rel_errorlist_set_find_error(err,undefined_instance);
+        break;
+        /* more needs to be added here */
       }
       DestroyValue(&setvalue);
       return NULL;
@@ -311,22 +304,22 @@ struct gl_list_t *FindNextNameElementPath(CONST struct Name *n,
 
 static
 struct gl_list_t *RealFindInstancesPath(CONST struct Instance *i,
-				    CONST struct Name *n,
-				    enum find_errors *errval)
-{
+		CONST struct Name *n, rel_errorlist *err
+){
   struct gl_list_t *result,*next;
   PAN *p;
+  (void)err;
 
   result = gl_create(NAMELISTSIZE);
   p = CreatePAN(i,NULL); /* in context of i, i has no name. */
   gl_append_ptr(result,(VOIDPTR)p);
   while(n!=NULL){
-    next = FindNextNameElementPath(n,result,errval);
+    next = FindNextNameElementPath(n,result,err);
     DestroyPANList(&result);
-    if (next!=NULL){
+    if(next!=NULL){
       result = next;
       n = NextName(n);
-    } else {
+    }else{
       return NULL;
     }
   }
@@ -334,23 +327,21 @@ struct gl_list_t *RealFindInstancesPath(CONST struct Instance *i,
 }
 
 struct gl_list_t *FindInstancesPaths(CONST struct Instance *i,
-				CONST struct Name *n,
-				enum find_errors *errval)
-{
+		CONST struct Name *n, rel_errorlist *err
+){
   struct gl_list_t *result;
   unsigned long k, len;
   PAN *p;
   struct Name *n2;
-  *errval = impossible_instance;
-  if (i == NULL) return NULL;
+  rel_errorlist_set_find_error(err,impossible_instance);
+  if(i == NULL)return NULL;
   AssertMemory(i);
   assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(i);
-  *errval = correct_instance;
-  result = RealFindInstancesPath(i,n,errval);
+  rel_errorlist_set_find_error(err,correct_instance);
+  result = RealFindInstancesPath(i,n,err);
   SetEvaluationContext(NULL);
-  if (result != NULL)
-  {
+  if(result != NULL){
     /* convert list of pairs to list of names. */
     len = gl_length(result);
     for (k= 1 ; k <= len; k++) {

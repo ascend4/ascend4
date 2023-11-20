@@ -129,8 +129,9 @@ extern void DestroyNoteTmpList(struct NoteTmp *head);
 ASC_DLLSPEC int InitNotesDatabase(symchar *dbid);
 
 /**
- * Returns a gl_list containing symchar * of names (dbid)
- * of databases currently in existence.
+	Returns a gl_list containing symchar * of names (dbid)
+	of databases currently in existence. The caller owns the list and should
+	destroy it when no longer needed.
  */
 ASC_DLLSPEC struct gl_list_t *ListNotesDatabases(void);
 
@@ -144,7 +145,7 @@ ASC_DLLSPEC void DestroyNotesDatabase(symchar *dbid);
  * Clear any notes associated with the type named out of
  * database. Useful if replacing a type.
  */
-extern void DestroyNotesOnType(symchar *dbid, symchar *type_name);
+ASC_DLLSPEC void DestroyNotesOnType(symchar *dbid, symchar *type_name);
 
 /**
  * Returns a list of notes matching the keys specified.
@@ -238,7 +239,7 @@ ASC_DLLSPEC CONST char *GetNoteFilename(struct Note *n);
 /** Return line number of note. possibly -1. */
 ASC_DLLSPEC int GetNoteLineNum(struct Note *n);
 
-/** Return the text string of a note.  It is ours. */
+/** Return the text string of a note. It is ours; caller shouldn't free it */
 ASC_DLLSPEC struct bracechar *GetNoteText(struct Note *n);
 
 /** Return the enum NoteData. */
@@ -346,14 +347,14 @@ ASC_DLLSPEC struct gl_list_t *GetMatchingNotes(symchar *dbid,
  * else it should return a pointer to be used in processing strings.
  * Tcl_RegExpCompile is an example of this function class.
  */
-typedef void *(*NEInitFunc)(void *, /* NEdata */
+typedef void *(NEInitFunc)(void *, /* NEdata */
                             char *  /* pattern */);
 
 /**
  * An NECompareFunc returns -1 for error, 0 for no match, 1 for match.
  * Tcl_RegExpExec is an example of this function class.
  */
-typedef int (*NECompareFunc)(void *, /* NEdata */
+typedef int (NECompareFunc)(void *, /* NEdata */
                              void *, /* return from NEInitFunc */
                              char *, /* substring to test for match */
                              char *  /* beginning of string containing
@@ -362,12 +363,15 @@ typedef int (*NECompareFunc)(void *, /* NEdata */
                             );
 
 /**
- * This is a wrapper to keep things independent of anyone in particular's
- * regular expression package.
+	This is a wrapper to keep things independent of anyone in particular's
+	regular expression package.
+	
+	FIXME this wrapper needs a way to destroy the returned value from
+	NEInitFunc, not currently supplied; implies memory leak.
  */
 ASC_DLLSPEC struct NoteEngine *NotesCreateEngine(void *NEdata,
-                                   NEInitFunc NEInit,
-                                   NECompareFunc NECompare);
+                                   NEInitFunc *NEInit,
+                                   NECompareFunc *NECompare);
 
 /**
  * Destroys a previously returned engine.

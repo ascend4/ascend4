@@ -201,7 +201,7 @@ public:
 				self.setIntValue(value)
 				return
 			if self.isStr():
-				self.setStrValue(value)
+				self.setStrValue(bytes(value))
 				return
 			raise TypeError
 	}

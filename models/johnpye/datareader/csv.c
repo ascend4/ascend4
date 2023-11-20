@@ -1,4 +1,6 @@
 /*	ASCEND modelling environment
+	Copyright (C) 2017 John Pye
+	Copyright (C) 2009 José Zapata
 	Copyright (C) 2006 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
@@ -43,7 +45,7 @@
 # define MSG(ARGS...) ((void)0)
 #endif
 
-int datareader_csv_header(DataReader *d) {
+int datareader_csv_header(DataReader *d){
     char str[9999];
     char key[] = "abcdfghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVXYZ";//e is ommited
     //just in case data is IEEE floating point
@@ -51,12 +53,12 @@ int datareader_csv_header(DataReader *d) {
     int ncols = 0;
     boolean isHeader = FALSE; //assume first line has data
     int ndata = 0;
-    while (!feof(d->f)) {
-        if (fscanf (d->f, "%9998s",str) ==0) {
+    while(!feof(d->f)){
+        if(fscanf(d->f, "%9998s",str) ==0){
             CONSOLE_DEBUG("No Data reading CSV file");
             return 1;
         }
-        if (!feof(d->f)) ndata++;
+        if(!feof(d->f)) ndata++;
     }
 
     rewind(d->f);//return to start of the file for column number detection
@@ -67,14 +69,14 @@ int datareader_csv_header(DataReader *d) {
     }
 
     tok = strtok(str,","); //parse for the number of columns
-    while (tok !=NULL) {
+    while(tok !=NULL){
         ncols++; //count the number of columns
         if (strpbrk(tok,key) != NULL) { //check for nonnumeric characters
             isHeader = TRUE; //if any letter chars are found, first line is of headers
         }
         tok = strtok(NULL, ",");
     }
-    if (!isHeader) {
+    if(!isHeader){
         rewind(d->f); //if first line has data return pointer to beginning of file
     }
 
@@ -89,15 +91,15 @@ int datareader_csv_header(DataReader *d) {
     return 0;
 }
 
-int datareader_csv_eof(DataReader *d) {
-    if (feof(d->f)) {
+int datareader_csv_eof(DataReader *d){
+    if(feof(d->f)){
         MSG("REACHED END OF FILE");
-        MSG(ASC_PROG_NOTE,"Read: %d rows",d->ndata);
+        MSG("Read: %d rows",d->ndata);
         return 1;
     }
     return 0;
 }
-int datareader_csv_data(DataReader *d) {
+int datareader_csv_data(DataReader *d){
     char str[9999];
     double *csv = ASC_NEW_ARRAY(double, d->nmaxoutputs+1);
     char *tok;
@@ -106,10 +108,19 @@ int datareader_csv_data(DataReader *d) {
     MSG("Reading row %d",d->i);
 #endif
 
-    if (fscanf (d->f, "%9998s",str) == 0) { //copy the csv line to str
-        CONSOLE_DEBUG("No Data reading CSV file");
+	str[0] = '\0';
+    if(fscanf(d->f,"%9998s",str) == 0){ //copy the csv line to str
+        CONSOLE_DEBUG("No data reading CSV file");
+		ASC_FREE(csv);
         return 1;
     }
+	if(0==strlen(str)){
+		MSG("empty line");
+		ASC_FREE(csv);
+		return 0;
+	}
+	CONSOLE_DEBUG("got line '%s'",str);
+
     char *str2 = ASC_NEW_ARRAY(char,strlen(str)+1);
     strcpy(str2,str);//create a copy of the string, strtok is not a nice function
 
@@ -122,7 +133,7 @@ int datareader_csv_data(DataReader *d) {
 
     ASC_FREE(str2); //done with the string copy, free that memory
 
-    if (k != d->nmaxoutputs+1) { //check if the number of colums vary in the data set
+    if(k != d->nmaxoutputs+1){ //check if the number of colums vary in the data set
         CONSOLE_DEBUG("Bad input data in data row %d, %d columns when expecting %d",d->i,k,d->nmaxoutputs+1);
         ASC_FREE(csv);
         return 1;
@@ -134,7 +145,6 @@ int datareader_csv_data(DataReader *d) {
         *((double *)d->data + d->i*(d->nmaxoutputs+1) + k) = csv[k];
         MSG("[%d]-[%d]:%f",d->i,k, *((double *)d->data + d->i*(d->nmaxoutputs+1) + k));
     }
-
 
     d->i++;//set index for next data row
     ASC_FREE(csv);
@@ -164,3 +174,9 @@ int datareader_csv_vals(DataReader *d, double *v) {
     }
     return 0;
 }
+
+int datareader_csv_free(DataReader *d){
+	ASC_FREE(d->data);
+	return 0;
+}
+

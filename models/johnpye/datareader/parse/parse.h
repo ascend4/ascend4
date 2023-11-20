@@ -9,6 +9,12 @@
 #include "types.h"
 
 #include <stdio.h>
+#ifdef ASC_WITH_ZLIB
+# include <zlib.h>
+#endif
+
+/* for the 'ASC_WITH_ZLIB' var */
+#include <ascend/general/config.h>
 
 #ifdef __cplusplus
 extern "C"{
@@ -29,8 +35,10 @@ extern "C"{
 #define parseLexOper(p,s)         parseLexCategory(p,catOper,s)
 
 #define assign(ass)               (ass,1)
+#if 0
 #define done                      (1)
 #define fail                      (0)
+#endif
 
 #ifdef __GNUC__
 
@@ -84,7 +92,10 @@ typedef struct _parse{
   int       line;
 
   /* for FILE implementations */
-  FILE      *file;
+  FILE *file;
+#ifdef ASC_WITH_ZLIB
+  struct gzFile_s *gzfile;
+#endif
 
   /* for string implementations */
   char      *contents;
@@ -97,10 +108,14 @@ typedef struct _parse{
 
 /* functions */
 
-extern parse *parseCreateFile( FILE *file );
+extern parse *parseCreateFile(FILE *file );
 MSTRANP_API parse *parseCreateFileName( const char *name );
 parse *parseCreateString( char *s );
 MSTRANP_API void parseDispose( parse *p );
+
+#ifdef ASC_WITH_ZLIB
+MSTRANP_API parse *parseCreateGZFile(FILE *file);
+#endif
 
 void parseSetJudgement( parse *p, short c, category );
 void parseAddJudgement( parse *p, short c, category );

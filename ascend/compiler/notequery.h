@@ -49,6 +49,8 @@ ASC_DLLSPEC const char *notes_get_for_variable(
 	the most refined note of a certain notetype for each variable.
 	This is being implemented for detecting the inlets and outlets of a block 
 	in our canvas-based modelling approach.
+
+	TODO reimplement using GetNotesList.
 */
 ASC_DLLSPEC struct gl_list_t *notes_refined_for_type_with_lang(
 	symchar *dbid

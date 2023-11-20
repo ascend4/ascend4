@@ -1,0 +1,18 @@
+IMPORT "qrslv";
+REQUIRE "system.a4l";
+
+MODEL gradient;
+	x,y IS_A solver_var;
+	2*y - x = 1;
+	y - 2*x^2 + x^4 = 1;
+METHODS
+METHOD on_load;
+	x := 1;
+	y := 1;
+END on_load;
+METHOD self_test;
+	ASSERT abs(2*y - x -1) < 1e-12;
+	ASSERT abs(y - 2*x^2 + x^4 - 1) < 1e-12;
+END self_test;
+END gradient;
+

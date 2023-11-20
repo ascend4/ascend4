@@ -25,7 +25,15 @@
 	T(bintok) \
 	T(fixfree) \
 	T(blackbox) \
-	T(fixassign)
+	T(fixassign) \
+	T(dimen) \
+	T(fractions) \
+	T(units) \
+	T(name) \
+	T(symtab) \
+	T(qlfdid) \
+	T(func) \
+	T(notes)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)

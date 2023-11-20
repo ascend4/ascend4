@@ -99,7 +99,7 @@ ASC_DLLSPEC struct Units *g_units_hash_table[];
  *  The hash table for unit structs.
  */
 
-extern void InitUnitsTable(void);
+ASC_DLLSPEC void InitUnitsTable(void);
 /**<
 	This routine initializes some internal variables, so that all the
 	other units functions may be called.  It must be called once and
@@ -107,12 +107,12 @@ extern void InitUnitsTable(void);
 	Must be called after dimensions table initiatialization.
 */
 
-extern void DestroyUnitsTable(void);
+ASC_DLLSPEC void DestroyUnitsTable(void);
 /**<
 	This routine can be called to deallocate all of the units in the table.
 */
 
-extern struct UnitDefinition *CreateUnitDef(symchar *new_name,
+ASC_DLLSPEC struct UnitDefinition *CreateUnitDef(symchar *new_name,
                                             CONST char *unitsexpr,
                                             CONST char *filename,
                                             int linenum);
@@ -125,18 +125,18 @@ extern struct UnitDefinition *CreateUnitDef(symchar *new_name,
  *  @param linenum   Line number.
  */
 
-extern void DestroyUnitDef(struct UnitDefinition *udp);
+ASC_DLLSPEC void DestroyUnitDef(struct UnitDefinition *udp);
 /**<
  * Destroys udp and its unitsexpr.
  */
 
-extern void ProcessUnitDef(struct UnitDefinition *udp);
+ASC_DLLSPEC void ProcessUnitDef(struct UnitDefinition *udp);
 /**<
  * Attempts to add the info in udp to the units table.
  * messages to ascerr if not possible.
  */
 
-ASC_DLLSPEC CONST struct Units*LookupUnits(CONST char *c);
+ASC_DLLSPEC CONST struct Units *LookupUnits(CONST char *c);
 /**<
  *  Check the units library for units with a description string which
  *  matches c.  If it is found, this function will return a non-NULL pointer;
@@ -162,7 +162,7 @@ extern CONST struct Units *DefineUnits(symchar *c, double conv, CONST dim_type *
  *       know where to fix it. BAA 6-94
  */
 
-ASC_DLLSPEC CONST struct Units*FindOrDefineUnits(CONST char *c,
+ASC_DLLSPEC CONST struct Units *FindOrDefineUnits(CONST char *c,
                                              unsigned long * CONST pos,
                                              int * CONST error_code);
 /**<
@@ -197,17 +197,22 @@ ASC_DLLSPEC CONST struct Units*FindOrDefineUnits(CONST char *c,
  *  </pre>
  */
 
-ASC_DLLSPEC char**UnitsExplainError(CONST char *unitsexpr, int code, int pos);
+ASC_DLLSPEC char **UnitsExplainError(CONST char *unitsexpr, int code, int pos);
 /**<
- *  Returns an array of strings which may be helpful in
- *  explaining the error.
- *  - errv[0] is a message.
- *  - errv[1] is the unitsexpr.
- *  - errv[2] is a pointer to the error -------^ line.
- *            aligned with unitsexpr given.
- *  The user should never change or free errv or its content,
- *  nor should the user keep the pointers.
- */
+	Returns an array of strings which may be helpful in
+	explaining the error.
+		- errv[0] is a message.
+		- errv[1] is the unitsexpr.
+		- errv[2] is a pointer to the error -------^ line.
+			      aligned with unitsexpr given.
+	The user should never change or free errv or its content,
+	nor should the user keep the pointers.
+
+	UPDATE (JP 2018): you can call UnitsExplainError(NULL,-1,0) to clear
+	memory allocated by this function, but you shouldn't free it yourself
+	because this function is storing the pointer in a global variable which
+	it later tries to access internally.
+*/
 
 #define UnitsDescription(u) ((u)->description)
 /**<
@@ -224,7 +229,7 @@ ASC_DLLSPEC char**UnitsExplainError(CONST char *unitsexpr, int code, int pos);
  *  Returns the dimensions of the units structure.
  */
 
-ASC_DLLSPEC char *UnitsStringSI(struct Units *up);
+ASC_DLLSPEC char *UnitsStringSI(CONST struct Units *up);
 /**<
  *  Returns the SI form of the units for the dimensionality of up.
  *  Wild = *, Dimensionless = "", NULL up --> NULL return.

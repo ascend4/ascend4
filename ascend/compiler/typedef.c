@@ -598,23 +598,23 @@ DoNameF(CONST struct Name *nptr,
                  stat, /* statement of initial IS_A/ALIASES,relation */
                  STATBODY
                );
-    if (ok < 1) {
-      if (ok < 0) {
+    if(ok < 1) {
+      if(ok < 0) {
         ERROR_REPORTER_NOLINE(ASC_PROG_FATAL,"Insufficient memory during parse.");
         return DEF_ILLEGAL; /* well, having insufficient memory is illegal */
       }
-      if (noisy && ok == 0) {
-        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Same instance name \"%s\" used twice.",SCP(name));
+      if(noisy && ok == 0) {
         assert(g_lcl_pivot!=NULL);
-        if (g_lcl_pivot->e.statement != stat ) {
-          STATEMENT_ERROR(g_lcl_pivot->e.statement,"  First seen:");
-        } else {
-          FPRINTF(ASCERR,"\n");
+        if(g_lcl_pivot->e.statement != stat ) {
+          WriteStatementError(ASC_USER_ERROR,stat,1,"Name '%s' defined here, has been used before.",SCP(name));
+          WriteStatementError(ASC_USER_ERROR,g_lcl_pivot->e.statement,1,"Name '%s' was previously used here.",SCP(name));
+        }else{
+          WriteStatementError(ASC_USER_ERROR,stat,1,"Name '%s' has been used twice.",SCP(name));
         }
       }
       return DEF_NAME_DUPLICATE;
     }
-  } else {
+  }else{
     /* should never happen due to new upstream filters. */
     ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Bad name structure found in variable list.");
     return DEF_NAME_INCORRECT;
@@ -1087,10 +1087,12 @@ int DoExternal(symchar *type,
     nptr = ExternalStatNameRelation(stat);
     doname_status = DoName(nptr,FindRelationType(),stat);
     return doname_status;
+#if 0
   case ek_glass:
     nptr = ExternalStatNameRelation(stat);
     doname_status = DoName(nptr,FindExternalType(),stat);
     return doname_status;
+#endif
   default:
     nptr = NULL;
     break;
@@ -1178,6 +1180,7 @@ enum typelinterr DoRelations(symchar *type,
         return error_code;
       }
       break;
+
     case EXT:
       /* CONSOLE_DEBUG("PROCESSING EXTERNAL REL"); */
       error_code = DoExternal(type,stat,ft);
@@ -1186,6 +1189,7 @@ enum typelinterr DoRelations(symchar *type,
         return error_code;
       }
       break;
+
     case SELECT:
       /*
        * Now all of the statements inside a SELECT (including
@@ -1445,12 +1449,14 @@ enum e_findrhs AANameIdHasParameterizedPart(CONST struct Name **nptrerr,
   nptr = *nptrerr;
   assert(nptr!=NULL);
 
+#if 0
   if ( GetBaseType(type)== patch_type) {
     type = GetPatchOriginal(type);
     if (type==NULL) {
       return FRC_badname;
     }
   }
+#endif
   if ( GetBaseType(type) != model_type) {
     /* cannot alias subatomic parts, and arrays don't have independent
      * typedescs yet.
@@ -1548,6 +1554,7 @@ CONST struct TypeDescription
   assert(type!=NULL);
   assert(NameId(nptr)!=0);
   assert(rval!=NULL);
+#if 0
   if ( GetBaseType(type)== patch_type) {
     type = GetPatchOriginal(type);
     if (type==NULL) {
@@ -1555,6 +1562,7 @@ CONST struct TypeDescription
       return NULL;
     }
   }
+#endif
   if ( GetBaseType(type) != model_type) {
     /* cannot alias subatomic parts, and arrays don't have independent
      * typedescs yet.
@@ -5240,7 +5248,7 @@ struct TypeDescription *CreateLogRelTypeDef(struct module_t *mod,
 }
 
 
-
+#if 0 && defined(DISUSED)
 struct TypeDescription *CreatePatchTypeDef(symchar *patch,
         				   symchar *original,
         				   symchar *orig_mod,
@@ -5274,7 +5282,9 @@ struct TypeDescription *CreatePatchTypeDef(symchar *patch,
   result = CreatePatchTypeDesc(patch,rdesc,mod,pl,sl);
   return result;
 }
+#endif
 
+#if 0 && defined(DISUSED)
 /*********************************************************************\
 DefineEMType(fname,basetype);
 Create a external MODEL root type.
@@ -5292,6 +5302,7 @@ static void DefineEMType(symchar *sym, enum type_kind t)
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to define %s.",SCP(sym));
   }
 }
+#endif
 
 /*********************************************************************\
 DefineDType(fname,basetype);
@@ -5373,7 +5384,9 @@ void DefineFundamentalTypes(void)
   /* define when class */
   DefineWhenType();
   /* define external MODEL class */
+#if 0
   DefineEMType(GetBaseTypeName(model_type&patch_type),model_type);
+#endif
   /* define uncompiled class */
   DefineDType(GetBaseTypeName(dummy_type));
 }

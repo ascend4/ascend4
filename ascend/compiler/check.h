@@ -56,14 +56,14 @@ ASC_DLLSPEC void CheckInstanceLevel(FILE *f, CONST struct Instance *i, int pass)
  *  pass == 5: defaults also                     <br>
  */
 
-extern void CheckInstanceStructure(FILE *f, CONST struct Instance *i);
+ASC_DLLSPEC void CheckInstanceStructure(FILE *f, CONST struct Instance *i);
 /**<
  *  Perform popular consistency checks possible, and check for
  *  as many errors as possible.  This won't modify anything.
  *  This doesn't warn about unassigned real constants, basically.
  */
 
-extern void InstanceTokenStatistics(FILE *f, CONST struct Instance *i);
+ASC_DLLSPEC void InstanceTokenStatistics(FILE *f, CONST struct Instance *i);
 /**<
  *  This compiles and prints various token relation statistics for
  *  this instance tree.

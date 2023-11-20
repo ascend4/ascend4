@@ -1,0 +1,57 @@
+@ Relation: dummy1
+2 
+1 
+@ Relation: dummy10
+0.58124431560631241 
+@ Relation: dummy11
+0.33333333333333333 
+-1. 
+@ Relation: dummy12
+0.33333333333333333 
+@ Relation: dummy13
+1. 
+-3. 
+@ Relation: dummy14
+0.97087378640776699 
+-0.32362459546925566 
+@ Relation: dummy15
+0.1875 
+-0.625e-1 
+@ Relation: dummy16
+0.11144701701163635e-1 
+-0.72604683460022877 
+@ Relation: dummy17
+14.15433673469387755 
+1.06760204081632653 
+@ Relation: dummy18
+-0.625e-1 
+-0.625e-1 
+@ Relation: dummy19
+0 
+@ Relation: dummy2
+3 
+1 
+@ Relation: dummy20
+0.33333333333333333 
+-0.11111111111111111 
+@ Relation: dummy21
+0.42533538354549172 
+@ Relation: dummy3
+1 
+@ Relation: dummy4
+1 
+@ Relation: dummy5
+0.5 
+@ Relation: dummy6
+1.5 
+@ Relation: dummy7
+0.25 
+0.25 
+@ Relation: dummy9
+0.31622776601683793 
+0.9486832980505138 
+@ Relation: yacas_pow_bug
+1 
+@ Relation: yacas_pow_bug_test
+0.70710678118654752 
+Quitting...

@@ -30,6 +30,7 @@ listiotempfile.tmp
 models/johnpye/fprops/fluids/fluids_list.h
 models/johnpye/fprops/python/fprops.py
 models/johnpye/fprops/python/fprops_wrap.c
+models/johnpye/fprops/test/cutest
 options.cache
 pygtk/ascdev
 pygtk/ascend
@@ -39,9 +40,19 @@ test/test
 test_readln.txt
 **/*.gcno
 **/*.gcda
+**/*.bak
+**/*~
 models/johnpye/fprops/mix
 models/johnpye/fprops/test_cubicroots
 cscope.*
 tcltk/interface/ascend4
 tcltk/interface/typelex.c
 tcltk/asc4dev
+models/johnpye/datareader/23161.tm2
+models/johnpye/datareader/723815TY.csv
+models/johnpye/datareader/AUS_ACT.Canberra.Airport.949260_RMY.epw
+models/johnpye/datareader/AUS_NSW.Moree.Aero.955270_RMY.epw
+models/johnpye/datareader/Birdsville.epw
+models/johnpye/datareader/CA_Daggett_Barstow.bin
+models/johnpye/datareader/daggett_ca_34.865371_-116.783023_psmv3_60_tmy.csv
+

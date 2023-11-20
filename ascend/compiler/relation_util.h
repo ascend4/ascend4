@@ -289,10 +289,12 @@ extern int ArgsForRealToken(enum Expr_enum ex);
 	@TODO this stuff is not complete
 */
 
+#if 0
 #define OpCode_Lhs(r)       ((int *)(ROPCODE(r).lhs))
 #define OpCode_Rhs(r)       ((int *)(ROPCODE(r).rhs))
 #define OpCodeNumberArgs(r) (ROPCODE(r).nargs)
 #define OpCodeConstants(r)  ((double *)(ROPCODE(r).constants))
+#endif
 
 /*------------------------------------------------------------------------
 	BLACK BOX RELATION PROCESSING
@@ -321,6 +323,7 @@ extern struct ExternalFunc *RelationBlackBoxExtFunc(CONST struct relation *rel);
 	GLASS BOX STUFF
 */
 
+#if 0
 /*
 	These will be called a lot so that they will all be made
 	macros. Double check that the same is true for the
@@ -331,6 +334,7 @@ extern int GlassBoxRelIndex(CONST struct relation *rel);
 extern int *GlassBoxArgs(CONST struct relation *rel);
 
 #define GlassBoxNumberArgs(r) (RGBOX(r).nargs)
+#endif
 
 /*-----------------------------------------------------------------------------
 	GENERAL STUFF FOR RELATIONS
@@ -467,6 +471,12 @@ int RelationCalcResidualBinary(CONST struct relation *rel, double *res);
  * If return is 1, then res will not have been changed.
  * This function may raise SIGFPE it calls external code.
  */
+
+int RelationCalcGradientBinary(CONST struct relation *r, double *resid,double *gradient);
+/**<
+	Calculate gradients for a bintoken relation.
+	@return 0 on success, non-zero if errors occur, eg if bintoken turned off.
+*/
 
 enum safe_err
 RelationCalcResidualPostfixSafe(struct Instance *i, double *res);
@@ -657,7 +667,6 @@ ASC_DLLSPEC enum safe_err RelationCalcSecondDerivSafe(struct Instance *i, double
  */
 
 /** -----------------Hessian Calculation Routines----------------------------------------*/
-ASC_DLLSPEC int RelationCalcHessianMtx(struct Instance *i, hessian_mtx *hess_mtx, unsigned long dimension);
 /**<
 	This function calculates the full, dense hessian matrix of the relation pointed to by instance pointer i
 	@param i is the relation whose Hessian matrix is calculated
@@ -666,7 +675,18 @@ ASC_DLLSPEC int RelationCalcHessianMtx(struct Instance *i, hessian_mtx *hess_mtx
 	@return not significant yet
  */
 
-ASC_DLLSPEC enum safe_err RelationCalcHessianMtxSafe(struct Instance *i, hessian_mtx *hess_mtx,unsigned long dimension);
+ASC_DLLSPEC int RelationCalcHessianMtx(struct Instance *i, ltmatrix *hess_mtx,unsigned long dimension);
+/**<
+	This function calculates the full, dense hessian matrix of the relation pointed to by instance pointer i
+	@param i is the relation whose Hessian matrix is calculated
+	@param hess_mtx is the pointer to the 2 dimensional Lower triangular array of the Hessian Matrix
+	@param dimension is the dimension of the hessian matrix
+	@return not significant yet
+
+	'Unsafe' Version
+ */
+
+ASC_DLLSPEC enum safe_err RelationCalcHessianMtxSafe(struct Instance *i, ltmatrix *hess_mtx,unsigned long dimension);
 /**<
 	This function calculates the full, dense hessian matrix of the relation pointed to by instance pointer i
 	@param i is the relation whose Hessian matrix is calculated
@@ -688,7 +708,7 @@ double *RelationFindRoots(struct Instance *i,
         int *able,
         int *nsolns);
 /**<
-	RelationFindRoot WILL find a root if there is one. It is in charge of
+	RelationFindRoots WILL find a root if there is one. It is in charge of
 	trying every trick in the book. The user must pass in a pointer to a
 	struct relation. We require that the relation be of the type e_token with
 	relation->relop = e_equals and we will whine if it is not.  The calling
@@ -698,11 +718,10 @@ double *RelationFindRoots(struct Instance *i,
 	- nsolns = 0 : No solution found
 	- nsolns > 0 : The soln_status equals the number of roots found
 
-	@return NULL if success? 1 for success and 0 for failure?
-
-	@NOTE In general compiler functions return 0 for success but this function
-	returns 1 for success because success = 1 is the convention on the solver
-	side.
+	@return an array of solutions, or NULL if none identified or if errors arose.
+	The called must look after freeing the returned array once it has been used.
+	
+	@TODO this function doesn't make use of pooled memory, but should, perhaps?
 
 	@TODO (we really should make a system wide convention for return values)
 
@@ -717,8 +736,7 @@ double *RelationFindRoots(struct Instance *i,
 	(void) RelationFindRoots(NULL,0,0,0,0,NULL,NULL,NULL);
 	in order to free this memory.
 
-	@TODO I think that this function might not really be used, or might only
-	be used by old solvers. Is that the case? -- JP
+	This function is called from relman_directly_solve_new -- JP
 */
 
 /*-----------------------------------------------------------------------------

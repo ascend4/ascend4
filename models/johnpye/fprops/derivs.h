@@ -24,7 +24,7 @@
 /* a locally-used struct for passing state together with some saturation properties */
 typedef struct SatStateData_struct SatStateData;
 
-double fprops_deriv(FluidState state, char *vars, FpropsError *err);
+double fprops_deriv(FluidState2 state, char *vars, FpropsError *err);
 
 double fprops_non_dZdv_T(FPROPS_CHAR z, double T, double rho, const PureFluid *fluid, FpropsError *err);
 double fprops_non_dZdT_v(FPROPS_CHAR z, double T, double rho, const PureFluid *fluid, FpropsError *err);

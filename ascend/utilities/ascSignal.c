@@ -65,13 +65,12 @@
 #include "ascSignal.h"
 #include <ascend/general/panic.h>
 
-/* #define SIGNAL_DEBUG */
+//#define SIGNAL_DEBUG
 #ifdef SIGNAL_DEBUG
 # define MSG CONSOLE_DEBUG
 #else
 # define MSG(ARGS...) ((void)0)
 #endif
-
 /*------------------------------------------------------------------------------
   GLOBALS AND FOWARD DECS
 */
@@ -82,7 +81,7 @@ JMP_BUF g_seg_env;
 JMP_BUF g_int_env;
 
 #ifdef HAVE_C99FPE
-fenv_t g_fenv;
+fexcept_t g_fenv;
 #endif
 
 /* for future use */
@@ -156,11 +155,11 @@ static int fenv_push(fenv_t *stack,int *top, int excepts);
 int Asc_SignalInit(void){
   /* initialize SIGFPE stack */
 
-#ifdef ASC_RESETNEEDED
+# ifdef ASC_RESETNEEDED
   MSG("Initialising signal stack (with resets needed)");
-#else
+# else
   MSG("Initialising signal stack (with resets not required)");
-#endif
+# endif
 
   if(f_traps == NULL){
     f_traps = ASC_NEW(SignalStacks);
@@ -187,7 +186,7 @@ int Asc_SignalInit(void){
   initstack(SIGINT);
   initstack(SIGSEGV);
 
-#if defined(HAVE_C99FPE)
+#ifdef HAVE_C99FPE
   MSG("Initialise FPE state to stack (%d)",f_fenv_stack_top);
   fenv_push(f_fenv_stack,&f_fenv_stack_top,0);
 #endif
@@ -198,8 +197,12 @@ int Asc_SignalInit(void){
 /**
 	Clears and destroys the stacks of signal handlers.
 */
-void Asc_SignalDestroy(void)
-{
+void Asc_SignalDestroy(void){
+#ifdef HAVE_C99FPE
+  MSG("Restoring FPE state from stack (%d)",f_fenv_stack_top);
+  fenv_pop(f_fenv_stack,&f_fenv_stack_top);
+#endif
+
   ascfree(f_traps);
 #ifdef HAVE_C99FPE
   if(f_fenv_stack){
@@ -303,7 +306,7 @@ int Asc_SignalHandlerPop_impl(int signum, SigHandlerFn *tp, char *name
   err = pop_trap(signum, tp, name, file, line);
 
   if (err != 0 && tp != NULL) {
-    MSG("stack pop mismatch");
+	MSG("stack pop mismatch");
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Asc_Signal (%d) stack pop mismatch.",signum);
     return err;
   }
@@ -337,26 +340,26 @@ int Asc_SignalHandlerPop_impl(int signum, SigHandlerFn *tp, char *name
 }
 
 void Asc_SignalTrap(int sigval){
-	MSG("Caught signal #%d",sigval);
-	switch(sigval) {
-	case SIGFPE:
-		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Floating point error caught");
-		MSG("SIGFPE caught");
+  MSG("Caught signal #%d",sigval);
+  switch(sigval) {
+  case SIGFPE:
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Floating point error caught");
+    MSG("SIGFPE caught");
 #ifdef HAVE_C99FPE
-		FPRESET;
+    FPRESET;
 #endif
-		LONGJMP(g_fpe_env,sigval);
-	case SIGINT:
-		MSG("SIGINT (Ctrl-C) caught");
-		LONGJMP(g_int_env,sigval);
-	case SIGSEGV:
-		MSG("SIGSEGV caught");
-		LONGJMP(g_seg_env,sigval);
-	default:
-		MSG("Unrecognised signal %d caught",sigval);
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Installed on unexpected signal (sigval = %d). Returning (who knows where...)", sigval);
-		return;
-	}
+    LONGJMP(g_fpe_env,sigval);
+  case SIGINT:
+	MSG("SIGINT (Ctrl-C) caught");
+    LONGJMP(g_int_env,sigval);
+  case SIGSEGV:
+    MSG("SIGSEGV caught");
+    LONGJMP(g_seg_env,sigval);
+  default:
+    MSG("Unrecognised signal %d caught",sigval);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Installed on unexpected signal (sigval = %d). Returning (who knows where...)", sigval);
+    return;
+  }
 }
 
 void Asc_SignalPrintStack(int signum){

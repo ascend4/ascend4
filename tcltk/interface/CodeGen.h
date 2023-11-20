@@ -57,7 +57,7 @@
 #define CG_SLV_OPEN   0x0
 
 enum CodeGen_enum {
-  CG_ascend, CG_linear, CG_gams, CG_math, CG_c, /* main classes */
+  /*CG_ascend,*/ CG_linear, CG_gams, CG_math, CG_c, /* main classes */
   CG_minos, CG_blackbox, CG_glassbox,           /* subclasses of CG_c */
   CG_squarebracket, CG_curlybracket, CG_round,  /* array subsrcripts*/
   CG_hat_power, CG_dstar_power, CG_func_power,  /* exponentiation */
@@ -210,6 +210,7 @@ extern int Asc_CodeGenGeneralCmd(ClientData cdata, Tcl_Interp *interp,
  *  Registered as __codegen_general filename ?grad?nograd? format.
  */
 
+#if 0 && defined(DISUSED)
 extern void Asc_CodeGenWriteAscendFile(slv_system_t sys,
                                        FILE *fp,
                                        char *file_prefix,
@@ -220,10 +221,13 @@ extern void Asc_CodeGenWriteAscendFile(slv_system_t sys,
  *  of pulling in external relations. typelist is a list of types that
  *  may be used to filter the amount of information that is written out.
  */
+#endif
 
+#if 0
 /** some experimental stuff */
 extern int  Asc_CodeGenTypesCmd(ClientData cdata, Tcl_Interp *interp,
                                 int argc, char *argv[]);
+#endif
 
 #endif /* ASCTK_CODEGEN_H */
 

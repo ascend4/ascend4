@@ -69,12 +69,12 @@ extern struct Name *CreateSetName(struct Set *s);
 	Create a name node of type set with the set s associated with it.
 */
 
-extern struct Name *CreateEnumElementName(symchar *s);
+ASC_DLLSPEC struct Name *CreateEnumElementName(symchar *s);
 /**<
 	Create a name node of type set with the subscript s associated with it.
 */
 
-extern struct Name *CreateIntegerElementName(long i);
+ASC_DLLSPEC struct Name *CreateIntegerElementName(long i);
 /**<
 	Create a name node of type set with the subscript i associated with it.
 */
@@ -127,7 +127,7 @@ extern struct Name *NextNameF(CONST struct Name *n);
 		
 */
 
-extern int NameIdF(CONST struct Name *n);
+ASC_DLLSPEC int NameIdF(CONST struct Name *n);
 /**<
 	Return NAMEBIT_IDTY if n is an identifier type Name or 0 otherwise.
 	We should have analogous functions for CHAT and ATTR, but since no
@@ -137,19 +137,19 @@ extern int NameIdF(CONST struct Name *n);
 */
 
 #ifdef NDEBUG
-#define NameAuto(n) ((n)->bits & (NAMEBIT_AUTO|NAMEBIT_IDTY))
+#define NameAuto(n) (((n)->bits & (NAMEBIT_AUTO|NAMEBIT_IDTY)) == (NAMEBIT_AUTO|NAMEBIT_IDTY) ? NAMEBIT_AUTO : 0)
 #else
 #define NameAuto(n) NameAutoF(n)
 #endif
 /**<
 	Test whether a Name is a system generated identifier.
 	@param n CONST struct Name*, Name to query.
-	@return An int:  NAMEBIT_AUTO if n is an system generated identifier
+	@return An int: NAMEBIT_AUTO if n is an system generated identifier
 			type Name, or 0 otherwise.
 	@see NameAutoF()
 */
 
-extern int NameAutoF(CONST struct Name *n);
+ASC_DLLSPEC int NameAutoF(CONST struct Name *n);
 /**<
 	Return NAMEBIT_AUTO if n is an system generated identifier
 	type Name, or 0 otherwise.
@@ -168,7 +168,7 @@ extern int NameAutoF(CONST struct Name *n);
 	@return The id pointer as a symchar*.
 	@see NameIdPtrF()
 */
-extern symchar *NameIdPtrF(CONST struct Name *n);
+ASC_DLLSPEC symchar *NameIdPtrF(CONST struct Name *n);
 /**<
 	Assumes that n is a identifier type name node.
 	@return the id pointer.
@@ -182,7 +182,7 @@ extern symchar *SimpleNameIdPtr(CONST struct Name *n);
 	it returns the char pointer.
 */
 
-extern unsigned int NameLength(CONST struct Name *n);
+ASC_DLLSPEC unsigned int NameLength(CONST struct Name *n);
 /**<
 	Returns the number of links in a name.
 
@@ -218,7 +218,7 @@ extern struct Name *CopyName(CONST struct Name *n);
 	Make and return a copy of the whole name.
 */
 
-extern struct Name *CopyAppendNameNode(CONST struct Name *n, CONST struct Name *node);
+ASC_DLLSPEC struct Name *CopyAppendNameNode(CONST struct Name *n, CONST struct Name *node);
 /**<
 	Make a copy of n and append a copy of the node (which may be just the
 	head of a longer name). The result is totally disjoint from the inputs.
@@ -230,11 +230,13 @@ ASC_DLLSPEC void DestroyName(struct Name *n);
 	Handles NULL input gracefully.
 */
 
+#if 0 /* DISUSED */
 extern void DestroyNamePtr(struct Name *n);
 /**<
 	Deallocate this name node, and don't change the next node.
 	Handles NULL input gracefully.
  */
+#endif
 
 extern struct Name *JoinNames(struct Name *n1, struct Name *n2);
 /**<
@@ -255,7 +257,7 @@ extern CONST struct Name *NextIdName(CONST struct Name *n);
 	which is expected to be a NameId. If there is none, returns NULL.
  */
 
-extern int NameCompound(CONST struct Name *n);
+ASC_DLLSPEC int NameCompound(CONST struct Name *n);
 /**<
 	Test whether name is compound (i.e. crosses a MODEL/ATOM boundary).
 	If so this returns 1, OTHERWISE this returns 0.  So array names
@@ -274,10 +276,12 @@ extern int NameCompound(CONST struct Name *n);
 	So basically, if the name is printed with a '.' this will return 1.
 */
 
+#if 0 /* DISUSED */
 extern int NamesEqual(CONST struct Name *n1, CONST struct Name *n2);
 /**<
 	Return TRUE if and only if n1 and n2 are structurally equivalent.
 */
+#endif
 
 extern int CompareNames(CONST struct Name *n1, CONST struct Name *n2);
 /**<
@@ -285,17 +289,17 @@ extern int CompareNames(CONST struct Name *n1, CONST struct Name *n2);
 	Will need fixing when we have supported attributes.
 */
 
-extern void name_init_pool(void);
+ASC_DLLSPEC void name_init_pool(void);
 /**<
 	Starts memory recycle. Do not call twice before stopping recycle.
 */
 
-extern void name_destroy_pool(void);
+ASC_DLLSPEC void name_destroy_pool(void);
 /**<
 	Stops memory recycle. Do not call while ANY names are outstanding.
 */
 
-extern void name_report_pool(void);
+ASC_DLLSPEC void name_report_pool(void);
 /**<
 	Write the pool report to ASCERR for the name pool.
 */

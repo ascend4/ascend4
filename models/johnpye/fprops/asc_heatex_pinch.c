@@ -233,11 +233,15 @@ int heatex_calc(struct BBoxInterp *bbox,
 		double hc = cold.h + Q/cold.mdot*i/n;
 		FpropsError err = FPROPS_NO_ERROR;
 		/* FIXME make use of guess values? */
-		fprops_solve_ph(hot.p, hh, &Th, &rhoh, 0, heatex_data->comp[1], &err);
+		FluidState2 Sh = fprops_solve_ph(hot.p, hh, heatex_data->comp[1], &err);
+		Th = fprops_T(Sh,&err);
+		rhoh = fprops_h(Sh,&err);
 		if(err){
 			/* error solving (p,h) hotside */
 		}
-		fprops_solve_ph(cold.p, hc, &Tc, &rhoc, 0, heatex_data->comp[0], &err);
+		FluidState2 Sc = fprops_solve_ph(cold.p, hc, heatex_data->comp[0], &err);
+		Tc = fprops_T(Sc,&err);
+		rhoc = fprops_rho(Sc,&err);
 		if(err){
 			/* error solving (p,h) coldside */
 		}

@@ -1,5 +1,5 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2007 Carnegie Mellon University
+	Copyright (C) 2018 John Pye
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -39,6 +39,13 @@
 
 #include <test/common.h>
 #include <test/assertimpl.h>
+
+//#define BASICS_DEBUG
+#ifdef BASICS_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 static void test_init(void){
 
@@ -84,30 +91,22 @@ static void test_parse_string_module(void){
 
 	m = Asc_OpenStringModule(model, &status, ""/* name prefix*/);
 
-#ifdef BASICS_DEBUG
-	CONSOLE_DEBUG("Asc_OpenStringModule returns status=%d",status);
-#endif
+	MSG("Asc_OpenStringModule returns status=%d",status);
 	CU_ASSERT(status==0); /* if successfully created */
 
-#ifdef BASICS_DEBUG
-	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
-#endif
+	MSG("Beginning parse of %s",Asc_ModuleName(m));
 	status = zz_parse();
 
-#ifdef BASICS_DEBUG
-	CONSOLE_DEBUG("zz_parse returns status=%d",status);
-#endif
+	MSG("zz_parse returns status=%d",status);
 	CU_ASSERT(status==0);
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
-#ifdef BASICS_DEBUG
-	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
-#endif
+	MSG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
 
 	CU_ASSERT(gl_length(l)==2);
 	gl_destroy(l);
 
-/* CONSOLE_DEBUG("Asc_OpenStringModule returns status=%d",status); */
+	MSG("Asc_OpenStringModule returns status=%d",status);
 	Asc_CompilerDestroy();
 }
 
@@ -130,10 +129,8 @@ static void test_instantiate_string(void){
 
 	Asc_CompilerInit(1);
 	CU_ASSERT(FindType(AddSymbol("boolean"))!=NULL);
-#ifdef BASICS_DEBUG
-	CONSOLE_DEBUG("Boolean type found OK");
-#endif
-	/* CONSOLE_DEBUG("MODEL TEXT:\n%s",model); */
+	MSG("Boolean type found OK");
+	//MSG("MODEL TEXT:\n%s",model);
 
 	//struct module_t *m;
 	int status;
@@ -150,9 +147,7 @@ static void test_instantiate_string(void){
 	CU_ASSERT_FATAL(sim!=NULL);
 
 	/* check the simulation name */
-#ifdef BASICS_DEBUG
-	CONSOLE_DEBUG("Got simulation, name = %s",SCP(GetSimulationName(sim)));
-#endif
+	MSG("Got simulation, name = %s",SCP(GetSimulationName(sim)));
 	CU_ASSERT_FATAL(GetSimulationName(sim)==AddSymbol("sim1"));
 
 	/* check for the expected instances */
@@ -192,20 +187,14 @@ static void test_parse_basemodel(void){
 	m = Asc_OpenModule("basemodel.a4l",&status);
 	CU_ASSERT(status==0);
 
-#ifdef BASICS_DEBUG
-	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
-#endif
+	MSG("Beginning parse of %s",Asc_ModuleName(m));
 	status = zz_parse();
 
-#ifdef BASICS_DEBUG
-	CONSOLE_DEBUG("zz_parse returns status=%d",status);
-#endif
+	MSG("zz_parse returns status=%d",status);
 	CU_ASSERT(status==0);
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
-#ifdef BASICS_DEBUG
-	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
-#endif
+	MSG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
 	gl_destroy(l);
 
 	/* there are only 8 things declared in system.a4l: */
@@ -228,20 +217,14 @@ static void test_parse_file(void){
 	m = Asc_OpenModule("system.a4l",&status);
 	CU_ASSERT(status==0);
 
-#ifdef BASICS_DEBUG
-	CONSOLE_DEBUG("Beginning parse of %s",Asc_ModuleName(m));
-#endif
+	MSG("Beginning parse of %s",Asc_ModuleName(m));
 	status = zz_parse();
 
-#ifdef BASICS_DEBUG
-	CONSOLE_DEBUG("zz_parse returns status=%d",status);
-#endif
+	MSG("zz_parse returns status=%d",status);
 	CU_ASSERT(status==0);
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
-#ifdef BASICS_DEBUG
-	CONSOLE_DEBUG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
-#endif
+	MSG("%lu library entries loaded from %s",gl_length(l),Asc_ModuleName(m));
 	gl_destroy(l);
 
 	/* there are only 8 things declared in system.a4l: */
@@ -487,6 +470,33 @@ static void test_type_info(void){
 }
 
 
+
+/*
+	Junk pointer in errors from parser "Rejected 'model2'"...
+*/
+static void test_badalias(void){
+	/*struct module_t *m;*/
+	int status;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/* load the file */
+#define TESTFILE "badalias"
+	/*m =*/ Asc_OpenModule("test/compiler/" TESTFILE ".a4c",&status);
+	CU_ASSERT(status == 0);
+
+	/* parse it */
+	CU_ASSERT(0 == zz_parse());
+
+	/* check that 'badalias' model was rejected */
+	CU_ASSERT(FindType(AddSymbol(TESTFILE))==NULL);
+
+	Asc_CompilerDestroy();
+#undef TESTFILE
+}
+
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -504,7 +514,8 @@ static void test_type_info(void){
 	T(stop) \
 	T(stoponfailedassert) \
 	T(badassign) \
-	T(type_info)
+	T(type_info) \
+	T(badalias)
 
 REGISTER_TESTS_SIMPLE(compiler_basics, TESTS)
 

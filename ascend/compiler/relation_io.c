@@ -675,7 +675,7 @@ void WriteSide(FILE *f,
       case 1:
 	lhs = LeftHandSide(r,pos,side);
 	term = RelationTerm(r,lhs,side);
-	if (NeedParen(t,RelationTermType(term),0)) {
+	if (NeedParen(t,RelationTermType(term),0)){
 	  PUTC('(',f);
         }
 	PushRelation(pos,2,lhs);
@@ -836,7 +836,29 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
       break;
     case e_power:
     case e_ipower:
-      if (lang == relio_C) {
+#if 0
+      if(lang == relio_yacas){
+        switch(first){
+        case 1:
+          Asc_DStringAppend(dsPtr,"((",2);
+          PushRelation(pos,2,NOLHS);
+          lhs = LeftHandSide(r,pos,side);
+          PushRelation(lhs,1,NOLHS);
+          break;
+        case 2:
+          Asc_DStringAppend(dsPtr,")^",2);
+          PushRelation(pos,0,NOLHS);
+          PushRelation(pos-1,1,NOLHS);
+          break;
+        case 0:
+          Asc_DStringAppend(dsPtr,")",1);
+          break;
+        default: /* first */
+          ASC_PANIC("Don't know this type of stack first");
+        }
+      }else
+#endif
+      if(lang == relio_C){
         /* we assume the args to pow Always need () around them
          * to keep , from confusing anything, so lhs not used.
          */
@@ -851,7 +873,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
           PushRelation(pos,2,NOLHS);
           lhs = LeftHandSide(r,pos,side);
           PushRelation(lhs,1,NOLHS);
-	  break;
+          break;
         case 2:
           /* seeing this binary token the second time */
           if (t==e_power) {
@@ -886,7 +908,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
         /* seeing this binary token the first time */
         lhs = LeftHandSide(r,pos,side);
         term = RelationTerm(r,lhs,side);
-        if (NeedParen(t,RelationTermType(term),0)) {
+        if (NeedParen(t,RelationTermType(term),0)||lang==relio_yacas) {
           Asc_DStringAppend(dsPtr,"(",1);
         }
         PushRelation(pos,2,lhs);
@@ -895,7 +917,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
       case 2:
         /* seeing this binary token the second time */
         term = RelationTerm(r,oldlhs,side);
-        if (NeedParen(t,RelationTermType(term),0)) {
+        if (NeedParen(t,RelationTermType(term),0)||lang==relio_yacas) {
           Asc_DStringAppend(dsPtr,")",1);
         }
         Asc_DStringAppend(dsPtr," ",1);
@@ -1150,7 +1172,7 @@ void Infix_WriteRelation(FILE *f,
   }
 }
 
-
+#if 0 && defined(DISUSED)
 /*
  * KAA.
  * Just a dumb little note about writing out variable lists --
@@ -1234,6 +1256,7 @@ static void WriteGlassBoxRelationDS(Asc_DString *dsPtr,
   }
   WriteOpDS(dsPtr,RelationRelop(r),relio_ascend);
 }
+#endif
 
 /**
 	Output a blackbox relation to the specified file pointer.
@@ -1352,9 +1375,11 @@ void WriteRelation(FILE *f, CONST struct Instance *relinst,
   case e_blackbox:
     WriteBlackBoxRelation(f,reln,ref);
     return;
+#if 0
   case e_glassbox:
     WriteGlassBoxRelation(f,reln,ref);
     return;
+#endif
   default:
     FPRINTF(ASCERR,"Unknown relation type in WriteRelation\n");
     return;
@@ -1393,9 +1418,11 @@ char *WriteRelationString(CONST struct Instance *relinst,
   case e_blackbox:
     WriteBlackBoxRelationDS(dsPtr,reln,ref);
     break;
+#if 0
   case e_glassbox:
     WriteGlassBoxRelationDS(dsPtr,reln,ref);
     break;
+#endif
   default:
     FPRINTF(ASCERR,"Unknown relation type in WriteRelationString\n");
     if (lenptr != NULL) {
@@ -1671,6 +1698,7 @@ void SaveTokenRelation(FILE *fp, CONST struct Instance *relinst)
   gl_destroy(constants);
 }
 
+#if 0 && defined(DISUSED)
 /*
  *********************************************************************
  * SaveGlassBoxRelation
@@ -1703,9 +1731,10 @@ void SaveGlassBoxRelation(FILE *fp, CONST struct Instance *relinst)
   SaveRelationVariables(fp,reln);
   FPRINTF(fp,"}\n\n");					/* the trailer */
 }
+#endif
 
 
-#ifdef  THIS_IS_AN_UNUSED_FUNCTION
+#if 0 && defined(THIS_IS_AN_UNUSED_FUNCTION)
 /*
  * This function should be good enough to save token relations
  * and opcode relations to glassbox format. Blackbox relations
@@ -1735,7 +1764,7 @@ void Save__Reln2GlassBox(FILE *fp, CONST struct Instance *relinst,
 }
 #endif  /* THIS_IS_AN_UNUSED_FUNCTION */
 
-
+#if 0 && defined(THIS_IS_AN_UNUSED_FUNCTION)
 /*
  *********************************************************************
  * SaveReln2GlassBox
@@ -1751,18 +1780,24 @@ void SaveReln2GlassBox(FILE *fp, CONST struct Instance *relinst,
 
   type = GetInstanceRelationType(relinst);
   switch (type) {
-  case e_token:		/* token -> glassbox */
+#if 0
   case e_opcode:	/* opcode -> glassbox */
+#endif
+  case e_token:		/* token -> glassbox */
     SaveReln2GlassBox(fp,relinst,prefix,index_);
     break;
+#if 0
   case e_glassbox:
     SaveGlassBoxRelation(fp,relinst);	/* we will use the existing prefix */
     break;
+#endif
   default:
     FPRINTF(ASCERR,"Relation type not supported in SaveGlassBox\n");
     break;
   }
 }
+#endif
+
 
 int ConversionIsValid(enum Expr_enum old, enum Expr_enum new)
 {
@@ -1774,9 +1809,11 @@ int ConversionIsValid(enum Expr_enum old, enum Expr_enum new)
     if (new!=e_blackbox)
       return 1;		/* we can handle all but blackboxes */
     return 0;
+#if 0
   case e_opcode:	/* not fully supported yet */
     return 0;
   case e_glassbox:
+#endif
   case e_blackbox:
     return 0;
   default:

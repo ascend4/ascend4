@@ -1,4 +1,5 @@
 /*	ASCEND modelling environment
+	Copyright (C) 2017 John Pye
 	Copyright (C) 2011 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
@@ -151,12 +152,19 @@ N34; \field Liquid Precipitation Quantity
 
 #include <stdio.h>
 
+#include <ascend/general/config.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/error.h>
 
 #include "parse/parse.h"
 
-#define EE_DEBUG 1
+//#define EE_DEBUG
+#ifdef EE_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 
 /**
 	Data extracted from the E/E data file, doesn't have to included everything,
@@ -246,7 +254,14 @@ int datareader_ee_header(DataReader *d){
 	struct EeLocation loc;
 	d->data = ASC_NEW(EeData);
 	DATA(d)->foundmissing = (EePoint){0,0,0,0 ,0,0,0,0};
+#ifdef ASC_WITH_ZLIB
+	MSG("Loading with zlib support");
+	DATA(d)->p = parseCreateGZFile(d->f);
+#else
+	ERROR_REPORTER_HERE(ASC_USER_NOTE,"EnergyPlus datareader compiled without zlib support, can't read .gz files");
 	DATA(d)->p = parseCreateFile(d->f);
+#endif
+
 	parse *p = DATA(d)->p;
 
 	if(!(
@@ -312,7 +327,7 @@ int datareader_ee_eof(DataReader *d){
 	@return 0 on success
 */
 int datareader_ee_data(DataReader *d){
-	CONSOLE_DEBUG("Reading data, i = %d",d->i);
+	MSG("Reading data, i = %d",d->i);
 	unsigned year,month,day,hour,minute;
 	char uncerts[101];
 	EePoint row;
@@ -424,11 +439,9 @@ int datareader_ee_time(DataReader *d, double *t){
 #define ROW DATA(d)->rows[d->i]
 
 int datareader_ee_vals(DataReader *d, double *v){
-#if EE_DEBUG
-	CONSOLE_DEBUG("At t=%f d, T = %lf, DNI = %f Wh/m2"
+	MSG("At t=%f d, T = %lf, DNI = %f Wh/m2"
 		,(ROW.t / 3600. / 24.),ROW.T, ROW.DNI
 	);
-#endif
 
 	v[0]=ROW.T;
 	v[1]=ROW.p;

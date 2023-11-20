@@ -78,7 +78,9 @@ enum type_kind {
   /* complex base types */
   model_type =    COMPOUND_KIND | 0x100,
   array_type =    COMPOUND_KIND | 0x200,
+#if 0
   patch_type =    COMPOUND_KIND | 0x400,
+#endif
   /* list_type? COMPOUND_KIND | 0x800, */
   /* oddly structured base types */
   relation_type = EQN_KIND | 0x1000,
@@ -859,7 +861,8 @@ ASC_DLLSPEC struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *d);
  *  @return The module associated with d as a module_t *.
  */
 
-#define GetPatchOriginal(d)  ((d)->refines)
+#if 0
+# define GetPatchOriginal(d)  ((d)->refines)
 /**<
  *  Returns the original type of the TypeDescription being patched.
  *  NULL must be treated as an error, as a patch is meaningless without
@@ -868,6 +871,7 @@ ASC_DLLSPEC struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *d);
  *  @param d The type to query (TypeDescription *).
  *  @return The original type of d as a TypeDescription *.
  */
+#endif
 
 extern struct IndexType *CreateIndexType(struct Set *set, int int_index);
 /**<

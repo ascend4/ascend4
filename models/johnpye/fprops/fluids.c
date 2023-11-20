@@ -46,7 +46,7 @@ static int nfluids = 0 + FLUIDS(F,X) + RPPFLUIDS(F,X);
 #undef F
 #undef X
 
-PureFluid *fprops_fluid(const char *name, const char *corrtype, const char *source){
+const PureFluid *fprops_fluid(const char *name, const char *corrtype, const char *source){
 	int i;
 	MSG("Looking for fluid '%s' of type '%s', with source text '%s'",name,corrtype,source);
 	for(i = 0; i < nfluids; ++i){
@@ -77,7 +77,7 @@ int fprops_num_fluids(){
 	return nfluids;
 }
 
-PureFluid *fprops_get_fluid(int i){
+const PureFluid *fprops_get_fluid(int i){
 	if(i >= 0 && i < nfluids){
 		PureFluid *P = fprops_prepare(fluids[i],NULL);
 		MSG("Fluid '%s' with T_t = %f",P->name,P->data->T_t);
@@ -99,6 +99,7 @@ void fprops_fluid_destroy(PureFluid *P){
 		assert(FPROPS_CUBIC != P->type);
 		break;
 	case FPROPS_IDEAL:
+	case FPROPS_INCOMP:
 	case FPROPS_REDKW:
 	case FPROPS_SOAVE:
 	case FPROPS_MBWR:

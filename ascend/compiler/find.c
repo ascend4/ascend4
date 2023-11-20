@@ -59,6 +59,7 @@
 #include "logical_relation.h"
 #include "logrelation.h"
 #include "logrel_util.h"
+#include "relerr.h"
 
 #define NAMELISTSIZE 20L
 #define DEFTOLERANCE 1e-08
@@ -68,7 +69,7 @@ struct for_table_t *g_EvaluationForTable=NULL;
 int ListMode=0;           /* 0 = set or normal mode; 1 = list mode */
 int EvaluatingSets=0;     /* 1 = in process of set evaluation */
 int g_DeclarativeContext=0; /* 0 = declarative processing
-			     * !0 = procedural processing.
+                             * !0 = procedural processing.
                              */
 
 int GetDeclarativeContextF()
@@ -136,8 +137,8 @@ static int ProcessIntegersInSets(CONST struct Instance *i)
 }
 
 static struct gl_list_t *RealFindInstances(CONST struct Instance *i,
-				    CONST struct Name *n,
-				    enum find_errors *errval);
+                                    CONST struct Name *n,
+                                    rel_errorlist *err);
 
 struct value_t InstanceEvaluateName(CONST struct Name *nptr)
 {
@@ -145,36 +146,37 @@ struct value_t InstanceEvaluateName(CONST struct Name *nptr)
   struct Instance *inst;
   struct value_t result;
   unsigned long c,len;
-  enum find_errors errval;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct for_var_t *ptr;
   symchar *name;
 
-  if (GetEvaluationForTable()!=NULL){
+  if(GetEvaluationForTable()!=NULL){
     /* check FOR vars list before user vars */
     AssertMemory(GetEvaluationForTable());
-    if ((name = SimpleNameIdPtr(nptr))!=NULL){
-      if ((ptr = FindForVar(GetEvaluationForTable(),name))!=NULL){
-	switch(GetForKind(ptr)){
-	case f_integer:
-	  return CreateIntegerValue(GetForInteger(ptr),1);
-	case f_symbol:
-	  return CreateSymbolValue(GetForSymbol(ptr),1);
-	case f_set:
-	  return CreateSetValue(CopySet(GetForSet(ptr)));
-	default:
-	  FPRINTF(ASCERR,"Untyped for variable.\n");
-	  return CreateErrorValue(undefined_value);
-	}
+    if((name = SimpleNameIdPtr(nptr))!=NULL){
+      //CONSOLE_DEBUG("FOR variable '%s'",SCP(name));
+      if((ptr = FindForVar(GetEvaluationForTable(),name))!=NULL){
+        switch(GetForKind(ptr)){
+        case f_integer:
+          return CreateIntegerValue(GetForInteger(ptr),1);
+        case f_symbol:
+          return CreateSymbolValue(GetForSymbol(ptr),1);
+        case f_set:
+          return CreateSetValue(CopySet(GetForSet(ptr)));
+        default:
+          FPRINTF(ASCERR,"Untyped FOR variable.\n");
+          return CreateErrorValue(undefined_value);
+        }
       }
     }
   }
   /* didn't find or bomb, so must be in user vars */
   if (GetEvaluationContext()==NULL) return CreateErrorValue(incorrect_name);
   AssertMemory(GetEvaluationContext());
-  list = RealFindInstances(GetEvaluationContext(),nptr,&errval);
+  list = RealFindInstances(GetEvaluationContext(),nptr,&err);
   if (list==NULL){
-    assert(errval!=correct_instance);
-    switch(errval){
+    assert(rel_errorlist_get_find_error(&err)!=correct_instance);
+    switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
       return CreateErrorValue(name_unfound);
     case undefined_instance:
@@ -196,82 +198,82 @@ struct value_t InstanceEvaluateName(CONST struct Name *nptr)
       case REAL_INST:
       case REAL_ATOM_INST:
       case REAL_CONSTANT_INST:
-	if (AtomAssigned(inst)) {
-	  return CreateRealValue(RealAtomValue(inst),RealAtomDims(inst),
-				IsConstantInstance(inst));
-	} else {
-	  return CreateErrorValue(undefined_value);
+        if (AtomAssigned(inst)) {
+          return CreateRealValue(RealAtomValue(inst),RealAtomDims(inst),
+                                IsConstantInstance(inst));
+        } else {
+          return CreateErrorValue(undefined_value);
         }
       case BOOLEAN_INST:
       case BOOLEAN_ATOM_INST:
       case BOOLEAN_CONSTANT_INST:
-	if (AtomAssigned(inst)) {
-	  return CreateBooleanValue(GetBooleanAtomValue(inst),
-					IsConstantInstance(inst));
-	} else {
-	  return CreateErrorValue(undefined_value);
+        if (AtomAssigned(inst)) {
+          return CreateBooleanValue(GetBooleanAtomValue(inst),
+                                        IsConstantInstance(inst));
+        } else {
+          return CreateErrorValue(undefined_value);
         }
       case INTEGER_CONSTANT_INST:
-	if (inst !=NULL && AtomAssigned(inst)) {
-	  return CreateIntegerValue(GetIntegerAtomValue(inst),1);
-	} else {
-	  return CreateErrorValue(undefined_value);
+        if (inst !=NULL && AtomAssigned(inst)) {
+          return CreateIntegerValue(GetIntegerAtomValue(inst),1);
+        } else {
+          return CreateErrorValue(undefined_value);
         }
       case INTEGER_ATOM_INST:
       case INTEGER_INST:
-	if (EvaluatingSets){
-	  int piis;
+        if (EvaluatingSets){
+          int piis;
           piis = ProcessIntegersInSets(inst);
-	  if(piis==1) {
-	    return CreateErrorValue(type_conflict);
+          if(piis==1) {
+            return CreateErrorValue(type_conflict);
           }
-	  if(piis==2) {
-	    return CreateErrorValue(incorrect_name);
+          if(piis==2) {
+            return CreateErrorValue(incorrect_name);
           }
-	}
-	if (AtomAssigned(inst)) {
-	  return CreateIntegerValue(GetIntegerAtomValue(inst),0);
-	} else {
-	  return CreateErrorValue(undefined_value);
+        }
+        if (AtomAssigned(inst)) {
+          return CreateIntegerValue(GetIntegerAtomValue(inst),0);
+        } else {
+          return CreateErrorValue(undefined_value);
         }
       case SET_ATOM_INST:
-	if (ListMode) {
+        if (ListMode) {
           /* more kaa-ism. client should be checking this. not us. */
-	  FPRINTF(ASCERR,"Set atoms are not allowed in lists! (ListMode==1)\n");
-	  return CreateErrorValue(illegal_set_use);
-	}
-	if (AtomAssigned(inst)) {
-	  return CreateSetValue(CopySet(SetAtomList(inst)));
-	} else {
-	  return CreateErrorValue(undefined_value);
+          FPRINTF(ASCERR,"Set atoms are not allowed in lists! (ListMode==1)\n");
+          return CreateErrorValue(illegal_set_use);
+        }
+        if (AtomAssigned(inst)) {
+          return CreateSetValue(CopySet(SetAtomList(inst)));
+        } else {
+          return CreateErrorValue(undefined_value);
         }
       case SYMBOL_INST:
       case SYMBOL_ATOM_INST:
       case SYMBOL_CONSTANT_INST:
-	if (AtomAssigned(inst)) {
-	  return CreateSymbolValue(GetSymbolAtomValue(inst),
-					IsConstantInstance(inst));
-	} else {
-	  return CreateErrorValue(undefined_value);
+        if (AtomAssigned(inst)) {
+          return CreateSymbolValue(GetSymbolAtomValue(inst),
+                                        IsConstantInstance(inst));
+        } else {
+          return CreateErrorValue(undefined_value);
         }
       case SET_INST:
-	if (ListMode) {
+        if (ListMode) {
           /* more kaa-ism. client should be checking this. not us. */
-	  FPRINTF(ASCERR,"Sets instances are not allowed in lists! (ListMode==1)\n");
-	  return CreateErrorValue(illegal_set_use);
-	}
-	if (AtomAssigned(inst)) {
-	  return CreateSetValue(CopySet(SetAtomList(inst)));
-	} else {
-	  return CreateErrorValue(undefined_value);
+          FPRINTF(ASCERR,"Sets instances are not allowed in lists! (ListMode==1)\n");
+          return CreateErrorValue(illegal_set_use);
+        }
+        if (AtomAssigned(inst)) {
+          return CreateSetValue(CopySet(SetAtomList(inst)));
+        } else {
+          return CreateErrorValue(undefined_value);
         }
       default:
-	return CreateErrorValue(incorrect_name);
+        return CreateErrorValue(incorrect_name);
       }
     } else {
     /* BUG BAA this block may be incorrect. what is it? Looks like kaaism*/
       if (GetDeclarativeContext()==0) {
-	/* find out if this is ever called in instantiation */
+        /* find out if this is ever called in instantiation */
 FPRINTF(ASCERR,"BAA debug: please tell ballan@cs.cmu.edu you saw:\n");
 WriteName(ASCERR,nptr);
 FPRINTF(ASCERR,"\nin compiling what MODEL.\n");
@@ -279,8 +281,8 @@ FPRINTF(ASCERR,"\nin compiling what MODEL.\n");
       result = CreateEmptyListValue();
       len = gl_length(list);
       for(c=1; c<=len; c++){
-	inst = (struct Instance *)gl_fetch(list,c);
-	AssertMemory(inst);
+        inst = (struct Instance *)gl_fetch(list,c);
+        AssertMemory(inst);
       /* Don't know why only integers should be valid in lists.
        * He who introduces crap should at least be complete about it.
        * Somewhere there's probably a client not doing proper checking
@@ -288,79 +290,79 @@ FPRINTF(ASCERR,"\nin compiling what MODEL.\n");
        */
 #define OLDCRAP 0
 #if OLDCRAP /* integer only */
-	switch(InstanceKind(inst)) {
-	case INTEGER_ATOM_INST:
-	  if (AtomAssigned(inst)) {
-	    AppendToListValue(result,
-			      CreateIntegerValue(GetIntegerAtomValue(inst),
-				IsConstantInstance(inst)));
-	  } else {
-	    return CreateErrorValue(undefined_value);
+        switch(InstanceKind(inst)) {
+        case INTEGER_ATOM_INST:
+          if (AtomAssigned(inst)) {
+            AppendToListValue(result,
+                              CreateIntegerValue(GetIntegerAtomValue(inst),
+                                IsConstantInstance(inst)));
+          } else {
+            return CreateErrorValue(undefined_value);
           }
-	  break;
-	case SET_ATOM_INST:
-	case SYMBOL_ATOM_INST:
-	case INTEGER_INST:
-	case SET_INST:
-	case SYMBOL_INST:
-	default:
-	  gl_destroy(list);
-	  DestroyValue(&result);
-	  return CreateErrorValue(incorrect_name);
-	}
+          break;
+        case SET_ATOM_INST:
+        case SYMBOL_ATOM_INST:
+        case INTEGER_INST:
+        case SET_INST:
+        case SYMBOL_INST:
+        default:
+          gl_destroy(list);
+          DestroyValue(&result);
+          return CreateErrorValue(incorrect_name);
+        }
 #else
   /* extended oldcrap to include this. baa. 3/98 */
-	switch(InstanceKind(inst)) {
-	case REAL_ATOM_INST:
-	case REAL_CONSTANT_INST:
-	  if (AtomAssigned(inst)) {
-	    AppendToListValue(result,
-			      CreateRealValue(RealAtomValue(inst),
+        switch(InstanceKind(inst)) {
+        case REAL_ATOM_INST:
+        case REAL_CONSTANT_INST:
+          if (AtomAssigned(inst)) {
+            AppendToListValue(result,
+                              CreateRealValue(RealAtomValue(inst),
                                               RealAtomDims(inst),
-				IsConstantInstance(inst)));
-	  } else {
-	    return CreateErrorValue(undefined_value);
+                                IsConstantInstance(inst)));
+          } else {
+            return CreateErrorValue(undefined_value);
           }
-	  break;
-	case INTEGER_ATOM_INST:
-	case INTEGER_CONSTANT_INST:
-	  if (AtomAssigned(inst)) {
-	    AppendToListValue(result,
-			      CreateIntegerValue(GetIntegerAtomValue(inst),
-				IsConstantInstance(inst)));
-	  } else {
-	    return CreateErrorValue(undefined_value);
+          break;
+        case INTEGER_ATOM_INST:
+        case INTEGER_CONSTANT_INST:
+          if (AtomAssigned(inst)) {
+            AppendToListValue(result,
+                              CreateIntegerValue(GetIntegerAtomValue(inst),
+                                IsConstantInstance(inst)));
+          } else {
+            return CreateErrorValue(undefined_value);
           }
-	  break;
-	case SET_ATOM_INST:
-	  if (AtomAssigned(inst)) {
-	    AppendToListValue(result,
-	        CreateSetValue(CopySet(SetAtomList(inst))));
-	  } else {
-	    return CreateErrorValue(undefined_value);
+          break;
+        case SET_ATOM_INST:
+          if (AtomAssigned(inst)) {
+            AppendToListValue(result,
+                CreateSetValue(CopySet(SetAtomList(inst))));
+          } else {
+            return CreateErrorValue(undefined_value);
           }
-	  break;
-	case SYMBOL_ATOM_INST:
-	case SYMBOL_CONSTANT_INST:
-	  if (AtomAssigned(inst)) {
-	    AppendToListValue(result,
-			      CreateSymbolValue(GetSymbolAtomValue(inst),
-				IsConstantInstance(inst)));
-	  } else {
-	    return CreateErrorValue(undefined_value);
+          break;
+        case SYMBOL_ATOM_INST:
+        case SYMBOL_CONSTANT_INST:
+          if (AtomAssigned(inst)) {
+            AppendToListValue(result,
+                              CreateSymbolValue(GetSymbolAtomValue(inst),
+                                IsConstantInstance(inst)));
+          } else {
+            return CreateErrorValue(undefined_value);
           }
-	  break;
+          break;
         /* ok, we will uniformly reject lists of subatomics, though
-	 * it is arbitrary and inconsistent to do so.
+         * it is arbitrary and inconsistent to do so.
          */
-	case INTEGER_INST:
-	case SET_INST:
-	case SYMBOL_INST:
-	default:
-	  gl_destroy(list);
-	  DestroyValue(&result);
-	  return CreateErrorValue(incorrect_name);
-	}
+        case INTEGER_INST:
+        case SET_INST:
+        case SYMBOL_INST:
+        default:
+          gl_destroy(list);
+          DestroyValue(&result);
+          return CreateErrorValue(incorrect_name);
+        }
 #endif
       }
       gl_destroy(list);
@@ -382,7 +384,7 @@ struct value_t InstanceEvaluateSatisfiedName(CONST struct Name *nptr,
 {
   struct gl_list_t *list;
   struct Instance *inst;
-  enum find_errors errval;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   struct for_var_t *ptr;
   symchar *name;
   CONST struct relation *rel;
@@ -395,26 +397,26 @@ struct value_t InstanceEvaluateSatisfiedName(CONST struct Name *nptr,
     AssertMemory(GetEvaluationForTable());
     if ((name = SimpleNameIdPtr(nptr))!=NULL){
       if ((ptr = FindForVar(GetEvaluationForTable(),name))!=NULL){
-	switch(GetForKind(ptr)){
-	case f_integer:
-	  return CreateIntegerValue(GetForInteger(ptr),1);
-	case f_symbol:
-	  return CreateSymbolValue(GetForSymbol(ptr),1);
-	case f_set:
-	  return CreateSetValue(CopySet(GetForSet(ptr)));
-	default:
-	  FPRINTF(ASCERR,"Untyped for variable.\n");
-	  return CreateErrorValue(undefined_value);
-	}
+        switch(GetForKind(ptr)){
+        case f_integer:
+          return CreateIntegerValue(GetForInteger(ptr),1);
+        case f_symbol:
+          return CreateSymbolValue(GetForSymbol(ptr),1);
+        case f_set:
+          return CreateSetValue(CopySet(GetForSet(ptr)));
+        default:
+          FPRINTF(ASCERR,"Untyped for variable.\n");
+          return CreateErrorValue(undefined_value);
+        }
       }
     }
   }
   if (GetEvaluationContext()==NULL) return CreateErrorValue(incorrect_name);
   AssertMemory(GetEvaluationContext());
-  list = RealFindInstances(GetEvaluationContext(),nptr,&errval);
+  list = RealFindInstances(GetEvaluationContext(),nptr,&err);
   if (list==NULL){
-    assert(errval!=correct_instance);
-    switch(errval){
+    assert(rel_errorlist_get_find_error(&err)!=correct_instance);
+    switch(rel_errorlist_get_find_error(&err)){
     case unmade_instance:
       return CreateErrorValue(name_unfound);
     case undefined_instance:
@@ -438,7 +440,7 @@ struct value_t InstanceEvaluateSatisfiedName(CONST struct Name *nptr,
         if (status != safe_ok) {
         FPRINTF(ASCERR,
             "Something wrong while calculating a residual in Sat Expr\n");
-	return CreateErrorValue(undefined_value);
+        return CreateErrorValue(undefined_value);
         }
         rel = GetInstanceRelationOnly(inst);
         relop = RelationRelop(rel);
@@ -446,18 +448,18 @@ struct value_t InstanceEvaluateSatisfiedName(CONST struct Name *nptr,
         case e_equal:
           if (tol != DBL_MAX) {
             if(fabs(tol)>fabs(res)) {
-	      return CreateBooleanValue(1,0);
+              return CreateBooleanValue(1,0);
             }
             else {
-	      return CreateBooleanValue(0,0);
+              return CreateBooleanValue(0,0);
             }
           }
           else {
             if((DEFTOLERANCE)>fabs(res)) {
-	      return CreateBooleanValue(1,0);
+              return CreateBooleanValue(1,0);
             }
             else {
-	      return CreateBooleanValue(0,0);
+              return CreateBooleanValue(0,0);
             }
           }
         case e_notequal:
@@ -549,16 +551,16 @@ struct value_t InstanceEvaluateSatisfiedName(CONST struct Name *nptr,
           FPRINTF(ASCERR,
                "Something wrong while calculating a residual in Sat Expr\n");
           return CreateErrorValue(incorrect_name);
-	}
+        }
       case LREL_INST:
         if (LogRelCalcResidual(inst,&logres)) {
           FPRINTF(ASCERR,
             "Something wrong while calculating a log residual in Sat Expr\n");
- 	  return CreateErrorValue(undefined_value);
+           return CreateErrorValue(undefined_value);
         }
-	return CreateBooleanValue(logres,0);
+        return CreateBooleanValue(logres,0);
       default:
-	return CreateErrorValue(incorrect_name);
+        return CreateErrorValue(incorrect_name);
       }
     }
     else {
@@ -573,10 +575,9 @@ struct value_t InstanceEvaluateSatisfiedName(CONST struct Name *nptr,
 }
 
 
-static struct gl_list_t *FindArrayChildren(struct gl_list_t *list,
-				    CONST struct set_t *sptr,
-				    enum find_errors *errval)
-{
+static struct gl_list_t *FindArrayChildren(struct gl_list_t *list
+	, CONST struct set_t *sptr, rel_errorlist *err
+){
   struct gl_list_t *result;
   struct Instance *i,*child;
   struct InstanceName rec;
@@ -592,38 +593,38 @@ static struct gl_list_t *FindArrayChildren(struct gl_list_t *list,
     for(c1=1; c1<=len1; c1++){
       i = (struct Instance *)gl_fetch(list,c1);
       if (InstanceKind(i)==ARRAY_ENUM_INST){
-	if (NextToExpand(i)!=1){
-	  for(c2=1; c2<=len2; c2++){
-	    SetInstanceNameStrIndex(rec,FetchStrMember(sptr,c2));
-	    if ((pos = ChildSearch(i,&rec))==0){
-	      gl_destroy(result);
-	      desc = InstanceTypeDesc(i);
-	      if ( GetArrayBaseIsRelation(desc) || GetArrayBaseIsLogRel(desc)){
-		*errval = unmade_instance;
-	      } else {
-		*errval = impossible_instance;
+        if (NextToExpand(i)!=1){
+          for(c2=1; c2<=len2; c2++){
+            SetInstanceNameStrIndex(rec,FetchStrMember(sptr,c2));
+            if ((pos = ChildSearch(i,&rec))==0){
+              gl_destroy(result);
+              desc = InstanceTypeDesc(i);
+              if(GetArrayBaseIsRelation(desc) || GetArrayBaseIsLogRel(desc)){
+                rel_errorlist_set_find_error(err, unmade_instance);
+              }else{
+                rel_errorlist_set_find_error(err, impossible_instance);
               }
-	      return NULL;
-	    } else {
+              return NULL;
+            }else{
               child = InstanceChild(i,pos);
-	      if (child!=NULL){
-		gl_append_ptr(result,(VOIDPTR)child);
-	      } else {
-		gl_destroy(result);
-		*errval = unmade_instance;
-		return NULL;
-	      }
-	    }
-	  }
-	} else {
-	  gl_destroy(result);
-	  *errval = unmade_instance;
-	  return NULL;
-	}
-      } else {
-	gl_destroy(result);
-	*errval = impossible_instance;
-	return NULL;
+              if (child!=NULL){
+                gl_append_ptr(result,(VOIDPTR)child);
+              } else {
+                gl_destroy(result);
+                rel_errorlist_set_find_error(err,unmade_instance);
+                return NULL;
+              }
+            }
+          }
+        }else{
+          gl_destroy(result);
+          rel_errorlist_set_find_error(err,unmade_instance);
+          return NULL;
+        }
+      }else{
+        gl_destroy(result);
+        rel_errorlist_set_find_error(err,impossible_instance);
+        return NULL;
       }
     }
     return result;
@@ -635,38 +636,38 @@ static struct gl_list_t *FindArrayChildren(struct gl_list_t *list,
     for(c1=1; c1<=len1; c1++){
       i = (struct Instance *)gl_fetch(list,c1);
       if (InstanceKind(i)==ARRAY_INT_INST){
-	if (NextToExpand(i)!=1){
-	  for (c2=1; c2<=len2; c2++){
-	    SetInstanceNameIntIndex(rec,FetchIntMember(sptr,c2));
-	    if ((pos = ChildSearch(i,&rec))==0){
-	      gl_destroy(result);
-	      desc = InstanceTypeDesc(i);
-	      if (GetArrayBaseIsRelation(desc) || GetArrayBaseIsLogRel(desc)) {
-		*errval = unmade_instance;
-	      } else {
-		*errval = impossible_instance;
+        if (NextToExpand(i)!=1){
+          for (c2=1; c2<=len2; c2++){
+            SetInstanceNameIntIndex(rec,FetchIntMember(sptr,c2));
+            if ((pos = ChildSearch(i,&rec))==0){
+              gl_destroy(result);
+              desc = InstanceTypeDesc(i);
+              if (GetArrayBaseIsRelation(desc) || GetArrayBaseIsLogRel(desc)) {
+                rel_errorlist_set_find_error(err,unmade_instance);
+              }else{
+                rel_errorlist_set_find_error(err,impossible_instance);
               }
-	      return NULL;
-	    } else {
-	      child = InstanceChild(i,pos);
-	      if (child!=NULL){
-		gl_append_ptr(result,(VOIDPTR)child);
-	      } else{
-		gl_destroy(result);
-		*errval = unmade_instance;
-		return NULL;
-	      }
-	    }
-	  }
-	} else {
-	  gl_destroy(result);
-	  *errval = unmade_instance;
-	  return NULL;
-	}
-      } else {
-	gl_destroy(result);
-	*errval = impossible_instance;
-	return NULL;
+              return NULL;
+            }else{
+              child = InstanceChild(i,pos);
+              if (child!=NULL){
+                gl_append_ptr(result,(VOIDPTR)child);
+              }else{
+                gl_destroy(result);
+                rel_errorlist_set_find_error(err,unmade_instance);
+                return NULL;
+              }
+            }
+          }
+        }else{
+          gl_destroy(result);
+          rel_errorlist_set_find_error(err,unmade_instance);
+          return NULL;
+        }
+      }else{
+        gl_destroy(result);
+        rel_errorlist_set_find_error(err,impossible_instance);
+        return NULL;
       }
     }
     return result;
@@ -675,11 +676,10 @@ static struct gl_list_t *FindArrayChildren(struct gl_list_t *list,
   return NULL;
 }
 
-static
-struct gl_list_t *FindNextNameElement(CONST struct Name *n,
-				      struct gl_list_t *list,
-				      enum find_errors *errval)
-{
+
+static struct gl_list_t *FindNextNameElement(CONST struct Name *n
+	, struct gl_list_t *list, rel_errorlist *err
+){
   unsigned long pos,c,len;
   struct InstanceName rec;
   struct Instance *current,*child;
@@ -687,37 +687,42 @@ struct gl_list_t *FindNextNameElement(CONST struct Name *n,
   CONST struct Set *sptr;
   struct gl_list_t *result;
 
-  *errval = correct_instance;
-  if (NameId(n)){
+  rel_errorlist_set_find_error(err,correct_instance);
+  if(NameId(n)){// name element is an 'identity'
+    //CONSOLE_DEBUG("finding instance for name '%s'",SCP(NameIdPtr(n)));
     result = gl_create(NAMELISTSIZE);
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,NameIdPtr(n));
     len = gl_length(list);
     for(c=1; c<=len; c++){
+      //CONSOLE_DEBUG("item %lu of %lu",c,len);
       current = (struct Instance *)gl_fetch(list,c);
       pos = ChildSearch(current,&rec);
-      if (pos!=0){
-	child = InstanceChild(current,pos);
-	if (child!=NULL){
-	  gl_append_ptr(result,(VOIDPTR)child);
-	} else{
-	  *errval = unmade_instance;
-	  gl_destroy(result);
-	  return NULL;
-	}
-      } else{
-	*errval = unmade_instance;
+      if(pos!=0){
+        child = InstanceChild(current,pos);
+        if(child!=NULL){
+          gl_append_ptr(result,(VOIDPTR)child);
+        }else{
+          //CONSOLE_DEBUG("unmade instance (null child) %lu of %lu with pos=%lu, name '%s'",c,len,pos,SCP(NameIdPtr(n)));
+          rel_errorlist_set_find_error(err,unmade_instance);
+          gl_destroy(result);
+          return NULL;
+        }
+      }else{
+        //CONSOLE_DEBUG("unmade instance %lu of %lu with name '%s'",c,len,SCP(NameIdPtr(n)));
+        rel_errorlist_set_find_error(err,unmade_instance);
         /* it would seem this ought to be undefined_instance,
          * but maybe refinement causes insanity. -- in which case
          * it should be a caller policy to wait, rather than our
          * job to anticipate policy and short circuit things here.
          */
-	gl_destroy(result);
-	return NULL;
+        gl_destroy(result);
+        return NULL;
       }
     }
     return result;
-  } else {
+  }else{
+    //CONSOLE_DEBUG("name is a set");
     sptr = NameSetPtr(n);
     setvalue = EvaluateSet(sptr,InstanceEvaluateName);
     switch(ValueKind(setvalue)){
@@ -726,25 +731,25 @@ struct gl_list_t *FindNextNameElement(CONST struct Name *n,
     case list_value:
       oldvalue = setvalue;
       if (ListMode) {
-	setvalue = CreateOrderedSetFromList(oldvalue);
+        setvalue = CreateOrderedSetFromList(oldvalue);
       } else {
-	setvalue = CreateSetFromList(oldvalue);
+        setvalue = CreateSetFromList(oldvalue);
       }
       DestroyValue(&oldvalue);
       /* intended to fall through to next case */
     case set_value:
-      result = FindArrayChildren(list,SetValue(setvalue),errval);
+      result = FindArrayChildren(list,SetValue(setvalue),err);
       DestroyValue(&setvalue);
       return result;
     case error_value:
       switch(ErrorValue(setvalue)){
       case illegal_set_use:
-	*errval = impossible_instance;
-	break;
+        rel_errorlist_set_find_error(err,impossible_instance);
+        break;
       default:
-	*errval = undefined_instance;
-	break;
-	/* more needs to be added here */
+        rel_errorlist_set_find_error(err,undefined_instance);
+        break;
+        /* more needs to be added here */
       }
       DestroyValue(&setvalue);
       return NULL;
@@ -755,56 +760,60 @@ struct gl_list_t *FindNextNameElement(CONST struct Name *n,
   }
 }
 
-static
-struct gl_list_t *RealFindInstances(CONST struct Instance *i,
-				    CONST struct Name *n,
-				    enum find_errors *errval)
-{
+
+static struct gl_list_t *RealFindInstances(CONST struct Instance *i
+	,CONST struct Name *n, rel_errorlist *err
+){
   struct gl_list_t *result,*next;
   result = gl_create(NAMELISTSIZE);
   gl_append_ptr(result,(VOIDPTR)i);
   while(n!=NULL){
-    next = FindNextNameElement(n,result,errval);
+    next = FindNextNameElement(n,result,err);
     gl_destroy(result);
-    if (next!=NULL){
+    if(next!=NULL){
       result = next;
       n = NextName(n);
-    } else {
+    }else{
+      // returning 'NULL' should always mean had a find_error
+      assert(rel_errorlist_get_find_error(err)!=correct_instance);
       return NULL;
     }
   }
   return result;
 }
 
-struct gl_list_t *FindInstances(CONST struct Instance *i,
-				CONST struct Name *n,
-				enum find_errors *errval)
-{
+
+struct gl_list_t *FindInstances(CONST struct Instance *i
+	,CONST struct Name *n,rel_errorlist *err
+){
   struct gl_list_t *result;
-  *errval = impossible_instance;
-  if (i == NULL) return NULL;
+  if(i == NULL){
+    rel_errorlist_set_find_error_name(err,impossible_instance,n);
+    return NULL;
+  }
   AssertMemory(i);
   assert(GetEvaluationContext()==NULL);
   SetEvaluationContext(i);
-  *errval = correct_instance;
-  result = RealFindInstances(i,n,errval);
+  rel_errorlist_set_find_error(err,correct_instance);
+  
+  result = RealFindInstances(i,n,err);
+
   SetEvaluationContext(NULL);
   return result;
 }
 
-struct gl_list_t *FindInstancesFromNames(CONST struct Instance *i,
-                                                CONST struct gl_list_t *names,
-                                                enum find_errors *err,
-                                                unsigned long *errpos)
-{
+
+struct gl_list_t *FindInstancesFromNames(CONST struct Instance *i
+	,CONST struct gl_list_t *names,rel_errorlist *err
+){
   unsigned long pos, len;
   struct gl_list_t *result, *tmp;
   struct Name *n;
 
-  *errpos = 0;
+  rel_errorlist_set_find_errpos(err,0);
   len = gl_length(names);
   if (len == 0) {
-    *err = correct_instance;
+    rel_errorlist_set_find_error(err,correct_instance);
     return NULL;
   }
   result = gl_create(len);
@@ -812,21 +821,21 @@ struct gl_list_t *FindInstancesFromNames(CONST struct Instance *i,
     n = (struct Name *)gl_fetch(names,pos);
     if (n == NULL) {
       gl_destroy(result);
-      *err = impossible_instance;
-      *errpos = pos;
+      rel_errorlist_set_find_error_name(err,impossible_instance,n);
+      rel_errorlist_set_find_errpos(err,pos);
       return NULL;
     }
     tmp = FindInstances(i,n,err);
     if (tmp == NULL) {
       gl_destroy(result);
-      *errpos = pos;
+      rel_errorlist_set_find_errpos(err,pos);
       return NULL;
     }
     if (gl_length(tmp) != 1) {
       gl_destroy(tmp);
       gl_destroy(result);
-      *err = impossible_instance;
-      *errpos = pos;
+      rel_errorlist_set_find_error_name(err,impossible_instance,n);
+      rel_errorlist_set_find_errpos(err,pos);
       return NULL;
     }
     gl_append_ptr(result,gl_fetch(tmp,1));

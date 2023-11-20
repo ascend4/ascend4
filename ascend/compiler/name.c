@@ -254,10 +254,10 @@ int NameIdF(CONST struct Name *n)
   return ((n->bits & NAMEBIT_IDTY) != 0);
 }
 
-int NameAutoF(CONST struct Name *n)
-{
+int NameAutoF(CONST struct Name *n){
   assert(n!=NULL);
-  return ((n->bits &( NAMEBIT_IDTY | NAMEBIT_AUTO)) != 0);
+  /* fixed this to correctly match the documented behaviour */
+  return (((n)->bits & (NAMEBIT_AUTO|NAMEBIT_IDTY)) == (NAMEBIT_AUTO|NAMEBIT_IDTY) ? NAMEBIT_AUTO : 0);
 }
 
 symchar *NameIdPtrF(CONST struct Name *n)
@@ -330,6 +330,7 @@ void DestroyName(register struct Name *n)
   }
 }
 
+#if 0 /* DISUSED */
 void DestroyNamePtr(struct Name *n)
 {
   if (n!=NULL) {
@@ -342,6 +343,7 @@ void DestroyNamePtr(struct Name *n)
     IDNFREE((char *)n);
   }
 }
+#endif
 
 struct Name *JoinNames(struct Name *n1, struct Name *n2)
 {
@@ -397,6 +399,7 @@ int NameCompound(CONST struct Name *n)
   return (dotseen || idseen>1);
 }
 
+#if 0 /* DISUSED */
 int NamesEqual(CONST struct Name *n1, CONST struct Name *n2)
 {
   if (n1==n2) return 1;
@@ -412,6 +415,7 @@ int NamesEqual(CONST struct Name *n1, CONST struct Name *n2)
   }
   return ((n1==NULL)&&(n2==NULL));
 }
+#endif
 
 /*
  * nameids  > subscripts.

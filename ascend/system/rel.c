@@ -131,12 +131,14 @@ rel_create(SlvBackendToken instance, struct rel_relation *newrel)
   case e_token:
     newrel->type = e_rel_token;
     break;
+#if 0
   case e_opcode:
     ASC_PANIC("switching on e_opcode");
     break;
   case e_glassbox:
     newrel->type = e_rel_glassbox;
     break;
+#endif
   case e_blackbox:
     newrel->type = e_rel_blackbox;
     break;

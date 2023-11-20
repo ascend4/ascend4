@@ -14,10 +14,15 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-/**
+*//** @file
 	Light-Weight Hessian Matrix Library
+	
+	This module implements dense symmetric and full matrices. Symmetric
+	matrices can be stored internally as either lower-triangular or 
+	upper-triangular. Module includes routines to access values from a particular
+	row of the matrix, but no additional routines are included. These routines
+	so far are only used in relman.c (relman_hess) and solvers/ipopt.
+
 	Created by: Mahesh Narayanamurthi
 	Creation Date: Aug 2009
 */
@@ -30,7 +35,7 @@
 #include <ascend/general/mathmacros.h>
 #include <stdio.h>
 
-/**	@addtogroup general_ltmatrix General Lightweight Matrix
+/**	@addtogroup general_ltmatrix Dense symmetric matrices
 	@{
 */
 
@@ -38,30 +43,30 @@
 	Hessian Matrix Layout-Structure
 */
 
-enum hess_layout{
-	Upper, /*Upper Triangular Matrix*/
-	Lower, /*Lower Triangular Matrix*/
-	Full   /*Full Hessian Matrix*/
+enum ltmatrix_layout_enum{
+	LTMATRIX_UPPER, /*Upper Triangular Matrix*/
+	LTMATRIX_LOWER, /*Lower Triangular Matrix*/
+	LTMATRIX_FULL   /*Full Hessian Matrix*/
 };
 
-typedef enum hess_layout layout;
+typedef enum ltmatrix_layout_enum ltmatrix_layout;
 
 
 /**
 	Hessian Matrix Data-Structure
 */
 
-struct rel_hessian_mtx {
-	layout access_type; /* Details about access type  */
+struct ltmatrix_struct {
+	ltmatrix_layout access_type; /* Details about access type  */
 	unsigned long dimension;  /* Dimension of Square Matrix */
 	unsigned long len; /* n*n in maximum case*/
 	double *h;
 };
 
-typedef struct rel_hessian_mtx hessian_mtx;
+typedef struct ltmatrix_struct ltmatrix;
 
 
-#define Hessian_Mtx_set_element(matrix,row,col,value) \
+#define ltmatrix_set_element(matrix,row,col,value) \
 do { \
 	asc_assert(matrix!=NULL); \
 	ASC_ASSERT_RANGE(row,0,matrix->dimension); \
@@ -72,7 +77,7 @@ do { \
 	unsigned long d; \
 	unsigned long l; \
 	switch(matrix->access_type){ \
-		case Upper: \
+		case LTMATRIX_UPPER: \
 			r = MIN(row,col); \
 			c = MAX(row,col); \
 			d = matrix->dimension; \
@@ -81,14 +86,14 @@ do { \
 			asc_assert(index < l);\
 			matrix->h[index] = value; \
 			break; \
-		case Lower: \
+		case LTMATRIX_LOWER: \
 			r = MAX(row,col); \
 			c = MIN(row,col); \
 			index = ((r)*(r+1))/2 + c; \
 			asc_assert(index < (matrix->len));\
 			matrix->h[index] = value; \
 			break; \
-		case Full: \
+		case LTMATRIX_FULL: \
 			index = (row * (matrix->dimension)) + col; \
 			asc_assert(index < (matrix->len));\
 			matrix->h[index] = value; \
@@ -99,7 +104,7 @@ do { \
 #define HESSIAN_LT_SET_ELEMENT(matrix,row,col,val)  \
 do { \
 	asc_assert(matrix!=NULL); \
-	asc_assert(matrix->access_type==Lower); \
+	asc_assert(matrix->access_type==LTMATRIX_LOWER); \
 	ASC_ASSERT_RANGE(row,0,matrix->dimension); \
 	ASC_ASSERT_RANGE(col,0,matrix->dimension); \
 	unsigned long index;\
@@ -114,7 +119,7 @@ do { \
 #define HESSIAN_UT_SET_ELEMENT(matrix,row,col,val) \
 do { \
 	asc_assert(matrix!=NULL); \
-	asc_assert(matrix->access_type==Upper); \
+	asc_assert(matrix->access_type==LTMATRIX_UPPER); \
 	ASC_ASSERT_RANGE(row,0,matrix->dimension); \
 	ASC_ASSERT_RANGE(col,0,matrix->dimension); \
 	unsigned long index;\
@@ -134,7 +139,7 @@ do { \
 #define HESSIAN_FULL_SET_ELEMENT(matrix,row,col,val) \
 do { \
 	asc_assert(matrix!=NULL); \
-	asc_assert(matrix->access_type==Full); \
+	asc_assert(matrix->access_type==LTMATRIX_FULL); \
 	ASC_ASSERT_RANGE(row,0,matrix->dimension); \
 	ASC_ASSERT_RANGE(col,0,matrix->dimension); \
 	unsigned long index;\
@@ -145,33 +150,33 @@ do { \
 } while (0)
 
 
-#define Hessian_Mtx_get_element(matrix,row,col) matrix->h[Hessian_Mtx_access(matrix,row,col)]
+#define ltmatrix_get_element(matrix,row,col) matrix->h[ltmatrix_access(matrix,row,col)]
 
-ASC_DLLSPEC hessian_mtx* Hessian_Mtx_create(layout access_type,
+ASC_DLLSPEC ltmatrix* ltmatrix_create(ltmatrix_layout access_type,
 											unsigned long dimension
 											);
 
-ASC_DLLSPEC int Hessian_Mtx_destroy(hessian_mtx* matrix);
+ASC_DLLSPEC int ltmatrix_destroy(ltmatrix* matrix);
 
-ASC_DLLSPEC int Hessian_Mtx_compare(hessian_mtx* matrix_a, hessian_mtx* matrix_b);
+ASC_DLLSPEC int ltmatrix_compare(ltmatrix* matrix_a, ltmatrix* matrix_b);
 
-ASC_DLLSPEC int Hessian_Mtx_compare_array(hessian_mtx* matrix_a, double* array_b);
+ASC_DLLSPEC int ltmatrix_compare_array(ltmatrix* matrix_a, double* array_b);
 
-ASC_DLLSPEC int Hessian_Mtx_clear(hessian_mtx* matrix);
+ASC_DLLSPEC int ltmatrix_clear(ltmatrix* matrix);
 
-ASC_DLLSPEC int Hessian_Mtx_init(hessian_mtx* matrix, double* new_vals);
+ASC_DLLSPEC int ltmatrix_init(ltmatrix* matrix, double* new_vals);
 
-ASC_DLLSPEC unsigned long Hessian_Mtx_access(hessian_mtx* matrix,
+ASC_DLLSPEC unsigned long ltmatrix_access(ltmatrix* matrix,
 											unsigned long row,
 											unsigned long col);
 
-ASC_DLLSPEC double* Hessian_Mtx_get_row_pointer(hessian_mtx* matrix, unsigned long row);
+ASC_DLLSPEC double* ltmatrix_get_row_pointer(ltmatrix* matrix, unsigned long row);
 
-ASC_DLLSPEC unsigned long Hessian_Mtx_get_row_length(hessian_mtx* matrix, unsigned long row);
+ASC_DLLSPEC unsigned long ltmatrix_get_row_length(ltmatrix* matrix, unsigned long row);
 
-ASC_DLLSPEC void Hessian_Mtx_debug_print(FILE *fp, hessian_mtx* matrix);
+ASC_DLLSPEC void ltmatrix_debug_print(FILE *fp, ltmatrix* matrix);
 
-ASC_DLLSPEC int Hessian_Mtx_test_validity(hessian_mtx *matrix);
+ASC_DLLSPEC int ltmatrix_test_validity(ltmatrix *matrix);
 
 
 /** TODO

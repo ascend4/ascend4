@@ -48,7 +48,7 @@
 #include <ascend/compiler/symtab.h>
 #include <ascend/compiler/instance_io.h>
 #include <ascend/compiler/safe.h>
-#include <ascend/compiler/interval.h>
+//#include <tcltk/interface/interval.h>
 #include <ascend/compiler/func.h>
 #include <ascend/compiler/extcall.h>
 #include <ascend/compiler/setinstval.h>

@@ -241,6 +241,22 @@
 #define ASC_DEFAULT_ASCENDLIBRARY "@DEFAULT_ASCENDLIBRARY@"
 #define ASC_DEFAULT_ASCENDSOLVERS "@DEFAULT_ASCENDSOLVERS@"
 
+/**
+	envvar used for the path to the directory containing btprolog.h and the 
+	makefile for compilation of bintokens.
+*/
+#define ASC_ENV_BTINC "ASCENDBTINC"
+/** default value for env var named by ASC_ENV_BTINC */
+#define ASC_DEFAULT_BTINC "@DEFAULT_ASCENDBTINC@"
+
+/*
+	envvar used to locate libascend.so for bintoken linking.
+*/
+#define ASC_ENV_BTLIB "ASCENDBTLIB"
+/** default value for env var named by ASC_ENV_BTLIB */
+#define ASC_DEFAULT_BTLIB "@DEFAULT_ASCENDBTLIB@"
+
+
 /*------------------------------------------------------------------------------
   LEX
 */

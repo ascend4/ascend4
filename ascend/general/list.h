@@ -22,22 +22,17 @@
 	The flexible array has two interesting characteristics.  It allows
 	contant time(O(1)) retrieval of list items and it is almost infinitely
 	extendable (i.e. has no preset limit on the number of items in the list).
-	It does not use much extra memory while providing these services.<br><br>
+	It does not use much extra memory while providing these services.
 
 	The list only stores pointers to items as VOIDPTR (void *).  This is
 	an advantage, in that the user has the flexibility to store pointers to
 	any data type in the list.  It is also a disadvanatage, since the data
 	structure is not type safe and the user must carefully keep track of
-	what is stored in the list.<br><br>
+	what is stored in the list.
 
 	This module provides a standard set of list type operations.  Each includes
 	some predictions about the efficiency of that operation.  Any  modification
 	of these procedures should live up to those claims.
-
-	Requires:
-	#include <stdio.h>
-	#include "utilities/ascConfig.h"
-	#include "compiler/compiler.h"
 *//*
 	by Tom Epperly
 	Last in CVS: $Revision: 1.3 $ $Date: 1998/02/19 13:03:22 $ $Author: ballan $
@@ -113,24 +108,6 @@ ASC_DLLSPEC void gl_init(void);
  *  The list recycler is independent of the pool implementation.
  *  This function may be called more than once, although in general
  *  there is no reason to do so.
- */
-
-#ifdef ASC_NO_POOL
-#define LISTUSESPOOL FALSE
-#else
-#define LISTUSESPOOL TRUE
-#endif
-/**<
- *  Flag to select list management strategy.
- *  LISTUSESPOOL == TRUE allows the list module to use pool.[ch] to
- *  manage list memory overhead. Performance is enhanced this way.<br><br>
- *
- *  LISTUSESPOOL == FALSE removes the pool dependency completely, at
- *  a performance penalty.<br><br>
- *
- *  The following 3 functions work for either value of LISTUSESPOOL
- *  in some appropriate fashion: gl_init_pool(),  gl_destroy_pool(),
- *  gl_report_pool().
  */
 
 ASC_DLLSPEC void gl_init_pool(void);

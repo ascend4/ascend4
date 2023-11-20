@@ -1,4 +1,4 @@
-/*  ASCEND modelling environment
+  /*  ASCEND modelling environment
 	Copyright (C) 2006-2011 Carnegie Mellon University
 	Copyright (C) 1998 Carnegie Mellon University
 
@@ -42,6 +42,8 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
 #include <ascend/general/pretty.h>
+#include <ascend/general/ospath.h>
+#include <ascend/utilities/ascEnvVar.h>
 
 #include "functype.h"
 #include "expr_types.h"
@@ -57,10 +59,18 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #include "mathinst.h"
 /* last */
 
+/* why do we include btprolog here? */
 #include <ascend/bintokens/btprolog.h>
 
-//#define BINTOKEN_VERBOSE
+//#define BINTOKEN_DEBUG
+#ifdef BINTOKEN_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
+#define C_INDENT 4
+#define C_WIDTH 70
 #define CLINE(a) FPRINTF(fp,"%s\n",(a))
 
 enum bintoken_error {
@@ -130,6 +140,66 @@ int bt_string_replace(CONST char *new, char **ptr){
   }
   return 0;
 }
+#if 1
+int BinTokenSetOptionsDefault(){
+#ifdef WIN32
+# error "Not implemented"
+#else
+  char srcn[PATH_MAX];
+  char libn[PATH_MAX];
+  snprintf(srcn,PATH_MAX,"/tmp/ascend-btsrc-%d.c",getpid());
+  snprintf(libn,PATH_MAX,"/tmp/ascend-btsrc-%d.so",getpid());
+
+#define BINTOK_NOMAKEFILE
+  /* this approach calls GCC directly */
+#ifdef BINTOK_NOMAKEFILE
+  env_import_default(ASC_ENV_BTINC,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTINC,0,1);
+  env_import_default(ASC_ENV_BTLIB,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTLIB,0,1);
+
+  char buildtmpl[PATH_MAX];
+  snprintf(buildtmpl,PATH_MAX
+    ,"gcc -shared -fPIC -I$" ASC_ENV_BTINC " -o%s %s -L$" ASC_ENV_BTLIB " -lascend"
+    ,libn,srcn
+  );
+
+  char *s1 = Asc_GetEnv(ASC_ENV_BTLIB);
+  MSG("%s=%s",ASC_ENV_BTLIB,s1);
+  ASC_FREE(s1);
+#else
+  /* this approach uses 'make' call instead. Turned off for now (incomplete implementation)*/
+
+  /* Env var $ASCENDBTINCLUDE gives the location of the Makefile we use
+  which will default to eg /usr/include/ascend/bintokens for normal 
+  post-install execution, but can be overridden eg when testing. */
+  env_import_default(ASC_ENV_BTINC,getenv,Asc_PutEnv,ASC_DEFAULT_BTINC,0);
+
+  struct FilePath *fp1 = ospath_new_expand_env("$"ASC_ENV_BTINC"/Makefile",Asc_GetEnv,1);
+  ospath_stat_t st; 
+  char *s;
+  if(ospath_stat(fp1,&st)){
+    s = ospath_str(fp1);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"makefile '%s' does not exist",s);
+    ASC_FREE(s);
+  }
+  ASC_FREE(fp1);
+  char buildtmpl[PATH_MAX];
+  snprintf(buildtmpl,PATH_MAX
+    ,"make -f $" ASC_ENV_BTINC "/Makefile ASCBT_TARGET=\"%s\" ASCBT_SRC=\"%s\""
+    ,libn,srcn
+  );
+#endif
+  char *buildcmd = env_subst(buildtmpl,Asc_GetEnv,1);
+  char rmcmd[] = "/bin/rm";
+#ifdef BINTOKEN_DEBUG
+  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,rmcmd,1000,1/*verbose*/,0/*housekeep*/);
+#else
+  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,rmcmd,1000,0/*verbose*/,1/*housekeep*/);
+#endif
+  ASC_FREE(buildcmd);
+  return res;
+#endif
+}
+#endif
 
 /*
  * Set the configurations for building code.
@@ -146,7 +216,7 @@ int BinTokenSetOptions(CONST char *srcname,
                        int verbose,
                        int housekeep)
 {
-  /*CONSOLE_DEBUG("...");*/
+  /*MSG("...");*/
   int err = 0;
   err += bt_string_replace(srcname,&(g_bt_data.srcname));
   err += bt_string_replace(objname,&(g_bt_data.objname));
@@ -156,9 +226,7 @@ int BinTokenSetOptions(CONST char *srcname,
   g_bt_data.maxrels = maxrels;
   g_bt_data.verbose = verbose;
   g_bt_data.housekeep = housekeep;
-#ifdef BINTOKEN_VERBOSE
-  CONSOLE_DEBUG("make command = %s",buildcommand);
-#endif
+  MSG("make command = %s",buildcommand);
   return err;
 }
 
@@ -210,19 +278,32 @@ void BinTokenClearTables(void)
  */
 void BinTokenDeleteReference(int btable)
 {
-  if (btable < 0 || btable > g_bt_data.nextid ||
-      g_bt_data.tables[btable].type == BT_error) {
-    return;
-    /* relation references a loadfailure library or already deleted
-     * or corrupted memory has made its way here.
-     */
+  if(btable < 0 || btable > g_bt_data.nextid 
+    || g_bt_data.tables[btable].type == BT_error
+  ){
+    return; /* relation references a loadfailure library or already deleted
+    or corrupted memory has made its way here.*/
   }
   g_bt_data.tables[btable].refcount--;
-  if (g_bt_data.tables[btable].refcount == 0) {
+  if(g_bt_data.tables[btable].refcount == 0){
     /* unload the library if possible here */
 #if HAVE_DL_UNLOAD
-    /*ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"UNLOADING %s",g_bt_data.tables[btable].name);*/
+    CONSOLE_DEBUG("Unloading btable=%d: %s",btable,g_bt_data.tables[btable].name);
     Asc_DynamicUnLoad(g_bt_data.tables[btable].name);
+
+    if(g_bt_data.housekeep){
+      if(g_bt_data.libname && strlen(g_bt_data.libname)){
+          char *cbuf;
+          cbuf = ASC_NEW_ARRAY(char,strlen(g_bt_data.unlinkcommand)+1+strlen(g_bt_data.libname)+1);
+          assert(cbuf!=NULL);
+          sprintf(cbuf,"%s %s",g_bt_data.unlinkcommand,g_bt_data.libname);
+          MSG("Deleting bintok shared library: %s",cbuf);
+          (void)system(cbuf); /* we don't care if the delete fails */
+          ASC_FREE(cbuf);
+      }
+    }
+
+
 #else
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Dynamic Unloading not available in this build");
 #endif /* havedlunload */
@@ -231,7 +312,7 @@ void BinTokenDeleteReference(int btable)
     g_bt_data.tables[btable].tu = NULL;
     g_bt_data.tables[btable].type = BT_error;
   }else{
-    CONSOLE_DEBUG("Deleting one reference...");
+    MSG("Deleting one reference...");
   }
 }
 
@@ -433,11 +514,8 @@ enum bintoken_error GetResidualString(struct Instance *i,
  */
 static
 enum bintoken_error WriteResidualCode(FILE *fp, struct Instance *i,
-                                      int nrel, int verbose,
-                                      char *streqn, int timesused)
-{
-#define C_INDENT 4
-#define C_WIDTH 70
+    int nrel, int verbose, char *streqn, int timesused
+){
   assert(i!=NULL);
 
   if (streqn==NULL) {
@@ -445,6 +523,8 @@ enum bintoken_error WriteResidualCode(FILE *fp, struct Instance *i,
   }
 
   if (verbose) {
+    MSG("Writing residual code for rel %p",i);
+
     /* put in a little header */
     CLINE("\n/*");
     FPRINTF(fp,"\tRelation used %d times, prototyped from:\n",timesused);
@@ -469,7 +549,7 @@ enum bintoken_error WriteResidualCode(FILE *fp, struct Instance *i,
   } else {
     CLINE("  ;");
   }
-#ifdef BINTOKEN_VERBOSE
+#ifdef BINTOKEN_DEBUG
   FPRINTF(fp,"  fprintf(stderr,\"%%s:%%d: residual for '%%s' is %%f.\\n\", __FILE__, __LINE__, \"");
   WriteAnyInstanceName(fp,i);
   FPRINTF(fp,"\", *residual);\n");
@@ -477,6 +557,31 @@ enum bintoken_error WriteResidualCode(FILE *fp, struct Instance *i,
   CLINE("}");
   return BTE_ok;
 }
+
+static
+enum bintoken_error WriteGradientCode(FILE *fp, struct Instance *i,
+    int nrel, int verbose, char *streqn, int timesused
+){
+  if (verbose) {
+    MSG("Writing gradient code for rel %p (NOT IMPLEMENTED)",i);
+
+    /* put in a little header */
+    CLINE("\n/*");
+    FPRINTF(fp,"\tGradients for\n",timesused);
+    FPRINTF(fp,"\t");
+    /* Use fastest path to a root */
+    WriteAnyInstanceName(fp,i);
+    CLINE("\n*/");
+  }
+  FPRINTF(fp,"void g_%d(double *x, double *resid, double *grad){\n",nrel);
+  FPRINTF(fp,"\t*resid =");
+  print_long_string(fp,streqn,C_WIDTH,C_INDENT); /* human readable, sort of */
+  FPRINTF(fp,";\n");
+  fprintf(fp,"\t/* gradient code missing */\n");
+  FPRINTF(fp,"}\n\n");
+  return BTE_write;
+}
+
 
 /*
  * t is the array of function pointers. size is number or
@@ -626,7 +731,7 @@ enum bintoken_error BinTokenSharesToC(struct Instance *root,
     eqn = (struct bintoken_unique_eqn *)gl_fetch(eql.ue,c);
     i = gl_fetch(rellist,eqn->firstrel);
     WriteResidualCode(fp,i,eqn->indexU,verbose,eqn->str,eqn->refcount);
-    /* here we could also write gradient code based on i, indexU. */
+    WriteGradientCode(fp,i,eqn->indexU,verbose,eqn->str,eqn->refcount);
   }
   /* write the registered function name */
   pid = getpid();
@@ -656,7 +761,7 @@ enum bintoken_error BinTokenSharesToC(struct Instance *root,
   CLINE("\treturn status;");
   if (verbose) {
     FPRINTF(fp,"\t/* %lu unique equations */\n",gl_length(eql.ue));
-    CONSOLE_DEBUG("Prepared %lu external C functions.\n",gl_length(eql.ue));
+    MSG("Prepared %lu external C functions.\n",gl_length(eql.ue));
   }
   CLINE("}");
 
@@ -673,13 +778,11 @@ enum bintoken_error BinTokenCompileC(char *buildcommand)
   //ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Starting build, command:\n%s\n",buildcommand);
   status = system(buildcommand);
   if (status) {
-    CONSOLE_DEBUG("buildcommand: %s",buildcommand);
-    CONSOLE_DEBUG("...returned status %d",status);
+    MSG("buildcommand: %s",buildcommand);
+    MSG("...returned status %d",status);
     return BTE_build;
   }
-#ifdef BINTOKEN_VERBOSE
-  CONSOLE_DEBUG("Build command returned OK, status=%d",status);
-#endif
+  MSG("Build command returned OK, status=%d",status);
   return BTE_ok;
 }
 
@@ -785,18 +888,16 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
   char *unlinkcommand = g_bt_data.unlinkcommand;
   int verbose = g_bt_data.verbose;
 
-#ifdef BINTOKEN_VERBOSE
-  CONSOLE_DEBUG("...");
-#endif
+  MSG("...");
 
   if (g_bt_data.maxrels == 0) {
-#ifdef BINTOKEN_VERBOSE
+#ifdef BINTOKEN_DEBUG
     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"BinTokensCreate disabled (maxrels=0)\n");
 #endif
     return;
   }
   if (srcname == NULL || buildcommand == NULL || unlinkcommand == NULL) {
-#ifdef BINTOKEN_VERBOSE
+#ifdef BINTOKEN_DEBUG
     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"BinaryTokensCreate called with no options set: ignoring");
 #endif
     return;
@@ -811,8 +912,8 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
     return;
   }
 
-  CONSOLE_DEBUG("Creating bintokens");
-  //CONSOLE_DEBUG("buildcommand = %s",buildcommand);
+  MSG("Creating bintokens");
+  //MSG("buildcommand = %s",buildcommand);
 
   switch(method){
   case BT_C:
@@ -824,24 +925,26 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
     }
     status = BinTokenCompileC(buildcommand);
     if(status != BTE_ok){
-      CONSOLE_DEBUG("WRiting error msg");
+      MSG("Writing error msg");
       BinTokenErrorMessage(status,root,srcname,buildcommand);
       break; /* leave source file there to debug */
     }else{
-      CONSOLE_DEBUG("BinTokenCompileC completed OK");
+      MSG("BinTokenCompileC completed OK");
       if(g_bt_data.housekeep){
         /* trash src */
         cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(srcname)+1);
         assert(cbuf!=NULL);
         sprintf(cbuf,"%s %s",unlinkcommand,srcname);
-        system(cbuf); /* we don't care if the delete fails */
+        (void)system(cbuf); /* we don't care if the delete fails */
         ASC_FREE(cbuf);
         /* trash obj */
-        cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(objname)+1);
-        assert(cbuf!=NULL);
-        sprintf(cbuf,"%s %s",unlinkcommand,objname);
-        system(cbuf); /* we don't care if the delete fails */
-        ASC_FREE(cbuf);
+        if(objname && strlen(objname)){
+          cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(objname)+1);
+          assert(cbuf!=NULL);
+          sprintf(cbuf,"%s %s",unlinkcommand,objname);
+          (void)system(cbuf); /* we don't care if the delete fails */
+          ASC_FREE(cbuf);
+        }
       }
 
       status = BinTokenLoadC(rellist,libname,g_bt_data.regname);
@@ -849,7 +952,8 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
         BinTokenErrorMessage(status,root,libname,buildcommand);
         /* leave source,binary files there to debug */
       }else{
-        CONSOLE_DEBUG("BinTokenLoadC completed OK");
+        MSG("BinTokenLoadC completed OK");
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Binary tokens compiled and loaded.\n");
       }
     }
     break;
@@ -866,9 +970,10 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
  * Vars is assumed already filled with values.
  * This function must not malloc or free memory.
  */
-int BinTokenCalcResidual(int btable, int bindex, double *vars, double *residual)
-{
-  if (btable < 1 || bindex < 1) {
+int BinTokenCalcResidual(int btable, int bindex
+    , double *vars, double *residual
+){
+  if(btable < 1 || bindex < 1){
     return 1;
   }
   switch (g_bt_data.tables[btable].type) {
@@ -899,6 +1004,7 @@ int BinTokenCalcResidual(int btable, int bindex, double *vars, double *residual)
       return 0;
 #endif
     }
+#ifdef BINTOKEN_WITH_F77
   case BT_F77: {
       /* this case needs to be cleaned up to match the C case above. */
       struct TableF *ftable;
@@ -930,6 +1036,7 @@ int BinTokenCalcResidual(int btable, int bindex, double *vars, double *residual)
       }
       return 1;
     }
+#endif
   default:
     return 1;
   }
@@ -939,16 +1046,20 @@ int BinTokenCalcResidual(int btable, int bindex, double *vars, double *residual)
  * Returns nonzero if can't evaluate gradient.
  * Vars is assumed already filled with values.
  */
-int BinTokenCalcGradient(int btable, int bindex,double *vars,
-                         double *residual, double *gradient)
-{
-  if (btable == 0) {
+int BinTokenCalcGradient(int btable, int bindex
+    ,double *vars,double *residual, double *gradient
+){
+  MSG("Calculating gradient...");
+  if(btable == 0){
+    MSG("btable is 0");
     return 1;
   }
   switch (g_bt_data.tables[btable].type) {
   case BT_error:
+    MSG("expired table");
     return 1; /* expired table! */
   case BT_C: {
+      MSG("C bintokens");
       /* signal handling needs to match func above. this is slow here. */
       struct TableC *ctable;
       BinTokenGPtr func;
@@ -958,7 +1069,8 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
         return 1;
       }
       func = ctable[bindex].G;
-      if (func != NULL) {
+      if(func != NULL){
+        MSG("got gradient function");
 #ifdef ASC_SIGNAL_TRAPS
         Asc_SignalHandlerPush(SIGFPE,Asc_SignalTrap);
         if (SETJMP(g_fpe_env)==0) {
@@ -974,9 +1086,12 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
           return 1;
         }
 #endif /* ASC_SIGNAL_TRAPS */
+      }else{
+        MSG("no gradient function available");
       }
       return 1;
     }
+#ifdef BINTOKEN_WITH_F77
   case BT_F77: {
       struct TableF *ftable;
       BinTokenSPtr subroutine;
@@ -1008,6 +1123,7 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
       }
       return 1;
     }
+#endif
   default:
     return 1;
   }

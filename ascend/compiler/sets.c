@@ -331,6 +331,7 @@ struct Set *ReverseSetList(register struct Set *s)
   }
 }
 
+#if 0 /* DISUSED */
 int SetStructuresEqual(CONST struct Set *s1, CONST struct Set *s2)
 {
   if (s1==s2) return 1;
@@ -348,6 +349,7 @@ int SetStructuresEqual(CONST struct Set *s1, CONST struct Set *s2)
   }
   return ((s1==NULL)&&(s2==NULL));
 }
+#endif
 
 int CompareSetStructures(CONST struct Set *s1, CONST struct Set *s2)
 {

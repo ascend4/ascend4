@@ -69,13 +69,13 @@ ASC_DLLSPEC struct gl_list_t *g_dimen_list;
  *  overhead.
  */
 
-extern void InitDimenList(void);
+ASC_DLLSPEC void InitDimenList(void);
 /**<
  *  Initialize the dimension list.
  *  Must be called once and only once before any other dimension calls.
  */
 
-extern void DestroyDimenList(void);
+ASC_DLLSPEC void DestroyDimenList(void);
 /**<
  *  This can be called to deallocate all of the allocated dimensions.
  */
@@ -136,28 +136,28 @@ extern CONST dim_type *HalfDimension(CONST dim_type *d, int b);
  *  If not b, result may point to noninteger dim. Dim will be in global list.
  */
 
-extern CONST dim_type *ThirdDimension(CONST dim_type *d, int b);
+ASC_DLLSPEC CONST dim_type *ThirdDimension(CONST dim_type *d, int b);
 /**<
  *  Return a pointer to a dimension structure with cbrt dimensionality.
  *  Returns null if cbrt dimensionality is fractional when tested (b true).
  *  If !b, result may point to noninteger dim. Dim will be in global list.
  */
 
-extern CONST dim_type *SquareDimension(CONST dim_type *d, int b);
+ASC_DLLSPEC CONST dim_type *SquareDimension(CONST dim_type *d, int b);
 /**<
  *  Return a pointer to a dimension structure with square dimensionality.
  *  Returns null if square dimensionality is fractional when tested (b true).
  *  If not b, result may point to noninteger dim. Dim will be in global list.
  */
 
-extern CONST dim_type *CubeDimension(CONST dim_type *d, int b);
+ASC_DLLSPEC CONST dim_type *CubeDimension(CONST dim_type *d, int b);
 /**<
  *  Return a pointer to a dimension structure with cube dimensionality.
  *  Returns null if cube dimensionality is fractional when tested (b true).
  *  If !b, result may point to noninteger dim. Dim will be in global list.
  */
 
-extern CONST dim_type *PowDimension(long mult, CONST dim_type *d, int b);
+ASC_DLLSPEC CONST dim_type *PowDimension(long mult, CONST dim_type *d, int b);
 /**<
  *  Return a pointer to a dimension structure with d*mult dimensionality.
  *  Returns null if cube dimensionality is fractional when tested (b true)
@@ -165,7 +165,7 @@ extern CONST dim_type *PowDimension(long mult, CONST dim_type *d, int b);
  *  If !b, result may point to noninteger dim. Dim will be in global list.
  */
 
-extern void SetWild(dim_type *dim);
+ASC_DLLSPEC void SetWild(dim_type *dim);
 /**<
  *  Set the wild flag of dimensions dim.
  */
@@ -175,12 +175,12 @@ ASC_DLLSPEC int IsWild(CONST dim_type *d);
  *  Return a true value if d is wild, and otherwise return a false value.
  */
 
-extern int OddDimension(CONST dim_type *d);
+ASC_DLLSPEC int OddDimension(CONST dim_type *d);
 /**<
  *  Return a true value if d has an odd, wild, or non-integer dimension.
  */
 
-extern int NonCubicDimension(CONST dim_type *d);
+ASC_DLLSPEC int NonCubicDimension(CONST dim_type *d);
 /**<
  *  Return a true value if d has an noncubic, wild, or non-integer dimension.
  */
@@ -228,7 +228,7 @@ ASC_DLLSPEC dim_type AddDimensions(CONST dim_type *d1, CONST dim_type *d2);
  *  table instead, use SumDimensions.
  */
 
-extern CONST dim_type *SumDimensions(CONST dim_type *d1, CONST dim_type *d2, int check);
+ASC_DLLSPEC CONST dim_type *SumDimensions(CONST dim_type *d1, CONST dim_type *d2, int check);
 /**<
  *  Add 2 dimensions with checking.
  *  Wild+anything equals wild.
@@ -268,6 +268,11 @@ ASC_DLLSPEC void ParseDim(dim_type *dim, CONST char *c);
  *  Initialize dim appropriately according to the string c.  If c doesn't
  *  match any of the dimension strings, dim will be dimensionless and
  *  an error message will be printed.
+ *
+ *  Note that this function only matches simple single-dimensional strings,
+ *  equal to just one of the strings below, no dimensional expressions are
+ *  matched.
+ *  
  *  <pre>
  *         String  Dimension Index
  *         "M"     D_MASS
@@ -289,7 +294,7 @@ ASC_DLLSPEC char *DimName(CONST int nIndex);
  *  to index if index is within [0..NUM_DIMENS-1], otherwise return NULL.
  */
 
-extern CONST dim_type *CheckDimensionsMatch(CONST dim_type *d1, CONST dim_type *d2);
+ASC_DLLSPEC CONST dim_type *CheckDimensionsMatch(CONST dim_type *d1, CONST dim_type *d2);
 /**<
  *  Compare 2 dimensions.
  *  - Return d1 if d2 is wild

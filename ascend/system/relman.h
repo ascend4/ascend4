@@ -180,14 +180,13 @@ ASC_DLLSPEC int relman_diff2_rev(struct rel_relation *rel,
 		 						 real64 *derivatives,
 		   						 int32 *variables,
 								 int32 *count, int32 safe);
-
 /**<
-  similar to relman_diff2, but uses revers Automatic differentiation to obtain derivatives
- */
+	Similar to relman_diff2, but uses reverse Automatic differentiation to obtain derivatives
+*/
 
 ASC_DLLSPEC int relman_hess(struct rel_relation *rel,
 							const var_filter_t *filter,
-							hessian_mtx *hess_matrix,
+							ltmatrix *hess_matrix,
 							int32 *count,
 							unsigned long max_dimension,
 							int32 safe);
@@ -208,7 +207,10 @@ ASC_DLLSPEC int relman_diff3(struct rel_relation *rel,
                         struct var_variable **variables,
                         int32 *count,
                         int32 safe);
-/**< as relman_diff2 but fills a var_variable* array intest of an index array. */
+/**<
+	As relman_diff2 but fills a var_variable* array intest of an index array.
+	This version is used by the IDA solver.
+*/
 
 ASC_DLLSPEC int relman_diff_grad(struct rel_relation *rel,
                             const var_filter_t *filter,
@@ -219,31 +221,36 @@ ASC_DLLSPEC int relman_diff_grad(struct rel_relation *rel,
                             real64 *resid,
                             int32 safe);
 /**<
- *  Calculates the row of the jacobian matrix (the transpose gradient of
- *  the relation residual \f$ \nabla^T \left( f \right) \f$) corresponding to the relation
- *  rel.  The filter determines which variables actually contribute to the
- *  jacobian. The residual of the relation is also computed and returned.
- *  If an error is encountered in the calculation, the status returned is
- *  1. Status = 0 is OK.
- *  If the value of safe is nonzero, "safe" functions are used to for
- *  the calculations.<br><br>
- *  The calling function should allocate the output vectors 'derivatives',
- *  'variables_master' and 'variables_solver'.  'count' will be set to
- *  the number of elements assigned upon exit.
- *  derivative(i) will contain the derivative of the relation with
- *  respect to the variable whose master index is stored in
- *  variables_master(i). The solver index of each variable is stored in
- *  variables_solver(i).
- *
- *  There are two differences wrt to relman_diff2:
- *    - the master index (solver independent) is obtained
- *    - the residual is evaluated
+	This version is used by CMSlv.
+
+	Calculates the row of the jacobian matrix (the transpose gradient of
+	the relation residual \f$ \nabla^T \left( f \right) \f$) corresponding to the relation
+	rel.  The filter determines which variables actually contribute to the
+	jacobian. The residual of the relation is also computed and returned.
+	If an error is encountered in the calculation, the status returned is
+	1. Status = 0 is OK.
+	If the value of safe is nonzero, "safe" functions are used to for
+	the calculations.<br><br>
+	The calling function should allocate the output vectors 'derivatives',
+	'variables_master' and 'variables_solver'.  'count' will be set to
+	the number of elements assigned upon exit.
+	derivative(i) will contain the derivative of the relation with
+	  respect to the variable whose master index is stored in
+	variables_master(i). The solver index of each variable is stored in
+	variables_solver(i).
+
+	There are two differences wrt to relman_diff2:
+	  - the master index (solver independent) is obtained
+	  - the residual is evaluated
  */
 
 ASC_DLLSPEC int relman_diffs(struct rel_relation *rel,
 		const var_filter_t *filter, mtx_matrix_t mtx,
 		real64 *resid, int safe);
 /**<
+	This is the main derviative function as used by QRSlv and several other
+	solvers (not all of them in current use) -- JP Jan 2018
+
 	Calculates the row of the jacobian matrix (the transpose gradient of
 	the relation residual \f$ \nabla^T \left( f \right) \f$ ) corresponding to the relation
 	rel.  The filter determines which variables actually contribute to the
@@ -274,6 +281,7 @@ ASC_DLLSPEC int relman_diffs(struct rel_relation *rel,
 	harwellian matrices, glassbox rels and blackbox.
 */
 
+#if 0 && THIS_IS_A_DISUSED_FUNCTION
 extern int32 relman_diff_harwell(struct rel_relation **rlist,
 		var_filter_t *vfilter, rel_filter_t *rfilter,
 		int32 rlen, int32 bias, int32 mors,
@@ -300,6 +308,7 @@ extern int32 relman_diff_harwell(struct rel_relation **rlist,
 
 	@todo relman_diff_harwell() bias == 1 is not yet implemented.
 */
+#endif
 
 ASC_DLLSPEC int32 relman_jacobian_count(struct rel_relation **rlist,
                                    int32 rlen,
@@ -307,12 +316,15 @@ ASC_DLLSPEC int32 relman_jacobian_count(struct rel_relation **rlist,
                                    rel_filter_t *rfilter,
                                    int32 *rhomax);
 /**<
- *  Return the number of nonzero gradient entries in the equations
- *  given. Only equations passing rfilter and entries passing vfilter
- *  are counted. rlen is the length of the relation list.
- *  *rhomax is the largest row count on return.
- */
+	This function is used by IPOPT ipopt_presolve.
 
+	Return the number of nonzero gradient entries in the equations
+	given. Only equations passing rfilter and entries passing vfilter
+	are counted. rlen is the length of the relation list.
+	*rhomax is the largest row count on return.
+*/
+
+#if 0 && THIS_IS_A_DISUSED_FUNCTION
 ASC_DLLSPEC int32 relman_hessian_count(
 	struct rel_relation **rlist, int32 rlen
 	, var_filter_t *vfilter, rel_filter_t *rfilter
@@ -324,6 +336,7 @@ ASC_DLLSPEC int32 relman_hessian_count(
  *  are counted. rlen is the length of the relation list.
  *  *rhomax is the largest row count on return.
  */
+#endif
 
 ASC_DLLSPEC boolean relman_calc_satisfied_scaled(struct rel_relation *rel,
                                             real64 tolerance);
@@ -402,6 +415,7 @@ extern real64 *relman_directly_solve_new(struct rel_relation *rel,
 	@see relman_make_string_infix
 */
 
+#if 0 & THIS_IS_DISUSED
 #if 0 /* needs compiler-side work */
 # define relman_make_xstring_postfix(sys,rel) \
       relman_make_vstring_postfix((sys),(rel),FALSE)
@@ -413,6 +427,7 @@ extern real64 *relman_directly_solve_new(struct rel_relation *rel,
  *  Not suppported.
  *  @TODO Consider adding support for xstring postfix format.
  */
+#endif
 
 ASC_DLLSPEC char *relman_make_vstring_infix(slv_system_t sys,
                                        struct rel_relation *rel,
@@ -430,10 +445,12 @@ extern char *relman_make_vstring_postfix(slv_system_t sys,
  *  Do not call this function directly - use the macro instead.
  */
 
+#if 0 & THIS_IS_DISUSED
 extern char *dummyrelstring(slv_system_t sys,
                             struct rel_relation *rel,
                             int style);
 /**<  Temporary no-op function to placehold unimplemented io functions. */
+#endif
 
 extern void relman_free_reused_mem(void);
 /**< Call when desired to free memory cached internally. */

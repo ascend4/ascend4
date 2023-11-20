@@ -1,6 +1,6 @@
 /*
 ASCEND modelling environment
-Copyright (C) 2022 John Pye
+Copyright (C) 2020-2022 John Pye
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -20,22 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "rundata.h"
 
-int fprops_region_pT(double p, double T, const PureFluid *fluid, FpropsError *err);
+int fprops_region_pT(double p, double h, const PureFluid *fluid, FpropsError *err);
 
-void fprops_solve_pT(double p, double T, double *rho
-	, const PureFluid *fluid, FpropsError *err
-);
-
-#if 0
-/* functions for reporting steps back to python */
-typedef struct{
-	double x,y;
-} StepData;
-
-stepdata_reset();
-int stepdata_record(double x, double y);
-stepdata_count();
-StepData stepdata_get(int i);
-#endif
+/**
+	Function to solve fluid state for given (p,T).
+*/
+FluidState2 fprops_solve_pT(double p, double h, const PureFluid *fluid, FpropsError *err);
 
 #endif

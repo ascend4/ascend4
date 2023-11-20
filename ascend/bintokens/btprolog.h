@@ -56,6 +56,7 @@
 # include <ascend/compiler/instance_enum.h>
 #else
 # define IS_BINTOKEN_COMPILE
+/* FIXME shouldn't we be eliminating these #includes...? */
 # include <ascend/general/platform.h>
 # include <ascend/compiler/instance_enum.h>
 #endif
@@ -78,21 +79,26 @@
 typedef void (*BinTokenFPtr)(double *, double *);
 /**  Gradient evaluation function pointer.  G(vars,grad,resid); */
 typedef void (*BinTokenGPtr)(double *, double *, double *);
+#ifdef BINTOKEN_WITH_F77
 /**
  * F77 style interface code (if and big goto required inside).
  * S(vars,grad,resid,ForG,bindex,status);
  */
 typedef void (*BinTokenSPtr)(double *, double *, double *, int *, int *, int *);
+#endif
 #else
 /**  Residual evaluation function pointer.  F(vars,resid); */
 typedef void (*BinTokenFPtr)();
 /**  Gradient evaluation function pointer.  G(vars,grad,resid); */
 typedef void (*BinTokenGPtr)();
+
+#ifdef BINTOKEN_WITH_F77
 /**
  * F77 style interface code (if and big goto required inside).
  * S(vars,grad,resid,ForG,bindex,status);
  */
 typedef void (*BinTokenSPtr)();
+#endif
 #endif /* __STDC__ */
 
 struct TableC {
@@ -100,13 +106,17 @@ struct TableC {
   BinTokenGPtr G;
 };
 
+#ifdef BINTOKEN_WITH_F77
 struct TableF {
   BinTokenSPtr S;
 };
+#endif
 
 union TableUnion {
   struct TableC c;
+#ifdef BINTOKEN_WITH_F77
   struct TableF f;
+#endif
 };
 
 #ifdef __STDC__
