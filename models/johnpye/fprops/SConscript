@@ -25,7 +25,7 @@ srcs = coresrcs + fprops_env['fluids'] + ['fluids/_rpp.c']
 fprops_env['shobjs'] = [fprops_env.SharedObject(s) for s in srcs]
 
 # this is (or is supposed to be) a shared library without ASCEND dependencies
-fprops_env['libfprops'] = fprops_env.SharedLibrary("fprops",fprops_env['shobjs'])
+#fprops_env['libfprops'] = fprops_env.SharedLibrary("fprops",fprops_env['shobjs'])
 
 if fprops_env.get('BUILDING_ASCEND') or fprops_env.get('WITH_ASCEND'):
 	asc_env = fprops_env.Clone()
