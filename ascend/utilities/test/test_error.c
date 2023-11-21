@@ -76,8 +76,24 @@ static void test_error(void){
 
 	MSG("\nTesting error_reporter routines...");
 	// create a rewindable temporary file for testing the error reporter...
+#ifdef WIN32
+	char tmpl[PATH_MAX];
+	snprintf(tmpl,PATH_MAX,"%s\\.asctempXXXXXX",getenv("HOME"));
+	fprintf(stderr,"tmpl = %s\n",tmpl);
+	int fd = mkstemp(tmpl);
+	if(-1==fd){
+		perror("mkstemp");
+		CU_FAIL("failed mkstemp");
+		return;
+	}
+	FILE *tmp = fdopen(fd,"w+");
+	if(tmp == NULL){
+    	perror("fdopen");
+#else
 	FILE *tmp = tmpfile();
 	if(tmp == NULL){
+    	perror("tmpfile");
+#endif
 		CU_FAIL("failed to open tmpfile");
 	}
 	my_error_fp = tmp;

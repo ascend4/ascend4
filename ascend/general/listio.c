@@ -47,7 +47,7 @@ void gl_write_list(FILE *fp, struct gl_list_t *l)
   }
   len = gl_length(l);
   for (c= 1; c <= len ; c++) {
-	/* FIXME the point to integer thing here is not working */
+	/* FIXME the pointer to integer thing here is not working */
     fprintf(myfp,"%lu: 0x%p (" ASC_PTRFMT ")\n",c,gl_fetch(l,c),
              (asc_intptr_t)gl_fetch(l,c));
   }
@@ -69,7 +69,7 @@ ASC_DLLSPEC void gl_write_list_str(FILE *fp, struct gl_list_t *l, WriteItemFn *w
 	fputs("(",fp);
 	for(c=1; c<= len; ++c){
 		if(c>1)fputs(",",fp);
-		(*write_item)(fp,gl_fetch(l,c));
+		(*write_item)(fp,(void *)gl_fetch(l,c));
 	}
 	fputs(")",fp);
 }

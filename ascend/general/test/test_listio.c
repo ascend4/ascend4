@@ -155,9 +155,26 @@ static void test_str(void){
   unsigned long prior_meminuse;
   prior_meminuse = ascmeminuse();       /* save meminuse() at start of test function */
 
+#ifdef WIN32
+  char tmpl[PATH_MAX];
+  snprintf(tmpl,PATH_MAX,"%s\\.asctempXXXXXX",getenv("HOME"));
+  fprintf(stderr,"tmpl = %s\n",tmpl);
+  int fd = mkstemp(tmpl);
+  if(-1==fd){
+    perror("mkstemp");
+    CU_FAIL("failed mkstemp");
+    return;
+  }
+  FILE *tmp = fdopen(fd,"w+");
+  if(tmp == NULL){
+    perror("fdopen");
+#else
   FILE *tmp = tmpfile();
   if(tmp == NULL){
-    CU_FAIL("failed to open tmpfile");
+    perror("tmpfile");
+#endif
+    CU_FAIL("failed to open temporary file");
+    return;
   }
 
   /* set up pooling & recycling */
