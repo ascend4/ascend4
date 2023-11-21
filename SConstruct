@@ -2691,10 +2691,11 @@ if with_mmio:
 else:
 	print("Skipping... MMIO export won't be built:", without_mmio_reason)
 
-#if with_pcre:
-#	env.Append(WITH_PCRE=1)
-#else:
-#	print "Skipping... PCRE searching of NOTES:",without_pcre_reason
+if with_pcre:
+	env['WITH_PCRE']=True
+else:
+	env['WITH_PCRE']=False
+	print("Skipping... PCRE searching of NOTES:",without_pcre_reason)
 #-------------
 # LIBASCEND -- all 'core' functionality
 
