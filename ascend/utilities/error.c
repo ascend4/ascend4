@@ -332,7 +332,7 @@ int error_reporter_tree_start(){
 int error_reporter_tree_end(){return 0;}
 void error_reporter_tree_clear(){}
 int error_reporter_tree_has_error(){
-	E"Attempt to check 'tree_has_error' when 'tree' turned off at compile time");
+	ERRMSG("Attempt to check 'tree_has_error' when 'tree' turned off at compile time");
 	return 0;
 }
 #endif /* ERROR_REPORTER_TREE_ACTIVE */
