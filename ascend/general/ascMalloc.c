@@ -233,6 +233,7 @@ static CONST VOIDPTR MaxMemory(void){
 
 #define NONZERO(x) ((0 != (x)) ? (x) : 1)
 
+#if 0 // the mathematics here is rather opaque, so removing it for now
 static CONST VOIDPTR MemoryMean(void){
   int c;
   size_t size;
@@ -245,8 +246,9 @@ static CONST VOIDPTR MemoryMean(void){
           + ((double)size) * ((double)(asc_intptr_t)f_mem_rec[c].ptr);
     }
   }
-  return (VOIDPTR)(asc_intptr_t)(sum/NONZERO(bytes));
+  return (VOIDPTR)(sum/NONZERO(bytes));
 }
+#endif
 
 /*
  *  Creates a temporary file for logging memory events.
@@ -300,27 +302,25 @@ static void OpenLogFile(void){
 }
 
 static void WriteMemoryStatus(FILE *f, CONST char *msg){
-  CONST VOIDPTR minm;
-  CONST VOIDPTR maxm;
-  minm = MinMemory();
-  maxm = MaxMemory();
+  CONST void *minm = MinMemory();
+  CONST void *maxm = MaxMemory();
   MSG1(f,"%s\n"
             "Current memory usage(byte allocated): %lu\n"
             "Current number of blocks: %d\n"
             "Peak memory usage(bytes allocated): %lu\n"
-            "Lowest address: %lx\n"
-            "Highest address: %lx\n"
+            "Lowest address: %p\n"
+            "Highest address: %p\n"
             "Memory density: %g\n"
-            "Memory mean: %lx\n",
-            msg,
+  //          "Memory mean: %lx\n"
+            , msg,
             f_memory_allocated,
             f_memory_length,
             f_peak_memory_usage,
-            (asc_intptr_t)minm,
-            (asc_intptr_t)maxm,
+            minm,
+            maxm,
             ((double)f_memory_allocated/(double)
-            NONZERO((CONST char *)maxm - (CONST char *)minm)),
-		(asc_intptr_t)MemoryMean()
+            NONZERO((CONST char *)maxm - (CONST char *)minm))
+//          ,MemoryMean()
 	);
 }
 
