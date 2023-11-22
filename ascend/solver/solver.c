@@ -34,7 +34,14 @@
 #include <ascend/general/panic.h>
 #include <ascend/compiler/packages.h>
 
-#define SOLVER_DEBUG 0
+//#define SOLVER_DEBUG
+#ifdef SOLVER_DEBUG
+# define MSG CONSOLE_DEBUG
+# define ERRMSG CONSOLE_DEBUG
+#else
+# define MSG(...) 
+# define ERRMSG CONSOLE_DEBUG
+#endif
 
 /**
 	Local function that holds the list of available solvers. The value 
@@ -81,17 +88,17 @@ const SlvFunctionsT *solver_engine(const int number){
 	const struct gl_list_t *L = solver_get_engines();
 	int i;
 	const SlvFunctionsT *S, *Sfound=NULL;
-	/* CONSOLE_DEBUG("Searching for solver #%d in list of %d solvers",number,gl_length(L)); */
+	MSG("Searching for solver #%d in list of %ld solvers",number,gl_length(L));
 	for(i=1; i <= gl_length(L); ++i){
 		S = gl_fetch(L,i);
-		/* CONSOLE_DEBUG("Looking at %s (%d)",S->name,S->number); */
+		MSG("Looking at %s (%d)",S->name,S->number);
 		if(S->number==number){
-			/* CONSOLE_DEBUG("Match!"); */
+			MSG("Match!");
 			Sfound = S;
 			break;
 		}
 	}
-	/* CONSOLE_DEBUG("Returning %d",Sfound); */
+	MSG("Returning %p",Sfound);
 	return Sfound;
 }
 
@@ -172,10 +179,8 @@ int solver_register(const SlvFunctionsT *solver){
 	struct gl_list_t *L;
 	L = solver_get_engines_growable();
 
-#if 0
-	CONSOLE_DEBUG("REGISTERING SOLVER");
-	CONSOLE_DEBUG("There were %lu registered solvers", gl_length(solver_get_list(0)));
-#endif
+	MSG("REGISTERING SOLVERS");
+	MSG("There were %lu registered solvers", gl_length(solver_get_list(0)));
 
 	int i;
 	const SlvFunctionsT *S;
@@ -191,15 +196,11 @@ int solver_register(const SlvFunctionsT *solver){
 		}
 	}
 
-#if 0
-	CONSOLE_DEBUG("Adding engine '%s'",solver->name);
-#endif
+	MSG("Adding engine '%s'",solver->name);
 
 	gl_append_ptr((struct gl_list_t *)L,(SlvFunctionsT *)solver);
 	
-#if 0
-	CONSOLE_DEBUG("There are now %lu registered solvers", gl_length(solver_get_list(0)));
-#endif
+	MSG("There are now %lu registered solvers", gl_length(solver_get_list(0)));
 	return 0;
 }
 
@@ -221,12 +222,13 @@ struct StaticSolverRegistration{
 */
 static const struct StaticSolverRegistration slv_reg[]={
 	{"qrslv"}
-	,{NULL}
-#if 0
+#if 1
 	,{"conopt"}
 	,{"lrslv"}
 	,{"cmslv"}
 	,{"ipopt"}
+#endif
+	,{NULL}
 /* 	{0,"SLV",&slv0_register} */
 /*	,{0,"MINOS",&slv1_register} */
 /*	,{0,"CSLV",&slv4_register} */
@@ -234,7 +236,6 @@ static const struct StaticSolverRegistration slv_reg[]={
 /*	,{0,"MPS",&slv6_register} */
 /*	,{0,"NGSLV",&slv7_register} */
 /* 	,{0,"OPTSQP",&slv2_register} */
-#endif
 };
 
 int SlvRegisterStandardClients(void){
@@ -243,8 +244,9 @@ int SlvRegisterStandardClients(void){
 	int error;
 	int i;
 
-	/* CONSOLE_DEBUG("REGISTERING STANDARD SOLVER ENGINES"); */
+	MSG("REGISTERING STANDARD SOLVER ENGINES");
 	for(i=0; slv_reg[i].importname!=NULL;++i){
+		MSG("Registering '%s'",slv_reg[i].importname);
 		error = package_load(slv_reg[i].importname,NULL);
 		if(error){
 			ERROR_REPORTER_HERE(ASC_PROG_NOTE
@@ -411,7 +413,7 @@ int slv_select_solver(slv_system_t sys,int solver){
 	/* CONSOLE_DEBUG("PREVIOUS SOLVER IS CLEAR"); */
 
     if(sys->ct != NULL) {
-#if SOLVER_DEBUG
+#ifdef SOLVER_DEBUG
 	  CONSOLE_DEBUG("CURRENT SOLVER UNCHANGED");
 #endif
       return sys->solver;

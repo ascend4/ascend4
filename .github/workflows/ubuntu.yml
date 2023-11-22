@@ -54,6 +54,10 @@ jobs:
         ./a4 script ascxx/testslvreq
         ./a4 script ascxx/testipopt
 
+    - name: ASCEND FPROPS external function test
+      run: |    
+        ./a4 run models/johnpye/fprops/rankine_fprops.a4c -m stream_state_test
+
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
       with:

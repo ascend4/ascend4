@@ -50,7 +50,7 @@ if env.get('WITH_IPOPT'):
 	
 	conf = solver_env.Configure(custom_tests={'CheckIPOPT':CheckIPOPT})
 	if not conf.CheckIPOPT():
-		env['WITH_IPOPT'] = False
+		conf.env['WITH_IPOPT'] = False
 	solver_env = conf.Finish()
 	
 	if env['WITH_IPOPT']:
@@ -65,7 +65,7 @@ if env.get('WITH_IPOPT'):
 			,SHLIBSUFFIX = env['EXTLIB_SUFFIX']
 			,SHLIBPREFIX = env['EXTLIB_PREFIX']
 		)
-	
+		print("solver:",lib)
 
 		env.Depends(lib,env['libascend'])
 
