@@ -1,4 +1,3 @@
-/* : set syntax=cpp : */
 /*
 	SWIG interface routines to read a file into the library
 */
@@ -568,4 +567,4 @@ void shutdown(){
 %ignore Curve::Curve();
 
 %include "curve.h"
-
+// vim:syntax=cpp:ts=4:sw=4:noet

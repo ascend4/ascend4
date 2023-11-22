@@ -10,7 +10,11 @@ def run_ascend_model(filen,model=None,printvars=None,test=True):
 	`printvars`: a list of variable names which, if present, will be printed out (in dev). Forces test=False.
 	`test`: whether or not to run the `self_test` method, if it exists. Defaults true.
 	"""
-		
+	
+	import platform
+	if platform.system()=="Windows":
+		import os,pathlib
+		os.add_dll_directory(pathlib.Path(__file__).parent.parent)
 	import ascpy
 	L = ascpy.Library()
 	#print(f"FILEN = {filen}")

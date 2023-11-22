@@ -13,6 +13,9 @@ if __name__=='__main__':
 	SEP = os.pathsep
 	if platform.system()=="Windows":
 		LD_LIBRARY_PATH="PATH"
+		dlldir = Path(__file__).parent.parent
+		print(f"ADDING DLL DIRECTORY {dlldir}")
+		os.add_dll_directory(dlldir)
 	elif platform.system()=="Darwin":
 		LD_LIBRARY_PATH="DYLD_LIBRARY_PATH"
 	else:
