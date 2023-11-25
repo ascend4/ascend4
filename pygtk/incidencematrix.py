@@ -21,7 +21,7 @@ class IncidenceMatrixWindow:
 		loading.load_matplotlib(throw=True)
 
 	def run(self):
-		# convert incidence map to pylab numarray type:
+		# convert incidence map to numpy	 type:
 
 		# Warning dialog message box
 
@@ -69,6 +69,7 @@ class IncidenceMatrixWindow:
 		pylab.xlabel("Variables")
 		pylab.ylabel("Relations")
 #		#pylab.connect('motion_notify_event',self.on_sparsity_motion_notify)
+		ax.format_coord = self.incidence_get_coord_str
 		pylab.ion()
 		pylab.show()
 
@@ -92,11 +93,11 @@ class IncidenceMatrixWindow:
 			except IndexError:
 				return "[out of range]"
 
-			print("row = %d, col = %d" % (_row,_col))
+			#print("row = %d, col = %d" % (_row,_col))
 
 			self.lastrow = _row;
 			self.lastcol = _col; 
 			self.lastmsg = "rel '%s', var '%s': block %d" %(_rel,_var,_blk)
-			print(self.lastmsg)
+			#print(self.lastmsg)
 			return self.lastmsg
 
