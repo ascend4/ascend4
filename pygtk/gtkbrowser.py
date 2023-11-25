@@ -12,6 +12,7 @@ try:
 	import sys
 	import time
 	import threading
+	import subprocess
 
 	loading.print_status("Loading LIBASCEND/ascpy")
 	import ascpy
@@ -1179,17 +1180,17 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		return 0;
 
 	def on_errorview_button(self, widget, event):
-		if event.type == Gtk.Gdk._2BUTTON_PRESS:
+		if event.type == Gdk.EventType.DOUBLE_BUTTON_PRESS:
 			model,iter = widget.get_selection().get_selected()
 			if not iter:
 				return True
 			filename = model.get_value(iter,5)
 			line = model.get_value(iter,6)
-			print("\nEDITING %s +%d" %(filename,line))
-			# TODO add more checks to ensure the editor is available, etc.
-			editor = self.prefs.getStringPref("Browser","editor","pluma")
-			subprocess.Popen([editor,filename,'+%d'%(line,)])
-			
+			if filename and line:
+				print("\nEDITING %s +%d" %(filename,line))
+				# TODO add more checks to ensure the editor is available, etc.
+				editor = self.prefs.getStringPref("Browser","editor","gedit")
+				subprocess.Popen([editor,filename,'+%d'%(line,)])
 
 #   --------------------------------
 #   BUTTON METHODS
