@@ -1,6 +1,6 @@
 # General-purpose popup window for reporting graphical stuff
 
-from gi.repository import Gtk, GdkPixbuf
+from gi.repository import Gtk, Gdk, GdkPixbuf
 from gi.repository import Pango
 import ascpy
 from varentry import *
@@ -18,6 +18,7 @@ class ImageWindow:
 		self.vbox = self.browser.builder.get_object("vbox1")
 		self.closebutton = self.browser.builder.get_object("closebutton")
 		self.window.set_title(title)
+
 
 		if self.browser.icon:
 			self.window.set_icon(self.browser.icon)
@@ -41,6 +42,7 @@ class ImageWindow:
 		self.vbox.add(self.scrollwin)
 
 		self.browser.builder.connect_signals(self)
+		self.scrollwin.connect("scroll-event", self.on_scroll_event)
 
 		# more than 100% is pointless
 		self.zoom_max = 1
@@ -60,7 +62,7 @@ class ImageWindow:
 			if os.path.exists(chooser.get_filename()):
 				label = Gtk.Label("File Already Exists, Overwrite?")
 				dialog = Gtk.Dialog("Error",None, Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
-                    Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+					Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
 				dialog.vbox.pack_start(label, True, True, 0)
 				label.show()
 				response = dialog.run()
@@ -77,6 +79,21 @@ class ImageWindow:
 				shutil.copy(self.imagefilename,chooser.get_filename())
 				self.browser.reporter.reportWarning("FILE SAVED: '%s'" % chooser.get_filename())
 				chooser.destroy()
+
+	def on_scroll_event(self, widget, event):
+		if event.state & Gdk.ModifierType.CONTROL_MASK:
+			if event.direction == Gdk.ScrollDirection.UP:
+				self.zoom(self.zoom_current * 1.1)
+				return True
+			elif event.direction == Gdk.ScrollDirection.DOWN:
+				self.zoom(self.zoom_current * 0.9)
+				return True
+			elif event.direction == Gdk.ScrollDirection.SMOOTH:
+				if event.delta_y < 0:
+					self.zoom(self.zoom_current * 1.1)
+				else:
+					self.zoom(self.zoom_current * 0.9)
+		return False
 
 	def on_zoomfit_clicked(self,*args):
 		self.zoom(fit=1)

@@ -48,7 +48,7 @@ default_tcl = '/usr'
 default_tcl_libpath = "$TCL/lib"
 default_tcl_cpppath = "$TCL/include"
 default_conopt_envvar="CONOPT_PATH"
-default_with_graphviz = False
+default_with_graphviz = True
 default_tcl_lib = "tcl8.5"
 default_tk_lib = "tk8.5"
 default_tktable_lib = "Tktable2.9"
@@ -2690,6 +2690,9 @@ if with_mmio:
 	srcs += env.SConscript(['mmio/SConscript'],'env')
 else:
 	print("Skipping... MMIO export won't be built:", without_mmio_reason)
+
+if not with_graphviz:
+	print("Skipping... GraphViz features won't be built:", without_graphviz_reason)
 
 if with_pcre:
 	env['WITH_PCRE']=True
