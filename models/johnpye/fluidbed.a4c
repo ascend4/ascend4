@@ -1,0 +1,80 @@
+REQUIRE "johnpye/shapes.a4c";
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/airprops2.a4c";
+
+MODEL fluidbed;
+	T IS_A temperature;
+	p IS_A pressure;
+	
+	fluid IS_A thermophysical_fluid_base;
+	T, fluid.T ARE_THE_SAME;
+	p, fluid.p ARE_THE_SAME;
+		
+	chamber IS_A solid_cylinder;
+	bed_p "bed (packed)" IS_A solid_cylinder;
+	bed_mf "bed (min. fluidisation)" IS_A solid_cylinder;
+	chamber.d, bed_p.d, bed_mf.d ARE_THE_SAME;
+	
+	m_p "mass of particles" IS_A mass;
+	rho_p "density of particles" IS_A mass_density;
+	d_p "diameter of particles" IS_A distance;
+	eps_p "void fraction (packed)" IS_A factor;
+	eps_mf "void fraction (min. fluidis.)" IS_A factor;
+	
+	m_p = rho_p * bed_p.V * (1-eps_p);
+	m_p = rho_p * bed_mf.V * (1-eps_mf);
+	
+	U_mf "superficial velocity for min. fluidisation" IS_A speed;
+	Re_mf "Reynolds number at minimum fluidised" IS_A factor;
+	Re_mf = d_p * U_mf * fluid.rho / fluid.mu;
+	
+	psi_s "sphericity" IS_A factor;
+
+	(* equation from Alireza's spreadsheet *)
+	(* unk: psi_s * eps^3 = 1./14; *)
+	
+	(* Gibson et al. equation: https://doi.org/10.1016/j.cherd.2018.05.009 *)
+	gibson: (1 - eps_mf) = 12.2 * psi_s^2 * eps_mf^3;
+	
+	(* Wen and Yu equation -- doesn't solve *)
+	(* wen_yu: U_mf = d_p * (rho_p - fluid.rho) * 1{EARTH_G} / (18 * fluid.mu) 
+		* (4.9 + Re_mf ) / (4.9 + 0.4 * Re_mf);*)
+	
+	U_t "terminal velocity" IS_A speed;
+	(* Stokes' law (for small spherical particles, low Re *)	
+	stokes: U_t = 2{EARTH_G} * (d_p/2.)^2 * (rho_p - fluid.rho) / (9 * fluid.mu);
+	
+	(* Richardson and Zaki equation https://doi.org/10.1016/0009-2509(54)85015-9 *)
+	n IS_A factor;
+	rich_zaki: U_mf = U_t * eps_mf^n;
+	
+	DP_mf "pressure drop in the bed" IS_A delta_pressure;
+	DP_mf = -m_p * 1{EARTH_G} / chamber.end.A;
+	
+	DP_dp "pressure drop in the distributor plate" IS_A delta_pressure;
+	r_DP "ration of distributor plate to bed pressure drop" IS_A factor;
+	DP_dp = r_DP * DP_mf; 
+END fluidbed;
+
+MODEL fluidbed_test_air REFINES fluidbed;
+	fluid IS_REFINED_TO air_fluid;
+METHODS	
+	METHOD on_load;
+		RUN fluid.default;
+
+		U_mf.lower_bound := 0 {m/s};
+
+		FIX n:= 4.65;
+		FIX chamber.d := 68 {mm};
+		FIX T := 400 {K} + 273.15 {K};
+		FIX eps_p := 0.32;
+		FIX p := 1 {atm};
+		FIX m_p := 400 {g};
+		FIX d_p := 500 {um};
+		FIX rho_p := 3500 {kg/m^3};
+		FIX chamber.L := 500 {mm};
+		FIX psi_s := 0.86;
+		FIX r_DP := 0.4;
+	END on_load;
+END fluidbed_test_air;
+
