@@ -27,6 +27,9 @@ MODEL fluidbed;
 	U_mf "superficial velocity for min. fluidisation" IS_A speed;
 	Re_mf "Reynolds number at minimum fluidised" IS_A factor;
 	Re_mf = d_p * U_mf * fluid.rho / fluid.mu;
+
+	mdot_mf "mass flow rate at min. fluidisation" IS_A mass_rate;
+	fluid.rho * chamber.end.A * U_mf = mdot_mf;
 	
 	psi_s "sphericity" IS_A factor;
 
@@ -36,7 +39,7 @@ MODEL fluidbed;
 	(* Gibson et al. equation: https://doi.org/10.1016/j.cherd.2018.05.009 *)
 	gibson: (1 - eps_mf) = 12.2 * psi_s^2 * eps_mf^3;
 	
-	(* Wen and Yu equation -- doesn't solve *)
+	(* Wen and Yu equation -- doesn't solve? *)
 	(* wen_yu: U_mf = d_p * (rho_p - fluid.rho) * 1{EARTH_G} / (18 * fluid.mu) 
 		* (4.9 + Re_mf ) / (4.9 + 0.4 * Re_mf);*)
 	
@@ -48,12 +51,36 @@ MODEL fluidbed;
 	n IS_A factor;
 	rich_zaki: U_mf = U_t * eps_mf^n;
 	
+	(* pressure drop is based on equilibrium of forces; gravity on pcls' mass *)
 	DP_mf "pressure drop in the bed" IS_A delta_pressure;
 	DP_mf = -m_p * 1{EARTH_G} / chamber.end.A;
 	
+	(* distributor plate *)
+
 	DP_dp "pressure drop in the distributor plate" IS_A delta_pressure;
 	r_DP "ration of distributor plate to bed pressure drop" IS_A factor;
-	DP_dp = r_DP * DP_mf; 
+	DP_dp = r_DP * DP_mf; (* Kunii, page. 102 *)
+	
+	t_plate IS_A distance;
+	hole IS_A solid_cylinder;
+	t_plate, hole.L ARE_THE_SAME;
+	n_holes IS_A factor;
+	mdot_hole IS_A mass_rate;
+	mdot_hole * n_holes = mdot_mf;
+	
+	U_hole IS_A speed;
+	uhole_rel: mdot_hole = fluid.rho * hole.end.A * U_hole;
+	
+	Re_t "vessel Reynolds number" IS_A factor;
+	Re_t = 	chamber.d * U_mf * fluid.rho / fluid.mu;
+	
+	C_D "drag coefficient for holes" IS_A factor;
+	CD_rel: -DP_dp = 0.5 * C_D * fluid.rho * U_hole^2;
+	
+	(* stirring effect, Kunii, p. 106 *)
+	alpha IS_A factor; 
+	alpha * -DP_mf * 1{EARTH_G} = 0.5 * fluid.rho * U_hole^2;
+	
 END fluidbed;
 
 MODEL fluidbed_test_air REFINES fluidbed;
@@ -63,6 +90,7 @@ METHODS
 		RUN fluid.default;
 
 		U_mf.lower_bound := 0 {m/s};
+		U_hole.lower_bound := 0 {m/s};
 
 		FIX n:= 4.65;
 		FIX chamber.d := 68 {mm};
@@ -74,7 +102,10 @@ METHODS
 		FIX rho_p := 3500 {kg/m^3};
 		FIX chamber.L := 500 {mm};
 		FIX psi_s := 0.86;
-		FIX r_DP := 0.4;
+		FIX r_DP := 0.25;
+		FIX hole.d := 1 {mm};
+		FIX t_plate := 3 {mm};
+		FIX C_D := 0.7;
 	END on_load;
 END fluidbed_test_air;
 
