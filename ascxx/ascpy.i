@@ -562,6 +562,8 @@ void shutdown(){
 
 %include "annotation.h"
 
+%newobject AnnotationDatabase::getTypeRefinedNotesLang "0";
+
 %include "plot.i"
 
 %ignore Curve::Curve();

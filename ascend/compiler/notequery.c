@@ -22,6 +22,12 @@
 #include "symtab.h"
 #include <ascend/utilities/error.h>
 
+#ifdef NOTEQUERY_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 const char *notes_get_for_variable(symchar *dbid
 	, const struct TypeDescription *t
 	, const symchar *varname
@@ -35,7 +41,7 @@ const char *notes_get_for_variable(symchar *dbid
 
 	int i;
 	for(i=1; i<=gl_length(types); ++i){
-		CONSOLE_DEBUG("ancestor %d: %s",i,SCP((symchar *)gl_fetch(types,i)));
+		MSG("ancestor %d: %s",i,SCP((symchar *)gl_fetch(types,i)));
 	}
 
 	symchar *inl = AddSymbol("inline");
@@ -49,17 +55,17 @@ const char *notes_get_for_variable(symchar *dbid
 	gl_destroy(langs);
 	gl_destroy(ids);
 
-	CONSOLE_DEBUG("noteslist = %ld items",gl_length(noteslist));
+	MSG("noteslist = %ld items",gl_length(noteslist));
 
 	if(gl_length(noteslist)==0){
-		CONSOLE_DEBUG("empty notes list returned");
+		MSG("empty notes list returned");
 		return NULL;
 	}
 	struct Note *n = (struct Note *)gl_fetch(noteslist,1);
 
-	CONSOLE_DEBUG("note ID = %s, lang = %s",SCP(GetNoteId(n)),SCP(GetNoteLanguage(n)));	
+	MSG("note ID = %s, lang = %s",SCP(GetNoteId(n)),SCP(GetNoteLanguage(n)));	
 
-	CONSOLE_DEBUG("note text = %s",BraceCharString(GetNoteText(n)));
+	MSG("note text = %s",BraceCharString(GetNoteText(n)));
 	
 	return BraceCharString(GetNoteText(n));
 }

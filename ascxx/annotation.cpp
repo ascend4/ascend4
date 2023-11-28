@@ -69,7 +69,9 @@ AnnotationDatabase::getNoteForVariable(const Type &type
 		, const SymChar *varname
 		, const SymChar *lang
 ){
-	return notes_get_for_variable(this->dbid, type.getInternalType(), varname->getInternalType(), lang->getInternalType());
+	symchar *sc_lang = NULL;
+	if(lang)sc_lang = lang->getInternalType();
+	return notes_get_for_variable(this->dbid, type.getInternalType(), varname->getInternalType(), sc_lang);
 }
 
 /**

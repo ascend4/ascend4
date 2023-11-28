@@ -34,6 +34,10 @@ class ModelView:
 		self.modelview.connect("row-expanded", self.row_expanded )
 		self.modelview.connect("button-press-event", self.on_treeview_event )
 		self.modelview.connect("key-press-event",self.on_treeview_event )
+		
+		self.modelview.set_has_tooltip(True)
+		self.last_tooltip_path = None
+		self.modelview.connect("query-tooltip",self.on_query_tooltip)
 
 		# data columns are: name type value colour weight editable
 		
@@ -500,19 +504,18 @@ class ModelView:
 				if event.button == 3:
 					_contextmenu = True
 
+		if _path:
+			_model = self.modelview.get_model()
+			piter = _model.get_iter(_path)
+			originalpath = _model.get_value(piter, ORIGINAL_PATH_INDEX)
+			_name, _instance = self.otank[originalpath]
+				
 		if not _contextmenu:
 			#print "NOT DOING ANYTHING ABOUT %s" % Gdk.keyval_name(event.keyval)
 			return False
 
-		if _path:
-			piter = self.modelview.get_model().get_iter(_path)
-			originalpath = self.modelview.get_model().get_value(piter, ORIGINAL_PATH_INDEX)
-			_name, _instance = self.otank[originalpath]
-			# set the statusbar
-			nn = self.notes.getNotes(self.sim.getModel().getType(),ascpy.SymChar("inline"),_name)
-			for n in nn:
-				print("%s: (%s) %s" % (n.getId(),str(n.getLanguage()),n.getText()))
-		
+
+		if _path:		
 			self.builder.get_object("free_variable").set_sensitive(False)
 			self.builder.get_object("fix_variable").set_sensitive(False)
 			self.builder.get_object("propsmenuitem").set_sensitive(False)
@@ -592,7 +595,7 @@ class ModelView:
 
 		self.modelview.grab_focus()
 		self.modelview.set_cursor( _path, _col, 0)
-		self.treecontext.popup( None, None, None,None, _button, event.time)
+		self.treecontext.popup( None, None, None,None, _button, event.time) 
 		return True
 
 	def get_model_context_menu(self,instance):
@@ -743,3 +746,34 @@ class ModelView:
 		except:
 			self.browser.reporter.reportError("Unable to display units dialog.")
 
+	def on_query_tooltip(self,widget,x,y,keymode,tooltip):
+		_model = self.modelview.get_model()
+		bin_x, bin_y = self.modelview.convert_widget_to_bin_window_coords(x, y)
+		_pinfo = self.modelview.get_path_at_pos(bin_x,bin_y)
+		if _pinfo:
+			path, col, cx, cy = _pinfo
+			if path != self.last_tooltip_path:
+				self.last_tooltip_path = path
+				piter = _model.get_iter(path) # first element is 'path'
+				if piter:
+					opath = _model.get_value(piter, ORIGINAL_PATH_INDEX)
+					_name, _inst = self.otank[opath]
+					tooltip.set_text(str(_name))
+					if _inst.isAtom():
+						# it would be useful to have a _inst.parent() method, but we don't have it, so use the treemodel
+						parent = _model.iter_parent(piter)
+						if parent:
+							parentpath = _model.get_value(parent, ORIGINAL_PATH_INDEX)
+							_pname,_pinst = self.otank[parentpath]
+							n = self.notes.getNoteForVariable(_pinst.getType(),_name)
+							if n:
+								tooltip.set_text(n)
+								self.last_tooltip = n
+								return True
+				self.last_tooltip = None
+			else:
+				if self.last_tooltip:
+					tooltip.set_text(self.last_tooltip)
+					return True
+
+		return False
