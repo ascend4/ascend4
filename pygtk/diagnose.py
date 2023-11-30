@@ -1,9 +1,8 @@
-import array as arr
+import numpy as np
 from itertools import groupby
 from operator import itemgetter
 import math
 
-import cairo
 from gi.repository import GdkPixbuf, Gdk
 
 import config
@@ -12,7 +11,7 @@ from preferences import *
 
 ZOOM_RE = re.compile(r"([0-9]+)\s*%?")
 MAX_ZOOM_SIZE = float(2000) # float
-MAX_ZOOM_RATIO = float(16) # float
+MAX_ZOOM_RATIO = float(32) # float
 AT_BOUND_TOL = 0.0001
 
 class DiagnoseWindow:
@@ -29,9 +28,9 @@ class DiagnoseWindow:
 		try:
 			_icon = Gtk.Image()
 			_iconpath = os.path.join(browser.assets_dir, 'diagnose' + config.ICON_EXTENSION)
-			print(("ICON PATH =",_iconpath))
+			#print(("ICON PATH =",_iconpath))
 			_icon.set_from_file(_iconpath)
-			print(("ICON = ",_icon))
+			#print(("ICON = ",_icon))
 			self.window.set_icon(_icon.get_pixbuf())
 		except:
 			pass
@@ -82,16 +81,16 @@ class DiagnoseWindow:
 	def apply_prefs(self):
 		vc = self.browser.prefs.getBoolPref("Diagnose","varcollapsed",True)
 
-		print(("VARCOLLAPSED =",vc))
+		#print(("VARCOLLAPSED =",vc))
 		self.varcollapsed.set_active(vc)
 		self.relcollapsed.set_active(self.browser.prefs.getBoolPref("Diagnose","relcollapsed",True))
 
 	def prepare_data(self):
 		# convert incidence map to pylab numarray type:
-		print("PREPARING DATA to be loaded")
+		#print("PREPARING DATA to be loaded")
 		self.im = self.browser.sim.getIncidenceMatrix()
 		self.data = self.im.getIncidenceData()
-		print("DATA LOADED")
+		#print("DATA LOADED")
 
 		self.zoom=1;
 	
@@ -99,7 +98,7 @@ class DiagnoseWindow:
 		
 		try:
 			if self.im.getNumBlocks()==0:
-				print("NO BLOCKS!")
+				#print("NO BLOCKS!")
 				self.image.set_from_stock(Gtk.STOCK_DIALOG_ERROR
 					,Gtk.IconSize.DIALOG
 				)
@@ -132,68 +131,79 @@ class DiagnoseWindow:
 		nr = int(rh-rl+1);
 		nc = int(ch-cl+1);
 
-		print("STARTING IMAGE CREATION")
-		# refer http://pyGtk.org/pygtk2tutorial/sec-DrawingMethods.html
-		c = chr(255)
-		b = nr * nc * 4 * [c]
-		rowstride = 4 * nc
-		
-		blackdot = [chr(0)]*3;
-		reddot = [chr(255), chr(0), chr(0)]
-		pinkdot = [chr(255), chr(127), chr(127)]
-		skydot = [chr(127), chr(127), chr(255)]
-		bluedot = [chr(0), chr(0), chr(255)]
-		hotpinkdot = [chr(255), chr(47), chr(179)] # very big (+/-)
-		brightbluedot = [chr(71), chr(157), chr(255)] # very small (+/-)
-		greendot = [chr(87), chr(193), chr(70)] # close to 1
-		orangedot = [chr(255), chr(207), chr(61)] # 10-1000
-		bluegreendot = [chr(70), chr(221), chr(181)] # 0.001 - 0.1
+		nr = int(rh - rl + 1)
+		nc = int(ch - cl + 1)
+
+		#print("STARTING IMAGE CREATION")
+
+		# Create an empty numpy array for RGB image
+		image_array = 255 * np.ones((nr, nc, 3), dtype=np.uint8)
+
+		# Define colors as NumPy arrays
+		blackdot = np.array([0, 0, 0], dtype=np.uint8)
+		reddot = np.array([255, 0, 0], dtype=np.uint8)
+		pinkdot = np.array([255,127,127], dtype=np.uint8)
+		skydot = np.array([127,127,255], dtype=np.uint8)
+		bluedot = np.array([0,0,255], dtype=np.uint8)
+		hotpinkdot = np.array([255,47,179], dtype=np.uint8) # very big (+/-)
+		brightbluedot = np.array([71,157,255], dtype=np.uint8) # very small (+/-)
+		greendot = np.array([87,193,70], dtype=np.uint8) # close to 1
+		orangedot = np.array([255,207,61], dtype=np.uint8) # 10-1000
+		bluegreendot = np.array([70,221,181], dtype=np.uint8) # 0.001 - 0.1		
+
 		for i in self.data:
-			if i.row < rl or i.row > rh or i.col < cl or i.col > ch:
-				continue
-			r = i.row - rl
-			c = i.col - cl
-			pos = rowstride * r + 4 * c
-			dot = blackdot
-			var = self.im.getVariable(i.col)
-			if abs( (var.getValue()-var.getUpperBound())/ var.getNominal() )  < AT_BOUND_TOL:
-				dot = reddot
-			elif abs( var.getValue() - var.getLowerBound() ) / var.getNominal() < AT_BOUND_TOL:
-				dot = reddot
-			else:
-				rat = var.getValue() / var.getNominal()
-				if rat!=0:
-					try:
-						val = abs(rat)
-						if abs(rat) > 1000:
-							dot = hotpinkdot
-						elif abs(rat) > 10:
-							dot = orangedot
-						elif abs(rat) < 0.001:
-							dot = brightbluedot
-						elif abs(rat) < 10 and abs(rat) > 0.1:
-							dot = greendot
-						elif abs(rat) > 0.001 and abs(rat) < 0.1:
-							dot = bluegreendot
-						else:
-							dot = blackdot
-					except ValueError as e:
-						pass
-			b[pos + 2], b[pos + 1], b[pos] = dot
+			if rl <= i.row <= rh and cl <= i.col <= ch:
+				r = i.row - rl
+				c = i.col - cl
 
-		d = ''.join(b)
+				dot = blackdot
+				var = self.im.getVariable(i.col)
 
-		print("DONE IMAGE CREATION")
-		buff = arr.array('u',d)
-		surface = cairo.ImageSurface.create_for_data(buff, cairo.FORMAT_ARGB32, nc, nr)
-		self.pixbuf = Gdk.pixbuf_get_from_surface(surface, 0, 0, surface.get_width(), surface.get_height())
+				if abs( (var.getValue()-var.getUpperBound())/ var.getNominal() )  < AT_BOUND_TOL:
+					dot = reddot
+				elif abs( var.getValue() - var.getLowerBound() ) / var.getNominal() < AT_BOUND_TOL:
+					dot = reddot
+				else:
+					rat = var.getValue() / var.getNominal()
+					if rat!=0:
+						try:
+							val = abs(rat)
+							if abs(rat) > 1000:
+								dot = hotpinkdot
+							elif abs(rat) > 10:
+								dot = orangedot
+							elif abs(rat) < 0.001:
+								dot = brightbluedot
+							elif abs(rat) < 10 and abs(rat) > 0.1:
+								dot = greendot
+							elif abs(rat) > 0.001 and abs(rat) < 0.1:
+								dot = bluegreendot
+							else:
+								dot = blackdot
+						except ValueError as e:
+							pass
+
+				# Set the pixel color in the NumPy array
+				image_array[r, c, :] = dot[:]
+
+		#print("DONE IMAGE CREATION")
+
+		self.pixbuf = GdkPixbuf.Pixbuf.new_from_data(
+			image_array.tobytes()
+			,GdkPixbuf.Colorspace.RGB
+			,False # no alpha
+			,8 # bits per channel
+			,nc # width
+			,nr # height
+			,nc*3 # rowstride
+		)
 
 		self.nr = nr
 		self.nc = nc
 		self.zoom = -1 # to fit, up to max 16x
 		self.do_zoom()
 
-		print("DONE IMAGE TRANSFER TO SERVER")
+		#print("DONE IMAGE TRANSFER TO SERVER")
 
 		self.fill_var_names()
 		self.fill_rel_names()
@@ -201,7 +211,7 @@ class DiagnoseWindow:
 
 		self.fill_selection_info()
 
-		print("DONE FILL VALUES")
+		#print("DONE FILL VALUES")
 
 	def fill_selection_info(self):
 		if self.var:
@@ -265,7 +275,7 @@ class DiagnoseWindow:
 		self.image.set_from_pixbuf(pb1)
 
 	def fill_block_status(self):
-		print("FILL BLOCK STATUS")
+		#print("FILL BLOCK STATUS")
 		s = self.im.getBlockStatus(self.block)
 		ss = "Failed"
 		if s == ascpy.IM_CONVERGED:
@@ -280,7 +290,7 @@ class DiagnoseWindow:
 		
 
 	def fill_var_names(self):
-		print("FILL VAR NAMES")
+		#print("FILL VAR NAMES")
 
 		names = [str(i) for i in self.im.getBlockVars(self.block)]
 
@@ -300,14 +310,14 @@ class DiagnoseWindow:
 			text = "\n".join(names)
 		self.varbuf.set_text(text)
 
-		print("DONE VAR NAMES")
+		#print("DONE VAR NAMES")
 
 	def fill_rel_names(self):
-		print("REL NAMES")
+		#print("REL NAMES")
 
 		rels = self.im.getBlockRels(self.block)
 
-		print("GOT RELS, NOW GETTING NAMES")
+		#print("GOT RELS, NOW GETTING NAMES")
 
 		names = [str(i) for i in rels]
 
@@ -327,7 +337,7 @@ class DiagnoseWindow:
 			text = "\n".join(names)
 		self.relbuf.set_text(text)
 
-		print("DONE REL NAMES")
+		#print("DONE REL NAMES")
 
 	def set_block(self, block):
 		self.fill_values(block)
@@ -439,7 +449,7 @@ class DiagnoseWindow:
 				self.set_block(b)
 				return
 			b = b - 1
-		print("NO PRECEDING 'BIG' BLOCKS")
+		#print("NO PRECEDING 'BIG' BLOCKS")
 		
 	def on_nextbigbutton_clicked(self,*args):
 		b = self.block + 1
@@ -450,11 +460,11 @@ class DiagnoseWindow:
 				self.set_block(b)
 				return
 			b = b + 1
-		print("NO FOLLOWING 'BIG' BLOCKS")
+		#print("NO FOLLOWING 'BIG' BLOCKS")
 	
 	def on_blockentry_key_press_event(self,widget,event):
 		keyname = Gdk.keyval_name(event.keyval)
-		print(("KEY ",keyname))
+		#print(("KEY ",keyname))
 		if keyname=="Return":
 			self.set_block( int(self.blockentry.get_text()) )
 
@@ -472,7 +482,7 @@ class DiagnoseWindow:
 
 	def on_zoomentry_key_press_event(self,widget,event):
 		keyname = Gdk.keyval_name(event.keyval)
-		print(("KEY ",keyname))
+		#print(("KEY ",keyname))
 		if keyname=="Return":
 			t = self.zoomentry.get_text()
 			m = ZOOM_RE.match(t)

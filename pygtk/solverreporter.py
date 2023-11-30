@@ -3,7 +3,6 @@ import time
 import gi
 gi.require_version('Gtk','3.0')
 from gi.repository import Gtk
-from diagnose import *
 
 class PythonSolverReporter(ascpy.SolverReporter):
 	def __init__(self,browser,message=None):
@@ -88,8 +87,9 @@ class PopupSolverReporter(PythonSolverReporter):
 
 	def on_diagnose_button_click(self,*args):
 		try:
+			import diagnose
 			_bl = self.sim.getActiveBlock()
-			_db = DiagnoseWindow(self.browser,_bl)
+			_db = diagnose.DiagnoseWindow(self.browser,_bl)
 			_db.run()
 		except RuntimeError as e:
 			self.reporter.reportError(str(e))

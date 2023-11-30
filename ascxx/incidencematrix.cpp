@@ -12,6 +12,15 @@ extern "C"{
 #include <ascend/system/slv_client.h>
 }
 
+//#define INCIDENCEMATRIX_DEBUG
+#ifdef INCIDENCEMATRIX_DEBUG
+# define MSG CONSOLE_DEBUG
+# define ERRMSG CONSOLE_DEBUG
+#else
+# define MSG(...) 
+# define ERRMSG CONSOLE_DEBUG
+#endif
+
 IncidencePoint::IncidencePoint(const int&row, const int &col, const IncidencePointType &type) : row(row), col(col), type(type){
 	// constructor, IncidencePoint
 }
@@ -200,7 +209,7 @@ IncidenceMatrix::getBlockVars(const int &block){
 
 const vector<Relation>
 IncidenceMatrix::getBlockRels(const int &block){
-	CONSOLE_DEBUG("...");
+	MSG("...");
 	if(!is_built){
 		buildPlotData();
 	}
@@ -215,7 +224,7 @@ IncidenceMatrix::getBlockRels(const int &block){
 	for(int j=low; j<=high; ++j){
 		v.push_back(getRelation(j));
 	}
-	CONSOLE_DEBUG("...");
+	MSG("...");
 	return v;
 }
 	

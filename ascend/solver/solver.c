@@ -39,7 +39,7 @@
 # include <windows.h>
 #endif
 
-#define SOLVER_DEBUG
+//#define SOLVER_DEBUG
 #ifdef SOLVER_DEBUG
 # define MSG CONSOLE_DEBUG
 # define ERRMSG CONSOLE_DEBUG
