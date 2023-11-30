@@ -46,5 +46,5 @@ if env.get('CAN_INSTALL'):
 
 	gladefiles = glob.glob("glade/*")
 	env.InstallShared(Dir(env.subst("$INSTALL_ROOT$INSTALL_ASCDATA/glade")),gladefiles)
-	
+
 # vim: ts=4:sw=4:noet:syntax=python

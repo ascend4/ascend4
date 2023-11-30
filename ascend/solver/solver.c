@@ -33,8 +33,13 @@
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
 #include <ascend/compiler/packages.h>
+#include <ascend/general/ospath.h>
 
-//#define SOLVER_DEBUG
+#ifdef WIN32
+# include <windows.h>
+#endif
+
+#define SOLVER_DEBUG
 #ifdef SOLVER_DEBUG
 # define MSG CONSOLE_DEBUG
 # define ERRMSG CONSOLE_DEBUG
@@ -222,11 +227,11 @@ struct StaticSolverRegistration{
 */
 static const struct StaticSolverRegistration slv_reg[]={
 	{"qrslv"}
-#if 1
+	,{"ipopt"}
+#if 0
 	,{"conopt"}
 	,{"lrslv"}
 	,{"cmslv"}
-	,{"ipopt"}
 #endif
 	,{NULL}
 /* 	{0,"SLV",&slv0_register} */
@@ -238,11 +243,77 @@ static const struct StaticSolverRegistration slv_reg[]={
 /* 	,{0,"OPTSQP",&slv2_register} */
 };
 
+#if 0
+/* this code can automate calls to AddDllDirectory in Windows. however, for now, we found it wasn't needed (surprisingly) */
+#ifdef WIN32
+# ifdef ASC_DLLDIRS
+static FilePathTestFn add_solver_dll_dir;
+static int add_solver_dll_dir(struct FilePath *fp,void *user_data){
+	char *nm = ospath_str(fp);
+	MSG("Adding DLL directory '%s'",nm);
+	int l = MultiByteToWideChar(CP_UTF8, 0, nm, -1, NULL, 0);
+	WCHAR *wstr = ASC_NEW_ARRAY(WCHAR,l);
+	int res = MultiByteToWideChar(CP_UTF8,0,nm,-1,wstr,l);
+	if(0==res){
+		perror("MultiByteToWideChar");
+		return 1;
+	}
+	AddDllDirectory(wstr);
+	ASC_FREE(nm);
+	ASC_FREE(wstr);
+	return 0; // ensures we keep going through the whole list
+}
+static int add_source_dll_dir(struct FilePath *fp,void *user_data){
+	struct FilePath *fp1 = ospath_new(ASC_SOURCE_ROOT);
+	struct FilePath *fp2 = ospath_concat(fp1,fp);
+	struct FilePath *fp3 = ospath_getabs(fp2);
+	ospath_free(fp1); ospath_free(fp2);
+	int res = add_solver_dll_dir(fp3,NULL);
+	ospath_free(fp3);
+	return res;
+}
+# endif
+#endif
+#endif
+
 int SlvRegisterStandardClients(void){
 	int nclients = 0;
 	//int newclient=0;
 	int error;
 	int i;
+
+#if 0
+#ifdef WIN32
+# ifdef ASC_DLLDIRS
+	MSG("ADDING DLL DIRS");
+	MSG("IPOPT...");
+
+	//struct FilePath *fp1 = ospath_new("solvers/ipopt");
+	//add_source_dll_dir(fp1, NULL);
+
+	//struct FilePath *fp2 = ospath_new("c:/msys64/home/john/.local/bin");
+	//add_solver_dll_dir(fp2, NULL);
+
+	//struct FilePath *fp3 = ospath_new("c:/msys64/home/john/ascend");
+	//add_solver_dll_dir(fp3, NULL);
+
+	//struct FilePath *fp4 = ospath_new("c:/windows/system32");
+	//add_solver_dll_dir(fp4, NULL);
+
+	//struct FilePath *fp5 = ospath_new("c:/msys64/mingw64/bin");
+	//add_solver_dll_dir(fp5, NULL);
+	
+#if 0
+	MSG("Raw input: " ASC_DLLDIRS);
+	struct FilePath **dlldirs = ospath_searchpath_new(ASC_DLLDIRS);
+	void *res = ospath_searchpath_iterate(dlldirs,&add_solver_dll_dir,NULL);
+	if(NULL != res){
+		MSG("ERROR DLLDIRS");
+	}	
+#endif
+# endif
+#endif
+#endif
 
 	MSG("REGISTERING STANDARD SOLVER ENGINES");
 	for(i=0; slv_reg[i].importname!=NULL;++i){
@@ -568,3 +639,4 @@ const char *slv_solver_name(int sindex){
   }
 }
 
+// vim: ts=4:noet:

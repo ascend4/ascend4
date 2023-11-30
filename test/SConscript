@@ -37,4 +37,4 @@ if platform.system()=="Windows":
 else:
 	test_env.Depends(testprog,"#/libascend.so.1")
 	
-
+# vim: noet:ts=4:sw=4:syntax=python

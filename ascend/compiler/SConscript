@@ -91,4 +91,3 @@ if libascend_env.get('CAN_INSTALL'):
 Return('objs')
 
 # vim: noet:ts=4:sw=4:syntax=python
-

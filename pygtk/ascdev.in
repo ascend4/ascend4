@@ -12,16 +12,20 @@ if __name__=='__main__':
 	
 	SEP = os.pathsep
 	if platform.system()=="Windows":
+		# libascend will be in the parent of this dir. other directories (eg for ipopt etc) can be set via DLLDIRS.
+		# print("ADDDIRS =","@DLLDIRS@")
+		adddirs=[Path(p) for p in "@DLLDIRS@".split(os.pathsep)] + [Path(__file__).parent.parent]
+		for p in adddirs:
+			dlldir = Path(__file__).parent.parent
+			# print(f"ADDING DLL DIRECTORY {dlldir}")
+			os.add_dll_directory(dlldir)
 		LD_LIBRARY_PATH="PATH"
-		dlldir = Path(__file__).parent.parent
-		print(f"ADDING DLL DIRECTORY {dlldir}")
-		os.add_dll_directory(dlldir)
 	elif platform.system()=="Darwin":
 		LD_LIBRARY_PATH="DYLD_LIBRARY_PATH"
 	else:
 		LD_LIBRARY_PATH="LD_LIBRARY_PATH"
 
-	ev = ['ASCENDLIBRARY','ASCENDSOLVERS','PYTHONPATH',LD_LIBRARY_PATH,'PATH']
+	ev = set(['ASCENDLIBRARY','ASCENDSOLVERS','PYTHONPATH',LD_LIBRARY_PATH,'PATH'])
 	for v in ev:
 		if not os.environ.get(v):
 			raise RuntimeError("Missing required environment variable '%s'"%(v,))
@@ -37,3 +41,5 @@ if __name__=='__main__':
 	#print("ASSETS PATH = %s" % assetspath)
 	B = Browser(assetspath=assetspath)
 	B.run()	
+
+# vim:syntax=python:ts=4:sw=4:noet

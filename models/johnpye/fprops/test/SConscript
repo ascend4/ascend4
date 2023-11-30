@@ -13,7 +13,7 @@ testsrcs = ['ideal.c','ph.c','sat1.c','sat.c','visc.c']
 
 #print "CUNIT_CPPPATH =",test_env.get("CUNIT_CPPPATH")
 
-if test_env['HAVE_CUNIT']:
+if test_env['WITH_CUNIT']:
 	test_env.AppendUnique(
 		CPPPATH=test_env.get('CUNIT_CPPPATH',[])
 		,LIBPATH=test_env.get('CUNIT_LIBPATH',[])

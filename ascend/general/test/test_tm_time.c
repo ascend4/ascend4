@@ -84,7 +84,7 @@ static void test_tm_time(void)
   start = tm_cpu_time();                /* record the initial time */
   //CU_TEST(start == 0.0);
 
-  for (i=0 ; i<1000000 ; i += 2) {    /* consume some CPU time */
+  for (i=0 ; i<100000000 ; i += 2) {    /* consume some CPU time */
     --i; // two steps forward, one step back...
   }
  

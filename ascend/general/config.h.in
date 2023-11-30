@@ -91,18 +91,12 @@ typedef unsigned long long asc_intptr_t;
 /*
 	Whether to do use testing malloc. Required for some of the CUnit
 	tests to work fully.
-
-	SCons will uncomment the #define line if required.
-	Doing it this (hacky) way so as not to mess up autoconf.
 */
 @MALLOC_DEBUG@
 
 /*
 	Whether the dmalloc library was detected. Should permit much reduced
 	complexity in ascMalloc.c, hopefully.
-
-	SCons will uncomment the #define line if required.
-	Doing it this (hacky) way so as not to mess up autoconf.
 */
 @ASC_WITH_DMALLOC@
 
@@ -112,10 +106,11 @@ typedef unsigned long long asc_intptr_t;
 
 	On Windows, we can handle TERM=cygwin (the msys/cygwin prompt).
 	On non-Windows, we can handle 'xterm'.
-
-	SCons will uncomment the #define line if required.
-	Doing it this (hacky) way so as not to mess up autoconf.
 */
 @ASC_XTERM_COLORS@
+
+#define ASC_DLLDIRS "@DLLDIRS@"
+
+#define ASC_SOURCE_ROOT "@SOURCE_ROOT@"
 
 #endif

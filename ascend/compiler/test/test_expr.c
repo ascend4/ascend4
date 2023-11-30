@@ -118,7 +118,6 @@ static void test_boolrel(void){
 
 
 static void test_write(void){
-
 	CU_ASSERT(0 == Asc_CompilerInit(0));
 
 #define DECLVAR(NAME) struct Expr *NAME = CreateVarExpr(CreateIdName(AddSymbol(#NAME)));
@@ -127,24 +126,43 @@ static void test_write(void){
 	DECLVAR(C);
 
 #define LEN 1024
-	char fn[LEN], s[LEN];
+	char s[LEN];
+	
+#ifdef WIN32
+  char tmpl[PATH_MAX];
+  snprintf(tmpl,PATH_MAX,"%s\\.asctempXXXXXX",getenv("HOME"));
+  fprintf(stderr,"tmpl = %s\n",tmpl);
+  int fd = mkstemp(tmpl);
+  if(-1==fd){
+    perror("mkstemp");
+    CU_FAIL("failed mkstemp");
+    return;
+  }
+  FILE *tmp = fdopen(fd,"w+");
+  if(tmp == NULL){
+    perror("fdopen");
+#else
+  FILE *tmp = tmpfile();
+  if(tmp == NULL){
+    perror("tmpfile");
+#endif
+    CU_FAIL("failed to open temporary file");
+    return;
+  }
 
-	CU_ASSERT(errno == 0);
-	FILE *F = tmpfile();
-	CU_ASSERT_EQUAL(errno, 0);
-
+	
 	// trivial boolean expression
 
 	struct Expr *AandB = JoinExprLists(B,JoinExprLists(A,CreateOpExpr(e_and)));
 	struct Expr *C_or_AandB = JoinExprLists(AandB,JoinExprLists(C,CreateOpExpr(e_or)));
 
-	WriteExpr(F,C_or_AandB);
-	rewind(F);
+	WriteExpr(tmp,C_or_AandB);
+	rewind(tmp);
 	errno=0;
 	memset(s,'\0',LEN);
-	CU_TEST(fread(s,1,LEN,F));
+	CU_TEST(fread(s,1,LEN,tmp));
 	CU_TEST(0==strncmp(s,"B A AND C OR",LEN));
-	rewind(F);
+	rewind(tmp);
 
 	struct Expr *Ap357t35 = JoinExprLists(
 		JoinExprLists(A,CreateOpExpr(e_plus))
@@ -155,7 +173,7 @@ static void test_write(void){
 	MSG("EXPR:");
 	WriteExpr(ASCERR,Ap357t35);
 
-	fclose(F);
+	fclose(tmp);
 	Asc_CompilerDestroy();
 }
 
@@ -177,3 +195,4 @@ static void test_write(void){
 
 REGISTER_TESTS_SIMPLE(compiler_expr, TESTS)
 
+// vim:syntax=python:ts=2:sw=2:et

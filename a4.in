@@ -49,6 +49,47 @@ def add_at_start(envvar,pathcomponents):
 		
 	return changed
 
+def shebang(script,args):
+	"""This excessively complex function allows us to launch shebang-encoded scripts when 'a4' is
+	run on Windows. It depends on the 'cygpath' program, which in turn depends on some of the 
+	MSYS2 environment variables. Does nothing on Linux. Arguably it would be much easier to just
+	ask MSYS2 bash to look after all this directly."""
+	if not platform.system()== "Windows":
+		return [script] + args
+
+	p = pathlib.Path(script)
+	if not p.is_file() or not os.access(p, os.X_OK):
+		MSG("checking PATHEXT extensions...")
+		found = None
+		for pe in os.environ.get('PATHEXT').split(";"):
+			exe = pathlib.Path(str(script) + pe)
+			MSG(f"checking for {exe}")
+			if exe.is_file():
+				found = exe
+				break
+		if not found:
+			raise RuntimeError(f"script '{script}' either doesn't exist is or not executable")
+		return [found]+args
+	with open(p,'r') as f:
+		line1 = f.readline()
+		if line1.startswith("#!"):
+			interp = line1[2:].strip().split()
+			if interp:
+				pi = pathlib.Path(interp[0])
+				if str(pi)[0] == "/":
+					# MSYS path... convert to Windows
+					wp = subprocess.run([shutil.which('cygpath'),'-w',pi],capture_output=True,check=True,encoding='utf-8')
+					MSG(f"WP = {wp.stdout}")
+					pi = pathlib.Path(wp.stdout.strip())
+				if not pi.is_absolute():
+					raise RuntimeError(f"in script {p}, the shebang line must contain an absolute path (got: '{pi}')")
+				if not pi.is_file() or not os.access(pi, os.X_OK):
+					raise RuntimeError(f"in script {p}, interpreter '{pi}' is not a file or is not flagged as executable")
+				return [pi] + interp[1:] + [script] + args
+			raise RuntimeError(f"Invalid shebang line in {script}")
+	# does not start with shebang, could be natively executable (we'll just try)
+	return [script]+args
+
 if __name__ == "__main__":
 
 	p = argparse.ArgumentParser(description='ASCEND launcher')
@@ -171,7 +212,7 @@ if __name__ == "__main__":
 		# for the convenience of the developer -- hack this for your temporary needs
 		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev', sourceroot/'models'/'johnpye'/'extpy'/'extpytest.a4c']
 	elif args.action == 'script':
-		cmd += [args.file.resolve()]+args.rest
+		cmd += shebang(args.file,args.rest)
 	elif args.action == 'env' :
 		shargs = []
 		if os.environ.get('ASCEND_SHELL'):

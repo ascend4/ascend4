@@ -67,7 +67,7 @@ env['EXTLIB_SUFFIX'] = "_ascend" + env.subst("$SHLIBSUFFIX")
 env['EXTLIB_PREFIX'] = env.subst("$SHLIBPREFIX")
 env['extfns'] = []
 env['WITH_PYTHON'] = 1
-env['HAVE_CUNIT'] = 0
+env['WITH_CUNIT'] = 0
 
 env.SConscript("SConscript",["env"])
 

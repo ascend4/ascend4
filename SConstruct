@@ -11,7 +11,7 @@ soname_major_int = "1"
 soname_minor = ".0"
 
 import sys, os, subprocess, platform, distutils.sysconfig, os.path, re, types, pathlib
-import subprocess
+import subprocess, shutil
 
 # version number for python, useful on Windows
 pyversion = "%d.%d" % (sys.version_info[0],sys.version_info[1])
@@ -129,6 +129,7 @@ if platform.system()=="Windows":
 
 	if not os.path.exists(default_conopt_prefix):
 		default_conopt_prefix = None
+		
 
 elif platform.system()=="Darwin":
 
@@ -320,6 +321,12 @@ vars.Add(
 	'PYTHON_PKG'
 	,"Python package name in pkg-config"
 	,"python-%d.%d" % (sys.version_info[0],sys.version_info[1])
+)
+
+vars.Add(
+	'DLLDIRS'
+	,"Directories where external DLLs can be loaded from by ASCEND (eg IPOPT,IDA) (Windows only, semicolon-delimited)"
+	,"$CUNIT_PREFIX/bin;solvers/ipopt;solvers/qrslv"
 )
 
 default_python_pkg_embed = "$PYTHON_PKG"
@@ -936,43 +943,47 @@ if env['ENV'].get('HOST_PREFIX'):
 		print("NOTE: using HOST_PREFIX=%s from environment to override HOST_PREFIX SCons variable" % env['ENV']['HOST_PREFIX'])
 		env['HOST_PREFIX'] = env['ENV']['HOST_PREFIX']+"-"
 
-with_tcltk = env.get('WITH_TCLTK')
-without_tcltk_reason = "disabled by options/config.py"
 
-with_cunit = env.get('WITH_CUNIT')
-without_cunit_reason = "not requested"
+#-----------------------------
+# optional components: attempting to unify handling of these. in each case, they can be disabled via scons command line, or 
+# based on tests that determine they are unavailable. reason in each will be reported before building commences.
 
-with_extfns = env.get('WITH_EXTFNS')
-without_extfn_reason = "disabled by options/config.py"
+env['OPTIONALS'] = {}
+def set_optional(env,comp,reason=None,active=None):
+	"""
+	Record WITH_OPTION variables for build, but also store
+	reasons why optional components are not being built, so 
+	they can be output at the end.
+	"""
+	NAME = f'WITH_{comp.upper()}'
+	if active is None:
+		active = False
+		if env.get(NAME):
+			active = True
+	if active:
+		reason = None
+	if not active and reason is None:
+		reason = "disabled in user's build options"
+	env['OPTIONALS'][comp] = (active,reason)
+	if env.get(NAME) != active:
+		env[NAME] = active
+	return active
 
-with_scrollkeeper = env.get('WITH_SCROLLKEEPER')
-without_scrollkeeper_reason = "disabled by options/config.py"
+AddMethod(Environment, set_optional, 'set_optional')
 
-with_dmalloc = env.get('WITH_DMALLOC')
-without_dmalloc_reason = "disabled by options/config.py"
+for opt in ['tcltk','cunit','extfns','scrollkeeper','dmalloc','graphviz','ufsparse','zlib','mmio','blas','signals','doc','doc_build','pcre','installer']:
+	env.set_optional(opt)
 
-with_graphviz = env.get('WITH_GRAPHVIZ')
-without_graphiviz_reason = "disabled by options/config.py"
+if not env['WITH_DOC']:
+	env.set_optional('doc_build',reason='documentation was disabled',active=False)
 
-with_ufsparse = env.get('WITH_UFSPARSE')
-without_ufsparse_reason = "disabled by options/config.py"
+for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS':
+	env.set_optional(solv,active = solv in env['WITH_SOLVERS'], reason="Not selected (see option WITH_SOLVERS)")
+	
 
-with_zlib = env.get('WITH_ZLIB')
-without_zlib_reason = "disabled by options/config.py"
-
-with_mmio = env.get('WITH_MMIO')
-without_mmio_reason = "disabled by options/config.py"
-
-with_signals = env.get('WITH_SIGNALS')
-without_signals_reason = "disabled by options/config.py"
-
-with_doc = env.get('WITH_DOC')
-
-with_doc_build = env.get('WITH_DOC_BUILD');
-without_doc_build_reason = "disabled by options/config.py"
-if not with_doc:
-	with_doc_build = False
-	without_doc_build_reason = "disabled by with_doc"
+print(f"DEBUG: WITH_CUNIT = {env['WITH_CUNIT']}")
+print(f"DEBUG: WITH_IPOPT = {env['WITH_IPOPT']}")
+print(f"DEBUG: WITH_MAKEMPS = {env['WITH_MAKEMPS']}")
 
 with_latex2html = False
 
@@ -981,33 +992,6 @@ if platform.system()=="Windows":
 else:
 	with_installer=0
 	without_installer_reason = "only possible under Windows"
-
-notselected = "Not selected (see config option WITH_SOLVERS)"
-
-with_lsode = 'LSODE' in env['WITH_SOLVERS']
-without_lsode_reason = notselected
-
-with_ida = 'IDA' in env['WITH_SOLVERS']
-without_ida_reason = notselected
-
-with_dopri5 = 'DOPRI5' in env['WITH_SOLVERS']
-without_dopri5_reason = notselected
-
-with_radau5 = 'RADAU5' in env['WITH_SOLVERS']
-without_radau5_reason = notselected
-
-with_conopt = 'CONOPT' in env['WITH_SOLVERS']
-without_conopt_reason = notselected
-
-#with_ipopt = 'IPOPT' in env['WITH_SOLVERS']
-#without_ipopt_reason = notselected
-
-with_pcre = env.get('WITH_PCRE')
-without_pcre_reason = "disabled by options/config.py"
-
-with_makemps = 'MAKEMPS' in env['WITH_SOLVERS']
-without_makemps_reason = notselected
-
 
 #print "SOLVERS:",env['WITH_SOLVERS']
 #print "WITH_BINTOKEN:",env['WITH_BINTOKEN']
@@ -1721,11 +1705,6 @@ def CheckCONOPT(context):
 	return is_ok
 
 #----------------
-# IPOPT test
-
-
-
-#----------------
 # Tcl test
 
 # TCL and TK required version 8.1 through 8.5:
@@ -1970,14 +1949,15 @@ def CheckSigReset(context):
 #----------------
 # LyX on this system?
 
-def CheckLyx(context):
+def CheckLyX(context):
 	context.Message("Checking for LyX... ")
 	r = context.env.WhereIs("lyx")
 	if r:
 		context.Result(r)
+		return True
 	else:
 		context.Result(0)
-	return r
+		return False 
 
 #----------------
 # Latex2HTML on this system?
@@ -2047,7 +2027,7 @@ conf = Configure(env
 #		, 'CheckPythonLib' : CheckPythonLib
 		, 'CheckCUnit' : CheckCUnit
 		, 'CheckDMalloc' : CheckDMalloc
-		, 'CheckLyx' : CheckLyx
+		, 'CheckLyX' : CheckLyX
 		, 'CheckLatex2HTML' : CheckLatex2HTML
 		, 'CheckGraphVizAgraph' : CheckGraphVizAgraph
 		, 'CheckGraphVizCgraph' : CheckGraphVizCgraph
@@ -2227,10 +2207,9 @@ if conf.CheckGcc():
 
 # Catching SIGINT
 
-if env['WITH_SIGNALS']:
+if conf.env['WITH_SIGNALS']:
 	if not conf.CheckSIGINT():
-		with_signals = False
-		without_signals_reason = "SIGINT uncatchable"
+		conf.env.set_optional('signals',active=False,reason="SIGINT uncatchable")
 
 # Catching SIGFPE
 
@@ -2248,11 +2227,11 @@ if conf.CheckSigReset() is False:
 # YACC
 
 #if conf.CheckYacc():
-if env['YACC']:
+if conf.env['YACC']:
 	conf.env['HAVE_YACC']=True
 
 #if conf.CheckLex():
-if env['LEX']:
+if conf.env['LEX']:
 	conf.env['HAVE_LEX']=True
 
 if conf.CheckLexDestroy():
@@ -2260,175 +2239,105 @@ if conf.CheckLexDestroy():
 
 # Tcl/Tk
 
-if with_tcltk:
+if conf.env['WITH_TCLTK']:
 	if conf.CheckTcl():
 		if conf.CheckTclVersion():
 			if conf.CheckTk():
 				if with_tcltk and conf.CheckTkVersion():
-					if env['STATIC_TCLTK']:
+					if conf.env['STATIC_TCLTK']:
 						if conf.CheckTkTable():
 							pass
 						else:
 							without_tcltk_reason = "TkTable not found"
 							with_tcltk = False
 				else:
-					without_tcltk_reason = "Require Tk version <= 8.4. See 'scons -h'"
-					with_tcltk = False
+					conf.env.set_optional('tcltk',active=False,reason="Require Tk version <= 8.4. See 'scons -h'")
 			else:
-				without_tcltk_reason = "Tk not found."
-				with_tcltk = False
+				conf.env.set_optional('tcltk',active=False,reason="Tk not found")
 		else:
-			without_tcltk_reason = "Require Tcl <= 8.4 Tcl."
-			with_tcltk = False
-
+			conf.env.set_optional('tcltk',active=False,reason="Require Tcl <= 8.4 Tcl.")
 	else:
-		without_tcltk_reason = "Tcl not found."
-		with_tcltk = False
+		conf.env.set_optional('tcltk',active=False,reason='Tcl not found')
 
-if env['STATIC_TCLTK']:
+if conf.env['STATIC_TCLTK']:
 	conf.CheckX11()
 
 # CUnit
 
-conf.env['HAVE_CUNIT'] = False
-if with_cunit:
-	if not conf.CheckCUnit():
-		without_cunit_reason = 'CUnit not found'
-		with_cunit = False
-	else:
-		conf.env['HAVE_CUNIT'] = True	
-		#print "CUNIT NOT FOUND, LIBS=",conf.env.get('LIBS')
+if conf.env['WITH_CUNIT']:
+	conf.env.set_optional('cunit',active=conf.CheckCUnit(),reason='not found')
 
 # DMALLOC
 
-if with_dmalloc:
-	if not conf.CheckDMalloc():
-		without_dmalloc_reason = 'dmalloc not found'
-		with_dmalloc = False
+if conf.env['WITH_DMALLOC']:
+	conf.env.set_optional('dmalloc',active=conf.CheckDMalloc(),reason='not found')
 
 # GRAPHVIZ
 
-if with_graphviz:
-	if not conf.CheckGraphVizCgraph():
-		if not conf.CheckGraphVizAgraph():
-			without_graphviz_reason = 'graphviz not found (cgraph nor agraph)'
-			with_graphviz = False
-			env['WITH_GRAPHVIZ'] = False
-	env['HAVE_GRAPHVIZ_BOOLEAN'] = conf.CheckGraphVizBoolean()		
+if conf.env['WITH_GRAPHVIZ']:
+	if not conf.CheckGraphVizCgraph() and not conf.CheckGraphVizAgraph():
+		conf.env.set_optional('graphviz',active=False,reason='graphviz not found (cgraph nor agraph)')
+	conf.env['HAVE_GRAPHVIZ_BOOLEAN'] = conf.CheckGraphVizBoolean()		
 
 # UFSPARSE
 
-if with_ufsparse:
-	if not conf.CheckUFSparse():
-		without_ufsparse_reason = 'ufsparse not found'
-		with_ufsparse = False
-		env['WITH_UFSPARSE'] = False
+if conf.env['WITH_UFSPARSE']:
+	conf.env.set_optional('ufsparse',active=conf.CheckUFSparse(),reason="not found")
 
 # IDA
 
-if with_ida:
+if conf.env['WITH_IDA']:
 	if not conf.CheckSUNDIALS():
-		with_ida = False
-		without_ida_reason = "SUNDIALS not found, or bad version"
-	elif not conf.CheckIDA():
-		with_ida = False
-		without_ida_reason = "Unable to compile/link against SUNDIALS/IDA"
+		conf.env.set_optional('ida',active=False,reason="SUNDIALS not found, or bad version")
+	else:
+		if not conf.CheckIDA():
+			conf.env.set_optional('ida',active=False,reason="Unable to compile/link against SUNDIALS/IDA")
 
 # CONOPT
 
-if not with_conopt:
-	without_conopt_reason = "Not selected (see config option WITH_SOLVERS)"
-elif conf.CheckCONOPT() is False:
-	if conf.env.get('CONOPT_LINKED'):
-		conf.env['CONOPT_LINKED'] = False
+if conf.env['WITH_CONOPT']:
+	if not conf.CheckCONOPT():
+		conf.env['CONOPT_LINKED']=False
 	# we no longer require CONOPT at buildtime in order to build support for it
 	#with_conopt = False
 	#without_conpt_reason = "CONOPT not found"
 
-# IPOPT
-
-#if not with_ipopt:
-#	without_ipopt_reason = "Not selected (see config option WITH_SOLVERS)"
-#elif not conf.CheckIPOPT():
-#	with_ipopt = False
-#	without_ipopt_reason = "IPOPT not found"
-
 # ZLIB
 
-if not conf.CheckCHeader('zlib.h'):
-	with_zlib = False
-	without_zlib_reason = "zlib.h not found"
-elif not conf.CheckLib('z'):
-	with_zlib = False
-	without_zlib_reason = "library libz not found"
+if conf.env['WITH_ZLIB']:
+	if not conf.CheckCHeader('zlib.h'):
+		conf.env.set_optional('zlib',active=False,reason="zlib.h not found")
+	if not conf.CheckLib('z'):
+		conf.env.set_optional('zlib',active=False,reason='library libz not found')
 
-# BLAS
+# LSODE needs Fortran; no fortran then no LSODE
 
-need_blas=False
+if conf.env['WITH_LSODE']:
+	conf.env.set_optional('lsode',active=conf.CheckFortran(),reason="Fortran compiler was not functional. Check setup.")
 
-if with_lsode:
-	print("WITH LSODE")
-	need_fortran = True
-	need_fortran_reasons.append("LSODE")
-	need_blas=True
+# BLAS (WITH_BLAS = a copy exists on the system)
 
-#if with_ipopt:
-#	need_blas=True
-
-if need_blas:
-	if conf.CheckLib('blas'):
-		with_local_blas = False
-		without_local_blas_reason = "Found BLAS installed on system"
-	else:
-		with_local_blas = True
-		need_fortran = True
-		need_fortran_reasons.append("BLAS")
-else:
-	with_local_blas= False;
-	without_local_blas_reason = "BLAS not required"
-
-# FORTRAN
-
-# we'll assume now (2012) that we always have gfortran available on our system.
-
-if need_fortran and not conf.CheckFortran():
-	print("Failed to build simple test file with your Fortran compiler.")
-	print("Check your compiler is installed and running correctly.")
-	print("You can set your Fortran compiler using the FORTRAN scons option.")
-	print("The fortran compiler is REQUIRED to build:",", ".join(need_fortran_reasons))
-	print("Perhaps try examining the value of your WITH_SOLVERS option (remove LSODE, etc).")
-	Exit(1)
-
-#else:
-#	print "FORTRAN not required"
-
-# F2C
-
-if need_fortran:
-	if platform.system()=="Windows":
-		pass
-		#conf.env.Append(LIBPATH='c:\mingw\lib')
+if conf.env['WITH_LSODE']:
+	# we only need BLAS for LSODE
+	if env['WITH_BLAS']:
+		print("CHECKING BLAS")
+		conf.env.set_optional('blas',active=conf.CheckLib('blas'),reason="Not found (local code will be used instead)")
 
 # scrollkeeper
 
-if with_scrollkeeper:
-	if conf.CheckScrollkeeperConfig() is False:
-		with_scrollkeeper=False
-		without_scrollkeeper_reason="unable to detect scrollkeeper-config"
+if conf.env['WITH_SCROLLKEEPER']:
+	conf.env.set_optional('scrollkeeper',active=conf.CheckScrollkeeperConfig(),reason="unable to detect 'scrollkeeper-config'")
 
 # lyx
 
-if with_doc_build:
-	if not conf.CheckLyx():
-		with_doc_build = False
-		without_doc_build_reason="unable to locate LyX"
+if conf.env['WITH_DOC_BUILD']:
+	conf.env.set_optional('doc_build',active=conf.CheckLyX(),reason="unable to locate LyX")
+	print(f"WITH_DOC_BUILD = {conf.env['WITH_DOC_BUILD']}")
 
 # PCRE
 
-if with_pcre:
-	if not conf.CheckPCRE():
-		with_pcre = False
-		without_pcre_reason = "PCRE not found"
+if conf.env['WITH_PCRE']:
+	conf.env.set_optional('pcre',active=conf.CheckPCRE(),reason="PCRE not found")
 
 # TODO: -D_HPUX_SOURCE is needed
 
@@ -2453,6 +2362,22 @@ env = conf.Finish()
 #---------------------------------------
 # SUBSTITUTION DICTIONARY for .in files
 
+def cygpath(mypath):
+	cmd = [pathlib.Path(shutil.which('cygpath')),'-w',mypath]
+	print(f"CMD = {cmd}")
+	return subprocess.run(cmd,check=1,capture_output=1,encoding="utf=8").stdout.strip("\r\n \t")
+
+def get_dlldirs(pathlist):
+	print("start:",pathlist)
+	l1 = str(pathlist).split(os.pathsep)
+	print(f"l1 = {l1}")
+	l2 = [cygpath(p) for p in l1]
+	print(f"l2 = {l2}")
+	return os.pathsep.join(l2)
+	
+env['DLLDIRS'] = get_dlldirs(env.subst(env["DLLDIRS"]))
+print(f"final DLLDIRS = {env['DLLDIRS']}")
+
 release = env.get('RELEASE')
 if release=="0.":
 	release="0"
@@ -2476,6 +2401,7 @@ subst_dict = {
 	, '@INSTALL_PYTHON@':env['INSTALL_PYTHON']
 	, '@INSTALL_PYTHON_ASCEND@':env['INSTALL_PYTHON_ASCEND']
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
+	, '@DLLDIRS@':c_escape(env["DLLDIRS"])
 	, '@VERSION@':version
 	, '@RELEASE@':release
 	, '@SONAME_MAJOR_INT@':soname_major_int
@@ -2532,12 +2458,12 @@ if env.get('WITH_DOC'):
 
 # bool options...
 for k,v in {
-		'ASC_WITH_DMALLOC':with_dmalloc
-		,'ASC_WITH_UFSPARSE':with_ufsparse
-		,'ASC_WITH_MMIO':with_mmio
-		,'ASC_WITH_ZLIB':with_zlib
-		,'ASC_WITH_PCRE':with_pcre
-		,'ASC_SIGNAL_TRAPS':with_signals
+		'ASC_WITH_DMALLOC':env['WITH_DMALLOC']
+		,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
+		,'ASC_WITH_MMIO':env['WITH_MMIO']
+		,'ASC_WITH_ZLIB':env['WITH_ZLIB']
+		,'ASC_WITH_PCRE':env['WITH_PCRE']
+		,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
 		,'HAVE_C99FPE':env.get('HAVE_C99FPE')
 		,'HAVE_IEEE':env.get('HAVE_IEEE')
@@ -2620,24 +2546,6 @@ if env['GCOV']:
 
 #FIXME there must be a better way of doing this...
 
-if with_ida:
-	env.Append(WITH_IDA=1)
-
-if with_conopt:
-	env.Append(WITH_CONOPT=1)
-
-if 'IPOPT' in env['WITH_SOLVERS']:
-	env.Append(WITH_IPOPT=1)
-
-if with_dopri5:
-	env.Append(WITH_DOPRI5=1)
-
-if with_radau5:
-	env.Append(WITH_RADAU5=1)
-
-if with_makemps:
-	env.Append(WITH_MAKEMPS=1)
-
 #if with_graphviz and env.get('GRAPHVIZ_RPATH'):
 #	env.Append(RPATH=env['GRAPHVIZ_RPATH'])
 
@@ -2654,10 +2562,8 @@ if env.get('WITH_PYTHON'):
 #-------------
 # TCL/TK GUI
 
-if with_tcltk:
+if env['WITH_TCLTK']:
 	env.SConscript(['tcltk/SConscript'],'env')
-else:
-	print("Skipping... Tcl/Tk bindings aren't being built:",without_tcltk_reason)
 
 #------------
 # BASE/GENERIC SUBDIRECTORIES
@@ -2674,31 +2580,14 @@ for d in dirs:
 #-------------
 # IMPORTED CODE: LSODE, BLAS, etc
 
-if with_local_blas:
+if env['WITH_LSODE'] and not env['WITH_BLAS']:
 	env['blasobjs'] = env.SConscript(['blas/SConscript'],'env')
 else:
 	env['blasobjs'] = []
-	print("Skipping... BLAS won't be built:", without_local_blas_reason)
 
-if not with_ida:
-	print("Skipping... IDA won't be built:", without_ida_reason)
-
-if not with_dopri5:
-	print("Skipping... DOPRI5 won't be built:", without_dopri5_reason)
-
-if with_mmio:
+if env['WITH_MMIO']:
 	srcs += env.SConscript(['mmio/SConscript'],'env')
-else:
-	print("Skipping... MMIO export won't be built:", without_mmio_reason)
 
-if not with_graphviz:
-	print("Skipping... GraphViz features won't be built:", without_graphviz_reason)
-
-if with_pcre:
-	env['WITH_PCRE']=True
-else:
-	env['WITH_PCRE']=False
-	print("Skipping... PCRE searching of NOTES:",without_pcre_reason)
 #-------------
 # LIBASCEND -- all 'core' functionality
 
@@ -2712,10 +2601,10 @@ libascend_env.Append(
 if platform.system()=="Linux":
 	libascend_env.Append(LIBS=['dl'])
 
-if with_dmalloc:
+if env['WITH_DMALLOC']:
 	libascend_env.Append(LIBS=['dmalloc'])
 
-if with_ufsparse:
+if env['WITH_UFSPARSE']:
 	libascend_env.Append(LIBS=['cxsparse'])
 
 if platform.system()=="Linux":
@@ -2748,7 +2637,7 @@ test_env.Append(
 	CPPPATH="#"
 )
 
-if with_cunit:
+if env['WITH_CUNIT']:
 	testdirs = ['general','solver','utilities','linear','compiler','system','packages','integrator']
 	testsrcs = []
 	for testdir in testdirs:
@@ -2776,11 +2665,8 @@ env.SConscript(['solvers/SConscript'],'env')
 #-------------
 # EXTERNAL FUNCTIONS
 
-print(f"env['HAVE_CUNIT'] = {env['HAVE_CUNIT']}")
+#print(f"env['HAVE_CUNIT'] = {env['HAVE_CUNIT']}")
 modeldirs = env.SConscript(['models/SConscript'],'env')
-
-if not with_extfns:
-	print("Skipping... External modules aren't being built:",without_extfns_reason)
 
 for _f in env['extfns']:
 	env.Depends(_f,'libascend')
@@ -2991,11 +2877,9 @@ Alias('dist',[tar,deb_tar])
 
 #print "WITH_DOC_BUILD = ",with_doc_build
 
-if with_doc_build:
+if env['WITH_DOC_BUILD']:
 	#user's manual
 	env.SConscript('doc/SConscript',['env'])
-else:
-	print("Skipping... Documentation isn't being built:",without_doc_build_reason)
 
 #------------------------------------------------------
 # RPM BUILD
@@ -3007,21 +2891,31 @@ else:
 # DEFAULT TARGETS
 
 default_targets =['libascend','solvers',a4cmd]
-if with_tcltk:
+if env['WITH_TCLTK']:
 	default_targets.append('tcltk')
 if 'WITH_PYTHON' in env:
 	default_targets.append('ascxx')
 	default_targets.append('pygtk')
 	default_targets.append('pyfprops')
-if with_extfns:
+if env['WITH_EXTFNS']:
 	default_targets.append('extfns')
-if with_doc_build:
+if env['WITH_DOC_BUILD']:
 	default_targets.append('doc')
-if with_cunit:
+if env['WITH_CUNIT']:
 	default_targets.append('test')
 
 env.Default(default_targets)
 
+# reporting skipped components
+
+for comp,val in env['OPTIONALS'].items():
+	active,reason = val
+	if active:
+		pass #print(f"Building {comp}")
+	else:
+		print(f"Skipping {comp}... {reason}")
+
 print("Building targets:"," ".join([str(i) for i in BUILD_TARGETS]))
 
+print(f"WITH_DOC_BUILD = {env['WITH_DOC_BUILD']}")
 # vim: ts=4:sw=4:noet:syntax=python
