@@ -109,7 +109,7 @@ typedef unsigned long long asc_intptr_t;
 */
 @ASC_XTERM_COLORS@
 
-#define ASC_DLLDIRS "@DLLDIRS@"
+/* #define ASC_DLLDIRS "@DLLDIRS@" */
 
 #define ASC_SOURCE_ROOT "@SOURCE_ROOT@"
 

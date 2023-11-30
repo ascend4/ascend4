@@ -2374,9 +2374,12 @@ def get_dlldirs(pathlist):
 	l2 = [cygpath(p) for p in l1]
 	print(f"l2 = {l2}")
 	return os.pathsep.join(l2)
-	
-env['DLLDIRS'] = get_dlldirs(env.subst(env["DLLDIRS"]))
-print(f"final DLLDIRS = {env['DLLDIRS']}")
+
+if platform.system()=="Windows":	
+	env['DLLDIRS'] = get_dlldirs(env.subst(env["DLLDIRS"]))
+else:
+	env['DLLDIRS'] = ""
+#print(f"final DLLDIRS = {env['DLLDIRS']}")
 
 release = env.get('RELEASE')
 if release=="0.":
@@ -2401,7 +2404,7 @@ subst_dict = {
 	, '@INSTALL_PYTHON@':env['INSTALL_PYTHON']
 	, '@INSTALL_PYTHON_ASCEND@':env['INSTALL_PYTHON_ASCEND']
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
-	, '@DLLDIRS@':c_escape(env["DLLDIRS"])
+#	, '@DLLDIRS@':c_escape(env["DLLDIRS"])
 	, '@VERSION@':version
 	, '@RELEASE@':release
 	, '@SONAME_MAJOR_INT@':soname_major_int
