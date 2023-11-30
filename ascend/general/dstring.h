@@ -97,7 +97,7 @@ typedef struct Asc_DString {
  *                < 0, then append all of string, up to null at end.
  *  @return Returns the new value of the dynamic string.
  */
-ASC_DLLSPEC char *Asc_DStringAppend(register Asc_DString *dsPtr,
+ASC_DLLSPEC char *Asc_DStringAppend(Asc_DString *dsPtr,
                                CONST char *string,
                                int length);
 
@@ -123,7 +123,7 @@ ASC_DLLSPEC void Asc_DStringFree(Asc_DString *dsPtr);
  *
  *  @param dsPtr Pointer to structure for dynamic string (non-NULL).
  */
-ASC_DLLSPEC void Asc_DStringInit(register Asc_DString *dsPtr);
+ASC_DLLSPEC void Asc_DStringInit(Asc_DString *dsPtr);
 
 /*----------------------------------------------------------------------*/
 /**
