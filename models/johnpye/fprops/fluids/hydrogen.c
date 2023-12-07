@@ -21,6 +21,10 @@
 
 	It is understood that this is the same correlation as implemented by REFPROP
 	version 8.0.
+	
+	Note the publication Leachman et al 2009 contains different data, including
+	a different value of T_c:
+	https://doi.org/10.1063/1.3160306
 */
 
 
@@ -94,6 +98,44 @@ static HelmholtzData helmholtz_data_hydrogen = {
 	}
 };
 
+#define MUSTAR 1e-6
+static const ViscosityData visc_hydrogen = {
+	.source="C Wei, S M Jafari Raad, Y Leonenko, H Hassanzadeh, 2023. 'Correlations for prediction of hydrogen gas viscosity and density for production, Int. J. Hydrogen Energy. 48, pp. 34930-34944. (Range: 100-1000 K, <220 MPa), "
+	,.type=FPROPS_VISC_1
+	,.data={.v1={
+		.mu_star = MUSTAR
+		,.T_star = 30.41 /* = eps/k */
+		,.rho_star = 1
+		,.sigma = sqrt((0.026695 / 1.0069) * sqrt(HYDROGEN_M))
+			/* because 1.0069 = 0.026695 * sqrt(M) / SQ(sigma); solve for sigma */
+		,.M = HYDROGEN_M
+		,.eps_over_k = 30.41
+		,.ci={
+			FPROPS_CI_1
+			,.data={.ci1={
+				.nt=5
+				,.t=(const ViscCI1Term[]){
+					 {0,  0.958737511232263}
+					,{1, -0.0537931756541833}
+					,{2, -0.0417130264021347}
+					,{3,  0.00401309021911078}
+					,{4,  1.1146015668052e-5}
+				}
+			}}
+		}
+		,.nt=5
+		,.t=(const ViscData1Term[]){
+			/* values here are multiplied by 1e6 because they will be later divided by mu_star, 
+			but in the Wei paper, no such division was indicated. */
+			 { 0.00150682400345535,  0, 1, 0}
+			,{ 0.00132122304497608,  0, 2, 0}
+			,{ 2.20790728835293e-12,+3, 6, 0}
+			,{-7.46651846381023e-18, 0, 8, 0}
+			,{ 4.45098340713357e-15,+1, 8, 0}
+		}
+	}}
+};
+
 const EosData eos_hydrogen = {
 	"hydrogen"
 	,"Jacob Leachman thesis, via email from Steve Penoncello, 2008"
@@ -101,10 +143,14 @@ const EosData eos_hydrogen = {
 	,100
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_hydrogen}
+	,.visc = &visc_hydrogen
 };
 
 #else
+#define TEST_VERBOSE
 # include "../test.h"
+# include "../visc.h"
+
 extern const EosData eos_hydrogen;
 
 /*
@@ -183,8 +229,91 @@ static const TestData td[] = {
 static const unsigned ntd = sizeof(td)/sizeof(TestData);
 
 void test_fluid_hydrogen(void){
+	FpropsError err=FPROPS_NO_ERROR;
 	PureFluid *P = helmholtz_prepare(&eos_hydrogen,NULL);
 	helm_run_test_cases(P, ntd, td, 'C');
+	
+	TEST_MSG("Testing viscosity values... ");
+	const ViscosityData *V = visc_prepare(&eos_hydrogen, P, &err);
+	ASSERT(FPROPS_NO_ERROR==err);
+	ASSERT(V != NULL);
+	P->visc = V;
+	
+	FluidState2 S;
+	S = fprops_set_Trho(25 + 273.15, 2.144, P, &err);
+	ASSERT(FPROPS_NO_ERROR==err);
+	double p = fprops_p(S,&err);
+	ASSERT(FPROPS_NO_ERROR==err);
+	
+	TEST_MSG("got p = %f atm = %f MPa",p/101.325e3,p/1e6);
+	
+	ASSERT(fabs(p - 26.43*101.325e3) < 0.01*101.325e3);
+	
+	double mu;
+#define VISC_TEST(T__1,RHO__1,MU__1,TOL__1) \
+	S = fprops_set_Trho(T__1, RHO__1, P, &err); \
+	mu = fprops_mu(S,&err); \
+	TEST_MSG("mu(%s=%f, %s=%f) = %e (target: %e)",STATENAME1(S),STATEVAL1(S),STATENAME2(S),STATEVAL2(S),mu,MU__1); \
+	ASSERT(FPROPS_NO_ERROR==err); \
+	CU_ASSERT_DOUBLE_EQUAL(mu,MU__1,TOL__1);
+
+# define THCOND_TEST(...)
+
+	TEST_MSG("Testing with data from Michels, 1953 https://doi.org/10.1016/S0031-8914(53)80112-6");
+	VISC_TEST(25+273.15, 2.144, 8.914e-6, 0.1e-6);
+	VISC_TEST(25+273.15, 43.44, 11.43e-6, 0.1e-6);
+	VISC_TEST(25+273.15, 71.09, 16.02e-6, 0.1e-6);
+	VISC_TEST(50+273.15, 11.81, 9.661e-6, 0.1e-6);
+	VISC_TEST(50+273.15, 35.59, 11.11e-6, 0.1e-6);
+	VISC_TEST(75+273.15, 3.014, 9.953e-6, 0.1e-6);
+	VISC_TEST(75+273.15, 15.74, 10.31e-6, 0.1e-6);
+	VISC_TEST(75+273.15, 45.27, 12.65e-6, 0.1e-6);
+
+/* viscosity points
+Temperature	Pressure	Density	Therm. Cond.	Viscosity
+(K)	(MPa)	(kg/m³)	(mW/m-K)	(µPa-s) */
+				
+#if 0
+VISC_TEST(80.000, 0.30349, 3.5663e-6, 0.0001e-6);
+#endif
+#if 0
+THCOND_TEST(80.000, 0.30349, 56.471, 0.01);
+VISC_TEST(80.000, 1.8329, 3.6111, 0.0001);
+THCOND_TEST(80.000, 1.8329, 57.733, 0.01);
+VISC_TEST(80.000, 3.3812, 3.6573, 0.0001);
+THCOND_TEST(80.000, 3.3812, 59.062, 0.01);
+VISC_TEST(80.000, 4.9457, 3.7052, 0.0001);
+THCOND_TEST(80.000, 4.9457, 60.474, 0.01);
+VISC_TEST(300.00, 0.080773, 8.9531, 0.0001);
+THCOND_TEST(300.00, 0.080773, 185.76, 0.01);
+VISC_TEST(300.00, 0.48323, 8.9650, 0.0001);
+THCOND_TEST(300.00, 0.48323, 186.19, 0.01);
+VISC_TEST(300.00, 0.88334, 8.9770, 0.0001);
+THCOND_TEST(300.00, 0.88334, 186.59, 0.01);
+VISC_TEST(300.00, 1.2811, 8.9888, 0.0001);
+THCOND_TEST(300.00, 1.2811, 186.99, 0.01);
+VISC_TEST(400.00, 0.060587, 10.892, 0.0001);
+THCOND_TEST(400.00, 0.060587, 234.06, 0.01);
+VISC_TEST(400.00, 1.8517, 10.945, 0.0001);
+THCOND_TEST(400.00, 1.8517, 235.94, 0.01);
+VISC_TEST(400.00, 3.5928, 10.998, 0.0001);
+THCOND_TEST(400.00, 3.5928, 237.76, 0.01);
+VISC_TEST(400.00, 5.2858, 11.051, 0.0001);
+THCOND_TEST(400.00, 5.2858, 239.60, 0.01);
+VISC_TEST(400.00, 6.9323, 11.105, 0.0001);
+THCOND_TEST(400.00, 6.9323, 241.46, 0.01);
+VISC_TEST(400.00, 8.5339, 11.161, 0.0001);
+THCOND_TEST(400.00, 8.5339, 243.34, 0.01);
+VISC_TEST(400.00, 10.092, 11.218, 0.0001);
+THCOND_TEST(400.00, 10.092, 245.25, 0.01);
+VISC_TEST(400.00, 11.609, 11.278, 0.0001);
+THCOND_TEST(400.00, 11.609, 247.18, 0.01);
+VISC_TEST(400.00, 13.086, 11.340, 0.0001);
+THCOND_TEST(400.00, 13.086, 249.14, 0.01);
+VISC_TEST(400.00, 14.524, 11.406, 0.0001);
+THCOND_TEST(400.00, 14.524, 251.12, 0.01);
+#endif
+
 }
 
 #endif

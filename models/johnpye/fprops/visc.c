@@ -42,6 +42,7 @@ const ViscosityData *visc_prepare(const EosData *E, const PureFluid *P, FpropsEr
 /*----------------------FIRST CORRELATION---------------------------*/
 /*
 	perhaps v1 data should include 0.0266958/SQ(sigma)?
+	(would make implementing eg Wei et al paper for Hydrogen viscosity a bit easier)
 */
 
 double visc1_ci1(const ViscCI1Data *ci1, double Tstar){
@@ -52,6 +53,7 @@ double visc1_ci1(const ViscCI1Data *ci1, double Tstar){
 		MSG("b[%d] = %e, i = %d",i,ci1->t[i].b, ci1->t[i].i);
 		res += ci1->t[i].b * pow(lnTstar, ci1->t[i].i);
 	}
+	MSG("ln(psi) = %e",res);
 	return exp(res);
 }
 
@@ -75,7 +77,9 @@ double visc1_mu0(FluidState2 state, FpropsError *err){
 	}
 	MSG("M = %f, sigma = %f, Omega = %f, eps/k = %f",v1->M, v1->sigma, Omega,v1->eps_over_k);
 	double mu0 = v1->mu_star * 0.0266958 * sqrt(v1->M * T) / SQ(v1->sigma) / Omega;
-	MSG("mu0 = %e",mu0);
+	MSG("const = %e", v1->mu_star * 0.0266958 * sqrt(v1->M) / SQ(v1->sigma));
+	MSG("T = %e",T);
+	MSG("mu0 = %g uPas",mu0 * 1e6);
 	return mu0;
 }
 		
@@ -94,7 +98,7 @@ double visc1_mu(FluidState2 state, FpropsError *err){
 	MSG("  (--> p = %e MPa)",fprops_p(state,err)/1e6);
 	const ViscosityData1 *v1 = &(state.fluid->visc->data.v1);
 	double mu0 = visc1_mu0(state,err);
-	double mur = 0;
+	double mur_red = 0;
 	MSG("T_star = %f",v1->T_star);
 	MSG("rho_star = %f",v1->rho_star);
 	double tau = v1->T_star / T;
@@ -105,17 +109,20 @@ double visc1_mu(FluidState2 state, FpropsError *err){
 		double mu1i = v1->t[i].N * pow(tau, v1->t[i].t) * pow(del, v1->t[i].d);
 		if(0 == v1->t[i].l){
 			MSG("%d: N = %e, t = %f, d = %d, l = %d --> %e", i, v1->t[i].N, v1->t[i].t, v1->t[i].d, v1->t[i].l, mu1i);
-			mur += mu1i;
+			mur_red += mu1i;
 		}else{
 			MSG("%d: N = %e, t = %f, d = %d, l = %d ** --> %e", i, v1->t[i].N, v1->t[i].t, v1->t[i].d, v1->t[i].l, mu1i * exp(-pow(del, v1->t[i].l)));
-			mur += mu1i * exp(-pow(del, v1->t[i].l));
+			mur_red += mu1i * exp(-pow(del, v1->t[i].l));
 		}
 	}
 	/* TODO something about critical point terms? */
 	/* FIXME if adding critical enhancement, note that the function thcond_lamc would need to be modified to allow the enhancement to be excluded from calculation */
-	MSG("mur/mu* = %e",mur);
-	MSG("mustar = %e",v1->mu_star);
-	return mu0 + (v1->mu_star * mur);
+	
+	double mur = mur_red * v1->mu_star;
+	MSG("mur/mu* = %e",mur_red);
+	MSG("mu* = %g uPas",v1->mu_star);
+	MSG("mur = %g uPas",mur);
+	return mu0 + mur;
 }
 
 /*----------------------SECOND CORRELATION---------------------------*/

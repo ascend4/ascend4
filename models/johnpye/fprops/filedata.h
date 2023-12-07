@@ -406,6 +406,13 @@ typedef struct ViscCollisionIntegData_struct{
 	} data;
 } ViscCollisionIntegData;
 
+/**
+	Excess viscosity terms of the kind
+	
+	N * tau^t * delta^d exp(-gamma * delta^l)
+	
+	where gamma is zero when l is zero, and 1 when l is non-zero.
+*/
 typedef struct ViscData1Term_struct{
 	double N, t;
 	int d, l;
@@ -448,6 +455,7 @@ typedef struct ViscDataEpt_struct{
     double b; ///< viscosity term b*ln(T)
     char is_ln; ///< if true, ln(mu) = [...]; if false, mu = [...].
 } ViscDataEpt;
+
 typedef struct ViscosityData_struct{
 	const char *source;
 	ViscosityType type;
