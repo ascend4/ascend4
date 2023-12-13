@@ -247,36 +247,64 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 	int res;
 	struct ExtPyData *extpydata;
 
+	MSG("hello from 'registermethod'");
+
 	// Parse arguments
 	if (!PyArg_ParseTuple(args,"O:registermethod", &fn)) {
+		MSG("Got NULL from PyArg_ParseTuple");
 		return NULL;
 	}
 	if (!PyCallable_Check(fn)) {
+		MSG("argument to 'registermethod' was not a python callable");
 		PyErr_SetString(PyExc_TypeError,"parameter must be callable");
 		return NULL;
 	}
 
+	MSG("FOUND FN=%p",fn);
+
 	// Retrieve __name__ attribute
 	name = PyObject_GetAttrString(fn, "__name__");
 	if (name == NULL) {
+		MSG("No __name__ attribute");
 		PyErr_SetString(PyExc_TypeError,"No __name__ attribute");
 		return NULL;
 	}
+	MSG("getting unicode");
 	cname = PyUnicode_AsUTF8(name);
+	MSG("got unicode");
 	if (cname == NULL) {
+		PyErr_SetString(PyExc_TypeError,"couldn't convert name to unicode");
 		Py_DECREF(name);
 		return NULL;
 	}
+
+	MSG("getting docstring");
 
 	// Retrieve __doc__ attribute (func_doc is deprecated)
 	docstring = PyObject_GetAttrString(fn, "__doc__");
-	cdocstring = (docstring != NULL) ? PyUnicode_AsUTF8(docstring) : "(no help)";
-	if (cdocstring == NULL) {
-		Py_DECREF(name);
-		if (docstring) Py_DECREF(docstring);
-		return NULL;
+	if(!docstring){
+		cdocstring = "(error retrieving docstring)";
+	}else if(docstring == Py_None){
+		cdocstring = "(no docstring provided)";
+	}else{
+		if(!PyUnicode_Check(docstring)){
+			const char *data = PyUnicode_DATA(docstring);
+			MSG("docstring is '%s'",data);
+			PyErr_SetString(PyExc_TypeError,"docstring is not unicode??");
+			return NULL;
+		}
+		cdocstring = PyUnicode_AsUTF8(docstring);
+		if(!cdocstring){
+			//MSG("docstring is '%s'",docstring);
+			PyErr_SetString(PyExc_TypeError,"couldn't convert docstring to unicode??");
+			Py_DECREF(name);
+			Py_DECREF(docstring);
+			return NULL;
+		}
 	}
 
+	MSG("populating ExtPyData");
+	
 	// Create and populate ExtPyData structure
 	extpydata = ASC_NEW(struct ExtPyData);
 	extpydata->name = ASC_NEW_ARRAY(char, strlen(cname) + 1);
