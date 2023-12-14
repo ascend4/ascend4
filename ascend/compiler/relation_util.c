@@ -423,18 +423,16 @@ static void apply_term_dimensions(CONST struct relation *rel,
                /* second wild non-zero */
                if( !*wild ) *wild = TRUE;
                if (GCDN) {
-                 FPRINTF(ASCERR,"ERROR:  %s has wild dimensions on\n",
+                 FPRINTF(ASCERR,"ERROR:  %s has wild dimensions on left and right hand sides.\n",
                        type==e_plus ? "Addition":"Subtraction");
-                 FPRINTF(ASCERR,"        left and right hand sides.\n");
                }
                first->type = type;
             } else if( !IsWild(&(second->d)) ) {
                /* second not wild */
                if( !*wild ) *wild = TRUE;
                if (GCDN) {
-                 FPRINTF(ASCERR,"ERROR:  %s has wild dimensions on\n",
+                 FPRINTF(ASCERR,"ERROR:  %s has wild dimensions on left hand side.\n",
                        type==e_plus ? "Addition":"Subtraction");
-                 FPRINTF(ASCERR,"        left hand side.\n");
                }
                CopyDimensions(&(second->d),&(first->d));
                first->type = type;
@@ -445,9 +443,8 @@ static void apply_term_dimensions(CONST struct relation *rel,
                /* second wild non-zero */
                if( !*wild ) *wild = TRUE;
                if (GCDN) {
-                 FPRINTF(ASCERR,"ERROR:  %s has wild dimensions on\n",
+                 FPRINTF(ASCERR,"ERROR:  %s has wild dimensions on right hand side.\n",
                        type==e_plus ? "Addition":"Subtraction");
-                 FPRINTF(ASCERR,"        right hand side.\n");
                }
                first->type = type;
             } else if ( !IsWild(&(second->d)) ) {
@@ -458,8 +455,7 @@ static void apply_term_dimensions(CONST struct relation *rel,
                     FPRINTF(ASCERR,"ERROR:  %s has dimensions ",
                       type==e_plus ? "Addition":"Subtraction");
                     WriteDimensions(ASCERR,&(first->d));
-                    FPRINTF(ASCERR," on left\n");
-                    FPRINTF(ASCERR,"        and dimensions ");
+                    FPRINTF(ASCERR," on left and dimensions ");
                     WriteDimensions(ASCERR,&(second->d));
                     FPRINTF(ASCERR," on right.\n");
                   }
@@ -541,15 +537,13 @@ int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens)
       if( IsWild(&(stack[0].d)) && !IsZero(&(stack[0])) ) {
         if( !wild ) wild = TRUE;
         if (GCDN) {
-          FPRINTF(ASCERR,"ERROR:  Relation has wild dimensions\n");
-          FPRINTF(ASCERR,"        on left hand side.\n");
+          FPRINTF(ASCERR,"ERROR:  Relation has wild dimensions on left hand side.\n");
         }
       }
       if( IsWild(&(stack[1].d)) && !IsZero(&(stack[1])) ) {
         if( !wild ) wild = TRUE;
         if (GCDN) {
-          FPRINTF(ASCERR,"ERROR:  Relation has wild dimensions\n");
-          FPRINTF(ASCERR,"        on right hand side.\n");
+          FPRINTF(ASCERR,"ERROR:  Relation has wild dimensions on right hand side.\n");
         }
       }
     }else{
@@ -558,8 +552,7 @@ int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens)
         if (GCDN) {
           FPRINTF(ASCERR,"ERROR:  Relation has dimensions ");
           WriteDimensions(ASCERR,&(stack[0].d));
-          FPRINTF(ASCERR," on left\n");
-          FPRINTF(ASCERR,"        and dimensions ");
+          FPRINTF(ASCERR," on left and dimensions ");
           WriteDimensions(ASCERR,&(stack[1].d));
           FPRINTF(ASCERR," on right.\n");
         }

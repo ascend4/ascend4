@@ -1,0 +1,15 @@
+REQUIRE "atoms.a4l";
+
+MODEL chkdim1;
+	a IS_A distance;
+	A IS_A area;
+	T IS_A temperature;
+	T = a + A;
+	T = 5*a*A;
+METHODS
+METHOD on_load;
+	FIX a;
+	a := 1{m};
+END on_load;
+END chkdim1;
+

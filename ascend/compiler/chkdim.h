@@ -1,5 +1,6 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2007 Carnegie Mellon University
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -13,38 +14,32 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*//**
+	@file
+	Dimensionality checks for relations.
+	
+	Previously solver/chkdim.h was written by someone (Ben?) but not implemented.
+*//*
+	by John Pye
+	Created: Dec 2023
+*/
+
+#ifndef ASC_CHKDIM_H
+#define ASC_CHKDIM_H
+
+/**	@addtogroup compiler_dimen Compiler Dimensions
+	@{
 */
 
 #include <ascend/general/platform.h>
-#include "test_register_compiler.h"
+#include "instance_types.h"
 
-#define TESTS(T) \
-	T(basics) \
-	T(autodiff) \
-	T(expr) \
-	T(bintok) \
-	T(fixfree) \
-	T(blackbox) \
-	T(fixassign) \
-	T(dimen) \
-	T(fractions) \
-	T(units) \
-	T(name) \
-	T(symtab) \
-	T(qlfdid) \
-	T(func) \
-	T(notes) \
-	T(chkdim)
+ASC_DLLSPEC int chkdim_check_relation(CONST struct Instance *i);
+/**<
+ *  Returns zero if all checks OK. Error messages via error_reporter.
+ */
 
+/* @} */
 
-#define PROTO_TEST(NAME) PROTO(compiler,NAME)
-TESTS(PROTO_TEST)
-#undef PROTO_TEST
+#endif  /* ASC_CHKDIM_H */
 
-#define REGISTER_TEST(NAME) \
-	result = TESTREGISTER(compiler,NAME); \
-	if(CUE_SUCCESS!=result){ \
-		return result; \
-	}
-
-REGISTER_SUITE(compiler,TESTS)
