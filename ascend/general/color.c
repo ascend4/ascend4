@@ -29,34 +29,38 @@
 static int color_test(){
 	/* 1: use xterm; 2: use windows; -1: no color */
 	static int use_xterm_color = 0;
-	char *term;
 	if(!use_xterm_color){
-		term = getenv("TERM");
-
+		char *no_color = getenv("NO_COLOR");
+		if(no_color!=NULL && no_color[0] != '\0'){
+			use_xterm_color = -1;
+		}else{
+			char *term;
+			term = getenv("TERM");
 # ifdef __WIN32__
-		if(term!=NULL){
-			if(strcmp(term,"cygwin")==0){
-				Asc_FPrintf(stderr,"\n\n\nUsing Windows color codes\n\n\n");
-				use_xterm_color=2;
-			}else if(strcmp(term,"xterm")==0){
-				Asc_FPrintf(stderr,"\n\n\nUsing xterm color codes\n\n\n");
-				use_xterm_color=1;
+			if(term!=NULL){
+				if(strcmp(term,"cygwin")==0){
+					Asc_FPrintf(stderr,"\n\n\nUsing Windows color codes\n\n\n");
+					use_xterm_color=2;
+				}else if(strcmp(term,"xterm")==0){
+					Asc_FPrintf(stderr,"\n\n\nUsing xterm color codes\n\n\n");
+					use_xterm_color=1;
+				}
 			}
-		}
 # else
-		if(term!=NULL){
-			if(strcmp(term,"xterm")==0 || strcmp(term,"xterm-256color")==0 || strcmp(term,"screen-256color")==0){
-				/* MSYS (rxvt), putty, xterm. */
-				use_xterm_color=1;
+			if(term!=NULL){
+				if(strcmp(term,"xterm")==0 || strcmp(term,"xterm-256color")==0 || strcmp(term,"screen-256color")==0){
+					/* MSYS (rxvt), putty, xterm. */
+					use_xterm_color=1;
+				}else{
+					/* unrecognised $TERM */
+					use_xterm_color=-1;
+				}
 			}else{
-				/* unrecognised $TERM */
+				/* no $TERM var */
 				use_xterm_color=-1;
 			}
-		}else{
-			/* no $TERM var */
-			use_xterm_color=-1;
-		}
 # endif
+		}
 	}
 	return use_xterm_color;
 }
