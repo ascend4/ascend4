@@ -91,8 +91,8 @@ def shebang(script,args):
 	return [script]+args
 
 if __name__ == "__main__":
-
 	p = argparse.ArgumentParser(description='ASCEND launcher')
+
 	p.add_argument('--debug',action='store_true',help='Show launcher debug output')
 	g = p.add_mutually_exclusive_group()
 	g.add_argument('--gdb',action='store_true',help='Run action via GDB')
@@ -109,6 +109,15 @@ if __name__ == "__main__":
 	p_gui.set_defaults(action='gui')
 
 	p_run = s.add_parser('run',help = 'Run model and solve (without GUI, via QRSlv solver)')
+
+	if sys.version_info.major == 3 and sys.version_info.minor < 8:
+		class ExtendAction(argparse.Action):
+			def __call__(self, parser, namespace, values, option_string=None):
+				items = getattr(namespace, self.dest) or []
+				items.extend(values)
+				setattr(namespace, self.dest, items)
+		p_run.register('action', 'extend', ExtendAction)
+
 	p_run.set_defaults(action='run')
 	p_run.add_argument('file',type=pathlib.Path,help='ASCEND model file to be opened')
 	p_run.add_argument('--model','-m', help="Name of MODEL to instantiate (defaults to filename without extension)");
