@@ -32,9 +32,18 @@
 */
 
 #include <ascend/general/platform.h>
-#include "instance_types.h"
+#include <ascend/system/rel.h>
+#include <ascend/system/slv_types.h>
 
-ASC_DLLSPEC int chkdim_check_relation(CONST struct Instance *i);
+ASC_DLLSPEC int chkdim_check_system(slv_system_t sys);
+/**<
+	Check all relations in a system. Hopefully report where any erroneous
+	relations were defined so that a user can click through and correct.
+	
+	Return 0 on success.
+*/
+
+ASC_DLLSPEC int chkdim_check_relation(struct rel_relation *rel);
 /**<
  *  Returns zero if all checks OK. Error messages via error_reporter.
  */

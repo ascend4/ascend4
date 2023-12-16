@@ -4,7 +4,7 @@ Import('libascend_env')
 csrcs = Split("""
 	anoncopy.c anonmerg.c anontype.c arrayinst.c ascCompiler.c
 	atomsize.c atomvalue.c bintoken.c braced.c
-	case.c check.c chkdim.c child.c childdef.c childio.c childinfo.c cmpfunc.c
+	case.c check.c child.c childdef.c childio.c childinfo.c cmpfunc.c
 	commands.c copyinst.c createinst.c defaultpaths.c destroyinst.c
 	dimen.c dimen_io.c dump.c
 	evaluate.c exprio.c exprs.c extcall.c

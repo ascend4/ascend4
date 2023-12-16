@@ -150,6 +150,7 @@ ASC_DLLSPEC int console_debug(const char *fmt,...);
 #endif
 
 #define ERROR_REPORTER_START_NOLINE(SEV) error_reporter_start(SEV,NULL,0,NULL);
+
 #define ERROR_REPORTER_STAT(sev,stat,msg) \
 	error_reporter(sev,Asc_ModuleFileName(stat->mod),stat->linenum,NULL,msg)
 

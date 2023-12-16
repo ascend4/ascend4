@@ -56,6 +56,10 @@
 #include "rootfind.h"
 #include "func.h"
 #include "parentchild.h"
+#include "statio.h"
+#include "instance_types.h"
+#include "instmacro.h"
+#include "statement.h"
 
 //#define RELUTIL_DEBUG
 #ifdef RELUTIL_DEBUG
@@ -161,15 +165,46 @@ static int  relutil_check_inst_and_res(struct Instance *i, double *res);
 #endif
 
 /*------------------------------------------------------------------------------
-  SOME STUFF TO DO WITH DIMENSIONS
+  DIMENSIONALITY CHECKS FOR RELATIONS
 */
+
+void get_relinst_location(const struct Instance *relinst, const char **filename, int *lineno){
+  *filename = NULL;
+  *lineno = 0;
+  
+  MSG("finding file/line of relinst %p",relinst);
+  struct Instance *p = InstanceParent(relinst,1);
+  
+  unsigned long ci = ChildIndex(p,relinst);
+  
+  const struct Statement *s = ChildDeclaration(p,ci);
+  *filename = Asc_ModuleFileName(StatementModule(s));
+  *lineno = StatementLineNum(s);
+}
+
+static int error_reporter_rel(const error_severity_t sev, const struct Instance *inst, const char *fmt,...){
+  va_list args;
+  const char *filename;
+  int lineno;
+  get_relinst_location(inst,&filename,&lineno);
+  va_start(args,fmt);
+  return va_error_reporter(sev,filename,lineno,NULL,fmt,args);
+}
+
+#ifdef ERRMSG
+# error ERRMSG defined?
+#endif
+
+#define ERRMSG(fmt,...) error_reporter_rel(ASC_USER_ERROR,relinst,fmt,## __VA_ARGS__)
 
 /**
-	@TODO what this does needs to be documented here
-
-	UNUSED FUNCTION??
+	This function is called on by RelationCheckDimensions.
+	
+	Not clear yet, but seems to be able updating variables and terms that
+	are marked as having 'wildcard' dimensions, once the dimension can be inferred
+	from other terms.
 */
-static void apply_term_dimensions(CONST struct relation *rel,
+static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct relation *rel,
 		struct relation_term *rt,
 		struct dimnode *first,
 		struct dimnode *second,
@@ -251,19 +286,15 @@ static void apply_term_dimensions(CONST struct relation *rel,
                if( IsWild(&(first->d)) && !IsZero(first) ) {
                   if( !*wild ) *wild = TRUE;
                   if (GCDN) {
-                    FPRINTF(ASCERR,"ERROR:  Relation has wild dimensions\n");
-                    FPRINTF(ASCERR,"        in function %s.\n",
-                      FuncName(TermFunc(rt)));
+                    ERRMSG("Relation has wild dimensions in function %s.",FuncName(TermFunc(rt)));
                   }
-               } else if( !IsWild(&(first->d)) &&
+               }else if( !IsWild(&(first->d)) &&
                          CmpDimen(&(first->d),Dimensionless()) ) {
-                  if( *con ) *con = FALSE;
-                  if (GCDN) {
-                    FPRINTF(ASCERR,"ERROR:  Function %s called with\n",
-                      FuncName(TermFunc(rt)));
-                    FPRINTF(ASCERR,"        dimensions ");
-                    WriteDimensions(ASCERR,&(first->d));
-                    FPRINTF(ASCERR,".\n");
+                  if(*con) *con = FALSE;
+                  if(GCDN){
+                    char *d1 = WriteDimensionString(&(first->d));
+                    ERRMSG("Function %s called with dimensions %s.",FuncName(TermFunc(rt)),d1);
+                    ASC_FREE(d1);
                   }
                }
                CopyDimensions(Dimensionless(),&(first->d));
@@ -276,23 +307,19 @@ static void apply_term_dimensions(CONST struct relation *rel,
                 ***  first must now be of dimension D_PLANE_ANGLE.
                 ***  It will then be made dimensionless.
                 **/
-               if( IsWild(&(first->d)) && !IsZero(first) ) {
-                  if( !*wild ) *wild = TRUE;
-                  if (GCDN) {
-                    FPRINTF(ASCERR,"ERROR:  Relation has wild dimensions\n");
-                    FPRINTF(ASCERR,"        in function %s.\n",
-                      FuncName(TermFunc(rt)) );
+               if(IsWild(&(first->d)) && !IsZero(first)){
+                  if(!*wild) *wild = TRUE;
+                  if(GCDN){
+                    ERRMSG("Relation has wild dimensions in function %s.",FuncName(TermFunc(rt)));
                   }
                }else{
-                 if( !IsWild(&(first->d)) &&
+                 if(!IsWild(&(first->d)) &&
                          CmpDimen(&(first->d),TrigDimension()) ) {
-                  if( *con ) *con = FALSE;
-                  if (GCDN) {
-                    FPRINTF(ASCERR,"ERROR:  Function %s called with\n",
-                      FuncName(TermFunc(rt)));
-                    FPRINTF(ASCERR,"        dimensions ");
-                    WriteDimensions(ASCERR,&(first->d));
-                    FPRINTF(ASCERR,".\n");
+                  if(*con) *con = FALSE;
+                  if(GCDN){
+                    char *d1 = WriteDimensionString(&(first->d));
+                    ERRMSG("Function %s called with dimensions %s.",FuncName(TermFunc(rt)));
+                    ASC_FREE(d1);
                   }
                  }
                }
@@ -307,22 +334,18 @@ static void apply_term_dimensions(CONST struct relation *rel,
                 ***  first must now be dimensionless.  It will
                 ***  end up with dimension D_PLANE_ANGLE
                 **/
-               if( IsWild(&(first->d)) && !IsZero(first) ) {
-                  if( !*wild ) *wild = TRUE;
-                  if (GCDN) {
-                    FPRINTF(ASCERR,"ERROR:  Relation has wild dimensions\n");
-                    FPRINTF(ASCERR,"        in function %s.\n",
-                      FuncName(TermFunc(rt)));
+               if(IsWild(&(first->d)) && !IsZero(first) ) {
+                  if(!*wild) *wild = TRUE;
+                  if(GCDN){
+                    ERRMSG("Relation has wild dimensions in function %s.",FuncName(TermFunc(rt)));
                   }
-               } else if( !IsWild(&(first->d)) &&
+               }else if(!IsWild(&(first->d)) &&
                          CmpDimen(&(first->d),Dimensionless()) ) {
-                  if( *con ) *con = FALSE;
-                  if (GCDN) {
-                    FPRINTF(ASCERR,"ERROR:  Function %s called with\n",
-                      FuncName(TermFunc(rt)));
-                    FPRINTF(ASCERR,"        dimensions ");
-                    WriteDimensions(ASCERR,&(first->d));
-                    FPRINTF(ASCERR,".\n");
+                  if(*con) *con = FALSE;
+                  if(GCDN){
+                    char *d1 = WriteDimensionString(&(first->d));
+                    ERRMSG("Function %s called with dimensions %s.",FuncName(TermFunc(rt)),d1);
+                    ASC_FREE(d1);
                   }
                }
                CopyDimensions(TrigDimension(),&(first->d));
@@ -349,17 +372,16 @@ static void apply_term_dimensions(CONST struct relation *rel,
       case e_power: /* fix me and add ipower */
          if( IsWild(&(second->d)) && !IsZero(second) ) {
             if( !*wild ) *wild = TRUE;
-            if (GCDN) {
-              FPRINTF(ASCERR,"ERROR:  Relation has wild dimensions\n");
-              FPRINTF(ASCERR,"        in exponent.\n");
+            if(GCDN){
+              ERRMSG("Relation has wild dimensions in exponent.");
             }
-         } else if( !IsWild(&(second->d)) &&
+         }else if(!IsWild(&(second->d)) &&
                    CmpDimen(&(second->d),Dimensionless()) ) {
             if( *con ) *con = FALSE;
             if (GCDN) {
-              FPRINTF(ASCERR,"ERROR:  Exponent has dimensions ");
-              WriteDimensions(ASCERR,&(second->d));
-              FPRINTF(ASCERR,".\n");
+              char *d1 = WriteDimensionString(&(second->d));
+              ERRMSG("Exponent has dimensions %s",d1);
+              ASC_FREE(d1);
             }
          }
          CopyDimensions(Dimensionless(),&(second->d));
@@ -387,17 +409,15 @@ static void apply_term_dimensions(CONST struct relation *rel,
                if( IsWild(&(first->d)) && !IsZero(first) ) {
                   if( !*wild ) *wild = TRUE;
                   if (GCDN) {
-                    FPRINTF(ASCERR,"ERROR: Relation has wild dimensions\n");
-                    FPRINTF(ASCERR,"       raised to a non-constant power.\n");
+                    ERRMSG("Relation has wild dimensions raised to a non-constant power.");
                   }
                } else if( !IsWild(&(first->d)) &&
                          CmpDimen(&(first->d),Dimensionless()) ) {
                   if( *con ) *con = FALSE;
                   if (GCDN) {
-                    FPRINTF(ASCERR,"ERROR:  Dimensions ");
-                    WriteDimensions(ASCERR,&(first->d));
-                    FPRINTF(ASCERR," are\n");
-                    FPRINTF(ASCERR,"       raised to a non-constant power.\n");
+                    char *d1 = WriteDimensionString(&(first->d));
+                    ERRMSG("Dimensions %s are raised to a non-constant power.",d1);
+                    ASC_FREE(d1);
                   }
                }
                CopyDimensions(Dimensionless(),&(first->d));
@@ -421,18 +441,16 @@ static void apply_term_dimensions(CONST struct relation *rel,
             /* first wild non-zero */
             if( IsWild(&(second->d)) && !IsZero(second) ) {
                /* second wild non-zero */
-               if( !*wild ) *wild = TRUE;
-               if (GCDN) {
-                 FPRINTF(ASCERR,"ERROR:  %s has wild dimensions on left and right hand sides.\n",
-                       type==e_plus ? "Addition":"Subtraction");
+               if(!*wild ) *wild = TRUE;
+               if(GCDN) {
+                 ERRMSG("%s has wild dimensions on left and right hand sides.",type==e_plus ? "Addition":"Subtraction");
                }
                first->type = type;
             } else if( !IsWild(&(second->d)) ) {
                /* second not wild */
-               if( !*wild ) *wild = TRUE;
-               if (GCDN) {
-                 FPRINTF(ASCERR,"ERROR:  %s has wild dimensions on left hand side.\n",
-                       type==e_plus ? "Addition":"Subtraction");
+               if(!*wild)*wild = TRUE;
+               if(GCDN){
+                 ERRMSG("%s has wild dimensions on left hand side.",type==e_plus ? "Addition":"Subtraction");
                }
                CopyDimensions(&(second->d),&(first->d));
                first->type = type;
@@ -443,8 +461,7 @@ static void apply_term_dimensions(CONST struct relation *rel,
                /* second wild non-zero */
                if( !*wild ) *wild = TRUE;
                if (GCDN) {
-                 FPRINTF(ASCERR,"ERROR:  %s has wild dimensions on right hand side.\n",
-                       type==e_plus ? "Addition":"Subtraction");
+                 ERRMSG("%s has wild dimensions on right hand side.",type==e_plus ? "Addition":"Subtraction");
                }
                first->type = type;
             } else if ( !IsWild(&(second->d)) ) {
@@ -452,12 +469,12 @@ static void apply_term_dimensions(CONST struct relation *rel,
                if( CmpDimen(&(first->d),&(second->d)) ) {
                   if( *con ) *con = FALSE;
                   if (GCDN) {
-                    FPRINTF(ASCERR,"ERROR:  %s has dimensions ",
-                      type==e_plus ? "Addition":"Subtraction");
-                    WriteDimensions(ASCERR,&(first->d));
-                    FPRINTF(ASCERR," on left and dimensions ");
-                    WriteDimensions(ASCERR,&(second->d));
-                    FPRINTF(ASCERR," on right.\n");
+                    char *d1 = WriteDimensionString(&(first->d));
+                    char *d2 = WriteDimensionString(&(second->d));
+                    ERRMSG("%s has dimensions %s on left and dimensions %s on right."
+                        ,type==e_plus ? "Addition":"Subtraction", d1, d2);
+                    ASC_FREE(d1);
+                    ASC_FREE(d2);
                   }
                }
                first->type = type;
@@ -466,7 +483,7 @@ static void apply_term_dimensions(CONST struct relation *rel,
          break;
 
       default:
-         FPRINTF(ASCERR,"ERROR:  Unknown relation term type.\n");
+         ERRMSG("Unknown relation term type.");
          if( *con ) *con = FALSE;
          first->type = type;
          break;
@@ -474,12 +491,13 @@ static void apply_term_dimensions(CONST struct relation *rel,
 }
 
 /**
-	@TODO what this does needs to be documented here
-
-	UNUSED FUNCTION??
+	Check a relation instance for dimensional consistency. Gives user an
+	error for example if attempting to add a length to a temperature, or
+	take the sine or log of anything by a dimensionless quantity.
+	
+	This function is called by `chkdim_check_relation`.
 */
-int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens)
-{
+int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens){
   CONST struct relation *rel;
   enum Expr_enum reltype= 0;
   struct dimnode *stack, *sp;
@@ -488,7 +506,7 @@ int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens)
   int consistent = TRUE;
   int wild = FALSE;
   unsigned long c, len;
-
+  
   rel = GetInstanceRelation(relinst, &reltype);
   if ( !IsWild(RelationDim(rel)) ) { /* don't do this twice */
     CopyDimensions(RelationDim(rel),dimens);
@@ -506,8 +524,7 @@ int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens)
     return( !IsWild(dimens) );
   }
   /* else token relation */
-  sp = stack = (struct dimnode *)
-    ascmalloc(RelationDepth(rel)*sizeof(struct dimnode));
+  sp = stack = ASC_NEW_ARRAY(struct dimnode,RelationDepth(rel));
   switch( RelationRelop(rel) ) {
   case e_less:
   case e_lesseq:
@@ -521,7 +538,7 @@ int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens)
       struct relation_term *rt;
       rt = (struct relation_term *)RelationTerm(rel,c,TRUE);
       sp += 1-ArgsForRealToken(RelationTermType(rt));
-      apply_term_dimensions(rel,rt,sp-1,sp,&consistent,&wild);
+      apply_term_dimensions(relinst,rel,rt,sp-1,sp,&consistent,&wild);
     } /* stack[0].d contains the dimensions of the lhs expression */
 
     /* Now working on the right-hand_side */
@@ -530,31 +547,31 @@ int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens)
       struct relation_term *rt;
       rt = (struct relation_term *) RelationTerm(rel,c,FALSE);
       sp += 1-ArgsForRealToken(RelationTermType(rt));
-      apply_term_dimensions(rel,rt,sp-1,sp,&consistent,&wild);
+      apply_term_dimensions(relinst,rel,rt,sp-1,sp,&consistent,&wild);
     } /* stack[1].d contains the dimensions of the rhs expression */
 
     if( IsWild(&(stack[0].d)) || IsWild(&(stack[1].d)) ) {
       if( IsWild(&(stack[0].d)) && !IsZero(&(stack[0])) ) {
         if( !wild ) wild = TRUE;
         if (GCDN) {
-          FPRINTF(ASCERR,"ERROR:  Relation has wild dimensions on left hand side.\n");
+          ERRMSG("Relation has wild dimensions on left hand side.");
         }
       }
       if( IsWild(&(stack[1].d)) && !IsZero(&(stack[1])) ) {
         if( !wild ) wild = TRUE;
         if (GCDN) {
-          FPRINTF(ASCERR,"ERROR:  Relation has wild dimensions on right hand side.\n");
+          ERRMSG("Relation has wild dimensions on right hand side.");
         }
       }
     }else{
       if( CmpDimen(&(stack[0].d),&(stack[1].d)) ) {
         if( consistent ) consistent = FALSE;
         if (GCDN) {
-          FPRINTF(ASCERR,"ERROR:  Relation has dimensions ");
-          WriteDimensions(ASCERR,&(stack[0].d));
-          FPRINTF(ASCERR," on left and dimensions ");
-          WriteDimensions(ASCERR,&(stack[1].d));
-          FPRINTF(ASCERR," on right.\n");
+          char *d1 = WriteDimensionString(&(stack[0].d));
+          char *d2 = WriteDimensionString(&(stack[1].d));
+          ERRMSG("Relation has dimensions %s on left and dimensions %s on right.",d1,d2);
+          ASC_FREE(d1);
+          ASC_FREE(d2);
         }
       }
     }
@@ -567,19 +584,19 @@ int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens)
       struct relation_term *rt;
       rt = (struct relation_term *) RelationTerm(rel,c,TRUE);
       sp += 1-ArgsForRealToken(RelationTermType(rt));
-      apply_term_dimensions(rel,rt,sp-1,sp,&consistent,&wild);
+      apply_term_dimensions(relinst,rel,rt,sp-1,sp,&consistent,&wild);
     } /* stack[0].d contains the dimensions of the lhs expression */
 
     if( IsWild(&(stack[0].d)) && !IsZero(&(stack[0])) ) {
       if( !wild ) wild = TRUE;
-      if (GCDN) {
-        FPRINTF(ASCERR,"ERROR:  Objective has wild dimensions.\n");
+      if(GCDN){
+        ERRMSG("Objective has wild dimensions.");
       }
     }
     break;
 
   default:
-    FPRINTF(ASCERR,"ERROR:  Unknown relation type.\n");
+    ERRMSG("Unknown relation type.");
     if( consistent ) consistent = FALSE;
     break;
   }
@@ -587,6 +604,8 @@ int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens)
   ascfree(stack);
   return( consistent && !wild );
 }
+
+#undef ERRMSG
 
 /*------------------------------------------------------------------------------
   CALCULATION FUNCTIONS
@@ -4370,5 +4389,5 @@ static int  relutil_check_inst_and_res(struct Instance *i, double *res){
 
 #endif
 
-/* vim: set ts=2 et: */
+/* vim: set sw=2 ts=8 et: */
 

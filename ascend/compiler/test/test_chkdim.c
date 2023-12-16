@@ -141,21 +141,12 @@ static void test_chkdim1(){
 	slv_system_t sys = system_build(GetSimulationRoot(siminst));
 	CU_ASSERT_FATAL(sys != NULL);
 	
-	struct rel_relation **rels = slv_get_master_rel_list(sys);
-	CU_ASSERT(NULL!=rels);
+	int res = chkdim_check_system(sys);
 	
-	int32 numrels = slv_get_num_master_rels(sys);
-	
-	int OK = 1;
-	for(int32 i=0; i<numrels; ++i){
-		struct Instance *inst = rels[i]->instance;
-		MSG("relinst = %p",inst);
-		int res = chkdim_check_relation(inst); // returns 0 on success
-		OK &= !res;
-		MSG("res = %d",res);
+	if(res){
+		MSG("error(s) were successfully detected");
 	}
-	if(!OK){MSG("error(s) were successfully detected");}
-	CU_ASSERT(!OK);
+	CU_ASSERT(res != 0);
 
 	if(sys)system_destroy(sys);
 	system_free_reused_mem();

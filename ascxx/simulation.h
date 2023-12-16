@@ -96,6 +96,7 @@ public:
 	void checkTokens();
 	void checkStructure();
 	void checkStatistics();
+	void checkDimensions();
 
 	void build();
 
