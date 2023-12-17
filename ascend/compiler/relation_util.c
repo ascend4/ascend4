@@ -188,7 +188,9 @@ static int error_reporter_rel(const error_severity_t sev, const struct Instance 
   int lineno;
   get_relinst_location(inst,&filename,&lineno);
   va_start(args,fmt);
-  return va_error_reporter(sev,filename,lineno,NULL,fmt,args);
+  int res = va_error_reporter(sev,filename,lineno,NULL,fmt,args);
+  va_end(args);
+  return res;
 }
 
 #ifdef ERRMSG
