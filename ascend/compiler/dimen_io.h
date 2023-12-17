@@ -50,9 +50,18 @@
 	dimen given.
 	
 	FIXME this function does not correctly output things like fractional powers,
-	which affects reporting of dimensionality errors (as of Dec 2023)
+	which affects reporting of dimensionality errors (as of Dec 2023). Integer
+	powers are fine, and integer powers are somehow all that ASCEND aims to 
+	support (although TODO document where that design decision is enforced)
  */
 ASC_DLLSPEC char *WriteDimensionString(CONST dim_type *p);
+
+/**
+	Write the 'canonical, indigestible' form as a string. The caller owns
+	the returned string and must free it. This function is useful for 
+	clearer error messages from chkdim_check_system.
+*/
+ASC_DLLSPEC char *WriteDimensionStringFull(CONST dim_type *p);
 
 /**
  * Write the canonical, indigestible form of the dimen with

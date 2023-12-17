@@ -172,7 +172,7 @@ void get_relinst_location(const struct Instance *relinst, const char **filename,
   *filename = NULL;
   *lineno = 0;
   
-  MSG("finding file/line of relinst %p",relinst);
+  //MSG("finding file/line of relinst %p",relinst);
   struct Instance *p = InstanceParent(relinst,1);
   
   unsigned long ci = ChildIndex(p,relinst);
@@ -294,7 +294,7 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
                   if(GCDN){
                     MSG("function arg dimensions are:");
                     WriteDimensions(ASCERR,&(first->d));
-                    char *d1 = WriteDimensionString(&(first->d));
+                    char *d1 = WriteDimensionStringFull(&(first->d));
                     ERRMSG("Function %s called with dimensions %s.",FuncName(TermFunc(rt)),d1);
                     ASC_FREE(d1);
                   }
@@ -319,7 +319,7 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
                          CmpDimen(&(first->d),TrigDimension()) ) {
                   if(*con) *con = FALSE;
                   if(GCDN){
-                    char *d1 = WriteDimensionString(&(first->d));
+                    char *d1 = WriteDimensionStringFull(&(first->d));
                     ERRMSG("Function %s called with dimensions %s (should be plane angle, P).",FuncName(TermFunc(rt)),d1);
                     ASC_FREE(d1);
                   }
@@ -345,7 +345,7 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
                          CmpDimen(&(first->d),Dimensionless()) ) {
                   if(*con) *con = FALSE;
                   if(GCDN){
-                    char *d1 = WriteDimensionString(&(first->d));
+                    char *d1 = WriteDimensionStringFull(&(first->d));
                     ERRMSG("Function %s called with dimensions %s.",FuncName(TermFunc(rt)),d1);
                     ASC_FREE(d1);
                   }
@@ -381,7 +381,7 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
                    CmpDimen(&(second->d),Dimensionless()) ) {
             if(*con)*con=FALSE;
             if(GCDN){
-              char *d1 = WriteDimensionString(&(second->d));
+              char *d1 = WriteDimensionStringFull(&(second->d));
               ERRMSG("Exponent has dimensions %s",d1);
               ASC_FREE(d1);
             }
@@ -417,7 +417,7 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
                          CmpDimen(&(first->d),Dimensionless()) ) {
                   if(*con)*con=FALSE;
                   if(GCDN){
-                    char *d1 = WriteDimensionString(&(first->d));
+                    char *d1 = WriteDimensionStringFull(&(first->d));
                     ERRMSG("Dimensions %s are raised to a non-constant power.",d1);
                     ASC_FREE(d1);
                   }
@@ -471,8 +471,8 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
                if( CmpDimen(&(first->d),&(second->d)) ) {
                   if(*con)*con=FALSE;
                   if(GCDN){
-                    char *d1 = WriteDimensionString(&(first->d));
-                    char *d2 = WriteDimensionString(&(second->d));
+                    char *d1 = WriteDimensionStringFull(&(first->d));
+                    char *d2 = WriteDimensionStringFull(&(second->d));
                     ERRMSG("%s has dimensions %s on left and dimensions %s on right."
                         ,type==e_plus ? "Addition":"Subtraction", d1, d2);
                     ASC_FREE(d1);
@@ -570,14 +570,14 @@ int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens){
       if( CmpDimen(&(stack[0].d),&(stack[1].d)) ) {
         if( consistent ) consistent = FALSE;
         if(GCDN){
-          MSG("Dimension of left:");
-          WriteDimensions(ASCERR,&(stack[0].d));
-          FPRINTF(ASCERR,"\n");
-          MSG("Dimension of right:");
-          WriteDimensions(ASCERR,&(stack[1].d));
-          FPRINTF(ASCERR,"\n");
-          char *d1 = WriteDimensionString(&(stack[0].d));
-          char *d2 = WriteDimensionString(&(stack[1].d));
+          //MSG("Dimension of left:");
+          //WriteDimensions(ASCERR,&(stack[0].d));
+          //FPRINTF(ASCERR,"\n");
+          //MSG("Dimension of right:");
+          //WriteDimensions(ASCERR,&(stack[1].d));
+          //FPRINTF(ASCERR,"\n");
+          char *d1 = WriteDimensionStringFull(&(stack[0].d));
+          char *d2 = WriteDimensionStringFull(&(stack[1].d));
           ERRMSG("Relation has inconsistent dimensions %s on left and dimensions %s on right.",d1,d2);
           ASC_FREE(d1);
           ASC_FREE(d2);

@@ -770,7 +770,11 @@ CONST struct Units *FindOrDefineUnits(CONST char *c,
   return result;
 }
 
-
+/*
+  Note that the use of GetDimPower in this function implies some
+  'approximation' to the true dimensions recorded. Only integer powers
+  get reported, so something like y = sqrt(T) would end up with units of [1].
+*/
 char *UnitsStringSI(const struct Units *p){
   Asc_DString ds, *dsPtr;
   char expo[20];
