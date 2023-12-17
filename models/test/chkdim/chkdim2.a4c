@@ -37,3 +37,35 @@ METHODS
 		FIX x := 3 {m};
 	END on_load;
 END chkdim5;
+
+MODEL chkdim6;
+	Re IS_A factor;
+	d IS_A distance;
+	U IS_A speed;
+	mu IS_A viscosity;
+	rho IS_A mass_density;
+	Re = rho*U*d * mu;
+METHODS
+	METHOD on_load;
+		FIX d := 1 {m};
+		FIX rho := 1.2 {kg/m^3};
+		FIX mu := 1e-6 {Pa*s};
+		FIX U := 60 {km/h};
+	END on_load;
+END chkdim6;
+
+MODEL chkdim7; (* no error *)
+	Re IS_A factor;
+	d IS_A distance;
+	U IS_A speed;
+	mu IS_A viscosity;
+	rho IS_A mass_density;
+	Re = rho*U*d / mu;
+METHODS
+	METHOD on_load;
+		FIX d := 1 {m};
+		FIX rho := 1.2 {kg/m^3};
+		FIX mu := 1e-6 {Pa*s};
+		FIX U := 60 {km/h};
+	END on_load;
+END chkdim7;

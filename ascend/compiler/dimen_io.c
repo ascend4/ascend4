@@ -90,7 +90,7 @@ static void WriteDimPowerString(Asc_DString *dp, const char *dim, const struct f
     if(Numerator(frac)==1){
       sprintf(expo,"%s",dim);
     }else{
-      sprintf(expo,"%s^%d",dim,Numerator(frac));
+      sprintf(expo,"%s^%d",dim,Numerator(frac)>0 ? Numerator(frac) : -Numerator(frac));
     }
   }else{
     sprintf(expo,"%s^(%d/%d)",dim,Numerator(frac)>0 ? Numerator(frac) : -Numerator(frac), Denominator(frac));

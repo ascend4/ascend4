@@ -186,6 +186,19 @@ static void test_chkdim5(){
 	test_dimen_errors(f,m,TRUE);
 }
 
+static void test_chkdim6(){
+	char *f="test/chkdim/chkdim2.a4c";
+	char *m="chkdim6";
+	test_dimen_errors(f,m,TRUE);
+}
+
+static void test_chkdim7(){
+	char *f="test/chkdim/chkdim2.a4c";
+	char *m="chkdim7";
+	test_dimen_errors(f,m,FALSE);
+}
+
+
 /*===========================================================================*/
 /* Registration information */
 
@@ -196,7 +209,9 @@ static void test_chkdim5(){
 	T(chkdim2) \
 	T(chkdim3) \
 	T(chkdim4) \
-	T(chkdim5)
+	T(chkdim5) \
+	T(chkdim6) \
+	T(chkdim7) 
 
 REGISTER_TESTS_SIMPLE(compiler_chkdim, TESTS)
 
