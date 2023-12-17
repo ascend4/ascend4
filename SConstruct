@@ -2243,13 +2243,12 @@ if conf.env['WITH_TCLTK']:
 	if conf.CheckTcl():
 		if conf.CheckTclVersion():
 			if conf.CheckTk():
-				if with_tcltk and conf.CheckTkVersion():
+				if conf.CheckTkVersion():
 					if conf.env['STATIC_TCLTK']:
 						if conf.CheckTkTable():
 							pass
 						else:
-							without_tcltk_reason = "TkTable not found"
-							with_tcltk = False
+							conf.env.set_optional('tcltk',active=False,reason="TkTable not found")
 				else:
 					conf.env.set_optional('tcltk',active=False,reason="Require Tk version <= 8.4. See 'scons -h'")
 			else:

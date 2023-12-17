@@ -33,7 +33,8 @@
 	T(symtab) \
 	T(qlfdid) \
 	T(func) \
-	T(notes)
+	T(notes) \
+	T(chkdim)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)

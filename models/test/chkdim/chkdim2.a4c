@@ -1,0 +1,71 @@
+REQUIRE "atoms.a4l";
+
+MODEL chkdim2;
+	x, y IS_A distance;
+	y = 5 * sin(x);
+METHODS
+	METHOD on_load;
+		FIX x := 3{m};
+	END on_load;
+END chkdim2;
+
+MODEL chkdim3;
+	x, y IS_A distance;
+	y = x^0.5;
+METHODS
+	METHOD on_load;
+		FIX x := 3{m};
+	END on_load;
+END chkdim3;
+
+MODEL chkdim4;
+	(* FIXME this one throws a nonsense error message *)
+	x IS_A temperature;
+	y IS_A factor;
+	y = x^0.5;
+METHODS
+	METHOD on_load;
+		FIX y := 42;
+	END on_load;
+END chkdim4;
+
+MODEL chkdim5;
+	x, y IS_A distance;
+	x = sin(y);
+METHODS
+	METHOD on_load;
+		FIX x := 3 {m};
+	END on_load;
+END chkdim5;
+
+MODEL chkdim6;
+	Re IS_A factor;
+	d IS_A distance;
+	U IS_A speed;
+	mu IS_A viscosity;
+	rho IS_A mass_density;
+	Re = rho*U*d * mu;
+METHODS
+	METHOD on_load;
+		FIX d := 1 {m};
+		FIX rho := 1.2 {kg/m^3};
+		FIX mu := 1e-6 {Pa*s};
+		FIX U := 60 {km/h};
+	END on_load;
+END chkdim6;
+
+MODEL chkdim7; (* no error *)
+	Re IS_A factor;
+	d IS_A distance;
+	U IS_A speed;
+	mu IS_A viscosity;
+	rho IS_A mass_density;
+	Re = rho*U*d / mu;
+METHODS
+	METHOD on_load;
+		FIX d := 1 {m};
+		FIX rho := 1.2 {kg/m^3};
+		FIX mu := 1e-6 {Pa*s};
+		FIX U := 60 {km/h};
+	END on_load;
+END chkdim7;

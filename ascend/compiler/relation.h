@@ -52,6 +52,8 @@
 #ifndef ASC_RELATION_H
 #define ASC_RELATION_H
 
+#include "instance_enum.h"
+#include "rel_blackbox.h"
 #include "relerr.h"
 
 /**	@addtogroup compiler_rel Compiler Relations

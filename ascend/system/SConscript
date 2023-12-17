@@ -3,7 +3,9 @@ Import('libascend_env')
 
 csrcs = Split("""
 	analyze.c block.c
-	bnd.c bndman.c calc.c cond_config.c
+	bnd.c bndman.c calc.c 
+	chkdim.c
+	cond_config.c
 	conditional.c discrete.c
 	diffvars.c
 	jacobian.c

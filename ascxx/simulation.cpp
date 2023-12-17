@@ -39,6 +39,7 @@ extern "C"{
 #include <ascend/compiler/instance_enum.h>
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/check.h>
+#include <ascend/system/chkdim.h>
 #include <ascend/compiler/name.h>
 #include <ascend/compiler/pending.h>
 #include <ascend/compiler/importhandler.h>
@@ -374,6 +375,25 @@ void
 Simulation::checkStatistics(){
 	Instance *i1 = getModel().getInternalType();
 	InstanceStatistics(stderr, &*i1);
+}
+
+
+void 
+Simulation::checkDimensions(){
+	try{
+		// build the system (if not built already)
+		build();
+	}catch(runtime_error &e){
+		stringstream ss;
+		ss << "Couldn't build system:";
+		ss << e.what();
+		throw runtime_error(ss.str());
+	}
+	int res = chkdim_check_system(sys);
+	if(res){
+		throw runtime_error("Dimensionality check failed.");
+	}
+	ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"Model dimensionality is OK.");
 }
 
 

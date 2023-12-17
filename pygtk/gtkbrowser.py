@@ -922,6 +922,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 					_dialog.run()
 			else:
 				self.reporter.reportNote("System DoF check OK")
+				
+			status = self.sim.checkDimensions()
 
 		except RuntimeError as e:
 			self.stop_waiting()
