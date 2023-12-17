@@ -126,6 +126,9 @@ static void asc_va_panic(const int status, const char *filename, const int line
 		);
 	}
 #endif
+
+	va_end(args2);
+	va_end(args);
 }
 
 /**

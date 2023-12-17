@@ -697,6 +697,7 @@ void WriteStatementError(const error_severity_t sev
 	va_copy(args2,args);
 	vfprintf_error_reporter(ASCERR,fmt,&args2);
 	va_end(args);
+	va_end(args2);
 	if(outputstatement){
 		FPRINTF(ASCERR,"\n");
 		WriteStatement(ASCERR,stat,4);
