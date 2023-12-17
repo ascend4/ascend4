@@ -46,8 +46,11 @@
 */
 
 /**
- * Write the human readable and parser edible string form of the
- * dimen given.
+	Write the human readable and parser edible string form of the
+	dimen given.
+	
+	FIXME this function does not correctly output things like fractional powers,
+	which affects reporting of dimensionality errors (as of Dec 2023)
  */
 ASC_DLLSPEC char *WriteDimensionString(CONST dim_type *p);
 

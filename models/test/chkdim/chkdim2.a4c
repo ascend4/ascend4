@@ -1,0 +1,39 @@
+REQUIRE "atoms.a4l";
+
+MODEL chkdim2;
+	x, y IS_A distance;
+	y = 5 * sin(x);
+METHODS
+	METHOD on_load;
+		FIX x := 3{m};
+	END on_load;
+END chkdim2;
+
+MODEL chkdim3;
+	x, y IS_A distance;
+	y = x^0.5;
+METHODS
+	METHOD on_load;
+		FIX x := 3{m};
+	END on_load;
+END chkdim3;
+
+MODEL chkdim4;
+	(* FIXME this one throws a nonsense error message *)
+	x IS_A temperature;
+	y IS_A factor;
+	y = x^0.5;
+METHODS
+	METHOD on_load;
+		FIX y := 42;
+	END on_load;
+END chkdim4;
+
+MODEL chkdim5;
+	x, y IS_A distance;
+	x = sin(y);
+METHODS
+	METHOD on_load;
+		FIX x := 3 {m};
+	END on_load;
+END chkdim5;

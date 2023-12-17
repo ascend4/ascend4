@@ -55,6 +55,7 @@
 #include <ascend/system/slv_client.h>
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_server.h>
+#include <ascend/system/chkdim.h>
 
 #include <test/common.h>
 #include <test/common.h>
@@ -94,23 +95,14 @@
 	CU_ASSERT(sys != NULL);
 */
 
-static void test_chkdim1(){
-	char *modelfile="test/chkdim/chkdim1.a4c";
-	char *modelname="chkdim1";
-	int simplify=0;
-	const char *librarypath="models";
+static void test_dimen_errors(const char *modelfile, const char *modelname, int shouldfail){
+	int simplify=1;
 
-	char env1[2*PATH_MAX];
-	int status;
-
-	Asc_CompilerInit(1);
+	Asc_CompilerInit(simplify);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
 
-	//int qrslv_index;
-	//package_load("qrslv",NULL);
-	//qrslv_index = slv_lookup_client("QRSlv");
-	//CU_ASSERT_FATAL(qrslv_index != -1);
+	int status;
 
 	/* load the model file */
 	Asc_OpenModule(modelfile,&status);
@@ -142,11 +134,18 @@ static void test_chkdim1(){
 	CU_ASSERT_FATAL(sys != NULL);
 	
 	int res = chkdim_check_system(sys);
-	
-	if(res){
-		MSG("error(s) were successfully detected");
+
+	if(shouldfail){
+		if(res){
+			MSG("error(s) detected file %s, model %s, as expected",modelfile,modelname);
+		}
+		CU_ASSERT(res != 0);
+	}else{
+		if(!res){
+			MSG("no errors in file %s, model %s, as expected",modelfile,modelname);
+		}
+		CU_ASSERT(res == 0);
 	}
-	CU_ASSERT(res != 0);
 
 	if(sys)system_destroy(sys);
 	system_free_reused_mem();
@@ -157,6 +156,35 @@ static void test_chkdim1(){
 	Asc_CompilerDestroy();
 }
 
+static void test_chkdim1(){
+	char *f="test/chkdim/chkdim1.a4c";
+	char *m="chkdim1";
+	test_dimen_errors(f,m,TRUE);
+}
+
+static void test_chkdim2(){
+	char *f="test/chkdim/chkdim2.a4c";
+	char *m="chkdim2";
+	test_dimen_errors(f,m,TRUE);
+}
+
+static void test_chkdim3(){
+	char *f="test/chkdim/chkdim2.a4c";
+	char *m="chkdim3";
+	test_dimen_errors(f,m,TRUE);
+}
+
+static void test_chkdim4(){
+	char *f="test/chkdim/chkdim2.a4c";
+	char *m="chkdim4";
+	test_dimen_errors(f,m,TRUE);
+}
+
+static void test_chkdim5(){
+	char *f="test/chkdim/chkdim2.a4c";
+	char *m="chkdim5";
+	test_dimen_errors(f,m,TRUE);
+}
 
 /*===========================================================================*/
 /* Registration information */
@@ -164,7 +192,11 @@ static void test_chkdim1(){
 /* the list of tests */
 
 #define TESTS(T) \
-	T(chkdim1)
+	T(chkdim1) \
+	T(chkdim2) \
+	T(chkdim3) \
+	T(chkdim4) \
+	T(chkdim5)
 
 REGISTER_TESTS_SIMPLE(compiler_chkdim, TESTS)
 

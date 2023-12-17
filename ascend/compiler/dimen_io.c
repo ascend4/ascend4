@@ -24,11 +24,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "dimen_io.h"
+
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/dstring.h>
+#include <ascend/utilities/error.h>
 
-#include "dimen_io.h"
 
 static
 void WriteFrac(FILE *f, struct fraction frac, CONST char *str, int *CONST p)
@@ -67,6 +69,7 @@ char *WriteDimensionString(CONST dim_type *p)
   int numseen = 0, i, k;
   char expo[40];
   if (p==NULL) {
+    CONSOLE_DEBUG("writing dimensions for NULL?");
     return NULL;
   }
   if (IsWild(p)) {
