@@ -695,7 +695,7 @@ void WriteStatementError(const error_severity_t sev
 	error_reporter_start(sev,Asc_ModuleFileName(stat->mod),stat->linenum,SCP(StatementTypeString(stat)));
 	va_start(args,fmt);
 	va_copy(args2,args);
-	vfprintf_error_reporter(ASCERR,fmt,&args2);
+	vfprintf_error_reporter(ASCERR,fmt,args2);
 	va_end(args);
 	va_end(args2);
 	if(outputstatement){
