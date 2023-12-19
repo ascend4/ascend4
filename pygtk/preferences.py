@@ -17,7 +17,6 @@ class Preferences:
 		return cls._instance
 
 	def load_preferences(self):
-		print("LOADING PREFERENCES\n\n")
 		try:
 			if platform.system()=="Windows":
 				self.fn = Path(os.environ['APPDATA']) / "ascend-config.yml"
@@ -44,7 +43,6 @@ class Preferences:
 		self.preferences[key] = value
 
 	def save_preferences(self):
-		print("SAVING PREFERENCES\n\n")
 		# we won't save preferences if another ascend has saved them since we loaded (not sure what's best here)
 		latest_mtime = self.fn.stat().st_mtime if self.fn.exists() else 0
 		if latest_mtime == self.mtime:

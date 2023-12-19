@@ -21,7 +21,18 @@ def run_ascend_model(filen,model=None,printvars=None,test=True):
 	L.load(str(filen))
 	if model is None:
 		model = filen.stem
-	T = L.findType(model)
+	try:
+		T = L.findType(model)
+	except RuntimeError as e:
+		print(e)
+		from pathlib import Path
+		for M in L.getModules():
+			if Path(M.getFilename()) == Path(filen):
+				print(f"Module {M.getFilename()} contains:")
+				for m in L.getModuleTypes(M):
+					print(f"  {m}")	
+		sys.exit(2)
+		
 	M = T.getSimulation('sim',True) # run default method = True
 	M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
 	
