@@ -31,7 +31,7 @@ MODEL stream_state_thermophysical REFINES stream_state;
 	k IS_A thermal_conductivity;
 	mu IS_A viscosity;
 	rho IS_A mass_density;
-	rho = 1. / v;
+	dens: rho = 1. / v;
 
 	calc_mu: fprops_mu(
 		T, rho : INPUT;

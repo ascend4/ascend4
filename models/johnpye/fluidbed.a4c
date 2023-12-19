@@ -1,8 +1,32 @@
 REQUIRE "johnpye/shapes.a4c";
 REQUIRE "johnpye/thermo_types.a4c";
 REQUIRE "johnpye/airprops2.a4c";
+REQUIRE "johnpye/fprops/thermophys.a4c";
 
-MODEL fluidbed;
+(*
+MODEL hydrogen REFINES thermophysical_fluid_base;
+	state IS_A stream_state_thermophysical;
+	cd ALIASES state.cd;
+	cd.component :== 'hydrogen';
+	cd.type :== 'helmholtz';
+	T, state.T ARE_THE_SAME;
+	p, state.T ARE_THE_SAME;
+	v, state.v ARE_THE_SAME;
+	s, state.s ARE_THE_SAME;
+	mu, state.mu ARE_THE_SAME;
+	k, state.k ARE_THE_SAME;
+	rho, state.rho ARE_THE_SAME;
+
+	(* TODO cp, x *)
+METHODS
+	METHOD default;
+		RUN state.default;
+		state.dens.included := FALSE; (* redundant equation *)
+	END default;	
+END hydrogen;
+*)
+
+MODEL fluidbed_base;
 	T IS_A temperature;
 	p IS_A pressure;
 	
@@ -52,8 +76,13 @@ MODEL fluidbed;
 	rich_zaki: U_mf = U_t * eps_mf^n;
 	
 	(* pressure drop is based on equilibrium of forces; gravity on pcls' mass *)
-	DP_mf "pressure drop in the bed" IS_A delta_pressure;
+	DP_mf "pressure drop in the bed at min. fluidisation" IS_A delta_pressure;
 	DP_mf = -m_p * 1{EARTH_G} / chamber.end.A;
+	
+	F_grav, F_pres, F_mom IS_A force;
+	F_grav = -m_p * 1{EARTH_G};
+	F_pres = DP_mf * chamber.end.A;
+	F_mom = mdot_mf * U_mf * ( 1 - (p + DP_mf) / p);
 	
 	(* distributor plate *)
 
@@ -79,11 +108,16 @@ MODEL fluidbed;
 	
 	(* stirring effect, Kunii, p. 106 *)
 	alpha IS_A factor; 
-	alpha * -DP_mf * 1{EARTH_G} = 0.5 * fluid.rho * U_hole^2;
+	alpha * -DP_mf * 1{EARTH_G} = 0.5 * fluid.rho * U_hole^2; (* DIMENSIONALITY ERROR HERE *)
 	
-END fluidbed;
+	(* Stewart and Davidson onset of slugging https://doi.org/10.1016/0032-5910(67)80014-7 *)
+	U_sf IS_A speed;
+	U_sf - U_mf = 0.2 * 0.35 * (1{EARTH_G} * chamber.d)^0.5;
+	(* =also referenced in Baeyens & Geldart https://doi.org/10.1016/0009-2509(74)85051-7 *)
+	
+END fluidbed_base;
 
-MODEL fluidbed_test_air REFINES fluidbed;
+MODEL fluidbed_test_air REFINES fluidbed_base;
 	fluid IS_REFINED_TO air_fluid;
 METHODS	
 	METHOD on_load;
@@ -99,7 +133,7 @@ METHODS
 		FIX p := 1 {atm};
 		FIX m_p := 400 {g};
 		FIX d_p := 500 {um};
-		FIX rho_p := 3500 {kg/m^3};
+		FIX rho_p := 3500 {kg/m^3}; (* effective density from Spreitzer *)
 		FIX chamber.L := 500 {mm};
 		FIX psi_s := 0.86;
 		FIX r_DP := 0.25;

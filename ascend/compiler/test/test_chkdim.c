@@ -198,6 +198,11 @@ static void test_chkdim7(){
 	test_dimen_errors(f,m,FALSE);
 }
 
+static void test_chkdim8(){
+	char *f="test/chkdim/chkdim2.a4c";
+	char *m="shape_circle";
+	test_dimen_errors(f,m,FALSE);
+}
 
 /*===========================================================================*/
 /* Registration information */
@@ -211,7 +216,8 @@ static void test_chkdim7(){
 	T(chkdim4) \
 	T(chkdim5) \
 	T(chkdim6) \
-	T(chkdim7) 
+	T(chkdim7) \
+	T(chkdim8)
 
 REGISTER_TESTS_SIMPLE(compiler_chkdim, TESTS)
 

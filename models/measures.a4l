@@ -439,7 +439,7 @@ M_SQRT2=     {1.4142135623730950488E0};   (*  sqrt(2) *)
 M_SQRT1_2=   {7.0710678118654752440E-1};  (*  1/sqrt(2) *)
 
 eCHARGE = {1.602e-19*C};         (* Charge of an electron *)
-EARTH_G = {9.80665 * m/s/s};   (* Earth's gravitational field, somewhere *)
+EARTH_G = {9.80665 * m/s^2};   (* Earth's gravitational field, somewhere *)
 eMASS = {9.1095e-31*kg};   (* Electron rest mass, I suppose *)
 pMASS = {1.67265e-27*kg};  (* Proton mass *)
 

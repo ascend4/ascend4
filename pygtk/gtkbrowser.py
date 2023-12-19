@@ -1189,7 +1189,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			filename = model.get_value(iter,5)
 			line = model.get_value(iter,6)
 			if filename and line:
-				print("\nEDITING %s +%d" %(filename,line))
+				#print("\nEDITING %s +%d" %(filename,line))
 				# TODO add more checks to ensure the editor is available, etc.
 				editor = self.prefs.getStringPref("Browser","editor","gedit")
 				subprocess.Popen([editor,filename,'+%d'%(line,)])

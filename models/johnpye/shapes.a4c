@@ -41,6 +41,7 @@ MODEL shape_annulus REFINES shape_generic;
 END shape_annulus;
 
 MODEL shape_cylinder REFINES shape_generic;
+	(* area of just the curved face *)
 	name :== 'cylinder';
 	d "diameter" IS_A distance;
 	L "length" IS_A distance;

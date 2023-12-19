@@ -69,3 +69,15 @@ METHODS
 		FIX U := 60 {km/h};
 	END on_load;
 END chkdim7;
+
+MODEL shape_generic;
+	A IS_A area;
+	name IS_A symbol_constant;
+END shape_generic;
+
+MODEL shape_circle REFINES shape_generic;
+	name :== 'circle';
+	d "internal diameter" IS_A distance;
+	A_circ_eq: A = 0.25{PI} * d^2;
+END shape_circle;
+

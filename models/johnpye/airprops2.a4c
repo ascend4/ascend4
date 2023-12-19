@@ -55,16 +55,16 @@ MODEL air_fluid REFINES thermophysical_fluid_base;
 	h_eq: (h - h_cor) * M = 1{kJ/kmol} * SUM[c[i]/(i+1) * (T/1{K})^(i+1) | i IN [0..n-1]];
 
 	(* entropy is the integral of (cp(T)/T)*dT over a temperature range, with s_cor being the offset *)
-	s_eq: (s - s_cor) * M = 1{kJ/kmol/K} * c[0]*ln(T/1{K}) - R*M*ln(p/1{Pa}) + SUM[c[i]/i * (T/1{K})^i | i IN [1..n-1]];
+	s_eq: (s - s_cor) * M = 1{kJ/kmol/K} * ( c[0]*ln(T/1{K}) + SUM[c[i]/i * (T/1{K})^i | i IN [1..n-1]]) - R*M*ln(p/1{Pa});
 
 	(* viscosity from Lo et al, 1966, doi:10.1021/je60031a020, with ideal gas EOS for dpdT_v *)
 	mustar IS_A viscosity;
-	z1_eq: mustar = 4.38e-2{cP} * (1.01e-3 * T - 0.093)^(5./9);
-	dpdT_v IS_A solver_var;
-	z2_eq: mu - mustar = 5.76e-3{cP} * (dpdT_v/1{atm})^1.126;
+	z1_eq: mustar = 4.38e-2{cP} * (1.01e-3 * T/1{K} - 0.093)^(5./9); (* Fig. 1 *)
+	dpdT_v IS_A pressure_per_temperature;
+	z2_eq: mu - mustar = 5.76e-3{cP} * (dpdT_v/1{atm/K})^1.126; (* Fig. 2 *)
 	dpdT_v = rho * R;
 
-	(* conductivity, from Kadoya et al, doi:10.1063/1.555744, using ideal EOS because of use of rho in calc *)
+	(* thermal conductivity, from Kadoya et al, doi:10.1063/1.555744, using ideal EOS because of use of rho in calc *)
 	cc[-4..0,1,5] IS_A real_constant;
 	cc[1] :== 0.239503;
 	cc[5] :== 0.00649768;

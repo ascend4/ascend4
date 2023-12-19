@@ -446,6 +446,13 @@ END length_parameter;
         nominal := 50 {Pa/m};
     END pressure_per_length;
   
+    ATOM pressure_per_temperature REFINES solver_var
+        DIMENSION M/L/T^2/TMP
+        DEFAULT 10 {kPa/K};
+        lower_bound := -1e20{kPa/K};
+        upper_bound := +1e20{kPa/K};
+        nominal := 50 {kPa/K};
+    END pressure_per_temperature;
 
 (*  M A S S / M O L E  Q U A N T I T I E S
     --------------------------------------  *)

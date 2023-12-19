@@ -61,7 +61,7 @@
 #include "instmacro.h"
 #include "statement.h"
 
-#define RELUTIL_DEBUG
+//#define RELUTIL_DEBUG
 #ifdef RELUTIL_DEBUG
 # include "relation_io.h"
 # include "exprio.h"
@@ -90,7 +90,7 @@ static struct relation *glob_rel;
 static int glob_varnum;
 static int glob_done;
 
-/* some data structurs...*/
+/* some data structures...*/
 
 struct dimnode {
    dim_type d;
@@ -168,7 +168,11 @@ static int  relutil_check_inst_and_res(struct Instance *i, double *res);
   DIMENSIONALITY CHECKS FOR RELATIONS
 */
 
-void get_relinst_location(const struct Instance *relinst, const char **filename, int *lineno){
+/**
+  Get the file and line for a relation Instance.
+  FIXME needs error checking/handling?
+*/
+static void get_relinst_location(const struct Instance *relinst, const char **filename, int *lineno){
   *filename = NULL;
   *lineno = 0;
   
@@ -182,6 +186,11 @@ void get_relinst_location(const struct Instance *relinst, const char **filename,
   *lineno = StatementLineNum(s);
 }
 
+/**
+  Reporting an sprintf-style error message with the filename and lineno
+  corresponding to a specified relation Instance. 
+  See also <ascend/utilities/error.h>.
+*/ 
 static int error_reporter_rel(const error_severity_t sev, const struct Instance *inst, const char *fmt,...){
   va_list args;
   const char *filename;
@@ -196,15 +205,23 @@ static int error_reporter_rel(const error_severity_t sev, const struct Instance 
 #ifdef ERRMSG
 # error ERRMSG defined?
 #endif
-
 #define ERRMSG(fmt,...) error_reporter_rel(ASC_USER_ERROR,relinst,fmt,## __VA_ARGS__)
 
 /**
-	This function is called on by RelationCheckDimensions.
-	
-	Not clear yet, but seems to be able updating variables and terms that
-	are marked as having 'wildcard' dimensions, once the dimension can be inferred
-	from other terms.
+  This function is called on by RelationCheckDimensions once for each
+  relation_term in the relation. Relation terms are basically nodes 
+  in the evaluation tree, including operations (+,-,* etc) and values
+  (constants, variables) and function (sin, ln, etc) and power (a^b).
+
+  Depending on the relation_term type, the optional 'first' and 'second'
+  arguments will be nodes on the 'dimnode' stack corresponding to the
+  already-calculated input expressions. They are processed togehter,
+  according to the relation_term's operation, and written out to the 'first'
+  dimnode as output.
+  
+  Since relation_terms can consume 0, 1 or 2 inputs (eg for constant, sin/log,
+  or +*-/ respectively, but will always produce one output, the stack can
+  increase or decrease as the traversal progresses.
 */
 static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct relation *rel,
 		struct relation_term *rt,
@@ -217,30 +234,35 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
 
    switch(type=RelationTermType(rt)) {
       case e_zero:
+         MSG("zero term");
          CopyDimensions(WildDimension(),&(first->d));
          first->real_const = 0.0;
          first->type = type;
          break;
 
       case e_int:
+         MSG("int term");
          CopyDimensions(Dimensionless(),&(first->d));
          first->int_const = (short)TermInteger(rt);
          first->type = type;
          break;
 
       case e_real:
+         MSG("real term");
          CopyDimensions(TermDimensions(rt),&(first->d));
          first->real_const = TermReal(rt);
          first->type = type;
          break;
 
       case e_var: {
+         MSG("var term");
          struct Instance *var = RelationVariable(rel,TermVarNumber(rt));
          CopyDimensions(RealAtomDims(var),&(first->d));
          first->type = type;
          break;
       }
       case e_func: {
+         MSG("func '%s' term",FuncName(TermFunc(rt)));
          enum Func_enum id = FuncId(TermFunc(rt));
          switch( id ) {
             case F_ABS:
@@ -294,8 +316,10 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
                          CmpDimen(&(first->d),Dimensionless()) ) {
                   if(*con) *con = FALSE;
                   if(GCDN){
+#if 0
                     MSG("function arg dimensions are:");
                     WriteDimensions(ASCERR,&(first->d));
+#endif
                     char *d1 = WriteDimensionStringFull(&(first->d));
                     ERRMSG("Function %s called with dimensions %s.",FuncName(TermFunc(rt)),d1);
                     ASC_FREE(d1);
@@ -360,37 +384,78 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
       }
 
       case e_uminus:
+         MSG("negation term");
          first->type = type;
          break;
 
       case e_times:
+         MSG("product term");
          first->d = AddDimensions(&(first->d),&(second->d));
          first->type = type;
          break;
 
       case e_divide:
+         MSG("division term");
          first->d = SubDimensions(&(first->d),&(second->d));
          first->type = type;
          break;
 
+      case e_ipower:
+         MSG("integer power term");
+         {
+            char *d1 = WriteDimensionStringFull(&(first->d));
+            MSG("first dim: %s",d1);
+            ASC_FREE(d1);
+         }
+         switch(second->type){
+         case e_int:
+            MSG("power is integer = %d",second->int_const);         
+            if(!IsWild(&(first->d)) &&
+               CmpDimen(&(first->d),Dimensionless())){
+               struct fraction power;
+               power = CreateFraction(second->int_const,1);
+#if 0
+               char *d1 = WriteDimensionStringFull(&(first->d));
+               MSG("original dim: %s",d1);
+#endif
+               first->d = ScaleDimensions(&(first->d),power);
+#if 0
+               ASC_FREE(d1);
+               d1 = WriteDimensionStringFull(&(first->d));
+               MSG("new dim: %s",d1);
+               ASC_FREE(d1);
+#endif
+            }
+            break;
+         case e_real:
+            ERROR_REPORTER_HERE(ASC_PROG_ERROR,"e_ipower has real-value exponent?");
+            break;
+         default:
+            MSG("unexpected exponent Expr_enum %d",second->type);
+         }
+         break;
+
       case e_power: /* fix me and add ipower */
+         MSG("real power term");
          if( IsWild(&(second->d)) && !IsZero(second) ) {
             if(!*wild) *wild=TRUE;
             if(GCDN){
-              ERRMSG("Relation has wild dimensions in exponent.");
+              ERRMSG("Expression contains wild dimensions in exponent.");
             }
          }else if(!IsWild(&(second->d)) &&
                    CmpDimen(&(second->d),Dimensionless()) ) {
             if(*con)*con=FALSE;
             if(GCDN){
               char *d1 = WriteDimensionStringFull(&(second->d));
-              ERRMSG("Exponent has dimensions %s",d1);
+              ERRMSG("Exponent should be dimensionless, but has dimensions %s",d1);
               ASC_FREE(d1);
             }
          }
+         // force the exponent to dimensionless
          CopyDimensions(Dimensionless(),&(second->d));
-         switch( second->type ) {
+         switch(second->type) {
             case e_int:
+               MSG("power is integer");
                if( !IsWild(&(first->d)) &&
                   CmpDimen(&(first->d),Dimensionless()) ) {
                   struct fraction power;
@@ -400,6 +465,7 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
                break;
 
             case e_real:
+               MSG("power is real");
                if( !IsWild(&(first->d)) &&
                   CmpDimen(&(first->d),Dimensionless()) ) {
                   struct fraction power;
@@ -410,6 +476,7 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
 
             /* what about e_zero? */
             default:
+               MSG("power is something else");
                if( IsWild(&(first->d)) && !IsZero(first) ) {
                   if(!*wild) *wild=TRUE;
                   if(GCDN){
@@ -499,6 +566,35 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
 	error for example if attempting to add a length to a temperature, or
 	take the sine or log of anything by a dimensionless quantity.
 	
+	Relations are composed of a list of 'relation_term' objects, which 
+	represent a tree of binary and unary operations. The RelationTerm
+	function is used to access the LHS and RHS lists of relation_term
+	objects. For each type of relation_term, the function ArgsForRealToken
+	lets us know how many arguments are needed (eg + consumes two arguments,
+	while sin and log just one).
+	
+	As the relation_terms are traversed, this function builds up and
+	consumes a stack of dimensions, essentially calculating the dimension
+	of the overall LHS and RHS expression. However, along the way,
+	any unreasonably operations, like adding a temperature to a length
+	are picked up and reported from the nested calls to 
+	apply_term_dimensions.
+	
+	Finally, this function reports whether the LHS and RHS dimension
+	is consistent.
+	
+	A special note about 'wild' dimensions. This is for things like
+	'solver_var' which are variables that can be set to contain any
+	value with any units. Wildcard dimensions are not considered
+	satisfactoring in this 'check' -- wildcard dimensions are mostly 
+	being reported as an error.
+	
+	FIXME it might be possible for dimension checking here to propagate
+	out to the METHODS section: once the necessary dimensions can be
+	inferred from an equation, we could convert wildcard variables to
+	dimensioned variables. This seems not to be implemented here, because
+	the 
+		
 	This function is called by `chkdim_check_relation`.
 */
 int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens){
@@ -539,10 +635,11 @@ int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens){
   case e_notequal:
      /* Working on the left-hand-side */
     len = RelationLength(rel,TRUE);
-    for( c = 1; c <= len; c++ ) {
+    for(c = 1; c <= len; c++) {
       struct relation_term *rt;
       rt = (struct relation_term *)RelationTerm(rel,c,TRUE);
       sp += 1-ArgsForRealToken(RelationTermType(rt));
+      MSG("lhs term %d",RelationTermType(rt));
       apply_term_dimensions(relinst,rel,rt,sp-1,sp,&consistent,&wild);
     } /* stack[0].d contains the dimensions of the lhs expression */
 
@@ -552,32 +649,27 @@ int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens){
       struct relation_term *rt;
       rt = (struct relation_term *) RelationTerm(rel,c,FALSE);
       sp += 1-ArgsForRealToken(RelationTermType(rt));
+      MSG("rhs term %d",RelationTermType(rt));
       apply_term_dimensions(relinst,rel,rt,sp-1,sp,&consistent,&wild);
     } /* stack[1].d contains the dimensions of the rhs expression */
 
-    if( IsWild(&(stack[0].d)) || IsWild(&(stack[1].d)) ) {
-      if( IsWild(&(stack[0].d)) && !IsZero(&(stack[0])) ) {
-        if( !wild ) wild = TRUE;
+    if(IsWild(&(stack[0].d)) || IsWild(&(stack[1].d)) ) {
+      if(IsWild(&(stack[0].d)) && !IsZero(&(stack[0])) ) {
+        if(!wild) wild = TRUE;
         if(GCDN){
           ERRMSG("Relation has wild dimensions on left hand side.");
         }
       }
-      if( IsWild(&(stack[1].d)) && !IsZero(&(stack[1])) ) {
-        if( !wild ) wild = TRUE;
+      if(IsWild(&(stack[1].d)) && !IsZero(&(stack[1])) ) {
+        if(!wild) wild = TRUE;
         if(GCDN){
           ERRMSG("Relation has wild dimensions on right hand side.");
         }
       }
     }else{
-      if( CmpDimen(&(stack[0].d),&(stack[1].d)) ) {
-        if( consistent ) consistent = FALSE;
+      if(CmpDimen(&(stack[0].d),&(stack[1].d)) ) {
+        if(consistent) consistent = FALSE;
         if(GCDN){
-          //MSG("Dimension of left:");
-          //WriteDimensions(ASCERR,&(stack[0].d));
-          //FPRINTF(ASCERR,"\n");
-          //MSG("Dimension of right:");
-          //WriteDimensions(ASCERR,&(stack[1].d));
-          //FPRINTF(ASCERR,"\n");
           char *d1 = WriteDimensionStringFull(&(stack[0].d));
           char *d2 = WriteDimensionStringFull(&(stack[1].d));
           ERRMSG("Relation has inconsistent dimensions %s on left and dimensions %s on right.",d1,d2);
@@ -598,7 +690,7 @@ int RelationCheckDimensions(struct Instance *relinst, dim_type *dimens){
       apply_term_dimensions(relinst,rel,rt,sp-1,sp,&consistent,&wild);
     } /* stack[0].d contains the dimensions of the lhs expression */
 
-    if( IsWild(&(stack[0].d)) && !IsZero(&(stack[0])) ) {
+    if(IsWild(&(stack[0].d)) && !IsZero(&(stack[0]))) {
       if( !wild ) wild = TRUE;
       if(GCDN){
         ERRMSG("Objective has wild dimensions.");
@@ -4225,11 +4317,11 @@ int ArgsForRealToken(enum Expr_enum type){
    case e_int:
    case e_real:
    case e_var:
-     return(0);
+     return 0;
 
    case e_func:
    case e_uminus:
-      return(1);
+      return 1;
 
    case e_plus:
    case e_minus:
@@ -4237,11 +4329,11 @@ int ArgsForRealToken(enum Expr_enum type){
    case e_divide:
    case e_power:
    case e_ipower:
-      return(2);
+      return 2;
 
    default:
-      FPRINTF(ASCERR,"ArgsForRealToken: Unknown relation term type.\n");
-      return(0);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown relation term type (Expr_enum %d).",type);
+      return 0;
    }
 }
 
