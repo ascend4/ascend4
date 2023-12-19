@@ -30,7 +30,7 @@ def run_ascend_model(filen,model=None,printvars=None,test=True):
 			if Path(M.getFilename()) == Path(filen):
 				print(f"Module {M.getFilename()} contains:")
 				for m in L.getModuleTypes(M):
-					print(f"  {m}")	
+					print(f"  {m}")
 		sys.exit(2)
 		
 	M = T.getSimulation('sim',True) # run default method = True
