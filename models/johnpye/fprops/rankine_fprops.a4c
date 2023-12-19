@@ -42,14 +42,14 @@ END fluid;
 	Thermo properties -- IAPWS-IF95
 *)
 MODEL stream_state;
-	cd IS_A fluid;
+	cd "component data" IS_A fluid;
 	p IS_A pressure;
 	h IS_A specific_enthalpy;
 
 	T IS_A temperature;
 	v IS_A specific_volume;
 	s IS_A specific_entropy;
-	x IS_A fraction;
+	x "vapour fraction" IS_A fraction;
 
 	calc_vT: fprops_phsx_vT(
 		v, T : INPUT;

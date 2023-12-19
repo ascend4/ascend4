@@ -323,6 +323,10 @@ METHOD default_self;
 	RUN PU.default_self;
 	RUN HE.default_self;
 	HE.cons_mass_heat.included := FALSE;
+	Wdot_TU.nominal := 100 {MW};
+	Wdot_PU.nominal := 10 {MW};
+	mdot.nominal := 100 {kg/s};
+	
 END default_self;
 METHOD cycle_plot;
 	EXTERNAL cycle_plot_rankine_regen1(SELF);

@@ -22,7 +22,7 @@ REQUIRE "stream_holdup.a4l";
 	ASCEND 'thermodynamics.a4l' library.
 
 	You can read a HOW TO document that describes these models in detail at
-	http://ascendwiki.cheme.cmu.edu/Thermodynamics_with_ASCEND
+	https://ascend4.org/Thermodynamics_with_ASCEND
 *)
 
 (*
