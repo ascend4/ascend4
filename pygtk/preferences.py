@@ -1,142 +1,119 @@
 # Preferences module for ASCPY.
 
-import configparser, os
+import yaml
+from pathlib import Path
 import re
 import platform
 
-## @TODO implement this differently; the __del__ stuff is not working correctly
-## in the context of the extpy extension.
+import json
 
 class Preferences:
-	__sharedstate = {}
+	_instance = None
 
-	def __init__(self):
-		self.__dict__ = self.__sharedstate
+	def __new__(cls, *args, **kwargs):
+		if not cls._instance:
+			cls._instance = super(Preferences, cls).__new__(cls)
+			cls._instance.load_preferences()
+		return cls._instance
 
-		if not hasattr(self,'n'):
-			self.n = 0;
-			if platform.system()=="Windows":
-				self.fname = os.path.join(os.environ['APPDATA'],".ascend.ini")
-			else:
-				self.fname = os.path.expanduser("~/.ascend.ini");
-
-			#print("PREFERENCES FILE =",self.fname)
-				
-		self.n = self.n + 1;
-
-		if not hasattr(self,'ini'):
-			#print "READING/CREATING CONFIG"
-			self.ini = configparser.ConfigParser();
-			self.ini.read( [ self.fname ] );
-
-	def __del__(self):
-		self.n = self.n - 1;
-		if self.n==0:
-			#print "\rSaving preferences in ",self.fname
-			f = open(self.fname, "w");
-			self.ini.write( f );
-
-	def getGeometrySizePosition(self,displayname,key):
+	def load_preferences(self):
+		print("LOADING PREFERENCES\n\n")
 		try:
-			_g = self.ini.get("Geometry:"+str(displayname),key)
-		except configparser.NoSectionError:
-			return None
-		except configparser.NoOptionError:
-			return None
-		_p = re.compile('^\s*(\d+)[Xx](\d+)\+(-?\d+)\+(-?\d+)\s*$');
+			if platform.system()=="Windows":
+				self.fn = Path(os.environ['APPDATA']) / "ascend-config.yml"
+			else:
+				folder = Path.home()/".config"/"ascend";
+				folder.mkdir(parents=True,exist_ok=True);
+				self.fn = folder/"ascend-config.yml"
+			with open(self.fn, 'r') as f:
+				self.preferences = yaml.safe_load(f)
+		except FileNotFoundError:
+			self.preferences = {}  # Default preferences
+		if self.preferences is None:
+			self.preferences = {}
+		if 'geometry' not in self.preferences:
+			self.preferences['geometry'] = {}
+		if 'preferredunits' not in self.preferences:
+			self.preferences['preferredunits'] = {}
+		self.mtime = self.fn.stat().st_mtime if self.fn.exists() else 0
 
+	def get_preference(self, key, default=None):
+		return self.preferences.get(key, default)
+
+	def set_preference(self, key, value):
+		self.preferences[key] = value
+
+	def save_preferences(self):
+		print("SAVING PREFERENCES\n\n")
+		# we won't save preferences if another ascend has saved them since we loaded (not sure what's best here)
+		latest_mtime = self.fn.stat().st_mtime if self.fn.exists() else 0
+		if latest_mtime == self.mtime:
+			with open(self.fn, 'w') as f:
+				yaml.dump(self.preferences, f, default_flow_style=False)
+
+	def getStringPref(self, sect, key, default=None):
+		return self.preferences.get(sect, {}).get(key, default)
+
+	def getRealPref(self, sect, key, default=None):
+		return self.preferences.get(sect, {}).get(key, default)
+
+	def getBoolPref(self, sect, key, default=None):
+		return self.preferences.get(sect, {}).get(key, default)
+
+	def setStringPref(self, sect, key, val):
+		if sect not in self.preferences:
+			self.preferences[sect] = {}
+		self.preferences[sect][key] = str(val)
+
+	def setRealPref(self, sect, key, val):
+		if sect not in self.preferences:
+			self.preferences[sect] = {}
+		self.preferences[sect][key] = float(val)
+
+	def setBoolPref(self, sect, key, val):
+		if sect not in self.preferences:
+			self.preferences[sect] = {}
+		self.preferences[sect][key] = True if val else False
+
+	def getGeometrySizePosition(self,displayname,winname):
+		_g = self.preferences['geometry'].get(str(displayname),{}).get(winname,None)
+		if _g is None:
+			return None
+		#print(f"GOT GEOM FOR {winname}: {_g}")
+		_p = re.compile('^\s*(\d+)[Xx](\d+)\+(-?\d+)\+(-?\d+)\s*$');
 		_m = _p.match(_g)
-		#print "MATCH: ",_m.groups()
+		#print(f"MATCH: {_m.groups()}")
 		if not _m:
 			return None
+		#print(f"MATCH: {_m.groups()}")
 		return [int(i) for i in _m.groups()]
 
-	def setGeometrySizePosition(self,displayname,key,width,height,top,left):
-		if not self.ini.has_section("Geometry:"+str(displayname)):
-			self.ini.add_section("Geometry:"+str(displayname))
-		self.ini.set("Geometry:"+str(displayname),key, "%dx%d+%d+%d" % (width, height, top, left) );
+	def setGeometrySizePosition(self,displayname,winname,width,height,left,top):
+		print("setGeometrySizePosition:","%dx%d+%d+%d" % (width, height, left, top) )
+		if str(displayname) not in self.preferences['geometry']:
+			self.preferences['geometry'][str(displayname)] = {}
+		self.preferences['geometry'][str(displayname)][winname] = "%dx%d+%d+%d" % (width, height, left, top);
 
 	def getGeometryValue(self,displayname,key):
-		try:
-			_g = self.ini.get("Geometry:"+str(displayname),key)
-		except configparser.NoSectionError:
-			return None
-		except configparser.NoOptionError:
-			return None
-		return int(_g)
+		return self.preferences['geometry'].get(str(displayname),{}).get(key,None)
 
 	def setGeometryValue(self,displayname,key,value):
-		if not self.ini.has_section("Geometry:"+str(displayname)):
-			self.ini.add_section("Geometry:"+str(displayname))
-		self.ini.set("Geometry:"+str(displayname),key,str(value))		
+		if str(displayname) not in self.preferences['geometry']:
+			self.preferences['geometry'][str(displayname)] = {}
+		self.preferences['geometry'][str(displayname)][key] = value
+
+	def getPreferredUnitsOrigin(self, key):
+		return self.preferences['preferredunits'].get(key,None)
 
 	def getPreferredUnits(self, key):
 		_u = self.getPreferredUnitsOrigin(key)
-		##### CELSIUS TEMPERATURE WORKAROUND
+		##### CELSIUS TEMPERATURE WORKAROUND (see celsiusunits.py)
 		if _u == "degC":
 			_u = "K"
-		##### CELSIUS TEMPERATURE WORKAROUND
-		return _u
-
-	def getPreferredUnitsOrigin(self, key):
-		try:
-			_u = self.ini.get("PreferredUnits", key)
-		except configparser.NoSectionError:
-			return None
-		except configparser.NoOptionError:
-			return None
 		return _u
 
 	def setPreferredUnits(self,key,val):
-		if not self.ini.has_section("PreferredUnits"):
-			self.ini.add_section("PreferredUnits")
-		self.ini.set("PreferredUnits",key,val)
-		#print "SET PREFERRED UNITS FOR %s TO %s" % ( key, val )
-
-	def getBoolPref(self,sect,key,default=None):
-		try:
-			_u = self.ini.get(sect,key)
-		except configparser.NoSectionError:
-			return default
-		except configparser.NoOptionError:
-			return default
-		if _u:
-			return True
-		return False
-
-	def setBoolPref(self,sect,key,val):
-		if not self.ini.has_section(sect):
-			self.ini.add_section(sect)
-		if val:
-			val = "1"
-		else:
-			val = ""
-		self.ini.set(sect,key,val)
-		
-	def getStringPref(self,sect,key,default=None):
-		try:
-			_u = self.ini.get(sect,key)
-		except configparser.NoSectionError:
-			return default
-		except configparser.NoOptionError:
-			return default
-		return _u;
-
-	def getRealPref(self,sect,key,default=None):
-		try:
-			_u = self.ini.get(sect,key)
-		except configparser.NoSectionError:
-			return default
-		except configparser.NoOptionError:
-			return default
-		return float(_u);		
-
-	def setStringPref(self,sect,key,value):
-		if not self.ini.has_section(sect):
-			self.ini.add_section(sect)
-		self.ini.set(sect,key,str(value))
-		
-
+		self.preferences['preferredunits'][key] = val
 
 # Test script:
 def main():
@@ -151,6 +128,8 @@ def main():
 	y.setPreferredUnits("time","hr");
 	print("Units for length: ",y.getPreferredUnits("length"));
 	print("Units for time: ",y.getPreferredUnits("time"));
+	
+	assert x is y
 
 	print("About to delete x")
 	del x;
@@ -158,10 +137,14 @@ def main():
 
 	y.setPreferredUnits("length","cm");
 
-	print("About to delete y")
-	del y;
-
+	print("explicitly save preferences on y");
+	
+	y.save_preferences()
+	del y
 	print("Deleted y")
+
 
 if __name__ == "__main__":
     main()
+    
+# vim: ts=4:sw=4:noet:syntax=python

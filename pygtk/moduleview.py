@@ -141,10 +141,10 @@ class ModuleView:
 			# TODO is this the fastest way??
 			for module in x.getModules():
 				if module.getName()==self.modulename:
-					fn=module.getFilename()
+					filename=module.getFilename()
 					break
 			# FIXME what if module not found??
-			ViewModel(filename=fn,title="Module '%s'" % (self.modulename))
+			ViewModel(filename=filename,title="Module '%s'" % (self.modulename))
 		elif self.modelname:
 			x = ascpy.Library() 
 			for module in x.getModules():

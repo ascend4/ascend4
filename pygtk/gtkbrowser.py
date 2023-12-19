@@ -944,25 +944,21 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.modelview.refreshtree()
 
 	def do_quit(self):
-		loading.print_status("Saving window location")		
 		self.reporter.clearPythonErrorCallback()
 
-		_w,_h = self.window.get_size()
-		_t,_l = self.window.get_position()
-		_display = self.window.get_screen().get_display().get_name()
-		self.prefs.setGeometrySizePosition(_display,"browserwin",_w,_h,_t,_l );
+		loading.print_status("Saving window location")		
+		w,h = self.window.get_size()
+		x,y = self.window.get_position()
+		display = self.window.get_screen().get_display().get_name()
+		self.prefs.setGeometrySizePosition(display,"browserwin",w,h,x,y );
 
-		_p = self.browserpaned.get_position()
-		self.prefs.setGeometryValue(_display,"browserpaned",_p);
-
-		loading.print_status("Saving current directory")			
-		self.prefs.setStringPref("Directories","fileopenpath",self.fileopenpath)
-
-		self.prefs.setBoolPref("Browser","auto_solve",self.is_auto)
+		p = self.browserpaned.get_position()
+		self.prefs.setGeometryValue(_display,"browserpaned",p);
 
 		loading.print_status("Saving preferences")
-		# causes prefs to be saved unless they are still being used elsewher
-		del(self.prefs)
+		self.prefs.setStringPref("Directories","fileopenpath",self.fileopenpath)
+		self.prefs.setBoolPref("Browser","auto_solve",self.is_auto)
+		self.prefs.save_preferences()
 
 		loading.print_status("Clearing error callback")		
 		self.reporter.clearPythonErrorCallback()
@@ -970,11 +966,10 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		loading.print_status("Closing down GTK")
 		Gtk.main_quit()
 
-		loading.print_status("Clearing library")			
+		loading.print_status("Clearing library")
 		self.library.clear()
 		
 		loading.print_status("Quitting")
-
 		return False
 
 	def on_tools_sparsity_click(self,*args):
