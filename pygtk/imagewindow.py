@@ -47,9 +47,9 @@ class ImageWindow:
 		# more than 100% is pointless
 		self.zoom_max = 1
 		self.zoom_step = 1.5;
-
 		self.zoom(fit=True)
-		self.zoom_fit = self.zoom_current
+
+		self.window.connect("size-allocate", self.on_size_allocate)
 
 	def on_save_clicked(self,*args):
 		self.browser.reporter.reportNote("SAVE %s" % self.imagefilename) 
@@ -113,10 +113,10 @@ class ImageWindow:
 
 	def zoom(self,ratio=1,fit=False):
 		self.browser.reporter.reportNote("ZOOM TO %d %%" % (ratio*100))
-		w_view,h_view = self.window.get_size()
+		alloc = self.scrollwin.get_allocation()
 
-		r_w = float(w_view) / self.w_orig	
-		r_h = float(h_view) / self.h_orig
+		r_w = float(alloc.width) / self.w_orig
+		r_h = float(alloc.height) / self.h_orig
 		if r_w < r_h:
 			ratio_fit = r_w
 		else:
@@ -148,8 +148,7 @@ class ImageWindow:
 		if self.delete:
 			os.unlink(self.imagefilename)
 
-	def on_imagewindow_size_request(self,*args):
+	def on_size_allocate(self,widget,allocation):
 		if self.is_fit:
 			self.zoom(fit=1)
-			
 
