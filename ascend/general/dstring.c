@@ -73,7 +73,7 @@ char *Asc_DStringSet(Asc_DString *dsPtr, CONST char *string)
   /*
    * Copy the new string into the buffer
    */
-  strncpy(dsPtr->string, string, (size_t)length);
+  strncpy(dsPtr->string, string, (size_t)length+1);
   dsPtr->length = length;
   dsPtr->string[dsPtr->length] = '\0';
   return dsPtr->string;

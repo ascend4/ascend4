@@ -117,14 +117,14 @@
 #endif
 
 /* PATH_MAX is in ospath.h */
-#define DRIVEMAX 3
+#define DRIVEMAX 2
 #define LISTMAX 256
 
 struct FilePath{
-    char path[PATH_MAX]; /** the string version of the represented POSIX path */
+    char path[PATH_MAX+1]; /** the string version of the represented POSIX path */
 
 #ifdef WINPATHS
-    char drive[DRIVEMAX]; /** the drive the path resides on (field is absent in POSIX systems) */
+    char drive[DRIVEMAX+1]; /** the drive the path resides on (field is absent in POSIX systems) */
 #endif
 };
 
@@ -279,12 +279,12 @@ void ospath_free_str(char *str){
 void ospath_fixslash(char *path){
 
 	char *p;
-	char temp[PATH_MAX];
+	char temp[PATH_MAX+1];
 	int startslash;
 	int endslash;
 	STRTOKVAR(nexttok);
 
-	STRNCPY(temp,path,PATH_MAX);
+	strcpy(temp,path);temp[PATH_MAX]='\0';
 
 #if 0
 	X(path);
@@ -416,7 +416,7 @@ void ospath_extractdriveletter(struct FilePath *fp)
 		}
 		*(p-2)='\0';
 	}else{
-		STRNCPY(fp->drive,"",DRIVEMAX);
+		fp->drive[0] = '\0';
 	}
 #if 0
 	M("RESULT");
@@ -761,7 +761,7 @@ struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned depth)
 
 char *ospath_getbasefilename(struct FilePath *fp){
 	char *temp;
-	unsigned length, offset;
+	unsigned length	;
 	char *pos;
 
 	if(fp==NULL)return NULL;
@@ -778,9 +778,8 @@ char *ospath_getbasefilename(struct FilePath *fp){
 	/* reverse find '/' but DON'T ignore a trailing slash*/
 	/* (this is changed from the original implementation)*/
 	length = strlen(fp->path);
-	offset = length;
 
-	pos = strrchr(fp->path, PATH_SEPARATOR_CHAR); /* OFFSET! */
+	pos = strrchr(fp->path, PATH_SEPARATOR_CHAR);
 
 	/* extract filename given position of find / and return it.*/
 	if(pos != NULL){
@@ -793,7 +792,7 @@ char *ospath_getbasefilename(struct FilePath *fp){
 		return temp;
 	}else{
 		temp = ASC_NEW_ARRAY(char, length+1);
-		STRNCPY(temp, fp->path, length);
+		strcpy(temp, fp->path);
 		*(temp+length)='\0';
 		return temp;
 	}
@@ -1062,8 +1061,8 @@ int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2){
 struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath *fp2){
 
 	struct FilePath *fp;
-	char temp[2][PATH_MAX];
-	char temp2[PATH_MAX];
+	char temp[2][PATH_MAX+1];
+	char temp2[PATH_MAX+1];
 	struct FilePath *r;
 
 	X(fp1->path);
@@ -1096,13 +1095,13 @@ struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath
 	/* now, both paths are valid...*/
 
 #ifdef WINPATHS
-	STRNCPY(temp[0],fp1->drive,PATH_MAX);
+	strcpy(temp[0],fp1->drive);
 	STRNCAT(temp[0],fp1->path,PATH_MAX-strlen(temp[0]));
 #else
-	STRNCPY(temp[0], fp1->path,PATH_MAX);
+	strcpy(temp[0], fp1->path);
 #endif
 
-	STRNCPY(temp[1], fp2->path,PATH_MAX);
+	strcpy(temp[1], fp2->path);
 
 	/* make sure temp has a / on the end. */
 	if(temp[0][strlen(temp[0]) - 1] != PATH_SEPARATOR_CHAR){
@@ -1127,7 +1126,7 @@ struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath
 	}
 
 	/* create a new path object with the two path strings appended together.*/
-	STRNCPY(temp2,temp[0],PATH_MAX);
+	strcpy(temp2,temp[0]);
 	STRNCAT(temp2,temp[1],PATH_MAX-strlen(temp2));
 #if 1
 	V(strlen(temp2));
@@ -1142,7 +1141,7 @@ struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath
 
 void ospath_append(struct FilePath *fp, struct FilePath *fp1){
 	char *p;
-	char temp[2][PATH_MAX];
+	char temp[2][PATH_MAX+1];
 	struct FilePath fp2;
 
 	ospath_copy(&fp2,fp1);
@@ -1172,11 +1171,11 @@ void ospath_append(struct FilePath *fp, struct FilePath *fp1){
 #if 0
 	temp[0] = CALLOC(1+strlen(fp->path), sizeof(char));
 #endif
-	STRNCPY(temp[0], fp->path, PATH_MAX);
+	strcpy(temp[0], fp->path);
 #if 0
 	temp[1] = CALLOC(strlen(fp2.path), sizeof(char));
 #endif
-	STRNCPY(temp[1], fp2.path, PATH_MAX);
+	strcpy(temp[1], fp2.path);
 
 	X(temp[0]);
 	X(temp[1]);
@@ -1199,7 +1198,7 @@ void ospath_append(struct FilePath *fp, struct FilePath *fp1){
 	X(temp[1]);
 
 	/*create new path string.*/
-	STRNCPY(fp->path,temp[0], PATH_MAX);
+	strcpy(fp->path,temp[0]);
 	STRNCAT(fp->path,temp[1], PATH_MAX-strlen(fp->path));
 
 	X(fp->path);

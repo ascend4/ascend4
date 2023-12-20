@@ -233,18 +233,18 @@ class Browser:
 		if not self.window:
 			raise RuntimeError("Couldn't load window from glade file")
 
-		_display = self.window.get_screen().get_display().get_name()
-		_geom=self.prefs.getGeometrySizePosition(_display,"browserwin")
-		if _geom:
-			self.window.resize(_geom[0],_geom[1])
-			self.window.move(_geom[2],_geom[3])
+		display = self.window.get_screen().get_display().get_name()
+		geom=self.prefs.getGeometrySizePosition(display,"browserwin")
+		if geom:
+			self.window.resize(geom[0],geom[1])
+			self.window.move(geom[2],geom[3])
 		
 		self.window.connect("delete_event", self.delete_event)
 
 		self.browserpaned=self.builder.get_object ("browserpaned")
-		_geom2=self.prefs.getGeometryValue(_display,"browserpaned")
-		if _geom2:
-			self.browserpaned.set_position(_geom2)
+		geom2=self.prefs.getGeometryValue(display,"browserpaned")
+		if geom2:
+			self.browserpaned.set_position(geom2)
 
 		buttons = ["open","reload","solve","integrate","check","methodrun"]
 		for n in buttons:
@@ -953,7 +953,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.prefs.setGeometrySizePosition(display,"browserwin",w,h,x,y );
 
 		p = self.browserpaned.get_position()
-		self.prefs.setGeometryValue(_display,"browserpaned",p);
+		self.prefs.setGeometryValue(display,"browserpaned",p);
 
 		loading.print_status("Saving preferences")
 		self.prefs.setStringPref("Directories","fileopenpath",self.fileopenpath)

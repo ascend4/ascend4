@@ -72,7 +72,9 @@ ASC_DLLSPEC int importhandler_add(struct ImportHandler *handler){
 	for(i=0; i< IMPORTHANDLER_MAX; ++i){
 		if(importhandler_library->handlers[i] == NULL)break;
 		if(importhandler_library->handlers[i]->name == handler->name){
+#ifdef IMPORTHANDLER_VERBOSE
 			ERROR_REPORTER_HERE(ASC_USER_NOTE,"Handler already loaded");
+#endif
 			return 0;
 		}
 	}
@@ -100,7 +102,7 @@ int importhandler_import(struct ImportHandler *handler, struct FilePath *fp
 		p = ASC_NEW(struct ImportPackage);
 		p->fp = ospath_new_copy(fp);
 		p->partialpath = ASC_NEW_ARRAY_CLEAR(char,strlen(partialpath)+1);
-		strncpy(p->partialpath,partialpath,strlen(partialpath));
+		strcpy(p->partialpath,partialpath);
 		MSG("partialpath='%s'",p->partialpath);
 		p->cleanupfunc = cleanupfunc;
 		p->handler = handler;
@@ -151,7 +153,7 @@ static int importhandler_unload(struct ImportPackage *p){
 */
 char *importhandler_extlib_filename(const char *partialname){
 	char *buffer;
-	buffer = ASC_NEW_ARRAY(char,PATH_MAX);
+	buffer = ASC_NEW_ARRAY(char,PATH_MAX+1);
 
 #if defined(ASC_EXTLIBSUFFIX) && defined(ASC_EXTLIBPREFIX)
 	/*
@@ -200,7 +202,7 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 	struct FilePath *fp1;
 	char *stem;
 	char *path;
-	char auto_initfunc[PATH_MAX];
+	char auto_initfunc[PATH_MAX+1];
 	int result;
 
 	MSG("Importing '%s'",partialpath);
@@ -219,7 +221,7 @@ int importhandler_extlib_import(const struct FilePath *fp,const char *initfunc,c
 	if(initfunc==NULL){
 		fp1 = ospath_new(partialpath);
 		stem = ospath_getbasefilename(fp1);
-		strncpy(auto_initfunc,stem,PATH_MAX);
+		strncpy(auto_initfunc,stem,PATH_MAX);auto_initfunc[PATH_MAX]='\0';
 		ospath_free(fp1);
 		ASC_FREE(stem);
 

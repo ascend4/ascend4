@@ -49,7 +49,7 @@
 #include <ascend/general/panic.h>
 #include <ascend/utilities/ascDynaLoad.h>
 
-#define ASC_GRAPH_DEBUG
+//#define ASC_GRAPH_DEBUG
 #ifdef ASC_GRAPH_DEBUG
 # define MSG CONSOLE_DEBUG
 #else

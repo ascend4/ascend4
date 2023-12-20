@@ -516,7 +516,7 @@ static int SpecialSelfName(CONST struct Name *n){
 }
 
 /**
-	Produces a list of lists of argument instances. a the list returned is never NULL except when out of memory. Entries in this list may be NULL if some argument search fails. Argument search is successful IFF errlist returned is empty (length 0).
+	Produces a list of lists of argument instances. the list returned is never NULL except when out of memory. Entries in this list may be NULL if some argument search fails. Argument search is successful IFF errlist returned is empty (length 0).
  */
 static struct gl_list_t *ProcessExtMethodArgs(struct Instance *inst,
 		CONST struct VariableList *vl, struct gl_list_t *errlist

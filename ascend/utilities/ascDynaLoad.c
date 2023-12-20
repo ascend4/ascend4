@@ -40,6 +40,8 @@
 
 #include <ascend/utilities/config.h>
 
+//#define DL_ALREADY_WARNING
+
 //#define DL_DEBUG
 #ifdef DL_DEBUG
 # define MSG CONSOLE_DEBUG
@@ -160,7 +162,9 @@ void AscCheckDuplicateLoad(CONST char *path)
   r = g_ascend_dllist;
   while (r != NULL) {
     if (strcmp(path,r->path)==0) {
+#ifdef DL_ALREADY_WARNING
       ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Attempt to load already-loaded '%s'.",path);
+#endif
       return;
     }
     r = r->next;

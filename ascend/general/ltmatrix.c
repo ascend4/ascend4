@@ -134,7 +134,7 @@ unsigned long ltmatrix_access(ltmatrix* matrix, unsigned long row, unsigned long
 	asc_assert(matrix!=NULL); 
 	ASC_ASSERT_RANGE(row,0,matrix->dimension); 
 	ASC_ASSERT_RANGE(col,0,matrix->dimension); 
-	unsigned long index;
+	unsigned long index = 99999;
 	unsigned long r; 
 	unsigned long c; 
 	unsigned long d; 

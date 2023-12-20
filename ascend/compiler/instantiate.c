@@ -319,12 +319,12 @@ void instantiation_error(error_severity_t sev
 		va_error_reporter(sev
 			, Asc_ModuleBestName(StatementModule(stat))
 			, StatementLineNum(stat), NULL
-			, fmt, &args2
+			, fmt, args2
 		);
 	}else{
 		va_error_reporter(sev
 			, NULL, 0, NULL
-			, fmt, &args2
+			, fmt, args2
 		);
 	}
 	va_end(args);
@@ -4781,8 +4781,6 @@ static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 	enum Expr_enum reltype;
 	//char *iname;
 
-	char *iname;
-
 #ifdef DEBUG_RELS
 	CONSOLE_DEBUG("ENTERED ExecuteREL");
 #endif
@@ -4862,6 +4860,7 @@ static int ExecuteREL(struct Instance *inst, struct Statement *statement){
 #ifdef DEBUG_RELS
 	STATEMENT_NOTE(statement, "End of ExecuteREL. huh?");
 #endif
+	return 0;
 }
 
 /**
@@ -10026,7 +10025,7 @@ int ExecuteUnSelectedForStatements(struct Instance *inst,
 {
   struct Statement *statement;
   unsigned long c,len;
-  int return_value;
+  //int return_value;
   struct gl_list_t *list;
   list = GetList(sl);
   len = gl_length(list);
@@ -10042,32 +10041,31 @@ int ExecuteUnSelectedForStatements(struct Instance *inst,
       case CALL:
       case CASGN:
       case ASGN:
-        return_value = 1;
         break;
       case FNAME:
         if (g_iteration>=MAXNUMBER) {
           STATEMENT_ERROR(statement,
               "FNAME not allowed inside a SELECT Statement");
         }
-        return_value = 1; /*ignore it */
+        //return_value = 1; /*ignore it */
         break;
       case ALIASES:
-        return_value = ExecuteUnSelectedALIASES(inst,statement);
+        ExecuteUnSelectedALIASES(inst,statement);
         break;
       case ISA:
-        return_value = ExecuteUnSelectedISA(inst,statement);
+        ExecuteUnSelectedISA(inst,statement);
         break;
       case FOR:
-        return_value =  ExecuteUnSelectedForStatements(inst,
+        ExecuteUnSelectedForStatements(inst,
                                  ForStatStmts(statement));
         break;
       case REL:
       case EXT:
       case LOGREL:
-        return_value = ExecuteUnSelectedEQN(inst,statement);
+        ExecuteUnSelectedEQN(inst,statement);
         break;
       case WHEN:
-        return_value = ExecuteUnSelectedWHEN(inst,statement);
+        ExecuteUnSelectedWHEN(inst,statement);
         break;
       case COND:
         STATEMENT_ERROR(statement,
@@ -10085,7 +10083,6 @@ int ExecuteUnSelectedForStatements(struct Instance *inst,
                   " declarative section unSEL FOR");
     }
   }
-  /* FIXME this should be 'return_value', shouldn't it??? */
   return 1;
 }
 

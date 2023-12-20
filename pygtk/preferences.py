@@ -87,7 +87,6 @@ class Preferences:
 		return [int(i) for i in _m.groups()]
 
 	def setGeometrySizePosition(self,displayname,winname,width,height,left,top):
-		print("setGeometrySizePosition:","%dx%d+%d+%d" % (width, height, left, top) )
 		if str(displayname) not in self.preferences['geometry']:
 			self.preferences['geometry'][str(displayname)] = {}
 		self.preferences['geometry'][str(displayname)][winname] = "%dx%d+%d+%d" % (width, height, left, top);

@@ -175,10 +175,10 @@ static void rankikw_factor(linsolqr_system_t sys)
    mtx_range_t pivot_candidates;
    real64 *tmp;
    real64 pivot, *pivots;
-   int32 length;
+   //int32 length;
    mtx_matrix_t mtx;
 
-   length = sys->rng.high - sys->rng.low + 1;
+   //length = sys->rng.high - sys->rng.low + 1;
    tmp = sys->ludata->tmp;
    /* eliminate row takes care of zeroing the relevant region and won't
       change values outside of it. */
@@ -188,7 +188,6 @@ static void rankikw_factor(linsolqr_system_t sys)
    sys->smallest_pivot = MAXDOUBLE;
    last_row = pivot_candidates.high = sys->rng.high;
    for( nz.row = sys->rng.low ; nz.row <= last_row ; ) {
-
       pivot_candidates.low = nz.col = nz.row;
       pivots[nz.row]=pivot = mtx_value(mtx,&nz);
       pivot = fabs(pivot);
@@ -215,7 +214,6 @@ static void rankikw_factor(linsolqr_system_t sys)
          mtx_drag(mtx,nz.row,last_row);
          number_drag(pivots,nz.row,last_row);
          --last_row;
-#undef KAA_DEBUG
 #ifdef KAA_DEBUG
          ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Warning: Row %d is dependent with pivot %20.8g",nz.row,pivot);
 #endif /* KAA_DEBUG */
@@ -247,10 +245,10 @@ static void rankijz_factor(linsolqr_system_t sys)
    mtx_region_t candidates;
    real64 *tmp;
    real64 pivot, *pivots;
-   int32 length;
+   //int32 length;
    mtx_matrix_t mtx;
 
-   length = sys->rng.high - sys->rng.low + 1;
+   //length = sys->rng.high - sys->rng.low + 1;
    tmp = sys->ludata->tmp;
    /* eliminate row takes care of zeroing the relevant region and won't
       change values outside of it. */
@@ -320,7 +318,9 @@ static void rankijz_factor(linsolqr_system_t sys)
 */
 int ranki_entry(linsolqr_system_t sys,mtx_region_t *region){
    struct rhs_list *rl;
+#ifdef KAA_DEBUG
    double comptime;
+#endif
 
    CHECK_SYSTEM(sys);
    if( sys->factored )
@@ -353,7 +353,9 @@ int ranki_entry(linsolqr_system_t sys,mtx_region_t *region){
    ensure_capacity(sys);
    ensure_lu_capacity(sys);
 
+#ifdef KAA_DEBUG
    comptime = tm_cpu_time();
+#endif
    switch(sys->fmethod) {
    case ranki_ka:
    case ranki_kw:
@@ -369,8 +371,7 @@ int ranki_entry(linsolqr_system_t sys,mtx_region_t *region){
  */
    sys->factored = TRUE;
 
-#undef KAA_DEBUG
-#if KAA_DEBUG
+#ifdef KAA_DEBUG
    comptime = tm_cpu_time() - comptime;
    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Time for Inversion = %f",comptime);
    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Non-zeros in Inverse = %d",mtx_nonzeros_in_region(sys->factors,region));
