@@ -31,7 +31,7 @@
 #include <ascend/general/list.h>
 #include <ascend/system/slv_client.h>
 
-#define ASC_CHKDIM_DEBUG
+//#define ASC_CHKDIM_DEBUG
 #ifdef ASC_CHKDIM_DEBUG
 # define MSG CONSOLE_DEBUG
 #else

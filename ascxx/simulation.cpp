@@ -427,7 +427,9 @@ Simulation::checkDoF() const{
 }
 
 /**
-	Check consistency
+	Check consistency for systems containing WHEN statements that affect
+	the problem structure. Returns a candidate list of variables to FIX in order
+	to achieve consistency, if so.
 
 	@TODO what is the difference between this and checkStructuralSingularity?
 
@@ -441,8 +443,12 @@ Simulation::getFreeableVariables(){
 	int *fixedarrayptr=NULL;
 
 	if(!sys){
-    	throw runtime_error("System not yet built");
+    	throw runtime_error("System not yet built.");
     }
+	
+	if(!slv_need_consistency(sys)){
+		throw runtime_error("System has no structure-modifying WHEN statements.");
+	}
 
 	int res = consistency_analysis(sys, &fixedarrayptr);
 

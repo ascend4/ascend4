@@ -113,51 +113,51 @@ ASC_DLLSPEC void ClearDimensions(dim_type *d);
  *  Initialize all the dimension fractions to zero.
  */
 
-ASC_DLLSPEC CONST dim_type*Dimensionless(void);
+ASC_DLLSPEC const dim_type*Dimensionless(void);
 /**<
  *  Return a pointer to the dimensionless structure.
  */
 
-ASC_DLLSPEC CONST dim_type *TrigDimension(void);
+ASC_DLLSPEC const dim_type *TrigDimension(void);
 /**<
  *  Return a pointer to the dimension structure for plane angle.
  */
 
-ASC_DLLSPEC CONST dim_type *WildDimension(void);
+ASC_DLLSPEC const dim_type *WildDimension(void);
 /**<
  *  Return a pointer to a wild dimension structure.  You don't need to
  *  call FindOrAddDimen with this dimension.
  */
 
-extern CONST dim_type *HalfDimension(CONST dim_type *d, int b);
+extern const dim_type *HalfDimension(const dim_type *d, int b);
 /**<
  *  Return a pointer to a dimension structure with sqrt dimensionality.
  *  Returns null if sqrt dimensionality is fractional when tested (b true).
  *  If not b, result may point to noninteger dim. Dim will be in global list.
  */
 
-ASC_DLLSPEC CONST dim_type *ThirdDimension(CONST dim_type *d, int b);
+ASC_DLLSPEC const dim_type *ThirdDimension(const dim_type *d, int b);
 /**<
  *  Return a pointer to a dimension structure with cbrt dimensionality.
  *  Returns null if cbrt dimensionality is fractional when tested (b true).
  *  If !b, result may point to noninteger dim. Dim will be in global list.
  */
 
-ASC_DLLSPEC CONST dim_type *SquareDimension(CONST dim_type *d, int b);
+ASC_DLLSPEC const dim_type *SquareDimension(const dim_type *d, int b);
 /**<
  *  Return a pointer to a dimension structure with square dimensionality.
  *  Returns null if square dimensionality is fractional when tested (b true).
  *  If not b, result may point to noninteger dim. Dim will be in global list.
  */
 
-ASC_DLLSPEC CONST dim_type *CubeDimension(CONST dim_type *d, int b);
+ASC_DLLSPEC const dim_type *CubeDimension(const dim_type *d, int b);
 /**<
  *  Return a pointer to a dimension structure with cube dimensionality.
  *  Returns null if cube dimensionality is fractional when tested (b true).
  *  If !b, result may point to noninteger dim. Dim will be in global list.
  */
 
-ASC_DLLSPEC CONST dim_type *PowDimension(long mult, CONST dim_type *d, int b);
+ASC_DLLSPEC const dim_type *PowDimension(long mult, const dim_type *d, int b);
 /**<
  *  Return a pointer to a dimension structure with d*mult dimensionality.
  *  Returns null if cube dimensionality is fractional when tested (b true)
@@ -170,22 +170,22 @@ ASC_DLLSPEC void SetWild(dim_type *dim);
  *  Set the wild flag of dimensions dim.
  */
 
-ASC_DLLSPEC int IsWild(CONST dim_type *d);
+ASC_DLLSPEC int IsWild(const dim_type *d);
 /**<
  *  Return a true value if d is wild, and otherwise return a false value.
  */
 
-ASC_DLLSPEC int OddDimension(CONST dim_type *d);
+ASC_DLLSPEC int OddDimension(const dim_type *d);
 /**<
  *  Return a true value if d has an odd, wild, or non-integer dimension.
  */
 
-ASC_DLLSPEC int NonCubicDimension(CONST dim_type *d);
+ASC_DLLSPEC int NonCubicDimension(const dim_type *d);
 /**<
  *  Return a true value if d has an noncubic, wild, or non-integer dimension.
  */
 
-extern int SameDimen(CONST dim_type *d1, CONST dim_type *d2);
+extern int SameDimen(const dim_type *d1, const dim_type *d2);
 /**<
  *  Return 1 if d1 and d2 have the same dimensional value, or 0
  *  otherwise. Two wild dimensions are the same, regardless of any
@@ -193,12 +193,12 @@ extern int SameDimen(CONST dim_type *d1, CONST dim_type *d2);
  *  Wild and any non-wild are NOT the same.
  */
 
-ASC_DLLSPEC int CmpDimen(CONST dim_type *d1, CONST dim_type *d2);
+ASC_DLLSPEC int CmpDimen(const dim_type *d1, const dim_type *d2);
 /**<
  *  Return 1,0,-1 if d1 is >,=, or < d2 respectively.
  */
 
-ASC_DLLSPEC CONST dim_type *FindOrAddDimen(CONST dim_type *d);
+ASC_DLLSPEC const dim_type *FindOrAddDimen(const dim_type *d);
 /**<
  *  This function is run to make sure only one copy of each dimensions
  *  is stored.  It is designed to be called as follows:
@@ -213,12 +213,12 @@ ASC_DLLSPEC CONST dim_type *FindOrAddDimen(CONST dim_type *d);
  *  </pre>
  */
 
-ASC_DLLSPEC void CopyDimensions(CONST dim_type *src, dim_type *dest);
+ASC_DLLSPEC void CopyDimensions(const dim_type *src, dim_type *dest);
 /**<
  *  Copy from src to dest.
  */
 
-ASC_DLLSPEC dim_type AddDimensions(CONST dim_type *d1, CONST dim_type *d2);
+ASC_DLLSPEC dim_type AddDimensions(const dim_type *d1, const dim_type *d2);
 /**<
  *  Add 2 dimensions.
  *  Wild+anything equals wild.
@@ -228,7 +228,7 @@ ASC_DLLSPEC dim_type AddDimensions(CONST dim_type *d1, CONST dim_type *d2);
  *  table instead, use SumDimensions.
  */
 
-ASC_DLLSPEC CONST dim_type *SumDimensions(CONST dim_type *d1, CONST dim_type *d2, int check);
+ASC_DLLSPEC const dim_type *SumDimensions(const dim_type *d1, const dim_type *d2, int check);
 /**<
  *  Add 2 dimensions with checking.
  *  Wild+anything equals wild.
@@ -238,7 +238,7 @@ ASC_DLLSPEC CONST dim_type *SumDimensions(CONST dim_type *d1, CONST dim_type *d2
  *  Result will be in global list.
  */
 
-ASC_DLLSPEC dim_type SubDimensions(CONST dim_type *d1, CONST dim_type *d2);
+ASC_DLLSPEC dim_type SubDimensions(const dim_type *d1, const dim_type *d2);
 /**<
  *  Subtract 2 dimensions.
  *  Wild-anything equals wild.
@@ -248,7 +248,7 @@ ASC_DLLSPEC dim_type SubDimensions(CONST dim_type *d1, CONST dim_type *d2);
  *  table instead, use DiffDimensions.
  */
 
-extern CONST dim_type *DiffDimensions(CONST dim_type *d1, CONST dim_type *d2, int check);
+extern const dim_type *DiffDimensions(const dim_type *d1, const dim_type *d2, int check);
 /**<
  *  Subtract 2 dimensions with checking.
  *  Wild-anything equals wild.
@@ -258,12 +258,12 @@ extern CONST dim_type *DiffDimensions(CONST dim_type *d1, CONST dim_type *d2, in
  *  Result will be in global list.
  */
 
-ASC_DLLSPEC dim_type ScaleDimensions(CONST dim_type *dim, struct fraction frac);
+ASC_DLLSPEC dim_type ScaleDimensions(const dim_type *dim, struct fraction frac);
 /**<
  *  Scale the dimensions by frac.  A wild scaled always remains wild.
  */
 
-ASC_DLLSPEC void ParseDim(dim_type *dim, CONST char *c);
+ASC_DLLSPEC void ParseDim(dim_type *dim, const char *c);
 /**<
  *  Initialize dim appropriately according to the string c.  If c doesn't
  *  match any of the dimension strings, dim will be dimensionless and
@@ -288,13 +288,13 @@ ASC_DLLSPEC void ParseDim(dim_type *dim, CONST char *c);
  *  </pre>
  */
 
-ASC_DLLSPEC char *DimName(CONST int nIndex);
+ASC_DLLSPEC char *DimName(const int nIndex);
 /**<
  *  Return the internal copy of the name of the dimension corresponding
  *  to index if index is within [0..NUM_DIMENS-1], otherwise return NULL.
  */
 
-ASC_DLLSPEC CONST dim_type *CheckDimensionsMatch(CONST dim_type *d1, CONST dim_type *d2);
+ASC_DLLSPEC const dim_type *CheckDimensionsMatch(const dim_type *d1, const dim_type *d2);
 /**<
  *  Compare 2 dimensions.
  *  - Return d1 if d2 is wild
@@ -303,13 +303,13 @@ ASC_DLLSPEC CONST dim_type *CheckDimensionsMatch(CONST dim_type *d1, CONST dim_t
  *  - Otherwise return NULL
  */
 
-ASC_DLLSPEC void PrintDimen(FILE *f ,CONST dim_type *d);
+ASC_DLLSPEC void PrintDimen(FILE *f ,const dim_type *d);
 /**< Print a dimension to a file.  Used in interface */
 
 
-ASC_DLLSPEC void PrintDimenMessage(CONST char *message
-		, CONST char *label1, CONST dim_type *d1
-		, CONST char *label2, CONST dim_type *d2
+ASC_DLLSPEC void PrintDimenMessage(const char *message
+		, const char *label1, const dim_type *d1
+		, const char *label2, const dim_type *d2
 );
 
 /**< Print a message like "LABEL1='dim1', LABEL2='dim2'" */

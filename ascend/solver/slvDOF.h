@@ -137,22 +137,27 @@ ASC_DLLSPEC int32 get_globally_consistent_eligible(slv_system_t server,
 
 ASC_DLLSPEC int32 consistency_analysis(slv_system_t server, int32 **fixed);
 /**<
- *  Returns 1 if system is structurally consistent, 0 otherwise.
- *  That is you send us the address of a pointer to an int32 array
- *  and we will fill in the pointer.
- *  The function
- *  performs an automatized combinatorial consitency analysis to find
- *  a partition which causes all the alernatives in the system to be
- *  consitent. If the system is consistent, the array 'fixed' will contain
+ *  Consistency analysis is about looking at the WHEN statements in a system
+ *  and figuring out if there are variables that can be fixed to ensure that 
+ *  changing the branch of the WHEN does not introduce result in a different-
+ *  sized problem to solve (I think -- JP, 2023)
+ * 
+ *  The function performs an automatized combinatorial consistency analysis to
+ *  find a partition which causes all the alternatives in the system to be
+ *  consistent. If the system is consistent, the array 'fixed' will contain
  *  the solver var indices of a set of  variables which, if fixed, will
  *  result in a consistent partition for all the alternatives in the
- *  system.<br><br>
+ *  system.
+ *
+ *  @return 1 if system is structurally consistent, 0 otherwise.
+ *  @param fixed variables which, if fixed, will result in a consistent partition
+	you send us the address of a pointer to an int32 array
+ *  and we will fill in the pointer. The index list is terminated with a -1 but may be of any length.
+ *  The indices are var_mindex of vars on master_var_list.
  *  If return is 1, user should free 'fixed' when done with it. Return 0
  *  -> fixed will be null.
- *  The index list is terminated with a -1 but may be of any length.
- *  The indices are var_mindex of vars on master_var_list.
  */
 
 /* @} */
 
-#endif  /* ASC_SLVDOF_H */
+#endif  /* ASC_SLVDOF_H */	

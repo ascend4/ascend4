@@ -1335,7 +1335,7 @@ int32 consistency_analysis(slv_system_t server,int32 **fixed){
 
   boolist = slv_get_solvers_dvar_list(server);
   dnum = slv_get_num_solvers_dvars(server);
-  need_consistency_analysis = slv_need_consistency(server);;
+  need_consistency_analysis = slv_need_consistency(server);
 
   if(boolist == NULL ) {
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Discrete Variable list was never set.");

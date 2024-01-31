@@ -67,34 +67,6 @@
 # define MSG(ARGS...) ((void)0)
 #endif
 
-/* didn't work:
-	int status;
-
-	Asc_CompilerInit(1);
-	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
-	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
-
-	CONSOLE_DEBUG("Opening '%s'...",filename);
-
-	// load the file, parse it, and find our type definition
-	Asc_OpenModule(filename,&status);
-	CU_ASSERT(status == 0);
-	CU_ASSERT(0 == zz_parse());
-	CU_ASSERT(FindType(AddSymbol(modelname))!=NULL);
-
-	// instantiate it
-	struct Instance *siminst = SimsCreateInstance(AddSymbol(modelname), AddSymbol("sim1"), e_normal, NULL);
-	CU_ASSERT_FATAL(siminst!=NULL);
-
-    CONSOLE_DEBUG("Running 'on_load'...");
-	struct Name *name = CreateIdName(AddSymbol("on_load"));
-	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT_FATAL(pe==Proc_all_ok);
-
-	slv_system_t sys = system_build(siminst);
-	CU_ASSERT(sys != NULL);
-*/
-
 static void test_dimen_errors(const char *modelfile, const char *modelname, int shouldfail){
 	int simplify=1;
 
@@ -156,53 +128,29 @@ static void test_dimen_errors(const char *modelfile, const char *modelname, int 
 	Asc_CompilerDestroy();
 }
 
+
 static void test_chkdim1(){
 	char *f="test/chkdim/chkdim1.a4c";
 	char *m="chkdim1";
 	test_dimen_errors(f,m,TRUE);
 }
 
-static void test_chkdim2(){
-	char *f="test/chkdim/chkdim2.a4c";
-	char *m="chkdim2";
-	test_dimen_errors(f,m,TRUE);
+#define DEF_TEST2(NAME,SHOULDFAIL) \
+	static void test_##NAME(){ \
+	char *f="test/chkdim/chkdim2.a4c"; \
+	char *m= #NAME ; \
+	test_dimen_errors(f,m,SHOULDFAIL); \
 }
 
-static void test_chkdim3(){
-	char *f="test/chkdim/chkdim2.a4c";
-	char *m="chkdim3";
-	test_dimen_errors(f,m,TRUE);
-}
-
-static void test_chkdim4(){
-	char *f="test/chkdim/chkdim2.a4c";
-	char *m="chkdim4";
-	test_dimen_errors(f,m,TRUE);
-}
-
-static void test_chkdim5(){
-	char *f="test/chkdim/chkdim2.a4c";
-	char *m="chkdim5";
-	test_dimen_errors(f,m,TRUE);
-}
-
-static void test_chkdim6(){
-	char *f="test/chkdim/chkdim2.a4c";
-	char *m="chkdim6";
-	test_dimen_errors(f,m,TRUE);
-}
-
-static void test_chkdim7(){
-	char *f="test/chkdim/chkdim2.a4c";
-	char *m="chkdim7";
-	test_dimen_errors(f,m,FALSE);
-}
-
-static void test_chkdim8(){
-	char *f="test/chkdim/chkdim2.a4c";
-	char *m="shape_circle";
-	test_dimen_errors(f,m,FALSE);
-}
+DEF_TEST2(chkdim2,TRUE);
+DEF_TEST2(chkdim3,TRUE);
+DEF_TEST2(chkdim4,TRUE);
+DEF_TEST2(chkdim5,TRUE);
+DEF_TEST2(chkdim6,TRUE);
+DEF_TEST2(chkdim7,FALSE);
+DEF_TEST2(chkdim8,FALSE);
+DEF_TEST2(chkdim9,TRUE);
+DEF_TEST2(chkdim10,TRUE);
 
 /*===========================================================================*/
 /* Registration information */
@@ -217,7 +165,9 @@ static void test_chkdim8(){
 	T(chkdim5) \
 	T(chkdim6) \
 	T(chkdim7) \
-	T(chkdim8)
+	T(chkdim8) \
+	T(chkdim9) \
+	T(chkdim10)
 
 REGISTER_TESTS_SIMPLE(compiler_chkdim, TESTS)
 

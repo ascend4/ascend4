@@ -1418,17 +1418,18 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		try:
 			v = self.sim.getFreeableVariables()
 		except RuntimeError as e:
-			self.reporter.reportError("Unable to show freeable variables: %s"%str(e))
+			self.reporter.reportError("Unable to run consistency analysis: %s"%str(e))
 			return
-		text = "Freeable Variables"
+		text = "Consistency Analysis (variable-structure modelling)"
 		title = text
 		text += "\n"
+		text += "This function performs an automatized combinatorial consitency analysis to find a partition which causes all the alternatives in the system to be consistent. If the system is consistent, the array 'fixed' will contain the solver var indices of a set of discrete variables which, if fixed, will result in a consistent partition for all the alternatives in the system.\n"
 		if len(v):
 			for var in v:
 				text += "\n%s" % var
 		else:
 			text += "\nnone"
-		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog = InfoDialog(self,self.window,text,title,wrap=True)
 		_dialog.run()
 		
 	def on_show_external_functions_activate(self,*args):

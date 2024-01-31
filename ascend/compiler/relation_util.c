@@ -268,6 +268,7 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
             case F_ABS:
             case F_HOLD:
                /* no checking or scaling */
+               /* first->d = first->d already, no operation required */
                break;
 
             case F_SQR:
@@ -303,10 +304,9 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
             case F_ARCSINH:
             case F_ARCCOSH:
             case F_ARCTANH:
-               /**
-                ***  first must now be dimensionless.  It will
-                ***  end up dimensionless as well.
-                **/
+               /* for all of these, the argument ('first') must be dimensionless.
+                  and the result will also be dimensless
+               */
                if( IsWild(&(first->d)) && !IsZero(first) ) {
                   if(!*wild) *wild=TRUE;
                   if(GCDN){
@@ -316,10 +316,6 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
                          CmpDimen(&(first->d),Dimensionless()) ) {
                   if(*con) *con = FALSE;
                   if(GCDN){
-#if 0
-                    MSG("function arg dimensions are:");
-                    WriteDimensions(ASCERR,&(first->d));
-#endif
                     char *d1 = WriteDimensionStringFull(&(first->d));
                     ERRMSG("Function %s called with dimensions %s.",FuncName(TermFunc(rt)),d1);
                     ASC_FREE(d1);
@@ -331,10 +327,8 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
             case F_SIN:
             case F_COS:
             case F_TAN: {
-               /**
-                ***  first must now be of dimension D_PLANE_ANGLE.
-                ***  It will then be made dimensionless.
-                **/
+               /* for these, the argument must be dimensioned D_PLANE_ANGLE and
+                 the resulting will be dimensionless. */
                if(IsWild(&(first->d)) && !IsZero(first)){
                   if(!*wild) *wild = TRUE;
                   if(GCDN){
@@ -358,10 +352,8 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
             case F_ARCSIN:
             case F_ARCCOS:
             case F_ARCTAN:
-               /**
-                ***  first must now be dimensionless.  It will
-                ***  end up with dimension D_PLANE_ANGLE
-                **/
+               /* for these, the argument must be dimensionless, and the result 
+                  will be D_PLANE_ANGLE. */
                if(IsWild(&(first->d)) && !IsZero(first) ) {
                   if(!*wild) *wild = TRUE;
                   if(GCDN){
@@ -501,7 +493,7 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
       case e_plus:
       case e_minus:
          if( IsWild(&(first->d)) && IsZero(first) ) {
-            /* first wild zero */
+            /* first is wild and zero */
             CopyDimensions(&(second->d),&(first->d));
             first->type = second->type;
             if( second->type==e_int )
@@ -509,11 +501,11 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
             if( second->type==e_real )
                first->real_const = second->real_const;
          }else if( IsWild(&(first->d)) && !IsZero(first) ) {
-            /* first wild non-zero */
+            /* first non wild and non-zero */
             if( IsWild(&(second->d)) && !IsZero(second) ) {
                /* second wild non-zero */
                if(!*wild) *wild = TRUE;
-               if(GCDN) {
+               if(GCDN){
                  ERRMSG("%s has wild dimensions on left and right hand sides.",type==e_plus ? "Addition":"Subtraction");
                }
                first->type = type;
@@ -583,11 +575,30 @@ static void apply_term_dimensions(CONST struct Instance *relinst, CONST struct r
 	Finally, this function reports whether the LHS and RHS dimension
 	is consistent.
 	
-	A special note about 'wild' dimensions. This is for things like
+	A special note about 'wild' (wildcard) dimensions. This is for things like
 	'solver_var' which are variables that can be set to contain any
 	value with any units. Wildcard dimensions are not considered
 	satisfactoring in this 'check' -- wildcard dimensions are mostly 
-	being reported as an error.
+	being reported as an error. Consider what should happen when wildcard
+	values (W) are used in expressions along with dimensioned/dimensionless
+	values (D), with either zero (0) or non-zero (1) values in the following:
+
+	  0W + 0W --> 0W (adding a wild zero to something does not change it)
+	  0W + 0D --> 0D
+	  0W + 1W --> 1W
+	  0W + 1D --> 1D
+	  (vice verse the same)
+	  1W + 1W --> errors, can't add a non-zero wild value to something else
+	  1W + 0D 
+	  1W + 1D
+	  (and vv)
+	  0D + 1D --> dimensions need to match, even for addition of zero
+	  1D + 1D
+	  
+	Exponents:
+	
+	  
+	  
 	
 	FIXME it might be possible for dimension checking here to propagate
 	out to the METHODS section: once the necessary dimensions can be

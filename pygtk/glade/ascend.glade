@@ -2286,7 +2286,7 @@ upper and lower bounds displayed.</property>
                         <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Show f_reeable vars</property>
+                        <property name="label" translatable="yes">Show _consistency analysis</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_show_freeable_variables_activate" swapped="no"/>
                         <accelerator key="R" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>

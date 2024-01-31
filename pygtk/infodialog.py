@@ -6,7 +6,7 @@ from gi.repository import Pango
 from varentry import *
 
 class InfoDialog:
-	def __init__(self,browser,parent,text,title,tabs=None):
+	def __init__(self,browser,parent,text,title,tabs=None,wrap=None):
 		self.browser = browser
 
 		# GUI config
@@ -26,6 +26,11 @@ class InfoDialog:
 
 		self.textview = self.browser.builder.get_object("textview")
 		self.closebutton = self.browser.builder.get_object("closebutton")
+		
+		if wrap:
+			self.textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+		else:
+			self.textview.set_wrap_mode(Gtk.WrapMode.NONE)
 
 		if tabs:
 			self.setTabs(*tabs)

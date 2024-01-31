@@ -178,14 +178,6 @@ ATOM R_value REFINES solver_var
 	nominal := 1 {K*m^2/W};
 END R_value;
 
-ATOM pressure_per_temperature REFINES solver_var
-    DIMENSION M/L/T^2/TMP
-    DEFAULT 1.0{Pa/K};
-    lower_bound := -1e50{Pa/K};
-    upper_bound := 1e50{Pa/K};
-    nominal := 1.0{Pa/K};
-END pressure_per_temperature;
-
 ATOM energy_rate_per_length REFINES solver_var
 	DIMENSION M*L/T^3
 	DEFAULT 1000{W/m};

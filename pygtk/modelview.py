@@ -93,7 +93,7 @@ class ModelView:
 		self.hideallmenuitem.connect("activate", self.hide_all_variables)
 		self.hidevariable.connect("activate", self.show_variable)
 
-		self.variables = {"showed": [], "hidden": []}
+		self.variables = {"shown": set(), "hidden": set()}
 
 		if not self.treecontext:
 			raise RuntimeError("Couldn't create browsercontext")
@@ -121,12 +121,11 @@ class ModelView:
 
 	def fill_variables_menus(self):
 		# show all variables
-		vars = []
+		vars = set()
 		for instance in list(self.otank.values()):
-			if not str(instance[1].getType()) in vars:
-				vars.append(str(instance[1].getType()))
-		self.variables["showed"] = sorted(vars)
-		for instype in self.variables["showed"]:
+			vars.add(str(instance[1].getType()))
+		self.variables["shown"] = sorted(vars)
+		for instype in self.variables["shown"]:
 			menuitem = Gtk.MenuItem(instype)
 			menuitem.connect("activate", self.show_variable)
 			self.hidemenuitem.get_submenu().append(menuitem)
@@ -134,7 +133,7 @@ class ModelView:
 		self.hideallmenuitem.set_sensitive(True)
 
 	def clear_variables_menus(self):
-		self.variables = {"showed": [], "hidden": []}
+		self.variables = {"shown": set(), "hidden": set()}
 		allitem = self.hidemenuitem.get_submenu().get_children()[0]
 		for item in list(self.hidemenuitem.get_submenu().get_children()):
 			self.hidemenuitem.get_submenu().remove(item)
@@ -155,7 +154,7 @@ class ModelView:
 		self.modelview.expand_row(model.get_path(model.get_iter_first()), False)
 
 	def hide_all_variables(self, *args):
-		for instype in list(self.variables["showed"]):
+		for instype in list(self.variables["shown"]):
 			self.set_variable_visibility(instype, False)
 
 		self.modelview.get_model().refilter()
@@ -183,7 +182,7 @@ class ModelView:
 		if show:
 			if instype in self.variables["hidden"]:
 				self.variables["hidden"].remove(instype)
-			self.variables["showed"].append(instype)
+			self.variables["shown"].append(instype)
 			menuitem = None
 			for item in self.showmenuitem.get_submenu().get_children():
 				if item.get_label() == instype:
@@ -194,9 +193,9 @@ class ModelView:
 				self.hidemenuitem.get_submenu().insert(menuitem, self.get_menu_position(menuitem, self.hidemenuitem))
 
 		else:
-			if instype in self.variables["showed"]:
-				self.variables["showed"].remove(instype)
-			self.variables["hidden"].append(instype)
+			if instype in self.variables["shown"]:
+				self.variables["shown"].remove(instype)
+			self.variables["hidden"].add(instype)
 			menuitem = None
 			for item in self.hidemenuitem.get_submenu().get_children():
 				if item.get_label() == instype:
@@ -206,7 +205,7 @@ class ModelView:
 				self.hidemenuitem.get_submenu().remove(menuitem)
 				self.showmenuitem.get_submenu().insert(menuitem, self.get_menu_position(menuitem, self.showmenuitem))
 
-		self.hideallmenuitem.set_sensitive(len(self.variables["showed"]) > 0)
+		self.hideallmenuitem.set_sensitive(len(self.variables["shown"]) > 0)
 		self.showallmenuitem.set_sensitive(len(self.variables["hidden"]) > 0)
 
 	def get_menu_position(self, menuitem, menu):
@@ -221,10 +220,17 @@ class ModelView:
 		path = model.get_path(piter)
 		if str(path) not in self.otank:
 			return False
-
 		name, value = self.otank[path.to_string()]
-		instype = str(value.getType())
-		return instype in self.variables["showed"]
+		insttype = str(value.getType())
+
+		if value.isRelation() and 'relation' not in self.variables["shown"]:
+			return False
+		elif value.isAtom() and insttype not in self.variables["shown"]:
+			return False
+		elif value.isArray() and 'array' not in self.variables["shown"]:
+			return False
+		else:
+			return True
 
 	def clear(self):
 		self.clear_variables_menus()

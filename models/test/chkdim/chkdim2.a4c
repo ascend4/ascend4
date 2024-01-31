@@ -75,9 +75,31 @@ MODEL shape_generic;
 	name IS_A symbol_constant;
 END shape_generic;
 
-MODEL shape_circle REFINES shape_generic;
+MODEL chkdim8 REFINES shape_generic; (* shoul be no error *)
 	name :== 'circle';
 	d "internal diameter" IS_A distance;
 	A_circ_eq: A = 0.25{PI} * d^2;
-END shape_circle;
+END chkdim8;
+
+MODEL chkdim9; (* error *)
+	x IS_A distance;
+	y IS_A delta_distance;
+	(* x = y + 0; *)
+	x + y = 0;
+METHODS
+	METHOD on_load;
+		FIX x := 1 {m};
+	END on_load;
+END chkdim9;
+
+
+MODEL chkdim10; (* error *)
+	l IS_A distance;
+	T IS_A temperature;
+	abs(T) = abs(l);
+METHODS
+	METHOD on_load;
+		FIX l := 1 {m};
+	END on_load;
+END chkdim10; 
 
