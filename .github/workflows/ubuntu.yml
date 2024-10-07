@@ -18,9 +18,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Use a different Ubuntu mirror
+    - name: Check what Ubuntu mirror is being used
       run: |
-        sudo sed -i 's/azure\.archive\.ubuntu\.com/mirror\.lostpacket\.org/' /etc/apt/sources.list
         sudo cat /etc/apt/sources.list
 
     - name: Install dependencies
@@ -64,5 +63,5 @@ jobs:
         gcov: true
         flags: ubuntu, cunit
 
-
+#        sudo sed -i 's/azure\.archive\.ubuntu\.com/mirror\.lostpacket\.org/' /etc/apt/sources.list
 # vim: ts=2:sw=2:et
