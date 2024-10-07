@@ -35,18 +35,14 @@
 #include "sets.h"
 #include "case.h"
 
-#define CAMALLOC(x) x = ASC_NEW(struct Case)
-
 /********************************************************************\
                         Case processing
 \********************************************************************/
 
 
 
-struct Case *CreateCase(struct Set *vl, struct gl_list_t *refinst)
-{
-  register struct Case *result;
-  CAMALLOC(result);
+struct Case *CreateCase(struct Set *vl, struct gl_list_t *refinst){
+  struct Case *result = ASC_NEW(struct Case);
   assert(result!=NULL);
   result->ValueList = vl;
   result->ref = refinst;
@@ -55,51 +51,44 @@ struct Case *CreateCase(struct Set *vl, struct gl_list_t *refinst)
 }
 
 
-struct Set *GetCaseValuesF(struct Case *c)
-{
+struct Set *GetCaseValuesF(struct Case *c){
   assert(c);
   return c->ValueList;
 }
 
 
-struct gl_list_t *GetCaseReferencesF(struct Case *c)
-{
+struct gl_list_t *GetCaseReferencesF(struct Case *c){
   assert(c);
   return c->ref;
 }
 
 
-int GetCaseStatusF(struct Case *c)
-{
+int GetCaseStatusF(struct Case *c){
   assert(c);
   return c->active;
 }
 
-struct Case *SetCaseValues(struct Case *c, struct Set *vl)
-{
+struct Case *SetCaseValues(struct Case *c, struct Set *vl){
   assert(c);
   c->ValueList = vl;
   return c;
 }
 
-struct Case *SetCaseReferences(struct Case *c, struct gl_list_t *refinst)
-{
+struct Case *SetCaseReferences(struct Case *c, struct gl_list_t *refinst){
   assert(c);
   c->ref = refinst;
   return c;
 }
 
 
-struct Case *SetCaseStatus(struct Case *c, int setact)
-{
+struct Case *SetCaseStatus(struct Case *c, int setact){
   assert(c);
   c->active = setact;
   return c;
 }
 
 
-unsigned long NumberCaseRefs(struct Case *c)
-{
+unsigned long NumberCaseRefs(struct Case *c){
   struct gl_list_t *refs;
   unsigned long n;
   refs = GetCaseReferences(c);
@@ -108,40 +97,34 @@ unsigned long NumberCaseRefs(struct Case *c)
 }
 
 
-struct Instance *CaseRef(struct Case *c,
-			 unsigned long int refnum)
-{
+struct Instance *CaseRef(struct Case *c, unsigned long int refnum){
   struct gl_list_t *refs;
   refs = GetCaseReferences(c);
   return (struct Instance *)gl_fetch(refs,refnum);
 }
 
 
-void DestroyCase(struct Case *c)
-{
-  register struct Set *set;
-  set = c->ValueList;
-  if (c!=NULL){
-      if (c->ValueList) {
-	if (set->next== NULL) {
-	  DestroySetNodeByReference(c->ValueList);
-        }
-	else {
-	  DestroySetListByReference(c->ValueList);
-	}
+void DestroyCase(struct Case *c){
+  struct Set *set;
+  if(c!=NULL){
+    set = c->ValueList;
+    if(set) {
+      if(set->next== NULL) {
+        DestroySetNodeByReference(set);
+      }else{
+        DestroySetListByReference(set);
       }
-      gl_destroy(c->ref);
-      c->active = 0;
-      ascfree((char *)c);
+    }
+    gl_destroy(c->ref);
+    c->active = 0;
+    ASC_FREE(c);
   }
 }
 
 
-struct Case *CopyCase(struct Case *c)
-{
-  register struct Case *result;
+struct Case *CopyCase(struct Case *c){
   assert(c);
-  CAMALLOC(result);
+  struct Case *result = ASC_NEW(struct Case);
   if (c->ValueList) result->ValueList = CopySetByReference(c->ValueList);
   else result->ValueList = c->ValueList;
   result->ref = gl_copy(c->ref);
@@ -149,7 +132,5 @@ struct Case *CopyCase(struct Case *c)
   return result;
 }
 
-
-
-
+/* vim: set noai ts=8 sw=2 et: */
 

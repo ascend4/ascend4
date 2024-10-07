@@ -194,6 +194,14 @@ ATOM energy_flux REFINES solver_var
 	nominal := 1000{W/m^2};
 END energy_flux;
 
+ATOM area_rate REFINES solver_var
+	DIMENSION L^2/T
+	DEFAULT 1{m^2/s};
+	lower_bound := -1e50{m^2/s};
+	upper_bound := 1e50{m^2/s};
+	nominal := 1{m^2/s};
+END area_rate;
+
 (* for use in heat exchangers: C_c, C_h, C_min, etc. *)
 ATOM capacity_rate REFINES power_per_temperature;
 END capacity_rate;
