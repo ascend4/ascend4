@@ -105,9 +105,8 @@ struct Instance *CaseRef(struct Case *c, unsigned long int refnum){
 
 
 void DestroyCase(struct Case *c){
-  struct Set *set;
   if(c!=NULL){
-    set = c->ValueList;
+    struct Set *set = c->ValueList;
     if(set) {
       if(set->next== NULL) {
         DestroySetNodeByReference(set);
