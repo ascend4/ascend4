@@ -97,14 +97,14 @@ symchar *g_statio_stattypenames[WILLBE+1];
 static
 symchar *g_statio_flowtypenames[fc_stop+1];
 
+
 void statio_clear_stattypenames(void){
 	g_statio_stattypenames[0]=NULL;
 }
 
 
 static
-void Indent(FILE *f, register int i)
-{
+void Indent(FILE *f, register int i){
   register int tabs;
   if (i<=0) return;
   tabs = i / 8;
@@ -115,8 +115,7 @@ void Indent(FILE *f, register int i)
 
 /* return a string of the kind */
 static
-char *ForKindString(enum ForKind fk)
-{
+char *ForKindString(enum ForKind fk){
   switch (fk) {
   case fk_create:
     return "CREATE";
@@ -132,8 +131,7 @@ char *ForKindString(enum ForKind fk)
 }
 
 static
-void WriteOrder(FILE *f, enum ForOrder o)
-{
+void WriteOrder(FILE *f, enum ForOrder o){
   switch(o){
   case f_increasing: FPRINTF(f," INCREASING"); break;
   case f_decreasing: FPRINTF(f," DECREASING"); break;
@@ -142,8 +140,7 @@ void WriteOrder(FILE *f, enum ForOrder o)
 }
 
 static
-void WriteWhenNode(FILE *f,struct WhenList *w, int i)
-{
+void WriteWhenNode(FILE *f,struct WhenList *w, int i){
   register struct Set *set;
   Indent(f,i);
   set = WhenSetList(w);
@@ -157,17 +154,15 @@ void WriteWhenNode(FILE *f,struct WhenList *w, int i)
 }
 
 static
-void WriteWhenList(FILE *f, struct WhenList *w, int i)
-{
+void WriteWhenList(FILE *f, struct WhenList *w, int i){
   while (w!=NULL) {
     WriteWhenNode(f,w,i);
     w = NextWhenCase(w);
   }
 }
 
-static
-void WriteSelectNode(FILE *f, struct SelectList *sel, int i)
-{
+static 
+void WriteSelectNode(FILE *f, struct SelectList *sel, int i){
   register struct Set *set;
   Indent(f,i);
   set = SelectSetList(sel);
@@ -191,8 +186,7 @@ void WriteSelectList(FILE *f, struct SelectList *sel, int i)
 }
 
 static
-void WriteSwitchNode(FILE *f, struct SwitchList *sw, int i)
-{
+void WriteSwitchNode(FILE *f, struct SwitchList *sw, int i){
   register struct Set *set;
   Indent(f,i);
   set = SwitchSetList(sw);
@@ -207,16 +201,14 @@ void WriteSwitchNode(FILE *f, struct SwitchList *sw, int i)
 }
 
 static
-void WriteSwitchList(FILE *f, struct SwitchList *sw, int i)
-{
+void WriteSwitchList(FILE *f, struct SwitchList *sw, int i){
   while (sw!=NULL) {
     WriteSwitchNode(f,sw,i);
     sw = NextSwitchCase(sw);
   }
 }
 
-struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl)
-{
+struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl){
   register unsigned long len,c;
   register CONST struct gl_list_t *l=NULL;
   struct gl_list_t *found=NULL;
@@ -274,15 +266,13 @@ struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl)
   return found;
 }
 
-unsigned long StatementListLength(CONST struct StatementList *sl)
-{
+unsigned long StatementListLength(CONST struct StatementList *sl){
   if (sl==NULL) return 0L;
   if (GetList(sl) == NULL) return 0L;
   return gl_length(GetList(sl));
 }
 
-void WriteStatement(FILE *f, CONST struct Statement *s, int i)
-{
+void WriteStatement(FILE *f, CONST struct Statement *s, int i){
   struct Name *n;
   assert(s!=NULL);
   if (GSS && SUP(s)) return;
@@ -633,8 +623,7 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
  * VRR. But the "jumping" of the statements is only for the outermost
  * SELECT, the nested SELECTs do not require it.
  */
-void WriteStatementList(FILE *f, CONST struct StatementList *sl, int i)
-{
+void WriteStatementList(FILE *f, CONST struct StatementList *sl, int i){
   register unsigned long len,c;
   register CONST struct gl_list_t *l;
   struct Statement *stat;
@@ -654,8 +643,8 @@ void WriteStatementList(FILE *f, CONST struct StatementList *sl, int i)
  * VRR.
  */
 void WriteDiffStatementList(FILE *f, CONST struct StatementList *sl1,
-                            CONST struct StatementList *sl2, int i)
-{
+                            CONST struct StatementList *sl2, int i
+){
   register unsigned long len1,len2,c;
   register CONST struct gl_list_t *l;
   struct Statement *stat;
@@ -672,8 +661,7 @@ void WriteDiffStatementList(FILE *f, CONST struct StatementList *sl1,
   }
 }
 
-void WriteStatementSuppressed(FILE *f, CONST struct Statement *stat)
-{
+void WriteStatementSuppressed(FILE *f, CONST struct Statement *stat){
   if (stat!=NULL) {
     FPRINTF(f,"  Incorrect statement (final warning) at %s:%lu\n",
             Asc_ModuleBestName(StatementModule(stat)),
@@ -776,8 +764,7 @@ void WriteStatementLocation(FILE *f, CONST struct Statement *stat){
 }
 
 
-CONST char *StatioLabel(int level)
-{
+const char *StatioLabel(int level){
   if (level >4 || level <1) {
     level = 0;
   }
@@ -792,39 +779,36 @@ int *GetStatioSuppressions(void) {
   return table;
 }
 
-void DestroySuppressions(int *table)
-{
+void DestroySuppressions(int *table){
   assert(table!=NULL);
   ascfree(table);
 }
 
 
 void WriteStatementErrorSparse(FILE *f,
-                                CONST struct Statement *stat,
-                                CONST char *message, int *ignore)
-{
+    const struct Statement *stat, const char *message, int *ignore
+){
   assert(ignore!=NULL);
   g_statio_suppressions = ignore;
-  if (!SUP(stat)) {
-    if (message) FPRINTF(f,message);
-    if (stat ){
+  if(stat){
+    if(!SUP(stat)){
+      if(message) FPRINTF(f,message);
       FPRINTF(f," %s:%lu\n",
-              Asc_ModuleBestName(StatementModule(stat)),
-              StatementLineNum(stat));
+                Asc_ModuleBestName(StatementModule(stat)),
+                StatementLineNum(stat));
       WriteStatement(f,stat,0);
       if (GetEvaluationForTable()!=NULL) {
         WriteForTable(f,GetEvaluationForTable());
         FPRINTF(f,"\n");
       }
-    } else {
-      FPRINTF(f,"NULL STATEMENT!!!\n");
     }
+  }else{
+    FPRINTF(f,"NULL STATEMENT!!!\n");
   }
   g_statio_suppressions = NULL;
 }
 
-symchar *StatementTypeString(CONST struct Statement *s)
-{
+symchar *StatementTypeString(CONST struct Statement *s){
   static symchar *error_statement_sym;
   assert(s!=NULL);
   if(g_statio_stattypenames[0]==NULL) {
@@ -837,8 +821,8 @@ symchar *StatementTypeString(CONST struct Statement *s)
     g_statio_stattypenames[AA] = AddSymbol("ARE_ALIKE");
     g_statio_stattypenames[LNK] = AddSymbol("LINK");
     g_statio_stattypenames[FOR] = AddSymbol("FOR");
-	g_statio_stattypenames[FIX] = AddSymbol("FIX");
-	g_statio_stattypenames[FREE] = AddSymbol("FREE");
+    g_statio_stattypenames[FIX] = AddSymbol("FIX");
+    g_statio_stattypenames[FREE] = AddSymbol("FREE");
     g_statio_stattypenames[REL] = GetBaseTypeName(relation_type);
     g_statio_stattypenames[LOGREL] = GetBaseTypeName(logrel_type);
     g_statio_stattypenames[ASGN] = AddSymbol("Assignment");
@@ -851,7 +835,7 @@ symchar *StatementTypeString(CONST struct Statement *s)
     g_statio_stattypenames[SWITCH] = AddSymbol("SWITCH");
     g_statio_stattypenames[EXT] = AddSymbol("EXTERNAL");
     g_statio_stattypenames[CALL] = AddSymbol("CALL");
-	g_statio_stattypenames[ASSERT] = AddSymbol("ASSERT");
+    g_statio_stattypenames[ASSERT] = AddSymbol("ASSERT");
     g_statio_stattypenames[FLOW] = AddSymbol("<flow-control>");
     g_statio_stattypenames[WHILE] = AddSymbol("WHILE");
     g_statio_stattypenames[REF] = AddSymbol("_IS_");
@@ -865,6 +849,7 @@ symchar *StatementTypeString(CONST struct Statement *s)
     g_statio_flowtypenames[fc_break] = AddSymbol("BREAK");
     g_statio_flowtypenames[fc_fallthru] = AddSymbol("FALL_THROUGH");
   }
+  
   switch(StatementType(s)) {
   case ALIASES:
   case ISA:
@@ -929,3 +914,5 @@ void Asc_StatErrMsg_NotAllowedDeclarative(FILE *f
 		, suggestion
 	);
 }
+
+/* vim: set noai ts=2 sw=2 et: */
