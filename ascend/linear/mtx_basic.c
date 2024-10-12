@@ -2920,9 +2920,8 @@ static void mtx_write_perm(FILE *fp,int32 ord,int32 *arr){
 
 static void mtx_read_perm(FILE *fp,int32 ord,int32 *arr){
   int32 i;
-  int nitems;
   for (i=0; i<ord;i++) {
-    nitems = fscanf(fp,"%d",&(arr[i]));
+    int nitems = fscanf(fp,"%d",&(arr[i]));
     if (nitems != 1) {
       FPRINTF(g_mtxerr, "mtx_read_perm: ran out of data at %d\n", i);
       return;
@@ -3003,25 +3002,15 @@ static int getregion(FILE* fp, mtx_region_t *reg) {
 }
 
 static int getcoef(FILE* fp, int *row, int *col, double *val){
-  char buf[80];
   int nitems;
-  nitems = fscanf(fp,"%d %d",row,col);
+  nitems = fscanf(fp,"%d %d %lg",row,col, val);
   if( nitems == EOF) {
     return 0;
   }
-  if (nitems != 2) {
-    FPRINTF(g_mtxerr, "mtx_read_region: getcoef:ran out of data: coord\n");
+  if (nitems != 3) {
+    FPRINTF(g_mtxerr, "mtx_read_region: getcoef:ran out of data: i j val\n");
     return 0;
   }
-  nitems = fscanf(fp,"%s",buf);
-  if( nitems == EOF) {
-    return 0;
-  }
-  if (nitems != 1) {
-    FPRINTF(g_mtxerr, "mtx_read_region: getcoef:ran out of data: value\n");
-    return 0;
-  }
-  *val=strtod(buf,NULL);
   return 1;
 }
 
