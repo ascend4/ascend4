@@ -550,7 +550,7 @@ DoNameF(CONST struct Name *nptr,
         CONST struct Statement *stat,
         int noisy)
 {
-  register symchar *name;
+  symchar *name;
   int ok;
   int nsubs=0;
 
@@ -627,7 +627,7 @@ enum typelinterr DoVarList(CONST struct VariableList *vlist,
                            CONST struct TypeDescription *type,
                            CONST struct Statement *stat)
 {
-  register CONST struct Name *nptr;
+  CONST struct Name *nptr;
   enum typelinterr error_code;
   while(vlist!=NULL){
     nptr = NamePointer(vlist);
@@ -675,8 +675,8 @@ static
 enum typelinterr VerifyALIASES(CONST struct StatementList *stats,
                            struct gl_list_t *childlist)
 {
-  register struct gl_list_t *statements;
-  register unsigned long c,len,pos;
+  struct gl_list_t *statements;
+  unsigned long c,len,pos;
   enum typelinterr error_code;
   struct Statement *stat;
   struct ChildListEntry test;
@@ -753,8 +753,8 @@ enum typelinterr VerifyALIASES(CONST struct StatementList *stats,
 static
 enum typelinterr DoIS_A(CONST struct StatementList *stats)
 {
-  register struct gl_list_t *statements;
-  register unsigned long c,len;
+  struct gl_list_t *statements;
+  unsigned long c,len;
   enum typelinterr error_code;
   struct Statement *stat;
   statements = GetList(stats);
@@ -1157,9 +1157,9 @@ enum typelinterr DoRelations(symchar *type,
         	             CONST struct StatementList *stats,
         	             struct gl_list_t *ft)
 {
-  register struct gl_list_t *statements;
-  register unsigned long c,len;
-  register struct Statement *stat;
+  struct gl_list_t *statements;
+  unsigned long c,len;
+  struct Statement *stat;
   enum typelinterr error_code;
   statements = GetList(stats);
   len = gl_length(statements);
@@ -1240,9 +1240,9 @@ enum typelinterr DoWhens(symchar *type,
                          CONST struct StatementList *stats,
                          struct gl_list_t *ft)
 {
-  register struct gl_list_t *statements;
-  register unsigned long c,len;
-  register struct Statement *stat;
+  struct gl_list_t *statements;
+  unsigned long c,len;
+  struct Statement *stat;
   enum typelinterr error_code;
   statements = GetList(stats);
   len = gl_length(statements);
@@ -1373,7 +1373,7 @@ struct AliasList *ALPrepend(struct AliasList *list, struct AliasList *ele)
 static
 struct AliasList *CreateAliasesList(struct StatementList *stats)
 {
-  register struct Statement *stat;
+  struct Statement *stat;
   struct gl_list_t *statements;
   struct AliasList *result=NULL;
   unsigned long c,len;
@@ -2558,9 +2558,9 @@ enum typelinterr VerifyDefsAsgns(symchar *name,
                                  struct gl_list_t *lclgl,
                                  struct gl_list_t *ft)
 {
-  register struct gl_list_t *statements;
-  register unsigned long c,len;
-  register unsigned long nc,nlen;
+  struct gl_list_t *statements;
+  unsigned long c,len;
+  unsigned long nc,nlen;
   CONST struct TypeDescription *rtype;
   struct Statement *stat;
   CONST struct Name *nptr;
@@ -2744,8 +2744,8 @@ static
 enum typelinterr VerifyRefinementLegal(CONST struct StatementList *stats,
                                        struct gl_list_t *lclgl)
 {
-  register unsigned long c,len,pos;
-  register struct gl_list_t *statements;
+  unsigned long c,len,pos;
+  struct gl_list_t *statements;
   CONST struct VariableList *vl;
   struct Statement *stat;
   CONST struct Name *nptr;
@@ -3197,7 +3197,7 @@ enum typelinterr VerifyISAARGS(CONST struct StatementList *stats,
                                struct gl_list_t *lclgl,
                                struct gl_list_t *ft)
 {
-  register unsigned long c,len;
+  unsigned long c,len;
   struct Statement *stat;
   CONST struct Set *alist;
   CONST struct TypeDescription *d;
@@ -3254,7 +3254,7 @@ enum typelinterr VerifyForVars(CONST struct StatementList *stats,
                                struct gl_list_t *ft,
                                symchar *name)
 {
-  register unsigned long c,len,nc,nlen;
+  unsigned long c,len,nc,nlen;
   struct Statement *stat;
   symchar *fvname;
   unsigned long pos;
@@ -3534,9 +3534,9 @@ enum typelinterr VerifyRelationNames(symchar * name,
                                      struct gl_list_t *lclgl,
                                      struct gl_list_t *ft)
 {
-  register struct gl_list_t *statements;
-  register unsigned long c,len;
-  register struct Statement *stat;
+  struct gl_list_t *statements;
+  unsigned long c,len;
+  struct Statement *stat;
   enum typelinterr error_code;
   statements = GetList(stats);
   len = gl_length(statements);
@@ -3858,7 +3858,7 @@ enum typelinterr DoParamName(CONST struct Name *nptr,
         		     CONST struct Statement *stat,
                              int checksubs)
 {
-  register symchar *name;
+  symchar *name;
   int isarray =0;
   int ok;
   if (NameId(nptr)){
@@ -3906,7 +3906,7 @@ enum typelinterr DoParamVarList(CONST struct VariableList *vlist,
                            CONST struct Statement *stat,
                            int checksubs)
 {
-  register CONST struct Name *nptr;
+  CONST struct Name *nptr;
   enum typelinterr error_code;
 
   while(vlist!=NULL){
@@ -3935,8 +3935,8 @@ enum typelinterr ParametricChildList(symchar *name,
                                      struct StatementList *slist,
                                      int checksubs)
 {
-  register struct gl_list_t *statements;
-  register unsigned long c,len;
+  struct gl_list_t *statements;
+  unsigned long c,len;
   enum typelinterr error_code;
   struct Statement *stat;
 
@@ -3990,8 +3990,8 @@ enum typelinterr CheckParameterWheres(symchar *name,
                                       struct StatementList *slist,
                                       struct gl_list_t *lclgl)
 {
-  register struct gl_list_t *statements;
-  register unsigned long c,len;
+  struct gl_list_t *statements;
+  unsigned long c,len;
   struct Statement *stat;
   CONST struct VariableList *vl;
   CONST struct TypeDescription *rtype;
@@ -4556,7 +4556,7 @@ static
 ChildListPtr FinishChildList(symchar *type, struct StatementList *stats)
 {
   ChildListPtr result;
-  register struct gl_list_t *childlist;
+  struct gl_list_t *childlist;
   struct gl_list_t *ilist;
   struct for_table_t *ftable;
   enum typelinterr error_code;
@@ -4991,10 +4991,10 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
 static
 ChildListPtr MakeAtomChildList(struct StatementList *sl)
 {
-  register struct Statement *stat;
+  struct Statement *stat;
   ChildListPtr result;
-  register struct gl_list_t *list,*childlist;
-  register unsigned long c,len;
+  struct gl_list_t *list,*childlist;
+  unsigned long c,len;
   enum typelinterr error_code;
   list = GetList(sl);
   len = gl_length(list);
@@ -5132,7 +5132,7 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
   struct TypeDescription *rdesc;
   ChildListPtr clist;
   struct ChildDesc *childd;
-  register unsigned long bytesize;
+  unsigned long bytesize;
 
   if (err) {
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Atom definition \"%s\" abandoned due to syntax errors.",SCP(name));

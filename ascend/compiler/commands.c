@@ -103,7 +103,7 @@ extern unsigned long NumberCommands(void)
 
 extern CONST char *CommandName(unsigned long int u)
 {
-  register struct command_t *ptr;
+  struct command_t *ptr;
   ptr = (struct command_t *)gl_fetch(global_command_list,u);
   return ptr->str;
 }
@@ -111,7 +111,7 @@ extern CONST char *CommandName(unsigned long int u)
 
 extern CONST char *CommandHelp(unsigned long int u)
 {
-  register struct command_t *ptr;
+  struct command_t *ptr;
   ptr = (struct command_t *)gl_fetch(global_command_list,u);
   return ptr->help;
 }
@@ -119,7 +119,7 @@ extern CONST char *CommandHelp(unsigned long int u)
 
 extern void CommandFunc(unsigned long int u, InterfaceCommandF *func)
 {
-  register struct command_t *ptr;
+  struct command_t *ptr;
   ptr = (struct command_t *)gl_fetch(global_command_list,u);
   *func = ptr->func;
 }
@@ -127,7 +127,7 @@ extern void CommandFunc(unsigned long int u, InterfaceCommandF *func)
 
 extern int CommandTerminate(unsigned long int u)
 {
-  register struct command_t *ptr;
+  struct command_t *ptr;
   ptr = (struct command_t *)gl_fetch(global_command_list,u);
   return ptr->terminate;
 }
@@ -135,7 +135,7 @@ extern int CommandTerminate(unsigned long int u)
 
 extern int CommandNumArgs(unsigned long int u)
 {
-  register struct command_t *ptr;
+  struct command_t *ptr;
   ptr = (struct command_t *)gl_fetch(global_command_list,u);
   return ptr->num_args;
 }
@@ -143,7 +143,7 @@ extern int CommandNumArgs(unsigned long int u)
 
 extern enum arg_type CommandArgument(unsigned long int u, int i)
 {
-  register struct command_t *ptr;
+  struct command_t *ptr;
   ptr = (struct command_t *)gl_fetch(global_command_list,u);
   return ptr->args[i];
 }
@@ -151,7 +151,7 @@ extern enum arg_type CommandArgument(unsigned long int u, int i)
 
 extern void CommandArgsPrint(FILE *fp, unsigned long int u)
 {
-  register struct command_t *ptr;
+  struct command_t *ptr;
   int i;
   ptr = (struct command_t *)gl_fetch(global_command_list,u);
   FPRINTF(fp,"%s",ptr->str);
@@ -185,8 +185,8 @@ extern void CommandArgsPrint(FILE *fp, unsigned long int u)
 
 
 static
-int mycmp(register CONST char *str1,
-	  register CONST char *str2)
+int mycmp(CONST char *str1,
+	  CONST char *str2)
 {
   while(*str1 != '\0') {
     if (*str1 < *str2) return -1;
@@ -204,10 +204,10 @@ int mycmp(register CONST char *str1,
  */
 static
 unsigned long FindGLB(CONST char *str, int place,
-		      register unsigned long int lower,
-		      register unsigned long int upper)
+		      unsigned long int lower,
+		      unsigned long int upper)
 {
-  register struct command_t *ptr;
+  struct command_t *ptr;
   unsigned long search;
   str += place;
   while (lower <= upper){
@@ -234,10 +234,10 @@ unsigned long FindGLB(CONST char *str, int place,
  */
 static
 unsigned long FindLUB(CONST char *str, int place,
-		      register unsigned long int lower,
-		      register unsigned long int upper)
+		      unsigned long int lower,
+		      unsigned long int upper)
 {
-  register struct command_t *ptr;
+  struct command_t *ptr;
   unsigned long search;
   str += place;
   while (lower <= upper){
@@ -261,7 +261,7 @@ unsigned long FindLUB(CONST char *str, int place,
 extern void LimitCommand(unsigned long int *lower, unsigned long int *upper,
                          CONST char *str, int place)
 {
-  register struct command_t *ptr;
+  struct command_t *ptr;
   if (*lower > *upper) return;
   if (*lower == *upper){
     ptr = (struct command_t *)gl_fetch(global_command_list,*lower);
@@ -276,10 +276,10 @@ extern void LimitCommand(unsigned long int *lower, unsigned long int *upper,
 
 
 static
-int NumberMatch(register CONST char *str1,
-		register CONST char *str2, int max)
+int NumberMatch(CONST char *str1,
+		CONST char *str2, int max)
 {
-  register int c=0;
+  int c=0;
   while((c<max)&&(*str1 != '\0')&&(*str1 == *str2)){
     str1++;
     str2++;
@@ -292,10 +292,10 @@ int NumberMatch(register CONST char *str1,
 extern void CompleteCommand(unsigned long int lower, unsigned long int upper,
                             char *str, int *place)
 {
-  register CONST char *cpy;
+  CONST char *cpy;
   int count;
   unsigned long pos;
-  register struct command_t *ptr;
+  struct command_t *ptr;
   ptr = (struct command_t *)gl_fetch(global_command_list,lower);
   cpy = ptr->str;
   count = (int)strlen(cpy);
@@ -312,7 +312,7 @@ extern void CompleteCommand(unsigned long int lower, unsigned long int upper,
 extern unsigned long int FindCommand(CONST char *s)
 {
   struct gl_list_t *clist;
-  register struct command_t *ptr;
+  struct command_t *ptr;
   unsigned long pos,len;
   clist = global_command_list;
   if (clist == NULL || s==NULL) return 0;

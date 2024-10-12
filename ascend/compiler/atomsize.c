@@ -48,7 +48,7 @@
 static unsigned long ChildMemory(unsigned long int count,
                                  CONST struct ChildDesc *cdesc)
 {
-  register unsigned long result;
+  unsigned long result;
   result = NextHighestEven(count)*sizeof(struct Instance *);
   while(count) {
     switch(ChildDescType(GetChildArrayElement(cdesc,count))) {

@@ -37,7 +37,7 @@
  **/
 static int killnl(char *s, int *nl)
 {
-   register char *end;
+   char *end;
 
    end = s + strlen(s);
    if( (*nl = (end != s && end[-1] == '\n')) ) {

@@ -113,10 +113,10 @@ struct Instance *ShortCutProtoInstance(struct TypeDescription *type)
   Copy Instance code.
 \*********************************************************************/
 
-void CheckChildCopies(register unsigned long int num,
-		      register struct Instance **clist)
+void CheckChildCopies(unsigned long int num,
+		      struct Instance **clist)
 {
-  register unsigned long c;
+  unsigned long c;
   for(c=0;c<num;c++) {
     if ((clist[c]->t==SET_INST)&&(S_INST(clist[c])->list!=NULL)) {
       S_INST(clist[c])->list = CopySet(S_INST(clist[c])->list);
@@ -147,8 +147,8 @@ static
 struct Instance *CopyReal(CONST struct Instance *i)
 {
   if (IsAtomicInstance(i)) {
-    register struct RealAtomInstance *src,*result;
-    register unsigned long size;
+  struct RealAtomInstance *src,*result;
+  unsigned long size;
     AssertMemory(i);
     src = RA_INST(i);
     size = GetByteSize(src->desc);
@@ -166,8 +166,8 @@ struct Instance *CopyReal(CONST struct Instance *i)
     AssertMemory(result);
     return INST(result);
   } else {
-    register struct RealConstantInstance *src,*result;
-    register unsigned long size;
+  struct RealConstantInstance *src,*result;
+  unsigned long size;
     AssertMemory(i);
     src = RC_INST(i);
     size = GetByteSize(src->desc);
@@ -188,8 +188,8 @@ static
 struct Instance *CopyInteger(CONST struct Instance *i)
 {
   if (IsAtomicInstance(i)) {
-    register struct IntegerAtomInstance *src,*result;
-    register unsigned long size;
+  struct IntegerAtomInstance *src,*result;
+  unsigned long size;
 
     AssertMemory(i);
     src = IA_INST(i);
@@ -208,8 +208,8 @@ struct Instance *CopyInteger(CONST struct Instance *i)
     AssertMemory(result);
     return INST(result);
   } else {
-    register struct IntegerConstantInstance *src,*result;
-    register unsigned long size;
+  struct IntegerConstantInstance *src,*result;
+  unsigned long size;
 
     AssertMemory(i);
     src = IC_INST(i);
@@ -232,8 +232,8 @@ static
 struct Instance *CopyBoolean(CONST struct Instance *i)
 {
   if (IsAtomicInstance(i)) {
-    register struct BooleanAtomInstance *src,*result;
-    register unsigned long size;
+  struct BooleanAtomInstance *src,*result;
+  unsigned long size;
     AssertMemory(i);
     src = BA_INST(i);
     size = GetByteSize(src->desc);
@@ -253,8 +253,8 @@ struct Instance *CopyBoolean(CONST struct Instance *i)
     AssertMemory(result);
     return INST(result);
   } else {
-    register struct BooleanConstantInstance *src,*result;
-    register unsigned long size;
+  struct BooleanConstantInstance *src,*result;
+  unsigned long size;
     AssertMemory(i);
     src = BC_INST(i);
     size = GetByteSize(src->desc);
@@ -272,8 +272,8 @@ struct Instance *CopyBoolean(CONST struct Instance *i)
 static
 struct Instance *CopySetInst(CONST struct Instance *i)
 {
-  register struct SetAtomInstance *src, *result;
-  register unsigned long size;
+  struct SetAtomInstance *src, *result;
+  unsigned long size;
   AssertMemory(i);
   src = SA_INST(i);
   size = GetByteSize(src->desc);
@@ -300,8 +300,8 @@ static
 struct Instance *CopySymbolInst(CONST struct Instance *i)
 {
   if (IsAtomicInstance(i)) {
-    register struct SymbolAtomInstance *src,*result;
-    register unsigned long size;
+  struct SymbolAtomInstance *src,*result;
+  unsigned long size;
     AssertMemory(i);
     src = SYMA_INST(i);
     size = GetByteSize(src->desc);
@@ -319,8 +319,8 @@ struct Instance *CopySymbolInst(CONST struct Instance *i)
     AssertMemory(result);
     return INST(result);
   } else {
-    register struct SymbolConstantInstance *src,*result;
-    register unsigned long size;
+  struct SymbolConstantInstance *src,*result;
+  unsigned long size;
     AssertMemory(i);
     src = SYMC_INST(i);
     size = GetByteSize(src->desc);
@@ -338,8 +338,8 @@ struct Instance *CopySymbolInst(CONST struct Instance *i)
 static
 struct Instance *CopyRelationInst(CONST struct Instance *i)
 {
-  register struct RelationInstance *src,*result;
-  register unsigned long size;
+  struct RelationInstance *src,*result;
+  unsigned long size;
   AssertMemory(i);
   src = RELN_INST(i);
   size = GetByteSize(src->desc);
@@ -368,8 +368,8 @@ struct Instance *CopyRelationInst(CONST struct Instance *i)
 static
 struct Instance *CopyLogRelInst(CONST struct Instance *i)
 {
-  register struct LogRelInstance *src,*result;
-  register unsigned long size;
+  struct LogRelInstance *src,*result;
+  unsigned long size;
   AssertMemory(i);
   src = LRELN_INST(i);
   size = GetByteSize(src->desc);
@@ -398,8 +398,8 @@ struct Instance *CopyLogRelInst(CONST struct Instance *i)
 static
 struct Instance *CopyWhenInst(CONST struct Instance *i)
 {
-  register struct WhenInstance *src,*result;
-  register unsigned long size;
+  struct WhenInstance *src,*result;
+  unsigned long size;
   AssertMemory(i);
   src = W_INST(i);
   size = sizeof(struct WhenInstance);
@@ -423,9 +423,9 @@ struct Instance *CopyWhenInst(CONST struct Instance *i)
 static
 struct Instance *CopyModel(CONST struct Instance *i)
 {
-  register struct ModelInstance *mod,*result;
-  register unsigned long num_children;
-  register struct TypeDescription *type;
+  struct ModelInstance *mod,*result;
+  unsigned long num_children;
+  struct TypeDescription *type;
   AssertMemory(i);
   mod = MOD_INST(i);
   type = mod->desc;
@@ -452,9 +452,9 @@ struct Instance *CopyModel(CONST struct Instance *i)
 
 static struct gl_list_t *CopyArrayChildPtrs(struct gl_list_t *list)
 {
-  register struct gl_list_t *result;
-  register unsigned long length,c;
-  register struct ArrayChild *new,*src;
+  struct gl_list_t *result;
+  unsigned long length,c;
+  struct ArrayChild *new,*src;
   if (list!=NULL){
     length = gl_length(list);
     if (length) {
@@ -478,7 +478,7 @@ static struct gl_list_t *CopyArrayChildPtrs(struct gl_list_t *list)
 
 static struct Instance *CopyArray(CONST struct Instance *i)
 {
-  register struct ArrayInstance *ary,*result;
+  struct ArrayInstance *ary,*result;
   AssertMemory(i);
   ary = ARY_INST(i);
   result = ARY_INST(ascmalloc(sizeof(struct ArrayInstance)));

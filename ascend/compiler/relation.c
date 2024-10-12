@@ -90,10 +90,10 @@ static union RelationTermUnion
 
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
 static
-unsigned long ExprLength(register CONST struct Expr *start,
-			 register CONST struct Expr *stop)
+unsigned long ExprLength(CONST struct Expr *start,
+			 CONST struct Expr *stop)
 {
-  register unsigned long result=0;
+  unsigned long result=0;
   while(start!=stop){
     start = NextExpr(start);
     result++;
@@ -861,11 +861,11 @@ static int check_gt1(unsigned long i) {
  *             ^----next = next free location to put an index in termstack
  */
 static unsigned long SimplifyTermBuf(int level,
-				 register struct relation_term ** CONST b,
+				 struct relation_term ** CONST b,
 				 CONST unsigned long blen)
 {
-  register unsigned long next;
-  register unsigned long *ts; /* term stack, should we need it */
+  unsigned long next;
+  unsigned long *ts; /* term stack, should we need it */
   unsigned long top;
   long last;
   unsigned long right;
@@ -2318,7 +2318,7 @@ static int ProcessListRange(CONST struct Instance *ref
 }
 
 static
-CONST struct Expr *ExprContainsSuchThat(register CONST struct Expr *ex){
+CONST struct Expr *ExprContainsSuchThat(CONST struct Expr *ex){
   while(ex!=NULL){
     if (ExprType(ex)==e_st) return ex;
     ex = NextExpr(ex);
@@ -3373,8 +3373,8 @@ static void DestroyTermSide(struct relation_side_temp *temp)
 	@param inst	relation instance to be removed from the relations list belonging to each variable
 */
 void DestroyVarList(struct gl_list_t *l, struct Instance *relinst){
-  register struct Instance *ptr;
-  register unsigned long c;
+  struct Instance *ptr;
+  unsigned long c;
   for(c=gl_length(l);c>=1;c--){
     if(NULL != (ptr = (struct Instance *)gl_fetch(l,c))){
       //CONSOLE_DEBUG("Destroy var list");
@@ -3486,8 +3486,8 @@ void ChangeTermSide(union RelationTermUnion *side,
 		    unsigned long int old,
 		    unsigned long int new)
 {
-  register long c;
-  register struct relation_term *term;
+  long c;
+  struct relation_term *term;
   for(c=len-1;c>=0;c--){
     term = A_TERM(&(side[c]));
     if (term->t == e_var){

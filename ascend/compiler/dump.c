@@ -63,7 +63,7 @@ unsigned long g_dump_type_count,g_dump_inst_count;
 
 void InitDump(void)
 {
-  register unsigned c;
+  unsigned c;
   for(c=0;c<DUMPHASHSIZE;g_dump_ht[c++]=NULL);
   g_dump_type_count = 0;
   g_dump_inst_count = 0;
@@ -71,10 +71,10 @@ void InitDump(void)
 
 void EmptyTrash(void)
 {
-  register unsigned c;
-  register unsigned long i,len;
-  register struct DumpRec *p,*next;
-  register struct gl_list_t *l;
+  unsigned c;
+  unsigned long i,len;
+  struct DumpRec *p,*next;
+  struct gl_list_t *l;
   if (g_dump_inst_count==0) return;
   for(c=0;c<DUMPHASHSIZE;c++) {
     p = g_dump_ht[c];
@@ -98,10 +98,10 @@ void EmptyTrash(void)
 
 void TendTrash(void)
 {
-  register unsigned c;
-  register unsigned long i;
-  register struct DumpRec *p;
-  register struct gl_list_t *l;
+  unsigned c;
+  unsigned long i;
+  struct DumpRec *p;
+  struct gl_list_t *l;
   if (g_dump_inst_count <= MESSYTHRESH) return;
   for(c=0;c<DUMPHASHSIZE;c++) {
     p = g_dump_ht[c];
@@ -120,10 +120,10 @@ void TendTrash(void)
 
 void TrashType(symchar *str)
 {
-  register unsigned long c,len,bucket;
-  register struct DumpRec *p,*prev;
-  register struct gl_list_t *l;
-  register int cmp;
+  unsigned long c,len,bucket;
+  struct DumpRec *p,*prev;
+  struct gl_list_t *l;
+  int cmp;
   assert(AscFindSymbol(str)!=NULL);
   if (*(SCP(str)) == '\0') return;
   bucket = DUMPHASHINDEX(SCP(str));
@@ -157,11 +157,11 @@ void TrashType(symchar *str)
 
 struct Instance *FindInstance(symchar *str)
 {
-  register struct DumpRec *p,*prev;
-  register int cmp;
-  register struct gl_list_t *l;
-  register struct Instance *result;
-  register unsigned long bucket;
+  struct DumpRec *p,*prev;
+  int cmp;
+  struct gl_list_t *l;
+  struct Instance *result;
+  unsigned long bucket;
   if (*(SCP(str)) == '\0') return NULL;
   bucket = DUMPHASHINDEX(SCP(str));
   if ((p = g_dump_ht[bucket])==NULL) return NULL;
@@ -207,10 +207,10 @@ void AddInstance(struct Instance *i)
 
      /* add instance i to the trash dump */
 {
-  register struct DumpRec *p,*prev;
-  register symchar *type;
-  register int cmp;
-  register unsigned long bucket;
+  struct DumpRec *p,*prev;
+  symchar *type;
+  int cmp;
+  unsigned long bucket;
   type = InstanceType(i);
   if ((i==NULL)||(type==NULL)) return;
   bucket = DUMPHASHINDEX(SCP(type));

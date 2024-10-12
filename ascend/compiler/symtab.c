@@ -110,9 +110,9 @@ in string space.
 \*********************************************************************/
 static symchar *CopyString(CONST char *str,int userlen)
 {
-  register unsigned long length;
-  register struct StringSpaceRec *ptr;
-  register char *result;
+  unsigned long length;
+  struct StringSpaceRec *ptr;
+  char *result;
   int *lenptr;
   assert(userlen == (int)strlen(str));
   length = (unsigned long)userlen+1;
@@ -162,7 +162,7 @@ static symchar *CopyString(CONST char *str,int userlen)
 
 void DestroyStringSpace(void)
 {
-  register struct StringSpaceRec *ptr,*next;
+  struct StringSpaceRec *ptr,*next;
   ptr = g_string_space;
   while (ptr != NULL){
     next = ptr->next;
@@ -178,8 +178,8 @@ void DestroyStringSpace(void)
 
 static void StringSpaceReport(FILE *fp)
 {
-  register unsigned long num_blocks=0,used_memory=0;
-  register struct StringSpaceRec *ptr;
+  unsigned long num_blocks=0,used_memory=0;
+  struct StringSpaceRec *ptr;
   ptr = g_string_space;
   while(ptr != NULL){
     num_blocks++;
@@ -203,7 +203,7 @@ static void StringSpaceReport(FILE *fp)
 
 void InitSymbolTable(void)
 {
-  register int c;
+  int c;
   for(c=0;c<SYMTABSIZE;g_symbol_table[c++]=NULL);
   g_symbol_size = 0;
   g_symbol_collisions = 0;
@@ -216,9 +216,9 @@ void InitSymbolTable(void)
 
 symchar *AddSymbolL(CONST char *c, int l)
 {
-  register unsigned long hv;
-  register int cmp;
-  register struct symbol_entry *item,*next;
+  unsigned long hv;
+  int cmp;
+  struct symbol_entry *item,*next;
   hv = SymHashFunction(c);
   if (l<=0) l = strlen(c);
   if (g_symbol_table[hv]==NULL) {
@@ -266,8 +266,8 @@ symchar *AddSymbol(CONST char *c)
  */
 symchar *AscFindSymbol(symchar *c)
 {
-  register unsigned long hv;
-  register struct symbol_entry *next;
+  unsigned long hv;
+  struct symbol_entry *next;
 
   hv = SymHashFunction(c);
   for (next = g_symbol_table[hv]; next != NULL; next = next->next) {

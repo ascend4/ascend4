@@ -202,7 +202,7 @@ int CallBlackBox(struct Instance *inst,
 /**
 	When glassbox are registered, they must register a pointer
 	to their function jump table. In other words, they must
-	register a pointer to an 'array of pointers to functions'.
+  a pointer to an 'array of pointers to functions'.
 	This typedef just makes life a little cleaner.
 
 	<-- what typedef?? -- JP

@@ -17,11 +17,11 @@
 
 #include "config.h"
 
-unsigned long hashpjw(register CONST char *str,
-                      register unsigned long int size)
+unsigned long hashpjw(CONST char *str,
+                      unsigned long int size)
 {
-  register CONST char *p;
-  register unsigned long h=0,g;
+  CONST char *p;
+  unsigned long h=0,g;
 
   asc_assert((NULL != str) && (size > 0));
 
@@ -42,7 +42,7 @@ unsigned long hashpjw(register CONST char *str,
  * integer hashing function.
  */
 unsigned long hashpjw_int(int id,
-                          register unsigned long int size)
+                          unsigned long int size)
 {
   char tmp[64];
 

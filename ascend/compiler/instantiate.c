@@ -729,7 +729,7 @@ static
 int DeriveSetType(CONST struct Set *sptr, struct Instance *parent,
                   CONST unsigned int searchfor
 ){
-  register CONST struct Set *ptr;
+  CONST struct Set *ptr;
   int result=-1;		/* -1 indicates a failure */
   ptr = sptr;
   /* if it contains a range it must be an integer set */
@@ -4309,7 +4309,7 @@ int VerifyInsts(struct Instance *inst,
 static
 int SameClique(struct Instance *i1, struct Instance *i2)
 {
-  register struct Instance *i=i1;
+  struct Instance *i=i1;
   do {
     if (i==i2) return 1;
     i = NextCliqueMember(i);
@@ -12005,8 +12005,8 @@ static void ExecuteDefault(struct Instance *i
 	, struct Statement *stat,unsigned long int *depth
 ){
   struct gl_list_t *lvals;
-  register unsigned long c,length;
-  register struct Instance *ptr;
+  unsigned long c,length;
+  struct Instance *ptr;
   struct value_t value;
   REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
   if(NULL != (lvals = FindInstances(i,DefaultStatVar(stat),&err))){
@@ -12129,8 +12129,8 @@ void ExecuteDefaultStatements(struct Instance *i,
                               struct gl_list_t *slist,
                               unsigned long int *depth)
 {
-  register unsigned long c,length;
-  register struct Statement *stat;
+  unsigned long c,length;
+  struct Statement *stat;
 
   if (slist){
     length = gl_length(slist);
@@ -12991,7 +12991,7 @@ int IncompleteArray(CONST struct Instance *i)
 {
   unsigned long c,len;
   struct Instance *child;
-  register struct TypeDescription *desc;
+  struct TypeDescription *desc;
   len = NumberChildren(i);
   for(c=1;c<=len;c++){
     child = InstanceChild(i,c);

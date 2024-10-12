@@ -83,9 +83,9 @@ static struct ParseReturn ParseString(CONST char *c
 );
 
 
-static void CopyToGlobal(register CONST char *c){
-  register char *p;
-  register unsigned length;
+static void CopyToGlobal(CONST char *c){
+  char *p;
+  unsigned length;
   length = strlen(c);
   if (g_units_str==NULL) {
     g_units_str = ascmalloc((unsigned)length+(unsigned)1);
@@ -137,8 +137,8 @@ static char *g_unit_base_name[NUM_DIMENS];
 
 
 void InitUnitsTable(void){
-  register unsigned long c;
-  //register CONST struct Units *result;
+  unsigned long c;
+  //CONST struct Units *result;
 
   for(c=0;c<UNITS_HASH_SIZE;g_units_hash_table[c++]=NULL);
     /* no body */
@@ -161,7 +161,7 @@ void InitUnitsTable(void){
 
 
 void DestroyUnitsTable(void){
-  register unsigned long c;
+  unsigned long c;
   struct Units *ptr,*next;
   for(c=0;c<UNITS_HASH_SIZE;g_units_hash_table[c++]=NULL){
     next = g_units_hash_table[c];
@@ -266,8 +266,8 @@ void ProcessUnitDef(struct UnitDefinition *ud){
 
 
 CONST struct Units *LookupUnits(CONST char *c){
-  register struct Units *result;
-  register int str_cmp=1;
+  struct Units *result;
+  int str_cmp=1;
   if((result=g_units_hash_table[UnitsHashFunction(c)])!=NULL) {
     while(((str_cmp=strcmp(SCP(UnitsDescription(result)),c))<0) &&
 	  (result->next != NULL))
@@ -292,9 +292,9 @@ static struct Units *CheckUnitsMatch(struct Units *p
 CONST struct Units *DefineUnits(symchar *c
 	, double conv, CONST dim_type *dim
 ){
-  register unsigned long bucket;
-  register struct Units *result,*tmp;
-  register int str_cmp;
+  unsigned long bucket;
+  struct Units *result,*tmp;
+  int str_cmp;
   assert(AscFindSymbol(c)!=NULL);
   bucket=UnitsHashFunction(SCP(c));
   if(g_units_hash_table[bucket]!=NULL){
@@ -342,7 +342,7 @@ static void SkipStrBlanks(CONST char *c, unsigned long int *CONST pos){
 }
 
 
-static int AddChar(register char ch, register unsigned int pos){
+static int AddChar(char ch, unsigned int pos){
   if (pos < MAXTOKENLENGTH) {
     g_units_id_space[pos]=ch;
     return 1;
@@ -355,7 +355,7 @@ static int AddChar(register char ch, register unsigned int pos){
 static enum units_scanner_tokens GetUnitsToken(CONST char *c
 	, unsigned long int *CONST pos
 ){
-  register unsigned cc;
+  unsigned cc;
   SkipStrBlanks(c,pos);
 
 #define ADD_CHAR_S \
@@ -459,7 +459,7 @@ static
 FRACPART ParseInt(CONST char *c,
 	unsigned long int *CONST pos, int *CONST error_code
 ){
-  register unsigned count=0;
+  unsigned count=0;
   SkipStrBlanks(c,pos);
   if((c[*pos]=='-')||(c[*pos]=='+'))
     g_units_id_space[count++]=c[(*pos)++];
@@ -484,7 +484,7 @@ static
 struct fraction ParseFraction(CONST char *c,
 	unsigned long int *CONST pos, int *CONST error_code
 ){
-  register FRACPART num,denom;
+  FRACPART num,denom;
   SkipStrBlanks(c,pos);
   if(c[*pos]=='('){
     MSG("Got '('");
@@ -540,7 +540,7 @@ static
 struct ParseReturn ParseTerm(CONST char *c,
 	unsigned long int *CONST pos, int *CONST error_code
 ){
-  register CONST struct Units *lookup;
+  CONST struct Units *lookup;
   struct fraction frac;
   //enum units_scanner_tokens tok;
   struct ParseReturn result;
@@ -724,7 +724,7 @@ struct ParseReturn CheckNewUnits(CONST char *c
     ,unsigned long int *CONST pos, int *CONST error_code
 ){
   struct ParseReturn preturn;
-  register CONST struct Units *result;
+  CONST struct Units *result;
 
   /* initialize return codes */
   *pos = 0;
@@ -747,7 +747,7 @@ struct ParseReturn CheckNewUnits(CONST char *c
 CONST struct Units *FindOrDefineUnits(CONST char *c,
 		unsigned long int *CONST pos, int *CONST error_code
 ){
-  register CONST struct Units *result;
+  CONST struct Units *result;
   struct ParseReturn preturn;
 
   /* initialize return codes */
@@ -827,8 +827,8 @@ char *UnitsStringSI(const struct Units *p){
 
 
 void DumpUnits(FILE *file){
-  register unsigned long c;
-  register struct Units *p;
+  unsigned long c;
+  struct Units *p;
   char *ds;
   FPRINTF(file,"Units dump\n");
   for(c=0;c<UNITS_HASH_SIZE;c++) {

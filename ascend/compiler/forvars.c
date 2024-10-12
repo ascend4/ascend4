@@ -58,7 +58,7 @@ static struct for_var_t *ForVarMalloc(void)
 
 struct for_table_t *CreateForTable(void)
 {
-  register struct for_table_t *result;
+  struct for_table_t *result;
   result =gl_create(4L);
   AssertMemory(result);
   return result;
@@ -182,7 +182,7 @@ Routines to process for_var_t types.
 
 struct for_var_t *CreateForVar(symchar *name)
 {
-  register struct for_var_t *result;
+  struct for_var_t *result;
   assert(AscFindSymbol(name)!=NULL);
   result = FVMALLOC;
   result->t = f_untyped;

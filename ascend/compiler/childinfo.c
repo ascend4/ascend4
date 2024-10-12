@@ -57,7 +57,7 @@ struct ChildDesc *CreateChildDescArray(unsigned long int l){
 
 struct ChildDesc *CreateEmptyChildDescArray(void)
 {
-  register struct ChildDesc *cda = NULL;
+  struct ChildDesc *cda = NULL;
   cda = ASC_NEW_CLEAR(struct ChildDesc);
   assert(cda != NULL);
   cda->t = bad_child;

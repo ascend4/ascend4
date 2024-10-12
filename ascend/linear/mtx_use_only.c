@@ -43,7 +43,7 @@ FILE *g_mtxerr;
 struct element_t *mtx_find_element(mtx_matrix_t mtx, int32 org_row,
                                    int32 org_col)
 {
-   register struct element_t *elt;
+   struct element_t *elt;
 
 /* old way.
    for( elt = mtx->hdr.row[org_row] ; NOTNULL(elt) ; elt = elt->next.col )
@@ -63,7 +63,7 @@ struct element_t *mtx_create_element(mtx_matrix_t mtx,
  ***  initially zero.
  **/
 {
-  register struct element_t *elt;
+  struct element_t *elt;
 
 #if MTX_DEBUG
   if( NOTNULL(mtx_find_element(mtx,org_row,org_col)) ) {
@@ -88,7 +88,7 @@ struct element_t *mtx_create_element_value(mtx_matrix_t mtx,
                                            int32 org_col,
                                            real64 val)
 {
-  register struct element_t *elt;
+  struct element_t *elt;
 
 #if MTX_DEBUG
   if( NOTNULL(mtx_find_element(mtx,org_row,org_col)) ) {
@@ -109,7 +109,7 @@ struct element_t *mtx_create_element_value(mtx_matrix_t mtx,
 }
 
 /* new version */
-struct element_t *mtx_next_col(register struct element_t *elt,
+struct element_t *mtx_next_col(struct element_t *elt,
                                mtx_range_t *rng, int32 *tocur)
 {
    if( NOTNULL(elt) ) {
@@ -128,7 +128,7 @@ struct element_t *mtx_next_col(register struct element_t *elt,
 }
 
 /* original version */
-struct element_t *mtx_next_row(register struct element_t *elt,
+struct element_t *mtx_next_row(struct element_t *elt,
                                mtx_range_t *rng, int32 *tocur)
 {
    if( NOTNULL(elt) ) elt = elt->next.row;

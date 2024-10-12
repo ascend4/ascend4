@@ -180,7 +180,7 @@ void mtx_householder_transform_region(mtx_matrix_t mtx,
   struct element_t *elt;
   real64 u,mult;
   int32 ku, kr, numcols, kcol;
-  register int32 org;
+  int32 org;
 
   /* the following are reuseable buffers we must zero before releasing */
   char *mv;               /* mark buffer, should we need it, droptol */

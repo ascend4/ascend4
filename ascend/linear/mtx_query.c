@@ -738,7 +738,7 @@ int32 mtx_numbers_in_region(mtx_matrix_t mtx,mtx_region_t *reg)
   return(count);
 }
 
-static real64 msqr(register real64 d) {
+static real64 msqr(real64 d) {
   return d*d;
 }
 
@@ -758,7 +758,7 @@ void mtx_org_row_vec(mtx_matrix_t mtx, int32 row,
   }
   if( rng->high >= rng->low ) {
     int32 *tocur;
-    register int32 org_col, cur_col;
+    int32 org_col, cur_col;
     tocur = mtx->perm.col.org_to_cur;
     for( ; NOTNULL(elt); elt = elt->next.col ) {
       cur_col=tocur[(org_col = elt->col)];
@@ -784,7 +784,7 @@ void mtx_org_col_vec(mtx_matrix_t mtx, int32 col,
   }
   if( rng->high >= rng->low ) {
     int32 *tocur;
-    register int32 org_row, cur_row;
+    int32 org_row, cur_row;
     tocur = mtx->perm.row.org_to_cur;
     for( ; NOTNULL(elt); elt = elt->next.row ) {
       cur_row=tocur[(org_row = elt->row)];
@@ -811,7 +811,7 @@ void mtx_cur_row_vec(mtx_matrix_t mtx, int32 row,
     return;
   }
   if( rng->high >= rng->low ) {
-    register int32 cur_col;
+    int32 cur_col;
     for( ; NOTNULL(elt); elt = elt->next.col ) {
       cur_col=tocur[elt->col];
       if( in_range(rng,cur_col) )
@@ -837,7 +837,7 @@ void mtx_cur_col_vec(mtx_matrix_t mtx, int32 col,
     return;
   }
   if( rng->high >= rng->low ) {
-    register int32 cur_row;
+    int32 cur_row;
     for( ; NOTNULL(elt); elt = elt->next.row ) {
       cur_row=tocur[elt->row];
       if( in_range(rng,cur_row) )
@@ -886,7 +886,7 @@ mtx_sparse_t *mtx_org_row_sparse(mtx_matrix_t mtx, int32 row,
   }
   if( rng->high >= rng->low ) {
     int32 *tocur;
-    register int32 cur_col;
+    int32 cur_col;
 
     tocur = mtx->perm.col.org_to_cur;
     if (zeroes == mtx_IGNORE_ZEROES) {
@@ -961,7 +961,7 @@ mtx_sparse_t *mtx_org_col_sparse(mtx_matrix_t mtx, int32 col,
   }
   if( rng->high >= rng->low ) {
     int32 *tocur;
-    register int32 cur_row;
+    int32 cur_row;
 
     tocur = mtx->perm.row.org_to_cur;
     if (zeroes == mtx_IGNORE_ZEROES) {
@@ -1038,7 +1038,7 @@ mtx_sparse_t *mtx_cur_row_sparse(mtx_matrix_t mtx, int32 row,
   }
   /* range is not ALL */
   if( rng->high >= rng->low ) {
-    register int32 cur_col;
+    int32 cur_col;
 
     if (zeroes == mtx_IGNORE_ZEROES) {
       for(k=0; NOTNULL(elt) && k < cap; elt = elt->next.col ) {
@@ -1113,7 +1113,7 @@ mtx_sparse_t *mtx_cur_col_sparse(mtx_matrix_t mtx, int32 col,
     return NULL; /* ran out of vector */
   }
   if( rng->high >= rng->low ) {
-    register int32 cur_row;
+    int32 cur_row;
 
     if (zeroes == mtx_IGNORE_ZEROES) {
       for(k=0; NOTNULL(elt) && k < cap; elt = elt->next.row ) {
@@ -1162,7 +1162,7 @@ void mtx_zr_org_vec_using_row(mtx_matrix_t mtx,int32 row,
     return;
   }
   if( rng->high >= rng->low ) {
-    register int32 org_col, cur_col;
+    int32 org_col, cur_col;
     int32 *tocur;
     tocur = mtx->perm.col.org_to_cur;
     for( ; NOTNULL(elt); elt = elt->next.col ) {
@@ -1188,7 +1188,7 @@ void mtx_zr_org_vec_using_col(mtx_matrix_t mtx, int32 col,
     return;
   }
   if( rng->high >= rng->low ) {
-    register int32 org_row, cur_row;
+    int32 org_row, cur_row;
     int32 *tocur;
     tocur = mtx->perm.row.org_to_cur;
     for( ; NOTNULL(elt); elt = elt->next.row ) {
@@ -1216,7 +1216,7 @@ void mtx_zr_cur_vec_using_row(mtx_matrix_t mtx,int32 row,
     return;
   }
   if( rng->high >= rng->low ) {
-    register int32 cur_col;
+    int32 cur_col;
     for( ; NOTNULL(elt); elt = elt->next.col ) {
       cur_col=tocur[elt->col];
       if( in_range(rng,cur_col) )
@@ -1242,7 +1242,7 @@ void mtx_zr_cur_vec_using_col(mtx_matrix_t mtx, int32 col,
     return;
   }
   if( rng->high >= rng->low ) {
-    register int32 cur_row;
+    int32 cur_row;
     for( ; NOTNULL(elt); elt = elt->next.row ) {
       cur_row=tocur[elt->row];
       if( in_range(rng,cur_row) )
@@ -1255,7 +1255,7 @@ real64 mtx_sum_sqrs_in_row( mtx_matrix_t mtx, int32 row, const mtx_range_t *rng)
 {
    struct element_t *elt;
    int32 *tocur;
-   register real64 sum;
+   real64 sum;
 
 #if MTX_DEBUG
    if(!mtx_check_matrix(mtx)) return D_ZERO;
@@ -1276,7 +1276,7 @@ real64 mtx_sum_sqrs_in_col( mtx_matrix_t mtx, int32 col, const mtx_range_t *rng)
 {
    struct element_t *elt;
    int32 *tocur;
-   register real64 sum;
+   real64 sum;
 
 #if MTX_DEBUG
    if(!mtx_check_matrix(mtx)) return D_ZERO;
@@ -1297,7 +1297,7 @@ real64 mtx_sum_abs_in_row( mtx_matrix_t mtx, int32 row, const mtx_range_t *rng)
 {
    struct element_t *elt;
    int32 *tocur;
-   register real64 sum;
+   real64 sum;
 
 #if MTX_DEBUG
    if(!mtx_check_matrix(mtx)) return D_ZERO;
@@ -1318,7 +1318,7 @@ real64 mtx_sum_abs_in_col( mtx_matrix_t mtx, int32 col, const mtx_range_t *rng)
 {
    struct element_t *elt;
    int32 *tocur;
-   register real64 sum;
+   real64 sum;
 
 #if MTX_DEBUG
    if(!mtx_check_matrix(mtx)) return D_ZERO;
@@ -1343,7 +1343,7 @@ real64 mtx_row_dot_full_org_vec(mtx_matrix_t mtx,
 {
   struct element_t *elt;
   int32 *tocur;
-  register real64 sum;
+  real64 sum;
 
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return D_ZERO;
@@ -1361,7 +1361,7 @@ real64 mtx_row_dot_full_org_vec(mtx_matrix_t mtx,
       }
     } else {
       if( rng->high >= rng->low ) {
-        register int32 cur;
+        int32 cur;
         for( ; NOTNULL(elt); elt = elt->next.col ) {
           cur=tocur[elt->col];
           if( in_range(rng,cur) ) {
@@ -1377,7 +1377,7 @@ real64 mtx_row_dot_full_org_vec(mtx_matrix_t mtx,
       }
     } else {
       if( rng->high >= rng->low ) {
-        register int32 cur,org;
+        int32 cur,org;
         for( ; NOTNULL(elt); elt = elt->next.col ) {
           cur=tocur[org=elt->col];
           if( in_range(rng,cur) ) {
@@ -1398,7 +1398,7 @@ real64 mtx_col_dot_full_org_vec(mtx_matrix_t mtx,
 {
   struct element_t *elt;
   int32 *tocur;
-  register real64 sum;
+  real64 sum;
 
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return D_ZERO;
@@ -1416,7 +1416,7 @@ real64 mtx_col_dot_full_org_vec(mtx_matrix_t mtx,
       }
     } else {
       if( rng->high >= rng->low ) {
-        register int32 cur;
+        int32 cur;
         for( ; NOTNULL(elt); elt = elt->next.row ) {
           cur=tocur[elt->row];
           if( in_range(rng,cur) ) {
@@ -1432,7 +1432,7 @@ real64 mtx_col_dot_full_org_vec(mtx_matrix_t mtx,
       }
     } else {
       if( rng->high >= rng->low ) {
-        register int32 org,cur;
+        int32 org,cur;
         for( ; NOTNULL(elt); elt = elt->next.row ) {
           cur=tocur[org=elt->row];
           if( in_range(rng,cur) ) {
@@ -1453,7 +1453,7 @@ real64 mtx_row_dot_full_cur_vec(mtx_matrix_t mtx,
 {
   struct element_t *elt;
   int32 *tocur;
-  register real64 sum;
+  real64 sum;
 
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return D_ZERO;
@@ -1468,7 +1468,7 @@ real64 mtx_row_dot_full_cur_vec(mtx_matrix_t mtx,
       }
     } else {
       if( rng->high >= rng->low ) {
-        register int32 cur;
+        int32 cur;
         for( ; NOTNULL(elt); elt = elt->next.col ) {
           cur=tocur[elt->col];
           if( in_range(rng,cur) ) {
@@ -1493,7 +1493,7 @@ real64 mtx_col_dot_full_cur_vec(mtx_matrix_t mtx,
 {
   struct element_t *elt;
   int32 *tocur;
-  register real64 sum;
+  real64 sum;
 
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return D_ZERO;
@@ -1508,7 +1508,7 @@ real64 mtx_col_dot_full_cur_vec(mtx_matrix_t mtx,
       }
     } else {
       if( rng->high >= rng->low ) {
-        register int32 cur;
+        int32 cur;
         for( ; NOTNULL(elt); elt = elt->next.row ) {
           cur=tocur[elt->row];
           if( in_range(rng,cur) ) {
@@ -1533,7 +1533,7 @@ real64 mtx_row_dot_full_org_custom_vec(mtx_matrix_t mtx,
 {
   struct element_t *elt;
   int32 *tocur;
-  register real64 sum;
+  real64 sum;
 
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return D_ZERO;
@@ -1551,7 +1551,7 @@ real64 mtx_row_dot_full_org_custom_vec(mtx_matrix_t mtx,
       }
     } else {
       if( rng->high >= rng->low ) {
-        register int32 cur;
+        int32 cur;
         for( ; NOTNULL(elt); elt = elt->next.col ) {
           cur=tocur[elt->col];
           if( in_range(rng,cur) ) {
@@ -1569,7 +1569,7 @@ real64 mtx_row_dot_full_org_custom_vec(mtx_matrix_t mtx,
       }
     } else {
       if( rng->high >= rng->low ) {
-        register int32 cur;
+        int32 cur;
         for( ; NOTNULL(elt); elt = elt->next.col ) {
           cur=tocur[elt->col];
           if( in_range(rng,cur) ) {
@@ -1591,7 +1591,7 @@ real64 mtx_col_dot_full_org_custom_vec(mtx_matrix_t mtx,
 {
   struct element_t *elt;
   int32 *tocur;
-  register real64 sum;
+  real64 sum;
 
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return D_ZERO;
@@ -1609,7 +1609,7 @@ real64 mtx_col_dot_full_org_custom_vec(mtx_matrix_t mtx,
       }
     } else {
       if( rng->high >= rng->low ) {
-        register int32 cur;
+        int32 cur;
         for( ; NOTNULL(elt); elt = elt->next.row ) {
           cur=tocur[elt->row];
           if( in_range(rng,cur) ) {
@@ -1627,7 +1627,7 @@ real64 mtx_col_dot_full_org_custom_vec(mtx_matrix_t mtx,
       }
     } else {
       if( rng->high >= rng->low ) {
-        register int32 cur;
+        int32 cur;
         for( ; NOTNULL(elt); elt = elt->next.row ) {
           cur=tocur[elt->row];
           if( in_range(rng,cur) ) {
@@ -1663,7 +1663,7 @@ void mtx_org_vec_add_row(mtx_matrix_t mtx, real64 *vec, int32 row,
       return;
     }
     if( rng->high >= rng->low ) {
-      register int32 cur_col,lo,hi;
+      int32 cur_col,lo,hi;
 
       lo=rng->low; hi=rng->high;
       for( ; NOTNULL(elt); elt = elt->next.col ) {
@@ -1682,7 +1682,7 @@ void mtx_org_vec_add_row(mtx_matrix_t mtx, real64 *vec, int32 row,
     }
     if( rng->high >= rng->low ) {
       int32 *tocur;
-      register int32 cur_col, org_col,lo,hi;
+      int32 cur_col, org_col,lo,hi;
       lo=rng->low; hi=rng->high;
       tocur = mtx->perm.col.org_to_cur;
       for( ; NOTNULL(elt); elt = elt->next.col ) {
@@ -1717,7 +1717,7 @@ void mtx_org_vec_add_col(mtx_matrix_t mtx, real64 *vec, int32 col,
       return;
     }
     if( rng->high >= rng->low ) {
-      register int32 cur_row,lo,hi;
+      int32 cur_row,lo,hi;
       lo=rng->low; hi=rng->high;
       for( ; NOTNULL(elt); elt = elt->next.row ) {
         cur_row = org2row[elt->row];
@@ -1734,7 +1734,7 @@ void mtx_org_vec_add_col(mtx_matrix_t mtx, real64 *vec, int32 col,
       return;
     }
     if( rng->high >= rng->low ) {
-      register int32 cur_row, org_row,lo,hi;
+      int32 cur_row, org_row,lo,hi;
       int32 *tocur;
 
       lo=rng->low; hi=rng->high;
@@ -1767,7 +1767,7 @@ void mtx_cur_vec_add_row(mtx_matrix_t mtx, real64 *vec, int32 row,
       return;
     }
     if( rng->high >= rng->low ) {
-      register int32 cur_col,lo,hi;
+      int32 cur_col,lo,hi;
       lo= rng->low; hi=rng->high;
       for( ; NOTNULL(elt); elt = elt->next.col ) {
         cur_col=tocur[elt->col];
@@ -1799,7 +1799,7 @@ void mtx_cur_vec_add_col(mtx_matrix_t mtx, real64 *vec, int32 col,
       return;
     }
     if( rng->high >= rng->low ) {
-      register int32 cur_row,lo,hi;
+      int32 cur_row,lo,hi;
       lo= rng->low; hi=rng->high;
       for( ; NOTNULL(elt); elt = elt->next.row ) {
         cur_row=tocur[elt->row];

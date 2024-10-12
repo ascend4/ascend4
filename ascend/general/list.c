@@ -466,7 +466,7 @@ void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
 
 
 void gl_append_list(struct gl_list_t *extendlist, struct gl_list_t *list){
-  register unsigned long c,len,oldlen,newlen;
+  unsigned long c,len,oldlen,newlen;
 
   asc_assert((NULL != extendlist) &&
              (0 != gl_expandable(extendlist)) &&
@@ -642,7 +642,7 @@ void gl_upsort(struct gl_list_t *list,
                unsigned long int lower,
                unsigned long int upper)
 {
-  register unsigned long i,j;
+  unsigned long i,j;
   VOIDPTR pivot_element;
   j = upper;
   i = lower;
@@ -651,7 +651,7 @@ void gl_upsort(struct gl_list_t *list,
     while (pivot_element > gl_fetch(list,i)) i += 1;
     while (gl_fetch(list,j) > pivot_element)  j -= 1;
     if (i <= j) {
-      register VOIDPTR temp;
+      VOIDPTR temp;
       temp = gl_fetch(list,i);
       GL_STORE(list,i,gl_fetch(list,j));
       GL_STORE(list,j,temp);
@@ -741,7 +741,7 @@ void gl_insert_sorted(struct gl_list_t *list
 	, VOIDPTR ptr, CmpFunc func
 ){
   int comparison;
-  register unsigned long lower,upper,search=0L;
+  unsigned long lower,upper,search=0L;
 
   asc_assert((NULL != list) &&
              (0 != gl_expandable(list)) &&
@@ -793,7 +793,7 @@ void gl_insert_sorted(struct gl_list_t *list
 
 void gl_iterate(struct gl_list_t *list, void (*func) (VOIDPTR)){
 #ifdef NDEBUG
-  register unsigned long length,counter;
+  unsigned long length,counter;
   length = GL_LENGTH(list);
   for (counter=0;counter<length;counter++)
     (*func)(list->data[counter]);
@@ -821,7 +821,7 @@ unsigned long gl_ptr_search(CONST struct gl_list_t *list
   /* if list is short, use linear instead of binary search.
   SHORTSEARCH is the minimum size for a binary search.
   SHORTSEARCH must be >=0 */
-  register unsigned long lower,upper,search;
+  unsigned long lower,upper,search;
 
   asc_assert(NULL != list);
   if(!GL_LENGTH(list))return 0;
@@ -830,7 +830,7 @@ unsigned long gl_ptr_search(CONST struct gl_list_t *list
        && (upper = GL_LENGTH(list)-1) > SHORTSEARCH
 #endif
   ){		/* use binary search */
-    register long comparison;
+    long comparison;
     lower = 0;
 #if (SHORTSEARCH <= 0)
     upper = GL_LENGTH(list)-1;
@@ -889,7 +889,7 @@ unsigned long gl_ptr_search(CONST struct gl_list_t *list
 unsigned long gl_search(CONST struct gl_list_t *list
 	,CONST VOIDPTR match, CmpFunc func
 ){
-  register unsigned long lower,upper,search;
+  unsigned long lower,upper,search;
 #ifdef __alpha
   long comparison;
 #else
@@ -919,7 +919,7 @@ unsigned long gl_search(CONST struct gl_list_t *list
 unsigned long gl_search_reverse(CONST struct gl_list_t *list
 	,CONST VOIDPTR match, CmpFunc func
 ){
-  register unsigned long search;
+  unsigned long search;
 
   asc_assert((NULL != list) && (NULL != func));
   if(list->flags & gsf_SORTED) {	/* use binary search */
@@ -1072,7 +1072,7 @@ struct gl_list_t *gl_concat(CONST struct gl_list_t *list1
 
 int gl_compare_ptrs(CONST struct gl_list_t *l1, CONST struct gl_list_t *l2){
   unsigned long len,c;
-  register unsigned long i1,i2;
+  unsigned long i1,i2;
   if (l1==NULL || l2 == NULL) {
     ASC_PANIC("Called with NULL input");
   }

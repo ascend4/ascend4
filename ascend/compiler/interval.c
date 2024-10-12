@@ -452,7 +452,7 @@ int IsIn(double d, struct Interval i)
 
 struct Interval PowInterval(struct Interval x, struct Interval y)
 {
-  register double a,b,c,d, t1, t2;
+  double a,b,c,d, t1, t2;
   struct Interval result;
   if (x.low < 0.0){
     ASC_PANIC("PowInterval call with a argument less than zero.\n");

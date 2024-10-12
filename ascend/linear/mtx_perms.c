@@ -301,7 +301,7 @@ extern size_t mtx_block_perm_size(mtx_block_perm_t bp)
 /* DO NOT CALL this on the perm of a matrix that is a slave */
 static void swap( struct permutation_t *perm, int32 cur1,int32 cur2)
 {
-   register int32 org1,org2;
+   int32 org1,org2;
 
    if( cur1 == cur2 ) return;
    org1 = perm->cur_to_org[cur1];
@@ -343,7 +343,7 @@ void mtx_swap_cols( mtx_matrix_t mtx, int32 cur1,int32 cur2)
 
 void mtx_drag( mtx_matrix_t mtx, int32 begin, int32 end)
 {
-  register int32 *rcto, *ccto, *rotc, *cotc;
+  int32 *rcto, *ccto, *rotc, *cotc;
   int32 holdrow,holdcol;
 
 #if MTX_DEBUG
@@ -382,8 +382,8 @@ void mtx_drag( mtx_matrix_t mtx, int32 begin, int32 end)
 
 void mtx_reverse_diagonal( mtx_matrix_t mtx, int32 begin, int32 end)
 {
-  register int32 center,j;
-  register struct permutation_t *rperm, *cperm;
+  int32 center,j;
+  struct permutation_t *rperm, *cperm;
 #if MTX_DEBUG
    if(!mtx_check_matrix(mtx)) return;
 #endif
@@ -531,7 +531,7 @@ static int32 assign_row( mtx_matrix_t mtx, int32 row,
    Rewind.next.col = mtx->hdr.row[mtx->perm.row.cur_to_org[row]];
    if( NULL != (elt=mtx_next_col(&Rewind,&(vars->unassigned_cols),tocur)) ) {
       /* Cheap assignment */
-      register int32 col;
+      int32 col;
       col = tocur[elt->col];
       swap(&(mtx->perm.col),col,row);
       return(col);
@@ -542,7 +542,7 @@ static int32 assign_row( mtx_matrix_t mtx, int32 row,
       int32 col;
       col = tocur[elt->col];
       if( vars->row_visited[col] != vars->rv_indicator ) {
-         register int32 assigned_col;
+         int32 assigned_col;
          if( (assigned_col = assign_row(mtx,col,vars)) >= ZERO ) {
             swap(&(mtx->perm.col),assigned_col,row);
             return( assigned_col );

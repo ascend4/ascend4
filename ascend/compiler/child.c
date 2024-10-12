@@ -143,7 +143,7 @@ ChildListPtr CreateChildList(struct gl_list_t *l)
 {
   struct ChildListEntry *old;
   struct ChildListStructure *result;
-  register unsigned long c,length;
+  unsigned long c,length;
   assert(l!=NULL);
 
   length = gl_length(l);
@@ -249,10 +249,10 @@ ChildListPtr AppendChildList(ChildListPtr cl,
 {
   struct ChildListStructure *result;
   struct ChildListEntry *cle, *gle;
-  register unsigned long length,cln,gln;
-  register unsigned long clength;
+  unsigned long length,cln,gln;
+  unsigned long clength;
 #ifndef NDEBUG
-  register unsigned long totlen;
+  unsigned long totlen;
 #endif
   assert(l!=NULL);
   assert(cl!=NULL);

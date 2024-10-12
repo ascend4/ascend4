@@ -107,10 +107,10 @@ struct Instance *CopyAnonRelationInstance(struct Instance *newparent,
 			                  struct gl_list_t *copyvars,
 					struct pairlist_t *bboxtable)
 {
-  register struct RelationInstance *src,*result;
+  struct RelationInstance *src,*result;
   struct relation *rel;
   enum Expr_enum type;
-  register unsigned long size;
+  unsigned long size;
 
 #if TIMECOMPILER
   /* hack to get some statistics. BAA */
@@ -162,9 +162,9 @@ struct gl_list_t *CopyAnonArrayChildPtrs(struct Instance *newparent,
                                          struct gl_list_t *copyvars,
 					struct pairlist_t *bboxtable)
 {
-  register struct gl_list_t *result;
-  register unsigned long length,c;
-  register struct ArrayChild *new,*src;
+  struct gl_list_t *result;
+  unsigned long length,c;
+  struct ArrayChild *new,*src;
   if (list!=NULL){
     length = gl_length(list);
     if (length) {
@@ -217,7 +217,7 @@ CopyAnonRelationArrayInstance(struct Instance *newparent,
                               struct gl_list_t *copyvars,
 				struct pairlist_t *bboxtable)
 {
-  register struct ArrayInstance *ary,*result;
+  struct ArrayInstance *ary,*result;
   AssertMemory(proto);
   ary = ARY_INST(proto);
   result = ARY_INST(ASC_NEW(struct ArrayInstance));

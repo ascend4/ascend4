@@ -51,7 +51,7 @@ void Swap(unsigned long int *p1, unsigned long int *p2)
 }
 
 
-CONST struct Expr *FindLastExpr(register CONST struct Expr *ex)
+CONST struct Expr *FindLastExpr(CONST struct Expr *ex)
 {
   assert(ex!=NULL);
   while(NextExpr(ex)!=NULL) ex = NextExpr(ex);

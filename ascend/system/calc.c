@@ -197,7 +197,7 @@ real64 calc_rec(real64 x)
 #define CUBRTHUGE      5.6438030941223618e102
 /* largest cubeable number in an 8 byte ieee double */
 #endif
-real64 calc_cube(register real64 x)
+real64 calc_cube(real64 x)
 {
    if( fabs(x) > CUBRTHUGE || fabs(x) < INV_CUBRTHUGE ) {
       real64 bogus;
@@ -266,7 +266,7 @@ real64 calc_erf_inv(real64 x)
 
 real64 calc_lnm_inv(real64 x)
 {
-   register double eps=FuncGetLnmEpsilon();
+   double eps=FuncGetLnmEpsilon();
    if( x > (MAXDOUBLE > 1.0e308 ? 709.196209 : log(MAXDOUBLE)) ) {
       real64 bogus = BIGNUM;
       if( calc_print_errors ) {
@@ -426,7 +426,7 @@ real64 calc_sqrt_D0(real64 x)
    return(sqrt(x));
 }
 
-real64 calc_tan_D1(register real64 x)
+real64 calc_tan_D1(real64 x)
 {
    x=cos(x);
    return( calc_rec(calc_sqr_D0(x)) );
@@ -497,7 +497,7 @@ real64 calc_tan_D2(real64 x)
 
 real64 calc_arcsin_D2(real64 x)
 {
-   register double t;
+   double t;
    t = calc_rec(1.0 - calc_sqr_D0(x));
    return( calc_mul_D0( calc_mul_D0(x,t) , calc_mul_D0(t,t) ) );
 }

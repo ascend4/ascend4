@@ -140,8 +140,8 @@ int NotDuplicated(struct pending_t *pl, struct Instance *inst)
 static
 unsigned long CalcNumberPending(void)
 {
-  register struct pending_t *ptr;
-  register unsigned long c=0;
+  struct pending_t *ptr;
+  unsigned long c=0;
   ptr = g_pending_list;
   while (ptr){
     AssertContainedMemory(ptr,sizeof(struct pending_t));
@@ -161,7 +161,7 @@ struct Instance *PendingInstanceF(CONST struct pending_t *pt)
 
 void ClearList(void)
 {
-  register struct pending_t *ptr,*next;
+  struct pending_t *ptr,*next;
 
   ptr = g_pending_list;
   g_pending_list_end = g_pending_list = NULL;
@@ -247,7 +247,7 @@ void AddBelow(struct pending_t *pt,
 
 void AddToEnd(struct Instance *i)
 {
-  register struct pending_t *ptr;
+  struct pending_t *ptr;
   assert(NotDuplicated(g_pending_list,i));
 #if FAST_PENDINGS
 #ifndef NDEBUG
@@ -289,7 +289,7 @@ void AddToEnd(struct Instance *i)
 #if FAST_PENDINGS
 void PendingInstanceRealloced(struct Instance *old, struct Instance *new)
 {
-  register struct pending_t *ptr;
+  struct pending_t *ptr;
   if (g_pending_list!=NULL){
     ptr = ((struct PendInstance *)(new))->p;
     /* handshake */
@@ -313,7 +313,7 @@ void PendingInstanceRealloced(struct Instance *old, struct Instance *new)
 #else
 void PendingInstanceRealloced(struct Instance *old, struct Instance *new)
 {
-  register struct pending_t *ptr;
+  struct pending_t *ptr;
   if (g_pending_list!=NULL){
     ptr = g_pending_list;
     while(ptr!=NULL){
@@ -332,7 +332,7 @@ void PendingInstanceRealloced(struct Instance *old, struct Instance *new)
 #if FAST_PENDINGS
 void RemoveInstance(struct Instance *i)
 {
-  register struct pending_t *ptr;
+  struct pending_t *ptr;
   if (g_pending_list!=NULL) {
 #ifndef NDEBUG
     if (InstanceKind(i) != MODEL_INST &&
@@ -358,7 +358,7 @@ void RemoveInstance(struct Instance *i)
 #else
 void RemoveInstance(struct Instance *i)
 {
-  register struct pending_t *ptr;
+  struct pending_t *ptr;
   ptr = g_pending_list;
   while(ptr){
     if (ptr->inst == i){
@@ -405,7 +405,7 @@ static void RemoveFromList(struct pending_t *pt)
 #if FAST_PENDINGS
 int InstanceInList(struct Instance *i)
 {
-  register struct pending_t *ptr;
+  struct pending_t *ptr;
 #ifndef NDEBUG
   if (InstanceKind(i) != MODEL_INST &&
       InstanceKind(i) != ARRAY_ENUM_INST &&
@@ -429,7 +429,7 @@ int InstanceInList(struct Instance *i)
 #else
 int InstanceInList(struct Instance *i)
 {
-  register struct pending_t *ptr;
+  struct pending_t *ptr;
   ptr = g_pending_list;
   while(ptr!=NULL){
     if (ptr->inst==i) return 1;

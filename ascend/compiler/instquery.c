@@ -85,8 +85,8 @@ enum inst_t InstanceKindF(CONST struct Instance *i){
 
 
 unsigned long InstanceDepth(CONST struct Instance *i){
-  register unsigned long c,result=0,d;
-  register CONST struct Instance *parent;
+  unsigned long c,result=0,d;
+  CONST struct Instance *parent;
   if (i==NULL) return 0;
   AssertMemory(i);
   for(c=NumberParents(i);c>0;c--){
@@ -98,8 +98,8 @@ unsigned long InstanceDepth(CONST struct Instance *i){
 }
 
 unsigned long InstanceShortDepth(CONST struct Instance *i){
-  register unsigned long c,result=UINT_MAX,d;
-  register CONST struct Instance *parent;
+  unsigned long c,result=UINT_MAX,d;
+  CONST struct Instance *parent;
   if (i==NULL) return 0;
   AssertMemory(i);
   if (NumberParents(i)==0) return 1;
@@ -668,7 +668,7 @@ unsigned long InstanceIndirected(CONST struct Instance *i){
   return LONG_MAX;
 }
 
-symchar *InstanceType(register CONST struct Instance *i){
+symchar *InstanceType(CONST struct Instance *i){
   AssertMemory(i);
   switch(i->t) {
   case SIM_INST:	/* Not sure -- return the type of root */

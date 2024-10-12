@@ -157,7 +157,7 @@ void name_report_pool(void) {
 
 struct Name *CreateIdNameF(symchar *s,int bits)
 {
-  register struct Name *result;
+  struct Name *result;
   assert(s!=NULL);
   result = IDNMALLOC;
   assert(result!=NULL);
@@ -187,7 +187,7 @@ unsigned int NameLength(CONST struct Name *n)
 
 struct Name *CreateSetName(struct Set *s)
 {
-  register struct Name *result;
+  struct Name *result;
   assert(s!=NULL);
   result = IDNMALLOC;
   assert(result!=NULL);
@@ -274,8 +274,8 @@ CONST struct Set *NameSetPtrF(CONST struct Name *n)
 
 struct Name *CopyName(CONST struct Name *n)
 {
-  register struct Name *result,*p;
-  register CONST struct Name *np;
+  struct Name *result,*p;
+  CONST struct Name *np;
   if (n==NULL) return NULL;
   np = n;
   result = IDNMALLOC;
@@ -314,9 +314,9 @@ struct Name *CopyAppendNameNode(CONST struct Name *n, CONST struct Name *node)
   return result;
 }
 
-void DestroyName(register struct Name *n)
+void DestroyName(struct Name *n)
 {
-  register struct Name *next;
+  struct Name *next;
   while(n!=NULL) {
     next = n->next;
     if (!(n->bits & NAMEBIT_IDTY)) {
@@ -347,7 +347,7 @@ void DestroyNamePtr(struct Name *n)
 
 struct Name *JoinNames(struct Name *n1, struct Name *n2)
 {
-  register struct Name *p;
+  struct Name *p;
   if (n1==NULL) return n2;
   /* find end of name list */
   p = n1;
@@ -357,7 +357,7 @@ struct Name *JoinNames(struct Name *n1, struct Name *n2)
   return n1;
 }
 
-CONST struct Name *NextIdName(register CONST struct Name *n)
+CONST struct Name *NextIdName(CONST struct Name *n)
 {
   if (n==NULL) return NULL;
   assert(NameId(n)!=0);
@@ -368,9 +368,9 @@ CONST struct Name *NextIdName(register CONST struct Name *n)
   return n;
 }
 
-struct Name *ReverseName(register struct Name *n)
+struct Name *ReverseName(struct Name *n)
 {
-  register struct Name *next,*previous=NULL;
+  struct Name *next,*previous=NULL;
   if (n==NULL) return n;
   while (TRUE) {		/* loop until it returns */
     next = n->next;

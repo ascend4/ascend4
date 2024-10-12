@@ -180,7 +180,7 @@ CONST struct Expr *GetUpperExprF(CONST struct Set *s)
 
 struct Set *CopySetNode(CONST struct Set *s)
 {
-  register struct Set *result;
+  struct Set *result;
   if (s==NULL) {
     return NULL;
   }
@@ -199,7 +199,7 @@ struct Set *CopySetNode(CONST struct Set *s)
 
 struct Set *CopySetList(CONST struct Set *s)
 {
-  register struct Set *result,*p;
+  struct Set *result,*p;
   if (s==NULL) {
     return NULL;
   }
@@ -242,7 +242,7 @@ void DestroySetNode(struct Set *s)
 
 void DestroySetList(struct Set *s)
 {
-  register struct Set *next;
+  struct Set *next;
   while (s!=NULL) {
 #if SETUSESPOOL
     AssertMemory(s);
@@ -268,7 +268,7 @@ void DestroySetHead(struct Set *s)
 
 void DestroySetListByReference(struct Set *s)
 {
-  register struct Set *next;
+  struct Set *next;
   if (--s->ref_count == 0){
     while (s!=NULL) {
 #if SETUSESPOOL
@@ -308,7 +308,7 @@ void DestroySetNodeByReference(struct Set *s)
 
 struct Set *JoinSetLists(struct Set *s1, struct Set *s2)
 {
-  register struct Set *s;
+  struct Set *s;
   if (s1==NULL) return s2;
   s = s1;
   /* find end of set list */
@@ -318,9 +318,9 @@ struct Set *JoinSetLists(struct Set *s1, struct Set *s2)
   return s1;
 }
 
-struct Set *ReverseSetList(register struct Set *s)
+struct Set *ReverseSetList(struct Set *s)
 {
-  register struct Set *next,*previous=NULL;
+  struct Set *next,*previous=NULL;
   if (s==NULL) return s;
   while (TRUE) {		/* loop until broken */
     next = s->next;
@@ -400,7 +400,7 @@ int CompareSetStructures(CONST struct Set *s1, CONST struct Set *s2)
 
 unsigned long SetLength(CONST struct Set *set)
 {
-  register unsigned long l=0;
+  unsigned long l=0;
   while (set!=NULL){
     l++;
     set = NextSet(set);
