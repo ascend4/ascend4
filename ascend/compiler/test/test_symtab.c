@@ -35,10 +35,10 @@ static void test_test1(void){
 
 	symchar *s = AddSymbol("hello");
 
-	CU_TEST(NULL!=AscFindSymbol(s));
+	CU_TEST(NULL!=SCP(AscFindSymbol(s)));
 	//CU_TEST(NULL==AscFindSymbol("hellox"));
-	CU_TEST(NULL==AscFindSymbol(s+1));
-	CU_TEST(NULL==AscFindSymbol(s-1));
+	CU_TEST(NULL==SCP(AscFindSymbol(s+1)));
+	CU_TEST(NULL==SCP(AscFindSymbol(s-1)));
 
 	CU_TEST(0==strcmp(SCP(s),"hello"));
 
@@ -55,8 +55,8 @@ static void test_test1(void){
 	MSG("c = '%s'",c);
 	
 	symchar *s2 = AddSymbol(c);
-	CU_TEST(NULL!=AscFindSymbol(s2));
-	CU_TEST(0==strcmp(AscFindSymbol(s2),c));
+	CU_TEST(NULL!=SCP(AscFindSymbol(s2)));
+	CU_TEST(0==strcmp(SCP(AscFindSymbol(s2)),c));
 
 	PrintTab(1);
 

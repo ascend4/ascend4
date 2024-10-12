@@ -74,11 +74,11 @@ static void test_bintok(char *filenamestem,int usebintok){
 	}else{
 		CU_TEST(0==BinTokenClearOptions());
 	}
-	error_reporter_tree_t *T1 = error_reporter_tree_start(0);
+	error_reporter_tree_start();
 	struct Instance *siminst = SimsCreateInstance(AddSymbol(filenamestem), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(siminst!=NULL);
-	CU_TEST(!error_reporter_tree_has_error(T1));
-	error_reporter_tree_end(T1);
+	CU_TEST(!error_reporter_tree_has_error());
+	error_reporter_tree_end();
 
 	/* initialise */
 #define ONLOAD "on_load"

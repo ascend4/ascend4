@@ -110,7 +110,6 @@ static void test_list(void)
   unsigned long i;
   unsigned long *pint_array[20];
   int lists_were_active = FALSE;
-  int i_initialized_lists = FALSE;
   unsigned long prior_meminuse;
 
   prior_meminuse = ascmeminuse();                     /* save meminuse() at start of function*/
@@ -136,7 +135,6 @@ static void test_list(void)
   if(FALSE == gl_pool_initialized()) {                 /* initialize list system if necessary */
     gl_init();
     gl_init_pool();
-    i_initialized_lists = TRUE;
   }else{
     lists_were_active = TRUE;
   }

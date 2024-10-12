@@ -39,6 +39,12 @@
 
 #include <test/common.h>
 #include <test/assertimpl.h>
+//#define TDEFALL_DEBUG
+#ifdef TDEFALL_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 static enum Proc_enum run_method(struct Instance *sim, const char *methodname){
 	CONSOLE_DEBUG("Running '%s'...",methodname);
@@ -61,6 +67,9 @@ static struct Instance *load_and_initialise(const char *fname, const char *model
 	
 	/* load the file */
 	m = Asc_OpenModule(fname,&status);
+	if (!m) {
+		MSG("load_and_initialized failed to OpenModule");
+	}
 	CU_ASSERT(status == 0);
 
 	/* parse it */

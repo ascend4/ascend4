@@ -75,57 +75,63 @@ struct errormessage {
  * The effect is obviously cumulative.
  */
 int g_parser_warnings = 0;
+#define DEM_LVL_OK 0
+#define DEM_LVL_NOTE 1
+#define DEM_LVL_WARN 2
+#define DEM_LVL_ERR 3
+#define DEM_LVL_FATAL 4
+#define DEM_LVL_UNKN 5
 
 static struct errormessage g_DefinitionErrorMessages[] = {
-  /*0*/{"No error",0},
-  {"Name of a part has been reused (failure)",3},
-  {"Name of a part has incorrect structure (failure)",3},
-  {"Name of a part/variable that does not exist",3},
-  {"Name of undefined function (failure)",3},
-  /*5*/{"Illegal right hand side type in ALIASES",3},
-  {"Illegal expression encountered (parser, lint or memory error, failure)",3},
-  {"Illegal parameter type for WILL_BE (failure)",3},
-  {"Statement not allowed in context (failure)",3},
-  {"Illegal parameter (more than 1 name per IS_A/WILL_BE - failure)",3},
-  /*10*/{"Illegal parameter reduction (LHS not defined by ancestral IS_A)",3},
-  {"Illegal parameter reduction (reassigning part - failure)",3},
-  {"Illegal parameter type for IS_A (punting). Try WILL_BE?",3},
-  {"Unverifiable name or illegal type in a relation",2},
-  {"Unverifiable name or illegal type in RHS of :==",2},
-  /*15*/{"Incorrect number of arguments passed to parameterized type. (failure)",3},
-  {"Incorrect argument passed to parameterized type. (failure)",3},
-  {"Statement possibly modifies type of parameter. (failure)",3},
-  {"Unverifiable LHS of :==, possibly undefined part or non-constant type",2},
-  {"Unverifiable LHS of :=, possibly undefined part or non-variable type",2},
-  /*20*/{"Illegal type or undefined name in RHS of := (failure)",3},
-  {"Object with incompatible type specified in refinement",3},
-  {"FOR loop index shadows previous declaration (failure)",3},
-  {"Unverifiable name or illegal type in ARE_ALIKE",2},
-  {"Illegal parameterized type in ARE_ALIKE",3},
-  /*25*/{"Illegal set of array elements in ARE_ALIKE",3},
-  {"WILL(_NOT)_BE_THE_SAME contains incorrect names.",3},
-  {"WILL_BE in WHERE clause not yet implemented.",3},
-  {"Mismatched alias array subscript and set name in ALIASES-ISA.",3},
-  {"Unverifiable FOR loop set, possibly undefined part or non-constant type", 2},
-  /*30*/{"SELECT statements are not allowed inside a FOR loop",3},
-  {"Illegal relation -- too many relational operators (<,>,=,<=,>=,<>)",3},
-  {"Illegal logical relation -- too many equality operators (!=,==)",3},
-  {"Illegal USE found outside WHEN statement",3},
-  {"Illegal FOR used in a method must be FOR/DO",3},
-  /*35*/{"Illegal FOR used in body must be FOR/CREATE",3},
-  {"Illegal ATOM attribute or relation type in ARE_THE_SAME",3},
-  {":= used outside METHOD makes models hard to debug or reuse",1},
-  {"Illegal BREAK used outside loop or SWITCH.",3},
-  {"Illegal CONTINUE used outside loop.",3},
-  /*40*/{"Illegal FALL_THROUGH used outside SWITCH.",3},
-  {"Incorrect nested argument definition for MODEL. (failure)",3},
-  {"Indexed relation has incorrect subscripts. (failure)",3},
-  {"Illegal FOR used in WHERE statements must be FOR/CHECK",3},
-  {"Illegal FOR used in parameter definitions must be FOR/EXPECT",3},
-  /*45*/{"Miscellaneous style",1},
-  {"Miscellaneous warning",2},
-  {"Miscellaneous error",3},
-  {"Unknown error encountered in statement",5}
+  /*0*/{"No error", DEM_LVL_OK},
+  {"Name of a part has been reused (failure)",DEM_LVL_ERR},
+  {"Name of a part has incorrect structure (failure)",DEM_LVL_ERR},
+  {"Name of a part/variable that does not exist",DEM_LVL_ERR},
+  {"Name of undefined function (failure)",DEM_LVL_ERR},
+  /*5*/{"Illegal right hand side type in ALIASES",DEM_LVL_ERR},
+  {"Illegal expression encountered (parser, lint or memory error, failure)",DEM_LVL_ERR},
+  {"Illegal parameter type for WILL_BE (failure)",DEM_LVL_ERR},
+  {"Statement not allowed in context (failure)",DEM_LVL_ERR},
+  {"Illegal parameter (more than 1 name per IS_A/WILL_BE - failure)",DEM_LVL_ERR},
+  /*10*/{"Illegal parameter reduction (LHS not defined by ancestral IS_A)",DEM_LVL_ERR},
+  {"Illegal parameter reduction (reassigning part - failure)",DEM_LVL_ERR},
+  {"Illegal parameter type for IS_A (punting). Try WILL_BE?",DEM_LVL_ERR},
+  {"Unverifiable name or illegal type in a relation",DEM_LVL_WARN},
+  {"Unverifiable name or illegal type in RHS of :==",DEM_LVL_WARN},
+  /*15*/{"Incorrect number of arguments passed to parameterized type. (failure)",DEM_LVL_ERR},
+  {"Incorrect argument passed to parameterized type. (failure)",DEM_LVL_ERR},
+  {"Statement possibly modifies type of parameter. (failure)",DEM_LVL_ERR},
+  {"Unverifiable LHS of :==, possibly undefined part or non-constant type",DEM_LVL_WARN},
+  {"Unverifiable LHS of :=, possibly undefined part or non-variable type",DEM_LVL_WARN},
+  /*20*/{"Illegal type or undefined name in RHS of := (failure)",DEM_LVL_ERR},
+  {"Object with incompatible type specified in refinement",DEM_LVL_ERR},
+  {"FOR loop index shadows previous declaration (failure)",DEM_LVL_ERR},
+  {"Unverifiable name or illegal type in ARE_ALIKE",DEM_LVL_WARN},
+  {"Illegal parameterized type in ARE_ALIKE",DEM_LVL_ERR},
+  /*25*/{"Illegal set of array elements in ARE_ALIKE",DEM_LVL_ERR},
+  {"WILL(_NOT)_BE_THE_SAME contains incorrect names.",DEM_LVL_ERR},
+  {"WILL_BE in WHERE clause not yet implemented.",DEM_LVL_ERR},
+  {"Mismatched alias array subscript and set name in ALIASES-ISA.",DEM_LVL_ERR},
+  {"Unverifiable FOR loop set, possibly undefined part or non-constant type",DEM_LVL_WARN},
+  /*30*/{"rELECT statements are not allowed inside a FOR loop",DEM_LVL_ERR},
+  {"Illegal relation -- too many relational operators (<,>,=,<=,>=,<>)",DEM_LVL_ERR},
+  {"Illegal logical relation -- too many equality operators (!=,==)",DEM_LVL_ERR},
+  {"Illegal USE found outside WHEN statement",DEM_LVL_ERR},
+  {"Illegal FOR used in a method must be FOR/DO",DEM_LVL_ERR},
+  /*35*/{"Illegal FOR used in body must be FOR/CREATE",DEM_LVL_ERR},
+  {"Illegal ATOM attribute or relation type in ARE_THE_SAME",DEM_LVL_ERR},
+  {":= used outside METHOD makes models hard to debug or reuse",DEM_LVL_NOTE},
+  {"Illegal BREAK used outside loop or SWITCH.",DEM_LVL_ERR},
+  {"Illegal CONTINUE used outside loop.",DEM_LVL_ERR},
+  /*40*/{"Illegal FALL_THROUGH used outside SWITCH.",DEM_LVL_ERR},
+  {"Incorrect nested argument definition for MODEL. (failure)",DEM_LVL_ERR},
+  {"Indexed relation has incorrect subscripts. (failure)",DEM_LVL_ERR},
+  {"Illegal FOR used in WHERE statements must be FOR/CHECK",DEM_LVL_ERR},
+  {"Illegal FOR used in parameter definitions must be FOR/EXPECT",DEM_LVL_ERR},
+  /*45*/{"Miscellaneous style",DEM_LVL_NOTE},
+  {"Miscellaneous warning",DEM_LVL_WARN},
+  {"Miscellaneous error",DEM_LVL_ERR},
+  {"Unknown error encountered in statement",DEM_LVL_UNKN}
 };
 
 void TypeLintErrorAuxillary(FILE *f, char *str, enum typelinterr err,
@@ -157,6 +163,8 @@ void TypeLintError(FILE *f, CONST struct Statement *stat,enum typelinterr err){
   case 2: sev = ASC_USER_WARNING; break;
   case 3: sev = ASC_USER_ERROR; break;
   case 4: sev = ASC_PROG_FATAL; break;
+  default:
+	  sev = ASC_PROG_WARNING; break;
   }
   WriteStatementError(sev,stat,1,g_DefinitionErrorMessages[err].str);
 }

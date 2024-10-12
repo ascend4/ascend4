@@ -2920,8 +2920,14 @@ static void mtx_write_perm(FILE *fp,int32 ord,int32 *arr){
 
 static void mtx_read_perm(FILE *fp,int32 ord,int32 *arr){
   int32 i;
-  for (i=0; i<ord;i++)
-    fscanf(fp,"%d",&(arr[i]));
+  int nitems;
+  for (i=0; i<ord;i++) {
+    nitems = fscanf(fp,"%d",&(arr[i]));
+    if (nitems != 1) {
+      FPRINTF(g_mtxerr, "mtx_read_perm: ran out of data at %d\n", i);
+      return;
+    }
+  }
 }
 
 static char mtxmagic[]="mtx_matrix_data.\0";
@@ -2998,13 +3004,25 @@ static int getregion(FILE* fp, mtx_region_t *reg) {
 
 static int getcoef(FILE* fp, int *row, int *col, double *val){
   char buf[80];
-  if( fscanf(fp,"%d %d",row,col)==EOF) {
+  int nitems;
+  nitems = fscanf(fp,"%d %d",row,col);
+  if( nitems == EOF) {
     return 0;
-  } else {
-    fscanf(fp,"%s",buf);
-    *val=strtod(buf,NULL);
-    return 1;
   }
+  if (nitems != 2) {
+    FPRINTF(g_mtxerr, "mtx_read_region: getcoef:ran out of data: coord\n");
+    return 0;
+  }
+  nitems = fscanf(fp,"%s",buf);
+  if( nitems == EOF) {
+    return 0;
+  }
+  if (nitems != 1) {
+    FPRINTF(g_mtxerr, "mtx_read_region: getcoef:ran out of data: value\n");
+    return 0;
+  }
+  *val=strtod(buf,NULL);
+  return 1;
 }
 
 mtx_matrix_t mtx_read_region(FILE *fp,mtx_matrix_t mtx,int transpose){
@@ -3013,17 +3031,17 @@ mtx_matrix_t mtx_read_region(FILE *fp,mtx_matrix_t mtx,int transpose){
   int32 orgrow,orgcol, ord,inc,nblocks;
   boolean readblocks;
   char buf[81];
-
+  int nitems;
   readblocks = FALSE;
-  fscanf(fp,"%80s",buf);
-  if (strcmp(buf,mtxmagic)) {
+  nitems = fscanf(fp,"%80s",buf);
+  if (nitems != 1 || strcmp(buf,mtxmagic)) {
     FPRINTF(g_mtxerr,
 	    "mtx_read_region: mtx data file has bad magic number\n%s\n",buf);
     return mtx;
   }
   /* order */
-  fscanf(fp,"%d",&ord);
-  if (ord<0) {
+  nitems = fscanf(fp,"%d",&ord);
+  if (nitems != 1 || ord<0) {
     FPRINTF(g_mtxerr, "mtx_read_region: mtx data has illegal order%d\n",ord);
     return mtx;
   }
@@ -3051,8 +3069,8 @@ mtx_matrix_t mtx_read_region(FILE *fp,mtx_matrix_t mtx,int transpose){
   mtx_read_perm(fp,ord,mtx->perm.row.org_to_cur);
   mtx_read_perm(fp,ord,mtx->perm.col.cur_to_org);
   mtx_read_perm(fp,ord,mtx->perm.col.org_to_cur);
-  fscanf(fp,"%80s",buf);
-  if (strcmp(buf,permmagic)) {
+  nitems = fscanf(fp,"%80s",buf);
+  if (nitems != 1 || strcmp(buf,permmagic)) {
      /* could be new format with block data, then read, or bogusness */
     if (strcmp(buf,blockmagic)) {
       FPRINTF(g_mtxerr,
@@ -3060,8 +3078,14 @@ mtx_matrix_t mtx_read_region(FILE *fp,mtx_matrix_t mtx,int transpose){
       return mtx;
     } else {
       /* read the block data */
-      fscanf(fp,"%d",&nblocks);
-      fscanf(fp,"%d",&(mtx->data->symbolic_rank));
+      nitems = fscanf(fp,"%d",&nblocks);
+      if (nitems != 1) {
+        FPRINTF(g_mtxerr, "mtx_read_region: mtx data has bad block count.\n");
+      }
+      nitems = fscanf(fp,"%d",&(mtx->data->symbolic_rank));
+      if (nitems != 1) {
+        FPRINTF(g_mtxerr, "mtx_read_region: mtx data has bad rank.\n");
+      }
       if (!readblocks) {
         mtx_region_t fake;
         for (inc=0; inc < nblocks; inc++) {
@@ -3089,8 +3113,8 @@ mtx_matrix_t mtx_read_region(FILE *fp,mtx_matrix_t mtx,int transpose){
           return mtx;
         }
       }
-      fscanf(fp,"%80s",buf);
-      if (strcmp(buf,blockend)) {
+      nitems = fscanf(fp,"%80s",buf);
+      if (nitems != 1 || strcmp(buf,blockend)) {
         FPRINTF(g_mtxerr, "mtx_read_region: mtx data has bad block magic.\n");
       }
     }

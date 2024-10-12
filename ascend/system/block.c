@@ -705,8 +705,8 @@ int slv_set_up_block(slv_system_t sys,int bnum)
   mtx_region_t reg;
   const mtx_block_t *b;
   int32 c,vlen,rlen;
-  var_filter_t vf;
-  rel_filter_t rf;
+  // var_filter_t vf;
+  // rel_filter_t rf;
 
   if (sys==NULL) return 1;
   rlen = slv_get_num_solvers_rels(sys);
@@ -718,10 +718,10 @@ int slv_set_up_block(slv_system_t sys,int bnum)
   assert(rp!=NULL);
   assert(vp!=NULL);
 
-  rf.matchbits = (REL_INCLUDED | REL_EQUALITY | REL_INBLOCK | REL_ACTIVE);
-  rf.matchvalue = (REL_INCLUDED | REL_EQUALITY | REL_INBLOCK | REL_ACTIVE);
-  vf.matchbits =(VAR_INCIDENT |VAR_SVAR | VAR_FIXED |VAR_INBLOCK | VAR_ACTIVE);
-  vf.matchvalue = (VAR_INCIDENT | VAR_SVAR | VAR_INBLOCK | VAR_ACTIVE);
+  // rf.matchbits = (REL_INCLUDED | REL_EQUALITY | REL_INBLOCK | REL_ACTIVE);
+  // rf.matchvalue = (REL_INCLUDED | REL_EQUALITY | REL_INBLOCK | REL_ACTIVE);
+  // vf.matchbits =(VAR_INCIDENT |VAR_SVAR | VAR_FIXED |VAR_INBLOCK | VAR_ACTIVE);
+  // vf.matchvalue = (VAR_INCIDENT | VAR_SVAR | VAR_INBLOCK | VAR_ACTIVE);
 
   b = slv_get_solvers_blocks(sys);
   assert(b!=NULL);

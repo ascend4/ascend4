@@ -104,7 +104,10 @@ void slv_sort_rels_and_vars(slv_system_t sys
   struct rel_relation **rp, **rtmp, *rel;
   struct var_variable **vp, **vtmp, *var;
 
-  int32 nrow,ncol,rlen,vlen,rel_tmp_end;
+#if DEBUG_SLVSORT
+  int32 nrow,ncol;
+#endif
+  int32 rlen,vlen,rel_tmp_end;
   int32 r,c,var_tmp_end,len;
   var_filter_t vf;
   rel_filter_t rf;
@@ -137,7 +140,7 @@ void slv_sort_rels_and_vars(slv_system_t sys
   vf.matchvalue = (VAR_INCIDENT | VAR_SVAR | VAR_ACTIVE);
 
   /* count rows and cols */
-#if 0
+#if DEBUG_SLVSORT
   nrow = slv_count_solvers_rels(sys,&rf);
   ncol = slv_count_solvers_vars(sys,&vf);
   (void)ncol; (void)nrow;

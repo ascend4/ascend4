@@ -838,13 +838,13 @@ static void set_active_rels_in_cases(int32 *cases, int32 ncases,
 void set_active_rels_in_subregion(slv_system_t sys, int32 *cases,
 				  int32 ncases, struct gl_list_t *disvars)
 {
-  struct rel_relation **solverrl;
+  // struct rel_relation **solverrl;
   struct dis_discrete *dis;
   struct gl_list_t *whens;
   struct w_when *when;
   int32 d,dlen,w,wlen;
 
-  solverrl = slv_get_solvers_rel_list(sys);
+  /* solverrl = */ slv_get_solvers_rel_list(sys); // do we need this for a side effect?
 
   SET_WHENDEBUG(sys)
 
@@ -1003,7 +1003,10 @@ static int32 compare_alternative_cases(struct when_case *cur_case1,
   struct gl_list_t *rel_list1, *rel_list2;
   struct rel_relation *rel1, *rel2;
   struct var_variable **inc1, **inc2;
-  int32 numcase1, numcase2;
+#ifdef PREANALYSIS_DEBUG
+  int32 numcase1;
+  int32 numcase2;
+#endif
   int32 nrel1, nrel2;
   int32 nvar1, nvar2;
   int32 v,r, ind1, ind2;
@@ -1011,9 +1014,9 @@ static int32 compare_alternative_cases(struct when_case *cur_case1,
   int32 *ninc1, *ninc2;
   int32 *ord_ind1, *ord_ind2;
 
+#ifdef PREANALYSIS_DEBUG
   numcase1 = when_case_case_number(cur_case1);
   numcase2 = when_case_case_number(cur_case2);
-#ifdef PREANALYSIS_DEBUG
   FPRINTF(ASCERR,"Making comparison of CASEs:\n");
   FPRINTF(ASCERR,"case A = %d  case B = %d \n",numcase1,numcase2);
 #endif
@@ -1781,7 +1784,7 @@ void configure_conditional_problem(int32 numwhens,
                                    struct logrel_relation **solverll,
 				   struct var_variable **mastervl)
 {
-  int32 w,result;
+  int32 w;
   struct w_when *when;
 
   /* Enumerate cases in when's */
@@ -1796,7 +1799,7 @@ void configure_conditional_problem(int32 numwhens,
   /* get structure of the different alternatives */
   for (w = 0; w < numwhens; w++) {
     when = whenlist[w];
-    result = analyze_alternative_structures_in_when(when,mastervl);
+    (void)analyze_alternative_structures_in_when(when,mastervl);
   }
 
   /*

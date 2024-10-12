@@ -19,6 +19,12 @@
 
 #include <test/common.h>
 #include <test/assertimpl.h>
+//#define FIXASSIGN_DEBUG
+#ifdef FIXASSIGN_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 static struct Instance *load_model(const char *filename, const char *name, int assert_parse_ok, int *parsestatus){
 	struct module_t *m;
@@ -32,6 +38,9 @@ static struct Instance *load_model(const char *filename, const char *name, int a
 	strcat((char *)path,filename);
 	int openmodulestatus;
 	m = Asc_OpenModule(path,&openmodulestatus);
+	if (!m) {
+		MSG("load_model failed to OpenModule");
+	}
 	CU_ASSERT(openmodulestatus == 0);
 	CONSOLE_DEBUG("Parsing...");
 	if(assert_parse_ok){

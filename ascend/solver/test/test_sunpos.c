@@ -42,6 +42,12 @@
 #include <ascend/system/slv_server.h>
 
 #include <test/common.h>
+//#define TSP_DEBUG
+#ifdef TSP_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 /**
 	Reusable function for the standard process of loading, initialising, solving
@@ -71,7 +77,10 @@ static void load_solve_test_qrslv(const char *librarypath, const char *modelfile
 	CU_ASSERT_FATAL(qrslv_index != -1);
 
 	/* load the model file */
-	Asc_OpenModule(modelfile,&status);
+	struct module_t *m = Asc_OpenModule(modelfile,&status);
+	if (!m) {
+		MSG("load_solve_test_qrslv failed OpenModule");
+	}
 	CU_ASSERT(status == 0);
 	if(status){
 		Asc_CompilerDestroy();

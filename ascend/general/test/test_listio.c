@@ -190,7 +190,10 @@ static void test_str(void){
   
   fputs("hello world",tmp);
   rewind(tmp);
-  fgets(buffer,4096,tmp);
+  char *rb = fgets(buffer,4096,tmp);
+  if (!rb) {
+	  CU_ASSERT(NULL=="failed to read constant from stack memory");
+  }
   CU_ASSERT(0==strcmp(buffer,"hello world"));
   rewind(tmp);
   
@@ -205,7 +208,10 @@ static void test_str(void){
 
   gl_write_list_str(tmp, list1, &gl_write_list_item_str);
   rewind(tmp);
-  fgets(buffer,4096,tmp);
+  rb = fgets(buffer,4096,tmp);
+  if (!rb) {
+	  CU_ASSERT(NULL=="failed to read gl_write_list_str result from stack memory");
+  }
   CU_ASSERT(0==strcmp(buffer,"(one,two,three)"));
 
   // TEST SORTED LIST
@@ -226,7 +232,10 @@ static void test_str(void){
   rewind(tmp);
   gl_write_list_str(tmp, list1, &gl_write_list_item_str);
   rewind(tmp);
-  fgets(buffer,4096,tmp);
+  rb = fgets(buffer,4096,tmp);
+  if (!rb) {
+	  CU_ASSERT(NULL=="failed to read long gl_write_list_str result from stack memory");
+  }
   CU_ASSERT(0==strcmp(buffer,"(TV,camera,man,person,woman)"));
 
   gl_destroy(list1);
@@ -247,7 +256,10 @@ static void test_str(void){
   rewind(tmp);
   gl_write_list_str(tmp, list1, &gl_write_list_item_str);
   rewind(tmp);
-  fgets(buffer,4096,tmp);
+  rb = fgets(buffer,4096,tmp);
+  if (!rb) {
+	  CU_ASSERT(NULL=="failed to read longer gl_write_list_str result from stack memory");
+  }
   CU_ASSERT(0==strcmp(buffer,"(one,two,(NULL),three,(NULL))"));
 
   gl_destroy(list1);

@@ -338,9 +338,15 @@ static int DoCalculation(struct BBoxInterp *interp,
   offset = ncomps+1;
   TotP = inputs[offset];
 
+  int unknown;
   for (c=0;c<ncomps;c++) {
     vp.component = problem->components[c];	/* get component name */
-    result = GetCoefficients(&vp);		/* get antoines coeffs */
+    unknown = GetCoefficients(&vp);		/* get antoines coeffs */
+    if (unknown) {
+	    result = 1;
+	    interp->status = calc_incorrect_args;
+	    goto cleanup;
+    }
     SatP[c] = exp(vp.a - vp.b/(T + vp.c));	/* calc satP */
     vap_frac[c] = SatP[c] * liq_frac[c] / TotP;
   }
@@ -378,11 +384,13 @@ static int DoCalculation(struct BBoxInterp *interp,
     tmp++;
   }
 
+cleanup:
   free((char *)liq_frac);
   free((char *)vap_frac);
   free((char *)SatP);
-  interp->status = calc_all_ok;
-  return 0;
+  if (!result)
+    interp->status = calc_all_ok;
+  return result;
 }
 
 int kvalues_fex(struct BBoxInterp *interp,
