@@ -334,14 +334,15 @@ static
 int32 ipopt_get_default_parameters(slv_system_t server, SlvClientToken asys
 		,slv_parameters_t *parameters
 ){
-	IpoptSystem *sys = NULL;
 	struct slv_parameter *new_parms = NULL;
+#if DEBUG
+	IpoptSystem *sys = NULL;
 	int32 make_macros = 0;
-
 	if(server != NULL && asys != NULL) {
 		sys = SYS(asys);
 		make_macros = 1;
 	}
+#endif
 
 	if(parameters->parms == NULL) {
 		new_parms = ASC_NEW_ARRAY_OR_NULL(struct slv_parameter,IPOPT_PARAMS);
