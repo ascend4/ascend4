@@ -55,7 +55,7 @@ static struct gl_list_t *g_model_definition_methods = NULL;
 struct InitProcedure *CreateProcedure(symchar *name,
 				      struct StatementList *stats)
 {
-  register struct InitProcedure *result;
+  struct InitProcedure *result;
   assert(AscFindSymbol(name)!=NULL);
   PMALLOC(result);
   assert(result!=NULL);
@@ -68,7 +68,7 @@ struct InitProcedure *CreateProcedure(symchar *name,
 
 struct InitProcedure *CopyProcedure(struct InitProcedure *p)
 {
-  register struct InitProcedure *result;
+  struct InitProcedure *result;
   assert(p!=NULL);
   PMALLOC(result);
   assert(result!=NULL);
@@ -80,7 +80,7 @@ struct InitProcedure *CopyProcedure(struct InitProcedure *p)
 
 struct InitProcedure *CopyProcToModify(struct InitProcedure *p)
 {
-  register struct InitProcedure *result;
+  struct InitProcedure *result;
   assert(p!=NULL);
   PMALLOC(result);
   assert(result!=NULL);
@@ -93,10 +93,10 @@ struct InitProcedure *CopyProcToModify(struct InitProcedure *p)
 struct gl_list_t *MergeProcedureLists(struct gl_list_t *old,
                                       struct gl_list_t *new)
 {
-  register struct gl_list_t *result;
-  register struct InitProcedure *proc;
-  register unsigned long c,len;
-  register unsigned long refproc;
+  struct gl_list_t *result;
+  struct InitProcedure *proc;
+  unsigned long c,len;
+  unsigned long refproc;
   if (old==NULL) {
     return new;
   }

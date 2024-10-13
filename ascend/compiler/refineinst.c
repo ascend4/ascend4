@@ -80,7 +80,7 @@
 /* checks children, and does some value copying in the process */
 static void CheckChild(struct Instance *old, struct Instance *new)
 {
-  register CONST dim_type *dimp;
+  CONST dim_type *dimp;
   assert(old->t==new->t);
   switch(old->t){
   case REAL_INST:
@@ -136,9 +136,9 @@ static void CheckChild(struct Instance *old, struct Instance *new)
 }
 
 static
-void CheckAtomValuesOne(register struct Instance **old,
-			register struct Instance **new,
-			register unsigned long int num)
+void CheckAtomValuesOne(struct Instance **old,
+			struct Instance **new,
+			unsigned long int num)
 {
   while(num--)
     CheckChild(*(old++),*(new++));
@@ -147,7 +147,7 @@ void CheckAtomValuesOne(register struct Instance **old,
 static
 void CheckAtomValuesTwo(struct Instance *old, struct Instance *new)
 {
-  register unsigned long c,num_children,pos;
+  unsigned long c,num_children,pos;
   struct InstanceName name;
   num_children = NumberChildren(old);
   for(c=1;c<=num_children;c++){
@@ -166,7 +166,7 @@ void CheckAtomValuesTwo(struct Instance *old, struct Instance *new)
 static struct Instance *RefineRealConstant(struct RealConstantInstance *i,
 					struct TypeDescription *type)
 {
-  register CONST dim_type *dimp;
+  CONST dim_type *dimp;
   unsigned what=0;
   /* bit game: bit 0 = update val,1 = update dim, bits 8,16= err in val/dim */
 
@@ -243,8 +243,8 @@ static struct Instance *RefineRealAtom(struct RealAtomInstance *i,
 			    struct TypeDescription *type)
 {
   struct RealAtomInstance *new;
-  register struct gl_list_t *tmp;
-  register CONST dim_type *dimp;
+  struct gl_list_t *tmp;
+  CONST dim_type *dimp;
   assert(MoreRefined(type,i->desc)==type);
   AssertMemory(i);
   if (i->desc==type) return INST(i);
@@ -354,8 +354,8 @@ RefineBooleanConstant(struct BooleanConstantInstance *i,
 static struct Instance *RefineBooleanAtom(struct BooleanAtomInstance *i,
 			       struct TypeDescription *type)
 {
-  register struct BooleanAtomInstance *new;
-  register struct gl_list_t *tmp;
+  struct BooleanAtomInstance *new;
+  struct gl_list_t *tmp;
   assert(MoreRefined(type,i->desc)==type);
   AssertMemory(i);
   if (i->desc==type) return INST(i);
@@ -433,8 +433,8 @@ static struct Instance
 static struct Instance *RefineIntegerAtom(struct IntegerAtomInstance *i,
 			       struct TypeDescription *type)
 {
-  register struct gl_list_t *tmp;
-  register struct IntegerAtomInstance *new;
+  struct gl_list_t *tmp;
+  struct IntegerAtomInstance *new;
   assert(MoreRefined(type,i->desc)==type);
   AssertMemory(i);
   if (i->desc==type) return INST(i);
@@ -478,8 +478,8 @@ static struct Instance *RefineIntegerAtom(struct IntegerAtomInstance *i,
 static struct Instance *RefineSet(struct SetAtomInstance *i,
 			   struct TypeDescription *type)
 {
-  register struct gl_list_t *tmp;
-  register struct SetAtomInstance *new;
+  struct gl_list_t *tmp;
+  struct SetAtomInstance *new;
   assert(MoreRefined(type,i->desc)==type);
   AssertMemory(i);
   if (i->desc==type) return INST(i);
@@ -548,8 +548,8 @@ static struct Instance *RefineSymbolConstant(struct SymbolConstantInstance *i,
 static struct Instance *RefineSymbolAtom(struct SymbolAtomInstance *i,
 			      struct TypeDescription *type)
 {
-  register struct gl_list_t *tmp;
-  register struct SymbolAtomInstance *new;
+  struct gl_list_t *tmp;
+  struct SymbolAtomInstance *new;
   assert(MoreRefined(type,i->desc)==type);
   AssertMemory(i);
   if (i->desc==type) return INST(i);
@@ -604,8 +604,8 @@ struct Instance *RefineModel(struct ModelInstance *i,
                              struct ModelInstance *arginst)
 {
   struct TypeDescription *oldtype;
-  register unsigned long new_length,old_length;
-  register struct ModelInstance *result;
+  unsigned long new_length,old_length;
+  struct ModelInstance *result;
   assert(MoreRefined(type,i->desc)==type);
   AssertMemory(i);
   AssertMemory(type);

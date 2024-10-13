@@ -171,10 +171,10 @@ struct value_t CreateSetValue(struct set_t *sptr)
 struct value_t CreateSetFromList(struct value_t value)
 {
   struct value_t result;
-  register struct value_t *vptr;
-  register struct set_t *sptr,*tmp;
-  register struct gl_list_t *list;
-  register unsigned long c,len;
+  struct value_t *vptr;
+  struct set_t *sptr,*tmp;
+  struct gl_list_t *list;
+  unsigned long c,len;
   IVAL(result);
   if (value.t == error_value) return value;
   result.t = set_value;
@@ -253,11 +253,11 @@ struct value_t CreateSetFromList(struct value_t value)
 struct value_t CreateOrderedSetFromList(struct value_t value)
 {
   struct value_t result;
-  register struct value_t *vptr;
-  register struct set_t *sptr;
+  struct value_t *vptr;
+  struct set_t *sptr;
   struct set_t *sval;
-  register struct gl_list_t *list;
-  register unsigned long c,len, sc,slen;
+  struct gl_list_t *list;
+  unsigned long c,len, sc,slen;
   IVAL(result);
 
   assert(ListMode!=0);
@@ -732,7 +732,7 @@ struct value_t DivideValues(struct value_t value1, struct value_t value2)
 static
 long ipower(long int x, long int y)
 {
-  register long result=1;
+  long result=1;
   if (y==0) return result;
   if (y>0) {
     while(y-->0)

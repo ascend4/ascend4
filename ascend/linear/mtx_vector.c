@@ -273,7 +273,7 @@ void vec_write(FILE *fp, struct vec_vector *vec){
 /* Dot product for loop unrolled vector norms */
 real64 vec_dot(int32 len, const real64 *p1, const real64 *p2)
 {
-  register double sum,lsum;
+  double sum,lsum;
   int m,n;
 
 /* 

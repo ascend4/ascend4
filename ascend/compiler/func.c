@@ -52,74 +52,74 @@ double g_lnm_epsilon = 1.0e-8;
 
 
 #if defined(__WIN32__) || defined(_WIN32) || defined(WIN32)
-double cbrt(register double d){
+double cbrt(double d){
   return pow(d,(double)0.3333333333333333333333);
 }
 #endif
 
-int ascnintF(register double d){
+int ascnintF(double d){
   return ((d)>=0.0 ? (int)floor((d) + 0.5) : -(int)floor(0.5 - (d)));
 }
 
 
-double dln(register double d){
+double dln(double d){
   return 1.0/d;
 }
 
-double dln2(register double d){
+double dln2(double d){
   return -1.0/(d*d);
 }
 
-double lnm(register double d){
+double lnm(double d){
   return (d>g_lnm_epsilon?log(d):d/g_lnm_epsilon + (log(g_lnm_epsilon) -1));
 
 }
 
-double dlnm(register double d){
+double dlnm(double d){
   return ( d>g_lnm_epsilon ? (double)1.0/d : 1/g_lnm_epsilon);
 }
 
-double dlnm2(register double d){
+double dlnm2(double d){
   return (d>g_lnm_epsilon ? (double)-1.0/(d*d) : (double)0.0);
 }
 
-double dlog10(register double d){
+double dlog10(double d){
   return M_LOG10E/d;
 }
 
-double dlog102(register double d){
+double dlog102(double d){
   return -M_LOG10E/(d*d);
 }
 
-double dcos(register double d){
+double dcos(double d){
   return -sin(d);
 }
 
-double dcos2(register double d){
+double dcos2(double d){
   return -cos(d);
 }
 
-double dtan(register double d){
-  register double c;
+double dtan(double d){
+  double c;
   c=cos(d);
   return 1.0/(c*c);
 }
 
-double dtan2(register double d){
-  register double c;
+double dtan2(double d){
+  double c;
   c=cos(d);
   return ldexp(tan(d)/(c*c),1);
 }
 
-double sqr(register double d){
+double sqr(double d){
   return d*d;
 }
 
-double dsqr(register double d){
+double dsqr(double d){
   return ldexp(d,1);
 }
 
-double dsqr2(register double d){
+double dsqr2(double d){
   (void)d;  /*  stop gcc whine about unused parameter */
   return 2.0;
 }
@@ -128,19 +128,19 @@ double hold(double d){
   return d;
 }
 
-double dsqrt(register double d){
+double dsqrt(double d){
   return 1.0/(ldexp(sqrt(d),1));
 }
 
-double dsqrt2(register double d){
+double dsqrt2(double d){
   return -1.0/ldexp(sqrt(d)*d,2);
 }
 
-double dfabs(register double d){
+double dfabs(double d){
   return ((d > 0.0) ? 1.0 : ((d<0.0 ) ? -1 : 0));
 }
 
-double dfabs2(register double d){
+double dfabs2(double d){
   (void)d;  /*  stop gcc whine about unused parameter */
   return 0.0;
 }
@@ -151,7 +151,7 @@ double dhold(double d){
 }
 
  /* The next 4 are new */
-double asc_ipow(register double d, int i) {
+double asc_ipow(double d, int i) {
   unsigned negative = 0;
   negative = (i<0);
   if (negative) i = (-i);
@@ -169,7 +169,7 @@ double asc_ipow(register double d, int i) {
   case 9: d = d*d*d*d*d*d*d*d*d; break;
   default:
     {
-      register double res;
+      double res;
       res = d;
       for (--i; i > 0; i--) res *= d;
       d = res;
@@ -211,110 +211,110 @@ double asc_d2ipow(double d, int i) {
 }
 
 
-double cube(register double d){
+double cube(double d){
   return d*d*d;
 }
-double dcube(register double d){
+double dcube(double d){
   return 3.0*d*d;
 }
-double dcube2(register double d){
+double dcube2(double d){
   return 6.0*d;
 }
 
-double dcbrt(register double d){
-  register double c;
+double dcbrt(double d){
+  double c;
   c=cbrt(d);
   return (double)0.3333333333333333/(c*c);
 }
 
-double dcbrt2(register double d){
-  register double c;
+double dcbrt2(double d){
+  double c;
   c=cbrt(d);
   return (double)-0.2222222222222222/pow(c,5.0);
 }
 
-double dasin(register double d){
+double dasin(double d){
   return 1.0/sqrt(1.0-d*d);
 }
 
-double dasin2(register double d){
-  register double c;
+double dasin2(double d){
+  double c;
   c=1.0-d*d;
   return d/(c*sqrt(c));
 }
 
-double dacos(register double d)
+double dacos(double d)
 {
   return -1.0/sqrt(1-d*d);
 }
 
-double dacos2(register double d){
-  register double c;
+double dacos2(double d){
+  double c;
   c=1.0-d*d;
   return -d/(c*sqrt(c));
 }
 
-double datan(register double d){
+double datan(double d){
   return 1.0/(1.0+d*d);
 }
 
-double datan2(register double d){
+double datan2(double d){
   return -2*d/sqr(1+d*d);
 }
 
 #ifdef HAVE_ERF
-double derf(register double d){
+double derf(double d){
   return ldexp(exp(-(d*d))/sqrt(M_PI),1);
 }
 
-double derf2(register double d)
+double derf2(double d)
 {
   return -ldexp(d*exp(-(d*d))/sqrt(M_PI),2);
 }
 #endif /* HAVE_ERF */
 
-double dtanh(register double d){
-  register double c;
+double dtanh(double d){
+  double c;
   c = cosh(d);
   c = 1/(c*c);
   return c;
 }
 
-double dtanh2(register double d){
-  register double c;
+double dtanh2(double d){
+  double c;
   c = cosh(d);
   return -ldexp(tanh(d),1)/(c*c);
 }
 
-double arcsinh(register double d){
+double arcsinh(double d){
   return log(d+sqrt(d*d+1.0));
 }
 
-double darcsinh(register double d){
+double darcsinh(double d){
   return 1.0/sqrt(d*d+1.0);
 }
 
-double darcsinh2(register double d){
-  register double c;
+double darcsinh2(double d){
+  double c;
   c=d*d+1.0;
   return -d/sqrt(c*c*c);
 }
 
-double arccosh(register double d){
+double arccosh(double d){
   return log(d+sqrt(d*d-1.0));
 }
 
-double darccosh(register double d){
+double darccosh(double d){
   return 1.0/sqrt(d*d-1.0);
 }
 
-double darccosh2(register double d){
-  register double c;
+double darccosh2(double d){
+  double c;
   c=d*d-1.0;
   return -d/sqrt(c*c*c);
 }
 
-double arctanh(register double d){
+double arctanh(double d){
   return  ldexp( log((d+1.0)/(1.0-d)) ,-1);
 /* an alternative, more expensive but perhaps less exception prone
 *  coding of arctanh is:
@@ -325,12 +325,12 @@ double arctanh(register double d){
 */
 }
 
-double darctanh(register double d){
+double darctanh(double d){
   return  1.0/(1-d*d);
 }
 
-double darctanh2(register double d){
-  register double c;
+double darctanh2(double d){
+  double c;
   c=1.0-d*d;
   return ldexp( d/(c*c) ,1);
 }

@@ -207,8 +207,8 @@ struct gl_list_t *CopyWhenCaseRefList(struct Instance *dest_inst,
 
 void DestroyWhenVarList(struct gl_list_t *l, struct Instance *inst)
 {
-  register struct Instance *ptr;
-  register unsigned long c;
+  struct Instance *ptr;
+  unsigned long c;
   for(c=gl_length(l);c>=1;c--){
     if (NULL != (ptr = (struct Instance *)gl_fetch(l,c))){
       switch(ptr->t) {
@@ -232,8 +232,8 @@ void DestroyWhenVarList(struct gl_list_t *l, struct Instance *inst)
 static
 void DestroyWhenCases(struct Case *cur_case, struct Instance *inst)
 {
-  register struct Instance *ptr;
-  register unsigned long c,len;
+  struct Instance *ptr;
+  unsigned long c,len;
   struct gl_list_t *reflist;
 
   reflist = GetCaseReferences(cur_case);
@@ -261,7 +261,7 @@ void DestroyWhenCases(struct Case *cur_case, struct Instance *inst)
 void DestroyWhenCaseList(struct gl_list_t *l, struct Instance *inst)
 {
   struct Case *cur_case;
-  register unsigned long c,len;
+  unsigned long c,len;
   len = gl_length(l);
 
   for(c=len;c>=1;c--){

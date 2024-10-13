@@ -179,7 +179,7 @@ static
 unsigned int ExprStackDepth(CONST struct Expr *ex,
 			    CONST struct Expr *stop)
 {
-  register unsigned int maxdepth=0,depth=0;
+  unsigned int maxdepth=0,depth=0;
   while (ex!=stop){
     AssertMemory(ex);
     switch(ExprType(ex)){
@@ -652,7 +652,7 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
 {
   struct value_t top,next;
   symchar *cptr;
-  register struct stack_t *stack;
+  struct stack_t *stack;
   IVAL(top);
   IVAL(next);
   if (ContainsSuchThat(expr,stop)!=NULL) {

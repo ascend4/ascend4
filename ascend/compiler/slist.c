@@ -99,9 +99,9 @@ struct StatementList *CopyStatementList(struct StatementList *sl)
 
 struct StatementList *CopyListToModify(struct StatementList *sl)
 {
-  register struct StatementList *result;
-  register struct Statement *s;
-  register unsigned long c,len;
+  struct StatementList *result;
+  struct Statement *s;
+  unsigned long c,len;
   assert(sl!=NULL);
   assert(sl->ref_count);
   result=SLMALLOC;
@@ -217,7 +217,7 @@ int CompareISLists(CONST struct StatementList *sl1,
 
 void AppendStatement(struct StatementList *sl1, struct Statement *s)
 {
-  register struct gl_list_t *l1;
+  struct gl_list_t *l1;
 
   assert(s!=NULL);
   if (sl1 ==NULL) {
@@ -231,10 +231,10 @@ void AppendStatement(struct StatementList *sl1, struct Statement *s)
 struct StatementList *AppendStatementLists(CONST struct StatementList *sl1,
                                            struct StatementList *sl2)
 {
-  register CONST struct gl_list_t *l1;
-  register struct gl_list_t *list,*l2;
-  register struct Statement *stat;
-  register unsigned long c,len;
+  CONST struct gl_list_t *l1;
+  struct gl_list_t *list,*l2;
+  struct Statement *stat;
+  unsigned long c,len;
   assert(sl1 && sl2);
   l1 = GetList(sl1);
   l2 = GetList(sl2);
@@ -260,7 +260,7 @@ struct StatementList *AppendStatementLists(CONST struct StatementList *sl1,
 
 void DestroyStatementList(struct StatementList *sl)
 {
-  register unsigned long c,len;
+  unsigned long c,len;
   if (sl == NULL) return;
   assert(sl->ref_count!=0);
   if (sl->ref_count < MAXREFCOUNT) sl->ref_count--;

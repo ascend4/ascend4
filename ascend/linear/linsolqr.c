@@ -864,7 +864,7 @@ int32 find_pivot_number(const real64 *vec,
     return 0;
   }
   if (tol >= D_ONE) {
-    register real64 biggest = MAX(eps,D_ZERO);
+    real64 biggest = MAX(eps,D_ZERO);
     /* get the biggest, period */
     k = 0;
     for (j=0; j < len; j++) {
@@ -881,7 +881,7 @@ int32 find_pivot_number(const real64 *vec,
     ivec[0] = 0;
     if (*maxi==len) {
       /* cheap search against eps and tol, no list. */
-      register real64 thold;
+      real64 thold;
       thold = tol * vec[len-1];
       if (thold >= eps) {
         for (k = 0; k < len && vec[k] < thold; k++);
@@ -906,7 +906,7 @@ int32 find_pivot_number(const real64 *vec,
       if (bigi == 0) {
         *maxi = k = 0;
       } else {
-        register real64 thold;
+        real64 thold;
         /* Note: if bigi is enormous, we should do a binary search,
            not linear. */
         *maxi = ivec[bigi-1];
@@ -2662,7 +2662,7 @@ static void qr_forward_eliminate(linsolqr_system_t sys,
     /* arr is indexed by original column number */
     int32 dotlim,col;
     real64 *diag;
-    register int32 org_col;
+    int32 org_col;
 
     diag=sys->qrdata->alpha;
     dot_rng.low= sys->rng.low;

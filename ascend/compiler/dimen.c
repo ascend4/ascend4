@@ -236,8 +236,8 @@ int SameDimen(const dim_type *d1, const dim_type *d2){
 
 
 int CmpDimen(const dim_type *d1, const dim_type *d2){
-	register unsigned c;
-	register int i;
+	unsigned c;
+	int i;
 	assert(d1!=NULL);
 	assert(d2!=NULL);
 	if (WILD(d1)) {
@@ -264,7 +264,7 @@ int CmpDimen(const dim_type *d1, const dim_type *d2){
 
 
 void ClearDimensions(dim_type *d){
-  register unsigned c;
+  unsigned c;
   struct fraction f;
   assert(d!=NULL);
   f = CreateFraction((FRACPART)0,(FRACPART)1);
@@ -293,8 +293,8 @@ const dim_type *WildDimension(void){
 
 
 static
-dim_type *CopyDimen(register const dim_type *d){
-  register dim_type *result;
+dim_type *CopyDimen(const dim_type *d){
+  dim_type *result;
   assert(d!=NULL);
   result = ASC_NEW(dim_type);
   ascbcopy((char *)d,(char *)result,sizeof(dim_type));
@@ -304,8 +304,8 @@ dim_type *CopyDimen(register const dim_type *d){
 
 
 const dim_type *FindOrAddDimen(const dim_type *d){
-  register unsigned long place;
-  register dim_type *result;
+  unsigned long place;
+  dim_type *result;
   if ((place=gl_search(g_dimen_list,d,(CmpFunc)CmpDimen))!=0){
     result = gl_fetch(g_dimen_list,place);
   }
@@ -319,7 +319,7 @@ const dim_type *FindOrAddDimen(const dim_type *d){
 
 
 dim_type AddDimensions(const dim_type *d1, const dim_type *d2){
-  register unsigned c;
+  unsigned c;
   dim_type result;
   ClearDimensions(&result);
   if (WILD(d1)||WILD(d2)) {
@@ -335,7 +335,7 @@ dim_type AddDimensions(const dim_type *d1, const dim_type *d2){
 
 
 const dim_type *SumDimensions(const dim_type *d1, const dim_type *d2,int check){
-  register unsigned c;
+  unsigned c;
   dim_type result;
   if (check && (FractionalDimension(d1) || FractionalDimension(d2)) ) {
     return NULL;
@@ -354,7 +354,7 @@ const dim_type *SumDimensions(const dim_type *d1, const dim_type *d2,int check){
 
 
 dim_type SubDimensions(const dim_type *d1, const dim_type *d2){
-  register unsigned c;
+  unsigned c;
   dim_type result;
   ClearDimensions(&result);
   if (WILD(d1)||WILD(d2)) {
@@ -372,7 +372,7 @@ const dim_type *DiffDimensions(const dim_type *d1,
                                const dim_type *d2,
                                int check)
 {
-  register unsigned c;
+  unsigned c;
   dim_type result;
   if (check && (FractionalDimension(d1) || FractionalDimension(d2)) ){
     return NULL;
@@ -392,7 +392,7 @@ const dim_type *DiffDimensions(const dim_type *d1,
 
 dim_type ScaleDimensions(const dim_type *dim, struct fraction frac){
   dim_type result;
-  register unsigned c;
+  unsigned c;
   result = *dim;
   if (result.wild & DIM_WILD) return result;
   for(c=0;c<NUM_DIMENS;c++) {
@@ -441,7 +441,7 @@ ASC_DLLSPEC void PrintDimenMessage(const char *message
 
 
 void DumpDimens(FILE *file){
-  register unsigned long c,len;
+  unsigned long c,len;
   len = gl_length(g_dimen_list);
   FPRINTF(file,"Dimensions dump\n");
   for(c=1;c<=len;c++) {

@@ -38,7 +38,7 @@
 
 struct SwitchList *CreateSwitch(struct Set *set, struct StatementList *sl)
 {
-  register struct SwitchList *result;
+  struct SwitchList *result;
   SWMALLOC(result);
   result->slist = sl;
   result->values =set;
@@ -48,7 +48,7 @@ struct SwitchList *CreateSwitch(struct Set *set, struct StatementList *sl)
 
 struct SwitchList *ReverseSwitchCases(struct SwitchList *sw)
 {
-  register struct SwitchList *next,*previous=NULL;
+  struct SwitchList *next,*previous=NULL;
   if (sw==NULL) return sw;
   while (1) {			/* loop until broken */
     next = sw->next;
@@ -62,7 +62,7 @@ struct SwitchList *ReverseSwitchCases(struct SwitchList *sw)
 struct SwitchList *LinkSwitchCases(struct SwitchList *sw1,
 				   struct SwitchList *sw2)
 {
-  register struct SwitchList *p;
+  struct SwitchList *p;
   p = sw1;
   while (p->next!=NULL) p = p->next;
   p->next = sw2;
@@ -91,7 +91,7 @@ struct StatementList *SwitchStatementListF(struct SwitchList *sw)
 
 void DestroySwitchNode(struct SwitchList *sw)
 {
-  register struct Set *set;
+  struct Set *set;
   if (sw!=NULL){
     set = sw->values;
     if (sw->values) {
@@ -110,7 +110,7 @@ void DestroySwitchNode(struct SwitchList *sw)
 
 void DestroySwitchList(struct SwitchList *sw)
 {
-  register struct SwitchList *next;
+  struct SwitchList *next;
   while (sw!=NULL){
     next = NextSwitchCase(sw);
     DestroySwitchNode(sw);
@@ -120,7 +120,7 @@ void DestroySwitchList(struct SwitchList *sw)
 
 struct SwitchList *CopySwitchNode(struct SwitchList *sw)
 {
-  register struct SwitchList *result;
+  struct SwitchList *result;
   assert(sw);
   SWMALLOC(result);
   if (sw->values) result->values = CopySetByReference(sw->values);
@@ -132,7 +132,7 @@ struct SwitchList *CopySwitchNode(struct SwitchList *sw)
 
 struct SwitchList *CopySwitchList(struct SwitchList *sw)
 {
-  register struct SwitchList *head=NULL,*p;
+  struct SwitchList *head=NULL,*p;
   if (sw!=NULL) {
     p = head = CopySwitchNode(sw);
     sw = sw->next;

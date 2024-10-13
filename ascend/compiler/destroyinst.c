@@ -158,7 +158,7 @@ static void DeleteIPtr(struct Instance *i){
 static int RemoveParentReferences(
 	struct Instance *inst, struct Instance *parent
 ){
-  register unsigned long c,pos,length;
+  unsigned long c,pos,length;
   AssertMemory(inst);
   if(parent!=NULL){
     AssertMemory(parent);
@@ -195,7 +195,7 @@ static int RemoveParentReferences(
 }
 
 static void RemoveFromClique(struct Instance *inst){
-  register struct Instance *i,*hold;
+  struct Instance *i,*hold;
   AssertMemory(inst);
   if ((hold=i=NextCliqueMember(inst))==inst)
     return;
@@ -254,7 +254,7 @@ static void DeleteArrayChild(struct ArrayChild *acp, struct Instance *parent){
 static void RemoveRelationLinks(struct Instance *i){
   struct gl_list_t *list = RA_INST(i)->relations;
   if(NULL==list)return;
-  register unsigned long c,length;
+  unsigned long c,length;
   assert(list!=NULL);
   length = gl_length(list);
   for(c=1;c<=length;c++){
@@ -276,7 +276,7 @@ static void RemoveRelationLinks(struct Instance *i){
 static
 void RemoveLogRelLinks(struct Instance *i, struct gl_list_t *list)
 {
-  register unsigned long c,length;
+  unsigned long c,length;
   assert(list!=NULL);
   length = gl_length(list);
   for(c=1;c<=length;c++) {
@@ -289,7 +289,7 @@ void RemoveLogRelLinks(struct Instance *i, struct gl_list_t *list)
 static
 void RemoveWhenLinks(struct Instance *i, struct gl_list_t *list)
 {
-  register unsigned long c,length;
+  unsigned long c,length;
   assert(list!=NULL);
   length = gl_length(list);
   for(c=1;c<=length;c++) {
@@ -299,7 +299,7 @@ void RemoveWhenLinks(struct Instance *i, struct gl_list_t *list)
 }
 
 static void DestroyAtomChildren(
-	register struct Instance **i, register unsigned long int nc
+  struct Instance **i, unsigned long int nc
 ){
   while(nc-- > 0){
     AssertMemory(i);
@@ -318,8 +318,8 @@ static void DestroyAtomChildren(
 	to the object.
 */
 static void DestroyInstanceParts(struct Instance *i){
-  register unsigned long c,length;
-  register struct gl_list_t *l;
+  unsigned long c,length;
+  struct gl_list_t *l;
   struct Instance *child;
   AssertMemory(i);
   switch(i->t) {

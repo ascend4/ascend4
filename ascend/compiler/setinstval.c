@@ -123,7 +123,7 @@ int SetStrCmp(CONST char *s1, CONST char *s2)
 
 struct set_t *CreateEmptySet(void)
 {
-  register struct set_t *result;
+  struct set_t *result;
   assert(sizeof(asc_intptr_t)==sizeof(char *));
   MALLOCSET(result);
   result->kind = empty_set;
@@ -182,7 +182,7 @@ void InsertString(struct set_t *set, symchar *str){
 
 void InsertIntegerRange(struct set_t *set, long int lower, long int upper)
 {
-  register long i;
+  long i;
   assert(set&&((set->kind==integer_set)||(set->kind==empty_set)));
   for(i=lower;i<=upper;InsertInteger(set,i++));
 }
@@ -190,8 +190,8 @@ void InsertIntegerRange(struct set_t *set, long int lower, long int upper)
 struct set_t *SetUnion(CONST struct set_t *s1, CONST struct set_t *s2)
 {
   struct set_t *result;
-  register unsigned long c1,l1,c2,l2;
-  register int cmp;
+  unsigned long c1,l1,c2,l2;
+  int cmp;
   CmpFunc func;
   assert(s1&&s2);
   if (s1->kind==empty_set) return CopySet(s2);
@@ -242,8 +242,8 @@ struct set_t *SetUnion(CONST struct set_t *s1, CONST struct set_t *s2)
 struct set_t *SetIntersection(CONST struct set_t *s1, CONST struct set_t *s2)
 {
   struct set_t *result;
-  register unsigned long c1,l1,c2,l2;
-  register int cmp;
+  unsigned long c1,l1,c2,l2;
+  int cmp;
   CmpFunc func;
   assert(s1&&s2);
   if (s1->kind==empty_set) return CreateEmptySet();
@@ -284,8 +284,8 @@ struct set_t *SetIntersection(CONST struct set_t *s1, CONST struct set_t *s2)
 struct set_t *SetDifference(CONST struct set_t *s1, CONST struct set_t *s2)
 {
   struct set_t *result;
-  register unsigned long c1,l1,c2,l2;
-  register int cmp;
+  unsigned long c1,l1,c2,l2;
+  int cmp;
   CmpFunc func;
   assert(s1&&s2);
   if (s1->kind==empty_set) return CreateEmptySet();
@@ -322,7 +322,7 @@ struct set_t *SetDifference(CONST struct set_t *s1, CONST struct set_t *s2)
 
 struct set_t *CopySet(CONST struct set_t *set)
 {
-  register struct set_t *result;
+  struct set_t *result;
   assert(set!=NULL);
   MALLOCSET(result);
   result->kind = set->kind;
@@ -396,7 +396,7 @@ enum set_kind SetKind(CONST struct set_t *s)
 
 int SetsEqual(CONST struct set_t *s1, CONST struct set_t *s2)
 {
-  register unsigned long c,length;
+  unsigned long c,length;
   assert(s1&&s2);
   if (s1->kind!=s2->kind) return 0;
   if (s1->list==NULL) {
@@ -424,7 +424,7 @@ int SetsEqual(CONST struct set_t *s1, CONST struct set_t *s2)
 
 int Subset(CONST struct set_t *s1, CONST struct set_t *s2)
 {
-  register asc_intptr_t c1,c2,length1,length2;
+  asc_intptr_t c1,c2,length1,length2;
   assert(s1&&s2);
   if (s1->kind==empty_set) return 1;
   if (s2->kind==empty_set) return 0;
@@ -436,7 +436,7 @@ int Subset(CONST struct set_t *s1, CONST struct set_t *s2)
   if (length1>length2) return 0;
   c1=c2=1;
   if (s1->kind == integer_set) {
-    register long i1,i2;
+  long i1,i2;
     while((c1<=length1)&&(c2<=length2)) {
       i1 = (asc_intptr_t)gl_fetch(s1->list,c1);
       i2 = (asc_intptr_t)gl_fetch(s2->list,c2);
@@ -448,8 +448,8 @@ int Subset(CONST struct set_t *s1, CONST struct set_t *s2)
     }
   }
   else {
-    register char *str1,*str2;
-    register int cmp;
+  char *str1,*str2;
+  int cmp;
     while((c1<=length1)&&(c2<=length2)) {
       str1 = gl_fetch(s1->list,c1);
       str2 = gl_fetch(s2->list,c2);

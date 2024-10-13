@@ -205,8 +205,8 @@ struct TypeDescription *FindType(symchar *name){
 }
 
 void DestroyLibrary(void){
-  register unsigned c;
-  register struct LibraryStructure *ptr,*next;
+  unsigned c;
+  struct LibraryStructure *ptr,*next;
   for(c=0;c<LIBRARYHASHSIZE;c++) {
     if(LibraryHashTable[c]!=NULL){
       ptr = LibraryHashTable[c];
@@ -232,8 +232,8 @@ void DestroyLibrary(void){
 
 
 struct gl_list_t *FindFundamentalTypes(void){
-  register unsigned c;
-  register struct LibraryStructure *ptr,*next;
+  unsigned c;
+  struct LibraryStructure *ptr,*next;
   struct TypeDescription *d;
   struct gl_list_t *fundies;
 
@@ -459,8 +459,8 @@ int AddType(struct TypeDescription *desc){
 
 struct  gl_list_t *DefinitionList(void){
   struct gl_list_t *result;
-  register unsigned c;
-  register struct LibraryStructure *ptr;
+  unsigned c;
+  struct LibraryStructure *ptr;
   result = gl_create(200L);
   for(c=0;c<LIBRARYHASHSIZE;c++){
     ptr = LibraryHashTable[c];
@@ -500,8 +500,8 @@ unsigned int CheckFundamental(symchar *f){
 
 struct gl_list_t *Asc_TypeByModule(CONST struct module_t *m){
   struct gl_list_t *result;
-  register unsigned c;
-  register struct LibraryStructure *ptr;
+  unsigned c;
+  struct LibraryStructure *ptr;
   CONST struct module_t *modptr;
 
   assert(m != NULL);
@@ -526,8 +526,8 @@ struct gl_list_t *Asc_TypeByModule(CONST struct module_t *m){
 
 struct gl_list_t *TypesThatRefineMe(symchar *name){
   struct gl_list_t *result;
-  register unsigned c;
-  register struct LibraryStructure *ptr;
+  unsigned c;
+  struct LibraryStructure *ptr;
   CONST struct TypeDescription *refdesc;
   symchar *refname;
 
@@ -560,8 +560,8 @@ struct gl_list_t *TypesThatRefineMe(symchar *name){
  */
 struct gl_list_t *AllTypesThatRefineMe_Flat(symchar *name){
   struct gl_list_t *result;
-  register unsigned c;
-  register struct LibraryStructure *ptr;
+  unsigned c;
+  struct LibraryStructure *ptr;
   struct TypeDescription *refdesc,*desc;
   //symchar *refname;
 
@@ -598,8 +598,8 @@ struct gl_list_t *AllTypesThatRefineMe_Flat(symchar *name){
 static
 struct gl_list_t *AllTypesThatRefineMe_FlatType(struct TypeDescription *desc){
   struct gl_list_t *result;
-  register unsigned c;
-  register struct LibraryStructure *ptr;
+  unsigned c;
+  struct LibraryStructure *ptr;
   struct TypeDescription *refdesc;
 
   if (!desc) { /* nobody home by that name */
@@ -673,7 +673,7 @@ static void EstablishPaternity(struct HierarchyNode *hd, struct gl_list_t *fl){
  */
 struct HierarchyNode *AllTypesThatRefineMe_Tree(symchar *name){
   struct gl_list_t *flatlist;
-  register unsigned c,end;
+  unsigned c,end;
   struct TypeDescription *refdesc,*desc;
   struct HierarchyNode *head;
 
@@ -726,8 +726,8 @@ void DestroyHierarchyNode(struct HierarchyNode *head){
 
 
 int IsTypeRefined(CONST struct TypeDescription *desc){
-  register unsigned c;
-  register struct LibraryStructure *ptr;
+  unsigned c;
+  struct LibraryStructure *ptr;
   CONST struct TypeDescription *refdesc;
 
   for(c=0;c<LIBRARYHASHSIZE;c++){

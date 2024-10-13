@@ -56,7 +56,7 @@ int SetNodeIsTrue(struct Set *s)
 
 struct WhenList *CreateWhen(struct Set *set, struct StatementList *sl)
 {
-  register struct WhenList *result;
+  struct WhenList *result;
   WMALLOC(result);
   result->slist = sl;
   result->values =set;
@@ -66,7 +66,7 @@ struct WhenList *CreateWhen(struct Set *set, struct StatementList *sl)
 
 struct WhenList *ReverseWhenCases(struct WhenList *w)
 {
-  register struct WhenList *next,*previous=NULL;
+  struct WhenList *next,*previous=NULL;
   if (w==NULL) return w;
   while (1) {			/* loop until broken */
     next = w->next;
@@ -79,7 +79,7 @@ struct WhenList *ReverseWhenCases(struct WhenList *w)
 
 struct WhenList *LinkWhenCases(struct WhenList *w1, struct WhenList *w2)
 {
-  register struct WhenList *p;
+  struct WhenList *p;
   p = w1;
   while (p->next!=NULL) p = p->next;
   p->next = w2;
@@ -107,7 +107,7 @@ struct StatementList *WhenStatementListF(struct WhenList *w)
 
 void DestroyWhenNode(struct WhenList *w)
 {
-  register struct Set *set;
+  struct Set *set;
   if (w!=NULL){
     set = w->values;
     if (w->values) {
@@ -126,7 +126,7 @@ void DestroyWhenNode(struct WhenList *w)
 
 void DestroyWhenList(struct WhenList *w)
 {
-  register struct WhenList *next;
+  struct WhenList *next;
   while (w!=NULL){
     next = NextWhenCase(w);
     DestroyWhenNode(w);
@@ -136,7 +136,7 @@ void DestroyWhenList(struct WhenList *w)
 
 struct WhenList *CopyWhenNode(struct WhenList *w)
 {
-  register struct WhenList *result;
+  struct WhenList *result;
   assert(w!=NULL);
   WMALLOC(result);
   if (w->values) result->values = CopySetByReference(w->values);
@@ -148,7 +148,7 @@ struct WhenList *CopyWhenNode(struct WhenList *w)
 
 struct WhenList *CopyWhenList(struct WhenList *w)
 {
-  register struct WhenList *head=NULL,*p;
+  struct WhenList *head=NULL,*p;
   if (w!=NULL) {
     p = head = CopyWhenNode(w);
     w = w->next;

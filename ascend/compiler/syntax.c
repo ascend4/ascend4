@@ -38,7 +38,7 @@
 
 unsigned NumberOfRelOps(struct Expr *ex)
 {
-  register unsigned count=0;
+  unsigned count=0;
   while(ex!=NULL){
     switch(ExprType(ex)){
     case e_equal:

@@ -177,7 +177,7 @@ void ApplyToLeaves(struct Instance *i, AVProc func, int depth)
  */
 void ArrayVisitLocalLeaves(struct Instance *i, AVProc func)
 {
-  register struct ArrayInstance *ary;
+  struct ArrayInstance *ary;
   int depth;
   AssertMemory(i);
   ary = ARY_INST(i);
@@ -225,9 +225,9 @@ struct gl_list_t *CollectArrayInstances(CONST struct Instance *i,
 
 int RectangleArrayExpanded(CONST struct Instance *i)
 {
-  register struct ArrayInstance *ary;
-  register struct ArrayChild *ptr;
-  register unsigned long number;
+  struct ArrayInstance *ary;
+  struct ArrayChild *ptr;
+  unsigned long number;
   AssertMemory(i);
   ary = ARY_INST(i);
   if ((ary->t==ARRAY_INT_INST)||(ary->t==ARRAY_ENUM_INST)) {
@@ -424,9 +424,9 @@ int RectangleSubscriptsMatch(CONST struct Instance *parent,
 
 unsigned long NextToExpand(CONST struct Instance *i)
 {
-  register struct ArrayInstance *ary;
-  register struct ArrayChild *ptr;
-  register unsigned long number,c;
+  struct ArrayInstance *ary;
+  struct ArrayChild *ptr;
+  unsigned long number,c;
   AssertMemory(i);
   ary = ARY_INST(i);
   if ((ary->t==ARRAY_INT_INST)||(ary->t==ARRAY_ENUM_INST)) {
@@ -453,7 +453,7 @@ unsigned long NextToExpand(CONST struct Instance *i)
 
 unsigned long NumberofDereferences(CONST struct Instance *i)
 {
-  register struct ArrayInstance *ary;
+  struct ArrayInstance *ary;
   AssertMemory(i);
   ary = ARY_INST(i);
   if ((ary->t==ARRAY_INT_INST)||(ary->t==ARRAY_ENUM_INST)) {
@@ -625,8 +625,8 @@ void ExpandIntegerSet(struct ArrayInstance *i, struct set_t *set,
                       struct Instance *rhsinst, struct Instance *arginst,
                       struct gl_list_t *rhslist)
 {
-  register unsigned long c,len;
-  register struct ArrayChild *ptr, *rptr;
+  unsigned long c,len;
+  struct ArrayChild *ptr, *rptr;
   AssertMemory(i);
   AssertMemory(set);
   assert(rhslist==NULL||rhsinst==NULL); /* one type of alias or other */
@@ -667,8 +667,8 @@ void ExpandStringSet(struct ArrayInstance *i, struct set_t *set,
                      struct Instance *rhsinst, struct Instance *arginst,
                      struct gl_list_t *rhslist)
 {
-  register unsigned long c,len;
-  register struct ArrayChild *ptr, *rptr;
+  unsigned long c,len;
+  struct ArrayChild *ptr, *rptr;
   AssertMemory(i);
   AssertMemory(set);
   assert(rhslist==NULL||rhsinst==NULL); /* one type of alias or other */
@@ -737,9 +737,9 @@ void RecursiveExpand(struct Instance *i, unsigned long int num,
       ASC_PANIC("Attempt to expand previously expanded array.\n");
     }
   } else {			/* not there yet recurse on each child */
-    register unsigned long c,len;
-    register struct ArrayChild *child;
-    register struct ArrayInstance *ptr;
+    unsigned long c,len;
+    struct ArrayChild *child;
+    struct ArrayInstance *ptr;
     ptr = ARY_INST(i);
     if (ptr->children==NULL){
       Asc_Panic(2, NULL,
@@ -892,7 +892,7 @@ int RealCmpArrayInsts(struct ArrayInstance *a1, struct ArrayInstance *a2)
 {
   unsigned long c,len;
   struct gl_list_t *cl1, *cl2;
-  register struct ArrayChild *ac1, *ac2;
+  struct ArrayChild *ac1, *ac2;
   int cmp;
 
   if (a1==a2) {

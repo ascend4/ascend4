@@ -113,8 +113,8 @@ void InterfaceNotifyProc(char *ptr, struct Instance *old, struct Instance *new)
   UNUSED_PARAMETER(new);
   (void)old;
 #if 0 /* is, officially, no big deal. baa .*/
-  register unsigned long c,len;
-  register struct Instance *sptr;
+  unsigned long c,len;
+  struct Instance *sptr;
   len = gl_length(g_simulation_list);
   for(c=len;c>=1;c--) {
     sptr = (struct Instance *)gl_fetch(g_simulation_list,c);

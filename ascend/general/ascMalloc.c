@@ -147,7 +147,7 @@ char *ascreallocPUREF(char *ptr, size_t oldbytes, size_t newbytes){
     ret = malloc(newbytes);
     if (ret==NULL) return NULL;
     if (oldbytes%sizeof(long) == 0 && ((asc_intptr_t)ptr)%sizeof(long) == 0) {
-      register unsigned long c,len, *src, *trg;
+      unsigned long c,len, *src, *trg;
       src = (unsigned long *)ptr;
       trg = (unsigned long *)ret;
       len = oldbytes/sizeof(long);
@@ -182,7 +182,7 @@ char *ascreallocPUREF_dbg(char *ptr, size_t oldbytes, size_t newbytes){
     ret = ascmallocf(newbytes, __FILE__, __LINE__);
     if(ret==NULL) return NULL;
     if(oldbytes%sizeof(long) == 0 && ((asc_intptr_t)ptr)%sizeof(long) == 0) {
-      register unsigned long c,len, *src, *trg;
+      unsigned long c,len, *src, *trg;
       src = (unsigned long *)ptr;
       trg = (unsigned long *)ret;
       len = oldbytes/sizeof(long);

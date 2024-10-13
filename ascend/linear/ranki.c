@@ -413,7 +413,7 @@ void forward_substitute(linsolqr_system_t sys,
    dotlim=dot_rng.low+sys->rank;
    if (transpose) {     /* arr is indexed by original column number */
      for( nz.col=dot_rng.low; nz.col < dotlim; ++(nz.col) ) {
-       register int32 org_col;
+       int32 org_col;
 
        dot_rng.high = nz.col - 1;
        org_col = mtx_col_to_org(mtx,nz.col);
@@ -427,7 +427,7 @@ void forward_substitute(linsolqr_system_t sys,
 
    } else {             /* arr is indexed by original row number */
      for( nz.row=dot_rng.low; nz.row < dotlim; ++(nz.row) ) {
-       register int32 org_row;
+       int32 org_row;
 
        dot_rng.high = nz.row - 1;
        org_row = mtx_row_to_org(mtx,nz.row);
@@ -483,7 +483,7 @@ void backward_substitute(linsolqr_system_t sys,
    pivlist=sys->ludata->pivlist;
    if (transpose) {     /* arr is indexed by original column number */
      for( nz.col = dot_rng.high ; nz.col >= dotlim ; --(nz.col) ) {
-       register int32 org_col;
+       int32 org_col;
 
        dot_rng.low = nz.col + 1;
 
@@ -502,7 +502,7 @@ void backward_substitute(linsolqr_system_t sys,
    } else {             /* arr is indexed by original row number */
      /* we are working from the bottom up */
      for( nz.row = dot_rng.high ; nz.row >= dotlim ; --(nz.row) ) {
-       register int32 org_row;
+       int32 org_row;
 
        dot_rng.low = nz.row + 1;
        org_row = mtx_row_to_org(mtx,nz.row);

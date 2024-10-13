@@ -372,7 +372,7 @@ static boolean cpqr_get_householder(linsolqr_system_t sys,
    An untrapped underflow must have occurred, because we had a nonzero above.
   */
   if (t != D_ZERO) {
-    register double apiv;
+    double apiv;
     /* scale the hhcol by stewarts 1/pi sqrt, essentially */
     for (i = 0; i < sp->len; i++) {
       sp->data[i] *= t;
@@ -622,7 +622,7 @@ static void cpqr_forward_eliminate(linsolqr_system_t sys,
     /* arr is indexed by original column number */
     int32 dotlim,col;
     const real64 *diag;
-    register int32 org_col;
+    int32 org_col;
 
     mtx = sys->factors;
     diag = sys->qrdata->alpha;

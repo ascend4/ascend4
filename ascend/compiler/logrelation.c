@@ -996,8 +996,8 @@ static void DestroyLogTermSide(struct logrel_side_temp *temp)
 
 void DestroyBVarList(struct gl_list_t *l, struct Instance *inst)
 {
-  register struct Instance *ptr;
-  register unsigned long c;
+  struct Instance *ptr;
+  unsigned long c;
   for(c=gl_length(l);c>=1;c--)
     if (NULL != (ptr = (struct Instance *)gl_fetch(l,c)))
       RemoveLogRel(ptr,inst);
@@ -1006,8 +1006,8 @@ void DestroyBVarList(struct gl_list_t *l, struct Instance *inst)
 
 void DestroySatRelList(struct gl_list_t *l, struct Instance *inst)
 {
-  register struct Instance *ptr;
-  register unsigned long c;
+  struct Instance *ptr;
+  unsigned long c;
   for(c=gl_length(l);c>=1;c--)
     if (NULL != (ptr = (struct Instance *)gl_fetch(l,c)))
       RemoveLogRel(ptr,inst);
@@ -1065,8 +1065,8 @@ void ChangeLogVarTermSide(union LogRelTermUnion *side,
 		          unsigned long int old,
 		          unsigned long int new)
 {
-  register long c;
-  register struct logrel_term *term;
+  long c;
+  struct logrel_term *term;
   for(c=len-1;c>=0;c--){
     term = LOGA_TERM(&(side[c]));
     switch (term->t){
@@ -1089,8 +1089,8 @@ void ChangeLogSatTermSide(union LogRelTermUnion *side,
 		          unsigned long int old,
 		          unsigned long int new)
 {
-  register long c;
-  register struct logrel_term *term;
+  long c;
+  struct logrel_term *term;
   for(c=len-1;c>=0;c--){
     term = LOGA_TERM(&(side[c]));
     switch (term->t){

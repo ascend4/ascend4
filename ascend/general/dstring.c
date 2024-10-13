@@ -35,7 +35,7 @@
 #include "mathmacros.h"
 
 
-void Asc_DStringInit(register Asc_DString *dsPtr)
+void Asc_DStringInit(Asc_DString *dsPtr)
 {
   asc_assert(NULL != dsPtr);
   dsPtr->string = dsPtr->staticSpace;
@@ -81,7 +81,7 @@ char *Asc_DStringSet(Asc_DString *dsPtr, CONST char *string)
 
 
 
-char *Asc_DStringAppend(register Asc_DString *dsPtr,
+char *Asc_DStringAppend(Asc_DString *dsPtr,
                         CONST char *string,
                         int length)
 {
@@ -130,7 +130,7 @@ char *Asc_DStringAppend(register Asc_DString *dsPtr,
 
 
 
-void Asc_DStringTrunc(register Asc_DString *dsPtr, int length)
+void Asc_DStringTrunc(Asc_DString *dsPtr, int length)
 {
   asc_assert(NULL != dsPtr);
 
@@ -145,7 +145,7 @@ void Asc_DStringTrunc(register Asc_DString *dsPtr, int length)
 
 
 
-void Asc_DStringFree(register Asc_DString *dsPtr)
+void Asc_DStringFree(Asc_DString *dsPtr)
 {
   asc_assert(NULL != dsPtr);
   if (dsPtr->string != dsPtr->staticSpace) {
@@ -161,7 +161,7 @@ void Asc_DStringFree(register Asc_DString *dsPtr)
 
 char *Asc_DStringResult(Asc_DString *dsPtr)
 {
-  register char *result;
+  char *result;
 
   asc_assert (NULL != dsPtr);
   result = (char *)ascmalloc(strlen(dsPtr->string)+1);

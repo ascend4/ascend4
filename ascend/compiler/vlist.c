@@ -45,7 +45,7 @@
 
 struct VariableList *CreateVariableNode(struct Name *n)
 {
-  register struct VariableList *result;
+  struct VariableList *result;
   assert(n!=NULL);
   result = NLMALLOC;
   assert(result!=NULL);
@@ -74,7 +74,7 @@ CONST struct Name *NamePointerF(CONST struct VariableList *n)
 
 struct VariableList *CopyVariableList(struct VariableList *n)
 {
-  register struct VariableList *result,*p,*np;
+  struct VariableList *result,*p,*np;
   if (n==NULL) return NULL;
   np = n;
   result = NLMALLOC;
@@ -100,9 +100,9 @@ unsigned long VariableListLength(CONST struct VariableList *n)
   return len;
 }
 
-void DestroyVariableList(register struct VariableList *n)
+void DestroyVariableList(struct VariableList *n)
 {
-  register struct VariableList *next;
+  struct VariableList *next;
   while (n!=NULL) {
     next = n->next;
     DestroyName(n->nptr);
@@ -122,7 +122,7 @@ void DestroyVariableListNode(struct VariableList *n)
 struct VariableList *JoinVariableLists(struct VariableList *n1,
 				       struct VariableList *n2)
 {
-  register struct VariableList *p;
+  struct VariableList *p;
   if (n1==NULL) return n2;
   /* find end of name list n1 */
   p = n1;
@@ -132,9 +132,9 @@ struct VariableList *JoinVariableLists(struct VariableList *n1,
   return n1;
 }
 
-struct VariableList *ReverseVariableList(register struct VariableList *n)
+struct VariableList *ReverseVariableList(struct VariableList *n)
 {
-  register struct VariableList *next,*previous=NULL;
+  struct VariableList *next,*previous=NULL;
   if (n==NULL) return n;
   while (TRUE) {		/* loop until broken */
     next = n->next;

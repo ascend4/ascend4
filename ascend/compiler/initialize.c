@@ -132,7 +132,7 @@ static
 void InstanceNamePart(struct Name *n, struct Name **copy,
                       symchar **procname)
 {
-  register struct Name *ptr,*tmp;
+  struct Name *ptr,*tmp;
 
   /*FPRINTF(ASCERR,"INSTANCE NAME PART, input is n=");
   WriteName(ASCERR,n);
@@ -172,9 +172,9 @@ void InstanceNamePart(struct Name *n, struct Name **copy,
 struct InitProcedure *SearchProcList(CONST struct gl_list_t *l,
                                      symchar *name)
 {
-  register unsigned up,c,low;
-  register struct InitProcedure *ptr;
-  register int cmp;
+  unsigned up,c,low;
+  struct InitProcedure *ptr;
+  int cmp;
   assert(AscFindSymbol(name)!=NULL);
   if(l == NULL){
     return NULL;

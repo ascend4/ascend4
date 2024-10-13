@@ -53,14 +53,14 @@ unsigned long g_proto_count=0;
 
 void InitializePrototype(void)
 {
-  register unsigned c;
+  unsigned c;
   for(c=0;c<PROTOTYPEHASHSIZE;g_proto_ht[c++]=NULL);
   g_proto_count = 0;
 }
 
 struct Instance *LookupPrototype(symchar *t)
 {
-  register struct ProtoRec *p;
+  struct ProtoRec *p;
   assert(AscFindSymbol(t)!=NULL);
 
   p = g_proto_ht[PROTOHASH(t)];
@@ -75,10 +75,10 @@ struct Instance *LookupPrototype(symchar *t)
 
 void AddPrototype(struct Instance *i)
 {
-  register unsigned long bucket;
-  register struct ProtoRec *p;
-  //register struct ProtoRec *prev;
-  register symchar *t;
+  unsigned long bucket;
+  struct ProtoRec *p;
+  //struct ProtoRec *prev;
+  symchar *t;
 
   t = InstanceType(i);
   p = g_proto_ht[bucket=PROTOHASH(t)];
@@ -121,8 +121,8 @@ void AddPrototype(struct Instance *i)
 
 void DeletePrototype(symchar *t)
 {
-  register struct ProtoRec *p,**prev;
-  register unsigned long bucket;
+  struct ProtoRec *p,**prev;
+  unsigned long bucket;
   assert(AscFindSymbol(t)!=NULL);
 
   p = g_proto_ht[bucket = PROTOHASH(t)];
@@ -147,8 +147,8 @@ void DeletePrototype(symchar *t)
 
 void DestroyPrototype(void)
 {
-  register unsigned c;
-  register struct ProtoRec *p,*next;
+  unsigned c;
+  struct ProtoRec *p,*next;
   for(c=0;c<PROTOTYPEHASHSIZE;c++){
     if ((p=g_proto_ht[c])!=NULL) {
       g_proto_ht[c]=NULL;

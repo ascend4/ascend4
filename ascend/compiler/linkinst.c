@@ -191,7 +191,7 @@ void ChangeWhenPointers(struct Instance *when, struct Instance *old,
 void ChangeParent(struct Instance *parent, struct Instance *oldchild,
 		  struct Instance *newchild
 ){
-  register unsigned long c,length;
+  unsigned long c,length;
   AssertMemory(parent);
   length = NumberChildren(parent);
   for(c=1;c<=length;c++){
@@ -202,8 +202,8 @@ void ChangeParent(struct Instance *parent, struct Instance *oldchild,
 }
 
 void ReDirectParents(struct Instance *old, struct Instance *new){
-  register struct Instance *parent;
-  register unsigned long index1,length;
+  struct Instance *parent;
+  unsigned long index1,length;
   length = NumberParents(new);
   for(index1=1;index1<=length;index1++) {
     parent = InstanceParent(new,index1);
@@ -212,8 +212,8 @@ void ReDirectParents(struct Instance *old, struct Instance *new){
 }
 
 void ReDirectChildren(struct Instance *old, struct Instance *new){
-  register struct Instance *child;
-  register unsigned long c,length,pos;
+  struct Instance *child;
+  unsigned long c,length,pos;
   length = NumberChildren(new);
   for(c=1;c<=length;c++){
     if ((child = InstanceChild(new,c))!=NULL){
@@ -226,11 +226,11 @@ void ReDirectChildren(struct Instance *old, struct Instance *new){
 }
 
 
-void ReorderChildrenPtrs(register struct Instance **c,
-		register CONST ChildListPtr old, register CONST ChildListPtr new,
-		register unsigned long int olen, register unsigned long int nlen
+void ReorderChildrenPtrs(struct Instance **c,
+		CONST ChildListPtr old, CONST ChildListPtr new,
+		unsigned long int olen, unsigned long int nlen
 ){
-  register unsigned nzero;
+  unsigned nzero;
   if (olen==0) return;
   nzero = nlen-olen;
   while (nlen > 0) {
@@ -250,7 +250,7 @@ void ReorderChildrenPtrs(register struct Instance **c,
 	Remove old from the clique put new in its place.
 */
 void FixCliques(struct Instance *old, struct Instance *new){
-  register struct Instance *ptr,*next;
+  struct Instance *ptr,*next;
   ptr = new;
   /*  SetNextCliqueMember(ptr,NextCliqueMember(old)); not needed */
   while((next=NextCliqueMember(ptr))!=old)
@@ -266,7 +266,7 @@ void FixCliques(struct Instance *old, struct Instance *new){
  */
 void FixRelations(struct RealAtomInstance *old, struct RealAtomInstance *new)
 {
-  register unsigned long c,len;
+  unsigned long c,len;
   AssertMemory(old);
   AssertMemory(new);
   if ((new->relations==NULL)||(new->relations==old->relations)){
@@ -297,7 +297,7 @@ void FixRelations(struct RealAtomInstance *old, struct RealAtomInstance *new)
 
 static
 void FixLogRelationsIf(struct Instance *old, struct Instance *new){
-  register unsigned long c,len;
+  unsigned long c,len;
   if ((len=LogRelationsCount(new))>0){
     for(c=1;c<=len;c++) {
       ChangeLogRelPointers(LogRelationsForInstance(new,c),old,new);
@@ -307,7 +307,7 @@ void FixLogRelationsIf(struct Instance *old, struct Instance *new){
 
 static
 void FixLogRelationsElse(struct Instance *old, struct Instance *new){
-  register unsigned long c,len;
+  unsigned long c,len;
   if ((len=LogRelationsCount(INST(old)))>0){
     for(c=1;c<=len;c++){
       ChangeLogRelPointers(LogRelationsForInstance(old,c),old,new);
@@ -370,7 +370,7 @@ void FixLogRelations(struct Instance *old,
 
 static
 void FixWhensIf(struct Instance *old, struct Instance *new){
-  register unsigned long c,len;
+  unsigned long c,len;
   if ((len=WhensCount(new))>0){
     for(c=1;c<=len;c++) {
       ChangeWhenPointers(WhensForInstance(new,c),old,new);
@@ -380,7 +380,7 @@ void FixWhensIf(struct Instance *old, struct Instance *new){
 
 static
 void FixWhensElse(struct Instance *old, struct Instance *new){
-  register unsigned long c,len;
+  unsigned long c,len;
   if ((len=WhensCount(INST(old)))>0){
     for(c=1;c<=len;c++){
       ChangeWhenPointers(WhensForInstance(old,c),old,new);

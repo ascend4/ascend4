@@ -104,8 +104,8 @@ void statio_clear_stattypenames(void){
 
 
 static
-void Indent(FILE *f, register int i){
-  register int tabs;
+void Indent(FILE *f, int i){
+  int tabs;
   if (i<=0) return;
   tabs = i / 8;
   while (tabs--) PUTC('\t',f);
@@ -141,7 +141,7 @@ void WriteOrder(FILE *f, enum ForOrder o){
 
 static
 void WriteWhenNode(FILE *f,struct WhenList *w, int i){
-  register struct Set *set;
+  struct Set *set;
   Indent(f,i);
   set = WhenSetList(w);
   if (set!=NULL){
@@ -163,7 +163,7 @@ void WriteWhenList(FILE *f, struct WhenList *w, int i){
 
 static 
 void WriteSelectNode(FILE *f, struct SelectList *sel, int i){
-  register struct Set *set;
+  struct Set *set;
   Indent(f,i);
   set = SelectSetList(sel);
   if (set!=NULL){
@@ -187,7 +187,7 @@ void WriteSelectList(FILE *f, struct SelectList *sel, int i)
 
 static
 void WriteSwitchNode(FILE *f, struct SwitchList *sw, int i){
-  register struct Set *set;
+  struct Set *set;
   Indent(f,i);
   set = SwitchSetList(sw);
   if (set!=NULL){
@@ -209,8 +209,8 @@ void WriteSwitchList(FILE *f, struct SwitchList *sw, int i){
 }
 
 struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl){
-  register unsigned long len,c;
-  register CONST struct gl_list_t *l=NULL;
+  unsigned long len,c;
+  CONST struct gl_list_t *l=NULL;
   struct gl_list_t *found=NULL;
   struct Statement *s=NULL;
   symchar *td;
@@ -624,8 +624,8 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
  * SELECT, the nested SELECTs do not require it.
  */
 void WriteStatementList(FILE *f, CONST struct StatementList *sl, int i){
-  register unsigned long len,c;
-  register CONST struct gl_list_t *l;
+  unsigned long len,c;
+  CONST struct gl_list_t *l;
   struct Statement *stat;
   l = GetList(sl);
   len = gl_length(l);
@@ -645,8 +645,8 @@ void WriteStatementList(FILE *f, CONST struct StatementList *sl, int i){
 void WriteDiffStatementList(FILE *f, CONST struct StatementList *sl1,
                             CONST struct StatementList *sl2, int i
 ){
-  register unsigned long len1,len2,c;
-  register CONST struct gl_list_t *l;
+  unsigned long len1,len2,c;
+  CONST struct gl_list_t *l;
   struct Statement *stat;
   l = GetList(sl1);
   len1=gl_length(l);

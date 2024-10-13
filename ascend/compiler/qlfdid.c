@@ -216,7 +216,7 @@ int CheckChildExist(struct InstanceName name){
 
 
 struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp){
-  register char *ptr, *org;
+  char *ptr, *org;
   struct InstanceName name;
   struct gl_list_t *search_list = NULL;
   struct SearchEntry *se;
@@ -386,7 +386,7 @@ int Asc_QlfdidSearch2(char *str){
 */
 static
 struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative){
-  register char *ptr;
+  char *ptr;
   struct InstanceName name;
   int ndx = 0;
   int open_bracket = 0;

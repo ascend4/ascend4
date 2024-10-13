@@ -85,8 +85,8 @@ struct UniversalTable *GetUniversalTable(void)
 struct Instance *LookupInstance(struct gl_list_t *table,
 				struct TypeDescription *desc)
 {
-  register unsigned long c;
-  register struct universal_rec *ptr;
+  unsigned long c;
+  struct universal_rec *ptr;
   if (table){
     for(c=gl_length(table);c>=1;--c){
       ptr = (struct universal_rec *)gl_fetch(table,c);
@@ -113,8 +113,8 @@ void AddUniversalInstance(struct gl_list_t *table,
 
 void RemoveUniversalInstance(struct gl_list_t *table, struct Instance *inst)
 {
-  register unsigned long c;
-  register struct universal_rec *ptr;
+  unsigned long c;
+  struct universal_rec *ptr;
   if (table){
     for(c=gl_length(table);c>=1;--c){
       ptr = (struct universal_rec *)gl_fetch(table,c);
@@ -131,8 +131,8 @@ void ChangeUniversalInstance(struct gl_list_t *table,
 			     struct Instance *oldinst,
 			     struct Instance *newinst)
 {
-  register unsigned long c;
-  register struct universal_rec *ptr;
+  unsigned long c;
+  struct universal_rec *ptr;
   if (table){
     for(c=gl_length(table);c>=1;--c){
       ptr = (struct universal_rec *)gl_fetch(table,c);
@@ -155,7 +155,7 @@ unsigned long NumberTypes(struct gl_list_t *table)
 
 struct Instance *GetInstance(struct gl_list_t *table, unsigned long int pos)
 {
-  register struct universal_rec *ptr;
+  struct universal_rec *ptr;
   if (table){
     ptr = (struct universal_rec *)gl_fetch(table,pos);
     AssertAllocatedMemory(ptr,sizeof(struct universal_rec));
@@ -168,7 +168,7 @@ struct Instance *GetInstance(struct gl_list_t *table, unsigned long int pos)
 struct TypeDescription *GetTypeDescription(struct gl_list_t *table,
 					   unsigned long int pos)
 {
-  register struct universal_rec *ptr;
+  struct universal_rec *ptr;
   if (table){
     ptr = (struct universal_rec *)gl_fetch(table,pos);
     AssertAllocatedMemory(ptr,sizeof(struct universal_rec));

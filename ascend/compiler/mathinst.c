@@ -385,7 +385,7 @@ void AddRelation(struct Instance *i, struct Instance *reln){
 }
 
 void RemoveRelation(struct Instance *i, struct Instance *reln){
-	register unsigned long c;
+	unsigned long c;
 	//CONSOLE_DEBUG("Var %p: remove reference to rel %p",i,reln);
 	assert(i&&reln&&(reln->t==REL_INST));
 	AssertMemory(i);
@@ -510,7 +510,7 @@ void AddLogRel(struct Instance *i, struct Instance *lreln)
 
 void RemoveLogRel(struct Instance *i, struct Instance *lreln)
 {
-  register unsigned long c;
+  unsigned long c;
   assert(i&&lreln&&(lreln->t==LREL_INST));
   AssertMemory(i);
   switch(i->t) {
@@ -790,7 +790,7 @@ void AddWhen(struct Instance *i, struct Instance *when)
 
 void RemoveWhen(struct Instance *i, struct Instance *when)
 {
-  register unsigned long c;
+  unsigned long c;
   assert(i&&when&&(when->t==WHEN_INST));
   AssertMemory(i);
   switch(i->t) {

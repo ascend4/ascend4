@@ -235,7 +235,7 @@ double safe_rec(double x,enum safe_err *safe){
 #define CUBRTHUGE      5.6438030941223618e102
 /* largest cubeable number in an 8 byte ieee double */
 #endif
-double safe_cube(register double x,enum safe_err *safe)
+double safe_cube(double x,enum safe_err *safe)
 {
    if( fabs(x) > CUBRTHUGE || fabs(x) < INV_CUBRTHUGE ) {
       double bogus;
@@ -298,7 +298,7 @@ double safe_erf_inv(double x,enum safe_err *safe)
 
 double safe_lnm_inv(double x,enum safe_err *safe)
 {
-   register double eps=FuncGetLnmEpsilon();
+  double eps=FuncGetLnmEpsilon();
 
    if( x > (DBL_MAX > 1.0e308 ? 709.196209 : log(DBL_MAX)) ) {
       double bogus = BIGNUM;
@@ -711,7 +711,7 @@ double safe_tanh_D2(double x,enum safe_err *safe)
 
 double safe_arcsin_D2(double x,enum safe_err *safe)
 {
-   register double t;
+  double t;
    t = safe_rec(1.0 - safe_sqr_D0(x,safe),safe);
    return( safe_mul_D0( safe_mul_D0(x,t,safe) , safe_mul_D0(t,t,safe) ,safe) );
 }

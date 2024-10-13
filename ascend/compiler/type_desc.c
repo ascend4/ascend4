@@ -244,8 +244,8 @@ void UnLinkTypeDesc(struct TypeDescription *old,
  */
 static
 unsigned short int StatListHasDefaults(struct StatementList *sl) {
-  register unsigned long len,c;
-  register CONST struct gl_list_t *l;
+  unsigned long len,c;
+  CONST struct gl_list_t *l;
 
   len = StatementListLength(sl);
   if (len==0L) return 0;
@@ -293,8 +293,8 @@ int ParametersInTypeInsideSelect(struct Statement *stat)
 static
 unsigned short int ParametersInType(struct StatementList *sl,
                                     struct StatementList *psl) {
-  register unsigned long len,c;
-  register CONST struct gl_list_t *l;
+  unsigned long len,c;
+  CONST struct gl_list_t *l;
   struct TypeDescription *d;
   struct Statement *stat;
   unsigned int forflags = (contains_ISA | contains_WILLBE | contains_IRT );
@@ -403,7 +403,7 @@ struct TypeDescription
 		struct StatementList *tsl, /* list of reduced statements */
 		struct StatementList *wsl  /* list of wbts statements */
 ){
-  register struct TypeDescription *result;
+  struct TypeDescription *result;
   result=ASC_NEW(struct TypeDescription);
   result->ref_count = 1;
   result->t = model_type;
@@ -438,7 +438,7 @@ struct TypeDescription
 struct TypeDescription
 *CreateDummyTypeDesc(symchar *name)
 {
-  register struct TypeDescription *result;
+  struct TypeDescription *result;
   result=ASC_NEW(struct TypeDescription);
   result->ref_count = 1;
   result->t = dummy_type;
@@ -469,7 +469,7 @@ struct TypeDescription *CreateConstantTypeDesc(
 		symchar *sval,          /* default symbol */
 		int univ
 ){
-  register struct TypeDescription *result;
+  struct TypeDescription *result;
   result=ASC_NEW(struct TypeDescription);
   result->t = t;
   result->ref_count = 1;
@@ -526,7 +526,7 @@ struct TypeDescription
 		long ival,
 		symchar *sval
 ){
-  register struct TypeDescription *result;
+  struct TypeDescription *result;
   result=ASC_NEW(struct TypeDescription);
 #if TYPELINKDEBUG
   FPRINTF(ASCERR,"\n");
@@ -632,7 +632,7 @@ struct TypeDescription *FindArray(struct module_t *mod,
 		int iswhen,
 		struct gl_list_t *indices
 ){
-  register struct ArrayDescList *ptr;
+  struct ArrayDescList *ptr;
   int ade;
   ptr = g_array_desc_list;
   while(ptr!=NULL){
@@ -650,7 +650,7 @@ struct TypeDescription *FindArray(struct module_t *mod,
 
 static
 void AddArray(struct TypeDescription *d){
-  register struct ArrayDescList *ptr;
+  struct ArrayDescList *ptr;
   ptr = g_array_desc_list;
   g_array_desc_list =
     (struct ArrayDescList *)ascmalloc(sizeof(struct ArrayDescList));
@@ -660,7 +660,7 @@ void AddArray(struct TypeDescription *d){
 
 static
 void RemoveArrayTypeDesc(struct TypeDescription *d){
-  register struct ArrayDescList *ptr , *next;
+  struct ArrayDescList *ptr , *next;
   ptr = g_array_desc_list;
   if (ptr!=NULL){
     if (ptr->desc == d){
@@ -691,7 +691,7 @@ struct TypeDescription *CreateArrayTypeDesc(struct module_t *mod,
 		int iswhen,
 		struct gl_list_t *indices
 ){
-  register struct TypeDescription *result;
+  struct TypeDescription *result;
 #if MAKEARRAYNAMES
   char name[64];
 #endif
@@ -829,7 +829,7 @@ struct TypeDescription
 		     struct gl_list_t *pl,	/* procedures */
 		     struct StatementList *sl 	/* declarative */
 ){
-  register struct TypeDescription *result;
+  struct TypeDescription *result;
   assert(rdesc!=NULL);			/* mandatory */
   result=ASC_NEW(struct TypeDescription);
   result->ref_count = 1;
@@ -855,7 +855,7 @@ struct TypeDescription
 struct TypeDescription *MoreRefined(CONST struct TypeDescription *desc1,
 				    CONST struct TypeDescription *desc2)
 {
-  register CONST struct TypeDescription *ptr1,*ptr2;
+  CONST struct TypeDescription *ptr1,*ptr2;
   AssertAllocatedMemory(desc1,sizeof(struct TypeDescription));
   AssertAllocatedMemory(desc2,sizeof(struct TypeDescription));
   if (desc1->t!=desc2->t) return NULL; /* base types unequal */
@@ -1573,7 +1573,7 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
 void DifferentVersionCheck(CONST struct TypeDescription *desc1,
 			   CONST struct TypeDescription *desc2
 ){
-  register CONST struct TypeDescription *ptr;
+  CONST struct TypeDescription *ptr;
   int erred;
   erred = 0;
   AssertAllocatedMemory(desc1,sizeof(struct TypeDescription));

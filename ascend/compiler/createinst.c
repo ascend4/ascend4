@@ -74,8 +74,8 @@
 #include "instmacro.h"
 #include "instquery.h"
 
-void ZeroNewChildrenEntries(register struct Instance **child_ary,
-			    register unsigned long int num)
+void ZeroNewChildrenEntries(struct Instance **child_ary,
+			    unsigned long int num)
 {
   /* initialize all the children pointers to NULL */
   while(num--) {
@@ -93,9 +93,9 @@ void ZeroNewChildrenEntries(register struct Instance **child_ary,
  */
 struct Instance *CreateModelInstance(struct TypeDescription *type)
 {
-  register struct ModelInstance *result, *proto;
-  register unsigned long num_children;
-  register CONST struct StatementList *stats;
+  struct ModelInstance *result, *proto;
+  unsigned long num_children;
+  CONST struct StatementList *stats;
   proto = MOD_INST(LookupPrototype(GetName(type)));
   if (proto==NULL) {
     CopyTypeDesc(type);
@@ -158,7 +158,7 @@ struct Instance *CreateDummyInstance(struct TypeDescription *gdt)
 struct Instance *CreateSimulationInstance(struct TypeDescription *type,
 					  symchar *name)
 {
-  register struct SimulationInstance *result;
+  struct SimulationInstance *result;
   unsigned num_children;
   /* unsigned int size; */
 
@@ -244,7 +244,7 @@ static void MakeAtomChildren(unsigned long int nc, /* number of children */
 		      CONST struct ChildDesc *childd) /* children */
 						      /* descriptions */
 {
-  register unsigned long c=1;
+  unsigned long c=1;
   struct ChildDesc cd;
   while(c<=nc) {
     AssertContainedIn(parent,base);
@@ -313,8 +313,8 @@ static void MakeAtomChildren(unsigned long int nc, /* number of children */
 struct Instance *CreateRealInstance(struct TypeDescription *type){
 
   if (BaseTypeIsAtomic(type)) {
-    register struct RealAtomInstance *result;
-    register unsigned long num_children;
+  struct RealAtomInstance *result;
+  unsigned long num_children;
 
     if ((result=RA_INST(LookupPrototype(GetName(type))))==NULL) {
       CopyTypeDesc(type);
@@ -372,7 +372,7 @@ struct Instance *CreateRealInstance(struct TypeDescription *type){
     }
   } else {
     /* create constant */
-    register struct RealConstantInstance *result;
+  struct RealConstantInstance *result;
     if((result=RC_INST(LookupPrototype(GetName(type))))==NULL){
       CopyTypeDesc(type);
       result = RC_INST(ascmalloc(GetByteSize(type)));
@@ -408,8 +408,8 @@ struct Instance *CreateRealInstance(struct TypeDescription *type){
 struct Instance *CreateIntegerInstance(struct TypeDescription *type)
 {
   if (BaseTypeIsAtomic(type)) {
-    register struct IntegerAtomInstance *result;
-    register unsigned long num_children;
+  struct IntegerAtomInstance *result;
+  unsigned long num_children;
 
     if ((result=IA_INST(LookupPrototype(GetName(type))))==NULL) {
       CopyTypeDesc(type);
@@ -450,7 +450,7 @@ struct Instance *CreateIntegerInstance(struct TypeDescription *type)
       return CopyInstance(INST(result));
     }
   } else {
-    register struct IntegerConstantInstance *result;
+  struct IntegerConstantInstance *result;
 
     if ((result=IC_INST(LookupPrototype(GetName(type))))==NULL) {
       CopyTypeDesc(type);
@@ -487,8 +487,8 @@ struct Instance *CreateIntegerInstance(struct TypeDescription *type)
 struct Instance *CreateBooleanInstance(struct TypeDescription *type)
 {
   if (BaseTypeIsAtomic(type)) {
-    register struct BooleanAtomInstance *result;
-    register unsigned long num_children;
+  struct BooleanAtomInstance *result;
+  unsigned long num_children;
 
     if ((result=BA_INST(LookupPrototype(GetName(type))))==NULL) {
       CopyTypeDesc(type);
@@ -531,7 +531,7 @@ struct Instance *CreateBooleanInstance(struct TypeDescription *type)
       return CopyInstance(INST(result));
     }
   } else {
-    register struct BooleanConstantInstance *result;
+  struct BooleanConstantInstance *result;
 
     if ((result=BC_INST(LookupPrototype(GetName(type))))==NULL) {
       CopyTypeDesc(type);
@@ -567,8 +567,8 @@ struct Instance *CreateBooleanInstance(struct TypeDescription *type)
 struct Instance *CreateSetInstance(struct TypeDescription *type, int intset)
 {
   if (BaseTypeIsAtomic(type)) {
-    register struct SetAtomInstance *result;
-    register unsigned long num_children;
+  struct SetAtomInstance *result;
+  unsigned long num_children;
 
     if ((result=SA_INST(LookupPrototype(GetName(type))))==NULL) {
       CopyTypeDesc(type);
@@ -610,8 +610,8 @@ struct Instance *CreateSetInstance(struct TypeDescription *type, int intset)
 struct Instance *CreateSymbolInstance(struct TypeDescription *type)
 {
   if (BaseTypeIsAtomic(type)) {
-    register struct SymbolAtomInstance *result;
-    register unsigned long num_children;
+  struct SymbolAtomInstance *result;
+  unsigned long num_children;
 
     if ((result=SYMA_INST(LookupPrototype(GetName(type))))==NULL){
       CopyTypeDesc(type);
@@ -649,7 +649,7 @@ struct Instance *CreateSymbolInstance(struct TypeDescription *type)
       return CopyInstance(INST(result));
     }
   } else {
-    register struct SymbolConstantInstance *result;
+  struct SymbolConstantInstance *result;
 
     if ((result=SYMC_INST(LookupPrototype(GetName(type))))==NULL){
       CopyTypeDesc(type);
@@ -686,8 +686,8 @@ struct Instance *CreateSymbolInstance(struct TypeDescription *type)
 struct Instance *CreateRelationInstance(struct TypeDescription *type,
 					enum Expr_enum reltype)
 {
-  register struct RelationInstance *result;
-  register unsigned long num_children;
+  struct RelationInstance *result;
+  unsigned long num_children;
   /* ERROR_REPORTER_DEBUG("Entered CreateRelationInstance\n"); */
 
   if ((result=RELN_INST(LookupPrototype(GetName(type))))==NULL){
@@ -731,8 +731,8 @@ struct Instance *CreateRelationInstance(struct TypeDescription *type,
 
 struct Instance *CreateLogRelInstance(struct TypeDescription *type)
 {
-  register struct LogRelInstance *result;
-  register unsigned long num_children;
+  struct LogRelInstance *result;
+  unsigned long num_children;
   if ((result=LRELN_INST(LookupPrototype(GetName(type))))==NULL){
     CopyTypeDesc(type);
     num_children = ChildListLen(GetChildList(type));
@@ -768,7 +768,7 @@ struct Instance *CreateLogRelInstance(struct TypeDescription *type)
 
 struct Instance *CreateWhenInstance(struct TypeDescription *type)
 {
-  register struct WhenInstance *result;
+  struct WhenInstance *result;
   if ((result=W_INST(LookupPrototype(GetName(type))))==NULL){
     CopyTypeDesc(type);
     result = W_INST(ascmalloc((unsigned)sizeof(struct WhenInstance)));

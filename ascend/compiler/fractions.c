@@ -30,7 +30,7 @@
 #include <ascend/general/platform.h>
 
 static
-short GCD(register int s1, register int s2)
+short GCD(int s1, int s2)
 /*
  *  Return the greatist common divisor of s1 and s2.  This is guarenteed
  *  to always work.  It can be proven to be correct.
@@ -57,7 +57,7 @@ short GCD(register int s1, register int s2)
 
 struct fraction Simplify(struct fraction f)
 {
-  register short s;
+  short s;
   if (f.denominator<0) {
     f.denominator = -f.denominator;
     f.numerator = -f.numerator;
@@ -127,7 +127,7 @@ struct fraction DivF(struct fraction f1, struct fraction f2)
 
 int CmpF(struct fraction f1, struct fraction f2)
 {
-  register FRACPART
+  FRACPART
     num1,
     num2;
   num1 = f1.numerator*f2.denominator;

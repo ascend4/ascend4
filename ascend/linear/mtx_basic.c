@@ -1202,7 +1202,7 @@ void mtx_clear(mtx_matrix_t mtx){
 
 real64 mtx_value(mtx_matrix_t mtx, mtx_coord_t *coord){
    struct element_t *elt;
-   register int32 org_row,org_col;
+   int32 org_row,org_col;
 
 #if MTX_DEBUG
    if(!mtx_check_matrix(mtx)) return D_ZERO;
@@ -1215,7 +1215,7 @@ real64 mtx_value(mtx_matrix_t mtx, mtx_coord_t *coord){
 }
 
 void mtx_set_value( mtx_matrix_t mtx, mtx_coord_t *coord, real64 value){
-  register int32 org_row,org_col;
+  int32 org_row,org_col;
 
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return;
@@ -1239,7 +1239,7 @@ void mtx_set_value( mtx_matrix_t mtx, mtx_coord_t *coord, real64 value){
 }
 
 void mtx_fill_value(mtx_matrix_t mtx, mtx_coord_t *coord, real64 value){
-   register int32 org_row,org_col;
+   int32 org_row,org_col;
 
 #if MTX_DEBUG
    if(!mtx_check_matrix(mtx)) return;
@@ -1385,7 +1385,7 @@ int32 mtx_assemble(mtx_matrix_t mtx){
 }
 
 void mtx_del_zr_in_row(mtx_matrix_t mtx, int32 row){
-   register int32 org;
+   int32 org;
    struct element_t **rlink, **clink;
 
 #if MTX_DEBUG
@@ -1407,7 +1407,7 @@ void mtx_del_zr_in_row(mtx_matrix_t mtx, int32 row){
 }
 
 void mtx_del_zr_in_col(mtx_matrix_t mtx, int32 col){
-   register int32 org;
+   int32 org;
    struct element_t **clink, **rlink;
 
 #if MTX_DEBUG
@@ -1429,7 +1429,7 @@ void mtx_del_zr_in_col(mtx_matrix_t mtx, int32 col){
 }
 
 void mtx_del_zr_in_rowrange(mtx_matrix_t mtx, mtx_range_t *rng){
-  register int32 org,row,rowhi, *toorg;
+  int32 org,row,rowhi, *toorg;
   struct element_t **rlink, **clink;
 
 #if MTX_DEBUG
@@ -1458,7 +1458,7 @@ void mtx_del_zr_in_rowrange(mtx_matrix_t mtx, mtx_range_t *rng){
 }
 
 void mtx_del_zr_in_colrange(mtx_matrix_t mtx, mtx_range_t *rng){
-  register int32 org,col,colhi, *toorg;
+  int32 org,col,colhi, *toorg;
   struct element_t **clink, **rlink;
 
 #if MTX_DEBUG
@@ -1946,8 +1946,8 @@ void mtx_fill_org_row_vec(mtx_matrix_t mtx, int32 row
 		, real64 *vec, mtx_range_t *rng
 ){
   int32 org_row,highcol, *toorg;
-  register int32 org_col;
-  register real64 value;
+  int32 org_col;
+  real64 value;
 
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return;
@@ -1961,7 +1961,7 @@ void mtx_fill_org_row_vec(mtx_matrix_t mtx, int32 row
         mtx_create_element_value(mtx,org_row,org_col,value);
     }
   } else {
-    register int32 cur_col;
+    int32 cur_col;
 
     toorg = mtx->perm.col.cur_to_org;
     highcol= rng->high;
@@ -1976,8 +1976,8 @@ void mtx_fill_org_col_vec(mtx_matrix_t mtx
 		, int32 col, real64 *vec, mtx_range_t *rng
 ){
   int32 org_col,highrow, *toorg;
-  register int32 org_row;
-  register real64 value;
+  int32 org_row;
+  real64 value;
 
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return;
@@ -1991,7 +1991,7 @@ void mtx_fill_org_col_vec(mtx_matrix_t mtx
         mtx_create_element_value(mtx,org_row,org_col,value);
     }
   } else {
-    register int32 cur_row;
+    int32 cur_row;
 
     toorg = mtx->perm.row.cur_to_org;
     highrow= rng->high;
@@ -2006,8 +2006,8 @@ void mtx_fill_cur_row_vec(mtx_matrix_t mtx
 		, int32 row, real64 *vec, mtx_range_t *rng
 ){
   int32 org_row,highcol,lowcol, *toorg;
-  register int32 cur_col;
-  register real64 value;
+  int32 cur_col;
+  real64 value;
 
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return;
@@ -2032,8 +2032,8 @@ void mtx_fill_cur_col_vec(mtx_matrix_t mtx
 		, int32 col, real64 *vec, mtx_range_t *rng
 ){
   int32 org_col,highrow,lowrow, *toorg;
-  register int32 cur_row;
-  register real64 value;
+  int32 cur_row;
+  real64 value;
 
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return;
@@ -2059,8 +2059,8 @@ void mtx_dropfill_cur_col_vec(mtx_matrix_t mtx, int32 col,
                               real64 tol
 ){
   int32 org_col,highrow,lowrow, *toorg;
-  register int32 cur_row;
-  register real64 value;
+  int32 cur_row;
+  real64 value;
 
   if (tol==0.0) {
     mtx_fill_cur_col_vec(mtx,col,vec,rng);
@@ -2091,8 +2091,8 @@ void mtx_dropfill_cur_row_vec(mtx_matrix_t mtx, int32 row,
                               real64 tol
 ){
   int32 org_row,highcol,lowcol, *toorg;
-  register int32 cur_col;
-  register real64 value;
+  int32 cur_col;
+  real64 value;
 
   if (tol==0.0) {
     mtx_fill_cur_row_vec(mtx,row,vec,rng);
@@ -2282,7 +2282,7 @@ void mtx_mult_col_zero(mtx_matrix_t mtx, int32 col, mtx_range_t *rng){
 void mtx_add_row(mtx_matrix_t mtx, int32 s_cur, int32 t_cur, real64 factor,
 		mtx_range_t *rng
 ){
-   register int32 org_col;
+   int32 org_col;
    int32 t_org,*tocur;
    struct element_t **arr,*elt;
 
@@ -2304,7 +2304,7 @@ void mtx_add_row(mtx_matrix_t mtx, int32 s_cur, int32 t_cur, real64 factor,
       }
       mtx_renull_using_row(mtx,t_org,arr);
    } else if( rng->high >= rng->low ) {
-      register int32 cur_col;
+      int32 cur_col;
 
       tocur = mtx->perm.col.org_to_cur;
       arr = mtx_expand_row(mtx,t_org);   /* Expand the target row */
@@ -2476,7 +2476,7 @@ void mtx_add_row_series_init(mtx_matrix_t mtx,int32 t_cur,boolean use){
 }
 
 void mtx_add_row_series(int32 s_cur,real64 factor,mtx_range_t *rng){
-  register int32 org_col;
+  int32 org_col;
   int32 t_org,*tocur;
   struct element_t **arr,*elt;
   mtx_matrix_t mtx;
@@ -2509,7 +2509,7 @@ void mtx_add_row_series(int32 s_cur,real64 factor,mtx_range_t *rng){
   /* fast_in_range is a 10% winner on the alpha, and should be even more
      on the other platforms. */
   if( rng->high >= rng->low ) {
-    register int32 cur_col, lo,hi;
+    int32 cur_col, lo,hi;
     lo=rng->low; hi= rng->high;
     for( ; NOTNULL(elt); elt = elt->next.col ) {
       cur_col=tocur[(org_col=elt->col)];
@@ -2566,7 +2566,7 @@ void mtx_add_col_series_init(mtx_matrix_t mtx,int32 t_cur,boolean use){
 }
 
 void mtx_add_col_series(int32 s_cur,real64 factor,mtx_range_t *rng){
-  register int32 org_row;
+  int32 org_row;
   int32 t_org,*tocur;
   struct element_t **arr,*elt;
   mtx_matrix_t mtx;
@@ -2597,7 +2597,7 @@ void mtx_add_col_series(int32 s_cur,real64 factor,mtx_range_t *rng){
     return;
   }
   if( rng->high >= rng->low ) {
-    register int32 cur_row;
+    int32 cur_row;
 
     for( ; NOTNULL(elt); elt = elt->next.row ) {
       cur_row=tocur[(org_row=elt->row)];

@@ -433,8 +433,8 @@ void MakeStatementPass(struct gl_list_t *l,
 		       struct BitList *blist,
 		       struct BitList *inited)
 {
-  register unsigned long c,len;
-  register struct Statement *stat;
+  unsigned long c,len;
+  struct Statement *stat;
   len = gl_length(l);
   c = FirstNonZeroBit(blist);
   while(c<len){
@@ -463,7 +463,7 @@ void MakeStatementPass(struct gl_list_t *l,
 static
 unsigned long BitCount(struct BitList *blist)
 {
-  register unsigned long result=0,c,len;
+  unsigned long result=0,c,len;
   len = BLength(blist);
   for(c=FirstNonZeroBit(blist); c < len;c++)
     if (ReadBit(blist,c)) result++;
@@ -500,8 +500,8 @@ struct ChildDesc *MakeChildDesc(symchar *name,
 				struct StatementList *sl,
 				ChildListPtr clist)
 {
-  register unsigned num_children;
-  register struct ChildDesc *result;
+  unsigned num_children;
+  struct ChildDesc *result;
   num_children = ChildListLen(clist);
   if (num_children) {
     result = CreateChildDescArray(num_children);

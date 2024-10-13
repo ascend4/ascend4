@@ -133,7 +133,7 @@ int KeepWhichInstance(struct TypeDescription *d1,
     }
 #endif
   } else {
-    register struct TypeDescription *morerefined;
+  struct TypeDescription *morerefined;
     morerefined = MoreRefined(d1,d2);
     if (morerefined==d1) return 1;
     if (morerefined==d2) return 2;
@@ -151,7 +151,7 @@ be cannibalized. Merging value on constants here has a clique side effect.
 Returns 0 if happy, 1 or other if not.
 \*********************************************************************/
 {
-  register CONST dim_type *dim;
+  CONST dim_type *dim;
   assert(i1&&i2&&i1->t==i2->t);
   AssertMemory(i1);
   AssertMemory(i2);
@@ -237,14 +237,14 @@ Returns 0 if happy, 1 or other if not.
 	  /* heuristic to save the one with the lower address */
 #ifdef MEM_DECREASE
 	  if (SA_INST(i2)->list > SA_INST(i1)->list){
-	    register struct set_t *temp;
+	    struct set_t *temp;
 	    temp = SA_INST(i2)->list;
 	    SA_INST(i2)->list = SA_INST(i1)->list;
 	    SA_INST(i1)->list = temp;
 	  }
 #else
 	  if (SA_INST(i2)->list < SA_INST(i1)->list){
-	    register struct set_t *temp;
+	    struct set_t *temp;
 	    temp = SA_INST(i2)->list;
 	    SA_INST(i2)->list = SA_INST(i1)->list;
 	    SA_INST(i1)->list = temp;
@@ -327,14 +327,14 @@ Returns 0 if happy, 1 or other if not.
 	  /* heuristic to save the one with the lower address */
 #ifdef MEM_DECREASE
 	  if (S_INST(i2)->list > S_INST(i1)->list){
-	    register struct set_t *temp;
+	    struct set_t *temp;
 	    temp = S_INST(i2)->list;
 	    S_INST(i2)->list = S_INST(i1)->list;
 	    S_INST(i1)->list = temp;
 	  }
 #else
 	  if (S_INST(i2)->list < S_INST(i1)->list){
-	    register struct set_t *temp;
+	    struct set_t *temp;
 	    temp = S_INST(i2)->list;
 	    S_INST(i2)->list = S_INST(i1)->list;
 	    S_INST(i1)->list = temp;
@@ -446,8 +446,8 @@ void MergeParentLists(struct gl_list_t *l1,
 		      struct Instance *old,
 		      struct Instance *new)
 {
-  register unsigned long c,len;
-  register struct Instance *parent;
+  unsigned long c,len;
+  struct Instance *parent;
   len = gl_length(l2);
   for(c=1;c<=len;c++){
     parent = INST(gl_fetch(l2,c));
@@ -544,7 +544,7 @@ void MergeParents(struct Instance *i1, struct Instance *i2)
 static
 int mergeinst_InClique(struct Instance *i1, struct Instance *i2)
 {
-  register struct Instance *ptr;
+  struct Instance *ptr;
   ptr = i1;
   do{
     if (ptr==i2) return 1;
@@ -556,7 +556,7 @@ int mergeinst_InClique(struct Instance *i1, struct Instance *i2)
 /* wire together cliques, but does not mess with refinements */
 void MergeCliques(struct Instance *i1, struct Instance *i2)
 {
-  register struct Instance *tmp;
+  struct Instance *tmp;
   if (!mergeinst_InClique(i1,i2)){
     tmp = NextCliqueMember(i1);
     SetNextCliqueMember(i1,NextCliqueMember(i2));
@@ -690,7 +690,7 @@ void MergeModelValues(struct ModelInstance *i1, struct ModelInstance *i2)
 /*
  * assumes that i1 is more refined.  Checks the bitlists.
  */
-  register unsigned long c,len;
+  unsigned long c,len;
   len = BLength(i2->executed);
   for(c=0;c<len;c++)
     if (!ReadBit(i2->executed,c)) ClearBit(i1->executed,c);
@@ -961,8 +961,8 @@ int CheckArrayChildren(struct gl_list_t *l1,
 		       struct gl_list_t *l2,
 		       enum inst_t t)
 {
-  register unsigned long c,len;
-  register struct ArrayChild *child1,*child2;
+  unsigned long c,len;
+  struct ArrayChild *child1,*child2;
   if ((l1==NULL)||(l2==NULL)) return 0;
   len = gl_length(l1);
   if (gl_length(l2)!=len) return 1;

@@ -42,7 +42,7 @@
 
 struct SelectList *CreateSelect(struct Set *set, struct StatementList *sl)
 {
-  register struct SelectList *result;
+  struct SelectList *result;
   SELMALLOC(result);
   result->slist = sl;
   result->values =set;
@@ -52,7 +52,7 @@ struct SelectList *CreateSelect(struct Set *set, struct StatementList *sl)
 
 struct SelectList *ReverseSelectCases(struct SelectList *sel)
 {
-  register struct SelectList *next,*previous=NULL;
+  struct SelectList *next,*previous=NULL;
   if (sel==NULL) return sel;
   while (1) {			/* loop until broken */
     next = sel->next;
@@ -66,7 +66,7 @@ struct SelectList *ReverseSelectCases(struct SelectList *sel)
 struct SelectList *LinkSelectCases(struct SelectList *sel1,
 				   struct SelectList *sel2)
 {
-  register struct SelectList *p;
+  struct SelectList *p;
   p = sel1;
   while (p->next!=NULL) p = p->next;
   p->next = sel2;
@@ -95,7 +95,7 @@ struct StatementList *SelectStatementListF(struct SelectList *sel)
 
 void DestroySelectNode(struct SelectList *sel)
 {
-  register struct Set *set;
+  struct Set *set;
   if (sel!=NULL){
     set = sel->values;
     if (sel->values) {
@@ -114,7 +114,7 @@ void DestroySelectNode(struct SelectList *sel)
 
 void DestroySelectList(struct SelectList *sel)
 {
-  register struct SelectList *next;
+  struct SelectList *next;
   while (sel!=NULL){
     next = NextSelectCase(sel);
     DestroySelectNode(sel);
@@ -124,7 +124,7 @@ void DestroySelectList(struct SelectList *sel)
 
 struct SelectList *CopySelectNode(struct SelectList *sel)
 {
-  register struct SelectList *result;
+  struct SelectList *result;
   assert(sel);
   SELMALLOC(result);
   if (sel->values) result->values = CopySetByReference(sel->values);
@@ -136,7 +136,7 @@ struct SelectList *CopySelectNode(struct SelectList *sel)
 
 struct SelectList *CopySelectList(struct SelectList *sel)
 {
-  register struct SelectList *head=NULL,*p;
+  struct SelectList *head=NULL,*p;
   if (sel!=NULL) {
     p = head = CopySelectNode(sel);
     sel = sel->next;

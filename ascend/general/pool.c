@@ -470,7 +470,7 @@ pool_store_t pool_create_store(int length, int width,
 
 void *pool_get_element(pool_store_t ps){
   /* no automatic variables please */
-  register struct pool_element *elt;
+  struct pool_element *elt;
   /* in a test on the alpha, though, making elt static global slowed it */
 
   if (ISNULL(ps)) {
@@ -537,7 +537,7 @@ void pool_free_elementF(pool_store_t ps, void *ptr
 	, CONST char *fn
 #endif
 ){
-  register struct pool_element *elt;
+  struct pool_element *elt;
 
   if (ISNULL(ptr)) return;
   elt = (struct pool_element *)ptr;
@@ -712,7 +712,7 @@ void pool_print_store(FILE *fp, pool_store_t ps, unsigned detail){
 
 
 size_t pool_sizeof_store(pool_store_t ps){
-  register size_t siz;
+  size_t siz;
   if (check_pool_store(ps)>1) return (size_t)0;
   siz = sizeof(struct pool_store_header);    /* header */
   siz += ps->barsize * ps->len;             /* elt data */

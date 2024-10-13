@@ -263,7 +263,7 @@ struct Statement *CreateWILLBE(struct VariableList *vl, symchar *t,
 struct Statement *CreateIRT(struct VariableList *vl, symchar *t,
                             struct Set *ta)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(IRT);
   result->v.i.type = t;
   result->v.i.typeargs = ta;
@@ -275,7 +275,7 @@ struct Statement *CreateIRT(struct VariableList *vl, symchar *t,
 
 struct Statement *CreateAA(struct VariableList *vl)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(AA);
   result->v.a.vl = vl;
   return result;
@@ -284,7 +284,7 @@ struct Statement *CreateAA(struct VariableList *vl)
 
 struct Statement *IgnoreLNK(symchar *key, struct Name *n_key, struct VariableList *vl)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(LNK);
 
   if(key != NULL){
@@ -301,7 +301,7 @@ struct Statement *IgnoreLNK(symchar *key, struct Name *n_key, struct VariableLis
 
 struct Statement *CreateLNK(symchar *key, struct Name *n_key, struct VariableList *vl)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(LNK);
 
   if(key != NULL){
@@ -319,7 +319,7 @@ struct Statement *CreateLNK(symchar *key, struct Name *n_key, struct VariableLis
 
 struct Statement *CreateUNLNK(symchar *key, struct Name *n_key, struct VariableList *vl)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(UNLNK);
 
   if(key != NULL){
@@ -337,14 +337,14 @@ return result;
 
 struct Statement *CreateATS(struct VariableList *vl)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(ATS);
   result->v.a.vl = vl;
   return result;
 }
 
 struct Statement *CreateFIX(struct VariableList *vars){
-	register struct Statement *result;
+	struct Statement *result;
 	/*CONSOLE_DEBUG("CREATING FIX STMT");*/
 	result=create_statement_here(FIX);
 	result->v.fx.vars = vars;
@@ -353,7 +353,7 @@ struct Statement *CreateFIX(struct VariableList *vars){
 }
 
 struct Statement *CreateFREE(struct VariableList *vars){
-  register struct Statement *result;
+  struct Statement *result;
   /* CONSOLE_DEBUG("CREATING FREE STMT"); */
   result=create_statement_here(FREE);
   result->v.fx.vars = vars;
@@ -361,7 +361,7 @@ struct Statement *CreateFREE(struct VariableList *vars){
 }
 
 struct Statement *CreateSOLVER(CONST char *solvername){
-	register struct Statement *result;
+	struct Statement *result;
 	result=create_statement_here(SOLVER);
 	result->v.solver.name = solvername;
 	/*CONSOLE_DEBUG("CREATED SOLVER STATEMENT");*/
@@ -369,7 +369,7 @@ struct Statement *CreateSOLVER(CONST char *solvername){
 }
 
 struct Statement *CreateOPTION(CONST char *optname, struct Expr *rhs){
-	register struct Statement *result;
+	struct Statement *result;
 	result=create_statement_here(OPTION);
 	result->v.option.name = optname;
 	result->v.option.rhs = rhs;
@@ -377,14 +377,14 @@ struct Statement *CreateOPTION(CONST char *optname, struct Expr *rhs){
 }
 
 struct Statement *CreateSOLVE(){
-	register struct Statement *result;
+	struct Statement *result;
 	result=create_statement_here(SOLVE);
 	return result;
 }
 
 struct Statement *CreateWBTS(struct VariableList *vl)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(WBTS);
   result->v.a.vl = vl;
   return result;
@@ -392,7 +392,7 @@ struct Statement *CreateWBTS(struct VariableList *vl)
 
 struct Statement *CreateWNBTS(struct VariableList *vl)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(WNBTS);
   result->v.a.vl = vl;
   return result;
@@ -491,7 +491,7 @@ struct Statement *CreateFOR(symchar *sindex,
 			    struct StatementList *stmts,
 			    enum ForOrder order, enum ForKind kind)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(FOR);
   result->v.f.index = sindex;
   result->v.f.e = expr;
@@ -505,7 +505,7 @@ struct Statement *CreateFOR(symchar *sindex,
 
 struct Statement *CreateFlow(enum FlowControl fc, CONST char *mt)
 {
-  register struct Statement *result;
+  struct Statement *result;
 
   switch (fc) {
   case fc_break:
@@ -538,7 +538,7 @@ void SetRelationName(struct Statement *stat, struct Name *n)
 
 struct Statement *CreateREL(struct Name *n, struct Expr *relation)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(REL);
   result->v.rel.nptr = n;
   result->v.rel.relation = relation;
@@ -555,7 +555,7 @@ void SetLogicalRelName(struct Statement *stat, struct Name *n)
 
 struct Statement *CreateLOGREL(struct Name *n, struct Expr *logrel)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(LOGREL);
   result->v.lrel.nptr = n;
   result->v.lrel.logrel = logrel;
@@ -569,7 +569,7 @@ struct Statement *CreateEXTERNGlassBox(
 			       struct Name *data,
 			       struct Name *scope)
 {
-  register struct Statement *result;
+  struct Statement *result;
   ERROR_REPORTER_NOTE("Found glassbox equation statement '%s'\n",funcname);
 
   result=create_statement_here(EXT);
@@ -590,7 +590,7 @@ struct Statement *CreateEXTERNBlackBox(
 			       unsigned long n_inputs,
 			       unsigned long n_outputs)
 {
-  register struct Statement *result;
+  struct Statement *result;
   struct Name *bbsuffix;
   symchar *bsuf;
   /* ERROR_REPORTER_DEBUG("Found blackbox equation statement '%s'\n",funcname); */
@@ -620,7 +620,7 @@ struct Statement *CreateEXTERNMethod(
 			       CONST char *funcname,
 			       struct VariableList *vl)
 {
-  register struct Statement *result;
+  struct Statement *result;
   /* ERROR_REPORTER_DEBUG("Found external method statement '%s'\n",funcname); */
   result=create_statement_here(EXT);
   result->v.ext.mode = ek_method;
@@ -634,7 +634,7 @@ struct Statement *CreateREF(struct VariableList *vl,
 			    symchar *st,
 			    int mode)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(REF);
   result->v.ref.mode = mode;
   result->v.ref.ref_name = ref_name;
@@ -645,7 +645,7 @@ struct Statement *CreateREF(struct VariableList *vl,
 
 struct Statement *CreateRUN(struct Name *n,struct Name *type_access)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(RUN);
   result->v.r.proc_name = n;
   result->v.r.type_name = type_access; /* NULL is valid */
@@ -654,7 +654,7 @@ struct Statement *CreateRUN(struct Name *n,struct Name *type_access)
 
 struct Statement *CreateCALL(symchar *sym,struct Set *args)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(CALL);
   result->v.call.id = sym;
   result->v.call.args = args; /* NULL is valid */
@@ -662,7 +662,7 @@ struct Statement *CreateCALL(symchar *sym,struct Set *args)
 }
 
 struct Statement *CreateASSERT(struct Expr *ex){
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(ASSERT);
   result->v.asserts.test = ex;
   return result;
@@ -672,7 +672,7 @@ struct Statement *CreateIF(struct Expr *ex,
 			   struct StatementList *thenblock,
 			   struct StatementList *elseblock)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(IF);
   result->v.ifs.test = ex;
   result->v.ifs.thenblock = thenblock;
@@ -689,7 +689,7 @@ struct Statement *CreateIF(struct Expr *ex,
 struct Statement *CreateWhile(struct Expr *ex,
 			   struct StatementList *thenblock)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(WHILE);
   result->v.loop.test = ex;
   result->v.loop.block = thenblock;
@@ -703,7 +703,7 @@ struct Statement *CreateWHEN(struct Name *wname, struct VariableList *vlist,
                              struct WhenList *wl)
 {
   struct StatementList *sl;
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(WHEN);
   result->v.w.nptr = wname;
   result->v.w.vl = vlist;
@@ -718,7 +718,7 @@ struct Statement *CreateWHEN(struct Name *wname, struct VariableList *vlist,
 
 struct Statement *CreateFNAME(struct Name *name)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(FNAME);
   result->v.n.wname = name;
   return result;
@@ -728,7 +728,7 @@ struct Statement *CreateFNAME(struct Name *name)
 struct Statement *CreateSWITCH(struct VariableList *v, struct SwitchList *sw)
 {
   struct StatementList *sl;
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(SWITCH);
   result->v.sw.vl = v;
   result->v.sw.cases = sw;
@@ -781,7 +781,7 @@ struct Statement *CreateSELECT(struct VariableList *v, struct SelectList *sel)
 {
   unsigned int tmp=0;
   struct StatementList *sl;
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(SELECT);
   result->v.se.vl = v;
   result->v.se.cases = sel;
@@ -799,7 +799,7 @@ struct Statement *CreateSELECT(struct VariableList *v, struct SelectList *sel)
 
 struct Statement *CreateCOND(struct StatementList *stmts)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(COND);
   result->v.cond.stmts = stmts;
   AddContext(stmts,context_COND);
@@ -810,7 +810,7 @@ struct Statement *CreateCOND(struct StatementList *stmts)
 
 struct Statement *CreateASSIGN(struct Name *n, struct Expr *rhs)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(ASGN);
   result->v.asgn.nptr = n;
   result->v.asgn.rhs = rhs;
@@ -819,7 +819,7 @@ struct Statement *CreateASSIGN(struct Name *n, struct Expr *rhs)
 
 struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs)
 {
-  register struct Statement *result;
+  struct Statement *result;
   result=create_statement_here(CASGN);
   result->v.asgn.nptr = n;
   result->v.asgn.rhs = rhs;
@@ -1065,7 +1065,7 @@ void DestroyStatement(struct Statement *s)
 
 struct Statement *CopyToModify(struct Statement *s)
 {
-  register struct Statement *result;
+  struct Statement *result;
   size_t size;
   assert(s!=NULL);
   assert(s->ref_count);

@@ -398,7 +398,7 @@ void forward_substitute2(linsolqr_system_t sys,
   if (transpose) { /* arr is indexed by original column number */
     mtx=sys->inverse;
     for( nz.col=sys->rng.low; nz.col < dotlim; ++(nz.col) ) {
-      register int32 org_col;
+      int32 org_col;
 
       org_col = mtx_col_to_org(mtx,nz.col);
       if (arr[org_col]!=D_ZERO) nonzero_found=TRUE;
@@ -411,7 +411,7 @@ void forward_substitute2(linsolqr_system_t sys,
   } else { /* arr is indexed by original row number */
     mtx=sys->factors;
     for( nz.row=sys->rng.low; nz.row < dotlim; ++(nz.row) ) {
-      register int32 org_row;
+      int32 org_row;
 
       org_row = mtx_row_to_org(mtx,nz.row);
       if (arr[org_row]!=D_ZERO) nonzero_found=TRUE;
@@ -450,7 +450,7 @@ void backward_substitute2(linsolqr_system_t sys,
   if (transpose) { /* arr is indexed by original column number */
     mtx = sys->factors;
     for( nz.col = sys->rng.low+sys->rank-1; nz.col >= dotlim ; --(nz.col) ) {
-      register int32 org_col;
+      int32 org_col;
 
       org_col = mtx_col_to_org(mtx,nz.col);
       if (arr[org_col] != D_ZERO) nonzero_found=TRUE;
@@ -463,7 +463,7 @@ void backward_substitute2(linsolqr_system_t sys,
     /* we are working from the bottom up */
     mtx = sys->inverse;
     for( nz.row = sys->rng.low+sys->rank-1; nz.row >= dotlim ; --(nz.row) ) {
-      register int32 org_row;
+      int32 org_row;
 
       org_row = mtx_row_to_org(mtx,nz.row);
       if (arr[org_row]!=D_ZERO) nonzero_found=TRUE;

@@ -153,7 +153,7 @@ void exprs_report_pool(void){
 
 struct Expr *CreateVarExpr(struct Name *n)
 {
-  register struct Expr *result;
+  struct Expr *result;
   assert(n!=NULL);
   AssertMemory(n);
   EXPR_NEW(result,e_var);
@@ -174,7 +174,7 @@ void InitVarExpr(struct Expr *result,CONST struct Name *n)
 
 struct Expr *CreateOpExpr(enum Expr_enum t)
 {
-  register struct Expr *result;
+  struct Expr *result;
   assert((t!=e_var)&&(t!=e_func)&&(t!=e_int)&&(t!=e_real)&&(t!=e_zero));
   EXPR_NEW(result,t);
 #if EXPRSUSESPOOL
@@ -188,7 +188,7 @@ struct Expr *CreateOpExpr(enum Expr_enum t)
 struct Expr *CreateSatisfiedExpr(struct Name *n, double tol,
                                  CONST dim_type *dims)
 {
-  register struct Expr *result;
+  struct Expr *result;
   EXPR_NEW(result,e_satisfied);
   result->v.se.sen =  n;
   result->v.se.ser.rvalue = tol;
@@ -199,7 +199,7 @@ struct Expr *CreateSatisfiedExpr(struct Name *n, double tol,
 
 struct Expr *CreateFuncExpr(CONST struct Func *f)
 {
-  register struct Expr *result;
+  struct Expr *result;
   EXPR_NEW(result,e_func);
   result->v.fptr = f;
   EXPR_CHECK_MEMORY(result);
@@ -208,7 +208,7 @@ struct Expr *CreateFuncExpr(CONST struct Func *f)
 
 struct Expr *CreateIntExpr(long int i)
 {
-  register struct Expr *result;
+  struct Expr *result;
   EXPR_NEW(result,e_int);
   result->v.ivalue = i;
   EXPR_CHECK_MEMORY(result);
@@ -217,7 +217,7 @@ struct Expr *CreateIntExpr(long int i)
 
 struct Expr *CreateRealExpr(double r, CONST dim_type *dims)
 {
-  register struct Expr *result;
+  struct Expr *result;
   EXPR_NEW(result,e_real);
   result->v.r.rvalue = r;
   result->v.r.dimensions = dims;
@@ -227,7 +227,7 @@ struct Expr *CreateRealExpr(double r, CONST dim_type *dims)
 
 struct Expr *CreateTrueExpr(void)
 {
-  register struct Expr *result;
+  struct Expr *result;
   EXPR_NEW(result,e_boolean);
   result->v.bvalue = 1;
   EXPR_CHECK_MEMORY(result);
@@ -236,7 +236,7 @@ struct Expr *CreateTrueExpr(void)
 
 struct Expr *CreateFalseExpr(void)
 {
-  register struct Expr *result;
+  struct Expr *result;
   EXPR_NEW(result,e_boolean);
   result->v.bvalue = 0;
   EXPR_CHECK_MEMORY(result);
@@ -245,7 +245,7 @@ struct Expr *CreateFalseExpr(void)
 
 struct Expr *CreateAnyExpr(void)
 {
-  register struct Expr *result;
+  struct Expr *result;
   EXPR_NEW(result,e_boolean);
   result->v.bvalue = 2;
   EXPR_CHECK_MEMORY(result);
@@ -254,7 +254,7 @@ struct Expr *CreateAnyExpr(void)
 
 struct Expr *CreateSetExpr(struct Set *set)
 {
-  register struct Expr *result;
+  struct Expr *result;
   EXPR_NEW(result,e_set);
   result->v.s = set;
   EXPR_CHECK_MEMORY(result);
@@ -264,7 +264,7 @@ struct Expr *CreateSetExpr(struct Set *set)
 
 struct Expr *CreateSymbolExpr(symchar *sym)
 {
-  register struct Expr *result;
+  struct Expr *result;
   assert(AscFindSymbol(sym)!=NULL);
   EXPR_NEW(result,e_symbol);
   result->v.sym_ptr = sym;
@@ -274,7 +274,7 @@ struct Expr *CreateSymbolExpr(symchar *sym)
 
 struct Expr *CreateQStringExpr(CONST char *qstr)
 {
-  register struct Expr *result;
+  struct Expr *result;
   EXPR_NEW(result,e_qstring);
   result->v.sym_ptr = (symchar *)qstr; /* qstr really not symbol */
   EXPR_CHECK_MEMORY(result);
@@ -283,7 +283,7 @@ struct Expr *CreateQStringExpr(CONST char *qstr)
 
 struct Expr *CreateBuiltin(enum Expr_enum t, struct Set *set)
 {
-  register struct Expr *result;
+  struct Expr *result;
   EXPR_NEW(result,t);
   result->v.s = set;
   EXPR_CHECK_MEMORY(result);
@@ -376,8 +376,8 @@ CONST dim_type *SatisfiedExprRDimensionsF(CONST struct Expr *e)
  */
 struct Expr *CopyExprList(CONST struct Expr *e)
 {
-  register struct Expr *result, *p;
-  register CONST struct Expr *ep;
+  struct Expr *result, *p;
+  CONST struct Expr *ep;
   if (e==NULL) return NULL;
   AssertMemory(e);
   ep = e;
@@ -494,7 +494,7 @@ struct Expr *CopyExprList(CONST struct Expr *e)
 
 void DestroyExprList(struct Expr *e)
 {
-  register struct Expr *next,*ep;
+  struct Expr *next,*ep;
   ep = e;
   while(ep!=NULL) {
     AssertMemory(ep);
@@ -522,7 +522,7 @@ void DestroyExprList(struct Expr *e)
 
 struct Expr *JoinExprLists(struct Expr *e1, struct Expr *e2)
 {
-  register struct Expr *e;
+  struct Expr *e;
   if (e1 == NULL) return e2;
   AssertMemory(e1);
   e = e1;
@@ -536,7 +536,7 @@ struct Expr *JoinExprLists(struct Expr *e1, struct Expr *e2)
 
 unsigned long ExprListLength(CONST struct Expr *e)
 {
-  register CONST struct Expr *ptr;
+  CONST struct Expr *ptr;
   unsigned long len = 0L;
 
   AssertMemory(e);

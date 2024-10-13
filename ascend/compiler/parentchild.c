@@ -347,12 +347,12 @@ unsigned long SearchForParent(CONST struct Instance *i,
 struct InstanceName ParentsName(CONST struct Instance *p,
 				CONST struct Instance *c)
 {
-  register unsigned long count=1, num_children;
-  register struct Instance **child;
-  register ChildListPtr clist;
+  unsigned long count=1, num_children;
+  struct Instance **child;
+  ChildListPtr clist;
   struct InstanceName result;
-  register struct gl_list_t *arylist;
-  register struct ArrayChild *arychild;
+  struct gl_list_t *arylist;
+  struct ArrayChild *arychild;
   AssertMemory(p);
   AssertMemory(c);
   assert((p != NULL)&&(c != NULL));
@@ -613,8 +613,8 @@ unsigned long NumberChildren(CONST struct Instance *i)
 struct Instance *InstanceChild(CONST struct Instance *i,
 				   unsigned long int n)
 {
-  register struct ArrayChild *ptr;
-  register struct Instance **child;
+  struct ArrayChild *ptr;
+  struct Instance **child;
   assert((i!=NULL) && (n>0) && (n<=NumberChildren(i)));
   AssertMemory(i);
   switch(i->t) {
@@ -694,8 +694,8 @@ struct Instance *InstanceChild(CONST struct Instance *i,
 				   unsigned long int n)
 {
 #ifndef NDEBUG
-  register struct ArrayChild *ptr;
-  register struct Instance **child;
+  struct ArrayChild *ptr;
+  struct Instance **child;
   assert((i!=NULL) && (n>0) && (n<=NumberChildren(i)));
   AssertMemory(i);
   if (i->t & (IERRINST | ICHILDLESS)) {
@@ -812,7 +812,7 @@ struct Instance *InstanceChild(CONST struct Instance *i,
 
 struct InstanceName ChildName(CONST struct Instance *i, unsigned long int n)
 {
-  register struct ArrayChild *arychild;
+  struct ArrayChild *arychild;
   struct InstanceName result;
   assert((i!=NULL)&&(n>0)&&(n<=NumberChildren(i)));
   AssertMemory(i);
@@ -1009,11 +1009,11 @@ unsigned long ChildSearch(CONST struct Instance *i,
 unsigned long ChildIndex(CONST struct Instance *i,
 			 CONST struct Instance *child)
 {
-  register unsigned long count=1, num_children=0;
-  register struct Instance **childlist = NULL;
-  register ChildListPtr clist;
-  register struct gl_list_t *arylist;
-  register struct ArrayChild *arychild;
+  unsigned long count=1, num_children=0;
+  struct Instance **childlist = NULL;
+  ChildListPtr clist;
+  struct gl_list_t *arylist;
+  struct ArrayChild *arychild;
 
   assert((i!=NULL) && (child!=NULL));
   AssertMemory(i);
@@ -1100,8 +1100,8 @@ struct Instance *ChildByChar(CONST struct Instance *inst,symchar *name)
 void StoreChildPtr(struct Instance *i, unsigned long int n,
 		   struct Instance *child)
 {
-  register struct Instance **childptr;
-  register struct ArrayChild *ptr;
+  struct Instance **childptr;
+  struct ArrayChild *ptr;
   assert((i!=NULL)&&(n>0)&&(n<=NumberChildren(i)));
   AssertMemory(i);
   switch(i->t) {
