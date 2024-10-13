@@ -36,6 +36,7 @@ jobs:
           mingw-w64-${{matrix.env}}-toolchain
           mingw-w64-${{matrix.env}}-gsl
           mingw-w64-${{matrix.env}}-gcc
+          mingw-w64-${{matrix.env}}-gcc-gfortran
           mingw-w64-${{matrix.env}}-gtk2
           mingw-w64-${{matrix.env}}-binutils
           mingw-w64-${{matrix.env}}-pkg-config
