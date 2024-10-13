@@ -1092,10 +1092,10 @@ static void adjust_row_count(struct reorder_vars *vars,int32 removed_col)
  **/
 {
    mtx_coord_t nz;
-   real64 value;
+   /* real64 value; */
    nz.col = removed_col;
    nz.row = mtx_FIRST;
-   while( value = mtx_next_in_col(vars->mtx,&nz,&(vars->reg.row)),
+   while( /* value = */ mtx_next_in_col(vars->mtx,&nz,&(vars->reg.row)),
          nz.row != mtx_LAST )
       --(vars->rowcount[nz.row]);
 }
@@ -1174,7 +1174,7 @@ static void forward_triangularize(struct reorder_vars *vars)
 {
    boolean change;
    mtx_coord_t nz;
-   real64 value;
+   // real64 value;
 
    do {
       change = FALSE;
@@ -1184,7 +1184,7 @@ static void forward_triangularize(struct reorder_vars *vars)
       if( nz.row <= vars->reg.row.high ) {
          /* found singleton row */
          nz.col = mtx_FIRST; /* this is somehow coming back with nz.col -1 */
-         value = mtx_next_in_row(vars->mtx,&nz,&(vars->reg.col));
+         /* value = */ mtx_next_in_row(vars->mtx,&nz,&(vars->reg.col));
          adjust_row_count(vars,nz.col);
          assign_row_and_col(vars,nz.row,nz.col);
          change = TRUE;
@@ -1204,7 +1204,7 @@ static int32 select_row(struct reorder_vars *vars)
    int32 i, nties=-2;  /* # elements currently defined in vars->tlist */
    int32 sum;
    mtx_coord_t nz;
-   real64 value;
+   // real64 value;
    mtx_matrix_t mtx;
    mtx_range_t *colrng, *rowrng;
 
@@ -1233,7 +1233,7 @@ static int32 select_row(struct reorder_vars *vars)
       sum = 0;
       nz.row = vars->tlist[i].ndx;
       nz.col = mtx_FIRST;
-      while( value = mtx_next_in_row(mtx,&nz,colrng),
+      while( /* value = */mtx_next_in_row(mtx,&nz,colrng),
             nz.col != mtx_LAST )
          sum += mtx_nonzeros_in_col(mtx,nz.col,rowrng);
       if( sum > max_col_count ) {
@@ -1313,7 +1313,7 @@ static void spk1_reorder(struct reorder_vars *vars)
       struct reorder_list *head;
       int32 nelts;   /* # elements "allocated" from vars->tlist */
       mtx_coord_t nz;
-      real64 value;
+      // real64 value;
 
       forward_triangularize(vars);
       assign_null_rows(vars);
@@ -1331,7 +1331,7 @@ static void spk1_reorder(struct reorder_vars *vars)
       nelts = 0;
       nz.row = select_row(vars);
       nz.col = mtx_FIRST;
-      while( value = mtx_next_in_row(mtx,&nz,&(vars->reg.col)),
+      while( /* value = */ mtx_next_in_row(mtx,&nz,&(vars->reg.col)),
             nz.col != mtx_LAST ) {
          struct reorder_list **q,*p;
 
@@ -1385,10 +1385,10 @@ static void adjust_col_count(struct creorder_vars *vars,int32 removed_row)
  **/
 {
    mtx_coord_t nz;
-   real64 value;
+   // real64 value;
    nz.row = removed_row;
    nz.col = mtx_FIRST;
-   while( value = mtx_next_in_row(vars->mtx,&nz,&(vars->reg.col)),
+   while( /* value = */ mtx_next_in_row(vars->mtx,&nz,&(vars->reg.col)),
          nz.col != mtx_LAST )
       --(vars->colcount[nz.col]);
 }
@@ -1469,7 +1469,7 @@ static void cforward_triangularize(struct creorder_vars *vars)
 
    do {
       mtx_coord_t nz;
-      real64 value;
+      // real64 value;
       change = FALSE;
       for( nz.col = vars->reg.col.low ;
           nz.col <= vars->reg.col.high && vars->colcount[nz.col] != 1;
@@ -1477,7 +1477,7 @@ static void cforward_triangularize(struct creorder_vars *vars)
       if( nz.col <= vars->reg.col.high ) {
          /* found singleton col */
          nz.row = mtx_FIRST;
-         value = mtx_next_in_col(vars->mtx,&nz,&(vars->reg.row));
+         /* value = */ mtx_next_in_col(vars->mtx,&nz,&(vars->reg.row));
          adjust_col_count(vars,nz.row);
          assign_col_and_row(vars,nz.col,nz.row);
          change = TRUE;
@@ -1497,7 +1497,7 @@ static int32 select_col(struct creorder_vars *vars)
    int32 i, nties=-2;  /* # elements currently defined in vars->tlist */
    int32 sum;
    mtx_coord_t nz;
-   real64 value;
+   // real64 value;
    mtx_matrix_t mtx;
    mtx_range_t *colrng, *rowrng;
 
@@ -1526,7 +1526,7 @@ static int32 select_col(struct creorder_vars *vars)
       sum = 0;
       nz.row = mtx_FIRST;
       nz.col = vars->tlist[i].ndx;
-      while( value = mtx_next_in_col(mtx,&nz,rowrng),
+      while( /* value = */ mtx_next_in_col(mtx,&nz,rowrng),
             nz.row != mtx_LAST )
          sum += mtx_nonzeros_in_row(mtx,nz.row,colrng);
       if( sum > max_row_count ) {
@@ -1611,7 +1611,7 @@ static void tspk1_reorder(struct creorder_vars *vars)
       struct creorder_list *head;
       int32 nelts;   /* # elements "allocated" from vars->tlist */
       mtx_coord_t nz;
-      real64 value;
+      // real64 value;
 
       cforward_triangularize(vars);
       assign_null_cols(vars);
@@ -1629,7 +1629,7 @@ static void tspk1_reorder(struct creorder_vars *vars)
       nelts = 0;
       nz.row = mtx_FIRST;
       nz.col = select_col(vars);
-      while( value = mtx_next_in_col(mtx,&nz,&(vars->reg.row)),
+      while( /* value = */ mtx_next_in_col(mtx,&nz,&(vars->reg.row)),
             nz.row != mtx_LAST ) {
          struct creorder_list **q,*p;
 
@@ -1665,8 +1665,8 @@ static boolean nonempty_row(mtx_matrix_t mtx,int32 row)
  **/
 {
    mtx_coord_t nz;
-   real64 value;
-   value = mtx_next_in_row(mtx, mtx_coord(&nz,row,mtx_FIRST), mtx_ALL_COLS);
+   // real64 value;
+   /* value = */ mtx_next_in_row(mtx, mtx_coord(&nz,row,mtx_FIRST), mtx_ALL_COLS);
    return( nz.col != mtx_LAST );
 }
 
@@ -1676,8 +1676,8 @@ static boolean nonempty_col(mtx_matrix_t mtx,int32 col)
  **/
 {
    mtx_coord_t nz;
-   real64 value;
-   value = mtx_next_in_col(mtx, mtx_coord(&nz,mtx_FIRST,col), mtx_ALL_ROWS);
+   // real64 value;
+   /* value = */ mtx_next_in_col(mtx, mtx_coord(&nz,mtx_FIRST,col), mtx_ALL_ROWS);
    return( nz.row != mtx_LAST );
 }
 
@@ -2365,7 +2365,7 @@ static void qr_apply_householder(linsolqr_system_t sys,
  */
 {
   static int32 *hhrowlist=NULL, listlen=0;
-  real64 *hhcol, *hhrow, tauc, value,xdothhcol;
+  real64 *hhcol, *hhrow, tauc, /* value, */ xdothhcol;
   int32 col,row,collim,rowlim;
   mtx_matrix_t mtx;
   mtx_coord_t coord;
@@ -2435,7 +2435,7 @@ static void qr_apply_householder(linsolqr_system_t sys,
     coord.row=mtx_FIRST;
     coord.col=curcol;
     /* do transform */
-    while( value = mtx_next_in_col(mtx,&coord,rng),
+    while( /* value = */ mtx_next_in_col(mtx,&coord,rng),
            coord.row != mtx_LAST ) {
       if (hhrowdense) {
         mtx_old_add_row_sparse(mtx,coord.row,hhrow,-tauc*hhcol[coord.row],
@@ -2460,7 +2460,7 @@ static void qr_apply_householder(linsolqr_system_t sys,
 
     /* rezero used part of hhcol and do housekeeping on changed rows */
     coord.row=mtx_FIRST;
-    while( value = mtx_next_in_col(mtx,&coord,rng),
+    while( /* value = */ mtx_next_in_col(mtx,&coord,rng),
            coord.row != mtx_LAST ) {
       mtx_del_zr_in_row(mtx,coord.row);
       /*safe only because we cleaned curcol in get_householder */
@@ -3781,7 +3781,7 @@ int linsolqr_setup_ngslv(linsolqr_system_t sys,
                          real64 *tmpvec)
 {
    struct rhs_list *rl;
-   int status=0,k;
+   int k;
 
    CHECK_SYSTEM(sys);
    if( !sys->factored ) {
@@ -3809,8 +3809,8 @@ int linsolqr_setup_ngslv(linsolqr_system_t sys,
       forward_substitute2(sys,rl->varvalue,rl->transpose);
       /* we now have inv(L11)*inv(U11)*B1 stored in rl->varvalue */
 
-      status=1;
    } else {
+
      if( NOTNULL(rhs) ) {
        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rhs not found on list.");
      } else {

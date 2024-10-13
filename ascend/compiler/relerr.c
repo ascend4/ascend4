@@ -66,7 +66,7 @@ int rel_errorlist_set_name(rel_errorlist *err, const struct Name *errname){
 	return 0;
 }
 
-int rel_errorlist_get_find_error(rel_errorlist *err){
+enum find_errors rel_errorlist_get_find_error(rel_errorlist *err){
 	assert(err!=NULL);
 	return err->ferr;
 }

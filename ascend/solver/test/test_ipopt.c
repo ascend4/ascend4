@@ -42,6 +42,13 @@
 #include <ascend/system/slv_server.h>
 
 #include <test/common.h>
+//#define TIPOPT
+#ifdef TIPOPT_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
+
 
 /*
 	Test solving a simple IPOPT model
@@ -62,6 +69,9 @@ static void test_ipopt(const char *filenamestem){
 	{
 		int status;
 		m = Asc_OpenModule(path,&status);
+		if (!m) {
+			MSG("test_ipopt: failed OpenModule");
+		}
 		CU_ASSERT(status == 0);
 	}
 

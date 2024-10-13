@@ -4,7 +4,7 @@ typedef int (*initFunc)(void);
 typedef int (*isInitializedFunc)(void);
 typedef void (*cleanupFunc)(void);
 
-ASC_DLLSPEC int valuex = FALSE;
+/* ASC_DLLSPEC */ int valuex = FALSE;
                           
 ASC_DLLSPEC int init(void){
   valuex = TRUE;

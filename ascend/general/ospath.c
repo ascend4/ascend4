@@ -185,10 +185,6 @@ struct FilePath *ospath_new(const char *path){
 
 	ospath_cleanup(fp);
 
-#if 0
-	D(fp);
-#endif
-
 	return fp;
 }
 
@@ -202,9 +198,6 @@ struct FilePath *ospath_new_noclean(const char *path){
 	STRNCPY(fp->path,path,PATH_MAX);
 	assert(strcmp(fp->path,path)==0);
 #ifdef WINPATHS
-#if 0
-	X(fp->path);
-#endif
 	ospath_extractdriveletter(fp);
 #endif
 
@@ -253,10 +246,6 @@ struct FilePath *ospath_new_from_posix(const char *posixpath){
 	ospath_fixslash(fp->path);
 #endif
 
-#if 0
-	X(fp->path);
-#endif
-
 	ospath_cleanup(fp);
 
 	return fp;
@@ -286,24 +275,13 @@ void ospath_fixslash(char *path){
 
 	strcpy(temp,path);temp[PATH_MAX]='\0';
 
-#if 0
-	X(path);
-#endif
 
 	startslash = (strlen(temp) > 0 && temp[0] == PATH_WRONGSLASH_CHAR);
 	endslash = (strlen(temp) > 1 && temp[strlen(temp) - 1] == PATH_WRONGSLASH_CHAR);
 
-#if 0
-	V(startslash);
-	V(endslash);
-
-#endif
 	/* reset fp->path as required. */
 	STRNCPY(path, (startslash ? PATH_SEPARATOR_STR : ""), PATH_MAX);
 
-#if 0
-	M("STARTING STRTOK");
-#endif
 	for(p = STRTOK(temp, PATH_WRONGSLASH_STR,nexttok);
 			p!=NULL;
 			p = STRTOK(NULL,PATH_WRONGSLASH_STR,nexttok)
@@ -318,23 +296,14 @@ void ospath_fixslash(char *path){
 
 		STRCAT(path,p);
 	}
-#if 0
-	M("FINISHED STRTOK");
-#endif
 
 	/* put / on end as required, according to what the starting path had */
 	if(endslash && (strlen(path) > 0 ? (path[strlen(path) - 1] != PATH_SEPARATOR_CHAR) : 1))
 	{
-#if 0
-		M("adding endslash!");
-#endif
 
 		STRCAT(path, PATH_SEPARATOR_STR);
 	}
 
-#if 0
-	X(path);
-#endif
 }
 #endif
 
@@ -400,11 +369,6 @@ struct FilePath *ospath_gethomepath(void){
 void ospath_extractdriveletter(struct FilePath *fp)
 {
 	char *p;
-#if 0
-	M("SOURCE");
-	X(fp->path);
-	fprintf(stderr,"CHAR 1 = %c\n",fp->path[1]);
-#endif
 
 	/* extract the drive the path resides on... */
 	if(strlen(fp->path) >= 2 && fp->path[1] == ':')
@@ -418,11 +382,6 @@ void ospath_extractdriveletter(struct FilePath *fp)
 	}else{
 		fp->drive[0] = '\0';
 	}
-#if 0
-	M("RESULT");
-	X(fp->path);
-	X(fp->drive);
-#endif
 }
 #endif
 
@@ -438,12 +397,6 @@ void ospath_cleanup(struct FilePath *fp){
 	/*  compress the path, and resolve ~ */
 	startslash = (strlen(fp->path) > 0 && fp->path[0] == PATH_SEPARATOR_CHAR);
 	endslash = (strlen(fp->path) > 1 && fp->path[strlen(fp->path) - 1] == PATH_SEPARATOR_CHAR);
-
-#if 0
-	fprintf(stderr,"FS ON START = %d\n",startslash);
-	fprintf(stderr,"FS ON END   = %d\n",endslash);
-	fprintf(stderr,"FIRST CHAR = %c\n",fp->path[0]);
-#endif
 
 	home = ospath_gethomepath();
 
@@ -464,11 +417,6 @@ void ospath_cleanup(struct FilePath *fp){
 			p!=NULL;
 			p = STRTOK(NULL,PATH_SEPARATOR_STR,nexttok)
 	){
-#if 0
-		M("NEXT TOKEN");
-		X(p);
-		X(path+strlen(p)+1);
-#endif
 		if(strcmp(p, "~")==0){
 
 			if(p == path){ /* check that the ~ is the first character in the path */
@@ -531,9 +479,6 @@ void ospath_cleanup(struct FilePath *fp){
 		/* add the present path component */
 		STRCAT(fp->path, p);
 	}
-#if 0
-	M("FINISHED STRTOK");
-#endif
 
 	ospath_free(home);
 
@@ -693,7 +638,8 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 	return fp1;
 }
 
-#if 0
+#define ospath_gpadn_used 0
+#if ospath_gpadn_used
 // this function not yet in use
 struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned depth)
 {
@@ -739,9 +685,6 @@ struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned depth)
 
 		p = STRTOK(NULL, PATH_SEPARATOR_STR, nexttok);
 	}
-#if 0
-	M("FINISHED STRTOK");
-#endif
 
 	/* put / on end as required*/
 	if(strlen(temp) > 0 ? (temp[strlen(temp) - 1] != PATH_SEPARATOR_CHAR) : 1)
@@ -873,7 +816,8 @@ int ospath_isroot(struct FilePath *fp)
 	return strcmp(fp->path, PATH_SEPARATOR_STR) ? 0 : 1;
 }
 
-#if 0
+#define ospath_depth_used 0
+#if ospath_depth_used
 // disused, so far
 unsigned ospath_depth(struct FilePath *fp){
 	unsigned length;
@@ -904,9 +848,6 @@ unsigned ospath_depth(struct FilePath *fp){
 
 struct FilePath *ospath_root(struct FilePath *fp){
 #ifdef WINPATHS
-#if 0
-	M("WIN ROOT");
-#endif
 	char *temp;
 	struct FilePath *r;
 
@@ -923,9 +864,6 @@ struct FilePath *ospath_root(struct FilePath *fp){
 	return r;
 #else
 	(void)fp;
-#if 0
-	M("JUST RETURNING PATH SEP");
-#endif
 	return ospath_new(PATH_SEPARATOR_STR);
 #endif
 }
@@ -983,12 +921,6 @@ int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2){
 		return 1;
 	}
 
-#if 0
-	/ now, both are valid...
-	M("BOTH ARE VALID");
-
-	/Check that paths both have drives, if applic.
-#endif
 #ifdef WINPATHS
 	if(strcmp(fp1->drive,"")==0){
 		M("PATH IS MISSING DRIVE LETTER");
@@ -1025,16 +957,10 @@ int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2){
 	X(temp[0]);
 	for(p=temp[0];*p!='\0';++p){
 		*p=tolower(*p);
-#if 0
-		C(*p);
-#endif
 	}
 	X(temp[1]);
 	for(p=temp[1];*p!='\0';++p){
 		*p=tolower(*p);
-#if 0
-		C(*p);
-#endif
 	}
 	X(temp[0]);
 	X(temp[1]);
@@ -1050,10 +976,6 @@ int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2){
 		STRCAT(temp[1],PATH_SEPARATOR_STR);
 	}
 
-#if 0
-	X(temp[0]);
-	X(temp[1]);
-#endif
 
 	return strcmp(temp[0],temp[1]);
 }
@@ -1062,7 +984,7 @@ struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath
 
 	struct FilePath *fp;
 	char temp[2][PATH_MAX+1];
-	char temp2[PATH_MAX+1];
+	char temp2[2*PATH_MAX+1];
 	struct FilePath *r;
 
 	X(fp1->path);
@@ -1114,9 +1036,11 @@ struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath
 #endif
 
 #if 1
-	V(strlen(temp[0]));
+	size_t s0 = strlen(temp[0]);
+	size_t s1 = strlen(temp[1]);
+	V(s0);
 	X(temp[0]);
-	V(strlen(temp[1]));
+	V(s1);
 	X(temp[1]);
 #endif
 
@@ -1127,7 +1051,10 @@ struct FilePath *ospath_concat(const struct FilePath *fp1, const struct FilePath
 
 	/* create a new path object with the two path strings appended together.*/
 	strcpy(temp2,temp[0]);
-	STRNCAT(temp2,temp[1],PATH_MAX-strlen(temp2));
+	if (s1 >= (PATH_MAX - s0)) {
+		return NULL;
+	}
+	strncpy(temp2+s0, temp[1], PATH_MAX-s0);
 #if 1
 	V(strlen(temp2));
 	X(temp2);
@@ -1168,13 +1095,7 @@ void ospath_append(struct FilePath *fp, struct FilePath *fp1){
 	X(fp2.path);
 
 	/* both paths are valid...*/
-#if 0
-	temp[0] = CALLOC(1+strlen(fp->path), sizeof(char));
-#endif
 	strcpy(temp[0], fp->path);
-#if 0
-	temp[1] = CALLOC(strlen(fp2.path), sizeof(char));
-#endif
 	strcpy(temp[1], fp2.path);
 
 	X(temp[0]);
@@ -1197,18 +1118,17 @@ void ospath_append(struct FilePath *fp, struct FilePath *fp1){
 	X(temp[0]);
 	X(temp[1]);
 
+	size_t s0 = strlen(temp[0]);
+	size_t s1 = strlen(temp[1]);
 	/*create new path string.*/
-	strcpy(fp->path,temp[0]);
-	STRNCAT(fp->path,temp[1], PATH_MAX-strlen(fp->path));
+	strcpy(fp->path, temp[0]);
+	if (s1 >= (PATH_MAX - s0)) {
+		M("ospath_append: result bigger than PATH_MAX truncated\n");
+		return;
+	}
+	strncpy(fp->path + s0, temp[1], PATH_MAX-s0);
 
 	X(fp->path);
-
-#if 0
-	ASC_FREE(temp[0]);
-	M("Freed temp[0]");
-	ASC_FREE(temp[1]);
-	M("Freed temp[1]");
-#endif
 
 	D(fp);
 	ospath_cleanup(fp);
@@ -1318,14 +1238,7 @@ struct FilePath **ospath_searchpath_new(const char *path){
 
 	pp = ASC_NEW_ARRAY(struct FilePath*, n+1);
 	for(i=0; i<n; ++i){
-#if 0
-		V(i);
-		X(list[i]);
-#endif
 		pp[i] = ospath_new_noclean(list[i]);
-#if 0
-		D(pp[i]);
-#endif
 		ASC_FREE(list[i]);
 	}
 	pp[n] = NULL;

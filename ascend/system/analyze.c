@@ -620,7 +620,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp){
           }else{
 	if(ip->u.v.deriv==-1){
 		//printf("\n smth smth \n");
-		struct solver_ipdata *original_indep_var;
+		struct solver_ipdata *original_indep_var = NULL;
 		if(gl_length(p_data->indepvars) != 0) {
 			original_indep_var = (struct solver_ipdata *)gl_fetch(p_data->indepvars,1);
 			//printf("\n asadada %d \n",original_indep_var->i == inst);

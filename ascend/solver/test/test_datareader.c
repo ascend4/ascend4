@@ -90,11 +90,11 @@ static void dr_load_solve_test_qrslv(const char *librarypath, const char *modelf
 
 	/* instantiate it */
 	CONSOLE_DEBUG("Instantiating '%s'",modelfile);
-	error_reporter_tree_t *tree = error_reporter_tree_start(0);
+	error_reporter_tree_start();
 	struct Instance *siminst = SimsCreateInstance(AddSymbol(modelname), AddSymbol("sim1"), e_normal, NULL);
 
-	int has_error = error_reporter_tree_has_error(tree);
-	error_reporter_tree_end(tree);	
+	int has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
 	CONSOLE_DEBUG("has_error = %d",has_error);
 	if(instantiatefail){
 		CU_TEST(has_error);

@@ -94,6 +94,12 @@ struct rel_errorlist_struct{
 };
 typedef struct rel_errorlist_struct rel_errorlist;
 
+#if (SIZEOF_VOIDP > SIZE_OF_INT)
+#define enum_to_vp(x) ((void*)(long)x)
+#else
+#define enum_to_vp(x) (x)
+#endif
+
 /* we will try using the 'cleanup' attribute (GCC, clang) for automating the
 freeing of memory for rel_errorlist. In cases where compilers don't support
 something like this, we can simply not provide extended error reporting, 
@@ -119,7 +125,7 @@ int rel_errorlist_set_find_error_name(rel_errorlist *err, enum find_errors ferr,
 
 int rel_errorlist_set_name(rel_errorlist *err, const struct Name *errname);
 
-int rel_errorlist_get_find_error(rel_errorlist *err);
+enum find_errors rel_errorlist_get_find_error(rel_errorlist *err);
 int rel_errorlist_set_find_errpos(rel_errorlist *err,unsigned long errpos);
 //int rel_errorlist_get_lastcode(rel_errorlist *err);
 

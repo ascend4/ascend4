@@ -105,21 +105,33 @@ static void test_error(void){
 #define CHECKIT(STR)\
 	fprintf(tmp,"\n");\
 	rewind(tmp); \
-	fgets(output,4096,tmp); \
-	MSG("OUTPUT: %s",output);\
-	sprintf(gold,STR "\n",myfile,myline); \
-	MSG("GOLD  : %s",gold);\
-	CU_ASSERT(0==strcmp(output,gold));\
+	{ char *op = \
+		fgets(output,4096,tmp); \
+		if (op) { \
+			MSG("OUTPUT: %s",output);\
+			sprintf(gold,STR "\n",myfile,myline); \
+			MSG("GOLD  : %s",gold);\
+			CU_ASSERT(0==strcmp(output,gold));\
+		} else { \
+			CU_ASSERT(NULL=="fgets failed on tmpfile");\
+		} \
+	}\
 	rewind(tmp);\
 	output[0]='\0';
 #define CHECKIT1(STR)\
 	fprintf(tmp,"\n");\
 	rewind(tmp); \
-	fgets(output,4096,tmp); \
-	MSG("OUTPUT: [%s]",output);\
-	sprintf(gold,STR "\n"); \
-	MSG("GOLD  : [%s]",gold);\
-	CU_ASSERT(0==strcmp(output,gold));\
+	{ char *op = \
+		fgets(output,4096,tmp); \
+		if (op) { \
+			MSG("OUTPUT: [%s]",output);\
+			sprintf(gold,STR "\n"); \
+			MSG("GOLD  : [%s]",gold);\
+			CU_ASSERT(0==strcmp(output,gold));\
+		} else { \
+			CU_ASSERT(NULL=="fgets failed on tmpfile");\
+		} \
+	} \
 	rewind(tmp);\
 	output[0]='\0';
 	

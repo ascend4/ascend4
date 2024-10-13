@@ -72,12 +72,18 @@ int mm_read_unsymmetric_sparse(const char *fname, int *M_, int *N_, int *nz_,
     /*   specifier as in "%lg", "%lf", "%le", otherwise errors will occur */
     /*  (ANSI C X3.159-1989, Sec. 4.9.6.2, p. 136 lines 13-15)            */
  
+    int nitems;
     for (i=0; i<nz; i++)
     {
-        fscanf(f, "%d %d %lg\n", &I[i], &J[i], &val[i]);
+        nitems = fscanf(f, "%d %d %lg\n", &I[i], &J[i], &val[i]);
+        if (nitems !=3) {
+            fprintf(stderr, "short data in mm_read_unsymmetric_sparse");
+            goto out;
+        }
         I[i]--;  /* adjust from 1-based to 0-based */
         J[i]--;
     }
+ out:
     fclose(f);
  
     return 0;
@@ -457,14 +463,13 @@ char  *mm_typecode_to_str(MM_typecode matcode)
 {
     char buffer[MM_MAX_LINE_LENGTH];
     char *types[4];
-	//char *strdup(const char *);
-    int error =0;
 
     /* check for MTX type */
     if (mm_is_matrix(matcode)) 
         types[0] = MM_MTX_STR;
-    else
-        error=1;
+    else {
+        types[0] = "MTX-ERROR";
+    }
 
     /* check for CRD or ARR matrix */
     if (mm_is_sparse(matcode))

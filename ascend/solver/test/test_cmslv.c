@@ -42,6 +42,12 @@
 #include <ascend/system/slv_server.h>
 
 #include <test/common.h>
+//#define TCMSLV_DEBUG
+#ifdef TCMSLV_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 /*
 	Test solving a simple CMSlv model
@@ -62,6 +68,9 @@ static void test_cmslv(const char *filenamestem){
 	{
 		int status;
 		m = Asc_OpenModule(path,&status);
+		if (!m) {
+			MSG("test_cmslv: failed OpenModule");
+		}
 		CU_ASSERT(status == 0);
 	}
 

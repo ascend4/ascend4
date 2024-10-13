@@ -40,6 +40,12 @@
 #include <test/common.h>
 #include <test/assertimpl.h>
 
+//#define FIXFREE_DEBUG
+#ifdef FIXFREE_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 static struct Instance *load_model(const char *name){
 	struct module_t *m;
 	int status;
@@ -49,6 +55,9 @@ static struct Instance *load_model(const char *name){
 
 	/* load the file */
 	m = Asc_OpenModule("test/compiler/fixfree.a4c",&status);
+	if (!m) {
+		MSG("load_model failed to OpenModule");
+	}
 	CU_ASSERT(status == 0);
 
 	/* parse it */

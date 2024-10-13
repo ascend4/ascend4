@@ -41,6 +41,12 @@
 #include <ascend/system/slv_server.h>
 
 #include <test/common.h>
+//#define TSR_DEBUG
+#ifdef TSR_DEBUG
+# define MSG CONSOLE_DEBUG
+#else
+# define MSG(ARGS...) ((void)0)
+#endif
 
 typedef struct SlvReqC_struct{
 	struct Instance *siminst;
@@ -194,6 +200,9 @@ static void test_slvreq_c(void){
 	/* load the file */
 #define TESTFILE "test2"
 	m = Asc_OpenModule("test/slvreq/" TESTFILE ".a4c",&status);
+	if (!m) {
+		MSG("test_ipopt: failed OpenModule");
+	}
 	CU_ASSERT(status == 0);
 
 	/* parse it */

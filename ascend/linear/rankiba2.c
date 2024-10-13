@@ -564,12 +564,11 @@ void eliminate_row2_ba(	mtx_matrix_t mtx,
    * all N from low to origin will be eliminated.
    */
   /* old */
-  int32 j,low,high;
+  int32 j,low;
   double tmpval;
 
   /* pseudo curcol limits */
   low = rng->low;	/* don't change this. pccleft needs it */
-  high = rng->high;
 
 #if RBADEBUG
    FPRINTF(stderr,"Elim Row: %d\n",row);

@@ -61,7 +61,7 @@ static struct Instance *load_model(const char *name,int should_have_error){
 
 	/* parse it */
 
-	error_reporter_tree_t *tree = error_reporter_tree_start(0);
+	error_reporter_tree_start();
 
 	CU_ASSERT(zz_parse() == 0);
 
@@ -69,7 +69,7 @@ static struct Instance *load_model(const char *name,int should_have_error){
 
 	/* instantiate it */
 	struct Instance *sim = SimsCreateInstance(AddSymbol(name), AddSymbol("sim1"), e_normal, NULL);
-	if(error_reporter_tree_has_error(tree)){
+	if(error_reporter_tree_has_error()){
 		if(!should_have_error){
 			CU_FAIL("Unexpected failure in SimsCreateInstance");
 		}
@@ -78,7 +78,7 @@ static struct Instance *load_model(const char *name,int should_have_error){
 			CU_FAIL("No error found although expected in SimsCreateInstance");
 		}
 	}
-	error_reporter_tree_end(tree);
+	error_reporter_tree_end();
 	return sim;
 }
 
@@ -111,7 +111,6 @@ static void test_parsefail4(void){
 	check that blackbox load and solves correctly
 */
 static void load_solve_test(const char *filenamestem, const char *modelname){
-	char env1[2*PATH_MAX];
 	int status;
 
 	/* load the file */

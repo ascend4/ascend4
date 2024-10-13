@@ -75,13 +75,13 @@ int32 bndman_log_eval(struct bnd_boundary *bnd){
 int32 bndman_calc_satisfied(struct bnd_boundary *bnd){
   int32 logres;
   struct rel_relation *rel;
-  real64 res,tol;
+  real64 tol;
   boolean rstat;
 
   switch(bnd_kind(bnd)) {
     case e_bnd_rel:
       rel = bnd_rel(bnd_real_cond(bnd));
-      res = bndman_real_eval(bnd); /* force to reset real residual */
+      (void)bndman_real_eval(bnd); /* force to reset real residual */
       tol = bnd_tolerance(bnd);
       rstat = relman_calc_satisfied(rel,tol);
       if (rstat) {

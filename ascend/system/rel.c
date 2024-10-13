@@ -113,7 +113,6 @@ static struct rel_relation *rel_copy(const struct rel_relation *rel){
 struct rel_relation *
 rel_create(SlvBackendToken instance, struct rel_relation *newrel)
 {
-  CONST struct relation *instance_relation;
 #ifdef DIEDIEDIE
   struct ExtCallNode *ext;
 #endif
@@ -126,7 +125,7 @@ rel_create(SlvBackendToken instance, struct rel_relation *newrel)
   }
   assert(newrel!=NULL);
   newrel->instance = instance;
-  instance_relation = GetInstanceRelation(IPTR(instance),&ctype);
+  (void)GetInstanceRelation(IPTR(instance),&ctype); /* get just ctype */
   switch (ctype) {
   case e_token:
     newrel->type = e_rel_token;

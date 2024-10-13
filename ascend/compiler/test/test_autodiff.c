@@ -271,12 +271,12 @@ static void test_autodiff(void){
 	root = GetSimulationRoot(sim);
 
 	/** Call on_load */
-	error_reporter_tree_t *tree1 = error_reporter_tree_start(0);
+	error_reporter_tree_start();
 
 	name = CreateIdName(AddSymbol("on_load"));
 	pe = Initialize(root,name,"sim1",ASCERR,0, NULL, NULL);
-	CU_TEST_FATAL(0==error_reporter_tree_has_error(tree1));
-	error_reporter_tree_end(tree1);
+	CU_TEST_FATAL(0==error_reporter_tree_has_error());
+	error_reporter_tree_end();
 
 	CU_TEST_FATAL(pe == Proc_all_ok);
 
@@ -341,7 +341,7 @@ static void test_autodiff(void){
 	Routine to conduct derivative tests on a single relation
 */
 static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
-	double err,residual_rev,residual_fwd;
+	double residual_rev,residual_fwd;
 	double *gradients_rev,*gradients_fwd,*deriv_2nd;
 	float yacas_first_der = 0.0;  /* compiler complains type mismatch when using */
 	float yacas_second_der = 0.0; /*double to read using fscanf(File*,"%21.17g"...) */
@@ -350,7 +350,8 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 	struct relation *r;
 	int32 status;
 	char *rname = NULL, *infix_rel = NULL, *varname;
-	char buf[20];
+	char buf[21];
+	int nitems;
     struct RXNameData myrd = {"x",NULL,""};
 	struct DiffTestData *data = (struct DiffTestData*) ptr;
 	struct Instance *var_inst;
@@ -493,15 +494,20 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 		}else if(data->first_yacas!=NULL){
 			/* Benchmarking Non-Safe Gradient Errors against Yacas */
 			if(!feof(data->first_yacas)){
-				fscanf(data->first_yacas,"%g\n",&yacas_first_der);
-				if(!VERY_CLOSE(yacas_first_der,gradients_rev[i])){
+				nitems = fscanf(data->first_yacas,"%g\n",&yacas_first_der);
+				if (nitems != 1) {
+					MSG("no number found for 1st derivative");
+					CU_FAIL("first derivative unparsed (yacas versus reverse autodiff)");
+					data->d1errors_yacas ++;
+					style = "background-color:yellow; font-color:red";
+				} else if(!VERY_CLOSE(yacas_first_der,gradients_rev[i])){
 					MSG("dR/dx%lu_yacas = %g",i,yacas_first_der);
 					MSG("dR/dx%lu_rev = %g",i,gradients_rev[i]);
 					MSG("abs. error = %g",fabs(yacas_first_der - gradients_rev[i]));
 					CU_FAIL("first derivative mismatch (yacas versus reverse autodiff)");
 					data->d1errors_yacas ++;
 					style = "background-color:yellow; font-color:red";
-				}else{
+				} else {
 					style = "";
 				}
 				LOG(data,"<tr><td>Column</td><td>ASCEND(nonsafe,rev)</td><td>YACAS</td><td>Abs. Error</td></tr>\n");
@@ -532,10 +538,14 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 
 	if(data->second_yacas!=NULL){
 		char s[PATH_MAX+1];
-		fgets(s,PATH_MAX,data->second_yacas);
+		char *rs;
+		rs = fgets(s,PATH_MAX,data->second_yacas);
 		char s2[PATH_MAX];
 		snprintf(s2,PATH_MAX,"@ Relation: %s\n",rname);
-		if(0!=strcmp(s,s2)){
+		if (!rs) {
+			MSG("line read failed from second-derivs yacas file");
+			CU_FAIL_FATAL("Missing relation in second-derivs yacas file");
+		} else if(0!=strcmp(s,s2)){
 			MSG("line: <%s>",s);
 			MSG("expected: <%s>",s2);
 			CU_FAIL_FATAL("wrong relation read from second-derivs yacas file");
@@ -557,14 +567,19 @@ static void AutomateDiffTest(struct Instance *inst, VOIDPTR ptr){
 			/* Benchmarking Non-Safe Second Derivative Errors against Yacas */
 			for(j=0; j<num_var; j++){
 				if(!feof(data->second_yacas)){
-					fscanf(data->second_yacas,"%g\n",&yacas_second_der);
-					if(!VERY_CLOSE(yacas_second_der, deriv_2nd[j])){
+					nitems = fscanf(data->second_yacas,"%g\n",&yacas_second_der);
+					if (nitems != 1) {
+						MSG("no number found for 2nd derivative");
+						CU_FAIL("second derivative yacas vs reverse AD");
+						data->d1errors_yacas ++;
+						style = "background-color:yellow; font-color:red";
+					} else if(!VERY_CLOSE(yacas_second_der, deriv_2nd[j])){
 	 					MSG("d2R/dx%ludx%lu_yacas = %g",i,j,yacas_second_der);
 						MSG("d2R/dx%ludx%lu_rev = %g",i,j,deriv_2nd[j]);
 						CU_FAIL("second derivative yacas vs reverse AD");
 						data->d2errors_yacas ++;
 						style = "background-color:yellow; font-color:red";
-					}else{
+					} else {
 						style = "";
 					}
 					LOG(data,"<tr style=\"%s\"><td>%lu</td><td>%lu</td><td>%21.17g</td><td>%21.17g</td><td>%.4g</td></tr>\n"
