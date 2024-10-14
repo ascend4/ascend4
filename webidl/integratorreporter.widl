@@ -1,0 +1,80 @@
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*//** @file
+	C++ wrapper for the IntegratorReporter struct in the solver C-API.
+	This interface is intended to be exposed via the SWIG 'director' functionality
+	which allows it to be overloaded in Python, so reporting of integration
+	results can be done directly with python scripts of the user's design.
+*/
+
+
+interface Integrator;
+
+/**
+	Observer API to allow ASCEND to add rows/columns to the observer panel
+	in the Python interface.
+
+	Should also be generalisable so that we can output observations to files
+	etc.
+*/
+interface IntegratorReporterCxx{
+	IntegratorReporterCxx(Integrator *);
+	~IntegratorReporterCxx();
+
+	//void addObservedVariable(Variable v);
+	int initOutput();
+	int closeOutput();
+	int updateStatus();
+	int recordObservedValues();
+
+	Integrator *getIntegrator();
+
+};
+
+/**
+	NULL integrator reporter. This reporter won't output ANYTHING at all.
+*/
+interface IntegratorReporterNull : public IntegratorReporterCxx{
+	IntegratorReporterNull(Integrator *);
+	~IntegratorReporterNull();
+
+	int initOutput();
+	int closeOutput();
+	int updateStatus();
+	int recordObservedValues();
+};
+
+/**
+	Simple console based integrator reporter. Output the observed variables
+	to the console at each sample point.
+*/
+interface IntegratorReporterConsole : public IntegratorReporterCxx{
+	IntegratorReporterConsole(Integrator *);
+	~IntegratorReporterConsole();
+
+	int initOutput();
+	int closeOutput();
+	int updateStatus();
+	int recordObservedValues();
+};
+
+
+int ascxx_integratorreporter_init(IntegratorSystem *blsys);
+int ascxx_integratorreporter_write(IntegratorSystem *blsys);
+int ascxx_integratorreporter_write_obs(IntegratorSystem *blsys);
+int ascxx_integratorreporter_close(IntegratorSystem *blsys);
+
+

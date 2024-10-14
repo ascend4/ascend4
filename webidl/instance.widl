@@ -1,0 +1,131 @@
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+interface Plot;
+
+typedef enum{
+	ASCXX_INST_STATUS_UNKNOWN=0, ASCXX_VAR_FIXED, ASCXX_VAR_UNSOLVED, ASCXX_VAR_ACTIVE, ASCXX_VAR_SOLVED
+	, ASCXX_REL_INACTIVE
+} InstanceStatus;
+
+/**
+	This interface has to be called 'Instanc' in C++ to avoid a name clash
+	with C. Maybe coulda done it with namespaces but didn't know how.
+
+	This interface is renamed back to 'Instance' by SWIG, so use 'Instance'
+	when you're in Python.
+
+	The Right Way to implement this interface would be as a base class
+	with lots of diffent subinterfacees for the different atom types.
+	Maybe even multiple inheritance.
+
+	But until the underlying C code is ported to C++ or modularised in
+	some other way, it's not going to be worth the effort. We discussed
+	this in the mailing list.
+*/
+interface Instanc{
+	Instanc();
+	Instanc(Instance *i);
+	Instanc(Instance *i, const SymChar &name);
+	Instanc(const Instanc &parent, const unsigned long &childnum);
+	Instanc(const Instanc&);
+	~Instanc();
+	std::vector<Instanc> &getChildren();
+	Instanc getChild(const SymChar &) ;
+	Instanc getChild(const long &) ;
+	const enum inst_t getKind() ;
+	const std::string getKindStr() ;
+	const Type getType() ;
+	const bool isAtom() ;
+	const bool isFixed() ;
+	const bool isIncluded() ;
+
+	const bool isFund() ;
+	const bool isConst() ;
+	const bool isCompound() ;
+	const bool isRelation() ;
+	const bool isLogicalRelation() ;
+	const bool isWhen() ;
+	const bool isSet() ;
+	const bool isSetInt() ;
+	const bool isSetString() ;
+	const bool isSetEmpty() ; // set of of type 'empty', NB not same as SetInt::length()==0
+	const bool isArray() ;
+	const bool isDefined() ;
+	const bool isChildless() ;
+	const bool isBool() ;
+	const bool isInt() ;
+	const bool isSymbol() ;
+	const bool isReal() ;
+	const bool isAssigned() ;
+	const bool isModel() ;
+	const SymChar &getName() ;
+	const double getRealValue() ;
+	const bool isDimensionless() ;
+	const Dimensions getDimensions() ;
+	const bool getBoolValue() ;
+	const long getIntValue() ;
+	const SymChar getSymbolValue() ;
+
+	const std::string getWhenAsString(const Instanc &relative_to) ;
+	const std::string getLogrelAsString(const Instanc &relative_to) ;
+	const std::string getValueAsString() ;
+	const std::string getRelationAsString(const Instanc &relative_to) ;
+	Plot getPlot() ;
+
+	const bool isPlottable() ;
+
+	void setFixed(const bool &val=true);
+	void setIncluded(const bool &val=true);
+	void setBoolValue(const bool&, const unsigned &depth=0);
+	void setIntValue(const long&, const unsigned &depth=0);
+	void setRealValue(const double&, const unsigned &depth=0);
+	void setRealValueWithUnits(double, const char *, const unsigned &depth=0);
+	void setSymbolValue(const SymChar &);
+
+	template<interface T>
+	const ASCXX_Set<T> getSetValue() const{
+		if(!isSet()){
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not set-valued",getName().toString());
+			return ASCXX_Set<T>();
+		}
+		if(!isConst() && !isDefined()){
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not defined",getName().toString());
+			return ASCXX_Set<T>();
+		}
+		return ASCXX_Set<T>(SetAtomList(i));
+	}
+
+	const enum set_kind getSetType() ;
+	void write(const char *fname) ;
+	Instance *getInternalType() ;
+
+	void setStatus(const InstanceStatus &); ///< make this one private, just for friend Simulation?
+	const InstanceStatus getStatus() ;
+
+	void setLowerBound(const double &);
+	void setUpperBound(const double &);
+	void setNominal(const double &);
+	const double getLowerBound() ;
+	const double  getUpperBound() ;
+	const double  getNominal() ;
+
+	const std::vector<Instanc> getClique() ;
+	const std::vector<std::string> getAliases() ;
+
+	const double getResidual() ;
+	const bool getLogicalResidual() ;
+};

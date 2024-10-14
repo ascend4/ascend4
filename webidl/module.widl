@@ -1,0 +1,28 @@
+
+/**
+	A Module in ASCEND is an opened version of an A4L or A4C file. You
+	can have multiple versions of a file active in memory at a time,
+	theoretically, although no serious effort to support this in the
+	PyGTK interface has yet been made.
+
+	To view what types are present in a given Module, you currently
+	need to query the Library object.
+*/
+interface Module{
+	Module();
+	Module(const module_t *t);
+
+	/// Name of the current module (as identified by ASCEND)
+	const char *getName() ;
+
+	/// Modification time (see <time.h>) for the current module
+	const struct tm* getMtime() ;
+
+	/// Filename for the current module
+	const char *getFilename() ;
+
+	/// Return the internal representation of the module
+	const struct module_t *getInternalType() ;
+};
+
+

@@ -1,0 +1,18 @@
+interface Curve : public Instanc{
+	Curve(); // hack -- this was previously private. not sure what this breaks.
+	Curve(const Curve &);
+	std::vector<double> x;
+	std::vector<double> y;
+	const std::string getLegend();
+
+	/**
+		Get the curve format string, as used by matplotlib.
+		Documented here:
+		http://matplotlib.sourceforge.net/api/axes_api.html#matplotlib.axes.Axes.plot
+
+		(This value is not used by the Tcl/Tk GUI.)
+	*/
+	const std::string getFormat();
+};
+
+

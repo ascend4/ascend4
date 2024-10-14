@@ -1,0 +1,20 @@
+
+/**
+	This is a wrapper for external methods as returned
+	by the getExtMethods method of the Library object. At this stage it
+	is purely for extracting meta-data about the ExtMethod.
+*/
+interface ExtMethod {
+	ExtMethod();
+
+	// ExtMethod(PyObject *);
+
+	ExtMethod(const struct ExternalFunc *);
+	ExtMethod(const ExtMethod &);
+	const char *getHelp() ;
+	const char *getName() ;
+	const unsigned long getNumInputs() ;
+	const unsigned long getNumOutputs() ;
+};
+
+

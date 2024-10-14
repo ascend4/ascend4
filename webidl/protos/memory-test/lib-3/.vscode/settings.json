@@ -1,0 +1,13 @@
+{
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/vbox-wasm/Desktop/Projects/memory-test/lib-1",
+            "binaryPath": "/home/vbox-wasm/Desktop/Projects/memory-test/lib-1/test.exe",
+            "binaryArgs": []
+        }
+    ],
+    "cmake.options.statusBarVisibility": "icon",
+    "files.associations": {
+        "lib-1.h": "c"
+    }
+}

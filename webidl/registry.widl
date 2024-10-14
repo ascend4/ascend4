@@ -1,0 +1,20 @@
+/**
+	@file
+	This head files provides SWIGed access to the importhandler 'shared pointer'
+	mechanism used to pass data from 'extpy' to 'ascpy' in particular (and
+	hopefully between other scripting languages/GUI combinations in future)
+*/
+
+
+
+interface Registry{
+//	void setInteger(const char *key, int value);
+	void setPointer(const char *key, void *value);
+	Instanc *getInstance(const char *key);
+	Simulation &getSimulation(const char *key);
+
+	// void setPyObject(const char *key, PyObject *obj);
+
+};
+
+

@@ -1,0 +1,34 @@
+/**
+	A model type as loaded from an ASCEND a4c file. For example, a type
+	might be a 'test_controller' from the simple_fs.a4l example file.
+
+	Once you have a type, you can create an instance of it (getInstance)
+	which will then allow you to start on solving it.
+*/
+interface Type{
+	Type();
+	Type(const TypeDescription *t);
+	const SymChar getName() ;
+	const int getParameterCount() ;
+	const TypeDescription *getInternalType() ;
+	// workaround for bug #494:
+	Simulation getSimulation(const SymChar &name, const bool rundefaultmethod);
+	//Simulation getSimulation(const SymChar &name="sim", const bool &rundefaultmethod=true);
+	const Dimensions getDimensions() ;
+	std::vector<Method> getMethods() ; ///< FIXME this does not report 'built in' methods like reset, ClearAll
+	Method getMethod(const SymChar &name) ; ///< exception if not found
+	const bool isRefinedSolverVar() ; ///< is this type a refinement of solver_var?
+	const bool isRefinedAtom() ;
+	const bool isRefinedReal() ;
+	const bool isRefinedConstant() ;
+	const bool isFundamental() ;
+	const bool isModel() ;
+	const bool hasParameters() ;
+	const Type &findMember(const SymChar &name);
+
+	Module getModule() ;
+
+	bool operator<(const Type &other) ;
+};
+
+

@@ -1,0 +1,15 @@
+/**
+	This interface will be renamed Units for use in Python
+*/
+interface UnitsM{
+	UnitsM();
+	UnitsM(const struct Units *u);
+	UnitsM(const char *units);
+
+	const SymChar getName() ;
+	const Dimensions getDimensions() ;
+	const double getConversion() ;
+	const bool operator==(const UnitsM &other) ;
+};
+
+

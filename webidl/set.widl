@@ -1,0 +1,53 @@
+/**
+	This C++ template defines ASCXX_Set<long> and ASCXX_Set<SymChar>
+	which can hold instance-variable sets (struct set_t) (as opposed
+	to 'struct Set' which is different!).
+
+	It has to be a template because the element type is different,
+	so the element accessor functions are different.
+
+	In python, this interface can be wrapped in a more elegant way, see
+	ascend.i for details.
+*/
+
+interface Empty{
+	// empty interface for use in ASCXX_Set<Empty>
+};
+
+template<interface T>
+interface ASCXX_Set{
+
+	ASCXX_Set();
+
+	ASCXX_Set(const struct set_t *s);
+
+	const bool isCorrectType() ;
+
+	unsigned long length();
+
+	const T operator[](const unsigned long &index);
+	inline const T at(const unsigned long &index);
+};
+
+template<>
+const bool ASCXX_Set<long>::isCorrectType() ;
+
+template<>
+const bool ASCXX_Set<SymChar>::isCorrectType() ;
+
+template<>
+const bool ASCXX_Set<void>::isCorrectType() ;
+
+template<interface T>
+std::ostream& operator<< (std::ostream& os, const ASCXX_Set<T>& s);
+
+template<>
+const long ASCXX_Set<long>::operator[](const unsigned long &i) ;
+
+template<>
+const SymChar ASCXX_Set<SymChar>::operator[](const unsigned long &i) ;
+
+template<>
+const Empty ASCXX_Set<Empty>::operator[](const unsigned long &i) ;
+
+

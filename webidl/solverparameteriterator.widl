@@ -1,0 +1,14 @@
+interface SolverParameterIterator{
+	explicit SolverParameterIterator();
+
+	void operator++();
+	void operator=(const SolverParameterIterator &);
+
+	const bool operator<(const SolverParameterIterator &) const;
+	SolverParameter operator*() const;
+
+//	friend std::ostream &operator<<( std::ostream &outs, const SolverParameterIterator &I);
+};
+
+
+

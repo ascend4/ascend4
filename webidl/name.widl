@@ -1,0 +1,18 @@
+/*
+	Handles 'temporary names', which are used for example
+	when calling methods on instances.
+
+	This interface will be renamed to 'Name' when used
+	from Python.
+*/
+interface Nam{
+	Nam();
+	Nam(const SymChar &);
+	Nam(struct Name*);
+	~Nam();
+	struct Name *getInternalType();
+	const std::string getName();
+};
+
+
+

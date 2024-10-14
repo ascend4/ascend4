@@ -1,0 +1,6 @@
+interface Bar
+{
+    void Bar();
+    long getf();
+    void setf(long i);
+};

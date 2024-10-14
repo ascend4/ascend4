@@ -1,0 +1,95 @@
+interface SingularityInfo{
+	bool isSingular() ;
+	std::vector<Relation> rels; /**< relations involved in the singularity */
+	std::vector<Variable> vars; /**< variables involved in the singularity */
+	std::vector<Variable> freeablevars; /**< vars that should be freed */
+};
+
+enum StructuralStatus{
+	ASCXX_DOF_UNDERSPECIFIED=1,
+	ASCXX_DOF_SQUARE=2, /* = everything's ok */
+	ASCXX_DOF_OVERSPECIFIED=4,
+	ASCXX_DOF_STRUCT_SINGULAR=3
+};
+
+/**
+	@TODO This interface is for *Simulation* instances.
+
+	Handle instantiating, running initialisation functions, solving
+	and outputing results of solutions.
+
+	In ASCEND C-code, a simulation is a special type of Instance. It
+	has a 'simulation root' instance which often needs to be used for
+	solving, inspecting, etc, rather than the simulation instance itself.
+
+	The Simulation can be exported to an Integrator (for time-stepping)
+	or a Solver (for steady-state solutions).
+
+	At present the architecture is a bit muddy wrt to way that Solvers and
+	Integrators 'act on' the Simulation. We need to work on improving the
+	delimitation of solver and integrator, and keeping better track of the 
+	state of the Simulation (has it been 'built', etc).
+*/
+interface Simulation : public Instanc{
+	explicit Simulation(Instance *i, const SymChar &name);
+	Simulation(const Simulation &);
+	~Simulation();
+
+	Instanc &getModel();
+
+	void runDefaultMethod();
+	void run(const Method &method);
+	void run(const Method &method, Instanc &model);
+
+
+	// checks on the instance tree
+	void checkInstance(const int &level=5);
+	void checkTokens();
+	void checkStructure();
+	void checkStatistics();
+	void checkDimensions();
+
+	void build();
+
+	// checks of solver lists/structure
+	enum StructuralStatus checkDoF() ;
+	bool checkStructuralSingularity();
+	const SingularityInfo &getSingularityInfo() ;
+
+	void solve(Solver s, SolverReporter &reporter);
+	void presolve(Solver s);
+	const int iterate();
+	void postsolve(SolverStatus status);
+	SolverStatus getStatus();
+
+	std::vector<Variable> getFixableVariables();
+	std::vector<Variable> getVariablesNearBounds(const double &epsilon=1e-4);
+	std::vector<Variable> getVariablesFarFromNominals(const double &bignum);
+	std::vector<Variable> getFixedVariables();
+	std::vector<Variable> getallVariables();
+	Matrix getMatrix();
+
+	void write(const char *fname,const char *type=NULL) ;
+
+	void setSolver(Solver &s);
+	const Solver getSolver() ;
+
+	SolverParameters getParameters() ;
+	void setParameters(SolverParameters &);
+
+	IncidenceMatrix getIncidenceMatrix();
+
+	const std::string getInstanceName(const Instanc &) ;
+
+	void processVarStatus();
+	const int getNumVars();
+
+	const int getActiveBlock() ;
+
+	std::vector<Variable> getFreeableVariables();
+	
+	void setSolverHooks(SolverHooks *H);
+	SolverHooks *getSolverHooks() ;
+};
+
+

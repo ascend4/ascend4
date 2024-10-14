@@ -1,0 +1,9 @@
+interface SolverReporter{
+	SolverReporter();
+	~SolverReporter();
+
+	int report(SolverStatus *status);
+	void finalise(SolverStatus *status);
+};
+
+

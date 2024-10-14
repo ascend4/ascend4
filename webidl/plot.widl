@@ -1,0 +1,33 @@
+/**
+	This is interface for accessing plottable data from ASCEND. It's needed in order
+	to cleanly access the MatPlotLib commands via Python, but it could also be used to
+	abstract the xgraph plotting code somewhat as well.
+*/
+interface Plot : public Instanc{
+
+	Plot(const Plot &plot);	
+
+	const std::string getTitle() ;
+	const std::string getXLabel() ;
+	const std::string getYLabel() ;
+
+	/**
+		Get 'legend position', an integer for use by matplotlib, see here for
+		documentation:
+		http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.legend
+
+		This value is not used by the Tcl/Tk GUI's plotting routine.
+	*/
+	const int getLegendPosition() ;
+
+	const bool isXLog() ;
+	const bool isYLog() ;
+	const double getXLow() ;
+	const double getXHigh() ;
+	const double getYLow() ;
+	const double getYHigh() ;
+	
+	std::vector<Curve> curves;
+};
+
+

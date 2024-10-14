@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<script src="http://localhost:8000/output.js" crossorigin="anonymous"></script>
+	<script>
+		createMyModule().then(function (Module) {
+			f = new Module.Foo();
+			b = new Module.Bar();
+			// console.log(f.getf());
+			console.log(b.getf());
+			b.setf(17);
+			// console.log(b.getf());
+		});
+
+		
+		
+		function displayOutput(x) {
+			const elmt = document.createElement("p");
+			elmt.appendChild(document.createTextNode(x));
+			document.body.appendChild(elmt);
+		}
+	</script>
+</head>
+
+<body>
+	<button onclick="console.log(f.getf());">log Foo f</button>
+	<button onclick="console.log(b.getf());">log Bar f</button>
+	<button onclick="displayOutput(f.getf());">append Foo f</button>
+	<button onclick="displayOutput(b.getf());">append Bar f</button>
+	<br>
+	<input id="bar-f" type="number" placeholder="Insert Number">
+	<button onclick="b.setf(document.getElementById('bar-f').value)">set Bar.f</button>
+</body>
+
+</html>

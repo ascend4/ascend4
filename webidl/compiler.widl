@@ -1,0 +1,16 @@
+interface Compiler{
+	Compiler();
+	static Compiler *instance(); /* (as in singleton pattern) */
+
+	const bool getUseRelationSharing();
+	void setUseRelationSharing(const bool&);
+
+	void setBinaryCompilation(const bool&);
+
+	void setVerbosity(const int&);
+};
+
+/** Compiler access function for use with Python */
+Compiler *getCompiler();
+
+

@@ -1,0 +1,42 @@
+interface SolverParameter{
+	explicit SolverParameter(slv_parameter *);
+	SolverParameter &operator=(const SolverParameter &);
+
+	const std::string getName() ;
+	const std::string getDescription() ;
+	const std::string getLabel() ;
+	const int &getNumber() ;
+	const int &getPage() ;
+
+	const bool isInt() ;
+	const bool isBool() ;
+	const bool isStr() ;
+	const bool isReal() ;
+
+	// The following throw execeptions unless the parameter type is correct
+	const int &getIntValue() ;
+	const int &getIntLowerBound() ;
+	const int &getIntUpperBound() ;
+	void setIntValue(const int&);
+
+	const bool getBoolValue() ;
+	void setBoolValue(const bool&);
+
+	const std::string getStrValue() ;
+	const std::vector<std::string> getStrOptions() ;
+	void setStrValue(const std::string &);
+	void setStrOption(const int &opt);
+
+	const double &getRealValue() ;
+	const double &getRealLowerBound() ;
+	const double &getRealUpperBound() ;
+	void setRealValue(const double&);
+
+	const bool isBounded() ;
+
+	const std::string toString() ;
+
+	void setValueValue(const Value &V);
+};
+
+

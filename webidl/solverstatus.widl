@@ -1,0 +1,36 @@
+/**
+	Class to wrap slv_status_t and provide
+	and query interface to access various data from it
+*/
+interface SolverStatus{
+	SolverStatus();
+	SolverStatus(const SolverStatus &old);
+	void getSimulationStatus(Simulation &);
+
+	const bool isOK() ;
+	const bool isOverDefined() ;
+	const bool isUnderDefined() ;
+	const bool isStructurallySingular() ;
+	const bool isInconsistent() ;
+	const bool isReadyToSolve() ;
+	const bool isConverged() ;
+	const bool isDiverged() ;
+	const bool hasExceededIterationLimit() ;
+	const bool hasExceededTimeLimit() ;
+	const bool hasResidualCalculationErrors() ;
+	const bool isInterrupted() ;
+	const int getIterationNum() ;
+
+	// block structure stuff...
+
+	const int getNumBlocks() ;
+	const int getCurrentBlockNum() ;
+	const int getCurrentBlockSize() ;
+	const int getCurrentBlockIteration() ;
+	const int getNumConverged() ; /* previous total size */
+	const int getNumJacobianEvals() ;
+	const int getNumResidualEvals() ;
+	const double getBlockResidualRMS() ;
+};
+
+

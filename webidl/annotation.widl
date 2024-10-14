@@ -1,0 +1,31 @@
+interface Annotation{
+	Annotation();
+	Annotation(struct Note *);
+	const char *getId() ;
+	const char *getMethod() ;
+	const SymChar getType() ;
+	const SymChar getLanguage() ;
+	const char *getFilename() ;
+	const int getLineNumber() ;
+	const char *getText() ;
+	const int getDataType() ;
+	//const void *getUserData(const int &datatype) ;
+};
+
+interface AnnotationDatabase{
+	AnnotationDatabase(const SymChar &dbid);
+	std::vector<Annotation> getNotes(const Type &type, const SymChar *lang=NULL
+		, const SymChar *id=NULL, const SymChar *method=NULL, const int flag=0
+	);
+
+	std::vector<Annotation> getTypeRefinedNotesLang(const Type &type
+		, const SymChar *lang
+	);
+
+	const char *getNoteForVariable(const Type &type
+		, const SymChar *varname
+		, const SymChar *lang=NULL /* assume 'inline' if not specified */
+	);
+};
+
+

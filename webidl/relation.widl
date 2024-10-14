@@ -1,0 +1,14 @@
+interface Relation : public Instance{
+	Relation();
+	Relation(const Relation &old);
+	Relation(Simulation *sim, rel_relation *rel);
+
+	const std::string getName() ;
+	double getResidual() ;
+	const std::vector<Variable> getIncidentVariables() ;
+	int getNumIncidentVariables() ;
+	Instanc getInstance() ;
+	std::string getRelationAsString() ;
+};
+
+

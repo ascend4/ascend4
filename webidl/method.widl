@@ -1,0 +1,22 @@
+
+
+/**
+	Initialisation functions are specified
+	in models using "METHOD" statements.
+
+	This interface acts as a holder for these funtions, so that they
+	can be passed from a type to an instance via instanc.run(method).
+
+	(@TODO rename this interface to Method or similar)
+*/
+interface Method{
+	Method(struct InitProcedure *initproc);
+	Method();
+	Method(const Method &);
+	~Method();
+	struct InitProcedure *getInternalType();
+	const char *getName();
+	SymChar getSym();
+};
+
+

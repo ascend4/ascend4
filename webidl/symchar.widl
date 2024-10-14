@@ -1,0 +1,27 @@
+
+/**
+	A container for ASCEND strings, used to ensure
+	that two identical strings created via the SymChar interface
+	will only be stored once in memory, and can be tested for
+	equality using pointer comparison alone.
+
+	 @TODO @bug FIXME There is a problem with the calling conventions of char * and symchar*
+	 -- C++ can't tell which one you're trying to use.
+*/
+interface SymChar{
+	//SymChar();
+	SymChar(const std::string &name);
+	SymChar(const char *name);
+	//SymChar(const symchar *name); // never gets used
+	SymChar(const SymChar &);
+	SymChar(const struct InstanceName &);
+	bool operator==(const SymChar &) ;
+	bool operator<(const SymChar &) ;
+
+	const char *toString() ;
+	const symchar *getInternalType() ;
+};
+
+std::ostream& operator << (std::ostream& os, const SymChar& s);
+
+
