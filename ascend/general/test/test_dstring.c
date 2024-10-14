@@ -43,14 +43,14 @@ static void test_dstring(void)
   prior_meminuse = ascmeminuse();
 
   /* set up test strings */
-  memset(&str_statsize_m1, '?', ASC_DSTRING_STATIC_SIZE-3);
-  str_statsize_m1[ASC_DSTRING_STATIC_SIZE-2] = '\0';
+  memset(str_statsize_m1, '?', ASC_DSTRING_STATIC_SIZE-2); // write n-2 bytes into a string size n-1
+  str_statsize_m1[ASC_DSTRING_STATIC_SIZE-2] = '\0'; // write nul at byte n-1-1
 
-  memset(&str_statsize, '=', ASC_DSTRING_STATIC_SIZE-2);
-  str_statsize[ASC_DSTRING_STATIC_SIZE-1] = '\0';
+  memset(str_statsize, '=', ASC_DSTRING_STATIC_SIZE-1); // n-1 bytes into size n
+  str_statsize[ASC_DSTRING_STATIC_SIZE-1] = '\0'; // write nul at byte n-1
 
-  memset(&str_statsize_p1, '|', ASC_DSTRING_STATIC_SIZE-1);
-  str_statsize_p1[ASC_DSTRING_STATIC_SIZE] = '\0';
+  memset(str_statsize_p1, '|', ASC_DSTRING_STATIC_SIZE); // n bytes into size n+1
+  str_statsize_p1[ASC_DSTRING_STATIC_SIZE] = '\0'; // write nul at byte n-1+1
 
   strcpy(str_statcat1, str_statsize_m1);
   strcat(str_statcat1, str_statsize);
