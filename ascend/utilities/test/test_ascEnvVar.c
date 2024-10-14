@@ -47,6 +47,7 @@ int compare_strings(CONST VOIDPTR p1, CONST VOIDPTR p2)
   return strcmp((char *)p1, (char *)p2);
 }
 
+#pragma GCC diagnostic ignored "-Wformat-truncation"
 static void test_ascEnvVar(void)
 {
   char str_path[STR_LEN];
