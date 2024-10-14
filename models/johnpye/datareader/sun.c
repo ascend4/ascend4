@@ -327,11 +327,11 @@ double solar_zenith (int time, int day,
 double solar_azimuth (int time, int day,
 		      double latitude, double longitude, double long_std)
 {
-  double theta=0, omega=0, delta=0, phi = latitude*_PI_/180.0, psi=0, cospsi=0;
+  double theta, delta, phi = latitude*_PI_/180.0, psi=0, cospsi=0;
   int lat = LAT (time, day, longitude, long_std);
 
   delta = _PI_/180.0*declination (day);
-  omega = _PI_/180.0*hour_angle (lat);
+  //double omega = _PI_/180.0*hour_angle (lat);
   theta = _PI_/180.0*solar_zenith (time, day, latitude, longitude, long_std);
 
 

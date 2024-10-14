@@ -60,7 +60,7 @@ int datareader_tmy2_header(DataReader *d){
 	int longdeg, longmin;
 	int elev;
 
-	fscanf(d->f,"%s %s %s %d"
+	int nitems = fscanf(d->f,"%s %s %s %d"
 		" %c %d %d"
 		" %c %d %d"
 		" %d"
@@ -69,6 +69,11 @@ int datareader_tmy2_header(DataReader *d){
 			,&longhemi,&longdeg,&longmin
 			,&elev
 	);
+	if (nitems != 11) {
+		CONSOLE_DEBUG( "TMY2 header read: missing data");
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"TMY2 data missing");
+		return 1;
+	}
 
 	double lat = latdeg + latmin/60;
 	if(lathemi=='S')lat=-lat;

@@ -37,7 +37,7 @@ typedef struct DataReader_struct DataReader;
 
 DataReader *datareader_new(const char *fn, int noutputs);
 int datareader_init(DataReader *d);
-int datareader_set_parameters(DataReader *d, const char *parameters);
+int datareader_set_parameters(DataReader *d, char *parameters);
 int datareader_set_format(DataReader *d, const char *format);
 int datareader_free(DataReader *d);
 

@@ -226,7 +226,8 @@ int heatex_calc(struct BBoxInterp *bbox,
 	//CONSOLE_DEBUG("hot: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",hot.p/1e5, hot.h/1e3, hot.mdot);
 	//CONSOLE_DEBUG("cold: p = %f bar, h = %f kJ/kg, mdot = %f kg/s",cold.p/1e5, cold.h/1e3, cold.mdot);
 
-	double Th,Tc,rhoh,rhoc;
+	double Th,Tc;
+	// double rhoh,rhoc;
 	/* loop from i=0 (cold inlet) to i=n (cold outlet) */
 	for(i=0;i<=n;++i){
 		double hh = hot.h - Q/hot.mdot*(n-i)/n;
@@ -235,13 +236,13 @@ int heatex_calc(struct BBoxInterp *bbox,
 		/* FIXME make use of guess values? */
 		FluidState2 Sh = fprops_solve_ph(hot.p, hh, heatex_data->comp[1], &err);
 		Th = fprops_T(Sh,&err);
-		rhoh = fprops_h(Sh,&err);
+		/* rhoh = */(void)fprops_h(Sh,&err);
 		if(err){
 			/* error solving (p,h) hotside */
 		}
 		FluidState2 Sc = fprops_solve_ph(cold.p, hc, heatex_data->comp[0], &err);
 		Tc = fprops_T(Sc,&err);
-		rhoc = fprops_rho(Sc,&err);
+		/* rhoc = */(void) fprops_rho(Sc,&err);
 		if(err){
 			/* error solving (p,h) coldside */
 		}

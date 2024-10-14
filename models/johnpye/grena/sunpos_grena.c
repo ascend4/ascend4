@@ -76,9 +76,11 @@ void SunPos_set_press_temp(SunPos *S, double p, double T){
 */
 void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth){
 	double HourAngle;
-	double TopocRightAscension;
 	double TopocDeclination;
+#ifdef SP_DEBUG
+	double TopocRightAscension;
 	double TopocHourAngle;
+#endif
 	double Elevation_no_refrac;
 	double RefractionCorrection;
 
@@ -148,8 +150,10 @@ void SunPos_calc_zen_azi(SunPos *S, double *zenith, double *azimuth){
 	// parallax correction to right ascension
 
 	double d_alpha = -4.26e-5 * c_lat * s_H;
+#ifdef SP_DEBUG
 	TopocRightAscension = RightAscension + d_alpha;
 	TopocHourAngle = HourAngle - d_alpha;
+#endif
 
 	// parallax correction to declination:
 

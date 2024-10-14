@@ -152,13 +152,13 @@ void test_fluid_oxygen(void){
 	ASSERT_TOL_VAL(ideal_cp((FluidStateUnion){.Trho={60,1.2820239582e3}},P->data,&err),9.10133773207e2,1e-9);
 	ASSERT_TOL_VAL(ideal_cp((FluidStateUnion){.Trho={120,6.43209699241E-1}},P->data,&err),9.09800101279e2,1e-9);
 	ASSERT_TOL_VAL(ideal_cp((FluidStateUnion){.Trho={270,2.85140864243e-1}},P->data,&err),9.1439308538e2,1e-9);
-
+#ifdef O2_DEBUG
 	double p0 = 1.01325e5;
 	double T0 = 298.15;
 	double rho0 = p0/(OXYGEN_R*T0);
-
-	//ASSERT_TOL_VAL(ideal_h(T0,rho0,P->data,&err),0,1e-9);
-	//ASSERT_TOL_VAL(ideal_s(T0,rho0,P->data,&err),0,1e-9);
+	ASSERT_TOL_VAL(ideal_h(T0,rho0,P->data,&err),0,1e-9);
+	ASSERT_TOL_VAL(ideal_s(T0,rho0,P->data,&err),0,1e-9);
+#endif
 
 //#define REALLY_TEST
 #ifdef REALLY_TEST
