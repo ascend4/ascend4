@@ -204,7 +204,6 @@ double thcond1_chitilde(FluidState2 state, FpropsError *err){
 		ERRMSG("Failed to evaluate density");
 		return NAN;
 	}
-	double T = fprops_T(state,err);
 	if(*err){
 		ERRMSG("Failed to evaluate temperature");
 		return NAN;
@@ -218,7 +217,10 @@ double thcond1_chitilde(FluidState2 state, FpropsError *err){
 	MSG("dpdrho_T = %f",dpdrho_T);
 
 	double chitilde = p_c * rho / SQ(rho_c) / dpdrho_T;
+#ifdef THCOND_DEBUG
+	double T = fprops_T(state,err);
 	MSG("chitilde(T=%f,rho=%f) = %f",T,rho,chitilde);
+#endif
 	return chitilde;
 }
 

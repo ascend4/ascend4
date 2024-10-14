@@ -288,8 +288,10 @@ static PyObject *extpy_registermethod(PyObject *self, PyObject *args){
 		cdocstring = "(no docstring provided)";
 	}else{
 		if(!PyUnicode_Check(docstring)){
+#ifdef EXTPY_DEBUG
 			const char *data = PyUnicode_DATA(docstring);
 			MSG("docstring is '%s'",data);
+#endif
 			PyErr_SetString(PyExc_TypeError,"docstring is not unicode??");
 			return NULL;
 		}

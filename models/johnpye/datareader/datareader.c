@@ -196,8 +196,9 @@ int asc_datareader_prepare(struct BBoxInterp *slv_interp,
     	might affect this address, potentially causing a seg fault.
 
     */
-	char *par2 = ASC_NEW_ARRAY(char,strlen(par)+1);
-	strncpy(par2,par,strlen(par)+1);
+	size_t p2sz = strlen(par) + 1;
+	char *par2 = ASC_NEW_ARRAY(char,p2sz);
+	strncpy(par2,par,p2sz);
 
 	/*datareader only! in rigour nouputs has to be derived by more
 	  explicit methods, such as parsing or argument passing*/

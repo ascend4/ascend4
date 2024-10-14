@@ -127,12 +127,12 @@ interp_t datareader_int_type(const char *interpToken) {
 	This process happens after datareader creation so that the right amount
 	of memory is allocated for cols and interp_t. The other reason to create
 	a separate function is that an integer with the result of this operation
-	can be returned
+	can be returned.
 	@param d the datareader object
-	@param par the parameter string passed from the drconfig model
+	@param par the parameter string passed from the drconfig model (written by strtok)
 	@return 0 on sucess
 **/
-int datareader_set_parameters(DataReader *d, const char *parameters) {
+int datareader_set_parameters(DataReader *d, char *parameters) {
     char *partok = NULL;
     int parcount = 0;
     boolean LastTokWasNumeric = FALSE;//keep track of token types
@@ -481,7 +481,9 @@ int datareader_locate(DataReader *d, double t, double *t1, double *t2){
 	@TODO implement this
 */
 int datareader_func(DataReader *d, double *inputs, double *outputs) {
+#ifdef DR_DEBUG
     boolean AtStart, AtEnd; //keep track of dataset ends, they affect constrained spline calculations
+#endif
     int i,j;
     double t1[1], t2[1];
     double v0[d->nmaxoutputs], v1[d->nmaxoutputs], v2[d->nmaxoutputs], v3[d->nmaxoutputs];
@@ -506,9 +508,14 @@ int datareader_func(DataReader *d, double *inputs, double *outputs) {
         ++d->i; //go one step forward
         (*d->valfn)(d, v3); //take a data sample at t1+2
         --d->i; //go back one step
+#ifdef DR_DEBUG
         AtEnd = FALSE; //index is not at the end of the dataset
+#endif
     }
-    else AtEnd = TRUE;
+#ifdef DR_DEBUG
+    else
+	AtEnd = TRUE;
+#endif
 
     (*d->valfn)(d, v2);
     --d->i;
@@ -518,9 +525,14 @@ int datareader_func(DataReader *d, double *inputs, double *outputs) {
         --d->i; //go one step backward
         (*d->valfn)(d, v0); //take a data sample at t1-1
         ++d->i; //should be positioned at v1 t1
+#ifdef DR_DEBUG
         AtStart = FALSE;
-    }else 
+#endif
+    }
+#ifdef DR_DEBUG
+    else 
 		AtStart = TRUE;
+#endif
 
     MSG("LOCATED OK, d->i = %d, t1 = %lf, t2 = %lf, v1=%lf, v2=%lf", d->i, t1[0], t2[0], v1[0], v2[0]);
 
@@ -549,7 +561,9 @@ int datareader_func(DataReader *d, double *inputs, double *outputs) {
 	values. These can be smooth if the cubic interpolation method is selected.
 */
 int datareader_deriv(DataReader *d, double *inputs, double *jacobian) {
+#ifdef DR_DEBUG
     boolean AtStart, AtEnd; //keep track of dataset ends, they affect constrained spline calculations
+#endif
     int i,j;
     double t1[1], t2[1];
     double v0[d->nmaxoutputs], v1[d->nmaxoutputs], v2[d->nmaxoutputs], v3[d->nmaxoutputs];
@@ -574,9 +588,13 @@ int datareader_deriv(DataReader *d, double *inputs, double *jacobian) {
         ++d->i; //go one step forward
         (*d->valfn)(d, v3); //take a data sample at t1+2
         --d->i; //go back one step
+#ifdef DR_DEBUG
         AtEnd = FALSE; //index is not at the end of the dataset
+#endif
     }
+#ifdef DR_DEBUG
     else AtEnd = TRUE;
+#endif
 
     (*d->valfn)(d, v2);
     --d->i;
@@ -586,9 +604,13 @@ int datareader_deriv(DataReader *d, double *inputs, double *jacobian) {
         --d->i; //go one step backward
         (*d->valfn)(d, v0); //take a data sample at t1-1
         ++d->i; //should be positioned at v1 t1
+#ifdef DR_DEBUG
         AtStart = FALSE;
+#endif
     }
+#ifdef DR_DEBUG
     else AtStart = TRUE;
+#endif
 
     MSG("LOCATED OK, d->i = %d, t1 = %lf, t2 = %lf, v1=%lf, v2=%lf", d->i, t1[0], t2[0], v1[0], v2[0]);
 

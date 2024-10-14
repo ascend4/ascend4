@@ -128,7 +128,7 @@ double visc1_mu(FluidState2 state, FpropsError *err){
 /*----------------------SECOND CORRELATION---------------------------*/
 
 double visc2_mu(double T, const ViscDataEpt *data, FpropsError *err){
-	ViscPowTerm *pt = &(data->pt[0]);
+	const ViscPowTerm *pt = &(data->pt[0]);
 	double term, sum = 0;
 	unsigned i;
 	for(i = 0; i < data->np; ++i, ++pt){

@@ -197,7 +197,12 @@ int datareader_acdb_header(DataReader *d){
 	unsigned yr;
 	unsigned data_rows;
 
-	fscanf(d->f,"%2c%2ud",code,&yr);
+	int nitems = fscanf(d->f,"%2c%2ud",code,&yr);
+	if (nitems != 2){
+		CONSOLE_DEBUG("Bad code or year in datareader_acdb_header");
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Bad code or year in datareader_acdb_header");
+		return 1;
+	}
 
 	code[2] = '\0';
 
@@ -350,7 +355,12 @@ int datareader_acdb_data(DataReader *d){
 	unsigned i;
 	assert(N_FIELDS == sizeof(fieldsize) / sizeof(unsigned));
 
-	fgets(code, 3, d->f);
+	char *fgout = fgets(code, 3, d->f);
+	if (!fgout) {
+		  CONSOLE_DEBUG("Bad code in datareader_acdb_data");
+		  ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Bad code datareader_acdb_data");
+		  return 1;
+	}
 	//CONSOLE_DEBUG("code = '%s'",code);
 	//assert(strcmp(code,"CA")==0);
 
@@ -360,7 +370,12 @@ int datareader_acdb_data(DataReader *d){
 		in the field width.
 	*/
 	for(i=0; i < N_FIELDS; ++i){
-		fgets(field, fieldsize[i] + 1, d->f);
+		fgout = fgets(field, fieldsize[i] + 1, d->f);
+		if (!fgout) {
+			  CONSOLE_DEBUG("Bad code in datareader_acdb_data");
+			  ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Bad code datareader_acdb_data");
+			  return 1;
+		}
 		//CONSOLE_DEBUG("field %d: size = %d, str = '%s'", i, fieldsize[i], field);
 		if(i==ACDB_WHITESPACE1)continue;
 
@@ -370,7 +385,12 @@ int datareader_acdb_data(DataReader *d){
 		data[i] = atoi(field);
 	}
 
-	fscanf(d->f," ");
+	int nitems = fscanf(d->f," ");
+	if (nitems != 1){
+		CONSOLE_DEBUG("Bad whitespace in datareader_acdb_data");
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Bad whitespace in datareader_acdb_data");
+		return 1;
+	}
 
 #if 0
 	CONSOLE_DEBUG("Time: %d/%d/%d %2d:00",data[ACDB_DAY],data[ACDB_MONTH],data[ACDB_YEAR],data[ACDB_HOUR]);
