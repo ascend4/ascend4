@@ -145,7 +145,9 @@ char *ascreallocPUREF(char *ptr, size_t oldbytes, size_t newbytes){
     /* expand */
     char *ret;
     ret = malloc(newbytes);
+
     if (ret==NULL) return NULL;
+
     if (oldbytes%sizeof(long) == 0 && ((asc_intptr_t)ptr)%sizeof(long) == 0) {
       register unsigned long c,len, *src, *trg;
       src = (unsigned long *)ptr;

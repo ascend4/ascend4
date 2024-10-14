@@ -34,3 +34,5 @@ double thcond1_lam(FluidState2 state, FpropsError *err);
 /**< thermal conductivity [W/m/K] */
 
 double thcond1_lam_poly(double T, const ThCondPoly *poly, FpropsError *err);
+
+double thcond1_lam_rat(double T, const ThCondPolyRatio *rat, FpropsError *err);

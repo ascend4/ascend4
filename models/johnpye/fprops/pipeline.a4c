@@ -1,0 +1,149 @@
+REQUIRE "johnpye/fprops/pipe.a4c";
+REQUIRE "johnpye/fprops/thermophys.a4c";
+REQUIRE "johnpye/shapes.a4c";
+IMPORT "sensitivity/solve";
+
+MODEL flow_uniform_xsec REFINES stream_node;
+	shape IS_A shape_generic;
+	Vel IS_A speed;
+	shape.A * Vel = mdot * v;
+END flow_uniform_xsec;
+
+MODEL flow_uniform_xsec_test REFINES flow_uniform_xsec;
+	cd.component :== 'nitrogen';
+	cd.type :== 'helmholtz';
+	circle IS_A shape_circle;
+	shape, circle ARE_THE_SAME;
+	d ALIASES circle.d;
+METHODS
+	METHOD on_load;
+		RUN state.default;
+		FIX T := 300 {K};
+		FIX p := 10 {bar};
+		FIX d := 5 {cm};
+		FIX mdot := 0.5{kg/s};
+	END on_load;
+END flow_uniform_xsec_test;
+
+MODEL flow_uniform_xsec_thermophys_test REFINES flow_uniform_xsec;
+	state IS_REFINED_TO stream_state_thermophysical;
+	cd.component :== 'nitrogen';
+	cd.type :== 'helmholtz';
+	shape IS_REFINED_TO shape_circle;
+	d IS_A distance;
+	d, shape.d ARE_THE_SAME;
+METHODS
+	METHOD on_load;
+		RUN state.default;
+		FIX T := 300 {K};
+		FIX p := 10 {bar};
+		FIX d := 5 {cm};
+		FIX mdot := 0.5{kg/s};
+	END on_load;
+END flow_uniform_xsec_thermophys_test;
+
+MODEL pipe_element REFINES stream_equipment;
+	inlet, outlet IS_REFINED_TO flow_uniform_xsec;
+	inlet.state, outlet.state IS_REFINED_TO stream_state_thermophysical;
+	
+	solid IS_A solid_cylinder;
+	inlet.shape, solid.end ARE_THE_SAME;
+	outlet.shape, solid.end ARE_THE_SAME;
+	d IS_A distance;
+	d, solid.d ARE_THE_SAME;
+	L ALIASES solid.L;
+
+	(* energy equation, ignoring potential energy, note: steady-state *)
+	en_eqn: inlet.h + 0.5*inlet.Vel^2 = outlet.h + 0.5*outlet.Vel^2;
+	
+	(* pressure drops *)
+	Re "Reynolds number" IS_A positive_factor;
+	eps "pipe roughness" IS_A distance;
+	f_D "Friction factor (Darcy)" IS_A positive_factor;
+	Re_eq: Re = inlet.Vel * d / inlet.state.mu / inlet.v;
+
+	(* Swamee-Jain eqn *)
+	f_eq: f_D = 0.25 / (log10(eps/(d*3.7) +5.74/Re^0.9))^2; (* note: constant f assumed over length, calculated with inlet spec vol *)
+
+	(* momentum equation *)
+	mom_eqn: (inlet.p - outlet.p) = (0.5 * inlet.Vel^2 * inlet.state.rho) * f_D * (L/d);
+
+	dp IS_A delta_pressure;
+	dp_eq: dp = outlet.p - inlet.p;
+END pipe_element;
+
+
+MODEL pipe_element_test_N2 REFINES pipe_element;
+	cd.component :== 'nitrogen';
+	cd.type :== 'helmholtz';
+METHODS
+	METHOD on_load;
+		RUN inlet.state.default;
+		RUN outlet.state.default;
+		FIX d := 5 {cm};
+		FIX eps := 0.09 {mm};
+		FIX inlet.T := 300{K};
+		FIX inlet.p := 10 {bar};
+		FIX mdot := 150 {g/s};
+		FIX L := 10{m};
+	END on_load;
+END pipe_element_test_N2;
+
+MODEL pipe_element_test_H2 REFINES pipe_element;
+	cd.component :== 'hydrogen';
+	cd.type :== 'helmholtz';
+METHODS
+	METHOD on_load;
+		RUN inlet.state.default;
+		RUN outlet.state.default;
+		FIX d := 5 {cm};
+		FIX eps := 0.09 {mm};
+		FIX inlet.T := 300{K};
+		FIX inlet.p := 10 {bar};
+		FIX mdot := 150 {g/s};
+		FIX L := 10{m};
+	END on_load;
+END pipe_element_test_H2;
+
+
+MODEL pipe_multi REFINES stream_equipment;
+	n IS_A integer_constant;
+	element[0..(n-1)] IS_A pipe_element;
+	FOR i IN [1..(n-1)] CREATE
+		element[i-1].outlet, element[i].inlet ARE_THE_SAME;
+	END FOR;
+	element[0..n-1].eps ARE_THE_SAME;
+	eps ALIASES element[0].eps;
+	inlet IS_REFINED_TO flow_uniform_xsec;
+	inlet, element[0].inlet ARE_THE_SAME;
+	outlet, element[n-1].outlet ARE_THE_SAME;
+	element[0..(n-1)].L ARE_THE_SAME;
+	solid IS_A solid_cylinder;
+	solid.end, inlet.shape ARE_THE_SAME;
+	L ALIASES solid.L;
+	element[0].L * n = L;
+METHODS
+	METHOD default;
+		RUN inlet.state.default;
+		RUN outlet.state.default;
+		RUN element[0..n-1].inlet.default;
+		RUN element[n-1].outlet.default;
+	END default;
+END pipe_multi;
+
+MODEL pipe_multi_test REFINES pipe_multi;
+	n :== 2;
+	cd.component :== 'nitrogen';
+	cd.type :== 'helmholtz';
+METHODS
+	METHOD on_load;
+		RUN pipe_multi::default;
+		FIX inlet.T := 300{K};
+		FIX inlet.p := 10 {bar};
+		FIX mdot := 150 {g/s};
+		FIX L := 10 {m};
+		FIX inlet.shape.d := 5{cm};
+		FIX eps := 0.09 {mm};
+	END on_load;
+END pipe_multi_test;
+

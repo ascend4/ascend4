@@ -145,8 +145,12 @@ static const char *fprops_Tvsx_h_incomp_help = "Calculate T, v, s, x for incompr
 extern
 ASC_EXPORT int fprops_register(){
 	int result = 0;
-
-	ERROR_REPORTER_HERE(ASC_USER_WARNING,"FPROPS is still EXPERIMENTAL. Use with caution.");
+	static int already = 0;
+	
+	if(!already){
+		ERROR_REPORTER_HERE(ASC_USER_WARNING,"FPROPS is still EXPERIMENTAL. Use with caution.");
+		already = 1;
+	}
 
 #define CALCFN(NAME,INPUTS,OUTPUTS) \
 	result += CreateUserFunctionBlackBox(#NAME \

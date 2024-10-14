@@ -382,6 +382,8 @@ double fprops_lam(FluidState2 state, FpropsError *err){
 			return thcond1_lam(state,err);
 	case FPROPS_THCOND_POLY:
 		return thcond1_lam_poly(fprops_T(state,err),&(state.fluid->thcond->data.poly),err);
+	case FPROPS_THCOND_RAT:
+		return thcond1_lam_rat(fprops_T(state,err),&(state.fluid->thcond->data.rat),err);
 	default:
 		ERRMSG("Thermal conductivity calculation not yet supported for this fluid");
 		*err = FPROPS_INVALID_REQUEST;

@@ -33,13 +33,13 @@ MODEL stream_state_thermophysical REFINES stream_state;
 	rho IS_A mass_density;
 	dens: rho = 1. / v;
 
-	calc_mu: fprops_mu(
+	calc_mu: fprops_mu_Trho(
 		T, rho : INPUT;
 		mu : OUTPUT;
 		cd : DATA
 	);
 
-	calc_lam: fprops_lam(
+	calc_lam: fprops_lam_Trho(
 		T, rho : INPUT;
 		k : OUTPUT;
 		cd : DATA

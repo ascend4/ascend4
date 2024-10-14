@@ -125,13 +125,43 @@ static const ViscosityData visc_hydrogen = {
 		}
 		,.nt=5
 		,.t=(const ViscData1Term[]){
-			/* values here are multiplied by 1e6 because they will be later divided by mu_star, 
-			but in the Wei paper, no such division was indicated. */
 			 { 0.00150682400345535,  0, 1, 0}
 			,{ 0.00132122304497608,  0, 2, 0}
 			,{ 2.20790728835293e-12,+3, 6, 0}
 			,{-7.46651846381023e-18, 0, 8, 0}
 			,{ 4.45098340713357e-15,+1, 8, 0}
+		}
+	}}
+};
+
+static const ThermalConductivityData thcond_hydrogen = {
+	.source = "Assael et al, 'Correlation of the Thermal Conductivity of Normal and Parahydrogen from the Triple Point to 1000 K and up to 100 MPa', 2011. https://doi.org/10.1063/1.3606499"
+	,.type = FPROPS_THCOND_RAT
+	,.data = {.rat={
+		.num = {
+			.np = 7
+			,.pt = (const ThCondPolyTerm[]){
+				{-3.40976e-1, 0}
+				,{4.58820e0, 1}
+				,{-1.45080e0, 2}
+				,{3.26394e-1, 3}
+				,{3.16939e-3, 4}
+				,{1.90592e-4, 5}
+				,{-1.13900e-6, 6}
+			}
+			,.Tstar = HYDROGEN_TC
+			,.kstar = 1
+		}
+		,.den = {
+			.np = 4
+			,.pt = (const ThCondPolyTerm[]){
+				{1.38497e2, 0}
+				,{-2.21878e1, 1}
+				,{4.57151e0, 2}
+				,{1.00000e0, 3}
+			}
+			,.Tstar = HYDROGEN_TC
+			,.kstar = 1
 		}
 	}}
 };
@@ -144,6 +174,7 @@ const EosData eos_hydrogen = {
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_hydrogen}
 	,.visc = &visc_hydrogen
+	,.thcond = &thcond_hydrogen
 };
 
 #else
@@ -249,7 +280,7 @@ void test_fluid_hydrogen(void){
 	
 	ASSERT(fabs(p - 26.43*101.325e3) < 0.01*101.325e3);
 	
-	double mu;
+	double mu, k;
 #define VISC_TEST(T__1,RHO__1,MU__1,TOL__1) \
 	S = fprops_set_Trho(T__1, RHO__1, P, &err); \
 	mu = fprops_mu(S,&err); \
@@ -257,7 +288,12 @@ void test_fluid_hydrogen(void){
 	ASSERT(FPROPS_NO_ERROR==err); \
 	CU_ASSERT_DOUBLE_EQUAL(mu,MU__1,TOL__1);
 
-# define THCOND_TEST(...)
+# define THCOND_TEST(T__1,RHO__1,K__1,TOL__1) \
+	S = (FluidState2){{.Trho={T__1,RHO__1}},P}; \
+	k = fprops_k(S,&err); \
+	TEST_MSG("k(%s=%f, %s=%f) = %e (target: %e)",STATENAME1(S),STATEVAL1(S),STATENAME2(S),STATEVAL2(S),k,K__1); \
+	ASSERT(FPROPS_NO_ERROR==err); \
+	CU_ASSERT_DOUBLE_EQUAL(k,K__1,TOL__1);
 
 	TEST_MSG("Testing with data from Michels, 1953 https://doi.org/10.1016/S0031-8914(53)80112-6");
 	VISC_TEST(25+273.15, 2.144, 8.914e-6, 0.1e-6);
@@ -268,6 +304,21 @@ void test_fluid_hydrogen(void){
 	VISC_TEST(75+273.15, 3.014, 9.953e-6, 0.1e-6);
 	VISC_TEST(75+273.15, 15.74, 10.31e-6, 0.1e-6);
 	VISC_TEST(75+273.15, 45.27, 12.65e-6, 0.1e-6);
+
+	TEST_MSG("Testing conductivity values... ");
+	thcond_prepare(P, eos_hydrogen.thcond, &err);
+	ASSERT(FPROPS_NO_ERROR==err);
+		
+	TEST_MSG("Testing with data from Assael et al, 2011 10.1063/1.3606499");
+	THCOND_TEST(298.150, 0.00000, 185.67, 0.01);
+	THCOND_TEST(298.150, 0.80844, 186.97, 0.01);
+	THCOND_TEST(298.150, 14.4813, 201.35, 0.01);
+	THCOND_TEST(35.0000, 0.00000, 26.988, 0.01);
+	THCOND_TEST(35.0000, 30.0000, 75.594, 0.01);
+	THCOND_TEST(35.0000, 30.0000, 71.854, 0.01);
+	THCOND_TEST(18.0000, 0.00000, 13.875, 0.01);
+	THCOND_TEST(18.0000, 75.0000, 104.48, 0.01);
+
 
 /* viscosity points
 Temperature	Pressure	Density	Therm. Cond.	Viscosity

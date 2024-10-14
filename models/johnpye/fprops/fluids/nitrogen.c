@@ -163,7 +163,7 @@ static const ViscosityData visc_nitrogen = {
 };
 
 static const ThermalConductivityData thcond_nitrogen = {
-	.source = "Lemmon and Jacobsen, 2003. Int J Thermophys 25(1)."
+	.source = "Lemmon and Jacobsen, 2003. Int J Thermophys 25(1) https://doi.org/10.1023/B:IJOT.0000022327.04529.f3."
 	,.type=FPROPS_THCOND_1
 	,.data={.k1={
 		.k_star = 1e-3

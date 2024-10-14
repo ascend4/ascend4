@@ -409,7 +409,7 @@ typedef struct ViscCollisionIntegData_struct{
 /**
 	Excess viscosity terms of the kind
 	
-	N * tau^t * delta^d exp(-gamma * delta^l)
+	N * tau^t * delta^d * exp(-gamma * delta^l)
 	
 	where gamma is zero when l is zero, and 1 when l is non-zero.
 */
@@ -471,6 +471,7 @@ typedef enum ThCondType_enum{
 	FPROPS_THCOND_NONE = 0
 	,FPROPS_THCOND_1 = 1 /**< first thermal conductivity model, as per Vesovic et al 1990 (for CO2) and Lemmon and Jacobsen 2004 (for N2,O2,Ar,air). */
 	,FPROPS_THCOND_POLY = 2
+	,FPROPS_THCOND_RAT = 3
 } ThCondType;
 
 /**
@@ -488,6 +489,12 @@ typedef struct ThCondCritEnhOlchowyData_struct{
 	double gamma;
 } ThCondCritEnhOlchowyData;
 
+/**
+	residual terms for thermal conductivity, in the form of
+	N * tau^t * delta^d  * exp(-gamma*delta^l)
+	
+	where gamma is 0 if l=0, or 1 otherwise.
+*/
 typedef struct ThCondData1Term_struct{
 	double N, t;
 	int d, l;
@@ -529,17 +536,32 @@ typedef struct ThCondPoly_struct{
 	double kstar;
 }ThCondPoly;
 
+/* ratio of polynomials, as for example in Assael et al, 2011 https://doi.org/10.1063/1.3606499 */
+typedef struct ThCondPolyRatio_struct{
+	ThCondPoly num;
+	ThCondPoly den;
+} ThCondPolyRatio;
+
 typedef struct ThermalConductivityData_struct{
 	const char *source;
 	ThCondType type;
 	union{
 		ThermalConductivityData1 k1;
 		ThCondPoly poly;
+		ThCondPolyRatio rat;
 	} data;
 } ThermalConductivityData;
 
+/* what have we seen for thermal conductivity:
 
+   temperature-only part (dilute gas)
+   - simple polynomial/power series wrt temperature
+   - lam0 + lamr + lamc formulations, with
+     - lam0 
+  
+     
 
+*/
 /*------------------------DATA WRAPPER-----------------------------*/
 
 /** EOS correlation types */

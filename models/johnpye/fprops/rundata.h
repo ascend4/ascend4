@@ -174,6 +174,12 @@ typedef union FluidStateUnion_union{
 	/* NOTE that this union doesn't know which data it is storing; the form of data depends on the type of FluidData. */
 } FluidStateUnion;
 
+/**
+	An updated FluidState struct that stores different state variables
+	depending on the EOS currently in use. Ideally, the user shouldn't need
+	to know what's inside this struct, and should use 'accessor functions'
+	instead.
+*/
 typedef struct FluidState2_struct{
 	FluidStateUnion vals;
 	const PureFluid *fluid; ///< pointer to fluid description and associated functions

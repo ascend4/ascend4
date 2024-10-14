@@ -33,7 +33,8 @@
 //#define THCOND_DEBUG
 #ifdef THCOND_DEBUG
 # include "color.h"
-# include "test.h"
+//# include "test.h"
+# define ASSERT(args...) assert(args)
 # define MSG FPROPS_MSG
 # define ERRMSG FPROPS_ERRMSG
 #else
@@ -56,6 +57,11 @@ void thcond_prepare(PureFluid *P, const ThermalConductivityData *K, FpropsError 
 		return;
 	case FPROPS_THCOND_POLY:
 		MSG("Series with %u polynomial terms",K->data.poly.np);
+		P->thcond = K;
+		MSG("P.thcond.type = %d",P->thcond->type);
+		return;
+	case FPROPS_THCOND_RAT:
+		MSG("Ratio of polynomials, num %u terms, den %u terms",K->data.rat.num.np, K->data.rat.den.np);
 		P->thcond = K;
 		MSG("P.thcond.type = %d",P->thcond->type);
 		return;
@@ -313,7 +319,7 @@ double thcond1_lam(FluidState2 state, FpropsError *err){
 	return thcond1_lam0(state,err) + thcond1_lamr(state,err) + thcond1_lamc(state,err);
 	}
 
-/*------------------- POLYNOMIAL THERMAL CONDUCTIVITY WRT TEMPERATURE-------------------*/
+/*------------- POLYNOMIAL THERMAL CONDUCTIVITY WRT TEMPERATURE---------------*/
 
 double thcond1_lam_poly(double T, const ThCondPoly *poly, FpropsError *err){
 	if(poly == NULL){*err = FPROPS_INVALID_REQUEST; return NAN;}
@@ -327,6 +333,20 @@ double thcond1_lam_poly(double T, const ThCondPoly *poly, FpropsError *err){
 	}
 	return poly->kstar * sum;
 }
+
+/*------------------   RATIO OF POLYNOMIALS WRT TEMPERATURE-------------------*/
+
+double thcond1_lam_rat(double T, const ThCondPolyRatio *rat, FpropsError *err){
+	if(rat == NULL){*err = FPROPS_INVALID_REQUEST; return NAN;}
+	if(rat->num.pt == NULL || rat->den.pt == NULL){*err = FPROPS_INVALID_REQUEST; return NAN;}
+	double num = thcond1_lam_poly(T,&(rat->num),err);
+	MSG("num = %g",num);
+	double den = thcond1_lam_poly(T,&(rat->den),err);
+	MSG("den = %g",den);
+	if(0==den){*err = FPROPS_NUMERIC_ERROR; return NAN;}
+	return num/den;
+}
+
 
 
 

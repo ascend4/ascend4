@@ -260,4 +260,4 @@ void AddInstance(struct Instance *i)
   gl_append_ptr(p->instances,(VOIDPTR)i);
 }
 
-
+/* vim: set noai ts=8 sw=2 et: */
