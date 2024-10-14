@@ -124,7 +124,7 @@ static void test_slv_common(void)
   mtx_coord_t coord;
   mtx_region_t region;
   real64 rarray[100];
-  real64 rarray2[100];
+  real64 rarray2[100] = { 0 };
   int i;
   FILE *file_normal;
   int32 hi[11];
