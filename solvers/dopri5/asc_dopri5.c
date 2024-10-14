@@ -563,13 +563,14 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 	double x;
 	double xend;
 	unsigned long nsamples, neq;
-	long nobs;
+	// long nobs;
 	//int  itol, itask, mf, lrw, liw;
 	//unsigned long index;
 	//int istate, iopt;
 	//double * rwork;
 	//int * iwork;
-	double *y, *atoler, *rtoler, *obs;
+	double *y, *atoler, *rtoler;
+	// double *obs;
 	int my_neq;
 	enum dopri5_status res;
 
@@ -632,7 +633,7 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 		return 3;
 	}
 	neq = blsys->n_y;
-	nobs = blsys->n_obs;
+	// nobs = blsys->n_obs;
 
 #if 0
 	// TODO implement these:
@@ -655,7 +656,7 @@ int integrator_dopri5_solve(IntegratorSystem *blsys
 	rtoler = dopri5_get_artol(blsys,1,tolvect);
 	atoler = dopri5_get_artol(blsys,0,tolvect);
 
-	obs = integrator_get_observations(blsys, NULL);
+	// obs = integrator_get_observations(blsys, NULL);
 
 	// TODO check memory allocations
 

@@ -2508,7 +2508,6 @@ static void update_relations_residuals(slv_system_t server)
   struct rel_relation **master;
   struct rel_relation *rel;
   rel_filter_t rfilter;
-  real64 resid;
   int32 r, rlen, status;
 
   master = slv_get_master_rel_list(server);
@@ -2524,7 +2523,7 @@ static void update_relations_residuals(slv_system_t server)
   for (r=0; r<rlen; r++) {
     rel = master[r];
     if(rel_apply_filter(rel,&rfilter)) {
-      resid = relman_eval(rel,&status,1);
+      (void)relman_eval(rel,&status,1);
     }
   }
 #ifdef ASC_SIGNAL_TRAPS
@@ -3339,7 +3338,6 @@ void get_multipliers(SlvClientToken asys,
   slv9_system_t sys;
   linsolqr_system_t lsys;
   mtx_region_t  *newblocks, *oneblock;
-  int32 rank;
   int32 c, cr, len, row;
   real64 *weights;
   real64 summ;
@@ -3348,7 +3346,11 @@ void get_multipliers(SlvClientToken asys,
   check_system(sys);
 
   mtx_output_assign(sys->lin_mtx,nrel,nrel);
+#if SHOW_LAGRANGE_DETAILS
+  int32 rank;
   rank = mtx_symbolic_rank(sys->lin_mtx);
+  FPRINTF(ASCERR, "cmslv: get_multipliers: rank %d\n",rank);
+#endif
   mtx_partition(sys->lin_mtx);
   len = mtx_number_of_blocks(sys->lin_mtx);
   newblocks = ASC_NEW_ARRAY(mtx_region_t,len);
@@ -3467,11 +3469,15 @@ void get_gradient_in_subregion(slv_system_t server,
   int32 nvar, nrel, ntotvar, ntotrel;
   int32 countrel,countvar,cr,cv,len,vind;
   int32 nvnb, countnbv;
+#if SHOW_LAGRANGE_DETAILS
   FILE *lif;
+#endif
 
   sys = SLV9(asys);
   check_system(sys);
+#if SHOW_LAGRANGE_DETAILS
   lif = LIF(sys);
+#endif
 
   rlist = slv_get_master_rel_list(server);
   vlist = slv_get_master_var_list(server);
@@ -4138,8 +4144,8 @@ void apply_optimization_step(slv_system_t server, SlvClientToken asys,
   struct var_variable **vlist;
   struct var_variable *var;
   var_filter_t vfilter;
-  int32 totvars, num_vars, num_tot, c, count;
-  real64 nominal, up, low, pre_val;
+  int32 totvars, c, count;
+  real64 up, low, pre_val;
   real64 value, dx, test_value,norm2;
   FILE *lif;
 
@@ -4151,7 +4157,10 @@ void apply_optimization_step(slv_system_t server, SlvClientToken asys,
 		       | VAR_SVAR | VAR_FIXED);
   vfilter.matchvalue = (VAR_ACTIVE_AT_BND | VAR_INCIDENT | VAR_SVAR);
   vlist = slv_get_master_var_list(server);
+#if DEBUG
+  int32 num_vars;
   num_vars = slv_count_master_vars(server,&vfilter);
+#endif
   totvars = slv_get_num_master_vars(server);
 
   count = 0;
@@ -4170,7 +4179,6 @@ void apply_optimization_step(slv_system_t server, SlvClientToken asys,
     var = vlist[c];
     pre_val = rvalues->pre_values[c];
     if(var_apply_filter(var,&vfilter)) {
-      nominal = var_nominal(var);
       low = var_lower_bound(var);
       up = var_upper_bound(var);
       dx = factor * ( values->element[count] / norm2 );
@@ -4206,12 +4214,9 @@ void apply_optimization_step(slv_system_t server, SlvClientToken asys,
       count++;
     }
   }
-  /*
-   * num_tot is to stop gcc whining about unused parameters
-   */
-  num_tot = num_vars+n_subregions;
 
 #if DEBUG
+  int num_tot = num_vars+n_subregions;
   for(c=count; c<num_tot; c++) {
     FPRINTF(ASCERR," coefficient of subregion %d = %f \n",
 	    c-count+1,values->element[c]);
@@ -4235,11 +4240,11 @@ int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
   slv9_system_t sys;
   struct rel_relation **rlist;
   struct var_variable **vlist;
-  struct opt_matrix coeff_matrix;
-  struct opt_vector opt_var_values;
-  struct opt_vector invariant_vect_values;
-  struct opt_vector variant_vect_values;
-  struct opt_vector gradient;
+  struct opt_matrix coeff_matrix = { NULL };
+  struct opt_vector opt_var_values = { NULL };
+  struct opt_vector invariant_vect_values = { NULL };
+  struct opt_vector variant_vect_values = { NULL };
+  struct opt_vector gradient = { NULL };
   struct opt_matrix multipliers;
   var_filter_t vfilter;
   int32 num_vars,num_opt_eqns, num_opt_vars;
@@ -4895,16 +4900,28 @@ int32 get_solvers_tokens(slv9_system_t sys, slv_system_t server){
 
 	MSG("SETTING UP LRSLV");
 	newsolver = slv_switch_solver(server,num_log_reg);
+	if (newsolver == -1) {
+		FPRINTF(ASCERR,"Solver lrslv was not registered\n");
+		return 1;
+	}
 	token[LOGICAL_SOLVER] = slv_get_client_token(server);
 	solver_index[LOGICAL_SOLVER] = slv_get_selected_solver(server);
 
 	MSG("SETTING UP QRSLV");
 	newsolver = slv_switch_solver(server,num_nl_reg);
+	if (newsolver == -1) {
+		FPRINTF(ASCERR,"Solver qrslv was not registered\n");
+		return 1;
+	}
 	token[NONLINEAR_SOLVER] = slv_get_client_token(server);
 	solver_index[NONLINEAR_SOLVER] = slv_get_selected_solver(server);
 
 	MSG("SETTING UP CONOPT (%d)",num_opt_reg);
 	newsolver = slv_switch_solver(server,num_opt_reg);
+	if (newsolver == -1) {
+		FPRINTF(ASCERR,"Solver conopt was not registered\n");
+		return 1;
+	}
 	token[OPTIMIZATION_SOLVER] = slv_get_client_token(server);
 	solver_index[OPTIMIZATION_SOLVER] = slv_get_selected_solver(server);
 
@@ -5138,10 +5155,7 @@ static
 void update_cost(struct slv_block_cost *cost, slv_status_t *status,
 		int32 current_block, int32 previous_block
 ){
-  int32 ci;
-
   if(current_block >=0) {
-    ci=current_block;
     cost[current_block].size = status->block.current_size;
     cost[current_block].iterations	= status->block.iteration;
     cost[current_block].funcs = status->block.funcs;
@@ -5169,7 +5183,6 @@ int32 is_an_optimization_problem(slv_system_t server,
 ){
   slv9_system_t sys;
   slv_status_t status;
-  mtx_matrix_t Jacobian;
   dof_t *dofdata;
   var_filter_t vfilter;
   int32 optimizing;
@@ -5185,7 +5198,6 @@ int32 is_an_optimization_problem(slv_system_t server,
   slv_set_solver_index(server,solver_index[NONLINEAR_SOLVER]);
   slv_presolve(server);
 
-  Jacobian = slv_get_sys_mtx(server);
   dofdata = slv_get_dofdata(server);
   sys->rank = dofdata->structural_rank;
 
@@ -5328,12 +5340,8 @@ int slv9_iterate(slv_system_t server, SlvClientToken asys){
 #if TEST_CONSISTENCY
   int32 *test= NULL;
 #endif /* TEST_CONSISTENCY */
-  FILE *mif;
-  FILE *lif;
 
   sys = SLV9(asys);
-  mif = MIF(sys);
-  lif = LIF(sys);
 
   if(server == NULL || sys==NULL) return 1;
   if(check_system(SLV9(sys))) return 2;

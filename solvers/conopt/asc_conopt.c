@@ -1922,6 +1922,9 @@ static int COI_CALL conopt_readmatrix(
 	    , &(obj_count),SAFE_CALC
     );
 	/* what about checking error code? -- JP */
+  } else {
+    derivatives = NULL;
+    variables = NULL;
   }
 
   count = count_old = 0;
@@ -1968,7 +1971,8 @@ static int COI_CALL conopt_readmatrix(
       }
       if(rlist[c] == sys->obj) {
 		for (r = 0; r < obj_count; r++) {
-		  if ( variables[r] == var_sindex(var) ) {
+		  // if (sys->obj != NULL) variables/derivatives is populated
+		  if ( variables && derivatives && variables[r] == var_sindex(var) ) {
 		    rowno[count] = *m - 1;
 		    value[count] = derivatives[r];
 		    nlflag[count] = 1;               /* fix this later */

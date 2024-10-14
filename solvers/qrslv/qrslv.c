@@ -2798,18 +2798,22 @@ static
 int32 qrslv_get_default_parameters(slv_system_t server, SlvClientToken asys
 		,slv_parameters_t *parameters
 ){
-  qrslv_system_t sys = NULL;
-  union parm_arg lo,hi,val;
   struct slv_parameter *new_parms = NULL;
-  int32 make_macros = 0;
 
+#if DEBUG
+  qrslv_system_t sys;
   if(server != NULL && asys != NULL) {
     sys = QRSLV(asys);
-    make_macros = 1;
+  } else {
+    sys = NULL;
   }
+#endif
 
+#if DEBUG
 #ifndef NDEBUG  /* keep purify from whining on UMR */
-  lo.argr = hi.argr = val.argr = 0.0;
+  union parm_arg hi, lo, val;
+  hi.argr = low.argr = val.argr = 0.0;
+#endif
 #endif
 
   if(parameters->parms == NULL) {

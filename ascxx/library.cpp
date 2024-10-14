@@ -179,8 +179,10 @@ Library::loadString(const char *str, const char *nameprefix){
 	}
 #endif
 
+#ifdef ASCXX_LIBRARY_DEBUG
 	struct gl_list_t *l = Asc_TypeByModule(m);
 	MSG("%lu library entries loaded from %s",gl_length(l), nameprefix);
+#endif
 }
 
 const char *

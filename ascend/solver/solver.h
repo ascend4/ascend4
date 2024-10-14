@@ -152,7 +152,7 @@ ASC_DLLSPEC mtx_matrix_t slv_get_sys_mtx(slv_system_t sys);
 /**<
 	Returns the mtx used, or NULL if none. The user should check.
 
-	@deprecated {THIS CALL SHOULD GO AWAY}
+	This is dispatched over the proxy macro in solver.c.
 
 	@NOTE this function is referenced by the C++ api (Simulation::getMatrix).
 	So don't don't vanish it! -- JP 20070113 @ENDNOTE
@@ -189,6 +189,8 @@ ASC_DLLSPEC int slv_presolve(slv_system_t sys);
 	Among other things, this function will perform structural analysis
 	so that structural analysis flags in the status will be accurate.
 
+	This is dispatched over the proxy macro in solver.c.
+
 	@return 0 on success, 1 if errors occurred (they will be output via ERROR_REPORTER)
 */
 
@@ -216,6 +218,7 @@ ASC_DLLSPEC int slv_resolve(slv_system_t sys);
 		expression may be simplified.
 
 	This function is considerably more efficient when it is usable.
+	This is dispatched over the proxy macro in solver.c.
 
 	@return 0 on success
 */
@@ -230,6 +233,8 @@ ASC_DLLSPEC int slv_iterate(slv_system_t sys);
 	any way between iterations (i.e. you may look, but don't touch: see
 	slv_presolve()).  See also slv_solve().
 
+	This is dispatched over the proxy macro in solver.c.
+
 	@return 0 on success
 */
 
@@ -238,6 +243,8 @@ ASC_DLLSPEC int slv_solve(slv_system_t sys);
 	Attempts to solve the entire system in one shot (i.e.
 	performs as many iterations as needed or allowed).  For some solvers,
 	slv_iterate() and slv_solve() may mean the same thing.
+
+	This is dispatched over the proxy macro in solver.c.
 
 	@return 0 on success
 */
