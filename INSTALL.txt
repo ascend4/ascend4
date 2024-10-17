@@ -102,7 +102,7 @@ You can then type:
     
 The simplest way to install ASCEND 'off-root' is something like:
 
-  scons INSTALL_PREFIX=~/ascroot
+  scons INSTALL_PREFIX=~/ascroot install
   
 Note that if you install (or run) ASCEND off-root, you need to
 ensure that Linux can access the shared libraries. For example,
