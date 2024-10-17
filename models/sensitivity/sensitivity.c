@@ -468,9 +468,8 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
 	* wanted to see the sensitivity of a *parameter*, it would not
 	* be possible. We will have to trap this in CheckArgs.
 	*
-	* Also the current version of ascend is fucked in how the var module
-	* handles variables and their numbering through the interface ptr
-	* crap.
+	* The var module use of interfaceptr for numbering variables
+	* may be problematic.
 	*/
 
 	(void)NumberFreeVars(NULL);		/* used to re-init the system */

@@ -49,8 +49,8 @@ default_tcl_libpath = "$TCL/lib"
 default_tcl_cpppath = "$TCL/include"
 default_conopt_envvar="CONOPT_PATH"
 default_with_graphviz = True
-default_tcl_lib = "tcl8.5"
-default_tk_lib = "tk8.5"
+default_tcl_lib = "tcl8.6"
+default_tk_lib = "tk8.6"
 default_tktable_lib = "Tktable2.9"
 default_ida_prefix="$DEFAULT_PREFIX"
 #default_ipopt_libpath = "$IPOPT_PREFIX/lib"
@@ -207,15 +207,15 @@ else: # LINUX, unix we hope
 		print(LSB)
 		if 'DISTRIB_ID' in LSB and LSB['DISTRIB_ID'] == "Ubuntu":
 			if float(LSB['DISTRIB_RELEASE']) >= 9.04:
-				default_tcl_lib = "tcl8.5"
-				default_tk_lib = "tk8.5"
+				default_tcl_lib = "tcl8.6"
+				default_tk_lib = "tk8.6"
 				default_tktable_lib = "Tktable2.9"
-				default_tcl_cpppath = "/usr/include/tcl8.5"
+				default_tcl_cpppath = "/usr/include/tcl8.6"
 			if not os.path.exists(default_tcl_cpppath):
-				default_tcl_lib = "tcl8.4"
-				default_tk_lib = "tk8.4"
+				default_tcl_lib = "tcl8.6"
+				default_tk_lib = "tk8.6"
 				default_tktable_lib = "Tktable2.9"
-				default_tcl_cpppath = "/usr/include/tcl8.4"
+				default_tcl_cpppath = "/usr/include/tcl8.6"
 				
 	# centos 5
 	if os.path.exists("/etc/redhat-release"):
@@ -1708,7 +1708,7 @@ def CheckCONOPT(context):
 # Tcl test
 
 # TCL and TK required version 8.1 through 8.5:
-tcltk_minor_newest_acceptable = 5
+tcltk_minor_newest_acceptable = 6
 tcltk_major_required = 8
 
 tcl_check_text = r"""
@@ -2203,7 +2203,7 @@ if conf.CheckGcc():
 		conf.env['HAVE_GCCVISIBILITY']=True;
 		conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
 		conf.env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
-	conf.env.Append(CCFLAGS=['-Wall','-O2'])
+	conf.env.Append(CCFLAGS=['-Wall','-O2','-g'])
 
 # Catching SIGINT
 

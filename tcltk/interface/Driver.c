@@ -540,7 +540,6 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 #if !ASC_ABSOLUTE_PATHS
 	char s1[PATH_MAX];
 #endif
-	int err;
 	int guessedtk=0;
 	FILE *f;
 
@@ -551,9 +550,12 @@ static void AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	AscSaveOrgEnv(interp, progname);
 
 	/* import these into the environment */
-	err = env_import(ASC_ENV_DIST,getenv,PUTENV,0);
 #ifdef ASCTK_DEBUG
-	if(err)CONSOLE_DEBUG("No %s var imported (error %d)",ASC_ENV_DIST,err);
+	int err =
+#endif
+	env_import(ASC_ENV_DIST,getenv,PUTENV,0);
+#ifdef ASCTK_DEBUG
+	if (err) CONSOLE_DEBUG("No %s var imported (error %d)",ASC_ENV_DIST,err);
 #endif
 	env_import(ASC_ENV_TK,getenv,PUTENV,0);
 	env_import(ASC_ENV_BITMAPS,getenv,PUTENV,0);
@@ -1018,7 +1020,8 @@ StdinProc(ClientData clientData, int mask)
   Tcl_CreateChannelHandler(chan, TCL_READABLE, StdinProc,
                            (ClientData) chan);
   Tcl_DStringFree(&g_command);
-  if (*interp->result != 0) {
+  CONST84 char *iresult = Tcl_GetStringResult(interp);
+  if (iresult != 0 && iresult[0] != 0) { // null or empty string ok
     if ((code != TCL_OK) || (tty)) {
       /*
        * The statement below used to call "printf", but that resulted
@@ -1027,7 +1030,7 @@ StdinProc(ClientData clientData, int mask)
        * NOTE: This probably will not work under Windows either.
        */
 
-      puts(interp->result);
+      printf("%s\n",iresult);
     }
   }
 
@@ -1103,7 +1106,7 @@ defaultPrompt:
 
       errChannel = Tcl_GetChannel(interp, "stderr", NULL);
       if (errChannel != (Tcl_Channel) NULL) {
-        Tcl_Write(errChannel, interp->result, -1);
+        Tcl_Write(errChannel, Tcl_GetStringResult(interp), -1);
         Tcl_Write(errChannel, "\n", 1);
       }
       goto defaultPrompt;

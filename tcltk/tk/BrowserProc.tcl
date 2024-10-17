@@ -297,9 +297,8 @@ proc BrowUpdateFindCascade {} {
       -underline -1
     # bindings don't stick if you leave out this update.
     update
-    switch $tk_version {
-    8.4 -
-    8.5 {
+    switch -regex -- $tk_version {
+    8.[4-7] {
       bind $m <Any-Leave> "+
       set ascPopdata($ascBrowVect(parents).childpop.in) 0
       set ascPopdata($ascBrowVect(parents).childpop.id) \
@@ -307,6 +306,7 @@ proc BrowUpdateFindCascade {} {
              \{ tk::MenuUnpost $ascBrowVect(parents).childpop \} \}\]
     "
 	}
+    # pre-8.4
     default {
       bind $m <Any-Leave> "+
       set ascPopdata($ascBrowVect(parents).childpop.in) 0

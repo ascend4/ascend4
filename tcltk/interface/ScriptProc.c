@@ -212,7 +212,7 @@ int Asc_FastRaiseCmd(ClientData cdata, Tcl_Interp *interp,
   mainwin = Tk_MainWindow(interp);
   tkwin = Tk_NameToWindow(interp,argv[1],mainwin);
   if (!tkwin) {
-    return TCL_ERROR; /* a message should be in the interp->result */
+    return TCL_ERROR; /* a message should be in Tcl_GetStringResult(interp)  */
   }
   display = Tk_Display(tkwin);
   window = Tk_WindowId(tkwin);

@@ -601,7 +601,7 @@ proc Debug_Var_Trace {n1 n2 mode} {
 # C calls and which are TCL procedures                                      #
 # excludes widget names (C calls starting with dots) from user C call list  #
 # all variables are set after the first call to unifo.
-# bugs: fucking slow
+# bugs: slow
 # These 3 vars are lists of the predefined procedures, C calls, and both
 # due to TCL
 # global asctcl_procbase
@@ -654,7 +654,7 @@ proc uinfo {type} {
   set asctk_procbase [list \
     tk_nextMenuEntry tk_bindForTraversal tk_menuBar tk_getMenuButtons \
     tk_traverseToMenu tk_firstMenu tk_menus tk_invokeMenu tkMenuButtonDown \
-    tk_nextMenu tk_mbUnpost tk_traverseWithinMenu tk_mbPost 
+    tk_nextMenu tk_mbUnpost tk_traverseWithinMenu tk_mbPost 
   ]
 
   set asctk_Cbase [list menubutton listbox pack checkbutton canvas \
