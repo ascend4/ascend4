@@ -38,124 +38,124 @@
 	@{
 */
 
-extern double DIPow(register double d, long int n);
+extern double DIPow(double d, long int n);
 /**< 
  *  Return d^n rounded downward.
  */
 
-extern double UIPow(register double d, long int n);
+extern double UIPow(double d, long int n);
 /**< 
  *  Return d^n rounded upward.
  */
 
 #ifndef SLOPPY
-extern double DPow(register double d1, register double d2);
+extern double DPow(double d1, double d2);
 /**< 
  *  Return the downward rounded result of d1^d2(d1 raised to the power d2).
  */
 
-extern double UPow(register double d1, register double d2);
+extern double UPow(double d1, double d2);
 /**< 
  *  Return the downward rounded result of d1^d2(d1 raised to the power d2).
  */
 
-extern double DPlus(register double d1, register double d2);
+extern double DPlus(double d1, double d2);
 /**< 
  *  Return the downward rounded addition of d1 and d2.
  */
 
-extern double UPlus(register double d1, register double d2);
+extern double UPlus(double d1, double d2);
 /**< 
  *  Return the upward rounded addition of d1 and d2.
  */
 
-extern double DMinus(register double d1, register double d2);
+extern double DMinus(double d1, double d2);
 /**< 
  *  Return d1-d2 with downward rounding.
  */
 
-extern double UMinus(register double d1, register double d2);
+extern double UMinus(double d1, double d2);
 /**< 
  *  Return d1-d2 with upward rounding.
  */
 
-extern double DTimes(register double d1, register double d2);
+extern double DTimes(double d1, double d2);
 /**< 
  *  Return d1*d2 with downward rounding.
  */
 
-extern double UTimes(register double d1, register double d2);
+extern double UTimes(double d1, double d2);
 /**< 
  *  Return d1*d2 with upward rounding.
  */
 
-extern double DDivide(register double d1, register double d2);
+extern double DDivide(double d1, double d2);
 /**< 
  *  Return d1/d2 with downward rounding.
  */
 
-extern double UDivide(register double d1, register double d2);
+extern double UDivide(double d1, double d2);
 /**< 
  *  Return d1/d2 with upward rounding.
  */
 
-extern double DSqr(register double d);
+extern double DSqr(double d);
 /**< 
  *  Return sqr(d) with downward rounding.
  */
 
-extern double USqr(register double d);
+extern double USqr(double d);
 /**< 
  *  Return sqr(d) with upward rounding.
  */
 
-extern double DSqrt(register double d);
+extern double DSqrt(double d);
 /**< 
  *  Return sqrt(d) with downward rounding.
  */
 
-extern double USqrt(register double d);
+extern double USqrt(double d);
 /**< 
  *  Return sqrt(d) with upward rounding.
  */
 
-extern double DExp(register double d);
+extern double DExp(double d);
 /**< 
  *  Return exp(d) with downward rounding.
  */
 
-extern double UExp(register double d);
+extern double UExp(double d);
 /**< 
  *  Return exp(d) with upward rounding.
  */
 
-extern double DLog(register double d);
+extern double DLog(double d);
 /**< 
  *  Return log base 10 of d rounded down.
  */
 
-extern double ULog(register double d);
+extern double ULog(double d);
 /**< 
  *  Return the log base 10 of d.
  */
 
-extern double DLn(register double d);
+extern double DLn(double d);
 /**< 
  *  Return ln(d) (log base e) with downward rounding.
  */
 
-extern double ULn(register double d);
+extern double ULn(double d);
 /**< 
  *  Return ln(d) with upward rounding.
  */
 
 #ifdef HAVE_ERF
-extern double DErf(register double d);
+extern double DErf(double d);
 /**< 
  *  Return erf(d) with downward rounding.
  */
 
-extern double UErf(register double d);
+extern double UErf(double d);
 /**< 
  *  Return erf(d) with upward rounding.
  */
