@@ -66,6 +66,8 @@ const ReferenceState *REF_TPUS(double T0, double p0, double u0, double s0);
 const ReferenceState *REF_TPHS(double T0, double p0, double h0, double s0);
 const ReferenceState *REF_PHI0(double c, double m);
 
+#if 0 // no way to interrogate reference states from python so far
+typedef struct ReferenceState_struct ReferenceState;
 %extend ReferenceState{
 	const char *typename;
 }
@@ -75,6 +77,7 @@ const char *ReferenceState_typename_get(const ReferenceState *ref){
 	return fprops_refstate_type(ref->type);
 }
 %}
+#endif
 
 /* ----------------- ACCESSING FLUID SPECIFICATIONS -----------------*/
 

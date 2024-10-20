@@ -34,21 +34,21 @@ def path_absolute(p):
 munge = lambda s: s
 
 if platform.system()=="Windows":
-	import _winreg
-	x=_winreg.ConnectRegistry(None,_winreg.HKEY_LOCAL_MACHINE)
-	y= _winreg.OpenKey(x,r"SOFTWARE\ASCEND")
-	LIB,t = _winreg.QueryValueEx(y,"INSTALL_LIB")
-	BIN,t = _winreg.QueryValueEx(y,"INSTALL_BIN")
-	INCLUDE,t = _winreg.QueryValueEx(y,"INSTALL_INCLUDE")
-	ASCDATA,t = _winreg.QueryValueEx(y,"INSTALL_ASCDATA")
-	MODELS,t = _winreg.QueryValueEx(y,"INSTALL_MODELS")
+	import winreg
+	x=winreg.ConnectRegistry(None,winreg.HKEY_LOCAL_MACHINE)
+	y= winreg.OpenKey(x,r"SOFTWARE\ASCEND")
+	LIB,t = winreg.QueryValueEx(y,"INSTALL_LIB")
+	BIN,t = winreg.QueryValueEx(y,"INSTALL_BIN")
+	INCLUDE,t = winreg.QueryValueEx(y,"INSTALL_INCLUDE")
+	ASCDATA,t = winreg.QueryValueEx(y,"INSTALL_ASCDATA")
+	MODELS,t = winreg.QueryValueEx(y,"INSTALL_MODELS")
 
 	#assume that these won't change too much on Windows...
 	EXTLIB_SUFFIX = "_ascend.dll"
 	EXTLIB_PREFIX = ""
 
-	_winreg.CloseKey(y)
-	_winreg.CloseKey(x)
+	winreg.CloseKey(y)
+	winreg.CloseKey(x)
 	
 	try:
 		# if we have access to GetShortPathName, we'll use it...
@@ -106,7 +106,7 @@ if options.cppflags:
 	if INCLUDE!="/usr/include":
 		include=INCLUDE
 	if len(include):
-		print "-I"+munge(include)+""
+		print("-I"+munge(include)+"")
 	ok = True
 
 if options.libs:
@@ -116,23 +116,23 @@ if options.libs:
 	Lflag  = ""
 	if len(libs):
 		Lflag = "-L"+munge(libs)+" "
-	print Lflag + "-lascend"
+	print(Lflag + "-lascend")
 	ok = True
 
 if options.data:
-	print ASCDATA
+	print(ASCDATA)
 	ok = True
 
 if options.models:
-	print MODELS
+	print(MODELS)
 	ok = True
 
 if options.extlibsuff:
-	print EXTLIB_SUFFIX
+	print(EXTLIB_SUFFIX)
 	ok = True
 
 if options.extlibpref:
-	print EXTLIB_PREFIX
+	print(EXTLIB_PREFIX)
 	ok = True
 
 if not ok:

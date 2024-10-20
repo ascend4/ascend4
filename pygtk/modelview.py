@@ -481,6 +481,8 @@ class ModelView:
 	def on_treeview_event(self,widget,event):
 		_path = None
 		_contextmenu = False
+		_button = None
+		
 		if event.type == Gdk.EventType.KEY_PRESS:
 			_keyval = Gdk.keyval_name(event.keyval)
 			_path, _col = self.modelview.get_cursor()

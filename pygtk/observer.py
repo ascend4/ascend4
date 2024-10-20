@@ -545,6 +545,7 @@ class ObserverTab:
 		_path = None
 		_delete_row = False
 		_contextmenu = False
+		_button = None
 		
 		_sel = self.view.get_selection()
 		_model, _rowlist = _sel.get_selected_rows()
