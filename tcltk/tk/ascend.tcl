@@ -137,9 +137,8 @@ proc load_Templates {} {
   asc_source "$env(ASCENDTK)/templates/amlscroll.tcl"
   global tcl_platform tk_version
   if {$tcl_platform(platform) == "unix"} {
-    switch $tk_version {
-    8.5 -
-    8.4 {
+    switch -regexp -- $tk_version {
+    8.[4-7] {
         puts "source $env(ASCENDTK)/templates/asctkfbox84.tcl"
         asc_source "$env(ASCENDTK)/templates/asctkfbox84.tcl"
       }

@@ -95,7 +95,7 @@ extern double safe_factorial(unsigned x, enum safe_err *err);
 /**< Compute n!. */
 extern double safe_rec(double x, enum safe_err *err);
 /**<Compute 1/x. */
-extern double safe_cube(register double x, enum safe_err *err);
+extern double safe_cube(double x, enum safe_err *err);
 /**<Compute x^3 with range check. */
 extern double safe_Dn_rec(double x, int y, enum safe_err *err);
 /**< Compute n-th derivative of 1/x. */

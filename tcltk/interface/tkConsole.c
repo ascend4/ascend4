@@ -193,7 +193,7 @@ TkConsoleInit(interp)
     Tcl_Preserve((ClientData) consoleInterp);
     if (Tcl_Eval(consoleInterp, initCmd) == TCL_ERROR) {
 	/* goto error; -- no problem for now... */
-	printf("Eval error: %s", consoleInterp->result);
+	printf("Eval error: %s", Tcl_GetStringResult(consoleInterp));
     }
     Tcl_Release((ClientData) consoleInterp);
     return TCL_OK;
@@ -467,11 +467,11 @@ InterpreterCmd(clientData, interp, argc, argv)
     Tcl_Preserve((ClientData) otherInterp);
     if ((c == 'e') && (strncmp(argv[1], "eval", length)) == 0) {
    	result = Tcl_GlobalEval(otherInterp, argv[2]);
-    	Tcl_AppendResult(interp, otherInterp->result, (char *) NULL);
+	Tcl_AppendResult(interp, Tcl_GetStringResult(otherInterp), (char *) NULL);
     } else if ((c == 'r') && (strncmp(argv[1], "record", length)) == 0) {
    	Tcl_RecordAndEval(otherInterp, argv[2], TCL_EVAL_GLOBAL);
 	result = TCL_OK;
-    	Tcl_AppendResult(interp, otherInterp->result, (char *) NULL);
+	Tcl_AppendResult(interp, Tcl_GetStringResult(otherInterp), (char *) NULL);
     } else {
 	Tcl_AppendResult(interp, "bad option \"", argv[1],
 		"\": should be eval or record",

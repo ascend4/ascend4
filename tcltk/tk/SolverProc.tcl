@@ -4639,7 +4639,7 @@ leavetrace
 # Flush solver if sim moved is current sim. But only after we have
 # safely escaped from C control.
 # requires tk if . exists.
-# If . does not exist, user is fucking around on the command line and
+# If . does not exist, user is messing around on the command line and
 # shouldn't be able to do things that relocate an instance while the
 # solver is also running.
 #----------------------------------------------------------------------------
