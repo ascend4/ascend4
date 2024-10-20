@@ -100,7 +100,6 @@ int Asc_DebuGetBlkOfVar(ClientData cdata, Tcl_Interp *interp,
   int32 col,numblock,ndx,maxvar,blow,bhigh;
   int status =TCL_OK;
   mtx_matrix_t mtx;
-  mtx_region_t reg;
   struct var_variable **vp;
   var_filter_t vfilter;
   dof_t *d;
@@ -157,7 +156,9 @@ int Asc_DebuGetBlkOfVar(ClientData cdata, Tcl_Interp *interp,
     } else if( col < b->block[block_number].col.low ) {
         bhigh = block_number-1;
       } else {
-          reg = b->block[block_number];
+#ifdef DEBUG
+	  mtx_region_t reg = b->block[block_number];
+#endif
           numblock = block_number;
           break;
         }
@@ -185,7 +186,6 @@ int Asc_DebuGetBlkOfEqn(ClientData cdata, Tcl_Interp *interp,
   int32 row,numblock,ndx,maxrel,blow,bhigh;
   int status = TCL_OK;
   mtx_matrix_t mtx;
-  mtx_region_t reg;
   struct rel_relation **rp;
   rel_filter_t rfilter;
   dof_t *d;
@@ -243,7 +243,9 @@ int Asc_DebuGetBlkOfEqn(ClientData cdata, Tcl_Interp *interp,
     } else if( row < b->block[block_number].row.low ) {
         bhigh = block_number-1;
       } else {
-          reg = b->block[block_number];
+#ifdef DEBUG
+          mtx_region_t reg = b->block[block_number];
+#endif
           numblock = block_number;
           break;
         }
@@ -1747,7 +1749,7 @@ int Asc_DebuWriteIncidence(ClientData cdata, Tcl_Interp *interp,
   int32 order,bnum,maxrel;
   int32 *tmp;
   mtx_region_t reg;
-  real64 value;
+  /* real64 value; */
   struct rel_relation **rp;
   char *line = ASC_NEW_ARRAY(char,32);
 
@@ -1842,7 +1844,7 @@ int Asc_DebuWriteIncidence(ClientData cdata, Tcl_Interp *interp,
     }
     mtx_zero_int32(tmp,order);
     nz.col=mtx_FIRST;
-    while ( value=mtx_next_in_row(mtx,&nz,mtx_ALL_COLS), nz.col!=mtx_LAST) {
+    while ( /* value= */mtx_next_in_row(mtx,&nz,mtx_ALL_COLS), nz.col!=mtx_LAST) {
       tmp[nz.col] = 1;
     }
     for( nz.col=0; nz.col<order; nz.col++ ) {
@@ -2662,10 +2664,9 @@ int Asc_DebuNumBlockSing(ClientData cdata, Tcl_Interp *interp,
 {
   struct rel_relation **rp;
   struct var_variable **vp;
-  dof_t *d;
   const mtx_block_t *b;
   linsolqr_system_t lsys;
-  int32 nr,nv,u,p,numblocks,cur_block;
+  int32 u,p,numblocks,cur_block;
   mtx_region_t region;
   mtx_matrix_t mtx;
   slv_status_t ss;
@@ -2708,7 +2709,9 @@ int Asc_DebuNumBlockSing(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
   mtx = linsolqr_get_matrix(lsys);
-  d = slv_get_dofdata(g_solvsys_cur);
+#ifdef DEBUG
+  dof_t *d = slv_get_dofdata(g_solvsys_cur);
+#endif
   b = slv_get_solvers_blocks(g_solvsys_cur);
   numblocks = b->nblocks;
 
@@ -2726,8 +2729,14 @@ int Asc_DebuNumBlockSing(ClientData cdata, Tcl_Interp *interp,
                   TCL_STATIC);
     return TCL_ERROR;
   }
-  nr=slv_get_num_solvers_rels(g_solvsys_cur);
-  nv=slv_get_num_solvers_vars(g_solvsys_cur);
+#ifdef DEBUG
+  int32 nr=
+#endif
+  slv_get_num_solvers_rels(g_solvsys_cur);
+#ifdef DEBUG
+  int32 nv=
+#endif
+  slv_get_num_solvers_vars(g_solvsys_cur);
 
   /* get io option */
   i=3;
@@ -3181,8 +3190,6 @@ int Asc_DebuCalcRelNominals(ClientData cdata, Tcl_Interp *interp,
   struct rel_relation **rp,**rl,*rel;
   struct var_variable **vp,**vl;
   int32 maxrel,i;
-  int ls,rs;
-  real64 nom;
 
   UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
@@ -3210,21 +3217,13 @@ int Asc_DebuCalcRelNominals(ClientData cdata, Tcl_Interp *interp,
   }
 
   for (i=0; i<maxrel; i++) {
-    ls = rs = 0;
     rel = rl[i];
     if (rel_included(rel) && rel_active(rel) ) {
       if ( dbg_calc_nominal(rel) ) {
-        nom = rel_nominal(rel);
+#ifdef DEBUG
+        real64 nom = rel_nominal(rel);
+#endif
         calc_ok = TRUE;
-/* dead code...with no reason to live?
-   ls = dbg_check_lhs(rel);
-        calc_ok = TRUE;
-        rs = dbg_check_rhs(rel);
-        if (ls || rs ) {
-          sprintf(tmps,"%d %d %d %g",i,ls,rs,nom);
-          Tcl_AppendElement(interp, tmps);
-        }
-*/
       }
     }
   }

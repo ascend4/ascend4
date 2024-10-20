@@ -394,7 +394,7 @@ void Unit_UpdateFundUnits(struct DisplayUnit *du)
     return;
   }
   d = (dim_type *)UnitsDimensions(du->fu);
-  if (Numerator(GetDimFraction(*(dim_type *)UnitsDimensions(du->fu),
+  if (Numerator(GetDimFraction(*(dim_type *)d,
                                updatefundunitdim)) != 0) {
     du->fu = NULL;
     Unit_DisplayFund(du->d);

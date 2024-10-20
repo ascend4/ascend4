@@ -362,9 +362,8 @@ proc set_cmuBindings {} {
 # baa 6/12/97, tk80b1-no patches
   bind Menubutton <Motion> {
     global tk_strictMotif
-    switch $tk_version {
-    8.5 -
-    8.4 {
+    switch -regexp -- $tk_version {
+    8.[4-7] {
         if {$tk_strictMotif} {
           tk::MbMotion %W up %X %Y
         } else {
