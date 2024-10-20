@@ -4,12 +4,21 @@ Thanks for downloading ASCEND! We hope you'll find it straight-
 forward to set up and run ASCEND. If you have any comments on
 your experience with this, we're very keen to hear about that.
 Please check out the up-to-date contact details at:
-https://ascendserver.cheme.cmu.edu/wiki/
+https://ascend4.org/
+
+WARNING: (Oct 2024)
+This file is very out of date. For the most maintained instructions on building ASCEND, please see
+1. the Github Actions build instructions for Ubuntu and Windows (MSYS2) encoded in
+https://github.com/ascend4/ascend4/tree/python3/.github/workflows
+2. the ASCEND wiki at
+https://ascend4.org/Building_ASCEND
+
+-----
 
 There are older versions of this document, which include instructions
 on how to build ASCEND with GNU Autotools. This may or may not work
 with the version you are currently looking at.
-https://ascendserver.cheme.cmu.edu/svn/ascend/code/branches/extfn/INSTALL.txt?view=log
+https://code.ascend4.org/ascend/trunk/INSTALL.txt?view=log
 
 -----
 BUILDING ON LINUX AND WINDOWS
@@ -42,20 +51,18 @@ already present if you have SCons!). The Tcl/Tk interface requires that you
 have Tcl/Tk and TkTable installed on your system.
 
 For updates on this information, and PLATFORM-SPECIFIC INFORMATION, please check
-http://ascendserver.cheme.cmu.edu/wiki/index.php/BuildingAscend
-
-For specific information on building the Python interface and
-setting up the PyGTK GUI, please see
-http://ascendserver.cheme.cmu.edu/wiki/index.php/PythonWrapper
-
-------
-BUILDING ON SOLARIS
-
-Some work has been done on building on Solaris, using Python 2.3. At present
-it's pretty close but not yet stable. If you can help out, let us know.
+https://ascend4.org/Building_ASCEND
 
 ------
 RUNNING FOR THE FIRST TIME
+
+You can use the './a4' script to launch ASCEND without installing it.
+Use './a4 --help' for details.
+For example, './a4 gui' will open the GTK GUI.
+This script does the job of setting the necessary environment
+variables that the program depends on when running uninstalled.
+
+old advice:
 
 If you've build ASCEND from source, you don't need to 'install'
 it before you can run it. The main issue with running from the
@@ -76,6 +83,9 @@ as shown below.
 ------
 ISSUES WITH THE TCL/TK INTERFACE
 
+we have not tested the tcl/tk interface for a long time.
+
+old advice: 
 It can sometimes be a bit challenging to build the Tcl/Tk
 interface. ASCEND can run with Tcl/Tk version 8.4 but it is more stable when
 using Tcl/Tk version 8.3. 
@@ -110,9 +120,14 @@ in the above case, you would need to add
 
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/ascroot/lib
 
+See comment on the './a4' script above.
+
 ------
 INSTALLING ON WINDOWS
 
+it's a while since we tested the windows installer. it probably needs some love.
+
+old advice:
 To build a Windows installer (a 'setup.exe') for the PyGTK GUI,
 you will need to have the NSIS installer-creator installed on
 your system (which is free, at http://nsis.sf.net/). Then you 
