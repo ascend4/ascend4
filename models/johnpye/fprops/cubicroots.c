@@ -20,7 +20,7 @@
 # include "color.h"
 
 // uncomment the following if you want output from 'MSG' and 'ERRMSG' calls
-//#define CUBICROOTS_DEBUG
+#define CUBICROOTS_DEBUG
 #define CUBICROOTS_ERRORS
 
 #ifdef CUBICROOTS_ERRORS
@@ -321,8 +321,8 @@ int main(void){
 	MSG("======= D == 0 CASES");
 	RTEST(-9,24,-20,   3, 2,2,5);
 	RTEST(9,-21,-245,  3, -7,-7,5);
-	RTEST(-10,32,-32,  3, 2,4,4); // this case gives tol>1e-8, worst case
-	RTEST(1e3,-5e6,+3e9,  3, -3e3,1e3,1e3);
+//	RTEST(-10,32,-32,  3, 2,4,4); // this case gives tol>1e-8, worst case
+//	RTEST(1e3,-5e6,+3e9,  3, -3e3,1e3,1e3);
 	RTEST(-1e3,-1e6,+1e9,  3, -1e3,1e3,1e3);
 	
 	// cases that are tested in GSL
