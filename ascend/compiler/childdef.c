@@ -249,7 +249,7 @@ static
 struct BitList *g_def_child_bit_list = NULL;
 
 static
-struct value_t DefEvaluateName(struct Name *nptr)
+struct value_t DefEvaluateName(CONST struct Name *nptr)
 {
   symchar *name;
   struct ChildDesc rec;

@@ -41,15 +41,23 @@
 	@{
 */
 
-extern struct value_t EvaluateSet(CONST struct Set *sptr,
-                                  struct value_t (*EvaluateName)());
+typedef struct value_t EvaluateNameFn(CONST struct Name *nptr);
+/**<
+ *  A callback to evaluate a single Name in the current context.
+ *  Should return a struct value_t for that Name.
+ */
+
+extern struct value_t EvaluateSet(CONST struct Set *sptr
+	, EvaluateNameFn *EvaluateName
+);
 /**<
  *  Return the value of a Set structure, which just might be a set.
  */
 
-extern struct value_t EvaluateExpr(CONST struct Expr *expr,
-                                   CONST struct Expr *stop,
-                                   struct value_t (*EvaluateName)());
+extern struct value_t EvaluateExpr(CONST struct Expr *expr
+	,CONST struct Expr *stop
+	,EvaluateNameFn *EvaluateName
+);
 /**<
  *  Return the value of a name structure.
  *  In most cases stop = NULL.  stop can be used to evaluate just part of
