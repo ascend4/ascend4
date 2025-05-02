@@ -2654,7 +2654,7 @@ if env['WITH_CUNIT']:
 
 	env.Alias('test',[env.Dir('test')])	
 else:
-	print("Skipping... CUnit tests aren't being built:",without_cunit_reason)
+	print("Skipping... CUnit tests aren't being built:")
 
 #-------------
 # EXTERNAL SOLVERS

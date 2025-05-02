@@ -45,6 +45,7 @@
 */
 
 #include <ascend/general/platform.h>
+#include <stdbool.h>
 
 /**
  *  The ChildListStructure is a private implementation detail.
