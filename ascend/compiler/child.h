@@ -237,7 +237,7 @@ ASC_DLLSPEC unsigned ChildGetBooleans(ChildListPtr cl, unsigned long n);
  */
 
 ASC_DLLSPEC void ChildSetBoolean(ChildListPtr cl, unsigned long n,
-                            unsigned cbfname, unsigned val);
+                            unsigned cbfname, bool val);
 /**<
  *  Set child number n current boolean flag bit cbfname to val.
  *  Children are numbered 1..ChildListLen(cl).

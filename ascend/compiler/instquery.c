@@ -71,9 +71,9 @@
 
 /**** GLOBAL VARIABLE SECTION ****/
 
-void (*InterfacePtrATS)() = NULL;
-void (*InterfacePtrDelete)() = NULL;
-void (*InterfaceNotify)() = NULL;
+InterfacePtrATSFn *InterfacePtrATS = NULL;
+InterfacePtrDeleteFn *InterfacePtrDelete = NULL;
+InterfaceNotifyFn *InterfaceNotify = NULL;
 
 /**** END GLOBAL VARIABLE SECTION ****/
 

@@ -56,7 +56,9 @@
 	For a more robust, transient protocol see instance_io.h.
 */
 
-extern void (*InterfacePtrDelete)();
+typedef void InterfacePtrDeleteFn(struct Instance *,char *);
+
+extern InterfacePtrDeleteFn *InterfacePtrDelete;
 /**<
  *  This global variable should be provided by the interface.  It is a
  *  pointer to a void function(procedure).  This procedure will be called
@@ -81,7 +83,9 @@ extern void (*InterfacePtrDelete)();
  *  </pre>
  */
 
-extern void (*InterfaceNotify)();
+typedef void InterfaceNotifyFn(char *,struct Instance *,struct Instance *);
+
+extern InterfaceNotifyFn *InterfaceNotify;
 /**<
  *  This global variable should be provided by the interface.  It is a
  *  pointer to a void function(procedure).  This procedure will be called
@@ -107,7 +111,9 @@ extern void (*InterfaceNotify)();
  *  </pre>
  */
 
-extern void (*InterfacePtrATS)();
+typedef void InterfacePtrATSFn(struct Instance *,struct Instance *);
+
+extern InterfacePtrATSFn *InterfacePtrATS;
 /**<
  *  This global variable should be provided by the interface.  It is a
  *  pointer to a void function(procedure).  The function will be called

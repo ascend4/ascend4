@@ -372,7 +372,7 @@ unsigned ChildGetBooleans(ChildListPtr cl, unsigned long int n)
 }
 
 void ChildSetBoolean(ChildListPtr cl, unsigned long int n,
-                     unsigned flag, unsigned bool)
+                     unsigned flag, bool val)
 {
   assert(cl!=NULL && n && n <= gl_length(GL(cl)));
   switch (flag) {
@@ -383,7 +383,7 @@ void ChildSetBoolean(ChildListPtr cl, unsigned long int n,
   default:
     return;
   }
-  if (bool==1) {
+  if (val==1) {
     CGET(cl,n)->bflags |= flag;
   } else {
     CGET(cl,n)->bflags &= ~flag;

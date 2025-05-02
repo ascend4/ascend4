@@ -71,14 +71,14 @@ extern boolean calc_print_errors;
 
 extern real64 calc_upower(real64 x, unsigned n); /**< Compute x^n. */
 extern real64 calc_factorial(unsigned n);        /**< Compute n!. */
-extern real64 calc_rec();                        /**< Compute 1/x. */
-extern real64 calc_cube();                       /**< Compute x^3 with range check. */
-extern real64 calc_Dn_rec();                     /**< Compute n-th derivative of 1/x. */
+extern real64 calc_rec(real64);                        /**< Compute 1/x. */
+extern real64 calc_cube(real64);                       /**< Compute x^3 with range check. */
+extern real64 calc_Dn_rec(real64,int);                     /**< Compute n-th derivative of 1/x. */
 #ifdef HAVE_ERF
-extern real64 calc_erf_inv();                    /**< Compute inverse of erf. */
+extern real64 calc_erf_inv(real64);                    /**< Compute inverse of erf. */
 #endif /* HAVE_ERF */
-extern real64 calc_lnm_inv();                    /**< Compute inverse of lnm */
-extern int calc_is_int();                        /**< 0,1 ==> even/odd int, else ==> not an int. */
+extern real64 calc_lnm_inv(real64);                    /**< Compute inverse of lnm */
+extern int calc_is_int(real64);                        /**< 0,1 ==> even/odd int, else ==> not an int. */
 
 /*  All of the following calc_XXXX_Di must resolve to C functions
  *  rather than macros because calc_func_Di takes the address of them.

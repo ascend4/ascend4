@@ -347,8 +347,8 @@ unsigned SuchThatForm(CONST struct Expr *expr,
 static
 int GetNameAndSet(CONST struct Expr *ex, CONST struct Expr *stop,
 		  symchar **name, struct value_t *value,
-		  struct value_t (*EvaluateName) (/* ??? */))
-{
+		  EvaluateNameFn *EvaluateName
+){
 	/* NAME SET IN */
 	if (ExprType(ex)==e_var){
 		if ((*name = SimpleNameIdPtr(ExprName(ex)))!=NULL){
@@ -411,8 +411,8 @@ static
 struct value_t EvaluateLeftIteration(CONST struct Expr *expr,
 				     CONST struct Expr *stop,
 				     CONST struct Expr *depth_one,
-				     struct value_t (*EvaluateName)(/* ??? */))
-{
+				     EvaluateNameFn *EvaluateName
+){
   CONST struct Expr *st_node,*rhs;
   struct set_t *sptr;
   symchar *tmp_name;		/* name of temporary variable */
@@ -522,8 +522,8 @@ static
 struct value_t EvaluateRightIteration(CONST struct Expr *expr,
 				      CONST struct Expr *stop,
 				      CONST struct Expr *depth_one,
-				      struct value_t (*EvaluateName)(/*???*/))
-{
+				      EvaluateNameFn *EvaluateName
+){
   symchar *tmp_name;
   CONST struct Expr *node;
   struct value_t iteration_set,l_value,tmp_value,lhs_value;
@@ -611,8 +611,8 @@ void EvaluateRightIterationNamesNeeded(CONST struct Expr *expr,
 static
 struct value_t EvaluateSuchThat(CONST struct Expr *expr,
 				CONST struct Expr *stop,
-				struct value_t (*EvaluateName) (/* ??? */))
-{
+				EvaluateNameFn *EvaluateName
+){
   CONST struct Expr *depth_one;
   switch(SuchThatForm(expr,stop,&depth_one)){
   case 0:
@@ -648,8 +648,8 @@ void EvaluateSuchThatNamesNeeded(CONST struct Expr *expr,
 	@TODO document this
 */
 struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
-			    struct value_t (*EvaluateName) (/* ? */))
-{
+			    EvaluateNameFn *EvaluateName
+){
   struct value_t top,next;
   symchar *cptr;
   struct stack_t *stack;
@@ -1062,8 +1062,8 @@ struct gl_list_t *EvaluateNamesNeededShallow(CONST struct Expr *expr,
  * of our memory activity
  */
 struct value_t EvaluateSet(CONST struct Set *sptr,
-			   struct value_t (*EvaluateName) (/* ??? */))
-{
+			   EvaluateNameFn *EvaluateName
+){
   struct value_t result,lower,upper;
   long l,u,c;
   int previous_state;
