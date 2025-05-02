@@ -55,6 +55,7 @@
 #include "instance_enum.h"
 #include "rel_blackbox.h"
 #include "relerr.h"
+#include "vlist.h"
 
 /**	@addtogroup compiler_rel Compiler Relations
 	@{

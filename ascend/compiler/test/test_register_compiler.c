@@ -20,6 +20,7 @@
 
 #define TESTS(T) \
 	T(basics) \
+	T(relation) \
 	T(autodiff) \
 	T(expr) \
 	T(bintok) \
