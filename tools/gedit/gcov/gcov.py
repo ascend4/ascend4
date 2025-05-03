@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 from gi.repository import GObject, Gedit, Gio
-import subprocess, os, re, sys
+import subprocess, os, sys, json, gzip, fnmatch
 
 # Debug message helper
-MSG = lambda *args, **kwargs: print(f"[CoverageHighlighter]", *args, file=sys.stderr, **kwargs)
+def MSG(*args, **kwargs):
+    print("[CoverageHighlighter]", *args, file=sys.stderr, **kwargs)
 
 class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
     __gtype_name__ = "CoverageHighlighter"
@@ -14,42 +15,29 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
         super().__init__()
 
     def do_activate(self):
-        # Try new API first, fallback if unavailable
-        doc = None
+        # Determine TeplFile via Document or Buffer
+        tfile = None
         if hasattr(self.view, 'get_document'):
             try:
                 doc = self.view.get_document()
+                tfile = doc.get_file() if doc else None
             except Exception:
-                MSG("get_document() exists but raised exception")
-                doc = None
-        else:
-            MSG("get_document() not available on View")
-
-        # Obtain TeplFile via Document or Buffer
-        tfile = None
-        if doc:
-            try:
-                tfile = doc.get_file()
-            except Exception:
-                MSG("doc.get_file() raised exception")
-                tfile = None
+                MSG("get_document()/get_file() error, falling back")
         if not tfile:
             buf = self.view.get_buffer()
             try:
                 tfile = buf.get_file()
             except Exception:
-                MSG("buffer.get_file() raised exception")
-                tfile = None
-
+                MSG("buffer.get_file() error")
         if not tfile:
             MSG("No TeplFile for buffer, cannot determine file path")
             return
 
-        # Get Gio.File and actual path
+        # Get filesystem path
         try:
             gfile = tfile.get_location()
         except Exception:
-            MSG("tfile.get_location() raised exception")
+            MSG("tfile.get_location() error")
             return
         if not gfile:
             MSG("No Gio.File for buffer, cannot determine file path")
@@ -73,63 +61,60 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
         base = os.path.basename(src)
         stem, _ = os.path.splitext(base)
 
-        cmd = ['gcov', '-r', '-j', '-b', base]
+        # Run gcov to produce JSON
+        cmd = ['gcov', '-i', '-b', '-r', base]
         MSG(f"Running {' '.join(cmd)} in {src_dir}")
         try:
-            result = subprocess.run(
+            subprocess.run(
                 cmd,
                 cwd=src_dir,
                 check=True,
-                stdout=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
                 stderr=subprocess.PIPE,
                 text=True
             )
-            MSG(f"gcov completed for {base}")
-            # Show initial output lines for debug
-            for line in result.stdout.splitlines()[:5]:
-                MSG(line)
+            MSG(f"gcov JSON completed for {base}")
         except subprocess.CalledProcessError as e:
             MSG(f"gcov error: {e.stderr.strip()}")
             return
 
-        # Locate the .gcov file
-        gcov_file = None
-        for fname in (f"{base}.gcov", f"{stem}.gcov"):
-            path = os.path.join(src_dir, fname)
-            if os.path.isfile(path):
-                gcov_file = path
+        # Find the generated .gcov.json.gz file
+        pattern = f"{stem}*.gcov.json.gz"
+        json_path = None
+        for fname in os.listdir(src_dir):
+            if fnmatch.fnmatch(fname, pattern):
+                json_path = os.path.join(src_dir, fname)
                 break
-        if not gcov_file:
-            MSG(f"No .gcov file found in {src_dir}")
+        if not json_path:
+            MSG(f"No .gcov.json.gz file found in {src_dir}")
             return
-        MSG(f"Parsing {gcov_file}")
+        MSG(f"Parsing JSON file: {json_path}")
 
-        # Parse coverage data
-        pattern = re.compile(r'^\s*([-0-9#]+):\s*(\d+):')
-        coverage = {}
+        # Load and parse JSON
         try:
-            with open(gcov_file) as gf:
-                for line in gf:
-                    m = pattern.match(line)
-                    if not m:
-                        continue
-                    count_str, lineno_str = m.groups()
-                    lineno = int(lineno_str) - 1
-                    if count_str in ('-', '#####'):
-                        hit = False
-                    else:
-                        hit = count_str.isdigit() and int(count_str) > 0
-                    coverage[lineno] = hit
+            with gzip.open(json_path, 'rt', encoding='utf-8') as gf:
+                data = json.load(gf)
         except Exception as e:
-            MSG(f"Error reading gcov file: {e}")
+            MSG(f"Failed to read/parse JSON: {e}")
             return
+
+        # Extract per-line counts
+        coverage = {}
+        for fentry in data.get('files', []):
+            fname = fentry.get('file')
+            if fname == base or fname.endswith('/' + base):
+                for line in fentry.get('lines', []):
+                    ln = line.get('line_number', 0) - 1
+                    count = line.get('count', 0)
+                    coverage[ln] = (count > 0)
+                break
 
         total = len(coverage)
         covered = sum(1 for hit in coverage.values() if hit)
         pct = (covered / total * 100) if total else 0
         MSG(f"Coverage: {covered}/{total} lines ({pct:.1f}%)")
 
-        # Apply highlighting
+        # Apply highlighting tags
         buf = self.view.get_buffer()
         tag_hit = buf.create_tag('cov_covered', background='#d0ffd0')
         tag_miss = buf.create_tag('cov_uncovered', background='#ffd0d0')
