@@ -14,94 +14,151 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
     def __init__(self):
         super().__init__()
         self._idle_id = None
+        self._monitor = None
 
     def do_activate(self):
-        # Schedule coverage highlight once UI is idle (buffer content loaded)
+        # Initial highlight when idle
         try:
             self._idle_id = GObject.idle_add(self._activate_highlight)
-            MSG('Scheduled idle highlight')
+            MSG('Scheduled initial idle highlight')
         except Exception as e:
-            MSG(f'Failed to schedule idle highlight: {e}')
+            MSG(f'Failed to schedule initial highlight: {e}')
+
+        # Setup directory monitor to watch for .gcda/.gcno changes
+        buf = self.view.get_buffer()
+        tfile = getattr(buf, 'get_file', lambda: None)()
+        if tfile:
+            gfile = getattr(tfile, 'get_location', lambda: None)()
+            if gfile:
+                src_dir = os.path.dirname(gfile.get_path())
+                dir_file = Gio.File.new_for_path(src_dir)
+                try:
+                    self._monitor = dir_file.monitor_directory(
+                        Gio.FileMonitorFlags.NONE, None)
+                    self._monitor.connect('changed', self._on_dir_changed)
+                    MSG(f'Monitoring directory for coverage changes: {src_dir}')
+                except Exception as e:
+                    MSG(f'Failed to monitor directory: {e}')
 
     def do_deactivate(self):
-        # Remove idle callback if still pending
+        # Cancel idle callback if pending
         if self._idle_id:
             GObject.source_remove(self._idle_id)
             self._idle_id = None
+        # Stop directory monitor
+        if self._monitor:
+            try:
+                self._monitor.cancel()
+            except Exception:
+                pass
+            self._monitor = None
+
+    def _on_dir_changed(self, monitor, file, other, event_type):
+        # React only to create or modify events on coverage files
+        name = file.get_basename()
+        if name.endswith('.gcda') or name.endswith('.gcno'):
+            MSG(f'Coverage data changed: {name}, scheduling refresh')
+            GObject.idle_add(self._activate_highlight)
 
     def _activate_highlight(self):
+        # Perform highlight pass
         buf = self.view.get_buffer()
-        # Get TeplFile -> Gio.File
         tfile = getattr(buf, 'get_file', lambda: None)()
         if not tfile:
-            MSG('No TeplFile; skipping highlight')
+            MSG('No TeplFile; skip')
             return False
         gfile = getattr(tfile, 'get_location', lambda: None)()
         if not gfile:
-            MSG('No Gio.File; skipping highlight')
+            MSG('No Gio.File; skip')
             return False
         src = gfile.get_path()
-        MSG(f'Idle highlight for {src}')
+        MSG(f'Running highlight for {src}')
         if not src.endswith('.c'):
-            MSG(f'{src} is not a C source; skipping gcov')
+            MSG('Not a C source; skip')
             return False
         self._highlight(src)
-        return False
+        return False  # single-run
 
     def _highlight(self, src):
         src_dir = os.path.dirname(src)
         base = os.path.basename(src)
 
-        # Run gcov to produce JSON
-        cmd = ['gcov', '-i', '-b', '-r', base]
-        MSG(f"Running {' '.join(cmd)} in {src_dir}")
-        try:
-            subprocess.run(cmd, cwd=src_dir, check=True,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
-            MSG(f"gcov JSON completed for {base}")
-        except subprocess.CalledProcessError as e:
-            MSG(f"gcov error: {e.stderr.strip()}")
-            return
+        # Determine latest data timestamp
+        data_mtime = 0
+        for f in os.listdir(src_dir):
+            if f.endswith('.gcda') or f.endswith('.gcno'):
+                try:
+                    m = os.path.getmtime(os.path.join(src_dir, f))
+                except OSError:
+                    continue
+                if m > data_mtime:
+                    data_mtime = m
 
-        # Find the generated .gcov.json.gz file
-        pattern = f"{os.path.splitext(base)[0]}*.gcov.json.gz"
+        # Check existing JSON
+        stem = os.path.splitext(base)[0]
+        json_pattern = f"{stem}*.gcov.json.gz"
+        existing_json = None
+        for f in os.listdir(src_dir):
+            if fnmatch.fnmatch(f, json_pattern):
+                existing_json = os.path.join(src_dir, f)
+                break
+
+        rerun = True
+        if existing_json:
+            try:
+                json_mtime = os.path.getmtime(existing_json)
+                if json_mtime >= data_mtime:
+                    MSG('Coverage JSON up-to-date; skipping gcov')
+                    rerun = False
+                else:
+                    MSG('Coverage JSON stale; rerunning gcov')
+            except OSError:
+                MSG('JSON stat error; rerunning gcov')
+        else:
+            MSG('No JSON found; running gcov')
+
+        if rerun:
+            cmd = ['gcov', '-i', '-b', '-r', base]
+            MSG(f"Running {' '.join(cmd)} in {src_dir}")
+            try:
+                subprocess.run(cmd, cwd=src_dir, check=True,
+                               stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+                MSG(f"gcov JSON generated for {base}")
+            except subprocess.CalledProcessError as e:
+                MSG(f"gcov error: {e.stderr.strip()}")
+                return
+
+        # Locate JSON file
         json_path = None
-        for fname in os.listdir(src_dir):
-            if fnmatch.fnmatch(fname, pattern):
-                json_path = os.path.join(src_dir, fname)
+        for f in os.listdir(src_dir):
+            if fnmatch.fnmatch(f, json_pattern):
+                json_path = os.path.join(src_dir, f)
                 break
         if not json_path:
-            MSG(f"No .gcov.json.gz file found in {src_dir}")
+            MSG(f"No JSON coverage file found in {src_dir}")
             return
         MSG(f"Parsing JSON file: {json_path}")
 
-        # Load and parse JSON
         try:
             with gzip.open(json_path, 'rt', encoding='utf-8') as gf:
                 data = json.load(gf)
         except Exception as e:
-            MSG(f"Failed to read/parse JSON: {e}")
+            MSG(f"JSON parse error: {e}")
             return
 
-        # Extract per-line counts
         coverage = {}
         for fentry in data.get('files', []):
-            fname = fentry.get('file', '')
-            # Match by ending with the base filename
-            if not fname.endswith(base):
+            if not fentry.get('file', '').endswith(base):
                 continue
             for line in fentry.get('lines', []):
                 ln = line.get('line_number', 0) - 1
-                count = line.get('count', 0)
-                coverage[ln] = (count > 0)
+                coverage[ln] = (line.get('count', 0) > 0)
             break
 
         total = len(coverage)
         covered = sum(1 for hit in coverage.values() if hit)
-        percent = covered * 100 / total if total else 0
-        MSG(f"Coverage: {covered}/{total} lines ({percent:.1f}%)")
+        MSG(f"Coverage: {covered}/{total} lines ({covered*100/total if total else 0:.1f}%)")
 
-        # Apply highlighting tags
         buf = self.view.get_buffer()
         tag_hit = buf.create_tag('cov_covered', background='#d0ffd0')
         tag_miss = buf.create_tag('cov_uncovered', background='#ffd0d0')
