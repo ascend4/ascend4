@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.gcov-gedit" path="/org/gnome/gcovhighlight/">
+    <key name="debug" type="b">
+      <default>false</default>
+      <summary>Enable debug logging</summary>
+      <description>
+        If true, the coverage-highlight plugin will print debug messages
+        to stderr.
+      </description>
+    </key>
+  </schema>
+</schemalist>
+

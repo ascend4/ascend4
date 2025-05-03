@@ -1,18 +1,40 @@
 import os
-from SCons.Script import DefaultEnvironment, Alias
+from SCons.Script import DefaultEnvironment, Alias, Command
 
-# Create the default SCons environment
+# Set up environment
 env = DefaultEnvironment()
 
-# Destination directory for Gedit plugins
-plugin_dir = os.path.expanduser('~/.local/share/gedit/plugins')
+# User home directory
+home = os.path.expanduser('~')
 
-# Plugin files to install
-sources = ['gcov.plugin', 'gcov.py']
+# Destination for Gedit plugins
+gedit_plugin_dir = os.path.join(home, '.local', 'share', 'gedit', 'plugins')
+# Destination for GSettings schemas
+glib_schemas_dir = os.path.join(home, '.local', 'share', 'glib-2.0', 'schemas')
 
-# Install the plugin descriptor and script into the Gedit plugins folder
-install_targets = env.Install(plugin_dir, sources)
+# Files to install as Gedit plugin
+gedit_sources = [
+    'gcov.plugin',
+    'gcov.py',
+    'gcov-prefs.ui',
+]
 
-# Define an 'install' alias to trigger the installation
-Alias('install', install_targets)
+# GSettings schema file
+schema_source = 'org.gnome.gcov-gedit.gschema.xml'
+
+# Install plugin components
+gedit_installed = env.Install(gedit_plugin_dir, gedit_sources)
+# Install the GSettings schema
+schema_installed = env.Install(glib_schemas_dir, schema_source)
+
+# Compile the schemas (generates gschemas.compiled)
+compiled_schema_target = os.path.join(glib_schemas_dir, 'gschemas.compiled')
+compile_schemas = env.Command(
+    compiled_schema_target,
+    schema_installed,
+    'glib-compile-schemas ' + glib_schemas_dir
+)
+
+# Define an 'install' alias to install plugins and schemas, then compile schemas
+Alias('install', gedit_installed + schema_installed + [compile_schemas])
 

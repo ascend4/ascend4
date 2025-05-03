@@ -5,4 +5,5 @@ IAge=3
 Name=GCov highlighter
 Description=Highlights lines in C files based on gcov data
 Authors=John Pye <john.pye@anu.edu.au>
+PrefsPage=CoverageHighlighterPrefs
 

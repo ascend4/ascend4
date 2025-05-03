@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <object class="GtkBox" id="CoverageHighlighterPrefs">
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkCheckButton" id="debug-switch">
+        <property name="label">Enable debug logging</property>
+        <property name="halign">start</property>
+      </object>
+    </child>
+  </object>
+</interface>
+
