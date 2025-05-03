@@ -13,73 +13,58 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
 
     def __init__(self):
         super().__init__()
+        self._idle_id = None
 
     def do_activate(self):
-        # Determine TeplFile via Document or Buffer
-        tfile = None
-        if hasattr(self.view, 'get_document'):
-            try:
-                doc = self.view.get_document()
-                tfile = doc.get_file() if doc else None
-            except Exception:
-                MSG("get_document()/get_file() error, falling back")
-        if not tfile:
-            buf = self.view.get_buffer()
-            try:
-                tfile = buf.get_file()
-            except Exception:
-                MSG("buffer.get_file() error")
-        if not tfile:
-            MSG("No TeplFile for buffer, cannot determine file path")
-            return
-
-        # Get filesystem path
+        # Schedule coverage highlight once UI is idle (buffer content loaded)
         try:
-            gfile = tfile.get_location()
-        except Exception:
-            MSG("tfile.get_location() error")
-            return
-        if not gfile:
-            MSG("No Gio.File for buffer, cannot determine file path")
-            return
-
-        src = gfile.get_path()
-        MSG(f"Opening {src}")
-        if not src.endswith('.c'):
-            MSG("Not a C source, skipping coverage highlight")
-            return
-
-        # Perform coverage highlighting
-        self._highlight(src)
+            self._idle_id = GObject.idle_add(self._activate_highlight)
+            MSG('Scheduled idle highlight')
+        except Exception as e:
+            MSG(f'Failed to schedule idle highlight: {e}')
 
     def do_deactivate(self):
-        # No cleanup required
-        pass
+        # Remove idle callback if still pending
+        if self._idle_id:
+            GObject.source_remove(self._idle_id)
+            self._idle_id = None
+
+    def _activate_highlight(self):
+        buf = self.view.get_buffer()
+        # Get TeplFile -> Gio.File
+        tfile = getattr(buf, 'get_file', lambda: None)()
+        if not tfile:
+            MSG('No TeplFile; skipping highlight')
+            return False
+        gfile = getattr(tfile, 'get_location', lambda: None)()
+        if not gfile:
+            MSG('No Gio.File; skipping highlight')
+            return False
+        src = gfile.get_path()
+        MSG(f'Idle highlight for {src}')
+        if not src.endswith('.c'):
+            MSG('Not a C source; skipping highlight')
+            return False
+        self._highlight(src)
+        return False
 
     def _highlight(self, src):
         src_dir = os.path.dirname(src)
         base = os.path.basename(src)
-        stem, _ = os.path.splitext(base)
 
         # Run gcov to produce JSON
         cmd = ['gcov', '-i', '-b', '-r', base]
         MSG(f"Running {' '.join(cmd)} in {src_dir}")
         try:
-            subprocess.run(
-                cmd,
-                cwd=src_dir,
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE,
-                text=True
-            )
+            subprocess.run(cmd, cwd=src_dir, check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
             MSG(f"gcov JSON completed for {base}")
         except subprocess.CalledProcessError as e:
             MSG(f"gcov error: {e.stderr.strip()}")
             return
 
         # Find the generated .gcov.json.gz file
-        pattern = f"{stem}*.gcov.json.gz"
+        pattern = f"{os.path.splitext(base)[0]}*.gcov.json.gz"
         json_path = None
         for fname in os.listdir(src_dir):
             if fnmatch.fnmatch(fname, pattern):
@@ -101,18 +86,20 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
         # Extract per-line counts
         coverage = {}
         for fentry in data.get('files', []):
-            fname = fentry.get('file')
-            if fname == base or fname.endswith('/' + base):
-                for line in fentry.get('lines', []):
-                    ln = line.get('line_number', 0) - 1
-                    count = line.get('count', 0)
-                    coverage[ln] = (count > 0)
-                break
+            fname = fentry.get('file', '')
+            # Match by ending with the base filename
+            if not fname.endswith(base):
+                continue
+            for line in fentry.get('lines', []):
+                ln = line.get('line_number', 0) - 1
+                count = line.get('count', 0)
+                coverage[ln] = (count > 0)
+            break
 
         total = len(coverage)
         covered = sum(1 for hit in coverage.values() if hit)
-        pct = (covered / total * 100) if total else 0
-        MSG(f"Coverage: {covered}/{total} lines ({pct:.1f}%)")
+        percent = covered * 100 / total if total else 0
+        MSG(f"Coverage: {covered}/{total} lines ({percent:.1f}%)")
 
         # Apply highlighting tags
         buf = self.view.get_buffer()
@@ -123,7 +110,7 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
             end = start.copy()
             end.forward_to_line_end()
             buf.apply_tag(tag_hit if hit else tag_miss, start, end)
-        MSG("Highlight applied")
+        MSG('Highlight applied')
 
 # vim:ts=4:et:sw=4
 
