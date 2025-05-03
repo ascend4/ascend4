@@ -1,0 +1,18 @@
+import os
+from SCons.Script import DefaultEnvironment, Alias
+
+# Create the default SCons environment
+env = DefaultEnvironment()
+
+# Destination directory for Gedit plugins
+plugin_dir = os.path.expanduser('~/.local/share/gedit/plugins')
+
+# Plugin files to install
+sources = ['gcov.plugin', 'gcov.py']
+
+# Install the plugin descriptor and script into the Gedit plugins folder
+install_targets = env.Install(plugin_dir, sources)
+
+# Define an 'install' alias to trigger the installation
+Alias('install', install_targets)
+
