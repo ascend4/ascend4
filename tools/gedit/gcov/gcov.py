@@ -43,7 +43,7 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
         src = gfile.get_path()
         MSG(f'Idle highlight for {src}')
         if not src.endswith('.c'):
-            MSG('Not a C source; skipping highlight')
+            MSG(f'{src} is not a C source; skipping gcov')
             return False
         self._highlight(src)
         return False
