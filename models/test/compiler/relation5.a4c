@@ -1,0 +1,17 @@
+REQUIRE "atoms.a4l";
+MODEL relation5;
+	(* checking SimplifyTermBuf_Func *)
+
+	myzero IS_A integer_constant;
+	myzero :== 0;
+	
+	x[1..5] IS_A solver_var;
+	
+	(* function simplifications *)
+	eq1: x[1] = cosh(0) + exp(0); (* = 2 *)
+	eq2: x[2] = cos(0{rad}); (* = 1 *)
+	eq3: x[3] = sin(0{rad}); (* = 0 *)
+	eq4: x[4] = sinh(0); (* = 0 *)
+	eq5: x[5] = myzero^3;
+
+END relation5;

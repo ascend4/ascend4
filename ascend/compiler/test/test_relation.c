@@ -24,7 +24,7 @@
 #include <test/common.h>
 #include <test/assertimpl.h>
 
-#define TEST_RELATION_DEBUG
+//#define TEST_RELATION_DEBUG
 
 #ifdef TEST_RELATION_DEBUG
 # define MSG CONSOLE_DEBUG
@@ -194,10 +194,51 @@ static void test_relation4(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_relation5(void){
+	struct Instance *sim = load_model("relation5");
+	struct Instance *root = GetSimulationRoot(sim);
+	
+	const char *eqnv[] = {"eq1","eq2","eq3","eq4","eq5"};
+	const int rvalv[] = {2,1,0,0,0};
+	const struct relation *rel;
+	const char *eqni;
+	for(int i=0; i< 5; ++i){
+		eqni = eqnv[i];
+		struct Instance *eqi = ChildByChar(root, AddSymbol(eqni));
+		CU_ASSERT_FATAL(eqi != NULL);
+		char *pf = WriteRelationPostfixString(eqi,root);
+		MSG("%s: %s",eqni,pf);
+		ASC_FREE(pf);
+		rel = GetInstanceRelationOnly(eqi);
+		CU_ASSERT_FATAL(rel != NULL);
+		MSG("%s: length of LHS = %ld, RHS = %ld",eqni, RelationLength(rel,1),RelationLength(rel,0));
+
+		/* operator, variable count */
+		CU_ASSERT(RelationRelop(rel) == e_equal);
+
+		MSG("num vars = %ld",NumberVariables(rel));
+		CU_ASSERT(NumberVariables(rel) == 1);
+
+		//struct Instance *S_inst = ChildByChar(root, AddSymbol("S"));
+		//CU_ASSERT(RelationVariable(rel, 1) == S_inst);
+		CU_ASSERT(RelationLength(rel, 1) == 1); // LHS: x[i] where i is whatever
+		CU_ASSERT(RelationLength(rel, 0) == 1); // RHS: value
+
+		const struct relation_term *t = RelationTerm(rel, 1, 0);
+		MSG("%s: RHS term type = %d",eqni,RelationTermType(t));
+		CU_ASSERT(RelationTermType(t) == e_int);
+		CU_ASSERT(I_TERM(t)->ivalue == rvalv[i]);
+	}
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
 #define TESTS(T) \
     T(simple_eq) \
     T(relation2) \
     T(relation3) \
-    T(relation4)
+    T(relation4) \
+    T(relation5)
 
 REGISTER_TESTS_SIMPLE(compiler_relation, TESTS)

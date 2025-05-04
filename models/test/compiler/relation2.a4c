@@ -1,5 +1,6 @@
 REQUIRE "atoms.a4l";
 MODEL relation2;
+	(* checking token relation based on CARD (note: we can't use CARD directly in a relation, currently) *)
 	A IS_A set OF symbol_constant;
 	A :== ['A','B','C','D'];
 	n_A IS_A integer_constant;
