@@ -5,13 +5,18 @@ MODEL relation5;
 	myzero IS_A integer_constant;
 	myzero :== 0;
 	
-	x[1..5] IS_A solver_var;
+	x[1..11] IS_A solver_var;
 	
 	(* function simplifications *)
 	eq1: x[1] = cosh(0) + exp(0); (* = 2 *)
 	eq2: x[2] = cos(0{rad}); (* = 1 *)
 	eq3: x[3] = sin(0{rad}); (* = 0 *)
 	eq4: x[4] = sinh(0); (* = 0 *)
-	eq5: x[5] = myzero^3;
-
+	eq5: x[5] = cube(myzero); (* 0 *)
+	eq6: x[6] = cbrt(myzero + 1 - 1); (* 0 *)
+	eq7: x[7] = sqr(myzero * 0); (* 0 *)
+	eq8: x[8] = sqrt(myzero + 0); (* 0 *)
+	eq9: x[9] = arcsin(0); (* 0 *)
+	eq10: x[10] = arccos(0); (* 0.5{PI} *)
+	eq11: x[11] = abs(-99 + 99); (* 0 *)
 END relation5;

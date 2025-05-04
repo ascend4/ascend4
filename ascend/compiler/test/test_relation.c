@@ -198,34 +198,68 @@ static void test_relation5(void){
 	struct Instance *sim = load_model("relation5");
 	struct Instance *root = GetSimulationRoot(sim);
 	
-	const char *eqnv[] = {"eq1","eq2","eq3","eq4","eq5"};
-	const int rvalv[] = {2,1,0,0,0};
-	for(int i=0; i< 5; ++i){
-		const char *eqni = eqnv[i];
-		struct Instance *eqi = ChildByChar(root, AddSymbol(eqni));
-		CU_ASSERT_FATAL(eqi != NULL);
-		char *pf = WriteRelationPostfixString(eqi,root);
-		MSG("%s: %s",eqni,pf);
-		ASC_FREE(pf);
-		const struct relation *rel = GetInstanceRelationOnly(eqi);
-		CU_ASSERT_FATAL(rel != NULL);
-		MSG("%s: length of LHS = %ld, RHS = %ld",eqni, RelationLength(rel,1),RelationLength(rel,0));
+	{
+		const char *eqnv[] = {"eq1","eq2","eq3","eq4"};
+		const int rvalv[] = {2,1,0,0};
+		for(int i=0; i< 4; ++i){ // FIXME add test for eq10
+			const char *eqni = eqnv[i];
+			struct Instance *eqi = ChildByChar(root, AddSymbol(eqni));
+			CU_ASSERT_FATAL(eqi != NULL);
+			char *pf = WriteRelationPostfixString(eqi,root);
+			MSG("%s: %s",eqni,pf);
+			ASC_FREE(pf);
+			const struct relation *rel = GetInstanceRelationOnly(eqi);
+			CU_ASSERT_FATAL(rel != NULL);
+			MSG("%s: length of LHS = %ld, RHS = %ld",eqni, RelationLength(rel,1),RelationLength(rel,0));
 
-		/* operator, variable count */
-		CU_ASSERT(RelationRelop(rel) == e_equal);
+			/* operator, variable count */
+			CU_ASSERT(RelationRelop(rel) == e_equal);
 
-		MSG("num vars = %ld",NumberVariables(rel));
-		CU_ASSERT(NumberVariables(rel) == 1);
+			MSG("num vars = %ld",NumberVariables(rel));
+			CU_ASSERT(NumberVariables(rel) == 1);
 
-		//struct Instance *S_inst = ChildByChar(root, AddSymbol("S"));
-		//CU_ASSERT(RelationVariable(rel, 1) == S_inst);
-		CU_ASSERT(RelationLength(rel, 1) == 1); // LHS: x[i] where i is whatever
-		CU_ASSERT(RelationLength(rel, 0) == 1); // RHS: value
+			//struct Instance *S_inst = ChildByChar(root, AddSymbol("S"));
+			//CU_ASSERT(RelationVariable(rel, 1) == S_inst);
+			CU_ASSERT(RelationLength(rel, 1) == 1); // LHS: x[i] where i is whatever
+			CU_ASSERT(RelationLength(rel, 0) == 1); // RHS: value
 
-		const struct relation_term *t = RelationTerm(rel, 1, 0);
-		MSG("%s: RHS term type = %d",eqni,RelationTermType(t));
-		CU_ASSERT(RelationTermType(t) == e_int);
-		CU_ASSERT(I_TERM(t)->ivalue == rvalv[i]);
+			const struct relation_term *t = RelationTerm(rel, 1, 0);
+			MSG("%s: RHS term type = %d",eqni,RelationTermType(t));
+			CU_ASSERT(RelationTermType(t) == e_int);
+			CU_ASSERT(I_TERM(t)->ivalue == rvalv[i]);
+		}
+	}
+	
+	{
+		const char *eqnv[] = {"eq5","eq6","eq7","eq8","eq9","eq10","eq11"};
+		const double rvalv[] = {0,0,0,0,0,F_PI_HALF,0};
+		for(int i=0; i< 7; ++i){ // FIXME add test for eq10
+			const char *eqni = eqnv[i];
+			struct Instance *eqi = ChildByChar(root, AddSymbol(eqni));
+			CU_ASSERT_FATAL(eqi != NULL);
+			char *pf = WriteRelationPostfixString(eqi,root);
+			MSG("%s: %s",eqni,pf);
+			ASC_FREE(pf);
+			const struct relation *rel = GetInstanceRelationOnly(eqi);
+			CU_ASSERT_FATAL(rel != NULL);
+			MSG("%s: length of LHS = %ld, RHS = %ld",eqni, RelationLength(rel,1),RelationLength(rel,0));
+
+			/* operator, variable count */
+			CU_ASSERT(RelationRelop(rel) == e_equal);
+
+			MSG("num vars = %ld",NumberVariables(rel));
+			CU_ASSERT(NumberVariables(rel) == 1);
+
+			//struct Instance *S_inst = ChildByChar(root, AddSymbol("S"));
+			//CU_ASSERT(RelationVariable(rel, 1) == S_inst);
+			CU_ASSERT(RelationLength(rel, 1) == 1); // LHS: x[i] where i is whatever
+			CU_ASSERT(RelationLength(rel, 0) == 1); // RHS: value
+
+			const struct relation_term *t = RelationTerm(rel, 1, 0);
+			MSG("%s: RHS term type = %d",eqni,RelationTermType(t));
+			CU_ASSERT(RelationTermType(t) == e_real);
+			CU_ASSERT(R_TERM(t)->value == rvalv[i]);
+		}
 	}
 
 	sim_destroy(sim);
