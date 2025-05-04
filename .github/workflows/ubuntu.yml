@@ -58,10 +58,12 @@ jobs:
         ./a4 run models/johnpye/fprops/rankine_fprops.a4c -m stream_state_test
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         gcov: true
-        flags: ubuntu, cunit
+        flags: ubuntu-cunit
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
 
 #        sudo sed -i 's/azure\.archive\.ubuntu\.com/mirror\.lostpacket\.org/' /etc/apt/sources.list
 # vim: ts=2:sw=2:et
