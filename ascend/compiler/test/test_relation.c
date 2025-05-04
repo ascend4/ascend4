@@ -200,16 +200,14 @@ static void test_relation5(void){
 	
 	const char *eqnv[] = {"eq1","eq2","eq3","eq4","eq5"};
 	const int rvalv[] = {2,1,0,0,0};
-	const struct relation *rel;
-	const char *eqni;
 	for(int i=0; i< 5; ++i){
-		eqni = eqnv[i];
+		const char *eqni = eqnv[i];
 		struct Instance *eqi = ChildByChar(root, AddSymbol(eqni));
 		CU_ASSERT_FATAL(eqi != NULL);
 		char *pf = WriteRelationPostfixString(eqi,root);
 		MSG("%s: %s",eqni,pf);
 		ASC_FREE(pf);
-		rel = GetInstanceRelationOnly(eqi);
+		const struct relation *rel = GetInstanceRelationOnly(eqi);
 		CU_ASSERT_FATAL(rel != NULL);
 		MSG("%s: length of LHS = %ld, RHS = %ld",eqni, RelationLength(rel,1),RelationLength(rel,0));
 
