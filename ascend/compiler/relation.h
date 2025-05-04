@@ -228,8 +228,10 @@ extern void ReportRelInstantiator(FILE *f);
  */
 #define RTOKEN(r)  (r)->share->token
 #define RBBOX(r)   (r)->share->bbox
-#define RGBOX(r)   (r)->share->gbox
-#define ROPCODE(r) (r)->share->opcode
+#if 0
+# define RGBOX(r)   (r)->share->gbox
+# define ROPCODE(r) (r)->share->opcode
+#endif
 
 /**
  * Some defines for TokenRelations. struct relation *r;
@@ -327,6 +329,7 @@ extern struct relation
  *  @param err      Location to store find error code.
  */
 
+#if 0
 extern struct relation
 *CreateOpCodeRelation(struct Instance *reference,
                       struct Instance *relinst,
@@ -344,7 +347,9 @@ extern struct relation
  *  ex		the expression to be converted.
  *  err		output any errors
  */
+#endif
 
+#if 0
 extern struct relation
 *CreateGlassBoxRelation(struct Instance *relinst,
                         struct ExternalFunc *efunc,
@@ -355,6 +360,7 @@ extern struct relation
  *  Create a relation from an expression, a reference instance and a relation
  *  instance.  This modifies the instance tree.
  */
+#endif
 
 extern struct relation
 *CreateBlackBoxRelation(struct Instance *relinst,
@@ -411,6 +417,7 @@ extern void ModifyTokenRelationPointers(struct Instance *relinst,
  *       penalties to merging vars now, too.
  */
 
+#if 0
 extern void ModifyGlassBoxRelPointers(struct Instance *relinst,
                                       struct relation *rel,
                                       CONST struct Instance *old,
@@ -421,6 +428,7 @@ extern void ModifyGlassBoxRelPointers(struct Instance *relinst,
  *  @see ModifyTokenRelationPointers() for more information which
  *       applies to this function also.
  */
+#endif
 
 extern void ModifyBlackBoxRelPointers(struct Instance *relinst,
                                       struct relation *rel,

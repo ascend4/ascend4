@@ -1633,6 +1633,7 @@ void SaveTokenConstants(FILE *fp, struct gl_list_t *constants)
   FPRINTF(fp,";\n");		/* terminate */
 }
 
+#if 0 // disused
 /*
  *********************************************************************
  * SaveRelationVariables
@@ -1661,7 +1662,9 @@ void SaveRelationVariables(FILE *fp, CONST struct relation *r)
   }
   FPRINTF(fp,";\n");		/* terminate */
 }
+# endif
 
+#if 0 // disused
 /*
  *********************************************************************
  * SaveTokenRelation
@@ -1697,8 +1700,9 @@ void SaveTokenRelation(FILE *fp, CONST struct Instance *relinst)
 
   gl_destroy(constants);
 }
+#endif
 
-#if 0 && defined(DISUSED)
+#if 0 // disused
 /*
  *********************************************************************
  * SaveGlassBoxRelation
@@ -1734,7 +1738,7 @@ void SaveGlassBoxRelation(FILE *fp, CONST struct Instance *relinst)
 #endif
 
 
-#if 0 && defined(THIS_IS_AN_UNUSED_FUNCTION)
+#if 0 // disused
 /*
  * This function should be good enough to save token relations
  * and opcode relations to glassbox format. Blackbox relations

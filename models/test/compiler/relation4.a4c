@@ -1,0 +1,10 @@
+REQUIRE "atoms.a4l";
+MODEL relation4;
+	A IS_A set OF integer_constant;
+	A :== [1..3];
+	x[A] IS_A solver_var;
+	
+	S IS_A solver_var;
+	eq1: S = PROD[x[i] | i IN A];
+
+END relation4;

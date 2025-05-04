@@ -1532,7 +1532,7 @@ void SaveComplexInsts(FILE *fp, struct gl_list_t *list)
   }
 }
 
-#ifdef THIS_IS_AN_UNUSED_FUNCTION
+#if 0 // unused
 static
 void SaveRelations(FILE *fp, struct gl_list_t *list)
 {
@@ -1569,7 +1569,7 @@ void SaveRelations(FILE *fp, struct gl_list_t *list)
     }
   }
 }
-#endif /* THIS_IS_AN_UNUSED_FUNCTION */
+#endif
 
 
 static
@@ -1589,7 +1589,7 @@ void SaveLogRelations(FILE *fp, struct gl_list_t *list)
 }
 
 
-#ifdef THIS_IS_AN_UNUSED_FUNCTION
+#if 0 // unused
 static
 void Save__Atoms(FILE *fp, struct Instance *inst)
 {
@@ -1636,10 +1636,10 @@ void Save__Atoms(FILE *fp, struct Instance *inst)
   }
   FPRINTF(fp,"}\n\n");
 }
-#endif /* THIS_IS_AN_UNUSED_FUNCTION */
+#endif
 
 
-#ifdef THIS_IS_AN_UNUSED_FUNCTION
+#if 0 // unused
 static
 void SaveAtoms(FILE *fp, struct gl_list_t *list)
 {
@@ -1652,7 +1652,7 @@ void SaveAtoms(FILE *fp, struct gl_list_t *list)
     Save__Atoms(fp,inst);
   }
 }
-#endif /* THIS_IS_AN_UNUSED_FUNCTION */
+#endif
 
 
 static

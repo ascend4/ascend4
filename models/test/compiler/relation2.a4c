@@ -1,0 +1,11 @@
+REQUIRE "atoms.a4l";
+MODEL relation2;
+	A IS_A set OF symbol_constant;
+	A :== ['A','B','C','D'];
+	n_A IS_A integer_constant;
+	n_A :== CARD[A];
+	
+	a IS_A solver_var;
+	eq1: a = n_A + 1; 
+	(* this will be simplified to a = 5 by compiler *)
+END relation2;

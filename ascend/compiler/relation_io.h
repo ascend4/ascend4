@@ -169,25 +169,32 @@ extern void WriteRelationsInList(FILE *f, struct gl_list_t *l);
  *  file given in various formats.
  */
 
+#if 0
 ASC_DLLSPEC void SaveRelationVariables(FILE *fp, CONST struct relation *r);
 /**<
  *  Given a relation will save its variable list in the ASCEND condensed
  *  format.
  *  Was extern
  */
+#endif
 
+#if 0
 extern void SaveGlassBoxRelation(FILE *fp, CONST struct Instance *relinst);
 /**<
  *  Given a glassbox relation will save it in the ASCEND condensed
  *  format.
  */
+#endif
 
+#if 0 // disused
 extern void SaveTokenRelation(FILE *fp, CONST struct Instance *relinst);
 /**<
  *  Given a token relation will save it in the ASCEND condensed
  *  format.
  */
+#endif 
 
+#if 0
 extern void SaveReln2GlassBox(FILE *fp,
                               CONST struct Instance *relinst,
                               char *prefix,
@@ -196,6 +203,7 @@ extern void SaveReln2GlassBox(FILE *fp,
  *  Given a relation will save it and perform conversion to the glassbox
  *  format.
  */
+#endif
 
 extern int ConversionIsValid(enum Expr_enum old, enum Expr_enum new_enum);
 /**<
