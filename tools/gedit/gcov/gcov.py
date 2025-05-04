@@ -4,11 +4,11 @@ import os, sys, subprocess, json, gzip, fnmatch
 from gi.repository import Gio, Gtk, GObject, Gedit, PeasGtk
 
 # GSettings for plugin preferences
-settings = Gio.Settings.new("org.gnome.gcov-gedit")
+t_settings = Gio.Settings.new("org.gnome.gcov-gedit")
 
 def MSG(*args, **kwargs):
     """Print debug messages when 'debug' is true."""
-    if settings.get_boolean("debug"):
+    if t_settings.get_boolean("debug"):
         print("[CoverageHighlighter]", *args, file=sys.stderr, **kwargs)
 
 class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
@@ -23,31 +23,42 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
         self._stem        = None
 
     def do_activate(self):
+        MSG("Activating coverage highlighter plugin")
         buf   = self.view.get_buffer()
         tfile = getattr(buf, 'get_file', lambda: None)()
         if not tfile:
-            MSG("No TeplFile; disabled")
+            MSG("No TeplFile; plugin disabled")
             return
         gfile = getattr(tfile, 'get_location', lambda: None)()
         if not gfile:
-            MSG("No Gio.File; disabled")
+            MSG("No Gio.File; plugin disabled")
             return
 
         src       = gfile.get_path()
         base      = os.path.basename(src)
         self._stem = os.path.splitext(base)[0]
         src_dir   = os.path.dirname(src)
+        MSG(f"Loaded source file: {src}")
 
         # Initial highlight once idle
-        self._idle_id = GObject.idle_add(self._activate_highlight)
+        try:
+            self._idle_id = GObject.idle_add(self._activate_highlight)
+            MSG("Scheduled initial idle highlight")
+        except Exception as e:
+            MSG(f"Failed to schedule initial highlight: {e}")
 
         # Watch only this file's .gcda/.gcno
-        file_obj = Gio.File.new_for_path(src_dir)
-        self._monitor = file_obj.monitor_directory(
-            Gio.FileMonitorFlags.NONE, None)
-        self._monitor.connect('changed', self._on_dir_changed)
+        try:
+            file_obj = Gio.File.new_for_path(src_dir)
+            self._monitor = file_obj.monitor_directory(
+                Gio.FileMonitorFlags.NONE, None)
+            self._monitor.connect('changed', self._on_dir_changed)
+            MSG(f"Monitoring {src_dir} for {self._stem}.gcda/.gcno changes")
+        except Exception as e:
+            MSG(f"Failed to monitor directory: {e}")
 
     def do_deactivate(self):
+        MSG("Deactivating plugin and removing monitors/timers")
         if self._idle_id:
             GObject.source_remove(self._idle_id)
             self._idle_id = None
@@ -61,7 +72,7 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
     def _on_dir_changed(self, monitor, file, other, etype):
         name = file.get_basename()
         if name in (f"{self._stem}.gcda", f"{self._stem}.gcno"):
-            # debounce multiple rapid events
+            MSG(f"Detected change for {name}, debouncing")
             if self._debounce_id:
                 GObject.source_remove(self._debounce_id)
             self._debounce_id = GObject.timeout_add(
@@ -69,20 +80,29 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
 
     def _on_debounce_timeout(self):
         self._debounce_id = None
+        MSG("Debounce elapsed, scheduling highlight")
         GObject.idle_add(self._activate_highlight)
         return False
 
     def _activate_highlight(self):
         buf   = self.view.get_buffer()
         tfile = getattr(buf, 'get_file', lambda: None)()
-        if not tfile: return False
+        if not tfile:
+            MSG("No TeplFile; skip highlight")
+            return False
         gfile = getattr(tfile, 'get_location', lambda: None)()
-        if not gfile: return False
+        if not gfile:
+            MSG("No Gio.File; skip highlight")
+            return False
 
         src = gfile.get_path()
-        if not src.endswith('.c'): return False
+        if not src.endswith('.c'):
+            MSG("Not a C source; skip highlight")
+            return False
 
+        MSG(f"Starting highlight for {src}")
         self._highlight(src)
+        MSG("Highlight pass complete")
         return False
 
     def _highlight(self, src):
@@ -104,45 +124,66 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
 
         # If no data file: clear and return
         if not os.path.isfile(data):
+            MSG('Data file missing; clearing all highlights')
             start, end = buf.get_start_iter(), buf.get_end_iter()
             buf.remove_tag(tag_hit,  start, end)
             buf.remove_tag(tag_miss, start, end)
             return
 
         # Check timestamps to see if JSON needs regen
-        latest_data = max(
-            os.path.getmtime(p)
-            for p in (note, data) if os.path.isfile(p)
-        )
+        latest_data = 0
+        for p in (note, data):
+            if os.path.isfile(p):
+                try:
+                    latest_data = max(latest_data, os.path.getmtime(p))
+                except Exception:
+                    pass
+        MSG(f"Latest data timestamp: {latest_data}")
 
+        # Locate existing JSON if fresh
         pattern   = f"{stem}*.gcov.json.gz"
         json_path = None
         for fn in os.listdir(src_dir):
             if fnmatch.fnmatch(fn, pattern):
                 cand = os.path.join(src_dir, fn)
-                if os.path.getmtime(cand) >= latest_data:
-                    json_path = cand
+                try:
+                    if os.path.getmtime(cand) >= latest_data:
+                        json_path = cand
+                        MSG(f"Using up-to-date JSON: {cand}")
+                except Exception:
+                    MSG("Error checking JSON timestamp; will regenerate")
                 break
 
         # Regenerate if missing or stale
         if not json_path:
-            subprocess.run(
-                ['gcov','-i','-b','-r',base],
-                cwd=src_dir, check=True,
+            MSG("JSON missing or stale; running gcov -i")
+            try:
+                subprocess.run([
+                    'gcov','-i','-b','-r',base
+                ], cwd=src_dir, check=True,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE
-            )
+                stderr=subprocess.PIPE)
+                MSG("gcov JSON generated")
+            except subprocess.CalledProcessError as e:
+                MSG(f"gcov error: {e.stderr.strip()}")
+                return
             for fn in os.listdir(src_dir):
                 if fnmatch.fnmatch(fn, pattern):
                     json_path = os.path.join(src_dir, fn)
+                    MSG(f"Found new JSON: {json_path}")
                     break
 
         if not json_path:
+            MSG("No JSON found after gcov; aborting highlight")
             return
 
-        # Parse JSON
-        with gzip.open(json_path, 'rt', encoding='utf-8') as gf:
-            data = json.load(gf)
+        MSG(f"Parsing JSON: {json_path}")
+        try:
+            with gzip.open(json_path, 'rt', encoding='utf-8') as gf:
+                data = json.load(gf)
+        except Exception as e:
+            MSG(f"JSON parse error: {e}")
+            return
 
         # Build per-line map
         coverage = {}
@@ -150,10 +191,11 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
             if not fentry.get('file','').endswith(base):
                 continue
             for lninfo in fentry.get('lines', []):
-                ln = lninfo.get('line_number',0)-1
-                coverage[ln] = lninfo.get('count',0)>0
+                ln = lninfo.get('line_number',0) - 1
+                coverage[ln] = lninfo.get('count',0) > 0
             break
 
+        MSG(f"Parsed coverage lines: {len(coverage)}")
         # Clear old tags
         start, end = buf.get_start_iter(), buf.get_end_iter()
         buf.remove_tag(tag_hit,  start, end)
@@ -165,9 +207,9 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
                 it0 = buf.get_iter_at_line(ln)
                 it1 = it0.copy(); it1.forward_to_line_end()
                 buf.apply_tag(tag_hit if hit else tag_miss, it0, it1)
-            except Exception:
-                pass
-
+            except Exception as e:
+                MSG(f"Error tagging line {ln+1}: {e}")
+        MSG("Highlights applied")
 
 class CoverageHighlighterPrefs(GObject.Object, PeasGtk.Configurable):
     __gtype_name__ = "CoverageHighlighterPrefs"
@@ -182,15 +224,14 @@ class CoverageHighlighterPrefs(GObject.Object, PeasGtk.Configurable):
         widget = builder.get_object("CoverageHighlighterPrefs")
 
         switch = builder.get_object("debug-switch")
-        switch.set_active(settings.get_boolean("debug"))
+        switch.set_active(t_settings.get_boolean("debug"))
         switch.connect(
             "toggled",
-            lambda btn: settings.set_boolean("debug", btn.get_active())
+            lambda btn: t_settings.set_boolean("debug", btn.get_active())
         )
         return widget
 
     def do_update_configuration(self):
-        # nothing else to do
         pass
 
 # vim:ts=4:et:sw=4
