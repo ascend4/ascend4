@@ -46,8 +46,9 @@ RUN svn co https://svn.code.sf.net/p/cunit/code/branches/mingw64 cunit \
   && make -j8 \
   && make install
 
-# make sure python and node modules you add are easily available
+# codex binary, apply_patch and CUnit are in relevant path vars
 ENV PATH="/usr/local/bin:/opt/codex:${PATH}"
+ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
 
 USER ubuntu
 RUN mkdir -p ~/.local

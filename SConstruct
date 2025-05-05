@@ -2472,7 +2472,7 @@ for k,v in {
 		,'HAVE_ERF':env.get('HAVE_ERF')
 		,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
-		,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY')
+		,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY',0)
 		,'HAVE_SNPRINTF':env.get('HAVE_SNPRINTF')
 		,'HAVE__SNPRINTF':env.get('HAVE__SNPRINTF')
 		}.items():
