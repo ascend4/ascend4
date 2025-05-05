@@ -25,14 +25,21 @@ RUN apt-get update \
  && apt-get install -y nodejs \
  && rm -rf /var/lib/apt/lists/*
 
+# install Codex CLI
 RUN npm install -g @openai/codex
 
-RUN apt-get update
+# install subversion, GNU patch and link apply_patch
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      subversion \
+      patch \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get install -y --no-install-recommends subversion
+RUN ln -s "$(which patch)" /usr/local/bin/apply_patch
 
 WORKDIR /work
 
+# build and install CUnit from Subversion
 RUN svn co https://svn.code.sf.net/p/cunit/code/branches/mingw64 cunit \
   && cd cunit \
   && ./configure --prefix=/usr/local \
@@ -41,6 +48,10 @@ RUN svn co https://svn.code.sf.net/p/cunit/code/branches/mingw64 cunit \
 
 # make sure python and node modules you add are easily available
 ENV PATH="/usr/local/bin:/opt/codex:${PATH}"
+
+USER ubuntu
+RUN mkdir -p ~/.local
+USER root
 
 # by default drop in to a shell
 ENTRYPOINT [ "bash" ]
