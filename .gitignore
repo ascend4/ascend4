@@ -1,5 +1,6 @@
 ascend-config
 coverage.info
+.env
 *.gcov.json.gz
 *.gcov
 *.os
