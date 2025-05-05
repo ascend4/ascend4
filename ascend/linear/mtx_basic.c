@@ -2792,7 +2792,10 @@ size_t mtx_chattel_size(mtx_matrix_t mtx) {
 }
 
 void mtx_free_reused_mem(void){
+  /* Free all reusable null vectors, including sums and indices */
   (void)mtx_null_mark((int32)0);
+  (void)mtx_null_sum((int32)0);
+  (void)mtx_null_index((int32)0);
   (void)mtx_null_vector((int32)0);
   (void)mtx_null_row_vector((int32)0);
   (void)mtx_null_col_vector((int32)0);
