@@ -87,7 +87,20 @@ def generate(env):
 		else:
 			sundialsconfig = env.WhereIs("sundials-config")
 			if not sundialsconfig:
-				raise RuntimeError("Unable to locate 'sundials-config' in PATH")
+				env.SetDefault(
+					DEFAULT_PREFIX='/usr'
+					,SUNDIALS_PREFIX="$DEFAULT_PREFIX"
+					,SUNDIALS_CPPPATH="$SUNDIALS_PREFIX/include"
+					,SUNDIALS_LIBPATH="$SUNDIALS_PREFIX/lib"
+					,SUNDIALS_LIBS=['sundials_ida', 'sundials_nvecserial', 'm']
+				)
+				print("LOOKING FOR",os.path.join(env.subst('$SUNDIALS_CPPPATH'),'ida/ida.h'))
+				if os.path.exists(os.path.join(env.subst('$SUNDIALS_CPPPATH'),'ida/ida.h')):
+					print("FOUND ida.h, USING FOR FAIL-OVER SUNDIALS DETECTION...")
+					env['HAVE_SUNDIALS'] = True
+					return
+				else:
+					raise RuntimeError("Unable to locate 'sundials-config' in PATH")
 			cmd = ['sundials-config','-mida','-ts','-lc']
 			env1 = env.Clone()
 			env1['CPPPATH'] = None
@@ -122,7 +135,7 @@ def generate(env):
 		print("SUNDIALS_CPPPATH =",env.get('SUNDIALS_CPPPATH'))
 
 	except Exception as e:
-		print("FAILED SUNDIALS DETECTION (%s):" % platform.system(),e.__class__,str(e))
+		print("FAILED SUNDIALS DETECTION (%s):" % platform.system(), e)
 		env['HAVE_SUNDIALS'] = False
 
 def find_sundials_config(env):

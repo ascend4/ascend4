@@ -23,6 +23,9 @@
 #define ASC_IDATYPES_H
 
 #include <ascend/integrator/integrator.h>
+#if SUNDIALS_VERSION_MAJOR>2
+# include <sundials/sundials_context.h>
+#endif
 
 /* forward dec needed for IntegratorIdaPrecFreeFn */
 struct IntegratorIdaDataStruct;
@@ -61,6 +64,10 @@ typedef struct IntegratorIdaDataStruct{
 	IdaFlagFn *flagfn;
 	IdaFlagNameFn *flagnamefn;
 	const char *flagfntype;
+	/* SUNDIALS 3.x context */
+#if SUNDIALS_VERSION_MAJOR>2
+	SUNContext sunctx;
+#endif
 
 } IntegratorIdaData;
 

@@ -145,6 +145,12 @@ static void integrator_ida_create(IntegratorSystem *integ) {
 	enginedata->flagnamefn = NULL;
 
 	integ->enginedata = (void *) enginedata;
+#if SUNDIALS_VERSION_MAJOR>2
+	{ int _f = SUNContext_Create(NULL, &enginedata->sunctx);
+		if (_f != SUNCONTEXT_SUCCESS)
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"SUNContext_Create failed");
+	}
+#endif
 
 	integrator_ida_params_default(integ);
 }
@@ -167,6 +173,9 @@ static void integrator_ida_free(void *enginedata) {
 	}
 
 	ASC_FREE(d->rellist);
+#if SUNDIALS_VERSION_MAJOR>2
+	SUNContext_Free(&d->sunctx);
+#endif
 
 #ifdef DESTROY_DEBUG
 	CONSOLE_DEBUG("Now destroying the enginedata");
@@ -1014,8 +1023,12 @@ static int integrator_ida_solve(IntegratorSystem *integ,
 	/* store reference to list of relations (in enginedata) */
 		ida_load_rellist(integ);
 
-	/* create IDA object */
+   /* create IDA object */
+#if SUNDIALS_VERSION_MAJOR>2
+	ida_mem = IDACreate(enginedata->sunctx);
+#else
 	ida_mem = IDACreate();
+#endif
 
 	/* Setup parameter inputs and initial conditions for IDA. */
 	tout = samplelist_get(integ->samples, start_index + 1);
@@ -1263,4 +1276,4 @@ static int integrator_ida_stats(void *ida_mem, IntegratorIdaStats *s) {
 #endif
 }
 
-/* vim: set ts=4: */
+/* vim: set ts=4:noet:sw=4 */

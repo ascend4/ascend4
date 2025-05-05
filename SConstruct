@@ -1577,16 +1577,15 @@ def CheckDLOpen(context):
 
 #----------------
 # IDA test
-
-sundials_version_major_required = 2
+# Require SUNDIALS >= 2.4 (accept any major >=2, if major==2 then minor>=4)
+sundials_version_major_min = 2
 sundials_version_minor_min = 4
-sundials_version_minor_max = 4
 
 sundials_version_text = """
 #include <sundials/sundials_config.h>
 #include <stdio.h>
 int main(){
-	printf("%s",SUNDIALS_PACKAGE_VERSION);
+	printf("%s",SUNDIALS_VERSION);
 	return 0;
 }
 """
@@ -1624,11 +1623,9 @@ def CheckSUNDIALS(context):
 	major,minor,patch = tuple([int(i) for i in output.split(".")])
 	context.env['SUNDIALS_VERSION_MAJOR'] = major
 	context.env['SUNDIALS_VERSION_MINOR'] = minor
-	if major != sundials_version_major_required \
-			or minor < sundials_version_minor_min \
-			or minor > sundials_version_minor_max:
+	# accept any SUNDIALS version >= 3.1
+	if major < 3 or (major == 3 and minor < 1):
 		context.Result(output+" (bad version)")
-		# bad version
 		return 0
 		
 	# good version
@@ -2355,6 +2352,18 @@ if platform.system()=="Windows" and 'MSVS' in env:
 
 #print("1. SIZEOF_VOID_P = %s"%(conf.env['SIZEOF_VOID_P']))
 env = conf.Finish()
+# Fallback for SUNDIALS detection if sundials-config not found (Ubuntu default)
+if not env.get('HAVE_SUNDIALS', False):
+    prefix = os.environ.get('SUNDIALS_PREFIX', '/usr')
+    incdir = os.path.join(prefix, 'include')
+    libdirs = [os.path.join(prefix, 'lib'), os.path.join(prefix, 'lib', 'x86_64-linux-gnu')]
+    libdirs = [d for d in libdirs if os.path.isdir(d)]
+    if os.path.isdir(incdir) and libdirs:
+        env['SUNDIALS_CPPPATH'] = [incdir]
+        env['SUNDIALS_LIBPATH'] = libdirs
+        env['SUNDIALS_LIBS'] = ['sundials_ida', 'sundials_nvecserial', 'm']
+        env['HAVE_SUNDIALS'] = True
+        print("Fallback SUNDIALS detection in SConstruct: prefix=%s; libs=%s" % (prefix, env['SUNDIALS_LIBS']))
 #print("2. SIZEOF_VOID_P = %s"%(env['SIZEOF_VOID_P']))
 #print "-=-=-=-=-=-=-=-=- LIBS =",env.get('LIBS')
 
