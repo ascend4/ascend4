@@ -69,10 +69,12 @@ jobs:
         ./a4 script `which bash` test/test_expectpass_mallocdebug
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         gcov: true
-        flags: msys, cunit
+        flags: msys2-cunit
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
 
 # vim: ts=2:sw=2:et
 

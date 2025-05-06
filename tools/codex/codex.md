@@ -13,9 +13,11 @@ ASCEND (although it's up to you to clear out results from earlier builds you
 might have done in your host system).
 
 To build the docker:
+
 ```sh
 docker build -t ascend .
 ```
+
 Note that this docker includes a copy of codex, as well as all of the ASCEND
 build dependencies. It also includes a copy of CUnit, built from source, which
 it downloads using subversion from Sourceforge (old school!)
@@ -24,25 +26,33 @@ it downloads using subversion from Sourceforge (old school!)
 
 To run the docker, map your working folder (here, ~/ascend/git) and set the
 user/group to yourself as follows:
+
 ```sh
 docker run -it -v ~/ascend/git:/app --user "$(id -u):$(id -g)" -w /app ascend
 ```
+
 To build in the docker, note that CUNIT is installed in /usr/local and you may
 need to explicitly tell SCons to look there:
+
 ```sh
 scons CUNIT_PREFIX=/usr/local -j8
 ```
+
 # Running Codex
 
 To run Codex, create a .env file in your ASCEND working folder (ie ~/ascend/git)
 containing your OpenAI API key:
+
 ```sh
 OPENAI_API_KEY=sk_.......
 ```
+
 Then run codex as follows:
+
 ```sh
 codex "please explain this codebase"
 ```
+
 and it should work. Please let us know if there are any problems with these
 instructions!
 
