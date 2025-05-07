@@ -165,6 +165,9 @@ extern void InitBBox(struct Instance *context, struct BlackBoxCache *b);
  */
 extern void DeleteRefBlackBoxCache(struct relation *rel, struct BlackBoxCache **b);
 
+/** Return number of live BlackBoxCache objects (for leak testing). */
+ASC_DLLSPEC int BlackBoxCacheAlive(void);
+
 /* @} */
 
 #endif /* ASC_REL_BLACKBOX_H */

@@ -58,7 +58,7 @@
 # define MSG(ARGS...) ((void)0)
 #endif
 
-#define BBDEBUG 0 /* set 0 if not wanting spew */
+#define BBDEBUG 0 /* set 0 if not wanting spew, but don't remove this */
 
 static int32 ArgsDifferent(double new, double old, double tol){
 	if (fabs(new - old) > fabs(tol)) {
@@ -107,8 +107,10 @@ real64 *blackbox_dsolve(struct Instance *ri, struct Instance *v
 		return NULL;
 	}
 
-	solns = ASC_NEW_ARRAY(double,1);
-	solns[0] = RealAtomValue(v) - resid;
+    /* Avoid dynamic allocation: use static buffer for single solution */
+    static double soln_buff[1];
+    solns = soln_buff;
+    solns[0] = RealAtomValue(v) - resid;
 	MSG("Got solution %f for blackbox output", solns[0]);
 	*able = 1;
 	*nsolns = 1;
@@ -519,7 +521,15 @@ int blackbox_fdiff(ExtBBoxFunc *resfn, struct BBoxInterp *interp
   BLACK BOX CACHE
 */
 
+
 static int g_cbbccount = 0;
+/* count of currently live BlackBoxCache objects */
+static int g_bbccurrent = 0;
+
+/** Return number of currently live cache objects. */
+int BlackBoxCacheAlive(void) {
+	return g_bbccurrent;
+}
 
 #define JACMAGIC -3.141592071828
 struct BlackBoxCache *CreateBlackBoxCache(
@@ -532,6 +542,7 @@ struct BlackBoxCache *CreateBlackBoxCache(
 {
 	struct BlackBoxCache *b = (struct BlackBoxCache *)malloc(sizeof(struct BlackBoxCache));
 	g_cbbccount++;
+	g_bbccurrent++;
 	b->count = g_cbbccount;
  	b->interp.task = bb_none;
 	b->interp.status = calc_all_ok;
@@ -657,6 +668,8 @@ static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b){
 		b->efunc = NULL;
     }
     b->count *= -1;
+	/* decrement live cache count */
+	g_bbccurrent--;
     ascfree(b);
 }
 

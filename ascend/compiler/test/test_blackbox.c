@@ -34,8 +34,8 @@
 #include <ascend/compiler/parentchild.h>
 #include <ascend/compiler/atomvalue.h>
 #include <ascend/compiler/pending.h>
-
 #include <ascend/compiler/initialize.h>
+#include <ascend/compiler/rel_blackbox.h> // needed for leak test
 
 #include <ascend/compiler/packages.h>
 #include <ascend/system/system.h>
@@ -217,6 +217,16 @@ static void test_pass23(void){
 	load_solve_test("passarray","pass23");
 }
 
+/**
+   Test that blackbox cache is torn down properly after destroy.
+*/
+static void test_cache_teardown(void){
+    // perform a full load, solve, and teardown of a blackbox model
+    load_solve_test("pass","pass1");
+    // after full teardown, no BlackBoxCache should remain
+    CU_ASSERT(0 == BlackBoxCacheAlive());
+}
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -241,7 +251,8 @@ static void test_pass23(void){
 	T(pass14) \
 	T(pass20) \
 	T(pass22) \
-	T(pass23)
+	T(pass23) \
+    T(cache_teardown)
 
 REGISTER_TESTS_SIMPLE(compiler_blackbox, TESTS)
 
