@@ -593,7 +593,13 @@ void InitBBox(struct Instance *context, struct BlackBoxCache *b){
 	init = GetInitFunc(b->efunc);
 	b->interp.task = bb_first_call;
 	(*init)( &(b->interp), data, arglist);
-  	b->interp.task = bb_none;
+	b->interp.task = bb_none;
+	/* free the temporary argument lists now no longer needed */
+	for (br = 1; br <= nbr; ++br) {
+		struct gl_list_t *ilist = (struct gl_list_t *)gl_fetch(arglist, br);
+		gl_destroy(ilist);
+	}
+	gl_destroy(arglist);
 }
 
 
@@ -649,9 +655,9 @@ static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b){
 		b->interp.task = bb_last_call;
 		(*final)(&(b->interp));
 		b->efunc = NULL;
-	}
-	b->count *= -1;
-	ascfree(b);
+    }
+    b->count *= -1;
+    ascfree(b);
 }
 
 

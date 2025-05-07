@@ -276,7 +276,7 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
   }
   if (nsolns<0 && allsolns>0 && fp !=NULL) {
    /* dump the rejected solutions to give the user a clue */
-	ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(ASCERR,"Solution(s) for '");
     var_write_name(server,var,ASCERR);
     FPRINTF(ASCERR,"' in equation '");
@@ -285,10 +285,9 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
     for (--allsolns; allsolns >= 0; allsolns--)  {
       FPRINTF(ASCERR," %.18g",slist[allsolns]);
     }
-	error_reporter_end_flush();
+    error_reporter_end_flush();
   }
-  /* destroy_array(slist); do not do this */
-  //ASC_FREE(slist);
+  /* solution list memory is managed internally by RelationFindRoots; not freed here */
   return( nsolns >= 0 ? 1 : -1 );
 }
 
@@ -316,8 +315,14 @@ int slv_direct_log_solve(slv_system_t server
   (void)fp;
 
   slist = logrelman_directly_solve(lrel,dvar,&able,&nsolns,perturb,insts);
-  if( !able ) return(0);
-  if(nsolns == -1) return (-1);
+  if (!able) {
+    destroy_array(slist);
+    return 0;
+  }
+  if (nsolns == -1) {
+    destroy_array(slist);
+    return -1;
+  }
 
   if (nsolns == 1) {
     dis_set_boolean_value(dvar,slist[1]);
