@@ -151,6 +151,12 @@ extern struct BlackBoxCache *CreateBlackBoxCache( int32 inputsLen, int32 outputs
 /** make a persistent reference to b. */
 extern void AddRefBlackBoxCache(struct BlackBoxCache *b);
 
+/**
+ * Cleanup any leaked BlackBoxData and BlackBoxCache objects.
+ * Should be called once at final compiler teardown.
+ */
+extern void BlackBoxCleanupGlobals(void);
+
 /** dispatch the init function on a bbox after updating the input instance list
   from the names list.
   @param context the parent model containing the relations the cache is

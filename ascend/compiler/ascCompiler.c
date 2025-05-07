@@ -47,6 +47,7 @@
 #include "evaluate.h"
 #include "units.h"
 #include "symtab.h"
+#include "rel_blackbox.h"
 #include "notate.h"
 #include "module.h"
 #include "child.h"
@@ -239,6 +240,8 @@ void Asc_CompilerDestroy(void)
   importhandler_destroylibrary();
 
   DestroyExtFuncLibrary();      /* deallocate external function nodes */
+  /* cleanup any leaked blackbox caches and data before pools are torn down */
+  BlackBoxCleanupGlobals();
 
   /* some of the following calls are order dependent. see the headers.
    * In general, larger complex objects should be cleared before their

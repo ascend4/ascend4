@@ -68,6 +68,13 @@ static int32 ArgsDifferent(double new, double old, double tol){
 	}
 }
 
+/* forward declarations for registry and cleanup */
+static void register_BBC(struct BlackBoxCache *b);
+static void unregister_BBC(struct BlackBoxCache *b);
+static void register_BBD(struct BlackBoxData *d);
+static void unregister_BBD(struct BlackBoxData *d);
+static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b);
+
 /*------------------------------------------------------------------------------
   DIRECT SOLVE ROUTINE
 */
@@ -386,6 +393,8 @@ struct BlackBoxData *CreateBlackBoxData(struct BlackBoxCache *common){
 	assert(common!=NULL);
 	b->common = common;
 	AddRefBlackBoxCache(common);
+	/* track for final cleanup */
+	register_BBD(b);
 #if BBDEBUG
 	FPRINTF(ASCERR,"CreateBlackBoxData(%p) made BBD#%d (%p)\n",common,b->count, b);
 #endif
@@ -416,10 +425,12 @@ void CopyBlackBoxDataByReference(struct relation *src
 		/* everyone gets a unique bbd and shared cache */
 		b = (struct BlackBoxData *)pairlist_valueAt(bboxtable, entry);
 #if BBDEBUG
-		FPRINTF(ASCERR,"CopyBlackBoxDataByReference(%p, %p): found already cloned cache C#%d (%p)in BBD#%d (%p)\n",src,dest,b->common->count, b->common, b->count, b);
+		FPRINTF(ASCERR,"CopyBlackBoxDataByReference(%p, %p): found already cloned cache C#%d (%p) in BBD#%d (%p)\n",src,dest,b->common->count, b->common, b->count, b);
 #endif
 		newCache = b->common;
+		/* create new data reference; keep shared cache reference for this BBD */
 		b = CreateBlackBoxData(newCache);
+		/* refrain from dropping cache ref here to preserve correct refCount */
 	} else {
 		/* dup common */
 		/* This is common across a single box output array of rels,
@@ -442,8 +453,11 @@ void DestroyBlackBoxData(struct relation *rel, struct BlackBoxData *b){
 #if BBDEBUG
 	FPRINTF(ASCERR,"DestroyBlackBoxData(%p): destroying bbd %p BBD#%d\n",rel,b,b->count);
 #endif
+	/* drop data ref and free data block */
 	DeleteRefBlackBoxCache(rel, &(b->common));
 	b->count *= -1;
+	/* remove from registry and free */
+	unregister_BBD(b);
 	ascfree(b);
 }
 
@@ -526,6 +540,92 @@ static int g_cbbccount = 0;
 /* count of currently live BlackBoxCache objects */
 static int g_bbccurrent = 0;
 
+/*
+ * Global registries to catch any BlackBoxData and BlackBoxCache objects
+ * that escape normal destruction. They will be forcibly freed at compiler teardown.
+ */
+static struct BlackBoxCache **g_bbc_registry = NULL;
+static size_t g_bbc_count = 0;
+static size_t g_bbc_capacity = 0;
+static struct BlackBoxData  **g_bbd_registry = NULL;
+static size_t g_bbd_count = 0;
+static size_t g_bbd_capacity = 0;
+
+/* Internal helpers to register/unregister */
+static void register_BBC(struct BlackBoxCache *b) {
+    if (g_bbc_count == g_bbc_capacity) {
+        size_t new_cap = g_bbc_capacity ? g_bbc_capacity * 2 : 16;
+        g_bbc_registry = (struct BlackBoxCache **)ascrealloc(
+            g_bbc_registry, new_cap * sizeof(*g_bbc_registry)
+        );
+        if (!g_bbc_registry) ASC_PANIC("Out of memory registering BlackBoxCache");
+        g_bbc_capacity = new_cap;
+    }
+    g_bbc_registry[g_bbc_count++] = b;
+}
+static void unregister_BBC(struct BlackBoxCache *b) {
+    for (size_t i = 0; i < g_bbc_count; ++i) {
+        if (g_bbc_registry[i] == b) {
+            g_bbc_registry[i] = g_bbc_registry[--g_bbc_count];
+            return;
+        }
+    }
+}
+static void register_BBD(struct BlackBoxData *d) {
+    if (g_bbd_count == g_bbd_capacity) {
+        size_t new_cap = g_bbd_capacity ? g_bbd_capacity * 2 : 16;
+        g_bbd_registry = (struct BlackBoxData **)ascrealloc(
+            g_bbd_registry, new_cap * sizeof(*g_bbd_registry)
+        );
+        if (!g_bbd_registry) ASC_PANIC("Out of memory registering BlackBoxData");
+        g_bbd_capacity = new_cap;
+    }
+    g_bbd_registry[g_bbd_count++] = d;
+}
+static void unregister_BBD(struct BlackBoxData *d) {
+    for (size_t i = 0; i < g_bbd_count; ++i) {
+        if (g_bbd_registry[i] == d) {
+            g_bbd_registry[i] = g_bbd_registry[--g_bbd_count];
+            return;
+        }
+    }
+}
+/**
+ * Cleanup any leaked BlackBoxData and BlackBoxCache objects.
+ * Call this at final compiler teardown to free any leftover allocations.
+ */
+void BlackBoxCleanupGlobals(void) {
+    size_t i;
+    /* First, destroy any remaining data objects (drop cache refs and free data) */
+    for (i = 0; i < g_bbd_count; ++i) {
+        DestroyBlackBoxData(NULL, g_bbd_registry[i]);
+    }
+    if (g_bbd_registry) {
+        ascfree(g_bbd_registry);
+        g_bbd_registry = NULL;
+    }
+    g_bbd_count = g_bbd_capacity = 0;
+    /* Next, destroy any remaining cache objects, but free their name lists first */
+    for (i = 0; i < g_bbc_count; ++i) {
+        struct BlackBoxCache *b = g_bbc_registry[i];
+        if (b->argListNames) {
+            DeepDestroySpecialList(b->argListNames, (DestroyFunc)DestroyName);
+            b->argListNames = NULL;
+        }
+        if (b->dataName) {
+            DestroyName(b->dataName);
+            b->dataName = NULL;
+        }
+        /* Now free the rest */
+        DestroyBlackBoxCache(NULL, b);
+    }
+    if (g_bbc_registry) {
+        ascfree(g_bbc_registry);
+        g_bbc_registry = NULL;
+    }
+    g_bbc_count = g_bbc_capacity = 0;
+}
+
 /** Return number of currently live cache objects. */
 int BlackBoxCacheAlive(void) {
 	return g_bbccurrent;
@@ -563,6 +663,8 @@ struct BlackBoxCache *CreateBlackBoxCache(
 	b->gradCount = 0;
 	b->refCount = 1;
 	b->efunc = efunc;
+	/* track for final cleanup */
+	register_BBC(b);
 	return b;
 }
 
@@ -666,11 +768,13 @@ static void DestroyBlackBoxCache(struct relation *rel, struct BlackBoxCache *b){
 		b->interp.task = bb_last_call;
 		(*final)(&(b->interp));
 		b->efunc = NULL;
-    }
-    b->count *= -1;
+	}
+	b->count *= -1;
 	/* decrement live cache count */
 	g_bbccurrent--;
-    ascfree(b);
+	/* remove from registry and free */
+	unregister_BBC(b);
+	ascfree(b);
 }
 
 

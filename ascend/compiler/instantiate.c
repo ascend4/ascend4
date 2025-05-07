@@ -5459,23 +5459,29 @@ int Pass2ExecuteBlackBoxEXTLoop(struct Instance *inst, struct Statement *stateme
   RemoveForVariable(GetEvaluationForTable());
   DestroyValue(&value);
   DestroySetNode(extrange);
+  DestroyExpr(ex);
 
 /* ------------ */ /* ------------ */
   /* and now for cleaning up shared data. */
-  init = GetInitFunc(efunc);
-  if(init){
-    if( (*init)( &(common->interp), data, arglist) ){
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in blackbox initfn");
+cleanup:
+  /* teardown shared cache and resources */
+  if (common) {
+    init = GetInitFunc(efunc);
+    if (init) {
+      if ((*init)(&(common->interp), data, arglist)) {
+        ERROR_REPORTER_HERE(ASC_PROG_ERR, "Error in blackbox initfn");
+      }
     }
+    common->interp.task = bb_none;
+    DeleteRefBlackBoxCache(NULL, &common);
   }
-  common->interp.task = bb_none;
   ascfree(context);
-  DeleteRefBlackBoxCache(NULL, &common);
   gl_destroy(inputs);
   gl_destroy(outputs);
   DestroySpecialList(arglist);
-  DeepDestroySpecialList(argListNames,(DestroyFunc)DestroyName);
+  DeepDestroySpecialList(argListNames, (DestroyFunc)DestroyName);
   DestroyName(dataName);
+  /* free reserved loop index symbol */
 /* ------------ */ /* ------------ */
 
   /*  currently designed to always succeed or fail permanently.
