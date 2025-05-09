@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-
 import os, sys, subprocess, json, gzip, fnmatch
+from collections import defaultdict
 from gi.repository import Gio, Gtk, GObject, Gedit, PeasGtk
 
 # GSettings for plugin preferences
 t_settings = Gio.Settings.new("org.gnome.gcov-gedit")
 
 def MSG(*args, **kwargs):
-    """Print debug messages when 'debug' is true."""
     if t_settings.get_boolean("debug"):
         print("[CoverageHighlighter]", *args, file=sys.stderr, **kwargs)
 
@@ -17,14 +16,19 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
 
     def __init__(self):
         super().__init__()
-        self._idle_id     = None
-        self._monitor     = None
+        MSG("__init__ called")
+        self._idle_id = None
+        self._monitor = None
         self._debounce_id = None
-        self._stem        = None
+        self._stem = None
+        self._lcov_root = None
+        self._baseline_cache = {}
+        self._statusbar = None
+        self._status_ctx = None
 
     def do_activate(self):
-        MSG("Activating coverage highlighter plugin")
-        buf   = self.view.get_buffer()
+        MSG("Activating plugin")
+        buf = self.view.get_buffer()
         tfile = getattr(buf, 'get_file', lambda: None)()
         if not tfile:
             MSG("No TeplFile; plugin disabled")
@@ -34,31 +38,53 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
             MSG("No Gio.File; plugin disabled")
             return
 
-        src       = gfile.get_path()
-        base      = os.path.basename(src)
-        self._stem = os.path.splitext(base)[0]
-        src_dir   = os.path.dirname(src)
-        MSG(f"Loaded source file: {src}")
-
-        # Initial highlight once idle
+        # set up status bar context
+        win = self.view.get_toplevel()
         try:
-            self._idle_id = GObject.idle_add(self._activate_highlight)
-            MSG("Scheduled initial idle highlight")
+            self._statusbar = win.get_statusbar()
+            self._status_ctx = self._statusbar.get_context_id('CoverageHighlighter')
+            MSG("Statusbar context created")
         except Exception as e:
-            MSG(f"Failed to schedule initial highlight: {e}")
+            MSG(f"Statusbar init error: {e}")
 
-        # Watch only this file's .gcda/.gcno
+        src = gfile.get_path()
+        MSG(f"Loaded source file: {src}")
+        base = os.path.basename(src)
+        self._stem = os.path.splitext(base)[0]
+        src_dir = os.path.dirname(src)
+
+        # locate .lcov folder for baseline coverage file
+        self._lcov_root = self._find_lcov_root(src_dir)
+        MSG(f"LCOV root: {self._lcov_root}")
+
+        # ensure coverage tags exist
+        if not hasattr(buf, '_cov_tags'):
+            MSG("Creating coverage tags")
+            buf._cov_tags = (
+                buf.create_tag('cov_covered',   background='#d0ffd0'),
+                buf.create_tag('cov_uncovered', background='#ffd0d0'),
+                buf.create_tag('cov_new',       background='#c0ffc0'),
+                buf.create_tag('cov_lost',      background='#ffc0c0'),
+                buf.create_tag('cov_common',    background='#fff8c0'),
+            )
+        self._tags = buf._cov_tags
+
+        # schedule initial highlight
+        MSG("Scheduling initial highlight")
+        self._idle_id = GObject.idle_add(self._activate_highlight)
+
+        # monitor .gcda/.gcno changes for re-highlighting
         try:
             file_obj = Gio.File.new_for_path(src_dir)
             self._monitor = file_obj.monitor_directory(
                 Gio.FileMonitorFlags.NONE, None)
             self._monitor.connect('changed', self._on_dir_changed)
-            MSG(f"Monitoring {src_dir} for {self._stem}.gcda/.gcno changes")
+            MSG(f"Monitoring directory for changes: {src_dir}")
         except Exception as e:
             MSG(f"Failed to monitor directory: {e}")
 
     def do_deactivate(self):
-        MSG("Deactivating plugin and removing monitors/timers")
+        MSG("Deactivating plugin")
         if self._idle_id:
             GObject.source_remove(self._idle_id)
             self._idle_id = None
@@ -75,17 +101,16 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
             MSG(f"Detected change for {name}, debouncing")
             if self._debounce_id:
                 GObject.source_remove(self._debounce_id)
-            self._debounce_id = GObject.timeout_add(
-                500, self._on_debounce_timeout)
+            self._debounce_id = GObject.timeout_add(500, self._on_debounce_timeout)
 
     def _on_debounce_timeout(self):
-        self._debounce_id = None
         MSG("Debounce elapsed, scheduling highlight")
+        self._debounce_id = None
         GObject.idle_add(self._activate_highlight)
         return False
 
     def _activate_highlight(self):
-        buf   = self.view.get_buffer()
+        buf = self.view.get_buffer()
         tfile = getattr(buf, 'get_file', lambda: None)()
         if not tfile:
             MSG("No TeplFile; skip highlight")
@@ -94,90 +119,66 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
         if not gfile:
             MSG("No Gio.File; skip highlight")
             return False
-
         src = gfile.get_path()
         if not src.endswith('.c'):
-            MSG("Not a C source; skip highlight")
+            MSG(f"Not a C source: {src}")
             return False
 
-        MSG(f"Starting highlight for {src}")
-        self._highlight(src)
-        MSG("Highlight pass complete")
+        diff_mode = t_settings.get_boolean('differential-mode')
+        mode = 'diff' if diff_mode else 'standard'
+        MSG(f"Highlight mode: {mode} for {src}")
+
+        # status bar notification
+        if self._statusbar and self._status_ctx is not None:
+            self._statusbar.push(self._status_ctx, f"Starting {mode} coverage highlight")
+
+        if diff_mode and self._lcov_root:
+            self._highlight_diff(src)
+        else:
+            self._highlight_standard(src)
+
+        # final status bar message
+        if self._statusbar and self._status_ctx is not None:
+            self._statusbar.push(self._status_ctx, f"{mode.capitalize()} highlight complete for {os.path.basename(src)}")
+
         return False
 
-    def _highlight(self, src):
+    def _highlight_standard(self, src):
+        MSG(f"Standard highlight: {src}")
+        buf = self.view.get_buffer()
         src_dir = os.path.dirname(src)
-        base    = os.path.basename(src)
-        stem    = self._stem
-
+        base = os.path.basename(src)
+        stem = self._stem
         note = os.path.join(src_dir, f"{stem}.gcno")
         data = os.path.join(src_dir, f"{stem}.gcda")
-        buf  = self.view.get_buffer()
 
-        # Attach or reuse the tag pair on the buffer itself
-        if not hasattr(buf, '_cov_tags'):
-            buf._cov_tags = (
-                buf.create_tag('cov_covered',   background='#d0ffd0'),
-                buf.create_tag('cov_uncovered', background='#ffd0d0')
-            )
-        tag_hit, tag_miss = buf._cov_tags
-
-        # If no data file: clear and return
         if not os.path.isfile(data):
-            MSG('Data file missing; clearing all highlights')
+            MSG('Data file missing; clearing highlights')
             start, end = buf.get_start_iter(), buf.get_end_iter()
-            buf.remove_tag(tag_hit,  start, end)
-            buf.remove_tag(tag_miss, start, end)
+            buf.remove_tag(self._tags[0], start, end)
+            buf.remove_tag(self._tags[1], start, end)
             return
 
-        # Check timestamps to see if JSON needs regen
-        latest_data = 0
-        for p in (note, data):
-            if os.path.isfile(p):
-                try:
-                    latest_data = max(latest_data, os.path.getmtime(p))
-                except Exception:
-                    pass
-        MSG(f"Latest data timestamp: {latest_data}")
-
-        # Locate existing JSON if fresh
-        pattern   = f"{stem}*.gcov.json.gz"
+        latest = max(os.path.getmtime(p) for p in (note, data) if os.path.exists(p))
         json_path = None
         for fn in os.listdir(src_dir):
-            if fnmatch.fnmatch(fn, pattern):
-                cand = os.path.join(src_dir, fn)
-                try:
-                    if os.path.getmtime(cand) >= latest_data:
-                        json_path = cand
-                        MSG(f"Using up-to-date JSON: {cand}")
-                except Exception:
-                    MSG("Error checking JSON timestamp; will regenerate")
-                break
-
-        # Regenerate if missing or stale
-        if not json_path:
-            MSG("JSON missing or stale; running gcov -i")
-            try:
-                subprocess.run([
-                    'gcov','-i','-b','-r',base
-                ], cwd=src_dir, check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE)
-                MSG("gcov JSON generated")
-            except subprocess.CalledProcessError as e:
-                MSG(f"gcov error: {e.stderr.strip()}")
-                return
-            for fn in os.listdir(src_dir):
-                if fnmatch.fnmatch(fn, pattern):
-                    json_path = os.path.join(src_dir, fn)
-                    MSG(f"Found new JSON: {json_path}")
+            if fn.startswith(stem) and fn.endswith('.gcov.json.gz'):
+                path = os.path.join(src_dir, fn)
+                if os.path.getmtime(path) >= latest:
+                    json_path = path
                     break
-
         if not json_path:
-            MSG("No JSON found after gcov; aborting highlight")
+            MSG('Generating gcov JSON')
+            subprocess.run(['gcov','-i','-b','-r', base], cwd=src_dir,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            for fn in os.listdir(src_dir):
+                if fn.startswith(stem) and fn.endswith('.gcov.json.gz'):
+                    json_path = os.path.join(src_dir, fn)
+                    break
+        if not json_path:
+            MSG('No JSON found; abort standard highlight')
             return
 
-        MSG(f"Parsing JSON: {json_path}")
         try:
             with gzip.open(json_path, 'rt', encoding='utf-8') as gf:
                 data = json.load(gf)
@@ -185,31 +186,131 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
             MSG(f"JSON parse error: {e}")
             return
 
-        # Build per-line map
         coverage = {}
         for fentry in data.get('files', []):
-            if not fentry.get('file','').endswith(base):
-                continue
-            for lninfo in fentry.get('lines', []):
-                ln = lninfo.get('line_number',0) - 1
-                coverage[ln] = lninfo.get('count',0) > 0
-            break
+            if fentry.get('file','').endswith(base):
+                for lninfo in fentry.get('lines', []):
+                    coverage[lninfo['line_number']-1] = lninfo['count']>0
+                break
 
-        MSG(f"Parsed coverage lines: {len(coverage)}")
-        # Clear old tags
         start, end = buf.get_start_iter(), buf.get_end_iter()
-        buf.remove_tag(tag_hit,  start, end)
-        buf.remove_tag(tag_miss, start, end)
-
-        # Apply new ones
+        buf.remove_tag(self._tags[0], start, end)
+        buf.remove_tag(self._tags[1], start, end)
         for ln, hit in coverage.items():
+            it0 = buf.get_iter_at_line(ln)
+            it1 = it0.copy(); it1.forward_to_line_end()
+            buf.apply_tag(self._tags[0] if hit else self._tags[1], it0, it1)
+        MSG(f"Standard highlight complete for {src}")
+
+    def _highlight_diff(self, src):
+        MSG(f"Differential highlight: {src}")
+        buf = self.view.get_buffer()
+        base_info = os.path.join(self._lcov_root, 'base.info')
+        base_counts = self._baseline_cache.get(src) or self._load_baseline(base_info, src)
+        self._baseline_cache[src] = base_counts
+        curr_counts = self._load_current(src)
+        if curr_counts is None:
+            MSG('No current counts; abort diff')
+            return
+
+        start, end = buf.get_start_iter(), buf.get_end_iter()
+        for tag in self._tags:
+            buf.remove_tag(tag, start, end)
+
+        for ln in sorted(set(base_counts) | set(curr_counts)):
+            b = base_counts.get(ln,0)>0
+            c = curr_counts.get(ln,0)>0
+            if not b and c:
+                tag = self._tags[2]
+            elif b and not c:
+                tag = self._tags[3]
+            elif b and c:
+                tag = self._tags[4]
+            else:
+                continue
+            it0 = buf.get_iter_at_line(ln-1)
+            it1 = it0.copy(); it1.forward_to_line_end()
+            buf.apply_tag(tag, it0, it1)
+        MSG(f"Differential highlight complete for {src}")
+
+    def _find_lcov_root(self, start_dir):
+        MSG(f"Searching for .lcov in {start_dir}")
+        p = start_dir
+        while p and p != os.path.dirname(p):
+            cand = os.path.join(p, '.lcov')
+            if os.path.isdir(cand):
+                MSG(f"Found .lcov at {cand}")
+                return cand
+            p = os.path.dirname(p)
+        MSG("No .lcov folder found")
+        return None
+
+    def _load_baseline(self, info_path, src):
+        MSG(f"Loading baseline counts from {info_path} for {src}")
+        counts = {}
+        try:
+            with open(info_path, 'r') as f:
+                in_sec = False
+                for raw in f:
+                    line = raw.strip()
+                    if line.startswith('SF:'):
+                        in_sec = (line[3:].strip() == src)
+                    elif in_sec and line.startswith('DA:'):
+                        ln, cnt = line[3:].split(',',1)
+                        counts[int(ln)] = int(cnt)
+                    elif in_sec and line == 'end_of_record':
+                        break
+        except Exception as e:
+            MSG(f"Error loading baseline: {e}")
+        MSG(f"Baseline lines: {len(counts)}")
+        return counts
+
+    def _load_current(self, src):
+        MSG(f"Loading current counts via gcov JSON for {src}")
+        src_dir, base = os.path.dirname(src), os.path.basename(src)
+        stem = os.path.splitext(base)[0]
+        note = os.path.join(src_dir, f"{stem}.gcno")
+        data = os.path.join(src_dir, f"{stem}.gcda")
+        if not os.path.exists(data):
+            MSG("No .gcda; skipping current load")
+            return {}
+        latest = max(os.path.getmtime(p) for p in (note, data) if os.path.exists(p))
+        json_path = None
+        for fn in os.listdir(src_dir):
+            if fn.startswith(stem) and fn.endswith('.gcov.json.gz'):
+                path = os.path.join(src_dir, fn)
+                if os.path.getmtime(path) >= latest:
+                    json_path = path
+                    break
+        if not json_path:
             try:
-                it0 = buf.get_iter_at_line(ln)
-                it1 = it0.copy(); it1.forward_to_line_end()
-                buf.apply_tag(tag_hit if hit else tag_miss, it0, it1)
+                MSG("Running gcov to generate JSON")
+                subprocess.run(['gcov','-i','-b','-r', base], cwd=src_dir,
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except Exception as e:
-                MSG(f"Error tagging line {ln+1}: {e}")
-        MSG("Highlights applied")
+                MSG(f"gcov error: {e}")
+                return {}
+            for fn in os.listdir(src_dir):
+                if fn.startswith(stem) and fn.endswith('.gcov.json.gz'):
+                    json_path = os.path.join(src_dir, fn)
+                    break
+        if not json_path:
+            MSG("No JSON found after gcov run")
+            return {}
+        try:
+            with gzip.open(json_path, 'rt', encoding='utf-8') as gf:
+                data = json.load(gf)
+        except Exception as e:
+            MSG(f"JSON parse error: {e}")
+            return {}
+        counts = {}
+        for fentry in data.get('files', []):
+            if fentry.get('file','').endswith(base):
+                for lninfo in fentry.get('lines', []):
+                    counts[lninfo['line_number']] = lninfo['count']
+                break
+        MSG(f"Current lines: {len(counts)}")
+        return counts
 
 class CoverageHighlighterPrefs(GObject.Object, PeasGtk.Configurable):
     __gtype_name__ = "CoverageHighlighterPrefs"
@@ -217,9 +318,9 @@ class CoverageHighlighterPrefs(GObject.Object, PeasGtk.Configurable):
 
     def do_create_configure_widget(self):
         builder = Gtk.Builder()
-        ui_path = os.path.expanduser(
-            "~/.local/share/gedit/plugins/gcov-prefs.ui"
-        )
+        # Load preferences UI from the plugin directory
+        plugin_dir = os.path.dirname(__file__)
+        ui_path = os.path.join(plugin_dir, 'gcov-prefs.ui')
         builder.add_from_file(ui_path)
         widget = builder.get_object("CoverageHighlighterPrefs")
 
@@ -228,6 +329,12 @@ class CoverageHighlighterPrefs(GObject.Object, PeasGtk.Configurable):
         switch.connect(
             "toggled",
             lambda btn: t_settings.set_boolean("debug", btn.get_active())
+        )
+        diff_switch = builder.get_object("diff-switch")
+        diff_switch.set_active(t_settings.get_boolean("differential-mode"))
+        diff_switch.connect(
+            "toggled",
+            lambda btn: t_settings.set_boolean("differential-mode", btn.get_active())
         )
         return widget
 

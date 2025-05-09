@@ -9,6 +9,15 @@
         to stderr.
       </description>
     </key>
+    <key name="differential-mode" type="b">
+      <default>true</default>
+      <summary>Enable differential coverage</summary>
+      <description>
+        If true, the coverage-highlight plugin search for a .lcov/base.info (LCOV
+        output file) and use that as the basis for a differential coverage
+        highlighting for the currently-open file.
+      </description>
+    </key>
   </schema>
 </schemalist>
 
