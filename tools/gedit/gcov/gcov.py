@@ -197,15 +197,16 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
                     json_path = path
                     break
         if not json_path:
-            MSG('Generating gcov JSON')
-            subprocess.run(['gcov','-i','-b','-r', base], cwd=src_dir,
+            cmd = ['gcov','-i','-b','-r', base]
+            MSG(f"Generating gcov JSON: running '{' '.join(cmd)}' in {src_dir}")
+            subprocess.run(cmd, cwd=src_dir,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             for fn in os.listdir(src_dir):
                 if fn.startswith(stem) and fn.endswith('.gcov.json.gz'):
                     json_path = os.path.join(src_dir, fn)
                     break
         if not json_path:
-            MSG('No JSON found; abort standard highlight')
+            MSG('No JSON found; abort standard highlight (You may need a newer version of gcov.)')
             return
 
         try:
@@ -316,8 +317,9 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
                     break
         if not json_path:
             try:
-                MSG("Running gcov to generate JSON")
-                subprocess.run(['gcov','-i','-b','-r', base], cwd=src_dir,
+                cmd = ['gcov','-i','-b','-r', base]
+                MSG(f"Generating gcov JSON for 'current': '{' '.join(cmd)}' in {src_dir}")
+                subprocess.run(cmd, cwd=src_dir,
                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except Exception as e:
                 MSG(f"gcov error: {e}")
@@ -327,7 +329,7 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
                     json_path = os.path.join(src_dir, fn)
                     break
         if not json_path:
-            MSG("No JSON found after gcov run")
+            MSG("No JSON found after gcov run. (You may need a newer version of gcov.)")
             return {}
         try:
             with gzip.open(json_path, 'rt', encoding='utf-8') as gf:
