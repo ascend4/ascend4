@@ -77,11 +77,12 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
         if not hasattr(buf, '_cov_tags'):
             MSG("Creating coverage tags")
             buf._cov_tags = (
-                buf.create_tag('cov_covered',   background='#d0ffd0'),
-                buf.create_tag('cov_uncovered', background='#ffd0d0'),
-                buf.create_tag('cov_new',       background='#c0ffc0'),
-                buf.create_tag('cov_lost',      background='#ffc0c0'),
-                buf.create_tag('cov_common',    background='#fff8c0'),
+                buf.create_tag('cov_covered',    background='#d0ffd0'),
+                buf.create_tag('cov_uncovered',  background='#ffd0d0'),
+                buf.create_tag('cov_new',        background='#c0ffc0'),
+                buf.create_tag('cov_lost',       background='#ffc0c0'),
+                buf.create_tag('cov_common',     background='#fff8c0'),
+                buf.create_tag('cov_never',      background='#e0e0e0'),
             )
         self._tags = buf._cov_tags
 
@@ -245,15 +246,18 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
         for tag in self._tags:
             buf.remove_tag(tag, start, end)
 
+        # highlight each code line based on baseline/current coverage
         for ln in sorted(set(base_counts) | set(curr_counts)):
-            b = base_counts.get(ln,0)>0
-            c = curr_counts.get(ln,0)>0
+            b = base_counts.get(ln, 0) > 0
+            c = curr_counts.get(ln, 0) > 0
             if not b and c:
-                tag = self._tags[2]
+                tag = self._tags[2]  # newly covered
             elif b and not c:
-                tag = self._tags[3]
+                tag = self._tags[3]  # lost coverage
             elif b and c:
-                tag = self._tags[4]
+                tag = self._tags[4]  # covered in both
+            elif not b and not c:
+                tag = self._tags[5]  # never covered
             else:
                 continue
             it0 = buf.get_iter_at_line(ln-1)
