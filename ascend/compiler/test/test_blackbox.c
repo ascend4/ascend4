@@ -164,6 +164,10 @@ static void test_pass2(void){
 	load_solve_test("pass","pass2");
 }
 
+static void test_pass3(void){
+	load_solve_test("pass3","pass3");
+}
+
 static void test_pass5(void){
 	load_solve_test("pass5","pass5");
 }
@@ -240,6 +244,7 @@ static void test_cache_teardown(void){
 	T(parsefail4) \
 	T(pass1) \
 	T(pass2) \
+	T(pass3) \
 	T(pass5) \
 	T(pass6) \
 	T(pass7) \
