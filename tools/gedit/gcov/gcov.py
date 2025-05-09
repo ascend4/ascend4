@@ -25,6 +25,8 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
         self._baseline_cache = {}
         self._statusbar = None
         self._status_ctx = None
+        # persistent coverage indicator widget
+        self._indicator = None
 
     def do_activate(self):
         MSG("Activating plugin")
@@ -44,8 +46,22 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
             self._statusbar = win.get_statusbar()
             self._status_ctx = self._statusbar.get_context_id('CoverageHighlighter')
             MSG("Statusbar context created")
+            # create persistent coverage mode indicator once per window
+            if not hasattr(win, '_cov_indicator'):
+                try:
+                    indicator = Gtk.Label()
+                    indicator.set_halign(Gtk.Align.END)
+                    indicator.set_margin_start(6)
+                    self._statusbar.pack_end(indicator, False, False, 0)
+                    indicator.show()
+                    win._cov_indicator = indicator
+                except Exception as ie:
+                    MSG(f"Indicator init error: {ie}")
+            # reference the indicator widget
+            self._indicator = getattr(win, '_cov_indicator', None)
         except Exception as e:
             MSG(f"Statusbar init error: {e}")
+            self._indicator = None
 
         src = gfile.get_path()
         MSG(f"Loaded source file: {src}")
@@ -120,6 +136,18 @@ class CoverageHighlighter(GObject.Object, Gedit.ViewActivatable):
             MSG("No Gio.File; skip highlight")
             return False
         src = gfile.get_path()
+        # update persistent indicator based on coverage mode
+        if self._indicator is not None:
+            try:
+                if src.endswith('.c'):
+                    if t_settings.get_boolean('differential-mode'):
+                        self._indicator.set_text('DIFF')
+                    else:
+                        self._indicator.set_text('COV')
+                else:
+                    self._indicator.set_text('')
+            except Exception as ie:
+                MSG(f"Indicator update error: {ie}")
         if not src.endswith('.c'):
             MSG(f"Not a C source: {src}")
             return False

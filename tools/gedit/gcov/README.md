@@ -60,7 +60,7 @@ To create the `$PROJROOT/.lcov/base.info` file, build your code, clean out old
 `.gcda` files, run your baseline test, then run `lcov` to build the `base.info`
 file:
 
-```
+```sh
 cd $PROJROOT
 mkdir .lcov
 scons GCOV=1 DEBUG=1 -j7 test # of course build your project first...
@@ -69,10 +69,27 @@ find . -name '*.gcda' -delete # remove any leftover coverage data
 lcov --capture --directory . --output-file .lcov/base.info --rc check_data_consistency=0 
 ```
 
+For the differential test, you can keep the existing coverage data, or you can 
+reset it if you want to show 'no longer covered' lines and not just 
+'newly covered' lines:
+
+```sh
+cd $PROJROOT
+find . -name '*.gcda' -delete # remove any leftover coverage data
+```
+
+Then, run your your new test:
+```sh
+./a4 script test/test compiler_blackbox.pass1 compiler_blackbox.pass3
+```
+
 Having done that, any files with `$PROJROOT` will display differential coverage
-if found.
+if found":
 
-
+* green lines: newly covered
+* red lines: no longer covered
+* orange: covered in both baseline and current
+* no highlighting: not counted as 'code' (see above)
 
 
 
