@@ -512,7 +512,7 @@ class Browser:
 
 		#	print("PYTHON: SETTING UP SOLVER HOOKS")
 		self.solverhooks = SolverHooksPythonBrowser(self)
-		ascpy.SolverHooksManager_Instance().setHooks(self.solverhooks)
+		ascpy.SolverHooksManager.Instance().setHooks(self.solverhooks)
 
 		self.solve_interrupt = False
 

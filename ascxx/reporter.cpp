@@ -59,7 +59,9 @@ Reporter::reportError(ERROR_REPORTER_CALLBACK_ARGS){
 */
 
 #ifdef ASCXX_USE_PYTHON
-#define PY_SSIZE_T_CLEAN
+#ifndef PY_SSIZE_T_CLEAN
+# error "PY_SSIZE_T_CLEAN needs to have been set in config.h"
+#endif
 #include <Python.h>
 
 int 

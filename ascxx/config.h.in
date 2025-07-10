@@ -5,6 +5,9 @@
 #ifndef ASCXX_CONFIG_H
 #define ASCXX_CONFIG_H
 
+// new requirement for Python 3.11 for '#' formats in calls to PyArg_ParseTuple/Py_BuildValue
+#define PY_SSIZE_T_CLEAN
+
 #define DEFAULT_ASCENDLIBRARY "@DEFAULT_ASCENDLIBRARY@"
 
 #define ASC_DLLDIRS "@DLLDIRS@"

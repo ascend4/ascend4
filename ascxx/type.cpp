@@ -16,6 +16,8 @@
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
 */
+#include "config.h"
+
 #include <Python.h>
 
 #include <iostream>
@@ -302,3 +304,4 @@ Type::findMember(const SymChar &name){
 	Type *t2=new Type(t);
 	return *t2;
 }
+
