@@ -379,6 +379,8 @@ class Browser:
 		#--------
 		# report absence of solvers if nec.
 
+		loading.print_status("Getting solver list...") #,"GLADE_FILE = %s" % self.glade_file)
+
 		if not len(ascpy.getSolvers()):
 			print("NO SOLVERS LOADED!")
 			self.reporter.reportError( "No solvers were loaded! ASCEND is probably not configured correctly." )
@@ -390,11 +392,12 @@ class Browser:
 			self.test()
 			return
 
-
 		#-------
 		# Solver engine list
 
 		self.update_solver_list()
+
+		loading.print_status("Recent file list...") #,"GLADE_FILE = %s" % self.glade_file)
 		
 		#-------
 		# Recent file list
@@ -402,10 +405,14 @@ class Browser:
 		self.recent_file_list = Gtk.Menu()
 		self.recent_file_list.show()
 		self.recent_files.set_submenu(self.recent_file_list)
+
+		loading.print_status("here...") #,"GLADE_FILE = %s" % self.glade_file)
 		
 		_max_num = int(self.prefs.getStringPref("recentfiles","max","-1"))
 		if _max_num == -1:
 			self.prefs.setStringPref("recentfiles","max","10")
+
+		loading.print_status("here1...") #,"GLADE_FILE = %s" % self.glade_file)
 
 		_cur_num = int(self.prefs.getStringPref("recentfiles","cur","-1"))
 		if _cur_num >= 0:
@@ -418,14 +425,26 @@ class Browser:
 		else:
 			self.recent_file_list.set_state(Gtk.StateType.INSENSITIVE)
 
+		loading.print_status("here2...") #,"GLADE_FILE = %s" % self.glade_file)
+
 		_pref_solver = self.prefs.getStringPref("Solver","engine","QRSlv")
+
+		loading.print_status("here3...") #,"GLADE_FILE = %s" % self.glade_file)
+		loading.print_status(f"preferred solver: {_pref_solver}") #,"GLADE_FILE = %s" % self.glade_file)
+
 		_mi = self.solver_engine_menu_dict.get(_pref_solver)
-		if _mi:
-			_mi.set_active(True)
+		loading.print_status(f"active item: {_mi}")
+		#if _mi:
+		#	_mi.set_active(True)
+
+		loading.print_status("Setting preferred solver...") #,"GLADE_FILE = %s" % self.glade_file)
+			
 		self.set_solver(_pref_solver)
 
 		#--------
 		# Assign an icon to the main window
+
+		loading.print_status("Main window icon...") #,"GLADE_FILE = %s" % self.glade_file)
 		
 		self.icon = None
 		if config.ICON_EXTENSION:
@@ -489,11 +508,15 @@ class Browser:
 		#--------
 		# Set up SolverHooks
 
+		loading.print_status("Solver hooks...") #,"GLADE_FILE = %s" % self.glade_file)
+
 		#	print("PYTHON: SETTING UP SOLVER HOOKS")
 		self.solverhooks = SolverHooksPythonBrowser(self)
-		ascpy.SolverHooksManager_Instance().setHooks(self.solverhooks)
+		ascpy.SolverHooksManager.Instance().setHooks(self.solverhooks)
 
 		self.solve_interrupt = False
+
+		loading.print_status("Loading complete") #,"GLADE_FILE = %s" % self.glade_file)
 		
 		# complete the loading *before* we open our model file. is that wise?
 		loading.complete()
@@ -592,6 +615,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.solver_engine.set_submenu(self.solver_engine_menu)
 		self.solver_engine_menu_dict = {}
 		_slvlist = ascpy.getSolvers()
+		print("\nSolver list:",_slvlist)
 		_fmi = None
 		for _s in _slvlist:
 			_mi = Gtk.RadioMenuItem(_fmi,_s.getName(),False)
@@ -601,12 +625,17 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			_mi.connect('toggled',self.on_select_solver_toggled,_s.getName())
 			self.solver_engine_menu.append(_mi)
 			self.solver_engine_menu_dict[_s.getName()]=_mi			
-
+		print("\nSolver menu dict:",self.solver_engine_menu_dict)
+			
 	def set_solver(self,solvername):
 		""" this sets the active solver in the GUI, which is the default applied to newly instantiated models """
+		print(f"\nsetting solver to {solvername}")
 		self.solver = ascpy.Solver(solvername)
+		print(f"\ngot solver {solvername}")
 		self.prefs.setStringPref("Solver","engine",solvername)
+		print(f"\nset pref to {solvername}")
 		self.reporter.reportNote("Set solver engine to '%s'" % solvername)
+		print(f"\nreported output re {solvername}")
 
 #   --------------------------------------------
 # 	MAJOR GUI COMMANDS
@@ -1167,7 +1196,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def error_callback(self,sev,filename,line,msg):
 		#print "SEV =",sev
-		#print "PYTHON error_callback: MSG =",msg
+		print(f"PYTHON error_callback: MSG = {msg}")
 		#print "FILENAME =",filename
 		#print "LINE =",line
 		pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))
@@ -1681,4 +1710,6 @@ class AutoUpdateDialog:
 			elif _res == Gtk.ResponseType.NO or _res == Gtk.ResponseType.DELETE_EVENT or _res == Gtk.ResponseType.CLOSE:
 				self.win.destroy()
 				return False
+
+# vim: ts=4:noet:sw=4
 

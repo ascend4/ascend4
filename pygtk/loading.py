@@ -96,7 +96,7 @@ class LoadingWindow(Gtk.Window):
 			if msg:
 				sys.stderr.write(f"MSG: {msg}\n")
 				_messages.append(msg)
-			sys.stderr.write(f"\rSTA: {status}\r")
+			sys.stderr.write(f"\rSTA: {status}\n")
 			sys.stderr.flush()
 		except IOError:
 			pass
