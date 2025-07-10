@@ -32,7 +32,7 @@ if __name__=='__main__':
 
 	#print("\nRunning with...")
 	#for v in [LD_LIBRARY_PATH,'ASCENDLIBRARY','ASCENDSOLVERS','PYTHONPATH','PATH']:
-	#	print("   %s = %s" % (v,os.environ[v]))
+	#	print("   %s = %s" % (v,os.environ.get(v)))
 	
 	import ascpy
 	import loading

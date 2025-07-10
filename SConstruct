@@ -453,7 +453,7 @@ vars.Add(PackageVariable('DEFAULT_PREFIX'
 # Where was CUNIT installed?
 vars.Add(PackageVariable('CUNIT_PREFIX'
 	,"Where are your CUnit files?"
-	,"$DEFAULT_PREFIX"
+	,pathlib.Path(os.environ['HOME'])/'.local'
 ))
 
 # Where are the CUnit includes?

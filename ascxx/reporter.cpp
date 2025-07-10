@@ -59,26 +59,52 @@ Reporter::reportError(ERROR_REPORTER_CALLBACK_ARGS){
 */
 
 #ifdef ASCXX_USE_PYTHON
-int
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+
+int 
 Reporter::reportErrorPython(ERROR_REPORTER_CALLBACK_ARGS){
-	PyObject *pyfunc, *pyarglist, *pyresult;
-	pyfunc = (PyObject *)client_data;
+    /* Make sure we own the GIL even if this callback comes from a C++ thread */
+    PyGILState_STATE gstate = PyGILState_Ensure();
 
-	char msg[REPORTER_MAX_ERROR_MSG];
-	vsnprintf(msg,REPORTER_MAX_ERROR_MSG,fmt,args);
+    PyObject *pyfunc = static_cast<PyObject *>(client_data);
+    if (!PyCallable_Check(pyfunc)) {
+        std::cerr << "client_data is not callable\n";
+        PyGILState_Release(gstate);
+        return 0;
+    }
 
-	pyarglist = Py_BuildValue("(H,s,i,s#)",sev,filename,line,msg,strlen(msg));             // Build argument list
-	pyresult = PyEval_CallObject(pyfunc,pyarglist);     // Call Python
-	Py_DECREF(pyarglist);                           // Trash arglist
+    char msg[REPORTER_MAX_ERROR_MSG];
+    vsnprintf(msg, sizeof msg, fmt, args);
 
-	int res = 0;
-	if (pyresult) {                                 // If no errors, return int
-		long long_res = PyLong_AsLong(pyresult);
-		res = int(long_res);
-	}
+    Py_ssize_t msglen = static_cast<Py_ssize_t>(strlen(msg));
 
-	Py_XDECREF(pyresult);
-	return res;
+    /* (H, z, i, s#)  →  (severity, filename|None, line, message, length) */
+    PyObject *pyargs = Py_BuildValue("(Hzi s#)",
+                                     sev,
+                                     filename,
+                                     line,
+                                     msg, msglen);
+
+    if (!pyargs) {            /* argument packing failed */
+        PyErr_Print();
+        PyGILState_Release(gstate);
+        return 0;
+    }
+
+    PyObject *pyresult = PyObject_CallObject(pyfunc, pyargs);
+    Py_DECREF(pyargs);
+
+    int rc = 0;
+    if (pyresult) {
+        rc = static_cast<int>(PyLong_AsLong(pyresult));
+        Py_DECREF(pyresult);
+    } else {
+        PyErr_Print();        /* show Python traceback */
+    }
+
+    PyGILState_Release(gstate);
+    return rc;
 }
 
 void
