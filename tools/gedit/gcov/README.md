@@ -1,4 +1,4 @@
-# GCOV plugin for Gedito
+# GCOV plugin for Gedit
 
 This is a coverage highlighting tool for the Gedit text editor. It is 
 completely independent of the ASCEND code and should really be split out
