@@ -93,7 +93,8 @@ if found":
 
 Below is what `rel_blackbox.c` looks like in Gedit after running the above tests:
 
-<img width="1178" height="1037" alt="image" src="https://github.com/user-attachments/assets/f3e79bc9-e01d-4aea-8234-808aa37feb67" />
+<img width="1178" height="1037" alt="image" src="https://github.com/user-attachments/assets/1c5ba675-5233-41f0-bc17-e9af187ad118" />
+
 
 
 
