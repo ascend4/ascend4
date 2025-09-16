@@ -49,7 +49,7 @@ disappear.
 
 ## Differential coverage analysis
 
-The plugin also supports highlighting of differential coverage analysis. This means that you can run a baseline coverage analysis, then a 'variant' coverage analysis (for example, two different unit tests) and you can find out all of the differences in the lines of code covered between the baseline and the variant: some lines will be covered in neither, some will be covered in the variant and not in the baseline, and some will be covered in both. This is very useful in localising the source of hard-to-fix errors.
+The plugin also supports highlighting of differential coverage analysis. This means that you can run a baseline coverage analysis, then a 'variant' coverage analysis (for example, two different unit tests) and you can find out all of the differences in the lines of code covered between the baseline and the variant: some lines will be covered in neither, some will be covered in the variant and not in the baseline or vice versa, and some will be covered in both. This is very useful in localising the source of hard-to-fix errors.
 
 Providing the Preferences setting for differential coverage is turned on in Gedit, this
 plugin will search for a folder called `.lcov` in parent folders (assumed to be
