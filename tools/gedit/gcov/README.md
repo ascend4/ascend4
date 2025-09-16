@@ -49,12 +49,13 @@ disappear.
 
 ## Differential coverage analysis
 
-The plugin also supports highlighting of differential coverage analysis. (BETA)
-Providing the Preferences setting for differential coverage is turned on, the
+The plugin also supports highlighting of differential coverage analysis. This means that you can run a baseline coverage analysis, then a 'variant' coverage analysis (for example, two different unit tests) and you can find out all of the differences in the lines of code covered between the baseline and the variant: some lines will be covered in neither, some will be covered in the variant and not in the baseline, and some will be covered in both. This is very useful in localising the source of hard-to-fix errors.
+
+Providing the Preferences setting for differential coverage is turned on in Gedit, this
 plugin will search for a folder called `.lcov` in parent folders (assumed to be
 the projec root, referred to here as `$PROJROOT`). If found, and if it contains a file 
 called `base.info`, then the plugin will attempt to display differential coverage for the currently open 
-file.
+file. Otherwise the plugin will do normal coverage analysis as noted above.
 
 To create the `$PROJROOT/.lcov/base.info` file, build your code, clean out old
 `.gcda` files, run your baseline test, then run `lcov` to build the `base.info`
@@ -68,7 +69,6 @@ find . -name '*.gcda' -delete # remove any leftover coverage data
 ./a4 script test/test compiler_blackbox.pass1 compiler_blackbox.pass2
 lcov --capture --directory . --output-file .lcov/base.info --rc check_data_consistency=0 
 ```
-
 For the differential test, you can keep the existing coverage data, or you can 
 reset it if you want to show 'no longer covered' lines and not just 
 'newly covered' lines:
@@ -84,7 +84,7 @@ Then, run your your new test:
 ```
 
 Having done that, any files with `$PROJROOT` will display differential coverage
-if found":
+if found, comparing in this example the 'pass1 and pass2' baseline with the 'pass1 and pass3' variant, with text highlighting colours in Gedit as follows:
 
 * green lines: newly covered
 * red lines: no longer covered
