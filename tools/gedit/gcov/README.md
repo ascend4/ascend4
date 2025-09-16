@@ -86,10 +86,11 @@ Then, run your your new test:
 Having done that, any files with `$PROJROOT` will display differential coverage
 if found, comparing in this example the 'pass1 and pass2' baseline with the 'pass1 and pass3' variant, with text highlighting colours in Gedit as follows:
 
-* green lines: newly covered
-* red lines: no longer covered
-* orange: covered in both baseline and current
-* no highlighting: not counted as 'code' (see above)
+* green lines: newly covered (in variant but not baseline)
+* red: no longer covered (in baseline but not in variant)
+* orange: covered in both baseline and variant
+* gery: covered in neither
+* no highlighting: lines not counted as 'code' (see above)
 
 Below is what `rel_blackbox.c` looks like in Gedit after running the above tests:
 
