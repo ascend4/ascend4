@@ -143,6 +143,11 @@ static HelmholtzData helmholtz_data_water = {
 	}
 };
 
+static const ElementComp elements_water[] = {
+	{"H", 2}
+	,{"O", 1}
+};
+
 const EosData eos_water = {
 	"water"
 	,"IAPWS-95"
@@ -150,6 +155,8 @@ const EosData eos_water = {
 	,100
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_water}
+	,.elements = elements_water
+	,.nelements = 2
 };
 
 #else

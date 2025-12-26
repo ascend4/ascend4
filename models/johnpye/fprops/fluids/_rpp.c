@@ -1350,6 +1350,11 @@ static const CubicData cubic_data_water = {
 	,.ideal = &ideal_data_water
 };
 
+static const ElementComp elements_rpp_water[] = {
+	{"H", 2}
+	,{"O", 1}
+};
+
 const EosData eos_rpp_water = {
 	"water"
 	,"RPP"
@@ -1357,6 +1362,8 @@ const EosData eos_rpp_water = {
 	,40
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_water}
+	,.elements = elements_rpp_water
+	,.nelements = 2
 };
 
 
@@ -2867,6 +2874,10 @@ static const CubicData cubic_data_hydrogen = {
 	,.ideal = &ideal_data_hydrogen
 };
 
+static const ElementComp elements_rpp_hydrogen[] = {
+	{"H", 2}
+};
+
 const EosData eos_rpp_hydrogen = {
 	"hydrogen"
 	,"RPP"
@@ -2874,6 +2885,8 @@ const EosData eos_rpp_hydrogen = {
 	,40
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_hydrogen}
+	,.elements = elements_rpp_hydrogen
+	,.nelements = 1
 };
 
 
@@ -11895,6 +11908,10 @@ static const CubicData cubic_data_oxygen = {
 	,.ideal = &ideal_data_oxygen
 };
 
+static const ElementComp elements_rpp_oxygen[] = {
+	{"O", 2}
+};
+
 const EosData eos_rpp_oxygen = {
 	"oxygen"
 	,"RPP"
@@ -11902,6 +11919,8 @@ const EosData eos_rpp_oxygen = {
 	,40
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_oxygen}
+	,.elements = elements_rpp_oxygen
+	,.nelements = 1
 };
 
 
@@ -15085,4 +15104,3 @@ const EosData eos_rpp_2_butene_trans = {
 	,FPROPS_CUBIC
 	,.data = {.cubic=&cubic_data_2_butene_trans}
 };
-

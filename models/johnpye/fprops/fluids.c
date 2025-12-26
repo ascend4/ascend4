@@ -72,6 +72,74 @@ const PureFluid *fprops_fluid(const char *name, const char *corrtype, const char
 	return NULL;
 }
 
+const EosData *fprops_eos(const char *name, const char *corrtype, const char *source){
+	int i;
+	MSG("Looking for EOS '%s' of type '%s', with source text '%s'",name,corrtype,source);
+	for(i = 0; i < nfluids; ++i){
+		if(0==strcmp(name, fluids[i]->name)){
+			MSG("Got '%s' (type %d, source '%s')",name,fluids[i]->type,fluids[i]->source);
+			if(source){
+				if(fluids[i]->source && NULL != strstr(fluids[i]->source, source)){
+					MSG("Source '%s' OK",source);
+				}else{
+					MSG("Source '%s' not matched",source);
+					continue;
+				}
+			}
+			if(fprops_corr_avail(fluids[i],corrtype)){
+				MSG("Match! %d",i);
+				return fluids[i];
+			}else{
+				MSG("No match");
+			}
+		}
+	}
+	ERRMSG("No EOS found matching name '%s', type '%s' and source '%s'",name,corrtype,source);
+	return NULL;
+}
+
+int fprops_build_element_matrix(const char **names, int ns, const char **elements, int ne, double *A_out){
+	return fprops_build_element_matrix_source(names, ns, elements, ne, NULL, A_out);
+}
+
+int fprops_build_element_matrix_source(const char **names, int ns, const char **elements, int ne,
+		const char *source, double *A_out){
+	int i;
+	int e;
+	int k;
+
+	if(!names || !elements || !A_out || ns <= 0 || ne <= 0){
+		return 0;
+	}
+
+	for(e = 0; e < ne; ++e){
+		for(i = 0; i < ns; ++i){
+			A_out[e * ns + i] = 0.0;
+		}
+	}
+
+	for(i = 0; i < ns; ++i){
+		const EosData *E = fprops_eos(names[i], NULL, source);
+		if(!E){
+			ERRMSG("Missing EOS data for '%s'", names[i]);
+			return 0;
+		}
+		if(!E->elements || E->nelements <= 0){
+			ERRMSG("Missing element composition for '%s'", E->name);
+			return 0;
+		}
+		for(k = 0; k < E->nelements; ++k){
+			for(e = 0; e < ne; ++e){
+				if(0 == strcmp(E->elements[k].symbol, elements[e])){
+					A_out[e * ns + i] += E->elements[k].count;
+				}
+			}
+		}
+	}
+
+	return 1;
+}
+
 
 int fprops_num_fluids(){
 	return nfluids;
@@ -107,4 +175,3 @@ void fprops_fluid_destroy(PureFluid *P){
 		break;
 	}
 }
-

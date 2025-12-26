@@ -92,6 +92,10 @@ static HelmholtzData helmholtz_data_oxygen = {
     }
 };
 
+static const ElementComp elements_oxygen[] = {
+	{"O", 2}
+};
+
 const EosData eos_oxygen = {
 	"oxygen"
 	,"R. Schmidt, W. Wagner, 1985. 'A new form of the equation of state for pure "
@@ -101,6 +105,8 @@ const EosData eos_oxygen = {
 	,100
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_oxygen}
+	,.elements = elements_oxygen
+	,.nelements = 1
 };
 
 #else

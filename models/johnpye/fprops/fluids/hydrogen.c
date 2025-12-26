@@ -136,6 +136,10 @@ static const ViscosityData visc_hydrogen = {
 	}}
 };
 
+static const ElementComp elements_hydrogen[] = {
+	{"H", 2}
+};
+
 const EosData eos_hydrogen = {
 	"hydrogen"
 	,"Jacob Leachman thesis, via email from Steve Penoncello, 2008"
@@ -144,6 +148,8 @@ const EosData eos_hydrogen = {
 	,FPROPS_HELMHOLTZ
 	,.data = {.helm = &helmholtz_data_hydrogen}
 	,.visc = &visc_hydrogen
+	,.elements = elements_hydrogen
+	,.nelements = 1
 };
 
 #else
@@ -317,4 +323,3 @@ THCOND_TEST(400.00, 14.524, 251.12, 0.01);
 }
 
 #endif
-

@@ -362,23 +362,26 @@ double pengrob_g(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 		MSG("Density exceeds limit value 1/b = %f",1./PD->b);
 		*err = FPROPS_RANGE_ERROR;
 	}
-#if 0
-	double h = pengrob_h(T,rho,data,err);
-	double s = pengrob_s(T,rho,data,err); // duplicated calculation of p!
-	if(isnan(h))MSG("h is nan");
-	if(isnan(s))MSG("s is nan");
-	return h - T*s;
-#else
-	//	previous code from Richard, probably fine but need to check
+	/* residual Gibbs energy from PR fugacity coefficient */
 	DEFINE_SQRTALPHA;
 	DEFINE_A;
 	DEFINE_V;
 	double p = pengrob_p((FluidStateUnion){.Trho={T, rho}}, data, err);
+	if(*err){
+		return NAN;
+	}
 	double Z = p*v/(data->R * T);
 	double B = p*PD->b/(data->R * T);
 	double A = p * a / SQ(data->R * T);
-	return log(fabs(Z-B))-(A/(sqrt(8)*B))*log(fabs((Z+(1+sqrt(2))*B)/(Z+(1-sqrt(2))*B)))+Z-1;
-#endif
+	double denom1 = Z - B;
+	double denom2 = Z + (1 - SQRT2) * B;
+	double numer2 = Z + (1 + SQRT2) * B;
+	if(denom1 <= 0 || denom2 <= 0 || numer2 <= 0){
+		*err = FPROPS_NUMERIC_ERROR;
+		return NAN;
+	}
+	double lnphi = (Z - 1) - log(denom1) - (A/(2*SQRT2*B)) * log(numer2/denom2);
+	return data->R * T * lnphi;
 }
 
 /**
@@ -467,19 +470,29 @@ double pengrob_cp(FluidStateUnion vals, const FluidData *data, FpropsError *err)
 */
 double pengrob_w(FluidStateUnion vals, const FluidData *data, FpropsError *err){
 	DEFINE_TD;
-    DEFINE_SQRTALPHA;
+	DEFINE_SQRTALPHA;
 	DEFINE_V;
 	DEFINE_DADT;
-	DEFINE_D2ADT2;
-	DEFINE_A;
 	DEFINE_DPDT_RHO;
-	double cv0 = ideal_cv((FluidStateUnion){.Trho={T, rho}}, data, err);
-	double cp0 = cv0 + data->R;
-	DEFINE_CVR;
-	DEFINE_CPR;
-	double k = (cp0 + cpr) / (cv0 + cvr);
-	double dpdv_T = - SQ(rho) * pengrob_dpdrho_T((FluidStateUnion){.Trho={T,rho}},data,err);
-	return v * sqrt(-k * dpdv_T);
+	double cv = pengrob_cv((FluidStateUnion){.Trho={T, rho}}, data, err);
+	if(*err){
+		return NAN;
+	}
+	double dpdrho_T = pengrob_dpdrho_T((FluidStateUnion){.Trho={T,rho}},data,err);
+	if(*err){
+		return NAN;
+	}
+	if(cv <= 0){
+		*err = FPROPS_NUMERIC_ERROR;
+		return NAN;
+	}
+	/* w^2 = (dp/drho)_T + (T/rho^2) * (dp/dT|rho)^2 / cv */
+	double w2 = dpdrho_T + (T / SQ(rho)) * (SQ(dpdT_rho) / cv);
+	if(!(w2 > 0)){
+		*err = FPROPS_NUMERIC_ERROR;
+		return NAN;
+	}
+	return sqrt(w2);
 }
 
 double pengrob_dpdrho_T(FluidStateUnion vals, const FluidData *data, FpropsError *err){
@@ -811,4 +824,3 @@ void pengrob_solve_pT(double p,double T, double *rho
 		return;
 	}
 }
-

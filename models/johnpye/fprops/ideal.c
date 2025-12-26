@@ -86,6 +86,14 @@ PureFluid *ideal_prepare(const EosData *E, const ReferenceState *ref){
 
 		//MSG("ref0 type = %d", E->data.cubic->ref0.type);
 		D->ref0 = E->data.cubic->ref0;
+		if(D->ref0.type == FPROPS_REF_TPHG){
+			if(isfinite(D->ref0.data.tphg.h0)){
+				D->ref0.data.tphg.h0 *= 1000.0;
+			}
+			if(isfinite(D->ref0.data.tphg.g0)){
+				D->ref0.data.tphg.g0 *= 1000.0;
+			}
+		}
 		if(ref == NULL){
 			ref = &(E->data.cubic->ref);
 		}
@@ -261,5 +269,4 @@ double ideal_sat(double T,double *rhof_ret, double *rhog_ret, const FluidData *d
 	*err = FPROPS_RANGE_ERROR;
 	return 0;
 }
-
 

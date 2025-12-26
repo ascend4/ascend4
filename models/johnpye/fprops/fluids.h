@@ -13,6 +13,16 @@ const PureFluid *fprops_fluid(const char *name, const char *corrtype, const char
 void fprops_fluid_destroy(PureFluid *fluid);
 
 /**
+	Look up the named fluid and return its EosData (metadata) record.
+*/
+const EosData *fprops_eos(const char *name, const char *corrtype, const char *source);
+
+/**
+	Build an element matrix A[ne * ns] (row-major) from species composition data.
+*/
+int fprops_build_element_matrix(const char **names, int ns, const char **elements, int ne, double *A_out);
+
+/**
 	@return number of fluids in the database.
 */
 int fprops_num_fluids();
@@ -26,5 +36,10 @@ int fprops_num_fluids();
 */
 const PureFluid *fprops_get_fluid(int i);
 
-#endif
+/**
+	Build an element matrix A[ne * ns] (row-major) from species composition data, using a source filter.
+*/
+int fprops_build_element_matrix_source(const char **names, int ns, const char **elements, int ne,
+		const char *source, double *A_out);
 
+#endif

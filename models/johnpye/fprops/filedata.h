@@ -565,6 +565,11 @@ typedef union EosUnion_union{
 	/* maybe more later */
 } EosUnion;
 
+typedef struct ElementComp_struct{
+	const char *symbol;
+	double count;
+} ElementComp;
+
 
 /** Data and metadata for a particular property correlation for a partcular species */
 typedef struct EosData_struct{
@@ -576,6 +581,8 @@ typedef struct EosData_struct{
 	const EosUnion data;
 	const ViscosityData *visc;
 	const ThermalConductivityData *thcond;
+	const ElementComp *elements; /**< optional elemental composition, NULL if unknown */
+	int nelements; /**< number of entries in elements, 0 if unknown */
 } EosData;
 
 #endif
