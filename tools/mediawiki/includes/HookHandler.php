@@ -76,7 +76,7 @@ class HookHandler {
 			return self::helpMessage( Html::element( 'span', [], $error ) );
 		}
 
-		return Html::rawElement( 'pre', [ 'class' => 'ashighlight' ], $out );
+		return Html::rawElement( 'pre', [ 'class' => 'ashighlight hl' ], $out );
 	}
 
 	private static function helpMessage( $error = null ) {
