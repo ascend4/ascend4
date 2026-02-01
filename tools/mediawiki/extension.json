@@ -23,8 +23,7 @@
 	},
 	"ResourceModules": {
 		"ext.ashighlight.styles": {
-			"localBasePath": "/var/www/html/extensions-local/ASHighlight",
-			"remoteExtPath": "/extensions-local/ASHighlight",
+			"localBasePath": "",
 			"styles": [
 				"resources/ashighlight.css"
 			]
