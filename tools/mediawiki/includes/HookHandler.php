@@ -14,7 +14,7 @@ class HookHandler {
 	}
 
 	public static function onSourceTag( $text, array $params, Parser $parser ) {
-		$parser->getOutput()->addModuleStyles( 'ext.ashighlight.styles' );
+		$parser->getOutput()->addModuleStyles( [ 'ext.ashighlight.styles' ] );
 
 		if ( !isset( $params['lang'] ) || $params['lang'] === '' ) {
 			return self::helpMessage();
