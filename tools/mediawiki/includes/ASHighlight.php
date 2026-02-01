@@ -88,14 +88,29 @@ class ASHighlight {
 		}
 
 		$result = $command->execute();
+		$ok = null;
 
-		if ( !$result->isOK() ) {
-			$this->error = (int)$result->getExitCode();
-			$this->errorMessage = trim( $result->getStderr() );
+		if ( method_exists( $result, 'isOK' ) ) {
+			$ok = $result->isOK();
+		} elseif ( method_exists( $result, 'getExitCode' ) ) {
+			$ok = ( $result->getExitCode() === 0 );
+		} elseif ( method_exists( $result, 'getReturnCode' ) ) {
+			$ok = ( $result->getReturnCode() === 0 );
+		}
+
+		if ( $ok === false ) {
+			if ( method_exists( $result, 'getExitCode' ) ) {
+				$this->error = (int)$result->getExitCode();
+			} elseif ( method_exists( $result, 'getReturnCode' ) ) {
+				$this->error = (int)$result->getReturnCode();
+			} else {
+				$this->error = -3;
+			}
+			$this->errorMessage = method_exists( $result, 'getStderr' ) ? trim( $result->getStderr() ) : '';
 			return null;
 		}
 
-		$out = $result->getStdout();
+		$out = method_exists( $result, 'getStdout' ) ? $result->getStdout() : '';
 
 		if ( is_file( $cssPath ) ) {
 			$this->stylesheet = file_get_contents( $cssPath );
