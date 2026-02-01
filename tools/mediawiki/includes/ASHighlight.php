@@ -79,8 +79,13 @@ class ASHighlight {
 		}
 
 		$command = Shell::command( ...$args )
-			->input( $text )
-			->timeout( $this->timeout );
+			->input( $text );
+
+		if ( method_exists( $command, 'timeout' ) ) {
+			$command->timeout( $this->timeout );
+		} elseif ( method_exists( $command, 'setTimeout' ) ) {
+			$command->setTimeout( $this->timeout );
+		}
 
 		$result = $command->execute();
 
