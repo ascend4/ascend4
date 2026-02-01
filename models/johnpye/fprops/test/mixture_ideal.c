@@ -85,8 +85,8 @@ static void test_pure_model_sat(void){
 
 static void test_constcp_model(void){
 	FpropsError err = FPROPS_NO_ERROR;
-	ConstCpData *D = constcp_create(FPROPS_CONSTCP_SOLID, 55.845, 750.0, 298.15
-		, 0.0, 0.0, 7800.0, &err
+	ConstCpData *D = constcp_create(FPROPS_CONSTCP_SOLID, NULL, 55.845, 750.0, 298.15
+		, 101325.0, 0.0, 0.0, 7800.0, &err
 	);
 	ASSERT(err == FPROPS_NO_ERROR);
 	ASSERT(D != NULL);

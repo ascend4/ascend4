@@ -14,8 +14,8 @@ static double constcp_s_cb(const void *ctx, double T, double p, const double *x,
 
 static double constcp_g_cb(const void *ctx, double T, double p, const double *x, FpropsError *err){
 	const ConstCpData *D = (const ConstCpData *)ctx;
-	(void)p; (void)x;
-	return constcp_g(T, D, err);
+	(void)x;
+	return constcp_g(T, p, D, err);
 }
 
 static double constcp_mu_cb(const void *ctx, unsigned i, double T, double p, const double *x, FpropsError *err){

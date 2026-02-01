@@ -3,6 +3,7 @@
 
 #include "fprops.h"
 #include "rundata.h"
+#include "constcp_species.h"
 
 /**
 	Look up the named fluid and return its internal data structure, or
@@ -41,5 +42,7 @@ const PureFluid *fprops_get_fluid(int i);
 */
 int fprops_build_element_matrix_source(const char **names, int ns, const char **elements, int ne,
 		const char *source, double *A_out);
+
+const ConstCpSpecies *fprops_constcp_species(const char *name, const char *source);
 
 #endif

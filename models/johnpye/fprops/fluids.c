@@ -3,6 +3,7 @@
 #include "fprops.h"
 #include "helmholtz.h"
 #include "pengrob.h"
+#include "constcp_data.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -121,8 +122,23 @@ int fprops_build_element_matrix_source(const char **names, int ns, const char **
 	for(i = 0; i < ns; ++i){
 		const EosData *E = fprops_eos(names[i], NULL, source);
 		if(!E){
-			ERRMSG("Missing EOS data for '%s'", names[i]);
-			return 0;
+			const ConstCpSpecies *S = constcp_data_lookup(names[i], source);
+			if(!S){
+				ERRMSG("Missing EOS/constcp data for '%s'", names[i]);
+				return 0;
+			}
+			if(!S->elements || !S->stoich || S->nelem == 0){
+				ERRMSG("Missing element composition for '%s'", S->name);
+				return 0;
+			}
+			for(k = 0; k < (int)S->nelem; ++k){
+				for(e = 0; e < ne; ++e){
+					if(0 == strcmp(S->elements[k], elements[e])){
+						A_out[e * ns + i] += S->stoich[k];
+					}
+				}
+			}
+			continue;
 		}
 		if(!E->elements || E->nelements <= 0){
 			ERRMSG("Missing element composition for '%s'", E->name);
@@ -138,6 +154,10 @@ int fprops_build_element_matrix_source(const char **names, int ns, const char **
 	}
 
 	return 1;
+}
+
+const ConstCpSpecies *fprops_constcp_species(const char *name, const char *source){
+	return constcp_data_lookup(name, source);
 }
 
 

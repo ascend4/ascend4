@@ -23,7 +23,7 @@ static int pr_rpp_allow_cp_cv(double T, double rho, double Tc, double rhoc){
 	return 0;
 }
 
-static void pr_rpp_check_state(const char *name, PureFluid *P, double T, double rho){
+static void pr_rpp_check_state(const char *name, const PureFluid *P, double T, double rho){
 	FpropsError err = FPROPS_NO_ERROR;
 	if(!(T > 0) || !(rho > 0)){
 		fprintf(stderr,"pengrob_rpp: invalid T/rho for '%s' (T=%g rho=%g)\n",name,T,rho);
@@ -123,7 +123,7 @@ static void pr_rpp_check_state(const char *name, PureFluid *P, double T, double 
 	/* speed of sound is still under validation for PR; skip in smoke suite */
 }
 
-static void pr_rpp_check_sat(const char *name, PureFluid *P){
+static void pr_rpp_check_sat(const char *name, const PureFluid *P){
 	FpropsError err = FPROPS_NO_ERROR;
 	double Tc = P->data->T_c;
 	if(!(Tc > 0)){
@@ -185,7 +185,7 @@ static void pr_rpp_check_sat(const char *name, PureFluid *P){
 }
 
 static void pr_rpp_smoke_one(const char *name){
-	PureFluid *P = fprops_fluid(name,"pengrob","RPP");
+	const PureFluid *P = fprops_fluid(name,"pengrob","RPP");
 	if(!P){
 		fprintf(stderr,"pengrob_rpp: failed to load '%s'\n",name);
 		CU_TEST(0);
@@ -232,7 +232,7 @@ static void pr_rpp_smoke_one(const char *name){
 
 	pr_rpp_check_sat(name,P);
 
-	fprops_fluid_destroy(P);
+	fprops_fluid_destroy((PureFluid *)P);
 }
 
 static void test_pengrob_rpp_smoke(void){

@@ -3,13 +3,13 @@
 #include <math.h>
 #include <stdlib.h>
 
-ConstCpData *constcp_create(ConstCpPhase phase, double M, double cp, double T_ref
-	, double h_ref, double s_ref, double rho, FpropsError *err
+ConstCpData *constcp_create(ConstCpPhase phase, const char *phase_id, double M, double cp
+	, double T_ref, double p_ref, double h_ref, double s_ref, double rho, FpropsError *err
 ){
 	ConstCpData *D;
 	if(!err)return NULL;
 	*err = FPROPS_NO_ERROR;
-	if(M <= 0 || cp <= 0 || T_ref <= 0){
+	if(M <= 0 || cp <= 0 || T_ref <= 0 || p_ref <= 0){
 		*err = FPROPS_INVALID_REQUEST;
 		return NULL;
 	}
@@ -19,9 +19,11 @@ ConstCpData *constcp_create(ConstCpPhase phase, double M, double cp, double T_re
 		return NULL;
 	}
 	D->phase = phase;
+	D->phase_id = phase_id;
 	D->M = M;
 	D->cp = cp;
 	D->T_ref = T_ref;
+	D->p_ref = p_ref;
 	D->h_ref = h_ref;
 	D->s_ref = s_ref;
 	D->rho = rho;
@@ -52,12 +54,15 @@ double constcp_s(double T, const ConstCpData *D, FpropsError *err){
 	return D->s_ref + D->cp * log(T / D->T_ref);
 }
 
-double constcp_g(double T, const ConstCpData *D, FpropsError *err){
+double constcp_g(double T, double p, const ConstCpData *D, FpropsError *err){
 	double h = constcp_h(T, D, err);
 	if(*err)return 0;
 	{
 		double s = constcp_s(T, D, err);
 		if(*err)return 0;
+		if(D && D->rho > 0 && p > 0){
+			return h - T * s + (p - D->p_ref) / D->rho;
+		}
 		return h - T * s;
 	}
 }
