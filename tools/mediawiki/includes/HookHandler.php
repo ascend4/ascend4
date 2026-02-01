@@ -4,6 +4,7 @@ namespace ASHighlight;
 
 use ASHighlight;
 use Html;
+use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
 use Parser;
 
@@ -42,8 +43,29 @@ class HookHandler {
 			$highlighter->startLineNumbersAt( $params['start'] );
 		}
 
+		$logger = LoggerFactory::getInstance( 'ASHighlight' );
+		$langs = $highlighter->getLanguageList();
+		if ( $langs === [] ) {
+			$logger->warning( 'Language list empty; langRoot may be wrong.', [
+				'langRoot' => MediaWikiServices::getInstance()->getMainConfig()->get( 'ASHighlightLangRoot' ),
+			] );
+		} elseif ( !in_array( $lang, $langs, true ) ) {
+			$logger->warning( 'Requested language not found in langDefs.', [
+				'lang' => $lang,
+				'langRoot' => MediaWikiServices::getInstance()->getMainConfig()->get( 'ASHighlightLangRoot' ),
+			] );
+			return self::helpMessage(
+				Html::element( 'span', [], wfMessage( 'ashighlight-err-language' )->text() )
+			);
+		}
+
 		$out = $highlighter->parseCode( $text, $lang );
 		if ( $highlighter->error ) {
+			$logger->error( 'Highlight failed.', [
+				'lang' => $lang,
+				'error' => $highlighter->error,
+				'message' => $highlighter->errorMessage,
+			] );
 			$error = $highlighter->errorMessage ?: wfMessage( 'ashighlight-err-language' )->text();
 			return self::helpMessage( Html::element( 'span', [], $error ) );
 		}
