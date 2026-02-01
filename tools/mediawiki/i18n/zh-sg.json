@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Shinjiman"
+		]
+	},
+	"ashighlight-specify": "您需要指定一种语言，像这样:",
+	"ashighlight-supported": "语法高亮所支持的语言:",
+	"ashighlight-err-loading": "(支持语言列表载入错误)"
+}

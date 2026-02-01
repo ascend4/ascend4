@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"BrokenArrow"
+		]
+	},
+	"ashighlight-specify": "È necessario specificare un linguaggio in questo modo:",
+	"ashighlight-supported": "Linguaggi di cui è possibile evidenziare la sintassi in colore:",
+	"ashighlight-err-loading": "(errore nel caricamento dell'elenco dei linguaggi supportati)"
+}

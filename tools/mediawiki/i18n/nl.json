@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Siebrand Mazeland"
+		]
+	},
+	"ashighlight-specify": "Geef een taal op zoals:",
+	"ashighlight-supported": "Ondersteunde talen voor syntaxismarkering:",
+	"ashighlight-err-loading": "(fout bij het laden van de lijst met ondersteunde talen)"
+}

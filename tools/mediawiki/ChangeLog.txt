@@ -14,3 +14,11 @@ Mon 16 Apr 2007
 
 First version uploaded to subversion, posted on mediawiki.org.
 -- John Pye
+
+Sun 1 Feb 2026
+--------------
+
+Updating to MW 1.43! Complete rewrite, with help from ChatGPT. Still using
+the 'highlight' program, but updating to new MW extension packaging.
+-- John Pye
+

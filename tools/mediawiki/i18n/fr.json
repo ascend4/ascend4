@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"French"
+		]
+	},
+	"ashighlight-specify": "Vous devez spécifier un langage comme ceci :",
+	"ashighlight-supported": "Langages supportés pour la coloration syntaxique :",
+	"ashighlight-err-loading": "(erreur en chargeant la liste des langages supportés)"
+}

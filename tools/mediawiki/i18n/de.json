@@ -1,0 +1,11 @@
+{
+	"@metadata": {
+		"authors": [
+			"Raymond"
+		]
+	},
+	"ashighlight-specify": "Die gewünschte Sprache muss wie folgt definiert werden:",
+	"ashighlight-supported": "Unterstützte Sprachen für die Syntax-Hervorhebung:",
+	"ashighlight-err-loading": "(Fehler beim Laden der Sprachenliste)",
+	"ashighlight-err-language": "Ungültige Sprache."
+}

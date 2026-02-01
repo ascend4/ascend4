@@ -1,0 +1,37 @@
+{
+	"name": "ASHighlight",
+	"version": "2.0.0",
+	"author": [
+		"John Pye"
+	],
+	"url": "https://www.andre-simon.de/",
+	"descriptionmsg": "ashighlight-desc",
+	"license-name": "GPL-2.0-or-later",
+	"type": "parserhook",
+	"manifest_version": 2,
+	"AutoloadClasses": {
+		"ASHighlight": "includes/ASHighlight.php",
+		"ASHighlight\\HookHandler": "includes/HookHandler.php"
+	},
+	"Hooks": {
+		"ParserFirstCallInit": "ASHighlight\\HookHandler::onParserFirstCallInit"
+	},
+	"MessagesDirs": {
+		"ASHighlight": [
+			"i18n"
+		]
+	},
+	"ResourceModules": {
+		"ext.ashighlight.styles": {
+			"styles": [
+				"resources/ashighlight.css"
+			]
+		}
+	},
+	"config": {
+		"ASHighlightBinary": "/usr/bin/highlight",
+		"ASHighlightLangRoot": "/usr/share/highlight/langDefs",
+		"ASHighlightTimeout": 10,
+		"ASHighlightTempDir": null
+	}
+}

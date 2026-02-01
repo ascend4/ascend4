@@ -1,0 +1,12 @@
+{
+	"@metadata": {
+		"authors": [
+			"John Pye"
+		]
+	},
+	"ashighlight-desc": "Provides syntax highlighting using Andre Simon's highlight",
+	"ashighlight-specify": "You need to specify a language like this:",
+	"ashighlight-supported": "Supported languages for syntax highlighting:",
+	"ashighlight-err-loading": "(error loading support language list)",
+	"ashighlight-err-language": "Invalid language."
+}
