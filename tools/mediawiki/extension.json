@@ -29,9 +29,17 @@
 		}
 	},
 	"config": {
-		"ASHighlightBinary": "/usr/bin/highlight",
-		"ASHighlightLangRoot": "/usr/share/highlight/langDefs",
-		"ASHighlightTimeout": 10,
-		"ASHighlightTempDir": null
+		"ASHighlightBinary": {
+			"value": "/usr/bin/highlight"
+		},
+		"ASHighlightLangRoot": {
+			"value": "/usr/share/highlight/langDefs"
+		},
+		"ASHighlightTimeout": {
+			"value": 10
+		},
+		"ASHighlightTempDir": {
+			"value": null
+		}
 	}
 }
