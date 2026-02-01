@@ -45,6 +45,12 @@ class HookHandler {
 
 		$logger = LoggerFactory::getInstance( 'ASHighlight' );
 		$langs = $highlighter->getLanguageList();
+		$logger->info( 'ASHighlight render requested.', [
+			'lang' => $lang,
+			'langRoot' => MediaWikiServices::getInstance()->getMainConfig()->get( 'ASHighlightLangRoot' ),
+			'langCount' => count( $langs ),
+			'langFound' => in_array( $lang, $langs, true ),
+		] );
 		if ( $langs === [] ) {
 			$logger->warning( 'Language list empty; langRoot may be wrong.', [
 				'langRoot' => MediaWikiServices::getInstance()->getMainConfig()->get( 'ASHighlightLangRoot' ),
