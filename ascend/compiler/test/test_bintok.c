@@ -46,12 +46,33 @@
 /*
 	Test solving a simple model with 'bintoken' support
 */
+static int bintok_supported(void){
+	static int cached = -1;
+	if(cached != -1){
+		return cached;
+	}
+	if(BinTokenSetOptionsDefault() != 0){
+		cached = 0;
+		return cached;
+	}
+	/* reset to a known state for tests that disable bintok */
+	(void)BinTokenClearOptions();
+	cached = 1;
+	return cached;
+}
+
 static void test_bintok(char *filenamestem,int usebintok){
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/qrslv");
 	Asc_PutEnv(ASC_ENV_BTINC "=.");
 	Asc_PutEnv(ASC_ENV_BTLIB "=.");
+
+	if(!bintok_supported()){
+		CONSOLE_DEBUG("Skipping bintok test '%s': BinTokenSetOptionsDefault not available",filenamestem);
+		Asc_CompilerDestroy();
+		return;
+	}
 
 	/* load and parse */
 	char path[PATH_MAX];
@@ -70,13 +91,7 @@ static void test_bintok(char *filenamestem,int usebintok){
 
 	/* instantiate it */
 	if(usebintok){
-		int rc = BinTokenSetOptionsDefault();
-		if(rc != 0){
-			CONSOLE_DEBUG("Skipping bintok test '%s': BinTokenSetOptionsDefault not available",filenamestem);
-			Asc_CompilerDestroy();
-			return;
-		}
-		CU_TEST(0==rc);
+		CU_TEST(0==BinTokenSetOptionsDefault());
 	}else{
 		CU_TEST(0==BinTokenClearOptions());
 	}
