@@ -31,6 +31,7 @@ jobs:
       with:
         msystem: ${{matrix.sys}}
         update: true
+        cache: true
         install: >-
           git swig subversion make flex bison
           mingw-w64-${{matrix.env}}-toolchain
@@ -77,4 +78,3 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
 
 # vim: ts=2:sw=2:et
-

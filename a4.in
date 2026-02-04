@@ -238,5 +238,6 @@ if __name__ == "__main__":
 		
 	MSG("CMD =",cmd)
 	proc = subprocess.run(cmd)
+	sys.exit(proc.returncode)
 
 # vim:syntax=python:ts=4:sw=4:noet
