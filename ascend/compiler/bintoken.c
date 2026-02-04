@@ -145,9 +145,46 @@ int bt_string_replace(CONST char *new, char **ptr){
 #if 1
 int BinTokenSetOptionsDefault(){
 #ifdef WIN32
+# if defined(__MINGW32__) || defined(__MINGW64__) || defined(__MSYS__)
+  char srcn[PATH_MAX];
+  char libn[PATH_MAX];
+  snprintf(srcn,PATH_MAX,"/tmp/ascend-btsrc-%d.c",getpid());
+  snprintf(libn,PATH_MAX,"/tmp/ascend-btsrc-%d.dll",getpid());
+
+#  define BINTOK_NOMAKEFILE
+  /* this approach calls GCC directly */
+#  ifdef BINTOK_NOMAKEFILE
+  env_import_default(ASC_ENV_BTINC,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTINC,0,1);
+  env_import_default(ASC_ENV_BTLIB,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTLIB,0,1);
+
+  char buildtmpl[CMDMAX];
+  snprintf(buildtmpl,CMDMAX
+    ,"gcc -shared -Wl,--export-all-symbols -I$" ASC_ENV_BTINC " -o%s %s -L$" ASC_ENV_BTLIB " -lascend"
+    ,libn,srcn
+  );
+
+  char *s1 = Asc_GetEnv(ASC_ENV_BTLIB);
+  MSG("%s=%s",ASC_ENV_BTLIB,s1);
+  ASC_FREE(s1);
+#  else
+  /* makefile path not supported for Windows yet */
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented for Windows (makefile path)");
+  return 1;
+#  endif
+  char *buildcmd = env_subst(buildtmpl,Asc_GetEnv,1);
+  char rmcmd[] = "/bin/rm";
+#  ifdef BINTOKEN_DEBUG
+  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,rmcmd,1000,1/*verbose*/,0/*housekeep*/);
+#  else
+  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,rmcmd,1000,0/*verbose*/,1/*housekeep*/);
+#  endif
+  ASC_FREE(buildcmd);
+  return res;
+# else
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented for Windows");
   return 1;
 //# error "Not implemented"
+# endif
 #else
   char srcn[PATH_MAX];
   char libn[PATH_MAX];
@@ -1174,4 +1211,3 @@ int main() { /* built only if TESTBT defined TRUE in bintoken.c */
 #endif /*unrelocate test bt*/
 
 /* vim: set ts=2 et: */
-
