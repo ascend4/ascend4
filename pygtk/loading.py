@@ -41,7 +41,8 @@ def load_matplotlib(throw=False,alert=False):
 	try:
 		import matplotlib
         # Added a new backend backend_gtk3. File bundle exists in PYTHONPATH
-		matplotlib.use('GTK3Cairo')
+		# GTK3Cairo can misplace axes in the embedded GTK window on some setups.
+		matplotlib.use('GTK3Agg')
 		try:
 			print_status("Trying python numpy")
 			import numpy
@@ -114,4 +115,3 @@ def complete():
 
 global w
 w = LoadingWindow()
-
