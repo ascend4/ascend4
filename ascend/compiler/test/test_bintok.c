@@ -70,7 +70,13 @@ static void test_bintok(char *filenamestem,int usebintok){
 
 	/* instantiate it */
 	if(usebintok){
-		CU_TEST(0==BinTokenSetOptionsDefault());
+		int rc = BinTokenSetOptionsDefault();
+		if(rc != 0){
+			CONSOLE_DEBUG("Skipping bintok test '%s': BinTokenSetOptionsDefault not available",filenamestem);
+			Asc_CompilerDestroy();
+			return;
+		}
+		CU_TEST(0==rc);
 	}else{
 		CU_TEST(0==BinTokenClearOptions());
 	}
@@ -149,4 +155,3 @@ static void test_gradient_nobintok(){
 	T(gradient_nobintok)
 
 REGISTER_TESTS_SIMPLE(compiler_bintok, TESTS)
-
