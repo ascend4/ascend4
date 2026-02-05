@@ -46,6 +46,22 @@
 /* #define DESTROY_DEBUG */
 /* #define ATOL_DEBUG */
 
+#ifdef INTEGRATOR_DEBUG
+static void integ_debug_list(const char *label, struct gl_list_t *list){
+	if(list == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"%s list is NULL", label);
+		return;
+	}
+	CONSOLE_DEBUG("%s list=%p len=%lu cap=%lu expandable=%d"
+		, label
+		, (void *)list
+		, (unsigned long)gl_length(list)
+		, (unsigned long)gl_capacity(list)
+		, gl_expandable(list)
+	);
+}
+#endif
+
 /*------------------------------------------------------------------------------
    The following names are of solver_var children or attributes
  * we support (at least temporarily) to determine who is a state and
@@ -364,6 +380,22 @@ int integrator_register(const IntegratorInternals *integ){
 	/* get the current list of registered engines */
 	struct gl_list_t *L;
 	L = integrator_get_engines_growable();
+#ifdef INTEGRATOR_DEBUG
+	integ_debug_list("integrator_register", L);
+#endif
+	if(L == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Integrator list is NULL; cannot register '%s'", integ->name);
+		return 1;
+	}
+	if(!gl_expandable(L)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR
+			,"Integrator list is not expandable; cannot register '%s' (len=%lu cap=%lu)"
+			, integ->name
+			, (unsigned long)gl_length(L)
+			, (unsigned long)gl_capacity(L)
+		);
+		return 1;
+	}
 
 	CONSOLE_DEBUG("REGISTERING INTEGRATOR");
 	CONSOLE_DEBUG("There were %lu registered integrators", gl_length(integrator_get_list(0)));
@@ -810,6 +842,18 @@ static int integrator_check_indep_var(IntegratorSystem *sys){
 */
 
 #define INTEG_ADD_TO_LIST(info,TYPE,INDEX,VAR,VARINDX,LIST) \
+	if((LIST)==NULL){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"INTEG_ADD_TO_LIST called with NULL list"); \
+		return; \
+	} \
+	if(!gl_expandable((LIST))){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR \
+			,"INTEG_ADD_TO_LIST list not expandable (len=%lu cap=%lu)" \
+			, (unsigned long)gl_length((LIST)) \
+			, (unsigned long)gl_capacity((LIST)) \
+		); \
+		return; \
+	} \
 	info = ASC_NEW(struct Integ_var_t); \
 	if(info==NULL){ \
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory (INTEG_VAR_NEW)"); \
