@@ -32,6 +32,7 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #include "bintoken.h"
 
 #include <unistd.h> /* for getpid() */
+#include <errno.h>
 
 #include <ascend/general/platform.h>
 #include <ascend/general/ascMalloc.h>
@@ -62,7 +63,7 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 /* why do we include btprolog here? */
 #include <ascend/bintokens/btprolog.h>
 
-//#define BINTOKEN_DEBUG
+#define BINTOKEN_DEBUG
 #ifdef BINTOKEN_DEBUG
 # define MSG CONSOLE_DEBUG
 #else
@@ -142,6 +143,23 @@ int bt_string_replace(CONST char *new, char **ptr){
   }
   return 0;
 }
+
+#ifdef BINTOKEN_DEBUG
+static
+void bt_debug_file_status(const char *label, const char *path){
+  if(path == NULL){
+    MSG("%s: (null path)",label);
+    return;
+  }
+  FILE *fp = fopen(path,"rb");
+  if(fp){
+    fclose(fp);
+    MSG("%s: exists (%s)",label,path);
+  }else{
+    MSG("%s: missing (%s): %s",label,path,strerror(errno));
+  }
+}
+#endif
 
 static
 const char *bt_tempdir(void){
@@ -991,6 +1009,9 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
       BinTokenErrorMessage(status,root,srcname,buildcommand);
       break; /* leave source file there if partial */
     }
+#ifdef BINTOKEN_DEBUG
+    bt_debug_file_status("bintoken source after write",srcname);
+#endif
     status = BinTokenCompileC(buildcommand);
     if(status != BTE_ok){
       MSG("Writing error msg");
@@ -998,11 +1019,17 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
       break; /* leave source file there to debug */
     }else{
       MSG("BinTokenCompileC completed OK");
+#ifdef BINTOKEN_DEBUG
+      bt_debug_file_status("bintoken library after build",libname);
+#endif
       if(g_bt_data.housekeep){
         /* trash src */
         cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(srcname)+1);
         assert(cbuf!=NULL);
         sprintf(cbuf,"%s %s",unlinkcommand,srcname);
+#ifdef BINTOKEN_DEBUG
+        MSG("bintoken cleanup src: %s",cbuf);
+#endif
         int rc = system(cbuf); /* we don't care if the delete fails */
 	if(rc){
           MSG("delete failed: %d",rc);
@@ -1013,6 +1040,9 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
           cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(objname)+1);
           assert(cbuf!=NULL);
           sprintf(cbuf,"%s %s",unlinkcommand,objname);
+#ifdef BINTOKEN_DEBUG
+          MSG("bintoken cleanup obj: %s",cbuf);
+#endif
           int rc = system(cbuf); /* we don't care if the delete fails */
   	  if(rc){
            MSG("delete failed: %d",rc);
