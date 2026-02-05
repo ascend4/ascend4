@@ -63,8 +63,6 @@ enum bintoken_kind {
 	@param libname        path to shared library, for AscDynaLoad
 	@param buildcommand   command for compiling the shared library file ('make' 
 	                      plus arguments, typically)
-	@param unlinkcommand  command for deleting bintoken files once no longer 
-	                      required
 	@param maxreln        is the largest number of relations to be allowed in a 
 	                      single generated C file.
 	@param verbose        if nonzero, causes human-edible comments in generated 
@@ -76,12 +74,12 @@ enum bintoken_kind {
  */
 ASC_DLLSPEC int BinTokenSetOptions(
 	CONST char *srcname, CONST char *objname, CONST char *libname
-	,CONST char *buildcommand, CONST char *unlinkcommand
+	,CONST char *buildcommand
 	,unsigned long maxreln
 	,int verbose, int housekeep
 );
 
-#define BinTokenClearOptions() BinTokenSetOptions(NULL,NULL,NULL,NULL,NULL,0,0,0)
+#define BinTokenClearOptions() BinTokenSetOptions(NULL,NULL,NULL,NULL,0,0,0)
 /**<
 	Shortcut macro for disabling bintokens in the compiler.
 */
@@ -143,4 +141,3 @@ extern int BinTokenCalcGradient(int btable, int bindex, double *vars,
 /* @} */
 
 #endif  /* ASC_BINTOKEN_H */
-

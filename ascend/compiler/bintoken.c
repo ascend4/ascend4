@@ -111,11 +111,10 @@ struct bt_data {
   char *objname;
   char *libname;
   char *buildcommand;
-  char *unlinkcommand;
   unsigned long maxrels; /* no more than this many C relations per file */
   int verbose; /* comments in generated code */
   int housekeep; /* if !=0, generated src files are deleted sometimes. */
-} g_bt_data = {NULL,0,0,NULL,0,"ERRARCHIVE",NULL,NULL,NULL,NULL,NULL,1,0,0};
+} g_bt_data = {NULL,0,0,NULL,0,"ERRARCHIVE",NULL,NULL,NULL,NULL,1,0,0};
 
 /**
  *  In the C++ interface, the arguments of BinTokenSetOptions need to be
@@ -161,6 +160,7 @@ void bt_debug_file_status(const char *label, const char *path){
 }
 #endif
 
+#ifdef WIN32
 static
 const char *bt_tempdir(void){
 #ifdef WIN32
@@ -175,6 +175,7 @@ const char *bt_tempdir(void){
   return "/tmp";
 #endif
 }
+#endif
 #if 1
 int BinTokenSetOptionsDefault(){
 #ifdef WIN32
@@ -214,11 +215,11 @@ int BinTokenSetOptionsDefault(){
   return 1;
 #  endif
   char *buildcmd = env_subst(buildtmpl,Asc_GetEnv,1);
-  char rmcmd[] = "/bin/rm";
+  /* cleanup uses remove(3) now */
 #  ifdef BINTOKEN_DEBUG
-  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,rmcmd,1000,1/*verbose*/,0/*housekeep*/);
+  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,1000,1/*verbose*/,0/*housekeep*/);
 #  else
-  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,rmcmd,1000,0/*verbose*/,1/*housekeep*/);
+  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,1000,0/*verbose*/,1/*housekeep*/);
 #  endif
   ASC_FREE(buildcmd);
   return res;
@@ -272,11 +273,11 @@ int BinTokenSetOptionsDefault(){
   );
 #endif
   char *buildcmd = env_subst(buildtmpl,Asc_GetEnv,1);
-  char rmcmd[] = "/bin/rm";
+  /* cleanup uses remove(3) now */
 #ifdef BINTOKEN_DEBUG
-  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,rmcmd,1000,1/*verbose*/,0/*housekeep*/);
+  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,1000,1/*verbose*/,0/*housekeep*/);
 #else
-  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,rmcmd,1000,0/*verbose*/,1/*housekeep*/);
+  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,1000,0/*verbose*/,1/*housekeep*/);
 #endif
   ASC_FREE(buildcmd);
   return res;
@@ -294,7 +295,6 @@ int BinTokenSetOptions(CONST char *srcname,
                        CONST char *objname,
                        CONST char *libname,
                        CONST char *buildcommand,
-                       CONST char *unlinkcommand,
                        unsigned long maxrels,
                        int verbose,
                        int housekeep)
@@ -305,7 +305,6 @@ int BinTokenSetOptions(CONST char *srcname,
   err += bt_string_replace(objname,&(g_bt_data.objname));
   err += bt_string_replace(libname,&(g_bt_data.libname));
   err += bt_string_replace(buildcommand,&(g_bt_data.buildcommand));
-  err += bt_string_replace(unlinkcommand,&(g_bt_data.unlinkcommand));
   g_bt_data.maxrels = maxrels;
   g_bt_data.verbose = verbose;
   g_bt_data.housekeep = housekeep;
@@ -351,7 +350,7 @@ void BinTokenClearTables(void)
   }
   g_bt_data.captables = 0;
   g_bt_data.nextid = 0;
-  BinTokenSetOptions(NULL,NULL,NULL,NULL,NULL,1,0,0);
+  BinTokenSetOptions(NULL,NULL,NULL,NULL,1,0,0);
 }
 
 /*
@@ -376,16 +375,10 @@ void BinTokenDeleteReference(int btable)
 
     if(g_bt_data.housekeep){
       if(g_bt_data.libname && strlen(g_bt_data.libname)){
-          char *cbuf;
-          cbuf = ASC_NEW_ARRAY(char,strlen(g_bt_data.unlinkcommand)+1+strlen(g_bt_data.libname)+1);
-          assert(cbuf!=NULL);
-          sprintf(cbuf,"%s %s",g_bt_data.unlinkcommand,g_bt_data.libname);
-          MSG("Deleting bintok shared library: %s",cbuf);
-          int rc = system(cbuf); /* we don't care if the delete fails */
-	  if(rc){
-            MSG("delete failed: %d",rc);
-	  }
-          ASC_FREE(cbuf);
+          MSG("Deleting bintok shared library: %s",g_bt_data.libname);
+          if(0!=remove(g_bt_data.libname)){
+            MSG("delete failed: %s",strerror(errno));
+          }
       }
     }
 
@@ -965,13 +958,11 @@ void BinTokenErrorMessage(enum bintoken_error err,
 
 void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
   struct gl_list_t *rellist;
-  char *cbuf;
   enum bintoken_error status;
   char *srcname = g_bt_data.srcname;
   char *objname = g_bt_data.objname;
   char *libname = g_bt_data.libname;
   char *buildcommand = g_bt_data.buildcommand;
-  char *unlinkcommand = g_bt_data.unlinkcommand;
   int verbose = g_bt_data.verbose;
 
   MSG("...");
@@ -982,7 +973,7 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
 #endif
     return;
   }
-  if (srcname == NULL || buildcommand == NULL || unlinkcommand == NULL) {
+  if (srcname == NULL || buildcommand == NULL) {
 #ifdef BINTOKEN_DEBUG
     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"BinaryTokensCreate called with no options set: ignoring");
 #endif
@@ -1024,30 +1015,14 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method){
 #endif
       if(g_bt_data.housekeep){
         /* trash src */
-        cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(srcname)+1);
-        assert(cbuf!=NULL);
-        sprintf(cbuf,"%s %s",unlinkcommand,srcname);
-#ifdef BINTOKEN_DEBUG
-        MSG("bintoken cleanup src: %s",cbuf);
-#endif
-        int rc = system(cbuf); /* we don't care if the delete fails */
-	if(rc){
-          MSG("delete failed: %d",rc);
-	}
-        ASC_FREE(cbuf);
+        if(0!=remove(srcname)){
+          MSG("delete failed (src): %s",strerror(errno));
+        }
         /* trash obj */
         if(objname && strlen(objname)){
-          cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(objname)+1);
-          assert(cbuf!=NULL);
-          sprintf(cbuf,"%s %s",unlinkcommand,objname);
-#ifdef BINTOKEN_DEBUG
-          MSG("bintoken cleanup obj: %s",cbuf);
-#endif
-          int rc = system(cbuf); /* we don't care if the delete fails */
-  	  if(rc){
-           MSG("delete failed: %d",rc);
-	  }
-          ASC_FREE(cbuf);
+          if(0!=remove(objname)){
+            MSG("delete failed (obj): %s",strerror(errno));
+          }
         }
       }
 
@@ -1251,7 +1226,6 @@ int main() { /* built only if TESTBT defined TRUE in bintoken.c */
   BinTokenSetOptions(
     "/tmp/btsrc.c","/tmp/btsrc.o","/tmp/btsrc.so"
     ,"make -f foo/Makefile BTTARGET=/tmp/btsrc /tmp/btsrc"
-    ,"/bin/rm"
     ,1000,1,0
   );
   BinTokensCreate((struct Instance *)1, BT_C);

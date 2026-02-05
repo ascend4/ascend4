@@ -185,7 +185,7 @@ extern int Asc_SimBinTokenSetOptions(ClientData, Tcl_Interp*, int, CONST84 char*
 #define Asc_SimBinTokenSetOptionsHN "sim_BinTokenSetOptions"
 /**  Usage */
 #define Asc_SimBinTokenSetOptionsHU \
-  Asc_SimBinTokenSetOptionsHN " <src obj lib build delete" \
+  Asc_SimBinTokenSetOptionsHN " <src obj lib build" \
   " maxrels verbose housekeep>"
 /**  Short help text */
 #define Asc_SimBinTokenSetOptionsHS \
@@ -196,7 +196,7 @@ extern int Asc_SimBinTokenSetOptions(ClientData, Tcl_Interp*, int, CONST84 char*
  *  to be used in the next compilation of binary token relations.\n\
  *  Names must be consistent and the name of the shared object must\n\
  *  be unique, e.g. where N is a number changing between instantiations:\n\
- *  /tmp/fooN.c /tmp/fooN.o /tmp/fooN.so <build command> /bin/rm 0 1 1000.\n\
+ *  /tmp/fooN.c /tmp/fooN.o /tmp/fooN.so <build command> 0 1 1000.\n\
  *  verbose is a code generation option 1 makes more readable code which\n\
  *  may be slower for cc to digest. housekeep if 1 causes intermediate\n\
  *  files to be aggressively deleted. maxrels is the most equations to\n\
@@ -212,4 +212,3 @@ extern int Asc_SimBinTokenSetOptions(ClientData, Tcl_Interp*, int, CONST84 char*
 "
 
 #endif  /* ASCTK_SIMSPROC_H */
-
