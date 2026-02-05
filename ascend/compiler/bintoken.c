@@ -142,14 +142,38 @@ int bt_string_replace(CONST char *new, char **ptr){
   }
   return 0;
 }
+
+static
+const char *bt_tempdir(void){
+#ifdef WIN32
+  const char *tmp = getenv("TEMP");
+  if(tmp && tmp[0]) return tmp;
+  tmp = getenv("TMP");
+  if(tmp && tmp[0]) return tmp;
+  return ".";
+#else
+  const char *tmp = getenv("TMPDIR");
+  if(tmp && tmp[0]) return tmp;
+  return "/tmp";
+#endif
+}
 #if 1
 int BinTokenSetOptionsDefault(){
 #ifdef WIN32
 # if defined(__MINGW32__) || defined(__MINGW64__) || defined(__MSYS__)
   char srcn[PATH_MAX];
   char libn[PATH_MAX];
-  snprintf(srcn,PATH_MAX,"/tmp/ascend-btsrc-%d.c",getpid());
-  snprintf(libn,PATH_MAX,"/tmp/ascend-btsrc-%d.dll",getpid());
+  const char *tmpdir = bt_tempdir();
+  char tmpdir_norm[PATH_MAX];
+  size_t i;
+  snprintf(tmpdir_norm,PATH_MAX,"%s",tmpdir);
+  for(i = 0; tmpdir_norm[i] != '\0'; ++i){
+    if(tmpdir_norm[i] == '\\'){
+      tmpdir_norm[i] = '/';
+    }
+  }
+  snprintf(srcn,PATH_MAX,"%s/ascend-btsrc-%d.c",tmpdir_norm,getpid());
+  snprintf(libn,PATH_MAX,"%s/ascend-btsrc-%d.dll",tmpdir_norm,getpid());
 
 #  define BINTOK_NOMAKEFILE
   /* this approach calls GCC directly */

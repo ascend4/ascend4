@@ -98,7 +98,14 @@ static void test_bintok(char *filenamestem,int usebintok){
 	error_reporter_tree_start();
 	struct Instance *siminst = SimsCreateInstance(AddSymbol(filenamestem), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(siminst!=NULL);
-	CU_TEST(!error_reporter_tree_has_error());
+	if(error_reporter_tree_has_error()){
+		error_reporter_tree_end();
+		solver_destroy_engines();
+		sim_destroy(siminst);
+		Asc_CompilerDestroy();
+		CU_FAIL_FATAL("Error during instantiation");
+		return;
+	}
 	error_reporter_tree_end();
 
 	/* initialise */
