@@ -28,6 +28,7 @@
 #include <ascend/utilities/error.h>
 #include "panic.h"
 #include "ascMalloc.h"
+#define LIST_C 1
 #include "list.h"
 #include "mathmacros.h"
 
@@ -308,7 +309,9 @@ static void gl_note_destroyed(struct gl_list_t *list);
 void gl_free_and_destroy(struct gl_list_t *list){
   unsigned long c;
   if (list == NULL) return;
-  gl_note_destroyed(list);
+#ifndef LIST_DEBUG_CALLER
+  gl_note_destroyed(list, "list.c", 0);
+#endif
 #if LISTUSESPOOL
   AssertMemory(list);
 #else
@@ -346,11 +349,17 @@ void gl_free_and_destroy(struct gl_list_t *list){
   }
 }
 
+void gl_free_and_destroy_debug(struct gl_list_t *list, const char *file, int line){
+  gl_note_destroyed(list, file, line);
+  gl_free_and_destroy(list);
+}
 
 void gl_destroy(struct gl_list_t *list){
   unsigned long c;
   if (list == NULL) return;
-  gl_note_destroyed(list);
+#ifndef LIST_DEBUG_CALLER
+  gl_note_destroyed(list, "list.c", 0);
+#endif
 #if LISTUSESPOOL
   AssertMemory(list);
 #else
@@ -382,6 +391,11 @@ void gl_destroy(struct gl_list_t *list){
     list->capacity = list->length = 0;
     POOL_FREEHEAD(list);
   }
+}
+
+void gl_destroy_debug(struct gl_list_t *list, const char *file, int line){
+  gl_note_destroyed(list, file, line);
+  gl_destroy(list);
 }
 
 
@@ -459,11 +473,20 @@ static void gl_expand_list_by(struct gl_list_t *list,unsigned long addlen)
 }
 
 /* track recently destroyed lists to help debug use-after-free */
-static struct gl_list_t *g_last_destroyed[16];
+struct gl_destroy_record {
+  struct gl_list_t *list;
+  const char *file;
+  int line;
+};
+
+static struct gl_destroy_record g_last_destroyed[16];
 static unsigned g_last_destroyed_pos;
 
-static void gl_note_destroyed(struct gl_list_t *list){
-  g_last_destroyed[g_last_destroyed_pos % 16] = list;
+static void gl_note_destroyed(struct gl_list_t *list, const char *file, int line){
+  unsigned pos = g_last_destroyed_pos % 16;
+  g_last_destroyed[pos].list = list;
+  g_last_destroyed[pos].file = file;
+  g_last_destroyed[pos].line = line;
   g_last_destroyed_pos++;
 }
 
@@ -477,13 +500,19 @@ void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
   if(!gl_expandable(list)){
     int i;
     for(i=0;i<16;i++){
-      if(g_last_destroyed[i] == list){
-        ERROR_REPORTER_HERE(ASC_PROG_ERR,"gl_append_ptr list matches recently destroyed list");
+      if(g_last_destroyed[i].list == list){
+        ERROR_REPORTER_HERE(ASC_PROG_ERR
+          ,"gl_append_ptr list matches recently destroyed list (list=%p from %s:%d)"
+          , (void *)list
+          , g_last_destroyed[i].file ? g_last_destroyed[i].file : "?"
+          , g_last_destroyed[i].line
+        );
         break;
       }
     }
     ERROR_REPORTER_HERE(ASC_PROG_ERR
-      ,"gl_append_ptr list not expandable (flags=0x%X len=%lu cap=%lu)"
+      ,"gl_append_ptr list not expandable (list=%p flags=0x%X len=%lu cap=%lu)"
+      , (void *)list
       , (unsigned)list->flags
       , (unsigned long)list->length
       , (unsigned long)list->capacity

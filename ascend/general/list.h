@@ -62,6 +62,9 @@
 
 #include "platform.h"
 
+/* TEMP: enable list destroy callsite tracking for MSYS2 debug */
+#define LIST_DEBUG_CALLER 1
+
 #ifndef TRUE
 #define TRUE 1
 #endif
@@ -807,4 +810,11 @@ extern void gl_reportrecycler(FILE *fp);
 /* @} */
 
 #endif /* ASC_LIST_H */
-
+#ifdef LIST_DEBUG_CALLER
+ASC_DLLSPEC void gl_destroy_debug(struct gl_list_t *list, const char *file, int line);
+ASC_DLLSPEC void gl_free_and_destroy_debug(struct gl_list_t *list, const char *file, int line);
+#ifndef LIST_C
+#define gl_destroy(list) gl_destroy_debug((list),__FILE__,__LINE__)
+#define gl_free_and_destroy(list) gl_free_and_destroy_debug((list),__FILE__,__LINE__)
+#endif
+#endif
