@@ -28,7 +28,6 @@
 #include <ascend/utilities/error.h>
 #include "panic.h"
 #include "ascMalloc.h"
-#define LIST_C 1
 #include "list.h"
 #include "mathmacros.h"
 
@@ -216,13 +215,9 @@ void gl_init_pool(){
 }
 
 
-static void gl_destroy_pool_impl(const char *file, int line){
+void gl_destroy_pool(void){
 #if LISTUSESPOOL
   if (g_list_head_pool==NULL) return;
-  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"gl_destroy_pool called from %s:%d"
-    , file ? file : "?"
-    , line
-  );
   gl_emptyrecycler();    /* deallocate data in recycled lists, zero RecycledContents[] */
   pool_clear_store(g_list_head_pool);
   pool_destroy_store(g_list_head_pool);
@@ -230,14 +225,6 @@ static void gl_destroy_pool_impl(const char *file, int line){
 #else
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"list.[ch] built without pooling of overheads\n");
 #endif
-}
-
-void gl_destroy_pool(void){
-  gl_destroy_pool_impl("list.c", 0);
-}
-
-void gl_destroy_pool_debug(const char *file, int line){
-  gl_destroy_pool_impl(file, line);
 }
 
 
@@ -316,14 +303,9 @@ struct gl_list_t *gl_create(unsigned long int capacity){
   }
 }
 
-static void gl_note_destroyed(struct gl_list_t *list, const char *file, int line);
-
 void gl_free_and_destroy(struct gl_list_t *list){
   unsigned long c;
   if (list == NULL) return;
-#ifndef LIST_DEBUG_CALLER
-  gl_note_destroyed(list, "list.c", 0);
-#endif
 #if LISTUSESPOOL
   AssertMemory(list);
 #else
@@ -361,17 +343,10 @@ void gl_free_and_destroy(struct gl_list_t *list){
   }
 }
 
-void gl_free_and_destroy_debug(struct gl_list_t *list, const char *file, int line){
-  gl_note_destroyed(list, file, line);
-  gl_free_and_destroy(list);
-}
 
 void gl_destroy(struct gl_list_t *list){
   unsigned long c;
   if (list == NULL) return;
-#ifndef LIST_DEBUG_CALLER
-  gl_note_destroyed(list, "list.c", 0);
-#endif
 #if LISTUSESPOOL
   AssertMemory(list);
 #else
@@ -403,11 +378,6 @@ void gl_destroy(struct gl_list_t *list){
     list->capacity = list->length = 0;
     POOL_FREEHEAD(list);
   }
-}
-
-void gl_destroy_debug(struct gl_list_t *list, const char *file, int line){
-  gl_note_destroyed(list, file, line);
-  gl_destroy(list);
 }
 
 
@@ -484,74 +454,12 @@ static void gl_expand_list_by(struct gl_list_t *list,unsigned long addlen)
   asc_assert(list->data!=NULL);
 }
 
-/* track recently destroyed lists to help debug use-after-free */
-struct gl_destroy_record {
-  struct gl_list_t *list;
-  const char *file;
-  int line;
-};
-
-static struct gl_destroy_record g_last_destroyed[16];
-static unsigned g_last_destroyed_pos;
-
-static void gl_note_destroyed(struct gl_list_t *list, const char *file, int line){
-  unsigned pos = g_last_destroyed_pos % 16;
-  g_last_destroyed[pos].list = list;
-  g_last_destroyed[pos].file = file;
-  g_last_destroyed[pos].line = line;
-  g_last_destroyed_pos++;
-}
-
-
-static void gl_append_ptr_impl(struct gl_list_t *list, VOIDPTR ptr, const char *file, int line){
-  if(list == NULL){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR
-      ,"gl_append_ptr called with NULL list (%s:%d)"
-      , file ? file : "?"
-      , line
-    );
-    asc_assert(list != NULL);
-    return;
-  }
-  if(!gl_expandable(list)){
-    int i;
-    for(i=0;i<16;i++){
-      if(g_last_destroyed[i].list == list){
-        ERROR_REPORTER_HERE(ASC_PROG_ERR
-          ,"gl_append_ptr list matches recently destroyed list (list=%p from %s:%d), caller %s:%d"
-          , (void *)list
-          , g_last_destroyed[i].file ? g_last_destroyed[i].file : "?"
-          , g_last_destroyed[i].line
-          , file ? file : "?"
-          , line
-        );
-        break;
-      }
-    }
-    ERROR_REPORTER_HERE(ASC_PROG_ERR
-      ,"gl_append_ptr list not expandable (list=%p flags=0x%X len=%lu cap=%lu) caller %s:%d"
-      , (void *)list
-      , (unsigned)list->flags
-      , (unsigned long)list->length
-      , (unsigned long)list->capacity
-      , file ? file : "?"
-      , line
-    );
-    asc_assert(0 != gl_expandable(list));
-    return;
-  }
+void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
+  asc_assert((NULL != list) && (0 != gl_expandable(list)));
   if (list->length > 0) SORTED_OFF(list);
   if (++(list->length) > list->capacity) /* expand list capacity*/
     gl_expand_list(list);
   list->data[list->length-1] = ptr;
-}
-
-void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
-  gl_append_ptr_impl(list, ptr, "list.c", 0);
-}
-
-void gl_append_ptr_debug(struct gl_list_t *list, VOIDPTR ptr, const char *file, int line){
-  gl_append_ptr_impl(list, ptr, file, line);
 }
 
 
