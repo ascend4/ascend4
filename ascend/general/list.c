@@ -307,6 +307,7 @@ struct gl_list_t *gl_create(unsigned long int capacity){
 void gl_free_and_destroy(struct gl_list_t *list){
   unsigned long c;
   if (list == NULL) return;
+  gl_note_destroyed(list);
 #if LISTUSESPOOL
   AssertMemory(list);
 #else
@@ -348,6 +349,7 @@ void gl_free_and_destroy(struct gl_list_t *list){
 void gl_destroy(struct gl_list_t *list){
   unsigned long c;
   if (list == NULL) return;
+  gl_note_destroyed(list);
 #if LISTUSESPOOL
   AssertMemory(list);
 #else
@@ -455,6 +457,15 @@ static void gl_expand_list_by(struct gl_list_t *list,unsigned long addlen)
   asc_assert(list->data!=NULL);
 }
 
+/* track recently destroyed lists to help debug use-after-free */
+static struct gl_list_t *g_last_destroyed[16];
+static unsigned g_last_destroyed_pos;
+
+static void gl_note_destroyed(struct gl_list_t *list){
+  g_last_destroyed[g_last_destroyed_pos % 16] = list;
+  g_last_destroyed_pos++;
+}
+
 
 void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
   if(list == NULL){
@@ -463,6 +474,13 @@ void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
     return;
   }
   if(!gl_expandable(list)){
+    int i;
+    for(i=0;i<16;i++){
+      if(g_last_destroyed[i] == list){
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"gl_append_ptr list matches recently destroyed list");
+        break;
+      }
+    }
     ERROR_REPORTER_HERE(ASC_PROG_ERR
       ,"gl_append_ptr list not expandable (flags=0x%X len=%lu cap=%lu)"
       , (unsigned)list->flags
