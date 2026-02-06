@@ -65,6 +65,10 @@ jobs:
         mkdir -p ~/.local
         MSYSTEM= scons GCOV=1 MALLOC_DEBUG=1 CUNIT_PREFIX=$HOME/.local ascend solvers models test a4
 
+    - name: Test solver_list
+      run: |
+        ./a4 script test/test solver_list
+
     - name: Test ASCEND
       run: |
         ./a4 script `which bash` test/test_expectpass_mallocdebug
