@@ -219,6 +219,7 @@ void gl_init_pool(){
 void gl_destroy_pool(void){
 #if LISTUSESPOOL
   if (g_list_head_pool==NULL) return;
+  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"gl_destroy_pool called");
   gl_emptyrecycler();    /* deallocate data in recycled lists, zero RecycledContents[] */
   pool_clear_store(g_list_head_pool);
   pool_destroy_store(g_list_head_pool);
