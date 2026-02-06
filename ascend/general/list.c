@@ -303,6 +303,7 @@ struct gl_list_t *gl_create(unsigned long int capacity){
   }
 }
 
+static void gl_note_destroyed(struct gl_list_t *list);
 
 void gl_free_and_destroy(struct gl_list_t *list){
   unsigned long c;
