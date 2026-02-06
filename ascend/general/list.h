@@ -813,9 +813,11 @@ extern void gl_reportrecycler(FILE *fp);
 #ifdef LIST_DEBUG_CALLER
 ASC_DLLSPEC void gl_destroy_debug(struct gl_list_t *list, const char *file, int line);
 ASC_DLLSPEC void gl_free_and_destroy_debug(struct gl_list_t *list, const char *file, int line);
+ASC_DLLSPEC void gl_destroy_pool_debug(const char *file, int line);
 #ifndef LIST_C
 #define gl_destroy(list) gl_destroy_debug((list),__FILE__,__LINE__)
 #define gl_free_and_destroy(list) gl_free_and_destroy_debug((list),__FILE__,__LINE__)
+#define gl_destroy_pool() gl_destroy_pool_debug(__FILE__,__LINE__)
 #endif
 #endif
 #ifdef LIST_DEBUG_CALLER

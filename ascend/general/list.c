@@ -216,10 +216,13 @@ void gl_init_pool(){
 }
 
 
-void gl_destroy_pool(void){
+static void gl_destroy_pool_impl(const char *file, int line){
 #if LISTUSESPOOL
   if (g_list_head_pool==NULL) return;
-  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"gl_destroy_pool called");
+  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"gl_destroy_pool called from %s:%d"
+    , file ? file : "?"
+    , line
+  );
   gl_emptyrecycler();    /* deallocate data in recycled lists, zero RecycledContents[] */
   pool_clear_store(g_list_head_pool);
   pool_destroy_store(g_list_head_pool);
@@ -227,6 +230,14 @@ void gl_destroy_pool(void){
 #else
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"list.[ch] built without pooling of overheads\n");
 #endif
+}
+
+void gl_destroy_pool(void){
+  gl_destroy_pool_impl("list.c", 0);
+}
+
+void gl_destroy_pool_debug(const char *file, int line){
+  gl_destroy_pool_impl(file, line);
 }
 
 
