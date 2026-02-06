@@ -818,3 +818,9 @@ ASC_DLLSPEC void gl_free_and_destroy_debug(struct gl_list_t *list, const char *f
 #define gl_free_and_destroy(list) gl_free_and_destroy_debug((list),__FILE__,__LINE__)
 #endif
 #endif
+#ifdef LIST_DEBUG_CALLER
+ASC_DLLSPEC void gl_append_ptr_debug(struct gl_list_t *list, VOIDPTR ptr, const char *file, int line);
+#ifndef LIST_C
+#define gl_append_ptr(list,ptr) gl_append_ptr_debug((list),(ptr),__FILE__,__LINE__)
+#endif
+#endif

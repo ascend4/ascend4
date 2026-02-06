@@ -491,9 +491,13 @@ static void gl_note_destroyed(struct gl_list_t *list, const char *file, int line
 }
 
 
-void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
+static void gl_append_ptr_impl(struct gl_list_t *list, VOIDPTR ptr, const char *file, int line){
   if(list == NULL){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"gl_append_ptr called with NULL list");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR
+      ,"gl_append_ptr called with NULL list (%s:%d)"
+      , file ? file : "?"
+      , line
+    );
     asc_assert(list != NULL);
     return;
   }
@@ -502,20 +506,24 @@ void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
     for(i=0;i<16;i++){
       if(g_last_destroyed[i].list == list){
         ERROR_REPORTER_HERE(ASC_PROG_ERR
-          ,"gl_append_ptr list matches recently destroyed list (list=%p from %s:%d)"
+          ,"gl_append_ptr list matches recently destroyed list (list=%p from %s:%d), caller %s:%d"
           , (void *)list
           , g_last_destroyed[i].file ? g_last_destroyed[i].file : "?"
           , g_last_destroyed[i].line
+          , file ? file : "?"
+          , line
         );
         break;
       }
     }
     ERROR_REPORTER_HERE(ASC_PROG_ERR
-      ,"gl_append_ptr list not expandable (list=%p flags=0x%X len=%lu cap=%lu)"
+      ,"gl_append_ptr list not expandable (list=%p flags=0x%X len=%lu cap=%lu) caller %s:%d"
       , (void *)list
       , (unsigned)list->flags
       , (unsigned long)list->length
       , (unsigned long)list->capacity
+      , file ? file : "?"
+      , line
     );
     asc_assert(0 != gl_expandable(list));
     return;
@@ -524,6 +532,14 @@ void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
   if (++(list->length) > list->capacity) /* expand list capacity*/
     gl_expand_list(list);
   list->data[list->length-1] = ptr;
+}
+
+void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
+  gl_append_ptr_impl(list, ptr, "list.c", 0);
+}
+
+void gl_append_ptr_debug(struct gl_list_t *list, VOIDPTR ptr, const char *file, int line){
+  gl_append_ptr_impl(list, ptr, file, line);
 }
 
 
