@@ -49,14 +49,36 @@ jobs:
     - name: Install Python dependencies
       run: |
         python3 -m pip install scons
-        
+
+    - name: Get CUnit SVN revision
+      id: cunit_rev
+      run: |
+        REV=$(svn info https://svn.code.sf.net/p/cunit/code/branches/mingw64 | awk -F': ' '/^Revision:/{print $2}')
+        echo "rev=$REV" >> "$GITHUB_OUTPUT"
+
+    - name: Cache CUnit install
+      id: cunit_cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.local
+        key: ${{ runner.os }}-msys2-cunit-r${{ steps.cunit_rev.outputs.rev }}
+        restore-keys: |
+          ${{ runner.os }}-msys2-cunit-
+
+    - name: Cache status
+      run: |
+        echo "CUnit cache hit: ${{ steps.cunit_cache.outputs.cache-hit }}"
+
     - name: Build and install CUnit
       run: |
-        svn co https://svn.code.sf.net/p/cunit/code/branches/mingw64 cunit
-        cd cunit
-        ./configure --prefix=$HOME/.local
-        make -j8
-        make install
+        if [ ! -f "$HOME/.local/lib/libcunit.a" ]; then
+          svn co https://svn.code.sf.net/p/cunit/code/branches/mingw64 cunit
+          cd cunit
+          ./configure --prefix=$HOME/.local
+          make -j8
+          make install
+        fi
 
     - uses: actions/checkout@v4
 
