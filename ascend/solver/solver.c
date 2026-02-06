@@ -29,6 +29,7 @@
 #include "solver.h"
 
 #include <ascend/system/system_impl.h>
+#include <ascend/utilities/error.h>
 #include <ascend/general/list.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
@@ -44,7 +45,7 @@
 # define MSG CONSOLE_DEBUG
 # define ERRMSG CONSOLE_DEBUG
 #else
-# define MSG(...) 
+# define MSG(...)
 # define ERRMSG CONSOLE_DEBUG
 #endif
 
@@ -55,22 +56,48 @@
 	@param free_space if 0, call as normal. if 1, free the list and maybe do some
 	cleaning up etc. Should be called whenever a simulation is destroyed.
 */
-static struct gl_list_t *solver_get_list(int free_space){
+static struct gl_list_t *solver_get_list_debug(int free_space, const char *file, int line){
 	static int init = 0;
 	static struct gl_list_t *L;
+	MSG("solver_get_list(%d) enter from %s:%d init=%d L=%p"
+		, free_space
+		, file ? file : "?"
+		, line
+		, init
+		, (void *)L
+	);
 	if(free_space){
 		if(init && L) {
 			 /*FIXME: ASC_FREE(L); free is never used on gl_list_t */
 			gl_destroy(L);
 		}
 		init = 0;
+		L = NULL;
+		MSG("solver_get_list(%d) exit from %s:%d init=%d L=%p"
+			, free_space
+			, file ? file : "?"
+			, line
+			, init
+			, (void *)L
+		);
 		return NULL;
 	}
 	if(!init){
 		L = gl_create(10);
 		init = 1;
 	}
+	MSG("solver_get_list(%d) exit from %s:%d init=%d L=%p"
+		, free_space
+		, file ? file : "?"
+		, line
+		, init
+		, (void *)L
+	);
 	return L;
+}
+
+static struct gl_list_t *solver_get_list(int free_space){
+	return solver_get_list_debug(free_space, "solver.c", 0);
 }
 
 /**
