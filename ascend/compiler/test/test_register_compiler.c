@@ -41,6 +41,7 @@
 	T(instantiate_logrel_bool_algebra) \
 	T(instantiate_alike) \
 	T(instantiate_context) \
+	T(instantiate_anontype) \
 	T(instantiate_array) \
 	T(instantiate_for)
 

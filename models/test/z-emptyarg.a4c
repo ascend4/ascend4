@@ -8,6 +8,8 @@ PROVIDE "z-emptyarg.a4c";
  * occur when reusing models without understanding them in detail.
  *)
 
+(* MIGRATED: compiler_instantiate_array (array_ok_empty_range). *)
+(*
 MODEL bug(
 	n IS_A integer_constant;
 	a[1..n] WILL_BE real;
@@ -18,6 +20,7 @@ MODEL test;
   a[1..0] IS_A real;
   b IS_A bug(0,a);
 END test;
+*)
 
 
 (*

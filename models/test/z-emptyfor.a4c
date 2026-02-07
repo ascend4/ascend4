@@ -24,6 +24,8 @@ PROVIDE "z-emptyfor.a4c";
  * other problems in compiler instruction scheduling.
  *)
 
+(* MIGRATED: compiler_instantiate_for (for_ok_empty_create). *)
+(*
 MODEL varfor;
   a[1..2] IS_A real;
   b[2..1] IS_A real; (* empty_*)
@@ -35,7 +37,9 @@ MODEL varfor;
 	d[i] IS_A real; (* empty *)
   END FOR;
 END varfor;
+*)
 
+(* NOT MIGRATED: parse/compile failure (unindexed relation array). *)
 MODEL badrelfor;
  (* not allowed to have array of unindexed eqns. *)
  x IS_A generic_real;
@@ -43,6 +47,8 @@ MODEL badrelfor;
  ra2[2..1]: x=3; (* empty*)
 END badrelfor;
 
+(* MIGRATED: compiler_instantiate_for (for_ok_relation_empty). *)
+(*
 MODEL relfor;
  x IS_A generic_real;
  FOR i IN [1..2] CREATE
@@ -52,11 +58,15 @@ MODEL relfor;
    ra4[i]: x = i;
  END FOR;
 END relfor;
+*)
 
+(* MIGRATED: compiler_instantiate_for (for_ok_empty_create, for_ok_relation_empty). *)
+(*
 MODEL testfor;
   v IS_A varfor;
   r IS_A relfor;
 END testfor;
+*)
 
 
 (*
