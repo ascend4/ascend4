@@ -70,6 +70,14 @@ static void test_array_fail_const_indices(void){
 	instantiate_case("array_fail_const_indices", 1);
 }
 
+static void test_array_fail_bool_set(void){
+	instantiate_case("array_fail_bool_set", 1);
+}
+
+static void test_array_fail_real_set(void){
+	instantiate_case("array_fail_real_set", 1);
+}
+
 static void test_array_ok_empty_range(void){
 	instantiate_case("array_ok_empty_range", 0);
 }
@@ -81,6 +89,8 @@ static void test_array_ok_empty_range(void){
 	T(array_fail_mixed_set) \
 	T(array_ok_range_constants) \
 	T(array_fail_const_indices) \
+	T(array_fail_bool_set) \
+	T(array_fail_real_set) \
 	T(array_ok_empty_range)
 
 REGISTER_TESTS_SIMPLE(compiler_instantiate_array, TESTS)

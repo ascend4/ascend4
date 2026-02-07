@@ -1,7 +1,6 @@
 #include <string.h>
 
 #include <ascend/general/env.h>
-#include <ascend/general/platform.h>
 #include <ascend/utilities/ascEnvVar.h>
 #include <ascend/utilities/error.h>
 
@@ -22,7 +21,7 @@ static void instantiate_case(const char *modelname, int expect_error){
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
 
-	m = Asc_OpenModule("test/instantiate/for.a4c", &status);
+	m = Asc_OpenModule("test/instantiate/alias.a4c", &status);
 	(void)m;
 	CU_ASSERT(status == 0);
 	CU_ASSERT(zz_parse() == 0);
@@ -68,47 +67,22 @@ static void compile_reject_case(const char *modulepath, const char *modelname){
 	Asc_CompilerDestroy();
 }
 
-static void test_for_ok_int(void){
-	instantiate_case("for_ok_int", 0);
+static void test_alias_ok_simple(void){
+	instantiate_case("alias_ok_simple", 0);
 }
 
-static void test_for_ok_sym(void){
-	instantiate_case("for_ok_sym", 0);
+static void test_alias_fail_unknown_child(void){
+	compile_reject_case("test/instantiate/alias_compile_fail_unknown.a4c",
+			"alias_fail_unknown_child");
 }
 
-static void test_for_fail_unindexed(void){
-	instantiate_case("for_fail_unindexed", 1);
-}
-
-static void test_for_fail_nonscalar_subscript(void){
-	instantiate_case("for_fail_nonscalar_subscript", 1);
-}
-
-static void test_for_fail_unindexed_relation_array(void){
-	compile_reject_case("test/instantiate/for_compile_fail_unindexed_relation.a4c",
-			"for_fail_unindexed_relation_array");
-}
-
-static void test_for_ok_empty_create(void){
-	instantiate_case("for_ok_empty_create", 0);
-}
-
-static void test_for_ok_relation_empty(void){
-	instantiate_case("for_ok_relation_empty", 0);
-}
-
-static void test_for_ok_indirect_sparse(void){
-	instantiate_case("for_ok_indirect_sparse", 0);
+static void test_alias_fail_for_unindexed(void){
+	instantiate_case("alias_fail_for_unindexed", 1);
 }
 
 #define TESTS(T) \
-	T(for_ok_int) \
-	T(for_ok_sym) \
-	T(for_fail_unindexed) \
-	T(for_fail_nonscalar_subscript) \
-	T(for_fail_unindexed_relation_array) \
-	T(for_ok_empty_create) \
-	T(for_ok_relation_empty) \
-	T(for_ok_indirect_sparse)
+	T(alias_ok_simple) \
+	T(alias_fail_unknown_child) \
+	T(alias_fail_for_unindexed)
 
-REGISTER_TESTS_SIMPLE(compiler_instantiate_for, TESTS)
+REGISTER_TESTS_SIMPLE(compiler_instantiate_alias, TESTS)

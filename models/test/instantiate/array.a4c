@@ -46,6 +46,20 @@ MODEL array_fail_const_indices;
 	x[b] IS_A real;
 END array_fail_const_indices;
 
+MODEL array_fail_bool_set;
+	(* FAIL: boolean-valued set subscript *)
+	s IS_A set OF boolean_constant;
+	s :== [TRUE,FALSE];
+	y[s] IS_A real;
+END array_fail_bool_set;
+
+MODEL array_fail_real_set;
+	(* FAIL: real-valued set subscript *)
+	s IS_A set OF real_constant;
+	s :== [1.0,2.5];
+	y[s] IS_A real;
+END array_fail_real_set;
+
 MODEL array_ok_empty_range_arg(
 	n IS_A integer_constant;
 	a[1..n] WILL_BE real;

@@ -1,0 +1,13 @@
+(* ALIASES instantiate tests *)
+
+MODEL alias_ok_simple;
+	a IS_A real;
+	b ALIASES a;
+END alias_ok_simple;
+
+MODEL alias_fail_for_unindexed;
+	a IS_A real;
+	FOR i IN [1..2] CREATE
+		b ALIASES a;
+	END FOR;
+END alias_fail_for_unindexed;

@@ -1,0 +1,6 @@
+(* ALIASES compile-fail tests *)
+
+MODEL alias_fail_unknown_child;
+	a IS_A real;
+	b ALIASES c;
+END alias_fail_unknown_child;

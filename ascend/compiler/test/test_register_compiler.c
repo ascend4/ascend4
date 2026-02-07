@@ -43,7 +43,10 @@
 	T(instantiate_context) \
 	T(instantiate_anontype) \
 	T(instantiate_array) \
-	T(instantiate_for)
+	T(instantiate_for) \
+	T(instantiate_when_select) \
+	T(instantiate_alias) \
+	T(instantiate_set_type_errors)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)

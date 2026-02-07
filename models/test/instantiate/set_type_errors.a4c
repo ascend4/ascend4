@@ -1,0 +1,12 @@
+(* Set/type derivation error tests *)
+
+MODEL set_fail_unknown_type;
+	(* FAIL: unknown set element type *)
+	s IS_A set OF no_such_type;
+END set_fail_unknown_type;
+
+MODEL set_fail_scalar_value;
+	(* FAIL: scalar value assigned to set *)
+	s IS_A set OF integer_constant;
+	s :== 1;
+END set_fail_scalar_value;

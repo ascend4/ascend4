@@ -1,0 +1,31 @@
+REQUIRE "system.a4l";
+(* WHEN/SELECT instantiate tests *)
+
+MODEL when_ok_unselected_cases;
+	b1, b2 IS_A boolean_constant;
+	b1 :== TRUE;
+	b2 :== FALSE;
+	x IS_A real;
+	r1: x = 1;
+	r2: x = 2;
+	r3: x = 3;
+	WHEN (b1,b2)
+		CASE TRUE,FALSE:
+			USE r1;
+		CASE FALSE,TRUE:
+			USE r2;
+		CASE FALSE,FALSE:
+			USE r3;
+	END WHEN;
+END when_ok_unselected_cases;
+
+MODEL select_ok_unselected_cases;
+	i IS_A integer_constant;
+	i :== 1;
+	SELECT(i)
+	CASE 1:
+		x IS_A real;
+	CASE 2:
+		y,z IS_A integer;
+	END SELECT;
+END select_ok_unselected_cases;

@@ -39,13 +39,15 @@ MODEL varfor;
 END varfor;
 *)
 
-(* NOT MIGRATED: parse/compile failure (unindexed relation array). *)
+(* MIGRATED: compiler_instantiate_for (for_fail_unindexed_relation_array, for_compile_fail.a4c). *)
+(*
 MODEL badrelfor;
  (* not allowed to have array of unindexed eqns. *)
  x IS_A generic_real;
  ra1[1..2]: x=2;
  ra2[2..1]: x=3; (* empty*)
 END badrelfor;
+*)
 
 (* MIGRATED: compiler_instantiate_for (for_ok_relation_empty). *)
 (*
