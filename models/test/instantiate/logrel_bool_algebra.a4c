@@ -1,0 +1,24 @@
+REQUIRE "atoms.a4l";
+
+(* Boolean algebra / logical relation instantiate tests *)
+
+MODEL logrel_and_or_ok;
+	a IS_A boolean_var;
+	b IS_A boolean_var;
+	fact IS_A boolean_var;
+	fact == (a AND b);
+END logrel_and_or_ok;
+
+MODEL logrel_not_ok;
+	a IS_A boolean_var;
+	fact IS_A boolean_var;
+	fact == NOT a;
+END logrel_not_ok;
+
+MODEL logrel_fail_nonbool_and;
+	(* FAIL: boolean AND with real value *)
+	a IS_A boolean_var;
+	x IS_A real;
+	fact IS_A boolean_var;
+	fact == (a AND x);
+END logrel_fail_nonbool_and;
