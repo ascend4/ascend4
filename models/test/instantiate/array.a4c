@@ -60,6 +60,13 @@ MODEL array_fail_real_set;
 	y[s] IS_A real;
 END array_fail_real_set;
 
+MODEL array_fail_direct_index_types;
+	(* FAIL: direct non-integer/symbol index types *)
+	x[TRUE] IS_A real;
+	y[2.5] IS_A real;
+	z['a'] IS_A real;
+END array_fail_direct_index_types;
+
 MODEL array_ok_empty_range_arg(
 	n IS_A integer_constant;
 	a[1..n] WILL_BE real;

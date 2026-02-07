@@ -1,0 +1,17 @@
+REQUIRE "system.a4l";
+(* WHEN/SELECT extra instantiate tests *)
+
+MODEL when_ok_no_match;
+	b1, b2 IS_A boolean_constant;
+	b1 :== FALSE;
+	b2 :== FALSE;
+	x IS_A real;
+	r1: x = 1;
+	r2: x = 2;
+	WHEN (b1,b2)
+		CASE TRUE,TRUE:
+			USE r1;
+		CASE TRUE,FALSE:
+			USE r2;
+	END WHEN;
+END when_ok_no_match;

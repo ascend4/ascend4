@@ -80,9 +80,14 @@ static void test_alias_fail_for_unindexed(void){
 	instantiate_case("alias_fail_for_unindexed", 1);
 }
 
+static void test_alias_fail_array_bad_index(void){
+	instantiate_case("alias_fail_array_bad_index", 1);
+}
+
 #define TESTS(T) \
 	T(alias_ok_simple) \
 	T(alias_fail_unknown_child) \
-	T(alias_fail_for_unindexed)
+	T(alias_fail_for_unindexed) \
+	T(alias_fail_array_bad_index)
 
 REGISTER_TESTS_SIMPLE(compiler_instantiate_alias, TESTS)

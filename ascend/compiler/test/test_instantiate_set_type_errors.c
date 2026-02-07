@@ -52,8 +52,13 @@ static void test_set_fail_scalar_value(void){
 	instantiate_case("set_fail_scalar_value", 1);
 }
 
+static void test_set_fail_union_type_conflict(void){
+	instantiate_case("set_fail_union_type_conflict", 1);
+}
+
 #define TESTS(T) \
 	T(set_fail_unknown_type) \
-	T(set_fail_scalar_value)
+	T(set_fail_scalar_value) \
+	T(set_fail_union_type_conflict)
 
 REGISTER_TESTS_SIMPLE(compiler_instantiate_set_type_errors, TESTS)

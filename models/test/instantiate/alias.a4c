@@ -11,3 +11,8 @@ MODEL alias_fail_for_unindexed;
 		b ALIASES a;
 	END FOR;
 END alias_fail_for_unindexed;
+
+MODEL alias_fail_array_bad_index;
+	a[1..2] IS_A real;
+	b ALIASES a[1..2];
+END alias_fail_array_bad_index;
