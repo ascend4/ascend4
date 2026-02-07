@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <unistd.h>
 
 #include <ascend/utilities/config.h>
 #include <ascend/general/platform.h>
@@ -29,16 +30,19 @@
 
 #include "printutil.h"
 #include "test_globals.h"
-
 #include <ascend/general/ospath.h>
 
 #include <CUnit/Basic.h>
+#include <CUnit/TestRun.h>
 
 #ifdef __WIN32__
 # include <windows.h>
 #endif
 
 extern int register_cunit_tests();
+
+static int g_capture_enabled = 1;
+
 
 int list_suites(){
 	struct CU_TestRegistry *reg = CU_get_registry();
@@ -114,12 +118,11 @@ int main(int argc, char* argv[]){
 
 	/* getopt_long stores the option index here. */
 	int option_index = 0;
-
 	const char *usage =
 		"%s -vsne [SuiteName|SuiteName.testname] ...\n"
 		"Test ASCEND base/generic routines\n"
 		"options:\n"
-		"    --verbose, -v   full output, including memory checking\n"
+		"    --verbose, -v   full output (no suppression)\n"
 		"    --silent, -s\n"
 		"    --normal, -n\n"
 		"    --on-error=[fail|abort|ignore], -e\n"
@@ -131,7 +134,7 @@ int main(int argc, char* argv[]){
 	char c;
 	while(-1 != (c = getopt_long (argc, argv, "vsne:t:l", long_options, &option_index))){
 		switch(c){
-			case 'v': mode = CU_BRM_VERBOSE; break;
+			case 'v': mode = CU_BRM_VERBOSE; g_capture_enabled = 0; break;
 			case 's': mode = CU_BRM_SILENT; break;
 			case 'n': mode = CU_BRM_NORMAL; break;
 			case 'e':
@@ -176,6 +179,7 @@ int main(int argc, char* argv[]){
 	register_cunit_tests();
 	CU_basic_set_mode(mode);
 	CU_set_error_action(error_action);
+	CU_set_test_output_capture(g_capture_enabled);
 
 	if(list){
 		if(strlen(suitename)){
