@@ -303,7 +303,6 @@ struct gl_list_t *gl_create(unsigned long int capacity){
   }
 }
 
-
 void gl_free_and_destroy(struct gl_list_t *list){
   unsigned long c;
   if (list == NULL) return;
@@ -455,23 +454,8 @@ static void gl_expand_list_by(struct gl_list_t *list,unsigned long addlen)
   asc_assert(list->data!=NULL);
 }
 
-
 void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr){
-  if(list == NULL){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"gl_append_ptr called with NULL list");
-    asc_assert(list != NULL);
-    return;
-  }
-  if(!gl_expandable(list)){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR
-      ,"gl_append_ptr list not expandable (flags=0x%X len=%lu cap=%lu)"
-      , (unsigned)list->flags
-      , (unsigned long)list->length
-      , (unsigned long)list->capacity
-    );
-    asc_assert(0 != gl_expandable(list));
-    return;
-  }
+  asc_assert((NULL != list) && (0 != gl_expandable(list)));
   if (list->length > 0) SORTED_OFF(list);
   if (++(list->length) > list->capacity) /* expand list capacity*/
     gl_expand_list(list);

@@ -1,0 +1,28 @@
+REQUIRE "atoms.a4l";
+
+(* relation/logrel/boolean instantiate tests *)
+
+MODEL relation_ok;
+	x IS_A real;
+	x - 1 = 0;
+END relation_ok;
+
+MODEL relation_fail_type;
+	(* FAIL: relation mixes real and symbol *)
+	x IS_A real;
+	x = 'a';
+END relation_fail_type;
+
+MODEL logrel_ok;
+	(* OK: boolean relation *)
+	fact IS_A boolean_var;
+	fiction IS_A boolean_var;
+	fact == fiction;
+END logrel_ok;
+
+MODEL logrel_fail_type;
+	(* FAIL: boolean relation mixes boolean and real *)
+	fact IS_A boolean_var;
+	x IS_A real;
+	fact == x;
+END logrel_fail_type;

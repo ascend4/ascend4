@@ -63,7 +63,7 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 /* why do we include btprolog here? */
 #include <ascend/bintokens/btprolog.h>
 
-#define BINTOKEN_DEBUG
+//#define BINTOKEN_DEBUG
 #ifdef BINTOKEN_DEBUG
 # define MSG CONSOLE_DEBUG
 #else

@@ -29,6 +29,7 @@
 #include "solver.h"
 
 #include <ascend/system/system_impl.h>
+#include <ascend/utilities/error.h>
 #include <ascend/general/list.h>
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/panic.h>
@@ -39,12 +40,12 @@
 # include <windows.h>
 #endif
 
-//#define SOLVER_DEBUG
+#define SOLVER_DEBUG
 #ifdef SOLVER_DEBUG
 # define MSG CONSOLE_DEBUG
 # define ERRMSG CONSOLE_DEBUG
 #else
-# define MSG(...) 
+# define MSG(...)
 # define ERRMSG CONSOLE_DEBUG
 #endif
 
@@ -64,6 +65,7 @@ static struct gl_list_t *solver_get_list(int free_space){
 			gl_destroy(L);
 		}
 		init = 0;
+		L = NULL;
 		return NULL;
 	}
 	if(!init){

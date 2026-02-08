@@ -47,7 +47,7 @@ MODEL simple_fail2;
 METHODS
 	METHOD on_load;
 		INDEPENDENT t;
-		DER(dy_dt,y);
+		DER(z, dy_dt);
 	END on_load;
 END simple_fail2;
 
@@ -60,7 +60,6 @@ MODEL simple_fail3;
 METHODS
 	METHOD on_load;
 		INDEPENDENT t;
-		DER(z, dy_dt);
+		DER(dy_dt, t);
 	END on_load;
 END simple_fail3;
-

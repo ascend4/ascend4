@@ -1,0 +1,142 @@
+REQUIRE "system.a4l";
+
+(* Context/WHERE/CREATE/DO instantiate tests *)
+
+MODEL context_fail_method_declare;
+	a IS_A real;
+METHODS
+	METHOD fail_foo;
+		b IS_A real; (* illegal IS_A in method *)
+	END fail_foo;
+END context_fail_method_declare;
+
+MODEL context_fail_method_when;
+	a IS_A real;
+METHODS
+	METHOD fail_when;
+		WHEN (i) (* illegal when; i undefined *)
+		CASE TRUE:
+			USE b;
+		END WHEN;
+	END fail_when;
+END context_fail_method_when;
+
+MODEL context_fail_method_select;
+	a IS_A real;
+METHODS
+	METHOD fail_select;
+		SELECT (i) (* illegal select; i undefined *)
+		CASE TRUE:
+			USE b;
+		END SELECT;
+	END fail_select;
+END context_fail_method_select;
+
+MODEL context_fail_method_rel;
+	a IS_A real;
+METHODS
+	METHOD fail_rel;
+		a = b; (* relations not legal in methods; b undefined *)
+	END fail_rel;
+END context_fail_method_rel;
+
+MODEL context_fail_switch_declarative;
+	is IS_A boolean;
+	SWITCH (is) (* illegal in declarative; use WHEN/SELECT *)
+	CASE TRUE:
+		USE j;
+	END SWITCH;
+END context_fail_switch_declarative;
+
+MODEL context_fail_if_declarative;
+	is IS_A boolean;
+	IF (is) THEN (* illegal in declarative; use WHEN *)
+		USE j;
+	END IF;
+END context_fail_if_declarative;
+
+MODEL context_fail_select_declarative;
+	is IS_A boolean;
+	SELECT (is) (* select requires constant *)
+	CASE TRUE:
+		USE j;
+	END SELECT;
+END context_fail_select_declarative;
+
+MODEL context_pass_where_create(
+	a IS_A integer_constant;
+	b WILL_BE set OF integer_constant;
+	c[b] IS_A integer_constant;
+) WHERE (
+	FOR i IN b CHECK
+		a==c[i];
+	END FOR;
+);
+	FOR j IN b CREATE
+		x[j] IS_A real;
+	END FOR;
+METHODS
+	METHOD doo;
+		FOR j IN b DO
+			x[j] := 1;
+		END FOR;
+	END doo;
+END context_pass_where_create;
+
+MODEL context_pass_where_create_wrap;
+	a IS_A integer_constant;
+	b IS_A set OF integer_constant;
+	c[b] IS_A integer_constant;
+	a :== 1;
+	b :== [1..2];
+	c[1] :== 1;
+	c[2] :== 1;
+	w IS_A context_pass_where_create(a, b, c);
+END context_pass_where_create_wrap;
+
+MODEL context_failcheck_where_create(
+	a IS_A integer_constant;
+	b WILL_BE set OF integer_constant;
+	c[b] IS_A integer_constant;
+) WHERE (
+	FOR i IN b CHECK
+		a==c[i];
+	END FOR;
+	FOR j IN b CREATE
+		x[j] IS_A real;
+	END FOR;
+	FOR j IN b DO
+		x[j] := 1;
+	END FOR;
+);
+	FOR j IN b CREATE
+		x[j] IS_A real;
+	END FOR;
+METHODS
+	METHOD doo;
+		FOR j IN b DO
+			x[j] := 1;
+		END FOR;
+	END doo;
+END context_failcheck_where_create;
+
+
+MODEL context_faildo_where_create(
+	a IS_A integer_constant;
+	b WILL_BE set OF integer_constant;
+	c[b] IS_A integer_constant;
+) WHERE (
+	FOR i IN b CHECK
+		a==c[i];
+	END FOR;
+);
+	FOR j IN b CREATE
+		x[j] IS_A real;
+	END FOR;
+METHODS
+	METHOD doo;
+		FOR j IN b DO
+			x[j] := 1;
+		END FOR;
+	END doo;
+END context_faildo_where_create;

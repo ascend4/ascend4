@@ -1613,6 +1613,17 @@ static void ExecuteInitLnk(struct procFrame *fm, struct Statement *stat){
 	key = LINKStatKey(stat);
 
 	CONSOLE_DEBUG("LINKStatVlist(stat) contains %lu",VariableListLength(LINKStatVlist(stat)));
+	if(instances == NULL){
+		switch(rel_errorlist_get_find_error(&err)){
+		case impossible_instance:
+			STATEMENT_ERROR(stat, "LINK statement contains impossible instance name");
+			break;
+		default:
+			STATEMENT_ERROR(stat, "Incomplete instances in LINK statement");
+			break;
+		}
+		return;
+	}
 	if((instances != NULL) && (key != NULL)){
 		switch(InstanceKind(fm->i)){
 		case MODEL_INST:

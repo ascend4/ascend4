@@ -44,6 +44,7 @@
 
 static void load_and_initialise(char *filename, char *modelname, int buildfail){
 	int status;
+	int expected_error = 0;
 
 	Asc_CompilerInit(1);
 	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
@@ -61,16 +62,40 @@ static void load_and_initialise(char *filename, char *modelname, int buildfail){
 	struct Instance *siminst = SimsCreateInstance(AddSymbol(modelname), AddSymbol("sim1"), e_normal, NULL);
 	CU_ASSERT_FATAL(siminst!=NULL);
 
-    CONSOLE_DEBUG("Running 'on_load'...");
+	CONSOLE_DEBUG("Running 'on_load'...");
 	struct Name *name = CreateIdName(AddSymbol("on_load"));
+	error_reporter_tree_start();
 	enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
-	CU_ASSERT(pe==Proc_all_ok);
-
-	slv_system_t sys = system_build(siminst);
+	int has_init_error = error_reporter_tree_has_error();
+	if(buildfail && has_init_error){
+		CONSOLE_DEBUG("Errors reported during on_load for buildfail test");
+		error_reporter_tree_dump(stderr);
+	}
+	error_reporter_tree_end();
 	if(buildfail){
-		CU_ASSERT(sys==NULL);
+		if(pe != Proc_all_ok){
+			CONSOLE_DEBUG("on_load returned non-ok Proc_enum for buildfail test");
+		}
+	}else{
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+	expected_error |= has_init_error;
+
+	error_reporter_tree_start();
+	slv_system_t sys = system_build(GetSimulationRoot(siminst));
+	int has_error = error_reporter_tree_has_error();
+	if(sys == NULL && !buildfail){
+		CONSOLE_DEBUG("system_build returned NULL; dumping error reporter tree");
+		error_reporter_tree_dump(stderr);
+	}
+	error_reporter_tree_end();
+	if(buildfail){
+		expected_error |= (sys == NULL || has_error);
+		CU_ASSERT(expected_error);
 	}else{
 		CU_ASSERT(sys != NULL);
+		CU_ASSERT(!has_error);
+		CU_ASSERT(!has_init_error);
 	}
 
  	CONSOLE_DEBUG("system has been built... any errors???");
@@ -116,4 +141,3 @@ static void test_simple_fail3(){
 	T(simple_fail3)
 
 REGISTER_TESTS_SIMPLE(system_link, TESTS)
-

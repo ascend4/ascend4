@@ -35,7 +35,18 @@
 	T(qlfdid) \
 	T(func) \
 	T(notes) \
-	T(chkdim)
+	T(chkdim) \
+	T(instantiate_set_enum) \
+	T(instantiate_relation_logrel_bool) \
+	T(instantiate_logrel_bool_algebra) \
+	T(instantiate_alike) \
+	T(instantiate_context) \
+	T(instantiate_anontype) \
+	T(instantiate_array) \
+	T(instantiate_for) \
+	T(instantiate_when_select) \
+	T(instantiate_alias) \
+	T(instantiate_set_type_errors)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)

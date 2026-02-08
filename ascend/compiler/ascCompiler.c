@@ -35,6 +35,8 @@
 #include <ascend/utilities/ascSignal.h>
 #include <ascend/general/panic.h>
 #include <ascend/general/list.h>
+#include <ascend/solver/solver.h>
+#include <ascend/integrator/integrator.h>
 
 
 #include "expr_types.h"
@@ -263,6 +265,8 @@ void Asc_CompilerDestroy(void)
 #ifdef ASC_SIGNAL_TRAPS
   Asc_SignalDestroy();
 #endif
+  solver_destroy_engines();
+  integrator_free_engines();
   gl_emptyrecycler();                  /* empty the reused list pool */
   gl_destroy_pool();                   /* empty the reused list head pool */
   ClearRecycleStack();                 /* empty the reused stack list  */

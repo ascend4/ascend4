@@ -1,0 +1,8 @@
+REQUIRE "system.a4l";
+(* FOR compile-fail instantiate tests: unindexed relation array *)
+
+MODEL for_fail_unindexed_relation_array;
+	(* FAIL: unindexed relation array *)
+	x IS_A generic_real;
+	ra1[1..2]: x = 2;
+END for_fail_unindexed_relation_array;

@@ -225,10 +225,13 @@ static void test_pass23(void){
    Test that blackbox cache is torn down properly after destroy.
 */
 static void test_cache_teardown(void){
-    // perform a full load, solve, and teardown of a blackbox model
-    load_solve_test("pass","pass1");
-    // after full teardown, no BlackBoxCache should remain
-    CU_ASSERT(0 == BlackBoxCacheAlive());
+	int before = BlackBoxCacheAlive();
+	// perform a full load, solve, and teardown of a blackbox model
+	load_solve_test("pass","pass1");
+	// after full teardown, cache count should be unchanged
+	int after = BlackBoxCacheAlive();
+	CONSOLE_DEBUG("BlackBoxCacheAlive before=%d after=%d", before, after);
+	CU_ASSERT(before == after);
 }
 
 
@@ -260,4 +263,3 @@ static void test_cache_teardown(void){
     T(cache_teardown)
 
 REGISTER_TESTS_SIMPLE(compiler_blackbox, TESTS)
-

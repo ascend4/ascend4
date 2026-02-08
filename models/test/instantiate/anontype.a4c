@@ -1,0 +1,115 @@
+REQUIRE "system.a4l";
+
+(* Anonymous type classification tests *)
+
+MODEL test_sc_anon;
+	a,b,c,d,e,f,g IS_A symbol_constant;
+	a :== 'one';
+	b :== 'two';
+	c :== 'one';
+	d :== 'three';
+	A,B,C,D,E,F,G IS_A symbol_constant;
+	A :== 'one';
+	B :== 'two';
+	C :== 'one';
+	D :== 'three';
+END test_sc_anon;
+
+MODEL test_bc_anon;
+	a,b,e IS_A boolean_constant;
+	c,d IS_A boolean_constant;
+	c :== FALSE;
+	a :== TRUE;
+	b :== FALSE;
+	A,B,E IS_A boolean_constant;
+	C,D IS_A boolean_constant;
+	C :== FALSE;
+	A :== TRUE;
+	B :== FALSE;
+END test_bc_anon;
+
+MODEL test_ic_anon;
+	a,b,c,d IS_A integer_constant;
+	e,f IS_A integer_constant;
+	g,h IS_A integer_constant;
+	a :== 1;
+	c :== 1;
+	d :== 2;
+	b :== 3;
+	f :== 2;
+	A,B,C,D IS_A integer_constant;
+	E,F IS_A integer_constant;
+	G,H IS_A integer_constant;
+	A :== 1;
+	C :== 1;
+	D :== 2;
+	B :== 3;
+	F :== 2;
+END test_ic_anon;
+
+MODEL test_set_anon;
+	c,C,zC IS_A set OF symbol_constant;
+
+	a,f,h,j IS_A set OF symbol_constant;
+	a :== ['foo','t'];
+	f :== ['foo','t'];
+	j :== ['a','t'];
+	h :== INTERSECTION[a,['bar']];
+
+	A,F,H,J IS_A set OF symbol_constant;
+	A :== ['foo','t'];
+	F :== ['foo','t'];
+	J :== ['a','foo','t'];
+	H :== INTERSECTION[A,['bar']];
+
+	zA,zF,zH,zJ IS_A set OF symbol_constant;
+	zA :== ['foo','t'];
+	zF :== ['foo','t'];
+	zJ :== ['a','foo','t'];
+	zH :== INTERSECTION[zA,['bar']];
+
+	g,G,zG IS_A set OF integer_constant;
+
+	e,b,d IS_A set OF integer_constant;
+	e :== [1,2];
+	b :== [1,2];
+	d :== INTERSECTION[e,[5]];
+
+	E,B,D IS_A set OF integer_constant;
+	E :== [1,2];
+	B :== [1,2];
+	D :== INTERSECTION[E,[5]];
+
+	zE,zB,zD IS_A set OF integer_constant;
+	zE :== [1,2];
+	zB :== [1,2];
+	zD :== INTERSECTION[zE,[5]];
+END test_set_anon;
+
+ATOM tr REFINES real;
+END tr;
+
+MODEL test_ai_anon1;
+	a[1..3],c[1..3] IS_A real;
+	b[2..3] IS_A real;
+	d[3..1] IS_A real;
+	e[3..1] IS_A real;
+	f[1..3] IS_A real;
+	f[2] IS_REFINED_TO tr;
+	g[1,2,3] IS_A integer;
+	h[1..3] IS_A integer;
+	i[1..3] IS_A integer;
+END test_ai_anon1;
+
+
+UNIVERSAL ATOM ut REFINES real;
+END ut;
+
+MODEL test_u_anon;
+	a,b,c IS_A ut;
+	b2 IS_A real;
+END test_u_anon;
+
+MODEL test_u2_anon;
+	p,q IS_A test_u_anon;
+END test_u2_anon;

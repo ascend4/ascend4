@@ -47,6 +47,7 @@
 #include "initialize.h"
 #include "instmacro.h" /**< DS: added in order to defer ModelInstance pointer, should be removed if the LINK functions are defined in a differnet file*/
 #include "find.h"
+#include "link.h"
 #include <ascend/general/list.h>
 #include "instance_types.h"
 #include "instquery.h"
@@ -1286,7 +1287,7 @@ void DeleteTypeDesc(struct TypeDescription *d){
       DestroyStatementList(d->u.modarg.absorbed);
       DestroyStatementList(d->u.modarg.reductions);
       DestroyStatementList(d->u.modarg.wheres);
-			gl_free_and_destroy(d->u.modarg.link_table);
+      LinkDestroyTable(d->u.modarg.link_table);
 /* not in use. probably needs to be smarter if it was.
       if (d->u.modarg.argdata!=NULL) {
         gl_destroy(d->u.modarg.argdata);
@@ -1688,4 +1689,3 @@ void SetTypeShowBit(struct TypeDescription *d, int value){
     d->flags &= ~TYPESHOW;
   }
 }
-

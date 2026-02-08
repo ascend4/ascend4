@@ -1,0 +1,22 @@
+(* Set/type derivation error tests *)
+
+MODEL set_fail_unknown_type;
+	(* FAIL: unknown set element type *)
+	s IS_A set OF no_such_type;
+END set_fail_unknown_type;
+
+MODEL set_fail_scalar_value;
+	(* FAIL: scalar value assigned to set *)
+	s IS_A set OF integer_constant;
+	s :== 1;
+END set_fail_scalar_value;
+
+MODEL set_fail_union_type_conflict;
+	(* FAIL: UNION of mixed-type set expression *)
+	s1 IS_A set OF integer_constant;
+	s1 :== [1..2];
+	s2 IS_A set OF symbol_constant;
+	s2 :== ['a','b'];
+	u IS_A set OF integer_constant;
+	u :== UNION[s1, s2];
+END set_fail_union_type_conflict;

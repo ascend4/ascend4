@@ -1,0 +1,81 @@
+(* Array instantiate tests *)
+
+MODEL array_ok_int;
+	(* OK: integer range subscript *)
+	x[1..3] IS_A real;
+END array_ok_int;
+
+MODEL array_ok_sym;
+	(* OK: symbol set subscript *)
+	s IS_A set OF symbol_constant;
+	s :== ['a','b'];
+	y[s] IS_A real;
+END array_ok_sym;
+
+MODEL array_fail_real_range;
+	(* FAIL: real-valued array range *)
+	x[1.5..3.5] IS_A real;
+END array_fail_real_range;
+
+MODEL array_fail_mixed_set;
+	(* FAIL: mixed-type symbol set *)
+	s IS_A set OF symbol_constant;
+	s :== [1,'a'];
+	y[s] IS_A real;
+END array_fail_mixed_set;
+
+MODEL array_ok_range_constants;
+	(* OK: integer/symbol constant subscripts *)
+	c IS_A integer_constant;
+	d IS_A symbol_constant;
+	c :== 3;
+	d :== 'sdf';
+	y[c] IS_A real;
+	z[d] IS_A real;
+	y2[c] IS_A real;
+	z2[d] IS_A real;
+END array_ok_range_constants;
+
+MODEL array_fail_const_indices;
+	(* FAIL: boolean/real constant subscripts *)
+	a IS_A boolean_constant;
+	b IS_A real_constant;
+	a :== TRUE;
+	b :== 2.1;
+	w[a] IS_A real;
+	x[b] IS_A real;
+END array_fail_const_indices;
+
+MODEL array_fail_bool_set;
+	(* FAIL: boolean-valued set subscript *)
+	s IS_A set OF boolean_constant;
+	s :== [TRUE,FALSE];
+	y[s] IS_A real;
+END array_fail_bool_set;
+
+MODEL array_fail_real_set;
+	(* FAIL: real-valued set subscript *)
+	s IS_A set OF real_constant;
+	s :== [1.0,2.5];
+	y[s] IS_A real;
+END array_fail_real_set;
+
+MODEL array_fail_direct_index_types;
+	(* FAIL: direct non-integer/symbol index types *)
+	x[TRUE] IS_A real;
+	y[2.5] IS_A real;
+	z['a'] IS_A real;
+END array_fail_direct_index_types;
+
+MODEL array_ok_empty_range_arg(
+	n IS_A integer_constant;
+	a[1..n] WILL_BE real;
+);
+	q IS_A real;
+END array_ok_empty_range_arg;
+
+MODEL array_ok_empty_range;
+	(* OK: empty range array and parameterized model *)
+	a[1..0] IS_A real;
+	b IS_A array_ok_empty_range_arg(0, a);
+END array_ok_empty_range;

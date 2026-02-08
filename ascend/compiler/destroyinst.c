@@ -34,6 +34,7 @@
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
 
+#include "link.h"
 #include "symtab.h"
 #include "functype.h"
 #include "expr_types.h"
@@ -352,7 +353,7 @@ static void DestroyInstanceParts(struct Instance *i){
     i->t = ERROR_INST;
     DeleteTypeDesc(MOD_INST(i)->desc);
     MOD_INST(i)->desc = NULL;
-	gl_destroy(MOD_INST(i)->link_table);
+    LinkDestroyTable(MOD_INST(i)->link_table);
     ascfree((char *)i);
     return;
   case REAL_CONSTANT_INST:
@@ -650,4 +651,3 @@ void DestroyInstance(struct Instance *inst, struct Instance *parent){
     }
   }
 }
-

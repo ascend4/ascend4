@@ -6,6 +6,8 @@ PROVIDE "z-context.a4c";
  * under the GNU Public License as described at the end of this file.
  *)
 
+(* MIGRATED: compiler_instantiate_context (models/test/instantiate/context.a4c). *)
+(*
 MODEL fail_context;
 
  a IS_A real;
@@ -128,6 +130,7 @@ METHOD doo;
 	END FOR;
 END doo;
 END faildo;
+*)
 
 MODEL failcreate (
 	a IS_A integer_constant;

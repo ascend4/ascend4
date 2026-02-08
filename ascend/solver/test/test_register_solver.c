@@ -26,6 +26,7 @@
 	T(qrslv) \
 	T(fprops) \
 	T(lrslv) \
+	T(list) \
 	T(slvdof) \
 	T(datareader) \
 	T(sunpos) \
@@ -42,4 +43,3 @@ TESTS(PROTO_SOLVER)
 	}
 
 REGISTER_SUITE(solver,TESTS)
-

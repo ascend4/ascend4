@@ -640,6 +640,25 @@ extern void clearLinkCache(struct Instance* model){
 	}
 }
 
+void LinkDestroyTable(struct gl_list_t *table){
+	unsigned long i, len;
+	if(table == NULL){
+		return;
+	}
+	len = gl_length(table);
+	for(i=1;i<=len;i++){
+		struct link_entry_t *entry = (struct link_entry_t *)gl_fetch(table,i);
+		if(entry != NULL){
+			if(entry->instances_cache != NULL){
+				gl_destroy(entry->instances_cache);
+				entry->instances_cache = NULL;
+			}
+			ascfree(entry);
+		}
+	}
+	gl_destroy(table);
+}
+
 extern void populateLinkCache(struct Instance* model){
 	struct gl_list_t *link_table;
 	struct link_entry_t *link_entry;
@@ -776,7 +795,7 @@ void TestingRoutine(struct Instance *model)
 
 	/* test getLinkTypes */
 	struct gl_list_t *linkTypes;
-	symchar *keyc1;
+	symchar *keyc1 = NULL;
 	linkTypes = getLinkTypes(model,0);
 	len1 = gl_length(linkTypes);
 	CONSOLE_DEBUG("\n number of unique link types: %d \n",len1);
@@ -786,6 +805,10 @@ void TestingRoutine(struct Instance *model)
 		CONSOLE_DEBUG("%s ",SCP(keyc1));
 	}
 	CONSOLE_DEBUG("\n");
+	if(len1 < 1){
+		gl_destroy(linkTypes);
+		return;
+	}
 
 	/* test getLinks */
 	struct gl_list_t *links;
@@ -837,4 +860,3 @@ void TestingRoutine(struct Instance *model)
 	/* test getLinkTableDeclarative (already tested in previous functions) */
 	/* test getLinkTableProcedural (already tested in previous functions) */
 }
-

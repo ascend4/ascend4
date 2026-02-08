@@ -11,6 +11,8 @@ PROVIDE "z-alike.a4c";
 (*********************************************************************\
 \*********************************************************************)
 
+(* MIGRATED: compiler_instantiate_alike (models/test/instantiate/alike.a4c). *)
+(*
 MODEL test_alike_base;
 NOTES 'purpose' SELF
 { This library exercises parser error checking. All models with fail_
@@ -82,6 +84,7 @@ MODEL pass_2_legal_aa_down_in_unparameterized_object REFINES test_alike_base;
   a,b IS_A box;
   a.x,b.x ARE_ALIKE;
 END pass_2_legal_aa_down_in_unparameterized_object;
+*)
 
 
 (*
