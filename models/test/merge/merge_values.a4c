@@ -1,0 +1,81 @@
+(* ARE_THE_SAME / mergeinst constant and set value tests *)
+
+MODEL merge_ok_int_constants_same;
+	a IS_A integer_constant;
+	b IS_A integer_constant;
+	a :== 1;
+	b :== 1;
+	a, b ARE_THE_SAME;
+END merge_ok_int_constants_same;
+
+MODEL merge_fail_int_constants_diff;
+	a IS_A integer_constant;
+	b IS_A integer_constant;
+	a :== 1;
+	b :== 2;
+	a, b ARE_THE_SAME;
+END merge_fail_int_constants_diff;
+
+MODEL merge_ok_bool_constants_same;
+	a IS_A boolean_constant;
+	b IS_A boolean_constant;
+	a :== TRUE;
+	b :== TRUE;
+	a, b ARE_THE_SAME;
+END merge_ok_bool_constants_same;
+
+MODEL merge_fail_bool_constants_diff;
+	a IS_A boolean_constant;
+	b IS_A boolean_constant;
+	a :== TRUE;
+	b :== FALSE;
+	a, b ARE_THE_SAME;
+END merge_fail_bool_constants_diff;
+
+MODEL merge_ok_symbol_constants_same;
+	a IS_A symbol_constant;
+	b IS_A symbol_constant;
+	a :== 'one';
+	b :== 'one';
+	a, b ARE_THE_SAME;
+END merge_ok_symbol_constants_same;
+
+MODEL merge_fail_symbol_constants_diff;
+	a IS_A symbol_constant;
+	b IS_A symbol_constant;
+	a :== 'one';
+	b :== 'two';
+	a, b ARE_THE_SAME;
+END merge_fail_symbol_constants_diff;
+
+MODEL merge_ok_real_constants_same;
+	a IS_A real_constant;
+	b IS_A real_constant;
+	a :== 1.0;
+	b :== 1.0;
+	a, b ARE_THE_SAME;
+END merge_ok_real_constants_same;
+
+MODEL merge_fail_real_constants_diff;
+	a IS_A real_constant;
+	b IS_A real_constant;
+	a :== 1.0;
+	b :== 2.0;
+	a, b ARE_THE_SAME;
+END merge_fail_real_constants_diff;
+
+MODEL merge_ok_sets_same;
+	s1 IS_A set OF integer_constant;
+	s2 IS_A set OF integer_constant;
+	s1 :== [1,2];
+	s2 :== [1,2];
+	s1, s2 ARE_THE_SAME;
+END merge_ok_sets_same;
+
+MODEL merge_fail_sets_diff;
+	s1 IS_A set OF integer_constant;
+	s2 IS_A set OF integer_constant;
+	s1 :== [1,2];
+	s2 :== [2,3];
+	s1, s2 ARE_THE_SAME;
+END merge_fail_sets_diff;

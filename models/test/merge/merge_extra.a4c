@@ -1,0 +1,2 @@
+REQUIRE "system.a4l";
+(* ARE_THE_SAME / mergeinst extra tests *)

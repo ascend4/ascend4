@@ -58,6 +58,14 @@ static void test_array_fail_real_range(void){
 	instantiate_case("array_fail_real_range", 1);
 }
 
+static void test_array_fail_bool_range(void){
+	instantiate_case("array_fail_bool_range", 1);
+}
+
+static void test_array_fail_symbol_range(void){
+	instantiate_case("array_fail_symbol_range", 1);
+}
+
 static void test_array_fail_mixed_set(void){
 	instantiate_case("array_fail_mixed_set", 1);
 }
@@ -90,6 +98,8 @@ static void test_array_ok_empty_range(void){
 	T(array_ok_int) \
 	T(array_ok_sym) \
 	T(array_fail_real_range) \
+	T(array_fail_bool_range) \
+	T(array_fail_symbol_range) \
 	T(array_fail_mixed_set) \
 	T(array_ok_range_constants) \
 	T(array_fail_const_indices) \

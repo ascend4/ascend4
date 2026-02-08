@@ -1,0 +1,41 @@
+(* ARE_THE_SAME / mergeinst dimension mismatch tests *)
+
+REQUIRE "system.a4l";
+
+ATOM len_var REFINES real DIMENSION L DEFAULT 1{m};
+END len_var;
+
+ATOM time_var REFINES real DIMENSION T DEFAULT 1{s};
+END time_var;
+
+CONSTANT len_const REFINES real_constant DIMENSION L;
+
+CONSTANT time_const REFINES real_constant DIMENSION T;
+
+MODEL merge_dims_atom_fail;
+	a IS_A len_var;
+	b IS_A time_var;
+	a, b ARE_THE_SAME;
+END merge_dims_atom_fail;
+
+MODEL merge_dims_const_fail;
+	a IS_A len_const;
+	b IS_A time_const;
+	a :== 1.0{m};
+	b :== 2.0{s};
+	a, b ARE_THE_SAME;
+END merge_dims_const_fail;
+
+MODEL merge_dims_atom_ok;
+	a IS_A len_var;
+	b IS_A len_var;
+	a, b ARE_THE_SAME;
+END merge_dims_atom_ok;
+
+MODEL merge_dims_const_ok;
+	a IS_A len_const;
+	b IS_A len_const;
+	a :== 1.0{m};
+	b :== 1.0{m};
+	a, b ARE_THE_SAME;
+END merge_dims_const_ok;
