@@ -9,7 +9,7 @@ static int has_unsupported(const char *pattern){
 	return strpbrk(pattern, "?[") != NULL;
 }
 
-int asc_glob_match(const char *pattern, const char *text, int *err){
+ASC_DLLSPEC int asc_glob_match(const char *pattern, const char *text, int *err){
 	if(err){
 		*err = 0;
 	}

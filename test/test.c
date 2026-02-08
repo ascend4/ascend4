@@ -193,6 +193,12 @@ static void expand_tests_file(const char *name, struct strlist *out){
 	}
 
 	char altpath[PATH_MAX];
+	size_t base_len = strlen(ASC_TEST_PATH);
+	size_t file_len = strlen(filename);
+	if(base_len + 1 + file_len >= sizeof(altpath)){
+		fprintf(stderr, "Test list path too long: '%s/%s'\n", ASC_TEST_PATH, filename);
+		return;
+	}
 	snprintf(altpath, sizeof(altpath), "%s/%s", ASC_TEST_PATH, filename);
 	if(access(altpath, R_OK) == 0){
 		read_tests_file(altpath, out);
