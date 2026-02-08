@@ -6183,11 +6183,13 @@ static int NameContainsName(CONST struct Name *n,CONST struct Name *sub){
   nl = EvaluateNamesNeededShallow(en,NULL,NULL);
   /* should this function be checking deep instead? can't tell yet. */
   if (nl==NULL || gl_length(nl)==0) {
+    ascfree(en);
     return 0; /* should never happen */
   }
   for (c=1, len = gl_length(nl); c <= len; c++) {
     if (CompareNames((struct Name *)gl_fetch(nl,c),sub)==0) {
       gl_destroy(nl);
+      ascfree(en);
       return 1;
     }
   }
@@ -13247,4 +13249,3 @@ struct Instance *InstantiatePatch(symchar *patch,
   return result;
 }
 #endif
-

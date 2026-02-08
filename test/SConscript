@@ -32,11 +32,16 @@ conf = test_env.Configure()
 if not conf.CheckDeclaration('CU_set_test_output_capture', '#include <CUnit/TestRun.h>\n'):
 	print("ERROR: CUnit is missing CU_set_test_output_capture; install the patched CUnit.")
 	Exit(1)
+if not conf.CheckDeclaration('fnmatch', '#include <fnmatch.h>\n'):
+	print("ERROR: fnmatch not available; cannot enable test glob support.")
+	Exit(1)
+test_env.Append(CPPDEFINES=['HAVE_FNMATCH'])
 test_env = conf.Finish()
 
 testprog = test_env.Program('test',srcs)
 
 test_env.Depends(testprog,"#/ascend/utilities/test")
+test_env.Depends(testprog,[test_env.Dir('#/solvers'), test_env.Dir('#/models')])
 
 if platform.system()=="Windows":
 	test_env.Depends(testprog,test_env['libascend'])

@@ -43,6 +43,7 @@
 	T(instantiate_context) \
 	T(instantiate_anontype) \
 	T(instantiate_array) \
+	T(instantiate_arr) \
 	T(instantiate_for) \
 	T(instantiate_when_select) \
 	T(instantiate_alias) \

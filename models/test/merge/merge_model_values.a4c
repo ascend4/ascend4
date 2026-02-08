@@ -1,0 +1,15 @@
+REQUIRE "system.a4l";
+
+(* ARE_THE_SAME / mergeinst model executed-bitlist tests *)
+
+MODEL value_model;
+	x IS_A real;
+	y IS_A real;
+	r1: x = 1;
+	r2: y = 2;
+END value_model;
+
+MODEL merge_model_values;
+	a IS_A value_model;
+	b IS_A value_model;
+END merge_model_values;

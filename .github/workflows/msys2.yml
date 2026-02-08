@@ -90,11 +90,11 @@ jobs:
 
     - name: Test solver_list
       run: |
-        ./a4 script test/test solver_list
+        ./a4 cutest solver_list
 
     - name: Test ASCEND
       run: |
-        ./a4 script `which bash` test/test_expectpass_mallocdebug
+        ./a4 cutest -r mallocdebug
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5

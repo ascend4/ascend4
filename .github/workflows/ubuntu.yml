@@ -42,7 +42,7 @@ jobs:
 
     - name: ASCEND CUnit tests
       run: |
-        ./a4 script test/test_expectpass_mallocdebug
+        ./a4 cutest -r mallocdebug
 
     - name: FPROPS CUnit tests
       run: |

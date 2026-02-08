@@ -1,0 +1,30 @@
+(* Compound ALIASES / IS_A (ARR) instantiate tests: fail cases *)
+
+MODEL arr_fail_with_value_len;
+	a IS_A real;
+	b IS_A real;
+	arr[idx] ALIASES (a,b) WHERE idx IS_A set OF integer_constant WITH_VALUE([1]);
+END arr_fail_with_value_len;
+
+MODEL arr_fail_with_value_type;
+	a IS_A real;
+	b IS_A real;
+	arr[idx] ALIASES (a,b) WHERE idx IS_A set OF integer_constant WITH_VALUE(['a','b']);
+END arr_fail_with_value_type;
+
+MODEL arr_fail_rhs_unknown;
+	a IS_A real;
+	arr[idx] ALIASES (a,missing) WHERE idx IS_A set OF integer_constant;
+END arr_fail_rhs_unknown;
+
+MODEL arr_fail_lhs_multiple;
+	a IS_A real;
+	b IS_A real;
+	arr1[idx],arr2[idx] ALIASES (a,b) WHERE idx IS_A set OF integer_constant;
+END arr_fail_lhs_multiple;
+
+MODEL arr_fail_setname_multiple;
+	a IS_A real;
+	b IS_A real;
+	arr[idx] ALIASES (a,b) WHERE idx1,idx2 IS_A set OF integer_constant;
+END arr_fail_setname_multiple;

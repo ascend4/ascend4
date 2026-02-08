@@ -128,6 +128,17 @@ if __name__ == "__main__":
 	p_scr.set_defaults(action='script')
 	p_scr.add_argument('file',type=pathlib.Path,help='Script file to be run')
 	p_scr.add_argument('rest',nargs=argparse.REMAINDER,help='Additional arguments to be passed to the script')
+
+	p_cutest = s.add_parser('cutest',help = 'Run ASCEND CUnit test runner with ASCEND environment set')
+	p_cutest.set_defaults(action='cutest')
+	p_cutest.add_argument('-r','--run',dest='runfile',help='Run tests listed in FILE (.tests extension optional)')
+	p_cutest.add_argument('-v','--verbose',action='store_true',help='Full CUnit output (no suppression)')
+	p_cutest.add_argument('-s','--silent',action='store_true',help='Silent CUnit output')
+	p_cutest.add_argument('-n','--normal',action='store_true',help='Normal CUnit output')
+	p_cutest.add_argument('-e','--on-error',dest='on_error',help='Set CUnit on-error action')
+	p_cutest.add_argument('-l','--list-suites',action='store_true',help='List suites')
+	p_cutest.add_argument('-t','--list-tests',dest='list_tests',help='List tests for suite')
+	p_cutest.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to test/test')
 	
 	p_sh = s.add_parser('env',help = 'Create a sub-shell in which ASCEND environment variables are set.')
 	p_sh.set_defaults(action='env')
@@ -222,6 +233,26 @@ if __name__ == "__main__":
 		cmd += [PYTHON,sourceroot/'pygtk'/'ascdev', sourceroot/'models'/'johnpye'/'extpy'/'extpytest.a4c']
 	elif args.action == 'script':
 		cmd += shebang(args.file,args.rest)
+	elif args.action == 'cutest':
+		cmd += [sourceroot / 'test' / 'test']
+		if args.verbose:
+			cmd += ['-v']
+		if args.silent:
+			cmd += ['-s']
+		if args.normal:
+			cmd += ['-n']
+		if args.on_error:
+			cmd += ['-e', args.on_error]
+		if args.list_suites:
+			cmd += ['-l']
+		if args.list_tests:
+			cmd += ['-t', args.list_tests]
+		if args.runfile:
+			cmd += ['-r', args.runfile]
+		rest = list(args.rest)
+		if rest and rest[0] == '--':
+			rest = rest[1:]
+		cmd += rest
 	elif args.action == 'env' :
 		shargs = []
 		if os.environ.get('ASCEND_SHELL'):
