@@ -1,0 +1,35 @@
+(* ARE_THE_SAME / mergeinst array merge tests *)
+
+REQUIRE "system.a4l";
+
+MODEL array_holder(S WILL_BE set OF integer_constant;);
+	A[S] IS_A real;
+END array_holder;
+
+MODEL merge_arrays_ok;
+	s1 IS_A set OF integer_constant;
+	s2 IS_A set OF integer_constant;
+	s1 :== [1,2];
+	s2 :== [1,2];
+	a IS_A array_holder(s1);
+	b IS_A array_holder(s2);
+	a.A[1] = 1;
+	a.A[2] = 2;
+	b.A[1] = 1;
+	b.A[2] = 2;
+	a.A, b.A ARE_THE_SAME;
+END merge_arrays_ok;
+
+MODEL merge_arrays_fail_diff_indices;
+	s1 IS_A set OF integer_constant;
+	s2 IS_A set OF integer_constant;
+	s1 :== [1,2];
+	s2 :== [1,3];
+	a IS_A array_holder(s1);
+	b IS_A array_holder(s2);
+	a.A[1] = 1;
+	a.A[2] = 2;
+	b.A[1] = 1;
+	b.A[3] = 3;
+	a.A, b.A ARE_THE_SAME;
+END merge_arrays_fail_diff_indices;

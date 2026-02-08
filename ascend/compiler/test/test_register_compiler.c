@@ -46,7 +46,18 @@
 	T(instantiate_for) \
 	T(instantiate_when_select) \
 	T(instantiate_alias) \
-	T(instantiate_set_type_errors)
+	T(instantiate_set_type_errors) \
+	T(instantiate_cond) \
+	T(merge) \
+	T(merge_extra) \
+	T(merge_values) \
+	T(merge_parents) \
+	T(merge_relparents) \
+	T(merge_children) \
+	T(merge_arrays) \
+	T(merge_dims) \
+	T(merge_model_children) \
+	T(merge_model_values)
 
 
 #define PROTO_TEST(NAME) PROTO(compiler,NAME)

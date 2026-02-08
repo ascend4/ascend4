@@ -1,0 +1,21 @@
+(* ARE_THE_SAME / mergeinst model children tests *)
+
+MODEL base_model;
+	a IS_A real;
+END base_model;
+
+MODEL refined_model REFINES base_model;
+	b IS_A real;
+END refined_model;
+
+MODEL merge_model_children_common;
+	m1 IS_A base_model;
+	m2 IS_A base_model;
+	m1, m2 ARE_THE_SAME;
+END merge_model_children_common;
+
+MODEL merge_model_children_uncommon;
+	m1 IS_A refined_model;
+	m2 IS_A base_model;
+	m1, m2 ARE_THE_SAME;
+END merge_model_children_uncommon;

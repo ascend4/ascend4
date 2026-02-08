@@ -4575,17 +4575,20 @@ static int ExecuteATS(struct Instance *inst, struct Statement *statement){
     if ((gl_length(instances)==0)||(MostRefined(instances)!=NULL)){
       len = gl_length(instances);
       if (len>1){
+        int merge_failed = 0;
         inst1 = (struct Instance *)gl_fetch(instances,1);
         for(c=2;c<=len;c++){
           inst2 = (struct Instance *)gl_fetch(instances,c);
           inst1 = MergeInstances(inst1,inst2);
           if (inst1==NULL){
-            STATEMENT_ERROR(statement, "Fatal ARE_THE_SAME error");
-            ASC_PANIC("Fatal ARE_THE_SAME error");
-            /*NOTREACHED Wanna bet? ! */
+            STATEMENT_ERROR(statement, "ARE_THE_SAME merge failed");
+            merge_failed = 1;
+            break;
           }
         }
-        PostMergeCheck(inst1);
+        if(!merge_failed){
+          PostMergeCheck(inst1);
+        }
       }
     }else{
       STATEMENT_ERROR(statement,
@@ -13244,5 +13247,4 @@ struct Instance *InstantiatePatch(symchar *patch,
   return result;
 }
 #endif
-
 

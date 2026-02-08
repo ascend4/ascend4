@@ -17,6 +17,16 @@ MODEL array_fail_real_range;
 	x[1.5..3.5] IS_A real;
 END array_fail_real_range;
 
+MODEL array_fail_bool_range;
+	(* FAIL: boolean-valued array range *)
+	x[TRUE..FALSE] IS_A real;
+END array_fail_bool_range;
+
+MODEL array_fail_symbol_range;
+	(* FAIL: symbol-valued array range *)
+	x['a'..'b'] IS_A real;
+END array_fail_symbol_range;
+
 MODEL array_fail_mixed_set;
 	(* FAIL: mixed-type symbol set *)
 	s IS_A set OF symbol_constant;
@@ -66,6 +76,7 @@ MODEL array_fail_direct_index_types;
 	y[2.5] IS_A real;
 	z['a'] IS_A real;
 END array_fail_direct_index_types;
+
 
 MODEL array_ok_empty_range_arg(
 	n IS_A integer_constant;

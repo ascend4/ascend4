@@ -1,0 +1,16 @@
+(* ARE_THE_SAME / mergeinst relation parent tests *)
+
+REQUIRE "system.a4l";
+
+MODEL parent_rel;
+	x IS_A real;
+	y IS_A real;
+	r: x = y;
+	lr: x > 0;
+END parent_rel;
+
+MODEL merge_relparents;
+	a IS_A parent_rel;
+	b IS_A parent_rel;
+	a, b ARE_THE_SAME;
+END merge_relparents;
