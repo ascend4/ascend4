@@ -28,6 +28,7 @@
 	T(hashpjw) \
 	T(list) \
 	T(listio) \
+	T(glob) \
 	T(pairlist) \
 	T(pool) \
 	T(pretty) \
@@ -51,4 +52,3 @@ TESTS(PROTO_GENERAL)
 	}
 
 REGISTER_SUITE(general,TESTS)
-

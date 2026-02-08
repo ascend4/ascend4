@@ -11,6 +11,7 @@ general_table
 general_tm_time
 general_ospath
 general_env
+general_glob
 general_ltmatrix
 general_ascMalloc
 utilities_error

@@ -24,6 +24,8 @@
 #include <ctype.h>
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>
+#else
+#include <ascend/general/glob.h>
 #endif
 
 #include <ascend/utilities/config.h>
@@ -91,11 +93,17 @@ static int has_glob_chars(const char *s){
 	return strpbrk(s, "*?[") != NULL;
 }
 
+#ifndef HAVE_FNMATCH
+static int has_unsupported_glob(const char *s){
+	return strpbrk(s, "?[") != NULL;
+}
+#endif
+
 static int match_pattern(const char *pattern, const char *text){
 #ifdef HAVE_FNMATCH
 	return fnmatch(pattern, text, 0) == 0;
 #else
-	return strcmp(pattern, text) == 0;
+	return asc_glob_match(pattern, text, NULL);
 #endif
 }
 
@@ -103,6 +111,13 @@ static void expand_pattern(const char *pattern, struct strlist *out){
 	struct CU_TestRegistry *reg = CU_get_registry();
 	struct CU_Suite *suite = reg ? reg->pSuite : NULL;
 	int matched = 0;
+#ifndef HAVE_FNMATCH
+	if(has_unsupported_glob(pattern)){
+		fprintf(stderr, "Glob pattern '%s' uses unsupported characters (only '*' is available without fnmatch)\n", pattern);
+		strlist_append_unique(out, pattern);
+		return;
+	}
+#endif
 	if(strchr(pattern, '.') != NULL){
 		for(; suite != NULL; suite = suite->pNext){
 			struct CU_Test *test = suite->pTest;
