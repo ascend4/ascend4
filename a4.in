@@ -131,13 +131,6 @@ if __name__ == "__main__":
 
 	p_cutest = s.add_parser('cutest',help = 'Run ASCEND CUnit test runner with ASCEND environment set')
 	p_cutest.set_defaults(action='cutest')
-	p_cutest.add_argument('-r','--run',dest='runfile',help='Run tests listed in FILE (.tests extension optional)')
-	p_cutest.add_argument('-v','--verbose',action='store_true',help='Full CUnit output (no suppression)')
-	p_cutest.add_argument('-s','--silent',action='store_true',help='Silent CUnit output')
-	p_cutest.add_argument('-n','--normal',action='store_true',help='Normal CUnit output')
-	p_cutest.add_argument('-e','--on-error',dest='on_error',help='Set CUnit on-error action')
-	p_cutest.add_argument('-l','--list-suites',action='store_true',help='List suites')
-	p_cutest.add_argument('-t','--list-tests',dest='list_tests',help='List tests for suite')
 	p_cutest.add_argument('rest',nargs=argparse.REMAINDER,help='Arguments to pass to test/test')
 	
 	p_sh = s.add_parser('env',help = 'Create a sub-shell in which ASCEND environment variables are set.')
@@ -149,7 +142,15 @@ if __name__ == "__main__":
 	p_sh = s.add_parser('q',help = 'Quick shortcut test -- test a4.in source for details.')
 	p_sh.set_defaults(action='q')
 
-	args = p.parse_args()
+	args, unknown = p.parse_known_args()
+	if unknown:
+		if hasattr(args, 'action') and args.action == 'cutest':
+			# Pass unknown args through to the test runner.
+			if not hasattr(args, 'rest') or args.rest is None:
+				args.rest = []
+			args.rest = unknown + list(args.rest)
+		else:
+			p.error("unrecognized arguments: " + " ".join(unknown))
 
 	if args.debug:
 		DEBUG=1
@@ -235,20 +236,6 @@ if __name__ == "__main__":
 		cmd += shebang(args.file,args.rest)
 	elif args.action == 'cutest':
 		cmd += [sourceroot / 'test' / 'test']
-		if args.verbose:
-			cmd += ['-v']
-		if args.silent:
-			cmd += ['-s']
-		if args.normal:
-			cmd += ['-n']
-		if args.on_error:
-			cmd += ['-e', args.on_error]
-		if args.list_suites:
-			cmd += ['-l']
-		if args.list_tests:
-			cmd += ['-t', args.list_tests]
-		if args.runfile:
-			cmd += ['-r', args.runfile]
 		rest = list(args.rest)
 		if rest and rest[0] == '--':
 			rest = rest[1:]

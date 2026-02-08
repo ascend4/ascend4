@@ -280,6 +280,8 @@ static void test_error(void){
 
 
 
+	error_reporter_set_callback(NULL);
+	my_error_fp = NULL;
 	fclose(tmp);
 
 	CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
@@ -293,4 +295,3 @@ static void test_error(void){
 
 REGISTER_TESTS_SIMPLE(utilities_error, TESTS)
 /* vim: ts=4:noet:sw=4 */
-
