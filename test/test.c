@@ -162,9 +162,15 @@ static void read_tests_file(const char *path, struct strlist *out){
 		fprintf(stderr, "Unable to open test list file '%s'\n", path);
 		return;
 	}
-	char *line = NULL;
-	size_t cap = 0;
-	while(getline(&line, &cap, fp) != -1){
+	char line[1024];
+	while(fgets(line, sizeof(line), fp) != NULL){
+		size_t len = strlen(line);
+		if(len == sizeof(line) - 1 && line[len - 1] != '\n'){
+			fprintf(stderr, "Test list line too long in '%s' (max %zu chars)\n", path, sizeof(line) - 2);
+			int ch;
+			while((ch = fgetc(fp)) != '\n' && ch != EOF){;}
+			continue;
+		}
 		char *t = trim_line(line);
 		if(t[0] == '\0' || t[0] == '#'){
 			continue;
@@ -175,7 +181,6 @@ static void read_tests_file(const char *path, struct strlist *out){
 			strlist_append_unique(out, t);
 		}
 	}
-	free(line);
 	fclose(fp);
 }
 
@@ -193,13 +198,11 @@ static void expand_tests_file(const char *name, struct strlist *out){
 	}
 
 	char altpath[PATH_MAX];
-	size_t base_len = strlen(ASC_TEST_PATH);
-	size_t file_len = strlen(filename);
-	if(base_len + 1 + file_len >= sizeof(altpath)){
+	int needed = snprintf(altpath, sizeof(altpath), "%s/%s", ASC_TEST_PATH, filename);
+	if(needed < 0 || (size_t)needed >= sizeof(altpath)){
 		fprintf(stderr, "Test list path too long: '%s/%s'\n", ASC_TEST_PATH, filename);
 		return;
 	}
-	snprintf(altpath, sizeof(altpath), "%s/%s", ASC_TEST_PATH, filename);
 	if(access(altpath, R_OK) == 0){
 		read_tests_file(altpath, out);
 		return;
