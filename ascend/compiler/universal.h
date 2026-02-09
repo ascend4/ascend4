@@ -77,6 +77,8 @@ extern void SetUniversalTable(struct UniversalTable * table);
  */
 
 extern struct UniversalTable *GetUniversalTable(void);
+
+ASC_DLLSPEC void DestroyUniversalDummyInstances(struct UniversalTable *table);
 /**<
  *  Return a pointer to the current global universal table.
  */
@@ -134,4 +136,3 @@ extern struct Instance *GetInstance(struct UniversalTable *table,
 /* @} */
 
 #endif /* ASC_UNIVERSAL_H */
-

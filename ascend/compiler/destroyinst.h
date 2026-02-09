@@ -43,6 +43,8 @@
 	@{
 */
 
+struct Instance;
+
 ASC_DLLSPEC void DestroyInstance(struct Instance *inst, struct Instance *parent);
 /**<
  *  If parent is NULL, this will destroy all references to inst and deallocate
@@ -61,4 +63,3 @@ ASC_DLLSPEC void DestroyInstance(struct Instance *inst, struct Instance *parent)
 /* @} */
 
 #endif  /* ASC_DESTROYINST_H */
-

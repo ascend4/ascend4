@@ -2690,7 +2690,8 @@ ascendconfig = env.Substfile('ascend-config.in')
 a4cmd = env.Substfile('a4.in')
 env.AddPostAction(a4cmd, 'chmod 755 $TARGET')
 if env.get('WITH_CUNIT'):
-	env.Depends('#/test/test', a4cmd)
+	test_runner = env.File('#/test/test' + env.subst('$PROGSUFFIX'))
+	env.Depends(test_runner, a4cmd)
 
 #------------------------------------------------------
 # INSTALLATION

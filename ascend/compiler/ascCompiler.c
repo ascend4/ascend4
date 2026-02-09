@@ -58,6 +58,7 @@
 #include "typedef.h"
 #include "value_type.h"
 #include "temp.h"
+#include "universal.h"
 #include "instance_enum.h"
 #include "parpend.h"
 #include "dump.h"
@@ -223,6 +224,7 @@ void Asc_CompilerDestroy(void)
   InterfacePtrDelete = NULL;
 
   SetUniversalProcedureList(NULL);
+  DestroyUniversalDummyInstances(GetUniversalTable());
   DestroyUniversalTable(GetUniversalTable());
   SetUniversalTable(NULL);
   EmptyTrash();
