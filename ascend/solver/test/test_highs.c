@@ -14,6 +14,10 @@
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/initialize.h>
 #include <ascend/compiler/name.h>
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/atomvalue.h>
+#include <ascend/compiler/mathinst.h>
+#include <ascend/compiler/relation_util.h>
 #include <ascend/compiler/packages.h>
 
 #include <ascend/system/system.h>
@@ -56,9 +60,41 @@ static int find_solver_var_value(slv_system_t sys, const char *name_substr, doub
 	return 0;
 }
 
+static void check_lp1_instance_tree(struct Instance *root, double expected_objective){
+	struct Instance *x;
+	struct Instance *y;
+	struct Instance *s1;
+	struct Instance *s2;
+	struct Instance *obj;
+	const struct relation *objrel;
+
+	CU_ASSERT_FATAL(root != NULL);
+	x = ChildByChar(root,AddSymbol("x"));
+	y = ChildByChar(root,AddSymbol("y"));
+	s1 = ChildByChar(root,AddSymbol("s1"));
+	s2 = ChildByChar(root,AddSymbol("s2"));
+	obj = ChildByChar(root,AddSymbol("obj"));
+	CU_ASSERT_FATAL(x != NULL);
+	CU_ASSERT_FATAL(y != NULL);
+	CU_ASSERT_FATAL(s1 != NULL);
+	CU_ASSERT_FATAL(s2 != NULL);
+	CU_ASSERT_FATAL(obj != NULL);
+
+	CU_ASSERT_DOUBLE_EQUAL(2.0,RealAtomValue(x),1e-7);
+	CU_ASSERT_DOUBLE_EQUAL(2.0,RealAtomValue(y),1e-7);
+	CU_ASSERT_DOUBLE_EQUAL(0.0,RealAtomValue(s1),1e-7);
+	CU_ASSERT_DOUBLE_EQUAL(0.0,RealAtomValue(s2),1e-7);
+
+	objrel = GetInstanceRelationOnly(obj);
+	CU_ASSERT_FATAL(objrel != NULL);
+	CU_ASSERT_DOUBLE_EQUAL(expected_objective,RelationResidual(objrel),1e-7);
+}
+
 static void run_highs_model(
 	const char *module_path,
 	const char *model_name,
+	double expected_objective,
+	int check_scalars_in_tree,
 	const struct var_expect *vars,
 	int nvars
 ){
@@ -128,6 +164,20 @@ static void run_highs_model(
 		}
 		CU_ASSERT_DOUBLE_EQUAL(vars[i].expected,value,vars[i].tol);
 	}
+	{
+		struct Instance *root = GetSimulationRoot(siminst);
+		struct Instance *objinst;
+		struct rel_relation *objrel = slv_get_obj_relation(sys);
+		CU_ASSERT_FATAL(root != NULL);
+		CU_ASSERT_FATAL(objrel != NULL);
+		objinst = ChildByChar(root,AddSymbol("obj"));
+		CU_ASSERT_FATAL(objinst != NULL);
+		CU_ASSERT_DOUBLE_EQUAL(expected_objective,rel_residual(objrel),1e-7);
+		CU_ASSERT_DOUBLE_EQUAL(expected_objective,RelationResidual(GetInstanceRelationOnly(objinst)),1e-7);
+		if(check_scalars_in_tree){
+			check_lp1_instance_tree(root,expected_objective);
+		}
+	}
 
 cleanup:
 	if(sys)system_destroy(sys);
@@ -144,7 +194,7 @@ static void test_highs_lp1(void){
 		{"s1", 0.0, 1e-7},
 		{"s2", 0.0, 1e-7}
 	};
-	run_highs_model("models/test/ipopt/lp1.a4c","lp1",expected,4);
+	run_highs_model("models/test/ipopt/lp1.a4c","lp1",-10.0,1,expected,4);
 }
 
 static void test_highs_lp_structured(void){
@@ -154,7 +204,7 @@ static void test_highs_lp_structured(void){
 		{"row[1].s", 0.0, 1e-7},
 		{"row[2].s", 0.0, 1e-7}
 	};
-	run_highs_model("models/test/ipopt/lp_structured.a4c","lp_structured",expected,4);
+	run_highs_model("models/test/ipopt/lp_structured.a4c","lp_structured",-10.0,0,expected,4);
 }
 
 #define TESTS(T) \

@@ -17,7 +17,7 @@ def CheckHIGHS(context):
 		context.Result('no (pkg-config not found)')
 		return False
 	try:
-		subprocess.run([pkg,"--libs","--cflags","highs"],stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True)
+		subprocess.run([pkg,"--exists","highs"],stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True)
 	except Exception:
 		context.Result('no (pkg-config --exists highs failed)')
 		return False
@@ -34,7 +34,8 @@ def CheckHIGHS(context):
 if env.get('WITH_HIGHS'):
 	solver_env = env.Clone()
 	if env['HIGHS_PREFIX'] not in ['/usr']:
-		solver_env.AppendENVPath('PKG_CONFIG_PATH',env.subst("$HIGHS_PREFIX/lib/pkgconfig"))
+		for subdir in ("lib/pkgconfig","lib64/pkgconfig"):
+			solver_env.AppendENVPath('PKG_CONFIG_PATH',env.subst(f"$HIGHS_PREFIX/{subdir}"))
 
 	conf = solver_env.Configure(custom_tests={'CheckHIGHS':CheckHIGHS})
 	if not conf.CheckHIGHS():

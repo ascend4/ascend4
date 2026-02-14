@@ -66,7 +66,14 @@
 #include <ascend/utilities/set.h>
 #include <ascend/general/tm_time.h>
 #include <ascend/general/mem.h>
+#include <ascend/utilities/error.h>
 #include <ascend/compiler/instance_io.h>
+
+#ifdef MAKEMPS_DEBUG
+#define MSG(...) CONSOLE_DEBUG(__VA_ARGS__)
+#else
+#define MSG(...) ((void)0)
+#endif
 
 /* _________________________________________________________________________ */
 
@@ -112,9 +119,10 @@ static FILE *open_write(const char *filename)
   if (filename == NULL) filename = "\0";  /* shouldn't pass null to fopen */
   f = fopen(filename, "w");
   if( f == NULL ) {
-	 FPRINTF(stderr,"ERROR:  (MPS) open_write\n");
-	 FPRINTF(stderr,"        Unable to open %s. Error:%s\n",
-	         filename, strerror(errno));
+	 ERROR_REPORTER_HERE(ASC_PROG_ERR
+	 	,"(MPS) open_write: unable to open '%s' (%s)"
+	 	,filename, strerror(errno)
+	 );
   }
 
   return f;
@@ -133,8 +141,10 @@ static boolean close_file(FILE *f)
   s = fclose(f);
   if (s == EOF)
   {
-  	 FPRINTF(stderr,"ERROR:  (MPS) open_write\n");
-             perror("        Unable to close file");
+  	 ERROR_REPORTER_HERE(ASC_PROG_ERR
+	 	,"(MPS) close_file: unable to close file (%s)"
+	 	,strerror(errno)
+	 );
      return FALSE;
   }
   else
@@ -284,8 +294,9 @@ extern boolean write_name_map(const char *name,        /* filename for output */
   //int i;
 
   if ((vlist == NULL) || (name == NULL)) {  /* got a bad pointer */
-          FPRINTF(stderr,"ERROR:  (MPS) write_name_map\n");
-          FPRINTF(stderr,"        Routine was passed a NULL pointer!\n");
+          ERROR_REPORTER_HERE(ASC_PROG_ERR
+          	,"(MPS) write_name_map: routine was passed a NULL pointer"
+          );
           return FALSE;
   }
 
@@ -383,8 +394,9 @@ static void do_name(FILE *out,             /* file */
                FPRINTF(out," MIN\n");          /* optimization direction */
                break;
 
-      default: FPRINTF(stderr,"ERROR:  (MPS) do_name\n");
-               FPRINTF(stderr,"        Unknown option for objective!\n");
+      default: ERROR_REPORTER_HERE(ASC_PROG_ERR
+                   ,"(MPS) do_name: unknown option for objective"
+               );
   }
 
   if (bo == 1)
@@ -414,8 +426,9 @@ static void do_rows(FILE *out,             /* file */
                                     break;
           case rel_TOK_nonincident: break;
 
-          default: FPRINTF(stderr,"ERROR:  (MPS) do_rows\n");
-                   FPRINTF(stderr,"        Unknown value for relational operators!\n");
+          default: ERROR_REPORTER_HERE(ASC_PROG_ERR
+                      ,"(MPS) do_rows: unknown value for relational operators"
+                   );
       }
 
    FPRINTF(out," N  R%07d\n", rused);     /* objective row */
@@ -462,26 +475,32 @@ static void upgrade_vars(FILE *out,             /* file */
                typerow[orgcol] = MPS_INT;
           }
 	  else if ((typerow[orgcol] == MPS_INT) && (dointeger == 2) && (dobinary != 2))  {
-	       FPRINTF(stderr,"WARNING: Variable C%07d was treated as a %s instead of a %s.\n", orgcol, MPS_BINARY_STR, MPS_INT_STR);
-	       FPRINTF(stderr,"         The selected MILP solver does not support %s.\n", MPS_INT_STR);
-	       FPRINTF(stderr,"         Upper bound was set to 1.0.\n");
+	       ERROR_REPORTER_HERE(ASC_PROG_WARNING
+	       	,"Variable C%07d treated as %s instead of %s; selected MILP solver does not support %s. Upper bound set to 1.0."
+	       	,orgcol, MPS_BINARY_STR, MPS_INT_STR, MPS_INT_STR
+	       );
                typerow[orgcol] = MPS_BINARY;
                ubrow[orgcol] = 1.0;   /* note: changed bound */
           }
 	  else if ((typerow[orgcol] == MPS_SEMI) && (dosemi == 0))  {   /* semi not supported */
-	       FPRINTF(stderr,"WARNING: Variable C%07d was converted from a %s to a %s.\n", orgcol, MPS_SEMI_STR, MPS_VAR_STR);
-	       FPRINTF(stderr,"         The selected MILP solver does not support %s.\n", orgcol, MPS_SEMI_STR);
-	       FPRINTF(stderr,"         The solution found may not be correct for your model.\n");
+	       ERROR_REPORTER_HERE(ASC_PROG_WARNING
+	       	,"Variable C%07d converted from %s to %s; selected MILP solver does not support %s. The solution may not be correct for this model."
+	       	,orgcol, MPS_SEMI_STR, MPS_VAR_STR, MPS_SEMI_STR
+	       );
                typerow[orgcol] = MPS_VAR;
           }
 	  else if ((typerow[orgcol] == MPS_BINARY) && (dointeger == 2) && (dobinary ==2))  {  /* neither is supported */
-	       FPRINTF(stderr,"WARNING: Variable C%07d was treated as a %s instead of a %s.\n", orgcol, MPS_VAR_STR, MPS_BINARY_STR);
-	       FPRINTF(stderr,"         The selected MILP solver only supports %s.\n", MPS_VAR_STR);
+	       ERROR_REPORTER_HERE(ASC_PROG_WARNING
+	       	,"Variable C%07d treated as %s instead of %s; selected MILP solver only supports %s."
+	       	,orgcol, MPS_VAR_STR, MPS_BINARY_STR, MPS_VAR_STR
+	       );
                typerow[orgcol] = MPS_VAR;
           }
 	  else if ((typerow[orgcol] == MPS_INT) && (dointeger == 2) && (dobinary == 2))  {  /* neither is supported */
-	       FPRINTF(stderr,"WARNING: Variable C%07d was treated as a %s instead of a %s.\n", orgcol, MPS_VAR_STR, MPS_INT_STR);
-	       FPRINTF(stderr,"         The selected MILP solver only supports %s.\n", MPS_VAR_STR);
+	       ERROR_REPORTER_HERE(ASC_PROG_WARNING
+	       	,"Variable C%07d treated as %s instead of %s; selected MILP solver only supports %s."
+	       	,orgcol, MPS_VAR_STR, MPS_INT_STR, MPS_VAR_STR
+	       );
                typerow[orgcol] = MPS_VAR;
           }
        }
@@ -572,21 +591,21 @@ void scan_SOS(mtx_matrix_t Ac_mtx,     /* Matrix representation of problem */
 
                    value = mtx_next_in_row(Ac_mtx,&nz,mtx_range(&range,0,vused));
                    if  ((nz.col != mtx_FIRST) && (nz.col != mtx_LAST)) {
-                	 if ( nz.col < current_col)  {
+                         if ( nz.col < current_col)  {
                         	   isSOS = FALSE;  /* overlaps prev SOS */
-                        	   FPRINTF(stderr, "nz.col, current_col, mtx_FIRST: %d  %d  %d\n", nz.col, current_col, mtx_FIRST);
+                        	   MSG("nz.col, current_col, mtx_FIRST: %d %d %d", nz.col, current_col, mtx_FIRST);
                          }
                 	 if ((typerow[mtx_col_to_org(Ac_mtx, nz.col)] != MPS_BINARY) &&
                 	     ( typerow[mtx_col_to_org(Ac_mtx, nz.col)] != MPS_INT)) {
                                isSOS = FALSE;  /* var is wrong type */
-                               FPRINTF(stderr, "typerow: %d\n", typerow[mtx_col_to_org(Ac_mtx, nz.col)]);
+                               MSG("typerow: %d", typerow[mtx_col_to_org(Ac_mtx, nz.col)]);
                 	 }
                    }
 
                } while ( (value == 1.0) && (nz.row != mtx_LAST) && isSOS );
 
                if (nz.col != mtx_LAST) isSOS = FALSE;  /* only true if terminated due to mxt_LAST */
-               FPRINTF(stderr, "isSOS,nz.col:%d, %d\n", isSOS,nz.col);
+               MSG("isSOS, nz.col: %d, %d", isSOS,nz.col);
 
          }
          else
@@ -594,7 +613,7 @@ void scan_SOS(mtx_matrix_t Ac_mtx,     /* Matrix representation of problem */
 
          if (isSOS)  /* reorder columns so all line up in first cols */
          {
-             FPRINTF(stderr, "current_row, not_row:%d, %d\n", current_row, not_row);
+             MSG("current_row, not_row: %d, %d", current_row, not_row);
              /* Is a SOS, so rearrange columns so all the vars in the equation
                 are from current_col on.  Also advance current_row by one. */
 
@@ -816,8 +835,9 @@ extern boolean write_MPS(const char *name,                /* filename for output
   real64 boval, epsval, pinf, minf;
 
   if ((name == NULL) || (parms == NULL)) {  /* got a bad pointer */
-          FPRINTF(stderr,"ERROR:  (MPS) write_MPS\n");
-          FPRINTF(stderr,"        Routine was passed a NULL pointer!\n");
+          ERROR_REPORTER_HERE(ASC_PROG_ERR
+          	,"(MPS) write_MPS: routine was passed a NULL pointer"
+          );
           return FALSE;
   }
 
@@ -873,8 +893,9 @@ extern boolean write_MPS(const char *name,                /* filename for output
      }
 
   if (SLV_PARAM_BOOL(parms,SP6_SOS2) == 1)  {    /* don't support SOS2 yet */
-       FPRINTF(stderr,"WARNING:  (MPS) write_MPS\n");
-       FPRINTF(stderr,"          SOS2 are not currently supported in ASCEND!\n");
+       ERROR_REPORTER_HERE(ASC_PROG_WARNING
+       	,"(MPS) write_MPS: SOS2 is not currently supported in ASCEND"
+       );
   }
 
   do_columns(out,                    /* file */

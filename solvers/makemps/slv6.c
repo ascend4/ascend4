@@ -40,6 +40,7 @@
 #include <ascend/general/tm_time.h>
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
+#include <ascend/utilities/error.h>
 #include <ascend/compiler/module.h>
 #include <ascend/compiler/library.h>
 #include <ascend/compiler/instance_io.h>
@@ -1009,16 +1010,20 @@ static void insure_bounds(FILE *mif,slv6_system_t sys, struct var_variable *var)
  ***  Insures that the variable value is within its bounds.
  **/
 {
+	char *varname = NULL;
    real64 val,low,high;
+	(void)mif;
 
    low = var_lower_bound(var);
    high = var_upper_bound(var);
    val = var_value(var);
+	varname = var_make_name(sys->slv,var);
+	if(varname == NULL)varname = ASC_STRDUP("<unknown>");
    if( low > high ) {
-      FPRINTF(mif,"Bounds for variable ");
-      slv_print_var_name(mif,sys->slv,var);
-      FPRINTF(mif," are inconsistent [%g,%g].\n",low,high);
-      FPRINTF(mif,"Bounds will be swapped.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING
+         ,"Bounds for variable '%s' are inconsistent [%g,%g]; swapping."
+         ,varname,low,high
+      );
       var_set_upper_bound(var, low);
       var_set_lower_bound(var, high);
       low = var_lower_bound(var);
@@ -1026,18 +1031,19 @@ static void insure_bounds(FILE *mif,slv6_system_t sys, struct var_variable *var)
    }
 
    if( low > val ) {
-      FPRINTF(mif,"Variable ");
-      slv_print_var_name(mif,sys->slv,var);
-      FPRINTF(mif," was initialized below its lower bound.\n");
-      FPRINTF(mif,"It will be moved to its lower bound.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING
+         ,"Variable '%s' was initialized below its lower bound; moved to lower bound."
+         ,varname
+      );
       var_set_value(var, low);
    } else if( val > high ) {
-      FPRINTF(mif,"Variable ");
-      slv_print_var_name(mif,sys->slv,var);
-      FPRINTF(mif," was initialized above its upper bound.\n");
-      FPRINTF(mif,"It will be moved to its upper bound.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING
+         ,"Variable '%s' was initialized above its upper bound; moved to upper bound."
+         ,varname
+      );
       var_set_value(var, high);
    }
+	ASC_FREE(varname);
 }
 
 #ifndef KILL
@@ -1485,15 +1491,21 @@ boolean slv6_eligible_solver(slv6_system_t server){
    if (SLV_PARAM_BOOL(&(sys->p),SP6_NONLIN) == 0){
       for( rp=sys->rlist ; *rp != NULL ; ++rp )   /* check relations */
           if(!relman_is_linear(*rp,&vfilter)) {
-            FPRINTF(MIF(sys), "ERROR:  With the current settings, the MPS generator can only\n");
-            FPRINTF(MIF(sys), "        handle linear models. Nonlinearity in constraint:\n");
-            slv_print_rel_name(MIF(sys),sys->slv, *rp);
+            char *relname = rel_make_name(sys->slv,*rp);
+            ERROR_REPORTER_HERE(ASC_PROG_ERR
+               ,"With current settings, MakeMPS requires linear models; nonlinearity in constraint '%s'."
+               ,(relname ? relname : "<unknown>")
+            );
+            ASC_FREE(relname);
             return(FALSE);   /* don't do nonlinearities */
           }
       if(!relman_is_linear(sys->obj,&vfilter)){
-          FPRINTF(MIF(sys), "ERROR:  With the current settings, the MPS generator can only\n");
-          FPRINTF(MIF(sys), "        handle linear models. Nonlinearity in objective:\n");
-          slv_print_rel_name(MIF(sys),sys->slv, sys->obj);
+          char *relname = rel_make_name(sys->slv,sys->obj);
+          ERROR_REPORTER_HERE(ASC_PROG_ERR
+             ,"With current settings, MakeMPS requires linear models; nonlinearity in objective '%s'."
+             ,(relname ? relname : "<unknown>")
+          );
+          ASC_FREE(relname);
           return(FALSE);   /* don't do nonlinearities */
       }
    }
