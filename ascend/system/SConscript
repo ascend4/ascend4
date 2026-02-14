@@ -16,6 +16,7 @@ csrcs = Split("""
 	slv_param.c
 	slv_stdcalls.c system.c var.c
 	incidence.c
+	lp_utils.c
 """)
 
 solver_env = libascend_env.Clone()
@@ -57,4 +58,3 @@ if libascend_env.get('CAN_INSTALL'):
 Return('objs')
 
 # vim: set syntax=python:
-

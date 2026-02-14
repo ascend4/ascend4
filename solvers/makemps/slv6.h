@@ -66,7 +66,7 @@
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_client.h>
 
-#include "mps_types.h"
+#include <ascend/system/lp_data.h>
 
 typedef struct slv6_system_structure *slv6_system_t;
 

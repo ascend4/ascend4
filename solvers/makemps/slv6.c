@@ -54,6 +54,7 @@
 #include <ascend/system/bnd.h>
 #include <ascend/system/var.h>
 #include <ascend/system/rel.h>
+#include <ascend/system/lp_utils.h>
 
 #ifndef KILL
 #define KILL TRUE
@@ -103,12 +104,9 @@ struct slv6_system_structure {
 static int slv6_get_default_parameters(slv_system_t server, SlvClientToken asys
 		,slv_parameters_t *parameters
 ){
-	slv6_system_t sys = NULL;
 	struct slv_parameter *new_parms = NULL;
-
-	if(server != NULL && asys != NULL) {
-		sys = SYS(asys);
-	}
+	(void)server;
+	(void)asys;
 
 	if(parameters->parms == NULL) {
 		new_parms = ASC_NEW_ARRAY_OR_NULL(struct slv_parameter,SP6_PARAMS);
@@ -318,69 +316,9 @@ static int check_system(slv6_system_t sys)
 /* Zeros an array of nelts objects, each having given type. */
 
 
-static void nuke_pointers(mps_data_t mps) { /* free all allocated memory in mps data structure */
-
-   if (mps.Ac_mtx != NULL) {       /* delete old matrix if the exist */
-       mtx_destroy(mps.Ac_mtx);
-       mps.Ac_mtx = NULL;
-   }
-
-   if (mps.lbrow != NULL) {        /* delete old vector if it exists */
-       destroy_array(mps.lbrow);
-       mps.lbrow = NULL;
-   }
-
-   if (mps.ubrow != NULL) {        /* delete old vector if it exists */
-       destroy_array(mps.ubrow);
-       mps.ubrow = NULL;
-   }
-
-   if (mps.bcol != NULL) {         /* delete old vector if the exist */
-       destroy_array(mps.bcol);
-       mps.bcol = NULL;
-   }
-
-   if (mps.typerow != NULL) {      /* delete old vector if it exists */
-       destroy_array(mps.typerow);
-       mps.typerow = NULL;
-   }
-
-   if (mps.relopcol != NULL) {     /* delete old vector if it exists */
-       destroy_array(mps.relopcol);
-       mps.relopcol = NULL;
-   }
+static void nuke_pointers(mps_data_t *mps) {
+	lp_nuke_pointers(mps);
 }
-
-/* _________________________________________________________________________ */
-
-/*
- ***  General input/output routines
- ***  -----------------------------
- ***     fp = MIF(sys)
- ***     fp = LIF(sys)
- **/
-
-/**
-	Returns fp if fp!=NULL, or a file pointer
-	open to nul device if fp == NULL.
-*/
-static FILE *get_output_file(FILE *fp){
-   static FILE *nuldev = NULL;
-   static char fname[] = "/dev/null";
-
-   if( fp==NULL ) {
-      if(nuldev==NULL)
-	 if( (nuldev=fopen(fname,"w")) == NULL ) {
-	    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to open %s.",fname);
-	 }
-      fp=nuldev;
-   }
-   return(fp);
-}
-
-/*   #define MIF(sys) get_output_file( (sys)->p.output.more_important )
- *   #define LIF(sys) get_output_file( (sys)->p.output.less_important )
- */
 
 /* _________________________________________________________________________ */
 
@@ -397,16 +335,7 @@ static FILE *get_output_file(FILE *fp){
 	var is not fixed and incident in something.
 */
 extern boolean free_inc_var_filter(struct var_variable *var){
-      var_filter_t vfilter;
-	   /* Solver lists are already reduced; do not require VAR_INCIDENT flags here. */
-	   vfilter.matchbits = (VAR_FIXED | VAR_ACTIVE);
-	   vfilter.matchvalue = VAR_ACTIVE;
-
-      /*     vfilter.fixed = var_false;*/            /* calc for all non-fixed vars */
-      /* vfilter.incident = var_true;  */        /* incident vars only */
-      /* vfilter.in_block = var_ignore; */
-
-      return var_apply_filter(var,&vfilter);
+	return lp_free_inc_var_filter(var);
 }
 
 static boolean inc_rel_filter(struct rel_relation *rel)
@@ -414,15 +343,7 @@ static boolean inc_rel_filter(struct rel_relation *rel)
  ***  Returns true if rel is an incident relation.
  **/
 {
-   rel_filter_t rfilter;  /* filter for included rels */
-   rfilter.matchbits = (REL_INCLUDED | REL_ACTIVE);
-   rfilter.matchvalue = (REL_INCLUDED| REL_ACTIVE );
-   /*   rfilter.included = rel_true;
-   rfilter.equality = rel_ignore;
-   rfilter.in_block = rel_ignore;
-   rfilter.in_subregion = rel_ignore; */
-
-   return rel_apply_filter(rel,&rfilter);
+	return lp_inc_rel_filter(rel);
 }
 
 
@@ -451,70 +372,7 @@ static boolean calc_c(mtx_matrix_t mtx,     /* matrix to store derivs */
                       int32 org_row,  /* original number of row to store them */
                       struct rel_relation  *obj)           /* expression to diffs */
 {
-      var_filter_t vfilter;
-      mtx_coord_t coord;
-      real64 *derivs = NULL;
-      int32 *vars = NULL;
-      int32 len, count, i;
-      int32 row;
-      int status;
-      int safe = 0;
-
-      if ((mtx == NULL) || (obj == NULL)) {         /* got a bad pointer */
-          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Routine was passed a NULL pointer!");
-          return FALSE;
-      }
-
-      vfilter.matchbits = (VAR_FIXED | VAR_INCIDENT | VAR_ACTIVE);
-      vfilter.matchvalue = (VAR_INCIDENT | VAR_ACTIVE);
-      /*      vfilter.fixed = var_false;
-      vfilter.incident = var_true;
-      vfilter.in_block = var_ignore;    */
-
-      row = mtx_org_to_row(mtx,org_row);       /* convert from original numbering to current */
-      if(row < 0){
-          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid objective row index %d.", (int)org_row);
-          return FALSE;
-      }
-
-      len = rel_n_incidences(obj);
-      if(len <= 0){
-          return TRUE;
-      }
-
-      derivs = ASC_NEW_ARRAY_OR_NULL(real64,len);
-      vars = ASC_NEW_ARRAY_OR_NULL(int32,len);
-      if((derivs == NULL) || (vars == NULL)){
-          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed.");
-          if(derivs)ascfree(derivs);
-          if(vars)ascfree(vars);
-          return FALSE;
-      }
-
-      count = 0;
-      status = relman_diff2(obj,&vfilter,derivs,vars,&count,safe);
-      if(status != 0){
-          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to evaluate objective gradient.");
-          ascfree(derivs);
-          ascfree(vars);
-          return FALSE;
-      }
-
-      coord.row = org_row;
-      for(i = 0; i < count; ++i){
-          if(vars[i] < 0 || vars[i] >= mtx_order(mtx)){
-              ERROR_REPORTER_HERE(ASC_PROG_ERR,"Objective column index %d out of range.", (int)vars[i]);
-              ascfree(derivs);
-              ascfree(vars);
-              return FALSE;
-          }
-          coord.col = vars[i];
-          mtx_fill_org_value(mtx,&coord,derivs[i]);
-      }
-
-      ascfree(derivs);
-      ascfree(vars);
-      return TRUE;
+	return lp_calc_c(mtx,org_row,obj);
 }
 
 
@@ -527,34 +385,7 @@ static real64 *calc_bounds(struct var_variable **vlist, /* variable list to get 
                                  boolean upper)         /* do upper, else lower */
 
 {
-      real64 *tmp_array_origin;  /* temporary storage for our bounds data */
-      int32 col;
-
-      if (vlist == NULL) {         /* got a bad pointer */
-          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Routine was passed a NULL variable list pointer.");
-          return FALSE;
-      }
-
-      tmp_array_origin = create_zero_array(vused,real64);
-      if (tmp_array_origin == NULL) {
-          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed.");
-          return FALSE;
-      }
-
-      for( ; *vlist != NULL ; ++vlist ){
-         col = var_sindex(*vlist);
-         if((col < 0) || (col >= vused)){
-            ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable index %d out of range.",(int)col);
-            ascfree(tmp_array_origin);
-            return FALSE;
-         }
-         if (upper) {
-            tmp_array_origin[col] = var_upper_bound(*vlist);
-         }else{
-            tmp_array_origin[col] = var_lower_bound(*vlist);
-         }
-      }
-      return tmp_array_origin;
+	return lp_calc_bounds(vlist,vused,upper);
 }
 
 
@@ -571,49 +402,7 @@ static real64 *calc_bounds(struct var_variable **vlist, /* variable list to get 
 static char *calc_reloplist(struct rel_relation **rlist,
                             int32    rused)   /* entry for each relation */
 {
-   char *reloplist;
-   int32 row;
-
-   reloplist = create_zero_array(rused,char);  /* default is rel_TOK_nonincident */
-   if (reloplist == NULL) {         /* memory allocation failed */
-          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed!");
-          return NULL;
-   }
-
-   for ( ;*rlist != NULL; rlist++)
-   {
-       row = rel_sindex(*rlist);
-       if((row < 0) || (row >= rused)){
-           ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation index %d out of range.",(int)row);
-           ascfree(reloplist);
-           return NULL;
-       }
-       if (inc_rel_filter(*rlist))   /* is an incident var */
-           switch(rel_relop(*rlist)) {
-               case e_rel_less:
-               case e_rel_lesseq:
-                              reloplist[row] = rel_TOK_less;
-                              break;
-
-               case e_rel_equal:
-                              reloplist[row] = rel_TOK_equal;
-                              break;
-               case e_rel_greater:
-               case e_rel_greatereq:
-                              reloplist[row] = rel_TOK_greater;
-                              break;
-               default:
-                              ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown relation type (not greater, less, or equal)");
-                              ascfree(reloplist);
-                              return NULL;
-           }
-       else{
-           reloplist[row] = rel_TOK_nonincident;
-       }
-
-   }
-
-   return reloplist;
+	return lp_calc_reloplist(rlist,rused);
 }
 
 /**
@@ -633,109 +422,17 @@ static char *calc_svtlist( struct var_variable **vlist,    /* input, not modifie
                            int *solver_semi_used,
                            int *solver_other_used,
                            int *solver_fixed){
-	struct TypeDescription *type;              /* type of the current var */
-	struct TypeDescription *solver_var_type;   /* type of the standard types */
-	struct TypeDescription *solver_int_type;
-	struct TypeDescription *solver_binary_type;
-	struct TypeDescription *solver_semi_type;
-
-	char *svtlist;  /* pointer for storage */
-	int32 orgcol;
-
-	/* get the types for variable definitions */
-
-	if( (solver_var_type = FindType(AddSymbol(MPS_VAR_STR))) == NULL ) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Type '%s' not defined; MPS export will not work.", MPS_VAR_STR);
-		return NULL;
-	}
-	if( (solver_int_type = FindType(AddSymbol(MPS_INT_STR))) == NULL ) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Type '%s' not defined; MPS export will not work.", MPS_INT_STR);
-		return NULL;
-	}
-	if( (solver_binary_type = FindType(AddSymbol(MPS_BINARY_STR))) == NULL ) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Type '%s' not defined; MPS export will not work.", MPS_BINARY_STR);
-		return NULL;
-	}
-	if( (solver_semi_type = FindType(AddSymbol(MPS_SEMI_STR))) == NULL ) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Type '%s' not defined; MPS export will not work.", MPS_SEMI_STR);
-		return NULL;
-	}
-
-	/* allocate memory and initialize stuff */
-
-	svtlist = create_array(vused,char);  /* see macro */
-	if (svtlist == NULL) {         /* memory allocation failed */
-		  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed for solver var type list!");
-		  return NULL;
-	}
-
-	*solver_var_used = 0;
-	*solver_relaxed_used = 0;
-	*solver_int_used = 0;
-	*solver_binary_used = 0;
-	*solver_semi_used = 0;
-	*solver_other_used = 0;
-	*solver_fixed = 0;
-	for(orgcol = 0; orgcol < vused; ++orgcol){
-		svtlist[orgcol] = MPS_FIXED;
-	}
-
-	/* loop over all vars */
-
-	for(; *vlist != NULL ; ++vlist )  {
-		orgcol = var_sindex(*vlist);
-		if((orgcol < 0) || (orgcol >= vused)){
-			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable index %d out of range.",(int)orgcol);
-			ascfree(svtlist);
-			return NULL;
-		}
-		if(free_inc_var_filter(*vlist) ){
-			type = InstanceTypeDesc(var_instance(*vlist));
-
-			if(type == MoreRefined(type,solver_binary_type) ){
-				if (var_relaxed(*vlist)){
-				   svtlist[orgcol] = MPS_RELAXED;
-				   (*solver_relaxed_used)++;
-				}else{
-				   svtlist[orgcol] = MPS_BINARY;
-				   (*solver_binary_used)++;
-				}
-			}else{
-				if (type == MoreRefined(type,solver_int_type) ){
-					if(var_relaxed(*vlist)){
-						svtlist[orgcol] = MPS_RELAXED;
-						(*solver_relaxed_used)++;
-					}else{
-						svtlist[orgcol] = MPS_INT;
-						(*solver_int_used)++;
-					}
-				}else{
-					if (type == MoreRefined(type,solver_semi_type) ){
-						if (var_relaxed(*vlist)){
-							svtlist[orgcol] = MPS_RELAXED;
-							(*solver_relaxed_used)++;
-						}else{
-							svtlist[orgcol] = MPS_SEMI;
-							(*solver_semi_used)++;
-						}
-					}else{
-						if (type == MoreRefined(type,solver_var_type) ){
-							/* either solver var or some refinement */
-							svtlist[orgcol] = MPS_VAR;
-							(*solver_var_used)++;
-						}else{
-							ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown solver_var type encountered.");
-							/* should never get to here */
-						}
-					}          /* if semi */
-				}          /* if int */
-			}         /* if binary */
-		}else{
-			svtlist[orgcol] = MPS_FIXED;
-			(*solver_fixed)++;
-		}
-	}
-	return svtlist;
+	return lp_calc_svtlist(
+		vlist
+		,vused
+		,solver_var_used
+		,solver_relaxed_used
+		,solver_int_used
+		,solver_binary_used
+		,solver_semi_used
+		,solver_other_used
+		,solver_fixed
+	);
 }
 
 static mtx_matrix_t calc_matrix(int32     cap,
@@ -810,94 +507,8 @@ static mtx_matrix_t calc_matrix(int32     cap,
 </pre>
 */
 {
-   mtx_matrix_t mtx;      /* main data structure */
-   var_filter_t vfilter;  /* checks for free incident vars in relman_diffs */
-   double time0;          /* time of Jacobian calculation, among other things */
-   struct rel_relation **rp;    /* relation pointer */
-   int32 orgrow;
-   int status;
-
-   if(obj == NULL) {         /* a little preflight checking */
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System must have an objective!");
-      return NULL;
-   }
-
-   time0=tm_cpu_time();           /* start timing */
-   s->calc_ok = TRUE;            /* no errors yet */
-
-   mtx = mtx_create();            /* create 0 order matrix */
-   mtx_set_order(mtx,cap);        /* adjust size of square matrix to size of cap
-                                    (cap set in presolve.) The relman_diffs
-                                     routine returns values in the matrix */
-                                  /* these routines don't return success/fail */
-
-   vfilter.matchbits = (VAR_FIXED | VAR_INCIDENT | VAR_ACTIVE);
-   vfilter.matchvalue = (VAR_INCIDENT | VAR_ACTIVE);
-   /*   vfilter.fixed = var_false;
-   vfilter.incident = var_true;
-   vfilter.in_block = var_ignore; */
-
-   /* want to save column of residuals as they come along from relman_diffs */
-   *rhs_orig = create_zero_array(rused,real64);
-   if(*rhs_orig == NULL) {         /* memory allocation failed */
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation for right hand side failed!");
-      return NULL;
-   }
-
-
-  /* note: the rhs array is the residual at the current point, not what we want!
-     see further comments at the start of this routine */
-
-	int safe = 0;
-
-   for( rp = rlist ; *rp != NULL ; ++rp ) {
-      /* fill out A matrix only for used elements */
-      if( inc_rel_filter(*rp) ) {
-         orgrow = rel_sindex(*rp);
-         if((orgrow < 0) || (orgrow >= rused)){
-            s->calc_ok = FALSE;  /* error in diffs ! */
-            ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation index %d out of range.",(int)orgrow);
-            destroy_array(*rhs_orig);  /* clean up house, then die */
-            mtx_destroy(mtx);                 /* zap all alocated memory */
-            return NULL;
-         }
-         status = relman_diffs(*rp,&vfilter,mtx,&((*rhs_orig)[orgrow]),safe);
-         if(status != 0) {
-            s->calc_ok = FALSE;  /* error in diffs ! */
-            ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating A matrix.");
-            destroy_array(*rhs_orig);  /* clean up house, then die */
-            mtx_destroy(mtx);                 /* zap all alocated memory */
-            return NULL;
-         }
-      }
-   }
-   /* Calculate the rank of the matrix, before we add extra rows/cols */
-   mtx_output_assign(mtx, crow, vused);
-   if(! mtx_output_assigned(mtx)) {  /* output assignment failed */
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Output assignment to calculate rank of problem failed.");
-      mtx_destroy(mtx);                 /* zap all alocated memory */
-      destroy_array(*rhs_orig);  /* clean up house, then die */
-      return NULL;
-   }
-   *rank = mtx_symbolic_rank(mtx);
-
-   if( *rank < 0 ) {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Symbolic rank calculation failed, matrix may be bad.");
-      return mtx;
-   }
-
-   /* calculate the c vector and save it to the matrix */
-   if( ! calc_c(mtx, crow, obj) ) {
-      s->calc_ok = FALSE;  /* error in diffs ! */
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating objective coefficients.");
-      mtx_destroy(mtx);    /* commit suicide */
-      destroy_array(*rhs_orig);  /* clean up house, then die */
-      return NULL;
-   }
-
-   s->block.jactime = tm_cpu_time() - time0;  /* set overall jacobian time */
-
-   return mtx;
+	(void)calc_c;
+	return lp_calc_matrix(cap,rused,vused,rlist,obj,crow,s,rank,rhs_orig);
 }
 
 
@@ -924,40 +535,7 @@ static void real_rhs(mtx_matrix_t    Ac_mtx,      /* Matrix representation of pr
  ***
  **/
 {
-   real64 a;        /* value of mtx element */
-   mtx_coord_t  nz;       /* coordinate of row/column in A matrix */
-   mtx_range_t  range;    /* storage for range of A matrix, run down a column */
-   int32  currow;   /* counter for current row */
-   int          orgrow;   /* original row number */
-   int          orgcol;   /* orignal col number */
-   double       rowval;   /* the sum of a[i]*x[i] in the row */
-
-   if(rhs == NULL) {         /* a little preflight checking */
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"The routine was passed a NULL rhs pointer!");
-      return;
-   }
-
-   for(currow = 0; currow < rused; currow++)      {      /* loop over all rows, is _current_ column number */
-      orgrow = mtx_row_to_org(Ac_mtx, currow);
-      if (relopcol[orgrow] != rel_TOK_nonincident)  {   /* if it is incident row */
-
- 	   nz.col = mtx_FIRST;    /* first nonzero col */
-	   nz.row = currow;       /* current row */
-           rowval = 0.0;          /* accumulate value here */
-
-           a = mtx_next_in_row(Ac_mtx,&nz,mtx_range(&range,0,vused));
-
-           do  {  orgcol  = mtx_col_to_org(Ac_mtx, nz.col);
-                  rowval += a*var_value(*(vlist+orgcol));
-                  a = mtx_next_in_row(Ac_mtx,&nz,mtx_range(&range,0,vused));
-
-               } while (nz.col != mtx_LAST);
-
-          rhs[orgrow] = rowval - rhs[orgrow];  /* set real value of right hand side */
-
-      }
-  }
-
+	lp_real_rhs(Ac_mtx,relopcol,vlist,rused,vused,rhs);
 }
 
 /* _________________________________________________________________________ */
@@ -965,51 +543,18 @@ static void real_rhs(mtx_matrix_t    Ac_mtx,      /* Matrix representation of pr
 /**
  ***  Routines used by presolve
  ***  --------------------
- ***  insure_bounds - fix inconsistent bounds
+ ***  ensure_bounds - fix inconsistent bounds
  ***  update_vlist - add vars to vlist
  ***  determine_vlist - build new vlist
  **/
 
 
-static void insure_bounds(FILE *mif,slv6_system_t sys, struct var_variable *var)
+static void ensure_bounds(FILE *mif,slv6_system_t sys, struct var_variable *var)
 /**
- ***  Insures that the variable value is within its bounds.
+ ***  Ensures that the variable value is within its bounds.
  **/
 {
-	char *varname = NULL;
-   real64 val,low,high;
-	(void)mif;
-
-   low = var_lower_bound(var);
-   high = var_upper_bound(var);
-   val = var_value(var);
-	varname = var_make_name(sys->slv,var);
-	if(varname == NULL)varname = ASC_STRDUP("<unknown>");
-   if( low > high ) {
-      ERROR_REPORTER_HERE(ASC_PROG_WARNING
-         ,"Bounds for variable '%s' are inconsistent [%g,%g]; swapping."
-         ,varname,low,high
-      );
-      var_set_upper_bound(var, low);
-      var_set_lower_bound(var, high);
-      low = var_lower_bound(var);
-      high = var_upper_bound(var);
-   }
-
-   if( low > val ) {
-      ERROR_REPORTER_HERE(ASC_PROG_WARNING
-         ,"Variable '%s' was initialized below its lower bound; moved to lower bound."
-         ,varname
-      );
-      var_set_value(var, low);
-   } else if( val > high ) {
-      ERROR_REPORTER_HERE(ASC_PROG_WARNING
-         ,"Variable '%s' was initialized above its upper bound; moved to upper bound."
-         ,varname
-      );
-      var_set_value(var, high);
-   }
-	ASC_FREE(varname);
+	lp_ensure_bounds(mif,sys->slv,var);
 }
 
 #ifndef KILL
@@ -1410,7 +955,7 @@ static int slv6_destroy(slv_system_t server, SlvClientToken asys){
 
 	slv_destroy_parms(&(sys->p));
 
-	nuke_pointers(sys->mps);   /* free memory, and set all pointers to NULL */
+	nuke_pointers(&(sys->mps));   /* free memory, and set all pointers to NULL */
 	ascfree( (POINTER)sys );
 
 
@@ -1490,10 +1035,6 @@ void slv6_presolve(slv_system_t server){
 
    struct var_variable **vp;
    struct rel_relation **rp;
-   struct bnd_boundary *bp;
-   int32 cap;
-
-   bnd_filter_t bfilter;
 
    /* Check if necessary pointers are non-NULL */
    check_system(sys);
@@ -1632,7 +1173,7 @@ void slv6_presolve(slv_system_t server){
    }
 
    /* free memory, and set all pointers to NULL */
-   nuke_pointers(sys->mps);
+   nuke_pointers(&(sys->mps));
 
    /* setup matrix representaion of problem */
    sys->mps.Ac_mtx = calc_matrix(sys->mps.cap,
@@ -1646,7 +1187,7 @@ void slv6_presolve(slv_system_t server){
                                  &sys->mps.bcol);
    if( sys->mps.Ac_mtx == NULL ) {
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed to build matrix representation.");
-      nuke_pointers(sys->mps);
+      nuke_pointers(&(sys->mps));
       return;
    }
 
@@ -1654,7 +1195,7 @@ void slv6_presolve(slv_system_t server){
    sys->mps.ubrow = calc_bounds(sys->vlist, sys->mps.vused, TRUE);
    if (sys->mps.ubrow == NULL)  {
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating variable upper bounds.");
-      nuke_pointers(sys->mps);
+      nuke_pointers(&(sys->mps));
       return;
    }
 
@@ -1662,7 +1203,7 @@ void slv6_presolve(slv_system_t server){
    sys->mps.lbrow = calc_bounds(sys->vlist, sys->mps.vused, FALSE);
    if (sys->mps.lbrow == NULL)  {
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating variable lower bounds.");
-      nuke_pointers(sys->mps);
+      nuke_pointers(&(sys->mps));
       return;
    }
 
@@ -1678,7 +1219,7 @@ void slv6_presolve(slv_system_t server){
                                    &sys->mps.solver_fixed);        /* output */
    if(sys->mps.typerow == NULL) {         /* allocation failed */
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating the variable type list!");
-      nuke_pointers(sys->mps);
+      nuke_pointers(&(sys->mps));
       return;
    }
 
@@ -1686,7 +1227,7 @@ void slv6_presolve(slv_system_t server){
 	 sys->mps.relopcol = calc_reloplist(sys->rlist, sys->mps.rused);
     if(sys->mps.relopcol == NULL) {         /* allocation failed */
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating the relational operators!");
-      nuke_pointers(sys->mps);
+      nuke_pointers(&(sys->mps));
       return;
    }
 
@@ -1699,9 +1240,9 @@ void slv6_presolve(slv_system_t server){
             sys->mps.bcol);       /* out: rhs array origin */
 
 
-   /* Call insure_bounds over all vars to make bounds self-consistent */
+   /* Call ensure_bounds over all vars to make bounds self-consistent */
    for( vp=sys->vlist; *vp != NULL ; ++vp )
-     insure_bounds(MIF(sys),sys, *vp);
+     ensure_bounds(NULL,sys, *vp);
 
    /* Reset status flags */
    sys->s.over_defined = (sys->mps.rinc > sys->mps.vinc);

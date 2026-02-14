@@ -66,7 +66,7 @@
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_client.h>
 
-#include <solvers/makemps/mps_types.h>
+#include <ascend/system/lp_data.h>
 
 typedef struct highs_system_structure *highs_system_t;
 
