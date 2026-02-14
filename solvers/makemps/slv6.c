@@ -280,8 +280,7 @@ static int check_system(slv6_system_t sys)
  **/
 {
    if( sys == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) check_system\n");
-      FPRINTF(stderr,"        NULL system handle.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL system handle.");
       return 1;
    }
 
@@ -289,12 +288,10 @@ static int check_system(slv6_system_t sys)
    case OK:
       return 0;
    case DESTROYED:
-      FPRINTF(stderr,"ERROR:  (slv6) check_system\n");
-      FPRINTF(stderr,"        System was recently destroyed.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System was recently destroyed.");
       return 1;
    default:
-      FPRINTF(stderr,"ERROR:  (slv6) check_system\n");
-      FPRINTF(stderr,"        System reused or never allocated.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System reused or never allocated.");
       return 1;
    }
 }
@@ -374,8 +371,7 @@ static FILE *get_output_file(FILE *fp){
    if( fp==NULL ) {
       if(nuldev==NULL)
 	 if( (nuldev=fopen(fname,"w")) == NULL ) {
-	    FPRINTF(stderr,"ERROR:  (slv6) get_output_file\n");
-	    FPRINTF(stderr,"        Unable to open %s.\n",fname);
+	    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to open %s.",fname);
 	 }
       fp=nuldev;
    }
@@ -465,8 +461,7 @@ static boolean calc_c(mtx_matrix_t mtx,     /* matrix to store derivs */
       int safe = 0;
 
       if ((mtx == NULL) || (obj == NULL)) {         /* got a bad pointer */
-          FPRINTF(stderr,"ERROR:  (slv6) calc_c\n");
-          FPRINTF(stderr,"        Routine was passed a NULL pointer!\n");
+          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Routine was passed a NULL pointer!");
           return FALSE;
       }
 
@@ -478,8 +473,7 @@ static boolean calc_c(mtx_matrix_t mtx,     /* matrix to store derivs */
 
       row = mtx_org_to_row(mtx,org_row);       /* convert from original numbering to current */
       if(row < 0){
-          FPRINTF(stderr,"ERROR:  (slv6) calc_c\n");
-          FPRINTF(stderr,"        Invalid objective row index %d.\n", (int)org_row);
+          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid objective row index %d.", (int)org_row);
           return FALSE;
       }
 
@@ -491,8 +485,7 @@ static boolean calc_c(mtx_matrix_t mtx,     /* matrix to store derivs */
       derivs = ASC_NEW_ARRAY_OR_NULL(real64,len);
       vars = ASC_NEW_ARRAY_OR_NULL(int32,len);
       if((derivs == NULL) || (vars == NULL)){
-          FPRINTF(stderr,"ERROR:  (slv6) calc_c\n");
-          FPRINTF(stderr,"        Memory allocation failed.\n");
+          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed.");
           if(derivs)ascfree(derivs);
           if(vars)ascfree(vars);
           return FALSE;
@@ -501,8 +494,7 @@ static boolean calc_c(mtx_matrix_t mtx,     /* matrix to store derivs */
       count = 0;
       status = relman_diff2(obj,&vfilter,derivs,vars,&count,safe);
       if(status != 0){
-          FPRINTF(stderr,"ERROR:  (slv6) calc_c\n");
-          FPRINTF(stderr,"        Failed to evaluate objective gradient.\n");
+          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to evaluate objective gradient.");
           ascfree(derivs);
           ascfree(vars);
           return FALSE;
@@ -511,8 +503,7 @@ static boolean calc_c(mtx_matrix_t mtx,     /* matrix to store derivs */
       coord.row = org_row;
       for(i = 0; i < count; ++i){
           if(vars[i] < 0 || vars[i] >= mtx_order(mtx)){
-              FPRINTF(stderr,"ERROR:  (slv6) calc_c\n");
-              FPRINTF(stderr,"        Objective column index %d out of range.\n", (int)vars[i]);
+              ERROR_REPORTER_HERE(ASC_PROG_ERR,"Objective column index %d out of range.", (int)vars[i]);
               ascfree(derivs);
               ascfree(vars);
               return FALSE;
@@ -540,23 +531,20 @@ static real64 *calc_bounds(struct var_variable **vlist, /* variable list to get 
       int32 col;
 
       if (vlist == NULL) {         /* got a bad pointer */
-          FPRINTF(stderr,"ERROR:  (slv6) calc_bounds\n");
-          FPRINTF(stderr,"        Routine was passed a NULL variable list pointer!\n");
+          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Routine was passed a NULL variable list pointer.");
           return FALSE;
       }
 
       tmp_array_origin = create_zero_array(vused,real64);
       if (tmp_array_origin == NULL) {
-          FPRINTF(stderr,"ERROR:  (slv6) calc_bounds\n");
-          FPRINTF(stderr,"        Memory allocation failed!\n");
+          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed.");
           return FALSE;
       }
 
       for( ; *vlist != NULL ; ++vlist ){
          col = var_sindex(*vlist);
          if((col < 0) || (col >= vused)){
-            FPRINTF(stderr,"ERROR:  (slv6) calc_bounds\n");
-            FPRINTF(stderr,"        Variable index %d out of range.\n",(int)col);
+            ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable index %d out of range.",(int)col);
             ascfree(tmp_array_origin);
             return FALSE;
          }
@@ -588,8 +576,7 @@ static char *calc_reloplist(struct rel_relation **rlist,
 
    reloplist = create_zero_array(rused,char);  /* default is rel_TOK_nonincident */
    if (reloplist == NULL) {         /* memory allocation failed */
-          FPRINTF(stderr,"ERROR:  (slv6) calc_reloplist\n");
-          FPRINTF(stderr,"        Memory allocation failed!\n");
+          ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed!");
           return NULL;
    }
 
@@ -597,8 +584,7 @@ static char *calc_reloplist(struct rel_relation **rlist,
    {
        row = rel_sindex(*rlist);
        if((row < 0) || (row >= rused)){
-           FPRINTF(stderr,"ERROR:  (slv6) calc_reloplist\n");
-           FPRINTF(stderr,"        Relation index %d out of range.\n",(int)row);
+           ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation index %d out of range.",(int)row);
            ascfree(reloplist);
            return NULL;
        }
@@ -617,8 +603,7 @@ static char *calc_reloplist(struct rel_relation **rlist,
                               reloplist[row] = rel_TOK_greater;
                               break;
                default:
-                              FPRINTF(stderr,"ERROR:  (slv6) calc_reloplist\n");
-                              FPRINTF(stderr,"        Unknown relation type (not greater, less, or equal)\n");
+                              ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown relation type (not greater, less, or equal)");
                               ascfree(reloplist);
                               return NULL;
            }
@@ -660,27 +645,19 @@ static char *calc_svtlist( struct var_variable **vlist,    /* input, not modifie
 	/* get the types for variable definitions */
 
 	if( (solver_var_type = FindType(AddSymbol(MPS_VAR_STR))) == NULL ) {
-		FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
-		FPRINTF(stderr,"        Type solver_var not defined.\n");
-		FPRINTF(stderr,"        MPS will not work.\n");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Type '%s' not defined; MPS export will not work.", MPS_VAR_STR);
 		return NULL;
 	}
 	if( (solver_int_type = FindType(AddSymbol(MPS_INT_STR))) == NULL ) {
-		FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
-		FPRINTF(stderr,"        Type solver_int not defined.\n");
-		FPRINTF(stderr,"        MPS will not work.\n");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Type '%s' not defined; MPS export will not work.", MPS_INT_STR);
 		return NULL;
 	}
 	if( (solver_binary_type = FindType(AddSymbol(MPS_BINARY_STR))) == NULL ) {
-		FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
-		FPRINTF(stderr,"        Type solver_binary not defined.\n");
-		FPRINTF(stderr,"        MPS will not work.\n");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Type '%s' not defined; MPS export will not work.", MPS_BINARY_STR);
 		return NULL;
 	}
 	if( (solver_semi_type = FindType(AddSymbol(MPS_SEMI_STR))) == NULL ) {
-		FPRINTF(stderr,"ERROR:  (slv6.c) get_solver_var_type\n");
-		FPRINTF(stderr,"        Type solver_semi not defined.\n");
-		FPRINTF(stderr,"        MPS will not work.\n");
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Type '%s' not defined; MPS export will not work.", MPS_SEMI_STR);
 		return NULL;
 	}
 
@@ -688,8 +665,7 @@ static char *calc_svtlist( struct var_variable **vlist,    /* input, not modifie
 
 	svtlist = create_array(vused,char);  /* see macro */
 	if (svtlist == NULL) {         /* memory allocation failed */
-		  FPRINTF(stderr,"ERROR:  (slv6) calc_svtlist\n");
-		  FPRINTF(stderr,"        Memory allocation failed for solver var type list!\n");
+		  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation failed for solver var type list!");
 		  return NULL;
 	}
 
@@ -709,8 +685,7 @@ static char *calc_svtlist( struct var_variable **vlist,    /* input, not modifie
 	for(; *vlist != NULL ; ++vlist )  {
 		orgcol = var_sindex(*vlist);
 		if((orgcol < 0) || (orgcol >= vused)){
-			FPRINTF(stderr,"ERROR:  (slv6) calc_svtlist\n");
-			FPRINTF(stderr,"        Variable index %d out of range.\n",(int)orgcol);
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable index %d out of range.",(int)orgcol);
 			ascfree(svtlist);
 			return NULL;
 		}
@@ -749,8 +724,7 @@ static char *calc_svtlist( struct var_variable **vlist,    /* input, not modifie
 							svtlist[orgcol] = MPS_VAR;
 							(*solver_var_used)++;
 						}else{
-							FPRINTF(stderr,"ERROR:  (slv6) determine_svtlist\n");
-							FPRINTF(stderr,"        Unknown solver_var type encountered.\n");
+							ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown solver_var type encountered.");
 							/* should never get to here */
 						}
 					}          /* if semi */
@@ -844,8 +818,7 @@ static mtx_matrix_t calc_matrix(int32     cap,
    int status;
 
    if(obj == NULL) {         /* a little preflight checking */
-      FPRINTF(stderr,"ERROR:  (slv6) calc_matrix\n");
-      FPRINTF(stderr,"        System must have an objective!\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"System must have an objective!");
       return NULL;
    }
 
@@ -867,8 +840,7 @@ static mtx_matrix_t calc_matrix(int32     cap,
    /* want to save column of residuals as they come along from relman_diffs */
    *rhs_orig = create_zero_array(rused,real64);
    if(*rhs_orig == NULL) {         /* memory allocation failed */
-      FPRINTF(stderr,"ERROR:  (slv6) calc_matrix\n");
-      FPRINTF(stderr,"        Memory allocation for right hand side failed!\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Memory allocation for right hand side failed!");
       return NULL;
    }
 
@@ -884,8 +856,7 @@ static mtx_matrix_t calc_matrix(int32     cap,
          orgrow = rel_sindex(*rp);
          if((orgrow < 0) || (orgrow >= rused)){
             s->calc_ok = FALSE;  /* error in diffs ! */
-            FPRINTF(stderr,"ERROR:  (slv6) calc_matrix\n");
-            FPRINTF(stderr,"        Relation index %d out of range.\n",(int)orgrow);
+            ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation index %d out of range.",(int)orgrow);
             destroy_array(*rhs_orig);  /* clean up house, then die */
             mtx_destroy(mtx);                 /* zap all alocated memory */
             return NULL;
@@ -893,8 +864,7 @@ static mtx_matrix_t calc_matrix(int32     cap,
          status = relman_diffs(*rp,&vfilter,mtx,&((*rhs_orig)[orgrow]),safe);
          if(status != 0) {
             s->calc_ok = FALSE;  /* error in diffs ! */
-            FPRINTF(stderr,"ERROR:  (slv6) calc_matrix\n");
-            FPRINTF(stderr,"        Error in calculating A matrix.\n");
+            ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating A matrix.");
             destroy_array(*rhs_orig);  /* clean up house, then die */
             mtx_destroy(mtx);                 /* zap all alocated memory */
             return NULL;
@@ -904,8 +874,7 @@ static mtx_matrix_t calc_matrix(int32     cap,
    /* Calculate the rank of the matrix, before we add extra rows/cols */
    mtx_output_assign(mtx, crow, vused);
    if(! mtx_output_assigned(mtx)) {  /* output assignment failed */
-      FPRINTF(stderr,"ERROR:  (slv6) calc_matrix\n");
-      FPRINTF(stderr,"        Output assignment to calculate rank of problem failed.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Output assignment to calculate rank of problem failed.");
       mtx_destroy(mtx);                 /* zap all alocated memory */
       destroy_array(*rhs_orig);  /* clean up house, then die */
       return NULL;
@@ -913,16 +882,14 @@ static mtx_matrix_t calc_matrix(int32     cap,
    *rank = mtx_symbolic_rank(mtx);
 
    if( *rank < 0 ) {
-      FPRINTF(stderr,"ERROR:  (slv6) calc_matrix\n");
-      FPRINTF(stderr,"        Symbolic rank calculation failed, matrix may be bad.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Symbolic rank calculation failed, matrix may be bad.");
       return mtx;
    }
 
    /* calculate the c vector and save it to the matrix */
    if( ! calc_c(mtx, crow, obj) ) {
       s->calc_ok = FALSE;  /* error in diffs ! */
-      FPRINTF(stderr,"ERROR:  (slv6) calc_matrix\n");
-      FPRINTF(stderr,"        Error in calculating objective coefficients.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating objective coefficients.");
       mtx_destroy(mtx);    /* commit suicide */
       destroy_array(*rhs_orig);  /* clean up house, then die */
       return NULL;
@@ -966,8 +933,7 @@ static void real_rhs(mtx_matrix_t    Ac_mtx,      /* Matrix representation of pr
    double       rowval;   /* the sum of a[i]*x[i] in the row */
 
    if(rhs == NULL) {         /* a little preflight checking */
-      FPRINTF(stderr,"ERROR:  (slv6) real_rhs\n");
-      FPRINTF(stderr,"        The routine was passed a NULL rhs pointer!\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"The routine was passed a NULL rhs pointer!");
       return;
    }
 
@@ -1245,8 +1211,7 @@ struct rel_relation *slv6_get_obj_relation(slv6_system_t sys){
 void slv6_dump_internals(slv6_system_t sys, int level){
    check_system(sys);
    if (level > 0) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_dump_internals\n");
-      FPRINTF(stderr,"        slv6 does not dump its internals.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Dumping internals is not implemented.");
    }
 }
 #endif
@@ -1286,8 +1251,7 @@ boolean slv6_change_basis(slv6_system_t sys,int32 var, mtx_range_t *rng){
    Nor, for that matter, is there a basis in the first place.
    So I just write out an error message, and return FALSE  */
 
-   FPRINTF(stderr,"ERROR:  (slv6) slv6_change_basis\n");
-   FPRINTF(stderr,"        This solver does not support changing the basis.\n");
+   ERROR_REPORTER_HERE(ASC_PROG_ERR,"Changing basis is not supported.");
 
    return FALSE;
 }
@@ -1467,13 +1431,11 @@ boolean slv6_eligible_solver(slv6_system_t server){
 
    check_system(sys);
    if( sys->rlist == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_eligible_solver\n");
-      FPRINTF(stderr,"        Relation list was never set.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation list was never set.");
       return (FALSE);
    }
    if( sys->obj == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_eligible_solver\n");
-      FPRINTF(stderr,"        No objective in problem.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"No objective in problem.");
       return (FALSE);
    }
 
@@ -1536,18 +1498,15 @@ void slv6_presolve(slv_system_t server){
    /* Check if necessary pointers are non-NULL */
    check_system(sys);
    if( sys->vlist == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Variable list was never set.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable list was never set.");
       return;
    }
    if( sys->blist == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Boundary list was never set.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Boundary list was never set.");
       return;
    }
    if( sys->rlist == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Relation list was never set.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation list was never set.");
       return;
    }
 
@@ -1562,7 +1521,7 @@ void slv6_presolve(slv_system_t server){
    if( sys->vlist_user == NULL ) determine_vlist(sys);
 #else
    if( sys->vlist_user == NULL ){
-     FPRINTF(stderr,"  function determine_vlist is slv6 is broken.\n");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"automatic variable-list setup is broken.");
      exit(1);
    }
 #endif
@@ -1658,18 +1617,17 @@ void slv6_presolve(slv_system_t server){
 	   /* Call slv6_elgibile_solver to see if the solver has a chance */
 	   /* If not bail now ... requires the incidence values of prev section be set */
 	   if(! slv6_eligible_solver(sys)) {
-	      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-	      FPRINTF(stderr,"        Model is not eligible for MakeMPS export with current options.\n");
+	      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Model is not eligible for MakeMPS export with current options.");
 	      return;
 	   }
 
    /*  Make sure that at least one incident variable and at least one incident
        relation exist, else bail */
    if ((sys->mps.rinc == 0) || (sys->mps.vinc == 0))  {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Your model must have at least one incident variable and equation.\n");
-      FPRINTF(stderr,"        Incident variables: %d\n", sys->mps.vinc);
-      FPRINTF(stderr,"        Incident equations: %d\n", sys->mps.rinc);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR
+         ,"Your model must have at least one incident variable and equation (incident variables: %d, incident equations: %d)."
+         ,sys->mps.vinc, sys->mps.rinc
+      );
       return;
    }
 
@@ -1687,8 +1645,7 @@ void slv6_presolve(slv_system_t server){
                                  &sys->mps.rank,
                                  &sys->mps.bcol);
    if( sys->mps.Ac_mtx == NULL ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Call to calc_matrix failed.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed to build matrix representation.");
       nuke_pointers(sys->mps);
       return;
    }
@@ -1696,8 +1653,7 @@ void slv6_presolve(slv_system_t server){
    /* get upper bound row */
    sys->mps.ubrow = calc_bounds(sys->vlist, sys->mps.vused, TRUE);
    if (sys->mps.ubrow == NULL)  {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Error in calculating variable upper bounds.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating variable upper bounds.");
       nuke_pointers(sys->mps);
       return;
    }
@@ -1705,8 +1661,7 @@ void slv6_presolve(slv_system_t server){
    /* get lower bound row */
    sys->mps.lbrow = calc_bounds(sys->vlist, sys->mps.vused, FALSE);
    if (sys->mps.lbrow == NULL)  {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Error in calculating variable lower bounds.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating variable lower bounds.");
       nuke_pointers(sys->mps);
       return;
    }
@@ -1722,8 +1677,7 @@ void slv6_presolve(slv_system_t server){
                                    &sys->mps.solver_other_used,    /* output */
                                    &sys->mps.solver_fixed);        /* output */
    if(sys->mps.typerow == NULL) {         /* allocation failed */
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Error in calculating the variable type list!\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating the variable type list!");
       nuke_pointers(sys->mps);
       return;
    }
@@ -1731,8 +1685,7 @@ void slv6_presolve(slv_system_t server){
    /* Call calc_reloplist here, to calculate the relational operators >=, <=, = */
 	 sys->mps.relopcol = calc_reloplist(sys->rlist, sys->mps.rused);
     if(sys->mps.relopcol == NULL) {         /* allocation failed */
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_presolve\n");
-      FPRINTF(stderr,"        Error in calculating the relational operators!\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculating the relational operators!");
       nuke_pointers(sys->mps);
       return;
    }
@@ -1784,16 +1737,16 @@ void slv6_solve(slv_system_t server){
        (sys->mps.bcol == NULL) ||
        (sys->mps.typerow == NULL) ||
        (sys->mps.relopcol == NULL)) {
-      FPRINTF(MIF(sys),"ERROR:  Matrix representation of problem is not available.\n");
-      FPRINTF(MIF(sys),"        Perhaps the presolve routine was not called before slv6_solve.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR
+         ,"Matrix representation of problem is not available; presolve may not have been called."
+      );
       return;
    }
 
    /* Check system to see if it can be solved  */
    check_system(sys);
    if( !sys->s.ready_to_solve ) {
-      FPRINTF(stderr,"ERROR:  (slv6) slv6_solve\n");
-      FPRINTF(stderr,"        Not ready to solve.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not ready to solve.");
       return;
    }
 

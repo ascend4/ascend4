@@ -1487,7 +1487,7 @@ void highs_presolve(slv_system_t server){
    if( sys->vlist_user == NULL ) determine_vlist(sys);
 #else
    if( sys->vlist_user == NULL ){
-     ERROR_REPORTER_HERE(ASC_PROG_ERR,"(highs) determine_vlist is broken.");
+     ERROR_REPORTER_HERE(ASC_PROG_ERR,"automatic variable-list setup is broken.");
      exit(1);
    }
 #endif
@@ -1611,7 +1611,7 @@ void highs_presolve(slv_system_t server){
                                  &sys->mps.rank,
                                  &sys->mps.bcol);
    if( sys->mps.Ac_mtx == NULL ) {
-      ERROR_REPORTER_HERE(ASC_PROG_ERR,"call to calc_matrix failed.");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed to build matrix representation.");
       nuke_pointers(sys->mps);
       return;
    }
