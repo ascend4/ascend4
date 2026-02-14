@@ -268,6 +268,28 @@ static void test_highs_mip_mixed_resolve(void){
 	run_highs_model("models/test/mip/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
 }
 
+static void test_highs_mip_facility_location(void){
+	/* Non-trivial MIP: capacitated facility-location with fixed + assignment costs. */
+	static const struct var_expect expected[] = {
+		{"open[1]", 1.0, 1e-7},
+		{"open[2]", 0.0, 1e-7},
+		{"open[3]", 1.0, 1e-7},
+		{"assign[1][1]", 1.0, 1e-7},
+		{"assign[2][3]", 1.0, 1e-7},
+		{"assign[3][3]", 1.0, 1e-7},
+		{"assign[4][3]", 1.0, 1e-7}
+	};
+	run_highs_model(
+		"models/test/mip/facility_location.a4c",
+		"mip_facility_location",
+		470.0,
+		0,
+		expected,
+		7,
+		NULL
+	);
+}
+
 static void test_highs_trnsport(void){
 	/* GAMS transportation LP benchmark: objective value regression against published optimum. */
 	run_highs_model("models/test/highs/trnsport.a4c","trnsport",153.675,0,NULL,0,NULL);
@@ -357,6 +379,7 @@ cleanup:
 	T(highs_mip_mixed) \
 	T(highs_mip_mixed_iterate) \
 	T(highs_mip_mixed_resolve) \
+	T(highs_mip_facility_location) \
 	T(highs_trnsport) \
 	T(highs_blend_whiskas2) \
 	T(highs_afiro) \
