@@ -1,0 +1,61 @@
+REQUIRE "atoms.a4l";
+
+(* Classic transportation LP from the GAMS 'trnsport' example.
+   Source data: two plants (Seattle/San-Diego), three markets
+   (New-York/Chicago/Topeka), freight cost 90 per case per 1000 miles.
+   Expected optimum objective: 153.675.
+*)
+MODEL trnsport;
+	ship_seattle_newyork IS_A factor;
+	ship_seattle_chicago IS_A factor;
+	ship_seattle_topeka IS_A factor;
+	ship_sandiego_newyork IS_A factor;
+	ship_sandiego_chicago IS_A factor;
+	ship_sandiego_topeka IS_A factor;
+
+	supply_seattle:
+		ship_seattle_newyork + ship_seattle_chicago + ship_seattle_topeka <= 350;
+	supply_sandiego:
+		ship_sandiego_newyork + ship_sandiego_chicago + ship_sandiego_topeka <= 600;
+
+	demand_newyork:
+		ship_seattle_newyork + ship_sandiego_newyork >= 325;
+	demand_chicago:
+		ship_seattle_chicago + ship_sandiego_chicago >= 300;
+	demand_topeka:
+		ship_seattle_topeka + ship_sandiego_topeka >= 275;
+
+	obj: MINIMIZE
+		0.225*ship_seattle_newyork
+	  + 0.153*ship_seattle_chicago
+	  + 0.162*ship_seattle_topeka
+	  + 0.225*ship_sandiego_newyork
+	  + 0.162*ship_sandiego_chicago
+	  + 0.126*ship_sandiego_topeka;
+
+METHODS
+
+METHOD bound_self;
+	ship_seattle_newyork.lower_bound := 0;
+	ship_seattle_chicago.lower_bound := 0;
+	ship_seattle_topeka.lower_bound := 0;
+	ship_sandiego_newyork.lower_bound := 0;
+	ship_sandiego_chicago.lower_bound := 0;
+	ship_sandiego_topeka.lower_bound := 0;
+END bound_self;
+
+METHOD default_self;
+	ship_seattle_newyork := 0;
+	ship_seattle_chicago := 300;
+	ship_seattle_topeka := 50;
+	ship_sandiego_newyork := 325;
+	ship_sandiego_chicago := 0;
+	ship_sandiego_topeka := 225;
+END default_self;
+
+METHOD on_load;
+	RUN bound_self;
+	RUN default_self;
+END on_load;
+
+END trnsport;

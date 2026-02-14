@@ -1,0 +1,37 @@
+REQUIRE "atoms.a4l";
+
+(* Two-ingredient Whiskas blending LP from the PuLP case study.
+   Minimize can cost subject to nutrition limits and fixed 100g mass.
+   Expected optimum: chicken = 33.333333..., beef = 66.666666...,
+   objective = 0.9666666667.
+*)
+MODEL blend_whiskas2;
+	chicken IS_A factor;
+	beef IS_A factor;
+
+	mass_balance: chicken + beef = 100;
+	protein_min: 0.100*chicken + 0.200*beef >= 8.0;
+	fat_min:     0.080*chicken + 0.100*beef >= 6.0;
+	fibre_max:   0.001*chicken + 0.005*beef <= 2.0;
+	salt_max:    0.002*chicken + 0.005*beef <= 0.4;
+
+	obj: MINIMIZE 0.013*chicken + 0.008*beef;
+
+METHODS
+
+METHOD bound_self;
+	chicken.lower_bound := 0;
+	beef.lower_bound := 0;
+END bound_self;
+
+METHOD default_self;
+	chicken := 50;
+	beef := 50;
+END default_self;
+
+METHOD on_load;
+	RUN bound_self;
+	RUN default_self;
+END on_load;
+
+END blend_whiskas2;

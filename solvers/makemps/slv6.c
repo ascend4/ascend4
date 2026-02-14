@@ -1248,7 +1248,8 @@ void slv6_presolve(slv_system_t server){
    sys->s.over_defined = (sys->mps.rinc > sys->mps.vinc);
    sys->s.under_defined = (sys->mps.rinc < sys->mps.vinc);
    sys->s.struct_singular = (sys->mps.rank < sys->mps.rinc);
-   sys->s.ok = sys->s.calc_ok && !sys->s.struct_singular;
+   /* MakeMPS exports are valid even when the row set is rank-deficient. */
+   sys->s.ok = sys->s.calc_ok;
    sys->s.ready_to_solve = sys->s.ok;
 
    sys->s.converged = FALSE;      /* changes to true after slv6_solve */

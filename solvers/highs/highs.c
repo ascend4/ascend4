@@ -1252,7 +1252,8 @@ void highs_presolve(slv_system_t server){
    sys->s.over_defined = (sys->mps.rinc > sys->mps.vinc);
    sys->s.under_defined = (sys->mps.rinc < sys->mps.vinc);
    sys->s.struct_singular = (sys->mps.rank < sys->mps.rinc);
-   sys->s.ok = sys->s.calc_ok && !sys->s.struct_singular;
+   /* HiGHS can solve LP/MIP models even with rank-deficient row sets. */
+   sys->s.ok = sys->s.calc_ok;
    sys->s.ready_to_solve = sys->s.ok;
 
    sys->s.converged = FALSE;      /* changes to true after highs_solve */
@@ -1621,7 +1622,7 @@ done:
 	sys->s.cpu_elapsed += (double)(tm_cpu_time() - sys->clock);
 	sys->s.block.cpu_elapsed = sys->s.cpu_elapsed;
 	sys->s.cost->time = sys->s.cpu_elapsed;
-	sys->s.ok = sys->s.calc_ok && !sys->s.struct_singular && sys->s.converged;
+	sys->s.ok = sys->s.calc_ok && sys->s.converged;
 	sys->s.ready_to_solve = FALSE;
 	sys->s.block.iteration = 1;
 	sys->s.iteration = 1;

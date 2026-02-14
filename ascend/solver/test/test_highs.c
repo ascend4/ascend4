@@ -39,6 +39,7 @@ struct highs_run_options{
 	int use_iterate;
 	int use_resolve;
 	int expect_converged;
+	double objective_tol;
 };
 
 static int find_param_index(const slv_parameters_t *pp, const char *name){
@@ -112,9 +113,13 @@ static void run_highs_model(
 	slv_status_t status;
 	int i;
 	int expect_converged = 1;
+	double objective_tol = 1e-7;
 
 	if(opts != NULL){
 		expect_converged = opts->expect_converged;
+		if(opts->objective_tol > 0){
+			objective_tol = opts->objective_tol;
+		}
 	}
 
 	Asc_CompilerInit(1);
@@ -208,8 +213,8 @@ static void run_highs_model(
 		CU_ASSERT_FATAL(objrel != NULL);
 		objinst = ChildByChar(root,AddSymbol("obj"));
 		CU_ASSERT_FATAL(objinst != NULL);
-		CU_ASSERT_DOUBLE_EQUAL(expected_objective,rel_residual(objrel),1e-7);
-		CU_ASSERT_DOUBLE_EQUAL(expected_objective,RelationResidual(GetInstanceRelationOnly(objinst)),1e-7);
+		CU_ASSERT_DOUBLE_EQUAL(expected_objective,rel_residual(objrel),objective_tol);
+		CU_ASSERT_DOUBLE_EQUAL(expected_objective,RelationResidual(GetInstanceRelationOnly(objinst)),objective_tol);
 		if(check_scalars_in_tree){
 			check_lp1_instance_tree(root,expected_objective);
 		}
@@ -247,20 +252,48 @@ static void test_highs_lp_structured(void){
 
 static void test_highs_mip_mixed(void){
 	/* Mixed-integer model: covers HiGHS MIP load path and mixed row operators. */
-	static const struct highs_run_options opts = {0,0,0,0};
+	static const struct highs_run_options opts = {0,0,0,0,1e-7};
 	run_highs_model("models/test/mip/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
 }
 
 static void test_highs_mip_mixed_iterate(void){
 	/* Same MIP model via the iterate entrypoint (current implementation delegates to solve). */
-	static const struct highs_run_options opts = {0,1,0,0};
+	static const struct highs_run_options opts = {0,1,0,0,1e-7};
 	run_highs_model("models/test/mip/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
 }
 
 static void test_highs_mip_mixed_resolve(void){
 	/* Same MIP model via resolve, after perturbing variable values. */
-	static const struct highs_run_options opts = {1,0,1,0};
+	static const struct highs_run_options opts = {1,0,1,0,1e-7};
 	run_highs_model("models/test/mip/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
+}
+
+static void test_highs_trnsport(void){
+	/* GAMS transportation LP benchmark: objective value regression against published optimum. */
+	run_highs_model("models/test/highs/trnsport.a4c","trnsport",153.675,0,NULL,0,NULL);
+}
+
+static void test_highs_blend_whiskas2(void){
+	/* PuLP blending LP benchmark: checks known unique optimum and primal variable values. */
+	static const struct var_expect expected[] = {
+		{"chicken", 100.0 / 3.0, 1e-7},
+		{"beef", 200.0 / 3.0, 1e-7}
+	};
+	run_highs_model(
+		"models/test/highs/blend_whiskas2.a4c",
+		"blend_whiskas2",
+		0.9666666666666667,
+		0,
+		expected,
+		2,
+		NULL
+	);
+}
+
+static void test_highs_afiro(void){
+	/* Netlib AFIRO LP benchmark: verifies solve path on denser benchmark-style LP data. */
+	static const struct highs_run_options opts = {0,0,0,1,1e-5};
+	run_highs_model("models/test/highs/afiro.a4c","afiro",-464.7531428571429,0,NULL,0,&opts);
 }
 
 static void test_highs_ineligible_without_objective(void){
@@ -324,6 +357,9 @@ cleanup:
 	T(highs_mip_mixed) \
 	T(highs_mip_mixed_iterate) \
 	T(highs_mip_mixed_resolve) \
+	T(highs_trnsport) \
+	T(highs_blend_whiskas2) \
+	T(highs_afiro) \
 	T(highs_ineligible_without_objective)
 
 REGISTER_TESTS_SIMPLE(solver_highs, TESTS)

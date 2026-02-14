@@ -195,6 +195,7 @@ static void check_highs_solution(
 	const char *mpsfile,
 	const char *mapfile,
 	double expected_objective,
+	double objective_tol,
 	const struct highs_var_expect *vars,
 	int nvars
 ){
@@ -231,8 +232,8 @@ static void check_highs_solution(
 		goto cleanup;
 	}
 	CONSOLE_DEBUG("HiGHS objective for %s: %.12g",mpsfile,obj);
-	CU_ASSERT_DOUBLE_EQUAL(expected_objective,obj,1e-7);
-	if(fabs(expected_objective - obj) > 1e-7){
+	CU_ASSERT_DOUBLE_EQUAL(expected_objective,obj,objective_tol);
+	if(fabs(expected_objective - obj) > objective_tol){
 		ok = 0;
 		goto cleanup;
 	}
@@ -271,6 +272,7 @@ static void run_makemps_model(
 	const char *map_needle_1,
 	const char *map_needle_2,
 	double highs_expected_objective,
+	double highs_objective_tol,
 	const struct highs_var_expect *highs_vars,
 	int highs_nvars,
 	int run_highs_check,
@@ -358,7 +360,14 @@ static void run_makemps_model(
 		CU_ASSERT_FATAL(file_contains(mapfile, map_needle_2));
 	}
 	if(run_highs_check){
-		check_highs_solution(mpsfile,mapfile,highs_expected_objective,highs_vars,highs_nvars);
+		check_highs_solution(
+			mpsfile,
+			mapfile,
+			highs_expected_objective,
+			highs_objective_tol,
+			highs_vars,
+			highs_nvars
+		);
 	}
 
 cleanup:
@@ -387,6 +396,7 @@ static void test_makemps_lp1(void){
 		NULL,
 		NULL,
 		-10.0,
+		1e-7,
 		expected_vars,
 		4,
 		1,
@@ -410,6 +420,7 @@ static void test_makemps_lp_structured(void){
 		"x[1]",
 		"row[1].s",
 		-10.0,
+		1e-7,
 		expected_vars,
 		4,
 		1,
@@ -427,10 +438,69 @@ static void test_makemps_mip_mixed(void){
 		".x",
 		".w",
 		0.0,
+		1e-7,
 		NULL,
 		0,
 		0,
 		0
+	);
+}
+
+static void test_makemps_trnsport(void){
+	/* GAMS transportation LP benchmark: export then validate objective with external HiGHS. */
+	run_makemps_model(
+		"models/test/highs/trnsport.a4c",
+		"trnsport",
+		"test/makemps_trnsport.mps",
+		"test/makemps_trnsport.map",
+		"ship_seattle_newyork",
+		"ship_sandiego_topeka",
+		153.675,
+		1e-7,
+		NULL,
+		0,
+		1,
+		-1
+	);
+}
+
+static void test_makemps_blend_whiskas2(void){
+	/* PuLP blending LP benchmark: objective plus variable mapping/values are regression checked. */
+	static const struct highs_var_expect expected_vars[] = {
+		{"chicken", 100.0 / 3.0, 1e-7},
+		{"beef", 200.0 / 3.0, 1e-7}
+	};
+	run_makemps_model(
+		"models/test/highs/blend_whiskas2.a4c",
+		"blend_whiskas2",
+		"test/makemps_blend_whiskas2.mps",
+		"test/makemps_blend_whiskas2.map",
+		"chicken",
+		"beef",
+		0.9666666666666667,
+		1e-7,
+		expected_vars,
+		2,
+		1,
+		-1
+	);
+}
+
+static void test_makemps_afiro(void){
+	/* Netlib AFIRO LP benchmark: regression check for parser/compile/export on denser LP data. */
+	run_makemps_model(
+		"models/test/highs/afiro.a4c",
+		"afiro",
+		"test/makemps_afiro.mps",
+		"test/makemps_afiro.map",
+		"x02",
+		"x39",
+		-464.7531428571429,
+		1e-5,
+		NULL,
+		0,
+		0,
+		-1
 	);
 }
 
@@ -603,6 +673,9 @@ cleanup:
 	T(makemps_lp1) \
 	T(makemps_lp_structured) \
 	T(makemps_mip_mixed) \
+	T(makemps_trnsport) \
+	T(makemps_blend_whiskas2) \
+	T(makemps_afiro) \
 	T(makemps_rejects_nonlinear_default) \
 	T(makemps_linearises_nonlinear_when_enabled)
 
