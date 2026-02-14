@@ -230,6 +230,8 @@ struct StaticSolverRegistration{
 static const struct StaticSolverRegistration slv_reg[]={
 	{"qrslv"}
 	,{"ipopt"}
+	,{"makemps"}
+	,{"highs"}
 #if 0
 	,{"conopt"}
 	,{"lrslv"}
