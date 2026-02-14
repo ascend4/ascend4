@@ -34,6 +34,13 @@ struct var_expect{
 	double tol;
 };
 
+struct highs_run_options{
+	int relaxed;
+	int use_iterate;
+	int use_resolve;
+	int expect_converged;
+};
+
 static int find_param_index(const slv_parameters_t *pp, const char *name){
 	int i;
 	for(i = 0; i < pp->num_parms; ++i){
@@ -96,13 +103,19 @@ static void run_highs_model(
 	double expected_objective,
 	int check_scalars_in_tree,
 	const struct var_expect *vars,
-	int nvars
+	int nvars,
+	const struct highs_run_options *opts
 ){
 	int solver_index = -1;
 	struct Instance *siminst = NULL;
 	slv_system_t sys = NULL;
 	slv_status_t status;
 	int i;
+	int expect_converged = 1;
+
+	if(opts != NULL){
+		expect_converged = opts->expect_converged;
+	}
 
 	Asc_CompilerInit(1);
 	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
@@ -139,22 +152,45 @@ static void run_highs_model(
 	sys = system_build(GetSimulationRoot(siminst));
 	CU_ASSERT_FATAL(sys != NULL);
 	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
+	CU_ASSERT_TRUE(slv_eligible_solver(sys));
 
 	{
 		slv_parameters_t pp;
 		int nonlin_idx;
+		int relaxed_idx;
 		slv_get_parameters(sys,&pp);
 		nonlin_idx = find_param_index(&pp,"nonlin");
+		relaxed_idx = find_param_index(&pp,"relaxed");
 		CU_ASSERT_FATAL(nonlin_idx != -1);
+		CU_ASSERT_FATAL(relaxed_idx != -1);
 		SLV_PARAM_BOOL(&pp,nonlin_idx) = FALSE;
+		SLV_PARAM_BOOL(&pp,relaxed_idx) = (opts != NULL && opts->relaxed) ? TRUE : FALSE;
 		slv_set_parameters(sys,&pp);
 	}
 
 	(void)slv_presolve(sys);
-	(void)slv_solve(sys);
+	if(opts != NULL && opts->use_iterate){
+		(void)slv_iterate(sys);
+	}else if(opts != NULL && opts->use_resolve){
+		struct var_variable **vlist = NULL;
+		(void)slv_solve(sys);
+		vlist = slv_get_solvers_var_list(sys);
+		if(vlist != NULL && *vlist != NULL){
+			var_set_value(*vlist,var_value(*vlist) + 0.1);
+		}
+		(void)slv_resolve(sys);
+	}else{
+		(void)slv_solve(sys);
+	}
 	slv_get_status(sys,&status);
-	CU_ASSERT_TRUE(status.converged);
-	CU_ASSERT_FALSE(status.diverged);
+	if(expect_converged){
+		CU_ASSERT_TRUE(status.converged);
+		CU_ASSERT_FALSE(status.diverged);
+	}else{
+		CU_ASSERT_FALSE(status.converged);
+		CU_ASSERT_TRUE(status.diverged);
+		goto cleanup;
+	}
 
 	for(i = 0; i < nvars; ++i){
 		double value = 0.0;
@@ -194,7 +230,7 @@ static void test_highs_lp1(void){
 		{"s1", 0.0, 1e-7},
 		{"s2", 0.0, 1e-7}
 	};
-	run_highs_model("models/test/ipopt/lp1.a4c","lp1",-10.0,1,expected,4);
+	run_highs_model("models/test/ipopt/lp1.a4c","lp1",-10.0,1,expected,4,NULL);
 }
 
 static void test_highs_lp_structured(void){
@@ -204,11 +240,84 @@ static void test_highs_lp_structured(void){
 		{"row[1].s", 0.0, 1e-7},
 		{"row[2].s", 0.0, 1e-7}
 	};
-	run_highs_model("models/test/ipopt/lp_structured.a4c","lp_structured",-10.0,0,expected,4);
+	run_highs_model("models/test/ipopt/lp_structured.a4c","lp_structured",-10.0,0,expected,4,NULL);
+}
+
+static void test_highs_mip_mixed(void){
+	static const struct highs_run_options opts = {0,0,0,0};
+	run_highs_model("models/test/ipopt/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
+}
+
+static void test_highs_mip_mixed_iterate(void){
+	static const struct highs_run_options opts = {0,1,0,0};
+	run_highs_model("models/test/ipopt/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
+}
+
+static void test_highs_mip_mixed_resolve(void){
+	static const struct highs_run_options opts = {1,0,1,0};
+	run_highs_model("models/test/ipopt/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
+}
+
+static void test_highs_ineligible_without_objective(void){
+	int solver_index = -1;
+	struct Instance *siminst = NULL;
+	slv_system_t sys = NULL;
+	slv_status_t status;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/highs"));
+
+	if(0 != package_load("highs",NULL)){
+		CONSOLE_DEBUG("Skipping HiGHS no-objective test: solver package not available");
+		goto cleanup;
+	}
+	solver_index = slv_lookup_client("HiGHS");
+	if(solver_index == -1){
+		CONSOLE_DEBUG("Skipping HiGHS no-objective test: solver not registered");
+		goto cleanup;
+	}
+
+	{
+		int status_open;
+		Asc_OpenModule("models/test/ipopt/lp_noobj.a4c",&status_open);
+		CU_ASSERT_FATAL(status_open == 0);
+	}
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("lp_noobj")) != NULL);
+
+	siminst = SimsCreateInstance(AddSymbol("lp_noobj"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe == Proc_all_ok);
+	}
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
+	CU_ASSERT_FALSE(slv_eligible_solver(sys));
+
+	(void)slv_presolve(sys);
+	slv_get_status(sys,&status);
+	CU_ASSERT_FALSE(status.ready_to_solve);
+	CU_ASSERT_FALSE(status.converged);
+
+cleanup:
+	if(sys)system_destroy(sys);
+	system_free_reused_mem();
+	solver_destroy_engines();
+	if(siminst)sim_destroy(siminst);
+	Asc_CompilerDestroy();
 }
 
 #define TESTS(T) \
 	T(highs_lp1) \
-	T(highs_lp_structured)
+	T(highs_lp_structured) \
+	T(highs_mip_mixed) \
+	T(highs_mip_mixed_iterate) \
+	T(highs_mip_mixed_resolve) \
+	T(highs_ineligible_without_objective)
 
 REGISTER_TESTS_SIMPLE(solver_highs, TESTS)

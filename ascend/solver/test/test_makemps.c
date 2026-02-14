@@ -272,7 +272,9 @@ static void run_makemps_model(
 	const char *map_needle_2,
 	double highs_expected_objective,
 	const struct highs_var_expect *highs_vars,
-	int highs_nvars
+	int highs_nvars,
+	int run_highs_check,
+	int integer_mode
 ){
 	int solver_index = -1;
 	struct Instance *siminst = NULL;
@@ -321,13 +323,19 @@ static void run_makemps_model(
 			slv_parameters_t pp;
 			int filename_idx;
 			int nonlin_idx;
+			int integer_idx;
 		slv_get_parameters(sys, &pp);
 			filename_idx = find_param_index(&pp, "filename");
 			nonlin_idx = find_param_index(&pp, "nonlin");
+			integer_idx = find_param_index(&pp, "integer");
 			CU_ASSERT_FATAL(filename_idx != -1);
 			CU_ASSERT_FATAL(nonlin_idx != -1);
+			CU_ASSERT_FATAL(integer_idx != -1);
 			slv_set_char_parameter(&(SLV_PARAM_CHAR(&pp,filename_idx)),mpsfile);
 			SLV_PARAM_BOOL(&pp,nonlin_idx) = FALSE;
+			if(integer_mode >= 0){
+				SLV_PARAM_INT(&pp,integer_idx) = integer_mode;
+			}
 			slv_set_parameters(sys, &pp);
 		}
 
@@ -339,6 +347,9 @@ static void run_makemps_model(
 	CU_ASSERT(file_contains(mpsfile, "RHS"));
 	CU_ASSERT(file_contains(mpsfile, "BOUNDS"));
 	CU_ASSERT(file_contains(mpsfile, "ENDATA"));
+	if(integer_mode == 0){
+		CU_ASSERT(file_contains(mpsfile, "INTORG"));
+	}
 	CU_ASSERT_FATAL(file_contains(mapfile, "ASCEND/MPS Variable Name Mapping"));
 	if(map_needle_1 != NULL){
 		CU_ASSERT_FATAL(file_contains(mapfile, map_needle_1));
@@ -346,7 +357,9 @@ static void run_makemps_model(
 	if(map_needle_2 != NULL){
 		CU_ASSERT_FATAL(file_contains(mapfile, map_needle_2));
 	}
-	check_highs_solution(mpsfile,mapfile,highs_expected_objective,highs_vars,highs_nvars);
+	if(run_highs_check){
+		check_highs_solution(mpsfile,mapfile,highs_expected_objective,highs_vars,highs_nvars);
+	}
 
 cleanup:
 	if(sys)system_destroy(sys);
@@ -374,7 +387,9 @@ static void test_makemps_lp1(void){
 		NULL,
 		-10.0,
 		expected_vars,
-		4
+		4,
+		1,
+		-1
 	);
 }
 
@@ -394,7 +409,25 @@ static void test_makemps_lp_structured(void){
 		"row[1].s",
 		-10.0,
 		expected_vars,
-		4
+		4,
+		1,
+		-1
+	);
+}
+
+static void test_makemps_mip_mixed(void){
+	run_makemps_model(
+		"models/test/ipopt/mip_mixed.a4c",
+		"mip_mixed",
+		"test/makemps_mip_mixed.mps",
+		"test/makemps_mip_mixed.map",
+		".x",
+		".w",
+		0.0,
+		NULL,
+		0,
+		0,
+		0
 	);
 }
 
@@ -564,6 +597,7 @@ cleanup:
 #define TESTS(T) \
 	T(makemps_lp1) \
 	T(makemps_lp_structured) \
+	T(makemps_mip_mixed) \
 	T(makemps_rejects_nonlinear_default) \
 	T(makemps_linearises_nonlinear_when_enabled)
 
