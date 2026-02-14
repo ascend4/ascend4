@@ -160,7 +160,7 @@ static void print_col_element(FILE *out,
  ***  want a newline if the last call was in the middle of a line
  **/
 {
-   static int32 oldvar;
+   static int32 oldvar = -1;
    static int         onetwo;  /* is it the first or second value on the line (ONE or TWO) */
 
    /* set up state */

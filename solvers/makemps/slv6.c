@@ -937,6 +937,7 @@ static void real_rhs(mtx_matrix_t    Ac_mtx,      /* Matrix representation of pr
                      char            relopcol[],  /* is it incident? */
                      struct var_variable  **vlist,      /* Variable list (NULL terminated) */
                      int32     rused,       /* in: total number of relations used */
+                     int32     vused,       /* in: total number of variables used */
                      real64    rhs[])       /* out: rhs array origin */
 /**
  ***  Takes the residuals stored in rhs, and converts them into the actual right
@@ -977,11 +978,11 @@ static void real_rhs(mtx_matrix_t    Ac_mtx,      /* Matrix representation of pr
 	   nz.row = currow;       /* current row */
            rowval = 0.0;          /* accumulate value here */
 
-           a = mtx_next_in_row(Ac_mtx,&nz,mtx_range(&range,0,rused));
+           a = mtx_next_in_row(Ac_mtx,&nz,mtx_range(&range,0,vused));
 
            do  {  orgcol  = mtx_col_to_org(Ac_mtx, nz.col);
                   rowval += a*var_value(*(vlist+orgcol));
-                  a = mtx_next_in_row(Ac_mtx,&nz,mtx_range(&range,0,rused));
+                  a = mtx_next_in_row(Ac_mtx,&nz,mtx_range(&range,0,vused));
 
                } while (nz.col != mtx_LAST);
 
@@ -1729,6 +1730,7 @@ void slv6_presolve(slv_system_t server){
             sys->mps.relopcol,    /* is it incident? */
             sys->vlist,           /* in: Variable list (NULL terminated) */
             sys->mps.rused,       /* in: total number of relations used */
+            sys->mps.vused,       /* in: total number of variables used */
             sys->mps.bcol);       /* out: rhs array origin */
 
 

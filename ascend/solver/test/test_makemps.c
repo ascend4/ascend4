@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #include <ascend/general/env.h>
 #include <ascend/general/ospath.h>
@@ -69,13 +70,209 @@ static int file_contains(const char *path, const char *needle){
 	return found;
 }
 
+struct highs_var_expect{
+	const char *ascend_substr;
+	double expected;
+	double tol;
+};
+
+static int highs_is_available(void){
+	static int cached = -1;
+	if(cached == -1){
+		cached = (system("highs --version >/dev/null 2>&1") == 0) ? 1 : 0;
+	}
+	return cached;
+}
+
+static int run_highs(const char *mpsfile, const char *solfile){
+	char cmd[1024];
+	if(snprintf(cmd,sizeof(cmd)
+		,"highs --model_file \"%s\" --solution_file \"%s\" >/dev/null 2>&1"
+		,mpsfile,solfile
+	) >= (int)sizeof(cmd)){
+		return 0;
+	}
+	return system(cmd) == 0;
+}
+
+static int highs_solution_is_optimal(const char *solfile){
+	FILE *f;
+	char line[512];
+	int saw_model_status = 0;
+
+	f = fopen(solfile,"r");
+	if(!f)return 0;
+	while(fgets(line,sizeof(line),f)){
+		if(saw_model_status){
+			fclose(f);
+			return strncmp(line,"Optimal",7) == 0;
+		}
+		if(strncmp(line,"Model status",12) == 0){
+			saw_model_status = 1;
+		}
+	}
+	fclose(f);
+	return 0;
+}
+
+static int highs_solution_objective(const char *solfile, double *objective){
+	FILE *f;
+	char line[512];
+	double v;
+
+	f = fopen(solfile,"r");
+	if(!f)return 0;
+	while(fgets(line,sizeof(line),f)){
+		if(sscanf(line,"Objective %lf",&v) == 1){
+			*objective = v;
+			fclose(f);
+			return 1;
+		}
+	}
+	fclose(f);
+	return 0;
+}
+
+static int map_lookup_mps_name(const char *mapfile, const char *ascend_substr, char *mps_name, size_t mps_name_len){
+	FILE *f;
+	char line[1024];
+	char tok[64];
+
+	f = fopen(mapfile,"r");
+	if(!f)return 0;
+	while(fgets(line,sizeof(line),f)){
+		if(sscanf(line,"%63s",tok) == 1 && tok[0] == 'C' && strstr(line,ascend_substr) != NULL){
+			(void)snprintf(mps_name,mps_name_len,"%s",tok);
+			fclose(f);
+			return 1;
+		}
+	}
+	fclose(f);
+	return 0;
+}
+
+static int highs_solution_col_value(const char *solfile, const char *col_name, double *value){
+	FILE *f;
+	char line[512];
+	char name[128];
+	double v;
+	int in_primal = 0;
+	int in_columns = 0;
+
+	f = fopen(solfile,"r");
+	if(!f)return 0;
+	while(fgets(line,sizeof(line),f)){
+		if(strncmp(line,"# Primal solution values",24) == 0){
+			in_primal = 1;
+			continue;
+		}
+		if(in_primal && strncmp(line,"# Dual solution values",22) == 0){
+			break;
+		}
+		if(in_primal && strncmp(line,"# Columns",9) == 0){
+			in_columns = 1;
+			continue;
+		}
+		if(in_primal && in_columns){
+			if(line[0] == '#'){
+				if(strncmp(line,"# Rows",6) == 0){
+					in_columns = 0;
+				}
+				continue;
+			}
+			if(sscanf(line,"%127s %lf",name,&v) == 2 && 0 == strcmp(name,col_name)){
+				*value = v;
+				fclose(f);
+				return 1;
+			}
+		}
+	}
+	fclose(f);
+	return 0;
+}
+
+static void check_highs_solution(
+	const char *mpsfile,
+	const char *mapfile,
+	double expected_objective,
+	const struct highs_var_expect *vars,
+	int nvars
+){
+	char solfile[512];
+	double obj = 0.0;
+	int i;
+	int ok = 1;
+
+	if(!highs_is_available()){
+		CONSOLE_DEBUG("Skipping HiGHS checks: 'highs' not found in PATH");
+		return;
+	}
+
+	if(snprintf(solfile,sizeof(solfile),"%s.highs.sol",mpsfile) >= (int)sizeof(solfile)){
+		CU_FAIL("HiGHS solution filename overflow");
+		ok = 0;
+		goto cleanup;
+	}
+	remove(solfile);
+
+	if(!run_highs(mpsfile,solfile)){
+		CU_FAIL("HiGHS execution failed");
+		ok = 0;
+		goto cleanup;
+	}
+	if(!highs_solution_is_optimal(solfile)){
+		CU_FAIL("HiGHS did not report optimal status");
+		ok = 0;
+		goto cleanup;
+	}
+	if(!highs_solution_objective(solfile,&obj)){
+		CU_FAIL("Unable to parse HiGHS objective");
+		ok = 0;
+		goto cleanup;
+	}
+	CONSOLE_DEBUG("HiGHS objective for %s: %.12g",mpsfile,obj);
+	CU_ASSERT_DOUBLE_EQUAL(expected_objective,obj,1e-7);
+	if(fabs(expected_objective - obj) > 1e-7){
+		ok = 0;
+		goto cleanup;
+	}
+
+	for(i = 0; i < nvars; ++i){
+		char mps_name[64];
+		double value = 0.0;
+		if(!map_lookup_mps_name(mapfile,vars[i].ascend_substr,mps_name,sizeof(mps_name))){
+			CU_FAIL("Unable to map ASCEND variable name to MPS column name");
+			ok = 0;
+			break;
+		}
+		if(!highs_solution_col_value(solfile,mps_name,&value)){
+			CU_FAIL("Unable to parse HiGHS primal column value");
+			ok = 0;
+			break;
+		}
+		CONSOLE_DEBUG("HiGHS %s (%s) = %.12g",vars[i].ascend_substr,mps_name,value);
+		CU_ASSERT_DOUBLE_EQUAL(vars[i].expected,value,vars[i].tol);
+		if(fabs(vars[i].expected - value) > fabs(vars[i].tol)){
+			ok = 0;
+			break;
+		}
+	}
+
+cleanup:
+	remove(solfile);
+	(void)ok;
+}
+
 static void run_makemps_model(
 	const char *module_path,
 	const char *model_name,
 	const char *mpsfile,
 	const char *mapfile,
 	const char *map_needle_1,
-	const char *map_needle_2
+	const char *map_needle_2,
+	double highs_expected_objective,
+	const struct highs_var_expect *highs_vars,
+	int highs_nvars
 ){
 	int solver_index = -1;
 	struct Instance *siminst = NULL;
@@ -149,6 +346,7 @@ static void run_makemps_model(
 	if(map_needle_2 != NULL){
 		CU_ASSERT_FATAL(file_contains(mapfile, map_needle_2));
 	}
+	check_highs_solution(mpsfile,mapfile,highs_expected_objective,highs_vars,highs_nvars);
 
 cleanup:
 	if(sys)system_destroy(sys);
@@ -161,24 +359,42 @@ cleanup:
 }
 
 static void test_makemps_lp1(void){
+	static const struct highs_var_expect expected_vars[] = {
+		{".x", 2.0, 1e-7},
+		{".y", 2.0, 1e-7},
+		{".s1", 0.0, 1e-7},
+		{".s2", 0.0, 1e-7}
+	};
 	run_makemps_model(
 		"models/test/ipopt/lp1.a4c",
 		"lp1",
 		"test/makemps_lp1.mps",
 		"test/makemps_lp1.map",
 		NULL,
-		NULL
+		NULL,
+		-10.0,
+		expected_vars,
+		4
 	);
 }
 
 static void test_makemps_lp_structured(void){
+	static const struct highs_var_expect expected_vars[] = {
+		{"x[1]", 2.0, 1e-7},
+		{"x[2]", 2.0, 1e-7},
+		{"row[1].s", 0.0, 1e-7},
+		{"row[2].s", 0.0, 1e-7}
+	};
 	run_makemps_model(
 		"models/test/ipopt/lp_structured.a4c",
 		"lp_structured",
 		"test/makemps_lp_structured.mps",
 		"test/makemps_lp_structured.map",
 		"x[1]",
-		"row[1].s"
+		"row[1].s",
+		-10.0,
+		expected_vars,
+		4
 	);
 }
 
