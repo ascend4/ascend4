@@ -290,6 +290,29 @@ static void test_highs_mip_facility_location(void){
 	);
 }
 
+static void test_highs_mip_tsp_mtz8(void){
+	/* Classic TSP MIP with MTZ subtour constraints on an asymmetric 8-city instance. */
+	static const struct var_expect expected[] = {
+		{"x[1][4]", 1.0, 1e-7},
+		{"x[4][2]", 1.0, 1e-7},
+		{"x[2][5]", 1.0, 1e-7},
+		{"x[5][6]", 1.0, 1e-7},
+		{"x[6][7]", 1.0, 1e-7},
+		{"x[7][3]", 1.0, 1e-7},
+		{"x[3][8]", 1.0, 1e-7},
+		{"x[8][1]", 1.0, 1e-7}
+	};
+	run_highs_model(
+		"models/test/mip/tsp_mtz8.a4c",
+		"mip_tsp_mtz8",
+		166.0,
+		0,
+		expected,
+		8,
+		NULL
+	);
+}
+
 static void test_highs_trnsport(void){
 	/* GAMS transportation LP benchmark: objective value regression against published optimum. */
 	run_highs_model("models/test/highs/trnsport.a4c","trnsport",153.675,0,NULL,0,NULL);
@@ -380,6 +403,7 @@ cleanup:
 	T(highs_mip_mixed_iterate) \
 	T(highs_mip_mixed_resolve) \
 	T(highs_mip_facility_location) \
+	T(highs_mip_tsp_mtz8) \
 	T(highs_trnsport) \
 	T(highs_blend_whiskas2) \
 	T(highs_afiro) \
