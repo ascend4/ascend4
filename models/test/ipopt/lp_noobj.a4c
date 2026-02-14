@@ -1,5 +1,6 @@
 REQUIRE "atoms.a4l";
 
+(* Test model with no objective; used to verify HiGHS ineligible-solver handling. *)
 MODEL lp_noobj;
 	x IS_A factor;
 

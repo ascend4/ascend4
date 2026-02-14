@@ -224,6 +224,7 @@ cleanup:
 }
 
 static void test_highs_lp1(void){
+	/* Baseline LP: verifies parse/compile/presolve/solve and instance-tree writeback. */
 	static const struct var_expect expected[] = {
 		{"x", 2.0, 1e-7},
 		{"y", 2.0, 1e-7},
@@ -234,6 +235,7 @@ static void test_highs_lp1(void){
 }
 
 static void test_highs_lp_structured(void){
+	/* Structured LP: exercises array/object path naming for solver variables. */
 	static const struct var_expect expected[] = {
 		{"x[1]", 2.0, 1e-7},
 		{"x[2]", 2.0, 1e-7},
@@ -244,21 +246,25 @@ static void test_highs_lp_structured(void){
 }
 
 static void test_highs_mip_mixed(void){
+	/* Mixed-integer model: covers HiGHS MIP load path and mixed row operators. */
 	static const struct highs_run_options opts = {0,0,0,0};
-	run_highs_model("models/test/ipopt/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
+	run_highs_model("models/test/mip/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
 }
 
 static void test_highs_mip_mixed_iterate(void){
+	/* Same MIP model via the iterate entrypoint (current implementation delegates to solve). */
 	static const struct highs_run_options opts = {0,1,0,0};
-	run_highs_model("models/test/ipopt/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
+	run_highs_model("models/test/mip/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
 }
 
 static void test_highs_mip_mixed_resolve(void){
+	/* Same MIP model via resolve, after perturbing variable values. */
 	static const struct highs_run_options opts = {1,0,1,0};
-	run_highs_model("models/test/ipopt/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
+	run_highs_model("models/test/mip/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
 }
 
 static void test_highs_ineligible_without_objective(void){
+	/* No-objective model: exercises ineligible-solver and presolve rejection path. */
 	int solver_index = -1;
 	struct Instance *siminst = NULL;
 	slv_system_t sys = NULL;

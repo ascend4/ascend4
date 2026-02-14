@@ -1,5 +1,12 @@
 REQUIRE "atoms.a4l";
 
+(* Test model for mixed-integer export/solve paths.
+   Includes:
+   - integer vars (x,y), with y relaxed to exercise mixed type handling
+   - <= and >= constraints (c_le, c_ge)
+   - an excluded relation (c_skip.included := FALSE)
+   - inconsistent/out-of-range initial bounds and values to exercise bound repair
+*)
 MODEL mip_mixed;
 	x IS_A solver_int;
 	y IS_A solver_int;

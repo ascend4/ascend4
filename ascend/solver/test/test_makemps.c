@@ -372,6 +372,7 @@ cleanup:
 }
 
 static void test_makemps_lp1(void){
+	/* Baseline LP export: checks MPS/map files and external HiGHS solve/value mapping. */
 	static const struct highs_var_expect expected_vars[] = {
 		{".x", 2.0, 1e-7},
 		{".y", 2.0, 1e-7},
@@ -394,6 +395,7 @@ static void test_makemps_lp1(void){
 }
 
 static void test_makemps_lp_structured(void){
+	/* Structured LP export: validates nested ASCEND variable-path to MPS name mapping. */
 	static const struct highs_var_expect expected_vars[] = {
 		{"x[1]", 2.0, 1e-7},
 		{"x[2]", 2.0, 1e-7},
@@ -416,8 +418,9 @@ static void test_makemps_lp_structured(void){
 }
 
 static void test_makemps_mip_mixed(void){
+	/* Mixed-integer export path: verifies integer-marked MPS output (INTORG markers). */
 	run_makemps_model(
-		"models/test/ipopt/mip_mixed.a4c",
+		"models/test/mip/mip_mixed.a4c",
 		"mip_mixed",
 		"test/makemps_mip_mixed.mps",
 		"test/makemps_mip_mixed.map",
@@ -432,6 +435,7 @@ static void test_makemps_mip_mixed(void){
 }
 
 static void test_makemps_rejects_nonlinear_default(void){
+	/* Nonlinear model with nonlin=FALSE: must be rejected before writing MPS output. */
 	int solver_index = -1;
 	struct Instance *siminst = NULL;
 	slv_system_t sys = NULL;
@@ -510,6 +514,7 @@ cleanup:
 }
 
 static void test_makemps_linearises_nonlinear_when_enabled(void){
+	/* Nonlinear model with nonlin=TRUE: linearization path should produce export output. */
 	int solver_index = -1;
 	struct Instance *siminst = NULL;
 	slv_system_t sys = NULL;

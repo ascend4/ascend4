@@ -68,6 +68,14 @@
 
 #include <ascend/system/lp_data.h>
 
+/**
+ * Developer note:
+ * This header intentionally keeps a small amount of legacy solver-interface
+ * detail (parameter indices and shared tokens) because both HiGHS and
+ * MakeMPS still depend on compatible data conventions during model export.
+ * Runtime implementation details are in `solvers/highs/highs.c`.
+ */
+
 typedef struct highs_system_structure *highs_system_t;
 
 int highs_register(void);

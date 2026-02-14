@@ -1,5 +1,6 @@
 REQUIRE "atoms.a4l";
 
+(* Test model for solver_highs/solver_makemps baseline LP solve and writeback checks. *)
 MODEL lp1;
 	x, y, s1, s2 IS_A factor;
 

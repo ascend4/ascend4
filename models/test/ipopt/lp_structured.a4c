@@ -1,5 +1,6 @@
 REQUIRE "atoms.a4l";
 
+(* Test model for structured variable-path mapping in MPS export and HiGHS solve checks. *)
 MODEL lp_row(
 	x1 WILL_BE factor;
 	x2 WILL_BE factor;
