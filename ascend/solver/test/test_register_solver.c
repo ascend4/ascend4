@@ -23,6 +23,8 @@
 	T(slvreq) \
 	T(ipopt) \
 	T(conopt) \
+	T(makemps) \
+	T(highs) \
 	T(qrslv) \
 	T(fprops) \
 	T(lrslv) \

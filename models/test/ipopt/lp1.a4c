@@ -1,0 +1,38 @@
+REQUIRE "atoms.a4l";
+
+MODEL lp1;
+	x, y, s1, s2 IS_A factor;
+
+	c1: x + y + s1 = 4;
+	c2: x + s2 = 2;
+	obj: MINIMIZE -3*x -2*y;
+
+METHODS
+
+METHOD self_test;
+	ASSERT abs(x - 2) < 1e-7;
+	ASSERT abs(y - 2) < 1e-7;
+	ASSERT abs(s1) < 1e-7;
+	ASSERT abs(s2) < 1e-7;
+END self_test;
+
+METHOD bound_self;
+	x.lower_bound := 0;
+	y.lower_bound := 0;
+	s1.lower_bound := 0;
+	s2.lower_bound := 0;
+END bound_self;
+
+METHOD default_self;
+	x := 0.5;
+	y := 0.5;
+	s1 := 3.0;
+	s2 := 1.5;
+END default_self;
+
+METHOD on_load;
+	RUN bound_self;
+	RUN default_self;
+END on_load;
+
+END lp1;

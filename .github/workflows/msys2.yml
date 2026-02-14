@@ -42,6 +42,7 @@ jobs:
           mingw-w64-${{matrix.env}}-gtk2
           mingw-w64-${{matrix.env}}-binutils
           mingw-w64-${{matrix.env}}-pkg-config
+          mingw-w64-${{matrix.env}}-highs
           mingw-w64-${{matrix.env}}-python
           mingw-w64-${{matrix.env}}-python-pip
           mingw-w64-${{matrix.env}}-python-wheel

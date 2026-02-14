@@ -437,7 +437,7 @@ mtx_coord_t *mtx_coord(mtx_coord_t *coordp, int32 row, int32 col){
    return(coordp);
 }
 
-mtx_range_t *mtx_range(mtx_range_t *rangep, int32 low, int32 high){
+ASC_DLLSPEC mtx_range_t *mtx_range(mtx_range_t *rangep, int32 low, int32 high){
    rangep->low = low;
    rangep->high = high;
    return(rangep);

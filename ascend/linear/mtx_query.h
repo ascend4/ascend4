@@ -36,7 +36,7 @@ ASC_DLLSPEC real64 mtx_next_in_row(mtx_matrix_t matrix,
                               mtx_coord_t *coord,
                               mtx_range_t *colrng);
 /**< See mtx_next_in_col(), switching row & column references. */
-extern real64 mtx_next_in_col(mtx_matrix_t matrix,
+ASC_DLLSPEC real64 mtx_next_in_col(mtx_matrix_t matrix,
                               mtx_coord_t *coord,
                               mtx_range_t *rowrng);
 /**<
@@ -178,7 +178,7 @@ extern real64 mtx_get_pivot_row(mtx_matrix_t matrix,
  -$-  Returns -1.0 from a bad matrix.
  **/
 
-extern int32 mtx_nonzeros_in_row(mtx_matrix_t matrix,
+ASC_DLLSPEC int32 mtx_nonzeros_in_row(mtx_matrix_t matrix,
                                  int32 row,
                                  mtx_range_t *colrng);
 /**<

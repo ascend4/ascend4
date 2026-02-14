@@ -347,7 +347,7 @@ vars.Add(ListVariable('WITH_SOLVERS'
 	,["QRSLV","CMSLV","LSODE","IDA","CONOPT","LRSLV","IPOPT","DOPRI5"]
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","RADAU5"
+		,'LSODE','LSOD','OPTSQP',"IDA","TRON","IPOPT","DOPRI5","MAKEMPS","HIGHS","RADAU5"
 	 ]
 ))
 
@@ -510,6 +510,13 @@ vars.Add('CONOPT_ENVVAR'
 vars.Add(PackageVariable("IPOPT_PREFIX"
 	,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
 ,pathlib.Path(os.environ['HOME'])/'.local'
+))
+
+#------- HIGHS -------
+
+vars.Add(PackageVariable("HIGHS_PREFIX"
+	,"Prefix for your HiGHS install (if not found via default pkg-config path)"
+	,pathlib.Path(os.environ['HOME'])/'.local'
 ))
 
 #
@@ -977,7 +984,7 @@ for opt in ['tcltk','cunit','extfns','scrollkeeper','dmalloc','graphviz','ufspar
 if not env['WITH_DOC']:
 	env.set_optional('doc_build',reason='documentation was disabled',active=False)
 
-for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS':
+for solv in 'LSODE','IDA','DOPRI5','RADAU5','CONOPT','IPOPT','MAKEMPS','HIGHS':
 	env.set_optional(solv,active = solv in env['WITH_SOLVERS'], reason="Not selected (see option WITH_SOLVERS)")
 	
 

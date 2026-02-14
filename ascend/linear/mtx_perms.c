@@ -313,7 +313,7 @@ static void swap( struct permutation_t *perm, int32 cur1,int32 cur2)
    perm->parity = !(perm->parity);
 }
 
-void mtx_swap_rows( mtx_matrix_t mtx, int32 cur1,int32 cur2)
+ASC_DLLSPEC void mtx_swap_rows( mtx_matrix_t mtx, int32 cur1,int32 cur2)
 {
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return;

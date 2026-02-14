@@ -3,7 +3,7 @@
  *  by Craig Schmidt
  *  Created: 2/11/95
  *  Version: $Revision: 1.13 $
- *  Version control file: $RCSfile: slv6.h,v $
+ *  Version control file: $RCSfile: highs.h,v $
  *  Date last modified: $Date: 1997/07/18 12:16:23 $
  *  Last modified by: $Author: mthomas $
  *
@@ -29,9 +29,9 @@
  */
 
 /** @file
- *  makeMPS solver registration module.
+ *  HiGHS solver registration module.
  *  <pre>
- *  Contents:     makeMPS module
+ *  Contents:     HiGHS module
  *
  *  Authors:      Karl Westerberg
  *                Joseph Zaher
@@ -50,32 +50,32 @@
  *                modify it yourself.  All functions defined in this
  *                header have identical protocols to the corresponding
  *                functions in slv.h except that slv_system_t ==>
- *                slv6_system_t and slv6_eligible_solver() only takes one
+ *                highs_system_t and highs_eligible_solver() only takes one
  *                parameter: the system.  Note also that the select
  *                solver functions don't exist.
  *  </pre>
- *  @todo makeMPS (solver/slv6.c) remains legacy code and needs refactoring.
+ *  @todo HiGHS (solver/highs.c) remains legacy code and needs refactoring.
  *        It currently compiles and is covered by solver tests.
  *  @todo Restructure solver/slv6 & mps so can remove declarations in
- *        solver/slv6.h out of header.  Currently needed by mps.[ch].
+ *        solver/highs.h out of header.  Currently needed by mps.[ch].
  */
 
-#ifndef ASC_SLV6_H
-#define ASC_SLV6_H
+#ifndef ASC_HIGHS_H
+#define ASC_HIGHS_H
 
 #include <ascend/solver/solver.h>
 #include <ascend/system/slv_client.h>
 
-#include "mps_types.h"
+#include <solvers/makemps/mps_types.h>
 
-typedef struct slv6_system_structure *slv6_system_t;
+typedef struct highs_system_structure *highs_system_t;
 
-int slv6_register(SlvFunctionsT *sft);
+int highs_register(void);
 /**<
- *  Registration function for the ASCEND makeMPS solver.
- *  This is the function that tells the system about the makeMPS solver.
+ *  Registration function for the ASCEND HiGHS solver.
+ *  This is the function that tells the system about the HiGHS solver.
  *  Our index is not necessarily going to be 6. That everything here is
- *  named slv6* is just a historical event.
+ *  named highs* is just a historical event.
  *
  *  @param sff SlvFunctionsT to receive the solver registration info.
  *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
@@ -86,10 +86,10 @@ int slv6_register(SlvFunctionsT *sft);
 /*
 # if 0
 */
-#define slv6_solver_name "makeMPS" /**< Solver's name. don't mess with the caps!*/
-#define slv6_solver_number 6   /**< Solver's number */
+#define highs_solver_name "HiGHS" /**< Solver's name. don't mess with the caps!*/
+#define highs_solver_number 60   /**< Solver's number */
 
-extern boolean free_inc_var_filter(struct var_variable *var);
+extern boolean highs_free_inc_var_filter(struct var_variable *var);
 /**<
  ***  I've been calling this particular var filter a lot ,
  ***  so I decided to make it a subroutine.  Returns true if
@@ -97,29 +97,29 @@ extern boolean free_inc_var_filter(struct var_variable *var);
  **/
 
 #if 0
-extern void slv6_set_var_list();
-extern struct var_variable **slv6_get_var_list();
-extern void slv6_set_bnd_list();
-extern void slv6_set_rel_list();
-extern struct rel_relation **slv6_get_rel_list();
-extern void slv6_set_extrel_list();
-extern struct ExtRelCache **slv6_get_extrel_list();
-extern int slv6_count_vars();
-extern int slv6_count_bnds();
-extern int slv6_count_rels();
-extern void slv6_set_obj_relation();
-extern struct rel_relation *slv6_get_obj_relation();
-extern boolean slv6_eligible_solver();
-extern void slv6_get_parameters();
-extern void slv6_set_parameters();
-extern void slv6_get_status();
-//extern linsol_system_t slv6_get_linsol_sys();
-extern void slv6_dump_internals();
-extern void slv6_presolve();
-extern boolean slv6_change_basis();
-extern void slv6_resolve();
-extern void slv6_iterate();
-extern void slv6_solve();
+extern void highs_set_var_list();
+extern struct var_variable **highs_get_var_list();
+extern void highs_set_bnd_list();
+extern void highs_set_rel_list();
+extern struct rel_relation **highs_get_rel_list();
+extern void highs_set_extrel_list();
+extern struct ExtRelCache **highs_get_extrel_list();
+extern int highs_count_vars();
+extern int highs_count_bnds();
+extern int highs_count_rels();
+extern void highs_set_obj_relation();
+extern struct rel_relation *highs_get_obj_relation();
+extern boolean highs_eligible_solver();
+extern void highs_get_parameters();
+extern void highs_set_parameters();
+extern void highs_get_status();
+//extern linsol_system_t highs_get_linsol_sys();
+extern void highs_dump_internals();
+extern void highs_presolve();
+extern boolean highs_change_basis();
+extern void highs_resolve();
+extern void highs_iterate();
+extern void highs_solve();
 #endif
 
 /*********************************************************************
@@ -128,11 +128,11 @@ extern void slv6_solve();
     This section describes the parameters, subparameters,
     and status flags as used by the solver.
 
-    *** See slv6_create() for more specific information   ***
+    *** See highs_create() for more specific information   ***
     *** on parameters and status flags                  ***
 
     *** Note: the parameters can be changed by the user ***
-    ***       with the slv6_set_parameters routine      ***
+    ***       with the highs_set_parameters routine      ***
 
 
     Use of subparameters in iarray and rarray:
@@ -180,10 +180,10 @@ extern void slv6_solve();
 
 *********************************************************************/
 #if 0
-#define slv6_IA_SIZE 12
-#define slv6_RA_SIZE 4
-#define slv6_CA_SIZE 1
-#define slv6_VA_SIZE 0
+#define highs_IA_SIZE 12
+#define highs_RA_SIZE 4
+#define highs_CA_SIZE 1
+#define highs_VA_SIZE 0
 
 /**< subscripts for ia */
 #define SP6_NONLIN   0
@@ -241,4 +241,4 @@ enum{
    defined in rel.h */
 #define rel_TOK_nonincident 00
 
-#endif  /* ASC_SLV6_H */
+#endif  /* ASC_HIGHS_H */

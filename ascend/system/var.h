@@ -326,14 +326,14 @@ ASC_DLLSPEC void var_set_nominal(struct var_variable *var, real64 nominal);
 
 ASC_DLLSPEC real64 var_lower_bound(struct var_variable *var);
 /**<  Returns the lower bound value of the variable. */
-extern void var_set_lower_bound(struct var_variable *var, real64 lower_bound);
+ASC_DLLSPEC void var_set_lower_bound(struct var_variable *var, real64 lower_bound);
 /**<
 	Sets the lower bound value of the variable.
 */
 
 ASC_DLLSPEC real64 var_upper_bound(struct var_variable *var);
 /**<  Returns the upper bound value of the variable. */
-extern void var_set_upper_bound(struct var_variable *var, real64 upper_bound);
+ASC_DLLSPEC void var_set_upper_bound(struct var_variable *var, real64 upper_bound);
 /**<
 	Gets/sets the upper bound value of the variable.
 */
@@ -491,7 +491,7 @@ ASC_DLLSPEC uint32 var_fixed(struct var_variable *var);
 /**< Returns the fixed flag of var.  Has side effects in the ascend instance. */
 ASC_DLLSPEC void var_set_fixed(struct var_variable *var, uint32 fixed);
 /**< Sets the fixed flag of var.  Has side effects in the ascend instance. */
-extern uint32 var_relaxed(struct var_variable *var);
+ASC_DLLSPEC uint32 var_relaxed(struct var_variable *var);
 /**< Returns the relaxed flag of var.  Has side effects in the ascend instance. */
 extern void var_set_relaxed(struct var_variable *var, uint32 fixed);
 /**< Sets the relaxed flag of var.  Has side effects in the ascend instance. */
@@ -675,4 +675,3 @@ extern boolean set_solver_types(void);
 /* @} */
 
 #endif  /* ASC_VAR_H */
-

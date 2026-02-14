@@ -153,7 +153,9 @@ static void test_ipopt(const char *filenamestem){
 	X T(test11) \
 	X T(test12) \
 	X T(test13) \
-	X T(test14)
+	X T(test14) \
+	X T(lp1) \
+	X T(lp_structured)
 //	X T(test15) --- FAILS, need to work out why
 // X T(formula) --- FAILS, need to work out why.
 
