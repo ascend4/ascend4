@@ -155,6 +155,8 @@ static void test_conopt(const char *filenamestem){
 	T(test12) \
 	T(test13) \
 	T(test14) \
+	T(lp1) \
+	T(lp_structured) \
 	T(conopttest)
 
 /* define the tests: each test loads the model, solves with CONOPT, then runs the

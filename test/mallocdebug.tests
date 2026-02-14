@@ -6,6 +6,7 @@ solver_slv_common
 solver_slvreq
 solver_lrslv
 solver_ipopt
+solver_makemps
 
 linear_mtx
 

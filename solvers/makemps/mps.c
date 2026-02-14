@@ -87,7 +87,7 @@ static void stamp(FILE *outfile, boolean newstamp, boolean dostamp, boolean dost
  ***  if newstamp is true
  **/
 {
-   static char stampstr[26];
+   static char stampstr[27];
    static unsigned long stamptime;
    time_t now;
 
@@ -95,7 +95,7 @@ static void stamp(FILE *outfile, boolean newstamp, boolean dostamp, boolean dost
 
    if (newstamp) {  /* generate new stamp */
       stamptime  = (unsigned long) clock();
-      sprintf(&stampstr[0], "%-26s", ctime(&now));
+      snprintf(&stampstr[0], sizeof(stampstr), "%-26s", ctime(&now));
    }
 
    if (dostamp) FPRINTF(outfile,"%-8x", stamptime);  /* only 8 chars for stamp in MPS, so show hex */
@@ -705,7 +705,7 @@ void do_bounds(FILE *out,              /* file */
                real64 lbrow[],   /* array of data */
                real64 ubrow[],   /* array of data */
                char typerow[],         /* array of data */
-               int32 rused,      /* size of arrays */
+               int32 vused,      /* size of arrays */
                int nonneg,             /* allow nonneg vars (no FR or MI) ? */
                int binary_flag,        /* allow BV vars ? */
                int integer_flag,       /* allow UI vars ? */
@@ -750,8 +750,11 @@ void do_bounds(FILE *out,              /* file */
 
    FPRINTF(out,"BOUNDS\n");                             /* section header */
 
-   for(i = 0; i < rused; i++)                          /* loop over all rows */
+   for(i = 0; i < vused; i++)                          /* loop over all columns */
    {
+     if(typerow[i] == MPS_FIXED){
+         continue;
+     }
      if ((typerow[i] == MPS_BINARY) && (binary_flag == 1))   /* do BV */
               FPRINTF(out," BV B%07d  C%07d\n",i,i);
      else if ((typerow[i] == MPS_INT) && (integer_flag == 1))  /* do UI */
@@ -802,51 +805,66 @@ void do_bounds(FILE *out,              /* file */
 
 extern boolean write_MPS(const char *name,                /* filename for output */
 	mps_data_t mps,                  /* the main chunk of data for the problem */
-	struct slv_parameter *parms
+	slv_parameters_t *parms
 ){
-#if 0
   FILE *out;
   int32 sosvar;   /* number of variables used in SOS's */
   int32 sosrel;   /* number of relations defining SOS's */
- // int i;                /* temporary counter */
+  int obj, bo, eps;
+  int relaxed, dointeger, dobinary, dosemi;
+  int nonneg;
+  real64 boval, epsval, pinf, minf;
 
-  if (name == NULL) {  /* got a bad pointer */
+  if ((name == NULL) || (parms == NULL)) {  /* got a bad pointer */
           FPRINTF(stderr,"ERROR:  (MPS) write_MPS\n");
           FPRINTF(stderr,"        Routine was passed a NULL pointer!\n");
           return FALSE;
   }
+
+  obj = SLV_PARAM_INT(parms,SP6_OBJ);
+  bo = SLV_PARAM_BOOL(parms,SP6_BO);
+  eps = SLV_PARAM_BOOL(parms,SP6_EPS);
+  boval = SLV_PARAM_REAL(parms,SP6_BOVAL);
+  epsval = SLV_PARAM_REAL(parms,SP6_EPSVAL);
+  relaxed = SLV_PARAM_BOOL(parms,SP6_RELAXED);
+  dointeger = SLV_PARAM_INT(parms,SP6_INTEGER);
+  dobinary = SLV_PARAM_INT(parms,SP6_BINARY);
+  dosemi = SLV_PARAM_BOOL(parms,SP6_SEMI);
+  nonneg = SLV_PARAM_BOOL(parms,SP6_NONNEG);
+  pinf = SLV_PARAM_REAL(parms,SP6_PINF);
+  minf = SLV_PARAM_REAL(parms,SP6_MINF);
 
   out = open_write(name);
   if (out == NULL) return FALSE;
 
   /* create header */
   do_name(out,                 /* file */
-          iarray[SP6_OBJ],     /* how does it know to max/min */
-          iarray[SP6_BO],      /* QOMILP style cutoff */
-          iarray[SP6_EPS],     /* QOMILP style termination criteria */
-          rarray[SP6_BOVAL],   /* value of cutoff */
-          rarray[SP6_EPSVAL]); /* value of termination criteria */
+          obj,                 /* how does it know to max/min */
+          bo,                  /* QOMILP style cutoff */
+          eps,                 /* QOMILP style termination criteria */
+          boval,               /* value of cutoff */
+          epsval);             /* value of termination criteria */
 
   do_rows(out,            /* file */
           mps.relopcol,   /* need type of constraint <=, >=, = */
-          mps.rinc);      /* number of incident relations */
+          mps.rused);     /* number of relations */
 
   upgrade_vars(out,                  /* file */
                mps.typerow,          /* array of variable type data */
                mps.ubrow,            /* change ub on int -> bin conversion */
                mps.vused,            /* number of vars */
-               iarray[SP6_RELAXED],  /* should the relaxed problem be solved */
-               iarray[SP6_INTEGER],  /* supports integer vars */
-               iarray[SP6_BINARY],   /* supports binary vars */
-               iarray[SP6_SEMI]);    /* supports semi-continuous vars */
+               relaxed,              /* should the relaxed problem be solved */
+               dointeger,            /* supports integer vars */
+               dobinary,             /* supports binary vars */
+               dosemi);              /* supports semi-continuous vars */
 
-  if ((iarray[SP6_SOS1] == 1) || (iarray[SP6_SOS3] == 1))  /* look for SOS's, reorder matrix */
+  if ((SLV_PARAM_BOOL(parms,SP6_SOS1) == 1) || (SLV_PARAM_BOOL(parms,SP6_SOS3) == 1))  /* look for SOS's, reorder matrix */
      scan_SOS(mps.Ac_mtx,     /* Matrix representation of problem */
               mps.relopcol,   /* array of relational operator data */
               mps.bcol,       /* array of RHS data */
               mps.typerow,    /* array of variable type data */
-              mps.rinc,       /* size of incident relations */
-              mps.vinc,       /* number of vars */
+              mps.rused,      /* size of relations */
+              mps.vused,      /* number of vars */
               &sosvar,        /* output: number of variables used in SOS's */
               &sosrel);       /* output: number of relations defining SOS's */
      else {
@@ -854,7 +872,7 @@ extern boolean write_MPS(const char *name,                /* filename for output
               sosrel = 0;
      }
 
-  if (iarray[SP6_SOS2] == 1)  {    /* don't support SOS2 yet */
+  if (SLV_PARAM_BOOL(parms,SP6_SOS2) == 1)  {    /* don't support SOS2 yet */
        FPRINTF(stderr,"WARNING:  (MPS) write_MPS\n");
        FPRINTF(stderr,"          SOS2 are not currently supported in ASCEND!\n");
   }
@@ -866,33 +884,28 @@ extern boolean write_MPS(const char *name,                /* filename for output
              mps.vused,         /* number of vars */
              sosvar,            /* number of variables used in SOS's */
              sosrel,            /* number of SOS's */
-             iarray[SP6_INTEGER],    /* supports integer vars */
-             iarray[SP6_BINARY]);    /* supports binary vars */
+             dointeger,              /* supports integer vars */
+             dobinary);              /* supports binary vars */
 
   do_rhs(out,                 /* file */
          mps.bcol,
          mps.relopcol,
-         mps.rinc,
-         mps.vinc);
+         mps.rused,
+         mps.vused);
 
   do_bounds(out,                   /* file */
             mps.lbrow,        /* array of data */
             mps.ubrow,        /* array of data */
             mps.typerow,      /* array of data */
-            mps.rused,        /* size of arrays */
-            iarray[SP6_NONNEG],    /* allow nonneg vars (no FR or MI) ? */
-            iarray[SP6_BINARY],    /* allow BV vars ? */
-            iarray[SP6_INTEGER],   /* allow UI vars ? */
-            iarray[SP6_SEMI],      /* allow SC vars ? */
-            rarray[SP6_PINF],      /* any UB>=pinf is set to + infinity */
-            rarray[SP6_MINF]);     /* any LB<=minf is set to - infinity */
+            mps.vused,        /* size of arrays */
+            nonneg,           /* allow nonneg vars (no FR or MI) ? */
+            dobinary,         /* allow BV vars ? */
+            dointeger,        /* allow UI vars ? */
+            dosemi,           /* allow SC vars ? */
+            pinf,             /* any UB>=pinf is set to + infinity */
+            minf);            /* any LB<=minf is set to - infinity */
 
   FPRINTF(out, "ENDATA\n");  /* finish up the file */
 
   return close_file(out);
-#else
-  return 0;
-#endif
 }
-
-

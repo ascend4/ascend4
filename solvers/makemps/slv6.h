@@ -54,8 +54,8 @@
  *                parameter: the system.  Note also that the select
  *                solver functions don't exist.
  *  </pre>
- *  @todo makeMPS (solver/slv6.c) is out-of-date and will not compile.
- *        Should be either fixed or archived.
+ *  @todo makeMPS (solver/slv6.c) remains legacy code and needs refactoring.
+ *        It currently compiles and is covered by solver tests.
  *  @todo Restructure solver/slv6 & mps so can remove declarations in
  *        solver/slv6.h out of header.  Currently needed by mps.[ch].
  */
@@ -242,4 +242,3 @@ enum{
 #define rel_TOK_nonincident 00
 
 #endif  /* ASC_SLV6_H */
-

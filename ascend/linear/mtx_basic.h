@@ -83,7 +83,7 @@ ASC_DLLSPEC mtx_coord_t *mtx_coord(mtx_coord_t *coordp, int32 row, int32 col);
 	    value = mtx_value(matrix,mtx_coord(&coord,row,col));
 	  }                                                </pre>
 */
-extern mtx_range_t *mtx_range(mtx_range_t *rangep, int32 low, int32 high);
+ASC_DLLSPEC mtx_range_t *mtx_range(mtx_range_t *rangep, int32 low, int32 high);
 /**<
 	Places the values of low and high into rangep and returns
 	the rangep pointer again.

@@ -23,6 +23,7 @@
 	T(slvreq) \
 	T(ipopt) \
 	T(conopt) \
+	T(makemps) \
 	T(qrslv) \
 	T(fprops) \
 	T(lrslv) \

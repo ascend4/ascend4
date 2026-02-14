@@ -108,23 +108,120 @@ void relman_free_reused_mem(void){
 }
 
 
-#if REIMPLEMENT
 boolean relman_is_linear( struct rel_relation *rel, var_filter_t *filter){
-   return (
-      exprman_is_linear(rel,rel_lhs(rel),filter) &&
-      exprman_is_linear(rel,rel_rhs(rel),filter)
-   );
+   const struct var_variable **vlist;
+   ltmatrix *hess;
+   int32 len, i, j;
+   int32 status;
+   double hij;
+   const double tol = 1e-12;
+
+   if(rel == NULL || filter == NULL){
+      return FALSE;
+   }
+
+   len = rel_n_incidences(rel);
+   if(len <= 1){
+      return TRUE;
+   }
+
+   vlist = rel_incidence_list(rel);
+   hess = ltmatrix_create(LTMATRIX_LOWER,len);
+   if(hess == NULL){
+      return FALSE;
+   }
+
+   status = (int32)RelationCalcHessianMtxSafe(rel_instance(rel),hess,len);
+   if(status != 0){
+      ltmatrix_destroy(hess);
+      return FALSE;
+   }
+
+   for(i = 0; i < len; ++i){
+      if(!var_apply_filter(vlist[i],filter)){
+         continue;
+      }
+      for(j = 0; j <= i; ++j){
+         if(!var_apply_filter(vlist[j],filter)){
+            continue;
+         }
+         hij = ltmatrix_get_element(hess,i,j);
+         if(fabs(hij) > tol){
+            ltmatrix_destroy(hess);
+            return FALSE;
+         }
+      }
+   }
+
+   ltmatrix_destroy(hess);
+   return TRUE;
 }
 
 real64 relman_linear_coef(struct rel_relation *rel, struct var_variable *var
 		, var_filter_t *filter
 ){
-   return(
-      exprman_linear_coef(rel,rel_lhs(rel),var,filter) -
-      exprman_linear_coef(rel,rel_rhs(rel),var,filter)
-   );
+   struct var_variable **vars;
+   real64 *derivs;
+   real64 resid;
+   real64 sum;
+   int32 len, count, i;
+   int32 status;
+   int32 calc_okp = 1;
+
+   if(rel == NULL || filter == NULL){
+      return 0.0;
+   }
+
+   len = rel_n_incidences(rel);
+   if(len <= 0){
+      return (var == NULL ? -relman_eval(rel,&calc_okp,0) : 0.0);
+   }
+
+   derivs = ASC_NEW_ARRAY_OR_NULL(real64,len);
+   vars = ASC_NEW_ARRAY_OR_NULL(struct var_variable *,len);
+   if(derivs == NULL || vars == NULL){
+      if(derivs)ASC_FREE(derivs);
+      if(vars)ASC_FREE(vars);
+      return 0.0;
+   }
+
+   count = 0;
+   status = relman_diff3(rel,filter,derivs,vars,&count,0);
+   if(status != 0){
+      ASC_FREE(derivs);
+      ASC_FREE(vars);
+      return 0.0;
+   }
+
+   if(var != NULL){
+      for(i = 0; i < count; ++i){
+         if(vars[i] == var){
+            real64 d = derivs[i];
+            ASC_FREE(derivs);
+            ASC_FREE(vars);
+            return d;
+         }
+      }
+      ASC_FREE(derivs);
+      ASC_FREE(vars);
+      return 0.0;
+   }
+
+   resid = relman_eval(rel,&calc_okp,0);
+   if(!calc_okp){
+      ASC_FREE(derivs);
+      ASC_FREE(vars);
+      return 0.0;
+   }
+   sum = 0.0;
+   for(i = 0; i < count; ++i){
+      sum += derivs[i] * var_value(vars[i]);
+   }
+
+   ASC_FREE(derivs);
+   ASC_FREE(vars);
+   return sum - resid;
 }
-#endif
 
 
 #if 0 && KILL
@@ -1155,4 +1252,3 @@ char *relman_make_vstring_postfix(slv_system_t sys,
 }
 
 /* vim: set ts=2 et: */
-
