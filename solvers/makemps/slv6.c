@@ -34,12 +34,16 @@
 #include "slv6.h"
 #include "mps.h"
 
+#include <ctype.h>
+#include <string.h>
+
 #include <ascend/general/ascMalloc.h>
 #include <ascend/utilities/set.h>
 #include <ascend/general/mem.h>
 #include <ascend/general/tm_time.h>
 #include <ascend/general/list.h>
 #include <ascend/general/dstring.h>
+#include <ascend/general/ospath.h>
 #include <ascend/utilities/error.h>
 #include <ascend/compiler/module.h>
 #include <ascend/compiler/library.h>
@@ -99,6 +103,83 @@ struct slv6_system_structure {
    mps_data_t  mps;          /* the main chunk of data for the problem */
 
 };
+
+static int makemps_has_suffix_ci(const char *name, const char *suffix){
+	size_t nlen, slen, i;
+	if(name == NULL || suffix == NULL){
+		return 0;
+	}
+	nlen = strlen(name);
+	slen = strlen(suffix);
+	if(nlen < slen){
+		return 0;
+	}
+	for(i = 0; i < slen; ++i){
+		unsigned char a = (unsigned char)name[nlen - slen + i];
+		unsigned char b = (unsigned char)suffix[i];
+		if(tolower(a) != tolower(b)){
+			return 0;
+		}
+	}
+	return 1;
+}
+
+static int makemps_build_output_names(const char *requested, char **mpsname, char **mapname){
+	size_t inlen, stemlen;
+	char *mps = NULL;
+	char *map = NULL;
+
+	if(mpsname == NULL || mapname == NULL || requested == NULL || requested[0] == '\0'){
+		return 0;
+	}
+
+	inlen = strlen(requested);
+	stemlen = inlen;
+	if(makemps_has_suffix_ci(requested, ".mps") || makemps_has_suffix_ci(requested, ".map")){
+		stemlen = inlen - 4;
+	}
+
+	mps = ASC_NEW_ARRAY(char, stemlen + 5);
+	map = ASC_NEW_ARRAY(char, stemlen + 5);
+	if(mps == NULL || map == NULL){
+		if(mps != NULL)ascfree(mps);
+		if(map != NULL)ascfree(map);
+		return 0;
+	}
+
+	if(stemlen > 0){
+		memcpy(mps, requested, stemlen);
+		memcpy(map, requested, stemlen);
+	}
+	memcpy(mps + stemlen, ".mps", 5);
+	memcpy(map + stemlen, ".map", 5);
+
+	*mpsname = mps;
+	*mapname = map;
+	return 1;
+}
+
+static char *makemps_get_abs_name(const char *name){
+	struct FilePath *fp = NULL;
+	struct FilePath *absfp = NULL;
+	char *abspath = NULL;
+	if(name == NULL || name[0] == '\0'){
+		return NULL;
+	}
+	fp = ospath_new(name);
+	if(fp == NULL){
+		return NULL;
+	}
+	absfp = ospath_getabs(fp);
+	if(absfp != NULL){
+		abspath = ospath_str(absfp);
+	}
+	ospath_free(fp);
+	if(absfp != NULL){
+		ospath_free(absfp);
+	}
+	return abspath;
+}
 
 
 static int slv6_get_default_parameters(slv_system_t server, SlvClientToken asys
@@ -250,10 +331,10 @@ static int slv6_get_default_parameters(slv_system_t server, SlvClientToken asys
 	slv_param_char(parameters,SP6_FILENAME
 		,(SlvParameterInitChar){{"filename"
 			,"Output filename",1
-			,"Name of the output file to be created."
-		}, "outfile.txt"}, (char *[]){
-			"outfile.txt","outfile1.txt","outfile2.txt","outfile3.txt",NULL
-		} /* FIXME how to specify that the user can type this in as free text? */
+			,"Path for generated files. If no extension is given, '.mps' and '.map' are added."
+		}, "outfile.mps"}, (char *[]){
+			"outfile.mps","outfile1.mps","outfile2.mps","outfile3.mps",NULL
+		}
 	);
 
 	asc_assert(parameters->num_parms==SP6_PARAMS);
@@ -1269,6 +1350,12 @@ void slv6_presolve(slv_system_t server){
 
 void slv6_solve(slv_system_t server){
 	slv6_system_t sys;
+	const char *requested_name;
+	char *mps_name = NULL;
+	char *map_name = NULL;
+	char *mps_name_abs = NULL;
+	char *map_name_abs = NULL;
+	boolean mps_ok, map_ok;
 	sys = SYS(server);
 
    /* make sure none of the mps pointers are NULL */
@@ -1298,22 +1385,46 @@ void slv6_solve(slv_system_t server){
    mtx_write_region_human(MIF(sys), sys->mps.Ac_mtx, mtx_ENTIRE_MATRIX);
    FPRINTF(MIF(sys),"_________________________________________\n");
  */
+	requested_name = SLV_PARAM_CHAR(&(sys->p),SP6_FILENAME);
+	if(!makemps_build_output_names(requested_name, &mps_name, &map_name)){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR
+			,"Invalid MakeMPS output filename '%s'"
+			,(requested_name != NULL ? requested_name : "(null)")
+		);
+		return;
+	}
 
-#define FN SLV_PARAM_CHAR(&(sys->p),SP6_FILENAME)
+	mps_ok = write_MPS(mps_name, sys->mps, &(sys->p));
+	map_ok = FALSE;
+	if(mps_ok){
+		map_ok = write_name_map(map_name, sys->vlist);
+	}
+	mps_name_abs = makemps_get_abs_name(mps_name);
+	map_name_abs = makemps_get_abs_name(map_name);
 
-   /* Call write_mps to create the mps file */
-   write_MPS(FN,     /* filename for output */
-             sys->mps,                      /* main chunk of data */
-             &(sys->p));
+	if(mps_ok && map_ok){
+		ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS
+			,"MakeMPS wrote '%s' and '%s'."
+			,(mps_name_abs != NULL ? mps_name_abs : mps_name)
+			,(map_name_abs != NULL ? map_name_abs : map_name)
+		);
+	}else if(mps_ok){
+		ERROR_REPORTER_NOLINE(ASC_USER_NOTE
+			,"MakeMPS wrote '%s' but failed to write '%s'."
+			,(mps_name_abs != NULL ? mps_name_abs : mps_name)
+			,(map_name_abs != NULL ? map_name_abs : map_name)
+		);
+	}else{
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR
+			,"MakeMPS failed to write output files (requested '%s')."
+			,requested_name
+		);
+	}
 
-   /* replace .mps with .map at end of filename */
-   *(FN+strlen(FN)-2) = 'a';
-   *(FN+strlen(FN)-1) = 'p';
-
-   /* writes out a file mapping the CXXXXXXX variable names with the actual ASCEND names */
-   write_name_map(FN,   /* user-specified filename */
-                  sys->vlist);
-#undef FN
+	if(mps_name_abs != NULL)ospath_free_str(mps_name_abs);
+	if(map_name_abs != NULL)ospath_free_str(map_name_abs);
+	ascfree(mps_name);
+	ascfree(map_name);
 
 
 
@@ -1321,6 +1432,12 @@ void slv6_solve(slv_system_t server){
    /* compute total elapsed time */
    sys->s.block.cpu_elapsed = sys->s.cpu_elapsed;
    sys->s.cost->time        = sys->s.cpu_elapsed;
+
+   if(!(mps_ok && map_ok)){
+      sys->s.converged = FALSE;
+      sys->s.ready_to_solve = FALSE;
+      return;
+   }
 
    sys->s.converged = TRUE;
    sys->s.ready_to_solve = FALSE;   /* !sys->s.converged  */

@@ -432,14 +432,18 @@ class Browser:
 		loading.print_status("here3...") #,"GLADE_FILE = %s" % self.glade_file)
 		loading.print_status(f"preferred solver: {_pref_solver}") #,"GLADE_FILE = %s" % self.glade_file)
 
+		if _pref_solver not in self.solver_engine_menu_dict and len(self.solver_engine_menu_dict):
+			_pref_solver = next(iter(self.solver_engine_menu_dict))
+			loading.print_status(f"preferred solver not available, using: {_pref_solver}")
+
 		_mi = self.solver_engine_menu_dict.get(_pref_solver)
 		loading.print_status(f"active item: {_mi}")
-		#if _mi:
-		#	_mi.set_active(True)
+		if _mi:
+			_mi.set_active(True)
 
 		loading.print_status("Setting preferred solver...") #,"GLADE_FILE = %s" % self.glade_file)
-			
-		self.set_solver(_pref_solver)
+		if not _mi and _pref_solver is not None:
+			self.set_solver(_pref_solver)
 
 		#--------
 		# Assign an icon to the main window
@@ -615,17 +619,19 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.solver_engine.set_submenu(self.solver_engine_menu)
 		self.solver_engine_menu_dict = {}
 		_slvlist = ascpy.getSolvers()
-		print("\nSolver list:",_slvlist)
 		_fmi = None
 		for _s in _slvlist:
-			_mi = Gtk.RadioMenuItem(_fmi,_s.getName(),False)
+			_name = _s.getName()
+			if _fmi is None:
+				_mi = Gtk.RadioMenuItem.new_with_label(None, _name)
+			else:
+				_mi = Gtk.RadioMenuItem.new_with_label_from_widget(_fmi, _name)
 			if _fmi==None:
 				_fmi = _mi
 			_mi.show()
-			_mi.connect('toggled',self.on_select_solver_toggled,_s.getName())
+			_mi.connect('toggled',self.on_select_solver_toggled,_name)
 			self.solver_engine_menu.append(_mi)
-			self.solver_engine_menu_dict[_s.getName()]=_mi			
-		print("\nSolver menu dict:",self.solver_engine_menu_dict)
+			self.solver_engine_menu_dict[_name]=_mi			
 			
 	def set_solver(self,solvername):
 		""" this sets the active solver in the GUI, which is the default applied to newly instantiated models """
@@ -1712,4 +1718,3 @@ class AutoUpdateDialog:
 				return False
 
 # vim: ts=4:noet:sw=4
-

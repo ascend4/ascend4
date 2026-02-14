@@ -189,7 +189,7 @@ class SolverParametersWindow:
 	def create_row_data(self,p):
 		_row = [p.getLabel()];
 		if p.isStr():
-			_row.extend([p.getStrValue(), str(len(p.getStrOptions()))+" options", False]);
+			_row.extend([p.getStrValue(), str(len(p.getStrOptions()))+" options", True]);
 		elif p.isBool():
 			if p.getBoolValue():
 				_val = SOLVERPARAM_BOOL_TRUE
@@ -249,4 +249,3 @@ class SolverParametersWindow:
 		_res = self.window.run()
 		self.window.destroy()
 		return _res
-
