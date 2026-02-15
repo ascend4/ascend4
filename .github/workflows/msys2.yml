@@ -93,9 +93,13 @@ jobs:
       run: |
         ./a4 cutest solver_list
 
-    - name: Test ASCEND
+    - name: Test ASCEND (except integrator_lsode)
       run: |
-        ./a4 cutest -r mallocdebug
+        ./a4 cutest -r mallocdebug -e integrator_lsode
+
+    - name: Test ASCEND (integrator_lsode)
+      run: |
+        ./a4 cutest integrator_lsode
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
