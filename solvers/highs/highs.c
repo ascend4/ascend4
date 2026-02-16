@@ -55,6 +55,12 @@
 #endif
 #define DEBUG FALSE
 #define HIGHS_PROGRESS_REPORT_INTERVAL 1.0
+#define HIGHS_DEBUG
+#ifdef HIGHS_DEBUG
+# define MSG(...) CONSOLE_DEBUG(__VA_ARGS__)
+#else
+# define MSG(...) ((void)0)
+#endif
 
 #define SYS(s) ((highs_system_t)(s))
 
@@ -1650,6 +1656,7 @@ static void highs_report_progress(
 		);
 	}
 
+	MSG("progress: %s",details);
 	(void)slv_report_progress("HiGHS",details);
 	sys->progress_report_count++;
 }
@@ -1664,6 +1671,9 @@ static void highs_solver_callback(
 	double running_time;
 	(void)message;
 	if(sys == NULL)return;
+	if(message != NULL && message[0] != '\0'){
+		MSG("callback[%d]: %s",callback_type,message);
+	}
 
 	iteration_count = highs_callback_total_iteration_count(data_out);
 	if(iteration_count > 0){
@@ -1708,6 +1718,7 @@ static void highs_enable_callbacks(highs_system_t sys, void *highs, int is_mip){
 		);
 		return;
 	}
+	MSG("installed HiGHS callback handler (progress callbacks %s).",progress_callbacks_enabled ? "enabled" : "disabled");
 
 #define HIGHS_START_CALLBACK(TYPE) do{ \
 	HighsInt cb_status = Highs_startCallback(highs,(TYPE)); \
@@ -1716,6 +1727,8 @@ static void highs_enable_callbacks(highs_system_t sys, void *highs, int is_mip){
 			,"unable to start HiGHS callback type %ld." \
 			,(long)(TYPE) \
 		); \
+	}else{ \
+		MSG("started HiGHS callback type %ld.",(long)(TYPE)); \
 	} \
 }while(0)
 
@@ -2070,6 +2083,7 @@ void highs_solve(slv_system_t server){
 	sys = SYS(server);
 	memset(&info,0,sizeof(info));
 	model_status = kHighsModelStatusNotset;
+	MSG("starting HiGHS solve.");
 
 	/* make sure none of the LP data pointers are NULL */
 	if ((sys->mps.Ac_mtx == NULL) ||
@@ -2108,6 +2122,11 @@ void highs_solve(slv_system_t server){
 		sys->s.ready_to_solve = FALSE;
 		return;
 	}
+	MSG(
+		"constructed %s model: cols=%ld rows=%ld nz=%ld."
+		,(is_mip ? "MIP" : "LP")
+		,(long)p.num_col,(long)p.num_row,(long)p.num_nz
+	);
 
 	highs = Highs_create();
 	if(highs == NULL){
@@ -2147,10 +2166,15 @@ void highs_solve(slv_system_t server){
 		sys->s.diverged = TRUE;
 		goto done;
 	}
+	MSG("model loaded into HiGHS.");
 	highs_enable_callbacks(sys,highs,is_mip);
 
 	status = Highs_run(highs);
 	model_status = Highs_getModelStatus(highs);
+	MSG(
+		"HiGHS run finished: status=%ld, model_status=%s (%ld)."
+		,(long)status,highs_model_status_name(model_status),(long)model_status
+	);
 	if(status == kHighsStatusError){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"HiGHS run failed.");
 		sys->s.converged = FALSE;
@@ -2161,6 +2185,12 @@ void highs_solve(slv_system_t server){
 	highs_collect_info_snapshot(highs,&info);
 	highs_update_status_flags_from_model_status(sys,model_status);
 	have_primal_solution = highs_has_feasible_primal_solution(&info);
+	MSG(
+		"status flags: converged=%d inconsistent=%d diverged=%d time_limit=%d iter_limit=%d primal_feasible=%d."
+		,sys->s.converged,sys->s.inconsistent,sys->s.diverged
+		,sys->s.time_limit_exceeded,sys->s.iteration_limit_exceeded
+		,have_primal_solution
+	);
 	if(sys->s.converged || have_primal_solution){
 		if(
 			Highs_getSolution(highs,p.col_value,p.col_dual,p.row_value,p.row_dual)
@@ -2230,6 +2260,10 @@ done:
 	sys->s.iteration = iteration_count;
 	sys->s.cost->iterations = iteration_count;
 	sys->s.cost->jacs = iteration_count;
+	MSG(
+		"final status: ok=%d converged=%d calc_ok=%d ready_to_solve=%d iter=%d."
+		,sys->s.ok,sys->s.converged,sys->s.calc_ok,sys->s.ready_to_solve,sys->s.iteration
+	);
 
 	if(highs)Highs_destroy(highs);
 	highs_problem_data_free(&p);

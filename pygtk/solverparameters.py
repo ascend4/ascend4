@@ -114,9 +114,16 @@ class SolverParametersWindow:
 						_item.show()
 						_item.connect('activate', self.on_menu_activate, _param, _iter, i);
 						_menu.append(_item)
-									
+					_xroot, _yroot = event.get_root_coords()
 					_menu.show()
-					_menu.popup(None, None,lambda _menu,data: (event.get_root_coords()[0],event.get_root_coords()[1], True), None,event.button, _time)
+					_menu.popup(
+						None
+						,None
+						,lambda *_unused: (_xroot, _yroot, True)
+						,None
+						,event.button
+						,_time
+					)
 
 	def on_menu_activate(self, menuitem, param, iter, newvalue):
 		if param.getStrValue() != newvalue:

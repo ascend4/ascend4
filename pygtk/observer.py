@@ -610,7 +610,15 @@ class ObserverTab:
 				return 0
 			if self.current_instance.isFixed() == False:
 				self.studycolumnmenuitem.set_sensitive(False)
-			self.treecontext.popup(None, None,lambda _menu,data: (event.get_root_coords()[0],event.get_root_coords()[1], True), None,_button, event.time)
+			_xroot, _yroot = event.get_root_coords()
+			self.treecontext.popup(
+				None
+				,None
+				,lambda *_unused: (_xroot, _yroot, True)
+				,None
+				,_button
+				,event.time
+			)
 		return 1
 		
 	def on_study_column_activate(self, *args):

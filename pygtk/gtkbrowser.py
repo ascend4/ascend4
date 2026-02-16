@@ -893,7 +893,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.reporter.reportError("No solver assigned!")
 			return
 
-		if self.prefs.getBoolPref("SolverReporter","show_popup",False):
+		if self.prefs.getBoolPref("SolverReporter","show_popup",True):
 			reporter = PopupSolverReporter(self,self.sim)
 		else:
 			reporter = SimpleSolverReporter(self)
@@ -1210,7 +1210,6 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def error_callback(self,sev,filename,line,msg):
 		#print "SEV =",sev
-		print(f"PYTHON error_callback: MSG = {msg}")
 		#print "FILENAME =",filename
 		#print "LINE =",line
 		pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))
