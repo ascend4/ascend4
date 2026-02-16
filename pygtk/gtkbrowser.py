@@ -442,7 +442,9 @@ class Browser:
 			_mi.set_active(True)
 
 		loading.print_status("Setting preferred solver...") #,"GLADE_FILE = %s" % self.glade_file)
-		if not _mi and _pref_solver is not None:
+		# Ensure solver object is always initialised. Depending on GTK radio
+		# item state, set_active(True) may not emit a toggled callback.
+		if _pref_solver is not None and not hasattr(self, "solver"):
 			self.set_solver(_pref_solver)
 
 		#--------
