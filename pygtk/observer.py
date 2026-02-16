@@ -597,7 +597,7 @@ class ObserverTab:
 		elif self.alive is False:
 			self.unitsmenuitem.set_sensitive(False)
 			self.studycolumnmenuitem.set_sensitive(False)
-			self.treecontext.popup( None, None, None, _button, event.time)
+			self.treecontext.popup_at_pointer(event)
 		else:
 			# Since we have the instance data in self.cols and treeview points us to the
 			# ClickableTreeColumn, we need to match the two.
@@ -610,15 +610,7 @@ class ObserverTab:
 				return 0
 			if self.current_instance.isFixed() == False:
 				self.studycolumnmenuitem.set_sensitive(False)
-			_xroot, _yroot = event.get_root_coords()
-			self.treecontext.popup(
-				None
-				,None
-				,lambda *_unused: (_xroot, _yroot, True)
-				,None
-				,_button
-				,event.time
-			)
+			self.treecontext.popup_at_pointer(event)
 		return 1
 		
 	def on_study_column_activate(self, *args):

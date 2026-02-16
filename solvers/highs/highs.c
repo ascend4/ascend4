@@ -1654,9 +1654,21 @@ static void highs_report_progress(
 		highs_progress_append(details,sizeof(details),&n
 			,", mip_gap=%.17g",data_out->mip_gap
 		);
+	}else if(
+		have_mip_data
+		&& isfinite(data_out->mip_primal_bound)
+		&& isfinite(data_out->mip_dual_bound)
+	){
+		double abs_gap = fabs(data_out->mip_primal_bound - data_out->mip_dual_bound);
+		highs_progress_append(details,sizeof(details),&n
+			,", mip_abs_gap=%.17g",abs_gap
+		);
 	}
 
 	MSG("progress: %s",details);
+	#ifdef HIGHS_DEBUG
+	ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"(HiGHS progress) %s",details);
+	#endif
 	(void)slv_report_progress("HiGHS",details);
 	sys->progress_report_count++;
 }
@@ -1669,6 +1681,7 @@ static void highs_solver_callback(
 	highs_system_t sys = (highs_system_t)user_data;
 	int iteration_count;
 	double running_time;
+	int force_progress;
 	(void)message;
 	if(sys == NULL)return;
 	if(message != NULL && message[0] != '\0'){
@@ -1685,11 +1698,18 @@ static void highs_solver_callback(
 		}
 	}
 
+	force_progress = (
+		callback_type == kHighsCallbackMipSolution
+		|| callback_type == kHighsCallbackMipImprovingSolution
+		|| callback_type == kHighsCallbackMipLogging
+	);
+
 	if(
 		data_out != NULL
 		&& SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_PROGRESS_CALLBACKS)
 		&& (
-			sys->progress_report_count == 0
+			force_progress
+			|| sys->progress_report_count == 0
 			|| (
 				(isfinite(data_out->running_time) && data_out->running_time >= 0.0 ? data_out->running_time : 0.0)
 				>= sys->next_progress_report_time

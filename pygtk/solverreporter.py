@@ -8,6 +8,9 @@ class PythonSolverReporter(ascpy.SolverReporter):
 	def __init__(self,browser,message=None):
 		self.browser=browser
 		self.updateinterval = self.browser.prefs.getRealPref("SolverReporter","update_interval", 0.5)
+		self.progress_note_interval = self.browser.prefs.getRealPref("SolverReporter","progress_note_interval", 1.0)
+		self.last_progress_note = 0.0
+		self.progress_note_emitted = False
 		self.reporter = self.browser.reporter
 		if self.reporter==None:
 			raise RuntimeError("Can't find reporter")
@@ -54,10 +57,23 @@ class PythonSolverReporter(ascpy.SolverReporter):
 		return False
 
 	def reportProgress(self, solver_name, message):
+		now = time.perf_counter()
 		try:
 			GObject.idle_add(self._report_progress_ui, solver_name, message)
 		except Exception:
 			pass
+		if (
+			not self.progress_note_emitted
+			or (now - self.last_progress_note) >= self.progress_note_interval
+		):
+			self.progress_note_emitted = True
+			self.last_progress_note = now
+			try:
+				GObject.idle_add(
+					lambda: self.reporter.reportNote("(%s) %s" % (solver_name, message)) or False
+				)
+			except Exception:
+				pass
 
 
 
