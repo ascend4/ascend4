@@ -442,7 +442,9 @@ class Browser:
 			_mi.set_active(True)
 
 		loading.print_status("Setting preferred solver...") #,"GLADE_FILE = %s" % self.glade_file)
-		if not _mi and _pref_solver is not None:
+		# Ensure solver object is always initialised. Depending on GTK radio
+		# item state, set_active(True) may not emit a toggled callback.
+		if _pref_solver is not None and not hasattr(self, "solver"):
 			self.set_solver(_pref_solver)
 
 		#--------
@@ -862,6 +864,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def do_solve_thread(self, reporter):
 		try:
+			ascpy.setSolverProgressReporter(reporter)
+			ascpy.setSolverInterrupt(False)
 			self.sim.presolve(self.solver)
 			status = self.sim.getStatus()
 			while status.isReadyToSolve() and not self.solve_interrupt:
@@ -876,6 +880,12 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.sim.postsolve(status)
 		except RuntimeError as err:
 			self.reporter.reportError(str(err))
+		finally:
+			try:
+				ascpy.setSolverInterrupt(False)
+				ascpy.setSolverProgressReporter(None)
+			except Exception:
+				pass
 
 	def do_solve(self):
 		if self.no_built_system():
@@ -885,7 +895,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.reporter.reportError("No solver assigned!")
 			return
 
-		if self.prefs.getBoolPref("SolverReporter","show_popup",False):
+		if self.prefs.getBoolPref("SolverReporter","show_popup",True):
 			reporter = PopupSolverReporter(self,self.sim)
 		else:
 			reporter = SimpleSolverReporter(self)
@@ -1202,7 +1212,6 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def error_callback(self,sev,filename,line,msg):
 		#print "SEV =",sev
-		print(f"PYTHON error_callback: MSG = {msg}")
 		#print "FILENAME =",filename
 		#print "LINE =",line
 		pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))

@@ -35,6 +35,9 @@
 #include <ascend/compiler/instance_io.h>
 #include <ascend/compiler/instquery.h>
 #include <string.h>
+#include <math.h>
+#include <limits.h>
+#include <stdarg.h>
 
 #include <ascend/linear/mtx.h>
 
@@ -51,6 +54,13 @@
 #define KILL TRUE
 #endif
 #define DEBUG FALSE
+#define HIGHS_PROGRESS_REPORT_INTERVAL 1.0
+#define HIGHS_DEBUG
+#ifdef HIGHS_DEBUG
+# define MSG(...) CONSOLE_DEBUG(__VA_ARGS__)
+#else
+# define MSG(...) ((void)0)
+#endif
 
 #define SYS(s) ((highs_system_t)(s))
 
@@ -82,10 +92,12 @@ struct highs_system_structure {
    int                    integrity;    /* ? Has the system been created */
 
    slv_parameters_t       p;            /* Parameters */
-   struct slv_parameter pa[SP6_PARAMS];
+   struct slv_parameter pa[HIGHS_PARAMS];
 
    slv_status_t           s;            /* Status flags */
    double                 clock;        /* CPU time */
+   double                 next_progress_report_time;
+   int                    progress_report_count;
 
    /**
     ***  Calculated Data
@@ -106,7 +118,7 @@ static int highs_get_default_parameters(slv_system_t server, SlvClientToken asys
 	highs_link_capi_stubs();
 
 	if(parameters->parms == NULL) {
-		new_parms = ASC_NEW_ARRAY_OR_NULL(struct slv_parameter,SP6_PARAMS);
+		new_parms = ASC_NEW_ARRAY_OR_NULL(struct slv_parameter,HIGHS_PARAMS);
 		if(new_parms == NULL) {
 		    return -1;
 		}
@@ -126,9 +138,9 @@ static int highs_get_default_parameters(slv_system_t server, SlvClientToken asys
 		}, FALSE}
 	);
 
-	/** Integer and Bool Options */
+	/** Model handling options */
 
-	slv_param_bool(parameters,SP6_NONLIN
+	slv_param_bool(parameters,HIGHS_PARAM_NONLIN
 		,(SlvParameterInitBool){{"nonlin"
 			,"Linearise non-linear equations?",1
 			,"Perform linearisation of non-linear models at the current point (TRUE)"
@@ -137,123 +149,99 @@ static int highs_get_default_parameters(slv_system_t server, SlvClientToken asys
 	);
 
 
-	slv_param_bool(parameters,SP6_RELAXED
+	slv_param_bool(parameters,HIGHS_PARAM_RELAXED
 		,(SlvParameterInitBool){{"relaxed"
 			,"Solve LP relaxation?",1
 			,"Solve regular problem (FALSE) or LP relaxation of problem (TRUE)."
 		}, FALSE}
 	);
 
-	slv_param_bool(parameters,SP6_NONNEG
-		,(SlvParameterInitBool){{"nonneg"
-			,"Require non-negative?",1
-			,"Solver handles free vars (FALSE) or solver requires that all vars have LB=0, UB=infinity, no FR or MI"
-		}, FALSE}
+	slv_param_bool(parameters,HIGHS_PARAM_PROGRESS_CALLBACKS
+		,(SlvParameterInitBool){{"progress_callbacks"
+			,"Enable progress callbacks?",2
+			,"Enable HiGHS callback-based progress reporting (text output and GUI polling support)."
+		}, TRUE}
 	);
 
-	slv_param_int(parameters,SP6_OBJ
-		,(SlvParameterInitInt){{"obj"
-			,"Objective function type",2
-			,"0->solver assumes minimization, do nothing special; 1->solver assumes maximization, swap obj coeff for min problems; 2->solver support SCICONIC style MINIMIZE; 3->solver supports QOMILP style MAX/MIN in names section"
-		}, 0, 0, 3}
+	/** HiGHS runtime options */
+
+	slv_param_real(parameters,HIGHS_PARAM_TIME_LIMIT
+		,(SlvParameterInitReal){{"time_limit"
+			,"Time limit (s)",2
+			,"HiGHS time limit in seconds."
+		}, 1e20, 0.0, 1.e30}
 	);
 
-	slv_param_int(parameters,SP6_BINARY
-		,(SlvParameterInitInt){{"binary"
-			,"Binary variable support",2
-			,"0->solver supports binary variables using INTORG; 1->solver supports binary variables with BV option in BOUNDS; 2->no support"
-		}, 2, 0, 2}
+	slv_param_int(parameters,HIGHS_PARAM_THREADS
+		,(SlvParameterInitInt){{"threads"
+			,"Threads",2
+			,"HiGHS thread count (0 = automatic)."
+		}, 0, 0, 1024}
 	);
 
-	slv_param_int(parameters,SP6_INTEGER
-		,(SlvParameterInitInt){{"integer"
-			,"Integer variable method",2
-			,"0->solver defines integer vars using INTORG; 1->solver defines integer vars using UI in BOUNDS; 2->no support for integer vars"
-		}, 2, 0, 2}
+	slv_param_char(parameters,HIGHS_PARAM_PRESOLVE
+		,(SlvParameterInitChar){{"presolve"
+			,"Presolve mode",2
+			,"HiGHS presolve option."
+		}, "choose"}, (char *[]){
+			"choose","on","off",NULL
+		}
 	);
 
-
-	slv_param_bool(parameters,SP6_SEMI
-		,(SlvParameterInitBool){{"semi"
-			,"Semi-continuous support?",2
-			,"0->no support; 1->solver supports SCICONIC style semi-continuous vars"
-		}, FALSE}
+	slv_param_char(parameters,HIGHS_PARAM_SOLVER
+		,(SlvParameterInitChar){{"solver"
+			,"Algorithm",2
+			,"HiGHS solver strategy."
+		}, "choose"}, (char *[]){
+			"choose","simplex","ipm","ipx",NULL
+		}
 	);
 
-	slv_param_bool(parameters,SP6_SOS1
-		,(SlvParameterInitBool){{"sos1"
-			,"SOS1 support?",2
-			,"0->no support; 1->solver supports SOS1, i.e. sum(Xi) = 1"
-		}, FALSE}
+	slv_param_char(parameters,HIGHS_PARAM_PARALLEL
+		,(SlvParameterInitChar){{"parallel"
+			,"Parallel mode",2
+			,"HiGHS parallel option."
+		}, "choose"}, (char *[]){
+			"choose","on","off",NULL
+		}
 	);
 
-	slv_param_bool(parameters,SP6_SOS2
-		,(SlvParameterInitBool){{"sos2"
-			,"SOS2 support? (ignored)",2
-			,"This parameter currently ignored; no support for type 2 yet. 0->no support; 1->solver supports SOS2, i.e. sum(xi) <=2, with 2 nonzeros being adjacent"
-		}, FALSE}
+	slv_param_real(parameters,HIGHS_PARAM_MIP_REL_GAP
+		,(SlvParameterInitReal){{"mip_rel_gap"
+			,"MIP relative gap",3
+			,"HiGHS relative optimality gap target for MIP."
+		}, 1e-4, 0.0, 1.e30}
 	);
 
-	slv_param_bool(parameters,SP6_SOS3
-		,(SlvParameterInitBool){{"sos3"
-			,"SOS3 support?",2
-			,"0->no support; 1->solver supports SOS3, i.e. sum(xi) <= 1"
-		}, FALSE}
+	slv_param_real(parameters,HIGHS_PARAM_MIP_ABS_GAP
+		,(SlvParameterInitReal){{"mip_abs_gap"
+			,"MIP absolute gap",3
+			,"HiGHS absolute optimality gap target for MIP."
+		}, 1e-6, 0.0, 1.e30}
 	);
 
-	slv_param_bool(parameters,SP6_BO
-		,(SlvParameterInitBool){{"bo"
-			,"BO current bound support?",3
-			,"0->no support; 1->solver supports QOMILP-style BO cutoff bound in names section. Note: value of bound is set in 'bndval'."
-		}, FALSE}
+	slv_param_int(parameters,HIGHS_PARAM_RANDOM_SEED
+		,(SlvParameterInitInt){{"random_seed"
+			,"Random seed",3
+			,"HiGHS random seed."
+		}, 0, 0, 2147483647}
 	);
 
-	slv_param_bool(parameters,SP6_EPS
-		,(SlvParameterInitBool){{"eps"
-			,"EPS termination criterion support?",4
-			,"0->no support; 1->solver supports QOMILP-style EPS termination criterion. Note: value of bound is set in 'epsval'."
-		}, FALSE}
-	);
-
-
-	slv_param_real(parameters,SP6_BOVAL
-		,(SlvParameterInitReal){{"boval"
-			,"BO cutoff bound value",3
-			,"Value of QOMILP style BO cutoff bound in names section. Ignored if 'bo' is FALSE."
-		}, 0, -1e99, 1.e99}
-	);
-
-	slv_param_real(parameters,SP6_EPSVAL
-		,(SlvParameterInitReal){{"epsval"
-			,"EPS termination criterion value",4
-			,"Value of QOMILP-style EPS termination criterion. Note: Ignored if 'eps' is FALSE."
-		}, 0, -1e99, 1.e99}
-	);
-
-	slv_param_real(parameters,SP6_PINF
+	slv_param_real(parameters,HIGHS_PARAM_PINF
 		,(SlvParameterInitReal){{"pinf"
-			,"Positive 'infinity' value",5
-			,"Any upper bound greater than 'pinf' will be set to +infinity"
+			,"Positive 'infinity' threshold",4
+			,"Any upper bound greater than 'pinf' is treated as +infinity in the exported matrix."
 		}, 1e30, 0, 1.e99}
 	);
 
-	slv_param_real(parameters,SP6_MINF
+	slv_param_real(parameters,HIGHS_PARAM_MINF
 		,(SlvParameterInitReal){{"minf"
-			,"Minus 'infinity' value",5
-			,"Any lower bound greater than 'minf' will be set to -infinity"
+			,"Negative 'infinity' threshold",4
+			,"Any lower bound less than 'minf' is treated as -infinity in the exported matrix."
 		}, -1e30, -1e99, 0}
 	);
 
-	slv_param_char(parameters,SP6_FILENAME
-		,(SlvParameterInitChar){{"filename"
-			,"Output filename",1
-			,"Name of the output file to be created."
-		}, "outfile.txt"}, (char *[]){
-			"outfile.txt","outfile1.txt","outfile2.txt","outfile3.txt",NULL
-		} /* FIXME how to specify that the user can type this in as free text? */
-	);
-
-	asc_assert(parameters->num_parms==SP6_PARAMS);
+	asc_assert(parameters->num_parms==HIGHS_PARAMS);
 
 	return 1;
 }
@@ -922,6 +910,8 @@ static SlvClientToken highs_create(slv_system_t server, int32 *statusindex){   /
 	sys->s.costsize                   = sys->s.block.number_of;  /* just one cost block, which will be set in  */
 
 	sys->s.cost=create_zero_array(sys->s.costsize,struct slv_block_cost);  /* allocate memory */
+	sys->next_progress_report_time = 0.0;
+	sys->progress_report_count = 0;
 
 
 	/* Note: the cost vars are equivalent to other sys->s.* vars
@@ -998,8 +988,8 @@ boolean highs_eligible_solver(highs_system_t server){
    vfilter.incident = var_true;
    vfilter.in_block = var_ignore;   */
 
-   /*  Check that the system is linear if iarray[SP6_NONLIN] == 0 */
-   if (SLV_PARAM_BOOL(&(sys->p),SP6_NONLIN) == 0){
+   /*  Check that the system is linear unless nonlinear linearization is enabled. */
+   if (SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_NONLIN) == 0){
       for( rp=sys->rlist ; *rp != NULL ; ++rp )   /* check relations */
           if(!relman_is_linear(*rp,&vfilter)) {
             char *relname = rel_make_name(sys->slv,*rp);
@@ -1323,9 +1313,9 @@ static int highs_build_problem(highs_system_t sys, struct highs_problem_data *p,
 
 	rused = sys->mps.rused;
 	vused = sys->mps.vused;
-	relaxed = SLV_PARAM_BOOL(&(sys->p),SP6_RELAXED);
-	pinf = SLV_PARAM_REAL(&(sys->p),SP6_PINF);
-	minf = SLV_PARAM_REAL(&(sys->p),SP6_MINF);
+	relaxed = SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_RELAXED);
+	pinf = SLV_PARAM_REAL(&(sys->p),HIGHS_PARAM_PINF);
+	minf = SLV_PARAM_REAL(&(sys->p),HIGHS_PARAM_MINF);
 	hinf = 1e30;
 	*is_mip = 0;
 
@@ -1475,6 +1465,624 @@ static int highs_build_problem(highs_system_t sys, struct highs_problem_data *p,
 	return 1;
 }
 
+static int highs_apply_options(highs_system_t sys, void *highs){
+	const char *presolve = SLV_PARAM_CHAR(&(sys->p),HIGHS_PARAM_PRESOLVE);
+	const char *solver = SLV_PARAM_CHAR(&(sys->p),HIGHS_PARAM_SOLVER);
+	const char *parallel = SLV_PARAM_CHAR(&(sys->p),HIGHS_PARAM_PARALLEL);
+	HighsInt status;
+
+#define APPLY_AND_VERIFY_BOOL_OPTION(NAME, VALUE) do{ \
+	HighsInt expected = (VALUE); \
+	HighsInt actual = 0; \
+	status = Highs_setBoolOptionValue(highs,(NAME),expected); \
+	if(status == kHighsStatusError){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed setting HiGHS option '%s'.",(NAME)); \
+		return 0; \
+	} \
+	status = Highs_getBoolOptionValue(highs,(NAME),&actual); \
+	if(status == kHighsStatusError){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed reading back HiGHS option '%s'.",(NAME)); \
+		return 0; \
+	} \
+	if(actual != expected){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"HiGHS option '%s' read-back mismatch (expected %ld, got %ld).",(NAME),(long)expected,(long)actual); \
+		return 0; \
+	} \
+}while(0)
+#define APPLY_AND_VERIFY_INT_OPTION(NAME, VALUE) do{ \
+	HighsInt expected = (VALUE); \
+	HighsInt actual = 0; \
+	status = Highs_setIntOptionValue(highs,(NAME),expected); \
+	if(status == kHighsStatusError){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed setting HiGHS option '%s'=%ld.",(NAME),(long)expected); \
+		return 0; \
+	} \
+	status = Highs_getIntOptionValue(highs,(NAME),&actual); \
+	if(status == kHighsStatusError){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed reading back HiGHS option '%s'.",(NAME)); \
+		return 0; \
+	} \
+	if(actual != expected){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"HiGHS option '%s' read-back mismatch (expected %ld, got %ld).",(NAME),(long)expected,(long)actual); \
+		return 0; \
+	} \
+}while(0)
+#define APPLY_AND_VERIFY_DOUBLE_OPTION(NAME, VALUE) do{ \
+	double expected = (VALUE); \
+	double actual = 0.0; \
+	double tol; \
+	status = Highs_setDoubleOptionValue(highs,(NAME),expected); \
+	if(status == kHighsStatusError){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed setting HiGHS option '%s'=%g.",(NAME),expected); \
+		return 0; \
+	} \
+	status = Highs_getDoubleOptionValue(highs,(NAME),&actual); \
+	if(status == kHighsStatusError){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed reading back HiGHS option '%s'.",(NAME)); \
+		return 0; \
+	} \
+	tol = 1e-12 * (1.0 + fabs(expected)); \
+	if(fabs(actual - expected) > tol){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"HiGHS option '%s' read-back mismatch (expected %.17g, got %.17g).",(NAME),expected,actual); \
+		return 0; \
+	} \
+}while(0)
+#define APPLY_AND_VERIFY_STRING_OPTION(NAME, VALUE) do{ \
+	const char *expected = (VALUE); \
+	char actual[512]; \
+	status = Highs_setStringOptionValue(highs,(NAME),expected); \
+	if(status == kHighsStatusError){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed setting HiGHS option '%s'='%s'.",(NAME),expected); \
+		return 0; \
+	} \
+	status = Highs_getStringOptionValue(highs,(NAME),actual); \
+	if(status == kHighsStatusError){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed reading back HiGHS option '%s'.",(NAME)); \
+		return 0; \
+	} \
+	if(strcmp(actual,expected) != 0){ \
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"HiGHS option '%s' read-back mismatch (expected '%s', got '%s').",(NAME),expected,actual); \
+		return 0; \
+	} \
+}while(0)
+
+	APPLY_AND_VERIFY_BOOL_OPTION("output_flag",0);
+	APPLY_AND_VERIFY_DOUBLE_OPTION("time_limit",SLV_PARAM_REAL(&(sys->p),HIGHS_PARAM_TIME_LIMIT));
+	APPLY_AND_VERIFY_INT_OPTION("threads",(HighsInt)SLV_PARAM_INT(&(sys->p),HIGHS_PARAM_THREADS));
+	APPLY_AND_VERIFY_STRING_OPTION("presolve",(presolve != NULL ? presolve : "choose"));
+	APPLY_AND_VERIFY_STRING_OPTION("solver",(solver != NULL ? solver : "choose"));
+	APPLY_AND_VERIFY_STRING_OPTION("parallel",(parallel != NULL ? parallel : "choose"));
+	APPLY_AND_VERIFY_DOUBLE_OPTION("mip_rel_gap",SLV_PARAM_REAL(&(sys->p),HIGHS_PARAM_MIP_REL_GAP));
+	APPLY_AND_VERIFY_DOUBLE_OPTION("mip_abs_gap",SLV_PARAM_REAL(&(sys->p),HIGHS_PARAM_MIP_ABS_GAP));
+	APPLY_AND_VERIFY_INT_OPTION("random_seed",(HighsInt)SLV_PARAM_INT(&(sys->p),HIGHS_PARAM_RANDOM_SEED));
+
+#undef APPLY_AND_VERIFY_BOOL_OPTION
+#undef APPLY_AND_VERIFY_INT_OPTION
+#undef APPLY_AND_VERIFY_DOUBLE_OPTION
+#undef APPLY_AND_VERIFY_STRING_OPTION
+
+	return 1;
+}
+
+static int highs_callback_total_iteration_count(const HighsCallbackDataOut *data_out){
+	long long total = 0;
+	if(data_out == NULL)return 0;
+	if(data_out->simplex_iteration_count > 0){
+		total += (long long)data_out->simplex_iteration_count;
+	}
+	if(data_out->ipm_iteration_count > 0){
+		total += (long long)data_out->ipm_iteration_count;
+	}
+	if(data_out->pdlp_iteration_count > 0){
+		total += (long long)data_out->pdlp_iteration_count;
+	}
+	if(total > INT_MAX)return INT_MAX;
+	if(total < 0)return 0;
+	return (int)total;
+}
+
+static void highs_progress_append(char *details, size_t cap, int *n, const char *fmt, ...){
+	va_list ap;
+	int wrote;
+	size_t rem;
+	if(*n < 0 || (size_t)(*n) >= cap)return;
+	rem = cap - (size_t)(*n);
+	va_start(ap,fmt);
+	wrote = vsnprintf(details + (*n),rem,fmt,ap);
+	va_end(ap);
+	if(wrote < 0){
+		*n = (int)cap;
+		return;
+	}
+	if((size_t)wrote >= rem){
+		*n = (int)cap;
+		return;
+	}
+	*n += wrote;
+}
+
+static void highs_report_progress(
+	highs_system_t sys, int callback_type,
+	const HighsCallbackDataOut *data_out, int iteration_count, double running_time
+){
+	char details[512];
+	int n = 0;
+	const char *tag = "callback";
+	int have_mip_data = 0;
+	if(sys == NULL || data_out == NULL)return;
+	switch(callback_type){
+		case kHighsCallbackSimplexInterrupt: tag = "simplex"; break;
+		case kHighsCallbackIpmInterrupt: tag = "ipm"; break;
+		case kHighsCallbackMipInterrupt: tag = "mip"; have_mip_data = 1; break;
+		case kHighsCallbackLogging: tag = "log"; break;
+		case kHighsCallbackMipLogging: tag = "mip_log"; have_mip_data = 1; break;
+		case kHighsCallbackMipSolution: tag = "mip_solution"; have_mip_data = 1; break;
+		case kHighsCallbackMipImprovingSolution: tag = "mip_incumbent"; have_mip_data = 1; break;
+		default: break;
+	}
+
+	highs_progress_append(details,sizeof(details),&n
+		,"tag=%s, t=%.3gs, iter=%d"
+		,tag,running_time,iteration_count
+	);
+	if(isfinite(data_out->objective_function_value)){
+		highs_progress_append(details,sizeof(details),&n
+			,", obj=%.17g",data_out->objective_function_value
+		);
+	}
+	if(have_mip_data && data_out->mip_node_count >= 0){
+		highs_progress_append(details,sizeof(details),&n
+			,", mip_nodes=%lld",(long long)data_out->mip_node_count
+		);
+	}
+	if(have_mip_data && data_out->mip_total_lp_iterations >= 0){
+		highs_progress_append(details,sizeof(details),&n
+			,", mip_lp_iter=%lld",(long long)data_out->mip_total_lp_iterations
+		);
+	}
+	if(have_mip_data && isfinite(data_out->mip_primal_bound)){
+		highs_progress_append(details,sizeof(details),&n
+			,", mip_primal=%.17g",data_out->mip_primal_bound
+		);
+	}
+	if(have_mip_data && isfinite(data_out->mip_dual_bound)){
+		highs_progress_append(details,sizeof(details),&n
+			,", mip_dual=%.17g",data_out->mip_dual_bound
+		);
+	}
+	if(have_mip_data && isfinite(data_out->mip_gap)){
+		highs_progress_append(details,sizeof(details),&n
+			,", mip_gap=%.17g",data_out->mip_gap
+		);
+	}else if(
+		have_mip_data
+		&& isfinite(data_out->mip_primal_bound)
+		&& isfinite(data_out->mip_dual_bound)
+	){
+		double abs_gap = fabs(data_out->mip_primal_bound - data_out->mip_dual_bound);
+		highs_progress_append(details,sizeof(details),&n
+			,", mip_abs_gap=%.17g",abs_gap
+		);
+	}
+
+	MSG("progress: %s",details);
+	#ifdef HIGHS_DEBUG
+	ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"(HiGHS progress) %s",details);
+	#endif
+	(void)slv_report_progress("HiGHS",details);
+	sys->progress_report_count++;
+}
+
+static void highs_solver_callback(
+	int callback_type, const char *message,
+	const HighsCallbackDataOut *data_out,
+	HighsCallbackDataIn *data_in, void *user_data
+){
+	highs_system_t sys = (highs_system_t)user_data;
+	int iteration_count;
+	double running_time;
+	int force_progress;
+	(void)message;
+	if(sys == NULL)return;
+	if(message != NULL && message[0] != '\0'){
+		MSG("callback[%d]: %s",callback_type,message);
+	}
+
+	iteration_count = highs_callback_total_iteration_count(data_out);
+	if(iteration_count > 0){
+		sys->s.block.iteration = iteration_count;
+		sys->s.iteration = iteration_count;
+		if(sys->s.cost){
+			sys->s.cost->iterations = iteration_count;
+			sys->s.cost->jacs = iteration_count;
+		}
+	}
+
+	force_progress = (
+		callback_type == kHighsCallbackMipSolution
+		|| callback_type == kHighsCallbackMipImprovingSolution
+		|| callback_type == kHighsCallbackMipLogging
+	);
+
+	if(
+		data_out != NULL
+		&& SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_PROGRESS_CALLBACKS)
+		&& (
+			force_progress
+			|| sys->progress_report_count == 0
+			|| (
+				(isfinite(data_out->running_time) && data_out->running_time >= 0.0 ? data_out->running_time : 0.0)
+				>= sys->next_progress_report_time
+			)
+		)
+	){
+		running_time = (isfinite(data_out->running_time) && data_out->running_time >= 0.0 ? data_out->running_time : 0.0);
+		highs_report_progress(sys,callback_type,data_out,iteration_count,running_time);
+		sys->next_progress_report_time = running_time + HIGHS_PROGRESS_REPORT_INTERVAL;
+	}
+
+	if(data_in != NULL && slv_get_solver_interrupt()){
+		data_in->user_interrupt = 1;
+		sys->s.panic = TRUE;
+	}
+}
+
+static void highs_enable_callbacks(highs_system_t sys, void *highs, int is_mip){
+	HighsInt status;
+	int progress_callbacks_enabled;
+	progress_callbacks_enabled = SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_PROGRESS_CALLBACKS);
+	status = Highs_setCallback(highs,&highs_solver_callback,(void *)sys);
+	if(status == kHighsStatusError){
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING
+			,"unable to install HiGHS callback; progress/interrupt callbacks disabled."
+		);
+		return;
+	}
+	MSG("installed HiGHS callback handler (progress callbacks %s).",progress_callbacks_enabled ? "enabled" : "disabled");
+
+#define HIGHS_START_CALLBACK(TYPE) do{ \
+	HighsInt cb_status = Highs_startCallback(highs,(TYPE)); \
+	if(cb_status == kHighsStatusError){ \
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING \
+			,"unable to start HiGHS callback type %ld." \
+			,(long)(TYPE) \
+		); \
+	}else{ \
+		MSG("started HiGHS callback type %ld.",(long)(TYPE)); \
+	} \
+}while(0)
+
+	HIGHS_START_CALLBACK(kHighsCallbackSimplexInterrupt);
+	HIGHS_START_CALLBACK(kHighsCallbackIpmInterrupt);
+	if(progress_callbacks_enabled){
+		HIGHS_START_CALLBACK(kHighsCallbackLogging);
+	}
+	if(is_mip){
+		HIGHS_START_CALLBACK(kHighsCallbackMipInterrupt);
+		if(progress_callbacks_enabled){
+			HIGHS_START_CALLBACK(kHighsCallbackMipLogging);
+			HIGHS_START_CALLBACK(kHighsCallbackMipSolution);
+			HIGHS_START_CALLBACK(kHighsCallbackMipImprovingSolution);
+		}
+	}
+
+#undef HIGHS_START_CALLBACK
+}
+
+struct highs_info_snapshot{
+	int have_objective_function_value;
+	double objective_function_value;
+	int have_simplex_iteration_count;
+	HighsInt simplex_iteration_count;
+	int have_ipm_iteration_count;
+	HighsInt ipm_iteration_count;
+	int have_pdlp_iteration_count;
+	HighsInt pdlp_iteration_count;
+	int have_primal_solution_status;
+	HighsInt primal_solution_status;
+	int have_dual_solution_status;
+	HighsInt dual_solution_status;
+	int have_basis_validity;
+	HighsInt basis_validity;
+	int have_max_primal_infeasibility;
+	double max_primal_infeasibility;
+	int have_max_dual_infeasibility;
+	double max_dual_infeasibility;
+	int have_num_primal_infeasibilities;
+	HighsInt num_primal_infeasibilities;
+	int have_num_dual_infeasibilities;
+	HighsInt num_dual_infeasibilities;
+	int have_mip_gap;
+	double mip_gap;
+	int have_mip_dual_bound;
+	double mip_dual_bound;
+	int have_mip_node_count;
+	int64_t mip_node_count;
+};
+
+static int highs_get_info_int_value(const void *highs, const char *name, HighsInt *value){
+	HighsInt status = Highs_getIntInfoValue(highs,name,value);
+	return status == kHighsStatusOk || status == kHighsStatusWarning;
+}
+
+static int highs_get_info_double_value(const void *highs, const char *name, double *value){
+	HighsInt status = Highs_getDoubleInfoValue(highs,name,value);
+	return status == kHighsStatusOk || status == kHighsStatusWarning;
+}
+
+static int highs_get_info_int64_value(const void *highs, const char *name, int64_t *value){
+	HighsInt status = Highs_getInt64InfoValue(highs,name,value);
+	return status == kHighsStatusOk || status == kHighsStatusWarning;
+}
+
+static const char *highs_model_status_name(HighsInt model_status){
+	switch(model_status){
+		case kHighsModelStatusNotset: return "Notset";
+		case kHighsModelStatusLoadError: return "LoadError";
+		case kHighsModelStatusModelError: return "ModelError";
+		case kHighsModelStatusPresolveError: return "PresolveError";
+		case kHighsModelStatusSolveError: return "SolveError";
+		case kHighsModelStatusPostsolveError: return "PostsolveError";
+		case kHighsModelStatusModelEmpty: return "ModelEmpty";
+		case kHighsModelStatusOptimal: return "Optimal";
+		case kHighsModelStatusInfeasible: return "Infeasible";
+		case kHighsModelStatusUnboundedOrInfeasible: return "UnboundedOrInfeasible";
+		case kHighsModelStatusUnbounded: return "Unbounded";
+		case kHighsModelStatusObjectiveBound: return "ObjectiveBound";
+		case kHighsModelStatusObjectiveTarget: return "ObjectiveTarget";
+		case kHighsModelStatusTimeLimit: return "TimeLimit";
+		case kHighsModelStatusIterationLimit: return "IterationLimit";
+		case kHighsModelStatusUnknown: return "Unknown";
+		case kHighsModelStatusSolutionLimit: return "SolutionLimit";
+		case kHighsModelStatusInterrupt: return "Interrupt";
+		default: return "UnknownStatusCode";
+	}
+}
+
+static const char *highs_solution_status_name(HighsInt solution_status){
+	switch(solution_status){
+		case kHighsSolutionStatusNone: return "None";
+		case kHighsSolutionStatusInfeasible: return "Infeasible";
+		case kHighsSolutionStatusFeasible: return "Feasible";
+		default: return "Unknown";
+	}
+}
+
+static const char *highs_basis_validity_name(HighsInt basis_validity){
+	switch(basis_validity){
+		case kHighsBasisValidityInvalid: return "Invalid";
+		case kHighsBasisValidityValid: return "Valid";
+		default: return "Unknown";
+	}
+}
+
+static void highs_collect_info_snapshot(const void *highs, struct highs_info_snapshot *info){
+	memset(info,0,sizeof(*info));
+	info->have_objective_function_value = highs_get_info_double_value(highs,"objective_function_value",&info->objective_function_value);
+	info->have_simplex_iteration_count = highs_get_info_int_value(highs,"simplex_iteration_count",&info->simplex_iteration_count);
+	info->have_ipm_iteration_count = highs_get_info_int_value(highs,"ipm_iteration_count",&info->ipm_iteration_count);
+	info->have_pdlp_iteration_count = highs_get_info_int_value(highs,"pdlp_iteration_count",&info->pdlp_iteration_count);
+	info->have_primal_solution_status = highs_get_info_int_value(highs,"primal_solution_status",&info->primal_solution_status);
+	info->have_dual_solution_status = highs_get_info_int_value(highs,"dual_solution_status",&info->dual_solution_status);
+	info->have_basis_validity = highs_get_info_int_value(highs,"basis_validity",&info->basis_validity);
+	info->have_max_primal_infeasibility = highs_get_info_double_value(highs,"max_primal_infeasibility",&info->max_primal_infeasibility);
+	info->have_max_dual_infeasibility = highs_get_info_double_value(highs,"max_dual_infeasibility",&info->max_dual_infeasibility);
+	info->have_num_primal_infeasibilities = highs_get_info_int_value(highs,"num_primal_infeasibilities",&info->num_primal_infeasibilities);
+	info->have_num_dual_infeasibilities = highs_get_info_int_value(highs,"num_dual_infeasibilities",&info->num_dual_infeasibilities);
+	info->have_mip_gap = highs_get_info_double_value(highs,"mip_gap",&info->mip_gap);
+	info->have_mip_dual_bound = highs_get_info_double_value(highs,"mip_dual_bound",&info->mip_dual_bound);
+	info->have_mip_node_count = highs_get_info_int64_value(highs,"mip_node_count",&info->mip_node_count);
+}
+
+static int highs_has_feasible_primal_solution(const struct highs_info_snapshot *info){
+	return info->have_primal_solution_status && info->primal_solution_status == kHighsSolutionStatusFeasible;
+}
+
+static void highs_update_status_flags_from_model_status(highs_system_t sys, HighsInt model_status){
+	sys->s.converged = (model_status == kHighsModelStatusOptimal);
+	sys->s.diverged = !sys->s.converged;
+	sys->s.inconsistent = (
+		model_status == kHighsModelStatusInfeasible
+		|| model_status == kHighsModelStatusUnboundedOrInfeasible
+	);
+	sys->s.time_limit_exceeded = (model_status == kHighsModelStatusTimeLimit);
+	sys->s.iteration_limit_exceeded = (model_status == kHighsModelStatusIterationLimit);
+	sys->s.panic = (model_status == kHighsModelStatusInterrupt);
+}
+
+static int highs_total_iteration_count(const struct highs_info_snapshot *info){
+	long long total = 0;
+	int have_any = 0;
+	if(info->have_simplex_iteration_count && info->simplex_iteration_count >= 0){
+		total += (long long)info->simplex_iteration_count;
+		have_any = 1;
+	}
+	if(info->have_ipm_iteration_count && info->ipm_iteration_count >= 0){
+		total += (long long)info->ipm_iteration_count;
+		have_any = 1;
+	}
+	if(info->have_pdlp_iteration_count && info->pdlp_iteration_count >= 0){
+		total += (long long)info->pdlp_iteration_count;
+		have_any = 1;
+	}
+	if(!have_any)return 0;
+	if(total > INT_MAX)return INT_MAX;
+	if(total < 0)return 0;
+	return (int)total;
+}
+
+static void highs_diag_append(char *details, size_t cap, int *n, const char *fmt, ...){
+	va_list ap;
+	int wrote;
+	size_t rem;
+	if(*n < 0 || (size_t)(*n) >= cap)return;
+	rem = cap - (size_t)(*n);
+	va_start(ap,fmt);
+	wrote = vsnprintf(details + (*n),rem,fmt,ap);
+	va_end(ap);
+	if(wrote < 0){
+		*n = (int)cap;
+		return;
+	}
+	if((size_t)wrote >= rem){
+		*n = (int)cap;
+		return;
+	}
+	*n += wrote;
+}
+
+static void highs_report_nonoptimal_status(
+	HighsInt model_status, const struct highs_info_snapshot *info, int have_primal_solution
+){
+	const char *status_name = highs_model_status_name(model_status);
+	error_severity_t sev = ASC_PROG_WARNING;
+	char details[1024];
+	int n = 0;
+	if(
+		model_status == kHighsModelStatusLoadError
+		|| model_status == kHighsModelStatusModelError
+		|| model_status == kHighsModelStatusPresolveError
+		|| model_status == kHighsModelStatusSolveError
+		|| model_status == kHighsModelStatusPostsolveError
+	){
+		sev = ASC_PROG_ERROR;
+	}
+
+	ERROR_REPORTER_HERE(sev
+		,"HiGHS terminated with status %s (%ld)."
+		,status_name,(long)model_status
+	);
+
+	if(info->have_primal_solution_status){
+		highs_diag_append(details,sizeof(details),&n
+			,"primal=%s"
+			,highs_solution_status_name(info->primal_solution_status)
+		);
+	}
+	if(info->have_dual_solution_status && n < (int)sizeof(details)){
+		highs_diag_append(details,sizeof(details),&n
+			,"%sdual=%s"
+			,(n > 0 ? ", " : "")
+			,highs_solution_status_name(info->dual_solution_status)
+		);
+	}
+	if(info->have_basis_validity && n < (int)sizeof(details)){
+		highs_diag_append(details,sizeof(details),&n
+			,"%sbasis=%s"
+			,(n > 0 ? ", " : "")
+			,highs_basis_validity_name(info->basis_validity)
+		);
+	}
+	if(
+		info->have_objective_function_value
+		&& isfinite(info->objective_function_value)
+		&& n < (int)sizeof(details)
+	){
+		highs_diag_append(details,sizeof(details),&n
+			,"%sobj=%.17g"
+			,(n > 0 ? ", " : "")
+			,info->objective_function_value
+		);
+	}
+	if(
+		info->have_simplex_iteration_count
+		&& info->simplex_iteration_count >= 0
+		&& n < (int)sizeof(details)
+	){
+		highs_diag_append(details,sizeof(details),&n
+			,"%ssimplex_iter=%ld"
+			,(n > 0 ? ", " : "")
+			,(long)info->simplex_iteration_count
+		);
+	}
+	if(
+		info->have_ipm_iteration_count
+		&& info->ipm_iteration_count >= 0
+		&& n < (int)sizeof(details)
+	){
+		highs_diag_append(details,sizeof(details),&n
+			,"%sipm_iter=%ld"
+			,(n > 0 ? ", " : "")
+			,(long)info->ipm_iteration_count
+		);
+	}
+	if(
+		info->have_pdlp_iteration_count
+		&& info->pdlp_iteration_count >= 0
+		&& n < (int)sizeof(details)
+	){
+		highs_diag_append(details,sizeof(details),&n
+			,"%spdlp_iter=%ld"
+			,(n > 0 ? ", " : "")
+			,(long)info->pdlp_iteration_count
+		);
+	}
+	if(info->have_mip_node_count && info->mip_node_count >= 0 && n < (int)sizeof(details)){
+		highs_diag_append(details,sizeof(details),&n
+			,"%smip_nodes=%lld"
+			,(n > 0 ? ", " : "")
+			,(long long)info->mip_node_count
+		);
+	}
+	if(info->have_mip_gap && isfinite(info->mip_gap) && n < (int)sizeof(details)){
+		highs_diag_append(details,sizeof(details),&n
+			,"%smip_gap=%.17g"
+			,(n > 0 ? ", " : "")
+			,info->mip_gap
+		);
+	}
+	if(
+		info->have_max_primal_infeasibility
+		&& isfinite(info->max_primal_infeasibility)
+		&& n < (int)sizeof(details)
+	){
+		highs_diag_append(details,sizeof(details),&n
+			,"%smax_primal_inf=%.17g"
+			,(n > 0 ? ", " : "")
+			,info->max_primal_infeasibility
+		);
+	}
+	if(
+		info->have_num_primal_infeasibilities
+		&& info->num_primal_infeasibilities >= 0
+		&& n < (int)sizeof(details)
+	){
+		highs_diag_append(details,sizeof(details),&n
+			,"%snum_primal_inf=%ld"
+			,(n > 0 ? ", " : "")
+			,(long)info->num_primal_infeasibilities
+		);
+	}
+	if(
+		info->have_max_dual_infeasibility
+		&& isfinite(info->max_dual_infeasibility)
+		&& n < (int)sizeof(details)
+	){
+		highs_diag_append(details,sizeof(details),&n
+			,"%smax_dual_inf=%.17g"
+			,(n > 0 ? ", " : "")
+			,info->max_dual_infeasibility
+		);
+	}
+	if(
+		info->have_num_dual_infeasibilities
+		&& info->num_dual_infeasibilities >= 0
+		&& n < (int)sizeof(details)
+	){
+		highs_diag_append(details,sizeof(details),&n
+			,"%snum_dual_inf=%ld"
+			,(n > 0 ? ", " : "")
+			,(long)info->num_dual_infeasibilities
+		);
+	}
+	if(n > 0){
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"HiGHS diagnostics: %s.",details);
+	}
+	if(!have_primal_solution){
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"HiGHS did not return a feasible primal solution.");
+	}
+}
+
 void highs_solve(slv_system_t server){
 	highs_system_t sys;
 	void *highs = NULL;
@@ -1488,8 +2096,14 @@ void highs_solve(slv_system_t server){
 	int safeeval;
 	int calc_ok;
 	int all_calc_ok;
+	int have_primal_solution = 0;
+	int iteration_count;
+	struct highs_info_snapshot info;
 
 	sys = SYS(server);
+	memset(&info,0,sizeof(info));
+	model_status = kHighsModelStatusNotset;
+	MSG("starting HiGHS solve.");
 
 	/* make sure none of the LP data pointers are NULL */
 	if ((sys->mps.Ac_mtx == NULL) ||
@@ -1510,6 +2124,14 @@ void highs_solve(slv_system_t server){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"not ready to solve.");
 		return;
 	}
+	sys->s.converged = FALSE;
+	sys->s.diverged = FALSE;
+	sys->s.inconsistent = FALSE;
+	sys->s.time_limit_exceeded = FALSE;
+	sys->s.iteration_limit_exceeded = FALSE;
+	sys->s.panic = FALSE;
+	sys->next_progress_report_time = 0.0;
+	sys->progress_report_count = 0;
 
 	sys->clock = tm_cpu_time();
 	is_mip = 0;
@@ -1520,6 +2142,11 @@ void highs_solve(slv_system_t server){
 		sys->s.ready_to_solve = FALSE;
 		return;
 	}
+	MSG(
+		"constructed %s model: cols=%ld rows=%ld nz=%ld."
+		,(is_mip ? "MIP" : "LP")
+		,(long)p.num_col,(long)p.num_row,(long)p.num_nz
+	);
 
 	highs = Highs_create();
 	if(highs == NULL){
@@ -1531,7 +2158,11 @@ void highs_solve(slv_system_t server){
 		return;
 	}
 
-	(void)Highs_setBoolOptionValue(highs,"output_flag",0);
+	if(!highs_apply_options(sys,highs)){
+		sys->s.converged = FALSE;
+		sys->s.diverged = TRUE;
+		goto done;
+	}
 	sense = (relman_obj_direction(sys->obj) == 1) ? kHighsObjSenseMaximize : kHighsObjSenseMinimize;
 	if(is_mip){
 		status = Highs_passMip(
@@ -1555,9 +2186,15 @@ void highs_solve(slv_system_t server){
 		sys->s.diverged = TRUE;
 		goto done;
 	}
+	MSG("model loaded into HiGHS.");
+	highs_enable_callbacks(sys,highs,is_mip);
 
 	status = Highs_run(highs);
 	model_status = Highs_getModelStatus(highs);
+	MSG(
+		"HiGHS run finished: status=%ld, model_status=%s (%ld)."
+		,(long)status,highs_model_status_name(model_status),(long)model_status
+	);
 	if(status == kHighsStatusError){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"HiGHS run failed.");
 		sys->s.converged = FALSE;
@@ -1565,24 +2202,30 @@ void highs_solve(slv_system_t server){
 		goto done;
 	}
 
-	if(
-		Highs_getSolution(highs,p.col_value,p.col_dual,p.row_value,p.row_dual)
-		== kHighsStatusError
-	){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"unable to fetch HiGHS solution.");
-		sys->s.converged = FALSE;
-		sys->s.diverged = TRUE;
-		goto done;
+	highs_collect_info_snapshot(highs,&info);
+	highs_update_status_flags_from_model_status(sys,model_status);
+	have_primal_solution = highs_has_feasible_primal_solution(&info);
+	MSG(
+		"status flags: converged=%d inconsistent=%d diverged=%d time_limit=%d iter_limit=%d primal_feasible=%d."
+		,sys->s.converged,sys->s.inconsistent,sys->s.diverged
+		,sys->s.time_limit_exceeded,sys->s.iteration_limit_exceeded
+		,have_primal_solution
+	);
+	if(sys->s.converged || have_primal_solution){
+		if(
+			Highs_getSolution(highs,p.col_value,p.col_dual,p.row_value,p.row_dual)
+			== kHighsStatusError
+		){
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"unable to fetch HiGHS solution.");
+			if(sys->s.converged){
+				sys->s.converged = FALSE;
+				sys->s.diverged = TRUE;
+			}
+			have_primal_solution = 0;
+		}
 	}
 
-	sys->s.converged = (model_status == kHighsModelStatusOptimal);
-	sys->s.diverged = !sys->s.converged;
-	sys->s.inconsistent = (
-		model_status == kHighsModelStatusInfeasible
-		|| model_status == kHighsModelStatusUnboundedOrInfeasible
-	);
-
-	if(sys->s.converged){
+	if(sys->s.converged || have_primal_solution){
 		for(vp = sys->vlist; *vp != NULL; ++vp){
 			int32 orgcol = var_sindex(*vp);
 			if(orgcol >= 0 && orgcol < sys->mps.vused){
@@ -1607,27 +2250,40 @@ void highs_solve(slv_system_t server){
 		sys->s.calc_ok = all_calc_ok;
 
 		if(!all_calc_ok){
-			ERROR_REPORTER_HERE(ASC_PROG_WARNING
-				,"converged but residual/objective refresh failed."
+			ERROR_REPORTER_HERE(ASC_PROG_WARNING,
+				"%s but residual/objective refresh failed."
+				,(sys->s.converged ? "converged" : "non-optimal solve returned feasible solution")
 			);
 		}
-	}else{
-		ERROR_REPORTER_HERE(ASC_PROG_WARNING
-			,"model status is %ld (not optimal)."
-			,(long)model_status
-		);
+	}else if(!sys->s.converged){
+		/* no writeback performed */
+	}
+
+	if(!sys->s.converged){
+		highs_report_nonoptimal_status(model_status,&info,have_primal_solution);
 	}
 
 done:
+	if(sys->s.panic){
+		slv_set_solver_interrupt(0);
+	}
 	sys->s.cpu_elapsed += (double)(tm_cpu_time() - sys->clock);
 	sys->s.block.cpu_elapsed = sys->s.cpu_elapsed;
 	sys->s.cost->time = sys->s.cpu_elapsed;
 	sys->s.ok = sys->s.calc_ok && sys->s.converged;
 	sys->s.ready_to_solve = FALSE;
-	sys->s.block.iteration = 1;
-	sys->s.iteration = 1;
-	sys->s.cost->iterations = 1;
-	sys->s.cost->jacs = 1;
+	iteration_count = highs_total_iteration_count(&info);
+	if(iteration_count <= 0 && sys->s.iteration > 0){
+		iteration_count = sys->s.iteration;
+	}
+	sys->s.block.iteration = iteration_count;
+	sys->s.iteration = iteration_count;
+	sys->s.cost->iterations = iteration_count;
+	sys->s.cost->jacs = iteration_count;
+	MSG(
+		"final status: ok=%d converged=%d calc_ok=%d ready_to_solve=%d iter=%d."
+		,sys->s.ok,sys->s.converged,sys->s.calc_ok,sys->s.ready_to_solve,sys->s.iteration
+	);
 
 	if(highs)Highs_destroy(highs);
 	highs_problem_data_free(&p);

@@ -2,12 +2,15 @@ import ascpy
 import time
 import gi
 gi.require_version('Gtk','3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, GObject
 
 class PythonSolverReporter(ascpy.SolverReporter):
 	def __init__(self,browser,message=None):
 		self.browser=browser
-		self.updateinterval = self.browser.prefs.getBoolPref("SolverReporter","update_interval", 0.5)
+		self.updateinterval = self.browser.prefs.getRealPref("SolverReporter","update_interval", 0.5)
+		self.progress_note_interval = self.browser.prefs.getRealPref("SolverReporter","progress_note_interval", 1.0)
+		self.last_progress_note = 0.0
+		self.progress_note_emitted = False
 		self.reporter = self.browser.reporter
 		if self.reporter==None:
 			raise RuntimeError("Can't find reporter")
@@ -42,6 +45,36 @@ class PythonSolverReporter(ascpy.SolverReporter):
 				status.getNumBlocks(),status.getCurrentBlockSize() )
 		self.reporter.reportError(_msg)
 
+	def _report_progress_ui(self, solver_name, message):
+		try:
+			self.browser.statusbar.pop(self.statusbarcontext)
+			self.browser.statusbar.push(
+				self.statusbarcontext,
+				"Solving (%s): %s" % (solver_name, message)
+			)
+		except Exception:
+			pass
+		return False
+
+	def reportProgress(self, solver_name, message):
+		now = time.perf_counter()
+		try:
+			GObject.idle_add(self._report_progress_ui, solver_name, message)
+		except Exception:
+			pass
+		if (
+			not self.progress_note_emitted
+			or (now - self.last_progress_note) >= self.progress_note_interval
+		):
+			self.progress_note_emitted = True
+			self.last_progress_note = now
+			try:
+				GObject.idle_add(
+					lambda: self.reporter.reportNote("(%s) %s" % (solver_name, message)) or False
+				)
+			except Exception:
+				pass
+
 
 
 class PopupSolverReporter(PythonSolverReporter):
@@ -69,21 +102,25 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.closebutton = self.browser.builder.get_object("closebutton1")
 		self.stopbutton = self.browser.builder.get_object("stopbutton")
 			
-		#print "SOLVER REPORTER ---- PYTHON"
+		self.solvedvars = 0
 
-		self.solvedvars = 0;
-
-		self.lasttime = 0;
-		self.blockstart = self.starttime;
-		self.blocktime = 0;
-		self.elapsed = 0;
-		self.blocknum = 0;
-		self.guiinterrupt = False;
-		self.guitime = 0;
+		self.lasttime = 0
+		self.blockstart = self.starttime
+		self.blocktime = 0
+		self.elapsed = 0
+		self.blocknum = 0
+		self.guiinterrupt = False
+		self.guitime = 0
 
 		self.sim = sim
 
 		self.nv = self.sim.getNumVars()
+		try:
+			ascpy.setSolverInterrupt(False)
+		except Exception:
+			pass
+		self.window.show_all()
+		self.window.present()
 
 	def on_diagnose_button_click(self,*args):
 		try:
@@ -97,9 +134,17 @@ class PopupSolverReporter(PythonSolverReporter):
 
 	def on_stopbutton_activate(self,*args):
 		self.guiinterrupt = True
+		try:
+			ascpy.setSolverInterrupt(True)
+		except Exception:
+			pass
 
 	def on_solverstatusdialog_response(self,widget,response):
 		self.guiinterrupt = True
+		try:
+			ascpy.setSolverInterrupt(True)
+		except Exception:
+			pass
 		self.window.destroy()
 		
 	def fill_values(self,status):
@@ -113,18 +158,18 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.blockelapsedtime.set_text("%0.1f s" % self.blocktime)
 
 		_frac = float(status.getNumConverged()) / self.nv
-		self.progressbar.set_text("%d vars converged..." % status.getNumConverged());
+		self.progressbar.set_text("%d vars converged..." % status.getNumConverged())
 		self.progressbar.set_fraction(_frac)
 
 	def report(self,status):
-		_time = time.perf_counter();
+		_time = time.perf_counter()
 		_sincelast = _time - self.lasttime
 		if status.getCurrentBlockNum() > self.blocknum:
 			self.blocknum = status.getCurrentBlockNum()
 			self.blockstart = _time
 
-		if self.lasttime==0 or _sincelast > self.updateinterval or status.isConverged():
-			self.lasttime = _time;
+		if self.lasttime == 0 or _sincelast > self.updateinterval or status.isConverged():
+			self.lasttime = _time
 			self.elapsed = _time - self.starttime
 			self.blocktime = _time - self.blockstart
 			self.fill_values(status)
@@ -136,21 +181,64 @@ class PopupSolverReporter(PythonSolverReporter):
 
 		return False
 
+	def _report_progress_popup(self, solver_name, message):
+		parts = {}
+		text = message.strip()
+		if not text:
+			return False
+
+		for token in text.split(","):
+			if "=" not in token:
+				continue
+			k, v = token.split("=", 1)
+			parts[k.strip()] = v.strip()
+
+		if len(text) > 84:
+			text = text[:81] + "..."
+		self.progressbar.set_text("%s: %s" % (solver_name, text))
+		self.progressbar.pulse()
+
+		if "iter" in parts:
+			self.numiterations.set_text(parts["iter"])
+			self.blockiterations.set_text(parts["iter"])
+		if "t" in parts:
+			self.elapsedtime.set_text(parts["t"])
+			self.blockelapsedtime.set_text(parts["t"])
+		if "obj" in parts:
+			self.blockresidual.set_text(parts["obj"])
+
+		# HiGHS MIP callback extras.
+		if "mip_nodes" in parts:
+			self.blockvars.set_text("%s nodes" % parts["mip_nodes"])
+		if "mip_gap" in parts:
+			self.numblocks.set_text("MIP gap %s" % parts["mip_gap"])
+		return False
+
+	def reportProgress(self, solver_name, message):
+		PythonSolverReporter.reportProgress(self, solver_name, message)
+		try:
+			GObject.idle_add(self._report_progress_popup, solver_name, message)
+		except Exception:
+			pass
+
 	def finalise(self,status):
 		try:
 			_time = time.perf_counter()
+			try:
+				ascpy.setSolverInterrupt(False)
+			except Exception:
+				pass
 
-			_p = self.browser.prefs;
-			_close_on_converged = _p.getBoolPref("SolverReporter","close_on_converged",True);
-			_close_on_nonconverged = _p.getBoolPref("SolverReporter","close_on_nonconverged",False);
+			_p = self.browser.prefs
+			_close_on_converged = _p.getBoolPref("SolverReporter","close_on_converged",True)
+			_close_on_nonconverged = _p.getBoolPref("SolverReporter","close_on_nonconverged",False)
+
 			if status.isConverged() and _close_on_converged:
 				self.report_to_browser(status)
-				print("CLOSING ON CONVERGED")
 				self.window.response(Gtk.ResponseType.CLOSE)
 				return
 			
 			if not status.isConverged() and _close_on_nonconverged:
-				print("CLOSING, NOT CONVERGED")
 				self.report_to_browser(status)
 				if self.window:
 					self.window.response(Gtk.ResponseType.CLOSE)
@@ -178,7 +266,6 @@ class PopupSolverReporter(PythonSolverReporter):
 			self.report_to_browser(status)
 
 			self.guitime = self.guitime + (time.perf_counter() - _time)
-			print("TIME SPENT UPDATING SOLVER: %0.2f s" % self.guitime)
 		except Exception as e:
 			print("SOME PROBLEM: %s" % str(e))
 

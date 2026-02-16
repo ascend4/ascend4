@@ -68,13 +68,7 @@
 
 #include <ascend/system/lp_data.h>
 
-/**
- * Developer note:
- * This header intentionally keeps a small amount of legacy solver-interface
- * detail (parameter indices and shared tokens) because both HiGHS and
- * MakeMPS still depend on compatible data conventions during model export.
- * Runtime implementation details are in `solvers/highs/highs.c`.
- */
+/* Parameter token IDs used by solvers/highs/highs.c. */
 
 typedef struct highs_system_structure *highs_system_t;
 
@@ -130,118 +124,27 @@ extern void highs_iterate();
 extern void highs_solve();
 #endif
 
-/*********************************************************************
-    Craig Schmidt 2/15/95
-
-    This section describes the parameters, subparameters,
-    and status flags as used by the solver.
-
-    *** See highs_create() for more specific information   ***
-    *** on parameters and status flags                  ***
-
-    *** Note: the parameters can be changed by the user ***
-    ***       with the highs_set_parameters routine      ***
-
-
-    Use of subparameters in iarray and rarray:
-
-    iarray[SP6_NONLIN]   0->require linear model,
-                         1->solve linearization at current pt
-    iarray[SP6_RELAXED]  0->solve regular problem
-                         1->solve LP relaxation of problem
-    iarray[SP6_NONNEG]   0->solver handles free vars
-                         1->solver requires that all vars have LB=0, UB=infinity, no FR or MI
-    iarray[SP6_OBJ]      0->solver assumes minimization, do nothing special
-                         1->solver assumes maximization, swap obj coeff for min problems
-                         2->solver support SCICONIC style MINIMIZE
-                         3->solver supports QOMILP style MAX/MIN in names section
-    iarray[SP6_BINARY]   0->solver supports binary variables using INTORG
-                         1->solver supports binary variables with BV option in BOUNDS
-                         2->no support
-    iarray[SP6_INTEGER]  0->solver defines integer vars using INTORG
-                         1->solver defines integer vars using UI in BOUNDS
-                         2->no support for integer vars
-    iarray[SP6_SEMI]     0->no support
-                         1->solver supports SCICONIC style semi-continuous vars
-    iarray[SP6_SOS1]     0->no support
-                         1->solver supports SOS1, i.e. sum(Xi)  = 1
-    iarray[SP6_SOS2]     0->no support
-                         1->solver supports SOS2, i.e. sum(xi) <=2, with 2 nonzeros being adjacent
-                         Note: this parameter currently ignored, no support offered for type 2
-    iarray[SP6_SOS3]     0->no support
-                         1->solver supports SOS3, i.e.  sum(xi) <= 1
-    iarray[SP6_BO]       0->no support
-                         1->solver supports QOMILP style BO cutoff bound in names section
-                         Note: value of bound is in rarray[SP6_BNDVAL]
-    iarray[SP6_EPS]      0->no support
-                         1->solver supports QOMILP style EPS termination criterion
-                         Note: value of bound is in rarray[SP6_EPSVAL]
-
-    rarray[SP6_BOVAL]    value of QOMILP style BO cutoff bound in names section
-                         Note: Ignored if iarray[SP6_BO]=0
-    rarray[SP6_EPSVAL]   value of QOMILP style EPS termination criterion
-                         Note: Ignored if iarray[SP6_EPS]=0
-    rarray[SP6_PINF]     any UB >= pinf is set to + infinity
-    rarray[SP6_MINF]     any LB <= minf is set to - infinity
-
-    carray[SP6_FILENAME] pointer to filename to create
-
-*********************************************************************/
-#if 0
-#define highs_IA_SIZE 12
-#define highs_RA_SIZE 4
-#define highs_CA_SIZE 1
-#define highs_VA_SIZE 0
-
-/**< subscripts for ia */
-#define SP6_NONLIN   0
-#define SP6_RELAXED  1
-#define SP6_NONNEG   2
-#define SP6_OBJ      3
-#define SP6_BINARY   4
-#define SP6_INTEGER  5
-#define SP6_SEMI     6
-#define SP6_SOS1     7
-#define SP6_SOS2     8
-#define SP6_SOS3     9
-#define SP6_BO       10
-#define SP6_EPS      11
-
-/**< subscripts for ra */
-#define SP6_BOVAL   0
-#define SP6_EPSVAL  1
-#define SP6_PINF    2
-#define SP6_MINF    3
-
-/**< subscripts for ca */
-#define SP6_FILENAME 0
-#endif
-
-
 enum{
 	/** ASCEND OPTIONS */
 	ASCEND_PARAM_SAFEEVAL = 0
-	/**< integer-valued */
-	, SP6_NONLIN
-	, SP6_RELAXED
-	, SP6_NONNEG
-	, SP6_OBJ
-	, SP6_BINARY
-	, SP6_INTEGER
-	, SP6_SEMI
-	, SP6_SOS1
-	, SP6_SOS2
-	, SP6_SOS3
-	, SP6_BO
-	, SP6_EPS
+	/**< boolean-valued */
+	, HIGHS_PARAM_NONLIN
+	, HIGHS_PARAM_RELAXED
+	, HIGHS_PARAM_PROGRESS_CALLBACKS
+	/* integer-valued */
+	, HIGHS_PARAM_THREADS
+	, HIGHS_PARAM_RANDOM_SEED
 	/* real-valued */
-	, SP6_BOVAL
-	, SP6_EPSVAL
-	, SP6_PINF
-	, SP6_MINF
+	, HIGHS_PARAM_TIME_LIMIT
+	, HIGHS_PARAM_MIP_REL_GAP
+	, HIGHS_PARAM_MIP_ABS_GAP
+	, HIGHS_PARAM_PINF
+	, HIGHS_PARAM_MINF
 	/* string-valued */
-	, SP6_FILENAME
-	, SP6_PARAMS
+	, HIGHS_PARAM_PRESOLVE
+	, HIGHS_PARAM_SOLVER
+	, HIGHS_PARAM_PARALLEL
+	, HIGHS_PARAMS
 };
 
 /**< define another token to go with

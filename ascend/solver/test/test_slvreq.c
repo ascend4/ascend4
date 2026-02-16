@@ -32,6 +32,7 @@
 #include <ascend/compiler/safe.h>
 #include <ascend/compiler/qlfdid.h>
 #include <ascend/compiler/instance_io.h>
+#include <ascend/compiler/packages.h>
 
 #include <ascend/compiler/slvreq.h>
 
@@ -56,6 +57,16 @@ typedef struct SlvReqC_struct{
 SlvReqSetSolverFn slvreq_c_set_solver;
 SlvReqSetOptionFn slvreq_c_set_option;
 SlvReqDoSolveFn slvreq_c_do_solve;
+
+static int find_param_index(const slv_parameters_t *pp, const char *name){
+	int i;
+	for(i=0; i<pp->num_parms; ++i){
+		if(pp->parms[i].name != NULL && strcmp(pp->parms[i].name,name)==0){
+			return i;
+		}
+	}
+	return -1;
+}
 
 /*
 	This function actually does the job of setting the solver in our little
@@ -177,10 +188,10 @@ int slvreq_c_do_solve(struct Instance *instance, void *user_data){
 	if(status.diverged)CONSOLE_DEBUG("Solver diverged");
 	if(status.inconsistent)CONSOLE_DEBUG("System is inconsistent");
 	if(status.iteration_limit_exceeded)CONSOLE_DEBUG("Solver exceeded iteration limit");
-	if(status.calc_ok != 0)CONSOLE_DEBUG("Solver had residual calculation errors");
+	if(status.calc_ok == 0)CONSOLE_DEBUG("Solver had residual calculation errors");
 	if(status.over_defined)CONSOLE_DEBUG("Solver system is over-defined");
 	if(status.under_defined)CONSOLE_DEBUG("Solver system is under-defined");
-	if(status.iteration_limit_exceeded)CONSOLE_DEBUG("Solver exceeded time limit");
+	if(status.time_limit_exceeded)CONSOLE_DEBUG("Solver exceeded time limit");
 
 	return SLVREQ_SOLVE_FAIL;
 }
@@ -241,13 +252,169 @@ static void test_slvreq_c(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_slvreq_highs_options(void){
+	struct module_t *m = NULL;
+	int status = 0;
+	SlvReqC S;
+	S.siminst = NULL;
+	S.sys = NULL;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/highs");
+
+	if(0 != package_load("highs",NULL)){
+		CONSOLE_DEBUG("Skipping slvreq HiGHS option test: solver package not available");
+		goto cleanup;
+	}
+	if(slv_lookup_client("HiGHS") == -1){
+		CONSOLE_DEBUG("Skipping slvreq HiGHS option test: solver not registered");
+		goto cleanup;
+	}
+
+	m = Asc_OpenModule("test/slvreq/highs_opts.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("highs_opts"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("highs_opts"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+
+	slvreq_assign_hooks(S.siminst, &slvreq_c_set_solver, &slvreq_c_set_option, &slvreq_c_do_solve, &S);
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe==Proc_all_ok);
+	}
+
+	CU_ASSERT_FATAL(S.sys != NULL);
+	{
+		slv_parameters_t pp;
+		int idx;
+		slv_get_parameters(S.sys,&pp);
+
+		idx = find_param_index(&pp,"threads");
+		CU_ASSERT_FATAL(idx != -1);
+		CU_ASSERT_EQUAL(SLV_PARAM_INT(&pp,idx),1);
+
+		idx = find_param_index(&pp,"random_seed");
+		CU_ASSERT_FATAL(idx != -1);
+		CU_ASSERT_EQUAL(SLV_PARAM_INT(&pp,idx),7);
+
+		idx = find_param_index(&pp,"time_limit");
+		CU_ASSERT_FATAL(idx != -1);
+		CU_ASSERT_DOUBLE_EQUAL(SLV_PARAM_REAL(&pp,idx),5.0,1e-12);
+
+		idx = find_param_index(&pp,"mip_rel_gap");
+		CU_ASSERT_FATAL(idx != -1);
+		CU_ASSERT_DOUBLE_EQUAL(SLV_PARAM_REAL(&pp,idx),1e-6,1e-12);
+
+		idx = find_param_index(&pp,"mip_abs_gap");
+		CU_ASSERT_FATAL(idx != -1);
+		CU_ASSERT_DOUBLE_EQUAL(SLV_PARAM_REAL(&pp,idx),1e-7,1e-12);
+
+		idx = find_param_index(&pp,"presolve");
+		CU_ASSERT_FATAL(idx != -1);
+		CU_ASSERT(0 == strcmp(SLV_PARAM_CHAR(&pp,idx),"on"));
+
+		idx = find_param_index(&pp,"solver");
+		CU_ASSERT_FATAL(idx != -1);
+		CU_ASSERT(0 == strcmp(SLV_PARAM_CHAR(&pp,idx),"simplex"));
+
+			idx = find_param_index(&pp,"parallel");
+			CU_ASSERT_FATAL(idx != -1);
+			CU_ASSERT(0 == strcmp(SLV_PARAM_CHAR(&pp,idx),"off"));
+
+			idx = find_param_index(&pp,"progress_callbacks");
+			CU_ASSERT_FATAL(idx != -1);
+			CU_ASSERT_FALSE(SLV_PARAM_BOOL(&pp,idx));
+		}
+
+cleanup:
+	if(S.sys)system_destroy(S.sys);
+	system_free_reused_mem();
+	if(S.siminst)sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
+static void test_slvreq_highs_options_invalid(void){
+	struct module_t *m = NULL;
+	int status = 0;
+	SlvReqC S;
+	S.siminst = NULL;
+	S.sys = NULL;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+	Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/highs");
+
+	if(0 != package_load("highs",NULL)){
+		CONSOLE_DEBUG("Skipping slvreq HiGHS invalid-option test: solver package not available");
+		goto cleanup;
+	}
+	if(slv_lookup_client("HiGHS") == -1){
+		CONSOLE_DEBUG("Skipping slvreq HiGHS invalid-option test: solver not registered");
+		goto cleanup;
+	}
+
+	m = Asc_OpenModule("test/slvreq/highs_opts_invalid.a4c",&status);
+	CU_ASSERT_FATAL(m != NULL);
+	CU_ASSERT(status == 0);
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol("highs_opts_invalid"))!=NULL);
+
+	S.siminst = SimsCreateInstance(AddSymbol("highs_opts_invalid"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(S.siminst!=NULL);
+	S.sys = NULL;
+
+	slvreq_assign_hooks(S.siminst, &slvreq_c_set_solver, &slvreq_c_set_option, &slvreq_c_do_solve, &S);
+
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		int has_error = 0;
+		enum Proc_enum pe;
+		error_reporter_tree_start();
+		pe = Initialize(GetSimulationRoot(S.siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		has_error = error_reporter_tree_has_error();
+		error_reporter_tree_end();
+		(void)pe;
+		CU_ASSERT_TRUE(has_error);
+	}
+
+	CU_ASSERT_FATAL(S.sys != NULL);
+	{
+		slv_parameters_t pp;
+		slv_status_t st;
+		int idx;
+		slv_get_status(S.sys,&st);
+		CU_ASSERT_FALSE(st.ok);
+		CU_ASSERT_TRUE(st.diverged);
+		slv_get_parameters(S.sys,&pp);
+		idx = find_param_index(&pp,"solver");
+		CU_ASSERT_FATAL(idx != -1);
+		CU_ASSERT(0 == strcmp(SLV_PARAM_CHAR(&pp,idx),"definitely_invalid"));
+	}
+
+cleanup:
+	if(S.sys)system_destroy(S.sys);
+	system_free_reused_mem();
+	if(S.siminst)sim_destroy(S.siminst);
+	solver_destroy_engines();
+	Asc_CompilerDestroy();
+}
+
 
 
 /*===========================================================================*/
 /* Registration information */
 
 #define TESTS(T) \
-	T(slvreq_c)
+	T(slvreq_c) \
+	T(slvreq_highs_options) \
+	T(slvreq_highs_options_invalid)
 
 REGISTER_TESTS_SIMPLE(solver_slvreq, TESTS)
-

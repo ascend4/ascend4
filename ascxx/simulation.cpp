@@ -829,6 +829,7 @@ SingularityInfo::isSingular() const{
 void
 Simulation::solve(Solver solver, SolverReporter &reporter){
 	int res;
+	setSolverInterrupt(false);
 
 	MSG("-----------------set solver----------------");
 
@@ -859,6 +860,14 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	SolverStatus status;
 	//int solved_vars=0;
 	bool stop=false;
+	struct ProgressReporterScope{
+		ProgressReporterScope(SolverReporter *reporter){
+			setSolverProgressReporter(reporter);
+		}
+		~ProgressReporterScope(){
+			setSolverProgressReporter(NULL);
+		}
+	} progress_reporter_scope(&reporter);
 
 	status.getSimulationStatus(*this);
 	reporter.report(&status);
@@ -916,6 +925,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 
 void
 Simulation::presolve(Solver s) {
+	setSolverInterrupt(false);
 	setSolver(s);
 
 	int res = slv_presolve(sys);
@@ -1091,5 +1101,3 @@ Simulation::getSolverHooks() const{
 	MSG("Got SolverHooks at %p for Simulation at %p",this->solverhooks,this);
 	return this->solverhooks;
 }
-
-

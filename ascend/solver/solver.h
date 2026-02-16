@@ -93,6 +93,11 @@ typedef int SolverRegisterFn(void);
 	@return 0 on success
 */
 
+typedef int (SlvProgressCallbackF)(const char *solver_name, const char *message, void *user_data);
+/**<
+	Optional callback interface for streaming in-run solver progress updates.
+*/
+
 /*------------------------------------------------------------------------------
   REGISTRATION SOLVERS AND QUERYING OF SOLVER LIST
 */
@@ -282,6 +287,34 @@ ASC_DLLSPEC int slv_get_selected_solver(slv_system_t sys);
 	Returns the current solver number for a system.
 */
 
+ASC_DLLSPEC void slv_set_progress_callback(SlvProgressCallbackF *callback, void *user_data);
+/**<
+	Set a global callback for in-run solver progress messages.
+	Pass NULL callback to disable.
+*/
+
+ASC_DLLSPEC void slv_clear_progress_callback(void);
+/**<
+	Clear any registered solver progress callback.
+*/
+
+ASC_DLLSPEC int slv_report_progress(const char *solver_name, const char *message);
+/**<
+	Emit progress through the registered callback, if any.
+	Returns callback result, or 0 if no callback is registered.
+*/
+
+ASC_DLLSPEC void slv_set_solver_interrupt(int value);
+/**<
+	Set or clear a global solver interrupt request flag.
+	Solvers that support in-run callbacks may poll this and terminate early.
+*/
+
+ASC_DLLSPEC int slv_get_solver_interrupt(void);
+/**<
+	Get the current value of the global solver interrupt request flag.
+*/
+
 ASC_DLLSPEC int slv_switch_solver(slv_system_t sys, int solver);
 /**<
 	Sets the given solver to be the current solver for the system.
@@ -377,5 +410,3 @@ ASC_DLLSPEC const char*slv_solver_name(int sindex);
 /* @} */
 
 #endif
-
-

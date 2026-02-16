@@ -292,6 +292,7 @@ public:
 	virtual ~SolverReporter();
 	virtual int report(SolverStatus *status);
 	virtual void finalise(SolverStatus *status);
+	virtual void reportProgress(const char *solver_name, const char *message);
 };
 
 %apply SWIGTYPE *DISOWN { IntegratorReporterCxx *reporter };

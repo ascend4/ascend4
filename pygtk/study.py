@@ -421,6 +421,8 @@ class StudyWin:
 
 			GObject.idle_add(self.solve_update, reporter, i)
 			try:
+				ascpy.setSolverProgressReporter(reporter)
+				ascpy.setSolverInterrupt(False)
 				browser.sim.presolve(browser.solver)
 				status = browser.sim.getStatus()
 				while status.isReadyToSolve() and not self.solve_interrupt:
@@ -436,6 +438,12 @@ class StudyWin:
 				browser.sim.postsolve(status)
 			except RuntimeError as err:
 				browser.reporter.reportError(str(err))
+			finally:
+				try:
+					ascpy.setSolverInterrupt(False)
+					ascpy.setSolverProgressReporter(None)
+				except Exception:
+					pass
 
 			i += 1
 

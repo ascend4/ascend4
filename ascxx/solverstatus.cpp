@@ -62,7 +62,7 @@ SolverStatus::isInconsistent() const{
 
 const bool
 SolverStatus::hasResidualCalculationErrors() const{
-	return s.calc_ok!=0;
+	return s.calc_ok==0;
 }
 
 const bool

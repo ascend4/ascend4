@@ -1,0 +1,27 @@
+REQUIRE "atoms.a4l";
+
+MODEL highs_opts_invalid;
+	x, y, s1, s2 IS_A factor;
+
+	c1: x + y + s1 = 4;
+	c2: x + s2 = 2;
+	obj: MINIMIZE -3*x -2*y;
+
+METHODS
+METHOD on_load;
+	x.lower_bound := 0;
+	y.lower_bound := 0;
+	s1.lower_bound := 0;
+	s2.lower_bound := 0;
+
+	x := 0.5;
+	y := 0.5;
+	s1 := 3.0;
+	s2 := 1.5;
+
+	SOLVER HiGHS;
+	OPTION solver 'definitely_invalid';
+	SOLVE;
+END on_load;
+END highs_opts_invalid;
+

@@ -176,6 +176,40 @@ const char *bt_tempdir(void){
 #endif
 }
 #endif
+
+static void bt_warn_missing_btprolog_header(void){
+  static int checked = 0;
+  struct FilePath *fp;
+  ospath_stat_t st;
+  char *pathstr = NULL;
+
+  if(checked){
+    return;
+  }
+  checked = 1;
+
+  fp = ospath_new_expand_env(
+    "$" ASC_ENV_BTINC "/ascend/bintokens/btprolog.h"
+    ,Asc_GetEnv
+    ,1
+  );
+  if(fp == NULL){
+    return;
+  }
+  if(ospath_stat(fp,&st) != 0){
+    pathstr = ospath_str(fp);
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING
+      ,"bintoken preflight: missing '%s'; generated C compile may fail. Set %s for this run."
+      ,(pathstr != NULL ? pathstr : "$" ASC_ENV_BTINC "/ascend/bintokens/btprolog.h")
+      ,ASC_ENV_BTINC
+    );
+    if(pathstr != NULL){
+      ospath_free_str(pathstr);
+    }
+  }
+  ospath_free(fp);
+}
+
 #if 1
 int BinTokenSetOptionsDefault(){
 #ifdef WIN32
@@ -199,6 +233,7 @@ int BinTokenSetOptionsDefault(){
 #  ifdef BINTOK_NOMAKEFILE
   env_import_default(ASC_ENV_BTINC,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTINC,0,1);
   env_import_default(ASC_ENV_BTLIB,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTLIB,0,1);
+  bt_warn_missing_btprolog_header();
 
   char buildtmpl[CMDMAX];
   snprintf(buildtmpl,CMDMAX
@@ -239,6 +274,7 @@ int BinTokenSetOptionsDefault(){
 #ifdef BINTOK_NOMAKEFILE
   env_import_default(ASC_ENV_BTINC,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTINC,0,1);
   env_import_default(ASC_ENV_BTLIB,getenv,Asc_GetEnv,Asc_PutEnv,ASC_DEFAULT_BTLIB,0,1);
+  bt_warn_missing_btprolog_header();
 
   char buildtmpl[CMDMAX];
   snprintf(buildtmpl,CMDMAX

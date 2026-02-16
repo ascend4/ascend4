@@ -198,6 +198,15 @@ if __name__ == "__main__":
 	if add_at_start('PYTHONPATH',pypath):
 		restart.append('PYTHONPATH')
 
+	# bintoken compile/link helpers expect single root paths, not PATH lists.
+	# In an in-tree dev run, default these to source root if user has not set them.
+	if not os.environ.get('ASCENDBTINC'):
+		os.environ['ASCENDBTINC'] = str(sourceroot)
+		MSG("CREATED ASCENDBTINC=%s" % os.environ['ASCENDBTINC'])
+	if not os.environ.get('ASCENDBTLIB'):
+		os.environ['ASCENDBTLIB'] = str(sourceroot)
+		MSG("CREATED ASCENDBTLIB=%s" % os.environ['ASCENDBTLIB'])
+
 	MSG("ARGS",args)
 		
 	precmd = []
