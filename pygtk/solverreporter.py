@@ -165,6 +165,46 @@ class PopupSolverReporter(PythonSolverReporter):
 
 		return False
 
+	def _report_progress_popup(self, solver_name, message):
+		parts = {}
+		text = message.strip()
+		if not text:
+			return False
+
+		for token in text.split(","):
+			if "=" not in token:
+				continue
+			k, v = token.split("=", 1)
+			parts[k.strip()] = v.strip()
+
+		if len(text) > 84:
+			text = text[:81] + "..."
+		self.progressbar.set_text("%s: %s" % (solver_name, text))
+		self.progressbar.pulse()
+
+		if "iter" in parts:
+			self.numiterations.set_text(parts["iter"])
+			self.blockiterations.set_text(parts["iter"])
+		if "t" in parts:
+			self.elapsedtime.set_text(parts["t"])
+			self.blockelapsedtime.set_text(parts["t"])
+		if "obj" in parts:
+			self.blockresidual.set_text(parts["obj"])
+
+		# HiGHS MIP callback extras.
+		if "mip_nodes" in parts:
+			self.blockvars.set_text("%s nodes" % parts["mip_nodes"])
+		if "mip_gap" in parts:
+			self.numblocks.set_text("MIP gap %s" % parts["mip_gap"])
+		return False
+
+	def reportProgress(self, solver_name, message):
+		PythonSolverReporter.reportProgress(self, solver_name, message)
+		try:
+			GObject.idle_add(self._report_progress_popup, solver_name, message)
+		except Exception:
+			pass
+
 	def finalise(self,status):
 		try:
 			_time = time.perf_counter()
