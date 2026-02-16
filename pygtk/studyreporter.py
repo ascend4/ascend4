@@ -53,12 +53,24 @@ class StudyReporter(PythonSolverReporter):
 		self.nsteps = nsteps
 		self.pointsdone = 0
 		self.allconverged = True
+		try:
+			ascpy.setSolverInterrupt(False)
+		except Exception:
+			pass
 
 	def on_stopbutton_activate(self,*args):
 		self.guiinterrupt = True
+		try:
+			ascpy.setSolverInterrupt(True)
+		except Exception:
+			pass
 
 	def on_studystatusdialog_response(self,widget,response):
 		self.guiinterrupt = True
+		try:
+			ascpy.setSolverInterrupt(True)
+		except Exception:
+			pass
 		self.window.destroy()
 		
 	def fill_values(self,status):
@@ -128,6 +140,10 @@ class StudyReporter(PythonSolverReporter):
 	def finalise(self,status):
 		try:
 			_time = time.perf_counter()
+			try:
+				ascpy.setSolverInterrupt(False)
+			except Exception:
+				pass
 			_sincelast = _time - self.lasttime
 			if _sincelast > self.updateinterval:
 				self.fill_values(status)

@@ -1,5 +1,6 @@
 import threading
 import loading
+import ascpy
 from gi.repository import GObject
 
 from solverreporter import *
@@ -78,6 +79,8 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 
 	def do_solve_thread(self, sim, reporter):
 		try:
+			ascpy.setSolverProgressReporter(reporter)
+			ascpy.setSolverInterrupt(False)
 			sim.presolve(sim.getSolver())
 			status = sim.getStatus()
 			while status.isReadyToSolve() and not self.solve_interrupt:
@@ -93,4 +96,9 @@ class SolverHooksPythonBrowser(SolverHooksPython):
 			sim.postsolve(status)
 		except Exception as e:
 			print("PYTHON ERROR:", str(e))
-
+		finally:
+			try:
+				ascpy.setSolverInterrupt(False)
+				ascpy.setSolverProgressReporter(None)
+			except Exception:
+				pass

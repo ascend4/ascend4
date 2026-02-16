@@ -2,7 +2,7 @@ import ascpy
 import time
 import gi
 gi.require_version('Gtk','3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, GObject
 
 class PythonSolverReporter(ascpy.SolverReporter):
 	def __init__(self,browser,message=None):
@@ -41,6 +41,23 @@ class PythonSolverReporter(ascpy.SolverReporter):
 		_msg = _msg + " while solving block %d/%d (%d vars in block)" % (status.getCurrentBlockNum(),
 				status.getNumBlocks(),status.getCurrentBlockSize() )
 		self.reporter.reportError(_msg)
+
+	def _report_progress_ui(self, solver_name, message):
+		try:
+			self.browser.statusbar.pop(self.statusbarcontext)
+			self.browser.statusbar.push(
+				self.statusbarcontext,
+				"Solving (%s): %s" % (solver_name, message)
+			)
+		except Exception:
+			pass
+		return False
+
+	def reportProgress(self, solver_name, message):
+		try:
+			GObject.idle_add(self._report_progress_ui, solver_name, message)
+		except Exception:
+			pass
 
 
 
@@ -84,6 +101,10 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.sim = sim
 
 		self.nv = self.sim.getNumVars()
+		try:
+			ascpy.setSolverInterrupt(False)
+		except Exception:
+			pass
 
 	def on_diagnose_button_click(self,*args):
 		try:
@@ -97,9 +118,17 @@ class PopupSolverReporter(PythonSolverReporter):
 
 	def on_stopbutton_activate(self,*args):
 		self.guiinterrupt = True
+		try:
+			ascpy.setSolverInterrupt(True)
+		except Exception:
+			pass
 
 	def on_solverstatusdialog_response(self,widget,response):
 		self.guiinterrupt = True
+		try:
+			ascpy.setSolverInterrupt(True)
+		except Exception:
+			pass
 		self.window.destroy()
 		
 	def fill_values(self,status):
@@ -139,6 +168,10 @@ class PopupSolverReporter(PythonSolverReporter):
 	def finalise(self,status):
 		try:
 			_time = time.perf_counter()
+			try:
+				ascpy.setSolverInterrupt(False)
+			except Exception:
+				pass
 
 			_p = self.browser.prefs;
 			_close_on_converged = _p.getBoolPref("SolverReporter","close_on_converged",True);

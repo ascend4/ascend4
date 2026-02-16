@@ -33,6 +33,7 @@ public:
 	const bool isDiverged() const;
 	const bool hasExceededIterationLimit() const;
 	const bool hasExceededTimeLimit() const;
+	/** True if residual/objective evaluation reported calculation errors. */
 	const bool hasResidualCalculationErrors() const;
 	const bool isInterrupted() const;
 	const int getIterationNum() const;

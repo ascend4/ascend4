@@ -50,6 +50,11 @@ class PopupSolverReporter(PythonSolverReporter):
 			
 	def on_progressdialog_stop(self,*args):
 		self.guiinterrupt = True;
+		try:
+			if hasattr(self.browser, "sim") and self.browser.sim:
+				ascpy.setSolverInterrupt(True)
+		except Exception:
+			pass
 
 	def on_progressdialog_close(self,widget):
 		self.progress_dialog.destroy()

@@ -32,3 +32,9 @@ SolverReporter::finalise(SolverStatus *status){
 		cerr << "Not converged" << endl;
 	}
 }
+
+void
+SolverReporter::reportProgress(const char *solver_name, const char *message){
+	(void)solver_name;
+	(void)message;
+}

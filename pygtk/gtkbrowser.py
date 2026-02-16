@@ -862,6 +862,8 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def do_solve_thread(self, reporter):
 		try:
+			ascpy.setSolverProgressReporter(reporter)
+			ascpy.setSolverInterrupt(False)
 			self.sim.presolve(self.solver)
 			status = self.sim.getStatus()
 			while status.isReadyToSolve() and not self.solve_interrupt:
@@ -876,6 +878,12 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.sim.postsolve(status)
 		except RuntimeError as err:
 			self.reporter.reportError(str(err))
+		finally:
+			try:
+				ascpy.setSolverInterrupt(False)
+				ascpy.setSolverProgressReporter(None)
+			except Exception:
+				pass
 
 	def do_solve(self):
 		if self.no_built_system():
