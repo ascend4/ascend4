@@ -54,6 +54,16 @@ extern unsigned long LineNum(void);
  *  This function returns the line number position of the scanner.
  */
 
+extern unsigned long Asc_ScannerTokenColumn(void);
+/**<
+ *  Returns the 1-based start column of the most recently matched token.
+ */
+
+extern CONST char *Asc_ScannerTokenText(void);
+/**<
+ *  Returns scanner text for the most recently matched token.
+ */
+
 extern void Asc_ScannerAssignFile(FILE *f, unsigned long linenum);
 /**<
  *  Change the input to file f and reset the line count to linenum.
@@ -113,7 +123,17 @@ extern void Asc_DestroyScannerInputBuffer(void);
  * startup. Call this only at the final shutdown of the scanner.
  */
 
+extern void Asc_ScannerSetTableMode(int enabled);
+/**<
+ * Enables/disables newline token emission for TABLE body parsing.
+ * When enabled, '\n' is returned as EOL_TOK instead of being discarded.
+ */
+
+extern int Asc_ScannerGetTableMode(void);
+/**<
+ * Returns nonzero if TABLE body lexing mode is currently enabled.
+ */
+
 /* @} */
 
 #endif /* ASC_SCANNER_H */
-

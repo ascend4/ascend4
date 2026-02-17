@@ -1,0 +1,14 @@
+REQUIRE "atoms.a4l";
+
+MODEL tables_v05_fail_table_bad_delimiter;
+	r IS_A set OF integer_constant;
+	c IS_A set OF integer_constant;
+	x[r][c] IS_A integer_constant;
+	r :== [1..2];
+	c :== [1..2];
+
+	TABLE x[r,c] POSITIONAL;
+		1 | 2
+		3 4
+	END TABLE;
+END tables_v05_fail_table_bad_delimiter;

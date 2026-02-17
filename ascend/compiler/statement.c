@@ -136,6 +136,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case RUN:
     case FNAME:
     case FLOW:
+    case TABLESTAT:
       break;
     case FOR:
       sublist = ForStatStmts(s);
@@ -826,6 +827,26 @@ struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs)
   return result;
 }
 
+struct Statement *CreateTABLE(struct Name *n,
+                              struct Expr *default_expr,
+                              int positional,
+                              unsigned long rows,
+                              unsigned long scalars,
+                              unsigned long items,
+                              char *body)
+{
+  struct Statement *result;
+  result = create_statement_here(TABLESTAT);
+  result->v.table.name = n;
+  result->v.table.default_expr = default_expr;
+  result->v.table.body = body;
+  result->v.table.positional = positional;
+  result->v.table.rows = rows;
+  result->v.table.scalars = scalars;
+  result->v.table.items = items;
+  return result;
+}
+
 enum stat_t StatementTypeF(CONST struct Statement *s)
 {
   assert(s!=NULL);
@@ -970,6 +991,18 @@ void DestroyStatement(struct Statement *s)
         s->v.asgn.nptr = NULL;
         DestroyExprList(s->v.asgn.rhs);
         s->v.asgn.rhs = NULL;
+        break;
+      case TABLESTAT:
+        DestroyName(s->v.table.name);
+        s->v.table.name = NULL;
+        if (s->v.table.default_expr != NULL) {
+          DestroyExprList(s->v.table.default_expr);
+          s->v.table.default_expr = NULL;
+        }
+        if (s->v.table.body != NULL) {
+          ascfree(s->v.table.body);
+          s->v.table.body = NULL;
+        }
         break;
       case RUN:
         DestroyName(s->v.r.proc_name);
@@ -1165,6 +1198,21 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.asgn.nptr = CopyName(s->v.asgn.nptr);
     result->v.asgn.rhs = CopyExprList(s->v.asgn.rhs);
     break;
+  case TABLESTAT:
+    result->v.table.name = CopyName(s->v.table.name);
+    result->v.table.default_expr = CopyExprList(s->v.table.default_expr);
+    result->v.table.positional = s->v.table.positional;
+    result->v.table.rows = s->v.table.rows;
+    result->v.table.scalars = s->v.table.scalars;
+    result->v.table.items = s->v.table.items;
+    if (s->v.table.body != NULL) {
+      size = strlen(s->v.table.body);
+      result->v.table.body = ASC_NEW_ARRAY(char,size + 1);
+      memcpy(result->v.table.body,s->v.table.body,size + 1);
+    } else {
+      result->v.table.body = NULL;
+    }
+    break;
   case RUN:
     result->v.r.proc_name = CopyName(s->v.r.proc_name);
     result->v.r.type_name = CopyName(s->v.r.type_name);
@@ -1275,6 +1323,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case COND:
   case WHILE:
   case FLOW:
+  case TABLESTAT:
     return s->context;
   default:
     ERROR_REPORTER_STAT(ASC_PROG_ERR,s,"GetStatContext called on incorrect statement type.");
@@ -1320,6 +1369,7 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case COND:
   case WHILE:
   case FLOW:
+  case TABLESTAT:
     s->context = c;
     break;
   default:
@@ -1367,6 +1417,7 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case COND:
   case WHILE:
   case FLOW:
+  case TABLESTAT:
     s->context |= c;
     break;
   default:
@@ -2482,6 +2533,34 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     return CompareExprs(AssignStatRHS(s1),AssignStatRHS(s2));
+  case TABLESTAT:
+    ctmp = CompareNames(s1->v.table.name,s2->v.table.name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (s1->v.table.positional != s2->v.table.positional) {
+      return (s1->v.table.positional > s2->v.table.positional) ? 1 : -1;
+    }
+    ctmp = CompareExprs(s1->v.table.default_expr,s2->v.table.default_expr);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (s1->v.table.rows != s2->v.table.rows) {
+      return (s1->v.table.rows > s2->v.table.rows) ? 1 : -1;
+    }
+    if (s1->v.table.scalars != s2->v.table.scalars) {
+      return (s1->v.table.scalars > s2->v.table.scalars) ? 1 : -1;
+    }
+    if (s1->v.table.items != s2->v.table.items) {
+      return (s1->v.table.items > s2->v.table.items) ? 1 : -1;
+    }
+    if (s1->v.table.body == NULL || s2->v.table.body == NULL) {
+      if (s1->v.table.body == s2->v.table.body) {
+        return 0;
+      }
+      return (s1->v.table.body != NULL) ? 1 : -1;
+    }
+    return strcmp(s1->v.table.body,s2->v.table.body);
   case RUN:
     ctmp = CompareNames(RunStatName(s1),RunStatName(s2));
     if (ctmp != 0) {
@@ -2739,4 +2818,3 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
 }
 
 /* vim: set ts=8: */
-

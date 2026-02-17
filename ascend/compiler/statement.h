@@ -469,6 +469,18 @@ extern struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs);
  *  The statement's line number is set to the current line number.
  */
 
+extern struct Statement *CreateTABLE(struct Name *n,
+                                     struct Expr *default_expr,
+                                     int positional,
+                                     unsigned long rows,
+                                     unsigned long scalars,
+                                     unsigned long items,
+                                     char *body);
+/**<
+ *  Create a TABLE statement node.
+ *  The statement takes ownership of n, default_expr, and body.
+ */
+
 #ifdef NDEBUG
 #define StatementType(s) ((s)->t)
 #else
@@ -2090,4 +2102,3 @@ extern int CompareISStatements(CONST struct Statement *s1,
 /* @} */
 
 #endif /* ASC_STATEMENT_H */
-

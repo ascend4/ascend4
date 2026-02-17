@@ -1,0 +1,14 @@
+REQUIRE "atoms.a4l";
+
+MODEL tables_v05_fail_sparse_repeated_labels;
+	r IS_A set OF integer_constant;
+	c IS_A set OF integer_constant;
+	cost[r][c] IS_A integer_constant;
+	r :== [1..2];
+	c :== [1..3];
+
+	TABLE cost[r][c];
+		1: 1=11 1=12 2=13
+		1: 3=23
+	END TABLE;
+END tables_v05_fail_sparse_repeated_labels;

@@ -1,0 +1,16 @@
+REQUIRE "atoms.a4l";
+
+MODEL tables_v05_fail_table_header;
+	customer IS_A set OF integer_constant;
+	facility IS_A set OF integer_constant;
+	ship_cost[customer][facility] IS_A factor_constant;
+
+	customer :== [1..2];
+	facility :== [1..2];
+
+	TABLE ship_cost[customer,facility]
+		1 2
+		1 2 3
+		2 4 5
+	END TABLE;
+END tables_v05_fail_table_header;

@@ -91,6 +91,7 @@
 
 #include <stdarg.h>
 #include <errno.h>
+#include <string.h>
 
 #include <ascend/utilities/config.h>
 #include <ascend/general/platform.h>
@@ -225,6 +226,7 @@ static int CheckVarList(struct Instance *, struct Statement *);
 static int CheckWhereStatements(struct Instance *,struct StatementList *);
 static int ExecuteISA(struct Instance *, struct Statement *);
 static int ExecuteCASGN(struct Instance *, struct Statement *);
+static int ExecuteTABLE(struct Instance *, struct Statement *);
 static int DigestArguments(struct Instance *,
                     struct gl_list_t *, struct StatementList *,
                     struct StatementList *, struct Statement *);
@@ -6067,6 +6069,474 @@ static int AssignStructuralValue(struct Instance *inst
   }
 }
 
+struct table_domain_t {
+  struct set_t *set;
+  enum set_kind kind;
+  unsigned long len;
+};
+
+static void TableDomainDestroy(struct table_domain_t *domain){
+  if (domain->set != NULL) {
+    DestroySet(domain->set);
+    domain->set = NULL;
+  }
+  domain->kind = empty_set;
+  domain->len = 0;
+}
+
+static int TableInitDomainFromSet(CONST struct set_t *set,
+                                  struct Statement *statement,
+                                  struct table_domain_t *domain)
+{
+  domain->set = CopySet(set);
+  if (domain->set == NULL) {
+    STATEMENT_ERROR(statement,"TABLE index set is unavailable");
+    return 0;
+  }
+  domain->kind = SetKind(domain->set);
+  if (domain->kind != integer_set && domain->kind != string_set && domain->kind != empty_set) {
+    STATEMENT_ERROR(statement,"TABLE index set type is unsupported");
+    TableDomainDestroy(domain);
+    return 0;
+  }
+  domain->len = Cardinality(domain->set);
+  return 1;
+}
+
+static int TableEvaluateDomains(struct Instance *inst,
+                                CONST struct Set *set_expr,
+                                struct Statement *statement,
+                                struct table_domain_t *domains,
+                                unsigned max_domains,
+                                unsigned *num_domains)
+{
+  struct value_t value, ordered;
+  struct gl_list_t *list;
+  struct value_t *vptr;
+  int saved_list_mode;
+  unsigned long c,len;
+  int all_sets = 0;
+  IVAL(value);
+  IVAL(ordered);
+  *num_domains = 0;
+
+  asc_assert(GetEvaluationContext()==NULL);
+  SetEvaluationContext(inst);
+  value = EvaluateSet(set_expr,InstanceEvaluateName);
+  SetEvaluationContext(NULL);
+
+  switch (ValueKind(value)) {
+  case set_value:
+    if (max_domains < 1) {
+      STATEMENT_ERROR(statement,"Too many TABLE indices");
+      DestroyValue(&value);
+      return 0;
+    }
+    if (!TableInitDomainFromSet(SetValue(value),statement,&domains[0])) {
+      DestroyValue(&value);
+      return 0;
+    }
+    *num_domains = 1;
+    break;
+  case list_value:
+    list = value.u.lvalues;
+    len = (list != NULL) ? gl_length(list) : 0;
+    all_sets = (len > 0);
+    for (c = 1; c <= len; ++c) {
+      vptr = (struct value_t *)gl_fetch(list,c);
+      if (vptr == NULL || ValueKind(*vptr) != set_value) {
+        all_sets = 0;
+        break;
+      }
+    }
+    if (all_sets) {
+      if (len > max_domains) {
+        STATEMENT_ERROR(statement,"Too many TABLE indices");
+        DestroyValue(&value);
+        return 0;
+      }
+      for (c = 1; c <= len; ++c) {
+        vptr = (struct value_t *)gl_fetch(list,c);
+        if (!TableInitDomainFromSet(SetValue(*vptr),statement,&domains[c-1])) {
+          unsigned long d;
+          for (d = 0; d < c - 1; ++d) {
+            TableDomainDestroy(&domains[d]);
+          }
+          DestroyValue(&value);
+          return 0;
+        }
+      }
+      *num_domains = (unsigned)len;
+      break;
+    }
+    if (max_domains < 1) {
+      STATEMENT_ERROR(statement,"Too many TABLE indices");
+      DestroyValue(&value);
+      return 0;
+    }
+    saved_list_mode = ListMode;
+    ListMode = 1;
+    ordered = CreateOrderedSetFromList(value);
+    ListMode = saved_list_mode;
+    if (ValueKind(ordered) != set_value) {
+      STATEMENT_ERROR(statement,"TABLE index set cannot be converted from list");
+      DestroyValue(&ordered);
+      DestroyValue(&value);
+      return 0;
+    }
+    if (!TableInitDomainFromSet(SetValue(ordered),statement,&domains[0])) {
+      DestroyValue(&ordered);
+      DestroyValue(&value);
+      return 0;
+    }
+    *num_domains = 1;
+    DestroyValue(&ordered);
+    break;
+  case error_value:
+    STATEMENT_ERROR(statement,"TABLE index set could not be evaluated");
+    DestroyValue(&value);
+    return 0;
+  default:
+    STATEMENT_ERROR(statement,"TABLE index expression must evaluate to a set");
+    DestroyValue(&value);
+    return 0;
+  }
+  DestroyValue(&value);
+  return 1;
+}
+
+static int TableParseNumberToken(CONST char *tok,
+                                 int sign,
+                                 int *is_int,
+                                 long *ival,
+                                 double *rval)
+{
+  char *end;
+  long ltmp;
+  double dtmp;
+  errno = 0;
+  ltmp = strtol(tok,&end,10);
+  if (end != NULL && *end == '\0' && errno != ERANGE) {
+    *is_int = 1;
+    *ival = sign * ltmp;
+    *rval = (double)(*ival);
+    return 1;
+  }
+  errno = 0;
+  dtmp = strtod(tok,&end);
+  if (end != NULL && *end == '\0' && errno != ERANGE) {
+    *is_int = 0;
+    *rval = (sign < 0) ? -dtmp : dtmp;
+    *ival = (long)(*rval);
+    return 1;
+  }
+  return 0;
+}
+
+static struct Name *TableBuildCellName(CONST struct Name *templ,
+                                       CONST struct table_domain_t *domains,
+                                       unsigned ndims,
+                                       CONST unsigned long *positions)
+{
+  CONST struct Name *scan;
+  CONST struct Name *node;
+  struct Name *result = NULL;
+  unsigned d = 0;
+
+  for (node = templ; node != NULL; node = NextName(node)) {
+    if (NameId(node)) {
+      result = CopyAppendNameNode(result,node);
+    } else {
+      unsigned rem_nodes = 0;
+      unsigned rem_dims;
+      unsigned take;
+      unsigned k;
+
+      for (scan = node; scan != NULL; scan = NextName(scan)) {
+        if (!NameId(scan)) {
+          rem_nodes++;
+        }
+      }
+      rem_dims = ndims - d;
+      if (rem_nodes == 0 || rem_dims == 0 || rem_dims < rem_nodes) {
+        DestroyName(result);
+        return NULL;
+      }
+      take = rem_dims - (rem_nodes - 1);
+      for (k = 0; k < take; ++k) {
+        struct Name *indexnode = NULL;
+        switch (domains[d].kind) {
+        case integer_set:
+          indexnode = CreateIntegerElementName((long)FetchIntMember(domains[d].set,positions[d]));
+          break;
+        case string_set:
+          indexnode = CreateEnumElementName(FetchStrMember(domains[d].set,positions[d]));
+          break;
+        default:
+          DestroyName(result);
+          return NULL;
+        }
+        result = JoinNames(result,indexnode);
+        d++;
+      }
+    }
+  }
+  if (d != ndims) {
+    DestroyName(result);
+    return NULL;
+  }
+  return result;
+}
+
+static int TableAssignCell(struct Instance *work,
+                           struct Statement *statement,
+                           CONST struct table_domain_t *domains,
+                           unsigned ndims,
+                           CONST unsigned long *positions,
+                           int is_int,
+                           long ival,
+                           double rval)
+{
+  struct Name *lhs;
+  struct gl_list_t *instances;
+  struct value_t value;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  struct Instance *inst;
+  int ok;
+
+  lhs = TableBuildCellName(statement->v.table.name,domains,ndims,positions);
+  if (lhs == NULL) {
+    STATEMENT_ERROR(statement,"Unable to construct TABLE assignment target name");
+    return 0;
+  }
+
+  instances = FindInstances(work,lhs,&err);
+  DestroyName(lhs);
+  if (instances == NULL || gl_length(instances) != 1) {
+    if (instances != NULL) {
+      gl_destroy(instances);
+    }
+    STATEMENT_ERROR(statement,"TABLE assignment target could not be resolved uniquely");
+    return 0;
+  }
+  inst = (struct Instance *)gl_fetch(instances,1);
+  gl_destroy(instances);
+
+  value = is_int
+    ? CreateIntegerValue(ival,1)
+    : CreateRealValue(rval,WildDimension(),1);
+
+  ok = AssignStructuralValue(inst,value,statement);
+  DestroyValue(&value);
+  return ok;
+}
+
+static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
+  struct table_domain_t domains[2];
+  CONST struct Name *node;
+  unsigned ndims = 0;
+  int rval = 1;
+  char *bodycopy = NULL;
+  char *line_ctx = NULL;
+  char *line;
+  unsigned long row_index = 1;
+  unsigned long flat_index = 0;
+  unsigned di;
+
+  if (StatWrong(statement)) {
+    return 1;
+  }
+
+  if (!statement->v.table.positional) {
+    STATEMENT_ERROR(statement,"Only POSITIONAL TABLE assignment is implemented");
+    MarkStatContext(statement,context_WRONG);
+    return 1;
+  }
+  if (statement->v.table.name == NULL || !NameId(statement->v.table.name)) {
+    STATEMENT_ERROR(statement,"TABLE target name is invalid");
+    MarkStatContext(statement,context_WRONG);
+    return 1;
+  }
+
+  for (di = 0; di < 2; ++di) {
+    domains[di].set = NULL;
+    domains[di].kind = empty_set;
+    domains[di].len = 0;
+  }
+
+  for (node = statement->v.table.name; node != NULL; node = NextName(node)) {
+    if (!NameId(node)) {
+      unsigned added = 0;
+      if (ndims >= 2) {
+        STATEMENT_ERROR(statement,"POSITIONAL TABLE currently supports at most 2 indices");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      if (!TableEvaluateDomains(work,NameSetPtr(node),statement,&domains[ndims],2 - ndims,&added)) {
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      ndims += added;
+    }
+  }
+  if (ndims == 0) {
+    STATEMENT_ERROR(statement,"TABLE target must include at least one index");
+    MarkStatContext(statement,context_WRONG);
+    goto cleanup;
+  }
+
+  if (statement->v.table.body != NULL) {
+    size_t n = strlen(statement->v.table.body);
+    bodycopy = ASC_NEW_ARRAY(char,n + 1);
+    memcpy(bodycopy,statement->v.table.body,n + 1);
+  } else {
+    bodycopy = ASC_NEW_ARRAY(char,1);
+    bodycopy[0] = '\0';
+  }
+
+  for (line = strtok_r(bodycopy,"\n",&line_ctx); line != NULL; line = strtok_r(NULL,"\n",&line_ctx)) {
+    char *tok_ctx = NULL;
+    char *tok;
+    unsigned long col_index = 1;
+    int row_has_values = 0;
+    int delim_pending = 0;
+    int sign = 1;
+    int sign_pending = 0;
+
+    for (tok = strtok_r(line," \t\r",&tok_ctx); tok != NULL; tok = strtok_r(NULL," \t\r",&tok_ctx)) {
+      int is_int;
+      long ival;
+      double rvalnum;
+      unsigned long pos[2];
+
+      if (strcmp(tok,";") == 0 || strcmp(tok,",") == 0) {
+        if (sign_pending) {
+          STATEMENT_ERROR(statement,"TABLE delimiter cannot follow a sign without a value");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        if (!row_has_values) {
+          STATEMENT_ERROR(statement,"TABLE row cannot begin with a delimiter");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        if (delim_pending) {
+          STATEMENT_ERROR(statement,"TABLE row has repeated delimiters without a value");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        delim_pending = 1;
+        continue;
+      }
+      if (strcmp(tok,"+") == 0 || strcmp(tok,"-") == 0) {
+        if (sign_pending) {
+          STATEMENT_ERROR(statement,"Malformed TABLE value sign sequence");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        delim_pending = 0;
+        sign = (tok[0] == '-') ? -1 : 1;
+        sign_pending = 1;
+        continue;
+      }
+      if (strcmp(tok,":") == 0 || strcmp(tok,"=") == 0) {
+        STATEMENT_ERROR(statement,"Unexpected sparse-token punctuation in POSITIONAL TABLE");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+
+      if (!TableParseNumberToken(tok,sign_pending ? sign : 1,&is_int,&ival,&rvalnum)) {
+        STATEMENT_ERROR(statement,"POSITIONAL TABLE contains non-numeric token");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      delim_pending = 0;
+      sign = 1;
+      sign_pending = 0;
+      row_has_values = 1;
+
+      if (ndims == 1) {
+        flat_index++;
+        if (flat_index > domains[0].len) {
+          STATEMENT_ERROR(statement,"Too many TABLE values for 1-D target");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        pos[0] = flat_index;
+        if (!TableAssignCell(work,statement,domains,1,pos,is_int,ival,rvalnum)) {
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+      } else {
+        if (row_index > domains[0].len) {
+          STATEMENT_ERROR(statement,"Too many TABLE rows for first index set");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        if (col_index > domains[1].len) {
+          STATEMENT_ERROR(statement,"Too many TABLE columns for second index set");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        pos[0] = row_index;
+        pos[1] = col_index;
+        if (!TableAssignCell(work,statement,domains,2,pos,is_int,ival,rvalnum)) {
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        col_index++;
+      }
+    }
+
+    if (sign_pending) {
+      STATEMENT_ERROR(statement,"Dangling sign token at end of TABLE row");
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+    if (delim_pending) {
+      STATEMENT_ERROR(statement,"TABLE row cannot end with a delimiter");
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+    if (!row_has_values) {
+      continue;
+    }
+    if (ndims == 2) {
+      if (col_index - 1 != domains[1].len) {
+        STATEMENT_ERROR(statement,"TABLE row has incorrect number of columns");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      row_index++;
+    }
+  }
+
+  if (ndims == 1) {
+    if (flat_index != domains[0].len) {
+      STATEMENT_ERROR(statement,"TABLE value count does not match index cardinality");
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+  } else {
+    if (row_index - 1 != domains[0].len) {
+      STATEMENT_ERROR(statement,"TABLE row count does not match first index cardinality");
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+  }
+  rval = 1;
+  goto cleanup;
+
+cleanup:
+  if (bodycopy != NULL) {
+    ascfree(bodycopy);
+  }
+  for (di = 0; di < 2; ++di) {
+    TableDomainDestroy(&domains[di]);
+  }
+  return rval;
+}
+
 
 /**
 	Execute structural and dimensional assignments.
@@ -6911,6 +7381,7 @@ static int Pass3CheckCondStatements(struct Instance *inst
     case WHEN:
     case FNAME:
     case SELECT:
+    case TABLESTAT:
       STATEMENT_ERROR(statement,
         "Statement not allowed inside a CONDITIONAL statement\n");
       return 0;
@@ -6973,6 +7444,7 @@ static int Pass2CheckCondStatements(struct Instance *inst
     case WHEN:
     case FNAME:
     case SELECT:
+    case TABLESTAT:
          STATEMENT_ERROR(statement,
                "Statement not allowed inside a CONDITIONAL statement\n");
          return 0;
@@ -7265,6 +7737,7 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement){
     case CALL:
     case ASGN:
     case SELECT:
+    case TABLESTAT:
          STATEMENT_ERROR(statement,
               "Statement not allowed inside a WHEN statement\n");
          return 0;
@@ -7785,6 +8258,7 @@ int Pass4CheckStatement(struct Instance *inst, struct Statement *stat)
   case LNK:
   case CASGN:
   case ASGN:
+  case TABLESTAT:
   default:
     return 1; /* ignore all in phase 4.*/
   }
@@ -7817,6 +8291,7 @@ int Pass3CheckStatement(struct Instance *inst, struct Statement *stat)
   case WHEN:
   case SELECT:
   case FNAME:
+  case TABLESTAT:
   default:
     return 1; /* ignore all in phase 3. nondeclarative flagged in pass1 */
   }
@@ -7850,6 +8325,7 @@ int Pass2CheckStatement(struct Instance *inst, struct Statement *stat)
   case WHEN:
   case SELECT:
   case FNAME:
+  case TABLESTAT:
   default:
     return 1; /* ignore all in phase 2. nondeclarative flagged in pass1 */
   }
@@ -7899,6 +8375,8 @@ int Pass1CheckStatement(struct Instance *inst, struct Statement *stat)
     return 1; /* ignore'm in phase 1 */
   case CASGN:
     return CheckCASGN(inst,stat);
+  case TABLESTAT:
+    return 1;
   case ASGN:
     return 1; /* ignore'm in phase 1 */
   case WHEN:
@@ -8960,6 +9438,10 @@ void ExecuteSelectStatements(struct Instance *inst, unsigned long *count,
         return_value = Pass1ExecuteFOR(inst,statement);
         if (return_value) ClearBit(blist,*count);
         break;
+      case TABLESTAT:
+        return_value = ExecuteTABLE(inst,statement);
+        if (return_value) ClearBit(blist,*count);
+        break;
       case ASGN:
       case REL:
       case EXT:
@@ -9022,6 +9504,7 @@ void ExecuteUnSelectedStatements(struct Instance *inst,unsigned long *count,
       case CALL:
       case CASGN:
       case ASGN:
+      case TABLESTAT:
         ClearBit(blist,*count);
         break;
       case FNAME:
@@ -9691,6 +10174,7 @@ int Pass5ExecuteForStatements(struct Instance *inst,
     case LOGREL:
     case COND:
     case CALL:
+    case TABLESTAT:
     case EXT:  /* ignore'm */
     break;
     default:
@@ -9748,6 +10232,7 @@ int Pass4ExecuteForStatements(struct Instance *inst,
     case LOGREL:
     case COND:
     case CALL:
+    case TABLESTAT:
     case EXT:  /* ignore'm */
     break;
     default:
@@ -9792,6 +10277,7 @@ int Pass3ExecuteForStatements(struct Instance *inst,
     case ASGN:
     case REL:
     case CALL:
+    case TABLESTAT:
     case EXT: /* ignore'm */
     case CASGN:
     case WHEN:
@@ -9869,6 +10355,7 @@ void Pass2ExecuteForStatements(struct Instance *inst,
     case ASGN: /* ignore'm */
     case CASGN:
     case LOGREL:
+    case TABLESTAT:
       return_value = 1; /* ignore'm until pass 3 */
       break;
     case WHEN:
@@ -9998,6 +10485,9 @@ void Pass1ExecuteForStatements(struct Instance *inst,
     case CASGN:
       return_value = ExecuteCASGN(inst,statement);
       break;
+    case TABLESTAT:
+      return_value = ExecuteTABLE(inst,statement);
+      break;
     case FNAME:
       STATEMENT_ERROR(statement,
                 "FNAME statements are only allowed inside a WHEN Statement");
@@ -10046,6 +10536,7 @@ int ExecuteUnSelectedForStatements(struct Instance *inst,
       case CALL:
       case CASGN:
       case ASGN:
+      case TABLESTAT:
         break;
       case FNAME:
         if (g_iteration>=MAXNUMBER) {
@@ -11278,6 +11769,8 @@ int Pass5ExecuteStatement(struct Instance *inst,struct Statement *statement)
     return 0;
   case FOR:
     return Pass5ExecuteFOR(inst,statement);
+  case TABLESTAT:
+    return 1;
   default:
     return 1;
     /* For anything else but a LINK and FOR statement */
@@ -11292,6 +11785,8 @@ int Pass4ExecuteStatement(struct Instance *inst,struct Statement *statement)
     return ExecuteWHEN(inst,statement);
   case FOR:
     return Pass4ExecuteFOR(inst,statement);
+  case TABLESTAT:
+    return 1;
   case LNK:
     return 1; /* automatically assume done */
   case UNLNK:
@@ -11312,6 +11807,8 @@ int Pass3ExecuteStatement(struct Instance *inst,struct Statement *statement)
     return ExecuteLOGREL(inst,statement);
   case COND:
     return Pass3ExecuteCOND(inst,statement);
+  case TABLESTAT:
+    return 1;
   case WHEN:
     return 1; /* assumed done  */
   case LNK:
@@ -11351,6 +11848,8 @@ int Pass2ExecuteStatement(struct Instance *inst,struct Statement *statement)
     return ExecuteEXT(inst,statement);
   case COND:
     return Pass2ExecuteCOND(inst,statement);
+  case TABLESTAT:
+    return 1;
   case LOGREL:
 		return 1; /* assumed done */
   case WHEN:
@@ -11387,6 +11886,8 @@ int Pass1ExecuteStatement(struct Instance *inst, unsigned long *c,
     return ExecuteAA(inst,statement);
   case FOR:
     return Pass1ExecuteFOR(inst,statement);
+  case TABLESTAT:
+    return ExecuteTABLE(inst,statement);
   case REL:
     return 1; /* automatically assume done */
   case CALL:

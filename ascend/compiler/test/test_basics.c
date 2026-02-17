@@ -18,6 +18,7 @@
 	Unit test functions for compiler. Nothing here yet.
 */
 #include <string.h>
+#include <stdio.h>
 
 #include <ascend/general/env.h>
 #include <ascend/general/platform.h>
@@ -34,6 +35,7 @@
 #include <ascend/compiler/parentchild.h>
 #include <ascend/compiler/atomvalue.h>
 #include <ascend/compiler/childio.h>
+#include <ascend/compiler/instance_name.h>
 
 #include <ascend/compiler/initialize.h>
 
@@ -46,6 +48,173 @@
 #else
 # define MSG(ARGS...) ((void)0)
 #endif
+
+/* Define this locally when you want verbose parser-error traces for table tests. */
+#define TEST_TABLES_DEBUG
+#ifdef TEST_TABLES_DEBUG
+# define TMSG CONSOLE_DEBUG
+#else
+# define TMSG(ARGS...) ((void)0)
+#endif
+
+typedef struct{
+	int error_count;
+	int first_error_line;
+	char first_error_file[256];
+	char first_error_msg[512];
+	char all_error_msgs[4096];
+} parse_error_capture_t;
+
+static parse_error_capture_t g_parse_error_capture;
+
+#ifdef TEST_TABLES_DEBUG
+static const char *sev_to_str(error_severity_t sev){
+	switch(sev){
+	case ASC_USER_SUCCESS: return "SUCCESS";
+	case ASC_USER_NOTE: return "USER_NOTE";
+	case ASC_USER_WARNING: return "USER_WARNING";
+	case ASC_USER_ERROR: return "USER_ERROR";
+	case ASC_PROG_NOTE: return "PROG_NOTE";
+	case ASC_PROG_WARNING: return "PROG_WARNING";
+	case ASC_PROG_ERROR: return "PROG_ERROR";
+	case ASC_PROG_FATAL: return "PROG_FATAL";
+	default: return "UNKNOWN";
+	}
+}
+#endif
+
+static void parse_error_capture_reset(void){
+	memset(&g_parse_error_capture,0,sizeof(g_parse_error_capture));
+}
+
+static int parse_error_capture_cb(ERROR_REPORTER_CALLBACK_ARGS){
+	char msg[sizeof(g_parse_error_capture.first_error_msg)];
+	int wrote_default;
+	va_list args_copy;
+	size_t used;
+
+	va_copy(args_copy,args);
+	vsnprintf(msg,sizeof(msg),fmt,args_copy);
+	va_end(args_copy);
+
+	TMSG("captured [%s] %s:%d: %s"
+		,sev_to_str(sev)
+		,filename ? filename : "(null)"
+		,line
+		,msg
+	);
+	if(sev & ASC_ERR_ERR){
+		g_parse_error_capture.error_count++;
+		used = strlen(g_parse_error_capture.all_error_msgs);
+		if(used + 2 < sizeof(g_parse_error_capture.all_error_msgs)){
+			if(used > 0){
+				snprintf(
+					g_parse_error_capture.all_error_msgs + used
+					,sizeof(g_parse_error_capture.all_error_msgs) - used
+					,"\n"
+				);
+				used = strlen(g_parse_error_capture.all_error_msgs);
+			}
+			snprintf(
+				g_parse_error_capture.all_error_msgs + used
+				,sizeof(g_parse_error_capture.all_error_msgs) - used
+				,"%s",msg
+			);
+		}
+		if(g_parse_error_capture.first_error_line == 0){
+			g_parse_error_capture.first_error_line = line;
+			if(filename){
+				snprintf(g_parse_error_capture.first_error_file
+					,sizeof(g_parse_error_capture.first_error_file)
+					,"%s",filename
+				);
+			}
+			snprintf(g_parse_error_capture.first_error_msg
+				,sizeof(g_parse_error_capture.first_error_msg)
+				,"%s",msg
+			);
+		}
+	}
+
+	/* Preserve normal console/error-stream output while also capturing metadata. */
+	va_copy(args_copy,args);
+	wrote_default = error_reporter_default_callback(sev,filename,line,funcname,fmt,args_copy);
+	va_end(args_copy);
+	return wrote_default;
+}
+
+static void parse_module_expect_error(const char *modulefile, const char *typename, const char *msg_substr, int expect_type_rejected, int require_column_info){
+	int status;
+	int has_error;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenModule(modulefile,&status);
+	CU_ASSERT(status == 0);
+	TMSG("parsing module '%s' (expecting parse errors)",modulefile);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	TMSG("error_count=%d first_error_line=%d",g_parse_error_capture.error_count,g_parse_error_capture.first_error_line);
+	TMSG("first_error='%s'",g_parse_error_capture.first_error_msg);
+	TMSG("all_errors:\n%s",g_parse_error_capture.all_error_msgs);
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(g_parse_error_capture.first_error_line > 0);
+	if(require_column_info){
+		CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs,"column") != NULL);
+	}
+	if(msg_substr){
+		CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs,msg_substr) != NULL);
+	}
+	if(expect_type_rejected && typename){
+		CU_ASSERT(FindType(AddSymbol(typename))==NULL);
+	}
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void instantiate_module_expect_error(const char *modulefile, const char *typename, const char *msg_substr){
+	int status;
+	struct Instance *sim;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenModule(modulefile,&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol(typename))!=NULL);
+
+	parse_error_capture_reset();
+	sim = SimsCreateInstance(AddSymbol(typename), AddSymbol("sim1"), e_normal, NULL);
+
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	if(msg_substr){
+		CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs,msg_substr) != NULL);
+	}
+
+	if(sim != NULL){
+		sim_destroy(sim);
+	}
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
 
 static void test_init(void){
 
@@ -496,6 +665,229 @@ static void test_badalias(void){
 #undef TESTFILE
 }
 
+static void test_parse_tables_v05(void){
+	int status;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_parse.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_clear();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_parse"))!=NULL);
+
+	Asc_CompilerDestroy();
+}
+
+static long fetch_int_table_cell_2d(struct Instance *root, const char *arrname, long i, long j){
+	struct InstanceName rec;
+	struct Instance *arr;
+	struct Instance *row;
+	struct Instance *inst;
+	unsigned long pos;
+	long value;
+
+	arr = ChildByChar(root,AddSymbol(arrname));
+	CU_ASSERT_FATAL(arr != NULL);
+
+	SetInstanceNameType(rec,IntArrayIndex);
+	SetInstanceNameIntIndex(rec,i);
+	pos = ChildSearch(arr,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	row = InstanceChild(arr,pos);
+	CU_ASSERT_FATAL(row != NULL);
+
+	SetInstanceNameIntIndex(rec,j);
+	pos = ChildSearch(row,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	inst = InstanceChild(row,pos);
+	CU_ASSERT_FATAL(inst != NULL);
+	CU_ASSERT_FATAL(InstanceKind(inst)==INTEGER_CONSTANT_INST);
+	CU_ASSERT_FATAL(AtomAssigned(inst));
+	value = GetIntegerAtomValue(inst);
+	return value;
+}
+
+static void test_instantiate_tables_v05_positional(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,1) == 11);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,2) == 12);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,3) == 13);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,1) == 21);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,2) == 22);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,3) == 23);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_parse_tables_v05_fail_table_header(void){
+	parse_module_expect_error(
+		"test/compiler/tables_v05_fail_table_header.a4c"
+		, "tables_v05_fail_table_header"
+		, "syntax error"
+		, 1
+		, 1
+	);
+}
+
+static void test_parse_tables_v05_fail_table_badchar(void){
+	parse_module_expect_error(
+		"test/compiler/tables_v05_fail_table_badchar.a4c"
+		, "tables_v05_fail_table_badchar"
+		, "Unexpected character"
+		, 0
+		, 1
+	);
+}
+
+static void test_parse_tables_v05_fail_dataset_missing_column(void){
+	parse_module_expect_error(
+		"test/compiler/tables_v05_fail_dataset_missing_column.a4c"
+		, "tables_v05_fail_dataset_missing_column"
+		, "syntax error"
+		, 1
+		, 1
+	);
+}
+
+static void test_parse_tables_v05_fail_dataset_missing_index(void){
+	parse_module_expect_error(
+		"test/compiler/tables_v05_fail_dataset_missing_index.a4c"
+		, "tables_v05_fail_dataset_missing_index"
+		, NULL
+		, 1
+		, 0
+	);
+}
+
+static void test_parse_tables_v05_fail_dataset_multi_units(void){
+	parse_module_expect_error(
+		"test/compiler/tables_v05_fail_dataset_multi_units.a4c"
+		, "tables_v05_fail_dataset_multi_units"
+		, NULL
+		, 1
+		, 0
+	);
+}
+
+static void test_parse_tables_v05_fail_table_bad_delimiter(void){
+	parse_module_expect_error(
+		"test/compiler/tables_v05_fail_table_bad_delimiter.a4c"
+		, "tables_v05_fail_table_bad_delimiter"
+		, "syntax error"
+		, 0
+		, 1
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_short_row(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_short_row.a4c"
+		, "tables_v05_fail_positional_short_row"
+		, NULL
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_too_many_cols(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_too_many_cols.a4c"
+		, "tables_v05_fail_positional_too_many_cols"
+		, NULL
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_too_few_rows(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_too_few_rows.a4c"
+		, "tables_v05_fail_positional_too_few_rows"
+		, NULL
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_too_many_rows(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_too_many_rows.a4c"
+		, "tables_v05_fail_positional_too_many_rows"
+		, NULL
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_invalid_row_label(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_invalid_row_label.a4c"
+		, "tables_v05_fail_positional_invalid_row_label"
+		, "POSITIONAL TABLE contains non-numeric token"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_invalid_col_delim(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_invalid_col_delim.a4c"
+		, "tables_v05_fail_positional_invalid_col_delim"
+		, "Unexpected sparse-token punctuation in POSITIONAL TABLE"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_sparse_repeated_labels(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_sparse_repeated_labels.a4c"
+		, "tables_v05_fail_sparse_repeated_labels"
+		, "Only POSITIONAL TABLE assignment is implemented"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_leading_delim(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_leading_delim.a4c"
+		, "tables_v05_fail_positional_leading_delim"
+		, "TABLE row cannot begin with a delimiter"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_trailing_delim(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_trailing_delim.a4c"
+		, "tables_v05_fail_positional_trailing_delim"
+		, "TABLE delimiter cannot follow a sign without a value"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_positional_double_delim(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_positional_double_delim.a4c"
+		, "tables_v05_fail_positional_double_delim"
+		, "TABLE delimiter cannot follow a sign without a value"
+	);
+}
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -515,7 +907,24 @@ static void test_badalias(void){
 	T(stoponfailedassert) \
 	T(badassign) \
 	T(type_info) \
-	T(badalias)
+	T(badalias) \
+	T(parse_tables_v05) \
+	T(instantiate_tables_v05_positional) \
+	T(parse_tables_v05_fail_table_header) \
+	T(parse_tables_v05_fail_table_badchar) \
+	T(parse_tables_v05_fail_table_bad_delimiter) \
+	T(parse_tables_v05_fail_dataset_missing_column) \
+	T(parse_tables_v05_fail_dataset_missing_index) \
+	T(parse_tables_v05_fail_dataset_multi_units) \
+	T(instantiate_tables_v05_fail_positional_short_row) \
+	T(instantiate_tables_v05_fail_positional_too_many_cols) \
+	T(instantiate_tables_v05_fail_positional_too_few_rows) \
+	T(instantiate_tables_v05_fail_positional_too_many_rows) \
+	T(instantiate_tables_v05_fail_positional_invalid_row_label) \
+	T(instantiate_tables_v05_fail_positional_invalid_col_delim) \
+	T(instantiate_tables_v05_fail_sparse_repeated_labels) \
+	T(instantiate_tables_v05_fail_positional_leading_delim) \
+	T(instantiate_tables_v05_fail_positional_trailing_delim) \
+	T(instantiate_tables_v05_fail_positional_double_delim)
 
 REGISTER_TESTS_SIMPLE(compiler_basics, TESTS)
-
