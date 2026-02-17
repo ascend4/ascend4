@@ -114,8 +114,8 @@ static int RequireIndex = 0;
 
 static int g_table_mode = 0;
 /*  If nonzero, newline characters in INITIAL state are emitted to the
- *  parser as EOL_TOK for TABLE parsing. A ';' followed by newline is
- *  treated as a line join (semicolon token returned, newline suppressed).
+ *  parser as EOL_TOK for TABLE parsing. A ';' followed by newline returns
+ *  ';' and suppresses a separate EOL token.
  */
 
 static YY_BUFFER_STATE RequireStack[MAX_REQUIRE_DEPTH];

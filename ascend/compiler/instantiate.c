@@ -6233,6 +6233,701 @@ static int TableParseNumberToken(CONST char *tok,
   return 0;
 }
 
+struct table_cell_value_t {
+  int is_int;
+  long ival;
+  double rval;
+};
+
+struct table_domain_ref_t {
+  CONST struct Expr *expr;
+  CONST struct Name *set_name;
+};
+
+static int TableAssignCell(struct Instance *work,
+                           struct Statement *statement,
+                           CONST struct table_domain_t *domains,
+                           unsigned ndims,
+                           CONST unsigned long *positions,
+                           int is_int,
+                           long ival,
+                           double rval);
+static int TableAssignCellMaybeWait(struct Instance *work,
+                                    struct Statement *statement,
+                                    CONST struct table_domain_t *domains,
+                                    unsigned ndims,
+                                    CONST unsigned long *positions,
+                                    int is_int,
+                                    long ival,
+                                    double rval);
+
+static int TableTokenIsDelimiter(CONST char *tok)
+{
+  return (strcmp(tok,",") == 0 || strcmp(tok,";") == 0);
+}
+
+static int TableTokenIsSign(CONST char *tok)
+{
+  return (strcmp(tok,"+") == 0 || strcmp(tok,"-") == 0);
+}
+
+static int TableTokenIsPunctuation(CONST char *tok)
+{
+  return TableTokenIsDelimiter(tok)
+      || TableTokenIsSign(tok)
+      || strcmp(tok,":") == 0
+      || strcmp(tok,"=") == 0;
+}
+
+static int TableTokenIsQuotedSymbol(CONST char *tok)
+{
+  size_t n;
+  if (tok == NULL) {
+    return 0;
+  }
+  n = strlen(tok);
+  return (n >= 2 && tok[0] == '\'' && tok[n - 1] == '\'');
+}
+
+static int TableParseIntegerToken(CONST char *tok, long *ival)
+{
+  char *end = NULL;
+  long v;
+  if (tok == NULL) {
+    return 0;
+  }
+  errno = 0;
+  v = strtol(tok,&end,10);
+  if (end == NULL || *end != '\0' || errno == ERANGE) {
+    return 0;
+  }
+  if (ival != NULL) {
+    *ival = v;
+  }
+  return 1;
+}
+
+static int TableParseSymbolToken(CONST char *tok, symchar **sym)
+{
+  size_t n;
+  if (tok == NULL || sym == NULL) {
+    return 0;
+  }
+  n = strlen(tok);
+  if (n == 0) {
+    return 0;
+  }
+  if (TableTokenIsQuotedSymbol(tok)) {
+    *sym = AddSymbolL(tok + 1,n - 2);
+  } else {
+    *sym = AddSymbol(tok);
+  }
+  return (*sym != NULL);
+}
+
+static int TableCollectDomainRefs(CONST struct Name *target,
+                                  struct Statement *statement,
+                                  struct table_domain_ref_t refs[2],
+                                  unsigned *ndims)
+{
+  CONST struct Name *node;
+  unsigned d = 0;
+  for (node = target; node != NULL; node = NextName(node)) {
+    CONST struct Set *setnode;
+    if (NameId(node)) {
+      continue;
+    }
+    for (setnode = NameSetPtr(node); setnode != NULL; setnode = NextSet(setnode)) {
+      CONST struct Expr *expr;
+      if (d >= 2) {
+        STATEMENT_ERROR(statement,"TABLE currently supports at most 2 indices");
+        return 0;
+      }
+      if (SetType(setnode)) {
+        STATEMENT_ERROR(statement,"TABLE index ranges are not supported");
+        return 0;
+      }
+      expr = GetSingleExpr(setnode);
+      if (expr == NULL) {
+        STATEMENT_ERROR(statement,"TABLE index expression is invalid");
+        return 0;
+      }
+      refs[d].expr = expr;
+      refs[d].set_name = NULL;
+      if (ExprType(expr) == e_var
+          && ExprListLength(expr) == 1
+          && SimpleNameIdPtr(ExprName(expr)) != NULL) {
+        refs[d].set_name = ExprName(expr);
+      }
+      d++;
+    }
+  }
+  *ndims = d;
+  return 1;
+}
+
+static int TableEvaluateDomainExpr(struct Instance *work,
+                                   CONST struct Expr *expr,
+                                   struct Statement *statement,
+                                   struct table_domain_t *domain,
+                                   int *undefined)
+{
+  struct Set tmpset;
+  struct value_t value, ordered;
+  int saved_list_mode;
+  IVAL(value);
+  IVAL(ordered);
+  *undefined = 0;
+
+  tmpset.next = NULL;
+  tmpset.range = 0;
+  tmpset.val.e = (struct Expr *)expr;
+  tmpset.ref_count = 1;
+
+  asc_assert(GetEvaluationContext()==NULL);
+  SetEvaluationContext(work);
+  value = EvaluateSet(&tmpset,InstanceEvaluateName);
+  SetEvaluationContext(NULL);
+
+  switch (ValueKind(value)) {
+  case set_value:
+    if (!TableInitDomainFromSet(SetValue(value),statement,domain)) {
+      DestroyValue(&value);
+      return 0;
+    }
+    DestroyValue(&value);
+    return 1;
+  case list_value:
+    saved_list_mode = ListMode;
+    ListMode = 1;
+    ordered = CreateOrderedSetFromList(value);
+    ListMode = saved_list_mode;
+    DestroyValue(&value);
+    if (ValueKind(ordered) != set_value) {
+      STATEMENT_ERROR(statement,"TABLE index set cannot be converted from list");
+      DestroyValue(&ordered);
+      return 0;
+    }
+    if (!TableInitDomainFromSet(SetValue(ordered),statement,domain)) {
+      DestroyValue(&ordered);
+      return 0;
+    }
+    DestroyValue(&ordered);
+    return 1;
+  case error_value:
+    if (ErrorValue(value) == name_unfound || ErrorValue(value) == undefined_value) {
+      *undefined = 1;
+      DestroyValue(&value);
+      return 0;
+    }
+    STATEMENT_ERROR(statement,"TABLE index set could not be evaluated");
+    DestroyValue(&value);
+    return 0;
+  default:
+    STATEMENT_ERROR(statement,"TABLE index expression must evaluate to a set");
+    DestroyValue(&value);
+    return 0;
+  }
+}
+
+static int TableAssignDomainSet(struct Instance *work,
+                                CONST struct Name *set_name,
+                                CONST struct set_t *setvalue,
+                                struct Statement *statement)
+{
+  struct gl_list_t *instances;
+  struct Instance *setinst;
+  struct value_t value;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  int ok;
+
+  instances = FindInstances(work,(struct Name *)set_name,&err);
+  if (instances == NULL || gl_length(instances) != 1) {
+    if (instances != NULL) {
+      gl_destroy(instances);
+    }
+    STATEMENT_ERROR(statement,"TABLE inferred index set name could not be resolved uniquely");
+    return 0;
+  }
+  setinst = (struct Instance *)gl_fetch(instances,1);
+  gl_destroy(instances);
+
+  value = CreateSetValue(CopySet(setvalue));
+  ok = AssignStructuralValue(setinst,value,statement);
+  DestroyValue(&value);
+  return ok;
+}
+
+static int TableInferDomainFromLabels(struct Instance *work,
+                                      CONST struct Name *set_name,
+                                      char **labels,
+                                      unsigned long nlabels,
+                                      struct Statement *statement,
+                                      struct table_domain_t *domain)
+{
+  struct set_t *setvalue = NULL;
+  unsigned long i;
+  int all_int = 1;
+  int ok = 0;
+
+  if (set_name == NULL) {
+    STATEMENT_ERROR(statement,"TABLE index set is undefined and cannot be inferred");
+    return 0;
+  }
+
+  for (i = 0; i < nlabels; ++i) {
+    long ival;
+    if (labels[i] == NULL || TableTokenIsQuotedSymbol(labels[i]) || !TableParseIntegerToken(labels[i],&ival)) {
+      all_int = 0;
+      break;
+    }
+  }
+
+  setvalue = CreateEmptySet();
+  if (all_int) {
+    for (i = 0; i < nlabels; ++i) {
+      long ival;
+      if (!TableParseIntegerToken(labels[i],&ival)) {
+        STATEMENT_ERROR(statement,"TABLE inferred integer index contains invalid label");
+        goto cleanup;
+      }
+      if (IntMember((asc_intptr_t)ival,setvalue)) {
+        STATEMENT_ERROR(statement,"TABLE inferred integer index contains duplicate labels");
+        goto cleanup;
+      }
+      InsertInteger(setvalue,(asc_intptr_t)ival);
+    }
+  } else {
+    for (i = 0; i < nlabels; ++i) {
+      symchar *sym;
+      if (!TableParseSymbolToken(labels[i],&sym)) {
+        STATEMENT_ERROR(statement,"TABLE inferred string index contains invalid label");
+        goto cleanup;
+      }
+      if (StrMember(sym,setvalue)) {
+        STATEMENT_ERROR(statement,"TABLE inferred string index contains duplicate labels");
+        goto cleanup;
+      }
+      InsertString(setvalue,sym);
+    }
+  }
+
+  if (!TableAssignDomainSet(work,set_name,setvalue,statement)) {
+    goto cleanup;
+  }
+  if (!TableInitDomainFromSet(setvalue,statement,domain)) {
+    goto cleanup;
+  }
+  ok = 1;
+
+cleanup:
+  if (setvalue != NULL) {
+    DestroySet(setvalue);
+  }
+  return ok;
+}
+
+static int TableLabelToPosition(CONST struct table_domain_t *domain,
+                                CONST char *tok,
+                                unsigned long *pos,
+                                struct Statement *statement,
+                                int is_row_label)
+{
+  unsigned long i;
+  const char *axis = is_row_label ? "row" : "column";
+  if (domain->kind == integer_set) {
+    long ival;
+    if (!TableParseIntegerToken(tok,&ival)) {
+      STATEMENT_ERROR(statement,
+        is_row_label
+          ? "TABLE row label is not a valid integer for first index set"
+          : "TABLE column label is not a valid integer for second index set");
+      return 0;
+    }
+    if (!IntMember((asc_intptr_t)ival,domain->set)) {
+      STATEMENT_ERROR(statement,
+        is_row_label
+          ? "TABLE row label is not a member of first index set"
+          : "TABLE column label is not a member of second index set");
+      return 0;
+    }
+    for (i = 1; i <= domain->len; ++i) {
+      if ((long)FetchIntMember(domain->set,i) == ival) {
+        *pos = i;
+        return 1;
+      }
+    }
+  } else if (domain->kind == string_set) {
+    symchar *sym;
+    if (!TableParseSymbolToken(tok,&sym)) {
+      STATEMENT_ERROR(statement,
+        is_row_label
+          ? "TABLE row label is not a valid symbol for first index set"
+          : "TABLE column label is not a valid symbol for second index set");
+      return 0;
+    }
+    if (!StrMember(sym,domain->set)) {
+      STATEMENT_ERROR(statement,
+        is_row_label
+          ? "TABLE row label is not a member of first index set"
+          : "TABLE column label is not a member of second index set");
+      return 0;
+    }
+    for (i = 1; i <= domain->len; ++i) {
+      if (FetchStrMember(domain->set,i) == sym) {
+        *pos = i;
+        return 1;
+      }
+    }
+  } else {
+    STATEMENT_ERROR(statement,"TABLE index set type is unsupported");
+    return 0;
+  }
+  FPRINTF(ASCERR,"Internal TABLE %s-label mapping failure.\n",axis);
+  return 0;
+}
+
+static int ExecuteTABLEDense(struct Instance *work, struct Statement *statement)
+{
+  struct table_domain_t domains[2];
+  struct table_domain_ref_t refs[2];
+  unsigned ndims = 0;
+  char *bodycopy = NULL;
+  char *line_ctx = NULL;
+  char *line;
+  char **col_labels = NULL;
+  char **row_labels = NULL;
+  struct table_cell_value_t *values = NULL;
+  struct table_cell_value_t *row_values = NULL;
+  unsigned long *row_pos = NULL;
+  unsigned long *col_pos = NULL;
+  char *row_seen = NULL;
+  char *col_seen = NULL;
+  unsigned long ncols = 0;
+  unsigned long nrows = 0;
+  int header_seen = 0;
+  unsigned d;
+  int rval = 0;
+
+  if (!TableCollectDomainRefs(statement->v.table.name,statement,refs,&ndims)) {
+    MarkStatContext(statement,context_WRONG);
+    return 1;
+  }
+  if (ndims != 2) {
+    STATEMENT_ERROR(statement,"Dense non-POSITIONAL TABLE requires exactly 2 indices");
+    MarkStatContext(statement,context_WRONG);
+    return 1;
+  }
+
+  for (d = 0; d < 2; ++d) {
+    domains[d].set = NULL;
+    domains[d].kind = empty_set;
+    domains[d].len = 0;
+  }
+
+  if (statement->v.table.body != NULL) {
+    size_t n = strlen(statement->v.table.body);
+    bodycopy = ASC_NEW_ARRAY(char,n + 1);
+    memcpy(bodycopy,statement->v.table.body,n + 1);
+  } else {
+    bodycopy = ASC_NEW_ARRAY(char,1);
+    bodycopy[0] = '\0';
+  }
+
+  for (line = strtok_r(bodycopy,"\n",&line_ctx); line != NULL; line = strtok_r(NULL,"\n",&line_ctx)) {
+    char *tok_ctx = NULL;
+    char *tok = strtok_r(line," \t\r",&tok_ctx);
+
+    if (tok == NULL) {
+      continue;
+    }
+
+    if (!header_seen) {
+      int expect_label = 1;
+      int seen_any = 0;
+      int last_delim = 0;
+      if (strcmp(tok,":") == 0) {
+        tok = strtok_r(NULL," \t\r",&tok_ctx);
+      }
+      for (; tok != NULL; tok = strtok_r(NULL," \t\r",&tok_ctx)) {
+        if (TableTokenIsDelimiter(tok)) {
+          if (expect_label || !seen_any) {
+            STATEMENT_ERROR(statement,"TABLE header has misplaced delimiter");
+            MarkStatContext(statement,context_WRONG);
+            goto cleanup;
+          }
+          expect_label = 1;
+          last_delim = tok[0];
+          continue;
+        }
+        if (TableTokenIsPunctuation(tok)) {
+          STATEMENT_ERROR(statement,"TABLE header contains invalid punctuation");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        if (!expect_label) {
+          /* whitespace-separated labels are accepted */
+        }
+        col_labels = (char **)ascrealloc(col_labels,sizeof(char *) * (ncols + 1));
+        col_labels[ncols++] = tok;
+        seen_any = 1;
+        expect_label = 0;
+        last_delim = 0;
+      }
+      if (!seen_any) {
+        STATEMENT_ERROR(statement,"TABLE header row is empty");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      if (expect_label) {
+        if (last_delim != ';') {
+          STATEMENT_ERROR(statement,"TABLE header cannot end with delimiter");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+      }
+      header_seen = 1;
+      continue;
+    }
+
+    {
+      unsigned long row_values_count = 0;
+      int sign = 1;
+      int sign_pending = 0;
+      int delim_pending = 0;
+      int last_delim = 0;
+
+      if (TableTokenIsPunctuation(tok)) {
+        STATEMENT_ERROR(statement,"TABLE data row is missing row label");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+
+      row_labels = (char **)ascrealloc(row_labels,sizeof(char *) * (nrows + 1));
+      row_labels[nrows] = tok;
+
+      tok = strtok_r(NULL," \t\r",&tok_ctx);
+      if (tok != NULL && strcmp(tok,":") == 0) {
+        tok = strtok_r(NULL," \t\r",&tok_ctx);
+      }
+      if (tok != NULL && TableTokenIsDelimiter(tok)) {
+        tok = strtok_r(NULL," \t\r",&tok_ctx);
+      }
+
+      row_values = ASC_NEW_ARRAY(struct table_cell_value_t,ncols > 0 ? ncols : 1);
+      for (; tok != NULL; tok = strtok_r(NULL," \t\r",&tok_ctx)) {
+        if (TableTokenIsDelimiter(tok)) {
+          if (sign_pending) {
+            STATEMENT_ERROR(statement,"TABLE delimiter cannot follow a sign without a value");
+            MarkStatContext(statement,context_WRONG);
+            goto cleanup;
+          }
+          if (row_values_count == 0) {
+            STATEMENT_ERROR(statement,"TABLE data row cannot begin values with delimiter");
+            MarkStatContext(statement,context_WRONG);
+            goto cleanup;
+          }
+          if (delim_pending) {
+            STATEMENT_ERROR(statement,"TABLE data row has repeated delimiters without a value");
+            MarkStatContext(statement,context_WRONG);
+            goto cleanup;
+          }
+          delim_pending = 1;
+          last_delim = tok[0];
+          continue;
+        }
+        if (TableTokenIsSign(tok)) {
+          if (sign_pending) {
+            STATEMENT_ERROR(statement,"Malformed TABLE value sign sequence");
+            MarkStatContext(statement,context_WRONG);
+            goto cleanup;
+          }
+          sign = (tok[0] == '-') ? -1 : 1;
+          sign_pending = 1;
+          delim_pending = 0;
+          last_delim = 0;
+          continue;
+        }
+        if (strcmp(tok,":") == 0 || strcmp(tok,"=") == 0) {
+          STATEMENT_ERROR(statement,"Unexpected sparse punctuation in dense TABLE row");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        if (row_values_count >= ncols) {
+          STATEMENT_ERROR(statement,"TABLE row has too many values");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        if (!TableParseNumberToken(tok,sign_pending ? sign : 1,
+                                   &row_values[row_values_count].is_int,
+                                   &row_values[row_values_count].ival,
+                                   &row_values[row_values_count].rval)) {
+          STATEMENT_ERROR(statement,"Dense TABLE contains non-numeric value token");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+        row_values_count++;
+        sign = 1;
+        sign_pending = 0;
+        delim_pending = 0;
+        last_delim = 0;
+      }
+
+      if (sign_pending) {
+        STATEMENT_ERROR(statement,"Dangling sign token at end of TABLE row");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      if (delim_pending) {
+        if (last_delim != ';') {
+          STATEMENT_ERROR(statement,"TABLE data row cannot end with delimiter");
+          MarkStatContext(statement,context_WRONG);
+          goto cleanup;
+        }
+      }
+      if (row_values_count != ncols) {
+        STATEMENT_ERROR(statement,"TABLE row has incorrect number of values");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+
+      values = (struct table_cell_value_t *)ascrealloc(values,sizeof(struct table_cell_value_t) * (nrows + 1) * ncols);
+      memcpy(values + nrows * ncols,row_values,sizeof(struct table_cell_value_t) * ncols);
+      ascfree(row_values);
+      row_values = NULL;
+      nrows++;
+    }
+  }
+
+  if (!header_seen) {
+    STATEMENT_ERROR(statement,"TABLE body is missing header row");
+    MarkStatContext(statement,context_WRONG);
+    goto cleanup;
+  }
+  if (nrows == 0) {
+    STATEMENT_ERROR(statement,"TABLE body is missing data rows");
+    MarkStatContext(statement,context_WRONG);
+    goto cleanup;
+  }
+
+  for (d = 0; d < 2; ++d) {
+    int undefined = 0;
+    if (!TableEvaluateDomainExpr(work,refs[d].expr,statement,&domains[d],&undefined)) {
+      if (!undefined) {
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+      if (!TableInferDomainFromLabels(work
+            ,refs[d].set_name
+            ,(d == 0) ? row_labels : col_labels
+            ,(d == 0) ? nrows : ncols
+            ,statement
+            ,&domains[d])) {
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+    }
+  }
+
+  if (domains[0].len != nrows) {
+    STATEMENT_ERROR(statement,"TABLE row count does not match first index cardinality");
+    MarkStatContext(statement,context_WRONG);
+    goto cleanup;
+  }
+  if (domains[1].len != ncols) {
+    STATEMENT_ERROR(statement,"TABLE column count does not match second index cardinality");
+    MarkStatContext(statement,context_WRONG);
+    goto cleanup;
+  }
+
+  row_pos = ASC_NEW_ARRAY(unsigned long,nrows);
+  col_pos = ASC_NEW_ARRAY(unsigned long,ncols);
+  row_seen = ASC_NEW_ARRAY(char,domains[0].len > 0 ? domains[0].len : 1);
+  col_seen = ASC_NEW_ARRAY(char,domains[1].len > 0 ? domains[1].len : 1);
+  memset(row_seen,0,domains[0].len > 0 ? domains[0].len : 1);
+  memset(col_seen,0,domains[1].len > 0 ? domains[1].len : 1);
+
+  for (d = 0; d < nrows; ++d) {
+    if (!TableLabelToPosition(&domains[0],row_labels[d],&row_pos[d],statement,1)) {
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+    if (row_seen[row_pos[d] - 1]) {
+      STATEMENT_ERROR(statement,"TABLE contains duplicate row labels");
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+    row_seen[row_pos[d] - 1] = 1;
+  }
+  for (d = 0; d < ncols; ++d) {
+    if (!TableLabelToPosition(&domains[1],col_labels[d],&col_pos[d],statement,0)) {
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+    if (col_seen[col_pos[d] - 1]) {
+      STATEMENT_ERROR(statement,"TABLE contains duplicate column labels");
+      MarkStatContext(statement,context_WRONG);
+      goto cleanup;
+    }
+    col_seen[col_pos[d] - 1] = 1;
+  }
+
+  for (d = 0; d < nrows; ++d) {
+    unsigned long c;
+    for (c = 0; c < ncols; ++c) {
+      unsigned long pos[2];
+      CONST struct table_cell_value_t *cell = &values[d * ncols + c];
+      int assign_result;
+      pos[0] = row_pos[d];
+      pos[1] = col_pos[c];
+      assign_result = TableAssignCellMaybeWait(work,statement,domains,2,pos,cell->is_int,cell->ival,cell->rval);
+      if (assign_result < 0) {
+        rval = 0;
+        goto cleanup;
+      }
+      if (!assign_result) {
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
+    }
+  }
+
+  rval = 1;
+
+cleanup:
+  if (row_values != NULL) {
+    ascfree(row_values);
+  }
+  if (row_seen != NULL) {
+    ascfree(row_seen);
+  }
+  if (col_seen != NULL) {
+    ascfree(col_seen);
+  }
+  if (row_pos != NULL) {
+    ascfree(row_pos);
+  }
+  if (col_pos != NULL) {
+    ascfree(col_pos);
+  }
+  if (values != NULL) {
+    ascfree(values);
+  }
+  if (row_labels != NULL) {
+    ascfree(row_labels);
+  }
+  if (col_labels != NULL) {
+    ascfree(col_labels);
+  }
+  if (bodycopy != NULL) {
+    ascfree(bodycopy);
+  }
+  for (d = 0; d < 2; ++d) {
+    TableDomainDestroy(&domains[d]);
+  }
+  return rval;
+}
+
 static struct Name *TableBuildCellName(CONST struct Name *templ,
                                        CONST struct table_domain_t *domains,
                                        unsigned ndims,
@@ -6331,6 +7026,56 @@ static int TableAssignCell(struct Instance *work,
   return ok;
 }
 
+static int TableAssignCellMaybeWait(struct Instance *work,
+                                    struct Statement *statement,
+                                    CONST struct table_domain_t *domains,
+                                    unsigned ndims,
+                                    CONST unsigned long *positions,
+                                    int is_int,
+                                    long ival,
+                                    double rval)
+{
+  struct Name *lhs;
+  struct gl_list_t *instances;
+  struct value_t value;
+  REL_ERRORLIST err = REL_ERRORLIST_EMPTY;
+  struct Instance *inst;
+  int ok;
+
+  lhs = TableBuildCellName(statement->v.table.name,domains,ndims,positions);
+  if (lhs == NULL) {
+    STATEMENT_ERROR(statement,"Unable to construct TABLE assignment target name");
+    return 0;
+  }
+
+  instances = FindInstances(work,lhs,&err);
+  DestroyName(lhs);
+  if (instances == NULL) {
+    switch (rel_errorlist_get_find_error(&err)) {
+    case unmade_instance:
+    case undefined_instance:
+      return -1;
+    default:
+      STATEMENT_ERROR(statement,"TABLE assignment target could not be resolved uniquely");
+      return 0;
+    }
+  }
+  if (gl_length(instances) != 1) {
+    gl_destroy(instances);
+    STATEMENT_ERROR(statement,"TABLE assignment target could not be resolved uniquely");
+    return 0;
+  }
+  inst = (struct Instance *)gl_fetch(instances,1);
+  gl_destroy(instances);
+
+  value = is_int
+    ? CreateIntegerValue(ival,1)
+    : CreateRealValue(rval,WildDimension(),1);
+  ok = AssignStructuralValue(inst,value,statement);
+  DestroyValue(&value);
+  return ok;
+}
+
 static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
   struct table_domain_t domains[2];
   CONST struct Name *node;
@@ -6347,15 +7092,13 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
     return 1;
   }
 
-  if (!statement->v.table.positional) {
-    STATEMENT_ERROR(statement,"Only POSITIONAL TABLE assignment is implemented");
-    MarkStatContext(statement,context_WRONG);
-    return 1;
-  }
   if (statement->v.table.name == NULL || !NameId(statement->v.table.name)) {
     STATEMENT_ERROR(statement,"TABLE target name is invalid");
     MarkStatContext(statement,context_WRONG);
     return 1;
+  }
+  if (!statement->v.table.positional) {
+    return ExecuteTABLEDense(work,statement);
   }
 
   for (di = 0; di < 2; ++di) {
@@ -6400,6 +7143,7 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
     unsigned long col_index = 1;
     int row_has_values = 0;
     int delim_pending = 0;
+    int last_delim = 0;
     int sign = 1;
     int sign_pending = 0;
 
@@ -6426,6 +7170,7 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
           goto cleanup;
         }
         delim_pending = 1;
+        last_delim = tok[0];
         continue;
       }
       if (strcmp(tok,"+") == 0 || strcmp(tok,"-") == 0) {
@@ -6435,6 +7180,7 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
           goto cleanup;
         }
         delim_pending = 0;
+        last_delim = 0;
         sign = (tok[0] == '-') ? -1 : 1;
         sign_pending = 1;
         continue;
@@ -6451,6 +7197,7 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
         goto cleanup;
       }
       delim_pending = 0;
+      last_delim = 0;
       sign = 1;
       sign_pending = 0;
       row_has_values = 1;
@@ -6494,9 +7241,11 @@ static int ExecuteTABLE(struct Instance *work, struct Statement *statement){
       goto cleanup;
     }
     if (delim_pending) {
-      STATEMENT_ERROR(statement,"TABLE row cannot end with a delimiter");
-      MarkStatContext(statement,context_WRONG);
-      goto cleanup;
+      if (last_delim != ';') {
+        STATEMENT_ERROR(statement,"TABLE row cannot end with a delimiter");
+        MarkStatContext(statement,context_WRONG);
+        goto cleanup;
+      }
     }
     if (!row_has_values) {
       continue;

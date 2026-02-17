@@ -1323,41 +1323,10 @@ table_option:
 
 table_body:
 	/* empty */
-	| table_rows
+	| table_body table_body_item
 	;
 
-table_rows:
-	table_line
-	| table_rows table_line
-	;
-
-table_line:
-	EOL_TOK
-	{
-	  TableParseEndRow();
-	}
-	| table_row table_line_end_opt
-	{
-	  TableParseEndRow();
-	}
-	;
-
-table_line_end_opt:
-	/* empty */
-	| table_line_end
-	;
-
-table_line_end:
-	EOL_TOK
-	| table_line_end EOL_TOK
-	;
-
-table_row:
-	table_row_item
-	| table_row table_row_item
-	;
-
-table_row_item:
+table_body_item:
 	table_scalar
 	| ':'
 	{
@@ -1381,7 +1350,11 @@ table_row_item:
 	}
 	| ';'
 	{
-	  TableParseAppendToken(";",0);
+	  TableParseEndRow();
+	}
+	| EOL_TOK
+	{
+	  TableParseEndRow();
 	}
 	;
 

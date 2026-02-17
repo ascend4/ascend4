@@ -1,0 +1,13 @@
+REQUIRE "atoms.a4l";
+
+MODEL tables_v05_instantiate_dense_implicit;
+	r IS_A set OF integer_constant;
+	c IS_A set OF symbol_constant;
+	cost[r][c] IS_A integer_constant;
+
+	TABLE cost[r,c];
+		: a b
+		2: 21 22
+		1: 11 12
+	END TABLE;
+END tables_v05_instantiate_dense_implicit;

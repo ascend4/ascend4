@@ -713,6 +713,65 @@ static long fetch_int_table_cell_2d(struct Instance *root, const char *arrname, 
 	return value;
 }
 
+static long fetch_int_table_cell_2d_is(struct Instance *root, const char *arrname, long i, const char *j){
+	struct InstanceName rec;
+	struct Instance *arr;
+	struct Instance *row;
+	struct Instance *inst;
+	unsigned long pos;
+	long value;
+
+	arr = ChildByChar(root,AddSymbol(arrname));
+	CU_ASSERT_FATAL(arr != NULL);
+
+	SetInstanceNameType(rec,IntArrayIndex);
+	SetInstanceNameIntIndex(rec,i);
+	pos = ChildSearch(arr,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	row = InstanceChild(arr,pos);
+	CU_ASSERT_FATAL(row != NULL);
+
+	SetInstanceNameType(rec,StrArrayIndex);
+	SetInstanceNameStrIndex(rec,AddSymbol(j));
+	pos = ChildSearch(row,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	inst = InstanceChild(row,pos);
+	CU_ASSERT_FATAL(inst != NULL);
+	CU_ASSERT_FATAL(InstanceKind(inst)==INTEGER_CONSTANT_INST);
+	CU_ASSERT_FATAL(AtomAssigned(inst));
+	value = GetIntegerAtomValue(inst);
+	return value;
+}
+
+static long fetch_int_table_cell_2d_ss(struct Instance *root, const char *arrname, const char *i, const char *j){
+	struct InstanceName rec;
+	struct Instance *arr;
+	struct Instance *row;
+	struct Instance *inst;
+	unsigned long pos;
+	long value;
+
+	arr = ChildByChar(root,AddSymbol(arrname));
+	CU_ASSERT_FATAL(arr != NULL);
+
+	SetInstanceNameType(rec,StrArrayIndex);
+	SetInstanceNameStrIndex(rec,AddSymbol(i));
+	pos = ChildSearch(arr,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	row = InstanceChild(arr,pos);
+	CU_ASSERT_FATAL(row != NULL);
+
+	SetInstanceNameStrIndex(rec,AddSymbol(j));
+	pos = ChildSearch(row,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	inst = InstanceChild(row,pos);
+	CU_ASSERT_FATAL(inst != NULL);
+	CU_ASSERT_FATAL(InstanceKind(inst)==INTEGER_CONSTANT_INST);
+	CU_ASSERT_FATAL(AtomAssigned(inst));
+	value = GetIntegerAtomValue(inst);
+	return value;
+}
+
 static void test_instantiate_tables_v05_positional(void){
 	int status;
 	struct Instance *sim;
@@ -743,6 +802,173 @@ static void test_instantiate_tables_v05_positional(void){
 	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,1) == 21);
 	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,2) == 22);
 	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,3) == 23);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_tables_v05_positional_csv_semicolon(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_positional_csv_semicolon.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_positional_csv_semicolon"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_positional_csv_semicolon"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,1) == 11);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,2) == 12);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,3) == 13);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,1) == 21);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,2) == 22);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,3) == 23);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_tables_v05_dense_int_labels(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_dense_int.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_dense_int"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_dense_int"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,1) == 11);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,2) == 12);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,3) == 13);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,1) == 21);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,2) == 22);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,3) == 23);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_tables_v05_dense_csv_semicolon(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_dense_csv_semicolon.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_dense_csv_semicolon"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_dense_csv_semicolon"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","alan","c3") == 23);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","alan","c1") == 21);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","alan","c2") == 22);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","bernhard","c3") == 13);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","bernhard","c1") == 11);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","bernhard","c2") == 12);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_tables_v05_dense_string_labels(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_dense_string.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_dense_string"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_dense_string"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","north","x") == 11);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","north","y") == 12);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","south","x") == 21);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","south","y") == 22);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_tables_v05_dense_implicit_sets(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/tables_v05_instantiate_dense_implicit.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("tables_v05_instantiate_dense_implicit"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("tables_v05_instantiate_dense_implicit"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d_is(root,"cost",1,"a") == 11);
+	CU_ASSERT(fetch_int_table_cell_2d_is(root,"cost",1,"b") == 12);
+	CU_ASSERT(fetch_int_table_cell_2d_is(root,"cost",2,"a") == 21);
+	CU_ASSERT(fetch_int_table_cell_2d_is(root,"cost",2,"b") == 22);
 
 	sim_destroy(sim);
 	Asc_CompilerDestroy();
@@ -860,7 +1086,7 @@ static void test_instantiate_tables_v05_fail_sparse_repeated_labels(void){
 	instantiate_module_expect_error(
 		"test/compiler/tables_v05_fail_sparse_repeated_labels.a4c"
 		, "tables_v05_fail_sparse_repeated_labels"
-		, "Only POSITIONAL TABLE assignment is implemented"
+		, "TABLE header contains invalid punctuation"
 	);
 }
 
@@ -884,7 +1110,23 @@ static void test_instantiate_tables_v05_fail_positional_double_delim(void){
 	instantiate_module_expect_error(
 		"test/compiler/tables_v05_fail_positional_double_delim.a4c"
 		, "tables_v05_fail_positional_double_delim"
-		, "TABLE delimiter cannot follow a sign without a value"
+		, NULL
+	);
+}
+
+static void test_instantiate_tables_v05_fail_dense_bad_col_label(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_dense_bad_col_label.a4c"
+		, "tables_v05_fail_dense_bad_col_label"
+		, "TABLE column label is not a member of second index set"
+	);
+}
+
+static void test_instantiate_tables_v05_fail_dense_bad_row_label_string(void){
+	instantiate_module_expect_error(
+		"test/compiler/tables_v05_fail_dense_bad_row_label_string.a4c"
+		, "tables_v05_fail_dense_bad_row_label_string"
+		, "TABLE row label is not a member of first index set"
 	);
 }
 
@@ -910,6 +1152,11 @@ static void test_instantiate_tables_v05_fail_positional_double_delim(void){
 	T(badalias) \
 	T(parse_tables_v05) \
 	T(instantiate_tables_v05_positional) \
+	T(instantiate_tables_v05_positional_csv_semicolon) \
+	T(instantiate_tables_v05_dense_int_labels) \
+	T(instantiate_tables_v05_dense_csv_semicolon) \
+	T(instantiate_tables_v05_dense_string_labels) \
+	T(instantiate_tables_v05_dense_implicit_sets) \
 	T(parse_tables_v05_fail_table_header) \
 	T(parse_tables_v05_fail_table_badchar) \
 	T(parse_tables_v05_fail_table_bad_delimiter) \
@@ -925,6 +1172,8 @@ static void test_instantiate_tables_v05_fail_positional_double_delim(void){
 	T(instantiate_tables_v05_fail_sparse_repeated_labels) \
 	T(instantiate_tables_v05_fail_positional_leading_delim) \
 	T(instantiate_tables_v05_fail_positional_trailing_delim) \
-	T(instantiate_tables_v05_fail_positional_double_delim)
+	T(instantiate_tables_v05_fail_positional_double_delim) \
+	T(instantiate_tables_v05_fail_dense_bad_col_label) \
+	T(instantiate_tables_v05_fail_dense_bad_row_label_string)
 
 REGISTER_TESTS_SIMPLE(compiler_basics, TESTS)
