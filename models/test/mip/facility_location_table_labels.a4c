@@ -8,7 +8,6 @@ MODEL mip_facility_location_table_labels;
 	demand[customers] IS_A factor_constant;
 	capacity[facilities] IS_A factor_constant;
 	fixed_cost[facilities] IS_A factor_constant;
-	ship_cost[customers][facilities] IS_A factor_constant;
 
 	open[facilities] IS_A solver_binary;
 	assign[customers][facilities] IS_A solver_binary;
@@ -29,7 +28,7 @@ MODEL mip_facility_location_table_labels;
 	fixed_cost['beta'] :== 100;
 	fixed_cost['gamma'] :== 90;
 
-	TABLE ship_cost[customers,facilities];
+	TABLE ship_cost[customers,facilities] IS_A factor_constant;
 		alpha,beta,gamma;
 		cust1,2,4,5;
 		cust2,3,1,2;

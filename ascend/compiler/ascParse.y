@@ -202,6 +202,9 @@ struct table_parse_state {
   int body_init;
   int positional;
   int row_has_items;
+  symchar *decl_type;
+  struct Set *decl_typeargs;
+  symchar *decl_set_type;
   struct Expr *default_expr;
   Asc_DString body;
   unsigned long rows;
@@ -209,7 +212,7 @@ struct table_parse_state {
   unsigned long items;
 };
 
-static struct table_parse_state g_table_parse = {0,0,0,0,NULL,{0},0,0,0};
+static struct table_parse_state g_table_parse = {0,0,0,0,NULL,NULL,NULL,NULL,{0},0,0,0};
 
 static void TableParseEnsureBody(void){
   if (!g_table_parse.body_init) {
@@ -219,6 +222,12 @@ static void TableParseEnsureBody(void){
 }
 
 static void TableParseBegin(void){
+  if (g_table_parse.decl_typeargs != NULL) {
+    DestroySetList(g_table_parse.decl_typeargs);
+    g_table_parse.decl_typeargs = NULL;
+  }
+  g_table_parse.decl_type = NULL;
+  g_table_parse.decl_set_type = NULL;
   if (g_table_parse.default_expr != NULL) {
     DestroyExprList(g_table_parse.default_expr);
   }
@@ -234,6 +243,12 @@ static void TableParseBegin(void){
 }
 
 static void TableParseAbort(void){
+  if (g_table_parse.decl_typeargs != NULL) {
+    DestroySetList(g_table_parse.decl_typeargs);
+    g_table_parse.decl_typeargs = NULL;
+  }
+  g_table_parse.decl_type = NULL;
+  g_table_parse.decl_set_type = NULL;
   if (g_table_parse.default_expr != NULL) {
     DestroyExprList(g_table_parse.default_expr);
     g_table_parse.default_expr = NULL;
@@ -327,6 +342,24 @@ static char *TableParseFinish(void){
   TableParseEnsureBody();
   result = Asc_DStringResult(&g_table_parse.body);
   g_table_parse.active = 0;
+  return result;
+}
+
+static struct Name *TableDeclNameFromTarget(CONST struct Name *target){
+  CONST struct Name *node;
+  struct Name *result = NULL;
+
+  for (node = target; node != NULL; node = NextName(node)) {
+    if (NameId(node)) {
+      result = CopyAppendNameNode(result,node);
+    } else {
+      CONST struct Set *setnode;
+      for (setnode = NameSetPtr(node); setnode != NULL; setnode = NextSet(setnode)) {
+        struct Name *idx = CreateSetName(CopySetNode(setnode));
+        result = JoinNames(result,idx);
+      }
+    }
+  }
   return result;
 }
 
@@ -1257,20 +1290,26 @@ units_statement:
 	;
 
 table_statement:
-	TABLE_TOK fname table_begin table_options ';' table_mode_on table_body END_TOK TABLE_TOK table_mode_off
+	TABLE_TOK fname table_begin table_decl_opt table_options ';' table_mode_on table_body END_TOK TABLE_TOK table_mode_off
 	{
 	  char *table_body;
 	  table_body = TableParseFinish();
 	  $$ = CreateTABLE($2,
+	                   g_table_parse.decl_type,
+	                   g_table_parse.decl_typeargs,
+	                   g_table_parse.decl_set_type,
 	                   g_table_parse.default_expr,
 	                   g_table_parse.positional,
 	                   g_table_parse.rows,
 	                   g_table_parse.scalars,
 	                   g_table_parse.items,
 	                   table_body);
+	  g_table_parse.decl_type = NULL;
+	  g_table_parse.decl_typeargs = NULL;
+	  g_table_parse.decl_set_type = NULL;
 	  g_table_parse.default_expr = NULL;
 	}
-	| TABLE_TOK fname table_begin table_options ';' table_mode_on error END_TOK TABLE_TOK table_mode_off
+	| TABLE_TOK fname table_begin table_decl_opt table_options ';' table_mode_on error END_TOK TABLE_TOK table_mode_off
 	{
 	  DestroyName($2);
 	  TableParseAbort();
@@ -1305,6 +1344,28 @@ table_mode_off:
 table_options:
 	/* empty */
 	| table_options table_option
+	;
+
+table_decl_opt:
+	/* empty */
+	{
+	  g_table_parse.decl_type = NULL;
+	  g_table_parse.decl_set_type = NULL;
+	  if (g_table_parse.decl_typeargs != NULL) {
+	    DestroySetList(g_table_parse.decl_typeargs);
+	  }
+	  g_table_parse.decl_typeargs = NULL;
+	}
+	| ISA_TOK type_identifier optional_of
+	{
+	  if (g_table_parse.decl_typeargs != NULL) {
+	    DestroySetList(g_table_parse.decl_typeargs);
+	  }
+	  g_table_parse.decl_type = $2;
+	  g_table_parse.decl_set_type = $3;
+	  g_table_parse.decl_typeargs = g_typeargs;
+	  g_typeargs = NULL;
+	}
 	;
 
 table_option:
@@ -1593,6 +1654,20 @@ statements:
 	{
 	  /* this is appending to a gllist of statements, not yet slist. */
 	  if ($2 != NULL) {
+	    if (StatementType($2) == TABLESTAT && $2->v.table.decl_type != NULL) {
+	      struct Statement *decl;
+	      struct VariableList *vl;
+	      vl = CreateVariableNode(TableDeclNameFromTarget($2->v.table.name));
+	      decl = CreateISA(vl
+	        ,$2->v.table.decl_type
+	        ,CopySetList($2->v.table.decl_typeargs)
+	        ,$2->v.table.decl_set_type
+	      );
+	      decl->mod = $2->mod;
+	      decl->linenum = $2->linenum;
+	      decl->context = $2->context;
+	      gl_append_ptr($1,(char *)decl);
+	    }
 	    gl_append_ptr($1,(char *)$2);
 	  }
 	  $$ = $1;

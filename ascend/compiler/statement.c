@@ -828,6 +828,9 @@ struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs)
 }
 
 struct Statement *CreateTABLE(struct Name *n,
+                              symchar *decl_type,
+                              struct Set *decl_typeargs,
+                              symchar *decl_set_type,
                               struct Expr *default_expr,
                               int positional,
                               unsigned long rows,
@@ -838,6 +841,9 @@ struct Statement *CreateTABLE(struct Name *n,
   struct Statement *result;
   result = create_statement_here(TABLESTAT);
   result->v.table.name = n;
+  result->v.table.decl_type = decl_type;
+  result->v.table.decl_typeargs = decl_typeargs;
+  result->v.table.decl_set_type = decl_set_type;
   result->v.table.default_expr = default_expr;
   result->v.table.body = body;
   result->v.table.positional = positional;
@@ -995,6 +1001,12 @@ void DestroyStatement(struct Statement *s)
       case TABLESTAT:
         DestroyName(s->v.table.name);
         s->v.table.name = NULL;
+        if (s->v.table.decl_typeargs != NULL) {
+          DestroySetList(s->v.table.decl_typeargs);
+          s->v.table.decl_typeargs = NULL;
+        }
+        s->v.table.decl_type = NULL;
+        s->v.table.decl_set_type = NULL;
         if (s->v.table.default_expr != NULL) {
           DestroyExprList(s->v.table.default_expr);
           s->v.table.default_expr = NULL;
@@ -1200,6 +1212,9 @@ struct Statement *CopyToModify(struct Statement *s)
     break;
   case TABLESTAT:
     result->v.table.name = CopyName(s->v.table.name);
+    result->v.table.decl_type = s->v.table.decl_type;
+    result->v.table.decl_typeargs = CopySetList(s->v.table.decl_typeargs);
+    result->v.table.decl_set_type = s->v.table.decl_set_type;
     result->v.table.default_expr = CopyExprList(s->v.table.default_expr);
     result->v.table.positional = s->v.table.positional;
     result->v.table.rows = s->v.table.rows;
@@ -2535,6 +2550,18 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     return CompareExprs(AssignStatRHS(s1),AssignStatRHS(s2));
   case TABLESTAT:
     ctmp = CompareNames(s1->v.table.name,s2->v.table.name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CmpSymchar(s1->v.table.decl_type,s2->v.table.decl_type);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CompareSetStructures(s1->v.table.decl_typeargs,s2->v.table.decl_typeargs);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CmpSymchar(s1->v.table.decl_set_type,s2->v.table.decl_set_type);
     if (ctmp != 0) {
       return ctmp;
     }

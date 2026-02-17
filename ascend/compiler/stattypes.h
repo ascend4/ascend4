@@ -405,6 +405,9 @@ struct StateOPTION{
 /** used for TABLE statement (parse metadata in v0). */
 struct StateTABLE{
   struct Name *name;           /**< target array name */
+  symchar *decl_type;          /**< inline TABLE declaration type (optional) */
+  struct Set *decl_typeargs;   /**< inline TABLE type arguments (optional) */
+  symchar *decl_set_type;      /**< inline TABLE set type for set-valued targets */
   struct Expr *default_expr;   /**< DEFAULT expression, if supplied */
   char *body;                  /**< canonical tokenized body text */
   unsigned long rows;          /**< parsed non-empty table rows */

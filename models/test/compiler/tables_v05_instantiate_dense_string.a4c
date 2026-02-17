@@ -3,12 +3,11 @@ REQUIRE "atoms.a4l";
 MODEL tables_v05_instantiate_dense_string;
 	r IS_A set OF symbol_constant;
 	c IS_A set OF symbol_constant;
-	cost[r][c] IS_A integer_constant;
 
 	r :== ['north','south'];
 	c :== ['x','y'];
 
-	TABLE cost[r,c];
+	TABLE cost[r,c] IS_A integer_constant;
 		x y
 		north 11 12
 		south 21 22
