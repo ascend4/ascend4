@@ -66,6 +66,7 @@
 #include "childdef.h"
 #include "cmpfunc.h"
 #include "typedef.h"
+#include "scanner.h"
 #include <ascend/general/mathmacros.h>
 
 /*
@@ -4774,9 +4775,13 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
   g_number = 0;
 
   if(err!=0){
-    ERROR_REPORTER_NOLINE(ASC_USER_ERROR
-      ,"Model definition '%s' abandoned due to syntax errors."
-      ,SCP(name)
+    error_reporter(
+      ASC_USER_ERROR,
+      Asc_ModuleBestName(mod != NULL ? mod : Asc_CurrentModule()),
+      (int)LineNum(),
+      NULL,
+      "Model definition '%s' abandoned due to syntax errors.",
+      SCP(name)
     );
     DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
     return NULL;
@@ -5047,7 +5052,14 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
   enum type_kind t;
 
   if (err) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Constant definition '%s' abandoned due to syntax errors.",SCP(name));
+    error_reporter(
+      ASC_PROG_ERR,
+      Asc_ModuleBestName(mod != NULL ? mod : Asc_CurrentModule()),
+      (int)LineNum(),
+      NULL,
+      "Constant definition '%s' abandoned due to syntax errors.",
+      SCP(name)
+    );
     return NULL;
   }
   if (refines==NULL) {
@@ -5135,7 +5147,14 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
   unsigned long bytesize;
 
   if (err) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Atom definition \"%s\" abandoned due to syntax errors.",SCP(name));
+    error_reporter(
+      ASC_PROG_ERR,
+      Asc_ModuleBestName(mod != NULL ? mod : Asc_CurrentModule()),
+      (int)LineNum(),
+      NULL,
+      "Atom definition \"%s\" abandoned due to syntax errors.",
+      SCP(name)
+    );
     DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
     return NULL;
   }
@@ -5392,4 +5411,3 @@ void DefineFundamentalTypes(void)
 }
 
 /* vim: set sw=2 ts=8 et: */
-

@@ -197,6 +197,139 @@ int g_parse_relns = 1;
  *      1 indicates process them
  */
 
+struct table_parse_state {
+  int active;
+  int body_init;
+  int positional;
+  int row_has_items;
+  struct Expr *default_expr;
+  Asc_DString body;
+  unsigned long rows;
+  unsigned long scalars;
+  unsigned long items;
+};
+
+static struct table_parse_state g_table_parse = {0,0,0,0,NULL,{0},0,0,0};
+
+static void TableParseEnsureBody(void){
+  if (!g_table_parse.body_init) {
+    Asc_DStringInit(&g_table_parse.body);
+    g_table_parse.body_init = 1;
+  }
+}
+
+static void TableParseBegin(void){
+  if (g_table_parse.default_expr != NULL) {
+    DestroyExprList(g_table_parse.default_expr);
+  }
+  g_table_parse.default_expr = NULL;
+  TableParseEnsureBody();
+  Asc_DStringTrunc(&g_table_parse.body,0);
+  g_table_parse.active = 1;
+  g_table_parse.positional = 0;
+  g_table_parse.row_has_items = 0;
+  g_table_parse.rows = 0;
+  g_table_parse.scalars = 0;
+  g_table_parse.items = 0;
+}
+
+static void TableParseAbort(void){
+  if (g_table_parse.default_expr != NULL) {
+    DestroyExprList(g_table_parse.default_expr);
+    g_table_parse.default_expr = NULL;
+  }
+  if (g_table_parse.body_init) {
+    Asc_DStringTrunc(&g_table_parse.body,0);
+  }
+  g_table_parse.active = 0;
+  g_table_parse.row_has_items = 0;
+  g_table_parse.rows = 0;
+  g_table_parse.scalars = 0;
+  g_table_parse.items = 0;
+  g_table_parse.positional = 0;
+}
+
+static void TableParseAppendToken(CONST char *tok, int scalar){
+  if (!g_table_parse.active || tok == NULL) {
+    return;
+  }
+  TableParseEnsureBody();
+  if (g_table_parse.row_has_items) {
+    Asc_DStringAppend(&g_table_parse.body," ",1);
+  }
+  Asc_DStringAppend(&g_table_parse.body,tok,-1);
+  g_table_parse.items++;
+  if (scalar) {
+    g_table_parse.scalars++;
+  }
+  g_table_parse.row_has_items = 1;
+}
+
+static void TableParseAppendInteger(long v){
+  char buf[64];
+  snprintf(buf,sizeof(buf),"%ld",v);
+  TableParseAppendToken(buf,1);
+}
+
+static void TableParseAppendReal(double v){
+  char buf[64];
+  snprintf(buf,sizeof(buf),"%.17g",v);
+  TableParseAppendToken(buf,1);
+}
+
+static void TableParseAppendSymbol(symchar *sym){
+  if (sym == NULL) {
+    return;
+  }
+  TableParseEnsureBody();
+  if (g_table_parse.row_has_items) {
+    Asc_DStringAppend(&g_table_parse.body," ",1);
+  }
+  Asc_DStringAppend(&g_table_parse.body,"'",1);
+  Asc_DStringAppend(&g_table_parse.body,SCP(sym),-1);
+  Asc_DStringAppend(&g_table_parse.body,"'",1);
+  g_table_parse.items++;
+  g_table_parse.scalars++;
+  g_table_parse.row_has_items = 1;
+}
+
+static void TableParseAppendBraced(CONST char *txt){
+  if (txt == NULL) {
+    return;
+  }
+  TableParseEnsureBody();
+  if (g_table_parse.row_has_items) {
+    Asc_DStringAppend(&g_table_parse.body," ",1);
+  }
+  Asc_DStringAppend(&g_table_parse.body,"{",1);
+  Asc_DStringAppend(&g_table_parse.body,txt,-1);
+  Asc_DStringAppend(&g_table_parse.body,"}",1);
+  g_table_parse.items++;
+  g_table_parse.scalars++;
+  g_table_parse.row_has_items = 1;
+}
+
+static void TableParseEndRow(void){
+  if (!g_table_parse.active) {
+    return;
+  }
+  if (g_table_parse.row_has_items) {
+    TableParseEnsureBody();
+    Asc_DStringAppend(&g_table_parse.body,"\n",1);
+    g_table_parse.rows++;
+    g_table_parse.row_has_items = 0;
+  }
+}
+
+static char *TableParseFinish(void){
+  char *result;
+  TableParseEndRow();
+  TableParseEnsureBody();
+  result = Asc_DStringResult(&g_table_parse.body);
+  g_table_parse.active = 0;
+  return result;
+}
+
 /*  Forward declaration of error message reporting
  *  functions provided at the end of this file.
  */
@@ -364,6 +497,7 @@ static void CollectNote(struct Note *);
 %token /* PATCH_TOK */ PROD_TOK PROVIDE_TOK
 %token REFINES_TOK REPLACE_TOK REQUIRE_TOK RETURN_TOK RUN_TOK
 %token SATISFIED_TOK SELECT_TOK SIZE_TOK SOLVE_TOK SOLVER_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK
+%token TABLE_TOK VALUES_TOK DATASET_TOK POSITIONAL_TOK INDEX_TOK COLUMN_TOK EOL_TOK
 %token THEN_TOK TRUE_TOK
 %token UNION_TOK UNITS_TOK UNIVERSAL_TOK UNLINK_TOK
 %token WHEN_TOK WHERE_TOK WHILE_TOK WILLBE_TOK WILLBETHESAME_TOK WILLNOTBETHESAME_TOK
@@ -411,6 +545,7 @@ static void CollectNote(struct Note *);
 %type <statptr> conditional_statement notes_statement
 %type <statptr> flow_statement while_statement
 %type <statptr> solve_statement solver_statement option_statement switch_statement
+%type <statptr> table_statement values_statement dataset_statement
 
 %type <slptr> fstatements global_def optional_else
 %type <slptr> optional_model_parameters optional_parameter_reduction
@@ -1119,11 +1254,235 @@ units_statement:
 	  gl_destroy($2);
 	  $$ = NULL;
 	}
-    ;
+	;
+
+table_statement:
+	TABLE_TOK fname table_begin table_options ';' table_mode_on table_body END_TOK TABLE_TOK table_mode_off
+	{
+	  char *table_body;
+	  table_body = TableParseFinish();
+	  $$ = CreateTABLE($2,
+	                   g_table_parse.default_expr,
+	                   g_table_parse.positional,
+	                   g_table_parse.rows,
+	                   g_table_parse.scalars,
+	                   g_table_parse.items,
+	                   table_body);
+	  g_table_parse.default_expr = NULL;
+	}
+	| TABLE_TOK fname table_begin table_options ';' table_mode_on error END_TOK TABLE_TOK table_mode_off
+	{
+	  DestroyName($2);
+	  TableParseAbort();
+	  ErrMsg_Generic("Error in TABLE body.");
+	  g_untrapped_error++;
+	  yyerrok;
+	  $$ = NULL;
+	}
+	;
+
+table_begin:
+	/* empty */
+	{
+	  TableParseBegin();
+	}
+	;
+
+table_mode_on:
+	/* empty */
+	{
+	  Asc_ScannerSetTableMode(1);
+	}
+	;
+
+table_mode_off:
+	/* empty */
+	{
+	  Asc_ScannerSetTableMode(0);
+	}
+	;
+
+table_options:
+	/* empty */
+	| table_options table_option
+	;
+
+table_option:
+	POSITIONAL_TOK
+	{
+	  g_table_parse.positional = 1;
+	}
+	| DEFAULT_TOK expr
+	{
+	  if (g_table_parse.default_expr != NULL) {
+	    DestroyExprList(g_table_parse.default_expr);
+	  }
+	  g_table_parse.default_expr = $2;
+	}
+	;
+
+table_body:
+	/* empty */
+	| table_body table_body_item
+	;
+
+table_body_item:
+	table_scalar
+	| ':'
+	{
+	  TableParseAppendToken(":",0);
+	}
+	| '='
+	{
+	  TableParseAppendToken("=",0);
+	}
+	| ','
+	{
+	  TableParseAppendToken(",",0);
+	}
+	| '+'
+	{
+	  TableParseAppendToken("+",0);
+	}
+	| '-'
+	{
+	  TableParseAppendToken("-",0);
+	}
+	| ';'
+	{
+	  TableParseEndRow();
+	}
+	| EOL_TOK
+	{
+	  TableParseEndRow();
+	}
+	;
+
+table_scalar:
+	IDENTIFIER_TOK
+	{
+	  TableParseAppendToken(SCP($1),1);
+	}
+	| SYMBOL_TOK
+	{
+	  TableParseAppendSymbol($1);
+	}
+	| INTEGER_TOK
+	{
+	  TableParseAppendInteger($1);
+	}
+	| REAL_TOK
+	{
+	  TableParseAppendReal($1);
+	}
+	| BRACEDTEXT_TOK
+	{
+	  TableParseAppendBraced($1);
+	}
+	;
+
+values_statement:
+	VALUES_TOK fname values_default_opt ';' values_entries END_TOK VALUES_TOK
+	{
+	  DestroyName($2);
+	  $$ = NULL;
+	}
+	;
+
+values_default_opt:
+	/* empty */
+	| DEFAULT_TOK expr
+	{
+	  DestroyExprList($2);
+	}
+	;
+
+values_entries:
+	values_entry ';'
+	| values_entries values_entry ';'
+	;
+
+values_entry:
+	values_key_list '=' expr
+	{
+	  DestroyExprList($3);
+	}
+	;
+
+values_key_list:
+	values_key
+	| values_key_list ',' values_key
+	;
+
+values_key:
+	IDENTIFIER_TOK
+	| SYMBOL_TOK
+	| INTEGER_TOK
+	| REAL_TOK
+	;
+
+dataset_statement:
+	DATASET_TOK IDENTIFIER_TOK FROM_TOK DQUOTE_TOK ';' dataset_items END_TOK DATASET_TOK
+	{
+	  $$ = NULL;
+	}
+	| DATASET_TOK IDENTIFIER_TOK FROM_TOK DQUOTE_TOK ';' error END_TOK DATASET_TOK
+	{
+	  ErrMsg_Generic("Error in DATASET body.");
+	  g_untrapped_error++;
+	  yyerrok;
+	  $$ = NULL;
+	}
+	;
+
+dataset_items:
+	/* empty */
+	| dataset_items dataset_item ';'
+	| dataset_items error ';'
+	{
+	  ErrMsg_Generic("Error in DATASET item.");
+	  g_untrapped_error++;
+	  yyerrok;
+	}
+	;
+
+dataset_item:
+	dataset_index_item
+	| dataset_map_item
+	;
+
+dataset_index_item:
+	INDEX_TOK IDENTIFIER_TOK FROM_TOK COLUMN_TOK IDENTIFIER_TOK ISA_TOK IDENTIFIER_TOK
+	;
+
+dataset_map_item:
+	dataset_target FROM_TOK COLUMN_TOK IDENTIFIER_TOK dataset_units_opt dataset_type_opt
+	;
+
+dataset_target:
+	IDENTIFIER_TOK '[' fvarlist ']'
+	{
+	  DestroyVariableList($3);
+	}
+	| dataset_target '[' fvarlist ']'
+	{
+	  DestroyVariableList($3);
+	}
+	;
+
+dataset_units_opt:
+	/* empty */
+	| BRACEDTEXT_TOK
+	;
+
+dataset_type_opt:
+	/* empty */
+	| ISA_TOK IDENTIFIER_TOK
+	;
 
 unitdeflist:
-	{
-	  $$ = gl_create(100L);
+		{
+		  $$ = gl_create(100L);
 	}
     | unitdeflist unitdef
 	{
@@ -1291,6 +1650,9 @@ statement:
     | conditional_statement
     | notes_statement
     | units_statement
+    | table_statement
+    | values_statement
+    | dataset_statement
     ;
 
 complex_statement:
@@ -2811,10 +3173,28 @@ logrelop:
  */
 int
 zz_error(char *s){
+  const char *tok = Asc_ScannerTokenText();
+  unsigned long col = Asc_ScannerTokenColumn();
+  char tokbuf[64];
+  size_t i;
+  if (tok == NULL) {
+    tok = "";
+  }
+
+  for (i = 0; i < sizeof(tokbuf) - 1 && tok[i] != '\0'; ++i) {
+    char c = tok[i];
+    tokbuf[i] = (c == '\n' || c == '\r' || c == '\t') ? ' ' : c;
+  }
+  tokbuf[i] = '\0';
+
   g_untrapped_error++;
   if (Asc_CurrentModule() != NULL) {
     MSG("message string '%s'",s);
-    error_reporter_current_line(ASC_USER_ERROR,"%s",s);
+    if (tokbuf[0] != '\0') {
+      error_reporter_current_line(ASC_USER_ERROR,"%s near token '%s' at column %lu",s,tokbuf,col);
+    } else {
+      error_reporter_current_line(ASC_USER_ERROR,"%s at column %lu",s,col);
+    }
   } else {
     error_reporter(ASC_USER_ERROR,NULL,0,NULL,"%s at end of input.",s);
   }
@@ -2849,7 +3229,6 @@ Asc_ErrMsgTypeDefnEOF(void)
 static void ErrMsg_Generic(CONST char *string){
 	static int errcount=0;
 	if(errcount<30){ 
-		char *s1 = strdup(string);
 		/* the module may have be already closed, Asc_CurrentModule will be null */
 		MSG("generic message, '%s'",string);
 		error_reporter_current_line(ASC_USER_ERROR,"%s",string);
@@ -2863,13 +3242,12 @@ static void ErrMsg_Generic(CONST char *string){
 
 		errcount++;
 		if(errcount==30){
-			ERROR_REPORTER_HERE(ASC_PROG_NOTE
-				,"Further reports of this error will be suppressed.\n"
-			);
+				ERROR_REPORTER_HERE(ASC_PROG_NOTE
+					,"Further reports of this error will be suppressed.\n"
+				);
+			}
 		}
-		ASC_FREE(s1);
 	}
-}
 
 static void ErrMsg_CommaName(CONST char *what, struct Name *name)
 {
@@ -3045,4 +3423,3 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
 }
 
 /* vim: set ts=8: */
-

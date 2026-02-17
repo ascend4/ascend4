@@ -81,6 +81,14 @@ static unsigned long yy_line = 1;
  *  every match of newline (\n) needs to ++ this variable.
  */
 
+static unsigned long g_col = 1;
+/*  The current scanner column (1-based).
+ */
+
+static unsigned long g_tok_col = 1;
+/*  The 1-based starting column of the most recently matched token.
+ */
+
 static unsigned long start_line = 0;
 /*  The ine number where an open-comment, open-brace, or
  *  open-double-quote occurs.  We use this to help in error reporting.
@@ -102,6 +110,12 @@ static int MatchedBackslash = 0;
 
 static int RequireIndex = 0;
 /*  The current nesting level of REQUIREd files
+ */
+
+static int g_table_mode = 0;
+/*  If nonzero, newline characters in INITIAL state are emitted to the
+ *  parser as EOL_TOK for TABLE parsing. A ';' followed by newline returns
+ *  ';' and suppresses a separate EOL token.
  */
 
 static YY_BUFFER_STATE RequireStack[MAX_REQUIRE_DEPTH];
@@ -141,6 +155,8 @@ static void ErrMsg_SymbolEOF(void);
 static void ErrMsg_SymbolEOL(void);
 static void ErrMsg_UnexpectedChar(void);
 
+#define YY_USER_ACTION do { g_tok_col = g_col; g_col += yyleng; } while(0);
+
 %}
 
 %x Comment
@@ -174,6 +190,11 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"<"			{ return '<' ;}
 <INITIAL>","			{ return ',' ;}
 <INITIAL>"."			{ return '.' ;}
+<INITIAL>";"{blank}*\n		{
+				  yy_line++;
+				  g_col = 1;
+				  return ';' ;
+				}
 <INITIAL>";"			{ return ';' ;}
 <INITIAL>":"			{ return ':' ;}
 <INITIAL>"["			{ return '[' ;}
@@ -208,6 +229,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"CONTINUE"		{ return CONTINUE_TOK		; }
 <INITIAL>"CREATE"		{ return CREATE_TOK		; }
 <INITIAL>"DATA"			{ return DATA_TOK			; }
+<INITIAL>"DATASET"		{ return DATASET_TOK		; }
 <INITIAL>"DECREASING"		{ return DECREASING_TOK		; }
 <INITIAL>"DEFAULT"		{ return DEFAULT_TOK		; }
 <INITIAL>"DEFINITION"		{ return DEFINITION_TOK		; }
@@ -226,6 +248,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"FOR"			{ return FOR_TOK			; }
 <INITIAL>"FROM"			{ return FROM_TOK			; }
 <INITIAL>"GLOBAL"		{ return GLOBAL_TOK		; }
+<INITIAL>"INDEX"		{ return INDEX_TOK			; }
 <INITIAL>"ASSERT"       { return ASSERT_TOK			; }
 <INITIAL>"IF"			{ return IF_TOK			; }
 <INITIAL>"'ignore'"		{ return IGNORE_TOK 	;}
@@ -254,6 +277,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"OUTPUT"		{ return OUTPUT_TOK		; }
 <INITIAL>"PROD"			{ return PROD_TOK			; }
 <INITIAL>"PROVIDE"		{ return PROVIDE_TOK		; }
+<INITIAL>"POSITIONAL"		{ return POSITIONAL_TOK		; }
 <INITIAL>"REFINES"		{ return REFINES_TOK		; }
 <INITIAL>"REPLACE"		{ return REPLACE_TOK		; }
 <INITIAL>"REQUIRE"		{ return REQUIRE_TOK		; }
@@ -268,6 +292,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"SOLVER"		{ return SOLVER_TOK		; }
 <INITIAL>"SWITCH"		{ return SWITCH_TOK		; }
 <INITIAL>"STOP"			{ return STOP_TOK			; }
+<INITIAL>"TABLE"		{ return TABLE_TOK			; }
 <INITIAL>"THEN"			{ return THEN_TOK			; }
 <INITIAL>"TRUE"			{ return TRUE_TOK			; }
 <INITIAL>"UNION"		{ return UNION_TOK		; }
@@ -276,6 +301,8 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"UNLINK"   		{ return UNLINK_TOK		; } 
 <INITIAL>"USE"			{ return USE_TOK			; }
 <INITIAL>"VALUE"		{ return VALUE_TOK		; }
+<INITIAL>"VALUES"		{ return VALUES_TOK			; }
+<INITIAL>"COLUMN"		{ return COLUMN_TOK			; }
 <INITIAL>"WHEN"			{ return WHEN_TOK			; }
 <INITIAL>"WHERE"		{ return WHERE_TOK		; }
 <INITIAL>"WHILE"		{ return WHILE_TOK		; }
@@ -325,6 +352,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  Increase the commment nesting level.
 				   */
 				  yy_line++;
+				  g_col = 1;
 				  CommentNestLevel++;
 				  break;
 				}
@@ -351,6 +379,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  This rule also matches empty line.
 				   */
 				  yy_line++;
+				  g_col = 1;
 				  break;
 				}
 <Comment>\(+[^*(\n]*		{
@@ -362,6 +391,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				  /*  Eat "("s not followed by "*" plus a "\n"
 				   */
 				  yy_line++;
+				  g_col = 1;
 				  break;
 				}
 <Comment>\*+[^*()\n]*		{
@@ -373,6 +403,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				  /*  Eat "*" not followed by ")" plus a "\n"
 				   */
 				  yy_line++;
+				  g_col = 1;
 				  break;
 				}
 <Comment><<EOF>>		{
@@ -429,6 +460,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   */
 				  ErrMsg_SymbolEOL();
 				  yy_line++;
+				  g_col = 1;
 				  BEGIN(INITIAL);
 				  break;
 				}
@@ -484,6 +516,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   */
 				  MatchedBackslash++;
 				  yy_line++;
+				  g_col = 1;
 				  yymore();
 				  break;
 				}
@@ -522,6 +555,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  This also matches an empty line.
 				   */
 				  yy_line++;
+				  g_col = 1;
 				  yymore();
 				  break;
 				}
@@ -566,6 +600,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				  BracesNestLevel = 1;
 				  start_line = yy_line;
 				  yy_line++;
+				  g_col = 1;
 				  break;
 				}
 <INITIAL>\{			{
@@ -594,6 +629,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   */
 				  MatchedBackslash++;
 				  yy_line++;
+				  g_col = 1;
 				  yymore();
 				  break;
 				}
@@ -610,6 +646,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  the text and increase the nesting level.
 				   */
 				  yy_line++;
+				  g_col = 1;
 				  BracesNestLevel++;
 				  yymore();
 				  break;
@@ -657,6 +694,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  This also matches an empty line.
 				   */
 				  yy_line++;
+				  g_col = 1;
 				  yymore();
 				  break;
 				}
@@ -722,6 +760,10 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>{blank}*\n		{
 				  /*  Ignore whitespace.  */
 				  yy_line++;
+				  g_col = 1;
+				  if (g_table_mode) {
+				    return EOL_TOK;
+				  }
 				  break;
 				}
 
@@ -772,6 +814,30 @@ LineNum(void)
   return yy_line;
 }
 
+unsigned long
+Asc_ScannerTokenColumn(void)
+{
+  return g_tok_col;
+}
+
+CONST char *
+Asc_ScannerTokenText(void)
+{
+  return yytext;
+}
+
+void
+Asc_ScannerSetTableMode(int enabled)
+{
+  g_table_mode = (enabled != 0);
+}
+
+int
+Asc_ScannerGetTableMode(void)
+{
+  return g_table_mode;
+}
+
 
 /*
  *  See the header file scanner.h for a description of this function.
@@ -781,6 +847,9 @@ Asc_ScannerAssignFile(FILE *f, unsigned long linenum)
 {
   yyin = f;
   yy_line = linenum;
+  g_col = 1;
+  g_tok_col = 1;
+  g_table_mode = 0;
   if ( RequireIndex == 0 ) {
     yyrestart(f);
   }
@@ -794,6 +863,9 @@ Asc_ScannerAssignString(void *yybs, unsigned long linenum, int first)
 {
   /* yyin = f; */
   yy_line = linenum;
+  g_col = 1;
+  g_tok_col = 1;
+  g_table_mode = 0;
   yy_switch_to_buffer((YY_BUFFER_STATE)yybs);
   if (first) {
     BEGIN(INITIAL);
@@ -813,13 +885,11 @@ Asc_ScannerPushBuffer(CONST char *filename)
   int status;        /* status returned from Asc_RequireModule */
   
   if ( RequireIndex >= MAX_REQUIRE_DEPTH ) {
-    FPRINTF(ASCERR,
-	    "Error:\tREQUIRE nested too deeply (%d levels) on line %s:%lu.\n"
-	    "\tFile \"%s\" not read.\n",
-	    RequireIndex,
-	    Asc_ModuleBestName(Asc_CurrentModule()),
-	    yy_line,
-	    filename);
+    error_reporter(ASC_USER_ERROR
+	,Asc_ModuleBestName(Asc_CurrentModule()),yy_line,NULL
+	,"REQUIRE nested too deeply (%d levels). File \"%s\" not read."
+	,RequireIndex, filename
+    );
     return 1;
   }
 
@@ -881,6 +951,9 @@ static int
 Asc_ScannerPopBuffer(void)
 {
   Asc_CloseCurrentModule(); /* the current module may be NULL. */
+  g_col = 1;
+  g_tok_col = 1;
+  g_table_mode = 0;
   if ( RequireIndex == 0 ) {
     return 1;
   }
@@ -895,6 +968,9 @@ void Asc_ScannerReleaseStringBuffer(void *yybs)
 {
   yy_delete_buffer((YY_BUFFER_STATE)yybs);
   yy_switch_to_buffer( RequireStack[--RequireIndex] );
+  g_col = 1;
+  g_tok_col = 1;
+  g_table_mode = 0;
   BEGIN(INITIAL);
 }
 
@@ -1089,66 +1165,62 @@ ErrMsg_BracesEOF(void){
 static void
 ErrMsg_CommentEOF(void)
 {
-  FPRINTF(ASCERR,
-          "Error:\tEnd of file reached within a comment.\n"
-	  "\tNo close-comment found for comment starting on line %s:%lu\n",
-	  Asc_ModuleBestName(Asc_CurrentModule()), start_line);
+  error_reporter(ASC_USER_ERROR
+	,Asc_ModuleBestName(Asc_CurrentModule()), start_line, NULL
+	,"End of file reached within a comment. No close-comment found for comment starting here."
+  );
 }
 
 
 static void
 ErrMsg_LongID(void)
 {
-  FPRINTF(ASCERR,
-	  "Error:\tIdentifier too long on line %s:%lu.\n"
-	  "\tIdentifier \"%s\" exceeds the maximum identifier size of %d\n",
-	  Asc_ModuleBestName(Asc_CurrentModule()),
-	  yy_line,
-	  yytext,
-	  YY_MAXLEN);
+  error_reporter(ASC_USER_ERROR
+	,Asc_ModuleBestName(Asc_CurrentModule()), yy_line, NULL
+	,"Identifier \"%s\" exceeds the maximum identifier size of %d"
+	,yytext, YY_MAXLEN
+  );
 }
 
 
 static void
 ErrMsg_LongSymbol(void)
 {
-  FPRINTF(ASCERR,
-	  "Error:\tSymbol too long on line %s:%lu.\n"
-	  "\tSymbol %s exceeds the maximum symbol size of %d\n",
-	  Asc_ModuleBestName(Asc_CurrentModule()),
-	  yy_line,
-	  yytext,
-	  YY_MAXLEN);
+  error_reporter(ASC_USER_ERROR
+	,Asc_ModuleBestName(Asc_CurrentModule()), yy_line, NULL
+	,"Symbol %s exceeds the maximum symbol size of %d"
+	,yytext, YY_MAXLEN
+  );
 }
 
 
 static void
 ErrMsg_DoubleQuoteEOF(void)
 {
-  FPRINTF(ASCERR,
-          "Error:\tEnd of file reached with a double quoted string.\n"
-	  "\tNo close quote found for the open quote on line %s:%lu\n",
-	  Asc_ModuleBestName(Asc_CurrentModule()), start_line);
+  error_reporter(ASC_USER_ERROR
+	,Asc_ModuleBestName(Asc_CurrentModule()), start_line, NULL
+	,"End of file reached with a double quoted string. No close quote found for this open quote."
+  );
 }
 
 
 static void
 ErrMsg_SymbolEOF(void)
 {
-  FPRINTF(ASCERR,
-          "Error:\tEnd of file reached within a symbol.\n"
-	  "\tNo close quote found for symbol on line %s:%lu\n",
-	  Asc_ModuleBestName(Asc_CurrentModule()), yy_line);
+  error_reporter(ASC_USER_ERROR
+	,Asc_ModuleBestName(Asc_CurrentModule()), yy_line, NULL
+	,"End of file reached within a symbol. No close quote found for symbol."
+  );
 }
 
 
 static void
 ErrMsg_SymbolEOL(void)
 {
-  FPRINTF(ASCERR,
-          "Error:\tEnd of line reached within a symbol.\n"
-	  "\tNo close quote found for symbol on line %s:%lu\n",
-	  Asc_ModuleBestName(Asc_CurrentModule()), yy_line);
+  error_reporter(ASC_USER_ERROR
+	,Asc_ModuleBestName(Asc_CurrentModule()), yy_line, NULL
+	,"End of line reached within a symbol. No close quote found for symbol."
+  );
 }
 
 #define ERRCOUNT_UNEXPCHAR 5
@@ -1157,10 +1229,10 @@ static void ErrMsg_UnexpectedChar(){
 	if(errcount<ERRCOUNT_UNEXPCHAR){
 		error_reporter(ASC_USER_ERROR
 			,Asc_ModuleBestName(Asc_CurrentModule()), yy_line, NULL
-			,"Unexpected character '%s' in input (ASCII %d). If you pasted"
+			,"Unexpected character '%s' in input at column %lu (ASCII %d). If you pasted"
 			" text from another source (a word-processor, web page, etc) be"
 			" careful that you haven't pasted strange quotes, hyphens, etc."
-			, yytext, yytext[0]
+			, yytext, g_tok_col, (int)(unsigned char)yytext[0]
 		);
 		errcount++;
 		if(errcount==ERRCOUNT_UNEXPCHAR){

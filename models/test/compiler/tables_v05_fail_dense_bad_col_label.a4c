@@ -1,0 +1,15 @@
+REQUIRE "atoms.a4l";
+
+MODEL tables_v05_fail_dense_bad_col_label;
+	r IS_A set OF integer_constant;
+	c IS_A set OF integer_constant;
+	cost[r][c] IS_A integer_constant;
+	r :== [1..2];
+	c :== [1..2];
+
+	TABLE cost[r,c];
+		: 1 3
+		1: 11 13
+		2: 21 23
+	END TABLE;
+END tables_v05_fail_dense_bad_col_label;

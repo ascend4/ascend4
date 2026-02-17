@@ -126,6 +126,7 @@ enum stat_t {
   COND,         /**< CONDITIONAL statement */
   WBTS,         /**< WILL_BE_THE_SAME */
   WNBTS,        /**< WILL_NOT_BE_THE_SAME */
+  TABLESTAT,    /**< TABLE statement */
   WILLBE        /**< WILL_BE */
   /* if you add anything after WILLBE, change statio.c/suppression
    * accordingly.
@@ -401,6 +402,17 @@ struct StateOPTION{
   struct Expr *rhs;
  };
 
+/** used for TABLE statement (parse metadata in v0). */
+struct StateTABLE{
+  struct Name *name;           /**< target array name */
+  struct Expr *default_expr;   /**< DEFAULT expression, if supplied */
+  char *body;                  /**< canonical tokenized body text */
+  unsigned long rows;          /**< parsed non-empty table rows */
+  unsigned long scalars;       /**< parsed scalar tokens */
+  unsigned long items;         /**< parsed row items (includes punctuation tokens) */
+  int positional;              /**< nonzero when POSITIONAL specified */
+};
+
 /**<DS: used for LINK statements */
 struct StateLINK {
   symchar *key;			/**< key under which the linked instances are stored in the link table, which can be a symbol, a name, loop index stored as symchars*/
@@ -464,6 +476,7 @@ union StateUnion {
   struct StateSOLVER     solver;
   struct StateOPTION     option;
   struct StateLINK	     lnk;
+  struct StateTABLE      table;
 };
 
 struct Statement {
@@ -484,4 +497,3 @@ struct StatementList {
 /* @} */
 
 #endif  /* ASC_STATTYPES_H */
-

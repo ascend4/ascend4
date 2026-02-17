@@ -469,6 +469,17 @@ static void test_highs_lp_structured(void){
 	run_highs_model("models/test/ipopt/lp_structured.a4c","lp_structured",-10.0,0,expected,4,NULL);
 }
 
+static void test_highs_lp_structured_table(void){
+	/* Structured LP TABLE variant: same solve/path expectations with TABLE-loaded constants. */
+	static const struct var_expect expected[] = {
+		{"x[1]", 2.0, 1e-7},
+		{"x[2]", 2.0, 1e-7},
+		{"row[1].s", 0.0, 1e-7},
+		{"row[2].s", 0.0, 1e-7}
+	};
+	run_highs_model("models/test/ipopt/lp_structured_table.a4c","lp_structured_table",-10.0,0,expected,4,NULL);
+}
+
 static void test_highs_mip_mixed(void){
 	/* Mixed-integer model: covers HiGHS MIP load path and mixed row operators. */
 	static const struct highs_run_options opts = {0,0,0,0,1e-7};
@@ -509,6 +520,28 @@ static void test_highs_mip_facility_location(void){
 	);
 }
 
+static void test_highs_mip_facility_location_table_labels(void){
+	/* String-labeled TABLE variant of facility-location benchmark. */
+	static const struct var_expect expected[] = {
+		{"open['alpha']", 1.0, 1e-7},
+		{"open['beta']", 0.0, 1e-7},
+		{"open['gamma']", 1.0, 1e-7},
+		{"assign['cust1']['alpha']", 1.0, 1e-7},
+		{"assign['cust2']['gamma']", 1.0, 1e-7},
+		{"assign['cust3']['gamma']", 1.0, 1e-7},
+		{"assign['cust4']['gamma']", 1.0, 1e-7}
+	};
+	run_highs_model(
+		"models/test/mip/facility_location_table_labels.a4c",
+		"mip_facility_location_table_labels",
+		470.0,
+		0,
+		expected,
+		7,
+		NULL
+	);
+}
+
 static void test_highs_mip_tsp_mtz8(void){
 	/* Classic TSP MIP with MTZ subtour constraints on an asymmetric 8-city instance. */
 	static const struct var_expect expected[] = {
@@ -524,6 +557,29 @@ static void test_highs_mip_tsp_mtz8(void){
 	run_highs_model(
 		"models/test/mip/tsp_mtz8.a4c",
 		"mip_tsp_mtz8",
+		166.0,
+		0,
+		expected,
+		8,
+		NULL
+	);
+}
+
+static void test_highs_mip_tsp_mtz8_table_labels(void){
+	/* String-labeled TABLE variant of the MTZ 8-city TSP benchmark. */
+	static const struct var_expect expected[] = {
+		{"x['a']['d']", 1.0, 1e-7},
+		{"x['d']['b']", 1.0, 1e-7},
+		{"x['b']['e']", 1.0, 1e-7},
+		{"x['e']['f']", 1.0, 1e-7},
+		{"x['f']['g']", 1.0, 1e-7},
+		{"x['g']['c']", 1.0, 1e-7},
+		{"x['c']['h']", 1.0, 1e-7},
+		{"x['h']['a']", 1.0, 1e-7}
+	};
+	run_highs_model(
+		"models/test/mip/tsp_mtz8_table_labels.a4c",
+		"mip_tsp_mtz8_table_labels",
 		166.0,
 		0,
 		expected,
@@ -879,11 +935,14 @@ cleanup:
 #define TESTS(T) \
 	T(highs_lp1) \
 	T(highs_lp_structured) \
+	T(highs_lp_structured_table) \
 	T(highs_mip_mixed) \
 	T(highs_mip_mixed_iterate) \
 	T(highs_mip_mixed_resolve) \
 	T(highs_mip_facility_location) \
+	T(highs_mip_facility_location_table_labels) \
 	T(highs_mip_tsp_mtz8) \
+	T(highs_mip_tsp_mtz8_table_labels) \
 	T(highs_trnsport) \
 	T(highs_blend_whiskas2) \
 	T(highs_afiro) \

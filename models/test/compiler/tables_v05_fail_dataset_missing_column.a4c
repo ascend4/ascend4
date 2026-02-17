@@ -1,0 +1,11 @@
+REQUIRE "atoms.a4l";
+
+MODEL tables_v05_fail_dataset_missing_column;
+	customer IS_A set OF integer_constant;
+	load[customer] IS_A factor_constant;
+
+	DATASET ops FROM "ops.csv";
+		INDEX customer FROM customer_id IS_A integer_constant;
+		load[customer] FROM COLUMN load_MW {MW};
+	END DATASET;
+END tables_v05_fail_dataset_missing_column;
