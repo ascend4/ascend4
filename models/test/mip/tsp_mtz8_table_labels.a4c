@@ -5,14 +5,13 @@ MODEL mip_tsp_mtz8_table_labels;
 	city IS_A set OF symbol_constant;
 	nondepot IS_A set OF symbol_constant;
 
-	c[city][city] IS_A factor_constant;
 	x[city][city] IS_A solver_binary;
 	u[city] IS_A solver_var;
 
 	city :== ['a','b','c','d','e','f','g','h'];
 	nondepot :== ['b','c','d','e','f','g','h'];
 
-	TABLE c[city,city];
+	TABLE c[city,city] IS_A factor_constant;
 		a,b,c,d,e,f,g,h;
 		a,0,89,22,11,43,39,36,25;
 		b,21,0,94,77,19,83,62,12;

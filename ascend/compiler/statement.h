@@ -470,6 +470,9 @@ extern struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs);
  */
 
 extern struct Statement *CreateTABLE(struct Name *n,
+                                     symchar *decl_type,
+                                     struct Set *decl_typeargs,
+                                     symchar *decl_set_type,
                                      struct Expr *default_expr,
                                      int positional,
                                      unsigned long rows,

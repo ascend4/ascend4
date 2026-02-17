@@ -502,6 +502,17 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
   case TABLESTAT:
     FPRINTF(f,"TABLE ");
     WriteName(f,s->v.table.name);
+    if (s->v.table.decl_type != NULL) {
+      FPRINTF(f," IS_A %s",SCP(s->v.table.decl_type));
+      if (s->v.table.decl_typeargs != NULL) {
+        FPRINTF(f,"(");
+        WriteSet(f,s->v.table.decl_typeargs);
+        FPRINTF(f,")");
+      }
+      if (s->v.table.decl_set_type != NULL) {
+        FPRINTF(f," OF %s",SCP(s->v.table.decl_set_type));
+      }
+    }
     if (s->v.table.positional) {
       FPRINTF(f," POSITIONAL");
     }
