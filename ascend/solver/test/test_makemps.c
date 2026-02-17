@@ -26,6 +26,10 @@
 
 #include <test/common.h>
 
+#ifndef TEST_MAKEMPS_KEEP_FILES
+#define TEST_MAKEMPS_KEEP_FILES 0
+#endif
+
 static int find_param_index(const slv_parameters_t *pp, const char *name){
 	int i;
 	for(i=0; i<pp->num_parms; ++i){
@@ -376,8 +380,10 @@ cleanup:
 	solver_destroy_engines();
 	if(siminst)sim_destroy(siminst);
 	Asc_CompilerDestroy();
+#if !TEST_MAKEMPS_KEEP_FILES
 	remove(mpsfile);
 	remove(mapfile);
+#endif
 }
 
 static void test_makemps_lp1(void){
@@ -428,6 +434,30 @@ static void test_makemps_lp_structured(void){
 	);
 }
 
+static void test_makemps_lp_structured_table(void){
+	/* Structured LP TABLE variant: same map and external HiGHS checks with TABLE constants. */
+	static const struct highs_var_expect expected_vars[] = {
+		{"x[1]", 2.0, 1e-7},
+		{"x[2]", 2.0, 1e-7},
+		{"row[1].s", 0.0, 1e-7},
+		{"row[2].s", 0.0, 1e-7}
+	};
+	run_makemps_model(
+		"models/test/ipopt/lp_structured_table.a4c",
+		"lp_structured_table",
+		"test/makemps_lp_structured_table.mps",
+		"test/makemps_lp_structured_table.map",
+		"x[1]",
+		"row[1].s",
+		-10.0,
+		1e-7,
+		expected_vars,
+		4,
+		1,
+		-1
+	);
+}
+
 static void test_makemps_mip_mixed(void){
 	/* Mixed-integer export path: verifies integer-marked MPS output (INTORG markers). */
 	run_makemps_model(
@@ -441,6 +471,62 @@ static void test_makemps_mip_mixed(void){
 		1e-7,
 		NULL,
 		0,
+		0,
+		0
+	);
+}
+
+static void test_makemps_mip_facility_location_table_labels(void){
+	/* String-labeled TABLE facility-location: MIP export + external HiGHS regression check. */
+	static const struct highs_var_expect expected_vars[] = {
+		{"open['alpha']", 1.0, 1e-7},
+		{"open['beta']", 0.0, 1e-7},
+		{"open['gamma']", 1.0, 1e-7},
+		{"assign['cust1']['alpha']", 1.0, 1e-7},
+		{"assign['cust2']['gamma']", 1.0, 1e-7},
+		{"assign['cust3']['gamma']", 1.0, 1e-7},
+		{"assign['cust4']['gamma']", 1.0, 1e-7}
+	};
+	run_makemps_model(
+		"models/test/mip/facility_location_table_labels.a4c",
+		"mip_facility_location_table_labels",
+		"test/makemps_mip_facility_location_table_labels.mps",
+		"test/makemps_mip_facility_location_table_labels.map",
+		"open['alpha']",
+		"assign['cust1']['alpha']",
+		470.0,
+		1e-7,
+		expected_vars,
+		7,
+		1,
+		0
+	);
+}
+
+static void test_makemps_mip_tsp_mtz8_table_labels(void){
+	/* String-labeled TABLE TSP: MakeMPS export + mapping smoke test.
+	   TODO: objective row currently emits without coefficients for this model. */
+	static const struct highs_var_expect expected_vars[] = {
+		{"x['a']['d']", 1.0, 1e-7},
+		{"x['d']['b']", 1.0, 1e-7},
+		{"x['b']['e']", 1.0, 1e-7},
+		{"x['e']['f']", 1.0, 1e-7},
+		{"x['f']['g']", 1.0, 1e-7},
+		{"x['g']['c']", 1.0, 1e-7},
+		{"x['c']['h']", 1.0, 1e-7},
+		{"x['h']['a']", 1.0, 1e-7}
+	};
+	run_makemps_model(
+		"models/test/mip/tsp_mtz8_table_labels.a4c",
+		"mip_tsp_mtz8_table_labels",
+		"test/makemps_mip_tsp_mtz8_table_labels.mps",
+		"test/makemps_mip_tsp_mtz8_table_labels.map",
+		"x['a']['d']",
+		"x['h']['a']",
+		166.0,
+		1e-7,
+		expected_vars,
+		8,
 		0,
 		0
 	);
@@ -672,7 +758,10 @@ cleanup:
 #define TESTS(T) \
 	T(makemps_lp1) \
 	T(makemps_lp_structured) \
+	T(makemps_lp_structured_table) \
 	T(makemps_mip_mixed) \
+	T(makemps_mip_facility_location_table_labels) \
+	T(makemps_mip_tsp_mtz8_table_labels) \
 	T(makemps_trnsport) \
 	T(makemps_blend_whiskas2) \
 	T(makemps_afiro) \
