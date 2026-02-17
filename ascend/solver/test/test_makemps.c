@@ -504,8 +504,7 @@ static void test_makemps_mip_facility_location_table_labels(void){
 }
 
 static void test_makemps_mip_tsp_mtz8_table_labels(void){
-	/* String-labeled TABLE TSP: MakeMPS export + mapping smoke test.
-	   TODO: objective row currently emits without coefficients for this model. */
+	/* String-labeled TABLE TSP: MIP export + external HiGHS regression check. */
 	static const struct highs_var_expect expected_vars[] = {
 		{"x['a']['d']", 1.0, 1e-7},
 		{"x['d']['b']", 1.0, 1e-7},
@@ -527,7 +526,7 @@ static void test_makemps_mip_tsp_mtz8_table_labels(void){
 		1e-7,
 		expected_vars,
 		8,
-		0,
+		1,
 		0
 	);
 }

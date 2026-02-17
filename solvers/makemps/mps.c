@@ -257,10 +257,14 @@ void print_col(FILE *out,               /* file */
        nz.col = curcol;       /* current col */
 
        /* note: since mtx_FIRST = mtx_LAST, can't use a while loop */
-       value = mtx_next_in_col(Ac_mtx,&nz,mtx_range(&range,0,rused));
+       value = mtx_next_in_col(Ac_mtx,&nz,mtx_range(&range,0,mtx_order(Ac_mtx)-1));
        do  {
-             print_col_element(out, orgcol, mtx_row_to_org(Ac_mtx, nz.row), value);   /* print out a nonzero element */
-             value = mtx_next_in_col(Ac_mtx,&nz,mtx_range(&range,0,rused));
+             int32 orgrow = mtx_row_to_org(Ac_mtx, nz.row);
+             /* Emit only declared rows (constraints plus objective), regardless of row permutation. */
+             if(orgrow >= 0 && orgrow <= rused){
+               print_col_element(out, orgcol, orgrow, value);
+             }
+             value = mtx_next_in_col(Ac_mtx,&nz,mtx_range(&range,0,mtx_order(Ac_mtx)-1));
 	   } while (nz.row != mtx_LAST);
 
        print_col_element(out, -1 , 0, 0.0);   /* clean up newline */
