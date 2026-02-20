@@ -188,10 +188,11 @@ static SlvClientToken ipopt_create(slv_system_t server, int32 *statusindex){
 	sys->n = -1;
 	sys->m = -1;
 
-	sys->s.ok = TRUE;
+	sys->s.kind = SLV_STATUS_NLP;
+  sys->s.ok = TRUE;
 	sys->s.calc_ok = TRUE;
-	sys->s.costsize = 0;
-	sys->s.cost = NULL; /*redundant, but sanity preserving */
+	sys->s.u.nlp.costsize = 0;
+	sys->s.u.nlp.cost = NULL; /*redundant, but sanity preserving */
 	sys->s.block.number_of = 1;
 	sys->s.block.current_block = 0;
 	sys->s.block.current_reordered_block = 0;
@@ -253,7 +254,7 @@ static int32 ipopt_destroy(slv_system_t server, SlvClientToken asys){
 	UNUSED_PARAMETER(server);
 	sys = SYS(asys);
 	slv_destroy_parms(&(sys->p));
-	if(sys->s.cost) ascfree(sys->s.cost);
+	if(sys->s.u.nlp.cost) ascfree(sys->s.u.nlp.cost);
 	ASC_FREE(sys);
 	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"ipopt_destroy still needs debugging");
 	return 0;
@@ -1140,13 +1141,13 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 	//...
 
 	if( matrix_creation_needed ) {
-		destroy_array(sys->s.cost);
-		sys->s.cost = create_zero_array(sys->s.costsize,struct slv_block_cost);
-		for( ind = 0; ind < sys->s.costsize; ++ind ) {
-		    sys->s.cost[ind].reorder_method = -1;
+		destroy_array(sys->s.u.nlp.cost);
+		sys->s.u.nlp.cost = create_zero_array(sys->s.u.nlp.costsize,struct slv_block_cost);
+		for( ind = 0; ind < sys->s.u.nlp.costsize; ++ind ) {
+		    sys->s.u.nlp.cost[ind].reorder_method = -1;
 		}
 	} else {
-		reset_cost(sys->s.cost,sys->s.costsize);
+		reset_cost(sys->s.u.nlp.cost,sys->s.u.nlp.costsize);
 	}
 
 #endif
@@ -1156,7 +1157,7 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 	sys->s.cpu_elapsed = 0.0;
 	sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
 	sys->s.block.previous_total_size = 0;
-	sys->s.costsize = 1+sys->s.block.number_of;
+	sys->s.u.nlp.costsize = 1+sys->s.block.number_of;
 
 
 	/* set to go to first unconverged block */
@@ -1172,7 +1173,7 @@ static int ipopt_presolve(slv_system_t server, SlvClientToken asys){
 
 	//CONSOLE_DEBUG("Reset status");
 
-	/* sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed; */
+	/* sys->s.u.nlp.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed; */
 
 	//ERROR_REPORTER_HERE(ASC_USER_SUCCESS,"presolve completed");
 	return 0;
@@ -1324,14 +1325,21 @@ static int ipopt_solve(slv_system_t server, SlvClientToken asys){
 		sys->s.converged = TRUE;
 
 		sys->s.block.current_block = -1; //is this 1??
-		sys->s.cost = ASC_NEW_ARRAY(struct slv_block_cost,1);
-		sys->s.cost->size=sys->s.block.current_size=sys->n;
-		sys->s.cost->iterations=sys->s.block.iteration;
-		sys->s.cost->funcs=sys->s.block.funcs;
-		sys->s.cost->jacs=sys->s.block.jacs;
-		sys->s.cost->time=sys->s.block.cpu_elapsed;
-		sys->s.cost->functime=sys->s.block.functime;
-		sys->s.cost->jactime=sys->s.block.jactime;
+		sys->s.u.nlp.costsize = 1 + sys->s.block.number_of;
+		if(sys->s.u.nlp.cost != NULL){
+			ASC_FREE(sys->s.u.nlp.cost);
+		}
+		sys->s.u.nlp.cost = ASC_NEW_ARRAY_CLEAR(struct slv_block_cost, sys->s.u.nlp.costsize);
+		for(j = 0; j < sys->s.u.nlp.costsize; ++j){
+			sys->s.u.nlp.cost[j].reorder_method = -1;
+		}
+		sys->s.u.nlp.cost[0].size = sys->s.block.current_size = sys->n;
+		sys->s.u.nlp.cost[0].iterations = sys->s.block.iteration;
+		sys->s.u.nlp.cost[0].funcs = sys->s.block.funcs;
+		sys->s.u.nlp.cost[0].jacs = sys->s.block.jacs;
+		sys->s.u.nlp.cost[0].time = sys->s.block.cpu_elapsed;
+		sys->s.u.nlp.cost[0].functime = sys->s.block.functime;
+		sys->s.u.nlp.cost[0].jactime = sys->s.block.jactime;
 
 
 		//CONSOLE_DEBUG("Solution of the primal variables, x");

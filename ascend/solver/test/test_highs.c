@@ -447,6 +447,81 @@ cleanup:
 	Asc_CompilerDestroy();
 }
 
+static int highs_get_kind_after_presolve(
+	const char *module_path, const char *model_name, int relaxed, slv_status_kind_t *kind_out
+){
+	int solver_index = -1;
+	struct Instance *siminst = NULL;
+	slv_system_t sys = NULL;
+	slv_status_t status;
+	int ran = 0;
+
+	Asc_CompilerInit(1);
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_LIBRARY "=models"));
+	CU_TEST(0 == Asc_PutEnv(ASC_ENV_SOLVERS "=solvers/highs"));
+
+	if(0 != package_load("highs",NULL)){
+		CONSOLE_DEBUG("Skipping HiGHS kind test: solver package not available");
+		goto cleanup;
+	}
+	solver_index = slv_lookup_client("HiGHS");
+	if(solver_index == -1){
+		CONSOLE_DEBUG("Skipping HiGHS kind test: solver not registered");
+		goto cleanup;
+	}
+
+	{
+		int status_open;
+		Asc_OpenModule(module_path,&status_open);
+		CU_ASSERT_FATAL(status_open == 0);
+	}
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT_FATAL(FindType(AddSymbol(model_name)) != NULL);
+
+	siminst = SimsCreateInstance(AddSymbol(model_name), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(siminst != NULL);
+	{
+		struct Name *name = CreateIdName(AddSymbol("on_load"));
+		enum Proc_enum pe = Initialize(GetSimulationRoot(siminst),name,"sim1", ASCERR, WP_STOPONERR, NULL, NULL);
+		CU_ASSERT(pe == Proc_all_ok);
+	}
+
+	sys = system_build(GetSimulationRoot(siminst));
+	CU_ASSERT_FATAL(sys != NULL);
+	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
+	CU_ASSERT_TRUE(slv_eligible_solver(sys));
+
+	{
+		slv_parameters_t pp;
+		int nonlin_idx;
+		int relaxed_idx;
+		slv_get_parameters(sys,&pp);
+		nonlin_idx = find_param_index(&pp,"nonlin");
+		relaxed_idx = find_param_index(&pp,"relaxed");
+		CU_ASSERT_FATAL(nonlin_idx != -1);
+		CU_ASSERT_FATAL(relaxed_idx != -1);
+		SLV_PARAM_BOOL(&pp,nonlin_idx) = FALSE;
+		SLV_PARAM_BOOL(&pp,relaxed_idx) = (relaxed ? TRUE : FALSE);
+		slv_set_parameters(sys,&pp);
+	}
+
+	(void)slv_presolve(sys);
+	slv_get_status(sys,&status);
+	CU_ASSERT_TRUE(status.ready_to_solve);
+	if(kind_out != NULL){
+		*kind_out = status.kind;
+	}
+	ran = 1;
+
+cleanup:
+	if(sys)system_destroy(sys);
+	system_free_reused_mem();
+	solver_destroy_engines();
+	if(siminst)sim_destroy(siminst);
+	Asc_CompilerDestroy();
+	return ran;
+}
+
 static void test_highs_lp1(void){
 	/* Baseline LP: verifies parse/compile/presolve/solve and instance-tree writeback. */
 	static const struct var_expect expected[] = {
@@ -480,10 +555,34 @@ static void test_highs_lp_structured_table(void){
 	run_highs_model("models/test/ipopt/lp_structured_table.a4c","lp_structured_table",-10.0,0,expected,4,NULL);
 }
 
+static void test_highs_kind_after_presolve_lp(void){
+	/* LP model should classify as LP right after presolve. */
+	slv_status_kind_t kind = SLV_STATUS_UNKNOWN;
+	int ran = highs_get_kind_after_presolve("models/test/ipopt/lp1.a4c","lp1",0,&kind);
+	if(!ran)return;
+	CU_ASSERT_EQUAL(kind, SLV_STATUS_LP);
+}
+
 static void test_highs_mip_mixed(void){
 	/* Mixed-integer model: covers HiGHS MIP load path and mixed row operators. */
 	static const struct highs_run_options opts = {0,0,0,0,1e-7};
 	run_highs_model("models/test/mip/mip_mixed.a4c","mip_mixed",0.0,0,NULL,0,&opts);
+}
+
+static void test_highs_kind_after_presolve_mip(void){
+	/* MIP model should classify as MIP right after presolve. */
+	slv_status_kind_t kind = SLV_STATUS_UNKNOWN;
+	int ran = highs_get_kind_after_presolve("models/test/mip/mip_mixed.a4c","mip_mixed",0,&kind);
+	if(!ran)return;
+	CU_ASSERT_EQUAL(kind, SLV_STATUS_MIP);
+}
+
+static void test_highs_kind_after_presolve_relaxed_mip(void){
+	/* Relaxed MIP should classify as LP right after presolve. */
+	slv_status_kind_t kind = SLV_STATUS_UNKNOWN;
+	int ran = highs_get_kind_after_presolve("models/test/mip/mip_mixed.a4c","mip_mixed",1,&kind);
+	if(!ran)return;
+	CU_ASSERT_EQUAL(kind, SLV_STATUS_LP);
 }
 
 static void test_highs_mip_mixed_iterate(void){
@@ -936,7 +1035,10 @@ cleanup:
 	T(highs_lp1) \
 	T(highs_lp_structured) \
 	T(highs_lp_structured_table) \
+	T(highs_kind_after_presolve_lp) \
 	T(highs_mip_mixed) \
+	T(highs_kind_after_presolve_mip) \
+	T(highs_kind_after_presolve_relaxed_mip) \
 	T(highs_mip_mixed_iterate) \
 	T(highs_mip_mixed_resolve) \
 	T(highs_mip_facility_location) \

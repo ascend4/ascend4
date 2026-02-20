@@ -42,6 +42,9 @@ extern "C"{
 #include <ascend/system/chkdim.h>
 #include <ascend/compiler/name.h>
 #include <ascend/compiler/pending.h>
+extern "C"{
+#include <ascend/system/slv_common.h>
+}
 #include <ascend/compiler/importhandler.h>
 #include <ascend/linear/mtx.h>
 #include <ascend/system/calc.h>
@@ -1017,16 +1020,18 @@ Simulation::processVarStatus(){
 	int nrels = slv_get_num_solvers_rels(getSystem());
 
 	slv_status_t status;
+	const struct slv__block_status_structure *block;
 	if(slv_get_status(sys, &status)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to update var status (get_status returns error)");
 		return;
 	}
 
-	if(status.block.number_of == 0){
+	block = slv_status_block(&status);
+	if(block == NULL || block->number_of == 0){
 		cerr << "Variable statuses can't be set: block structure not yet determined." << endl;
 		return;
 	}else{
-		MSG("There are %d blocks", status.block.number_of);
+		MSG("There are %d blocks", block->number_of);
 	}
 
 	if(!bb->block){
@@ -1039,16 +1044,16 @@ Simulation::processVarStatus(){
 
 		/** @todo find out the way code is taking */
 		if (status.converged ==  1){
-			low = high = status.block.current_size;
+			low = high = block->current_size;
 		}
 		else{
 			low = 1; // is this 1 or 0??
-			high = status.block.current_size;
+			high = block->current_size;
 		}
 	}
 	else{
-		int activeblock = status.block.current_block;
-		asc_assert(activeblock <= status.block.number_of);
+		int activeblock = block->current_block;
+		asc_assert(activeblock <= block->number_of);
 
 		low = bb->block[activeblock].col.low;
 		high = bb->block[activeblock].col.high;

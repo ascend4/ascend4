@@ -270,6 +270,34 @@ public:
 	const bool hasExceededTimeLimit() const;
 	const bool isInterrupted() const;
 	const int getIterationNum() const;
+	const double getCpuElapsed() const;
+
+	const int getKind() const;
+	const bool isNLP() const;
+	const bool isLP() const;
+	const bool isMIP() const;
+
+	const bool hasLpObjective() const;
+	const double getLpObjective() const;
+	const bool hasLpPrimalStatus() const;
+	const int getLpPrimalStatus() const;
+	const bool hasLpDualStatus() const;
+	const int getLpDualStatus() const;
+	const bool hasLpBasisStatus() const;
+	const int getLpBasisStatus() const;
+
+	const bool hasMipPrimalBound() const;
+	const double getMipPrimalBound() const;
+	const bool hasMipDualBound() const;
+	const double getMipDualBound() const;
+	const bool hasMipGap() const;
+	const double getMipGap() const;
+	const bool hasMipAbsGap() const;
+	const double getMipAbsGap() const;
+	const bool hasMipNodeCount() const;
+	const long long getMipNodeCount() const;
+	const bool hasMipTotalLpIterations() const;
+	const int getMipTotalLpIterations() const;
 
 	// block structure stuff...
 

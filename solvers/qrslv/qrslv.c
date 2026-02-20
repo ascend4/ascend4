@@ -2452,14 +2452,14 @@ static void move_to_next_block( qrslv_system_t sys){
 
     /* Record cost accounting info here. */
     ci=sys->s.block.current_block;
-    sys->s.cost[ci].size	=	sys->s.block.current_size;
-    sys->s.cost[ci].iterations	=	sys->s.block.iteration;
-    sys->s.cost[ci].funcs	=	sys->s.block.funcs;
-    sys->s.cost[ci].jacs	=	sys->s.block.jacs;
-    sys->s.cost[ci].functime	=	sys->s.block.functime;
-    sys->s.cost[ci].jactime	=	sys->s.block.jactime;
-    sys->s.cost[ci].time	=	sys->s.block.cpu_elapsed;
-    sys->s.cost[ci].resid	=	sys->s.block.residual;
+    sys->s.u.nlp.cost[ci].size	=	sys->s.block.current_size;
+    sys->s.u.nlp.cost[ci].iterations	=	sys->s.block.iteration;
+    sys->s.u.nlp.cost[ci].funcs	=	sys->s.block.funcs;
+    sys->s.u.nlp.cost[ci].jacs	=	sys->s.block.jacs;
+    sys->s.u.nlp.cost[ci].functime	=	sys->s.block.functime;
+    sys->s.u.nlp.cost[ci].jactime	=	sys->s.block.jactime;
+    sys->s.u.nlp.cost[ci].time	=	sys->s.block.cpu_elapsed;
+    sys->s.u.nlp.cost[ci].resid	=	sys->s.block.residual;
 
     /* De-initialize previous block */
     if(SLV_PARAM_BOOL(&(sys->p),SHOW_LESS_IMPT) && (sys->s.block.current_size >1 ||
@@ -2655,7 +2655,7 @@ static void reorder_new_block(qrslv_system_t sys){
     }
 
     if(sys->s.block.current_block <= sys->s.block.current_reordered_block &&
-       sys->s.cost[sys->s.block.current_block].reorder_method == method &&
+       sys->s.u.nlp.cost[sys->s.block.current_block].reorder_method == method &&
        sys->s.block.current_block >= 0 ) {
 #if DEBUG
       FPRINTF(stderr,"YOU JUST AVOIDED A REORDERING\n");
@@ -2670,21 +2670,21 @@ static void reorder_new_block(qrslv_system_t sys){
      * and setting in block flags.
      */
     if(strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"SPK1") == 0) {
-      sys->s.cost[sys->s.block.current_block].reorder_method = 2;
+      sys->s.u.nlp.cost[sys->s.block.current_block].reorder_method = 2;
       slv_spk1_reorder_block(SERVER,sys->s.block.current_block,1);
     }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"TEAR_DROP") == 0) {
-      sys->s.cost[sys->s.block.current_block].reorder_method = 1;
+      sys->s.u.nlp.cost[sys->s.block.current_block].reorder_method = 1;
       slv_tear_drop_reorder_block(SERVER,sys->s.block.current_block
       	,SLV_PARAM_INT(&(sys->p),CUTOFF), 0,mtx_SPK1
       );
 /* khack: try tspk1 for transpose case */
     }else if(strcmp(SLV_PARAM_CHAR(&(sys->p),REORDER_OPTION),"OVER_TEAR") == 0) {
-      sys->s.cost[sys->s.block.current_block].reorder_method = 1;
+      sys->s.u.nlp.cost[sys->s.block.current_block].reorder_method = 1;
       slv_tear_drop_reorder_block(SERVER,sys->s.block.current_block
         ,SLV_PARAM_INT(&(sys->p),CUTOFF), 1,mtx_SPK1
       );
     }else{
-      sys->s.cost[sys->s.block.current_block].reorder_method = 1;
+      sys->s.u.nlp.cost[sys->s.block.current_block].reorder_method = 1;
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(MIF(sys),"QRSlv called with unknown reorder option\n");
       FPRINTF(MIF(sys),"QRSlv using single edge tear drop (TEAR_DROP).\n");
@@ -3183,10 +3183,11 @@ static SlvClientToken qrslv_create(slv_system_t server, int *statusindex)
   sys->J.old_partition = TRUE;
   sys->p.whose = (*statusindex);
 
+  sys->s.kind = SLV_STATUS_NLP;
   sys->s.ok = TRUE;
   sys->s.calc_ok = TRUE;
-  sys->s.costsize = 0;
-  sys->s.cost = NULL; /* redundant, but sanity preserving */
+  sys->s.u.nlp.costsize = 0;
+  sys->s.u.nlp.cost = NULL; /* redundant, but sanity preserving */
   sys->vlist = slv_get_solvers_var_list(server);
   sys->rlist = slv_get_solvers_rel_list(server);
   sys->obj = slv_get_obj_relation(server);
@@ -3670,16 +3671,16 @@ static int qrslv_presolve(slv_system_t server, SlvClientToken asys){
   sys->s.cpu_elapsed = 0.0;
   sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
   sys->s.block.previous_total_size = 0;
-  sys->s.costsize = 1+sys->s.block.number_of;
+  sys->s.u.nlp.costsize = 1+sys->s.block.number_of;
 
   if(matrix_creation_needed){
-    destroy_array(sys->s.cost);
-    sys->s.cost = ASC_NEW_ARRAY_CLEAR(struct slv_block_cost,sys->s.costsize);
-    for( ind = 0; ind < sys->s.costsize; ++ind ) {
-      sys->s.cost[ind].reorder_method = -1;
+    destroy_array(sys->s.u.nlp.cost);
+    sys->s.u.nlp.cost = ASC_NEW_ARRAY_CLEAR(struct slv_block_cost,sys->s.u.nlp.costsize);
+    for( ind = 0; ind < sys->s.u.nlp.costsize; ++ind ) {
+      sys->s.u.nlp.cost[ind].reorder_method = -1;
     }
   }else{
-    reset_cost(sys->s.cost,sys->s.costsize);
+    reset_cost(sys->s.u.nlp.cost,sys->s.u.nlp.costsize);
   }
 
   /* set to go to first unconverged block */
@@ -3691,7 +3692,7 @@ static int qrslv_presolve(slv_system_t server, SlvClientToken asys){
 
   update_status(sys);
   iteration_ends(sys);
-  sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
+  sys->s.u.nlp.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
 
   return 0;
 }
@@ -3710,15 +3711,15 @@ static boolean qrslv_change_basis(qrslv_system_t sys,int32 var,
     struct slv_block_cost oldpresolve;
     int32 oldblocks;
     oldblocks = sys->s.block.number_of;
-    oldpresolve = sys->s.cost[sys->s.costsize-1];
+    oldpresolve = sys->s.u.nlp.cost[sys->s.u.nlp.costsize-1];
     mtx_partition(sys->J.mtx); /* this call needs to be replaced */
     sys->s.block.number_of =
       (slv_get_solvers_blocks(SERVER))->nblocks;
     if(oldblocks != sys->s.block.number_of) {
-      ascfree(sys->s.cost);
-      sys->s.costsize = sys->s.block.number_of+1;
-      sys->s.cost = ASC_NEW_ARRAY_OR_NULL_CLEAR(struct slv_block_cost, sys->s.costsize);
-      sys->s.cost[sys->s.costsize-1] = oldpresolve;
+      ascfree(sys->s.u.nlp.cost);
+      sys->s.u.nlp.costsize = sys->s.block.number_of+1;
+      sys->s.u.nlp.cost = ASC_NEW_ARRAY_OR_NULL_CLEAR(struct slv_block_cost, sys->s.u.nlp.costsize);
+      sys->s.u.nlp.cost[sys->s.u.nlp.costsize-1] = oldpresolve;
     }
   }
   return didit;
@@ -4226,7 +4227,7 @@ static int qrslv_destroy(slv_system_t server, SlvClientToken asys){
   destroy_matrices(sys);
   destroy_vectors(sys);
   sys->integrity = DESTROYED;
-  if(sys->s.cost) ascfree(sys->s.cost);
+  if(sys->s.u.nlp.cost) ascfree(sys->s.u.nlp.cost);
   ascfree( (POINTER)asys );
   return 0;
 }
