@@ -41,6 +41,7 @@ jobs:
           mingw-w64-${{matrix.env}}-gcc-fortran
           mingw-w64-${{matrix.env}}-gtk2
           mingw-w64-${{matrix.env}}-binutils
+          mingw-w64-${{matrix.env}}-gdb
           mingw-w64-${{matrix.env}}-pkg-config
           mingw-w64-${{matrix.env}}-highs
           mingw-w64-${{matrix.env}}-python
@@ -99,7 +100,7 @@ jobs:
 
     - name: Test ASCEND (integrator_lsode)
       run: |
-        ./a4 cutest integrator_lsode
+        ./a4 env -- bash -lc "gdb -batch -ex 'set pagination off' -ex run -ex 'bt full' --args ./test/test -r mallocdebug -v integrator_lsode.bounds"
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
