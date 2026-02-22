@@ -11,6 +11,7 @@ solver_highs
 
 linear_mtx
 linear_qrrank
+linear_linsolqr_api
 
 compiler_basics
 compiler_func

@@ -21,7 +21,8 @@
 
 #define TESTS(T) \
 	T(qrrank) \
-	T(mtx)
+	T(mtx) \
+	T(linsolqr_api)
 
 #define PROTO_TEST(NAME) PROTO(linear,NAME)
 TESTS(PROTO_TEST)
