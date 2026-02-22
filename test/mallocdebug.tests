@@ -10,6 +10,7 @@ solver_makemps
 solver_highs
 
 linear_mtx
+linear_qrrank
 
 compiler_basics
 compiler_func
