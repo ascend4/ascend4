@@ -98,12 +98,12 @@ jobs:
 
     - name: Verify GDB (ASCEND env)
       run: |
-        ./a4 env --shell /usr/bin/bash -- -lc "which gdb"
-        ./a4 env --shell /usr/bin/bash -- -lc "gdb --version"
+        ./a4 env --shell bash -- -lc "which gdb"
+        ./a4 env --shell bash -- -lc "gdb --version"
 
     - name: Test ASCEND (all, gdb batch)
       run: |
-        ./a4 env --shell /usr/bin/bash -- -lc "gdb -batch -ex 'set pagination off' -ex run -ex 'bt full' --args ./test/test -r mallocdebug"
+        ./a4 env --shell bash -- -lc "gdb -batch -ex 'set pagination off' -ex run -ex 'bt full' --args ./test/test -r mallocdebug"
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
