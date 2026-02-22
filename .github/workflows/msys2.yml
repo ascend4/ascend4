@@ -30,7 +30,7 @@ jobs:
     - uses: msys2/setup-msys2@v2
       with:
         msystem: ${{matrix.sys}}
-        update: true
+        update: false
         cache: true
         install: >-
           git swig subversion make flex bison
@@ -101,7 +101,11 @@ jobs:
         ./a4 env --shell bash -- -lc "which gdb"
         ./a4 env --shell bash -- -lc "gdb --version"
 
-    - name: Test ASCEND (all, gdb batch)
+    - name: Test ASCEND (solver_ipopt + integrator_lsode, gdb batch)
+      run: |
+        ./a4 env --shell bash -- -lc "gdb -batch -ex 'set pagination off' -ex run -ex 'bt full' --args ./test/test solver_ipopt integrator_lsode"
+
+    - name: Test ASCEND (mallocdebug full, gdb batch)
       run: |
         ./a4 env --shell bash -- -lc "gdb -batch -ex 'set pagination off' -ex run -ex 'bt full' --args ./test/test -r mallocdebug"
 
