@@ -214,6 +214,16 @@ struct table_parse_state {
 
 static struct table_parse_state g_table_parse = {0,0,0,0,NULL,NULL,NULL,NULL,{0},0,0,0};
 
+struct dataset_parse_state {
+  int active;
+  symchar *name;
+  char *filename;
+  struct DatasetIndexItem *indices;
+  struct DatasetMapItem *maps;
+};
+
+static struct dataset_parse_state g_dataset_parse = {0,NULL,NULL,NULL,NULL};
+
 static void TableParseEnsureBody(void){
   if (!g_table_parse.body_init) {
     Asc_DStringInit(&g_table_parse.body);
@@ -345,6 +355,126 @@ static char *TableParseFinish(void){
   return result;
 }
 
+static void DatasetParseClear(void){
+  struct DatasetIndexItem *idx = g_dataset_parse.indices;
+  struct DatasetMapItem *map = g_dataset_parse.maps;
+  while (idx != NULL) {
+    struct DatasetIndexItem *next = idx->next;
+    ASC_FREE(idx);
+    idx = next;
+  }
+  while (map != NULL) {
+    struct DatasetMapItem *next = map->next;
+    if (map->target != NULL) {
+      DestroyName(map->target);
+    }
+    if (map->units != NULL) {
+      ascfree(map->units);
+    }
+    ASC_FREE(map);
+    map = next;
+  }
+  if (g_dataset_parse.filename != NULL) {
+    ascfree(g_dataset_parse.filename);
+  }
+  g_dataset_parse.active = 0;
+  g_dataset_parse.name = NULL;
+  g_dataset_parse.filename = NULL;
+  g_dataset_parse.indices = NULL;
+  g_dataset_parse.maps = NULL;
+}
+
+static void DatasetParseBegin(symchar *name, CONST char *filename){
+  DatasetParseClear();
+  g_dataset_parse.active = 1;
+  g_dataset_parse.name = name;
+  g_dataset_parse.filename = (filename != NULL) ? ASC_STRDUP(filename) : NULL;
+}
+
+static void DatasetParseAddIndex(symchar *set_name,
+                                 symchar *column_name,
+                                 symchar *type_name)
+{
+  struct DatasetIndexItem *item;
+  if (!g_dataset_parse.active) {
+    return;
+  }
+  item = ASC_NEW(struct DatasetIndexItem);
+  item->set_name = set_name;
+  item->column_name = column_name;
+  item->type_name = type_name;
+  item->next = NULL;
+  if (g_dataset_parse.indices == NULL) {
+    g_dataset_parse.indices = item;
+  } else {
+    struct DatasetIndexItem *tail = g_dataset_parse.indices;
+    while (tail->next != NULL) {
+      tail = tail->next;
+    }
+    tail->next = item;
+  }
+}
+
+static void DatasetParseAddMap(struct Name *target,
+                               symchar *column_name,
+                               CONST char *units,
+                               symchar *type_name)
+{
+  struct DatasetMapItem *item;
+  if (!g_dataset_parse.active) {
+    if (target != NULL) {
+      DestroyName(target);
+    }
+    return;
+  }
+  item = ASC_NEW(struct DatasetMapItem);
+  item->target = target;
+  item->column_name = column_name;
+  item->units = (units != NULL) ? ASC_STRDUP(units) : NULL;
+  item->type_name = type_name;
+  item->next = NULL;
+  if (g_dataset_parse.maps == NULL) {
+    g_dataset_parse.maps = item;
+  } else {
+    struct DatasetMapItem *tail = g_dataset_parse.maps;
+    while (tail->next != NULL) {
+      tail = tail->next;
+    }
+    tail->next = item;
+  }
+}
+
+static struct Statement *DatasetParseFinish(void){
+  struct Statement *result;
+  if (!g_dataset_parse.active) {
+    return NULL;
+  }
+  result = CreateDATASET(g_dataset_parse.name,
+                         g_dataset_parse.filename,
+                         g_dataset_parse.indices,
+                         g_dataset_parse.maps);
+  g_dataset_parse.active = 0;
+  g_dataset_parse.name = NULL;
+  g_dataset_parse.filename = NULL;
+  g_dataset_parse.indices = NULL;
+  g_dataset_parse.maps = NULL;
+  return result;
+}
+
+static struct Name *DatasetAppendIndices(struct Name *base, struct VariableList *vl)
+{
+  CONST struct VariableList *node;
+  struct Name *result = base;
+  for (node = vl; node != NULL; node = NextVariableNode(node)) {
+    CONST struct Name *nptr = NamePointer(node);
+    struct Name *idxname = CopyName((struct Name *)nptr);
+    struct Set *setnode = CreateSingleSet(CreateVarExpr(idxname));
+    struct Name *setname = CreateSetName(setnode);
+    result = JoinNames(result,setname);
+  }
+  return result;
+}
+
 static struct Name *TableDeclNameFromTarget(CONST struct Name *target){
   CONST struct Name *node;
   struct Name *result = NULL;
@@ -361,6 +491,34 @@ static struct Name *TableDeclNameFromTarget(CONST struct Name *target){
     }
   }
   return result;
+}
+
+static int StatementListHasTypeDeclForName(CONST struct gl_list_t *list,
+                                           CONST struct Name *name)
+{
+  unsigned long len;
+  unsigned long c;
+  if (list == NULL || name == NULL) {
+    return 0;
+  }
+  len = gl_length(list);
+  for (c = 1; c <= len; ++c) {
+    struct Statement *s = (struct Statement *)gl_fetch(list,c);
+    CONST struct VariableList *vl;
+    if (s == NULL) {
+      continue;
+    }
+    if (StatementType(s) != ISA && StatementType(s) != IRT && StatementType(s) != WILLBE) {
+      continue;
+    }
+    for (vl = s->v.i.vl; vl != NULL; vl = NextVariableNode(vl)) {
+      CONST struct Name *nptr = NamePointer(vl);
+      if (nptr != NULL && CompareNames(nptr,name) == 0) {
+        return 1;
+      }
+    }
+  }
+  return 0;
 }
 
 /*  Forward declaration of error message reporting
@@ -562,7 +720,7 @@ static void CollectNote(struct Note *);
 %type <id_ptr> optional_of optional_method type_identifier call_identifier
 %type <dquote_ptr> optional_notes
 %type <braced_ptr> optional_bracedtext
-%type <nptr> data_args fname name /* optional_scope */
+%type <nptr> data_args fname name dataset_target /* optional_scope */
 %type <eptr> relation expr relop logrelop optional_with_value
 %type <sptr> set setexprlist optional_set_values
 %type <lptr> fvarlist input_args output_args varlist
@@ -579,6 +737,8 @@ static void CollectNote(struct Note *);
 %type <statptr> flow_statement while_statement
 %type <statptr> solve_statement solver_statement option_statement switch_statement
 %type <statptr> table_statement values_statement dataset_statement
+%type <braced_ptr> dataset_units_opt
+%type <id_ptr> dataset_type_opt
 
 %type <slptr> fstatements global_def optional_else
 %type <slptr> optional_model_parameters optional_parameter_reduction
@@ -1483,16 +1643,13 @@ values_key:
 	;
 
 dataset_statement:
-	DATASET_TOK IDENTIFIER_TOK FROM_TOK DQUOTE_TOK ';' dataset_items END_TOK DATASET_TOK
+	DATASET_TOK IDENTIFIER_TOK FROM_TOK DQUOTE_TOK ';'
 	{
-	  $$ = NULL;
+	  DatasetParseBegin($2,$4);
 	}
-	| DATASET_TOK IDENTIFIER_TOK FROM_TOK DQUOTE_TOK ';' error END_TOK DATASET_TOK
+	dataset_items END_TOK DATASET_TOK
 	{
-	  ErrMsg_Generic("Error in DATASET body.");
-	  g_untrapped_error++;
-	  yyerrok;
-	  $$ = NULL;
+	  $$ = DatasetParseFinish();
 	}
 	;
 
@@ -1502,6 +1659,7 @@ dataset_items:
 	| dataset_items error ';'
 	{
 	  ErrMsg_Generic("Error in DATASET item.");
+	  ErrMsg_Generic("Check DATASET statement syntax.");
 	  g_untrapped_error++;
 	  yyerrok;
 	}
@@ -1514,31 +1672,51 @@ dataset_item:
 
 dataset_index_item:
 	INDEX_TOK IDENTIFIER_TOK FROM_TOK COLUMN_TOK IDENTIFIER_TOK ISA_TOK IDENTIFIER_TOK
+	{
+	  DatasetParseAddIndex($2,$5,$7);
+	}
 	;
 
 dataset_map_item:
 	dataset_target FROM_TOK COLUMN_TOK IDENTIFIER_TOK dataset_units_opt dataset_type_opt
+	{
+	  DatasetParseAddMap($1,$4,$5,$6);
+	}
 	;
 
 dataset_target:
 	IDENTIFIER_TOK '[' fvarlist ']'
 	{
+	  $$ = DatasetAppendIndices(CreateIdName($1),$3);
 	  DestroyVariableList($3);
 	}
 	| dataset_target '[' fvarlist ']'
 	{
+	  $$ = DatasetAppendIndices($1,$3);
 	  DestroyVariableList($3);
 	}
 	;
 
 dataset_units_opt:
 	/* empty */
+	{
+	  $$ = NULL;
+	}
 	| BRACEDTEXT_TOK
+	{
+	  $$ = $1;
+	}
 	;
 
 dataset_type_opt:
 	/* empty */
+	{
+	  $$ = NULL;
+	}
 	| ISA_TOK IDENTIFIER_TOK
+	{
+	  $$ = $2;
+	}
 	;
 
 unitdeflist:
@@ -1667,6 +1845,49 @@ statements:
 	      decl->linenum = $2->linenum;
 	      decl->context = $2->context;
 	      gl_append_ptr($1,(char *)decl);
+	    }
+	    if (StatementType($2) == DATASETSTAT) {
+	      struct DatasetIndexItem *idx;
+	      struct DatasetMapItem *map;
+	      for (idx = $2->v.dataset.indices; idx != NULL; idx = idx->next) {
+	        if (idx->type_name != NULL) {
+	          struct Statement *decl;
+	          struct VariableList *vl;
+	          struct Name *setname = CreateIdName(idx->set_name);
+	          if (!StatementListHasTypeDeclForName($1,setname)) {
+	            vl = CreateVariableNode(setname);
+	            decl = CreateISA(vl
+	              ,GetBaseTypeName(set_type)
+	              ,NULL
+	              ,idx->type_name
+	            );
+	            decl->mod = $2->mod;
+	            decl->linenum = $2->linenum;
+	            decl->context = $2->context;
+	            gl_append_ptr($1,(char *)decl);
+	          } else {
+	            DestroyName(setname);
+	          }
+	        }
+	      }
+	      for (map = $2->v.dataset.maps; map != NULL; map = map->next) {
+	        if (map->type_name != NULL) {
+	          struct Statement *decl;
+	          struct VariableList *vl;
+	          if (!StatementListHasTypeDeclForName($1,map->target)) {
+	            vl = CreateVariableNode(CopyName(map->target));
+	            decl = CreateISA(vl
+	              ,map->type_name
+	              ,NULL
+	              ,NULL
+	            );
+	            decl->mod = $2->mod;
+	            decl->linenum = $2->linenum;
+	            decl->context = $2->context;
+	            gl_append_ptr($1,(char *)decl);
+	          }
+	        }
+	      }
 	    }
 	    gl_append_ptr($1,(char *)$2);
 	  }

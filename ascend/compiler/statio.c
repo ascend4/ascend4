@@ -260,6 +260,7 @@ struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList *sl){
     case EXT:
     case REF:	/* that this isn't handled may be a bug */
     case TABLESTAT:
+    case DATASETSTAT:
       break;
     default:
       break;
@@ -529,6 +530,36 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i){
     }
     Indent(f,i);
     FPRINTF(f,"END TABLE;\n");
+    break;
+  case DATASETSTAT:
+    FPRINTF(f,"DATASET %s FROM \"%s\";\n",
+      SCP(s->v.dataset.name),
+      s->v.dataset.filename ? s->v.dataset.filename : "");
+    {
+      struct DatasetIndexItem *idx = s->v.dataset.indices;
+      struct DatasetMapItem *map = s->v.dataset.maps;
+      for (; idx != NULL; idx = idx->next) {
+        Indent(f,i+2);
+        FPRINTF(f,"INDEX %s FROM COLUMN %s IS_A %s;\n",
+          SCP(idx->set_name),
+          SCP(idx->column_name),
+          SCP(idx->type_name));
+      }
+      for (; map != NULL; map = map->next) {
+        Indent(f,i+2);
+        WriteName(f,map->target);
+        FPRINTF(f," FROM COLUMN %s",SCP(map->column_name));
+        if (map->units != NULL) {
+          FPRINTF(f," {%s}",map->units);
+        }
+        if (map->type_name != NULL) {
+          FPRINTF(f," IS_A %s",SCP(map->type_name));
+        }
+        FPRINTF(f,";\n");
+      }
+    }
+    Indent(f,i);
+    FPRINTF(f,"END DATASET;\n");
     break;
   case ASGN:
     WriteName(f,DefaultStatVar(s));
@@ -877,6 +908,7 @@ symchar *StatementTypeString(CONST struct Statement *s){
     g_statio_stattypenames[WBTS] = AddSymbol("WILL_BE_THE_SAME");
     g_statio_stattypenames[WNBTS] = AddSymbol("WILL_NOT_BE_THE_SAME");
     g_statio_stattypenames[TABLESTAT] = AddSymbol("TABLE");
+    g_statio_stattypenames[DATASETSTAT] = AddSymbol("DATASET");
     g_statio_stattypenames[WILLBE] = AddSymbol("WILL_BE");
     g_statio_flowtypenames[fc_return] = AddSymbol("RETURN");
     g_statio_flowtypenames[fc_continue] = AddSymbol("CONTINUE");
@@ -914,6 +946,7 @@ symchar *StatementTypeString(CONST struct Statement *s){
   case WBTS:
   case WNBTS:
   case TABLESTAT:
+  case DATASETSTAT:
   case WILLBE:
   case WHILE:
     /* It's a massive fall through to check that we know the statement */

@@ -479,6 +479,7 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
       break;
     case CASGN:
     case TABLESTAT:
+    case DATASETSTAT:
       break;
     case FNAME:
       if ((context & context_WHEN) == 0) {
@@ -689,6 +690,7 @@ enum typelinterr TypeLintIllegalParamStats(FILE * fp,
     case FLOW:
     case WHILE:
     case TABLESTAT:
+    case DATASETSTAT:
     case IF:
     default:
       TypeLintError(fp,s,DEF_STAT_MISLOCATED);
@@ -761,6 +763,7 @@ TypeLintIllegalWhereStats(FILE * fp,
     case WHILE:
     case WILLBE:
     case TABLESTAT:
+    case DATASETSTAT:
     default:
       TypeLintError(fp,s,DEF_STAT_MISLOCATED);
       rval = DEF_STAT_MISLOCATED;
@@ -829,6 +832,7 @@ TypeLintIllegalReductionStats(FILE * fp,
     case WHILE:
     case WILLBE:
     case TABLESTAT:
+    case DATASETSTAT:
     default:
       TypeLintError(fp,s,DEF_STAT_MISLOCATED);
       rval = DEF_STAT_MISLOCATED;
@@ -876,6 +880,7 @@ TypeLintIllegalMethodStatList(FILE *fp,
     case WILLBE:
     case FNAME:
     case TABLESTAT:
+    case DATASETSTAT:
       Asc_StatErrMsg_NotAllowedMethod(fp,s,"");
       rval = DEF_STAT_MISLOCATED;
       break;
