@@ -13,6 +13,9 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      OMP_NUM_THREADS: "1"
+      ASCEND_CI_HIGHS_SERIAL: "1"
 
     defaults:
       run:

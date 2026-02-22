@@ -204,6 +204,29 @@ static int find_param_index(const slv_parameters_t *pp, const char *name){
 	return -1;
 }
 
+static int highs_ci_serial_mode_enabled(void){
+	const char *v = getenv("ASCEND_CI_HIGHS_SERIAL");
+	if(v == NULL || v[0] == '\0'){
+		v = getenv("GITHUB_ACTIONS");
+	}
+	return (v != NULL && v[0] != '\0' && !(v[0] == '0' && v[1] == '\0'));
+}
+
+static void highs_apply_ci_serial_overrides(slv_parameters_t *pp){
+	int idx;
+	if(pp == NULL || !highs_ci_serial_mode_enabled()){
+		return;
+	}
+	idx = find_param_index(pp,"threads");
+	if(idx != -1){
+		SLV_PARAM_INT(pp,idx) = 1;
+	}
+	idx = find_param_index(pp,"parallel");
+	if(idx != -1){
+		slv_set_char_parameter(&(SLV_PARAM_CHAR(pp,idx)),"off");
+	}
+}
+
 static int find_solver_var_value(slv_system_t sys, const char *name_substr, double *value){
 	struct var_variable **vars = slv_get_solvers_var_list(sys);
 	if(vars == NULL)return 0;
@@ -389,6 +412,7 @@ static void run_highs_model(
 			);
 		}
 
+		highs_apply_ci_serial_overrides(&pp);
 		slv_set_parameters(sys,&pp);
 	}
 
@@ -502,6 +526,7 @@ static int highs_get_kind_after_presolve(
 		CU_ASSERT_FATAL(relaxed_idx != -1);
 		SLV_PARAM_BOOL(&pp,nonlin_idx) = FALSE;
 		SLV_PARAM_BOOL(&pp,relaxed_idx) = (relaxed ? TRUE : FALSE);
+		highs_apply_ci_serial_overrides(&pp);
 		slv_set_parameters(sys,&pp);
 	}
 
@@ -843,6 +868,7 @@ static void test_highs_infeasible_diagnostics(void){
 		CU_ASSERT_FATAL(relaxed_idx != -1);
 		SLV_PARAM_BOOL(&pp,nonlin_idx) = FALSE;
 		SLV_PARAM_BOOL(&pp,relaxed_idx) = FALSE;
+		highs_apply_ci_serial_overrides(&pp);
 		slv_set_parameters(sys,&pp);
 	}
 
@@ -931,6 +957,7 @@ static int solve_tsp_with_progress_option(
 		idx = find_param_index(&pp,"progress_callbacks");
 		CU_ASSERT_FATAL(idx != -1);
 		SLV_PARAM_BOOL(&pp,idx) = (progress_callbacks_enabled ? TRUE : FALSE);
+		highs_apply_ci_serial_overrides(&pp);
 		slv_set_parameters(sys,&pp);
 	}
 
@@ -1011,6 +1038,12 @@ static void test_highs_interrupt_request(void){
 	CU_ASSERT_FATAL(sys != NULL);
 	CU_ASSERT_FATAL(slv_select_solver(sys,solver_index) != -1);
 	CU_ASSERT_TRUE(slv_eligible_solver(sys));
+	{
+		slv_parameters_t pp;
+		slv_get_parameters(sys,&pp);
+		highs_apply_ci_serial_overrides(&pp);
+		slv_set_parameters(sys,&pp);
+	}
 
 	(void)slv_presolve(sys);
 	slv_get_status(sys,&status);

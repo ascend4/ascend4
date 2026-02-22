@@ -34,9 +34,12 @@
 static void test_tm_time(void)
 {
   unsigned long i;
+  unsigned long retry;
   double start;
+  double end;
   double elapsed[7];
   unsigned long prior_meminuse;
+  volatile unsigned long burn = 0;
 
   prior_meminuse = ascmeminuse();             /* save meminuse() at start of test function */
 
@@ -84,13 +87,19 @@ static void test_tm_time(void)
   start = tm_cpu_time();                /* record the initial time */
   //CU_TEST(start == 0.0);
 
-  for (i=0 ; i<100000000 ; i += 2) {    /* consume some CPU time */
-    --i; // two steps forward, one step back...
+  for (i=0 ; i<10000000 ; ++i) {         /* consume some CPU time deterministically */
+    burn += (i & 1U);
   }
  
-  //double end1 = tm_cpu_time();
-  //CONSOLE_DEBUG("end = %lf",end1);
-  CU_TEST(tm_cpu_time() - start > 0.0); /* should see an increase in elapsed PU time */
+  end = tm_cpu_time();
+  for (retry = 0; retry < 50 && end <= start; ++retry) {
+    for (i = 0; i < 1000000; ++i) {
+      burn += ((i + retry) & 1U);
+    }
+    end = tm_cpu_time();
+  }
+  CU_TEST(burn > 0);
+  CU_TEST(end > start); /* should see an increase in elapsed CPU time */
 
   elapsed[0] = tm_cpu_time();           /* the timer variants should all return approx the same elapsed time */
   tm_cpu_time_ftn_(&elapsed[1]);        /* this assumes a fast CPU */
@@ -129,4 +138,3 @@ static void test_tm_time(void)
 	T(tm_time)
 
 REGISTER_TESTS_SIMPLE(general_tm_time, TESTS)
-
