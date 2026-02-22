@@ -5161,6 +5161,8 @@ static
 void update_cost(struct slv_block_cost *cost, slv_status_t *status,
 		int32 current_block, int32 previous_block
 ){
+  const struct slv_block_cost *status_cost = slv_status_cost(status);
+  int32 status_costsize = slv_status_costsize(status);
   if(current_block >=0) {
     cost[current_block].size = status->block.current_size;
     cost[current_block].iterations	= status->block.iteration;
@@ -5170,15 +5172,16 @@ void update_cost(struct slv_block_cost *cost, slv_status_t *status,
     cost[current_block].jactime = status->block.jactime;
     cost[current_block].time = status->block.cpu_elapsed;
     cost[current_block].resid = status->block.residual;
-    if(previous_block != -1 && previous_block != current_block) {
-      cost[previous_block].size	= status->cost[previous_block].size;
-      cost[previous_block].iterations=status->cost[previous_block].iterations;
-      cost[previous_block].funcs = status->cost[previous_block].funcs;
-      cost[previous_block].jacs	= status->cost[previous_block].jacs;
-      cost[previous_block].functime = status->cost[previous_block].functime;
-      cost[previous_block].jactime = status->cost[previous_block].jactime;
-      cost[previous_block].time	= status->cost[previous_block].time;
-      cost[previous_block].resid = status->cost[previous_block].resid;
+    if(previous_block != -1 && previous_block != current_block
+        && status_cost != NULL && previous_block < status_costsize) {
+      cost[previous_block].size	= status_cost[previous_block].size;
+      cost[previous_block].iterations=status_cost[previous_block].iterations;
+      cost[previous_block].funcs = status_cost[previous_block].funcs;
+      cost[previous_block].jacs	= status_cost[previous_block].jacs;
+      cost[previous_block].functime = status_cost[previous_block].functime;
+      cost[previous_block].jactime = status_cost[previous_block].jactime;
+      cost[previous_block].time	= status_cost[previous_block].time;
+      cost[previous_block].resid = status_cost[previous_block].resid;
     }
   }
 }
