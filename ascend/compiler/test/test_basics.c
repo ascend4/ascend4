@@ -19,6 +19,7 @@
 */
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 #include <ascend/general/env.h>
 #include <ascend/general/platform.h>
@@ -772,6 +773,28 @@ static long fetch_int_table_cell_2d_ss(struct Instance *root, const char *arrnam
 	return value;
 }
 
+static double fetch_real_table_cell_1d(struct Instance *root, const char *arrname, long i){
+	struct InstanceName rec;
+	struct Instance *arr;
+	struct Instance *inst;
+	unsigned long pos;
+	double value;
+
+	arr = ChildByChar(root,AddSymbol(arrname));
+	CU_ASSERT_FATAL(arr != NULL);
+
+	SetInstanceNameType(rec,IntArrayIndex);
+	SetInstanceNameIntIndex(rec,i);
+	pos = ChildSearch(arr,&rec);
+	CU_ASSERT_FATAL(pos != 0);
+	inst = InstanceChild(arr,pos);
+	CU_ASSERT_FATAL(inst != NULL);
+	CU_ASSERT_FATAL(InstanceKind(inst)==REAL_CONSTANT_INST);
+	CU_ASSERT_FATAL(AtomAssigned(inst));
+	value = RealAtomValue(inst);
+	return value;
+}
+
 static void test_instantiate_tables_v05_positional(void){
 	int status;
 	struct Instance *sim;
@@ -974,6 +997,107 @@ static void test_instantiate_tables_v05_dense_implicit_sets(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_instantiate_dataset_basic(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/dataset_basic.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("dataset_basic"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("dataset_basic"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,1) == 11);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,2) == 12);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",1,3) == 13);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,1) == 21);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,2) == 22);
+	CU_ASSERT(fetch_int_table_cell_2d(root,"cost",2,3) == 23);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_dataset_string(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/dataset_string.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("dataset_string"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("dataset_string"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","north","x") == 11);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","north","y") == 12);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","south","x") == 21);
+	CU_ASSERT(fetch_int_table_cell_2d_ss(root,"cost","south","y") == 22);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_dataset_real(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+	double value;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/dataset_real.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("dataset_real"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("dataset_real"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	value = fetch_real_table_cell_1d(root,"load",1);
+	CU_ASSERT(fabs(value - 1.5) < 1e-12);
+	value = fetch_real_table_cell_1d(root,"load",2);
+	CU_ASSERT(fabs(value - 2.25) < 1e-12);
+	value = fetch_real_table_cell_1d(root,"load",3);
+	CU_ASSERT(fabs(value - 3.75) < 1e-12);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
 static void test_parse_tables_v05_fail_table_header(void){
 	parse_module_expect_error(
 		"test/compiler/tables_v05_fail_table_header.a4c"
@@ -1039,6 +1163,14 @@ static void test_instantiate_tables_v05_fail_positional_short_row(void){
 		"test/compiler/tables_v05_fail_positional_short_row.a4c"
 		, "tables_v05_fail_positional_short_row"
 		, NULL
+	);
+}
+
+static void test_instantiate_dataset_units_conflict(void){
+	instantiate_module_expect_error(
+		"test/compiler/dataset_units_conflict.a4c"
+		, "dataset_units_conflict"
+		, "units conflict"
 	);
 }
 
@@ -1157,12 +1289,16 @@ static void test_instantiate_tables_v05_fail_dense_bad_row_label_string(void){
 	T(instantiate_tables_v05_dense_csv_semicolon) \
 	T(instantiate_tables_v05_dense_string_labels) \
 	T(instantiate_tables_v05_dense_implicit_sets) \
+	T(instantiate_dataset_basic) \
+	T(instantiate_dataset_string) \
+	T(instantiate_dataset_real) \
 	T(parse_tables_v05_fail_table_header) \
 	T(parse_tables_v05_fail_table_badchar) \
 	T(parse_tables_v05_fail_table_bad_delimiter) \
 	T(parse_tables_v05_fail_dataset_missing_column) \
 	T(parse_tables_v05_fail_dataset_missing_index) \
 	T(parse_tables_v05_fail_dataset_multi_units) \
+	T(instantiate_dataset_units_conflict) \
 	T(instantiate_tables_v05_fail_positional_short_row) \
 	T(instantiate_tables_v05_fail_positional_too_many_cols) \
 	T(instantiate_tables_v05_fail_positional_too_few_rows) \

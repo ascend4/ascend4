@@ -1082,6 +1082,7 @@ int Asc_SolvGetSlvStatPage(ClientData cdata, Tcl_Interp *interp,
                          int argc, CONST84 char *argv[])
 {
   slv_status_t s;
+  const struct slv__block_status_structure *block;
   char * tmps=NULL;
 
   UNUSED_PARAMETER(cdata);
@@ -1131,19 +1132,20 @@ int Asc_SolvGetSlvStatPage(ClientData cdata, Tcl_Interp *interp,
   Tcl_AppendElement(interp,tmps);
 
   /*block status*/
-  sprintf(tmps,"%d",s.block.number_of);
+  block = slv_status_block(&s);
+  sprintf(tmps,"%d",block ? block->number_of : 0);
   Tcl_AppendElement(interp,tmps);
-  sprintf(tmps,"%d",s.block.current_block);
+  sprintf(tmps,"%d",block ? block->current_block : 0);
   Tcl_AppendElement(interp,tmps);
-  sprintf(tmps,"%d",s.block.current_size);
+  sprintf(tmps,"%d",block ? block->current_size : 0);
   Tcl_AppendElement(interp,tmps);
-  sprintf(tmps,"%d",s.block.previous_total_size);
+  sprintf(tmps,"%d",block ? block->previous_total_size : 0);
   Tcl_AppendElement(interp,tmps);
-  sprintf(tmps,"%d",s.block.iteration);
+  sprintf(tmps,"%d",block ? block->iteration : 0);
   Tcl_AppendElement(interp,tmps);
-  sprintf(tmps,"%.10g",s.block.cpu_elapsed);
+  sprintf(tmps,"%.10g",block ? block->cpu_elapsed : 0.0);
   Tcl_AppendElement(interp,tmps);
-  sprintf(tmps,"%.10g",s.block.residual);
+  sprintf(tmps,"%.10g",block ? block->residual : 0.0);
   Tcl_AppendElement(interp,tmps);
   ascfree(tmps);
   return TCL_OK;
@@ -1152,6 +1154,8 @@ int Asc_SolvGetSlvCostPage(ClientData cdata, Tcl_Interp *interp,
                          int argc, CONST84 char *argv[])
 {
   slv_status_t s;
+  const struct slv_block_cost *cost;
+  int32 costsize;
   int i;
 
   UNUSED_PARAMETER(cdata);
@@ -1171,30 +1175,32 @@ int Asc_SolvGetSlvCostPage(ClientData cdata, Tcl_Interp *interp,
 
   slv_get_status(g_solvsys_cur,&s);
 
-  if (s.cost)  {
+  cost = slv_status_cost(&s);
+  costsize = slv_status_costsize(&s);
+  if (cost != NULL && costsize > 0)  {
     char * tmps=NULL;
     tmps= (char *)ascmalloc((MAXIMUM_NUMERIC_LENGTH+1)*sizeof(char));
     sprintf(tmps,"%s","\0");
-    for (i=0;i<s.costsize;i++) {
+    for (i=0;i<costsize;i++) {
       if (!i) {
-        sprintf(tmps,"{%d ",s.cost[i].size);
+        sprintf(tmps,"{%d ",cost[i].size);
       } else {
-        sprintf(tmps," {%d ",s.cost[i].size);
+        sprintf(tmps," {%d ",cost[i].size);
       }
       Tcl_AppendResult(interp,tmps,SNULL);
-      sprintf(tmps, "%d ",s.cost[i].iterations);
+      sprintf(tmps, "%d ",cost[i].iterations);
       Tcl_AppendResult(interp,tmps,SNULL);
-      sprintf(tmps, "%d ",s.cost[i].funcs);
+      sprintf(tmps, "%d ",cost[i].funcs);
       Tcl_AppendResult(interp,tmps,SNULL);
-      sprintf(tmps, "%d ",s.cost[i].jacs);
+      sprintf(tmps, "%d ",cost[i].jacs);
       Tcl_AppendResult(interp,tmps,SNULL);
-      sprintf(tmps, "%.8g ",s.cost[i].time);
+      sprintf(tmps, "%.8g ",cost[i].time);
       Tcl_AppendResult(interp,tmps,SNULL);
-      sprintf(tmps, "%.16g ",s.cost[i].resid);
+      sprintf(tmps, "%.16g ",cost[i].resid);
       Tcl_AppendResult(interp,tmps,SNULL);
-      sprintf(tmps, "%.8g ",s.cost[i].functime);
+      sprintf(tmps, "%.8g ",cost[i].functime);
       Tcl_AppendResult(interp,tmps,SNULL);
-      sprintf(tmps, "%.8g}",s.cost[i].jactime);
+      sprintf(tmps, "%.8g}",cost[i].jactime);
       Tcl_AppendResult(interp,tmps,SNULL);
     }
     ascfree(tmps);

@@ -1912,6 +1912,7 @@ static SlvClientToken slv1_create(slv_system_t server, int *statusindex)
   sys->p.partition = TRUE;
   sys->p.whose = slv1_solver_number;
   sys->p.rho = (double)0.1;
+  sys->s.kind = SLV_STATUS_NLP;
   sys->s.ok = TRUE;
   sys->s.calc_ok = TRUE;
   sys->rlist = internal_rlist(NULL);

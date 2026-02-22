@@ -13,6 +13,9 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      OMP_NUM_THREADS: "1"
+      ASCEND_CI_HIGHS_SERIAL: "1"
 
     defaults:
       run:
@@ -30,7 +33,7 @@ jobs:
     - uses: msys2/setup-msys2@v2
       with:
         msystem: ${{matrix.sys}}
-        update: true
+        update: false
         cache: true
         install: >-
           git swig subversion make flex bison
@@ -41,6 +44,7 @@ jobs:
           mingw-w64-${{matrix.env}}-gcc-fortran
           mingw-w64-${{matrix.env}}-gtk2
           mingw-w64-${{matrix.env}}-binutils
+          mingw-w64-${{matrix.env}}-gdb
           mingw-w64-${{matrix.env}}-pkg-config
           mingw-w64-${{matrix.env}}-highs
           mingw-w64-${{matrix.env}}-python
@@ -89,17 +93,28 @@ jobs:
         mkdir -p ~/.local
         MSYSTEM= scons GCOV=1 MALLOC_DEBUG=1 CUNIT_PREFIX=$HOME/.local ascend solvers models test a4
 
-    - name: Test solver_list
+    - name: Verify GDB
       run: |
-        ./a4 cutest solver_list
+        which gdb
+        gdb --version
+        ls -l ./test/test*
 
-    - name: Test ASCEND (except integrator_lsode)
+    - name: Verify GDB (ASCEND env)
       run: |
-        ./a4 cutest -r mallocdebug -e integrator_lsode
+        ./a4 env --shell bash -- -lc "which gdb"
+        ./a4 env --shell bash -- -lc "gdb --version"
 
-    - name: Test ASCEND (integrator_lsode)
+    - name: Test ASCEND (solver_ipopt + integrator_lsode, gdb batch)
       run: |
-        ./a4 cutest integrator_lsode
+        ./a4 env --shell bash -- -lc "gdb -batch -return-child-result -ex 'set pagination off' -ex run -ex 'thread apply all bt full' --args ./test/test solver_ipopt integrator_lsode"
+
+    - name: Test ASCEND (mallocdebug except solver_highs, gdb batch)
+      run: |
+        ./a4 env --shell bash -- -lc "gdb -batch -return-child-result -ex 'set pagination off' -ex run -ex 'thread apply all bt full' --args ./test/test -r mallocdebug -e solver_highs"
+
+    - name: Test ASCEND (mallocdebug full, gdb batch)
+      run: |
+        ./a4 env --shell bash -- -lc "gdb -batch -return-child-result -ex 'set pagination off' -ex run -ex 'thread apply all bt full' --args ./test/test -r mallocdebug"
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5

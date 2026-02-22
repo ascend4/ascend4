@@ -2181,14 +2181,14 @@ slv0_system_t sys;
 
       /* Record cost accounting info here. */
       ci=sys->s.block.current_block;
-      sys->s.cost[ci].size=sys->s.block.current_size;
-      sys->s.cost[ci].iterations=sys->s.block.iteration;
-      sys->s.cost[ci].funcs=sys->s.block.funcs;
-      sys->s.cost[ci].jacs=sys->s.block.jacs;
-      sys->s.cost[ci].functime=sys->s.block.functime;
-      sys->s.cost[ci].jactime=sys->s.block.jactime;
-      sys->s.cost[ci].time=sys->s.block.cpu_elapsed;
-      sys->s.cost[ci].resid=sys->s.block.residual;
+      sys->s.u.nlp.cost[ci].size=sys->s.block.current_size;
+      sys->s.u.nlp.cost[ci].iterations=sys->s.block.iteration;
+      sys->s.u.nlp.cost[ci].funcs=sys->s.block.funcs;
+      sys->s.u.nlp.cost[ci].jacs=sys->s.block.jacs;
+      sys->s.u.nlp.cost[ci].functime=sys->s.block.functime;
+      sys->s.u.nlp.cost[ci].jactime=sys->s.block.jactime;
+      sys->s.u.nlp.cost[ci].time=sys->s.block.cpu_elapsed;
+      sys->s.u.nlp.cost[ci].resid=sys->s.block.residual;
 
 #undef KAA_DEBUG
 #ifdef KAA_DEBUG
@@ -2494,10 +2494,11 @@ static SlvClientToken slv0_create(slv_system_t server, int *statusindex)
   sys->p.whose = slv0_solver_number;
   sys->p.rho = 1.0;
   sys->p.sp.iap=&(sys->iarray[0]); /* all defaults in iarray are 0 */
+  sys->s.kind = SLV_STATUS_NLP;
   sys->s.ok = TRUE;
   sys->s.calc_ok = TRUE;
-  sys->s.costsize = 0;
-  sys->s.cost = NULL; /*redundant, but sanity preserving */
+  sys->s.u.nlp.costsize = 0;
+  sys->s.u.nlp.cost = NULL; /*redundant, but sanity preserving */
 
   return(sys);
 }
@@ -2918,9 +2919,9 @@ void slv0_presolve(slv_system_t server, SlvClientToken asys)
   sys->s.cpu_elapsed = 0.0;
   sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
   sys->s.block.previous_total_size = 0;
-  sys->s.costsize=1+sys->s.block.number_of;
-  destroy_array(sys->s.cost);
-  sys->s.cost=create_zero_array(sys->s.costsize,struct slv_block_cost);
+  sys->s.u.nlp.costsize=1+sys->s.block.number_of;
+  destroy_array(sys->s.u.nlp.cost);
+  sys->s.u.nlp.cost=create_zero_array(sys->s.u.nlp.costsize,struct slv_block_cost);
 
   /* set to go to first unconverged block */
   sys->s.block.current_block = -1;
@@ -2934,7 +2935,7 @@ void slv0_presolve(slv_system_t server, SlvClientToken asys)
 
   update_status(sys);
   iteration_ends(sys);
-  sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
+  sys->s.u.nlp.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
   /* mtx_clear_region(sys->J.mtx,mtx_ENTIRE_MATRIX); doesn't seem to help*/
 }
 
@@ -2946,14 +2947,14 @@ static boolean slv0_change_basis(slv0_system_t sys,int32 var, mtx_range_t *rng){
      struct slv_block_cost oldpresolve;
      int32 oldblocks;
      oldblocks=sys->s.block.number_of;
-     oldpresolve=sys->s.cost[sys->s.costsize-1];
+     oldpresolve=sys->s.u.nlp.cost[sys->s.u.nlp.costsize-1];
      mtx_partition(sys->J.mtx);
      sys->s.block.number_of=mtx_number_of_blocks(sys->J.mtx);
      if (oldblocks!=sys->s.block.number_of) {
-       ascfree(sys->s.cost);
-       sys->s.costsize=sys->s.block.number_of+1;
-       sys->s.cost=create_zero_array(sys->s.costsize,struct slv_block_cost);
-       sys->s.cost[sys->s.costsize-1]=oldpresolve;
+       ascfree(sys->s.u.nlp.cost);
+       sys->s.u.nlp.costsize=sys->s.block.number_of+1;
+       sys->s.u.nlp.cost=create_zero_array(sys->s.u.nlp.costsize,struct slv_block_cost);
+       sys->s.u.nlp.cost[sys->s.u.nlp.costsize-1]=oldpresolve;
      }
    }
    return didit;
@@ -3417,7 +3418,7 @@ static int slv0_destroy(slv_system_t server, SlvClientToken asys)
   destroy_matrices(sys);
   destroy_vectors(sys);
   sys->integrity = DESTROYED;
-  if (sys->s.cost) ascfree(sys->s.cost);
+  if (sys->s.u.nlp.cost) ascfree(sys->s.u.nlp.cost);
   ascfree( (POINTER)sys );
   return 0;
 }

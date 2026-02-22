@@ -214,19 +214,82 @@ static void bt_warn_missing_btprolog_header(void){
 int BinTokenSetOptionsDefault(){
 #ifdef WIN32
 # if defined(__MINGW32__) || defined(__MINGW64__) || defined(__MSYS__)
-  char srcn[PATH_MAX];
-  char libn[PATH_MAX];
   const char *tmpdir = bt_tempdir();
-  char tmpdir_norm[PATH_MAX];
-  size_t i;
-  snprintf(tmpdir_norm,PATH_MAX,"%s",tmpdir);
-  for(i = 0; tmpdir_norm[i] != '\0'; ++i){
-    if(tmpdir_norm[i] == '\\'){
-      tmpdir_norm[i] = '/';
-    }
+  struct FilePath *tmpfp = NULL;
+  struct FilePath *srcfp = NULL;
+  struct FilePath *libfp = NULL;
+  struct FilePath *srcnamefp = NULL;
+  struct FilePath *libnamefp = NULL;
+  char *srcn = NULL;
+  char *libn = NULL;
+  char *srcname = NULL;
+  char *libname = NULL;
+  char *buildcmd = NULL;
+  int needed;
+  int res = 1;
+  if(tmpdir == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"No temporary directory for bintokens");
+    goto cleanup_paths;
   }
-  snprintf(srcn,PATH_MAX,"%s/ascend-btsrc-%d.c",tmpdir_norm,getpid());
-  snprintf(libn,PATH_MAX,"%s/ascend-btsrc-%d.dll",tmpdir_norm,getpid());
+  tmpfp = ospath_new(tmpdir);
+  if(tmpfp == NULL || !ospath_isvalid(tmpfp)){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid temp directory for bintokens");
+    goto cleanup_paths;
+  }
+
+  needed = snprintf(NULL,0,"ascend-btsrc-%d.c",getpid());
+  if(needed < 0){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed formatting bintoken source name");
+    goto cleanup_paths;
+  }
+  srcname = ASC_NEW_ARRAY(char,(size_t)needed + 1);
+  if(srcname == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Out of memory creating bintoken source name");
+    goto cleanup_paths;
+  }
+  snprintf(srcname,(size_t)needed + 1,"ascend-btsrc-%d.c",getpid());
+  srcnamefp = ospath_new_from_posix(srcname);
+  if(srcnamefp == NULL || !ospath_isvalid(srcnamefp)){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid bintoken source name");
+    goto cleanup_paths;
+  }
+  srcfp = ospath_concat(tmpfp,srcnamefp);
+  if(srcfp == NULL || !ospath_isvalid(srcfp)){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed constructing bintoken source path");
+    goto cleanup_paths;
+  }
+  srcn = ospath_str(srcfp);
+  if(srcn == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Out of memory creating bintoken source path");
+    goto cleanup_paths;
+  }
+
+  needed = snprintf(NULL,0,"ascend-btsrc-%d.dll",getpid());
+  if(needed < 0){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed formatting bintoken library name");
+    goto cleanup_paths;
+  }
+  libname = ASC_NEW_ARRAY(char,(size_t)needed + 1);
+  if(libname == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Out of memory creating bintoken library name");
+    goto cleanup_paths;
+  }
+  snprintf(libname,(size_t)needed + 1,"ascend-btsrc-%d.dll",getpid());
+  libnamefp = ospath_new_from_posix(libname);
+  if(libnamefp == NULL || !ospath_isvalid(libnamefp)){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid bintoken library name");
+    goto cleanup_paths;
+  }
+  libfp = ospath_concat(tmpfp,libnamefp);
+  if(libfp == NULL || !ospath_isvalid(libfp)){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed constructing bintoken library path");
+    goto cleanup_paths;
+  }
+  libn = ospath_str(libfp);
+  if(libn == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Out of memory creating bintoken library path");
+    goto cleanup_paths;
+  }
 
 #  define BINTOK_NOMAKEFILE
   /* this approach calls GCC directly */
@@ -249,14 +312,46 @@ int BinTokenSetOptionsDefault(){
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented for Windows (makefile path)");
   return 1;
 #  endif
-  char *buildcmd = env_subst(buildtmpl,Asc_GetEnv,1);
+  buildcmd = env_subst(buildtmpl,Asc_GetEnv,1);
   /* cleanup uses remove(3) now */
 #  ifdef BINTOKEN_DEBUG
-  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,1000,1/*verbose*/,0/*housekeep*/);
+  res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,1000,1/*verbose*/,0/*housekeep*/);
 #  else
-  int res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,1000,0/*verbose*/,1/*housekeep*/);
+  res = BinTokenSetOptions(srcn,NULL,libn,buildcmd,1000,0/*verbose*/,1/*housekeep*/);
 #  endif
   ASC_FREE(buildcmd);
+  buildcmd = NULL;
+cleanup_paths:
+  if(srcn != NULL){
+    ospath_free_str(srcn);
+  }
+  if(libn != NULL){
+    ospath_free_str(libn);
+  }
+  if(srcfp != NULL){
+    ospath_free(srcfp);
+  }
+  if(libfp != NULL){
+    ospath_free(libfp);
+  }
+  if(srcnamefp != NULL){
+    ospath_free(srcnamefp);
+  }
+  if(libnamefp != NULL){
+    ospath_free(libnamefp);
+  }
+  if(tmpfp != NULL){
+    ospath_free(tmpfp);
+  }
+  if(srcname != NULL){
+    ASC_FREE(srcname);
+  }
+  if(libname != NULL){
+    ASC_FREE(libname);
+  }
+  if(buildcmd != NULL){
+    ASC_FREE(buildcmd);
+  }
   return res;
 # else
   ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not implemented for Windows");

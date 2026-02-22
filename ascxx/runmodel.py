@@ -34,7 +34,11 @@ def run_ascend_model(filen,model=None,printvars=None,test=True):
 		sys.exit(2)
 		
 	M = T.getSimulation('sim',True) # run default method = True
-	M.solve(ascpy.Solver("QRSlv"),ascpy.SolverReporter())
+	try:
+		solver = M.getSolver()
+	except RuntimeError:
+		solver = ascpy.Solver("QRSlv")
+	M.solve(solver,ascpy.SolverReporter())
 	
 	if printvars is not None:
 		test = False

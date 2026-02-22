@@ -127,6 +127,7 @@ enum stat_t {
   WBTS,         /**< WILL_BE_THE_SAME */
   WNBTS,        /**< WILL_NOT_BE_THE_SAME */
   TABLESTAT,    /**< TABLE statement */
+  DATASETSTAT,  /**< DATASET statement */
   WILLBE        /**< WILL_BE */
   /* if you add anything after WILLBE, change statio.c/suppression
    * accordingly.
@@ -416,6 +417,29 @@ struct StateTABLE{
   int positional;              /**< nonzero when POSITIONAL specified */
 };
 
+/** used for DATASET statement (parse metadata in v0). */
+struct DatasetIndexItem{
+  symchar *set_name;          /**< index set name */
+  symchar *column_name;       /**< source column name */
+  symchar *type_name;         /**< element type (eg integer_constant) */
+  struct DatasetIndexItem *next;
+};
+
+struct DatasetMapItem{
+  struct Name *target;        /**< target array name */
+  symchar *column_name;       /**< source column name */
+  char *units;                /**< units string, without braces (optional) */
+  symchar *type_name;         /**< inline type (optional) */
+  struct DatasetMapItem *next;
+};
+
+struct StateDATASET{
+  symchar *name;              /**< dataset name */
+  char *filename;             /**< dataset source filename */
+  struct DatasetIndexItem *indices;
+  struct DatasetMapItem *maps;
+};
+
 /**<DS: used for LINK statements */
 struct StateLINK {
   symchar *key;			/**< key under which the linked instances are stored in the link table, which can be a symbol, a name, loop index stored as symchars*/
@@ -480,6 +504,7 @@ union StateUnion {
   struct StateOPTION     option;
   struct StateLINK	     lnk;
   struct StateTABLE      table;
+  struct StateDATASET    dataset;
 };
 
 struct Statement {

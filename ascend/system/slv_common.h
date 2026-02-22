@@ -138,11 +138,96 @@ struct slv__block_status_structure {
    real64 residual;                 /**< Current residual (RMS value) for the current block. */
 };
 
+/*------------------------------------------------------------------------------
+  STATUS KINDS AND LP/MIP DETAIL ENUMS
+*/
+
+typedef enum slv_status_kind_enum {
+  SLV_STATUS_UNKNOWN = 0,
+  SLV_STATUS_NLP,
+  SLV_STATUS_LP,
+  SLV_STATUS_MIP
+} slv_status_kind_t;
+
+typedef enum slv_solution_status_enum {
+  SLV_SOLUTION_STATUS_UNKNOWN = 0,
+  SLV_SOLUTION_STATUS_NONE,
+  SLV_SOLUTION_STATUS_INFEASIBLE,
+  SLV_SOLUTION_STATUS_FEASIBLE
+} slv_solution_status_t;
+
+typedef enum slv_basis_status_enum {
+  SLV_BASIS_STATUS_UNKNOWN = 0,
+  SLV_BASIS_STATUS_INVALID,
+  SLV_BASIS_STATUS_VALID
+} slv_basis_status_t;
+
+/*------------------------------------------------------------------------------
+  STATUS DETAIL STRUCTURES
+*/
+
+typedef struct slv_status_nlp_structure {
+  int32 costsize;                      /**< Number of elements in the cost array. */
+  struct slv_block_cost *cost;         /**< Array of slv_block_cost records. */
+} slv_status_nlp_t;
+
+typedef struct slv_status_lp_structure {
+  uint32 have_objective : 1;
+  uint32 have_primal_status : 1;
+  uint32 have_dual_status : 1;
+  uint32 have_basis_status : 1;
+  uint32 have_max_primal_infeas : 1;
+  uint32 have_max_dual_infeas : 1;
+  uint32 have_num_primal_infeas : 1;
+  uint32 have_num_dual_infeas : 1;
+  uint32 have_simplex_iterations : 1;
+  uint32 have_ipm_iterations : 1;
+  uint32 have_pdlp_iterations : 1;
+  uint32 have_model_status : 1;
+
+  double objective_value;
+  double max_primal_infeasibility;
+  double max_dual_infeasibility;
+  int32 num_primal_infeasibilities;
+  int32 num_dual_infeasibilities;
+  int32 simplex_iterations;
+  int32 ipm_iterations;
+  int32 pdlp_iterations;
+  int32 model_status;
+
+  slv_solution_status_t primal_status;
+  slv_solution_status_t dual_status;
+  slv_basis_status_t basis_status;
+} slv_status_lp_t;
+
+typedef struct slv_status_mip_structure {
+  slv_status_lp_t lp;                  /**< LP relaxation info (if available). */
+
+  uint32 have_primal_bound : 1;
+  uint32 have_dual_bound : 1;
+  uint32 have_gap : 1;
+  uint32 have_abs_gap : 1;
+  uint32 have_node_count : 1;
+  uint32 have_total_lp_iterations : 1;
+  uint32 have_solution_count : 1;
+
+  double primal_bound;
+  double dual_bound;
+  double gap;
+  double abs_gap;
+  long long node_count;
+  int32 total_lp_iterations;
+  int32 solution_count;
+} slv_status_mip_t;
+
 /**
  *  Solver status flags.
  *  <pre>
  *  The following is a list of statuses and their meanings.  Statuses
  *  cannot be written to, and thus there is no notion of default value.
+ *
+ *  NLP-only details (block/cost) are available in the NLP union branch.
+ *  LP/MIP solvers should populate their respective union branches.
  *
  *  ok:
  *     Specifies whether or not everything is "ok".  It is a shorthand for
@@ -253,6 +338,7 @@ struct slv__block_status_structure {
  *  </pre>
  */
 typedef struct slv_status_structure {
+   slv_status_kind_t kind;             /**< Which union branch is valid. */
    uint32 ok : 1;                       /**< If TRUE, everything is ok. */
    uint32 over_defined : 1;             /**< Is system over-defined? */
    uint32 under_defined : 1;            /**< Is system under-defined? */
@@ -266,11 +352,65 @@ typedef struct slv_status_structure {
    uint32 time_limit_exceeded : 1;      /**< Was the time limit exceeded? */
    uint32 panic :1;                     /**< Did the user stop the solver interactively? */
    int32 iteration;                     /**< Total number of iterations so far. */
-   int32 costsize;                      /**< Number of elements in the cost array. */
    double cpu_elapsed;                  /**< Total elapsed cpu seconds. */
-   struct slv_block_cost *cost;         /**< Array of slv_block_cost records. */
-   struct slv__block_status_structure block;  /**< Block status information. */
+   struct slv__block_status_structure block; /**< Block status information. */
+   union {
+     slv_status_nlp_t nlp;
+     slv_status_lp_t lp;
+     slv_status_mip_t mip;
+   } u;
 } slv_status_t;
+
+/*------------------------------------------------------------------------------
+  STATUS ACCESSORS
+*/
+
+static inline const slv_status_nlp_t *slv_status_nlp(const slv_status_t *s){
+  return (s != NULL && s->kind == SLV_STATUS_NLP) ? &s->u.nlp : NULL;
+}
+
+static inline slv_status_nlp_t *slv_status_nlp_rw(slv_status_t *s){
+  return (s != NULL && s->kind == SLV_STATUS_NLP) ? &s->u.nlp : NULL;
+}
+
+static inline const slv_status_lp_t *slv_status_lp(const slv_status_t *s){
+  return (s != NULL && s->kind == SLV_STATUS_LP) ? &s->u.lp : NULL;
+}
+
+static inline slv_status_lp_t *slv_status_lp_rw(slv_status_t *s){
+  return (s != NULL && s->kind == SLV_STATUS_LP) ? &s->u.lp : NULL;
+}
+
+static inline const slv_status_mip_t *slv_status_mip(const slv_status_t *s){
+  return (s != NULL && s->kind == SLV_STATUS_MIP) ? &s->u.mip : NULL;
+}
+
+static inline slv_status_mip_t *slv_status_mip_rw(slv_status_t *s){
+  return (s != NULL && s->kind == SLV_STATUS_MIP) ? &s->u.mip : NULL;
+}
+
+static inline const struct slv__block_status_structure *slv_status_block(const slv_status_t *s){
+  return (s != NULL) ? &s->block : NULL;
+}
+
+static inline struct slv__block_status_structure *slv_status_block_rw(slv_status_t *s){
+  return (s != NULL) ? &s->block : NULL;
+}
+
+static inline int32 slv_status_costsize(const slv_status_t *s){
+  const slv_status_nlp_t *nlp = slv_status_nlp(s);
+  return (nlp != NULL) ? nlp->costsize : 0;
+}
+
+static inline const struct slv_block_cost *slv_status_cost(const slv_status_t *s){
+  const slv_status_nlp_t *nlp = slv_status_nlp(s);
+  return (nlp != NULL) ? nlp->cost : NULL;
+}
+
+static inline struct slv_block_cost *slv_status_cost_rw(slv_status_t *s){
+  slv_status_nlp_t *nlp = slv_status_nlp_rw(s);
+  return (nlp != NULL) ? nlp->cost : NULL;
+}
 
 /* vector math stuff moved to mtx_vector.h */
 
@@ -621,4 +761,3 @@ ASC_DLLSPEC void slv_write_lnkmap(FILE *fp, int m, int32 **map);
 /* @} */
 
 #endif  /* ASC_SLV_COMMON_H */
-

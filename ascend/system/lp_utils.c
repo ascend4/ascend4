@@ -384,7 +384,12 @@ mtx_matrix_t lp_calc_matrix(
 		return NULL;
 	}
 
-	s->block.jactime = tm_cpu_time() - time0;
+	{
+		struct slv__block_status_structure *block = slv_status_block_rw(s);
+		if(block != NULL){
+			block->jactime = tm_cpu_time() - time0;
+		}
+	}
 	return mtx;
 }
 

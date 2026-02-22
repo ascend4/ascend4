@@ -55,7 +55,7 @@
 #endif
 #define DEBUG FALSE
 #define HIGHS_PROGRESS_REPORT_INTERVAL 1.0
-#define HIGHS_DEBUG
+//#define HIGHS_DEBUG
 #ifdef HIGHS_DEBUG
 # define MSG(...) CONSOLE_DEBUG(__VA_ARGS__)
 #else
@@ -106,6 +106,48 @@ struct highs_system_structure {
    mps_data_t  mps;          /* the main chunk of data for the problem */
 
 };
+
+static void highs_spoof_block_status(highs_system_t sys){
+   struct slv__block_status_structure *block = &sys->s.block;
+   int32 size = (sys->mps.vused > 0) ? (int32)sys->mps.vused : 0;
+
+   block->number_of = 1;
+   block->current_block = 0;
+   block->current_reordered_block = 0;
+   block->current_size = size;
+   block->previous_total_size = 0;
+   block->previous_total_size_vars = 0;
+   block->iteration = sys->s.iteration;
+   block->funcs = 0;
+   block->jacs = 0;
+   block->cpu_elapsed = sys->s.cpu_elapsed;
+   block->functime = 0.0;
+   block->jactime = 0.0;
+   block->residual = 0.0;
+}
+
+static int highs_is_mip_from_typerow(const highs_system_t sys){
+	int is_mip = 0;
+	int relaxed = SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_RELAXED);
+	int32 orgcol;
+
+	if(relaxed || sys->mps.typerow == NULL){
+		return 0;
+	}
+	for(orgcol = 0; orgcol < sys->mps.vused; ++orgcol){
+		switch(sys->mps.typerow[orgcol]){
+			case MPS_INT:
+			case MPS_BINARY:
+			case MPS_SEMI:
+				is_mip = 1;
+				break;
+			default:
+				break;
+		}
+		if(is_mip)break;
+	}
+	return is_mip;
+}
 
 
 static int highs_get_default_parameters(slv_system_t server, SlvClientToken asys
@@ -161,6 +203,12 @@ static int highs_get_default_parameters(slv_system_t server, SlvClientToken asys
 			,"Enable progress callbacks?",2
 			,"Enable HiGHS callback-based progress reporting (text output and GUI polling support)."
 		}, TRUE}
+	);
+	slv_param_bool(parameters,HIGHS_PARAM_PROGRESS_LOG
+		,(SlvParameterInitBool){{"progress_log"
+			,"Log progress to console?",2
+			,"Emit progress lines via console/error reporter."
+		}, FALSE}
 	);
 
 	/** HiGHS runtime options */
@@ -443,7 +491,7 @@ static mtx_matrix_t calc_matrix(int32     cap,
 	@param rlist,       in: Relation list (NULL terminated)
 	@param obj,          in: objective function
 	@param crow,         in: row to store objective row
-	@param s,          out: s.block.jactime, and s.calc_ok
+	@param s,          out: s.calc_ok
 	@param rank,       out
 	@oaram rhs_orig   out: rhs array origin
 
@@ -875,6 +923,7 @@ static SlvClientToken highs_create(slv_system_t server, int32 *statusindex){   /
 
 	/***  Initialize status flags ***/
 
+	sys->s.kind                      = SLV_STATUS_LP;
 	sys->s.over_defined               = FALSE;  /* set to (sys->mps.rinc > sys->mps.vinc) in highs_presolve */
 	sys->s.under_defined              = FALSE;  /* set to (sys->mps.rinc < sys->mps.vinc) in highs_presolve */
 	sys->s.struct_singular            = FALSE;  /* set to (sys->mps.rank < sys->mps.rinc) in highs_presolve */
@@ -890,42 +939,12 @@ static SlvClientToken highs_create(slv_system_t server, int32 *statusindex){   /
 	sys->s.iteration_limit_exceeded   = FALSE;  /* always FALSE, never used */
 	sys->s.time_limit_exceeded        = FALSE;  /* always FALSE, never used */
 
-	sys->s.block.number_of            = 1;      /* always 1, just have 1 block */
-	sys->s.block.current_block        = 0;      /* always 1, start in first and only block */
-	sys->s.block.current_size         = 0;      /* set to sys->mps.vused in highs_presolve */
-	sys->s.block.previous_total_size  = 0;      /* always 0, never used */
+	sys->s.iteration                  = 0;      /* reset iteration count */
+	sys->s.cpu_elapsed                = 0.0;    /* reset elapsed time */
 
-	/* same : */
-	sys->s.block.iteration            = 0;      /* set to 0 after highs_presolve; set to 1 after highs_solve */
-	sys->s.iteration                  = 0;      /* set to 0 after highs_presolve; set to 1 after highs_solve */
-
-	/* same : */
-	sys->s.block.cpu_elapsed          = 0.0;    /* set to time taken by highs_presolve and highs_solve */
-	sys->s.cpu_elapsed                = 0.0;    /* set to time taken by highs_presolve and highs_solve */
-
-	sys->s.block.functime             = 0.0;    /* always 0.0 since no function evaluation, never used */
-	sys->s.block.residual             = 0.0;    /* always 0.0 since not iterating, never used */
-	sys->s.block.jactime              = 0.0;    /* calculated in highs_presolve, time for jacobian eval */
-
-	sys->s.costsize                   = sys->s.block.number_of;  /* just one cost block, which will be set in  */
-
-	sys->s.cost=create_zero_array(sys->s.costsize,struct slv_block_cost);  /* allocate memory */
+	memset(&sys->s.u,0,sizeof(sys->s.u));
 	sys->next_progress_report_time = 0.0;
 	sys->progress_report_count = 0;
-
-
-	/* Note: the cost vars are equivalent to other sys->s.* vars
-
-	sys->s.cost->size        = sys->s.block.current_size
-	sys->s.cost->iterations  = sys->s.block.iteration
-	sys->s.cost->jacs        = sys->s.block.iteration
-	sys->s.cost->funcs       = always 0 since no function evals needed
-	sys->s.cost->time        = sys->s.block.cpu_elapsed
-	sys->s.cost->resid       = 0.0  whatever this is ?
-	sys->s.cost->functime    = 0.0  since no function evals needed
-	sys->s.cost->jactime     = sys->s.block.jactime
-
-	*/
 
 	return(sys);
 }
@@ -945,7 +964,7 @@ static int highs_destroy(slv_system_t server, SlvClientToken asys){
 	highs_set_extrel_list(sys,NULL);
 #endif
 	sys->integrity = DESTROYED;
-	if (sys->s.cost) ascfree(sys->s.cost);  /* deallocate cost array */
+	/* no per-status allocations */
 
 	slv_destroy_parms(&(sys->p));
 
@@ -1246,19 +1265,15 @@ void highs_presolve(slv_system_t server){
    sys->s.ok = sys->s.calc_ok;
    sys->s.ready_to_solve = sys->s.ok;
 
+   sys->s.kind = highs_is_mip_from_typerow(sys) ? SLV_STATUS_MIP : SLV_STATUS_LP;
    sys->s.converged = FALSE;      /* changes to true after highs_solve */
-   sys->s.block.current_size = sys->mps.vused;
-   sys->s.cost->size = sys->s.block.current_size;
 
    sys->s.cpu_elapsed       = (double)(tm_cpu_time() - sys->clock);  /* record times */
-   sys->s.block.cpu_elapsed = sys->s.cpu_elapsed;
-   sys->s.cost->time        = sys->s.cpu_elapsed;
-   sys->s.cost->jactime     = sys->s.block.jactime;  /* from calc_matrix */
-
-   sys->s.block.iteration   = 0;  /* reset iteration "count", changes to 1 after highs_solve */
    sys->s.iteration         = 0;
-   sys->s.cost->iterations  = 0;
-   sys->s.cost->jacs        = 0;
+   memset(&sys->s.u,0,sizeof(sys->s.u));
+
+   /* LP/MIP details will be populated after solve. */
+   highs_spoof_block_status(sys);
 
 }
 
@@ -1665,10 +1680,12 @@ static void highs_report_progress(
 		);
 	}
 
-	MSG("progress: %s",details);
-	#ifdef HIGHS_DEBUG
-	ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"(HiGHS progress) %s",details);
-	#endif
+	if(SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_PROGRESS_LOG)){
+		MSG("progress: %s",details);
+		#ifdef HIGHS_DEBUG
+		ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"(HiGHS progress) %s",details);
+		#endif
+	}
 	(void)slv_report_progress("HiGHS",details);
 	sys->progress_report_count++;
 }
@@ -1685,16 +1702,49 @@ static void highs_solver_callback(
 	(void)message;
 	if(sys == NULL)return;
 	if(message != NULL && message[0] != '\0'){
-		MSG("callback[%d]: %s",callback_type,message);
+		if(strcmp(message,"MIP check limits") != 0
+			&& SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_PROGRESS_LOG)
+		){
+			MSG("callback[%d]: %s",callback_type,message);
+		}
 	}
 
 	iteration_count = highs_callback_total_iteration_count(data_out);
 	if(iteration_count > 0){
-		sys->s.block.iteration = iteration_count;
 		sys->s.iteration = iteration_count;
-		if(sys->s.cost){
-			sys->s.cost->iterations = iteration_count;
-			sys->s.cost->jacs = iteration_count;
+	}
+
+	if(data_out != NULL && sys->s.kind == SLV_STATUS_MIP){
+		slv_status_mip_t *mip = slv_status_mip_rw(&sys->s);
+		if(mip != NULL){
+			if(data_out->mip_node_count >= 0){
+				mip->have_node_count = 1;
+				mip->node_count = (long long)data_out->mip_node_count;
+			}
+			if(data_out->mip_total_lp_iterations >= 0){
+				mip->have_total_lp_iterations = 1;
+				if(data_out->mip_total_lp_iterations > INT_MAX){
+					mip->total_lp_iterations = INT_MAX;
+				}else{
+					mip->total_lp_iterations = (int32)data_out->mip_total_lp_iterations;
+				}
+			}
+			if(isfinite(data_out->mip_primal_bound)){
+				mip->have_primal_bound = 1;
+				mip->primal_bound = data_out->mip_primal_bound;
+			}
+			if(isfinite(data_out->mip_dual_bound)){
+				mip->have_dual_bound = 1;
+				mip->dual_bound = data_out->mip_dual_bound;
+			}
+			if(isfinite(data_out->mip_gap)){
+				mip->have_gap = 1;
+				mip->gap = data_out->mip_gap;
+			}
+			if(mip->have_primal_bound && mip->have_dual_bound){
+				mip->have_abs_gap = 1;
+				mip->abs_gap = fabs(mip->primal_bound - mip->dual_bound);
+			}
 		}
 	}
 
@@ -1717,6 +1767,7 @@ static void highs_solver_callback(
 		)
 	){
 		running_time = (isfinite(data_out->running_time) && data_out->running_time >= 0.0 ? data_out->running_time : 0.0);
+		sys->s.cpu_elapsed = running_time;
 		highs_report_progress(sys,callback_type,data_out,iteration_count,running_time);
 		sys->next_progress_report_time = running_time + HIGHS_PROGRESS_REPORT_INTERVAL;
 	}
@@ -1792,12 +1843,16 @@ struct highs_info_snapshot{
 	HighsInt num_primal_infeasibilities;
 	int have_num_dual_infeasibilities;
 	HighsInt num_dual_infeasibilities;
+	int have_mip_primal_bound;
+	double mip_primal_bound;
 	int have_mip_gap;
 	double mip_gap;
 	int have_mip_dual_bound;
 	double mip_dual_bound;
 	int have_mip_node_count;
 	int64_t mip_node_count;
+	int have_mip_total_lp_iterations;
+	int64_t mip_total_lp_iterations;
 };
 
 static int highs_get_info_int_value(const void *highs, const char *name, HighsInt *value){
@@ -1856,6 +1911,116 @@ static const char *highs_basis_validity_name(HighsInt basis_validity){
 	}
 }
 
+static slv_solution_status_t highs_solution_status_to_slv(HighsInt solution_status){
+	switch(solution_status){
+		case kHighsSolutionStatusNone: return SLV_SOLUTION_STATUS_NONE;
+		case kHighsSolutionStatusInfeasible: return SLV_SOLUTION_STATUS_INFEASIBLE;
+		case kHighsSolutionStatusFeasible: return SLV_SOLUTION_STATUS_FEASIBLE;
+		default: return SLV_SOLUTION_STATUS_UNKNOWN;
+	}
+}
+
+static slv_basis_status_t highs_basis_validity_to_slv(HighsInt basis_validity){
+	switch(basis_validity){
+		case kHighsBasisValidityInvalid: return SLV_BASIS_STATUS_INVALID;
+		case kHighsBasisValidityValid: return SLV_BASIS_STATUS_VALID;
+		default: return SLV_BASIS_STATUS_UNKNOWN;
+	}
+}
+
+static int32 highs_clamp_int64_to_int32(long long value){
+	if(value > INT_MAX)return INT_MAX;
+	if(value < INT_MIN)return INT_MIN;
+	return (int32)value;
+}
+
+static void highs_fill_lp_status(
+	slv_status_lp_t *lp, const struct highs_info_snapshot *info, HighsInt model_status
+){
+	if(lp == NULL || info == NULL)return;
+	memset(lp,0,sizeof(*lp));
+	lp->have_model_status = 1;
+	lp->model_status = (int32)model_status;
+
+	if(info->have_objective_function_value && isfinite(info->objective_function_value)){
+		lp->have_objective = 1;
+		lp->objective_value = info->objective_function_value;
+	}
+	if(info->have_primal_solution_status){
+		lp->have_primal_status = 1;
+		lp->primal_status = highs_solution_status_to_slv(info->primal_solution_status);
+	}
+	if(info->have_dual_solution_status){
+		lp->have_dual_status = 1;
+		lp->dual_status = highs_solution_status_to_slv(info->dual_solution_status);
+	}
+	if(info->have_basis_validity){
+		lp->have_basis_status = 1;
+		lp->basis_status = highs_basis_validity_to_slv(info->basis_validity);
+	}
+	if(info->have_max_primal_infeasibility && isfinite(info->max_primal_infeasibility)){
+		lp->have_max_primal_infeas = 1;
+		lp->max_primal_infeasibility = info->max_primal_infeasibility;
+	}
+	if(info->have_max_dual_infeasibility && isfinite(info->max_dual_infeasibility)){
+		lp->have_max_dual_infeas = 1;
+		lp->max_dual_infeasibility = info->max_dual_infeasibility;
+	}
+	if(info->have_num_primal_infeasibilities && info->num_primal_infeasibilities >= 0){
+		lp->have_num_primal_infeas = 1;
+		lp->num_primal_infeasibilities = highs_clamp_int64_to_int32((long long)info->num_primal_infeasibilities);
+	}
+	if(info->have_num_dual_infeasibilities && info->num_dual_infeasibilities >= 0){
+		lp->have_num_dual_infeas = 1;
+		lp->num_dual_infeasibilities = highs_clamp_int64_to_int32((long long)info->num_dual_infeasibilities);
+	}
+	if(info->have_simplex_iteration_count && info->simplex_iteration_count >= 0){
+		lp->have_simplex_iterations = 1;
+		lp->simplex_iterations = highs_clamp_int64_to_int32((long long)info->simplex_iteration_count);
+	}
+	if(info->have_ipm_iteration_count && info->ipm_iteration_count >= 0){
+		lp->have_ipm_iterations = 1;
+		lp->ipm_iterations = highs_clamp_int64_to_int32((long long)info->ipm_iteration_count);
+	}
+	if(info->have_pdlp_iteration_count && info->pdlp_iteration_count >= 0){
+		lp->have_pdlp_iterations = 1;
+		lp->pdlp_iterations = highs_clamp_int64_to_int32((long long)info->pdlp_iteration_count);
+	}
+}
+
+static void highs_fill_mip_status(
+	slv_status_mip_t *mip, const struct highs_info_snapshot *info, HighsInt model_status
+){
+	if(mip == NULL || info == NULL)return;
+	memset(mip,0,sizeof(*mip));
+	highs_fill_lp_status(&mip->lp, info, model_status);
+
+	if(info->have_mip_primal_bound && isfinite(info->mip_primal_bound)){
+		mip->have_primal_bound = 1;
+		mip->primal_bound = info->mip_primal_bound;
+	}
+	if(info->have_mip_dual_bound && isfinite(info->mip_dual_bound)){
+		mip->have_dual_bound = 1;
+		mip->dual_bound = info->mip_dual_bound;
+	}
+	if(info->have_mip_gap && isfinite(info->mip_gap)){
+		mip->have_gap = 1;
+		mip->gap = info->mip_gap;
+	}
+	if(info->have_mip_node_count && info->mip_node_count >= 0){
+		mip->have_node_count = 1;
+		mip->node_count = (long long)info->mip_node_count;
+	}
+	if(info->have_mip_total_lp_iterations && info->mip_total_lp_iterations >= 0){
+		mip->have_total_lp_iterations = 1;
+		mip->total_lp_iterations = highs_clamp_int64_to_int32((long long)info->mip_total_lp_iterations);
+	}
+	if(mip->have_primal_bound && mip->have_dual_bound){
+		mip->have_abs_gap = 1;
+		mip->abs_gap = fabs(mip->primal_bound - mip->dual_bound);
+	}
+}
+
 static void highs_collect_info_snapshot(const void *highs, struct highs_info_snapshot *info){
 	memset(info,0,sizeof(*info));
 	info->have_objective_function_value = highs_get_info_double_value(highs,"objective_function_value",&info->objective_function_value);
@@ -1869,9 +2034,11 @@ static void highs_collect_info_snapshot(const void *highs, struct highs_info_sna
 	info->have_max_dual_infeasibility = highs_get_info_double_value(highs,"max_dual_infeasibility",&info->max_dual_infeasibility);
 	info->have_num_primal_infeasibilities = highs_get_info_int_value(highs,"num_primal_infeasibilities",&info->num_primal_infeasibilities);
 	info->have_num_dual_infeasibilities = highs_get_info_int_value(highs,"num_dual_infeasibilities",&info->num_dual_infeasibilities);
+	info->have_mip_primal_bound = highs_get_info_double_value(highs,"mip_primal_bound",&info->mip_primal_bound);
 	info->have_mip_gap = highs_get_info_double_value(highs,"mip_gap",&info->mip_gap);
 	info->have_mip_dual_bound = highs_get_info_double_value(highs,"mip_dual_bound",&info->mip_dual_bound);
 	info->have_mip_node_count = highs_get_info_int64_value(highs,"mip_node_count",&info->mip_node_count);
+	info->have_mip_total_lp_iterations = highs_get_info_int64_value(highs,"mip_total_lp_iterations",&info->mip_total_lp_iterations);
 }
 
 static int highs_has_feasible_primal_solution(const struct highs_info_snapshot *info){
@@ -2130,6 +2297,8 @@ void highs_solve(slv_system_t server){
 	sys->s.time_limit_exceeded = FALSE;
 	sys->s.iteration_limit_exceeded = FALSE;
 	sys->s.panic = FALSE;
+	sys->s.kind = SLV_STATUS_LP;
+	memset(&sys->s.u,0,sizeof(sys->s.u));
 	sys->next_progress_report_time = 0.0;
 	sys->progress_report_count = 0;
 
@@ -2142,6 +2311,9 @@ void highs_solve(slv_system_t server){
 		sys->s.ready_to_solve = FALSE;
 		return;
 	}
+	sys->s.kind = is_mip ? SLV_STATUS_MIP : SLV_STATUS_LP;
+	memset(&sys->s.u,0,sizeof(sys->s.u));
+	sys->s.iteration = 0;
 	MSG(
 		"constructed %s model: cols=%ld rows=%ld nz=%ld."
 		,(is_mip ? "MIP" : "LP")
@@ -2204,6 +2376,11 @@ void highs_solve(slv_system_t server){
 
 	highs_collect_info_snapshot(highs,&info);
 	highs_update_status_flags_from_model_status(sys,model_status);
+	if(sys->s.kind == SLV_STATUS_MIP){
+		highs_fill_mip_status(slv_status_mip_rw(&sys->s),&info,model_status);
+	}else{
+		highs_fill_lp_status(slv_status_lp_rw(&sys->s),&info,model_status);
+	}
 	have_primal_solution = highs_has_feasible_primal_solution(&info);
 	MSG(
 		"status flags: converged=%d inconsistent=%d diverged=%d time_limit=%d iter_limit=%d primal_feasible=%d."
@@ -2268,18 +2445,14 @@ done:
 		slv_set_solver_interrupt(0);
 	}
 	sys->s.cpu_elapsed += (double)(tm_cpu_time() - sys->clock);
-	sys->s.block.cpu_elapsed = sys->s.cpu_elapsed;
-	sys->s.cost->time = sys->s.cpu_elapsed;
 	sys->s.ok = sys->s.calc_ok && sys->s.converged;
 	sys->s.ready_to_solve = FALSE;
 	iteration_count = highs_total_iteration_count(&info);
 	if(iteration_count <= 0 && sys->s.iteration > 0){
 		iteration_count = sys->s.iteration;
 	}
-	sys->s.block.iteration = iteration_count;
 	sys->s.iteration = iteration_count;
-	sys->s.cost->iterations = iteration_count;
-	sys->s.cost->jacs = iteration_count;
+	highs_spoof_block_status(sys);
 	MSG(
 		"final status: ok=%d converged=%d calc_ok=%d ready_to_solve=%d iter=%d."
 		,sys->s.ok,sys->s.converged,sys->s.calc_ok,sys->s.ready_to_solve,sys->s.iteration

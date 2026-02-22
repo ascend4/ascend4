@@ -532,7 +532,7 @@ static mtx_matrix_t calc_matrix(int32     cap,
 	@param rlist,       in: Relation list (NULL terminated)
 	@param obj,          in: objective function
 	@param crow,         in: row to store objective row
-	@param s,          out: s.block.jactime, and s.calc_ok
+	@param s,          out: s.calc_ok (and NLP branch jacobian timing)
 	@param rank,       out
 	@oaram rhs_orig   out: rhs array origin
 
@@ -964,6 +964,7 @@ static SlvClientToken slv6_create(slv_system_t server, int32 *statusindex){   /*
 
 	/***  Initialize status flags ***/
 
+	sys->s.kind                      = SLV_STATUS_NLP;
 	sys->s.over_defined               = FALSE;  /* set to (sys->mps.rinc > sys->mps.vinc) in slv6_presolve */
 	sys->s.under_defined              = FALSE;  /* set to (sys->mps.rinc < sys->mps.vinc) in slv6_presolve */
 	sys->s.struct_singular            = FALSE;  /* set to (sys->mps.rank < sys->mps.rinc) in slv6_presolve */
@@ -996,21 +997,21 @@ static SlvClientToken slv6_create(slv_system_t server, int32 *statusindex){   /*
 	sys->s.block.residual             = 0.0;    /* always 0.0 since not iterating, never used */
 	sys->s.block.jactime              = 0.0;    /* calculated in slv6_presolve, time for jacobian eval */
 
-	sys->s.costsize                   = sys->s.block.number_of;  /* just one cost block, which will be set in  */
+	sys->s.u.nlp.costsize                   = sys->s.block.number_of;  /* just one cost block, which will be set in  */
 
-	sys->s.cost=create_zero_array(sys->s.costsize,struct slv_block_cost);  /* allocate memory */
+	sys->s.u.nlp.cost=create_zero_array(sys->s.u.nlp.costsize,struct slv_block_cost);  /* allocate memory */
 
 
 	/* Note: the cost vars are equivalent to other sys->s.* vars
 
-	sys->s.cost->size        = sys->s.block.current_size
-	sys->s.cost->iterations  = sys->s.block.iteration
-	sys->s.cost->jacs        = sys->s.block.iteration
-	sys->s.cost->funcs       = always 0 since no function evals needed
-	sys->s.cost->time        = sys->s.block.cpu_elapsed
-	sys->s.cost->resid       = 0.0  whatever this is ?
-	sys->s.cost->functime    = 0.0  since no function evals needed
-	sys->s.cost->jactime     = sys->s.block.jactime
+	sys->s.u.nlp.cost->size        = sys->s.block.current_size
+	sys->s.u.nlp.cost->iterations  = sys->s.block.iteration
+	sys->s.u.nlp.cost->jacs        = sys->s.block.iteration
+	sys->s.u.nlp.cost->funcs       = always 0 since no function evals needed
+	sys->s.u.nlp.cost->time        = sys->s.block.cpu_elapsed
+	sys->s.u.nlp.cost->resid       = 0.0  whatever this is ?
+	sys->s.u.nlp.cost->functime    = 0.0  since no function evals needed
+	sys->s.u.nlp.cost->jactime     = sys->s.block.jactime
 
 	*/
 
@@ -1032,7 +1033,7 @@ static int slv6_destroy(slv_system_t server, SlvClientToken asys){
 	slv6_set_extrel_list(sys,NULL);
 #endif
 	sys->integrity = DESTROYED;
-	if (sys->s.cost) ascfree(sys->s.cost);  /* deallocate cost array */
+	if (sys->s.u.nlp.cost) ascfree(sys->s.u.nlp.cost);  /* deallocate cost array */
 
 	slv_destroy_parms(&(sys->p));
 
@@ -1335,17 +1336,17 @@ void slv6_presolve(slv_system_t server){
 
    sys->s.converged = FALSE;      /* changes to true after slv6_solve */
    sys->s.block.current_size = sys->mps.vused;
-   sys->s.cost->size = sys->s.block.current_size;
+   sys->s.u.nlp.cost->size = sys->s.block.current_size;
 
    sys->s.cpu_elapsed       = (double)(tm_cpu_time() - sys->clock);  /* record times */
    sys->s.block.cpu_elapsed = sys->s.cpu_elapsed;
-   sys->s.cost->time        = sys->s.cpu_elapsed;
-   sys->s.cost->jactime     = sys->s.block.jactime;  /* from calc_matrix */
+   sys->s.u.nlp.cost->time        = sys->s.cpu_elapsed;
+   sys->s.u.nlp.cost->jactime     = sys->s.block.jactime;  /* from calc_matrix */
 
    sys->s.block.iteration   = 0;  /* reset iteration "count", changes to 1 after slv6_solve */
    sys->s.iteration         = 0;
-   sys->s.cost->iterations  = 0;
-   sys->s.cost->jacs        = 0;
+   sys->s.u.nlp.cost->iterations  = 0;
+   sys->s.u.nlp.cost->jacs        = 0;
 
 }
 
@@ -1432,7 +1433,7 @@ void slv6_solve(slv_system_t server){
    sys->s.cpu_elapsed += (double)(tm_cpu_time() - sys->clock);
    /* compute total elapsed time */
    sys->s.block.cpu_elapsed = sys->s.cpu_elapsed;
-   sys->s.cost->time        = sys->s.cpu_elapsed;
+   sys->s.u.nlp.cost->time        = sys->s.cpu_elapsed;
 
    if(!(mps_ok && map_ok)){
       sys->s.converged = FALSE;
@@ -1445,8 +1446,8 @@ void slv6_solve(slv_system_t server){
 
    sys->s.block.iteration   = 1;  /* change iteration "count", goes to 0 after slv6_presolve */
    sys->s.iteration         = 1;
-   sys->s.cost->iterations  = 1;
-   sys->s.cost->jacs        = 1;
+   sys->s.u.nlp.cost->iterations  = 1;
+   sys->s.u.nlp.cost->jacs        = 1;
    sys->s.ready_to_solve = FALSE;
 
 }

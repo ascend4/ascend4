@@ -34,11 +34,12 @@ static void test_test1(void){
 	InitSymbolTable();
 
 	symchar *s = AddSymbol("hello");
+	char fake1[] = "hellox";
+	char fake2[] = "xhello";
 
 	CU_TEST(NULL!=SCP(AscFindSymbol(s)));
-	//CU_TEST(NULL==AscFindSymbol("hellox"));
-	CU_TEST(NULL==SCP(AscFindSymbol(s+1)));
-	CU_TEST(NULL==SCP(AscFindSymbol(s-1)));
+	CU_TEST(NULL==SCP(AscFindSymbol((symchar *)fake1)));
+	CU_TEST(NULL==SCP(AscFindSymbol((symchar *)fake2)));
 
 	CU_TEST(0==strcmp(SCP(s),"hello"));
 
@@ -74,4 +75,3 @@ static void test_test1(void){
 	T(test1)
 
 REGISTER_TESTS_SIMPLE(compiler_symtab, TESTS)
-

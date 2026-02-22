@@ -90,6 +90,135 @@ create_statement_here(enum stat_t t){
 	return result;
 }
 
+static struct DatasetIndexItem *CopyDatasetIndexItems(CONST struct DatasetIndexItem *src)
+{
+  struct DatasetIndexItem *head = NULL;
+  struct DatasetIndexItem *tail = NULL;
+  while (src != NULL) {
+    struct DatasetIndexItem *item = ASC_NEW(struct DatasetIndexItem);
+    item->set_name = src->set_name;
+    item->column_name = src->column_name;
+    item->type_name = src->type_name;
+    item->next = NULL;
+    if (tail != NULL) {
+      tail->next = item;
+    } else {
+      head = item;
+    }
+    tail = item;
+    src = src->next;
+  }
+  return head;
+}
+
+static struct DatasetMapItem *CopyDatasetMapItems(CONST struct DatasetMapItem *src)
+{
+  struct DatasetMapItem *head = NULL;
+  struct DatasetMapItem *tail = NULL;
+  while (src != NULL) {
+    struct DatasetMapItem *item = ASC_NEW(struct DatasetMapItem);
+    item->target = CopyName(src->target);
+    item->column_name = src->column_name;
+    item->units = (src->units != NULL) ? ASC_STRDUP(src->units) : NULL;
+    item->type_name = src->type_name;
+    item->next = NULL;
+    if (tail != NULL) {
+      tail->next = item;
+    } else {
+      head = item;
+    }
+    tail = item;
+    src = src->next;
+  }
+  return head;
+}
+
+static void DestroyDatasetIndexItems(struct DatasetIndexItem *item)
+{
+  while (item != NULL) {
+    struct DatasetIndexItem *next = item->next;
+    ASC_FREE(item);
+    item = next;
+  }
+}
+
+static void DestroyDatasetMapItems(struct DatasetMapItem *item)
+{
+  while (item != NULL) {
+    struct DatasetMapItem *next = item->next;
+    if (item->target != NULL) {
+      DestroyName(item->target);
+    }
+    if (item->units != NULL) {
+      ascfree(item->units);
+    }
+    ASC_FREE(item);
+    item = next;
+  }
+}
+
+static int CompareDatasetIndexItems(CONST struct DatasetIndexItem *a,
+                                    CONST struct DatasetIndexItem *b)
+{
+  int ctmp;
+  while (a != NULL && b != NULL) {
+    ctmp = CmpSymchar(a->set_name,b->set_name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CmpSymchar(a->column_name,b->column_name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CmpSymchar(a->type_name,b->type_name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    a = a->next;
+    b = b->next;
+  }
+  if (a == b) {
+    return 0;
+  }
+  return (a != NULL) ? 1 : -1;
+}
+
+static int CompareDatasetMapItems(CONST struct DatasetMapItem *a,
+                                  CONST struct DatasetMapItem *b)
+{
+  int ctmp;
+  while (a != NULL && b != NULL) {
+    ctmp = CompareNames(a->target,b->target);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    ctmp = CmpSymchar(a->column_name,b->column_name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (a->units == NULL || b->units == NULL) {
+      if (a->units != b->units) {
+        return (a->units != NULL) ? 1 : -1;
+      }
+    } else {
+      ctmp = strcmp(a->units,b->units);
+      if (ctmp != 0) {
+        return ctmp;
+      }
+    }
+    ctmp = CmpSymchar(a->type_name,b->type_name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    a = a->next;
+    b = b->next;
+  }
+  if (a == b) {
+    return 0;
+  }
+  return (a != NULL) ? 1 : -1;
+}
+
 void AddContext(struct StatementList *slist, unsigned int con)
 {
   unsigned long c,length;
@@ -853,6 +982,20 @@ struct Statement *CreateTABLE(struct Name *n,
   return result;
 }
 
+struct Statement *CreateDATASET(symchar *name,
+                                char *filename,
+                                struct DatasetIndexItem *indices,
+                                struct DatasetMapItem *maps)
+{
+  struct Statement *result;
+  result = create_statement_here(DATASETSTAT);
+  result->v.dataset.name = name;
+  result->v.dataset.filename = filename;
+  result->v.dataset.indices = indices;
+  result->v.dataset.maps = maps;
+  return result;
+}
+
 enum stat_t StatementTypeF(CONST struct Statement *s)
 {
   assert(s!=NULL);
@@ -1014,6 +1157,21 @@ void DestroyStatement(struct Statement *s)
         if (s->v.table.body != NULL) {
           ascfree(s->v.table.body);
           s->v.table.body = NULL;
+        }
+        break;
+      case DATASETSTAT:
+        s->v.dataset.name = NULL;
+        if (s->v.dataset.filename != NULL) {
+          ascfree(s->v.dataset.filename);
+          s->v.dataset.filename = NULL;
+        }
+        if (s->v.dataset.indices != NULL) {
+          DestroyDatasetIndexItems(s->v.dataset.indices);
+          s->v.dataset.indices = NULL;
+        }
+        if (s->v.dataset.maps != NULL) {
+          DestroyDatasetMapItems(s->v.dataset.maps);
+          s->v.dataset.maps = NULL;
         }
         break;
       case RUN:
@@ -1228,6 +1386,12 @@ struct Statement *CopyToModify(struct Statement *s)
       result->v.table.body = NULL;
     }
     break;
+  case DATASETSTAT:
+    result->v.dataset.name = s->v.dataset.name;
+    result->v.dataset.filename = (s->v.dataset.filename != NULL) ? ASC_STRDUP(s->v.dataset.filename) : NULL;
+    result->v.dataset.indices = CopyDatasetIndexItems(s->v.dataset.indices);
+    result->v.dataset.maps = CopyDatasetMapItems(s->v.dataset.maps);
+    break;
   case RUN:
     result->v.r.proc_name = CopyName(s->v.r.proc_name);
     result->v.r.type_name = CopyName(s->v.r.type_name);
@@ -1339,6 +1503,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case WHILE:
   case FLOW:
   case TABLESTAT:
+  case DATASETSTAT:
     return s->context;
   default:
     ERROR_REPORTER_STAT(ASC_PROG_ERR,s,"GetStatContext called on incorrect statement type.");
@@ -1385,6 +1550,7 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case WHILE:
   case FLOW:
   case TABLESTAT:
+  case DATASETSTAT:
     s->context = c;
     break;
   default:
@@ -1433,6 +1599,7 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case WHILE:
   case FLOW:
   case TABLESTAT:
+  case DATASETSTAT:
     s->context |= c;
     break;
   default:
@@ -2588,6 +2755,26 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return (s1->v.table.body != NULL) ? 1 : -1;
     }
     return strcmp(s1->v.table.body,s2->v.table.body);
+  case DATASETSTAT:
+    ctmp = CmpSymchar(s1->v.dataset.name,s2->v.dataset.name);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    if (s1->v.dataset.filename == NULL || s2->v.dataset.filename == NULL) {
+      if (s1->v.dataset.filename != s2->v.dataset.filename) {
+        return (s1->v.dataset.filename != NULL) ? 1 : -1;
+      }
+    } else {
+      ctmp = strcmp(s1->v.dataset.filename,s2->v.dataset.filename);
+      if (ctmp != 0) {
+        return ctmp;
+      }
+    }
+    ctmp = CompareDatasetIndexItems(s1->v.dataset.indices,s2->v.dataset.indices);
+    if (ctmp != 0) {
+      return ctmp;
+    }
+    return CompareDatasetMapItems(s1->v.dataset.maps,s2->v.dataset.maps);
   case RUN:
     ctmp = CompareNames(RunStatName(s1),RunStatName(s2));
     if (ctmp != 0) {

@@ -1034,7 +1034,7 @@ static void conopt_initialize( conopt_system_t sys){
    * Next line was added to create the aray cost, whis is used by
    * the interface to display residuals and number of iterations
    */
-  sys->s.costsize = 1+sys->s.block.number_of;
+  sys->s.u.nlp.costsize = 1+sys->s.block.number_of;
 
   if( sys->s.block.current_block < sys->s.block.number_of ) {
     boolean ok;
@@ -1497,10 +1497,11 @@ static SlvClientToken conopt_create(slv_system_t server, int32*statusindex){
 
   sys->con.work=NULL;
 
+  sys->s.kind = SLV_STATUS_NLP;
   sys->s.ok = TRUE;
   sys->s.calc_ok = TRUE;
-  sys->s.costsize = 0;
-  sys->s.cost = NULL; /*redundant, but sanity preserving */
+  sys->s.u.nlp.costsize = 0;
+  sys->s.u.nlp.cost = NULL; /*redundant, but sanity preserving */
   sys->vlist = slv_get_solvers_var_list(server);
   sys->rlist = slv_get_solvers_rel_list(server);
   sys->obj = slv_get_obj_relation(server);
@@ -1769,15 +1770,15 @@ static void reset_cost(struct slv_block_cost *cost,int32 costsize)
 static void update_cost(conopt_system_t sys)
 {
   int32 ci;
-  if (sys->s.cost == NULL) {
-    sys->s.cost = create_zero_array(sys->s.costsize,struct slv_block_cost);
+  if (sys->s.u.nlp.cost == NULL) {
+    sys->s.u.nlp.cost = create_zero_array(sys->s.u.nlp.costsize,struct slv_block_cost);
   } else {
-    reset_cost(sys->s.cost,sys->s.costsize);
+    reset_cost(sys->s.u.nlp.cost,sys->s.u.nlp.costsize);
   }
   ci=sys->s.block.current_block;
-  sys->s.cost[ci].size	= sys->s.block.current_size;
-  sys->s.cost[ci].iterations = sys->s.block.iteration;
-  sys->s.cost[ci].resid	= sys->s.block.residual;
+  sys->s.u.nlp.cost[ci].size	= sys->s.block.current_size;
+  sys->s.u.nlp.cost[ci].iterations = sys->s.block.iteration;
+  sys->s.u.nlp.cost[ci].resid	= sys->s.block.residual;
 }
 
 /*------------------------------------------------------------------------------
@@ -2748,16 +2749,16 @@ static int conopt_presolve(slv_system_t server, SlvClientToken asys){
   sys->s.cpu_elapsed = 0.0;
   sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
   sys->s.block.previous_total_size = 0;
-  sys->s.costsize = 1+sys->s.block.number_of;
+  sys->s.u.nlp.costsize = 1+sys->s.block.number_of;
 
   if( matrix_creation_needed ) {
-    destroy_array(sys->s.cost);
-    sys->s.cost = create_zero_array(sys->s.costsize,struct slv_block_cost);
-    for( ind = 0; ind < sys->s.costsize; ++ind ) {
-      sys->s.cost[ind].reorder_method = -1;
+    destroy_array(sys->s.u.nlp.cost);
+    sys->s.u.nlp.cost = create_zero_array(sys->s.u.nlp.costsize,struct slv_block_cost);
+    for( ind = 0; ind < sys->s.u.nlp.costsize; ++ind ) {
+      sys->s.u.nlp.cost[ind].reorder_method = -1;
     }
   } else {
-    reset_cost(sys->s.cost,sys->s.costsize);
+    reset_cost(sys->s.u.nlp.cost,sys->s.u.nlp.costsize);
   }
 
   /* set to go to first unconverged block */
@@ -2769,7 +2770,7 @@ static int conopt_presolve(slv_system_t server, SlvClientToken asys){
 
   update_status(sys);
   iteration_ends(sys);
-  sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
+  sys->s.u.nlp.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
 
   return 0;
 }
@@ -2901,8 +2902,8 @@ static int32 conopt_destroy(slv_system_t server, SlvClientToken asys){
   destroy_matrices(sys);
   slv_destroy_parms(&(sys->p));
   sys->integrity = DESTROYED;
-  if(sys->s.cost){
-	ASC_FREE(sys->s.cost);
+  if(sys->s.u.nlp.cost){
+	ASC_FREE(sys->s.u.nlp.cost);
   }
 
   if(sys->con.work != NULL){
