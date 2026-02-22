@@ -67,7 +67,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
-          ~/.local
+          ${{ github.workspace }}/.cunit
         key: ${{ runner.os }}-msys2-cunit-r${{ steps.cunit_rev.outputs.rev }}
         restore-keys: |
           ${{ runner.os }}-msys2-cunit-
@@ -78,10 +78,11 @@ jobs:
 
     - name: Build and install CUnit
       run: |
-        if [ ! -f "$HOME/.local/lib/libcunit.a" ]; then
+        CUNIT_PREFIX="$(cygpath -u "$GITHUB_WORKSPACE")/.cunit"
+        if [ ! -f "$CUNIT_PREFIX/lib/libcunit.a" ]; then
           svn co https://svn.code.sf.net/p/cunit/code/branches/mingw64 cunit
           cd cunit
-          ./configure --prefix=$HOME/.local
+          ./configure --prefix="$CUNIT_PREFIX"
           make -j8
           make install
         fi
@@ -90,8 +91,9 @@ jobs:
 
     - name: Build ASCEND
       run: |
-        mkdir -p ~/.local
-        MSYSTEM= scons GCOV=1 MALLOC_DEBUG=1 CUNIT_PREFIX=$HOME/.local ascend solvers models test a4
+        CUNIT_PREFIX="$(cygpath -u "$GITHUB_WORKSPACE")/.cunit"
+        mkdir -p "$CUNIT_PREFIX"
+        MSYSTEM= scons GCOV=1 MALLOC_DEBUG=1 CUNIT_PREFIX="$CUNIT_PREFIX" ascend solvers models test a4
 
     - name: Verify GDB
       run: |
