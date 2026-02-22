@@ -335,9 +335,7 @@ void rel_set_nominal( struct rel_relation *rel, real64 nominal){
 	generally, like the FindType checking stuff in var.c
 */
 static void check_included_flag(void){
-  if (INCLUDED_R == NULL || AscFindSymbol(INCLUDED_R) == NULL) {
-    INCLUDED_R = AddSymbol("included");
-  }
+  INCLUDED_R = AddSymbol("included");
 }
 uint32 rel_included( struct rel_relation *rel){
 	struct Instance *c;

@@ -6495,6 +6495,7 @@ static int DatasetTokenizeLine(CONST char *line,
   Asc_DString token;
   char **tokens = NULL;
   unsigned count = 0;
+  unsigned ti;
   int in_quote = 0;
   int saw_token = 0;
   size_t i;
@@ -6534,6 +6535,10 @@ static int DatasetTokenizeLine(CONST char *line,
         saw_token = 1;
       } else if (!end && (ch == ',' || ch == ';')) {
         STATEMENT_ERROR(statement,"Empty DATASET field");
+        for (ti = 0; ti < count; ++ti) {
+          ascfree(tokens[ti]);
+        }
+        ascfree(tokens);
         Asc_DStringFree(&token);
         return -1;
       }
@@ -6548,7 +6553,10 @@ static int DatasetTokenizeLine(CONST char *line,
       if (ch == '\'') {
         in_quote = !in_quote;
       }
-      Asc_DStringAppend(&token,&ch,1);
+      {
+        char chbuf[2] = {ch,'\0'};
+        Asc_DStringAppend(&token,chbuf,1);
+      }
     }
   }
 
@@ -7938,6 +7946,14 @@ static int ExecuteDATASET(struct Instance *work, struct Statement *statement)
   }
 
   indices = ASC_NEW_ARRAY(struct dataset_index_runtime_t,nindices);
+  for (i = 0; i < nindices; ++i) {
+    indices[i].item = NULL;
+    indices[i].col = 0;
+    indices[i].set = NULL;
+    indices[i].domain.set = NULL;
+    indices[i].domain.kind = empty_set;
+    indices[i].domain.len = 0;
+  }
   i = 0;
   for (idx = statement->v.dataset.indices; idx != NULL; idx = idx->next) {
     enum set_kind kind;
@@ -8029,6 +8045,13 @@ static int ExecuteDATASET(struct Instance *work, struct Statement *statement)
   }
 
   maps = ASC_NEW_ARRAY(struct dataset_map_runtime_t,nmaps);
+  for (i = 0; i < nmaps; ++i) {
+    maps[i].item = NULL;
+    maps[i].col = 0;
+    maps[i].ndims = 0;
+    maps[i].indices = NULL;
+    maps[i].domains = NULL;
+  }
   i = 0;
   for (map = statement->v.dataset.maps; map != NULL; map = map->next) {
     struct dataset_domain_ref_t *refs = NULL;
