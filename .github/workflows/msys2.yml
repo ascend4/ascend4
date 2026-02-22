@@ -105,6 +105,10 @@ jobs:
       run: |
         ./a4 env --shell bash -- -lc "gdb -batch -return-child-result -ex 'set pagination off' -ex run -ex 'thread apply all bt full' --args ./test/test solver_ipopt integrator_lsode"
 
+    - name: Test ASCEND (mallocdebug except solver_highs, gdb batch)
+      run: |
+        ./a4 env --shell bash -- -lc "gdb -batch -return-child-result -ex 'set pagination off' -ex run -ex 'thread apply all bt full' --args ./test/test -r mallocdebug -e solver_highs"
+
     - name: Test ASCEND (mallocdebug full, gdb batch)
       run: |
         ./a4 env --shell bash -- -lc "gdb -batch -return-child-result -ex 'set pagination off' -ex run -ex 'thread apply all bt full' --args ./test/test -r mallocdebug"
