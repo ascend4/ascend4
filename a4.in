@@ -256,12 +256,27 @@ if __name__ == "__main__":
 		rest = list(args.rest)
 		if rest and rest[0] == '--':
 			rest = rest[1:]
+		shell = args.shell
+		if platform.system() == "Windows":
+			shname = pathlib.Path(shell).name.lower()
+			cygpath = shutil.which('cygpath')
+			if shname in ('bash','bash.exe') and os.environ.get('MSYSTEM'):
+				# In MSYS2, avoid Windows resolving bare 'bash' to WSL's System32\bash.exe.
+				if cygpath:
+					wp = subprocess.run([cygpath,'-w','/usr/bin/bash.exe'],capture_output=True,check=True,encoding='utf-8')
+					shell = wp.stdout.strip()
+				elif shname == 'bash':
+					shell = 'bash.exe'
+			elif shell.startswith('/') and cygpath:
+				# Convert explicit MSYS-style shell paths for CreateProcess on Windows.
+				wp = subprocess.run([cygpath,'-w',shell],capture_output=True,check=True,encoding='utf-8')
+				shell = wp.stdout.strip()
 		if args.label:
-			if pathlib.Path(args.shell).name == 'bash':
+			if pathlib.Path(shell).name.lower() in ('bash','bash.exe'):
 				os.environ['PS1'] = r'a4> \[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 				shargs += ['--norc']
 		os.environ['ASCEND_SHELL'] = '1'
-		cmd += [args.shell] + shargs + rest
+		cmd += [shell] + shargs + rest
 	else:
 		print("unrecognised command")
 		sys.exit(1);
