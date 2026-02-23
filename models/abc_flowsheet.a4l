@@ -488,3 +488,31 @@ MODEL abc_demo_sheet;
     END values;
 
 END abc_demo_sheet;
+
+(* Lightweight probe model for compiler/unit testing of declarative defaults. *)
+MODEL abc_defaults_probe;
+	n_columns IS_A integer_constant;
+	n_columns :== 3;
+
+	sources IS_A set OF integer_constant;
+	sinks IS_A set OF integer_constant;
+	sources :== [1..7];
+	sinks :== [1..7];
+
+	z_on[1..n_columns] IS_A boolean;
+	hat_on[1..n_columns] IS_A boolean;
+	hb_on[1..n_columns] IS_A boolean;
+	Equilibrated[1..n_columns] IS_A boolean;
+	stream_exists[sources][sinks] IS_A boolean;
+
+	(* MODEL-level declarative defaults using := *)
+	z_on[1..n_columns] := FALSE;
+	hat_on[1..n_columns] := FALSE;
+	hb_on[1..n_columns] := FALSE;
+	Equilibrated[1..n_columns] := FALSE;
+	stream_exists[sources][sinks] := FALSE;
+
+	(* ATOM-level defaults from atom type definitions *)
+	saturated_liquid_feed IS_A start_true;
+	saturated_vapor_feed IS_A start_false;
+END abc_defaults_probe;

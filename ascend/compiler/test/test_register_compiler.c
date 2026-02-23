@@ -42,6 +42,7 @@
 	T(instantiate_alike) \
 	T(instantiate_context) \
 	T(instantiate_anontype) \
+	T(instantiate_defaults) \
 	T(instantiate_array) \
 	T(instantiate_arr) \
 	T(instantiate_for) \
