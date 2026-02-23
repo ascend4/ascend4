@@ -97,7 +97,6 @@ jobs:
     - name: Build ASCEND
       run: |
         CUNIT_PREFIX="$(cygpath -u "$RUNNER_TEMP")/ascend4-msys2-cunit"
-        mkdir -p ~/.local
         mkdir -p "$CUNIT_PREFIX"
         MSYSTEM= scons GCOV=1 MALLOC_DEBUG=1 CUNIT_PREFIX="$CUNIT_PREFIX" ascend solvers models test a4
 

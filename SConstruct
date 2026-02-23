@@ -69,6 +69,8 @@ default_pcre_prefix="$DEFAULT_PREFIX"
 default_pcre_libs=['pcre']
 default_pcre_libpath="$PCRE_PREFIX/lib"
 default_pcre_cpppath="$PCRE_PREFIX/include"
+_home_local = pathlib.Path.home() / '.local'
+default_user_local = str(_home_local if _home_local.exists() else pathlib.Path('/usr'))
 
 icon_extension = '.png'
 
@@ -453,7 +455,7 @@ vars.Add(PackageVariable('DEFAULT_PREFIX'
 # Where was CUNIT installed?
 vars.Add(PackageVariable('CUNIT_PREFIX'
 	,"Where are your CUnit files?"
-	,pathlib.Path(os.environ['HOME'])/'.local'
+	,default_user_local
 ))
 
 # Where are the CUnit includes?
@@ -509,14 +511,14 @@ vars.Add('CONOPT_ENVVAR'
 
 vars.Add(PackageVariable("IPOPT_PREFIX"
 	,"Prefix for your IPOPT install (IPOPT ./configure --prefix)"
-,pathlib.Path(os.environ['HOME'])/'.local'
+	,default_user_local
 ))
 
 #------- HIGHS -------
 
 vars.Add(PackageVariable("HIGHS_PREFIX"
 	,"Prefix for your HiGHS install (if not found via default pkg-config path)"
-	,pathlib.Path(os.environ['HOME'])/'.local'
+	,default_user_local
 ))
 
 #
