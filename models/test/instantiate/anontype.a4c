@@ -169,3 +169,19 @@ MODEL test_write_anon;
 	a,b IS_A test_inner_rel_anon;
 	c,d IS_A test_inner_lrel_anon;
 END test_write_anon;
+
+MODEL test_pass2_dummy_child;
+	i IS_A integer_constant;
+	i :== 1;
+	x IS_A real;
+	SELECT(i)
+	CASE 1:
+		r_sel: x = 1;
+	CASE 2:
+		r_unsel: x = 2;
+	END SELECT;
+END test_pass2_dummy_child;
+
+MODEL test_copy_dummy_anon;
+	m1,m2 IS_A test_pass2_dummy_child;
+END test_copy_dummy_anon;

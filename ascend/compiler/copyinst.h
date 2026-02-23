@@ -67,7 +67,7 @@ extern void RedoChildPointers(unsigned long int num,
  * Fix up the num subatomic child pointers of newparent.
  */
 
-extern struct Instance *ShortCutMakeUniversalInstance(struct TypeDescription *type);
+ASC_DLLSPEC struct Instance *ShortCutMakeUniversalInstance(struct TypeDescription *type);
 /**<
  *  <!--  struct Instance *ShortCutMakeUniversalInstance(type);        -->
  *  <!--  struct TypeDescription *type;                                -->
@@ -138,4 +138,3 @@ ASC_DLLSPEC struct Instance *CopyInstance(CONST struct Instance *i);
 /* @} */
 
 #endif  /* ASC_COPYINST_H */
-

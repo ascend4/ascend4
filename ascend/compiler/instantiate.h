@@ -257,9 +257,9 @@ extern void ReConfigureInstFromArgs(struct Instance *inst,
  *  already occupied.
  */
 
-extern void LinkToParentByPos(struct Instance *parent,
-                              struct Instance *child,
-                              unsigned long childnum);
+ASC_DLLSPEC void LinkToParentByPos(struct Instance *parent,
+                                   struct Instance *child,
+                                   unsigned long childnum);
 /**<
  *  Add child as childnumth child of parent and add parent to child.
  */
@@ -274,4 +274,3 @@ extern int IncompleteArray(CONST struct Instance *i);
 /* @} */
 
 #endif /* ASC_INSTANTIATE_H */
-
