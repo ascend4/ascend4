@@ -8034,6 +8034,16 @@ static int ExecuteDATASET(struct Instance *work, struct Statement *statement)
     indices[i].set = NULL;
   }
 
+  /*
+   * DATASET index assignment can define array index sets that were previously
+   * unknown. Try an immediate expansion so map assignments can resolve
+   * target instances in this same pass.
+   */
+  {
+    int changed = 0;
+    TryArrayExpansion(work,&changed);
+  }
+
   for (map = statement->v.dataset.maps; map != NULL; map = map->next) {
     nmaps++;
   }
