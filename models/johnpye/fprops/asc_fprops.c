@@ -67,6 +67,7 @@ better later on, hopefully. */
 */
 
 ExtBBoxInitFunc asc_fprops_prepare;
+ExtBBoxFinalFunc asc_fprops_final;
 ExtBBoxFunc fprops_p_Trho_calc;
 ExtBBoxFunc fprops_u_Trho_calc;
 ExtBBoxFunc fprops_s_Trho_calc;
@@ -154,7 +155,7 @@ ASC_EXPORT int fprops_register(){
 		, NAME##_calc /* value */ \
 		, (ExtBBoxFunc*)NULL /* derivatives not provided yet*/ \
 		, (ExtBBoxFunc*)NULL /* hessian not provided yet */ \
-		, (ExtBBoxFinalFunc*)NULL /* finalisation not implemented */ \
+		, asc_fprops_final \
 		, INPUTS,OUTPUTS /* inputs, outputs */ \
 		, NAME##_help /* help text */ \
 		, 0.0 \
@@ -166,7 +167,7 @@ ASC_EXPORT int fprops_register(){
 		, NAME##_calc /* value */ \
 		, NAME##_calc /* derivatives */ \
 		, (ExtBBoxFunc*)NULL /* hessian not provided yet */ \
-		, (ExtBBoxFinalFunc*)NULL /* finalisation not implemented */ \
+		, asc_fprops_final \
 		, INPUTS,OUTPUTS /* inputs, outputs */ \
 		, NAME##_help /* help text */ \
 		, 0.0 \
@@ -267,6 +268,14 @@ int asc_fprops_prepare(struct BBoxInterp *bbox,
 	MSG("Prepared component '%s'%s%s%s OK.",comp, type?" type '":"", type?type:"" ,type?"'":""
 	);
 	return 0;
+}
+
+void asc_fprops_final(struct BBoxInterp *bbox){
+	if(bbox == NULL || bbox->user_data == NULL){
+		return;
+	}
+	fprops_fluid_destroy((PureFluid *)bbox->user_data);
+	bbox->user_data = NULL;
 }
 
 /*------------------------------------------------------------------------------
@@ -860,6 +869,5 @@ int fprops_Tvsx_h_incomp_calc(struct BBoxInterp *bbox,
 		return 10;
 	}
 }
-
 
 
