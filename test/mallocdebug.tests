@@ -5,6 +5,10 @@ utilities_*
 solver_slv_common
 solver_slvreq
 solver_lrslv
+solver_qrslv.fixedbug513_no_simplify
+solver_qrslv.fixedbug513_simplify
+solver_qrslv.fixedbug564
+solver_qrslv.fixedbug564_repeat
 solver_ipopt
 solver_makemps
 solver_highs
