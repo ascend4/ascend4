@@ -113,3 +113,59 @@ END test_u_anon;
 MODEL test_u2_anon;
 	p,q IS_A test_u_anon;
 END test_u2_anon;
+
+MODEL test_rel_anon;
+	x[1..3],y[1..3] IS_A real;
+	x[1] = y[1];
+	x[2] = y[2];
+	x[1] = y[1];
+	x[2] = y[2];
+END test_rel_anon;
+
+MODEL test_lrel_anon;
+	x[1..3],y[1..3] IS_A boolean;
+	x[1] == y[1];
+	x[2] == y[2];
+	x[1] == y[1];
+	x[2] == y[2];
+END test_lrel_anon;
+
+MODEL test_rel_impossible_anon;
+	x IS_A real;
+	y[1] IS_A real;
+	y[2] = y[3];
+	x = x;
+END test_rel_impossible_anon;
+
+MODEL test_lrel_impossible_anon;
+	x IS_A boolean;
+	y[1] IS_A boolean;
+	y[2] == y[3];
+	x == x;
+END test_lrel_impossible_anon;
+
+MODEL test_dummy_anon;
+	i IS_A integer_constant;
+	i :== 1;
+	SELECT(i)
+	CASE 1:
+		x IS_A real;
+	CASE 2:
+		y,z,w IS_A integer;
+	END SELECT;
+END test_dummy_anon;
+
+MODEL test_inner_rel_anon;
+	x,y IS_A real;
+	x = y;
+END test_inner_rel_anon;
+
+MODEL test_inner_lrel_anon;
+	p,q IS_A boolean;
+	p == q;
+END test_inner_lrel_anon;
+
+MODEL test_write_anon;
+	a,b IS_A test_inner_rel_anon;
+	c,d IS_A test_inner_lrel_anon;
+END test_write_anon;

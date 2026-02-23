@@ -163,13 +163,16 @@ static int RemoveParentReferences(
   AssertMemory(inst);
   if(parent!=NULL){
     AssertMemory(parent);
-    /* destroy link from inst to parent */
-    pos = SearchForParent(inst,parent);
-    if(pos != 0 || inst->t == DUMMY_INST){
-      /* Because the dummy always 'adds' a parent, it must always delete it to 
-      keep the ref_count happy. Dummy knows of no parents, but knows exactly 
+    /* destroy all links from inst to this parent */
+    if(inst->t == DUMMY_INST){
+      /* Because the dummy always 'adds' a parent, it must always delete it to
+      keep the ref_count happy. Dummy knows of no parents, but knows exactly
       how many it doesn't have. */
-      DeleteParent(inst,pos);
+      DeleteParent(inst,0);
+    }else{
+      while((pos = SearchForParent(inst,parent)) != 0){
+        DeleteParent(inst,pos);
+      }
     }
     /* destroy link(s) from parent to inst */
     while(0 != (pos = ChildIndex(parent,inst))){

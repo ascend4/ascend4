@@ -3386,10 +3386,23 @@ void DestroyVarList(struct gl_list_t *l, struct Instance *relinst){
 
 void DestroyRelation(struct relation *rel, struct Instance *relinst){
   struct BlackBoxData *bbd;
+  enum Expr_enum reltype;
   if (rel==NULL) return;
+  reltype = GetInstanceRelationType(relinst);
+
+  /*
+   * Blackbox externalData is per relation instance copy, not shared via the
+   * relation refcount/union. Release it for every relation instance.
+   */
+  if (reltype == e_blackbox && rel->externalData != NULL) {
+    bbd = (struct BlackBoxData *)(rel->externalData);
+    DestroyBlackBoxData(rel,bbd);
+    rel->externalData = NULL;
+  }
+
   assert(RelationRefCount(rel));
   if (--(RelationRefCount(rel))==0) {
-    switch (GetInstanceRelationType(relinst)) {
+    switch (reltype) {
     case e_token:
       //CONSOLE_DEBUG("Destroy token rel");
       if (RTOKEN(rel).lhs!=NULL) {
@@ -3430,9 +3443,6 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst){
       }
       RBBOX(rel).lhsindex = -(RBBOX(rel).lhsindex);
       RBBOX(rel).lhsvar = 0;
-      bbd = (struct BlackBoxData *)(rel->externalData);
-      DestroyBlackBoxData(rel,bbd);
-      rel->externalData = NULL;
       break;
     default:
       /*NOTREACHED we hope */
