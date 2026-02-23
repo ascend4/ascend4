@@ -267,19 +267,10 @@ def exists_maybe_cygpath(mypath):
 	return None
 
 def get_default_user_local():
-	home_root = os.environ.get('HOME')
-	if home_root:
-		home_local = pathlib.Path(home_root) / '.local'
-	else:
-		home_local = pathlib.Path.home() / '.local'
-
+	home_local = pathlib.Path.home() / '.local'
 	home_local_path = exists_maybe_cygpath(home_local)
 	if home_local_path:
 		return home_local_path
-
-	usr_path = exists_maybe_cygpath('/usr')
-	if usr_path:
-		return usr_path
 	return default_prefix
 
 default_user_local = get_default_user_local()
