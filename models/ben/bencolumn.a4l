@@ -688,7 +688,7 @@ FREE feed.f[components];
 feed_tray.qeq.included := FALSE;
 feed.Ftot := 0.0{mol/s};
 FIX feed.Ftot;
-feed_tray_state.y[components - [FIX reference]];
+	feed_tray_state.y[components - [reference]].fixed := TRUE;
 FIX feed_tray_state.phi['liquid'];
 feed_tray_state.phi['liquid'] := 0.5;
 RUN feed_tray.liqout.specify;
