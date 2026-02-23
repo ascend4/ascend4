@@ -69,8 +69,6 @@ default_pcre_prefix="$DEFAULT_PREFIX"
 default_pcre_libs=['pcre']
 default_pcre_libpath="$PCRE_PREFIX/lib"
 default_pcre_cpppath="$PCRE_PREFIX/include"
-_home_local = pathlib.Path.home() / '.local'
-default_user_local = str(_home_local if _home_local.exists() else pathlib.Path('/usr'))
 
 icon_extension = '.png'
 
@@ -251,6 +249,40 @@ else: # LINUX, unix we hope
 
 if not os.path.exists(default_ida_prefix):
 	default_ida_prefix = None
+
+def cygpath(mypath):
+	cmd = [pathlib.Path(shutil.which('cygpath')),'-w',mypath]
+	print(f"CMD = {cmd}")
+	return subprocess.run(cmd,check=1,capture_output=1,encoding="utf=8").stdout.strip("\r\n \t")
+
+def exists_maybe_cygpath(mypath):
+	path = str(mypath)
+	if os.environ.get('MSYSTEM'):
+		try:
+			path = cygpath(path)
+		except Exception:
+			pass
+	if os.path.exists(path):
+		return path
+	return None
+
+def get_default_user_local():
+	home_root = os.environ.get('HOME')
+	if home_root:
+		home_local = pathlib.Path(home_root) / '.local'
+	else:
+		home_local = pathlib.Path.home() / '.local'
+
+	home_local_path = exists_maybe_cygpath(home_local)
+	if home_local_path:
+		return home_local_path
+
+	usr_path = exists_maybe_cygpath('/usr')
+	if usr_path:
+		return usr_path
+	return default_prefix
+
+default_user_local = get_default_user_local()
 
 soname_clean = "${SHLIBPREFIX}ascend${SHLIBSUFFIX}"
 soname_full = "%s%s" % (soname_clean,soname_major)
@@ -2369,11 +2401,6 @@ env = conf.Finish()
 
 #---------------------------------------
 # SUBSTITUTION DICTIONARY for .in files
-
-def cygpath(mypath):
-	cmd = [pathlib.Path(shutil.which('cygpath')),'-w',mypath]
-	print(f"CMD = {cmd}")
-	return subprocess.run(cmd,check=1,capture_output=1,encoding="utf=8").stdout.strip("\r\n \t")
 
 def get_dlldirs(pathlist):
 	print("start:",pathlist)
