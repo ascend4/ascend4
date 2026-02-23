@@ -460,6 +460,13 @@ vars.Add(BoolVariable('WITH_ZLIB'
 	,True
 ))
 
+# liblzma/xz support
+vars.Add(BoolVariable('WITH_LZMA'
+	,"Include features that make use of the liblzma/xz compression library,"
+	+" if available. Set to zero if you want to explicitly disable this."
+	,True
+))
+
 # Build with MMIO matrix export support?
 vars.Add(BoolVariable('WITH_MMIO'
 	,"Include support for exporting matrices in Matrix Market format"
@@ -1003,7 +1010,7 @@ def set_optional(env,comp,reason=None,active=None):
 
 AddMethod(Environment, set_optional, 'set_optional')
 
-for opt in ['tcltk','cunit','extfns','scrollkeeper','dmalloc','graphviz','ufsparse','zlib','mmio','blas','signals','doc','doc_build','pcre','installer']:
+for opt in ['tcltk','cunit','extfns','scrollkeeper','dmalloc','graphviz','ufsparse','zlib','lzma','mmio','blas','signals','doc','doc_build','pcre','installer']:
 	env.set_optional(opt)
 
 if not env['WITH_DOC']:
@@ -1165,6 +1172,32 @@ def CheckScrollkeeperConfig(context):
 	context.env['OMFDIR']=dir
 	context.Result("OK, %s" % dir)
 	return 1
+
+def TryPkgConfigPackages(env, packages):
+	"""
+	Try to import compiler/linker flags for one of the given package names
+	using pkg-config (or pkgconf). Returns True on success.
+	"""
+	for tool in ['pkg-config','pkgconf']:
+		if shutil.which(tool) is None:
+			continue
+		for pkg in packages:
+			env1 = env.Clone()
+			env1['CPPPATH'] = None
+			env1['LIBPATH'] = None
+			env1['LIBS'] = None
+			try:
+				env1.ParseConfig([tool,pkg,'--cflags','--libs'])
+				if env1.get('CPPPATH'):
+					env.AppendUnique(CPPPATH=env1['CPPPATH'])
+				if env1.get('LIBPATH'):
+					env.AppendUnique(LIBPATH=env1['LIBPATH'])
+				if env1.get('LIBS'):
+					env.AppendUnique(LIBS=env1['LIBS'])
+				return True
+			except Exception:
+				pass
+	return False
 
 #----------------
 # General purpose library-and-header test
@@ -2336,10 +2369,40 @@ if conf.env['WITH_CONOPT']:
 # ZLIB
 
 if conf.env['WITH_ZLIB']:
-	if not conf.CheckCHeader('zlib.h'):
-		conf.env.set_optional('zlib',active=False,reason="zlib.h not found")
-	if not conf.CheckLib('z'):
-		conf.env.set_optional('zlib',active=False,reason='library libz not found')
+	zlib_ok = False
+	zlib_reason = "zlib not found"
+	if TryPkgConfigPackages(conf.env,['zlib']):
+		if conf.CheckCHeader('zlib.h'):
+			zlib_ok = True
+		else:
+			zlib_reason = "zlib.h not found"
+	else:
+		if not conf.CheckCHeader('zlib.h'):
+			zlib_reason = "zlib.h not found"
+		elif not conf.CheckLib('z'):
+			zlib_reason = "library libz not found"
+		else:
+			zlib_ok = True
+	conf.env.set_optional('zlib',active=zlib_ok,reason=zlib_reason)
+
+# LZMA
+
+if conf.env['WITH_LZMA']:
+	lzma_ok = False
+	lzma_reason = "liblzma not found"
+	if TryPkgConfigPackages(conf.env,['liblzma','xz']):
+		if conf.CheckCHeader('lzma.h'):
+			lzma_ok = True
+		else:
+			lzma_reason = "lzma.h not found"
+	else:
+		if not conf.CheckCHeader('lzma.h'):
+			lzma_reason = "lzma.h not found"
+		elif not conf.CheckLib('lzma'):
+			lzma_reason = "library liblzma not found"
+		else:
+			lzma_ok = True
+	conf.env.set_optional('lzma',active=lzma_ok,reason=lzma_reason)
 
 # LSODE needs Fortran; no fortran then no LSODE
 
@@ -2389,6 +2452,11 @@ if platform.system()=="Windows" and 'MSVS' in env:
 env = conf.Finish()
 #print("2. SIZEOF_VOID_P = %s"%(env['SIZEOF_VOID_P']))
 #print "-=-=-=-=-=-=-=-=- LIBS =",env.get('LIBS')
+
+if env['WITH_ZLIB']:
+	env.AppendUnique(CPPDEFINES=['ASC_WITH_ZLIB'])
+if env['WITH_LZMA']:
+	env.AppendUnique(CPPDEFINES=['ASC_WITH_LZMA'])
 
 #---------------------------------------
 # SUBSTITUTION DICTIONARY for .in files
@@ -2491,6 +2559,7 @@ for k,v in {
 		,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
 		,'ASC_WITH_MMIO':env['WITH_MMIO']
 		,'ASC_WITH_ZLIB':env['WITH_ZLIB']
+		,'ASC_WITH_LZMA':env['WITH_LZMA']
 		,'ASC_WITH_PCRE':env['WITH_PCRE']
 		,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
