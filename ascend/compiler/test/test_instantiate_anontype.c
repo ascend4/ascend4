@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 
 #include <ascend/general/env.h>
@@ -11,6 +12,15 @@
 #include <ascend/compiler/library.h>
 #include <ascend/compiler/symtab.h>
 #include <ascend/compiler/simlist.h>
+#include <ascend/compiler/parentchild.h>
+#include <ascend/compiler/instquery.h>
+#include <ascend/compiler/instantiate.h>
+#include <ascend/compiler/createinst.h>
+#include <ascend/compiler/copyinst.h>
+#include <ascend/compiler/instance_name.h>
+#include <ascend/compiler/anontype.h>
+#include <ascend/compiler/anoncopy.h>
+#include <ascend/compiler/destroyinst.h>
 
 #include <test/common.h>
 #include <test/assertimpl.h>
@@ -43,6 +53,23 @@ static void instantiate_case(const char *modelname, int expect_error){
 	}else{
 		CU_ASSERT(sim != NULL);
 		CU_ASSERT(!has_error);
+		if(sim){
+			struct Instance *root = InstanceChild(sim,1);
+			if(!root){
+				root = sim;
+			}
+			struct gl_list_t *atl = Asc_DeriveAnonList(root);
+			CU_ASSERT(atl != NULL);
+			if(atl){
+				FILE *fp = tmpfile();
+				CU_ASSERT(fp != NULL);
+				if(fp){
+					Asc_WriteAnonList(fp, atl, root, 0);
+					fclose(fp);
+				}
+				Asc_DestroyAnonList(atl);
+			}
+		}
 	}
 
 	if(sim){
@@ -58,6 +85,90 @@ static void test_anontype_set(void){ instantiate_case("test_set_anon", 0); }
 static void test_anontype_ai1(void){ instantiate_case("test_ai_anon1", 0); }
 static void test_anontype_u(void){ instantiate_case("test_u_anon", 0); }
 static void test_anontype_u2(void){ instantiate_case("test_u2_anon", 0); }
+static void test_anontype_rel(void){ instantiate_case("test_rel_anon", 0); }
+static void test_anontype_lrel(void){ instantiate_case("test_lrel_anon", 0); }
+static void test_anontype_rel_impossible(void){ instantiate_case("test_rel_impossible_anon", 1); }
+static void test_anontype_lrel_impossible(void){ instantiate_case("test_lrel_impossible_anon", 1); }
+static void test_anontype_dummy(void){ instantiate_case("test_dummy_anon", 0); }
+static void test_anontype_write(void){ instantiate_case("test_write_anon", 0); }
+static void test_anontype_copy_dummy(void){ instantiate_case("test_copy_dummy_anon", 0); }
+
+static unsigned long child_pos_by_name(const struct Instance *inst, const char *name){
+	struct InstanceName rec;
+	SetInstanceNameType(rec, StrName);
+	SetInstanceNameStrPtr(rec, AddSymbol(name));
+	return ChildSearch(inst, &rec);
+}
+
+static void test_anontype_copy_dummy_proto(void){
+	struct module_t *m;
+	int status;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	m = Asc_OpenModule("test/instantiate/anontype.a4c", &status);
+	(void)m;
+	CU_ASSERT(status == 0);
+	CU_ASSERT(zz_parse() == 0);
+	CU_ASSERT(FindType(AddSymbol("test_copy_dummy_anon")) != NULL);
+
+	error_reporter_tree_start();
+	struct Instance *sim = SimsCreateInstance(AddSymbol("test_copy_dummy_anon"), AddSymbol("sim1"), e_normal, NULL);
+	int has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(sim != NULL);
+	CU_ASSERT(!has_error);
+
+	if(sim){
+		struct Instance *root = InstanceChild(sim,1);
+		CU_ASSERT(root != NULL);
+		struct Instance *m1 = ChildByChar(root, AddSymbol("m1"));
+		struct Instance *m2 = ChildByChar(root, AddSymbol("m2"));
+		CU_ASSERT(m1 != NULL);
+		CU_ASSERT(m2 != NULL);
+		if(m1 && m2){
+			unsigned long pos = child_pos_by_name(m1, "r_unsel");
+			CU_ASSERT(pos > 0);
+			if(pos > 0){
+				struct TypeDescription *dd = FindDummyType();
+				CU_ASSERT(dd != NULL);
+				struct Instance *child1 = InstanceChild(m1,pos);
+				CU_ASSERT(child1 != NULL);
+				if(dd && child1 && InstanceKind(child1) != DUMMY_INST){
+					DestroyInstance(child1,m1);
+					struct Instance *dummy = ShortCutMakeUniversalInstance(dd);
+					if(dummy == NULL){
+						dummy = CreateDummyInstance(dd);
+					}
+					CU_ASSERT(dummy != NULL);
+					if(dummy){
+						LinkToParentByPos(m1,dummy,pos);
+					}
+				}
+				child1 = InstanceChild(m1,pos);
+				CU_ASSERT(child1 != NULL);
+				CU_ASSERT(InstanceKind(child1) == DUMMY_INST);
+
+				struct Instance *child2 = InstanceChild(m2,pos);
+				if(child2 != NULL){
+					DestroyInstance(child2,m2);
+				}
+				CU_ASSERT(InstanceChild(m2,pos) == NULL);
+
+				struct gl_list_t *protovars = Pass2CollectAnonProtoVars(m1);
+				CU_ASSERT(protovars != NULL);
+				if(protovars){
+					Pass2CopyAnonProto(m1, InstanceBitList(m1), protovars, m2);
+					Pass2DestroyAnonProtoVars(protovars);
+				}
+				CU_ASSERT(InstanceKind(InstanceChild(m2,pos)) == DUMMY_INST);
+			}
+		}
+		sim_destroy(sim);
+	}
+	Asc_CompilerDestroy();
+}
 
 #define TESTS(T) \
 	T(anontype_sc) \
@@ -66,6 +177,14 @@ static void test_anontype_u2(void){ instantiate_case("test_u2_anon", 0); }
 	T(anontype_set) \
 	T(anontype_ai1) \
 	T(anontype_u) \
-	T(anontype_u2)
+	T(anontype_u2) \
+	T(anontype_rel) \
+	T(anontype_lrel) \
+	T(anontype_rel_impossible) \
+	T(anontype_lrel_impossible) \
+	T(anontype_dummy) \
+	T(anontype_write) \
+	T(anontype_copy_dummy) \
+	T(anontype_copy_dummy_proto)
 
 REGISTER_TESTS_SIMPLE(compiler_instantiate_anontype, TESTS)

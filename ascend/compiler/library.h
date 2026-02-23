@@ -95,7 +95,7 @@ extern struct TypeDescription *FindSetType(void);
  *  Returns NULL if never defined, which is an extreme error.
  */
 
-extern struct TypeDescription *FindDummyType(void);
+ASC_DLLSPEC struct TypeDescription *FindDummyType(void);
 /**<
  *  Finds the type description associated with unselected statements.
  *  Returns NULL if never defined, which is an extreme error.

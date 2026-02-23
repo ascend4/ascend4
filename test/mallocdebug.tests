@@ -5,6 +5,7 @@ utilities_*
 solver_slv_common
 solver_slvreq
 solver_lrslv
+solver_qrslv
 solver_ipopt
 solver_makemps
 solver_highs
@@ -29,7 +30,6 @@ compiler_qlfdid
 compiler_autodiff
 compiler_bintok
 compiler_instantiate_*
--e compiler_instantiate_anontype
 compiler_merge*
 
 packages_defaultall

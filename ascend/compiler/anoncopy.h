@@ -31,6 +31,7 @@
 #ifndef ASC_ANONCOPY_H
 #define ASC_ANONCOPY_H
 
+#include <ascend/general/platform.h>
 #include <ascend/utilities/bit.h>
 #include <ascend/general/list.h>
 
@@ -40,7 +41,7 @@
 	@{
 */
 
-extern struct gl_list_t *Pass2CollectAnonProtoVars(struct Instance *i);
+ASC_DLLSPEC struct gl_list_t *Pass2CollectAnonProtoVars(struct Instance *i);
 /**<
 	Returns a gl_list of index paths through i to reach the vars
 	occurring in relations (or relation arrays) of i.
@@ -58,15 +59,15 @@ extern struct gl_list_t *Pass2CollectAnonProtoVars(struct Instance *i);
 	Pass2DestroyAnonProtoVars().
 */
 
-extern void Pass2DestroyAnonProtoVars(struct gl_list_t *indexpathlist);
+ASC_DLLSPEC void Pass2DestroyAnonProtoVars(struct gl_list_t *indexpathlist);
 /**<
 	Deallocate the indexpathlist collected by Pass2CollectAnonProtoVars().
 */
 
-extern void Pass2CopyAnonProto(struct Instance *proto,
-                               struct BitList *protoblist,
-                               struct gl_list_t *protovarindices,
-                               struct Instance *i);
+ASC_DLLSPEC void Pass2CopyAnonProto(struct Instance *proto,
+                                    struct BitList *protoblist,
+                                    struct gl_list_t *protovarindices,
+                                    struct Instance *i);
 /**<
 	Copies all the local relations (including those in arrays)
 	of the MODEL instance proto to the instance i using only
@@ -78,4 +79,3 @@ extern void Pass2CopyAnonProto(struct Instance *proto,
 /* @} */
 
 #endif /* ASC_ANONCOPY_H */
-
