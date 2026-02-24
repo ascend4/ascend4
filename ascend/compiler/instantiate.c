@@ -6108,6 +6108,7 @@ struct dataset_column_t {
 
 struct dataset_row_t {
   char **cells;
+  char *storage;
 };
 
 struct dataset_table_t {
@@ -6151,12 +6152,10 @@ static void DatasetTableDestroy(struct dataset_table_t *table)
   }
   if (table->rows != NULL) {
     for (r = 0; r < table->nrows; ++r) {
+      if (table->rows[r].storage != NULL) {
+        ascfree(table->rows[r].storage);
+      }
       if (table->rows[r].cells != NULL) {
-        for (c = 0; c < table->ncols; ++c) {
-          if (table->rows[r].cells[c] != NULL) {
-            ascfree(table->rows[r].cells[c]);
-          }
-        }
         ascfree(table->rows[r].cells);
       }
     }
@@ -7438,12 +7437,27 @@ static struct dataset_table_t *DatasetReadFile(CONST char *path,
       return NULL;
     }
 
-    table->rows = (struct dataset_row_t *)ascrealloc(table->rows,sizeof(struct dataset_row_t) * (table->nrows + 1));
-    table->rows[table->nrows].cells = ASC_NEW_ARRAY(char *,table->ncols);
     {
+      struct dataset_row_t *row;
+      char *dst;
+      size_t storage_len = 0;
       unsigned i;
+
+      table->rows = (struct dataset_row_t *)ascrealloc(table->rows,sizeof(struct dataset_row_t) * (table->nrows + 1));
+      row = &table->rows[table->nrows];
+      row->cells = ASC_NEW_ARRAY(char *,table->ncols);
+      row->storage = NULL;
       for (i = 0; i < table->ncols; ++i) {
-        table->rows[table->nrows].cells[i] = tokens[i];
+        storage_len += strlen(tokens[i]) + 1;
+      }
+      row->storage = ASC_NEW_ARRAY(char,storage_len > 0 ? storage_len : 1);
+      dst = row->storage;
+      for (i = 0; i < table->ncols; ++i) {
+        size_t len = strlen(tokens[i]) + 1;
+        memcpy(dst,tokens[i],len);
+        row->cells[i] = dst;
+        dst += len;
+        ascfree(tokens[i]);
       }
     }
     ascfree(tokens);
@@ -15944,7 +15958,7 @@ static struct Instance *Pass2InstantiateModel(struct Instance *result,
   if (result!=NULL) {
     /* CONSOLE_DEBUG("result!=NULL..."); */
     /* pass2 pendings already set by visit */
-    if (ANONFORCE || g_use_copyanon != 0) {
+    if (ANONFORCE || (g_use_copyanon != 0 && !g_pass1_saw_dataset)) {
 #if TIMECOMPILER
       g_ExecuteREL_CreateTokenRelation_calls = 0;
       g_CopyAnonRelation = 0;
