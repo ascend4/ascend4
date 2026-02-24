@@ -1,0 +1,310 @@
+REQUIRE "atoms.a4l";
+
+(*
+	LP dispatch+sizing model for:
+	- PV generation (from Melbourne GHI time-series)
+	- direct electric heater to process
+	- thermal storage (charge from PV, discharge to process steam)
+	- boiler residual
+
+	This is a MILP-capable first-cut: storage-unit count is integer, with
+	optional relaxation via stor_units.relaxed.
+*)
+MODEL pv_heater_tes_lp_melbourne;
+	timestep IS_A set OF integer_constant;
+	dispatch_step IS_A set OF integer_constant;
+	dispatch_step_nonfirst IS_A set OF integer_constant;
+
+	ghi_wm2[timestep] IS_A real_constant;
+
+	n_steps IS_A integer_constant;
+	n_steps :== 8760;
+	horizon_steps IS_A integer_constant;
+	horizon_steps :== 168;
+	dispatch_step :== [1..horizon_steps];
+	dispatch_step_nonfirst :== [2..horizon_steps];
+	annualization_factor IS_A real_constant;
+	annualization_factor :== n_steps / horizon_steps;
+
+	(*
+		Input weather: station 086282 (Melbourne airport), hourly.
+		When profile files are available, replace this DATASET with:
+		- demand profile mapping (profile.csv)
+		- PV output profile mapping (pv_profile.csv)
+		and keep the same dispatch/cost block below.
+	*)
+	DATASET melbourne FROM "johnpye/dataset/086282TMY_60min.csv.xz";
+		ghi_wm2[timestep] IS_A real_constant FROM 'Mean global irradiance (over 1 minute) in W/sq m';
+	END DATASET;
+
+	(* Technical constants *)
+	dt_h IS_A real_constant;
+	dt_h :== 1.0;
+
+	ghi_ref_wm2 IS_A real_constant;
+	ghi_ref_wm2 :== 1000.0;
+
+	unit_e_kwh IS_A real_constant;
+	unit_e_kwh :== 20000.0;
+	unit_p_ch_kw IS_A real_constant;
+	unit_p_ch_kw :== 4000.0;
+	unit_p_dis_kw IS_A real_constant;
+	unit_p_dis_kw :== 3000.0;
+
+	eta_c IS_A real_constant;
+	eta_c :== 0.99498743710662;
+	eta_d IS_A real_constant;
+	eta_d :== 0.99498743710662;
+
+	soc_init_frac IS_A real_constant;
+	soc_init_frac :== 0.5;
+	soc_final_frac IS_A real_constant;
+	soc_final_frac :== 0.5;
+
+	(* Demand and policy settings *)
+	steam_demand_kw IS_A real_constant;
+	steam_demand_kw :== 3000.0;
+	cf_target IS_A real_constant;
+	cf_target :== 0.40;
+	annual_demand_mwh_target IS_A real_constant;
+	annual_demand_mwh_target :== steam_demand_kw * dt_h * n_steps / 1000;
+	displaced_target_mwh IS_A real_constant;
+	displaced_target_mwh :== cf_target * annual_demand_mwh_target;
+
+	(* Economics *)
+	fuel_aud_per_mwh_th IS_A real_constant;
+	fuel_aud_per_mwh_th :== 110.76923076923077;
+
+	wacc IS_A real_constant;
+	wacc :== 0.064;
+	life_years IS_A integer_constant;
+	life_years :== 25;
+	crf IS_A real_constant;
+	crf :== wacc * (1 + wacc)^life_years / ((1 + wacc)^life_years - 1);
+
+	pv_capex_aud_per_mw IS_A real_constant;
+	pv_capex_aud_per_mw :== 1030850.0;
+	pv_om_aud_per_mw_yr IS_A real_constant;
+	pv_om_aud_per_mw_yr :== 12680.0;
+
+	stor_unit_capex_aud IS_A real_constant;
+	stor_unit_capex_aud :== 3503332.8166175787;
+	stor_unit_om_aud_per_yr IS_A real_constant;
+	stor_unit_om_aud_per_yr :== 12000.0;
+
+	eboiler_capex_aud_per_mw IS_A real_constant;
+	eboiler_capex_aud_per_mw :== 319330.0;
+	eboiler_om_aud_per_mw_yr IS_A real_constant;
+	eboiler_om_aud_per_mw_yr :== 2000.0;
+
+	(* Design variables *)
+	pv_size_kw IS_A solver_var;
+	stor_units IS_A solver_int;
+	eboiler_cap_kw IS_A solver_var;
+
+	(* Derived design quantities *)
+	e_cap_kwh IS_A solver_var;
+	p_ch_cap_kw IS_A solver_var;
+	p_dis_cap_kw IS_A solver_var;
+
+	(* Dispatch variables *)
+	pv_gen_kw[dispatch_step] IS_A solver_var;
+	pv_to_proc_kw[dispatch_step] IS_A solver_var;
+	pv_to_ch_kw[dispatch_step] IS_A solver_var;
+	stor_to_proc_kw[dispatch_step] IS_A solver_var;
+	pv_curt_kw[dispatch_step] IS_A solver_var;
+	boiler_kw[dispatch_step] IS_A solver_var;
+	soc_kwh[dispatch_step] IS_A solver_var;
+
+	(* Annual energy tallies *)
+	displaced_mwh IS_A solver_var;
+	boiler_mwh IS_A solver_var;
+	pv_input_mwh IS_A solver_var;
+	annual_demand_mwh IS_A solver_var;
+	fraction_displaced_demand IS_A solver_var;
+
+	(* Cost tallies *)
+	boiler_fuel_cost_aud IS_A solver_var;
+	pv_ann_capex_aud IS_A solver_var;
+	pv_om_aud IS_A solver_var;
+	stor_ann_capex_aud IS_A solver_var;
+	stor_om_aud IS_A solver_var;
+	eboiler_ann_capex_aud IS_A solver_var;
+	eboiler_om_aud IS_A solver_var;
+	total_ann_cost_aud IS_A solver_var;
+
+	(* Design couplings *)
+	z_storage_energy_cap: e_cap_kwh = stor_units * unit_e_kwh;
+	z_storage_ch_cap: p_ch_cap_kw = stor_units * unit_p_ch_kw;
+	z_storage_dis_cap: p_dis_cap_kw = stor_units * unit_p_dis_kw;
+
+	(* Dispatch constraints *)
+	FOR t IN dispatch_step CREATE
+		z_pv_limit[t]:
+			(* Linear PV proxy from GHI; replace with pv_profile[t] when provided. *)
+			pv_gen_kw[t] <= pv_size_kw * ghi_wm2[t] / ghi_ref_wm2;
+
+		z_pv_split[t]:
+			pv_gen_kw[t] = pv_to_proc_kw[t] + pv_to_ch_kw[t] + pv_curt_kw[t];
+
+		z_eboiler_cap[t]:
+			pv_to_proc_kw[t] <= eboiler_cap_kw;
+
+		z_storage_ch_limit[t]:
+			pv_to_ch_kw[t] <= p_ch_cap_kw;
+
+		z_storage_dis_limit[t]:
+			stor_to_proc_kw[t] <= p_dis_cap_kw;
+
+		z_demand_balance[t]:
+			pv_to_proc_kw[t] + stor_to_proc_kw[t] + boiler_kw[t] = steam_demand_kw;
+
+		z_soc_ub[t]:
+			soc_kwh[t] <= e_cap_kwh;
+	END FOR;
+
+	z_soc_first:
+		soc_kwh[1] = soc_init_frac * e_cap_kwh
+			+ dt_h * (eta_c * pv_to_ch_kw[1] - stor_to_proc_kw[1] / eta_d);
+
+	FOR t IN dispatch_step_nonfirst CREATE
+		z_soc_rec[t]:
+			soc_kwh[t] = soc_kwh[t - 1]
+				+ dt_h * (eta_c * pv_to_ch_kw[t] - stor_to_proc_kw[t] / eta_d);
+	END FOR;
+
+	z_soc_cycle:
+		soc_kwh[horizon_steps] = soc_final_frac * e_cap_kwh;
+
+	(* Annual tallies *)
+	z_displaced_mwh:
+		displaced_mwh = annualization_factor * SUM[(pv_to_proc_kw[t] + stor_to_proc_kw[t]) * dt_h / 1000 | t IN dispatch_step];
+	z_boiler_mwh:
+		boiler_mwh = annualization_factor * SUM[boiler_kw[t] * dt_h / 1000 | t IN dispatch_step];
+	z_pv_input_mwh:
+		pv_input_mwh = annualization_factor * SUM[pv_gen_kw[t] * dt_h / 1000 | t IN dispatch_step];
+	z_annual_demand:
+		annual_demand_mwh = steam_demand_kw * dt_h * horizon_steps * annualization_factor / 1000;
+	z_fraction_displaced:
+		fraction_displaced_demand = displaced_mwh / annual_demand_mwh_target;
+
+	(* Policy/production constraint *)
+	z_displaced_target:
+		displaced_mwh >= displaced_target_mwh;
+
+	(* Economics *)
+	z_boiler_fuel_cost:
+		boiler_fuel_cost_aud = fuel_aud_per_mwh_th * boiler_mwh;
+
+	z_pv_ann_capex:
+		pv_ann_capex_aud = crf * pv_capex_aud_per_mw * pv_size_kw / 1000;
+	z_pv_om:
+		pv_om_aud = pv_om_aud_per_mw_yr * pv_size_kw / 1000;
+
+	z_stor_ann_capex:
+		stor_ann_capex_aud = crf * stor_unit_capex_aud * stor_units;
+	z_stor_om:
+		stor_om_aud = stor_unit_om_aud_per_yr * stor_units;
+
+	z_eboiler_ann_capex:
+		eboiler_ann_capex_aud = crf * eboiler_capex_aud_per_mw * eboiler_cap_kw / 1000;
+	z_eboiler_om:
+		eboiler_om_aud = eboiler_om_aud_per_mw_yr * eboiler_cap_kw / 1000;
+
+	z_total_cost:
+		total_ann_cost_aud = boiler_fuel_cost_aud
+			+ pv_ann_capex_aud + pv_om_aud
+			+ stor_ann_capex_aud + stor_om_aud
+			+ eboiler_ann_capex_aud + eboiler_om_aud;
+
+	obj: MINIMIZE total_ann_cost_aud;
+
+METHODS
+METHOD bound_self;
+	pv_size_kw.lower_bound := 0;
+	pv_size_kw.upper_bound := 100000;
+	stor_units.lower_bound := 0;
+	stor_units.upper_bound := 200;
+	eboiler_cap_kw.lower_bound := 0;
+	eboiler_cap_kw.upper_bound := 100000;
+
+	e_cap_kwh.lower_bound := 0;
+	p_ch_cap_kw.lower_bound := 0;
+	p_dis_cap_kw.lower_bound := 0;
+
+	displaced_mwh.lower_bound := 0;
+	boiler_mwh.lower_bound := 0;
+	pv_input_mwh.lower_bound := 0;
+	annual_demand_mwh.lower_bound := 0;
+	fraction_displaced_demand.lower_bound := 0;
+
+	boiler_fuel_cost_aud.lower_bound := 0;
+	pv_ann_capex_aud.lower_bound := 0;
+	pv_om_aud.lower_bound := 0;
+	stor_ann_capex_aud.lower_bound := 0;
+	stor_om_aud.lower_bound := 0;
+	eboiler_ann_capex_aud.lower_bound := 0;
+	eboiler_om_aud.lower_bound := 0;
+	total_ann_cost_aud.lower_bound := 0;
+
+	FOR t IN dispatch_step DO
+		pv_gen_kw[t].lower_bound := 0;
+		pv_to_proc_kw[t].lower_bound := 0;
+		pv_to_ch_kw[t].lower_bound := 0;
+		stor_to_proc_kw[t].lower_bound := 0;
+		pv_curt_kw[t].lower_bound := 0;
+		boiler_kw[t].lower_bound := 0;
+		boiler_kw[t].upper_bound := steam_demand_kw;
+		soc_kwh[t].lower_bound := 0;
+	END FOR;
+END bound_self;
+
+METHOD default_self;
+	pv_size_kw := 0;
+	stor_units := 0;
+	eboiler_cap_kw := 0;
+
+	e_cap_kwh := 0;
+	p_ch_cap_kw := 0;
+	p_dis_cap_kw := 0;
+
+	displaced_mwh := 0;
+	boiler_mwh := annual_demand_mwh;
+	pv_input_mwh := 0;
+	annual_demand_mwh := steam_demand_kw * dt_h * n_steps / 1000;
+	fraction_displaced_demand := 0;
+
+	boiler_fuel_cost_aud := fuel_aud_per_mwh_th * annual_demand_mwh;
+	pv_ann_capex_aud := 0;
+	pv_om_aud := 0;
+	stor_ann_capex_aud := 0;
+	stor_om_aud := 0;
+	eboiler_ann_capex_aud := 0;
+	eboiler_om_aud := 0;
+	total_ann_cost_aud := boiler_fuel_cost_aud;
+
+	FOR t IN dispatch_step DO
+		pv_gen_kw[t] := 0;
+		pv_to_proc_kw[t] := 0;
+		pv_to_ch_kw[t] := 0;
+		stor_to_proc_kw[t] := 0;
+		pv_curt_kw[t] := 0;
+		boiler_kw[t] := steam_demand_kw;
+		soc_kwh[t] := 0;
+	END FOR;
+END default_self;
+
+METHOD on_load;
+	RUN bound_self;
+	RUN default_self;
+	ASSERT CARD[timestep] = n_steps;
+	ASSERT horizon_steps <= n_steps;
+	SOLVER HiGHS;
+END on_load;
+
+METHOD self_test;
+	ASSERT displaced_mwh >= displaced_target_mwh - 1e-4;
+	ASSERT abs((displaced_mwh + boiler_mwh) - annual_demand_mwh) < 1e-3;
+	ASSERT total_ann_cost_aud >= 0;
+END self_test;
+END pv_heater_tes_lp_melbourne;
