@@ -180,6 +180,10 @@ static int g_defaulted;			/* used for atoms,constants */
 static CONST dim_type *g_dim_ptr;	  /* dim of last units parsed, or so */
 static CONST dim_type *g_atom_dim_ptr;	  /* dim of DIMENSION decl */
 static CONST dim_type *g_default_dim_ptr; /* dim of default value parsed */
+static symchar *g_default_units;         /* units token of default value, if supplied */
+static symchar *g_constant_units;        /* units token from CONSTANT ... UNITS ... */
+static symchar *g_parsed_units;          /* units token from most recently parsed unit expression */
+static symchar *g_number_units;          /* units token from most recently parsed number */
 
 static double g_default_double;
 static long g_default_long;
@@ -803,7 +807,7 @@ static void CollectNote(struct Note *);
 %type <notesptr> notes_body noteslist
 %type <listp> methods proclist proclistf statements unitdeflist complex_statement fix_and_assign_statement
 %type <procptr> procedure
-%type <dimp> dims dimensions
+%type <dimp> dims dimensions constant_dims
 %type <dimen> dimexpr
 %type <order> optional_direction
 %type <tptr> add_method_head replace_method_head
@@ -1095,6 +1099,7 @@ atom_def:
 	                                g_atom_dim_ptr,
 	                                g_default_long,
 	                                g_default_symbol,
+	                                g_default_units,
 	                                g_untrapped_error);
 	    if (def_ptr != NULL) {
 	      keepnotes = AddType(def_ptr);
@@ -1143,17 +1148,20 @@ default_val:
 	{
 	  $$ = 0.0;
 	  g_default_dim_ptr = WildDimension();
+	  g_default_units = NULL;
 	  g_defaulted = 0;
 	}
     | DEFAULT_TOK optional_sign number
 	{
 	  $$ = $2 ? -$3 : $3;
+	  g_default_units = g_number_units;
 	  g_defaulted = 1;
 	}
     | DEFAULT_TOK FALSE_TOK
 	{
 	  $$ = 0.0;
 	  g_default_dim_ptr = Dimensionless();
+	  g_default_units = NULL;
 	  g_default_long = 0;
 	  g_defaulted = 1;
 	}
@@ -1161,6 +1169,7 @@ default_val:
 	{
 	  $$ = 0.0;
 	  g_default_dim_ptr = Dimensionless();
+	  g_default_units = NULL;
 	  g_default_long = 1;
 	  g_defaulted = 1;
 	}
@@ -1168,6 +1177,7 @@ default_val:
 	{
 	  $$ = 0.0;
 	  g_default_dim_ptr = Dimensionless();
+	  g_default_units = NULL;
 	  g_default_symbol = $2;
 	  g_defaulted = 0;
 	}
@@ -1192,6 +1202,7 @@ constant_def:
 	                                    g_default_long,
 	                                    g_default_symbol,
 	                                    g_atom_dim_ptr,
+	                                    (g_constant_units != NULL ? g_constant_units : g_default_units),
 	                                    g_untrapped_error);
 	    if (def_ptr != NULL) {
 	      keepnotes = AddType(def_ptr);
@@ -1213,7 +1224,7 @@ constant_def:
     ;
 
 constant_head:
-    CONSTANT_TOK IDENTIFIER_TOK REFINES_TOK IDENTIFIER_TOK dims constant_val
+    CONSTANT_TOK IDENTIFIER_TOK REFINES_TOK IDENTIFIER_TOK constant_dims constant_val
     optional_notes ';'
 	{
 	  g_type_name = $2;
@@ -1246,16 +1257,54 @@ constant_head:
 	}
     ;
 
+constant_dims:
+    DIMENSION_TOK dimensions
+	{
+	  $$ = $2;
+	  g_constant_units = NULL;
+	}
+    | DIMENSIONLESS_TOK
+	{
+	  $$ = Dimensionless();
+	  g_constant_units = NULL;
+	}
+    | /* empty */
+	{
+	  $$ = WildDimension();
+	  g_constant_units = NULL;
+	}
+    | UNITS_TOK BRACEDTEXT_TOK
+	{
+	  unsigned long pos;
+	  int error_code;
+	  g_units_ptr = FindOrDefineUnits($2,&pos,&error_code);
+	  if (g_units_ptr != NULL) {
+	    $$ = UnitsDimensions(g_units_ptr);
+	    g_constant_units = UnitsDescription(g_units_ptr);
+	  } else {
+	    char **errv;
+	    $$ = WildDimension();
+	    g_constant_units = NULL;
+	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'",$2);
+	    errv = UnitsExplainError($2,error_code,pos);
+	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
+	    g_untrapped_error++;
+	  }
+	}
+    ;
+
 constant_val:
     /* empty */
 	{
 	  $<real_value>$ = 0.0;
 	  g_default_dim_ptr = WildDimension();
+	  g_default_units = NULL;
 	  g_defaulted = 0;
 	}
     | CASSIGN_TOK optional_sign number
 	{
 	  $<real_value>$ = $2 ? -$3 : $3;
+	  g_default_units = g_number_units;
 	  g_defaulted = 1;
 	}
     | CASSIGN_TOK TRUE_TOK
@@ -1263,6 +1312,7 @@ constant_val:
 	  $<int_value>$ = 1;
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
+	  g_default_units = NULL;
 	  g_constant_type = BOOLEANCONSTANT;
 	}
     | CASSIGN_TOK FALSE_TOK
@@ -1270,6 +1320,7 @@ constant_val:
 	  $<int_value>$ = 0;
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
+	  g_default_units = NULL;
 	  g_constant_type = BOOLEANCONSTANT;
 	}
     | CASSIGN_TOK SYMBOL_TOK
@@ -1277,6 +1328,7 @@ constant_val:
 	  $<sym_ptr>$ = $2;
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
+	  g_default_units = NULL;
 	  g_constant_type = SYMBOLCONSTANT;
 	}
     ;
@@ -3157,6 +3209,7 @@ number:
 	  $$ = $1;
 	  g_constant_type = LONGCONSTANT;
 	  g_default_dim_ptr = Dimensionless();
+	  g_number_units = NULL;
 	}
     | realnumber
 	{
@@ -3170,6 +3223,7 @@ realnumber:
     REAL_TOK opunits
 	{
 	  $$ = $1*$2;
+	  g_number_units = g_parsed_units;
 	}
     | INTEGER_TOK BRACEDTEXT_TOK
 	{
@@ -3179,15 +3233,18 @@ realnumber:
 	  if (g_units_ptr != NULL) {
 	    $$ = (double)$1*UnitsConvFactor(g_units_ptr);
 	    g_dim_ptr = UnitsDimensions(g_units_ptr);
+	    g_parsed_units = UnitsDescription(g_units_ptr);
 	  } else {
 	    char **errv;
 	    $$ = (double)$1;
 	    g_dim_ptr = WildDimension();
+	    g_parsed_units = NULL;
 	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'", $2);
 	    errv = UnitsExplainError($2,error_code,pos);
 	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
 	    g_untrapped_error++;
 	  }
+	  g_number_units = g_parsed_units;
 	}
     ;
 
@@ -3195,6 +3252,7 @@ opunits:
     /* empty */
 	{
 	  g_dim_ptr = Dimensionless();
+	  g_parsed_units = NULL;
 	  $$ = 1.0;
 	}
     | BRACEDTEXT_TOK
@@ -3205,10 +3263,12 @@ opunits:
 	  if (g_units_ptr != NULL) {
 	    $$ = UnitsConvFactor(g_units_ptr);
 	    g_dim_ptr = UnitsDimensions(g_units_ptr);
+	    g_parsed_units = UnitsDescription(g_units_ptr);
 	  } else {
 	    char **errv;
 	    $$ = 1.0;
 	    g_dim_ptr = WildDimension();
+	    g_parsed_units = NULL;
 	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'",$1);
 	    errv = UnitsExplainError($1,error_code,pos);
 	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);

@@ -466,6 +466,7 @@ struct TypeDescription *CreateConstantTypeDesc(
 		int defaulted,          /* valid for constants, indicates default value was assigned */
 		double rval,            /* default value for real const */
 		CONST dim_type *dim,    /* dimensions of default real */
+		symchar *decl_units,    /* declared units token */
 		long ival,              /* default integer const */
 		symchar *sval,          /* default symbol */
 		int univ
@@ -489,6 +490,7 @@ struct TypeDescription *CreateConstantTypeDesc(
   result->flags |=  TYPESHOW;
   result->u.constant.byte_length = bytesize;
   result->u.constant.defaulted = (defaulted) ? 1 : 0;
+  result->u.constant.decl_units = decl_units;
   switch (t) {
   case real_constant_type:
     result->u.constant.u.defreal = rval;
@@ -523,6 +525,7 @@ struct TypeDescription
 		int defaulted, /* TRUE indicates default value was assigned */
 		double dval, /* default value for real atoms */
 		CONST dim_type *ddim, /* dimensions of default value */
+		symchar *decl_units, /* declared units token */
 		int univ,
 		long ival,
 		symchar *sval
@@ -552,6 +555,7 @@ struct TypeDescription
   result->u.atom.byte_length = bytesize;
   result->u.atom.childinfo = childd;
   result->u.atom.defaulted = (defaulted) ? 1 : 0;
+  result->u.atom.decl_units = decl_units;
   switch(t) {
   case real_type:
     result->u.atom.u.defval = dval;
@@ -762,6 +766,7 @@ struct TypeDescription *CreateRelationTypeDesc(struct module_t *mod,
   result->u.atom.defaulted = 0;
   result->u.atom.defval = 0.0;
   result->u.atom.dimp = NULL;
+  result->u.atom.decl_units = NULL;
   return result;
 }
 
@@ -794,6 +799,7 @@ struct TypeDescription *CreateLogRelTypeDesc(struct module_t *mod,
   result->u.atom.defaulted = 0;
   result->u.atom.defval = 0.0;
   result->u.atom.dimp = NULL;
+  result->u.atom.decl_units = NULL;
   result->u.atom.u.defbool = 0;
   return result;
 }
@@ -1456,7 +1462,8 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
     if (d1->u.atom.defaulted != d2->u.atom.defaulted ||
         (d1->u.atom.defaulted  &&
            d1->u.atom.u.defval != d2->u.atom.u.defval) ||
-        d1->u.atom.dimp != d2->u.atom.dimp
+        d1->u.atom.dimp != d2->u.atom.dimp ||
+        d1->u.atom.decl_units != d2->u.atom.decl_units
        ) {
       return 0;
     }
@@ -1489,7 +1496,8 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
     if (d1->u.constant.defaulted != d2->u.constant.defaulted ||
         (d1->u.constant.defaulted  &&
            d1->u.constant.u.defreal != d2->u.constant.u.defreal) ||
-        d1->u.constant.dimp != d2->u.constant.dimp
+        d1->u.constant.dimp != d2->u.constant.dimp ||
+        d1->u.constant.decl_units != d2->u.constant.decl_units
        ) {
       return 0;
     }

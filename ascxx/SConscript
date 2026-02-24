@@ -48,6 +48,7 @@ ipopttest = envx.Program('testipopt',['testipopt.cpp'] + objs)
 conopttest = envx.Program('testconopt',['testconopt.cpp'] + objs)
 slvreqtest = envx.Program('testslvreq',['testslvreq.cpp'] + objs)
 highstest = envx.Program('testhighs',['testhighs.cpp'] + objs)
+declunitstest = envx.Program('testdeclunits',['testdeclunits.cpp'] + objs)
 
 #---------------------------------------------
 # BUILD THE SWIG WRAPPER
