@@ -1,0 +1,273 @@
+This page documents the TABLE/VALUES/DATASET syntax and behavior that is actually implemented in ASCEND at present.
+
+== Status Summary ==
+
+* <code>TABLE</code>: parsed and compiled.
+* <code>VALUES</code>: parsed only (no statement object/lowering yet).
+* <code>DATASET</code>: parsed, compiled, and executed (v0 CSV-like loader).
+
+== TABLE Syntax (Implemented) ==
+
+<source lang=ascend>
+TABLE <target_name> [IS_A <type_name>[(<type_args>)] [OF <set_type>]] [POSITIONAL] [DEFAULT <expr>];
+    ...
+END TABLE;
+</source>
+
+Where <code>&lt;target_name&gt;</code> is an indexed array reference such as:
+
+<source lang=ascend>
+cost[r,c]
+</source>
+
+or
+
+<source lang=ascend>
+cost[r][c]
+</source>
+
+Notes:
+
+* Inline declaration is supported, eg <code>TABLE cost[r,c] IS_A factor_constant;</code>.
+* When inline declaration is used, ASCEND injects an equivalent <code>IS_A</code> declaration statement before the TABLE statement during parsing.
+* <code>POSITIONAL</code> and <code>DEFAULT</code> may both be written.
+* Body rows are newline-based.
+* Tokens accepted in TABLE body include identifiers, quoted symbols, integers, reals, <code>{...}</code>, and punctuation <code>:</code> <code>=</code> <code>,</code> <code>+</code> <code>-</code> <code>;</code>.
+
+== TABLE Compilation Behavior ==
+
+=== 1) POSITIONAL TABLE ===
+
+<source lang=ascend>
+TABLE cost[r,c] IS_A integer_constant POSITIONAL;
+    11 12 13
+    21 22 23
+END TABLE;
+</source>
+
+Implemented behavior:
+
+* Supports 1-D and 2-D targets.
+* Values must be numeric (integer or real).
+* Signs <code>+</code>/<code>-</code> are supported.
+* Comma can be used as a value separator.
+* A sequence containing at least one semicolon and/or newline ends the current row.
+* Enforces row/column/value counts against index cardinality.
+* Sparse punctuation (<code>:</code>, <code>=</code>) is rejected in POSITIONAL mode.
+
+=== 2) Dense non-POSITIONAL TABLE ===
+
+<source lang=ascend>
+TABLE cost[r,c] IS_A integer_constant;
+	    3 1 2
+	    2 23 21 22
+	    1 13 11 12
+END TABLE;
+</source>
+
+Implemented behavior:
+
+* Dense non-POSITIONAL mode currently requires exactly 2 indices.
+* First non-empty row is the column-label header.
+* Header may optionally start with <code>:</code>.
+* Each data row begins with a row label; <code>:</code> after row label is optional.
+* Cell values are numeric only (integer or real).
+* Row/column labels can be integer or symbol-valued.
+* Duplicate row labels and duplicate column labels are rejected.
+* Label membership is checked against index sets when those sets are already defined.
+* Row/column counts must match first/second index set cardinality.
+* Comma-separated rows (CSV-like) are accepted.
+* A sequence containing at least one semicolon and/or newline ends the current row.
+
+== Label Rules ==
+
+Examples:
+
+<source lang=ascend>
+TABLE cost[r,c];
+	    x y
+	    north 11 12
+	    south 21 22
+END TABLE;
+</source>
+
+<source lang=ascend>
+TABLE cost[r,c] IS_A integer_constant;
+	    c3,c1,c2;
+	    alan,23,21,22;
+	    bernhard,13,11,12;
+END TABLE;
+</source>
+
+Current label handling:
+
+* Integer labels: parsed as integers and matched to integer sets.
+* Symbol labels: unquoted identifiers or quoted symbols (e.g. <code>'New York'</code>) are matched to symbol sets.
+
+== Implicit Set Inference (Implemented for Dense TABLE) ==
+
+If an index set expression cannot yet be evaluated and it is a simple named set, dense TABLE can infer and assign that set from labels.
+
+Example:
+
+<source lang=ascend>
+r IS_A set OF integer_constant;
+c IS_A set OF symbol_constant;
+
+TABLE cost[r,c] IS_A integer_constant;
+        a  b
+    2: 21 22
+    1: 11 12
+END TABLE;
+</source>
+
+Behavior:
+
+* If all labels are unquoted integers, infer integer set.
+* Otherwise infer symbol set.
+* Duplicate inferred labels are rejected.
+
+== Current Limitations ==
+
+* Sparse non-POSITIONAL TABLE assignment (e.g. <code>row: col=value ...</code>) is not implemented.
+* <code>DEFAULT &lt;expr&gt;</code> is parsed and stored but not yet used in TABLE lowering.
+* Non-numeric TABLE cell values are not yet supported.
+* TABLE index ranges written directly in index expressions are not currently supported by dense lowering.
+* DATASET explicit index sets are limited to integer or symbol sets (real-valued indices not yet supported).
+* DATASET implicit-row mode currently supports only one undeclared index set per statement.
+* <code>VALUES</code> is parse-only at this stage.
+
+== VALUES Syntax (Parse-only) ==
+
+<source lang=ascend>
+VALUES demand[customer] DEFAULT 0;
+    1 = 45;
+    2 = 30;
+END VALUES;
+</source>
+
+Accepted keys: identifier, symbol, integer, real.
+
+== DATASET Syntax (Implemented) ==
+
+=== Minimal path ===
+
+<source lang=ascend>
+DATASET met FROM "weather.csv";
+    ghi[t] FROM 'GHI';
+END DATASET;
+</source>
+
+With no <code>INDEX</code> items, <code>t</code> is interpreted as the row index
+(1..N rows). If <code>t</code> is undeclared, parser lowering injects:
+
+<source lang=ascend>
+t IS_A set OF integer_constant;
+</source>
+
+=== Full form (explicit index + typed maps) ===
+
+<source lang=ascend>
+DATASET ops FROM "ops.csv";
+    INDEX customer FROM COLUMN customer_id IS_A integer_constant;
+    load[customer] IS_A factor_constant FROM 'load_MW' {MW};
+END DATASET;
+</source>
+
+Supported map statement forms:
+
+* <code>&lt;target&gt; FROM [COLUMN] &lt;column_ref&gt; [units] [IS_A type]</code>
+* <code>&lt;target&gt; IS_A type FROM [COLUMN] &lt;column_ref&gt; [units]</code>
+
+where:
+
+* <code>&lt;column_ref&gt;</code> is an identifier or quoted symbol.
+* <code>COLUMN</code> is optional for map items.
+* <code>COLUMN</code> is required for <code>INDEX</code> items.
+
+=== Example: Melbourne DNI/GHI ===
+
+<source lang=ascend>
+MODEL melbourne_dni_ghi_dataset4;
+    DATASET melbourne FROM "johnpye/datareader/086282TMY_60min_dni_ghi.csv";
+        dni[timestep] IS_A real_constant FROM 'DNI';
+        ghi[timestep] IS_A real_constant FROM 'GHI';
+    END DATASET;
+
+    annual_dni_sum = SUM[dni[t] | t IN timestep];
+    annual_ghi_sum = SUM[ghi[t] | t IN timestep];
+END melbourne_dni_ghi_dataset4;
+</source>
+
+Notes:
+
+* No explicit <code>INDEX</code> statement is required in this form.
+* <code>timestep</code> is populated as 1..N (N = number of data rows).
+* Quoted column names are used for direct header matching.
+
+== DATASET Compilation Behavior (Implemented) ==
+
+=== File loading ===
+
+* Reads CSV-like input with a required header row.
+* Delimiters accepted: comma and semicolon.
+* Quoted fields (single/double quote) are accepted; outer quotes are stripped.
+* Blank lines and comment lines beginning with <code>#</code> are ignored.
+* Supported file types: plain, <code>.gz</code>, <code>.xz</code>.
+* Compression support is conditional at build time:
+** <code>.gz</code> requires zlib.
+** <code>.xz</code> requires liblzma.
+
+=== Column names and units ===
+
+Column units are parsed from header suffixes:
+
+* <code>Name{unit}</code>
+* <code>Name / {unit}</code>
+* <code>Name[unit]</code>
+* <code>Name / [unit]</code>
+
+(whitespace tolerant)
+
+Optional units-row behavior:
+
+* If the first data row parses as units-only tokens, it is consumed as column units.
+* Units-row tokens accepted include bracket/brace forms with optional leading <code>/</code>.
+* Dimensionless tokens (<code>-</code>, <code>1</code>, <code>dimensionless</code>) mean "no units".
+
+=== Index handling ===
+
+* Explicit <code>INDEX</code> items:
+** Build and assign named sets from column values.
+** Supported element types: integer, symbol.
+* Implicit row-index mode (no explicit <code>INDEX</code> items):
+** Unresolved simple set names in map indices are bound to row positions 1..N.
+** The corresponding set is assigned as integer row labels.
+** Current restriction: one undeclared set name per DATASET.
+
+=== Map assignment ===
+
+* Map targets assign to constant instances (real/int/symbol/bool constants).
+* Units rules:
+** Map units and column units must match if both are present.
+** Cell units (<code>value{unit}</code>) must match map/column units if those are present.
+** If map/column units are absent, cell units may provide units for real constants.
+** Units are rejected for integer/symbol/boolean constants.
+
+=== Runtime notes ===
+
+* Loaded DATASET content is materialized in memory and cached per file during pass 1.
+* For simple 1D array targets (eg <code>dni[t]</code>), assignment uses a direct array-child fast path instead of per-cell <code>FindInstances</code>.
+* After this fast path, DATASET loading/assignment is much cheaper; large runtime is currently dominated by relation instantiation (eg large <code>SUM[...]</code> relations).
+
+== Test Coverage Notes ==
+
+The implemented TABLE behavior above is covered in <code>compiler_basics</code> tests, including:
+
+* POSITIONAL success/fail paths.
+* Dense integer labels.
+* Dense string labels.
+* Dense implicit-set inference.
+* Dense invalid row/column label failures.
+
+[[Category:Development]]

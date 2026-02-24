@@ -521,6 +521,60 @@ static int StatementListHasTypeDeclForName(CONST struct gl_list_t *list,
   return 0;
 }
 
+static void DatasetAppendImplicitSetDecls(struct gl_list_t *list, struct Statement *dataset_stat)
+{
+  struct DatasetMapItem *map;
+
+  if (list == NULL || dataset_stat == NULL || StatementType(dataset_stat) != DATASETSTAT) {
+    return;
+  }
+  if (dataset_stat->v.dataset.indices != NULL) {
+    return;
+  }
+
+  for (map = dataset_stat->v.dataset.maps; map != NULL; map = map->next) {
+    CONST struct Name *node;
+    for (node = map->target; node != NULL; node = NextName(node)) {
+      CONST struct Set *setnode;
+      if (NameId(node)) {
+        continue;
+      }
+      for (setnode = NameSetPtr(node); setnode != NULL; setnode = NextSet(setnode)) {
+        CONST struct Expr *expr = GetSingleExpr(setnode);
+        CONST struct Name *setexpr;
+        symchar *setid;
+        struct Name *setname;
+        struct Statement *decl;
+        struct VariableList *vl;
+
+        if (expr == NULL || ExprType(expr) != e_var || ExprListLength(expr) != 1) {
+          continue;
+        }
+        setexpr = ExprName(expr);
+        setid = (setexpr != NULL) ? SimpleNameIdPtr(setexpr) : NULL;
+        if (setid == NULL) {
+          continue;
+        }
+        setname = CreateIdName(setid);
+        if (StatementListHasTypeDeclForName(list,setname)) {
+          DestroyName(setname);
+          continue;
+        }
+        vl = CreateVariableNode(setname);
+        decl = CreateISA(vl
+          ,GetBaseTypeName(set_type)
+          ,NULL
+          ,GetBaseTypeName(integer_constant_type)
+        );
+        decl->mod = dataset_stat->mod;
+        decl->linenum = dataset_stat->linenum;
+        decl->context = dataset_stat->context;
+        gl_append_ptr(list,(char *)decl);
+      }
+    }
+  }
+}
+
 /*  Forward declaration of error message reporting
  *  functions provided at the end of this file.
  */
@@ -738,7 +792,7 @@ static void CollectNote(struct Note *);
 %type <statptr> solve_statement solver_statement option_statement switch_statement
 %type <statptr> table_statement values_statement dataset_statement
 %type <braced_ptr> dataset_units_opt
-%type <id_ptr> dataset_type_opt
+%type <id_ptr> dataset_type_opt dataset_type_req dataset_column_ref dataset_column_selector
 
 %type <slptr> fstatements global_def optional_else
 %type <slptr> optional_model_parameters optional_parameter_reduction
@@ -1671,16 +1725,42 @@ dataset_item:
 	;
 
 dataset_index_item:
-	INDEX_TOK IDENTIFIER_TOK FROM_TOK COLUMN_TOK IDENTIFIER_TOK ISA_TOK IDENTIFIER_TOK
+	INDEX_TOK IDENTIFIER_TOK FROM_TOK COLUMN_TOK dataset_column_ref ISA_TOK IDENTIFIER_TOK
 	{
 	  DatasetParseAddIndex($2,$5,$7);
 	}
 	;
 
 dataset_map_item:
-	dataset_target FROM_TOK COLUMN_TOK IDENTIFIER_TOK dataset_units_opt dataset_type_opt
+	dataset_target FROM_TOK dataset_column_selector dataset_units_opt dataset_type_opt
 	{
-	  DatasetParseAddMap($1,$4,$5,$6);
+	  DatasetParseAddMap($1,$3,$4,$5);
+	}
+	| dataset_target dataset_type_req FROM_TOK dataset_column_selector dataset_units_opt
+	{
+	  DatasetParseAddMap($1,$4,$5,$2);
+	}
+	;
+
+dataset_column_selector:
+	COLUMN_TOK dataset_column_ref
+	{
+	  $$ = $2;
+	}
+	| dataset_column_ref
+	{
+	  $$ = $1;
+	}
+	;
+
+dataset_column_ref:
+	IDENTIFIER_TOK
+	{
+	  $$ = $1;
+	}
+	| SYMBOL_TOK
+	{
+	  $$ = $1;
 	}
 	;
 
@@ -1714,6 +1794,13 @@ dataset_type_opt:
 	  $$ = NULL;
 	}
 	| ISA_TOK IDENTIFIER_TOK
+	{
+	  $$ = $2;
+	}
+	;
+
+dataset_type_req:
+	ISA_TOK IDENTIFIER_TOK
 	{
 	  $$ = $2;
 	}
@@ -1870,6 +1957,7 @@ statements:
 	          }
 	        }
 	      }
+	      DatasetAppendImplicitSetDecls($1,$2);
 	      for (map = $2->v.dataset.maps; map != NULL; map = map->next) {
 	        if (map->type_name != NULL) {
 	          struct Statement *decl;

@@ -1098,6 +1098,111 @@ static void test_instantiate_dataset_real(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_instantiate_dataset_isa_from(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+	double value;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/dataset_isa_from.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("dataset_isa_from"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("dataset_isa_from"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	value = fetch_real_table_cell_1d(root,"load",1);
+	CU_ASSERT(fabs(value - 1.5) < 1e-12);
+	value = fetch_real_table_cell_1d(root,"load",2);
+	CU_ASSERT(fabs(value - 2.25) < 1e-12);
+	value = fetch_real_table_cell_1d(root,"load",3);
+	CU_ASSERT(fabs(value - 3.75) < 1e-12);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_dataset_implicit_row_index(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+	double value;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/dataset_implicit_row_index.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("dataset_implicit_row_index"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("dataset_implicit_row_index"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	value = fetch_real_table_cell_1d(root,"load",1);
+	CU_ASSERT(fabs(value - 1.5) < 1e-12);
+	value = fetch_real_table_cell_1d(root,"load",2);
+	CU_ASSERT(fabs(value - 2.25) < 1e-12);
+	value = fetch_real_table_cell_1d(root,"load",3);
+	CU_ASSERT(fabs(value - 3.75) < 1e-12);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
+static void test_instantiate_dataset_implicit_row_index_autoset(void){
+	int status;
+	struct Instance *sim;
+	struct Instance *root;
+	double value;
+
+	Asc_CompilerInit(1);
+	Asc_PutEnv(ASC_ENV_LIBRARY "=models");
+
+	/*m =*/ Asc_OpenModule("test/compiler/dataset_implicit_row_index_autoset.a4c",&status);
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	CU_ASSERT(0 == error_reporter_tree_has_error());
+	error_reporter_tree_end();
+
+	CU_ASSERT(FindType(AddSymbol("dataset_implicit_row_index_autoset"))!=NULL);
+
+	sim = SimsCreateInstance(AddSymbol("dataset_implicit_row_index_autoset"), AddSymbol("sim1"), e_normal, NULL);
+	CU_ASSERT_FATAL(sim!=NULL);
+	root = GetSimulationRoot(sim);
+	CU_ASSERT_FATAL(root!=NULL);
+
+	value = fetch_real_table_cell_1d(root,"load",1);
+	CU_ASSERT(fabs(value - 1.5) < 1e-12);
+	value = fetch_real_table_cell_1d(root,"load",2);
+	CU_ASSERT(fabs(value - 2.25) < 1e-12);
+	value = fetch_real_table_cell_1d(root,"load",3);
+	CU_ASSERT(fabs(value - 3.75) < 1e-12);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
 static void test_parse_tables_v05_fail_table_header(void){
 	parse_module_expect_error(
 		"test/compiler/tables_v05_fail_table_header.a4c"
@@ -1171,6 +1276,30 @@ static void test_instantiate_dataset_units_conflict(void){
 		"test/compiler/dataset_units_conflict.a4c"
 		, "dataset_units_conflict"
 		, "units conflict"
+	);
+}
+
+static void test_instantiate_dataset_units_bracket_conflict(void){
+	instantiate_module_expect_error(
+		"test/compiler/dataset_units_bracket_conflict.a4c"
+		, "dataset_units_bracket_conflict"
+		, "units conflict"
+	);
+}
+
+static void test_instantiate_dataset_units_row_conflict(void){
+	instantiate_module_expect_error(
+		"test/compiler/dataset_units_row_conflict.a4c"
+		, "dataset_units_row_conflict"
+		, "units conflict"
+	);
+}
+
+static void test_instantiate_dataset_implicit_row_index_multi_fail(void){
+	instantiate_module_expect_error(
+		"test/compiler/dataset_implicit_row_index_multi_fail.a4c"
+		, "dataset_implicit_row_index_multi_fail"
+		, "implicit row-index mode supports only one undeclared index set"
 	);
 }
 
@@ -1292,6 +1421,9 @@ static void test_instantiate_tables_v05_fail_dense_bad_row_label_string(void){
 	T(instantiate_dataset_basic) \
 	T(instantiate_dataset_string) \
 	T(instantiate_dataset_real) \
+	T(instantiate_dataset_isa_from) \
+	T(instantiate_dataset_implicit_row_index) \
+	T(instantiate_dataset_implicit_row_index_autoset) \
 	T(parse_tables_v05_fail_table_header) \
 	T(parse_tables_v05_fail_table_badchar) \
 	T(parse_tables_v05_fail_table_bad_delimiter) \
@@ -1299,6 +1431,9 @@ static void test_instantiate_tables_v05_fail_dense_bad_row_label_string(void){
 	T(parse_tables_v05_fail_dataset_missing_index) \
 	T(parse_tables_v05_fail_dataset_multi_units) \
 	T(instantiate_dataset_units_conflict) \
+	T(instantiate_dataset_units_bracket_conflict) \
+	T(instantiate_dataset_units_row_conflict) \
+	T(instantiate_dataset_implicit_row_index_multi_fail) \
 	T(instantiate_tables_v05_fail_positional_short_row) \
 	T(instantiate_tables_v05_fail_positional_too_many_cols) \
 	T(instantiate_tables_v05_fail_positional_too_few_rows) \
