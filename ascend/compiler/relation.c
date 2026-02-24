@@ -2397,6 +2397,59 @@ static int AppendList( CONST struct Instance *,
 		 int ,
 		 rel_errorlist *);
 
+static int TryFoldListSetValue(CONST struct Instance *ref,
+                               CONST struct Set *setexpr,
+                               int op,
+                               struct relation_term **term_out)
+{
+  struct value_t set_value;
+  struct value_t agg_value;
+  int folded = 0;
+
+  if (ref == NULL || setexpr == NULL || term_out == NULL) {
+    return 0;
+  }
+  *term_out = NULL;
+  IVAL(set_value);
+  IVAL(agg_value);
+
+  asc_assert(GetEvaluationContext() == NULL);
+  SetEvaluationContext((struct Instance *)ref);
+  set_value = EvaluateSet(setexpr,InstanceEvaluateName);
+  SetEvaluationContext(NULL);
+
+  switch (op) {
+  case SUM:
+    agg_value = SumValues(set_value);
+    break;
+  case PROD:
+    agg_value = ProdValues(set_value);
+    break;
+  default:
+    DestroyValue(&set_value);
+    return 0;
+  }
+  DestroyValue(&set_value);
+
+  switch (ValueKind(agg_value)) {
+  case integer_value:
+    *term_out = CreateIntegerTerm(IntegerValue(agg_value));
+    folded = 1;
+    break;
+  case real_value:
+    if (RealValueDimensions(agg_value) != NULL
+        && !IsWild(RealValueDimensions(agg_value))) {
+      *term_out = CreateRealTerm(RealValue(agg_value),RealValueDimensions(agg_value));
+      folded = 1;
+    }
+    break;
+  default:
+    break;
+  }
+  DestroyValue(&agg_value);
+  return folded;
+}
+
 /**
 	@todo document this
 
@@ -2560,14 +2613,26 @@ static int ConvertSubExpr(CONST struct Expr *ptr, CONST struct Expr *stop
       DestroyValue(&cvalue);
       break;
     case e_sum:
-      my_added++;
-      if(AppendList(ref,rel,ExprBuiltinSet(ptr),SUM,err))
-        return 1;
+      term = NULL;
+      if (TryFoldListSetValue(ref,ExprBuiltinSet(ptr),SUM,&term)) {
+        my_added++;
+        AppendTermBuf(term);
+      } else {
+        my_added++;
+        if(AppendList(ref,rel,ExprBuiltinSet(ptr),SUM,err))
+          return 1;
+      }
       break;
     case e_prod:
-      my_added++;
-      if(AppendList(ref,rel,ExprBuiltinSet(ptr),PROD,err))
-        return 1;
+      term = NULL;
+      if (TryFoldListSetValue(ref,ExprBuiltinSet(ptr),PROD,&term)) {
+        my_added++;
+        AppendTermBuf(term);
+      } else {
+        my_added++;
+        if(AppendList(ref,rel,ExprBuiltinSet(ptr),PROD,err))
+          return 1;
+      }
       break;
     case e_func:
       term = CreateFuncTerm(ExprFunc(ptr));
@@ -2940,15 +3005,25 @@ static int ConvertExpr(CONST struct Expr *start,
       DestroyValue(&cvalue);
       break;
     case e_sum:
-      if(AppendList(ref,rel,ExprBuiltinSet(start),SUM,err)){
-        DestroyTermList();
-        return 0;
+      term = NULL;
+      if (TryFoldListSetValue(ref,ExprBuiltinSet(start),SUM,&term)) {
+        AppendTermBuf(term);
+      } else {
+        if(AppendList(ref,rel,ExprBuiltinSet(start),SUM,err)){
+          DestroyTermList();
+          return 0;
+        }
       }
       break;
     case e_prod:
-      if(AppendList(ref,rel,ExprBuiltinSet(start),PROD,err)){
-        DestroyTermList();
-        return 0;
+      term = NULL;
+      if (TryFoldListSetValue(ref,ExprBuiltinSet(start),PROD,&term)) {
+        AppendTermBuf(term);
+      } else {
+        if(AppendList(ref,rel,ExprBuiltinSet(start),PROD,err)){
+          DestroyTermList();
+          return 0;
+        }
       }
       break;
     case e_func:

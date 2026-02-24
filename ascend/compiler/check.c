@@ -287,7 +287,7 @@ void RecursiveCheckInstance(FILE *f, CONST struct Instance *i,
   CONST struct Instance *ptr;
   struct TypeDescription *desc;
   struct InstanceName name;
-  unsigned long c=0;
+  unsigned long c=0, np=0;
   /* check for erroneous instance types */
   if (CheckInstanceType(f,i,parent)) return;
   /* check for unexecuted statements */
@@ -329,8 +329,18 @@ void RecursiveCheckInstance(FILE *f, CONST struct Instance *i,
     FPRINTF(f,"The clique was properly terminated.\n");
   }
   /* check i's parents */
-  for(c=NumberParents(i);c>=1;c--){
+  np = NumberParents(i);
+  for(c=np;c>=1;c--){
     ptr = InstanceParent(i,c);
+    /*
+     * For the parent we recursed from, reciprocal child membership has already
+     * been demonstrated by traversal (InstanceChild in caller) and validated
+     * in the SearchForParent(i,parent) check above. Avoid an extra ChildIndex
+     * linear scan in this common case.
+     */
+    if (parent != NULL && ptr == parent) {
+      continue;
+    }
     if (!ChildIndex(ptr,i)){
       WriteInstanceName(f,i,NULL);
       FPRINTF(f," thinks that ");

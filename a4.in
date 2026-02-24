@@ -97,6 +97,7 @@ if __name__ == "__main__":
 	g = p.add_mutually_exclusive_group()
 	g.add_argument('--gdb',action='store_true',help='Run action via GDB')
 	g.add_argument('--valgrind',action='store_true',help='Run action via Valgrind')
+	g.add_argument('--callgrind',action='store_true',help='Run action via Valgrind Callgrind profiler')
 
 	s = p.add_subparsers(help='sub-command help')
 	
@@ -217,6 +218,16 @@ if __name__ == "__main__":
 		if VALGRIND == None:
 			raise RuntimeError("Could not locate 'valgrind' in the PATH")
 		precmd = [VALGRIND]+ '--suppressions=tools/valgrind/suppressions --tool=memcheck --leak-check=full --show-reachable=yes'.split(' ')
+	elif args.callgrind:
+		VALGRIND = shutil.which('valgrind')
+		if VALGRIND == None:
+			raise RuntimeError("Could not locate 'valgrind' in the PATH")
+		callgrind_out = os.environ.get('ASC_CALLGRIND_OUT','callgrind.out.%p')
+		precmd = [VALGRIND] + [
+			'--tool=callgrind'
+			, '--trace-children=yes'
+			, '--callgrind-out-file=%s' % callgrind_out
+		]
 	
 	cmd = precmd
 	if not hasattr(args,'action') or args.action == 'gui':

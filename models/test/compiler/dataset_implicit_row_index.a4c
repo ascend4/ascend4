@@ -1,0 +1,10 @@
+REQUIRE "atoms.a4l";
+
+MODEL dataset_implicit_row_index;
+	t IS_A set OF integer_constant;
+	load[t] IS_A real_constant;
+
+	DATASET loadset FROM "test/compiler/dataset_real.csv";
+		load[t] FROM COLUMN load;
+	END DATASET;
+END dataset_implicit_row_index;
