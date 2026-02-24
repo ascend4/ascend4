@@ -20,6 +20,7 @@
 
 #define TESTS(T) \
 	T(basics) \
+	T(dataset) \
 	T(relation) \
 	T(autodiff) \
 	T(expr) \

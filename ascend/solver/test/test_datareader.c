@@ -286,4 +286,3 @@ class TestCSV(Ascend):
 	T(tmy3)
 
 REGISTER_TESTS_SIMPLE(solver_datareader, TESTS)
-

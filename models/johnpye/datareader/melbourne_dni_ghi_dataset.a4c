@@ -2,8 +2,8 @@ REQUIRE "atoms.a4l";
 
 (*
 	First-step DATASET model for Melbourne (station 086282) DNI/GHI data.
-	This model uses a normalized CSV extract derived from:
-		johnpye/datareader/086282TMY_60min.csv.xz
+	This model uses weather data as-received from 'marcoernst.net':
+		johnpye/dataset/086282TMY_60min.csv.xz
 *)
 MODEL melbourne_dni_ghi_dataset;
 	timestep IS_A set OF integer_constant;
