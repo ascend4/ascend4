@@ -91,6 +91,71 @@ static struct {
   struct gl_list_t *slist;
 } g_cons = {NULL,NULL,NULL,NULL};
 
+#define CHILDINDEX_CACHE_SIZE (1UL << 17)
+#define CHILDINDEX_CACHE_PROBES 8
+
+struct ChildIndexCacheEntry {
+  CONST struct Instance *parent;
+  CONST struct Instance *child;
+  unsigned long pos;
+  unsigned int epoch;
+};
+
+static struct ChildIndexCacheEntry *g_childindex_cache = NULL;
+static unsigned long g_childindex_cache_mask = 0;
+static unsigned int g_childindex_cache_epoch = 1;
+
+static void BeginChildIndexCachePass(void)
+{
+  unsigned long c;
+  if (g_childindex_cache == NULL) {
+    g_childindex_cache =
+      ASC_NEW_ARRAY_CLEAR(struct ChildIndexCacheEntry,CHILDINDEX_CACHE_SIZE);
+    if (g_childindex_cache == NULL) {
+      return;
+    }
+    g_childindex_cache_mask = CHILDINDEX_CACHE_SIZE - 1;
+    g_childindex_cache_epoch = 1;
+    return;
+  }
+  if (++g_childindex_cache_epoch == 0) {
+    for (c = 0; c < CHILDINDEX_CACHE_SIZE; ++c) {
+      g_childindex_cache[c].epoch = 0;
+    }
+    g_childindex_cache_epoch = 1;
+  }
+}
+
+static unsigned long ChildIndexCached(CONST struct Instance *parent,
+                                      CONST struct Instance *child)
+{
+  unsigned long idx, probe, pos;
+  struct ChildIndexCacheEntry *ent;
+
+  if (g_childindex_cache == NULL || parent == NULL || child == NULL) {
+    return ChildIndex(parent,child);
+  }
+  idx = ((unsigned long)((asc_intptr_t)parent * 1103515245UL) ^
+         (unsigned long)(((asc_intptr_t)child * 2654435761UL) >> 7))
+      & g_childindex_cache_mask;
+  for (probe = 0; probe < CHILDINDEX_CACHE_PROBES; ++probe) {
+    ent = g_childindex_cache + idx;
+    if (ent->epoch != g_childindex_cache_epoch) {
+      pos = ChildIndex(parent,child);
+      ent->parent = parent;
+      ent->child = child;
+      ent->pos = pos;
+      ent->epoch = g_childindex_cache_epoch;
+      return pos;
+    }
+    if (ent->parent == parent && ent->child == child) {
+      return ent->pos;
+    }
+    idx = (idx + 1) & g_childindex_cache_mask;
+  }
+  return ChildIndex(parent,child);
+}
+
 static
 int CheckInstanceType(FILE *f, CONST struct Instance *i,
                       CONST struct Instance *parent)
@@ -341,7 +406,7 @@ void RecursiveCheckInstance(FILE *f, CONST struct Instance *i,
     if (parent != NULL && ptr == parent) {
       continue;
     }
-    if (!ChildIndex(ptr,i)){
+    if (!ChildIndexCached(ptr,i)){
       WriteInstanceName(f,i,NULL);
       FPRINTF(f," thinks that ");
       WriteInstanceName(f,ptr,NULL);
@@ -447,6 +512,7 @@ static void WriteConsLists(FILE *f, int pr, int pb, int pi, int ps)
 void CheckInstanceLevel(FILE *f, CONST struct Instance *i,int pass)
 {
   InitConsLists();
+  BeginChildIndexCachePass();
   g_suppressions = GetStatioSuppressions();
   if (pass<5) g_suppressions[ASGN]=1;
   if (pass<4) g_suppressions[WHEN]=1;
@@ -461,6 +527,7 @@ void CheckInstanceLevel(FILE *f, CONST struct Instance *i,int pass)
 void CheckInstanceStructure(FILE *f,CONST struct Instance *i)
 {
   InitConsLists();
+  BeginChildIndexCachePass();
   RecursiveCheckInstance(f,i,NULL,5);
   WriteConsLists(f,0,1,1,1);
   ClearConsLists();

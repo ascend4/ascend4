@@ -152,6 +152,18 @@ static void DeleteIPtr(struct Instance *i){
   }
 }
 
+static void ClearParentChildLinks(struct Instance *parent,
+                                  struct Instance *inst)
+{
+  unsigned long pos, nch;
+  nch = NumberChildren(parent);
+  for (pos = 1; pos <= nch; ++pos) {
+    if (InstanceChild(parent,pos) == inst) {
+      StoreChildPtr(parent,pos,NULL);
+    }
+  }
+}
+
 /**
 	This never returns anything but 1 for DUMMY_INSTs.
 	@return true value if inst should be deleted; otherwise, return 0.
@@ -159,7 +171,7 @@ static void DeleteIPtr(struct Instance *i){
 static int RemoveParentReferences(
 	struct Instance *inst, struct Instance *parent
 ){
-  unsigned long c,pos,length;
+  unsigned long c,d,pos,length;
   AssertMemory(inst);
   if(parent!=NULL){
     AssertMemory(parent);
@@ -175,9 +187,7 @@ static int RemoveParentReferences(
       }
     }
     /* destroy link(s) from parent to inst */
-    while(0 != (pos = ChildIndex(parent,inst))){
-      StoreChildPtr(parent,pos,NULL);
-    }
+    ClearParentChildLinks(parent,inst);
     return (NumberParents(inst) == 0);
   }else{
     length = NumberParents(inst);
@@ -190,8 +200,14 @@ static int RemoveParentReferences(
     }
     for(c=1;c<=length;c++) {
       parent = InstanceParent(inst,c);
-      while(0 != (pos = ChildIndex(parent,inst))){
-        StoreChildPtr(parent,pos,NULL);
+      /* Parent aliases can duplicate parent entries; clear each unique parent once. */
+      for (d = 1; d < c; ++d) {
+        if (InstanceParent(inst,d) == parent) {
+          break;
+        }
+      }
+      if (d == c) {
+        ClearParentChildLinks(parent,inst);
       }
     }
     return  1;
