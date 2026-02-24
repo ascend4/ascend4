@@ -31,12 +31,14 @@
 #include <ascend/compiler/parser.h>
 #include <ascend/compiler/library.h>
 #include <ascend/compiler/symtab.h>
+#include <ascend/compiler/type_desc.h>
 #include <ascend/compiler/simlist.h>
 #include <ascend/compiler/instquery.h>
 #include <ascend/compiler/parentchild.h>
 #include <ascend/compiler/atomvalue.h>
 #include <ascend/compiler/childio.h>
 #include <ascend/compiler/instance_name.h>
+#include <ascend/compiler/units.h>
 
 #include <ascend/compiler/initialize.h>
 
@@ -1101,6 +1103,295 @@ static void test_instantiate_tables_v05_fail_dense_bad_row_label_string(void){
 	);
 }
 
+static void test_atom_declared_units_from_default(void){
+	int status;
+	int has_error;
+	struct TypeDescription *t;
+	const char *model = "\n\
+		UNITS\n\
+			MW = {1e6*kg*m^2/s^3};\n\
+		END UNITS;\n\
+		ATOM atom_decl_units REFINES real DIMENSION M*L^2/T^3 DEFAULT 5 {MW};\n\
+		END atom_decl_units;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 0);
+
+	t = FindType(AddSymbol("atom_decl_units"));
+	CU_ASSERT_FATAL(t != NULL);
+	CU_ASSERT(GetBaseType(t) == real_type);
+	CU_ASSERT_FATAL(GetRealDeclaredUnits(t) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetRealDeclaredUnits(t)), "MW");
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_constant_units_clause_and_declared_units(void){
+	int status;
+	int has_error;
+	const struct Units *u;
+	struct TypeDescription *t;
+	const char *model = "\n\
+		UNITS\n\
+			MWh = {3.6e9*kg*m^2/s^2};\n\
+			USD_per_MWh = {USD/MWh};\n\
+		END UNITS;\n\
+		CONSTANT const_units_no_default REFINES real_constant UNITS {MWh};\n\
+		CONSTANT const_units_with_default REFINES real_constant UNITS {USD_per_MWh} :== 20 {USD_per_MWh};";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 0);
+
+	t = FindType(AddSymbol("const_units_no_default"));
+	CU_ASSERT_FATAL(t != NULL);
+	CU_ASSERT(GetBaseType(t) == real_constant_type);
+	CU_ASSERT(ConstantDefaulted(t) == 0);
+	CU_ASSERT_FATAL(GetConstantDeclaredUnits(t) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetConstantDeclaredUnits(t)), "MWh");
+	u = LookupUnits("MWh");
+	CU_ASSERT_FATAL(u != NULL);
+	CU_ASSERT(GetConstantDimens(t) == UnitsDimensions(u));
+
+	t = FindType(AddSymbol("const_units_with_default"));
+	CU_ASSERT_FATAL(t != NULL);
+	CU_ASSERT(GetBaseType(t) == real_constant_type);
+	CU_ASSERT(ConstantDefaulted(t) == 1);
+	CU_ASSERT_FATAL(GetConstantDeclaredUnits(t) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetConstantDeclaredUnits(t)), "USD_per_MWh");
+	u = LookupUnits("USD_per_MWh");
+	CU_ASSERT_FATAL(u != NULL);
+	CU_ASSERT(GetConstantDimens(t) == UnitsDimensions(u));
+	CU_ASSERT_DOUBLE_EQUAL(GetConstantDefReal(t), 20.0 * UnitsConvFactor(u), 1e-12);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_constant_units_clause_invalid_units(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		CONSTANT const_units_invalid REFINES real_constant UNITS {NO_SUCH_UNIT};";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs, "Undefined units") != NULL);
+	CU_ASSERT(FindType(AddSymbol("const_units_invalid")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_constant_units_clause_nonreal_rejected(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		CONSTANT const_units_nonreal REFINES integer_constant UNITS {kg};";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(strstr(g_parse_error_capture.all_error_msgs, "non-real type") != NULL);
+	CU_ASSERT(FindType(AddSymbol("const_units_nonreal")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_atom_declared_units_inherited_on_refine(void){
+	int status;
+	int has_error;
+	struct TypeDescription *parent;
+	struct TypeDescription *child;
+	const char *model = "\n\
+		UNITS\n\
+			MW = {1e6*kg*m^2/s^3};\n\
+		END UNITS;\n\
+		ATOM atom_decl_units_parent REFINES real DIMENSION M*L^2/T^3 DEFAULT 5 {MW};\n\
+		END atom_decl_units_parent;\n\
+		ATOM atom_decl_units_child REFINES atom_decl_units_parent;\n\
+		END atom_decl_units_child;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 0);
+
+	parent = FindType(AddSymbol("atom_decl_units_parent"));
+	CU_ASSERT_FATAL(parent != NULL);
+	CU_ASSERT(GetBaseType(parent) == real_type);
+	CU_ASSERT_FATAL(GetRealDeclaredUnits(parent) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetRealDeclaredUnits(parent)), "MW");
+
+	child = FindType(AddSymbol("atom_decl_units_child"));
+	CU_ASSERT_FATAL(child != NULL);
+	CU_ASSERT(GetBaseType(child) == real_type);
+	CU_ASSERT_FATAL(GetRealDeclaredUnits(child) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetRealDeclaredUnits(child)), "MW");
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_atom_declared_units_null_without_units(void){
+	int status;
+	int has_error;
+	struct TypeDescription *t;
+	const char *model = "\n\
+		ATOM atom_decl_units_null REFINES real DIMENSION M*L^2/T^3;\n\
+		END atom_decl_units_null;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 0);
+
+	t = FindType(AddSymbol("atom_decl_units_null"));
+	CU_ASSERT_FATAL(t != NULL);
+	CU_ASSERT(GetBaseType(t) == real_type);
+	CU_ASSERT(GetRealDeclaredUnits(t) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_constant_declared_units_inherited_on_refine(void){
+	int status;
+	int has_error;
+	const struct Units *u;
+	struct TypeDescription *parent;
+	struct TypeDescription *child;
+	const char *model = "\n\
+		UNITS\n\
+			MWh = {3.6e9*kg*m^2/s^2};\n\
+		END UNITS;\n\
+		CONSTANT const_units_parent REFINES real_constant UNITS {MWh};\n\
+		CONSTANT const_units_child REFINES const_units_parent;";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+	CU_ASSERT(has_error == 0);
+
+	u = LookupUnits("MWh");
+	CU_ASSERT_FATAL(u != NULL);
+
+	parent = FindType(AddSymbol("const_units_parent"));
+	CU_ASSERT_FATAL(parent != NULL);
+	CU_ASSERT(GetBaseType(parent) == real_constant_type);
+	CU_ASSERT_FATAL(GetConstantDeclaredUnits(parent) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetConstantDeclaredUnits(parent)), "MWh");
+	CU_ASSERT(GetConstantDimens(parent) == UnitsDimensions(u));
+
+	child = FindType(AddSymbol("const_units_child"));
+	CU_ASSERT_FATAL(child != NULL);
+	CU_ASSERT(GetBaseType(child) == real_constant_type);
+	CU_ASSERT_FATAL(GetConstantDeclaredUnits(child) != NULL);
+	CU_ASSERT_STRING_EQUAL(SCP(GetConstantDeclaredUnits(child)), "MWh");
+	CU_ASSERT(GetConstantDimens(child) == UnitsDimensions(u));
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
+static void test_constant_units_clause_mismatched_default_rejected(void){
+	int status;
+	int has_error;
+	const char *model = "\n\
+		UNITS\n\
+			MWh = {3.6e9*kg*m^2/s^2};\n\
+			MW = {1e6*kg*m^2/s^3};\n\
+		END UNITS;\n\
+		CONSTANT const_units_bad_default REFINES real_constant UNITS {MWh} :== 20 {MW};";
+
+	Asc_CompilerInit(1);
+	parse_error_capture_reset();
+	error_reporter_set_callback(&parse_error_capture_cb);
+
+	/*m =*/ Asc_OpenStringModule(model, &status, "");
+	CU_ASSERT(status == 0);
+
+	error_reporter_tree_start();
+	CU_ASSERT(0 == zz_parse());
+	has_error = error_reporter_tree_has_error();
+	error_reporter_tree_end();
+
+	CU_ASSERT(has_error == 1);
+	CU_ASSERT(g_parse_error_capture.error_count > 0);
+	CU_ASSERT(FindType(AddSymbol("const_units_bad_default")) == NULL);
+
+	error_reporter_set_callback(NULL);
+	Asc_CompilerDestroy();
+}
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -1142,6 +1433,14 @@ static void test_instantiate_tables_v05_fail_dense_bad_row_label_string(void){
 	T(instantiate_tables_v05_fail_positional_trailing_delim) \
 	T(instantiate_tables_v05_fail_positional_double_delim) \
 	T(instantiate_tables_v05_fail_dense_bad_col_label) \
-	T(instantiate_tables_v05_fail_dense_bad_row_label_string)
+	T(instantiate_tables_v05_fail_dense_bad_row_label_string) \
+	T(atom_declared_units_from_default) \
+	T(constant_units_clause_and_declared_units) \
+	T(constant_units_clause_invalid_units) \
+	T(constant_units_clause_nonreal_rejected) \
+	T(atom_declared_units_inherited_on_refine) \
+	T(atom_declared_units_null_without_units) \
+	T(constant_declared_units_inherited_on_refine) \
+	T(constant_units_clause_mismatched_default_rejected)
 
 REGISTER_TESTS_SIMPLE(compiler_basics, TESTS)

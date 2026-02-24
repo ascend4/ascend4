@@ -116,6 +116,7 @@ struct ConstantTypeDesc {
   unsigned defaulted;         /**< 0 -> ignore default value and units
                                    1 -> don't ignore them */
   CONST dim_type *dimp;       /**< dimensions of instance */
+  symchar *decl_units;        /**< declared unit expression for real constants, if supplied */
   /* no stinking child list */
 };
 
@@ -132,6 +133,7 @@ struct AtomTypeDesc {
     unsigned defbool;         /**< default value for boolean instances */
   } u;                        /**< union of default values */
   CONST dim_type *dimp;       /**< dimensions of instance */
+  symchar *decl_units;        /**< declared unit expression for real atoms, if supplied */
 };
 
 /**
@@ -643,6 +645,16 @@ extern unsigned GetBoolDefaultF(CONST struct TypeDescription *d,
 #define GetConstantDefSymbol(d)  ((d)->u.constant.u.defsymbol)
 /**<  Returns the symchar* default value of constant TypeDescription *d. */
 
+#define GetRealDeclaredUnits(d) ((d)->u.atom.decl_units)
+/**<
+	Returns the declared units token for a real atom default value, if any.
+*/
+
+#define GetConstantDeclaredUnits(d) ((d)->u.constant.decl_units)
+/**<
+	Returns the declared units token for a real constant declaration/default, if any.
+*/
+
 
 /*------------------------------------------------------------------------------
 	DIMENSIONS
@@ -990,6 +1002,7 @@ extern struct TypeDescription
                         int defaulted,
                         double rval,
                         CONST dim_type *dim,
+                        symchar *decl_units,
                         long ival,
                         symchar *sval,
                         int univ);
@@ -1023,6 +1036,7 @@ extern struct TypeDescription
                     int defaulted,
                     double dval,
                     CONST dim_type *ddim,
+                    symchar *decl_units,
                     int univ,
                     long ival,
                     symchar *sval);
@@ -1257,4 +1271,3 @@ ASC_DLLSPEC void SetTypeShowBit(struct TypeDescription *d, int value);
 /* @} */
 
 #endif  /* ASC_TYPE_DESC_H */
-

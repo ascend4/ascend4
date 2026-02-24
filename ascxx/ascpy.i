@@ -304,6 +304,8 @@ public:
 %apply SWIGTYPE *DISOWN { Compiler * };
 %apply SWIGTYPE *DISOWN { Simulation * };
 
+/* keep raw token internal for wrapper implementation */
+%rename(_getDeclaredUnitsToken) Type::getDeclaredUnits;
 %include "type.h"
 
 %extend Type{
@@ -330,6 +332,13 @@ public:
 				return None
 
 			return _units;
+
+		def getDeclaredUnits(self):
+			"""Return declared units for the type as a Units object, or None."""
+			_u = self._getDeclaredUnitsToken()
+			if _u is None:
+				return None
+			return Units(_u)
 	%}
 }
 
@@ -477,12 +486,12 @@ public:
 				#raise RuntimeError("Unknown value model type="+self.getType().getName().toString()+", instance kind=".getKindStr())
 
 		def getRealValueAndUnits(self):
-			"""Return real-valued instance value as a string, converted to, and including, its preferred units."""
+			"""Return real-valued instance value as a string, using preferred, then declared, then default units."""
 			if not self.isReal():
 				raise TypeError
-			if self.isFund():
-				return self.getRealValue();
 			_u = self.getType().getPreferredUnits();
+			if _u is None:
+				_u = self.getType().getDeclaredUnits()
 			if _u is None:
 				_u = self.getDimensions().getDefaultUnits()
 			return _u.getConvertedValue(self.getRealValue())

@@ -129,6 +129,21 @@ Type::isRefinedConstant() const{
 	return BaseTypeIsConstant(t);
 }
 
+const char *
+Type::getDeclaredUnits() const{
+	if(t==NULL){
+		throw runtime_error("Type::getDeclaredUnits: t is NULL");
+	}
+	switch(GetBaseType(t)){
+		case real_type:
+			return GetRealDeclaredUnits(t) ? SCP(GetRealDeclaredUnits(t)) : NULL;
+		case real_constant_type:
+			return GetConstantDeclaredUnits(t) ? SCP(GetConstantDeclaredUnits(t)) : NULL;
+		default:
+			return NULL;
+	}
+}
+
 /**
 	Instantiate a type. This *can be* expensive, if you have selected to 
 	compile your model into C-code and load a dynamic library with native
@@ -304,4 +319,3 @@ Type::findMember(const SymChar &name){
 	Type *t2=new Type(t);
 	return *t2;
 }
-

@@ -5046,6 +5046,7 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
         				      long ival,
         				      symchar *sval,
         				      CONST dim_type *dim,
+        				      symchar *decl_units,
                                               unsigned int err)
 {
   struct TypeDescription *rdesc;
@@ -5097,6 +5098,9 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
       ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Dimensions of constant refinement %s don't match those of %s.",SCP(name),SCP(refines));
         return NULL;
     }
+    if (decl_units == NULL && GetConstantDeclaredUnits(rdesc) != NULL) {
+      decl_units = GetConstantDeclaredUnits(rdesc);
+    }
     if ( ConstantDefaulted(rdesc) ) {
       defaulted = 1;
       rval = GetConstantDefReal(rdesc);
@@ -5104,12 +5108,26 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
     break; /* end real const */
   case integer_constant_type: /* fall through */
   case boolean_constant_type:
+    if (decl_units != NULL) {
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERR
+        ,"CONSTANT %s declares UNITS but refines non-real type %s."
+        ,SCP(name),SCP(refines)
+      );
+      return NULL;
+    }
     if ( ConstantDefaulted(rdesc) ) {
       defaulted = 1;
       ival = GetConstantDefInteger(rdesc);
     }
     break; /* end integer,boolean const */
   case symbol_constant_type:
+    if (decl_units != NULL) {
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERR
+        ,"CONSTANT %s declares UNITS but refines non-real type %s."
+        ,SCP(name),SCP(refines)
+      );
+      return NULL;
+    }
     if ( ConstantDefaulted(rdesc) ) {
       defaulted = 1;
       sval = GetConstantDefSymbol(rdesc);
@@ -5124,7 +5142,7 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
       StatioLabel(1),SCP(name));
   }
   return CreateConstantTypeDesc(name,t,rdesc,mod,CalcByteSize(t,NULL,NULL),
-        			defaulted,rval,dim,ival,sval,univ);
+        			defaulted,rval,dim,decl_units,ival,sval,univ);
 }
 
 struct TypeDescription *CreateAtomTypeDef(symchar *name,
@@ -5139,6 +5157,7 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
         				  CONST dim_type *dim,
         				  long ival,
         				  symchar *sval,
+        				  symchar *decl_units,
                                           unsigned int err)
 {
   struct TypeDescription *rdesc;
@@ -5186,6 +5205,9 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
     }
     t = GetBaseType(rdesc);
     if (GetUniversalFlag(rdesc)) univ=1;
+    if (decl_units == NULL && GetRealDeclaredUnits(rdesc) != NULL) {
+      decl_units = GetRealDeclaredUnits(rdesc);
+    }
     sl = AppendStatementLists(GetStatementList(rdesc),sl);
     pl = MergeProcedureLists(GetInitializationList(rdesc),pl);
     if ((!defaulted)&&(AtomDefaulted(rdesc))){
@@ -5206,7 +5228,7 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
       /* calculate bytesize */
       bytesize = CalcByteSize(t,clist,childd);
       return CreateAtomTypeDesc(name,t,rdesc,mod,clist,pl,sl,bytesize,
-        			childd,defaulted,val,dim,univ,ival,sval);
+        			childd,defaulted,val,dim,decl_units,univ,ival,sval);
     } else {
       ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"CreateAtomTypeDef: unable to MakeChildDesc");
       DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
@@ -5361,7 +5383,7 @@ static void DefineCType(symchar *sym, enum type_kind t)
 {
   struct TypeDescription *def;
   def = CreateConstantTypeDesc(sym,t,NULL,NULL,CalcByteSize(t,NULL,NULL),
-                               0,0.0,WildDimension(),0,NULL,0);
+                               0,0.0,WildDimension(),NULL,0,NULL,0);
   if (def) {
     AddType(def);
   } else {
@@ -5378,7 +5400,7 @@ static void DefineFType(symchar *sym, enum type_kind t)
 {
   struct TypeDescription *def;
   def = CreateAtomTypeDef(sym,NULL,t,NULL,0,EmptyStatementList(),NULL,
-        		  0,0.0,WildDimension(),0,NULL,0);
+        		  0,0.0,WildDimension(),0,NULL,NULL,0);
   if (def) {
     AddType(def);
   } else {
