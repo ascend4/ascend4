@@ -6842,10 +6842,12 @@ static int DatasetReadLine(struct dataset_stream_t *stream,
       break;
     }
     {
-      char c = (char)ch;
+      char cbuf[2];
       got = 1;
-      Asc_DStringAppend(line,&c,1);
-      if (c == '\n') {
+      cbuf[0] = (char)ch;
+      cbuf[1] = '\0';
+      Asc_DStringAppend(line,cbuf,1);
+      if (cbuf[0] == '\n') {
         break;
       }
     }
@@ -7246,10 +7248,13 @@ static int DatasetMaybeApplyUnitsRow(struct dataset_table_t *table,
     return 1;
   }
 
-  parsed = ASC_NEW_ARRAY(char *,ntokens);
+  parsed = ASC_NEW_ARRAY_CLEAR(char *,ntokens);
+  if (parsed == NULL) {
+    STATEMENT_ERROR(statement,"Unable to allocate DATASET units-row buffer");
+    return 0;
+  }
   for (i = 0; i < ntokens; ++i) {
     int has_units = 0;
-    parsed[i] = NULL;
     if (!DatasetParseUnitsOnlyToken(tokens[i],&parsed[i],&has_units)) {
       goto not_units_row;
     }
