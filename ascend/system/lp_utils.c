@@ -1,5 +1,7 @@
 #include "lp_utils.h"
 
+#include <math.h>
+
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/mathmacros.h>
 #include <ascend/general/mem.h>
@@ -51,6 +53,14 @@ void lp_nuke_pointers(mps_data_t *mps){
 	if(mps->bcol != NULL){
 		destroy_array(mps->bcol);
 		mps->bcol = NULL;
+	}
+	if(mps->col_scale != NULL){
+		destroy_array(mps->col_scale);
+		mps->col_scale = NULL;
+	}
+	if(mps->row_scale != NULL){
+		destroy_array(mps->row_scale);
+		mps->row_scale = NULL;
 	}
 	if(mps->typerow != NULL){
 		destroy_array(mps->typerow);
@@ -469,4 +479,195 @@ void lp_ensure_bounds(FILE *mif, slv_system_t slv, struct var_variable *var){
 		var_set_value(var, high);
 	}
 	ASC_FREE(varname);
+}
+
+static real64 lp_safe_nominal(real64 raw){
+	real64 s = fabs(raw);
+	if(!isfinite(s) || s < 1e-12){
+		return 1.0;
+	}
+	return s;
+}
+
+boolean lp_apply_nominal_scaling(
+	mtx_matrix_t Ac_mtx,
+	real64 lbrow[],
+	real64 ubrow[],
+	real64 bcol[],
+	char typerow[],
+	char relopcol[],
+	int32 cap,
+	int32 rused,
+	int32 vused,
+	int32 crow,
+	struct var_variable **vlist,
+	struct rel_relation **rlist,
+	struct rel_relation *obj,
+	boolean varnom_scale,
+	boolean relnom_scale,
+	real64 **col_scale_out,
+	real64 **row_scale_out
+){
+	real64 *col_scale = NULL;
+	real64 *row_scale = NULL;
+	real64 *row_auto = NULL;
+	int32 i;
+	struct var_variable **vp;
+	struct rel_relation **rp;
+
+	mtx_coord_t nz;
+	mtx_range_t range;
+	real64 a;
+	int32 orgcol;
+	int32 curcol;
+	int32 orgrow;
+	real64 cscale;
+	real64 rscale;
+
+	if(
+		Ac_mtx == NULL || lbrow == NULL || ubrow == NULL || bcol == NULL
+		|| typerow == NULL || relopcol == NULL
+		|| vlist == NULL || rlist == NULL || cap <= 0 || rused < 0 || vused < 0
+	){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"lp_apply_nominal_scaling called with invalid arguments.");
+		return FALSE;
+	}
+	(void)obj;
+	(void)crow;
+
+	col_scale = create_array(vused,real64);
+	row_scale = create_array(cap,real64);
+	if(col_scale == NULL || row_scale == NULL){
+		if(col_scale != NULL)ascfree(col_scale);
+		if(row_scale != NULL)ascfree(row_scale);
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed allocating LP/MIP scaling arrays.");
+		return FALSE;
+	}
+	if(relnom_scale){
+		row_auto = create_zero_array(rused,real64);
+		if(row_auto == NULL){
+			ascfree(col_scale);
+			ascfree(row_scale);
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed allocating LP/MIP row auto-scale array.");
+			return FALSE;
+		}
+	}
+
+	for(i = 0; i < vused; ++i)col_scale[i] = 1.0;
+	for(i = 0; i < cap; ++i)row_scale[i] = 1.0;
+
+	if(varnom_scale){
+		for(vp = vlist; *vp != NULL; ++vp){
+			real64 s;
+			int32 col = var_sindex(*vp);
+			if(col < 0 || col >= vused)continue;
+			switch(typerow[col]){
+				case MPS_INT:
+				case MPS_BINARY:
+				case MPS_SEMI:
+					col_scale[col] = 1.0;
+					break;
+				default:
+					s = lp_safe_nominal(var_nominal(*vp));
+					col_scale[col] = s;
+					break;
+			}
+		}
+	}
+
+	if(relnom_scale){
+		for(rp = rlist; *rp != NULL; ++rp){
+			real64 s;
+			int32 row = rel_sindex(*rp);
+			if(row < 0 || row >= rused)continue;
+			if(relopcol[row] == LP_TOK_NONINCIDENT)continue;
+			s = lp_safe_nominal(relman_scale(*rp));
+			row_scale[row] = s;
+		}
+
+		for(i = 0; i < rused; ++i){
+			row_auto[i] = fabs(bcol[i]);
+		}
+		for(orgcol = 0; orgcol < vused; ++orgcol){
+			curcol = mtx_org_to_col(Ac_mtx,orgcol);
+			if(curcol < 0)continue;
+			cscale = col_scale[orgcol];
+			if(cscale <= 0.0)cscale = 1.0;
+
+			nz.col = curcol;
+			nz.row = mtx_FIRST;
+			a = mtx_next_in_col(Ac_mtx,&nz,mtx_range(&range,0,mtx_order(Ac_mtx)-1));
+			while(nz.row != mtx_LAST){
+				orgrow = mtx_row_to_org(Ac_mtx,nz.row);
+				if(orgrow >= 0 && orgrow < rused){
+					real64 abs_coeff = fabs(a * cscale);
+					if(abs_coeff > row_auto[orgrow]){
+						row_auto[orgrow] = abs_coeff;
+					}
+				}
+				a = mtx_next_in_col(Ac_mtx,&nz,mtx_range(&range,0,mtx_order(Ac_mtx)-1));
+			}
+		}
+		for(i = 0; i < rused; ++i){
+			real64 rs = lp_safe_nominal(row_auto[i]);
+			if(rs > row_scale[i]){
+				row_scale[i] = rs;
+			}
+		}
+	}
+
+	for(i = 0; i < vused; ++i){
+		cscale = col_scale[i];
+		if(cscale <= 0.0)cscale = 1.0;
+		lbrow[i] /= cscale;
+		ubrow[i] /= cscale;
+	}
+
+	for(i = 0; i < rused; ++i){
+		rscale = row_scale[i];
+		if(rscale <= 0.0)rscale = 1.0;
+		bcol[i] /= rscale;
+	}
+
+	for(orgcol = 0; orgcol < vused; ++orgcol){
+		curcol = mtx_org_to_col(Ac_mtx,orgcol);
+		if(curcol < 0)continue;
+		cscale = col_scale[orgcol];
+		if(cscale <= 0.0)cscale = 1.0;
+
+		nz.col = curcol;
+		nz.row = mtx_FIRST;
+		a = mtx_next_in_col(Ac_mtx,&nz,mtx_range(&range,0,mtx_order(Ac_mtx)-1));
+		while(nz.row != mtx_LAST){
+			orgrow = mtx_row_to_org(Ac_mtx,nz.row);
+			if(orgrow < 0){
+				a = mtx_next_in_col(Ac_mtx,&nz,mtx_range(&range,0,mtx_order(Ac_mtx)-1));
+				continue;
+			}
+			if(orgrow >= 0 && orgrow < cap){
+				rscale = row_scale[orgrow];
+			}else{
+				rscale = 1.0;
+			}
+			if(rscale <= 0.0)rscale = 1.0;
+			mtx_set_value(Ac_mtx,&nz,a * cscale / rscale);
+			a = mtx_next_in_col(Ac_mtx,&nz,mtx_range(&range,0,mtx_order(Ac_mtx)-1));
+		}
+	}
+
+	if(col_scale_out != NULL){
+		*col_scale_out = col_scale;
+	}else{
+		ascfree(col_scale);
+	}
+	if(row_scale_out != NULL){
+		*row_scale_out = row_scale;
+	}else{
+		ascfree(row_scale);
+	}
+	if(row_auto != NULL){
+		ascfree(row_auto);
+	}
+
+	return TRUE;
 }

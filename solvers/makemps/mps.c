@@ -292,7 +292,8 @@ void print_col(FILE *out,               /* file */
  **/
 
 extern boolean write_name_map(const char *name,        /* filename for output */
-                              struct var_variable  **vlist)  /* Variable list (NULL terminated) */
+                              struct var_variable  **vlist,  /* Variable list (NULL terminated) */
+                              const real64 *col_scale)
 {
   FILE *out;
   //int i;
@@ -312,8 +313,8 @@ extern boolean write_name_map(const char *name,        /* filename for output */
   FPRINTF(out,"Timestamp: ");
     stamp(out,FALSE,TRUE,TRUE);   /*  use same stamp as in write_MPS, which was already called */
   FPRINTF(out,"\n");
-  FPRINTF(out,"MPS Name   ASCEND Name\n");
-  FPRINTF(out,"--------   -----------\n");
+  FPRINTF(out,"MPS Name   ASCEND Name   ColScale(x = scale*x_s)\n");
+  FPRINTF(out,"--------   -----------   ----------------------\n");
 
   for(; *vlist != NULL ; ++vlist )
      if( free_inc_var_filter(*vlist) )
@@ -325,6 +326,12 @@ extern boolean write_name_map(const char *name,        /* filename for output */
 
          /* now, from instance_io.h, the full qualified name */
          WriteInstanceName(out, var_instance(*vlist), NULL);
+         if(col_scale != NULL){
+           int32 col = var_sindex(*vlist);
+           if(col >= 0){
+             FPRINTF(out,"   %.17g",col_scale[col]);
+           }
+         }
          FPRINTF(out,"\n");
      }
 

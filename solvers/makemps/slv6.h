@@ -226,6 +226,8 @@ enum{
 	, SP6_SOS3
 	, SP6_BO
 	, SP6_EPS
+	, SP6_VARNOM_SCALE
+	, SP6_RELNOM_SCALE
 	/* real-valued */
 	, SP6_BOVAL
 	, SP6_EPSVAL

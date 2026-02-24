@@ -298,6 +298,18 @@ static int slv6_get_default_parameters(slv_system_t server, SlvClientToken asys
 			,"0->no support; 1->solver supports QOMILP-style EPS termination criterion. Note: value of bound is set in 'epsval'."
 		}, FALSE}
 	);
+	slv_param_bool(parameters,SP6_VARNOM_SCALE
+		,(SlvParameterInitBool){{"varnom_scale"
+			,"Scale by variable nominals?",5
+			,"Scale LP/MIP columns and bounds using continuous-variable nominal values."
+		}, TRUE}
+	);
+	slv_param_bool(parameters,SP6_RELNOM_SCALE
+		,(SlvParameterInitBool){{"relnom_scale"
+			,"Scale by relation nominals?",5
+			,"Scale LP/MIP constraint rows and RHS using relation nominal values."
+		}, TRUE}
+	);
 
 
 	slv_param_real(parameters,SP6_BOVAL
@@ -958,6 +970,8 @@ static SlvClientToken slv6_create(slv_system_t server, int32 *statusindex){   /*
 	sys->mps.lbrow = NULL;     /* all other data in mps structure is 0 */
 	sys->mps.ubrow = NULL;
 	sys->mps.bcol = NULL;
+	sys->mps.col_scale = NULL;
+	sys->mps.row_scale = NULL;
 	sys->mps.typerow = NULL;
 	sys->mps.relopcol = NULL;
 
@@ -1326,6 +1340,30 @@ void slv6_presolve(slv_system_t server){
    for( vp=sys->vlist; *vp != NULL ; ++vp )
      ensure_bounds(NULL,sys, *vp);
 
+   if(!lp_apply_nominal_scaling(
+      sys->mps.Ac_mtx,
+      sys->mps.lbrow,
+      sys->mps.ubrow,
+      sys->mps.bcol,
+      sys->mps.typerow,
+      sys->mps.relopcol,
+      sys->mps.cap,
+      sys->mps.rused,
+      sys->mps.vused,
+      sys->mps.crow,
+      sys->vlist,
+      sys->rlist,
+      sys->obj,
+      SLV_PARAM_BOOL(&(sys->p),SP6_VARNOM_SCALE),
+      SLV_PARAM_BOOL(&(sys->p),SP6_RELNOM_SCALE),
+      &sys->mps.col_scale,
+      &sys->mps.row_scale
+   )){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed applying LP/MIP nominal scaling.");
+      nuke_pointers(&(sys->mps));
+      return;
+   }
+
    /* Reset status flags */
    sys->s.over_defined = (sys->mps.rinc > sys->mps.vinc);
    sys->s.under_defined = (sys->mps.rinc < sys->mps.vinc);
@@ -1399,7 +1437,7 @@ void slv6_solve(slv_system_t server){
 	mps_ok = write_MPS(mps_name, sys->mps, &(sys->p));
 	map_ok = FALSE;
 	if(mps_ok){
-		map_ok = write_name_map(map_name, sys->vlist);
+		map_ok = write_name_map(map_name, sys->vlist, sys->mps.col_scale);
 	}
 	mps_name_abs = makemps_get_abs_name(mps_name);
 	map_name_abs = makemps_get_abs_name(map_name);

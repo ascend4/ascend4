@@ -91,4 +91,32 @@ ASC_DLLSPEC void lp_ensure_bounds(
 	struct var_variable *var
 );
 
+/**
+ * Apply nominal-based scaling to LP/MIP data:
+ * - variable scaling by var_nominal (continuous vars only)
+ * - relation scaling by relman_scale for incident constraints
+ *
+ * The transformed problem uses scaled variables x_s such that
+ * x = col_scale * x_s.
+ */
+ASC_DLLSPEC boolean lp_apply_nominal_scaling(
+	mtx_matrix_t Ac_mtx,
+	real64 lbrow[],
+	real64 ubrow[],
+	real64 bcol[],
+	char typerow[],
+	char relopcol[],
+	int32 cap,
+	int32 rused,
+	int32 vused,
+	int32 crow,
+	struct var_variable **vlist,
+	struct rel_relation **rlist,
+	struct rel_relation *obj,
+	boolean varnom_scale,
+	boolean relnom_scale,
+	real64 **col_scale_out,
+	real64 **row_scale_out
+);
+
 #endif

@@ -27,6 +27,8 @@ typedef struct mps_data {
 	real64 *lbrow;
 	real64 *ubrow;
 	real64 *bcol;
+	real64 *col_scale;
+	real64 *row_scale;
 	char *typerow;
 	char *relopcol;
 } mps_data_t;

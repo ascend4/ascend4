@@ -288,6 +288,18 @@ static int highs_get_default_parameters(slv_system_t server, SlvClientToken asys
 			,"Any lower bound less than 'minf' is treated as -infinity in the exported matrix."
 		}, -1e30, -1e99, 0}
 	);
+	slv_param_bool(parameters,HIGHS_PARAM_VARNOM_SCALE
+		,(SlvParameterInitBool){{"varnom_scale"
+			,"Scale by variable nominals?",4
+			,"Scale LP/MIP columns and bounds using continuous-variable nominal values."
+		}, TRUE}
+	);
+	slv_param_bool(parameters,HIGHS_PARAM_RELNOM_SCALE
+		,(SlvParameterInitBool){{"relnom_scale"
+			,"Scale by relation nominals?",4
+			,"Scale LP/MIP constraint rows and RHS using relation nominal values."
+		}, TRUE}
+	);
 
 	asc_assert(parameters->num_parms==HIGHS_PARAMS);
 
@@ -917,6 +929,8 @@ static SlvClientToken highs_create(slv_system_t server, int32 *statusindex){   /
 	sys->mps.lbrow = NULL;     /* all other data in mps structure is 0 */
 	sys->mps.ubrow = NULL;
 	sys->mps.bcol = NULL;
+	sys->mps.col_scale = NULL;
+	sys->mps.row_scale = NULL;
 	sys->mps.typerow = NULL;
 	sys->mps.relopcol = NULL;
 
@@ -1256,6 +1270,30 @@ void highs_presolve(slv_system_t server){
    /* Call ensure_bounds over all vars to make bounds self-consistent */
    for( vp=sys->vlist; *vp != NULL ; ++vp )
      ensure_bounds(NULL,sys, *vp);
+
+   if(!lp_apply_nominal_scaling(
+      sys->mps.Ac_mtx,
+      sys->mps.lbrow,
+      sys->mps.ubrow,
+      sys->mps.bcol,
+      sys->mps.typerow,
+      sys->mps.relopcol,
+      sys->mps.cap,
+      sys->mps.rused,
+      sys->mps.vused,
+      sys->mps.crow,
+      sys->vlist,
+      sys->rlist,
+      sys->obj,
+      SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_VARNOM_SCALE),
+      SLV_PARAM_BOOL(&(sys->p),HIGHS_PARAM_RELNOM_SCALE),
+      &sys->mps.col_scale,
+      &sys->mps.row_scale
+   )){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"failed applying LP/MIP nominal scaling.");
+      nuke_pointers(&(sys->mps));
+      return;
+   }
 
    /* Reset status flags */
    sys->s.over_defined = (sys->mps.rinc > sys->mps.vinc);
@@ -2406,7 +2444,11 @@ void highs_solve(slv_system_t server){
 		for(vp = sys->vlist; *vp != NULL; ++vp){
 			int32 orgcol = var_sindex(*vp);
 			if(orgcol >= 0 && orgcol < sys->mps.vused){
-				var_set_value(*vp,p.col_value[orgcol]);
+				real64 v = p.col_value[orgcol];
+				if(sys->mps.col_scale != NULL){
+					v *= sys->mps.col_scale[orgcol];
+				}
+				var_set_value(*vp,v);
 			}
 		}
 

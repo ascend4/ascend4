@@ -45,7 +45,8 @@
  *  @return Returns zero on success, non-zero if an error occurred.
  */
 extern boolean write_name_map(const char *name,
-                              struct var_variable **vlist);
+                              struct var_variable **vlist,
+                              const real64 *col_scale);
 
 /*
  *  Writes out the MPS file.

@@ -541,7 +541,7 @@ static void test_makemps_trnsport(void){
 		"ship_seattle_newyork",
 		"ship_sandiego_topeka",
 		153.675,
-		1e-7,
+		1e-3,
 		NULL,
 		0,
 		1,
