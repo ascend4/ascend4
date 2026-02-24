@@ -37,12 +37,28 @@ ATOM currency_value REFINES solver_var
 	DEFAULT 0 {USD};
 	lower_bound := -1e50 {USD};
 	upper_bound := 1e50 {USD};
-	nominal := 1 {USD};
+	nominal := 1e6 {USD};
 END currency_value;
 
 ATOM positive_currency_value REFINES currency_value;
 	lower_bound := 0 {USD};
 END positive_currency_value;
+
+ATOM energy_gj REFINES solver_var
+	DIMENSION M*L^2/T^2
+	DEFAULT 0 {GJ};
+	lower_bound := -1e7 {GJ};
+	upper_bound := 1e7 {GJ};
+	nominal := 1e4 {GJ};
+END energy_gj;
+
+ATOM energy_rate_mw REFINES solver_var
+	DIMENSION M*L^2/T^3
+	DEFAULT 0 {MW};
+	lower_bound := -500 {MW};
+	upper_bound := 500 {MW};
+	nominal := 5 {MW};
+END energy_rate_mw;
 
 MODEL pv_heater_tes_lp;
 	timestep IS_A set OF integer_constant;
@@ -133,29 +149,29 @@ MODEL pv_heater_tes_lp;
 	heater_om_per_energy_equiv :== 2000 {USD/MW/yr};
 
 	(* Design variables *)
-	pv_capacity IS_A energy_rate;
+	pv_capacity IS_A energy_rate_mw;
 	storage_units IS_A solver_int;
-	heater_capacity IS_A energy_rate;
+	heater_capacity IS_A energy_rate_mw;
 
 	(* Derived design quantities *)
-	storage_energy_capacity IS_A energy;
-	storage_charge_capacity IS_A energy_rate;
-	storage_discharge_capacity IS_A energy_rate;
+	storage_energy_capacity IS_A energy_gj;
+	storage_charge_capacity IS_A energy_rate_mw;
+	storage_discharge_capacity IS_A energy_rate_mw;
 
 	(* Dispatch variables *)
-	pv_available[dispatch_step] IS_A energy_rate;
-	pv_to_process[dispatch_step] IS_A energy_rate;
-	pv_to_storage[dispatch_step] IS_A energy_rate;
-	storage_to_process[dispatch_step] IS_A energy_rate;
-	pv_curtailment[dispatch_step] IS_A energy_rate;
-	boiler_to_process[dispatch_step] IS_A energy_rate;
-	storage_state[dispatch_step] IS_A energy;
+	pv_available[dispatch_step] IS_A energy_rate_mw;
+	pv_to_process[dispatch_step] IS_A energy_rate_mw;
+	pv_to_storage[dispatch_step] IS_A energy_rate_mw;
+	storage_to_process[dispatch_step] IS_A energy_rate_mw;
+	pv_curtailment[dispatch_step] IS_A energy_rate_mw;
+	boiler_to_process[dispatch_step] IS_A energy_rate_mw;
+	storage_state[dispatch_step] IS_A energy_gj;
 
 	(* Annual energy tallies *)
-	displaced_energy IS_A energy;
-	boiler_energy IS_A energy;
-	pv_energy IS_A energy;
-	annual_demand IS_A energy;
+	displaced_energy IS_A energy_gj;
+	boiler_energy IS_A energy_gj;
+	pv_energy IS_A energy_gj;
+	annual_demand IS_A energy_gj;
 	displaced_fraction IS_A fraction;
 
 	(* Annual cost tallies *)
@@ -268,14 +284,14 @@ METHOD bound_self;
 	heater_capacity.lower_bound := 0 {MW};
 	heater_capacity.upper_bound := 100 {MW};
 
-	storage_energy_capacity.lower_bound := 0 {MWh};
+	storage_energy_capacity.lower_bound := 0 {GJ};
 	storage_charge_capacity.lower_bound := 0 {MW};
 	storage_discharge_capacity.lower_bound := 0 {MW};
 
-	displaced_energy.lower_bound := 0 {MWh};
-	boiler_energy.lower_bound := 0 {MWh};
-	pv_energy.lower_bound := 0 {MWh};
-	annual_demand.lower_bound := 0 {MWh};
+	displaced_energy.lower_bound := 0 {GJ};
+	boiler_energy.lower_bound := 0 {GJ};
+	pv_energy.lower_bound := 0 {GJ};
+	annual_demand.lower_bound := 0 {GJ};
 
 	FOR t IN dispatch_step DO
 		pv_available[t].lower_bound := 0 {MW};
@@ -285,7 +301,7 @@ METHOD bound_self;
 		pv_curtailment[t].lower_bound := 0 {MW};
 		boiler_to_process[t].lower_bound := 0 {MW};
 		boiler_to_process[t].upper_bound := process_demand;
-		storage_state[t].lower_bound := 0 {MWh};
+		storage_state[t].lower_bound := 0 {GJ};
 	END FOR;
 END bound_self;
 
@@ -295,14 +311,14 @@ METHOD default_self;
 	storage_units.relaxed := TRUE;
 	heater_capacity := 0 {MW};
 
-	storage_energy_capacity := 0 {MWh};
+	storage_energy_capacity := 0 {GJ};
 	storage_charge_capacity := 0 {MW};
 	storage_discharge_capacity := 0 {MW};
 
 	annual_demand := process_demand * step_duration * n_steps;
-	displaced_energy := 0 {MWh};
+	displaced_energy := 0 {GJ};
 	boiler_energy := annual_demand;
-	pv_energy := 0 {MWh};
+	pv_energy := 0 {GJ};
 	displaced_fraction := 0;
 
 	fuel_cost_annual := fuel_price * annual_demand;
@@ -321,7 +337,7 @@ METHOD default_self;
 		storage_to_process[t] := 0 {MW};
 		pv_curtailment[t] := 0 {MW};
 		boiler_to_process[t] := process_demand;
-		storage_state[t] := 0 {MWh};
+		storage_state[t] := 0 {GJ};
 	END FOR;
 END default_self;
 
@@ -342,8 +358,8 @@ METHOD on_load;
 END on_load;
 
 METHOD self_test;
-	ASSERT displaced_energy >= displaced_energy_target - 1e-6 {MWh};
-	ASSERT abs((displaced_energy + boiler_energy) - annual_demand) < 1e-4 {MWh};
+	ASSERT displaced_energy >= displaced_energy_target - 1e-6 {GJ};
+	ASSERT abs((displaced_energy + boiler_energy) - annual_demand) < 1e-4 {GJ};
 	ASSERT total_annual_cost >= 0 {USD};
 END self_test;
 END pv_heater_tes_lp;
