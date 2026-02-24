@@ -266,11 +266,49 @@ static void test_relation5(void){
 	Asc_CompilerDestroy();
 }
 
+static void test_relation_sum_var(void){
+	struct Instance *sim = load_model("relation_sum_var");
+	struct Instance *root = GetSimulationRoot(sim);
+	struct Instance *eq1 = ChildByChar(root, AddSymbol("eq1"));
+	struct Instance *z_inst = ChildByChar(root, AddSymbol("z"));
+	struct Instance *x_inst = ChildByChar(root, AddSymbol("x"));
+	const struct relation *rel = NULL;
+	unsigned long nvars, i;
+	int saw_z = 0, saw_x1 = 0, saw_x2 = 0;
+
+	CU_ASSERT_FATAL(eq1 != NULL);
+	CU_ASSERT_FATAL(z_inst != NULL);
+	CU_ASSERT_FATAL(x_inst != NULL);
+
+	rel = GetInstanceRelationOnly(eq1);
+	CU_ASSERT_FATAL(rel != NULL);
+
+	nvars = NumberVariables(rel);
+	CU_ASSERT(nvars == 3);
+	for(i = 1; i <= nvars; ++i){
+		struct Instance *vi = RelationVariable(rel,i);
+		if(vi == z_inst){
+			saw_z = 1;
+		}else if(vi == InstanceChild(x_inst,1)){
+			saw_x1 = 1;
+		}else if(vi == InstanceChild(x_inst,2)){
+			saw_x2 = 1;
+		}
+	}
+	CU_ASSERT(saw_z);
+	CU_ASSERT(saw_x1);
+	CU_ASSERT(saw_x2);
+
+	sim_destroy(sim);
+	Asc_CompilerDestroy();
+}
+
 #define TESTS(T) \
-    T(simple_eq) \
-    T(relation2) \
-    T(relation3) \
-    T(relation4) \
-    T(relation5)
+	    T(simple_eq) \
+	    T(relation2) \
+	    T(relation3) \
+	    T(relation4) \
+	    T(relation5) \
+	    T(relation_sum_var)
 
 REGISTER_TESTS_SIMPLE(compiler_relation, TESTS)

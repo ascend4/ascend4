@@ -2431,6 +2431,15 @@ static int TryFoldListSetValue(CONST struct Instance *ref,
   }
   DestroyValue(&set_value);
 
+  /*
+    Fold SUM/PROD only when the aggregate is provably constant.
+    Otherwise we can silently erase variable incidences (eg objective SUM[...] terms).
+  */
+  if (!IsConstantValue(agg_value)) {
+    DestroyValue(&agg_value);
+    return 0;
+  }
+
   switch (ValueKind(agg_value)) {
   case integer_value:
     *term_out = CreateIntegerTerm(IntegerValue(agg_value));
