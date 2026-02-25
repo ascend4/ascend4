@@ -960,6 +960,8 @@ static SlvClientToken highs_create(slv_system_t server, int32 *statusindex){   /
 	sys->next_progress_report_time = 0.0;
 	sys->progress_report_count = 0;
 
+	/* Successful create should clear warning/status code. */
+	*statusindex = 0;
 	return(sys);
 }
 
