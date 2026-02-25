@@ -61,7 +61,9 @@ static void test_single(void){
 	isInitializedFunc isInitialized_func;
 	cleanupFunc       cleanup_func;
 	valuetype        *value1, *value2;
+#ifdef MALLOC_DEBUG
 	unsigned long prior_meminuse;
+#endif
 #ifdef __WIN32__
 	const char *shlib_name = "ascend\\utilities\\test\\testdynaload.dll";
 #elif defined(__APPLE__)
@@ -167,7 +169,9 @@ static void test_single(void){
 
 
 static void test_multi(void){
+#ifdef MALLOC_DEBUG
 	unsigned long prior_meminuse;
+#endif
 #ifdef __WIN32__
 	const char *shlib_name[3] = {"ascend\\utilities\\test\\testdynaload.dll"
 		,"ascend\\utilities\\test\\testdynaload2.dll"
@@ -234,4 +238,3 @@ static void test_multi(void){
 	T(multi)
 
 REGISTER_TESTS_SIMPLE(utilities_ascDynaLoad, TESTS)
-

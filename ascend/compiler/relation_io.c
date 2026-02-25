@@ -1540,6 +1540,7 @@ void WriteRelationsInList(FILE *fp,struct gl_list_t *list)
  *********************************************************************
  */
 
+#if 0 /* disused */
 #undef LHS
 #undef RHS
 #define LHS 0
@@ -1632,6 +1633,7 @@ void SaveTokenConstants(FILE *fp, struct gl_list_t *constants)
   }
   FPRINTF(fp,";\n");		/* terminate */
 }
+#endif
 
 #if 0 // disused
 /*

@@ -629,31 +629,33 @@ struct Instance *RefineModel(struct ModelInstance *i,
   new_length = ChildListLen(GetChildList(type));
   old_length = ChildListLen(GetChildList(i->desc));
   if (new_length > old_length){
+    size_t oldbytes, newbytes;
+    struct Instance *oldinst = INST(i);
     /* resize the instance */
-    result = MOD_INST(ascrealloc((char *)i,
-				 (unsigned)sizeof(struct ModelInstance)+
-				 (unsigned)new_length*
-				 (unsigned)sizeof(struct Instance *)));
-    if (result!=i) {
-      /* if realloc moved the instance, need to update all connections to
-       * the instance from before it was refined to point at the new memory.
-       */
-      PendingInstanceRealloced(INST(i),INST(result)); /* change pending list */
-      if (InterfaceNotify!=NULL)
-	(*InterfaceNotify)(result->interface_ptr,INST(i),INST(result));
-      /* fix external relations variables */
-      FixExternalVars(INST(i),INST(result));
-      /* fix whens */
-      FixWhensForRefinement(INST(i),INST(result));
-      ReDirectParents(INST(i),INST(result));
-      ReDirectChildren(INST(i),INST(result));
-      /* fix cliques */
-      FixCliques(INST(i),INST(result));
-      /* fix universal stuff */
-      if (GetUniversalFlag(result->desc)) {
-	ChangeUniversalInstance(GetUniversalTable(),INST(i),INST(result));
-      }
+    oldbytes = sizeof(struct ModelInstance) + old_length * sizeof(struct Instance *);
+    newbytes = sizeof(struct ModelInstance) + new_length * sizeof(struct Instance *);
+    result = MOD_INST(ascmalloc(newbytes));
+    if (result == NULL) {
+      Asc_Panic(2, __FUNCTION__, "Unable to expand refined model instance.");
     }
+    memcpy(result, i, oldbytes);
+    /* fix all connections that still point at the old instance address */
+    PendingInstanceRealloced(oldinst,INST(result)); /* change pending list */
+    if (InterfaceNotify!=NULL)
+      (*InterfaceNotify)(result->interface_ptr,oldinst,INST(result));
+    /* fix external relations variables */
+    FixExternalVars(oldinst,INST(result));
+    /* fix whens */
+    FixWhensForRefinement(oldinst,INST(result));
+    ReDirectParents(oldinst,INST(result));
+    ReDirectChildren(oldinst,INST(result));
+    /* fix cliques */
+    FixCliques(oldinst,INST(result));
+    /* fix universal stuff */
+    if (GetUniversalFlag(result->desc)) {
+      ChangeUniversalInstance(GetUniversalTable(),oldinst,INST(result));
+    }
+    ascfree((char *)oldinst);
     /* init spaces of expanded instance to NULL */
     ZeroNewChildrenEntries(MOD_CHILD(result,old_length),new_length-old_length);
     ReorderChildrenPtrs(MOD_CHILD(result,0),
@@ -768,4 +770,3 @@ struct Instance *RefineClique(struct Instance *i,
   }
   return i;
 }
-

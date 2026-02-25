@@ -79,6 +79,13 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 #define D P->data
 #define I E->data.incomp
 
+	if(E == NULL || I == NULL){
+		ERRMSG("Null EosData or incompressible data in incomp_prepare");
+		FPROPS_FREE(P->data);
+		FPROPS_FREE(P);
+		return NULL;
+	}
+
 	MSG("E->data.incomp = %p",I);
 
 	/* metadata */
@@ -106,13 +113,6 @@ PureFluid *incomp_prepare(const EosData *E, const ReferenceState *ref){
 	D->T_t = NAN;
 	D->rho_c = NAN;
 	D->omega = NAN;
-
-	if(NULL == &(I->rho)){
-		ERRMSG("Density null in the provided filedata");
-		cp0_destroy(D->cp0);
-		FPROPS_FREE(P->data); FPROPS_FREE(P);
-		return NULL;
-	}
 
 	IncompRunData *R = FPROPS_NEW(IncompRunData);
 	D->corr.incomp = R;

@@ -414,28 +414,29 @@ static void WriteAllocation(CONST VOIDPTR adr, size_t size,
   }
 }
 
-static void WriteReAllocation(CONST VOIDPTR adr1, size_t size1,
+static void WriteReAllocation(asc_intptr_t adr1, size_t size1,
                               CONST VOIDPTR adr2, size_t size2,
                               CONST char *file, int line)
 {
+  VOIDPTR adr2e = (VOIDPTR)((char *)adr2 + (size2 > 0 ? (size2 - 1) : 0));
   if (NULL != f_memory_log_file) {
     MSG1(f_memory_log_file,"%9p->%9p %9zu %9zu->%9zu %9zu %6d %s\n",
                               (void *)adr2,
-                              (void *)adr2 + size2 - 1,
+                              adr2e,
                               size2,
-                              (asc_intptr_t)adr1,
-                              (asc_intptr_t)adr1 + size1 - 1,
+                              (size_t)adr1,
+                              (size_t)(adr1 + (size1 > 0 ? (asc_intptr_t)(size1 - 1) : 0)),
                               size1, line, file);
     fflush(f_memory_log_file);
   }
   else{
     MSG1(ASCERR,"Unable to append to memory log file.\n");
-    MSG1(ASCERR, "%9p->%9p %9zu %9p->%9p %9zu %6d %s\n",
+    MSG1(ASCERR, "%9p->%9p %9zu %9zu->%9zu %9zu %6d %s\n",
                    adr2,
-                   adr2 + size2 - 1,
+                   adr2e,
                    size2,
-                   adr1,
-                   adr1 + size1 - 1,
+                   (size_t)adr1,
+                   (size_t)(adr1 + (size1 > 0 ? (asc_intptr_t)(size1 - 1) : 0)),
                    size1, line, file);
   }
 }
@@ -585,16 +586,16 @@ static void DeallocateMemory(CONST VOIDPTR ptr, size_t size,
   WriteDeallocation(ptr,size,file,line);
 }
 
-static void ReallocateMemory(CONST VOIDPTR ptr1, size_t size1,
+static void ReallocateMemory(int ptr1_pos, asc_intptr_t ptr1_adr, size_t size1,
                              CONST VOIDPTR ptr2, size_t size2,
                              CONST char *file, int line
 ){
   int pos,c;
   /* handle the deallocation first */
-  pos = SearchForMemory(ptr1);
+  pos = ptr1_pos;
   if(( pos >= 0 ) &&
       ( pos < f_memory_length ) &&
-      ( f_mem_rec[pos].ptr == ptr1 )) {
+      ((asc_intptr_t)f_mem_rec[pos].ptr == ptr1_adr )) {
     /* a matching pointer was found */
     asc_assert(f_mem_rec[pos].size == size1);
     /* copy all allocation records to the previous index, overwriting the current record */
@@ -623,11 +624,11 @@ static void ReallocateMemory(CONST VOIDPTR ptr1, size_t size1,
         f_mem_rec[pos].ptr = ptr2;
         f_mem_rec[pos].size = size2;
       }
-    }else{
-      MSG1(ASCERR, "Pointer list filled up.  Error messages may be unreliable.\n");
-    }
+  }else{
+    MSG1(ASCERR, "Pointer list filled up.  Error messages may be unreliable.\n");
   }
-  WriteReAllocation(ptr1,size1,ptr2,size2,file,line);
+  }
+  WriteReAllocation(ptr1_adr,size1,ptr2,size2,file,line);
 }
 
 VOIDPTR asccallocf(size_t nelem, size_t elsize,
@@ -684,8 +685,12 @@ static size_t FindMemorySize(CONST VOIDPTR ptr, int * CONST found){
 VOIDPTR ascreallocf(VOIDPTR ptr, size_t size, CONST char *file, int line){
   size_t old_size;
   int found;
+  int old_pos;
+  asc_intptr_t old_ptr_adr;
   VOIDPTR result;
   OpenLogFile();
+  old_pos = SearchForMemory(ptr);
+  old_ptr_adr = (asc_intptr_t)ptr;
   if (AllocatedMemory(ptr,0)){
     old_size = FindMemorySize(ptr,&found);
     if (!found){
@@ -704,7 +709,7 @@ VOIDPTR ascreallocf(VOIDPTR ptr, size_t size, CONST char *file, int line){
   }
   if (NULL == result)
     size = 0;
-  ReallocateMemory(ptr,old_size,result,size,file,line);
+  ReallocateMemory(old_pos,old_ptr_adr,old_size,result,size,file,line);
   if (size >= old_size)
     f_memory_allocated += (size-old_size);
   else

@@ -99,9 +99,19 @@ unsigned long find_int_pos(const struct gl_list_t *list, unsigned long value)
  */
 static void test_list(void)
 {
+#ifdef MALLOC_DEBUG
   /* array to hold discarded list pointers to check for deallocation */
   struct gl_list_t *p_used_lists[MAX_LISTS_TO_TRACK];
   unsigned long n_used_lists = 0;       /* # of lists stored in same */
+# define TRACK_USED_LIST(listptr) \
+  do { \
+    if (n_used_lists < MAX_LISTS_TO_TRACK) { \
+      p_used_lists[n_used_lists++] = (listptr); \
+    } \
+  } while (0)
+#else
+# define TRACK_USED_LIST(listptr) ((void)0)
+#endif
 
   struct gl_list_t *p_list1;
   struct gl_list_t *p_list2;
@@ -155,9 +165,11 @@ static void test_list(void)
       *pint_array[i] = i;
   }
 
+#ifdef MALLOC_DEBUG
   for (i=0 ; i<MAX_LISTS_TO_TRACK ; ++i) {  /* initialize the array of used lists */
     p_used_lists[i] = NULL;
   }
+#endif
 
   /* test gl_create(), gl_destroy(), gl_free_and_destroy() */
 
@@ -175,10 +187,7 @@ static void test_list(void)
   CU_TEST(0 != AllocatedMemory((VOIDPTR)p_list1, capacity * sizeof(VOIDPTR)));
 #endif
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* destroy the list and check for deallocation */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* destroy the list and check for deallocation */
 
 #ifdef MALLOC_DEBUG
 #ifdef LISTUSESPOOL
@@ -214,10 +223,7 @@ static void test_list(void)
   }
 #endif
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up, leaving data in tact */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up, leaving data in tact */
 
 #ifdef MALLOC_DEBUG
   for (i=0 ; i<10 ; ++i) {              /* check that data is still in tact */
@@ -236,10 +242,7 @@ static void test_list(void)
   }
 #endif
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_free_and_destroy(p_list1);         /* clean up, deallocating data stored in list */
+  TRACK_USED_LIST(p_list1);  gl_free_and_destroy(p_list1);         /* clean up, deallocating data stored in list */
 
 #ifdef MALLOC_DEBUG
   for (i=0 ; i<20 ; ++i) {              /* check that some data was deallocated */
@@ -305,10 +308,7 @@ static void test_list(void)
     CU_TEST(i == *((unsigned long*)gl_fetch(p_list1, i+1)));
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_store() */
 
@@ -361,10 +361,7 @@ static void test_list(void)
     CU_TEST((10-i) == *((unsigned long*)gl_fetch(p_list1, i)));
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_append_ptr() */
 
@@ -417,10 +414,7 @@ static void test_list(void)
     CU_TEST(NULL == gl_fetch(p_list1, i+1));
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_fast_append_ptr() */
 
@@ -469,10 +463,7 @@ static void test_list(void)
     CU_TEST(NULL == gl_fetch(p_list1, i+1));
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_append_list() */
 
@@ -547,10 +538,7 @@ static void test_list(void)
     CU_TEST(*pint_array[i] == *((unsigned long*)gl_fetch(p_list2, i+1)));
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list2;
-  }
-  gl_destroy(p_list2);                  /* create a list with NULL pointer data */
+  TRACK_USED_LIST(p_list2);  gl_destroy(p_list2);                  /* create a list with NULL pointer data */
   p_list2 = gl_create(2);
   gl_append_ptr(p_list2, NULL);
   gl_append_ptr(p_list2, NULL);
@@ -571,15 +559,9 @@ static void test_list(void)
     CU_TEST(NULL == gl_fetch(p_list2, i+1));
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the lists, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the lists, preserving data */
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list2;
-  }
-  gl_destroy(p_list2);
+  TRACK_USED_LIST(p_list2);  gl_destroy(p_list2);
 
   /* test (sort-of) gl_init(), gl_init_pool(), gl_destroy_pool() */
 
@@ -602,7 +584,9 @@ static void test_list(void)
   gl_init_pool();
   gl_init();                            /* should be able to call this again without problems */
 
+#ifdef MALLOC_DEBUG
   n_used_lists = 0;
+#endif
 
   /* test gl_length(), gl_safe_length() */
 
@@ -632,10 +616,7 @@ static void test_list(void)
     CU_TEST((i+1) == gl_safe_length(p_list1));
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_capacity() */
 
@@ -649,18 +630,12 @@ static void test_list(void)
   }
   CU_TEST(capacity < gl_capacity(p_list1));
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   p_list1 = gl_create(capacity+1);      /* create a list having larger capacity */
   CU_TEST(capacity < gl_capacity(p_list1));
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
 
   /* test gl_sort(), gl_sorted(), gl_insert_sorted(), gl_set_sorted() */
@@ -818,10 +793,7 @@ static void test_list(void)
     CU_TEST(gl_fetch(p_list1, i+2) >= gl_fetch(p_list1, i+1));
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_iterate() */
 
@@ -852,10 +824,7 @@ static void test_list(void)
     CU_TEST((2*i) == *((unsigned long*)gl_fetch(p_list1, i+1)));
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
   for (i=0 ; i<20 ; ++i)                /* need to restore our integer array */
     *pint_array[i] = i;
 
@@ -1058,10 +1027,7 @@ static void test_list(void)
       gl_search_reverse(p_list1, pint_array[5], compare_ints));
   CU_TEST(0 == gl_search_reverse(p_list1, pint_array[10], compare_ints));
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_empty() */
 
@@ -1084,10 +1050,7 @@ static void test_list(void)
   gl_reset(p_list1);
   CU_TEST(TRUE == gl_empty(p_list1));
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_unique_list() */
 
@@ -1107,10 +1070,7 @@ static void test_list(void)
   gl_append_ptr(p_list1, pint_array[5]);
   CU_TEST(FALSE == gl_unique_list(p_list1));
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_delete() */
 
@@ -1256,10 +1216,7 @@ static void test_list(void)
   pint_array[8] = (unsigned long*)ascmalloc(sizeof(unsigned long));
   *pint_array[8] = 8;
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_reverse() */
 
@@ -1309,10 +1266,7 @@ static void test_list(void)
   }
   CU_TEST(0 != gl_sorted(p_list1));
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_reset() */
 
@@ -1353,10 +1307,7 @@ static void test_list(void)
   CU_TEST(0 != gl_sorted(p_list1));
   CU_TEST(0 != gl_expandable(p_list1));
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_copy() */
 
@@ -1375,20 +1326,14 @@ static void test_list(void)
 
   p_list2 = gl_copy(p_list1);            /* copying an empty list should be ok */
   CU_TEST(0 == gl_length(p_list2));
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list2;
-  }
-  gl_destroy(p_list2);
+  TRACK_USED_LIST(p_list2);  gl_destroy(p_list2);
 
   gl_append_ptr(p_list1, pint_array[5]);
 
   p_list2 = gl_copy(p_list1);            /* copying a list having 1 element should be ok */
   CU_TEST(1 == gl_length(p_list2));
   CU_TEST(5 == *((unsigned long*)gl_fetch(p_list1, 1)));
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list2;
-  }
-  gl_destroy(p_list2);
+  TRACK_USED_LIST(p_list2);  gl_destroy(p_list2);
 
   gl_reset(p_list1);
   for (i=0 ; i<10 ; ++i) {
@@ -1401,10 +1346,7 @@ static void test_list(void)
   for (i=0 ; i<10 ; ++i) {
     CU_TEST(*((unsigned long*)gl_fetch(p_list1, i+1)) == *((unsigned long*)gl_fetch(p_list2, i+1)));
   }
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list2;
-  }
-  gl_destroy(p_list2);
+  TRACK_USED_LIST(p_list2);  gl_destroy(p_list2);
 
   gl_sort(p_list1, compare_addresses_reverse);
 
@@ -1415,10 +1357,7 @@ static void test_list(void)
     CU_TEST(*((unsigned long*)gl_fetch(p_list1, i+1)) == *((unsigned long*)gl_fetch(p_list2, i+1)));
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list2;
-  }
-  gl_free_and_destroy(p_list2);         /* shared data should be destroyed also */
+  TRACK_USED_LIST(p_list2);  gl_free_and_destroy(p_list2);         /* shared data should be destroyed also */
 #ifdef MALLOC_DEBUG
   for (i=0 ; i<10 ; ++i) {
     CU_TEST(0 == AllocatedMemory(gl_fetch(p_list1, i+1), sizeof(unsigned long)));
@@ -1430,10 +1369,7 @@ static void test_list(void)
     *pint_array[i] = i;
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_concat() */
 
@@ -1459,10 +1395,7 @@ static void test_list(void)
   p_list3 = gl_concat(p_list1, p_list2);  /* concatenating empty list should be ok */
   CU_TEST(0 == gl_length(p_list3));
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list3;
-  }
-  gl_destroy(p_list3);
+  TRACK_USED_LIST(p_list3);  gl_destroy(p_list3);
 
   gl_append_ptr(p_list1, pint_array[3]);
 
@@ -1470,29 +1403,20 @@ static void test_list(void)
   CU_TEST(1 == gl_length(p_list3));
   CU_TEST(*pint_array[3] == *((unsigned long*)gl_fetch(p_list3, 1)));
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list3;
-  }
-  gl_destroy(p_list3);
+  TRACK_USED_LIST(p_list3);  gl_destroy(p_list3);
 
   p_list3 = gl_concat(p_list2, p_list1);  /* concatenating empty list with a 1-element list */
   CU_TEST(1 == gl_length(p_list3));
   CU_TEST(*pint_array[3] == *((unsigned long*)gl_fetch(p_list3, 1)));
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list3;
-  }
-  gl_destroy(p_list3);
+  TRACK_USED_LIST(p_list3);  gl_destroy(p_list3);
 
   p_list3 = gl_concat(p_list1, p_list1);  /* concatenating two 1-element lists */
   CU_TEST(2 == gl_length(p_list3));
   CU_TEST(*pint_array[3] == *((unsigned long*)gl_fetch(p_list3, 1)));
   CU_TEST(*pint_array[3] == *((unsigned long*)gl_fetch(p_list3, 2)));
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list3;
-  }
-  gl_destroy(p_list3);
+  TRACK_USED_LIST(p_list3);  gl_destroy(p_list3);
 
   gl_reset(p_list1);
   for (i=0 ; i<10 ; ++i) {
@@ -1505,10 +1429,7 @@ static void test_list(void)
     CU_TEST(*pint_array[i] == *((unsigned long*)gl_fetch(p_list3, i+1)));
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list3;
-  }
-  gl_destroy(p_list3);
+  TRACK_USED_LIST(p_list3);  gl_destroy(p_list3);
 
   p_list3 = gl_concat(p_list2, p_list1);  /* concatenating empty list with a 1-element list */
   CU_TEST(10 == gl_length(p_list3));
@@ -1516,10 +1437,7 @@ static void test_list(void)
     CU_TEST(*pint_array[i] == *((unsigned long*)gl_fetch(p_list3, i+1)));
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list3;
-  }
-  gl_destroy(p_list3);
+  TRACK_USED_LIST(p_list3);  gl_destroy(p_list3);
 
   for (i=0 ; i<10 ; ++i) {
     gl_append_ptr(p_list2, pint_array[i+10]);
@@ -1531,18 +1449,9 @@ static void test_list(void)
     CU_TEST(*pint_array[i] == *((unsigned long*)gl_fetch(p_list3, i+1)));
   }
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list2;
-  }
-  gl_destroy(p_list2);
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list3;
-  }
-  gl_destroy(p_list3);
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list2);  gl_destroy(p_list2);
+  TRACK_USED_LIST(p_list3);  gl_destroy(p_list3);
 
   /* test gl_compare_ptrs() */
 
@@ -1590,14 +1499,8 @@ static void test_list(void)
   CU_TEST(0 > gl_compare_ptrs(p_list1, p_list2));   /* compare equal lists */
   CU_TEST(0 < gl_compare_ptrs(p_list2, p_list1));   /* compare equal lists */
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list2;
-  }
-  gl_destroy(p_list2);
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list2);  gl_destroy(p_list2);
 
   /* test gl_expandable(), gl_set_expandable() */
 
@@ -1627,10 +1530,7 @@ static void test_list(void)
   gl_set_expandable(p_list1, FALSE);
   CU_TEST(0 == gl_expandable(p_list1));
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* test gl_fetchaddr() */
 
@@ -1670,10 +1570,7 @@ static void test_list(void)
   CU_TEST(&p_list1->data[1] == gl_fetchaddr(p_list1, 2));
   CU_TEST(&p_list1->data[2] == gl_fetchaddr(p_list1, 3));
 
-  if (n_used_lists < MAX_LISTS_TO_TRACK) {
-    p_used_lists[n_used_lists++] = p_list1;
-  }
-  gl_destroy(p_list1);                  /* clean up the list, preserving data */
+  TRACK_USED_LIST(p_list1);  gl_destroy(p_list1);                  /* clean up the list, preserving data */
 
   /* gl_report_pool - not tested */
 
@@ -1705,6 +1602,7 @@ static void test_list(void)
 
   CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
 }
+#undef TRACK_USED_LIST
 
 /*===========================================================================*/
 /* Registration information */
@@ -1714,4 +1612,3 @@ static void test_list(void)
 	T(list)
 
 REGISTER_TESTS_SIMPLE(general_list, TESTS);
-

@@ -159,6 +159,8 @@ static void ErrMsg_UnexpectedChar(void);
 
 %}
 
+%option noinput nounput
+
 %x Comment
 %x Symbol
 %x BracedText
