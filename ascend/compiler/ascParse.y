@@ -843,11 +843,15 @@ definition:
 /*    | patch_def */
     | units_def
     | global_def
-    | error
+	| error
 	{
-	  ErrMsg_Generic("Error in definition.");
+	  /*
+	   * The specific syntax diagnostic is already emitted by zz_error().
+	   * Emitting a generic message here causes noisy duplicates during
+	   * parser recovery.
+	   */
 	}
-    ;
+	;
 
 global_def:
     GLOBAL_TOK ';' fstatements end ';'
