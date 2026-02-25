@@ -112,5 +112,7 @@ class RealAtomEntry:
 		if by_name:
 			model_scope = True
 		self.instance.setDisplayUnitsOverride(self.units, by_name, model_scope)
-		ascpy.saveDisplayUnitsOverrides()
+		rc = ascpy.saveDisplayUnitsOverrides()
+		if rc != 0:
+			raise RuntimeError("Failed to save units-overrides preferences")
 		

@@ -804,9 +804,11 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		# TODO does the user want to lose their work?
 		# TODO do we need to chdir?
 		try:
-			ascpy.reloadDisplayUnitsOverrides()
+			rc = ascpy.reloadDisplayUnitsOverrides()
+			if rc != 0:
+				self.reporter.reportWarning("Failed to reload units-overrides preferences")
 		except Exception:
-			pass
+			self.reporter.reportWarning("Failed to reload units-overrides preferences")
 
 		_context = self.statusbar.get_context_id("do_open")
 
@@ -1098,6 +1100,12 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.prefs.setStringPref("Directories","fileopenpath",self.fileopenpath)
 		self.prefs.setBoolPref("Browser","auto_solve",self.is_auto)
 		self.prefs.save_preferences()
+		try:
+			rc = ascpy.saveDisplayUnitsOverrides()
+			if rc != 0:
+				self.reporter.reportWarning("Failed to save units-overrides preferences")
+		except Exception:
+			self.reporter.reportWarning("Failed to save units-overrides preferences")
 
 		loading.print_status("Clearing error callback")		
 		self.reporter.clearPythonErrorCallback()

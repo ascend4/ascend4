@@ -2289,11 +2289,21 @@ int UnitsOverridesSave(
 }
 
 char *UnitsOverridesDefaultPath(void){
+	CONST char *explicit_path = getenv("ASCEND_UNITS_OVERRIDES_PATH");
 	CONST char *xdg = getenv("XDG_CONFIG_HOME");
 	CONST char *home = getenv("HOME");
 	CONST char *appdata = getenv("APPDATA");
 	char *out;
 	size_t n;
+	if (explicit_path != NULL && *explicit_path != '\0') {
+		n = strlen(explicit_path) + 1;
+		out = ASC_NEW_ARRAY(char,n);
+		if (out == NULL) {
+			return NULL;
+		}
+		snprintf(out,n,"%s",explicit_path);
+		return out;
+	}
 	if (xdg != NULL && *xdg != '\0') {
 		n = strlen(xdg) + strlen("/ascend/units-overrides.ini") + 1;
 		out = ASC_NEW_ARRAY(char,n);

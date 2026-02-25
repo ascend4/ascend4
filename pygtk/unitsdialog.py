@@ -188,7 +188,9 @@ class UnitsDialog:
 		by_name = self.name_override_check.get_active()
 		model_scope = self.scope_model_check.get_active()
 		self.instance.setDisplayUnitsOverride(self.selected_units, by_name, model_scope)
-		ascpy.saveDisplayUnitsOverrides()
+		rc = ascpy.saveDisplayUnitsOverrides()
+		if rc != 0:
+			raise RuntimeError("Failed to save units-overrides preferences")
 		self.current_units_name = self.selected_units
 
 	def run(self):

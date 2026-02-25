@@ -446,6 +446,11 @@ ASC_DLLSPEC int UnitsOverridesSave(
 ASC_DLLSPEC char *UnitsOverridesDefaultPath(void);
 /**<
  *  Build default path for units-overrides file.
+ *  Environment precedence:
+ *    ASCEND_UNITS_OVERRIDES_PATH (full filename)
+ *    XDG_CONFIG_HOME/ascend/units-overrides.ini
+ *    HOME/.config/ascend/units-overrides.ini
+ *    APPDATA/ascend/units-overrides.ini
  *  Caller owns returned memory and must free with ASC_FREE.
  */
 
