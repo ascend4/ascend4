@@ -23,10 +23,15 @@
 #include <ascend/general/platform.h>
 #ifdef __WIN32__
 #include <io.h>
+#define TEST_CLOSEFD _close
+#else
+#include <unistd.h>
+#define TEST_CLOSEFD close
 #endif
 #include <ascend/general/ascMalloc.h>
 #include <ascend/general/list.h>
 #include <ascend/general/listio.h>
+#include <ascend/general/ospath.h>
 
 #include <test/common.h>
 #include <test/assertimpl.h>
@@ -149,30 +154,25 @@ static void test_listio(void){
 */
 static void test_str(void){
   struct gl_list_t *list1;
+  char tmp_path[PATH_MAX] = "";
+  int fd;
 
   // PREPARE 
   int i_initialized_lists = FALSE;
   unsigned long prior_meminuse;
   prior_meminuse = ascmeminuse();       /* save meminuse() at start of test function */
 
-#ifdef WIN32
-  char tmpl[PATH_MAX];
-  snprintf(tmpl,PATH_MAX,"%s\\.asctempXXXXXX",getenv("HOME"));
-  fprintf(stderr,"tmpl = %s\n",tmpl);
-  int fd = mkstemp(tmpl);
+  fd = ospath_mkstemp(tmp_path,sizeof(tmp_path),"asc_listio_");
   if(-1==fd){
-    perror("mkstemp");
-    CU_FAIL("failed mkstemp");
+    perror("ospath_mkstemp");
+    CU_FAIL("failed ospath_mkstemp");
     return;
   }
   FILE *tmp = fdopen(fd,"w+");
   if(tmp == NULL){
+    TEST_CLOSEFD(fd);
+    remove(tmp_path);
     perror("fdopen");
-#else
-  FILE *tmp = tmpfile();
-  if(tmp == NULL){
-    perror("tmpfile");
-#endif
     CU_FAIL("failed to open temporary file");
     return;
   }
@@ -267,6 +267,7 @@ static void test_str(void){
   // CLEAN UP
 
   if(tmp)fclose(tmp);
+  if(tmp_path[0] != '\0') remove(tmp_path);
 
   if (TRUE == i_initialized_lists) {
     gl_destroy_pool();

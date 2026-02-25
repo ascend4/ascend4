@@ -16,6 +16,14 @@
 */
 #include <stdlib.h>
 #include <stdio.h>
+#include <ascend/general/ospath.h>
+#ifdef __WIN32__
+# include <io.h>
+# define TEST_CLOSEFD _close
+#else
+# include <unistd.h>
+# define TEST_CLOSEFD close
+#endif
 #include <ascend/utilities/error.h>
 
 #include <test/common.h>
@@ -73,28 +81,23 @@ static void test_error(void){
 
 	unsigned long prior_meminuse;
 	prior_meminuse = ascmeminuse(); /* save meminuse() at start of test function */
+	char tmp_path[PATH_MAX] = "";
 
 	MSG("\nTesting error_reporter routines...");
 	// create a rewindable temporary file for testing the error reporter...
-#ifdef WIN32
-	char tmpl[PATH_MAX];
-	snprintf(tmpl,PATH_MAX,"%s\\.asctempXXXXXX",getenv("HOME"));
-	fprintf(stderr,"tmpl = %s\n",tmpl);
-	int fd = mkstemp(tmpl);
+	int fd = ospath_mkstemp(tmp_path,sizeof(tmp_path),"asc_error_");
 	if(-1==fd){
-		perror("mkstemp");
-		CU_FAIL("failed mkstemp");
+		perror("ospath_mkstemp");
+		CU_FAIL("failed ospath_mkstemp");
 		return;
 	}
 	FILE *tmp = fdopen(fd,"w+");
 	if(tmp == NULL){
-    	perror("fdopen");
-#else
-	FILE *tmp = tmpfile();
-	if(tmp == NULL){
-    	perror("tmpfile");
-#endif
-		CU_FAIL("failed to open tmpfile");
+	    	perror("fdopen");
+			CU_FAIL("failed to open tmpfile");
+			TEST_CLOSEFD(fd);
+			remove(tmp_path);
+			return;
 	}
 	my_error_fp = tmp;
 	error_reporter_set_callback(&my_error_reporter);
@@ -283,6 +286,7 @@ static void test_error(void){
 	error_reporter_set_callback(NULL);
 	my_error_fp = NULL;
 	fclose(tmp);
+	remove(tmp_path);
 
 	CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
 }
