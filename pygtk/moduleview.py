@@ -137,49 +137,54 @@ class ModuleView:
 	def view_activate(self,widget,*args):
 		filename=''
 		if self.modulename:
-			x = ascpy.Library()
-			# TODO is this the fastest way??
-			for module in x.getModules():
+			# Look up in the currently loaded library, not a fresh empty Library().
+			for module in self.library.getModules():
 				if module.getName()==self.modulename:
 					filename=module.getFilename()
 					break
-			# FIXME what if module not found??
+			if not filename:
+				self.browser.reporter.reportError("Unable to locate module '%s'" % self.modulename)
+				return
 			ViewModel(filename=filename,title="Module '%s'" % (self.modulename))
 		elif self.modelname:
-			x = ascpy.Library() 
-			for module in x.getModules():
-				for model in  x.getModuleTypes(module):
+			for module in self.library.getModules():
+				for model in self.library.getModuleTypes(module):
 					if str(model)==self.modelname:
 						filename=module.getFilename()
 			if not filename:
+				self.browser.reporter.reportError("Unable to locate model '%s'" % self.modelname)
 				return
 			displaytext=[]
 			typelist = ['MODEL','DEFINITION','ATOM']  
 			proceed = False
 			flagvariable = False  
-			module = open(filename,"r")
-			if module:
-				lines = module.readlines()
-				for line in lines:
-					words = line.split()
-					for i in range(len(words)):
-						if words[i] in typelist:
-							if i!= len(words)-1:
-								if words[i+1].split(';')[0]==self.modelname or words[i+1].split('(')[0]==self.modelname:
-									proceed = True
-						elif words[i]=='END':
+			try:
+				with open(filename,"r",encoding="utf-8",errors="replace") as module:
+					lines = module.readlines()
+			except Exception as e:
+				self.browser.reporter.reportError("Failed to open '%s': %s" % (filename, e))
+				return
+
+			for line in lines:
+				words = line.split()
+				for i in range(len(words)):
+					if words[i] in typelist:
+						if i!= len(words)-1:
 							if words[i+1].split(';')[0]==self.modelname or words[i+1].split('(')[0]==self.modelname:
-								flagvariable = True
-								if proceed == True:
-									displaytext.append(line)
-									proceed = False
-								break
-						if proceed == True:
-							displaytext.append(line)
+								proceed = True
+					elif words[i]=='END':
+						if words[i+1].split(';')[0]==self.modelname or words[i+1].split('(')[0]==self.modelname:
+							flagvariable = True
+							if proceed == True:
+								displaytext.append(line)
+								proceed = False
 							break
-					if flagvariable==True:
+					if proceed == True:
+						displaytext.append(line)
 						break
-				ViewModel(text=''.join(displaytext),title="Model '%s'" % (self.modelname))
+				if flagvariable==True:
+					break
+			ViewModel(text=''.join(displaytext),title="Model '%s'" % (self.modelname))
 
 	def clear(self):
 		self.modulestore.clear()
@@ -238,14 +243,13 @@ class ViewModel:
 		box.pack_start(scroll, True, True, 0)
 
 		if filename is not None:
-			#Get the content of the file
-			model = open(filename, "r")
-			if model:
-				string = model.read()
-				model.close()
-				buff.set_text(string)
-			else:
-				self.reporter.reportError( "Error opening the file" )
+			# Get the content of the file.
+			try:
+				with open(filename, "r", encoding="utf-8", errors="replace") as model:
+					string = model.read()
+			except Exception as e:
+				string = "Error opening file '%s': %s" % (filename, e)
+			buff.set_text(string)
 		elif text is not None:
 			buff.set_text(text)
 		else:
