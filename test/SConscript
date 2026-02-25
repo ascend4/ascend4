@@ -38,8 +38,6 @@ conf = test_env.Configure()
 if not conf.CheckDeclaration('CU_set_test_output_capture', '#include <CUnit/TestRun.h>\n'):
 	print("ERROR: CUnit is missing CU_set_test_output_capture; install the patched CUnit.")
 	Exit(1)
-if conf.CheckDeclaration('fnmatch', '#include <fnmatch.h>\n'):
-	test_env.Append(CPPDEFINES=['HAVE_FNMATCH'])
 test_env = conf.Finish()
 
 testprog = test_env.Program('test',srcs)

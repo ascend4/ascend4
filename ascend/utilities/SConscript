@@ -14,9 +14,7 @@ objs = []
 for c in csrcs:
 	objs += libascend_env.SharedObject(c)
 
-sig_env = libascend_env.Clone()
-sig_env.Append(CPPDEFINES=['NO_SIGINT_TRAP','NO_SIGSEGV_TRAP'])
-objs += sig_env.SharedObject('ascSignal.c')
+objs += libascend_env.SharedObject('ascSignal.c')
 
 #--------------------
 # INSTALL
@@ -32,4 +30,3 @@ if libascend_env.get('CAN_INSTALL'):
 Return('objs')
 
 # vim: set syntax=python:
-
