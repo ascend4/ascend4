@@ -584,7 +584,10 @@ class ObserverTab:
 			if _delete_row:
 				self.on_delete_row()
 				return True
-			self.treecontext.popup( None, None, None, _button, event.time)
+			if event.type == Gdk.EventType.BUTTON_PRESS:
+				self.treecontext.popup_at_pointer(event)
+			else:
+				self.treecontext.popup( None, None, None, _button, event.time)
 			return
 		
 		self.view.grab_focus()

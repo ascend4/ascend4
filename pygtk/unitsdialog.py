@@ -2,6 +2,7 @@ from gi.repository import Gtk
 from gi.repository import Pango
 
 import ascpy
+import time
 from celsiusunits import CelsiusUnits
 from preferences import Preferences
 
@@ -83,8 +84,10 @@ class UnitsDialog:
 
 		self.name_override_check.connect("toggled", self.on_name_override_toggled)
 
-		table.attach(self.name_override_check, 1, 2, 3, 4)
-		table.attach(self.scope_model_check, 1, 2, 4, 5)
+		xfill = Gtk.AttachOptions.FILL
+		yfill = Gtk.AttachOptions.FILL
+		table.attach(self.name_override_check, 1, 2, 3, 4, xfill, yfill, 0, 0)
+		table.attach(self.scope_model_check, 1, 2, 4, 5, xfill, yfill, 0, 0)
 
 		self.name_override_check.show()
 		self.scope_model_check.show()
@@ -195,14 +198,29 @@ class UnitsDialog:
 			if _res == Gtk.ResponseType.APPLY or _res == Gtk.ResponseType.CLOSE:
 				if _res == Gtk.ResponseType.CLOSE and not len(self.realtypes):
 					break
+				t0 = time.perf_counter()
 				try:
 					self._apply_selection()
 				except Exception as e:
 					self.browser.reporter.reportError(str(e))
 					continue
-				self.browser.modelview.refreshtree()
+				t1 = time.perf_counter()
+				by_name = self.name_override_check.get_active()
+				if by_name:
+					self.browser.modelview.refresh_display_units(instance=self.instance)
+				else:
+					self.browser.modelview.refresh_display_units(instance_type=self.T)
+				t2 = time.perf_counter()
 				for _obs in self.browser.observers:
 					if _obs.alive:
 						_obs.units_refresh(self.T)
+				t3 = time.perf_counter()
 				self.update_unitsview(self.T)
+				t4 = time.perf_counter()
+				elapsed = t4 - t0
+				if elapsed > 0.2:
+					self.browser.reporter.reportNote(
+						"Units Apply timing: set %.3fs, tree %.3fs, observers %.3fs, dialog %.3fs, total %.3fs"
+						% (t1 - t0, t2 - t1, t3 - t2, t4 - t3, elapsed)
+					)
 		self.window.hide()

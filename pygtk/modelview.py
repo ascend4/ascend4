@@ -309,6 +309,29 @@ class ModelView:
 				else:
 					self.modelstore.set_value(_iter,3,BROWSER_UNINCLUDED_COLOR)
 
+	def refresh_display_units(self, instance=None, instance_type=None):
+		"""
+		Refresh only displayed values affected by units policy changes.
+		If instance is provided: refresh that instance only.
+		If instance_type is provided: refresh matching type name only.
+		"""
+		target_type_name = None
+		if instance_type is not None:
+			target_type_name = str(instance_type.getName())
+		for _path in self.otank:
+			_iter = self.modelstore.get_iter(_path)
+			_name, _instance = self.otank[_path]
+			if instance is not None and _instance != instance:
+				continue
+			if target_type_name is not None:
+				try:
+					if str(_instance.getType().getName()) != target_type_name:
+						continue
+				except Exception:
+					continue
+			_value = self.browser.get_instance_display_value(_instance)
+			self.modelstore.set_value(_iter, 2, _value)
+
 	def get_selected_type(self):
 		return self.get_selected_instance().getType()
 
@@ -566,7 +589,10 @@ class ModelView:
 			self.hidevariable.set_label("Hide selected types")
 
 			self.modelview.grab_focus()
-			self.treecontext.popup(None, None, None, None, _button, event.time)
+			if event.type == Gdk.EventType.BUTTON_PRESS:
+				self.treecontext.popup_at_pointer(event)
+			else:
+				self.treecontext.popup(None, None, None, None, _button, event.time)
 			return True
 
 		if _instance.isReal():
@@ -590,7 +616,10 @@ class ModelView:
 			self.modelview.grab_focus()
 			self.modelview.set_cursor(_path,_col,0)
 			print("RUNNING POPUP MENU")
-			self.modelmenu.popup(None, None, None, None, _button, event.time)
+			if event.type == Gdk.EventType.BUTTON_PRESS:
+				self.modelmenu.popup_at_pointer(event)
+			else:
+				self.modelmenu.popup(None, None, None, None, _button, event.time)
 			return True
 
 		self.hidevariable.set_label("Hide " + str(_instance.getType()))
@@ -598,7 +627,10 @@ class ModelView:
 
 		self.modelview.grab_focus()
 		self.modelview.set_cursor( _path, _col, 0)
-		self.treecontext.popup( None, None, None,None, _button, event.time) 
+		if event.type == Gdk.EventType.BUTTON_PRESS:
+			self.treecontext.popup_at_pointer(event)
+		else:
+			self.treecontext.popup( None, None, None,None, _button, event.time)
 		return True
 
 	def get_model_context_menu(self,instance):

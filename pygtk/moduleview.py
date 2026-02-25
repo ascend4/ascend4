@@ -132,7 +132,7 @@ class ModuleView:
 				self.modelname = y[0].get_value(y[1],0)
 				self.modulename = None
 			self.viewmenuitem.set_sensitive(True)
-			self.modulemenu.popup(None,None,None,None,3,event.time)
+			self.modulemenu.popup_at_pointer(event)
 		
 	def view_activate(self,widget,*args):
 		filename=''
