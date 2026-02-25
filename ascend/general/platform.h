@@ -48,6 +48,8 @@
 #ifndef ASC_PLATFORM_H
 #define ASC_PLATFORM_H
 
+#include <ascend/general/config.h>
+
 #ifndef ASC_BUILDING_INTERFACE
 # define ASC_BUILDING_LIBASCEND
 #endif
@@ -545,4 +547,3 @@ This macro returns a nonzero value if X is finite: not plus or
 
 
 #endif /* ASC_PLATFORM_H */
-

@@ -64,6 +64,11 @@ typedef unsigned long long asc_intptr_t;
 @HAVE_IEEE@
 
 /**
+	If we can use GCC symbol visibility attributes.
+*/
+@HAVE_GCCVISIBILITY@
+
+/**
 	If we have IEEE math library include 'isnan' etc.
 */
 @HAVE_ERF@
@@ -99,6 +104,16 @@ typedef unsigned long long asc_intptr_t;
 	complexity in ascMalloc.c, hopefully.
 */
 @ASC_WITH_DMALLOC@
+
+/*
+	Whether support for reading gzip-compressed CSV files is enabled.
+*/
+@ASC_WITH_ZLIB@
+
+/*
+	Whether support for reading xz-compressed CSV files is enabled.
+*/
+@ASC_WITH_LZMA@
 
 /*
 	Whether to generate color console output when requested eg
