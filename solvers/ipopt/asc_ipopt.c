@@ -27,10 +27,6 @@
 
 #include <ascend/utilities/config.h>
 
-#ifndef ASC_WITH_IPOPT
-# error "ASC_WITH_IPOPT must be defined in order to build this."
-#endif
-
 #include <math.h>
 
 #include <ascend/solver/solver.h>

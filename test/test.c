@@ -22,13 +22,15 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <ctype.h>
+
+#include <ascend/utilities/config.h>
+
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>
 #else
 #include <ascend/general/glob.h>
 #endif
 
-#include <ascend/utilities/config.h>
 #include <ascend/general/platform.h>
 #include <ascend/utilities/error.h>
 #include <ascend/compiler/redirectFile.h>

@@ -39,6 +39,7 @@ extern "C"{
 #include <ascend/compiler/mathinst.h>
 #include <ascend/compiler/when_io.h>
 #include <ascend/compiler/logrel_io.h>
+#include <ascend/compiler/units.h>
 }
 
 #include <iostream>
@@ -46,6 +47,70 @@ extern "C"{
 #include <sstream>
 
 using namespace std;
+
+struct UnitsOverridesDB *ascxx_get_units_overrides_db(void){
+	static struct UnitsOverridesDB *db = NULL;
+	static int loaded = 0;
+	if (!loaded) {
+		char *path = NULL;
+		unsigned nloaded = 0;
+		unsigned nerrors = 0;
+		loaded = 1;
+		db = UnitsOverridesCreate();
+		if (db == NULL) {
+			return NULL;
+		}
+		path = UnitsOverridesDefaultPath();
+		if (path != NULL && *path != '\0') {
+			(void)UnitsOverridesLoad(db,path,&nloaded,&nerrors);
+			ASC_FREE(path);
+		}
+	}
+	return db;
+}
+
+int
+reloadDisplayUnitsOverrides(void){
+	struct UnitsOverridesDB *db = ascxx_get_units_overrides_db();
+	char *path = NULL;
+	unsigned nloaded = 0;
+	unsigned nerrors = 0;
+	int rc = 0;
+	if (db == NULL) {
+		return 1;
+	}
+	UnitsOverridesClear(db);
+	path = UnitsOverridesDefaultPath();
+	if (path == NULL || *path == '\0') {
+		if (path != NULL) {
+			ASC_FREE(path);
+		}
+		return 0;
+	}
+	rc = UnitsOverridesLoad(db,path,&nloaded,&nerrors);
+	ASC_FREE(path);
+	return rc;
+}
+
+int
+saveDisplayUnitsOverrides(void){
+	struct UnitsOverridesDB *db = ascxx_get_units_overrides_db();
+	char *path = NULL;
+	int rc = 0;
+	if (db == NULL) {
+		return 1;
+	}
+	path = UnitsOverridesDefaultPath();
+	if (path == NULL || *path == '\0') {
+		if (path != NULL) {
+			ASC_FREE(path);
+		}
+		return 1;
+	}
+	rc = UnitsOverridesSave(db,path);
+	ASC_FREE(path);
+	return rc;
+}
 
 /**
 	Create an instance of a type. @see Simulation for instantiation.
@@ -372,6 +437,71 @@ Instanc::getRealValue() const{
 		return 0;
 	}
 	return RealAtomValue(i);
+}
+
+const UnitsM
+Instanc::getDisplayUnits(const bool &autoscale, const double &lower, const double &upper) const{
+	return getDisplayUnitsPolicy(autoscale,false,lower,upper);
+}
+
+const UnitsM
+Instanc::getDisplayUnitsPolicy(const bool &autoscale, const bool &autoscale_overrides, const double &lower, const double &upper) const{
+	const struct Units *u;
+	if (!isReal()) {
+		throw runtime_error("Instanc::getDisplayUnitsPolicy: not a real-valued instance");
+	}
+	u = UnitsResolveDisplayForInstancePolicy(
+		ascxx_get_units_overrides_db(),i,
+		autoscale ? 1 : 0,
+		autoscale_overrides ? 1 : 0,
+		lower,upper
+	);
+	if (u == NULL) {
+		throw runtime_error("Instanc::getDisplayUnitsPolicy: unable to resolve display units");
+	}
+	return UnitsM(u);
+}
+
+void
+Instanc::setDisplayUnitsOverride(const std::string &units, const bool &by_name, const bool &model_scope) const{
+	struct UnitsOverridesDB *db = ascxx_get_units_overrides_db();
+	enum UnitsOverrideKind kind = by_name ? UNITS_OVERRIDE_NAME : UNITS_OVERRIDE_TYPE;
+	int rc;
+	if (!isReal()) {
+		throw runtime_error("Instanc::setDisplayUnitsOverride: not a real-valued instance");
+	}
+	if (db == NULL) {
+		throw runtime_error("Instanc::setDisplayUnitsOverride: overrides DB unavailable");
+	}
+	rc = UnitsOverridesSetForInstance(
+		db,i,kind,model_scope ? 1 : 0,units.c_str()
+	);
+	if (rc != 0) {
+		stringstream ss;
+		ss << "Instanc::setDisplayUnitsOverride failed (rc=" << rc << ")";
+		throw runtime_error(ss.str());
+	}
+}
+
+void
+Instanc::clearDisplayUnitsOverride(const bool &by_name, const bool &model_scope) const{
+	struct UnitsOverridesDB *db = ascxx_get_units_overrides_db();
+	enum UnitsOverrideKind kind = by_name ? UNITS_OVERRIDE_NAME : UNITS_OVERRIDE_TYPE;
+	int rc;
+	if (!isReal()) {
+		throw runtime_error("Instanc::clearDisplayUnitsOverride: not a real-valued instance");
+	}
+	if (db == NULL) {
+		throw runtime_error("Instanc::clearDisplayUnitsOverride: overrides DB unavailable");
+	}
+	rc = UnitsOverridesUnsetForInstance(
+		db,i,kind,model_scope ? 1 : 0
+	);
+	if (rc != 0) {
+		stringstream ss;
+		ss << "Instanc::clearDisplayUnitsOverride failed (rc=" << rc << ")";
+		throw runtime_error(ss.str());
+	}
 }
 
 const bool

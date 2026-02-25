@@ -299,7 +299,7 @@ static int error_reporter_tree_write(error_reporter_tree_t *t){
 
 static void error_reporter_tree_dump_impl(FILE *file,error_reporter_tree_t *t, int level){
 	if(t->err){
-		if(t->err->msg){
+		if(t->err->msg[0] != '\0'){
 			fprintf(file,"%.*s- %s at %p\n",2*level," ",t->err->msg,t);
 		}else{
 			fprintf(file,"%.*s- %s at %p\n",2*level," ","[empty message]",t);

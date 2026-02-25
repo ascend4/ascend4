@@ -1199,6 +1199,33 @@ def TryPkgConfigPackages(env, packages):
 				pass
 	return False
 
+def SnapshotBuildFlags(env):
+	"""Snapshot selected build flags so temporary checks can be reverted."""
+	out = {}
+	for k in ['CPPPATH','LIBPATH','LIBS']:
+		v = env.get(k)
+		out[k] = None if v is None else list(v)
+	return out
+
+def RestoreBuildFlags(env, snap):
+	for k in ['CPPPATH','LIBPATH','LIBS']:
+		v = snap.get(k)
+		if v is None:
+			if k in env:
+				del env[k]
+		else:
+			env[k] = v
+
+def AddedBuildFlags(before, after):
+	"""Return ordered unique additions in 'after' relative to 'before'."""
+	b = [] if before is None else before
+	a = [] if after is None else after
+	added = []
+	for x in a:
+		if x not in b and x not in added:
+			added.append(x)
+	return added
+
 #----------------
 # General purpose library-and-header test
 
@@ -2266,9 +2293,8 @@ if conf.CheckGcc():
 	conf.env['HAVE_GCC']=True;
 	if env.get('WITH_GCCVISIBILITY') and conf.CheckGccVisibility():
 		conf.env['HAVE_GCCVISIBILITY']=True;
-		conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
-		conf.env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
-	conf.env.Append(CCFLAGS=['-Wall','-O2','-g'])
+		conf.env.AppendUnique(CCFLAGS=['-fvisibility=hidden'])
+	conf.env.AppendUnique(CCFLAGS=['-Wall','-O2','-g'])
 
 # Catching SIGINT
 
@@ -2331,6 +2357,9 @@ if conf.env['STATIC_TCLTK']:
 if conf.env['WITH_CUNIT']:
 	conf.env.set_optional('cunit',active=conf.CheckCUnit(),reason='not found')
 
+# fnmatch (used by test runner glob support fallback)
+conf.env['HAVE_FNMATCH'] = conf.CheckDeclaration('fnmatch', '#include <fnmatch.h>\n')
+
 # DMALLOC
 
 if conf.env['WITH_DMALLOC']:
@@ -2368,7 +2397,11 @@ if conf.env['WITH_CONOPT']:
 
 # ZLIB
 
+conf.env['ZLIB_CPPPATH'] = []
+conf.env['ZLIB_LIBPATH'] = []
+conf.env['ZLIB_LIBS'] = []
 if conf.env['WITH_ZLIB']:
+	zlib_saved = SnapshotBuildFlags(conf.env)
 	zlib_ok = False
 	zlib_reason = "zlib not found"
 	if TryPkgConfigPackages(conf.env,['zlib']):
@@ -2383,11 +2416,21 @@ if conf.env['WITH_ZLIB']:
 			zlib_reason = "library libz not found"
 		else:
 			zlib_ok = True
+	zlib_after = SnapshotBuildFlags(conf.env)
+	if zlib_ok:
+		conf.env['ZLIB_CPPPATH'] = AddedBuildFlags(zlib_saved['CPPPATH'],zlib_after['CPPPATH'])
+		conf.env['ZLIB_LIBPATH'] = AddedBuildFlags(zlib_saved['LIBPATH'],zlib_after['LIBPATH'])
+		conf.env['ZLIB_LIBS'] = AddedBuildFlags(zlib_saved['LIBS'],zlib_after['LIBS'])
+	RestoreBuildFlags(conf.env,zlib_saved)
 	conf.env.set_optional('zlib',active=zlib_ok,reason=zlib_reason)
 
 # LZMA
 
+conf.env['LZMA_CPPPATH'] = []
+conf.env['LZMA_LIBPATH'] = []
+conf.env['LZMA_LIBS'] = []
 if conf.env['WITH_LZMA']:
+	lzma_saved = SnapshotBuildFlags(conf.env)
 	lzma_ok = False
 	lzma_reason = "liblzma not found"
 	if TryPkgConfigPackages(conf.env,['liblzma','xz']):
@@ -2402,6 +2445,12 @@ if conf.env['WITH_LZMA']:
 			lzma_reason = "library liblzma not found"
 		else:
 			lzma_ok = True
+	lzma_after = SnapshotBuildFlags(conf.env)
+	if lzma_ok:
+		conf.env['LZMA_CPPPATH'] = AddedBuildFlags(lzma_saved['CPPPATH'],lzma_after['CPPPATH'])
+		conf.env['LZMA_LIBPATH'] = AddedBuildFlags(lzma_saved['LIBPATH'],lzma_after['LIBPATH'])
+		conf.env['LZMA_LIBS'] = AddedBuildFlags(lzma_saved['LIBS'],lzma_after['LIBS'])
+	RestoreBuildFlags(conf.env,lzma_saved)
 	conf.env.set_optional('lzma',active=lzma_ok,reason=lzma_reason)
 
 # LSODE needs Fortran; no fortran then no LSODE
@@ -2452,11 +2501,6 @@ if platform.system()=="Windows" and 'MSVS' in env:
 env = conf.Finish()
 #print("2. SIZEOF_VOID_P = %s"%(env['SIZEOF_VOID_P']))
 #print "-=-=-=-=-=-=-=-=- LIBS =",env.get('LIBS')
-
-if env['WITH_ZLIB']:
-	env.AppendUnique(CPPDEFINES=['ASC_WITH_ZLIB'])
-if env['WITH_LZMA']:
-	env.AppendUnique(CPPDEFINES=['ASC_WITH_LZMA'])
 
 #---------------------------------------
 # SUBSTITUTION DICTIONARY for .in files
@@ -2512,7 +2556,7 @@ subst_dict = {
 	, '@PYTHON@' : python_exe
 	, '@PYVERSION@' : pyversion
 	, '@SOURCE_ROOT@':c_escape(os.path.abspath(str(env.Dir("#"))))
-	, '@WITH_GRAPHVIZ@': str(int(env.get('WITH_GRAPHVIZ')))
+	, '@ASC_WITH_GRAPHVIZ@': str(int(env.get('WITH_GRAPHVIZ')))
 #define ASC_ABSOLUTE_PATHS @ASC_ABSOLUTE_PATHS@
 #if ASC_ABSOLUTE_PATHS
 # define ASCENDDIST_DEFAULT "@ASCENDDIST_DEFAULT@"
@@ -2555,18 +2599,22 @@ if env.get('WITH_DOC'):
 
 # bool options...
 for k,v in {
-		'ASC_WITH_DMALLOC':env['WITH_DMALLOC']
-		,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
-		,'ASC_WITH_MMIO':env['WITH_MMIO']
-		,'ASC_WITH_ZLIB':env['WITH_ZLIB']
-		,'ASC_WITH_LZMA':env['WITH_LZMA']
-		,'ASC_WITH_PCRE':env['WITH_PCRE']
-		,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']
+			'ASC_WITH_DMALLOC':env['WITH_DMALLOC']
+			,'ASC_WITH_UFSPARSE':env['WITH_UFSPARSE']
+			,'ASC_WITH_MMIO':env['WITH_MMIO']
+			,'ASC_WITH_ZLIB':env['WITH_ZLIB']
+			,'ASC_WITH_LZMA':env['WITH_LZMA']
+			,'WITH_GRAPHVIZ':env.get('WITH_GRAPHVIZ')
+			,'HAVE_GRAPHVIZ_BOOLEAN':env.get('HAVE_GRAPHVIZ_BOOLEAN')
+			,'ASC_WITH_PCRE':env['WITH_PCRE']
+			,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
+		,'HAVE_GCCVISIBILITY':env.get('HAVE_GCCVISIBILITY')
 		,'HAVE_C99FPE':env.get('HAVE_C99FPE')
 		,'HAVE_IEEE':env.get('HAVE_IEEE')
-		,'HAVE_ERF':env.get('HAVE_ERF')
-		,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
+			,'HAVE_ERF':env.get('HAVE_ERF')
+			,'HAVE_FNMATCH':env.get('HAVE_FNMATCH')
+			,'ASC_XTERM_COLORS':env.get('WITH_XTERM_COLORS')
 		,'MALLOC_DEBUG':env.get('MALLOC_DEBUG')
 		,'ASC_HAVE_LEXDESTROY':env.get('HAVE_LEXDESTROY',0)
 		,'HAVE_SNPRINTF':env.get('HAVE_SNPRINTF')
@@ -2581,9 +2629,6 @@ for k,v in {
 
 if with_latex2html:
 	env['WITH_LATEX2HTML']=1
-
-if 'HAVE_GCCVISIBILITY' in env:
-	subst_dict['@HAVE_GCCVISIBILITY@'] = "1"
 
 env.Append(SUBST_DICT=subst_dict)
 
@@ -2627,7 +2672,7 @@ SConsEnvironment.InstallLibraryAs = lambda env, dest, files: InstallPermAs(env, 
 env.AppendUnique(CPPPATH=['#'])
 
 if env['DEBUG']:
-	env.Append(
+	env.AppendUnique(
 		CCFLAGS=['-g']
 		,LINKFLAGS=['-g']
 	)
@@ -2636,8 +2681,8 @@ if env['ADDCCFLAGS']:
 	env.Append(CCFLAGS=env['ADDCCFLAGS'])
 
 if env['GCOV']:
-	env.Append(
-		CPPFLAGS=['-g','-fprofile-arcs','-ftest-coverage']
+	env.AppendUnique(
+		CCFLAGS=['-g','-fprofile-arcs','-ftest-coverage']
 		, LIBS=['gcov']
 		, LINKFLAGS=['-fprofile-arcs','-ftest-coverage']
 	)
@@ -2667,6 +2712,18 @@ if env['WITH_TCLTK']:
 # BASE/GENERIC SUBDIRECTORIES
 
 libascend_env = env.Clone()
+if env.get('ZLIB_CPPPATH'):
+	libascend_env.AppendUnique(CPPPATH=env['ZLIB_CPPPATH'])
+if env.get('ZLIB_LIBPATH'):
+	libascend_env.AppendUnique(LIBPATH=env['ZLIB_LIBPATH'])
+if env.get('ZLIB_LIBS'):
+	libascend_env.AppendUnique(LIBS=env['ZLIB_LIBS'])
+if env.get('LZMA_CPPPATH'):
+	libascend_env.AppendUnique(CPPPATH=env['LZMA_CPPPATH'])
+if env.get('LZMA_LIBPATH'):
+	libascend_env.AppendUnique(LIBPATH=env['LZMA_LIBPATH'])
+if env.get('LZMA_LIBS'):
+	libascend_env.AppendUnique(LIBS=env['LZMA_LIBS'])
 
 dirs = ['general','utilities','compiler','system','solver','integrator','packages','linear','bintokens']
 
@@ -2691,7 +2748,7 @@ if env['WITH_MMIO']:
 
 # FIXME want to move these bits to ascend/SConscript
 
-libascend_env.Append(
+libascend_env.AppendUnique(
 	CPPPATH=['#']
 	,LIBS=['m']
 )
@@ -2731,9 +2788,7 @@ env.Alias('libascend',libtargets)
 # UNIT TESTS (C CODE)
 
 test_env = env.Clone()
-test_env.Append(
-	CPPPATH="#"
-)
+test_env.AppendUnique(CPPPATH=['#'])
 
 if env['WITH_CUNIT']:
 	testdirs = ['general','solver','utilities','linear','compiler','system','packages','integrator']

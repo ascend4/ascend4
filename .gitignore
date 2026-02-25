@@ -31,6 +31,7 @@ ascxx/testipopt
 ascxx/testhighs
 ascxx/testmakemps
 ascxx/testslvreq
+ascxx/testdeclunits
 config.log
 libascend.so.1
 listiotempfile.tmp

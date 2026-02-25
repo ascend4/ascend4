@@ -503,8 +503,8 @@ struct module_t *FindModuleFile(CONST char *name,
 
 
     if( StoreModule( new_module ) != 0 ) {
+      ERROR_REPORTER_HERE(ASC_PROG_ERROR,"COULDN'T STORE MODULE %s",new_module->filename);
       DeleteModule( new_module );
-	  ERROR_REPORTER_HERE(ASC_PROG_ERROR,"COULDN'T STORE MODULE %s",new_module->filename);
       *status = -3;
       return NULL;
     }

@@ -91,13 +91,13 @@ class ModuleView:
 		something we might allow in the future."""
 
 		modules = self.library.getModules()
-		if len(path.to_string())==1:
+		if path.get_depth() == 1:
 			if self.moduleview.row_expanded(path):
 				self.moduleview.collapse_row(path)
 			else:
 				self.moduleview.expand_row(path,False)
 			#self.browser.reporter.reportNote("Launching of external editor not yet implemented")
-		elif len(path.to_string())>=3:
+		elif path.get_depth() >= 2:
 			if path.to_string() in self.modtank:
 				_type = self.modtank[path.to_string()];
 				if not _type.isModel():
@@ -125,61 +125,67 @@ class ModuleView:
 		if event.button == 3:	
 			x = widget.get_selection()
 			y = x.get_selected()
-			if len(y[0].get_path(y[1]).to_string())==1:
+			selpath = y[0].get_path(y[1])
+			if selpath.get_depth() == 1:
 				self.modulename=y[0].get_value(y[1],0)
 				self.modelname=None
-			elif len(y[0].get_path(y[1]).to_string())==3:	
+			elif selpath.get_depth() >= 2:	
 				self.modelname = y[0].get_value(y[1],0)
 				self.modulename = None
 			self.viewmenuitem.set_sensitive(True)
-			self.modulemenu.popup(None,None,None,None,3,event.time)
+			self.modulemenu.popup_at_pointer(event)
 		
 	def view_activate(self,widget,*args):
 		filename=''
 		if self.modulename:
-			x = ascpy.Library()
-			# TODO is this the fastest way??
-			for module in x.getModules():
+			# Look up in the currently loaded library, not a fresh empty Library().
+			for module in self.library.getModules():
 				if module.getName()==self.modulename:
 					filename=module.getFilename()
 					break
-			# FIXME what if module not found??
+			if not filename:
+				self.browser.reporter.reportError("Unable to locate module '%s'" % self.modulename)
+				return
 			ViewModel(filename=filename,title="Module '%s'" % (self.modulename))
 		elif self.modelname:
-			x = ascpy.Library() 
-			for module in x.getModules():
-				for model in  x.getModuleTypes(module):
+			for module in self.library.getModules():
+				for model in self.library.getModuleTypes(module):
 					if str(model)==self.modelname:
 						filename=module.getFilename()
 			if not filename:
+				self.browser.reporter.reportError("Unable to locate model '%s'" % self.modelname)
 				return
 			displaytext=[]
 			typelist = ['MODEL','DEFINITION','ATOM']  
 			proceed = False
 			flagvariable = False  
-			module = open(filename,"r")
-			if module:
-				lines = module.readlines()
-				for line in lines:
-					words = line.split()
-					for i in range(len(words)):
-						if words[i] in typelist:
-							if i!= len(words)-1:
-								if words[i+1].split(';')[0]==self.modelname or words[i+1].split('(')[0]==self.modelname:
-									proceed = True
-						elif words[i]=='END':
+			try:
+				with open(filename,"r",encoding="utf-8",errors="replace") as module:
+					lines = module.readlines()
+			except Exception as e:
+				self.browser.reporter.reportError("Failed to open '%s': %s" % (filename, e))
+				return
+
+			for line in lines:
+				words = line.split()
+				for i in range(len(words)):
+					if words[i] in typelist:
+						if i!= len(words)-1:
 							if words[i+1].split(';')[0]==self.modelname or words[i+1].split('(')[0]==self.modelname:
-								flagvariable = True
-								if proceed == True:
-									displaytext.append(line)
-									proceed = False
-								break
-						if proceed == True:
-							displaytext.append(line)
+								proceed = True
+					elif words[i]=='END':
+						if words[i+1].split(';')[0]==self.modelname or words[i+1].split('(')[0]==self.modelname:
+							flagvariable = True
+							if proceed == True:
+								displaytext.append(line)
+								proceed = False
 							break
-					if flagvariable==True:
+					if proceed == True:
+						displaytext.append(line)
 						break
-				ViewModel(text=''.join(displaytext),title="Model '%s'" % (self.modelname))
+				if flagvariable==True:
+					break
+			ViewModel(text=''.join(displaytext),title="Model '%s'" % (self.modelname))
 
 	def clear(self):
 		self.modulestore.clear()
@@ -212,15 +218,19 @@ class ViewModel:
 		#Get the ASCEND language
 		GObject.type_register(GtkSource.View)
 		mgr = GtkSource.LanguageManager.get_default()
-		op = mgr.get_search_path()
-		if os.path.join('..','tools','gtksourceview-3.0') not in op:
-			op.append(os.path.join('..','tools','gtksourceview-3.0'))
+		op = list(mgr.get_search_path())
+		local_lang_path = os.path.abspath(
+			os.path.join(os.path.dirname(__file__), '..', 'tools', 'gtksourceview-3.0')
+		)
+		if os.path.isdir(local_lang_path) and local_lang_path not in op:
+			op.append(local_lang_path)
 			mgr.set_search_path(op)
 		lang = mgr.get_language('ascend')
 
 		# TODO add status bar where this message can be reported?
 		if lang is None:
 			print("UNABLE TO LOCATE ASCEND LANGUAGE DESCRIPTION for gtksourceview")
+			print("GtkSource search path:", mgr.get_search_path())
 
 		#Creating a ScrolledWindow for the textview widget
 		scroll = Gtk.ScrolledWindow()
@@ -238,14 +248,13 @@ class ViewModel:
 		box.pack_start(scroll, True, True, 0)
 
 		if filename is not None:
-			#Get the content of the file
-			model = open(filename, "r")
-			if model:
-				string = model.read()
-				model.close()
-				buff.set_text(string)
-			else:
-				self.reporter.reportError( "Error opening the file" )
+			# Get the content of the file.
+			try:
+				with open(filename, "r", encoding="utf-8", errors="replace") as model:
+					string = model.read()
+			except Exception as e:
+				string = "Error opening file '%s': %s" % (filename, e)
+			buff.set_text(string)
 		elif text is not None:
 			buff.set_text(text)
 		else:

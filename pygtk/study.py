@@ -85,13 +85,9 @@ class StudyWin:
 			self.taint_entry(self.nsteps,good=1)
 
 		# fill in upper/.lower bound
-		_u = self.instance.getType().getPreferredUnits();
-		if _u is None:
-			_conversion = 1
-			_u = self.instance.getDimensions().getDefaultUnits().getName().toString()
-		else:
-			_conversion = _u.getConversion() # displayvalue x conversion = SI
-			_u = _u.getName().toString()
+		_u = self.browser.get_instance_display_units(self.instance)
+		_conversion = _u.getConversion()
+		_u = _u.getName().toString()
 
 		_arr = {self.lowerb: self.instance.getRealValue()
 			,self.upperb: self.instance.getUpperBound() # this upper bound is probably stoopid
@@ -329,7 +325,8 @@ class StudyWin:
 		newtext = CelsiusUnits.convert_edit(self.instance, newtext, False)
 		##### CELSIUS TEMPERATURE WORKAROUND
 		# FIXME Add missing units if they have not been entered.
-		i = RealAtomEntry(self.instance, newtext)
+		_default_units = self.browser.get_instance_display_units(self.instance)
+		i = RealAtomEntry(self.instance, newtext, _default_units)
 		_msg = None
 		try:
 			i.checkEntry()

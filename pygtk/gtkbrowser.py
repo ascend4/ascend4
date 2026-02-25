@@ -41,6 +41,7 @@ try:
 	from infodialog import *       # general-purpose textual information dialog
 	from versioncheck import *     # version check (contacts ascend.cruncher2.dyndns.org)
 	from unitsdialog import *      # general-purpose textual information dialog
+	from celsiusunits import CelsiusUnits
 	from solverhooks import *      # solver hooks for use from Python layer
 	import config
 
@@ -278,6 +279,7 @@ class Browser:
 		self.check_weekly.set_active(not(self.prefs.getBoolPref("Browser","disable_auto_check_for_updates",False)))
 
 		self.builder.connect_signals(self)
+		self.init_units_policy_controls()
 
 		#-------
 		# Status icons
@@ -611,6 +613,114 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		#Call the function at the SWIG API level that runs all the tests and pass to it, the *args
 		#ascpy is accessible here
 
+	def init_units_policy_controls(self):
+		self.units_autorange = self.prefs.getBoolPref("UnitsPolicy","auto_range",True)
+		self.units_autorange_overrides = self.prefs.getBoolPref("UnitsPolicy","auto_range_overrides",False)
+		self.units_edit_name_override = self.prefs.getBoolPref("UnitsPolicy","edit_override_by_name",False)
+		self.units_edit_model_scope = self.prefs.getBoolPref("UnitsPolicy","edit_scope_model",True)
+
+		editmenu = self.builder.get_object("editmenu_menu")
+		if editmenu is None:
+			return
+
+		editmenu.append(Gtk.SeparatorMenuItem())
+		self.units_autorange_menu = Gtk.CheckMenuItem.new_with_mnemonic("Auto-ranged _units")
+		self.units_autorange_overrides_menu = Gtk.CheckMenuItem.new_with_mnemonic("Auto-range _override units")
+		self.units_edit_name_menu = Gtk.CheckMenuItem.new_with_mnemonic("Unit edits set _variable override")
+		self.units_scope_model_menu = Gtk.CheckMenuItem.new_with_mnemonic("Limit unit edit overrides to current _model")
+
+		editmenu.append(self.units_autorange_menu)
+		editmenu.append(self.units_autorange_overrides_menu)
+		editmenu.append(self.units_edit_name_menu)
+		editmenu.append(self.units_scope_model_menu)
+
+		self.units_autorange_menu.connect("toggled", self.on_units_autorange_menu_toggled)
+		self.units_autorange_overrides_menu.connect("toggled", self.on_units_autorange_overrides_menu_toggled)
+		self.units_edit_name_menu.connect("toggled", self.on_units_edit_name_menu_toggled)
+		self._units_scope_model_handler = self.units_scope_model_menu.connect(
+			"toggled", self.on_units_scope_model_menu_toggled
+		)
+
+		self.units_autorange_menu.set_active(self.units_autorange)
+		self.units_autorange_overrides_menu.set_active(self.units_autorange_overrides)
+		self.units_edit_name_menu.set_active(self.units_edit_name_override)
+		self.units_scope_model_menu.set_active(self.units_edit_model_scope)
+		self._sync_units_scope_menu_sensitivity()
+
+		self.units_autorange_menu.show()
+		self.units_autorange_overrides_menu.show()
+		self.units_edit_name_menu.show()
+		self.units_scope_model_menu.show()
+
+	def _set_units_scope_menu_active_no_persist(self, active):
+		self.units_scope_model_menu.handler_block(self._units_scope_model_handler)
+		self.units_scope_model_menu.set_active(active)
+		self.units_scope_model_menu.handler_unblock(self._units_scope_model_handler)
+
+	def _sync_units_scope_menu_sensitivity(self):
+		if hasattr(self, "units_scope_model_menu"):
+			if self.units_edit_name_override:
+				self._set_units_scope_menu_active_no_persist(True)
+				self.units_scope_model_menu.set_sensitive(False)
+			else:
+				self._set_units_scope_menu_active_no_persist(self.units_edit_model_scope)
+				self.units_scope_model_menu.set_sensitive(True)
+
+	def on_units_autorange_menu_toggled(self, checkmenuitem, *args):
+		self.units_autorange = checkmenuitem.get_active()
+		self.prefs.setBoolPref("UnitsPolicy","auto_range",self.units_autorange)
+		if self.sim is not None:
+			self.modelview.refreshtree()
+
+	def on_units_autorange_overrides_menu_toggled(self, checkmenuitem, *args):
+		self.units_autorange_overrides = checkmenuitem.get_active()
+		self.prefs.setBoolPref("UnitsPolicy","auto_range_overrides",self.units_autorange_overrides)
+		if self.sim is not None:
+			self.modelview.refreshtree()
+
+	def on_units_edit_name_menu_toggled(self, checkmenuitem, *args):
+		self.units_edit_name_override = checkmenuitem.get_active()
+		self.prefs.setBoolPref("UnitsPolicy","edit_override_by_name",self.units_edit_name_override)
+		self._sync_units_scope_menu_sensitivity()
+
+	def on_units_scope_model_menu_toggled(self, checkmenuitem, *args):
+		self.units_edit_model_scope = checkmenuitem.get_active()
+		self.prefs.setBoolPref("UnitsPolicy","edit_scope_model",self.units_edit_model_scope)
+
+	def get_units_autoscale(self):
+		return self.units_autorange
+
+	def get_units_autoscale_overrides(self):
+		return self.units_autorange_overrides
+
+	def get_units_edit_override_by_name(self):
+		return self.units_edit_name_override
+
+	def get_units_edit_scope_model(self):
+		if self.units_edit_name_override:
+			return True
+		return self.units_edit_model_scope
+
+	def get_instance_display_units(self, instance, autoscale=None):
+		if autoscale is None:
+			autoscale = self.get_units_autoscale()
+		autoscale_overrides = self.get_units_autoscale_overrides()
+		try:
+			return instance.getDisplayUnitsPolicy(autoscale, autoscale_overrides)
+		except Exception:
+			# Backward compatibility with older ascpy builds.
+			return instance.getDisplayUnits(autoscale)
+
+	def get_instance_display_value(self, instance, autoscale=None):
+		if instance.isReal():
+			if (instance.isAtom() or instance.isFund() or instance.isConst()) and not instance.isDefined():
+				return "undefined"
+			units = self.get_instance_display_units(instance, autoscale)
+			value = units.getConvertedValue(instance.getRealValue())
+		else:
+			value = str(instance.getValue())
+		return CelsiusUnits.convert_show(instance, value, True)
+
 
 #   ------------------
 #   SOLVER LIST
@@ -713,6 +823,12 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 	def do_open(self,filename):
 		# TODO does the user want to lose their work?
 		# TODO do we need to chdir?
+		try:
+			rc = ascpy.reloadDisplayUnitsOverrides()
+			if rc != 0:
+				self.reporter.reportWarning("Failed to reload units-overrides preferences")
+		except Exception:
+			self.reporter.reportWarning("Failed to reload units-overrides preferences")
 
 		_context = self.statusbar.get_context_id("do_open")
 
@@ -1004,6 +1120,12 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		self.prefs.setStringPref("Directories","fileopenpath",self.fileopenpath)
 		self.prefs.setBoolPref("Browser","auto_solve",self.is_auto)
 		self.prefs.save_preferences()
+		try:
+			rc = ascpy.saveDisplayUnitsOverrides()
+			if rc != 0:
+				self.reporter.reportWarning("Failed to save units-overrides preferences")
+		except Exception:
+			self.reporter.reportWarning("Failed to save units-overrides preferences")
 
 		loading.print_status("Clearing error callback")		
 		self.reporter.clearPythonErrorCallback()
@@ -1029,8 +1151,15 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 			self.reporter.reportError(str(e))
 
 	def on_units_click(self,*args):
-		T = self.modelview.get_selected_type()
-		_un = UnitsDialog(self,T)
+		_instance = self.modelview.get_selected_instance()
+		if _instance is None:
+			self.reporter.reportError("Select a real variable first.")
+			return
+		if not _instance.isReal():
+			self.reporter.reportError("Units can only be edited for real-valued variables.")
+			return
+		T = _instance.getType()
+		_un = UnitsDialog(self,T,_instance)
 		_un.run()
 
 	def on_tools_incidencegraph_click(self,*args):

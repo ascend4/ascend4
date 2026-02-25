@@ -25,7 +25,6 @@ def CheckHIGHS(context):
 	context.env.ParseConfig(str(pathlib.Path(pkg))+' --cflags --libs highs')
 	is_ok = context.TryLink(highs_test_text,".c")
 	if is_ok:
-		context.env.Append(CPPDEFINES='ASC_WITH_HIGHS')
 		context.Result(True)
 	else:
 		context.Result('no (failed to link)')

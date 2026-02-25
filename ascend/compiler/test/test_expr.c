@@ -20,7 +20,15 @@
 #include <string.h>
 
 #include <ascend/general/env.h>
+#include <ascend/general/ospath.h>
 #include <ascend/general/platform.h>
+#ifdef __WIN32__
+# include <io.h>
+# define TEST_CLOSEFD _close
+#else
+# include <unistd.h>
+# define TEST_CLOSEFD close
+#endif
 #include <ascend/utilities/ascEnvVar.h>
 #include <ascend/utilities/error.h>
 
@@ -127,28 +135,23 @@ static void test_write(void){
 
 #define LEN 1024
 	char s[LEN];
-	
-#ifdef WIN32
-  char tmpl[PATH_MAX];
-  snprintf(tmpl,PATH_MAX,"%s\\.asctempXXXXXX",getenv("HOME"));
-  fprintf(stderr,"tmpl = %s\n",tmpl);
-  int fd = mkstemp(tmpl);
-  if(-1==fd){
-    perror("mkstemp");
-    CU_FAIL("failed mkstemp");
-    return;
-  }
-  FILE *tmp = fdopen(fd,"w+");
-  if(tmp == NULL){
-    perror("fdopen");
-#else
-  FILE *tmp = tmpfile();
-  if(tmp == NULL){
-    perror("tmpfile");
-#endif
-    CU_FAIL("failed to open temporary file");
-    return;
-  }
+	char tmp_path[PATH_MAX] = "";
+	int fd = ospath_mkstemp(tmp_path,sizeof(tmp_path),"asc_expr_");
+	if(-1==fd){
+		perror("ospath_mkstemp");
+		CU_FAIL("failed ospath_mkstemp");
+		Asc_CompilerDestroy();
+		return;
+	}
+	FILE *tmp = fdopen(fd,"w+");
+	if(tmp == NULL){
+		perror("fdopen");
+		CU_FAIL("failed to open temporary file");
+		TEST_CLOSEFD(fd);
+		remove(tmp_path);
+		Asc_CompilerDestroy();
+		return;
+	}
 
 	
 	// trivial boolean expression
@@ -174,6 +177,7 @@ static void test_write(void){
 	WriteExpr(ASCERR,Ap357t35);
 
 	fclose(tmp);
+	remove(tmp_path);
 	Asc_CompilerDestroy();
 }
 

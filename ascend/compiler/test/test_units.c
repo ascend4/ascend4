@@ -19,6 +19,7 @@
 */
 #include <ascend/compiler/units.h>
 #include <ascend/compiler/symtab.h>
+#include <ascend/general/ospath.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -60,6 +61,19 @@ static void destroy_ladder_item_list(struct gl_list_t *items){
 		DestroyUnitLadderItem(item);
 	}
 	gl_destroy(items);
+}
+
+static int make_temp_path(char *dst, size_t dstlen, const char *prefix){
+	int fd;
+	if (dst == NULL || dstlen == 0) {
+		return -1;
+	}
+	fd = ospath_mkstemp(dst,dstlen,prefix);
+	if (fd < 0) {
+		return -1;
+	}
+	close(fd);
+	return 0;
 }
 
 static void test_test1(void){
@@ -365,16 +379,15 @@ static void define_unit(const char *name, const char *expr){
 }
 
 static void test_test5(void){
-	struct UnitsOverridesDB *db;
-	struct UnitsOverridesDB *db2;
+	struct UnitsOverridesDB *db = NULL;
+	struct UnitsOverridesDB *db2 = NULL;
 	const struct Units *u;
 	const dim_type *powerdim;
 	const dim_type *lengthdim;
 	unsigned loaded = 0, errors = 0;
-	char fn1[] = "/tmp/asc_uovr_1_XXXXXX";
-	char fn2[] = "/tmp/asc_uovr_2_XXXXXX";
+	char fn1[PATH_MAX] = "";
+	char fn2[PATH_MAX] = "";
 	FILE *fp;
-	int fd;
 	char *defaultpath;
 	int found_simroot_name = 0;
 	int found_trimmed_name = 0;
@@ -435,14 +448,19 @@ static void test_test5(void){
 	CU_TEST(NULL == UnitsOverridesResolve(db,"models/johnpye/demo.a4c","length_type","",lengthdim));
 	CU_TEST(NULL == UnitsOverridesLookup(db,UNITS_OVERRIDE_TYPE,"models/johnpye/demo.a4c","length_type"));
 
-	fd = mkstemp(fn1);
-	CU_ASSERT_FATAL(fd >= 0);
-	close(fd);
-	fd = mkstemp(fn2);
-	CU_ASSERT_FATAL(fd >= 0);
-	close(fd);
+	if (0 != make_temp_path(fn1,sizeof(fn1),"asc_uovr_1_")) {
+		CU_FAIL("failed creating temporary file path");
+		goto cleanup;
+	}
+	if (0 != make_temp_path(fn2,sizeof(fn2),"asc_uovr_2_")) {
+		CU_FAIL("failed creating temporary file path");
+		goto cleanup;
+	}
 	fp = fopen(fn1,"w");
-	CU_ASSERT_PTR_NOT_NULL_FATAL(fp);
+	CU_ASSERT_PTR_NOT_NULL(fp);
+	if (fp == NULL) {
+		goto cleanup;
+	}
 	fprintf(fp,"[global]\n");
 	fprintf(fp,"type.energy_rate = kW\n");
 	fprintf(fp,"badkey = kW\n");
@@ -455,8 +473,8 @@ static void test_test5(void){
 
 	UnitsOverridesClear(db);
 	CU_TEST(0 == UnitsOverridesLoad(db,fn1,&loaded,&errors));
-	CU_TEST(loaded == 3);
-	CU_TEST(errors >= 3);
+	CU_TEST(loaded == 4);
+	CU_TEST(errors >= 2);
 
 	u = UnitsOverridesResolve(db,"models/johnpye/demo.a4c","energy_rate","plant.tes.power",powerdim);
 	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
@@ -472,7 +490,10 @@ static void test_test5(void){
 	CU_TEST(0 == UnitsOverridesSetSimroot(db,"sim1"));
 	CU_TEST(0 == UnitsOverridesSave(db,fn2));
 	fp = fopen(fn2,"r");
-	CU_ASSERT_PTR_NOT_NULL_FATAL(fp);
+	CU_ASSERT_PTR_NOT_NULL(fp);
+	if (fp == NULL) {
+		goto cleanup;
+	}
 	while (fgets(line,sizeof(line),fp) != NULL) {
 		if (strstr(line,"name.sim1.plant.rooted.power") != NULL) {
 			found_simroot_name = 1;
@@ -486,7 +507,10 @@ static void test_test5(void){
 	CU_TEST(found_trimmed_name);
 
 	db2 = UnitsOverridesCreate();
-	CU_ASSERT_PTR_NOT_NULL_FATAL(db2);
+	CU_ASSERT_PTR_NOT_NULL(db2);
+	if (db2 == NULL) {
+		goto cleanup;
+	}
 	UnitsOverridesClear(db2);
 	CU_TEST(0 == UnitsOverridesLoad(db2,fn2,&loaded,&errors));
 	u = UnitsOverridesResolve(db2,"models/johnpye/demo.a4c","energy_rate","plant.tes.power",powerdim);
@@ -502,10 +526,158 @@ static void test_test5(void){
 		ASC_FREE(defaultpath);
 	}
 
+cleanup:
 	UnitsOverridesDestroy(db2);
 	UnitsOverridesDestroy(db);
-	remove(fn1);
-	remove(fn2);
+	if (fn1[0] != '\0') remove(fn1);
+	if (fn2[0] != '\0') remove(fn2);
+
+	DestroyUnitsTable();
+	DestroyStringSpace();
+	DestroySymbolTable();
+	DestroyDimenList();
+	gl_destroy_pool();
+}
+
+static void test_test6(void){
+	struct UnitsOverridesDB *db = NULL;
+	const struct Units *u;
+	const dim_type *powerdim;
+	unsigned loaded = 0, errors = 0;
+	char fn1[PATH_MAX] = "";
+	char fn2[PATH_MAX] = "";
+	FILE *fp;
+	int found_entry = 0;
+	char line[256];
+
+	gl_init_pool();
+	gl_init();
+	InitDimenList();
+	InitSymbolTable();
+	InitUnitsTable();
+
+	if (0 != make_temp_path(fn1,sizeof(fn1),"asc_uovr_lazy_1_")) {
+		CU_FAIL("failed creating temporary file path");
+		goto cleanup;
+	}
+	if (0 != make_temp_path(fn2,sizeof(fn2),"asc_uovr_lazy_2_")) {
+		CU_FAIL("failed creating temporary file path");
+		goto cleanup;
+	}
+
+	fp = fopen(fn1,"w");
+	CU_ASSERT_PTR_NOT_NULL(fp);
+	if (fp == NULL) {
+		goto cleanup;
+	}
+	fprintf(fp,"[global]\n");
+	fprintf(fp,"type.energy_rate = MW\n");
+	fclose(fp);
+
+	db = UnitsOverridesCreate();
+	CU_ASSERT_PTR_NOT_NULL(db);
+	if (db == NULL) {
+		goto cleanup;
+	}
+
+	CU_TEST(0 == UnitsOverridesLoad(db,fn1,&loaded,&errors));
+	CU_TEST(loaded == 1);
+	CU_TEST(errors == 0);
+
+	/* Save immediately: unresolved entries must not be dropped. */
+	CU_TEST(0 == UnitsOverridesSave(db,fn2));
+	fp = fopen(fn2,"r");
+	CU_ASSERT_PTR_NOT_NULL(fp);
+	if (fp == NULL) {
+		goto cleanup;
+	}
+	while (fgets(line,sizeof(line),fp) != NULL) {
+		if (strstr(line,"type.energy_rate = MW") != NULL) {
+			found_entry = 1;
+			break;
+		}
+	}
+	fclose(fp);
+	CU_TEST(found_entry);
+
+	/* Define units after load, then resolve lazily. */
+	define_unit("W","kg*m^2/s^3");
+	define_unit("MW","1e6*W");
+	powerdim = UnitsDimensions(LookupUnits("W"));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(powerdim);
+	u = UnitsOverridesResolve(db,"","energy_rate","plant.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"MW"));
+
+cleanup:
+	UnitsOverridesDestroy(db);
+	if (fn1[0] != '\0') remove(fn1);
+	if (fn2[0] != '\0') remove(fn2);
+
+	DestroyUnitsTable();
+	DestroyStringSpace();
+	DestroySymbolTable();
+	DestroyDimenList();
+	gl_destroy_pool();
+}
+
+static void test_test7(void){
+	struct UnitsOverridesDB *db = NULL;
+	const struct Units *u;
+	const dim_type *powerdim;
+	unsigned loaded = 0, errors = 0;
+	char fn1[PATH_MAX] = "";
+	FILE *fp;
+
+	gl_init_pool();
+	gl_init();
+	InitDimenList();
+	InitSymbolTable();
+	InitUnitsTable();
+
+	/* Provide the target dimension, but not the requested override units yet. */
+	define_unit("W","kg*m^2/s^3");
+	powerdim = UnitsDimensions(LookupUnits("W"));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(powerdim);
+
+	if (0 != make_temp_path(fn1,sizeof(fn1),"asc_uovr_ctx_1_")) {
+		CU_FAIL("failed creating temporary file path");
+		goto cleanup;
+	}
+	fp = fopen(fn1,"w");
+	CU_ASSERT_PTR_NOT_NULL(fp);
+	if (fp == NULL) {
+		goto cleanup;
+	}
+	fprintf(fp,"[global]\n");
+	fprintf(fp,"type.energy_rate = MW\n");
+	fclose(fp);
+
+	db = UnitsOverridesCreate();
+	CU_ASSERT_PTR_NOT_NULL(db);
+	if (db == NULL) {
+		goto cleanup;
+	}
+	CU_TEST(0 == UnitsOverridesLoad(db,fn1,&loaded,&errors));
+	CU_TEST(loaded == 1);
+	CU_TEST(errors == 0);
+
+	/*
+	 * First resolve occurs in a context where MW is still undefined:
+	 * must not remove the preference.
+	 */
+	u = UnitsOverridesResolve(db,"","energy_rate","plant.power",powerdim);
+	CU_TEST(NULL == u);
+
+	/* Later context provides MW; stored preference must now apply. */
+	define_unit("MW","1e6*W");
+	u = UnitsOverridesResolve(db,"","energy_rate","plant.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"MW"));
+
+cleanup:
+	UnitsOverridesDestroy(db);
+	if (fn1[0] != '\0') remove(fn1);
 
 	DestroyUnitsTable();
 	DestroyStringSpace();
@@ -525,7 +697,9 @@ static void test_test5(void){
 	T(test2) \
 	T(test3) \
 	T(test4) \
-	T(test5)
+	T(test5) \
+	T(test6) \
+	T(test7)
 
 
 REGISTER_TESTS_SIMPLE(compiler_units, TESTS)

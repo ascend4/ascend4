@@ -11,13 +11,17 @@
 
 #ifdef __WIN32__
 # include <process.h>
+# include <io.h>
+# define DATASET_CLOSEFD _close
 # define DATASET_PATHLIST_SEP ';'
 #else
 # include <unistd.h>
+# define DATASET_CLOSEFD close
 # define DATASET_PATHLIST_SEP ':'
 #endif
 
 #include <ascend/general/env.h>
+#include <ascend/general/ospath.h>
 #include <ascend/general/platform.h>
 #include <ascend/utilities/ascEnvVar.h>
 #include <ascend/utilities/error.h>
@@ -287,14 +291,82 @@ static int dataset_command_available(const char *command){
 	return system(cmd) == 0;
 }
 
-static int dataset_make_library_path_with_tmp(char *librarypath, size_t librarypath_len){
-	return snprintf(librarypath,librarypath_len,"/tmp%cmodels",DATASET_PATHLIST_SEP) < (int)librarypath_len;
+static int dataset_build_temp_file_path(const char *filename, char *path, size_t path_len){
+	char probe_path[PATH_MAX];
+	struct FilePath *probe_fp = NULL;
+	struct FilePath *dir_fp = NULL;
+	struct FilePath *name_fp = NULL;
+	struct FilePath *full_fp = NULL;
+	char *full_str = NULL;
+	int fd, ok = 0;
+
+	if (filename == NULL || path == NULL || path_len == 0) {
+		return 0;
+	}
+	fd = ospath_mkstemp(probe_path,sizeof(probe_path),"asc_dataset_");
+	if (fd < 0) {
+		return 0;
+	}
+	DATASET_CLOSEFD(fd);
+	remove(probe_path);
+
+	probe_fp = ospath_new(probe_path);
+	if (probe_fp == NULL) goto cleanup;
+	dir_fp = ospath_getdir(probe_fp);
+	if (dir_fp == NULL) goto cleanup;
+	name_fp = ospath_new_noclean(filename);
+	if (name_fp == NULL) goto cleanup;
+	full_fp = ospath_concat(dir_fp,name_fp);
+	if (full_fp == NULL) goto cleanup;
+	full_str = ospath_str(full_fp);
+	if (full_str == NULL) goto cleanup;
+	if (snprintf(path,path_len,"%s",full_str) >= (int)path_len) goto cleanup;
+	ok = 1;
+
+cleanup:
+	if (full_str != NULL) ospath_free_str(full_str);
+	ospath_free(full_fp);
+	ospath_free(name_fp);
+	ospath_free(dir_fp);
+	ospath_free(probe_fp);
+	return ok;
+}
+
+static int dataset_make_library_path_for_file(
+	const char *file_path,
+	char *librarypath,
+	size_t librarypath_len
+){
+	struct FilePath *fp = NULL;
+	struct FilePath *dir_fp = NULL;
+	char *dir_str = NULL;
+	int ok = 0;
+
+	if (file_path == NULL || librarypath == NULL || librarypath_len == 0) {
+		return 0;
+	}
+	fp = ospath_new(file_path);
+	if (fp == NULL) goto cleanup;
+	dir_fp = ospath_getdir(fp);
+	if (dir_fp == NULL) goto cleanup;
+	dir_str = ospath_str(dir_fp);
+	if (dir_str == NULL) goto cleanup;
+	if (snprintf(librarypath,librarypath_len,"%s%cmodels",dir_str,DATASET_PATHLIST_SEP) >= (int)librarypath_len) {
+		goto cleanup;
+	}
+	ok = 1;
+
+cleanup:
+	if (dir_str != NULL) ospath_free_str(dir_str);
+	ospath_free(dir_fp);
+	ospath_free(fp);
+	return ok;
 }
 
 static int dataset_prepare_melbourne_uncompressed(char *csv_path, size_t csv_path_len){
 	char cmd[4 * PATH_MAX];
 
-	if(snprintf(csv_path,csv_path_len,"/tmp/086282TMY_60min.csv") >= (int)csv_path_len){
+	if(!dataset_build_temp_file_path("086282TMY_60min.csv",csv_path,csv_path_len)){
 		return 0;
 	}
 	if(snprintf(cmd,sizeof(cmd)
@@ -510,8 +582,8 @@ static void test_melbourne_dni_uncompressed(void){
 		return;
 	}
 
-	CU_ASSERT_FATAL(dataset_make_library_path_with_tmp(librarypath,sizeof(librarypath)));
 	CU_ASSERT_FATAL(dataset_prepare_melbourne_uncompressed(csv_path,sizeof(csv_path)));
+	CU_ASSERT_FATAL(dataset_make_library_path_for_file(csv_path,librarypath,sizeof(librarypath)));
 
 	dataset_load_run_methods(
 		librarypath,
@@ -533,8 +605,8 @@ static void test_melbourne_dni_gz(void){
 		return;
 	}
 
-	CU_ASSERT_FATAL(dataset_make_library_path_with_tmp(librarypath,sizeof(librarypath)));
 	CU_ASSERT_FATAL(dataset_prepare_melbourne_uncompressed(csv_path,sizeof(csv_path)));
+	CU_ASSERT_FATAL(dataset_make_library_path_for_file(csv_path,librarypath,sizeof(librarypath)));
 	CU_ASSERT_FATAL(dataset_prepare_melbourne_gz(csv_path,gz_path,sizeof(gz_path)));
 
 	dataset_load_run_methods(librarypath,"johnpye/dataset/melbourne_dni.a4c","melbourne_dni_gz");

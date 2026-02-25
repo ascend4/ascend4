@@ -31,6 +31,7 @@
 	T(dimen) \
 	T(fractions) \
 	T(units) \
+	T(displayunits) \
 	T(name) \
 	T(symtab) \
 	T(qlfdid) \
