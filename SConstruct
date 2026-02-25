@@ -2266,9 +2266,8 @@ if conf.CheckGcc():
 	conf.env['HAVE_GCC']=True;
 	if env.get('WITH_GCCVISIBILITY') and conf.CheckGccVisibility():
 		conf.env['HAVE_GCCVISIBILITY']=True;
-		conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
-		conf.env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
-	conf.env.Append(CCFLAGS=['-Wall','-O2','-g'])
+		conf.env.AppendUnique(CCFLAGS=['-fvisibility=hidden'])
+	conf.env.AppendUnique(CCFLAGS=['-Wall','-O2','-g'])
 
 # Catching SIGINT
 
@@ -2453,11 +2452,6 @@ env = conf.Finish()
 #print("2. SIZEOF_VOID_P = %s"%(env['SIZEOF_VOID_P']))
 #print "-=-=-=-=-=-=-=-=- LIBS =",env.get('LIBS')
 
-if env['WITH_ZLIB']:
-	env.AppendUnique(CPPDEFINES=['ASC_WITH_ZLIB'])
-if env['WITH_LZMA']:
-	env.AppendUnique(CPPDEFINES=['ASC_WITH_LZMA'])
-
 #---------------------------------------
 # SUBSTITUTION DICTIONARY for .in files
 
@@ -2563,6 +2557,7 @@ for k,v in {
 		,'ASC_WITH_PCRE':env['WITH_PCRE']
 		,'ASC_SIGNAL_TRAPS':env['WITH_SIGNALS']
 		,'ASC_RESETNEEDED':env.get('ASC_RESETNEEDED')
+		,'HAVE_GCCVISIBILITY':env.get('HAVE_GCCVISIBILITY')
 		,'HAVE_C99FPE':env.get('HAVE_C99FPE')
 		,'HAVE_IEEE':env.get('HAVE_IEEE')
 		,'HAVE_ERF':env.get('HAVE_ERF')
@@ -2581,9 +2576,6 @@ for k,v in {
 
 if with_latex2html:
 	env['WITH_LATEX2HTML']=1
-
-if 'HAVE_GCCVISIBILITY' in env:
-	subst_dict['@HAVE_GCCVISIBILITY@'] = "1"
 
 env.Append(SUBST_DICT=subst_dict)
 
@@ -2627,7 +2619,7 @@ SConsEnvironment.InstallLibraryAs = lambda env, dest, files: InstallPermAs(env, 
 env.AppendUnique(CPPPATH=['#'])
 
 if env['DEBUG']:
-	env.Append(
+	env.AppendUnique(
 		CCFLAGS=['-g']
 		,LINKFLAGS=['-g']
 	)
@@ -2636,8 +2628,8 @@ if env['ADDCCFLAGS']:
 	env.Append(CCFLAGS=env['ADDCCFLAGS'])
 
 if env['GCOV']:
-	env.Append(
-		CPPFLAGS=['-g','-fprofile-arcs','-ftest-coverage']
+	env.AppendUnique(
+		CCFLAGS=['-g','-fprofile-arcs','-ftest-coverage']
 		, LIBS=['gcov']
 		, LINKFLAGS=['-fprofile-arcs','-ftest-coverage']
 	)

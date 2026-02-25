@@ -163,11 +163,15 @@ for swigf in Split("""
 
 	if envs.get('WITH_DMALLOC'):
 		envs.Append(LIBS = ['dmalloc'])
-		envs.AppendUnique(LIBPATH = [env.get('DMALLOC_LIBPATH')])
+		_dmalloc_libpath = env.get('DMALLOC_LIBPATH')
+		if _dmalloc_libpath:
+			envs.AppendUnique(LIBPATH=[_dmalloc_libpath])
 
 	if envs.get('WITH_GRAPHVIZ'):
 		envs.Append(LIBS = env['GRAPHVIZ_LIBS'])
-		envs.AppendUnique(LIBPATH = [env.get('GRAPHVIZ_LIBPATH')])
+		_graphviz_libpath = env.get('GRAPHVIZ_LIBPATH')
+		if _graphviz_libpath:
+			envs.AppendUnique(LIBPATH=[_graphviz_libpath])
 
 	swiglib = envs.SharedLibrary("ascpy",objs + swigobjs
 		, SHLIBPREFIX = '_'
