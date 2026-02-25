@@ -508,3 +508,66 @@ JPY = {0.00856091*USD};*)
 * AscendWorldDomination = {big/estimate};
 *)
 END UNITS;
+
+(* Unit ladders for automatic engineering-unit scaling *)
+UNITS LADDER
+	nm = {nano*m};
+	um = {micro*m};
+	mm = {milli*m};
+	cm = {m/100};
+	dm = {m/10};
+	m = {m};
+	km = {kilo*m};
+END UNITS LADDER;
+
+UNITS LADDER
+	aN = {N*1e-18};
+	fN = {N*1e-15};
+	pN = {N*1e-12};
+	nN = {N*1e-9};
+	uN = {N*1e-6};
+	mN = {N*1e-3};
+	N = {kg*m/s^2};
+	kN = {1000*N};
+	MN = {1e6*N};
+	GN = {1e9*N};
+	TN = {1e12*N};
+	PN = {1e15*N};
+	EN = {1e18*N};
+END UNITS LADDER;
+
+UNITS LADDER
+	nJ = {J*1.0e-9};
+	uJ = {J*1.0e-6};
+	mJ = {J*1.0e-3};
+	J = {kg*m^2/s^2};
+	kJ = {J*1000};
+	MJ = {J*1e6};
+	GJ = {J*1e9};
+	TJ = {J*1e12};
+	PJ = {J*1e15};
+END UNITS LADDER;
+
+UNITS LADDER
+	aW = {atto*W};
+	fW = {femto*W};
+	pW = {pico*W};
+	nW = {nano*W};
+	uW = {micro*W};
+	mW = {milli*W};
+	W = {J/s};
+	kW = {kilo*W};
+	MW = {mega*W};
+	GW = {giga*W};
+	TW = {tera*W};
+	PW = {peta*W};
+	EW = {exa*W};
+END UNITS LADDER;
+
+UNITS LADDER
+	Wh = {W*h};
+	kWh = {kW*h};
+	MWh = {MW*h};
+	GWh = {GW*h};
+	TWh = {TW*h};
+END UNITS LADDER;

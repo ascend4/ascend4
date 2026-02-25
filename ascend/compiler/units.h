@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <ascend/general/platform.h>
+#include <ascend/general/list.h>
 #include "compiler.h"
 #include "fractions.h"
 #include "dimen.h"
@@ -51,6 +52,8 @@ struct Units {
   double conversion_factor; /**< to convert from units to system units */
   symchar *description;     /**< description of units */
   CONST dim_type *dim;      /**< dimenions of units */
+  long ladder_id;           /**< ladder membership id, or -1 if none */
+  long ladder_rank;         /**< 0-based rank within ladder, undefined if ladder_id<0 */
   struct Units *next;       /**< not for human consumption */
 };
 
@@ -62,6 +65,32 @@ struct UnitDefinition {
   CONST char *unitsexpr;
   CONST char *filename;
   int linenum;
+};
+
+/**
+	Temporary structure for parsing UNITS LADDER definitions in ascParse.y.
+	If is_anchor is nonzero, unitsexpr must be NULL and name references an
+	existing ladder member used as an insertion anchor.
+*/
+struct UnitLadderItem {
+  symchar *name;
+  CONST char *unitsexpr;
+  CONST char *filename;
+  int linenum;
+  int is_anchor;
+};
+
+/**
+	Opaque holder for user display-units overrides.
+ */
+struct UnitsOverridesDB;
+
+/**
+	Override key namespace.
+ */
+enum UnitsOverrideKind{
+	UNITS_OVERRIDE_TYPE = 1, /**< key is type name */
+	UNITS_OVERRIDE_NAME = 2  /**< key is canonical variable qlfdid */
 };
 
 #define UNITS_HASH_SIZE (1023)
@@ -134,6 +163,27 @@ ASC_DLLSPEC void ProcessUnitDef(struct UnitDefinition *udp);
 /**<
  * Attempts to add the info in udp to the units table.
  * messages to ascerr if not possible.
+ */
+
+ASC_DLLSPEC struct UnitLadderItem *CreateUnitLadderItem(symchar *name,
+                                                   CONST char *unitsexpr,
+                                                   int is_anchor,
+                                                   CONST char *filename,
+                                                   int linenum);
+/**<
+ *  Create a new UNITS LADDER item.
+ *  For anchor items, pass is_anchor nonzero and unitsexpr as NULL.
+ */
+
+ASC_DLLSPEC void DestroyUnitLadderItem(struct UnitLadderItem *item);
+/**<
+ *  Destroys one UNITS LADDER item.
+ */
+
+ASC_DLLSPEC int ProcessUnitLadder(struct gl_list_t *items);
+/**<
+ *  Process a UNITS LADDER item list.
+ *  Returns number of errors encountered.
  */
 
 ASC_DLLSPEC CONST struct Units *LookupUnits(CONST char *c);
@@ -229,6 +279,124 @@ ASC_DLLSPEC char **UnitsExplainError(CONST char *unitsexpr, int code, int pos);
  *  Returns the dimensions of the units structure.
  */
 
+#define UnitsLadderId(u) ((u)->ladder_id)
+/**<
+ *  Returns ladder id for this units object, or -1 if it is not in a ladder.
+ */
+
+#define UnitsLadderRank(u) ((u)->ladder_rank)
+/**<
+ *  Returns 0-based rank in the ladder (valid only if UnitsLadderId(u) >= 0).
+ */
+
+ASC_DLLSPEC CONST struct Units *LookupUnitsByLadder(long ladder_id, long ladder_rank);
+/**<
+ *  Lookup a units object by ladder id and ladder rank. Returns NULL if absent.
+ */
+
+ASC_DLLSPEC struct UnitsOverridesDB *UnitsOverridesCreate(void);
+/**<
+ *  Create an empty overrides DB.
+ */
+
+ASC_DLLSPEC void UnitsOverridesDestroy(struct UnitsOverridesDB *db);
+/**<
+ *  Destroy db and all contained entries.
+ */
+
+ASC_DLLSPEC void UnitsOverridesClear(struct UnitsOverridesDB *db);
+/**<
+ *  Remove all entries from db.
+ */
+
+ASC_DLLSPEC int UnitsOverridesSetSimroot(
+	struct UnitsOverridesDB *db,
+	CONST char *simroot
+);
+/**<
+ *  Set simulation-root token used for save-time canonicalization of name keys.
+ *  If simroot is non-empty, saving name overrides strips an exact "<simroot>."
+ *  prefix from each name key before writing.
+ *  Pass NULL or "" to clear.
+ */
+
+ASC_DLLSPEC int UnitsOverridesSet(struct UnitsOverridesDB *db,
+	enum UnitsOverrideKind kind,
+	CONST char *scope,
+	CONST char *name,
+	CONST char *units
+);
+/**<
+ *  Set one override entry.
+ *  scope = "" means global (allowed for type overrides only).
+ *  Returns 0 on success, nonzero on invalid input or units parse failure.
+ */
+
+ASC_DLLSPEC int UnitsOverridesUnset(struct UnitsOverridesDB *db,
+	enum UnitsOverrideKind kind,
+	CONST char *scope,
+	CONST char *name
+);
+/**<
+ *  Remove one override entry; returns 0 if removed, nonzero if absent/invalid.
+ */
+
+ASC_DLLSPEC CONST struct Units *UnitsOverridesLookup(
+	struct UnitsOverridesDB *db,
+	enum UnitsOverrideKind kind,
+	CONST char *scope,
+	CONST char *name
+);
+/**<
+ *  Lookup one override exactly by kind/scope/name.
+ */
+
+ASC_DLLSPEC CONST struct Units *UnitsOverridesResolve(
+	struct UnitsOverridesDB *db,
+	CONST char *scope,
+	CONST char *type_name,
+	CONST char *qlfdid,
+	CONST dim_type *dim
+);
+/**<
+ *  Resolve override with precedence:
+ *    name(scope) -> type(scope) -> type(global)
+ *  Name lookup tries qlfdid exactly, then qlfdid with a leading
+ *  "<simroot>." stripped.
+ *  Invalid dimensional overrides are reported (ASC_USER_ERROR) and dropped.
+ *  Returns NULL if no applicable override exists.
+ */
+
+ASC_DLLSPEC int UnitsOverridesLoad(
+	struct UnitsOverridesDB *db,
+	CONST char *filename,
+	unsigned *loaded,
+	unsigned *errors
+);
+/**<
+ *  Load overrides from INI-like file.
+ *  Sections: [global], [<relative-or-absolute-model-file>]
+ *  Keys:
+ *    type.<type_name> = <units>
+ *    name.<qlfdid_without_simroot> = <units>   (file sections only)
+ *  Load is additive; call UnitsOverridesClear(db) before load if desired.
+ *  Returns 0 on success (including file not found), nonzero otherwise.
+ */
+
+ASC_DLLSPEC int UnitsOverridesSave(
+	struct UnitsOverridesDB *db,
+	CONST char *filename
+);
+/**<
+ *  Save overrides in INI-like format. Returns 0 on success.
+ */
+
+ASC_DLLSPEC char *UnitsOverridesDefaultPath(void);
+/**<
+ *  Build default path for units-overrides file.
+ *  Caller owns returned memory and must free with ASC_FREE.
+ */
+
 ASC_DLLSPEC char *UnitsStringSI(CONST struct Units *up);
 /**<
  *  Returns the SI form of the units for the dimensionality of up.
@@ -242,4 +410,3 @@ ASC_DLLSPEC void DumpUnits(FILE *f);
 /* @} */
 
 #endif /* ASC_UNITS_H */
-

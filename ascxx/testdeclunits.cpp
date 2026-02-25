@@ -14,8 +14,15 @@ int main(void){
 		const char *model = "\n\
 			UNITS\n\
 				MW = {1e6*kg*m^2/s^3};\n\
+				W = {kg*m^2/s^3};\n\
+				kW = {1e3*W};\n\
 				MWh = {3.6e9*kg*m^2/s^2};\n\
 			END UNITS;\n\
+			UNITS LADDER\n\
+				W = {kg*m^2/s^3};\n\
+				kW = {1e3*W};\n\
+				MW = {1e6*W};\n\
+			END UNITS LADDER;\n\
 			ATOM atom_decl_units REFINES real DIMENSION M*L^2/T^3 DEFAULT 3 {MW};\n\
 			END atom_decl_units;\n\
 			ATOM atom_no_decl_units REFINES real DIMENSION M*L^2/T^3;\n\
@@ -32,6 +39,15 @@ int main(void){
 		UnitsM atom_u(atom_units);
 		if(atom_u.getName().toString() == NULL){
 			throw runtime_error("atom declared units object invalid");
+		}
+		if(!atom_u.hasLadder()){
+			throw runtime_error("expected atom declared units to have ladder membership");
+		}
+		{
+			UnitsM auto_u = atom_u.getAutoScaledUnits(9.5e6);
+			if(0 != strcmp(auto_u.getName().toString(), "MW")){
+				throw runtime_error("auto-scaled units mismatch for 9.5e6 SI");
+			}
 		}
 
 		Type t_const = L.findType("const_decl_units");

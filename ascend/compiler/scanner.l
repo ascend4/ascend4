@@ -261,6 +261,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"IS_A"			{ return ISA_TOK			; }
 <INITIAL>"IS_REFINED_TO"	{ return ISREFINEDTO_TOK		; }
 <INITIAL>"LINK"   		{ return LINK_TOK		; } 
+<INITIAL>"LADDER"		{ return LADDER_TOK		; }
 <INITIAL>"MAXIMIZE"		{ return MAXIMIZE_TOK		; }
 <INITIAL>"MAX_INTEGER"		{ return MAXINTEGER_TOK		; }
 <INITIAL>"MAX_REAL"		{ return MAXREAL_TOK		; }
