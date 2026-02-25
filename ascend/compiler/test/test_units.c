@@ -455,8 +455,8 @@ static void test_test5(void){
 
 	UnitsOverridesClear(db);
 	CU_TEST(0 == UnitsOverridesLoad(db,fn1,&loaded,&errors));
-	CU_TEST(loaded == 3);
-	CU_TEST(errors >= 3);
+	CU_TEST(loaded == 4);
+	CU_TEST(errors >= 2);
 
 	u = UnitsOverridesResolve(db,"models/johnpye/demo.a4c","energy_rate","plant.tes.power",powerdim);
 	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
@@ -514,6 +514,135 @@ static void test_test5(void){
 	gl_destroy_pool();
 }
 
+static void test_test6(void){
+	struct UnitsOverridesDB *db;
+	const struct Units *u;
+	const dim_type *powerdim;
+	unsigned loaded = 0, errors = 0;
+	char fn1[] = "/tmp/asc_uovr_lazy_1_XXXXXX";
+	char fn2[] = "/tmp/asc_uovr_lazy_2_XXXXXX";
+	FILE *fp;
+	int fd;
+	int found_entry = 0;
+	char line[256];
+
+	gl_init_pool();
+	gl_init();
+	InitDimenList();
+	InitSymbolTable();
+	InitUnitsTable();
+
+	fd = mkstemp(fn1);
+	CU_ASSERT_FATAL(fd >= 0);
+	close(fd);
+	fd = mkstemp(fn2);
+	CU_ASSERT_FATAL(fd >= 0);
+	close(fd);
+
+	fp = fopen(fn1,"w");
+	CU_ASSERT_PTR_NOT_NULL_FATAL(fp);
+	fprintf(fp,"[global]\n");
+	fprintf(fp,"type.energy_rate = MW\n");
+	fclose(fp);
+
+	db = UnitsOverridesCreate();
+	CU_ASSERT_PTR_NOT_NULL_FATAL(db);
+
+	CU_TEST(0 == UnitsOverridesLoad(db,fn1,&loaded,&errors));
+	CU_TEST(loaded == 1);
+	CU_TEST(errors == 0);
+
+	/* Save immediately: unresolved entries must not be dropped. */
+	CU_TEST(0 == UnitsOverridesSave(db,fn2));
+	fp = fopen(fn2,"r");
+	CU_ASSERT_PTR_NOT_NULL_FATAL(fp);
+	while (fgets(line,sizeof(line),fp) != NULL) {
+		if (strstr(line,"type.energy_rate = MW") != NULL) {
+			found_entry = 1;
+			break;
+		}
+	}
+	fclose(fp);
+	CU_TEST(found_entry);
+
+	/* Define units after load, then resolve lazily. */
+	define_unit("W","kg*m^2/s^3");
+	define_unit("MW","1e6*W");
+	powerdim = UnitsDimensions(LookupUnits("W"));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(powerdim);
+	u = UnitsOverridesResolve(db,"","energy_rate","plant.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"MW"));
+
+	UnitsOverridesDestroy(db);
+	remove(fn1);
+	remove(fn2);
+
+	DestroyUnitsTable();
+	DestroyStringSpace();
+	DestroySymbolTable();
+	DestroyDimenList();
+	gl_destroy_pool();
+}
+
+static void test_test7(void){
+	struct UnitsOverridesDB *db;
+	const struct Units *u;
+	const dim_type *powerdim;
+	unsigned loaded = 0, errors = 0;
+	char fn1[] = "/tmp/asc_uovr_ctx_1_XXXXXX";
+	FILE *fp;
+	int fd;
+
+	gl_init_pool();
+	gl_init();
+	InitDimenList();
+	InitSymbolTable();
+	InitUnitsTable();
+
+	/* Provide the target dimension, but not the requested override units yet. */
+	define_unit("W","kg*m^2/s^3");
+	powerdim = UnitsDimensions(LookupUnits("W"));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(powerdim);
+
+	fd = mkstemp(fn1);
+	CU_ASSERT_FATAL(fd >= 0);
+	close(fd);
+	fp = fopen(fn1,"w");
+	CU_ASSERT_PTR_NOT_NULL_FATAL(fp);
+	fprintf(fp,"[global]\n");
+	fprintf(fp,"type.energy_rate = MW\n");
+	fclose(fp);
+
+	db = UnitsOverridesCreate();
+	CU_ASSERT_PTR_NOT_NULL_FATAL(db);
+	CU_TEST(0 == UnitsOverridesLoad(db,fn1,&loaded,&errors));
+	CU_TEST(loaded == 1);
+	CU_TEST(errors == 0);
+
+	/*
+	 * First resolve occurs in a context where MW is still undefined:
+	 * must not remove the preference.
+	 */
+	u = UnitsOverridesResolve(db,"","energy_rate","plant.power",powerdim);
+	CU_TEST(NULL == u);
+
+	/* Later context provides MW; stored preference must now apply. */
+	define_unit("MW","1e6*W");
+	u = UnitsOverridesResolve(db,"","energy_rate","plant.power",powerdim);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_TEST(0 == strcmp(SCP(UnitsDescription(u)),"MW"));
+
+	UnitsOverridesDestroy(db);
+	remove(fn1);
+
+	DestroyUnitsTable();
+	DestroyStringSpace();
+	DestroySymbolTable();
+	DestroyDimenList();
+	gl_destroy_pool();
+}
+
 
 /*===========================================================================*/
 /* Registration information */
@@ -525,7 +654,9 @@ static void test_test5(void){
 	T(test2) \
 	T(test3) \
 	T(test4) \
-	T(test5)
+	T(test5) \
+	T(test6) \
+	T(test7)
 
 
 REGISTER_TESTS_SIMPLE(compiler_units, TESTS)

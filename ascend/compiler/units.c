@@ -1230,6 +1230,43 @@ static void uovr_free_entry(struct UnitsOverrideEntry *e){
 	ascfree(e);
 }
 
+static const struct Units *uovr_entry_resolve_units(
+	struct UnitsOverrideEntry *e,
+	unsigned long *pos,
+	int *err
+){
+	const struct Units *u = NULL;
+	unsigned long pos_local = 0;
+	int err_local = 0;
+	if (pos != NULL) {
+		*pos = 0;
+	}
+	if (err != NULL) {
+		*err = 0;
+	}
+	if (e == NULL || e->units == NULL || *e->units == '\0') {
+		if (err != NULL) {
+			*err = 1;
+		}
+		return NULL;
+	}
+	if (e->u != NULL) {
+		return e->u;
+	}
+	u = FindOrDefineUnits(e->units,&pos_local,&err_local);
+	if (u != NULL && err_local == 0) {
+		e->u = u;
+		return u;
+	}
+	if (pos != NULL) {
+		*pos = pos_local;
+	}
+	if (err != NULL) {
+		*err = (err_local != 0) ? err_local : 1;
+	}
+	return NULL;
+}
+
 static void uovr_clear_buckets(struct UnitsOverrideEntry **buckets){
 	unsigned long i;
 	if (buckets == NULL) {
@@ -1403,7 +1440,7 @@ CONST struct Units *UnitsOverridesLookup(
 	if (ref == NULL || *ref == NULL) {
 		return NULL;
 	}
-	return (*ref)->u;
+	return uovr_entry_resolve_units(*ref,NULL,NULL);
 }
 
 static CONST struct Units *uovr_validate_resolved(
@@ -1413,8 +1450,30 @@ static CONST struct Units *uovr_validate_resolved(
 	CONST char *name,
 	const dim_type *dim
 ){
-	CONST struct Units *u = UnitsOverridesLookup(db,kind,scope,name);
+	struct UnitsOverrideEntry **ref;
+	struct UnitsOverrideEntry *e;
+	CONST struct Units *u = NULL;
+	int err = 0;
+	CONST char *scope0 = (scope != NULL) ? scope : "";
+	ref = uovr_find_ref(db,kind,scope0,name);
+	if (ref == NULL || *ref == NULL) {
+		return NULL;
+	}
+	e = *ref;
+	u = uovr_entry_resolve_units(e,NULL,&err);
 	if (u == NULL) {
+		/* Undefined units may be valid in another model context; keep override. */
+		if (err == 1) {
+			return NULL;
+		}
+		error_reporter(ASC_USER_ERROR,NULL,0,NULL,
+			"Removing invalid units override '%s|%s' -> '%s' (undefined/invalid units)",
+			(scope != NULL) ? scope : "", name,
+			(e->units != NULL) ? e->units : ""
+		);
+		*ref = e->next;
+		uovr_free_entry(e);
+		db->dirty = 1;
 		return NULL;
 	}
 	if (!SameDimen(dim,UnitsDimensions(u))) {
@@ -1422,7 +1481,9 @@ static CONST struct Units *uovr_validate_resolved(
 			"Removing invalid units override '%s|%s' -> '%s' (dimension mismatch)",
 			(scope != NULL) ? scope : "", name, SCP(UnitsDescription(u))
 		);
-		UnitsOverridesUnset(db,kind,scope,name);
+		*ref = e->next;
+		uovr_free_entry(e);
+		db->dirty = 1;
 		return NULL;
 	}
 	return u;
@@ -1968,7 +2029,11 @@ int UnitsOverridesLoad(
 		char *section;
 		char *ovrname;
 		enum UnitsOverrideKind kind;
-		int rc;
+		unsigned long pos = 0;
+		int parse_err = 0;
+		const struct Units *parsed = NULL;
+		struct UnitsOverrideEntry **ref;
+		struct UnitsOverrideEntry *entry;
 
 		++lineno;
 		buf[strcspn(buf,"\r\n")] = '\0';
@@ -2060,18 +2125,47 @@ int UnitsOverridesLoad(
 			++nerrors;
 			continue;
 		}
-		rc = UnitsOverridesSet(
-			db,
-			kind,
-			current_scope,
-			ovrname,
-			val
-		);
-		if (rc != 0) {
+		ref = uovr_find_ref(db,kind,current_scope,ovrname);
+		if (ref == NULL) {
 			++nerrors;
-		}else{
-			++nloaded;
+			continue;
 		}
+		parsed = FindOrDefineUnits(val,&pos,&parse_err);
+		if (parsed == NULL || parse_err != 0) {
+			parsed = NULL; /* defer resolution until runtime */
+		}
+		if (*ref != NULL) {
+			entry = *ref;
+			if (entry->units != NULL) {
+				ascfree(entry->units);
+			}
+			entry->units = uovr_strdup(val);
+			if (entry->units == NULL) {
+				++nerrors;
+				continue;
+			}
+			entry->u = parsed;
+			db->dirty = 1;
+			++nloaded;
+			continue;
+		}
+		entry = ASC_NEW_CLEAR(struct UnitsOverrideEntry);
+		if (entry == NULL) {
+			++nerrors;
+			continue;
+		}
+		entry->scope = uovr_strdup(current_scope);
+		entry->name = uovr_strdup(ovrname);
+		entry->units = uovr_strdup(val);
+		entry->u = parsed;
+		if (entry->scope == NULL || entry->name == NULL || entry->units == NULL) {
+			uovr_free_entry(entry);
+			++nerrors;
+			continue;
+		}
+		*ref = entry;
+		db->dirty = 1;
+		++nloaded;
 	}
 	fclose(fp);
 	if (loaded != NULL) {
