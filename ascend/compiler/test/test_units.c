@@ -41,12 +41,7 @@
 #endif
 
 static unsigned long get_num_units_defined(void){
-  unsigned long c, nc = 0;
-  struct Units *p;
-  for(c=0;c<UNITS_HASH_SIZE;c++) {
-    for(p = g_units_hash_table[c];p!=NULL;p=p->next)nc++;
-  }
-  return nc;
+  return UnitsTableSize();
 }
 
 static void destroy_ladder_item_list(struct gl_list_t *items){

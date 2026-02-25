@@ -554,6 +554,10 @@ CONST struct Units *DefineUnits(symchar *c
   return result;
 }
 
+unsigned long UnitsTableSize(void){
+	return g_units_size;
+}
+
 CONST struct Units *LookupUnitsByLadder(long ladder_id, long ladder_rank){
 	unsigned long c;
 	struct Units *p;
