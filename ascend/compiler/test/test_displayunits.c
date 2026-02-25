@@ -178,6 +178,11 @@ static void test_displayunits_resolve(void){
 	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
 	CU_ASSERT_STRING_EQUAL(SCP(UnitsDescription(u)),"kW");
 
+	/* Override-aware autoscaling policy should scale override-selected units. */
+	u = UnitsResolveDisplayForInstancePolicy(db,y,1,1,0.1,1000.0);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(u);
+	CU_ASSERT_STRING_EQUAL(SCP(UnitsDescription(u)),"GW");
+
 	if (xname != NULL) {
 		ASC_FREE(xname);
 	}

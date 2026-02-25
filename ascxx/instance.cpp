@@ -441,15 +441,23 @@ Instanc::getRealValue() const{
 
 const UnitsM
 Instanc::getDisplayUnits(const bool &autoscale, const double &lower, const double &upper) const{
+	return getDisplayUnitsPolicy(autoscale,false,lower,upper);
+}
+
+const UnitsM
+Instanc::getDisplayUnitsPolicy(const bool &autoscale, const bool &autoscale_overrides, const double &lower, const double &upper) const{
 	const struct Units *u;
 	if (!isReal()) {
-		throw runtime_error("Instanc::getDisplayUnits: not a real-valued instance");
+		throw runtime_error("Instanc::getDisplayUnitsPolicy: not a real-valued instance");
 	}
-	u = UnitsResolveDisplayForInstance(
-		ascxx_get_units_overrides_db(),i,autoscale ? 1 : 0,lower,upper
+	u = UnitsResolveDisplayForInstancePolicy(
+		ascxx_get_units_overrides_db(),i,
+		autoscale ? 1 : 0,
+		autoscale_overrides ? 1 : 0,
+		lower,upper
 	);
 	if (u == NULL) {
-		throw runtime_error("Instanc::getDisplayUnits: unable to resolve display units");
+		throw runtime_error("Instanc::getDisplayUnitsPolicy: unable to resolve display units");
 	}
 	return UnitsM(u);
 }

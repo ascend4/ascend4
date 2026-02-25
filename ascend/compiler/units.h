@@ -389,6 +389,22 @@ ASC_DLLSPEC CONST struct Units *UnitsResolveDisplayForInstance(
  *  Returns NULL for invalid input or non-real instances.
  */
 
+ASC_DLLSPEC CONST struct Units *UnitsResolveDisplayForInstancePolicy(
+	struct UnitsOverridesDB *db,
+	CONST struct Instance *inst,
+	int autoscale,
+	int autoscale_overrides,
+	double lower,
+	double upper
+);
+/**<
+ *  Resolve display units with explicit autoscale policy for overrides.
+ *  Same precedence and behavior as UnitsResolveDisplayForInstance, except:
+ *    if autoscale_overrides != 0, autoscaling is also applied when the chosen
+ *    units came from a name/type override.
+ *  If autoscale_overrides == 0, override-selected units are returned as-is.
+ */
+
 ASC_DLLSPEC int UnitsOverridesSetForInstance(
 	struct UnitsOverridesDB *db,
 	CONST struct Instance *inst,

@@ -615,6 +615,7 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 	def init_units_policy_controls(self):
 		self.units_autorange = self.prefs.getBoolPref("UnitsPolicy","auto_range",True)
+		self.units_autorange_overrides = self.prefs.getBoolPref("UnitsPolicy","auto_range_overrides",False)
 		self.units_edit_name_override = self.prefs.getBoolPref("UnitsPolicy","edit_override_by_name",False)
 		self.units_edit_model_scope = self.prefs.getBoolPref("UnitsPolicy","edit_scope_model",True)
 
@@ -624,25 +625,30 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 
 		editmenu.append(Gtk.SeparatorMenuItem())
 		self.units_autorange_menu = Gtk.CheckMenuItem.new_with_mnemonic("Auto-ranged _units")
+		self.units_autorange_overrides_menu = Gtk.CheckMenuItem.new_with_mnemonic("Auto-range _override units")
 		self.units_edit_name_menu = Gtk.CheckMenuItem.new_with_mnemonic("Unit edits set _variable override")
 		self.units_scope_model_menu = Gtk.CheckMenuItem.new_with_mnemonic("Limit unit edit overrides to current _model")
 
 		editmenu.append(self.units_autorange_menu)
+		editmenu.append(self.units_autorange_overrides_menu)
 		editmenu.append(self.units_edit_name_menu)
 		editmenu.append(self.units_scope_model_menu)
 
 		self.units_autorange_menu.connect("toggled", self.on_units_autorange_menu_toggled)
+		self.units_autorange_overrides_menu.connect("toggled", self.on_units_autorange_overrides_menu_toggled)
 		self.units_edit_name_menu.connect("toggled", self.on_units_edit_name_menu_toggled)
 		self._units_scope_model_handler = self.units_scope_model_menu.connect(
 			"toggled", self.on_units_scope_model_menu_toggled
 		)
 
 		self.units_autorange_menu.set_active(self.units_autorange)
+		self.units_autorange_overrides_menu.set_active(self.units_autorange_overrides)
 		self.units_edit_name_menu.set_active(self.units_edit_name_override)
 		self.units_scope_model_menu.set_active(self.units_edit_model_scope)
 		self._sync_units_scope_menu_sensitivity()
 
 		self.units_autorange_menu.show()
+		self.units_autorange_overrides_menu.show()
 		self.units_edit_name_menu.show()
 		self.units_scope_model_menu.show()
 
@@ -666,6 +672,12 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 		if self.sim is not None:
 			self.modelview.refreshtree()
 
+	def on_units_autorange_overrides_menu_toggled(self, checkmenuitem, *args):
+		self.units_autorange_overrides = checkmenuitem.get_active()
+		self.prefs.setBoolPref("UnitsPolicy","auto_range_overrides",self.units_autorange_overrides)
+		if self.sim is not None:
+			self.modelview.refreshtree()
+
 	def on_units_edit_name_menu_toggled(self, checkmenuitem, *args):
 		self.units_edit_name_override = checkmenuitem.get_active()
 		self.prefs.setBoolPref("UnitsPolicy","edit_override_by_name",self.units_edit_name_override)
@@ -678,6 +690,9 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 	def get_units_autoscale(self):
 		return self.units_autorange
 
+	def get_units_autoscale_overrides(self):
+		return self.units_autorange_overrides
+
 	def get_units_edit_override_by_name(self):
 		return self.units_edit_name_override
 
@@ -689,7 +704,12 @@ For details, see http://ascendbugs.cheme.cmu.edu/view.php?id=337"""
 	def get_instance_display_units(self, instance, autoscale=None):
 		if autoscale is None:
 			autoscale = self.get_units_autoscale()
-		return instance.getDisplayUnits(autoscale)
+		autoscale_overrides = self.get_units_autoscale_overrides()
+		try:
+			return instance.getDisplayUnitsPolicy(autoscale, autoscale_overrides)
+		except Exception:
+			# Backward compatibility with older ascpy builds.
+			return instance.getDisplayUnits(autoscale)
 
 	def get_instance_display_value(self, instance, autoscale=None):
 		if instance.isReal():

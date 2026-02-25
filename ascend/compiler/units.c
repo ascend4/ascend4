@@ -1884,6 +1884,19 @@ CONST struct Units *UnitsResolveDisplayForInstance(
 	double lower,
 	double upper
 ){
+	return UnitsResolveDisplayForInstancePolicy(
+		db,inst,autoscale,0,lower,upper
+	);
+}
+
+CONST struct Units *UnitsResolveDisplayForInstancePolicy(
+	struct UnitsOverridesDB *db,
+	CONST struct Instance *inst,
+	int autoscale,
+	int autoscale_overrides,
+	double lower,
+	double upper
+){
 	CONST struct Units *u = NULL;
 	CONST dim_type *dim;
 	CONST struct TypeDescription *td;
@@ -1931,6 +1944,9 @@ CONST struct Units *UnitsResolveDisplayForInstance(
 			ASC_FREE(scope_key);
 		}
 		if (u != NULL) {
+			if (autoscale && autoscale_overrides && AtomAssigned(inst)) {
+				u = uovr_autoscale_ladder(u,RealAtomValue(inst),lower,upper);
+			}
 			return u;
 		}
 	}
