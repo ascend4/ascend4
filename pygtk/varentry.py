@@ -15,11 +15,12 @@ class InputError(Exception):
 		return "Input Error: %s" % self.msg;
 
 class RealAtomEntry:
-	def __init__(self,instance,newtext):
+	def __init__(self,instance,newtext,default_units=None):
 		self.instance = instance;
 		self.newtext = newtext;
 		self.units = None; # the string value of the entered units
 		self.value = None;
+		self.default_units = default_units;
 
 	def checkEntry(self):
 		_instdim = self.instance.getDimensions();
@@ -48,11 +49,15 @@ class RealAtomEntry:
 
 		# check the units
 		if self.units.strip() == "":
-			# if no units entered, assume the 'preferred' units
-			_u = _insttype.getPreferredUnits()
+			# if no units entered, assume display/default units supplied by caller.
+			_u = self.default_units
 			if _u is None:
-				# no preferred units for this type, so assume default units
-				_u = _instdim.getDefaultUnits()
+				try:
+					_u = self.instance.getDisplayUnits(False)
+				except RuntimeError:
+					_u = _instdim.getDefaultUnits()
+			elif _u.__class__ == str:
+				_u = ascpy.Units(_u)
 			print("Assuming units '%s'" % _u.getName().toString())
 		else:
 			try:
@@ -92,10 +97,20 @@ class RealAtomEntry:
 		return self.value
 
 	def exportPreferredUnits(self,prefs):
-		_typename = str( self.instance.getType().getName() )
+		return
+
+	def applyUnitsOverride(self, browser, by_name=None, model_scope=None):
 		_dim = self.instance.getDimensions()
-
-		if self.units.strip() != "" and not _dim.isDimensionless():
-			prefs.setPreferredUnits(_typename,self.units);
+		if self.units is None or self.units.strip() == "":
+			return
+		if _dim.isDimensionless() or _dim.isWild():
+			return
+		if by_name is None:
+			by_name = browser.get_units_edit_override_by_name()
+		if model_scope is None:
+			model_scope = browser.get_units_edit_scope_model()
+		if by_name:
+			model_scope = True
+		self.instance.setDisplayUnitsOverride(self.units, by_name, model_scope)
+		ascpy.saveDisplayUnitsOverrides()
 		
-

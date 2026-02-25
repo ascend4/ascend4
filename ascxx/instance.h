@@ -22,6 +22,7 @@
 #include "type.h"
 #include "set.h"
 #include "dimensions.h"
+#include "units.h"
 
 class Plot;
 
@@ -158,7 +159,12 @@ public:
 
 	const double getResidual() const;
 	const bool getLogicalResidual() const;
+	const UnitsM getDisplayUnits(const bool &autoscale=true, const double &lower=0.1, const double &upper=1000.0) const;
+	void setDisplayUnitsOverride(const std::string &units, const bool &by_name=false, const bool &model_scope=true) const;
+	void clearDisplayUnitsOverride(const bool &by_name=false, const bool &model_scope=true) const;
 };
 
-#endif
+int saveDisplayUnitsOverrides(void);
+int reloadDisplayUnitsOverrides(void);
 
+#endif

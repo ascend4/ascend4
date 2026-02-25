@@ -101,9 +101,7 @@ class IntegratorWindow:
 		# get the current time value as the beginentry...
 		print("SEARCHING FOR TIME VAR...")
 		try:
-			_u = self.indepvar.getInstance().getType().getPreferredUnits()
-			if _u is None:
-				_u = self.indepvar.getInstance().getType().getDimensions().getDefaultUnits()
+			_u = self.browser.get_instance_display_units(self.indepvar.getInstance())
 			#_t = self.integrator.getCurrentTime();
 			_t = str(self.indepvar.getInstance().getRealValue() / _u.getConversion())
 			self.beginentry.set_text(str(_t)+" "+_u.getName().toString())
@@ -250,7 +248,8 @@ class IntegratorWindow:
 		self.okbutton.set_sensitive(True)
 		# A simple function to get the real value from the entered text
 		# and taint the entry box accordingly
-		i = RealAtomEntry(self.indepvar.getInstance(), entry.get_text())
+		_default_units = self.browser.get_instance_display_units(self.indepvar.getInstance())
+		i = RealAtomEntry(self.indepvar.getInstance(), entry.get_text(), _default_units)
 		try:
 			i.checkEntry()
 			_value = i.getValue()
@@ -275,7 +274,8 @@ class IntegratorWindow:
 			, self.durationentry:[lambda x:float(x),"duration"]
 			, self.nstepsentry:[lambda x:int(x),"num"]
 		}.items():
-			x = RealAtomEntry(self.indepvar.getInstance(), _k.get_text())
+			_default_units = self.browser.get_instance_display_units(self.indepvar.getInstance())
+			x = RealAtomEntry(self.indepvar.getInstance(), _k.get_text(), _default_units)
 			x.checkEntry()
 			if _k == self.beginentry: 
 				units = x.units
@@ -299,7 +299,8 @@ class IntegratorWindow:
 			try:
 				_f = self.integratorentries[_k];
 				# pass the substep setting to the integrator
-				x[_f] = RealAtomEntry(self.indepvar.getInstance(), _f.get_text())
+				_default_units = self.browser.get_instance_display_units(self.indepvar.getInstance())
+				x[_f] = RealAtomEntry(self.indepvar.getInstance(), _f.get_text(), _default_units)
 				x[_f].checkEntry()
 				if _k!="maxsteps":
 					self.taint_entry(_f,"white")
@@ -338,4 +339,3 @@ class IntegratorWindow:
 			_res = self.integrator.setEngine(self.engines[engine])			
 		except IndexError as e:
 			raise IntegratorError("Unable to set engine: %s" % e) 
-

@@ -386,6 +386,9 @@ public:
 	const double getRealValue() const;
 	const bool isDimensionless() const;
 	const Dimensions getDimensions() const;
+	const UnitsM getDisplayUnits(const bool &autoscale=true, const double &lower=0.1, const double &upper=1000.0) const;
+	void setDisplayUnitsOverride(const std::string &units, const bool &by_name=false, const bool &model_scope=true) const;
+	void clearDisplayUnitsOverride(const bool &by_name=false, const bool &model_scope=true) const;
 	const bool getBoolValue() const;
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
@@ -423,6 +426,9 @@ public:
 	const std::vector<Instanc> getClique() const;
 	const std::vector<std::string> getAliases() const;
 };
+
+int saveDisplayUnitsOverrides(void);
+int reloadDisplayUnitsOverrides(void);
 
 %extend Instanc{
 	const char *__repr__(){
@@ -486,24 +492,11 @@ public:
 				#raise RuntimeError("Unknown value model type="+self.getType().getName().toString()+", instance kind=".getKindStr())
 
 		def getRealValueAndUnits(self):
-			"""Return real-valued instance value as a string, using preferred, then declared, then default units."""
+			"""Return real-valued instance value as a string using display-units policy."""
 			if not self.isReal():
 				raise TypeError
 			_u = self.getDisplayUnits()
 			return _u.getConvertedValue(self.getRealValue())
-
-		def getDisplayUnits(self, autoscale=True, lower=0.1, upper=1000.0):
-			"""Return display units for this instance: preferred -> declared -> default; optionally autoscaled by ladder."""
-			if not self.isReal():
-				raise TypeError
-			_u = self.getType().getPreferredUnits()
-			if _u is None:
-				_u = self.getType().getDeclaredUnits()
-			if _u is None:
-				_u = self.getDimensions().getDefaultUnits()
-			if autoscale and _u.hasLadder():
-				_u = _u.getAutoScaledUnits(self.getRealValue(), lower, upper)
-			return _u
 
 		def to(self,units):
 			"""Returns an instance value converted to specified units."""

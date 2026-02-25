@@ -56,9 +56,10 @@ class ObserverColumn:
 				name = browser.sim.getInstanceName(instance)
 
 		if units is None:
-			units = instance.getType().getPreferredUnits()
-		if units is None:
-			units = instance.getType().getDimensions().getDefaultUnits()
+			if browser is not None:
+				units = browser.get_instance_display_units(instance)
+			else:
+				units = instance.getDisplayUnits()
 
 		uname = str(units.getName())
 
@@ -688,30 +689,20 @@ class ObserverTab:
 	def on_units_activate(self, *args):
 		if self.current_instance is not None:
 			T = self.current_instance.getType()
-			_un = UnitsDialog(self.browser,T)
+			_un = UnitsDialog(self.browser,T,self.current_instance)
 			_un.run()
 	
 	def units_refresh(self, instance_type):
 		for _col in list(self.cols.values()):
-			_units = None
-			_units = instance_type.getPreferredUnits()
-			if _units is None:
-				_units = instance_type.getDimensions().getDefaultUnits()
-			_uname = str(_units.getName())
-			
 			_col_type = _col.instance.getType()
-			_col_units = _col_type.getPreferredUnits()
-			if _col_units is None:
-				_col_units = _col_type.getDimensions().getDefaultUnits()
-			_col_uname = str(_col_units.getName())
-			
-			if _col_uname == _uname:
+			if instance_type is None or str(_col_type.getName()) == str(instance_type.getName()):
+				_units = self.browser.get_instance_display_units(_col.instance)
+				_uname = str(_units.getName())
 				if self.browser == None:
 					name = "UNNAMED"
 				else:
 					name = self.browser.sim.getInstanceName(_col.instance)
 
-				_uname = str(_units.getName())
 				##### CELSIUS TEMPERATURE WORKAROUND
 				if _col.instance.getType().isRefinedReal() and str(_col.instance.getType().getDimensions()) == 'TMP':
 					units = Preferences().getPreferredUnitsOrigin(str(_col.instance.getType().getName()))

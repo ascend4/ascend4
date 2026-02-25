@@ -27,6 +27,7 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
+#include <float.h>
 #ifdef _WIN32
 #include <direct.h>
 #else
@@ -39,8 +40,14 @@
 #include <ascend/utilities/error.h>
 
 #include "instance_enum.h"
+#include "instquery.h"
+#include "parentchild.h"
+#include "instance_io.h"
 #include "cmpfunc.h"
 #include "symtab.h"
+#include "atomvalue.h"
+#include "type_desc.h"
+#include "module.h"
 
 #include "dimen_io.h"
 #include "units.h"
@@ -1476,6 +1483,404 @@ CONST struct Units *UnitsOverridesResolve(
 		}
 	}
 	return NULL;
+}
+
+static CONST struct Units *uovr_declared_units_for_type(
+	CONST struct TypeDescription *td
+){
+	symchar *decl_units = NULL;
+	unsigned long pos = 0;
+	int err = 0;
+	CONST struct Units *u = NULL;
+	if (td == NULL) {
+		return NULL;
+	}
+	switch (GetBaseType(td)) {
+	case real_type:
+		decl_units = GetRealDeclaredUnits(td);
+		break;
+	case real_constant_type:
+		decl_units = GetConstantDeclaredUnits(td);
+		break;
+	default:
+		return NULL;
+	}
+	if (decl_units == NULL || SCP(decl_units) == NULL || *SCP(decl_units) == '\0') {
+		return NULL;
+	}
+	u = LookupUnits(SCP(decl_units));
+	if (u != NULL) {
+		return u;
+	}
+	u = FindOrDefineUnits(SCP(decl_units),&pos,&err);
+	if (err != 0) {
+		return NULL;
+	}
+	return u;
+}
+
+static CONST struct Units *uovr_default_units_for_dim(CONST dim_type *dim){
+	struct Units tmp;
+	CONST struct Units *u = NULL;
+	char *si = NULL;
+	unsigned long pos = 0;
+	int err = 0;
+	if (dim == NULL) {
+		return NULL;
+	}
+	if (IsWild(dim)) {
+		return LookupUnits("?");
+	}
+	memset(&tmp,0,sizeof(tmp));
+	tmp.dim = dim;
+	si = UnitsStringSI(&tmp);
+	if (si == NULL) {
+		return NULL;
+	}
+	u = LookupUnits(si);
+	if (u == NULL) {
+		u = FindOrDefineUnits(si,&pos,&err);
+	}
+	ASC_FREE(si);
+	if (err != 0) {
+		return NULL;
+	}
+	return u;
+}
+
+static CONST struct Units *uovr_autoscale_ladder(
+	CONST struct Units *u,
+	double value_si,
+	double lower,
+	double upper
+){
+	CONST struct Units *cand;
+	CONST struct Units *best;
+	double best_score = DBL_MAX;
+	double abs_si;
+	double target;
+	long ladder_id;
+	long rank;
+	int have_inrange = 0;
+	if (u == NULL) {
+		return NULL;
+	}
+	if (UnitsLadderId(u) < 0) {
+		return u;
+	}
+	if (!(lower > 0.0) || !(upper > lower)) {
+		return u;
+	}
+	if (!isfinite(value_si) || value_si == 0.0) {
+		return u;
+	}
+	abs_si = fabs(value_si);
+	if (abs_si == 0.0) {
+		return u;
+	}
+	best = u;
+	ladder_id = UnitsLadderId(u);
+	target = 0.5 * (log10(lower) + log10(upper));
+	for (rank = 0; ; ++rank) {
+		double value;
+		double score;
+		int inrange;
+		cand = LookupUnitsByLadder(ladder_id,rank);
+		if (cand == NULL) {
+			break;
+		}
+		value = abs_si / UnitsConvFactor(cand);
+		if (!(value > 0.0) || !isfinite(value)) {
+			continue;
+		}
+		inrange = (value >= lower && value < upper);
+		if (inrange) {
+			score = fabs(log10(value) - target);
+			if (!have_inrange || score < best_score) {
+				best = cand;
+				best_score = score;
+				have_inrange = 1;
+			}
+		}else if (!have_inrange) {
+			score = fabs(log10(value));
+			if (score < best_score) {
+				best = cand;
+				best_score = score;
+			}
+		}
+	}
+	return best;
+}
+
+static CONST struct Instance *uovr_owner_model_instance(CONST struct Instance *inst){
+	CONST struct Instance *p = inst;
+	while (p != NULL) {
+		enum inst_t k = InstanceKind(p);
+		if (k == MODEL_INST) {
+			return p;
+		}
+		if (k == SIM_INST || NumberParents(p) < 1) {
+			return NULL;
+		}
+		p = InstanceParent(p,1);
+	}
+	return NULL;
+}
+
+static char *uovr_build_model_scope_key(CONST struct Instance *model_inst){
+	CONST struct TypeDescription *mtd;
+	CONST struct module_t *mod;
+	CONST char *modfile = NULL;
+	CONST char *mname = NULL;
+	size_t nmod;
+	size_t nname;
+	size_t n;
+	char *scope;
+	if (model_inst == NULL || InstanceKind(model_inst) != MODEL_INST) {
+		return NULL;
+	}
+	mtd = InstanceTypeDesc(model_inst);
+	if (mtd == NULL) {
+		return NULL;
+	}
+	if (GetName(mtd) != NULL) {
+		mname = SCP(GetName(mtd));
+	}
+	mod = GetModule(mtd);
+	if (mod != NULL && Asc_ModuleFileName(mod) != NULL) {
+		modfile = Asc_ModuleFileName(mod);
+	}
+	if ((modfile == NULL || *modfile == '\0') && (mname == NULL || *mname == '\0')) {
+		return NULL;
+	}
+	nmod = (modfile != NULL) ? strlen(modfile) : 0;
+	nname = (mname != NULL) ? strlen(mname) : 0;
+	if (nmod == 0) {
+		scope = ASC_NEW_ARRAY(char,nname + 1);
+		if (scope != NULL) {
+			memcpy(scope,mname,nname + 1);
+		}
+		return scope;
+	}
+	if (nname == 0) {
+		scope = ASC_NEW_ARRAY(char,nmod + 1);
+		if (scope != NULL) {
+			memcpy(scope,modfile,nmod + 1);
+		}
+		return scope;
+	}
+	n = nmod + 2 + nname + 1;
+	scope = ASC_NEW_ARRAY(char,n);
+	if (scope == NULL) {
+		return NULL;
+	}
+	snprintf(scope,n,"%s::%s",modfile,mname);
+	return scope;
+}
+
+static int uovr_keys_for_instance(
+	CONST struct Instance *inst,
+	enum UnitsOverrideKind kind,
+	int model_scope,
+	char **scope_key_out,
+	char **name_key_out
+){
+	CONST struct TypeDescription *td = NULL;
+	CONST struct Instance *owner_model = NULL;
+	CONST char *type_name = NULL;
+	char *scope_key = NULL;
+	char *name_key = NULL;
+	char *qlfdid = NULL;
+	if (scope_key_out == NULL || name_key_out == NULL) {
+		return 1;
+	}
+	*scope_key_out = NULL;
+	*name_key_out = NULL;
+	if (inst == NULL) {
+		return 1;
+	}
+	td = InstanceTypeDesc(inst);
+	if (td != NULL && GetName(td) != NULL) {
+		type_name = SCP(GetName(td));
+	}
+	if (kind == UNITS_OVERRIDE_TYPE) {
+		if (type_name == NULL || *type_name == '\0') {
+			return 2;
+		}
+		if (model_scope) {
+			owner_model = uovr_owner_model_instance(inst);
+			scope_key = uovr_build_model_scope_key(owner_model);
+			if (scope_key == NULL || *scope_key == '\0') {
+				if (scope_key != NULL) {
+					ASC_FREE(scope_key);
+				}
+				return 3;
+			}
+		}
+		name_key = uovr_strdup(type_name);
+		if (name_key == NULL) {
+			if (scope_key != NULL) {
+				ASC_FREE(scope_key);
+			}
+			return 4;
+		}
+		*scope_key_out = scope_key;
+		*name_key_out = name_key;
+		return 0;
+	}
+	if (kind != UNITS_OVERRIDE_NAME) {
+		return 1;
+	}
+	owner_model = uovr_owner_model_instance(inst);
+	scope_key = uovr_build_model_scope_key(owner_model);
+	if (scope_key == NULL || *scope_key == '\0') {
+		if (scope_key != NULL) {
+			ASC_FREE(scope_key);
+		}
+		return 3;
+	}
+	qlfdid = WriteInstanceNameString(inst,owner_model);
+	if (qlfdid == NULL) {
+		qlfdid = WriteInstanceNameString(inst,NULL);
+	}
+	if (qlfdid == NULL || *qlfdid == '\0') {
+		if (qlfdid != NULL) {
+			ASC_FREE(qlfdid);
+		}
+		ASC_FREE(scope_key);
+		return 2;
+	}
+	*scope_key_out = scope_key;
+	*name_key_out = qlfdid;
+	return 0;
+}
+
+int UnitsOverridesSetForInstance(
+	struct UnitsOverridesDB *db,
+	CONST struct Instance *inst,
+	enum UnitsOverrideKind kind,
+	int model_scope,
+	CONST char *units
+){
+	char *scope_key = NULL;
+	char *name_key = NULL;
+	CONST char *scope = "";
+	int rc;
+	if (db == NULL || units == NULL || *units == '\0') {
+		return 1;
+	}
+	rc = uovr_keys_for_instance(inst,kind,model_scope,&scope_key,&name_key);
+	if (rc != 0) {
+		return rc;
+	}
+	if (scope_key != NULL && *scope_key != '\0') {
+		scope = scope_key;
+	}
+	rc = UnitsOverridesSet(db,kind,scope,name_key,units);
+	if (scope_key != NULL) {
+		ASC_FREE(scope_key);
+	}
+	if (name_key != NULL) {
+		ASC_FREE(name_key);
+	}
+	return rc;
+}
+
+int UnitsOverridesUnsetForInstance(
+	struct UnitsOverridesDB *db,
+	CONST struct Instance *inst,
+	enum UnitsOverrideKind kind,
+	int model_scope
+){
+	char *scope_key = NULL;
+	char *name_key = NULL;
+	CONST char *scope = "";
+	int rc;
+	if (db == NULL) {
+		return 1;
+	}
+	rc = uovr_keys_for_instance(inst,kind,model_scope,&scope_key,&name_key);
+	if (rc != 0) {
+		return rc;
+	}
+	if (scope_key != NULL && *scope_key != '\0') {
+		scope = scope_key;
+	}
+	rc = UnitsOverridesUnset(db,kind,scope,name_key);
+	if (scope_key != NULL) {
+		ASC_FREE(scope_key);
+	}
+	if (name_key != NULL) {
+		ASC_FREE(name_key);
+	}
+	return rc;
+}
+
+CONST struct Units *UnitsResolveDisplayForInstance(
+	struct UnitsOverridesDB *db,
+	CONST struct Instance *inst,
+	int autoscale,
+	double lower,
+	double upper
+){
+	CONST struct Units *u = NULL;
+	CONST dim_type *dim;
+	CONST struct TypeDescription *td;
+	CONST char *scope = "";
+	char *scope_key = NULL;
+	CONST char *type_name = NULL;
+	char *qlfdid = NULL;
+	CONST struct Instance *owner_model = NULL;
+	if (inst == NULL) {
+		return NULL;
+	}
+	switch (InstanceKind(inst)) {
+	case REAL_INST:
+	case REAL_ATOM_INST:
+	case REAL_CONSTANT_INST:
+		break;
+	default:
+		return NULL;
+	}
+	dim = RealAtomDims(inst);
+	if (dim == NULL) {
+		return NULL;
+	}
+	td = InstanceTypeDesc(inst);
+	if (td != NULL) {
+		if (GetName(td) != NULL) {
+			type_name = SCP(GetName(td));
+		}
+	}
+	if (db != NULL) {
+		owner_model = uovr_owner_model_instance(inst);
+		scope_key = uovr_build_model_scope_key(owner_model);
+		if (scope_key != NULL && *scope_key != '\0') {
+			scope = scope_key;
+		}
+		qlfdid = WriteInstanceNameString(inst,owner_model);
+		if (qlfdid == NULL) {
+			qlfdid = WriteInstanceNameString(inst,NULL);
+		}
+		u = UnitsOverridesResolve(db,scope,type_name,qlfdid,dim);
+		if (qlfdid != NULL) {
+			ASC_FREE(qlfdid);
+		}
+		if (scope_key != NULL) {
+			ASC_FREE(scope_key);
+		}
+		if (u != NULL) {
+			return u;
+		}
+	}
+	u = uovr_declared_units_for_type(td);
+	if (u == NULL) {
+		u = uovr_default_units_for_dim(dim);
+	}
+	if (u != NULL && autoscale && AtomAssigned(inst)) {
+		u = uovr_autoscale_ladder(u,RealAtomValue(inst),lower,upper);
+	}
+	return u;
 }
 
 static char *uovr_ltrim(char *s){

@@ -241,7 +241,7 @@ class ModelView:
 #   INSTANCE TREE
 
 	def get_tree_row_data(self,instance): # for instance browser
-		_value = str(instance.getValue())
+		_value = self.browser.get_instance_display_value(instance)
 		_type = str(instance.getType())
 		_name = str(instance.getName())
 		_fgcolor = BROWSER_INCLUDED_COLOR
@@ -292,10 +292,7 @@ class ModelView:
 		for _path in self.otank: # { path : (name,value) }
 			_iter = self.modelstore.get_iter(_path)
 			_name, _instance = self.otank[_path]
-			_value = str(_instance.getValue())
-			##### CELSIUS TEMPERATURE WORKAROUND
-			_value = CelsiusUnits.convert_show(_instance, _value, True)
-			##### CELSIUS TEMPERATURE WORKAROUND
+			_value = self.browser.get_instance_display_value(_instance)
 			self.modelstore.set_value(_iter, 2, _value)
 			if _instance.getType().isRefinedSolverVar():
 				if _instance.isFixed() and self.modelstore.get_value(_iter,3)==BROWSER_FREE_COLOR:
@@ -344,11 +341,12 @@ class ModelView:
 			newtext = CelsiusUnits.convert_edit(_instance, newtext, True)
 			##### CELSIUS TEMPERATURE WORKAROUND
 
-			_e = RealAtomEntry(_instance, newtext)
+			_default_units = self.browser.get_instance_display_units(_instance)
+			_e = RealAtomEntry(_instance, newtext, _default_units)
 			try:
 				_e.checkEntry()
 				_e.setValue()
-				_e.exportPreferredUnits(self.browser.prefs)
+				_e.applyUnitsOverride(self.browser)
 			except InputError as e:
 				self.browser.reporter.reportError(str(e))
 				return True
@@ -388,15 +386,12 @@ class ModelView:
 
 		# now that the variable is set, update the GUI and re-solve if desired
 		_iter = self.modelstore.get_iter(path)
-		self.modelstore.set_value(_iter,2, str(_instance.getValue()))
+		self.modelstore.set_value(_iter,2, self.browser.get_instance_display_value(_instance))
 
 		if _instance.getType().isRefinedSolverVar():
 			self.modelstore.set_value(_iter,3,BROWSER_FIXED_COLOR) # set the row green as fixed
 
 		self.browser.do_solve_if_auto()
-		for _obs in self.browser.observers:
-			if _obs.alive:
-				_obs.units_refresh(self.get_selected_instance().getType())
 		return True
 
 	##### EXTERNAL RELATION WORKAROUND
@@ -747,9 +742,16 @@ class ModelView:
 		_dia.run()
 
 	def units_activate(self,*args):
-		T = self.get_selected_type()
+		_instance = self.get_selected_instance()
+		if _instance is None:
+			self.browser.reporter.reportError("Select a real variable first.")
+			return
+		if not _instance.isReal():
+			self.browser.reporter.reportError("Units can only be edited for real-valued variables.")
+			return
+		T = _instance.getType()
 		try:
-			_un = UnitsDialog(self.browser,T)
+			_un = UnitsDialog(self.browser,T,_instance)
 			_un.run()
 		except:
 			self.browser.reporter.reportError("Unable to display units dialog.")

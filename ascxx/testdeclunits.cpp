@@ -1,8 +1,10 @@
 #include "library.h"
 #include "type.h"
+#include "simulation.h"
 #include "units.h"
 
 #include <cstring>
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 
@@ -16,18 +18,23 @@ int main(void){
 				MW = {1e6*kg*m^2/s^3};\n\
 				W = {kg*m^2/s^3};\n\
 				kW = {1e3*W};\n\
+				GW = {1e9*W};\n\
 				MWh = {3.6e9*kg*m^2/s^2};\n\
 			END UNITS;\n\
 			UNITS LADDER\n\
 				W = {kg*m^2/s^3};\n\
 				kW = {1e3*W};\n\
 				MW = {1e6*W};\n\
+				GW = {1e9*W};\n\
 			END UNITS LADDER;\n\
-			ATOM atom_decl_units REFINES real DIMENSION M*L^2/T^3 DEFAULT 3 {MW};\n\
+			ATOM atom_decl_units REFINES real DIMENSION M*L^2/T^3 DEFAULT 9500 {MW};\n\
 			END atom_decl_units;\n\
 			ATOM atom_no_decl_units REFINES real DIMENSION M*L^2/T^3;\n\
 			END atom_no_decl_units;\n\
-			CONSTANT const_decl_units REFINES real_constant UNITS {MWh};";
+			CONSTANT const_decl_units REFINES real_constant UNITS {MWh};\n\
+			MODEL display_units_probe;\n\
+				a IS_A atom_decl_units;\n\
+			END display_units_probe;";
 
 		L.loadString(model, "declunits_cpp_test");
 
@@ -47,6 +54,19 @@ int main(void){
 			UnitsM auto_u = atom_u.getAutoScaledUnits(9.5e6);
 			if(0 != strcmp(auto_u.getName().toString(), "MW")){
 				throw runtime_error("auto-scaled units mismatch for 9.5e6 SI");
+			}
+		}
+		{
+			Type t_probe = L.findType("display_units_probe");
+			Simulation sim = t_probe.getSimulation("sim1", false);
+			Instanc a = sim.getModel().getChild("a");
+			UnitsM disp_u = a.getDisplayUnits();
+			double value_in_disp = a.getRealValue() / disp_u.getConversion();
+			if(0 != strcmp(disp_u.getName().toString(), "GW")){
+				throw runtime_error("instance display units resolution mismatch");
+			}
+			if(fabs(value_in_disp - 9.5) > 1e-6){
+				throw runtime_error("display units conversion mismatch");
 			}
 		}
 
