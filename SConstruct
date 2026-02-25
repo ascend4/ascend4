@@ -2683,7 +2683,7 @@ if env['WITH_MMIO']:
 
 # FIXME want to move these bits to ascend/SConscript
 
-libascend_env.Append(
+libascend_env.AppendUnique(
 	CPPPATH=['#']
 	,LIBS=['m']
 )
@@ -2723,9 +2723,7 @@ env.Alias('libascend',libtargets)
 # UNIT TESTS (C CODE)
 
 test_env = env.Clone()
-test_env.Append(
-	CPPPATH="#"
-)
+test_env.AppendUnique(CPPPATH=['#'])
 
 if env['WITH_CUNIT']:
 	testdirs = ['general','solver','utilities','linear','compiler','system','packages','integrator']
