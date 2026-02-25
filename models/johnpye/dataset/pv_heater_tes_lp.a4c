@@ -1,5 +1,11 @@
 REQUIRE "atoms.a4l";
 
+UNITS LADDER
+AUD = {0.71*USD};
+kAUD = {1e3*AUD};
+MAUD = {1e6*AUD};
+END UNITS;
+
 (*
 	Dimensioned LP/MIP dispatch+sizing model for:
 	- PV generation (from Melbourne GHI time-series)
@@ -12,36 +18,36 @@ REQUIRE "atoms.a4l";
 *)
 
 CONSTANT irradiance_data_constant
-REFINES real_constant DIMENSION M/T^3;
+REFINES real_constant UNITS {W/m^2};
 
 CONSTANT power_constant
-REFINES real_constant DIMENSION M*L^2/T^3;
+REFINES real_constant UNITS {MW};
 
 CONSTANT energy_quantity_constant
-REFINES real_constant DIMENSION M*L^2/T^2;
+REFINES real_constant UNITS {MWh};
 
 CONSTANT cost_constant
-REFINES real_constant DIMENSION C;
+REFINES real_constant UNITS {AUD};
 
 CONSTANT cost_per_energy_constant
-REFINES real_constant DIMENSION C*T^2/M/L^2;
+REFINES real_constant UNITS {AUD/MWh};
 
 CONSTANT cost_per_power_constant
-REFINES real_constant DIMENSION C*T^3/M/L^2;
+REFINES real_constant UNITS {AUD/MW};
 
 CONSTANT cost_rate_constant
 REFINES real_constant DIMENSION C/T;
 
 ATOM currency_value REFINES solver_var
 	DIMENSION C
-	DEFAULT 0 {USD};
-	lower_bound := -1e50 {USD};
-	upper_bound := 1e50 {USD};
-	nominal := 1e6 {USD};
+	DEFAULT 0 {AUD};
+	lower_bound := -1e50 {AUD};
+	upper_bound := 1e50 {AUD};
+	nominal := 1e6 {AUD};
 END currency_value;
 
 ATOM positive_currency_value REFINES currency_value;
-	lower_bound := 0 {USD};
+	lower_bound := 0 {AUD};
 END positive_currency_value;
 
 ATOM energy_gj REFINES solver_var
