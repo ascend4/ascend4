@@ -3455,8 +3455,7 @@ static void create_matrices(slv_system_t server, qrslv_system_t sys)
   sys->ZBZ.Zy = ASC_NEW_ARRAY_OR_NULL(real64, sys->ZBZ.order);
 }
 
-static void create_vectors(sys)
-qrslv_system_t sys;
+static void create_vectors(qrslv_system_t sys)
 {
   sys->nominals.vec = ASC_NEW_ARRAY_OR_NULL(real64,sys->cap);
   sys->nominals.rng = &(sys->J.reg.col);
@@ -4257,4 +4256,3 @@ ASC_EXPORT int qrslv_register(void){
 }
 
 /* :ex: set ts=8 */
-
