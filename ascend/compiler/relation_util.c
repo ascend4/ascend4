@@ -734,7 +734,7 @@ static double RelationBranchEvaluator(struct relation_term *term)
   assert(term != NULL);
   switch(RelationTermType(term)) {
   case e_func:
-	 /* CONSOLE_DEBUG("Evaluating term using FuncEval..."); */
+	 /* MSG("Evaluating term using FuncEval..."); */
     return FuncEval(TermFunc(term),
       RelationBranchEvaluator(TermFuncLeft(term)) );
   case e_var:
@@ -2298,7 +2298,7 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
       break;
     case e_blackbox:
       if(RelationCalcResidualPostfix(i,res) != 0) {
-        CONSOLE_DEBUG("Problem evaluating Blackbox residual");
+        MSG("Problem evaluating Blackbox residual");
         status = safe_problem;
         safe_error_to_stderr(&status);
       }
@@ -2343,7 +2343,7 @@ RelationCalcResidualPostfix(struct Instance *i, double *res){
   p = InstanceParent(i,1);
   char *tmp;
   tmp = WriteRelationString(i,p,NULL,NULL,relio_ascend,NULL);
-  CONSOLE_DEBUG("Evaluating residual for '%s'",tmp);
+  MSG("Evaluating residual for '%s'",tmp);
   ASC_FREE(tmp);
   */
 
@@ -2518,7 +2518,7 @@ RelationCalcGradient(struct Instance *r, double *grad){
 enum safe_err
 RelationCalcGradientSafe(struct Instance *r, double *grad){
   double residual;
-  //CONSOLE_DEBUG("Gradient Evaluation Type: SAFE");
+  MSG("Gradient Evaluation Type: SAFE");
   return RelationCalcResidGradSafe(r, &residual, grad);
 }
 
@@ -2598,21 +2598,21 @@ enum safe_err RelationCalcResidGradSafe(struct Instance *i
     if(BlackBoxCalcResidGrad(i, residual, gradient, r) ) {
       not_safe = safe_problem;
     }
-    //CONSOLE_DEBUG("Relation Type: e_blackbox");
+    MSG("Relation Type: e_blackbox");
     return not_safe;
   }
   if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
 #if 0
     if(reltype == e_glassbox){
-	    //CONSOLE_DEBUG("Relation Type: e_glassbox");
+	    //MSG("Relation Type: e_glassbox");
 	    ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
     }
     if(reltype == e_opcode){
-     	//CONSOLE_DEBUG("Relation Type: e_opcode");
+     	//MSG("Relation Type: e_opcode");
     	ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
     }
 #endif
-    //CONSOLE_DEBUG("Relation Type: other");
+    //MSG("Relation Type: other");
     not_safe = safe_problem;
     return not_safe;
   }
@@ -2639,7 +2639,7 @@ int	RelationCalcGradientRev(struct Instance *r, double *grad){
 */
 enum safe_err RelationCalcGradientRevSafe(struct Instance *r, double *grad){
 	double residual;
-	//CONSOLE_DEBUG("Gradient Evaluation Type: SAFE");
+	//MSG("Gradient Evaluation Type: SAFE");
 	return RelationCalcResidGradRevSafe(r, &residual, grad);
 }
 
@@ -2706,29 +2706,29 @@ enum safe_err RelationCalcResidGradRevSafe(struct Instance *i
 
 	if( reltype == e_token ) {
 		RelationEvaluateResidualGradientRevSafe(r, residual, gradient,0, &not_safe);
-		//CONSOLE_DEBUG("Relation Type: e_token");
+		//MSG("Relation Type: e_token");
 		return not_safe;
 	}
 	if(reltype == e_blackbox){
 		/*if(BlackBoxCalcResidGrad(i, residual, gradient, r) ) {
 			not_safe = safe_problem;
 		}
-		CONSOLE_DEBUG("Relation Type: e_blackbox");
+		MSG("Relation Type: e_blackbox");
 		return not_safe;*/
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Black Box Relation not implemented");
 	}
 	if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
 #if 0
 		if(reltype == e_glassbox){
-			CONSOLE_DEBUG("Relation Type: e_glassbox");
+			MSG("Relation Type: e_glassbox");
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
 		}
 		if(reltype == e_opcode){
-			CONSOLE_DEBUG("Relation Type: e_opcode");
+			MSG("Relation Type: e_opcode");
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
 		}
 #endif
-		CONSOLE_DEBUG("Relation Type: other");
+		MSG("Relation Type: other");
 		not_safe = safe_problem;
 		return not_safe;
 	}
@@ -2810,22 +2810,22 @@ enum safe_err RelationCalcSecondDerivSafe(struct Instance *i
 		/*if(BlackBoxCalcResidGrad(i, residual, gradient, r) ) {
 		not_safe = safe_problem;
     }
-		CONSOLE_DEBUG("Relation Type: e_blackbox");
+		MSG("Relation Type: e_blackbox");
 		return not_safe;*/
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Black Box Relation not implemented");
 	}
 	if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
 #if 0
 		if(reltype == e_glassbox){
-			CONSOLE_DEBUG("Relation Type: e_glassbox");
+			MSG("Relation Type: e_glassbox");
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
 		}
 		if(reltype == e_opcode){
-			CONSOLE_DEBUG("Relation Type: e_opcode");
+			MSG("Relation Type: e_opcode");
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
 		}
 #endif
-		CONSOLE_DEBUG("Relation Type: other");
+		MSG("Relation Type: other");
 		not_safe = safe_problem;
 		return not_safe;
 	}
@@ -2841,7 +2841,7 @@ int RelationCalcHessianMtx(struct Instance *i, ltmatrix *hess_mtx, unsigned long
 	struct relation *r;
 	enum Expr_enum reltype;
 
-// 	CONSOLE_DEBUG("IN FUNCTION RelationCalcHessianMtx");
+// 	MSG("IN FUNCTION RelationCalcHessianMtx");
 
 	r = (struct relation *)GetInstanceRelation(i, &reltype);
 	if( r == NULL ) {
@@ -2870,7 +2870,7 @@ enum safe_err RelationCalcHessianMtxSafe(struct Instance *i, ltmatrix *hess_mtx,
 	enum Expr_enum reltype;
 	enum safe_err not_safe = safe_ok;
 
-//	CONSOLE_DEBUG("IN FUNCTION RelationCalcHessianMtxSafe");
+//	MSG("IN FUNCTION RelationCalcHessianMtxSafe");
 
 #ifndef NDEBUG
 	if( i == NULL ) {
@@ -2905,22 +2905,22 @@ enum safe_err RelationCalcHessianMtxSafe(struct Instance *i, ltmatrix *hess_mtx,
 		/*if(BlackBoxCalcResidGrad(i, residual, gradient, r) ) {
 		not_safe = safe_problem;
 	}
-		CONSOLE_DEBUG("Relation Type: e_blackbox");
+		MSG("Relation Type: e_blackbox");
 		return not_safe;*/
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Black Box Relation not implemented");
 	}
 	if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
 #if 0
 		if(reltype == e_glassbox){
-			CONSOLE_DEBUG("Relation Type: e_glassbox");
+			MSG("Relation Type: e_glassbox");
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
 		}
 		if(reltype == e_opcode){
-			CONSOLE_DEBUG("Relation Type: e_opcode");
+			MSG("Relation Type: e_opcode");
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
 		}
 #endif
-		CONSOLE_DEBUG("Relation Type: other");
+		MSG("Relation Type: other");
 		not_safe = safe_problem;
 		return not_safe;
 	}
@@ -3319,13 +3319,13 @@ double *RelationFindRoots(struct Instance *i,
      * target.
      */
     if(SearchEval_Branch(Infix_LhsSide(glob_rel)) < 1) {
-      /* CONSOLE_DEBUG("SearchEval_Branch(Infix_LhsSide(glob_rel)) gave < 1..."); */
+      /* MSG("SearchEval_Branch(Infix_LhsSide(glob_rel)) gave < 1..."); */
       sideval = RelationBranchEvaluator(Infix_LhsSide(glob_rel));
       if(asc_finite(sideval)) {
-        /* CONSOLE_DEBUG("LHS is finite"); */
+        /* MSG("LHS is finite"); */
         InsertBranchResult(Infix_LhsSide(glob_rel),sideval);
       }else{
-        /* CONSOLE_DEBUG("LHS is INFINITE"); */
+        /* MSG("LHS is INFINITE"); */
         FPRINTF(ASCERR,"Inequality in RelationFindRoots. Infinite RHS.\n");
         glob_rel = NULL;
         return NULL;
@@ -3333,20 +3333,20 @@ double *RelationFindRoots(struct Instance *i,
     }
     assert(Infix_RhsSide(glob_rel) != NULL);
     if(SearchEval_Branch(Infix_RhsSide(glob_rel)) < 1) {
-        /* CONSOLE_DEBUG("SearchEval_Branch(Infix_RhsSide(glob_rel)) gave < 1..."); */
+        /* MSG("SearchEval_Branch(Infix_RhsSide(glob_rel)) gave < 1..."); */
         sideval = RelationBranchEvaluator(Infix_RhsSide(glob_rel));
         if(asc_finite(sideval)) {
-          /* CONSOLE_DEBUG("RHS is finite"); */
+          /* MSG("RHS is finite"); */
           InsertBranchResult(Infix_RhsSide(glob_rel),sideval);
         }else{
-          /* CONSOLE_DEBUG("RHS is INFINITE"); */
+          /* MSG("RHS is INFINITE"); */
           FPRINTF(ASCERR,"Inequality in RelationFindRoots. Infinite LHS.\n");
           glob_rel = NULL;
           return NULL;
         }
     }
     if(glob_done < 1) {
-      /* CONSOLE_DEBUG("RelationInvertToken never found variable"); */
+      /* MSG("RelationInvertToken never found variable"); */
       /* RelationInvertToken never found variable */
       glob_done = 0;
       *able = FALSE;
@@ -3355,18 +3355,18 @@ double *RelationFindRoots(struct Instance *i,
     if(glob_done == 1) {
       /* set to 0 so while loop in RelationInvertToken will work */
       glob_done = 0;
-      /* CONSOLE_DEBUG("Calling 'RelationInvertToken'..."); */
+      /* MSG("Calling 'RelationInvertToken'..."); */
       glob_done = RelationInvertTokenTop(&(soln_list));
     }
     if(glob_done == 1) { /* if still one, token inversions successful */
-		/* CONSOLE_DEBUG("INVERSION was successful"); */
+		/* MSG("INVERSION was successful"); */
       glob_done = 0;
       *nsolns= soln_list.length;
       *able = TRUE;
       return soln_list.soln;
     }
     /* CALL ITERATIVE SOLVER */
-    CONSOLE_DEBUG("Solving iteratively...");
+    MSG("Solving iteratively...");
     *soln_list.soln = RootFind(glob_rel,&(lower_bound),
         		       &(upper_bound),&(nominal),
         		       &(tolerance),
@@ -3377,7 +3377,7 @@ double *RelationFindRoots(struct Instance *i,
       *nsolns = 1;
       *able = TRUE;
     }else{
-      CONSOLE_DEBUG("Single-equation iterative solver was unable to find a solution.");
+      MSG("Single-equation iterative solver was unable to find a solution.");
       *able = FALSE;
     }
     return soln_list.soln;
@@ -3880,7 +3880,7 @@ int RelationInvertToken(struct relation_term **term,
       soln_list->soln[ndx] = -soln_list->soln[ndx];
       break;
     case e_func:
-      CONSOLE_DEBUG("Inverting a function term...");
+      MSG("Inverting a function term...");
       switch(FuncId(TermFunc(*term))) {
       case F_EXP:
         soln_list->soln[ndx] = safe_ln_D0(soln_list->soln[ndx],not_safe);
@@ -3981,12 +3981,12 @@ int RelationInvertToken(struct relation_term **term,
       case F_ARCTAN:
         if( -safe_PI/2.0 < soln_list->soln[ndx] &&
             soln_list->soln[ndx] < safe_PI/2.0 ) {
-          CONSOLE_DEBUG("Inverting arctan...");
+          MSG("Inverting arctan...");
           soln_list->soln[ndx] =
             safe_tan_D0(soln_list->soln[ndx],not_safe);
         }else{
-          CONSOLE_DEBUG("Not inverting arctan (out of range)...");
-          /* CONSOLE_DEBUG("ARCTAN arg x = %f is out of range (-pi/2,pi/2)",soln_list->soln[ndx]); */
+          MSG("Not inverting arctan (out of range)...");
+          /* MSG("ARCTAN arg x = %f is out of range (-pi/2,pi/2)",soln_list->soln[ndx]); */
           remove_soln(soln_list,ndx);
         }
         break;
@@ -3996,7 +3996,7 @@ int RelationInvertToken(struct relation_term **term,
           soln_list->soln[ndx] =
             safe_tanh_D0(soln_list->soln[ndx],not_safe);
         }else{
-          /* CONSOLE_DEBUG("ARCTANH arg x = %f is out of range (-1,1)",soln_list->soln[ndx]); */
+          /* MSG("ARCTANH arg x = %f is out of range (-1,1)",soln_list->soln[ndx]); */
           remove_soln(soln_list,ndx);
         }
         break;
@@ -4012,7 +4012,7 @@ int RelationInvertToken(struct relation_term **term,
 
       case F_TAN:
         /* added by me, Aug 2006 -- JP */
-        /* CONSOLE_DEBUG("Inverting %f=tan(x)",soln_list->soln[ndx]); */
+        /* MSG("Inverting %f=tan(x)",soln_list->soln[ndx]); */
         soln_list->soln[ndx] = safe_arctan_D0( soln_list->soln[ndx],not_safe );
         if( *not_safe != safe_ok) {
           remove_soln(soln_list,ndx);
@@ -4254,7 +4254,7 @@ double RootFind(struct relation *rel,
     return 0.0;
   }
 
-  CONSOLE_DEBUG("Attempting to solver relation using zbrent");
+  MSG("Attempting to solver relation using zbrent");
 
   vlist = RelationVarList(glob_rel);
   n = (int)gl_length(vlist);
